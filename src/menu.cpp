@@ -7,6 +7,7 @@
 
 #include "interface.h"
 #include "ui.h"
+#include "versions.h"
 
 #include "game/mapres_image.h"
 #include "game/mapres_tilemap.h"
@@ -478,6 +479,8 @@ static int menu_render(netaddr4 *server_address, char *str, int max_len)
 	if (ui_do_button(&quit_button, "", 0, 290, 250, 69, 25, draw_menu_button, &quit_button))
 		return -1;
 
+	ui_do_label(10.0f, 300.0f-20.0f, "Version: " TEEWARS_VERSION);
+	
 	return 0;
 }
 

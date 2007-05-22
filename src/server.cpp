@@ -12,6 +12,8 @@
 
 #include "lzw.h"
 
+#include "versions.h"
+
 namespace baselib {}
 using namespace baselib;
 
@@ -472,7 +474,12 @@ public:
 			
 			if(p->is_good())
 			{
-				// TODO: check version
+				// check version
+				if(strncmp(version, TEEWARS_NETVERSION, 32) != 0)
+				{
+					// TODO: send error
+					return;
+				}
 				
 				// look for empty slot, linear search
 				int id = -1;

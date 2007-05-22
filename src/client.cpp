@@ -15,6 +15,8 @@
 
 #include "lzw.h"
 
+#include "versions.h"
+
 using namespace baselib;
 
 // --- string handling (MOVE THESE!!) ---
@@ -220,7 +222,7 @@ public:
 		recived_snapshots = 0;
 		
 		packet p(NETMSG_CLIENT_CONNECT);
-		p.write_str("dev v1", 32); // payload
+		p.write_str(TEEWARS_NETVERSION, 32); // payload
 		p.write_str(name,MAX_NAME_LENGTH);
 		p.write_str("no clan", MAX_CLANNAME_LENGTH);
 		p.write_str("password", 32);

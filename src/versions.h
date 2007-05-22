@@ -1,0 +1,2 @@
+#define TEEWARS_NETVERSION "dev v1"
+#define TEEWARS_VERSION "0.1.1"
