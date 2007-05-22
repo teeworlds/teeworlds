@@ -1,0 +1,39 @@
+Title: Tasks
+
+Group: 0.1.0 - Awesome Alpha (RELEASED)
+
+Group: 0.1.1 - Awesome Alpha Bug Fixed (NEXT)
+	DONE * Bobbing powerups
+	DONE * Get -c working under windows
+	DONE * Bigger powerups
+* Pickup sounds
+* FAQ on the webpage
+	DONE * Private server (no heartbeats)
+	DONE * Can't pickup ammo, health or armor when not needed
+
+Group: 0.2.x - 
+* Fix so that the homepage is in the SVN
+* Cleanup: SVN
+* Cleanup: client.cpp / server.cpp
+* Cleanup: game_client.cpp / game_server.cpp
+* Cleanup: editor.cpp
+* Masterserver: Master server should only hold ips. Clients should ask servers for more info + ping
+* Masterserver: NAT/FW detection
+* Game: Respawn time
+* Game: Chat
+* Game: Bigger and better scoreboard
+* Game: Events for kills and such
+* Client: Should timeout from server
+* Client: More robust and smoother handling of snapshots
+* Client: Some sort of settings format (think KISS).
+* Server: LAN / Internet / Private servers.
+* Server: Answer to a getinfo message
+
+Group: 0.3.0 - Editor Edition
+* Fix the editor
+
+Group: Unassigned
+* zlib compression on the maps.
+* png loader
+* The gfx API now uses BGRA for texture loading. It should be RGBA. (gfx.cpp)
+* Flipping of tiles in the tilemap should be fixed. (mapres_tilemap.cpp)

@@ -1,0 +1,8 @@
+Title: Hacking
+
+Group: Source Layout
+data_src - Data for the game is located under data_src and is unprocessed.
+src - Engine source. It contains the network communication, graphics and sound.
+src/game - The game source. This is the source that acctually is teewars. 
+	You can write a new game using the engine by removing these files and start from scratch.
+scripts - Scripts.

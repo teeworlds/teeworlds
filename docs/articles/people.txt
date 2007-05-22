@@ -1,0 +1,23 @@
+Title: People
+
+Group: Magnus Auvinen (matricks)
+* *Role*: Lead Programmer
+* *Email*: magnus.auvinen@gmail.com
+* *Likes*: Tight stuff
+* *Dislikes*: Memory allocation
+
+Group: Johan Althoff (teetow)
+* *Role*: Lead Designer, Sound Designer
+* *Email*: teetow@gmail.com
+* *Likes*: Cute 'n cuddly
+* *Dislikes*: Booring food
+
+Group: Tomas Landin (kungtotte)
+* *Role*: Win32 Maintainer
+* *Email*: kungtotte@gmail.com
+
+Group: Joel de Vahl (void)
+* *Role*: Mac OS X Maintainer
+* *Email*: joel.de.vahl@gmail.com
+* *Likes*: Weird programming languages
+* *Dislikes*: Monoculture

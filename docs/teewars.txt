@@ -1,0 +1,183 @@
+= Teewars Documentation
+
+== Tasks
+
+=== Bigger tasks
+* Tilemap editor (Huge, non-R1).
+* Offline gui (Non-R1)
+* Fix everything so it builds under windows.
+* Chat.
+* Master server (Non-R1)
+* zlib compression on the maps.
+
+=== Medium tasks
+* Fix packetloss handling. (client.cpp/server.cpp)
+* Flipping of tiles in the tilemap should be fixed. (mapres_tilemap.cpp, tool.py)
+* Compression for snapshots. Not zlib as it's abit overkill for the small size. (client.cpp/server.cpp)
+* Splitting and combine snapshot over several packets. (server.cpp/client.cpp)
+* Some sort of settings format (think KISS) for the client. (client.cpp)
+* Score board. (game/*)
+* The gfx implementation uses 1 quad in a VBO. It should be a whole bunch. (gfx.cpp)
+* Clients should timeout. (server.cpp)
+
+=== Smaller tasks
+* The gfx API now uses BGRA for texture loading. It should be RGBA. (gfx.cpp, tool.py)
+* Commandline option for what server to connect to. ("-c host")
+
+== Running the Game
+
+=== Start a Server
+-----------------
+# ./teewars -s
+-----------------
+
+=== Connect with the client
+-----------------
+# ./teewars [-c IP]
+-----------------
+Not specifying -c will connect the client to localhost
+
+== Source Layout
+=== data_src
+Data for the game is located under data_src and is unprocessed.
+
+=== src
+Engine source. It contains the network communication, graphics and sound.
+
+==== src/game
+The game source. This is the source that acctually is teewars. You can write a
+new game using the engine by removing these files and start from scratch.
+
+=== scripts
+Scripts.
+
+
+== File Formats
+
+This sections describes the diffrent file format that Teewars uses.
+
+=== Map v2
+	int ID
+	int version
+	int size
+	int swaplen
+	
+	int num_item_types
+	int num_items
+	int num_raw_data
+	
+	int item_size
+	int data_size
+
+	types {
+		int typeid
+		int start
+		int num
+	} * (num_item_types)
+
+	item_offsets {
+		int offset
+	} * (num_items)
+	
+	raw_data_offsets {
+		int offset
+	} * (num_raw_data)
+
+	item {
+		int type_and_id
+		int size
+		datai {
+			int data
+		} * (size/4)
+	} * (num_items)
+
+	raw_data {
+		byte d
+	} * X
+
+	Notes:
+		swaplen tells how much of the data that should be swapped
+		types.start is an index into offsets
+		item.size must be a multiple of 4
+		the types must be sorted by type id
+		special typeid of 0xffff means raw data, and there fore should always come last
+
+	Could change:
+		item.size could be removed
+
+	
+==== Map Items
+	0x8010 = image
+	0x8020 = tilemap
+	0x8030 = collision
+
+	collision {
+		int width
+		int height
+		int raw_data_index
+	}
+	data {
+		byte data
+	} * (width * height)
+	
+	image {
+		int width
+		int height
+		int raw_data_index
+	}
+	pixel {
+		byte r
+		byte g
+		byte b
+		byte a
+	} * (width * height)
+	
+	tilemap {
+		int image
+		int width
+		int height
+		int x
+		int y
+		int scale
+		int raw_data_index
+	}
+	data {
+		byte data
+	} * (width * height)
+
+== Network Protocol
+
+=== CLIENT_CONNECT
+Sent by the client when it wants to connect.
+	str32 name
+	str32 clan
+	str32 password
+	str32 skin
+	
+=== SERVER_ACCEPT
+Sent by the server as a respons to CLIENT_CONNECT, when it accepts a connection.
+	str32 mapname
+
+=== CLIENT_DONE
+Sent when the client is done loading the map.
+	nothing
+	
+=== SERVER_SNAP
+Sent by the server at a steady interval to all players. Contains a snapshot of the current world.
+	int num_parts
+	int part
+	int size
+
+==== Snapshot
+
+	int num_items
+	
+	offsets {
+		int offset
+	} * num_items
+	
+	item {
+		int type_and_id
+		int data[X]
+	} * num_items
+

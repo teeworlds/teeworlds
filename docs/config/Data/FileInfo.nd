@@ -1,0 +1,45 @@
+1.35
+C/C++
+/home/kma/code/teewars/docs/articles/tasks.txt	1179823068	1	Tasks
+/home/kma/code/teewars/src/game/game_server.cpp	1179768929	0	/home/kma/code/teewars/src/game/game_server.cpp
+/home/kma/code/teewars/src/wavpack/bits.c	1174419375	0	/home/kma/code/teewars/src/wavpack/bits.c
+/home/kma/code/teewars/src/game/mapres_col.cpp	1179432693	0	/home/kma/code/teewars/src/game/mapres_col.cpp
+/home/kma/code/teewars/src/game/mapres_tilemap.cpp	1179618843	0	/home/kma/code/teewars/src/game/mapres_tilemap.cpp
+/home/kma/code/teewars/docs/articles/map_format.txt	1176276415	1	Map File Format
+/home/kma/code/teewars/src/wavpack/unpack.c	1174419375	0	/home/kma/code/teewars/src/wavpack/unpack.c
+/home/kma/code/teewars/src/game/mapres_image.h	1179424345	0	/home/kma/code/teewars/src/game/mapres_image.h
+/home/kma/code/teewars/src/menu.cpp	1179619488	0	/home/kma/code/teewars/src/menu.cpp
+/home/kma/code/teewars/src/snapshot.h	1174119734	0	/home/kma/code/teewars/src/snapshot.h
+/home/kma/code/teewars/src/game/mapres_image.cpp	1179605594	0	/home/kma/code/teewars/src/game/mapres_image.cpp
+/home/kma/code/teewars/src/wavpack/float.c	1174419375	0	/home/kma/code/teewars/src/wavpack/float.c
+/home/kma/code/teewars/src/wavpack/words.c	1174419375	0	/home/kma/code/teewars/src/wavpack/words.c
+/home/kma/code/teewars/src/game/mapres_col.h	1179430826	0	/home/kma/code/teewars/src/game/mapres_col.h
+/home/kma/code/teewars/src/wavpack/metadata.c	1174419375	0	/home/kma/code/teewars/src/wavpack/metadata.c
+/home/kma/code/teewars/docs/articles/playing.txt	1176366016	1	Playing
+/home/kma/code/teewars/src/client.cpp	1179768399	0	/home/kma/code/teewars/src/client.cpp
+/home/kma/code/teewars/src/packet.h	1179571910	0	/home/kma/code/teewars/src/packet.h
+/home/kma/code/teewars/src/datafile.cpp	1179506867	0	/home/kma/code/teewars/src/datafile.cpp
+/home/kma/code/teewars/src/wavpack/readme.txt	1174419375	0	/home/kma/code/teewars/src/wavpack/readme.txt
+/home/kma/code/teewars/src/main.cpp	1178039502	0	/home/kma/code/teewars/src/main.cpp
+/home/kma/code/teewars/src/server.cpp	1179768288	0	/home/kma/code/teewars/src/server.cpp
+/home/kma/code/teewars/docs/articles/gameplay.txt	1179485640	1	Gameplay
+/home/kma/code/teewars/src/editor.cpp	1179619211	0	/home/kma/code/teewars/src/editor.cpp
+/home/kma/code/teewars/src/lzw.h	1179593947	0	/home/kma/code/teewars/src/lzw.h
+/home/kma/code/teewars/src/game/game_client.cpp	1179769035	0	/home/kma/code/teewars/src/game/game_client.cpp
+/home/kma/code/teewars/src/datafile.h	1179434139	0	/home/kma/code/teewars/src/datafile.h
+/home/kma/code/teewars/src/ui.cpp	1179611933	0	/home/kma/code/teewars/src/ui.cpp
+/home/kma/code/teewars/src/lzw.cpp	1179593670	0	/home/kma/code/teewars/src/lzw.cpp
+/home/kma/code/teewars/src/wavpack/wputils.c	1174419375	0	/home/kma/code/teewars/src/wavpack/wputils.c
+/home/kma/code/teewars/docs/articles/editor.txt	1177240261	1	Editor
+/home/kma/code/teewars/src/game/mapres.h	1176644781	0	/home/kma/code/teewars/src/game/mapres.h
+/home/kma/code/teewars/src/gfx.cpp	1179619211	0	/home/kma/code/teewars/src/gfx.cpp
+/home/kma/code/teewars/src/game/mapres_tilemap.h	1179526258	0	/home/kma/code/teewars/src/game/mapres_tilemap.h
+/home/kma/code/teewars/docs/articles/people.txt	1176365618	1	People
+/home/kma/code/teewars/src/interface.h	1179767917	1	Engine Interface
+/home/kma/code/teewars/src/map.cpp	1179410987	0	/home/kma/code/teewars/src/map.cpp
+/home/kma/code/teewars/src/game/game.h	1179618414	0	/home/kma/code/teewars/src/game/game.h
+/home/kma/code/teewars/src/wavpack/license.txt	1174419375	0	/home/kma/code/teewars/src/wavpack/license.txt
+/home/kma/code/teewars/docs/articles/hacking.txt	1176365797	1	Hacking
+/home/kma/code/teewars/src/wavpack/wavpack.h	1174419375	0	/home/kma/code/teewars/src/wavpack/wavpack.h
+/home/kma/code/teewars/src/ui.h	1179611933	0	/home/kma/code/teewars/src/ui.h
+/home/kma/code/teewars/src/snd.cpp	1179611933	0	/home/kma/code/teewars/src/snd.cpp

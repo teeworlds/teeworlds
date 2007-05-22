@@ -1,0 +1,100 @@
+Title: Map File Format
+
+Group: Structure
+(start code)
+int ID // should be "MAPP"
+int version // should be 2
+int size
+int swaplen
+	
+int num_item_types
+int num_items
+int num_raw_data
+	
+int item_size
+int data_size
+
+types {
+	int typeid
+	int start
+	int num
+} * (num_item_types)
+
+item_offsets {
+	int offset
+} * (num_items)
+	
+raw_data_offsets {
+	int offset
+} * (num_raw_data)
+
+item {
+	int type_and_id
+	int size
+	datai {
+		int data
+	} * (size/4)
+} * (num_items)
+
+raw_data {
+	byte d
+} * X
+(end)
+
+Notes:
+	* swaplen tells how much of the data that should be swapped
+	* types.start is an index into offsets
+	* item.size must be a multiple of 4
+	* the types must be sorted by type id
+	* special typeid of 0xffff means raw data, and there fore should always come last
+
+Could change:
+	* item.size could be removed
+
+Section: Registered Item Types
+
+Group: Image (0x8010)
+(start code)
+image {
+	int width
+	int height
+	int raw_data_index
+}
+
+pixel_data {
+	byte r
+	byte g
+	byte b
+	byte a
+} * (width * height)
+(end)
+
+Group: Tilemap (0x8020)
+(start code)
+tilemap {
+	int image
+	int width
+	int height
+	int x
+	int y
+	int scale
+	int raw_data_index
+}
+
+data {
+	byte data
+} * (width * height)
+(end)
+
+Group: Collision (0x8030)
+(start code)
+collision {
+	int width
+	int height
+	int raw_data_index
+}
+
+data {
+	byte data
+} * (width * height)
+(end)
