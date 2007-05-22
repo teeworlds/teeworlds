@@ -2,6 +2,7 @@
 #include <baselib/network.h>
 
 #include <stdio.h>
+#include "versions.h"
 
 using namespace baselib;
 
@@ -14,6 +15,11 @@ int main(int argc, char **argv)
 	// search for server or editor argument
 	for(int i = 1; i < argc; i++)
 	{
+		if(argv[i][0] == '-' && argv[i][1] == 'v' && argv[i][2] == 0)
+		{
+			printf(TEEWARS_VERSION"\n");
+			return 0;
+		}
 		if(argv[i][0] == '-' && argv[i][1] == 's' && argv[i][2] == 0)
 			return server_main(argc, argv);
 		else if(argv[i][0] == '-' && argv[i][1] == 'e' && argv[i][2] == 0)

@@ -8,7 +8,8 @@ Changes
 	* -c now works under windows
 	* -p for private server
 	* Can't pickup ammor, health or armor when not needed
-	
+	* Added version number in the menu
+
 0.1.0 
 	* First Release
 
@@ -29,11 +30,13 @@ Players spawn with the Sledge Hammer and the Gun, which has unlimited ammo. All 
 Command Line Switches
 #####################
 
--s to start a server
+-v to see the version
 -w for windowed mode
+-c HOST to connect to a server
+
+-s to start a server
 -n NAME to name a server
 -p to make a server private
--c HOST to connect to a server
 
 Note. The server uses port 8303, so forward it from your NAT/Firewall if you start a server.
 
