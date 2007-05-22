@@ -1,0 +1,86 @@
+-- 
+function copy(output, input)
+	print("copy " .. PathFilename(output))
+    local copy_command
+    
+    if family == "windows" then
+        copy_command = "copy"
+        input = str_replace(input, "/", "\\")
+        output = str_replace(output, "/", "\\")
+    else
+        copy_command = "cp"
+    end
+
+    os.execute(copy_command .. " " .. input .. " " .. output)
+	return 0
+end
+
+function Copy(outputdir, ...)
+	local inputs = collect_input(arg)
+	local outputs = {}
+	
+	-- compile all the files
+	for index, inname in inputs do
+		output = Path(outputdir .. "/" .. PathFilename(inname))
+		input = Path(inname)
+		bam_add_job("copy", output, input)
+		bam_add_dependency(output, input)
+		table.insert(outputs, output)
+	end
+	
+	return outputs
+end
+
+function makemap(output, input)
+	print("makemap " .. PathFilename(output))
+	os.execute("python scripts/tool.py " .. input .. " " .. output)
+end
+
+function MakeMap(output, input)
+	local output = bam_path_fix(output)
+	local input = bam_path_fix(input)
+	bam_add_job("makemap", output, input)
+	bam_add_dependency(output, input)
+	return output
+end
+
+--
+baselib = Import("../baselib/baselib.bam")
+
+settings = NewSettings()
+baselib.use(settings)
+settings.cc.debug = 1
+settings.cc.optimize = 0
+settings.cc.flags = "-Wall"
+
+game_src = Collect("src/game/*.cpp")
+main_src = Collect("src/*.cpp")
+wavpack_src = Collect("src/wavpack/*.c")
+exe = Link(settings, "teewars", Compile(settings, game_src, main_src, wavpack_src))
+
+--maps = {
+--	MakeMap("data/test.map", "data_src/test.txt"),
+--	MakeMap("data/dm1.map", "data_src/dm1.txt"),
+--	MakeMap("data/ctf1.map", "data_src/ctf1.txt")
+--	}
+	
+--data_files = Copy("data",
+--	{
+--		"data_src/game_main.tga",
+--		"data_src/game_weapons.tga",
+--		"data_src/char_teefault.tga",
+--		"data_src/sun.tga",
+--		"data_src/debug_font.tga",
+--		"data_src/dm1.map"
+--	})
+--audio_files = Copy("data/audio",
+--	{
+--		"data_src/audio/Music_Menu.wav",
+--		"data_src/audio/wp_flump_explo-01.wav",
+--		"data_src/audio/wp_flump_explo-02.wav",
+--		"data_src/audio/wp_flump_explo-03.wav"
+--	})
+
+game = PseudoTarget("game", exe)
+
+Target(game)
