@@ -1,4 +1,16 @@
-This is the first playable beta version of Teewars.
+This is a patched version of the first playable beta version of Teewars. 
+
+Changes
+#######
+0.1.1
+	* Bobbing pickups
+	* Bigger pickups
+	* -c now works under windows
+	* -p for private server
+	* Can't pickup ammor, health or armor when not needed
+	
+0.1.0 
+	* First Release
 
 Keys
 ####
@@ -9,19 +21,21 @@ Left mouse button fires your weapon
 Right mouse button launches the grappling hook
 1-5 to change weapon
 
-
 Gameplay
 ########
 
 Players spawn with the Sledge Hammer and the Gun, which has unlimited ammo. All other weapons hold 10 rounds.
 
-
 Command Line Switches
-####################
+#####################
 
 -s to start a server
 -w for windowed mode
-	
+-n NAME to name a server
+-p to make a server private
+-c HOST to connect to a server
+
+Note. The server uses port 8303, so forward it from your NAT/Firewall if you start a server.
 
 The Teewars team
 ################
