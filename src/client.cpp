@@ -587,7 +587,6 @@ int client_main(int argc, char **argv)
 		else if(argv[i][0] == '-' && argv[i][1] == 'w' && argv[i][2] == 0)
 		{
 			// -w
-			i++;
 			fullscreen = false;
 		}
 	}
