@@ -703,7 +703,7 @@ void inp_update();
 float client_frametime();
 float client_localtime();
 
-#define MASTER_SERVER_ADDRESS "teewars.com"
+#define MASTER_SERVER_ADDRESS "master.teewars.com"
 #define MASTER_SERVER_PORT 8300
 
 
