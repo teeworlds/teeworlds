@@ -1088,8 +1088,9 @@ void modc_init()
 	leye.y = 1;
 	leye.w = 0.5;
 	leye.h = 0.5;
+	
 	reye.x = 5;
-	reye.y = 1.5;
+	reye.y = 1.0;
 	reye.w = 0.5;
 	reye.h = 0.5;
 }

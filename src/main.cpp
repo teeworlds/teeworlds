@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 			printf(TEEWARS_VERSION"\n");
 			return 0;
 		}
-		if(argv[i][0] == '-' && argv[i][1] == 's' && argv[i][2] == 0)
+		else if(argv[i][0] == '-' && argv[i][1] == 's' && argv[i][2] == 0)
 			return server_main(argc, argv);
 		else if(argv[i][0] == '-' && argv[i][1] == 'e' && argv[i][2] == 0)
 			return editor_main(argc, argv);
