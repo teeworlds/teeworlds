@@ -10,9 +10,9 @@ Group: 0.1.1 - Awesome Alpha Bug Fixed (NEXT)
 * FAQ on the webpage
 	DONE * Private server (no heartbeats)
 	DONE * Can't pickup ammo, health or armor when not needed
+	DONE * Fix so that the homepage is in the SVN
 
 Group: 0.2.x - 
-* Fix so that the homepage is in the SVN
 * Cleanup: SVN
 * Cleanup: client.cpp / server.cpp
 * Cleanup: game_client.cpp / game_server.cpp
@@ -23,6 +23,7 @@ Group: 0.2.x -
 * Game: Chat
 * Game: Bigger and better scoreboard
 * Game: Events for kills and such
+	DONE * Client: Only send input when needed
 * Client: Should timeout from server
 * Client: More robust and smoother handling of snapshots
 * Client: Some sort of settings format (think KISS).
