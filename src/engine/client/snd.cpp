@@ -2,7 +2,7 @@
 #include <baselib/audio.h>
 #include <baselib/stream/file.h>
 
-#include "interface.h"
+#include <engine/interface.h>
 
 using namespace baselib;
 
@@ -181,10 +181,11 @@ public:
 static mixer mixer;
 //static sound_data test_sound;
 
+/*
 extern "C" 
 {
 #include "wavpack/wavpack.h"
-}
+}*/
 
 /*
 static file_stream *read_func_filestream;

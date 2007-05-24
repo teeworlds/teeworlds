@@ -1,7 +1,7 @@
 #include <baselib/system.h>
-#include "../interface.h"
+#include "../../engine/interface.h"
 #include "mapres_image.h"
-#include "mapres.h"
+#include "../mapres.h"
 
 static int map_textures[64] = {0};
 static int count = 0;

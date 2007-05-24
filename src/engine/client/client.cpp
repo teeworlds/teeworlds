@@ -7,16 +7,15 @@
 #include <string.h>
 #include <stdarg.h>
 #include <math.h>
-#include "interface.h"
+#include <engine/interface.h>
 
-
-#include "packet.h"
-#include "snapshot.h"
+#include <engine/packet.h>
+#include <engine/snapshot.h>
 #include "ui.h"
 
-#include "lzw.h"
+#include <engine/lzw.h>
 
-#include "versions.h"
+#include <engine/versions.h>
 
 using namespace baselib;
 
@@ -477,8 +476,8 @@ public:
 		if (server_address)
 			connect(server_address);
 		
-		int64 inputs_per_second = 50;
-		int64 time_per_input = time_freq()/inputs_per_second;
+		//int64 inputs_per_second = 50;
+		//int64 time_per_input = time_freq()/inputs_per_second;
 		int64 game_starttime = time_get();
 		int64 last_input = game_starttime;
 		
@@ -668,7 +667,7 @@ public:
 	}	
 };
 
-int client_main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	dbg_msg("client", "starting...");
 	netaddr4 server_address(127, 0, 0, 1, 8303);

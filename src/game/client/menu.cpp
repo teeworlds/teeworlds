@@ -5,13 +5,13 @@
 #include <baselib/mouse.h>
 #include <baselib/network.h>
 
-#include "interface.h"
-#include "ui.h"
-#include "versions.h"
+#include <engine/interface.h>
+#include <engine/versions.h>
+#include "../mapres.h"
 
-#include "game/mapres_image.h"
-#include "game/mapres_tilemap.h"
-#include "game/mapres.h"
+#include <engine/client/ui.h>
+#include "mapres_image.h"
+#include "mapres_tilemap.h"
 
 using namespace baselib;
 

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "game.h"
+#include "../game.h"
 
 using namespace baselib;
 
@@ -646,7 +646,16 @@ public:
 					if (flags & WEAPON_DRAWSAMMO)
 						numammo--;
 					// Create projectile
-					new projectile(projectileclass, player->client_id, player->pos+vec2(0,projoffsety)+player->direction*projoffsetx, player->direction*projectilevel, projectilespan, player, damage, projectileflags, force, sound_impact_projectile);
+					new projectile(projectileclass,
+						player->client_id,
+						player->pos+vec2(0,projoffsety)+player->direction*projoffsetx,
+						player->direction*projectilevel,
+						(int)projectilespan,
+						player,
+						damage,
+						projectileflags,
+						force,
+						sound_impact_projectile);
 					// recoil force if any
 					if (recoilforce > 0.0f)
 					{

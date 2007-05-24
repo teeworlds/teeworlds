@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "game.h"
+#include "../game.h"
 #include "mapres_image.h"
 #include "mapres_tilemap.h"
 

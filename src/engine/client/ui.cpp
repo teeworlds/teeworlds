@@ -1,4 +1,4 @@
-#include "interface.h"
+#include <engine/interface.h>
 #include "ui.h"
 
 /********************************************************

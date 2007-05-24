@@ -1,7 +1,7 @@
 #include <baselib/system.h>
 #include <baselib/vmath.h>
 #include <math.h>
-#include "../interface.h"
+#include "../engine/interface.h"
 #include "mapres_col.h"
 
 // Don't tweak :)

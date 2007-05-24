@@ -2,7 +2,7 @@
 #include <baselib/vmath.h>
 #include <baselib/stream/file.h>
 
-#include "interface.h"
+#include <engine/interface.h>
 
 using namespace baselib;
 
@@ -222,6 +222,8 @@ int gfx_load_tga(image_info *img, const char *filename)
 
 	bool flipx = (headers[17] >> 4) & 1;
 	bool flipy = !((headers[17] >> 5) & 1);
+	
+	(void)flipx; // TODO: make use of this flag
 
 	if(headers[2] != 2) // needs to be uncompressed RGB
 	{
@@ -547,7 +549,7 @@ void gfx_pretty_text(float x, float y, float size, const char *text)
 	
 	while (*text)
 	{
-		const char c = *text;
+		const int c = *text;
 		const float width = current_font->m_CharEndTable[c] - current_font->m_CharStartTable[c];
 		
 		text++;
@@ -573,7 +575,7 @@ float gfx_pretty_text_width(float size, const char *text)
 
 	while (*text)
 	{
-		const char c = *text++;
+		const int c = *text++;
 		width += size * (current_font->m_CharEndTable[c] - current_font->m_CharStartTable[c] + spacing);
 	}
 

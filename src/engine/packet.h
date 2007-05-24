@@ -55,7 +55,7 @@ protected:
 	
 	void debug_verify_mark(int type, int size)
 	{
-		if(read_int_raw() == ((type<<16) | size))
+		if(read_int_raw() != ((type<<16) | size))
 			dbg_assert(0, "error during packet disassembly");
 	}
 	
@@ -110,8 +110,9 @@ public:
 	const char *read_str()
 	{
 		debug_verify_mark(DEBUG_TYPE_STR, 0);
-		const char *s = (const char *)current;
 		int size = read_int_raw();
+		const char *s = (const char *)current;
+		//dbg_msg("packet", "reading string '%s' (%d)", s, size);
 		current += size;
 		return s;
 	}

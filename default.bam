@@ -31,56 +31,35 @@ function Copy(outputdir, ...)
 	return outputs
 end
 
-function makemap(output, input)
-	print("makemap " .. PathFilename(output))
-	os.execute("python scripts/tool.py " .. input .. " " .. output)
-end
-
-function MakeMap(output, input)
-	local output = bam_path_fix(output)
-	local input = bam_path_fix(input)
-	bam_add_job("makemap", output, input)
-	bam_add_dependency(output, input)
-	return output
-end
-
 --
-baselib = Import("../baselib/baselib.bam")
 
+--baselib = Import("src/baselib/baselib.bam")
+baselib = Import("../baselib/baselib.bam")
 settings = NewSettings()
-baselib.use(settings)
+baselib.apply(settings, "all")
+
+server_settings = NewSettings()
+baselib.apply(server_settings, "network")
+
 settings.cc.debug = 1
 settings.cc.optimize = 0
 settings.cc.flags = "-Wall"
+settings.cc.includes:add("src")
+--settings.cc.includes:add("src/baselib/include")
 
-game_src = Collect("src/game/*.cpp")
-main_src = Collect("src/*.cpp")
-wavpack_src = Collect("src/wavpack/*.c")
-exe = Link(settings, "teewars", Compile(settings, game_src, main_src, wavpack_src))
+--baselib = Compile(settings, Collect("src/baselib/src/*.cpp", "src/baselib/src/*.c"))
+engine = Compile(settings, Collect("src/engine/*.cpp"))
+client = Compile(settings, Collect("src/engine/client/*.cpp"))
+server = Compile(settings, Collect("src/engine/server/*.cpp"))
+game_shared = Compile(settings, Collect("src/game/*.cpp"))
+game_client = Compile(settings, Collect("src/game/client/*.cpp"))
+game_server = Compile(settings, Collect("src/game/server/*.cpp"))
+editor = Compile(settings, Collect("src/editor/*.cpp"))
 
---maps = {
---	MakeMap("data/test.map", "data_src/test.txt"),
---	MakeMap("data/dm1.map", "data_src/dm1.txt"),
---	MakeMap("data/ctf1.map", "data_src/ctf1.txt")
---	}
-	
---data_files = Copy("data",
---	{
---		"data_src/game_main.tga",
---		"data_src/game_weapons.tga",
---		"data_src/char_teefault.tga",
---		"data_src/sun.tga",
---		"data_src/debug_font.tga",
---		"data_src/dm1.map"
---	})
---audio_files = Copy("data/audio",
---	{
---		"data_src/audio/Music_Menu.wav",
---		"data_src/audio/wp_flump_explo-01.wav",
---		"data_src/audio/wp_flump_explo-02.wav",
---		"data_src/audio/wp_flump_explo-03.wav"
---	})
+client_exe = Link(settings, "teewars", engine, client, game_shared, game_client)
+server_exe = Link(server_settings, "teewars_srv", engine, server, game_shared, game_server)
+-- editor_exe = Link(settings, "editor", engine, game_shared, editor)
 
-game = PseudoTarget("game", exe)
-
-Target(game)
+Target(PseudoTarget("client", client_exe))
+Target(PseudoTarget("server", server_exe))
+-- Target(PseudoTarget("editor", editor_exe))
