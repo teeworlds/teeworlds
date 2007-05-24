@@ -392,7 +392,7 @@ public:
 	void send_accept(client *client, const char *map)
 	{
 		packet p(NETMSG_SERVER_ACCEPT);
-		p.write_str(map, 32);
+		p.write_str(map);
 		client->conn.send(&p);
 	}
 	
@@ -440,8 +440,7 @@ public:
 		}
 		else if(p->msg() == NETMSG_CLIENT_ERROR)
 		{
-			char reason[128];
-			p->read_str(reason, 128);
+			const char *reason = p->read_str();
 			if(p->is_good())
 				dbg_msg("network/server", "client error. cid=%x reason='%s'", cid, reason);
 			else
@@ -460,17 +459,17 @@ public:
 		if(p->msg() == NETMSG_CLIENT_CONNECT)
 		{
 			// we got no state for this client yet
-			char version[32];
-			char name[MAX_NAME_LENGTH];
-			char clan[MAX_CLANNAME_LENGTH];
-			char password[32];
-			char skin[32];
+			const char *version;
+			const char *name;
+			const char *clan;
+			const char *password;
+			const char *skin;
 			
-			p->read_str(version, 32);
-			p->read_str(name, MAX_NAME_LENGTH);
-			p->read_str(clan, MAX_CLANNAME_LENGTH);
-			p->read_str(password, 32);
-			p->read_str(skin, 32);
+			version = p->read_str();
+			name = p->read_str();
+			clan = p->read_str();
+			password = p->read_str();
+			skin = p->read_str();
 			
 			if(p->is_good())
 			{
@@ -493,6 +492,7 @@ public:
 				if(id != -1)
 				{
 					// slot found
+					// TODO: perform correct copy here
 					mem_copy(clients[id].name, name, MAX_NAME_LENGTH);
 					mem_copy(clients[id].clan, clan, MAX_CLANNAME_LENGTH);
 					clients[id].state = client::STATE_CONNECTING;

@@ -18,7 +18,7 @@ protected:
 		unsigned seq;
 	};
 	
-	unsigned char packet_data[MAX_PACKET_SIZE-sizeof(header)];
+	unsigned char packet_data[MAX_PACKET_SIZE];
 	unsigned char *current;
 	
 	// these are used to prepend data in the packet
@@ -26,8 +26,6 @@ protected:
 	// pack and unpack the same way
 	enum
 	{
-		DEBUG_TYPE_SHIFT=24,
-		DEBUG_SIZE_MASK=0xffff,
 		DEBUG_TYPE_INT=0x1,
 		DEBUG_TYPE_STR=0x2,
 		DEBUG_TYPE_RAW=0x3,
@@ -36,19 +34,29 @@ protected:
 	// writes an int to the packet
 	void write_int_raw(int i)
 	{
-		// TODO: byteorder fix, should make sure that it writes big endian
 		// TODO: check for overflow
 		*(int*)current = i;
 		current += sizeof(int);
 	}
 
 	// reads an int from the packet
-	void read_int_raw(int *i)
+	int read_int_raw()
 	{
-		// TODO: byteorder fix, should make sure that it reads big endian
 		// TODO: check for overflow
-		*i = *(int*)current;
+		int i = *(int*)current;
 		current += sizeof(int);
+		return i;
+	}
+	
+	void debug_insert_mark(int type, int size)
+	{
+		write_int_raw((type<<16)|size);
+	}
+	
+	void debug_verify_mark(int type, int size)
+	{
+		if(read_int_raw() == ((type<<16) | size))
+			dbg_assert(0, "error during packet disassembly");
 	}
 	
 public:
@@ -68,69 +76,52 @@ public:
 	// writes an int to the packet
 	void write_int(int i)
 	{
-		write_int_raw((DEBUG_TYPE_INT<<DEBUG_TYPE_SHIFT) | 4);
+		debug_insert_mark(DEBUG_TYPE_INT, 4);
 		write_int_raw(i);
 	}
 
 	void write_raw(const char *raw, int size)
 	{
-		write_int_raw((DEBUG_TYPE_RAW<<DEBUG_TYPE_SHIFT) | size);
+		debug_insert_mark(DEBUG_TYPE_RAW, size);
 		while(size--)
 			*current++ = *raw++;
 	}
 
 	// writes a string to the packet
-	void write_str(const char *str, int storagesize)
+	void write_str(const char *str)
 	{
-		write_int_raw((DEBUG_TYPE_STR<<DEBUG_TYPE_SHIFT) | storagesize);
-		
-		while(storagesize-1) // make sure to zero terminate
-		{
-			if(!*str)
-				break;
-			
+		debug_insert_mark(DEBUG_TYPE_STR, 0);
+		int s = strlen(str)+1;
+		write_int_raw(s);
+		for(;*str; current++, str++)
 			*current = *str;
-			current++;
-			str++;
-			storagesize--;
-		}
-		
-		while(storagesize)
-		{
-			*current = 0;
-			current++;
-			storagesize--;
-		}
+		*current = 0;
+		current++;
 	}
 	
 	// reads an int from the packet
 	int read_int()
 	{
-		int t;
-		read_int_raw(&t);
-		dbg_assert(t == ((DEBUG_TYPE_INT<<DEBUG_TYPE_SHIFT) | 4), "error during packet disassembly");
-		read_int_raw(&t);
-		return t;
+		debug_verify_mark(DEBUG_TYPE_INT, 4);
+		return read_int_raw();
 	}
 	
 	// reads a string from the packet
-	void read_str(char *str, int storagesize)
+	const char *read_str()
 	{
-		int t;
-		read_int_raw(&t);
-		dbg_assert(t == ((DEBUG_TYPE_STR<<DEBUG_TYPE_SHIFT) | storagesize), "error during packet disassembly.");
-		mem_copy(str, current, storagesize);
-		current += storagesize;
-		dbg_assert(str[storagesize-1] == 0, "string should be zero-terminated.");
+		debug_verify_mark(DEBUG_TYPE_STR, 0);
+		const char *s = (const char *)current;
+		int size = read_int_raw();
+		current += size;
+		return s;
 	}
 	
-	void read_raw(char *data, int size)
+	const char *read_raw(int size)
 	{
-		int t;
-		read_int_raw(&t);
-		dbg_assert(t == ((DEBUG_TYPE_RAW<<DEBUG_TYPE_SHIFT) | size), "error during packet disassembly.");
-		while(size--)
-			*data++ = *current++;
+		debug_verify_mark(DEBUG_TYPE_RAW, size);
+		const char *d = (const char *)current;
+		current += size;
+		return d;
 	}
 	
 	// TODO: impelement this
@@ -190,7 +181,6 @@ public:
 			// TODO: save packet, we might need to retransmit
 		}
 		
-		//dbg_msg("network/connection", "sending packet. msg=%x size=%x seq=%x ", p->msg(), p->size(), seq);
 		p->set_header(ack, seq);
 		socket->send(&address(), p->data(), p->size());
 		counter_sent_bytes += p->size();

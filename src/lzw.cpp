@@ -3,7 +3,7 @@
 // LZW Compressor
 struct SYM
 {
-	unsigned char data[1024*2];
+	unsigned char *data;
 	int size;
 	int next;
 };
@@ -20,21 +20,6 @@ static SYMBOLS symbols;
 // symbol info
 inline int sym_size(int i) { return symbols.syms[i].size; }
 inline unsigned char *sym_data(int i) { return symbols.syms[i].data; }
-
-static void sym_init()
-{
-	for(int i = 0; i < 256; i++)
-	{
-		symbols.syms[i].data[0] = (unsigned char)i;
-		symbols.syms[i].size = 1;
-		symbols.jumptable[i] = -1;
-	}
-
-	for(int i = 0; i < 512; i++)
-		symbols.syms[i].next = -1;
-
-	symbols.currentsym = 0;
-}
 
 static void sym_index(int sym)
 {
@@ -68,10 +53,9 @@ static void sym_unindex(int sym)
 static int sym_add(unsigned char *sym, long len)
 {
 	int i = 256+symbols.currentsym;
-
-	memcpy(symbols.syms[i].data, sym, len);
+	symbols.syms[i].data = sym;
 	symbols.syms[i].size = len;
-	symbols.currentsym = (i+1)%255;
+	symbols.currentsym = (symbols.currentsym+1)%255;
 	return i;
 }
 
@@ -84,13 +68,40 @@ static int sym_add_and_index(unsigned char *sym, long len)
 	return s;
 }
 
-static void sym_append(int sym, unsigned char extra)
+static void sym_init()
 {
-	symbols.syms[sym].data[symbols.syms[sym].size] = extra;
-	symbols.syms[sym].size++;
+	static unsigned char table[256];
+	for(int i = 0; i < 256; i++)
+	{
+		table[i] = i;
+		symbols.syms[i].data = &table[i];
+		symbols.syms[i].size = 1;
+		symbols.jumptable[i] = -1;
+	}
+
+	for(int i = 0; i < 512; i++)
+		symbols.syms[i].next = -1;
+
+	/*
+	// insert some symbols to start with
+	static unsigned char zeros[8] = {0,0,0,0,0,0,0,0};
+	//static unsigned char one1[4] = {0,0,0,1};
+	//static unsigned char one2[4] = {1,0,0,0};
+	sym_add_and_index(zeros, 2);
+	sym_add_and_index(zeros, 3);
+	sym_add_and_index(zeros, 4);
+	sym_add_and_index(zeros, 5);
+	sym_add_and_index(zeros, 6);
+	sym_add_and_index(zeros, 7);
+	sym_add_and_index(zeros, 8);
+	
+	//sym_add_and_index(one1, 4);
+	//sym_add_and_index(one2, 4);*/
+
+	symbols.currentsym = 0;
 }
 
-static int sym_find(unsigned char *data, int size)
+static int sym_find(unsigned char *data, int size, int avoid)
 {
 	int best = data[0];
 	int bestlen = 1;
@@ -98,7 +109,7 @@ static int sym_find(unsigned char *data, int size)
 
 	while(current != -1)
 	{
-		if(symbols.syms[current].size <= size && memcmp(data, symbols.syms[current].data, symbols.syms[current].size) == 0)
+		if(current != avoid && symbols.syms[current].size <= size && memcmp(data, symbols.syms[current].data, symbols.syms[current].size) == 0)
 		{
 			if(bestlen < symbols.syms[current].size)
 			{
@@ -122,6 +133,7 @@ long lzw_compress(const void *src_, int size, void *dst_)
 	unsigned char *end = (unsigned char *)src_+size;
 	unsigned char *dst = (unsigned char *)dst_;
 	long left = (end-src);
+	int lastsym = -1;
 
 	// init symboltable
 	sym_init();
@@ -146,7 +158,7 @@ long lzw_compress(const void *src_, int size, void *dst_)
 				break;
 			}
 
- 			int sym = sym_find( src, left);
+ 			int sym = sym_find(src, left, lastsym);
 			int symsize = sym_size( sym);
 
 			if(sym&0x100)
@@ -155,7 +167,7 @@ long lzw_compress(const void *src_, int size, void *dst_)
 			*dst++ = sym&0xff; // set symbol
 
 			if(left > symsize+1) // create new symbol
-				sym_add_and_index( src, symsize+1);
+				lastsym = sym_add_and_index(src, symsize+1);
 			
 			src += symsize; // advance src
 			left -= symsize;
@@ -175,7 +187,8 @@ long lzw_decompress(const void *src_, void *dst_)
 {
 	unsigned char *src = (unsigned char *)src_;
 	unsigned char *dst = (unsigned char *)dst_;
-	int previtem = -1; // 0-255 = raw byte, 256+ = symbol
+	unsigned char *prevdst = 0;
+	int prevsize = -1;
 	int item;
 
 	sym_init();
@@ -195,16 +208,13 @@ long lzw_decompress(const void *src_, void *dst_)
 			if(item == 0x1ff) // EOF symbol
 				return (dst-(unsigned char *)dst_);
 
-			if(previtem != -1) // this one could be removed
-			{
-				// the previous item can 
-				int s = sym_add( sym_data( previtem), sym_size( previtem));
-				sym_append(s, sym_data( item)[0]);
-			}
+			if(prevdst) // this one could be removed
+				sym_add(prevdst, prevsize+1);
 				
-			memcpy(dst, sym_data( item), sym_size( item));
-			dst += sym_size( item);
-			previtem = item;
+			memcpy(dst, sym_data(item), sym_size(item));
+			prevdst = dst;
+			prevsize = sym_size(item);
+			dst += sym_size(item);
 		}
 
 	}

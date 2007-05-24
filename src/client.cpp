@@ -5,6 +5,7 @@
 #include <baselib/stream/file.h>
 
 #include <string.h>
+#include <stdarg.h>
 #include <math.h>
 #include "interface.h"
 
@@ -93,8 +94,11 @@ void inp_update()
 // --- input snapping ---
 static int input_data[MAX_INPUT_SIZE];
 static int input_data_size;
+static int input_is_changed = 1;
 void snap_input(void *data, int size)
 {
+	if(input_data_size != size || memcmp(input_data, data, size))
+		input_is_changed = 1;
 	mem_copy(input_data, data, size);
 	input_data_size = size;
 }
@@ -167,6 +171,103 @@ float client_frametime()
 	return frametime;
 }
 
+void unpack(const char *src, const char *fmt, ...)
+{
+}
+
+/*int modc_onmsg(int msg)
+{
+	msg_get("iis")
+}*/
+
+/*
+	i = int (int i)
+	s = string (const char *str)
+	r = raw data (int size, void *data)
+*/
+
+/*
+class packet2
+{
+private:
+	// packet data
+	struct header
+	{
+		unsigned msg;
+		unsigned ack;
+		unsigned seq;
+	};
+	
+	unsigned char packet_data[MAX_PACKET_SIZE];
+	unsigned char *current;
+	
+	enum
+	{
+		MAX_PACKET_SIZE = 1024,
+	};
+	
+public:
+	packet2()
+	{
+		current = packet_data;
+		current += sizeof(header);
+	}
+
+	int pack(char *dst, const char *fmt, ...)
+	{
+		va_list arg_list;
+		va_start(arg_list, fmt);
+		while(*fmt)
+		{
+			if(*fmt == 's')
+			{
+				// pack string
+				const char *s = va_arg(arg_list, const char*);
+				*dst++ = 2;
+				while(*s)
+				{
+					*dst = *s;
+					dst++;
+					s++;
+				}
+				*dst = 0; // null terminate
+				dst++;
+				fmt++;
+			}
+			else if(*fmt == 'i')
+			{
+				// pack int
+				int i = va_arg(arg_list, int);
+				*dst++ = 1;
+				*dst++ = (i>>24)&0xff;
+				*dst++ = (i>>16)&0xff;
+				*dst++ = (i>>8)&0xff;
+				*dst++ = i&0xff;
+				fmt++;
+			}
+			else
+			{
+				dbg_break(); // error
+				break;
+			}
+		}
+		va_end(arg_list);	
+	}	
+};
+*/
+/*
+int msg_get(const char *fmt)
+{
+	
+}
+
+int client_msg_send(int msg, const char *fmt, ...)
+
+int server_msg_send(int msg, const char *fmt, ...)
+{
+
+}*/
+
 // --- client ---
 class client
 {
@@ -221,12 +322,21 @@ public:
 	{
 		recived_snapshots = 0;
 		
+		/*
+		pack(NETMSG_CLIENT_CONNECT, "sssss",
+			TEEWARS_NETVERSION,
+			name,
+			"no clan",
+			"password",
+			"myskin");
+		*/
+		
 		packet p(NETMSG_CLIENT_CONNECT);
-		p.write_str(TEEWARS_NETVERSION, 32); // payload
-		p.write_str(name,MAX_NAME_LENGTH);
-		p.write_str("no clan", MAX_CLANNAME_LENGTH);
-		p.write_str("password", 32);
-		p.write_str("myskin", 32);
+		p.write_str(TEEWARS_NETVERSION); // payload
+		p.write_str(name);
+		p.write_str("no clan");
+		p.write_str("password");
+		p.write_str("myskin");
 		send_packet(&p);
 	}
 
@@ -238,8 +348,11 @@ public:
 
 	void send_error(const char *error)
 	{
+		/*
+			pack(NETMSG_CLIENT_ERROR, "s", error);
+		*/
 		packet p(NETMSG_CLIENT_ERROR);
-		p.write_str(error, 128);
+		p.write_str(error);
 		send_packet(&p);
 		//send_packet(&p);
 		//send_packet(&p);
@@ -247,8 +360,10 @@ public:
 
 	void send_input()
 	{
+		/*
+			pack(NETMSG_CLIENT_ERROR, "s", error);
+		*/
 		packet p(NETMSG_CLIENT_INPUT);
-		
 		p.write_int(input_data_size);
 		for(int i = 0; i < input_data_size/4; i++)
 			p.write_int(input_data[i]);
@@ -365,7 +480,7 @@ public:
 		int64 inputs_per_second = 50;
 		int64 time_per_input = time_freq()/inputs_per_second;
 		int64 game_starttime = time_get();
-		int64 lastinput = game_starttime;
+		int64 last_input = game_starttime;
 		
 		int64 reporttime = time_get();
 		int64 reportinterval = time_freq()*1;
@@ -377,12 +492,16 @@ public:
 		{	
 			frames++;
 			int64 frame_start_time = time_get();
-			
-			if(time_get()-lastinput > time_per_input)
+
+			// send input
+			if(get_state() == STATE_ONLINE)
 			{
-				if(get_state() == STATE_ONLINE)
+				if(input_is_changed || time_get() > last_input+time_freq())
+				{
 					send_input();
-				lastinput += time_per_input;
+					input_is_changed = 0;
+					last_input = time_get();
+				}
 			}
 			
 			// update input
@@ -449,8 +568,8 @@ public:
 	{
 		if(p->msg() == NETMSG_SERVER_ACCEPT)
 		{
-			char map[32];
-			p->read_str(map, 32);
+			const char *map;
+			map = p->read_str();
 			
 			if(p->is_good())
 			{
@@ -482,7 +601,8 @@ public:
 			{
 				if(snapshot_part == part)
 				{
-					p->read_raw((char*)snapshots[SNAP_INCOMMING] + part*MAX_SNAPSHOT_PACKSIZE, part_size);
+					const char *d = p->read_raw(part_size);
+					mem_copy((char*)snapshots[SNAP_INCOMMING] + part*MAX_SNAPSHOT_PACKSIZE, d, part_size);
 					snapshot_part++;
 				
 					if(snapshot_part == num_parts)
@@ -495,13 +615,6 @@ public:
 						lzw_decompress(snapshots[SNAP_INCOMMING], snapshots[SNAP_CURRENT]);
 						
 						// apply snapshot, cycle pointers
-						/*
-						snapshot *tmp = snapshots[SNAP_PREV];
-						snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
-						snapshots[SNAP_CURRENT] = snapshots[SNAP_INCOMMING];
-						snapshots[SNAP_INCOMMING] = tmp;
-						*/
-						
 						recived_snapshots++;
 						snapshot_start_time = time_get();
 						
