@@ -83,16 +83,16 @@ public:
 				{
 					if(channels[c].data->channels == 1)
 					{
-						left += (1.0f-(channels[c].pan+1.0f)*0.5f) * channels[c].vol * channels[c].data->data[channels[c].tick];
-						right += (channels[c].pan+1.0f)*0.5f * channels[c].vol * channels[c].data->data[channels[c].tick];
+						left += (int)((1.0f-(channels[c].pan+1.0f)*0.5f) * channels[c].vol * channels[c].data->data[channels[c].tick]);
+						right += (int)((channels[c].pan+1.0f)*0.5f * channels[c].vol * channels[c].data->data[channels[c].tick]);
 						channels[c].tick++;
 					}
 					else
 					{
 						float pl = channels[c].pan<0.0f?-channels[c].pan:1.0f;
 						float pr = channels[c].pan>0.0f?1.0f-channels[c].pan:1.0f;
-						left += pl*channels[c].vol * channels[c].data->data[channels[c].tick];
-						right += pr*channels[c].vol * channels[c].data->data[channels[c].tick + 1];
+						left += (int)(pl*channels[c].vol * channels[c].data->data[channels[c].tick]);
+						right += (int)(pr*channels[c].vol * channels[c].data->data[channels[c].tick + 1]);
 						channels[c].tick += 2;
 					}
 				

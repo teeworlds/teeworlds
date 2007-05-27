@@ -163,7 +163,7 @@ void sound_vol_pan(const vec2& p, float *vol, float *pan)
 	*pan = 0.0f;
 	*vol = 1.0f;
 
-	if(abs(player_to_ev.x) > stereo_separation_deadzone)
+	if(fabs(player_to_ev.x) > stereo_separation_deadzone)
 	{
 		*pan = stereo_separation * (player_to_ev.x - sign(player_to_ev.x)*stereo_separation_deadzone);
 		if(*pan < -1.0f) *pan = -1.0f;
@@ -186,20 +186,21 @@ static void cell_select_ex(int cx, int cy, float x, float y, float w, float h)
 	gfx_quads_setsubset(x/(float)cx,y/(float)cy,(x+w)/(float)cx,(y+h)/(float)cy);
 }
 
+/*
 static void cell_select_ex_flip_x(int cx, int cy, float x, float y, float w, float h)
 {
 	gfx_quads_setsubset((x+w)/(float)cx,y/(float)cy,x /(float)cx,(y+h)/(float)cy);
-}
+}*/
 
 static void cell_select_ex_flip_y(int cx, int cy, float x, float y, float w, float h)
 {
 	gfx_quads_setsubset(x/(float)cx,(y+h)/(float)cy,(x+w)/(float)cx,y/(float)cy);
 }
-
+/*
 static void cell_select(int x, int y, int w, int h)
 {
 	gfx_quads_setsubset(x/16.0f,y/16.0f,(x+w)/16.0f,(y+h)/16.0f);
-}
+}*/
 
 inline void cell_select_flip_x(int x, int y, int w, int h)
 {
@@ -309,7 +310,7 @@ public:
 		amount = max(1,amount);
 		for (int j = 0; j < amount; j++)
 		{
-			float a = j/(float)amount-0.5f;
+			//float a = j/(float)amount-0.5f;
 			item *i = create_i();
 			if (i)
 			{
@@ -1178,8 +1179,8 @@ void modc_newsnapshot()
 			ev_sound *ev = (ev_sound *)data;
 			vec2 p(ev->x, ev->y);
 			int sound = (ev->sound & SOUND_MASK);
-			bool bstartloop = (ev->sound & SOUND_LOOPFLAG_STARTLOOP) != 0;
-			bool bstoploop = (ev->sound & SOUND_LOOPFLAG_STOPLOOP) != 0;
+			//bool bstartloop = (ev->sound & SOUND_LOOPFLAG_STARTLOOP) != 0;
+			//bool bstoploop = (ev->sound & SOUND_LOOPFLAG_STOPLOOP) != 0;
 			float vol, pan;
 			sound_vol_pan(p, &vol, &pan);
 
@@ -1469,7 +1470,7 @@ static void render_player(obj_player *prev, obj_player *player)
 				cell_select_ex(numcellsx, numcellsy, modifiertexcoord[MODIFIER_TYPE_NINJA].x, modifiertexcoord[MODIFIER_TYPE_NINJA].y, modifiertexcoord[MODIFIER_TYPE_NINJA].w, modifiertexcoord[MODIFIER_TYPE_NINJA].h);
 
 			angle = getninjaangle(direction, prev, player);//getmeleeangle(direction, prev, player);
-			vec2 ninjadir = get_direction(angle * 256.0f);
+			vec2 ninjadir = get_direction((int)(angle * 256.0f)); // TODO: ugly, fix this
 			gfx_quads_setrotation(angle);
 			vec2 p = position + vec2(0,modifierrenderparams[MODIFIER_TYPE_NINJA].offsety)+ ninjadir * modifierrenderparams[MODIFIER_TYPE_NINJA].offsetx;
 			// if attack is active hold it differently and draw speedlines behind us?
@@ -1500,7 +1501,7 @@ static void render_player(obj_player *prev, obj_player *player)
 				//angle = getmeleeangle(direction, prev, player);
 				angle = gethammereangle(direction, prev, player);
 				gfx_quads_setrotation(angle);
-				dir = get_direction(angle * 256.0f);
+				dir = get_direction((int)(angle * 256.0f)); // TODO: ugly, fix this
 			}
 			else
 			{

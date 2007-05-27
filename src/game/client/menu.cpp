@@ -157,7 +157,7 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 
 	if (ui_active_item() == id)
 	{
-		char c = keys::last_char();
+		int c = keys::last_char();
 		int k = keys::last_key();
 		int len = strlen(str);
 	
@@ -343,7 +343,7 @@ void refresh_list(server_list *list)
                 read_int(data, &signature);
     
                 // check signature
-                if (signature == 'TWSL')
+                if(signature == 'TWSL')
                 {
                     read_int(data + 4, &master_server_version);
                     read_int(data + 8, &server_count);
