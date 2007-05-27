@@ -6,6 +6,7 @@
 
 #include <string.h>
 #include <stdarg.h>
+#include <stdlib.h>
 #include <math.h>
 #include <engine/interface.h>
 
@@ -331,7 +332,7 @@ public:
 		*/
 		
 		packet p(NETMSG_CLIENT_CONNECT);
-		p.write_str(TEEWARS_NETVERSION); // payload
+		p.write_str(TEEWARS_VERSION); // payload
 		p.write_str(name);
 		p.write_str("no clan");
 		p.write_str("password");
@@ -388,7 +389,7 @@ public:
 	
 	bool load_data()
 	{
-		debug_font = gfx_load_texture_tga("data/debug_font.tga");
+		debug_font = gfx_load_texture("data/debug_font.png");
 		return true;
 	}
 	
@@ -420,8 +421,8 @@ public:
 			
 			if (!inited)
 			{
-				tee_texture = gfx_load_texture_tga("data/gui_tee.tga");
-				connecting_texture = gfx_load_texture_tga("data/gui/connecting.tga");
+				tee_texture = gfx_load_texture("data/gui_tee.png");
+				connecting_texture = gfx_load_texture("data/gui/connecting.png");
 					
 				inited = true;
 			}
@@ -565,7 +566,11 @@ public:
 
 	void process_packet(packet *p)
 	{
-		if(p->msg() == NETMSG_SERVER_ACCEPT)
+		if(p->version() != TEEWARS_NETVERSION)
+		{
+			error("wrong version");
+		}
+		else if(p->msg() == NETMSG_SERVER_ACCEPT)
 		{
 			const char *map;
 			map = p->read_str();

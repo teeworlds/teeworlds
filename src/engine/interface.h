@@ -15,6 +15,11 @@ enum
 	SERVER_CLIENT_TIMEOUT=5,
 	SNAP_CURRENT=0,
 	SNAP_PREV=1,
+	
+	IMG_RGB=0,
+	IMG_RGBA,
+	IMG_BGR,
+	IMG_BGRA,
 };
 
 struct snap_item
@@ -33,10 +38,12 @@ public:
 struct image_info
 {
 	int width, height;
+	int format;
 	void *data;
 };
 
 int gfx_load_tga(image_info *img, const char *filename);
+int gfx_load_png(image_info *img, const char *filename);
 
 
 /*
@@ -50,8 +57,8 @@ void gfx_swap(); // NOT EXPOSED
 
 // textures
 /*
-	Function: gfx_load_texture_tga
-		Loads a TGA from file.
+	Function: gfx_load_texture
+		Loads a texture from a file. TGA and PNG supported.
 	
 	Arguments:
 		filename - Null terminated string to the file to load.
@@ -62,7 +69,7 @@ void gfx_swap(); // NOT EXPOSED
 	See Also:
 		<gfx_unload_texture>
 */
-int gfx_load_texture_tga(const char *filename);
+int gfx_load_texture(const char *filename);
 
 /*
 	Function: gfx_load_texture_raw
@@ -83,7 +90,7 @@ int gfx_load_texture_tga(const char *filename);
 	See Also:
 		<gfx_unload_texture>
 */
-int gfx_load_texture_raw(int w, int h, const void *data);
+int gfx_load_texture_raw(int w, int h, int format, const void *data);
 
 /*
 	Function: gfx_texture_set

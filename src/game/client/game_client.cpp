@@ -653,12 +653,12 @@ static particle_system temp_system;
 void modc_init()
 {
 	// load textures
-	texture_weapon = gfx_load_texture_tga("data/tileset_weapons.tga");
-	texture_game = gfx_load_texture_tga("data/game_main.tga");
-	texture_char_default = gfx_load_texture_tga("data/char_teefault.tga");
-	texture_sun = gfx_load_texture_tga("data/sun.tga");
-	texture_particles = gfx_load_texture_tga("data/tileset_particles.tga");
-	font_texture = gfx_load_texture_tga("data/debug_font.tga");
+	texture_weapon = gfx_load_texture("data/tileset_weapons.png");
+	texture_game = gfx_load_texture("data/game_main.png");
+	texture_char_default = gfx_load_texture("data/char_teefault.png");
+	texture_sun = gfx_load_texture("data/sun.png");
+	texture_particles = gfx_load_texture("data/tileset_particles.png");
+	font_texture = gfx_load_texture("data/debug_font.png");
 
 	
 	// load sounds

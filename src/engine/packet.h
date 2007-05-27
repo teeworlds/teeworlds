@@ -1,9 +1,14 @@
 #include <baselib/stream/file.h>
 #include <baselib/network.h>
 
+#include "versions.h"
+
+#define MACRO_MAKEINT(a,b,c,d) ((a<<24)|(b<<16)|(c<<8)|d)
+
 // TODO: this is not KISS
 class packet
 {
+	friend class connection;
 protected:
 	enum
 	{
@@ -13,6 +18,11 @@ protected:
 	// packet data
 	struct header
 	{
+		unsigned id;
+		unsigned version;
+		unsigned size_and_flags;
+		unsigned crc;
+		
 		unsigned msg;
 		unsigned ack;
 		unsigned seq;
@@ -60,10 +70,20 @@ protected:
 	}
 	
 public:
+
+	enum
+	{
+		FLAG_VITAL=1,
+		FLAG_RESEND=2
+	};
+
 	packet(unsigned msg=0)
 	{
 		current = packet_data;
 		current += sizeof(header);
+
+		((header*)packet_data)->id = MACRO_MAKEINT('K','M','A',1);
+		((header*)packet_data)->version = TEEWARS_NETVERSION;
 		((header*)packet_data)->msg = msg;
 	}
 	
@@ -128,14 +148,99 @@ public:
 	// TODO: impelement this
 	bool is_good() const { return true; }
 
+	unsigned version() const { return ((header*)packet_data)->version; }
 	unsigned msg() const { return ((header*)packet_data)->msg; }
 	unsigned seq() const { return ((header*)packet_data)->seq; }
 	unsigned ack() const { return ((header*)packet_data)->ack; }
+	unsigned flags() const { return (((header*)packet_data)->size_and_flags) & 0xffff; }
 	
 	// access functions to get the size and data
 	int size() const { return (int)(current-(unsigned char*)packet_data); }
 	int max_size() const { return MAX_PACKET_SIZE; }
 	void *data() { return packet_data; }
+};
+
+// TODO: remove all the allocations from this class
+class ring_buffer
+{
+	struct item
+	{
+		item *next;
+		item *prev;
+		int size;
+	};
+	
+	item *first;
+	item *last;
+	
+	unsigned buffer_size;
+public:
+	ring_buffer()
+	{
+		first = 0;
+		last = 0;
+		buffer_size = 0;
+	}
+	
+	~ring_buffer()
+	{
+		reset();
+	}
+	
+	void reset()
+	{
+		// clear all
+		while(peek_data())
+			next();		
+	}
+	
+	void *alloc(int size)
+	{
+		item *i = (item*)mem_alloc(sizeof(item)+size, 1);
+		i->size = size;
+		
+		i->prev = last;
+		i->next = 0;
+		if(last)
+			last->next = i;
+		else
+			first = i;
+		last = i;
+		
+		buffer_size += size;
+		return (void*)(i+1);
+	}
+	
+	unsigned peek_size()
+	{
+		if(!first)
+			return 0;
+		return first->size;
+	}
+
+	void *peek_data()
+	{
+		if(!first)
+			return 0;
+		return (void*)(first+1);
+	}
+	
+	void next()
+	{
+		if(first)
+		{
+			item *next = first->next;
+			buffer_size += first->size;
+			mem_free(first);
+			first = next;
+			if(first)
+				first->prev = 0;
+			else
+				last = 0;
+		}
+	}
+	
+	unsigned size() { return buffer_size; }
 };
 
 //
@@ -145,10 +250,51 @@ class connection
 	baselib::netaddr4 addr;
 	unsigned seq;
 	unsigned ack;
-	unsigned last_ack;
 	
 	unsigned counter_sent_bytes;
 	unsigned counter_recv_bytes;
+	
+	int needs_resend;
+	
+	/*
+	struct resend_packet
+	{
+		resend_packet *next;
+		unsigned seq;
+		unsigned msg;
+		unsigned size;
+		char data[1];
+	};
+	
+	resend_packet *first_resend;
+	resend_packet *last_resend;
+	*/
+	
+	ring_buffer resend_buffer;
+
+	void save_for_resend(packet *p)
+	{
+		/*
+		packet *n = (packet *)resend_buffer.alloc(p->size());
+		mem_copy(n->data(), p->data(), p->size());
+		n->current = (unsigned char*)n->data() + p->size();
+		*/
+	}
+	
+	void remove_resends(unsigned ack)
+	{
+		/*
+		while(1)
+		{
+			packet *p = (packet *)resend_buffer.peek_data();
+			if(!p)
+				break;
+			
+			if(p->seq() > ack)
+				break;
+			resend_buffer.next();
+		}*/
+	}
 	
 public:
 	void counter_reset()
@@ -165,24 +311,28 @@ public:
 
 	void init(baselib::socket_udp4 *socket, const baselib::netaddr4 *addr)
 	{
+		resend_buffer.reset();
+		
 		this->addr = *addr;
 		this->socket = socket;
-		last_ack = 0;
 		ack = 0;
 		seq = 0;
+		needs_resend = 0;
 		counter_reset();
 	}
 	
 	void send(packet *p)
 	{
-		if(p->msg()&(31<<1))
-		{
-			// vital packet
+		if(p->flags()&packet::FLAG_VITAL)
 			seq++;
-			// TODO: save packet, we might need to retransmit
-		}
 		
 		p->set_header(ack, seq);
+
+		if(p->flags()&packet::FLAG_VITAL)
+			save_for_resend(p);
+
+		// TODO: request resend if needed, use needs_resend variable
+		
 		socket->send(&address(), p->data(), p->size());
 		counter_sent_bytes += p->size();
 	}
@@ -191,7 +341,7 @@ public:
 	{
 		counter_recv_bytes += p->size();
 		
-		if(p->msg()&(31<<1))
+		if(p->flags()&packet::FLAG_VITAL)
 		{
 			if(p->seq() == ack+1)
 			{
@@ -202,8 +352,8 @@ public:
 			}
 			else if(p->seq() > ack)
 			{
-				// TODO: request resend
 				// packet loss
+				needs_resend = 1;
 				dbg_msg("network/connection", "packet loss! seq=%x ack=%x+1", p->seq(), ack);
 				return p;
 			}
@@ -214,9 +364,14 @@ public:
 			}
 		}
 		
-		if(last_ack != p->ack())
+		// remove resends
+		remove_resends(p->ack());
+		
+		// handle resends
+		if(p->flags()&packet::FLAG_RESEND)
 		{
-			// TODO: remove acked packets
+			// peer as requested a resend of all non acked packages.
+			
 		}
 		
 		return p;		
@@ -233,7 +388,6 @@ public:
 
 enum
 {
-	NETMSG_VITAL=0x80000000,
 	NETMSG_CONTEXT_CONNECT=0x00010000,
 	NETMSG_CONTEXT_GAME=0x00020000,
 	NETMSG_CONTEXT_GLOBAL=0x00040000,
@@ -253,7 +407,7 @@ enum
 		// str32 mapname
 
 	
-	NETMSG_CLIENT_DONE=NETMSG_VITAL|NETMSG_CONTEXT_CONNECT|3,
+	NETMSG_CLIENT_DONE=NETMSG_CONTEXT_CONNECT|3,
 		// nothing
 	
 	// game phase
@@ -266,10 +420,10 @@ enum
 	NETMSG_CLIENT_INPUT = NETMSG_CONTEXT_GAME|1, // client will spam these
 		// int input[MAX_INPUTS]
 	
-	NETMSG_SERVER_EVENT = NETMSG_CONTEXT_GAME|NETMSG_VITAL|2,
-	NETMSG_CLIENT_EVENT = NETMSG_CONTEXT_GAME|NETMSG_VITAL|2,
+	NETMSG_SERVER_EVENT = NETMSG_CONTEXT_GAME|2,
+	NETMSG_CLIENT_EVENT = NETMSG_CONTEXT_GAME|2,
 
-	NETMSG_CLIENT_CHECKALIVE = NETMSG_CONTEXT_GAME|NETMSG_VITAL|3, // check if client is alive
+	NETMSG_CLIENT_CHECKALIVE = NETMSG_CONTEXT_GAME|3, // check if client is alive
 	
 	NETMSG_CLIENT_ERROR=0x0fffffff,
 		// str128 reason

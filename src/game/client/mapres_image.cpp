@@ -24,7 +24,7 @@ int img_init()
 	{
 		mapres_image *img = (mapres_image *)map_get_item(start+i, 0, 0);
 		void *data = map_get_data(img->image_data);
-		map_textures[i] = gfx_load_texture_raw(img->width, img->height, data);
+		map_textures[i] = gfx_load_texture_raw(img->width, img->height, IMG_BGRA, data);
 	}
 	
 	return count;

@@ -4,6 +4,11 @@
 
 #include <engine/interface.h>
 
+#include "pnglite/pnglite.h"
+
+#include <string.h>
+
+
 using namespace baselib;
 
 static opengl::context context;
@@ -150,7 +155,7 @@ bool gfx_init(bool fullscreen)
 	textures[MAX_TEXTURES-1].next = -1;
 	
 	// create null texture, will get id=0
-	gfx_load_texture_raw(4,4,null_texture_data);
+	gfx_load_texture_raw(4,4,IMG_RGBA,null_texture_data);
 	
 	return true;
 }
@@ -175,7 +180,7 @@ void gfx_blend_additive()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 }
 
-int gfx_load_texture_raw(int w, int h, const void *data)
+int gfx_load_texture_raw(int w, int h, int format, const void *data)
 {
 	// grab texture
 	int tex = first_free_texture;
@@ -185,20 +190,51 @@ int gfx_load_texture_raw(int w, int h, const void *data)
 	// set data and return
 	// TODO: should be RGBA, not BGRA
 	dbg_msg("gfx", "%d = %dx%d", tex, w, h);
-	textures[tex].tex.data2d(w, h, GL_RGBA, GL_BGRA, GL_UNSIGNED_BYTE, data);
+	if(format == IMG_RGB)
+		textures[tex].tex.data2d(w, h, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, data);
+	else if(format == IMG_RGBA)
+		textures[tex].tex.data2d(w, h, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	else if(format == IMG_BGR)
+		textures[tex].tex.data2d(w, h, GL_RGB, GL_BGR, GL_UNSIGNED_BYTE, data);
+	else if(format == IMG_BGRA)
+		textures[tex].tex.data2d(w, h, GL_RGBA, GL_BGRA, GL_UNSIGNED_BYTE, data);
 	return tex;
 }
 
 // simple uncompressed RGBA loaders
-int gfx_load_texture_tga(const char *filename)
+int gfx_load_texture(const char *filename)
 {
-	image_info img;
-	
-	if(gfx_load_tga(&img, filename))
+	int l = strlen(filename);
+	if(l < 3)
+		return 0;
+
+	if(	(filename[l-3] == 't' || filename[l-3] == 'T') &&
+		(filename[l-2] == 'g' || filename[l-2] == 'G') &&
+		(filename[l-1] == 'a' || filename[l-1] == 'A'))
 	{
-		int id = gfx_load_texture_raw(img.width, img.height, img.data);
-		mem_free(img.data);
-		return id;
+		image_info img;
+		if(gfx_load_tga(&img, filename))
+		{
+			int id = gfx_load_texture_raw(img.width, img.height, img.format, img.data);
+			mem_free(img.data);
+			return id;
+		}
+		return 0;
+	}
+
+	if(	(filename[l-3] == 'p' || filename[l-3] == 'P') &&
+		(filename[l-2] == 'n' || filename[l-2] == 'N') &&
+		(filename[l-1] == 'g' || filename[l-1] == 'G'))
+	{
+		image_info img;
+		if(gfx_load_png(&img, filename))
+		{
+			int id = gfx_load_texture_raw(img.width, img.height, img.format, img.data);
+			mem_free(img.data);
+			return id;
+		}
+		
+		return 0;
 	}
 	
 	return 0;
@@ -240,6 +276,7 @@ int gfx_load_tga(image_info *img, const char *filename)
 	// read data
 	int data_size = img->width*img->height*4;
 	img->data = mem_alloc(data_size, 1);
+	img->format = IMG_BGRA;
 
 	if (flipy)
 	{
@@ -252,6 +289,40 @@ int gfx_load_tga(image_info *img, const char *filename)
 		file.read(img->data, data_size);
 	file.close();
 
+	return 1;
+}
+
+
+
+int gfx_load_png(image_info *img, const char *filename)
+{
+	// open file for reading
+	png_init(0,0);
+
+	png_t png;
+	if(png_open_file(&png, filename) != PNG_NO_ERROR)
+	{
+		dbg_msg("game/png", "failed to open file. filename='%s'", filename);
+		return 0;
+	}
+	
+	if(png.depth != 8 || (png.color_type != PNG_TRUECOLOR && png.color_type != PNG_TRUECOLOR_ALPHA))
+	{
+		dbg_msg("game/png", "invalid format. filename='%s'", filename);
+		png_close_file(&png);
+	}
+		
+	unsigned char *buffer = (unsigned char *)mem_alloc(png.width * png.height * png.bpp, 1);
+	png_get_data(&png, buffer);
+	png_close_file(&png);
+	
+	img->width = png.width;
+	img->height = png.height;
+	if(png.color_type == PNG_TRUECOLOR)
+		img->format = IMG_RGB;
+	else if(png.color_type == PNG_TRUECOLOR_ALPHA)
+		img->format = IMG_RGBA;
+	img->data = buffer;
 	return 1;
 }
 

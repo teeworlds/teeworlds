@@ -45,11 +45,10 @@ settings.cc.debug = 1
 settings.cc.optimize = 0
 settings.cc.flags = "-Wall"
 settings.cc.includes:add("src")
---settings.cc.includes:add("src/baselib/include")
+settings.cc.includes:add("../baselib/src/external/zlib")
 
---baselib = Compile(settings, Collect("src/baselib/src/*.cpp", "src/baselib/src/*.c"))
 engine = Compile(settings, Collect("src/engine/*.cpp"))
-client = Compile(settings, Collect("src/engine/client/*.cpp"))
+client = Compile(settings, Collect("src/engine/client/*.cpp", "src/engine/client/pnglite/*.c"))
 server = Compile(settings, Collect("src/engine/server/*.cpp"))
 game_shared = Compile(settings, Collect("src/game/*.cpp"))
 game_client = Compile(settings, Collect("src/game/client/*.cpp"))

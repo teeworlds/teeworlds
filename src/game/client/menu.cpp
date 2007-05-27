@@ -216,7 +216,7 @@ int do_scroll_bar(void *id, float x, float y, float height, int steps, int last_
 				float pos = ui_mouse_y() - y - 8;
 				float perc = pos / (height - 16);
 
-				r = (steps + 1) * perc;
+				r = (int)((steps + 1) * perc);
 				if (r < 0)
 					r = 0;
 				else if (r > steps)
@@ -327,7 +327,6 @@ void refresh_list(server_list *list)
         {
             char data[256];
             int total_received = 0;
-            int pointer = 0;
             int received;
 
             int master_server_version = -1;
@@ -352,7 +351,6 @@ void refresh_list(server_list *list)
                     // TODO: handle master server version O.o
                         
                     const int server_info_size = 212;
-                    const int wanted_data_count = server_count * server_info_size;
 
                     list->active_count = 0;
     
@@ -489,42 +487,42 @@ void modmenu_init()
 	keys::enable_char_cache();
 	keys::enable_key_cache();
 
-    current_font->font_texture = gfx_load_texture_tga("data/big_font.tga");
-	background_texture = gfx_load_texture_tga("data/gui_bg.tga");
-    not_empty_item_texture = gfx_load_texture_tga("data/gui/game_list_item_not_empty.tga");
-    empty_item_texture = gfx_load_texture_tga("data/gui/game_list_item_empty.tga");
-    active_item_texture = gfx_load_texture_tga("data/gui/game_list_item_active.tga");
-	selected_item_texture = gfx_load_texture_tga("data/gui/game_list_item_selected.tga");
+    current_font->font_texture = gfx_load_texture("data/big_font.png");
+	background_texture = gfx_load_texture("data/gui_bg.png");
+    not_empty_item_texture = gfx_load_texture("data/gui/game_list_item_not_empty.png");
+    empty_item_texture = gfx_load_texture("data/gui/game_list_item_empty.png");
+    active_item_texture = gfx_load_texture("data/gui/game_list_item_active.png");
+	selected_item_texture = gfx_load_texture("data/gui/game_list_item_selected.png");
 
-	join_button_texture = gfx_load_texture_tga("data/gui/join_button.tga");
-	join_button_hot_texture = gfx_load_texture_tga("data/gui/join_button_hot.tga");
-	join_button_active_texture = gfx_load_texture_tga("data/gui/join_button_active.tga");
-	join_button_grey_texture = gfx_load_texture_tga("data/gui/join_button_greyed.tga");
+	join_button_texture = gfx_load_texture("data/gui/join_button.png");
+	join_button_hot_texture = gfx_load_texture("data/gui/join_button_hot.png");
+	join_button_active_texture = gfx_load_texture("data/gui/join_button_active.png");
+	join_button_grey_texture = gfx_load_texture("data/gui/join_button_greyed.png");
 
 
-//    button_not_hilighted_texture = gfx_load_texture_tga("data/gui/game_list_join_button.tga");
-//	button_hilighted_texture = gfx_load_texture_tga("data/gui/button_hilighted.tga");
-//	button_active_texture = gfx_load_texture_tga("data/gui/button_active.tga");
+//    button_not_hilighted_texture = gfx_load_texture("data/gui/game_list_join_button.png");
+//	button_hilighted_texture = gfx_load_texture("data/gui/button_hilighted.png");
+//	button_active_texture = gfx_load_texture("data/gui/button_active.png");
 
-    quit_button_texture = gfx_load_texture_tga("data/gui/quit_button.tga");
-	quit_button_hot_texture = gfx_load_texture_tga("data/gui/quit_button_hot.tga");
-	quit_button_active_texture = gfx_load_texture_tga("data/gui/quit_button_active.tga");
+    quit_button_texture = gfx_load_texture("data/gui/quit_button.png");
+	quit_button_hot_texture = gfx_load_texture("data/gui/quit_button_hot.png");
+	quit_button_active_texture = gfx_load_texture("data/gui/quit_button_active.png");
 
-    up_button_texture = gfx_load_texture_tga("data/gui/scroll_arrow_up.tga");
-	up_button_active_texture = gfx_load_texture_tga("data/gui/scroll_arrow_up_active.tga");
+    up_button_texture = gfx_load_texture("data/gui/scroll_arrow_up.png");
+	up_button_active_texture = gfx_load_texture("data/gui/scroll_arrow_up_active.png");
 
-    down_button_texture = gfx_load_texture_tga("data/gui/scroll_arrow_down.tga");
-	down_button_active_texture = gfx_load_texture_tga("data/gui/scroll_arrow_down_active.tga");
+    down_button_texture = gfx_load_texture("data/gui/scroll_arrow_down.png");
+	down_button_active_texture = gfx_load_texture("data/gui/scroll_arrow_down_active.png");
 
-    teewars_banner_texture = gfx_load_texture_tga("data/gui_logo.tga");
-    scroll_indicator_texture = gfx_load_texture_tga("data/gui/scroll_drag.tga");
-	connect_localhost_texture = gfx_load_texture_tga("data/gui/game_list_connect_localhost.tga");
+    teewars_banner_texture = gfx_load_texture("data/gui_logo.png");
+    scroll_indicator_texture = gfx_load_texture("data/gui/scroll_drag.png");
+	connect_localhost_texture = gfx_load_texture("data/gui/game_list_connect_localhost.png");
 
-	refresh_button_texture = gfx_load_texture_tga("data/gui/refresh_button.tga");
-	refresh_button_hot_texture = gfx_load_texture_tga("data/gui/refresh_button_hot.tga");
-	refresh_button_active_texture = gfx_load_texture_tga("data/gui/refresh_button_active.tga");
+	refresh_button_texture = gfx_load_texture("data/gui/refresh_button.png");
+	refresh_button_hot_texture = gfx_load_texture("data/gui/refresh_button_hot.png");
+	refresh_button_active_texture = gfx_load_texture("data/gui/refresh_button_active.png");
 
-	input_box_texture = gfx_load_texture_tga("data/gui/input_box.tga");
+	input_box_texture = gfx_load_texture("data/gui/input_box.png");
 
 	music_menu = snd_load_wav("data/audio/Music_Menu.wav");
 }
