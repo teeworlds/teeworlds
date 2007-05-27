@@ -19,6 +19,138 @@ using namespace baselib;
  MENU                                                  
 *********************************************************/
 
+enum gui_tileset_enum
+{
+	tileset_regular,
+	tileset_hot,
+	tileset_active,
+	tileset_inactive
+};
+
+enum gui_parts_enum
+{
+	invalid_part = 0,
+	button_big_begin,
+	button_big_mid,
+	button_big_end,
+	slider_big_arrow_left,
+	slider_big_horiz_begin,
+	slider_big_horiz_mid,
+	slider_big_horiz_end,
+	slider_big_arrow_up,
+	slider_big_vert_begin,
+	slider_big_handle_horiz,
+	slider_small_handle_horiz,
+	slider_small_handle_vert,
+	slider_big_handle_vert,
+	slider_huge_handle_vert,
+	radio_unchecked,
+	radio_checked,
+	slider_small_vert_end,
+	slider_small_vert_mid,
+	slider_small_vert_begin,
+	slider_small_horiz_end,
+	slider_small_arrow_right,
+	slider_small_arrow_up,
+	slider_small_arrow_down,
+	slider_small_arrow_left,
+	slider_small_horiz_mid,
+	slider_small_horiz_begin,
+	slider_huge_handle_horiz,
+	slider_big_vert_mid,
+	slider_big_vert_end,
+	slider_big_arrow_down,
+	slider_big_arrow_right,
+};
+
+struct gui_part
+{
+	int x, y;
+	int w, h;
+	bool stretch_x, stretch_y;
+};
+
+gui_part parts[] =
+{
+	{ 0, 0, 0, 0 }, // invalid_part
+	{ 0, 0, 16, 48 }, // button_big_begin 
+	{ 16, 0, 16, 48 }, // button_big_mid 
+	{ 32, 0, 16, 48 }, // button_big_end 
+	{ 0, 64, 16, 16 }, // slider_big_arrow_left 
+	{ 0, 48, 16, 16 }, // slider_big_horiz_begin 
+	{ 16, 48, 16, 16 }, // slider_big_horiz_mid 
+	{ 32, 48, 16, 16 }, // slider_big_horiz_end 
+	{ 16, 64, 16, 16 }, // slider_big_arrow_up 
+	{ 48, 48, 16, 16 }, // slider_big_vert_begin 
+	{ 64, 48, 16, 32 }, // slider_big_handle_horiz 
+	{ 80, 48, 16, 16 }, // slider_small_handle_horiz 
+	{ 96, 48, 16, 16 }, // slider_small_handle_vert 
+	{ 80, 64, 32, 16 }, // slider_big_handle_vert 
+	{ 64, 80, 48, 32 }, // slider_huge_handle_vert 
+	{ 64, 112, 32, 32 }, // radio_unchecked 
+	{ 96, 112, 32, 32 }, // radio_checked 
+	{ 48, 128, 16, 16 }, // slider_small_vert_end 
+	{ 48, 112, 16, 16 }, // slider_small_vert_mid 
+	{ 48, 96, 16, 16 }, // slider_small_vert_begin 
+	{ 32, 96, 16, 16 }, // slider_small_horiz_end 
+	{ 32, 112, 16, 16 }, // slider_small_arrow_right 
+	{ 16, 112, 16, 16 }, // slider_small_arrow_up 
+	{ 16, 128, 16, 16 }, // slider_small_arrow_down 
+	{ 0, 112, 16, 16 }, // slider_small_arrow_left 
+	{ 17, 96, 16, 16 }, // slider_small_horiz_mid 
+	{ 0, 96, 16, 16 }, // slider_small_horiz_begin 
+	{ 112, 64, 32, 48 }, // slider_huge_handle_horiz 
+	{ 48, 64, 16, 16 }, // slider_big_vert_mid 
+	{ 48, 80, 16, 16 }, // slider_big_vert_end 
+	{ 16, 80, 16, 16 }, // slider_big_arrow_down 
+	{ 32, 64, 16, 16 } // slider_big_arrow_right
+};
+
+
+int gui_tileset_texture;
+
+void draw_part(gui_parts_enum part, gui_tileset_enum tileset, float x, float y, float w, float h)
+{
+	const float tex_w = 512.0, tex_h = 512.0;
+
+	const gui_part p = parts[part];
+	const float start_x = p.x/tex_w, start_y = p.y/tex_h, f_w = p.w/tex_w, f_h = p.h/tex_h;
+
+	float ts_x, ts_y;
+
+	switch (tileset)
+	{
+		case tileset_regular:
+			ts_x = 0.0f; ts_y = 0.0f; break;
+		case tileset_hot:
+			ts_x = 0.375f; ts_y = 0.375f; break;
+		case tileset_active:
+			ts_x = 0.0f; ts_y = 0.375f; break;
+		case tileset_inactive:
+			ts_x = 0.375f; ts_y = 0.0f; break;
+		default:
+			dbg_msg("menu", "invalid tileset given to draw_part");
+	}
+	
+    gfx_blend_normal();
+    gfx_texture_set(gui_tileset_texture);
+    gfx_quads_begin();
+    gfx_quads_setcolor(1,1,1,1);
+	gfx_quads_setsubset(
+		ts_x+start_x, // startx
+		ts_y+start_y, // starty
+		ts_x+start_x+f_w, // endx
+		ts_y+start_y+f_h); // endy								
+    gfx_quads_drawTL(x,y,w,h);
+    gfx_quads_end();
+		
+}
+
+void draw_part(gui_parts_enum part, gui_tileset_enum tileset, float x, float y)
+{
+	draw_part(part, tileset, x, y, parts[part].w, parts[part].h);
+}
+
 struct pretty_font
 {
     char m_CharStartTable[256];
@@ -123,6 +255,52 @@ void draw_image_button(void *id, const char *text, int checked, float x, float y
 	ui_do_image(*(int *)id, x, y, w, h);
 }
 
+void draw_single_part_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
+{
+	gui_tileset_enum tileset;
+
+	if (ui_active_item() == id && ui_hot_item() == id)
+		tileset = tileset_active;
+	else if (ui_hot_item() == id)
+		tileset = tileset_hot;
+	else
+		tileset = tileset_regular;
+
+	draw_part((gui_parts_enum)(int)(int *)extra, tileset, x, y, w, h);
+}
+
+void draw_teewars_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
+{
+	gui_tileset_enum tileset;
+
+	if (ui_active_item() == id && ui_hot_item() == id)
+		tileset = tileset_active;
+	else if (ui_hot_item() == id)
+		tileset = tileset_hot;
+	else
+		tileset = tileset_regular;
+
+	gui_part begin_p = parts[button_big_begin];
+	gui_part mid_p = parts[button_big_mid];
+	gui_part end_p = parts[button_big_end];
+
+	float scale = h / begin_p.h;
+
+	float begin_w = scale * begin_p.w;
+	float end_w = scale * end_p.w;
+	float mid_w = w - begin_w - end_w;
+
+	float text_width = gfx_pretty_text_width(23.f, text);              
+
+	draw_part(button_big_begin, tileset, x, y, begin_w, h);
+	draw_part(button_big_mid, tileset, x + begin_w, y, mid_w, h);
+	draw_part(button_big_end, tileset, x + begin_w + mid_w, y, end_w, h);
+
+	gfx_texture_set(current_font->font_texture);
+
+	gfx_pretty_text(x + w/2 - text_width/2 , y, 23.f, text);
+}
+
 struct server_info
 {
 	int version;
@@ -193,12 +371,12 @@ int do_scroll_bar(void *id, float x, float y, float height, int steps, int last_
 {
 	int r = last_index;
 
-    if (ui_do_button(&up_button_texture, "", 0, x, y, 8, 8, draw_menu_button, &scroll_up_button))
+    if (ui_do_button(&up_button_texture, "", 0, x + 4, y, 8, 8, draw_single_part_button, (void *)slider_big_arrow_up))
 	{
 		if (r > 0)
 			--r;
 	}
-    else if (ui_do_button(&down_button_texture, "", 0, x, y + height - 8, 8, 8, draw_menu_button, &scroll_down_button))
+    else if (ui_do_button(&down_button_texture, "", 0, x + 4, y + height - 8, 8, 8, draw_single_part_button, (void *)slider_big_arrow_down))
 	{
 		if (r < steps)
 			++r;
@@ -231,8 +409,12 @@ int do_scroll_bar(void *id, float x, float y, float height, int steps, int last_
 			ui_set_hot_item(id);
 	}
 
-	ui_do_image(scroll_indicator_texture, x, y + 8 + r * ((height - 32) / steps), 8, 16);
-	
+	draw_part(slider_big_vert_begin, tileset_regular, x + 4, y + 8, 8, 8);
+	draw_part(slider_big_vert_mid, tileset_regular, x + 4, y + 8 + 8, 8, height - 16 - 16);
+	draw_part(slider_big_vert_end, tileset_regular, x + 4, y + 8 + 8 + height - 16 - 16, 8, 8);
+
+	draw_part(slider_big_handle_vert, tileset_regular, x, y + 8 + r * ((height - 32) / steps), 16, 8);
+
 	return r;
 }
 
@@ -408,14 +590,6 @@ static int menu_render(netaddr4 *server_address, char *str, int max_len)
 	// background color
 	gfx_clear(89/255.f,122/255.f,0.0);
 
-	// GRADIENT: top to bottom
-	// top color: 60, 80, 0
-	// bottom color: 90, 120, 0
-	
-	// world coordsys
-	float zoom = 3.0f;
-	gfx_mapscreen(0,0,400.0f*zoom,300.0f*zoom);
-
 	// GUI coordsys
 	gfx_mapscreen(0,0,400.0f,300.0f);
 
@@ -450,16 +624,16 @@ static int menu_render(netaddr4 *server_address, char *str, int max_len)
         return 1;
     }*/	
 
-	if (ui_do_button(&refresh_button, "", 0, 220, 210, 64, 24, draw_menu_button, &refresh_button))
+	if (ui_do_button(&refresh_button, "Refresh", 0, 220, 210, 85, 24, draw_teewars_button))
 	{
 		refresh_list(&list);
 	} 
 
 	if (list.selected_index == -1)
 	{
-		ui_do_image(join_button_grey_texture, 290, 210, 64, 24);
+		ui_do_button(&join_button, "Join", 0, 310, 210, 64, 24, draw_teewars_button);
 	}
-	else if (ui_do_button(&join_button, "", 0, 290, 210, 64, 24, draw_menu_button, &join_button))
+	else if (ui_do_button(&join_button, "Join", 0, 310, 210, 64, 24, draw_teewars_button))
 	{
 		*server_address = list.infos[list.selected_index].address;
 
@@ -474,7 +648,7 @@ static int menu_render(netaddr4 *server_address, char *str, int max_len)
 	ui_do_image(input_box_texture, name_x + 50 - 5, name_y - 5, 150 + 10, 14 + 10);
 	ui_do_edit_box(str, name_x + 50, name_y, 150, 14, str, max_len);
 
-	if (ui_do_button(&quit_button, "", 0, 290, 250, 69, 25, draw_menu_button, &quit_button))
+	if (ui_do_button(&quit_button, "Quit", 0, 310, 245, 64, 25, draw_teewars_button))
 		return -1;
 
 	ui_do_label(10.0f, 300.0f-20.0f, "Version: " TEEWARS_VERSION);
@@ -499,7 +673,7 @@ void modmenu_init()
 	join_button_active_texture = gfx_load_texture("data/gui/join_button_active.png");
 	join_button_grey_texture = gfx_load_texture("data/gui/join_button_greyed.png");
 
-
+	gui_tileset_texture = gfx_load_texture("data/gui/gui_widgets.png");
 //    button_not_hilighted_texture = gfx_load_texture("data/gui/game_list_join_button.png");
 //	button_hilighted_texture = gfx_load_texture("data/gui/button_hilighted.png");
 //	button_active_texture = gfx_load_texture("data/gui/button_active.png");

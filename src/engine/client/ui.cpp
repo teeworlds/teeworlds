@@ -97,11 +97,18 @@ int ui_do_button(void *id, const char *text, int checked, float x, float y, floa
 			ui_set_active_item(id);
 	}
 
+	// this gets rid of an annoying bug :<
+	if (!inside && ui_active_item() == id && !ui_mouse_button(0))
+		ui_set_active_item(0);
+
 	if(ui_active_item() == id && ui_hot_item() == id && !ui_mouse_button(0))
 	{
 		ui_set_active_item(0);
 		r = 1;
 	}
+
+	if (!inside && ui_hot_item() == id)
+		ui_set_hot_item(0);
 
     draw_func(id, text, checked, x, y, w, h, extra);
 
