@@ -29,7 +29,7 @@
 #define _PNGLITE_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"{
 #endif
 
 /*
@@ -70,13 +70,13 @@ enum
 	Typedefs for callbacks.
 */
 
-typedef unsigned (*png_read_callback_t)(void* output, unsigned size, unsigned numel, void* user_pointer);
+typedef unsigned (*png_read_callback_t)(void* output, size_t size, size_t numel, void* user_pointer);
 typedef void (*png_free_t)(void* p);
-typedef void * (*png_alloc_t)(unsigned s);
+typedef void * (*png_alloc_t)(size_t s);
 
 typedef struct
 {
-	void*					zs;				// pointer to z_stream
+	void*					zs;				/* pointer to z_stream */
 	png_read_callback_t		read_fun;
 	void*					user_pointer;
 
@@ -207,6 +207,4 @@ int png_close_file(png_t* png);
 #ifdef __cplusplus
 }
 #endif
-
-
 #endif

@@ -3,11 +3,10 @@
 */
 
 #include <zlib.h>
-#include "pnglite.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "pnglite.h"
 
 #define DO_CRC_CHECKS 1
 
@@ -36,17 +35,16 @@ static size_t file_read(png_t* png, void* out, size_t size, size_t numel)
 	return result;
 }
 
-static unsigned file_read_ul(png_t* png)
+static int file_read_ul(png_t* png, unsigned *out)
 {
-	unsigned result;
 	unsigned char buf[4];
 
 	if(file_read(png, buf, 1, 4) != 4)
 		return PNG_FILE_ERROR;
 
-	result = (buf[0]<<24) | (buf[1]<<16) | (buf[2]<<8) | buf[3];
+	*out = (buf[0]<<24) | (buf[1]<<16) | (buf[2]<<8) | buf[3];
 
-	return result;
+	return PNG_NO_ERROR;
 }
 
 static unsigned get_ul(unsigned char* buf)
@@ -108,9 +106,9 @@ static int png_read_ihdr(png_t* png)
 	unsigned orig_crc;
 	unsigned calc_crc;
 #endif
-	unsigned char ihdr[13+4];		 // length should be 13, make room for type (IHDR)
+	unsigned char ihdr[13+4];		 /* length should be 13, make room for type (IHDR) */
 
-	length = file_read_ul(png);
+	file_read_ul(png, &length);
 
 	if(length != 13)
 	{
@@ -121,7 +119,7 @@ static int png_read_ihdr(png_t* png)
 	if(file_read(png, ihdr, 1, 13+4) != 13+4)
 		return PNG_EOF_ERROR;
 #if DO_CRC_CHECKS
-	orig_crc = file_read_ul(png);
+	file_read_ul(png, &orig_crc);
 
 	calc_crc = crc32(0L, Z_NULL, 0);
 	calc_crc = crc32(calc_crc, ihdr, 13+4);
@@ -195,7 +193,7 @@ int png_open(png_t* png, png_read_callback_t read_fun, void* user_pointer)
 
 	result = png_read_ihdr(png);
 
-	png->bpp = png_get_bpp(png);
+	png->bpp = (unsigned char)png_get_bpp(png);
 
 	return result;
 }
@@ -256,7 +254,7 @@ static int png_end_inflate(png_t* png)
 	return PNG_NO_ERROR;
 }
 
-static int png_inflate(png_t* png, unsigned char* data, int len)
+static int png_inflate(png_t* png, char* data, int len)
 {
 	int result;
 	z_stream *stream = png->zs;
@@ -264,7 +262,7 @@ static int png_inflate(png_t* png, unsigned char* data, int len)
 	if(!stream)
 		return PNG_MEMORY_ERROR;
 
-	stream->next_in = data;
+	stream->next_in = (unsigned char*)data;
 	stream->avail_in = len;
 	
 	result = inflate(stream, Z_SYNC_FLUSH);
@@ -281,9 +279,9 @@ static int png_inflate(png_t* png, unsigned char* data, int len)
 	return PNG_NO_ERROR;
 }
 
-static int png_read_idat(png_t* png, unsigned char* output, unsigned out_len, unsigned firstlen) 
+static int png_read_idat(png_t* png, unsigned firstlen) 
 {
-	unsigned type;
+	unsigned type = 0;
 	char *chunk;
 	int result;
 	unsigned length = firstlen;
@@ -316,10 +314,10 @@ static int png_read_idat(png_t* png, unsigned char* output, unsigned out_len, un
 
 #if DO_CRC_CHECKS
 		calc_crc = crc32(0L, Z_NULL, 0);
-		calc_crc = crc32(calc_crc, "IDAT", 4);
-		calc_crc = crc32(calc_crc, chunk, length);
+		calc_crc = crc32(calc_crc, (unsigned char*)"IDAT", 4);
+		calc_crc = crc32(calc_crc, (unsigned char*)chunk, length);
 
-		orig_crc = file_read_ul(png);
+		file_read_ul(png, &orig_crc);
 
 		if(orig_crc != calc_crc)
 		{
@@ -334,7 +332,7 @@ static int png_read_idat(png_t* png, unsigned char* output, unsigned out_len, un
 
 		if(result != PNG_NO_ERROR) break;
 		
-		length = file_read_ul(png);
+		file_read_ul(png, &length);
 
 		if(length > old_len)
 		{
@@ -349,9 +347,9 @@ static int png_read_idat(png_t* png, unsigned char* output, unsigned out_len, un
 			break;
 		}
 
-	}while(type == *(int*)"IDAT");
+	}while(type == *(unsigned int*)"IDAT");
 
-	if(type == *(int*)"IEND")
+	if(type == *(unsigned int*)"IEND")
 		result = PNG_DONE;
 
 	png_free(chunk);
@@ -362,16 +360,16 @@ static int png_read_idat(png_t* png, unsigned char* output, unsigned out_len, un
 
 static int png_process_chunk(png_t* png)
 {
-	int result = PNG_NO_ERROR, idat_len = 0;
+	int result = PNG_NO_ERROR;
 	unsigned type;
 	unsigned length;
 
-	length = file_read_ul(png);
+	file_read_ul(png, &length);
 
 	if(file_read(png, &type, 1, 4) != 4)
 		return PNG_FILE_ERROR;
 
-	if(type == *(int*)"IDAT")	// if we found an idat, all other idats should be followed with no other chunks in between
+	if(type == *(unsigned int*)"IDAT")	/* if we found an idat, all other idats should be followed with no other chunks in between */
 	{
 		png->png_datalen = png->width * png->height * png->bpp + png->height;
 		png->png_data = png_alloc(png->png_datalen);
@@ -379,21 +377,21 @@ static int png_process_chunk(png_t* png)
 		if(!png->png_data)
 			return PNG_MEMORY_ERROR;
 
-		return png_read_idat(png, png->png_data, png->png_datalen, length);
+		return png_read_idat(png, length);
 	}
-	else if(type == *(int*)"IEND")
+	else if(type == *(unsigned int*)"IEND")
 	{
 		return PNG_DONE;
 	}
 	else
 	{
-		file_read(png, 0, 1, length + 4);		// unknown chunk
+		file_read(png, 0, 1, length + 4);		/* unknown chunk */
 	}
 
 	return result;
 }
 
-static void png_filter_sub(png_t* png, int stride, unsigned char* in, unsigned char* out, int len)
+static void png_filter_sub(int stride, unsigned char* in, unsigned char* out, int len)
 {
 	int i;
 	unsigned char a = 0;
@@ -407,7 +405,7 @@ static void png_filter_sub(png_t* png, int stride, unsigned char* in, unsigned c
 	}
 }
 
-static void png_filter_up(png_t* png, int stride, unsigned char* in, unsigned char* out, unsigned char* prev_line, int len)
+static void png_filter_up(int stride, unsigned char* in, unsigned char* out, unsigned char* prev_line, int len)
 {
 	int i;
 
@@ -420,7 +418,7 @@ static void png_filter_up(png_t* png, int stride, unsigned char* in, unsigned ch
         memcpy(out, in, len);
 }
 
-static void png_filter_average(png_t* png, int stride, unsigned char* in, unsigned char* out, unsigned char* prev_line, int len)
+static void png_filter_average(int stride, unsigned char* in, unsigned char* out, unsigned char* prev_line, int len)
 {
 	int i;
 	unsigned char a = 0;
@@ -438,7 +436,7 @@ static void png_filter_average(png_t* png, int stride, unsigned char* in, unsign
 		sum = a;
 		sum += b;
 
-		out[i] = in[i] + sum/2;
+		out[i] = (char)(in[i] + sum/2);
 	}
 }
 
@@ -458,10 +456,10 @@ static unsigned char png_paeth(unsigned char a, unsigned char b, unsigned char c
 	else
 		pr = c;
 
-	return pr;
+	return (char)pr;
 }
 
-static void png_filter_paeth(png_t* png, int stride, unsigned char* in, unsigned char* out, unsigned char* prev_line, int len)
+static void png_filter_paeth(int stride, unsigned char* in, unsigned char* out, unsigned char* prev_line, int len)
 {
 	int i;
 	unsigned char a;
@@ -520,29 +518,29 @@ static int png_unfilter(png_t* png, unsigned char* data)
 
 		switch(filter)
 		{
-		case 0: // none
+		case 0: /* none */
 			memcpy(data+outpos, filtered+pos, png->width * stride);
 			break;
-		case 1: // sub
-			png_filter_sub(png, stride, filtered+pos, data+outpos, png->width * stride);
+		case 1: /* sub */
+			png_filter_sub(stride, filtered+pos, data+outpos, png->width * stride);
 			break;
-		case 2: // up
+		case 2: /* up */
 			if(outpos)
-				png_filter_up(png, stride, filtered+pos, data+outpos, data + outpos - (png->width*stride), png->width*stride);
+				png_filter_up(stride, filtered+pos, data+outpos, data + outpos - (png->width*stride), png->width*stride);
 			else
-				png_filter_up(png, stride, filtered+pos, data+outpos, 0, png->width*stride);
+				png_filter_up(stride, filtered+pos, data+outpos, 0, png->width*stride);
 			break;
-		case 3: // average
+		case 3: /* average */
 			if(outpos)
-				png_filter_average(png, stride, filtered+pos, data+outpos, data + outpos - (png->width*stride), png->width*stride);
+				png_filter_average(stride, filtered+pos, data+outpos, data + outpos - (png->width*stride), png->width*stride);
 			else
-				png_filter_average(png, stride, filtered+pos, data+outpos, 0, png->width*stride);
+				png_filter_average(stride, filtered+pos, data+outpos, 0, png->width*stride);
 			break;
-		case 4: // paeth
+		case 4: /* paeth */
 			if(outpos)
-				png_filter_paeth(png, stride, filtered+pos, data+outpos, data + outpos - (png->width*stride), png->width*stride);
+				png_filter_paeth(stride, filtered+pos, data+outpos, data + outpos - (png->width*stride), png->width*stride);
 			else
-				png_filter_paeth(png, stride, filtered+pos, data+outpos, 0, png->width*stride);
+				png_filter_paeth(stride, filtered+pos, data+outpos, 0, png->width*stride);
 			break;
 		default:
 			return PNG_UNKNOWN_FILTER;
