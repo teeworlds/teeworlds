@@ -80,7 +80,7 @@ void ui_do_label(float x, float y, char *text)
 {
     gfx_blend_normal();
     gfx_texture_set(current_font->font_texture);
-    gfx_pretty_text(x, y, 18.f, text);
+    gfx_pretty_text(x, y, 36.f, text);
 }
 
 int ui_do_button(void *id, const char *text, int checked, float x, float y, float w, float h, draw_button_callback draw_func, void *extra)
