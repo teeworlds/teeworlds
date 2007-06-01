@@ -41,7 +41,7 @@ void config_load(const char *filename)
 				string value = line.substr(eq_index + 1);
 
     			#define MACRO_CONFIG_INT(name,def,min,max) { if (strcmp(#name, variable.c_str()) == 0) config_set_ ## name (&config, atoi(value.c_str())); }
-    			#define MACRO_CONFIG_STR(name,len,def) { if (strcmp(#name, variable.c_str()) == 0) { config_set_ ## name (&config, value.c_str()); cout << variable << '=' << value << endl; } }
+    			#define MACRO_CONFIG_STR(name,len,def) { if (strcmp(#name, variable.c_str()) == 0) { config_set_ ## name (&config, value.c_str()); } }
  
     			#include "config_variables.h" 
  
@@ -72,7 +72,7 @@ void config_save(const char *filename)
 }
 
 #define MACRO_CONFIG_INT(name,def,min,max) void config_set_ ## name (configuration *c, int val) { if (val < min) val = min; if (max != 0 && val > max) val = max; c->name = val; }
-#define MACRO_CONFIG_STR(name,len,def) void config_set_ ## name (configuration *c, const char *str) { strncpy(c->name, str, len-1); c->name[sizeof(c->name)-1] = 0; cout << "config_str" << endl; }
+#define MACRO_CONFIG_STR(name,len,def) void config_set_ ## name (configuration *c, const char *str) { strncpy(c->name, str, len-1); c->name[sizeof(c->name)-1] = 0; }
 #include "config_variables.h"
 #undef MACRO_CONFIG_INT
 #undef MACRO_CONFIG_STR
