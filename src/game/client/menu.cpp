@@ -891,6 +891,7 @@ static int settings_screen_render()
 	if (ui_do_button(&save_button, "Save", 0, 482, 490, 128, 48, draw_teewars_button))
 	{
 		config = config_copy;
+		config_save("teewars.cfg");
 		screen = 0;
 	}
 	

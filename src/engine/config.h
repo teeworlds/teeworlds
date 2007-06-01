@@ -17,7 +17,7 @@ void config_load(const char *filename);
 void config_save(const char *filename);
 
 #define MACRO_CONFIG_INT(name,def,min,max) void config_set_ ## name (configuration *c, int val);
-#define MACRO_CONFIG_STR(name,len,def) void config_set_ ## name (configuration *c, char *str);
+#define MACRO_CONFIG_STR(name,len,def) void config_set_ ## name (configuration *c, const char *str);
 #include "config_variables.h"
 #undef MACRO_CONFIG_INT
 #undef MACRO_CONFIG_STR
