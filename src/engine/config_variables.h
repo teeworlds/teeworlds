@@ -1,2 +1,2 @@
-#include "../game/config_variables.h"
+#include "../game/game_variables.h"
 

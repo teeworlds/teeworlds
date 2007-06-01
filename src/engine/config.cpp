@@ -76,6 +76,12 @@ void config_save(const char *filename)
 	file.close();
 }
 
+#define MACRO_CONFIG_INT(name,def,min,max) int config_get_ ## name (configuration *c) { return c->name; }
+#define MACRO_CONFIG_STR(name,len,def) const char *config_get_ ## name (configuration *c) { return c->name; }
+#include "config_variables.h"
+#undef MACRO_CONFIG_INT
+#undef MACRO_CONFIG_STR
+
 #define MACRO_CONFIG_INT(name,def,min,max) void config_set_ ## name (configuration *c, int val) { if (val < min) val = min; if (max != 0 && val > max) val = max; c->name = val; }
 #define MACRO_CONFIG_STR(name,len,def) void config_set_ ## name (configuration *c, const char *str) { strncpy(c->name, str, len-1); c->name[sizeof(c->name)-1] = 0; }
 #include "config_variables.h"
