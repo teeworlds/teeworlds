@@ -14,7 +14,7 @@
 #include <engine/client/ui.h>
 #include "mapres_image.h"
 #include "mapres_tilemap.h"
-#include <engine/config/config.h>
+#include <engine/config.h>
 
 using namespace baselib;
 
@@ -852,15 +852,15 @@ static int settings_screen_render()
 	// KEYS
 	ui_do_label(column1_x, keys_y, "Keys:", 36);
 	ui_do_label(column2_x, keys_y + 0, "Move Left:", 36);
-	set_key_move_left(&config_copy, ui_do_key_reader(&config_copy.key_move_left, column3_x, keys_y + 0, 70, 40, config_copy.key_move_left));
+	config_set_key_move_left(&config_copy, ui_do_key_reader(&config_copy.key_move_left, column3_x, keys_y + 0, 70, 40, config_copy.key_move_left));
 	ui_do_label(column2_x, keys_y + 40, "Move Right:", 36);
-	set_key_move_right(&config_copy, ui_do_key_reader(&config_copy.key_move_right, column3_x, keys_y + 40, 70, 40, config_copy.key_move_right));
+	config_set_key_move_right(&config_copy, ui_do_key_reader(&config_copy.key_move_right, column3_x, keys_y + 40, 70, 40, config_copy.key_move_right));
 	ui_do_label(column2_x, keys_y + 80, "Jump:", 36);
-	set_key_jump(&config_copy, ui_do_key_reader(&config_copy.key_jump, column3_x, keys_y + 80, 70, 40, config_copy.key_jump));
+	config_set_key_jump(&config_copy, ui_do_key_reader(&config_copy.key_jump, column3_x, keys_y + 80, 70, 40, config_copy.key_jump));
 	ui_do_label(column2_x, keys_y + 120, "Fire:", 36);
-	set_key_fire(&config_copy, ui_do_key_reader(&config_copy.key_fire, column3_x, keys_y + 120, 70, 40, config_copy.key_fire));
+	config_set_key_fire(&config_copy, ui_do_key_reader(&config_copy.key_fire, column3_x, keys_y + 120, 70, 40, config_copy.key_fire));
 	ui_do_label(column2_x, keys_y + 160, "Hook:", 36);
-	set_key_hook(&config_copy, ui_do_key_reader(&config_copy.key_hook, column3_x, keys_y + 160, 70, 40, config_copy.key_hook));
+	config_set_key_hook(&config_copy, ui_do_key_reader(&config_copy.key_hook, column3_x, keys_y + 160, 70, 40, config_copy.key_hook));
 
 	// RESOLUTION
 	static char resolutions[][128] =
@@ -883,8 +883,8 @@ static int settings_screen_render()
 	ui_do_label(column1_x, resolution_y, "Resolution:", 36);
 	selected_index = ui_do_combo_box(&selected_index, column2_x, resolution_y, 170, (char **)resolutions, 5, selected_index);
 
-	set_screen_width(&config_copy, res[selected_index][0]);
-	set_screen_height(&config_copy, res[selected_index][1]);
+	config_set_screen_width(&config_copy, res[selected_index][0]);
+	config_set_screen_height(&config_copy, res[selected_index][1]);
 
 	// SAVE BUTTON
 	static int save_button;

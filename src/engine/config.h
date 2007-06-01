@@ -5,7 +5,7 @@ struct configuration
 { 
     #define MACRO_CONFIG_INT(name,def,min,max) int name;
     #define MACRO_CONFIG_STR(name,len,def) char name[len];
-    #include "config_define.h" 
+    #include "config_variables.h" 
     #undef MACRO_CONFIG_INT 
     #undef MACRO_CONFIG_STR 
 }; 
@@ -14,10 +14,11 @@ extern configuration config;
 
 void config_reset();
 void config_load(const char *filename);
+void config_save(const char *filename);
 
-#define MACRO_CONFIG_INT(name,def,min,max) void set_ ## name (configuration *c, int val);
-#define MACRO_CONFIG_STR(name,len,def) void set_ ## name (configuration *c, char *str);
-#include "config_define.h"
+#define MACRO_CONFIG_INT(name,def,min,max) void config_set_ ## name (configuration *c, int val);
+#define MACRO_CONFIG_STR(name,len,def) void config_set_ ## name (configuration *c, char *str);
+#include "config_variables.h"
 #undef MACRO_CONFIG_INT
 #undef MACRO_CONFIG_STR
 
