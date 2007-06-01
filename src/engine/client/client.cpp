@@ -695,7 +695,7 @@ int main(int argc, char **argv)
 		{
 			// -n NAME
 			i++;
-			set_player_name(argv[i]);
+			set_player_name(&config, argv[i]);
 		}
 		else if(argv[i][0] == '-' && argv[i][1] == 'w' && argv[i][2] == 0)
 		{

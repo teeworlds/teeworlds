@@ -782,6 +782,7 @@ static void refresh_list(server_list *list)
 }
 
 static int screen = 0;
+static configuration config_copy;
 
 static int main_screen_render(netaddr4 *server_address)
 {
@@ -827,7 +828,10 @@ static int main_screen_render(netaddr4 *server_address)
 
 	static int settings_button;
 	if (ui_do_button(&settings_button, "Settings", 0, 20, 420, 170, 48, draw_teewars_button))
+	{
+		config_copy = config;
 		screen = 1;
+	}
 
 	return 0;
 }
@@ -843,20 +847,20 @@ static int settings_screen_render()
 
 	// NAME
 	ui_do_label(column1_x, name_y, "Name:", 36);
-	ui_do_edit_box(config.player_name, column2_x, name_y, 300, 36, config.player_name, sizeof(config.player_name));
+	ui_do_edit_box(config_copy.player_name, column2_x, name_y, 300, 36, config_copy.player_name, sizeof(config_copy.player_name));
 
 	// KEYS
 	ui_do_label(column1_x, keys_y, "Keys:", 36);
 	ui_do_label(column2_x, keys_y + 0, "Move Left:", 36);
-	set_key_move_left(ui_do_key_reader(&config.key_move_left, column3_x, keys_y + 0, 70, 40, config.key_move_left));
+	set_key_move_left(&config_copy, ui_do_key_reader(&config_copy.key_move_left, column3_x, keys_y + 0, 70, 40, config_copy.key_move_left));
 	ui_do_label(column2_x, keys_y + 40, "Move Right:", 36);
-	set_key_move_right(ui_do_key_reader(&config.key_move_right, column3_x, keys_y + 40, 70, 40, config.key_move_right));
+	set_key_move_right(&config_copy, ui_do_key_reader(&config_copy.key_move_right, column3_x, keys_y + 40, 70, 40, config_copy.key_move_right));
 	ui_do_label(column2_x, keys_y + 80, "Jump:", 36);
-	set_key_jump(ui_do_key_reader(&config.key_jump, column3_x, keys_y + 80, 70, 40, config.key_jump));
+	set_key_jump(&config_copy, ui_do_key_reader(&config_copy.key_jump, column3_x, keys_y + 80, 70, 40, config_copy.key_jump));
 	ui_do_label(column2_x, keys_y + 120, "Fire:", 36);
-	set_key_fire(ui_do_key_reader(&config.key_fire, column3_x, keys_y + 120, 70, 40, config.key_fire));
+	set_key_fire(&config_copy, ui_do_key_reader(&config_copy.key_fire, column3_x, keys_y + 120, 70, 40, config_copy.key_fire));
 	ui_do_label(column2_x, keys_y + 160, "Hook:", 36);
-	set_key_hook(ui_do_key_reader(&config.key_hook, column3_x, keys_y + 160, 70, 40, config.key_hook));
+	set_key_hook(&config_copy, ui_do_key_reader(&config_copy.key_hook, column3_x, keys_y + 160, 70, 40, config_copy.key_hook));
 
 	// RESOLUTION
 	static char resolutions[][128] =
@@ -867,13 +871,32 @@ static int settings_screen_render()
 		"1024x764",
 		"1280x1024",
 	};
+	static int res[][2] =
+	{
+		{ 400, 300 },
+		{ 640, 480 },
+		{ 800, 600 },
+		{ 1024, 768 },
+		{ 1280, 1024 },
+	};
 	static int selected_index = 0;
 	ui_do_label(column1_x, resolution_y, "Resolution:", 36);
 	selected_index = ui_do_combo_box(&selected_index, column2_x, resolution_y, 170, (char **)resolutions, 5, selected_index);
 
-	// BACK BUTTON
-	static int back_button;
-	if (ui_do_button(&back_button, "Back", 0, 620, 490, 128, 48, draw_teewars_button))
+	set_screen_width(&config_copy, res[selected_index][0]);
+	set_screen_height(&config_copy, res[selected_index][1]);
+
+	// SAVE BUTTON
+	static int save_button;
+	if (ui_do_button(&save_button, "Save", 0, 482, 490, 128, 48, draw_teewars_button))
+	{
+		config = config_copy;
+		screen = 0;
+	}
+	
+	// CANCEL BUTTON
+	static int cancel_button;
+	if (ui_do_button(&cancel_button, "Cancel", 0, 620, 490, 150, 48, draw_teewars_button))
 		screen = 0;
 
 	return 0;
