@@ -53,9 +53,7 @@ void config_load(const char *filename)
 	if (file)
 	{
 		while (getline(file, line))
-		{
 			config_set(line.c_str());
-		}
 
 		file.close();
 	}
