@@ -695,7 +695,7 @@ void modmenu_shutdown();
     Function: modmenu_render
         Called every frame to let the menu render it self.
 */
-int modmenu_render(void *server_address, char *name, int max_len);
+int modmenu_render(void *server_address);
 
 void snap_encode_string(const char *src, int *dst, int length, int max_length);
 void snap_decode_string(const int *src, char *dst, int length);

@@ -1,3 +1,4 @@
+#include <baselib/system.h>
 #include <engine/interface.h>
 #include "ui.h"
 
@@ -15,7 +16,6 @@ struct pretty_font
 
 extern pretty_font *current_font;
 void gfx_pretty_text(float x, float y, float size, const char *text);
-
 
 static void *hot_item = 0;
 static void *active_item = 0;
@@ -76,11 +76,11 @@ void ui_do_image(int texture, float x, float y, float w, float h)
     gfx_quads_end();
 }
 
-void ui_do_label(float x, float y, char *text)
+void ui_do_label(float x, float y, const char *text, float size)
 {
     gfx_blend_normal();
     gfx_texture_set(current_font->font_texture);
-    gfx_pretty_text(x, y, 36.f, text);
+    gfx_pretty_text(x, y, size, text);
 }
 
 int ui_do_button(void *id, const char *text, int checked, float x, float y, float w, float h, draw_button_callback draw_func, void *extra)
@@ -97,7 +97,7 @@ int ui_do_button(void *id, const char *text, int checked, float x, float y, floa
 			ui_set_active_item(id);
 	}
 
-	// this gets rid of an annoying bug :<
+	// this gets rid of an annoying bug :< (but it creates another annoying bug :O)
 	if (!inside && ui_active_item() == id && !ui_mouse_button(0))
 		ui_set_active_item(0);
 

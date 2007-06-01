@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include "versions.h"
+#include "config.h"
 
 using namespace baselib;
 
@@ -12,6 +13,10 @@ extern int server_main(int argc, char **argv);
 
 int main(int argc, char **argv)
 {
+//	config_reset();
+//	config_load("teewars.cfg");
+	kldfjg
+
 	// search for server or editor argument
 	for(int i = 1; i < argc; i++)
 	{

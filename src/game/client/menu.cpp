@@ -14,6 +14,7 @@
 #include <engine/client/ui.h>
 #include "mapres_image.h"
 #include "mapres_tilemap.h"
+#include <engine/config/config.h>
 
 using namespace baselib;
 
@@ -324,13 +325,12 @@ struct pretty_font
 };  
 
 extern pretty_font *current_font;
-void gfx_pretty_text(float x, float y, float size, const char *text);
 float gfx_pretty_text_width(float size, const char *text);
 
 void draw_scrolling_background(int id, float w, float h, float t)
 {
-	float tx = w/256.0f;
-	float ty = h/256.0f;
+	float tx = w/512.0f;
+	float ty = h/512.0f;
 
 	float start_x = fmod(t, 1.0f);
 	float start_y = 1.0f - fmod(t*0.8f, 1.0f);
@@ -349,50 +349,10 @@ void draw_scrolling_background(int id, float w, float h, float t)
 }
 
 int background_texture;
-int not_empty_item_texture;
-int empty_item_texture;
-int active_item_texture;
-int selected_item_texture;
 int teewars_banner_texture;
-int connect_localhost_texture;
 
 int music_menu;
 int music_menu_id = -1;
-
-struct button_textures
-{
-	int *normal_texture;
-	int *hot_texture;
-	int *active_texture;
-};
-
-button_textures connect_localhost_button = { &connect_localhost_texture, &connect_localhost_texture, &connect_localhost_texture };
-button_textures list_item_button = { &not_empty_item_texture, &active_item_texture, &active_item_texture };
-button_textures selected_item_button = { &selected_item_texture, &selected_item_texture, &selected_item_texture };
-
-void draw_menu_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
-{
-	button_textures *tx = (button_textures *)extra;
-
-    gfx_blend_normal();
-	
-	if (ui_active_item() == id && ui_hot_item() == id)
-		gfx_texture_set(*tx->active_texture);
-	else if (ui_hot_item() == id)
-		gfx_texture_set(*tx->hot_texture);
-	else
-		gfx_texture_set(*tx->normal_texture);
-	
-    gfx_quads_begin();
-
-    gfx_quads_setcolor(1,1,1,1);
-
-    gfx_quads_drawTL(x,y,w,h);
-    gfx_quads_end();
-
-    gfx_texture_set(current_font->font_texture);
-    gfx_pretty_text(x + 8.f, y - 7.f, 36.f, text);
-}
 
 void draw_image_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
 {
@@ -413,6 +373,18 @@ void draw_single_part_button(void *id, const char *text, int checked, float x, f
 	draw_part((gui_parts_enum)(int)(int *)extra, tileset, x, y, w, h);
 }
 
+void draw_menu_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
+{
+	gui_composite_box_enum box_style;
+	if ((int)extra)
+		box_style = screen_info_box;
+	else
+		box_style = screen_list_box;
+	draw_box(box_style, tileset_regular, x, y, w, h);
+
+	ui_do_label(x + 10, y, text, 28);
+}
+
 void draw_teewars_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
 {
 	float text_width = gfx_pretty_text_width(46.f, text);
@@ -430,9 +402,7 @@ void draw_teewars_button(void *id, const char *text, int checked, float x, float
 
 	draw_box(button_big_box, tileset, x, y, w, h);
 
-	gfx_texture_set(current_font->font_texture);
-
-	gfx_pretty_text(x + w/2 - text_width/2 , y, 46.f, text);
+	ui_do_label(x + w/2 - text_width/2, y, text, 46);
 }
 
 struct server_info
@@ -452,6 +422,99 @@ struct server_list
 	int scroll_index;
 	int selected_index;
 };
+
+
+int ui_do_key_reader(void *id, float x, float y, float w, float h, int key)
+{
+	// process
+	int inside = ui_mouse_inside(x, y, w, h);
+	int new_key = key;
+	
+	if (inside)
+	{
+		ui_set_hot_item(id);
+
+		if (ui_mouse_button(0))
+			ui_set_active_item(id);
+	}
+
+	if (ui_active_item() == id)
+	{
+		int k = keys::last_key();
+		if (k)
+		{
+			new_key = k;
+			ui_set_active_item(0);
+		}
+	}
+
+	// draw
+	gui_composite_box_enum box_style = screen_info_box;	
+	draw_box(box_style, tileset_regular, x, y, w, h);
+	
+	char str[16];
+	sprintf(str, "%i", key);
+	ui_do_label(x + 10, y, str, 36);
+	if (ui_active_item() == id)
+	{
+		float w = gfx_pretty_text_width(36.0f, str);
+		ui_do_label(x + 10 + w, y, "_", 36);
+	}
+
+	return new_key;
+}
+
+int ui_do_combo_box(void *id, float x, float y, float w, char *lines[128], int line_count, int selected_index)
+{
+	float line_height = 36.0f;
+
+	int inside = (ui_active_item() == id) ? ui_mouse_inside(x, y, w, line_count * line_height) : ui_mouse_inside(x, y, w, line_height);
+	int hover_index = (ui_mouse_y() - y) / line_height;
+
+	char resolutions[][128] =
+	{
+		"400x300",
+		"640x480",
+		"800x600",
+		"1024x768",
+		"1280x1024",
+	};
+
+	if (ui_active_item() == id)
+	{
+		for (int i = 0; i < line_count; i++)
+		{
+			gui_composite_box_enum box_style;
+			if (inside && hover_index == i)
+				box_style = screen_info_box;
+			else
+				box_style = screen_list_box;
+
+			draw_box(box_style, tileset_regular, x, y + i * line_height, w, line_height);
+			ui_do_label(x + 10 + 10, y + i * line_height, resolutions[i], 36);
+			if (selected_index == i)
+				ui_do_label(x + 10, y + i * line_height, "-", 36);
+		}
+
+		if (!ui_mouse_button(0))
+		{
+			ui_set_active_item(0);
+
+			if (inside)
+				selected_index = hover_index;
+		}
+	}
+	else
+	{
+		draw_box(screen_list_box, tileset_regular, x, y, w, line_height);
+		ui_do_label(x + 10, y, resolutions[selected_index], 36);
+
+		if (inside && ui_mouse_button(0))
+			ui_set_active_item(id);
+	}
+
+	return selected_index;
+}
 
 int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int str_size)
 {
@@ -491,12 +554,13 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 
 	draw_box(screen_textbox_box, tileset_regular, x, y, w, h);
 
-	ui_do_label(x + 8.f, y - 7.f, str);
+	ui_do_label(x + 10, y, str, 36);
+
 
 	if (ui_active_item() == id)
 	{
 		float w = gfx_pretty_text_width(36.0f, str);
-		ui_do_label(x + 8.f + w, y - 7.f, "_");
+		ui_do_label(x + 10 + w, y, "_", 36);
 	}
 
 	return r;
@@ -514,12 +578,12 @@ int do_scroll_bar(void *id, float x, float y, float height, int steps, int last_
 		if (r > 0)
 			--r;
 	}
-    else if (ui_do_button(&down_button, "", 0, x + 8, y + height - 16, 16, 16, draw_single_part_button, (void *)slider_big_arrow_down))
+    if (ui_do_button(&down_button, "", 0, x + 8, y + height - 16, 16, 16, draw_single_part_button, (void *)slider_big_arrow_down))
 	{
 		if (r < steps)
 			++r;
 	}
-	else if (steps > 0) // only if there's actually stuff to scroll through
+	if (steps > 0) // only if there's actually stuff to scroll through
 	{
 		int inside = ui_mouse_inside(x, y + 16, 16, height - 32);
         if (inside && (!ui_active_item() || ui_active_item() == id))
@@ -556,7 +620,7 @@ int do_scroll_bar(void *id, float x, float y, float height, int steps, int last_
 	return r;
 }
 
-int do_server_list(server_list *list, float x, float y, int visible_items)
+static int do_server_list(server_list *list, float x, float y, int visible_items)
 {
 	const float spacing = 3.f;
 	const float item_height = 28;
@@ -569,24 +633,20 @@ int do_server_list(server_list *list, float x, float y, int visible_items)
 	for (int i = 0; i < visible_items; i++)
 	{
 		int item_index = i + list->scroll_index;
-		if (item_index >= list->active_count)
-			ui_do_image(empty_item_texture, x, y + i * item_height + i * spacing, item_width, item_height);
+		if (item_index >= list->active_count);
+			//ui_do_image(empty_item_texture, x, y + i * item_height + i * spacing, item_width, item_height);
 		else
 		{
 			server_info *item = &list->infos[item_index];
 
 			bool clicked = false;
-			if (list->selected_index == item_index)
-				clicked = ui_do_button(item, item->name, 0, x, y + i * item_height + i * spacing, item_width, item_height, draw_menu_button, &selected_item_button);
-			else
-				clicked = ui_do_button(item, item->name, 0, x, y + i * item_height + i * spacing, item_width, item_height, draw_menu_button, &list_item_button);
+			clicked = ui_do_button(item, item->name, 0, x, y + i * item_height + i * spacing, item_width, item_height, draw_menu_button, (list->selected_index == item_index) ? (void *)1 : 0);
 
 			char temp[64]; // plenty of extra room so we don't get sad :o
 			sprintf(temp, "%i/%i", item->players, item->max_players);
 
-			gfx_texture_set(current_font->font_texture);
-			gfx_pretty_text(x + 600, y + i * item_height + i * spacing - 7.f, 36.f, temp);
-            gfx_pretty_text(x + 360, y + i * item_height + i * spacing - 7.f, 36.f, item->map);
+			ui_do_label(x + 600, y + i * item_height + i * spacing, temp, item_height);
+			ui_do_label(x + 360, y + i * item_height + i * spacing, item->map, item_height);
 
 			if (clicked)
 			{
@@ -601,7 +661,7 @@ int do_server_list(server_list *list, float x, float y, int visible_items)
 	return r;
 }
 
-char *read_int(char *buffer, int *value)
+static char *read_int(char *buffer, int *value)
 {
     *value = buffer[0] << 24;
     *value |= buffer[1] << 16;
@@ -611,7 +671,7 @@ char *read_int(char *buffer, int *value)
 	return buffer + 4;
 }
 
-char *read_netaddr(char *buffer, netaddr4 *addr)
+static char *read_netaddr(char *buffer, netaddr4 *addr)
 {
 	addr->ip[0] = *buffer++;
 	addr->ip[1] = *buffer++;
@@ -626,7 +686,7 @@ char *read_netaddr(char *buffer, netaddr4 *addr)
 	return buffer;
 }
 
-void refresh_list(server_list *list)
+static void refresh_list(server_list *list)
 {
 	netaddr4 addr;
 	netaddr4 me(0, 0, 0, 0, 0);
@@ -721,14 +781,10 @@ void refresh_list(server_list *list)
 	}
 }
 
-static int menu_render(netaddr4 *server_address, char *str, int max_len)
+static int screen = 0;
+
+static int main_screen_render(netaddr4 *server_address)
 {
-	// background color
-	gfx_clear(89/255.f,122/255.f,0.0);
-
-	// GUI coordsys
-	gfx_mapscreen(0,0,800.0f,600.0f);
-
 	static server_list list;
 	static bool inited = false;
 
@@ -744,21 +800,7 @@ static int menu_render(netaddr4 *server_address, char *str, int max_len)
 		refresh_list(&list);
 	}
 
-	static int64 start = time_get();
-
-	float t = double(time_get() - start) / double(time_freq());
-	draw_scrolling_background(background_texture, 800, 600, t * 0.01);
-
-	ui_do_image(teewars_banner_texture, 140, 20, 512, 128);
-
 	do_server_list(&list, 20, 160, 8);
-
-	/*
-    if (ui_do_button(&connect_localhost_button, "", 0, 15, 250, 64, 24, draw_menu_button, &connect_localhost_button))
-    {
-        *server_address = netaddr4(127, 0, 0, 1, 8303);
-        return 1;
-    }*/	
 
 	static int refresh_button, join_button, quit_button;
 
@@ -780,18 +822,83 @@ static int menu_render(netaddr4 *server_address, char *str, int max_len)
 		return 1;
 	}
 
-	const float name_x = 20, name_y = 430;
-
-	ui_do_label(name_x + 8.f, name_y - 7.f, "Name:");
-	//ui_do_image(input_box_texture, name_x + 50 - 5, name_y - 5, 150 + 10, 14 + 10);
-	ui_do_edit_box(str, name_x + 100, name_y, 300, 28, str, max_len);
-
 	if (ui_do_button(&quit_button, "Quit", 0, 620, 490, 128, 48, draw_teewars_button))
 		return -1;
 
-	ui_do_label(20.0f, 600.0f-40.0f, "Version: " TEEWARS_VERSION);
-	
+	static int settings_button;
+	if (ui_do_button(&settings_button, "Settings", 0, 20, 420, 170, 48, draw_teewars_button))
+		screen = 1;
+
 	return 0;
+}
+
+static int settings_screen_render()
+{
+	const float column1_x = 20;
+	const float column2_x = column1_x + 150;
+	const float column3_x = column2_x + 170;
+	const float name_y = 160;
+	const float resolution_y = 200;
+	const float keys_y = 240;
+
+	// NAME
+	ui_do_label(column1_x, name_y, "Name:", 36);
+	ui_do_edit_box(config.player_name, column2_x, name_y, 300, 36, config.player_name, sizeof(config.player_name));
+
+	// KEYS
+	ui_do_label(column1_x, keys_y, "Keys:", 36);
+	ui_do_label(column2_x, keys_y + 0, "Move Left:", 36);
+	set_key_move_left(ui_do_key_reader(&config.key_move_left, column3_x, keys_y + 0, 70, 40, config.key_move_left));
+	ui_do_label(column2_x, keys_y + 40, "Move Right:", 36);
+	set_key_move_right(ui_do_key_reader(&config.key_move_right, column3_x, keys_y + 40, 70, 40, config.key_move_right));
+	ui_do_label(column2_x, keys_y + 80, "Jump:", 36);
+	set_key_jump(ui_do_key_reader(&config.key_jump, column3_x, keys_y + 80, 70, 40, config.key_jump));
+	ui_do_label(column2_x, keys_y + 120, "Fire:", 36);
+	set_key_fire(ui_do_key_reader(&config.key_fire, column3_x, keys_y + 120, 70, 40, config.key_fire));
+	ui_do_label(column2_x, keys_y + 160, "Hook:", 36);
+	set_key_hook(ui_do_key_reader(&config.key_hook, column3_x, keys_y + 160, 70, 40, config.key_hook));
+
+	// RESOLUTION
+	static char resolutions[][128] =
+	{
+		"400x300",
+		"640x480",
+		"800x600",
+		"1024x764",
+		"1280x1024",
+	};
+	static int selected_index = 0;
+	ui_do_label(column1_x, resolution_y, "Resolution:", 36);
+	selected_index = ui_do_combo_box(&selected_index, column2_x, resolution_y, 170, (char **)resolutions, 5, selected_index);
+
+	// BACK BUTTON
+	static int back_button;
+	if (ui_do_button(&back_button, "Back", 0, 620, 490, 128, 48, draw_teewars_button))
+		screen = 0;
+
+	return 0;
+}
+
+static int menu_render(netaddr4 *server_address)
+{
+	// background color
+	gfx_clear(89/255.f,122/255.f,0.0);
+
+	// GUI coordsys
+	gfx_mapscreen(0,0,800.0f,600.0f);
+
+	static int64 start = time_get();
+
+	float t = double(time_get() - start) / double(time_freq());
+	draw_scrolling_background(background_texture, 800, 600, t * 0.01);
+
+	ui_do_image(teewars_banner_texture, 140, 20, 512, 128);
+	ui_do_label(20.0f, 600.0f-40.0f, "Version: " TEEWARS_VERSION, 36);
+
+	if (screen == 0)
+		return main_screen_render(server_address);
+	else
+		return settings_screen_render();
 }
 
 void modmenu_init()
@@ -800,16 +907,10 @@ void modmenu_init()
 	keys::enable_key_cache();
 
     current_font->font_texture = gfx_load_texture("data/big_font.png");
+
 	background_texture = gfx_load_texture("data/gui_bg.png");
-    not_empty_item_texture = gfx_load_texture("data/gui/game_list_item_not_empty.png");
-    empty_item_texture = gfx_load_texture("data/gui/game_list_item_empty.png");
-    active_item_texture = gfx_load_texture("data/gui/game_list_item_active.png");
-	selected_item_texture = gfx_load_texture("data/gui/game_list_item_selected.png");
-
 	gui_tileset_texture = gfx_load_texture("data/gui/gui_widgets.png");
-
     teewars_banner_texture = gfx_load_texture("data/gui_logo.png");
-	connect_localhost_texture = gfx_load_texture("data/gui/game_list_connect_localhost.png");
 
 	music_menu = snd_load_wav("data/audio/Music_Menu.wav");
 }
@@ -818,7 +919,7 @@ void modmenu_shutdown()
 {
 }
 
-int modmenu_render(void *ptr, char *str, int max_len)
+int modmenu_render(void *ptr)
 {
 	static int mouse_x = 0;
 	static int mouse_y = 0;
@@ -857,7 +958,8 @@ int modmenu_render(void *ptr, char *str, int max_len)
         ui_update(mx,my,mx*3.0f,my*3.0f,buttons);
     }
 
-    int r = menu_render(server_address, str, max_len);
+    //int r = menu_render(server_address, str, max_len);
+	int r = menu_render(server_address);
 
     // render butt ugly mouse cursor
     gfx_texture_set(-1);

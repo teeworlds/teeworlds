@@ -26,7 +26,7 @@ int ui_mouse_inside(float x, float y, float w, float h);
 typedef void (*draw_button_callback)(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra);
 
 void ui_do_image(int texture, float x, float y, float w, float h);
-void ui_do_label(float x, float y, char *text);
+void ui_do_label(float x, float y, const char *text, float size);
 int ui_do_button(void *id, const char *text, int checked, float x, float y, float w, float h, draw_button_callback draw_func, void *extra);
 int ui_do_button(void *id, const char *text, int checked, float x, float y, float w, float h, draw_button_callback draw_func);
 

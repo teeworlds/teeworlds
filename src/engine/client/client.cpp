@@ -17,6 +17,7 @@
 #include <engine/lzw.h>
 
 #include <engine/versions.h>
+#include <engine/config/config.h>
 
 using namespace baselib;
 
@@ -282,7 +283,6 @@ public:
 
 	// data to hold three snapshots
 	// previous, 
-	char name[MAX_NAME_LENGTH];
 
 	bool fullscreen;
 
@@ -302,13 +302,6 @@ public:
 	{
 		dbg_msg("game", "state change. last=%d current=%d", state, s);
 		state = s;
-	}
-	
-	void set_name(const char *new_name)
-	{
-		mem_zero(name, MAX_NAME_LENGTH);
-		strncpy(name, new_name, MAX_NAME_LENGTH);
-		name[MAX_NAME_LENGTH-1] = 0;
 	}
 
 	void set_fullscreen(bool flag) { fullscreen = flag; }
@@ -333,7 +326,7 @@ public:
 		
 		packet p(NETMSG_CLIENT_CONNECT);
 		p.write_str(TEEWARS_VERSION); // payload
-		p.write_str(name);
+		p.write_str(config.player_name);
 		p.write_str("no clan");
 		p.write_str("password");
 		p.write_str("myskin");
@@ -405,7 +398,7 @@ public:
 		else if (get_state() != STATE_CONNECTING && get_state() != STATE_LOADING)
 		{
 			netaddr4 server_address;
-			int status = modmenu_render(&server_address, name, MAX_NAME_LENGTH);
+			int status = modmenu_render(&server_address);
 
 			if (status == -1)
 				set_state(STATE_QUIT);
@@ -675,8 +668,11 @@ public:
 int main(int argc, char **argv)
 {
 	dbg_msg("client", "starting...");
+	config_reset();
+	config_load("teewars.cfg");
+
 	netaddr4 server_address(127, 0, 0, 1, 8303);
-	const char *name = "nameless jerk";
+	//const char *name = "nameless jerk";
 	bool connect_at_once = false;
 	bool fullscreen = true;
 
@@ -699,7 +695,7 @@ int main(int argc, char **argv)
 		{
 			// -n NAME
 			i++;
-			name = argv[i];
+			set_player_name(argv[i]);
 		}
 		else if(argv[i][0] == '-' && argv[i][1] == 'w' && argv[i][2] == 0)
 		{
@@ -710,7 +706,6 @@ int main(int argc, char **argv)
 	
 	// start the server
 	client c;
-	c.set_name(name);
 	c.set_fullscreen(fullscreen);
 	c.run(connect_at_once ? &server_address : 0x0);
 	return 0;
