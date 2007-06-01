@@ -23,6 +23,26 @@ void config_reset()
     #undef MACRO_CONFIG_STR 
 }
 
+void config_set(const char *line)
+{
+	char var_str[128];
+	char *val_str = strchr(line, '=');
+	if (val_str)
+	{
+		memcpy(var_str, line, val_str - line);
+		var_str[val_str - line] = 0;
+		++val_str;
+
+		#define MACRO_CONFIG_INT(name,def,min,max) { if (strcmp(#name, var_str) == 0) config_set_ ## name (&config, atoi(val_str)); }
+    	#define MACRO_CONFIG_STR(name,len,def) { if (strcmp(#name, var_str) == 0) { config_set_ ## name (&config, val_str); } }
+ 
+    	#include "config_variables.h" 
+ 
+    	#undef MACRO_CONFIG_INT 
+    	#undef MACRO_CONFIG_STR 
+	}
+}
+
 void config_load(const char *filename)
 {
 	dbg_msg("config/load", "loading %s", filename);
@@ -34,20 +54,7 @@ void config_load(const char *filename)
 	{
 		while (getline(file, line))
 		{
-			int eq_index = line.find_first_of('=');
-			if (eq_index != string::npos)
-			{
-				string variable = line.substr(0, eq_index);
-				string value = line.substr(eq_index + 1);
-
-    			#define MACRO_CONFIG_INT(name,def,min,max) { if (strcmp(#name, variable.c_str()) == 0) config_set_ ## name (&config, atoi(value.c_str())); }
-    			#define MACRO_CONFIG_STR(name,len,def) { if (strcmp(#name, variable.c_str()) == 0) { config_set_ ## name (&config, value.c_str()); } }
- 
-    			#include "config_variables.h" 
- 
-    			#undef MACRO_CONFIG_INT 
-    			#undef MACRO_CONFIG_STR 
-			}
+			config_set(line.c_str());
 		}
 
 		file.close();
