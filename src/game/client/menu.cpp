@@ -452,8 +452,7 @@ int ui_do_key_reader(void *id, float x, float y, float w, float h, int key)
 	gui_composite_box_enum box_style = screen_info_box;	
 	draw_box(box_style, tileset_regular, x, y, w, h);
 	
-	char str[16];
-	sprintf(str, "%i", key);
+	const char *str = keys::key_name(key);
 	ui_do_label(x + 10, y, str, 36);
 	if (ui_active_item() == id)
 	{
@@ -852,15 +851,15 @@ static int settings_screen_render()
 	// KEYS
 	ui_do_label(column1_x, keys_y, "Keys:", 36);
 	ui_do_label(column2_x, keys_y + 0, "Move Left:", 36);
-	config_set_key_move_left(&config_copy, ui_do_key_reader(&config_copy.key_move_left, column3_x, keys_y + 0, 70, 40, config_copy.key_move_left));
+	config_set_key_move_left(&config_copy, ui_do_key_reader(&config_copy.key_move_left, column3_x, keys_y + 0, 150, 40, config_copy.key_move_left));
 	ui_do_label(column2_x, keys_y + 40, "Move Right:", 36);
-	config_set_key_move_right(&config_copy, ui_do_key_reader(&config_copy.key_move_right, column3_x, keys_y + 40, 70, 40, config_copy.key_move_right));
+	config_set_key_move_right(&config_copy, ui_do_key_reader(&config_copy.key_move_right, column3_x, keys_y + 40, 150, 40, config_copy.key_move_right));
 	ui_do_label(column2_x, keys_y + 80, "Jump:", 36);
-	config_set_key_jump(&config_copy, ui_do_key_reader(&config_copy.key_jump, column3_x, keys_y + 80, 70, 40, config_copy.key_jump));
+	config_set_key_jump(&config_copy, ui_do_key_reader(&config_copy.key_jump, column3_x, keys_y + 80, 150, 40, config_copy.key_jump));
 	ui_do_label(column2_x, keys_y + 120, "Fire:", 36);
-	config_set_key_fire(&config_copy, ui_do_key_reader(&config_copy.key_fire, column3_x, keys_y + 120, 70, 40, config_copy.key_fire));
+	config_set_key_fire(&config_copy, ui_do_key_reader(&config_copy.key_fire, column3_x, keys_y + 120, 150, 40, config_copy.key_fire));
 	ui_do_label(column2_x, keys_y + 160, "Hook:", 36);
-	config_set_key_hook(&config_copy, ui_do_key_reader(&config_copy.key_hook, column3_x, keys_y + 160, 70, 40, config_copy.key_hook));
+	config_set_key_hook(&config_copy, ui_do_key_reader(&config_copy.key_hook, column3_x, keys_y + 160, 150, 40, config_copy.key_hook));
 
 	// RESOLUTION
 	static char resolutions[][128] =
@@ -881,7 +880,7 @@ static int settings_screen_render()
 	};
 	static int selected_index = 0;
 	ui_do_label(column1_x, resolution_y, "Resolution:", 36);
-	selected_index = ui_do_combo_box(&selected_index, column2_x, resolution_y, 170, (char **)resolutions, 5, selected_index);
+	selected_index = ui_do_combo_box(&selected_index, column2_x, resolution_y, 180, (char **)resolutions, 5, selected_index);
 
 	config_set_screen_width(&config_copy, res[selected_index][0]);
 	config_set_screen_height(&config_copy, res[selected_index][1]);

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <engine/config.h>
 #include "../game.h"
 #include "mapres_image.h"
 #include "mapres_tilemap.h"
@@ -1733,13 +1734,13 @@ void modc_render()
 	// snap input
 	{
 		player_input input;
-		input.left = inp_key_pressed('A');
-		input.right = inp_key_pressed('D');
+		input.left = inp_key_pressed(config.key_move_left);
+		input.right = inp_key_pressed(config.key_move_right);
 		float a = atan((float)mouse_pos.y/(float)mouse_pos.x);
 		if(mouse_pos.x < 0)
 			a = a+pi;
 		input.angle = (int)(a*256.0f);
-		input.jump = inp_key_pressed(baselib::keys::space) || inp_key_pressed('W');
+		input.jump = inp_key_pressed(config.key_jump);
 		
 		input.fire = inp_mouse_button_pressed(0);// | (oldinput.fire << 16);
 		//oldinput.fire = input.fire & 0x0000ffff;
