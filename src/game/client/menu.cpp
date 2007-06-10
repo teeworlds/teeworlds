@@ -323,8 +323,8 @@ void draw_box(gui_composite_box_enum box, gui_tileset_enum tileset, float x, flo
 
 struct pretty_font
 {
-    char m_CharStartTable[256];
-    char m_CharEndTable[256];
+    float m_CharStartTable[256];
+    float m_CharEndTable[256];
     int font_texture;
 };  
 
@@ -931,6 +931,8 @@ static int settings_screen_render()
 
 extern double extra_kerning[256*256];
 
+#include <GL/glfw.h>
+
 static int editor_screen_render()
 {
 	static bool loaded = false;
@@ -948,6 +950,22 @@ static int editor_screen_render()
 
 			while ((line = lstream.get_line()))
 				extra_kerning[i++] = atof(line);
+
+			file.close();
+		}
+
+		if (file.open_r("tracking.txt"))
+		{
+			line_stream lstream(&file);
+			char *line;
+
+			for (int i = 0; i < 256; i++)
+			{
+				line = lstream.get_line();
+				current_font->m_CharStartTable[i] = atof(line);
+				line = lstream.get_line();
+				current_font->m_CharEndTable[i] = atof(line);
+			}
 
 			file.close();
 		}
@@ -987,6 +1005,50 @@ static int editor_screen_render()
 		ui_do_label(84, 30 * i + 20, num, 30);
 	}
 
+	for (int i = 0; i < len; i++)
+	{
+		char s[2] = {0};
+		s[0] = text[i];
+
+		ui_do_label(700, 35 * i + 10, s, 45);
+
+    	gfx_blend_normal();
+    	gfx_texture_set(-1);
+    	gfx_quads_begin();
+    	gfx_quads_setcolor(0,0,0,0.5);
+    	gfx_quads_drawTL(700,35*i+20,1,30);
+		gfx_quads_drawTL(700+45*(current_font->m_CharEndTable[s[0]]-current_font->m_CharStartTable[s[0]]),35*i+20,1,30);
+    	gfx_quads_end();
+		// less
+		if (ui_do_button((void *)(200 + i * 2), "", 0, 650, 35 * i + 10 + 20, 16, 16, draw_single_part_button, (void *)slider_big_arrow_left))
+		{
+			current_font->m_CharStartTable[s[0]] -= 0.01;
+		}
+
+		// more
+		if (ui_do_button((void *)(200 + i * 2 + 1), "", 0, 666, 35 * i + 10 + 20, 16, 16, draw_single_part_button, (void *)slider_big_arrow_right))
+		{
+			current_font->m_CharStartTable[s[0]] += 0.01;
+		}
+
+
+
+		// less
+		if (ui_do_button((void *)(300 + i * 2), "", 0, 750, 35 * i + 10 + 20, 16, 16, draw_single_part_button, (void *)slider_big_arrow_left))
+		{
+			current_font->m_CharEndTable[s[0]] -= 0.01;
+		}
+
+		// more
+		if (ui_do_button((void *)(300 + i * 2 + 1), "", 0, 766, 35 * i + 10 + 20, 16, 16, draw_single_part_button, (void *)slider_big_arrow_right))
+		{
+			current_font->m_CharEndTable[s[0]] += 0.01;
+		}
+
+		
+
+	}
+
 	// SAVE BUTTON
 	static int save_button;
 	if (ui_do_button(&save_button, "Save", 0, 482, 490, 128, 48, draw_teewars_button))
@@ -1000,6 +1062,21 @@ static int editor_screen_render()
 			for (int i = 0; i < 256*256; i++)
 			{
 				sprintf(t, "%f\n", extra_kerning[i]);
+				file.write(t, strlen(t));
+			}
+
+			file.close();
+		}
+
+		if (file.open_w("tracking.txt"))
+		{
+			char t[16];
+
+			for (int i = 0; i < 256; i++)
+			{
+				sprintf(t, "%f\n", current_font->m_CharStartTable[i]);
+				file.write(t, strlen(t));
+				sprintf(t, "%f\n", current_font->m_CharEndTable[i]);
 				file.write(t, strlen(t));
 			}
 

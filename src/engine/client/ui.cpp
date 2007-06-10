@@ -9,8 +9,8 @@
 
 struct pretty_font
 {
-    char m_CharStartTable[256];
-	char m_CharEndTable[256];
+    float m_CharStartTable[256];
+	float m_CharEndTable[256];
 	int font_texture;
 };
 
