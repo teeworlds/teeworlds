@@ -352,11 +352,11 @@ void draw_scrolling_background(int id, float w, float h, float t)
     gfx_quads_end();
 }
 
-int background_texture;
-int teewars_banner_texture;
+static int background_texture;
+static int teewars_banner_texture;
 
-int music_menu;
-int music_menu_id = -1;
+static int music_menu;
+static int music_menu_id = -1;
 
 void draw_image_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
 {
@@ -934,7 +934,7 @@ extern double extra_kerning[256*256];
 static int editor_screen_render()
 {
 	static bool loaded = false;
-	static char text[16] = {0};
+	static char text[32] = {0};
 
 	if (!loaded)
 	{
@@ -971,9 +971,9 @@ static int editor_screen_render()
 		loaded = true;
 	}
 
-	ui_do_edit_box(text, 150, 200, 300, 36, text, sizeof(text));
+	ui_do_edit_box(text, 160, 20, 300, 36, text, sizeof(text));
 
-	ui_do_label(150, 250, text, 80);
+	ui_do_label(160, 250, text, 70);
 
 	int len = strlen(text);
 
@@ -1000,7 +1000,7 @@ static int editor_screen_render()
 
 		char num[16];
 		sprintf(num, "(%f)", extra_kerning[index]);
-		ui_do_label(84, 30 * i + 20, num, 30);
+		ui_do_label(84, 30 * i + 30, num, 12);
 	}
 
 	for (int i = 0; i < len; i++)
@@ -1018,38 +1018,44 @@ static int editor_screen_render()
 		gfx_quads_drawTL(700+45*(current_font->m_CharEndTable[s[0]]-current_font->m_CharStartTable[s[0]]),35*i+20,1,30);
     	gfx_quads_end();
 		// less
-		if (ui_do_button((void *)(200 + i * 2), "", 0, 650, 35 * i + 10 + 20, 16, 16, draw_single_part_button, (void *)slider_big_arrow_left))
+		if (ui_do_button((void *)(200 + i * 2), "", 0, 650, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)slider_big_arrow_left))
 		{
 			current_font->m_CharStartTable[s[0]] -= 0.01;
 		}
 
 		// more
-		if (ui_do_button((void *)(200 + i * 2 + 1), "", 0, 666, 35 * i + 10 + 20, 16, 16, draw_single_part_button, (void *)slider_big_arrow_right))
+		if (ui_do_button((void *)(200 + i * 2 + 1), "", 0, 666, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)slider_big_arrow_right))
 		{
 			current_font->m_CharStartTable[s[0]] += 0.01;
 		}
 
+		char num[16];
+		sprintf(num, "(%f)", current_font->m_CharStartTable[s[0]]);
+		ui_do_label(645, 35 * i + 40, num, 12);
+
+
 
 
 		// less
-		if (ui_do_button((void *)(300 + i * 2), "", 0, 750, 35 * i + 10 + 20, 16, 16, draw_single_part_button, (void *)slider_big_arrow_left))
+		if (ui_do_button((void *)(300 + i * 2), "", 0, 750, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)slider_big_arrow_left))
 		{
 			current_font->m_CharEndTable[s[0]] -= 0.01;
 		}
 
 		// more
-		if (ui_do_button((void *)(300 + i * 2 + 1), "", 0, 766, 35 * i + 10 + 20, 16, 16, draw_single_part_button, (void *)slider_big_arrow_right))
+		if (ui_do_button((void *)(300 + i * 2 + 1), "", 0, 766, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)slider_big_arrow_right))
 		{
 			current_font->m_CharEndTable[s[0]] += 0.01;
 		}
 
-		
+		sprintf(num, "(%f)", current_font->m_CharEndTable[s[0]]);
+		ui_do_label(745, 35 * i + 40, num, 12);
 
 	}
 
 	// SAVE BUTTON
 	static int save_button;
-	if (ui_do_button(&save_button, "Save", 0, 482, 490, 128, 48, draw_teewars_button))
+	if (ui_do_button(&save_button, "Save", 0, 482, 520, 128, 48, draw_teewars_button))
 	{
 		file_stream file;
 
@@ -1086,7 +1092,7 @@ static int editor_screen_render()
 	
 	// CANCEL BUTTON
 	static int cancel_button;
-	if (ui_do_button(&cancel_button, "Cancel", 0, 620, 490, 150, 48, draw_teewars_button))
+	if (ui_do_button(&cancel_button, "Cancel", 0, 620, 520, 150, 48, draw_teewars_button))
 		screen = 0;
 
 	return 0;
@@ -1105,8 +1111,11 @@ static int menu_render(netaddr4 *server_address)
 	float t = double(time_get() - start) / double(time_freq());
 	draw_scrolling_background(background_texture, 800, 600, t * 0.01);
 
-	ui_do_image(teewars_banner_texture, 140, 20, 512, 128);
-	ui_do_label(20.0f, 600.0f-40.0f, "Version: " TEEWARS_VERSION, 36);
+	if (screen != 2)
+	{
+		ui_do_image(teewars_banner_texture, 140, 20, 512, 128);
+		ui_do_label(20.0f, 600.0f-40.0f, "Version: " TEEWARS_VERSION, 36);
+	}
 
 	if (screen == 0)
 		return main_screen_render(server_address);
