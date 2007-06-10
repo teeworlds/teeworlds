@@ -1,6 +1,5 @@
 #include <baselib/system.h>
-#include <baselib/keys.h>
-#include <baselib/mouse.h>
+#include <baselib/input.h>
 #include <baselib/audio.h>
 #include <baselib/stream/file.h>
 
@@ -68,15 +67,15 @@ void snap_decode_string(const int *src, char *dst, int max_length)
 }
 
 // --- input wrappers ---
-static int keyboard_state[2][keys::last];
+static int keyboard_state[2][input::last];
 static int keyboard_current = 0;
 static int keyboard_first = 1;
 
-void inp_mouse_relative(int *x, int *y) { mouse::position(x, y); }
+void inp_mouse_relative(int *x, int *y) { input::mouse_position(x, y); }
 int inp_key_pressed(int key) { return keyboard_state[keyboard_current][key]; }
 int inp_key_was_pressed(int key) { return keyboard_state[keyboard_current^1][key]; }
 int inp_key_down(int key) { return inp_key_pressed(key)&&!inp_key_was_pressed(key); }
-int inp_mouse_button_pressed(int button) { return mouse::pressed(button); }
+int inp_button_pressed(int button) { return input::pressed(button); }
 
 void inp_update()
 {
@@ -88,8 +87,8 @@ void inp_update()
 	}
 	
 	keyboard_current = keyboard_current^1;
-	for(int i = 0; i < keys::last; i++)
-		keyboard_state[keyboard_current][i] = keys::pressed(i);
+	for(int i = 0; i < input::last; i++)
+		keyboard_state[keyboard_current][i] = input::pressed(i);
 }
 
 // --- input snapping ---
@@ -479,7 +478,7 @@ public:
 		int64 reportinterval = time_freq()*1;
 		int frames = 0;
 		
-		mouse::set_mode(mouse::mode_relative);
+		input::set_mouse_mode(input::mode_relative);
 		
 		while (1)
 		{	
@@ -501,10 +500,10 @@ public:
 			inp_update();
 			
 			//
-			if(keys::pressed(keys::f1))
-				mouse::set_mode(mouse::mode_absolute);
-			if(keys::pressed(keys::f2))
-				mouse::set_mode(mouse::mode_relative);
+			if(input::pressed(input::f1))
+				input::set_mouse_mode(input::mode_absolute);
+			if(input::pressed(input::f2))
+				input::set_mouse_mode(input::mode_relative);
 				
 			// pump the network
 			pump_network();
@@ -533,7 +532,7 @@ public:
 				conn.counter_reset();
 			}
 			
-			if (keys::pressed(keys::esc))
+			if (input::pressed(input::esc))
 				if (get_state() == STATE_CONNECTING || get_state() == STATE_ONLINE)
 					disconnect();
 

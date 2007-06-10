@@ -1742,10 +1742,10 @@ void modc_render()
 		input.angle = (int)(a*256.0f);
 		input.jump = inp_key_pressed(config.key_jump);
 		
-		input.fire = inp_mouse_button_pressed(0);// | (oldinput.fire << 16);
+		input.fire = inp_key_pressed(input::mouse_1);// | (oldinput.fire << 16);
 		//oldinput.fire = input.fire & 0x0000ffff;
 		
-		input.hook = inp_mouse_button_pressed(1) || inp_key_pressed(baselib::keys::lctrl); // be nice to mac users O.o
+		input.hook = inp_key_pressed(input::mouse_2) || inp_key_pressed(baselib::input::lctrl); // be nice to mac users O.o
 		input.blink = inp_key_pressed('S');
 		
 		// Weapon switching
@@ -1965,7 +1965,7 @@ void modc_render()
 	// render gui stuff
 	gfx_mapscreen(0,0,400,300);
 	// render score board
-	if(inp_key_pressed(baselib::keys::tab))
+	if(inp_key_pressed(baselib::input::tab))
 	{
 		gfx_texture_set(font_texture);
 		gfx_quads_text(10, 50, 8, "Score Board");

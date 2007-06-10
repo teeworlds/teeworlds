@@ -3,8 +3,7 @@
 #include <string.h>
 
 #include <baselib/system.h>
-#include <baselib/keys.h>
-#include <baselib/mouse.h>
+#include <baselib/input.h>
 #include <baselib/network.h>
 
 #include <engine/interface.h>
@@ -119,7 +118,6 @@ struct gui_part
 {
 	int x, y;
 	int w, h;
-	bool stretch_x, stretch_y;
 };
 
 gui_part parts[] =
@@ -427,24 +425,39 @@ struct server_list
 int ui_do_key_reader(void *id, float x, float y, float w, float h, int key)
 {
 	// process
+	static bool can_be_selected = true;
 	int inside = ui_mouse_inside(x, y, w, h);
 	int new_key = key;
 	
-	if (inside)
-	{
-		ui_set_hot_item(id);
+	if (!ui_mouse_button(0) && !can_be_selected)
+		can_be_selected = true;
 
-		if (ui_mouse_button(0))
-			ui_set_active_item(id);
+	if (can_be_selected)
+	{
+		if (inside)
+		{
+			ui_set_hot_item(id);
+
+			if (ui_mouse_button(0) && ui_active_item() != id)
+			{
+				ui_set_active_item(id);
+				can_be_selected = false;
+			}
+		}
 	}
 
-	if (ui_active_item() == id)
+	if (can_be_selected)
 	{
-		int k = keys::last_key();
-		if (k)
+		if (ui_active_item() == id)
 		{
-			new_key = k;
-			ui_set_active_item(0);
+			int k = input::last_key();
+			dbg_msg("menu/-", "%i", k);
+			if (k)
+			{
+				new_key = k;
+				ui_set_active_item(0);
+				can_be_selected = false;
+			}
 		}
 	}
 
@@ -452,7 +465,7 @@ int ui_do_key_reader(void *id, float x, float y, float w, float h, int key)
 	gui_composite_box_enum box_style = screen_info_box;	
 	draw_box(box_style, tileset_regular, x, y, w, h);
 	
-	const char *str = keys::key_name(key);
+	const char *str = input::key_name(key);
 	ui_do_label(x + 10, y, str, 36);
 	if (ui_active_item() == id)
 	{
@@ -530,8 +543,8 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 
 	if (ui_active_item() == id)
 	{
-		int c = keys::last_char();
-		int k = keys::last_key();
+		int c = input::last_char();
+		int k = input::last_key();
 		int len = strlen(str);
 	
 		if (c >= 32 && c < 128)
@@ -543,7 +556,7 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 			}
 		}
 
-		if (k == keys::backspace)
+		if (k == input::backspace)
 		{
 			if (len > 0)
 				str[len-1] = 0;
@@ -926,8 +939,8 @@ static int menu_render(netaddr4 *server_address)
 
 void modmenu_init()
 {
-	keys::enable_char_cache();
-	keys::enable_key_cache();
+	input::enable_char_cache();
+	input::enable_key_cache();
 
     current_font->font_texture = gfx_load_texture("data/big_font.png");
 
@@ -974,9 +987,9 @@ int modmenu_render(void *ptr)
         mwy = mx*3.0f; // adjust to zoom and offset
             
         int buttons = 0;
-        if(inp_mouse_button_pressed(0)) buttons |= 1;
-        if(inp_mouse_button_pressed(1)) buttons |= 2;
-        if(inp_mouse_button_pressed(2)) buttons |= 4;
+        if(inp_key_pressed(input::mouse_1)) buttons |= 1;
+        if(inp_key_pressed(input::mouse_2)) buttons |= 2;
+        if(inp_key_pressed(input::mouse_3)) buttons |= 4;
             
         ui_update(mx,my,mx*3.0f,my*3.0f,buttons);
     }
@@ -1003,8 +1016,8 @@ int modmenu_render(void *ptr)
 		music_menu_id = -1;
 	}
 
-	keys::clear_char();
-	keys::clear_key();
+	input::clear_char();
+	input::clear_key();
 
 	return r;
 }

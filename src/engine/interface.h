@@ -6,7 +6,7 @@
 */
 
 // TODO: Move the definitions of these keys here
-#include <baselib/keys.h>
+#include <baselib/input.h>
 
 enum
 {
@@ -330,22 +330,6 @@ bool snd_shutdown();
 		y - Pointer to the variable that should get the Y movement.
 */
 void inp_mouse_relative(int *x, int *y);
-
-/*
-	Function: inp_mouse_button_pressed
-		Checks if a mouse button is pressed.
-		
-	Arguments:
-		button - Index to the button to check.
-			* 0 - Left mouse button.
-			* 1 - Right mouse button.
-			* 2 - Middle mouse button.
-			* Others over 2 is undefined mouse buttons.
-			
-	Returns:
-		Returns 1 if the button is pressed, otherwise 0.
-*/
-int inp_mouse_button_pressed(int button);
 
 /*
 	Function: inp_key_pressed
