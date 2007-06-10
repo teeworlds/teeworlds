@@ -931,8 +931,6 @@ static int settings_screen_render()
 
 extern double extra_kerning[256*256];
 
-#include <GL/glfw.h>
-
 static int editor_screen_render()
 {
 	static bool loaded = false;
