@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <stdlib.h>
+
+#include <baselib/system.h>
+#include <baselib/stream/file.h>
+#include <baselib/stream/line.h>
+
 
 #include <baselib/system.h>
 #include <baselib/input.h>
@@ -835,6 +841,10 @@ static int main_screen_render(netaddr4 *server_address)
 		screen = 1;
 	}
 
+	static int editor_button;
+	if (ui_do_button(&editor_button, "Kerning Editor", 0, 20, 470, 170, 48, draw_teewars_button))
+		screen = 2;
+
 	return 0;
 }
 
@@ -919,6 +929,94 @@ static int settings_screen_render()
 	return 0;
 }
 
+extern double extra_kerning[256*256];
+
+static int editor_screen_render()
+{
+	static bool loaded = false;
+	static char text[16] = {0};
+
+	if (!loaded)
+	{
+		file_stream file;
+
+		if (file.open_r("kerning.txt"))
+		{
+			line_stream lstream(&file);
+			int i = 0;
+			char *line;
+
+			while ((line = lstream.get_line()))
+				extra_kerning[i++] = atof(line);
+
+			file.close();
+		}
+
+		loaded = true;
+	}
+
+	ui_do_edit_box(text, 150, 200, 300, 36, text, sizeof(text));
+
+	ui_do_label(150, 250, text, 80);
+
+	int len = strlen(text);
+
+	for (int i = 0; i < len-1; i++)
+	{
+		char s[3] = {0};
+		s[0] = text[i];
+		s[1] = text[i+1];
+		ui_do_label(10, 30 * i + 10, s, 45); 
+
+		int index = s[0] + s[1] * 256;
+
+		// less
+		if (ui_do_button((void *)(100 + i * 2), "", 0, 50, 30 * i + 10 + 20, 16, 16, draw_single_part_button, (void *)slider_big_arrow_left))
+		{
+			extra_kerning[index] -= 0.01;
+		}
+
+		// more
+		if (ui_do_button((void *)(100 + i * 2 + 1), "", 0, 66, 30 * i + 10 + 20, 16, 16, draw_single_part_button, (void *)slider_big_arrow_right))
+		{
+			extra_kerning[index] += 0.01;
+		}
+
+		char num[16];
+		sprintf(num, "(%f)", extra_kerning[index]);
+		ui_do_label(84, 30 * i + 20, num, 30);
+	}
+
+	// SAVE BUTTON
+	static int save_button;
+	if (ui_do_button(&save_button, "Save", 0, 482, 490, 128, 48, draw_teewars_button))
+	{
+		file_stream file;
+
+		if (file.open_w("kerning.txt"))
+		{
+			char t[16];
+			
+			for (int i = 0; i < 256*256; i++)
+			{
+				sprintf(t, "%f\n", extra_kerning[i]);
+				file.write(t, strlen(t));
+			}
+
+			file.close();
+		}
+
+		//screen = 0;
+	}
+	
+	// CANCEL BUTTON
+	static int cancel_button;
+	if (ui_do_button(&cancel_button, "Cancel", 0, 620, 490, 150, 48, draw_teewars_button))
+		screen = 0;
+
+	return 0;
+}
+
 static int menu_render(netaddr4 *server_address)
 {
 	// background color
@@ -937,8 +1035,10 @@ static int menu_render(netaddr4 *server_address)
 
 	if (screen == 0)
 		return main_screen_render(server_address);
-	else
+	else if (screen == 1)
 		return settings_screen_render();
+	else if (screen == 2)
+		return editor_screen_render();
 }
 
 void modmenu_init()

@@ -610,6 +610,8 @@ pretty_font default_font =
 0
 };
 
+double extra_kerning[256*256] = {0};
+
 pretty_font *current_font = &default_font;
 
 void gfx_pretty_text(float x, float y, float size, const char *text)
@@ -623,8 +625,6 @@ void gfx_pretty_text(float x, float y, float size, const char *text)
 		const int c = *text;
 		const float width = current_font->m_CharEndTable[c] - current_font->m_CharStartTable[c];
 		
-		text++;
-
 		gfx_quads_setsubset(
 			(c%16)/16.0f + current_font->m_CharStartTable[c]/16.0f, // startx
 			(c/16)/16.0f, // starty
@@ -633,7 +633,13 @@ void gfx_pretty_text(float x, float y, float size, const char *text)
 
 		gfx_quads_drawTL(x, y, width * size, size);
 
-		x += (width + spacing) * size;
+		double x_nudge = 0;
+		if (text[1])
+			x_nudge = extra_kerning[text[0] + text[1] * 256];
+
+		x += (width + spacing + x_nudge) * size;
+
+		text++;
 	}
 
 	gfx_quads_end();
@@ -642,13 +648,21 @@ void gfx_pretty_text(float x, float y, float size, const char *text)
 float gfx_pretty_text_width(float size, const char *text)
 {
 	const float spacing = 0.05f;
-	float width = 0.0f;
+	float w = 0.0f;
 
 	while (*text)
 	{
-		const int c = *text++;
-		width += size * (current_font->m_CharEndTable[c] - current_font->m_CharStartTable[c] + spacing);
+		const int c = *text;
+		const float width = current_font->m_CharEndTable[c] - current_font->m_CharStartTable[c];
+
+		double x_nudge = 0;
+		if (text[1])
+			x_nudge = extra_kerning[text[0] + text[1] * 256];
+
+		w += (width + spacing + x_nudge) * size;
+
+		text++;
 	}
 
-	return width;
+	return w;
 }
