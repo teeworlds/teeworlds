@@ -624,20 +624,22 @@ void gfx_pretty_text(float x, float y, float size, const char *text)
 	{
 		const int c = *text;
 		const float width = current_font->m_CharEndTable[c] - current_font->m_CharStartTable[c];
+
+		x -= size * current_font->m_CharStartTable[c];
 		
 		gfx_quads_setsubset(
-			(c%16)/16.0f + current_font->m_CharStartTable[c]/16.0f, // startx
+			(c%16)/16.0f, // startx
 			(c/16)/16.0f, // starty
-			(c%16)/16.0f + current_font->m_CharEndTable[c]/16.0f + 0.001, // endx
+			(c%16)/16.0f+1.0f/16.0f, // endx
 			(c/16)/16.0f+1.0f/16.0f); // endy
 
-		gfx_quads_drawTL(x, y, width * size, size);
+		gfx_quads_drawTL(x, y, size, size);
 
 		double x_nudge = 0;
 		if (text[1])
 			x_nudge = extra_kerning[text[0] + text[1] * 256];
 
-		x += (width + spacing + x_nudge) * size;
+		x += (width + current_font->m_CharStartTable[c] + spacing + x_nudge) * size;
 
 		text++;
 	}
