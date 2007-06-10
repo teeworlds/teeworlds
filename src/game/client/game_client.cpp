@@ -1742,10 +1742,11 @@ void modc_render()
 		input.angle = (int)(a*256.0f);
 		input.jump = inp_key_pressed(config.key_jump);
 		
-		input.fire = inp_key_pressed(input::mouse_1);// | (oldinput.fire << 16);
+		input.fire = inp_key_pressed(config.key_fire);// | (oldinput.fire << 16);
 		//oldinput.fire = input.fire & 0x0000ffff;
 		
-		input.hook = inp_key_pressed(input::mouse_2) || inp_key_pressed(baselib::input::lctrl); // be nice to mac users O.o
+		input.hook = inp_key_pressed(config.key_hook);
+
 		input.blink = inp_key_pressed('S');
 		
 		// Weapon switching

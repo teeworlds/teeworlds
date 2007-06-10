@@ -451,7 +451,6 @@ int ui_do_key_reader(void *id, float x, float y, float w, float h, int key)
 		if (ui_active_item() == id)
 		{
 			int k = input::last_key();
-			dbg_msg("menu/-", "%i", k);
 			if (k)
 			{
 				new_key = k;
@@ -476,21 +475,12 @@ int ui_do_key_reader(void *id, float x, float y, float w, float h, int key)
 	return new_key;
 }
 
-int ui_do_combo_box(void *id, float x, float y, float w, char *lines[128], int line_count, int selected_index)
+int ui_do_combo_box(void *id, float x, float y, float w, char *lines, int line_count, int selected_index)
 {
 	float line_height = 36.0f;
 
 	int inside = (ui_active_item() == id) ? ui_mouse_inside(x, y, w, line_count * line_height) : ui_mouse_inside(x, y, w, line_height);
 	int hover_index = (ui_mouse_y() - y) / line_height;
-
-	char resolutions[][128] =
-	{
-		"400x300",
-		"640x480",
-		"800x600",
-		"1024x768",
-		"1280x1024",
-	};
 
 	if (ui_active_item() == id)
 	{
@@ -503,7 +493,7 @@ int ui_do_combo_box(void *id, float x, float y, float w, char *lines[128], int l
 				box_style = screen_list_box;
 
 			draw_box(box_style, tileset_regular, x, y + i * line_height, w, line_height);
-			ui_do_label(x + 10 + 10, y + i * line_height, resolutions[i], 36);
+			ui_do_label(x + 10 + 10, y + i * line_height, lines + 128 * i, 36);
 			if (selected_index == i)
 				ui_do_label(x + 10, y + i * line_height, "-", 36);
 		}
@@ -519,7 +509,7 @@ int ui_do_combo_box(void *id, float x, float y, float w, char *lines[128], int l
 	else
 	{
 		draw_box(screen_list_box, tileset_regular, x, y, w, line_height);
-		ui_do_label(x + 10, y, resolutions[selected_index], 36);
+		ui_do_label(x + 10, y, lines + 128 * selected_index, 36);
 
 		if (inside && ui_mouse_button(0))
 			ui_set_active_item(id);
@@ -850,7 +840,7 @@ static int main_screen_render(netaddr4 *server_address)
 
 static int settings_screen_render()
 {
-	const float column1_x = 20;
+	const float column1_x = 150;
 	const float column2_x = column1_x + 150;
 	const float column3_x = column2_x + 170;
 	const float name_y = 160;
@@ -877,23 +867,37 @@ static int settings_screen_render()
 	// RESOLUTION
 	static char resolutions[][128] =
 	{
-		"400x300",
-		"640x480",
 		"800x600",
 		"1024x764",
-		"1280x1024",
+		"1280x960",
+		"1600x1200",
 	};
 	static int res[][2] =
 	{
-		{ 400, 300 },
-		{ 640, 480 },
 		{ 800, 600 },
 		{ 1024, 768 },
-		{ 1280, 1024 },
+		{ 1280, 960 },
+		{ 1600, 1200 },
 	};
-	static int selected_index = 0;
+
+	static int selected_index = -1;
+	if (selected_index == -1)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			if (config.screen_width == res[i][0])
+			{
+				selected_index = i;
+				break;
+			}
+		}
+
+		if (selected_index == -1)
+			selected_index = 1;
+	}
+
 	ui_do_label(column1_x, resolution_y, "Resolution:", 36);
-	selected_index = ui_do_combo_box(&selected_index, column2_x, resolution_y, 180, (char **)resolutions, 5, selected_index);
+	selected_index = ui_do_combo_box(&selected_index, column2_x, resolution_y, 180, (char *)resolutions, 4, selected_index);
 
 	config_set_screen_width(&config_copy, res[selected_index][0]);
 	config_set_screen_height(&config_copy, res[selected_index][1]);
