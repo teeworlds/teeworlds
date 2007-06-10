@@ -26,7 +26,7 @@ void config_reset()
 void config_set(const char *line)
 {
 	char var_str[256];
-	char *val_str = strchr(line, '=');
+	char *val_str = (char *)strchr(line, '=');
 	if (val_str)
 	{
 		memcpy(var_str, line, val_str - line);
