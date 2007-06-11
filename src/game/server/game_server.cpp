@@ -1429,7 +1429,7 @@ public:
 				}
 			}
 		}
-		else if (input.activeweapon && iactiveweapon != (input.activeweapon & ~0x80000000))
+		else if (input.activeweapon && (unsigned int)iactiveweapon != (input.activeweapon & ~0x80000000))
 		{
 			input.activeweapon &= ~0x80000000;
 			// check which weapon to activate

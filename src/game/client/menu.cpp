@@ -542,6 +542,9 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 		int c = input::last_char();
 		int k = input::last_key();
 		int len = strlen(str);
+
+		if (c)
+			dbg_msg("menu", "c: %i", c);
 	
 		if (c >= 32 && c < 128)
 		{
@@ -1015,22 +1018,22 @@ static int editor_screen_render()
     	gfx_quads_begin();
     	gfx_quads_setcolor(0,0,0,0.5);
     	gfx_quads_drawTL(700,35*i+20,1,30);
-		gfx_quads_drawTL(700+45*(current_font->m_CharEndTable[s[0]]-current_font->m_CharStartTable[s[0]]),35*i+20,1,30);
+		gfx_quads_drawTL(700+45*(current_font->m_CharEndTable[(int)s[0]]-current_font->m_CharStartTable[(int)s[0]]),35*i+20,1,30);
     	gfx_quads_end();
 		// less
 		if (ui_do_button((void *)(200 + i * 2), "", 0, 650, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)slider_big_arrow_left))
 		{
-			current_font->m_CharStartTable[s[0]] -= 0.01;
+			current_font->m_CharStartTable[(int)s[0]] -= 0.01;
 		}
 
 		// more
 		if (ui_do_button((void *)(200 + i * 2 + 1), "", 0, 666, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)slider_big_arrow_right))
 		{
-			current_font->m_CharStartTable[s[0]] += 0.01;
+			current_font->m_CharStartTable[(int)s[0]] += 0.01;
 		}
 
 		char num[16];
-		sprintf(num, "(%f)", current_font->m_CharStartTable[s[0]]);
+		sprintf(num, "(%f)", current_font->m_CharStartTable[(int)s[0]]);
 		ui_do_label(645, 35 * i + 40, num, 12);
 
 
@@ -1039,16 +1042,16 @@ static int editor_screen_render()
 		// less
 		if (ui_do_button((void *)(300 + i * 2), "", 0, 750, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)slider_big_arrow_left))
 		{
-			current_font->m_CharEndTable[s[0]] -= 0.01;
+			current_font->m_CharEndTable[(int)s[0]] -= 0.01;
 		}
 
 		// more
 		if (ui_do_button((void *)(300 + i * 2 + 1), "", 0, 766, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)slider_big_arrow_right))
 		{
-			current_font->m_CharEndTable[s[0]] += 0.01;
+			current_font->m_CharEndTable[(int)s[0]] += 0.01;
 		}
 
-		sprintf(num, "(%f)", current_font->m_CharEndTable[s[0]]);
+		sprintf(num, "(%f)", current_font->m_CharEndTable[(int)s[0]]);
 		ui_do_label(745, 35 * i + 40, num, 12);
 
 	}
@@ -1117,12 +1120,15 @@ static int menu_render(netaddr4 *server_address)
 		ui_do_label(20.0f, 600.0f-40.0f, "Version: " TEEWARS_VERSION, 36);
 	}
 
-	if (screen == 0)
-		return main_screen_render(server_address);
-	else if (screen == 1)
+	switch (screen)
+	{
+	case 1:
 		return settings_screen_render();
-	else if (screen == 2)
+	case 2:
 		return editor_screen_render();
+	default:
+		return main_screen_render(server_address);
+	}
 }
 
 void modmenu_init()
