@@ -180,7 +180,8 @@ class data_constructor:
 			if p.target in self.targets:
 				i = self.targets[p.target]
 				#print "ptr @ %d -> %s -> %d" % (p.index, p.target, i)
-				self.write(p.index, 8, struct.pack("P", i)) # TODO: fix me
+				data = struct.pack("P", i)
+				self.write(p.index, len(data), data)
 			else:
 				print "ERROR: couldn't find target '%s' for pointer at %d" % (p.target, p.index)
 
@@ -305,7 +306,7 @@ class variable_instance(variable):
 	def get_patch_code(self, ptrname, basename):
 		return ["patch_ptr_%s(&(%s->%s), %s);" % (self.subtype, ptrname, self.name, basename)]
 	def size(self):
-		return translator.types[self.subtype].size()
+		return self.translator.types[self.subtype].size()
 	def emit_data(self, cons, index, src_data):
 		target = src_data.find_node(self.expr)
 		translator.types[self.subtype].emit_data(cons, index, target)
