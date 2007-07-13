@@ -307,9 +307,7 @@ class variable_instance(variable):
 	def size(self):
 		return translator.types[self.subtype].size()
 	def emit_data(self, cons, index, src_data):
-		print self.expr
 		target = src_data.find_node(self.expr)
-		print target
 		translator.types[self.subtype].emit_data(cons, index, target)
 		#target = 
 		#cons.add_pointer(index, target)
