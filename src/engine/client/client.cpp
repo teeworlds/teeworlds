@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include <engine/interface.h>
 
@@ -13,58 +14,13 @@
 #include <engine/snapshot.h>
 #include "ui.h"
 
-#include <engine/lzw.h>
+#include <engine/compression.h>
 
 #include <engine/versions.h>
 #include <engine/config.h>
+#include <engine/network.h>
 
 using namespace baselib;
-
-// --- string handling (MOVE THESE!!) ---
-void snap_encode_string(const char *src, int *dst, int length, int max_length)
-{
-	const unsigned char *p = (const unsigned char *)src;
-	
-	// handle whole int
-	for(int i = 0; i < length/4; i++)
-	{
-		*dst = (p[0]<<24|p[1]<<16|p[2]<<8|p[3]);
-		p += 4;
-		dst++;
-	}
-	
-	// take care of the left overs
-	int left = length%4;
-	if(left)
-	{
-		unsigned last = 0;
-		switch(left)
-		{
-			case 3: last |= p[2]<<8;
-			case 2: last |= p[1]<<16;
-			case 1: last |= p[0]<<24;
-		}
-		*dst = last;
-	}
-}
-
-void snap_decode_string(const int *src, char *dst, int max_length)
-{
-	dbg_assert((max_length%4) == 0, "length must be power of 4");
-	for(int i = 0; i < max_length; i++)
-		dst[0] = 0;
-	
-	for(int i = 0; i < max_length/4; i++)
-	{
-		dst[0] = (*src>>24)&0xff;
-		dst[1] = (*src>>16)&0xff;
-		dst[2] = (*src>>8)&0xff;
-		dst[3] = (*src)&0xff;
-		src++;
-		dst+=4;
-	}
-	dst[-1] = 0; // make sure to zero terminate
-}
 
 // --- input wrappers ---
 static int keyboard_state[2][input::last];
@@ -92,7 +48,7 @@ void inp_update()
 }
 
 // --- input snapping ---
-static int input_data[MAX_INPUT_SIZE];
+static int input_data[MAX_INPUT_SIZE] = {0};
 static int input_data_size;
 static int input_is_changed = 1;
 void snap_input(void *data, int size)
@@ -110,6 +66,8 @@ enum
 	NUM_SNAPSHOT_TYPES=3,
 };
 
+static snapshot_storage snapshots_new;
+static int current_tick;
 static snapshot *snapshots[NUM_SNAPSHOT_TYPES];
 static char snapshot_data[NUM_SNAPSHOT_TYPES][MAX_SNAPSHOT_SIZE];
 static int recived_snapshots;
@@ -127,7 +85,7 @@ void *snap_get_item(int snapid, int index, snap_item *item)
 	snapshot::item *i = snapshots[snapid]->get_item(index);
 	item->type = i->type();
 	item->id = i->id();
-	return (void *)i->data;
+	return (void *)i->data();
 }
 
 int snap_num_items(int snapid)
@@ -145,9 +103,14 @@ static void snap_init()
 	recived_snapshots = 0;
 }
 
-float snap_intratick()
+float client_intratick()
 {
 	return (time_get() - snapshot_start_time)/(float)(time_freq()/SERVER_TICK_SPEED);
+}
+
+int client_tick()
+{
+	return current_tick;
 }
 
 void *snap_find_item(int snapid, int type, int id)
@@ -157,123 +120,45 @@ void *snap_find_item(int snapid, int type, int id)
 	{
 		snapshot::item *itm = snapshots[snapid]->get_item(i);
 		if(itm->type() == type && itm->id() == id)
-			return (void *)itm->data;
+			return (void *)itm->data();
 	}
 	return 0x0;
 }
 
 
-int menu_loop();
-float frametime = 0.0001f;
+int menu_loop(); // TODO: what is this?
+static float frametime = 0.0001f;
 
 float client_frametime()
 {
 	return frametime;
 }
 
-void unpack(const char *src, const char *fmt, ...)
+static net_client net;
+
+int client_send_msg()
 {
+	const msg_info *info = msg_get_info();
+	NETPACKET packet;
+	packet.client_id = 0;
+	packet.data = info->data;
+	packet.data_size = info->size;
+
+	if(info->flags&MSGFLAG_VITAL)	
+		packet.flags = PACKETFLAG_VITAL;
+	
+	net.send(&packet);
+	return 0;
 }
-
-/*int modc_onmsg(int msg)
-{
-	msg_get("iis")
-}*/
-
-/*
-	i = int (int i)
-	s = string (const char *str)
-	r = raw data (int size, void *data)
-*/
-
-/*
-class packet2
-{
-private:
-	// packet data
-	struct header
-	{
-		unsigned msg;
-		unsigned ack;
-		unsigned seq;
-	};
-	
-	unsigned char packet_data[MAX_PACKET_SIZE];
-	unsigned char *current;
-	
-	enum
-	{
-		MAX_PACKET_SIZE = 1024,
-	};
-	
-public:
-	packet2()
-	{
-		current = packet_data;
-		current += sizeof(header);
-	}
-
-	int pack(char *dst, const char *fmt, ...)
-	{
-		va_list arg_list;
-		va_start(arg_list, fmt);
-		while(*fmt)
-		{
-			if(*fmt == 's')
-			{
-				// pack string
-				const char *s = va_arg(arg_list, const char*);
-				*dst++ = 2;
-				while(*s)
-				{
-					*dst = *s;
-					dst++;
-					s++;
-				}
-				*dst = 0; // null terminate
-				dst++;
-				fmt++;
-			}
-			else if(*fmt == 'i')
-			{
-				// pack int
-				int i = va_arg(arg_list, int);
-				*dst++ = 1;
-				*dst++ = (i>>24)&0xff;
-				*dst++ = (i>>16)&0xff;
-				*dst++ = (i>>8)&0xff;
-				*dst++ = i&0xff;
-				fmt++;
-			}
-			else
-			{
-				dbg_break(); // error
-				break;
-			}
-		}
-		va_end(arg_list);	
-	}	
-};
-*/
-/*
-int msg_get(const char *fmt)
-{
-	
-}
-
-int client_msg_send(int msg, const char *fmt, ...)
-
-int server_msg_send(int msg, const char *fmt, ...)
-{
-
-}*/
 
 // --- client ---
+// TODO: remove this class
 class client
 {
 public:
-	socket_udp4 socket;
-	connection conn;
+	
+	//socket_udp4 socket;
+	//connection conn;
 	int64 reconnect_timer;
 	
 	int snapshot_part;
@@ -305,37 +190,24 @@ public:
 
 	void set_fullscreen(bool flag) { fullscreen = flag; }
 	
-	void send_packet(packet *p)
-	{
-		conn.send(p);
-	}
-	
-	void send_connect()
+	void send_info()
 	{
 		recived_snapshots = 0;
-		
-		/*
-		pack(NETMSG_CLIENT_CONNECT, "sssss",
-			TEEWARS_NETVERSION,
-			name,
-			"no clan",
-			"password",
-			"myskin");
-		*/
-		
-		packet p(NETMSG_CLIENT_CONNECT);
-		p.write_str(TEEWARS_VERSION); // payload
-		p.write_str(config.player_name);
-		p.write_str("no clan");
-		p.write_str("password");
-		p.write_str("myskin");
-		send_packet(&p);
+
+		msg_pack_start(NETMSG_INFO, MSGFLAG_VITAL);
+		msg_pack_string(config.player_name, 128);
+		msg_pack_string(config.clan_name, 128);
+		msg_pack_string(config.password, 128);
+		msg_pack_string("myskin", 128);
+		msg_pack_end();
+		client_send_msg();
 	}
 
-	void send_done()
+	void send_entergame()
 	{
-		packet p(NETMSG_CLIENT_DONE);
-		send_packet(&p);
+		msg_pack_start(NETMSG_ENTERGAME, MSGFLAG_VITAL);
+		msg_pack_end();
+		client_send_msg();
 	}
 
 	void send_error(const char *error)
@@ -343,40 +215,38 @@ public:
 		/*
 			pack(NETMSG_CLIENT_ERROR, "s", error);
 		*/
+		/*
 		packet p(NETMSG_CLIENT_ERROR);
 		p.write_str(error);
 		send_packet(&p);
 		//send_packet(&p);
 		//send_packet(&p);
+		*/
 	}	
 
 	void send_input()
 	{
-		/*
-			pack(NETMSG_CLIENT_ERROR, "s", error);
-		*/
-		packet p(NETMSG_CLIENT_INPUT);
-		p.write_int(input_data_size);
+		msg_pack_start(NETMSG_INPUT, 0);
+		msg_pack_int(input_data_size);
 		for(int i = 0; i < input_data_size/4; i++)
-			p.write_int(input_data[i]);
-		send_packet(&p);
+			msg_pack_int(input_data[i]);
+		msg_pack_end();
+		client_send_msg();
 	}
 	
 	void disconnect()
 	{
+		/*
 		send_error("disconnected");
 		set_state(STATE_OFFLINE);
 		map_unload();
+		*/
 	}
 	
 	void connect(netaddr4 *server_address)
 	{
-		conn.init(&socket, server_address);
-		
-		// start by sending connect
-		send_connect();
+		net.connect(server_address);
 		set_state(STATE_CONNECTING);
-		reconnect_timer = time_get()+time_freq();
 	}
 	
 	bool load_data()
@@ -385,14 +255,42 @@ public:
 		return true;
 	}
 	
+	void debug_render()
+	{
+		gfx_blend_normal();
+		gfx_texture_set(debug_font);
+		gfx_mapscreen(0,0,gfx_screenwidth(),gfx_screenheight());
+		
+		static NETSTATS prev, current;
+		static int64 last_snap = 0;
+		if(time_get()-last_snap > time_freq()/10)
+		{
+			last_snap = time_get();
+			prev = current;
+			net.stats(&current);
+		}
+		
+		char buffer[512];
+		sprintf(buffer, "send: %8d recv: %8d",
+			(current.send_bytes-prev.send_bytes)*10,
+			(current.recv_bytes-prev.recv_bytes)*10);
+		gfx_quads_text(10, 10, 16, buffer);
+		
+	}
+	
 	void render()
 	{
 		gfx_clear(0.0f,0.0f,0.0f);
 		
 		// this should be moved around abit
+		// TODO: clean this shit up!
 		if(get_state() == STATE_ONLINE)
 		{
 			modc_render();
+			
+			// debug render stuff
+			debug_render();
+			
 		}
 		else if (get_state() != STATE_CONNECTING && get_state() != STATE_LOADING)
 		{
@@ -404,7 +302,7 @@ public:
 			else if (status)
 				connect(&server_address);
 		}
-		else if (get_state() == STATE_CONNECTING)
+		else if (get_state() == STATE_CONNECTING || get_state() == STATE_LOADING)
 		{
 			static int64 start = time_get();
 			static int tee_texture;
@@ -458,15 +356,18 @@ public:
 		// init menu
 		modmenu_init();
 		
+		net.open(0);
+		
 		// open socket
+		/*
 		if(!socket.open(0))
 		{
 			dbg_msg("network/client", "failed to open socket");
 			return;
-		}
+		}*/
 
 		// connect to the server if wanted
-		if (server_address)
+		if(server_address)
 			connect(server_address);
 		
 		//int64 inputs_per_second = 50;
@@ -504,6 +405,9 @@ public:
 				input::set_mouse_mode(input::mode_absolute);
 			if(input::pressed(input::f2))
 				input::set_mouse_mode(input::mode_relative);
+
+			if(input::pressed(input::lctrl) && input::pressed('Q'))
+				break;
 				
 			// pump the network
 			pump_network();
@@ -523,13 +427,13 @@ public:
 			
 			if(reporttime < time_get())
 			{
-				unsigned sent, recved;
-				conn.counter_get(&sent, &recved);
-				dbg_msg("client/report", "fps=%.02f",
-					frames/(float)(reportinterval/time_freq()));
+				//unsigned sent, recved;
+				//conn.counter_get(&sent, &recved);
+				dbg_msg("client/report", "fps=%.02f netstate=%d",
+					frames/(float)(reportinterval/time_freq()), net.state());
 				frames = 0;
 				reporttime += reportinterval;
-				conn.counter_reset();
+				//conn.counter_reset();
 			}
 			
 			if (input::pressed(input::esc))
@@ -556,117 +460,171 @@ public:
 		set_state(STATE_BROKEN);
 	}
 
-	void process_packet(packet *p)
+	void process_packet(NETPACKET *packet)
 	{
-		if(p->version() != TEEWARS_NETVERSION)
+		int msg = msg_unpack_start(packet->data, packet->data_size);
+		if(msg == NETMSG_MAP)
 		{
-			error("wrong version");
-		}
-		else if(p->msg() == NETMSG_SERVER_ACCEPT)
-		{
-			const char *map;
-			map = p->read_str();
+			const char *map = msg_unpack_string();
+			dbg_msg("client/network", "connection accepted, map=%s", map);
+			set_state(STATE_LOADING);
 			
-			if(p->is_good())
+			if(map_load(map))
 			{
-				dbg_msg("client/network", "connection accepted, map=%s", map);
-				set_state(STATE_LOADING);
-				
-				if(map_load(map))
-				{
-					modc_entergame();
-					send_done();
-					dbg_msg("client/network", "loading done");
-					// now we will wait for two snapshots
-					// to finish the connection
-				}
-				else
-				{
-					error("failure to load map");
-				}
+				modc_entergame();
+				send_entergame();
+				dbg_msg("client/network", "loading done");
+				// now we will wait for two snapshots
+				// to finish the connection
+			}
+			else
+			{
+				error("failure to load map");
 			}
 		}
-		else if(p->msg() == NETMSG_SERVER_SNAP)
+		else if(msg == NETMSG_SNAP || msg == NETMSG_SNAPSMALL || msg == NETMSG_SNAPEMPTY)
 		{
 			//dbg_msg("client/network", "got snapshot");
-			int num_parts = p->read_int();
-			int part = p->read_int();
-			int part_size = p->read_int();
+			int game_tick = msg_unpack_int();
+			int delta_tick = game_tick-msg_unpack_int();
+			int num_parts = 1;
+			int part = 0;
+			int part_size = 0;
 			
-			if(p->is_good())
+			if(msg == NETMSG_SNAP)
 			{
-				if(snapshot_part == part)
+				num_parts = msg_unpack_int();
+				part = msg_unpack_int();
+			}
+			
+			if(msg != NETMSG_SNAPEMPTY)
+				part_size = msg_unpack_int();
+			
+			if(snapshot_part == part)
+			{
+				// TODO: clean this up abit
+				const char *d = (const char *)msg_unpack_raw(part_size);
+				mem_copy((char*)snapshots[SNAP_INCOMMING] + part*MAX_SNAPSHOT_PACKSIZE, d, part_size);
+				snapshot_part++;
+			
+				if(snapshot_part == num_parts)
 				{
-					const char *d = p->read_raw(part_size);
-					mem_copy((char*)snapshots[SNAP_INCOMMING] + part*MAX_SNAPSHOT_PACKSIZE, d, part_size);
-					snapshot_part++;
-				
-					if(snapshot_part == num_parts)
-					{
-						snapshot *tmp = snapshots[SNAP_PREV];
-						snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
-						snapshots[SNAP_CURRENT] = tmp;
+					snapshot *tmp = snapshots[SNAP_PREV];
+					snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
+					snapshots[SNAP_CURRENT] = tmp;
+					current_tick = game_tick;
 
-						// decompress snapshot
-						lzw_decompress(snapshots[SNAP_INCOMMING], snapshots[SNAP_CURRENT]);
-						
-						// apply snapshot, cycle pointers
-						recived_snapshots++;
-						snapshot_start_time = time_get();
-						
-						// we got two snapshots until we see us self as connected
-						if(recived_snapshots == 2)
-						{
-							local_start_time = time_get();
-							set_state(STATE_ONLINE);
-						}
-						
-						if(recived_snapshots > 2)
-							modc_newsnapshot();
-						
-						snapshot_part = 0;
+					// decompress snapshot
+					void *deltadata = snapshot_empty_delta();
+					int deltasize = sizeof(int)*3;
+
+					unsigned char tmpbuffer[MAX_SNAPSHOT_SIZE];
+					unsigned char tmpbuffer2[MAX_SNAPSHOT_SIZE];
+					if(part_size)
+					{
+						//int snapsize = lzw_decompress(snapshots[SNAP_INCOMMING], snapshots[SNAP_CURRENT]);
+						int compsize = zerobit_decompress(snapshots[SNAP_INCOMMING], part_size, tmpbuffer);
+						//int compsize = lzw_decompress(snapshots[SNAP_INCOMMING],tmpbuffer);
+						int intsize = intpack_decompress(tmpbuffer, compsize, tmpbuffer2);
+						deltadata = tmpbuffer2;
+						deltasize = intsize;
 					}
 
-				}
-				else
-				{
-					dbg_msg("client", "snapshot reset!");
+					// find snapshot that we should use as delta 
+					static snapshot emptysnap;
+					emptysnap.data_size = 0;
+					emptysnap.num_items = 0;
+					
+					snapshot *deltashot = &emptysnap;
+					int deltashot_size;
+
+					if(delta_tick >= 0)
+					{
+						void *delta_data;
+						deltashot_size = snapshots_new.get(delta_tick, &delta_data);
+						if(deltashot_size >= 0)
+						{
+							deltashot = (snapshot *)delta_data;
+						}
+						else
+						{
+							// TODO: handle this
+							dbg_msg("client", "error, couldn't find the delta snapshot");
+						}
+					}
+
+					int snapsize = snapshot_unpack_delta(deltashot, (snapshot*)snapshots[SNAP_CURRENT], deltadata, deltasize);
+					//snapshot *shot = (snapshot *)snapshots[SNAP_CURRENT];
+
+					// purge old snapshots					
+					snapshots_new.purge_until(delta_tick);
+					snapshots_new.purge_until(game_tick-50); // TODO: change this to server tickrate
+					
+					// add new
+					snapshots_new.add(game_tick, snapsize, snapshots[SNAP_CURRENT]);
+					
+					// apply snapshot, cycle pointers
+					recived_snapshots++;
+					snapshot_start_time = time_get();
+					
+					// we got two snapshots until we see us self as connected
+					if(recived_snapshots == 2)
+					{
+						local_start_time = time_get();
+						set_state(STATE_ONLINE);
+					}
+					
+					if(recived_snapshots > 2)
+						modc_newsnapshot();
+					
 					snapshot_part = 0;
+					
+					// ack snapshot
+					msg_pack_start(NETMSG_SNAPACK, 0);
+					msg_pack_int(game_tick);
+					msg_pack_end();
+					client_send_msg();
 				}
 			}
-		}
-		else
-		{
-			dbg_msg("server/client", "unknown packet %x", p->msg());
+			else
+			{
+				dbg_msg("client", "snapshot reset!");
+				snapshot_part = 0;
+			}
 		}
 	}
 	
 	void pump_network()
 	{
-		while(1)
+		net.update();
+
+		// check for errors		
+		if(get_state() != STATE_OFFLINE && net.state() == NETSTATE_OFFLINE)
 		{
-			packet p;
-			netaddr4 from;
-			int bytes = socket.recv(&from, p.data(), p.max_size());
-			
-			if(bytes <= 0)
-				break;
-			
-			process_packet(&p);
+			// TODO: add message to the user there
+			set_state(STATE_OFFLINE);
+		}
+
+		//
+		if(get_state() == STATE_CONNECTING && net.state() == NETSTATE_ONLINE)
+		{
+			// we switched to online
+			dbg_msg("client", "connected, sending info");
+			set_state(STATE_LOADING);
+			send_info();
 		}
 		
-		//
-		if(get_state() == STATE_CONNECTING && time_get() > reconnect_timer)
-		{
-			send_connect();
-			reconnect_timer = time_get() + time_freq();
-		}
+		// process packets
+		NETPACKET packet;
+		while(net.recv(&packet))
+			process_packet(&packet);
 	}	
 };
 
 int main(int argc, char **argv)
 {
 	dbg_msg("client", "starting...");
+	
 	config_reset();
 	config_load("teewars.cfg");
 
@@ -683,9 +641,23 @@ int main(int argc, char **argv)
 	{
 		if(argv[i][0] == '-' && argv[i][1] == 'c' && argv[i][2] == 0 && argc - i > 1)
 		{
-			// -c SERVER
+			// -c SERVER:PORT
 			i++;
-			if(net_host_lookup(argv[i], 8303, &server_address) != 0)
+			const char *port_str = 0;
+			for(int k = 0; argv[i][k]; k++)
+			{
+				if(argv[i][k] == ':')
+				{
+					port_str = &(argv[i][k+1]);
+					argv[i][k] = 0;
+					break;
+				}
+			}
+			int port = 8303;
+			if(port_str)
+				port = atoi(port_str);
+				
+			if(net_host_lookup(argv[i], port, &server_address) != 0)
 				dbg_msg("main", "could not find the address of %s, connecting to localhost", argv[i]);
 			else
 				connect_at_once = true;

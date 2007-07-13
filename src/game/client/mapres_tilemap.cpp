@@ -33,7 +33,8 @@ void tilemap_render(float scale, int fg)
 			gfx_quads_begin();
 			
 			int c = 0;
-			float frac = (1.0f/1024.0f); //2.0f;
+			float frac = (1.0f/1024.0f);//2.0f; //2.0f;
+			const float s = 1.0f;
 			for(int y = 0; y < tmap->height; y++)
 				for(int x = 0; x < tmap->width; x++, c++)
 				{
@@ -41,13 +42,14 @@ void tilemap_render(float scale, int fg)
 					if(d)
 					{
 						gfx_quads_setsubset(
-							(d%16)/16.0f+frac,
-							(d/16)/16.0f+frac,
-							(d%16)/16.0f+1.0f/16.0f-frac,
-							(d/16)/16.0f+1.0f/16.0f-frac);
+							(d%16)/16.0f*s+frac,
+							(d/16)/16.0f*s+frac,
+							((d%16)/16.0f+1.0f/16.0f)*s-frac,
+							((d/16)/16.0f+1.0f/16.0f)*s-frac);
 						gfx_quads_drawTL(x*scale, y*scale, scale, scale);
 					}
 				}
+			
 			gfx_quads_end();
 		}
 	}

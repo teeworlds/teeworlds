@@ -520,7 +520,7 @@ void snap_input(void *data, int size);
 	Remarks:
 		DOCTODO: Explain how to use it.
 */
-float snap_intratick();
+//float snap_intratick();
 
 /*
 	Group: Server Callbacks
@@ -681,8 +681,13 @@ void modmenu_shutdown();
 */
 int modmenu_render(void *server_address);
 
-void snap_encode_string(const char *src, int *dst, int length, int max_length);
-void snap_decode_string(const int *src, char *dst, int length);
+
+
+
+
+
+//void snap_encode_string(const char *src, int *dst, int length, int max_length);
+//void snap_decode_string(const int *src, char *dst, int length);
 
 int server_getclientinfo(int client_id, client_info *info);
 int server_tick();
@@ -693,6 +698,44 @@ int inp_key_down(int key);
 void inp_update();
 float client_frametime();
 float client_localtime();
+
+// message packing
+enum
+{
+	MSGFLAG_VITAL=1,
+};
+
+void msg_pack_start(int msg, int flags);
+void msg_pack_int(int i);
+void msg_pack_string(const char *p, int limit);
+void msg_pack_raw(const void *data, int size);
+void msg_pack_end();
+
+struct msg_info
+{
+	int msg;
+	int flags;
+	const unsigned char *data;
+	int size;
+};
+
+const msg_info *msg_get_info();
+
+// message unpacking
+int msg_unpack_start(const void *data, int data_size);
+int msg_unpack_int();
+const char *msg_unpack_string();
+const unsigned char *msg_unpack_raw(int size);
+
+// message sending
+int server_send_msg(int client_id);
+int client_send_msg();
+
+int client_tick();
+float client_intratick();
+
+
+int modc_message();
 
 #define MASTER_SERVER_ADDRESS "master.teewars.com"
 #define MASTER_SERVER_PORT 8300

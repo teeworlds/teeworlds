@@ -1,0 +1,415 @@
+sounds {
+	gun_fire {
+		"data/audio/wp_gun_fire-01.wav"
+		"data/audio/wp_gun_fire-02.wav"
+		"data/audio/wp_gun_fire-03.wav"
+	}
+
+	shotgun_fire {
+		"data/audio/wp_shotty_fire-01.wav"
+		"data/audio/wp_shotty_fire-02.wav"
+		"data/audio/wp_shotty_fire-03.wav"
+	}
+	
+	rocket_fire {
+		"data/audio/wp_flump_launch-01.wav"
+		"data/audio/wp_flump_launch-02.wav"
+		"data/audio/wp_flump_launch-03.wav"
+	}
+	
+	hammer_fire {
+		"data/audio/wp_hammer_swing-01.wav"
+		"data/audio/wp_hammer_swing-02.wav"
+		"data/audio/wp_hammer_swing-03.wav"
+	}
+	
+	ninja_fire { 
+		"data/audio/wp_ninja_attack-01.wav"
+		"data/audio/wp_ninja_attack-02.wav"
+		"data/audio/wp_ninja_attack-03.wav"
+	}
+
+	rocket_explode {
+		"data/audio/wp_flump_explo-01.wav"
+		"data/audio/wp_flump_explo-02.wav"
+		"data/audio/wp_flump_explo-03.wav"
+	}
+	
+	ninja_hit {
+		"data/audio/wp_ninja_hit-01.wav"
+		"data/audio/wp_ninja_hit-02.wav"
+		"data/audio/wp_ninja_hit-03.wav"
+	}
+
+	weapon_switch { 
+		"data/audio/wp_switch-01.wav"
+		"data/audio/wp_switch-02.wav"
+		"data/audio/wp_switch-03.wav"
+	}
+
+	player_pain_short {
+		"data/audio/vo_teefault_pain_short-01.wav"
+		"data/audio/vo_teefault_pain_short-02.wav"
+		"data/audio/vo_teefault_pain_short-03.wav"
+		"data/audio/vo_teefault_pain_short-04.wav"
+		"data/audio/vo_teefault_pain_short-05.wav"
+		"data/audio/vo_teefault_pain_short-06.wav"
+		"data/audio/vo_teefault_pain_short-07.wav"
+		"data/audio/vo_teefault_pain_short-08.wav"
+		"data/audio/vo_teefault_pain_short-09.wav"
+		"data/audio/vo_teefault_pain_short-10.wav"
+		"data/audio/vo_teefault_pain_short-11.wav"
+		"data/audio/vo_teefault_pain_short-12.wav"
+	}
+
+	player_pain_long {
+		"data/audio/vo_teefault_pain_long-01.wav"
+		"data/audio/vo_teefault_pain_long-02.wav"
+	}
+
+	body_land {
+		"data/audio/foley_land-01.wav"
+		"data/audio/foley_land-02.wav"
+		"data/audio/foley_land-03.wav"
+		"data/audio/foley_land-04.wav"
+	}
+	
+	player_jump {
+		"data/audio/foley_foot_left-01.wav"
+		"data/audio/foley_foot_left-02.wav"
+		"data/audio/foley_foot_left-03.wav"
+		"data/audio/foley_foot_left-04.wav"
+		"data/audio/foley_foot_right-01.wav"
+		"data/audio/foley_foot_right-02.wav"
+		"data/audio/foley_foot_right-03.wav"
+		"data/audio/foley_foot_right-04.wav"
+	}
+
+	player_die {
+		"data/audio/foley_body_splat-02.wav"
+		"data/audio/foley_body_splat-03.wav"
+		"data/audio/foley_body_splat-04.wav"
+	}
+	
+	player_spawn {
+		"data/audio/vo_teefault_spawn-01.wav"
+		"data/audio/vo_teefault_spawn-02.wav"
+		"data/audio/vo_teefault_spawn-03.wav"
+		"data/audio/vo_teefault_spawn-04.wav"
+		"data/audio/vo_teefault_spawn-05.wav"
+		"data/audio/vo_teefault_spawn-06.wav"
+		"data/audio/vo_teefault_spawn-07.wav"
+	}
+
+	tee_cry {
+		"data/audio/vo_teefault_cry-01.wav"
+		"data/audio/vo_teefault_cry-02.wav"
+	}
+
+	hook_loop { 
+		"data/audio/hook_loop-01.wav"
+		"data/audio/hook_loop-02.wav"
+	}
+	
+	hook_attach {
+		"data/audio/hook_attach-01.wav"
+		"data/audio/hook_attach-02.wav"
+		"data/audio/hook_attach-03.wav"
+	}
+}
+
+
+images {
+	weapons {
+		filename "data/tileset_weapons.png"
+	}
+	
+	game {
+		filename "data/game_main.png"
+	}
+
+	particles {
+		filename "data/tileset_particles.png"
+	}
+
+	sun {
+		filename "data/sun.png"
+	}
+	
+	char_default {
+		filename "data/char_teefault.png"
+	}
+}
+
+particles {
+	part1 {
+		sprite sprites.particles.part1
+		color 0.7 0.7 0.7 1.0
+		life 50
+	}
+
+	part2 {
+		sprite sprites.particles.part2
+		color 1.0 1.0 1.0 1.0
+		life 50
+	}
+
+	part3 {
+		sprite sprites.particles.part3
+		color 0.8 0.8 0.8 1.0
+		life 50
+	}
+
+	part4 {
+		sprite sprites.particles.part4
+		color 0.98 0.1 0.16 1.0
+		life 70
+	}
+
+	part5 {
+		sprite sprites.particles.part5
+		color 1.0 1.0 1.0 1.0
+		life 70
+	}
+
+	part6 {
+		sprite sprites.particles.part6
+		color 0.6 0.6 0.6 1.0
+		life 100
+	}
+
+	part7 {
+		sprite sprites.particles.part7
+		color 1.0 1.0 1.0 1.0
+		life 100
+	}
+	
+	part8 {
+		sprite sprites.particles.part8
+		color 0.7 0.7 0.7 1.0
+		life 150
+	}
+	
+	part9 {
+		sprite sprites.particles.part9
+		color 1.0 1.0 1.0 1.0
+		life 40
+	}
+}
+
+
+weapons {
+	gun {
+		sprite_body sprites.weapons.weapon_gun_body
+		sprite_cursor sprites.weapons.weapon_gun_cursor
+		sprite_proj sprites.weapons.weapon_gun_proj
+
+		recoil 10
+		reloadtime 100
+		visual_size 64
+	}
+	
+	rocket {
+		sprite_body sprites.weapons.weapon_rocket_body
+		sprite_cursor sprites.weapons.weapon_rocket_cursor
+		sprite_proj sprites.weapons.weapon_rocket_proj
+		
+		recoil 10
+		reloadtime 600
+		visual_size 96
+	}
+	
+	shotgun {
+		sprite_body sprites.weapons.weapon_shotgun_body
+		sprite_cursor sprites.weapons.weapon_shotgun_cursor
+		sprite_proj sprites.weapons.weapon_shotgun_proj
+		
+		recoil 10
+		reloadtime 800
+		visual_size 96
+	}
+	
+	hammer {
+		sprite_body sprites.weapons.weapon_hammer_body
+		sprite_cursor sprites.weapons.weapon_hammer_cursor
+		sprite_proj sprites.weapons.weapon_hammer_proj
+		
+		recoil 10
+		reloadtime 100
+		visual_size 96
+	}
+}
+	
+sprites {
+
+	particles images.particles 16 16 {
+		part1 2 0 2 2
+		part2 4 0 2 2
+		part3 6 0 2 2
+		part4 8 0 2 2
+		part5 10 0 2 2
+		part6 2 2 2 2
+		part7 4 2 2 2
+		part8 6 2 2 2
+		part9 8 2 2 2
+		
+		star1 0 0 2 2
+		star2 0 2 2 2
+	}
+	
+	hud images.game 32 16 {
+		health_full 0 0 4 4
+		health_empty 5 0 4 4
+		armor_full 0 5 4 4
+		armor_empty 5 5 4 4
+	}
+	
+	weapons images.weapons 32 32 {
+		weapon_gun_body 2 4 4 2
+		weapon_gun_cursor 0 4 2 2
+		weapon_gun_proj 6 4 2 2
+		weapon_gun_muzzle1 8 4 3 2
+		weapon_gun_muzzle2 12 4 3 2
+		weapon_gun_muzzle3 16 4 3 2
+		
+		weapon_shotgun_body 2 6 8 2
+		weapon_shotgun_cursor 0 6 2 2
+		weapon_shotgun_proj 10 6 2 2
+		weapon_shotgun_muzzle1 12 6 3 2
+		weapon_shotgun_muzzle2 16 6 3 2
+		weapon_shotgun_muzzle3 20 6 3 2
+		
+		weapon_rocket_body 2 8 7 2
+		weapon_rocket_cursor 0 8 2 2
+		weapon_rocket_proj 10 8 2 2
+		
+		weapon_hammer_body 2 1 4 3
+		weapon_hammer_cursor 0 0 2 2
+		weapon_hammer_proj 0 0 0 0
+		
+		weapon_ninja_body 2 10 7 2
+		weapon_ninja_cursor 0 10 2 2
+		weapon_ninja_proj 0 0 0 0
+		
+		hook_chain 2 0 1 1
+		hook_head 3 0 2 1
+		
+		hadoken1 1 12 7 4
+		hadoken2 8 12 8 4
+		hadoken3 17 12 7 4
+	}
+
+	powerups images.weapons 32 32 {
+		powerup_health 10 2 2 2
+		powerup_armor 12 2 2 2
+		powerup_weapon 3 0 6 2
+		powerup_ninja 3 10 7 2
+		powerup_timefield 3 0 6 2
+	}
+	
+	tees images.char_default 16 64 {
+		tee_body 0 0 4 4
+		tee_body_outline 4 0 4 4
+		tee_foot 8 3 2 1
+		tee_foot_outline 8 2 2 1
+		
+		tee_eye_normal 10 2 1 1
+	}
+}
+
+animations {
+	base {
+		body {
+			0.0 0 -4 0
+		}
+		
+		back_foot {
+			0.0 0 10 0
+		}
+		
+		front_foot {
+			0.0 0 10 0
+		}
+		
+		attach {
+		}
+	}
+
+	idle {
+		body {
+		}
+		
+		back_foot {
+			0.0 -7 0 0
+		}
+		
+		front_foot {
+			0.0  7 0 0
+		}
+		
+		attach {
+			0.0  0 0 0
+		}
+	}
+	
+	inair {
+		body {
+		}
+		
+		back_foot {
+			0.0 -3 0 -0.1
+		}
+		
+		front_foot {
+			0.0 3 0 -0.1
+		}
+		
+		attach {
+		}	
+	}
+
+	walk {
+		body {
+		}
+		
+		front_foot {
+			0.0   8  0 0
+			0.2  -8  0 0
+			0.4 -10 -4 0.2
+			0.6  -8 -8 0.3
+			0.8   4 -4 -0.2
+			1.0   8  0 0
+		}
+	
+		back_foot {
+			0.0 -10 -4 0.2
+			0.2  -8 -8 0.3
+			0.4  -4 -4 -0.2
+			0.6   0  0 0
+			0.8  -8  0 0
+			1.0 -10 -4 0.2
+		}
+		
+		attach {
+		}
+	}
+	
+	hammer_swing {
+		body {
+		}
+		
+		front_foot {
+		}
+	
+		back_foot {
+		}
+		
+		attach {
+			0.0 0 0 -0.10
+			0.3 0 0 0.25
+			0.4 0 0 0.30
+			0.5 0 0 0.25
+			1.0 0 0 -0.10
+		}
+	}	
+}

@@ -1,0 +1,80 @@
+struct image {
+	int id = 0
+	string filename = filename@1
+}
+
+struct spriteset {
+	ptr:image img = @1
+	int gridx = @2
+	int gridy = @3
+}
+
+struct sprite {
+	ptr:spriteset set = parent
+	int x = @1
+	int y = @2
+	int w = @3
+	int h = @4
+}
+
+struct sound {
+	int id = 0
+	string filename = @0
+}
+
+struct soundset {
+	int last = 0
+	array:sound sounds = *
+}
+
+struct particleinfo {
+	ptr:sprite spr = sprite@1
+	float color_r = color@1
+	float color_g = color@2
+	float color_b = color@3
+	float color_a = color@4
+	int lifemod = life@1
+}
+
+struct weapon {
+	ptr:sprite sprite_body = sprite_body@1
+	ptr:sprite sprite_cursor = sprite_cursor@1
+	ptr:sprite sprite_proj = sprite_proj@1
+	int recoil = recoil@1
+	int visual_size = visual_size@1
+}
+
+struct keyframe {
+	float time =  @0
+	float x = @1
+	float y = @2
+	float angle = @3
+}
+
+struct sequence {
+	array:keyframe frames = *
+}
+
+struct animation {
+	instance:sequence body = body
+	instance:sequence back_foot = back_foot
+	instance:sequence front_foot = front_foot
+	instance:sequence attach = attach
+}
+
+struct data_container {
+	array:image images = images.*
+	array:spriteset spritesets = sprites.*
+	array:sprite sprites = sprites.*.*
+	array:weapon weapons = weapons.*
+	array:particleinfo particles = particles.*
+
+	array:soundset sounds = sounds.*
+	array:animation animations = animations.*
+}
+
+const array:int weapon = weapons.*
+const array:int sound = sounds.*
+const array:int image = images.*
+const array:int sprite = sprites.*.*
+const array:int anim = animations.*

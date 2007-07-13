@@ -1,0 +1,5 @@
+struct data_container {
+}
+
+const array:int sound = sounds.*
+const array:int weapon = weapons.*

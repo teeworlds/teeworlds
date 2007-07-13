@@ -31,7 +31,60 @@ function Copy(outputdir, ...)
 	return outputs
 end
 
---
+function dc_header(output, data, script)
+	print("dc_header " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script))
+    return os.execute("scripts/compiler.py " .. data .. " " .. script .. " -h " .. output)
+end
+
+function dc_source(output, data, script)
+	print("dc_source " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script))
+    return os.execute("scripts/compiler.py " .. data .. " " .. script .. " -s " .. output)
+end
+
+function dc_data(output, data, script)
+	print("dc_data " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script))
+    return os.execute("scripts/compiler.py " .. data .. " " .. script .. " -d " .. output)
+end
+
+
+function DataCompile_Header(datafile, scriptfile, outputfile)
+	datafile = Path(datafile)
+	scriptfile = Path(scriptfile)
+	outputfile = Path(outputfile)
+	bam_add_job("dc_header", outputfile, datafile, scriptfile)
+	bam_add_dependency(outputfile, datafile)
+	bam_add_dependency(outputfile, scriptfile)
+	return outputfile
+end
+
+function DataCompile_Source(datafile, scriptfile, outputfile)
+	datafile = Path(datafile)
+	scriptfile = Path(scriptfile)
+	outputfile = Path(outputfile)
+	bam_add_job("dc_source", outputfile, datafile, scriptfile)
+	bam_add_dependency(outputfile, datafile)
+	bam_add_dependency(outputfile, scriptfile)
+	return outputfile
+end
+
+function DataCompile(datafile, scriptfile, headerfile, sourcefile, outputdatafile)
+	datafile = Path(datafile)
+	scriptfile = Path(scriptfile)
+	headerfile = Path(headerfile)
+	sourcefile = Path(sourcefile)
+	outputdatafile = Path(outputdatafile)
+	bam_add_job("dc_source", sourcefile, datafile, scriptfile)
+	bam_add_job("dc_header", headerfile, datafile, scriptfile)
+	bam_add_job("dc_data", outputdatafile, datafile, scriptfile)
+	bam_add_dependency(sourcefile, datafile)
+	bam_add_dependency(sourcefile, scriptfile)
+	bam_add_dependency(sourcefile, headerfile)
+	bam_add_dependency(headerfile, datafile)
+	bam_add_dependency(headerfile, scriptfile)
+	bam_add_dependency(outputdatafile, datafile)
+	bam_add_dependency(outputdatafile, scriptfile)
+	return {data = outputdatafile, header=headerfile, source=sourcefile}
+end
 
 --baselib = Import("src/baselib/baselib.bam")
 baselib = Import("../baselib/baselib.bam")
@@ -47,18 +100,25 @@ settings.cc.flags = "-Wall"
 settings.cc.includes:add("src")
 settings.cc.includes:add("../baselib/src/external/zlib")
 
+serverdata = DataCompile("datasrc/teewars.ds", "datasrc/server.dts", "src/game/server/data.h", "src/game/server/data/data.cpp", "data/server.dat")
+clientdata = DataCompile("datasrc/teewars.ds", "datasrc/client.dts", "src/game/client/data.h", "src/game/client/data/data.cpp", "data/client.dat")
+
 engine = Compile(settings, Collect("src/engine/*.cpp"))
 client = Compile(settings, Collect("src/engine/client/*.cpp", "src/engine/client/pnglite/*.c"))
 server = Compile(settings, Collect("src/engine/server/*.cpp"))
 game_shared = Compile(settings, Collect("src/game/*.cpp"))
-game_client = Compile(settings, Collect("src/game/client/*.cpp"))
-game_server = Compile(settings, Collect("src/game/server/*.cpp"))
+game_client = Compile(settings, Collect("src/game/client/*.cpp"), clientdata.source)
+game_server = Compile(settings, Collect("src/game/server/*.cpp"), serverdata.source)
 editor = Compile(settings, Collect("src/editor/*.cpp"))
+
+crapnet = Compile(settings, Collect("src/crapnet/*.cpp"))
 
 client_exe = Link(settings, "teewars", engine, client, game_shared, game_client)
 server_exe = Link(server_settings, "teewars_srv", engine, server, game_shared, game_server)
 -- editor_exe = Link(settings, "editor", engine, game_shared, editor)
+crapnet_exe = Link(server_settings, "crapnet", crapnet)
 
-Target(PseudoTarget("client", client_exe))
-Target(PseudoTarget("server", server_exe))
+Target(PseudoTarget("client", client_exe, clientdata.data))
+Target(PseudoTarget("server", server_exe, serverdata.data))
+Target(PseudoTarget("tools", crapnet_exe))
 -- Target(PseudoTarget("editor", editor_exe))

@@ -1,15 +1,8 @@
 #include <baselib/system.h>
-#include <baselib/vmath.h>
+#include <baselib/math.h>
 #include <math.h>
 #include "../engine/interface.h"
 #include "mapres_col.h"
-
-// Don't tweak :)
-const float pi = 3.14159265358979f;
-
-#define LERP(a,b,t) (a + (b-a) * t)
-#define min(a, b) ( a > b ? b : a)
-#define max(a, b) ( a > b ? a : b)
 
 inline baselib::vec2 get_direction(int angle)
 {
@@ -21,7 +14,7 @@ inline float get_angle(baselib::vec2 dir)
 {
 	float a = atan(dir.y/dir.x);
 	if(dir.x < 0)
-		a = a+pi;
+		a = a+baselib::pi;
 	return a;
 }
 
@@ -76,7 +69,8 @@ struct ev_sound
 
 struct ev_healthmod
 {
-	int x, y;
+	int x, y; // could perhaps be an client id
+	int vx, vy; // should be an angle instead
 	int amount;
 };
 
@@ -84,20 +78,19 @@ struct obj_projectile
 {
 	int type;
 	int x, y;
-	int vx, vy;
+	int vx, vy; // should be an angle instead
 };
 
 struct obj_powerup
 {
-	int type;
-	int subtype;
 	int x, y;
-	int vx, vy;
+	int type; // why do we need two types?
+	int subtype;
 };
 
 struct obj_player
 {
-	int name[8];
+	//int name[8];
 	
 	int local;
 	int clientid;
@@ -113,12 +106,10 @@ struct obj_player
 	// current active weapon
 	int weapon;
 	// current active modifier
-	int modifier;
+	//int modifier;
 
-	// num attack ticks left of current attck
-	int attackticks;
-	int attacklen;
-	int visualtimeattack;
+	// num attack ticks left of current attack
+	int attacktick;
 	
 	int score;
 	int emote;
@@ -182,50 +173,4 @@ enum
 	ITEM_ARMOR_5=0x00030005,
 	ITEM_ARMOR_10=0x00030010,
 	ITEM_NINJA=0x00040001,
-};
-
-// sound categories and stuff
-enum
-{
-	SOUND_FIRE_GUN = 0,
-	SOUND_FIRE_SHOTGUN,
-	SOUND_FIRE_ROCKET,
-	SOUND_FIRE_MELEE,
-	SOUND_FIRE_NINJA,
-
-
-	// impacts with world
-	SOUND_IMPACT_PROJECTILE_GUN,
-	SOUND_IMPACT_PROJECTILE_SHOTGUN,
-	SOUND_IMPACT_PROJECTILE_ROCKET,
-
-
-	// chain ?
-
-	// Player movement
-	SOUND_PLAYER_JUMP,
-	SOUND_PLAYER_HURT_SHORT,
-	SOUND_PLAYER_HURT_LONG,
-	SOUND_PLAYER_SPAWN,
-	SOUND_PLAYER_CHAIN_LOOP,
-	SOUND_PLAYER_CHAIN_IMPACT,
-	SOUND_PLAYER_IMPACT,
-	SOUND_PLAYER_IMPACT_NINJA,
-	SOUND_PLAYER_DIE,
-	SOUND_PLAYER_SWITCHWEAPON,
-	SOUND_PLAYER_EQUIP,
-	SOUND_PLAYER_LAND,
-
-	SOUND_NUMSOUNDS,
-
-
-	// extra defs (for future?)
-	SOUND_EQUIP_GUN = SOUND_PLAYER_EQUIP,
-	SOUND_EQUIP_ROCKET = SOUND_PLAYER_EQUIP,
-	SOUND_EQUIP_SHOTGUN = SOUND_PLAYER_EQUIP,
-	SOUND_EQUIP_MELEE = SOUND_PLAYER_EQUIP,
-
-	SOUND_LOOPFLAG_STARTLOOP = 0x80000000,
-	SOUND_LOOPFLAG_STOPLOOP = 0x40000000,
-	SOUND_MASK = ~(SOUND_LOOPFLAG_STARTLOOP | SOUND_LOOPFLAG_STOPLOOP),
 };

@@ -374,13 +374,14 @@ void draw_single_part_button(void *id, const char *text, int checked, float x, f
 	else
 		tileset = tileset_regular;
 
-	draw_part((gui_parts_enum)(int)(int *)extra, tileset, x, y, w, h);
+	
+	draw_part((gui_parts_enum)((char*)extra-(char*)0), tileset, x, y, w, h);
 }
 
 void draw_menu_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
 {
 	gui_composite_box_enum box_style;
-	if ((int)extra)
+	if ((int)((char*)extra-(char*)0))
 		box_style = screen_info_box;
 	else
 		box_style = screen_list_box;
@@ -401,7 +402,7 @@ void draw_teewars_button(void *id, const char *text, int checked, float x, float
 	else
 		tileset = tileset_regular;
 
-	if ((int)(int *)extra == 1)
+	if ((int)((char*)extra-(char*)0) == 1)
 		tileset = tileset_inactive;
 
 	draw_box(button_big_box, tileset, x, y, w, h);
@@ -486,7 +487,7 @@ int ui_do_combo_box(void *id, float x, float y, float w, char *lines, int line_c
 	float line_height = 36.0f;
 
 	int inside = (ui_active_item() == id) ? ui_mouse_inside(x, y, w, line_count * line_height) : ui_mouse_inside(x, y, w, line_height);
-	int hover_index = (ui_mouse_y() - y) / line_height;
+	int hover_index = (int)((ui_mouse_y() - y) / line_height);
 
 	if (ui_active_item() == id)
 	{

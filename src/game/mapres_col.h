@@ -1,3 +1,4 @@
+#include <baselib/vmath.h>
 
 struct mapres_collision
 {
@@ -8,3 +9,4 @@ struct mapres_collision
 
 int col_init(int dividor);
 int col_check_point(int x, int y);
+bool col_intersect_line(baselib::vec2 pos0, baselib::vec2 pos1, baselib::vec2 *out);

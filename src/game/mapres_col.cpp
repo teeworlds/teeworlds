@@ -1,7 +1,11 @@
 #include <baselib/system.h>
+#include <baselib/vmath.h>
+#include <baselib/math.h>
 #include "../engine/interface.h"
 #include "mapres_col.h"
 #include "mapres.h"
+
+using namespace baselib;
 
 /*
 	Simple collision rutines!
@@ -41,4 +45,25 @@ int col_check_point(int x, int y)
 		return 0; // up == sky == free
 	
 	return col.data[ny*col.w+nx];
+}
+
+// TODO: rewrite this smarter!
+bool col_intersect_line(vec2 pos0, vec2 pos1, vec2 *out)
+{
+	float d = distance(pos0, pos1);
+	
+	for(float f = 0; f < d; f++)
+	{
+		float a = f/d;
+		vec2 pos = mix(pos0, pos1, a);
+		if(col_check_point((int)pos.x, (int)pos.y))
+		{
+			if(out)
+				*out = pos;
+			return true;
+		}
+	}
+	if(out)
+		*out = pos1;
+	return false;
 }

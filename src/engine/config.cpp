@@ -29,7 +29,7 @@ void config_set(const char *line)
 	const char *val_str = strchr(line, '=');
 	if (val_str)
 	{
-		memcpy(var_str, line, val_str - line);
+		mem_copy(var_str, line, val_str - line);
 		var_str[val_str - line] = 0;
 		++val_str;
 
