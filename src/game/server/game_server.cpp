@@ -516,7 +516,7 @@ public:
 		if(num)
 		{
 			mapres_spawnpoint *sp = (mapres_spawnpoint*)map_get_item(start + (rand()%num), NULL, NULL);
-			pos = vec2(sp->x, sp->y);
+			pos = vec2((float)sp->x, (float)sp->y);
 		}
 		else
 			pos = vec2(100.0f, -60.0f);

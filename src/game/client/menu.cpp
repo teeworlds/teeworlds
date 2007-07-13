@@ -1024,13 +1024,13 @@ static int editor_screen_render()
 		// less
 		if (ui_do_button((void *)(200 + i * 2), "", 0, 650, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)slider_big_arrow_left))
 		{
-			current_font->m_CharStartTable[(int)s[0]] -= 0.01;
+			current_font->m_CharStartTable[(int)s[0]] -= 0.01f;
 		}
 
 		// more
 		if (ui_do_button((void *)(200 + i * 2 + 1), "", 0, 666, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)slider_big_arrow_right))
 		{
-			current_font->m_CharStartTable[(int)s[0]] += 0.01;
+			current_font->m_CharStartTable[(int)s[0]] += 0.01f;
 		}
 
 		char num[16];
@@ -1043,13 +1043,13 @@ static int editor_screen_render()
 		// less
 		if (ui_do_button((void *)(300 + i * 2), "", 0, 750, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)slider_big_arrow_left))
 		{
-			current_font->m_CharEndTable[(int)s[0]] -= 0.01;
+			current_font->m_CharEndTable[(int)s[0]] -= 0.01f;
 		}
 
 		// more
 		if (ui_do_button((void *)(300 + i * 2 + 1), "", 0, 766, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)slider_big_arrow_right))
 		{
-			current_font->m_CharEndTable[(int)s[0]] += 0.01;
+			current_font->m_CharEndTable[(int)s[0]] += 0.01f;
 		}
 
 		sprintf(num, "(%f)", current_font->m_CharEndTable[(int)s[0]]);

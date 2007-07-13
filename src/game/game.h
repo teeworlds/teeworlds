@@ -18,7 +18,7 @@ inline float get_angle(baselib::vec2 dir)
 	return a;
 }
 
-inline bool col_check_point(float x, float y) { return col_check_point((int)x, (int)y); }
+inline bool col_check_point(float x, float y) { return col_check_point((int)x, (int)y) != 0; }
 inline bool col_check_point(baselib::vec2 p) { return col_check_point(p.x, p.y); }
 
 // Network stuff

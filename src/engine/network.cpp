@@ -305,7 +305,7 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 		else if(conn->state == NETWORK_CONNSTATE_CONNECT)
 		{
 			// connection made
-			if(p->flags == NETWORK_PACKETFLAG_CONNECT|NETWORK_PACKETFLAG_ACCEPT)
+			if(p->flags == (NETWORK_PACKETFLAG_CONNECT|NETWORK_PACKETFLAG_ACCEPT))
 			{
 				conn_send(conn, NETWORK_PACKETFLAG_ACCEPT, 0, 0);
 				conn->state = NETWORK_CONNSTATE_ONLINE;

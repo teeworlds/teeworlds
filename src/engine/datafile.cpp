@@ -68,7 +68,7 @@ datafile *datafile_load(const char *filename)
 	// TODO: change this header
 	int header[4];
 	file.read(header, sizeof(header));
-	if(((header[0]>>24)&0xff) != 'D' || ((header[0]>>16)&0xff) != 'A' || (header[0]>>8)&0xff != 'T' || (header[0]&0xff)!= 'A')
+	if(((header[0]>>24)&0xff) != 'D' || ((header[0]>>16)&0xff) != 'A' || ((header[0]>>8)&0xff) != 'T' || (header[0]&0xff) != 'A')
 	{
 		dbg_msg("datafile", "wrong signature. %x %x %x %x", header[0], header[1], header[2], header[3]);
 		return 0;
