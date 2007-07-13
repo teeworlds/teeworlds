@@ -31,19 +31,24 @@ function Copy(outputdir, ...)
 	return outputs
 end
 
+dc_compiler = "scripts/compiler.py"
+if family == "windows" then
+	dc_compiler = "scripts\\compiler.py"
+end
+
 function dc_header(output, data, script)
 	print("dc_header " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script))
-    return os.execute("scripts/compiler.py " .. data .. " " .. script .. " -h " .. output)
+	return os.execute(dc_compiler .. " " .. data .. " " .. script .. " -h " .. output)
 end
 
 function dc_source(output, data, script)
 	print("dc_source " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script))
-    return os.execute("scripts/compiler.py " .. data .. " " .. script .. " -s " .. output)
+	return os.execute(dc_compiler .. " " .. data .. " " .. script .. " -s " .. output)
 end
 
 function dc_data(output, data, script)
 	print("dc_data " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script))
-    return os.execute("scripts/compiler.py " .. data .. " " .. script .. " -d " .. output)
+	return os.execute(dc_compiler .. " " .. data .. " " .. script .. " -d " .. output)
 end
 
 
@@ -96,7 +101,11 @@ baselib.apply(server_settings, "network")
 
 settings.cc.debug = 1
 settings.cc.optimize = 0
-settings.cc.flags = "-Wall"
+if family == "windows" then
+	settings.cc.flags = "/wd4244"
+else
+	settings.cc.flags = "-Wall"
+end
 settings.cc.includes:add("src")
 settings.cc.includes:add("../baselib/src/external/zlib")
 
