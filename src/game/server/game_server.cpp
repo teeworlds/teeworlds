@@ -871,6 +871,9 @@ public:
 	{
 		vel += force;
 
+		// create healthmod indicator
+		create_damageind(pos, normalize(force), dmg);
+
 		if(armor)
 		{
 			armor -= 1;
@@ -885,9 +888,6 @@ public:
 		}
 		else
 			armor -= dmg;
-		
-		// create healthmod indicator
-		create_damageind(pos, normalize(force), dmg);
 		
 		damage_taken_tick = server_tick()+50;
 		
