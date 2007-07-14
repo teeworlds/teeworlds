@@ -383,19 +383,6 @@ void modc_init()
 	// load the data container
 	data = load_data_container("data/client.dat");
 	
-	for(int i = 0; i < data->gui.num_boxes; i++)
-	{
-		dbg_msg("gui", "%d %d %d %d",
-			data->gui.boxes[i].rect.x,
-			data->gui.boxes[i].rect.y,
-			data->gui.boxes[i].center.x,
-			data->gui.boxes[i].center.y);
-	}
-	
-	dbg_msg("gui", "%d %d",	data->gui.boxes[GUI_BOX_BUTTON].rect.x, data->gui.boxes[GUI_BOX_BUTTON].rect.y);
-	dbg_msg("gui", "%d %d",
-		data->gui.misc[GUI_MISC_CHECKBOX_UNCHECKED].x, data->gui.misc[GUI_MISC_CHECKBOX_UNCHECKED].y);
-	
 	// load sounds
 	for(int s = 0; s < data->num_sounds; s++)
 		for(int i = 0; i < data->sounds[s].num_sounds; i++)
