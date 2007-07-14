@@ -487,7 +487,8 @@ int net_server_recv(NETSERVER *s, NETPACKET *packet)
 				// check if we already got this client
 				for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
 				{
-					if(net_addr4_cmp(&s->slots[i].conn.peeraddr, &addr) == 0)
+					if(s->slots[i].conn.state != NETWORK_CONNSTATE_OFFLINE &&
+						net_addr4_cmp(&s->slots[i].conn.peeraddr, &addr) == 0)
 					{
 						found = 1; // silent ignore.. we got this client already
 						break;
