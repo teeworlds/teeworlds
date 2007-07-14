@@ -62,6 +62,26 @@ struct animation {
 	instance:sequence attach = attach
 }
 
+struct gui_box {
+	int x = @1
+	int y = @2
+	int w = @3
+	int h = @4
+}
+
+struct gui_compositebox {
+	instance:gui_box rect = rect
+	instance:gui_box center = center
+}
+
+struct gui_widgets {
+	array:gui_compositebox boxes = boxes.*
+	array:gui_box misc = misc.*
+}
+
+const array:int gui_box = gui.boxes.*
+const array:int gui_misc = gui.misc.*
+
 struct data_container {
 	array:image images = images.*
 	array:spriteset spritesets = sprites.*
@@ -71,6 +91,8 @@ struct data_container {
 
 	array:soundset sounds = sounds.*
 	array:animation animations = animations.*
+
+	instance:gui_widgets gui = gui
 }
 
 const array:int weapon = weapons.*

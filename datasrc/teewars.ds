@@ -413,3 +413,77 @@ animations {
 		}
 	}	
 }
+
+gui {
+	boxes {
+		button {
+			rect 0 0 48 48
+			center 16 16 16 16
+		}
+
+		screen_thick {
+			rect 0 384 48 48
+			center 16 400 16 16
+		}
+
+		screen_transparent {
+			rect 48 384 48 48
+			center 64 400 16 16
+		}
+
+		screen_info {
+			rect 96 384 48 48
+			center 112 400 16 16
+		}
+
+		screen_textbox {
+			rect 144 384 48 48
+			center 160 400 16 16
+		}
+
+		screen_list {
+			rect 192 384 48 48
+			center 208 400 16 16
+		}
+	}
+
+	misc {
+		button_big_topleft 0 0 16 16
+		button_big_topmid 16 0 16 16
+		button_big_topright 32 0 16 16
+		button_big_midleft 0 16 16 16
+		button_big_midmid 16 16 16 16
+		button_big_midright 32 16 16 16
+		button_big_btmleft 0 32 16 16
+		button_big_btmmid 16 32 16 16
+		button_big_btmright 32 32 16 16
+		slider_big_horiz_begin 0 48 16 16
+		slider_big_horiz_mid 16 48 16 16
+		slider_big_horiz_end 32 48 16 16
+		slider_small_horiz_begin 0 96 16 16
+		slider_small_horiz_mid 16 96 16 16
+		slider_small_horiz_end 32 96 16 16
+		slider_small_vert_begin 48 96 16 16
+		radio_unchecked 64 112 32 32
+		radio_checked 96 112 32 32
+		slider_small_vert_mid 48 112 16 16
+		slider_small_vert_end 48 128 16 16
+		slider_big_vert_begin 48 48 16 16
+		slider_big_handle_vert 64 48 16 32
+		slider_big_handle_horiz 80 64 32 16
+		slider_small_handle_horiz 80 48 16 16
+		slider_big_arrow_left 0 64 16 16
+		slider_big_arrow_up 16 64 16 16
+		slider_big_arrow_right 32 64 16 16
+		slider_big_arrow_down 16 80 16 16
+		slider_small_arrow_left 0 112 16 16
+		slider_small_arrow_up 16 112 16 16
+		slider_small_arrow_right 32 112 16 16
+		slider_small_arrow_down 16 128 16 16
+		slider_small_handle_vert 96 48 16 16
+		slider_big_vert_mid 48 64 16 16
+		slider_big_vert_end 48 80 16 16
+		checkbox_unchecked 64 112 32 32
+		checkbox_checked 96 112 32 32
+	}
+}

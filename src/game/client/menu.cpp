@@ -21,6 +21,8 @@
 #include "mapres_tilemap.h"
 #include <engine/config.h>
 
+#include "data.h"
+
 using namespace baselib;
 
 /********************************************************
