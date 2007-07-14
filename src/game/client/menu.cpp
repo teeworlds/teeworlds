@@ -1137,7 +1137,7 @@ void modmenu_init()
 	input::enable_char_cache();
 	input::enable_key_cache();
 
-    current_font->font_texture = gfx_load_texture("data/big_font.png");
+    current_font->font_texture = gfx_load_texture("data/big_font2.png");
 
 	background_texture = gfx_load_texture("data/gui_bg.png");
 	gui_tileset_texture = gfx_load_texture("data/gui/gui_widgets.png");

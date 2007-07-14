@@ -1100,11 +1100,11 @@ void modc_render()
 		if(chat_active)
 		{
 			
-			gfx_texture_set(-1); // TODO: remove when the font looks better
+			/*gfx_texture_set(-1); // TODO: remove when the font looks better
 			gfx_quads_begin();
 			gfx_quads_setcolor(0,0,0,0.4f);
 			gfx_quads_drawTL(x-2, y+1, 300, 8);
-			gfx_quads_end();
+			gfx_quads_end();*/
 			
 			// render chat input
 			char buf[sizeof(chat_input)+16];
@@ -1122,11 +1122,13 @@ void modc_render()
 			if(client_tick() > chat_lines[r].tick+50*15)
 				break;
 
+			/*
 			gfx_texture_set(-1); // TODO: remove when the font looks better
 			gfx_quads_begin();
 			gfx_quads_setcolor(0,0,0,0.4f);
 			gfx_quads_drawTL(x-2, y+1, gfx_pretty_text_width(10, chat_lines[r].text)+3, 8);
 			gfx_quads_end();
+			*/
 
 			gfx_pretty_text(x, y, 10, chat_lines[r].text);
 			y -= 8;
