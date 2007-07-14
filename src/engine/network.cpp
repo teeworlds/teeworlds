@@ -19,8 +19,6 @@
 */
 
 
-#define NETWORK_HEADER_V2
-
 // move
 static int net_addr4_cmp(const NETADDR4 *a, const NETADDR4 *b)
 {
@@ -38,11 +36,7 @@ enum
 {
 	NETWORK_VERSION = 1,
 	
-#ifdef NETWORK_HEADER_V2
 	NETWORK_HEADER_SIZE = 6,
-#else
-	NETWORK_HEADER_SIZE = 12,
-#endif
 	NETWORK_MAX_PACKET_SIZE = 1024,
 	NETWORK_MAX_CLIENTS = 16,
 	
@@ -77,27 +71,12 @@ struct NETPACKETDATA
 static void send_packet(NETSOCKET socket, NETADDR4 *addr, NETPACKETDATA *packet)
 {
 	unsigned char buffer[NETWORK_MAX_PACKET_SIZE];
-#ifdef NETWORK_HEADER_V2
 	buffer[0] = packet->flags;
 	buffer[1] = ((packet->seq>>4)&0xf0) | ((packet->ack>>8)&0x0f);
 	buffer[2] = packet->seq;
 	buffer[3] = packet->ack;
 	buffer[4] = packet->crc>>8;
 	buffer[5] = packet->crc&0xff;
-#else	
-	buffer[0] = packet->ID[0];
-	buffer[1] = packet->ID[1];
-	buffer[2] = packet->version;
-	buffer[3] = packet->flags;
-	buffer[4] = packet->seq>>8;
-	buffer[5] = packet->seq&0xff;
-	buffer[6] = packet->ack>>8;
-	buffer[7] = packet->ack&0xff;
-	buffer[8] = (packet->crc>>24)&0xff;
-	buffer[9] = (packet->crc>>16)&0xff;
-	buffer[10] = (packet->crc>>8)&0xff;
-	buffer[11] = packet->crc&0xff;
-#endif
 	mem_copy(buffer+NETWORK_HEADER_SIZE, packet->data, packet->data_size);
 	int send_size = NETWORK_HEADER_SIZE+packet->data_size;
 	//dbg_msg("network", "sending packet, size=%d (%d + %d)", send_size, NETWORK_HEADER_SIZE, packet->data_size);
@@ -299,6 +278,9 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 					return 0;
 				}
 			}
+			
+			if(p->data_size == 0)
+				return 0;
 				
 			return 1;
 		}
@@ -394,7 +376,6 @@ static int check_packet(unsigned char *buffer, int size, NETPACKETDATA *packet)
 		return -1;
 	
 	// read the packet
-#ifdef NETWORK_HEADER_V2	
 	packet->ID[0] = 'T';
 	packet->ID[1] = 'W';
 	packet->version = NETWORK_VERSION;
@@ -402,15 +383,6 @@ static int check_packet(unsigned char *buffer, int size, NETPACKETDATA *packet)
 	packet->seq = ((buffer[1]&0xf0)<<4)|buffer[2];
 	packet->ack = ((buffer[1]&0x0f)<<8)|buffer[3];
 	packet->crc = (buffer[8]<<24)|(buffer[9]<<16)|(buffer[10]<<8)|buffer[11];
-#else
-	packet->ID[0] = buffer[0];
-	packet->ID[1] = buffer[1];
-	packet->version = buffer[2];
-	packet->flags = buffer[3];
-	packet->seq = (buffer[4]<<8)|buffer[5];
-	packet->ack = (buffer[6]<<8)|buffer[7];
-	packet->crc = (buffer[8]<<24)|(buffer[9]<<16)|(buffer[10]<<8)|buffer[11];
-#endif
 	packet->data_size = size - NETWORK_HEADER_SIZE;
 	packet->data = buffer+NETWORK_HEADER_SIZE;
 	
@@ -653,10 +625,8 @@ int net_client_recv(NETCLIENT *c, NETPACKET *packet)
 		
 		NETPACKETDATA data;
 		int r = check_packet(c->recv_buffer, bytes, &data);
-		if(r == 0)
+		if(r == 0 && conn_feed(&c->conn, &data, &addr))
 		{
-			// ok packet, process it
-			conn_feed(&c->conn, &data, &addr);
 			// fill in packet
 			packet->client_id = 0;
 			packet->address = addr;
