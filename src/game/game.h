@@ -41,6 +41,7 @@ enum
 	MSG_SAY,
 	MSG_CHAT,
 	MSG_SETNAME,
+	MSG_KILLMSG,
 };
 
 enum
@@ -63,6 +64,7 @@ struct player_input
 	int blink;
 	int activeweapon;
 };
+
 
 struct ev_explosion
 {

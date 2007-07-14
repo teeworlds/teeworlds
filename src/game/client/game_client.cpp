@@ -365,11 +365,36 @@ void chat_add_line(int client_id, const char *line)
 	chat_lines[chat_current_line].tick = client_tick();
 	sprintf(chat_lines[chat_current_line].text, "%s: %s", client_datas[client_id].name, line); // TODO: abit nasty
 }
- 
+
+struct killmsg
+{
+	int weapon;
+	int victim;
+	int killer;
+	int tick;
+};
+
+static const int killmsg_max = 5;
+killmsg killmsgs[killmsg_max];
+static int killmsg_current = 0;
+
 void modc_init()
 {
 	// load the data container
 	data = load_data_container("data/client.dat");
+	
+	for(int i = 0; i < data->gui.num_boxes; i++)
+	{
+		dbg_msg("gui", "%d %d %d %d",
+			data->gui.boxes[i].rect.x,
+			data->gui.boxes[i].rect.y,
+			data->gui.boxes[i].center.x,
+			data->gui.boxes[i].center.y);
+	}
+	
+	dbg_msg("gui", "%d %d",	data->gui.boxes[GUI_BOX_BUTTON].rect.x, data->gui.boxes[GUI_BOX_BUTTON].rect.y);
+	dbg_msg("gui", "%d %d",
+		data->gui.misc[GUI_MISC_CHECKBOX_UNCHECKED].x, data->gui.misc[GUI_MISC_CHECKBOX_UNCHECKED].y);
 	
 	// load sounds
 	for(int s = 0; s < data->num_sounds; s++)
@@ -390,6 +415,10 @@ void modc_entergame()
 	
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		client_datas[i].name[0] = 0;
+		
+	for(int i = 0; i < killmsg_max; i++)
+		killmsgs[i].tick = -100000;
+
 }
 
 void modc_shutdown()
@@ -622,7 +651,6 @@ static void anim_eval_add(animstate *state, animation *anim, float time, float a
 static void render_tee(animstate *anim, int skin, vec2 dir, vec2 pos)
 {
 	vec2 direction =  dir;
-	//float angle = info->angle;
 	vec2 position = pos;
 	
 	gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
@@ -633,7 +661,6 @@ static void render_tee(animstate *anim, int skin, vec2 dir, vec2 pos)
 	{
 		// first pass we draw the outline
 		// second pass we draw the filling
-		
 		int outline = p==0 ? 1 : 0;
 		int shift = charids[skin%16];
 		
@@ -642,6 +669,7 @@ static void render_tee(animstate *anim, int skin, vec2 dir, vec2 pos)
 			float basesize = 10.0f;
 			if(f == 1)
 			{
+				gfx_quads_setrotation(anim->body.angle*pi*2);
 				// draw body
 				select_sprite(outline?SPRITE_TEE_BODY_OUTLINE:SPRITE_TEE_BODY, 0, 0, shift*4);
 				gfx_quads_draw(position.x+anim->body.x, position.y+anim->body.y, 4*basesize, 4*basesize);
@@ -664,7 +692,7 @@ static void render_tee(animstate *anim, int skin, vec2 dir, vec2 pos)
 			float w = basesize*2.5f;
 			float h = basesize*1.425f;
 			
-			gfx_quads_setrotation(foot->angle);
+			gfx_quads_setrotation(foot->angle*pi*2);
 			gfx_quads_draw(position.x+foot->x, position.y+foot->y, w, h);
 		}
 	}
@@ -769,66 +797,54 @@ static void render_player(obj_player *prev, obj_player *player)
 		// TODO: draw muzzleflare
 		gfx_quads_end();
 	}
-	
-	render_tee(&state, player->clientid, direction, position);
-	
-	/*
-	gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
-	gfx_quads_begin();
-	
-	// draw foots
-	for(int p = 0; p < 2; p++)
-	{
-		// first pass we draw the outline
-		// second pass we draw the filling
-		
-		int outline = p==0 ? 1 : 0;
-		int shift = charids[player->clientid%16];
-		
-		for(int f = 0; f < 2; f++)
-		{
-			float basesize = 10.0f;
-			if(f == 1)
-			{
-				// draw body
-				select_sprite(outline?SPRITE_TEE_BODY_OUTLINE:SPRITE_TEE_BODY, 0, 0, shift*4);
-				gfx_quads_draw(position.x+state.body.x, position.y+state.body.y, 4*basesize, 4*basesize);
-				
-				// draw eyes
-				if(p == 1)
-				{
-					vec2 md = get_direction(player->angle);
-					float mouse_dir_x = md.x;
-					float mouse_dir_y = md.y;
-					
-					// normal
-					select_sprite(SPRITE_TEE_EYE_NORMAL, 0, 0, shift*4);
-					gfx_quads_draw(position.x-4+mouse_dir_x*4, position.y-8+mouse_dir_y*3, basesize, basesize);
-					gfx_quads_draw(position.x+4+mouse_dir_x*4, position.y-8+mouse_dir_y*3, basesize, basesize);
-				}
-			}
 
-			// draw feet
-			select_sprite(outline?SPRITE_TEE_FOOT_OUTLINE:SPRITE_TEE_FOOT, 0, 0, shift*4);
-			
-			keyframe *foot = f ? &state.front_foot : &state.back_foot;
-			
-			float w = basesize*2.5f;
-			float h = basesize*1.425f;
-			
-			gfx_quads_setrotation(foot->angle);
-			gfx_quads_draw(position.x+foot->x, position.y+foot->y, w, h);
-		}
-	}
-	
-	gfx_quads_end();
-	*/
+	// render the tee	
+	render_tee(&state, player->clientid, direction, position);
 }
 
 
+void render_sun(float x, float y)
+{
+	vec2 pos(x, y);
+
+	gfx_texture_set(-1);
+	gfx_blend_additive();
+	gfx_quads_begin();
+	const int rays = 10;
+	gfx_quads_setcolor(1.0f,1.0f,1.0f,0.025f);
+	for(int r = 0; r < rays; r++)
+	{
+		float a = r/(float)rays + client_localtime()*0.025f;
+		float size = (1.0f/(float)rays)*0.25f;
+		vec2 dir0(sinf((a-size)*pi*2.0f), cosf((a-size)*pi*2.0f));
+		vec2 dir1(sinf((a+size)*pi*2.0f), cosf((a+size)*pi*2.0f));
+		
+		gfx_quads_setcolorvertex(0, 1.0f,1.0f,1.0f,0.025f);
+		gfx_quads_setcolorvertex(1, 1.0f,1.0f,1.0f,0.025f);
+		gfx_quads_setcolorvertex(2, 1.0f,1.0f,1.0f,0.0f);
+		gfx_quads_setcolorvertex(3, 1.0f,1.0f,1.0f,0.0f);
+		const float range = 1000.0f;
+		gfx_quads_draw_freeform(
+			pos.x+dir0.x, pos.y+dir0.y,
+			pos.x+dir1.x, pos.y+dir1.y,
+			pos.x+dir0.x*range, pos.y+dir0.y*range,
+			pos.x+dir1.x*range, pos.y+dir1.y*range);
+	}
+	gfx_quads_end();
+	gfx_blend_normal();
+	
+	gfx_texture_set(data->images[IMAGE_SUN].id);
+	gfx_quads_begin();
+	gfx_quads_draw(pos.x, pos.y, 256, 256);
+	gfx_quads_end();	
+}
 
 void modc_render()
 {	
+	animstate idlestate;
+	anim_eval(&data->animations[ANIM_BASE], 0, &idlestate);
+	anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);	
+	
 	if(inp_key_down(input::enter))
 	{
 		if(chat_active)
@@ -973,38 +989,7 @@ void modc_render()
 
 	// draw the sun	
 	{
-		vec2 pos(local_player_pos.x*0.5f, local_player_pos.y*0.5f);
-
-		gfx_texture_set(-1);
-		gfx_blend_additive();
-		gfx_quads_begin();
-		const int rays = 10;
-		gfx_quads_setcolor(1.0f,1.0f,1.0f,0.025f);
-		for(int r = 0; r < rays; r++)
-		{
-			float a = r/(float)rays + client_localtime()*0.05f;
-			float size = (1.0f/(float)rays)*0.25f;
-			vec2 dir0(sinf((a-size)*pi*2.0f), cosf((a-size)*pi*2.0f));
-			vec2 dir1(sinf((a+size)*pi*2.0f), cosf((a+size)*pi*2.0f));
-			
-			gfx_quads_setcolorvertex(0, 1.0f,1.0f,1.0f,0.025f);
-			gfx_quads_setcolorvertex(1, 1.0f,1.0f,1.0f,0.025f);
-			gfx_quads_setcolorvertex(2, 1.0f,1.0f,1.0f,0.0f);
-			gfx_quads_setcolorvertex(3, 1.0f,1.0f,1.0f,0.0f);
-			const float range = 1000.0f;
-			gfx_quads_draw_freeform(
-				pos.x+dir0.x, pos.y+dir0.y,
-				pos.x+dir1.x, pos.y+dir1.y,
-				pos.x+dir0.x*range, pos.y+dir0.y*range,
-				pos.x+dir1.x*range, pos.y+dir1.y*range);
-		}
-		gfx_quads_end();
-		gfx_blend_normal();
-		
-		gfx_texture_set(data->images[IMAGE_SUN].id);
-		gfx_quads_begin();
-		gfx_quads_draw(pos.x, pos.y, 256, 256);
-		gfx_quads_end();
+		render_sun(local_player_pos.x*0.5f, local_player_pos.y*0.5f);
 	}
 	
 	// render map
@@ -1090,22 +1075,64 @@ void modc_render()
 		gfx_quads_end();
 	}
 	
-	// render gui stuff
-	gfx_mapscreen(0,0,400,300);
-	
+	// render kill messages
 	{
+		gfx_mapscreen(0, 0, width*1.5f, height*1.5f);
+		float startx = width*1.5f-10.0f;
+		float y = 10.0f;
+		
+		for(int i = 0; i < killmsg_max; i++)
+		{
+			
+			int r = (killmsg_current+i+1)%killmsg_max;
+			if(client_tick() > killmsgs[r].tick+50*10)
+				continue;
+			
+			float font_size = 48.0f;
+			float killername_w = gfx_pretty_text_width(font_size, client_datas[killmsgs[r].killer].name);
+			float victimname_w = gfx_pretty_text_width(font_size, client_datas[killmsgs[r].victim].name);
+			
+			float x = startx;
+			
+			// render victim name
+			x -= victimname_w;
+			gfx_pretty_text(x, y, font_size, client_datas[killmsgs[r].victim].name);
+			
+			// render victim tee
+			x -= 24.0f;
+			render_tee(&idlestate, killmsgs[r].victim, vec2(1,0), vec2(x, y+28));
+			x -= 32.0f;
+
+			// render weapon
+			x -= 44.0f;
+			gfx_texture_set(data->images[IMAGE_WEAPONS].id);
+			gfx_quads_begin();
+			select_sprite(data->weapons[killmsgs[r].weapon].sprite_body);
+			draw_sprite(x, y+28, 96);
+			gfx_quads_end();
+			x -= 52.0f;
+
+			// render killer tee
+			x -= 24.0f;
+			render_tee(&idlestate, killmsgs[r].killer, vec2(1,0), vec2(x, y+28));
+			x -= 32.0f;
+			
+			// render killer name
+			x -= killername_w;
+			gfx_pretty_text(x, y, font_size, client_datas[killmsgs[r].killer].name);
+			
+			y += 44;
+		}
+	}
+	
+	// render chat
+	{
+		gfx_mapscreen(0,0,400,300);
 		float x = 10.0f;
 		float y = 300.0f-50.0f;
 		float starty = -1;
 		if(chat_active)
 		{
-			
-			/*gfx_texture_set(-1); // TODO: remove when the font looks better
-			gfx_quads_begin();
-			gfx_quads_setcolor(0,0,0,0.4f);
-			gfx_quads_drawTL(x-2, y+1, 300, 8);
-			gfx_quads_end();*/
-			
 			// render chat input
 			char buf[sizeof(chat_input)+16];
 			sprintf(buf, "Chat: %s_", chat_input);
@@ -1122,21 +1149,13 @@ void modc_render()
 			if(client_tick() > chat_lines[r].tick+50*15)
 				break;
 
-			/*
-			gfx_texture_set(-1); // TODO: remove when the font looks better
-			gfx_quads_begin();
-			gfx_quads_setcolor(0,0,0,0.4f);
-			gfx_quads_drawTL(x-2, y+1, gfx_pretty_text_width(10, chat_lines[r].text)+3, 8);
-			gfx_quads_end();
-			*/
-
 			gfx_pretty_text(x, y, 10, chat_lines[r].text);
 			y -= 8;
 		}
 	}
 	
 	// render score board
-	if(inp_key_pressed(baselib::input::tab))
+	if(inp_key_pressed(baselib::input::tab) || (local_player && local_player->health == -1))
 	{
 		gfx_mapscreen(0, 0, width, height);
 
@@ -1157,10 +1176,6 @@ void modc_render()
 		
 		//gfx_texture_set(-1);
 		//gfx_quads_text(10, 50, 8, "Score Board");
-		animstate state;
-		anim_eval(&data->animations[ANIM_BASE], 0, &state);
-		anim_eval_add(&state, &data->animations[ANIM_IDLE], 0, 1.0f);
-
 		int num = snap_num_items(SNAP_CURRENT);
 		for(int i = 0; i < num; i++)
 		{
@@ -1177,7 +1192,7 @@ void modc_render()
 					gfx_pretty_text(x+60-gfx_pretty_text_width(48,buf), y, 48, buf);
 					gfx_pretty_text(x+128, y, 48, client_datas[player->clientid].name);
 
-					render_tee(&state, player->clientid, vec2(1,0), vec2(x+90, y+24));
+					render_tee(&idlestate, player->clientid, vec2(1,0), vec2(x+90, y+24));
 					y += 58.0f;
 				}
 			}
@@ -1199,5 +1214,13 @@ void modc_message(int msg)
 		int cid = msg_unpack_int();
 		const char *name = msg_unpack_string();
 		strncpy(client_datas[cid].name, name, 64);
+	}
+	else if(msg == MSG_KILLMSG)
+	{
+		killmsg_current = (killmsg_current+1)%killmsg_max;
+		killmsgs[killmsg_current].killer = msg_unpack_int();
+		killmsgs[killmsg_current].victim = msg_unpack_int();
+		killmsgs[killmsg_current].weapon = msg_unpack_int();
+		killmsgs[killmsg_current].tick = client_tick();
 	}
 }

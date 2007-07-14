@@ -236,11 +236,9 @@ public:
 	
 	void disconnect()
 	{
-		/*
 		send_error("disconnected");
 		set_state(STATE_OFFLINE);
 		map_unload();
-		*/
 	}
 	
 	void connect(netaddr4 *server_address)

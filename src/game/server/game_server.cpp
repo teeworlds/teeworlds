@@ -24,7 +24,7 @@ const float gravity = 0.5f;
 
 class player* get_player(int index);
 void create_damageind(vec2 p, vec2 dir, int amount);
-void create_explosion(vec2 p, int owner = -1, bool bnodamage = false);
+void create_explosion(vec2 p, int owner, int weapon, bool bnodamage);
 void create_smoke(vec2 p);
 void create_sound(vec2 pos, int sound, int loopflags = 0);
 class player* intersect_player(vec2 pos0, vec2 pos1, vec2& new_pos, class entity* notthis = 0);
@@ -225,7 +225,7 @@ public:
 		
 	virtual void snap(int snapping_client) {}
 		
-	virtual bool take_damage(vec2 force, int dmg, int from) { return true; }
+	virtual bool take_damage(vec2 force, int dmg, int from, int weapon) { return true; }
 };
 
 int entity::current_id = 1;
@@ -397,9 +397,10 @@ public:
 	int flags;
 	int damage;
 	int sound_impact;
+	int weapon;
 	float force;
 	
-	projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity* powner, int damage, int flags = 0, float force = 0.0f, int sound_impact = -1)
+	projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity* powner, int damage, int flags, float force, int sound_impact, int weapon)
 	: entity(OBJTYPE_PROJECTILE)
 	{
 		this->type = type;
@@ -412,6 +413,7 @@ public:
 		this->force = force;
 		this->damage = damage;
 		this->sound_impact = sound_impact;
+		this->weapon = weapon;
 		world.insert_entity(this);
 	}
 
@@ -430,9 +432,9 @@ public:
 				create_sound(pos, sound_impact);
 				
 			if (flags & PROJECTILE_FLAGS_EXPLODE)
-				create_explosion(oldpos, owner);
+				create_explosion(oldpos, owner, weapon, false);
 			else if (targetplayer)
-				targetplayer->take_damage(normalize(vel) * max(0.001f, force), damage, owner);
+				targetplayer->take_damage(normalize(vel) * max(0.001f, force), damage, owner, weapon);
 				
 			world.destroy_entity(this);
 		}
@@ -642,7 +644,7 @@ public:
 								direction*30.0f,
 								100,
 								this,
-								1, 0, 0, -1);
+								1, 0, 0, -1, WEAPON_GUN);
 							break;
 						case WEAPON_ROCKET:
 							new projectile(WEAPON_PROJECTILETYPE_ROCKET,
@@ -651,7 +653,7 @@ public:
 								direction*15.0f,
 								100,
 								this,
-								1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, -1);						
+								1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, -1, WEAPON_ROCKET);						
 							break;
 						case WEAPON_SHOTGUN:
 							for(int i = 0; i < 3; i++)
@@ -662,7 +664,7 @@ public:
 									direction*(20.0f+(i+1)*2.0f),
 									100,
 									this,
-									1, 0, 0, -1);
+									1, 0, 0, -1, WEAPON_SHOTGUN);
 							}
 							break;
 					}
@@ -799,7 +801,7 @@ public:
 			if(ent && ent->objtype == OBJTYPE_PLAYER)
 			{
 				player *p = (player*)ent;
-				if(p == this)
+				if(p == this || !(p->flags&FLAG_ALIVE))
 					continue; // make sure that we don't nudge our self
 				
 				// handle player <-> player collision
@@ -842,20 +844,30 @@ public:
 		pos = defered_pos;
 	}
 	
-	void die()
+	void die(int killer, int weapon)
 	{
+		// send the kill message
+		msg_pack_start(MSG_KILLMSG, MSGFLAG_VITAL);
+		msg_pack_int(killer);
+		msg_pack_int(client_id);
+		msg_pack_int(weapon);
+		msg_pack_end();
+		server_send_msg(-1);
+		
+		// a nice sound
 		create_sound(pos, SOUND_PLAYER_DIE);
 		
+		// release all hooks
 		release_hooked();
 		release_hooks();
 		
-		// TODO: insert timer here
+		// set dead state
 		dead = true;
 		die_tick = server_tick();
 		clear_flag(entity::FLAG_ALIVE);
 	}
 	
-	virtual bool take_damage(vec2 force, int dmg, int from)
+	virtual bool take_damage(vec2 force, int dmg, int from, int weapon)
 	{
 		vel += force;
 
@@ -894,7 +906,7 @@ public:
 				}
 			}
 			
-			die();
+			die(from, weapon);
 			return false;
 		}
 
@@ -1062,7 +1074,7 @@ void create_damageind(vec2 p, vec2 dir, int amount)
 	}
 }
 
-void create_explosion(vec2 p, int owner, bool bnodamage)
+void create_explosion(vec2 p, int owner, int weapon, bool bnodamage)
 {
 	// create the event
 	ev_explosion *ev = (ev_explosion *)events.create(EVENT_EXPLOSION, sizeof(ev_explosion));
@@ -1084,7 +1096,7 @@ void create_explosion(vec2 p, int owner, bool bnodamage)
 			float l = length(diff);
 			float dmg = 5 * (1 - (l/radius));
 			if((int)dmg)
-				ents[i]->take_damage(forcedir*dmg*2, (int)dmg, owner);
+				ents[i]->take_damage(forcedir*dmg*2, (int)dmg, owner, weapon);
 		}
 	}
 }
