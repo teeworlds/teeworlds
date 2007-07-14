@@ -510,15 +510,29 @@ int net_server_recv(NETSERVER *s, NETPACKET *packet)
 			// ok packet, process it
 			if(data.flags == NETWORK_PACKETFLAG_CONNECT)
 			{
-				// client that wants to connect
 				int found = 0;
+				
+				// check if we already got this client
 				for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
 				{
-					if(s->slots[i].conn.state == NETWORK_CONNSTATE_OFFLINE)
+					if(net_addr4_cmp(&s->slots[i].conn.peeraddr, &addr) == 0)
 					{
-						conn_feed(&s->slots[i].conn, &data, &addr);
-						found = 1;
+						found = 1; // silent ignore.. we got this client already
 						break;
+					}
+				}
+				
+				// client that wants to connect
+				if(!found)
+				{
+					for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
+					{
+						if(s->slots[i].conn.state == NETWORK_CONNSTATE_OFFLINE)
+						{
+							conn_feed(&s->slots[i].conn, &data, &addr);
+							found = 1;
+							break;
+						}
 					}
 				}
 				
