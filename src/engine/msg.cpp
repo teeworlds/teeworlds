@@ -10,13 +10,22 @@ void msg_pack_int(int i) { packer.add_int(i); }
 void msg_pack_string(const char *p, int limit) { packer.add_string(p, limit); }
 void msg_pack_raw(const void *data, int size) { packer.add_raw((const unsigned char *)data, size); }
 
+void msg_pack_start_system(int msg, int flags)
+{
+	packer.reset();
+	pack_info.msg = (msg<<1)|1;
+	pack_info.flags = flags;
+	
+	msg_pack_int(pack_info.msg);
+}
+
 void msg_pack_start(int msg, int flags)
 {
 	packer.reset();
-	pack_info.msg = msg;
+	pack_info.msg = msg<<1;
 	pack_info.flags = flags;
 	
-	msg_pack_int(msg);
+	msg_pack_int(pack_info.msg);
 }
 
 void msg_pack_end()
@@ -32,10 +41,12 @@ const msg_info *msg_get_info()
 
 // message unpacking
 static data_unpacker unpacker;
-int msg_unpack_start(const void *data, int data_size)
+int msg_unpack_start(const void *data, int data_size, int *system)
 {
 	unpacker.reset((const unsigned char *)data, data_size);
-	return msg_unpack_int();
+	int msg = msg_unpack_int();
+	*system = msg&1;
+	return msg>>1;
 }
 
 int msg_unpack_int() { return unpacker.get_int(); }

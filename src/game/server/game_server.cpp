@@ -5,8 +5,8 @@
 
 using namespace baselib;
 
-// ---------
-const bool debug_bots = false;
+// --------- DEBUG STUFF ---------
+const bool debug_bots = true;
 
 // --------- PHYSICS TWEAK! --------
 const float ground_control_speed = 7.0f;
@@ -23,7 +23,7 @@ const float hook_drag_speed = 15.0f;
 const float gravity = 0.5f;
 
 class player* get_player(int index);
-void create_healthmod(vec2 p, int amount);
+void create_damageind(vec2 p, vec2 dir, int amount);
 void create_explosion(vec2 p, int owner = -1, bool bnodamage = false);
 void create_smoke(vec2 p);
 void create_sound(vec2 pos, int sound, int loopflags = 0);
@@ -175,6 +175,10 @@ private:
 	friend class player;
 	entity *prev_entity;
 	entity *next_entity;
+
+	entity *prev_type_entity;
+	entity *next_type_entity;
+
 	int index;
 	static int current_id;
 protected:
@@ -189,18 +193,27 @@ public:
 	enum
 	{
 		FLAG_DESTROY=0x00000001,
+		FLAG_ALIVE=0x00000002,
 	};
-
+	
 	entity(int objtype)
 	{
 		this->objtype = objtype;
 		pos = vec2(0,0);
-		flags = 0;
+		flags = FLAG_ALIVE;
 		proximity_radius = 0;
 		
 		current_id++;
 		id = current_id;
+		
+		next_entity = 0;
+		prev_entity = 0;
+		prev_type_entity = 0;
+		next_type_entity = 0;
 	}
+	
+	void set_flag(unsigned flag) { flags |= flag; }
+	void clear_flag(unsigned flag) { flags &= ~flag; }
 	
 	virtual ~entity()
 	{
@@ -221,10 +234,19 @@ int entity::current_id = 1;
 class game_world
 {
 public:
+	enum
+	{
+		NUM_ENT_TYPES=10,
+	};
+
 	entity *first_entity;
+	entity *first_entity_types[NUM_ENT_TYPES];
+	
 	game_world()
 	{
 		first_entity = 0x0;
+		for(int i = 0; i < NUM_ENT_TYPES; i++)
+			first_entity_types[i] = 0;
 	}
 	
 	int find_entities(vec2 pos, float radius, entity **ents, int max)
@@ -232,6 +254,9 @@ public:
 		int num = 0;
 		for(entity *ent = first_entity; ent; ent = ent->next_entity)
 		{
+			if(!(ent->flags&entity::FLAG_ALIVE))
+				continue;
+				
 			if(distance(ent->pos, pos) < radius+ent->proximity_radius)
 			{
 				ents[num] = ent;
@@ -247,14 +272,13 @@ public:
 	int find_entities(vec2 pos, float radius, entity **ents, int max, const int* types, int maxtypes)
 	{
 		int num = 0;
-		for(entity *ent = first_entity; ent; ent = ent->next_entity)
+		for(int t = 0; t < maxtypes; t++)
 		{
-			for (int i = 0; i < maxtypes; i++)
+			for(entity *ent = first_entity_types[types[t]]; ent; ent = ent->next_type_entity)
 			{
-				if (ent->objtype != types[i])
+				if(!(ent->flags&entity::FLAG_ALIVE))
 					continue;
-
-				// TODO: this seams like it could be done several times unnessesary
+				
 				if(distance(ent->pos, pos) < radius+ent->proximity_radius)
 				{
 					ents[num] = ent;
@@ -276,11 +300,18 @@ public:
 		ent->next_entity = first_entity;
 		ent->prev_entity = 0x0;
 		first_entity = ent;
+
+		// into typelist aswell
+		if(first_entity_types[ent->objtype])
+			first_entity_types[ent->objtype]->prev_type_entity = ent;
+		ent->next_type_entity = first_entity_types[ent->objtype];
+		ent->prev_type_entity = 0x0;
+		first_entity_types[ent->objtype] = ent;
 	}
 	
 	void destroy_entity(entity *ent)
 	{
-		ent->flags |= entity::FLAG_DESTROY;
+		ent->set_flag(entity::FLAG_DESTROY);
 	}
 	
 	void remove_entity(entity *ent)
@@ -292,6 +323,13 @@ public:
 			first_entity = ent->next_entity;
 		if(ent->next_entity)
 			ent->next_entity->prev_entity = ent->prev_entity;
+
+		if(ent->prev_type_entity)
+			ent->prev_type_entity->next_type_entity = ent->next_type_entity;
+		else
+			first_entity_types[ent->objtype] = ent->next_type_entity;
+		if(ent->next_type_entity)
+			ent->next_type_entity->prev_type_entity = ent->prev_type_entity;
 	}
 	
 	//
@@ -394,7 +432,7 @@ public:
 			if (flags & PROJECTILE_FLAGS_EXPLODE)
 				create_explosion(oldpos, owner);
 			else if (targetplayer)
-				targetplayer->take_damage(normalize(vel) * force, damage, owner);
+				targetplayer->take_damage(normalize(vel) * max(0.001f, force), damage, owner);
 				
 			world.destroy_entity(this);
 		}
@@ -442,7 +480,7 @@ public:
 
 	//
 	int client_id;
-	char name[32];
+	char name[64];
 
 	// input	
 	player_input previnput;
@@ -455,6 +493,9 @@ public:
 	int armor;
 
 	int score;
+	
+	bool dead;
+	int die_tick;
 
 	// hooking stuff
 	enum
@@ -496,6 +537,8 @@ public:
 		direction = vec2(0.0f, 1.0f);
 		client_id = -1;
 		score = 0;
+		dead = true;
+		die_tick = 0;
 	}
 	
 	virtual void destroy() {  }
@@ -505,6 +548,8 @@ public:
 		health = PLAYER_MAXHEALTH;
 		armor = 0;
 		jumped = 0;
+		dead = false;
+		set_flag(entity::FLAG_ALIVE);
 		
 		mem_zero(&input, sizeof(input));
 		vel = vec2(0.0f, 0.0f);
@@ -520,6 +565,7 @@ public:
 		}
 		else
 			pos = vec2(100.0f, -60.0f);
+		defered_pos = pos;
 			
 		// init weapons
 		mem_zero(&weapons, sizeof(weapons));
@@ -638,6 +684,14 @@ public:
 	{
 		// TODO: rework the input to be more robust
 		// TODO: remove this tick count, it feels weird
+		if(dead)
+		{
+			if(server_tick()-die_tick >= server_tickspeed()*3) // auto respawn after 3 sec
+				respawn();
+			if(input.fire && server_tick()-die_tick >= server_tickspeed()/2) // auto respawn after 0.5 sec
+				respawn();
+			return;
+		}
 		
 		// fetch some info
 		bool grounded = is_grounded();
@@ -796,7 +850,9 @@ public:
 		release_hooks();
 		
 		// TODO: insert timer here
-		respawn();
+		dead = true;
+		die_tick = server_tick();
+		clear_flag(entity::FLAG_ALIVE);
 	}
 	
 	virtual bool take_damage(vec2 force, int dmg, int from)
@@ -819,7 +875,7 @@ public:
 			armor -= dmg;
 		
 		// create healthmod indicator
-		create_healthmod(pos, dmg);
+		create_damageind(pos, normalize(force), dmg);
 		
 		damage_taken_tick = server_tick()+50;
 		
@@ -875,6 +931,9 @@ public:
 			player->health = health;
 			player->armor = armor;
 		}
+		
+		if(dead)
+			player->health = -1;
 		
 		if(length(vel) > 15.0f)
 			player->emote = EMOTE_HAPPY;
@@ -981,20 +1040,26 @@ void powerup::snap(int snapping_client)
 
 // POWERUP END ///////////////////////
 
-static const int NUM_BOTS = 1;
-static player players[MAX_CLIENTS+NUM_BOTS];
+static player players[MAX_CLIENTS];
 
 player *get_player(int index)
 {
 	return &players[index];
 }
 
-void create_healthmod(vec2 p, int amount)
+void create_damageind(vec2 p, vec2 dir, int amount)
 {
-	ev_healthmod *ev = (ev_healthmod *)events.create(EVENT_HEALTHMOD, sizeof(ev_healthmod));
-	ev->x = (int)p.x;
-	ev->y = (int)p.y;
-	ev->amount = amount;
+	float a = get_angle(dir);
+	float s = a-pi/3;
+	float e = a+pi/3;
+	for(int i = 0; i < amount; i++)
+	{
+		float f = mix(s, e, float(i+1)/float(amount+2));
+		ev_damageind *ev = (ev_damageind *)events.create(EVENT_DAMAGEINDICATION, sizeof(ev_damageind));
+		ev->x = (int)p.x;
+		ev->y = (int)p.y;
+		ev->angle = (int)(f*256.0f);
+	}
 }
 
 void create_explosion(vec2 p, int owner, bool bnodamage)
@@ -1052,13 +1117,13 @@ player* intersect_player(vec2 pos0, vec2 pos1, vec2& new_pos, entity* notthis)
 	vec2 dir = pos1 - pos0;
 	float radius = length(dir * 0.5f);
 	vec2 center = pos0 + dir * 0.5f;
-	int num = world.find_entities(center, radius, ents, 64);
+	const int types[] = {OBJTYPE_PLAYER};
+	int num = world.find_entities(center, radius, ents, 64, types, 1);
 	for (int i = 0; i < num; i++)
 	{
 		// Check if entity is a player
-		if (ents[i] != notthis && ents[i]->objtype == OBJTYPE_PLAYER)
+		if (ents[i] != notthis)
 		{
-			// temp, set hook pos to our position
 			new_pos = ents[i]->pos;
 			return (player*)ents[i];
 		}
@@ -1082,8 +1147,11 @@ void mods_tick()
 			count++;
 			if(count == 10)
 			{
-				for(int i = 0; i < NUM_BOTS; i++)
-					mods_client_enter(MAX_CLIENTS+i);
+				for(int i = 0; i < 1; i++)
+				{
+					mods_client_enter(MAX_CLIENTS-i-1);
+					strcpy(players[MAX_CLIENTS-i-1].name, "(bot)");
+				}
 				count = -1;
 			}
 		}
@@ -1108,12 +1176,48 @@ void mods_client_enter(int client_id)
 	players[client_id].client_id = client_id;
 	players[client_id].respawn();
 	world.insert_entity(&players[client_id]);
+	
+	client_info info; // fetch login name
+	if(server_getclientinfo(client_id, &info))
+		strcpy(players[client_id].name, info.name);
+	else
+		strcpy(players[client_id].name, "(bot)");
+	
+	msg_pack_start(MSG_SETNAME, MSGFLAG_VITAL);
+	msg_pack_int(client_id);
+	msg_pack_string(players[client_id].name, 64);
+	msg_pack_end();
+	server_send_msg(-1);
+	
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(players[client_id].client_id != -1)
+		{
+			msg_pack_start(MSG_SETNAME, MSGFLAG_VITAL);
+			msg_pack_int(i);
+			msg_pack_string(players[i].name, 64);
+			msg_pack_end();
+			server_send_msg(client_id);
+		}
+	}
 }
 
 void mods_client_drop(int client_id)
 {
 	players[client_id].client_id = -1;
 	world.remove_entity(&players[client_id]);
+}
+
+void mods_message(int msg, int client_id)
+{
+	if(msg == MSG_SAY)
+	{
+		msg_pack_start(MSG_CHAT, MSGFLAG_VITAL);
+		msg_pack_int(client_id);
+		msg_pack_string(msg_unpack_string(), 512);
+		msg_pack_end();
+		server_send_msg(-1);
+	}
 }
 
 void mods_init()

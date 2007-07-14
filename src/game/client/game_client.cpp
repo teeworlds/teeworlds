@@ -1,6 +1,8 @@
 #include <baselib/math.h>
+//#include <baselib/keys.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <engine/config.h>
 #include "../game.h"
 #include "mapres_image.h"
@@ -16,6 +18,11 @@ int charids[16] = {2,10,0,4,12,6,14,1,9,15,13,11,7,5,8,3};
 static vec2 mouse_pos;
 static vec2 local_player_pos;
 static obj_player *local_player;
+
+struct client_data
+{
+	char name[64];
+} client_datas[MAX_CLIENTS];
 
 inline float frandom() { return rand()/(float)(RAND_MAX); }
 
@@ -144,28 +151,27 @@ void move_point(vec2 *inout_pos, vec2 *inout_vel, float elasticity)
 	}
 }
 
-class health_texts
+class damage_indicators
 {
 public:
 	int64 lastupdate;
 	struct item
 	{
 		vec2 pos;
-		vec2 vel;
-		int amount;
-		int istar;
+		vec2 dir;
 		float life;
 		float startangle;
 	};
 	
 	enum
 	{
-		MAX_ITEMS=16,
+		MAX_ITEMS=64,
 	};
 
-	health_texts()
+	damage_indicators()
 	{
 		lastupdate = 0;
+		num_items = 0;
 	}
 	
 	item items[MAX_ITEMS];
@@ -188,54 +194,35 @@ public:
 		*i = items[num_items];
 	}
 	
-	void create(vec2 pos, int amount)
+	void create(vec2 pos, vec2 dir)
 	{
-		amount = max(1,amount);
-		for (int j = 0; j < amount; j++)
+		item *i = create_i();
+		if (i)
 		{
-			//float a = j/(float)amount-0.5f;
-			item *i = create_i();
-			if (i)
-			{
-				i->pos = pos;
-				i->pos.y -= 20.0f;
-				i->pos.x += ((float)rand()/(float)RAND_MAX) * 5.0f;
-				i->amount = amount;
-				i->life = 1.5f;
-				i->istar = rand()%2;
-				i->vel = vec2(((float)rand()/(float)RAND_MAX) * 50.0f,-150.0f);
-				i->startangle = (( (float)rand()/(float)RAND_MAX) - 1.0f) * 2.0f * pi;
-			}
+			i->pos = pos;
+			i->life = 0.75f;
+			i->dir = dir;
+			i->startangle = (( (float)rand()/(float)RAND_MAX) - 1.0f) * 2.0f * pi;
 		}
 	}
 	
 	void render()
 	{
-		if (!lastupdate)
-			lastupdate = time_get();
-
-		int64 lasttime = lastupdate;
-		lastupdate = time_get();
-
-		float delta = (float) (lastupdate - lasttime) / (float)time_freq();
-		gfx_texture_set(data->images[IMAGE_PARTICLES].id);
+		gfx_texture_set(data->images[IMAGE_GAME].id);
 		gfx_quads_begin();
 		for(int i = 0; i < num_items;)
 		{
-			items[i].vel += vec2(0,500.0f) * delta;
-			items[i].pos += items[i].vel * delta;
-			items[i].life -= delta;
-			//items[i].pos.y -= frametime*15.0f;
+			vec2 pos = mix(items[i].pos+items[i].dir*75.0f, items[i].pos, clamp((items[i].life-0.60f)/0.15f, 0.0f, 1.0f));
+			
+			items[i].life -= client_frametime();
 			if(items[i].life < 0.0f)
 				destroy_i(&items[i]);
 			else
 			{
-				gfx_quads_setcolor(1.0f,1.0f,1.0f, items[i].life / 1.5f);
+				gfx_quads_setcolor(1.0f,1.0f,1.0f, items[i].life/0.1f);
 				gfx_quads_setrotation(items[i].startangle + items[i].life * 2.0f);
-				float size = 64.0f;
-				const int stars[] = {SPRITE_STAR1, SPRITE_STAR2};
-				select_sprite(stars[items[i].istar]);
-				gfx_quads_draw(items[i].pos.x-size/2, items[i].pos.y-size/2, size, size);
+				select_sprite(SPRITE_STAR1);
+				draw_sprite(pos.x, pos.y, 48.0f);
 				i++;
 			}
 		}
@@ -244,7 +231,7 @@ public:
 	
 };
 
-static health_texts healthmods;
+static damage_indicators damageind;
 
 class particle_system
 {
@@ -350,6 +337,35 @@ public:
 
 static particle_system temp_system;
  
+ 
+static bool chat_active = false;
+static char chat_input[512];
+static unsigned chat_input_len;
+static const int chat_max_lines = 10;
+
+struct chatline
+{
+	int tick;
+	char text[512+64];
+};
+
+chatline chat_lines[chat_max_lines];
+static int chat_current_line = 0;
+
+void chat_reset()
+{
+	for(int i = 0; i < chat_max_lines; i++)
+		chat_lines[i].tick = -1000000;
+	chat_current_line = 0;
+}
+
+void chat_add_line(int client_id, const char *line)
+{
+	chat_current_line = (chat_current_line+1)%chat_max_lines;
+	chat_lines[chat_current_line].tick = client_tick();
+	sprintf(chat_lines[chat_current_line].text, "%s: %s", client_datas[client_id].name, line); // TODO: abit nasty
+}
+ 
 void modc_init()
 {
 	// load the data container
@@ -370,6 +386,10 @@ void modc_entergame()
 	col_init(32);
 	img_init();
 	tilemap_init();
+	chat_reset();
+	
+	for(int i = 0; i < MAX_CLIENTS; i++)
+		client_datas[i].name[0] = 0;
 }
 
 void modc_shutdown()
@@ -384,10 +404,10 @@ void modc_newsnapshot()
 		snap_item item;
 		void *data = snap_get_item(SNAP_CURRENT, i, &item);
 		
-		if(item.type == EVENT_HEALTHMOD)
+		if(item.type == EVENT_DAMAGEINDICATION)
 		{
-			ev_healthmod *ev = (ev_healthmod *)data;
-			healthmods.create(vec2(ev->x, ev->y), ev->amount);
+			ev_damageind *ev = (ev_damageind *)data;
+			damageind.create(vec2(ev->x, ev->y), get_direction(ev->angle));
 		}
 		else if(item.type == EVENT_EXPLOSION)
 		{
@@ -567,6 +587,8 @@ struct animstate
 	keyframe attach;
 };
 
+
+
 static void anim_eval(animation *anim, float time, animstate *state)
 {
 	anim_seq_eval(&anim->body, time, &state->body);
@@ -597,8 +619,64 @@ static void anim_eval_add(animstate *state, animation *anim, float time, float a
 	anim_add(state, &add, amount);
 }
 
+static void render_tee(animstate *anim, int skin, vec2 dir, vec2 pos)
+{
+	vec2 direction =  dir;
+	//float angle = info->angle;
+	vec2 position = pos;
+	
+	gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
+	gfx_quads_begin();
+	
+	// draw foots
+	for(int p = 0; p < 2; p++)
+	{
+		// first pass we draw the outline
+		// second pass we draw the filling
+		
+		int outline = p==0 ? 1 : 0;
+		int shift = charids[skin%16];
+		
+		for(int f = 0; f < 2; f++)
+		{
+			float basesize = 10.0f;
+			if(f == 1)
+			{
+				// draw body
+				select_sprite(outline?SPRITE_TEE_BODY_OUTLINE:SPRITE_TEE_BODY, 0, 0, shift*4);
+				gfx_quads_draw(position.x+anim->body.x, position.y+anim->body.y, 4*basesize, 4*basesize);
+				
+				// draw eyes
+				if(p == 1)
+				{
+					// normal
+					select_sprite(SPRITE_TEE_EYE_NORMAL, 0, 0, shift*4);
+					gfx_quads_draw(position.x-4+direction.x*4, position.y-8+direction.y*3, basesize, basesize);
+					gfx_quads_draw(position.x+4+direction.x*4, position.y-8+direction.y*3, basesize, basesize);
+				}
+			}
+
+			// draw feet
+			select_sprite(outline?SPRITE_TEE_FOOT_OUTLINE:SPRITE_TEE_FOOT, 0, 0, shift*4);
+			
+			keyframe *foot = f ? &anim->front_foot : &anim->back_foot;
+			
+			float w = basesize*2.5f;
+			float h = basesize*1.425f;
+			
+			gfx_quads_setrotation(foot->angle);
+			gfx_quads_draw(position.x+foot->x, position.y+foot->y, w, h);
+		}
+	}
+	
+	gfx_quads_end();	
+}
+
 static void render_player(obj_player *prev, obj_player *player)
 {
+	if(player->health < 0) // dont render dead players
+		return;
+	
 	vec2 direction = get_direction(player->angle);
 	float angle = player->angle/256.0f;
 	vec2 position = mix(vec2(prev->x, prev->y), vec2(player->x, player->y), client_intratick());
@@ -692,6 +770,9 @@ static void render_player(obj_player *prev, obj_player *player)
 		gfx_quads_end();
 	}
 	
+	render_tee(&state, player->clientid, direction, position);
+	
+	/*
 	gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
 	gfx_quads_begin();
 	
@@ -741,10 +822,60 @@ static void render_player(obj_player *prev, obj_player *player)
 	}
 	
 	gfx_quads_end();
+	*/
 }
+
+
 
 void modc_render()
 {	
+	if(inp_key_down(input::enter))
+	{
+		if(chat_active)
+		{
+			// send message
+			msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
+			msg_pack_string(chat_input, 512);
+			msg_pack_end();
+			client_send_msg();
+		}
+		else
+		{
+			mem_zero(chat_input, sizeof(chat_input));
+			chat_input_len = 0;
+		}
+		chat_active = !chat_active;
+	}
+	
+	if(chat_active)
+	{
+		int c = input::last_char(); // TODO: bypasses the engine interface
+		int k = input::last_key(); // TODO: bypasses the engine interface
+	
+		if (c >= 32 && c < 255)
+		{
+			if (chat_input_len < sizeof(chat_input) - 1)
+			{
+				chat_input[chat_input_len] = c;
+				chat_input[chat_input_len+1] = 0;
+				chat_input_len++;
+			}
+		}
+
+		if(k == input::backspace)
+		{
+			if(chat_input_len > 0)
+			{
+				chat_input[chat_input_len-1] = 0;
+				chat_input_len--;
+			}
+		}
+		
+	}
+	
+	input::clear_char(); // TODO: bypasses the engine interface
+	input::clear_key(); // TODO: bypasses the engine interface
+	
 	// fetch new input
 	{
 		int x, y;
@@ -763,22 +894,26 @@ void modc_render()
 		float a = atan((float)mouse_pos.y/(float)mouse_pos.x);
 		if(mouse_pos.x < 0)
 			a = a+pi;
-
+			
 		input.angle = (int)(a*256.0f);
-		input.left = inp_key_pressed(config.key_move_left);
-		input.right = inp_key_pressed(config.key_move_right);
-		input.jump = inp_key_pressed(config.key_jump);
-		input.fire = inp_key_pressed(config.key_fire);
-		input.hook = inp_key_pressed(config.key_hook);
-
-		input.blink = inp_key_pressed('S');
-		
-		// Weapon switching
 		input.activeweapon = -1;
-		input.activeweapon = inp_key_pressed('1') ? 0 : input.activeweapon;
-		input.activeweapon = inp_key_pressed('2') ? 1 : input.activeweapon;
-		input.activeweapon = inp_key_pressed('3') ? 2 : input.activeweapon;
-		input.activeweapon = inp_key_pressed('4') ? 3 : input.activeweapon;
+		
+		if(!chat_active)
+		{
+			input.left = inp_key_pressed(config.key_move_left);
+			input.right = inp_key_pressed(config.key_move_right);
+			input.jump = inp_key_pressed(config.key_jump);
+			input.fire = inp_key_pressed(config.key_fire);
+			input.hook = inp_key_pressed(config.key_hook);
+
+			input.blink = inp_key_pressed('S');
+			
+			// Weapon switching
+			input.activeweapon = inp_key_pressed('1') ? 0 : input.activeweapon;
+			input.activeweapon = inp_key_pressed('2') ? 1 : input.activeweapon;
+			input.activeweapon = inp_key_pressed('3') ? 2 : input.activeweapon;
+			input.activeweapon = inp_key_pressed('4') ? 3 : input.activeweapon;
+		}
 
 		snap_input(&input, sizeof(input));
 	}
@@ -811,7 +946,7 @@ void modc_render()
 	}
 
 	// pseudo format
-	float zoom = inp_key_pressed('T') ? 1.0 : 3.0f;
+	float zoom = 3.0f;
 	
 	float width = 400*zoom;
 	float height = 300*zoom;
@@ -907,8 +1042,8 @@ void modc_render()
 
 	tilemap_render(32.0f, 1);
 	
-	// render health mods
-	healthmods.render();
+	// render damage indications
+	damageind.render();
 	
 	if(local_player)
 	{
@@ -958,14 +1093,73 @@ void modc_render()
 	// render gui stuff
 	gfx_mapscreen(0,0,400,300);
 	
+	{
+		float x = 10.0f;
+		float y = 300.0f-50.0f;
+		float starty = -1;
+		if(chat_active)
+		{
+			
+			gfx_texture_set(-1); // TODO: remove when the font looks better
+			gfx_quads_begin();
+			gfx_quads_setcolor(0,0,0,0.4f);
+			gfx_quads_drawTL(x-2, y+1, 300, 8);
+			gfx_quads_end();
+			
+			// render chat input
+			char buf[sizeof(chat_input)+16];
+			sprintf(buf, "Chat: %s_", chat_input);
+			gfx_pretty_text(x, y, 10, buf);
+			starty = y;
+		}
+		
+		y -= 10;
+		
+		int i;
+		for(i = 0; i < chat_max_lines; i++)
+		{
+			int r = ((chat_current_line-i)+chat_max_lines)%chat_max_lines;
+			if(client_tick() > chat_lines[r].tick+50*15)
+				break;
+
+			gfx_texture_set(-1); // TODO: remove when the font looks better
+			gfx_quads_begin();
+			gfx_quads_setcolor(0,0,0,0.4f);
+			gfx_quads_drawTL(x-2, y+1, gfx_pretty_text_width(10, chat_lines[r].text)+3, 8);
+			gfx_quads_end();
+
+			gfx_pretty_text(x, y, 10, chat_lines[r].text);
+			y -= 8;
+		}
+	}
+	
 	// render score board
 	if(inp_key_pressed(baselib::input::tab))
 	{
+		gfx_mapscreen(0, 0, width, height);
+
+		float x = 50.0f;
+		float y = 150.0f;
+
+		gfx_blend_normal();
+		
 		gfx_texture_set(-1);
-		gfx_quads_text(10, 50, 8, "Score Board");
+		gfx_quads_begin();
+		gfx_quads_setcolor(0,0,0,0.5f);
+		gfx_quads_drawTL(x-10.f, y-10.f, 400.0f, 600.0f);
+		gfx_quads_end();
+		
+		//gfx_texture_set(current_font->font_texture);
+		gfx_pretty_text(x, y, 64, "Score Board");
+		y += 100.0f;
+		
+		//gfx_texture_set(-1);
+		//gfx_quads_text(10, 50, 8, "Score Board");
+		animstate state;
+		anim_eval(&data->animations[ANIM_BASE], 0, &state);
+		anim_eval_add(&state, &data->animations[ANIM_IDLE], 0, 1.0f);
 
 		int num = snap_num_items(SNAP_CURRENT);
-		int row = 1;
 		for(int i = 0; i < num; i++)
 		{
 			snap_item item;
@@ -977,13 +1171,31 @@ void modc_render()
 				if(player)
 				{
 					char buf[128];
-					char name[32] = "tjo";
-					//snap_decode_string(player->name, name, 32);
-					sprintf(buf, "%4d %s", player->score, name);
-					gfx_quads_text(10, 50 + 10 * row, 8, buf);
-					row++;
+					sprintf(buf, "%4d", player->score);
+					gfx_pretty_text(x+60-gfx_pretty_text_width(48,buf), y, 48, buf);
+					gfx_pretty_text(x+128, y, 48, client_datas[player->clientid].name);
+
+					render_tee(&state, player->clientid, vec2(1,0), vec2(x+90, y+24));
+					y += 58.0f;
 				}
 			}
 		}
+	}
+}
+
+void modc_message(int msg)
+{
+	if(msg == MSG_CHAT)
+	{
+		int cid = msg_unpack_int();
+		const char *message = msg_unpack_string();
+		dbg_msg("message", "chat cid=%d msg='%s'", cid, message);
+		chat_add_line(cid, message);
+	}
+	else if(msg == MSG_SETNAME)
+	{
+		int cid = msg_unpack_int();
+		const char *name = msg_unpack_string();
+		strncpy(client_datas[cid].name, name, 64);
 	}
 }

@@ -705,6 +705,7 @@ enum
 	MSGFLAG_VITAL=1,
 };
 
+void msg_pack_start_system(int msg, int flags);
 void msg_pack_start(int msg, int flags);
 void msg_pack_int(int i);
 void msg_pack_string(const char *p, int limit);
@@ -722,20 +723,23 @@ struct msg_info
 const msg_info *msg_get_info();
 
 // message unpacking
-int msg_unpack_start(const void *data, int data_size);
+int msg_unpack_start(const void *data, int data_size, int *system);
 int msg_unpack_int();
 const char *msg_unpack_string();
 const unsigned char *msg_unpack_raw(int size);
 
 // message sending
-int server_send_msg(int client_id);
+int server_send_msg(int client_id); // client_id == -1 == broadcast
 int client_send_msg();
 
 int client_tick();
 float client_intratick();
 
+void gfx_pretty_text(float x, float y, float size, const char *text);
+float gfx_pretty_text_width(float size, const char *text);
 
-int modc_message();
+void mods_message(int msg, int client_id);
+void modc_message(int msg);
 
 #define MASTER_SERVER_ADDRESS "master.teewars.com"
 #define MASTER_SERVER_PORT 8300

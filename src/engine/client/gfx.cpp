@@ -617,7 +617,7 @@ pretty_font *current_font = &default_font;
 void gfx_pretty_text(float x, float y, float size, const char *text)
 {
 	const float spacing = 0.05f;
-	
+	gfx_texture_set(current_font->font_texture);
 	gfx_quads_begin();
 	
 	while (*text)

@@ -6,29 +6,37 @@ Group: 0.1.1 - Awesome Alpha Bug Fixed (NEXT)
 	DONE * Bobbing powerups
 	DONE * Get -c working under windows
 	DONE * Bigger powerups
-* Pickup sounds
-* FAQ on the webpage
 	DONE * Private server (no heartbeats)
 	DONE * Can't pickup ammo, health or armor when not needed
 	DONE * Fix so that the homepage is in the SVN
 
 Group: 0.2.x - 
-* Cleanup: SVN
 * Cleanup: client.cpp / server.cpp
-* Cleanup: game_client.cpp / game_server.cpp
 * Cleanup: editor.cpp
+
+* Web: FAQ on the webpage
+* Game: Events for kills and such
+* Game: Pickup sounds
+* Game: Add the sounds
+* Game: Fix the hammer again
+* Game: Tweak graphics
+
+* Client: More robust and smoother handling of snapshots
+	* Need to add some smoothed timer or something
+	
 * Masterserver: Master server should only hold ips. Clients should ask servers for more info + ping
 * Masterserver: NAT/FW detection
-* Game: Respawn time
-* Game: Chat
-* Game: Bigger and better scoreboard
-* Game: Events for kills and such
-	DONE * Client: Only send input when needed
-* Client: Should timeout from server
-* Client: More robust and smoother handling of snapshots
-* Client: Some sort of settings format (think KISS).
 * Server: LAN / Internet / Private servers.
 * Server: Answer to a getinfo message
+
+DONE * Game: Chat
+DONE * Game: Bigger and better scoreboard
+DONE * Cleanup: SVN
+DONE * Cleanup: game_client.cpp / game_server.cpp
+DONE * Game: Respawn time
+DONE * Client: Only send input when needed
+DONE * Client: Should timeout from server
+DONE * Client: Some sort of settings format (think KISS).
 
 Group: 0.3.0 - Editor Edition
 * Fix the editor

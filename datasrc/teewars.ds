@@ -252,9 +252,6 @@ sprites {
 		part7 4 2 2 2
 		part8 6 2 2 2
 		part9 8 2 2 2
-		
-		star1 0 0 2 2
-		star2 0 2 2 2
 	}
 	
 	hud images.game 32 16 {
@@ -262,6 +259,9 @@ sprites {
 		health_empty 5 0 4 4
 		armor_full 0 5 4 4
 		armor_empty 5 5 4 4
+		star1 0 10 3 3
+		star2 3 10 3 3
+		star3 6 10 3 3
 	}
 	
 	weapons images.weapons 32 32 {

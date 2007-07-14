@@ -107,8 +107,19 @@ int server_send_msg(int client_id)
 
 	if(info->flags&MSGFLAG_VITAL)	
 		packet.flags = PACKETFLAG_VITAL;
-	
-	net.send(&packet);
+			
+	if(client_id == -1)
+	{
+		// broadcast
+		for(int i = 0; i < MAX_CLIENTS; i++)
+			if(clients[i].is_ingame())
+			{
+				packet.client_id = i;
+				net.send(&packet);
+			}
+	}
+	else
+		net.send(&packet);
 	return 0;
 }
 	
@@ -337,9 +348,9 @@ public:
 						left -= chunk;
 
 						if(numpackets == 1)
-							msg_pack_start(NETMSG_SNAPSMALL, 0);
+							msg_pack_start_system(NETMSG_SNAPSMALL, 0);
 						else
-							msg_pack_start(NETMSG_SNAP, 0);
+							msg_pack_start_system(NETMSG_SNAP, 0);
 						msg_pack_int(current_tick);
 						msg_pack_int(current_tick-delta_tick); // compressed with
 						msg_pack_int(chunk);
@@ -352,7 +363,7 @@ public:
 				}
 				else
 				{
-					msg_pack_start(NETMSG_SNAPEMPTY, 0);
+					msg_pack_start_system(NETMSG_SNAPEMPTY, 0);
 					msg_pack_int(current_tick);
 					msg_pack_int(current_tick-delta_tick); // compressed with
 					msg_pack_end();
@@ -366,7 +377,7 @@ public:
 
 	void send_map(int cid)
 	{
-		msg_pack_start(NETMSG_MAP, MSGFLAG_VITAL);
+		msg_pack_start_system(NETMSG_MAP, MSGFLAG_VITAL);
 		msg_pack_string(map_name, 0);
 		msg_pack_end();
 		server_send_msg(cid);
@@ -385,40 +396,49 @@ public:
 	void process_client_packet(NETPACKET *packet)
 	{
 		int cid = packet->client_id;
-		int msg = msg_unpack_start(packet->data, packet->data_size);
-		if(msg == NETMSG_INFO)
+		int sys;
+		int msg = msg_unpack_start(packet->data, packet->data_size, &sys);
+		if(sys)
 		{
-			strncpy(clients[cid].name, msg_unpack_string(), MAX_NAME_LENGTH);
-			strncpy(clients[cid].clan, msg_unpack_string(), MAX_CLANNAME_LENGTH);
-			const char *password = msg_unpack_string();
-			const char *skin = msg_unpack_string();
-			(void)password; // ignore these variables
-			(void)skin;
-			send_map(cid);
-		}
-		else if(msg == NETMSG_ENTERGAME)
-		{
-			dbg_msg("game", "player as entered the game. cid=%x", cid);
-			clients[cid].state = client::STATE_INGAME;
-			mods_client_enter(cid);
-		}
-		else if(msg == NETMSG_INPUT)
-		{
-			int input[MAX_INPUT_SIZE];
-			int size = msg_unpack_int();
-			for(int i = 0; i < size/4; i++)
-				input[i] = msg_unpack_int();
-			mods_client_input(cid, input);
-		}
-		else if(msg == NETMSG_SNAPACK)
-		{
-			clients[cid].last_acked_snapshot = msg_unpack_int();
+			// system message
+			if(msg == NETMSG_INFO)
+			{
+				strncpy(clients[cid].name, msg_unpack_string(), MAX_NAME_LENGTH);
+				strncpy(clients[cid].clan, msg_unpack_string(), MAX_CLANNAME_LENGTH);
+				const char *password = msg_unpack_string();
+				const char *skin = msg_unpack_string();
+				(void)password; // ignore these variables
+				(void)skin;
+				send_map(cid);
+			}
+			else if(msg == NETMSG_ENTERGAME)
+			{
+				dbg_msg("game", "player as entered the game. cid=%x", cid);
+				clients[cid].state = client::STATE_INGAME;
+				mods_client_enter(cid);
+			}
+			else if(msg == NETMSG_INPUT)
+			{
+				int input[MAX_INPUT_SIZE];
+				int size = msg_unpack_int();
+				for(int i = 0; i < size/4; i++)
+					input[i] = msg_unpack_int();
+				mods_client_input(cid, input);
+			}
+			else if(msg == NETMSG_SNAPACK)
+			{
+				clients[cid].last_acked_snapshot = msg_unpack_int();
+			}
+			else
+			{
+				dbg_msg("server", "strange message cid=%d msg=%d data_size=%d", cid, msg, packet->data_size);
+			}
 		}
 		else
 		{
-			dbg_msg("server", "strange message cid=%d msg=%d data_size=%d", cid, msg, packet->data_size);
+			// game message
+			mods_message(msg, cid);
 		}
-		
 	}
 
 	void process_packet(NETPACKET *packet)

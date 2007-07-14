@@ -30,9 +30,17 @@ enum
 	OBJTYPE_PROJECTILE,
 	OBJTYPE_POWERUP,
 	EVENT_EXPLOSION,
-	EVENT_HEALTHMOD,
+	EVENT_DAMAGEINDICATION,
 	EVENT_SOUND,
 	EVENT_SMOKE,
+};
+
+enum
+{
+	MSG_NULL=0,
+	MSG_SAY,
+	MSG_CHAT,
+	MSG_SETNAME,
 };
 
 enum
@@ -67,11 +75,10 @@ struct ev_sound
 	int sound; // if (0x80000000 flag is set -> looping) if (0x40000000 is set -> stop looping
 };
 
-struct ev_healthmod
+struct ev_damageind
 {
-	int x, y; // could perhaps be an client id
-	int vx, vy; // should be an angle instead
-	int amount;
+	int x, y;
+	int angle;
 };
 
 struct obj_projectile
@@ -91,7 +98,6 @@ struct obj_powerup
 struct obj_player
 {
 	//int name[8];
-	
 	int local;
 	int clientid;
 
@@ -106,7 +112,6 @@ struct obj_player
 	// current active weapon
 	int weapon;
 	// current active modifier
-	//int modifier;
 
 	// num attack ticks left of current attack
 	int attacktick;

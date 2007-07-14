@@ -194,7 +194,7 @@ public:
 	{
 		recived_snapshots = 0;
 
-		msg_pack_start(NETMSG_INFO, MSGFLAG_VITAL);
+		msg_pack_start_system(NETMSG_INFO, MSGFLAG_VITAL);
 		msg_pack_string(config.player_name, 128);
 		msg_pack_string(config.clan_name, 128);
 		msg_pack_string(config.password, 128);
@@ -205,7 +205,7 @@ public:
 
 	void send_entergame()
 	{
-		msg_pack_start(NETMSG_ENTERGAME, MSGFLAG_VITAL);
+		msg_pack_start_system(NETMSG_ENTERGAME, MSGFLAG_VITAL);
 		msg_pack_end();
 		client_send_msg();
 	}
@@ -226,7 +226,7 @@ public:
 
 	void send_input()
 	{
-		msg_pack_start(NETMSG_INPUT, 0);
+		msg_pack_start_system(NETMSG_INPUT, 0);
 		msg_pack_int(input_data_size);
 		for(int i = 0; i < input_data_size/4; i++)
 			msg_pack_int(input_data[i]);
@@ -462,135 +462,145 @@ public:
 
 	void process_packet(NETPACKET *packet)
 	{
-		int msg = msg_unpack_start(packet->data, packet->data_size);
-		if(msg == NETMSG_MAP)
+		int sys;
+		int msg = msg_unpack_start(packet->data, packet->data_size, &sys);
+		if(sys)
 		{
-			const char *map = msg_unpack_string();
-			dbg_msg("client/network", "connection accepted, map=%s", map);
-			set_state(STATE_LOADING);
-			
-			if(map_load(map))
+			// system message
+			if(msg == NETMSG_MAP)
 			{
-				modc_entergame();
-				send_entergame();
-				dbg_msg("client/network", "loading done");
-				// now we will wait for two snapshots
-				// to finish the connection
-			}
-			else
-			{
-				error("failure to load map");
-			}
-		}
-		else if(msg == NETMSG_SNAP || msg == NETMSG_SNAPSMALL || msg == NETMSG_SNAPEMPTY)
-		{
-			//dbg_msg("client/network", "got snapshot");
-			int game_tick = msg_unpack_int();
-			int delta_tick = game_tick-msg_unpack_int();
-			int num_parts = 1;
-			int part = 0;
-			int part_size = 0;
-			
-			if(msg == NETMSG_SNAP)
-			{
-				num_parts = msg_unpack_int();
-				part = msg_unpack_int();
-			}
-			
-			if(msg != NETMSG_SNAPEMPTY)
-				part_size = msg_unpack_int();
-			
-			if(snapshot_part == part)
-			{
-				// TODO: clean this up abit
-				const char *d = (const char *)msg_unpack_raw(part_size);
-				mem_copy((char*)snapshots[SNAP_INCOMMING] + part*MAX_SNAPSHOT_PACKSIZE, d, part_size);
-				snapshot_part++;
-			
-				if(snapshot_part == num_parts)
+				const char *map = msg_unpack_string();
+				dbg_msg("client/network", "connection accepted, map=%s", map);
+				set_state(STATE_LOADING);
+				
+				if(map_load(map))
 				{
-					snapshot *tmp = snapshots[SNAP_PREV];
-					snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
-					snapshots[SNAP_CURRENT] = tmp;
-					current_tick = game_tick;
-
-					// decompress snapshot
-					void *deltadata = snapshot_empty_delta();
-					int deltasize = sizeof(int)*3;
-
-					unsigned char tmpbuffer[MAX_SNAPSHOT_SIZE];
-					unsigned char tmpbuffer2[MAX_SNAPSHOT_SIZE];
-					if(part_size)
-					{
-						//int snapsize = lzw_decompress(snapshots[SNAP_INCOMMING], snapshots[SNAP_CURRENT]);
-						int compsize = zerobit_decompress(snapshots[SNAP_INCOMMING], part_size, tmpbuffer);
-						//int compsize = lzw_decompress(snapshots[SNAP_INCOMMING],tmpbuffer);
-						int intsize = intpack_decompress(tmpbuffer, compsize, tmpbuffer2);
-						deltadata = tmpbuffer2;
-						deltasize = intsize;
-					}
-
-					// find snapshot that we should use as delta 
-					static snapshot emptysnap;
-					emptysnap.data_size = 0;
-					emptysnap.num_items = 0;
-					
-					snapshot *deltashot = &emptysnap;
-					int deltashot_size;
-
-					if(delta_tick >= 0)
-					{
-						void *delta_data;
-						deltashot_size = snapshots_new.get(delta_tick, &delta_data);
-						if(deltashot_size >= 0)
-						{
-							deltashot = (snapshot *)delta_data;
-						}
-						else
-						{
-							// TODO: handle this
-							dbg_msg("client", "error, couldn't find the delta snapshot");
-						}
-					}
-
-					int snapsize = snapshot_unpack_delta(deltashot, (snapshot*)snapshots[SNAP_CURRENT], deltadata, deltasize);
-					//snapshot *shot = (snapshot *)snapshots[SNAP_CURRENT];
-
-					// purge old snapshots					
-					snapshots_new.purge_until(delta_tick);
-					snapshots_new.purge_until(game_tick-50); // TODO: change this to server tickrate
-					
-					// add new
-					snapshots_new.add(game_tick, snapsize, snapshots[SNAP_CURRENT]);
-					
-					// apply snapshot, cycle pointers
-					recived_snapshots++;
-					snapshot_start_time = time_get();
-					
-					// we got two snapshots until we see us self as connected
-					if(recived_snapshots == 2)
-					{
-						local_start_time = time_get();
-						set_state(STATE_ONLINE);
-					}
-					
-					if(recived_snapshots > 2)
-						modc_newsnapshot();
-					
-					snapshot_part = 0;
-					
-					// ack snapshot
-					msg_pack_start(NETMSG_SNAPACK, 0);
-					msg_pack_int(game_tick);
-					msg_pack_end();
-					client_send_msg();
+					modc_entergame();
+					send_entergame();
+					dbg_msg("client/network", "loading done");
+					// now we will wait for two snapshots
+					// to finish the connection
+				}
+				else
+				{
+					error("failure to load map");
 				}
 			}
-			else
+			else if(msg == NETMSG_SNAP || msg == NETMSG_SNAPSMALL || msg == NETMSG_SNAPEMPTY)
 			{
-				dbg_msg("client", "snapshot reset!");
-				snapshot_part = 0;
+				//dbg_msg("client/network", "got snapshot");
+				int game_tick = msg_unpack_int();
+				int delta_tick = game_tick-msg_unpack_int();
+				int num_parts = 1;
+				int part = 0;
+				int part_size = 0;
+				
+				if(msg == NETMSG_SNAP)
+				{
+					num_parts = msg_unpack_int();
+					part = msg_unpack_int();
+				}
+				
+				if(msg != NETMSG_SNAPEMPTY)
+					part_size = msg_unpack_int();
+				
+				if(snapshot_part == part)
+				{
+					// TODO: clean this up abit
+					const char *d = (const char *)msg_unpack_raw(part_size);
+					mem_copy((char*)snapshots[SNAP_INCOMMING] + part*MAX_SNAPSHOT_PACKSIZE, d, part_size);
+					snapshot_part++;
+				
+					if(snapshot_part == num_parts)
+					{
+						snapshot *tmp = snapshots[SNAP_PREV];
+						snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
+						snapshots[SNAP_CURRENT] = tmp;
+						current_tick = game_tick;
+
+						// decompress snapshot
+						void *deltadata = snapshot_empty_delta();
+						int deltasize = sizeof(int)*3;
+
+						unsigned char tmpbuffer[MAX_SNAPSHOT_SIZE];
+						unsigned char tmpbuffer2[MAX_SNAPSHOT_SIZE];
+						if(part_size)
+						{
+							//int snapsize = lzw_decompress(snapshots[SNAP_INCOMMING], snapshots[SNAP_CURRENT]);
+							int compsize = zerobit_decompress(snapshots[SNAP_INCOMMING], part_size, tmpbuffer);
+							//int compsize = lzw_decompress(snapshots[SNAP_INCOMMING],tmpbuffer);
+							int intsize = intpack_decompress(tmpbuffer, compsize, tmpbuffer2);
+							deltadata = tmpbuffer2;
+							deltasize = intsize;
+						}
+
+						// find snapshot that we should use as delta 
+						static snapshot emptysnap;
+						emptysnap.data_size = 0;
+						emptysnap.num_items = 0;
+						
+						snapshot *deltashot = &emptysnap;
+						int deltashot_size;
+
+						if(delta_tick >= 0)
+						{
+							void *delta_data;
+							deltashot_size = snapshots_new.get(delta_tick, &delta_data);
+							if(deltashot_size >= 0)
+							{
+								deltashot = (snapshot *)delta_data;
+							}
+							else
+							{
+								// TODO: handle this
+								dbg_msg("client", "error, couldn't find the delta snapshot");
+							}
+						}
+
+						int snapsize = snapshot_unpack_delta(deltashot, (snapshot*)snapshots[SNAP_CURRENT], deltadata, deltasize);
+						//snapshot *shot = (snapshot *)snapshots[SNAP_CURRENT];
+
+						// purge old snapshots					
+						snapshots_new.purge_until(delta_tick);
+						snapshots_new.purge_until(game_tick-50); // TODO: change this to server tickrate
+						
+						// add new
+						snapshots_new.add(game_tick, snapsize, snapshots[SNAP_CURRENT]);
+						
+						// apply snapshot, cycle pointers
+						recived_snapshots++;
+						snapshot_start_time = time_get();
+						
+						// we got two snapshots until we see us self as connected
+						if(recived_snapshots == 2)
+						{
+							local_start_time = time_get();
+							set_state(STATE_ONLINE);
+						}
+						
+						if(recived_snapshots > 2)
+							modc_newsnapshot();
+						
+						snapshot_part = 0;
+						
+						// ack snapshot
+						msg_pack_start_system(NETMSG_SNAPACK, 0);
+						msg_pack_int(game_tick);
+						msg_pack_end();
+						client_send_msg();
+					}
+				}
+				else
+				{
+					dbg_msg("client", "snapshot reset!");
+					snapshot_part = 0;
+				}
 			}
+		}
+		else
+		{
+			// game message
+			modc_message(msg);
 		}
 	}
 	
