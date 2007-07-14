@@ -66,31 +66,27 @@ datafile *datafile_load(const char *filename)
 		return 0;
 	
 	// TODO: change this header
-	int header[4];
+	unsigned char header[16];
 	file.read(header, sizeof(header));
-	if(((header[0]>>24)&0xff) != 'D' || ((header[0]>>16)&0xff) != 'A' || ((header[0]>>8)&0xff) != 'T' || (header[0]&0xff) != 'A')
+	if(header[3] != 'D' || header[2] != 'A' || header[1] != 'T' || header[0] != 'A')
 	{
 		dbg_msg("datafile", "wrong signature. %x %x %x %x", header[0], header[1], header[2], header[3]);
 		return 0;
 	}
 	
-	int version = header[1];
+	int version = (unsigned)header[4] | (unsigned)header[5]<<8 | (unsigned)header[6]<<16 | (unsigned)header[7]<<24;
 	if(version != 3)
 	{
 		dbg_msg("datafile", "wrong version. version=%x", version);
 		return 0;
 	}
 	
-	unsigned size = header[2];
-	unsigned swapsize = header[3];
+	unsigned size = (unsigned)header[8] | (unsigned)header[9]<<8 | (unsigned)header[10]<<16 | (unsigned)header[11]<<24;
+	unsigned swapsize = (unsigned)header[12] | (unsigned)header[13]<<8 | (unsigned)header[14]<<16 | (unsigned)header[15]<<24;
 	
 	if(DEBUG)
 		dbg_msg("datafile", "loading. size=%d", size);
 	
-	// TODO: use this variable for good and awesome
-	(void)swapsize;
-	
-	//map_unload();
 	datafile *df = (datafile*)mem_alloc(size+sizeof(datafile_info), 1);
 	unsigned readsize = file.read(&df->data, size);
 	if(readsize != size)
@@ -98,13 +94,19 @@ datafile *datafile_load(const char *filename)
 		dbg_msg("datafile", "couldn't load the whole thing, wanted=%d got=%d", size, readsize);
 		return 0;
 	}
-	
-	// TODO: byteswap
-	//map->byteswap();
 
+#if defined(CONF_ARCH_ENDIAN_BIG)
+	unsigned *dst = (unsigned*)df;
+	unsigned char *src = (unsigned char*)df;
+	for(unsigned i = 0; i < swapsize; i++)
+	{
+		unsigned j = i << 2;
+		dst[i] = src[j] | src[j+1]<<8 | src[j+2]<<16 | src[j+3]<<24;
+	}
+#endif
+	
 	if(DEBUG)
 		dbg_msg("datafile", "item_size=%d", df->data.item_size);
-	
 	
 	df->info.item_types = (item_type *)df->data.start;
 	df->info.item_offsets = (int *)&df->info.item_types[df->data.num_item_types];

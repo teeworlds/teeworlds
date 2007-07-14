@@ -447,6 +447,13 @@ int snd_load_wav(const char *filename)
 				snd.data = (short*)mem_alloc(chunk_size, 1);
 				file.read(snd.data, chunk_size);
 				snd.num_samples = chunk_size/(2);
+#if defined(CONF_ARCH_ENDIAN_BIG)
+				for(unsigned i = 0; i < (unsigned)snd.num_samples; i++)
+				{
+					unsigned j = i << 1;
+					snd.data[i] = ((short)((char*)snd.data)[j]) + ((short)((char*)snd.data)[j+1] << 8);
+				}
+#endif
 				snd.sustain_start = -1;
 				snd.sustain_end = -1;
 				snd.last_played = 0;
