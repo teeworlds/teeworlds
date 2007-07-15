@@ -922,6 +922,7 @@ void modc_render()
 	}
 
 	// setup world view
+	obj_game *gameobj = 0;
 	{
 		// 1. fetch local player
 		// 2. set him to the center
@@ -942,9 +943,10 @@ void modc_render()
 					void *p = snap_find_item(SNAP_PREV, item.type, item.id);
 					if(p)
 						local_player_pos = mix(vec2(((obj_player *)p)->x, ((obj_player *)p)->y), local_player_pos, client_intratick());
-					break;
 				}
 			}
+			else if(item.type == OBJTYPE_GAME)
+				gameobj = (obj_game *)data;
 		}
 	}
 
@@ -981,6 +983,7 @@ void modc_render()
 	
 	// render map
 	tilemap_render(32.0f, 0);
+	
 	// render items
 	int num = snap_num_items(SNAP_CURRENT);
 	for(int i = 0; i < num; i++)
@@ -1141,8 +1144,42 @@ void modc_render()
 		}
 	}
 	
+	// render goals
+	if(gameobj)
+	{
+		gfx_mapscreen(0,0,400,300);
+		if(!gameobj->sudden_death)
+		{
+			char buf[32];
+			int time = 0;
+			if(gameobj->time_limit)
+			{
+				time = gameobj->time_limit*60 - ((client_tick()-gameobj->round_start_tick)/client_tickspeed());
+				
+				if(gameobj->game_over)
+					time  = 0;
+			}	
+			else
+				time = (client_tick()-gameobj->round_start_tick)/client_tickspeed();
+			
+			sprintf(buf, "%d:%02d", time /60, time %60);
+			float w = gfx_pretty_text_width(16, buf);
+			gfx_pretty_text(200-w/2, 2, 16, buf);
+		}
+
+		if(gameobj->sudden_death)
+		{
+			const char *text = "Sudden Death";
+			float w = gfx_pretty_text_width(16, text);
+			gfx_pretty_text(200-w/2, 2, 16, text);
+		}
+	}
+	
 	// render score board
-	if(inp_key_pressed(baselib::input::tab) || (local_player && local_player->health == -1))
+	if(inp_key_pressed(baselib::input::tab) || // user requested
+		(local_player && local_player->health == -1) || // player dead
+		(gameobj && gameobj->game_over) // game over
+		)
 	{
 		gfx_mapscreen(0, 0, width, height);
 
@@ -1157,12 +1194,23 @@ void modc_render()
 		gfx_quads_drawTL(x-10.f, y-10.f, 400.0f, 600.0f);
 		gfx_quads_end();
 		
-		//gfx_texture_set(current_font->font_texture);
 		gfx_pretty_text(x, y, 64, "Score Board");
-		y += 100.0f;
+		y += 64.0f;
+		if(gameobj && gameobj->time_limit)
+		{
+			char buf[64];
+			sprintf(buf, "Time Limit: %d min", gameobj->time_limit);
+			gfx_pretty_text(x, y, 32, buf);
+			y += 32.0f;
+		}
+		if(gameobj && gameobj->score_limit)
+		{
+			char buf[64];
+			sprintf(buf, "Score Limit: %d", gameobj->score_limit);
+			gfx_pretty_text(x, y, 32, buf);
+			y += 32.0f;
+		}
 		
-		//gfx_texture_set(-1);
-		//gfx_quads_text(10, 50, 8, "Score Board");
 		int num = snap_num_items(SNAP_CURRENT);
 		for(int i = 0; i < num; i++)
 		{

@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
+#include <engine/config.h>
 #include "../game.h"
 #include "data.h"
+#include "game_server.h"
 
 using namespace baselib;
 
@@ -27,7 +29,7 @@ void create_damageind(vec2 p, vec2 dir, int amount);
 void create_explosion(vec2 p, int owner, int weapon, bool bnodamage);
 void create_smoke(vec2 p);
 void create_sound(vec2 pos, int sound, int loopflags = 0);
-class player* intersect_player(vec2 pos0, vec2 pos1, vec2& new_pos, class entity* notthis = 0);
+class player *intersect_player(vec2 pos0, vec2 pos1, vec2 &new_pos, class entity *notthis = 0);
 
 template<typename T>
 T saturated_add(T min, T max, T current, T modifier)
@@ -51,7 +53,6 @@ T saturated_add(T min, T max, T current, T modifier)
 		return current;
 	}
 }
-
 
 // TODO: rewrite this smarter!
 void move_box(vec2 *inout_pos, vec2 *inout_vel, vec2 size, float elasticity)
@@ -119,144 +120,109 @@ void move_box(vec2 *inout_pos, vec2 *inout_vel, vec2 size, float elasticity)
 	*inout_vel = vel;
 }
 
-//
-class event_handler
+//////////////////////////////////////////////////
+// Event handler
+//////////////////////////////////////////////////
+event_handler::event_handler()
 {
-	static const int MAX_EVENTS = 128;
-	static const int MAX_DATASIZE = 128*4;
+	clear();
+}
 
-	int types[MAX_EVENTS];  // TODO: remove some of these arrays
-	int offsets[MAX_EVENTS];
-	int sizes[MAX_EVENTS];
-	char data[MAX_DATASIZE];
-	
-	int current_offset;
-	int num_events;
-public:
-	event_handler()
-	{
-		clear();
-	}
-	
-	void *create(int type, int size)
-	{
-		void *p = &data[current_offset];
-		offsets[num_events] = current_offset;
-		types[num_events] = type;
-		sizes[num_events] = size;
-		current_offset += size;
-		num_events++;
-		return p;
-	}
-	
-	void clear()
-	{
-		num_events = 0;
-		current_offset = 0;
-	}
-	
-	void snap(int snapping_client)
-	{
-		for(int i = 0; i < num_events; i++)
-		{
-			void *d = snap_new_item(types[i], i, sizes[i]);
-			mem_copy(d, &data[offsets[i]], sizes[i]);
-		}
-	}
-};
-
-static event_handler events;
-
-// a basic entity
-class entity
+void *event_handler::create(int type, int size)
 {
-private:
-	friend class game_world;
-	friend class player;
-	entity *prev_entity;
-	entity *next_entity;
+	void *p = &data[current_offset];
+	offsets[num_events] = current_offset;
+	types[num_events] = type;
+	sizes[num_events] = size;
+	current_offset += size;
+	num_events++;
+	return p;
+}
 
-	entity *prev_type_entity;
-	entity *next_type_entity;
+void event_handler::clear()
+{
+	num_events = 0;
+	current_offset = 0;
+}
 
-	int index;
-	static int current_id;
-protected:
-	int id;
-	
-public:
-	float proximity_radius;
-	unsigned flags;
-	int objtype;
-	vec2 pos;
-
-	enum
+void event_handler::snap(int snapping_client)
+{
+	for(int i = 0; i < num_events; i++)
 	{
-		FLAG_DESTROY=0x00000001,
-		FLAG_ALIVE=0x00000002,
-	};
-	
-	entity(int objtype)
-	{
-		this->objtype = objtype;
-		pos = vec2(0,0);
-		flags = FLAG_ALIVE;
-		proximity_radius = 0;
-		
-		current_id++;
-		id = current_id;
-		
-		next_entity = 0;
-		prev_entity = 0;
-		prev_type_entity = 0;
-		next_type_entity = 0;
+		void *d = snap_new_item(types[i], i, sizes[i]);
+		mem_copy(d, &data[offsets[i]], sizes[i]);
 	}
-	
-	void set_flag(unsigned flag) { flags |= flag; }
-	void clear_flag(unsigned flag) { flags &= ~flag; }
-	
-	virtual ~entity()
-	{
-	}
+}
 
-	virtual void destroy() { delete this; }
-	virtual void tick() {}
-	virtual void tick_defered() {}
-		
-	virtual void snap(int snapping_client) {}
-		
-	virtual bool take_damage(vec2 force, int dmg, int from, int weapon) { return true; }
-};
+event_handler events;
+
+//////////////////////////////////////////////////
+// Entity
+//////////////////////////////////////////////////
+entity::entity(int objtype)
+{
+	this->objtype = objtype;
+	pos = vec2(0,0);
+	flags = FLAG_ALIVE;
+	proximity_radius = 0;
+	
+	current_id++;
+	id = current_id;
+	
+	next_entity = 0;
+	prev_entity = 0;
+	prev_type_entity = 0;
+	next_type_entity = 0;
+}
+
+entity::~entity()
+{
+}
 
 int entity::current_id = 1;
 
-// game world. handles all entities
-class game_world
+//////////////////////////////////////////////////
+// game world
+//////////////////////////////////////////////////
+game_world::game_world()
 {
-public:
-	enum
-	{
-		NUM_ENT_TYPES=10,
-	};
+	paused = false;
+	reset_requested = false;
+	first_entity = 0x0;
+	for(int i = 0; i < NUM_ENT_TYPES; i++)
+		first_entity_types[i] = 0;
+}
 
-	entity *first_entity;
-	entity *first_entity_types[NUM_ENT_TYPES];
-	
-	game_world()
+int game_world::find_entities(vec2 pos, float radius, entity **ents, int max)
+{
+	int num = 0;
+	for(entity *ent = first_entity; ent; ent = ent->next_entity)
 	{
-		first_entity = 0x0;
-		for(int i = 0; i < NUM_ENT_TYPES; i++)
-			first_entity_types[i] = 0;
+		if(!(ent->flags&entity::FLAG_ALIVE))
+			continue;
+			
+		if(distance(ent->pos, pos) < radius+ent->proximity_radius)
+		{
+			ents[num] = ent;
+			num++;
+			if(num == max)
+				break;
+		}
 	}
 	
-	int find_entities(vec2 pos, float radius, entity **ents, int max)
+	return num;
+}
+
+int game_world::find_entities(vec2 pos, float radius, entity **ents, int max, const int* types, int maxtypes)
+{
+	int num = 0;
+	for(int t = 0; t < maxtypes; t++)
 	{
-		int num = 0;
-		for(entity *ent = first_entity; ent; ent = ent->next_entity)
+		for(entity *ent = first_entity_types[types[t]]; ent; ent = ent->next_type_entity)
 		{
 			if(!(ent->flags&entity::FLAG_ALIVE))
 				continue;
-				
+			
 			if(distance(ent->pos, pos) < radius+ent->proximity_radius)
 			{
 				ents[num] = ent;
@@ -265,81 +231,94 @@ public:
 					break;
 			}
 		}
-		
-		return num;
 	}
+	
+	return num;
+}
 
-	int find_entities(vec2 pos, float radius, entity **ents, int max, const int* types, int maxtypes)
+void game_world::insert_entity(entity *ent)
+{
+	// insert it
+	if(first_entity)
+		first_entity->prev_entity = ent;
+	ent->next_entity = first_entity;
+	ent->prev_entity = 0x0;
+	first_entity = ent;
+
+	// into typelist aswell
+	if(first_entity_types[ent->objtype])
+		first_entity_types[ent->objtype]->prev_type_entity = ent;
+	ent->next_type_entity = first_entity_types[ent->objtype];
+	ent->prev_type_entity = 0x0;
+	first_entity_types[ent->objtype] = ent;
+}
+
+void game_world::destroy_entity(entity *ent)
+{
+	ent->set_flag(entity::FLAG_DESTROY);
+}
+
+void game_world::remove_entity(entity *ent)
+{
+	// remove
+	if(ent->prev_entity)
+		ent->prev_entity->next_entity = ent->next_entity;
+	else
+		first_entity = ent->next_entity;
+	if(ent->next_entity)
+		ent->next_entity->prev_entity = ent->prev_entity;
+
+	if(ent->prev_type_entity)
+		ent->prev_type_entity->next_type_entity = ent->next_type_entity;
+	else
+		first_entity_types[ent->objtype] = ent->next_type_entity;
+	if(ent->next_type_entity)
+		ent->next_type_entity->prev_type_entity = ent->prev_type_entity;
+}
+
+//
+void game_world::snap(int snapping_client)
+{
+	for(entity *ent = first_entity; ent; ent = ent->next_entity)
+		ent->snap(snapping_client);
+}
+
+void game_world::reset()
+{
+	// reset all entities
+	for(entity *ent = first_entity; ent; ent = ent->next_entity)
+		ent->reset();
+	remove_entities();
+	
+	for(entity *ent = first_entity; ent; ent = ent->next_entity)
+		ent->post_reset();
+	remove_entities();
+	
+	reset_requested = false;
+}
+
+void game_world::remove_entities()
+{
+	// destroy objects marked for destruction
+	entity *ent = first_entity;
+	while(ent)
 	{
-		int num = 0;
-		for(int t = 0; t < maxtypes; t++)
+		entity *next = ent->next_entity;
+		if(ent->flags&entity::FLAG_DESTROY)
 		{
-			for(entity *ent = first_entity_types[types[t]]; ent; ent = ent->next_type_entity)
-			{
-				if(!(ent->flags&entity::FLAG_ALIVE))
-					continue;
-				
-				if(distance(ent->pos, pos) < radius+ent->proximity_radius)
-				{
-					ents[num] = ent;
-					num++;
-					if(num == max)
-						break;
-				}
-			}
+			remove_entity(ent);
+			ent->destroy();
 		}
-		
-		return num;
+		ent = next;
 	}
-	
-	void insert_entity(entity *ent)
-	{
-		// insert it
-		if(first_entity)
-			first_entity->prev_entity = ent;
-		ent->next_entity = first_entity;
-		ent->prev_entity = 0x0;
-		first_entity = ent;
+}
 
-		// into typelist aswell
-		if(first_entity_types[ent->objtype])
-			first_entity_types[ent->objtype]->prev_type_entity = ent;
-		ent->next_type_entity = first_entity_types[ent->objtype];
-		ent->prev_type_entity = 0x0;
-		first_entity_types[ent->objtype] = ent;
-	}
+void game_world::tick()
+{
+	if(reset_requested)
+		reset();
 	
-	void destroy_entity(entity *ent)
-	{
-		ent->set_flag(entity::FLAG_DESTROY);
-	}
-	
-	void remove_entity(entity *ent)
-	{
-		// remove
-		if(ent->prev_entity)
-			ent->prev_entity->next_entity = ent->next_entity;
-		else
-			first_entity = ent->next_entity;
-		if(ent->next_entity)
-			ent->next_entity->prev_entity = ent->prev_entity;
-
-		if(ent->prev_type_entity)
-			ent->prev_type_entity->next_type_entity = ent->next_type_entity;
-		else
-			first_entity_types[ent->objtype] = ent->next_type_entity;
-		if(ent->next_type_entity)
-			ent->next_type_entity->prev_type_entity = ent->prev_type_entity;
-	}
-	
-	//
-	void snap(int snapping_client)
-	{
-		for(entity *ent = first_entity; ent; ent = ent->next_entity)
-			ent->snap(snapping_client);
-	}
-	
-	void tick()
+	if(!paused)
 	{
 		// update all objects
 		for(entity *ent = first_entity; ent; ent = ent->next_entity)
@@ -347,641 +326,652 @@ public:
 			
 		for(entity *ent = first_entity; ent; ent = ent->next_entity)
 			ent->tick_defered();
+	}
+	
+	remove_entities();
+}
+
+game_world world;
+
+//////////////////////////////////////////////////
+// game object
+//////////////////////////////////////////////////
+gameobject::gameobject()
+: entity(OBJTYPE_GAME)
+{
+	game_over_tick = -1;
+	sudden_death = 0;
+	round_start_tick = server_tick();
+}
+
+void gameobject::endround()
+{
+	world.paused = true;
+	game_over_tick = server_tick();
+	sudden_death = 0;
+}
+
+void gameobject::resetgame()
+{
+	world.reset_requested = true;
+}
+
+void gameobject::startround()
+{
+	resetgame();
+	
+	round_start_tick = server_tick();
+	sudden_death = 0;
+	game_over_tick = -1;
+	world.paused = false;
+}
+
+void gameobject::post_reset()
+{
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(players[i].client_id != -1)
+			players[i].respawn();
+	}
+}
+
+void gameobject::tick()
+{
+	if(game_over_tick == -1)
+	{
+		// game is running
 		
-		// destroy objects marked for destruction
-		entity *ent = first_entity;
-		while(ent)
+		// gather some stats
+		int topscore = 0;
+		int topscore_count = 0;
+		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			entity *next = ent->next_entity;
-			if(ent->flags&entity::FLAG_DESTROY)
+			if(players[i].client_id != -1)
 			{
-				remove_entity(ent);
-				ent->destroy();
+				if(players[i].score > topscore)
+				{
+					topscore = players[i].score;
+					topscore_count = 1;
+				}
+				else if(players[i].score == topscore)
+					topscore_count++;
 			}
-			ent = next;
 		}
-	}
-};
-
-static game_world world;
-
-// TODO: move to seperate file
-class powerup : public entity
-{
-public:
-	static const int phys_size = 14;
-	
-	int type;
-	int subtype; // weapon type for instance?
-	int spawntick;
-	powerup(int _type, int _subtype = 0);
-	
-	virtual void tick();
-	virtual void snap(int snapping_client);
-};
-
-// projectile entity
-class projectile : public entity
-{
-public:
-	enum
-	{
-		PROJECTILE_FLAGS_EXPLODE = 1 << 0,
-	};
-	
-	vec2 vel;
-	entity *powner; // this is nasty, could be removed when client quits
-	int lifespan;
-	int owner;
-	int type;
-	int flags;
-	int damage;
-	int sound_impact;
-	int weapon;
-	float force;
-	
-	projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity* powner, int damage, int flags, float force, int sound_impact, int weapon)
-	: entity(OBJTYPE_PROJECTILE)
-	{
-		this->type = type;
-		this->pos = pos;
-		this->vel = vel;
-		this->lifespan = span;
-		this->owner = owner;
-		this->powner = powner;
-		this->flags = flags;
-		this->force = force;
-		this->damage = damage;
-		this->sound_impact = sound_impact;
-		this->weapon = weapon;
-		world.insert_entity(this);
-	}
-
-	void tick()
-	{
-		vec2 oldpos = pos;
-		vel.y += 0.25f;
-		pos += vel;
-		lifespan--;
 		
-		// check player intersection as well
-		entity *targetplayer = (entity*)intersect_player(oldpos, pos, oldpos, powner);
-		if(targetplayer || lifespan < 0 || col_check_point((int)pos.x, (int)pos.y))
+		// check score win condition
+		if((config.scorelimit > 0 && topscore >= config.scorelimit) ||
+			(config.timelimit > 0 && (server_tick()-round_start_tick) >= config.timelimit*server_tickspeed()*60))
 		{
-			if (lifespan >= 0)
-				create_sound(pos, sound_impact);
-				
-			if (flags & PROJECTILE_FLAGS_EXPLODE)
-				create_explosion(oldpos, owner, weapon, false);
-			else if (targetplayer)
-				targetplayer->take_damage(normalize(vel) * max(0.001f, force), damage, owner, weapon);
-				
-			world.destroy_entity(this);
+			if(topscore_count == 1)
+				endround();
+			else
+				sudden_death = 1;
 		}
 	}
-	
-	void snap(int snapping_client)
+	else
 	{
-		obj_projectile *proj = (obj_projectile *)snap_new_item(OBJTYPE_PROJECTILE, id, sizeof(obj_projectile));
-		proj->x = (int)pos.x;
-		proj->y = (int)pos.y;
-		proj->vx = (int)vel.x; // TODO: should be an angle
-		proj->vy = (int)vel.y;
-		proj->type = type;
+		// game over.. wait for restart
+		if(server_tick() > game_over_tick+server_tickspeed()*10)
+			startround();
 	}
-};
+}
 
-// player entity
+void gameobject::snap(int snapping_client)
+{
+	obj_game *game = (obj_game *)snap_new_item(OBJTYPE_GAME, id, sizeof(obj_game));
+	game->paused = world.paused;
+	game->game_over = game_over_tick==-1?0:1;
+	game->sudden_death = sudden_death;
+	
+	game->score_limit = config.scorelimit;
+	game->time_limit = config.timelimit;
+	game->round_start_tick = round_start_tick;
+}
+
+gameobject gameobj;
+
+//////////////////////////////////////////////////
+// projectile
+//////////////////////////////////////////////////
+projectile::projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity* powner,
+	int damage, int flags, float force, int sound_impact, int weapon)
+: entity(OBJTYPE_PROJECTILE)
+{
+	this->type = type;
+	this->pos = pos;
+	this->vel = vel;
+	this->lifespan = span;
+	this->owner = owner;
+	this->powner = powner;
+	this->flags = flags;
+	this->force = force;
+	this->damage = damage;
+	this->sound_impact = sound_impact;
+	this->weapon = weapon;
+	world.insert_entity(this);
+}
+
+void projectile::reset()
+{
+	world.destroy_entity(this);
+}
+
+void projectile::tick()
+{
+	vec2 oldpos = pos;
+	vel.y += 0.25f;
+	pos += vel;
+	lifespan--;
+	
+	// check player intersection as well
+	entity *targetplayer = (entity*)intersect_player(oldpos, pos, oldpos, powner);
+	if(targetplayer || lifespan < 0 || col_check_point((int)pos.x, (int)pos.y))
+	{
+		if (lifespan >= 0)
+			create_sound(pos, sound_impact);
+			
+		if (flags & PROJECTILE_FLAGS_EXPLODE)
+			create_explosion(oldpos, owner, weapon, false);
+		else if (targetplayer)
+			targetplayer->take_damage(normalize(vel) * max(0.001f, force), damage, owner, weapon);
+			
+		world.destroy_entity(this);
+	}
+}
+
+void projectile::snap(int snapping_client)
+{
+	obj_projectile *proj = (obj_projectile *)snap_new_item(OBJTYPE_PROJECTILE, id, sizeof(obj_projectile));
+	proj->x = (int)pos.x;
+	proj->y = (int)pos.y;
+	proj->vx = (int)vel.x; // TODO: should be an angle
+	proj->vy = (int)vel.y;
+	proj->type = type;
+}
+
+//////////////////////////////////////////////////
+// player
+//////////////////////////////////////////////////
 // TODO: move to separate file
-class player : public entity
+player::player()
+: entity(OBJTYPE_PLAYER)
 {
-public:
-	static const int phys_size = 28;
+	init();
+}
+
+void player::init()
+{
+	proximity_radius = phys_size;
+	name[0] = 'n';
+	name[1] = 'o';
+	name[2] = 'o';
+	name[3] = 'b';
+	name[4] = 0;
+	client_id = -1;
+	reset();
+}
+
+void player::reset()
+{
+	release_hooked();
+	release_hooks();
 	
-	enum // what are these?
+	pos = vec2(0.0f, 0.0f);
+	vel = vec2(0.0f, 0.0f);
+	direction = vec2(0.0f, 1.0f);
+	score = 0;
+	dead = true;
+	die_tick = 0;
+}
+
+void player::destroy() {  }
+	
+void player::respawn()
+{
+	health = PLAYER_MAXHEALTH;
+	armor = 0;
+	jumped = 0;
+	dead = false;
+	set_flag(entity::FLAG_ALIVE);
+	
+	mem_zero(&input, sizeof(input));
+	vel = vec2(0.0f, 0.0f);
+	
+	// get spawn point
+	int start, num;
+	map_get_type(1, &start, &num);
+	
+	if(num)
 	{
-		WEAPON_PROJECTILETYPE_GUN		= 0,
-		WEAPON_PROJECTILETYPE_ROCKET	= 1,
-		WEAPON_PROJECTILETYPE_SHOTGUN	= 2,
-	};
-	
-	// weapon info
-	struct weaponstat
-	{
-		bool got;
-		int ammo;
-	} weapons[NUM_WEAPONS];
-	int active_weapon;
-	int reload_timer;
-	int attack_tick;
-	
-	// we need a defered position so we can handle the physics correctly
-	vec2 defered_pos;
-	vec2 vel;
-	vec2 direction;
-
-	//
-	int client_id;
-	char name[64];
-
-	// input	
-	player_input previnput;
-	player_input input;
-	int jumped;
-	
-	int damage_taken_tick;
-
-	int health;
-	int armor;
-
-	int score;
-	
-	bool dead;
-	int die_tick;
-
-	// hooking stuff
-	enum
-	{
-		HOOK_RETRACTED=-1,
-		HOOK_IDLE=0,
-		HOOK_FLYING,
-		HOOK_GRABBED
-	};
-	
-	int hook_state; 
-	player *hooked_player;
-	vec2 hook_pos;
-	vec2 hook_dir;
-
-	//
-	player()
-	: entity(OBJTYPE_PLAYER)
-	{
-		reset();
+		mapres_spawnpoint *sp = (mapres_spawnpoint*)map_get_item(start + (rand()%num), NULL, NULL);
+		pos = vec2((float)sp->x, (float)sp->y);
 	}
+	else
+		pos = vec2(100.0f, -60.0f);
+	defered_pos = pos;
+		
+	// init weapons
+	mem_zero(&weapons, sizeof(weapons));
+	weapons[WEAPON_HAMMER].got = true;
+	weapons[WEAPON_HAMMER].ammo = -1;
+	weapons[WEAPON_GUN].got = true;
+	weapons[WEAPON_GUN].ammo = 10;
+	active_weapon = WEAPON_GUN;
+	reload_timer = 0;
 	
-	void reset()
+	create_sound(pos, SOUND_PLAYER_SPAWN);
+}
+
+bool player::is_grounded()
+{
+	if(col_check_point((int)(pos.x+phys_size/2), (int)(pos.y+phys_size/2+5)))
+		return true;
+	if(col_check_point((int)(pos.x-phys_size/2), (int)(pos.y+phys_size/2+5)))
+		return true;
+	return false;
+}
+
+// releases the hooked player
+void player::release_hooked()
+{
+	hook_state = HOOK_IDLE;
+	hooked_player = 0x0;
+}
+
+// release all hooks to this player	
+void player::release_hooks()
+{
+	// TODO: loop thru players only
+	for(entity *ent = world.first_entity; ent; ent = ent->next_entity)
 	{
-		//equip_time = 0;
-		
-		release_hooked();
-		release_hooks();
-		
-		proximity_radius = phys_size;
-		name[0] = 'n';
-		name[1] = 'o';
-		name[2] = 'o';
-		name[3] = 'b';
-		name[4] = 0;
-		
-		pos = vec2(100.0f, 0.0f);
-		vel = vec2(0.0f, 0.0f);
-		direction = vec2(0.0f, 1.0f);
-		client_id = -1;
-		score = 0;
-		dead = true;
-		die_tick = 0;
-	}
-	
-	virtual void destroy() {  }
-		
-	void respawn()
-	{
-		health = PLAYER_MAXHEALTH;
-		armor = 0;
-		jumped = 0;
-		dead = false;
-		set_flag(entity::FLAG_ALIVE);
-		
-		mem_zero(&input, sizeof(input));
-		vel = vec2(0.0f, 0.0f);
-		
-		// get spawn point
-		int start, num;
-		map_get_type(1, &start, &num);
-		
-		if(num)
+		if(ent && ent->objtype == OBJTYPE_PLAYER)
 		{
-			mapres_spawnpoint *sp = (mapres_spawnpoint*)map_get_item(start + (rand()%num), NULL, NULL);
-			pos = vec2((float)sp->x, (float)sp->y);
+			player *p = (player*)ent;
+			if(p->hooked_player == this)
+				p->release_hooked();
 		}
-		else
-			pos = vec2(100.0f, -60.0f);
-		defered_pos = pos;
-			
-		// init weapons
-		mem_zero(&weapons, sizeof(weapons));
-		weapons[WEAPON_HAMMER].got = true;
-		weapons[WEAPON_HAMMER].ammo = -1;
-		weapons[WEAPON_GUN].got = true;
-		weapons[WEAPON_GUN].ammo = 10;
-		active_weapon = WEAPON_GUN;
-		reload_timer = 0;
-		
-		create_sound(pos, SOUND_PLAYER_SPAWN);
 	}
-	
-	bool is_grounded()
+}
+
+void player::handle_weapons()
+{
+	// check reload timer
+	if(reload_timer)
 	{
-		if(col_check_point((int)(pos.x+phys_size/2), (int)(pos.y+phys_size/2+5)))
-			return true;
-		if(col_check_point((int)(pos.x-phys_size/2), (int)(pos.y+phys_size/2+5)))
-			return true;
-		return false;
+		reload_timer--;
+		return;
 	}
 
-	// releases the hooked player
-	void release_hooked()
-	{
-		hook_state = HOOK_IDLE;
-		hooked_player = 0x0;
-	}
+	// switch weapon if wanted		
+	if(input.activeweapon >= 0 && input.activeweapon < NUM_WEAPONS && weapons[input.activeweapon].got)
+		active_weapon = input.activeweapon;
 
-	// release all hooks to this player	
-	void release_hooks()
+	if(input.fire)
 	{
-		// TODO: loop thru players only
-		for(entity *ent = world.first_entity; ent; ent = ent->next_entity)
+		if(reload_timer == 0)
 		{
-			if(ent && ent->objtype == OBJTYPE_PLAYER)
+			// fire!
+			if(weapons[active_weapon].ammo)
 			{
-				player *p = (player*)ent;
-				if(p->hooked_player == this)
-					p->release_hooked();
-			}
-		}
-	}
-	
-	void handle_weapons()
-	{
-		// check reload timer
-		if(reload_timer)
-		{
-			reload_timer--;
-			return;
-		}
-
-		// switch weapon if wanted		
-		if(input.activeweapon >= 0 && input.activeweapon < NUM_WEAPONS && weapons[input.activeweapon].got)
-			active_weapon = input.activeweapon;
-
-		if(input.fire)
-		{
-			if(reload_timer == 0)
-			{
-				// fire!
-				if(weapons[active_weapon].ammo)
+				switch(active_weapon)
 				{
-					switch(active_weapon)
-					{
-						case WEAPON_HAMMER:
-							break;
+					case WEAPON_HAMMER:
+						break;
 
-						case WEAPON_GUN:
-							new projectile(WEAPON_PROJECTILETYPE_GUN,
-								client_id,
-								pos+vec2(0,0),
-								direction*30.0f,
-								100,
-								this,
-								1, 0, 0, -1, WEAPON_GUN);
-							break;
-						case WEAPON_ROCKET:
-							new projectile(WEAPON_PROJECTILETYPE_ROCKET,
-								client_id,
-								pos+vec2(0,0),
-								direction*15.0f,
-								100,
-								this,
-								1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, -1, WEAPON_ROCKET);						
-							break;
-						case WEAPON_SHOTGUN:
-							for(int i = 0; i < 3; i++)
-							{
-								new projectile(WEAPON_PROJECTILETYPE_SHOTGUN,
-									client_id,
-									pos+vec2(0,0),
-									direction*(20.0f+(i+1)*2.0f),
-									100,
-									this,
-									1, 0, 0, -1, WEAPON_SHOTGUN);
-							}
-							break;
-					}
-					
-					weapons[active_weapon].ammo--;
-				}
-				else
-				{
-					// click!!! click
-				}
-				
-				attack_tick = server_tick();
-				reload_timer = 10; // make this variable depending on weapon
-			}
-		}
-	}
-	
-	virtual void tick()
-	{
-		// TODO: rework the input to be more robust
-		// TODO: remove this tick count, it feels weird
-		if(dead)
-		{
-			if(server_tick()-die_tick >= server_tickspeed()*3) // auto respawn after 3 sec
-				respawn();
-			if(input.fire && server_tick()-die_tick >= server_tickspeed()/2) // auto respawn after 0.5 sec
-				respawn();
-			return;
-		}
-		
-		// fetch some info
-		bool grounded = is_grounded();
-		direction = get_direction(input.angle);
-		
-		float max_speed = grounded ? ground_control_speed : air_control_speed;
-		float accel = grounded ? ground_control_accel : air_control_accel;
-		float friction = grounded ? ground_friction : air_friction;
-		
-		// handle movement
-		if(input.left)
-			vel.x = saturated_add(-max_speed, max_speed, vel.x, -accel);
-		if(input.right)
-			vel.x = saturated_add(-max_speed, max_speed, vel.x, accel);
-			
-		if(!input.left && !input.right)
-			vel.x *= friction;
-		
-		// handle jumping
-		if(input.jump)
-		{
-			if(!jumped && grounded)
-			{
-				create_sound(pos, SOUND_PLAYER_JUMP);
-				vel.y = -ground_jump_speed;
-				jumped++;
-			}
-		}
-		else
-			jumped = 0;
-			
-		// do hook
-		if(input.hook)
-		{
-			if(hook_state == HOOK_IDLE)
-			{
-				hook_state = HOOK_FLYING;
-				hook_pos = pos;
-				hook_dir = direction;
-			}
-			else if(hook_state == HOOK_FLYING)
-			{
-				vec2 new_pos = hook_pos+hook_dir*hook_fire_speed;
-
-				// Check against other players first
-				for(entity *ent = world.first_entity; ent; ent = ent->next_entity)
-				{
-					if(ent && ent->objtype == OBJTYPE_PLAYER)
-					{
-						player *p = (player*)ent;
-						if(p != this && distance(p->pos, new_pos) < p->phys_size)
+					case WEAPON_GUN:
+						new projectile(WEAPON_PROJECTILETYPE_GUN,
+							client_id,
+							pos+vec2(0,0),
+							direction*30.0f,
+							100,
+							this,
+							1, 0, 0, -1, WEAPON_GUN);
+						break;
+					case WEAPON_ROCKET:
+						new projectile(WEAPON_PROJECTILETYPE_ROCKET,
+							client_id,
+							pos+vec2(0,0),
+							direction*15.0f,
+							100,
+							this,
+							1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, -1, WEAPON_ROCKET);						
+						break;
+					case WEAPON_SHOTGUN:
+						for(int i = 0; i < 3; i++)
 						{
-							hook_state = HOOK_GRABBED;
-							hooked_player = p;
-							break;
+							new projectile(WEAPON_PROJECTILETYPE_SHOTGUN,
+								client_id,
+								pos+vec2(0,0),
+								direction*(20.0f+(i+1)*2.0f),
+								100,
+								this,
+								1, 0, 0, -1, WEAPON_SHOTGUN);
 						}
-					}
+						break;
 				}
 				
-				if(hook_state == HOOK_FLYING)
-				{
-					// check against ground
-					if(col_intersect_line(hook_pos, new_pos, &new_pos))
-					{
-						hook_state = HOOK_GRABBED;
-						hook_pos = new_pos;	
-					}
-					else if(distance(pos, new_pos) > hook_length)
-					{
-						hook_state = HOOK_RETRACTED;
-					}
-					else
-						hook_pos = new_pos;
-				}
-				
-				if(hook_state == HOOK_GRABBED)
-					create_sound(pos, SOUND_HOOK_ATTACH);
+				weapons[active_weapon].ammo--;
 			}
-		}
-		else
-		{
-			release_hooked();
-			hook_pos = pos;
-		}
+			else
+			{
+				// click!!! click
+			}
 			
-		if(hook_state == HOOK_GRABBED)
-		{
-			if(hooked_player)
-				hook_pos = hooked_player->pos;
+			attack_tick = server_tick();
+			reload_timer = 10; // make this variable depending on weapon
+		}
+	}
+}
 
-			float d = distance(pos, hook_pos);
-			vec2 dir = normalize(pos - hook_pos);		
-			if(d > 10.0f) // TODO: fix tweakable variable
-			{
-				float accel = hook_drag_accel * (d/hook_length);
-				vel.x = saturated_add(-hook_drag_speed, hook_drag_speed, vel.x, -accel*dir.x*0.75f);
-				vel.y = saturated_add(-hook_drag_speed, hook_drag_speed, vel.y, -accel*dir.y);
-			}
-		}
-			
-		// fix influence of other players, collision + hook
-		// TODO: loop thru players only
-		for(entity *ent = world.first_entity; ent; ent = ent->next_entity)
-		{
-			if(ent && ent->objtype == OBJTYPE_PLAYER)
-			{
-				player *p = (player*)ent;
-				if(p == this || !(p->flags&FLAG_ALIVE))
-					continue; // make sure that we don't nudge our self
-				
-				// handle player <-> player collision
-				float d = distance(pos, p->pos);
-				vec2 dir = normalize(pos - p->pos);
-				if(d < phys_size*1.25f)
-				{
-					float a = phys_size*1.25f - d;
-					vel = vel + dir*a;
-				}
-				
-				// handle hook influence
-				if(p->hooked_player == this)
-				{
-					if(d > phys_size*1.50f) // TODO: fix tweakable variable
-					{
-						float accel = hook_drag_accel * (d/hook_length);
-						vel.x = saturated_add(-hook_drag_speed, hook_drag_speed, vel.x, -accel*dir.x);
-						vel.y = saturated_add(-hook_drag_speed, hook_drag_speed, vel.y, -accel*dir.y);
-					}
-				}
-			}
-		}
-		
-		// handle weapons
-		handle_weapons();
-		
-		// add gravity
-		vel.y += gravity;
-		
-		// do the move
-		defered_pos = pos;
-		move_box(&defered_pos, &vel, vec2(phys_size, phys_size), 0);
+void player::tick()
+{
+	// TODO: rework the input to be more robust
+	// TODO: remove this tick count, it feels weird
+	if(dead)
+	{
+		if(server_tick()-die_tick >= server_tickspeed()*3) // auto respawn after 3 sec
+			respawn();
+		if(input.fire && server_tick()-die_tick >= server_tickspeed()/2) // auto respawn after 0.5 sec
+			respawn();
 		return;
 	}
 	
-	virtual void tick_defered()
-	{
-		// apply the new position
-		pos = defered_pos;
-	}
+	// fetch some info
+	bool grounded = is_grounded();
+	direction = get_direction(input.angle);
 	
-	void die(int killer, int weapon)
-	{
-		// send the kill message
-		msg_pack_start(MSG_KILLMSG, MSGFLAG_VITAL);
-		msg_pack_int(killer);
-		msg_pack_int(client_id);
-		msg_pack_int(weapon);
-		msg_pack_end();
-		server_send_msg(-1);
-		
-		// a nice sound
-		create_sound(pos, SOUND_PLAYER_DIE);
-		
-		// release all hooks
-		release_hooked();
-		release_hooks();
-		
-		// set dead state
-		dead = true;
-		die_tick = server_tick();
-		clear_flag(entity::FLAG_ALIVE);
-	}
+	float max_speed = grounded ? ground_control_speed : air_control_speed;
+	float accel = grounded ? ground_control_accel : air_control_accel;
+	float friction = grounded ? ground_friction : air_friction;
 	
-	virtual bool take_damage(vec2 force, int dmg, int from, int weapon)
+	// handle movement
+	if(input.left)
+		vel.x = saturated_add(-max_speed, max_speed, vel.x, -accel);
+	if(input.right)
+		vel.x = saturated_add(-max_speed, max_speed, vel.x, accel);
+		
+	if(!input.left && !input.right)
+		vel.x *= friction;
+	
+	// handle jumping
+	if(input.jump)
 	{
-		vel += force;
-
-		// create healthmod indicator
-		create_damageind(pos, normalize(force), dmg);
-
-		if(armor)
+		if(!jumped && grounded)
 		{
-			armor -= 1;
-			dmg--;
+			create_sound(pos, SOUND_PLAYER_JUMP);
+			vel.y = -ground_jump_speed;
+			jumped++;
 		}
+	}
+	else
+		jumped = 0;
 		
-		if(dmg > armor)
+	// do hook
+	if(input.hook)
+	{
+		if(hook_state == HOOK_IDLE)
 		{
-			dmg -= armor;
-			armor = 0;
-			health -= dmg;
+			hook_state = HOOK_FLYING;
+			hook_pos = pos;
+			hook_dir = direction;
 		}
-		else
-			armor -= dmg;
-		
-		damage_taken_tick = server_tick()+50;
-		
-		// check for death
-		if(health <= 0)
+		else if(hook_state == HOOK_FLYING)
 		{
-			// apply score
-			if(from != -1)
+			vec2 new_pos = hook_pos+hook_dir*hook_fire_speed;
+
+			// Check against other players first
+			for(entity *ent = world.first_entity; ent; ent = ent->next_entity)
 			{
-				if(from == client_id)
-					score--;
-				else
+				if(ent && ent->objtype == OBJTYPE_PLAYER)
 				{
-					player *p = get_player(from);
-					p->score++;
+					player *p = (player*)ent;
+					if(p != this && distance(p->pos, new_pos) < p->phys_size)
+					{
+						hook_state = HOOK_GRABBED;
+						hooked_player = p;
+						break;
+					}
 				}
 			}
 			
-			die(from, weapon);
-			return false;
-		}
-
-		if (dmg > 2)
-			create_sound(pos, SOUND_PLAYER_PAIN_LONG);
-		else
-			create_sound(pos, SOUND_PLAYER_PAIN_SHORT);
-
-		// spawn blood?
-		return true;
-	}
-
-	virtual void snap(int snaping_client)
-	{
-		obj_player *player = (obj_player *)snap_new_item(OBJTYPE_PLAYER, client_id, sizeof(obj_player));
-
-		player->x = (int)pos.x;
-		player->y = (int)pos.y;
-		player->vx = (int)vel.x;
-		player->vy = (int)vel.y;
-		player->emote = EMOTE_NORMAL;
-
-		player->ammocount = weapons[active_weapon].ammo;
-		player->health = 0;
-		player->armor = 0;
-		player->local = 0;
-		player->clientid = client_id;
-		player->weapon = active_weapon;
-		player->attacktick = attack_tick;
-		
-		if(client_id == snaping_client)
-		{
-			player->local = 1;
-			player->health = health;
-			player->armor = armor;
-		}
-		
-		if(dead)
-			player->health = -1;
-		
-		if(length(vel) > 15.0f)
-			player->emote = EMOTE_HAPPY;
-		
-		if(damage_taken_tick > server_tick())
-			player->emote = EMOTE_PAIN;
-		
-		if(player->emote == EMOTE_NORMAL)
-		{
-			if((server_tick()%(50*5)) < 10)
-				player->emote = EMOTE_BLINK;
-		}
-		
-		player->hook_active = hook_state>0?1:0;
-		player->hook_x = (int)hook_pos.x;
-		player->hook_y = (int)hook_pos.y;
+			if(hook_state == HOOK_FLYING)
+			{
+				// check against ground
+				if(col_intersect_line(hook_pos, new_pos, &new_pos))
+				{
+					hook_state = HOOK_GRABBED;
+					hook_pos = new_pos;	
+				}
+				else if(distance(pos, new_pos) > hook_length)
+				{
+					hook_state = HOOK_RETRACTED;
+				}
+				else
+					hook_pos = new_pos;
+			}
 			
-		player->angle = input.angle;
-		player->score = score;
+			if(hook_state == HOOK_GRABBED)
+				create_sound(pos, SOUND_HOOK_ATTACH);
+		}
 	}
-};
+	else
+	{
+		release_hooked();
+		hook_pos = pos;
+	}
+		
+	if(hook_state == HOOK_GRABBED)
+	{
+		if(hooked_player)
+			hook_pos = hooked_player->pos;
 
-// POWERUP ///////////////////////
+		float d = distance(pos, hook_pos);
+		vec2 dir = normalize(pos - hook_pos);		
+		if(d > 10.0f) // TODO: fix tweakable variable
+		{
+			float accel = hook_drag_accel * (d/hook_length);
+			vel.x = saturated_add(-hook_drag_speed, hook_drag_speed, vel.x, -accel*dir.x*0.75f);
+			vel.y = saturated_add(-hook_drag_speed, hook_drag_speed, vel.y, -accel*dir.y);
+		}
+	}
+		
+	// fix influence of other players, collision + hook
+	// TODO: loop thru players only
+	for(entity *ent = world.first_entity; ent; ent = ent->next_entity)
+	{
+		if(ent && ent->objtype == OBJTYPE_PLAYER)
+		{
+			player *p = (player*)ent;
+			if(p == this || !(p->flags&FLAG_ALIVE))
+				continue; // make sure that we don't nudge our self
+			
+			// handle player <-> player collision
+			float d = distance(pos, p->pos);
+			vec2 dir = normalize(pos - p->pos);
+			if(d < phys_size*1.25f)
+			{
+				float a = phys_size*1.25f - d;
+				vel = vel + dir*a;
+			}
+			
+			// handle hook influence
+			if(p->hooked_player == this)
+			{
+				if(d > phys_size*1.50f) // TODO: fix tweakable variable
+				{
+					float accel = hook_drag_accel * (d/hook_length);
+					vel.x = saturated_add(-hook_drag_speed, hook_drag_speed, vel.x, -accel*dir.x);
+					vel.y = saturated_add(-hook_drag_speed, hook_drag_speed, vel.y, -accel*dir.y);
+				}
+			}
+		}
+	}
+	
+	// handle weapons
+	handle_weapons();
+	
+	// add gravity
+	vel.y += gravity;
+	
+	// do the move
+	defered_pos = pos;
+	move_box(&defered_pos, &vel, vec2(phys_size, phys_size), 0);
+	return;
+}
 
+void player::tick_defered()
+{
+	// apply the new position
+	pos = defered_pos;
+}
+
+void player::die(int killer, int weapon)
+{
+	// send the kill message
+	msg_pack_start(MSG_KILLMSG, MSGFLAG_VITAL);
+	msg_pack_int(killer);
+	msg_pack_int(client_id);
+	msg_pack_int(weapon);
+	msg_pack_end();
+	server_send_msg(-1);
+	
+	// a nice sound
+	create_sound(pos, SOUND_PLAYER_DIE);
+	
+	// release all hooks
+	release_hooked();
+	release_hooks();
+	
+	// set dead state
+	dead = true;
+	die_tick = server_tick();
+	clear_flag(entity::FLAG_ALIVE);
+}
+
+bool player::take_damage(vec2 force, int dmg, int from, int weapon)
+{
+	vel += force;
+
+	// create healthmod indicator
+	create_damageind(pos, normalize(force), dmg);
+
+	if(armor)
+	{
+		armor -= 1;
+		dmg--;
+	}
+	
+	if(dmg > armor)
+	{
+		dmg -= armor;
+		armor = 0;
+		health -= dmg;
+	}
+	else
+		armor -= dmg;
+	
+	damage_taken_tick = server_tick()+50;
+	
+	// check for death
+	if(health <= 0)
+	{
+		// apply score
+		if(from != -1)
+		{
+			if(from == client_id)
+				score--;
+			else
+			{
+				player *p = get_player(from);
+				p->score++;
+			}
+		}
+		
+		die(from, weapon);
+		return false;
+	}
+
+	if (dmg > 2)
+		create_sound(pos, SOUND_PLAYER_PAIN_LONG);
+	else
+		create_sound(pos, SOUND_PLAYER_PAIN_SHORT);
+
+	// spawn blood?
+	return true;
+}
+
+void player::snap(int snaping_client)
+{
+	obj_player *player = (obj_player *)snap_new_item(OBJTYPE_PLAYER, client_id, sizeof(obj_player));
+
+	player->x = (int)pos.x;
+	player->y = (int)pos.y;
+	player->vx = (int)vel.x;
+	player->vy = (int)vel.y;
+	player->emote = EMOTE_NORMAL;
+
+	player->ammocount = weapons[active_weapon].ammo;
+	player->health = 0;
+	player->armor = 0;
+	player->local = 0;
+	player->clientid = client_id;
+	player->weapon = active_weapon;
+	player->attacktick = attack_tick;
+	
+	if(client_id == snaping_client)
+	{
+		player->local = 1;
+		player->health = health;
+		player->armor = armor;
+	}
+	
+	if(dead)
+		player->health = -1;
+	
+	if(length(vel) > 15.0f)
+		player->emote = EMOTE_HAPPY;
+	
+	if(damage_taken_tick > server_tick())
+		player->emote = EMOTE_PAIN;
+	
+	if(player->emote == EMOTE_NORMAL)
+	{
+		if((server_tick()%(50*5)) < 10)
+			player->emote = EMOTE_BLINK;
+	}
+	
+	player->hook_active = hook_state>0?1:0;
+	player->hook_x = (int)hook_pos.x;
+	player->hook_y = (int)hook_pos.y;
+		
+	player->angle = input.angle;
+	player->score = score;
+}
+
+player players[MAX_CLIENTS];
+
+//////////////////////////////////////////////////
+// powerup
+//////////////////////////////////////////////////
 powerup::powerup(int _type, int _subtype)
 : entity(OBJTYPE_POWERUP)
 {
 	//static int current_id = 0;
 	type = _type;
 	subtype = _subtype;
+	
 	// set radius (so it can collide and be hooked and stuff)
 	proximity_radius = phys_size;
-	spawntick = -1;
+	
+	reset();
 	
 	// TODO: should this be done here?
 	world.insert_entity(this);
+}
+
+void powerup::reset()
+{
+	spawntick = -1;
 }
 
 void powerup::tick()
@@ -1051,8 +1041,6 @@ void powerup::snap(int snapping_client)
 }
 
 // POWERUP END ///////////////////////
-
-static player players[MAX_CLIENTS];
 
 player *get_player(int index)
 {
@@ -1150,6 +1138,9 @@ void mods_tick()
 	// clear all events
 	events.clear();
 	world.tick();
+	
+	if(world.paused) // make sure that the game object always updates
+		gameobj.tick();
 
 	if(debug_bots)
 	{
@@ -1178,16 +1169,20 @@ void mods_snap(int client_id)
 
 void mods_client_input(int client_id, void *input)
 {
-	players[client_id].previnput = players[client_id].input;
-	players[client_id].input = *(player_input*)input;
+	if(!world.paused)
+	{
+		players[client_id].previnput = players[client_id].input;
+		players[client_id].input = *(player_input*)input;
+	}
 }
 
 void mods_client_enter(int client_id)
 {
-	players[client_id].reset();
+	players[client_id].init();
 	players[client_id].client_id = client_id;
-	players[client_id].respawn();
 	world.insert_entity(&players[client_id]);
+	players[client_id].respawn();
+	
 	
 	client_info info; // fetch login name
 	if(server_getclientinfo(client_id, &info))
@@ -1278,6 +1273,8 @@ void mods_init()
 		powerup *ppower = new powerup(type, subtype);
 		ppower->pos = vec2(it->x, it->y);
 	}
+	
+	world.insert_entity(&gameobj);
 }
 
 void mods_shutdown() {}

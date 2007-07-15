@@ -113,6 +113,11 @@ int client_tick()
 	return current_tick;
 }
 
+int client_tickspeed()
+{
+	return SERVER_TICK_SPEED;
+}
+
 void *snap_find_item(int snapid, int type, int id)
 {
 	// TODO: linear search. should be fixed.

@@ -26,6 +26,7 @@ inline bool col_check_point(baselib::vec2 p) { return col_check_point(p.x, p.y);
 enum
 {
 	OBJTYPE_NULL=0,
+	OBJTYPE_GAME,
 	OBJTYPE_PLAYER,
 	OBJTYPE_PROJECTILE,
 	OBJTYPE_POWERUP,
@@ -83,6 +84,17 @@ struct ev_damageind
 	int angle;
 };
 
+struct obj_game
+{
+	int round_start_tick;
+	int game_over;
+	int sudden_death;
+	int paused;
+	
+	int score_limit;
+	int time_limit;
+};
+
 struct obj_projectile
 {
 	int type;
@@ -99,7 +111,6 @@ struct obj_powerup
 
 struct obj_player
 {
-	//int name[8];
 	int local;
 	int clientid;
 
@@ -111,12 +122,9 @@ struct obj_player
 	int vx, vy;
 	int angle;
 	
-	// current active weapon
-	int weapon;
-	// current active modifier
+	int weapon; // current active weapon
 
-	// num attack ticks left of current attack
-	int attacktick;
+	int attacktick; // num attack ticks left of current attack
 	
 	int score;
 	int emote;

@@ -734,6 +734,7 @@ int client_send_msg();
 
 int client_tick();
 float client_intratick();
+int client_tickspeed();
 
 void gfx_pretty_text(float x, float y, float size, const char *text);
 float gfx_pretty_text_width(float size, const char *text);
