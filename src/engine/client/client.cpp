@@ -412,6 +412,13 @@ public:
 			if(input::pressed(input::lctrl) && input::pressed('Q'))
 				break;
 				
+			// editor invoke
+			/*
+			if(input::pressed(input::lctrl) && input::pressed('O'))
+			{
+				disconnect();
+			}*/
+				
 			// pump the network
 			pump_network();
 			
@@ -634,6 +641,8 @@ public:
 	}	
 };
 
+int editor_main(int argc, char **argv);
+
 int main(int argc, char **argv)
 {
 	dbg_msg("client", "starting...");
@@ -645,6 +654,7 @@ int main(int argc, char **argv)
 	//const char *name = "nameless jerk";
 	bool connect_at_once = false;
 	bool fullscreen = true;
+	bool editor = false;
 
 	// init network, need to be done first so we can do lookups
 	net_init();
@@ -686,11 +696,20 @@ int main(int argc, char **argv)
 			// -w
 			fullscreen = false;
 		}
+		else if(argv[i][0] == '-' && argv[i][1] == 'e' && argv[i][2] == 0)
+		{
+			editor = true;
+		}
 	}
 	
-	// start the server
-	client c;
-	c.set_fullscreen(fullscreen);
-	c.run(connect_at_once ? &server_address : 0x0);
+	if(editor)
+		editor_main(argc, argv);
+	else
+	{
+		// start the client
+		client c;
+		c.set_fullscreen(fullscreen);
+		c.run(connect_at_once ? &server_address : 0x0);
+	}
 	return 0;
 }

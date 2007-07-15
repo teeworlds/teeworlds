@@ -122,7 +122,7 @@ editor = Compile(settings, Collect("src/editor/*.cpp"))
 
 crapnet = Compile(settings, Collect("src/crapnet/*.cpp"))
 
-client_exe = Link(settings, "teewars", engine, client, game_shared, game_client)
+client_exe = Link(settings, "teewars", engine, client, editor, game_shared, game_client)
 server_exe = Link(server_settings, "teewars_srv", engine, server, game_shared, game_server)
 -- editor_exe = Link(settings, "editor", engine, game_shared, editor)
 crapnet_exe = Link(server_settings, "crapnet", crapnet)

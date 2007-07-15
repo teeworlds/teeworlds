@@ -544,19 +544,28 @@ void gfx_quads_draw_freeform(
 void gfx_quads_text(float x, float y, float size, const char *text)
 {
 	gfx_quads_begin();
+	float startx = x;
 	while(*text)
 	{
 		char c = *text;
 		text++;
 		
-		gfx_quads_setsubset(
-			(c%16)/16.0f,
-			(c/16)/16.0f,
-			(c%16)/16.0f+1.0f/16.0f,
-			(c/16)/16.0f+1.0f/16.0f);
-		
-		gfx_quads_drawTL(x,y,size,size);
-		x += size/2;
+		if(c == '\n')
+		{
+			x = startx;
+			y += size;
+		}
+		else
+		{
+			gfx_quads_setsubset(
+				(c%16)/16.0f,
+				(c/16)/16.0f,
+				(c%16)/16.0f+1.0f/16.0f,
+				(c/16)/16.0f+1.0f/16.0f);
+			
+			gfx_quads_drawTL(x,y,size,size);
+			x += size/2;
+		}
 	}
 	
 	gfx_quads_end();
@@ -620,26 +629,37 @@ void gfx_pretty_text(float x, float y, float size, const char *text)
 	gfx_texture_set(current_font->font_texture);
 	gfx_quads_begin();
 	
+	float startx = x;
+	
 	while (*text)
 	{
 		const int c = *text;
-		const float width = current_font->m_CharEndTable[c] - current_font->m_CharStartTable[c];
-
-		x -= size * current_font->m_CharStartTable[c];
 		
-		gfx_quads_setsubset(
-			(c%16)/16.0f, // startx
-			(c/16)/16.0f, // starty
-			(c%16)/16.0f+1.0f/16.0f, // endx
-			(c/16)/16.0f+1.0f/16.0f); // endy
+		if(c == '\n')
+		{
+			x = startx;
+			y += size;
+		}
+		else
+		{
+			const float width = current_font->m_CharEndTable[c] - current_font->m_CharStartTable[c];
 
-		gfx_quads_drawTL(x, y, size, size);
+			x -= size * current_font->m_CharStartTable[c];
+			
+			gfx_quads_setsubset(
+				(c%16)/16.0f, // startx
+				(c/16)/16.0f, // starty
+				(c%16)/16.0f+1.0f/16.0f, // endx
+				(c/16)/16.0f+1.0f/16.0f); // endy
 
-		double x_nudge = 0;
-		if (text[1])
-			x_nudge = extra_kerning[text[0] + text[1] * 256];
+			gfx_quads_drawTL(x, y, size, size);
 
-		x += (width + current_font->m_CharStartTable[c] + spacing + x_nudge) * size;
+			double x_nudge = 0;
+			if (text[1])
+				x_nudge = extra_kerning[text[0] + text[1] * 256];
+
+			x += (width + current_font->m_CharStartTable[c] + spacing + x_nudge) * size;
+		}
 
 		text++;
 	}

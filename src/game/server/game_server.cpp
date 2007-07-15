@@ -1261,11 +1261,11 @@ void mods_init()
 			subtype = WEAPON_TYPE_MELEE;
 			break;
 		
-		case ITEM_HEALTH_1:
+		case ITEM_HEALTH:
 			type = POWERUP_TYPE_HEALTH;
 			break;
 		
-		case ITEM_ARMOR_1:
+		case ITEM_ARMOR:
 			type = POWERUP_TYPE_ARMOR;
 			break;
 		};

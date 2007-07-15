@@ -15,6 +15,8 @@ Group: 0.2.x -
 * Cleanup: editor.cpp
 
 * Web: FAQ on the webpage
+* Web: New webpage
+* Web: Forum
 
 * Game: Pickup sounds
 * Game: Add the sounds
