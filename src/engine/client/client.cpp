@@ -409,15 +409,9 @@ public:
 			if(input::pressed(input::f2))
 				input::set_mouse_mode(input::mode_relative);
 
+			// panic button
 			if(input::pressed(input::lctrl) && input::pressed('Q'))
 				break;
-				
-			// editor invoke
-			/*
-			if(input::pressed(input::lctrl) && input::pressed('O'))
-			{
-				disconnect();
-			}*/
 				
 			// pump the network
 			pump_network();
@@ -437,13 +431,10 @@ public:
 			
 			if(reporttime < time_get())
 			{
-				//unsigned sent, recved;
-				//conn.counter_get(&sent, &recved);
 				dbg_msg("client/report", "fps=%.02f netstate=%d",
 					frames/(float)(reportinterval/time_freq()), net.state());
 				frames = 0;
 				reporttime += reportinterval;
-				//conn.counter_reset();
 			}
 			
 			if (input::pressed(input::esc))
@@ -536,9 +527,7 @@ public:
 						unsigned char tmpbuffer2[MAX_SNAPSHOT_SIZE];
 						if(part_size)
 						{
-							//int snapsize = lzw_decompress(snapshots[SNAP_INCOMMING], snapshots[SNAP_CURRENT]);
 							int compsize = zerobit_decompress(snapshots[SNAP_INCOMMING], part_size, tmpbuffer);
-							//int compsize = lzw_decompress(snapshots[SNAP_INCOMMING],tmpbuffer);
 							int intsize = intpack_decompress(tmpbuffer, compsize, tmpbuffer2);
 							deltadata = tmpbuffer2;
 							deltasize = intsize;
