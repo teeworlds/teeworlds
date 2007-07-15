@@ -637,13 +637,16 @@ void player::handle_weapons()
 							1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, -1, WEAPON_ROCKET);						
 						break;
 					case WEAPON_SHOTGUN:
-						for(int i = 0; i < 3; i++)
+						for(int i = -2; i <= 2; i++)
 						{
+							float a = get_angle(direction);
+							a += i*0.075f;
 							new projectile(WEAPON_PROJECTILETYPE_SHOTGUN,
 								client_id,
 								pos+vec2(0,0),
-								direction*(20.0f+(i+1)*2.0f),
-								100,
+								vec2(cosf(a), sinf(a))*25.0f,
+								//vec2(cosf(a), sinf(a))*20.0f,
+								server_tickspeed()/3,
 								this,
 								1, 0, 0, -1, WEAPON_SHOTGUN);
 						}
@@ -956,11 +959,8 @@ player players[MAX_CLIENTS];
 powerup::powerup(int _type, int _subtype)
 : entity(OBJTYPE_POWERUP)
 {
-	//static int current_id = 0;
 	type = _type;
 	subtype = _subtype;
-	
-	// set radius (so it can collide and be hooked and stuff)
 	proximity_radius = phys_size;
 	
 	reset();
