@@ -15,11 +15,14 @@ Group: 0.2.x -
 * Cleanup: editor.cpp
 
 * Web: FAQ on the webpage
-* Game: Events for kills and such
+
 * Game: Pickup sounds
 * Game: Add the sounds
 * Game: Fix the hammer again
 * Game: Tweak graphics
+
+* Editor: Put it back in
+* Client: Parallax layers
 
 * Client: More robust and smoother handling of snapshots
 	* Need to add some smoothed timer or something
@@ -29,6 +32,8 @@ Group: 0.2.x -
 * Server: LAN / Internet / Private servers.
 * Server: Answer to a getinfo message
 
+DONE * Game: fraglimit, timelimit
+DONE * Game: Events for kills and such
 DONE * Game: Chat
 DONE * Game: Bigger and better scoreboard
 DONE * Cleanup: SVN
