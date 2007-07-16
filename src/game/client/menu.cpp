@@ -943,12 +943,13 @@ void modmenu_init()
 	input::enable_char_cache();
 	input::enable_key_cache();
 
+	// TODO: should be removed
     current_font->font_texture = gfx_load_texture("data/big_font.png");
-
 	background_texture = gfx_load_texture("data/gui_bg.png");
 	gui_tileset_texture = gfx_load_texture("data/gui/gui_widgets.png");
     teewars_banner_texture = gfx_load_texture("data/gui_logo.png");
 
+	// TODO: should be removed
 	music_menu = snd_load_wav("data/audio/Music_Menu.wav");
 }
 
@@ -970,7 +971,7 @@ int modmenu_render(void *ptr)
 	netaddr4 *server_address = (netaddr4 *)ptr;	
 
     // handle mouse movement
-    float mx, my, mwx, mwy;
+    float mx, my;
     {
         int rx, ry;
         inp_mouse_relative(&rx, &ry);
@@ -984,8 +985,6 @@ int modmenu_render(void *ptr)
         // update the ui
         mx = (mouse_x/(float)gfx_screenwidth())*800.0f;
         my = (mouse_y/(float)gfx_screenheight())*600.0f;
-        mwx = mx*3.0f; // adjust to zoom and offset
-        mwy = mx*3.0f; // adjust to zoom and offset
             
         int buttons = 0;
         if(inp_key_pressed(input::mouse_1)) buttons |= 1;
@@ -999,6 +998,7 @@ int modmenu_render(void *ptr)
 	int r = menu_render(server_address);
 
     // render butt ugly mouse cursor
+    // TODO: render nice cursor
     gfx_texture_set(-1);
     gfx_quads_begin();
     gfx_quads_setcolor(0,0,0,1);
