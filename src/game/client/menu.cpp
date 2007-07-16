@@ -99,17 +99,11 @@ void draw_box(int box_type, gui_tileset_enum tileset, float x, float y, float w,
 
 	/* A composite box consists of 9 parts. To get the coordinates for all corners, we need A, B, C and D:
 	 * A----+----+----+ 
-	 * |    |    |    | 
 	 * | tl | tm | tr | 
-	 * |    |    |    | 
 	 * +----B----+----+ 
-	 * |    |    |    | 
 	 * | ml | mm | mr | 
-	 * |    |    |    | 
 	 * +----+----C----+ 
-	 * |    |    |    | 
 	 * | bl | bm | br | 
-	 * |    |    |    | 
 	 * +----+----+----D
 	 */
 
