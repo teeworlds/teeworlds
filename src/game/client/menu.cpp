@@ -23,6 +23,8 @@
 
 #include "data.h"
 
+static data_container *data;
+
 using namespace baselib;
 
 /********************************************************
@@ -37,290 +39,103 @@ enum gui_tileset_enum
 	tileset_inactive
 };
 
-enum gui_parts_enum
-{
-	invalid_part = 0,
-    button_big_topleft, 
-    button_big_topmid, 
-    button_big_topright, 
-    button_big_midleft, 
-    button_big_midmid, 
-    button_big_midright, 
-    button_big_btmleft, 
-    button_big_btmmid, 
-    button_big_btmright, 
-    slider_big_horiz_begin, 
-    slider_big_horiz_mid, 
-    slider_big_horiz_end, 
-    slider_small_horiz_begin, 
-    slider_small_horiz_mid, 
-    slider_small_horiz_end, 
-    slider_small_vert_begin, 
-    radio_unchecked, 
-    radio_checked, 
-    slider_small_vert_mid, 
-    slider_small_vert_end, 
-    slider_big_vert_begin, 
-    slider_big_handle_vert, 
-    slider_big_handle_horiz, 
-    slider_small_handle_horiz, 
-    slider_big_arrow_left, 
-    slider_big_arrow_up, 
-    slider_big_arrow_right, 
-    slider_big_arrow_down, 
-    slider_small_arrow_left, 
-    slider_small_arrow_up, 
-    slider_small_arrow_right, 
-    slider_small_arrow_down, 
-    slider_small_handle_vert, 
-    slider_big_vert_mid, 
-    slider_big_vert_end, 
-    screen_thick_topleft, 
-    screen_thick_topmid, 
-    screen_thick_topright, 
-    screen_thick_midleft, 
-    screen_thick_midmid, 
-    screen_thick_midright, 
-    screen_thick_btmleft, 
-    screen_thick_btmmid, 
-    screen_thick_btmright, 
-    screen_transparent_topleft, 
-    screen_transparent_topmid, 
-    screen_transparent_topright, 
-    screen_transparent_midleft, 
-    screen_transparent_midmid, 
-    screen_transparent_midright, 
-    screen_transparent_btmleft, 
-    screen_transparent_btmmid, 
-    screen_transparent_btmright, 
-    screen_info_topleft, 
-    screen_info_topmid, 
-    screen_info_topright, 
-    screen_info_midleft, 
-    screen_info_midmid, 
-    screen_info_midright, 
-    screen_info_btmleft, 
-    screen_info_btmmid, 
-    screen_info_btmright, 
-    screen_textbox_topleft, 
-    screen_textbox_topmid, 
-    screen_textbox_topright, 
-    screen_textbox_midleft, 
-    screen_textbox_midmid, 
-    screen_textbox_midright, 
-    screen_textbox_btmleft, 
-    screen_textbox_btmmid, 
-    screen_textbox_btmright, 
-    screen_list_topleft, 
-    screen_list_topmid, 
-    screen_list_topright, 
-    screen_list_midleft, 
-    screen_list_midmid, 
-    screen_list_midright, 
-    screen_list_btmleft, 
-    screen_list_btmmid, 
-    screen_list_btmright
-};
-
-struct gui_part
-{
-	int x, y;
-	int w, h;
-};
-
-gui_part parts[] =
-{
-	{ 0, 0, 0, 0 }, // invalid_part
-{ 0, 0, 16, 16 }, // button_big_topleft 
-{ 16, 0, 16, 16 }, // button_big_topmid 
-{ 32, 0, 16, 16 }, // button_big_topright 
-{ 0, 16, 16, 16 }, // button_big_midleft 
-{ 16, 16, 16, 16 }, // button_big_midmid 
-{ 32, 16, 16, 16 }, // button_big_midright 
-{ 0, 32, 16, 16 }, // button_big_btmleft 
-{ 16, 32, 16, 16 }, // button_big_btmmid 
-{ 32, 32, 16, 16 }, // button_big_btmright 
-{ 0, 48, 16, 16 }, // slider_big_horiz_begin 
-{ 16, 48, 16, 16 }, // slider_big_horiz_mid 
-{ 32, 48, 16, 16 }, // slider_big_horiz_end 
-{ 0, 96, 16, 16 }, // slider_small_horiz_begin 
-{ 16, 96, 16, 16 }, // slider_small_horiz_mid 
-{ 32, 96, 16, 16 }, // slider_small_horiz_end 
-{ 48, 96, 16, 16 }, // slider_small_vert_begin 
-{ 64, 112, 32, 32 }, // radio_unchecked 
-{ 96, 112, 32, 32 }, // radio_checked 
-{ 48, 112, 16, 16 }, // slider_small_vert_mid 
-{ 48, 128, 16, 16 }, // slider_small_vert_end 
-{ 48, 48, 16, 16 }, // slider_big_vert_begin 
-{ 64, 48, 16, 32 }, // slider_big_handle_vert 
-{ 80, 64, 32, 16 }, // slider_big_handle_horiz 
-{ 80, 48, 16, 16 }, // slider_small_handle_horiz 
-{ 0, 64, 16, 16 }, // slider_big_arrow_left 
-{ 16, 64, 16, 16 }, // slider_big_arrow_up 
-{ 32, 64, 16, 16 }, // slider_big_arrow_right 
-{ 16, 80, 16, 16 }, // slider_big_arrow_down 
-{ 0, 112, 16, 16 }, // slider_small_arrow_left 
-{ 16, 112, 16, 16 }, // slider_small_arrow_up 
-{ 32, 112, 16, 16 }, // slider_small_arrow_right 
-{ 16, 128, 16, 16 }, // slider_small_arrow_down 
-{ 96, 48, 16, 16 }, // slider_small_handle_vert 
-{ 48, 64, 16, 16 }, // slider_big_vert_mid 
-{ 48, 80, 16, 16 }, // slider_big_vert_end 
-{ 0, 384, 16, 16 }, // screen_thick_topleft 
-{ 16, 384, 16, 16 }, // screen_thick_topmid 
-{ 32, 384, 16, 16 }, // screen_thick_topright 
-{ 0, 400, 16, 16 }, // screen_thick_midleft 
-{ 16, 400, 16, 16 }, // screen_thick_midmid 
-{ 32, 400, 16, 16 }, // screen_thick_midright 
-{ 0, 416, 16, 16 }, // screen_thick_btmleft 
-{ 16, 416, 16, 16 }, // screen_thick_btmmid 
-{ 32, 416, 16, 16 }, // screen_thick_btmright 
-{ 48, 384, 16, 16 }, // screen_transparent_topleft 
-{ 64, 384, 16, 16 }, // screen_transparent_topmid 
-{ 80, 384, 16, 16 }, // screen_transparent_topright 
-{ 48, 400, 16, 16 }, // screen_transparent_midleft 
-{ 64, 400, 16, 16 }, // screen_transparent_midmid 
-{ 80, 400, 16, 16 }, // screen_transparent_midright 
-{ 48, 416, 16, 16 }, // screen_transparent_btmleft 
-{ 64, 416, 16, 16 }, // screen_transparent_btmmid 
-{ 80, 416, 16, 16 }, // screen_transparent_btmright 
-{ 96, 384, 16, 16 }, // screen_info_topleft 
-{ 112, 384, 16, 16 }, // screen_info_topmid 
-{ 128, 384, 16, 16 }, // screen_info_topright 
-{ 96, 400, 16, 16 }, // screen_info_midleft 
-{ 112, 400, 16, 16 }, // screen_info_midmid 
-{ 128, 400, 16, 16 }, // screen_info_midright 
-{ 96, 416, 16, 16 }, // screen_info_btmleft 
-{ 112, 416, 16, 16 }, // screen_info_btmmid 
-{ 128, 416, 16, 16 }, // screen_info_btmright 
-{ 144, 384, 16, 16 }, // screen_textbox_topleft 
-{ 160, 384, 16, 16 }, // screen_textbox_topmid 
-{ 176, 384, 16, 16 }, // screen_textbox_topright 
-{ 144, 400, 16, 16 }, // screen_textbox_midleft 
-{ 160, 400, 16, 16 }, // screen_textbox_midmid 
-{ 176, 400, 16, 16 }, // screen_textbox_midright 
-{ 144, 416, 16, 16 }, // screen_textbox_btmleft 
-{ 160, 416, 16, 16 }, // screen_textbox_btmmid 
-{ 176, 416, 16, 16 }, // screen_textbox_btmright 
-{ 192, 384, 16, 16 }, // screen_list_topleft 
-{ 208, 384, 16, 16 }, // screen_list_topmid 
-{ 224, 384, 16, 16 }, // screen_list_topright 
-{ 192, 400, 16, 16 }, // screen_list_midleft 
-{ 208, 400, 16, 16 }, // screen_list_midmid 
-{ 224, 400, 16, 16 }, // screen_list_midright 
-{ 192, 416, 16, 16 }, // screen_list_btmleft 
-{ 208, 416, 16, 16 }, // screen_list_btmmid 
-{ 224, 416, 16, 16 } // screen_list_btmright
-};
-
-#define GUI_COMPOSITE_BOX(name) { name ## _topleft, name ## _topmid, name ## _topright, name ## _midleft, name ## _midmid, name ## _midright, name ## _btmleft, name ## _btmmid, name ## _btmright }
-
-enum gui_composite_box_enum
-{
-	button_big_box,
-	screen_thick_box,
-	screen_transparent_box,
-	screen_info_box,
-	screen_textbox_box,
-	screen_list_box,
-};
-
-struct gui_composite_box
-{
-	gui_parts_enum part_topleft, part_topmid, part_topright;
-	gui_parts_enum part_midleft, part_midmid, part_midright;
-	gui_parts_enum part_btmleft, part_btmmid, part_btmright;
-};
-
-gui_composite_box boxes[] =
-{
-	GUI_COMPOSITE_BOX(button_big),
-	GUI_COMPOSITE_BOX(screen_thick),
-	GUI_COMPOSITE_BOX(screen_transparent),
-	GUI_COMPOSITE_BOX(screen_info),
-	GUI_COMPOSITE_BOX(screen_textbox),
-	GUI_COMPOSITE_BOX(screen_list),
-};
-
 int gui_tileset_texture;
 
-void draw_part(gui_part part, gui_tileset_enum tileset, float x, float y, float w, float h)
+void draw_area(gui_tileset_enum tileset, int areax, int areay, int areaw, int areah, float x, float y, float w, float h)
 {
 	const float tex_w = 512.0, tex_h = 512.0;
-
-	const float start_x = part.x/tex_w, start_y = part.y/tex_h, f_w = part.w/tex_w, f_h = part.h/tex_h;
-
-	float ts_x, ts_y;
 
 	switch (tileset)
 	{
 		case tileset_regular:
-			ts_x = 0.0f; ts_y = 0.0f; break;
+			break;
 		case tileset_hot:
-			ts_x = 0.375f; ts_y = 0.375f; break;
+			areax += 192; areay += 192; break;
 		case tileset_active:
-			ts_x = 0.0f; ts_y = 0.375f; break;
+			areay += 192; break;
 		case tileset_inactive:
-			ts_x = 0.375f; ts_y = 0.0f; break;
+			areax += 192; break;
 		default:
 			dbg_msg("menu", "invalid tileset given to draw_part");
 	}
-	
+
+	float ts_x = areax / tex_w;
+	float ts_y = areay / tex_h;
+	float te_x = (areax + areaw) / tex_w;
+	float te_y = (areay + areah) / tex_h;
+
     gfx_blend_normal();
     gfx_texture_set(gui_tileset_texture);
     gfx_quads_begin();
     gfx_quads_setcolor(1,1,1,1);
 	gfx_quads_setsubset(
-		ts_x+start_x, // startx
-		ts_y+start_y, // starty
-		ts_x+start_x+f_w, // endx
-		ts_y+start_y+f_h); // endy								
+		ts_x, // startx
+		ts_y, // starty
+		te_x, // endx
+		te_y); // endy								
     gfx_quads_drawTL(x,y,w,h);
     gfx_quads_end();
 }
 
-
-void draw_part(gui_parts_enum part, gui_tileset_enum tileset, float x, float y, float w, float h)
+void draw_part(int part_type, gui_tileset_enum tileset, float x, float y, float w, float h)
 {
-	draw_part(parts[part], tileset, x, y, w, h);
+	gui_box part = data->gui.misc[part_type];
+
+	draw_area(tileset, part.x, part.y, part.w, part.h, x, y, w, h);
+
+	//draw_part(parts[part], tileset, x, y, w, h);
 }
 
-void draw_part(gui_parts_enum part, gui_tileset_enum tileset, float x, float y)
+void draw_part(int part_type, gui_tileset_enum tileset, float x, float y)
 {
-	draw_part(part, tileset, x, y, parts[part].w, parts[part].h);
-}
-
-void draw_box(gui_composite_box_enum box, gui_tileset_enum tileset, float x, float y, float w, float h)
-{
-	gui_composite_box b = boxes[box];
-
-	gui_part topleft_p = parts[b.part_topleft];
-	gui_part topmid_p = parts[b.part_topmid];
-	gui_part topright_p = parts[b.part_topright];
-	gui_part midleft_p = parts[b.part_midleft];
-	gui_part btmleft_p = parts[b.part_btmleft];
-
-	float scale = h / (topleft_p.h + midleft_p.h + btmleft_p.h);
-	scale = 1.0;
-
-	float topleft_w = scale * topleft_p.w;
-	float topright_w = scale * topright_p.w;
-	float topmid_w = w - topright_w - topleft_w;
-	float topleft_h = scale * topleft_p.h;
-	float btmleft_h = scale * btmleft_p.h;
-	float midleft_h = h - topleft_h - btmleft_h;
-
-	draw_part(b.part_topleft, tileset, x, y);
-	draw_part(b.part_topmid, tileset, x + topleft_w, y, topmid_w, topleft_h);
-	draw_part(b.part_topright, tileset, x + topleft_w + topmid_w, y);
+	gui_box part = data->gui.misc[part_type];
 	
-	draw_part(b.part_midleft, tileset, x, y + topleft_h, topright_w, midleft_h);
-	draw_part(b.part_midmid, tileset, x + topleft_w, y + topleft_h, topmid_w, midleft_h);
-	draw_part(b.part_midright, tileset, x + topleft_w + topmid_w, y + topleft_h, topright_w, midleft_h);
+	draw_part(part_type, tileset, x, y, part.w, part.h);
+}
 
-	draw_part(b.part_btmleft, tileset, x, y + topleft_h + midleft_h);
-	draw_part(b.part_btmmid, tileset, x + topleft_w, y + topleft_h + midleft_h, topmid_w, btmleft_h);
-	draw_part(b.part_btmright, tileset, x + topleft_w + topmid_w, y + topleft_h + midleft_h);
+void draw_box(int box_type, gui_tileset_enum tileset, float x, float y, float w, float h)
+{
+	gui_compositebox box = data->gui.boxes[box_type];
+
+	/* A composite box consists of 9 parts. To get the coordinates for all corners, we need A, B, C and D:
+	 * A----+----+----+ 
+	 * |    |    |    | 
+	 * | tl | tm | tr | 
+	 * |    |    |    | 
+	 * +----B----+----+ 
+	 * |    |    |    | 
+	 * | ml | mm | mr | 
+	 * |    |    |    | 
+	 * +----+----C----+ 
+	 * |    |    |    | 
+	 * | bl | bm | br | 
+	 * |    |    |    | 
+	 * +----+----+----D
+	 */
+
+	int ax = box.rect.x;
+	int ay = box.rect.y;
+
+	int bx = box.center.x;
+	int by = box.center.y;
+	
+	int cx = box.center.x + box.center.w;
+	int cy = box.center.y + box.center.h;
+
+	int dx = box.rect.x + box.rect.w;
+	int dy = box.rect.y + box.rect.h;
+
+	draw_area(tileset, ax, ay, bx-ax, by-ay, x, y, bx-ax, by-ay);
+	draw_area(tileset, bx, ay, cx-bx, by-ay, x+bx-ax, y, w-(bx-ax)-(dx-cx), by-ay);
+	draw_area(tileset, cx, ay, dx-cx, by-ay, x+w-(dx-cx), y, dx-cx, by-ay);
+	
+	draw_area(tileset, ax, by, bx-ax, cy-by, x, y+(by-ay), bx-ax, h-(by-ay)-(dy-cy));
+	draw_area(tileset, bx, by, cx-bx, cy-by, x+bx-ax, y+(by-ay), w-(bx-ax)-(dx-cx), h-(by-ay)-(dy-cy));
+	draw_area(tileset, cx, by, dx-cx, cy-by, x+w-(dx-cx), y+(by-ay), dx-cx, h-(by-ay)-(dy-cy));
+
+	draw_area(tileset, ax, cy, bx-ax, dy-cy, x, y+h-(dy-cy), bx-ax, dy-cy);
+	draw_area(tileset, bx, cy, cx-bx, dy-cy, x+bx-ax, y+h-(dy-cy), w-(bx-ax)-(dx-cx), dy-cy);
+	draw_area(tileset, cx, cy, dx-cx, dy-cy, x+w-(dx-cx), y+h-(dy-cy), dx-cx, dy-cy);
 }
 
 struct pretty_font
@@ -377,17 +192,17 @@ void draw_single_part_button(void *id, const char *text, int checked, float x, f
 		tileset = tileset_regular;
 
 	
-	draw_part((gui_parts_enum)((char*)extra-(char*)0), tileset, x, y, w, h);
+	draw_part((int)((char*)extra-(char*)0), tileset, x, y, w, h);
 }
 
 void draw_menu_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
 {
-	gui_composite_box_enum box_style;
+	int box_type;
 	if ((int)((char*)extra-(char*)0))
-		box_style = screen_info_box;
+		box_type = GUI_BOX_SCREEN_INFO;
 	else
-		box_style = screen_list_box;
-	draw_box(box_style, tileset_regular, x, y, w, h);
+		box_type = GUI_BOX_SCREEN_LIST;
+	draw_box(box_type, tileset_regular, x, y, w, h);
 
 	ui_do_label(x + 10, y, text, 28);
 }
@@ -407,7 +222,7 @@ void draw_teewars_button(void *id, const char *text, int checked, float x, float
 	if ((int)((char*)extra-(char*)0) == 1)
 		tileset = tileset_inactive;
 
-	draw_box(button_big_box, tileset, x, y, w, h);
+	draw_box(GUI_BOX_BUTTON, tileset, x, y, w, h);
 
 	ui_do_label(x + w/2 - text_width/2, y, text, 46);
 }
@@ -470,8 +285,7 @@ int ui_do_key_reader(void *id, float x, float y, float w, float h, int key)
 	}
 
 	// draw
-	gui_composite_box_enum box_style = screen_info_box;	
-	draw_box(box_style, tileset_regular, x, y, w, h);
+	draw_box(GUI_BOX_SCREEN_INFO, tileset_regular, x, y, w, h);
 	
 	const char *str = input::key_name(key);
 	ui_do_label(x + 10, y, str, 36);
@@ -495,13 +309,13 @@ int ui_do_combo_box(void *id, float x, float y, float w, char *lines, int line_c
 	{
 		for (int i = 0; i < line_count; i++)
 		{
-			gui_composite_box_enum box_style;
+			int box_type;
 			if (inside && hover_index == i)
-				box_style = screen_info_box;
+				box_type = GUI_BOX_SCREEN_INFO;
 			else
-				box_style = screen_list_box;
+				box_type = GUI_BOX_SCREEN_LIST;
 
-			draw_box(box_style, tileset_regular, x, y + i * line_height, w, line_height);
+			draw_box(box_type, tileset_regular, x, y + i * line_height, w, line_height);
 			ui_do_label(x + 10 + 10, y + i * line_height, lines + 128 * i, 36);
 			if (selected_index == i)
 				ui_do_label(x + 10, y + i * line_height, "-", 36);
@@ -517,7 +331,7 @@ int ui_do_combo_box(void *id, float x, float y, float w, char *lines, int line_c
 	}
 	else
 	{
-		draw_box(screen_list_box, tileset_regular, x, y, w, line_height);
+		draw_box(GUI_BOX_SCREEN_LIST, tileset_regular, x, y, w, line_height);
 		ui_do_label(x + 10, y, lines + 128 * selected_index, 36);
 
 		if (inside && ui_mouse_button(0))
@@ -566,10 +380,9 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 		r = 1;
 	}
 
-	draw_box(screen_textbox_box, tileset_regular, x, y, w, h);
+	draw_box(GUI_BOX_SCREEN_TEXTBOX, tileset_regular, x, y, w, h);
 
 	ui_do_label(x + 10, y, str, 36);
-
 
 	if (ui_active_item() == id)
 	{
@@ -587,12 +400,12 @@ int do_scroll_bar(void *id, float x, float y, float height, int steps, int last_
 	static int up_button;
 	static int down_button;
 
-    if (ui_do_button(&up_button, "", 0, x + 8, y, 16, 16, draw_single_part_button, (void *)slider_big_arrow_up))
+    if (ui_do_button(&up_button, "", 0, x + 8, y, 16, 16, draw_single_part_button, (void *)GUI_MISC_SLIDER_BIG_ARROW_UP))
 	{
 		if (r > 0)
 			--r;
 	}
-    if (ui_do_button(&down_button, "", 0, x + 8, y + height - 16, 16, 16, draw_single_part_button, (void *)slider_big_arrow_down))
+    if (ui_do_button(&down_button, "", 0, x + 8, y + height - 16, 16, 16, draw_single_part_button, (void *)GUI_MISC_SLIDER_BIG_ARROW_DOWN))
 	{
 		if (r < steps)
 			++r;
@@ -625,11 +438,11 @@ int do_scroll_bar(void *id, float x, float y, float height, int steps, int last_
 			ui_set_hot_item(id);
 	}
 
-	draw_part(slider_big_vert_begin, tileset_regular, x + 8, y + 16, 16, 16);
-	draw_part(slider_big_vert_mid, tileset_regular, x + 8, y + 32, 16, height - 32 - 32);
-	draw_part(slider_big_vert_end, tileset_regular, x + 8, y + height - 32, 16, 16);
+	draw_part(GUI_MISC_SLIDER_BIG_VERT_BEGIN, tileset_regular, x + 8, y + 16, 16, 16);
+	draw_part(GUI_MISC_SLIDER_BIG_VERT_MID, tileset_regular, x + 8, y + 32, 16, height - 32 - 32);
+	draw_part(GUI_MISC_SLIDER_BIG_VERT_END, tileset_regular, x + 8, y + height - 32, 16, 16);
 
-	draw_part(slider_big_handle_horiz, tileset_regular, x, y + 16 + r * ((height - 64) / steps), 32, 16);
+	draw_part(GUI_MISC_SLIDER_BIG_HANDLE_HORIZ, tileset_regular, x, y + 16 + r * ((height - 64) / steps), 32, 16);
 
 	return r;
 }
@@ -993,13 +806,13 @@ static int editor_screen_render()
 		int index = s[0] + s[1] * 256;
 
 		// less
-		if (ui_do_button((void *)(100 + i * 2), "", 0, 50, 30 * i + 10 + 20, 16, 16, draw_single_part_button, (void *)slider_big_arrow_left))
+		if (ui_do_button((void *)(100 + i * 2), "", 0, 50, 30 * i + 10 + 20, 16, 16, draw_single_part_button, (void *)GUI_MISC_SLIDER_BIG_ARROW_LEFT))
 		{
 			extra_kerning[index] -= 0.01;
 		}
 
 		// more
-		if (ui_do_button((void *)(100 + i * 2 + 1), "", 0, 66, 30 * i + 10 + 20, 16, 16, draw_single_part_button, (void *)slider_big_arrow_right))
+		if (ui_do_button((void *)(100 + i * 2 + 1), "", 0, 66, 30 * i + 10 + 20, 16, 16, draw_single_part_button, (void *)GUI_MISC_SLIDER_BIG_ARROW_RIGHT))
 		{
 			extra_kerning[index] += 0.01;
 		}
@@ -1024,13 +837,13 @@ static int editor_screen_render()
 		gfx_quads_drawTL(700+45*(current_font->m_CharEndTable[(int)s[0]]-current_font->m_CharStartTable[(int)s[0]]),35*i+20,1,30);
     	gfx_quads_end();
 		// less
-		if (ui_do_button((void *)(200 + i * 2), "", 0, 650, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)slider_big_arrow_left))
+		if (ui_do_button((void *)(200 + i * 2), "", 0, 650, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)GUI_MISC_SLIDER_BIG_ARROW_LEFT))
 		{
 			current_font->m_CharStartTable[(int)s[0]] -= 0.01f;
 		}
 
 		// more
-		if (ui_do_button((void *)(200 + i * 2 + 1), "", 0, 666, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)slider_big_arrow_right))
+		if (ui_do_button((void *)(200 + i * 2 + 1), "", 0, 666, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)GUI_MISC_SLIDER_BIG_ARROW_RIGHT))
 		{
 			current_font->m_CharStartTable[(int)s[0]] += 0.01f;
 		}
@@ -1043,13 +856,13 @@ static int editor_screen_render()
 
 
 		// less
-		if (ui_do_button((void *)(300 + i * 2), "", 0, 750, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)slider_big_arrow_left))
+		if (ui_do_button((void *)(300 + i * 2), "", 0, 750, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)GUI_MISC_SLIDER_BIG_ARROW_LEFT))
 		{
 			current_font->m_CharEndTable[(int)s[0]] -= 0.01f;
 		}
 
 		// more
-		if (ui_do_button((void *)(300 + i * 2 + 1), "", 0, 766, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)slider_big_arrow_right))
+		if (ui_do_button((void *)(300 + i * 2 + 1), "", 0, 766, 35 * i + 10 + 15, 16, 16, draw_single_part_button, (void *)GUI_MISC_SLIDER_BIG_ARROW_RIGHT))
 		{
 			current_font->m_CharEndTable[(int)s[0]] += 0.01f;
 		}
@@ -1146,6 +959,8 @@ void modmenu_init()
     teewars_banner_texture = gfx_load_texture("data/gui_logo.png");
 
 	music_menu = snd_load_wav("data/audio/Music_Menu.wav");
+
+	data = load_data_container("data/client.dat");
 }
 
 void modmenu_shutdown()
