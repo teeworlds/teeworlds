@@ -11,7 +11,7 @@
 
 using namespace baselib;
 
-static data_container *data;
+data_container *data = 0x0;
 
 int charids[16] = {2,10,0,4,12,6,14,1,9,15,13,11,7,5,8,3};
 

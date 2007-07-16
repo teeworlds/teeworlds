@@ -23,7 +23,7 @@
 
 #include "data.h"
 
-static data_container *data;
+extern data_container *data;
 
 using namespace baselib;
 
@@ -956,8 +956,6 @@ void modmenu_init()
     teewars_banner_texture = gfx_load_texture("data/gui_logo.png");
 
 	music_menu = snd_load_wav("data/audio/Music_Menu.wav");
-
-	data = load_data_container("data/client.dat");
 }
 
 void modmenu_shutdown()
