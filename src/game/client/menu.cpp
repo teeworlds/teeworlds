@@ -360,9 +360,6 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 		int k = input::last_key();
 		int len = strlen(str);
 
-		if (c)
-			dbg_msg("menu", "c: %i", c);
-	
 		if (c >= 32 && c < 128)
 		{
 			if (len < str_size - 1)
