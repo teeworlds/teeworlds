@@ -41,6 +41,8 @@ Group: 0.2.0 - Clean Up (NEXT)
 * Server: LAN / Internet / Private servers.
 * Server: Answer to a getinfo message
 
+* Menu: Make it look abit nicer, abit more teewars
+
 * DONE: Editor: Put it back in
 * DONE: Game: fraglimit, timelimit
 * DONE: Game: Events for kills and such
