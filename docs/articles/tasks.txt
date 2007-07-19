@@ -3,12 +3,12 @@ Title: Tasks
 Group: 0.1.0 - Awesome Alpha (RELEASED)
 
 Group: 0.1.1 - Awesome Alpha Bug Fixed (NEXT)
-	DONE * Bobbing powerups
-	DONE * Get -c working under windows
-	DONE * Bigger powerups
-	DONE * Private server (no heartbeats)
-	DONE * Can't pickup ammo, health or armor when not needed
-	DONE * Fix so that the homepage is in the SVN
+	* DONE: Bobbing powerups
+	* DONE: Get -c working under windows
+	* DONE: Bigger powerups
+	* DONE: Private server (no heartbeats)
+	* DONE: Can't pickup ammo, health or armor when not needed
+	* DONE: Fix so that the homepage is in the SVN
 
 Group: 0.2.x - 
 * Cleanup: client.cpp / server.cpp
@@ -17,14 +17,21 @@ Group: 0.2.x -
 * Web: FAQ on the webpage
 * Web: New webpage
 * Web: Forum
+* Web: Everything on prq
 
 * Game: Pickup sounds
 * Game: Add the sounds
 * Game: Fix the hammer again
 * Game: Tweak graphics
 
-* Editor: Put it back in
-* Client: Parallax layers
+* Weapon: Hammer
+* Weapon: Gun
+* Weapon: Rocket
+* Weapon: Sniper
+* Weapon: (Shotty)
+* Weapon: (Laser?)
+
+* Client: Parerallax layers
 
 * Client: More robust and smoother handling of snapshots
 	* Need to add some smoothed timer or something
@@ -34,6 +41,7 @@ Group: 0.2.x -
 * Server: LAN / Internet / Private servers.
 * Server: Answer to a getinfo message
 
+DONE * Editor: Put it back in
 DONE * Game: fraglimit, timelimit
 DONE * Game: Events for kills and such
 DONE * Game: Chat
