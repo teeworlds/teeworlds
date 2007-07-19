@@ -2,7 +2,7 @@ Title: Map File Format
 
 Group: Structure
 (start code)
-int ID // should be "MAPP"
+int ID // should be "DATA"
 int version // should be 2
 int size
 int swaplen
