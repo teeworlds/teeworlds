@@ -58,6 +58,6 @@ Group: 0.3.0 - Editor Edition
 
 Group: Unassigned
 * zlib compression on the maps.
-* png loader
+* DONE png loader
 * The gfx API now uses BGRA for texture loading. It should be RGBA. (gfx.cpp)
 * Flipping of tiles in the tilemap should be fixed. (mapres_tilemap.cpp)
