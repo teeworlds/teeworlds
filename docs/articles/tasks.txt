@@ -31,7 +31,7 @@ Group: 0.2.0 - Clean Up (NEXT)
 * Weapon: (Shotty)
 * Weapon: (Laser?)
 
-* Client: Parerallax layers
+* Client: Parerallax layers (wanted)
 
 * Client: More robust and smoother handling of snapshots
 	* Need to add some smoothed timer or something
