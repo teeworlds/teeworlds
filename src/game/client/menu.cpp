@@ -206,7 +206,7 @@ void draw_teewars_button(void *id, const char *text, int checked, float x, float
 	float text_width = gfx_pretty_text_width(46.f, text);
 	gui_tileset_enum tileset;
 
-	if (ui_active_item() == id && ui_hot_item() == id)
+	if (ui_active_item() == id)
 		tileset = tileset_active;
 	else if (ui_hot_item() == id)
 		tileset = tileset_hot;
@@ -246,37 +246,26 @@ int ui_do_key_reader(void *id, float x, float y, float w, float h, int key)
 	static bool can_be_selected = true;
 	int inside = ui_mouse_inside(x, y, w, h);
 	int new_key = key;
+
+	if(ui_active_item() == id)
+	{
+		int k = input::last_key();
+		if (k)
+		{
+			new_key = k;
+			ui_set_active_item(0);
+			can_be_selected = false;
+		}
+	}
+	else if(ui_hot_item() == id)
+	{
+		if(ui_mouse_button(0))
+			ui_set_active_item(id);
+	}
 	
-	if (!ui_mouse_button(0) && !can_be_selected)
-		can_be_selected = true;
+	if(inside)
+		ui_set_hot_item(id);
 
-	if (can_be_selected)
-	{
-		if (inside)
-		{
-			ui_set_hot_item(id);
-
-			if (ui_mouse_button(0) && ui_active_item() != id)
-			{
-				ui_set_active_item(id);
-				can_be_selected = false;
-			}
-		}
-	}
-
-	if (can_be_selected)
-	{
-		if (ui_active_item() == id)
-		{
-			int k = input::last_key();
-			if (k)
-			{
-				new_key = k;
-				ui_set_active_item(0);
-				can_be_selected = false;
-			}
-		}
-	}
 
 	// draw
 	draw_box(GUI_BOX_SCREEN_INFO, tileset_regular, x, y, w, h);
@@ -340,14 +329,6 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
     int inside = ui_mouse_inside(x, y, w, h);
 	int r = 0;
 
-	if(inside)
-	{
-		ui_set_hot_item(id);
-
-		if(ui_mouse_button(0))
-			ui_set_active_item(id);
-	}
-
 	if (ui_active_item() == id)
 	{
 		int c = input::last_char();
@@ -370,6 +351,14 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 		}
 		r = 1;
 	}
+	else if(ui_hot_item() == id)
+	{
+		if(ui_mouse_button(0))
+			ui_set_active_item(id);
+	}
+	
+	if(inside)
+			ui_set_hot_item(id);
 
 	draw_box(GUI_BOX_SCREEN_TEXTBOX, tileset_regular, x, y, w, h);
 

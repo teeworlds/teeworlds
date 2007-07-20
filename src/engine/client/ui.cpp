@@ -44,6 +44,8 @@ int ui_update(float mx, float my, float mwx, float mwy, int buttons)
     mouse_wy = mwy;
     mouse_buttons = buttons;
     hot_item = becomming_hot_item;
+    if(active_item)
+    	hot_item = active_item;
     becomming_hot_item = 0;
     return 0;
 }
@@ -89,29 +91,25 @@ int ui_do_button(void *id, const char *text, int checked, float x, float y, floa
     int r = 0;
     int inside = ui_mouse_inside(x,y,w,h);
 
-	if(inside)
+	if(ui_active_item() == id)
 	{
-		ui_set_hot_item(id);
-
+		if(!ui_mouse_button(0))
+		{
+			if(inside)
+				r = 1;
+			ui_set_active_item(0);
+		}
+	}
+	else if(ui_hot_item() == id)
+	{
 		if(ui_mouse_button(0))
 			ui_set_active_item(id);
 	}
-
-	// this gets rid of an annoying bug :< (but it creates another annoying bug :O)
-	if (!inside && ui_active_item() == id && !ui_mouse_button(0))
-		ui_set_active_item(0);
-
-	if(ui_active_item() == id && ui_hot_item() == id && !ui_mouse_button(0))
-	{
-		ui_set_active_item(0);
-		r = 1;
-	}
-
-	if (!inside && ui_hot_item() == id)
-		ui_set_hot_item(0);
+	
+	if(inside)
+		ui_set_hot_item(id);
 
     draw_func(id, text, checked, x, y, w, h, extra);
-
     return r;
 }
 
