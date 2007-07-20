@@ -243,9 +243,12 @@ struct server_list
 int ui_do_key_reader(void *id, float x, float y, float w, float h, int key)
 {
 	// process
-	static bool can_be_selected = true;
+	static bool mouse_released = true;
 	int inside = ui_mouse_inside(x, y, w, h);
 	int new_key = key;
+	
+	if(!ui_mouse_button(0))
+		mouse_released = true;
 
 	if(ui_active_item() == id)
 	{
@@ -254,18 +257,17 @@ int ui_do_key_reader(void *id, float x, float y, float w, float h, int key)
 		{
 			new_key = k;
 			ui_set_active_item(0);
-			can_be_selected = false;
+			mouse_released = false;
 		}
 	}
 	else if(ui_hot_item() == id)
 	{
-		if(ui_mouse_button(0))
+		if(ui_mouse_button(0) && mouse_released)
 			ui_set_active_item(id);
 	}
 	
 	if(inside)
 		ui_set_hot_item(id);
-
 
 	// draw
 	draw_box(GUI_BOX_SCREEN_INFO, tileset_regular, x, y, w, h);
@@ -329,7 +331,7 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
     int inside = ui_mouse_inside(x, y, w, h);
 	int r = 0;
 
-	if (ui_active_item() == id)
+	if(ui_last_active_item() == id)
 	{
 		int c = input::last_char();
 		int k = input::last_key();
@@ -351,6 +353,12 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 		}
 		r = 1;
 	}
+	
+	if(ui_active_item() == id)
+	{
+		if(!ui_mouse_button(0))
+			ui_set_active_item(0);
+	}
 	else if(ui_hot_item() == id)
 	{
 		if(ui_mouse_button(0))
@@ -358,13 +366,13 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 	}
 	
 	if(inside)
-			ui_set_hot_item(id);
+		ui_set_hot_item(id);
 
 	draw_box(GUI_BOX_SCREEN_TEXTBOX, tileset_regular, x, y, w, h);
 
 	ui_do_label(x + 10, y, str, 36);
 
-	if (ui_active_item() == id)
+	if (ui_last_active_item() == id)
 	{
 		float w = gfx_pretty_text_width(36.0f, str);
 		ui_do_label(x + 10 + w, y, "_", 36);
