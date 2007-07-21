@@ -43,6 +43,7 @@ enum gui_tileset_enum
 
 int gui_tileset_texture;
 int cursor_texture;
+int cloud1_texture, cloud2_texture, cloud3_texture;
 
 void draw_area(gui_tileset_enum tileset, int areax, int areay, int areaw, int areah, float x, float y, float w, float h)
 {
@@ -154,6 +155,39 @@ void draw_background(float t)
 
 	gfx_blend_normal();
 	render_sun(170, 170);
+
+    gfx_texture_set(cloud1_texture);
+    gfx_quads_begin();
+    gfx_quads_setcolor(1,1,1,1);
+	gfx_quads_setsubset(
+		0.0f, // startx
+		0.0f, // starty
+		1.0f, // endx
+		1.0f); // endy								
+    gfx_quads_drawTL(3500 - fmod(t * 20 + 2000, 4524), 0, 1024, 1024);
+    gfx_quads_end();
+
+    gfx_texture_set(cloud2_texture);
+    gfx_quads_begin();
+    gfx_quads_setcolor(1,1,1,1);
+	gfx_quads_setsubset(
+		0.0f, // startx
+		0.0f, // starty
+		1.0f, // endx
+		1.0f); // endy								
+    gfx_quads_drawTL(3000 - fmod(t * 50 + 1000, 4024), 150, 1024, 1024);
+    gfx_quads_end();
+
+    gfx_texture_set(cloud3_texture);
+    gfx_quads_begin();
+    gfx_quads_setcolor(1,1,1,1);
+	gfx_quads_setsubset(
+		0.0f, // startx
+		0.0f, // starty
+		1.0f, // endx
+		1.0f); // endy								
+    gfx_quads_drawTL(4000 - fmod(t * 60, 4512), 600, 512, 512);
+    gfx_quads_end();
 
 /*
 	float tx = w/512.0f;
@@ -508,7 +542,7 @@ int do_scroll_bar_horiz(void *id, float x, float y, float width, int steps, int 
 	draw_part(GUI_MISC_SLIDER_BIG_HORIZ_MID, tileset_regular, x + 32, y + 8, width - 32 - 32, 16);
 	draw_part(GUI_MISC_SLIDER_BIG_HORIZ_END, tileset_regular, x + width - 32, y + 8, 16, 16);
 
-	draw_part(GUI_MISC_SLIDER_BIG_HANDLE_VERT, tileset_regular, x + 16 + r * ((width - 48) / steps), y, 16, 32);
+	draw_part(GUI_MISC_SLIDER_BIG_HANDLE_HORIZ, tileset_inactive, x + 16 + r * ((width - 64) / steps), y + 7, 32, 16);
 
 	return r;
 }
@@ -1040,12 +1074,12 @@ static int menu_render()
 
 	float t = double(time_get() - start) / double(time_freq());
 	gfx_mapscreen(0,0,1600.0f,1200.0f);
-	draw_background(t * 0.01);
+	draw_background(t);
 	gfx_mapscreen(0,0,800.0f,600.0f);
 
 	if (screen != SCREEN_KERNING)
 	{
-		ui_do_image(teewars_banner_texture, 140, 20, 512, 128);
+		ui_do_image(teewars_banner_texture, 200, 20, 512, 128);
 		ui_do_label(20.0f, 600.0f-40.0f, "Version: " TEEWARS_VERSION, 36);
 	}
 
@@ -1072,6 +1106,9 @@ void modmenu_init()
 	gui_tileset_texture = gfx_load_texture("data/gui/gui_widgets.png");
     teewars_banner_texture = gfx_load_texture("data/gui_logo.png");
 	cursor_texture = gfx_load_texture("data/gui/cursor.png");
+	cloud1_texture = gfx_load_texture("data/cloud-1.png");
+	cloud2_texture = gfx_load_texture("data/cloud-2.png");
+	cloud3_texture = gfx_load_texture("data/cloud-3.png");
 
 	// TODO: should be removed
 	music_menu = snd_load_wav("data/audio/Music_Menu.wav");
