@@ -1049,7 +1049,8 @@ player *get_player(int index)
 
 void create_damageind(vec2 p, vec2 dir, int amount)
 {
-	float a = get_angle(dir);
+	float a = 3 * 3.14159f / 2;
+	//float a = get_angle(dir);
 	float s = a-pi/3;
 	float e = a+pi/3;
 	for(int i = 0; i < amount; i++)

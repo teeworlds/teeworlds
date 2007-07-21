@@ -42,6 +42,12 @@ struct image_info
 	void *data;
 };
 
+struct video_mode
+{
+	int width, height;
+	int red, green, blue;
+};
+
 int gfx_load_tga(image_info *img, const char *filename);
 int gfx_load_png(image_info *img, const char *filename);
 
@@ -54,6 +60,8 @@ int gfx_load_png(image_info *img, const char *filename);
 bool gfx_init(bool fullscreen); // NOT EXPOSED
 void gfx_shutdown(); // NOT EXPOSED
 void gfx_swap(); // NOT EXPOSED
+
+int gfx_get_video_modes(video_mode *list, int maxcount);
 
 // textures
 /*

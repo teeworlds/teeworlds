@@ -160,6 +160,11 @@ bool gfx_init(bool fullscreen)
 	return true;
 }
 
+int gfx_get_video_modes(video_mode *list, int maxcount)
+{
+	return context.getvideomodes((opengl::videomode *)list, maxcount);
+}
+
 int gfx_unload_texture(int index)
 {
 	textures[index].tex.clear();

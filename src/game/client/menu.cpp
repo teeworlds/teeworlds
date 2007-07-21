@@ -142,8 +142,17 @@ struct pretty_font
 extern pretty_font *current_font;
 float gfx_pretty_text_width(float size, const char *text);
 
-void draw_scrolling_background(int id, float w, float h, float t)
+void render_sun(float x, float y);
+
+void draw_background(float t)
 {
+	// background color
+	gfx_clear(0.65f,0.78f,0.9f);
+
+	gfx_blend_normal();
+	render_sun(170, 170);
+
+/*
 	float tx = w/512.0f;
 	float ty = h/512.0f;
 
@@ -161,6 +170,7 @@ void draw_scrolling_background(int id, float w, float h, float t)
 		start_y+ty); // endy								
     gfx_quads_drawTL(0.0f,0.0f,w,h);
     gfx_quads_end();
+*/
 }
 
 static int background_texture;
@@ -207,7 +217,10 @@ void draw_teewars_button(void *id, const char *text, int checked, float x, float
 	gui_tileset_enum tileset;
 
 	if (ui_active_item() == id)
-		tileset = tileset_active;
+	{
+		int inside = ui_mouse_inside(x, y, w, h);
+		tileset = inside ? tileset_active : tileset_hot;
+	}
 	else if (ui_hot_item() == id)
 		tileset = tileset_hot;
 	else
@@ -681,28 +694,53 @@ static int settings_screen_render()
 	ui_do_label(column2_x, keys_y + 160, "Hook:", 36);
 	config_set_key_hook(&config_copy, ui_do_key_reader(&config_copy.key_hook, column3_x, keys_y + 160, 150, 40, config_copy.key_hook));
 
-	// RESOLUTION
-	static char resolutions[][128] =
-	{
-		"800x600",
-		"1024x764",
-		"1280x960",
-		"1600x1200",
-	};
-	static int res[][2] =
-	{
-		{ 800, 600 },
-		{ 1024, 768 },
-		{ 1280, 960 },
-		{ 1600, 1200 },
-	};
+	static int resolution_count[2] = {0};
+	static int resolutions[2][10][2] = {0};
+	static char resolution_names[2][10][128] = {0};
 
+	static bool inited = false;
+	if (!inited)
+	{
+		const int num_modes = 1024;
+
+		video_mode modes[num_modes];
+
+		int retn = gfx_get_video_modes(modes, num_modes);
+
+		for (int i = 0; i < retn; i++)
+		{
+			video_mode mode = modes[i];
+			int depth = mode.red + mode.green + mode.blue;
+			
+			int depth_index;
+
+			if (depth == 15 || depth == 16)
+				depth_index = 0;
+			else if (depth == 24)
+				depth_index = 1;
+			else
+			{
+				dbg_msg("menu", "a resolution with a weird depth was reported: %ix%i (%i/%i/%i)", mode.width, mode.height, mode.red, mode.green, mode.blue);
+				continue;
+			}
+
+			int resolution_index = resolution_count[depth_index];
+			resolution_count[depth_index]++;
+			resolutions[depth_index][resolution_index][0] = mode.width;
+			resolutions[depth_index][resolution_index][1] = mode.height;
+			sprintf(resolution_names[depth_index][resolution_index], "%ix%i", mode.width, mode.height);
+		}
+
+		inited = true;
+	}
+
+	int depth_index = 0;
 	static int selected_index = -1;
 	if (selected_index == -1)
 	{
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < resolution_count[depth_index]; i++)
 		{
-			if (config.screen_width == res[i][0])
+			if (config.screen_width == resolutions[depth_index][i][0])
 			{
 				selected_index = i;
 				break;
@@ -714,10 +752,10 @@ static int settings_screen_render()
 	}
 
 	ui_do_label(column1_x, resolution_y, "Resolution:", 36);
-	selected_index = ui_do_combo_box(&selected_index, column2_x, resolution_y, 180, (char *)resolutions, 4, selected_index);
+	selected_index = ui_do_combo_box(&selected_index, column2_x, resolution_y, 180, (char *)resolution_names[depth_index], resolution_count[depth_index], selected_index);
 
-	config_set_screen_width(&config_copy, res[selected_index][0]);
-	config_set_screen_height(&config_copy, res[selected_index][1]);
+	config_set_screen_width(&config_copy, resolutions[depth_index][selected_index][0]);
+	config_set_screen_height(&config_copy, resolutions[depth_index][selected_index][1]);
 
 	// SAVE BUTTON
 	static int save_button;
@@ -908,7 +946,8 @@ static int editor_screen_render()
 static int menu_render(netaddr4 *server_address)
 {
 	// background color
-	gfx_clear(89/255.f,122/255.f,0.0);
+	gfx_clear(0.65f,0.78f,0.9f);
+	//gfx_clear(89/255.f,122/255.f,0.0);
 
 	// GUI coordsys
 	gfx_mapscreen(0,0,800.0f,600.0f);
@@ -916,7 +955,9 @@ static int menu_render(netaddr4 *server_address)
 	static int64 start = time_get();
 
 	float t = double(time_get() - start) / double(time_freq());
-	draw_scrolling_background(background_texture, 800, 600, t * 0.01);
+	gfx_mapscreen(0,0,1600.0f,1200.0f);
+	draw_background(t * 0.01);
+	gfx_mapscreen(0,0,800.0f,600.0f);
 
 	if (screen != 2)
 	{
