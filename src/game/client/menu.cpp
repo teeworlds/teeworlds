@@ -542,7 +542,7 @@ int do_scroll_bar_horiz(void *id, float x, float y, float width, int steps, int 
 	draw_part(GUI_MISC_SLIDER_BIG_HORIZ_MID, tileset_regular, x + 32, y + 8, width - 32 - 32, 16);
 	draw_part(GUI_MISC_SLIDER_BIG_HORIZ_END, tileset_regular, x + width - 32, y + 8, 16, 16);
 
-	draw_part(GUI_MISC_SLIDER_BIG_HANDLE_HORIZ, tileset_inactive, x + 16 + r * ((width - 64) / steps), y + 7, 32, 16);
+	draw_part(GUI_MISC_SLIDER_BIG_HANDLE_HORIZ, tileset_regular, x + 16 + r * ((width - 64) / steps), y + 8, 32, 16);
 
 	return r;
 }
@@ -596,7 +596,7 @@ int do_scroll_bar_vert(void *id, float x, float y, float height, int steps, int 
 	draw_part(GUI_MISC_SLIDER_BIG_VERT_MID, tileset_regular, x + 8, y + 32, 16, height - 32 - 32);
 	draw_part(GUI_MISC_SLIDER_BIG_VERT_END, tileset_regular, x + 8, y + height - 32, 16, 16);
 
-	draw_part(GUI_MISC_SLIDER_BIG_HANDLE_HORIZ, tileset_regular, x, y + 16 + r * ((height - 48) / steps), 32, 16);
+	draw_part(GUI_MISC_SLIDER_BIG_HANDLE_VERT, tileset_regular, x + 8, y + 16 + r * ((height - 64) / steps), 16, 32);
 
 	return r;
 }
