@@ -31,6 +31,7 @@ void create_damageind(vec2 p, vec2 dir, int amount);
 void create_explosion(vec2 p, int owner, int weapon, bool bnodamage);
 void create_smoke(vec2 p);
 void create_spawn(vec2 p);
+void create_death(vec2 p);
 void create_sound(vec2 pos, int sound, int loopflags = 0);
 class player *intersect_player(vec2 pos0, vec2 pos1, vec2 &new_pos, class entity *notthis = 0);
 
@@ -1137,6 +1138,7 @@ void player::die(int killer, int weapon)
 	dead = true;
 	die_tick = server_tick();
 	clear_flag(entity::FLAG_ALIVE);
+	create_death(pos);
 }
 
 bool player::take_damage(vec2 force, int dmg, int from, int weapon)
@@ -1406,6 +1408,14 @@ void create_spawn(vec2 p)
 {
 	// create the event
 	ev_spawn *ev = (ev_spawn *)events.create(EVENT_SPAWN, sizeof(ev_spawn));
+	ev->x = (int)p.x;
+	ev->y = (int)p.y;
+}
+
+void create_death(vec2 p)
+{
+	// create the event
+	ev_death *ev = (ev_death *)events.create(EVENT_DEATH, sizeof(ev_death));
 	ev->x = (int)p.x;
 	ev->y = (int)p.y;
 }

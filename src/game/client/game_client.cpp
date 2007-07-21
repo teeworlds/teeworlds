@@ -336,7 +336,39 @@ public:
 };
 
 static particle_system temp_system;
- 
+
+class projectile_particles
+{
+public:
+	enum
+	{
+		LISTSIZE = 1000,
+	};
+	// meh, just use size % 
+	int lastadd[LISTSIZE];
+	projectile_particles()
+	{
+		for (int i = 0; i < LISTSIZE; i++)
+			lastadd[i] = -1000;
+	}
+
+	void addparticle(int projectiletype, int projectileid, vec2 pos, vec2 vel)
+	{
+		int particlespersecond = data->projectileparticles[projectiletype].particlespersecond;
+		int lastaddtick = lastadd[projectileid % LISTSIZE];
+		if ((client_tick() - lastaddtick) > (client_tickspeed() / particlespersecond))
+		{
+			lastadd[projectileid % LISTSIZE] = client_tick();
+			float life = data->projectileparticles[projectiletype].particlelife;
+			float size = data->projectileparticles[projectiletype].particlesize;
+			vec2 v = vel * 0.2f + normalize(vec2(frandom()-0.5f, -frandom()))*(32.0f+frandom()*32.0f);
+			
+			// add the particle (from projectiletype later on, but meh...)
+			temp_system.new_particle(pos, v, life, size, 0, 0.95f);
+		}
+	}
+};
+static projectile_particles proj_particles;
  
 static bool chat_active = false;
 static char chat_input[512];
@@ -504,6 +536,31 @@ void modc_newsnapshot()
 				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 128.0f, 0.985f);
 			}
 		}
+		else if(item.type == EVENT_DEATH)
+		{
+			ev_explosion *ev = (ev_explosion *)data;
+			vec2 p(ev->x, ev->y);
+			
+			// center explosion
+			vec2 v = normalize(vec2(frandom()-0.5f, -frandom()))*(32.0f+frandom()*32.0f);
+			temp_system.new_particle(p, v, 1.2f, 64.0f, 0, 0.95f);
+			v = normalize(vec2(frandom()-0.5f, -frandom()))*(128.0f+frandom()*128.0f);
+			temp_system.new_particle(p, v, 1.2f, 32.0f, 0, 0.95f);
+			v = normalize(vec2(frandom()-0.5f, -frandom()))*(128.0f+frandom()*128.0f);
+			temp_system.new_particle(p, v, 1.2f, 16.0f, 0, 0.95f);
+			
+			for(int i = 0; i < 8; i++)
+			{
+				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(64.0f+frandom()*64.0f);
+				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 0, 0.985f);
+			}
+			
+			for(int i = 0; i < 8; i++)
+			{
+				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(128.0f+frandom()*256.0f);
+				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 128.0f, 0.985f);
+			}
+		}
 		else if(item.type == EVENT_SOUND)
 		{
 			ev_sound *ev = (ev_sound *)data;
@@ -524,7 +581,7 @@ void modc_newsnapshot()
 	}
 }
 
-static void render_projectile(obj_projectile *prev, obj_projectile *current)
+static void render_projectile(obj_projectile *prev, obj_projectile *current, int itemid)
 {
 	gfx_texture_set(data->images[IMAGE_WEAPONS].id);
 	gfx_quads_begin();
@@ -532,6 +589,9 @@ static void render_projectile(obj_projectile *prev, obj_projectile *current)
 	select_sprite(data->weapons[current->type%data->num_weapons].sprite_proj);
 	vec2 vel = mix(vec2(prev->vx, prev->vy), vec2(current->vx, current->vy), client_intratick());
 	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
+	
+	// add particle for this projectile
+	proj_particles.addparticle(current->type, itemid, pos, vel);
 	
 	if(length(vel) > 0.00001f)
 		gfx_quads_setrotation(get_angle(vel));
@@ -718,6 +778,13 @@ static void render_player(obj_player *prev, obj_player *player)
 {
 	if(player->health < 0) // dont render dead players
 		return;
+	
+	if (prev->health < 0)
+	{
+		// Don't flicker from previous position
+		prev->x = player->x;
+		prev->y = player->y;
+	}
 	
 	vec2 direction = get_direction(player->angle);
 	float angle = player->angle/256.0f;
@@ -1090,7 +1157,7 @@ void modc_render()
 		{
 			void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
 			if(prev)
-				render_projectile((obj_projectile *)prev, (obj_projectile *)data);
+				render_projectile((obj_projectile *)prev, (obj_projectile *)data, item.id);
 		}
 		else if(item.type == OBJTYPE_POWERUP)
 		{

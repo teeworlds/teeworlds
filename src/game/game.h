@@ -39,6 +39,7 @@ enum
 	EVENT_SOUND,
 	EVENT_SMOKE,
 	EVENT_SPAWN,
+	EVENT_DEATH,
 };
 
 enum
@@ -81,6 +82,11 @@ struct ev_explosion
 };
 
 struct ev_spawn
+{
+	int x, y;
+};
+
+struct ev_death
 {
 	int x, y;
 };
