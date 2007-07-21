@@ -11,7 +11,7 @@ static const float NUM_FRAMES_STOP_INV = 1.0f/(float)NUM_FRAMES_STOP;
 static const int NUM_FRAMES_LERP = 512;
 static const float NUM_FRAMES_LERP_INV = 1.0f/(float)NUM_FRAMES_LERP;
 
-static float GLOBAL_VOLUME_SCALE = 0.75f;
+static const float GLOBAL_VOLUME_SCALE = 0.75f;
 
 static const int64 GLOBAL_SOUND_DELAY = 1000;
 
@@ -195,6 +195,7 @@ struct sound_holder
 static const int MAX_SOUNDS = 1024;
 static sound_holder sounds[MAX_SOUNDS];
 static int first_free_sound;
+static float master_volume = 1.0f;
 
 bool snd_init()
 {
@@ -213,7 +214,7 @@ bool snd_shutdown()
 
 float snd_get_master_volume()
 {
-	return GLOBAL_VOLUME_SCALE;
+	return master_volume;
 }
 
 void snd_set_master_volume(float val)
@@ -223,7 +224,7 @@ void snd_set_master_volume(float val)
 	else if(val > 1.0f)
 		val = 1.0f;
 
-	GLOBAL_VOLUME_SCALE = val;
+	master_volume = val;
 }
 
 static int snd_alloc_sound()
@@ -407,7 +408,7 @@ int snd_play(int id, int loop, float vol, float pan)
 
 	dbg_assert(sounds[id].sound.data != 0, "null sound");
 	dbg_assert(sounds[id].next == -1, "sound isn't allocated");
-	return mixer.play(&sounds[id].sound, loop, vol, pan);
+	return mixer.play(&sounds[id].sound, loop, master_volume * vol, pan);
 }
 
 void snd_stop(int id)
