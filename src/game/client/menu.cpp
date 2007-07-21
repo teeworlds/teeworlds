@@ -704,7 +704,7 @@ static int main_render()
 		// *server_address = list.infos[list.selected_index].address;
 		
 		server_info *servers;
-		int num_servers = client_serverbrowse_getlist(&servers);
+		client_serverbrowse_getlist(&servers);
 
 		client_connect(servers[selected_index].address);
 		//dbg_msg("menu/join_button", "IP: %i.%i.%i.%i:%i", (int)server_address->ip[0], (int)server_address->ip[1], (int)server_address->ip[2], (int)server_address->ip[3], server_address->port);
