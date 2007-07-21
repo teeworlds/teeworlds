@@ -389,6 +389,8 @@ public:
 	{
 		local_start_time = time_get();
 		snapshot_part = 0;
+		info_request_begin = 0;
+		info_request_end = 0;
 		
 		// init graphics and sound
 		if(!gfx_init())
