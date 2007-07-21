@@ -18,6 +18,10 @@ inline float get_angle(baselib::vec2 dir)
 	return a;
 }
 
+#define LERP(a,b,t) (a + (b-a) * t)
+#define min(a, b) ( a > b ? b : a)
+#define max(a, b) ( a > b ? a : b)
+
 inline bool col_check_point(float x, float y) { return col_check_point((int)x, (int)y) != 0; }
 inline bool col_check_point(baselib::vec2 p) { return col_check_point(p.x, p.y); }
 
@@ -34,6 +38,7 @@ enum
 	EVENT_DAMAGEINDICATION,
 	EVENT_SOUND,
 	EVENT_SMOKE,
+	EVENT_SPAWN,
 };
 
 enum
@@ -71,6 +76,11 @@ struct player_input
 
 
 struct ev_explosion
+{
+	int x, y;
+};
+
+struct ev_spawn
 {
 	int x, y;
 };
@@ -151,9 +161,6 @@ enum
 	POWERUP_TYPE_NINJA			= 3,
 	POWERUP_TYPE_TIMEFIELD		= 4,
 	POWERUP_TYPE_NUMPOWERUPS,
-
-	PLAYER_MAXHEALTH			= 10,
-	PLAYER_MAXARMOR				= 10,
 
 	MODIFIER_TYPE_NINJA			= 0,
 	MODIFIER_TYPE_TIMEFIELD		= 1,

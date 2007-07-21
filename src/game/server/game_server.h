@@ -112,6 +112,7 @@ class gameobject : public entity
 	int sudden_death;
 	
 public:
+	int gametype;
 	gameobject();
 	virtual void post_reset();
 	virtual void tick();
@@ -190,11 +191,21 @@ class player : public entity
 public:
 	static const int phys_size = 28;
 	
+	enum // what are these?
+	{
+		MODIFIER_RETURNFLAGS_OVERRIDEVELOCITY		= 1 << 0,
+		MODIFIER_RETURNFLAGS_OVERRIDEPOSITION		= 1 << 1,
+		MODIFIER_RETURNFLAGS_OVERRIDEGRAVITY		= 1 << 2,
+	};
+
 	// weapon info
+	entity* hitobjects[10];
+	int numobjectshit;
 	struct weaponstat
 	{
-		bool got;
+		int ammoregenstart;
 		int ammo;
+		bool got;
 	} weapons[NUM_WEAPONS];
 	int active_weapon;
 	int reload_timer;
@@ -218,6 +229,14 @@ public:
 
 	int health;
 	int armor;
+
+	// ninja
+	baselib::vec2 activationdir;
+	int ninjaactivationtick;
+	int extrapowerflags;
+	int currentcooldown;
+	int currentactivation;
+	int currentmovetime;
 
 	int score;
 	
@@ -251,7 +270,8 @@ public:
 	void release_hooked();
 	void release_hooks();
 	
-	void handle_weapons();
+	int handle_weapons();
+	int handle_ninja();
 
 	virtual void tick();
 	virtual void tick_defered();

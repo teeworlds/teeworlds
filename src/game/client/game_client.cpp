@@ -479,6 +479,31 @@ void modc_newsnapshot()
 				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 128.0f, 0.985f);
 			}
 		}
+		else if(item.type == EVENT_SPAWN)
+		{
+			ev_explosion *ev = (ev_explosion *)data;
+			vec2 p(ev->x, ev->y);
+			
+			// center explosion
+			vec2 v = normalize(vec2(frandom()-0.5f, -frandom()))*(32.0f+frandom()*32.0f);
+			temp_system.new_particle(p, v, 1.2f, 64.0f, 0, 0.95f);
+			v = normalize(vec2(frandom()-0.5f, -frandom()))*(128.0f+frandom()*128.0f);
+			temp_system.new_particle(p, v, 1.2f, 32.0f, 0, 0.95f);
+			v = normalize(vec2(frandom()-0.5f, -frandom()))*(128.0f+frandom()*128.0f);
+			temp_system.new_particle(p, v, 1.2f, 16.0f, 0, 0.95f);
+			
+			for(int i = 0; i < 8; i++)
+			{
+				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(64.0f+frandom()*64.0f);
+				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 0, 0.985f);
+			}
+			
+			for(int i = 0; i < 8; i++)
+			{
+				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(128.0f+frandom()*256.0f);
+				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 128.0f, 0.985f);
+			}
+		}
 		else if(item.type == EVENT_SOUND)
 		{
 			ev_sound *ev = (ev_sound *)data;
@@ -715,8 +740,13 @@ static void render_player(obj_player *prev, obj_player *player)
 
 	if (player->weapon == WEAPON_HAMMER)
 	{
-		float a = clamp((client_tick()-player->attacktick+client_intratick())/7.5f, 0.0f, 1.0f);
+		float a = clamp((client_tick()-player->attacktick+client_intratick())/10.0f, 0.0f, 1.0f);
 		anim_eval_add(&state, &data->animations[ANIM_HAMMER_SWING], a, 1.0f);
+	}
+	if (player->weapon == WEAPON_NINJA)
+	{
+		float a = clamp((client_tick()-player->attacktick+client_intratick())/40.0f, 0.0f, 1.0f);
+		anim_eval_add(&state, &data->animations[ANIM_NINJA_SWING], a, 1.0f);
 	}
 
 		
@@ -763,13 +793,39 @@ static void render_player(obj_player *prev, obj_player *player)
 
 		vec2 dir = direction;
 		float recoil = 0.0f;
+		vec2 p;
 		if (player->weapon == WEAPON_HAMMER)
 		{
+			// Static position for hammer
+			p = position;
+			p.y += data->weapons[iw].offsety;
 			// if attack is under way, bash stuffs
 			if(direction.x < 0)
+			{
 				gfx_quads_setrotation(-pi/2-state.attach.angle*pi*2);
+				p.x -= data->weapons[iw].offsetx;
+			}
 			else
+			{
 				gfx_quads_setrotation(-pi/2+state.attach.angle*pi*2);
+			}
+			draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
+		}
+		else if (player->weapon == WEAPON_NINJA)
+		{
+			p = position;
+			p.y += data->weapons[iw].offsety;
+			
+			if(direction.x < 0)
+			{
+				gfx_quads_setrotation(-pi/2-state.attach.angle*pi*2);
+				p.x -= data->weapons[iw].offsetx;
+			}
+			else
+			{
+				gfx_quads_setrotation(-pi/2+state.attach.angle*pi*2);
+			}
+			draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
 		}
 		else
 		{
@@ -778,12 +834,44 @@ static void render_player(obj_player *prev, obj_player *player)
 			float a = (client_tick()-player->attacktick+client_intratick())/5.0f;
 			if(a < 1)
 				recoil = sinf(a*pi);
+			p = position + dir * data->weapons[iw].offsetx - dir*recoil*10.0f;
+			p.y += data->weapons[iw].offsety;
+			draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
 		}
-
-		vec2 p = position + dir*20.0f - dir*recoil*10.0f;
-		draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
 		
-		// TODO: draw muzzleflare
+		if (player->weapon == WEAPON_TYPE_GUN || player->weapon == WEAPON_TYPE_SHOTGUN)
+		{
+			// check if we're firing stuff
+			if (true)///prev->attackticks)
+			{
+				float alpha = 0.0f;
+				int phase1tick = (client_tick() - player->attacktick);
+				if (phase1tick < (data->weapons[iw].muzzleduration + 3))
+				{
+					float intratick = client_intratick();
+					float t = ((((float)phase1tick) + intratick)/(float)data->weapons[iw].muzzleduration);
+					alpha = LERP(2.0, 0.0f, min(1.0f,max(0.0f,t)));
+				}
+
+				int itex = rand() % data->weapons[iw].nummuzzlesprites;
+				if (alpha > 0.0f && data->weapons[iw].sprite_muzzle[itex].psprite)
+				{
+					float offsety = -data->weapons[iw].muzzleoffsety;
+					select_sprite(data->weapons[iw].sprite_muzzle[itex].psprite, direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
+					if(direction.x < 0)
+						offsety = -offsety;
+
+					vec2 diry(-dir.y,dir.x);
+					p += dir * data->weapons[iw].muzzleoffsetx + diry * offsety;
+
+					draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
+					/*gfx_quads_setcolor(1.0f,1.0f,1.0f,alpha);
+					vec2 diry(-dir.y,dir.x);
+					p += dir * muzzleparams[player->weapon].offsetx + diry * offsety;
+					gfx_quads_draw(p.x,p.y,muzzleparams[player->weapon].sizex, muzzleparams[player->weapon].sizey);*/
+				}
+			}
+		}
 		gfx_quads_end();
 	}
 

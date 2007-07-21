@@ -5,6 +5,8 @@
 #include "data.h"
 #include "game_server.h"
 
+data_container *data = 0x0;
+
 using namespace baselib;
 
 // --------- DEBUG STUFF ---------
@@ -28,6 +30,7 @@ class player* get_player(int index);
 void create_damageind(vec2 p, vec2 dir, int amount);
 void create_explosion(vec2 p, int owner, int weapon, bool bnodamage);
 void create_smoke(vec2 p);
+void create_spawn(vec2 p);
 void create_sound(vec2 pos, int sound, int loopflags = 0);
 class player *intersect_player(vec2 pos0, vec2 pos1, vec2 &new_pos, class entity *notthis = 0);
 
@@ -339,6 +342,7 @@ game_world world;
 gameobject::gameobject()
 : entity(OBJTYPE_GAME)
 {
+	gametype = GAMETYPE_DM;
 	game_over_tick = -1;
 	sudden_death = 0;
 	round_start_tick = server_tick();
@@ -577,6 +581,8 @@ void player::init()
 	name[3] = 'b';
 	name[4] = 0;
 	client_id = -1;
+	extrapowerflags = 0;
+	ninjaactivationtick = 0;
 	reset();
 }
 
@@ -597,7 +603,7 @@ void player::destroy() {  }
 	
 void player::respawn()
 {
-	health = PLAYER_MAXHEALTH;
+	health = data->playerinfo[gameobj.gametype].maxhealth;
 	armor = 0;
 	jumped = 0;
 	dead = false;
@@ -624,7 +630,7 @@ void player::respawn()
 	weapons[WEAPON_HAMMER].got = true;
 	weapons[WEAPON_HAMMER].ammo = -1;
 	weapons[WEAPON_GUN].got = true;
-	weapons[WEAPON_GUN].ammo = 10;
+	weapons[WEAPON_GUN].ammo = data->weapons[active_weapon].maxammo;
 
 	// TEMP DEBUG
 	weapons[WEAPON_ROCKET_BACKPACK].got = true;
@@ -632,8 +638,15 @@ void player::respawn()
 
 	active_weapon = WEAPON_GUN;
 	reload_timer = 0;
+
+	// TEMP TEMP TEMP
+	/*ninjaactivationtick = server_tick();
+	weapons[WEAPON_NINJA].got = 1;
+	active_weapon = WEAPON_NINJA;*/
 	
+	// Create sound and spawn effects
 	create_sound(pos, SOUND_PLAYER_SPAWN);
+	create_spawn(pos);
 }
 
 bool player::is_grounded()
@@ -667,20 +680,111 @@ void player::release_hooks()
 	}
 }
 
-void player::handle_weapons()
+int player::handle_ninja()
+{
+	if ((server_tick() - ninjaactivationtick) > (data->weapons[WEAPON_NINJA].duration * server_tickspeed() / 1000))
+	{
+		// time's up, return
+		active_weapon = WEAPON_GUN;
+		return 0;
+	}
+	
+	// Check if it should activate
+	if ((input.fire && !(previnput.fire)) && (server_tick() > currentcooldown))
+	{
+		// ok then, activate ninja
+		attack_tick = server_tick();
+		activationdir = direction;
+		currentmovetime = data->weapons[WEAPON_NINJA].movetime * server_tickspeed() / 1000;
+		currentcooldown = data->weapons[WEAPON_NINJA].firedelay * server_tickspeed() / 1000 + server_tick();
+		// reset hit objects
+		numobjectshit = 0;
+
+		create_sound(pos, SOUND_NINJA_FIRE);
+	}
+
+	currentmovetime--;
+	
+	if (currentmovetime == 0)
+	{	
+		// reset player velocity
+		vel *= 0.2f;
+		//return MODIFIER_RETURNFLAGS_OVERRIDEWEAPON;
+	}
+	
+	if (currentmovetime > 0)
+	{
+		// Set player velocity
+		vel = activationdir * data->weapons[WEAPON_NINJA].velocity;
+		vec2 oldpos = pos;
+		move_box(&defered_pos, &vel, vec2(phys_size, phys_size), 0.0f);
+		// reset velocity so the client doesn't predict stuff
+		vel = vec2(0.0f,0.0f);
+		if ((currentmovetime % 2) == 0)
+		{
+			create_smoke(pos);
+		}
+		
+		// check if we hit anything along the way
+		{
+			int type = OBJTYPE_PLAYER;
+			entity *ents[64];
+			vec2 dir = pos - oldpos;
+			float radius = length(dir * 0.5f);
+			vec2 center = oldpos + dir * 0.5f;
+			int num = world.find_entities(center, radius, ents, 64, &type, 1);
+			
+			for (int i = 0; i < num; i++)
+			{
+				// Check if entity is a player
+				if (ents[i] == this)
+					continue;
+				// make sure we haven't hit this object before
+				bool balreadyhit = false;
+				for (int j = 0; j < numobjectshit; j++)
+				{
+					if (hitobjects[j] == ents[i])
+						balreadyhit = true;
+				}
+				if (balreadyhit)
+					continue;
+
+				// check so we are sufficiently close
+				if (distance(ents[i]->pos, pos) > (phys_size * 2.0f))
+					continue;
+			
+				// hit a player, give him damage and stuffs...
+				create_sound(ents[i]->pos, SOUND_NINJA_HIT);
+				// set his velocity to fast upward (for now)
+				hitobjects[numobjectshit++] = ents[i];
+				ents[i]->take_damage(vec2(0,10.0f), data->weapons[WEAPON_NINJA].meleedamage, client_id,-1);
+			}
+		}
+		return MODIFIER_RETURNFLAGS_OVERRIDEVELOCITY | MODIFIER_RETURNFLAGS_OVERRIDEPOSITION | MODIFIER_RETURNFLAGS_OVERRIDEGRAVITY;
+	}
+	return 0;
+}
+
+int player::handle_weapons()
 {
 	// check reload timer
 	if(reload_timer)
 	{
 		reload_timer--;
-		return;
+		return 0;
+	}
+	if (active_weapon == WEAPON_NINJA)
+	{
+		// don't update other weapons while ninja is active
+		return handle_ninja();
 	}
 
 	// switch weapon if wanted		
-	if(input.activeweapon >= 0 && input.activeweapon < NUM_WEAPONS && weapons[input.activeweapon].got)
+	if(input.activeweapon >= 0 && input.activeweapon < NUM_WEAPONS && weapons[input.activeweapon].got && 
+		data->weapons[active_weapon].duration <= 0)
 		active_weapon = input.activeweapon;
 
-	if(input.fire)
+	if(!previnput.fire && input.fire)
 	{
 		if(reload_timer == 0)
 		{
@@ -690,6 +794,8 @@ void player::handle_weapons()
 				switch(active_weapon)
 				{
 					case WEAPON_HAMMER:
+						// reset objects hit
+						numobjectshit = 0;
 						create_sound(pos, SOUND_HAMMER_FIRE);
 						break;
 
@@ -739,17 +845,89 @@ void player::handle_weapons()
 				}
 				
 				weapons[active_weapon].ammo--;
+				attack_tick = server_tick();
+				reload_timer = data->weapons[active_weapon].firedelay * server_tickspeed() / 1000;
 			}
 			else
 			{
 				// click!!! click
 				// TODO: make sound here
 			}
-			
-			attack_tick = server_tick();
-			reload_timer = 10; // TODO: make this variable depending on weapon
 		}
 	}
+	// Update weapons
+	if (active_weapon == WEAPON_HAMMER && reload_timer > 0)
+	{
+		// Handle collisions
+		// only one that needs update (for now)
+		// do selection for the weapon and bash anything in it
+		// check if we hit anything along the way
+		int type = OBJTYPE_PLAYER;
+		entity *ents[64];
+		float reach = 20.0f;
+		vec2 lookdir(direction.x > 0.0f ? 1.0f : -1.0f, 0.0f);
+		vec2 dir = lookdir * data->weapons[active_weapon].meleereach;
+		float radius = length(dir * 0.5f);
+		vec2 center = pos + dir * 0.5f;
+		int num = world.find_entities(center, radius, ents, 64, &type, 1);
+		
+		for (int i = 0; i < num; i++)
+		{
+			// Check if entity is a player
+			if (ents[i] == this)
+				continue;
+			// make sure we haven't hit this object before
+			bool balreadyhit = false;
+			for (int j = 0; j < numobjectshit; j++)
+			{
+				if (hitobjects[j] == ents[i])
+					balreadyhit = true;
+			}
+			if (balreadyhit)
+				continue;
+
+			// check so we are sufficiently close
+			if (distance(ents[i]->pos, pos) > (phys_size * 2.0f))
+				continue;
+		
+			// hit a player, give him damage and stuffs...
+			// create sound for bash
+			//create_sound(ents[i]->pos, sound_impact);
+
+			// set his velocity to fast upward (for now)
+			create_smoke(ents[i]->pos);
+			hitobjects[numobjectshit++] = ents[i];
+			ents[i]->take_damage(vec2(0,10.0f), data->weapons[active_weapon].meleedamage, client_id, active_weapon);
+			player* target = (player*)ents[i];
+			vec2 dir;
+			if (length(target->pos - pos) > 0.0f)
+				dir = normalize(target->pos - pos);
+			else
+				dir = vec2(0,-1);
+			target->vel += dir * 10.0f + vec2(0,-10.0f);
+		}
+	}
+	if (data->weapons[active_weapon].ammoregentime)
+	{
+		// If equipped and not active, regen ammo?
+		if (reload_timer <= 0)
+		{
+			if (weapons[active_weapon].ammoregenstart < 0)
+				weapons[active_weapon].ammoregenstart = server_tick();
+
+			if ((server_tick() - weapons[active_weapon].ammoregenstart) >= data->weapons[active_weapon].ammoregentime * server_tickspeed() / 1000)
+			{
+				// Add some ammo
+				weapons[active_weapon].ammo = min(weapons[active_weapon].ammo + 1, data->weapons[active_weapon].maxammo);
+				weapons[active_weapon].ammoregenstart = -1;
+			}
+		}
+		else
+		{
+			weapons[active_weapon].ammoregenstart = -1;
+		}
+	}
+	return 0;
 }
 
 void player::tick()
@@ -851,7 +1029,7 @@ void player::tick()
 		
 	if(hook_state == HOOK_GRABBED)
 	{
-		if(hooked_player)
+		/*if(hooked_player)
 			hook_pos = hooked_player->pos;
 
 		float d = distance(pos, hook_pos);
@@ -861,7 +1039,25 @@ void player::tick()
 			float accel = hook_drag_accel * (d/hook_length);
 			vel.x = saturated_add(-hook_drag_speed, hook_drag_speed, vel.x, -accel*dir.x*0.75f);
 			vel.y = saturated_add(-hook_drag_speed, hook_drag_speed, vel.y, -accel*dir.y);
-		}
+		}*/
+		// Old version feels much better (to me atleast)
+		vec2 hookvel = normalize(hook_pos-pos)*hook_drag_accel;
+		// the hook as more power to drag you up then down.
+		// this makes it easier to get on top of an platform
+		if(hookvel.y > 0)
+			hookvel.y *= 0.3f;
+		
+		// the hook will boost it's power if the player wants to move
+		// in that direction. otherwise it will dampen everything abit
+		if((hookvel.x < 0 && input.left) || (hookvel.x > 0 && input.right)) 
+			hookvel.x *= 0.95f;
+		else
+			hookvel.x *= 0.75f;
+		vec2 new_vel = vel+hookvel;
+		
+		// check if we are under the legal limit for the hook
+		if(length(new_vel) < hook_drag_speed || length(new_vel) < length(vel))
+			vel = new_vel; // no problem. apply
 	}
 		
 	// fix influence of other players, collision + hook
@@ -897,14 +1093,20 @@ void player::tick()
 	}
 	
 	// handle weapons
-	handle_weapons();
+	int retflags = handle_weapons();
+	if (!(retflags & (MODIFIER_RETURNFLAGS_OVERRIDEVELOCITY | MODIFIER_RETURNFLAGS_OVERRIDEPOSITION)))
+	{
+		// add gravity
+		if (!(retflags & MODIFIER_RETURNFLAGS_OVERRIDEGRAVITY))
+			vel.y += gravity;
 	
-	// add gravity
-	vel.y += gravity;
+		// do the move
+		defered_pos = pos;
+		move_box(&defered_pos, &vel, vec2(phys_size, phys_size), 0);
+	}
 	
-	// do the move
-	defered_pos = pos;
-	move_box(&defered_pos, &vel, vec2(phys_size, phys_size), 0);
+	// Previnput
+	previnput = input;
 	return;
 }
 
@@ -1085,16 +1287,16 @@ void powerup::tick()
 		switch (type)
 		{
 		case POWERUP_TYPE_HEALTH:
-			if(pplayer->health < PLAYER_MAXHEALTH)
+			if(pplayer->health < data->playerinfo[gameobj.gametype].maxhealth)
 			{
-				pplayer->health = min((int)PLAYER_MAXHEALTH, pplayer->health + 1);
+				pplayer->health = min((int)data->playerinfo[gameobj.gametype].maxhealth, pplayer->health + 1);
 				respawntime = 20;
 			}
 			break;
 		case POWERUP_TYPE_ARMOR:
-			if(pplayer->armor < PLAYER_MAXARMOR)
+			if(pplayer->armor < data->playerinfo[gameobj.gametype].maxarmor)
 			{
-				pplayer->armor = min((int)PLAYER_MAXARMOR, pplayer->armor + 1);
+				pplayer->armor = min((int)data->playerinfo[gameobj.gametype].maxarmor, pplayer->armor + 1);
 				respawntime = 20;
 			}
 			break;
@@ -1110,6 +1312,15 @@ void powerup::tick()
 				}
 			}
 			break;
+		case POWERUP_TYPE_NINJA:
+			{
+				// activate ninja on target player
+				pplayer->ninjaactivationtick = server_tick();
+				pplayer->weapons[WEAPON_NINJA].got = true;
+				pplayer->active_weapon = WEAPON_NINJA;
+				respawntime = 20;
+				break;
+			}
 		default:
 			break;
 		};
@@ -1191,6 +1402,14 @@ void create_smoke(vec2 p)
 	ev->y = (int)p.y;
 }
 
+void create_spawn(vec2 p)
+{
+	// create the event
+	ev_spawn *ev = (ev_spawn *)events.create(EVENT_SPAWN, sizeof(ev_spawn));
+	ev->x = (int)p.x;
+	ev->y = (int)p.y;
+}
+
 void create_sound(vec2 pos, int sound, int loopingflags)
 {
 	if (sound < 0)
@@ -1265,7 +1484,7 @@ void mods_client_input(int client_id, void *input)
 {
 	if(!world.paused)
 	{
-		players[client_id].previnput = players[client_id].input;
+		//players[client_id].previnput = players[client_id].input;
 		players[client_id].input = *(player_input*)input;
 	}
 }
@@ -1323,6 +1542,7 @@ void mods_message(int msg, int client_id)
 
 void mods_init()
 {
+	data = load_data_container("data/server.dat");
 	col_init(32);
 
 	int start, num;
