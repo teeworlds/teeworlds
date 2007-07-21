@@ -391,7 +391,7 @@ int snd_load_wav(const char *filename)
 	}
 
 	if(id >= 0)
-		dbg_msg("sound/wav", "loaded %s, sustain start: %d end: %d", filename, sounds[id].sound.sustain_start, sounds[id].sound.sustain_end);
+		dbg_msg("sound/wav", "loaded %s", filename);
 	else
 		dbg_msg("sound/wav", "failed to load %s", filename);
 

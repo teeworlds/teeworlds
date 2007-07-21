@@ -616,6 +616,7 @@ void player::handle_weapons()
 				switch(active_weapon)
 				{
 					case WEAPON_HAMMER:
+						create_sound(pos, SOUND_HAMMER_FIRE);
 						break;
 
 					case WEAPON_GUN:
@@ -626,6 +627,7 @@ void player::handle_weapons()
 							100,
 							this,
 							1, 0, 0, -1, WEAPON_GUN);
+						create_sound(pos, SOUND_GUN_FIRE);
 						break;
 					case WEAPON_ROCKET:
 						new projectile(WEAPON_PROJECTILETYPE_ROCKET,
@@ -634,7 +636,8 @@ void player::handle_weapons()
 							direction*15.0f,
 							100,
 							this,
-							1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, -1, WEAPON_ROCKET);						
+							1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, SOUND_ROCKET_EXPLODE, WEAPON_ROCKET);
+						create_sound(pos, SOUND_ROCKET_FIRE);
 						break;
 					case WEAPON_SHOTGUN:
 						for(int i = -2; i <= 2; i++)
@@ -650,6 +653,7 @@ void player::handle_weapons()
 								this,
 								1, 0, 0, -1, WEAPON_SHOTGUN);
 						}
+						create_sound(pos, SOUND_SHOTGUN_FIRE);
 						break;
 				}
 				
