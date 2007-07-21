@@ -37,7 +37,7 @@ inline short clamp(int i)
 	return i;
 }
 
-class mixer : public audio_stream
+static class mixer : public audio_stream
 {
 public:
 	class channel
@@ -64,80 +64,88 @@ public:
 
 	channel channels[MAX_CHANNELS];
 
-	virtual void fill(void *output, unsigned long frames)
+	void fill_mono(short *out, unsigned long frames, channel *c, float dv = 0.0f)
 	{
-		//dbg_msg("snd", "mixing!");
-		
-		short *out = (short*)output;
-		bool clamp_flag = false;
-		
-		int active_channels = 0;
 		for(unsigned long i = 0; i < frames; i++)
 		{
-			int left = 0;
-			int right = 0;
-			
-			for(int c = 0; c < MAX_CHANNELS; c++)
-			{
-				if(channels[c].data)
-				{
-					if(channels[c].data->channels == 1)
-					{
-						left += (int)((1.0f-(channels[c].pan+1.0f)*0.5f) * channels[c].vol * channels[c].data->data[channels[c].tick]);
-						right += (int)((channels[c].pan+1.0f)*0.5f * channels[c].vol * channels[c].data->data[channels[c].tick]);
-						channels[c].tick++;
-					}
-					else
-					{
-						float pl = channels[c].pan<0.0f?-channels[c].pan:1.0f;
-						float pr = channels[c].pan>0.0f?1.0f-channels[c].pan:1.0f;
-						left += (int)(pl*channels[c].vol * channels[c].data->data[channels[c].tick]);
-						right += (int)(pr*channels[c].vol * channels[c].data->data[channels[c].tick + 1]);
-						channels[c].tick += 2;
-					}
-				
-					if(channels[c].loop)
-					{
-						if(channels[c].data->sustain_start >= 0 && channels[c].tick >= channels[c].data->sustain_end)
-							channels[c].tick = channels[c].data->sustain_start;
-						else if(channels[c].tick > channels[c].data->num_samples)
-							channels[c].tick = 0;
-					}
-					else if(channels[c].tick > channels[c].data->num_samples)
-						channels[c].data = 0;
+			float p = (1.0f-(c->pan+1.0f)*0.5f);
+			int val = (int)(p*c->vol * c->data->data[c->tick]);
+			out[i<<1] += (short)val;
+			out[(i<<1)+1] += (short)val;
+			c->tick++;
+			c->vol += dv;
+			if(c->vol < 0.0f) c->vol = 0.0f;
+		}
+	}
 
-					if(channels[c].stop == 0)
-					{
-						channels[c].stop = -1;
-						channels[c].data = 0;
-					}
-					else if(channels[c].stop > 0)
-					{
-						channels[c].vol = channels[c].old_vol * (float)channels[c].stop * NUM_FRAMES_STOP_INV;
-						channels[c].stop--;
-					}
-					if(channels[c].lerp > 0)
-					{
-						channels[c].vol = (1.0f - (float)channels[c].lerp * NUM_FRAMES_LERP_INV) * channels[c].new_vol +
-							(float)channels[c].lerp * NUM_FRAMES_LERP_INV * channels[c].old_vol;
-						channels[c].lerp--;
-					}
-					active_channels++;
-				}
-			}
+	void fill_stereo(short *out, unsigned long frames, channel *c, float dv = 0.0f)
+	{
+		for(unsigned long i = 0; i < frames; i++)
+		{
+			float pl = c->pan<0.0f?-c->pan:1.0f;
+			float pr = c->pan>0.0f?1.0f-c->pan:1.0f;
+			int vl = (int)(pl*c->vol * c->data->data[c->tick]);
+			int vr = (int)(pr*c->vol * c->data->data[c->tick + 1]);
+			out[i<<1] += (short)vl;
+			out[(i<<1)+1] += (short)vr;
+			c->tick += 2;
+			c->vol += dv;
+			if(c->vol < 0.0f) c->vol = 0.0f;
+		}
+	}
 
-			// TODO: remove these
+	virtual void fill(void *output, unsigned long frames)
+	{
+		short *out = (short*)output;
 
-			*out = clamp(left); // left
-			if(*out != left) clamp_flag = true;
-			out++;
-			*out = clamp(right); // right
-			if(*out != right) clamp_flag = true;
-			out++;
+		for(unsigned long i = 0; i < frames; i++)
+		{
+			out[i<<1] = 0;
+			out[(i<<1)+1] = 0;
 		}
 
-		if(clamp_flag)
-			dbg_msg("snd", "CLAMPED!");
+		for(int c = 0; c < MAX_CHANNELS; c++)
+		{
+			unsigned long filled = 0;
+			while(channels[c].data && filled < frames)
+			{
+				unsigned long to_fill = frames;
+				float dv = 0.0f;
+
+				if(channels[c].stop >= 0)
+					to_fill = (unsigned)channels[c].stop>frames?frames:channels[c].stop;
+				if(channels[c].loop >= 0 &&
+						channels[c].data->sustain_start >= 0)
+				{
+					unsigned long tmp = channels[c].data->sustain_end - channels[c].tick;
+					to_fill = tmp>frames?frames:tmp;
+				}
+
+				if(channels[c].lerp >= 0)
+				{
+						dv = (channels[c].new_vol - channels[c].old_vol) * NUM_FRAMES_LERP_INV;
+						dbg_msg("mixer", "lerp %f", dv);
+				}
+
+				if(channels[c].data->channels == 1)
+					fill_mono(out, to_fill, &channels[c], dv);
+				else
+					fill_stereo(out, to_fill, &channels[c], dv);
+
+				if(channels[c].loop >= 0 &&
+						channels[c].data->sustain_start >= 0 &&
+						channels[c].tick >= channels[c].data->sustain_end)
+					channels[c].tick = channels[c].data->sustain_start;
+				if(channels[c].tick >= channels[c].data->num_samples)
+					channels[c].data = 0;
+
+				channels[c].lerp -= to_fill;
+				if(channels[c].lerp < 0)
+					channels[c].lerp = 0;
+
+				filled += to_fill;
+			}
+		}
 	}
 	
 	int play(sound_data *sound, unsigned loop, float vol, float pan)
@@ -154,6 +162,7 @@ public:
 				channels[c].loop = loop;
 				channels[c].vol = vol * GLOBAL_VOLUME_SCALE;
 				channels[c].pan = pan;
+				channels[c].lerp = -1;
 				sound->last_played = time_get();
 				return c;
 			}
@@ -176,134 +185,7 @@ public:
 		channels[id].old_vol = channels[id].vol;
 		channels[id].lerp = NUM_FRAMES_LERP;
 	}
-};
-
-static mixer mixer;
-//static sound_data test_sound;
-
-/*
-extern "C" 
-{
-#include "wavpack/wavpack.h"
-}*/
-
-/*
-static file_stream *read_func_filestream;
-static int32_t read_func(void *buff, int32_t bcount)
-{
-    return read_func_filestream->read(buff, bcount);
-}
-static uchar *format_samples(int bps, uchar *dst, int32_t *src, uint32_t samcnt)
-{
-    int32_t temp;
-
-    switch (bps) {
-
-        case 1:
-            while (samcnt--)
-                *dst++ = *src++ + 128;
-
-            break;
-
-        case 2:
-            while (samcnt--) {
-                *dst++ = (uchar)(temp = *src++);
-                *dst++ = (uchar)(temp >> 8);
-            }
-
-            break;
-
-        case 3:
-            while (samcnt--) {
-                *dst++ = (uchar)(temp = *src++);
-                *dst++ = (uchar)(temp >> 8);
-                *dst++ = (uchar)(temp >> 16);
-            }
-
-            break;
-
-        case 4:
-            while (samcnt--) {
-                *dst++ = (uchar)(temp = *src++);
-                *dst++ = (uchar)(temp >> 8);
-                *dst++ = (uchar)(temp >> 16);
-                *dst++ = (uchar)(temp >> 24);
-            }
-
-            break;
-    }
-
-    return dst;
-}*/
-
-/*
-struct sound_holder
-{
-	sound_data sound;
-	int next;
-};
-
-static const int MAX_SOUNDS = 256;
-static sound_holder sounds[MAX_SOUNDS];
-static int first_free_sound;
-
-bool snd_load_wv(const char *filename, sound_data *snd)
-{
-	// open file
-	file_stream file;
-	if(!file.open_r(filename))
-	{
-		dbg_msg("sound/wv", "failed to open file. filename='%s'", filename);
-		return false;
-	}
-	read_func_filestream = &file;
-	
-	// get info
-	WavpackContext *wpc;
-	char error[128];
-	wpc = WavpackOpenFileInput(read_func, error);
-	if(!wpc)
-	{
-		dbg_msg("sound/wv", "failed to open file. err=%s filename='%s'", error, filename);
-		return false;
-	}
-
-
-	snd->num_samples = WavpackGetNumSamples(wpc);
-    int bps = WavpackGetBytesPerSample(wpc);
-	int channels = WavpackGetReducedChannels(wpc);
-	snd->rate = WavpackGetSampleRate(wpc);
-	int bits = WavpackGetBitsPerSample(wpc);
-	
-	(void)bps;
-	(void)channels;
-	(void)bits;
-	
-	// decompress
-	int datasize = snd->num_samples*2;
-	snd->data = (short*)mem_alloc(datasize, 1);
-	int totalsamples = 0;
-	while(1)
-	{
-		int buffer[1024*4];
-		int samples_unpacked = WavpackUnpackSamples(wpc, buffer, 1024*4);
-		totalsamples += samples_unpacked;
-		
-		if(samples_unpacked)
-		{
-			// convert
-		}
-	}
-	
-	if(snd->num_samples != totalsamples)
-	{
-		dbg_msg("sound/wv", "wrong amount of samples. filename='%s'", filename);
-		mem_free(snd->data);
-		return false;;
-	}
-		
-	return false;
-}*/
+} mixer;
 
 struct sound_holder
 {
@@ -428,11 +310,6 @@ int snd_load_wav(const char *filename)
 					return -1;
 				}
 				
-				// skip extra bytes (not used for uncompressed)
-				//int extra_bytes = fmt[14] | (fmt[15]<<8);
-				//dbg_msg("sound/wav", "%d", extra_bytes);
-				//file.skip(extra_bytes);
-				
 				// next state
 				state++;
 			}
@@ -468,22 +345,27 @@ int snd_load_wav(const char *filename)
 		{
 			if(head[0] == 's' && head[1] == 'm' && head[2] == 'p' && head[3] == 'l')
 			{
-				int smpl[9];
-				int loop[6];
+				unsigned char smpl[36];
+				unsigned char loop[24];
+				dbg_msg("sound/wav", "got sustain");
 
 				file.read(smpl, sizeof(smpl));
+				unsigned num_loops = (smpl[28] | (smpl[29]<<8) | (smpl[30]<<16) | (smpl[31]<<24));
+				unsigned skip = (smpl[32] | (smpl[33]<<8) | (smpl[34]<<16) | (smpl[35]<<24));
 
-				if(smpl[7] > 0)
+				if(num_loops > 0)
 				{
 					file.read(loop, sizeof(loop));
-					sounds[id].sound.sustain_start = loop[2] * sounds[id].sound.channels;
-					sounds[id].sound.sustain_end = loop[3] * sounds[id].sound.channels;
+					unsigned start = (loop[8] | (loop[9]<<8) | (loop[10]<<16) | (loop[11]<<24));
+					unsigned end = (loop[12] | (loop[13]<<8) | (loop[14]<<16) | (loop[15]<<24));
+					sounds[id].sound.sustain_start = start * sounds[id].sound.channels;
+					sounds[id].sound.sustain_end = end * sounds[id].sound.channels;
 				}
 
-				if(smpl[7] > 1)
-					file.skip((smpl[7]-1) * sizeof(loop));
+				if(num_loops > 1)
+					file.skip((num_loops-1) * sizeof(loop));
 
-				file.skip(smpl[8]);
+				file.skip(skip);
 				state++;
 			}
 			else
@@ -494,7 +376,7 @@ int snd_load_wav(const char *filename)
 	}
 
 	if(id >= 0)
-		dbg_msg("sound/wav", "loaded %s", filename);
+		dbg_msg("sound/wav", "loaded %s, sustain start: %d end: %d", filename, sounds[id].sound.sustain_start, sounds[id].sound.sustain_end);
 	else
 		dbg_msg("sound/wav", "failed to load %s", filename);
 
