@@ -165,14 +165,12 @@ public:
 		//for(int i = 0; i < MAX_CLIENTS; i++)
 			//dbg_msg("network/server", "\t%d: %d", i, clients[i].state);
 
-		if (net_host_lookup(MASTERSERVER_ADDRESS, MASTERSERVER_PORT, &master_server) != 0)
+		dbg_msg("server", "masterserver is %s", config.masterserver);
+		if (net_host_lookup(config.masterserver, MASTERSERVER_PORT, &master_server) != 0)
 		{
 			// TODO: fix me
 			//master_server = netaddr4(0, 0, 0, 0, 0);
 		}
-		
-		dbg_msg("server", "masterserver = %d.%d.%d.%d:%d",
-			master_server.ip[0], master_server.ip[1], master_server.ip[2], master_server.ip[3], master_server.port);
 
 		mods_init();
 
@@ -463,6 +461,19 @@ public:
 		net.send(&packet);
 	}
 
+
+	void send_fwcheckresponse(NETADDR4 *addr)
+	{
+		dbg_msg("server", "sending heartbeat");
+		NETPACKET packet;
+		packet.client_id = -1;
+		packet.address = *addr;
+		packet.flags = PACKETFLAG_CONNLESS;
+		packet.data_size = sizeof(SERVERBROWSE_FWRESPONSE);
+		packet.data = SERVERBROWSE_FWRESPONSE;
+		net.send(&packet);
+	}
+
 	void pump_network()
 	{
 		net.update();
@@ -479,7 +490,21 @@ public:
 				{
 					dbg_msg("server", "info requested");
 					send_serverinfo(&packet.address);
-					
+				}
+				else if(packet.data_size == sizeof(SERVERBROWSE_FWCHECK) &&
+					memcmp(packet.data, SERVERBROWSE_FWCHECK, sizeof(SERVERBROWSE_FWCHECK)) == 0)
+				{
+					send_fwcheckresponse(&packet.address);
+				}
+				else if(packet.data_size == sizeof(SERVERBROWSE_FWOK) &&
+					memcmp(packet.data, SERVERBROWSE_FWOK, sizeof(SERVERBROWSE_FWOK)) == 0)
+				{
+					dbg_msg("server", "no firewall/nat problems detected");
+				}
+				else if(packet.data_size == sizeof(SERVERBROWSE_FWERROR) &&
+					memcmp(packet.data, SERVERBROWSE_FWERROR, sizeof(SERVERBROWSE_FWERROR)) == 0)
+				{
+					dbg_msg("server", "ERROR: clients can not connect due to FIREWALL/NAT");
 				}
 			}
 			else

@@ -9,4 +9,6 @@ MACRO_CONFIG_STR(player_name, 32, "nameless tee")
 MACRO_CONFIG_STR(clan_name, 32, "")
 MACRO_CONFIG_STR(password, 32, "")
 
+MACRO_CONFIG_STR(masterserver, 128, "master.teewars.com")
+
 MACRO_CONFIG_INT(sv_port, 8303, 0, 0)

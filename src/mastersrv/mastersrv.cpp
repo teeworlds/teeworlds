@@ -9,6 +9,14 @@ enum {
 	EXPIRE_TIME = 90
 };
 
+static struct check_server
+{
+	NETADDR4 address;
+	int try_count;
+	int64 try_time;
+} check_servers[MAX_SERVERS];
+static int num_checkservers = 0;
+
 static struct packet_data
 {
 	unsigned char header[sizeof(SERVERBROWSE_LIST)];
@@ -17,7 +25,58 @@ static struct packet_data
 static int64 server_expire[MAX_SERVERS];
 static int num_servers = 0;
 
-static net_client net;
+static net_client net_checker; // NAT/FW checker
+static net_client net_op; // main
+
+void send_ok(NETADDR4 *addr)
+{
+	NETPACKET p;
+	p.client_id = -1;
+	p.address = *addr;
+	p.flags = PACKETFLAG_CONNLESS;
+	p.data_size = sizeof(SERVERBROWSE_FWOK);
+	p.data = SERVERBROWSE_FWOK;
+	net_op.send(&p);
+}
+
+void send_error(NETADDR4 *addr)
+{
+	NETPACKET p;
+	p.client_id = -1;
+	p.address = *addr;
+	p.flags = PACKETFLAG_CONNLESS;
+	p.data_size = sizeof(SERVERBROWSE_FWERROR);
+	p.data = SERVERBROWSE_FWERROR;
+	net_op.send(&p);
+}
+
+void send_check(NETADDR4 *addr)
+{
+	NETPACKET p;
+	p.client_id = -1;
+	p.address = *addr;
+	p.flags = PACKETFLAG_CONNLESS;
+	p.data_size = sizeof(SERVERBROWSE_FWCHECK);
+	p.data = SERVERBROWSE_FWCHECK;
+	net_checker.send(&p);
+}
+
+void add_checkserver(NETADDR4 *info)
+{
+	// add server
+	if(num_checkservers == MAX_SERVERS)
+	{
+		dbg_msg("mastersrv", "error: mastersrv is full");
+		return;
+	}
+	
+	dbg_msg("mastersrv", "checking: %d.%d.%d.%d:%d",
+		info->ip[0], info->ip[1], info->ip[2], info->ip[3], info->port);
+	check_servers[num_checkservers].address = *info;
+	check_servers[num_checkservers].try_count = 0;
+	check_servers[num_checkservers].try_time = 0;
+	num_checkservers++;
+}
 
 void add_server(NETADDR4 *info)
 {
@@ -48,6 +107,36 @@ void add_server(NETADDR4 *info)
 	num_servers++;
 }
 
+void update_servers()
+{
+	int64 now = time_get();
+	int64 freq = time_freq();
+	for(int i = 0; i < num_checkservers; i++)
+	{
+		if(now > check_servers[i].try_time+freq)
+		{
+			if(check_servers[i].try_count == 5)
+			{
+				dbg_msg("mastersrv", "check failed: %d.%d.%d.%d:%d",
+					check_servers[i].address.ip[0], check_servers[i].address.ip[1],
+					check_servers[i].address.ip[2], check_servers[i].address.ip[3],check_servers[i].address.port);
+					
+				// FAIL!!
+				send_error(&check_servers[i].address);
+				check_servers[i] = check_servers[num_checkservers-1];
+				num_checkservers--;
+				i--;
+			}
+			else
+			{
+				check_servers[i].try_count++;
+				check_servers[i].try_time = now;
+				send_check(&check_servers[i].address);
+			}
+		}
+	}
+}
+
 void purge_servers()
 {
 	int64 now = time_get();
@@ -71,7 +160,8 @@ void purge_servers()
 
 int main(int argc, char **argv)
 {
-	net.open(MASTERSERVER_PORT, 0);
+	net_op.open(MASTERSERVER_PORT, 0);
+	net_checker.open(MASTERSERVER_PORT+1, 0);
 	// TODO: check socket for errors
 	
 	mem_copy(data.header, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
@@ -79,17 +169,18 @@ int main(int argc, char **argv)
 	
 	while(1)
 	{
-		net.update();
+		net_op.update();
+		net_checker.update();
 		
 		// process packets
 		NETPACKET packet;
-		while(net.recv(&packet))
+		while(net_op.recv(&packet))
 		{
 			if(packet.data_size == sizeof(SERVERBROWSE_HEARTBEAT) &&
 				memcmp(packet.data, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT)) == 0)
 			{
 				// add it
-				add_server(&packet.address);
+				add_checkserver(&packet.address);
 			}
 			else if(packet.data_size == sizeof(SERVERBROWSE_GETLIST) &&
 				memcmp(packet.data, SERVERBROWSE_GETLIST, sizeof(SERVERBROWSE_GETLIST)) == 0)
@@ -102,13 +193,35 @@ int main(int argc, char **argv)
 				p.flags = PACKETFLAG_CONNLESS;
 				p.data_size = num_servers*sizeof(NETADDR4)+sizeof(SERVERBROWSE_LIST);
 				p.data = &data;
-				net.send(&p);
+				net_op.send(&p);
 			}
+		}
 
+		// process packets
+		while(net_checker.recv(&packet))
+		{
+			if(packet.data_size == sizeof(SERVERBROWSE_FWRESPONSE) &&
+				memcmp(packet.data, SERVERBROWSE_FWRESPONSE, sizeof(SERVERBROWSE_FWRESPONSE)) == 0)
+			{
+				// remove it from checking
+				for(int i = 0; i < num_checkservers; i++)
+				{
+					if(net_addr4_cmp(&check_servers[i].address, &packet.address) == 0)
+					{
+						num_checkservers--;
+						check_servers[i] = check_servers[num_checkservers];
+						break;
+					}
+				}
+				
+				add_server(&packet.address);
+				send_ok(&packet.address);
+			}
 		}
 		
 		// TODO: shouldn't be done every fuckin frame
 		purge_servers();
+		update_servers();
 		
 		// be nice to the CPU
 		thread_sleep(1);

@@ -417,7 +417,7 @@ public:
 		net.open(0, 0);
 		
 		//
-		net_host_lookup(MASTERSERVER_ADDRESS, MASTERSERVER_PORT, &master_server);
+		net_host_lookup(config.masterserver, MASTERSERVER_PORT, &master_server);
 
 		// connect to the server if wanted
 		if(direct_connect_server)
@@ -574,6 +574,9 @@ public:
 					servers.infos[i].max_players = 0;
 					servers.infos[i].latency = 999;
 					sprintf(servers.infos[i].address, "%d.%d.%d.%d:%d",
+						servers.addresses[i].ip[0], servers.addresses[i].ip[1], servers.addresses[i].ip[2],
+						servers.addresses[i].ip[3], servers.addresses[i].port);
+					sprintf(servers.infos[i].name, "%d.%d.%d.%d:%d",
 						servers.addresses[i].ip[0], servers.addresses[i].ip[1], servers.addresses[i].ip[2],
 						servers.addresses[i].ip[3], servers.addresses[i].port);
 				}
