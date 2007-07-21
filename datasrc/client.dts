@@ -106,7 +106,7 @@ struct data_container {
 	array:sprite sprites = sprites.*.*
 	array:weapon weapons = weapons.*
 	array:particleinfo particles = particles.*
-	array:projectileparticles projectileparticles = projectileparticles.*
+	array:projectileparticles projectileinfo = projectileparticles.*
 
 	array:soundset sounds = sounds.*
 	array:animation animations = animations.*
@@ -119,3 +119,4 @@ const array:int sound = sounds.*
 const array:int image = images.*
 const array:int sprite = sprites.*.*
 const array:int anim = animations.*
+const array:int gametype = playerstats.*
