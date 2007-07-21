@@ -201,7 +201,7 @@ public:
 		{
 			i->pos = pos;
 			i->life = 0.75f;
-			i->dir = dir;
+			i->dir = dir*-1;
 			i->startangle = (( (float)rand()/(float)RAND_MAX) - 1.0f) * 2.0f * pi;
 		}
 	}
@@ -382,7 +382,7 @@ void modc_init()
 {
 	// load the data container
 	data = load_data_container("data/client.dat");
-	
+
 	// load sounds
 	for(int s = 0; s < data->num_sounds; s++)
 		for(int i = 0; i < data->sounds[s].num_sounds; i++)
@@ -505,15 +505,17 @@ static void render_projectile(obj_projectile *prev, obj_projectile *current)
 	gfx_quads_begin();
 	
 	select_sprite(data->weapons[current->type%data->num_weapons].sprite_proj);
-	vec2 vel(current->vx, current->vy);
+	vec2 vel = mix(vec2(prev->vx, prev->vy), vec2(current->vx, current->vy), client_intratick());
+	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
 	
-	// TODO: interpolare angle aswell
 	if(length(vel) > 0.00001f)
 		gfx_quads_setrotation(get_angle(vel));
 	else
 		gfx_quads_setrotation(0);
 	
-	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
+	// TODO: do this, but nice
+	//temp_system.new_particle(pos, vec2(0,0), 0.3f, 14.0f, 0, 0.95f);
+
 	gfx_quads_draw(pos.x, pos.y,32,32);
 	gfx_quads_setrotation(0);
 	gfx_quads_end();
@@ -898,7 +900,8 @@ void modc_render()
 		if(mouse_pos.x < 0)
 			a = a+pi;
 			
-		input.angle = (int)(a*256.0f);
+		input.target_x = (int)mouse_pos.x; //(int)(a*256.0f);
+		input.target_y = (int)mouse_pos.y; //(int)(a*256.0f);
 		input.activeweapon = -1;
 		
 		if(!chat_active)
@@ -912,10 +915,8 @@ void modc_render()
 			input.blink = inp_key_pressed('S');
 			
 			// Weapon switching
-			input.activeweapon = inp_key_pressed('1') ? 0 : input.activeweapon;
-			input.activeweapon = inp_key_pressed('2') ? 1 : input.activeweapon;
-			input.activeweapon = inp_key_pressed('3') ? 2 : input.activeweapon;
-			input.activeweapon = inp_key_pressed('4') ? 3 : input.activeweapon;
+			for(int i = 0; i < 8; i++)
+				input.activeweapon = inp_key_pressed('1'+i) ? i : input.activeweapon;
 		}
 
 		snap_input(&input, sizeof(input));

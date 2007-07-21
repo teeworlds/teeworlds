@@ -18,20 +18,6 @@
 		unsigned char crc[2];		6
 */
 
-
-// move
-static int net_addr4_cmp(const NETADDR4 *a, const NETADDR4 *b)
-{
-	if(	a->ip[0] != b->ip[0] ||
-		a->ip[1] != b->ip[1] ||
-		a->ip[2] != b->ip[2] ||
-		a->ip[3] != b->ip[3] ||
-		a->port != b->port
-	)
-		return 1;
-	return 0;
-}
-
 enum
 {
 	NETWORK_VERSION = 1,
@@ -51,7 +37,7 @@ enum
 	NETWORK_PACKETFLAG_CLOSE=0x04,
 	NETWORK_PACKETFLAG_VITAL=0x08,
 	NETWORK_PACKETFLAG_RESEND=0x10,
-	//NETWORK_PACKETFLAG_STATELESS=0x20,
+	NETWORK_PACKETFLAG_CONNLESS=0x20,
 };
 
 struct NETPACKETDATA
@@ -208,7 +194,7 @@ static void conn_send(NETCONNECTION *conn, int flags, int data_size, const void 
 	p.data_size = data_size;
 	p.data = (unsigned char *)data;
 	p.first_send_time = time_get();
-	
+
 	if(flags&NETWORK_PACKETFLAG_VITAL)
 	{
 		// save packet if we need to resend
@@ -321,7 +307,7 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 
 static void conn_update(NETCONNECTION *conn)
 {
-	if(conn->state == NETWORK_CONNSTATE_ERROR)
+	if(conn->state == NETWORK_CONNSTATE_OFFLINE || conn->state == NETWORK_CONNSTATE_ERROR)
 		return;
 	
 	// check for timeout
@@ -479,58 +465,71 @@ int net_server_recv(NETSERVER *s, NETPACKET *packet)
 		int r = check_packet(s->recv_buffer, bytes, &data);
 		if(r == 0)
 		{
-			// ok packet, process it
-			if(data.flags == NETWORK_PACKETFLAG_CONNECT)
+			if(data.flags&NETWORK_PACKETFLAG_CONNLESS)
 			{
-				int found = 0;
-				
-				// check if we already got this client
-				for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
-				{
-					if(s->slots[i].conn.state != NETWORK_CONNSTATE_OFFLINE &&
-						net_addr4_cmp(&s->slots[i].conn.peeraddr, &addr) == 0)
-					{
-						found = 1; // silent ignore.. we got this client already
-						break;
-					}
-				}
-				
-				// client that wants to connect
-				if(!found)
-				{
-					for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
-					{
-						if(s->slots[i].conn.state == NETWORK_CONNSTATE_OFFLINE)
-						{
-							conn_feed(&s->slots[i].conn, &data, &addr);
-							found = 1;
-							break;
-						}
-					}
-				}
-				
-				if(!found)
-				{
-					// TODO: send error
-				}
+				// connection less packets
+				packet->client_id = -1;
+				packet->address = addr;
+				packet->flags = PACKETFLAG_CONNLESS;
+				packet->data_size = data.data_size;
+				packet->data = data.data;
+				return 1;		
 			}
 			else
 			{
-				// find matching slot
-				for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
+				// ok packet, process it
+				if(data.flags == NETWORK_PACKETFLAG_CONNECT)
 				{
-					if(net_addr4_cmp(&s->slots[i].conn.peeraddr, &addr) == 0)
+					int found = 0;
+					
+					// check if we already got this client
+					for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
 					{
-						if(conn_feed(&s->slots[i].conn, &data, &addr))
+						if(s->slots[i].conn.state != NETWORK_CONNSTATE_OFFLINE &&
+							net_addr4_cmp(&s->slots[i].conn.peeraddr, &addr) == 0)
 						{
-							if(data.data_size)
+							found = 1; // silent ignore.. we got this client already
+							break;
+						}
+					}
+					
+					// client that wants to connect
+					if(!found)
+					{
+						for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
+						{
+							if(s->slots[i].conn.state == NETWORK_CONNSTATE_OFFLINE)
 							{
-								packet->client_id = i;	
-								packet->address = addr;
-								packet->flags = 0;
-								packet->data_size = data.data_size;
-								packet->data = data.data;
-								return 1;
+								conn_feed(&s->slots[i].conn, &data, &addr);
+								found = 1;
+								break;
+							}
+						}
+					}
+					
+					if(!found)
+					{
+						// TODO: send error
+					}
+				}
+				else
+				{
+					// find matching slot
+					for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
+					{
+						if(net_addr4_cmp(&s->slots[i].conn.peeraddr, &addr) == 0)
+						{
+							if(conn_feed(&s->slots[i].conn, &data, &addr))
+							{
+								if(data.data_size)
+								{
+									packet->client_id = i;	
+									packet->address = addr;
+									packet->flags = 0;
+									packet->data_size = data.data_size;
+									packet->data = data.data;
+									return 1;
+								}
 							}
 						}
 					}
@@ -540,6 +539,7 @@ int net_server_recv(NETSERVER *s, NETPACKET *packet)
 		else
 		{
 			// errornous packet, drop it
+			dbg_msg("server", "crazy packet");
 		}
 		
 		// read header
@@ -551,10 +551,27 @@ int net_server_recv(NETSERVER *s, NETPACKET *packet)
 
 int net_server_send(NETSERVER *s, NETPACKET *packet)
 {
-	// TODO: insert stuff for stateless stuff
-	dbg_assert(packet->client_id >= 0, "errornous client id");
-	dbg_assert(packet->client_id < NETWORK_MAX_CLIENTS, "errornous client id");
-	conn_send(&s->slots[packet->client_id].conn, 0, packet->data_size, packet->data);
+	if(packet->flags&PACKETFLAG_CONNLESS)
+	{
+		// send connectionless packet
+		NETPACKETDATA p;
+		p.ID[0] = 'T';
+		p.ID[1] = 'W';
+		p.version = NETWORK_VERSION;
+		p.flags = NETWORK_PACKETFLAG_CONNLESS;
+		p.seq = 0;
+		p.ack = 0;
+		p.crc = 0;
+		p.data_size = packet->data_size;
+		p.data = (unsigned char *)packet->data;
+		send_packet(s->socket, &packet->address, &p);
+	}
+	else
+	{
+		dbg_assert(packet->client_id >= 0, "errornous client id");
+		dbg_assert(packet->client_id < NETWORK_MAX_CLIENTS, "errornous client id");
+		conn_send(&s->slots[packet->client_id].conn, 0, packet->data_size, packet->data);
+	}
 	return 0;
 }
 
@@ -574,11 +591,11 @@ void net_server_stats(NETSERVER *s, NETSTATS *stats)
 }
 
 //
-NETCLIENT *net_client_open(int flags)
+NETCLIENT *net_client_open(int port, int flags)
 {
 	NETCLIENT *client = (NETCLIENT *)mem_alloc(sizeof(NETCLIENT), 1);
 	mem_zero(client, sizeof(NETCLIENT));
-	client->socket = net_udp4_create(0);
+	client->socket = net_udp4_create(port);
 	conn_init(&client->conn, client->socket);
 	return client;
 }
@@ -626,23 +643,37 @@ int net_client_recv(NETCLIENT *c, NETPACKET *packet)
 		
 		NETPACKETDATA data;
 		int r = check_packet(c->recv_buffer, bytes, &data);
-		if(r == 0 && conn_feed(&c->conn, &data, &addr))
-		{
-			// fill in packet
-			packet->client_id = 0;
-			packet->address = addr;
-			packet->flags = 0;
-			packet->data_size = data.data_size;
-			packet->data = data.data;
-			return 1;
-		}
-		else
-		{
-			// errornous packet, drop it
-		}
 		
-		// read header
-		// do checksum
+		if(r == 0)
+		{
+			if(data.flags&NETWORK_PACKETFLAG_CONNLESS)
+			{
+				// connection less packets
+				packet->client_id = -1;
+				packet->address = addr;
+				packet->flags = PACKETFLAG_CONNLESS;
+				packet->data_size = data.data_size;
+				packet->data = data.data;
+				return 1;		
+			}
+			else
+			{
+				if(conn_feed(&c->conn, &data, &addr))
+				{
+					// fill in packet
+					packet->client_id = 0;
+					packet->address = addr;
+					packet->flags = 0;
+					packet->data_size = data.data_size;
+					packet->data = data.data;
+					return 1;
+				}
+				else
+				{
+					// errornous packet, drop it
+				}
+			}			
+		}
 	}
 	
 	return 0;
@@ -650,9 +681,27 @@ int net_client_recv(NETCLIENT *c, NETPACKET *packet)
 
 int net_client_send(NETCLIENT *c, NETPACKET *packet)
 {
-	// TODO: insert stuff for stateless stuff
-	dbg_assert(packet->client_id == 0, "errornous client id");
-	conn_send(&c->conn, 0, packet->data_size, packet->data);
+	if(packet->flags&PACKETFLAG_CONNLESS)
+	{
+		// send connectionless packet
+		NETPACKETDATA p;
+		p.ID[0] = 'T';
+		p.ID[1] = 'W';
+		p.version = NETWORK_VERSION;
+		p.flags = NETWORK_PACKETFLAG_CONNLESS;
+		p.seq = 0;
+		p.ack = 0;
+		p.crc = 0;
+		p.data_size = packet->data_size;
+		p.data = (unsigned char *)packet->data;
+		send_packet(c->socket, &packet->address, &p);
+	}
+	else
+	{
+		// TODO: insert stuff for stateless stuff
+		dbg_assert(packet->client_id == 0, "errornous client id");
+		conn_send(&c->conn, 0, packet->data_size, packet->data);
+	}
 	return 0;
 }
 

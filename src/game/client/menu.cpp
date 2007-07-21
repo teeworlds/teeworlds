@@ -11,6 +11,7 @@
 #include <baselib/system.h>
 #include <baselib/input.h>
 #include <baselib/network.h>
+#include <baselib/math.h>
 
 #include <engine/interface.h>
 #include <engine/versions.h>
@@ -22,6 +23,7 @@
 #include <engine/config.h>
 
 #include "data.h"
+#include <mastersrv/mastersrv.h>
 
 extern data_container *data;
 
@@ -234,6 +236,7 @@ void draw_teewars_button(void *id, const char *text, int checked, float x, float
 	ui_do_label(x + w/2 - text_width/2, y, text, 46);
 }
 
+/*
 struct server_info
 {
 	int version;
@@ -242,11 +245,10 @@ struct server_info
 	netaddr4 address;
 	char name[129];
 	char map[65];
-};
+};*/
 
 struct server_list
 {   
-    server_info infos[10];
 	int active_count, info_count;
 	int scroll_index;
 	int selected_index;
@@ -555,7 +557,7 @@ int do_scroll_bar_vert(void *id, float x, float y, float height, int steps, int 
 	return r;
 }
 
-static int do_server_list(server_list *list, float x, float y, int visible_items)
+static int do_server_list(float x, float y, int *scroll_index, int *selected_index, int visible_items)
 {
 	const float spacing = 3.f;
 	const float item_height = 28;
@@ -563,22 +565,27 @@ static int do_server_list(server_list *list, float x, float y, int visible_items
 	const float real_width = item_width + 20;
 	const float real_height = item_height * visible_items + spacing * (visible_items - 1);
 
+	server_info *servers;
+	int num_servers = client_serverbrowse_getlist(&servers);
+
 	int r = -1;
 
 	for (int i = 0; i < visible_items; i++)
 	{
-		int item_index = i + list->scroll_index;
-		if (item_index >= list->active_count);
+		int item_index = i + *scroll_index;
+		if (item_index >= num_servers)
+			;
 			//ui_do_image(empty_item_texture, x, y + i * item_height + i * spacing, item_width, item_height);
 		else
 		{
-			server_info *item = &list->infos[item_index];
+			server_info *item = &servers[item_index];
 
 			bool clicked = false;
-			clicked = ui_do_button(item, item->name, 0, x, y + i * item_height + i * spacing, item_width, item_height, draw_menu_button, (list->selected_index == item_index) ? (void *)1 : 0);
+			clicked = ui_do_button(item, item->name, 0, x, y + i * item_height + i * spacing, item_width, item_height,
+				draw_menu_button, (*selected_index == item_index) ? (void *)1 : 0);
 
 			char temp[64]; // plenty of extra room so we don't get sad :o
-			sprintf(temp, "%i/%i", item->players, item->max_players);
+			sprintf(temp, "%i/%i  %3d", item->num_players, item->max_players, item->latency);
 
 			ui_do_label(x + 600, y + i * item_height + i * spacing, temp, item_height);
 			ui_do_label(x + 360, y + i * item_height + i * spacing, item->map, item_height);
@@ -586,134 +593,15 @@ static int do_server_list(server_list *list, float x, float y, int visible_items
 			if (clicked)
 			{
 				r = item_index;
-				list->selected_index = item_index;
+				*selected_index = item_index;
 			}
 		}
 	}
 
-	list->scroll_index = do_scroll_bar_vert(&list->scroll_index, x + real_width - 16, y, real_height, list->active_count - visible_items, list->scroll_index);
+	*scroll_index = do_scroll_bar_vert(scroll_index, x + real_width - 16, y, real_height,
+		min(num_servers - visible_items, 0), *scroll_index);
 	
 	return r;
-}
-
-static char *read_int(char *buffer, int *value)
-{
-    *value = buffer[0] << 24;
-    *value |= buffer[1] << 16;
-    *value |= buffer[2] << 8;
-    *value |= buffer[3];
-
-	return buffer + 4;
-}
-
-static char *read_netaddr(char *buffer, netaddr4 *addr)
-{
-	addr->ip[0] = *buffer++;
-	addr->ip[1] = *buffer++;
-	addr->ip[2] = *buffer++;
-	addr->ip[3] = *buffer++;
-
-	int port;
-	buffer = read_int(buffer, &port);
-
-	addr->port = port;
-
-	return buffer;
-}
-
-static void refresh_list(server_list *list)
-{
-	netaddr4 addr;
-	netaddr4 me(0, 0, 0, 0, 0);
-
-	list->selected_index = -1;
-	
-	if (net_host_lookup(MASTER_SERVER_ADDRESS, MASTER_SERVER_PORT, &addr) == 0)
-    {
-        socket_tcp4 sock;
-        sock.open(&me);
-
-		//sock.set_non_blocking();
-
-		// try and connect with a timeout of 1 second
-        if (sock.connect_non_blocking(&addr))
-        {
-            char data[256];
-            int total_received = 0;
-            int received;
-
-            int master_server_version = -1;
-            int server_count = -1;
-
-            // read header
-            while (total_received < 12 && (received = sock.recv(data + total_received, 12 - total_received)) > 0)
-                total_received += received;
-
-            // see if we have the header
-            if (total_received == 12)
-            {
-                int signature;
-                read_int(data, &signature);
-    
-                // check signature
-                if(signature == 'TWSL')
-                {
-                    read_int(data + 4, &master_server_version);
-                    read_int(data + 8, &server_count);
-
-                    // TODO: handle master server version O.o
-                        
-                    const int server_info_size = 212;
-
-                    list->active_count = 0;
-    
-                    for (int i = 0; i < server_count; i++)
-                    { 
-                         total_received = 0;
-
-                        // read data for a server
-                        while (sock.is_connected() && total_received < server_info_size && (received = sock.recv(data + total_received, server_info_size - total_received)) > 0)
-                            total_received += received;
-
-                        // check if we got enough data
-                        if (total_received == server_info_size)
-                        {
-                            char *d = data;
-
-                            server_info *info = &list->infos[i];
-
-                            d = read_int(d, &info->version);
-                            d = read_netaddr(d, &info->address);
-
-							//dbg_msg("menu/got_serverinfo", "IP: %i.%i.%i.%i:%i", (int)info->address.ip[0], (int)info->address.ip[1], (int)info->address.ip[2], (int)info->address.ip[3], info->address.port);
-
-                            d = read_int(d, &info->players);
-                            d = read_int(d, &info->max_players);
-                            memcpy(info->name, d, 128);
-                            d += 128;
-							memcpy(info->map, d, 64);
-
-                            // let's be safe.
-                            info->name[128] = 0;
-                            info->map[64] = 0;
-
-                            ++list->active_count;
-                        }
-                        else
-                            break;
-                    }
-
-                    if (list->scroll_index >= list->active_count)
-                        list->scroll_index = list->active_count - 1;
-
-                    if (list->scroll_index < 0)
-                        list->scroll_index = 0;
-                }
-            }
-
-            sock.close();
-        }
-	}
 }
 
 enum
@@ -737,41 +625,45 @@ const float row2_y = row1_y + 40;
 const float row3_y = row2_y + 40;
 const float row4_y = row3_y + 40;
 
-static int main_render(netaddr4 *server_address)
+static int main_render()
 {
-	static server_list list;
 	static bool inited = false;
 
 	if (!inited)
 	{
+		/*
 		list.info_count = 256;
 
 		list.scroll_index = 0;
 		list.selected_index = -1;
+		*/
 
 		inited = true;
 
-		refresh_list(&list);
+		client_serverbrowse_refresh();
 	}
 
-	do_server_list(&list, 20, 160, 8);
+	static int scoll_index = 0, selected_index = -1;
+	do_server_list(20, 160, &scoll_index, &selected_index, 8);
 
 	static int refresh_button, join_button, quit_button;
 
 	if (ui_do_button(&refresh_button, "Refresh", 0, 440, 420, 170, 48, draw_teewars_button))
-	{
-		refresh_list(&list);
-	} 
+		client_serverbrowse_refresh();
 
-	if (list.selected_index == -1)
+	if (selected_index == -1)
 	{
 		ui_do_button(&join_button, "Join", 0, 620, 420, 128, 48, draw_teewars_button, (void *)1);
 	}
 	else if (ui_do_button(&join_button, "Join", 0, 620, 420, 128, 48, draw_teewars_button))
 	{
-		*server_address = list.infos[list.selected_index].address;
+		// *server_address = list.infos[list.selected_index].address;
+		
+		server_info *servers;
+		int num_servers = client_serverbrowse_getlist(&servers);
 
-		dbg_msg("menu/join_button", "IP: %i.%i.%i.%i:%i", (int)server_address->ip[0], (int)server_address->ip[1], (int)server_address->ip[2], (int)server_address->ip[3], server_address->port);
+		client_connect(servers[selected_index].address);
+		//dbg_msg("menu/join_button", "IP: %i.%i.%i.%i:%i", (int)server_address->ip[0], (int)server_address->ip[1], (int)server_address->ip[2], (int)server_address->ip[3], server_address->port);
 
 		return 1;
 	}
@@ -1123,7 +1015,7 @@ static int kerning_render()
 	return 0;
 }
 
-static int menu_render(netaddr4 *server_address)
+static int menu_render()
 {
 	// background color
 	gfx_clear(0.65f,0.78f,0.9f);
@@ -1147,7 +1039,7 @@ static int menu_render(netaddr4 *server_address)
 
 	switch (screen)
 	{
-		case SCREEN_MAIN: return main_render(server_address);
+		case SCREEN_MAIN: return main_render();
 		case SCREEN_SETTINGS_GENERAL:
 		case SCREEN_SETTINGS_CONTROLS:
 		case SCREEN_SETTINGS_VIDEO:
@@ -1176,7 +1068,7 @@ void modmenu_shutdown()
 {
 }
 
-int modmenu_render(void *ptr)
+int modmenu_render()
 {
 	static int mouse_x = 0;
 	static int mouse_y = 0;
@@ -1186,8 +1078,6 @@ int modmenu_render(void *ptr)
 		dbg_msg("menu", "no music is playing, so let's play some tunes!");
 		music_menu_id = snd_play(music_menu, SND_LOOP);
 	}
-
-	netaddr4 *server_address = (netaddr4 *)ptr;	
 
     // handle mouse movement
     float mx, my;
@@ -1214,7 +1104,7 @@ int modmenu_render(void *ptr)
     }
 
     //int r = menu_render(server_address, str, max_len);
-	int r = menu_render(server_address);
+	int r = menu_render();
 
     // render butt ugly mouse cursor
     // TODO: render nice cursor

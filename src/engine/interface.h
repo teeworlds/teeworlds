@@ -689,7 +689,7 @@ void modmenu_shutdown();
     Function: modmenu_render
         Called every frame to let the menu render it self.
 */
-int modmenu_render(void *server_address);
+int modmenu_render();
 
 
 
@@ -752,9 +752,19 @@ float gfx_pretty_text_width(float size, const char *text);
 void mods_message(int msg, int client_id);
 void modc_message(int msg);
 
-#define MASTER_SERVER_ADDRESS "master.teewars.com"
-#define MASTER_SERVER_PORT 8300
+struct server_info
+{
+	int max_players;
+	int num_players;
+	int latency; // in ms
+	char name[128];
+	char map[128];
+	char address[128];
+};
 
+void client_connect(const char *address);
 
+void client_serverbrowse_refresh();
+int client_serverbrowse_getlist(server_info **servers);
 
 #endif

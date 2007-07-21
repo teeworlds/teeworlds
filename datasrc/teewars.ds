@@ -238,6 +238,16 @@ weapons {
 		reloadtime 100
 		visual_size 96
 	}
+	
+	rocket_backpack {
+		sprite_body sprites.weapons.weapon_hammer_body
+		sprite_cursor sprites.weapons.weapon_hammer_cursor
+		sprite_proj sprites.weapons.weapon_hammer_proj
+		
+		recoil 10
+		reloadtime 100
+		visual_size 64
+	}
 }
 	
 sprites {

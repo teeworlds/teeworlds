@@ -476,7 +476,7 @@ class translator:
 #include <stdio.h>
 #include <stdlib.h>
 
-void patch_ptr(char **ptr, char *base)
+static void patch_ptr(char **ptr, char *base)
 {
 	*ptr = base+(size_t)(*ptr);
 }

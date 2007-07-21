@@ -58,7 +58,10 @@ struct player_input
 {
 	int left;
 	int right;
-	int angle;
+	
+	int target_x;
+	int target_y;
+	
 	int jump;
 	int fire;
 	int hook;

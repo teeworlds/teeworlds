@@ -28,6 +28,7 @@ enum
 {
 	NETFLAG_ALLOWSTATELESS=1,
 	PACKETFLAG_VITAL=1,
+	PACKETFLAG_CONNLESS=2,
 	
 	NETSTATE_OFFLINE=0,
 	NETSTATE_CONNECTING,
@@ -46,7 +47,7 @@ int net_server_delclient(NETSERVER *s); // -1 when no more, else, client id
 void net_server_stats(NETSERVER *s, NETSTATS *stats);
 
 // client side
-NETCLIENT *net_client_open(int flags);
+NETCLIENT *net_client_open(int port, int flags);
 int net_client_disconnect(NETCLIENT *c, const char *reason);
 int net_client_connect(NETCLIENT *c, NETADDR4 *addr);
 int net_client_recv(NETCLIENT *c, NETPACKET *packet);
@@ -88,7 +89,7 @@ public:
 	net_client() : ptr(0) {}
 	~net_client() { close(); }
 	
-	int open(int flags) { ptr = net_client_open(flags); return ptr != 0; }
+	int open(int port, int flags) { ptr = net_client_open(port, flags); return ptr != 0; }
 	int close() { int r = net_client_close(ptr); ptr = 0; return r; }
 	
 	int connect(NETADDR4 *addr) { return net_client_connect(ptr, addr); }

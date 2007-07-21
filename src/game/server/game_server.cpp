@@ -464,7 +464,8 @@ void projectile::tick()
 	lifespan--;
 	
 	// check player intersection as well
-	entity *targetplayer = (entity*)intersect_player(oldpos, pos, oldpos, powner);
+	vec2 new_pos;
+	entity *targetplayer = (entity*)intersect_player(oldpos, pos, new_pos, powner);
 	if(targetplayer || lifespan < 0 || col_check_point((int)pos.x, (int)pos.y))
 	{
 		if (lifespan >= 0)
@@ -487,6 +488,74 @@ void projectile::snap(int snapping_client)
 	proj->vx = (int)vel.x; // TODO: should be an angle
 	proj->vy = (int)vel.y;
 	proj->type = type;
+}
+
+
+//////////////////////////////////////////////////
+// projectile_backpackrocket
+//////////////////////////////////////////////////
+projectile_backpackrocket::projectile_backpackrocket(baselib::vec2 pos, baselib::vec2 target, int owner, entity* powner)
+: projectile(WEAPON_PROJECTILETYPE_ROCKET, owner, pos, vec2(0,0), 100, powner, 0, 0, 0, -1, WEAPON_ROCKET_BACKPACK)
+{
+	stage = 0;
+	start_tick = server_tick();
+	vel = vec2(0,-10.0f);
+	this->target = target;
+	start = pos;
+	midpoint = pos;
+	midpoint.y = target.y;
+	direction = normalize(target-midpoint);
+	deply_ticks = (int)( distance(start, midpoint)/(float)server_tickspeed() * 5.0f );
+	dbg_msg("rocket_bp", "%f %d", distance(start, midpoint), deply_ticks);
+}
+
+void projectile_backpackrocket::tick()
+{
+	lifespan--;
+	if(!lifespan)
+		world.destroy_entity(this);
+		
+	vec2 oldpos = pos;
+		
+	if(stage == 0)
+	{
+		float time = (server_tick()-start_tick)/(float)(deply_ticks);
+		if(midpoint.y > start.y)
+			pos.y = mix(start.y, midpoint.y, 1-sinf((1-time)*pi/2));
+		else
+			pos.y = mix(start.y, midpoint.y, sinf(time*pi/2));
+
+		float a = (server_tick()-start_tick)/(float)server_tickspeed()*pi*7.5f;
+		vel.x = sinf(a)*30.0f;
+		vel.y = cosf(a)*30.0f;
+		
+		if(server_tick() > start_tick+deply_ticks)
+		{
+			pos = midpoint;
+			direction = normalize(target-pos);
+			vel = vec2(0,0);
+			stage = 1;
+		}
+	}
+	else if(stage == 1)
+	{
+		vel += direction*1.5f;
+		vel.x = clamp(vel.x, -20.0f, 20.0f);
+		pos += vel;
+	}
+
+	// check player intersection as well
+	vec2 new_pos;
+	entity *targetplayer = (entity*)intersect_player(oldpos, pos, new_pos, powner);
+	if(targetplayer || lifespan < 0 || col_check_point((int)pos.x, (int)pos.y))
+	{
+		if (lifespan >= 0)
+			create_sound(pos, sound_impact);
+			
+		create_explosion(oldpos, owner, weapon, false);
+			
+		world.destroy_entity(this);
+	}	
 }
 
 //////////////////////////////////////////////////
@@ -556,6 +625,11 @@ void player::respawn()
 	weapons[WEAPON_HAMMER].ammo = -1;
 	weapons[WEAPON_GUN].got = true;
 	weapons[WEAPON_GUN].ammo = 10;
+
+	// TEMP DEBUG
+	weapons[WEAPON_ROCKET_BACKPACK].got = true;
+	weapons[WEAPON_ROCKET_BACKPACK].ammo = 10;
+
 	active_weapon = WEAPON_GUN;
 	reload_timer = 0;
 	
@@ -620,7 +694,7 @@ void player::handle_weapons()
 						break;
 
 					case WEAPON_GUN:
-						new projectile(WEAPON_PROJECTILETYPE_GUN,
+						new projectile(projectile::WEAPON_PROJECTILETYPE_GUN,
 							client_id,
 							pos+vec2(0,0),
 							direction*30.0f,
@@ -630,7 +704,7 @@ void player::handle_weapons()
 						create_sound(pos, SOUND_GUN_FIRE);
 						break;
 					case WEAPON_ROCKET:
-						new projectile(WEAPON_PROJECTILETYPE_ROCKET,
+						new projectile(projectile::WEAPON_PROJECTILETYPE_ROCKET,
 							client_id,
 							pos+vec2(0,0),
 							direction*15.0f,
@@ -644,7 +718,7 @@ void player::handle_weapons()
 						{
 							float a = get_angle(direction);
 							a += i*0.075f;
-							new projectile(WEAPON_PROJECTILETYPE_SHOTGUN,
+							new projectile(projectile::WEAPON_PROJECTILETYPE_SHOTGUN,
 								client_id,
 								pos+vec2(0,0),
 								vec2(cosf(a), sinf(a))*25.0f,
@@ -655,6 +729,13 @@ void player::handle_weapons()
 						}
 						create_sound(pos, SOUND_SHOTGUN_FIRE);
 						break;
+					case WEAPON_ROCKET_BACKPACK:
+						new projectile_backpackrocket(
+							pos+vec2(0,0),
+							pos+vec2(input.target_x,input.target_y),
+							client_id,
+							this);
+						break;						
 				}
 				
 				weapons[active_weapon].ammo--;
@@ -662,10 +743,11 @@ void player::handle_weapons()
 			else
 			{
 				// click!!! click
+				// TODO: make sound here
 			}
 			
 			attack_tick = server_tick();
-			reload_timer = 10; // make this variable depending on weapon
+			reload_timer = 10; // TODO: make this variable depending on weapon
 		}
 	}
 }
@@ -685,7 +767,7 @@ void player::tick()
 	
 	// fetch some info
 	bool grounded = is_grounded();
-	direction = get_direction(input.angle);
+	direction = normalize(vec2(input.target_x, input.target_y));
 	
 	float max_speed = grounded ? ground_control_speed : air_control_speed;
 	float accel = grounded ? ground_control_accel : air_control_accel;
@@ -950,8 +1032,13 @@ void player::snap(int snaping_client)
 	player->hook_active = hook_state>0?1:0;
 	player->hook_x = (int)hook_pos.x;
 	player->hook_y = (int)hook_pos.y;
+
+	float a = atan((float)input.target_y/(float)input.target_x);
+	if(input.target_x < 0)
+		a = a+pi;
 		
-	player->angle = input.angle;
+	player->angle = (int)(a*256.0f);
+	
 	player->score = score;
 }
 
@@ -1079,15 +1166,17 @@ void create_explosion(vec2 p, int owner, int weapon, bool bnodamage)
 		// deal damage
 		entity *ents[64];
 		const float radius = 128.0f;
+		const float innerradius = 42.0f;
 		int num = world.find_entities(p, radius, ents, 64);
 		for(int i = 0; i < num; i++)
 		{
 			vec2 diff = ents[i]->pos - p;
 			vec2 forcedir(0,1);
-			if (length(diff))
-				forcedir = normalize(diff);
 			float l = length(diff);
-			float dmg = 5 * (1 - (l/radius));
+			if(l)
+				forcedir = normalize(diff);
+			l = 1-clamp((l-innerradius)/(radius-innerradius), 0.0f, 1.0f);
+			float dmg = 6 * l;
 			if((int)dmg)
 				ents[i]->take_damage(forcedir*dmg*2, (int)dmg, owner, weapon);
 		}

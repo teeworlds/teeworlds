@@ -15,6 +15,7 @@
 #include <engine/network.h>
 #include <engine/config.h>
 
+#include <mastersrv/mastersrv.h>
 
 namespace baselib {}
 using namespace baselib;
@@ -162,11 +163,14 @@ public:
 		//for(int i = 0; i < MAX_CLIENTS; i++)
 			//dbg_msg("network/server", "\t%d: %d", i, clients[i].state);
 
-		if (net_host_lookup(MASTER_SERVER_ADDRESS, MASTER_SERVER_PORT, &master_server) != 0)
+		if (net_host_lookup(MASTERSERVER_ADDRESS, MASTERSERVER_PORT, &master_server) != 0)
 		{
 			// TODO: fix me
 			//master_server = netaddr4(0, 0, 0, 0, 0);
 		}
+		
+		dbg_msg("server", "masterserver = %d.%d.%d.%d:%d",
+			master_server.ip[0], master_server.ip[1], master_server.ip[2], master_server.ip[3], master_server.port);
 
 		mods_init();
 
@@ -178,13 +182,15 @@ public:
 		lastheartbeat = 0;
 
 		int64 reporttime = time_get();
-		int64 reportinterval = time_freq()*3;
+		int reportinterval = 3;
+		//int64 reportinterval = time_freq()*3;
 
 		int64 simulationtime = 0;
 		int64 snaptime = 0;
 		int64 networktime = 0;
+		int64 totaltime = 0;
 
-		while(1)
+		while(true)
 		{
 			int64 t = time_get();
 			if(t-lasttick > time_per_tick)
@@ -204,23 +210,11 @@ public:
 				lasttick += time_per_tick;
 			}
 
-			if(send_heartbeats)
+			//if(send_heartbeats)
 			{
 				if (t > lastheartbeat+time_per_heartbeat)
 				{
-					if (master_server.port != 0)
-					{
-						int players = 0;
-
-						for (int i = 0; i < MAX_CLIENTS; i++)
-							if (!clients[i].is_empty())
-								players++;
-
-						// TODO: fix me
-						netaddr4 me(127, 0, 0, 0, 8303);
-						//send_heartbeat(0, &me, players, MAX_CLIENTS, server_name, mapname);
-					}
-
+					send_heartbeat();
 					lastheartbeat = t+time_per_heartbeat;
 				}
 			}
@@ -233,37 +227,21 @@ public:
 
 			if(reporttime < time_get())
 			{
-				int64 totaltime = simulationtime+snaptime+networktime;
 				dbg_msg("server/report", "sim=%.02fms snap=%.02fms net=%.02fms total=%.02fms load=%.02f%%",
-					simulationtime/(float)reportinterval*1000,
-					snaptime/(float)reportinterval*1000,
-					networktime/(float)reportinterval*1000,
-					totaltime/(float)reportinterval*1000,
-					(simulationtime+snaptime+networktime)/(float)reportinterval*100.0f);
-
-				unsigned sent_total=0, recv_total=0;
-				/*
-				for (int i = 0; i < MAX_CLIENTS; i++)
-					if (!clients[i].is_empty())
-					{
-						unsigned s,r;
-						clients[i].conn.counter_get(&s,&r);
-						clients[i].conn.counter_reset();
-						sent_total += s;
-						recv_total += r;
-					}
-				*/
-
-				dbg_msg("server/report", "biggestsnap=%d send=%d recv=%d",
-					biggest_snapshot, sent_total/3, recv_total/3);
+					(simulationtime/reportinterval)/(double)time_freq()*1000,
+					(snaptime/reportinterval)/(double)time_freq()*1000,
+					(networktime/reportinterval)/(double)time_freq()*1000,
+					(totaltime/reportinterval)/(double)time_freq()*1000,
+					(totaltime)/reportinterval/(double)time_freq()*100.0f);
 
 				simulationtime = 0;
 				snaptime = 0;
 				networktime = 0;
+				totaltime = 0;
 
-				reporttime += reportinterval;
+				reporttime += time_freq()*reportinterval;
 			}
-
+			totaltime += time_get()-t;
 			thread_sleep(1);
 		}
 
@@ -382,6 +360,18 @@ public:
 		msg_pack_end();
 		server_send_msg(cid);
 	}
+	
+	void send_heartbeat()
+	{
+		dbg_msg("server", "sending heartbeat");
+		NETPACKET packet;
+		packet.client_id = -1;
+		packet.address = master_server;
+		packet.flags = PACKETFLAG_CONNLESS;
+		packet.data_size = sizeof(SERVERBROWSE_HEARTBEAT);
+		packet.data = SERVERBROWSE_HEARTBEAT;
+		net.send(&packet);
+	}
 
 	void drop(int cid, const char *reason)
 	{
@@ -450,6 +440,27 @@ public:
 		drop(clientId, "client timedout");
 	}
 
+	void send_serverinfo(NETADDR4 *addr)
+	{
+		dbg_msg("server", "sending heartbeat");
+		NETPACKET packet;
+		
+		data_packer packer;
+		packer.reset();
+		packer.add_raw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
+		packer.add_string(server_name, 128);
+		packer.add_string(map_name, 128);
+		packer.add_int(8); // max_players
+		packer.add_int(0); // num_players
+		
+		packet.client_id = -1;
+		packet.address = *addr;
+		packet.flags = PACKETFLAG_CONNLESS;
+		packet.data_size = packer.size();
+		packet.data = packer.data();
+		net.send(&packet);
+	}
+
 	void pump_network()
 	{
 		net.update();
@@ -458,10 +469,16 @@ public:
 		NETPACKET packet;
 		while(net.recv(&packet))
 		{
-			
 			if(packet.client_id == -1)
 			{
 				// stateless
+				if(packet.data_size == sizeof(SERVERBROWSE_GETINFO) &&
+					memcmp(packet.data, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
+				{
+					dbg_msg("server", "info requested");
+					send_serverinfo(&packet.address);
+					
+				}
 			}
 			else
 				process_client_packet(&packet);

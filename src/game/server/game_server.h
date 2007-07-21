@@ -146,6 +146,10 @@ public:
 	enum
 	{
 		PROJECTILE_FLAGS_EXPLODE = 1 << 0,
+		
+		WEAPON_PROJECTILETYPE_GUN		= 0,
+		WEAPON_PROJECTILETYPE_ROCKET	= 1,
+		WEAPON_PROJECTILETYPE_SHOTGUN	= 2,
 	};
 	
 	baselib::vec2 vel;
@@ -166,18 +170,25 @@ public:
 	virtual void snap(int snapping_client);
 };
 
+class projectile_backpackrocket : public projectile
+{
+	int stage;
+	int start_tick;
+	int deply_ticks;
+	baselib::vec2 target;
+	baselib::vec2 start;
+	baselib::vec2 midpoint;
+	baselib::vec2 direction;
+public:
+	projectile_backpackrocket(baselib::vec2 pos, baselib::vec2 target, int owner, entity* powner);
+	virtual void tick();
+};
+
 // player entity
 class player : public entity
 {
 public:
 	static const int phys_size = 28;
-	
-	enum // what are these?
-	{
-		WEAPON_PROJECTILETYPE_GUN		= 0,
-		WEAPON_PROJECTILETYPE_ROCKET	= 1,
-		WEAPON_PROJECTILETYPE_SHOTGUN	= 2,
-	};
 	
 	// weapon info
 	struct weaponstat
