@@ -11,7 +11,7 @@ static const float NUM_FRAMES_STOP_INV = 1.0f/(float)NUM_FRAMES_STOP;
 static const int NUM_FRAMES_LERP = 512;
 static const float NUM_FRAMES_LERP_INV = 1.0f/(float)NUM_FRAMES_LERP;
 
-static const float GLOBAL_VOLUME_SCALE = 0.75f;
+static float GLOBAL_VOLUME_SCALE = 0.75f;
 
 static const int64 GLOBAL_SOUND_DELAY = 1000;
 
@@ -209,6 +209,21 @@ bool snd_shutdown()
 {
 	mixer.destroy();
 	return true;
+}
+
+float snd_get_master_volume()
+{
+	return GLOBAL_VOLUME_SCALE;
+}
+
+void snd_set_master_volume(float val)
+{
+	if(val < 0.0f)
+		val = 0.0f;
+	else if(val > 1.0f)
+		val = 1.0f;
+
+	GLOBAL_VOLUME_SCALE = val;
 }
 
 static int snd_alloc_sound()

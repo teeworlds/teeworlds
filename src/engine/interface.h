@@ -319,6 +319,8 @@ enum
 };
 	
 bool snd_init();
+float snd_get_master_volume();
+void snd_set_master_volume(float val);
 int snd_load_wav(const char *filename);
 int snd_play(int sound, int loop = SND_PLAY_ONCE, float vol = 1.0f, float pan = 0.0f);
 void snd_stop(int id);
