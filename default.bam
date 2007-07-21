@@ -95,9 +95,9 @@ config_name = "debug"
 config_ext = ""
 
 settings = NewSettings()
-settings.cc.output = function(input, extention)
-	return Path("objs/" .. PathFilename(input) .. config_ext .. extention)
-end
+--settings.cc.output = function(input, extention)
+--	return Path("objs/" .. PathFilename(input) .. config_ext .. extention)
+--end
 
 baselib_options = {}
 baselib_options.settings = settings
