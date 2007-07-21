@@ -447,7 +447,61 @@ int ui_do_check_box(void *id, float x, float y, float w, float h, int value)
 	return r;
 }
 
-int do_scroll_bar(void *id, float x, float y, float height, int steps, int last_index)
+int do_scroll_bar_horiz(void *id, float x, float y, float width, int steps, int last_index)
+{
+	int r = last_index;
+
+	static int up_button;
+	static int down_button;
+
+    if (ui_do_button(&up_button, "", 0, x, y + 8, 16, 16, draw_single_part_button, (void *)GUI_MISC_SLIDER_BIG_ARROW_LEFT))
+	{
+		if (r > 0)
+			--r;
+	}
+    if (ui_do_button(&down_button, "", 0, x + width - 16, y + 8, 16, 16, draw_single_part_button, (void *)GUI_MISC_SLIDER_BIG_ARROW_RIGHT))
+	{
+		if (r < steps)
+			++r;
+	}
+	if (steps > 0) // only if there's actually stuff to scroll through
+	{
+		int inside = ui_mouse_inside(x + 16, y, width - 32, 32);
+        if (inside && (!ui_active_item() || ui_active_item() == id))
+			ui_set_hot_item(id);
+
+		if(ui_active_item() == id)
+		{
+			if (ui_mouse_button(0))
+			{
+				float pos = ui_mouse_x() - x - 16;
+				float perc = pos / (width - 32);
+
+				r = (int)((steps + 1) * perc);
+				if (r < 0)
+					r = 0;
+				else if (r > steps)
+					r = steps;
+			}
+			else
+				ui_set_active_item(0);
+		}
+		else if (ui_hot_item() == id && ui_mouse_button(0))
+			ui_set_active_item(id);
+		else if (inside && (!ui_active_item() || ui_active_item() == id))
+			ui_set_hot_item(id);
+	}
+
+	draw_part(GUI_MISC_SLIDER_BIG_HORIZ_BEGIN, tileset_regular, x + 16, y + 8, 16, 16);
+	draw_part(GUI_MISC_SLIDER_BIG_HORIZ_MID, tileset_regular, x + 32, y + 8, width - 32 - 32, 16);
+	draw_part(GUI_MISC_SLIDER_BIG_HORIZ_END, tileset_regular, x + width - 32, y + 8, 16, 16);
+
+	draw_part(GUI_MISC_SLIDER_BIG_HANDLE_VERT, tileset_regular, x + 16 + r * ((width - 48) / steps), y, 16, 32);
+
+	return r;
+}
+
+int do_scroll_bar_vert(void *id, float x, float y, float height, int steps, int last_index)
 {
 	int r = last_index;
 
@@ -474,7 +528,7 @@ int do_scroll_bar(void *id, float x, float y, float height, int steps, int last_
 		{
 			if (ui_mouse_button(0))
 			{
-				float pos = ui_mouse_y() - y - 16;
+				float pos = ui_mouse_y() - y - 32;
 				float perc = pos / (height - 32);
 
 				r = (int)((steps + 1) * perc);
@@ -496,7 +550,7 @@ int do_scroll_bar(void *id, float x, float y, float height, int steps, int last_
 	draw_part(GUI_MISC_SLIDER_BIG_VERT_MID, tileset_regular, x + 8, y + 32, 16, height - 32 - 32);
 	draw_part(GUI_MISC_SLIDER_BIG_VERT_END, tileset_regular, x + 8, y + height - 32, 16, 16);
 
-	draw_part(GUI_MISC_SLIDER_BIG_HANDLE_HORIZ, tileset_regular, x, y + 16 + r * ((height - 64) / steps), 32, 16);
+	draw_part(GUI_MISC_SLIDER_BIG_HANDLE_HORIZ, tileset_regular, x, y + 16 + r * ((height - 48) / steps), 32, 16);
 
 	return r;
 }
@@ -537,7 +591,7 @@ static int do_server_list(server_list *list, float x, float y, int visible_items
 		}
 	}
 
-	list->scroll_index = do_scroll_bar(&list->scroll_index, x + real_width - 16, y, real_height, list->active_count - visible_items, list->scroll_index);
+	list->scroll_index = do_scroll_bar_vert(&list->scroll_index, x + real_width - 16, y, real_height, list->active_count - visible_items, list->scroll_index);
 	
 	return r;
 }
@@ -676,11 +730,12 @@ static int screen = SCREEN_MAIN;
 static configuration config_copy;
 
 const float column1_x = 250;
-const float column2_x = column1_x + 150;
+const float column2_x = column1_x + 170;
 const float column3_x = column2_x + 170;
 const float row1_y = 180;
 const float row2_y = row1_y + 40;
 const float row3_y = row2_y + 40;
+const float row4_y = row3_y + 40;
 
 static int main_render(netaddr4 *server_address)
 {
@@ -840,7 +895,7 @@ static int settings_video_render()
 	ui_do_label(column1_x, row2_y, "Resolution:", 36);
 	selected_index = ui_do_combo_box(&selected_index, column2_x, row2_y, 170, (char *)resolution_names[depth_index], resolution_count[depth_index], selected_index);
 
-	ui_do_label(column1_x, row1_y, "Bits:", 36);
+	ui_do_label(column1_x, row1_y, "Color Depth:", 36);
 	depth_index = ui_do_combo_box(&depth_index, column2_x, row1_y, 64, (char *)bit_labels, 2, depth_index);
 	
 
@@ -853,6 +908,10 @@ static int settings_video_render()
 
 static int settings_sound_render()
 {
+	ui_do_label(column1_x, row1_y, "Volume:", 36);
+	
+	config_set_volume(&config_copy, do_scroll_bar_horiz(&config_copy.volume, column2_x, row1_y, 200, 255, config_copy.volume));
+
 	return 0;
 }
 
@@ -881,6 +940,7 @@ static int settings_render()
 	static int save_button;
 	if (ui_do_button(&save_button, "Save", 0, 482, 490, 128, 48, draw_teewars_button))
 	{
+		snd_set_master_volume(config_copy.volume / 255.0f);
 		config = config_copy;
 		config_save("teewars.cfg");
 		screen = SCREEN_MAIN;

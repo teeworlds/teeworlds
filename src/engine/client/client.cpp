@@ -636,6 +636,8 @@ int main(int argc, char **argv)
 	config_reset();
 	config_load("teewars.cfg");
 
+	snd_set_master_volume(config.volume / 255.0f);
+
 	netaddr4 server_address(127, 0, 0, 1, 8303);
 	//const char *name = "nameless jerk";
 	bool connect_at_once = false;
