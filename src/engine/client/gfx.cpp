@@ -33,8 +33,6 @@ static vec2 g_QuadTexture[4];
 static opengl::vertex_buffer vertex_buffer;
 //static int screen_width = 800;
 //static int screen_height = 600;
-static int screen_width = 1024;
-static int screen_height = 768;
 static float rotation = 0;
 static int quads_drawing = 0;
 
@@ -103,9 +101,9 @@ static void draw_quad(bool _bflush = false)
 	}
 }
 	
-bool gfx_init(bool fullscreen)
+bool gfx_init()
 {
-	if(!context.create(config.screen_width, config.screen_height, 24, 8, 16, 0, fullscreen?opengl::context::FLAG_FULLSCREEN:0))
+	if(!context.create(config.screen_width, config.screen_height, 24, 8, 16, 0, config.fullscreen?opengl::context::FLAG_FULLSCREEN:0))
 	{
 		dbg_msg("game", "failed to create gl context");
 		return false;
@@ -124,7 +122,7 @@ bool gfx_init(bool fullscreen)
 											  context.version_minor(),
 											  context.version_rev());*/
 
-	gfx_mapscreen(0,0,screen_width, screen_height);
+	gfx_mapscreen(0,0,config.screen_width, config.screen_height);
 	
 	// TODO: make wrappers for this
 	glEnable(GL_BLEND);
@@ -347,12 +345,12 @@ void gfx_swap()
 
 int gfx_screenwidth()
 {
-	return screen_width;
+	return config.screen_width;
 }
 
 int gfx_screenheight()
 {
-	return screen_height;
+	return config.screen_height;
 }
 
 void gfx_texture_set(int slot)

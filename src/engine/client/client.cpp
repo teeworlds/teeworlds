@@ -173,8 +173,6 @@ public:
 	// data to hold three snapshots
 	// previous, 
 
-	bool fullscreen;
-
 	enum
 	{
 		STATE_OFFLINE,
@@ -193,8 +191,6 @@ public:
 		state = s;
 	}
 
-	void set_fullscreen(bool flag) { fullscreen = flag; }
-	
 	void send_info()
 	{
 		recived_snapshots = 0;
@@ -342,7 +338,7 @@ public:
 		snapshot_part = 0;
 		
 		// init graphics and sound
-		if(!gfx_init(fullscreen))
+		if(!gfx_init())
 			return;
 
 		snd_init(); // sound is allowed to fail
@@ -643,7 +639,6 @@ int main(int argc, char **argv)
 	netaddr4 server_address(127, 0, 0, 1, 8303);
 	//const char *name = "nameless jerk";
 	bool connect_at_once = false;
-	bool fullscreen = true;
 	bool editor = false;
 
 	// init network, need to be done first so we can do lookups
@@ -684,7 +679,7 @@ int main(int argc, char **argv)
 		else if(argv[i][0] == '-' && argv[i][1] == 'w' && argv[i][2] == 0)
 		{
 			// -w
-			fullscreen = false;
+			config.fullscreen = 0;
 		}
 		else if(argv[i][0] == '-' && argv[i][1] == 'e' && argv[i][2] == 0)
 		{
@@ -698,7 +693,6 @@ int main(int argc, char **argv)
 	{
 		// start the client
 		client c;
-		c.set_fullscreen(fullscreen);
 		c.run(connect_at_once ? &server_address : 0x0);
 	}
 	return 0;

@@ -305,6 +305,27 @@ int ui_do_combo_box(void *id, float x, float y, float w, char *lines, int line_c
 
 	if (ui_active_item() == id)
 	{
+		if (!ui_mouse_button(0))
+		{
+			ui_set_active_item(0);
+
+			if (inside)
+				selected_index = hover_index;
+		}
+	}
+	else if(ui_hot_item() == id)
+	{
+		if (ui_mouse_button(0))
+			ui_set_active_item(id);
+	}
+
+	if (inside)
+	{
+		ui_set_hot_item(id);
+	}
+
+	if (ui_active_item() == id)
+	{
 		for (int i = 0; i < line_count; i++)
 		{
 			int box_type;
@@ -318,22 +339,12 @@ int ui_do_combo_box(void *id, float x, float y, float w, char *lines, int line_c
 			if (selected_index == i)
 				ui_do_label(x + 10, y + i * line_height, "-", 36);
 		}
-
-		if (!ui_mouse_button(0))
-		{
-			ui_set_active_item(0);
-
-			if (inside)
-				selected_index = hover_index;
-		}
 	}
 	else
 	{
 		draw_box(GUI_BOX_SCREEN_LIST, tileset_regular, x, y, w, line_height);
 		ui_do_label(x + 10, y, lines + 128 * selected_index, 36);
 
-		if (inside && ui_mouse_button(0))
-			ui_set_active_item(id);
 	}
 
 	return selected_index;
@@ -364,6 +375,9 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 			if (len > 0)
 				str[len-1] = 0;
 		}
+		else if (k == input::enter)
+			ui_clear_last_active_item();
+
 		r = 1;
 	}
 	
@@ -390,6 +404,45 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 		float w = gfx_pretty_text_width(36.0f, str);
 		ui_do_label(x + 10 + w, y, "_", 36);
 	}
+
+	return r;
+}
+
+int ui_do_check_box(void *id, float x, float y, float w, float h, int value)
+{
+    int inside = ui_mouse_inside(x, y, w, h);
+	int r = value;
+
+	if(ui_active_item() == id)
+	{
+		if(!ui_mouse_button(0))
+		{
+			ui_set_active_item(0);
+			r = r ? 0 : 1;
+		}
+	}
+	else if(ui_hot_item() == id)
+	{
+		if(ui_mouse_button(0))
+			ui_set_active_item(id);
+	}
+	
+	if(inside)
+		ui_set_hot_item(id);
+
+	// render
+	gui_tileset_enum tileset;
+	int part_type;
+	if (ui_active_item() == id)
+		tileset = tileset_active;
+	else if (ui_hot_item() == id)
+		tileset = tileset_hot;
+	else
+		tileset = tileset_regular;
+
+	part_type = r ? GUI_MISC_RADIO_CHECKED : GUI_MISC_RADIO_UNCHECKED;
+	
+	draw_part(part_type, tileset, x, y, w, h);
 
 	return r;
 }
@@ -688,8 +741,6 @@ static int main_render(netaddr4 *server_address)
 
 static int settings_general_render()
 {
-	//ui_do_label(100, 150, "General", 36);
-	
 	// NAME
 	ui_do_label(column1_x, row1_y, "Name:", 36);
 	ui_do_edit_box(config_copy.player_name, column2_x, row1_y, 300, 36, config_copy.player_name, sizeof(config_copy.player_name));
@@ -757,13 +808,13 @@ static int settings_video_render()
 		inited = true;
 	}
 
-	static int depth_index = 0;
+	int depth_index = (config_copy.color_depth == 16) ? 0 : 1;
 	static int selected_index = -1;
 	if (selected_index == -1)
 	{
 		for (int i = 0; i < resolution_count[depth_index]; i++)
 		{
-			if (config.screen_width == resolutions[depth_index][i][0])
+			if (config_copy.screen_width == resolutions[depth_index][i][0])
 			{
 				selected_index = i;
 				break;
@@ -777,19 +828,23 @@ static int settings_video_render()
 	static char bit_labels[][128] =
 	{
 		"16",
-		"32"
+		"24"
 	};
 
 	// we need to draw these bottom up, to make overlapping work correctly
+	ui_do_label(column1_x, row3_y + 50, "(A restart of the game is required for these settings to take effect.)", 20);
+
+	ui_do_label(column1_x, row3_y, "Fullscreen:", 36);
+	config_set_fullscreen(&config_copy, ui_do_check_box(&config_copy.fullscreen, column2_x, row3_y + 5, 32, 32, config_copy.fullscreen));
+
 	ui_do_label(column1_x, row2_y, "Resolution:", 36);
-	selected_index = ui_do_combo_box(&selected_index, column2_x, row2_y, 180, (char *)resolution_names[depth_index], resolution_count[depth_index], selected_index);
+	selected_index = ui_do_combo_box(&selected_index, column2_x, row2_y, 170, (char *)resolution_names[depth_index], resolution_count[depth_index], selected_index);
 
 	ui_do_label(column1_x, row1_y, "Bits:", 36);
-	depth_index = ui_do_combo_box(&depth_index, column2_x, row1_y, 110, (char *)bit_labels, 2, depth_index);
-	ui_do_label(column1_x, row3_y, "Fullscreen:", 36);
+	depth_index = ui_do_combo_box(&depth_index, column2_x, row1_y, 64, (char *)bit_labels, 2, depth_index);
+	
 
-	ui_do_label(column1_x, row3_y + 200, "(A restart of the game is required for these settings to take effect.)", 16);
-
+	config_set_color_depth(&config_copy, (depth_index == 0) ? 16 : 24);
 	config_set_screen_width(&config_copy, resolutions[depth_index][selected_index][0]);
 	config_set_screen_height(&config_copy, resolutions[depth_index][selected_index][1]);
 

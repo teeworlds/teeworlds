@@ -57,7 +57,7 @@ int gfx_load_png(image_info *img, const char *filename);
 */
 
 // graphics
-bool gfx_init(bool fullscreen); // NOT EXPOSED
+bool gfx_init(); // NOT EXPOSED
 void gfx_shutdown(); // NOT EXPOSED
 void gfx_swap(); // NOT EXPOSED
 

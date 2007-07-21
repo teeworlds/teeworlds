@@ -32,7 +32,8 @@ float ui_mouse_world_y() { return mouse_wy; }
 int ui_mouse_button(int index) { return (mouse_buttons>>index)&1; }
 
 void ui_set_hot_item(void *id) { becomming_hot_item = id; }
-void ui_set_active_item(void *id) { active_item = id; last_active_item = id; }
+void ui_set_active_item(void *id) { active_item = id; if (id) last_active_item = id; }
+void ui_clear_last_active_item() { last_active_item = 0; }
 void *ui_hot_item() { return hot_item; }
 void *ui_active_item() { return active_item; }
 void *ui_last_active_item() { return last_active_item; }

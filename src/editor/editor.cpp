@@ -1225,7 +1225,7 @@ int editor_main(int argc, char **argv)
 		return -1;
 	}
 	
-	if(!gfx_init(false))
+	if(!gfx_init())
 		return -1;
 	
 	modmenu_init();

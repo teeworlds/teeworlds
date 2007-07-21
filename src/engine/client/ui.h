@@ -18,6 +18,7 @@ int ui_mouse_button(int index);
 
 void ui_set_hot_item(void *id);
 void ui_set_active_item(void *id);
+void ui_clear_last_active_item();
 void *ui_hot_item();
 void *ui_active_item();
 void *ui_last_active_item();
