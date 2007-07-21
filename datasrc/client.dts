@@ -40,6 +40,12 @@ struct spriteptr {
 	ptr:sprite psprite = @0
 }
 
+struct projectileparticles {
+	int particlespersecond = particlespersecond@1
+	float particlesize = particlesize@1
+	float particlelife = particlelife@1
+}
+
 struct weapon {
 	ptr:sprite sprite_body = sprite_body@1
 	ptr:sprite sprite_cursor = sprite_cursor@1
@@ -100,6 +106,7 @@ struct data_container {
 	array:sprite sprites = sprites.*.*
 	array:weapon weapons = weapons.*
 	array:particleinfo particles = particles.*
+	array:projectileparticles projectileparticles = projectileparticles.*
 
 	array:soundset sounds = sounds.*
 	array:animation animations = animations.*

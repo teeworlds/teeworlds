@@ -208,12 +208,21 @@ playerstats {
 	}
 }
 
-modifiers {
-	ninja {
-		sprite_body sprites.weapons.weapon_ninja_body
-		sprite_cursor sprites.weapons.weapon_ninja_cursor
-
-		movetime 200
+projectileparticles {
+	gun {
+		particlespersecond 200
+		particlesize 16.0
+		particlelife 0.5
+	}
+	rocket {
+		particlespersecond 100
+		particlesize 22.0
+		particlelife 1.3
+	}
+	shotgun {
+		particlespersecond 100
+		particlesize 16.0
+		particlelife 0.8
 	}
 }
 
