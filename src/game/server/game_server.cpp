@@ -343,7 +343,7 @@ game_world world;
 gameobject::gameobject()
 : entity(OBJTYPE_GAME)
 {
-	gametype = GAMETYPE_DM;
+	gametype = GAMETYPE_TDM;
 	game_over_tick = -1;
 	sudden_death = 0;
 	round_start_tick = server_tick();
@@ -431,6 +431,7 @@ void gameobject::snap(int snapping_client)
 	game->score_limit = config.scorelimit;
 	game->time_limit = config.timelimit;
 	game->round_start_tick = round_start_tick;
+	game->gametype = gametype;
 }
 
 gameobject gameobj;
@@ -596,6 +597,7 @@ void player::reset()
 	vel = vec2(0.0f, 0.0f);
 	direction = vec2(0.0f, 1.0f);
 	score = 0;
+	team = 0;
 	dead = true;
 	die_tick = 0;
 }
@@ -1244,6 +1246,7 @@ void player::snap(int snaping_client)
 	player->angle = (int)(a*256.0f);
 	
 	player->score = score;
+	player->team = team;
 }
 
 player players[MAX_CLIENTS];

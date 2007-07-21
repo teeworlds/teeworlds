@@ -239,6 +239,7 @@ public:
 	int currentmovetime;
 
 	int score;
+	int team;
 	
 	bool dead;
 	int die_tick;

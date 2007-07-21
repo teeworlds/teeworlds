@@ -112,6 +112,7 @@ struct obj_game
 	
 	int score_limit;
 	int time_limit;
+	int gametype;
 };
 
 struct obj_projectile
@@ -150,6 +151,7 @@ struct obj_player
 	
 	int hook_active;
 	int hook_x, hook_y;
+	int team;
 };
 
 enum

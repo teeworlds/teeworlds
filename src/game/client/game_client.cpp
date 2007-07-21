@@ -354,13 +354,13 @@ public:
 
 	void addparticle(int projectiletype, int projectileid, vec2 pos, vec2 vel)
 	{
-		int particlespersecond = data->projectileparticles[projectiletype].particlespersecond;
+		int particlespersecond = data->projectileinfo[projectiletype].particlespersecond;
 		int lastaddtick = lastadd[projectileid % LISTSIZE];
 		if ((client_tick() - lastaddtick) > (client_tickspeed() / particlespersecond))
 		{
 			lastadd[projectileid % LISTSIZE] = client_tick();
-			float life = data->projectileparticles[projectiletype].particlelife;
-			float size = data->projectileparticles[projectiletype].particlesize;
+			float life = data->projectileinfo[projectiletype].particlelife;
+			float size = data->projectileinfo[projectiletype].particlesize;
 			vec2 v = vel * 0.2f + normalize(vec2(frandom()-0.5f, -frandom()))*(32.0f+frandom()*32.0f);
 			
 			// add the particle (from projectiletype later on, but meh...)
@@ -1339,52 +1339,137 @@ void modc_render()
 	{
 		gfx_mapscreen(0, 0, width, height);
 
-		float x = 50.0f;
-		float y = 150.0f;
+		if (gameobj->gametype == GAMETYPE_DM)
+		{
+			// Normal deathmatch
 
-		gfx_blend_normal();
-		
-		gfx_texture_set(-1);
-		gfx_quads_begin();
-		gfx_quads_setcolor(0,0,0,0.5f);
-		gfx_quads_drawTL(x-10.f, y-10.f, 400.0f, 600.0f);
-		gfx_quads_end();
-		
-		gfx_pretty_text(x, y, 64, "Score Board");
-		y += 64.0f;
-		if(gameobj && gameobj->time_limit)
-		{
-			char buf[64];
-			sprintf(buf, "Time Limit: %d min", gameobj->time_limit);
-			gfx_pretty_text(x, y, 32, buf);
-			y += 32.0f;
-		}
-		if(gameobj && gameobj->score_limit)
-		{
-			char buf[64];
-			sprintf(buf, "Score Limit: %d", gameobj->score_limit);
-			gfx_pretty_text(x, y, 32, buf);
-			y += 32.0f;
-		}
-		
-		int num = snap_num_items(SNAP_CURRENT);
-		for(int i = 0; i < num; i++)
-		{
-			snap_item item;
-			void *data = snap_get_item(SNAP_CURRENT, i, &item);
+			float x = 50.0f;
+			float y = 150.0f;
+
+			gfx_blend_normal();
 			
-			if(item.type == OBJTYPE_PLAYER)
+			gfx_texture_set(-1);
+			gfx_quads_begin();
+			gfx_quads_setcolor(0,0,0,0.5f);
+			gfx_quads_drawTL(x-10.f, y-10.f, 400.0f, 600.0f);
+			gfx_quads_end();
+			
+			gfx_pretty_text(x, y, 64, "Score Board");
+			y += 64.0f;
+			if(gameobj && gameobj->time_limit)
 			{
-				obj_player *player = (obj_player *)data;
-				if(player)
+				char buf[64];
+				sprintf(buf, "Time Limit: %d min", gameobj->time_limit);
+				gfx_pretty_text(x, y, 32, buf);
+				y += 32.0f;
+			}
+			if(gameobj && gameobj->score_limit)
+			{
+				char buf[64];
+				sprintf(buf, "Score Limit: %d", gameobj->score_limit);
+				gfx_pretty_text(x, y, 32, buf);
+				y += 32.0f;
+			}
+			
+			int num = snap_num_items(SNAP_CURRENT);
+			for(int i = 0; i < num; i++)
+			{
+				snap_item item;
+				void *data = snap_get_item(SNAP_CURRENT, i, &item);
+				
+				if(item.type == OBJTYPE_PLAYER)
 				{
-					char buf[128];
-					sprintf(buf, "%4d", player->score);
-					gfx_pretty_text(x+60-gfx_pretty_text_width(48,buf), y, 48, buf);
-					gfx_pretty_text(x+128, y, 48, client_datas[player->clientid].name);
+					obj_player *player = (obj_player *)data;
+					if(player)
+					{
+						char buf[128];
+						sprintf(buf, "%4d", player->score);
+						gfx_pretty_text(x+60-gfx_pretty_text_width(48,buf), y, 48, buf);
+						gfx_pretty_text(x+128, y, 48, client_datas[player->clientid].name);
 
-					render_tee(&idlestate, player->clientid, vec2(1,0), vec2(x+90, y+24));
-					y += 58.0f;
+						render_tee(&idlestate, player->clientid, vec2(1,0), vec2(x+90, y+24));
+						y += 58.0f;
+					}
+				}
+			}
+		}
+		else if (gameobj->gametype == GAMETYPE_TDM)
+		{
+			// Team deathmatch
+			gfx_blend_normal();
+			
+			float x = 50.0f;
+			float y = 150.0f;
+			
+			gfx_texture_set(-1);
+			gfx_quads_begin();
+			gfx_quads_setcolor(0,0,0,0.5f);
+			gfx_quads_drawTL(x-10.f, y-10.f, 800.0f, 600.0f);
+			gfx_quads_end();
+
+			gfx_pretty_text(x, y, 64, "Score Board");
+			if(gameobj && gameobj->time_limit)
+			{
+				char buf[64];
+				sprintf(buf, "Time Limit: %d min", gameobj->time_limit);
+				gfx_pretty_text(x + 400, y + 25, 32, buf);
+			}
+			if(gameobj && gameobj->score_limit)
+			{
+				char buf[64];
+				sprintf(buf, "Score Limit: %d", gameobj->score_limit);
+				gfx_pretty_text(x + 400, y + 25, 32, buf);
+			}
+			y += 64.0f;
+
+			// Calculate team scores
+			int teamscore[2];
+			teamscore[0] = 0;
+			teamscore[1] = 0;
+			int num = snap_num_items(SNAP_CURRENT);
+			for(int i = 0; i < num; i++)
+			{
+				snap_item item;
+				void *data = snap_get_item(SNAP_CURRENT, i, &item);
+				
+				if(item.type == OBJTYPE_PLAYER)
+				{
+					obj_player *player = (obj_player *)data;
+					if(player && player->team >= 0 && player->team < 2)
+					{
+						teamscore[player->team] += player->score;
+					}
+				}
+			}
+
+			char buf[128];
+			gfx_pretty_text(x, y, 40, "Team A - ");
+			sprintf(buf, "%4d", teamscore[0]);
+			gfx_pretty_text(x + 110, y, 40, buf);
+
+			gfx_pretty_text(x + 400, y, 40, "Team B - ");
+			sprintf(buf, "%4d", teamscore[1]);
+			gfx_pretty_text(x + 510, y, 40, buf);
+
+			y += 50.0f;
+
+			for(int i = 0; i < num; i++)
+			{
+				snap_item item;
+				void *data = snap_get_item(SNAP_CURRENT, i, &item);
+				
+				if(item.type == OBJTYPE_PLAYER)
+				{
+					obj_player *player = (obj_player *)data;
+					if(player)
+					{
+						sprintf(buf, "%4d", player->score);
+						gfx_pretty_text(x+60-gfx_pretty_text_width(48,buf), y, 48, buf);
+						gfx_pretty_text(x+128, y, 48, client_datas[player->clientid].name);
+
+						render_tee(&idlestate, player->clientid, vec2(1,0), vec2(x+90, y+24));
+						y += 58.0f;
+					}
 				}
 			}
 		}
