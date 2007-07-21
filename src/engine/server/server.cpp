@@ -102,6 +102,8 @@ int server_send_msg(int client_id)
 {
 	const msg_info *info = msg_get_info();
 	NETPACKET packet;
+	mem_zero(&packet, sizeof(NETPACKET));
+	
 	packet.client_id = client_id;
 	packet.data = info->data;
 	packet.data_size = info->size;

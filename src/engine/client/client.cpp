@@ -147,6 +147,8 @@ int client_send_msg()
 {
 	const msg_info *info = msg_get_info();
 	NETPACKET packet;
+	mem_zero(&packet, sizeof(NETPACKET));
+	
 	packet.client_id = 0;
 	packet.data = info->data;
 	packet.data_size = info->size;
