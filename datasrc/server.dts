@@ -1,5 +1,24 @@
+struct weapon {
+	int firedelay = firedelay@1
+	int meleedamage = meleedamage@1
+	int meleereach = meleereach@1
+	int ammoregentime = ammoregentime@1
+	int maxammo = maxammo@1
+	int duration = duration@1
+	int movetime = movetime@1
+	int velocity = velocity@1
+}
+
+struct playerstats {
+	int maxhealth = maxhealth@1
+	int maxarmor = maxarmor@1
+}
+
 struct data_container {
+	array:weapon weapons = weapons.*
+	array:playerstats playerinfo = playerstats.*
 }
 
 const array:int sound = sounds.*
 const array:int weapon = weapons.*
+const array:int gametype = playerstats.*

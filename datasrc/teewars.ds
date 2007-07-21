@@ -197,56 +197,179 @@ particles {
 	}
 }
 
+playerstats {
+	dm {
+		maxhealth 10
+		maxarmor 10
+	}
+	tdm {
+		maxhealth 10
+		maxarmor 10
+	}
+}
+
+modifiers {
+	ninja {
+		sprite_body sprites.weapons.weapon_ninja_body
+		sprite_cursor sprites.weapons.weapon_ninja_cursor
+
+		movetime 200
+	}
+}
 
 weapons {
 	gun {
 		sprite_body sprites.weapons.weapon_gun_body
 		sprite_cursor sprites.weapons.weapon_gun_cursor
 		sprite_proj sprites.weapons.weapon_gun_proj
+		sprite_muzzles {
+			sprites.weapons.weapon_gun_muzzle1
+			sprites.weapons.weapon_gun_muzzle2
+			sprites.weapons.weapon_gun_muzzle3
+		}
 
+		nummuzzlesprites 3
+		muzzleoffsetx 50.0
+		muzzleoffsety 6.0
+		maxammo 5
 		recoil 10
-		reloadtime 100
+		firedelay 100
+		muzzleduration 5
 		visual_size 64
+		offsetx 32.0
+		offsety 4.0
+		meleedamage 0
+		meleereach 0
+		ammoregentime 1000
+		duration -1
+		movetime 0
+		velocity 0
 	}
 	
 	rocket {
 		sprite_body sprites.weapons.weapon_rocket_body
 		sprite_cursor sprites.weapons.weapon_rocket_cursor
 		sprite_proj sprites.weapons.weapon_rocket_proj
+		sprite_muzzles {
+		}
 		
+		nummuzzlesprites 0
+		muzzleoffsetx 0.0
+		muzzleoffsety 0.0
+		maxammo 10
 		recoil 10
-		reloadtime 600
+		firedelay 600
+		muzzleduration 0
 		visual_size 96
+		offsetx 24.0
+		offsety -2.0
+		meleedamage 0
+		meleereach 0
+		ammoregentime 0
+		duration -1
+		movetime 0
+		velocity 0
 	}
 	
 	shotgun {
 		sprite_body sprites.weapons.weapon_shotgun_body
 		sprite_cursor sprites.weapons.weapon_shotgun_cursor
 		sprite_proj sprites.weapons.weapon_shotgun_proj
+		sprite_muzzles {
+			sprites.weapons.weapon_shotgun_muzzle1
+			sprites.weapons.weapon_shotgun_muzzle2
+			sprites.weapons.weapon_shotgun_muzzle3
+		}
 		
+		nummuzzlesprites 3
+		muzzleoffsetx 70.0
+		muzzleoffsety 6.0
+		maxammo 10
 		recoil 10
-		reloadtime 800
+		firedelay 800
+		muzzleduration 5
 		visual_size 96
+		offsetx 24.0
+		offsety -2.0
+		meleedamage 0
+		meleereach 0
+		ammoregentime 0
+		duration -1
+		movetime 0
+		velocity 0
 	}
 	
 	hammer {
 		sprite_body sprites.weapons.weapon_hammer_body
 		sprite_cursor sprites.weapons.weapon_hammer_cursor
 		sprite_proj sprites.weapons.weapon_hammer_proj
+		sprite_muzzles {
+		}
 		
+		nummuzzlesprites 0
+		muzzleoffsetx 0.0
+		muzzleoffsety 0.0
+		maxammo 10
 		recoil 10
-		reloadtime 100
+		firedelay 300
+		muzzleduration 0
 		visual_size 96
+		offsetx 4.0
+		offsety -20.0
+		meleedamage 1
+		meleereach 25
+		ammoregentime 0
+		duration -1
+		movetime 0
+		velocity 0
 	}
-	
 	rocket_backpack {
 		sprite_body sprites.weapons.weapon_hammer_body
 		sprite_cursor sprites.weapons.weapon_hammer_cursor
 		sprite_proj sprites.weapons.weapon_hammer_proj
+		sprite_muzzles {
+		}
 		
+		nummuzzlesprites 0
+		muzzleoffsetx 0.0
+		muzzleoffsety 0.0
+		maxammo 10
 		recoil 10
-		reloadtime 100
+		firedelay 100
+		muzzleduration 0
 		visual_size 64
+		offsetx 4.0
+		offsety -20.0
+		meleedamage 1
+		meleereach 25
+		ammoregentime 0
+		duration -1
+		movetime 0
+		velocity 0
+	}
+	ninja {
+		sprite_body sprites.weapons.weapon_ninja_body
+		sprite_cursor sprites.weapons.weapon_ninja_cursor
+		sprite_proj sprites.weapons.weapon_ninja_proj
+		sprite_muzzles {
+		}
+		
+		nummuzzlesprites 0
+		muzzleoffsetx 0.0
+		muzzleoffsety 0.0
+		maxammo 0
+		recoil 0
+		firedelay 1000
+		muzzleduration 0
+		visual_size 96
+		offsetx 0.0
+		offsety 0.0
+		meleedamage 1
+		meleereach 0
+		ammoregentime 0
+		duration 15000
+		movetime 200
+		velocity 50
 	}
 }
 	
@@ -420,6 +543,25 @@ animations {
 			0.4 0 0 0.30
 			0.5 0 0 0.25
 			1.0 0 0 -0.10
+		}
+	}	
+	ninja_swing {
+		body {
+		}
+		
+		front_foot {
+		}
+	
+		back_foot {
+		}
+		
+		attach {
+			0.0 0 0 -0.25
+			0.1 0 0 -0.05
+			0.15 0 0 0.35
+			0.42 0 0 0.4
+			0.5 0 0 0.35
+			1.0 0 0 -0.25
 		}
 	}	
 }

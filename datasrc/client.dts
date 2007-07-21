@@ -36,12 +36,24 @@ struct particleinfo {
 	int lifemod = life@1
 }
 
+struct spriteptr {
+	ptr:sprite psprite = @0
+}
+
 struct weapon {
 	ptr:sprite sprite_body = sprite_body@1
 	ptr:sprite sprite_cursor = sprite_cursor@1
 	ptr:sprite sprite_proj = sprite_proj@1
+	array:spriteptr sprite_muzzle = sprite_muzzles.*
+	
+	int nummuzzlesprites = nummuzzlesprites@1
 	int recoil = recoil@1
 	int visual_size = visual_size@1
+	int muzzleduration = muzzleduration@1
+	float offsetx = offsetx@1
+	float offsety = offsety@1
+	float muzzleoffsetx = muzzleoffsetx@1
+	float muzzleoffsety = muzzleoffsety@1
 }
 
 struct keyframe {
