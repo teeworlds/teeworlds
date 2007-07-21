@@ -293,7 +293,7 @@ static int tilesets_set_img(int index, int w, int h, void *data)
 	if(tilesets[index].img.data)
 		mem_free(tilesets[index].img.data);
 	tilesets[index].img.data = data;
-	tilesets[index].tex_id = gfx_load_texture_raw(w, h, IMG_BGRA, data);
+	tilesets[index].tex_id = gfx_load_texture_raw(w, h, IMG_RGBA, data);
 	return index;
 }
 
@@ -636,7 +636,7 @@ static void editor_listdir_callback(const char *name, int is_dir, void *user)
 		sprintf(buf, "tilesets/%s", name);
 		
 		image_info img;
-		if(!gfx_load_tga(&img, buf))
+		if(!gfx_load_png(&img, buf))
 			return;
 		
 		tilesets_set_img(editor_loadimage, img.width, img.height, img.data);
