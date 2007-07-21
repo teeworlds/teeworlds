@@ -67,7 +67,7 @@ static void draw_quad(bool _bflush = false)
 	{
 		if (!_bflush)
 			g_iVertexEnd += 4;
-		if(GLEW_VERSION_2_0)
+		if(GLEW_ARB_vertex_buffer_object)
 		{
 			// set the data
 			vertex_buffer.data(g_pVertices, vertexBufferSize * sizeof(custom_vertex), GL_DYNAMIC_DRAW);
@@ -135,7 +135,7 @@ bool gfx_init()
 	for (int i = 0; i < vertexBufferSize; i++)
 		g_pVertices[i].pos.z = -5.0f;
 
-	if(GLEW_VERSION_2_0)
+	if(GLEW_ARB_vertex_buffer_object)
 	{
 		// set the streams
 		vertex_buffer.data(g_pVertices, sizeof(vertexBufferSize), GL_DYNAMIC_DRAW);
