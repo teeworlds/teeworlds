@@ -338,6 +338,7 @@ public:
 	
 	void run(netaddr4 *server_address)
 	{
+		local_start_time = time_get();
 		snapshot_part = 0;
 		
 		// init graphics and sound

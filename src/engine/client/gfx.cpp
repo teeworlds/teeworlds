@@ -8,6 +8,8 @@
 
 #include <string.h>
 
+#include <engine/config.h>
+
 
 using namespace baselib;
 
@@ -103,7 +105,7 @@ static void draw_quad(bool _bflush = false)
 	
 bool gfx_init(bool fullscreen)
 {
-	if(!context.create(screen_width, screen_height, 24, 8, 16, 0, fullscreen?opengl::context::FLAG_FULLSCREEN:0))
+	if(!context.create(config.screen_width, config.screen_height, 24, 8, 16, 0, fullscreen?opengl::context::FLAG_FULLSCREEN:0))
 	{
 		dbg_msg("game", "failed to create gl context");
 		return false;

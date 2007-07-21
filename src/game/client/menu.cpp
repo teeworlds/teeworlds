@@ -609,10 +609,27 @@ static void refresh_list(server_list *list)
 	}
 }
 
-static int screen = 0;
+enum
+{
+	SCREEN_MAIN,
+	SCREEN_SETTINGS_GENERAL,
+	SCREEN_SETTINGS_CONTROLS,
+	SCREEN_SETTINGS_VIDEO,
+	SCREEN_SETTINGS_SOUND,
+	SCREEN_KERNING
+};
+
+static int screen = SCREEN_MAIN;
 static configuration config_copy;
 
-static int main_screen_render(netaddr4 *server_address)
+const float column1_x = 250;
+const float column2_x = column1_x + 150;
+const float column3_x = column2_x + 170;
+const float row1_y = 180;
+const float row2_y = row1_y + 40;
+const float row3_y = row2_y + 40;
+
+static int main_render(netaddr4 *server_address)
 {
 	static server_list list;
 	static bool inited = false;
@@ -658,42 +675,48 @@ static int main_screen_render(netaddr4 *server_address)
 	if (ui_do_button(&settings_button, "Settings", 0, 20, 420, 170, 48, draw_teewars_button))
 	{
 		config_copy = config;
-		screen = 1;
+		screen = SCREEN_SETTINGS_GENERAL;
 	}
 
 	static int editor_button;
 	if (ui_do_button(&editor_button, "Kerning Editor", 0, 20, 470, 170, 48, draw_teewars_button))
-		screen = 2;
+		screen = SCREEN_KERNING;
 
 	return 0;
 }
 
-static int settings_screen_render()
+
+static int settings_general_render()
 {
-	const float column1_x = 150;
-	const float column2_x = column1_x + 150;
-	const float column3_x = column2_x + 170;
-	const float name_y = 160;
-	const float resolution_y = 200;
-	const float keys_y = 240;
-
+	//ui_do_label(100, 150, "General", 36);
+	
 	// NAME
-	ui_do_label(column1_x, name_y, "Name:", 36);
-	ui_do_edit_box(config_copy.player_name, column2_x, name_y, 300, 36, config_copy.player_name, sizeof(config_copy.player_name));
+	ui_do_label(column1_x, row1_y, "Name:", 36);
+	ui_do_edit_box(config_copy.player_name, column2_x, row1_y, 300, 36, config_copy.player_name, sizeof(config_copy.player_name));
 
+	return 0;
+}
+
+static int settings_controls_render()
+{
 	// KEYS
-	ui_do_label(column1_x, keys_y, "Keys:", 36);
-	ui_do_label(column2_x, keys_y + 0, "Move Left:", 36);
-	config_set_key_move_left(&config_copy, ui_do_key_reader(&config_copy.key_move_left, column3_x, keys_y + 0, 150, 40, config_copy.key_move_left));
-	ui_do_label(column2_x, keys_y + 40, "Move Right:", 36);
-	config_set_key_move_right(&config_copy, ui_do_key_reader(&config_copy.key_move_right, column3_x, keys_y + 40, 150, 40, config_copy.key_move_right));
-	ui_do_label(column2_x, keys_y + 80, "Jump:", 36);
-	config_set_key_jump(&config_copy, ui_do_key_reader(&config_copy.key_jump, column3_x, keys_y + 80, 150, 40, config_copy.key_jump));
-	ui_do_label(column2_x, keys_y + 120, "Fire:", 36);
-	config_set_key_fire(&config_copy, ui_do_key_reader(&config_copy.key_fire, column3_x, keys_y + 120, 150, 40, config_copy.key_fire));
-	ui_do_label(column2_x, keys_y + 160, "Hook:", 36);
-	config_set_key_hook(&config_copy, ui_do_key_reader(&config_copy.key_hook, column3_x, keys_y + 160, 150, 40, config_copy.key_hook));
+	ui_do_label(column1_x, row1_y, "Keys:", 36);
+	ui_do_label(column2_x, row1_y + 0, "Move Left:", 36);
+	config_set_key_move_left(&config_copy, ui_do_key_reader(&config_copy.key_move_left, column3_x, row1_y + 0, 150, 40, config_copy.key_move_left));
+	ui_do_label(column2_x, row1_y + 40, "Move Right:", 36);
+	config_set_key_move_right(&config_copy, ui_do_key_reader(&config_copy.key_move_right, column3_x, row1_y + 40, 150, 40, config_copy.key_move_right));
+	ui_do_label(column2_x, row1_y + 80, "Jump:", 36);
+	config_set_key_jump(&config_copy, ui_do_key_reader(&config_copy.key_jump, column3_x, row1_y + 80, 150, 40, config_copy.key_jump));
+	ui_do_label(column2_x, row1_y + 120, "Fire:", 36);
+	config_set_key_fire(&config_copy, ui_do_key_reader(&config_copy.key_fire, column3_x, row1_y + 120, 150, 40, config_copy.key_fire));
+	ui_do_label(column2_x, row1_y + 160, "Hook:", 36);
+	config_set_key_hook(&config_copy, ui_do_key_reader(&config_copy.key_hook, column3_x, row1_y + 160, 150, 40, config_copy.key_hook));
 
+	return 0;
+}
+
+static int settings_video_render()
+{
 	static int resolution_count[2] = {0};
 	static int resolutions[2][10][2] = {0};
 	static char resolution_names[2][10][128] = {0};
@@ -734,7 +757,7 @@ static int settings_screen_render()
 		inited = true;
 	}
 
-	int depth_index = 0;
+	static int depth_index = 0;
 	static int selected_index = -1;
 	if (selected_index == -1)
 	{
@@ -751,11 +774,53 @@ static int settings_screen_render()
 			selected_index = 1;
 	}
 
-	ui_do_label(column1_x, resolution_y, "Resolution:", 36);
-	selected_index = ui_do_combo_box(&selected_index, column2_x, resolution_y, 180, (char *)resolution_names[depth_index], resolution_count[depth_index], selected_index);
+	static char bit_labels[][128] =
+	{
+		"16",
+		"32"
+	};
+
+	// we need to draw these bottom up, to make overlapping work correctly
+	ui_do_label(column1_x, row2_y, "Resolution:", 36);
+	selected_index = ui_do_combo_box(&selected_index, column2_x, row2_y, 180, (char *)resolution_names[depth_index], resolution_count[depth_index], selected_index);
+
+	ui_do_label(column1_x, row1_y, "Bits:", 36);
+	depth_index = ui_do_combo_box(&depth_index, column2_x, row1_y, 110, (char *)bit_labels, 2, depth_index);
+	ui_do_label(column1_x, row3_y, "Fullscreen:", 36);
+
+	ui_do_label(column1_x, row3_y + 200, "(A restart of the game is required for these settings to take effect.)", 16);
 
 	config_set_screen_width(&config_copy, resolutions[depth_index][selected_index][0]);
 	config_set_screen_height(&config_copy, resolutions[depth_index][selected_index][1]);
+
+	return 0;
+}
+
+static int settings_sound_render()
+{
+	return 0;
+}
+
+static int settings_render()
+{
+	static int general_button, controls_button, video_button, sound_button;
+
+	if (ui_do_button(&general_button, "General", 0, 30, 200, 170, 48, draw_teewars_button))
+		screen = SCREEN_SETTINGS_GENERAL;
+	if (ui_do_button(&controls_button, "Controls", 0, 30, 250, 170, 48, draw_teewars_button))
+		screen = SCREEN_SETTINGS_CONTROLS;
+	if (ui_do_button(&video_button, "Video", 0, 30, 300, 170, 48, draw_teewars_button))
+		screen = SCREEN_SETTINGS_VIDEO;
+	if (ui_do_button(&sound_button, "Sound", 0, 30, 350, 170, 48, draw_teewars_button))
+		screen = SCREEN_SETTINGS_SOUND;
+
+	switch (screen)
+	{
+		case SCREEN_SETTINGS_GENERAL: settings_general_render(); break;
+		case SCREEN_SETTINGS_CONTROLS: settings_controls_render(); break;
+		case SCREEN_SETTINGS_VIDEO: settings_video_render(); break;
+		case SCREEN_SETTINGS_SOUND: settings_sound_render(); break;
+	}
 
 	// SAVE BUTTON
 	static int save_button;
@@ -763,20 +828,20 @@ static int settings_screen_render()
 	{
 		config = config_copy;
 		config_save("teewars.cfg");
-		screen = 0;
+		screen = SCREEN_MAIN;
 	}
 	
 	// CANCEL BUTTON
 	static int cancel_button;
 	if (ui_do_button(&cancel_button, "Cancel", 0, 620, 490, 150, 48, draw_teewars_button))
-		screen = 0;
+		screen = SCREEN_MAIN;
 
 	return 0;
 }
 
 extern double extra_kerning[256*256];
 
-static int editor_screen_render()
+static int kerning_render()
 {
 	static bool loaded = false;
 	static char text[32] = {0};
@@ -938,7 +1003,7 @@ static int editor_screen_render()
 	// CANCEL BUTTON
 	static int cancel_button;
 	if (ui_do_button(&cancel_button, "Cancel", 0, 620, 520, 150, 48, draw_teewars_button))
-		screen = 0;
+		screen = SCREEN_MAIN;
 
 	return 0;
 }
@@ -959,7 +1024,7 @@ static int menu_render(netaddr4 *server_address)
 	draw_background(t * 0.01);
 	gfx_mapscreen(0,0,800.0f,600.0f);
 
-	if (screen != 2)
+	if (screen != SCREEN_KERNING)
 	{
 		ui_do_image(teewars_banner_texture, 140, 20, 512, 128);
 		ui_do_label(20.0f, 600.0f-40.0f, "Version: " TEEWARS_VERSION, 36);
@@ -967,12 +1032,13 @@ static int menu_render(netaddr4 *server_address)
 
 	switch (screen)
 	{
-	case 1:
-		return settings_screen_render();
-	case 2:
-		return editor_screen_render();
-	default:
-		return main_screen_render(server_address);
+		case SCREEN_MAIN: return main_render(server_address);
+		case SCREEN_SETTINGS_GENERAL:
+		case SCREEN_SETTINGS_CONTROLS:
+		case SCREEN_SETTINGS_VIDEO:
+		case SCREEN_SETTINGS_SOUND: return settings_render();
+		case SCREEN_KERNING: return kerning_render();
+		default: dbg_msg("menu", "invalid screen selected..."); return 0;
 	}
 }
 
