@@ -42,6 +42,7 @@ enum gui_tileset_enum
 };
 
 int gui_tileset_texture;
+int cursor_texture;
 
 void draw_area(gui_tileset_enum tileset, int areax, int areay, int areaw, int areah, float x, float y, float w, float h)
 {
@@ -215,7 +216,9 @@ void draw_menu_button(void *id, const char *text, int checked, float x, float y,
 
 void draw_teewars_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
 {
-	float text_width = gfx_pretty_text_width(46.f, text);
+	const float font_size = 46.0f;
+
+	float text_width = gfx_pretty_text_width(font_size, text);
 	gui_tileset_enum tileset;
 
 	if (ui_active_item() == id)
@@ -233,7 +236,7 @@ void draw_teewars_button(void *id, const char *text, int checked, float x, float
 
 	draw_box(GUI_BOX_BUTTON, tileset, x, y, w, h);
 
-	ui_do_label(x + w/2 - text_width/2, y, text, 46);
+	ui_do_label(x + w/2 - text_width/2, y, text, font_size);
 }
 
 /*
@@ -382,6 +385,12 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 
 		r = 1;
 	}
+
+	int box_type;
+	if (ui_active_item() == id || ui_hot_item() == id || ui_last_active_item() == id)
+		box_type = GUI_BOX_SCREEN_INFO;
+	else
+		box_type = GUI_BOX_SCREEN_TEXTBOX;
 	
 	if(ui_active_item() == id)
 	{
@@ -397,7 +406,8 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 	if(inside)
 		ui_set_hot_item(id);
 
-	draw_box(GUI_BOX_SCREEN_TEXTBOX, tileset_regular, x, y, w, h);
+
+	draw_box(box_type, tileset_regular, x, y, w, h);
 
 	ui_do_label(x + 10, y, str, 36);
 
@@ -698,17 +708,16 @@ static int settings_general_render()
 static int settings_controls_render()
 {
 	// KEYS
-	ui_do_label(column1_x, row1_y, "Keys:", 36);
-	ui_do_label(column2_x, row1_y + 0, "Move Left:", 36);
-	config_set_key_move_left(&config_copy, ui_do_key_reader(&config_copy.key_move_left, column3_x, row1_y + 0, 150, 40, config_copy.key_move_left));
-	ui_do_label(column2_x, row1_y + 40, "Move Right:", 36);
-	config_set_key_move_right(&config_copy, ui_do_key_reader(&config_copy.key_move_right, column3_x, row1_y + 40, 150, 40, config_copy.key_move_right));
-	ui_do_label(column2_x, row1_y + 80, "Jump:", 36);
-	config_set_key_jump(&config_copy, ui_do_key_reader(&config_copy.key_jump, column3_x, row1_y + 80, 150, 40, config_copy.key_jump));
-	ui_do_label(column2_x, row1_y + 120, "Fire:", 36);
-	config_set_key_fire(&config_copy, ui_do_key_reader(&config_copy.key_fire, column3_x, row1_y + 120, 150, 40, config_copy.key_fire));
-	ui_do_label(column2_x, row1_y + 160, "Hook:", 36);
-	config_set_key_hook(&config_copy, ui_do_key_reader(&config_copy.key_hook, column3_x, row1_y + 160, 150, 40, config_copy.key_hook));
+	ui_do_label(column1_x, row1_y + 0, "Move Left:", 36);
+	config_set_key_move_left(&config_copy, ui_do_key_reader(&config_copy.key_move_left, column2_x, row1_y + 0, 150, 40, config_copy.key_move_left));
+	ui_do_label(column1_x, row1_y + 40, "Move Right:", 36);
+	config_set_key_move_right(&config_copy, ui_do_key_reader(&config_copy.key_move_right, column2_x, row1_y + 40, 150, 40, config_copy.key_move_right));
+	ui_do_label(column1_x, row1_y + 80, "Jump:", 36);
+	config_set_key_jump(&config_copy, ui_do_key_reader(&config_copy.key_jump, column2_x, row1_y + 80, 150, 40, config_copy.key_jump));
+	ui_do_label(column1_x, row1_y + 120, "Fire:", 36);
+	config_set_key_fire(&config_copy, ui_do_key_reader(&config_copy.key_fire, column2_x, row1_y + 120, 150, 40, config_copy.key_fire));
+	ui_do_label(column1_x, row1_y + 160, "Hook:", 36);
+	config_set_key_hook(&config_copy, ui_do_key_reader(&config_copy.key_hook, column2_x, row1_y + 160, 150, 40, config_copy.key_hook));
 
 	return 0;
 }
@@ -803,6 +812,7 @@ static int settings_sound_render()
 	ui_do_label(column1_x, row1_y, "Volume:", 36);
 	
 	config_set_volume(&config_copy, do_scroll_bar_horiz(&config_copy.volume, column2_x, row1_y, 200, 255, config_copy.volume));
+	snd_set_master_volume(config_copy.volume / 255.0f);
 
 	return 0;
 }
@@ -832,7 +842,6 @@ static int settings_render()
 	static int save_button;
 	if (ui_do_button(&save_button, "Save", 0, 482, 490, 128, 48, draw_teewars_button))
 	{
-		snd_set_master_volume(config_copy.volume / 255.0f);
 		config = config_copy;
 		config_save("teewars.cfg");
 		screen = SCREEN_MAIN;
@@ -841,7 +850,10 @@ static int settings_render()
 	// CANCEL BUTTON
 	static int cancel_button;
 	if (ui_do_button(&cancel_button, "Cancel", 0, 620, 490, 150, 48, draw_teewars_button))
+	{
+		snd_set_master_volume(config.volume / 255.0f);
 		screen = SCREEN_MAIN;
+	}
 
 	return 0;
 }
@@ -1059,6 +1071,7 @@ void modmenu_init()
 	background_texture = gfx_load_texture("data/gui_bg.png");
 	gui_tileset_texture = gfx_load_texture("data/gui/gui_widgets.png");
     teewars_banner_texture = gfx_load_texture("data/gui_logo.png");
+	cursor_texture = gfx_load_texture("data/gui/cursor.png");
 
 	// TODO: should be removed
 	music_menu = snd_load_wav("data/audio/Music_Menu.wav");
@@ -1108,16 +1121,10 @@ int modmenu_render()
 
     // render butt ugly mouse cursor
     // TODO: render nice cursor
-    gfx_texture_set(-1);
+    gfx_texture_set(cursor_texture);
     gfx_quads_begin();
-    gfx_quads_setcolor(0,0,0,1);
-    gfx_quads_draw_freeform(mx,my,mx,my,
-                                mx+14,my,
-                                mx,my+14);
     gfx_quads_setcolor(1,1,1,1);
-    gfx_quads_draw_freeform(mx+1,my+1,mx+1,my+1,
-                                mx+10,my+1,
-                                mx+1,my+10);
+    gfx_quads_drawTL(mx,my,24,24);
     gfx_quads_end();
 
 	if (r)
