@@ -124,7 +124,6 @@ public:
 				if(channels[c].lerp >= 0)
 				{
 						dv = (channels[c].new_vol - channels[c].old_vol) * NUM_FRAMES_LERP_INV;
-						dbg_msg("mixer", "lerp %f", dv);
 				}
 
 				if(channels[c].data->channels == 1)
@@ -141,7 +140,7 @@ public:
 
 				channels[c].lerp -= to_fill;
 				if(channels[c].lerp < 0)
-					channels[c].lerp = 0;
+					channels[c].lerp = -1;
 
 				filled += to_fill;
 			}
