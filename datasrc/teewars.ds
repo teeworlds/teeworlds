@@ -368,12 +368,12 @@ weapons {
 		muzzleoffsety 0.0
 		maxammo 0
 		recoil 0
-		firedelay 1000
+		firedelay 400
 		muzzleduration 0
 		visual_size 96
 		offsetx 0.0
 		offsety 0.0
-		meleedamage 1
+		meleedamage 10
 		meleereach 0
 		ammoregentime 0
 		duration 15000
