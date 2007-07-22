@@ -1221,6 +1221,9 @@ bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 	// create healthmod indicator
 	create_damageind(pos, normalize(force), dmg);
 
+	if (gameobj.gametype == GAMETYPE_TDM && from >= 0 && players[from].team == team)
+		return false;
+
 	if(armor)
 	{
 		armor -= 1;
