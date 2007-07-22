@@ -908,6 +908,29 @@ static void render_player(obj_player *prev, obj_player *player)
 				gfx_quads_setrotation(-pi/2+state.attach.angle*pi*2);
 			}
 			draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
+
+			// HADOKEN
+			if ((client_tick()-player->attacktick) <= (SERVER_TICK_SPEED / 6) && data->weapons[iw].nummuzzlesprites)
+			{
+				int itex = rand() % data->weapons[iw].nummuzzlesprites;
+				float alpha = 1.0f;
+				if (alpha > 0.0f && data->weapons[iw].sprite_muzzle[itex].psprite)
+				{
+					vec2 dir = vec2(player->x,player->y) - vec2(prev->x, prev->y);
+					dir = normalize(dir);
+					float hadokenangle = atan(dir.y/dir.x);
+					if (dir.x < 0.0f)
+						hadokenangle += pi;
+					gfx_quads_setrotation(hadokenangle);
+					float offsety = -data->weapons[iw].muzzleoffsety;
+					select_sprite(data->weapons[iw].sprite_muzzle[itex].psprite, 0);
+					vec2 diry(-dir.y,dir.x);
+					p = position;
+					float offsetx = data->weapons[iw].muzzleoffsetx;
+					p -= dir * offsetx;
+					draw_sprite(p.x, p.y, 160.0f);
+				}
+			}
 		}
 		else
 		{
@@ -1588,7 +1611,7 @@ void modc_render()
 
 						sprintf(buf, "%4d", player->latency);
 						float tw = gfx_pretty_text_width(48.0f, buf);
-						gfx_pretty_text(offsetx + x + 240, y, 48, buf);
+						gfx_pretty_text(offsetx + x + 240, offsets[player->team], 48, buf);
 
 						offsets[player->team] += 58.0f;
 					}
