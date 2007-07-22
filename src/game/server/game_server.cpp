@@ -380,7 +380,7 @@ void gameobject::post_reset()
 	}
 }
 
-void gameobject::tick()
+void gameobject::tick_dm()
 {
 	if(game_over_tick == -1)
 	{
@@ -421,6 +421,60 @@ void gameobject::tick()
 	}
 }
 
+void gameobject::tick_tdm()
+{
+	if(game_over_tick == -1)
+	{
+		// game is running
+		
+		// gather some stats
+		int totalscore[2] = {0,0};
+		int topscore_count = 0;
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(players[i].client_id != -1)
+				totalscore[players[i].team] += players[i].score;
+		}
+		if (totalscore[0] >= config.scorelimit)
+			topscore_count++;
+		if (totalscore[1] >= config.scorelimit)
+			topscore_count++;
+		
+		// check score win condition
+		if((config.scorelimit > 0 && (totalscore[0] >= config.scorelimit || totalscore[1] >= config.scorelimit)) ||
+			(config.timelimit > 0 && (server_tick()-round_start_tick) >= config.timelimit*server_tickspeed()*60))
+		{
+			if(topscore_count == 1)
+				endround();
+			else
+				sudden_death = 1;
+		}
+	}
+	else
+	{
+		// game over.. wait for restart
+		if(server_tick() > game_over_tick+server_tickspeed()*10)
+			startround();
+	}
+}
+
+void gameobject::tick()
+{
+	switch(gametype)
+	{
+	case GAMETYPE_TDM:
+		{
+			tick_tdm();
+			break;
+		}
+	default:
+		{
+			tick_dm();
+			break;
+		}
+	}
+}
+
 void gameobject::snap(int snapping_client)
 {
 	obj_game *game = (obj_game *)snap_new_item(OBJTYPE_GAME, id, sizeof(obj_game));
@@ -432,6 +486,20 @@ void gameobject::snap(int snapping_client)
 	game->time_limit = config.timelimit;
 	game->round_start_tick = round_start_tick;
 	game->gametype = gametype;
+}
+
+int gameobject::getteam(int notthisid)
+{
+	int numplayers[2] = {0,0};
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(players[i].client_id != -1 && players[i].client_id != notthisid)
+		{
+			numplayers[players[i].team]++;
+		}
+	}
+
+	return numplayers[0] > numplayers[1] ? 1 : 0;
 }
 
 gameobject gameobj;
@@ -1526,9 +1594,17 @@ void mods_client_enter(int client_id)
 	
 	client_info info; // fetch login name
 	if(server_getclientinfo(client_id, &info))
+	{
 		strcpy(players[client_id].name, info.name);
+	}
 	else
 		strcpy(players[client_id].name, "(bot)");
+
+	if (gameobj.gametype == GAMETYPE_TDM)
+	{
+		// Check which team the player should be on
+		players[client_id].team = gameobj.getteam(client_id);
+	}
 	
 	msg_pack_start(MSG_SETNAME, MSGFLAG_VITAL);
 	msg_pack_int(client_id);

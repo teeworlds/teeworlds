@@ -116,7 +116,10 @@ public:
 	gameobject();
 	virtual void post_reset();
 	virtual void tick();
+	virtual void tick_dm();
+	virtual void tick_tdm();
 	virtual void snap(int snapping_client);
+	virtual int getteam(int notthisid);
 };
 
 extern gameobject gameobj;
