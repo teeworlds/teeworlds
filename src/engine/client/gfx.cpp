@@ -156,7 +156,7 @@ bool gfx_init()
 	
 	// create null texture, will get id=0
 	gfx_load_texture_raw(4,4,IMG_RGBA,null_texture_data);
-	
+
 	return true;
 }
 
@@ -222,7 +222,35 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data)
 	
 	return tex;
 }
+/*
+int gfx_load_mip_texture_raw(int w, int h, int format, const void *data)
+{
+	// grab texture
+	int tex = first_free_texture;
+	first_free_texture = textures[tex].next;
+	textures[tex].next = -1;
+	
+	// set data and return
+	// TODO: should be RGBA, not BGRA
+	dbg_msg("gfx", "%d = %dx%d", tex, w, h);
+	dbg_assert(format == IMG_RGBA, "not an RGBA image");
 
+	unsigned mip_w = w;
+	unsigned mip_h = h;
+	unsigned level = 0;
+	const unsigned char *ptr = (const unsigned char*)data;
+	while(mip_w > 0 && mip_h > 0)
+	{
+		dbg_msg("gfx mip", "%d = %dx%d", level, mip_w, mip_h);
+		textures[tex].tex.data2d_mip(mip_w, mip_h, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, level, ptr);
+		level++;
+		ptr = ptr + mip_w*mip_h*4;
+		mip_w = mip_w>>1;
+		mip_h = mip_h>>1;
+	}
+	return tex;
+}
+*/
 // simple uncompressed RGBA loaders
 int gfx_load_texture(const char *filename)
 {

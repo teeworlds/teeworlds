@@ -935,7 +935,6 @@ int player::handle_weapons()
 		// check if we hit anything along the way
 		int type = OBJTYPE_PLAYER;
 		entity *ents[64];
-		float reach = 20.0f;
 		vec2 lookdir(direction.x > 0.0f ? 1.0f : -1.0f, 0.0f);
 		vec2 dir = lookdir * data->weapons[active_weapon].meleereach;
 		float radius = length(dir * 0.5f);

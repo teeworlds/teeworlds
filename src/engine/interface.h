@@ -99,6 +99,7 @@ int gfx_load_texture(const char *filename);
 		<gfx_unload_texture>
 */
 int gfx_load_texture_raw(int w, int h, int format, const void *data);
+//int gfx_load_mip_texture_raw(int w, int h, int format, const void *data);
 
 /*
 	Function: gfx_texture_set
