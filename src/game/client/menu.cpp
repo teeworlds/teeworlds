@@ -44,6 +44,8 @@ enum gui_tileset_enum
 int gui_tileset_texture;
 int cursor_texture;
 int cloud1_texture, cloud2_texture, cloud3_texture;
+int menu_background_texture;
+int butterflies_texture;
 
 void draw_area(gui_tileset_enum tileset, int areax, int areay, int areaw, int areah, float x, float y, float w, float h)
 {
@@ -154,6 +156,7 @@ void draw_background(float t)
 	gfx_clear(0.65f,0.78f,0.9f);
 
 	gfx_blend_normal();
+
 	render_sun(170, 170);
 
     gfx_texture_set(cloud1_texture);
@@ -164,7 +167,7 @@ void draw_background(float t)
 		0.0f, // starty
 		1.0f, // endx
 		1.0f); // endy								
-    gfx_quads_drawTL(3500 - fmod(t * 20 + 2000, 4524), 0, 1024, 1024);
+    gfx_quads_drawTL(3500 - fmod(t * 20 + 2000, 4524), 0, 512, 512);
     gfx_quads_end();
 
     gfx_texture_set(cloud2_texture);
@@ -175,7 +178,7 @@ void draw_background(float t)
 		0.0f, // starty
 		1.0f, // endx
 		1.0f); // endy								
-    gfx_quads_drawTL(3000 - fmod(t * 50 + 1000, 4024), 150, 1024, 1024);
+    gfx_quads_drawTL(3000 - fmod(t * 50 + 1000, 4024), 150, 512, 512);
     gfx_quads_end();
 
     gfx_texture_set(cloud3_texture);
@@ -186,28 +189,45 @@ void draw_background(float t)
 		0.0f, // starty
 		1.0f, // endx
 		1.0f); // endy								
-    gfx_quads_drawTL(4000 - fmod(t * 60, 4512), 600, 512, 512);
+    gfx_quads_drawTL(4000 - fmod(t * 60, 4512), 300, 256, 256);
     gfx_quads_end();
 
-/*
-	float tx = w/512.0f;
-	float ty = h/512.0f;
-
-	float start_x = fmod(t, 1.0f);
-	float start_y = 1.0f - fmod(t*0.8f, 1.0f);
-
-    gfx_blend_normal();
-    gfx_texture_set(id);
+    gfx_texture_set(menu_background_texture);
     gfx_quads_begin();
     gfx_quads_setcolor(1,1,1,1);
 	gfx_quads_setsubset(
-		start_x, // startx
-		start_y, // starty
-		start_x+tx, // endx
-		start_y+ty); // endy								
-    gfx_quads_drawTL(0.0f,0.0f,w,h);
+		0.0f, // startx
+		0.0f, // starty
+		1.0f, // endx
+		1.0f); // endy								
+    gfx_quads_drawTL(0, -400, 1600, 1600);
     gfx_quads_end();
-*/
+
+	int frame = int(t * 10) % 3;
+
+	//float x_path = -t
+
+	float x_nudge = 3*cos(t*10);
+	float y_nudge = 8*sin(t*3);
+
+	x_nudge += 150 * cos(t/3);
+	y_nudge += 30 * sin(t/3);
+
+	float angl = t/3;
+	angl = fmod(angl, 2*pi);
+
+	bool flip = angl > pi;
+
+    gfx_texture_set(butterflies_texture);
+    gfx_quads_begin();
+    gfx_quads_setcolor(1, 1, 1, 1);
+	gfx_quads_setsubset(
+		flip ? (frame + 1) * 0.25f : frame * 0.25f, // startx
+		0.0f, // starty
+		flip ? frame * 0.25f : (frame + 1) * 0.25f, // endx
+		0.5f); // endy								
+    gfx_quads_drawTL(1250 + x_nudge, 480 + y_nudge, 64, 64);
+    gfx_quads_end();
 }
 
 static int background_texture;
@@ -322,7 +342,12 @@ int ui_do_key_reader(void *id, float x, float y, float w, float h, int key)
 		ui_set_hot_item(id);
 
 	// draw
-	draw_box(GUI_BOX_SCREEN_INFO, tileset_regular, x, y, w, h);
+	int box_type;
+	if (ui_active_item() == id || ui_hot_item() == id)
+		box_type = GUI_BOX_SCREEN_INFO;
+	else
+		box_type = GUI_BOX_SCREEN_TEXTBOX;
+	draw_box(box_type, tileset_regular, x, y, w, h);
 	
 	const char *str = input::key_name(key);
 	ui_do_label(x + 10, y, str, 36);
@@ -381,9 +406,13 @@ int ui_do_combo_box(void *id, float x, float y, float w, char *lines, int line_c
 	}
 	else
 	{
-		draw_box(GUI_BOX_SCREEN_LIST, tileset_regular, x, y, w, line_height);
+		int box_type;
+		if (ui_active_item() == id || ui_hot_item() == id)
+			box_type = GUI_BOX_SCREEN_INFO;
+		else
+			box_type = GUI_BOX_SCREEN_TEXTBOX;
+		draw_box(box_type, tileset_regular, x, y, w, line_height);
 		ui_do_label(x + 10, y, lines + 128 * selected_index, 36);
-
 	}
 
 	return selected_index;
@@ -688,11 +717,24 @@ static int main_render()
 	}
 
 	static int scoll_index = 0, selected_index = -1;
+	int last_selected_index = selected_index;
 	do_server_list(20, 160, &scoll_index, &selected_index, 8);
+	
+	static char address[32] = "localhost:8303";
+
+	ui_do_edit_box(address, 280, 425, 300, 36, address, sizeof(address));
+
+	if (last_selected_index != selected_index && selected_index != -1)
+	{
+		server_info *servers;
+		client_serverbrowse_getlist(&servers);
+
+		strcpy(address, servers[selected_index].address);
+	}
 
 	static int refresh_button, join_button, quit_button;
 
-	if (ui_do_button(&refresh_button, "Refresh", 0, 440, 420, 170, 48, draw_teewars_button))
+	if (ui_do_button(&refresh_button, "Refresh", 0, 20, 420, 170, 48, draw_teewars_button))
 		client_serverbrowse_refresh();
 
 	if (selected_index == -1)
@@ -701,13 +743,7 @@ static int main_render()
 	}
 	else if (ui_do_button(&join_button, "Join", 0, 620, 420, 128, 48, draw_teewars_button))
 	{
-		// *server_address = list.infos[list.selected_index].address;
-		
-		server_info *servers;
-		client_serverbrowse_getlist(&servers);
-
-		client_connect(servers[selected_index].address);
-		//dbg_msg("menu/join_button", "IP: %i.%i.%i.%i:%i", (int)server_address->ip[0], (int)server_address->ip[1], (int)server_address->ip[2], (int)server_address->ip[3], server_address->port);
+		client_connect(address);
 
 		return 1;
 	}
@@ -716,15 +752,15 @@ static int main_render()
 		return -1;
 
 	static int settings_button;
-	if (ui_do_button(&settings_button, "Settings", 0, 20, 420, 170, 48, draw_teewars_button))
+	if (ui_do_button(&settings_button, "Settings", 0, 20, 490, 170, 48, draw_teewars_button))
 	{
 		config_copy = config;
 		screen = SCREEN_SETTINGS_GENERAL;
 	}
 
-	static int editor_button;
-	if (ui_do_button(&editor_button, "Kerning Editor", 0, 20, 470, 170, 48, draw_teewars_button))
-		screen = SCREEN_KERNING;
+	//static int editor_button;
+	//if (ui_do_button(&editor_button, "Kerning Editor", 0, 20, 470, 170, 48, draw_teewars_button))
+	//	screen = SCREEN_KERNING;
 
 	return 0;
 }
@@ -743,15 +779,15 @@ static int settings_controls_render()
 {
 	// KEYS
 	ui_do_label(column1_x, row1_y + 0, "Move Left:", 36);
-	config_set_key_move_left(&config_copy, ui_do_key_reader(&config_copy.key_move_left, column2_x, row1_y + 0, 150, 40, config_copy.key_move_left));
+	config_set_key_move_left(&config_copy, ui_do_key_reader(&config_copy.key_move_left, column2_x, row1_y + 0, 150, 36, config_copy.key_move_left));
 	ui_do_label(column1_x, row1_y + 40, "Move Right:", 36);
-	config_set_key_move_right(&config_copy, ui_do_key_reader(&config_copy.key_move_right, column2_x, row1_y + 40, 150, 40, config_copy.key_move_right));
+	config_set_key_move_right(&config_copy, ui_do_key_reader(&config_copy.key_move_right, column2_x, row1_y + 40, 150, 36, config_copy.key_move_right));
 	ui_do_label(column1_x, row1_y + 80, "Jump:", 36);
-	config_set_key_jump(&config_copy, ui_do_key_reader(&config_copy.key_jump, column2_x, row1_y + 80, 150, 40, config_copy.key_jump));
+	config_set_key_jump(&config_copy, ui_do_key_reader(&config_copy.key_jump, column2_x, row1_y + 80, 150, 36, config_copy.key_jump));
 	ui_do_label(column1_x, row1_y + 120, "Fire:", 36);
-	config_set_key_fire(&config_copy, ui_do_key_reader(&config_copy.key_fire, column2_x, row1_y + 120, 150, 40, config_copy.key_fire));
+	config_set_key_fire(&config_copy, ui_do_key_reader(&config_copy.key_fire, column2_x, row1_y + 120, 150, 36, config_copy.key_fire));
 	ui_do_label(column1_x, row1_y + 160, "Hook:", 36);
-	config_set_key_hook(&config_copy, ui_do_key_reader(&config_copy.key_hook, column2_x, row1_y + 160, 150, 40, config_copy.key_hook));
+	config_set_key_hook(&config_copy, ui_do_key_reader(&config_copy.key_hook, column2_x, row1_y + 160, 150, 36, config_copy.key_hook));
 
 	return 0;
 }
@@ -1109,6 +1145,8 @@ void modmenu_init()
 	cloud1_texture = gfx_load_texture("data/cloud-1.png");
 	cloud2_texture = gfx_load_texture("data/cloud-2.png");
 	cloud3_texture = gfx_load_texture("data/cloud-3.png");
+	menu_background_texture = gfx_load_texture("data/menu_background.png");
+	butterflies_texture = gfx_load_texture("data/menu_butterfly.png");
 
 	// TODO: should be removed
 	music_menu = snd_load_wav("data/audio/Music_Menu.wav");

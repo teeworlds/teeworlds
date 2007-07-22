@@ -23,15 +23,36 @@ void config_reset()
     #undef MACRO_CONFIG_STR 
 }
 
+void strip_spaces(char **p)
+{
+	char *&s = *p;
+	
+	while (*s == ' ')
+		++s;
+
+	char *end = s + strlen(s);
+	while (end > s && *(end - 1) == ' ')
+		*--end = 0;
+}
+
 void config_set(const char *line)
 {
-	char var_str[256];
-	const char *val_str = strchr(line, '=');
-	if (val_str)
+	const char *c = strchr(line, '=');
+	if (c)
 	{
-		mem_copy(var_str, line, val_str - line);
-		var_str[val_str - line] = 0;
-		++val_str;
+		char var[256];
+		char val[256];
+
+		strcpy(val, c+1);
+
+		mem_copy(var, line, c - line);
+		var[c - line] = 0;
+
+		char *var_str = var;
+		char *val_str = val;
+
+		strip_spaces(&var_str);
+		strip_spaces(&val_str);
 
 		#define MACRO_CONFIG_INT(name,def,min,max) { if (strcmp(#name, var_str) == 0) config_set_ ## name (&config, atoi(val_str)); }
     	#define MACRO_CONFIG_STR(name,len,def) { if (strcmp(#name, var_str) == 0) { config_set_ ## name (&config, val_str); } }
