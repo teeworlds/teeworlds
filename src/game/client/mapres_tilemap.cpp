@@ -15,6 +15,10 @@ void tilemap_render(float scale, int fg)
 	if(!map_is_loaded())
 		return;
 	
+	
+	float screen_x0, screen_y0, screen_x1, screen_y1;
+	gfx_getscreen(&screen_x0, &screen_y0, &screen_x1, &screen_y1);
+	
 	// fetch indecies
 	int start, num;
 	map_get_type(MAPRES_TILEMAP, &start, &num);
@@ -40,23 +44,35 @@ void tilemap_render(float scale, int fg)
 			gfx_texture_set(img_get(tmap->image));
 			gfx_quads_begin();
 			
-			int c = 0;
 			float frac = (1.0f/1024.0f);//2.0f; //2.0f;
 			float texsize = 1024.0f;
 			float nudge = 0.5f/texsize;
-			for(int y = 0; y < tmap->height; y++)
-				for(int x = 0; x < tmap->width; x++, c++)
+			
+			int startx = (int)(screen_x0/scale) - 1;
+			int endx = (int)(screen_x1/scale) + 1;
+			int starty = (int)(screen_y0/scale) - 1;
+			int endy = (int)(screen_y1/scale) + 1;
+			for(int y = starty; y < endy; y++)
+				for(int x = startx; x < endx; x++)
 				{
+					int mx = x;
+					int my = y;
+					if(mx<0) mx = 0;
+					if(mx>=tmap->width) mx = tmap->width-1;
+					if(my<0) my = 0;
+					if(my>=tmap->height) my = tmap->height-1;
+					
+					int c = mx + my*tmap->width;
+						
 					unsigned char d = data[c*2];
 					if(d)
 					{
-						/*
-						gfx_quads_setsubset(
-							(d%16)/16.0f*s+frac,
-							(d/16)/16.0f*s+frac,
-							((d%16)/16.0f+1.0f/16.0f)*s-frac,
-							((d/16)/16.0f+1.0f/16.0f)*s-frac);
-							*/
+						//gfx_quads_setsubset(
+						//	(d%16)/16.0f*s+frac,
+						//	(d/16)/16.0f*s+frac,
+						//	((d%16)/16.0f+1.0f/16.0f)*s-frac,
+						//	((d/16)/16.0f+1.0f/16.0f)*s-frac);
+							
 						int tx = d%16;
 						int ty = d/16;
 						int px0 = tx*(1024/16);

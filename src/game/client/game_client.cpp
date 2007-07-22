@@ -629,7 +629,7 @@ static void render_powerup(obj_powerup *prev, obj_powerup *current)
 	float size = 64.0f;
 	if (current->type == POWERUP_TYPE_WEAPON)
 	{
-		angle = -0.25f * pi * 2.0f;
+		angle = 0; //-pi/6;//-0.25f * pi * 2.0f;
 		select_sprite(data->weapons[current->subtype%data->num_weapons].sprite_body);
 		size = data->weapons[current->subtype%data->num_weapons].visual_size;
 	}
@@ -1213,9 +1213,16 @@ void modc_render()
 	gfx_clear(0.65f,0.78f,0.9f);
 
 	// draw the sun	
-	{
-		render_sun(local_player_pos.x*0.5f, local_player_pos.y*0.5f);
-	}
+	render_sun(local_player_pos.x*0.5f, local_player_pos.y*0.5f);
+	
+	// draw backdrop
+	gfx_texture_set(data->images[IMAGE_BACKDROP].id);
+	gfx_quads_begin();
+	float parallax_amount = 0.25f;
+	for(int x = -1; x < 3; x++)
+		gfx_quads_drawTL(1024*x+screen_x*parallax_amount, (screen_y)*parallax_amount+150, 1024, 1024);
+	gfx_quads_end();
+	
 	
 	// render map
 	tilemap_render(32.0f, 0);

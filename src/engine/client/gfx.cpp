@@ -35,7 +35,10 @@ static opengl::vertex_buffer vertex_buffer;
 //static int screen_height = 600;
 static float rotation = 0;
 static int quads_drawing = 0;
-
+static float screen_x0 = 0;
+static float screen_y0 = 0;
+static float screen_x1 = 0;
+static float screen_y1 = 0;
 
 struct texture_holder
 {
@@ -415,9 +418,21 @@ void gfx_clear(float r, float g, float b)
 
 void gfx_mapscreen(float tl_x, float tl_y, float br_x, float br_y)
 {
+	screen_x0 = tl_x;
+	screen_y0 = tl_y;
+	screen_x1 = br_x;
+	screen_y1 = br_y;
 	mat4 mat;
 	mat.ortho(tl_x, br_x, br_y, tl_y, 1.0f, 10.f);
 	opengl::matrix_projection(&mat);
+}
+
+void gfx_getscreen(float *tl_x, float *tl_y, float *br_x, float *br_y)
+{
+	*tl_x = screen_x0;
+	*tl_y = screen_y0;
+	*br_x = screen_x1;
+	*br_y = screen_y1;
 }
 
 void gfx_setoffset(float x, float y)

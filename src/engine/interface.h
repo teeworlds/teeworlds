@@ -750,6 +750,8 @@ int client_tickspeed();
 void gfx_pretty_text(float x, float y, float size, const char *text);
 float gfx_pretty_text_width(float size, const char *text);
 
+void gfx_getscreen(float *tl_x, float *tl_y, float *br_x, float *br_y);
+
 void mods_message(int msg, int client_id);
 void modc_message(int msg);
 

@@ -139,6 +139,10 @@ images {
 	char_default {
 		filename "data/char_teefault.png"
 	}
+	
+	backdrop {
+		filename "data/mountain_paralax.png"
+	}	
 }
 
 particles {

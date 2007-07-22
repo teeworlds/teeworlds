@@ -10,7 +10,7 @@ data_container *data = 0x0;
 using namespace baselib;
 
 // --------- DEBUG STUFF ---------
-const bool debug_bots = true;
+const bool debug_bots = false;
 
 // --------- PHYSICS TWEAK! --------
 const float ground_control_speed = 7.0f;
@@ -1691,14 +1691,18 @@ void mods_init()
 		case ITEM_ARMOR:
 			type = POWERUP_TYPE_ARMOR;
 			break;
+
 		case ITEM_NINJA:
 			type = POWERUP_TYPE_NINJA;
 			subtype = WEAPON_NINJA;
 			break;
 		};
 		
-		powerup *ppower = new powerup(type, subtype);
-		ppower->pos = vec2(it->x, it->y);
+		if(type != -1)
+		{
+			powerup *ppower = new powerup(type, subtype);
+			ppower->pos = vec2(it->x, it->y);
+		}
 	}
 	
 	world.insert_entity(&gameobj);
