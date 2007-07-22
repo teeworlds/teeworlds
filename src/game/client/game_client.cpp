@@ -4,11 +4,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <engine/config.h>
+#include <engine/client/ui.h>
+#include <engine/client/client.h>
 #include "../game.h"
 #include "mapres_image.h"
 #include "mapres_tilemap.h"
 #include "data.h"
+#include "menu.h"
 
+extern client main_client;
 using namespace baselib;
 
 data_container *data = 0x0;
@@ -17,6 +21,11 @@ int charids[16] = {2,10,0,4,12,6,14,1,9,15,13,11,7,5,8,3};
 
 static int gametype = GAMETYPE_DM;
 static int skinseed = 0;
+static int menu_team = 0;
+static int menu_quit = 0;
+
+static bool chat_active = false;
+static bool menu_active = false;
 
 static vec2 mouse_pos;
 static vec2 local_player_pos;
@@ -25,6 +34,7 @@ static obj_player *local_player;
 struct client_data
 {
 	char name[64];
+	int team;
 } client_datas[MAX_CLIENTS];
 
 inline float frandom() { return rand()/(float)(RAND_MAX); }
@@ -373,7 +383,6 @@ public:
 };
 static projectile_particles proj_particles;
  
-static bool chat_active = false;
 static char chat_input[512];
 static unsigned chat_input_len;
 static const int chat_max_lines = 10;
@@ -436,7 +445,10 @@ void modc_entergame()
 	chat_reset();
 	
 	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
 		client_datas[i].name[0] = 0;
+		client_datas[i].team = 0;
+	}
 		
 	for(int i = 0; i < killmsg_max; i++)
 		killmsgs[i].tick = -100000;
@@ -909,7 +921,7 @@ static void render_player(obj_player *prev, obj_player *player)
 			draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
 		}
 		
-		if (player->weapon == WEAPON_TYPE_GUN || player->weapon == WEAPON_TYPE_SHOTGUN)
+		if (player->weapon == WEAPON_GUN || player->weapon == WEAPON_SHOTGUN)
 		{
 			// check if we're firing stuff
 			if (true)///prev->attackticks)
@@ -987,54 +999,116 @@ void render_sun(float x, float y)
 	gfx_quads_end();	
 }
 
+void ingamemenu_render()
+{
+	if (!local_player)
+		return;
+	gfx_mapscreen(0, 0, 800, 600);
+	// Ingame menu - quit and change team (if tdm)
+	float mx,my;
+	int rx, ry;
+    inp_mouse_relative(&rx, &ry);
+    mouse_pos.x += rx;
+    mouse_pos.y += ry;
+    if(mouse_pos.x < 0) mouse_pos.x = 0;
+    if(mouse_pos.y < 0) mouse_pos.y = 0;
+    if(mouse_pos.x > gfx_screenwidth()) mouse_pos.x = gfx_screenwidth();
+    if(mouse_pos.y > gfx_screenheight()) mouse_pos.y = gfx_screenheight();
+        
+    // update the ui
+    mx = (mouse_pos.x/(float)gfx_screenwidth())*800.0f;
+    my = (mouse_pos.y/(float)gfx_screenheight())*600.0f;
+        
+    int buttons = 0;
+    if(inp_key_pressed(input::mouse_1)) buttons |= 1;
+    if(inp_key_pressed(input::mouse_2)) buttons |= 2;
+    if(inp_key_pressed(input::mouse_3)) buttons |= 4;
+        
+    ui_update(mx,my,mx*3.0f,my*3.0f,buttons);
+
+	gfx_texture_set(cursor_texture);
+	gfx_quads_begin();
+	gfx_quads_setcolor(1,1,1,1);
+	gfx_quads_drawTL(mx,my,24,24);
+	gfx_quads_end();
+
+	char buf[128];
+	if (gametype == GAMETYPE_TDM)
+	{
+		// Switch team
+		ui_do_label(100,100,"Switch Team",40);
+		sprintf(buf,"Team: %s",local_player->team ? "A" : "B");
+		if (ui_do_button(&menu_team, buf, 0, 30, 150, 170, 48, draw_teewars_button))
+		{
+			msg_pack_start(MSG_SWITCHTEAM, MSGFLAG_VITAL);
+			msg_pack_end();
+			client_send_msg();
+			menu_active = false;
+		}
+	}
+
+	if (ui_do_button(&menu_quit, "Quit", 0, 30, 350, 170, 48, draw_teewars_button))
+	{
+		//if (get_state() == STATE_CONNECTING || get_state() == STATE_ONLINE)
+			main_client.disconnect();
+	}
+}
+
 void modc_render()
 {	
 	animstate idlestate;
 	anim_eval(&data->animations[ANIM_BASE], 0, &idlestate);
 	anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);	
-	
-	if(inp_key_down(input::enter))
-	{
-		if(chat_active)
-		{
-			// send message
-			msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
-			msg_pack_string(chat_input, 512);
-			msg_pack_end();
-			client_send_msg();
-		}
-		else
-		{
-			mem_zero(chat_input, sizeof(chat_input));
-			chat_input_len = 0;
-		}
-		chat_active = !chat_active;
-	}
-	
-	if(chat_active)
-	{
-		int c = input::last_char(); // TODO: bypasses the engine interface
-		int k = input::last_key(); // TODO: bypasses the engine interface
-	
-		if (c >= 32 && c < 255)
-		{
-			if (chat_input_len < sizeof(chat_input) - 1)
-			{
-				chat_input[chat_input_len] = c;
-				chat_input[chat_input_len+1] = 0;
-				chat_input_len++;
-			}
-		}
 
-		if(k == input::backspace)
+	if (inp_key_down(input::esc))
+	{
+		menu_active = !menu_active;
+	}
+	if (!menu_active)
+	{
+		if(inp_key_down(input::enter))
 		{
-			if(chat_input_len > 0)
+			if(chat_active)
 			{
-				chat_input[chat_input_len-1] = 0;
-				chat_input_len--;
+				// send message
+				msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
+				msg_pack_string(chat_input, 512);
+				msg_pack_end();
+				client_send_msg();
 			}
+			else
+			{
+				mem_zero(chat_input, sizeof(chat_input));
+				chat_input_len = 0;
+			}
+			chat_active = !chat_active;
 		}
 		
+		if(chat_active)
+		{
+			int c = input::last_char(); // TODO: bypasses the engine interface
+			int k = input::last_key(); // TODO: bypasses the engine interface
+		
+			if (c >= 32 && c < 255)
+			{
+				if (chat_input_len < sizeof(chat_input) - 1)
+				{
+					chat_input[chat_input_len] = c;
+					chat_input[chat_input_len+1] = 0;
+					chat_input_len++;
+				}
+			}
+
+			if(k == input::backspace)
+			{
+				if(chat_input_len > 0)
+				{
+					chat_input[chat_input_len-1] = 0;
+					chat_input_len--;
+				}
+			}
+			
+		}
 	}
 	
 	input::clear_char(); // TODO: bypasses the engine interface
@@ -1063,7 +1137,7 @@ void modc_render()
 		input.target_y = (int)mouse_pos.y; //(int)(a*256.0f);
 		input.activeweapon = -1;
 		
-		if(!chat_active)
+		if(!chat_active && !menu_active)
 		{
 			input.left = inp_key_pressed(config.key_move_left);
 			input.right = inp_key_pressed(config.key_move_right);
@@ -1157,7 +1231,10 @@ void modc_render()
 		{
 			void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
 			if(prev)
+			{
+				client_datas[((obj_player *)data)->clientid].team = ((obj_player *)data)->team;
 				render_player((obj_player *)prev, (obj_player *)data);
+			}
 		}
 		else if(item.type == OBJTYPE_PROJECTILE)
 		{
@@ -1188,9 +1265,12 @@ void modc_render()
 		gfx_quads_begin();
 		
 		// render cursor
-		select_sprite(data->weapons[local_player->weapon%data->num_weapons].sprite_cursor);
-		float cursorsize = 64;
-		draw_sprite(local_player_pos.x+mouse_pos.x, local_player_pos.y+mouse_pos.y, cursorsize);
+		if (!menu_active)
+		{
+			select_sprite(data->weapons[local_player->weapon%data->num_weapons].sprite_cursor);
+			float cursorsize = 64;
+			draw_sprite(local_player_pos.x+mouse_pos.x, local_player_pos.y+mouse_pos.y, cursorsize);
+		}
 
 		// render ammo count
 		// render gui stuff
@@ -1252,22 +1332,26 @@ void modc_render()
 			
 			// render victim tee
 			x -= 24.0f;
-			//int skin = gametype == GAMETYPE_TDM ? skinseed + player->team : player->clientid;
-			render_tee(&idlestate, killmsgs[r].victim, vec2(1,0), vec2(x, y+28));
+			int skin = gametype == GAMETYPE_TDM ? skinseed + client_datas[killmsgs[r].victim].team : killmsgs[r].victim;
+			render_tee(&idlestate, skin, vec2(1,0), vec2(x, y+28));
 			x -= 32.0f;
 
 			// render weapon
 			x -= 44.0f;
-			gfx_texture_set(data->images[IMAGE_WEAPONS].id);
-			gfx_quads_begin();
-			select_sprite(data->weapons[killmsgs[r].weapon].sprite_body);
-			draw_sprite(x, y+28, 96);
-			gfx_quads_end();
+			if (killmsgs[r].weapon >= 0)
+			{
+				gfx_texture_set(data->images[IMAGE_WEAPONS].id);
+				gfx_quads_begin();
+				select_sprite(data->weapons[killmsgs[r].weapon].sprite_body);
+				draw_sprite(x, y+28, 96);
+				gfx_quads_end();
+			}
 			x -= 52.0f;
 
 			// render killer tee
 			x -= 24.0f;
-			render_tee(&idlestate, killmsgs[r].killer, vec2(1,0), vec2(x, y+28));
+			skin = gametype == GAMETYPE_TDM ? skinseed + client_datas[killmsgs[r].killer].team : killmsgs[r].killer;
+			render_tee(&idlestate, skin, vec2(1,0), vec2(x, y+28));
 			x -= 32.0f;
 			
 			// render killer name
@@ -1276,6 +1360,12 @@ void modc_render()
 			
 			y += 44;
 		}
+	}
+
+	if (menu_active)
+	{
+		ingamemenu_render();
+		return;
 	}
 	
 	// render chat
@@ -1410,7 +1500,8 @@ void modc_render()
 			// Team deathmatch
 			gfx_blend_normal();
 			
-			float x = 50.0f;
+			float w = 650.0f;
+			float x = width-w-50.0f;
 			float y = 150.0f;
 			
 			gfx_texture_set(-1);
@@ -1483,7 +1574,12 @@ void modc_render()
 						gfx_pretty_text(offsetx + x+128, offsets[player->team], 48, client_datas[player->clientid].name);
 
 						int skin = skinseed + player->team;
-						render_tee(&idlestate, skin, vec2(1,0), vec2(offsetx + x+90, y+24));
+						render_tee(&idlestate, skin, vec2(1,0), vec2(offsetx + x+90, offsets[player->team]+24));
+
+						sprintf(buf, "%4d", player->latency);
+						float tw = gfx_pretty_text_width(48.0f, buf);
+						gfx_pretty_text(offsetx + x + 220, y, 48, buf);
+
 						offsets[player->team] += 58.0f;
 					}
 				}

@@ -1640,6 +1640,13 @@ void mods_message(int msg, int client_id)
 		msg_pack_end();
 		server_send_msg(-1);
 	}
+	else if (msg == MSG_SWITCHTEAM)
+	{
+		// Switch team on given client and kill/respawn him
+		players[client_id].team = !players[client_id].team;
+		players[client_id].die(client_id, -1);
+		players[client_id].score--;
+	}
 }
 
 void mods_init()
@@ -1662,19 +1669,19 @@ void mods_init()
 		{
 		case ITEM_WEAPON_GUN:
 			type = POWERUP_TYPE_WEAPON;
-			subtype = WEAPON_TYPE_GUN;
+			subtype = WEAPON_GUN;
 			break;
 		case ITEM_WEAPON_SHOTGUN:
 			type = POWERUP_TYPE_WEAPON;
-			subtype = WEAPON_TYPE_SHOTGUN;
+			subtype = WEAPON_SHOTGUN;
 			break;
 		case ITEM_WEAPON_ROCKET:
 			type = POWERUP_TYPE_WEAPON;
-			subtype = WEAPON_TYPE_ROCKET;
+			subtype = WEAPON_ROCKET;
 			break;
 		case ITEM_WEAPON_HAMMER:
 			type = POWERUP_TYPE_WEAPON;
-			subtype = WEAPON_TYPE_MELEE;
+			subtype = WEAPON_HAMMER;
 			break;
 		
 		case ITEM_HEALTH:
@@ -1683,6 +1690,10 @@ void mods_init()
 		
 		case ITEM_ARMOR:
 			type = POWERUP_TYPE_ARMOR;
+			break;
+		case ITEM_NINJA:
+			type = POWERUP_TYPE_NINJA;
+			subtype = WEAPON_NINJA;
 			break;
 		};
 		
