@@ -15,6 +15,9 @@ data_container *data = 0x0;
 
 int charids[16] = {2,10,0,4,12,6,14,1,9,15,13,11,7,5,8,3};
 
+static int gametype = GAMETYPE_DM;
+static int skinseed = 0;
+
 static vec2 mouse_pos;
 static vec2 local_player_pos;
 static obj_player *local_player;
@@ -942,8 +945,9 @@ static void render_player(obj_player *prev, obj_player *player)
 		gfx_quads_end();
 	}
 
-	// render the tee	
-	render_tee(&state, player->clientid, direction, position);
+	// render the tee
+	int skin = gametype == GAMETYPE_TDM ? skinseed + player->team : player->clientid;
+	render_tee(&state, skin, direction, position);
 }
 
 
@@ -1248,6 +1252,7 @@ void modc_render()
 			
 			// render victim tee
 			x -= 24.0f;
+			//int skin = gametype == GAMETYPE_TDM ? skinseed + player->team : player->clientid;
 			render_tee(&idlestate, killmsgs[r].victim, vec2(1,0), vec2(x, y+28));
 			x -= 32.0f;
 
@@ -1305,6 +1310,7 @@ void modc_render()
 	// render goals
 	if(gameobj)
 	{
+		gametype = gameobj->gametype;
 		gfx_mapscreen(0,0,400,300);
 		if(!gameobj->sudden_death)
 		{
@@ -1429,9 +1435,7 @@ void modc_render()
 			y += 64.0f;
 
 			// Calculate team scores
-			int teamscore[2];
-			teamscore[0] = 0;
-			teamscore[1] = 0;
+			int teamscore[2] = {0,0};
 			int num = snap_num_items(SNAP_CURRENT);
 			for(int i = 0; i < num; i++)
 			{
@@ -1459,6 +1463,10 @@ void modc_render()
 
 			y += 50.0f;
 
+			float offsets[2];
+			offsets[0] = y;
+			offsets[1] = y;
+
 			for(int i = 0; i < num; i++)
 			{
 				snap_item item;
@@ -1467,14 +1475,16 @@ void modc_render()
 				if(item.type == OBJTYPE_PLAYER)
 				{
 					obj_player *player = (obj_player *)data;
-					if(player)
+					if(player && player->team >= 0 && player->team < 2)
 					{
 						sprintf(buf, "%4d", player->score);
-						gfx_pretty_text(x+60-gfx_pretty_text_width(48,buf), y, 48, buf);
-						gfx_pretty_text(x+128, y, 48, client_datas[player->clientid].name);
+						float offsetx = player->team ? 400 : 0;
+						gfx_pretty_text(offsetx + x+60-gfx_pretty_text_width(48,buf), offsets[player->team], 48, buf);
+						gfx_pretty_text(offsetx + x+128, offsets[player->team], 48, client_datas[player->clientid].name);
 
-						render_tee(&idlestate, player->clientid, vec2(1,0), vec2(x+90, y+24));
-						y += 58.0f;
+						int skin = skinseed + player->team;
+						render_tee(&idlestate, skin, vec2(1,0), vec2(offsetx + x+90, y+24));
+						offsets[player->team] += 58.0f;
 					}
 				}
 			}
