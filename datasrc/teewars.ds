@@ -299,7 +299,7 @@ weapons {
 		muzzleoffsety 6.0
 		maxammo 10
 		recoil 10
-		firedelay 800
+		firedelay 600
 		muzzleduration 5
 		visual_size 96
 		offsetx 24.0
