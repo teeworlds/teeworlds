@@ -244,7 +244,7 @@ weapons {
 		nummuzzlesprites 3
 		muzzleoffsetx 50.0
 		muzzleoffsety 6.0
-		maxammo 5
+		maxammo 10
 		recoil 10
 		firedelay 100
 		muzzleduration 5
@@ -253,7 +253,7 @@ weapons {
 		offsety 4.0
 		meleedamage 0
 		meleereach 0
-		ammoregentime 1000
+		ammoregentime 500
 		duration -1
 		movetime 0
 		velocity 0
@@ -324,7 +324,7 @@ weapons {
 		muzzleoffsety 0.0
 		maxammo 10
 		recoil 10
-		firedelay 300
+		firedelay 150
 		muzzleduration 0
 		visual_size 96
 		offsetx 4.0
@@ -372,12 +372,12 @@ weapons {
 		muzzleoffsety 0.0
 		maxammo 0
 		recoil 0
-		firedelay 400
+		firedelay 800
 		muzzleduration 0
 		visual_size 96
 		offsetx 0.0
 		offsety 0.0
-		meleedamage 10
+		meleedamage 9
 		meleereach 0
 		ammoregentime 0
 		duration 15000

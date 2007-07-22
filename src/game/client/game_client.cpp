@@ -1003,21 +1003,22 @@ void ingamemenu_render()
 {
 	if (!local_player)
 		return;
-	gfx_mapscreen(0, 0, 800, 600);
+	gfx_mapscreen(0, 0, 800, 600); // TODO: fix me
 	// Ingame menu - quit and change team (if tdm)
 	float mx,my;
 	int rx, ry;
     inp_mouse_relative(&rx, &ry);
-    mouse_pos.x += rx;
-    mouse_pos.y += ry;
-    if(mouse_pos.x < 0) mouse_pos.x = 0;
-    if(mouse_pos.y < 0) mouse_pos.y = 0;
-    if(mouse_pos.x > gfx_screenwidth()) mouse_pos.x = gfx_screenwidth();
-    if(mouse_pos.y > gfx_screenheight()) mouse_pos.y = gfx_screenheight();
+    static vec2 menu_mouse_pos(0,0);
+    menu_mouse_pos.x += rx;
+    menu_mouse_pos.y += ry;
+    if(menu_mouse_pos.x < 0) mouse_pos.x = 0;
+    if(menu_mouse_pos.y < 0) mouse_pos.y = 0;
+    if(menu_mouse_pos.x > gfx_screenwidth()) menu_mouse_pos.x = gfx_screenwidth();
+    if(menu_mouse_pos.y > gfx_screenheight()) menu_mouse_pos.y = gfx_screenheight();
         
     // update the ui
-    mx = (mouse_pos.x/(float)gfx_screenwidth())*800.0f;
-    my = (mouse_pos.y/(float)gfx_screenheight())*600.0f;
+    mx = (menu_mouse_pos.x/(float)gfx_screenwidth())*800.0f;
+    my = (menu_mouse_pos.y/(float)gfx_screenheight())*600.0f;
         
     int buttons = 0;
     if(inp_key_pressed(input::mouse_1)) buttons |= 1;
@@ -1025,12 +1026,6 @@ void ingamemenu_render()
     if(inp_key_pressed(input::mouse_3)) buttons |= 4;
         
     ui_update(mx,my,mx*3.0f,my*3.0f,buttons);
-
-	gfx_texture_set(cursor_texture);
-	gfx_quads_begin();
-	gfx_quads_setcolor(1,1,1,1);
-	gfx_quads_drawTL(mx,my,24,24);
-	gfx_quads_end();
 
 	char buf[128];
 	if (gametype == GAMETYPE_TDM)
@@ -1047,11 +1042,18 @@ void ingamemenu_render()
 		}
 	}
 
-	if (ui_do_button(&menu_quit, "Quit", 0, 30, 350, 170, 48, draw_teewars_button))
+	if (ui_do_button(&menu_quit, "Disconnect", 0, 30, 350, 170, 48, draw_teewars_button))
 	{
 		//if (get_state() == STATE_CONNECTING || get_state() == STATE_ONLINE)
 			main_client.disconnect();
 	}
+	
+	gfx_texture_set(cursor_texture);
+	gfx_quads_begin();
+	gfx_quads_setcolor(1,1,1,1);
+	gfx_quads_drawTL(mx,my,24,24);
+	gfx_quads_end();
+	
 }
 
 void modc_render()
@@ -1115,6 +1117,7 @@ void modc_render()
 	input::clear_key(); // TODO: bypasses the engine interface
 	
 	// fetch new input
+	if(!menu_active)
 	{
 		int x, y;
 		inp_mouse_relative(&x, &y);
@@ -1585,7 +1588,7 @@ void modc_render()
 
 						sprintf(buf, "%4d", player->latency);
 						float tw = gfx_pretty_text_width(48.0f, buf);
-						gfx_pretty_text(offsetx + x + 220, y, 48, buf);
+						gfx_pretty_text(offsetx + x + 240, y, 48, buf);
 
 						offsets[player->team] += 58.0f;
 					}

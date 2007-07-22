@@ -343,7 +343,7 @@ game_world world;
 gameobject::gameobject()
 : entity(OBJTYPE_GAME)
 {
-	gametype = GAMETYPE_DM;
+	gametype = GAMETYPE_TDM;
 	game_over_tick = -1;
 	sudden_death = 0;
 	round_start_tick = server_tick();
@@ -703,10 +703,6 @@ void player::respawn()
 	weapons[WEAPON_GUN].got = true;
 	weapons[WEAPON_GUN].ammo = data->weapons[active_weapon].maxammo;
 
-	// TEMP DEBUG
-	weapons[WEAPON_ROCKET_BACKPACK].got = true;
-	weapons[WEAPON_ROCKET_BACKPACK].ammo = 10;
-
 	active_weapon = WEAPON_GUN;
 	reload_timer = 0;
 
@@ -1006,7 +1002,7 @@ void player::tick()
 	// TODO: remove this tick count, it feels weird
 	if(dead)
 	{
-		if(server_tick()-die_tick >= server_tickspeed()*3) // auto respawn after 3 sec
+		if(server_tick()-die_tick >= server_tickspeed()*5) // auto respawn after 3 sec
 			respawn();
 		if(input.fire && server_tick()-die_tick >= server_tickspeed()/2) // auto respawn after 0.5 sec
 			respawn();
@@ -1376,14 +1372,14 @@ void powerup::tick()
 			if(pplayer->health < data->playerinfo[gameobj.gametype].maxhealth)
 			{
 				pplayer->health = min((int)data->playerinfo[gameobj.gametype].maxhealth, pplayer->health + 1);
-				respawntime = 20;
+				respawntime = 15;
 			}
 			break;
 		case POWERUP_TYPE_ARMOR:
 			if(pplayer->armor < data->playerinfo[gameobj.gametype].maxarmor)
 			{
 				pplayer->armor = min((int)data->playerinfo[gameobj.gametype].maxarmor, pplayer->armor + 1);
-				respawntime = 20;
+				respawntime = 15;
 			}
 			break;
 				
@@ -1393,8 +1389,8 @@ void powerup::tick()
 				if(pplayer->weapons[subtype].ammo < 10 || !pplayer->weapons[subtype].got)
 				{
 					pplayer->weapons[subtype].got = true;
-					pplayer->weapons[subtype].ammo = min(10, pplayer->weapons[subtype].ammo + 5);
-					respawntime = 20;
+					pplayer->weapons[subtype].ammo = min(10, pplayer->weapons[subtype].ammo + 10);
+					respawntime = 15;
 				}
 			}
 			break;
@@ -1404,7 +1400,7 @@ void powerup::tick()
 				pplayer->ninjaactivationtick = server_tick();
 				pplayer->weapons[WEAPON_NINJA].got = true;
 				pplayer->active_weapon = WEAPON_NINJA;
-				respawntime = 20;
+				respawntime = 90;
 				break;
 			}
 		default:

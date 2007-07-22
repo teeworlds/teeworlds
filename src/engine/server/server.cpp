@@ -249,7 +249,7 @@ public:
 				reporttime += time_freq()*reportinterval;
 			}
 			totaltime += time_get()-t;
-			//thread_sleep(1);
+			thread_sleep(1);
 		}
 
 		mods_shutdown();
