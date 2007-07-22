@@ -651,6 +651,7 @@ void player::init()
 	name[3] = 'b';
 	name[4] = 0;
 	client_id = -1;
+	team = 0;
 	extrapowerflags = 0;
 	ninjaactivationtick = 0;
 	reset();
@@ -665,7 +666,6 @@ void player::reset()
 	vel = vec2(0.0f, 0.0f);
 	direction = vec2(0.0f, 1.0f);
 	score = 0;
-	team = 0;
 	dead = true;
 	die_tick = 0;
 }
@@ -797,7 +797,7 @@ int player::handle_ninja()
 			int type = OBJTYPE_PLAYER;
 			entity *ents[64];
 			vec2 dir = pos - oldpos;
-			float radius = length(dir * 0.5f);
+			float radius = phys_size * 2.0f; //length(dir * 0.5f);
 			vec2 center = oldpos + dir * 0.5f;
 			int num = world.find_entities(center, radius, ents, 64, &type, 1);
 			
