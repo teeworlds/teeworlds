@@ -766,5 +766,6 @@ void client_connect(const char *address);
 
 void client_serverbrowse_refresh();
 int client_serverbrowse_getlist(server_info **servers);
+void client_serverbrowse_use_lan(int use);
 
 #endif

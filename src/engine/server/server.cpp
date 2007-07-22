@@ -40,8 +40,15 @@ public:
 		STATE_INGAME = 2,
 	};
 
+	struct stored_snapshot
+	{
+		int64 send_time;
+		snapshot snap;
+	};
+
 	// connection state info
 	int state;
+	int latency;
 	
 	int last_acked_snapshot;
 	snapshot_storage snapshots;
@@ -91,7 +98,7 @@ int server_getclientinfo(int client_id, client_info *info)
 	if(clients[client_id].is_ingame())
 	{
 		info->name = clients[client_id].name;
-		info->latency = 0;
+		info->latency = clients[client_id].latency;
 		return 1;
 	}
 	return 0;
@@ -280,7 +287,7 @@ public:
 				clients[i].snapshots.purge_until(current_tick-SERVER_TICK_SPEED);
 				
 				// save it the snapshot
-				clients[i].snapshots.add(current_tick, snapshot_size, data);
+				clients[i].snapshots.add(current_tick, time_get(), snapshot_size, data);
 				
 				// find snapshot that we can preform delta against
 				static snapshot emptysnap;
@@ -292,7 +299,7 @@ public:
 				int delta_tick = -1;
 				{
 					void *delta_data;
-					deltashot_size = clients[i].snapshots.get(clients[i].last_acked_snapshot, (void **)&delta_data);
+					deltashot_size = clients[i].snapshots.get(clients[i].last_acked_snapshot, 0, (void **)&delta_data);
 					if(deltashot_size >= 0)
 					{
 						delta_tick = clients[i].last_acked_snapshot;
@@ -418,6 +425,9 @@ public:
 			else if(msg == NETMSG_SNAPACK)
 			{
 				clients[cid].last_acked_snapshot = msg_unpack_int();
+				int64 tagtime;
+				if(clients[cid].snapshots.get(clients[cid].last_acked_snapshot, &tagtime, 0) >= 0)
+					clients[cid].latency = (int)(((time_get()-tagtime)*1000)/time_freq());
 			}
 			else
 			{
@@ -442,7 +452,6 @@ public:
 
 	void send_serverinfo(NETADDR4 *addr)
 	{
-		dbg_msg("server", "sending heartbeat");
 		NETPACKET packet;
 		
 		data_packer packer;
@@ -488,7 +497,6 @@ public:
 				if(packet.data_size == sizeof(SERVERBROWSE_GETINFO) &&
 					memcmp(packet.data, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
 				{
-					dbg_msg("server", "info requested");
 					send_serverinfo(&packet.address);
 				}
 				else if(packet.data_size == sizeof(SERVERBROWSE_FWCHECK) &&
@@ -504,7 +512,9 @@ public:
 				else if(packet.data_size == sizeof(SERVERBROWSE_FWERROR) &&
 					memcmp(packet.data, SERVERBROWSE_FWERROR, sizeof(SERVERBROWSE_FWERROR)) == 0)
 				{
-					dbg_msg("server", "ERROR: clients can not connect due to FIREWALL/NAT");
+					dbg_msg("server", "ERROR: the master server reports that clients can not to the");
+					dbg_msg("server", "ERROR: server due to  connect due to firewall/nat. configure");
+					dbg_msg("server", "ERROR: your firewall/nat to let trough udp on port %d.", 8303);
 				}
 			}
 			else
@@ -549,8 +559,6 @@ public:
 int main(int argc, char **argv)
 {
 	dbg_msg("server", "starting...");
-
-	dbg_msg("server", "%d %d", sizeof(snapshot), sizeof(snapshot::item));
 
 	config_reset();
 	config_load("server.cfg");

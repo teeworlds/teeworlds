@@ -343,7 +343,7 @@ game_world world;
 gameobject::gameobject()
 : entity(OBJTYPE_GAME)
 {
-	gametype = GAMETYPE_TDM;
+	gametype = GAMETYPE_DM;
 	game_over_tick = -1;
 	sudden_death = 0;
 	round_start_tick = server_tick();
@@ -1032,6 +1032,9 @@ void player::tick()
 		
 	if(hook_state == HOOK_GRABBED)
 	{
+		if(hooked_player)
+			hook_pos = hooked_player->pos;
+			
 		/*if(hooked_player)
 			hook_pos = hooked_player->pos;
 
@@ -1043,24 +1046,29 @@ void player::tick()
 			vel.x = saturated_add(-hook_drag_speed, hook_drag_speed, vel.x, -accel*dir.x*0.75f);
 			vel.y = saturated_add(-hook_drag_speed, hook_drag_speed, vel.y, -accel*dir.y);
 		}*/
+		
 		// Old version feels much better (to me atleast)
-		vec2 hookvel = normalize(hook_pos-pos)*hook_drag_accel;
-		// the hook as more power to drag you up then down.
-		// this makes it easier to get on top of an platform
-		if(hookvel.y > 0)
-			hookvel.y *= 0.3f;
-		
-		// the hook will boost it's power if the player wants to move
-		// in that direction. otherwise it will dampen everything abit
-		if((hookvel.x < 0 && input.left) || (hookvel.x > 0 && input.right)) 
-			hookvel.x *= 0.95f;
-		else
-			hookvel.x *= 0.75f;
-		vec2 new_vel = vel+hookvel;
-		
-		// check if we are under the legal limit for the hook
-		if(length(new_vel) < hook_drag_speed || length(new_vel) < length(vel))
-			vel = new_vel; // no problem. apply
+		if(distance(hook_pos, pos) > 46.0f)
+		{
+			vec2 hookvel = normalize(hook_pos-pos)*hook_drag_accel;
+			// the hook as more power to drag you up then down.
+			// this makes it easier to get on top of an platform
+			if(hookvel.y > 0)
+				hookvel.y *= 0.3f;
+			
+			// the hook will boost it's power if the player wants to move
+			// in that direction. otherwise it will dampen everything abit
+			if((hookvel.x < 0 && input.left) || (hookvel.x > 0 && input.right)) 
+				hookvel.x *= 0.95f;
+			else
+				hookvel.x *= 0.75f;
+			
+			vec2 new_vel = vel+hookvel;
+			
+			// check if we are under the legal limit for the hook
+			if(length(new_vel) < hook_drag_speed || length(new_vel) < length(vel))
+				vel = new_vel; // no problem. apply
+		}
 	}
 		
 	// fix influence of other players, collision + hook
@@ -1204,6 +1212,12 @@ void player::snap(int snaping_client)
 	player->vx = (int)vel.x;
 	player->vy = (int)vel.y;
 	player->emote = EMOTE_NORMAL;
+
+	player->latency = 0;
+	client_info info;
+	if(server_getclientinfo(client_id, &info))
+		player->latency = info.latency;
+	
 
 	player->ammocount = weapons[active_weapon].ammo;
 	player->health = 0;

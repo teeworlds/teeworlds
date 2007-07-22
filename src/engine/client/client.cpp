@@ -167,6 +167,7 @@ static struct
 	netaddr4 addresses[MAX_SERVERS];
 	int num;
 } servers;
+static int serverlist_lan = 1;
 
 static netaddr4 master_server;
 
@@ -176,19 +177,50 @@ int client_serverbrowse_getlist(server_info **serverlist)
 	return servers.num;
 }
 
+void client_serverbrowse_init()
+{
+	servers.num = 0;
+}
+
+void client_serverbrowse_use_lan(int use)
+{
+	serverlist_lan = use;
+}
+
 void client_serverbrowse_refresh()
 {
-	dbg_msg("client", "requesting server list");
-	NETPACKET packet;
-	packet.client_id = -1;
-	packet.address = master_server;
-	packet.flags = PACKETFLAG_CONNLESS;
-	packet.data_size = sizeof(SERVERBROWSE_GETLIST);
-	packet.data = SERVERBROWSE_GETLIST;
-	net.send(&packet);	
-	
-	// reset the list
-	servers.num = 0;
+	if(serverlist_lan)
+	{
+		dbg_msg("client", "broadcasting for servers");
+		NETPACKET packet;
+		packet.client_id = -1;
+		packet.address.ip[0] = 0;
+		packet.address.ip[1] = 0;
+		packet.address.ip[2] = 0;
+		packet.address.ip[3] = 0;
+		packet.address.port = 8303;
+		packet.flags = PACKETFLAG_CONNLESS;
+		packet.data_size = sizeof(SERVERBROWSE_GETINFO);
+		packet.data = SERVERBROWSE_GETINFO;
+		net.send(&packet);	
+		
+		// reset the list
+		servers.num = 0;		
+	}
+	else
+	{
+		dbg_msg("client", "requesting server list");
+		NETPACKET packet;
+		packet.client_id = -1;
+		packet.address = master_server;
+		packet.flags = PACKETFLAG_CONNLESS;
+		packet.data_size = sizeof(SERVERBROWSE_GETLIST);
+		packet.data = SERVERBROWSE_GETLIST;
+		net.send(&packet);	
+		
+		// reset the list
+		servers.num = 0;
+	}
 }
 
 enum
@@ -214,6 +246,7 @@ static void set_state(int s)
 
 void client_connect(const char *server_address_str)
 {
+	dbg_msg("client", "connecting to '%s'", server_address_str);
 	char buf[512];
 	strncpy(buf, server_address_str, 512);
 	
@@ -393,6 +426,8 @@ public:
 		snapshot_part = 0;
 		info_request_begin = 0;
 		info_request_end = 0;
+		
+		client_serverbrowse_init();
 		
 		// init graphics and sound
 		if(!gfx_init())
@@ -589,17 +624,40 @@ public:
 				data_unpacker unpacker;
 				unpacker.reset((unsigned char*)packet->data+sizeof(SERVERBROWSE_INFO), packet->data_size-sizeof(SERVERBROWSE_INFO));
 				
-				for(int i = 0; i < servers.num; i++)
+				if(serverlist_lan)
 				{
-					if(net_addr4_cmp(&servers.addresses[i], &packet->address) == 0)
+					if(servers.num != MAX_SERVERS)
 					{
+						int i = servers.num;
 						strncpy(servers.infos[i].name, unpacker.get_string(), 128);
 						strncpy(servers.infos[i].map, unpacker.get_string(), 128);
 						servers.infos[i].max_players = unpacker.get_int();
 						servers.infos[i].num_players = unpacker.get_int();
-						servers.infos[i].latency = ((time_get() - servers.request_times[i])*1000)/time_freq();
+						servers.infos[i].latency = 0;
+						
+						sprintf(servers.infos[i].address, "%d.%d.%d.%d:%d",
+							packet->address.ip[0], packet->address.ip[1], packet->address.ip[2],
+							packet->address.ip[3], packet->address.port);
+
 						dbg_msg("client", "got server info");
-						break;
+						servers.num++;
+						
+					}
+				}
+				else
+				{
+					for(int i = 0; i < servers.num; i++)
+					{
+						if(net_addr4_cmp(&servers.addresses[i], &packet->address) == 0)
+						{
+							strncpy(servers.infos[i].name, unpacker.get_string(), 128);
+							strncpy(servers.infos[i].map, unpacker.get_string(), 128);
+							servers.infos[i].max_players = unpacker.get_int();
+							servers.infos[i].num_players = unpacker.get_int();
+							servers.infos[i].latency = ((time_get() - servers.request_times[i])*1000)/time_freq();
+							dbg_msg("client", "got server info");
+							break;
+						}
 					}
 				}
 			}
@@ -688,7 +746,7 @@ public:
 							if(delta_tick >= 0)
 							{
 								void *delta_data;
-								deltashot_size = snapshots_new.get(delta_tick, &delta_data);
+								deltashot_size = snapshots_new.get(delta_tick, 0, &delta_data);
 								if(deltashot_size >= 0)
 								{
 									deltashot = (snapshot *)delta_data;
@@ -708,7 +766,7 @@ public:
 							snapshots_new.purge_until(game_tick-50); // TODO: change this to server tickrate
 							
 							// add new
-							snapshots_new.add(game_tick, snapsize, snapshots[SNAP_CURRENT]);
+							snapshots_new.add(game_tick, time_get(), snapsize, snapshots[SNAP_CURRENT]);
 							
 							// apply snapshot, cycle pointers
 							recived_snapshots++;

@@ -6,6 +6,8 @@
 static int map_textures[64] = {0};
 static int count = 0;
 
+extern int DEBUGTEST_MAPIMAGE;
+
 int img_init()
 {
 	int start, count;

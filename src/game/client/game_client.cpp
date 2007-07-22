@@ -1108,6 +1108,8 @@ void modc_render()
 
 	// pseudo format
 	float zoom = 3.0f;
+	if(inp_key_pressed('I'))
+		zoom = 1.0f;
 	
 	float width = 400*zoom;
 	float height = 300*zoom;
@@ -1343,7 +1345,8 @@ void modc_render()
 		{
 			// Normal deathmatch
 
-			float x = 50.0f;
+			float w = 550.0f;
+			float x = width-w-50.0f;
 			float y = 150.0f;
 
 			gfx_blend_normal();
@@ -1351,7 +1354,7 @@ void modc_render()
 			gfx_texture_set(-1);
 			gfx_quads_begin();
 			gfx_quads_setcolor(0,0,0,0.5f);
-			gfx_quads_drawTL(x-10.f, y-10.f, 400.0f, 600.0f);
+			gfx_quads_drawTL(x-10.f, y-10.f, w, 600.0f);
 			gfx_quads_end();
 			
 			gfx_pretty_text(x, y, 64, "Score Board");
@@ -1386,6 +1389,9 @@ void modc_render()
 						sprintf(buf, "%4d", player->score);
 						gfx_pretty_text(x+60-gfx_pretty_text_width(48,buf), y, 48, buf);
 						gfx_pretty_text(x+128, y, 48, client_datas[player->clientid].name);
+						sprintf(buf, "%4d", player->latency);
+						float tw = gfx_pretty_text_width(48.0f, buf);
+						gfx_pretty_text(x+w-tw-20, y, 48, buf);
 
 						render_tee(&idlestate, player->clientid, vec2(1,0), vec2(x+90, y+24));
 						y += 58.0f;

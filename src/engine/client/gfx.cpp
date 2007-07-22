@@ -185,6 +185,8 @@ void gfx_blend_additive()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 }
 
+int DEBUGTEST_MAPIMAGE = 0;
+
 int gfx_load_texture_raw(int w, int h, int format, const void *data)
 {
 	// grab texture
@@ -195,14 +197,29 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data)
 	// set data and return
 	// TODO: should be RGBA, not BGRA
 	dbg_msg("gfx", "%d = %dx%d", tex, w, h);
-	if(format == IMG_RGB)
-		textures[tex].tex.data2d(w, h, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, data);
-	else if(format == IMG_RGBA)
-		textures[tex].tex.data2d(w, h, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	else if(format == IMG_BGR)
-		textures[tex].tex.data2d(w, h, GL_RGB, GL_BGR, GL_UNSIGNED_BYTE, data);
-	else if(format == IMG_BGRA)
-		textures[tex].tex.data2d(w, h, GL_RGBA, GL_BGRA, GL_UNSIGNED_BYTE, data);
+	if(DEBUGTEST_MAPIMAGE)
+	{
+		if(format == IMG_RGB)
+			textures[tex].tex.data2d_nomip(w, h, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, data);
+		else if(format == IMG_RGBA)
+			textures[tex].tex.data2d_nomip(w, h, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		else if(format == IMG_BGR)
+			textures[tex].tex.data2d_nomip(w, h, GL_RGB, GL_BGR, GL_UNSIGNED_BYTE, data);
+		else if(format == IMG_BGRA)
+			textures[tex].tex.data2d_nomip(w, h, GL_RGBA, GL_BGRA, GL_UNSIGNED_BYTE, data);
+	}
+	else
+	{
+		if(format == IMG_RGB)
+			textures[tex].tex.data2d(w, h, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, data);
+		else if(format == IMG_RGBA)
+			textures[tex].tex.data2d(w, h, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		else if(format == IMG_BGR)
+			textures[tex].tex.data2d(w, h, GL_RGB, GL_BGR, GL_UNSIGNED_BYTE, data);
+		else if(format == IMG_BGRA)
+			textures[tex].tex.data2d(w, h, GL_RGBA, GL_BGRA, GL_UNSIGNED_BYTE, data);
+	}
+	
 	return tex;
 }
 

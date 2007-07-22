@@ -43,6 +43,7 @@ class snapshot_storage
 {
 	struct holder
 	{
+		int64 tagtime;
 		int tick;
 		int data_size;
 		int *data() { return (int *)(this+1); }
@@ -71,15 +72,16 @@ public:
 		buffer.reset();
 	}
 
-	void add(int tick, int data_size, void *data)
+	void add(int tick, int64 tagtime, int data_size, void *data)
 	{
 		holder *h = (holder *)buffer.alloc(sizeof(holder)+data_size);
 		h->tick = tick;
 		h->data_size = data_size;
+		h->tagtime = tagtime;
 		mem_copy(h->data(), data, data_size);
 	}
 	
-	int get(int tick, void **data)
+	int get(int tick, int64 *tagtime, void **data)
 	{
 		ring_buffer::item *i = buffer.first();
 		while(i)
@@ -87,7 +89,10 @@ public:
 			holder *h = (holder *)i->data();
 			if(h->tick == tick)
 			{
-				*data = h->data();
+				if(data)
+					*data = h->data();
+				if(tagtime)
+					*tagtime = h->tagtime;
 				return h->data_size;
 			}
 				

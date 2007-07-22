@@ -147,6 +147,7 @@ struct obj_player
 	int attacktick; // num attack ticks left of current attack
 	
 	int score;
+	int latency;
 	int emote;
 	
 	int hook_active;
