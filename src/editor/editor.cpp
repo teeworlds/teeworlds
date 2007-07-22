@@ -5,6 +5,7 @@
 
 #include <engine/interface.h>
 #include <engine/datafile.h>
+#include <engine/config.h>
 #include <engine/client/ui.h>
 
 #include <game/client/mapres_image.h>
@@ -34,6 +35,7 @@ static ent_type ent_types[] = {
 	{"hammer", MAPRES_ITEM, ITEM_WEAPON_HAMMER},
 	{"health", MAPRES_ITEM, ITEM_HEALTH},
 	{"armor", MAPRES_ITEM, ITEM_ARMOR},
+	{"ninja", MAPRES_ITEM, ITEM_NINJA},
 	{0, 0}
 };
 
@@ -312,7 +314,7 @@ static tileset *tilesets_get(int index)
 *********************************************************/
 static void render_tilemap(tilemap *tm, float sx, float sy, float scale)
 {
-	float frac = (1.0f/512.0f); //2.0f;
+	float frac = (1.0f/1024.0f); //2.0f;
 	gfx_quads_begin();
 	for(int y = 0; y < tm->height; y++)
 		for(int x = 0; x < tm->width; x++)
@@ -1207,6 +1209,8 @@ extern void modmenu_init();
 int editor_main(int argc, char **argv)
 {
 	dbg_msg("editor", "starting...");
+	
+	config_load("editor.cfg");
 	
 	// parse arguments
 	for(int i = 1; i < argc; i++)
