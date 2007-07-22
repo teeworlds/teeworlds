@@ -111,6 +111,8 @@ bool gfx_init()
 		dbg_msg("game", "failed to create gl context");
 		return false;
 	}
+
+	
 	// Init vertices
 	if (g_pVertices)
 		mem_free(g_pVertices);
@@ -160,12 +162,20 @@ bool gfx_init()
 	// create null texture, will get id=0
 	gfx_load_texture_raw(4,4,IMG_RGBA,null_texture_data);
 
+	// set vsync as needed
+	gfx_set_vsync(config.vsync);
+
 	return true;
 }
 
 int gfx_get_video_modes(video_mode *list, int maxcount)
 {
 	return context.getvideomodes((opengl::videomode *)list, maxcount);
+}
+
+void gfx_set_vsync(int val)
+{
+	context.set_vsync(val);
 }
 
 int gfx_unload_texture(int index)

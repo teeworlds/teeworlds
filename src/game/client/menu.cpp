@@ -311,7 +311,6 @@ struct server_list
 	int selected_index;
 };
 
-
 int ui_do_key_reader(void *id, float x, float y, float w, float h, int key)
 {
 	// process
@@ -704,13 +703,6 @@ static int main_render()
 
 	if (!inited)
 	{
-		/*
-		list.info_count = 256;
-
-		list.scroll_index = 0;
-		list.selected_index = -1;
-		*/
-
 		inited = true;
 
 		client_serverbrowse_refresh();
@@ -737,11 +729,11 @@ static int main_render()
 	if (ui_do_button(&refresh_button, "Refresh", 0, 20, 420, 170, 48, draw_teewars_button))
 		client_serverbrowse_refresh();
 
-	if (selected_index == -1)
+	/*if (selected_index == -1)
 	{
 		ui_do_button(&join_button, "Join", 0, 620, 420, 128, 48, draw_teewars_button, (void *)1);
 	}
-	else if (ui_do_button(&join_button, "Join", 0, 620, 420, 128, 48, draw_teewars_button))
+	else */if (ui_do_button(&join_button, "Join", 0, 620, 420, 128, 48, draw_teewars_button))
 	{
 		client_connect(address);
 
@@ -758,9 +750,9 @@ static int main_render()
 		screen = SCREEN_SETTINGS_GENERAL;
 	}
 
-	//static int editor_button;
-	//if (ui_do_button(&editor_button, "Kerning Editor", 0, 20, 470, 170, 48, draw_teewars_button))
-	//	screen = SCREEN_KERNING;
+	/*static int editor_button;
+	if (ui_do_button(&editor_button, "Kerning Editor", 0, 20, 470, 170, 48, draw_teewars_button))
+		screen = SCREEN_KERNING;*/
 
 	return 0;
 }
@@ -840,7 +832,7 @@ static int settings_video_render()
 	{
 		for (int i = 0; i < resolution_count[depth_index]; i++)
 		{
-			if (config_copy.screen_width == resolutions[depth_index][i][0])
+			if (config_copy.screen_width == resolutions[depth_index][i][0] && config_copy.screen_height == resolutions[depth_index][i][1])
 			{
 				selected_index = i;
 				break;
@@ -858,7 +850,10 @@ static int settings_video_render()
 	};
 
 	// we need to draw these bottom up, to make overlapping work correctly
-	ui_do_label(column1_x, row3_y + 50, "(A restart of the game is required for these settings to take effect.)", 20);
+	ui_do_label(column1_x, row4_y + 50, "(A restart of the game is required for these settings to take effect.)", 20);
+	
+	ui_do_label(column1_x, row4_y, "V-sync:", 36);
+	config_set_vsync(&config_copy, ui_do_check_box(&config_copy.vsync, column2_x, row4_y + 5, 32, 32, config_copy.vsync));
 
 	ui_do_label(column1_x, row3_y, "Fullscreen:", 36);
 	config_set_fullscreen(&config_copy, ui_do_check_box(&config_copy.fullscreen, column2_x, row3_y + 5, 32, 32, config_copy.fullscreen));

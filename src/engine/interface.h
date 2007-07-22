@@ -62,6 +62,7 @@ void gfx_shutdown(); // NOT EXPOSED
 void gfx_swap(); // NOT EXPOSED
 
 int gfx_get_video_modes(video_mode *list, int maxcount);
+void gfx_set_vsync(int val);
 
 // textures
 /*
