@@ -962,6 +962,7 @@ int player::handle_weapons()
 
 			// set his velocity to fast upward (for now)
 			create_smoke(ents[i]->pos);
+			create_sound(pos, SOUND_HAMMER_HIT);
 			hitobjects[numobjectshit++] = ents[i];
 			ents[i]->take_damage(vec2(0,10.0f), data->weapons[active_weapon].meleedamage, client_id, active_weapon);
 			player* target = (player*)ents[i];

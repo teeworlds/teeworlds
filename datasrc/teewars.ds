@@ -22,6 +22,12 @@ sounds {
 		"data/audio/wp_hammer_swing-02.wav"
 		"data/audio/wp_hammer_swing-03.wav"
 	}
+
+	hammer_hit {
+		"data/audio/wp_hammer_hit-01.wav"
+		"data/audio/wp_hammer_hit-02.wav"
+		"data/audio/wp_hammer_hit-03.wav"
+	}
 	
 	ninja_fire { 
 		"data/audio/wp_ninja_attack-01.wav"
