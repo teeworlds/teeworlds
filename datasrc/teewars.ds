@@ -371,11 +371,14 @@ weapons {
 		sprite_cursor sprites.weapons.weapon_ninja_cursor
 		sprite_proj sprites.weapons.weapon_ninja_proj
 		sprite_muzzles {
+			sprites.weapons.hadoken1
+			sprites.weapons.hadoken2
+			sprites.weapons.hadoken3
 		}
 		
-		nummuzzlesprites 0
-		muzzleoffsetx 0.0
-		muzzleoffsety 0.0
+		nummuzzlesprites 3
+		muzzleoffsetx 40.0
+		muzzleoffsety -4.0
 		maxammo 0
 		recoil 0
 		firedelay 800
