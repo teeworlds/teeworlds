@@ -270,7 +270,7 @@ void draw_menu_button(void *id, const char *text, int checked, float x, float y,
 
 void draw_teewars_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
 {
-	const float font_size = 46.0f;
+	const float font_size = 42.0f;
 
 	float text_width = gfx_pretty_text_width(font_size, text);
 	gui_tileset_enum tileset;
@@ -290,7 +290,7 @@ void draw_teewars_button(void *id, const char *text, int checked, float x, float
 
 	draw_box(GUI_BOX_BUTTON, tileset, x, y, w, h);
 
-	ui_do_label(x + w/2 - text_width/2, y, text, font_size);
+	ui_do_label(x + w/2 - text_width/2, y + 2, text, font_size);
 }
 
 /*
