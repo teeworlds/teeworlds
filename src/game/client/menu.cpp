@@ -784,11 +784,13 @@ static int settings_controls_render()
 	return 0;
 }
 
+static const unsigned MAX_RESOLUTIONS = 8;
+
 static int settings_video_render()
 {
 	static int resolution_count[2] = {0};
-	static int resolutions[2][10][2] = {0};
-	static char resolution_names[2][10][128] = {0};
+	static int resolutions[2][MAX_RESOLUTIONS][2] = {0};
+	static char resolution_names[2][MAX_RESOLUTIONS][128] = {0};
 
 	static bool inited = false;
 	if (!inited)
@@ -817,10 +819,14 @@ static int settings_video_render()
 			}
 
 			int resolution_index = resolution_count[depth_index];
-			resolution_count[depth_index]++;
-			resolutions[depth_index][resolution_index][0] = mode.width;
-			resolutions[depth_index][resolution_index][1] = mode.height;
-			sprintf(resolution_names[depth_index][resolution_index], "%ix%i", mode.width, mode.height);
+			if(resolution_index < MAX_RESOLUTIONS)
+			{
+				resolution_count[depth_index]++;
+				resolutions[depth_index][resolution_index][0] = mode.width;
+				resolutions[depth_index][resolution_index][1] = mode.height;
+				dbg_msg("res", "%ix%i", mode.width, mode.height);
+				sprintf(resolution_names[depth_index][resolution_index], "%ix%i", mode.width, mode.height);
+			}
 		}
 
 		inited = true;
