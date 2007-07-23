@@ -207,6 +207,29 @@ particles {
 	}
 }
 
+powerups {
+	health {
+		amount 1
+		respawntime 15
+		startspawntime 0
+	}
+	armor {
+		amount 1
+		respawntime 15
+		startspawntime 0
+	}
+	weapon {
+		amount 10
+		respawntime 15
+		startspawntime 0
+	}
+	ninja {
+		amount 1
+		respawntime 90
+		startspawntime 90
+	}
+}
+
 playerstats {
 	dm {
 		maxhealth 10
