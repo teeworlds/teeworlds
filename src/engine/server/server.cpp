@@ -512,9 +512,8 @@ public:
 				else if(packet.data_size == sizeof(SERVERBROWSE_FWERROR) &&
 					memcmp(packet.data, SERVERBROWSE_FWERROR, sizeof(SERVERBROWSE_FWERROR)) == 0)
 				{
-					dbg_msg("server", "ERROR: the master server reports that clients can not to the");
-					dbg_msg("server", "ERROR: server due to  connect due to firewall/nat. configure");
-					dbg_msg("server", "ERROR: your firewall/nat to let trough udp on port %d.", 8303);
+					dbg_msg("server", "ERROR: the master server reports that clients can not connect to this server.");
+					dbg_msg("server", "ERROR: configure your firewall/nat to let trough udp on port %d.", 8303);
 				}
 			}
 			else
