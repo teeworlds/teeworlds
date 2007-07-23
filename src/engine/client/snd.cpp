@@ -137,12 +137,17 @@ public:
 						channels[c].data->sustain_start >= 0 &&
 						channels[c].tick >= channels[c].data->sustain_end)
 					channels[c].tick = channels[c].data->sustain_start;
-				if(channels[c].tick >= channels[c].data->num_samples)
+
+				if(channels[c].stop >= 0)
+					channels[c].stop -=  to_fill;
+				if(channels[c].tick >= channels[c].data->num_samples ||
+						channels[c].stop == 0)
 					channels[c].data = 0;
 
 				channels[c].lerp -= to_fill;
 				if(channels[c].lerp < 0)
 					channels[c].lerp = -1;
+
 
 				filled += to_fill;
 			}
