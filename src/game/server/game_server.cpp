@@ -1350,7 +1350,10 @@ powerup::powerup(int _type, int _subtype)
 
 void powerup::reset()
 {
-	spawntick = -1;
+	if (data->powerupinfo[type].startspawntime > 0)
+		spawntick = server_tick() + server_tickspeed() * data->powerupinfo[type].startspawntime;
+	else
+		spawntick = -1;
 }
 
 void powerup::tick()
@@ -1372,39 +1375,39 @@ void powerup::tick()
 		int respawntime = -1;
 		switch (type)
 		{
-		case POWERUP_TYPE_HEALTH:
+		case POWERUP_HEALTH:
 			if(pplayer->health < data->playerinfo[gameobj.gametype].maxhealth)
 			{
-				pplayer->health = min((int)data->playerinfo[gameobj.gametype].maxhealth, pplayer->health + 1);
-				respawntime = 15;
+				pplayer->health = min((int)data->playerinfo[gameobj.gametype].maxhealth, pplayer->health + data->powerupinfo[type].amount);
+				respawntime = data->powerupinfo[type].respawntime;
 			}
 			break;
-		case POWERUP_TYPE_ARMOR:
+		case POWERUP_ARMOR:
 			if(pplayer->armor < data->playerinfo[gameobj.gametype].maxarmor)
 			{
-				pplayer->armor = min((int)data->playerinfo[gameobj.gametype].maxarmor, pplayer->armor + 1);
-				respawntime = 15;
+				pplayer->armor = min((int)data->playerinfo[gameobj.gametype].maxarmor, pplayer->armor + data->powerupinfo[type].amount);
+				respawntime = data->powerupinfo[type].respawntime;
 			}
 			break;
 				
-		case POWERUP_TYPE_WEAPON:
+		case POWERUP_WEAPON:
 			if(subtype >= 0 && subtype < NUM_WEAPONS)
 			{
 				if(pplayer->weapons[subtype].ammo < 10 || !pplayer->weapons[subtype].got)
 				{
 					pplayer->weapons[subtype].got = true;
-					pplayer->weapons[subtype].ammo = min(10, pplayer->weapons[subtype].ammo + 10);
-					respawntime = 15;
+					pplayer->weapons[subtype].ammo = min(10, pplayer->weapons[subtype].ammo + data->powerupinfo[type].amount);
+					respawntime = data->powerupinfo[type].respawntime;
 				}
 			}
 			break;
-		case POWERUP_TYPE_NINJA:
+		case POWERUP_NINJA:
 			{
 				// activate ninja on target player
 				pplayer->ninjaactivationtick = server_tick();
 				pplayer->weapons[WEAPON_NINJA].got = true;
 				pplayer->active_weapon = WEAPON_NINJA;
-				respawntime = 90;
+				respawntime = data->powerupinfo[type].respawntime;
 				break;
 			}
 		default:
@@ -1668,32 +1671,32 @@ void mods_init()
 		switch(it->type)
 		{
 		case ITEM_WEAPON_GUN:
-			type = POWERUP_TYPE_WEAPON;
+			type = POWERUP_WEAPON;
 			subtype = WEAPON_GUN;
 			break;
 		case ITEM_WEAPON_SHOTGUN:
-			type = POWERUP_TYPE_WEAPON;
+			type = POWERUP_WEAPON;
 			subtype = WEAPON_SHOTGUN;
 			break;
 		case ITEM_WEAPON_ROCKET:
-			type = POWERUP_TYPE_WEAPON;
+			type = POWERUP_WEAPON;
 			subtype = WEAPON_ROCKET;
 			break;
 		case ITEM_WEAPON_HAMMER:
-			type = POWERUP_TYPE_WEAPON;
+			type = POWERUP_WEAPON;
 			subtype = WEAPON_HAMMER;
 			break;
 		
 		case ITEM_HEALTH:
-			type = POWERUP_TYPE_HEALTH;
+			type = POWERUP_HEALTH;
 			break;
 		
 		case ITEM_ARMOR:
-			type = POWERUP_TYPE_ARMOR;
+			type = POWERUP_ARMOR;
 			break;
 
 		case ITEM_NINJA:
-			type = POWERUP_TYPE_NINJA;
+			type = POWERUP_NINJA;
 			subtype = WEAPON_NINJA;
 			break;
 		};
