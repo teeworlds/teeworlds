@@ -627,7 +627,7 @@ static void render_powerup(obj_powerup *prev, obj_powerup *current)
 	gfx_quads_begin();
 	float angle = 0.0f;
 	float size = 64.0f;
-	if (current->type == POWERUP_TYPE_WEAPON)
+	if (current->type == POWERUP_WEAPON)
 	{
 		angle = 0; //-pi/6;//-0.25f * pi * 2.0f;
 		select_sprite(data->weapons[current->subtype%data->num_weapons].sprite_body);
