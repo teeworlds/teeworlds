@@ -473,7 +473,6 @@ public:
 
 	void send_fwcheckresponse(NETADDR4 *addr)
 	{
-		dbg_msg("server", "sending heartbeat");
 		NETPACKET packet;
 		packet.client_id = -1;
 		packet.address = *addr;

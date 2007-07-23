@@ -183,13 +183,10 @@ void client_serverbrowse_init()
 	servers.num = 0;
 }
 
-void client_serverbrowse_use_lan(int use)
+void client_serverbrowse_refresh(int lan)
 {
-	serverlist_lan = use;
-}
-
-void client_serverbrowse_refresh()
-{
+	serverlist_lan = lan;
+	
 	if(serverlist_lan)
 	{
 		dbg_msg("client", "broadcasting for servers");
