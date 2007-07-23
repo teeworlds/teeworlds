@@ -110,11 +110,12 @@ public:
 			unsigned long filled = 0;
 			while(channels[c].data && filled < frames)
 			{
-				unsigned long to_fill = frames;
+				unsigned long frames_left = (channels[c].data->num_samples - channels[c].tick) >> (channels[c].data->channels-1);
+				unsigned long to_fill = frames>frames_left?frames_left:frames;
 				float dv = 0.0f;
 
 				if(channels[c].stop >= 0)
-					to_fill = (unsigned)channels[c].stop>frames?frames:channels[c].stop;
+					to_fill = (unsigned)channels[c].stop>frames_left?frames:channels[c].stop;
 				if(channels[c].loop >= 0 &&
 						channels[c].data->sustain_start >= 0)
 				{
