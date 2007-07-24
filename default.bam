@@ -117,10 +117,10 @@ baselib.apply(server_settings, "network")
 settings.cc.includes:add("src")
 settings.cc.includes:add("../baselib/src/external/zlib")
 
-serverdata = DataCompile("datasrc/teewars.ds", "datasrc/server.dts", "src/game/server/data.h", "src/game/server/data/server_data.cpp", "datasrc/server.dat")
-clientdata = DataCompile("datasrc/teewars.ds", "datasrc/client.dts", "src/game/client/data.h", "src/game/client/data/client_data.cpp", "datasrc/client.dat")
-internal_clientdata = Dat2c("datasrc/client.dat", "src/game/client/data/client_internal.cpp", "internal_client_data");
-internal_serverdata = Dat2c("datasrc/server.dat", "src/game/server/data/server_internal.cpp", "internal_server_data");
+serverdata = DataCompile("datasrc/teewars.ds", "datasrc/server.dts", "src/game/server/data.h", "src/game/server/data/server_data.cpp", "data/server.dat")
+clientdata = DataCompile("datasrc/teewars.ds", "datasrc/client.dts", "src/game/client/data.h", "src/game/client/data/client_data.cpp", "data/client.dat")
+internal_clientdata = Dat2c("data/client.dat", "src/game/client/data/client_internal.cpp", "internal_client_data");
+internal_serverdata = Dat2c("data/server.dat", "src/game/server/data/server_internal.cpp", "internal_server_data");
 
 function build(config)
 	engine = Compile(settings, Collect("src/engine/*.cpp"))
