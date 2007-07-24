@@ -168,6 +168,7 @@ public:
 				channels[c].loop = loop;
 				channels[c].vol = vol * GLOBAL_VOLUME_SCALE;
 				channels[c].pan = pan;
+				channels[c].stop = -1;
 				channels[c].lerp = -1;
 				sound->last_played = time_get();
 				return c;

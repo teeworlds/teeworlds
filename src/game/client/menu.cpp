@@ -705,7 +705,7 @@ static int main_render()
 	{
 		inited = true;
 
-		client_serverbrowse_refresh();
+		client_serverbrowse_refresh(0);
 	}
 
 	static int scoll_index = 0, selected_index = -1;
@@ -727,7 +727,7 @@ static int main_render()
 	static int refresh_button, join_button, quit_button;
 
 	if (ui_do_button(&refresh_button, "Refresh", 0, 20, 420, 170, 48, draw_teewars_button))
-		client_serverbrowse_refresh();
+		client_serverbrowse_refresh(0);
 
 	/*if (selected_index == -1)
 	{
