@@ -559,7 +559,7 @@ int main(int argc, char **argv)
 	dbg_msg("server", "starting...");
 
 	config_reset();
-	config_load("server.cfg");
+	config_load("default.cfg");
 
 	const char *mapname = "data/demo.map";
 	const char *servername = 0;

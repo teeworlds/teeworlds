@@ -31,9 +31,19 @@ function Copy(outputdir, ...)
 	return outputs
 end
 
-dc_compiler = "scripts/compiler.py"
+dc_compiler = "python scripts/compiler.py"
 if family == "windows" then
 	dc_compiler = "scripts\\compiler.py"
+end
+
+dat2c_compiler = "python scripts/dat2c.py"
+if family == "windows" then
+	dat2c_compiler = "scripts\\dat2c.py"
+end
+
+function dat2c(output, data, name)
+	print("dat2c " .. PathFilename(output) .. " = " .. PathFilename(data))
+	return os.execute(dat2c_compiler .. " " .. data .. " " .. name .. " > " .. output)
 end
 
 function dc_header(output, data, script)
@@ -51,25 +61,12 @@ function dc_data(output, data, script)
 	return os.execute(dc_compiler .. " " .. data .. " " .. script .. " -d " .. output)
 end
 
-
-function DataCompile_Header(datafile, scriptfile, outputfile)
+function Dat2c(datafile, sourcefile, arrayname)
 	datafile = Path(datafile)
-	scriptfile = Path(scriptfile)
-	outputfile = Path(outputfile)
-	bam_add_job("dc_header", outputfile, datafile, scriptfile)
-	bam_add_dependency(outputfile, datafile)
-	bam_add_dependency(outputfile, scriptfile)
-	return outputfile
-end
-
-function DataCompile_Source(datafile, scriptfile, outputfile)
-	datafile = Path(datafile)
-	scriptfile = Path(scriptfile)
-	outputfile = Path(outputfile)
-	bam_add_job("dc_source", outputfile, datafile, scriptfile)
-	bam_add_dependency(outputfile, datafile)
-	bam_add_dependency(outputfile, scriptfile)
-	return outputfile
+	sourcefile = Path(sourcefile)
+	bam_add_job("dat2c", sourcefile, datafile, arrayname)
+	bam_add_dependency(sourcefile, datafile)
+	return sourcefile
 end
 
 function DataCompile(datafile, scriptfile, headerfile, sourcefile, outputdatafile)
@@ -95,6 +92,16 @@ config_name = "debug"
 config_ext = ""
 
 settings = NewSettings()
+settings.cc.debug = 1
+settings.cc.optimize = 0
+
+if family == "windows" then
+	settings.cc.flags = "/wd4244"
+else
+	settings.cc.flags = "-Wall"
+	settings.linker.flags = ""
+end
+
 --settings.cc.output = function(input, extention)
 --	return Path("objs/" .. PathFilename(input) .. config_ext .. extention)
 --end
@@ -107,17 +114,13 @@ baselib.apply(settings, "all")
 server_settings = NewSettings()
 baselib.apply(server_settings, "network")
 
-if family == "windows" then
-	settings.cc.flags = "/wd4244"
-else
-	settings.cc.flags = "-Wall"
-end
-
 settings.cc.includes:add("src")
 settings.cc.includes:add("../baselib/src/external/zlib")
 
-serverdata = DataCompile("datasrc/teewars.ds", "datasrc/server.dts", "src/game/server/data.h", "src/game/server/data/server_data.cpp", "data/server.dat")
-clientdata = DataCompile("datasrc/teewars.ds", "datasrc/client.dts", "src/game/client/data.h", "src/game/client/data/client_data.cpp", "data/client.dat")
+serverdata = DataCompile("datasrc/teewars.ds", "datasrc/server.dts", "src/game/server/data.h", "src/game/server/data/server_data.cpp", "datasrc/server.dat")
+clientdata = DataCompile("datasrc/teewars.ds", "datasrc/client.dts", "src/game/client/data.h", "src/game/client/data/client_data.cpp", "datasrc/client.dat")
+internal_clientdata = Dat2c("datasrc/client.dat", "src/game/client/data/client_internal.cpp", "internal_client_data");
+internal_serverdata = Dat2c("datasrc/server.dat", "src/game/server/data/server_internal.cpp", "internal_server_data");
 
 function build(config)
 	engine = Compile(settings, Collect("src/engine/*.cpp"))
@@ -125,23 +128,28 @@ function build(config)
 	server = Compile(settings, Collect("src/engine/server/*.cpp"))
 	masterserver = Compile(settings, Collect("src/mastersrv/*.cpp"))
 	game_shared = Compile(settings, Collect("src/game/*.cpp"))
-	game_client = Compile(settings, Collect("src/game/client/*.cpp"), clientdata.source)
-	game_server = Compile(settings, Collect("src/game/server/*.cpp"), serverdata.source)
+	game_client = Compile(settings, Collect("src/game/client/*.cpp"), clientdata.source, internal_clientdata)
+	game_server = Compile(settings, Collect("src/game/server/*.cpp"), serverdata.source, internal_serverdata)
 	editor = Compile(settings, Collect("src/editor/*.cpp"))
 
-	crapnet = Compile(settings, Collect("src/crapnet/*.cpp"))
-
+	-- build tools
+	tools_src = Collect("src/tools/*.cpp", "src/tools/*.c")
+	
+	objs = Compile(settings, tools_src)
+	tools = {}
+	for i,v in objs do
+		toolname = PathFilename(file_base(v))
+		tools[i] = Link(settings, toolname, v)
+	end
+	
 	client_exe = Link(settings, "teewars"..config_ext, engine, client, editor, game_shared, game_client)
 	server_exe = Link(server_settings, "teewars_srv"..config_ext, engine, server, game_shared, game_server)
 	masterserver_exe = Link(server_settings, "mastersrv"..config_ext, masterserver, engine)
-	-- editor_exe = Link(settings, "editor", engine, game_shared, editor)
-	crapnet_exe = Link(server_settings, "crapnet"..config_ext, crapnet)
 
 	Target(PseudoTarget("client", client_exe, clientdata.data))
 	Target(PseudoTarget("server", server_exe, serverdata.data))
 	Target(PseudoTarget("masterserver", masterserver_exe))
-	Target(PseudoTarget("tools", crapnet_exe))
-	-- Target(PseudoTarget("editor", editor_exe))
+	Target(PseudoTarget("tools", tools))
 end
 
 build("debug")

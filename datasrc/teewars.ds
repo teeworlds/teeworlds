@@ -148,7 +148,19 @@ images {
 	
 	backdrop {
 		filename "data/mountain_paralax.png"
-	}	
+	}
+	
+	cloud_1 {
+		filename "data/cloud-1.png"
+	}
+
+	cloud_2 {
+		filename "data/cloud-2.png"
+	}
+
+	cloud_3 {
+		filename "data/cloud-3.png"
+	}
 }
 
 particles {

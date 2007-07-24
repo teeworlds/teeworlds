@@ -70,6 +70,7 @@ enum
 	Typedefs for callbacks.
 */
 
+typedef unsigned (*png_write_callback_t)(void* input, size_t size, size_t numel, void* user_pointer);
 typedef unsigned (*png_read_callback_t)(void* output, size_t size, size_t numel, void* user_pointer);
 typedef void (*png_free_t)(void* p);
 typedef void * (*png_alloc_t)(size_t s);
@@ -78,6 +79,7 @@ typedef struct
 {
 	void*					zs;				/* pointer to z_stream */
 	png_read_callback_t		read_fun;
+	png_write_callback_t	write_fun;
 	void*					user_pointer;
 
 	unsigned char*			png_data;
@@ -126,13 +128,23 @@ int png_init(png_alloc_t pngalloc, png_free_t pngfree);
 
 int png_open_file(png_t *png, const char* filename);
 
+int png_open_file_read(png_t *png, const char* filename);
+int png_open_file_write(png_t *png, const char* filename);
+
 /*
 	Function: png_open
 
-	This function reads a png from the specified callback. The callback should be of the format:
+	This function reads or writes a png from/to the specified callback. The callbacks should be of the format:
 
+	> size_t (*png_write_callback_t)(void* input, size_t size, size_t numel, void* user_pointer);
 	> size_t (*png_read_callback_t)(void* output, size_t size, size_t numel, void* user_pointer).
 
+	Only one callback has to be specified. The read callback in case of PNG reading, otherwise the write callback.
+
+	Writing:
+	The callback will be called like fwrite.
+
+	Reading:
 	The callback will be called each time pnglite needs more data. The callback should read as much data as requested, 
 	or return 0. This should always be possible if the PNG is sane.	If the output-buffer is a null-pointer the callback 
 	should only skip ahead the specified number of elements. If the callback is a null-pointer the user_pointer will be 
@@ -148,6 +160,9 @@ int png_open_file(png_t *png, const char* filename);
 */
 
 int png_open(png_t* png, png_read_callback_t read_fun, void* user_pointer);
+
+int png_open_read(png_t* png, png_read_callback_t read_fun, void* user_pointer);
+int png_open_write(png_t* png, png_write_callback_t write_fun, void* user_pointer);
 
 /*
 	Function: png_print_info
@@ -189,6 +204,8 @@ char* png_error_string(int error);
 */
 
 int png_get_data(png_t* png, unsigned char* data);
+
+int png_set_data(png_t* png, unsigned width, unsigned height, char depth, int color, unsigned char* data);
 
 /*
 	Function: png_close_file

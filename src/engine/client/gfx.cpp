@@ -1,4 +1,5 @@
 #include <baselib/opengl.h>
+#include <baselib/math.h>
 #include <baselib/vmath.h>
 #include <baselib/stream/file.h>
 
@@ -22,19 +23,19 @@ struct custom_vertex
 	vec4 color;
 };
 
-const int vertexBufferSize = 2048;
+const int vertex_buffer_size = 2048*32;
 //static custom_vertex vertices[4];
-static custom_vertex* g_pVertices = 0;
-static int g_iVertexStart = 0;
-static int g_iVertexEnd = 0;
-static vec4 g_QuadColor[4];
-static vec2 g_QuadTexture[4];
+static custom_vertex *vertices = 0;
+static int num_vertices = 0;
+static vec4 color[4];
+static vec2 texture[4];
 
 static opengl::vertex_buffer vertex_buffer;
 //static int screen_width = 800;
 //static int screen_height = 600;
 static float rotation = 0;
 static int quads_drawing = 0;
+
 static float screen_x0 = 0;
 static float screen_y0 = 0;
 static float screen_x1 = 0;
@@ -61,19 +62,19 @@ static const unsigned char null_texture_data[] = {
 
 static void draw_quad(bool _bflush = false)
 {
-	if (!_bflush && ((g_iVertexEnd + 4) < vertexBufferSize))
+	if (!_bflush && ((num_vertices + 4) < vertex_buffer_size))
 	{
 		// Just add
-		g_iVertexEnd += 4;
+		num_vertices += 4;
 	}
-	else if (g_iVertexEnd)
+	else if (num_vertices)
 	{
 		if (!_bflush)
-			g_iVertexEnd += 4;
+			num_vertices += 4;
 		if(GLEW_ARB_vertex_buffer_object)
 		{
 			// set the data
-			vertex_buffer.data(g_pVertices, vertexBufferSize * sizeof(custom_vertex), GL_DYNAMIC_DRAW);
+			vertex_buffer.data(vertices, num_vertices * sizeof(custom_vertex), GL_DYNAMIC_DRAW);
 			opengl::stream_vertex(&vertex_buffer, 3, GL_FLOAT, sizeof(custom_vertex), 0);
 			opengl::stream_texcoord(&vertex_buffer, 0, 2, GL_FLOAT,
 					sizeof(custom_vertex),
@@ -81,28 +82,81 @@ static void draw_quad(bool _bflush = false)
 			opengl::stream_color(&vertex_buffer, 4, GL_FLOAT,
 					sizeof(custom_vertex),
 					sizeof(vec3)+sizeof(vec2));		
-			opengl::draw_arrays(GL_QUADS, 0, g_iVertexEnd);
+			opengl::draw_arrays(GL_QUADS, 0, num_vertices);
 		}
 		else
 		{
 			glVertexPointer(3, GL_FLOAT,
 					sizeof(custom_vertex),
-					(char*)g_pVertices);
+					(char*)vertices);
 			glTexCoordPointer(2, GL_FLOAT,
 					sizeof(custom_vertex),
-					(char*)g_pVertices + sizeof(vec3));
+					(char*)vertices + sizeof(vec3));
 			glColorPointer(4, GL_FLOAT,
 					sizeof(custom_vertex),
-					(char*)g_pVertices + sizeof(vec3) + sizeof(vec2));
+					(char*)vertices + sizeof(vec3) + sizeof(vec2));
 			glEnableClientState(GL_VERTEX_ARRAY);
 			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 			glEnableClientState(GL_COLOR_ARRAY);
-			glDrawArrays(GL_QUADS, 0, g_iVertexEnd);
+			glDrawArrays(GL_QUADS, 0, num_vertices);
 		}
+		
 		// Reset pointer
-		g_iVertexEnd = 0;
+		num_vertices = 0;
 	}
 }
+struct batch
+{
+	opengl::vertex_buffer vb;
+	int num;
+};
+
+void gfx_quads_draw_batch(void *in_b)
+{
+	batch *b = (batch*)in_b;
+	
+	if(GLEW_ARB_vertex_buffer_object)
+	{
+		// set the data
+		opengl::stream_vertex(&b->vb, 3, GL_FLOAT, sizeof(custom_vertex), 0);
+		opengl::stream_texcoord(&b->vb, 0, 2, GL_FLOAT,
+				sizeof(custom_vertex),
+				sizeof(vec3));
+		opengl::stream_color(&b->vb, 4, GL_FLOAT,
+				sizeof(custom_vertex),
+				sizeof(vec3)+sizeof(vec2));		
+		opengl::draw_arrays(GL_QUADS, 0, b->num);
+	}
+	/*
+	else
+	{
+		glVertexPointer(3, GL_FLOAT,
+				sizeof(custom_vertex),
+				(char*)vertices);
+		glTexCoordPointer(2, GL_FLOAT,
+				sizeof(custom_vertex),
+				(char*)vertices + sizeof(vec3));
+		glColorPointer(4, GL_FLOAT,
+				sizeof(custom_vertex),
+				(char*)vertices + sizeof(vec3) + sizeof(vec2));
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
+		glDrawArrays(GL_QUADS, 0, b->num);
+	}*/	
+}
+
+
+void *gfx_quads_create_batch()
+{
+	batch *b = new batch;
+	b->num = num_vertices;
+	b->vb.data(vertices, num_vertices*sizeof(custom_vertex), GL_STATIC_DRAW);
+	num_vertices = 0;
+	gfx_quads_end();
+	return b;
+}
+
 	
 bool gfx_init()
 {
@@ -114,11 +168,10 @@ bool gfx_init()
 
 	
 	// Init vertices
-	if (g_pVertices)
-		mem_free(g_pVertices);
-	g_pVertices = (custom_vertex*)mem_alloc(sizeof(custom_vertex) * vertexBufferSize, 1);
-	g_iVertexStart = 0;
-	g_iVertexEnd = 0;
+	if (vertices)
+		mem_free(vertices);
+	vertices = (custom_vertex*)mem_alloc(sizeof(custom_vertex) * vertex_buffer_size, 1);
+	num_vertices = 0;
 
 	context.set_title("---");
 
@@ -137,13 +190,13 @@ bool gfx_init()
 	opengl::matrix_modelview(&mat);
 	
 	// Set all z to -5.0f
-	for (int i = 0; i < vertexBufferSize; i++)
-		g_pVertices[i].pos.z = -5.0f;
+	for (int i = 0; i < vertex_buffer_size; i++)
+		vertices[i].pos.z = -5.0f;
 
 	if(GLEW_ARB_vertex_buffer_object)
 	{
 		// set the streams
-		vertex_buffer.data(g_pVertices, sizeof(vertexBufferSize), GL_DYNAMIC_DRAW);
+		vertex_buffer.data(vertices, sizeof(vertex_buffer_size), GL_DYNAMIC_DRAW);
 		opengl::stream_vertex(&vertex_buffer, 3, GL_FLOAT, sizeof(custom_vertex), 0);
 		opengl::stream_texcoord(&vertex_buffer, 0, 2, GL_FLOAT,
 				sizeof(custom_vertex),
@@ -198,8 +251,6 @@ void gfx_blend_additive()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 }
 
-int DEBUGTEST_MAPIMAGE = 0;
-
 int gfx_load_texture_raw(int w, int h, int format, const void *data)
 {
 	// grab texture
@@ -210,27 +261,11 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data)
 	// set data and return
 	// TODO: should be RGBA, not BGRA
 	dbg_msg("gfx", "%d = %dx%d", tex, w, h);
-	if(DEBUGTEST_MAPIMAGE)
+	if(format == IMG_RGB)
+		textures[tex].tex.data2d(w, h, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, data);
+	else if(format == IMG_RGBA)
 	{
-		if(format == IMG_RGB)
-			textures[tex].tex.data2d_nomip(w, h, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, data);
-		else if(format == IMG_RGBA)
-			textures[tex].tex.data2d_nomip(w, h, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		else if(format == IMG_BGR)
-			textures[tex].tex.data2d_nomip(w, h, GL_RGB, GL_BGR, GL_UNSIGNED_BYTE, data);
-		else if(format == IMG_BGRA)
-			textures[tex].tex.data2d_nomip(w, h, GL_RGBA, GL_BGRA, GL_UNSIGNED_BYTE, data);
-	}
-	else
-	{
-		if(format == IMG_RGB)
-			textures[tex].tex.data2d(w, h, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, data);
-		else if(format == IMG_RGBA)
-			textures[tex].tex.data2d(w, h, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		else if(format == IMG_BGR)
-			textures[tex].tex.data2d(w, h, GL_RGB, GL_BGR, GL_UNSIGNED_BYTE, data);
-		else if(format == IMG_BGRA)
-			textures[tex].tex.data2d(w, h, GL_RGBA, GL_BGRA, GL_UNSIGNED_BYTE, data);
+		textures[tex].tex.data2d(w, h, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	}
 	
 	return tex;
@@ -270,92 +305,16 @@ int gfx_load_texture(const char *filename)
 	int l = strlen(filename);
 	if(l < 3)
 		return 0;
-
-	if(	(filename[l-3] == 't' || filename[l-3] == 'T') &&
-		(filename[l-2] == 'g' || filename[l-2] == 'G') &&
-		(filename[l-1] == 'a' || filename[l-1] == 'A'))
+	image_info img;
+	if(gfx_load_png(&img, filename))
 	{
-		image_info img;
-		if(gfx_load_tga(&img, filename))
-		{
-			int id = gfx_load_texture_raw(img.width, img.height, img.format, img.data);
-			mem_free(img.data);
-			return id;
-		}
-		return 0;
-	}
-
-	if(	(filename[l-3] == 'p' || filename[l-3] == 'P') &&
-		(filename[l-2] == 'n' || filename[l-2] == 'N') &&
-		(filename[l-1] == 'g' || filename[l-1] == 'G'))
-	{
-		image_info img;
-		if(gfx_load_png(&img, filename))
-		{
-			int id = gfx_load_texture_raw(img.width, img.height, img.format, img.data);
-			mem_free(img.data);
-			return id;
-		}
-		
-		return 0;
+		int id = gfx_load_texture_raw(img.width, img.height, img.format, img.data);
+		mem_free(img.data);
+		return id;
 	}
 	
 	return 0;
 }
-
-int gfx_load_tga(image_info *img, const char *filename)
-{
-	// open file for reading
-	file_stream file;
-	if(!file.open_r(filename))
-	{
-		dbg_msg("game/tga", "failed to open file. filename='%s'", filename);
-		return 0;
-	}
-	
-	// read header
-	unsigned char headers[18];
-	file.read(headers, sizeof(headers));
-	img->width = headers[12]+(headers[13]<<8);
-	img->height = headers[14]+(headers[15]<<8);
-
-	bool flipx = (headers[17] >> 4) & 1;
-	bool flipy = !((headers[17] >> 5) & 1);
-	
-	(void)flipx; // TODO: make use of this flag
-
-	if(headers[2] != 2) // needs to be uncompressed RGB
-	{
-		dbg_msg("game/tga", "tga not uncompressed rgb. filename='%s'", filename);
-		return 0;
-	}
-		
-	if(headers[16] != 32) // needs to be RGBA
-	{
-		dbg_msg("game/tga", "tga is 32bit. filename='%s'", filename);
-		return 0;
-	}
-	
-	// read data
-	int data_size = img->width*img->height*4;
-	img->data = mem_alloc(data_size, 1);
-	img->format = IMG_BGRA;
-
-	if (flipy)
-	{
-		for (int i = 0; i < img->height; i++)
-		{
-			file.read((char *)img->data + (img->height-i-1)*img->width*4, img->width*4);
-		}
-	}
-	else
-		file.read(img->data, data_size);
-	file.close();
-
-	return 1;
-}
-
-
 
 int gfx_load_png(image_info *img, const char *filename)
 {
@@ -391,8 +350,8 @@ int gfx_load_png(image_info *img, const char *filename)
 
 void gfx_shutdown()
 {
-	if (g_pVertices)
-		mem_free(g_pVertices);
+	if (vertices)
+		mem_free(vertices);
 	context.destroy();
 }
 
@@ -458,6 +417,9 @@ void gfx_setoffset(float x, float y)
 	opengl::matrix_modelview(&mat);
 }
 
+
+
+
 void gfx_quads_begin()
 {
 	dbg_assert(quads_drawing == 0, "called quads_begin twice");
@@ -485,46 +447,42 @@ void gfx_quads_setrotation(float angle)
 void gfx_quads_setcolorvertex(int i, float r, float g, float b, float a)
 {
 	dbg_assert(quads_drawing == 1, "called gfx_quads_setcolorvertex without quads_begin");
-	g_QuadColor[i].r = r;
-	g_QuadColor[i].g = g;
-	g_QuadColor[i].b = b;
-	g_QuadColor[i].a = a;
+	color[i].r = r;
+	color[i].g = g;
+	color[i].b = b;
+	color[i].a = a;
 }
 
 void gfx_quads_setcolor(float r, float g, float b, float a)
 {
 	dbg_assert(quads_drawing == 1, "called gfx_quads_setcolor without quads_begin");
-	g_QuadColor[0] = vec4(r,g,b,a);
-	g_QuadColor[1] = vec4(r,g,b,a);
-	g_QuadColor[2] = vec4(r,g,b,a);
-	g_QuadColor[3] = vec4(r,g,b,a);
-	/*gfx_quads_setcolorvertex(0,r,g,b,a);
-	gfx_quads_setcolorvertex(1,r,g,b,a);
-	gfx_quads_setcolorvertex(2,r,g,b,a);
-	gfx_quads_setcolorvertex(3,r,g,b,a);*/
+	color[0] = vec4(r,g,b,a);
+	color[1] = vec4(r,g,b,a);
+	color[2] = vec4(r,g,b,a);
+	color[3] = vec4(r,g,b,a);
 }
 
 void gfx_quads_setsubset(float tl_u, float tl_v, float br_u, float br_v)
 {
 	dbg_assert(quads_drawing == 1, "called gfx_quads_setsubset without quads_begin");
 
-	g_QuadTexture[0].x = tl_u;
-	g_QuadTexture[0].y = tl_v;
+	texture[0].x = tl_u;
+	texture[0].y = tl_v;
 	//g_pVertices[g_iVertexEnd].tex.u = tl_u;
 	//g_pVertices[g_iVertexEnd].tex.v = tl_v;
 
-	g_QuadTexture[1].x = br_u;
-	g_QuadTexture[1].y = tl_v;
+	texture[1].x = br_u;
+	texture[1].y = tl_v;
 	//g_pVertices[g_iVertexEnd + 2].tex.u = br_u;
 	//g_pVertices[g_iVertexEnd + 2].tex.v = tl_v;
 
-	g_QuadTexture[2].x = br_u;
-	g_QuadTexture[2].y = br_v;
+	texture[2].x = br_u;
+	texture[2].y = br_v;
 	//g_pVertices[g_iVertexEnd + 1].tex.u = tl_u;
 	//g_pVertices[g_iVertexEnd + 1].tex.v = br_v;
 
-	g_QuadTexture[3].x = tl_u;
-	g_QuadTexture[3].y = br_v;
+	texture[3].x = tl_u;
+	texture[3].y = br_v;
 	//g_pVertices[g_iVertexEnd + 3].tex.u = br_u;
 	//g_pVertices[g_iVertexEnd + 3].tex.v = br_v;
 }
@@ -550,33 +508,33 @@ void gfx_quads_drawTL(float x, float y, float width, float height)
 	center.y = y + height/2;
 	center.z = 0;
 	
-	g_pVertices[g_iVertexEnd].pos.x = x;
-	g_pVertices[g_iVertexEnd].pos.y = y;
-	g_pVertices[g_iVertexEnd].tex.u = g_QuadTexture[0].x;
-	g_pVertices[g_iVertexEnd].tex.v = g_QuadTexture[0].y;
-	g_pVertices[g_iVertexEnd].color = g_QuadColor[0];
-	rotate(center, g_pVertices[g_iVertexEnd].pos);
+	vertices[num_vertices].pos.x = x;
+	vertices[num_vertices].pos.y = y;
+	vertices[num_vertices].tex.u = texture[0].x;
+	vertices[num_vertices].tex.v = texture[0].y;
+	vertices[num_vertices].color = color[0];
+	rotate(center, vertices[num_vertices].pos);
 
-	g_pVertices[g_iVertexEnd + 1].pos.x = x+width;
-	g_pVertices[g_iVertexEnd + 1].pos.y = y;
-	g_pVertices[g_iVertexEnd + 1].tex.u = g_QuadTexture[1].x;
-	g_pVertices[g_iVertexEnd + 1].tex.v = g_QuadTexture[1].y;
-	g_pVertices[g_iVertexEnd + 1].color = g_QuadColor[1];
-	rotate(center, g_pVertices[g_iVertexEnd + 1].pos);
+	vertices[num_vertices + 1].pos.x = x+width;
+	vertices[num_vertices + 1].pos.y = y;
+	vertices[num_vertices + 1].tex.u = texture[1].x;
+	vertices[num_vertices + 1].tex.v = texture[1].y;
+	vertices[num_vertices + 1].color = color[1];
+	rotate(center, vertices[num_vertices + 1].pos);
 
-	g_pVertices[g_iVertexEnd + 2].pos.x = x + width;
-	g_pVertices[g_iVertexEnd + 2].pos.y = y+height;
-	g_pVertices[g_iVertexEnd + 2].tex.u = g_QuadTexture[2].x;
-	g_pVertices[g_iVertexEnd + 2].tex.v = g_QuadTexture[2].y;
-	g_pVertices[g_iVertexEnd + 2].color = g_QuadColor[2];
-	rotate(center, g_pVertices[g_iVertexEnd + 2].pos);
+	vertices[num_vertices + 2].pos.x = x + width;
+	vertices[num_vertices + 2].pos.y = y+height;
+	vertices[num_vertices + 2].tex.u = texture[2].x;
+	vertices[num_vertices + 2].tex.v = texture[2].y;
+	vertices[num_vertices + 2].color = color[2];
+	rotate(center, vertices[num_vertices + 2].pos);
 
-	g_pVertices[g_iVertexEnd + 3].pos.x = x;
-	g_pVertices[g_iVertexEnd + 3].pos.y = y+height;
-	g_pVertices[g_iVertexEnd + 3].tex.u = g_QuadTexture[3].x;
-	g_pVertices[g_iVertexEnd + 3].tex.v = g_QuadTexture[3].y;
-	g_pVertices[g_iVertexEnd + 3].color = g_QuadColor[3];
-	rotate(center, g_pVertices[g_iVertexEnd + 3].pos);
+	vertices[num_vertices + 3].pos.x = x;
+	vertices[num_vertices + 3].pos.y = y+height;
+	vertices[num_vertices + 3].tex.u = texture[3].x;
+	vertices[num_vertices + 3].tex.v = texture[3].y;
+	vertices[num_vertices + 3].color = color[3];
+	rotate(center, vertices[num_vertices + 3].pos);
 	
 	draw_quad();
 }
@@ -589,29 +547,29 @@ void gfx_quads_draw_freeform(
 {
 	dbg_assert(quads_drawing == 1, "called quads_draw_freeform without quads_begin");
 	
-	g_pVertices[g_iVertexEnd].pos.x = x0;
-	g_pVertices[g_iVertexEnd].pos.y = y0;
-	g_pVertices[g_iVertexEnd].tex.u = g_QuadTexture[0].x;
-	g_pVertices[g_iVertexEnd].tex.v = g_QuadTexture[0].y;
-	g_pVertices[g_iVertexEnd].color = g_QuadColor[0];
+	vertices[num_vertices].pos.x = x0;
+	vertices[num_vertices].pos.y = y0;
+	vertices[num_vertices].tex.u = texture[0].x;
+	vertices[num_vertices].tex.v = texture[0].y;
+	vertices[num_vertices].color = color[0];
 
-	g_pVertices[g_iVertexEnd + 1].pos.x = x1;
-	g_pVertices[g_iVertexEnd + 1].pos.y = y1;
-	g_pVertices[g_iVertexEnd + 1].tex.u = g_QuadTexture[1].x;
-	g_pVertices[g_iVertexEnd + 1].tex.v = g_QuadTexture[1].y;
-	g_pVertices[g_iVertexEnd + 1].color = g_QuadColor[1];
+	vertices[num_vertices + 1].pos.x = x1;
+	vertices[num_vertices + 1].pos.y = y1;
+	vertices[num_vertices + 1].tex.u = texture[1].x;
+	vertices[num_vertices + 1].tex.v = texture[1].y;
+	vertices[num_vertices + 1].color = color[1];
 
-	g_pVertices[g_iVertexEnd + 2].pos.x = x3;
-	g_pVertices[g_iVertexEnd + 2].pos.y = y3;
-	g_pVertices[g_iVertexEnd + 2].tex.u = g_QuadTexture[2].x;
-	g_pVertices[g_iVertexEnd + 2].tex.v = g_QuadTexture[2].y;
-	g_pVertices[g_iVertexEnd + 2].color = g_QuadColor[2];
+	vertices[num_vertices + 2].pos.x = x3;
+	vertices[num_vertices + 2].pos.y = y3;
+	vertices[num_vertices + 2].tex.u = texture[2].x;
+	vertices[num_vertices + 2].tex.v = texture[2].y;
+	vertices[num_vertices + 2].color = color[2];
 
-	g_pVertices[g_iVertexEnd + 3].pos.x = x2;
-	g_pVertices[g_iVertexEnd + 3].pos.y = y2;
-	g_pVertices[g_iVertexEnd + 3].tex.u = g_QuadTexture[3].x;
-	g_pVertices[g_iVertexEnd + 3].tex.v = g_QuadTexture[3].y;
-	g_pVertices[g_iVertexEnd + 3].color = g_QuadColor[3];
+	vertices[num_vertices + 3].pos.x = x2;
+	vertices[num_vertices + 3].pos.y = y2;
+	vertices[num_vertices + 3].tex.u = texture[3].x;
+	vertices[num_vertices + 3].tex.v = texture[3].y;
+	vertices[num_vertices + 3].color = color[3];
 	
 	draw_quad();
 }

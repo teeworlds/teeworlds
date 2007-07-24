@@ -43,7 +43,7 @@ enum gui_tileset_enum
 
 int gui_tileset_texture;
 int cursor_texture;
-int cloud1_texture, cloud2_texture, cloud3_texture;
+//int cloud1_texture, cloud2_texture, cloud3_texture;
 int menu_background_texture;
 int butterflies_texture;
 
@@ -159,7 +159,7 @@ void draw_background(float t)
 
 	render_sun(170, 170);
 
-    gfx_texture_set(cloud1_texture);
+    gfx_texture_set(data->images[IMAGE_CLOUD_1].id);
     gfx_quads_begin();
     gfx_quads_setcolor(1,1,1,1);
 	gfx_quads_setsubset(
@@ -170,7 +170,7 @@ void draw_background(float t)
     gfx_quads_drawTL(3500 - fmod(t * 20 + 2000, 4524), 0, 512, 512);
     gfx_quads_end();
 
-    gfx_texture_set(cloud2_texture);
+    gfx_texture_set(data->images[IMAGE_CLOUD_2].id);
     gfx_quads_begin();
     gfx_quads_setcolor(1,1,1,1);
 	gfx_quads_setsubset(
@@ -181,7 +181,7 @@ void draw_background(float t)
     gfx_quads_drawTL(3000 - fmod(t * 50 + 1000, 4024), 150, 512, 512);
     gfx_quads_end();
 
-    gfx_texture_set(cloud3_texture);
+    gfx_texture_set(data->images[IMAGE_CLOUD_3].id);
     gfx_quads_begin();
     gfx_quads_setcolor(1,1,1,1);
 	gfx_quads_setsubset(
@@ -704,7 +704,6 @@ static int main_render()
 	if (!inited)
 	{
 		inited = true;
-
 		client_serverbrowse_refresh(0);
 	}
 
@@ -914,7 +913,7 @@ static int settings_render()
 	if (ui_do_button(&save_button, "Save", 0, 482, 490, 128, 48, draw_teewars_button))
 	{
 		config = config_copy;
-		config_save("teewars.cfg");
+		config_save("default.cfg");
 		screen = SCREEN_MAIN;
 	}
 	
@@ -1143,9 +1142,6 @@ void modmenu_init()
 	gui_tileset_texture = gfx_load_texture("data/gui/gui_widgets.png");
     teewars_banner_texture = gfx_load_texture("data/gui_logo.png");
 	cursor_texture = gfx_load_texture("data/gui/cursor.png");
-	cloud1_texture = gfx_load_texture("data/cloud-1.png");
-	cloud2_texture = gfx_load_texture("data/cloud-2.png");
-	cloud3_texture = gfx_load_texture("data/cloud-3.png");
 	menu_background_texture = gfx_load_texture("data/menu_background.png");
 	butterflies_texture = gfx_load_texture("data/menu_butterfly.png");
 

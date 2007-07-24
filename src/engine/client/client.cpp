@@ -500,7 +500,7 @@ void client::run(const char *direct_connect_server)
 			break;
 
 		// be nice
-		thread_sleep(1);
+		//thread_sleep(1);
 		
 		if(reporttime < time_get())
 		{
@@ -826,7 +826,7 @@ int main(int argc, char **argv)
 	dbg_msg("client", "starting...");
 	
 	config_reset();
-	config_load("teewars.cfg");
+	config_load("default.cfg");
 
 	const char *direct_connect_server = 0x0;
 	snd_set_master_volume(config.volume / 255.0f);

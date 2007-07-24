@@ -1210,7 +1210,7 @@ int editor_main(int argc, char **argv)
 {
 	dbg_msg("editor", "starting...");
 	
-	config_load("editor.cfg");
+	config_load("default.cfg");
 	
 	// parse arguments
 	for(int i = 1; i < argc; i++)
