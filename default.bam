@@ -61,6 +61,11 @@ function dc_data(output, data, script)
 	return os.execute(dc_compiler .. " " .. data .. " " .. script .. " -d " .. output)
 end
 
+function dc_cdata(output, data, script)
+	print("dc_cdata " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script))
+	return os.execute(dc_compiler .. " " .. data .. " " .. script .. " -c " .. output)
+end
+
 function Dat2c(datafile, sourcefile, arrayname)
 	datafile = Path(datafile)
 	sourcefile = Path(sourcefile)
@@ -77,7 +82,7 @@ function DataCompile(datafile, scriptfile, headerfile, sourcefile, outputdatafil
 	outputdatafile = Path(outputdatafile)
 	bam_add_job("dc_source", sourcefile, datafile, scriptfile)
 	bam_add_job("dc_header", headerfile, datafile, scriptfile)
-	bam_add_job("dc_data", outputdatafile, datafile, scriptfile)
+	bam_add_job("dc_cdata", outputdatafile, datafile, scriptfile)
 	bam_add_dependency(sourcefile, datafile)
 	bam_add_dependency(sourcefile, scriptfile)
 	bam_add_dependency(sourcefile, headerfile)
@@ -85,7 +90,7 @@ function DataCompile(datafile, scriptfile, headerfile, sourcefile, outputdatafil
 	bam_add_dependency(headerfile, scriptfile)
 	bam_add_dependency(outputdatafile, datafile)
 	bam_add_dependency(outputdatafile, scriptfile)
-	return {data = outputdatafile, header=headerfile, source=sourcefile}
+	return {cdata = outputdatafile, header=headerfile, source=sourcefile}
 end
 
 config_name = "debug"
@@ -117,10 +122,23 @@ baselib.apply(server_settings, "network")
 settings.cc.includes:add("src")
 settings.cc.includes:add("../baselib/src/external/zlib")
 
-serverdata = DataCompile("datasrc/teewars.ds", "datasrc/server.dts", "src/game/server/data.h", "src/game/server/data/server_data.cpp", "data/server.dat")
-clientdata = DataCompile("datasrc/teewars.ds", "datasrc/client.dts", "src/game/client/data.h", "src/game/client/data/client_data.cpp", "data/client.dat")
-internal_clientdata = Dat2c("data/client.dat", "src/game/client/data/client_internal.cpp", "internal_client_data");
-internal_serverdata = Dat2c("data/server.dat", "src/game/server/data/server_internal.cpp", "internal_server_data");
+serverdata = DataCompile(
+		"datasrc/teewars.ds", 
+		"datasrc/server.dts", 
+		"src/game/server/data.h",
+		"src/game/server/data/server_data.cpp",
+		"src/game/server/data/server_internal.cpp")
+
+clientdata = DataCompile(
+		"datasrc/teewars.ds", 
+		"datasrc/client.dts", 
+		"src/game/client/data.h",
+		"src/game/client/data/server_data.cpp",
+		"src/game/client/data/server_internal.cpp")
+
+--clientdata = DataCompile("datasrc/teewars.ds", "datasrc/client.dts", "src/game/client/data.h", "src/game/client/data/client_data.cpp", "datasrc/client.dat")
+--internal_clientdata = Dat2c("datasrc/client.dat", "src/game/client/data/client_internal.cpp", "internal_client_data");
+--internal_serverdata = Dat2c("datasrc/server.dat", "src/game/server/data/server_internal.cpp", "internal_server_data");
 
 function build(config)
 	engine = Compile(settings, Collect("src/engine/*.cpp"))
@@ -128,8 +146,8 @@ function build(config)
 	server = Compile(settings, Collect("src/engine/server/*.cpp"))
 	masterserver = Compile(settings, Collect("src/mastersrv/*.cpp"))
 	game_shared = Compile(settings, Collect("src/game/*.cpp"))
-	game_client = Compile(settings, Collect("src/game/client/*.cpp"), clientdata.source, internal_clientdata)
-	game_server = Compile(settings, Collect("src/game/server/*.cpp"), serverdata.source, internal_serverdata)
+	game_client = Compile(settings, Collect("src/game/client/*.cpp"), clientdata.source, clientdata.cdata)
+	game_server = Compile(settings, Collect("src/game/server/*.cpp"), serverdata.source, serverdata.cdata)
 	editor = Compile(settings, Collect("src/editor/*.cpp"))
 
 	-- build tools
@@ -146,8 +164,8 @@ function build(config)
 	server_exe = Link(server_settings, "teewars_srv"..config_ext, engine, server, game_shared, game_server)
 	masterserver_exe = Link(server_settings, "mastersrv"..config_ext, masterserver, engine)
 
-	Target(PseudoTarget("client", client_exe, clientdata.data))
-	Target(PseudoTarget("server", server_exe, serverdata.data))
+	Target(PseudoTarget("client", client_exe))
+	Target(PseudoTarget("server", server_exe))
 	Target(PseudoTarget("masterserver", masterserver_exe))
 	Target(PseudoTarget("tools", tools))
 end

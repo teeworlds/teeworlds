@@ -1652,9 +1652,11 @@ void mods_message(int msg, int client_id)
 	}
 }
 
+extern unsigned char internal_data[];
+
 void mods_init()
 {
-	data = load_data_container("data/server.dat");
+	data = load_data_from_memory(internal_data);
 	col_init(32);
 
 	int start, num;

@@ -422,10 +422,12 @@ static const int killmsg_max = 5;
 killmsg killmsgs[killmsg_max];
 static int killmsg_current = 0;
 
+extern unsigned char internal_data[];
+
 void modc_init()
 {
 	// load the data container
-	data = load_data_container("data/client.dat");
+	data = load_data_from_memory(internal_data);
 
 	// load sounds
 	for(int s = 0; s < data->num_sounds; s++)

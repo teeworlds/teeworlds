@@ -465,7 +465,8 @@ class translator:
 		for s in self.structs:
 			s.emit_header_code(out)
 		print >>out, ""
-		print >>out, "data_container *load_data_container(const char *filename);"
+		print >>out, "data_container *load_data_from_file(const char *filename);"
+		print >>out, "data_container *load_data_from_memory(unsigned char *filename);"
 		print >>out, ""
 		
 
@@ -485,9 +486,18 @@ static void patch_ptr(char **ptr, char *base)
 		for s in self.structs:
 			s.emit_source_code(out)
 		print >>out, '''
-data_container *load_data_container(const char *filename)
+
+data_container *load_data_from_memory(unsigned char *mem)
 {
-	data_container *con = 0;
+	/* patch all pointers */
+	data_container *con = (data_container*)mem;
+	patch_ptr_data_container(con, (char *)con);
+	return con;
+}
+
+data_container *load_data_from_file(const char *filename)
+{
+	unsigned char *data = 0;
 	int size;
 
 	/* open file */
@@ -499,13 +509,11 @@ data_container *load_data_container(const char *filename)
 	fseek(f, 0, SEEK_SET);
 
 	/* allocate, read data and close file */
-	con = (data_container*)malloc(size);
-	fread(con, 1, size, f);
+	data = (unsigned char *)malloc(size);
+	fread(data, 1, size, f);
 	fclose(f);
 
-	/* patch all pointers */
-	patch_ptr_data_container(con, (char *)con);
-	return con;
+	return load_data_from_memory(data);
 }
 
 '''
@@ -571,6 +579,7 @@ input_filename = sys.argv[1]
 script_filename = sys.argv[2]
 
 output_filename = 0
+coutput_filename = 0
 header_filename = 0
 source_filename = 0
 
@@ -580,6 +589,8 @@ elif sys.argv[3] == '-s':
 	source_filename = sys.argv[4]
 elif sys.argv[3] == '-d':
 	output_filename = sys.argv[4]
+elif sys.argv[3] == '-c':
+	coutput_filename = sys.argv[4]
 
 srcdata = parse_file(input_filename)
 script = parse_file(script_filename)
@@ -594,4 +605,22 @@ if source_filename:
 if output_filename:
 	rawdata = translator.emit_data()
 	file(output_filename, "wb").write(rawdata)
-	#print "filesize:", len(rawdata)	
+if coutput_filename:
+	i = 0
+	rawdata = translator.emit_data()
+	f = file(coutput_filename, "w")
+
+	print >>f,"unsigned char internal_data[] = {"
+	print >>f,str(ord(rawdata[0])),
+	for d in rawdata[1:]:
+	    s = ","+str(ord(d))
+	    print >>f,s,
+	    i += len(s)+1
+	
+	    if i >= 70:
+	        print >>f,""
+	        i = 0
+	print >>f,""
+	print >>f,"};"
+	print >>f,""
+	f.close()

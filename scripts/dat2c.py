@@ -3,7 +3,7 @@ import sys
 data = file(sys.argv[1], "rb").read()
 
 i = 0
-print "const char", sys.argv[2], "[] = {"
+print "unsigned char", sys.argv[2], "[] = {"
 print str(ord(data[0])),
 for d in data[1:]:
 	s = ","+str(ord(d))
