@@ -766,9 +766,41 @@ static int settings_general_render()
 	return 0;
 }
 
+typedef void (*assign_func_callback)(configuration *config, int value);
+
+struct key_thing
+{
+	char name[32];
+	int *key;
+	assign_func_callback assign_func;
+};
+
 static int settings_controls_render()
 {
+	static int scroll_index = 0;
+
+	key_thing keys[] = 
+	{
+		{ "Move Left:", &config_copy.key_move_left, config_set_key_move_left },
+		{ "Move Right:", &config_copy.key_move_right, config_set_key_move_right },
+		{ "Jump:", &config_copy.key_jump, config_set_key_jump },
+		{ "Fire:", &config_copy.key_fire, config_set_key_fire },
+		{ "Hook:", &config_copy.key_hook, config_set_key_hook },
+		{ "Pistol:", &config_copy.key_weapon1, config_set_key_weapon1 },
+		{ "Grenade:", &config_copy.key_weapon2, config_set_key_weapon2 },
+		{ "Shotgun:", &config_copy.key_weapon3, config_set_key_weapon3 },
+		{ "Hammer:", &config_copy.key_weapon4, config_set_key_weapon4 },
+	};
+
+	for (int i = 0; i < 7; i++)
+	{
+		key_thing key = keys[i + scroll_index];
+		
+		ui_do_label(column1_x, row1_y + 40 * i, key.name, 36);
+		key.assign_func(&config_copy, ui_do_key_reader(key.key, column2_x, row1_y + 40 * i, 150, 36, *key.key));
+	}
 	// KEYS
+	/*
 	ui_do_label(column1_x, row1_y + 0, "Move Left:", 36);
 	config_set_key_move_left(&config_copy, ui_do_key_reader(&config_copy.key_move_left, column2_x, row1_y + 0, 150, 36, config_copy.key_move_left));
 	ui_do_label(column1_x, row1_y + 40, "Move Right:", 36);
@@ -779,11 +811,14 @@ static int settings_controls_render()
 	config_set_key_fire(&config_copy, ui_do_key_reader(&config_copy.key_fire, column2_x, row1_y + 120, 150, 36, config_copy.key_fire));
 	ui_do_label(column1_x, row1_y + 160, "Hook:", 36);
 	config_set_key_hook(&config_copy, ui_do_key_reader(&config_copy.key_hook, column2_x, row1_y + 160, 150, 36, config_copy.key_hook));
+	*/
+
+	scroll_index = do_scroll_bar_vert(&scroll_index, 600, row1_y, 40 * 7, 9 - 7, scroll_index);
 
 	return 0;
 }
 
-static const unsigned MAX_RESOLUTIONS = 8;
+static const int MAX_RESOLUTIONS = 8;
 
 static int settings_video_render()
 {
