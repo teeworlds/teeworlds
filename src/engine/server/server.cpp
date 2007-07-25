@@ -410,9 +410,12 @@ public:
 			}
 			else if(msg == NETMSG_ENTERGAME)
 			{
-				dbg_msg("game", "player as entered the game. cid=%x", cid);
-				clients[cid].state = client::STATE_INGAME;
-				mods_client_enter(cid);
+				if(clients[cid].state != client::STATE_INGAME)
+				{
+					dbg_msg("game", "player as entered the game. cid=%x", cid);
+					clients[cid].state = client::STATE_INGAME;
+					mods_client_enter(cid);
+				}
 			}
 			else if(msg == NETMSG_INPUT)
 			{
@@ -532,8 +535,6 @@ public:
 			clients[cid].snapshots.purge_all();
 			
 			mods_client_drop(cid);
-			
-			dbg_msg("server", "del client %d", cid);
 		}
 		
 		// check for new clients
@@ -548,8 +549,6 @@ public:
 			clients[cid].clan[0] = 0;
 			clients[cid].snapshots.purge_all();
 			clients[cid].last_acked_snapshot = -1;
-			
-			dbg_msg("server", "new client %d", cid);
 		}
 	}
 };

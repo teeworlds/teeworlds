@@ -15,7 +15,7 @@
 	header v2:
 		unsigned char flags;		1
 		unsigned char seq_ack[3];	4
-		unsigned char crc[2];		6
+		unsigned char token[2];		6
 */
 
 enum
@@ -40,6 +40,8 @@ enum
 	NETWORK_PACKETFLAG_CONNLESS=0x20,
 };
 
+static int current_token = 1;
+
 struct NETPACKETDATA
 {
 	unsigned char ID[2];
@@ -48,6 +50,7 @@ struct NETPACKETDATA
 	unsigned short seq;
 	unsigned short ack;
 	unsigned crc;
+	int token;
 	unsigned data_size;
 	int64 first_send_time;
 	unsigned char *data;
@@ -61,8 +64,8 @@ static void send_packet(NETSOCKET socket, NETADDR4 *addr, NETPACKETDATA *packet)
 	buffer[1] = ((packet->seq>>4)&0xf0) | ((packet->ack>>8)&0x0f);
 	buffer[2] = packet->seq;
 	buffer[3] = packet->ack;
-	buffer[4] = packet->crc>>8;
-	buffer[5] = packet->crc&0xff;
+	buffer[4] = packet->token>>8;
+	buffer[5] = packet->token&0xff;
 	mem_copy(buffer+NETWORK_HEADER_SIZE, packet->data, packet->data_size);
 	int send_size = NETWORK_HEADER_SIZE+packet->data_size;
 	//dbg_msg("network", "sending packet, size=%d (%d + %d)", send_size, NETWORK_HEADER_SIZE, packet->data_size);
@@ -74,6 +77,11 @@ struct NETCONNECTION
 	unsigned seq;
 	unsigned ack;
 	unsigned state;
+	
+	int token;
+	
+	int connected;
+	int disconnected;
 	
 	ring_buffer buffer;
 	
@@ -88,7 +96,6 @@ struct NETCONNECTION
 
 struct NETSLOT
 {
-	int online;
 	NETCONNECTION conn;
 };
 
@@ -117,12 +124,19 @@ static void conn_reset(NETCONNECTION *conn)
 {
 	conn->seq = 0;
 	conn->ack = 0;
+	//dbg_msg("connection", "state = %d->%d", conn->state, NETWORK_CONNSTATE_OFFLINE);
+	
+	if(conn->state == NETWORK_CONNSTATE_ONLINE)
+		conn->disconnected++;
+		
 	conn->state = NETWORK_CONNSTATE_OFFLINE;
 	conn->error_string = 0;
 	conn->last_send_time = 0;
 	conn->last_recv_time = 0;
+	conn->token = -1;
 	conn->buffer.reset();
 }
+
 
 static const char *conn_error(NETCONNECTION *conn)
 {
@@ -139,6 +153,8 @@ static void conn_init(NETCONNECTION *conn, NETSOCKET socket)
 	conn_reset(conn);
 	conn_reset_stats(conn);
 	conn->socket = socket;
+	conn->connected = 0;
+	conn->disconnected = 0;
 }
 
 static void conn_ack(NETCONNECTION *conn, int ack)
@@ -191,6 +207,7 @@ static void conn_send(NETCONNECTION *conn, int flags, int data_size, const void 
 	p.seq = conn->seq;
 	p.ack = conn->ack;
 	p.crc = 0;
+	p.token = conn->token;
 	p.data_size = data_size;
 	p.data = (unsigned char *)data;
 	p.first_send_time = time_get();
@@ -216,9 +233,17 @@ static int conn_connect(NETCONNECTION *conn, NETADDR4 *addr)
 	// init connection
 	conn_reset(conn);
 	conn->peeraddr = *addr;
+	conn->token = current_token++;
+	//dbg_msg("connection", "state = %d->%d", conn->state, NETWORK_CONNSTATE_CONNECT);
 	conn->state = NETWORK_CONNSTATE_CONNECT;
 	conn_send(conn, NETWORK_PACKETFLAG_CONNECT, 0, 0);
 	return 0;
+}
+
+static void conn_disconnect(NETCONNECTION *conn)
+{
+	conn_send(conn, NETWORK_PACKETFLAG_CLOSE, 0, 0);
+	conn_reset(conn);
 }
 
 static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
@@ -227,19 +252,35 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 	conn->stats.recv_packets++;
 	conn->stats.recv_bytes += p->data_size + NETWORK_HEADER_SIZE;
 	
+	if(p->flags&NETWORK_PACKETFLAG_CLOSE)
+	{
+		conn_reset(conn);
+		return 0;
+	}
+	
 	if(conn->state == NETWORK_CONNSTATE_OFFLINE)
 	{
 		if(p->flags == NETWORK_PACKETFLAG_CONNECT)
 		{
 			// send response and init connection
+			//dbg_msg("connection", "state = %d->%d", conn->state, NETWORK_CONNSTATE_ONLINE);
 			conn->state = NETWORK_CONNSTATE_ONLINE;
+			conn->connected++;
 			conn->peeraddr = *addr;
+			conn->token = p->token;
+			//dbg_msg("connection", "token set to %d", p->token);
 			conn_send(conn, NETWORK_PACKETFLAG_CONNECT|NETWORK_PACKETFLAG_ACCEPT, 0, 0);
 			dbg_msg("connection", "got connection, sending connect+accept");
 		}
 	}
 	else if(net_addr4_cmp(&conn->peeraddr, addr) == 0)
 	{
+		if(p->token != conn->token)
+		{
+			//dbg_msg("connection", "wrong token %d, %d", p->token, conn->token);
+			return 0;
+		}
+
 		if(conn->state == NETWORK_CONNSTATE_ONLINE)
 		{
 			// remove packages that are acked
@@ -276,7 +317,9 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 			if(p->flags == (NETWORK_PACKETFLAG_CONNECT|NETWORK_PACKETFLAG_ACCEPT))
 			{
 				conn_send(conn, NETWORK_PACKETFLAG_ACCEPT, 0, 0);
+				//dbg_msg("connection", "state = %d->%d", conn->state, NETWORK_CONNSTATE_ONLINE);
 				conn->state = NETWORK_CONNSTATE_ONLINE;
+				conn->connected++;
 				dbg_msg("connection", "got connect+accept, sending accept. connection online");
 			}
 		}
@@ -292,6 +335,7 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 		}*/
 		else
 		{
+			conn_reset(conn);
 			// strange packet, wrong state
 		}
 	}
@@ -315,6 +359,7 @@ static void conn_update(NETCONNECTION *conn)
 		conn->state != NETWORK_CONNSTATE_CONNECT &&
 		(time_get()-conn->last_recv_time) > time_freq()*3)
 	{
+		//dbg_msg("connection", "state = %d->%d", conn->state, NETWORK_CONNSTATE_ERROR);
 		conn->state = NETWORK_CONNSTATE_ERROR;
 		conn->error_string = "timeout";
 	}
@@ -322,6 +367,7 @@ static void conn_update(NETCONNECTION *conn)
 	// check for large buffer errors
 	if(conn->buffer.size() > 1024*64)
 	{
+		//dbg_msg("connection", "state = %d->%d", conn->state, NETWORK_CONNSTATE_ERROR);
 		conn->state = NETWORK_CONNSTATE_ERROR;
 		conn->error_string = "too weak connection (out of buffer)";
 	}
@@ -331,6 +377,7 @@ static void conn_update(NETCONNECTION *conn)
 		NETPACKETDATA *resend = (NETPACKETDATA *)conn->buffer.first()->data();
 		if(time_get()-resend->first_send_time > time_freq()*3)
 		{
+			//dbg_msg("connection", "state = %d->%d", conn->state, NETWORK_CONNSTATE_ERROR);
 			conn->state = NETWORK_CONNSTATE_ERROR;
 			conn->error_string = "too weak connection (not acked for 3 seconds)";
 		}
@@ -368,7 +415,8 @@ static int check_packet(unsigned char *buffer, int size, NETPACKETDATA *packet)
 	packet->flags = buffer[0];
 	packet->seq = ((buffer[1]&0xf0)<<4)|buffer[2];
 	packet->ack = ((buffer[1]&0x0f)<<8)|buffer[3];
-	packet->crc = (buffer[8]<<24)|(buffer[9]<<16)|(buffer[10]<<8)|buffer[11];
+	packet->crc = 0;
+	packet->token = (buffer[4]<<8)|buffer[5];
 	packet->data_size = size - NETWORK_HEADER_SIZE;
 	packet->data = buffer+NETWORK_HEADER_SIZE;
 	
@@ -407,9 +455,9 @@ int net_server_newclient(NETSERVER *s)
 {
 	for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
 	{
-		if(!s->slots[i].online && s->slots[i].conn.state == NETWORK_CONNSTATE_ONLINE)
+		if(s->slots[i].conn.connected)
 		{
-			s->slots[i].online = 1;
+			s->slots[i].conn.connected = 0;
 			return i;
 		}
 	}
@@ -421,9 +469,9 @@ int net_server_delclient(NETSERVER *s)
 {
 	for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
 	{
-		if(s->slots[i].online && s->slots[i].conn.state != NETWORK_CONNSTATE_ONLINE)
+		if(s->slots[i].conn.disconnected)
 		{
-			s->slots[i].online = 0;
+			s->slots[i].conn.disconnected = 0;
 			return i;
 		}
 	}
@@ -489,6 +537,7 @@ int net_server_recv(NETSERVER *s, NETPACKET *packet)
 							net_addr4_cmp(&s->slots[i].conn.peeraddr, &addr) == 0)
 						{
 							found = 1; // silent ignore.. we got this client already
+							//dbg_msg("netserver", "ignored connect request %d", i);
 							break;
 						}
 					}
@@ -500,6 +549,7 @@ int net_server_recv(NETSERVER *s, NETPACKET *packet)
 						{
 							if(s->slots[i].conn.state == NETWORK_CONNSTATE_OFFLINE)
 							{
+								//dbg_msg("netserver", "connection started %d", i);
 								conn_feed(&s->slots[i].conn, &data, &addr);
 								found = 1;
 								break;
@@ -507,7 +557,7 @@ int net_server_recv(NETSERVER *s, NETPACKET *packet)
 						}
 					}
 					
-					if(!found)
+					if(found)
 					{
 						// TODO: send error
 					}
@@ -619,7 +669,7 @@ int net_client_disconnect(NETCLIENT *c, const char *reason)
 {
 	// TODO: do this more graceful
 	dbg_msg("net_client", "disconnected. reason=\"%s\"", reason);
-	conn_reset(&c->conn);
+	conn_disconnect(&c->conn);
 	return 0;
 }
 

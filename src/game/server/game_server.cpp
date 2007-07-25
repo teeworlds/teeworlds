@@ -242,6 +242,13 @@ int game_world::find_entities(vec2 pos, float radius, entity **ents, int max, co
 
 void game_world::insert_entity(entity *ent)
 {
+	entity *cur = first_entity;
+	while(cur)
+	{
+		dbg_assert(cur != ent, "err");
+		cur = cur->next_entity;
+	}
+	
 	// insert it
 	if(first_entity)
 		first_entity->prev_entity = ent;
@@ -1629,6 +1636,7 @@ void mods_client_enter(int client_id)
 
 void mods_client_drop(int client_id)
 {
+	dbg_msg("mods", "client drop %d", client_id);
 	players[client_id].client_id = -1;
 	world.remove_entity(&players[client_id]);
 }

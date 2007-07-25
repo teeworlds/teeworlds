@@ -232,6 +232,7 @@ enum
 };
 
 static netaddr4 server_address;
+static const char *server_spam_address=0;
 
 static int state;
 static int get_state() { return state; }
@@ -319,6 +320,7 @@ void client::send_input()
 void client::disconnect()
 {
 	send_error("disconnected");
+	net.disconnect("disconnected");
 	set_state(STATE_OFFLINE);
 	map_unload();
 }
@@ -462,6 +464,9 @@ void client::run(const char *direct_connect_server)
 		// send input
 		if(get_state() == STATE_ONLINE)
 		{
+			if(server_spam_address)
+				disconnect();
+			
 			if(input_is_changed || time_get() > last_input+time_freq())
 			{
 				send_input();
@@ -469,6 +474,9 @@ void client::run(const char *direct_connect_server)
 				last_input = time_get();
 			}
 		}
+		
+		if(get_state() == STATE_OFFLINE && server_spam_address)
+			client_connect(server_spam_address);
 		
 		// update input
 		inp_update();
@@ -500,7 +508,7 @@ void client::run(const char *direct_connect_server)
 			break;
 
 		// be nice
-		//thread_sleep(1);
+		thread_sleep(1);
 		
 		if(reporttime < time_get())
 		{
@@ -844,6 +852,12 @@ int main(int argc, char **argv)
 			i++;
 			direct_connect_server = argv[i];
 		}
+		else if(argv[i][0] == '-' && argv[i][1] == 's' && argv[i][2] == 0 && argc - i > 1)
+		{
+			// -s SERVER:PORT
+			i++;
+			server_spam_address = argv[i];
+		}
 		else if(argv[i][0] == '-' && argv[i][1] == 'n' && argv[i][2] == 0 && argc - i > 1)
 		{
 			// -n NAME
@@ -855,6 +869,7 @@ int main(int argc, char **argv)
 			// -w
 			config.fullscreen = 0;
 		}
+		
 		else if(argv[i][0] == '-' && argv[i][1] == 'e' && argv[i][2] == 0)
 		{
 			editor = true;
