@@ -19,6 +19,8 @@ static void dilate(int w, int h, pixel *src, pixel *dst)
 {
 	int x, y, k, m, c;
 	int ix, iy;
+	const int xo[] = {0, -1, 1, 0};
+	const int yo[] = {-1, 0, 0, 1};
 
 	m = 0;
 	for(y = 0; y < h; y++)
@@ -29,8 +31,6 @@ static void dilate(int w, int h, pixel *src, pixel *dst)
 			if(src[m].a)
 				continue;
 			
-			const int xo[] = {0, -1, 1, 0};
-			const int yo[] = {-1, 0, 0, 1};
 			for(c = 0; c < 4; c++)
 			{
 				ix = clamp(x + xo[c], 0, w-1);
@@ -51,6 +51,7 @@ static void copy_alpha(int w, int h, pixel *src, pixel *dst)
 {
 	int x, y, m;
 
+	m = 0;
 	for(y = 0; y < h; y++)
 		for(x = 0; x < w; x++, m++)
 			dst[m].a = src[m].a;
