@@ -126,8 +126,11 @@ static void conn_reset(NETCONNECTION *conn)
 	conn->ack = 0;
 	//dbg_msg("connection", "state = %d->%d", conn->state, NETWORK_CONNSTATE_OFFLINE);
 	
-	if(conn->state == NETWORK_CONNSTATE_ONLINE)
+	if(conn->state == NETWORK_CONNSTATE_ONLINE ||
+		conn->state == NETWORK_CONNSTATE_ERROR)
+	{
 		conn->disconnected++;
+	}
 		
 	conn->state = NETWORK_CONNSTATE_OFFLINE;
 	conn->error_string = 0;
