@@ -1165,10 +1165,13 @@ void modc_render()
 			if(chat_active)
 			{
 				// send message
-				msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
-				msg_pack_string(chat_input, 512);
-				msg_pack_end();
-				client_send_msg();
+				if(chat_input_len)
+				{
+					msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
+					msg_pack_string(chat_input, 512);
+					msg_pack_end();
+					client_send_msg();
+				}
 			}
 			else
 			{
