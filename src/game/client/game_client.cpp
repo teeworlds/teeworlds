@@ -827,6 +827,53 @@ static void render_tee(animstate *anim, int skin, vec2 dir, vec2 pos)
 	gfx_quads_end();	
 }
 
+static void draw_round_rect(float x, float y, float w, float h, float r)
+{
+	int num = 8;
+	for(int i = 0; i < num; i+=2)
+	{
+		float a1 = i/(float)num * pi/2;
+		float a2 = (i+1)/(float)num * pi/2;
+		float a3 = (i+2)/(float)num * pi/2;
+		float ca1 = cosf(a1);
+		float ca2 = cosf(a2);
+		float ca3 = cosf(a3);
+		float sa1 = sinf(a1);
+		float sa2 = sinf(a2);
+		float sa3 = sinf(a3);
+		
+		gfx_quads_draw_freeform(
+			x+r, y+r,
+			x+(1-ca1)*r, y+(1-sa1)*r,
+			x+(1-ca3)*r, y+(1-sa3)*r,
+			x+(1-ca2)*r, y+(1-sa2)*r);
+
+		gfx_quads_draw_freeform(
+			x+w-r, y+r,
+			x+w-r+ca1*r, y+(1-sa1)*r,
+			x+w-r+ca3*r, y+(1-sa3)*r,
+			x+w-r+ca2*r, y+(1-sa2)*r);
+
+		gfx_quads_draw_freeform(
+			x+r, y+h-r,
+			x+(1-ca1)*r, y+h-r+sa1*r,
+			x+(1-ca3)*r, y+h-r+sa3*r,
+			x+(1-ca2)*r, y+h-r+sa2*r);
+
+		gfx_quads_draw_freeform(
+			x+w-r, y+h-r,
+			x+w-r+ca1*r, y+h-r+sa1*r,
+			x+w-r+ca3*r, y+h-r+sa3*r,
+			x+w-r+ca2*r, y+h-r+sa2*r);
+	}
+	
+	gfx_quads_drawTL(x+r, y+r, w-r*2, h-r*2); // center
+	gfx_quads_drawTL(x+r, y, w-r*2, r); // top
+	gfx_quads_drawTL(x+r, y+h-r, w-r*2, r); // bottom
+	gfx_quads_drawTL(x, y+r, r, h-r*2); // left
+	gfx_quads_drawTL(x+w-r, y+r, r, h-r*2); // right
+}
+
 static void render_player(obj_player *prev, obj_player *player)
 {
 	if(player->health < 0) // dont render dead players
@@ -1124,7 +1171,7 @@ void ingamemenu_render()
 	gfx_texture_set(-1);
 	gfx_quads_begin();
 	gfx_quads_setcolor(0,0,0,0.5f);
-	gfx_quads_drawTL(170, 120, 460, 300);
+	draw_round_rect(170, 120, 460, 300, 30.0f);
 	gfx_quads_end();
 	
 	ui_do_image(data->images[IMAGE_BANNER].id, 214, 150, 384, 96);
@@ -1579,7 +1626,7 @@ void modc_render()
 			// Normal deathmatch
 
 			float w = 550.0f;
-			float x = width/2-w/2;
+			float x = width/2-w/2+100.0f;
 			float y = 150.0f;
 
 			gfx_blend_normal();
@@ -1587,7 +1634,7 @@ void modc_render()
 			gfx_texture_set(-1);
 			gfx_quads_begin();
 			gfx_quads_setcolor(0,0,0,0.5f);
-			gfx_quads_drawTL(x-10.f, y-10.f, w, 600.0f);
+			draw_round_rect(x-10.f, y-10.f, w, 600.0f, 40.0f);
 			gfx_quads_end();
 			
 			float tw = gfx_pretty_text_width( 64, "Score Board");
