@@ -16,4 +16,6 @@ MACRO_CONFIG_STR(password, 32, "")
 
 MACRO_CONFIG_STR(masterserver, 128, "master.teewars.com")
 
+MACRO_CONFIG_STR(sv_name, 128, "unnamed server")
 MACRO_CONFIG_INT(sv_port, 8303, 0, 0)
+MACRO_CONFIG_INT(sv_sendheartbeats, 1, 0, 1)

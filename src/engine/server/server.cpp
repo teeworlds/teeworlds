@@ -62,7 +62,6 @@ public:
 
 static client clients[MAX_CLIENTS];
 static int current_tick = 0;
-static int send_heartbeats = 1;
 static net_server net;
 
 int server_tick()
@@ -140,20 +139,18 @@ public:
 	//socket_udp4 game_socket;
 
 	const char *map_name;
-	const char *server_name;
 	int64 lasttick;
 	int64 lastheartbeat;
 	netaddr4 master_server;
 
 	int biggest_snapshot;
 
-	bool run(const char *servername, const char *mapname)
+	bool run(const char *mapname)
 	{
 		biggest_snapshot = 0;
 
 		net_init(); // For Windows compatibility.
 		map_name = mapname;
-		server_name = servername;
 
 		// load map
 		if(!map_load(mapname))
@@ -169,10 +166,8 @@ public:
 			return false;
 		}
 
-		//for(int i = 0; i < MAX_CLIENTS; i++)
-			//dbg_msg("network/server", "\t%d: %d", i, clients[i].state);
-
-		dbg_msg("server", "masterserver is %s", config.masterserver);
+		dbg_msg("server", "server name is '%s'", config.sv_name);
+		dbg_msg("server", "masterserver is '%s'", config.masterserver);
 		if (net_host_lookup(config.masterserver, MASTERSERVER_PORT, &master_server) != 0)
 		{
 			// TODO: fix me
@@ -217,7 +212,7 @@ public:
 				lasttick += time_per_tick;
 			}
 
-			//if(send_heartbeats)
+			if(config.sv_sendheartbeats)
 			{
 				if (t > lastheartbeat+time_per_heartbeat)
 				{
@@ -460,7 +455,7 @@ public:
 		data_packer packer;
 		packer.reset();
 		packer.add_raw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
-		packer.add_string(server_name, 128);
+		packer.add_string(config.sv_name, 128);
 		packer.add_string(map_name, 128);
 		packer.add_int(MAX_CLIENTS); // max_players
 		int c = 0;
@@ -566,8 +561,7 @@ int main(int argc, char **argv)
 	config_reset();
 	config_load("default.cfg");
 
-	const char *mapname = "data/demo.map";
-	const char *servername = 0;
+	const char *mapname = "demo";
 	
 	// parse arguments
 	for(int i = 1; i < argc; i++)
@@ -582,12 +576,12 @@ int main(int argc, char **argv)
 		{
 			// -n server name
 			i++;
-			servername = argv[i];
+			config_set_sv_name(&config, argv[i]);
 		}
 		else if(argv[i][0] == '-' && argv[i][1] == 'p' && argv[i][2] == 0)
 		{
 			// -p (private server)
-			send_heartbeats = 0;
+			config_set_sv_sendheartbeats(&config, 0);
 		}
 		else if(argv[i][0] == '-' && argv[i][1] == 'o' && argv[i][2] == 0)
 		{
@@ -603,14 +597,8 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	if(!servername)
-	{
-		dbg_msg("server", "no server name given (-n \"server name\")");
-		return 0;
-	}
-
 	server_init();
 	server s;
-	s.run(servername, mapname);
+	s.run(mapname);
 	return 0;
 }

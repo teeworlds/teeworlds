@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <baselib/system.h>
 #include <baselib/stream/file.h>
 
@@ -43,6 +44,8 @@ int map_is_loaded()
 
 int map_load(const char *mapname)
 {
-	map = datafile_load(mapname);
+	char buf[512];
+	sprintf(buf, "data/%s.map", mapname);
+	map = datafile_load(buf);
 	return map != 0;
 }
