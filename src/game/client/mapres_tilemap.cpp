@@ -47,9 +47,9 @@ void tilemap_render(float scale, int fg)
 				float frac = (1.0f/1024.0f);//2.0f; //2.0f;
 				float texsize = 1024.0f;
 				float nudge = 0.5f/texsize;
-				
-				for(int y = 0; y < tmap->height; y++)
-					for(int x = 0; x < tmap->width; x++)
+				int border = 24;
+				for(int y = -border; y < tmap->height+border; y++)
+					for(int x = -border; x < tmap->width+border; x++)
 					{
 						int mx = x;
 						int my = y;
