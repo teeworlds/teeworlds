@@ -23,6 +23,7 @@ static int gametype = GAMETYPE_DM;
 static int skinseed = 0;
 static int menu_team = 0;
 static int menu_quit = 0;
+static int menu_resume = 0;
 
 static bool chat_active = false;
 static bool menu_active = false;
@@ -1093,10 +1094,27 @@ void ingamemenu_render()
 		}
 	}
 
-	if (ui_do_button(&menu_quit, "Disconnect", 0, 30, 350, 170, 48, draw_teewars_button))
+	const int column1_x = 275;
+	const int row1_y = 250;
+	const int row2_y = row1_y + 60;
+
+	gfx_blend_normal();
+	
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_quads_setcolor(0,0,0,0.5f);
+	gfx_quads_drawTL(250, 225, 300, 160);
+	gfx_quads_end();
+
+	if (ui_do_button(&menu_resume, "Resume Game", 0, column1_x, row1_y, 250, 48, draw_teewars_button))
 	{
-		//if (get_state() == STATE_CONNECTING || get_state() == STATE_ONLINE)
-			main_client.disconnect();
+		menu_active = 0;
+	}
+
+	if (ui_do_button(&menu_quit, "Disconnect", 0, column1_x, row2_y, 250, 48, draw_teewars_button))
+	{
+		menu_active = 0;
+		main_client.disconnect();
 	}
 	
 	gfx_texture_set(cursor_texture);
