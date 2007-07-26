@@ -1312,7 +1312,7 @@ void modc_render()
 	render_sun(20+screen_x*0.6f, 20+screen_y*0.6f);
 
 
-	static vec2 cloud_pos[6] = {vec2(0,0),vec2(0,200),vec2(0,400)};
+	static vec2 cloud_pos[6] = {vec2(-500,0),vec2(-500,200),vec2(-500,400)};
 	static float cloud_speed[6] = {30, 20, 10};
 	static int cloud_images[6] = {IMAGE_CLOUD_1, IMAGE_CLOUD_2, IMAGE_CLOUD_3};
 	
@@ -1321,7 +1321,7 @@ void modc_render()
 		float parallax_amount = 0.55f;
 		gfx_texture_set(data->images[cloud_images[i]].id);
 		gfx_quads_begin();
-		gfx_quads_drawTL((cloud_pos[i].x+fmod(client_localtime()*cloud_speed[i]+i*100.0f, 1000.0f))+screen_x*parallax_amount,
+		gfx_quads_drawTL((cloud_pos[i].x+fmod(client_localtime()*cloud_speed[i]+i*100.0f, 1700.0f))+screen_x*parallax_amount,
 			cloud_pos[i].y+screen_y*parallax_amount, 300, 300);
 		gfx_quads_end();
 	}
