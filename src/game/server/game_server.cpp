@@ -1458,6 +1458,95 @@ void powerup::snap(int snapping_client)
 
 // POWERUP END ///////////////////////
 
+//////////////////////////////////////////////////
+// FLAG
+//////////////////////////////////////////////////
+flag::flag(int _team)
+: entity(OBJTYPE_FLAG)
+{
+	team = _team;
+	proximity_radius = phys_size;
+	carrying_player = 0x0;
+	
+	reset();
+	
+	// TODO: should this be done here?
+	world.insert_entity(this);
+}
+
+void flag::reset()
+{
+	spawntick = -1;
+}
+
+void flag::tick()
+{
+	// wait for respawn
+	if(spawntick > 0)
+	{
+		if(server_tick() > spawntick)
+			spawntick = -1;
+		else
+			return;
+	}
+
+	// Check if a player intersected us
+	vec2 meh;
+	player* pplayer = intersect_player(pos, pos + vel, meh, 0);
+	if (pplayer)
+	{
+		if (!carrying_player)
+			carrying_player = pplayer;
+
+		// TODO: something..?
+	}
+
+	if (carrying_player)
+	{
+		if (carrying_player->dead)
+			carrying_player = 0x0;
+		else
+		{
+			vel = carrying_player->pos - pos;
+			pos = carrying_player->pos;
+		}
+	}
+	
+	if (!carrying_player)
+	{
+		vel.y += 0.25f;
+		vec2 new_pos = pos + vel;
+
+		col_intersect_line(pos, new_pos, &new_pos);
+
+		pos = new_pos;
+
+		if (is_grounded())
+			vel.x = vel.y = 0;
+	}
+}
+
+bool flag::is_grounded()
+{
+	if(col_check_point((int)(pos.x+phys_size/2), (int)(pos.y+phys_size/2+5)))
+		return true;
+	if(col_check_point((int)(pos.x-phys_size/2), (int)(pos.y+phys_size/2+5)))
+		return true;
+	return false;
+}
+
+void flag::snap(int snapping_client)
+{
+	if(spawntick != -1)
+		return;
+
+	obj_flag *flag = (obj_flag *)snap_new_item(OBJTYPE_FLAG, id, sizeof(obj_flag));
+	flag->x = (int)pos.x;
+	flag->y = (int)pos.y;
+	flag->team = team;
+}
+// FLAG END ///////////////////////
+
 player *get_player(int index)
 {
 	return &players[index];

@@ -657,6 +657,32 @@ static void render_powerup(obj_powerup *prev, obj_powerup *current)
 	gfx_quads_end();
 }
 
+static void render_flag(obj_flag *prev, obj_flag *current)
+{
+	float angle = 0.0f;
+	float size = 64.0f;
+
+    gfx_blend_normal();
+    gfx_texture_set(0);
+    gfx_quads_begin();
+	
+	gfx_quads_setrotation(angle);
+	
+	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
+	float offset = pos.y/32.0f + pos.x/32.0f;
+	pos.x += cosf(client_localtime()*2.0f+offset)*2.5f;
+	pos.y += sinf(client_localtime()*2.0f+offset)*2.5f;
+
+    gfx_quads_setcolor(current->team ? 1 : 0,0,current->team ? 0 : 1,1);
+	gfx_quads_setsubset(
+		0, // startx
+		0, // starty
+		1, // endx
+		1); // endy								
+    gfx_quads_drawTL(pos.x,pos.y,size,size);
+    gfx_quads_end();
+}
+
 static void anim_seq_eval(sequence *seq, float time, keyframe *frame)
 {
 	if(seq->num_frames == 0)
@@ -1302,7 +1328,13 @@ void modc_render()
 		{
 			void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
 			if(prev)
-				render_powerup((obj_powerup*)prev, (obj_powerup *)data);
+				render_powerup((obj_powerup *)prev, (obj_powerup *)data);
+		}
+		else if(item.type == OBJTYPE_FLAG)
+		{
+			void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+			if (prev)
+				render_flag((obj_flag *)prev, (obj_flag *)data);
 		}
 	}
 

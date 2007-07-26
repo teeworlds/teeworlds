@@ -34,6 +34,7 @@ enum
 	OBJTYPE_PLAYER,
 	OBJTYPE_PROJECTILE,
 	OBJTYPE_POWERUP,
+	OBJTYPE_FLAG,
 	EVENT_EXPLOSION,
 	EVENT_DAMAGEINDICATION,
 	EVENT_SOUND,
@@ -128,6 +129,12 @@ struct obj_powerup
 	int x, y;
 	int type; // why do we need two types?
 	int subtype;
+};
+
+struct obj_flag
+{
+	int x, y;
+	int team;
 };
 
 struct obj_player

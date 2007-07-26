@@ -294,3 +294,22 @@ public:
 };
 
 extern player players[MAX_CLIENTS];
+
+// TODO: move to seperate file
+class flag : public entity
+{
+public:
+	static const int phys_size = 14;
+	player *carrying_player;
+	baselib::vec2 vel;
+	
+	int team;
+	int spawntick;
+	flag(int _team);
+
+	bool is_grounded();
+	
+	virtual void reset();
+	virtual void tick();
+	virtual void snap(int snapping_client);
+};
