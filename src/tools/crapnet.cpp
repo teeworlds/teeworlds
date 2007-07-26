@@ -102,8 +102,8 @@ int run(int port, netaddr4 dest)
 				// update lag
 				double flux = rand()/(double)RAND_MAX;
 				int ms_spike = 0;
-				int ms_flux = 100;
-				int ms_ping = 50;
+				int ms_flux = 20;
+				int ms_ping = 20;
 				current_latency = ((time_freq()*ms_ping)/1000) + (int64)(((time_freq()*ms_flux)/1000)*flux); // 50ms
 				
 				if((p->id%100) == 0)

@@ -102,64 +102,6 @@ public:
 		return -1;
 	}
 };
-/*
-class snapshot_delta_builder
-{
-public:
-	static const int MAX_ITEMS = 512;
-
-	char data[MAX_SNAPSHOT_SIZE];
-	int data_size;
-
-	int offsets[MAX_ITEMS];
-	int num_items;
-
-	int top_size;
-	int top_items;
-
-	int snapnum;
-
-	snapshot_delta_builder()
-	{
-		top_size = 0;
-		top_items = 0;
-		snapnum = 0;
-	}
-
-	void start()
-	{
-		data_size = 0;
-		num_items = 0;
-	}
-
-	int finish(void *snapdata)
-	{
-		snapnum++;
-
-		// flattern and make the snapshot
-		snapshot *snap = (snapshot *)snapdata;
-		snap->data_size = data_size;
-		snap->num_items = num_items;
-		int offset_size = sizeof(int)*num_items;
-		mem_copy(snap->offsets, offsets, offset_size);
-		mem_copy(snap->data_start(), data, data_size);
-		return sizeof(int) + offset_size + data_size;
-	}
-
-	void *new_item(int type, int id, int size)
-	{
-		snapshot::item *obj = (snapshot::item *)(data+data_size);
-		obj->type_and_id = (type<<16)|id;
-		offsets[num_items] = data_size;
-		data_size += sizeof(int) + size;
-		num_items++;
-		dbg_assert(data_size < MAX_SNAPSHOT_SIZE, "too much data");
-		dbg_assert(num_items < MAX_ITEMS, "too many items");
-
-		return &obj->data;
-	}
-};
-*/
 
 class snapshot_builder
 {

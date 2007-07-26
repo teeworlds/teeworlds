@@ -951,7 +951,7 @@ static void render_player(obj_player *prev, obj_player *player)
 					if (dir.x < 0.0f)
 						hadokenangle += pi;
 					gfx_quads_setrotation(hadokenangle);
-					float offsety = -data->weapons[iw].muzzleoffsety;
+					//float offsety = -data->weapons[iw].muzzleoffsety;
 					select_sprite(data->weapons[iw].sprite_muzzle[itex].psprite, 0);
 					vec2 diry(-dir.y,dir.x);
 					p = position;
@@ -1707,7 +1707,7 @@ void modc_render()
 						render_tee(&idlestate, skin, vec2(1,0), vec2(offsetx + x+90, offsets[player->team]+24));
 
 						sprintf(buf, "%4d", player->latency);
-						float tw = gfx_pretty_text_width(48.0f, buf);
+						//float tw = gfx_pretty_text_width(48.0f, buf);
 						gfx_pretty_text(offsetx + x + 240, offsets[player->team], 48, buf);
 
 						offsets[player->team] += 58.0f;

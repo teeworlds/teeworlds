@@ -40,8 +40,6 @@ void tilemap_render(float scale, int fg)
 		{
 			gfx_texture_set(img_get(tmap->image));
 			
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			
 			if(!batches[t])
 			{
 				gfx_quads_begin();

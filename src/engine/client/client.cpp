@@ -65,17 +65,84 @@ void snap_input(void *data, int size)
 // -- snapshot handling ---
 enum
 {
-	SNAP_INCOMMING=2,
-	NUM_SNAPSHOT_TYPES=3,
+	NUM_SNAPSHOT_TYPES=2,
 };
 
-static snapshot_storage snapshots_new;
+struct snapshot_info
+{
+	snapshot_info *prev;
+	snapshot_info *next;
+	
+	int tick;
+	int64 recvtime;
+	snapshot *snap;
+};
+
+static snapshot_info *first_snapshot = 0;
+static snapshot_info *last_snapshot = 0;
+
+static snapshot_info *client_snapshot_add(int tick, int64 time, void *data, int data_size)
+{
+	snapshot_info *holder = (snapshot_info*)mem_alloc(sizeof(snapshot_info) + data_size, 1);
+	holder->tick = tick;
+	holder->recvtime = time;
+	holder->snap = (snapshot *)(holder+1);
+	mem_copy(holder->snap, data, data_size);
+	
+	
+	holder->next =0x0;
+	holder->prev = last_snapshot;
+	if(last_snapshot)
+		last_snapshot->next = holder;
+	else
+		first_snapshot = holder;
+	last_snapshot = holder;
+	
+	return holder;
+}
+
+static snapshot_info *client_snapshot_find(int tick)
+{
+	snapshot_info *current = first_snapshot;
+	while(current)
+	{
+		if(current->tick == tick)
+			return current;
+		current = current->next;
+	}
+	
+	return 0;
+}
+
+static void client_snapshot_purge_until(int tick)
+{
+	snapshot_info *current = first_snapshot;
+	while(current)
+	{
+		snapshot_info *next = current->next;
+		if(current->tick < tick)
+			mem_free(current);
+		else
+			break;
+		
+		current = next;
+		current->prev = 0;
+		first_snapshot = current;
+	}
+	
+	if(!first_snapshot)
+		last_snapshot = 0;
+}
+
+static snapshot_info *snapshots[NUM_SNAPSHOT_TYPES];
 static int current_tick;
-static snapshot *snapshots[NUM_SNAPSHOT_TYPES];
-static char snapshot_data[NUM_SNAPSHOT_TYPES][MAX_SNAPSHOT_SIZE];
 static int recived_snapshots;
 static int64 snapshot_start_time;
 static int64 local_start_time;
+static int64 game_start_time;
+static float latency = 0;
+static int extra_polating = 0;
+static char snapshot_incomming_data[MAX_SNAPSHOT_SIZE];
 
 float client_localtime()
 {
@@ -85,7 +152,7 @@ float client_localtime()
 void *snap_get_item(int snapid, int index, snap_item *item)
 {
 	dbg_assert(snapid >= 0 && snapid < NUM_SNAPSHOT_TYPES, "invalid snapid");
-	snapshot::item *i = snapshots[snapid]->get_item(index);
+	snapshot::item *i = snapshots[snapid]->snap->get_item(index);
 	item->type = i->type();
 	item->id = i->id();
 	return (void *)i->data();
@@ -94,16 +161,16 @@ void *snap_get_item(int snapid, int index, snap_item *item)
 int snap_num_items(int snapid)
 {
 	dbg_assert(snapid >= 0 && snapid < NUM_SNAPSHOT_TYPES, "invalid snapid");
-	return snapshots[snapid]->num_items;
+	return snapshots[snapid]->snap->num_items;
 }
 
 static void snap_init()
 {
-	snapshots[SNAP_INCOMMING] = (snapshot*)snapshot_data[0];
-	snapshots[SNAP_CURRENT] = (snapshot*)snapshot_data[1];
-	snapshots[SNAP_PREV] = (snapshot*)snapshot_data[2];
-	mem_zero(snapshot_data, NUM_SNAPSHOT_TYPES*MAX_SNAPSHOT_SIZE);
+	snapshots[SNAP_CURRENT] = 0;
+	snapshots[SNAP_PREV] = 0;
 	recived_snapshots = 0;
+	game_start_time = -1;
+	
 }
 
 float client_intratick()
@@ -124,9 +191,9 @@ int client_tickspeed()
 void *snap_find_item(int snapid, int type, int id)
 {
 	// TODO: linear search. should be fixed.
-	for(int i = 0; i < snapshots[snapid]->num_items; i++)
+	for(int i = 0; i < snapshots[snapid]->snap->num_items; i++)
 	{
-		snapshot::item *itm = snapshots[snapid]->get_item(i);
+		snapshot::item *itm = snapshots[snapid]->snap->get_item(i);
 		if(itm->type() == type && itm->id() == id)
 			return (void *)itm->data();
 	}
@@ -276,6 +343,7 @@ void client_connect(const char *server_address_str)
 void client::send_info()
 {
 	recived_snapshots = 0;
+	game_start_time = -1;
 
 	msg_pack_start_system(NETMSG_INFO, MSGFLAG_VITAL);
 	msg_pack_string(config.player_name, 128);
@@ -333,6 +401,9 @@ bool client::load_data()
 
 void client::debug_render()
 {
+	if(!config.debug)
+		return;
+		
 	gfx_blend_normal();
 	gfx_texture_set(debug_font);
 	gfx_mapscreen(0,0,gfx_screenwidth(),gfx_screenheight());
@@ -347,9 +418,10 @@ void client::debug_render()
 	}
 	
 	char buffer[512];
-	sprintf(buffer, "send: %8d recv: %8d",
+	sprintf(buffer, "send: %8d recv: %8d latency: %4.0f %c",
 		(current.send_bytes-prev.send_bytes)*10,
-		(current.recv_bytes-prev.recv_bytes)*10);
+		(current.recv_bytes-prev.recv_bytes)*10,
+		latency*1000.0f, extra_polating?'E':' ');
 	gfx_quads_text(10, 10, 16, buffer);
 	
 }
@@ -461,6 +533,30 @@ void client::run(const char *direct_connect_server)
 		frames++;
 		int64 frame_start_time = time_get();
 
+		// switch snapshot
+		if(recived_snapshots >= 3)
+		{
+			snapshot_info *cur = snapshots[SNAP_CURRENT];
+			int64 t = game_start_time + (cur->tick+1)*time_freq()/50;
+			if(latency > 0)
+				t += (int64)(time_freq()*(latency*1.1f));
+
+			if(t < time_get())
+			{
+				snapshot_info *next = snapshots[SNAP_CURRENT]->next;
+				if(next)
+				{
+					snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
+					snapshots[SNAP_CURRENT] = next;
+					snapshot_start_time = t;
+				}
+				else
+					extra_polating = 1;
+			}
+			else
+				extra_polating = 0;
+		}
+
 		// send input
 		if(get_state() == STATE_ONLINE)
 		{
@@ -508,7 +604,8 @@ void client::run(const char *direct_connect_server)
 			break;
 
 		// be nice
-		thread_sleep(1);
+		if(config.cpu_throttle)
+			thread_sleep(1);
 		
 		if(reporttime < time_get())
 		{
@@ -704,14 +801,11 @@ void client::process_packet(NETPACKET *packet)
 				{
 					// TODO: clean this up abit
 					const char *d = (const char *)msg_unpack_raw(part_size);
-					mem_copy((char*)snapshots[SNAP_INCOMMING] + part*MAX_SNAPSHOT_PACKSIZE, d, part_size);
+					mem_copy((char*)snapshot_incomming_data + part*MAX_SNAPSHOT_PACKSIZE, d, part_size);
 					snapshot_part++;
 				
 					if(snapshot_part == num_parts)
 					{
-						snapshot *tmp = snapshots[SNAP_PREV];
-						snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
-						snapshots[SNAP_CURRENT] = tmp;
 						current_tick = game_tick;
 
 						// decompress snapshot
@@ -722,7 +816,7 @@ void client::process_packet(NETPACKET *packet)
 						unsigned char tmpbuffer2[MAX_SNAPSHOT_SIZE];
 						if(part_size)
 						{
-							int compsize = zerobit_decompress(snapshots[SNAP_INCOMMING], part_size, tmpbuffer);
+							int compsize = zerobit_decompress(snapshot_incomming_data, part_size, tmpbuffer);
 							int intsize = intpack_decompress(tmpbuffer, compsize, tmpbuffer2);
 							deltadata = tmpbuffer2;
 							deltasize = intsize;
@@ -734,43 +828,64 @@ void client::process_packet(NETPACKET *packet)
 						emptysnap.num_items = 0;
 						
 						snapshot *deltashot = &emptysnap;
-						int deltashot_size;
 
 						if(delta_tick >= 0)
 						{
-							void *delta_data;
-							deltashot_size = snapshots_new.get(delta_tick, 0, &delta_data);
-							if(deltashot_size >= 0)
-							{
-								deltashot = (snapshot *)delta_data;
-							}
+							//void *delta_data;
+							snapshot_info *delta_info = client_snapshot_find(delta_tick);
+							//deltashot_size = snapshots_new.get(delta_tick, 0, &delta_data);
+							if(delta_info)
+								deltashot = delta_info->snap;
 							else
 							{
 								// TODO: handle this
 								dbg_msg("client", "error, couldn't find the delta snapshot");
 							}
 						}
+						
+						unsigned char tmpbuffer3[MAX_SNAPSHOT_SIZE];
+						int snapsize = snapshot_unpack_delta(deltashot, (snapshot*)tmpbuffer3, deltadata, deltasize);
 
-						int snapsize = snapshot_unpack_delta(deltashot, (snapshot*)snapshots[SNAP_CURRENT], deltadata, deltasize);
-						//snapshot *shot = (snapshot *)snapshots[SNAP_CURRENT];
-
-						// purge old snapshots					
-						snapshots_new.purge_until(delta_tick);
-						snapshots_new.purge_until(game_tick-50); // TODO: change this to server tickrate
+						// purge old snapshots				
+						int purgetick = delta_tick;
+						if(snapshots[SNAP_PREV] && snapshots[SNAP_PREV]->tick < purgetick)
+							purgetick = snapshots[SNAP_PREV]->tick;
+						if(snapshots[SNAP_CURRENT] && snapshots[SNAP_CURRENT]->tick < purgetick)
+							purgetick = snapshots[SNAP_PREV]->tick;
+						client_snapshot_purge_until(purgetick);
+						//client_snapshot_purge_until(game_tick-50);
 						
 						// add new
-						snapshots_new.add(game_tick, time_get(), snapsize, snapshots[SNAP_CURRENT]);
+						snapshot_info *snap = client_snapshot_add(game_tick, time_get(), tmpbuffer3, snapsize);
 						
 						// apply snapshot, cycle pointers
 						recived_snapshots++;
-						snapshot_start_time = time_get();
 						
 						// we got two snapshots until we see us self as connected
+						if(recived_snapshots <= 2)
+						{
+							snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
+							snapshots[SNAP_CURRENT] = snap;
+							snapshot_start_time = time_get();
+						}
+						
 						if(recived_snapshots == 2)
 						{
 							local_start_time = time_get();
 							set_state(STATE_ONLINE);
 						}
+						
+						int64 now = time_get();
+						int64 t = now - game_tick*time_freq()/50;
+						if(game_start_time == -1 || t < game_start_time)
+						{
+							dbg_msg("client", "adjusted time");
+							game_start_time = t;
+						}
+						
+						int64 wanted = game_start_time+(game_tick*time_freq())/50;
+						float current_latency = (now-wanted)/(float)time_freq();
+						latency = latency*0.95f+current_latency*0.05f;
 						
 						if(recived_snapshots > 2)
 							modc_newsnapshot();
