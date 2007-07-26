@@ -62,6 +62,14 @@ enum
 	EMOTE_HAPPY,
 };
 
+enum
+{
+	STATE_UNKNOWN=0,
+	STATE_PLAYING,
+	STATE_IN_MENU,
+	STATE_CHATTING,
+};
+
 struct player_input
 {
 	int left;
@@ -75,6 +83,7 @@ struct player_input
 	int hook;
 	int blink;
 	int activeweapon;
+	int state;
 };
 
 
@@ -141,6 +150,7 @@ struct obj_player
 {
 	int local;
 	int clientid;
+	int state;
 
 	int health;
 	int armor;

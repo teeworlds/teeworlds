@@ -675,6 +675,7 @@ void player::reset()
 	score = 0;
 	dead = true;
 	die_tick = 0;
+	state = STATE_UNKNOWN;
 }
 
 void player::destroy() {  }
@@ -686,6 +687,7 @@ void player::respawn()
 	jumped = 0;
 	dead = false;
 	set_flag(entity::FLAG_ALIVE);
+	state = STATE_PLAYING;
 	
 	mem_zero(&input, sizeof(input));
 	vel = vec2(0.0f, 0.0f);
@@ -1207,6 +1209,8 @@ void player::tick()
 		defered_pos = pos;
 		move_box(&defered_pos, &vel, vec2(phys_size, phys_size), 0);
 	}
+
+	state = input.state;
 	
 	// Previnput
 	previnput = input;
@@ -1353,6 +1357,8 @@ void player::snap(int snaping_client)
 	
 	player->score = score;
 	player->team = team;
+
+	player->state = state;
 }
 
 player players[MAX_CLIENTS];

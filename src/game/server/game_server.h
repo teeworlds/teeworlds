@@ -243,6 +243,7 @@ public:
 
 	int score;
 	int team;
+	int state;
 	
 	bool dead;
 	int die_tick;

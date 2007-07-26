@@ -181,6 +181,10 @@ images {
 	cloud_3 {
 		filename "data/cloud-3.png"
 	}
+
+	chat_bubbles {
+		filename "data/chatbubbles.png"
+	}
 }
 
 particles {
@@ -524,6 +528,10 @@ sprites {
 		tee_foot_outline 8 2 2 1
 		
 		tee_eye_normal 10 2 1 1
+	}
+
+	chatbubbles images.chat_bubbles 4 4 {
+		chat_dotdot 0 1 1 1
 	}
 }
 

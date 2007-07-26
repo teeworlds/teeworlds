@@ -1012,6 +1012,17 @@ static void render_player(obj_player *prev, obj_player *player)
 	// render the tee
 	int skin = gametype == GAMETYPE_TDM ? skinseed + player->team : player->clientid;
 	render_tee(&state, skin, direction, position);
+
+	if(player->state == STATE_CHATTING)
+	{
+
+		gfx_texture_set(data->images[IMAGE_CHAT_BUBBLES].id);
+		gfx_quads_begin();
+		select_sprite(SPRITE_CHAT_DOTDOT);
+		gfx_quads_draw(position.x + 24, position.y - 40, 64,64);
+		gfx_quads_end();
+	}
+		
 }
 
 
@@ -1211,9 +1222,14 @@ void modc_render()
 		input.target_x = (int)mouse_pos.x; //(int)(a*256.0f);
 		input.target_y = (int)mouse_pos.y; //(int)(a*256.0f);
 		input.activeweapon = -1;
-		
-		if(!chat_active && !menu_active)
+	
+		if(chat_active)
+			input.state = STATE_CHATTING;
+		else if(menu_active)
+			input.state = STATE_IN_MENU;
+		else
 		{
+			input.state = STATE_PLAYING;
 			input.left = inp_key_pressed(config.key_move_left);
 			input.right = inp_key_pressed(config.key_move_right);
 			input.jump = inp_key_pressed(config.key_jump);
