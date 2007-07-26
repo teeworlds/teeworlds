@@ -462,8 +462,14 @@ public:
 		packer.add_raw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
 		packer.add_string(server_name, 128);
 		packer.add_string(map_name, 128);
-		packer.add_int(8); // max_players
-		packer.add_int(0); // num_players
+		packer.add_int(MAX_CLIENTS); // max_players
+		int c = 0;
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(!clients[i].is_empty())
+				c++;
+		}
+		packer.add_int(c); // num_players
 		
 		packet.client_id = -1;
 		packet.address = *addr;
