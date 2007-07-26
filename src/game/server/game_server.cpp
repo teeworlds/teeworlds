@@ -1006,6 +1006,27 @@ int player::handle_weapons()
 
 void player::tick()
 {
+	// do latency stuff
+	{
+		client_info info;
+		if(server_getclientinfo(client_id, &info))
+		{
+			latency_accum += info.latency;
+			latency_accum_max = max(latency_accum_max, info.latency);
+			latency_accum_min = min(latency_accum_min, info.latency);
+		}
+			
+		if(server_tick()%server_tickspeed() == 0)
+		{
+			latency_avg = latency_accum/server_tickspeed();
+			latency_max = latency_accum_max;
+			latency_min = latency_accum_min;
+			latency_accum = 0;
+			latency_accum_min = 1000;
+			latency_accum_max = 0;
+		}
+	}
+
 	// TODO: rework the input to be more robust
 	// TODO: remove this tick count, it feels weird
 	if(dead)
@@ -1287,11 +1308,8 @@ void player::snap(int snaping_client)
 	player->vy = (int)vel.y;
 	player->emote = EMOTE_NORMAL;
 
-	player->latency = 0;
-	client_info info;
-	if(server_getclientinfo(client_id, &info))
-		player->latency = info.latency;
-	
+	player->latency = latency_avg;
+	player->latency_flux = latency_max-latency_min;
 
 	player->ammocount = weapons[active_weapon].ammo;
 	player->health = 0;
@@ -1637,8 +1655,8 @@ void mods_client_enter(int client_id)
 void mods_client_drop(int client_id)
 {
 	dbg_msg("mods", "client drop %d", client_id);
-	players[client_id].client_id = -1;
 	world.remove_entity(&players[client_id]);
+	players[client_id].client_id = -1;
 }
 
 void mods_message(int msg, int client_id)

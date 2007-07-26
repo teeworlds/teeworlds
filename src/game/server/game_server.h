@@ -246,6 +246,13 @@ public:
 	
 	bool dead;
 	int die_tick;
+	
+	int latency_accum;
+	int latency_accum_min;
+	int latency_accum_max;
+	int latency_avg;
+	int latency_min;
+	int latency_max;
 
 	// hooking stuff
 	enum

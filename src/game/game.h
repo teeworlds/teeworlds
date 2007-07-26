@@ -149,6 +149,7 @@ struct obj_player
 	
 	int score;
 	int latency;
+	int latency_flux;
 	int emote;
 	
 	int hook_active;

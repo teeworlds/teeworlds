@@ -1541,9 +1541,14 @@ void modc_render()
 						sprintf(buf, "%4d", player->score);
 						gfx_pretty_text(x+60-gfx_pretty_text_width(48,buf), y, 48, buf);
 						gfx_pretty_text(x+128, y, 48, client_datas[player->clientid].name);
+						
 						sprintf(buf, "%4d", player->latency);
 						float tw = gfx_pretty_text_width(48.0f, buf);
 						gfx_pretty_text(x+w-tw-20, y, 48, buf);
+						
+						/*sprintf(buf, "%4d", player->latency_flux);
+						tw = gfx_pretty_text_width(24.0f, buf);
+						gfx_pretty_text(x+w-tw-20, y+20, 24, buf);*/
 
 						render_tee(&idlestate, player->clientid, vec2(1,0), vec2(x+90, y+24));
 						y += 58.0f;
