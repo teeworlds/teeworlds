@@ -106,7 +106,7 @@ void draw_box(int box_type, gui_tileset_enum tileset, float x, float y, float w,
 	 * | bl | bm | br | 
 	 * +----+----+----D
 	 */
-
+	
 	int ax = box.rect.x;
 	int ay = box.rect.y;
 
@@ -261,7 +261,7 @@ void draw_menu_button(void *id, const char *text, int checked, float x, float y,
 
 void draw_teewars_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
 {
-	const float font_size = 42.0f;
+	const float font_size = h-6.0f;//42.0f;
 
 	float text_width = gfx_pretty_text_width(font_size, text);
 	gui_tileset_enum tileset;
@@ -353,8 +353,9 @@ int ui_do_key_reader(void *id, float x, float y, float w, float h, int key)
 int ui_do_combo_box(void *id, float x, float y, float w, char *lines, int line_count, int selected_index)
 {
 	float line_height = 36.0f;
+	float height = line_count * line_height;
 
-	int inside = (ui_active_item() == id) ? ui_mouse_inside(x, y, w, line_count * line_height) : ui_mouse_inside(x, y, w, line_height);
+	int inside = (ui_active_item() == id) ? ui_mouse_inside(x, y, w, height) : ui_mouse_inside(x, y, w, line_height);
 	int hover_index = (int)((ui_mouse_y() - y) / line_height);
 
 	if (ui_active_item() == id)
@@ -370,7 +371,9 @@ int ui_do_combo_box(void *id, float x, float y, float w, char *lines, int line_c
 	else if(ui_hot_item() == id)
 	{
 		if (ui_mouse_button(0))
+		{
 			ui_set_active_item(id);
+		}
 	}
 
 	if (inside)
@@ -673,6 +676,7 @@ enum
 	SCREEN_SETTINGS_GENERAL,
 	SCREEN_SETTINGS_CONTROLS,
 	SCREEN_SETTINGS_VIDEO,
+	SCREEN_SETTINGS_VIDEO_SELECT_MODE,
 	SCREEN_SETTINGS_SOUND,
 	SCREEN_KERNING
 };
@@ -812,77 +816,52 @@ static int settings_controls_render()
 	return 0;
 }
 
-static const int MAX_RESOLUTIONS = 8;
+static const int MAX_RESOLUTIONS = 128;
+static int settings_video_render_select_mode()
+{
+	video_mode modes[MAX_RESOLUTIONS];
+	int num_modes = gfx_get_video_modes(modes, MAX_RESOLUTIONS);
+	
+	static int scroll_index = 0;
+	scroll_index = do_scroll_bar_vert(&scroll_index, 600, row1_y, 40 * 7, num_modes - 7, scroll_index);
+
+	for (int i = 0; i < 7; i++)
+	{
+		int index = i + scroll_index;
+		//key_thing key = keys[i + scroll_index];
+		int depth = modes[index].red+modes[index].green+modes[index].blue;
+		if(depth < 16)
+			depth = 16;
+		else if(depth > 16)
+			depth = 24;
+		
+		char buf[128];
+		int s = 0;
+		if(modes[index].width == config_copy.screen_width &&
+			modes[index].height == config_copy.screen_height && 
+			depth == config_copy.color_depth)
+		{
+			s = 1;
+		}
+		
+		sprintf(buf, "%c %dx%d %d bit %c", s?'>':' ', modes[index].width, modes[index].height, depth, s?'<':' ');
+		
+		if(ui_do_button((void*)&modes[index], buf, 0,
+			column1_x, row1_y + 40 * i, 320, 32.0f, draw_teewars_button))
+		{
+			// select
+			config_set_color_depth(&config_copy, depth);
+			config_set_screen_width(&config_copy, modes[index].width);
+			config_set_screen_height(&config_copy, modes[index].height);
+			screen = SCREEN_SETTINGS_VIDEO;
+		}
+	}
+
+	return 0;
+}
 
 static int settings_video_render()
 {
-	static int resolution_count[2] = {0};
-	static int resolutions[2][MAX_RESOLUTIONS][2] = {0};
-	static char resolution_names[2][MAX_RESOLUTIONS][128] = {0};
-
-	static bool inited = false;
-	if (!inited)
-	{
-		const int num_modes = 1024;
-
-		video_mode modes[num_modes];
-
-		int retn = gfx_get_video_modes(modes, num_modes);
-
-		for (int i = 0; i < retn; i++)
-		{
-			video_mode mode = modes[i];
-			int depth = mode.red + mode.green + mode.blue;
-			
-			int depth_index;
-
-			if (depth == 15 || depth == 16)
-				depth_index = 0;
-			else if (depth == 24)
-				depth_index = 1;
-			else
-			{
-				dbg_msg("menu", "a resolution with a weird depth was reported: %ix%i (%i/%i/%i)", mode.width, mode.height, mode.red, mode.green, mode.blue);
-				continue;
-			}
-
-			int resolution_index = resolution_count[depth_index];
-			if(resolution_index < MAX_RESOLUTIONS)
-			{
-				resolution_count[depth_index]++;
-				resolutions[depth_index][resolution_index][0] = mode.width;
-				resolutions[depth_index][resolution_index][1] = mode.height;
-				dbg_msg("res", "%ix%i", mode.width, mode.height);
-				sprintf(resolution_names[depth_index][resolution_index], "%ix%i", mode.width, mode.height);
-			}
-		}
-
-		inited = true;
-	}
-
-	int depth_index = (config_copy.color_depth == 16) ? 0 : 1;
-	static int selected_index = -1;
-	if (selected_index == -1)
-	{
-		for (int i = 0; i < resolution_count[depth_index]; i++)
-		{
-			if (config_copy.screen_width == resolutions[depth_index][i][0] && config_copy.screen_height == resolutions[depth_index][i][1])
-			{
-				selected_index = i;
-				break;
-			}
-		}
-
-		if (selected_index == -1)
-			selected_index = 1;
-	}
-
-	static char bit_labels[][128] =
-	{
-		"16",
-		"24"
-	};
-
 	// we need to draw these bottom up, to make overlapping work correctly
 	ui_do_label(column1_x, row4_y + 50, "(A restart of the game is required for these settings to take effect.)", 20);
 	
@@ -892,17 +871,14 @@ static int settings_video_render()
 	ui_do_label(column1_x, row3_y, "Fullscreen:", 36);
 	config_set_fullscreen(&config_copy, ui_do_check_box(&config_copy.fullscreen, column2_x, row3_y + 5, 32, 32, config_copy.fullscreen));
 
-	ui_do_label(column1_x, row2_y, "Resolution:", 36);
-	selected_index = ui_do_combo_box(&selected_index, column2_x, row2_y, 170, (char *)resolution_names[depth_index], resolution_count[depth_index], selected_index);
+	ui_do_label(column1_x, row2_y, "Mode:", 36);
 
-	ui_do_label(column1_x, row1_y, "Color Depth:", 36);
-	depth_index = ui_do_combo_box(&depth_index, column2_x, row1_y, 64, (char *)bit_labels, 2, depth_index);
-	
-
-	config_set_color_depth(&config_copy, (depth_index == 0) ? 16 : 24);
-	config_set_screen_width(&config_copy, resolutions[depth_index][selected_index][0]);
-	config_set_screen_height(&config_copy, resolutions[depth_index][selected_index][1]);
-
+	char buf[128];
+	sprintf(buf, "%dx%d %d bit", config_copy.screen_width, config_copy.screen_height, config_copy.color_depth);
+	static int select_button = 0;
+	if(ui_do_button(&select_button, buf, 0, column2_x, row2_y, 300, 32, draw_teewars_button))
+		screen = SCREEN_SETTINGS_VIDEO_SELECT_MODE;
+		
 	return 0;
 }
 
@@ -934,6 +910,7 @@ static int settings_render()
 		case SCREEN_SETTINGS_GENERAL: settings_general_render(); break;
 		case SCREEN_SETTINGS_CONTROLS: settings_controls_render(); break;
 		case SCREEN_SETTINGS_VIDEO: settings_video_render(); break;
+		case SCREEN_SETTINGS_VIDEO_SELECT_MODE: settings_video_render_select_mode(); break;
 		case SCREEN_SETTINGS_SOUND: settings_sound_render(); break;
 	}
 
@@ -1154,6 +1131,7 @@ static int menu_render()
 		case SCREEN_SETTINGS_GENERAL:
 		case SCREEN_SETTINGS_CONTROLS:
 		case SCREEN_SETTINGS_VIDEO:
+		case SCREEN_SETTINGS_VIDEO_SELECT_MODE:
 		case SCREEN_SETTINGS_SOUND: return settings_render();
 		case SCREEN_KERNING: return kerning_render();
 		default: dbg_msg("menu", "invalid screen selected..."); return 0;
