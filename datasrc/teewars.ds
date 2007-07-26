@@ -149,6 +149,26 @@ images {
 	backdrop {
 		filename "data/mountain_paralax.png"
 	}
+
+	gui_widgets {
+		filename "data/gui/gui_widgets.png"
+	}
+
+	menu_background {
+		filename "data/menu_background.png"
+	}
+
+	menu_butterfly {
+		filename "data/menu_butterfly.png"
+	}
+
+	cursor {
+		filename "data/gui/cursor.png"
+	}
+
+	banner {
+		filename "data/gui_logo.png"
+	}
 	
 	cloud_1 {
 		filename "data/cloud-1.png"

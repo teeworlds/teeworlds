@@ -41,12 +41,6 @@ enum gui_tileset_enum
 	tileset_inactive
 };
 
-int gui_tileset_texture;
-int cursor_texture;
-//int cloud1_texture, cloud2_texture, cloud3_texture;
-int menu_background_texture;
-int butterflies_texture;
-
 void draw_area(gui_tileset_enum tileset, int areax, int areay, int areaw, int areah, float x, float y, float w, float h)
 {
 	const float tex_w = 512.0, tex_h = 512.0;
@@ -71,7 +65,7 @@ void draw_area(gui_tileset_enum tileset, int areax, int areay, int areaw, int ar
 	float te_y = (areay + areah) / tex_h;
 
     gfx_blend_normal();
-    gfx_texture_set(gui_tileset_texture);
+    gfx_texture_set(data->images[IMAGE_GUI_WIDGETS].id);
     gfx_quads_begin();
     gfx_quads_setcolor(1,1,1,1);
 	gfx_quads_setsubset(
@@ -192,7 +186,7 @@ void draw_background(float t)
     gfx_quads_drawTL(4000 - fmod(t * 60, 4512), 300, 256, 256);
     gfx_quads_end();
 
-    gfx_texture_set(menu_background_texture);
+    gfx_texture_set(data->images[IMAGE_MENU_BACKGROUND].id);
     gfx_quads_begin();
     gfx_quads_setcolor(1,1,1,1);
 	gfx_quads_setsubset(
@@ -218,7 +212,7 @@ void draw_background(float t)
 
 	bool flip = angl > pi;
 
-    gfx_texture_set(butterflies_texture);
+    gfx_texture_set(data->images[IMAGE_MENU_BUTTERFLY].id);
     gfx_quads_begin();
     gfx_quads_setcolor(1, 1, 1, 1);
 	gfx_quads_setsubset(
@@ -229,9 +223,6 @@ void draw_background(float t)
     gfx_quads_drawTL(1250 + x_nudge, 480 + y_nudge, 64, 64);
     gfx_quads_end();
 }
-
-static int background_texture;
-static int teewars_banner_texture;
 
 static int music_menu;
 static int music_menu_id = -1;
@@ -735,12 +726,7 @@ static int main_render()
 	if (use_lan != last_lan)
 		client_serverbrowse_refresh(use_lan);
 
-
-	/*if (selected_index == -1)
-	{
-		ui_do_button(&join_button, "Join", 0, 620, 420, 128, 48, draw_teewars_button, (void *)1);
-	}
-	else */if (ui_do_button(&join_button, "Join", 0, 620, 420, 128, 48, draw_teewars_button))
+	if (ui_do_button(&join_button, "Join", 0, 620, 420, 128, 48, draw_teewars_button))
 	{
 		client_connect(address);
 
@@ -1158,7 +1144,7 @@ static int menu_render()
 
 	if (screen != SCREEN_KERNING)
 	{
-		ui_do_image(teewars_banner_texture, 200, 20, 512, 128);
+		ui_do_image(data->images[IMAGE_BANNER].id, 200, 20, 512, 128);
 		ui_do_label(20.0f, 600.0f-40.0f, "Version: " TEEWARS_VERSION, 36);
 	}
 
@@ -1181,12 +1167,6 @@ void modmenu_init()
 
 	// TODO: should be removed
     current_font->font_texture = gfx_load_texture("data/big_font.png");
-	background_texture = gfx_load_texture("data/gui_bg.png");
-	gui_tileset_texture = gfx_load_texture("data/gui/gui_widgets.png");
-    teewars_banner_texture = gfx_load_texture("data/gui_logo.png");
-	cursor_texture = gfx_load_texture("data/gui/cursor.png");
-	menu_background_texture = gfx_load_texture("data/menu_background.png");
-	butterflies_texture = gfx_load_texture("data/menu_butterfly.png");
 
 	// TODO: should be removed
 	music_menu = snd_load_wav("data/audio/Music_Menu.wav");
@@ -1236,7 +1216,7 @@ int modmenu_render()
 
     // render butt ugly mouse cursor
     // TODO: render nice cursor
-    gfx_texture_set(cursor_texture);
+    gfx_texture_set(data->images[IMAGE_CURSOR].id);
     gfx_quads_begin();
     gfx_quads_setcolor(1,1,1,1);
     gfx_quads_drawTL(mx,my,24,24);

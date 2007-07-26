@@ -1095,29 +1095,32 @@ void ingamemenu_render()
 	}
 
 	const int column1_x = 275;
-	const int row1_y = 250;
+	const int row1_y = 200;
 	const int row2_y = row1_y + 60;
+	const int row3_y = row2_y + 60;
 
 	gfx_blend_normal();
 	
 	gfx_texture_set(-1);
 	gfx_quads_begin();
 	gfx_quads_setcolor(0,0,0,0.5f);
-	gfx_quads_drawTL(250, 225, 300, 160);
+	gfx_quads_drawTL(170, 120, 460, 300);
 	gfx_quads_end();
+	
+	ui_do_image(data->images[IMAGE_BANNER].id, 214, 150, 384, 96);
 
-	if (ui_do_button(&menu_resume, "Resume Game", 0, column1_x, row1_y, 250, 48, draw_teewars_button))
+	if (ui_do_button(&menu_resume, "Resume Game", 0, column1_x, row2_y, 250, 48, draw_teewars_button))
 	{
 		menu_active = 0;
 	}
 
-	if (ui_do_button(&menu_quit, "Disconnect", 0, column1_x, row2_y, 250, 48, draw_teewars_button))
+	if (ui_do_button(&menu_quit, "Disconnect", 0, column1_x, row3_y, 250, 48, draw_teewars_button))
 	{
 		menu_active = 0;
 		main_client.disconnect();
 	}
 	
-	gfx_texture_set(cursor_texture);
+	gfx_texture_set(data->images[IMAGE_CURSOR].id);
 	gfx_quads_begin();
 	gfx_quads_setcolor(1,1,1,1);
 	gfx_quads_drawTL(mx,my,24,24);

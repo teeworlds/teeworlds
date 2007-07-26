@@ -1,8 +1,6 @@
 #ifndef __MENU_H
 #define __MENU_H
 
-extern int cursor_texture;
-
 void draw_image_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra);
 void draw_single_part_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra);
 void draw_menu_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra);
