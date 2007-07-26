@@ -1626,7 +1626,7 @@ void modc_render()
 			// Normal deathmatch
 
 			float w = 550.0f;
-			float x = width/2-w/2+100.0f;
+			float x = width/2-w/2;
 			float y = 150.0f;
 
 			gfx_blend_normal();
