@@ -549,7 +549,7 @@ void projectile::tick()
 	entity *targetplayer = (entity*)intersect_player(oldpos, pos, new_pos, powner);
 	if(targetplayer || lifespan < 0 || col_check_point((int)pos.x, (int)pos.y))
 	{
-		if (lifespan >= 0)
+		if (lifespan >= 0 || weapon == WEAPON_ROCKET)
 			create_sound(pos, sound_impact);
 			
 		if (flags & PROJECTILE_FLAGS_EXPLODE)
