@@ -724,9 +724,17 @@ static int main_render()
 	}
 
 	static int refresh_button, join_button, quit_button;
+	static int use_lan = 0;
 
-	if (ui_do_button(&refresh_button, "Refresh", 0, 20, 420, 170, 48, draw_teewars_button))
-		client_serverbrowse_refresh(0);
+	if (ui_do_button(&refresh_button, "Refresh", 0, 20, 460, 170, 48, draw_teewars_button))
+		client_serverbrowse_refresh(use_lan);
+	
+	ui_do_label(60, 420, "Search LAN ", 36);
+	int last_lan = use_lan;
+	use_lan = ui_do_check_box(&use_lan, 20, 424, 32, 32, use_lan);
+	if (use_lan != last_lan)
+		client_serverbrowse_refresh(use_lan);
+
 
 	/*if (selected_index == -1)
 	{
@@ -743,7 +751,7 @@ static int main_render()
 		return -1;
 
 	static int settings_button;
-	if (ui_do_button(&settings_button, "Settings", 0, 20, 490, 170, 48, draw_teewars_button))
+	if (ui_do_button(&settings_button, "Settings", 0, 400, 490, 170, 48, draw_teewars_button))
 	{
 		config_copy = config;
 		screen = SCREEN_SETTINGS_GENERAL;
