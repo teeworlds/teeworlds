@@ -1576,7 +1576,7 @@ void modc_render()
 			// Normal deathmatch
 
 			float w = 550.0f;
-			float x = width-w-50.0f;
+			float x = width/2-w/2;
 			float y = 150.0f;
 
 			gfx_blend_normal();
@@ -1587,21 +1587,22 @@ void modc_render()
 			gfx_quads_drawTL(x-10.f, y-10.f, w, 600.0f);
 			gfx_quads_end();
 			
-			gfx_pretty_text(x, y, 64, "Score Board");
+			float tw = gfx_pretty_text_width( 64, "Score Board");
+			gfx_pretty_text(x+w/2-tw/2, y, 64, "Score Board");
 			y += 64.0f;
 			if(gameobj && gameobj->time_limit)
 			{
 				char buf[64];
 				sprintf(buf, "Time Limit: %d min", gameobj->time_limit);
-				gfx_pretty_text(x, y, 32, buf);
+				gfx_pretty_text(x+10, y, 32, buf);
 				y += 32.0f;
 			}
 			if(gameobj && gameobj->score_limit)
 			{
 				char buf[64];
 				sprintf(buf, "Score Limit: %d", gameobj->score_limit);
-				gfx_pretty_text(x, y, 32, buf);
-				y += 32.0f;
+				gfx_pretty_text(x+10, y, 32, buf);
+				y += 40.0f;
 			}
 			
 			int num = snap_num_items(SNAP_CURRENT);
