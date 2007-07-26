@@ -628,6 +628,7 @@ static void render_powerup(obj_powerup *prev, obj_powerup *current)
 {
 	gfx_texture_set(data->images[IMAGE_WEAPONS].id);
 	gfx_quads_begin();
+	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
 	float angle = 0.0f;
 	float size = 64.0f;
 	if (current->type == POWERUP_WEAPON)
@@ -646,11 +647,19 @@ static void render_powerup(obj_powerup *prev, obj_powerup *current)
 			SPRITE_POWERUP_TIMEFIELD
 			};
 		select_sprite(c[current->type]);
+		
+		if(c[current->type] == SPRITE_POWERUP_NINJA)
+		{
+			proj_particles.addparticle(0, 0,
+				pos+vec2((frandom()-0.5f)*80.0f, (frandom()-0.5f)*20.0f),
+				vec2((frandom()-0.5f)*10.0f, (frandom()-0.5f)*10.0f));
+			size *= 2.0f;
+			pos.x += 10.0f;
+		}
 	}
 	
 	gfx_quads_setrotation(angle);
 	
-	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
 	float offset = pos.y/32.0f + pos.x/32.0f;
 	pos.x += cosf(client_localtime()*2.0f+offset)*2.5f;
 	pos.y += sinf(client_localtime()*2.0f+offset)*2.5f;
