@@ -1214,10 +1214,15 @@ void modc_render()
 				// send message
 				if(chat_input_len)
 				{
-					msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
-					msg_pack_string(chat_input, 512);
-					msg_pack_end();
-					client_send_msg();
+					if(chat_input[0] == '/')
+						config_set(&chat_input[1]);
+					else
+					{
+						msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
+						msg_pack_string(chat_input, 512);
+						msg_pack_end();
+						client_send_msg();
+					}
 				}
 			}
 			else

@@ -12,6 +12,7 @@ struct configuration
 
 extern configuration config;
 
+void config_set(const char *line);
 void config_reset();
 void config_load(const char *filename);
 void config_save(const char *filename);

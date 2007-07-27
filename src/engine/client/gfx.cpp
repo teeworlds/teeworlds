@@ -23,7 +23,7 @@ struct custom_vertex
 	vec4 color;
 };
 
-const int vertex_buffer_size = 2048*32;
+const int vertex_buffer_size = 2048*64;
 //static custom_vertex vertices[4];
 static custom_vertex *vertices = 0;
 static int num_vertices = 0;
