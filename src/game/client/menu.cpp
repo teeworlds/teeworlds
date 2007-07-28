@@ -452,14 +452,13 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 			}
 		}
 
-		if (k == input::backspace)
+		if (k == input::backspace && at_index > 0)
 		{
-			if (at_index > 0)
-			{
-				memmove(str + at_index - 1, str + at_index, len - at_index + 1);
-				at_index--;
-			}
+			memmove(str + at_index - 1, str + at_index, len - at_index + 1);
+			at_index--;
 		}
+		else if (k == input::delet && at_index < len)
+			memmove(str + at_index, str + at_index + 1, len - at_index);
 		else if (k == input::enter)
 			ui_clear_last_active_item();
 		else if (k == input::left && at_index > 0)
