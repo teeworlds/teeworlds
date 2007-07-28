@@ -123,9 +123,9 @@ void draw_box(int box_type, gui_tileset_enum tileset, float x, float y, float w,
 	draw_area(tileset, bx, ay, cx-bx, by-ay, x+bx-ax, y, w-(bx-ax)-(dx-cx), by-ay);
 	draw_area(tileset, cx, ay, dx-cx, by-ay, x+w-(dx-cx), y, dx-cx, by-ay);
 	
-	draw_area(tileset, ax, by, bx-ax, cy-by, x, y+(by-ay), bx-ax, h-(by-ay)-(dy-cy));
+	draw_area(tileset, ax, by, bx-ax, min(int(h-(by-ay)-(dy-cy)), cy-by), x, y+(by-ay), bx-ax, h-(by-ay)-(dy-cy));
 	draw_area(tileset, bx, by, cx-bx, cy-by, x+bx-ax, y+(by-ay), w-(bx-ax)-(dx-cx), h-(by-ay)-(dy-cy));
-	draw_area(tileset, cx, by, dx-cx, cy-by, x+w-(dx-cx), y+(by-ay), dx-cx, h-(by-ay)-(dy-cy));
+	draw_area(tileset, cx, by, dx-cx, min(int(h-(by-ay)-(dy-cy)), cy-by), x+w-(dx-cx), y+(by-ay), dx-cx, h-(by-ay)-(dy-cy));
 
 	draw_area(tileset, ax, cy, bx-ax, dy-cy, x, y+h-(dy-cy), bx-ax, dy-cy);
 	draw_area(tileset, bx, cy, cx-bx, dy-cy, x+bx-ax, y+h-(dy-cy), w-(bx-ax)-(dx-cx), dy-cy);
