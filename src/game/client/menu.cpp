@@ -140,7 +140,6 @@ struct pretty_font
 };  
 
 extern pretty_font *current_font;
-float gfx_pretty_text_width(float size, const char *text);
 
 void render_sun(float x, float y);
 
@@ -415,6 +414,7 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 {
     int inside = ui_mouse_inside(x, y, w, h);
 	int r = 0;
+	static int at_index = 0;
 
 	if(ui_last_active_item() == id)
 	{
@@ -422,22 +422,50 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 		int k = input::last_key();
 		int len = strlen(str);
 
+		if (inside && ui_mouse_button(0))
+		{
+			int mx_rel = ui_mouse_x() - x;
+
+			for (int i = 1; i <= len; i++)
+			{
+				if (gfx_pretty_text_width(36.0f, str, i) + 10 > mx_rel)
+				{
+					at_index = i - 1;
+					break;
+				}
+
+				if (i == len)
+					at_index = len;
+			}
+		}
+
+		if (at_index > len)
+			at_index = len;
+
 		if (c >= 32 && c < 128)
 		{
-			if (len < str_size - 1)
+			if (len < str_size - 1 && at_index < str_size - 1)
 			{
-				str[len] = c;
-				str[len+1] = 0;
+				memmove(str + at_index + 1, str + at_index, len - at_index + 1);
+				str[at_index] = c;
+				at_index++;
 			}
 		}
 
 		if (k == input::backspace)
 		{
-			if (len > 0)
-				str[len-1] = 0;
+			if (at_index > 0)
+			{
+				memmove(str + at_index - 1, str + at_index, len - at_index + 1);
+				at_index--;
+			}
 		}
 		else if (k == input::enter)
 			ui_clear_last_active_item();
+		else if (k == input::left && at_index > 0)
+			at_index--;
+		else if (k == input::right && at_index < len)
+			at_index++;
 
 		r = 1;
 	}
@@ -447,6 +475,8 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 		box_type = GUI_BOX_SCREEN_INFO;
 	else
 		box_type = GUI_BOX_SCREEN_TEXTBOX;
+
+	bool just_got_active = false;
 	
 	if(ui_active_item() == id)
 	{
@@ -456,20 +486,23 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 	else if(ui_hot_item() == id)
 	{
 		if(ui_mouse_button(0))
+		{
+			if (ui_last_active_item() != id)
+				just_got_active = true;
 			ui_set_active_item(id);
+		}
 	}
 	
 	if(inside)
 		ui_set_hot_item(id);
 
-
 	draw_box(box_type, tileset_regular, x, y, w, h);
 
 	ui_do_label(x + 10, y, str, 36);
 
-	if (ui_last_active_item() == id)
+	if (ui_last_active_item() == id && !just_got_active)
 	{
-		float w = gfx_pretty_text_width(36.0f, str);
+		float w = gfx_pretty_text_width(36.0f, str, at_index);
 		ui_do_label(x + 10 + w, y, "_", 36);
 	}
 

@@ -731,12 +731,18 @@ void gfx_pretty_text(float x, float y, float size, const char *text)
 	gfx_quads_end();
 }
 
-float gfx_pretty_text_width(float size, const char *text)
+float gfx_pretty_text_width(float size, const char *text, int length)
 {
 	const float spacing = 0.05f;
 	float w = 0.0f;
 
-	while (*text)
+	const char *stop;
+	if (length == -1)
+		stop = text + strlen(text);
+	else
+		stop = text + length;
+
+	while (text < stop)
 	{
 		const int c = *text;
 		const float width = current_font->m_CharEndTable[c] - current_font->m_CharStartTable[c];
