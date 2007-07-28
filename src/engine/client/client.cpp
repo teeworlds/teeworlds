@@ -444,7 +444,6 @@ void client::render()
 	{
 		//netaddr4 server_address;
 		int status = modmenu_render();
-
 		if (status == -1)
 			set_state(STATE_QUIT);
 	}
@@ -476,6 +475,9 @@ void client::render()
 
 		ui_do_image(tee_texture, x, 95, w, 64);
 		ui_do_image(connecting_texture, 88, 150, 256, 64);
+		
+		if(inp_key_down(input::esc))
+			disconnect();
 	}
 }
 
