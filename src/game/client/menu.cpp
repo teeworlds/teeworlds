@@ -172,7 +172,7 @@ void draw_background(float t)
 		0.0f, // starty
 		1.0f, // endx
 		1.0f); // endy								
-    gfx_quads_drawTL(3000 - fmod(t * 50 + 1000, 4024), 150, 512, 512);
+    gfx_quads_drawTL(3000 - fmod(t * 50 + 2000, 4024), 150, 512, 512);
     gfx_quads_end();
 
     gfx_texture_set(data->images[IMAGE_CLOUD_3].id);
@@ -183,7 +183,7 @@ void draw_background(float t)
 		0.0f, // starty
 		1.0f, // endx
 		1.0f); // endy								
-    gfx_quads_drawTL(4000 - fmod(t * 60, 4512), 300, 256, 256);
+    gfx_quads_drawTL(4000 - fmod(t * 60 + 500, 4512), 300, 256, 256);
     gfx_quads_end();
 
     gfx_texture_set(data->images[IMAGE_MENU_BACKGROUND].id);
