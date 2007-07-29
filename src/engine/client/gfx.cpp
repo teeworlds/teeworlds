@@ -324,7 +324,7 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data)
 	// resample if needed
 	unsigned char *texdata = (unsigned char *)data;
 	unsigned char *tmpdata = 0;
-	if(1 || config.gfx_texture_quality==0)
+	if(config.gfx_texture_quality==0)
 	{
 		if(w > 16 && h > 16 && format == IMG_RGBA)
 		{
