@@ -411,6 +411,13 @@ void chat_add_line(int client_id, const char *line)
 	sprintf(chat_lines[chat_current_line].text, "%s: %s", client_datas[client_id].name, line); // TODO: abit nasty
 }
 
+void status_add_line(const char *line)
+{
+	chat_current_line = (chat_current_line+1)%chat_max_lines;
+	chat_lines[chat_current_line].tick = client_tick();
+	strcpy(chat_lines[chat_current_line].text, line);
+}
+
 struct killmsg
 {
 	int weapon;
@@ -1807,5 +1814,19 @@ void modc_message(int msg)
 		killmsgs[killmsg_current].victim = msg_unpack_int();
 		killmsgs[killmsg_current].weapon = msg_unpack_int();
 		killmsgs[killmsg_current].tick = client_tick();
+	}
+	else if(msg == MSG_JOIN)
+	{
+		int cid = msg_unpack_int();
+		char message[256];
+		sprintf(message, "%s joined the game", client_datas[cid].name);
+		status_add_line(message);
+	}
+	else if(msg == MSG_QUIT)
+	{
+		int cid = msg_unpack_int();
+		char message[256];
+		sprintf(message, "%s quit the game", client_datas[cid].name);
+		status_add_line(message);
 	}
 }

@@ -1753,10 +1753,13 @@ void mods_client_enter(int client_id)
 			server_send_msg(client_id);
 		}
 	}
+
+	mods_message(MSG_JOIN, client_id);
 }
 
 void mods_client_drop(int client_id)
 {
+	mods_message(MSG_QUIT, client_id);
 	dbg_msg("mods", "client drop %d", client_id);
 	world.remove_entity(&players[client_id]);
 	players[client_id].client_id = -1;
@@ -1778,6 +1781,20 @@ void mods_message(int msg, int client_id)
 		players[client_id].team = !players[client_id].team;
 		players[client_id].die(client_id, -1);
 		players[client_id].score--;
+	}
+	else if (msg == MSG_JOIN)
+	{
+		msg_pack_start(MSG_JOIN, MSGFLAG_VITAL);
+		msg_pack_int(client_id);
+		msg_pack_end();
+		server_send_msg(-1);
+	}
+	else if (msg == MSG_QUIT)
+	{
+		msg_pack_start(MSG_QUIT, MSGFLAG_VITAL);
+		msg_pack_int(client_id);
+		msg_pack_end();
+		server_send_msg(-1);
 	}
 }
 

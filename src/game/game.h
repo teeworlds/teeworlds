@@ -51,6 +51,8 @@ enum
 	MSG_SETNAME,
 	MSG_KILLMSG,
 	MSG_SWITCHTEAM,
+	MSG_JOIN,
+	MSG_QUIT,
 };
 
 enum
