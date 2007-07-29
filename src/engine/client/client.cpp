@@ -601,6 +601,15 @@ void client::run(const char *direct_connect_server)
 		// panic button
 		if(input::pressed(input::lctrl) && input::pressed('Q'))
 			break;
+
+		if(input::pressed(input::f5))
+		{
+			// ack snapshot
+			msg_pack_start_system(NETMSG_SNAPACK, 0);
+			msg_pack_int(-1);
+			msg_pack_end();
+			client_send_msg();
+		}
 			
 		// pump the network
 		pump_network();
@@ -794,7 +803,7 @@ void client::process_packet(NETPACKET *packet)
 					error("failure to load map");
 				}
 			}
-			else if(msg == NETMSG_SNAP || msg == NETMSG_SNAPSMALL || msg == NETMSG_SNAPEMPTY)
+			else if(msg == NETMSG_SNAP || msg == NETMSG_SNAPEMPTY) //|| msg == NETMSG_SNAPSMALL || msg == NETMSG_SNAPEMPTY)
 			{
 				//dbg_msg("client/network", "got snapshot");
 				int game_tick = msg_unpack_int();
@@ -802,15 +811,19 @@ void client::process_packet(NETPACKET *packet)
 				int num_parts = 1;
 				int part = 0;
 				int part_size = 0;
+				int crc = 0;
 				
-				if(msg == NETMSG_SNAP)
+				//if(msg == NETMSG_SNAP)
 				{
-					num_parts = msg_unpack_int();
-					part = msg_unpack_int();
+					//num_parts = msg_unpack_int();
+					//part = msg_unpack_int();
 				}
 				
 				if(msg != NETMSG_SNAPEMPTY)
+				{
 					part_size = msg_unpack_int();
+					crc = msg_unpack_int();
+				}
 				
 				if(snapshot_part == part)
 				{
@@ -831,6 +844,8 @@ void client::process_packet(NETPACKET *packet)
 						unsigned char tmpbuffer2[MAX_SNAPSHOT_SIZE];
 						if(part_size)
 						{
+							if(msg == NETMSG_SNAPEMPTY)
+								dbg_msg("client", "FAILURE!");
 							int compsize = zerobit_decompress(snapshot_incomming_data, part_size, tmpbuffer);
 							int intsize = intpack_decompress(tmpbuffer, compsize, tmpbuffer2);
 							deltadata = tmpbuffer2;
@@ -857,6 +872,8 @@ void client::process_packet(NETPACKET *packet)
 								dbg_msg("client", "error, couldn't find the delta snapshot");
 							}
 						}
+
+						//dbg_msg("UNPACK", "%d unpacked with %d", game_tick, delta_tick);
 						
 						unsigned char tmpbuffer3[MAX_SNAPSHOT_SIZE];
 						int snapsize = snapshot_unpack_delta(deltashot, (snapshot*)tmpbuffer3, deltadata, deltasize);
@@ -872,6 +889,10 @@ void client::process_packet(NETPACKET *packet)
 						
 						// add new
 						snapshot_info *snap = client_snapshot_add(game_tick, time_get(), tmpbuffer3, snapsize);
+						
+						//int ncrc = snapshot_crc((snapshot*)tmpbuffer3);
+						//if(crc != ncrc)
+							//dbg_msg("client", "client snapshot crc failure %d %d", crc, ncrc);
 						
 						// apply snapshot, cycle pointers
 						recived_snapshots++;
@@ -908,10 +929,13 @@ void client::process_packet(NETPACKET *packet)
 						snapshot_part = 0;
 						
 						// ack snapshot
-						msg_pack_start_system(NETMSG_SNAPACK, 0);
-						msg_pack_int(game_tick);
-						msg_pack_end();
-						client_send_msg();
+						//if((rand()%10)==0)
+						{
+							msg_pack_start_system(NETMSG_SNAPACK, 0);
+							msg_pack_int(game_tick);
+							msg_pack_end();
+							client_send_msg();
+						}
 					}
 				}
 				else

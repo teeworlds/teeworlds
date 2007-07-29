@@ -300,10 +300,13 @@ public:
 						delta_tick = clients[i].last_acked_snapshot;
 						deltashot = (snapshot *)delta_data;
 					}
+					else
+						dbg_msg("server", "no delta, sending full snapshot");
 				}
 				
 				// create delta
 				int deltasize = snapshot_create_delta(deltashot, (snapshot*)data, deltadata);
+				//dbg_msg("PACK", "%d unpacked with %d", current_tick, delta_tick);
 				
 				if(deltasize)
 				{
@@ -327,13 +330,14 @@ public:
 						int chunk = left < max_size ? left : max_size;
 						left -= chunk;
 
-						if(numpackets == 1)
-							msg_pack_start_system(NETMSG_SNAPSMALL, 0);
-						else
-							msg_pack_start_system(NETMSG_SNAP, 0);
+						//if(numpackets == 1)
+						//	msg_pack_start_system(NETMSG_SNAPSMALL, 0);
+						//else
+						msg_pack_start_system(NETMSG_SNAP, 0);
 						msg_pack_int(current_tick);
 						msg_pack_int(current_tick-delta_tick); // compressed with
 						msg_pack_int(chunk);
+						msg_pack_int(snapshot_crc((snapshot*)data));
 						msg_pack_raw(&compdata[n*max_size], chunk);
 						msg_pack_end();
 						//const msg_info *info = msg_get_info();

@@ -164,10 +164,12 @@ public:
 	void *new_item(int type, int id, int size)
 	{
 		snapshot::item *obj = (snapshot::item *)(data+data_size);
+		mem_zero(obj, sizeof(snapshot::item) + size);
 		obj->type_and_id = (type<<16)|id;
 		offsets[num_items] = data_size;
 		data_size += sizeof(snapshot::item) + size;
 		num_items++;
+		
 		dbg_assert(data_size < MAX_SNAPSHOT_SIZE, "too much data");
 		dbg_assert(num_items < MAX_ITEMS, "too many items");
 

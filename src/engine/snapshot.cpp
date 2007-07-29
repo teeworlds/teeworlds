@@ -27,6 +27,21 @@ void *snapshot_empty_delta()
 	return &empty;
 }
 
+int snapshot_crc(snapshot *snap)
+{
+	int crc = 0;
+	
+	for(int i = 0; i < snap->num_items; i++)
+	{
+		snapshot::item *item = snap->get_item(i);
+		int size = snap->get_item_datasize(i);
+		
+		for(int b = 0; b < size/4; b++)
+			crc += item->data()[b];
+	}
+	return crc;
+}
+
 static int diff_item(int *past, int *current, int *out, int size)
 {
 	/*

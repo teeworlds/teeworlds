@@ -46,7 +46,7 @@ void tilemap_render(float scale, int fg)
 			int endy = (int)(screen_y1/scale)+1;
 			int endx = (int)(screen_x1/scale)+1;
 			
-			float frac = (1.0f/1024.0f);//2.0f; //2.0f;
+			float frac = (1.25f/1024.0f);//2.0f; //2.0f;
 			float texsize = 1024.0f;
 			float nudge = 0.5f/texsize;
 			for(int y = starty; y < endy; y++)

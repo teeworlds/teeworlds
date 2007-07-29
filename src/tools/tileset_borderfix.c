@@ -75,7 +75,7 @@ int main(int argc, char **argv)
 	tilemap_borderfix(w, h, buffer[0], buffer[1]);
 	
 	// save here
-	png_open_file_write(&png, "output.png");
+	png_open_file_write(&png, argv[1]);
 	png_set_data(&png, w, h, 8, PNG_TRUECOLOR_ALPHA, (unsigned char *)buffer[1]);
 	png_close_file(&png);
 		

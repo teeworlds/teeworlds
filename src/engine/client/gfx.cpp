@@ -175,7 +175,8 @@ bool gfx_init()
 		indecies[i*6 + 5] = i+2;
 	}*/
 	
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	
 	// create null texture, will get id=0
 	gfx_load_texture_raw(4,4,IMG_RGBA,null_texture_data);

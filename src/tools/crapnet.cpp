@@ -40,6 +40,9 @@ int run(int port, netaddr4 dest)
 			int bytes = socket.recv(&from, buffer, 1024*2);
 			if(bytes <= 0)
 				break;
+				
+			if((rand()%10) == 0) // drop the packet
+				continue;
 
 			// create new packet				
 			packet *p = (packet *)mem_alloc(sizeof(packet)+bytes, 1);
