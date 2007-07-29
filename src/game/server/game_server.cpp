@@ -1089,7 +1089,7 @@ void player::tick()
 				if(ent && ent->objtype == OBJTYPE_PLAYER)
 				{
 					player *p = (player*)ent;
-					if(p != this && distance(p->pos, new_pos) < p->phys_size)
+					if(p != this && !p->dead && distance(p->pos, new_pos) < p->phys_size)
 					{
 						hook_state = HOOK_GRABBED;
 						hooked_player = p;
