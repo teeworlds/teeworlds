@@ -465,6 +465,10 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 			at_index--;
 		else if (k == input::right && at_index < len)
 			at_index++;
+		else if (k == input::home)
+			at_index = 0;
+		else if (k == input::end)
+			at_index = len;
 
 		r = 1;
 	}
