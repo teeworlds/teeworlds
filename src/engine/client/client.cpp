@@ -398,7 +398,7 @@ bool client::load_data()
 	debug_font = gfx_load_texture("data/debug_font.png");
 	return true;
 }
-
+extern int memory_alloced;
 void client::debug_render()
 {
 	if(!config.debug)
@@ -417,12 +417,14 @@ void client::debug_render()
 		net.stats(&current);
 	}
 	
+	static float frametime_avg = 0;
+	frametime_avg = frametime_avg*0.9f + frametime*0.1f;
 	char buffer[512];
-	sprintf(buffer, "send: %8d recv: %8d latency: %4.0f %c",
+	sprintf(buffer, "send: %6d recv: %6d latency: %4.0f %c fps: %d",
 		(current.send_bytes-prev.send_bytes)*10,
 		(current.recv_bytes-prev.recv_bytes)*10,
-		latency*1000.0f, extra_polating?'E':' ');
-	gfx_quads_text(10, 10, 16, buffer);
+		latency*1000.0f, extra_polating?'E':' ', (int)(1.0f/frametime_avg));
+	gfx_quads_text(2, 2, 16, buffer);
 	
 }
 
@@ -538,25 +540,36 @@ void client::run(const char *direct_connect_server)
 		// switch snapshot
 		if(recived_snapshots >= 3)
 		{
-			snapshot_info *cur = snapshots[SNAP_CURRENT];
-			int64 t = game_start_time + (cur->tick+1)*time_freq()/50;
-			if(latency > 0)
-				t += (int64)(time_freq()*(latency*1.1f));
-
-			if(t < time_get())
+			int64 now = time_get();
+			while(1)
 			{
-				snapshot_info *next = snapshots[SNAP_CURRENT]->next;
-				if(next)
+				snapshot_info *cur = snapshots[SNAP_CURRENT];
+				int64 tickstart = game_start_time + (cur->tick+1)*time_freq()/50;
+				int64 t = tickstart;
+				if(latency > 0)
+					t += (int64)(time_freq()*(latency*1.1f));
+
+				if(t < now)
 				{
-					snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
-					snapshots[SNAP_CURRENT] = next;
-					snapshot_start_time = t;
+					snapshot_info *next = snapshots[SNAP_CURRENT]->next;
+					if(next)
+					{
+						snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
+						snapshots[SNAP_CURRENT] = next;
+						snapshot_start_time = t;
+					}
+					else
+					{
+						extra_polating = 1;
+						break;
+					}
 				}
 				else
-					extra_polating = 1;
+				{
+					extra_polating = 0;
+					break;
+				}
 			}
-			else
-				extra_polating = 0;
 		}
 
 		// send input

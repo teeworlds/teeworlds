@@ -1826,6 +1826,8 @@ void mods_init()
 		
 		if(type != -1)
 		{
+			 // LOL, the only new in the entire game code
+			 // perhaps we can get rid of it. seams like a stupid thing to have
 			powerup *ppower = new powerup(type, subtype);
 			ppower->pos = vec2(it->x, it->y);
 		}

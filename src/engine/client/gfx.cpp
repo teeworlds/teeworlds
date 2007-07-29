@@ -111,6 +111,13 @@ struct batch
 	int num;
 };
 
+void gfx_destoy_batch(void *in_b)
+{
+	batch *b = (batch*)in_b;
+	delete b;
+	
+}
+
 void gfx_quads_draw_batch(void *in_b)
 {
 	batch *b = (batch*)in_b;
@@ -152,6 +159,7 @@ void *gfx_quads_create_batch()
 	batch *b = new batch;
 	b->num = num_vertices;
 	b->vb.data(vertices, num_vertices*sizeof(custom_vertex), GL_STATIC_DRAW);
+	dbg_msg("gfx", "created batch. num=%d size=%d", num_vertices, num_vertices*sizeof(custom_vertex));
 	num_vertices = 0;
 	gfx_quads_end();
 	return b;

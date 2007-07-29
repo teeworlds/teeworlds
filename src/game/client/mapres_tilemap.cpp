@@ -5,12 +5,16 @@
 
 #include <baselib/opengl.h>
 
-bool must_init = true;
 void *batches[32] = {0};
 
 int tilemap_init()
 {
-	must_init = true;
+	for(int i = 0; i < 32; i++)
+		if(batches[i])
+		{
+			gfx_destoy_batch(batches[i]);
+			batches[i] = 0;
+		}
 	return 0;
 }
 

@@ -1205,6 +1205,7 @@ void modc_render()
 	{
 		menu_active = !menu_active;
 	}
+	
 	if (!menu_active)
 	{
 		if(inp_key_down(input::enter))
