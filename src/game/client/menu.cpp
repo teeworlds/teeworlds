@@ -867,6 +867,9 @@ static int settings_video_render_select_mode()
 	for (int i = 0; i < 7; i++)
 	{
 		int index = i + scroll_index;
+		if(index >= num_modes)
+			break;
+			
 		//key_thing key = keys[i + scroll_index];
 		int depth = modes[index].red+modes[index].green+modes[index].blue;
 		if(depth < 16)
