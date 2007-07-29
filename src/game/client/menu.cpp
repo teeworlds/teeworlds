@@ -924,7 +924,7 @@ static int settings_video_render()
 	ui_do_label(column1_x, row4_y, "Quality Textures:", 36);
 	config_set_gfx_texture_quality(&config_copy, ui_do_check_box(&config_copy.gfx_texture_quality, column3_x, row4_y + 5, 32, 32, config_copy.gfx_texture_quality));
 
-	ui_do_label(column1_x, row5_y, "Textures Compression:", 36);
+	ui_do_label(column1_x, row5_y, "Texture Compression:", 36);
 	config_set_gfx_texture_compression(&config_copy, ui_do_check_box(&config_copy.gfx_texture_compression, column3_x, row5_y + 5, 32, 32, config_copy.gfx_texture_compression));
 
 	ui_do_label(column1_x, row6_y, "High Detail:", 36);
