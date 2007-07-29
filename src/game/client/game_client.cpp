@@ -1354,7 +1354,7 @@ void modc_render()
 
 	// pseudo format
 	float zoom = 3.0f;
-	if(inp_key_pressed('I'))
+	if(!chat_active && inp_key_pressed('I'))
 		zoom = 1.0f;
 	
 	float width = 400*zoom;
