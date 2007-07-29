@@ -306,6 +306,14 @@ void gfx_blend_additive()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 }
 
+static unsigned char sample(int w, int h, const unsigned char *data, int u, int v, int offset)
+{
+	return (data[(v*w+u)*4+offset]+
+	data[(v*w+u+1)*4+offset]+
+	data[((v+1)*w+u)*4+offset]+
+	data[((v+1)*w+u+1)*4+offset])/4;
+}
+
 int gfx_load_texture_raw(int w, int h, int format, const void *data)
 {
 	// grab texture
@@ -316,23 +324,21 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data)
 	// resample if needed
 	unsigned char *texdata = (unsigned char *)data;
 	unsigned char *tmpdata = 0;
-	if(config.gfx_texture_quality==0)
+	if(1 || config.gfx_texture_quality==0)
 	{
 		if(w > 16 && h > 16 && format == IMG_RGBA)
 		{
-			int amount = 2;
-			int pitch = w*4;
-			w/=amount;
-			h/=amount;
+			w/=2;
+			h/=2;
 			unsigned char *tmpdata = (unsigned char *)mem_alloc(w*h*4, 1);
 			int c = 0;
 			for(int y = 0; y < h; y++)
 				for(int x = 0; x < w; x++, c++)
 				{
-					tmpdata[c*4] = texdata[(y*amount*pitch+x*amount*4)];
-					tmpdata[c*4+1] = texdata[(y*amount*pitch+x*amount*4)+1];
-					tmpdata[c*4+2] = texdata[(y*amount*pitch+x*amount*4)+2];
-					tmpdata[c*4+3] = texdata[(y*amount*pitch+x*amount*4)+3];
+					tmpdata[c*4] = sample(w*2, h*2, texdata, x*2,y*2, 0);
+					tmpdata[c*4+1] = sample(w*2, h*2, texdata, x*2,y*2, 1);
+					tmpdata[c*4+2] = sample(w*2, h*2, texdata, x*2,y*2, 2);
+					tmpdata[c*4+3] = sample(w*2, h*2, texdata, x*2,y*2, 3);
 				}
 			texdata = tmpdata;
 		}
