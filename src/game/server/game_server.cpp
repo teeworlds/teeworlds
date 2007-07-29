@@ -1393,7 +1393,13 @@ void powerup::tick()
 	if(spawntick > 0)
 	{
 		if(server_tick() > spawntick)
+		{
+			// respawn
 			spawntick = -1;
+			
+			if(type == POWERUP_WEAPON)
+				create_sound(pos, SOUND_WEAPON_SPAWN, 0);
+		}
 		else
 			return;
 	}
@@ -1409,6 +1415,7 @@ void powerup::tick()
 		case POWERUP_HEALTH:
 			if(pplayer->health < data->playerinfo[gameobj.gametype].maxhealth)
 			{
+				create_sound(pos, SOUND_PICKUP_HEALTH, 0);
 				pplayer->health = min((int)data->playerinfo[gameobj.gametype].maxhealth, pplayer->health + data->powerupinfo[type].amount);
 				respawntime = data->powerupinfo[type].respawntime;
 			}
@@ -1416,6 +1423,7 @@ void powerup::tick()
 		case POWERUP_ARMOR:
 			if(pplayer->armor < data->playerinfo[gameobj.gametype].maxarmor)
 			{
+				create_sound(pos, SOUND_PICKUP_ARMOR, 0);
 				pplayer->armor = min((int)data->playerinfo[gameobj.gametype].maxarmor, pplayer->armor + data->powerupinfo[type].amount);
 				respawntime = data->powerupinfo[type].respawntime;
 			}
