@@ -754,10 +754,6 @@ float gfx_pretty_text_width(float size, const char *text, int length = -1);
 
 void gfx_getscreen(float *tl_x, float *tl_y, float *br_x, float *br_y);
 
-void gfx_quads_draw_batch(void *batch);
-void *gfx_quads_create_batch();
-void gfx_destoy_batch(void *batch);
-
 void mods_message(int msg, int client_id);
 void modc_message(int msg);
 

@@ -424,7 +424,7 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 
 		if (inside && ui_mouse_button(0))
 		{
-			int mx_rel = ui_mouse_x() - x;
+			int mx_rel = (int)(ui_mouse_x() - x);
 
 			for (int i = 1; i <= len; i++)
 			{
@@ -727,6 +727,9 @@ const float row1_y = 180;
 const float row2_y = row1_y + 40;
 const float row3_y = row2_y + 40;
 const float row4_y = row3_y + 40;
+const float row5_y = row4_y + 40;
+const float row6_y = row5_y + 40;
+const float row7_y = row6_y + 40;
 
 static int main_render()
 {
@@ -873,9 +876,9 @@ static int settings_video_render_select_mode()
 		
 		char buf[128];
 		int s = 0;
-		if(modes[index].width == config_copy.screen_width &&
-			modes[index].height == config_copy.screen_height && 
-			depth == config_copy.color_depth)
+		if(modes[index].width == config_copy.gfx_screen_width &&
+			modes[index].height == config_copy.gfx_screen_height && 
+			depth == config_copy.gfx_color_depth)
 		{
 			s = 1;
 		}
@@ -886,9 +889,9 @@ static int settings_video_render_select_mode()
 			column1_x, row1_y + 40 * i, 320, 32.0f, draw_teewars_button))
 		{
 			// select
-			config_set_color_depth(&config_copy, depth);
-			config_set_screen_width(&config_copy, modes[index].width);
-			config_set_screen_height(&config_copy, modes[index].height);
+			config_set_gfx_color_depth(&config_copy, depth);
+			config_set_gfx_screen_width(&config_copy, modes[index].width);
+			config_set_gfx_screen_height(&config_copy, modes[index].height);
 			screen = SCREEN_SETTINGS_VIDEO;
 		}
 	}
@@ -898,23 +901,34 @@ static int settings_video_render_select_mode()
 
 static int settings_video_render()
 {
-	// we need to draw these bottom up, to make overlapping work correctly
-	ui_do_label(column1_x, row4_y + 50, "(A restart of the game is required for these settings to take effect.)", 20);
-	
-	ui_do_label(column1_x, row4_y, "V-sync:", 36);
-	config_set_vsync(&config_copy, ui_do_check_box(&config_copy.vsync, column2_x, row4_y + 5, 32, 32, config_copy.vsync));
 
-	ui_do_label(column1_x, row3_y, "Fullscreen:", 36);
-	config_set_fullscreen(&config_copy, ui_do_check_box(&config_copy.fullscreen, column2_x, row3_y + 5, 32, 32, config_copy.fullscreen));
-
-	ui_do_label(column1_x, row2_y, "Mode:", 36);
+	ui_do_label(column1_x, row1_y, "Mode:", 36);
 
 	char buf[128];
-	sprintf(buf, "%dx%d %d bit", config_copy.screen_width, config_copy.screen_height, config_copy.color_depth);
+	sprintf(buf, "%dx%d %d bit", config_copy.gfx_screen_width, config_copy.gfx_screen_height, config_copy.gfx_color_depth);
 	static int select_button = 0;
-	if(ui_do_button(&select_button, buf, 0, column2_x, row2_y, 300, 32, draw_teewars_button))
+	if(ui_do_button(&select_button, buf, 0, column2_x, row1_y, 300, 32, draw_teewars_button))
 		screen = SCREEN_SETTINGS_VIDEO_SELECT_MODE;
 		
+	// we need to draw these bottom up, to make overlapping work correctly
+	
+	ui_do_label(column1_x, row2_y, "Fullscreen:", 36);
+	config_set_gfx_fullscreen(&config_copy, ui_do_check_box(&config_copy.gfx_fullscreen, column3_x, row2_y + 5, 32, 32, config_copy.gfx_fullscreen));
+
+	ui_do_label(column1_x, row3_y, "V-sync:", 36);
+	config_set_gfx_vsync(&config_copy, ui_do_check_box(&config_copy.gfx_vsync, column3_x, row3_y + 5, 32, 32, config_copy.gfx_vsync));
+
+	ui_do_label(column1_x, row4_y, "Quality Textures:", 36);
+	config_set_gfx_texture_quality(&config_copy, ui_do_check_box(&config_copy.gfx_texture_quality, column3_x, row4_y + 5, 32, 32, config_copy.gfx_texture_quality));
+
+	ui_do_label(column1_x, row5_y, "Textures Compression:", 36);
+	config_set_gfx_texture_compression(&config_copy, ui_do_check_box(&config_copy.gfx_texture_compression, column3_x, row5_y + 5, 32, 32, config_copy.gfx_texture_compression));
+
+	ui_do_label(column1_x, row6_y, "High Detail:", 36);
+	config_set_gfx_high_detail(&config_copy, ui_do_check_box(&config_copy.gfx_high_detail, column3_x, row6_y + 5, 32, 32, config_copy.gfx_high_detail));
+
+	ui_do_label(column1_x, row6_y + 50, "(A restart of the game is required for these settings to take effect.)", 20);
+
 	return 0;
 }
 

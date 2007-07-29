@@ -24,10 +24,7 @@ struct custom_vertex
 };
 
 const int vertex_buffer_size = 32*1024;
-//static custom_vertex vertices[4];
 static custom_vertex *vertices = 0;
-//static index_buffer ib;
-static unsigned short indecies[vertex_buffer_size*6];
 static int num_vertices = 0;
 static vec4 color[4];
 static vec2 texture[4];
@@ -85,8 +82,8 @@ static void draw_quad(bool _bflush = false)
 					sizeof(custom_vertex),
 					sizeof(vec3)+sizeof(vec2));		
 					
-			glDrawElements(GL_TRIANGLES, num_vertices, GL_UNSIGNED_SHORT, indecies);
-			//opengl::draw_arrays(GL_QUADS, 0, num_vertices);
+			//glDrawElements(GL_TRIANGLES, num_vertices, GL_UNSIGNED_SHORT, indecies);
+			opengl::draw_arrays(GL_QUADS, 0, num_vertices);
 		}
 		else
 		{
@@ -109,70 +106,11 @@ static void draw_quad(bool _bflush = false)
 		num_vertices = 0;
 	}
 }
-struct batch
-{
-	opengl::vertex_buffer vb;
-	int num;
-};
 
-void gfx_destoy_batch(void *in_b)
-{
-	batch *b = (batch*)in_b;
-	delete b;
-	
-}
-
-void gfx_quads_draw_batch(void *in_b)
-{
-	batch *b = (batch*)in_b;
-	
-	if(GLEW_ARB_vertex_buffer_object)
-	{
-		// set the data
-		opengl::stream_vertex(&b->vb, 3, GL_FLOAT, sizeof(custom_vertex), 0);
-		opengl::stream_texcoord(&b->vb, 0, 2, GL_FLOAT,
-				sizeof(custom_vertex),
-				sizeof(vec3));
-		opengl::stream_color(&b->vb, 4, GL_FLOAT,
-				sizeof(custom_vertex),
-				sizeof(vec3)+sizeof(vec2));		
-		opengl::draw_arrays(GL_QUADS, 0, b->num);
-	}
-	/*
-	else
-	{
-		glVertexPointer(3, GL_FLOAT,
-				sizeof(custom_vertex),
-				(char*)vertices);
-		glTexCoordPointer(2, GL_FLOAT,
-				sizeof(custom_vertex),
-				(char*)vertices + sizeof(vec3));
-		glColorPointer(4, GL_FLOAT,
-				sizeof(custom_vertex),
-				(char*)vertices + sizeof(vec3) + sizeof(vec2));
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnableClientState(GL_COLOR_ARRAY);
-		glDrawArrays(GL_QUADS, 0, b->num);
-	}*/	
-}
-
-
-void *gfx_quads_create_batch()
-{
-	batch *b = new batch;
-	b->num = num_vertices;
-	b->vb.data(vertices, num_vertices*sizeof(custom_vertex), GL_STATIC_DRAW);
-	dbg_msg("gfx", "created batch. num=%d size=%d", num_vertices, num_vertices*sizeof(custom_vertex));
-	num_vertices = 0;
-	gfx_quads_end();
-	return b;
-}
-
-	
 bool gfx_init()
 {
-	if(!context.create(config.screen_width, config.screen_height, 24, 8, 16, 0, config.fullscreen?opengl::context::FLAG_FULLSCREEN:0))
+	if(!context.create(config.gfx_screen_width, config.gfx_screen_height, 24, 8, 16, 0,
+		config.gfx_fullscreen?opengl::context::FLAG_FULLSCREEN:0))
 	{
 		dbg_msg("game", "failed to create gl context");
 		return false;
@@ -192,7 +130,7 @@ bool gfx_init()
 											  context.version_minor(),
 											  context.version_rev());*/
 
-	gfx_mapscreen(0,0,config.screen_width, config.screen_height);
+	gfx_mapscreen(0,0,config.gfx_screen_width, config.gfx_screen_height);
 	
 	// TODO: make wrappers for this
 	glEnable(GL_BLEND);
@@ -225,6 +163,7 @@ bool gfx_init()
 	textures[MAX_TEXTURES-1].next = -1;
 	
 	// init indecies
+	/*
 	for(int i = 0; i < vertex_buffer_size; i++)
 	{
 		indecies[i*6 + 0] = i+0;
@@ -234,7 +173,7 @@ bool gfx_init()
 		indecies[i*6 + 3] = i+1;
 		indecies[i*6 + 4] = i+3;
 		indecies[i*6 + 5] = i+2;
-	}
+	}*/
 	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	
@@ -242,7 +181,7 @@ bool gfx_init()
 	gfx_load_texture_raw(4,4,IMG_RGBA,null_texture_data);
 
 	// set vsync as needed
-	gfx_set_vsync(config.vsync);
+	gfx_set_vsync(config.gfx_vsync);
 
 	return true;
 }
@@ -273,7 +212,7 @@ video_mode fakemodes[] = {
 
 int gfx_get_video_modes(video_mode *list, int maxcount)
 {
-	if(config.display_all_modes)
+	if(config.gfx_display_all_modes)
 	{
 		mem_copy(list, fakemodes, sizeof(fakemodes));
 		return min((int)(sizeof(fakemodes)/sizeof(video_mode)), maxcount);
@@ -458,12 +397,12 @@ void gfx_swap()
 
 int gfx_screenwidth()
 {
-	return config.screen_width;
+	return config.gfx_screen_width;
 }
 
 int gfx_screenheight()
 {
-	return config.screen_height;
+	return config.gfx_screen_height;
 }
 
 void gfx_texture_set(int slot)
