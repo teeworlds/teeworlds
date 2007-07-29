@@ -23,9 +23,11 @@ struct custom_vertex
 	vec4 color;
 };
 
-const int vertex_buffer_size = 2048*64;
+const int vertex_buffer_size = 32*1024;
 //static custom_vertex vertices[4];
 static custom_vertex *vertices = 0;
+//static index_buffer ib;
+static unsigned short indecies[vertex_buffer_size*6];
 static int num_vertices = 0;
 static vec4 color[4];
 static vec2 texture[4];
@@ -82,7 +84,9 @@ static void draw_quad(bool _bflush = false)
 			opengl::stream_color(&vertex_buffer, 4, GL_FLOAT,
 					sizeof(custom_vertex),
 					sizeof(vec3)+sizeof(vec2));		
-			opengl::draw_arrays(GL_QUADS, 0, num_vertices);
+					
+			glDrawElements(GL_TRIANGLES, num_vertices, GL_UNSIGNED_SHORT, indecies);
+			//opengl::draw_arrays(GL_QUADS, 0, num_vertices);
 		}
 		else
 		{
@@ -220,7 +224,19 @@ bool gfx_init()
 		textures[i].next = i+1;
 	textures[MAX_TEXTURES-1].next = -1;
 	
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	// init indecies
+	for(int i = 0; i < vertex_buffer_size; i++)
+	{
+		indecies[i*6 + 0] = i+0;
+		indecies[i*6 + 1] = i+1;
+		indecies[i*6 + 2] = i+2;
+		
+		indecies[i*6 + 3] = i+1;
+		indecies[i*6 + 4] = i+3;
+		indecies[i*6 + 5] = i+2;
+	}
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	
 	// create null texture, will get id=0
 	gfx_load_texture_raw(4,4,IMG_RGBA,null_texture_data);
@@ -297,15 +313,50 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data)
 	first_free_texture = textures[tex].next;
 	textures[tex].next = -1;
 	
-	// set data and return
-	// TODO: should be RGBA, not BGRA
-	dbg_msg("gfx", "%d = %dx%d", tex, w, h);
-	if(format == IMG_RGB)
-		textures[tex].tex.data2d(w, h, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, data);
-	else if(format == IMG_RGBA)
+	// resample if needed
+	unsigned char *texdata = (unsigned char *)data;
+	unsigned char *tmpdata = 0;
+	if(config.gfx_texture_quality==0)
 	{
-		textures[tex].tex.data2d(w, h, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		if(w > 16 && h > 16 && format == IMG_RGBA)
+		{
+			int amount = 2;
+			int pitch = w*4;
+			w/=amount;
+			h/=amount;
+			unsigned char *tmpdata = (unsigned char *)mem_alloc(w*h*4, 1);
+			int c = 0;
+			for(int y = 0; y < h; y++)
+				for(int x = 0; x < w; x++, c++)
+				{
+					tmpdata[c*4] = texdata[(y*amount*pitch+x*amount*4)];
+					tmpdata[c*4+1] = texdata[(y*amount*pitch+x*amount*4)+1];
+					tmpdata[c*4+2] = texdata[(y*amount*pitch+x*amount*4)+2];
+					tmpdata[c*4+3] = texdata[(y*amount*pitch+x*amount*4)+3];
+				}
+			texdata = tmpdata;
+		}
 	}
+	
+	dbg_msg("gfx", "%d = %dx%d", tex, w, h);
+	
+	// set data and return
+	if(config.gfx_texture_compression && GLEW_ARB_texture_compression)
+	{
+		if(format == IMG_RGB)
+			textures[tex].tex.data2d(w, h, GL_COMPRESSED_RGB_ARB, GL_RGB, GL_UNSIGNED_BYTE, texdata);
+		else if(format == IMG_RGBA)
+			textures[tex].tex.data2d(w, h, GL_COMPRESSED_RGBA_ARB, GL_RGBA, GL_UNSIGNED_BYTE, texdata);
+	}
+	else
+	{
+		if(format == IMG_RGB)
+			textures[tex].tex.data2d(w, h, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE, texdata);
+		else if(format == IMG_RGBA)
+			textures[tex].tex.data2d(w, h, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, texdata);
+	}
+	
+	mem_free(tmpdata);
 	
 	return tex;
 }

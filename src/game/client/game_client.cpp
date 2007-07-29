@@ -1373,33 +1373,34 @@ void modc_render()
 	// draw background
 	gfx_clear(0.65f,0.78f,0.9f);
 
-	// draw the sun	
-	render_sun(20+screen_x*0.6f, 20+screen_y*0.6f);
-
-
-	static vec2 cloud_pos[6] = {vec2(-500,0),vec2(-500,200),vec2(-500,400)};
-	static float cloud_speed[6] = {30, 20, 10};
-	static int cloud_images[6] = {IMAGE_CLOUD_1, IMAGE_CLOUD_2, IMAGE_CLOUD_3};
-	
-	for(int i = 0; i < 3; i++)
+	// draw the sun
+	if(config.gfx_high_detail)
 	{
-		float parallax_amount = 0.55f;
-		gfx_texture_set(data->images[cloud_images[i]].id);
+		render_sun(20+screen_x*0.6f, 20+screen_y*0.6f);
+		
+		static vec2 cloud_pos[6] = {vec2(-500,0),vec2(-500,200),vec2(-500,400)};
+		static float cloud_speed[6] = {30, 20, 10};
+		static int cloud_images[6] = {IMAGE_CLOUD_1, IMAGE_CLOUD_2, IMAGE_CLOUD_3};
+		
+		for(int i = 0; i < 3; i++)
+		{
+			float parallax_amount = 0.55f;
+			gfx_texture_set(data->images[cloud_images[i]].id);
+			gfx_quads_begin();
+			gfx_quads_drawTL((cloud_pos[i].x+fmod(client_localtime()*cloud_speed[i]+i*100.0f, 1700.0f))+screen_x*parallax_amount,
+				cloud_pos[i].y+screen_y*parallax_amount, 300, 300);
+			gfx_quads_end();
+		}
+
+		
+		// draw backdrop
+		gfx_texture_set(data->images[IMAGE_BACKDROP].id);
 		gfx_quads_begin();
-		gfx_quads_drawTL((cloud_pos[i].x+fmod(client_localtime()*cloud_speed[i]+i*100.0f, 1700.0f))+screen_x*parallax_amount,
-			cloud_pos[i].y+screen_y*parallax_amount, 300, 300);
+		float parallax_amount = 0.25f;
+		for(int x = -1; x < 3; x++)
+			gfx_quads_drawTL(1024*x+screen_x*parallax_amount, (screen_y)*parallax_amount+150, 1024, 1024);
 		gfx_quads_end();
 	}
-
-	
-	// draw backdrop
-	gfx_texture_set(data->images[IMAGE_BACKDROP].id);
-	gfx_quads_begin();
-	float parallax_amount = 0.25f;
-	for(int x = -1; x < 3; x++)
-		gfx_quads_drawTL(1024*x+screen_x*parallax_amount, (screen_y)*parallax_amount+150, 1024, 1024);
-	gfx_quads_end();
-	
 	
 	// render map
 	tilemap_render(32.0f, 0);

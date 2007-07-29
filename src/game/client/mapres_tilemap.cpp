@@ -2,6 +2,7 @@
 #include "mapres_tilemap.h"
 #include "mapres_image.h"
 #include "../mapres.h"
+#include "../../engine/config.h"
 
 #include <baselib/opengl.h>
 
@@ -22,7 +23,7 @@ void tilemap_render(float scale, int fg)
 {
 	if(!map_is_loaded())
 		return;
-		
+	
 	float screen_x0, screen_y0, screen_x1, screen_y1;
 	gfx_getscreen(&screen_x0, &screen_y0, &screen_x1, &screen_y1);
 	
@@ -39,21 +40,28 @@ void tilemap_render(float scale, int fg)
 		
 		if(tmap->main)
 			passed_main = 1;
-
+			
 		if((fg && passed_main) || (!fg && !passed_main))
 		{
+			if(!config.gfx_high_detail && !tmap->main)
+				continue;
 			gfx_texture_set(img_get(tmap->image));
 			
 			if(!batches[t])
 			{
 				gfx_quads_begin();
 				
+				int starty = (int)(screen_y0/scale)-1;
+				int startx = (int)(screen_x0/scale)-1;
+				int endy = (int)(screen_y1/scale)+1;
+				int endx = (int)(screen_x1/scale)+1;
+				
 				float frac = (1.0f/1024.0f);//2.0f; //2.0f;
 				float texsize = 1024.0f;
 				float nudge = 0.5f/texsize;
 				int border = 24;
-				for(int y = -border; y < tmap->height+border; y++)
-					for(int x = -border; x < tmap->width+border; x++)
+				for(int y = starty; y < endy; y++)
+					for(int x = startx; x < endx; x++)
 					{
 						int mx = x;
 						int my = y;
@@ -92,11 +100,11 @@ void tilemap_render(float scale, int fg)
 						}
 					}
 				
-				//gfx_quads_end();
-				batches[t] = gfx_quads_create_batch();
+				gfx_quads_end();
+				//batches[t] = gfx_quads_create_batch();
 			}
 			
-			gfx_quads_draw_batch(batches[t]);
+			//gfx_quads_draw_batch(batches[t]);
 			//glCallList(lists_start+t);
 		}
 	}

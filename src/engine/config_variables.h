@@ -13,6 +13,11 @@ MACRO_CONFIG_STR(player_name, 32, "nameless tee")
 MACRO_CONFIG_STR(clan_name, 32, "")
 MACRO_CONFIG_STR(password, 32, "")
 
+MACRO_CONFIG_INT(gfx_texture_compression, 1, 0, 1)
+MACRO_CONFIG_INT(gfx_high_detail, 1, 0, 1)
+MACRO_CONFIG_INT(gfx_texture_quality, 1, 0, 1)
+
+
 
 MACRO_CONFIG_STR(masterserver, 128, "master.teewars.com")
 
