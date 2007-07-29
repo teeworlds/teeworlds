@@ -308,6 +308,14 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 					return 0;
 				}
 			}
+			else
+			{
+				if(p->seq > conn->ack)
+				{
+					dbg_msg("conn", "asking for resend");
+					conn_send(conn, NETWORK_PACKETFLAG_RESEND, 0, 0);
+				}
+			}
 			
 			if(p->data_size == 0)
 				return 0;
@@ -623,7 +631,10 @@ int net_server_send(NETSERVER *s, NETPACKET *packet)
 	{
 		dbg_assert(packet->client_id >= 0, "errornous client id");
 		dbg_assert(packet->client_id < NETWORK_MAX_CLIENTS, "errornous client id");
-		conn_send(&s->slots[packet->client_id].conn, 0, packet->data_size, packet->data);
+		int flags  = 0;
+		if(packet->flags&PACKETFLAG_VITAL)
+			flags |= NETWORK_PACKETFLAG_VITAL;
+		conn_send(&s->slots[packet->client_id].conn, flags, packet->data_size, packet->data);
 	}
 	return 0;
 }
@@ -753,7 +764,11 @@ int net_client_send(NETCLIENT *c, NETPACKET *packet)
 	{
 		// TODO: insert stuff for stateless stuff
 		dbg_assert(packet->client_id == 0, "errornous client id");
-		conn_send(&c->conn, 0, packet->data_size, packet->data);
+
+		int flags = 0;		
+		if(packet->flags&PACKETFLAG_VITAL)
+			flags |= NETWORK_PACKETFLAG_VITAL;
+		conn_send(&c->conn, flags, packet->data_size, packet->data);
 	}
 	return 0;
 }
