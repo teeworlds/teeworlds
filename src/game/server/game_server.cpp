@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <engine/config.h>
 #include "../game.h"
@@ -1714,6 +1715,15 @@ void mods_client_input(int client_id, void *input)
 	}
 }
 
+void send_chat_all(int cid, const char *msg)
+{
+	msg_pack_start(MSG_CHAT, MSGFLAG_VITAL);
+	msg_pack_int(cid);
+	msg_pack_string(msg, 512);
+	msg_pack_end();
+	server_send_msg(-1);
+}
+
 void mods_client_enter(int client_id)
 {
 	players[client_id].init();
@@ -1754,12 +1764,17 @@ void mods_client_enter(int client_id)
 		}
 	}
 
-	mods_message(MSG_JOIN, client_id);
+	char buf[512];
+	sprintf(buf, "%s has joined the game", players[client_id].name);
+	send_chat_all(-1, buf);
 }
 
 void mods_client_drop(int client_id)
 {
-	mods_message(MSG_QUIT, client_id);
+	char buf[512];
+	sprintf(buf, "%s has left the game", players[client_id].name);
+	send_chat_all(-1, buf);
+	
 	dbg_msg("mods", "client drop %d", client_id);
 	world.remove_entity(&players[client_id]);
 	players[client_id].client_id = -1;
@@ -1769,11 +1784,7 @@ void mods_message(int msg, int client_id)
 {
 	if(msg == MSG_SAY)
 	{
-		msg_pack_start(MSG_CHAT, MSGFLAG_VITAL);
-		msg_pack_int(client_id);
-		msg_pack_string(msg_unpack_string(), 512);
-		msg_pack_end();
-		server_send_msg(-1);
+		send_chat_all(client_id, msg_unpack_string());
 	}
 	else if (msg == MSG_SWITCHTEAM)
 	{
@@ -1781,20 +1792,6 @@ void mods_message(int msg, int client_id)
 		players[client_id].team = !players[client_id].team;
 		players[client_id].die(client_id, -1);
 		players[client_id].score--;
-	}
-	else if (msg == MSG_JOIN)
-	{
-		msg_pack_start(MSG_JOIN, MSGFLAG_VITAL);
-		msg_pack_int(client_id);
-		msg_pack_end();
-		server_send_msg(-1);
-	}
-	else if (msg == MSG_QUIT)
-	{
-		msg_pack_start(MSG_QUIT, MSGFLAG_VITAL);
-		msg_pack_int(client_id);
-		msg_pack_end();
-		server_send_msg(-1);
 	}
 }
 

@@ -391,6 +391,7 @@ static const int chat_max_lines = 10;
 struct chatline
 {
 	int tick;
+	int client_id;
 	char text[512+64];
 };
 
@@ -408,14 +409,11 @@ void chat_add_line(int client_id, const char *line)
 {
 	chat_current_line = (chat_current_line+1)%chat_max_lines;
 	chat_lines[chat_current_line].tick = client_tick();
-	sprintf(chat_lines[chat_current_line].text, "%s: %s", client_datas[client_id].name, line); // TODO: abit nasty
-}
-
-void status_add_line(const char *line)
-{
-	chat_current_line = (chat_current_line+1)%chat_max_lines;
-	chat_lines[chat_current_line].tick = client_tick();
-	strcpy(chat_lines[chat_current_line].text, line);
+	chat_lines[chat_current_line].client_id = client_id;
+	if(client_id == -1) // server message
+		sprintf(chat_lines[chat_current_line].text, "*** %s", line);
+	else
+		sprintf(chat_lines[chat_current_line].text, "%s: %s", client_datas[client_id].name, line); // TODO: abit nasty
 }
 
 struct killmsg
@@ -1354,8 +1352,12 @@ void modc_render()
 
 	// pseudo format
 	float zoom = 3.0f;
-	if(!chat_active && inp_key_pressed('I'))
-		zoom = 1.0f;
+	
+	if(config.debug)
+	{
+		if(!chat_active && inp_key_pressed(input::f8))
+			zoom = 1.0f;
+	}
 	
 	float width = 400*zoom;
 	float height = 300*zoom;
@@ -1589,7 +1591,7 @@ void modc_render()
 			int r = ((chat_current_line-i)+chat_max_lines)%chat_max_lines;
 			if(client_tick() > chat_lines[r].tick+50*15)
 				break;
-
+			
 			gfx_pretty_text(x, y, 10, chat_lines[r].text);
 			y -= 8;
 		}
@@ -1814,19 +1816,5 @@ void modc_message(int msg)
 		killmsgs[killmsg_current].victim = msg_unpack_int();
 		killmsgs[killmsg_current].weapon = msg_unpack_int();
 		killmsgs[killmsg_current].tick = client_tick();
-	}
-	else if(msg == MSG_JOIN)
-	{
-		int cid = msg_unpack_int();
-		char message[256];
-		sprintf(message, "%s joined the game", client_datas[cid].name);
-		status_add_line(message);
-	}
-	else if(msg == MSG_QUIT)
-	{
-		int cid = msg_unpack_int();
-		char message[256];
-		sprintf(message, "%s quit the game", client_datas[cid].name);
-		status_add_line(message);
 	}
 }
