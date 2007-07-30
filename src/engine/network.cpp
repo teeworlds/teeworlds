@@ -303,7 +303,7 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 				else
 				{
 					// out of sequence, request resend
-					dbg_msg("conn", "asking for resend");
+					//dbg_msg("conn", "asking for resend");
 					conn_send(conn, NETWORK_PACKETFLAG_RESEND, 0, 0);
 					return 0;
 				}
@@ -312,7 +312,7 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 			{
 				if(p->seq > conn->ack)
 				{
-					dbg_msg("conn", "asking for resend");
+					//dbg_msg("conn", "asking for resend");
 					conn_send(conn, NETWORK_PACKETFLAG_RESEND, 0, 0);
 				}
 			}

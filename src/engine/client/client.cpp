@@ -102,7 +102,6 @@ static snapshot_info *client_snapshot_add(int tick, int64 time, void *data, int 
 	holder->snap = (snapshot *)(holder+1);
 	mem_copy(holder->snap, data, data_size);
 	
-	
 	holder->next =0x0;
 	holder->prev = last_snapshot;
 	if(last_snapshot)
@@ -644,19 +643,9 @@ static void client_process_packet(NETPACKET *packet)
 				int num_parts = 1;
 				int part = 0;
 				int part_size = 0;
-				int crc = 0;
-				
-				//if(msg == NETMSG_SNAP)
-				{
-					//num_parts = msg_unpack_int();
-					//part = msg_unpack_int();
-				}
 				
 				if(msg != NETMSG_SNAPEMPTY)
-				{
 					part_size = msg_unpack_int();
-					crc = msg_unpack_int();
-				}
 				
 				if(snapshot_part == part)
 				{
@@ -677,8 +666,6 @@ static void client_process_packet(NETPACKET *packet)
 						unsigned char tmpbuffer2[MAX_SNAPSHOT_SIZE];
 						if(part_size)
 						{
-							if(msg == NETMSG_SNAPEMPTY)
-								dbg_msg("client", "FAILURE!");
 							int compsize = zerobit_decompress(snapshot_incomming_data, part_size, tmpbuffer);
 							int intsize = intpack_decompress(tmpbuffer, compsize, tmpbuffer2);
 							deltadata = tmpbuffer2;
@@ -762,13 +749,10 @@ static void client_process_packet(NETPACKET *packet)
 						snapshot_part = 0;
 						
 						// ack snapshot
-						//if((rand()%10)==0)
-						{
-							msg_pack_start_system(NETMSG_SNAPACK, 0);
-							msg_pack_int(game_tick);
-							msg_pack_end();
-							client_send_msg();
-						}
+						msg_pack_start_system(NETMSG_SNAPACK, 0);
+						msg_pack_int(game_tick);
+						msg_pack_end();
+						client_send_msg();
 					}
 				}
 				else

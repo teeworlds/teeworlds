@@ -306,7 +306,6 @@ public:
 				
 				// create delta
 				int deltasize = snapshot_create_delta(deltashot, (snapshot*)data, deltadata);
-				//dbg_msg("PACK", "%d unpacked with %d", current_tick, delta_tick);
 				
 				if(deltasize)
 				{
@@ -337,7 +336,6 @@ public:
 						msg_pack_int(current_tick);
 						msg_pack_int(current_tick-delta_tick); // compressed with
 						msg_pack_int(chunk);
-						msg_pack_int(snapshot_crc((snapshot*)data));
 						msg_pack_raw(&compdata[n*max_size], chunk);
 						msg_pack_end();
 						//const msg_info *info = msg_get_info();

@@ -882,16 +882,12 @@ static void render_player(obj_player *prev, obj_player *player)
 	if(player->health < 0) // dont render dead players
 		return;
 	
-	if (prev->health < 0)
-	{
-		// Don't flicker from previous position
-		prev->x = player->x;
-		prev->y = player->y;
-	}
-	
 	vec2 direction = get_direction(player->angle);
 	float angle = player->angle/256.0f;
 	vec2 position = mix(vec2(prev->x, prev->y), vec2(player->x, player->y), client_intratick());
+	
+	if(prev->health < 0) // Don't flicker from previous position
+		position = vec2(player->x, player->y);
 	
 	bool stationary = player->vx < 1 && player->vx > -1;
 	bool inair = col_check_point(player->x, player->y+16) == 0;
