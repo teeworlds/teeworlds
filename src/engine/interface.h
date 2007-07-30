@@ -753,6 +753,7 @@ void gfx_pretty_text(float x, float y, float size, const char *text);
 float gfx_pretty_text_width(float size, const char *text, int length = -1);
 
 void gfx_getscreen(float *tl_x, float *tl_y, float *br_x, float *br_y);
+int gfx_memory_usage();
 
 void mods_message(int msg, int client_id);
 void modc_message(int msg);
@@ -768,6 +769,7 @@ struct server_info
 };
 
 void client_connect(const char *address);
+void client_disconnect();
 
 void client_serverbrowse_refresh(int lan);
 int client_serverbrowse_getlist(server_info **servers);

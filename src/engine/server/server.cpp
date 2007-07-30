@@ -565,7 +565,7 @@ int main(int argc, char **argv)
 	config_reset();
 	config_load("default.cfg");
 
-	const char *mapname = "demo";
+	const char *mapname = "dm1";
 	
 	// parse arguments
 	for(int i = 1; i < argc; i++)

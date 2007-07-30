@@ -278,11 +278,34 @@ static int tilesets_new()
 }
 
 
+static void tilesets_delete(int index)
+{
+	// remove the tileset
+	if(tilesets[index].tex_id >= 0)
+		gfx_unload_texture(tilesets[index].tex_id);
+		
+	for(int i = index; i < num_tilesets-1; i++)
+		tilesets[i] = tilesets[i+1];
+	num_tilesets--;
+	
+	// adjust
+	for(int i = 0; i < layers_count(); i++)
+	{
+		if(layers_get(i)->tileset_id == index)
+			layers_get(i)->tileset_id = -1;
+		else if(layers_get(i)->tileset_id > index)
+			layers_get(i)->tileset_id--;
+	}
+}
+
 static void tilesets_clear()
 {
-	// TODO: remove texture aswell
 	for(int i = 0; i < num_tilesets; i++)
-		mem_free(tilesets[num_tilesets].img.data);
+	{
+		if(tilesets[i].tex_id >= 0)
+			gfx_unload_texture(tilesets[i].tex_id);
+		mem_free(tilesets[i].img.data);
+	}
 	num_tilesets = 0;
 	
 }
@@ -795,23 +818,31 @@ static void editor_render()
 		{
 			char buf[128];
 			sprintf(buf, "#%d %dx%d", i, tilesets_get(i)->img.width, tilesets_get(i)->img.height);
-			if(ui_do_button(&tilesets_get(i)->img, "L", layers_get(current_layer)->tileset_id == i, tilesetsbox_x, tilesetsbox_y+i*7, 6, 6, draw_editor_button))
+			if(ui_do_button(&tilesets_get(i)->img.width, "L", layers_get(current_layer)->tileset_id == i, tilesetsbox_x, tilesetsbox_y+i*7, 6, 6, draw_editor_button))
 			{
 				// load image
 				editor_loadimage = i;
 			}
-			
-			if(ui_do_button(tilesets_get(i), buf, layers_get(current_layer)->tileset_id == i, tilesetsbox_x+8, tilesetsbox_y+i*7, toolbox_width-8, 6, draw_editor_button))
+
+			if(ui_do_button(tilesets_get(i), buf, layers_get(current_layer)->tileset_id == i, tilesetsbox_x+16, tilesetsbox_y+i*7, toolbox_width-16, 6, draw_editor_button))
 			{
 				// select tileset for layer
-				dbg_msg("editor", "settings tileset %d=i", current_layer, i);
+				dbg_msg("editor", "settings tileset %d=%d", current_layer, i);
 				layers_get(current_layer)->tileset_id = i;
+			}
+
+			if(ui_do_button(&tilesets_get(i)->img.height, "D", layers_get(current_layer)->tileset_id == i, tilesetsbox_x+8, tilesetsbox_y+i*7, 6, 6, draw_editor_button)
+				&& (inp_key_pressed(input::lctrl) || inp_key_pressed(input::rctrl)))
+			{
+				dbg_msg("editor", "deleting tileset %d", i);
+				tilesets_delete(i);
+				i--;
 			}
 		}
 
 		// (add) button for tilesets
-		static int load_tileset;
-		if(ui_do_button(&load_tileset, "(Add)", 0, tilesetsbox_x, tilesetsbox_y+tilesets_count()*7+3, toolbox_width, 6, draw_editor_button))
+		static int add_tileset;
+		if(ui_do_button(&add_tileset, "(Add)", 0, tilesetsbox_x, tilesetsbox_y+tilesets_count()*7+3, toolbox_width, 6, draw_editor_button))
 			tilesets_new();
 		
 		if(brush.tiles != 0)

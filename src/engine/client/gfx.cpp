@@ -43,6 +43,7 @@ static float screen_y1 = 0;
 struct texture_holder
 {
 	opengl::texture tex;
+	int memsize;
 	int flags;
 	int next;
 };
@@ -51,6 +52,7 @@ static const int MAX_TEXTURES = 128;
 
 static texture_holder textures[MAX_TEXTURES];
 static int first_free_texture;
+static int memory_usage = 0;
 
 static const unsigned char null_texture_data[] = {
 	0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff, 
@@ -70,6 +72,11 @@ static void draw_quad(bool _bflush = false)
 	{
 		if (!_bflush)
 			num_vertices += 4;
+			
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
 		if(GLEW_ARB_vertex_buffer_object)
 		{
 			// set the data
@@ -177,6 +184,7 @@ bool gfx_init()
 	
 	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	
 	// create null texture, will get id=0
 	gfx_load_texture_raw(4,4,IMG_RGBA,null_texture_data);
@@ -230,6 +238,7 @@ int gfx_unload_texture(int index)
 {
 	textures[index].tex.clear();
 	textures[index].next = first_free_texture;
+	memory_usage -= textures[index].memsize;
 	first_free_texture = index;
 	return 0;
 }
@@ -246,6 +255,8 @@ void gfx_blend_additive()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 }
 
+int gfx_memory_usage() { return memory_usage; }
+
 static unsigned char sample(int w, int h, const unsigned char *data, int u, int v, int offset)
 {
 	return (data[(v*w+u)*4+offset]+
@@ -256,6 +267,8 @@ static unsigned char sample(int w, int h, const unsigned char *data, int u, int 
 
 int gfx_load_texture_raw(int w, int h, int format, const void *data)
 {
+	bool mipmap = true;
+	
 	// grab texture
 	int tex = first_free_texture;
 	first_free_texture = textures[tex].next;
@@ -301,6 +314,19 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data)
 		else if(format == IMG_RGBA)
 			textures[tex].tex.data2d(w, h, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, texdata);
 	}
+	
+	textures[tex].memsize = w*h*4;
+	if(mipmap)
+	{
+		while(w > 2 && h > 2)
+		{
+			w>>=1;
+			h>>=1;
+			textures[tex].memsize += w*h*4;
+		}
+	}
+	
+	memory_usage += textures[tex].memsize;
 	
 	mem_free(tmpdata);
 	

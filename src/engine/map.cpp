@@ -45,7 +45,7 @@ int map_is_loaded()
 int map_load(const char *mapname)
 {
 	char buf[512];
-	sprintf(buf, "data/%s.map", mapname);
+	sprintf(buf, "data/maps/%s.map", mapname);
 	map = datafile_load(buf);
 	return map != 0;
 }

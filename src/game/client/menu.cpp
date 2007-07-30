@@ -141,7 +141,8 @@ struct pretty_font
 
 extern pretty_font *current_font;
 
-void render_sun(float x, float y);
+extern void render_sun(float x, float y);
+extern void select_sprite(int id, int flags=0, int sx=0, int sy=0);
 
 void draw_background(float t)
 {
@@ -152,48 +153,19 @@ void draw_background(float t)
 
 	render_sun(170, 170);
 
-    gfx_texture_set(data->images[IMAGE_CLOUD_1].id);
+    gfx_texture_set(data->images[IMAGE_CLOUDS].id);
     gfx_quads_begin();
-    gfx_quads_setcolor(1,1,1,1);
-	gfx_quads_setsubset(
-		0.0f, // startx
-		0.0f, // starty
-		1.0f, // endx
-		1.0f); // endy								
-    gfx_quads_drawTL(3500 - fmod(t * 20 + 2000, 4524), 0, 512, 512);
-    gfx_quads_end();
-
-    gfx_texture_set(data->images[IMAGE_CLOUD_2].id);
-    gfx_quads_begin();
-    gfx_quads_setcolor(1,1,1,1);
-	gfx_quads_setsubset(
-		0.0f, // startx
-		0.0f, // starty
-		1.0f, // endx
-		1.0f); // endy								
-    gfx_quads_drawTL(3000 - fmod(t * 50 + 2000, 4024), 150, 512, 512);
-    gfx_quads_end();
-
-    gfx_texture_set(data->images[IMAGE_CLOUD_3].id);
-    gfx_quads_begin();
-    gfx_quads_setcolor(1,1,1,1);
-	gfx_quads_setsubset(
-		0.0f, // startx
-		0.0f, // starty
-		1.0f, // endx
-		1.0f); // endy								
-    gfx_quads_drawTL(4000 - fmod(t * 60 + 500, 4512), 300, 256, 256);
+		select_sprite(SPRITE_CLOUD1);
+		gfx_quads_drawTL(3500 - fmod(t * 20 + 2000, 4524), 0, 512, 512);
+		select_sprite(SPRITE_CLOUD2);
+		gfx_quads_drawTL(3000 - fmod(t * 50 + 2000, 4024), 150, 512, 512);
+		select_sprite(SPRITE_CLOUD3);
+		gfx_quads_drawTL(4000 - fmod(t * 60 + 500, 4512), 300, 256, 256);
     gfx_quads_end();
 
     gfx_texture_set(data->images[IMAGE_MENU_BACKGROUND].id);
     gfx_quads_begin();
-    gfx_quads_setcolor(1,1,1,1);
-	gfx_quads_setsubset(
-		0.0f, // startx
-		0.0f, // starty
-		1.0f, // endx
-		1.0f); // endy								
-    gfx_quads_drawTL(0, -400, 1600, 1600);
+	    gfx_quads_drawTL(0, 400, 1600, 1600/2);
     gfx_quads_end();
 
 	int frame = int(t * 10) % 3;

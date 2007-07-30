@@ -144,16 +144,8 @@ sounds {
 
 
 images {
-	weapons {
-		filename "data/tileset_weapons.png"
-	}
-	
 	game {
-		filename "data/game_main.png"
-	}
-
-	particles {
-		filename "data/tileset_particles.png"
+		filename "data/game.png"
 	}
 
 	sun {
@@ -169,7 +161,7 @@ images {
 	}
 
 	gui_widgets {
-		filename "data/gui/gui_widgets.png"
+		filename "data/gui_widgets.png"
 	}
 
 	menu_background {
@@ -181,23 +173,15 @@ images {
 	}
 
 	cursor {
-		filename "data/gui/cursor.png"
+		filename "data/gui_cursor.png"
 	}
 
 	banner {
 		filename "data/gui_logo.png"
 	}
 	
-	cloud_1 {
-		filename "data/cloud-1.png"
-	}
-
-	cloud_2 {
-		filename "data/cloud-2.png"
-	}
-
-	cloud_3 {
-		filename "data/cloud-3.png"
+	clouds {
+		filename "data/cloudmap.png"
 	}
 
 	chat_bubbles {
@@ -207,55 +191,55 @@ images {
 
 particles {
 	part1 {
-		sprite sprites.particles.part1
+		sprite sprites.game.part1
 		color 0.7 0.7 0.7 1.0
 		life 50
 	}
 
 	part2 {
-		sprite sprites.particles.part2
+		sprite sprites.game.part2
 		color 1.0 1.0 1.0 1.0
 		life 50
 	}
 
 	part3 {
-		sprite sprites.particles.part3
+		sprite sprites.game.part3
 		color 0.8 0.8 0.8 1.0
 		life 50
 	}
 
 	part4 {
-		sprite sprites.particles.part4
+		sprite sprites.game.part4
 		color 0.98 0.1 0.16 1.0
 		life 70
 	}
 
 	part5 {
-		sprite sprites.particles.part5
+		sprite sprites.game.part5
 		color 1.0 1.0 1.0 1.0
 		life 70
 	}
 
 	part6 {
-		sprite sprites.particles.part6
+		sprite sprites.game.part6
 		color 0.6 0.6 0.6 1.0
 		life 100
 	}
 
 	part7 {
-		sprite sprites.particles.part7
+		sprite sprites.game.part7
 		color 1.0 1.0 1.0 1.0
 		life 100
 	}
 	
 	part8 {
-		sprite sprites.particles.part8
+		sprite sprites.game.part8
 		color 0.7 0.7 0.7 1.0
 		life 150
 	}
 	
 	part9 {
-		sprite sprites.particles.part9
+		sprite sprites.game.part9
 		color 1.0 1.0 1.0 1.0
 		life 40
 	}
@@ -315,13 +299,13 @@ projectileparticles {
 
 weapons {
 	gun {
-		sprite_body sprites.weapons.weapon_gun_body
-		sprite_cursor sprites.weapons.weapon_gun_cursor
-		sprite_proj sprites.weapons.weapon_gun_proj
+		sprite_body sprites.game.weapon_gun_body
+		sprite_cursor sprites.game.weapon_gun_cursor
+		sprite_proj sprites.game.weapon_gun_proj
 		sprite_muzzles {
-			sprites.weapons.weapon_gun_muzzle1
-			sprites.weapons.weapon_gun_muzzle2
-			sprites.weapons.weapon_gun_muzzle3
+			sprites.game.weapon_gun_muzzle1
+			sprites.game.weapon_gun_muzzle2
+			sprites.game.weapon_gun_muzzle3
 		}
 
 		nummuzzlesprites 3
@@ -343,9 +327,9 @@ weapons {
 	}
 	
 	rocket {
-		sprite_body sprites.weapons.weapon_rocket_body
-		sprite_cursor sprites.weapons.weapon_rocket_cursor
-		sprite_proj sprites.weapons.weapon_rocket_proj
+		sprite_body sprites.game.weapon_rocket_body
+		sprite_cursor sprites.game.weapon_rocket_cursor
+		sprite_proj sprites.game.weapon_rocket_proj
 		sprite_muzzles {
 		}
 		
@@ -368,13 +352,13 @@ weapons {
 	}
 	
 	shotgun {
-		sprite_body sprites.weapons.weapon_shotgun_body
-		sprite_cursor sprites.weapons.weapon_shotgun_cursor
-		sprite_proj sprites.weapons.weapon_shotgun_proj
+		sprite_body sprites.game.weapon_shotgun_body
+		sprite_cursor sprites.game.weapon_shotgun_cursor
+		sprite_proj sprites.game.weapon_shotgun_proj
 		sprite_muzzles {
-			sprites.weapons.weapon_shotgun_muzzle1
-			sprites.weapons.weapon_shotgun_muzzle2
-			sprites.weapons.weapon_shotgun_muzzle3
+			sprites.game.weapon_shotgun_muzzle1
+			sprites.game.weapon_shotgun_muzzle2
+			sprites.game.weapon_shotgun_muzzle3
 		}
 		
 		nummuzzlesprites 3
@@ -396,9 +380,9 @@ weapons {
 	}
 	
 	hammer {
-		sprite_body sprites.weapons.weapon_hammer_body
-		sprite_cursor sprites.weapons.weapon_hammer_cursor
-		sprite_proj sprites.weapons.weapon_hammer_proj
+		sprite_body sprites.game.weapon_hammer_body
+		sprite_cursor sprites.game.weapon_hammer_cursor
+		sprite_proj sprites.game.weapon_hammer_proj
 		sprite_muzzles {
 		}
 		
@@ -420,9 +404,9 @@ weapons {
 		velocity 0
 	}
 	rocket_backpack {
-		sprite_body sprites.weapons.weapon_hammer_body
-		sprite_cursor sprites.weapons.weapon_hammer_cursor
-		sprite_proj sprites.weapons.weapon_hammer_proj
+		sprite_body sprites.game.weapon_hammer_body
+		sprite_cursor sprites.game.weapon_hammer_cursor
+		sprite_proj sprites.game.weapon_hammer_proj
 		sprite_muzzles {
 		}
 		
@@ -444,13 +428,13 @@ weapons {
 		velocity 0
 	}
 	ninja {
-		sprite_body sprites.weapons.weapon_ninja_body
-		sprite_cursor sprites.weapons.weapon_ninja_cursor
-		sprite_proj sprites.weapons.weapon_ninja_proj
+		sprite_body sprites.game.weapon_ninja_body
+		sprite_cursor sprites.game.weapon_ninja_cursor
+		sprite_proj sprites.game.weapon_ninja_proj
 		sprite_muzzles {
-			sprites.weapons.hadoken1
-			sprites.weapons.hadoken2
-			sprites.weapons.hadoken3
+			sprites.game.hadoken1
+			sprites.game.hadoken2
+			sprites.game.hadoken3
 		}
 		
 		nummuzzlesprites 3
@@ -473,30 +457,33 @@ weapons {
 }
 	
 sprites {
-
-	particles images.particles 16 16 {
-		part1 2 0 2 2
-		part2 4 0 2 2
-		part3 6 0 2 2
-		part4 8 0 2 2
-		part5 10 0 2 2
-		part6 2 2 2 2
-		part7 4 2 2 2
-		part8 6 2 2 2
-		part9 8 2 2 2
+	coulds images.clouds 16 16 {
+		cloud1 0 0 16 7
+		cloud2 0 7 11 8
+		cloud3 11 7 5 5
 	}
 	
-	hud images.game 32 16 {
-		health_full 0 0 4 4
-		health_empty 5 0 4 4
-		armor_full 0 5 4 4
-		armor_empty 5 5 4 4
-		star1 0 10 3 3
-		star2 3 10 3 3
-		star3 6 10 3 3
-	}
+	game images.game 32 16 {
 	
-	weapons images.weapons 32 32 {
+		health_full 21 0 2 2
+		health_empty 23 0 2 2
+		armor_full 21 2 2 2
+		armor_empty 23 2 2 2
+		
+		star1 15 0 2 2
+		star2 17 0 2 2
+		star3 19 0 2 2
+			
+		part1 6 0 1 1
+		part2 6 1 1 1
+		part3 7 0 1 1
+		part4 7 1 1 1
+		part5 8 0 1 1
+		part6 8 1 1 1
+		part7 9 0 2 2
+		part8 11 0 2 2
+		part9 13 0 2 2
+	
 		weapon_gun_body 2 4 4 2
 		weapon_gun_cursor 0 4 2 2
 		weapon_gun_proj 6 4 2 2
@@ -526,12 +513,10 @@ sprites {
 		hook_chain 2 0 1 1
 		hook_head 3 0 2 1
 		
-		hadoken1 1 12 7 4
-		hadoken2 8 12 8 4
-		hadoken3 17 12 7 4
-	}
-
-	powerups images.weapons 32 32 {
+		hadoken1 25 0 7 4
+		hadoken2 25 4 7 4
+		hadoken3 25 8 7 4
+		
 		powerup_health 10 2 2 2
 		powerup_armor 12 2 2 2
 		powerup_weapon 3 0 6 2

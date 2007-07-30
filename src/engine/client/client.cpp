@@ -15,15 +15,28 @@
 #include "ui.h"
 
 #include <engine/compression.h>
-
+#include <engine/network.h>
 #include <engine/versions.h>
 #include <engine/config.h>
-//#include <engine/network.h>
 
 #include <mastersrv/mastersrv.h>
-#include "client.h"
 
 using namespace baselib;
+
+static int info_request_begin;
+static int info_request_end;
+static int snapshot_part;
+static int64 local_start_time;
+static int64 game_start_time;
+static int current_tick;
+static float latency = 0;
+static int extra_polating = 0;
+static int debug_font;
+static float frametime = 0.0001f;
+static net_client net;
+static netaddr4 master_server;
+static netaddr4 server_address;
+static const char *server_spam_address=0;
 
 // --- input wrappers ---
 static int keyboard_state[2][input::last];
@@ -135,15 +148,11 @@ static void client_snapshot_purge_until(int tick)
 }
 
 static snapshot_info *snapshots[NUM_SNAPSHOT_TYPES];
-static int current_tick;
 static int recived_snapshots;
 static int64 snapshot_start_time;
-static int64 local_start_time;
-static int64 game_start_time;
-static float latency = 0;
-static int extra_polating = 0;
 static char snapshot_incomming_data[MAX_SNAPSHOT_SIZE];
 
+// ---
 float client_localtime()
 {
 	return (time_get()-local_start_time)/(float)(time_freq());
@@ -173,6 +182,7 @@ static void snap_init()
 	
 }
 
+// ------ time functions ------
 float client_intratick()
 {
 	return (time_get() - snapshot_start_time)/(float)(time_freq()/SERVER_TICK_SPEED);
@@ -188,6 +198,11 @@ int client_tickspeed()
 	return SERVER_TICK_SPEED;
 }
 
+float client_frametime()
+{
+	return frametime;
+}
+
 void *snap_find_item(int snapid, int type, int id)
 {
 	// TODO: linear search. should be fixed.
@@ -200,17 +215,9 @@ void *snap_find_item(int snapid, int type, int id)
 	return 0x0;
 }
 
-
 int menu_loop(); // TODO: what is this?
-static float frametime = 0.0001f;
 
-float client_frametime()
-{
-	return frametime;
-}
-
-static net_client net;
-
+// ----- send functions -----
 int client_send_msg()
 {
 	const msg_info *info = msg_get_info();
@@ -228,6 +235,53 @@ int client_send_msg()
 	return 0;
 }
 
+static void client_send_info()
+{
+	recived_snapshots = 0;
+	game_start_time = -1;
+
+	msg_pack_start_system(NETMSG_INFO, MSGFLAG_VITAL);
+	msg_pack_string(config.player_name, 128);
+	msg_pack_string(config.clan_name, 128);
+	msg_pack_string(config.password, 128);
+	msg_pack_string("myskin", 128);
+	msg_pack_end();
+	client_send_msg();
+}
+
+static void client_send_entergame()
+{
+	msg_pack_start_system(NETMSG_ENTERGAME, MSGFLAG_VITAL);
+	msg_pack_end();
+	client_send_msg();
+}
+
+static void client_send_error(const char *error)
+{
+	/*
+		pack(NETMSG_CLIENT_ERROR, "s", error);
+	*/
+	/*
+	packet p(NETMSG_CLIENT_ERROR);
+	p.write_str(error);
+	send_packet(&p);
+	//send_packet(&p);
+	//send_packet(&p);
+	*/
+}	
+
+static void client_send_input()
+{
+	msg_pack_start_system(NETMSG_INPUT, 0);
+	msg_pack_int(input_data_size);
+	for(int i = 0; i < input_data_size/4; i++)
+		msg_pack_int(input_data[i]);
+	msg_pack_end();
+	client_send_msg();
+}
+
+
+// ------ server browse ----
 static struct 
 {
 	server_info infos[MAX_SERVERS];
@@ -237,15 +291,13 @@ static struct
 } servers;
 static int serverlist_lan = 1;
 
-static netaddr4 master_server;
-
 int client_serverbrowse_getlist(server_info **serverlist)
 {
 	*serverlist = servers.infos;
 	return servers.num;
 }
 
-void client_serverbrowse_init()
+static void client_serverbrowse_init()
 {
 	servers.num = 0;
 }
@@ -288,6 +340,46 @@ void client_serverbrowse_refresh(int lan)
 	}
 }
 
+
+static void client_serverbrowse_request(int id)
+{
+	dbg_msg("client", "requesting server info from %d.%d.%d.%d:%d",
+		servers.addresses[id].ip[0], servers.addresses[id].ip[1], servers.addresses[id].ip[2],
+		servers.addresses[id].ip[3], servers.addresses[id].port);
+	NETPACKET packet;
+	packet.client_id = -1;
+	packet.address = servers.addresses[id];
+	packet.flags = PACKETFLAG_CONNLESS;
+	packet.data_size = sizeof(SERVERBROWSE_GETINFO);
+	packet.data = SERVERBROWSE_GETINFO;
+	net.send(&packet);
+	servers.request_times[id] = time_get();
+}
+
+static void client_serverbrowse_update()
+{
+	int64 timeout = time_freq();
+	int64 now = time_get();
+	int max_requests = 10;
+	
+	// timeout old requests
+	while(info_request_begin < servers.num && info_request_begin < info_request_end)
+	{
+		if(now > servers.request_times[info_request_begin]+timeout)
+			info_request_begin++;
+		else
+			break;
+	}
+	
+	// send new requests
+	while(info_request_end < servers.num && info_request_end-info_request_begin < max_requests)
+	{
+		client_serverbrowse_request(info_request_end);
+		info_request_end++;
+	}
+}
+
+// ------ state handling -----
 enum
 {
 	STATE_OFFLINE,
@@ -298,12 +390,9 @@ enum
 	STATE_QUIT,
 };
 
-static netaddr4 server_address;
-static const char *server_spam_address=0;
-
 static int state;
-static int get_state() { return state; }
-static void set_state(int s)
+static int client_get_state() { return state; }
+static void client_set_state(int s)
 {
 	dbg_msg("game", "state change. last=%d current=%d", state, s);
 	state = s;
@@ -335,71 +424,24 @@ void client_connect(const char *server_address_str)
 		dbg_msg("client", "could not find the address of %s, connecting to localhost", buf);
 	
 	net.connect(&server_address);
-	set_state(STATE_CONNECTING);	
+	client_set_state(STATE_CONNECTING);	
 }
 
-// --- client ---
-// TODO: remove this class
-void client::send_info()
+void client_disconnect()
 {
-	recived_snapshots = 0;
-	game_start_time = -1;
-
-	msg_pack_start_system(NETMSG_INFO, MSGFLAG_VITAL);
-	msg_pack_string(config.player_name, 128);
-	msg_pack_string(config.clan_name, 128);
-	msg_pack_string(config.password, 128);
-	msg_pack_string("myskin", 128);
-	msg_pack_end();
-	client_send_msg();
-}
-
-void client::send_entergame()
-{
-	msg_pack_start_system(NETMSG_ENTERGAME, MSGFLAG_VITAL);
-	msg_pack_end();
-	client_send_msg();
-}
-
-void client::send_error(const char *error)
-{
-	/*
-		pack(NETMSG_CLIENT_ERROR, "s", error);
-	*/
-	/*
-	packet p(NETMSG_CLIENT_ERROR);
-	p.write_str(error);
-	send_packet(&p);
-	//send_packet(&p);
-	//send_packet(&p);
-	*/
-}	
-
-void client::send_input()
-{
-	msg_pack_start_system(NETMSG_INPUT, 0);
-	msg_pack_int(input_data_size);
-	for(int i = 0; i < input_data_size/4; i++)
-		msg_pack_int(input_data[i]);
-	msg_pack_end();
-	client_send_msg();
-}
-
-void client::disconnect()
-{
-	send_error("disconnected");
+	client_send_error("disconnected");
 	net.disconnect("disconnected");
-	set_state(STATE_OFFLINE);
+	client_set_state(STATE_OFFLINE);
 	map_unload();
 }
 
-bool client::load_data()
+static bool client_load_data()
 {
 	debug_font = gfx_load_texture("data/debug_font.png");
 	return true;
 }
-extern int memory_alloced;
-void client::debug_render()
+
+static void client_debug_render()
 {
 	if(!config.debug)
 		return;
@@ -420,36 +462,38 @@ void client::debug_render()
 	static float frametime_avg = 0;
 	frametime_avg = frametime_avg*0.9f + frametime*0.1f;
 	char buffer[512];
-	sprintf(buffer, "send: %6d recv: %6d latency: %4.0f %c fps: %d",
+	sprintf(buffer, "send: %6d recv: %6d latency: %4.0f %c gfxmem: %6dk fps: %3d",
 		(current.send_bytes-prev.send_bytes)*10,
 		(current.recv_bytes-prev.recv_bytes)*10,
-		latency*1000.0f, extra_polating?'E':' ', (int)(1.0f/frametime_avg));
+		latency*1000.0f, extra_polating?'E':' ',
+		gfx_memory_usage()/1024,
+		(int)(1.0f/frametime_avg));
 	gfx_quads_text(2, 2, 16, buffer);
 	
 }
 
-void client::render()
+static void client_render()
 {
 	gfx_clear(0.0f,0.0f,0.0f);
 	
 	// this should be moved around abit
 	// TODO: clean this shit up!
-	if(get_state() == STATE_ONLINE)
+	if(client_get_state() == STATE_ONLINE)
 	{
 		modc_render();
 		
 		// debug render stuff
-		debug_render();
+		client_debug_render();
 		
 	}
-	else if (get_state() != STATE_CONNECTING && get_state() != STATE_LOADING)
+	else if (client_get_state() != STATE_CONNECTING && client_get_state() != STATE_LOADING)
 	{
 		//netaddr4 server_address;
 		int status = modmenu_render();
 		if (status == -1)
-			set_state(STATE_QUIT);
+			client_set_state(STATE_QUIT);
 	}
-	else if (get_state() == STATE_CONNECTING || get_state() == STATE_LOADING)
+	else if (client_get_state() == STATE_CONNECTING || client_get_state() == STATE_LOADING)
 	{
 		static int64 start = time_get();
 		static int tee_texture;
@@ -459,7 +503,7 @@ void client::render()
 		if (!inited)
 		{
 			tee_texture = gfx_load_texture("data/gui_tee.png");
-			connecting_texture = gfx_load_texture("data/gui/connecting.png");
+			connecting_texture = gfx_load_texture("data/gui_connecting.png");
 				
 			inited = true;
 		}
@@ -479,229 +523,18 @@ void client::render()
 		ui_do_image(connecting_texture, 88, 150, 256, 64);
 		
 		if(inp_key_down(input::esc))
-			disconnect();
+			client_disconnect();
 	}
 }
 
-void client::run(const char *direct_connect_server)
-{
-	local_start_time = time_get();
-	snapshot_part = 0;
-	info_request_begin = 0;
-	info_request_end = 0;
-	
-	client_serverbrowse_init();
-	
-	// init graphics and sound
-	if(!gfx_init())
-		return;
-
-	snd_init(); // sound is allowed to fail
-	
-	// load data
-	if(!load_data())
-		return;
-
-	// init snapshotting
-	snap_init();
-	
-	// init the mod
-	modc_init();
-
-	// init menu
-	modmenu_init();
-	
-	// open socket
-	net.open(0, 0);
-	
-	//
-	net_host_lookup(config.masterserver, MASTERSERVER_PORT, &master_server);
-
-	// connect to the server if wanted
-	if(direct_connect_server)
-		client_connect(direct_connect_server);
-		
-	//int64 inputs_per_second = 50;
-	//int64 time_per_input = time_freq()/inputs_per_second;
-	int64 game_starttime = time_get();
-	int64 last_input = game_starttime;
-	
-	int64 reporttime = time_get();
-	int64 reportinterval = time_freq()*1;
-	int frames = 0;
-	
-	input::set_mouse_mode(input::mode_relative);
-	
-	while (1)
-	{	
-		frames++;
-		int64 frame_start_time = time_get();
-
-		// switch snapshot
-		if(recived_snapshots >= 3)
-		{
-			int64 now = time_get();
-			while(1)
-			{
-				snapshot_info *cur = snapshots[SNAP_CURRENT];
-				int64 tickstart = game_start_time + (cur->tick+1)*time_freq()/50;
-				int64 t = tickstart;
-				if(latency > 0)
-					t += (int64)(time_freq()*(latency*1.1f));
-
-				if(t < now)
-				{
-					snapshot_info *next = snapshots[SNAP_CURRENT]->next;
-					if(next)
-					{
-						snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
-						snapshots[SNAP_CURRENT] = next;
-						snapshot_start_time = t;
-					}
-					else
-					{
-						extra_polating = 1;
-						break;
-					}
-				}
-				else
-				{
-					extra_polating = 0;
-					break;
-				}
-			}
-		}
-
-		// send input
-		if(get_state() == STATE_ONLINE)
-		{
-			if(server_spam_address)
-				disconnect();
-			
-			if(input_is_changed || time_get() > last_input+time_freq())
-			{
-				send_input();
-				input_is_changed = 0;
-				last_input = time_get();
-			}
-		}
-		
-		if(get_state() == STATE_OFFLINE && server_spam_address)
-			client_connect(server_spam_address);
-		
-		// update input
-		inp_update();
-		
-		//
-		if(input::pressed(input::f1))
-			input::set_mouse_mode(input::mode_absolute);
-		if(input::pressed(input::f2))
-			input::set_mouse_mode(input::mode_relative);
-
-		// panic button
-		if(input::pressed(input::lctrl) && input::pressed('Q'))
-			break;
-
-		if(input::pressed(input::f5))
-		{
-			// ack snapshot
-			msg_pack_start_system(NETMSG_SNAPACK, 0);
-			msg_pack_int(-1);
-			msg_pack_end();
-			client_send_msg();
-		}
-			
-		// pump the network
-		pump_network();
-		
-		// update the server browser
-		serverbrowse_update();
-		
-		// render
-		render();
-		
-		// swap the buffers
-		gfx_swap();
-		
-		// check conditions
-		if(get_state() == STATE_BROKEN || get_state() == STATE_QUIT)
-			break;
-
-		// be nice
-		if(config.cpu_throttle)
-			thread_sleep(1);
-		
-		if(reporttime < time_get())
-		{
-			dbg_msg("client/report", "fps=%.02f netstate=%d",
-				frames/(float)(reportinterval/time_freq()), net.state());
-			frames = 0;
-			reporttime += reportinterval;
-		}
-		
-		/*if (input::pressed(input::esc))
-			if (get_state() == STATE_CONNECTING || get_state() == STATE_ONLINE)
-				disconnect();*/
-
-		// update frametime
-		frametime = (time_get()-frame_start_time)/(float)time_freq();
-	}
-	
-	modc_shutdown();
-	disconnect();
-
-	modmenu_shutdown();
-	
-	gfx_shutdown();
-	snd_shutdown();
-}
-
-void client::error(const char *msg)
+static void client_error(const char *msg)
 {
 	dbg_msg("game", "error: %s", msg);
-	send_error(msg);
-	set_state(STATE_BROKEN);
+	client_send_error(msg);
+	client_set_state(STATE_BROKEN);
 }
 
-void client::serverbrowse_request(int id)
-{
-	dbg_msg("client", "requesting server info from %d.%d.%d.%d:%d",
-		servers.addresses[id].ip[0], servers.addresses[id].ip[1], servers.addresses[id].ip[2],
-		servers.addresses[id].ip[3], servers.addresses[id].port);
-	NETPACKET packet;
-	packet.client_id = -1;
-	packet.address = servers.addresses[id];
-	packet.flags = PACKETFLAG_CONNLESS;
-	packet.data_size = sizeof(SERVERBROWSE_GETINFO);
-	packet.data = SERVERBROWSE_GETINFO;
-	net.send(&packet);
-	servers.request_times[id] = time_get();
-}
-
-void client::serverbrowse_update()
-{
-	int64 timeout = time_freq();
-	int64 now = time_get();
-	int max_requests = 10;
-	
-	// timeout old requests
-	while(info_request_begin < servers.num && info_request_begin < info_request_end)
-	{
-		if(now > servers.request_times[info_request_begin]+timeout)
-			info_request_begin++;
-		else
-			break;
-	}
-	
-	// send new requests
-	while(info_request_end < servers.num && info_request_end-info_request_begin < max_requests)
-	{
-		serverbrowse_request(info_request_end);
-		info_request_end++;
-	}
-}
-
-void client::process_packet(NETPACKET *packet)
+static void client_process_packet(NETPACKET *packet)
 {
 	if(packet->client_id == -1)
 	{
@@ -788,19 +621,19 @@ void client::process_packet(NETPACKET *packet)
 			{
 				const char *map = msg_unpack_string();
 				dbg_msg("client/network", "connection accepted, map=%s", map);
-				set_state(STATE_LOADING);
+				client_set_state(STATE_LOADING);
 				
 				if(map_load(map))
 				{
 					modc_entergame();
-					send_entergame();
+					client_send_entergame();
 					dbg_msg("client/network", "loading done");
 					// now we will wait for two snapshots
 					// to finish the connection
 				}
 				else
 				{
-					error("failure to load map");
+					client_error("failure to load map");
 				}
 			}
 			else if(msg == NETMSG_SNAP || msg == NETMSG_SNAPEMPTY) //|| msg == NETMSG_SNAPSMALL || msg == NETMSG_SNAPEMPTY)
@@ -892,7 +725,7 @@ void client::process_packet(NETPACKET *packet)
 						
 						//int ncrc = snapshot_crc((snapshot*)tmpbuffer3);
 						//if(crc != ncrc)
-							//dbg_msg("client", "client snapshot crc failure %d %d", crc, ncrc);
+						//	dbg_msg("client", "client snapshot crc failure %d %d", crc, ncrc);
 						
 						// apply snapshot, cycle pointers
 						recived_snapshots++;
@@ -908,7 +741,7 @@ void client::process_packet(NETPACKET *packet)
 						if(recived_snapshots == 2)
 						{
 							local_start_time = time_get();
-							set_state(STATE_ONLINE);
+							client_set_state(STATE_ONLINE);
 						}
 						
 						int64 now = time_get();
@@ -953,35 +786,210 @@ void client::process_packet(NETPACKET *packet)
 	}
 }
 
-void client::pump_network()
+
+static void client_pump_network()
 {
 	net.update();
 
 	// check for errors		
-	if(get_state() != STATE_OFFLINE && net.state() == NETSTATE_OFFLINE)
+	if(client_get_state() != STATE_OFFLINE && net.state() == NETSTATE_OFFLINE)
 	{
 		// TODO: add message to the user there
-		set_state(STATE_OFFLINE);
+		client_set_state(STATE_OFFLINE);
 	}
 
 	//
-	if(get_state() == STATE_CONNECTING && net.state() == NETSTATE_ONLINE)
+	if(client_get_state() == STATE_CONNECTING && net.state() == NETSTATE_ONLINE)
 	{
 		// we switched to online
 		dbg_msg("client", "connected, sending info");
-		set_state(STATE_LOADING);
-		send_info();
+		client_set_state(STATE_LOADING);
+		client_send_info();
 	}
 	
 	// process packets
 	NETPACKET packet;
 	while(net.recv(&packet))
-		process_packet(&packet);
+		client_process_packet(&packet);
 }
+
+static void client_run(const char *direct_connect_server)
+{
+	local_start_time = time_get();
+	snapshot_part = 0;
+	info_request_begin = 0;
+	info_request_end = 0;
+	
+	client_serverbrowse_init();
+	
+	// init graphics and sound
+	if(!gfx_init())
+		return;
+
+	snd_init(); // sound is allowed to fail
+	
+	// load data
+	if(!client_load_data())
+		return;
+
+	// init snapshotting
+	snap_init();
+	
+	// init the mod
+	modc_init();
+
+	// init menu
+	modmenu_init();
+	
+	// open socket
+	net.open(0, 0);
+	
+	//
+	net_host_lookup(config.masterserver, MASTERSERVER_PORT, &master_server);
+
+	// connect to the server if wanted
+	if(direct_connect_server)
+		client_connect(direct_connect_server);
+		
+	//int64 inputs_per_second = 50;
+	//int64 time_per_input = time_freq()/inputs_per_second;
+	int64 game_starttime = time_get();
+	int64 last_input = game_starttime;
+	
+	int64 reporttime = time_get();
+	int64 reportinterval = time_freq()*1;
+	int frames = 0;
+	
+	input::set_mouse_mode(input::mode_relative);
+	
+	while (1)
+	{	
+		frames++;
+		int64 frame_start_time = time_get();
+
+		// switch snapshot
+		if(recived_snapshots >= 3)
+		{
+			int64 now = time_get();
+			while(1)
+			{
+				snapshot_info *cur = snapshots[SNAP_CURRENT];
+				int64 tickstart = game_start_time + (cur->tick+1)*time_freq()/50;
+				int64 t = tickstart;
+				if(latency > 0)
+					t += (int64)(time_freq()*(latency*1.1f));
+
+				if(t < now)
+				{
+					snapshot_info *next = snapshots[SNAP_CURRENT]->next;
+					if(next)
+					{
+						snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
+						snapshots[SNAP_CURRENT] = next;
+						snapshot_start_time = t;
+					}
+					else
+					{
+						extra_polating = 1;
+						break;
+					}
+				}
+				else
+				{
+					extra_polating = 0;
+					break;
+				}
+			}
+		}
+
+		// send input
+		if(client_get_state() == STATE_ONLINE)
+		{
+			if(server_spam_address)
+				client_disconnect();
+			
+			if(input_is_changed || time_get() > last_input+time_freq())
+			{
+				client_send_input();
+				input_is_changed = 0;
+				last_input = time_get();
+			}
+		}
+		
+		if(client_get_state() == STATE_OFFLINE && server_spam_address)
+			client_connect(server_spam_address);
+		
+		// update input
+		inp_update();
+		
+		//
+		if(input::pressed(input::f1))
+			input::set_mouse_mode(input::mode_absolute);
+		if(input::pressed(input::f2))
+			input::set_mouse_mode(input::mode_relative);
+
+		// panic button
+		if(input::pressed(input::lctrl) && input::pressed('Q'))
+			break;
+
+		if(input::pressed(input::f5))
+		{
+			// ack snapshot
+			msg_pack_start_system(NETMSG_SNAPACK, 0);
+			msg_pack_int(-1);
+			msg_pack_end();
+			client_send_msg();
+		}
+			
+		// pump the network
+		client_pump_network();
+		
+		// update the server browser
+		client_serverbrowse_update();
+		
+		// render
+		client_render();
+		
+		// swap the buffers
+		gfx_swap();
+		
+		// check conditions
+		if(client_get_state() == STATE_BROKEN || client_get_state() == STATE_QUIT)
+			break;
+
+		// be nice
+		if(config.cpu_throttle)
+			thread_sleep(1);
+		
+		if(reporttime < time_get())
+		{
+			dbg_msg("client/report", "fps=%.02f netstate=%d",
+				frames/(float)(reportinterval/time_freq()), net.state());
+			frames = 0;
+			reporttime += reportinterval;
+		}
+		
+		/*if (input::pressed(input::esc))
+			if (get_state() == STATE_CONNECTING || get_state() == STATE_ONLINE)
+				disconnect();*/
+
+		// update frametime
+		frametime = (time_get()-frame_start_time)/(float)time_freq();
+	}
+	
+	modc_shutdown();
+	client_disconnect();
+
+	modmenu_shutdown(); // TODO: remove this
+	
+	gfx_shutdown();
+	snd_shutdown();
+}
+
 
 int editor_main(int argc, char **argv);
 
-client main_client;
+//client main_client;
 
 int main(int argc, char **argv)
 {
@@ -1035,7 +1043,7 @@ int main(int argc, char **argv)
 	else
 	{
 		// start the client
-		main_client.run(direct_connect_server);
+		client_run(direct_connect_server);
 	}
 	return 0;
 }

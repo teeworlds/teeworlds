@@ -5,19 +5,17 @@
 #include <string.h>
 #include <engine/config.h>
 #include <engine/client/ui.h>
-#include <engine/client/client.h>
 #include "../game.h"
 #include "mapres_image.h"
 #include "mapres_tilemap.h"
 #include "data.h"
 #include "menu.h"
 
-extern client main_client;
 using namespace baselib;
 
 data_container *data = 0x0;
 
-int charids[16] = {2,10,0,4,12,6,14,1,9,15,13,11,7,5,8,3};
+static int charids[16] = {2,10,0,4,12,6,14,1,9,15,13,11,7,5,8,3};
 
 static int gametype = GAMETYPE_DM;
 static int skinseed = 0;
@@ -122,7 +120,7 @@ static void select_sprite(sprite *spr, int flags=0, int sx=0, int sy=0)
 		gfx_quads_setsubset(x/(float)cx,y/(float)cy,(x+w)/(float)cx,(y+h)/(float)cy);
 }
 
-static void select_sprite(int id, int flags=0, int sx=0, int sy=0)
+void select_sprite(int id, int flags=0, int sx=0, int sy=0)
 {
 	if(id < 0 || id > data->num_sprites)
 		return;
@@ -324,7 +322,7 @@ public:
 	void render()
 	{
 		gfx_blend_additive();
-		gfx_texture_set(data->images[IMAGE_PARTICLES].id);
+		gfx_texture_set(data->images[IMAGE_GAME].id);
 		gfx_quads_begin();
 		
 		for(int i = 0; i < num_particles; i++)
@@ -606,7 +604,7 @@ void modc_newsnapshot()
 
 static void render_projectile(obj_projectile *prev, obj_projectile *current, int itemid)
 {
-	gfx_texture_set(data->images[IMAGE_WEAPONS].id);
+	gfx_texture_set(data->images[IMAGE_GAME].id);
 	gfx_quads_begin();
 	
 	select_sprite(data->weapons[current->type%data->num_weapons].sprite_proj);
@@ -631,7 +629,7 @@ static void render_projectile(obj_projectile *prev, obj_projectile *current, int
 
 static void render_powerup(obj_powerup *prev, obj_powerup *current)
 {
-	gfx_texture_set(data->images[IMAGE_WEAPONS].id);
+	gfx_texture_set(data->images[IMAGE_GAME].id);
 	gfx_quads_begin();
 	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
 	float angle = 0.0f;
@@ -925,7 +923,7 @@ static void render_player(obj_player *prev, obj_player *player)
 	// draw hook
 	if(player->hook_active)
 	{
-		gfx_texture_set(data->images[IMAGE_WEAPONS].id);
+		gfx_texture_set(data->images[IMAGE_GAME].id);
 		gfx_quads_begin();
 		//gfx_quads_begin();
 
@@ -955,7 +953,7 @@ static void render_player(obj_player *prev, obj_player *player)
 
 	// draw gun
 	{
-		gfx_texture_set(data->images[IMAGE_WEAPONS].id);
+		gfx_texture_set(data->images[IMAGE_GAME].id);
 		gfx_quads_begin();
 		gfx_quads_setrotation(state.attach.angle*pi*2+angle);
 
@@ -1189,7 +1187,7 @@ void ingamemenu_render()
 	if (ui_do_button(&menu_quit, "Disconnect", 0, column1_x, row3_y, 250, 48, draw_teewars_button))
 	{
 		menu_active = 0;
-		main_client.disconnect();
+		client_disconnect();
 	}
 	
 	gfx_texture_set(data->images[IMAGE_CURSOR].id);
@@ -1389,17 +1387,18 @@ void modc_render()
 		
 		static vec2 cloud_pos[6] = {vec2(-500,0),vec2(-500,200),vec2(-500,400)};
 		static float cloud_speed[6] = {30, 20, 10};
-		static int cloud_images[6] = {IMAGE_CLOUD_1, IMAGE_CLOUD_2, IMAGE_CLOUD_3};
+		static int cloud_sprites[6] = {SPRITE_CLOUD1, SPRITE_CLOUD2, SPRITE_CLOUD3};
 		
+		gfx_texture_set(data->images[IMAGE_CLOUDS].id);
+		gfx_quads_begin();
 		for(int i = 0; i < 3; i++)
 		{
 			float parallax_amount = 0.55f;
-			gfx_texture_set(data->images[cloud_images[i]].id);
-			gfx_quads_begin();
+			select_sprite(cloud_sprites[i]);
 			gfx_quads_drawTL((cloud_pos[i].x+fmod(client_localtime()*cloud_speed[i]+i*100.0f, 1700.0f))+screen_x*parallax_amount,
 				cloud_pos[i].y+screen_y*parallax_amount, 300, 300);
-			gfx_quads_end();
 		}
+		gfx_quads_end();
 
 		
 		// draw backdrop
@@ -1407,7 +1406,7 @@ void modc_render()
 		gfx_quads_begin();
 		float parallax_amount = 0.25f;
 		for(int x = -1; x < 3; x++)
-			gfx_quads_drawTL(1024*x+screen_x*parallax_amount, (screen_y)*parallax_amount+150, 1024, 1024);
+			gfx_quads_drawTL(1024*x+screen_x*parallax_amount, (screen_y)*parallax_amount+150+512, 1024, 512);
 		gfx_quads_end();
 	}
 	
@@ -1461,7 +1460,7 @@ void modc_render()
 	
 	if(local_player)
 	{
-		gfx_texture_set(data->images[IMAGE_WEAPONS].id);
+		gfx_texture_set(data->images[IMAGE_GAME].id);
 		gfx_quads_begin();
 		
 		// render cursor
@@ -1540,7 +1539,7 @@ void modc_render()
 			x -= 44.0f;
 			if (killmsgs[r].weapon >= 0)
 			{
-				gfx_texture_set(data->images[IMAGE_WEAPONS].id);
+				gfx_texture_set(data->images[IMAGE_GAME].id);
 				gfx_quads_begin();
 				select_sprite(data->weapons[killmsgs[r].weapon].sprite_body);
 				draw_sprite(x, y+28, 96);
