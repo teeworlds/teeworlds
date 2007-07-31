@@ -471,7 +471,7 @@ void modc_newsnapshot()
 	for(int i = 0; i < num; i++)
 	{
 		snap_item item;
-		void *data = snap_get_item(SNAP_CURRENT, i, &item);
+		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 		
 		if(item.type == EVENT_DAMAGEINDICATION)
 		{
@@ -602,7 +602,7 @@ void modc_newsnapshot()
 	}
 }
 
-static void render_projectile(obj_projectile *prev, obj_projectile *current, int itemid)
+static void render_projectile(const obj_projectile *prev, const obj_projectile *current, int itemid)
 {
 	gfx_texture_set(data->images[IMAGE_GAME].id);
 	gfx_quads_begin();
@@ -627,7 +627,7 @@ static void render_projectile(obj_projectile *prev, obj_projectile *current, int
 	gfx_quads_end();
 }
 
-static void render_powerup(obj_powerup *prev, obj_powerup *current)
+static void render_powerup(const obj_powerup *prev, const obj_powerup *current)
 {
 	gfx_texture_set(data->images[IMAGE_GAME].id);
 	gfx_quads_begin();
@@ -670,7 +670,7 @@ static void render_powerup(obj_powerup *prev, obj_powerup *current)
 	gfx_quads_end();
 }
 
-static void render_flag(obj_flag *prev, obj_flag *current)
+static void render_flag(const obj_flag *prev, const obj_flag *current)
 {
 	float angle = 0.0f;
 	float size = 64.0f;
@@ -877,7 +877,7 @@ static void draw_round_rect(float x, float y, float w, float h, float r)
 	gfx_quads_drawTL(x+w-r, y+r, r, h-r*2); // right
 }
 
-static void render_player(obj_player *prev, obj_player *player)
+static void render_player(const obj_player *prev, const obj_player *player)
 {
 	if(player->health < 0) // dont render dead players
 		return;
@@ -1324,7 +1324,7 @@ void modc_render()
 		for(int i = 0; i < num; i++)
 		{
 			snap_item item;
-			void *data = snap_get_item(SNAP_CURRENT, i, &item);
+			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 			
 			if(item.type == OBJTYPE_PLAYER)
 			{
@@ -1334,7 +1334,7 @@ void modc_render()
 					local_player = player;
 					local_player_pos = vec2(player->x, player->y);
 
-					void *p = snap_find_item(SNAP_PREV, item.type, item.id);
+					const void *p = snap_find_item(SNAP_PREV, item.type, item.id);
 					if(p)
 						local_player_pos = mix(vec2(((obj_player *)p)->x, ((obj_player *)p)->y), local_player_pos, client_intratick());
 				}
@@ -1414,34 +1414,34 @@ void modc_render()
 	for(int i = 0; i < num; i++)
 	{
 		snap_item item;
-		void *data = snap_get_item(SNAP_CURRENT, i, &item);
+		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 		
 		if(item.type == OBJTYPE_PLAYER)
 		{
-			void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
 			if(prev)
 			{
-				client_datas[((obj_player *)data)->clientid].team = ((obj_player *)data)->team;
-				render_player((obj_player *)prev, (obj_player *)data);
+				client_datas[((const obj_player *)data)->clientid].team = ((const obj_player *)data)->team;
+				render_player((const obj_player *)prev, (const obj_player *)data);
 			}
 		}
 		else if(item.type == OBJTYPE_PROJECTILE)
 		{
-			void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
 			if(prev)
-				render_projectile((obj_projectile *)prev, (obj_projectile *)data, item.id);
+				render_projectile((const obj_projectile *)prev, (const obj_projectile *)data, item.id);
 		}
 		else if(item.type == OBJTYPE_POWERUP)
 		{
-			void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
 			if(prev)
-				render_powerup((obj_powerup *)prev, (obj_powerup *)data);
+				render_powerup((const obj_powerup *)prev, (const obj_powerup *)data);
 		}
 		else if(item.type == OBJTYPE_FLAG)
 		{
-			void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
 			if (prev)
-				render_flag((obj_flag *)prev, (obj_flag *)data);
+				render_flag((const obj_flag *)prev, (const obj_flag *)data);
 		}
 	}
 
@@ -1670,11 +1670,11 @@ void modc_render()
 			for(int i = 0; i < num; i++)
 			{
 				snap_item item;
-				void *data = snap_get_item(SNAP_CURRENT, i, &item);
+				const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 				
 				if(item.type == OBJTYPE_PLAYER)
 				{
-					obj_player *player = (obj_player *)data;
+					const obj_player *player = (const obj_player *)data;
 					if(player)
 					{
 						char buf[128];
@@ -1732,11 +1732,11 @@ void modc_render()
 			for(int i = 0; i < num; i++)
 			{
 				snap_item item;
-				void *data = snap_get_item(SNAP_CURRENT, i, &item);
+				const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 				
 				if(item.type == OBJTYPE_PLAYER)
 				{
-					obj_player *player = (obj_player *)data;
+					const obj_player *player = (const obj_player *)data;
 					if(player && player->team >= 0 && player->team < 2)
 					{
 						teamscore[player->team] += player->score;
@@ -1762,11 +1762,11 @@ void modc_render()
 			for(int i = 0; i < num; i++)
 			{
 				snap_item item;
-				void *data = snap_get_item(SNAP_CURRENT, i, &item);
+				const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 				
 				if(item.type == OBJTYPE_PLAYER)
 				{
-					obj_player *player = (obj_player *)data;
+					const obj_player *player = (const obj_player *)data;
 					if(player && player->team >= 0 && player->team < 2)
 					{
 						sprintf(buf, "%4d", player->score);

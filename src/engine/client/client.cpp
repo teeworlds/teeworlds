@@ -157,13 +157,25 @@ float client_localtime()
 	return (time_get()-local_start_time)/(float)(time_freq());
 }
 
-void *snap_get_item(int snapid, int index, snap_item *item)
+const void *snap_get_item(int snapid, int index, snap_item *item)
 {
 	dbg_assert(snapid >= 0 && snapid < NUM_SNAPSHOT_TYPES, "invalid snapid");
 	snapshot::item *i = snapshots[snapid]->snap->get_item(index);
 	item->type = i->type();
 	item->id = i->id();
 	return (void *)i->data();
+}
+
+const void *snap_find_item(int snapid, int type, int id)
+{
+	// TODO: linear search. should be fixed.
+	for(int i = 0; i < snapshots[snapid]->snap->num_items; i++)
+	{
+		snapshot::item *itm = snapshots[snapid]->snap->get_item(i);
+		if(itm->type() == type && itm->id() == id)
+			return (void *)itm->data();
+	}
+	return 0x0;
 }
 
 int snap_num_items(int snapid)
@@ -202,17 +214,6 @@ float client_frametime()
 	return frametime;
 }
 
-void *snap_find_item(int snapid, int type, int id)
-{
-	// TODO: linear search. should be fixed.
-	for(int i = 0; i < snapshots[snapid]->snap->num_items; i++)
-	{
-		snapshot::item *itm = snapshots[snapid]->snap->get_item(i);
-		if(itm->type() == type && itm->id() == id)
-			return (void *)itm->data();
-	}
-	return 0x0;
-}
 
 int menu_loop(); // TODO: what is this?
 

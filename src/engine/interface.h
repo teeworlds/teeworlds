@@ -490,7 +490,7 @@ int snap_num_items(int snapid);
 	Returns:
 		Returns a pointer to the item if it exists, otherwise NULL.
 */
-void *snap_get_item(int snapid, int index, snap_item *item);
+const void *snap_get_item(int snapid, int index, snap_item *item);
 
 /*
 	Function: snap_find_item
@@ -506,7 +506,7 @@ void *snap_get_item(int snapid, int index, snap_item *item);
 	Returns:
 		Returns a pointer to the item if it exists, otherwise NULL.
 */
-void *snap_find_item(int snapid, int type, int id);
+const void *snap_find_item(int snapid, int type, int id);
 
 /*
 	Function: snap_input
