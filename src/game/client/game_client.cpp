@@ -1665,35 +1665,69 @@ void modc_render()
 				gfx_pretty_text(x+10, y, 32, buf);
 				y += 40.0f;
 			}
-			
-			int num = snap_num_items(SNAP_CURRENT);
-			for(int i = 0; i < num; i++)
+
+			// find players
+			const obj_player *players[MAX_CLIENTS] = {0};
+			int num_players = 0;
+			for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
 			{
 				snap_item item;
 				const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 				
 				if(item.type == OBJTYPE_PLAYER)
 				{
-					const obj_player *player = (const obj_player *)data;
-					if(player)
+					players[num_players] = (const obj_player *)data;
+					num_players++;
+				}
+			}
+			
+			// sort players
+			for(int k = 0; k < num_players; k++) // ffs, bubblesort
+			{
+				for(int i = k; i < num_players-1; i++)
+				{
+					if(players[i]->score < players[i+1]->score)
 					{
-						char buf[128];
-						sprintf(buf, "%4d", player->score);
-						gfx_pretty_text(x+60-gfx_pretty_text_width(48,buf), y, 48, buf);
-						gfx_pretty_text(x+128, y, 48, client_datas[player->clientid].name);
-						
-						sprintf(buf, "%4d", player->latency);
-						float tw = gfx_pretty_text_width(48.0f, buf);
-						gfx_pretty_text(x+w-tw-20, y, 48, buf);
-						
-						/*sprintf(buf, "%4d", player->latency_flux);
-						tw = gfx_pretty_text_width(24.0f, buf);
-						gfx_pretty_text(x+w-tw-20, y+20, 24, buf);*/
-
-						render_tee(&idlestate, player->clientid, vec2(1,0), vec2(x+90, y+24));
-						y += 58.0f;
+						const obj_player *tmp = players[i];
+						players[i] = players[i+1];
+						players[i+1] = tmp;
 					}
 				}
+			}
+
+			// render headlines
+			gfx_pretty_text(x+10, y, 32, "Score");
+			gfx_pretty_text(x+125, y, 32, "Name");
+			gfx_pretty_text(x+w-70, y, 32, "Ping");
+			y += 38.0f;
+
+			// render player scores
+			for(int i = 0; i < num_players; i++)
+			{
+				const obj_player *player = players[i];
+				char buf[128];
+				float font_size = 46.0f;
+				if(player->local)
+				{
+					// background so it's easy to find the local player
+					gfx_texture_set(-1);
+					gfx_quads_begin();
+					gfx_quads_setcolor(1,1,1,0.25f);
+					draw_round_rect(x, y, w-15, 48, 20.0f);
+					gfx_quads_end();
+				}
+				
+				sprintf(buf, "%4d", player->score);
+				gfx_pretty_text(x+60-gfx_pretty_text_width(font_size,buf), y, font_size, buf);
+				gfx_pretty_text(x+128, y, font_size, client_datas[player->clientid].name);
+				
+				sprintf(buf, "%4d", player->latency);
+				float tw = gfx_pretty_text_width(font_size, buf);
+				gfx_pretty_text(x+w-tw-30, y, font_size, buf);
+
+				// render avatar
+				render_tee(&idlestate, player->clientid, vec2(1,0), vec2(x+90, y+28));
+				y += 50.0f;
 			}
 		}
 		else if (gameobj->gametype == GAMETYPE_TDM)
