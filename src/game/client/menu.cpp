@@ -321,7 +321,7 @@ int ui_do_key_reader(void *id, float x, float y, float w, float h, int key)
 	return new_key;
 }
 
-int ui_do_combo_box(void *id, float x, float y, float w, char *lines, int line_count, int selected_index)
+int ui_do_combo_box(void *id, float x, float y, float w, const char **lines, int line_count, int selected_index)
 {
 	float line_height = 36.0f;
 	float height = line_count * line_height;
@@ -363,7 +363,7 @@ int ui_do_combo_box(void *id, float x, float y, float w, char *lines, int line_c
 				box_type = GUI_BOX_SCREEN_LIST;
 
 			draw_box(box_type, tileset_regular, x, y + i * line_height, w, line_height);
-			ui_do_label(x + 10 + 10, y + i * line_height, lines + 128 * i, 36);
+			ui_do_label(x + 10 + 10, y + i * line_height, lines[i], 36);
 			if (selected_index == i)
 				ui_do_label(x + 10, y + i * line_height, "-", 36);
 		}
@@ -376,7 +376,7 @@ int ui_do_combo_box(void *id, float x, float y, float w, char *lines, int line_c
 		else
 			box_type = GUI_BOX_SCREEN_TEXTBOX;
 		draw_box(box_type, tileset_regular, x, y, w, line_height);
-		ui_do_label(x + 10, y, lines + 128 * selected_index, 36);
+		ui_do_label(x + 10, y, lines[selected_index], 36);
 	}
 
 	return selected_index;
@@ -685,6 +685,7 @@ enum
 	SCREEN_SETTINGS_CONTROLS,
 	SCREEN_SETTINGS_VIDEO,
 	SCREEN_SETTINGS_VIDEO_SELECT_MODE,
+	SCREEN_SETTINGS_VIDEO_CUSTOM,
 	SCREEN_SETTINGS_SOUND,
 	SCREEN_KERNING
 };
@@ -834,7 +835,7 @@ static int settings_video_render_select_mode()
 	int num_modes = gfx_get_video_modes(modes, MAX_RESOLUTIONS);
 	
 	static int scroll_index = 0;
-	scroll_index = do_scroll_bar_vert(&scroll_index, 600, row1_y, 40 * 7, num_modes - 7, scroll_index);
+	scroll_index = do_scroll_bar_vert(&scroll_index, 500, row1_y, 40 * 7, num_modes - 7, scroll_index);
 
 	for (int i = 0; i < 7; i++)
 	{
@@ -861,7 +862,7 @@ static int settings_video_render_select_mode()
 		sprintf(buf, "%c %dx%d %d bit %c", s?'>':' ', modes[index].width, modes[index].height, depth, s?'<':' ');
 		
 		if(ui_do_button((void*)&modes[index], buf, 0,
-			column1_x, row1_y + 40 * i, 320, 32.0f, draw_teewars_button))
+			column1_x, row1_y + 40 * i, 250, 32.0f, draw_teewars_button))
 		{
 			// select
 			config_set_gfx_color_depth(&config_copy, depth);
@@ -870,7 +871,29 @@ static int settings_video_render_select_mode()
 			screen = SCREEN_SETTINGS_VIDEO;
 		}
 	}
+	
+	static int back_button = 0;
+	if(ui_do_button(&back_button, "Back", 0, column3_x, row7_y, 150, 32, draw_teewars_button))
+		screen = SCREEN_SETTINGS_VIDEO;
 
+	return 0;
+}
+
+static int settings_video_render_custom()
+{
+	ui_do_label(column1_x, row1_y, "Quality Textures:", 36);
+	config_set_gfx_texture_quality(&config_copy, ui_do_check_box(&config_copy.gfx_texture_quality, column3_x, row1_y + 5, 32, 32, config_copy.gfx_texture_quality));
+
+	ui_do_label(column1_x, row2_y, "Texture Compression:", 36);
+	config_set_gfx_texture_compression(&config_copy, ui_do_check_box(&config_copy.gfx_texture_compression, column3_x, row2_y + 5, 32, 32, config_copy.gfx_texture_compression));
+
+	ui_do_label(column1_x, row3_y, "High Detail:", 36);
+	config_set_gfx_high_detail(&config_copy, ui_do_check_box(&config_copy.gfx_high_detail, column3_x, row3_y + 5, 32, 32, config_copy.gfx_high_detail));
+
+	static int back_button = 0;
+	if(ui_do_button(&back_button, "Back", 0, column3_x, row7_y, 150, 32, draw_teewars_button))
+		screen = SCREEN_SETTINGS_VIDEO;
+		
 	return 0;
 }
 
@@ -888,20 +911,44 @@ static int settings_video_render()
 	// we need to draw these bottom up, to make overlapping work correctly
 	
 	ui_do_label(column1_x, row2_y, "Fullscreen:", 36);
-	config_set_gfx_fullscreen(&config_copy, ui_do_check_box(&config_copy.gfx_fullscreen, column3_x, row2_y + 5, 32, 32, config_copy.gfx_fullscreen));
+	config_set_gfx_fullscreen(&config_copy, ui_do_check_box(&config_copy.gfx_fullscreen, column2_x, row2_y + 5, 32, 32, config_copy.gfx_fullscreen));
 
 	ui_do_label(column1_x, row3_y, "V-sync:", 36);
-	config_set_gfx_vsync(&config_copy, ui_do_check_box(&config_copy.gfx_vsync, column3_x, row3_y + 5, 32, 32, config_copy.gfx_vsync));
+	config_set_gfx_vsync(&config_copy, ui_do_check_box(&config_copy.gfx_vsync, column2_x, row3_y + 5, 32, 32, config_copy.gfx_vsync));
 
-	ui_do_label(column1_x, row4_y, "Quality Textures:", 36);
-	config_set_gfx_texture_quality(&config_copy, ui_do_check_box(&config_copy.gfx_texture_quality, column3_x, row4_y + 5, 32, 32, config_copy.gfx_texture_quality));
 
-	ui_do_label(column1_x, row5_y, "Texture Compression:", 36);
-	config_set_gfx_texture_compression(&config_copy, ui_do_check_box(&config_copy.gfx_texture_compression, column3_x, row5_y + 5, 32, 32, config_copy.gfx_texture_compression));
+	int current_level =
+		(config_copy.gfx_texture_quality<<8)|
+		(config_copy.gfx_texture_compression<<4)|
+		(config_copy.gfx_high_detail);
+		
+	static const int opt_levels[3] = {0x101,0x001,0x010};
+	static const char *opts[] = {
+		"High",
+		"Medium",
+		"Low",
+		"Custom"};
 
-	ui_do_label(column1_x, row6_y, "High Detail:", 36);
-	config_set_gfx_high_detail(&config_copy, ui_do_check_box(&config_copy.gfx_high_detail, column3_x, row6_y + 5, 32, 32, config_copy.gfx_high_detail));
+	int selected = 0; // custom per default
+	for(; selected < 3; selected++)
+	{
+		if(current_level == opt_levels[selected])
+			break;
+	}
+	
+	ui_do_label(column1_x, row4_y, "Quality:", 36);
+	int new_level = ui_do_combo_box(&config_copy.gfx_texture_quality, column2_x, row4_y, 150, opts, 4, selected);
+	if(new_level < 3)
+	{
+		config_set_gfx_texture_quality(&config_copy, (opt_levels[new_level]>>8)&1);
+		config_set_gfx_texture_compression(&config_copy, (opt_levels[new_level]>>4)&1);
+		config_set_gfx_high_detail(&config_copy, opt_levels[new_level]&1);
+	}
 
+	static int custom_button=0;
+	if(ui_do_button(&custom_button, "Customize", 0, column3_x, row4_y, 130, 32, draw_teewars_button))
+		screen = SCREEN_SETTINGS_VIDEO_CUSTOM;
+	
 	ui_do_label(column1_x, row6_y + 50, "(A restart of the game is required for these settings to take effect.)", 20);
 
 	return 0;
@@ -936,6 +983,7 @@ static int settings_render()
 		case SCREEN_SETTINGS_CONTROLS: settings_controls_render(); break;
 		case SCREEN_SETTINGS_VIDEO: settings_video_render(); break;
 		case SCREEN_SETTINGS_VIDEO_SELECT_MODE: settings_video_render_select_mode(); break;
+		case SCREEN_SETTINGS_VIDEO_CUSTOM: settings_video_render_custom(); break;
 		case SCREEN_SETTINGS_SOUND: settings_sound_render(); break;
 	}
 
@@ -1157,6 +1205,7 @@ static int menu_render()
 		case SCREEN_SETTINGS_CONTROLS:
 		case SCREEN_SETTINGS_VIDEO:
 		case SCREEN_SETTINGS_VIDEO_SELECT_MODE:
+		case SCREEN_SETTINGS_VIDEO_CUSTOM:
 		case SCREEN_SETTINGS_SOUND: return settings_render();
 		case SCREEN_KERNING: return kerning_render();
 		default: dbg_msg("menu", "invalid screen selected..."); return 0;
