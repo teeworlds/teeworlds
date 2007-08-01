@@ -1638,33 +1638,21 @@ void modc_render()
 
 			float w = 550.0f;
 			float x = width/2-w/2;
-			float y = 150.0f;
+			float ystart = 150.0f;
+			float y = ystart;
+			float h = 600.0f;
 
 			gfx_blend_normal();
 			
 			gfx_texture_set(-1);
 			gfx_quads_begin();
 			gfx_quads_setcolor(0,0,0,0.5f);
-			draw_round_rect(x-10.f, y-10.f, w, 600.0f, 40.0f);
+			draw_round_rect(x-10.f, y-10.f, w, h, 40.0f);
 			gfx_quads_end();
 			
 			float tw = gfx_pretty_text_width( 64, "Score Board");
 			gfx_pretty_text(x+w/2-tw/2, y, 64, "Score Board");
 			y += 64.0f;
-			if(gameobj && gameobj->time_limit)
-			{
-				char buf[64];
-				sprintf(buf, "Time Limit: %d min", gameobj->time_limit);
-				gfx_pretty_text(x+10, y, 32, buf);
-				y += 32.0f;
-			}
-			if(gameobj && gameobj->score_limit)
-			{
-				char buf[64];
-				sprintf(buf, "Score Limit: %d", gameobj->score_limit);
-				gfx_pretty_text(x+10, y, 32, buf);
-				y += 40.0f;
-			}
 
 			// find players
 			const obj_player *players[MAX_CLIENTS] = {0};
@@ -1713,7 +1701,7 @@ void modc_render()
 					gfx_texture_set(-1);
 					gfx_quads_begin();
 					gfx_quads_setcolor(1,1,1,0.25f);
-					draw_round_rect(x, y, w-15, 48, 20.0f);
+					draw_round_rect(x, y, w-20, 48, 20.0f);
 					gfx_quads_end();
 				}
 				
@@ -1723,12 +1711,27 @@ void modc_render()
 				
 				sprintf(buf, "%4d", player->latency);
 				float tw = gfx_pretty_text_width(font_size, buf);
-				gfx_pretty_text(x+w-tw-30, y, font_size, buf);
+				gfx_pretty_text(x+w-tw-35, y, font_size, buf);
 
 				// render avatar
 				render_tee(&idlestate, player->clientid, vec2(1,0), vec2(x+90, y+28));
 				y += 50.0f;
 			}
+			
+			// render goals
+			y = ystart+h-54;
+			if(gameobj && gameobj->time_limit)
+			{
+				char buf[64];
+				sprintf(buf, "Time Limit: %d min", gameobj->time_limit);
+				gfx_pretty_text(x+w/2, y, 32, buf);
+			}
+			if(gameobj && gameobj->score_limit)
+			{
+				char buf[64];
+				sprintf(buf, "Score Limit: %d", gameobj->score_limit);
+				gfx_pretty_text(x+40, y, 32, buf);
+			}			
 		}
 		else if (gameobj->gametype == GAMETYPE_TDM)
 		{
