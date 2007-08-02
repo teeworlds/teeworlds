@@ -135,6 +135,14 @@ sounds {
 		"data/audio/sfx_pickup_arm-04.wav"
 	}
 	
+	pickup_rocket {
+		"data/audio/sfx_pickup_launcher.wav"
+	}
+	
+	pickup_shotgun {
+		"data/audio/sfx_pickup_sg.wav"
+	}
+	
 	weapon_spawn {
 		"data/audio/sfx_spawn_wpn-01.wav"
 		"data/audio/sfx_spawn_wpn-02.wav"
