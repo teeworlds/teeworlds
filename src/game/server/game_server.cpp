@@ -11,7 +11,7 @@ data_container *data = 0x0;
 using namespace baselib;
 
 // --------- DEBUG STUFF ---------
-const bool debug_bots = false;
+const int debug_bots = 7;
 
 // --------- PHYSICS TWEAK! --------
 const float ground_control_speed = 7.0f;
@@ -675,6 +675,7 @@ void player::reset()
 	direction = vec2(0.0f, 1.0f);
 	score = 0;
 	dead = true;
+	spawning = false;
 	die_tick = 0;
 	state = STATE_UNKNOWN;
 }
@@ -683,6 +684,37 @@ void player::destroy() {  }
 	
 void player::respawn()
 {
+	spawning = true;
+}
+
+void player::try_respawn()
+{
+	// get spawn point
+	int start, num;
+	map_get_type(1, &start, &num);
+
+	vec2 spawnpos = vec2(100.0f, -60.0f);
+	if(num)
+	{
+		mapres_spawnpoint *sp = (mapres_spawnpoint*)map_get_item(start + (rand()%num), NULL, NULL);
+		spawnpos = vec2((float)sp->x, (float)sp->y);
+	}
+	
+	// check if the position is occupado
+	entity *ents[2] = {0};
+	int types[] = {OBJTYPE_PLAYER};
+	int num_ents = world.find_entities(spawnpos, 64, ents, 2, types, 1);
+	for(int i = 0; i < num_ents; i++)
+	{
+		if(ents[i] != this)
+			return;
+	}
+	
+	spawning = false;
+	pos = spawnpos;
+	defered_pos = pos;
+	
+
 	health = data->playerinfo[gameobj.gametype].maxhealth;
 	armor = 0;
 	jumped = 0;
@@ -692,19 +724,6 @@ void player::respawn()
 	
 	mem_zero(&input, sizeof(input));
 	vel = vec2(0.0f, 0.0f);
-	
-	// get spawn point
-	int start, num;
-	map_get_type(1, &start, &num);
-	
-	if(num)
-	{
-		mapres_spawnpoint *sp = (mapres_spawnpoint*)map_get_item(start + (rand()%num), NULL, NULL);
-		pos = vec2((float)sp->x, (float)sp->y);
-	}
-	else
-		pos = vec2(100.0f, -60.0f);
-	defered_pos = pos;
 		
 	// init weapons
 	mem_zero(&weapons, sizeof(weapons));
@@ -715,11 +734,6 @@ void player::respawn()
 
 	active_weapon = WEAPON_GUN;
 	reload_timer = 0;
-
-	// TEMP TEMP TEMP
-	/*ninjaactivationtick = server_tick();
-	weapons[WEAPON_NINJA].got = 1;
-	active_weapon = WEAPON_NINJA;*/
 	
 	// Create sound and spawn effects
 	create_sound(pos, SOUND_PLAYER_SPAWN);
@@ -1029,6 +1043,9 @@ void player::tick()
 			latency_accum_max = 0;
 		}
 	}
+	
+	if(spawning)
+		try_respawn();
 
 	// TODO: rework the input to be more robust
 	// TODO: remove this tick count, it feels weird
@@ -1689,7 +1706,7 @@ void mods_tick()
 			count++;
 			if(count == 10)
 			{
-				for(int i = 0; i < 1; i++)
+				for(int i = 0; i < debug_bots ; i++)
 				{
 					mods_client_enter(MAX_CLIENTS-i-1);
 					strcpy(players[MAX_CLIENTS-i-1].name, "(bot)");

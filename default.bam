@@ -120,7 +120,7 @@ function build(settings)
 		tools[i] = Link(settings, toolname, v)
 	end
 	
-	-- build client, server and master srever
+	-- build client, server and master server
 	client_exe = Link(settings, "teewars", engine, client, editor, game_shared, game_client)
 	server_exe = Link(server_settings, "teewars_srv", engine, server, game_shared, game_server)
 	masterserver_exe = Link(server_settings, "mastersrv", masterserver, engine)

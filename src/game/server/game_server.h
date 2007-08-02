@@ -245,6 +245,7 @@ public:
 	int team;
 	int state;
 	
+	bool spawning;
 	bool dead;
 	int die_tick;
 	
@@ -275,6 +276,7 @@ public:
 	virtual void reset();
 	virtual void destroy();
 		
+	void try_respawn();
 	void respawn();
 
 	bool is_grounded();
