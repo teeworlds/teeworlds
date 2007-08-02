@@ -15,7 +15,7 @@ using namespace baselib;
 
 data_container *data = 0x0;
 
-static int charids[16] = {2,10,0,4,12,6,14,1,9,15,13,11,7,5,8,3};
+static int charids[16] = {2,10,0,4,12,6,9,1,3,15,13,11,7,5,8,14};
 
 static int gametype = GAMETYPE_DM;
 static int skinseed = 0;
