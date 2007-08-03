@@ -150,6 +150,7 @@ class data_constructor:
 		self.trans = 0
 		self.pointers = []
 		self.targets = {}
+		self.enums = {}
 
 	def get_type(self, s):
 		return self.trans.types[s]
@@ -162,6 +163,14 @@ class data_constructor:
 	def add_pointer(self, index, target):
 		self.pointers += [pointer(index, target)]
 
+	def add_enum(self, name, value):
+		self.enums[name] = value
+		
+	def get_enum_value(self, name):
+		if not name in self.enums:
+			print "ERROR: couldn't find enum '%s'" % (name)
+		return self.enums[name]
+		
 	def add_target(self, target, index):
 		# TODO: warn about duplicates
 		#print "add_target(target='%s' index=%d)" % (target, index)
@@ -300,6 +309,16 @@ class variable_ptr(variable):
 		target = src_data.get_single(self.expr)
 		cons.add_pointer(index, target)
 
+class variable_enum(variable):
+	def get_code(self):
+		return ["long *%s;" % (self.name)]
+	def size(self):
+		return option_intsize
+	def emit_data(self, cons, index, src_data):
+		target = src_data.get_single(self.expr)
+		data = struct.pack("l", cons.get_enum_value(target))
+		cons.write(index, len(data), data)
+
 class variable_instance(variable):
 	def get_code(self):
 		return ["%s %s;" % (self.subtype, self.name)]
@@ -383,6 +402,8 @@ class translator:
 		subtype = ""
 		if type == "int":
 			v = variable_int()
+		elif type == "enum":
+			v = variable_enum()
 		elif type == "float":
 			v = variable_float()
 		elif type == "string":

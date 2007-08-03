@@ -1,3 +1,8 @@
+const array:int sound = sounds.*
+const array:int weapon = weapons.*
+const array:int gametype = playerstats.*
+const array:int powerup = powerups.*
+
 struct weapon {
 	int firedelay = firedelay@1
 	int meleedamage = meleedamage@1
@@ -25,8 +30,3 @@ struct data_container {
 	array:playerstats playerinfo = playerstats.*
 	array:powerupinf powerupinfo = powerups.*
 }
-
-const array:int sound = sounds.*
-const array:int weapon = weapons.*
-const array:int gametype = playerstats.*
-const array:int powerup = powerups.*

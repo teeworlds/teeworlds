@@ -1455,6 +1455,12 @@ void powerup::tick()
 					pplayer->weapons[subtype].got = true;
 					pplayer->weapons[subtype].ammo = min(10, pplayer->weapons[subtype].ammo + data->powerupinfo[type].amount);
 					respawntime = data->powerupinfo[type].respawntime;
+					
+					// TODO: data compiler should take care of stuff like this
+					if(subtype == WEAPON_ROCKET)
+						create_sound(pos, SOUND_PICKUP_ROCKET);
+					else if(subtype == WEAPON_SHOTGUN)
+						create_sound(pos, SOUND_PICKUP_SHOTGUN);
 				}
 			}
 			break;
@@ -1465,6 +1471,7 @@ void powerup::tick()
 				pplayer->weapons[WEAPON_NINJA].got = true;
 				pplayer->active_weapon = WEAPON_NINJA;
 				respawntime = data->powerupinfo[type].respawntime;
+				create_sound(pos, SOUND_PICKUP_NINJA);
 				break;
 			}
 		default:

@@ -143,6 +143,10 @@ sounds {
 		"data/audio/sfx_pickup_sg.wav"
 	}
 	
+	pickup_ninja {
+		"data/audio/sfx_pickup_ninja.wav"
+	}
+		
 	weapon_spawn {
 		"data/audio/sfx_spawn_wpn-01.wav"
 		"data/audio/sfx_spawn_wpn-02.wav"
