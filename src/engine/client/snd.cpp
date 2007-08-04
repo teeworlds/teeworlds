@@ -60,7 +60,7 @@ public:
 	
 	enum
 	{
-		MAX_CHANNELS=8,
+		MAX_CHANNELS=32,
 	};
 
 	channel channels[MAX_CHANNELS];
