@@ -166,7 +166,7 @@ void draw_background(float t)
 
     gfx_texture_set(data->images[IMAGE_MENU_BACKGROUND].id);
     gfx_quads_begin();
-	    gfx_quads_drawTL(0, 400, 1600, 1600/2);
+	    gfx_quads_drawTL(0, 430, 1600, 1600/2);
     gfx_quads_end();
 
 	int frame = int(t * 10) % 3;
