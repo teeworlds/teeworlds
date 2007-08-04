@@ -559,7 +559,7 @@ sprites {
 		tee_body 0 0 4 4
 		tee_body_outline 4 0 4 4
 		tee_foot 8 3 2 1
-		tee_foot_outline 8 2 2 1
+		tee_foot_outline 13 2 2 1
 		
 		tee_eye_normal 10 2 1 1
 	}
