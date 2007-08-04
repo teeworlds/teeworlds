@@ -754,6 +754,7 @@ float gfx_pretty_text_width(float size, const char *text, int length = -1);
 
 void gfx_getscreen(float *tl_x, float *tl_y, float *br_x, float *br_y);
 int gfx_memory_usage();
+void gfx_screenshot();
 
 void mods_message(int msg, int client_id);
 void modc_message(int msg);

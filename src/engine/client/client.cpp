@@ -913,6 +913,10 @@ static void client_run(const char *direct_connect_server)
 		if(input::pressed(input::f2))
 			input::set_mouse_mode(input::mode_relative);
 
+		// screenshot button
+		if(input::pressed(input::f10))
+			gfx_screenshot();
+
 		// panic button
 		if(input::pressed(input::lctrl) && input::pressed('Q'))
 			break;

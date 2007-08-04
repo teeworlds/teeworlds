@@ -8,6 +8,7 @@
 #include "pnglite/pnglite.h"
 
 #include <string.h>
+#include <stdio.h>
 
 #include <engine/config.h>
 
@@ -29,9 +30,11 @@ static int num_vertices = 0;
 static vec4 color[4];
 static vec2 texture[4];
 
+static int do_screenshot = 0;
+
 static opengl::vertex_buffer vertex_buffer;
-//static int screen_width = 800;
-//static int screen_height = 600;
+static int screen_width = -1;
+static int screen_height = -1;
 static float rotation = 0;
 static int quads_drawing = 0;
 
@@ -77,6 +80,7 @@ static void draw_quad(bool _bflush = false)
 		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+		/*
 		if(GLEW_ARB_vertex_buffer_object)
 		{
 			// set the data
@@ -93,21 +97,20 @@ static void draw_quad(bool _bflush = false)
 			opengl::draw_arrays(GL_QUADS, 0, num_vertices);
 		}
 		else
-		{
-			glVertexPointer(3, GL_FLOAT,
-					sizeof(custom_vertex),
-					(char*)vertices);
-			glTexCoordPointer(2, GL_FLOAT,
-					sizeof(custom_vertex),
-					(char*)vertices + sizeof(vec3));
-			glColorPointer(4, GL_FLOAT,
-					sizeof(custom_vertex),
-					(char*)vertices + sizeof(vec3) + sizeof(vec2));
-			glEnableClientState(GL_VERTEX_ARRAY);
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-			glEnableClientState(GL_COLOR_ARRAY);
-			glDrawArrays(GL_QUADS, 0, num_vertices);
-		}
+		{*/
+		glVertexPointer(3, GL_FLOAT,
+				sizeof(custom_vertex),
+				(char*)vertices);
+		glTexCoordPointer(2, GL_FLOAT,
+				sizeof(custom_vertex),
+				(char*)vertices + sizeof(vec3));
+		glColorPointer(4, GL_FLOAT,
+				sizeof(custom_vertex),
+				(char*)vertices + sizeof(vec3) + sizeof(vec2));
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
+		glDrawArrays(GL_QUADS, 0, num_vertices);
 		
 		// Reset pointer
 		num_vertices = 0;
@@ -116,7 +119,10 @@ static void draw_quad(bool _bflush = false)
 
 bool gfx_init()
 {
-	if(!context.create(config.gfx_screen_width, config.gfx_screen_height, 24, 8, 16, 0,
+	screen_width = config.gfx_screen_width;
+	screen_height = config.gfx_screen_height;
+	
+	if(!context.create(screen_width, screen_height, 24, 8, 16, 0,
 		config.gfx_fullscreen?opengl::context::FLAG_FULLSCREEN:0))
 	{
 		dbg_msg("game", "failed to create gl context");
@@ -150,6 +156,7 @@ bool gfx_init()
 	for (int i = 0; i < vertex_buffer_size; i++)
 		vertices[i].pos.z = -5.0f;
 
+/*
 	if(GLEW_ARB_vertex_buffer_object)
 	{
 		// set the streams
@@ -161,7 +168,7 @@ bool gfx_init()
 		opengl::stream_color(&vertex_buffer, 4, GL_FLOAT,
 				sizeof(custom_vertex),
 				sizeof(vec3)+sizeof(vec2));		
-	}
+	}*/
 
 	// init textures
 	first_free_texture = 0;
@@ -194,6 +201,8 @@ bool gfx_init()
 
 	return true;
 }
+
+
 
 video_mode fakemodes[] = {
 	{320,240,8,8,8}, {400,300,8,8,8}, {640,480,8,8,8},
@@ -417,19 +426,67 @@ void gfx_shutdown()
 	context.destroy();
 }
 
+void gfx_screenshot()
+{
+	do_screenshot = 1;
+}
+
 void gfx_swap()
 {
+	if(do_screenshot)
+	{
+		// fetch image data
+		int w = screen_width;
+		int h = screen_height;
+		unsigned char *pixel_data = (unsigned char *)mem_alloc(w*(h+1)*3, 1);
+		unsigned char *temp_row = pixel_data+w*h*3;
+		glReadPixels(0,0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pixel_data);
+		
+		// flip the pixel because opengl works from bottom left corner
+		for(int y = 0; y < h/2; y++)
+		{
+			mem_copy(temp_row, pixel_data+y*w*3, w*3);
+			mem_copy(pixel_data+y*w*3, pixel_data+(h-y-1)*w*3, w*3);
+			mem_copy(pixel_data+(h-y-1)*w*3, temp_row,w*3);
+		}
+		
+		// find filename
+		char filename[64];
+		{
+			static int index = 1;
+			for(; index < 1000; index++)
+			{
+				sprintf(filename, "screenshot%04d.png", index);
+				IOHANDLE io = io_open(filename, IOFLAG_READ);
+				if(io)
+					io_close(io);
+				else
+					break;
+			}
+		}
+		
+		// save png
+		png_t png;
+		png_open_file_write(&png, filename);
+		png_set_data(&png, w, h, 8, PNG_TRUECOLOR, (unsigned char *)pixel_data);
+		png_close_file(&png);
+
+		// clean up
+		mem_free(pixel_data);
+		do_screenshot = 0;
+	}
+	
 	context.swap();
 }
 
 int gfx_screenwidth()
 {
-	return config.gfx_screen_width;
+	return screen_width;
 }
 
 int gfx_screenheight()
 {
-	return config.gfx_screen_height;
+	return screen_height;
 }
 
 void gfx_texture_set(int slot)
