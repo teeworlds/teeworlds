@@ -162,8 +162,8 @@ sounds {
 	}
 
 	hit {
-		"data/audio/sfx_hit_strong-01.wav"
-		"data/audio/sfx_hit_strong-02.wav"
+		"data/audio/sfx_hit_weak-01.wav"
+		"data/audio/sfx_hit_weak-02.wav"
 	}
 }
 
