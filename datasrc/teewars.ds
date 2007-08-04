@@ -152,6 +152,14 @@ sounds {
 		"data/audio/sfx_spawn_wpn-02.wav"
 		"data/audio/sfx_spawn_wpn-03.wav"
 	}
+
+	weapon_noammo {
+		"data/audio/wp_noammo-01.wav"
+		"data/audio/wp_noammo-02.wav"
+		"data/audio/wp_noammo-03.wav"
+		"data/audio/wp_noammo-04.wav"
+		"data/audio/wp_noammo-05.wav"
+	}
 }
 
 

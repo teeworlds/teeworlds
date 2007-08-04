@@ -877,7 +877,13 @@ int player::handle_weapons()
 	// switch weapon if wanted		
 	if(input.activeweapon >= 0 && input.activeweapon < NUM_WEAPONS && weapons[input.activeweapon].got && 
 		data->weapons[active_weapon].duration <= 0)
+	{
+		if (active_weapon != input.activeweapon)
+			create_sound(pos, SOUND_WEAPON_SWITCH);
+
 		active_weapon = input.activeweapon;
+		
+	}
 
 	if(!previnput.fire && input.fire)
 	{
@@ -917,6 +923,7 @@ int player::handle_weapons()
 					case WEAPON_SHOTGUN:
 					{
 						int shotspread = min(2, weapons[active_weapon].ammo);
+						weapons[active_weapon].ammo -= shotspread - 1; // one will be taken later
 						for(int i = -shotspread; i <= shotspread; i++)
 						{
 							float a = get_angle(direction);
@@ -942,14 +949,13 @@ int player::handle_weapons()
 						break;						
 				}
 				
-				weapons[active_weapon].ammo -= max(1, weapons[active_weapon].ammocost);
+				weapons[active_weapon].ammo--;
 				attack_tick = server_tick();
 				reload_timer = data->weapons[active_weapon].firedelay * server_tickspeed() / 1000;
 			}
 			else
 			{
-				// click!!! click
-				// TODO: make sound here
+				create_sound(pos, SOUND_WEAPON_NOAMMO);
 			}
 		}
 	}

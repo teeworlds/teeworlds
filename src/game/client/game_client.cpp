@@ -1202,7 +1202,10 @@ void modc_render()
 
 	if (inp_key_down(input::esc))
 	{
-		menu_active = !menu_active;
+		if (chat_active)
+			chat_active = false;
+		else
+			menu_active = !menu_active;
 	}
 	
 	if (!menu_active)
@@ -1556,12 +1559,6 @@ void modc_render()
 			y += 44;
 		}
 	}
-
-	if (menu_active)
-	{
-		ingamemenu_render();
-		return;
-	}
 	
 	// render chat
 	{
@@ -1592,6 +1589,12 @@ void modc_render()
 		}
 	}
 	
+	if (menu_active)
+	{
+		ingamemenu_render();
+		return;
+	}
+
 	// render goals
 	if(gameobj)
 	{
