@@ -752,7 +752,7 @@ bool player::is_grounded()
 // releases the hooked player
 void player::release_hooked()
 {
-	hook_state = HOOK_IDLE;
+	hook_state = HOOK_RETRACTED;
 	hooked_player = 0x0;
 }
 
@@ -792,6 +792,10 @@ int player::handle_ninja()
 		numobjectshit = 0;
 
 		create_sound(pos, SOUND_NINJA_FIRE);
+		
+		// release all hooks when ninja is activated
+		release_hooked();
+		release_hooks();
 	}
 
 	currentmovetime--;
@@ -1099,6 +1103,7 @@ void player::tick()
 			hook_state = HOOK_FLYING;
 			hook_pos = pos;
 			hook_dir = direction;
+			hook_tick = -1;
 		}
 		else if(hook_state == HOOK_FLYING)
 		{
@@ -1136,19 +1141,29 @@ void player::tick()
 			}
 			
 			if(hook_state == HOOK_GRABBED)
+			{
 				create_sound(pos, SOUND_HOOK_ATTACH);
+				hook_tick = server_tick();
+			}
 		}
 	}
 	else
 	{
 		release_hooked();
+		hook_state = HOOK_IDLE;
 		hook_pos = pos;
 	}
 		
 	if(hook_state == HOOK_GRABBED)
 	{
 		if(hooked_player)
+		{
 			hook_pos = hooked_player->pos;
+			
+			// keep players hooked for a max of 1.5sec
+			if(server_tick() > hook_tick+(server_tickspeed()*3)/2)
+				release_hooked();
+		}
 			
 		/*if(hooked_player)
 			hook_pos = hooked_player->pos;

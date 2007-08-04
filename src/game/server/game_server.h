@@ -266,7 +266,8 @@ public:
 		HOOK_GRABBED
 	};
 	
-	int hook_state; 
+	int hook_state;
+	int hook_tick;
 	player *hooked_player;
 	baselib::vec2 hook_pos;
 	baselib::vec2 hook_dir;
