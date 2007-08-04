@@ -392,9 +392,9 @@ weapons {
 		muzzleoffsetx 70.0
 		muzzleoffsety 6.0
 		maxammo 10
-		costammo 2
+		costammo 1
 		recoil 10
-		firedelay 600
+		firedelay 400
 		muzzleduration 5
 		visual_size 96
 		offsetx 24.0
@@ -425,7 +425,7 @@ weapons {
 		visual_size 96
 		offsetx 4.0
 		offsety -20.0
-		meleedamage 1
+		meleedamage 3
 		meleereach 40
 		ammoregentime 0
 		duration -1

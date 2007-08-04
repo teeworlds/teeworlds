@@ -166,6 +166,7 @@ public:
 	int damage;
 	int sound_impact;
 	int weapon;
+	int bounce;
 	float force;
 	
 	projectile(int type, int owner, baselib::vec2 pos, baselib::vec2 vel, int span, entity* powner,

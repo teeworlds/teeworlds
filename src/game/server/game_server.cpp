@@ -11,7 +11,7 @@ data_container *data = 0x0;
 using namespace baselib;
 
 // --------- DEBUG STUFF ---------
-const int debug_bots = 0;
+const int debug_bots = 4;
 
 // --------- PHYSICS TWEAK! --------
 const float ground_control_speed = 7.0f;
@@ -57,6 +57,45 @@ T saturated_add(T min, T max, T current, T modifier)
 		if(current > max)
 			current = max;
 		return current;
+	}
+}
+
+// TODO: rewrite this smarter!
+void move_point(vec2 *inout_pos, vec2 *inout_vel, float elasticity, int *bounces)
+{
+	if(bounces)
+		*bounces = 0;
+	
+	vec2 pos = *inout_pos;
+	vec2 vel = *inout_vel;
+	if(col_check_point(pos + vel))
+	{
+		int affected = 0;
+		if(col_check_point(pos.x + vel.x, pos.y))
+		{
+			inout_vel->x *= -elasticity;
+			if(bounces)
+				(*bounces)++;			
+			affected++;
+		}
+
+		if(col_check_point(pos.x, pos.y + vel.y))
+		{
+			inout_vel->y *= -elasticity;
+			if(bounces)
+				(*bounces)++;			
+			affected++;
+		}
+		
+		if(affected == 0)
+		{
+			inout_vel->x *= -elasticity;
+			inout_vel->y *= -elasticity;
+		}
+	}
+	else
+	{
+		*inout_pos = pos + vel;
 	}
 }
 
@@ -535,6 +574,7 @@ projectile::projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity
 	this->damage = damage;
 	this->sound_impact = sound_impact;
 	this->weapon = weapon;
+	this->bounce = 0;
 	world.insert_entity(this);
 }
 
@@ -546,14 +586,29 @@ void projectile::reset()
 void projectile::tick()
 {
 	vec2 oldpos = pos;
-	vel.y += 0.25f;
-	pos += vel;
+	
+	int collide = 0;
+	if(bounce)
+	{
+		int numbounces;
+		vel.y += 0.25f;
+		move_point(&pos, &vel, 0.9f, &numbounces);
+		bounce -= numbounces;
+	}
+	else
+	{
+		vel.y += 0.25f;
+		pos += vel;
+		collide = col_check_point((int)pos.x, (int)pos.y);
+	}
+	
 	lifespan--;
 	
 	// check player intersection as well
 	vec2 new_pos;
 	entity *targetplayer = (entity*)intersect_player(oldpos, pos, new_pos, powner);
-	if(targetplayer || lifespan < 0 || col_check_point((int)pos.x, (int)pos.y))
+	
+	if(targetplayer || lifespan < 0 || collide || bounce < 0)
 	{
 		if (lifespan >= 0 || weapon == WEAPON_ROCKET)
 			create_sound(pos, sound_impact);
@@ -920,15 +975,18 @@ int player::handle_weapons()
 						create_sound(pos, SOUND_GUN_FIRE);
 						break;
 					case WEAPON_ROCKET:
-						new projectile(projectile::WEAPON_PROJECTILETYPE_ROCKET,
+					{
+						projectile *p = new projectile(projectile::WEAPON_PROJECTILETYPE_ROCKET,
 							client_id,
 							pos+vec2(0,0),
 							direction*15.0f,
 							100,
 							this,
 							1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, SOUND_ROCKET_EXPLODE, WEAPON_ROCKET);
+						p->bounce = 1;
 						create_sound(pos, SOUND_ROCKET_FIRE);
 						break;
+					}
 					case WEAPON_SHOTGUN:
 					{
 						int shotspread = min(2, weapons[active_weapon].ammo);
@@ -936,15 +994,15 @@ int player::handle_weapons()
 						for(int i = -shotspread; i <= shotspread; i++)
 						{
 							float a = get_angle(direction);
-							a += i*0.075f;
+							a += i*0.08f;
 							new projectile(projectile::WEAPON_PROJECTILETYPE_SHOTGUN,
 								client_id,
 								pos+vec2(0,0),
 								vec2(cosf(a), sinf(a))*25.0f,
 								//vec2(cosf(a), sinf(a))*20.0f,
-								server_tickspeed()/3,
+								(int)(server_tickspeed()*0.4f),
 								this,
-								2, 0, 0, -1, WEAPON_SHOTGUN);
+								1, 0, 0, -1, WEAPON_SHOTGUN);
 						}
 						create_sound(pos, SOUND_SHOTGUN_FIRE);
 						break;
@@ -1005,19 +1063,20 @@ int player::handle_weapons()
 			// hit a player, give him damage and stuffs...
 			// create sound for bash
 			//create_sound(ents[i]->pos, sound_impact);
+			vec2 fdir = normalize(ents[i]->pos- pos);
 
 			// set his velocity to fast upward (for now)
 			create_smoke(ents[i]->pos);
 			create_sound(pos, SOUND_HAMMER_HIT);
 			hitobjects[numobjectshit++] = ents[i];
-			ents[i]->take_damage(vec2(0,10.0f), data->weapons[active_weapon].meleedamage, client_id, active_weapon);
+			ents[i]->take_damage(vec2(0,-1.0f), data->weapons[active_weapon].meleedamage, client_id, active_weapon);
 			player* target = (player*)ents[i];
 			vec2 dir;
 			if (length(target->pos - pos) > 0.0f)
 				dir = normalize(target->pos - pos);
 			else
 				dir = vec2(0,-1);
-			target->vel += dir * 10.0f + vec2(0,-10.0f);
+			target->vel += dir * 25.0f + vec2(0,-5.0f);
 		}
 	}
 	if (data->weapons[active_weapon].ammoregentime)
@@ -1301,6 +1360,10 @@ void player::die(int killer, int weapon)
 bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 {
 	vel += force;
+
+	// player only inflicts half damage on self	
+	if(from == client_id)
+		dmg = max(1, dmg/2);
 
 	// create healthmod indicator
 	create_damageind(pos, normalize(force), dmg);
@@ -1664,7 +1727,7 @@ void create_explosion(vec2 p, int owner, int weapon, bool bnodamage)
 			l = 1-clamp((l-innerradius)/(radius-innerradius), 0.0f, 1.0f);
 			float dmg = 6 * l;
 			if((int)dmg)
-				ents[i]->take_damage(forcedir*dmg*2, (int)dmg/2, owner, weapon);
+				ents[i]->take_damage(forcedir*dmg*2, (int)dmg, owner, weapon);
 		}
 	}
 }
