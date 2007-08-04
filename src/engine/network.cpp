@@ -134,7 +134,6 @@ static void conn_reset(NETCONNECTION *conn)
 	}
 		
 	conn->state = NETWORK_CONNSTATE_OFFLINE;
-	mem_zero(conn->error_string, sizeof(conn->error_string));
 	conn->last_send_time = 0;
 	conn->last_recv_time = 0;
 	conn->token = -1;
@@ -165,6 +164,7 @@ static void conn_init(NETCONNECTION *conn, NETSOCKET socket)
 	conn->socket = socket;
 	conn->connected = 0;
 	conn->disconnected = 0;
+	mem_zero(conn->error_string, sizeof(conn->error_string));
 }
 
 static void conn_ack(NETCONNECTION *conn, int ack)
@@ -425,6 +425,8 @@ static int conn_update(NETCONNECTION *conn)
 		if(time_get()-conn->last_send_time > time_freq()/2) // send a new connect/accept every 500ms
 			conn_send(conn, NETWORK_PACKETFLAG_CONNECT|NETWORK_PACKETFLAG_ACCEPT, 0, 0);
 	}
+	
+	return 0;
 }
 
 
@@ -699,7 +701,7 @@ int net_client_disconnect(NETCLIENT *c, const char *reason)
 {
 	// TODO: do this more graceful
 	dbg_msg("net_client", "disconnected. reason=\"%s\"", reason);
-	conn_disconnect(&c->conn, 0);
+	conn_disconnect(&c->conn, reason);
 	return 0;
 }
 
