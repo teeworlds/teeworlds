@@ -592,7 +592,7 @@ void projectile::tick()
 	{
 		int numbounces;
 		vel.y += 0.25f;
-		move_point(&pos, &vel, 0.9f, &numbounces);
+		move_point(&pos, &vel, 0.25f, &numbounces);
 		bounce -= numbounces;
 	}
 	else
@@ -983,14 +983,12 @@ int player::handle_weapons()
 							100,
 							this,
 							1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, SOUND_ROCKET_EXPLODE, WEAPON_ROCKET);
-						p->bounce = 1;
 						create_sound(pos, SOUND_ROCKET_FIRE);
 						break;
 					}
 					case WEAPON_SHOTGUN:
 					{
-						int shotspread = min(2, weapons[active_weapon].ammo);
-						weapons[active_weapon].ammo -= shotspread - 1; // one will be taken later
+						int shotspread = 2;
 						for(int i = -shotspread; i <= shotspread; i++)
 						{
 							float a = get_angle(direction);
