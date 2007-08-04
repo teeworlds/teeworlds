@@ -143,6 +143,7 @@ extern pretty_font *current_font;
 
 extern void render_sun(float x, float y);
 extern void select_sprite(int id, int flags=0, int sx=0, int sy=0);
+extern void draw_sprite(float x, float y, float size);
 
 void draw_background(float t)
 {
@@ -156,11 +157,11 @@ void draw_background(float t)
     gfx_texture_set(data->images[IMAGE_CLOUDS].id);
     gfx_quads_begin();
 		select_sprite(SPRITE_CLOUD1);
-		gfx_quads_drawTL(3500 - fmod(t * 20 + 2000, 4524), 0, 512, 512);
+		draw_sprite(3500 - fmod(t * 20 + 2000, 4524), 250, 512);
 		select_sprite(SPRITE_CLOUD2);
-		gfx_quads_drawTL(3000 - fmod(t * 50 + 2000, 4024), 150, 512, 512);
+		draw_sprite(3000 - fmod(t * 50 + 2000, 4024), 150+250, 512);
 		select_sprite(SPRITE_CLOUD3);
-		gfx_quads_drawTL(4000 - fmod(t * 60 + 500, 4512), 300, 256, 256);
+		draw_sprite(4000 - fmod(t * 60 + 500, 4512), 300+130, 256);
     gfx_quads_end();
 
     gfx_texture_set(data->images[IMAGE_MENU_BACKGROUND].id);
@@ -681,6 +682,8 @@ static int do_server_list(float x, float y, int *scroll_index, int *selected_ind
 enum
 {
 	SCREEN_MAIN,
+	SCREEN_DISCONNECTED,
+	SCREEN_CONNECTING,
 	SCREEN_SETTINGS_GENERAL,
 	SCREEN_SETTINGS_CONTROLS,
 	SCREEN_SETTINGS_VIDEO,
@@ -704,6 +707,8 @@ const float row5_y = row4_y + 40;
 const float row6_y = row5_y + 40;
 const float row7_y = row6_y + 40;
 
+static char address[128] = "localhost:8303";
+	
 static int main_render()
 {
 	static bool inited = false;
@@ -718,8 +723,6 @@ static int main_render()
 	int last_selected_index = selected_index;
 	do_server_list(20, 160, &scoll_index, &selected_index, 8);
 	
-	static char address[32] = "localhost:8303";
-
 	ui_do_edit_box(address, 280, 425, 300, 36, address, sizeof(address));
 
 	if (last_selected_index != selected_index && selected_index != -1)
@@ -1176,6 +1179,74 @@ static int kerning_render()
 	return 0;
 }
 
+extern void draw_round_rect(float x, float y, float w, float h, float r);
+
+static int render_popup(const char *caption, const char *text, const char *button_text)
+{
+	float tw;
+
+	float w = 700;
+	float h = 300;
+	float x = 800/2-w/2;
+	float y = 600/2-h/2;
+
+	gfx_blend_normal();
+	
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_quads_setcolor(0,0,0,0.50f);
+	draw_round_rect(x, y, w, h, 40.0f);
+	gfx_quads_end();
+
+	tw = gfx_pretty_text_width(48.0f, caption);
+	ui_do_label(x+w/2-tw/2, y+20, caption, 48.0f);
+	
+	tw = gfx_pretty_text_width(32.0f, text);
+	ui_do_label(x+w/2-tw/2, y+130, text, 32.0f);
+
+	static int back_button = 0;
+	if(ui_do_button(&back_button, button_text, 0, x+w/2-100, y+220, 200, 48, draw_teewars_button))
+		return 1;
+		
+	return 0;
+}
+
+static int disconnected_render()
+{
+	if(strlen(client_error_string()) == 0)
+		screen = SCREEN_MAIN;
+	else
+	{
+		if(render_popup("Disconnected", client_error_string(), "Back"))
+			screen = SCREEN_MAIN;
+	}
+	return 0;
+}
+
+static int connecting_render()
+{
+	char buf[256];
+	sprintf(buf, "Server: %s", address);
+	if(render_popup("Connecting", buf, "Abort"))
+	{
+		client_disconnect();
+		screen = SCREEN_MAIN;
+	}
+	return 0;
+}
+
+
+void menu_do_disconnected()
+{
+	screen = SCREEN_DISCONNECTED;
+}
+
+
+void menu_do_connecting()
+{
+	screen = SCREEN_CONNECTING;
+}
+
 static int menu_render()
 {
 	// background color
@@ -1201,6 +1272,8 @@ static int menu_render()
 	switch (screen)
 	{
 		case SCREEN_MAIN: return main_render();
+		case SCREEN_DISCONNECTED: return disconnected_render();
+		case SCREEN_CONNECTING: return connecting_render();
 		case SCREEN_SETTINGS_GENERAL:
 		case SCREEN_SETTINGS_CONTROLS:
 		case SCREEN_SETTINGS_VIDEO:
@@ -1282,6 +1355,8 @@ int modmenu_render()
 
 	input::clear_char();
 	input::clear_key();
+	
+	//if(r)
 
 	return r;
 }

@@ -11,6 +11,10 @@ enum
 {
 	NETMSG_NULL=0,
 	
+	// the first thing sent by the client
+	// contains the version info for the client
+	NETMSG_INFO=1,
+	
 	// sent by server
 	NETMSG_MAP,
 	NETMSG_SNAP,
@@ -18,7 +22,6 @@ enum
 	NETMSG_SNAPSMALL,
 	
 	// sent by client
-	NETMSG_INFO,
 	NETMSG_ENTERGAME,
 	NETMSG_INPUT,
 	NETMSG_SNAPACK,

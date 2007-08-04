@@ -56,6 +56,7 @@ int net_client_close(NETCLIENT *c);
 int net_client_update(NETCLIENT *c);
 int net_client_state(NETCLIENT *c);
 void net_client_stats(NETCLIENT *c, NETSTATS *stats);
+const char *net_client_error_string(NETCLIENT *c);
 
 
 // wrapper classes for c++
@@ -98,6 +99,8 @@ public:
 	int recv(NETPACKET *packet) { return net_client_recv(ptr, packet); }
 	int send(NETPACKET *packet) { return net_client_send(ptr, packet); }
 	int update() { return net_client_update(ptr); }
+	
+	const char *error_string() { return net_client_error_string(ptr); }
 	
 	int state() { return net_client_state(ptr); }
 	void stats(NETSTATS *stats) { net_client_stats(ptr, stats); }

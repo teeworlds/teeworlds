@@ -127,7 +127,7 @@ void select_sprite(int id, int flags=0, int sx=0, int sy=0)
 	select_sprite(&data->sprites[id], flags, sx, sy);
 }
 
-static void draw_sprite(float x, float y, float size)
+void draw_sprite(float x, float y, float size)
 {
 	gfx_quads_draw(x, y, size*sprite_w_scale, size*sprite_h_scale);
 }
@@ -830,7 +830,7 @@ static void render_tee(animstate *anim, int skin, vec2 dir, vec2 pos)
 	gfx_quads_end();	
 }
 
-static void draw_round_rect(float x, float y, float w, float h, float r)
+void draw_round_rect(float x, float y, float w, float h, float r)
 {
 	int num = 8;
 	for(int i = 0; i < num; i+=2)
@@ -1194,7 +1194,7 @@ void ingamemenu_render()
 	
 }
 
-void modc_render()
+void render_game()
 {	
 	animstate idlestate;
 	anim_eval(&data->animations[ANIM_BASE], 0, &idlestate);
@@ -1394,8 +1394,8 @@ void modc_render()
 		{
 			float parallax_amount = 0.55f;
 			select_sprite(cloud_sprites[i]);
-			gfx_quads_drawTL((cloud_pos[i].x+fmod(client_localtime()*cloud_speed[i]+i*100.0f, 1700.0f))+screen_x*parallax_amount,
-				cloud_pos[i].y+screen_y*parallax_amount, 300, 300);
+			draw_sprite((cloud_pos[i].x+fmod(client_localtime()*cloud_speed[i]+i*100.0f, 1700.0f))+screen_x*parallax_amount,
+				cloud_pos[i].y+screen_y*parallax_amount, 300);
 		}
 		gfx_quads_end();
 
@@ -1827,6 +1827,68 @@ void modc_render()
 			}
 		}
 	}
+}
+
+void modc_render()
+{
+	// this should be moved around abit
+	if(client_state() == CLIENTSTATE_ONLINE)
+	{
+		render_game();
+	}
+	else // if (client_state() != CLIENTSTATE_CONNECTING && client_state() != CLIENTSTATE_LOADING)
+	{
+		//netaddr4 server_address;
+		if(modmenu_render() == -1)
+			client_quit();
+
+	}
+	/*
+	else if (client_state() == CLIENTSTATE_CONNECTING || client_state() == CLIENTSTATE_LOADING)
+	{
+		static int64 start = time_get();
+		static int tee_texture;
+		static int connecting_texture;
+		static bool inited = false;
+		
+		// TODO: ugly, remove this
+		if (!inited)
+		{
+			tee_texture = gfx_load_texture("data/gui_tee.png");
+			connecting_texture = gfx_load_texture("data/gui_connecting.png");
+				
+			inited = true;
+		}
+
+		gfx_mapscreen(0,0,400.0f,300.0f);
+
+		float t = (time_get() - start) / (double)time_freq();
+
+		float speed = 2*sin(t);
+
+		speed = 1.0f;
+
+		float x = 208 + sin(t*speed) * 32;
+		float w = sin(t*speed + 3.149) * 64;
+
+		ui_do_image(tee_texture, x, 95, w, 64);
+		ui_do_image(connecting_texture, 88, 150, 256, 64);
+		
+		if(inp_key_down(input::esc))
+			client_disconnect();
+	}*/
+}
+
+
+void menu_do_disconnected();
+void menu_do_connecting();
+
+void modc_statechange(int state, int old)
+{
+	if(state == CLIENTSTATE_OFFLINE)
+	 	menu_do_disconnected();
+	if(state == CLIENTSTATE_CONNECTING)
+		menu_do_connecting();
 }
 
 void modc_message(int msg)

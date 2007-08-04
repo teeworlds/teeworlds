@@ -21,6 +21,12 @@ enum
 	/*
 	IMG_BGR,
 	IMG_BGRA,*/
+	
+	CLIENTSTATE_OFFLINE=0,
+	CLIENTSTATE_CONNECTING,
+	CLIENTSTATE_LOADING,
+	CLIENTSTATE_ONLINE,
+	CLIENTSTATE_QUITING,
 };
 
 struct snap_item
@@ -667,6 +673,12 @@ void modc_shutdown();
 */
 void modc_render();
 
+/*
+	Function: modc_statechange
+		Called every time client changes state.
+*/
+void modc_statechange(int new_state, int old_state);
+
 
 
 /*
@@ -748,6 +760,8 @@ int client_send_msg();
 int client_tick();
 float client_intratick();
 int client_tickspeed();
+int client_state();
+const char *client_error_string();
 
 void gfx_pretty_text(float x, float y, float size, const char *text);
 float gfx_pretty_text_width(float size, const char *text, int length = -1);
@@ -771,6 +785,7 @@ struct server_info
 
 void client_connect(const char *address);
 void client_disconnect();
+void client_quit();
 
 void client_serverbrowse_refresh(int lan);
 int client_serverbrowse_getlist(server_info **servers);

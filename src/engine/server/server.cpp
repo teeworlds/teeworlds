@@ -397,6 +397,18 @@ public:
 			// system message
 			if(msg == NETMSG_INFO)
 			{
+				char version[64];
+				strncpy(version, msg_unpack_string(), 64);
+				if(strcmp(version, TEEWARS_NETVERSION_STRING) != 0)
+				//if(strcmp(version, "ERROR") != 0)
+				{
+					// OH FUCK! wrong version, drop him
+					char reason[256];
+					sprintf(reason, "wrong version. server is running %s.", TEEWARS_NETVERSION_STRING);
+					net.drop(cid, reason);
+					return;
+				}
+				
 				strncpy(clients[cid].name, msg_unpack_string(), MAX_NAME_LENGTH);
 				strncpy(clients[cid].clan, msg_unpack_string(), MAX_CLANNAME_LENGTH);
 				const char *password = msg_unpack_string();

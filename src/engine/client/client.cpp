@@ -241,6 +241,7 @@ static void client_send_info()
 	game_start_time = -1;
 
 	msg_pack_start_system(NETMSG_INFO, MSGFLAG_VITAL);
+	msg_pack_string(TEEWARS_NETVERSION_STRING, 64);
 	msg_pack_string(config.player_name, 128);
 	msg_pack_string(config.clan_name, 128);
 	msg_pack_string(config.password, 128);
@@ -380,22 +381,15 @@ static void client_serverbrowse_update()
 }
 
 // ------ state handling -----
-enum
-{
-	STATE_OFFLINE,
-	STATE_CONNECTING,
-	STATE_LOADING,
-	STATE_ONLINE,
-	STATE_BROKEN,
-	STATE_QUIT,
-};
-
 static int state;
-static int client_get_state() { return state; }
+int client_state() { return state; }
 static void client_set_state(int s)
 {
 	dbg_msg("game", "state change. last=%d current=%d", state, s);
+	int old = state;
 	state = s;
+	if(old != s)
+		modc_statechange(state, old);
 }
 
 
@@ -424,14 +418,14 @@ void client_connect(const char *server_address_str)
 		dbg_msg("client", "could not find the address of %s, connecting to localhost", buf);
 	
 	net.connect(&server_address);
-	client_set_state(STATE_CONNECTING);	
+	client_set_state(CLIENTSTATE_CONNECTING);	
 }
 
 void client_disconnect()
 {
 	client_send_error("disconnected");
 	net.disconnect("disconnected");
-	client_set_state(STATE_OFFLINE);
+	client_set_state(CLIENTSTATE_OFFLINE);
 	map_unload();
 }
 
@@ -472,66 +466,28 @@ static void client_debug_render()
 	
 }
 
+void client_quit()
+{
+	client_set_state(CLIENTSTATE_QUITING);
+}
+
+const char *client_error_string()
+{
+	return net.error_string();
+}
+
 static void client_render()
 {
 	gfx_clear(0.0f,0.0f,0.0f);
-	
-	// this should be moved around abit
-	// TODO: clean this shit up!
-	if(client_get_state() == STATE_ONLINE)
-	{
-		modc_render();
-		
-		// debug render stuff
-		client_debug_render();
-		
-	}
-	else if (client_get_state() != STATE_CONNECTING && client_get_state() != STATE_LOADING)
-	{
-		//netaddr4 server_address;
-		int status = modmenu_render();
-		if (status == -1)
-			client_set_state(STATE_QUIT);
-	}
-	else if (client_get_state() == STATE_CONNECTING || client_get_state() == STATE_LOADING)
-	{
-		static int64 start = time_get();
-		static int tee_texture;
-		static int connecting_texture;
-		static bool inited = false;
-		
-		if (!inited)
-		{
-			tee_texture = gfx_load_texture("data/gui_tee.png");
-			connecting_texture = gfx_load_texture("data/gui_connecting.png");
-				
-			inited = true;
-		}
-
-		gfx_mapscreen(0,0,400.0f,300.0f);
-
-		float t = (time_get() - start) / (double)time_freq();
-
-		float speed = 2*sin(t);
-
-		speed = 1.0f;
-
-		float x = 208 + sin(t*speed) * 32;
-		float w = sin(t*speed + 3.149) * 64;
-
-		ui_do_image(tee_texture, x, 95, w, 64);
-		ui_do_image(connecting_texture, 88, 150, 256, 64);
-		
-		if(inp_key_down(input::esc))
-			client_disconnect();
-	}
+	modc_render();
+	client_debug_render();
 }
 
 static void client_error(const char *msg)
 {
 	dbg_msg("game", "error: %s", msg);
 	client_send_error(msg);
-	client_set_state(STATE_BROKEN);
+	client_set_state(CLIENTSTATE_QUITING);
 }
 
 static void client_process_packet(NETPACKET *packet)
@@ -621,7 +577,7 @@ static void client_process_packet(NETPACKET *packet)
 			{
 				const char *map = msg_unpack_string();
 				dbg_msg("client/network", "connection accepted, map=%s", map);
-				client_set_state(STATE_LOADING);
+				client_set_state(CLIENTSTATE_LOADING);
 				
 				if(map_load(map))
 				{
@@ -729,7 +685,7 @@ static void client_process_packet(NETPACKET *packet)
 						if(recived_snapshots == 2)
 						{
 							local_start_time = time_get();
-							client_set_state(STATE_ONLINE);
+							client_set_state(CLIENTSTATE_ONLINE);
 						}
 						
 						int64 now = time_get();
@@ -777,18 +733,19 @@ static void client_pump_network()
 	net.update();
 
 	// check for errors		
-	if(client_get_state() != STATE_OFFLINE && net.state() == NETSTATE_OFFLINE)
+	if(client_state() != CLIENTSTATE_OFFLINE && net.state() == NETSTATE_OFFLINE)
 	{
 		// TODO: add message to the user there
-		client_set_state(STATE_OFFLINE);
+		client_set_state(CLIENTSTATE_OFFLINE);
+		dbg_msg("client", "offline error='%s'", net.error_string());
 	}
 
 	//
-	if(client_get_state() == STATE_CONNECTING && net.state() == NETSTATE_ONLINE)
+	if(client_state() == CLIENTSTATE_CONNECTING && net.state() == NETSTATE_ONLINE)
 	{
 		// we switched to online
 		dbg_msg("client", "connected, sending info");
-		client_set_state(STATE_LOADING);
+		client_set_state(CLIENTSTATE_LOADING);
 		client_send_info();
 	}
 	
@@ -824,7 +781,7 @@ static void client_run(const char *direct_connect_server)
 	modc_init();
 
 	// init menu
-	modmenu_init();
+	modmenu_init(); // TODO: remove
 	
 	// open socket
 	net.open(0, 0);
@@ -888,7 +845,7 @@ static void client_run(const char *direct_connect_server)
 		}
 
 		// send input
-		if(client_get_state() == STATE_ONLINE)
+		if(client_state() == CLIENTSTATE_ONLINE)
 		{
 			if(server_spam_address)
 				client_disconnect();
@@ -901,7 +858,7 @@ static void client_run(const char *direct_connect_server)
 			}
 		}
 		
-		if(client_get_state() == STATE_OFFLINE && server_spam_address)
+		if(client_state() == CLIENTSTATE_OFFLINE && server_spam_address)
 			client_connect(server_spam_address);
 		
 		// update input
@@ -943,7 +900,7 @@ static void client_run(const char *direct_connect_server)
 		gfx_swap();
 		
 		// check conditions
-		if(client_get_state() == STATE_BROKEN || client_get_state() == STATE_QUIT)
+		if(client_state() == CLIENTSTATE_QUITING)
 			break;
 
 		// be nice
@@ -958,10 +915,6 @@ static void client_run(const char *direct_connect_server)
 			reporttime += reportinterval;
 		}
 		
-		/*if (input::pressed(input::esc))
-			if (get_state() == STATE_CONNECTING || get_state() == STATE_ONLINE)
-				disconnect();*/
-
 		// update frametime
 		frametime = (time_get()-frame_start_time)/(float)time_freq();
 	}

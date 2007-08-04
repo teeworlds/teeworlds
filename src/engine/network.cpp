@@ -1,4 +1,5 @@
 #include <baselib/system.h>
+#include <string.h>
 
 #include "network.h"
 #include "ringbuffer.h"
@@ -87,7 +88,7 @@ struct NETCONNECTION
 	
 	int64 last_recv_time;
 	int64 last_send_time;
-	const char *error_string;
+	char error_string[256];
 	
 	NETADDR4 peeraddr;
 	NETSOCKET socket;
@@ -133,7 +134,7 @@ static void conn_reset(NETCONNECTION *conn)
 	}
 		
 	conn->state = NETWORK_CONNSTATE_OFFLINE;
-	conn->error_string = 0;
+	mem_zero(conn->error_string, sizeof(conn->error_string));
 	conn->last_send_time = 0;
 	conn->last_recv_time = 0;
 	conn->token = -1;
@@ -145,6 +146,12 @@ static const char *conn_error(NETCONNECTION *conn)
 {
 	return conn->error_string;
 }
+
+static void conn_set_error(NETCONNECTION *conn, const char *str)
+{
+	strcpy(conn->error_string, str);
+}
+
 /*
 static int conn_state(NETCONNECTION *conn)
 {
@@ -243,9 +250,12 @@ static int conn_connect(NETCONNECTION *conn, NETADDR4 *addr)
 	return 0;
 }
 
-static void conn_disconnect(NETCONNECTION *conn)
+static void conn_disconnect(NETCONNECTION *conn, const char *reason)
 {
-	conn_send(conn, NETWORK_PACKETFLAG_CLOSE, 0, 0);
+	if(reason)
+		conn_send(conn, NETWORK_PACKETFLAG_CLOSE, strlen(reason)+1, reason);
+	else
+		conn_send(conn, NETWORK_PACKETFLAG_CLOSE, 0, 0);
 	conn_reset(conn);
 }
 
@@ -258,6 +268,11 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 	if(p->flags&NETWORK_PACKETFLAG_CLOSE)
 	{
 		conn_reset(conn);
+		if(p->data_size)
+			conn_set_error(conn, (char *)p->data);
+		else
+			conn_set_error(conn, "no reason given");
+		dbg_msg("conn", "closed reason='%s'", conn_error(conn));
 		return 0;
 	}
 	
@@ -360,10 +375,10 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 
 
 
-static void conn_update(NETCONNECTION *conn)
+static int conn_update(NETCONNECTION *conn)
 {
 	if(conn->state == NETWORK_CONNSTATE_OFFLINE || conn->state == NETWORK_CONNSTATE_ERROR)
-		return;
+		return 0;
 	
 	// check for timeout
 	if(conn->state != NETWORK_CONNSTATE_OFFLINE &&
@@ -372,7 +387,7 @@ static void conn_update(NETCONNECTION *conn)
 	{
 		//dbg_msg("connection", "state = %d->%d", conn->state, NETWORK_CONNSTATE_ERROR);
 		conn->state = NETWORK_CONNSTATE_ERROR;
-		conn->error_string = "timeout";
+		conn_set_error(conn, "timeout");
 	}
 	
 	// check for large buffer errors
@@ -380,7 +395,7 @@ static void conn_update(NETCONNECTION *conn)
 	{
 		//dbg_msg("connection", "state = %d->%d", conn->state, NETWORK_CONNSTATE_ERROR);
 		conn->state = NETWORK_CONNSTATE_ERROR;
-		conn->error_string = "too weak connection (out of buffer)";
+		conn_set_error(conn, "too weak connection (out of buffer)");
 	}
 	
 	if(conn->buffer.first())
@@ -390,7 +405,7 @@ static void conn_update(NETCONNECTION *conn)
 		{
 			//dbg_msg("connection", "state = %d->%d", conn->state, NETWORK_CONNSTATE_ERROR);
 			conn->state = NETWORK_CONNSTATE_ERROR;
-			conn->error_string = "too weak connection (not acked for 3 seconds)";
+			conn_set_error(conn, "too weak connection (not acked for 3 seconds)");
 		}
 	}
 	
@@ -494,7 +509,8 @@ int net_server_drop(NETSERVER *s, int client_id, const char *reason)
 {
 	// TODO: insert lots of checks here
 	dbg_msg("net_server", "client dropped. cid=%d reason=\"%s\"", client_id, reason);
-	conn_reset(&s->slots[client_id].conn);
+	conn_disconnect(&s->slots[client_id].conn, reason);
+	//conn_reset(&s->slots[client_id].conn);
 	return 0;
 }
 
@@ -503,7 +519,7 @@ int net_server_update(NETSERVER *s)
 	for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
 	{
 		conn_update(&s->slots[i].conn);
-		if(conn_error(&s->slots[i].conn))
+		if(s->slots[i].conn.state == NETWORK_CONNSTATE_ERROR)
 			net_server_drop(s, i, conn_error(&s->slots[i].conn));
 	}
 	return 0;
@@ -674,7 +690,7 @@ int net_client_update(NETCLIENT *c)
 {
 	// TODO: implement me
 	conn_update(&c->conn);
-	if(conn_error(&c->conn))
+	if(c->conn.state == NETWORK_CONNSTATE_ERROR)
 		net_client_disconnect(c, conn_error(&c->conn));
 	return 0;
 }
@@ -683,7 +699,7 @@ int net_client_disconnect(NETCLIENT *c, const char *reason)
 {
 	// TODO: do this more graceful
 	dbg_msg("net_client", "disconnected. reason=\"%s\"", reason);
-	conn_disconnect(&c->conn);
+	conn_disconnect(&c->conn, 0);
 	return 0;
 }
 
@@ -785,4 +801,9 @@ int net_client_state(NETCLIENT *c)
 void net_client_stats(NETCLIENT *c, NETSTATS *stats)
 {
 	*stats = c->conn.stats;
+}
+
+const char *net_client_error_string(NETCLIENT *c)
+{
+	return conn_error(&c->conn);
 }
