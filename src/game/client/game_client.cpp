@@ -1635,7 +1635,7 @@ void render_game()
 	{
 		gfx_mapscreen(0, 0, width, height);
 
-		if (gameobj->gametype == GAMETYPE_DM)
+		if (gameobj && gameobj->gametype == GAMETYPE_DM)
 		{
 			// Normal deathmatch
 
@@ -1736,6 +1736,7 @@ void render_game()
 				gfx_pretty_text(x+40, y, 32, buf);
 			}			
 		}
+		/*
 		else if (gameobj->gametype == GAMETYPE_TDM)
 		{
 			// Team deathmatch
@@ -1826,6 +1827,7 @@ void render_game()
 				}
 			}
 		}
+		* */
 	}
 }
 
