@@ -363,6 +363,11 @@ public:
 	int lastadd[LISTSIZE];
 	projectile_particles()
 	{
+		reset();
+	}
+	
+	void reset()
+	{
 		for (int i = 0; i < LISTSIZE; i++)
 			lastadd[i] = -1000;
 	}
@@ -456,6 +461,8 @@ void modc_entergame()
 	tilemap_init();
 	chat_reset();
 	
+	proj_particles.reset();
+	
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		client_datas[i].name[0] = 0;
@@ -464,7 +471,6 @@ void modc_entergame()
 		
 	for(int i = 0; i < killmsg_max; i++)
 		killmsgs[i].tick = -100000;
-
 }
 
 void modc_shutdown()
