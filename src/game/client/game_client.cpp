@@ -23,6 +23,9 @@ static int menu_team = 0;
 static int menu_quit = 0;
 static int menu_resume = 0;
 
+static int music_menu = -1;
+static int music_menu_id = -1;
+
 static bool chat_active = false;
 static bool menu_active = false;
 
@@ -432,6 +435,9 @@ void modc_init()
 {
 	// load the data container
 	data = load_data_from_memory(internal_data);
+
+	// TODO: should be removed
+	music_menu = snd_load_wav("data/audio/Music_Menu.wav");
 
 	// load sounds
 	for(int s = 0; s < data->num_sounds; s++)
@@ -1831,54 +1837,31 @@ void render_game()
 	}
 }
 
+
+
 void modc_render()
 {
 	// this should be moved around abit
 	if(client_state() == CLIENTSTATE_ONLINE)
 	{
+		if (music_menu_id != -1)
+		{
+			snd_stop(music_menu_id);
+			music_menu_id = -1;
+		}
+		
 		render_game();
 	}
 	else // if (client_state() != CLIENTSTATE_CONNECTING && client_state() != CLIENTSTATE_LOADING)
 	{
+		if (music_menu_id == -1)
+			music_menu_id = snd_play(music_menu, SND_LOOP);
+		
 		//netaddr4 server_address;
 		if(modmenu_render() == -1)
 			client_quit();
 
 	}
-	/*
-	else if (client_state() == CLIENTSTATE_CONNECTING || client_state() == CLIENTSTATE_LOADING)
-	{
-		static int64 start = time_get();
-		static int tee_texture;
-		static int connecting_texture;
-		static bool inited = false;
-		
-		// TODO: ugly, remove this
-		if (!inited)
-		{
-			tee_texture = gfx_load_texture("data/gui_tee.png");
-			connecting_texture = gfx_load_texture("data/gui_connecting.png");
-				
-			inited = true;
-		}
-
-		gfx_mapscreen(0,0,400.0f,300.0f);
-
-		float t = (time_get() - start) / (double)time_freq();
-
-		float speed = 2*sin(t);
-
-		speed = 1.0f;
-
-		float x = 208 + sin(t*speed) * 32;
-		float w = sin(t*speed + 3.149) * 64;
-
-		ui_do_image(tee_texture, x, 95, w, 64);
-		ui_do_image(connecting_texture, 88, 150, 256, 64);
-		
-		if(inp_key_down(input::esc))
-			client_disconnect();
-	}*/
 }
 
 

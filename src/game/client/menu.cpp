@@ -196,9 +196,6 @@ void draw_background(float t)
     gfx_quads_end();
 }
 
-static int music_menu;
-static int music_menu_id = -1;
-
 void draw_image_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
 {
 	ui_do_image(*(int *)id, x, y, w, h);
@@ -1292,9 +1289,6 @@ void modmenu_init()
 
 	// TODO: should be removed
     current_font->font_texture = gfx_load_texture("data/big_font.png");
-
-	// TODO: should be removed
-	music_menu = snd_load_wav("data/audio/Music_Menu.wav");
 }
 
 void modmenu_shutdown()
@@ -1305,12 +1299,6 @@ int modmenu_render()
 {
 	static int mouse_x = 0;
 	static int mouse_y = 0;
-
-	if (music_menu_id == -1)
-	{
-		dbg_msg("menu", "no music is playing, so let's play some tunes!");
-		music_menu_id = snd_play(music_menu, SND_LOOP);
-	}
 
     // handle mouse movement
     float mx, my;
@@ -1346,12 +1334,6 @@ int modmenu_render()
     gfx_quads_setcolor(1,1,1,1);
     gfx_quads_drawTL(mx,my,24,24);
     gfx_quads_end();
-
-	if (r)
-	{
-		snd_stop(music_menu_id);
-		music_menu_id = -1;
-	}
 
 	input::clear_char();
 	input::clear_key();
