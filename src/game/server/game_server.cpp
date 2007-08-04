@@ -34,6 +34,7 @@ void create_smoke(vec2 p);
 void create_spawn(vec2 p);
 void create_death(vec2 p);
 void create_sound(vec2 pos, int sound, int loopflags = 0);
+void create_targetted_sound(vec2 pos, int sound, int target, int loopflags = 0);
 class player *intersect_player(vec2 pos0, vec2 pos1, vec2 &new_pos, class entity *notthis = 0);
 
 template<typename T>
@@ -133,12 +134,13 @@ event_handler::event_handler()
 	clear();
 }
 
-void *event_handler::create(int type, int size)
+void *event_handler::create(int type, int size, int target)
 {
 	void *p = &data[current_offset];
 	offsets[num_events] = current_offset;
 	types[num_events] = type;
 	sizes[num_events] = size;
+	targets[num_events] = target;
 	current_offset += size;
 	num_events++;
 	return p;
@@ -154,8 +156,11 @@ void event_handler::snap(int snapping_client)
 {
 	for(int i = 0; i < num_events; i++)
 	{
-		void *d = snap_new_item(types[i], i, sizes[i]);
-		mem_copy(d, &data[offsets[i]], sizes[i]);
+		if (targets[i] == -1 || targets[i] == snapping_client)
+		{
+			void *d = snap_new_item(types[i], i, sizes[i]);
+			mem_copy(d, &data[offsets[i]], sizes[i]);
+		}
 	}
 }
 
@@ -556,7 +561,11 @@ void projectile::tick()
 		if (flags & PROJECTILE_FLAGS_EXPLODE)
 			create_explosion(oldpos, owner, weapon, false);
 		else if (targetplayer)
+		{
 			targetplayer->take_damage(normalize(vel) * max(0.001f, force), damage, owner, weapon);
+				
+			create_targetted_sound(pos, SOUND_HIT, owner);
+		}
 			
 		world.destroy_entity(this);
 	}
@@ -1684,16 +1693,21 @@ void create_death(vec2 p)
 	ev->y = (int)p.y;
 }
 
-void create_sound(vec2 pos, int sound, int loopingflags)
+void create_targetted_sound(vec2 pos, int sound, int target, int loopingflags)
 {
 	if (sound < 0)
 		return;
 
 	// create a sound
-	ev_sound *ev = (ev_sound *)events.create(EVENT_SOUND, sizeof(ev_sound));
+	ev_sound *ev = (ev_sound *)events.create(EVENT_SOUND, sizeof(ev_sound), target);
 	ev->x = (int)pos.x;
 	ev->y = (int)pos.y;
 	ev->sound = sound | loopingflags;
+}
+
+void create_sound(vec2 pos, int sound, int loopingflags)
+{
+	create_targetted_sound(pos, sound, -1, loopingflags);
 }
 
 // TODO: should be more general

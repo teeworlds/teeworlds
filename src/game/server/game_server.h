@@ -8,13 +8,14 @@ class event_handler
 	int types[MAX_EVENTS];  // TODO: remove some of these arrays
 	int offsets[MAX_EVENTS];
 	int sizes[MAX_EVENTS];
+	int targets[MAX_EVENTS];
 	char data[MAX_DATASIZE];
 	
 	int current_offset;
 	int num_events;
 public:
 	event_handler();
-	void *create(int type, int size);
+	void *create(int type, int size, int target = -1);
 	void clear();
 	void snap(int snapping_client);
 };

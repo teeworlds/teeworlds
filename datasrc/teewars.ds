@@ -160,6 +160,11 @@ sounds {
 		"data/audio/wp_noammo-04.wav"
 		"data/audio/wp_noammo-05.wav"
 	}
+
+	hit {
+		"data/audio/sfx_hit_strong-01.wav"
+		"data/audio/sfx_hit_strong-02.wav"
+	}
 }
 
 
