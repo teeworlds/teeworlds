@@ -875,16 +875,19 @@ static void client_run(const char *direct_connect_server)
 			gfx_screenshot();
 
 		// panic button
-		if(input::pressed(input::lctrl) && input::pressed('Q'))
-			break;
-
-		if(input::pressed(input::f5))
+		if(config.debug)
 		{
-			// ack snapshot
-			msg_pack_start_system(NETMSG_SNAPACK, 0);
-			msg_pack_int(-1);
-			msg_pack_end();
-			client_send_msg();
+			if(input::pressed(input::lctrl) && input::pressed('Q'))
+				break;
+		
+			if(input::pressed(input::f5))
+			{
+				// ack snapshot
+				msg_pack_start_system(NETMSG_SNAPACK, 0);
+				msg_pack_int(-1);
+				msg_pack_end();
+				client_send_msg();
+			}
 		}
 			
 		// pump the network
