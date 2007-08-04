@@ -11,7 +11,7 @@ data_container *data = 0x0;
 using namespace baselib;
 
 // --------- DEBUG STUFF ---------
-const int debug_bots = 4;
+const int debug_bots = 0;
 
 // --------- PHYSICS TWEAK! --------
 const float ground_control_speed = 7.0f;
