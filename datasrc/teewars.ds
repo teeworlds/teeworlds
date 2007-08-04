@@ -324,6 +324,7 @@ weapons {
 		muzzleoffsetx 50.0
 		muzzleoffsety 6.0
 		maxammo 10
+		costammo 1
 		recoil 10
 		firedelay 100
 		muzzleduration 5
@@ -349,6 +350,7 @@ weapons {
 		muzzleoffsetx 0.0
 		muzzleoffsety 0.0
 		maxammo 10
+		costammo 1
 		recoil 10
 		firedelay 600
 		muzzleduration 0
@@ -377,6 +379,7 @@ weapons {
 		muzzleoffsetx 70.0
 		muzzleoffsety 6.0
 		maxammo 10
+		costammo 2
 		recoil 10
 		firedelay 600
 		muzzleduration 5
@@ -402,6 +405,7 @@ weapons {
 		muzzleoffsetx 0.0
 		muzzleoffsety 0.0
 		maxammo 10
+		costammo 0
 		recoil 10
 		firedelay 150
 		muzzleduration 0
@@ -409,7 +413,7 @@ weapons {
 		offsetx 4.0
 		offsety -20.0
 		meleedamage 1
-		meleereach 25
+		meleereach 40
 		ammoregentime 0
 		duration -1
 		movetime 0
@@ -426,6 +430,7 @@ weapons {
 		muzzleoffsetx 0.0
 		muzzleoffsety 0.0
 		maxammo 10
+		costammo 1
 		recoil 10
 		firedelay 100
 		muzzleduration 0
@@ -453,6 +458,7 @@ weapons {
 		muzzleoffsetx 40.0
 		muzzleoffsety -4.0
 		maxammo 0
+		costammo 0
 		recoil 0
 		firedelay 800
 		muzzleduration 0

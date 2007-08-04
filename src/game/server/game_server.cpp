@@ -731,7 +731,7 @@ void player::try_respawn()
 	weapons[WEAPON_HAMMER].ammo = -1;
 	weapons[WEAPON_GUN].got = true;
 	weapons[WEAPON_GUN].ammo = data->weapons[active_weapon].maxammo;
-
+	
 	active_weapon = WEAPON_GUN;
 	reload_timer = 0;
 	
@@ -911,7 +911,8 @@ int player::handle_weapons()
 						create_sound(pos, SOUND_ROCKET_FIRE);
 						break;
 					case WEAPON_SHOTGUN:
-						for(int i = -2; i <= 2; i++)
+						int shotspread = min(2, weapons[active_weapon].ammo);
+						for(int i = -shotspread; i <= shotspread; i++)
 						{
 							float a = get_angle(direction);
 							a += i*0.075f;
@@ -922,7 +923,7 @@ int player::handle_weapons()
 								//vec2(cosf(a), sinf(a))*20.0f,
 								server_tickspeed()/3,
 								this,
-								1, 0, 0, -1, WEAPON_SHOTGUN);
+								2, 0, 0, -1, WEAPON_SHOTGUN);
 						}
 						create_sound(pos, SOUND_SHOTGUN_FIRE);
 						break;
@@ -935,7 +936,7 @@ int player::handle_weapons()
 						break;						
 				}
 				
-				weapons[active_weapon].ammo--;
+				weapons[active_weapon].ammo -= max(1, weapons[active_weapon].ammocost);
 				attack_tick = server_tick();
 				reload_timer = data->weapons[active_weapon].firedelay * server_tickspeed() / 1000;
 			}
@@ -1631,7 +1632,7 @@ void create_explosion(vec2 p, int owner, int weapon, bool bnodamage)
 			l = 1-clamp((l-innerradius)/(radius-innerradius), 0.0f, 1.0f);
 			float dmg = 6 * l;
 			if((int)dmg)
-				ents[i]->take_damage(forcedir*dmg*2, (int)dmg, owner, weapon);
+				ents[i]->take_damage(forcedir*dmg*2, (int)dmg/2, owner, weapon);
 		}
 	}
 }

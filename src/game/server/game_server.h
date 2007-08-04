@@ -208,6 +208,7 @@ public:
 	{
 		int ammoregenstart;
 		int ammo;
+		int ammocost;
 		bool got;
 	} weapons[NUM_WEAPONS];
 	int active_weapon;

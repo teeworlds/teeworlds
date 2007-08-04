@@ -9,6 +9,7 @@ struct weapon {
 	int meleereach = meleereach@1
 	int ammoregentime = ammoregentime@1
 	int maxammo = maxammo@1
+	int costammo = costammo@1
 	int duration = duration@1
 	int movetime = movetime@1
 	int velocity = velocity@1
