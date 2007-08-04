@@ -911,6 +911,7 @@ int player::handle_weapons()
 						create_sound(pos, SOUND_ROCKET_FIRE);
 						break;
 					case WEAPON_SHOTGUN:
+					{
 						int shotspread = min(2, weapons[active_weapon].ammo);
 						for(int i = -shotspread; i <= shotspread; i++)
 						{
@@ -927,6 +928,7 @@ int player::handle_weapons()
 						}
 						create_sound(pos, SOUND_SHOTGUN_FIRE);
 						break;
+					}
 					case WEAPON_ROCKET_BACKPACK:
 						new projectile_backpackrocket(
 							pos+vec2(0,0),
