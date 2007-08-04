@@ -24,7 +24,7 @@ if platform == 'win32':
 
 def copydir(src, dst):
 	for root, dirs, files in os.walk(src, topdown=True):
-		if "/." in root:
+		if "/." in root or "\\." in root:
 			continue
 		for name in dirs:
 			if name[0] != '.':
