@@ -1,30 +1,89 @@
 body {
 	margin-top: 0px;
-	background-image: url();
-	background-repeat: repeat;
+	background-image: url(gfx/sun_bg.png);
+	background-repeat: no-repeat;
 	background-color: #82CDFF;
 	margin-left: 0px;
 	margin-right: 0px;
 	margin-bottom: 0px;
-}
-.brod {
+
 	color: #666666;
 	font-size: 12px;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	line-height: 20px;
 }
-.style6 {
+
+div#outer
+{
+	margin-left: auto;
+	margin-right: auto;
+	width: 820px;
+}
+
+.page_header {
+	margin-top: 0px;
+	background-image: url(gfx/top_logo_sun.png);
+	background-repeat: no-repeat;
+	padding-left: 370px;
+	margin-left: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+}
+
+.page_body_top {
+	background: url(gfx/main_bg_sun_top.png) no-repeat top left;
+	height: 40px;
+}
+
+.page_body {
+	background: url(gfx/main_bg_sun.png) repeat-y top left;
+	height: auto;
+	padding-top: 40px;
+	padding-left: 70px;
+	padding-right: 70px;
+	padding-bottom: 40px;
+}
+
+
+.page_image {
+	margin-left: 30px;
+	float: right;
+}
+
+.topic {
 	font-size: 18px;
-	font-family: Verdana, Arial, Helvetica, sans-serif;
 	color: #627E27;
 	font-weight: bold;
 }
-.style9 {
-	font-size: 18px;
-	font-family: Arial, Helvetica, sans-serif;
+
+
+.subtopic {
+	font-size: 14px;
 	color: #627E27;
-	font-weight: bold;
 }
+
+.normal {
+	font-size: 12px;
+}
+
+.date {
+	color: #666666;
+	font-size: 12px;
+	line-height: 20px;
+	font-style: italic;
+	font-weight: normal;
+}
+
+
+.sign {
+	color: #666666;
+	font-size: 12px;
+	line-height: 20px;
+	font-style: italic;
+	text-align: right;
+}
+
+
 a:link {
 	color: #333333;
 }
@@ -37,28 +96,15 @@ a:hover {
 a:active {
 	color: #333333;
 }
-.style11 {
-	color: #999999;
-	font-size: 12px;
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-}
-.style16 {
-	color: #666666;
-	font-size: 12px;
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	line-height: 20px;
-	font-style: italic;
+
+a:link img {
+	border: none;
 }
 
-.style19 {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	color: #627E27;
-	font-size: 14px;
+a:visited img {
+	border: none;
 }
 
-.style20 {
-	font-family: Verdana, Arial, Helvetica, sans-serif;
-	color: #000000;
-	font-size: 14px;
-	font-weight: bold;
+a:hover img {
+	border: none;
 }
