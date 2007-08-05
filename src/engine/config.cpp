@@ -66,12 +66,12 @@ void config_set(const char *line)
 
 void config_load(const char *filename)
 {
+	char full_path[1024];
 	if (filename[0] == '~')
 	{
 		char *home = getenv("HOME");
 		if (home)
 		{
-			char full_path[1024];
 			sprintf(full_path, "%s%s", home, filename+1);
 			filename = full_path;
 		}
@@ -96,12 +96,12 @@ void config_load(const char *filename)
 
 void config_save(const char *filename)
 {
+	char full_path[1024];
 	if (filename[0] == '~')
 	{
 		char *home = getenv("HOME");
 		if (home)
 		{
-			char full_path[1024];
 			sprintf(full_path, "%s%s", home, filename+1);
 			filename = full_path;
 		}
