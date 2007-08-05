@@ -316,6 +316,10 @@ void game_world::destroy_entity(entity *ent)
 
 void game_world::remove_entity(entity *ent)
 {
+	// not in the list
+	if(!ent->next_entity && !ent->prev_entity && first_entity != ent)
+		return;
+	
 	// remove
 	if(ent->prev_entity)
 		ent->prev_entity->next_entity = ent->next_entity;
@@ -330,6 +334,11 @@ void game_world::remove_entity(entity *ent)
 		first_entity_types[ent->objtype] = ent->next_type_entity;
 	if(ent->next_type_entity)
 		ent->next_type_entity->prev_type_entity = ent->prev_type_entity;
+		
+	ent->next_entity = 0;
+	ent->prev_entity = 0;
+	ent->next_type_entity = 0;
+	ent->prev_type_entity = 0;
 }
 
 //
