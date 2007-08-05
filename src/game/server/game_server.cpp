@@ -11,7 +11,7 @@ data_container *data = 0x0;
 using namespace baselib;
 
 // --------- DEBUG STUFF ---------
-const int debug_bots = 0;
+const int debug_bots = 7;
 
 // --------- PHYSICS TWEAK! --------
 const float ground_control_speed = 7.0f;
@@ -618,8 +618,6 @@ void projectile::tick()
 		else if (targetplayer)
 		{
 			targetplayer->take_damage(normalize(vel) * max(0.001f, force), damage, owner, weapon);
-				
-			create_targetted_sound(pos, SOUND_HIT, owner);
 		}
 			
 		world.destroy_entity(this);
@@ -916,7 +914,7 @@ int player::handle_ninja()
 				create_sound(ents[i]->pos, SOUND_NINJA_HIT);
 				// set his velocity to fast upward (for now)
 				hitobjects[numobjectshit++] = ents[i];
-				ents[i]->take_damage(vec2(0,10.0f), data->weapons[WEAPON_NINJA].meleedamage, client_id,-1);
+				ents[i]->take_damage(vec2(0,10.0f), data->weapons[WEAPON_NINJA].meleedamage, client_id,WEAPON_NINJA);
 			}
 		}
 		return MODIFIER_RETURNFLAGS_OVERRIDEVELOCITY | MODIFIER_RETURNFLAGS_OVERRIDEPOSITION | MODIFIER_RETURNFLAGS_OVERRIDEGRAVITY;
@@ -976,7 +974,7 @@ int player::handle_weapons()
 						break;
 					case WEAPON_ROCKET:
 					{
-						projectile *p = new projectile(projectile::WEAPON_PROJECTILETYPE_ROCKET,
+						new projectile(projectile::WEAPON_PROJECTILETYPE_ROCKET,
 							client_id,
 							pos+vec2(0,0),
 							direction*15.0f,
@@ -1386,6 +1384,10 @@ bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 	
 	damage_taken_tick = server_tick()+50;
 	
+	// do damage hit sound
+	if(from >= 0)
+		create_targetted_sound(pos, SOUND_HIT, from);
+			
 	// check for death
 	if(health <= 0)
 	{
@@ -1409,6 +1411,7 @@ bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 		create_sound(pos, SOUND_PLAYER_PAIN_LONG);
 	else
 		create_sound(pos, SOUND_PLAYER_PAIN_SHORT);
+
 
 	// spawn blood?
 	return true;

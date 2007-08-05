@@ -1665,8 +1665,16 @@ void render_game()
 			draw_round_rect(x-10.f, y-10.f, w, h, 40.0f);
 			gfx_quads_end();
 			
-			float tw = gfx_pretty_text_width( 64, "Score Board");
-			gfx_pretty_text(x+w/2-tw/2, y, 64, "Score Board");
+			if(gameobj->game_over)
+			{
+				float tw = gfx_pretty_text_width( 64, "Game Over");
+				gfx_pretty_text(x+w/2-tw/2, y, 64, "Game Over");
+			}
+			else
+			{
+				float tw = gfx_pretty_text_width( 64, "Score Board");
+				gfx_pretty_text(x+w/2-tw/2, y, 64, "Score Board");
+			}
 			y += 64.0f;
 
 			// find players
@@ -1890,6 +1898,11 @@ void modc_message(int msg)
 		const char *message = msg_unpack_string();
 		dbg_msg("message", "chat cid=%d msg='%s'", cid, message);
 		chat_add_line(cid, message);
+		
+		if(cid >= 0)
+			snd_play(data->sounds[SOUND_CHAT_CLIENT].sounds[0].id, SND_PLAY_ONCE, 1.0f, 0.0f);
+		else
+			snd_play(data->sounds[SOUND_CHAT_SERVER].sounds[0].id, SND_PLAY_ONCE, 1.0f, 0.0f);
 	}
 	else if(msg == MSG_SETNAME)
 	{

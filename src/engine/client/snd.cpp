@@ -14,7 +14,7 @@ static const float NUM_FRAMES_LERP_INV = 1.0f/(float)NUM_FRAMES_LERP;
 static const float GLOBAL_VOLUME_SCALE = 0.75f;
 static float master_volume = 1.0f;
 
-static const int64 GLOBAL_SOUND_DELAY = 1000;
+static const float GLOBAL_SOUND_DELAY = 0.05f;
 
 // --- sound ---
 class sound_data
@@ -156,7 +156,7 @@ public:
 	
 	int play(sound_data *sound, unsigned loop, float vol, float pan)
 	{
-		if(time_get() - sound->last_played < GLOBAL_SOUND_DELAY)
+		if(time_get() - sound->last_played < (int64)(time_freq()*GLOBAL_SOUND_DELAY))
 			return -1;
 
 		for(int c = 0; c < MAX_CHANNELS; c++)

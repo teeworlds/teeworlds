@@ -165,6 +165,14 @@ sounds {
 		"data/audio/sfx_hit_weak-01.wav"
 		"data/audio/sfx_hit_weak-02.wav"
 	}
+
+	chat_server {
+		"data/audio/chat_server.wav"
+	}
+	
+	chat_client {
+		"data/audio/chat_client.wav"
+	}
 }
 
 
