@@ -42,8 +42,20 @@ a:active {
 	font-size: 12px;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 }
-.style16 {color: #666666; font-size: 12px; font-family: Verdana, Arial, Helvetica, sans-serif; line-height: 20px; font-style: italic; }
-.style19 {font-family: Verdana, Arial, Helvetica, sans-serif; color: #627E27; font-size: 14px;}
+.style16 {
+	color: #666666;
+	font-size: 12px;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	line-height: 20px;
+	font-style: italic;
+}
+
+.style19 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	color: #627E27;
+	font-size: 14px;
+}
+
 .style20 {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	color: #000000;
