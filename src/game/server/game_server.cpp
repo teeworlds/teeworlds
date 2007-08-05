@@ -28,7 +28,7 @@ const float hook_drag_speed = 15.0f;
 const float gravity = 0.5f;
 
 class player* get_player(int index);
-void create_damageind(vec2 p, vec2 dir, int amount);
+void create_damageind(vec2 p, float angle_mod, int amount);
 void create_explosion(vec2 p, int owner, int weapon, bool bnodamage);
 void create_smoke(vec2 p);
 void create_spawn(vec2 p);
@@ -739,6 +739,7 @@ void player::reset()
 	dead = true;
 	spawning = false;
 	die_tick = 0;
+	damage_taken = 0;
 	state = STATE_UNKNOWN;
 }
 
@@ -1361,11 +1362,22 @@ bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 	if(from == client_id)
 		dmg = max(1, dmg/2);
 
-	// create healthmod indicator
-	create_damageind(pos, normalize(force), dmg);
-
 	if (gameobj.gametype == GAMETYPE_TDM && from >= 0 && players[from].team == team)
 		return false;
+
+	damage_taken++;
+
+	// create healthmod indicator
+	if(server_tick() < damage_taken_tick+25)
+	{
+		// make sure that the damage indicators doesn't group together
+		create_damageind(pos, damage_taken*0.25f, dmg);
+	}
+	else
+	{
+		damage_taken = 0;
+		create_damageind(pos, 0, dmg);
+	}
 
 	if(armor)
 	{
@@ -1382,7 +1394,7 @@ bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 	else
 		armor -= dmg;
 	
-	damage_taken_tick = server_tick()+50;
+	damage_taken_tick = server_tick();
 	
 	// do damage hit sound
 	if(from >= 0)
@@ -1451,7 +1463,7 @@ void player::snap(int snaping_client)
 	if(length(vel) > 15.0f)
 		player->emote = EMOTE_HAPPY;
 	
-	if(damage_taken_tick > server_tick())
+	if(damage_taken_tick+50 > server_tick())
 		player->emote = EMOTE_PAIN;
 	
 	if(player->emote == EMOTE_NORMAL)
@@ -1688,9 +1700,9 @@ player *get_player(int index)
 	return &players[index];
 }
 
-void create_damageind(vec2 p, vec2 dir, int amount)
+void create_damageind(vec2 p, float angle, int amount)
 {
-	float a = 3 * 3.14159f / 2;
+	float a = 3 * 3.14159f / 2 + angle;
 	//float a = get_angle(dir);
 	float s = a-pi/3;
 	float e = a+pi/3;

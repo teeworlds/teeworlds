@@ -217,6 +217,8 @@ public:
 	int reload_timer;
 	int attack_tick;
 	
+	int damage_taken;
+	
 	// we need a defered position so we can handle the physics correctly
 	baselib::vec2 defered_pos;
 	baselib::vec2 vel;
