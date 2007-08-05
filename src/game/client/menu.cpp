@@ -9,12 +9,14 @@
 
 
 #include <baselib/system.h>
+#include <baselib/config.h>
 #include <baselib/input.h>
 #include <baselib/network.h>
 #include <baselib/math.h>
 
 #include <engine/interface.h>
 #include <engine/versions.h>
+#include <engine/config.h>
 #include "../mapres.h"
 
 #include <engine/client/ui.h>

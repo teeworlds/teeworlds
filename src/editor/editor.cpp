@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <baselib/system.h>
 #include <baselib/input.h>
+#include <baselib/config.h>
 //#include <baselib/mouse.h>
 
 #include <engine/interface.h>

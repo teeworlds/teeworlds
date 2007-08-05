@@ -3,6 +3,7 @@
 #include <cstdlib>
 
 #include <baselib/system.h>
+#include <baselib/config.h>
 
 #include <engine/interface.h>
 

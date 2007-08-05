@@ -66,6 +66,18 @@ void config_set(const char *line)
 
 void config_load(const char *filename)
 {
+	if (filename[0] == '~')
+	{
+		char *home = getenv("HOME");
+		if (home)
+		{
+			char full_path[1024];
+			sprintf(full_path, "%s%s", home, filename+1);
+			filename = full_path;
+		}
+	}
+
+
 	dbg_msg("config/load", "loading %s", filename);
 
 	file_stream file;
@@ -84,6 +96,18 @@ void config_load(const char *filename)
 
 void config_save(const char *filename)
 {
+	if (filename[0] == '~')
+	{
+		char *home = getenv("HOME");
+		if (home)
+		{
+			char full_path[1024];
+			sprintf(full_path, "%s%s", home, filename+1);
+			filename = full_path;
+		}
+	}
+
+
 	dbg_msg("config/save", "saving config to %s", filename);
 
 	file_stream file;
@@ -101,6 +125,8 @@ void config_save(const char *filename)
 
 		file.close();
 	}
+	else
+		dbg_msg("config/save", "couldn't open %s for writing. :(", filename);
 }
 
 #define MACRO_CONFIG_INT(name,def,min,max) int config_get_ ## name (configuration *c) { return c->name; }

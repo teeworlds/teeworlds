@@ -1,4 +1,5 @@
 #include <baselib/system.h>
+#include <baselib/config.h>
 #include <baselib/input.h>
 #include <baselib/audio.h>
 #include <baselib/stream/file.h>
