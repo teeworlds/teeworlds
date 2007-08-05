@@ -155,7 +155,7 @@ public:
 		// load map
 		if(!map_load(mapname))
 		{
-			dbg_msg("server", "failed to load map. mapname='%s'");
+			dbg_msg("server", "failed to load map. mapname='%s'", mapname);
 			return false;
 		}
 
