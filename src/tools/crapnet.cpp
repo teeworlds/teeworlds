@@ -24,9 +24,9 @@ static int debug = 0;
 
 int run(int port, netaddr4 dest)
 {
-	netaddr4 src(0,0,0,0,0);
+	netaddr4 src(0,0,0,0,port);
 	socket_udp4 socket;
-	socket.open(port);
+	socket.open(src);
 	char buffer[1024*2];
 	int id = 0;
 	

@@ -36,7 +36,7 @@ enum
 };
 
 // server side
-NETSERVER *net_server_open(int port, int max_clients, int flags);
+NETSERVER *net_server_open(NETADDR4 bindaddr, int max_clients, int flags);
 int net_server_recv(NETSERVER *s, NETPACKET *packet);
 int net_server_send(NETSERVER *s, NETPACKET *packet);
 int net_server_close(NETSERVER *s);
@@ -47,7 +47,7 @@ int net_server_delclient(NETSERVER *s); // -1 when no more, else, client id
 void net_server_stats(NETSERVER *s, NETSTATS *stats);
 
 // client side
-NETCLIENT *net_client_open(int port, int flags);
+NETCLIENT *net_client_open(NETADDR4 bindaddr, int flags);
 int net_client_disconnect(NETCLIENT *c, const char *reason);
 int net_client_connect(NETCLIENT *c, NETADDR4 *addr);
 int net_client_recv(NETCLIENT *c, NETPACKET *packet);
@@ -68,7 +68,7 @@ public:
 	net_server() : ptr(0) {}
 	~net_server() { close(); }
 	
-	int open(int port, int max, int flags) { ptr = net_server_open(port, max, flags); return ptr != 0; }
+	int open(NETADDR4 bindaddr, int max, int flags) { ptr = net_server_open(bindaddr, max, flags); return ptr != 0; }
 	int close() { int r = net_server_close(ptr); ptr = 0; return r; }
 	
 	int recv(NETPACKET *packet) { return net_server_recv(ptr, packet); }
@@ -90,7 +90,7 @@ public:
 	net_client() : ptr(0) {}
 	~net_client() { close(); }
 	
-	int open(int port, int flags) { ptr = net_client_open(port, flags); return ptr != 0; }
+	int open(NETADDR4 bindaddr, int flags) { ptr = net_client_open(bindaddr, flags); return ptr != 0; }
 	int close() { int r = net_client_close(ptr); ptr = 0; return r; }
 	
 	int connect(NETADDR4 *addr) { return net_client_connect(ptr, addr); }

@@ -22,5 +22,6 @@ MACRO_CONFIG_INT(gfx_texture_quality, 1, 0, 1)
 MACRO_CONFIG_STR(masterserver, 128, "master.teewars.com")
 
 MACRO_CONFIG_STR(sv_name, 128, "unnamed server")
+MACRO_CONFIG_STR(sv_bindaddr, 128, "")
 MACRO_CONFIG_INT(sv_port, 8303, 0, 0)
 MACRO_CONFIG_INT(sv_sendheartbeats, 1, 0, 1)

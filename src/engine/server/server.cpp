@@ -158,9 +158,21 @@ public:
 			dbg_msg("server", "failed to load map. mapname='%s'", mapname);
 			return false;
 		}
-
+		
 		// start server
-		if(!net.open(8303, 0, 0))
+		NETADDR4 bindaddr;
+
+		if(strlen(config.sv_bindaddr) && net_host_lookup(config.sv_bindaddr, config.sv_port, &bindaddr) != 0)
+		{
+			// sweet!	
+		}
+		else
+		{
+			mem_zero(&bindaddr, sizeof(bindaddr));
+			bindaddr.port = config.sv_port;
+		}
+		
+		if(!net.open(bindaddr, 0, 0))
 		{
 			dbg_msg("network/server", "couldn't open socket");
 			return false;

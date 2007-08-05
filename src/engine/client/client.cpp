@@ -784,7 +784,9 @@ static void client_run(const char *direct_connect_server)
 	modmenu_init(); // TODO: remove
 	
 	// open socket
-	net.open(0, 0);
+	NETADDR4 bindaddr;
+	mem_zero(&bindaddr, sizeof(bindaddr));
+	net.open(bindaddr, 0);
 	
 	//
 	net_host_lookup(config.masterserver, MASTERSERVER_PORT, &master_server);

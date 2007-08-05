@@ -461,11 +461,11 @@ static int check_packet(unsigned char *buffer, int size, NETPACKETDATA *packet)
 	return 0;
 }
 
-NETSERVER *net_server_open(int port, int max_clients, int flags)
+NETSERVER *net_server_open(NETADDR4 bindaddr, int max_clients, int flags)
 {
 	NETSERVER *server = (NETSERVER *)mem_alloc(sizeof(NETSERVER), 1);
 	mem_zero(server, sizeof(NETSERVER));
-	server->socket = net_udp4_create(port);
+	server->socket = net_udp4_create(bindaddr);
 	
 	for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
 		conn_init(&server->slots[i].conn, server->socket);
@@ -673,11 +673,11 @@ void net_server_stats(NETSERVER *s, NETSTATS *stats)
 }
 
 //
-NETCLIENT *net_client_open(int port, int flags)
+NETCLIENT *net_client_open(NETADDR4 bindaddr, int flags)
 {
 	NETCLIENT *client = (NETCLIENT *)mem_alloc(sizeof(NETCLIENT), 1);
 	mem_zero(client, sizeof(NETCLIENT));
-	client->socket = net_udp4_create(port);
+	client->socket = net_udp4_create(bindaddr);
 	conn_init(&client->conn, client->socket);
 	return client;
 }

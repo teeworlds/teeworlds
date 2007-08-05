@@ -160,8 +160,14 @@ void purge_servers()
 
 int main(int argc, char **argv)
 {
-	net_op.open(MASTERSERVER_PORT, 0);
-	net_checker.open(MASTERSERVER_PORT+1, 0);
+	NETADDR4 bindaddr;
+	mem_zero(&bindaddr, sizeof(bindaddr));
+	bindaddr.port = MASTERSERVER_PORT;
+	
+	net_op.open(bindaddr, 0);
+
+	bindaddr.port = MASTERSERVER_PORT+1;
+	net_checker.open(bindaddr, 0);
 	// TODO: check socket for errors
 	
 	mem_copy(data.header, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
