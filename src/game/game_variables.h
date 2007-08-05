@@ -7,6 +7,7 @@ MACRO_CONFIG_INT(key_weapon1, 49, 32, 512)
 MACRO_CONFIG_INT(key_weapon2, 50, 32, 512)
 MACRO_CONFIG_INT(key_weapon3, 51, 32, 512)
 MACRO_CONFIG_INT(key_weapon4, 52, 32, 512)
+MACRO_CONFIG_INT(scroll_weapon, 1, 0, 1)
 
 MACRO_CONFIG_INT(scorelimit, 20, 0, 1000)
 MACRO_CONFIG_INT(timelimit, 0, 0, 1000)

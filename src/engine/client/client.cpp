@@ -45,6 +45,7 @@ static int keyboard_current = 0;
 static int keyboard_first = 1;
 
 void inp_mouse_relative(int *x, int *y) { input::mouse_position(x, y); }
+int inp_mouse_scroll() { input::mouse_scroll(); }
 int inp_key_pressed(int key) { return keyboard_state[keyboard_current][key]; }
 int inp_key_was_pressed(int key) { return keyboard_state[keyboard_current^1][key]; }
 int inp_key_down(int key) { return inp_key_pressed(key)&&!inp_key_was_pressed(key); }

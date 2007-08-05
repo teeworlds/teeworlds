@@ -1319,12 +1319,21 @@ void render_game()
 			
 			// Weapon switching
 #define TEST_WEAPON_KEY(key) if (inp_key_pressed(config.key_weapon ## key)) input.activeweapon = key-1;
+			if(config.scroll_weapon)
+			{
+				int delta = inp_mouse_scroll();
+				input.activeweapon = input.activeweapon + delta;
+
+				if(input.activeweapon > 3)
+					input.activeweapon = 3;
+				else if(input.activeweapon < 0)
+					input.activeweapon = 0;
+			}
+
 			TEST_WEAPON_KEY(1);
 			TEST_WEAPON_KEY(2);
 			TEST_WEAPON_KEY(3);
 			TEST_WEAPON_KEY(4);
-			//for(int i = 0; i < 8; i++)
-			//	input.activeweapon = inp_key_pressed('1'+i) ? i : input.activeweapon;
 		}
 
 		snap_input(&input, sizeof(input));

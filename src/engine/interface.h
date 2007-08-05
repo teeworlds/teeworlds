@@ -350,6 +350,8 @@ bool snd_shutdown();
 */
 void inp_mouse_relative(int *x, int *y);
 
+int inp_mouse_scroll();
+
 /*
 	Function: inp_key_pressed
 		Checks if a key is pressed.

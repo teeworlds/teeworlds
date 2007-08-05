@@ -804,7 +804,7 @@ static int settings_controls_render()
 		{ "Hammer:", &config_copy.key_weapon4, config_set_key_weapon4 },
 	};
 
-	for (int i = 0; i < 7; i++)
+	for (int i = 0; i < 6; i++)
 	{
 		key_thing key = keys[i + scroll_index];
 		
@@ -825,7 +825,11 @@ static int settings_controls_render()
 	config_set_key_hook(&config_copy, ui_do_key_reader(&config_copy.key_hook, column2_x, row1_y + 160, 150, 36, config_copy.key_hook));
 	*/
 
-	scroll_index = do_scroll_bar_vert(&scroll_index, 600, row1_y, 40 * 7, 9 - 7, scroll_index);
+	scroll_index = do_scroll_bar_vert(&scroll_index, 600, row1_y, 40 * 6, 9 - 7, scroll_index);
+
+	ui_do_label(column1_x, row1_y + 40 * 6, "Scroll wheel weapon switch", 22);
+	config_set_scroll_weapon(&config_copy, ui_do_check_box(&config_copy.scroll_weapon, column2_x + 50, row1_y + 40 * 6, 22, 22, config_copy.scroll_weapon));
+
 
 	return 0;
 }
