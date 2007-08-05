@@ -992,7 +992,11 @@ static int settings_render()
 	if (ui_do_button(&save_button, "Save", 0, 482, 490, 128, 48, draw_teewars_button))
 	{
 		config = config_copy;
+#ifdef CONF_PLATFORM_MACOSX
+		config_save("~/.teewars");
+#else
 		config_save("default.cfg");
+#endif
 		screen = SCREEN_MAIN;
 	}
 	

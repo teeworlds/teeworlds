@@ -1240,8 +1240,11 @@ extern void modmenu_init();
 int editor_main(int argc, char **argv)
 {
 	dbg_msg("editor", "starting...");
-	
+#ifdef CONF_PLATFORM_MACOSX	
+	config_load("~/teewars");
+#else
 	config_load("default.cfg");
+#endif
 	
 	// parse arguments
 	for(int i = 1; i < argc; i++)

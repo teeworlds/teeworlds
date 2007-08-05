@@ -585,7 +585,11 @@ int main(int argc, char **argv)
 	dbg_msg("server", "starting...");
 
 	config_reset();
-	config_load("default.cfg");
+#ifdef CONF_PLATFORM_MACOSX
+		config_load("~/.teewars");
+#else
+		config_load("default.cfg");
+#endif
 
 	const char *mapname = "dm1";
 	

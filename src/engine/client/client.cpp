@@ -943,7 +943,11 @@ int main(int argc, char **argv)
 	dbg_msg("client", "starting...");
 	
 	config_reset();
-	config_load("default.cfg");
+#ifdef CONF_PLATFORM_MACOSX
+		config_load("~/.teewars");
+#else
+		config_load("default.cfg");
+#endif
 
 	const char *direct_connect_server = 0x0;
 	snd_set_master_volume(config.volume / 255.0f);
