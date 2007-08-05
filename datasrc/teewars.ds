@@ -167,11 +167,11 @@ sounds {
 	}
 
 	chat_server {
-		"data/audio/chat_server.wav"
+		"data/audio/sfx_msg-server.wav"
 	}
 	
 	chat_client {
-		"data/audio/chat_client.wav"
+		"data/audio/sfx_msg-client.wav"
 	}
 }
 
