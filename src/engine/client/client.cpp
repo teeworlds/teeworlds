@@ -513,6 +513,10 @@ static void client_process_packet(NETPACKET *packet)
 				servers.infos[i].num_players = 0;
 				servers.infos[i].max_players = 0;
 				servers.infos[i].latency = 999;
+#if defined(CONF_ARCH_ENDIAN_BIG)
+				const char *tmp = (const char *)&servers.addresses[i].port;
+				servers.addresses[i].port = (tmp[1]<<8) | tmp[0];
+#endif
 				sprintf(servers.infos[i].address, "%d.%d.%d.%d:%d",
 					servers.addresses[i].ip[0], servers.addresses[i].ip[1], servers.addresses[i].ip[2],
 					servers.addresses[i].ip[3], servers.addresses[i].port);
