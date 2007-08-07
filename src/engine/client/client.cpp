@@ -38,6 +38,7 @@ static net_client net;
 static netaddr4 master_server;
 static netaddr4 server_address;
 static const char *server_spam_address=0;
+static int window_must_refocus = 0;
 
 // --- input wrappers ---
 static int keyboard_state[2][input::last];
@@ -872,11 +873,30 @@ static void client_run(const char *direct_connect_server)
 		// update input
 		inp_update();
 		
-		//
-		if(input::pressed(input::f1))
-			input::set_mouse_mode(input::mode_absolute);
-		if(input::pressed(input::f2))
-			input::set_mouse_mode(input::mode_relative);
+		// refocus
+		if(!gfx_window_active())
+		{
+			if(window_must_refocus == 0)
+			{
+				input::set_mouse_mode(input::mode_absolute);
+			}
+			window_must_refocus = 1;
+		}
+
+		if(window_must_refocus && gfx_window_active())
+		{
+			if(window_must_refocus < 3)
+			{
+				input::set_mouse_mode(input::mode_absolute);
+				window_must_refocus++;
+			}
+
+			if(inp_button_pressed(input::mouse_1))
+			{
+				input::set_mouse_mode(input::mode_relative);
+				window_must_refocus = 0;
+			}
+		}
 
 		// screenshot button
 		if(inp_key_down(input::f10))
@@ -885,6 +905,11 @@ static void client_run(const char *direct_connect_server)
 		// panic button
 		if(config.debug)
 		{
+			if(input::pressed(input::f1))
+				input::set_mouse_mode(input::mode_absolute);
+			if(input::pressed(input::f2))
+				input::set_mouse_mode(input::mode_relative);
+
 			if(input::pressed(input::lctrl) && input::pressed('Q'))
 				break;
 		
@@ -915,7 +940,7 @@ static void client_run(const char *direct_connect_server)
 			break;
 
 		// be nice
-		if(config.cpu_throttle)
+		if(config.cpu_throttle || !gfx_window_active())
 			thread_sleep(1);
 		
 		if(reporttime < time_get())

@@ -71,6 +71,8 @@ void gfx_swap(); // NOT EXPOSED
 int gfx_get_video_modes(video_mode *list, int maxcount);
 void gfx_set_vsync(int val);
 
+int gfx_window_active();
+
 // textures
 /*
 	Function: gfx_load_texture

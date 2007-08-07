@@ -213,6 +213,11 @@ bool gfx_init()
 }
 
 
+int gfx_window_active()
+{
+	return context.active()?1:0;
+}
+
 
 video_mode fakemodes[] = {
 	{320,240,8,8,8}, {400,300,8,8,8}, {640,480,8,8,8},
