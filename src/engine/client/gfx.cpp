@@ -121,12 +121,22 @@ bool gfx_init()
 {
 	screen_width = config.gfx_screen_width;
 	screen_height = config.gfx_screen_height;
-	
-	if(!context.create(screen_width, screen_height, 24, 8, 16, 0,
-		config.gfx_fullscreen?opengl::context::FLAG_FULLSCREEN:0))
+
+	if(config.gfx_fullscreen)
 	{
-		dbg_msg("game", "failed to create gl context");
-		return false;
+		if(!context.create(screen_width, screen_height, 24, 0, 0, 0, opengl::context::FLAG_FULLSCREEN))
+		{
+			dbg_msg("game", "failed to create gl context");
+			return false;
+		}
+	}
+	else
+	{
+		if(!context.create(screen_width, screen_height, 0, 0, 0, 0, 0))
+		{
+			dbg_msg("game", "failed to create gl context");
+			return false;
+		}
 	}
 
 	
