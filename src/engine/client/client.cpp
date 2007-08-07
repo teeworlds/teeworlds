@@ -879,7 +879,7 @@ static void client_run(const char *direct_connect_server)
 			input::set_mouse_mode(input::mode_relative);
 
 		// screenshot button
-		if(input::pressed(input::f10))
+		if(inp_key_down(input::f10))
 			gfx_screenshot();
 
 		// panic button
