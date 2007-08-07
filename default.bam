@@ -10,6 +10,11 @@ if family == "windows" then
 	dat2c_compiler = "scripts\\dat2c.py"
 end
 
+function rc(output, input)
+	print("rc " .. PathFilename(input))
+	return os.execute("rc /fo " .. output .. " " .. input)
+end
+
 function dat2c(output, data, name)
 	print("dat2c " .. PathFilename(output) .. " = " .. PathFilename(data))
 	return os.execute(dat2c_compiler .. " " .. data .. " " .. name .. " > " .. output)
@@ -33,6 +38,14 @@ end
 function dc_cdata(output, data, script)
 	print("dc_cdata " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script))
 	return os.execute(dc_compiler .. " " .. data .. " " .. script .. " -c " .. output)
+end
+
+function ResCompile(scriptfile)
+	scriptfile = Path(scriptfile)
+	output = PathBase(scriptfile) .. ".res"
+	bam_add_job("rc", output, scriptfile)
+	bam_add_dependency(output, scriptfile)
+	return output
 end
 
 function Dat2c(datafile, sourcefile, arrayname)
@@ -75,6 +88,12 @@ clientdata = DataCompile(
 		"src/game/client/data.h",
 		"src/game/client/data/client_data.cpp",
 		"src/game/client/data/client_internal.cpp")
+
+client_link_other = {}
+if family == "windows" then
+	client_link_other = {ResCompile("other/icons/teewars.rc")}
+end
+
 
 function build(settings)
 	settings.objdir = Path("objs")
@@ -121,7 +140,7 @@ function build(settings)
 	end
 	
 	-- build client, server and master server
-	client_exe = Link(settings, "teewars", engine, client, editor, game_shared, game_client)
+	client_exe = Link(settings, "teewars", engine, client, editor, game_shared, game_client, client_link_other)
 	server_exe = Link(server_settings, "teewars_srv", engine, server, game_shared, game_server)
 	masterserver_exe = Link(server_settings, "mastersrv", masterserver, engine)
 
