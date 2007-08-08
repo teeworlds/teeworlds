@@ -707,8 +707,8 @@ static void client_process_packet(NETPACKET *packet)
 						float current_latency = (now-wanted)/(float)time_freq();
 						latency = latency*0.95f+current_latency*0.05f;
 						
-						if(recived_snapshots > 2)
-							modc_newsnapshot();
+						//if(recived_snapshots > 2)
+						//	modc_newsnapshot();
 						
 						snapshot_part = 0;
 						
@@ -838,6 +838,9 @@ static void client_run(const char *direct_connect_server)
 						snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
 						snapshots[SNAP_CURRENT] = next;
 						snapshot_start_time = t;
+
+						if(snapshots[SNAP_CURRENT] && snapshots[SNAP_PREV])
+							modc_newsnapshot();
 					}
 					else
 					{
