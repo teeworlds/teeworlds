@@ -1,177 +1,177 @@
 sounds {
 	gun_fire {
-		"data/audio/wp_gun_fire-01.wav"
-		"data/audio/wp_gun_fire-02.wav"
-		"data/audio/wp_gun_fire-03.wav"
+		"data/audio/wp_gun_fire-01.wv"
+		"data/audio/wp_gun_fire-02.wv"
+		"data/audio/wp_gun_fire-03.wv"
 	}
 
 	shotgun_fire {
-		"data/audio/wp_shotty_fire-01.wav"
-		"data/audio/wp_shotty_fire-02.wav"
-		"data/audio/wp_shotty_fire-03.wav"
+		"data/audio/wp_shotty_fire-01.wv"
+		"data/audio/wp_shotty_fire-02.wv"
+		"data/audio/wp_shotty_fire-03.wv"
 	}
 	
 	rocket_fire {
-		"data/audio/wp_flump_launch-01.wav"
-		"data/audio/wp_flump_launch-02.wav"
-		"data/audio/wp_flump_launch-03.wav"
+		"data/audio/wp_flump_launch-01.wv"
+		"data/audio/wp_flump_launch-02.wv"
+		"data/audio/wp_flump_launch-03.wv"
 	}
 	
 	hammer_fire {
-		"data/audio/wp_hammer_swing-01.wav"
-		"data/audio/wp_hammer_swing-02.wav"
-		"data/audio/wp_hammer_swing-03.wav"
+		"data/audio/wp_hammer_swing-01.wv"
+		"data/audio/wp_hammer_swing-02.wv"
+		"data/audio/wp_hammer_swing-03.wv"
 	}
 
 	hammer_hit {
-		"data/audio/wp_hammer_hit-01.wav"
-		"data/audio/wp_hammer_hit-02.wav"
-		"data/audio/wp_hammer_hit-03.wav"
+		"data/audio/wp_hammer_hit-01.wv"
+		"data/audio/wp_hammer_hit-02.wv"
+		"data/audio/wp_hammer_hit-03.wv"
 	}
 	
 	ninja_fire { 
-		"data/audio/wp_ninja_attack-01.wav"
-		"data/audio/wp_ninja_attack-02.wav"
-		"data/audio/wp_ninja_attack-03.wav"
+		"data/audio/wp_ninja_attack-01.wv"
+		"data/audio/wp_ninja_attack-02.wv"
+		"data/audio/wp_ninja_attack-03.wv"
 	}
 
 	rocket_explode {
-		"data/audio/wp_flump_explo-01.wav"
-		"data/audio/wp_flump_explo-02.wav"
-		"data/audio/wp_flump_explo-03.wav"
+		"data/audio/wp_flump_explo-01.wv"
+		"data/audio/wp_flump_explo-02.wv"
+		"data/audio/wp_flump_explo-03.wv"
 	}
 	
 	ninja_hit {
-		"data/audio/wp_ninja_hit-01.wav"
-		"data/audio/wp_ninja_hit-02.wav"
-		"data/audio/wp_ninja_hit-03.wav"
+		"data/audio/wp_ninja_hit-01.wv"
+		"data/audio/wp_ninja_hit-02.wv"
+		"data/audio/wp_ninja_hit-03.wv"
 	}
 
 	weapon_switch { 
-		"data/audio/wp_switch-01.wav"
-		"data/audio/wp_switch-02.wav"
-		"data/audio/wp_switch-03.wav"
+		"data/audio/wp_switch-01.wv"
+		"data/audio/wp_switch-02.wv"
+		"data/audio/wp_switch-03.wv"
 	}
 
 	player_pain_short {
-		"data/audio/vo_teefault_pain_short-01.wav"
-		"data/audio/vo_teefault_pain_short-02.wav"
-		"data/audio/vo_teefault_pain_short-03.wav"
-		"data/audio/vo_teefault_pain_short-04.wav"
-		"data/audio/vo_teefault_pain_short-05.wav"
-		"data/audio/vo_teefault_pain_short-06.wav"
-		"data/audio/vo_teefault_pain_short-07.wav"
-		"data/audio/vo_teefault_pain_short-08.wav"
-		"data/audio/vo_teefault_pain_short-09.wav"
-		"data/audio/vo_teefault_pain_short-10.wav"
-		"data/audio/vo_teefault_pain_short-11.wav"
-		"data/audio/vo_teefault_pain_short-12.wav"
+		"data/audio/vo_teefault_pain_short-01.wv"
+		"data/audio/vo_teefault_pain_short-02.wv"
+		"data/audio/vo_teefault_pain_short-03.wv"
+		"data/audio/vo_teefault_pain_short-04.wv"
+		"data/audio/vo_teefault_pain_short-05.wv"
+		"data/audio/vo_teefault_pain_short-06.wv"
+		"data/audio/vo_teefault_pain_short-07.wv"
+		"data/audio/vo_teefault_pain_short-08.wv"
+		"data/audio/vo_teefault_pain_short-09.wv"
+		"data/audio/vo_teefault_pain_short-10.wv"
+		"data/audio/vo_teefault_pain_short-11.wv"
+		"data/audio/vo_teefault_pain_short-12.wv"
 	}
 
 	player_pain_long {
-		"data/audio/vo_teefault_pain_long-01.wav"
-		"data/audio/vo_teefault_pain_long-02.wav"
+		"data/audio/vo_teefault_pain_long-01.wv"
+		"data/audio/vo_teefault_pain_long-02.wv"
 	}
 
 	body_land {
-		"data/audio/foley_land-01.wav"
-		"data/audio/foley_land-02.wav"
-		"data/audio/foley_land-03.wav"
-		"data/audio/foley_land-04.wav"
+		"data/audio/foley_land-01.wv"
+		"data/audio/foley_land-02.wv"
+		"data/audio/foley_land-03.wv"
+		"data/audio/foley_land-04.wv"
 	}
 	
 	player_jump {
-		"data/audio/foley_foot_left-01.wav"
-		"data/audio/foley_foot_left-02.wav"
-		"data/audio/foley_foot_left-03.wav"
-		"data/audio/foley_foot_left-04.wav"
-		"data/audio/foley_foot_right-01.wav"
-		"data/audio/foley_foot_right-02.wav"
-		"data/audio/foley_foot_right-03.wav"
-		"data/audio/foley_foot_right-04.wav"
+		"data/audio/foley_foot_left-01.wv"
+		"data/audio/foley_foot_left-02.wv"
+		"data/audio/foley_foot_left-03.wv"
+		"data/audio/foley_foot_left-04.wv"
+		"data/audio/foley_foot_right-01.wv"
+		"data/audio/foley_foot_right-02.wv"
+		"data/audio/foley_foot_right-03.wv"
+		"data/audio/foley_foot_right-04.wv"
 	}
 
 	player_die {
-		"data/audio/foley_body_splat-02.wav"
-		"data/audio/foley_body_splat-03.wav"
-		"data/audio/foley_body_splat-04.wav"
+		"data/audio/foley_body_splat-02.wv"
+		"data/audio/foley_body_splat-03.wv"
+		"data/audio/foley_body_splat-04.wv"
 	}
 	
 	player_spawn {
-		"data/audio/vo_teefault_spawn-01.wav"
-		"data/audio/vo_teefault_spawn-02.wav"
-		"data/audio/vo_teefault_spawn-03.wav"
-		"data/audio/vo_teefault_spawn-04.wav"
-		"data/audio/vo_teefault_spawn-05.wav"
-		"data/audio/vo_teefault_spawn-06.wav"
-		"data/audio/vo_teefault_spawn-07.wav"
+		"data/audio/vo_teefault_spawn-01.wv"
+		"data/audio/vo_teefault_spawn-02.wv"
+		"data/audio/vo_teefault_spawn-03.wv"
+		"data/audio/vo_teefault_spawn-04.wv"
+		"data/audio/vo_teefault_spawn-05.wv"
+		"data/audio/vo_teefault_spawn-06.wv"
+		"data/audio/vo_teefault_spawn-07.wv"
 	}
 
 	tee_cry {
-		"data/audio/vo_teefault_cry-01.wav"
-		"data/audio/vo_teefault_cry-02.wav"
+		"data/audio/vo_teefault_cry-01.wv"
+		"data/audio/vo_teefault_cry-02.wv"
 	}
 
 	hook_loop { 
-		"data/audio/hook_loop-01.wav"
-		"data/audio/hook_loop-02.wav"
+		"data/audio/hook_loop-01.wv"
+		"data/audio/hook_loop-02.wv"
 	}
 	
 	hook_attach {
-		"data/audio/hook_attach-01.wav"
-		"data/audio/hook_attach-02.wav"
-		"data/audio/hook_attach-03.wav"
+		"data/audio/hook_attach-01.wv"
+		"data/audio/hook_attach-02.wv"
+		"data/audio/hook_attach-03.wv"
 	}
 	
 	pickup_health {
-		"data/audio/sfx_pickup_hrt-01.wav"
-		"data/audio/sfx_pickup_hrt-02.wav"
+		"data/audio/sfx_pickup_hrt-01.wv"
+		"data/audio/sfx_pickup_hrt-02.wv"
 	}
 	
 	pickup_armor {
-		"data/audio/sfx_pickup_arm-01.wav"
-		"data/audio/sfx_pickup_arm-02.wav"
-		"data/audio/sfx_pickup_arm-03.wav"
-		"data/audio/sfx_pickup_arm-04.wav"
+		"data/audio/sfx_pickup_arm-01.wv"
+		"data/audio/sfx_pickup_arm-02.wv"
+		"data/audio/sfx_pickup_arm-03.wv"
+		"data/audio/sfx_pickup_arm-04.wv"
 	}
 	
 	pickup_rocket {
-		"data/audio/sfx_pickup_launcher.wav"
+		"data/audio/sfx_pickup_launcher.wv"
 	}
 	
 	pickup_shotgun {
-		"data/audio/sfx_pickup_sg.wav"
+		"data/audio/sfx_pickup_sg.wv"
 	}
 	
 	pickup_ninja {
-		"data/audio/sfx_pickup_ninja.wav"
+		"data/audio/sfx_pickup_ninja.wv"
 	}
 		
 	weapon_spawn {
-		"data/audio/sfx_spawn_wpn-01.wav"
-		"data/audio/sfx_spawn_wpn-02.wav"
-		"data/audio/sfx_spawn_wpn-03.wav"
+		"data/audio/sfx_spawn_wpn-01.wv"
+		"data/audio/sfx_spawn_wpn-02.wv"
+		"data/audio/sfx_spawn_wpn-03.wv"
 	}
 
 	weapon_noammo {
-		"data/audio/wp_noammo-01.wav"
-		"data/audio/wp_noammo-02.wav"
-		"data/audio/wp_noammo-03.wav"
-		"data/audio/wp_noammo-04.wav"
-		"data/audio/wp_noammo-05.wav"
+		"data/audio/wp_noammo-01.wv"
+		"data/audio/wp_noammo-02.wv"
+		"data/audio/wp_noammo-03.wv"
+		"data/audio/wp_noammo-04.wv"
+		"data/audio/wp_noammo-05.wv"
 	}
 
 	hit {
-		"data/audio/sfx_hit_weak-01.wav"
-		"data/audio/sfx_hit_weak-02.wav"
+		"data/audio/sfx_hit_weak-01.wv"
+		"data/audio/sfx_hit_weak-02.wv"
 	}
 
 	chat_server {
-		"data/audio/sfx_msg-server.wav"
+		"data/audio/sfx_msg-server.wv"
 	}
 	
 	chat_client {
-		"data/audio/sfx_msg-client.wav"
+		"data/audio/sfx_msg-client.wv"
 	}
 }
 

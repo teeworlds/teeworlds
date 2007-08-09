@@ -121,7 +121,7 @@ function build(settings)
 	settings.cc.includes:add("../baselib/src/external/zlib")
 
 	engine = Compile(settings, Collect("src/engine/*.cpp"))
-	client = Compile(settings, Collect("src/engine/client/*.cpp", "src/engine/client/pnglite/*.c"))
+	client = Compile(settings, Collect("src/engine/client/*.cpp", "src/engine/client/pnglite/*.c", "src/wavpack/*.c"))
 	server = Compile(settings, Collect("src/engine/server/*.cpp"))
 	masterserver = Compile(settings, Collect("src/mastersrv/*.cpp"))
 	game_shared = Compile(settings, Collect("src/game/*.cpp"))

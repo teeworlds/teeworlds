@@ -4,6 +4,10 @@
 
 #include <engine/interface.h>
 
+extern "C" {
+#include "../../wavpack/wavpack.h"
+}
+
 using namespace baselib;
 
 static const int NUM_FRAMES_STOP = 512;
@@ -241,6 +245,87 @@ static int snd_alloc_sound()
 	int id = first_free_sound;
 	first_free_sound = sounds[id].next;
 	sounds[id].next = -1;
+	return id;
+}
+
+static FILE *file = NULL;
+
+static int read_data(void *buffer, int size)
+{
+	return fread(buffer, 1, size, file);	
+}
+
+int snd_load_wv(const char *filename)
+{
+	sound_data snd;
+	int id = -1;
+
+	char error[100];
+
+	file = fopen(filename, "r");
+
+	WavpackContext *context = WavpackOpenFileInput(read_data, error);
+	if (context)
+	{
+		int samples = WavpackGetNumSamples(context);
+		int bitspersample = WavpackGetBitsPerSample(context);
+		int bytespersample = WavpackGetBytesPerSample(context);
+		unsigned int samplerate = WavpackGetSampleRate(context);
+		int channels = WavpackGetNumChannels(context);
+
+		snd.channels = channels;
+		snd.rate = samplerate;
+
+		if(snd.channels > 2)
+		{
+			dbg_msg("sound/wv", "file is not mono or stereo. filename='%s'", filename);
+			return -1;
+		}
+
+		if(snd.rate != 44100)
+		{
+			dbg_msg("sound/wv", "file is %d Hz, not 44100 Hz. filename='%s'", snd.rate, filename);
+			return -1;
+		}
+		
+		if(bitspersample != 16)
+		{
+			dbg_msg("sound/wv", "bps is %d, not 16, filname='%s'", bitspersample, filename);
+			return -1;
+		}
+
+		int *data = (int *)mem_alloc(4*samples*channels, 1);
+		WavpackUnpackSamples(context, data, samples); // TODO: check return value
+		int *src = data;
+		
+		snd.data = (short *)mem_alloc(2*samples*channels, 1);
+		short *dst = snd.data;
+
+		for (int i = 0; i < samples*channels; i++)
+			*dst++ = (short)*src++;
+
+		mem_free(data);
+
+		snd.num_samples = samples;
+		snd.sustain_start = -1;
+		snd.sustain_end = -1;
+		snd.last_played = 0;
+		id = snd_alloc_sound();
+		sounds[id].sound = snd;
+	}
+	else
+	{
+		dbg_msg("sound/wv", "failed to open %s: %s", filename, error);
+	}
+
+	fclose(file);
+	file = NULL;
+
+	if(id >= 0)
+		dbg_msg("sound/wv", "loaded %s", filename);
+	else
+		dbg_msg("sound/wv", "failed to load %s", filename);
+
 	return id;
 }
 

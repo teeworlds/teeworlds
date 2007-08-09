@@ -447,7 +447,15 @@ void modc_init()
 	// load sounds
 	for(int s = 0; s < data->num_sounds; s++)
 		for(int i = 0; i < data->sounds[s].num_sounds; i++)
-			data->sounds[s].sounds[i].id = snd_load_wav(data->sounds[s].sounds[i].filename);
+		{
+			int id;
+			if (strcmp(data->sounds[s].sounds[i].filename + strlen(data->sounds[s].sounds[i].filename) - 3, ".wv") == 0)
+				id = snd_load_wv(data->sounds[s].sounds[i].filename);
+			else
+				id = snd_load_wav(data->sounds[s].sounds[i].filename);
+
+			data->sounds[s].sounds[i].id = id;
+		}
 	
 	// load textures
 	for(int i = 0; i < data->num_images; i++)
