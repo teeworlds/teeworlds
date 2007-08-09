@@ -570,6 +570,10 @@ sprites {
 		tee_foot_outline 13 2 2 1
 		
 		tee_eye_normal 10 2 1 1
+		tee_eye_pain 11 3 1 1
+		tee_eye_happy 11 2 1 1
+		tee_eye_surprise 12 0 1 1
+		tee_eye_angry 10 3 1 1
 	}
 
 	chatbubbles images.chat_bubbles 4 4 {

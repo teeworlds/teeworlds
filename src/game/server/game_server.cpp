@@ -806,6 +806,9 @@ void player::try_respawn()
 	
 	active_weapon = WEAPON_GUN;
 	reload_timer = 0;
+
+	emote_type = EMOTE_HAPPY;
+	emote_stop = server_tick() + server_tickspeed(); 
 	
 	// Create sound and spawn effects
 	create_sound(pos, SOUND_PLAYER_SPAWN);
@@ -1407,7 +1410,7 @@ bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 	
 	// do damage hit sound
 	if(from >= 0)
-		create_targetted_sound(pos, SOUND_HIT, from);
+		create_targetted_sound(players[from].pos, SOUND_HIT, from);
 			
 	// check for death
 	if(health <= 0)
@@ -1433,6 +1436,8 @@ bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 	else
 		create_sound(pos, SOUND_PLAYER_PAIN_SHORT);
 
+	emote_type = EMOTE_PAIN;
+	emote_stop = server_tick() + 500 * server_tickspeed() / 1000;
 
 	// spawn blood?
 	return true;
@@ -1446,7 +1451,14 @@ void player::snap(int snaping_client)
 	player->y = (int)pos.y;
 	player->vx = (int)vel.x;
 	player->vy = (int)vel.y;
-	player->emote = EMOTE_NORMAL;
+
+	if (emote_stop < server_tick())
+	{
+		emote_type = EMOTE_NORMAL;
+		emote_stop = -1;
+	}
+
+	player->emote = emote_type;
 
 	player->latency = latency_avg;
 	player->latency_flux = latency_max-latency_min;
@@ -1472,8 +1484,8 @@ void player::snap(int snaping_client)
 	if(length(vel) > 15.0f)
 		player->emote = EMOTE_HAPPY;
 	
-	if(damage_taken_tick+50 > server_tick())
-		player->emote = EMOTE_PAIN;
+	//if(damage_taken_tick+50 > server_tick())
+	//	player->emote = EMOTE_PAIN;
 	
 	if(player->emote == EMOTE_NORMAL)
 	{
@@ -1590,6 +1602,24 @@ void powerup::tick()
 				pplayer->active_weapon = WEAPON_NINJA;
 				respawntime = data->powerupinfo[type].respawntime;
 				create_sound(pos, SOUND_PICKUP_NINJA);
+
+				// loop through all players, setting their emotes
+				entity *ents[64];
+				const int types[] = {OBJTYPE_PLAYER};
+				int num = world.find_entities(vec2(0, 0), 1000000, ents, 64, types, 1);
+				for (int i = 0; i < num; i++)
+				{
+					player *p = (player *)ents[i];
+					if (p != pplayer)
+					{
+						p->emote_type = EMOTE_SURPRISE;
+						p->emote_stop = server_tick() + server_tickspeed();
+					}
+				}
+
+				pplayer->emote_type = EMOTE_ANGRY;
+				pplayer->emote_stop = server_tick() + 1200 * server_tickspeed() / 1000;
+
 				break;
 			}
 		default:

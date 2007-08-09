@@ -790,7 +790,7 @@ static void anim_eval_add(animstate *state, animation *anim, float time, float a
 	anim_add(state, &add, amount);
 }
 
-static void render_tee(animstate *anim, int skin, vec2 dir, vec2 pos)
+static void render_tee(animstate *anim, int skin, int emote, vec2 dir, vec2 pos)
 {
 	vec2 direction =  dir;
 	vec2 position = pos;
@@ -819,10 +819,26 @@ static void render_tee(animstate *anim, int skin, vec2 dir, vec2 pos)
 				// draw eyes
 				if(p == 1)
 				{
-					// normal
-					select_sprite(SPRITE_TEE_EYE_NORMAL, 0, 0, shift*4);
+					switch (emote)
+					{
+						case EMOTE_PAIN:
+							select_sprite(SPRITE_TEE_EYE_PAIN, 0, 0, shift*4);
+							break;
+						case EMOTE_HAPPY:
+							select_sprite(SPRITE_TEE_EYE_HAPPY, 0, 0, shift*4);
+							break;
+						case EMOTE_SURPRISE:
+							select_sprite(SPRITE_TEE_EYE_SURPRISE, 0, 0, shift*4);
+							break;
+						case EMOTE_ANGRY:
+							select_sprite(SPRITE_TEE_EYE_ANGRY, 0, 0, shift*4);
+							break;
+						default:
+							select_sprite(SPRITE_TEE_EYE_NORMAL, 0, 0, shift*4);
+							break;
+					}
 					gfx_quads_draw(position.x-4+direction.x*4, position.y-8+direction.y*3, basesize, basesize);
-					gfx_quads_draw(position.x+4+direction.x*4, position.y-8+direction.y*3, basesize, basesize);
+					gfx_quads_draw(position.x+4+direction.x*4, position.y-8+direction.y*3, -basesize, basesize);
 				}
 			}
 
@@ -1078,7 +1094,7 @@ static void render_player(const obj_player *prev, const obj_player *player)
 
 	// render the tee
 	int skin = gametype == GAMETYPE_TDM ? skinseed + player->team : player->clientid;
-	render_tee(&state, skin, direction, position);
+	render_tee(&state, skin, player->emote, direction, position);
 
 	if(player->state == STATE_CHATTING)
 	{
@@ -1552,7 +1568,7 @@ void render_game()
 			// render victim tee
 			x -= 24.0f;
 			int skin = gametype == GAMETYPE_TDM ? skinseed + client_datas[killmsgs[r].victim].team : killmsgs[r].victim;
-			render_tee(&idlestate, skin, vec2(1,0), vec2(x, y+28));
+			render_tee(&idlestate, skin, EMOTE_NORMAL, vec2(1,0), vec2(x, y+28));
 			x -= 32.0f;
 
 			// render weapon
@@ -1570,7 +1586,7 @@ void render_game()
 			// render killer tee
 			x -= 24.0f;
 			skin = gametype == GAMETYPE_TDM ? skinseed + client_datas[killmsgs[r].killer].team : killmsgs[r].killer;
-			render_tee(&idlestate, skin, vec2(1,0), vec2(x, y+28));
+			render_tee(&idlestate, skin, EMOTE_NORMAL, vec2(1,0), vec2(x, y+28));
 			x -= 32.0f;
 			
 			// render killer name
@@ -1746,7 +1762,7 @@ void render_game()
 				gfx_pretty_text(x+w-tw-35, y, font_size, buf);
 
 				// render avatar
-				render_tee(&idlestate, player->clientid, vec2(1,0), vec2(x+90, y+28));
+				render_tee(&idlestate, player->clientid, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28));
 				y += 50.0f;
 			}
 			

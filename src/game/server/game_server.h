@@ -218,6 +218,9 @@ public:
 	int attack_tick;
 	
 	int damage_taken;
+
+	int emote_type;
+	int emote_stop;
 	
 	// we need a defered position so we can handle the physics correctly
 	baselib::vec2 defered_pos;
