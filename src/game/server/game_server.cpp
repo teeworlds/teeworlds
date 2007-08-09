@@ -1488,15 +1488,15 @@ void player::snap(int snaping_client)
 	if(dead)
 		player->health = -1;
 	
-	if(length(vel) > 15.0f)
-		player->emote = EMOTE_HAPPY;
+	//if(length(vel) > 15.0f)
+	//	player->emote = EMOTE_HAPPY;
 	
 	//if(damage_taken_tick+50 > server_tick())
 	//	player->emote = EMOTE_PAIN;
 	
 	if(player->emote == EMOTE_NORMAL)
 	{
-		if((server_tick()%(50*5)) < 10)
+		if((server_tick()%(50*5)) < 5)
 			player->emote = EMOTE_BLINK;
 	}
 	

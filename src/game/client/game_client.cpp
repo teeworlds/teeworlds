@@ -837,8 +837,9 @@ static void render_tee(animstate *anim, int skin, int emote, vec2 dir, vec2 pos)
 							select_sprite(SPRITE_TEE_EYE_NORMAL, 0, 0, shift*4);
 							break;
 					}
-					gfx_quads_draw(position.x-4+direction.x*4, position.y-8+direction.y*3, basesize, basesize);
-					gfx_quads_draw(position.x+4+direction.x*4, position.y-8+direction.y*3, -basesize, basesize);
+					int h = emote == EMOTE_BLINK ? basesize/3 : basesize;
+					gfx_quads_draw(position.x-4+direction.x*4, position.y-8+direction.y*3, basesize, h);
+					gfx_quads_draw(position.x+4+direction.x*4, position.y-8+direction.y*3, -basesize, h);
 				}
 			}
 
