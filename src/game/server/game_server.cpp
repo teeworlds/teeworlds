@@ -807,9 +807,6 @@ void player::try_respawn()
 	active_weapon = WEAPON_GUN;
 	reload_timer = 0;
 
-	emote_type = EMOTE_HAPPY;
-	emote_stop = server_tick() + server_tickspeed(); 
-	
 	// Create sound and spawn effects
 	create_sound(pos, SOUND_PLAYER_SPAWN);
 	create_spawn(pos);
@@ -1410,7 +1407,7 @@ bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 	
 	// do damage hit sound
 	if(from >= 0)
-		create_targetted_sound(players[from].pos, SOUND_HIT, from);
+		create_targetted_sound(get_player(from)->pos, SOUND_HIT, from);
 			
 	// check for death
 	if(health <= 0)
@@ -1428,6 +1425,16 @@ bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 		}
 		
 		die(from, weapon);
+
+		// set attacker's face to happy (taunt!)
+		if (from >= 0 && from != client_id)
+		{
+			player *p = get_player(from);
+
+			p->emote_type = EMOTE_HAPPY;
+			p->emote_stop = server_tick() + server_tickspeed(); 
+		}
+	
 		return false;
 	}
 
