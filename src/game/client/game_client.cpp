@@ -413,13 +413,75 @@ void chat_reset()
 
 void chat_add_line(int client_id, const char *line)
 {
-	chat_current_line = (chat_current_line+1)%chat_max_lines;
-	chat_lines[chat_current_line].tick = client_tick();
-	chat_lines[chat_current_line].client_id = client_id;
 	if(client_id == -1) // server message
+	{
+		chat_current_line = (chat_current_line+1)%chat_max_lines;
+		chat_lines[chat_current_line].tick = client_tick();
+		chat_lines[chat_current_line].client_id = client_id;
 		sprintf(chat_lines[chat_current_line].text, "*** %s", line);
+	}
 	else
-		sprintf(chat_lines[chat_current_line].text, "%s: %s", client_datas[client_id].name, line); // TODO: abit nasty
+	{
+		int len;
+		int loop_count = 0;
+		while ((len = strlen(line)) > 0)
+		{
+			const int max_line_len = 80;
+			const char *str;
+			int str_len;
+
+			chat_current_line = (chat_current_line+1)%chat_max_lines;
+			chat_lines[chat_current_line].tick = client_tick();
+			chat_lines[chat_current_line].client_id = client_id;
+			// check if we need to cut it
+			if (len > max_line_len)
+			{
+				int cutoff = max_line_len;
+
+				// find space
+				while (cutoff > 0)
+				{
+					if (line[cutoff] == ' ')
+						break;
+					else
+						cutoff--;
+				}
+
+				// if no space was found, force cut off
+				if (!cutoff)
+					cutoff = max_line_len;
+	
+				str = line;
+				str_len = cutoff;
+
+				line += cutoff;
+
+				// get rid of leading spaces
+				while (line[0] == ' ')
+					line++;
+			}
+			else
+			{
+				str = line;
+				str_len = len;
+
+				line += len;
+			}
+
+			if (loop_count == 0)
+			{
+				sprintf(chat_lines[chat_current_line].text, "%s: %s", client_datas[client_id].name, str); // TODO: abit nasty
+				chat_lines[chat_current_line].text[strlen(client_datas[client_id].name) + 2 + str_len] = '\0';
+			}
+			else
+			{
+				memcpy(chat_lines[chat_current_line].text, str, str_len);
+				chat_lines[chat_current_line].text[str_len] = '\0';
+			}
+
+			loop_count++;
+		}
+	}
 }
 
 struct killmsg
