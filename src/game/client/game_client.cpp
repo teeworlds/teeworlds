@@ -17,11 +17,8 @@ data_container *data = 0x0;
 
 static int charids[16] = {2,10,0,4,12,6,9,1,3,15,13,11,7,5,8,14};
 
-static int gametype = GAMETYPE_DM;
+int gametype = GAMETYPE_DM;
 static int skinseed = 0;
-static int menu_team = 0;
-static int menu_quit = 0;
-static int menu_resume = 0;
 
 static int music_menu = -1;
 static int music_menu_id = -1;
@@ -1155,83 +1152,6 @@ void render_sun(float x, float y)
 	gfx_quads_end();	
 }
 
-void ingamemenu_render()
-{
-	if (!local_player)
-		return;
-	gfx_mapscreen(0, 0, 800, 600); // TODO: fix me
-	// Ingame menu - quit and change team (if tdm)
-	float mx,my;
-	int rx, ry;
-    inp_mouse_relative(&rx, &ry);
-    static vec2 menu_mouse_pos(0,0);
-    menu_mouse_pos.x += rx;
-    menu_mouse_pos.y += ry;
-    if(menu_mouse_pos.x < 0) mouse_pos.x = 0;
-    if(menu_mouse_pos.y < 0) mouse_pos.y = 0;
-    if(menu_mouse_pos.x > gfx_screenwidth()) menu_mouse_pos.x = gfx_screenwidth();
-    if(menu_mouse_pos.y > gfx_screenheight()) menu_mouse_pos.y = gfx_screenheight();
-        
-    // update the ui
-    mx = (menu_mouse_pos.x/(float)gfx_screenwidth())*800.0f;
-    my = (menu_mouse_pos.y/(float)gfx_screenheight())*600.0f;
-        
-    int buttons = 0;
-    if(inp_key_pressed(input::mouse_1)) buttons |= 1;
-    if(inp_key_pressed(input::mouse_2)) buttons |= 2;
-    if(inp_key_pressed(input::mouse_3)) buttons |= 4;
-        
-    ui_update(mx,my,mx*3.0f,my*3.0f,buttons);
-
-	char buf[128];
-	if (gametype == GAMETYPE_TDM)
-	{
-		// Switch team
-		ui_do_label(100,100,"Switch Team",40);
-		sprintf(buf,"Team: %s",local_player->team ? "A" : "B");
-		if (ui_do_button(&menu_team, buf, 0, 30, 150, 170, 48, draw_teewars_button))
-		{
-			msg_pack_start(MSG_SWITCHTEAM, MSGFLAG_VITAL);
-			msg_pack_end();
-			client_send_msg();
-			menu_active = false;
-		}
-	}
-
-	const int column1_x = 275;
-	const int row1_y = 200;
-	const int row2_y = row1_y + 60;
-	const int row3_y = row2_y + 60;
-
-	gfx_blend_normal();
-	
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_quads_setcolor(0,0,0,0.5f);
-	draw_round_rect(170, 120, 460, 300, 30.0f);
-	gfx_quads_end();
-	
-	ui_do_image(data->images[IMAGE_BANNER].id, 214, 150, 384, 96);
-
-	if (ui_do_button(&menu_resume, "Resume Game", 0, column1_x, row2_y, 250, 48, draw_teewars_button))
-	{
-		menu_active = 0;
-	}
-
-	if (ui_do_button(&menu_quit, "Disconnect", 0, column1_x, row3_y, 250, 48, draw_teewars_button))
-	{
-		menu_active = 0;
-		client_disconnect();
-	}
-	
-	gfx_texture_set(data->images[IMAGE_CURSOR].id);
-	gfx_quads_begin();
-	gfx_quads_setcolor(1,1,1,1);
-	gfx_quads_drawTL(mx,my,24,24);
-	gfx_quads_end();
-	
-}
-
 void render_game()
 {	
 	animstate idlestate;
@@ -1301,8 +1221,11 @@ void render_game()
 		}
 	}
 	
-	input::clear_char(); // TODO: bypasses the engine interface
-	input::clear_key(); // TODO: bypasses the engine interface
+	if (!menu_active)
+	{
+		input::clear_char(); // TODO: bypasses the engine interface
+		input::clear_key(); // TODO: bypasses the engine interface
+	}
 	
 	// fetch new input
 	if(!menu_active)
@@ -1638,12 +1561,6 @@ void render_game()
 		}
 	}
 	
-	if (menu_active)
-	{
-		ingamemenu_render();
-		return;
-	}
-
 	// render goals
 	if(gameobj)
 	{
@@ -1674,6 +1591,15 @@ void render_game()
 			float w = gfx_pretty_text_width(16, text);
 			gfx_pretty_text(200-w/2, 2, 16, text);
 		}
+	}
+
+	if (menu_active)
+	{
+		if (modmenu_render(true))
+			menu_active = false;
+			
+		//ingamemenu_render();
+		return;
 	}
 	
 	// render score board
@@ -1909,15 +1835,15 @@ void modc_render()
 			music_menu_id = snd_play(music_menu, SND_LOOP);
 		
 		//netaddr4 server_address;
-		if(modmenu_render() == -1)
+		if(modmenu_render(false) == -1)
 			client_quit();
-
 	}
 }
 
 
 void menu_do_disconnected();
 void menu_do_connecting();
+void menu_do_connected();
 
 void modc_statechange(int state, int old)
 {
@@ -1925,6 +1851,8 @@ void modc_statechange(int state, int old)
 	 	menu_do_disconnected();
 	if(state == CLIENTSTATE_CONNECTING)
 		menu_do_connecting();
+	if (state == CLIENTSTATE_ONLINE)
+		menu_do_connected();
 }
 
 void modc_message(int msg)

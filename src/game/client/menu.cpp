@@ -970,8 +970,21 @@ static int settings_sound_render()
 	return 0;
 }
 
-static int settings_render()
+extern void draw_round_rect(float x, float y, float w, float h, float r);
+
+static int settings_render(bool ingame)
 {
+	if (ingame)
+	{
+		gfx_blend_normal();
+		
+		gfx_texture_set(-1);
+		gfx_quads_begin();
+		gfx_quads_setcolor(0,0,0,0.5f);
+		draw_round_rect(10, 120, 780, 460, 30.0f);
+		gfx_quads_end();
+	}
+
 	static int general_button, controls_button, video_button, sound_button;
 
 	if (ui_do_button(&general_button, "General", 0, 30, 200, 170, 48, draw_teewars_button))
@@ -1012,6 +1025,61 @@ static int settings_render()
 	{
 		snd_set_master_volume(config.volume / 255.0f);
 		screen = SCREEN_MAIN;
+	}
+
+	return 0;
+}
+
+extern int gametype;
+static int ingame_main_render()
+{
+	static int menu_resume, menu_active, menu_quit, menu_settings;
+	char buf[128];
+	/*if (gametype == GAMETYPE_TDM)
+	{
+		// Switch team
+		ui_do_label(100,100,"Switch Team",40);
+		sprintf(buf,"Team: %s",local_player->team ? "A" : "B");
+		if (ui_do_button(&menu_team, buf, 0, 30, 150, 170, 48, draw_teewars_button))
+		{
+			msg_pack_start(MSG_SWITCHTEAM, MSGFLAG_VITAL);
+			msg_pack_end();
+			client_send_msg();
+			menu_active = false;
+		}
+	}*/
+
+	const int column1_x = 275;
+	const int row1_y = 200;
+	const int row2_y = row1_y + 60;
+	const int row3_y = row2_y + 60;
+	const int row4_y = row3_y + 60;
+
+	gfx_blend_normal();
+	
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_quads_setcolor(0,0,0,0.5f);
+	draw_round_rect(170, 120, 460, 360, 30.0f);
+	gfx_quads_end();
+	
+	ui_do_image(data->images[IMAGE_BANNER].id, 214, 150, 384, 96);
+
+	if (ui_do_button(&menu_resume, "Resume Game", 0, column1_x, row2_y, 250, 48, draw_teewars_button))
+	{
+		return 1;
+	}
+
+	if (ui_do_button(&menu_quit, "Disconnect", 0, column1_x, row4_y, 250, 48, draw_teewars_button))
+	{
+		client_disconnect();
+		return 1;
+	}
+
+	if (ui_do_button(&menu_settings, "Settings", 0, column1_x, row3_y, 250, 48, draw_teewars_button))
+	{
+		config_copy = config;
+		screen = SCREEN_SETTINGS_GENERAL;
 	}
 
 	return 0;
@@ -1186,7 +1254,6 @@ static int kerning_render()
 	return 0;
 }
 
-extern void draw_round_rect(float x, float y, float w, float h, float r);
 
 static int render_popup(const char *caption, const char *text, const char *button_text)
 {
@@ -1254,31 +1321,43 @@ void menu_do_connecting()
 	screen = SCREEN_CONNECTING;
 }
 
-static int menu_render()
+void menu_do_connected()
 {
-	// background color
-	gfx_clear(0.65f,0.78f,0.9f);
-	//gfx_clear(89/255.f,122/255.f,0.0);
+	screen = SCREEN_MAIN;
+}
 
-	// GUI coordsys
-	gfx_mapscreen(0,0,800.0f,600.0f);
-
-	static int64 start = time_get();
-
-	float t = double(time_get() - start) / double(time_freq());
-	gfx_mapscreen(0,0,1600.0f,1200.0f);
-	draw_background(t);
-	gfx_mapscreen(0,0,800.0f,600.0f);
-
-	if (screen != SCREEN_KERNING)
+static int menu_render(bool ingame)
+{
+	if (!ingame)
 	{
-		ui_do_image(data->images[IMAGE_BANNER].id, 200, 20, 512, 128);
-		ui_do_label(20.0f, 600.0f-40.0f, "Version: " TEEWARS_VERSION, 36);
+		// background color
+		gfx_clear(0.65f,0.78f,0.9f);
+		//gfx_clear(89/255.f,122/255.f,0.0);
+
+		// GUI coordsys
+		gfx_mapscreen(0,0,800.0f,600.0f);
+
+		static int64 start = time_get();
+
+		float t = double(time_get() - start) / double(time_freq());
+		gfx_mapscreen(0,0,1600.0f,1200.0f);
+		draw_background(t);
+		gfx_mapscreen(0,0,800.0f,600.0f);
+
+		if (screen != SCREEN_KERNING)
+		{
+			ui_do_image(data->images[IMAGE_BANNER].id, 200, 20, 512, 128);
+			ui_do_label(20.0f, 600.0f-40.0f, "Version: " TEEWARS_VERSION, 36);
+		}
+	}
+	else
+	{
+		gfx_mapscreen(0, 0, 800, 600);
 	}
 
 	switch (screen)
 	{
-		case SCREEN_MAIN: return main_render();
+		case SCREEN_MAIN: return ingame ? ingame_main_render() : main_render();
 		case SCREEN_DISCONNECTED: return disconnected_render();
 		case SCREEN_CONNECTING: return connecting_render();
 		case SCREEN_SETTINGS_GENERAL:
@@ -1286,7 +1365,7 @@ static int menu_render()
 		case SCREEN_SETTINGS_VIDEO:
 		case SCREEN_SETTINGS_VIDEO_SELECT_MODE:
 		case SCREEN_SETTINGS_VIDEO_CUSTOM:
-		case SCREEN_SETTINGS_SOUND: return settings_render();
+		case SCREEN_SETTINGS_SOUND: return settings_render(ingame);
 		case SCREEN_KERNING: return kerning_render();
 		default: dbg_msg("menu", "invalid screen selected..."); return 0;
 	}
@@ -1305,7 +1384,7 @@ void modmenu_shutdown()
 {
 }
 
-int modmenu_render()
+int modmenu_render(bool ingame)
 {
 	static int mouse_x = 0;
 	static int mouse_y = 0;
@@ -1335,7 +1414,7 @@ int modmenu_render()
     }
 
     //int r = menu_render(server_address, str, max_len);
-	int r = menu_render();
+	int r = menu_render(ingame);
 
     // render butt ugly mouse cursor
     // TODO: render nice cursor

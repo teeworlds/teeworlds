@@ -709,7 +709,7 @@ void modmenu_shutdown();
     Function: modmenu_render
         Called every frame to let the menu render it self.
 */
-int modmenu_render();
+int modmenu_render(bool ingame);
 
 
 
