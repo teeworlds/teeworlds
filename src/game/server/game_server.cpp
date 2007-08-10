@@ -750,6 +750,7 @@ void player::reset()
 	die_tick = 0;
 	damage_taken = 0;
 	state = STATE_UNKNOWN;
+	last_action = -1;
 }
 
 void player::destroy() {  }
@@ -1494,9 +1495,9 @@ void player::snap(int snaping_client)
 	//if(damage_taken_tick+50 > server_tick())
 	//	player->emote = EMOTE_PAIN;
 	
-	if(player->emote == EMOTE_NORMAL)
+	if (player->emote == EMOTE_NORMAL)
 	{
-		if((server_tick()%(50*5)) < 5)
+		if(250 - ((server_tick() - last_action)%(250)) < 5)
 			player->emote = EMOTE_BLINK;
 	}
 	
@@ -1894,6 +1895,9 @@ void mods_client_input(int client_id, void *input)
 {
 	if(!world.paused)
 	{
+		if (memcmp(&players[client_id].input, input, sizeof(player_input)) != 0)
+			players[client_id].last_action = server_tick();
+
 		//players[client_id].previnput = players[client_id].input;
 		players[client_id].input = *(player_input*)input;
 	}
