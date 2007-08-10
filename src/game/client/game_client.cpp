@@ -442,7 +442,7 @@ void modc_init()
 	data = load_data_from_memory(internal_data);
 
 	// TODO: should be removed
-	music_menu = snd_load_wav("data/audio/Music_Menu.wav");
+	music_menu = snd_load_wav("data/audio/menu_music.wav");
 
 	// load sounds
 	for(int s = 0; s < data->num_sounds; s++)
