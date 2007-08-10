@@ -768,7 +768,7 @@ int client_tickspeed();
 int client_state();
 const char *client_error_string();
 
-void gfx_pretty_text(float x, float y, float size, const char *text);
+void gfx_pretty_text(float x, float y, float size, const char *text, int max_width = -1);
 float gfx_pretty_text_width(float size, const char *text, int length = -1);
 
 void gfx_getscreen(float *tl_x, float *tl_y, float *br_x, float *br_y);

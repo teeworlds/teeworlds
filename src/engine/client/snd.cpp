@@ -269,7 +269,6 @@ int snd_load_wv(const char *filename)
 	{
 		int samples = WavpackGetNumSamples(context);
 		int bitspersample = WavpackGetBitsPerSample(context);
-		int bytespersample = WavpackGetBytesPerSample(context);
 		unsigned int samplerate = WavpackGetSampleRate(context);
 		int channels = WavpackGetNumChannels(context);
 

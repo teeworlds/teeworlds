@@ -790,7 +790,7 @@ double extra_kerning[256*256] = {0};
 
 pretty_font *current_font = &default_font;
 
-void gfx_pretty_text(float x, float y, float size, const char *text)
+void gfx_pretty_text(float x, float y, float size, const char *text, int max_width)
 {
 	const float spacing = 0.05f;
 	gfx_texture_set(current_font->font_texture);
@@ -826,6 +826,12 @@ void gfx_pretty_text(float x, float y, float size, const char *text)
 				x_nudge = extra_kerning[text[0] + text[1] * 256];
 
 			x += (width + current_font->m_CharStartTable[c] + spacing + x_nudge) * size;
+
+			if (max_width != -1 && x - startx > max_width)
+			{
+				x = startx;
+				y += size - 2;
+			}
 		}
 
 		text++;

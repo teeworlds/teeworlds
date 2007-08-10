@@ -15,7 +15,6 @@ struct pretty_font
 };
 
 extern pretty_font *current_font;
-void gfx_pretty_text(float x, float y, float size, const char *text);
 
 static void *hot_item = 0;
 static void *active_item = 0;
