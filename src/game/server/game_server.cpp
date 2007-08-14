@@ -26,6 +26,9 @@ const float hook_fire_speed = 45.0f;
 const float hook_drag_accel = 3.0f;
 const float hook_drag_speed = 15.0f;
 const float gravity = 0.5f;
+const float wall_friction = 0.80f;
+const float wall_jump_speed_up = ground_jump_speed*0.8f;
+const float wall_jump_speed_out = ground_jump_speed*0.8f;
 
 class player* get_player(int index);
 void create_damageind(vec2 p, float angle_mod, int amount);
@@ -1189,11 +1192,23 @@ void player::tick()
 	
 	// fetch some info
 	bool grounded = is_grounded();
+	int wall_sliding = 0;
 	direction = normalize(vec2(input.target_x, input.target_y));
 	
 	float max_speed = grounded ? ground_control_speed : air_control_speed;
 	float accel = grounded ? ground_control_accel : air_control_accel;
 	float friction = grounded ? ground_friction : air_friction;
+	
+	if(!grounded && vel.y > 0)
+	{
+		if(input.left && col_check_point((int)(pos.x-phys_size/2)-4, (int)(pos.y)))
+			wall_sliding = -1;
+		if(input.right && col_check_point((int)(pos.x+phys_size/2)+4, (int)(pos.y)))
+			wall_sliding = 1;
+	}
+
+	if(wall_sliding)
+		vel.y *= wall_friction;
 	
 	// handle movement
 	if(input.left)
@@ -1207,10 +1222,16 @@ void player::tick()
 	// handle jumping
 	if(input.jump)
 	{
-		if(!jumped && grounded)
+		if(!jumped && (grounded || wall_sliding))
 		{
 			create_sound(pos, SOUND_PLAYER_JUMP);
-			vel.y = -ground_jump_speed;
+			if(wall_sliding)
+			{
+				vel.y = -wall_jump_speed_up;
+				vel.x = -wall_jump_speed_out*wall_sliding;
+			}
+			else
+				vel.y = -ground_jump_speed;
 			jumped++;
 		}
 	}
