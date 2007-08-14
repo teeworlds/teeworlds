@@ -25,6 +25,7 @@ static int music_menu_id = -1;
 
 static bool chat_active = false;
 static bool menu_active = false;
+static bool emoticon_selector_active = false;
 
 static vec2 mouse_pos;
 static vec2 local_player_pos;
@@ -34,6 +35,8 @@ struct client_data
 {
 	char name[64];
 	int team;
+	int emoticon;
+	int emoticon_start;
 } client_datas[MAX_CLIENTS];
 
 inline float frandom() { return rand()/(float)(RAND_MAX); }
@@ -523,6 +526,8 @@ void modc_entergame()
 	{
 		client_datas[i].name[0] = 0;
 		client_datas[i].team = 0;
+		client_datas[i].emoticon = 0;
+		client_datas[i].emoticon_start = -1;
 	}
 		
 	for(int i = 0; i < killmsg_max; i++)
@@ -690,6 +695,22 @@ void modc_newsnapshot()
 			client_send_msg();
 		}
 	}
+}
+
+void send_changename_request(const char *name)
+{
+	msg_pack_start(MSG_CHANGENAME, MSGFLAG_VITAL);
+	msg_pack_string(name, 64);
+	msg_pack_end();
+	client_send_msg();
+}
+
+void send_emoticon(int emoticon)
+{
+	msg_pack_start(MSG_EMOTICON, MSGFLAG_VITAL);
+	msg_pack_int(emoticon);
+	msg_pack_end();
+	client_send_msg();
 }
 
 static void render_projectile(const obj_projectile *prev, const obj_projectile *current, int itemid)
@@ -1227,16 +1248,23 @@ static void render_player(const obj_player *prev, const obj_player *player)
 
 	if(player->state == STATE_CHATTING)
 	{
-
 		gfx_texture_set(data->images[IMAGE_CHAT_BUBBLES].id);
 		gfx_quads_begin();
 		select_sprite(SPRITE_CHAT_DOTDOT);
 		gfx_quads_draw(position.x + 24, position.y - 40, 64,64);
 		gfx_quads_end();
 	}
-		
-}
 
+	if (client_datas[player->clientid].emoticon_start + 2 * client_tickspeed() > client_tick())
+	{
+		gfx_texture_set(data->images[IMAGE_EMOTICONS].id);
+		gfx_quads_begin();
+		// client_datas::emoticon is an offset from the first emoticon
+		select_sprite(SPRITE_OOP + client_datas[player->clientid].emoticon);
+		gfx_quads_draw(position.x, position.y - 55, 64, 64);
+		gfx_quads_end();
+	}
+}
 
 void render_sun(float x, float y)
 {
@@ -1272,6 +1300,89 @@ void render_sun(float x, float y)
 	gfx_quads_begin();
 	gfx_quads_draw(pos.x, pos.y, 256, 256);
 	gfx_quads_end();	
+}
+
+static bool emoticon_selector_inactive_override = false;
+static int emoticon_selector_input_count = 0;
+static int emoticon_selector_input_iter = 0;
+static vec2 emoticon_selector_inputs[10];
+
+void emoticon_selector_reset()
+{
+	emoticon_selector_input_count = 0;
+	emoticon_selector_input_iter = 0;
+}
+
+int emoticon_selector_render()
+{
+	int x, y;
+	inp_mouse_relative(&x, &y);
+
+	if (x || y)
+	{
+		emoticon_selector_inputs[emoticon_selector_input_iter++ % 10] = vec2(x, y);
+		
+		emoticon_selector_input_count++;
+		if (emoticon_selector_input_count > 10)
+			emoticon_selector_input_count = 10;
+	}
+
+	float selected_angle = 0;
+
+	if (emoticon_selector_input_count > 5)
+	{
+		vec2 sum;
+
+		for (int i = 0; i < emoticon_selector_input_count; i++)
+			sum += emoticon_selector_inputs[i];
+
+		selected_angle = get_angle(normalize(sum));
+		if (selected_angle < 0)
+			selected_angle += 2*pi;
+	}
+
+	static bool mouse_down = false;
+	int emoticon_selected = -1;
+	bool return_now = false;
+
+	if (inp_key_pressed(baselib::input::mouse_1))
+	{
+		mouse_down = true;
+	}
+	else if (mouse_down)
+	{
+		return_now = true;
+		mouse_down = false;
+		emoticon_selector_active = false;
+		emoticon_selector_inactive_override = true;
+	}
+
+	gfx_mapscreen(0,0,400,300);
+
+	gfx_texture_set(data->images[IMAGE_EMOTICONS].id);
+	gfx_quads_begin();
+
+	for (int i = 0; i < 16; i++)
+	{
+		float angle = 2*pi*i/16.0;
+		float diff = fabs(selected_angle-angle);
+
+		bool selected = diff < pi/16;
+		
+		if (return_now && selected)
+			emoticon_selected = i;
+
+		float size = selected ? 48 : 32;
+
+		float nudge_x = 60 * cos(angle);
+		float nudge_y = 60 * sin(angle);
+		select_sprite(SPRITE_OOP + i);
+		gfx_quads_draw(200 + nudge_x, 150 + nudge_y, size, size);
+	}
+
+	gfx_quads_end();
+
+	return emoticon_selected;
 }
 
 void render_game()
@@ -1350,7 +1461,7 @@ void render_game()
 	}
 	
 	// fetch new input
-	if(!menu_active)
+	if(!menu_active && (!emoticon_selector_active || emoticon_selector_inactive_override))
 	{
 		int x, y;
 		inp_mouse_relative(&x, &y);
@@ -1379,7 +1490,8 @@ void render_game()
 			input.left = inp_key_pressed(config.key_move_left);
 			input.right = inp_key_pressed(config.key_move_right);
 			input.jump = inp_key_pressed(config.key_jump);
-			input.fire = inp_key_pressed(config.key_fire);
+			// TODO: this is not very well done. it should check this some other way
+			input.fire = emoticon_selector_active ? 0 : inp_key_pressed(config.key_fire);
 			input.hook = inp_key_pressed(config.key_hook);
 
 			//input.blink = inp_key_pressed('S');
@@ -1728,6 +1840,27 @@ void render_game()
 		//ingamemenu_render();
 		return;
 	}
+
+	if (inp_key_pressed('E'))
+	{
+		if (!emoticon_selector_active)
+		{
+			emoticon_selector_active = true;
+			emoticon_selector_reset();
+		}
+	}
+	else
+	{
+		emoticon_selector_active = false;
+		emoticon_selector_inactive_override = false;
+	}
+
+	if (emoticon_selector_active && !emoticon_selector_inactive_override)
+	{
+		int emoticon = emoticon_selector_render();
+		if (emoticon != -1)
+			send_emoticon(emoticon);
+	}
 	
 	// render score board
 	if(inp_key_pressed(baselib::input::tab) || // user requested
@@ -1990,7 +2123,7 @@ void modc_message(int msg)
 		const char *message = msg_unpack_string();
 		dbg_msg("message", "chat cid=%d msg='%s'", cid, message);
 		chat_add_line(cid, message);
-		
+
 		if(cid >= 0)
 			snd_play(data->sounds[SOUND_CHAT_CLIENT].sounds[0].id, SND_PLAY_ONCE, 1.0f, 0.0f);
 		else
@@ -2009,5 +2142,12 @@ void modc_message(int msg)
 		killmsgs[killmsg_current].victim = msg_unpack_int();
 		killmsgs[killmsg_current].weapon = msg_unpack_int();
 		killmsgs[killmsg_current].tick = client_tick();
+	}
+	else if (msg == MSG_EMOTICON)
+	{
+		int cid = msg_unpack_int();
+		int emoticon = msg_unpack_int();
+		client_datas[cid].emoticon = emoticon;
+		client_datas[cid].emoticon_start = client_tick();
 	}
 }

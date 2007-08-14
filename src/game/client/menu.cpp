@@ -974,6 +974,7 @@ static int settings_sound_render()
 }
 
 extern void draw_round_rect(float x, float y, float w, float h, float r);
+void send_changename_request(const char *name);
 
 static int settings_render(bool ingame)
 {
@@ -1013,6 +1014,10 @@ static int settings_render(bool ingame)
 	static int save_button;
 	if (ui_do_button(&save_button, "Save", 0, 482, 490, 128, 48, draw_teewars_button))
 	{
+		// did we change our name?
+		if (ingame && strcmp(config.player_name, config_copy.player_name) != 0)
+			send_changename_request(config_copy.player_name);
+
 		config = config_copy;
 #ifdef CONF_PLATFORM_MACOSX
 		config_save("~/.teewars");

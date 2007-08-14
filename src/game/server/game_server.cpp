@@ -1987,13 +1987,34 @@ void send_chat_all(int cid, const char *msg)
 	server_send_msg(-1);
 }
 
+void send_set_name(int cid, const char *old_name, const char *new_name)
+{
+	msg_pack_start(MSG_SETNAME, MSGFLAG_VITAL);
+	msg_pack_int(cid);
+	msg_pack_string(new_name, 64);
+	msg_pack_end();
+	server_send_msg(-1);
+
+	char msg[256];
+	sprintf(msg, "*** %s changed name to %s", old_name, new_name);
+	send_chat_all(-1, msg);
+}
+
+void send_emoticon(int cid, int emoticon)
+{
+	msg_pack_start(MSG_EMOTICON, MSGFLAG_VITAL);
+	msg_pack_int(cid);
+	msg_pack_int(emoticon % 16);
+	msg_pack_end();
+	server_send_msg(-1);
+}
+
 void mods_client_enter(int client_id)
 {
 	players[client_id].init();
 	players[client_id].client_id = client_id;
 	world.insert_entity(&players[client_id]);
 	players[client_id].respawn();
-	
 	
 	client_info info; // fetch login name
 	if(server_getclientinfo(client_id, &info))
@@ -2060,6 +2081,24 @@ void mods_message(int msg, int client_id)
 		players[client_id].die(client_id, -1);
 		players[client_id].score--;
 	}
+	else if (msg == MSG_CHANGENAME)
+	{
+		const char *name = msg_unpack_string();
+
+		// check for invalid chars
+		const char *p = name;
+		while (*p)
+			if (*p++ < 32)
+				return;
+
+		send_set_name(client_id, players[client_id].name, name);
+		strcpy(players[client_id].name, name);
+	}
+	else if (msg == MSG_EMOTICON)
+	{
+		int emoteicon = msg_unpack_int();
+		send_emoticon(client_id, emoteicon % 16);
+	}
 }
 
 extern unsigned char internal_data[];
@@ -2119,7 +2158,7 @@ void mods_init()
 		if(type != -1)
 		{
 			 // LOL, the only new in the entire game code
-			 // perhaps we can get rid of it. seams like a stupid thing to have
+			 // perhaps we can get rid of it. seems like a stupid thing to have
 			powerup *ppower = new powerup(type, subtype);
 			ppower->pos = vec2(it->x, it->y);
 		}

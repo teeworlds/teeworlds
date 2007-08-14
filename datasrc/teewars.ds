@@ -220,6 +220,10 @@ images {
 	chat_bubbles {
 		filename "data/chatbubbles.png"
 	}
+
+	emoticons {
+		filename "data/emoticons.png"
+	}
 }
 
 particles {
@@ -580,6 +584,25 @@ sprites {
 
 	chatbubbles images.chat_bubbles 4 4 {
 		chat_dotdot 0 1 1 1
+	}
+
+	emoticons images.emoticons 4 4 {
+		oop 0 0 1 1
+		exclamation 1 0 1 1
+		hearts 2 0 1 1
+		drop 3 0 1 1
+		dotdot 0 1 1 1
+		music1 1 1 1 1
+		music2 2 1 1 1
+		ghost 3 1 1 1
+		sushi 0 2 1 1
+		splattee 1 2 1 1
+		deviltee 2 2 1 1
+		zomg 3 2 1 1
+		zzz 0 3 1 1
+		blank1 1 3 1 1
+		deadtee 2 3 1 1
+		blank2 3 3 1 1
 	}
 }
 
