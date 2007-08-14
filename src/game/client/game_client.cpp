@@ -819,26 +819,21 @@ static void render_hand(int skin, vec2 center_pos, vec2 dir, float angle_offset,
 	hand_pos += dirx * post_rot_offset.x;
 	hand_pos += diry * post_rot_offset.y;
 
-	// don't draw if it's almost straight down
-	//if (abs(get_angle(dir) - 3*pi/2) > 10)
+	gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
+	gfx_quads_begin();
+
+	// two passes
+	for (int i = 0; i < 2; i++)
 	{
-		gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
-		gfx_quads_begin();
+		bool outline = i == 0;
 
-		// two passes
-		for (int i = 0; i < 2; i++)
-		{
-			bool outline = i == 0;
-
-			// draw hook hand
-			select_sprite(outline?SPRITE_TEE_HAND_OUTLINE:SPRITE_TEE_HAND, 0, 0, shift*4);
-			gfx_quads_setrotation(angle);
-			gfx_quads_draw(hand_pos.x, hand_pos.y, 2*basesize, 2*basesize);
-		}
-
-		gfx_quads_setrotation(0);
-		gfx_quads_end();
+		select_sprite(outline?SPRITE_TEE_HAND_OUTLINE:SPRITE_TEE_HAND, 0, 0, shift*4);
+		gfx_quads_setrotation(angle);
+		gfx_quads_draw(hand_pos.x, hand_pos.y, 2*basesize, 2*basesize);
 	}
+
+	gfx_quads_setrotation(0);
+	gfx_quads_end();
 }
 
 static void render_tee(animstate *anim, int skin, int emote, vec2 dir, vec2 pos)
@@ -1026,7 +1021,7 @@ static void render_player(const obj_player *prev, const obj_player *player)
 		gfx_quads_setrotation(0);
 		gfx_quads_end();
 
-		render_hand(skin, vec2(position.x+state.body.x, position.y+state.body.y), normalize(hook_pos-pos), -pi/2, vec2(20, 4));
+		render_hand(skin, position, normalize(hook_pos-pos), -pi/2, vec2(20, 0));
 	}
 
 	// draw gun
