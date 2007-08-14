@@ -1201,9 +1201,9 @@ void player::tick()
 	
 	if(!grounded && vel.y > 0)
 	{
-		if(input.left && col_check_point((int)(pos.x-phys_size/2)-4, (int)(pos.y)))
+		if(col_check_point((int)(pos.x-phys_size/2)-4, (int)(pos.y)))
 			wall_sliding = -1;
-		if(input.right && col_check_point((int)(pos.x+phys_size/2)+4, (int)(pos.y)))
+		if(col_check_point((int)(pos.x+phys_size/2)+4, (int)(pos.y)))
 			wall_sliding = 1;
 	}
 
