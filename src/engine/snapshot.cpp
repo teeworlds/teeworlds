@@ -42,6 +42,19 @@ int snapshot_crc(snapshot *snap)
 	return crc;
 }
 
+void snapshot_debug_dump(snapshot *snap)
+{
+	dbg_msg("snapshot", "data_size=%d num_items=%d", snap->data_size, snap->num_items);
+	for(int i = 0; i < snap->num_items; i++)
+	{
+		snapshot::item *item = snap->get_item(i);
+		int size = snap->get_item_datasize(i);
+		dbg_msg("snapshot", "\ttype=%d id=%d", item->type(), item->id());
+		for(int b = 0; b < size/4; b++)
+			dbg_msg("snapshot", "\t\t%3d %12d\t%08x", b, item->data()[b], item->data()[b]);
+	}
+}
+
 static int diff_item(int *past, int *current, int *out, int size)
 {
 	/*

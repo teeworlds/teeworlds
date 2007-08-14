@@ -122,6 +122,12 @@ bool gfx_init()
 	screen_width = config.gfx_screen_width;
 	screen_height = config.gfx_screen_height;
 
+	if(config.stress)
+	{
+		screen_width = 320;
+		screen_height = 240;
+	}
+	
 	if(config.gfx_fullscreen)
 	{
 		if(!context.create(screen_width, screen_height, 24, 0, 0, 0, opengl::context::FLAG_FULLSCREEN))
@@ -138,7 +144,12 @@ bool gfx_init()
 			return false;
 		}
 	}
-
+	
+	context.set_title("Teewars");
+	
+	// We don't want to see the window when we run the stress testing
+	if(config.stress)
+		context.iconify();
 	
 	// Init vertices
 	if (vertices)
@@ -146,7 +157,6 @@ bool gfx_init()
 	vertices = (custom_vertex*)mem_alloc(sizeof(custom_vertex) * vertex_buffer_size, 1);
 	num_vertices = 0;
 
-	context.set_title("---");
 
 	/*
 	dbg_msg("gfx", "OpenGL version %d.%d.%d", context.version_major(),
@@ -250,6 +260,7 @@ int gfx_get_video_modes(video_mode *list, int maxcount)
 		mem_copy(list, fakemodes, sizeof(fakemodes));
 		return min((int)(sizeof(fakemodes)/sizeof(video_mode)), maxcount);
 	}
+	
 	return context.getvideomodes((opengl::videomode *)list, maxcount);
 }
 
@@ -321,7 +332,8 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data)
 		}
 	}
 	
-	dbg_msg("gfx", "%d = %dx%d", tex, w, h);
+	if(config.debug)
+		dbg_msg("gfx", "%d = %dx%d", tex, w, h);
 	
 	// set data and return
 	if(config.gfx_texture_compression && GLEW_ARB_texture_compression)
@@ -790,64 +802,93 @@ double extra_kerning[256*256] = {0};
 
 pretty_font *current_font = &default_font;
 
-void gfx_pretty_text(float x, float y, float size, const char *text, int max_width)
+static int word_length(const char *text)
 {
+	int s = 1;
+	while(1)
+	{
+		if(*text == 0)
+			return s-1;
+		if(*text == '\n' || *text == '\t' || *text == ' ')
+			return s;
+		text++;
+		s++;
+	}
+}
+
+float gfx_pretty_text_raw(float x, float y, float size, const char *text_, int length)
+{
+	const unsigned char *text = (unsigned char *)text_;
 	const float spacing = 0.05f;
 	gfx_texture_set(current_font->font_texture);
 	gfx_quads_begin();
 	
-	float startx = x;
+	if(length < 0)
+		length = strlen(text_);
 	
-	while (*text)
+	while(length)
 	{
 		const int c = *text;
-		
-		if(c == '\n')
-		{
-			x = startx;
-			y += size;
-		}
-		else
-		{
-			const float width = current_font->m_CharEndTable[c] - current_font->m_CharStartTable[c];
-
-			x -= size * current_font->m_CharStartTable[c];
-			
-			gfx_quads_setsubset(
-				(c%16)/16.0f, // startx
-				(c/16)/16.0f, // starty
-				(c%16)/16.0f+1.0f/16.0f, // endx
-				(c/16)/16.0f+1.0f/16.0f); // endy
-
-			gfx_quads_drawTL(x, y, size, size);
-
-			double x_nudge = 0;
-			if (text[1])
-				x_nudge = extra_kerning[text[0] + text[1] * 256];
-
-			x += (width + current_font->m_CharStartTable[c] + spacing + x_nudge) * size;
-
-			if (max_width != -1 && x - startx > max_width)
-			{
-				x = startx;
-				y += size - 2;
-			}
-		}
-
 		text++;
+	
+		const float width = current_font->m_CharEndTable[c] - current_font->m_CharStartTable[c];
+
+		x -= size * current_font->m_CharStartTable[c];
+		
+		gfx_quads_setsubset(
+			(c%16)/16.0f, // startx
+			(c/16)/16.0f, // starty
+			(c%16)/16.0f+1.0f/16.0f, // endx
+			(c/16)/16.0f+1.0f/16.0f); // endy
+
+		gfx_quads_drawTL(x, y, size, size);
+
+		double x_nudge = 0;
+		if(length > 1 && text[1])
+			x_nudge = extra_kerning[text[0] + text[1] * 256];
+
+		x += (width + current_font->m_CharStartTable[c] + spacing + x_nudge) * size;
+		length--;
 	}
 
 	gfx_quads_end();
+	
+	return x;
 }
 
-float gfx_pretty_text_width(float size, const char *text, int length)
+void gfx_pretty_text(float x, float y, float size, const char *text, int max_width)
+{
+	if(max_width == -1)
+		gfx_pretty_text_raw(x, y, size, text, -1);
+	else
+	{
+		float startx = x;
+		while(*text)
+		{
+			int wlen = word_length(text);
+			float w = gfx_pretty_text_width(size, text, wlen);
+			if(x+w-startx > max_width)
+			{
+				y += size-2;
+				x = startx;
+			}
+			
+			x = gfx_pretty_text_raw(x, y, size, text, wlen);
+			
+			text += wlen;
+		}
+	}
+}
+
+float gfx_pretty_text_width(float size, const char *text_, int length)
 {
 	const float spacing = 0.05f;
 	float w = 0.0f;
+	const unsigned char *text = (unsigned char *)text_;
 
-	const char *stop;
+	const unsigned char *stop;
 	if (length == -1)
-		stop = text + strlen(text);
+		stop = text + strlen((char*)text);
 	else
 		stop = text + length;
 

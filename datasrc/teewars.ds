@@ -433,7 +433,7 @@ weapons {
 		visual_size 96
 		offsetx 4.0
 		offsety -20.0
-		meleedamage 3
+		meleedamage 4
 		meleereach 40
 		ammoregentime 0
 		duration -1

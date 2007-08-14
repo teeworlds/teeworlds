@@ -119,7 +119,7 @@ void config_save(const char *filename)
 #else
 		const char newline[] = "\n";
 #endif
-		const int newline_len = sizeof(newline);
+		const int newline_len = sizeof(newline)-1;
 		
     	#define MACRO_CONFIG_INT(name,def,min,max) { char str[256]; sprintf(str, "%s=%i", #name, config.name); file.write(str, strlen(str)); file.write(newline, newline_len); }
     	#define MACRO_CONFIG_STR(name,len,def) { file.write(#name, strlen(#name)); file.write("=", 1); file.write(config.name, strlen(config.name)); file.write(newline, newline_len); }

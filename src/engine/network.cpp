@@ -1,6 +1,8 @@
 #include <baselib/system.h>
 #include <string.h>
+#include <stdio.h>
 
+#include "config.h"
 #include "network.h"
 #include "ringbuffer.h"
 
@@ -39,6 +41,8 @@ enum
 	NETWORK_PACKETFLAG_VITAL=0x08,
 	NETWORK_PACKETFLAG_RESEND=0x10,
 	NETWORK_PACKETFLAG_CONNLESS=0x20,
+	
+	NETWORK_MAX_SEQACK=0x1000,
 };
 
 static int current_token = 1;
@@ -75,19 +79,23 @@ static void send_packet(NETSOCKET socket, NETADDR4 *addr, NETPACKETDATA *packet)
 
 struct NETCONNECTION
 {
-	unsigned seq;
-	unsigned ack;
+	unsigned short seq;
+	unsigned short ack;
 	unsigned state;
 	
 	int token;
+	
+	int remote_closed;
 	
 	int connected;
 	int disconnected;
 	
 	ring_buffer buffer;
 	
+	int64 last_update_time;
 	int64 last_recv_time;
 	int64 last_send_time;
+	
 	char error_string[256];
 	
 	NETADDR4 peeraddr;
@@ -104,6 +112,10 @@ struct NETSERVER
 {
 	NETSOCKET socket;
 	NETSLOT slots[NETWORK_MAX_CLIENTS];
+	int max_clients;
+	NETFUNC_NEWCLIENT new_client;
+	NETFUNC_NEWCLIENT del_client;
+	void *user_ptr;
 	unsigned char recv_buffer[NETWORK_MAX_PACKET_SIZE];
 };
 
@@ -125,6 +137,7 @@ static void conn_reset(NETCONNECTION *conn)
 {
 	conn->seq = 0;
 	conn->ack = 0;
+	conn->remote_closed = 0;
 	//dbg_msg("connection", "state = %d->%d", conn->state, NETWORK_CONNSTATE_OFFLINE);
 	
 	if(conn->state == NETWORK_CONNSTATE_ONLINE ||
@@ -136,6 +149,7 @@ static void conn_reset(NETCONNECTION *conn)
 	conn->state = NETWORK_CONNSTATE_OFFLINE;
 	conn->last_send_time = 0;
 	conn->last_recv_time = 0;
+	conn->last_update_time = 0;
 	conn->token = -1;
 	conn->buffer.reset();
 }
@@ -176,7 +190,7 @@ static void conn_ack(NETCONNECTION *conn, int ack)
 			break;
 			
 		NETPACKETDATA *resend = (NETPACKETDATA *)i->data();
-		if(resend->seq <= ack)
+		if(resend->seq <= ack || (ack < NETWORK_MAX_SEQACK/3 && resend->seq > NETWORK_MAX_SEQACK/2))
 			conn->buffer.pop_first();
 		else
 			break;
@@ -207,7 +221,9 @@ static void conn_resend(NETCONNECTION *conn)
 static void conn_send(NETCONNECTION *conn, int flags, int data_size, const void *data)
 {
 	if(flags&NETWORK_PACKETFLAG_VITAL)
-		conn->seq++;
+	{
+		conn->seq = (conn->seq+1)%NETWORK_MAX_SEQACK;
+	}
 	
 	NETPACKETDATA p;
 	p.ID[0] = 'T';
@@ -244,6 +260,7 @@ static int conn_connect(NETCONNECTION *conn, NETADDR4 *addr)
 	conn_reset(conn);
 	conn->peeraddr = *addr;
 	conn->token = current_token++;
+	mem_zero(conn->error_string, sizeof(conn->error_string));
 	//dbg_msg("connection", "state = %d->%d", conn->state, NETWORK_CONNSTATE_CONNECT);
 	conn->state = NETWORK_CONNSTATE_CONNECT;
 	conn_send(conn, NETWORK_PACKETFLAG_CONNECT, 0, 0);
@@ -252,10 +269,13 @@ static int conn_connect(NETCONNECTION *conn, NETADDR4 *addr)
 
 static void conn_disconnect(NETCONNECTION *conn, const char *reason)
 {
-	if(reason)
-		conn_send(conn, NETWORK_PACKETFLAG_CLOSE, strlen(reason)+1, reason);
-	else
-		conn_send(conn, NETWORK_PACKETFLAG_CLOSE, 0, 0);
+	if(conn->remote_closed == 0)
+	{
+		if(reason)
+			conn_send(conn, NETWORK_PACKETFLAG_CLOSE, strlen(reason)+1, reason);
+		else
+			conn_send(conn, NETWORK_PACKETFLAG_CLOSE, 0, 0);
+	}
 	conn_reset(conn);
 }
 
@@ -267,12 +287,16 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 	
 	if(p->flags&NETWORK_PACKETFLAG_CLOSE)
 	{
-		conn_reset(conn);
+		conn->state = NETWORK_CONNSTATE_ERROR;
+		conn->remote_closed = 1;
+		
+		//conn_reset(conn);
 		if(p->data_size)
 			conn_set_error(conn, (char *)p->data);
 		else
 			conn_set_error(conn, "no reason given");
-		dbg_msg("conn", "closed reason='%s'", conn_error(conn));
+		if(config.debug)
+			dbg_msg("conn", "closed reason='%s'", conn_error(conn));
 		return 0;
 	}
 	
@@ -288,7 +312,8 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 			conn->token = p->token;
 			//dbg_msg("connection", "token set to %d", p->token);
 			conn_send(conn, NETWORK_PACKETFLAG_CONNECT|NETWORK_PACKETFLAG_ACCEPT, 0, 0);
-			dbg_msg("connection", "got connection, sending connect+accept");
+			if(config.debug)
+				dbg_msg("connection", "got connection, sending connect+accept");
 		}
 	}
 	else if(net_addr4_cmp(&conn->peeraddr, addr) == 0)
@@ -310,15 +335,15 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 				
 			if(p->flags&NETWORK_PACKETFLAG_VITAL)
 			{
-				if(p->seq == conn->ack+1)
+				if(p->seq == (conn->ack+1)%NETWORK_MAX_SEQACK)
 				{
 					// in sequence
-					conn->ack++;
+					conn->ack = (conn->ack+1)%NETWORK_MAX_SEQACK;
 				}
 				else
 				{
 					// out of sequence, request resend
-					//dbg_msg("conn", "asking for resend");
+					dbg_msg("conn", "asking for resend %d %d", p->seq, (conn->ack+1)%NETWORK_MAX_SEQACK);
 					conn_send(conn, NETWORK_PACKETFLAG_RESEND, 0, 0);
 					return 0;
 				}
@@ -361,8 +386,10 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 		}*/
 		else
 		{
-			conn_reset(conn);
+			//conn_reset(conn);
 			// strange packet, wrong state
+			conn->state = NETWORK_CONNSTATE_ERROR;
+			conn_set_error(conn, "strange state and packet");
 		}
 	}
 	else
@@ -379,15 +406,37 @@ static int conn_update(NETCONNECTION *conn)
 {
 	if(conn->state == NETWORK_CONNSTATE_OFFLINE || conn->state == NETWORK_CONNSTATE_ERROR)
 		return 0;
+
+	// watch out for major hitches		
+	int64 now = time_get();
+	int64 delta = now-conn->last_update_time;
+	if(conn->last_update_time && delta > time_freq()/2)
+	{
+		dbg_msg("conn", "hitch %d", (int)((delta*1000)/time_freq()));
+
+		conn->last_recv_time += delta;
+
+		ring_buffer::item *i = conn->buffer.first();
+		while(i)
+		{
+			NETPACKETDATA *resend = (NETPACKETDATA *)i->data();
+			resend->first_send_time += delta;
+			i = i->next;
+		}
+	}
+		
+	conn->last_update_time = now;
 	
 	// check for timeout
 	if(conn->state != NETWORK_CONNSTATE_OFFLINE &&
 		conn->state != NETWORK_CONNSTATE_CONNECT &&
-		(time_get()-conn->last_recv_time) > time_freq()*3)
+		(now-conn->last_recv_time) > time_freq()*10)
 	{
 		//dbg_msg("connection", "state = %d->%d", conn->state, NETWORK_CONNSTATE_ERROR);
 		conn->state = NETWORK_CONNSTATE_ERROR;
-		conn_set_error(conn, "timeout");
+		char buf[128];
+		sprintf(buf, "timeout %lld %lld %lld %lld", now-conn->last_recv_time, now, conn->last_recv_time, time_freq()*10);
+		conn_set_error(conn, buf);
 	}
 	
 	// check for large buffer errors
@@ -401,11 +450,11 @@ static int conn_update(NETCONNECTION *conn)
 	if(conn->buffer.first())
 	{
 		NETPACKETDATA *resend = (NETPACKETDATA *)conn->buffer.first()->data();
-		if(time_get()-resend->first_send_time > time_freq()*3)
+		if(now-resend->first_send_time > time_freq()*10)
 		{
 			//dbg_msg("connection", "state = %d->%d", conn->state, NETWORK_CONNSTATE_ERROR);
 			conn->state = NETWORK_CONNSTATE_ERROR;
-			conn_set_error(conn, "too weak connection (not acked for 3 seconds)");
+			conn_set_error(conn, "too weak connection (not acked for 10 seconds)");
 		}
 	}
 	
@@ -463,14 +512,31 @@ static int check_packet(unsigned char *buffer, int size, NETPACKETDATA *packet)
 
 NETSERVER *net_server_open(NETADDR4 bindaddr, int max_clients, int flags)
 {
+	NETSOCKET socket = net_udp4_create(bindaddr);
+	if(socket == NETSOCKET_INVALID)
+		return 0;
+	
 	NETSERVER *server = (NETSERVER *)mem_alloc(sizeof(NETSERVER), 1);
 	mem_zero(server, sizeof(NETSERVER));
-	server->socket = net_udp4_create(bindaddr);
+	server->socket = socket;
+	server->max_clients = max_clients;
+	if(server->max_clients > NETWORK_MAX_CLIENTS)
+		server->max_clients = NETWORK_MAX_CLIENTS;
+	if(server->max_clients < 1)
+		server->max_clients = 1;
 	
 	for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
 		conn_init(&server->slots[i].conn, server->socket);
 
 	return server;
+}
+
+int net_server_set_callbacks(NETSERVER *s, NETFUNC_NEWCLIENT new_client, NETFUNC_DELCLIENT del_client, void *user)
+{
+	s->new_client = new_client;
+	s->del_client = del_client;
+	s->user_ptr = user;
+	return 0;
 }
 
 int net_server_close(NETSERVER *s)
@@ -479,9 +545,10 @@ int net_server_close(NETSERVER *s)
 	return 0;
 }
 
+/*
 int net_server_newclient(NETSERVER *s)
 {
-	for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
+	for(int i = 0; i < s->max_clients; i++)
 	{
 		if(s->slots[i].conn.connected)
 		{
@@ -495,7 +562,7 @@ int net_server_newclient(NETSERVER *s)
 
 int net_server_delclient(NETSERVER *s)
 {
-	for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
+	for(int i = 0; i < s->max_clients; i++)
 	{
 		if(s->slots[i].conn.disconnected)
 		{
@@ -505,20 +572,24 @@ int net_server_delclient(NETSERVER *s)
 	}
 	
 	return -1;
-}
+}*/
 
 int net_server_drop(NETSERVER *s, int client_id, const char *reason)
 {
 	// TODO: insert lots of checks here
 	dbg_msg("net_server", "client dropped. cid=%d reason=\"%s\"", client_id, reason);
 	conn_disconnect(&s->slots[client_id].conn, reason);
+	
+	if(s->del_client)
+		s->del_client(client_id, s->user_ptr);
+		
 	//conn_reset(&s->slots[client_id].conn);
 	return 0;
 }
 
 int net_server_update(NETSERVER *s)
 {
-	for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
+	for(int i = 0; i < s->max_clients; i++)
 	{
 		conn_update(&s->slots[i].conn);
 		if(s->slots[i].conn.state == NETWORK_CONNSTATE_ERROR)
@@ -560,7 +631,7 @@ int net_server_recv(NETSERVER *s, NETPACKET *packet)
 					int found = 0;
 					
 					// check if we already got this client
-					for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
+					for(int i = 0; i < s->max_clients; i++)
 					{
 						if(s->slots[i].conn.state != NETWORK_CONNSTATE_OFFLINE &&
 							net_addr4_cmp(&s->slots[i].conn.peeraddr, &addr) == 0)
@@ -574,27 +645,42 @@ int net_server_recv(NETSERVER *s, NETPACKET *packet)
 					// client that wants to connect
 					if(!found)
 					{
-						for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
+						for(int i = 0; i < s->max_clients; i++)
 						{
 							if(s->slots[i].conn.state == NETWORK_CONNSTATE_OFFLINE)
 							{
 								//dbg_msg("netserver", "connection started %d", i);
-								conn_feed(&s->slots[i].conn, &data, &addr);
 								found = 1;
+								conn_feed(&s->slots[i].conn, &data, &addr);
+								if(s->new_client)
+									s->new_client(i, s->user_ptr);
 								break;
 							}
 						}
 					}
 					
-					if(found)
+					if(!found)
 					{
-						// TODO: send error
+						// send connectionless packet
+						const char errstring[] = "server full";
+						NETPACKETDATA p;
+						p.ID[0] = 'T';
+						p.ID[1] = 'W';
+						p.version = NETWORK_VERSION;
+						p.flags = NETWORK_PACKETFLAG_CLOSE;
+						p.seq = 0;
+						p.ack = 0;
+						p.crc = 0;
+						p.token = data.token;
+						p.data_size = sizeof(errstring);
+						p.data = (unsigned char *)errstring;
+						send_packet(s->socket, &addr, &p);
 					}
 				}
 				else
 				{
 					// find matching slot
-					for(int i = 0; i < NETWORK_MAX_CLIENTS; i++)
+					for(int i = 0; i < s->max_clients; i++)
 					{
 						if(net_addr4_cmp(&s->slots[i].conn.peeraddr, &addr) == 0)
 						{
@@ -648,7 +734,7 @@ int net_server_send(NETSERVER *s, NETPACKET *packet)
 	else
 	{
 		dbg_assert(packet->client_id >= 0, "errornous client id");
-		dbg_assert(packet->client_id < NETWORK_MAX_CLIENTS, "errornous client id");
+		dbg_assert(packet->client_id < s->max_clients, "errornous client id");
 		int flags  = 0;
 		if(packet->flags&PACKETFLAG_VITAL)
 			flags |= NETWORK_PACKETFLAG_VITAL;
@@ -664,7 +750,7 @@ void net_server_stats(NETSERVER *s, NETSTATS *stats)
 	int num_stats = sizeof(NETSTATS)/sizeof(int);
 	int *istats = (int *)stats;
 	
-	for(int c = 0; c < NETWORK_MAX_CLIENTS; c++)
+	for(int c = 0; c < s->max_clients; c++)
 	{
 		int *sstats = (int *)(&(s->slots[c].conn.stats));
 		for(int i = 0; i < num_stats; i++)
@@ -774,6 +860,7 @@ int net_client_send(NETCLIENT *c, NETPACKET *packet)
 		p.seq = 0;
 		p.ack = 0;
 		p.crc = 0;
+		p.token = 0;
 		p.data_size = packet->data_size;
 		p.data = (unsigned char *)packet->data;
 		send_packet(c->socket, &packet->address, &p);

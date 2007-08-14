@@ -35,7 +35,6 @@ private:
 	entity *next_type_entity;
 
 	int index;
-	static int current_id;
 protected:
 	int id;
 	
@@ -123,7 +122,7 @@ public:
 	virtual int getteam(int notthisid);
 };
 
-extern gameobject gameobj;
+extern gameobject *gameobj;
 
 
 // TODO: move to seperate file
@@ -214,6 +213,7 @@ public:
 		bool got;
 	} weapons[NUM_WEAPONS];
 	int active_weapon;
+	int last_weapon;
 	int reload_timer;
 	int attack_tick;
 	
@@ -291,6 +291,8 @@ public:
 	void respawn();
 
 	bool is_grounded();
+	
+	void set_weapon(int w);
 
 	void release_hooked();
 	void release_hooks();
@@ -307,7 +309,7 @@ public:
 	virtual void snap(int snaping_client);
 };
 
-extern player players[MAX_CLIENTS];
+extern player *players;
 
 // TODO: move to seperate file
 class flag : public entity

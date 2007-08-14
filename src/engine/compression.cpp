@@ -32,7 +32,7 @@ const unsigned char *vint_unpack(const unsigned char *src, int *i)
         int sign = (*src>>6)&1; 
         *i = *src&0x3F; 
 
-	while(1)
+	do
 	{ 
 	        if(!(*src&0x80)) break;
 		src++;
@@ -49,7 +49,7 @@ const unsigned char *vint_unpack(const unsigned char *src, int *i)
 	        if(!(*src&0x80)) break;
 		src++;
                 *i |= (*src&(0x7F))<<(6+7+7+7);
-	}
+	} while(0);
 
 	src++;
 	*i ^= -sign; // if(sign) *i = ~(*i)

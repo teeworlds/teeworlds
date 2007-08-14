@@ -42,6 +42,7 @@ struct snapshot
 
 void *snapshot_empty_delta();
 int snapshot_crc(snapshot *snap);
+void snapshot_debug_dump(snapshot *snap);
 int snapshot_create_delta(snapshot *from, snapshot *to, void *data);
 int snapshot_unpack_delta(snapshot *from, snapshot *to, void *data, int data_size);
 

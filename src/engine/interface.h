@@ -12,15 +12,11 @@ enum
 {
 	MAX_CLIENTS=8,
 	SERVER_TICK_SPEED=50,
-	SERVER_CLIENT_TIMEOUT=5,
 	SNAP_CURRENT=0,
 	SNAP_PREV=1,
 	
 	IMG_RGB=0,
 	IMG_RGBA=1,
-	/*
-	IMG_BGR,
-	IMG_BGRA,*/
 	
 	CLIENTSTATE_OFFLINE=0,
 	CLIENTSTATE_CONNECTING,
@@ -794,5 +790,8 @@ void client_quit();
 
 void client_serverbrowse_refresh(int lan);
 int client_serverbrowse_getlist(server_info **servers);
+
+int snap_new_id();
+void snap_free_id(int id);
 
 #endif

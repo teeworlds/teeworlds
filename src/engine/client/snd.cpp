@@ -3,6 +3,7 @@
 #include <baselib/stream/file.h>
 
 #include <engine/interface.h>
+#include <engine/config.h>
 
 extern "C" {
 #include "../../wavpack/wavpack.h"
@@ -24,6 +25,16 @@ static const float GLOBAL_SOUND_DELAY = 0.05f;
 class sound_data
 {
 public:
+	sound_data() :
+		data(0x0),
+		num_samples(0),
+		rate(0),
+		channels(0),
+		sustain_start(-1),
+		sustain_end(-1),
+		last_played(0)
+	{ }
+
 	short *data;
 	int num_samples;
 	int rate;
@@ -33,13 +44,14 @@ public:
 	int64 last_played;
 };
 
-inline short clamp(int i)
+template<typename T>
+inline const T clamp(const T val, const T lower, const T upper)
 {
-	if(i > 0x7fff)
-		return 0x7fff;
-	if(i < -0x7fff)
-		return -0x7fff;
-	return i;
+	if(val > upper)
+		return upper;
+	if(val < lower)
+		return lower;
+	return val;
 }
 
 static class mixer : public audio_stream
@@ -65,34 +77,40 @@ public:
 	enum
 	{
 		MAX_CHANNELS=32,
+		MAX_FILL_FRAMES=256,
 	};
 
 	channel channels[MAX_CHANNELS];
+	int buffer[MAX_FILL_FRAMES*2];
 
-	void fill_mono(short *out, unsigned long frames, channel *c, float dv = 0.0f)
+	void fill_mono(int *out, unsigned long frames, channel *c, float dv = 0.0f)
 	{
+		float pl = clamp(1.0f - c->pan, 0.0f, 1.0f);
+		float pr = clamp(1.0f + c->pan, 0.0f, 1.0f);
+
 		for(unsigned long i = 0; i < frames; i++)
 		{
-			float p = (1.0f-(c->pan+1.0f)*0.5f);
-			int val = (int)(p*c->vol * master_volume * c->data->data[c->tick]);
-			out[i<<1] += (short)val;
-			out[(i<<1)+1] += (short)val;
+			float val = c->vol * master_volume * c->data->data[c->tick];
+
+			out[i<<1] += (int)(pl*val);
+			out[(i<<1)+1] += (int)(pr*val);
 			c->tick++;
 			c->vol += dv;
 			if(c->vol < 0.0f) c->vol = 0.0f;
 		}
 	}
 
-	void fill_stereo(short *out, unsigned long frames, channel *c, float dv = 0.0f)
+	void fill_stereo(int *out, unsigned long frames, channel *c, float dv = 0.0f)
 	{
+		float pl = clamp(1.0f - c->pan, 0.0f, 1.0f);
+		float pr = clamp(1.0f + c->pan, 0.0f, 1.0f);
+
 		for(unsigned long i = 0; i < frames; i++)
 		{
-			float pl = c->pan<0.0f?-c->pan:1.0f;
-			float pr = c->pan>0.0f?1.0f-c->pan:1.0f;
 			int vl = (int)(pl*c->vol * master_volume * c->data->data[c->tick]);
 			int vr = (int)(pr*c->vol * master_volume * c->data->data[c->tick + 1]);
-			out[i<<1] += (short)vl;
-			out[(i<<1)+1] += (short)vr;
+			out[i<<1] += vl;
+			out[(i<<1)+1] += vr;
 			c->tick += 2;
 			c->vol += dv;
 			if(c->vol < 0.0f) c->vol = 0.0f;
@@ -103,10 +121,12 @@ public:
 	{
 		short *out = (short*)output;
 
+		dbg_assert(frames <= MAX_FILL_FRAMES, "not enough fill frames in buffer");
+
 		for(unsigned long i = 0; i < frames; i++)
 		{
-			out[i<<1] = 0;
-			out[(i<<1)+1] = 0;
+			buffer[i<<1] = 0;
+			buffer[(i<<1)+1] = 0;
 		}
 
 		for(int c = 0; c < MAX_CHANNELS; c++)
@@ -133,9 +153,9 @@ public:
 				}
 
 				if(channels[c].data->channels == 1)
-					fill_mono(out, to_fill, &channels[c], dv);
+					fill_mono(buffer, to_fill, &channels[c], dv);
 				else
-					fill_stereo(out, to_fill, &channels[c], dv);
+					fill_stereo(buffer, to_fill, &channels[c], dv);
 
 				if(channels[c].loop >= 0 &&
 						channels[c].data->sustain_start >= 0 &&
@@ -155,6 +175,12 @@ public:
 
 				filled += to_fill;
 			}
+		}
+
+		for(unsigned long i = 0; i < frames; i++)
+		{
+			out[i<<1] = (short)clamp(buffer[i<<1], -0x7fff, 0x7fff);
+			out[(i<<1)+1] = (short)clamp(buffer[(i<<1)+1], -0x7fff, 0x7fff);
 		}
 	}
 	
@@ -262,7 +288,7 @@ int snd_load_wv(const char *filename)
 
 	char error[100];
 
-	file = fopen(filename, "r");
+	file = fopen(filename, "rb");
 
 	WavpackContext *context = WavpackOpenFileInput(read_data, error);
 	if (context)
@@ -453,7 +479,8 @@ int snd_load_wav(const char *filename)
 			{
 				unsigned char smpl[36];
 				unsigned char loop[24];
-				dbg_msg("sound/wav", "got sustain");
+				if(config.debug)
+					dbg_msg("sound/wav", "got sustain");
 
 				file.read(smpl, sizeof(smpl));
 				unsigned num_loops = (smpl[28] | (smpl[29]<<8) | (smpl[30]<<16) | (smpl[31]<<24));
@@ -482,7 +509,10 @@ int snd_load_wav(const char *filename)
 	}
 
 	if(id >= 0)
-		dbg_msg("sound/wav", "loaded %s", filename);
+	{
+		if(config.debug)
+			dbg_msg("sound/wav", "loaded %s", filename);
+	}
 	else
 		dbg_msg("sound/wav", "failed to load %s", filename);
 

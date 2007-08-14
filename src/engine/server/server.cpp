@@ -30,6 +30,97 @@ void *snap_new_item(int type, int id, int size)
 	return builder.new_item(type, id, size);
 }
 
+
+struct snap_id
+{
+	short next;
+	short state; // 0 = free, 1 = alloced, 2 = timed
+	int timeout_tick;
+};
+
+static const int MAX_IDS = 8*1024; // should be lowered
+static snap_id snap_ids[8*1024];
+static int snap_first_free_id;
+static int snap_first_timed_id;
+static int snap_last_timed_id;
+static int snap_id_usage;
+static int snap_id_inusage;
+
+static int snap_id_inited = 0;
+
+void snap_init_id()
+{
+	for(int i = 0; i < MAX_IDS; i++)
+	{
+		snap_ids[i].next = i+1;
+		snap_ids[i].state = 0;
+	}
+		
+	snap_ids[MAX_IDS-1].next = -1;
+	snap_first_free_id = 0;
+	snap_first_timed_id = -1;
+	snap_last_timed_id = -1;
+	snap_id_usage = 0;
+	snap_id_inusage = 0;
+	
+	snap_id_inited = 1;
+}
+
+int snap_new_id()
+{
+	dbg_assert(snap_id_inited == 1, "requesting id too soon");
+	
+	// process timed ids
+	while(snap_first_timed_id != -1 && snap_ids[snap_first_timed_id].timeout_tick < server_tick())
+	{
+		int next_timed = snap_ids[snap_first_timed_id].next;
+		
+		// add it to the free list
+		snap_ids[snap_first_timed_id].next = snap_first_free_id;
+		snap_ids[snap_first_timed_id].state = 0;
+		snap_first_free_id = snap_first_timed_id;
+		
+		// remove it from the timed list
+		snap_first_timed_id = next_timed;
+		if(snap_first_timed_id == -1)
+			snap_last_timed_id = -1;
+			
+		snap_id_usage--;
+	}
+	
+	int id = snap_first_free_id;
+	dbg_assert(id != -1, "id error");
+	snap_first_free_id = snap_ids[snap_first_free_id].next;
+	snap_ids[id].state = 1;
+	snap_id_usage++;
+	snap_id_inusage++;
+	return id;
+}
+
+void snap_free_id(int id)
+{
+	dbg_assert(snap_ids[id].state == 1, "id is not alloced");
+
+	snap_id_inusage--;
+	snap_ids[id].state = 2;
+	snap_ids[id].timeout_tick = server_tick() + server_tickspeed()*5;
+	snap_ids[id].next = -1;
+	
+	if(snap_last_timed_id != -1)
+	{
+		snap_ids[snap_last_timed_id].next = id;
+		snap_last_timed_id = id;
+	}
+	else
+	{
+		snap_first_timed_id = id;
+		snap_last_timed_id = id;
+	}
+}
+
+
+
+
 //
 class client
 {
@@ -132,31 +223,51 @@ int server_send_msg(int client_id)
 		net.send(&packet);
 	return 0;
 }
+
+static int new_client_callback(int cid, void *user)
+{
+	clients[cid].state = client::STATE_CONNECTING;
+	clients[cid].name[0] = 0;
+	clients[cid].clan[0] = 0;
+	clients[cid].snapshots.purge_all();
+	clients[cid].last_acked_snapshot = -1;
+	return 0;
+}
+
+static int del_client_callback(int cid, void *user)
+{
+	clients[cid].state = client::STATE_EMPTY;
+	clients[cid].name[0] = 0;
+	clients[cid].clan[0] = 0;
+	clients[cid].snapshots.purge_all();
 	
+	mods_client_drop(cid);
+	return 0;
+}
+		
 // TODO: remove this class
 class server
 {
 public:
 	//socket_udp4 game_socket;
-
-	const char *map_name;
 	int64 lasttick;
 	int64 lastheartbeat;
 	netaddr4 master_server;
 
 	int biggest_snapshot;
 
-	bool run(const char *mapname)
+	bool run()
 	{
 		biggest_snapshot = 0;
 
 		net_init(); // For Windows compatibility.
-		map_name = mapname;
+		
+		snap_init_id();
 
 		// load map
-		if(!map_load(mapname))
+		if(!map_load(config.sv_map))
 		{
-			dbg_msg("server", "failed to load map. mapname='%s'", mapname);
+			dbg_msg("server", "failed to load map. mapname='%s'", config.sv_map);
 			return false;
 		}
 		
@@ -173,12 +284,14 @@ public:
 			bindaddr.port = config.sv_port;
 		}
 		
-		if(!net.open(bindaddr, 0, 0))
+		if(!net.open(bindaddr, config.sv_max_clients, 0))
 		{
-			dbg_msg("network/server", "couldn't open socket");
+			dbg_msg("server", "couldn't open socket. port might already be in use");
 			return false;
 		}
-
+		
+		net.set_callbacks(new_client_callback, del_client_callback, 0);
+		
 		dbg_msg("server", "server name is '%s'", config.sv_name);
 		dbg_msg("server", "masterserver is '%s'", config.masterserver);
 		if (net_host_lookup(config.masterserver, MASTERSERVER_PORT, &master_server) != 0)
@@ -242,12 +355,16 @@ public:
 
 			if(reporttime < time_get())
 			{
-				dbg_msg("server/report", "sim=%.02fms snap=%.02fms net=%.02fms total=%.02fms load=%.02f%%",
-					(simulationtime/reportinterval)/(double)time_freq()*1000,
-					(snaptime/reportinterval)/(double)time_freq()*1000,
-					(networktime/reportinterval)/(double)time_freq()*1000,
-					(totaltime/reportinterval)/(double)time_freq()*1000,
-					(totaltime)/reportinterval/(double)time_freq()*100.0f);
+				if(config.debug)
+				{
+					dbg_msg("server", "sim=%.02fms snap=%.02fms net=%.02fms total=%.02fms load=%.02f%% ids=%d/%d",
+						(simulationtime/reportinterval)/(double)time_freq()*1000,
+						(snaptime/reportinterval)/(double)time_freq()*1000,
+						(networktime/reportinterval)/(double)time_freq()*1000,
+						(totaltime/reportinterval)/(double)time_freq()*1000,
+						(totaltime)/reportinterval/(double)time_freq()*100.0f,
+						snap_id_inusage, snap_id_usage);
+				}
 
 				simulationtime = 0;
 				snaptime = 0;
@@ -313,8 +430,6 @@ public:
 						delta_tick = clients[i].last_acked_snapshot;
 						deltashot = (snapshot *)delta_data;
 					}
-					else
-						dbg_msg("server", "no delta, sending full snapshot");
 				}
 				
 				// create delta
@@ -337,6 +452,7 @@ public:
 
 					const int max_size = MAX_SNAPSHOT_PACKSIZE;
 					int numpackets = (snapshot_size+max_size-1)/max_size;
+					(void)numpackets;
 					for(int n = 0, left = snapshot_size; left; n++)
 					{
 						int chunk = left < max_size ? left : max_size;
@@ -373,14 +489,13 @@ public:
 	void send_map(int cid)
 	{
 		msg_pack_start_system(NETMSG_MAP, MSGFLAG_VITAL);
-		msg_pack_string(map_name, 0);
+		msg_pack_string(config.sv_map, 0);
 		msg_pack_end();
 		server_send_msg(cid);
 	}
 	
 	void send_heartbeat()
 	{
-		dbg_msg("server", "sending heartbeat");
 		NETPACKET packet;
 		packet.client_id = -1;
 		packet.address = master_server;
@@ -397,7 +512,7 @@ public:
 
 		clients[cid].state = client::STATE_EMPTY;
 		mods_client_drop(cid);
-		dbg_msg("game", "player dropped. reason='%s' cid=%x name='%s'", reason, cid, clients[cid].name);
+		dbg_msg("server", "player dropped. reason='%s' cid=%x name='%s'", reason, cid, clients[cid].name);
 	}
 
 	void process_client_packet(NETPACKET *packet)
@@ -434,7 +549,7 @@ public:
 			{
 				if(clients[cid].state != client::STATE_INGAME)
 				{
-					dbg_msg("game", "player as entered the game. cid=%x", cid);
+					dbg_msg("server", "player as entered the game. cid=%x", cid);
 					clients[cid].state = client::STATE_INGAME;
 					mods_client_enter(cid);
 				}
@@ -483,7 +598,7 @@ public:
 		packer.reset();
 		packer.add_raw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
 		packer.add_string(config.sv_name, 128);
-		packer.add_string(map_name, 128);
+		packer.add_string(config.sv_map, 128);
 		packer.add_int(MAX_CLIENTS); // max_players
 		int c = 0;
 		for(int i = 0; i < MAX_CLIENTS; i++)
@@ -537,7 +652,8 @@ public:
 				else if(packet.data_size == sizeof(SERVERBROWSE_FWOK) &&
 					memcmp(packet.data, SERVERBROWSE_FWOK, sizeof(SERVERBROWSE_FWOK)) == 0)
 				{
-					dbg_msg("server", "no firewall/nat problems detected");
+					if(config.debug)
+						dbg_msg("server", "no firewall/nat problems detected");
 				}
 				else if(packet.data_size == sizeof(SERVERBROWSE_FWERROR) &&
 					memcmp(packet.data, SERVERBROWSE_FWERROR, sizeof(SERVERBROWSE_FWERROR)) == 0)
@@ -549,35 +665,6 @@ public:
 			else
 				process_client_packet(&packet);
 		}
-		
-		// check for removed clients
-		while(1)
-		{
-			int cid = net.delclient();
-			if(cid == -1)
-				break;
-			
-			clients[cid].state = client::STATE_EMPTY;
-			clients[cid].name[0] = 0;
-			clients[cid].clan[0] = 0;
-			clients[cid].snapshots.purge_all();
-			
-			mods_client_drop(cid);
-		}
-		
-		// check for new clients
-		while(1)
-		{
-			int cid = net.newclient();
-			if(cid == -1)
-				break;
-			
-			clients[cid].state = client::STATE_CONNECTING;
-			clients[cid].name[0] = 0;
-			clients[cid].clan[0] = 0;
-			clients[cid].snapshots.purge_all();
-			clients[cid].last_acked_snapshot = -1;
-		}
 	}
 };
 
@@ -586,50 +673,30 @@ int main(int argc, char **argv)
 	dbg_msg("server", "starting...");
 
 	config_reset();
+
 #ifdef CONF_PLATFORM_MACOSX
-		config_load("~/.teewars");
+	const char *config_filename = "~/.teewars";
 #else
-		config_load("default.cfg");
+	const char *config_filename = "default.cfg";
 #endif
 
-	const char *mapname = "dm1";
-	
-	// parse arguments
 	for(int i = 1; i < argc; i++)
 	{
-		if(argv[i][0] == '-' && argv[i][1] == 'm' && argv[i][2] == 0 && argc - i > 1)
+		if(argv[i][0] == '-' && argv[i][1] == 'f' && argv[i][2] == 0 && argc - i > 1)
 		{
-			// -m map
+			config_filename = argv[i+1];
 			i++;
-			mapname = argv[i];
-		}
-		else if(argv[i][0] == '-' && argv[i][1] == 'n' && argv[i][2] == 0 && argc - i > 1)
-		{
-			// -n server name
-			i++;
-			config_set_sv_name(&config, argv[i]);
-		}
-		else if(argv[i][0] == '-' && argv[i][1] == 'p' && argv[i][2] == 0)
-		{
-			// -p (private server)
-			config_set_sv_sendheartbeats(&config, 0);
-		}
-		else if(argv[i][0] == '-' && argv[i][1] == 'o' && argv[i][2] == 0)
-		{
-			// -o port
-			i++;
-			config_set_sv_port(&config, atol(argv[i]));
 		}
 	}
 
-	if(!mapname)
-	{
-		dbg_msg("server", "no map given (-m MAPNAME)");
-		return 0;
-	}
+	config_load(config_filename);
+
+	// parse arguments
+	for(int i = 1; i < argc; i++)
+		config_set(argv[i]);
 
 	server_init();
 	server s;
-	s.run(mapname);
+	s.run();
 	return 0;
 }

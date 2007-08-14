@@ -414,7 +414,7 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 		if (at_index > len)
 			at_index = len;
 
-		if (c >= 32 && c < 128)
+		if (!(c >= 0 && c < 32))
 		{
 			if (len < str_size - 1 && at_index < str_size - 1)
 			{
@@ -673,7 +673,7 @@ static int do_server_list(float x, float y, int *scroll_index, int *selected_ind
 	}
 
 	*scroll_index = do_scroll_bar_vert(scroll_index, x + real_width - 16, y, real_height,
-		min(num_servers - visible_items, 0), *scroll_index);
+		max(num_servers - visible_items, 0), *scroll_index);
 	
 	return r;
 }
@@ -837,8 +837,11 @@ static int settings_controls_render()
 static const int MAX_RESOLUTIONS = 128;
 static int settings_video_render_select_mode()
 {
-	video_mode modes[MAX_RESOLUTIONS];
-	int num_modes = gfx_get_video_modes(modes, MAX_RESOLUTIONS);
+	static video_mode modes[MAX_RESOLUTIONS];
+	static int num_modes = -1;
+	
+	if(num_modes == -1)
+		num_modes = gfx_get_video_modes(modes, MAX_RESOLUTIONS);
 	
 	static int scroll_index = 0;
 	scroll_index = do_scroll_bar_vert(&scroll_index, 500, row1_y, 40 * 7, num_modes - 7, scroll_index);
@@ -1033,10 +1036,10 @@ static int settings_render(bool ingame)
 extern int gametype;
 static int ingame_main_render()
 {
-	static int menu_resume, menu_active, menu_quit, menu_settings;
-	char buf[128];
+	static int menu_resume, menu_quit, menu_settings;
 	/*if (gametype == GAMETYPE_TDM)
 	{
+		char buf[128];
 		// Switch team
 		ui_do_label(100,100,"Switch Team",40);
 		sprintf(buf,"Team: %s",local_player->team ? "A" : "B");
@@ -1255,7 +1258,7 @@ static int kerning_render()
 }
 
 
-static int render_popup(const char *caption, const char *text, const char *button_text)
+int render_popup(const char *caption, const char *text, const char *button_text)
 {
 	float tw;
 
@@ -1278,9 +1281,14 @@ static int render_popup(const char *caption, const char *text, const char *butto
 	tw = gfx_pretty_text_width(32.0f, text);
 	ui_do_label(x+w/2-tw/2, y+130, text, 32.0f);
 
-	static int back_button = 0;
-	if(ui_do_button(&back_button, button_text, 0, x+w/2-100, y+220, 200, 48, draw_teewars_button))
-		return 1;
+	if(button_text)
+	{
+		static int back_button = 0;
+		if(ui_do_button(&back_button, button_text, 0, x+w/2-100, y+220, 200, 48, draw_teewars_button))
+			return 1;
+		if(inp_key_down(input::esc) || inp_key_down(input::enter))
+			return 1;
+	}
 		
 	return 0;
 }

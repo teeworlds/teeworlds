@@ -35,15 +35,19 @@ enum
 	NETSTATE_ONLINE,
 };
 
+typedef int (*NETFUNC_DELCLIENT)(int cid, void *user);
+typedef int (*NETFUNC_NEWCLIENT)(int cid, void *user);
+
 // server side
 NETSERVER *net_server_open(NETADDR4 bindaddr, int max_clients, int flags);
+int net_server_set_callbacks(NETSERVER *s, NETFUNC_NEWCLIENT new_client, NETFUNC_DELCLIENT del_client, void *user);
 int net_server_recv(NETSERVER *s, NETPACKET *packet);
 int net_server_send(NETSERVER *s, NETPACKET *packet);
 int net_server_close(NETSERVER *s);
 int net_server_update(NETSERVER *s);
 int net_server_drop(NETSERVER *s, int client_id, const char *reason);
-int net_server_newclient(NETSERVER *s); // -1 when no more, else, client id
-int net_server_delclient(NETSERVER *s); // -1 when no more, else, client id
+//int net_server_newclient(NETSERVER *s); // -1 when no more, else, client id
+//int net_server_delclient(NETSERVER *s); // -1 when no more, else, client id
 void net_server_stats(NETSERVER *s, NETSTATS *stats);
 
 // client side
@@ -71,13 +75,16 @@ public:
 	int open(NETADDR4 bindaddr, int max, int flags) { ptr = net_server_open(bindaddr, max, flags); return ptr != 0; }
 	int close() { int r = net_server_close(ptr); ptr = 0; return r; }
 	
+	int set_callbacks(NETFUNC_NEWCLIENT new_client, NETFUNC_DELCLIENT del_client, void *user)
+	{ return net_server_set_callbacks(ptr, new_client, del_client, user); }
+	
 	int recv(NETPACKET *packet) { return net_server_recv(ptr, packet); }
 	int send(NETPACKET *packet) { return net_server_send(ptr, packet); }
 	int update() { return net_server_update(ptr); }
 	
 	int drop(int client_id, const char *reason) { return net_server_drop(ptr, client_id, reason); } 
-	int newclient() { return net_server_newclient(ptr); }
-	int delclient() { return net_server_delclient(ptr); }
+	//int newclient() { return net_server_newclient(ptr); }
+	//int delclient() { return net_server_delclient(ptr); }
 	
 	void stats(NETSTATS *stats) { net_server_stats(ptr, stats); }
 };

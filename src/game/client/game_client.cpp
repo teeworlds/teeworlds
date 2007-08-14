@@ -61,10 +61,10 @@ void snd_play_random(int setid, float vol, float pan)
 }
 
 // sound volume tweak
-static const float stereo_separation = 0.01f;
-static const float stereo_separation_deadzone = 512.0f;
-static const float volume_distance_falloff = 100.0f;
-static const float volume_distance_deadzone = 512.0f;
+static const float stereo_separation = 0.001f;
+static const float stereo_separation_deadzone = 200.0f;
+static const float volume_distance_falloff = 200.0f;
+static const float volume_distance_deadzone = 320.0f;
 static const float volume_gun = 0.5f;
 static const float volume_tee = 0.5f;
 static const float volume_hit = 0.5f;
@@ -434,16 +434,59 @@ static int killmsg_current = 0;
 
 extern unsigned char internal_data[];
 
+
+extern void draw_round_rect(float x, float y, float w, float h, float r);
+extern int render_popup(const char *caption, const char *text, const char *button_text);
+
+static void render_loading(float percent)
+{
+	gfx_clear(0.65f,0.78f,0.9f);
+	gfx_mapscreen(0,0,800.0f,600.0f);
+
+	float tw;
+
+	float w = 700;
+	float h = 200;
+	float x = 800/2-w/2;
+	float y = 600/2-h/2;
+
+	gfx_blend_normal();
+	
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_quads_setcolor(0,0,0,0.50f);
+	draw_round_rect(x, y, w, h, 40.0f);
+	gfx_quads_end();
+
+	const char *caption = "Loading";
+	
+	tw = gfx_pretty_text_width(48.0f, caption);
+	ui_do_label(x+w/2-tw/2, y+20, caption, 48.0f);
+
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_quads_setcolor(1,1,1,1.0f);
+	draw_round_rect(x+40, y+h-75, (w-80)*percent, 25, 5.0f);
+	gfx_quads_end();
+
+	gfx_swap();
+}
+
 void modc_init()
 {
 	// load the data container
 	data = load_data_from_memory(internal_data);
 
 	// TODO: should be removed
-	music_menu = snd_load_wav("data/audio/menu_music.wav");
+	music_menu = snd_load_wav("data/audio/music_menu.wav");
+
+	float total = data->num_sounds+data->num_images;
+	float current = 0;
 
 	// load sounds
 	for(int s = 0; s < data->num_sounds; s++)
+	{
+		render_loading(current/total);
 		for(int i = 0; i < data->sounds[s].num_sounds; i++)
 		{
 			int id;
@@ -454,10 +497,17 @@ void modc_init()
 
 			data->sounds[s].sounds[i].id = id;
 		}
+		
+		current++;
+	}
 	
 	// load textures
 	for(int i = 0; i < data->num_images; i++)
+	{
+		render_loading(current/total);
 		data->images[i].id = gfx_load_texture(data->images[i].filename);
+		current++;
+	}
 }
 
 void modc_entergame()
@@ -483,13 +533,15 @@ void modc_shutdown()
 {
 }
 
-void modc_newsnapshot()
+static bool must_process_events = false;
+
+static void process_events(int s)
 {
-	int num = snap_num_items(SNAP_CURRENT);
+	int num = snap_num_items(s);
 	for(int i = 0; i < num; i++)
 	{
 		snap_item item;
-		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+		const void *data = snap_get_item(s, i, &item);
 		
 		if(item.type == EVENT_DAMAGEINDICATION)
 		{
@@ -616,6 +668,26 @@ void modc_newsnapshot()
 				// 		depening on the category
 				snd_play_random(soundid, vol, pan);
 			}
+		}
+	}
+	
+	must_process_events = false;
+}
+
+void modc_newsnapshot()
+{
+	if(must_process_events)
+		process_events(SNAP_PREV);
+	must_process_events = true;
+	
+	if(config.stress)
+	{
+		if((client_tick()%250) == 0)
+		{
+			msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
+			msg_pack_string("galenskap!!!!", 512);
+			msg_pack_end();
+			client_send_msg();
 		}
 	}
 }
@@ -883,7 +955,7 @@ static void render_tee(animstate *anim, int skin, int emote, vec2 dir, vec2 pos)
 							select_sprite(SPRITE_TEE_EYE_NORMAL, 0, 0, shift*4);
 							break;
 					}
-					int h = emote == EMOTE_BLINK ? basesize/3 : basesize;
+					int h = emote == EMOTE_BLINK ? (int)(basesize/3) : (int)(basesize);
 					gfx_quads_draw(position.x-4+direction.x*4, position.y-8+direction.y*3, basesize, h);
 					gfx_quads_draw(position.x+4+direction.x*4, position.y-8+direction.y*3, -basesize, h);
 				}
@@ -956,6 +1028,7 @@ static void render_player(const obj_player *prev, const obj_player *player)
 {
 	if(player->health < 0) // dont render dead players
 		return;
+		
 	int skin = gametype == GAMETYPE_TDM ? skinseed + player->team : player->clientid;
 
 	vec2 direction = get_direction(player->angle);
@@ -1248,7 +1321,7 @@ void render_game()
 			int c = input::last_char(); // TODO: bypasses the engine interface
 			int k = input::last_key(); // TODO: bypasses the engine interface
 		
-			if (c >= 32 && c < 255)
+			if (!(c >= 0 && c < 32))
 			{
 				if (chat_input_len < sizeof(chat_input) - 1)
 				{
@@ -1291,13 +1364,9 @@ void render_game()
 	{
 		player_input input;
 		mem_zero(&input, sizeof(input));
-
-		float a = atan((float)mouse_pos.y/(float)mouse_pos.x);
-		if(mouse_pos.x < 0)
-			a = a+pi;
 			
-		input.target_x = (int)mouse_pos.x; //(int)(a*256.0f);
-		input.target_y = (int)mouse_pos.y; //(int)(a*256.0f);
+		input.target_x = (int)mouse_pos.x;
+		input.target_y = (int)mouse_pos.y;
 		input.activeweapon = -1;
 	
 		if(chat_active)
@@ -1313,25 +1382,30 @@ void render_game()
 			input.fire = inp_key_pressed(config.key_fire);
 			input.hook = inp_key_pressed(config.key_hook);
 
-			input.blink = inp_key_pressed('S');
-			
+			//input.blink = inp_key_pressed('S');
 			// Weapon switching
-#define TEST_WEAPON_KEY(key) if (inp_key_pressed(config.key_weapon ## key)) input.activeweapon = key-1;
-			if(config.scroll_weapon)
-			{
-				int delta = inp_mouse_scroll();
-				input.activeweapon = input.activeweapon + delta;
-
-				if(input.activeweapon > 3)
-					input.activeweapon = 3;
-				else if(input.activeweapon < 0)
-					input.activeweapon = 0;
-			}
-
-			TEST_WEAPON_KEY(1);
-			TEST_WEAPON_KEY(2);
-			TEST_WEAPON_KEY(3);
-			TEST_WEAPON_KEY(4);
+			if(inp_key_pressed(config.key_weapon1)) input.activeweapon = 0;
+			if(inp_key_pressed(config.key_weapon2)) input.activeweapon = 1;
+			if(inp_key_pressed(config.key_weapon3)) input.activeweapon = 2;
+			if(inp_key_pressed(config.key_weapon4)) input.activeweapon = 3;
+		}
+		
+		// stress testing
+		if(config.stress)
+		{
+			float t = client_localtime();
+			mem_zero(&input, sizeof(input));
+			input.left = 1;
+			input.jump = ((int)t)&1;
+			input.fire = ((int)(t*10))&1;
+			input.hook = ((int)t)&1;
+			input.activeweapon = ((int)t)%NUM_WEAPONS;
+			input.target_x = (int)(sinf(t*3)*100.0f);
+			input.target_y = (int)(cosf(t*3)*100.0f);
+			
+			//input.target_x = (int)((rand()/(float)RAND_MAX)*64-32);
+			//input.target_y = (int)((rand()/(float)RAND_MAX)*64-32);
+			
 		}
 
 		snap_input(&input, sizeof(input));
@@ -1365,6 +1439,10 @@ void render_game()
 				gameobj = (obj_game *)data;
 		}
 	}
+	
+	// everything updated, do events
+	if(must_process_events)
+		process_events(SNAP_PREV);
 
 	// pseudo format
 	float zoom = 3.0f;
@@ -1413,7 +1491,7 @@ void render_game()
 		{
 			float parallax_amount = 0.55f;
 			select_sprite(cloud_sprites[i]);
-			draw_sprite((cloud_pos[i].x+fmod(client_localtime()*cloud_speed[i]+i*100.0f, 1700.0f))+screen_x*parallax_amount,
+			draw_sprite((cloud_pos[i].x+fmod(client_localtime()*cloud_speed[i]+i*100.0f, 3000.0f))+screen_x*parallax_amount,
 				cloud_pos[i].y+screen_y*parallax_amount, 300);
 		}
 		gfx_quads_end();
@@ -1707,7 +1785,7 @@ void render_game()
 			// sort players
 			for(int k = 0; k < num_players; k++) // ffs, bubblesort
 			{
-				for(int i = k; i < num_players-1; i++)
+				for(int i = 0; i < num_players-k-1; i++)
 				{
 					if(players[i]->score < players[i+1]->score)
 					{

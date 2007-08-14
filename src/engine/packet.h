@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <string.h>
 #include <baselib/stream/file.h>
 #include <baselib/network.h>
 
@@ -273,6 +274,9 @@ public:
 	
 	int get_int()
 	{
+		if(current >= end)
+			return 0;
+			
 		int i;
 		current = vint_unpack(current, &i);
 		// TODO: might be changed into variable width
@@ -285,6 +289,9 @@ public:
 	
 	const char *get_string()
 	{
+		if(current >= end)
+			return "";
+			
 		// TODO: add range check
 		// TODO: add debug marker
 		const char *ptr = (const char *)current;
