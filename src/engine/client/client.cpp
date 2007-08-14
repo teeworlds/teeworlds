@@ -864,9 +864,6 @@ static void client_run(const char *direct_connect_server)
 						snapshots[SNAP_CURRENT] = next;
 						if(snapshots[SNAP_CURRENT] && snapshots[SNAP_PREV])
 							modc_newsnapshot();
-
-						if(snapshots[SNAP_CURRENT] && snapshots[SNAP_PREV])
-							modc_newsnapshot();
 					}
 					else
 					{
