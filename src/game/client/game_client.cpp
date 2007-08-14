@@ -847,11 +847,6 @@ static void render_tee(animstate *anim, int skin, int emote, vec2 dir, vec2 pos)
 					gfx_quads_draw(position.x-4+direction.x*4, position.y-8+direction.y*3, basesize, h);
 					gfx_quads_draw(position.x+4+direction.x*4, position.y-8+direction.y*3, -basesize, h);
 				}
-
-				// draw hands
-				select_sprite(outline?SPRITE_TEE_HAND_OUTLINE:SPRITE_TEE_HAND, 0, 0, shift*4);
-				gfx_quads_draw(position.x, position.y);
-
 			}
 
 			// draw feet
