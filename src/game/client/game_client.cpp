@@ -796,6 +796,51 @@ static void anim_eval_add(animstate *state, animation *anim, float time, float a
 	anim_add(state, &add, amount);
 }
 
+static void render_hand(int skin, vec2 center_pos, vec2 dir, float angle_offset, vec2 post_rot_offset)
+{
+	// for drawing hand
+	int shift = charids[skin%16];
+	float basesize = 10.0f;
+	//dir = normalize(hook_pos-pos);
+
+	vec2 hand_pos = center_pos + dir;
+	float angle = get_angle(dir);
+	if (dir.x < 0)
+		angle -= angle_offset;
+	else
+		angle += angle_offset;
+
+	vec2 dirx = dir;
+	vec2 diry(-dir.y,dir.x);
+
+	if (dir.x < 0)
+		diry = -diry;
+
+	hand_pos += dirx * post_rot_offset.x;
+	hand_pos += diry * post_rot_offset.y;
+
+	// don't draw if it's almost straight down
+	//if (abs(get_angle(dir) - 3*pi/2) > 10)
+	{
+		gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
+		gfx_quads_begin();
+
+		// two passes
+		for (int i = 0; i < 2; i++)
+		{
+			bool outline = i == 0;
+
+			// draw hook hand
+			select_sprite(outline?SPRITE_TEE_HAND_OUTLINE:SPRITE_TEE_HAND, 0, 0, shift*4);
+			gfx_quads_setrotation(angle);
+			gfx_quads_draw(hand_pos.x, hand_pos.y, 2*basesize, 2*basesize);
+		}
+
+		gfx_quads_setrotation(0);
+		gfx_quads_end();
+	}
+}
+
 static void render_tee(animstate *anim, int skin, int emote, vec2 dir, vec2 pos)
 {
 	vec2 direction =  dir;
@@ -916,7 +961,8 @@ static void render_player(const obj_player *prev, const obj_player *player)
 {
 	if(player->health < 0) // dont render dead players
 		return;
-	
+	int skin = gametype == GAMETYPE_TDM ? skinseed + player->team : player->clientid;
+
 	vec2 direction = get_direction(player->angle);
 	float angle = player->angle/256.0f;
 	vec2 position = mix(vec2(prev->x, prev->y), vec2(player->x, player->y), client_intratick());
@@ -949,10 +995,9 @@ static void render_player(const obj_player *prev, const obj_player *player)
 		float a = clamp((client_tick()-player->attacktick+client_intratick())/40.0f, 0.0f, 1.0f);
 		anim_eval_add(&state, &data->animations[ANIM_NINJA_SWING], a, 1.0f);
 	}
-
 		
 	// draw hook
-	if(player->hook_active)
+	if (prev->hook_active && player->hook_active)
 	{
 		gfx_texture_set(data->images[IMAGE_GAME].id);
 		gfx_quads_begin();
@@ -977,9 +1022,11 @@ static void render_player(const obj_player *prev, const obj_player *player)
 			vec2 p = hook_pos + dir*f;
 			gfx_quads_draw(p.x, p.y,24,16);
 		}
-		
+
 		gfx_quads_setrotation(0);
 		gfx_quads_end();
+
+		render_hand(skin, vec2(position.x+state.body.x, position.y+state.body.y), normalize(hook_pos-pos), -pi/2, vec2(20, 4));
 	}
 
 	// draw gun
@@ -1097,10 +1144,17 @@ static void render_player(const obj_player *prev, const obj_player *player)
 			}
 		}
 		gfx_quads_end();
+
+		switch (player->weapon)
+		{
+			case WEAPON_GUN: render_hand(skin, p, direction, -3*pi/4, vec2(-15, 4)); break;
+			case WEAPON_SHOTGUN: render_hand(skin, p, direction, -pi/2, vec2(-5, 4)); break;
+			case WEAPON_ROCKET: render_hand(skin, p, direction, -pi/2, vec2(-4, 7)); break;
+		}
+		
 	}
 
 	// render the tee
-	int skin = gametype == GAMETYPE_TDM ? skinseed + player->team : player->clientid;
 	render_tee(&state, skin, player->emote, direction, position);
 
 	if(player->state == STATE_CHATTING)
