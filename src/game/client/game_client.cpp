@@ -1302,7 +1302,7 @@ void render_sun(float x, float y)
 	gfx_quads_end();	
 }
 
-const int emoticon_selector_input_num = 30;
+const int emoticon_selector_input_num = 20;
 static bool emoticon_selector_inactive_override = false;
 static int emoticon_selector_input_count = 0;
 static int emoticon_selector_input_iter = 0;
@@ -1363,12 +1363,12 @@ int emoticon_selector_render()
 	gfx_texture_set(data->images[IMAGE_EMOTICONS].id);
 	gfx_quads_begin();
 
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < 12; i++)
 	{
-		float angle = 2*pi*i/16.0;
+		float angle = 2*pi*i/12.0;
 		float diff = fabs(selected_angle-angle);
 
-		bool selected = diff < pi/16;
+		bool selected = diff < pi/12;
 		
 		if (return_now && selected)
 			emoticon_selected = i;
