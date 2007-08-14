@@ -1,6 +1,0 @@
-cleancmd:bam -c
-buildcmd:bam --debug-build-time
-sourcedir:c,cpp,h:../baselib/include/baselib
-sourcedir:c,cpp,h:../baselib/src/internal
-sourcedir:bam:../baselib
-sourcedir:c,cpp,h,bam:.
