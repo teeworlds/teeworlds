@@ -568,6 +568,8 @@ sprites {
 		tee_body_outline 4 0 4 4
 		tee_foot 8 3 2 1
 		tee_foot_outline 13 2 2 1
+		tee_hand 8 0 2 2
+		tee_hand_outline 10 0 2 2
 		
 		tee_eye_normal 10 2 1 1
 		tee_eye_pain 11 3 1 1
