@@ -1302,10 +1302,11 @@ void render_sun(float x, float y)
 	gfx_quads_end();	
 }
 
+const int emoticon_selector_input_num = 30;
 static bool emoticon_selector_inactive_override = false;
 static int emoticon_selector_input_count = 0;
 static int emoticon_selector_input_iter = 0;
-static vec2 emoticon_selector_inputs[10];
+static vec2 emoticon_selector_inputs[emoticon_selector_input_num];
 
 void emoticon_selector_reset()
 {
@@ -1320,16 +1321,16 @@ int emoticon_selector_render()
 
 	if (x || y)
 	{
-		emoticon_selector_inputs[emoticon_selector_input_iter++ % 10] = vec2(x, y);
+		emoticon_selector_inputs[emoticon_selector_input_iter++ % emoticon_selector_input_num] = vec2(x, y);
 		
 		emoticon_selector_input_count++;
-		if (emoticon_selector_input_count > 10)
-			emoticon_selector_input_count = 10;
+		if (emoticon_selector_input_count > emoticon_selector_input_num)
+			emoticon_selector_input_count = emoticon_selector_input_num;
 	}
 
 	float selected_angle = 0;
 
-	if (emoticon_selector_input_count > 5)
+	if (emoticon_selector_input_count > emoticon_selector_input_num/2)
 	{
 		vec2 sum;
 
