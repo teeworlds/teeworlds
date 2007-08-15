@@ -347,9 +347,14 @@ int snd_load_wv(const char *filename)
 	file = NULL;
 
 	if(id >= 0)
-		dbg_msg("sound/wv", "loaded %s", filename);
+	{
+		if(config.debug)
+			dbg_msg("sound/wv", "loaded %s", filename);
+	}
 	else
+	{
 		dbg_msg("sound/wv", "failed to load %s", filename);
+	}
 
 	return id;
 }
