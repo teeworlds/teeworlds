@@ -21,7 +21,7 @@ MACRO_CONFIG_INT(gfx_texture_compression, 0, 0, 1)
 MACRO_CONFIG_INT(gfx_high_detail, 1, 0, 1)
 MACRO_CONFIG_INT(gfx_texture_quality, 1, 0, 1)
 
-MACRO_CONFIG_INT(key_screenshot, 'Q', 32, 512)
+MACRO_CONFIG_INT(key_screenshot, 267, 32, 512)
 
 MACRO_CONFIG_STR(masterserver, 128, "master.teewars.com")
 

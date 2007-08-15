@@ -777,7 +777,7 @@ static int settings_general_render()
 
 	// Dynamic camera
 	ui_do_label(column1_x, row2_y, "Dynamic Camera:", 36);
-	config_set_dynamic_camera(&config_copy, ui_do_check_box(&config_copy.dynamic_camera, column2_x, row2_y, 22, 22, config_copy.dynamic_camera));
+	config_set_dynamic_camera(&config_copy, ui_do_check_box(&config_copy.dynamic_camera, column2_x + 55, row2_y + 4, 32, 32, config_copy.dynamic_camera));
 
 	return 0;
 }
@@ -795,7 +795,7 @@ static int settings_controls_render()
 {
 	static int scroll_index = 0;
 
-	key_thing keys[] = 
+	const key_thing keys[] = 
 	{
 		{ "Move Left:", &config_copy.key_move_left, config_set_key_move_left },
 		{ "Move Right:", &config_copy.key_move_right, config_set_key_move_right },
@@ -809,6 +809,8 @@ static int settings_controls_render()
 		{ "Emoticon:", &config_copy.key_emoticon, config_set_key_emoticon },
 		{ "Screenshot:", &config_copy.key_screenshot, config_set_key_screenshot },
 	};
+
+	const int key_count = sizeof(keys) / sizeof(key_thing);
 
 	for (int i = 0; i < 6; i++)
 	{
@@ -831,11 +833,10 @@ static int settings_controls_render()
 	config_set_key_hook(&config_copy, ui_do_key_reader(&config_copy.key_hook, column2_x, row1_y + 160, 150, 36, config_copy.key_hook));
 	*/
 
-	scroll_index = do_scroll_bar_vert(&scroll_index, 600, row1_y, 40 * 6, 9 - 7, scroll_index);
+	scroll_index = do_scroll_bar_vert(&scroll_index, 600, row1_y, 40 * 6, key_count - 6, scroll_index);
 
 	ui_do_label(column1_x, row1_y + 40 * 6, "Scroll wheel weapon switch", 22);
 	config_set_scroll_weapon(&config_copy, ui_do_check_box(&config_copy.scroll_weapon, column2_x + 50, row1_y + 40 * 6, 22, 22, config_copy.scroll_weapon));
-
 
 	return 0;
 }
