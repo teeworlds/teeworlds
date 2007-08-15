@@ -1255,10 +1255,24 @@ static void render_player(const obj_player *prev, const obj_player *player)
 		gfx_quads_end();
 	}
 
-	if (client_datas[player->clientid].emoticon_start + 2 * client_tickspeed() > client_tick())
+	if (client_datas[player->clientid].emoticon_start != -1 && client_datas[player->clientid].emoticon_start + 2 * client_tickspeed() > client_tick())
 	{
 		gfx_texture_set(data->images[IMAGE_EMOTICONS].id);
 		gfx_quads_begin();
+
+		float a;
+
+		int since_start = client_tick() - client_datas[player->clientid].emoticon_start;
+		int from_end = client_datas[player->clientid].emoticon_start + 2 * client_tickspeed() - client_tick();
+
+		if (since_start < client_tickspeed() / 5)
+			a = since_start / (client_tickspeed() / 5.0);
+		else if (from_end < client_tickspeed() / 5)
+			a = from_end / (client_tickspeed() / 5.0);
+		else
+			a = 1;
+
+		gfx_quads_setcolor(1.0f,1.0f,1.0f,a);
 		// client_datas::emoticon is an offset from the first emoticon
 		select_sprite(SPRITE_OOP + client_datas[player->clientid].emoticon);
 		gfx_quads_draw(position.x, position.y - 55, 64, 64);
