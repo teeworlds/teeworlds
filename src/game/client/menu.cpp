@@ -1429,8 +1429,6 @@ int modmenu_render(bool ingame)
     //int r = menu_render(server_address, str, max_len);
 	int r = menu_render(ingame);
 
-    // render butt ugly mouse cursor
-    // TODO: render nice cursor
     gfx_texture_set(data->images[IMAGE_CURSOR].id);
     gfx_quads_begin();
     gfx_quads_setcolor(1,1,1,1);

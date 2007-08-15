@@ -1324,16 +1324,12 @@ void render_sun(float x, float y)
 	gfx_quads_end();	
 }
 
-const int emoticon_selector_input_num = 20;
 static bool emoticon_selector_inactive_override = false;
-static int emoticon_selector_input_count = 0;
-static int emoticon_selector_input_iter = 0;
-static vec2 emoticon_selector_inputs[emoticon_selector_input_num];
+static vec2 emoticon_selector_mouse;
 
 void emoticon_selector_reset()
 {
-	emoticon_selector_input_count = 0;
-	emoticon_selector_input_iter = 0;
+	emoticon_selector_mouse = vec2(0, 0);
 }
 
 int emoticon_selector_render()
@@ -1341,28 +1337,15 @@ int emoticon_selector_render()
 	int x, y;
 	inp_mouse_relative(&x, &y);
 
-	if (x || y)
-	{
-		emoticon_selector_inputs[emoticon_selector_input_iter++ % emoticon_selector_input_num] = vec2(x, y);
-		
-		emoticon_selector_input_count++;
-		if (emoticon_selector_input_count > emoticon_selector_input_num)
-			emoticon_selector_input_count = emoticon_selector_input_num;
-	}
+	emoticon_selector_mouse.x += x;
+	emoticon_selector_mouse.y += y;
 
-	float selected_angle = 0;
+	if (length(emoticon_selector_mouse) > 60)
+		emoticon_selector_mouse = normalize(emoticon_selector_mouse) * 60;
 
-	if (emoticon_selector_input_count > emoticon_selector_input_num/2)
-	{
-		vec2 sum;
-
-		for (int i = 0; i < emoticon_selector_input_count; i++)
-			sum += emoticon_selector_inputs[i];
-
-		selected_angle = get_angle(normalize(sum));
-		if (selected_angle < 0)
-			selected_angle += 2*pi;
-	}
+	float selected_angle = get_angle(emoticon_selector_mouse);
+	if (selected_angle > pi)
+		selected_angle -= 2*pi;
 
 	static bool mouse_down = false;
 	int emoticon_selected = -1;
@@ -1388,6 +1371,8 @@ int emoticon_selector_render()
 	for (int i = 0; i < 12; i++)
 	{
 		float angle = 2*pi*i/12.0;
+		if (angle > pi)
+			angle -= 2*pi;
 		float diff = fabs(selected_angle-angle);
 
 		bool selected = diff < pi/12;
@@ -1404,6 +1389,12 @@ int emoticon_selector_render()
 	}
 
 	gfx_quads_end();
+
+    gfx_texture_set(data->images[IMAGE_CURSOR].id);
+    gfx_quads_begin();
+    gfx_quads_setcolor(1,1,1,1);
+    gfx_quads_drawTL(emoticon_selector_mouse.x+200,emoticon_selector_mouse.y+150,12,12);
+    gfx_quads_end();
 
 	return emoticon_selected;
 }
