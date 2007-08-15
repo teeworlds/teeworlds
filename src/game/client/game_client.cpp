@@ -1586,13 +1586,16 @@ void render_game()
 	
 	// center at char but can be moved when mouse is far away
 	float offx = 0, offy = 0;
-	int deadzone = 300;
-	if(mouse_pos.x > deadzone) offx = mouse_pos.x-deadzone;
-	if(mouse_pos.x <-deadzone) offx = mouse_pos.x+deadzone;
-	if(mouse_pos.y > deadzone) offy = mouse_pos.y-deadzone;
-	if(mouse_pos.y <-deadzone) offy = mouse_pos.y+deadzone;
-	offx = offx*2/3;
-	offy = offy*2/3;
+	if (config.dynamic_camera)
+	{
+		int deadzone = 300;
+		if(mouse_pos.x > deadzone) offx = mouse_pos.x-deadzone;
+		if(mouse_pos.x <-deadzone) offx = mouse_pos.x+deadzone;
+		if(mouse_pos.y > deadzone) offy = mouse_pos.y-deadzone;
+		if(mouse_pos.y <-deadzone) offy = mouse_pos.y+deadzone;
+		offx = offx*2/3;
+		offy = offy*2/3;
+	}
 		
 	screen_x = local_player_pos.x+offx;
 	screen_y = local_player_pos.y+offy;
@@ -1855,7 +1858,7 @@ void render_game()
 		return;
 	}
 
-	if (inp_key_pressed('E'))
+	if (inp_key_pressed(config.key_emoticon))
 	{
 		if (!emoticon_selector_active)
 		{

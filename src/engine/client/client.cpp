@@ -938,7 +938,7 @@ static void client_run(const char *direct_connect_server)
 		}
 
 		// screenshot button
-		if(inp_key_down(input::f10))
+		if(inp_key_down(config.key_screenshot))
 			gfx_screenshot();
 
 		// panic button

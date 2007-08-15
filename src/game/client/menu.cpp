@@ -775,6 +775,10 @@ static int settings_general_render()
 	ui_do_label(column1_x, row1_y, "Name:", 36);
 	ui_do_edit_box(config_copy.player_name, column2_x, row1_y, 300, 36, config_copy.player_name, sizeof(config_copy.player_name));
 
+	// Dynamic camera
+	ui_do_label(column1_x, row2_y, "Dynamic Camera:", 36);
+	config_set_dynamic_camera(&config_copy, ui_do_check_box(&config_copy.dynamic_camera, column2_x, row2_y, 22, 22, config_copy.dynamic_camera));
+
 	return 0;
 }
 
@@ -802,6 +806,8 @@ static int settings_controls_render()
 		{ "Grenade:", &config_copy.key_weapon2, config_set_key_weapon2 },
 		{ "Shotgun:", &config_copy.key_weapon3, config_set_key_weapon3 },
 		{ "Hammer:", &config_copy.key_weapon4, config_set_key_weapon4 },
+		{ "Emoticon:", &config_copy.key_emoticon, config_set_key_emoticon },
+		{ "Screenshot:", &config_copy.key_screenshot, config_set_key_screenshot },
 	};
 
 	for (int i = 0; i < 6; i++)
