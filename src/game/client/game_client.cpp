@@ -1366,13 +1366,18 @@ int emoticon_selector_render()
 	if (length(emoticon_selector_mouse) > 70)
 		emoticon_selector_mouse = normalize(emoticon_selector_mouse) * 70;
 
-	float selected_angle = get_angle(emoticon_selector_mouse);
-	if (selected_angle > pi)
-		selected_angle -= 2*pi;
+	float selected_angle = get_angle(emoticon_selector_mouse) + 2*pi/24;
+	if (selected_angle < 0)
+		selected_angle += 2*pi;
 
 	static bool mouse_down = false;
-	int emoticon_selected = -1;
 	bool return_now = false;
+	int selected_emoticon; 
+
+	if (length(emoticon_selector_mouse) < 50)
+		selected_emoticon = -1;
+	else
+		selected_emoticon = selected_angle / (2*pi) * 12;
 
 	if (inp_key_pressed(baselib::input::mouse_1))
 	{
@@ -1380,10 +1385,14 @@ int emoticon_selector_render()
 	}
 	else if (mouse_down)
 	{
-		return_now = true;
 		mouse_down = false;
-		emoticon_selector_active = false;
-		emoticon_selector_inactive_override = true;
+
+		if (selected_emoticon != -1)
+		{
+			return_now = true;
+			emoticon_selector_active = false;
+			emoticon_selector_inactive_override = true;
+		}
 	}
 
 	gfx_mapscreen(0,0,400,300);
@@ -1404,12 +1413,8 @@ int emoticon_selector_render()
 		float angle = 2*pi*i/12.0;
 		if (angle > pi)
 			angle -= 2*pi;
-		float diff = fabs(selected_angle-angle);
 
-		bool selected = diff < pi/12;
-		
-		if (return_now && selected)
-			emoticon_selected = i;
+		bool selected = selected_emoticon == i;
 
 		float size = selected ? 48 : 32;
 
@@ -1427,7 +1432,7 @@ int emoticon_selector_render()
     gfx_quads_drawTL(emoticon_selector_mouse.x+200,emoticon_selector_mouse.y+150,12,12);
     gfx_quads_end();
 
-	return emoticon_selected;
+	return return_now ? selected_emoticon : -1;
 }
 
 void render_game()
