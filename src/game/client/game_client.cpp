@@ -1720,7 +1720,7 @@ void render_game()
 		gfx_quads_begin();
 		
 		// render cursor
-		if (!menu_active)
+		if (!menu_active && (!emoticon_selector_active || emoticon_selector_inactive_override))
 		{
 			select_sprite(data->weapons[local_player->weapon%data->num_weapons].sprite_cursor);
 			float cursorsize = 64;
