@@ -998,6 +998,29 @@ static void render_tee(animstate *anim, int skin, int emote, vec2 dir, vec2 pos)
 	gfx_quads_end();	
 }
 
+void draw_circle(float x, float y, float r, int segments)
+{
+	float f_segments = (float)segments;
+	for(int i = 0; i < segments; i+=2)
+	{
+		float a1 = i/f_segments * 2*pi;
+		float a2 = (i+1)/f_segments * 2*pi;
+		float a3 = (i+2)/f_segments * 2*pi;
+		float ca1 = cosf(a1);
+		float ca2 = cosf(a2);
+		float ca3 = cosf(a3);
+		float sa1 = sinf(a1);
+		float sa2 = sinf(a2);
+		float sa3 = sinf(a3);
+		
+		gfx_quads_draw_freeform(
+			x, y,
+			x+ca1*r, y+sa1*r,
+			x+ca3*r, y+sa3*r,
+			x+ca2*r, y+sa2*r);
+	}
+}
+
 void draw_round_rect(float x, float y, float w, float h, float r)
 {
 	int num = 8;
@@ -1340,8 +1363,8 @@ int emoticon_selector_render()
 	emoticon_selector_mouse.x += x;
 	emoticon_selector_mouse.y += y;
 
-	if (length(emoticon_selector_mouse) > 60)
-		emoticon_selector_mouse = normalize(emoticon_selector_mouse) * 60;
+	if (length(emoticon_selector_mouse) > 70)
+		emoticon_selector_mouse = normalize(emoticon_selector_mouse) * 70;
 
 	float selected_angle = get_angle(emoticon_selector_mouse);
 	if (selected_angle > pi)
@@ -1364,6 +1387,14 @@ int emoticon_selector_render()
 	}
 
 	gfx_mapscreen(0,0,400,300);
+
+	gfx_blend_normal();
+	
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_quads_setcolor(0,0,0,0.3f);
+	draw_circle(200, 150, 80, 64);
+	gfx_quads_end();
 
 	gfx_texture_set(data->images[IMAGE_EMOTICONS].id);
 	gfx_quads_begin();
