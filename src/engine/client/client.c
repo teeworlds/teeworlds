@@ -9,8 +9,6 @@
 #include <engine/interface.h>
 #include "ui.h"
 
-#include <engine/versions.h>
-
 #include <engine/protocol.h>
 #include <engine/snapshot.h>
 #include <engine/compression.h>
@@ -152,7 +150,7 @@ static void client_send_info()
 	game_start_time = -1;
 
 	msg_pack_start_system(NETMSG_INFO, MSGFLAG_VITAL);
-	msg_pack_string(TEEWARS_NETVERSION_STRING, 64);
+	msg_pack_string(modc_net_version(), 128);
 	msg_pack_string(config.player_name, 128);
 	msg_pack_string(config.clan_name, 128);
 	msg_pack_string(config.password, 128);
@@ -717,6 +715,7 @@ static void client_run(const char *direct_connect_server)
 	
 	// init the mod
 	modc_init();
+	dbg_msg("client", "version %s", modc_net_version());
 	
 	// open socket
 	NETADDR4 bindaddr;

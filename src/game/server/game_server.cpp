@@ -3,6 +3,7 @@
 #include <string.h>
 #include <engine/config.h>
 #include "../game.h"
+#include "../version.h"
 #include "data.h"
 #include "game_server.h"
 
@@ -2189,3 +2190,5 @@ void mods_init()
 void mods_shutdown() {}
 void mods_presnap() {}
 void mods_postsnap() {}
+
+extern "C" const char *mods_net_version() { return TEEWARS_NETVERSION; }

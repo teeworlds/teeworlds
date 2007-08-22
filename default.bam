@@ -10,9 +10,24 @@ if family == "windows" then
 	dat2c_compiler = "scripts\\dat2c.py"
 end
 
+cmd5_tool = "python scripts/cmd5.py"
+if family == "windows" then
+	cmd5_tool = "scripts\\cmd5.py"
+end
+
 function rc(output, input)
 	print("rc " .. PathFilename(input))
 	return os.execute("rc /fo " .. output .. " " .. input)
+end
+
+function cmd5(output, inputs)
+	print("cmd5 " .. PathFilename(output))
+	cmd = cmd5_tool .. " "
+	for i,v in inputs do
+		cmd = cmd .. v .. " " 
+	end
+	cmd = cmd .. " > " .. output
+	return os.execute(cmd)
 end
 
 function dat2c(output, data, name)
@@ -40,6 +55,25 @@ function dc_cdata(output, data, script)
 	return os.execute(dc_compiler .. " " .. data .. " " .. script .. " -c " .. output)
 end
 
+
+function CHash(output, ...)
+	local inputs = {}
+	local ih = collect_input(arg)
+	
+	output = Path(output)
+	
+	-- compile all the files
+	for index, inname in ih do
+		table.insert(inputs, Path(inname))
+	end
+	
+	bam_add_job("cmd5", output, inputs)
+	for index, inname in inputs do
+		bam_add_dependency(output, inname)
+	end
+	return output
+end
+
 function ResCompile(scriptfile)
 	scriptfile = Path(scriptfile)
 	output = PathBase(scriptfile) .. ".res"
@@ -60,18 +94,26 @@ function DataCompile(datafile, scriptfile, headerfile, sourcefile, outputdatafil
 	datafile = Path(datafile)
 	scriptfile = Path(scriptfile)
 	headerfile = Path(headerfile)
-	sourcefile = Path(sourcefile)
-	outputdatafile = Path(outputdatafile)
-	bam_add_job("dc_source", sourcefile, datafile, scriptfile)
+	
 	bam_add_job("dc_header", headerfile, datafile, scriptfile)
-	bam_add_job("dc_cdata", outputdatafile, datafile, scriptfile)
-	bam_add_dependency(sourcefile, datafile)
-	bam_add_dependency(sourcefile, scriptfile)
-	bam_add_dependency(sourcefile, headerfile)
 	bam_add_dependency(headerfile, datafile)
 	bam_add_dependency(headerfile, scriptfile)
-	bam_add_dependency(outputdatafile, datafile)
-	bam_add_dependency(outputdatafile, scriptfile)
+	
+	if sourcefile then
+		sourcefile = Path(sourcefile)
+		bam_add_job("dc_source", sourcefile, datafile, scriptfile)
+		bam_add_dependency(sourcefile, datafile)
+		bam_add_dependency(sourcefile, scriptfile)
+		bam_add_dependency(sourcefile, headerfile)
+	end
+		
+	if outputdatafile then
+		outputdatafile = Path(outputdatafile)
+		bam_add_job("dc_cdata", outputdatafile, datafile, scriptfile)
+		bam_add_dependency(outputdatafile, datafile)
+		bam_add_dependency(outputdatafile, scriptfile)
+	end
+		
 	return {cdata = outputdatafile, header=headerfile, source=sourcefile}
 end
 
@@ -88,6 +130,13 @@ clientdata = DataCompile(
 		"src/game/client/data.h",
 		"src/game/client/data/client_data.cpp",
 		"src/game/client/data/client_internal.cpp")
+
+networkdata = DataCompile(
+		"datasrc/teewars.ds", 
+		"datasrc/network.dts", 
+		"src/game/protocol_ids.h")
+
+nethash = CHash("src/game/nethash.c", "src/engine/protocol.h", "src/game/game_protocol.h", networkdata.header)
 
 client_link_other = {}
 if family == "windows" then
@@ -171,7 +220,7 @@ function build(settings)
 	server = Compile(engine_settings, Collect("src/engine/server/*.c"))
 	
 	masterserver = Compile(settings, Collect("src/mastersrv/*.cpp"))
-	game_shared = Compile(settings, Collect("src/game/*.cpp"))
+	game_shared = Compile(settings, Collect("src/game/*.cpp"), nethash)
 	game_client = Compile(settings, Collect("src/game/client/*.cpp"), clientdata.source, clientdata.cdata)
 	game_server = Compile(settings, Collect("src/game/server/*.cpp"), serverdata.source, serverdata.cdata)
 	editor = Compile(settings, Collect("src/editor/*.cpp"))

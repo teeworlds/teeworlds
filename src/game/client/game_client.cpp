@@ -9,6 +9,7 @@ extern "C" {
 };
 
 #include "../game.h"
+#include "../version.h"
 #include "mapres_image.h"
 #include "mapres_tilemap.h"
 #include "data.h"
@@ -2204,3 +2205,6 @@ extern "C" void modc_message(int msg)
 		client_datas[cid].emoticon_start = client_tick();
 	}
 }
+
+
+extern "C" const char *modc_net_version() { return TEEWARS_NETVERSION; }

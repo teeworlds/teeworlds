@@ -708,6 +708,13 @@ int modmenu_render(int ingame);
 void modc_message(int msg);
 void mods_message(int msg, int client_id);
 
+const char *modc_net_version();
+const char *mods_net_version();
+
+// unused
+// const char *modc_version();
+// const char *mods_version();
+
 /* server */
 int server_getclientinfo(int client_id, CLIENT_INFO *info);
 int server_tick();

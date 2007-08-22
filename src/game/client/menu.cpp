@@ -8,12 +8,12 @@
 extern "C" {
 	#include <engine/system.h>
 	#include <engine/interface.h>
-	#include <engine/versions.h>
 	#include <engine/config.h>
 	#include <engine/client/ui.h>
 }
 
 #include "../mapres.h"
+#include "../version.h"
 
 #include "mapres_image.h"
 #include "mapres_tilemap.h"
@@ -1289,7 +1289,7 @@ int render_popup(const char *caption, const char *text, const char *button_text)
 	ui_do_label(x+w/2-tw/2, y+20, caption, 48.0f);
 	
 	tw = gfx_pretty_text_width(32.0f, text, -1);
-	ui_do_label(x+w/2-tw/2, y+130, text, 32.0f);
+    gfx_pretty_text(x+w/2-tw/2, y+130, 32.0f, text, -1);
 
 	if(button_text)
 	{
@@ -1366,6 +1366,8 @@ static int menu_render(bool ingame)
 		{
 			ui_do_image(data->images[IMAGE_BANNER].id, 200, 20, 512, 128);
 			ui_do_label(20.0f, 600.0f-40.0f, "Version: " TEEWARS_VERSION, 36);
+			if(config.debug)
+				ui_do_label(20.0f, 600.0f-60.0f, "Nethash: " TEEWARS_NETVERSION_HASH, 24);
 		}
 	}
 	else

@@ -11,7 +11,6 @@
 #include <engine/snapshot.h>
 
 #include <engine/compression.h>
-#include <engine/versions.h>
 
 #include <engine/network.h>
 #include <engine/config.h>
@@ -366,11 +365,11 @@ static void server_process_client_packet(NETPACKET *packet)
 		{
 			char version[64];
 			strncpy(version, msg_unpack_string(), 64);
-			if(strcmp(version, TEEWARS_NETVERSION_STRING) != 0)
+			if(strcmp(version, mods_net_version()) != 0)
 			{
 				// OH FUCK! wrong version, drop him
 				char reason[256];
-				sprintf(reason, "wrong version. server is running %s.", TEEWARS_NETVERSION_STRING);
+				sprintf(reason, "wrong version. server is running %s.", mods_net_version());
 				netserver_drop(net, cid, reason);
 				return;
 			}
@@ -545,6 +544,7 @@ static int server_run()
 	}
 
 	mods_init();
+	dbg_msg("server", "version %s", mods_net_version());
 
 	int64 time_per_tick = time_freq()/SERVER_TICK_SPEED;
 	int64 time_per_heartbeat = time_freq() * 30;
@@ -657,3 +657,4 @@ int main(int argc, char **argv)
 	server_run();
 	return 0;
 }
+
