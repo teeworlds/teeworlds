@@ -510,8 +510,15 @@ static void patch_ptr(char **ptr, char *base)
 
 data_container *load_data_from_memory(unsigned char *mem)
 {
+	if(mem[0] != sizeof(void*))
+		return 0;
+	if(mem[1] != sizeof(long))
+		return 0;
+	if(mem[2] != sizeof(float))
+		return 0;
+
 	/* patch all pointers */
-	data_container *con = (data_container*)mem;
+	data_container *con = (data_container*)(mem + 4);
 	patch_ptr_data_container(con, (char *)con);
 	return con;
 }
@@ -548,7 +555,8 @@ data_container *load_data_from_file(const char *filename)
 				i = cons.allocate(s.size())
 				s.emit_data(cons, i, self.srcdata)
 				cons.patch_pointers()
-				return cons.data
+				header = struct.pack("bbbb", option_ptrsize, option_intsize, option_floatsize, 0)
+				return header + cons.data
 			
 def create_translator(script, srcdata):
 	t = translator()
