@@ -239,6 +239,7 @@ static void server_do_snap()
 
 			// finish snapshot
 			int snapshot_size = snapbuild_finish(&builder, data);
+			int crc = snapshot_crc((SNAPSHOT*)data);
 
 			// remove old snapshos
 			// keep 1 seconds worth of snapshots
@@ -258,10 +259,7 @@ static void server_do_snap()
 			{
 				deltashot_size = snapstorage_get(&clients[i].snapshots, clients[i].last_acked_snapshot, 0, &deltashot);
 				if(deltashot_size >= 0)
-				//{
 					delta_tick = clients[i].last_acked_snapshot;
-					//deltashot = (SNAPSHOT *)delta_data;
-				//}
 			}
 			
 			// create delta
@@ -291,6 +289,7 @@ static void server_do_snap()
 					msg_pack_start_system(NETMSG_SNAP, 0);
 					msg_pack_int(current_tick);
 					msg_pack_int(current_tick-delta_tick); // compressed with
+					msg_pack_int(crc);
 					msg_pack_int(chunk);
 					msg_pack_raw(&compdata[n*max_size], chunk);
 					msg_pack_end();

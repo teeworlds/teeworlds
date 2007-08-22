@@ -32,6 +32,7 @@ static NETADDR4 master_server;
 static NETADDR4 server_address;
 static int window_must_refocus = 0;
 static int snaploss = 0;
+static int snapcrcerrors = 0;
 
 static int current_tick = 0;
 static float intratick = 0;
@@ -374,7 +375,7 @@ static void client_debug_render()
 	static float frametime_avg = 0;
 	frametime_avg = frametime_avg*0.9f + frametime*0.1f;
 	char buffer[512];
-	sprintf(buffer, "send: %6d recv: %6d snaploss: %4d latency: %4.0f %c gfxmem: %6dk fps: %3d",
+	sprintf(buffer, "send: %6d recv: %6d snaploss: %d latency: %4.0f %c gfxmem: %6dk fps: %3d",
 		(current.send_bytes-prev.send_bytes)*10,
 		(current.recv_bytes-prev.recv_bytes)*10,
 		snaploss,
@@ -527,9 +528,13 @@ static void client_process_packet(NETPACKET *packet)
 				int num_parts = 1;
 				int part = 0;
 				int part_size = 0;
+				int crc;
 				
 				if(msg != NETMSG_SNAPEMPTY)
+				{
+					crc = msg_unpack_int();
 					part_size = msg_unpack_int();
+				}
 				
 				if(snapshot_part == part && game_tick > current_tick)
 				{
@@ -552,8 +557,6 @@ static void client_process_packet(NETPACKET *packet)
 						// find delta
 						if(delta_tick >= 0)
 						{
-							//void *delta_data;
-							
 							int deltashot_size = snapstorage_get(&snapshot_storage, delta_tick, 0, &deltashot);
 							
 							if(deltashot_size < 0)
@@ -590,6 +593,27 @@ static void client_process_packet(NETPACKET *packet)
 						
 						unsigned char tmpbuffer3[MAX_SNAPSHOT_SIZE];
 						int snapsize = snapshot_unpack_delta(deltashot, (SNAPSHOT*)tmpbuffer3, deltadata, deltasize);
+						if(snapshot_crc((SNAPSHOT*)tmpbuffer3) != crc)
+						{
+							if(config.debug)
+								dbg_msg("client", "snapshot crc error\n");
+							snapcrcerrors++;
+							if(snapcrcerrors > 25)
+							{
+								// to many errors, send reset
+								msg_pack_start_system(NETMSG_SNAPACK, 0);
+								msg_pack_int(-1);
+								msg_pack_end();
+								client_send_msg();
+								snapcrcerrors = 0;
+							}
+							return;
+						}
+						else
+						{
+							if(snapcrcerrors)
+								snapcrcerrors--;
+						}
 
 						// purge old snapshots				
 						int purgetick = delta_tick;
