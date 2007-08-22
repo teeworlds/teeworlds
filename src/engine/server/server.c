@@ -490,7 +490,7 @@ static void server_pump_network()
 				memcmp(packet.data, SERVERBROWSE_FWERROR, sizeof(SERVERBROWSE_FWERROR)) == 0)
 			{
 				dbg_msg("server", "ERROR: the master server reports that clients can not connect to this server.");
-				dbg_msg("server", "ERROR: configure your firewall/nat to let trough udp on port %d.", 8303);
+				dbg_msg("server", "ERROR: configure your firewall/nat to let trough udp on port %d.", config.sv_port);
 			}
 		}
 		else

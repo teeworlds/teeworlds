@@ -1,6 +1,8 @@
 #ifndef ENGINE_SNAPSHOT_H
 #define ENGINE_SNAPSHOT_H
 
+#include "system.h"
+
 /* SNAPSHOT */
 
 enum

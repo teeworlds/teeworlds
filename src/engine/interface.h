@@ -11,7 +11,7 @@ extern "C" {
 
 #include "keys.h"
 
-enum
+enum 
 {
 	MAX_CLIENTS=8,
 	SERVER_TICK_SPEED=50, /* TODO: this should be removed */
