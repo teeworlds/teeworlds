@@ -1,16 +1,16 @@
 
-struct NETPACKET
+typedef struct
 {
-	// -1 means that it's a stateless packet
-	// 0 on the client means the server
+	/* -1 means that it's a stateless packet */
+	/* 0 on the client means the server */
 	int client_id;
-	NETADDR4 address; // only used when client_id == -1
+	NETADDR4 address; /* only used when client_id == -1 */
 	int flags;
 	int data_size;
 	const void *data;
-};
+} NETPACKET;
 
-struct NETSTATS
+typedef struct
 {
 	int send_bytes;
 	int recv_bytes;
@@ -19,10 +19,10 @@ struct NETSTATS
 	
 	int resend_packets;
 	int resend_bytes;
-};
+} NETSTATS;
 
-struct NETSERVER;
-struct NETCLIENT;
+typedef struct NETSERVER_t NETSERVER;
+typedef struct NETCLIENT_t NETCLIENT;
 
 enum
 {
@@ -38,32 +38,29 @@ enum
 typedef int (*NETFUNC_DELCLIENT)(int cid, void *user);
 typedef int (*NETFUNC_NEWCLIENT)(int cid, void *user);
 
-// server side
-NETSERVER *net_server_open(NETADDR4 bindaddr, int max_clients, int flags);
-int net_server_set_callbacks(NETSERVER *s, NETFUNC_NEWCLIENT new_client, NETFUNC_DELCLIENT del_client, void *user);
-int net_server_recv(NETSERVER *s, NETPACKET *packet);
-int net_server_send(NETSERVER *s, NETPACKET *packet);
-int net_server_close(NETSERVER *s);
-int net_server_update(NETSERVER *s);
-int net_server_drop(NETSERVER *s, int client_id, const char *reason);
-//int net_server_newclient(NETSERVER *s); // -1 when no more, else, client id
-//int net_server_delclient(NETSERVER *s); // -1 when no more, else, client id
-void net_server_stats(NETSERVER *s, NETSTATS *stats);
+/* server side */
+NETSERVER *netserver_open(NETADDR4 bindaddr, int max_clients, int flags);
+int netserver_set_callbacks(NETSERVER *s, NETFUNC_NEWCLIENT new_client, NETFUNC_DELCLIENT del_client, void *user);
+int netserver_recv(NETSERVER *s, NETPACKET *packet);
+int netserver_send(NETSERVER *s, NETPACKET *packet);
+int netserver_close(NETSERVER *s);
+int netserver_update(NETSERVER *s);
+int netserver_drop(NETSERVER *s, int client_id, const char *reason);
+int netserver_max_clients(NETSERVER *s);
+void netserver_stats(NETSERVER *s, NETSTATS *stats);
 
-// client side
-NETCLIENT *net_client_open(NETADDR4 bindaddr, int flags);
-int net_client_disconnect(NETCLIENT *c, const char *reason);
-int net_client_connect(NETCLIENT *c, NETADDR4 *addr);
-int net_client_recv(NETCLIENT *c, NETPACKET *packet);
-int net_client_send(NETCLIENT *c, NETPACKET *packet);
-int net_client_close(NETCLIENT *c);
-int net_client_update(NETCLIENT *c);
-int net_client_state(NETCLIENT *c);
-void net_client_stats(NETCLIENT *c, NETSTATS *stats);
-const char *net_client_error_string(NETCLIENT *c);
+/* client side */
+NETCLIENT *netclient_open(NETADDR4 bindaddr, int flags);
+int netclient_disconnect(NETCLIENT *c, const char *reason);
+int netclient_connect(NETCLIENT *c, NETADDR4 *addr);
+int netclient_recv(NETCLIENT *c, NETPACKET *packet);
+int netclient_send(NETCLIENT *c, NETPACKET *packet);
+int netclient_close(NETCLIENT *c);
+int netclient_update(NETCLIENT *c);
+int netclient_state(NETCLIENT *c);
+void netclient_stats(NETCLIENT *c, NETSTATS *stats);
+const char *netclient_error_string(NETCLIENT *c);
 
-
-// wrapper classes for c++
 #ifdef __cplusplus
 class net_server
 {
@@ -72,21 +69,20 @@ public:
 	net_server() : ptr(0) {}
 	~net_server() { close(); }
 	
-	int open(NETADDR4 bindaddr, int max, int flags) { ptr = net_server_open(bindaddr, max, flags); return ptr != 0; }
-	int close() { int r = net_server_close(ptr); ptr = 0; return r; }
+	int open(NETADDR4 bindaddr, int max, int flags) { ptr = netserver_open(bindaddr, max, flags); return ptr != 0; }
+	int close() { int r = netserver_close(ptr); ptr = 0; return r; }
 	
 	int set_callbacks(NETFUNC_NEWCLIENT new_client, NETFUNC_DELCLIENT del_client, void *user)
-	{ return net_server_set_callbacks(ptr, new_client, del_client, user); }
+	{ return netserver_set_callbacks(ptr, new_client, del_client, user); }
 	
-	int recv(NETPACKET *packet) { return net_server_recv(ptr, packet); }
-	int send(NETPACKET *packet) { return net_server_send(ptr, packet); }
-	int update() { return net_server_update(ptr); }
+	int recv(NETPACKET *packet) { return netserver_recv(ptr, packet); }
+	int send(NETPACKET *packet) { return netserver_send(ptr, packet); }
+	int update() { return netserver_update(ptr); }
 	
-	int drop(int client_id, const char *reason) { return net_server_drop(ptr, client_id, reason); } 
-	//int newclient() { return net_server_newclient(ptr); }
-	//int delclient() { return net_server_delclient(ptr); }
-	
-	void stats(NETSTATS *stats) { net_server_stats(ptr, stats); }
+	int drop(int client_id, const char *reason) { return netserver_drop(ptr, client_id, reason); } 
+
+	int max_clients() { return netserver_max_clients(ptr); }
+	void stats(NETSTATS *stats) { netserver_stats(ptr, stats); }
 };
 
 
@@ -97,19 +93,19 @@ public:
 	net_client() : ptr(0) {}
 	~net_client() { close(); }
 	
-	int open(NETADDR4 bindaddr, int flags) { ptr = net_client_open(bindaddr, flags); return ptr != 0; }
-	int close() { int r = net_client_close(ptr); ptr = 0; return r; }
+	int open(NETADDR4 bindaddr, int flags) { ptr = netclient_open(bindaddr, flags); return ptr != 0; }
+	int close() { int r = netclient_close(ptr); ptr = 0; return r; }
 	
-	int connect(NETADDR4 *addr) { return net_client_connect(ptr, addr); }
-	int disconnect(const char *reason) { return net_client_disconnect(ptr, reason); }
+	int connect(NETADDR4 *addr) { return netclient_connect(ptr, addr); }
+	int disconnect(const char *reason) { return netclient_disconnect(ptr, reason); }
 	
-	int recv(NETPACKET *packet) { return net_client_recv(ptr, packet); }
-	int send(NETPACKET *packet) { return net_client_send(ptr, packet); }
-	int update() { return net_client_update(ptr); }
+	int recv(NETPACKET *packet) { return netclient_recv(ptr, packet); }
+	int send(NETPACKET *packet) { return netclient_send(ptr, packet); }
+	int update() { return netclient_update(ptr); }
 	
-	const char *error_string() { return net_client_error_string(ptr); }
+	const char *error_string() { return netclient_error_string(ptr); }
 	
-	int state() { return net_client_state(ptr); }
-	void stats(NETSTATS *stats) { net_client_stats(ptr, stats); }
+	int state() { return netclient_state(ptr); }
+	void stats(NETSTATS *stats) { netclient_stats(ptr, stats); }
 };
 #endif

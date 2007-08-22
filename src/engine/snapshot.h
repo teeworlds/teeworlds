@@ -1,49 +1,88 @@
-#ifndef FILE_SNAPSHOT_H
-#define FILE_SNAPSHOT_H
+#ifndef ENGINE_SNAPSHOT_H
+#define ENGINE_SNAPSHOT_H
 
-struct snapshot
+/* SNAPSHOT */
+
+enum
+{
+	MAX_SNAPSHOT_SIZE=64*1024,
+};
+
+typedef struct
+{
+	int type_and_id;
+} SNAPSHOT_ITEM;
+
+typedef struct 
 {
 	int data_size;
 	int num_items;
-	
-	struct item
-	{
-		int type_and_id;
+} SNAPSHOT;
 
-		int *data() { return (int *)(this+1); }		
-		int type() { return type_and_id>>16; }
-		int id() { return type_and_id&(0xffff); }
-		int key() { return type_and_id; }
-	};
+int *snapitem_data(SNAPSHOT_ITEM *item);
+int snapitem_type(SNAPSHOT_ITEM *item);
+int snapitem_id(SNAPSHOT_ITEM *item);
+int snapitem_key(SNAPSHOT_ITEM *item);
 
-	int *offsets() { return (int *)(this+1); }		
-	char *data_start() { return (char *)(offsets() + num_items); }
-	item *get_item(int index) { return (item *)(data_start() + offsets()[index]); };
-	
-	// returns the number of ints in the item data
-	int get_item_datasize(int index)
-	{
-		if(index == num_items-1)
-			return (data_size - offsets()[index]) - sizeof(item);
-		return (offsets()[index+1] - offsets()[index]) - sizeof(item);
-	}
-	
-	int get_item_index(int key)
-	{
-		// TODO: this should not be a linear search. very bad
-		for(int i = 0; i < num_items; i++)
-		{
-			if(get_item(i)->key() == key)
-				return i;
-		}
-		return -1;
-	}
-};
+int *snapshot_offsets(SNAPSHOT *snap);
+char *snapshot_datastart(SNAPSHOT *snap);
+
+SNAPSHOT_ITEM *snapshot_get_item(SNAPSHOT *snap, int index);
+int snapshot_get_item_datasize(SNAPSHOT *snap, int index);
+int snapshot_get_item_index(SNAPSHOT *snap, int key);
 
 void *snapshot_empty_delta();
-int snapshot_crc(snapshot *snap);
-void snapshot_debug_dump(snapshot *snap);
-int snapshot_create_delta(snapshot *from, snapshot *to, void *data);
-int snapshot_unpack_delta(snapshot *from, snapshot *to, void *data, int data_size);
+int snapshot_crc(SNAPSHOT *snap);
+void snapshot_debug_dump(SNAPSHOT *snap);
+int snapshot_create_delta(SNAPSHOT *from, SNAPSHOT *to, void *data);
+int snapshot_unpack_delta(SNAPSHOT *from, SNAPSHOT *to, void *data, int data_size);
 
-#endif // FILE_SNAPSHOT_H
+/* SNAPSTORAGE */
+
+typedef struct SNAPSTORAGE_HOLDER_t
+{
+	struct SNAPSTORAGE_HOLDER_t *prev;
+	struct SNAPSTORAGE_HOLDER_t *next;
+	
+	int64 tagtime;
+	int tick;
+	
+	int snap_size;
+	SNAPSHOT *snap;
+} SNAPSTORAGE_HOLDER;
+ 
+typedef struct SNAPSTORAGE_t
+{
+	SNAPSTORAGE_HOLDER *first;
+	SNAPSTORAGE_HOLDER *last;
+} SNAPSTORAGE;
+
+void snapstorage_init(SNAPSTORAGE *ss);
+void snapstorage_purge_all(SNAPSTORAGE *ss);
+void snapstorage_purge_until(SNAPSTORAGE *ss, int tick);
+void snapstorage_add(SNAPSTORAGE *ss, int tick, int64 tagtime, int data_size, void *data);
+int snapstorage_get(SNAPSTORAGE *ss, int tick, int64 *tagtime, SNAPSHOT **data);
+
+/* SNAPBUILD */
+
+enum
+{
+	SNAPBUILD_MAX_ITEMS = 512,
+};
+
+typedef struct SNAPBUILD
+{
+	char data[MAX_SNAPSHOT_SIZE];
+	int data_size;
+
+	int offsets[SNAPBUILD_MAX_ITEMS];
+	int num_items;
+} SNAPBUILD;
+
+void snapbuild_init(SNAPBUILD *sb);
+SNAPSHOT_ITEM *snapbuild_get_item(SNAPBUILD *sb, int index);
+int *snapbuild_get_item_data(SNAPBUILD *sb, int key);
+int snapbuild_finish(SNAPBUILD *sb, void *snapdata);
+void *snapbuild_new_item(SNAPBUILD *sb, int type, int id, int size);
+
+#endif /* ENGINE_SNAPSHOT_H */

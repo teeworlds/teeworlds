@@ -1,17 +1,18 @@
-#include <baselib/math.h>
-//#include <baselib/keys.h>
+#include <game/math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <engine/config.h>
-#include <engine/client/ui.h>
+
+extern "C" {
+	#include <engine/client/ui.h>
+	#include <engine/config.h>
+};
+
 #include "../game.h"
 #include "mapres_image.h"
 #include "mapres_tilemap.h"
 #include "data.h"
 #include "menu.h"
-
-using namespace baselib;
 
 data_container *data = 0x0;
 
@@ -463,7 +464,7 @@ static void render_loading(float percent)
 
 	const char *caption = "Loading";
 	
-	tw = gfx_pretty_text_width(48.0f, caption);
+	tw = gfx_pretty_text_width(48.0f, caption, -1);
 	ui_do_label(x+w/2-tw/2, y+20, caption, 48.0f);
 
 	gfx_texture_set(-1);
@@ -475,7 +476,7 @@ static void render_loading(float percent)
 	gfx_swap();
 }
 
-void modc_init()
+extern "C" void modc_init()
 {
 	// load the data container
 	data = load_data_from_memory(internal_data);
@@ -513,7 +514,7 @@ void modc_init()
 	}
 }
 
-void modc_entergame()
+extern "C" void modc_entergame()
 {
 	col_init(32);
 	img_init();
@@ -534,7 +535,7 @@ void modc_entergame()
 		killmsgs[i].tick = -100000;
 }
 
-void modc_shutdown()
+extern "C" void modc_shutdown()
 {
 }
 
@@ -545,7 +546,7 @@ static void process_events(int s)
 	int num = snap_num_items(s);
 	for(int i = 0; i < num; i++)
 	{
-		snap_item item;
+		SNAP_ITEM item;
 		const void *data = snap_get_item(s, i, &item);
 		
 		if(item.type == EVENT_DAMAGEINDICATION)
@@ -679,7 +680,7 @@ static void process_events(int s)
 	must_process_events = false;
 }
 
-void modc_newsnapshot()
+extern "C" void modc_newsnapshot()
 {
 	if(must_process_events)
 		process_events(SNAP_PREV);
@@ -1377,9 +1378,9 @@ int emoticon_selector_render()
 	if (length(emoticon_selector_mouse) < 50)
 		selected_emoticon = -1;
 	else
-		selected_emoticon = selected_angle / (2*pi) * 12;
+		selected_emoticon = (int)(selected_angle / (2*pi) * 12.0f);
 
-	if (inp_key_pressed(baselib::input::mouse_1))
+	if (inp_key_pressed(KEY_MOUSE_1))
 	{
 		mouse_down = true;
 	}
@@ -1441,7 +1442,7 @@ void render_game()
 	anim_eval(&data->animations[ANIM_BASE], 0, &idlestate);
 	anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);	
 
-	if (inp_key_down(input::esc))
+	if (inp_key_down(KEY_ESC))
 	{
 		if (chat_active)
 			chat_active = false;
@@ -1451,7 +1452,7 @@ void render_game()
 	
 	if (!menu_active)
 	{
-		if(inp_key_down(input::enter))
+		if(inp_key_down(KEY_ENTER))
 		{
 			if(chat_active)
 			{
@@ -1479,8 +1480,8 @@ void render_game()
 		
 		if(chat_active)
 		{
-			int c = input::last_char(); // TODO: bypasses the engine interface
-			int k = input::last_key(); // TODO: bypasses the engine interface
+			int c = inp_last_char();
+			int k = inp_last_key();
 		
 			if (!(c >= 0 && c < 32))
 			{
@@ -1492,7 +1493,7 @@ void render_game()
 				}
 			}
 
-			if(k == input::backspace)
+			if(k == KEY_BACKSPACE)
 			{
 				if(chat_input_len > 0)
 				{
@@ -1506,8 +1507,7 @@ void render_game()
 	
 	if (!menu_active)
 	{
-		input::clear_char(); // TODO: bypasses the engine interface
-		input::clear_key(); // TODO: bypasses the engine interface
+		inp_clear();
 	}
 	
 	// fetch new input
@@ -1581,7 +1581,7 @@ void render_game()
 		int num = snap_num_items(SNAP_CURRENT);
 		for(int i = 0; i < num; i++)
 		{
-			snap_item item;
+			SNAP_ITEM item;
 			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 			
 			if(item.type == OBJTYPE_PLAYER)
@@ -1611,7 +1611,7 @@ void render_game()
 	
 	if(config.debug)
 	{
-		if(!chat_active && inp_key_pressed(input::f8))
+		if(!chat_active && inp_key_pressed(KEY_F8))
 			zoom = 1.0f;
 	}
 	
@@ -1678,7 +1678,7 @@ void render_game()
 	int num = snap_num_items(SNAP_CURRENT);
 	for(int i = 0; i < num; i++)
 	{
-		snap_item item;
+		SNAP_ITEM item;
 		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 		
 		if(item.type == OBJTYPE_PLAYER)
@@ -1781,19 +1781,19 @@ void render_game()
 				continue;
 			
 			float font_size = 48.0f;
-			float killername_w = gfx_pretty_text_width(font_size, client_datas[killmsgs[r].killer].name);
-			float victimname_w = gfx_pretty_text_width(font_size, client_datas[killmsgs[r].victim].name);
+			float killername_w = gfx_pretty_text_width(font_size, client_datas[killmsgs[r].killer].name, -1);
+			float victimname_w = gfx_pretty_text_width(font_size, client_datas[killmsgs[r].victim].name, -1);
 			
 			float x = startx;
 			
 			// render victim name
 			x -= victimname_w;
-			gfx_pretty_text(x, y, font_size, client_datas[killmsgs[r].victim].name);
+			gfx_pretty_text(x, y, font_size, client_datas[killmsgs[r].victim].name, -1);
 			
 			// render victim tee
 			x -= 24.0f;
 			int skin = gametype == GAMETYPE_TDM ? skinseed + client_datas[killmsgs[r].victim].team : killmsgs[r].victim;
-			render_tee(&idlestate, skin, EMOTE_NORMAL, vec2(1,0), vec2(x, y+28));
+			render_tee(&idlestate, skin, EMOTE_PAIN, vec2(-1,0), vec2(x, y+28));
 			x -= 32.0f;
 
 			// render weapon
@@ -1811,12 +1811,12 @@ void render_game()
 			// render killer tee
 			x -= 24.0f;
 			skin = gametype == GAMETYPE_TDM ? skinseed + client_datas[killmsgs[r].killer].team : killmsgs[r].killer;
-			render_tee(&idlestate, skin, EMOTE_NORMAL, vec2(1,0), vec2(x, y+28));
+			render_tee(&idlestate, skin, EMOTE_ANGRY, vec2(1,0), vec2(x, y+28));
 			x -= 32.0f;
 			
 			// render killer name
 			x -= killername_w;
-			gfx_pretty_text(x, y, font_size, client_datas[killmsgs[r].killer].name);
+			gfx_pretty_text(x, y, font_size, client_datas[killmsgs[r].killer].name, -1);
 			
 			y += 44;
 		}
@@ -1833,7 +1833,7 @@ void render_game()
 			// render chat input
 			char buf[sizeof(chat_input)+16];
 			sprintf(buf, "Chat: %s_", chat_input);
-			gfx_pretty_text(x, y, 10, buf, 380);
+			gfx_pretty_text(x, y, 10.0f, buf, 380);
 			starty = y;
 		}
 		
@@ -1846,7 +1846,7 @@ void render_game()
 			if(client_tick() > chat_lines[r].tick+50*15)
 				break;
 
-			int lines = int(gfx_pretty_text_width(10, chat_lines[r].text)) / 380 + 1;
+			int lines = int(gfx_pretty_text_width(10, chat_lines[r].text, -1)) / 380 + 1;
 			
 			gfx_pretty_text(x, y - 8 * (lines - 1), 10, chat_lines[r].text, 380);
 			y -= 8 * lines;
@@ -1873,15 +1873,15 @@ void render_game()
 				time = (client_tick()-gameobj->round_start_tick)/client_tickspeed();
 			
 			sprintf(buf, "%d:%02d", time /60, time %60);
-			float w = gfx_pretty_text_width(16, buf);
-			gfx_pretty_text(200-w/2, 2, 16, buf);
+			float w = gfx_pretty_text_width(16, buf, -1);
+			gfx_pretty_text(200-w/2, 2, 16, buf, -1);
 		}
 
 		if(gameobj->sudden_death)
 		{
 			const char *text = "Sudden Death";
-			float w = gfx_pretty_text_width(16, text);
-			gfx_pretty_text(200-w/2, 2, 16, text);
+			float w = gfx_pretty_text_width(16, text, -1);
+			gfx_pretty_text(200-w/2, 2, 16, text, -1);
 		}
 	}
 
@@ -1916,7 +1916,7 @@ void render_game()
 	}
 	
 	// render score board
-	if(inp_key_pressed(baselib::input::tab) || // user requested
+	if(inp_key_pressed(KEY_TAB) || // user requested
 		(local_player && local_player->health == -1) || // player dead
 		(gameobj && gameobj->game_over) // game over
 		)
@@ -1943,13 +1943,13 @@ void render_game()
 			
 			if(gameobj->game_over)
 			{
-				float tw = gfx_pretty_text_width( 64, "Game Over");
-				gfx_pretty_text(x+w/2-tw/2, y, 64, "Game Over");
+				float tw = gfx_pretty_text_width( 64, "Game Over", -1);
+				gfx_pretty_text(x+w/2-tw/2, y, 64, "Game Over", -1);
 			}
 			else
 			{
-				float tw = gfx_pretty_text_width( 64, "Score Board");
-				gfx_pretty_text(x+w/2-tw/2, y, 64, "Score Board");
+				float tw = gfx_pretty_text_width( 64, "Score Board", -1);
+				gfx_pretty_text(x+w/2-tw/2, y, 64, "Score Board", -1);
 			}
 			y += 64.0f;
 
@@ -1958,7 +1958,7 @@ void render_game()
 			int num_players = 0;
 			for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
 			{
-				snap_item item;
+				SNAP_ITEM item;
 				const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 				
 				if(item.type == OBJTYPE_PLAYER)
@@ -1983,9 +1983,9 @@ void render_game()
 			}
 
 			// render headlines
-			gfx_pretty_text(x+10, y, 32, "Score");
-			gfx_pretty_text(x+125, y, 32, "Name");
-			gfx_pretty_text(x+w-70, y, 32, "Ping");
+			gfx_pretty_text(x+10, y, 32, "Score", -1);
+			gfx_pretty_text(x+125, y, 32, "Name", -1);
+			gfx_pretty_text(x+w-70, y, 32, "Ping", -1);
 			y += 38.0f;
 
 			// render player scores
@@ -2005,12 +2005,12 @@ void render_game()
 				}
 				
 				sprintf(buf, "%4d", player->score);
-				gfx_pretty_text(x+60-gfx_pretty_text_width(font_size,buf), y, font_size, buf);
-				gfx_pretty_text(x+128, y, font_size, client_datas[player->clientid].name);
+				gfx_pretty_text(x+60-gfx_pretty_text_width(font_size,buf,-1), y, font_size, buf, -1);
+				gfx_pretty_text(x+128, y, font_size, client_datas[player->clientid].name, -1);
 				
 				sprintf(buf, "%4d", player->latency);
-				float tw = gfx_pretty_text_width(font_size, buf);
-				gfx_pretty_text(x+w-tw-35, y, font_size, buf);
+				float tw = gfx_pretty_text_width(font_size, buf, -1);
+				gfx_pretty_text(x+w-tw-35, y, font_size, buf, -1);
 
 				// render avatar
 				render_tee(&idlestate, player->clientid, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28));
@@ -2023,13 +2023,13 @@ void render_game()
 			{
 				char buf[64];
 				sprintf(buf, "Time Limit: %d min", gameobj->time_limit);
-				gfx_pretty_text(x+w/2, y, 32, buf);
+				gfx_pretty_text(x+w/2, y, 32, buf, -1);
 			}
 			if(gameobj && gameobj->score_limit)
 			{
 				char buf[64];
 				sprintf(buf, "Score Limit: %d", gameobj->score_limit);
-				gfx_pretty_text(x+40, y, 32, buf);
+				gfx_pretty_text(x+40, y, 32, buf, -1);
 			}			
 		}
 		/*
@@ -2129,7 +2129,7 @@ void render_game()
 
 
 
-void modc_render()
+extern "C" void modc_render()
 {
 	// this should be moved around abit
 	if(client_state() == CLIENTSTATE_ONLINE)
@@ -2145,7 +2145,7 @@ void modc_render()
 	else // if (client_state() != CLIENTSTATE_CONNECTING && client_state() != CLIENTSTATE_LOADING)
 	{
 		if (music_menu_id == -1)
-			music_menu_id = snd_play(music_menu, SND_LOOP);
+			music_menu_id = snd_play(music_menu, SND_LOOP, 1.0f, 0.0f);
 		
 		//netaddr4 server_address;
 		if(modmenu_render(false) == -1)
@@ -2158,7 +2158,7 @@ void menu_do_disconnected();
 void menu_do_connecting();
 void menu_do_connected();
 
-void modc_statechange(int state, int old)
+extern "C" void modc_statechange(int state, int old)
 {
 	if(state == CLIENTSTATE_OFFLINE)
 	 	menu_do_disconnected();
@@ -2168,7 +2168,7 @@ void modc_statechange(int state, int old)
 		menu_do_connected();
 }
 
-void modc_message(int msg)
+extern "C" void modc_message(int msg)
 {
 	if(msg == MSG_CHAT)
 	{

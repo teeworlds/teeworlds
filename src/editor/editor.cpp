@@ -1,21 +1,18 @@
 #include <stdio.h>
-#include <baselib/system.h>
-#include <baselib/input.h>
-#include <baselib/config.h>
-//#include <baselib/mouse.h>
 
-#include <engine/interface.h>
-#include <engine/datafile.h>
-#include <engine/config.h>
-#include <engine/client/ui.h>
+extern "C" {
+	#include <engine/system.h>
+	#include <engine/client/ui.h>
+	#include <engine/interface.h>
+	#include <engine/datafile.h>
+	#include <engine/config.h>
+}
 
 #include <game/client/mapres_image.h>
 #include <game/client/mapres_tilemap.h>
 //#include "game/mapres_col.h"
 #include <game/mapres.h>
 #include <game/game.h>
-
-using namespace baselib;
 
 static int font_texture = 0;
 static int checker_texture = 0;
@@ -261,7 +258,7 @@ static int layers_movedown(int index)
 struct tileset
 {
 	int tex_id;
-	image_info img;
+	IMAGE_INFO img;
 };
 
 static const int MAX_TILESETS = 64;
@@ -645,7 +642,7 @@ void draw_editor_button(void *id, const char *text, int checked, float x, float 
 
     gfx_quads_drawTL(x,y,w,h);
     gfx_quads_end();
-    gfx_pretty_text(x+1, y-1, 6.5f, text);
+    gfx_pretty_text(x+1, y-1, 6.5f, text, -1);
 }
 
 static int editor_loadimage = -1;
@@ -656,12 +653,12 @@ static void editor_listdir_callback(const char *name, int is_dir, void *user)
 		return;
 	
 	int *y = (int*)user;
-	if(ui_do_button((void*)(*y + 1), name, 0, 10, 10 + *y * 8, 100, 6, draw_editor_button))
+	if(ui_do_button((void*)(*y + 1), name, 0, 10, 10 + *y * 8, 100, 6, draw_editor_button, 0))
 	{
 		char buf[512];
 		sprintf(buf, "tilesets/%s", name);
 		
-		image_info img;
+		IMAGE_INFO img;
 		if(!gfx_load_png(&img, buf))
 			return;
 		
@@ -680,7 +677,7 @@ static void editor_render_loadfile_dialog()
 	int index = 0;
 	fs_listdir("tilesets", editor_listdir_callback, &index);
 	
-	if(inp_key_pressed(input::esc))
+	if(inp_key_pressed(KEY_ESC))
 		editor_loadimage = -1;
 }
 
@@ -773,11 +770,11 @@ static void editor_render()
 			if(layers_get(i)->visible)
 				text = "V";
 
-			if(ui_do_button(&layers_get(i)->visible, text, 0, layerbox_x, layerbox_y+i*14, 6, 6, draw_editor_button))
+			if(ui_do_button(&layers_get(i)->visible, text, 0, layerbox_x, layerbox_y+i*14, 6, 6, draw_editor_button, 0))
 				layers_get(i)->visible = layers_get(i)->visible^1;
 			
 			// layer bytton
-			if(ui_do_button(&layers_get(i)->tileset_id, buf, current_layer == i, layerbox_x+8, layerbox_y+i*14, toolbox_width-8, 12, draw_editor_button))
+			if(ui_do_button(&layers_get(i)->tileset_id, buf, current_layer == i, layerbox_x+8, layerbox_y+i*14, toolbox_width-8, 12, draw_editor_button, 0))
 				current_layer = i;
 		}
 		
@@ -786,28 +783,28 @@ static void editor_render()
 			static int push_button, pull_button;
 			float y = 150;
 			float x = 0;
-			if(ui_do_button(&push_button, "push", 0, x, y, toolbox_width, 6, draw_editor_button))
+			if(ui_do_button(&push_button, "push", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
 				current_layer = layers_moveup(current_layer);
 			y += 7;
 			
-			if(ui_do_button(&pull_button, "pull", 0, x, y, toolbox_width, 6, draw_editor_button))
+			if(ui_do_button(&pull_button, "pull", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
 				current_layer = layers_movedown(current_layer);
 			y += 10;
 
 			static int w_inc, w_dec;
 			int resize_amount = 10;
-			if(ui_do_button(&w_dec, "width-", 0, x, y, toolbox_width, 6, draw_editor_button))
+			if(ui_do_button(&w_dec, "width-", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
 				tilemap_resize(&layers_get_current()->tm, layers_get_current()->tm.width-resize_amount, layers_get_current()->tm.height, resize_amount);
 			y += 7;
-			if(ui_do_button(&w_inc, "width+", 0, x, y, toolbox_width, 6, draw_editor_button))
+			if(ui_do_button(&w_inc, "width+", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
 				tilemap_resize(&layers_get_current()->tm, layers_get_current()->tm.width+resize_amount, layers_get_current()->tm.height, resize_amount);
 			y += 10;
 
 			static int h_inc, h_dec;
-			if(ui_do_button(&h_dec, "height-", 0, x, y, toolbox_width, 6, draw_editor_button))
+			if(ui_do_button(&h_dec, "height-", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
 				tilemap_resize(&layers_get_current()->tm, layers_get_current()->tm.width, layers_get_current()->tm.height-resize_amount, resize_amount);
 			y += 7;
-			if(ui_do_button(&h_inc, "height+", 0, x, y, toolbox_width, 6, draw_editor_button))
+			if(ui_do_button(&h_inc, "height+", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
 				tilemap_resize(&layers_get_current()->tm, layers_get_current()->tm.width, layers_get_current()->tm.height+resize_amount, resize_amount);
 			y += 10;
 		}
@@ -819,21 +816,21 @@ static void editor_render()
 		{
 			char buf[128];
 			sprintf(buf, "#%d %dx%d", i, tilesets_get(i)->img.width, tilesets_get(i)->img.height);
-			if(ui_do_button(&tilesets_get(i)->img.width, "L", layers_get(current_layer)->tileset_id == i, tilesetsbox_x, tilesetsbox_y+i*7, 6, 6, draw_editor_button))
+			if(ui_do_button(&tilesets_get(i)->img.width, "L", layers_get(current_layer)->tileset_id == i, tilesetsbox_x, tilesetsbox_y+i*7, 6, 6, draw_editor_button, 0))
 			{
 				// load image
 				editor_loadimage = i;
 			}
 
-			if(ui_do_button(tilesets_get(i), buf, layers_get(current_layer)->tileset_id == i, tilesetsbox_x+16, tilesetsbox_y+i*7, toolbox_width-16, 6, draw_editor_button))
+			if(ui_do_button(tilesets_get(i), buf, layers_get(current_layer)->tileset_id == i, tilesetsbox_x+16, tilesetsbox_y+i*7, toolbox_width-16, 6, draw_editor_button, 0))
 			{
 				// select tileset for layer
 				dbg_msg("editor", "settings tileset %d=%d", current_layer, i);
 				layers_get(current_layer)->tileset_id = i;
 			}
 
-			if(ui_do_button(&tilesets_get(i)->img.height, "D", layers_get(current_layer)->tileset_id == i, tilesetsbox_x+8, tilesetsbox_y+i*7, 6, 6, draw_editor_button)
-				&& (inp_key_pressed(input::lctrl) || inp_key_pressed(input::rctrl)))
+			if(ui_do_button(&tilesets_get(i)->img.height, "D", layers_get(current_layer)->tileset_id == i, tilesetsbox_x+8, tilesetsbox_y+i*7, 6, 6, draw_editor_button, 0)
+				&& (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL)))
 			{
 				dbg_msg("editor", "deleting tileset %d", i);
 				tilesets_delete(i);
@@ -843,7 +840,7 @@ static void editor_render()
 
 		// (add) button for tilesets
 		static int add_tileset;
-		if(ui_do_button(&add_tileset, "(Add)", 0, tilesetsbox_x, tilesetsbox_y+tilesets_count()*7+3, toolbox_width, 6, draw_editor_button))
+		if(ui_do_button(&add_tileset, "(Add)", 0, tilesetsbox_x, tilesetsbox_y+tilesets_count()*7+3, toolbox_width, 6, draw_editor_button, 0))
 			tilesets_new();
 		
 		if(brush.tiles != 0)
@@ -853,7 +850,7 @@ static void editor_render()
 				tilemap_destroy(&brush);
 		}
 		
-		if(inp_key_pressed(input::space))
+		if(inp_key_pressed(KEY_SPACE))
 		{
 			// render chooser
 			float chooser_x = toolbox_width+10.0f;
@@ -885,7 +882,7 @@ static void editor_render()
 		float y = 0;
 		for(int i = 0; ent_types[i].name; i++)
 		{
-			if(ui_do_button(&ent_types[i], ent_types[i].name, current_type==i, 0, y, toolbox_width, 6, draw_editor_button))
+			if(ui_do_button(&ent_types[i], ent_types[i].name, current_type==i, 0, y, toolbox_width, 6, draw_editor_button, 0))
 			{
 				if(editor_selected_ent >= 0 && editor_selected_ent < ents_count())
 					ents_get(editor_selected_ent)->type = i;
@@ -895,7 +892,7 @@ static void editor_render()
 
 		y += 8;
 		static int add, del;
-		if(ui_do_button(&add, "Add", 0, 0, y, toolbox_width, 6, draw_editor_button))
+		if(ui_do_button(&add, "Add", 0, 0, y, toolbox_width, 6, draw_editor_button, 0))
 		{
 			int x = (int)(world_offset_x+400*zoom/2)/32*32+16;
 			int y = (int)(world_offset_y+300*zoom/2)/32*32+16;
@@ -903,14 +900,14 @@ static void editor_render()
 		}
 		
 		y += 8;
-		if(ui_do_button(&del, "Del", 0, 0, y, toolbox_width, 6, draw_editor_button))
+		if(ui_do_button(&del, "Del", 0, 0, y, toolbox_width, 6, draw_editor_button, 0))
 			ents_delete(editor_selected_ent);
 	}
 }
 
 int editor_load(const char *filename)
 {
-	datafile *df = datafile_load(filename);
+	DATAFILE *df = datafile_load(filename);
 	if(!df)
 		return 0;
 	
@@ -995,7 +992,7 @@ int editor_load(const char *filename)
 
 int editor_save(const char *filename)
 {
-	datafile_out *df = datafile_create(filename);
+	DATAFILE_OUT *df = datafile_create(filename);
 
 	// add tilesets
 	for(int i = 0; i < tilesets_count(); i++)
@@ -1094,9 +1091,9 @@ static int editor_loop()
 	int mouse_x = 0;
 	int mouse_y = 0;
 	
-	input::set_mouse_mode(input::mode_relative);
+	//input::set_mouse_mode(input::mode_relative);
 	
-	while(!(inp_key_pressed(input::lctrl) && inp_key_pressed('Q')))
+	while(!(inp_key_pressed(KEY_LCTRL) && inp_key_pressed('Q')))
 	{	
 		// update input
 		inp_update();
@@ -1120,9 +1117,9 @@ static int editor_loop()
 			mwy = world_offset_y+my*world_zoom; // adjust to zoom and offset
 			
 			int buttons = 0;
-			if(inp_key_pressed(input::mouse_1)) buttons |= 1;
-			if(inp_key_pressed(input::mouse_2)) buttons |= 2;
-			if(inp_key_pressed(input::mouse_3)) buttons |= 4;
+			if(inp_key_pressed(KEY_MOUSE_1)) buttons |= 1;
+			if(inp_key_pressed(KEY_MOUSE_2)) buttons |= 2;
+			if(inp_key_pressed(KEY_MOUSE_3)) buttons |= 4;
 			
 			ui_update(mx,my,mwx,mwy,buttons);
 		}
@@ -1130,11 +1127,11 @@ static int editor_loop()
 		//
 		editor_render();
 
-		if(inp_key_pressed(input::lalt) || inp_key_pressed(input::ralt))
+		if(inp_key_pressed(KEY_LALT) || inp_key_pressed(KEY_RALT))
 		{
 			static int moveid;
 			ui_set_hot_item(&moveid);
-			if(inp_key_pressed(input::mouse_1))
+			if(inp_key_pressed(KEY_MOUSE_1))
 			{
 				world_offset_x -= rx*2;
 				world_offset_y -= ry*2;
@@ -1159,17 +1156,19 @@ static int editor_loop()
 		gfx_swap();
 		
 		//
-		if(input::pressed(input::f1))
+		/*
+		if(inp_key_pressed(KEY_F1))
 			input::set_mouse_mode(input::mode_absolute);
-		if(input::pressed(input::f2))
+		if(inp_key_pressed(KEY_F2))
 			input::set_mouse_mode(input::mode_relative);
+			*/
 
 		// mode switch
-		if(inp_key_down(input::tab))
+		if(inp_key_down(KEY_TAB))
 			editor_mode ^= 1;
 		
 		// zoom in
-		if(inp_key_down(input::kp_add))
+		if(inp_key_down(KEY_KP_ADD))
 		{
 			world_zoom--;
 			if(world_zoom < 3)
@@ -1177,14 +1176,14 @@ static int editor_loop()
 		}
 		
 		// zoom out
-		if(inp_key_down(input::kp_subtract))
+		if(inp_key_down(KEY_KP_SUBTRACT))
 		{
 			world_zoom++;
 			if(world_zoom > 8)
 				world_zoom = 8;
 		}
 		
-		if(inp_key_pressed(input::lctrl) || inp_key_pressed(input::rctrl))
+		if(inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))
 		{
 			if(inp_key_down('L'))
 			{
@@ -1211,13 +1210,13 @@ static int editor_loop()
 
 		}
 		
-		if(inp_key_down(input::f5))
+		if(inp_key_down(KEY_F5))
 		{
 			dbg_msg("editor", "quick save");
 			editor_save("quicksave.map");
 		}
 		
-		if(inp_key_down(input::f8))
+		if(inp_key_down(KEY_F8))
 		{
 			dbg_msg("editor", "quick load");
 			int s = current_layer;
@@ -1238,7 +1237,7 @@ static int editor_loop()
 
 extern void modmenu_init();
 
-int editor_main(int argc, char **argv)
+extern "C" int editor_main(int argc, char **argv)
 {
 	dbg_msg("editor", "starting...");
 #ifdef CONF_PLATFORM_MACOSX	

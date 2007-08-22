@@ -1,0 +1,3 @@
+Removed all functionallity from function PaOSX_FixVolumeScalars in pa_mac_core.c. This keeps OSX in control of the volume and muting.
+2007-05-13 - jdv
+

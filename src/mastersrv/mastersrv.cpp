@@ -1,6 +1,9 @@
 #include <string.h>
-#include <baselib/system.h>
-#include <engine/network.h>
+
+extern "C" {
+	#include <engine/system.h>
+	#include <engine/network.h>
+}
 
 #include "mastersrv.h"
 

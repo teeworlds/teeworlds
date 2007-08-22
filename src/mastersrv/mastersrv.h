@@ -1,6 +1,8 @@
 static const int MASTERSERVER_PORT = 8383;
 
-static const int MAX_SERVERS = 200;
+enum {
+	MAX_SERVERS = 200,
+};
 
 /*enum {
 	SERVERBROWSE_NULL=0,

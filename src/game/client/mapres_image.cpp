@@ -1,5 +1,5 @@
-#include <baselib/system.h>
-#include "../../engine/interface.h"
+#include <engine/system.h>
+#include <engine/interface.h>
 #include "mapres_image.h"
 #include "../mapres.h"
 

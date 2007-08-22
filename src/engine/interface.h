@@ -1,17 +1,20 @@
-#ifndef FILE_INTERFACE_H
-#define FILE_INTERFACE_H
+#ifndef ENGINE_INTERFACE_H
+#define ENGINE_INTERFACE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
 	Title: Engine Interface
 */
 
-// TODO: Move the definitions of these keys here
-#include <baselib/input.h>
+#include "keys.h"
 
 enum
 {
 	MAX_CLIENTS=8,
-	SERVER_TICK_SPEED=50,
+	SERVER_TICK_SPEED=50, /* TODO: this should be removed */
 	SNAP_CURRENT=0,
 	SNAP_PREV=1,
 	
@@ -25,51 +28,59 @@ enum
 	CLIENTSTATE_QUITING,
 };
 
-struct snap_item
+typedef struct
 {
 	int type;
 	int id;
-};
+} SNAP_ITEM;
 
-struct client_info
+typedef struct
 {
-public:
 	const char *name;
 	int latency;
-};
+} CLIENT_INFO;
 
-struct image_info
+typedef struct
 {
 	int width, height;
 	int format;
 	void *data;
-};
+} IMAGE_INFO;
 
-struct video_mode
+typedef struct 
 {
 	int width, height;
 	int red, green, blue;
-};
+} VIDEO_MODE;
 
-int gfx_load_tga(image_info *img, const char *filename);
-int gfx_load_png(image_info *img, const char *filename);
+typedef struct
+{
+	int max_players;
+	int num_players;
+	int latency; /* in ms */
+	char name[128];
+	char map[128];
+	char address[128];
+} SERVER_INFO;
+
+/* image loaders */
+int gfx_load_png(IMAGE_INFO *img, const char *filename);
 
 
 /*
 	Group: Graphics
 */
 
-// graphics
-bool gfx_init(); // NOT EXPOSED
-void gfx_shutdown(); // NOT EXPOSED
-void gfx_swap(); // NOT EXPOSED
+int gfx_init();
+void gfx_shutdown();
+void gfx_swap();
 
-int gfx_get_video_modes(video_mode *list, int maxcount);
+int gfx_get_video_modes(VIDEO_MODE *list, int maxcount);
 void gfx_set_vsync(int val);
 
 int gfx_window_active();
 
-// textures
+/* textures */
 /*
 	Function: gfx_load_texture
 		Loads a texture from a file. TGA and PNG supported.
@@ -105,7 +116,7 @@ int gfx_load_texture(const char *filename);
 		<gfx_unload_texture>
 */
 int gfx_load_texture_raw(int w, int h, int format, const void *data);
-//int gfx_load_mip_texture_raw(int w, int h, int format, const void *data);
+/*int gfx_load_mip_texture_raw(int w, int h, int format, const void *data);*/
 
 /*
 	Function: gfx_texture_set
@@ -129,7 +140,7 @@ void gfx_texture_set(int id);
 	Remarks:
 		NOT IMPLEMENTED
 */
-int gfx_unload_texture(int id); // NOT IMPLEMENTED
+int gfx_unload_texture(int id);
 
 void gfx_clear(float r, float g, float b);
 
@@ -318,22 +329,22 @@ void gfx_quads_draw_freeform(
 
 void gfx_quads_text(float x, float y, float size, const char *text);
 
-// sound (client)
+/* sound (client) */
 enum
 {
 	SND_PLAY_ONCE = 0,
 	SND_LOOP
 };
 	
-bool snd_init();
+int snd_init();
 float snd_get_master_volume();
 void snd_set_master_volume(float val);
 int snd_load_wav(const char *filename);
 int snd_load_wv(const char *filename);
-int snd_play(int sound, int loop = SND_PLAY_ONCE, float vol = 1.0f, float pan = 0.0f);
+int snd_play(int sound, int loop, float vol, float pan);
 void snd_stop(int id);
 void snd_set_vol(int id, float vol);
-bool snd_shutdown();
+int snd_shutdown();
 
 /*
 	Group: Input
@@ -362,7 +373,7 @@ int inp_mouse_scroll();
 		Returns 1 if the button is pressed, otherwise 0.
 	
 	Remarks:
-		Check baselib/include/baselib/keys.h for the keys.
+		Check keys.h for the keys.
 */
 int inp_key_pressed(int key);
 
@@ -370,8 +381,8 @@ int inp_key_pressed(int key);
 	Group: Map
 */
 
-int map_load(const char *mapname); // NOT EXPOSED
-void map_unload(); // NOT EXPOSED
+int map_load(const char *mapname);
+void map_unload();
 
 /*
 	Function: map_is_loaded
@@ -497,7 +508,7 @@ int snap_num_items(int snapid);
 	Returns:
 		Returns a pointer to the item if it exists, otherwise NULL.
 */
-const void *snap_get_item(int snapid, int index, snap_item *item);
+const void *snap_get_item(int snapid, int index, SNAP_ITEM *item);
 
 /*
 	Function: snap_find_item
@@ -528,19 +539,6 @@ const void *snap_find_item(int snapid, int type, int id);
 		subject to byte swapping.
 */
 void snap_input(void *data, int size);
-
-/*
-	Function: snap_intratick
-		Returns the intra-tick mixing value.
-
-	Returns:
-		Returns the mixing value between the previous snapshot
-		and the current snapshot. 
-
-	Remarks:
-		DOCTODO: Explain how to use it.
-*/
-//float snap_intratick();
 
 /*
 	Group: Server Callbacks
@@ -680,8 +678,6 @@ void modc_render();
 */
 void modc_statechange(int new_state, int old_state);
 
-
-
 /*
     Group: Menu Callbacks
 */
@@ -705,27 +701,33 @@ void modmenu_shutdown();
     Function: modmenu_render
         Called every frame to let the menu render it self.
 */
-int modmenu_render(bool ingame);
+int modmenu_render(int ingame);
 
 
+/* undocumented callbacks */
+void modc_message(int msg);
+void mods_message(int msg, int client_id);
 
-
-
-
-//void snap_encode_string(const char *src, int *dst, int length, int max_length);
-//void snap_decode_string(const int *src, char *dst, int length);
-
-int server_getclientinfo(int client_id, client_info *info);
+/* server */
+int server_getclientinfo(int client_id, CLIENT_INFO *info);
 int server_tick();
 int server_tickspeed();
 
+/* input */
 int inp_key_was_pressed(int key);
 int inp_key_down(int key);
+char inp_last_char();
+int inp_last_key();
+void inp_clear();
 void inp_update();
-float client_frametime();
-float client_localtime();
+void inp_init();
+void inp_mouse_mode_absolute();
+void inp_mouse_mode_relative();
 
-// message packing
+const char *inp_key_name(int k);
+int inp_key_code(const char *key_name);
+
+/* message packing */
 enum
 {
 	MSGFLAG_VITAL=1,
@@ -738,60 +740,58 @@ void msg_pack_string(const char *p, int limit);
 void msg_pack_raw(const void *data, int size);
 void msg_pack_end();
 
-struct msg_info
+typedef struct
 {
 	int msg;
 	int flags;
 	const unsigned char *data;
 	int size;
-};
+} MSG_INFO;
 
-const msg_info *msg_get_info();
+const MSG_INFO *msg_get_info();
 
-// message unpacking
+/* message unpacking */
 int msg_unpack_start(const void *data, int data_size, int *system);
 int msg_unpack_int();
 const char *msg_unpack_string();
 const unsigned char *msg_unpack_raw(int size);
 
-// message sending
-int server_send_msg(int client_id); // client_id == -1 == broadcast
+/* message sending */
+int server_send_msg(int client_id); /* client_id == -1 == broadcast */
 int client_send_msg();
 
+/* client */
 int client_tick();
 float client_intratick();
 int client_tickspeed();
+float client_frametime();
+float client_localtime();
+
 int client_state();
 const char *client_error_string();
 
-void gfx_pretty_text(float x, float y, float size, const char *text, int max_width = -1);
-float gfx_pretty_text_width(float size, const char *text, int length = -1);
-
-void gfx_getscreen(float *tl_x, float *tl_y, float *br_x, float *br_y);
-int gfx_memory_usage();
-void gfx_screenshot();
-
-void mods_message(int msg, int client_id);
-void modc_message(int msg);
-
-struct server_info
-{
-	int max_players;
-	int num_players;
-	int latency; // in ms
-	char name[128];
-	char map[128];
-	char address[128];
-};
 
 void client_connect(const char *address);
 void client_disconnect();
 void client_quit();
 
 void client_serverbrowse_refresh(int lan);
-int client_serverbrowse_getlist(server_info **servers);
+int client_serverbrowse_getlist(SERVER_INFO **servers);
 
+/* undocumented graphics stuff */
+void gfx_pretty_text(float x, float y, float size, const char *text, int max_width);
+float gfx_pretty_text_width(float size, const char *text, int length);
+
+void gfx_getscreen(float *tl_x, float *tl_y, float *br_x, float *br_y);
+int gfx_memory_usage();
+void gfx_screenshot();
+
+/* server snap id */
 int snap_new_id();
 void snap_free_id(int id);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -1,20 +1,20 @@
-#include <baselib/system.h>
-#include <baselib/math.h>
+#include <engine/system.h>
+#include <game/math.h>
 #include <math.h>
 #include "../engine/interface.h"
 #include "mapres_col.h"
 
-inline baselib::vec2 get_direction(int angle)
+inline vec2 get_direction(int angle)
 {
 	float a = angle/256.0f;
-	return baselib::vec2(cosf(a), sinf(a));
+	return vec2(cosf(a), sinf(a));
 }
 
-inline float get_angle(baselib::vec2 dir)
+inline float get_angle(vec2 dir)
 {
 	float a = atan(dir.y/dir.x);
 	if(dir.x < 0)
-		a = a+baselib::pi;
+		a = a+pi;
 	return a;
 }
 
@@ -23,7 +23,7 @@ inline float get_angle(baselib::vec2 dir)
 #define max(a, b) ( a > b ? a : b)
 
 inline bool col_check_point(float x, float y) { return col_check_point((int)x, (int)y) != 0; }
-inline bool col_check_point(baselib::vec2 p) { return col_check_point(p.x, p.y); }
+inline bool col_check_point(vec2 p) { return col_check_point(p.x, p.y); }
 
 // Network stuff
 

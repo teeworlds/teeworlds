@@ -3,33 +3,25 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <baselib/system.h>
-#include <baselib/stream/file.h>
-#include <baselib/stream/line.h>
+#include <game/math.h>
 
+extern "C" {
+	#include <engine/system.h>
+	#include <engine/interface.h>
+	#include <engine/versions.h>
+	#include <engine/config.h>
+	#include <engine/client/ui.h>
+}
 
-#include <baselib/system.h>
-#include <baselib/config.h>
-#include <baselib/input.h>
-#include <baselib/network.h>
-#include <baselib/math.h>
-
-#include <engine/interface.h>
-#include <engine/versions.h>
-#include <engine/config.h>
 #include "../mapres.h"
 
-#include <engine/client/ui.h>
 #include "mapres_image.h"
 #include "mapres_tilemap.h"
-#include <engine/config.h>
 
 #include "data.h"
 #include <mastersrv/mastersrv.h>
 
 extern data_container *data;
-
-using namespace baselib;
 
 /********************************************************
  MENU                                                  
@@ -234,7 +226,7 @@ void draw_teewars_button(void *id, const char *text, int checked, float x, float
 {
 	const float font_size = h-6.0f;//42.0f;
 
-	float text_width = gfx_pretty_text_width(font_size, text);
+	float text_width = gfx_pretty_text_width(font_size, text, -1);
 	gui_tileset_enum tileset;
 
 	if (ui_active_item() == id)
@@ -285,7 +277,7 @@ int ui_do_key_reader(void *id, float x, float y, float w, float h, int key)
 
 	if(ui_active_item() == id)
 	{
-		int k = input::last_key();
+		int k = inp_last_key();
 		if (k)
 		{
 			new_key = k;
@@ -310,11 +302,11 @@ int ui_do_key_reader(void *id, float x, float y, float w, float h, int key)
 		box_type = GUI_BOX_SCREEN_TEXTBOX;
 	draw_box(box_type, tileset_regular, x, y, w, h);
 	
-	const char *str = input::key_name(key);
+	const char *str = inp_key_name(key);
 	ui_do_label(x + 10, y, str, 36);
 	if (ui_active_item() == id)
 	{
-		float w = gfx_pretty_text_width(36.0f, str);
+		float w = gfx_pretty_text_width(36.0f, str, -1);
 		ui_do_label(x + 10 + w, y, "_", 36);
 	}
 
@@ -390,8 +382,8 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 
 	if(ui_last_active_item() == id)
 	{
-		int c = input::last_char();
-		int k = input::last_key();
+		int c = inp_last_char();
+		int k = inp_last_key();
 		int len = strlen(str);
 
 		if (inside && ui_mouse_button(0))
@@ -424,22 +416,22 @@ int ui_do_edit_box(void *id, float x, float y, float w, float h, char *str, int 
 			}
 		}
 
-		if (k == input::backspace && at_index > 0)
+		if (k == KEY_BACKSPACE && at_index > 0)
 		{
 			memmove(str + at_index - 1, str + at_index, len - at_index + 1);
 			at_index--;
 		}
-		else if (k == input::delet && at_index < len)
+		else if (k == KEY_DEL && at_index < len)
 			memmove(str + at_index, str + at_index + 1, len - at_index);
-		else if (k == input::enter)
+		else if (k == KEY_ENTER)
 			ui_clear_last_active_item();
-		else if (k == input::left && at_index > 0)
+		else if (k == KEY_LEFT && at_index > 0)
 			at_index--;
-		else if (k == input::right && at_index < len)
+		else if (k == KEY_RIGHT && at_index < len)
 			at_index++;
-		else if (k == input::home)
+		else if (k == KEY_HOME)
 			at_index = 0;
-		else if (k == input::end)
+		else if (k == KEY_END)
 			at_index = len;
 
 		r = 1;
@@ -639,7 +631,7 @@ static int do_server_list(float x, float y, int *scroll_index, int *selected_ind
 	const float real_width = item_width + 20;
 	const float real_height = item_height * visible_items + spacing * (visible_items - 1);
 
-	server_info *servers;
+	SERVER_INFO *servers;
 	int num_servers = client_serverbrowse_getlist(&servers);
 
 	int r = -1;
@@ -652,7 +644,7 @@ static int do_server_list(float x, float y, int *scroll_index, int *selected_ind
 			//ui_do_image(empty_item_texture, x, y + i * item_height + i * spacing, item_width, item_height);
 		else
 		{
-			server_info *item = &servers[item_index];
+			SERVER_INFO *item = &servers[item_index];
 
 			bool clicked = false;
 			clicked = ui_do_button(item, item->name, 0, x, y + i * item_height + i * spacing, item_width, item_height,
@@ -693,7 +685,7 @@ enum
 };
 
 static int screen = SCREEN_MAIN;
-static configuration config_copy;
+static CONFIGURATION config_copy;
 
 const float column1_x = 250;
 const float column2_x = column1_x + 170;
@@ -726,7 +718,7 @@ static int main_render()
 
 	if (last_selected_index != selected_index && selected_index != -1)
 	{
-		server_info *servers;
+		SERVER_INFO *servers;
 		client_serverbrowse_getlist(&servers);
 
 		strcpy(address, servers[selected_index].address);
@@ -735,7 +727,7 @@ static int main_render()
 	static int refresh_button, join_button, quit_button;
 	static int use_lan = 0;
 
-	if (ui_do_button(&refresh_button, "Refresh", 0, 20, 460, 170, 48, draw_teewars_button))
+	if (ui_do_button(&refresh_button, "Refresh", 0, 20, 460, 170, 48, draw_teewars_button, 0))
 		client_serverbrowse_refresh(use_lan);
 	
 	ui_do_label(60, 420, "Search LAN ", 36);
@@ -744,18 +736,18 @@ static int main_render()
 	if (use_lan != last_lan)
 		client_serverbrowse_refresh(use_lan);
 
-	if (ui_do_button(&join_button, "Join", 0, 620, 420, 128, 48, draw_teewars_button))
+	if (ui_do_button(&join_button, "Join", 0, 620, 420, 128, 48, draw_teewars_button, 0))
 	{
 		client_connect(address);
 
 		return 1;
 	}
 
-	if (ui_do_button(&quit_button, "Quit", 0, 620, 490, 128, 48, draw_teewars_button))
+	if (ui_do_button(&quit_button, "Quit", 0, 620, 490, 128, 48, draw_teewars_button, 0))
 		return -1;
 
 	static int settings_button;
-	if (ui_do_button(&settings_button, "Settings", 0, 400, 490, 170, 48, draw_teewars_button))
+	if (ui_do_button(&settings_button, "Settings", 0, 400, 490, 170, 48, draw_teewars_button, 0))
 	{
 		config_copy = config;
 		screen = SCREEN_SETTINGS_GENERAL;
@@ -782,7 +774,7 @@ static int settings_general_render()
 	return 0;
 }
 
-typedef void (*assign_func_callback)(configuration *config, int value);
+typedef void (*assign_func_callback)(CONFIGURATION *config, int value);
 
 struct key_thing
 {
@@ -844,7 +836,7 @@ static int settings_controls_render()
 static const int MAX_RESOLUTIONS = 128;
 static int settings_video_render_select_mode()
 {
-	static video_mode modes[MAX_RESOLUTIONS];
+	static VIDEO_MODE modes[MAX_RESOLUTIONS];
 	static int num_modes = -1;
 	
 	if(num_modes == -1)
@@ -878,7 +870,7 @@ static int settings_video_render_select_mode()
 		sprintf(buf, "%c %dx%d %d bit %c", s?'>':' ', modes[index].width, modes[index].height, depth, s?'<':' ');
 		
 		if(ui_do_button((void*)&modes[index], buf, 0,
-			column1_x, row1_y + 40 * i, 250, 32.0f, draw_teewars_button))
+			column1_x, row1_y + 40 * i, 250, 32.0f, draw_teewars_button, 0))
 		{
 			// select
 			config_set_gfx_color_depth(&config_copy, depth);
@@ -889,7 +881,7 @@ static int settings_video_render_select_mode()
 	}
 	
 	static int back_button = 0;
-	if(ui_do_button(&back_button, "Back", 0, column3_x, row7_y, 150, 32, draw_teewars_button))
+	if(ui_do_button(&back_button, "Back", 0, column3_x, row7_y, 150, 32, draw_teewars_button, 0))
 		screen = SCREEN_SETTINGS_VIDEO;
 
 	return 0;
@@ -907,7 +899,7 @@ static int settings_video_render_custom()
 	config_set_gfx_high_detail(&config_copy, ui_do_check_box(&config_copy.gfx_high_detail, column3_x, row3_y + 5, 32, 32, config_copy.gfx_high_detail));
 
 	static int back_button = 0;
-	if(ui_do_button(&back_button, "Back", 0, column3_x, row7_y, 150, 32, draw_teewars_button))
+	if(ui_do_button(&back_button, "Back", 0, column3_x, row7_y, 150, 32, draw_teewars_button, 0))
 		screen = SCREEN_SETTINGS_VIDEO;
 		
 	return 0;
@@ -921,7 +913,7 @@ static int settings_video_render()
 	char buf[128];
 	sprintf(buf, "%dx%d %d bit", config_copy.gfx_screen_width, config_copy.gfx_screen_height, config_copy.gfx_color_depth);
 	static int select_button = 0;
-	if(ui_do_button(&select_button, buf, 0, column2_x, row1_y, 300, 32, draw_teewars_button))
+	if(ui_do_button(&select_button, buf, 0, column2_x, row1_y, 300, 32, draw_teewars_button, 0))
 		screen = SCREEN_SETTINGS_VIDEO_SELECT_MODE;
 		
 	// we need to draw these bottom up, to make overlapping work correctly
@@ -962,7 +954,7 @@ static int settings_video_render()
 	}
 
 	static int custom_button=0;
-	if(ui_do_button(&custom_button, "Customize", 0, column3_x, row4_y, 130, 32, draw_teewars_button))
+	if(ui_do_button(&custom_button, "Customize", 0, column3_x, row4_y, 130, 32, draw_teewars_button, 0))
 		screen = SCREEN_SETTINGS_VIDEO_CUSTOM;
 	
 	ui_do_label(column1_x, row6_y + 50, "(A restart of the game is required for these settings to take effect.)", 20);
@@ -998,13 +990,13 @@ static int settings_render(bool ingame)
 
 	static int general_button, controls_button, video_button, sound_button;
 
-	if (ui_do_button(&general_button, "General", 0, 30, 200, 170, 48, draw_teewars_button))
+	if (ui_do_button(&general_button, "General", 0, 30, 200, 170, 48, draw_teewars_button, 0))
 		screen = SCREEN_SETTINGS_GENERAL;
-	if (ui_do_button(&controls_button, "Controls", 0, 30, 250, 170, 48, draw_teewars_button))
+	if (ui_do_button(&controls_button, "Controls", 0, 30, 250, 170, 48, draw_teewars_button, 0))
 		screen = SCREEN_SETTINGS_CONTROLS;
-	if (ui_do_button(&video_button, "Video", 0, 30, 300, 170, 48, draw_teewars_button))
+	if (ui_do_button(&video_button, "Video", 0, 30, 300, 170, 48, draw_teewars_button, 0))
 		screen = SCREEN_SETTINGS_VIDEO;
-	if (ui_do_button(&sound_button, "Sound", 0, 30, 350, 170, 48, draw_teewars_button))
+	if (ui_do_button(&sound_button, "Sound", 0, 30, 350, 170, 48, draw_teewars_button, 0))
 		screen = SCREEN_SETTINGS_SOUND;
 
 	switch (screen)
@@ -1019,7 +1011,7 @@ static int settings_render(bool ingame)
 
 	// SAVE BUTTON
 	static int save_button;
-	if (ui_do_button(&save_button, "Save", 0, 482, 490, 128, 48, draw_teewars_button))
+	if (ui_do_button(&save_button, "Save", 0, 482, 490, 128, 48, draw_teewars_button, 0))
 	{
 		// did we change our name?
 		if (ingame && strcmp(config.player_name, config_copy.player_name) != 0)
@@ -1036,7 +1028,7 @@ static int settings_render(bool ingame)
 	
 	// CANCEL BUTTON
 	static int cancel_button;
-	if (ui_do_button(&cancel_button, "Cancel", 0, 620, 490, 150, 48, draw_teewars_button))
+	if (ui_do_button(&cancel_button, "Cancel", 0, 620, 490, 150, 48, draw_teewars_button, 0))
 	{
 		snd_set_master_volume(config.volume / 255.0f);
 		screen = SCREEN_MAIN;
@@ -1080,18 +1072,18 @@ static int ingame_main_render()
 	
 	ui_do_image(data->images[IMAGE_BANNER].id, 214, 150, 384, 96);
 
-	if (ui_do_button(&menu_resume, "Resume Game", 0, column1_x, row2_y, 250, 48, draw_teewars_button))
+	if (ui_do_button(&menu_resume, "Resume Game", 0, column1_x, row2_y, 250, 48, draw_teewars_button, 0))
 	{
 		return 1;
 	}
 
-	if (ui_do_button(&menu_quit, "Disconnect", 0, column1_x, row4_y, 250, 48, draw_teewars_button))
+	if (ui_do_button(&menu_quit, "Disconnect", 0, column1_x, row4_y, 250, 48, draw_teewars_button, 0))
 	{
 		client_disconnect();
 		return 1;
 	}
 
-	if (ui_do_button(&menu_settings, "Settings", 0, column1_x, row3_y, 250, 48, draw_teewars_button))
+	if (ui_do_button(&menu_settings, "Settings", 0, column1_x, row3_y, 250, 48, draw_teewars_button, 0))
 	{
 		config_copy = config;
 		screen = SCREEN_SETTINGS_GENERAL;
@@ -1109,6 +1101,8 @@ static int kerning_render()
 
 	if (!loaded)
 	{
+		// TODO: fix me
+		/*
 		file_stream file;
 
 		if (file.open_r("kerning.txt"))
@@ -1138,6 +1132,7 @@ static int kerning_render()
 
 			file.close();
 		}
+		*/
 
 		loaded = true;
 	}
@@ -1226,8 +1221,10 @@ static int kerning_render()
 
 	// SAVE BUTTON
 	static int save_button;
-	if (ui_do_button(&save_button, "Save", 0, 482, 520, 128, 48, draw_teewars_button))
+	if (ui_do_button(&save_button, "Save", 0, 482, 520, 128, 48, draw_teewars_button, 0))
 	{
+		// TODO: fix or remove me
+		/*
 		file_stream file;
 
 		if (file.open_w("kerning.txt"))
@@ -1257,13 +1254,14 @@ static int kerning_render()
 
 			file.close();
 		}
+		*/
 
 		//screen = 0;
 	}
 	
 	// CANCEL BUTTON
 	static int cancel_button;
-	if (ui_do_button(&cancel_button, "Cancel", 0, 620, 520, 150, 48, draw_teewars_button))
+	if (ui_do_button(&cancel_button, "Cancel", 0, 620, 520, 150, 48, draw_teewars_button, 0))
 		screen = SCREEN_MAIN;
 
 	return 0;
@@ -1287,18 +1285,18 @@ int render_popup(const char *caption, const char *text, const char *button_text)
 	draw_round_rect(x, y, w, h, 40.0f);
 	gfx_quads_end();
 
-	tw = gfx_pretty_text_width(48.0f, caption);
+	tw = gfx_pretty_text_width(48.0f, caption, -1);
 	ui_do_label(x+w/2-tw/2, y+20, caption, 48.0f);
 	
-	tw = gfx_pretty_text_width(32.0f, text);
+	tw = gfx_pretty_text_width(32.0f, text, -1);
 	ui_do_label(x+w/2-tw/2, y+130, text, 32.0f);
 
 	if(button_text)
 	{
 		static int back_button = 0;
-		if(ui_do_button(&back_button, button_text, 0, x+w/2-100, y+220, 200, 48, draw_teewars_button))
+		if(ui_do_button(&back_button, button_text, 0, x+w/2-100, y+220, 200, 48, draw_teewars_button, 0))
 			return 1;
-		if(inp_key_down(input::esc) || inp_key_down(input::enter))
+		if(inp_key_down(KEY_ESC) || inp_key_down(KEY_ENTER))
 			return 1;
 	}
 		
@@ -1391,11 +1389,8 @@ static int menu_render(bool ingame)
 	}
 }
 
-void modmenu_init()
+extern "C" void modmenu_init() // TODO: nastyness
 {
-	input::enable_char_cache();
-	input::enable_key_cache();
-
 	// TODO: should be removed
     current_font->font_texture = gfx_load_texture("data/big_font.png");
 }
@@ -1404,7 +1399,7 @@ void modmenu_shutdown()
 {
 }
 
-int modmenu_render(bool ingame)
+extern "C" int modmenu_render(int ingame) // TODO: nastyness
 {
 	static int mouse_x = 0;
 	static int mouse_y = 0;
@@ -1426,9 +1421,9 @@ int modmenu_render(bool ingame)
         my = (mouse_y/(float)gfx_screenheight())*600.0f;
             
         int buttons = 0;
-        if(inp_key_pressed(input::mouse_1)) buttons |= 1;
-        if(inp_key_pressed(input::mouse_2)) buttons |= 2;
-        if(inp_key_pressed(input::mouse_3)) buttons |= 4;
+        if(inp_key_pressed(KEY_MOUSE_1)) buttons |= 1;
+        if(inp_key_pressed(KEY_MOUSE_2)) buttons |= 2;
+        if(inp_key_pressed(KEY_MOUSE_3)) buttons |= 4;
             
         ui_update(mx,my,mx*3.0f,my*3.0f,buttons);
     }
@@ -1442,10 +1437,7 @@ int modmenu_render(bool ingame)
     gfx_quads_drawTL(mx,my,24,24);
     gfx_quads_end();
 
-	input::clear_char();
-	input::clear_key();
-	
-	//if(r)
+	inp_clear();
 
 	return r;
 }

@@ -1,10 +1,8 @@
-#include "../../engine/interface.h"
+#include <engine/interface.h>
+#include <engine/config.h>
 #include "mapres_tilemap.h"
 #include "mapres_image.h"
 #include "../mapres.h"
-#include "../../engine/config.h"
-
-#include <baselib/opengl.h>
 
 int tilemap_init()
 {

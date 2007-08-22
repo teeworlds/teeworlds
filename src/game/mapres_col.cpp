@@ -1,11 +1,10 @@
-#include <baselib/system.h>
-#include <baselib/vmath.h>
-#include <baselib/math.h>
+#include <engine/system.h>
+#include <game/vmath.h>
+#include <game/math.h>
+#include <math.h>
 #include "../engine/interface.h"
 #include "mapres_col.h"
 #include "mapres.h"
-
-using namespace baselib;
 
 /*
 	Simple collision rutines!

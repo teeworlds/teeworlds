@@ -94,7 +94,6 @@ if family == "windows" then
 	client_link_other = {ResCompile("other/icons/teewars.rc")}
 end
 
-
 function build(settings)
 	settings.objdir = Path("objs")
 
@@ -107,22 +106,70 @@ function build(settings)
 
 	server_settings = settings:copy()
 
-	basepath = Path("objs/baselib")
-	baselib_options = {}
-	baselib_options.settings = settings:copy()
-	baselib_options.settings.objdir = Path("objs/baselib")
-	baselib_options.settings.libdir = Path("objs/baselib")
-	baselib = Import("../baselib/baselib.bam", baselib_options)
-
-	baselib.apply(settings, "all")
-	baselib.apply(server_settings, "network")
-
+	-- set some platform specific settings
 	settings.cc.includes:add("src")
-	settings.cc.includes:add("../baselib/src/external/zlib")
+	settings.cc.includes:add("src/external/zlib")
+	settings.cc.includes:add("src/external/glfw/include")
 
-	engine = Compile(settings, Collect("src/engine/*.cpp"))
-	client = Compile(settings, Collect("src/engine/client/*.cpp", "src/engine/client/pnglite/*.c", "src/wavpack/*.c"))
-	server = Compile(settings, Collect("src/engine/server/*.cpp"))
+	if family == "unix" then
+   		if platform == "macosx" then
+			glfw_platform = "macosx"
+			settings.linker.frameworks:add("OpenGL")
+            settings.linker.frameworks:add("AGL")
+            settings.linker.frameworks:add("Carbon")
+			settings.linker.frameworks:add("CoreAudio")
+			settings.linker.frameworks:add("AudioToolbox")
+			settings.linker.frameworks:add("AudioUnit")
+		else
+			glfw_platform = "x11"
+			settings.linker.libs:add("pthread")
+            settings.linker.libs:add("asound")
+			settings.linker.libs:add("X11")
+			settings.linker.libs:add("GL")
+			settings.linker.libs:add("GLU")
+		end
+	elseif family == "windows" then
+		glfw_platform = "win32"
+		settings.linker.libs:add("gdi32.lib")
+		settings.linker.libs:add("user32.lib")
+		settings.linker.libs:add("opengl32.lib")
+		settings.linker.libs:add("glu32.lib")
+		settings.linker.libs:add("ws2_32.lib")
+		settings.linker.libs:add("dsound.lib")
+		settings.linker.libs:add("ole32.lib")
+	end
+	
+	-- build glfw
+	glfw_settings = settings:copy()
+	glfw_settings.cc.includes:add("src/engine/external/glfw/lib")
+	glfw_settings.cc.includes:add("src/engine/external/glfw/lib/" .. glfw_platform)
+
+	glfw = Compile(glfw_settings, Collect(
+		"src/engine/external/glfw/lib/*.c",
+		"src/engine/external/glfw/lib/" .. glfw_platform .. "/*.c"))
+
+	-- build teewars components
+	engine_settings = settings:copy()
+	
+	if family == "windows" then
+		engine_settings.cc.flags = "/wd4244 /TP"
+	else
+		engine_settings.cc.flags = "-Wall"
+		engine_settings.linker.flags = ""
+	end
+	
+	engine = Compile(engine_settings, Collect(
+		"src/engine/*.c",
+		"src/engine/external/zlib/*.c"))
+		
+	client = Compile(engine_settings, Collect(
+		"src/engine/client/*.c",
+		"src/engine/external/pnglite/*.c",
+		"src/engine/external/pa.c",
+		"src/engine/external/wavpack/*.c"))
+		
+	server = Compile(engine_settings, Collect("src/engine/server/*.c"))
+	
 	masterserver = Compile(settings, Collect("src/mastersrv/*.cpp"))
 	game_shared = Compile(settings, Collect("src/game/*.cpp"))
 	game_client = Compile(settings, Collect("src/game/client/*.cpp"), clientdata.source, clientdata.cdata)
@@ -136,11 +183,11 @@ function build(settings)
 	tools = {}
 	for i,v in objs do
 		toolname = PathFilename(file_base(v))
-		tools[i] = Link(settings, toolname, v)
+		tools[i] = Link(settings, toolname, v, engine)
 	end
 	
 	-- build client, server and master server
-	client_exe = Link(settings, "teewars", engine, client, editor, game_shared, game_client, client_link_other)
+	client_exe = Link(settings, "teewars", game_shared, game_client, engine, client, editor, glfw, pa, client_link_other)
 	server_exe = Link(server_settings, "teewars_srv", engine, server, game_shared, game_server)
 	masterserver_exe = Link(server_settings, "mastersrv", masterserver, engine)
 

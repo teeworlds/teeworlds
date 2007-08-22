@@ -8,10 +8,8 @@
 
 data_container *data = 0x0;
 
-using namespace baselib;
-
 // --------- DEBUG STUFF ---------
-const int debug_bots = 0;
+const int debug_bots = 3;
 
 // --------- PHYSICS TWEAK! --------
 const float ground_control_speed = 7.0f;
@@ -653,7 +651,7 @@ void projectile::snap(int snapping_client)
 //////////////////////////////////////////////////
 // projectile_backpackrocket
 //////////////////////////////////////////////////
-projectile_backpackrocket::projectile_backpackrocket(baselib::vec2 pos, baselib::vec2 target, int owner, entity* powner)
+projectile_backpackrocket::projectile_backpackrocket(vec2 pos, vec2 target, int owner, entity* powner)
 : projectile(WEAPON_PROJECTILETYPE_ROCKET, owner, pos, vec2(0,0), 100, powner, 0, 0, 0, -1, WEAPON_ROCKET_BACKPACK)
 {
 	stage = 0;
@@ -1157,7 +1155,7 @@ void player::tick()
 {
 	// do latency stuff
 	{
-		client_info info;
+		CLIENT_INFO info;
 		if(server_getclientinfo(client_id, &info))
 		{
 			latency_accum += info.latency;
@@ -1201,9 +1199,9 @@ void player::tick()
 	
 	if(!grounded && vel.y > 0)
 	{
-		if(col_check_point((int)(pos.x-phys_size/2)-4, (int)(pos.y)))
+		if(input.left && col_check_point((int)(pos.x-phys_size/2)-4, (int)(pos.y)))
 			wall_sliding = -1;
-		if(col_check_point((int)(pos.x+phys_size/2)+4, (int)(pos.y)))
+		if(input.right && col_check_point((int)(pos.x+phys_size/2)+4, (int)(pos.y)))
 			wall_sliding = 1;
 	}
 
@@ -2037,7 +2035,7 @@ void mods_client_enter(int client_id)
 	world.insert_entity(&players[client_id]);
 	players[client_id].respawn();
 	
-	client_info info; // fetch login name
+	CLIENT_INFO info; // fetch login name
 	if(server_getclientinfo(client_id, &info))
 	{
 		strcpy(players[client_id].name, info.name);

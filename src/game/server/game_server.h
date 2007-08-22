@@ -42,7 +42,7 @@ public:
 	float proximity_radius;
 	unsigned flags;
 	int objtype;
-	baselib::vec2 pos;
+	vec2 pos;
 
 	enum
 	{
@@ -65,7 +65,7 @@ public:
 		
 	virtual void snap(int snapping_client) {}
 		
-	virtual bool take_damage(baselib::vec2 force, int dmg, int from, int weapon) { return true; }
+	virtual bool take_damage(vec2 force, int dmg, int from, int weapon) { return true; }
 };
 
 
@@ -86,8 +86,8 @@ public:
 	bool reset_requested;
 	
 	game_world();
-	int find_entities(baselib::vec2 pos, float radius, entity **ents, int max);
-	int find_entities(baselib::vec2 pos, float radius, entity **ents, int max, const int* types, int maxtypes);
+	int find_entities(vec2 pos, float radius, entity **ents, int max);
+	int find_entities(vec2 pos, float radius, entity **ents, int max, const int* types, int maxtypes);
 
 	void insert_entity(entity *ent);
 	void destroy_entity(entity *ent);
@@ -156,7 +156,7 @@ public:
 		WEAPON_PROJECTILETYPE_SHOTGUN	= 2,
 	};
 	
-	baselib::vec2 vel;
+	vec2 vel;
 	entity *powner; // this is nasty, could be removed when client quits
 	int lifespan;
 	int owner;
@@ -168,7 +168,7 @@ public:
 	int bounce;
 	float force;
 	
-	projectile(int type, int owner, baselib::vec2 pos, baselib::vec2 vel, int span, entity* powner,
+	projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity* powner,
 		int damage, int flags, float force, int sound_impact, int weapon);
 	virtual void reset();
 	virtual void tick();
@@ -180,12 +180,12 @@ class projectile_backpackrocket : public projectile
 	int stage;
 	int start_tick;
 	int deply_ticks;
-	baselib::vec2 target;
-	baselib::vec2 start;
-	baselib::vec2 midpoint;
-	baselib::vec2 direction;
+	vec2 target;
+	vec2 start;
+	vec2 midpoint;
+	vec2 direction;
 public:
-	projectile_backpackrocket(baselib::vec2 pos, baselib::vec2 target, int owner, entity* powner);
+	projectile_backpackrocket(vec2 pos, vec2 target, int owner, entity* powner);
 	virtual void tick();
 };
 
@@ -225,9 +225,9 @@ public:
 	int last_action;
 	
 	// we need a defered position so we can handle the physics correctly
-	baselib::vec2 defered_pos;
-	baselib::vec2 vel;
-	baselib::vec2 direction;
+	vec2 defered_pos;
+	vec2 vel;
+	vec2 direction;
 
 	//
 	int client_id;
@@ -244,7 +244,7 @@ public:
 	int armor;
 
 	// ninja
-	baselib::vec2 activationdir;
+	vec2 activationdir;
 	int ninjaactivationtick;
 	int extrapowerflags;
 	int currentcooldown;
@@ -278,8 +278,8 @@ public:
 	int hook_state;
 	int hook_tick;
 	player *hooked_player;
-	baselib::vec2 hook_pos;
-	baselib::vec2 hook_dir;
+	vec2 hook_pos;
+	vec2 hook_dir;
 
 	//
 	player();
@@ -305,7 +305,7 @@ public:
 	
 	void die(int killer, int weapon);
 	
-	virtual bool take_damage(baselib::vec2 force, int dmg, int from, int weapon);
+	virtual bool take_damage(vec2 force, int dmg, int from, int weapon);
 	virtual void snap(int snaping_client);
 };
 
@@ -317,7 +317,7 @@ class flag : public entity
 public:
 	static const int phys_size = 14;
 	player *carrying_player;
-	baselib::vec2 vel;
+	vec2 vel;
 	
 	int team;
 	int spawntick;

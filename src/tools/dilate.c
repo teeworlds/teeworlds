@@ -1,5 +1,5 @@
 
-#include "../engine/client/pnglite/pnglite.c"
+#include "../engine/external/pnglite/pnglite.c"
 
 typedef struct pixel_t
 {
