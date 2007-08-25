@@ -305,17 +305,6 @@ powerups {
 	}
 }
 
-playerstats {
-	dm {
-		maxhealth 10
-		maxarmor 10
-	}
-	tdm {
-		maxhealth 10
-		maxarmor 10
-	}
-}
-
 projectileparticles {
 	gun {
 		particlespersecond 200

@@ -47,6 +47,10 @@ enum
 	STATE_PLAYING,
 	STATE_IN_MENU,
 	STATE_CHATTING,
+	
+	GAMETYPE_DM=0,
+	GAMETYPE_TDM,
+	GAMETYPE_CTF,
 };
 
 struct player_input

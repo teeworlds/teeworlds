@@ -409,7 +409,12 @@ game_world world;
 gameobject::gameobject()
 : entity(OBJTYPE_GAME)
 {
-	gametype = GAMETYPE_TDM;
+	gametype = GAMETYPE_DM;
+	if(strcmp(config.gametype, "ctf") == 0)
+		gametype = GAMETYPE_CTF;
+	else if(strcmp(config.gametype, "tdm") == 0)
+		gametype = GAMETYPE_TDM;
+	
 	game_over_tick = -1;
 	sudden_death = 0;
 	round_start_tick = server_tick();
