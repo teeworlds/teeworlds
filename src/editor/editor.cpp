@@ -26,13 +26,21 @@ struct ent_type
 
 static ent_type ent_types[] = {
 	{"spawn", MAPRES_SPAWNPOINT, 0},
+	{"spawn_red", MAPRES_SPAWNPOINT_RED, 0},
+	{"spawn_blue", MAPRES_SPAWNPOINT_BLUE, 0},
+	{"---", 0, 0},
+	{"flagstand_red", MAPRES_SPAWNPOINT_RED, 0},
+	{"flagstand_blue", MAPRES_SPAWNPOINT_BLUE, 0},
+	{"---", 0, 0},
 	{"gun", MAPRES_ITEM, ITEM_WEAPON_GUN},
 	{"shotgun", MAPRES_ITEM, ITEM_WEAPON_SHOTGUN},
 	{"rocket", MAPRES_ITEM, ITEM_WEAPON_ROCKET},
 	{"sniper", MAPRES_ITEM, ITEM_WEAPON_SNIPER},
 	{"hammer", MAPRES_ITEM, ITEM_WEAPON_HAMMER},
+	{"---", 0, 0},
 	{"health", MAPRES_ITEM, ITEM_HEALTH},
 	{"armor", MAPRES_ITEM, ITEM_ARMOR},
+	{"---", 0, 0},
 	{"ninja", MAPRES_ITEM, ITEM_NINJA},
 	{0, 0}
 };

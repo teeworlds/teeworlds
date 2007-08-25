@@ -1,6 +1,6 @@
-
 #include "system.h"
 #include "datafile.h"
+#include "external/zlib/zlib.h"
 
 static const int DEBUG=0;
 
@@ -19,7 +19,7 @@ typedef struct
 
 typedef struct
 {
-	int id;
+	char id[4];
 	int version;
 	int size;
 	int swaplen;
@@ -45,24 +45,28 @@ typedef struct
 	DATAFILE_ITEM_TYPE *item_types;
 	int *item_offsets;
 	int *data_offsets;
+	int *data_sizes;
 
 	char *item_start;
-	char *data_start;	
+	char *data_start;
 } DATAFILE_INFO;
 
 struct DATAFILE_t
 {
+	IOHANDLE file;
 	DATAFILE_INFO info;
-	DATAFILE_DATA data;
+	DATAFILE_HEADER header;
+	int data_start_offset;
+	char **data_ptrs;
+	char *data;
 };
 
 DATAFILE *datafile_load(const char *filename)
 {
 	DATAFILE *df;
 	IOHANDLE file;
-	unsigned char header[16];
-	int version;
-	unsigned size, swapsize, readsize;
+	DATAFILE_HEADER header;
+	unsigned readsize;
 	
 	unsigned *dst;
 	unsigned char *src;
@@ -79,36 +83,56 @@ DATAFILE *datafile_load(const char *filename)
 		return 0;
 	
 	/* TODO: change this header */
-	io_read(file, header, sizeof(header));
-	if(header[3] != 'D' || header[2] != 'A' || header[1] != 'T' || header[0] != 'A')
+	io_read(file, &header, sizeof(header));
+	if(header.id[0] != 'A' || header.id[1] != 'T' || header.id[2] != 'A' || header.id[3] != 'D')
 	{
-		dbg_msg("datafile", "wrong signature. %x %x %x %x", header[0], header[1], header[2], header[3]);
+		if(header.id[0] != 'D' || header.id[1] != 'A' || header.id[2] != 'T' || header.id[3] != 'A')
+		{
+			dbg_msg("datafile", "wrong signature. %x %x %x %x", header.id[0], header.id[1], header.id[2], header.id[3]);
+			return 0;
+		}
+	}
+	
+	/* TODO: swap the header */
+	if(header.version != 3 && header.version != 4)
+	{
+		dbg_msg("datafile", "wrong version. version=%x", header.version);
 		return 0;
 	}
 	
-	version = (unsigned)header[4] | (unsigned)header[5]<<8 | (unsigned)header[6]<<16 | (unsigned)header[7]<<24;
-	if(version != 3)
-	{
-		dbg_msg("datafile", "wrong version. version=%x", version);
-		return 0;
-	}
+	//if(DEBUG)
+		//dbg_msg("datafile", "loading. size=%d", datafile.size);
 	
-	size = (unsigned)header[8] | (unsigned)header[9]<<8 | (unsigned)header[10]<<16 | (unsigned)header[11]<<24;
-	swapsize = (unsigned)header[12] | (unsigned)header[13]<<8 | (unsigned)header[14]<<16 | (unsigned)header[15]<<24;
+	/* read in the rest except the data */
+	int size = 0;
+	size += header.num_item_types*sizeof(DATAFILE_ITEM_TYPE);
+	size += (header.num_items+header.num_raw_data)*sizeof(int);
+	if(header.version == 4)
+		size += header.num_raw_data*sizeof(int); /* v4 has uncompressed data sizes aswell */
+	size += header.item_size;
 	
-	(void)swapsize;
+	int allocsize = size;
+	allocsize += sizeof(DATAFILE); // add space for info structure
+	allocsize += header.num_raw_data*sizeof(void*); // add space for data pointers
+
+	df = (DATAFILE*)mem_alloc(allocsize, 1);
+	df->header = header;
+	df->data_start_offset = sizeof(DATAFILE_HEADER) + size;
+	df->data_ptrs = (void*)(df+1);
+	df->data = (char *)(df+1)+header.num_raw_data*sizeof(char *);
+	df->file = file;
 	
-	if(DEBUG)
-		dbg_msg("datafile", "loading. size=%d", size);
+	/* clear the data pointers */
+	mem_zero(df->data_ptrs, header.num_raw_data*sizeof(void*));
 	
-	df = (DATAFILE*)mem_alloc(size+sizeof(DATAFILE_INFO), 1);
-	readsize = io_read(file, &df->data, size);
+	/* read types, offsets, sizes and item data */
+	readsize = io_read(file, df->data, size);
 	if(readsize != size)
 	{
 		dbg_msg("datafile", "couldn't load the whole thing, wanted=%d got=%d", size, readsize);
 		return 0;
 	}
-
+/*
 #if defined(CONF_ARCH_ENDIAN_BIG)
 	unsigned *dst = (unsigned*)df;
 	unsigned char *src = (unsigned char*)df;
@@ -117,17 +141,21 @@ DATAFILE *datafile_load(const char *filename)
 		unsigned j = i << 2;
 		dst[i] = src[j] | src[j+1]<<8 | src[j+2]<<16 | src[j+3]<<24;
 	}
-#endif
+#endif*/
 	
 	if(DEBUG)
-		dbg_msg("datafile", "item_size=%d", df->data.item_size);
+		dbg_msg("datafile", "item_size=%d", df->header.item_size);
 	
-	df->info.item_types = (DATAFILE_ITEM_TYPE *)df->data.start;
-	df->info.item_offsets = (int *)&df->info.item_types[df->data.num_item_types];
-	df->info.data_offsets = (int *)&df->info.item_offsets[df->data.num_items];
+	df->info.item_types = (DATAFILE_ITEM_TYPE *)df->data;
+	df->info.item_offsets = (int *)&df->info.item_types[df->header.num_item_types];
+	df->info.data_offsets = (int *)&df->info.item_offsets[df->header.num_items];
+	df->info.data_sizes = (int *)&df->info.data_offsets[df->header.num_raw_data];
 	
-	df->info.item_start = (char *)&df->info.data_offsets[df->data.num_raw_data];
-	df->info.data_start = df->info.item_start + df->data.item_size;
+	if(header.version == 4)
+		df->info.item_start = (char *)&df->info.data_sizes[df->header.num_raw_data];
+	else
+		df->info.item_start = (char *)&df->info.data_offsets[df->header.num_raw_data];
+	df->info.data_start = df->info.item_start + df->header.item_size;
 
 	if(DEBUG)
 		dbg_msg("datafile", "datafile loading done. datafile='%s'", filename);
@@ -171,9 +199,74 @@ DATAFILE *datafile_load(const char *filename)
 	return df;
 }
 
+int datafile_num_data(DATAFILE *df)
+{
+	return df->header.num_raw_data;
+}
+
+/* always returns the size in the file */
+int datafile_get_datasize(DATAFILE *df, int index)
+{
+	//if(df->header.version == 4)
+	//	return df->info.data_sizes[index];
+	
+	if(index == df->header.num_raw_data-1)
+		return df->header.data_size-df->info.data_offsets[index];
+	return  df->info.data_offsets[index+1]-df->info.data_offsets[index];
+}
+
 void *datafile_get_data(DATAFILE *df, int index)
 {
-	return df->info.data_start+df->info.data_offsets[index];
+	// load it if needed
+	if(!df->data_ptrs[index])
+	{
+		/* fetch the data size */
+		int datasize = datafile_get_datasize(df, index);
+		
+		if(df->header.version == 4)
+		{
+			/* v4 has compressed data */
+			dbg_msg("datafile", "loading data index=%d size=%d", index, datasize);
+			void *temp = (char *)mem_alloc(datasize, 1);
+			unsigned long uncompressed_size = df->info.data_sizes[index];
+			df->data_ptrs[index] = (char *)mem_alloc(uncompressed_size, 1);
+			
+			/* read the compressed data */
+			io_seek(df->file, df->data_start_offset+df->info.data_offsets[index], IOSEEK_START);
+			io_read(df->file, temp, datasize);
+			
+			/* decompress the data, TODO: check for errors */
+			unsigned long s = uncompressed_size;
+			uncompress((void*)df->data_ptrs[index], &s, temp, datasize);
+			
+			/* clean up the temporary buffers */
+			mem_free(temp);
+		}
+		else
+		{
+			/* load the data */
+			dbg_msg("datafile", "loading data index=%d size=%d", index, datasize);
+			df->data_ptrs[index] = (char *)mem_alloc(datasize, 1);
+			io_seek(df->file, df->data_start_offset+df->info.data_offsets[index], IOSEEK_START);
+			io_read(df->file, df->data_ptrs[index], datasize);
+		}
+	}
+	
+	return df->data_ptrs[index];
+}
+
+void datafile_unload_data(DATAFILE *df, int index)
+{
+	/* */
+	mem_free(df->data_ptrs[index]);
+	df->data_ptrs[index] = 0x0;
+}
+
+int datafile_get_itemsize(DATAFILE *df, int index)
+{
+	if(index == df->header.num_items-1)
+		return df->header.item_size-df->info.item_offsets[index];
+	return  df->info.item_offsets[index+1]-df->info.item_offsets[index];
 }
 
 void *datafile_get_item(DATAFILE *df, int index, int *type, int *id)
@@ -189,7 +282,7 @@ void *datafile_get_item(DATAFILE *df, int index, int *type, int *id)
 void datafile_get_type(DATAFILE *df, int type, int *start, int *num)
 {
 	int i;
-	for(i = 0; i < df->data.num_item_types; i++)
+	for(i = 0; i < df->header.num_item_types; i++)
 	{
 		if(df->info.item_types[i].type == type)
 		{
@@ -212,7 +305,6 @@ void *datafile_find_item(DATAFILE *df, int type, int id)
 	datafile_get_type(df, type, &start, &num);
 	for(i = 0; i < num; i++)
 	{
-		
 		item = datafile_get_item(df, start+i,0, &item_id);
 		if(id == item_id)
 			return item;
@@ -222,20 +314,29 @@ void *datafile_find_item(DATAFILE *df, int type, int id)
 
 int datafile_num_items(DATAFILE *df)
 {
-	return df->data.num_items;
+	return df->header.num_items;
 }
 
 void datafile_unload(DATAFILE *df)
 {
 	if(df)
+	{
+		/* free the data that is loaded */
+		int i;
+		for(i = 0; i < df->header.num_raw_data; i++)
+			mem_free(df->data_ptrs[i]);
+		
+		io_close(df->file);
 		mem_free(df);
+	}
 }
 
 /* DATAFILE output */
 typedef struct
 {
-	int size;
-	void *data;
+	int uncompressed_size;
+	int compressed_size;
+	void *compressed_data;
 } DATA_INFO;
 
 typedef struct
@@ -324,8 +425,17 @@ int datafile_add_item(DATAFILE_OUT *df, int type, int id, int size, void *data)
 
 int datafile_add_data(DATAFILE_OUT *df, int size, void *data)
 {
-	df->datas[df->num_items].size = size;
-	df->datas[df->num_datas].data = data;
+	DATA_INFO *info = &df->datas[df->num_datas];
+	void *compdata = mem_alloc(size, 1); /* temporary buffer that we use duing compression */
+	info->uncompressed_size = size;
+	unsigned long s = size;
+	if(compress(compdata, &s, data, size) != Z_OK)
+		dbg_assert(0, "zlib error");
+	info->compressed_size = (int)s;
+	info->compressed_data = mem_alloc(info->compressed_size, 1);
+	mem_copy(info->compressed_data, compdata, info->compressed_size);
+	mem_free(compdata);
+
 	df->num_datas++;
 	return df->num_datas-1;
 }
@@ -353,7 +463,7 @@ int datafile_finish(DATAFILE_OUT *df)
 	
 	
 	for(i = 0; i < df->num_datas; i++)
-		datasize += df->datas[i].size;
+		datasize += df->datas[i].compressed_size;
 	
 	/* calculate the complete size */
 	typessize = df->num_item_types*sizeof(DATAFILE_ITEM_TYPE);
@@ -369,8 +479,11 @@ int datafile_finish(DATAFILE_OUT *df)
 	
 	/* construct header */
 	DATAFILE_HEADER header;
-	header.id = ('D'<<24) | ('A'<<16) | ('T'<<8) | ('A');
-	header.version = 3;
+	header.id[0] = 'D';
+	header.id[1] = 'A';
+	header.id[2] = 'T';
+	header.id[3] = 'A';
+	header.version = 4;
 	header.size = filesize - 16;
 	header.swaplen = swapsize - 16;
 	header.num_item_types = df->num_item_types;
@@ -427,7 +540,17 @@ int datafile_finish(DATAFILE_OUT *df)
 		if(DEBUG)
 			dbg_msg("datafile", "writing data offset num=%d offset=%d", i, offset);
 		io_write(df->file, &offset, sizeof(offset));
-		offset += df->datas[i].size;
+		offset += df->datas[i].compressed_size;
+	}
+
+	/* write data uncompressed sizes */
+	for(i = 0, offset = 0; i < df->num_datas; i++)
+	{
+		/*
+		if(DEBUG)
+			dbg_msg("datafile", "writing data offset num=%d offset=%d", i, offset);
+		*/
+		io_write(df->file, &df->datas[i].uncompressed_size, sizeof(int));
 	}
 	
 	/* write items */
@@ -457,8 +580,8 @@ int datafile_finish(DATAFILE_OUT *df)
 	for(i = 0; i < df->num_datas; i++)
 	{
 		if(DEBUG)
-			dbg_msg("datafile", "writing data id=%d size=%d", i, df->datas[i].size);
-		io_write(df->file, df->datas[i].data, df->datas[i].size);
+			dbg_msg("datafile", "writing data id=%d size=%d", i, df->datas[i].compressed_size);
+		io_write(df->file, df->datas[i].compressed_data, df->datas[i].compressed_size);
 	}
 
 	/* free data */

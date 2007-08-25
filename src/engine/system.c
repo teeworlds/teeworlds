@@ -94,6 +94,11 @@ struct memtail
 
 struct memheader *first = 0;
 
+int mem_allocated()
+{
+	return memory_alloced;
+}
+
 void *mem_alloc_debug(const char *filename, int line, unsigned size, unsigned alignment)
 {
 	/* TODO: fix alignment */
@@ -196,13 +201,13 @@ int io_seek(IOHANDLE io, int offset, int origin)
 
 	switch(origin)
 	{
-	case 0: /*IOSEEK_SET:*/
+	case IOSEEK_START:
 		real_origin = SEEK_SET;
 		break;
-	case 1: /*IOSEEK_CUR:*/
+	case IOSEEK_CUR:
 		real_origin = SEEK_CUR;
 		break;
-	case 2: /*IOSEEK_END:*/
+	case IOSEEK_END:
 		real_origin = SEEK_END;
 	}
 
@@ -219,7 +224,7 @@ long int io_length(IOHANDLE io)
 	long int length;
 	io_seek(io, 0, IOSEEK_END);
 	length = io_tell(io);
-	io_seek(io, 0, IOSEEK_SET);
+	io_seek(io, 0, IOSEEK_START);
 	return length;
 }
 

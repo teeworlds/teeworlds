@@ -106,6 +106,7 @@ int img_init()
 		void *data = map_get_data(img->image_data);
 		//calc_mipmaps(data, img->width, img->height, data_res);
 		map_textures[i] = gfx_load_texture_raw(img->width, img->height, IMG_RGBA, data);
+		map_unload_data(img->image_data);
 	}
 
 	//mem_free(data_res);

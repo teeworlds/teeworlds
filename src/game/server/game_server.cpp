@@ -409,7 +409,7 @@ game_world world;
 gameobject::gameobject()
 : entity(OBJTYPE_GAME)
 {
-	gametype = GAMETYPE_DM;
+	gametype = GAMETYPE_TDM;
 	game_over_tick = -1;
 	sudden_death = 0;
 	round_start_tick = server_tick();

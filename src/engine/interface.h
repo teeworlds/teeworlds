@@ -797,6 +797,9 @@ void gfx_screenshot();
 int snap_new_id();
 void snap_free_id(int id);
 
+/* other */
+void map_unload_data(int index);
+
 #ifdef __cplusplus
 }
 #endif

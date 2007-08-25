@@ -375,11 +375,12 @@ static void client_debug_render()
 	static float frametime_avg = 0;
 	frametime_avg = frametime_avg*0.9f + frametime*0.1f;
 	char buffer[512];
-	sprintf(buffer, "send: %6d recv: %6d snaploss: %d latency: %4.0f %c gfxmem: %6dk fps: %3d",
+	sprintf(buffer, "send: %6d recv: %6d snaploss: %d latency: %4.0f %c  mem %dk   gfxmem: %dk  fps: %3d",
 		(current.send_bytes-prev.send_bytes)*10,
 		(current.recv_bytes-prev.recv_bytes)*10,
 		snaploss,
 		latency*1000.0f, extra_polating?'E':' ',
+		mem_allocated()/1024,
 		gfx_memory_usage()/1024,
 		(int)(1.0f/frametime_avg));
 	gfx_quads_text(2, 2, 16, buffer);

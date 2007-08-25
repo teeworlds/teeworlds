@@ -149,7 +149,7 @@ enum {
 	IOFLAG_WRITE = 2,
 	IOFLAG_RANDOM = 4,
 
-	IOSEEK_SET = 0,
+	IOSEEK_START = 0,
 	IOSEEK_CUR = 1,
 	IOSEEK_END = 2
 };
@@ -514,7 +514,7 @@ int fs_listdir(const char *dir, fs_listdir_callback cb, void *user);
 int net_addr4_cmp(const NETADDR4 *a, const NETADDR4 *b);
 
 void mem_debug_dump();
-
+int mem_allocated();
 #ifdef __cplusplus
 }
 #endif

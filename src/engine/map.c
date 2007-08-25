@@ -8,6 +8,11 @@ void *map_get_data(int index)
 	return datafile_get_data(map, index);
 }
 
+void map_unload_data(int index)
+{
+	datafile_unload_data(map, index);
+}
+
 void *map_get_item(int index, int *type, int *id)
 {
 	return datafile_get_item(map, index, type, id);

@@ -1437,6 +1437,129 @@ int emoticon_selector_render()
 	return return_now ? selected_emoticon : -1;
 }
 
+void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, const char *title)
+{
+	//float w = 550.0f;
+	//float x = width/2-w/2;
+	//;
+	//float y = ystart;
+	//float w = 550.0f;
+
+	animstate idlestate;
+	anim_eval(&data->animations[ANIM_BASE], 0, &idlestate);
+	anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);	
+	
+	float ystart = y;
+	float h = 600.0f;
+
+	gfx_blend_normal();
+	
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_quads_setcolor(0,0,0,0.5f);
+	draw_round_rect(x-10.f, y-10.f, w, h, 40.0f);
+	gfx_quads_end();
+	
+	// render title
+	if(!title)
+	{
+		if(gameobj->game_over)
+			title = "Game Over";
+		else
+			title = "Score Board";
+	}
+
+	float tw = gfx_pretty_text_width( 64, "Game Over", -1);
+	gfx_pretty_text(x+w/2-tw/2, y, 64, "Game Over", -1);
+	
+
+	y += 64.0f;
+
+	// find players
+	const obj_player *players[MAX_CLIENTS] = {0};
+	int num_players = 0;
+	for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
+	{
+		SNAP_ITEM item;
+		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+		
+		if(item.type == OBJTYPE_PLAYER)
+		{
+			players[num_players] = (const obj_player *)data;
+			num_players++;
+		}
+	}
+	
+	// sort players
+	for(int k = 0; k < num_players; k++) // ffs, bubblesort
+	{
+		for(int i = 0; i < num_players-k-1; i++)
+		{
+			if(players[i]->score < players[i+1]->score)
+			{
+				const obj_player *tmp = players[i];
+				players[i] = players[i+1];
+				players[i+1] = tmp;
+			}
+		}
+	}
+
+	// render headlines
+	gfx_pretty_text(x+10, y, 32, "Score", -1);
+	gfx_pretty_text(x+125, y, 32, "Name", -1);
+	gfx_pretty_text(x+w-70, y, 32, "Ping", -1);
+	y += 38.0f;
+
+	// render player scores
+	for(int i = 0; i < num_players; i++)
+	{
+		const obj_player *player = players[i];
+		
+		// make sure that we render the correct team
+		if(team != -1 && player->team != team)
+			continue;
+		
+		char buf[128];
+		float font_size = 46.0f;
+		if(player->local)
+		{
+			// background so it's easy to find the local player
+			gfx_texture_set(-1);
+			gfx_quads_begin();
+			gfx_quads_setcolor(1,1,1,0.25f);
+			draw_round_rect(x, y, w-20, 48, 20.0f);
+			gfx_quads_end();
+		}
+		
+		sprintf(buf, "%4d", player->score);
+		gfx_pretty_text(x+60-gfx_pretty_text_width(font_size,buf,-1), y, font_size, buf, -1);
+		gfx_pretty_text(x+128, y, font_size, client_datas[player->clientid].name, -1);
+		
+		sprintf(buf, "%4d", player->latency);
+		float tw = gfx_pretty_text_width(font_size, buf, -1);
+		gfx_pretty_text(x+w-tw-35, y, font_size, buf, -1);
+
+		// render avatar
+		render_tee(&idlestate, player->clientid, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28));
+		y += 50.0f;
+	}
+	
+	// render goals
+	y = ystart+h-54;
+	if(gameobj && gameobj->time_limit)
+	{
+		char buf[64];
+		sprintf(buf, "Time Limit: %d min", gameobj->time_limit);
+		gfx_pretty_text(x+w/2, y, 32, buf, -1);
+	}
+	if(gameobj && gameobj->score_limit)
+	{
+		char buf[64];
+		sprintf(buf, "Score Limit: %d", gameobj->score_limit);
+		gfx_pretty_text(x+40, y, 32, buf, -1);
+	}				
+}
+
 void render_game()
 {	
 	animstate idlestate;
@@ -1924,211 +2047,21 @@ void render_game()
 	{
 		gfx_mapscreen(0, 0, width, height);
 
+		float w = 550.0f;
+		
 		if (gameobj && gameobj->gametype == GAMETYPE_DM)
 		{
-			// Normal deathmatch
-
-			float w = 550.0f;
-			float x = width/2-w/2;
-			float ystart = 150.0f;
-			float y = ystart;
-			float h = 600.0f;
-
-			gfx_blend_normal();
-			
-			gfx_texture_set(-1);
-			gfx_quads_begin();
-			gfx_quads_setcolor(0,0,0,0.5f);
-			draw_round_rect(x-10.f, y-10.f, w, h, 40.0f);
-			gfx_quads_end();
-			
-			if(gameobj->game_over)
-			{
-				float tw = gfx_pretty_text_width( 64, "Game Over", -1);
-				gfx_pretty_text(x+w/2-tw/2, y, 64, "Game Over", -1);
-			}
-			else
-			{
-				float tw = gfx_pretty_text_width( 64, "Score Board", -1);
-				gfx_pretty_text(x+w/2-tw/2, y, 64, "Score Board", -1);
-			}
-			y += 64.0f;
-
-			// find players
-			const obj_player *players[MAX_CLIENTS] = {0};
-			int num_players = 0;
-			for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
-			{
-				SNAP_ITEM item;
-				const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-				
-				if(item.type == OBJTYPE_PLAYER)
-				{
-					players[num_players] = (const obj_player *)data;
-					num_players++;
-				}
-			}
-			
-			// sort players
-			for(int k = 0; k < num_players; k++) // ffs, bubblesort
-			{
-				for(int i = 0; i < num_players-k-1; i++)
-				{
-					if(players[i]->score < players[i+1]->score)
-					{
-						const obj_player *tmp = players[i];
-						players[i] = players[i+1];
-						players[i+1] = tmp;
-					}
-				}
-			}
-
-			// render headlines
-			gfx_pretty_text(x+10, y, 32, "Score", -1);
-			gfx_pretty_text(x+125, y, 32, "Name", -1);
-			gfx_pretty_text(x+w-70, y, 32, "Ping", -1);
-			y += 38.0f;
-
-			// render player scores
-			for(int i = 0; i < num_players; i++)
-			{
-				const obj_player *player = players[i];
-				char buf[128];
-				float font_size = 46.0f;
-				if(player->local)
-				{
-					// background so it's easy to find the local player
-					gfx_texture_set(-1);
-					gfx_quads_begin();
-					gfx_quads_setcolor(1,1,1,0.25f);
-					draw_round_rect(x, y, w-20, 48, 20.0f);
-					gfx_quads_end();
-				}
-				
-				sprintf(buf, "%4d", player->score);
-				gfx_pretty_text(x+60-gfx_pretty_text_width(font_size,buf,-1), y, font_size, buf, -1);
-				gfx_pretty_text(x+128, y, font_size, client_datas[player->clientid].name, -1);
-				
-				sprintf(buf, "%4d", player->latency);
-				float tw = gfx_pretty_text_width(font_size, buf, -1);
-				gfx_pretty_text(x+w-tw-35, y, font_size, buf, -1);
-
-				// render avatar
-				render_tee(&idlestate, player->clientid, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28));
-				y += 50.0f;
-			}
-			
-			// render goals
-			y = ystart+h-54;
-			if(gameobj && gameobj->time_limit)
-			{
-				char buf[64];
-				sprintf(buf, "Time Limit: %d min", gameobj->time_limit);
-				gfx_pretty_text(x+w/2, y, 32, buf, -1);
-			}
-			if(gameobj && gameobj->score_limit)
-			{
-				char buf[64];
-				sprintf(buf, "Score Limit: %d", gameobj->score_limit);
-				gfx_pretty_text(x+40, y, 32, buf, -1);
-			}			
+			render_scoreboard(gameobj, width/2-w/2, 150.0f, w, -1, 0);
+			//render_scoreboard(gameobj, 0, 0, -1, 0);
 		}
-		/*
-		else if (gameobj->gametype == GAMETYPE_TDM)
+		else
 		{
-			// Team deathmatch
-			gfx_blend_normal();
-			
-			float w = 650.0f;
-			float x = width-w-50.0f;
-			float y = 150.0f;
-			
-			gfx_texture_set(-1);
-			gfx_quads_begin();
-			gfx_quads_setcolor(0,0,0,0.5f);
-			gfx_quads_drawTL(x-10.f, y-10.f, 800.0f, 600.0f);
-			gfx_quads_end();
-
-			gfx_pretty_text(x, y, 64, "Score Board");
-			if(gameobj && gameobj->time_limit)
-			{
-				char buf[64];
-				sprintf(buf, "Time Limit: %d min", gameobj->time_limit);
-				gfx_pretty_text(x + 400, y + 25, 32, buf);
-			}
-			if(gameobj && gameobj->score_limit)
-			{
-				char buf[64];
-				sprintf(buf, "Score Limit: %d", gameobj->score_limit);
-				gfx_pretty_text(x + 400, y + 25, 32, buf);
-			}
-			y += 64.0f;
-
-			// Calculate team scores
-			int teamscore[2] = {0,0};
-			int num = snap_num_items(SNAP_CURRENT);
-			for(int i = 0; i < num; i++)
-			{
-				snap_item item;
-				const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-				
-				if(item.type == OBJTYPE_PLAYER)
-				{
-					const obj_player *player = (const obj_player *)data;
-					if(player && player->team >= 0 && player->team < 2)
-					{
-						teamscore[player->team] += player->score;
-					}
-				}
-			}
-
-			char buf[128];
-			gfx_pretty_text(x, y, 40, "Team A - ");
-			sprintf(buf, "%4d", teamscore[0]);
-			gfx_pretty_text(x + 110, y, 40, buf);
-
-			gfx_pretty_text(x + 400, y, 40, "Team B - ");
-			sprintf(buf, "%4d", teamscore[1]);
-			gfx_pretty_text(x + 510, y, 40, buf);
-
-			y += 50.0f;
-
-			float offsets[2];
-			offsets[0] = y;
-			offsets[1] = y;
-
-			for(int i = 0; i < num; i++)
-			{
-				snap_item item;
-				const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-				
-				if(item.type == OBJTYPE_PLAYER)
-				{
-					const obj_player *player = (const obj_player *)data;
-					if(player && player->team >= 0 && player->team < 2)
-					{
-						sprintf(buf, "%4d", player->score);
-						float offsetx = player->team ? 400 : 0;
-						gfx_pretty_text(offsetx + x+60-gfx_pretty_text_width(48,buf), offsets[player->team], 48, buf);
-						gfx_pretty_text(offsetx + x+128, offsets[player->team], 48, client_datas[player->clientid].name);
-
-						int skin = skinseed + player->team;
-						render_tee(&idlestate, skin, vec2(1,0), vec2(offsetx + x+90, offsets[player->team]+24));
-
-						sprintf(buf, "%4d", player->latency);
-						//float tw = gfx_pretty_text_width(48.0f, buf);
-						gfx_pretty_text(offsetx + x + 240, offsets[player->team], 48, buf);
-
-						offsets[player->team] += 58.0f;
-					}
-				}
-			}
+			render_scoreboard(gameobj, width/2-w-20, 150.0f, w, 0, "Team A");
+			render_scoreboard(gameobj, width/2 + 20, 150.0f, w, 1, "Team B");
 		}
-		* */
+
 	}
 }
-
-
 
 extern "C" void modc_render()
 {

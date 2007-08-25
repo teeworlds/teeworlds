@@ -559,6 +559,9 @@ static int server_run()
 	int64 networktime = 0;
 	int64 totaltime = 0;
 
+	if(config.debug)
+	dbg_msg("server", "baseline memory usage %dk", mem_allocated()/1024);
+
 	while(1)
 	{
 		int64 t = time_get();
