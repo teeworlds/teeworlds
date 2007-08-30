@@ -119,5 +119,4 @@ const array:int sound = sounds.*
 const array:int image = images.*
 const array:int sprite = sprites.*.*
 const array:int anim = animations.*
-const array:int gametype = playerstats.*
 const array:int powerup = powerups.*

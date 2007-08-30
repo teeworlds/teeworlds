@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 extern "C" {
 	#include <engine/system.h>
@@ -21,28 +22,31 @@ struct ent_type
 {
 	const char *name;
 	int id;
-	int item_id;
+	int numfields;
+	int fields[8];
 };
 
 static ent_type ent_types[] = {
-	{"spawn", MAPRES_SPAWNPOINT, 0},
-	{"spawn_red", MAPRES_SPAWNPOINT_RED, 0},
-	{"spawn_blue", MAPRES_SPAWNPOINT_BLUE, 0},
-	{"---", 0, 0},
-	{"flagstand_red", MAPRES_SPAWNPOINT_RED, 0},
-	{"flagstand_blue", MAPRES_SPAWNPOINT_BLUE, 0},
-	{"---", 0, 0},
-	{"gun", MAPRES_ITEM, ITEM_WEAPON_GUN},
-	{"shotgun", MAPRES_ITEM, ITEM_WEAPON_SHOTGUN},
-	{"rocket", MAPRES_ITEM, ITEM_WEAPON_ROCKET},
-	{"sniper", MAPRES_ITEM, ITEM_WEAPON_SNIPER},
-	{"hammer", MAPRES_ITEM, ITEM_WEAPON_HAMMER},
-	{"---", 0, 0},
-	{"health", MAPRES_ITEM, ITEM_HEALTH},
-	{"armor", MAPRES_ITEM, ITEM_ARMOR},
-	{"---", 0, 0},
-	{"ninja", MAPRES_ITEM, ITEM_NINJA},
-	{0, 0}
+	{"null", 0, 0, {0}},
+	{"---", 0, 0, {0}},
+	{"spawn", MAPRES_SPAWNPOINT, 0, {0}},
+	{"spawn_red", MAPRES_SPAWNPOINT_RED, 0, {0}},
+	{"spawn_blue", MAPRES_SPAWNPOINT_BLUE, 0, {0}},
+	{"---", 0, 0, {0}},
+	{"flagstand_red", MAPRES_FLAGSTAND_RED, 0, {0}},
+	{"flagstand_blue", MAPRES_FLAGSTAND_BLUE, 0, {0}},
+	{"---", 0, 0, {0}},
+	{"gun", MAPRES_ITEM, 1, {ITEM_WEAPON_GUN,0}},
+	{"shotgun", MAPRES_ITEM, 1, {ITEM_WEAPON_SHOTGUN,0}},
+	{"rocket", MAPRES_ITEM, 1, {ITEM_WEAPON_ROCKET,0}},
+	{"sniper", MAPRES_ITEM, 1, {ITEM_WEAPON_SNIPER,0}},
+	{"hammer", MAPRES_ITEM, 1, {ITEM_WEAPON_HAMMER,0}},
+	{"---", 0, 0, {0}},
+	{"health", MAPRES_ITEM, 1, {ITEM_HEALTH,0}},
+	{"armor", MAPRES_ITEM, 1, {ITEM_ARMOR,0}},
+	{"---", 0, 0, {0}},
+	{"ninja", MAPRES_ITEM, 1, {ITEM_NINJA,0}},
+	{0, 0, 0, {0}}
 };
 
 
@@ -904,7 +908,11 @@ static void editor_render()
 		{
 			int x = (int)(world_offset_x+400*zoom/2)/32*32+16;
 			int y = (int)(world_offset_y+300*zoom/2)/32*32+16;
-			ents_new(0, x, y);
+			
+			if(editor_selected_ent >= 0 && editor_selected_ent < ents_count())
+				ents_new(ents_get(editor_selected_ent)->type, x, y);
+			else
+				ents_new(0, x, y);
 		}
 		
 		y += 8;
@@ -955,46 +963,33 @@ int editor_load(const char *filename)
 	}
 	
 	// load entities
+	for(int t = MAPRES_ENTS_START; t < MAPRES_ENTS_END; t++)
 	{
-		int type = -1;
-		for(int i = 0; ent_types[i].name; i++)
-		{
-			if(ent_types[i].id == MAPRES_SPAWNPOINT)
-			{
-				type = i;
-				break;
-			}
-		}
-		
+		// fetch entities of this class
 		int start, num;
-		datafile_get_type(df, MAPRES_SPAWNPOINT, &start, &num);
-		for(int t = 0; t < num; t++)
+		datafile_get_type(df, t, &start, &num);
+
+		for(int i = 0; i < num; i++)
 		{
-			mapres_spawnpoint *sp = (mapres_spawnpoint *)datafile_get_item(df, start+t,0,0);
-			ents_new(type, sp->x, sp->y);
-		}
-	}
-	
-	{
-		int start, num;
-		datafile_get_type(df, MAPRES_ITEM, &start, &num);
-		for(int t = 0; t < num; t++)
-		{
-			mapres_item *it = (mapres_item *)datafile_get_item(df, start+t,0,0);
+			mapres_entity *e = (mapres_entity *)datafile_get_item(df, start+i,0,0);
 			
-			int type = -1;
-			for(int i = 0; ent_types[i].name; i++)
+			// map type	
+			int type = 0;
+			for(int k = 0; ent_types[k].name; k++)
 			{
-				if(ent_types[i].id == MAPRES_ITEM && ent_types[i].item_id == it->type)
+				if(ent_types[k].id == t &&
+					memcmp(ent_types[k].fields, e->data, ent_types[k].numfields*sizeof(int)) == 0)
 				{
-					type = i;
+					type = k;
 					break;
 				}
 			}
-		
-			ents_new(type, it->x, it->y);
+			
+			//dbg_msg("editor", "ent type=%d pos=(%d,%d)", type, e->x, e->y);
+			ents_new(type, e->x, e->y);
 		}
-	}	
+	}
+
 	return 1;
 }
 
@@ -1056,33 +1051,23 @@ int editor_save(const char *filename)
 		}
 	}
 	
-	// add spawnpoints
-	for(int i = 0, id = 0; i < ents_count(); i++)
+	// add entities
+	for(int t = MAPRES_ENTS_START; t < MAPRES_ENTS_END; t++)
 	{
-		entity *ent = ents_get(i);
-		if(ent->type >= 0 && ent_types[ent->type].id == MAPRES_SPAWNPOINT)
+		int id = 0;
+		for(int i = 0; i < ents_count(); i++)
 		{
-			mapres_spawnpoint sp;
-			sp.x = ent->x;
-			sp.y = ent->y;
-			sp.type = 0;
-			datafile_add_item(df, MAPRES_SPAWNPOINT, id, sizeof(sp), &sp);
-			id++;
-		}
-	}
-
-	// add items
-	for(int i = 0, id = 0; i < ents_count(); i++)
-	{
-		entity *ent = ents_get(i);
-		if(ent->type >= 0 && ent_types[ent->type].id == MAPRES_ITEM)
-		{
-			mapres_item it;
-			it.x = ent->x;
-			it.y = ent->y;
-			it.type = ent_types[ent->type].item_id;
-			dbg_msg("editor", "i mapped=%d type=%x", ent->type, it.type);
-			datafile_add_item(df, MAPRES_ITEM, id, sizeof(it), &it);
+			entity *ent = ents_get(i);
+			if(ent_types[ent->type].id != t)
+				continue;
+				
+			int savebuf[64];
+			mapres_entity *mapent = (mapres_entity *)savebuf;
+			mapent->x = ent->x;
+			mapent->y = ent->y;
+			dbg_msg("editor", "saving ent idx=%d pos=(%d,%d)", i, ent->x, ent->y);
+			memcpy(mapent->data, ent_types[ent->type].fields, ent_types[ent->type].numfields*sizeof(int));
+			datafile_add_item(df, t, id, (ent_types[ent->type].numfields+2)*sizeof(int), mapent);
 			id++;
 		}
 	}
@@ -1099,7 +1084,7 @@ static int editor_loop()
 	int mouse_x = 0;
 	int mouse_y = 0;
 	
-	//input::set_mouse_mode(input::mode_relative);
+	inp_mouse_mode_relative();
 	
 	while(!(inp_key_pressed(KEY_LCTRL) && inp_key_pressed('Q')))
 	{	
@@ -1164,12 +1149,10 @@ static int editor_loop()
 		gfx_swap();
 		
 		//
-		/*
 		if(inp_key_pressed(KEY_F1))
-			input::set_mouse_mode(input::mode_absolute);
+			inp_mouse_mode_absolute();
 		if(inp_key_pressed(KEY_F2))
-			input::set_mouse_mode(input::mode_relative);
-			*/
+			inp_mouse_mode_relative();
 
 		// mode switch
 		if(inp_key_down(KEY_TAB))

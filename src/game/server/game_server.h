@@ -112,12 +112,16 @@ class gameobject : public entity
 	int sudden_death;
 	
 public:
+	class flag *flags[2];
+	vec2 flagsstands[2];
+	
 	int gametype;
 	gameobject();
 	virtual void post_reset();
 	virtual void tick();
 	virtual void tick_dm();
 	virtual void tick_tdm();
+	virtual void tick_ctf();
 	virtual void snap(int snapping_client);
 	virtual int getteam(int notthisid);
 };

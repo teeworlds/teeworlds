@@ -409,12 +409,26 @@ game_world world;
 gameobject::gameobject()
 : entity(OBJTYPE_GAME)
 {
-	gametype = GAMETYPE_DM;
+	// select gametype
 	if(strcmp(config.gametype, "ctf") == 0)
+	{
 		gametype = GAMETYPE_CTF;
+		dbg_msg("game", "-- Capture The Flag --");
+	}
 	else if(strcmp(config.gametype, "tdm") == 0)
+	{
 		gametype = GAMETYPE_TDM;
+		dbg_msg("game", "-- Team Death Match --");
+	}
+	else
+	{
+		gametype = GAMETYPE_DM;
+		dbg_msg("game", "-- Death Match --");
+	}
+		
+	//
 	
+	//
 	game_over_tick = -1;
 	sudden_death = 0;
 	round_start_tick = server_tick();
@@ -449,6 +463,10 @@ void gameobject::post_reset()
 		if(players[i].client_id != -1)
 			players[i].respawn();
 	}
+}
+
+void gameobject::tick_ctf()
+{
 }
 
 void gameobject::tick_dm()
@@ -533,6 +551,11 @@ void gameobject::tick()
 {
 	switch(gametype)
 	{
+	case GAMETYPE_CTF:
+		{
+			tick_ctf();
+			break;
+		}
 	case GAMETYPE_TDM:
 		{
 			tick_tdm();
@@ -794,19 +817,40 @@ void player::respawn()
 	spawning = true;
 }
 
-void player::try_respawn()
+bool try_spawntype(int t, vec2 *pos)
 {
 	// get spawn point
 	int start, num;
-	map_get_type(1, &start, &num);
+	map_get_type(t, &start, &num);
+	if(!num)
+		return false;
+		
+	mapres_spawnpoint *sp = (mapres_spawnpoint*)map_get_item(start + (rand()%num), NULL, NULL);
+	*pos = vec2((float)sp->x, (float)sp->y);
+	return true;
+}
 
+
+void player::try_respawn()
+{
 	vec2 spawnpos = vec2(100.0f, -60.0f);
-	if(num)
-	{
-		mapres_spawnpoint *sp = (mapres_spawnpoint*)map_get_item(start + (rand()%num), NULL, NULL);
-		spawnpos = vec2((float)sp->x, (float)sp->y);
-	}
 	
+	// get spawn point
+	if(gameobj->gametype == GAMETYPE_CTF)
+	{
+		// try first try own team spawn, then normal spawn and then enemy
+		if(!try_spawntype(MAPRES_SPAWNPOINT_RED+(team&1), &spawnpos))
+		{
+			if(!try_spawntype(MAPRES_SPAWNPOINT, &spawnpos))
+				try_spawntype(MAPRES_SPAWNPOINT_RED+((team+1)&1), &spawnpos);
+		}
+	}
+	else
+	{
+		if(!try_spawntype(MAPRES_SPAWNPOINT, &spawnpos))
+			try_spawntype(MAPRES_SPAWNPOINT_RED+(rand()&1), &spawnpos);
+	}
+		
 	// check if the position is occupado
 	entity *ents[2] = {0};
 	int types[] = {OBJTYPE_PLAYER};
@@ -822,7 +866,7 @@ void player::try_respawn()
 	defered_pos = pos;
 	
 
-	health = data->playerinfo[gameobj->gametype].maxhealth;
+	health = 10;
 	armor = 0;
 	jumped = 0;
 	dead = false;
@@ -1642,18 +1686,18 @@ void powerup::tick()
 		switch (type)
 		{
 		case POWERUP_HEALTH:
-			if(pplayer->health < data->playerinfo[gameobj->gametype].maxhealth)
+			if(pplayer->health < 10)
 			{
 				create_sound(pos, SOUND_PICKUP_HEALTH, 0);
-				pplayer->health = min((int)data->playerinfo[gameobj->gametype].maxhealth, pplayer->health + data->powerupinfo[type].amount);
+				pplayer->health = min(10, pplayer->health + data->powerupinfo[type].amount);
 				respawntime = data->powerupinfo[type].respawntime;
 			}
 			break;
 		case POWERUP_ARMOR:
-			if(pplayer->armor < data->playerinfo[gameobj->gametype].maxarmor)
+			if(pplayer->armor < 10)
 			{
 				create_sound(pos, SOUND_PICKUP_ARMOR, 0);
-				pplayer->armor = min((int)data->playerinfo[gameobj->gametype].maxarmor, pplayer->armor + data->powerupinfo[type].amount);
+				pplayer->armor = min(10, pplayer->armor + data->powerupinfo[type].amount);
 				respawntime = data->powerupinfo[type].respawntime;
 			}
 			break;
@@ -1753,6 +1797,8 @@ void flag::reset()
 
 void flag::tick()
 {
+	// THIS CODE NEEDS TO BE REWRITTEN. ITS NOT SAVE AT ALL
+	
 	// wait for respawn
 	if(spawntick > 0)
 	{
@@ -1763,17 +1809,34 @@ void flag::tick()
 	}
 
 	// Check if a player intersected us
-	vec2 meh;
-	player* pplayer = intersect_player(pos, pos + vel, meh, 0);
-	if (pplayer)
+	if(!carrying_player)
 	{
-		if (!carrying_player)
-			carrying_player = pplayer;
+		player *players[MAX_CLIENTS];
+		int types[] = {OBJTYPE_PLAYER};
+		int num = world.find_entities(pos, 32.0f, (entity**)players, MAX_CLIENTS, types, 1);
+		for(int i = 0; i < num; i++)
+		{
+			if(players[i]->team != team)
+			{
+				carrying_player = players[i];
+				break;
+			}
+		}
+		
+		if(!carrying_player)
+		{
+			vel.y += 0.25f;
+			vec2 new_pos = pos + vel;
 
-		// TODO: something..?
+			col_intersect_line(pos, new_pos, &new_pos);
+
+			pos = new_pos;
+
+			if (is_grounded())
+				vel.x = vel.y = 0;
+		}
 	}
-
-	if (carrying_player)
+	else
 	{
 		if (carrying_player->dead)
 			carrying_player = 0x0;
@@ -1782,19 +1845,6 @@ void flag::tick()
 			vel = carrying_player->pos - pos;
 			pos = carrying_player->pos;
 		}
-	}
-	
-	if (!carrying_player)
-	{
-		vel.y += 0.25f;
-		vec2 new_pos = pos + vel;
-
-		col_intersect_line(pos, new_pos, &new_pos);
-
-		pos = new_pos;
-
-		if (is_grounded())
-			vel.x = vel.y = 0;
 	}
 }
 
@@ -1973,6 +2023,8 @@ void mods_tick()
 				{
 					mods_client_enter(MAX_CLIENTS-i-1);
 					strcpy(players[MAX_CLIENTS-i-1].name, "(bot)");
+					if(gameobj->gametype != GAMETYPE_DM)
+						players[MAX_CLIENTS-i-1].team = count&1;
 				}
 				count = -1;
 			}
@@ -2186,6 +2238,23 @@ void mods_init()
 			 // perhaps we can get rid of it. seems like a stupid thing to have
 			powerup *ppower = new powerup(type, subtype);
 			ppower->pos = vec2(it->x, it->y);
+		}
+	}
+	
+	if(gameobj->gametype == GAMETYPE_CTF)
+	{
+		// fetch flagstands
+		for(int i = 0; i < 2; i++)
+		{
+			mapres_flagstand *stand;
+			stand = (mapres_flagstand *)map_find_item(MAPRES_FLAGSTAND_RED+i, 0);
+			if(stand)
+				gameobj->flagsstands[i] = vec2(stand->x, stand->y);
+
+			flag *f = new flag(i);
+			f->pos = gameobj->flagsstands[i];
+			//world.insert_entity(f);
+			dbg_msg("game", "flag at %f,%f", f->pos.x, f->pos.y);
 		}
 	}
 	

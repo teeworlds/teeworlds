@@ -399,6 +399,13 @@ int datafile_add_item(DATAFILE_OUT *df, int type, int id, int size, void *data)
 	df->items[df->num_items].id = id;
 	df->items[df->num_items].size = size;
 	
+	/*
+	dbg_msg("datafile", "added item type=%d id=%d size=%d", type, id, size);
+	int i;
+	for(i = 0; i < size/4; i++)
+		dbg_msg("datafile", "\t%d: %08x %d", i, ((int*)data)[i], ((int*)data)[i]);
+	*/
+	
 	/* copy data */
 	df->items[df->num_items].data = mem_alloc(size, 1);
 	mem_copy(df->items[df->num_items].data, data, size);

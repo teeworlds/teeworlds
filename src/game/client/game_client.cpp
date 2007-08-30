@@ -789,7 +789,7 @@ static void render_flag(const obj_flag *prev, const obj_flag *current)
 	float size = 64.0f;
 
     gfx_blend_normal();
-    gfx_texture_set(0);
+    gfx_texture_set(-1);
     gfx_quads_begin();
 	
 	gfx_quads_setrotation(angle);
@@ -805,7 +805,7 @@ static void render_flag(const obj_flag *prev, const obj_flag *current)
 		0, // starty
 		1, // endx
 		1); // endy								
-    gfx_quads_drawTL(pos.x,pos.y,size,size);
+    gfx_quads_draw(pos.x,pos.y,size,size);
     gfx_quads_end();
 }
 
@@ -1075,7 +1075,7 @@ static void render_player(const obj_player *prev, const obj_player *player)
 	if(player->health < 0) // dont render dead players
 		return;
 		
-	int skin = gametype == GAMETYPE_TDM ? skinseed + player->team : player->clientid;
+	int skin = gametype == GAMETYPE_DM ? player->clientid : skinseed + player->team;
 
 	vec2 direction = get_direction(player->angle);
 	float angle = player->angle/256.0f;

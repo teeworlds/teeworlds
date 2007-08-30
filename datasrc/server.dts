@@ -1,6 +1,5 @@
 const array:int sound = sounds.*
 const array:int weapon = weapons.*
-const array:int gametype = playerstats.*
 const array:int powerup = powerups.*
 
 struct weapon {
@@ -21,13 +20,7 @@ struct powerupinf {
 	int startspawntime = startspawntime@1
 }
 
-struct playerstats {
-	int maxhealth = maxhealth@1
-	int maxarmor = maxarmor@1
-}
-
 struct data_container {
 	array:weapon weapons = weapons.*
-	array:playerstats playerinfo = playerstats.*
 	array:powerupinf powerupinfo = powerups.*
 }

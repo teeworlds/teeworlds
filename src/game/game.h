@@ -27,10 +27,15 @@ inline float get_angle(vec2 dir)
 inline bool col_check_point(float x, float y) { return col_check_point((int)x, (int)y) != 0; }
 inline bool col_check_point(vec2 p) { return col_check_point(p.x, p.y); }
 
+struct mapres_entity
+{
+	int x, y;
+	int data[];
+};
+
 struct mapres_spawnpoint
 {
 	int x, y;
-	int type;
 };
 
 struct mapres_item
@@ -39,14 +44,21 @@ struct mapres_item
 	int type;
 };
 
+struct mapres_flagstand
+{
+	int x, y;
+};
+
 enum
 {
+	MAPRES_ENTS_START=1,
 	MAPRES_SPAWNPOINT=1,
 	MAPRES_ITEM=2,
-	MAPRES_SPAWNPOINT_RED=2,
-	MAPRES_SPAWNPOINT_BLUE=3,
-	MAPRES_FLAGSTAND_RED=4,
-	MAPRES_FLAGSTAND_BLUE=5,
+	MAPRES_SPAWNPOINT_RED=3,
+	MAPRES_SPAWNPOINT_BLUE=4,
+	MAPRES_FLAGSTAND_RED=5,
+	MAPRES_FLAGSTAND_BLUE=6,
+	MAPRES_ENTS_END,
 	
 	ITEM_NULL=0,
 	ITEM_WEAPON_GUN=0x00010001,
