@@ -189,6 +189,7 @@ static void client_send_error(const char *error)
 	*/
 }
 
+
 static void client_send_input()
 {
 	msg_pack_start_system(NETMSG_INPUT, 0);
@@ -597,7 +598,10 @@ static void client_process_packet(NETPACKET *packet)
 						if(inputs[k].tick == input_predtick)
 						{
 							float wanted_latency = inputs[k].latency - time_left/1000.0f + 0.01f;
-							prediction_latency = prediction_latency*0.95f + wanted_latency*0.05f;
+							if(wanted_latency > prediction_latency)
+								prediction_latency = prediction_latency*0.90f + wanted_latency*0.10f;
+							else
+								prediction_latency = prediction_latency*0.95f + wanted_latency*0.05f;
 							//dbg_msg("DEBUG", "predlatency=%f", prediction_latency);
 							break;
 						}
@@ -890,7 +894,18 @@ static void client_run(const char *direct_connect_server)
 				intratick = (now - prevtick_start) / (float)(curtick_start-prevtick_start);
 
 				// 25 frames ahead
-				int new_predtick = current_tick+prediction_latency*SERVER_TICK_SPEED;
+				int64 last_pred_game_time = 0;
+				int64 predicted_game_time = (now - game_start_time) + (int64)(time_freq()*prediction_latency);
+				if(predicted_game_time < last_pred_game_time)
+					predicted_game_time = last_pred_game_time;
+				last_pred_game_time = predicted_game_time;
+				
+				//int64 predictiontime = game_start_time + time_freq()+ prediction_latency*SERVER_TICK_SPEED
+				int new_predtick = (predicted_game_time*SERVER_TICK_SPEED) / time_freq();
+				
+				int64 predtick_start_time = (new_predtick*time_freq())/SERVER_TICK_SPEED;
+				intrapredtick = (predicted_game_time - predtick_start_time)*SERVER_TICK_SPEED/(float)time_freq();
+				
 				if(new_predtick > current_predtick)
 				{
 					//dbg_msg("")
@@ -901,6 +916,8 @@ static void client_run(const char *direct_connect_server)
 					client_send_input();
 				}
 			}
+			
+			//intrapredtick = current_predtick
 			
 			if(repredict)
 				modc_predict();

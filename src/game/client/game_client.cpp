@@ -1148,6 +1148,8 @@ static void render_player(const obj_player *prev_obj, const obj_player *player_o
 	prev = *prev_obj;
 	player = *player_obj;
 	
+	float intratick = client_intratick();
+	
 	if(player.health < 0) // dont render dead players
 		return;
 	
@@ -1156,6 +1158,7 @@ static void render_player(const obj_player *prev_obj, const obj_player *player_o
 		// apply predicted results
 		predicted_player.write(&player);
 		predicted_prev_player.write(&prev);
+		intratick = client_intrapredtick();
 	}
 		
 	int skin = charids[player.clientid];
@@ -1165,7 +1168,7 @@ static void render_player(const obj_player *prev_obj, const obj_player *player_o
 
 	vec2 direction = get_direction(player.angle);
 	float angle = player.angle/256.0f;
-	vec2 position = mix(vec2(prev.x, prev.y), vec2(player.x, player.y), client_intratick());
+	vec2 position = mix(vec2(prev.x, prev.y), vec2(player.x, player.y), intratick);
 	
 	if(prev.health < 0) // Don't flicker from previous position
 		position = vec2(player.x, player.y);
@@ -1187,12 +1190,12 @@ static void render_player(const obj_player *prev_obj, const obj_player *player_o
 
 	if (player.weapon == WEAPON_HAMMER)
 	{
-		float a = clamp((client_tick()-player.attacktick+client_intratick())/10.0f, 0.0f, 1.0f);
+		float a = clamp((client_tick()-player.attacktick+intratick)/10.0f, 0.0f, 1.0f);
 		anim_eval_add(&state, &data->animations[ANIM_HAMMER_SWING], a, 1.0f);
 	}
 	if (player.weapon == WEAPON_NINJA)
 	{
-		float a = clamp((client_tick()-player.attacktick+client_intratick())/40.0f, 0.0f, 1.0f);
+		float a = clamp((client_tick()-player.attacktick+intratick)/40.0f, 0.0f, 1.0f);
 		anim_eval_add(&state, &data->animations[ANIM_NINJA_SWING], a, 1.0f);
 	}
 		
@@ -1204,7 +1207,7 @@ static void render_player(const obj_player *prev_obj, const obj_player *player_o
 		//gfx_quads_begin();
 
 		vec2 pos = position;
-		vec2 hook_pos = mix(vec2(prev.hook_x, prev.hook_y), vec2(player.hook_x, player.hook_y), client_intratick());
+		vec2 hook_pos = mix(vec2(prev.hook_x, prev.hook_y), vec2(player.hook_x, player.hook_y), intratick);
 		
 		float d = distance(pos, hook_pos);
 		vec2 dir = normalize(pos-hook_pos);
@@ -1302,7 +1305,7 @@ static void render_player(const obj_player *prev_obj, const obj_player *player_o
 		{
 			// TODO: should be an animation
 			recoil = 0;
-			float a = (client_tick()-player.attacktick+client_intratick())/5.0f;
+			float a = (client_tick()-player.attacktick+intratick)/5.0f;
 			if(a < 1)
 				recoil = sinf(a*pi);
 			p = position + dir * data->weapons[iw].offsetx - dir*recoil*10.0f;
@@ -1319,7 +1322,6 @@ static void render_player(const obj_player *prev_obj, const obj_player *player_o
 				int phase1tick = (client_tick() - player.attacktick);
 				if (phase1tick < (data->weapons[iw].muzzleduration + 3))
 				{
-					float intratick = client_intratick();
 					float t = ((((float)phase1tick) + intratick)/(float)data->weapons[iw].muzzleduration);
 					alpha = LERP(2.0, 0.0f, min(1.0f,max(0.0f,t)));
 				}
@@ -1818,7 +1820,7 @@ void render_game()
 		}
 	}
 	
-	local_player_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_intratick());
+	local_player_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_intrapredtick());
 	//local_player_pos = predicted_player.pos;
 	
 	// everything updated, do events
