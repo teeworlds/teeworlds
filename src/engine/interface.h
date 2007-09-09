@@ -706,14 +706,12 @@ int modmenu_render(int ingame);
 
 /* undocumented callbacks */
 void modc_message(int msg);
+void modc_predict();
 void mods_message(int msg, int client_id);
+
 
 const char *modc_net_version();
 const char *mods_net_version();
-
-// unused
-// const char *modc_version();
-// const char *mods_version();
 
 /* server */
 int server_getclientinfo(int client_id, CLIENT_INFO *info);
@@ -769,14 +767,16 @@ int client_send_msg();
 
 /* client */
 int client_tick();
+int client_predtick();
 float client_intratick();
+float client_intrapredtick();
 int client_tickspeed();
 float client_frametime();
 float client_localtime();
 
 int client_state();
 const char *client_error_string();
-
+int *client_get_input(int tick);
 
 void client_connect(const char *address);
 void client_disconnect();

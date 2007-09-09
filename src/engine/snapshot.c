@@ -21,7 +21,7 @@ int snapshot_get_item_datasize(SNAPSHOT *snap, int index)
 
 int snapshot_get_item_index(SNAPSHOT *snap, int key)
 {
-    /* TODO: this should not be a linear search. very bad */
+    /* TODO: OPT: this should not be a linear search. very bad */
     int i;
     for(i = 0; i < snap->num_items; i++)
     {
@@ -135,6 +135,8 @@ static void undiff_item(int *past, int *diff, int *out, int size)
 	}
 }
 
+
+// TODO: OPT: this should be made much faster
 int snapshot_create_delta(SNAPSHOT *from, SNAPSHOT *to, void *dstdata)
 {
 	SNAPSHOT_DELTA *delta = (SNAPSHOT_DELTA *)dstdata;

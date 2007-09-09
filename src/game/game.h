@@ -20,6 +20,80 @@ inline float get_angle(vec2 dir)
 	return a;
 }
 
+
+template<typename T>
+inline T saturated_add(T min, T max, T current, T modifier)
+{
+	if(modifier < 0)
+	{
+		if(current < min)
+			return current;
+		current += modifier;
+		if(current < min)
+			current = min;
+		return current;
+	}
+	else
+	{
+		if(current > max)
+			return current;
+		current += modifier;
+		if(current > max)
+			current = max;
+		return current;
+	}
+}
+
+void move_point(vec2 *inout_pos, vec2 *inout_vel, float elasticity, int *bounces);
+void move_box(vec2 *inout_pos, vec2 *inout_vel, vec2 size, float elasticity);
+
+
+// hooking stuff
+enum
+{
+	HOOK_RETRACTED=-1,
+	HOOK_IDLE=0,
+	HOOK_FLYING,
+	HOOK_GRABBED
+};
+
+class world_core
+{
+public:
+	world_core()
+	{
+		mem_zero(players, sizeof(players));
+	}
+		
+	class player_core *players[MAX_CLIENTS];
+};
+
+class player_core
+{
+public:
+	world_core *world;
+	
+	vec2 pos;
+	vec2 vel;
+	
+	vec2 hook_pos;
+	vec2 hook_dir;
+	int hook_tick;
+	int hook_state;
+	int hooked_player;
+	
+	int jumped;
+	player_input input;
+	
+	void tick();
+	void move();
+	
+	void read(const obj_player_core *obj_core);
+	void write(obj_player_core *obj_core);
+	void quantize();
+};
+
+
 #define LERP(a,b,t) (a + (b-a) * t)
 #define min(a, b) ( a > b ? b : a)
 #define max(a, b) ( a > b ? a : b)

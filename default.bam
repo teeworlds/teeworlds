@@ -201,7 +201,7 @@ function build(settings)
 	engine_settings = settings:copy()
 	
 	if family == "windows" then
-		engine_settings.cc.flags = "/wd4244 /TP"
+		engine_settings.cc.flags = "/wd4244"
 	else
 		engine_settings.cc.flags = "-Wall"
 		engine_settings.linker.flags = ""
@@ -231,12 +231,12 @@ function build(settings)
 	objs = Compile(settings, tools_src)
 	tools = {}
 	for i,v in objs do
-		toolname = PathFilename(file_base(v))
+		toolname = PathFilename(PathBase(v))
 		tools[i] = Link(settings, toolname, v, engine)
 	end
 	
 	-- build client, server and master server
-	client_exe = Link(settings, "teewars", game_shared, game_client, engine, client, editor, glfw, pa, client_link_other)
+	client_exe = Link(settings, "teewars", game_shared, game_client, engine, client, editor, glfw, pa, client_libs, client_link_other)
 	server_exe = Link(server_settings, "teewars_srv", engine, server, game_shared, game_server)
 	masterserver_exe = Link(server_settings, "mastersrv", masterserver, engine)
 

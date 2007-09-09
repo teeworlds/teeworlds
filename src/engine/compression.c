@@ -1,23 +1,23 @@
 #include "system.h"
 #include <string.h>
 
-// Format: ESDDDDDD EDDDDDDD EDD...  Extended, Data, Sign
+/* Format: ESDDDDDD EDDDDDDD EDD...  Extended, Data, Sign */
 unsigned char *vint_pack(unsigned char *dst, int i) 
 { 
-	*dst = (i>>25)&0x40; // set sign bit if i<0
-	i = i^(i>>31); // if(i<0) i = ~i
+	*dst = (i>>25)&0x40; /* set sign bit if i<0 */
+	i = i^(i>>31); /* if(i<0) i = ~i */
 
-	*dst |= i&0x3F; // pack 6bit into dst
-	i >>= 6; // discard 6 bits
+	*dst |= i&0x3F; /* pack 6bit into dst */
+	i >>= 6; /* discard 6 bits */
 	if(i)
 	{
-		*dst |= 0x80; // set extend bit
+		*dst |= 0x80; /* set extend bit */
 		while(1)
 		{
 			dst++;
-			*dst = i&(0x7F); // pack 7bit
-			i >>= 7; // discard 7 bits
-			*dst |= (i!=0)<<7; // set extend bit (may branch)
+			*dst = i&(0x7F); /* pack 7bit */
+			i >>= 7; /* discard 7 bits */
+			*dst |= (i!=0)<<7; /* set extend bit (may branch) */
 			if(!i)
 				break;
 		}
@@ -52,7 +52,7 @@ const unsigned char *vint_unpack(const unsigned char *src, int *i)
 	} while(0);
 
 	src++;
-	*i ^= -sign; // if(sign) *i = ~(*i)
+	*i ^= -sign; /* if(sign) *i = ~(*i) */
 	return src; 
 } 
 
@@ -85,7 +85,7 @@ long intpack_compress(const void *src_, int size, void *dst_)
 }
 
 
-//
+/* */
 long zerobit_compress(const void *src_, int size, void *dst_)
 {
 	unsigned char *src = (unsigned char *)src_;

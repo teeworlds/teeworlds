@@ -1,5 +1,22 @@
 // NOTE: Be very careful when editing this file as it will change the network version
 
+// --------- PHYSICS TWEAK! --------
+const float ground_control_speed = 7.0f;
+const float ground_control_accel = 2.0f;
+const float ground_friction = 0.5f;
+const float ground_jump_speed = 13.5f;
+const float air_control_speed = 3.5f;
+const float air_control_accel = 1.2f;
+const float air_friction = 0.95f;
+const float hook_length = 34*10.0f;
+const float hook_fire_speed = 45.0f;
+const float hook_drag_accel = 3.0f;
+const float hook_drag_speed = 15.0f;
+const float gravity = 0.5f;
+const float wall_friction = 0.80f;
+const float wall_jump_speed_up = ground_jump_speed*0.8f;
+const float wall_jump_speed_out = ground_jump_speed*0.8f;
+
 // Network stuff
 enum
 {
@@ -129,7 +146,19 @@ struct obj_flag
 	int team;
 };
 
-struct obj_player
+
+struct obj_player_core
+{
+	int x, y;
+	int vx, vy;
+	int angle;
+
+	int hook_state;
+	int hook_x, hook_y;
+	int hook_dx, hook_dy;
+};
+
+struct obj_player : public obj_player_core
 {
 	int local;
 	int clientid;
@@ -138,10 +167,6 @@ struct obj_player
 	int health;
 	int armor;
 	int ammocount;
-	
-	int x, y;
-	int vx, vy;
-	int angle;
 	
 	int weapon; // current active weapon
 
@@ -152,7 +177,5 @@ struct obj_player
 	int latency_flux;
 	int emote;
 	
-	int hook_active;
-	int hook_x, hook_y;
 	int team;
 };

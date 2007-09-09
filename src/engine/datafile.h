@@ -5,7 +5,7 @@ typedef struct DATAFILE_t DATAFILE;
 /* read access */
 DATAFILE *datafile_load(const char *filename);
 DATAFILE *datafile_load_old(const char *filename);
-void *datafile_get_data(DATAFILE *df, int index); // automaticly load the data for the item
+void *datafile_get_data(DATAFILE *df, int index);
 int datafile_get_datasize(DATAFILE *df, int index);
 void datafile_unload_data(DATAFILE *df, int index);
 void *datafile_get_item(DATAFILE *df, int index, int *type, int *id);

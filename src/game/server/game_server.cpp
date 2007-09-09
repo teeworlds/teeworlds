@@ -9,26 +9,6 @@
 
 data_container *data = 0x0;
 
-// --------- DEBUG STUFF ---------
-const int debug_bots = 3;
-
-// --------- PHYSICS TWEAK! --------
-const float ground_control_speed = 7.0f;
-const float ground_control_accel = 2.0f;
-const float ground_friction = 0.5f;
-const float ground_jump_speed = 13.5f;
-const float air_control_speed = 3.5f;
-const float air_control_accel = 1.2f;
-const float air_friction = 0.95f;
-const float hook_length = 34*10.0f;
-const float hook_fire_speed = 45.0f;
-const float hook_drag_accel = 3.0f;
-const float hook_drag_speed = 15.0f;
-const float gravity = 0.5f;
-const float wall_friction = 0.80f;
-const float wall_jump_speed_up = ground_jump_speed*0.8f;
-const float wall_jump_speed_out = ground_jump_speed*0.8f;
-
 class player* get_player(int index);
 void create_damageind(vec2 p, float angle_mod, int amount);
 void create_explosion(vec2 p, int owner, int weapon, bool bnodamage);
@@ -38,134 +18,6 @@ void create_death(vec2 p);
 void create_sound(vec2 pos, int sound, int loopflags = 0);
 void create_targetted_sound(vec2 pos, int sound, int target, int loopflags = 0);
 class player *intersect_player(vec2 pos0, vec2 pos1, vec2 &new_pos, class entity *notthis = 0);
-
-template<typename T>
-T saturated_add(T min, T max, T current, T modifier)
-{
-	if(modifier < 0)
-	{
-		if(current < min)
-			return current;
-		current += modifier;
-		if(current < min)
-			current = min;
-		return current;
-	}
-	else
-	{
-		if(current > max)
-			return current;
-		current += modifier;
-		if(current > max)
-			current = max;
-		return current;
-	}
-}
-
-// TODO: rewrite this smarter!
-void move_point(vec2 *inout_pos, vec2 *inout_vel, float elasticity, int *bounces)
-{
-	if(bounces)
-		*bounces = 0;
-	
-	vec2 pos = *inout_pos;
-	vec2 vel = *inout_vel;
-	if(col_check_point(pos + vel))
-	{
-		int affected = 0;
-		if(col_check_point(pos.x + vel.x, pos.y))
-		{
-			inout_vel->x *= -elasticity;
-			if(bounces)
-				(*bounces)++;			
-			affected++;
-		}
-
-		if(col_check_point(pos.x, pos.y + vel.y))
-		{
-			inout_vel->y *= -elasticity;
-			if(bounces)
-				(*bounces)++;			
-			affected++;
-		}
-		
-		if(affected == 0)
-		{
-			inout_vel->x *= -elasticity;
-			inout_vel->y *= -elasticity;
-		}
-	}
-	else
-	{
-		*inout_pos = pos + vel;
-	}
-}
-
-// TODO: rewrite this smarter!
-void move_box(vec2 *inout_pos, vec2 *inout_vel, vec2 size, float elasticity)
-{
-	// do the move
-	vec2 pos = *inout_pos;
-	vec2 vel = *inout_vel;
-	
-	float distance = length(vel);
-	int max = (int)distance;
-	
-	vec2 offsets[4] = {	vec2(-size.x/2, -size.y/2), vec2( size.x/2, -size.y/2),
-						vec2(-size.x/2,  size.y/2), vec2( size.x/2,  size.y/2)};
-	
-	if(distance > 0.00001f)
-	{
-		vec2 old_pos = pos;
-		for(int i = 0; i <= max; i++)
-		{
-			float amount = i/(float)max;
-			if(max == 0)
-				amount = 0;
-			
-			vec2 new_pos = pos + vel*amount; // TODO: this row is not nice
-
-			for(int p = 0; p < 4; p++)
-			{
-				vec2 np = new_pos+offsets[p];
-				vec2 op = old_pos+offsets[p];
-				if(col_check_point(np))
-				{
-					int affected = 0;
-					if(col_check_point(np.x, op.y))
-					{
-						vel.x = -vel.x*elasticity;
-						pos.x = old_pos.x;
-						new_pos.x = old_pos.x;
-						affected++;
-					}
-
-					if(col_check_point(op.x, np.y))
-					{
-						vel.y = -vel.y*elasticity;
-						pos.y = old_pos.y;
-						new_pos.y = old_pos.y;
-						affected++;
-					}
-					
-					if(!affected)
-					{
-						new_pos = old_pos;
-						pos = old_pos;
-						vel *= -elasticity;
-					}
-				}
-			}
-			
-			old_pos = new_pos;
-		}
-		
-		pos = old_pos;
-	}
-	
-	*inout_pos = pos;
-	*inout_vel = vel;
-}
 
 //////////////////////////////////////////////////
 // Event handler
@@ -784,8 +636,8 @@ void player::reset()
 	release_hooks();
 	
 	pos = vec2(0.0f, 0.0f);
-	vel = vec2(0.0f, 0.0f);
-	direction = vec2(0.0f, 1.0f);
+	core.vel = vec2(0.0f, 0.0f);
+	//direction = vec2(0.0f, 1.0f);
 	score = 0;
 	dead = true;
 	spawning = false;
@@ -863,7 +715,9 @@ void player::try_respawn()
 	
 	spawning = false;
 	pos = spawnpos;
-	defered_pos = pos;
+	
+	core.pos = pos;
+	core.hooked_player = -1;
 	
 
 	health = 10;
@@ -873,8 +727,10 @@ void player::try_respawn()
 	set_flag(entity::FLAG_ALIVE);
 	state = STATE_PLAYING;
 	
+	core.hook_state = HOOK_IDLE;
+	
 	mem_zero(&input, sizeof(input));
-	vel = vec2(0.0f, 0.0f);
+	core.vel = vec2(0.0f, 0.0f);
 		
 	// init weapons
 	mem_zero(&weapons, sizeof(weapons));
@@ -905,13 +761,14 @@ bool player::is_grounded()
 // releases the hooked player
 void player::release_hooked()
 {
-	hook_state = HOOK_RETRACTED;
-	hooked_player = 0x0;
+	//hook_state = HOOK_RETRACTED;
+	//hooked_player = 0x0;
 }
 
 // release all hooks to this player	
 void player::release_hooks()
 {
+	/*
 	// TODO: loop thru players only
 	for(entity *ent = world.first_entity; ent; ent = ent->next_entity)
 	{
@@ -921,11 +778,13 @@ void player::release_hooks()
 			if(p->hooked_player == this)
 				p->release_hooked();
 		}
-	}
+	}*/
 }
 
 int player::handle_ninja()
 {
+	vec2 direction = normalize(vec2(input.target_x, input.target_y));
+	
 	if ((server_tick() - ninjaactivationtick) > (data->weapons[WEAPON_NINJA].duration * server_tickspeed() / 1000))
 	{
 		// time's up, return
@@ -956,18 +815,18 @@ int player::handle_ninja()
 	if (currentmovetime == 0)
 	{	
 		// reset player velocity
-		vel *= 0.2f;
+		core.vel *= 0.2f;
 		//return MODIFIER_RETURNFLAGS_OVERRIDEWEAPON;
 	}
 	
 	if (currentmovetime > 0)
 	{
 		// Set player velocity
-		vel = activationdir * data->weapons[WEAPON_NINJA].velocity;
+		core.vel = activationdir * data->weapons[WEAPON_NINJA].velocity;
 		vec2 oldpos = pos;
-		move_box(&defered_pos, &vel, vec2(phys_size, phys_size), 0.0f);
+		move_box(&core.pos, &core.vel, vec2(phys_size, phys_size), 0.0f);
 		// reset velocity so the client doesn't predict stuff
-		vel = vec2(0.0f,0.0f);
+		core.vel = vec2(0.0f,0.0f);
 		if ((currentmovetime % 2) == 0)
 		{
 			create_smoke(pos);
@@ -1015,6 +874,8 @@ int player::handle_ninja()
 
 int player::handle_weapons()
 {
+	vec2 direction = normalize(vec2(input.target_x, input.target_y));
+	
 	if(config.stress)
 	{
 		for(int i = 0; i < NUM_WEAPONS; i++)
@@ -1175,7 +1036,7 @@ int player::handle_weapons()
 				dir = normalize(target->pos - pos);
 			else
 				dir = vec2(0,-1);
-			target->vel += dir * 25.0f + vec2(0,-5.0f);
+			target->core.vel += dir * 25.0f + vec2(0,-5.0f);
 		}
 	}
 	if (data->weapons[active_weapon].ammoregentime)
@@ -1228,7 +1089,6 @@ void player::tick()
 		try_respawn();
 
 	// TODO: rework the input to be more robust
-	// TODO: remove this tick count, it feels weird
 	if(dead)
 	{
 		if(server_tick()-die_tick >= server_tickspeed()*5) // auto respawn after 3 sec
@@ -1238,205 +1098,30 @@ void player::tick()
 		return;
 	}
 	
-	// fetch some info
-	bool grounded = is_grounded();
-	int wall_sliding = 0;
-	direction = normalize(vec2(input.target_x, input.target_y));
+	//player_core core;
+	//core.pos = pos;
+	//core.jumped = jumped;
+	core.input = input;
+	core.tick();
 	
-	float max_speed = grounded ? ground_control_speed : air_control_speed;
-	float accel = grounded ? ground_control_accel : air_control_accel;
-	float friction = grounded ? ground_friction : air_friction;
-	
-	if(!grounded && vel.y > 0)
-	{
-		if(input.left && col_check_point((int)(pos.x-phys_size/2)-4, (int)(pos.y)))
-			wall_sliding = -1;
-		if(input.right && col_check_point((int)(pos.x+phys_size/2)+4, (int)(pos.y)))
-			wall_sliding = 1;
-	}
-
-	if(wall_sliding)
-		vel.y *= wall_friction;
-	
-	// handle movement
-	if(input.left)
-		vel.x = saturated_add(-max_speed, max_speed, vel.x, -accel);
-	if(input.right)
-		vel.x = saturated_add(-max_speed, max_speed, vel.x, accel);
-		
-	if(!input.left && !input.right)
-		vel.x *= friction;
-	
-	// handle jumping
-	if(input.jump)
-	{
-		if(!jumped && (grounded || wall_sliding))
-		{
-			create_sound(pos, SOUND_PLAYER_JUMP);
-			if(wall_sliding)
-			{
-				vel.y = -wall_jump_speed_up;
-				vel.x = -wall_jump_speed_out*wall_sliding;
-			}
-			else
-				vel.y = -ground_jump_speed;
-			jumped++;
-		}
-	}
-	else
-		jumped = 0;
-		
-	// do hook
-	if(input.hook)
-	{
-		if(hook_state == HOOK_IDLE)
-		{
-			hook_state = HOOK_FLYING;
-			hook_pos = pos;
-			hook_dir = direction;
-			hook_tick = -1;
-		}
-		else if(hook_state == HOOK_FLYING)
-		{
-			vec2 new_pos = hook_pos+hook_dir*hook_fire_speed;
-
-			// Check against other players first
-			for(entity *ent = world.first_entity; ent; ent = ent->next_entity)
-			{
-				if(ent && ent->objtype == OBJTYPE_PLAYER)
-				{
-					player *p = (player*)ent;
-					if(p != this && !p->dead && distance(p->pos, new_pos) < p->phys_size)
-					{
-						hook_state = HOOK_GRABBED;
-						hooked_player = p;
-						break;
-					}
-				}
-			}
-			
-			if(hook_state == HOOK_FLYING)
-			{
-				// check against ground
-				if(col_intersect_line(hook_pos, new_pos, &new_pos))
-				{
-					hook_state = HOOK_GRABBED;
-					hook_pos = new_pos;	
-				}
-				else if(distance(pos, new_pos) > hook_length)
-				{
-					hook_state = HOOK_RETRACTED;
-				}
-				else
-					hook_pos = new_pos;
-			}
-			
-			if(hook_state == HOOK_GRABBED)
-			{
-				create_sound(pos, SOUND_HOOK_ATTACH);
-				hook_tick = server_tick();
-			}
-		}
-	}
-	else
-	{
-		release_hooked();
-		hook_state = HOOK_IDLE;
-		hook_pos = pos;
-	}
-		
-	if(hook_state == HOOK_GRABBED)
-	{
-		if(hooked_player)
-		{
-			hook_pos = hooked_player->pos;
-			
-			// keep players hooked for a max of 1.5sec
-			if(server_tick() > hook_tick+(server_tickspeed()*3)/2)
-				release_hooked();
-		}
-			
-		/*if(hooked_player)
-			hook_pos = hooked_player->pos;
-
-		float d = distance(pos, hook_pos);
-		vec2 dir = normalize(pos - hook_pos);		
-		if(d > 10.0f) // TODO: fix tweakable variable
-		{
-			float accel = hook_drag_accel * (d/hook_length);
-			vel.x = saturated_add(-hook_drag_speed, hook_drag_speed, vel.x, -accel*dir.x*0.75f);
-			vel.y = saturated_add(-hook_drag_speed, hook_drag_speed, vel.y, -accel*dir.y);
-		}*/
-		
-		// Old version feels much better (to me atleast)
-		if(distance(hook_pos, pos) > 46.0f)
-		{
-			vec2 hookvel = normalize(hook_pos-pos)*hook_drag_accel;
-			// the hook as more power to drag you up then down.
-			// this makes it easier to get on top of an platform
-			if(hookvel.y > 0)
-				hookvel.y *= 0.3f;
-			
-			// the hook will boost it's power if the player wants to move
-			// in that direction. otherwise it will dampen everything abit
-			if((hookvel.x < 0 && input.left) || (hookvel.x > 0 && input.right)) 
-				hookvel.x *= 0.95f;
-			else
-				hookvel.x *= 0.75f;
-			
-			vec2 new_vel = vel+hookvel;
-			
-			// check if we are under the legal limit for the hook
-			if(length(new_vel) < hook_drag_speed || length(new_vel) < length(vel))
-				vel = new_vel; // no problem. apply
-		}
-	}
-		
-	// fix influence of other players, collision + hook
-	// TODO: loop thru players only
-	for(entity *ent = world.first_entity; ent; ent = ent->next_entity)
-	{
-		if(ent && ent->objtype == OBJTYPE_PLAYER)
-		{
-			player *p = (player*)ent;
-			if(p == this || !(p->flags&FLAG_ALIVE))
-				continue; // make sure that we don't nudge our self
-			
-			// handle player <-> player collision
-			float d = distance(pos, p->pos);
-			vec2 dir = normalize(pos - p->pos);
-			if(d < phys_size*1.25f)
-			{
-				float a = phys_size*1.25f - d;
-				vel = vel + dir*a;
-			}
-			
-			// handle hook influence
-			if(p->hooked_player == this)
-			{
-				if(d > phys_size*1.50f) // TODO: fix tweakable variable
-				{
-					float accel = hook_drag_accel * (d/hook_length);
-					vel.x = saturated_add(-hook_drag_speed, hook_drag_speed, vel.x, -accel*dir.x);
-					vel.y = saturated_add(-hook_drag_speed, hook_drag_speed, vel.y, -accel*dir.y);
-				}
-			}
-		}
-	}
 	
 	// handle weapons
 	int retflags = handle_weapons();
+	/*
 	if (!(retflags & (MODIFIER_RETURNFLAGS_OVERRIDEVELOCITY | MODIFIER_RETURNFLAGS_OVERRIDEPOSITION)))
 	{
 		// add gravity
-		if (!(retflags & MODIFIER_RETURNFLAGS_OVERRIDEGRAVITY))
-			vel.y += gravity;
+		//if (!(retflags & MODIFIER_RETURNFLAGS_OVERRIDEGRAVITY))
+			//vel.y += gravity;
 	
 		// do the move
 		defered_pos = pos;
-		move_box(&defered_pos, &vel, vec2(phys_size, phys_size), 0);
-	}
+		move_box(&core.pos, &vel, vec2(phys_size, phys_size), 0);
+	}*/
 
+	//defered_pos = core.pos;
+	//jumped = core.jumped;
+	
 	state = input.state;
 	
 	// Previnput
@@ -1446,8 +1131,12 @@ void player::tick()
 
 void player::tick_defered()
 {
+	core.move();
+	core.quantize();
+	pos = core.pos;
+	
 	// apply the new position
-	pos = defered_pos;
+	//pos = defered_pos;
 }
 
 void player::die(int killer, int weapon)
@@ -1478,13 +1167,14 @@ void player::die(int killer, int weapon)
 
 bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 {
-	vel += force;
+	core.vel += force;
 
 	// player only inflicts half damage on self	
 	if(from == client_id)
 		dmg = max(1, dmg/2);
 
-	if (gameobj->gametype == GAMETYPE_TDM && from >= 0 && players[from].team == team)
+	// CTF and TDM,
+	if (gameobj->gametype != GAMETYPE_DM && from >= 0 && players[from].team == team)
 		return false;
 
 	damage_taken++;
@@ -1567,10 +1257,15 @@ void player::snap(int snaping_client)
 {
 	obj_player *player = (obj_player *)snap_new_item(OBJTYPE_PLAYER, client_id, sizeof(obj_player));
 
-	player->x = (int)pos.x;
-	player->y = (int)pos.y;
-	player->vx = (int)vel.x;
-	player->vy = (int)vel.y;
+	core.write(player);
+	
+	if(snaping_client != client_id)
+	{
+		player->vx = 0; // make sure that we don't send these to clients who don't need them
+		player->vy = 0;
+		player->hook_dx = 0;
+		player->hook_dy = 0;
+	}
 
 	if (emote_stop < server_tick())
 	{
@@ -1612,21 +1307,6 @@ void player::snap(int snaping_client)
 		if(250 - ((server_tick() - last_action)%(250)) < 5)
 			player->emote = EMOTE_BLINK;
 	}
-	
-	player->hook_active = hook_state>0?1:0;
-	player->hook_x = (int)hook_pos.x;
-	player->hook_y = (int)hook_pos.y;
-
-	float a = 0;
-	if(input.target_x == 0)
-		a = atan((float)input.target_y);
-	else
-		a = atan((float)input.target_y/(float)input.target_x);
-		
-	if(input.target_x < 0)
-		a = a+pi;
-		
-	player->angle = (int)(a*256.0f);
 	
 	player->score = score;
 	player->team = team;
@@ -2011,7 +1691,7 @@ void mods_tick()
 	if(world.paused) // make sure that the game object always updates
 		gameobj->tick();
 
-	if(debug_bots)
+	if(config.dbg_bots)
 	{
 		static int count = 0;
 		if(count >= 0)
@@ -2019,13 +1699,14 @@ void mods_tick()
 			count++;
 			if(count == 10)
 			{
-				for(int i = 0; i < debug_bots ; i++)
+				for(int i = 0; i < config.dbg_bots ; i++)
 				{
 					mods_client_enter(MAX_CLIENTS-i-1);
 					strcpy(players[MAX_CLIENTS-i-1].name, "(bot)");
 					if(gameobj->gametype != GAMETYPE_DM)
-						players[MAX_CLIENTS-i-1].team = count&1;
+						players[MAX_CLIENTS-i-1].team = i&1;
 				}
+				
 				count = -1;
 			}
 		}
@@ -2187,7 +1868,15 @@ void mods_init()
 
 	players = new player[MAX_CLIENTS];
 	gameobj = new gameobject;
+	
+	// setup core world	
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		players[i].core.world = &world.core;
+		world.core.players[i] = &players[i].core;
+	}
 
+	//
 	int start, num;
 	map_get_type(MAPRES_ITEM, &start, &num);
 	

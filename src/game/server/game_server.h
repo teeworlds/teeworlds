@@ -85,6 +85,8 @@ public:
 	bool paused;
 	bool reset_requested;
 	
+	world_core core;
+	
 	game_world();
 	int find_entities(vec2 pos, float radius, entity **ents, int max);
 	int find_entities(vec2 pos, float radius, entity **ents, int max, const int* types, int maxtypes);
@@ -229,9 +231,9 @@ public:
 	int last_action;
 	
 	// we need a defered position so we can handle the physics correctly
-	vec2 defered_pos;
-	vec2 vel;
-	vec2 direction;
+	//vec2 defered_pos;
+	//vec2 vel;
+	//vec2 direction;
 
 	//
 	int client_id;
@@ -269,21 +271,14 @@ public:
 	int latency_avg;
 	int latency_min;
 	int latency_max;
-
-	// hooking stuff
-	enum
-	{
-		HOOK_RETRACTED=-1,
-		HOOK_IDLE=0,
-		HOOK_FLYING,
-		HOOK_GRABBED
-	};
 	
-	int hook_state;
-	int hook_tick;
-	player *hooked_player;
-	vec2 hook_pos;
-	vec2 hook_dir;
+	player_core core;
+	
+	//int hook_state;
+	//int hook_tick;
+	//player *hooked_player;
+	//vec2 hook_pos;
+	//vec2 hook_dir;
 
 	//
 	player();

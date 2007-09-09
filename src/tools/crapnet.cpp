@@ -38,8 +38,8 @@ int run(int port, NETADDR4 dest)
 			if(bytes <= 0)
 				break;
 				
-			if((rand()%10) == 0) // drop the packet
-				continue;
+			//if((rand()%10) == 0) // drop the packet
+			//	continue;
 
 			// create new packet				
 			packet *p = (packet *)mem_alloc(sizeof(packet)+bytes, 1);
@@ -100,13 +100,13 @@ int run(int port, NETADDR4 dest)
 				net_udp4_send(socket, &p->send_to, p->data, p->data_size);
 				
 				// update lag
-				double flux = rand()/(double)RAND_MAX;
+				double flux = 0; //rand()/(double)RAND_MAX;
 				int ms_spike = 0;
-				int ms_flux = 20;
-				int ms_ping = 20;
+				int ms_flux = 00;
+				int ms_ping = 100;
 				current_latency = ((time_freq()*ms_ping)/1000) + (int64)(((time_freq()*ms_flux)/1000)*flux); // 50ms
 				
-				if((p->id%100) == 0)
+				if(ms_spike && (p->id%100) == 0)
 					current_latency += (time_freq()*ms_spike)/1000;
 
 				mem_free(p);

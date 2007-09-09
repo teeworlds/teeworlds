@@ -7,7 +7,7 @@
 #include "config.h"
 
 
-// buffered stream for reading lines, should perhaps be something smaller
+/* buffered stream for reading lines, should perhaps be something smaller */
 typedef struct
 {
 	char buffer[4*1024];
@@ -33,9 +33,9 @@ char *linereader_get(LINEREADER *lr)
 	{
 		if(lr->buffer_pos >= lr->buffer_size)
 		{
-			// fetch more
+			/* fetch more */
 
-			// move the remaining part to the front
+			/* move the remaining part to the front */
 			unsigned left = lr->buffer_size - line_start;
 			if(line_start > lr->buffer_size)
 				left = 0;
@@ -43,7 +43,7 @@ char *linereader_get(LINEREADER *lr)
 				mem_move(lr->buffer, &lr->buffer[line_start], left);
 			lr->buffer_pos = left;
 
-			// fill the buffer
+			/* fill the buffer */
 			unsigned read = io_read(lr->io, &lr->buffer[lr->buffer_pos], lr->buffer_max_size-lr->buffer_pos);
 			lr->buffer_size = left + read;
 			line_start = 0;
@@ -52,20 +52,20 @@ char *linereader_get(LINEREADER *lr)
 			{
 				if(left)
 				{
-					lr->buffer[left] = 0; // return the last line
+					lr->buffer[left] = 0; /* return the last line */
 					lr->buffer_pos = left;
 					lr->buffer_size = left;
 					return lr->buffer;
 				}
 				else
-					return 0x0; // we are done!
+					return 0x0; /* we are done! */
 			}
 		}
 		else
 		{
 			if(lr->buffer[lr->buffer_pos] == '\n' || lr->buffer[lr->buffer_pos] == '\r')
 			{
-				// line found
+				/* line found */
 				lr->buffer[lr->buffer_pos] = 0;
 				lr->buffer_pos++;
 				return &lr->buffer[line_start];
@@ -176,7 +176,6 @@ void config_save(const char *filename)
 
 	dbg_msg("config/save", "saving config to %s", filename);
 
-	//file_stream file;
 	IOHANDLE file = io_open(filename, IOFLAG_WRITE);
 
 	if(file)

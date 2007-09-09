@@ -20,7 +20,9 @@
 
 static SNAPBUILD builder;
 
-static int64 lasttick;
+static int64 game_start_time;
+static int current_tick = 0;
+
 static int64 lastheartbeat;
 static NETADDR4 master_server;
 
@@ -36,11 +38,11 @@ void *snap_new_item(int type, int id, int size)
 typedef struct
 {
 	short next;
-	short state; // 0 = free, 1 = alloced, 2 = timed
+	short state; /* 0 = free, 1 = alloced, 2 = timed */
 	int timeout_tick;
 } SNAP_ID;
 
-static const int MAX_IDS = 8*1024; // should be lowered
+static const int MAX_IDS = 8*1024; /* should be lowered */
 static SNAP_ID snap_ids[8*1024];
 static int snap_first_free_id;
 static int snap_first_timed_id;
@@ -48,6 +50,42 @@ static int snap_last_timed_id;
 static int snap_id_usage;
 static int snap_id_inusage;
 static int snap_id_inited = 0;
+
+
+enum
+{
+	SRVCLIENT_STATE_EMPTY = 0,
+	SRVCLIENT_STATE_CONNECTING = 1,
+	SRVCLIENT_STATE_INGAME = 2,
+};
+
+typedef struct 
+{
+	int data[MAX_INPUT_SIZE];
+	int pred_tick; /* tick that the client predicted for the input */
+	int game_tick; /* the tick that was chosen for the input */
+	int64 timeleft; /* how much time in ms there were left before this should be applied */
+} CLIENT_INPUT;
+	
+/* */
+typedef struct
+{
+	/* connection state info */
+	int state;
+	int latency;
+	
+	int last_acked_snapshot;
+	SNAPSTORAGE snapshots;
+	
+	CLIENT_INPUT inputs[200]; /* TODO: handle input better */
+	int current_input;
+	
+	char name[MAX_NAME_LENGTH];
+	char clan[MAX_CLANNAME_LENGTH];
+} CLIENT;
+
+static CLIENT clients[MAX_CLIENTS];
+static NETSERVER *net;
 
 static void snap_init_id()
 {
@@ -72,17 +110,17 @@ int snap_new_id()
 {
 	dbg_assert(snap_id_inited == 1, "requesting id too soon");
 	
-	// process timed ids
+	/* process timed ids */
 	while(snap_first_timed_id != -1 && snap_ids[snap_first_timed_id].timeout_tick < server_tick())
 	{
 		int next_timed = snap_ids[snap_first_timed_id].next;
 		
-		// add it to the free list
+		/* add it to the free list */
 		snap_ids[snap_first_timed_id].next = snap_first_free_id;
 		snap_ids[snap_first_timed_id].state = 0;
 		snap_first_free_id = snap_first_timed_id;
 		
-		// remove it from the timed list
+		/* remove it from the timed list */
 		snap_first_timed_id = next_timed;
 		if(snap_first_timed_id == -1)
 			snap_last_timed_id = -1;
@@ -120,34 +158,14 @@ void snap_free_id(int id)
 	}
 }
 
-enum
-{
-	SRVCLIENT_STATE_EMPTY = 0,
-	SRVCLIENT_STATE_CONNECTING = 1,
-	SRVCLIENT_STATE_INGAME = 2,
-};
-
-//
-typedef struct
-{
-	// connection state info
-	int state;
-	int latency;
-	
-	int last_acked_snapshot;
-	SNAPSTORAGE snapshots;
-
-	char name[MAX_NAME_LENGTH];
-	char clan[MAX_CLANNAME_LENGTH];
-} CLIENT;
-
-static CLIENT clients[MAX_CLIENTS];
-static int current_tick = 0;
-static NETSERVER *net;
-
 int server_tick()
 {
 	return current_tick;
+}
+
+int64 server_tick_start_time(int tick)
+{
+	return game_start_time + (time_freq()*tick)/SERVER_TICK_SPEED;
 }
 
 int server_tickspeed()
@@ -201,7 +219,7 @@ int server_send_msg(int client_id)
 			
 	if(client_id == -1)
 	{
-		// broadcast
+		/* broadcast */
 		int i;
 		for(i = 0; i < MAX_CLIENTS; i++)
 			if(clients[i].state == SRVCLIENT_STATE_INGAME)
@@ -224,10 +242,10 @@ static void server_do_tick()
 
 static void server_do_snap()
 {
+	int i, k;
 	mods_presnap();
 
-	int i;
-	for( i = 0; i < MAX_CLIENTS; i++)
+	for(i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(clients[i].state == SRVCLIENT_STATE_INGAME)
 		{
@@ -237,18 +255,18 @@ static void server_do_snap()
 			snapbuild_init(&builder);
 			mods_snap(i);
 
-			// finish snapshot
+			/* finish snapshot */
 			int snapshot_size = snapbuild_finish(&builder, data);
 			int crc = snapshot_crc((SNAPSHOT*)data);
 
-			// remove old snapshos
-			// keep 1 seconds worth of snapshots
+			/* remove old snapshos */
+			/* keep 1 seconds worth of snapshots */
 			snapstorage_purge_until(&clients[i].snapshots, current_tick-SERVER_TICK_SPEED);
 			
-			// save it the snapshot
+			/* save it the snapshot */
 			snapstorage_add(&clients[i].snapshots, current_tick, time_get(), snapshot_size, data);
 			
-			// find snapshot that we can preform delta against
+			/* find snapshot that we can preform delta against */
 			static SNAPSHOT emptysnap;
 			emptysnap.data_size = 0;
 			emptysnap.num_items = 0;
@@ -262,12 +280,24 @@ static void server_do_snap()
 					delta_tick = clients[i].last_acked_snapshot;
 			}
 			
-			// create delta
+			int input_predtick = -1;
+			int64 timeleft = 0;
+			for(k = 0; k < 200; k++) // TODO: do this better
+			{
+				if(clients[i].inputs[k].game_tick == current_tick)
+				{
+					timeleft = clients[i].inputs[k].timeleft;
+					input_predtick = clients[i].inputs[k].pred_tick;
+					break;
+				}
+			}
+			
+			/* create delta */
 			int deltasize = snapshot_create_delta(deltashot, (SNAPSHOT*)data, deltadata);
 			
 			if(deltasize)
 			{
-				// compress it
+				/* compress it */
 				unsigned char intdata[MAX_SNAPSHOT_SIZE];
 				int intsize = intpack_compress(deltadata, deltasize, intdata);
 				
@@ -288,7 +318,9 @@ static void server_do_snap()
 
 					msg_pack_start_system(NETMSG_SNAP, 0);
 					msg_pack_int(current_tick);
-					msg_pack_int(current_tick-delta_tick); // compressed with
+					msg_pack_int(current_tick-delta_tick); /* compressed with */
+					msg_pack_int(input_predtick);
+					msg_pack_int((timeleft*1000)/time_freq());
 					msg_pack_int(crc);
 					msg_pack_int(chunk);
 					msg_pack_raw(&compdata[n*max_size], chunk);
@@ -300,7 +332,9 @@ static void server_do_snap()
 			{
 				msg_pack_start_system(NETMSG_SNAPEMPTY, 0);
 				msg_pack_int(current_tick);
-				msg_pack_int(current_tick-delta_tick); // compressed with
+				msg_pack_int(current_tick-delta_tick); /* compressed with */
+				msg_pack_int(input_predtick);
+				msg_pack_int((timeleft*1000)/time_freq());
 				msg_pack_end();
 				server_send_msg(i);
 			}
@@ -313,9 +347,19 @@ static void server_do_snap()
 
 static int new_client_callback(int cid, void *user)
 {
+	int i;
 	clients[cid].state = SRVCLIENT_STATE_CONNECTING;
 	clients[cid].name[0] = 0;
 	clients[cid].clan[0] = 0;
+	
+	/* reset input */
+	for(i = 0; i < 200; i++)
+	{
+		clients[cid].inputs[i].game_tick = -1;
+		clients[cid].inputs[i].pred_tick = -1;
+	}
+	clients[cid].current_input = 0;
+	
 	snapstorage_purge_all(&clients[cid].snapshots);
 	clients[cid].last_acked_snapshot = -1;
 	return 0;
@@ -359,14 +403,14 @@ static void server_process_client_packet(NETPACKET *packet)
 	int msg = msg_unpack_start(packet->data, packet->data_size, &sys);
 	if(sys)
 	{
-		// system message
+		/* system message */
 		if(msg == NETMSG_INFO)
 		{
 			char version[64];
 			strncpy(version, msg_unpack_string(), 64);
 			if(strcmp(version, mods_net_version()) != 0)
 			{
-				// OH FUCK! wrong version, drop him
+				/* OH FUCK! wrong version, drop him */
 				char reason[256];
 				sprintf(reason, "wrong version. server is running %s.", mods_net_version());
 				netserver_drop(net, cid, reason);
@@ -377,7 +421,7 @@ static void server_process_client_packet(NETPACKET *packet)
 			strncpy(clients[cid].clan, msg_unpack_string(), MAX_CLANNAME_LENGTH);
 			const char *password = msg_unpack_string();
 			const char *skin = msg_unpack_string();
-			(void)password; // ignore these variables
+			(void)password; /* ignore these variables */
 			(void)skin;
 			server_send_map(cid);
 		}
@@ -392,12 +436,29 @@ static void server_process_client_packet(NETPACKET *packet)
 		}
 		else if(msg == NETMSG_INPUT)
 		{
-			int input[MAX_INPUT_SIZE];
+			int tick = msg_unpack_int();
 			int size = msg_unpack_int();
 			int i;
+			
+			CLIENT_INPUT *input = &clients[cid].inputs[clients[cid].current_input];
+			input->timeleft = server_tick_start_time(tick)-time_get();
+			input->pred_tick = tick;
+			
+			if(tick < server_tick())
+			{
+				/* TODO: how should we handle this */
+				dbg_msg("server", "input got in late for=%d cur=%d", tick, server_tick());
+				tick = server_tick()+1;
+			}
+
+			input->game_tick = tick;
+			
 			for(i = 0; i < size/4; i++)
-				input[i] = msg_unpack_int();
-			mods_client_input(cid, input);
+				input->data[i] = msg_unpack_int();
+				
+			//time_get()
+			clients[cid].current_input++;
+			clients[cid].current_input %= 200;
 		}
 		else if(msg == NETMSG_SNAPACK)
 		{
@@ -413,7 +474,7 @@ static void server_process_client_packet(NETPACKET *packet)
 	}
 	else
 	{
-		// game message
+		/* game message */
 		mods_message(msg, cid);
 	}
 }
@@ -427,7 +488,7 @@ static void server_send_serverinfo(NETADDR4 *addr)
 	packer_add_raw(&p, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
 	packer_add_string(&p, config.sv_name, 128);
 	packer_add_string(&p, config.sv_map, 128);
-	packer_add_int(&p, netserver_max_clients(net)); // max_players
+	packer_add_int(&p, netserver_max_clients(net)); /* max_players */
 	int c = 0;
 	int i;
 	for(i = 0; i < MAX_CLIENTS; i++)
@@ -435,7 +496,7 @@ static void server_send_serverinfo(NETADDR4 *addr)
 		if(!clients[i].state != SRVCLIENT_STATE_EMPTY)
 			c++;
 	}
-	packer_add_int(&p, c); // num_players
+	packer_add_int(&p, c); /* num_players */
 	
 	packet.client_id = -1;
 	packet.address = *addr;
@@ -461,13 +522,13 @@ static void server_pump_network()
 {
 	netserver_update(net);
 	
-	// process packets
+	/* process packets */
 	NETPACKET packet;
 	while(netserver_recv(net, &packet))
 	{
 		if(packet.client_id == -1)
 		{
-			// stateless
+			/* stateless */
 			if(packet.data_size == sizeof(SERVERBROWSE_GETINFO) &&
 				memcmp(packet.data, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
 			{
@@ -501,23 +562,23 @@ static int server_run()
 {
 	biggest_snapshot = 0;
 
-	net_init(); // For Windows compatibility.
+	net_init(); /* For Windows compatibility. */
 	
 	snap_init_id();
 
-	// load map
+	/* load map */
 	if(!map_load(config.sv_map))
 	{
 		dbg_msg("server", "failed to load map. mapname='%s'", config.sv_map);
 		return -1;
 	}
 	
-	// start server
+	/* start server */
 	NETADDR4 bindaddr;
 
 	if(strlen(config.sv_bindaddr) && net_host_lookup(config.sv_bindaddr, config.sv_port, &bindaddr) != 0)
 	{
-		// sweet!
+		/* sweet! */
 	}
 	else
 	{
@@ -536,19 +597,16 @@ static int server_run()
 	
 	dbg_msg("server", "server name is '%s'", config.sv_name);
 	dbg_msg("server", "masterserver is '%s'", config.masterserver);
-	if (net_host_lookup(config.masterserver, MASTERSERVER_PORT, &master_server) != 0)
+	if(net_host_lookup(config.masterserver, MASTERSERVER_PORT, &master_server) != 0)
 	{
-		// TODO: fix me
-		//master_server = netaddr4(0, 0, 0, 0, 0);
+		/* TODO: fix me */
+		/*master_server = netaddr4(0, 0, 0, 0, 0); */
 	}
 
 	mods_init();
 	dbg_msg("server", "version %s", mods_net_version());
 
-	int64 time_per_tick = time_freq()/SERVER_TICK_SPEED;
 	int64 time_per_heartbeat = time_freq() * 30;
-	int64 starttime = time_get();
-	lasttick = starttime;
 	lastheartbeat = 0;
 
 	int64 reporttime = time_get();
@@ -558,28 +616,48 @@ static int server_run()
 	int64 snaptime = 0;
 	int64 networktime = 0;
 	int64 totaltime = 0;
+	
+	game_start_time = time_get();
 
 	if(config.debug)
-	dbg_msg("server", "baseline memory usage %dk", mem_allocated()/1024);
+		dbg_msg("server", "baseline memory usage %dk", mem_allocated()/1024);
 
 	while(1)
 	{
 		int64 t = time_get();
-		if(t-lasttick > time_per_tick)
+		if(t > server_tick_start_time(current_tick+1))
 		{
+			/* apply new input */
+			{
+				int c, i;
+				for(c = 0; c < MAX_CLIENTS; c++)
+				{
+					if(clients[c].state == SRVCLIENT_STATE_EMPTY)
+						continue;
+					for(i = 0; i < 200; i++)
+					{
+						if(clients[c].inputs[i].game_tick == server_tick())
+						{
+							mods_client_input(c, clients[c].inputs[i].data);
+							break;
+						}
+					}
+				}
+			}
+			
+			/* progress game */
 			{
 				int64 start = time_get();
 				server_do_tick();
 				simulationtime += time_get()-start;
 			}
 
+			/* snap game */
 			{
 				int64 start = time_get();
 				server_do_snap();
 				snaptime += time_get()-start;
 			}
-
-			lasttick += time_per_tick;
 		}
 
 		if(config.sv_sendheartbeats)
@@ -652,7 +730,7 @@ int main(int argc, char **argv)
 
 	config_load(config_filename);
 
-	// parse arguments
+	/* parse arguments */
 	for(i = 1; i < argc; i++)
 		config_set(argv[i]);
 

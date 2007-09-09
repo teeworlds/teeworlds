@@ -39,6 +39,7 @@ struct client_data
 	int team;
 	int emoticon;
 	int emoticon_start;
+	player_core predicted;
 } client_datas[MAX_CLIENTS];
 
 inline float frandom() { return rand()/(float)(RAND_MAX); }
@@ -137,6 +138,7 @@ void draw_sprite(float x, float y, float size)
 	gfx_quads_draw(x, y, size*sprite_w_scale, size*sprite_h_scale);
 }
 
+/*
 void move_point(vec2 *inout_pos, vec2 *inout_vel, float elasticity)
 {
 	vec2 pos = *inout_pos;
@@ -166,7 +168,7 @@ void move_point(vec2 *inout_pos, vec2 *inout_vel, float elasticity)
 	{
 		*inout_pos = pos + vel;
 	}
-}
+}*/
 
 class damage_indicators
 {
@@ -309,7 +311,7 @@ public:
 			particles[i].vel.y += particles[i].gravity*time_passed;
 			particles[i].vel *= particles[i].friction;
 			vec2 vel = particles[i].vel*time_passed;
-			move_point(&particles[i].pos, &vel, 0.1f+0.9f*frandom());
+			move_point(&particles[i].pos, &vel, 0.1f+0.9f*frandom(), NULL);
 			particles[i].vel = vel* (1.0f/time_passed);
 			particles[i].life += time_passed;
 			particles[i].rot += time_passed * particles[i].rotspeed;
@@ -681,6 +683,75 @@ static void process_events(int s)
 	must_process_events = false;
 }
 
+static player_core predicted_prev_player;
+static player_core predicted_player;
+
+extern "C" void modc_predict()
+{
+	// repredict player
+	{
+		world_core world;
+		int local_cid = -1;
+		
+		// search for players
+		for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
+		{
+			SNAP_ITEM item;
+			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+			
+			if(item.type == OBJTYPE_PLAYER)
+			{
+				const obj_player *player = (const obj_player *)data;
+				client_datas[player->clientid].predicted.world = &world;
+				world.players[player->clientid] = &client_datas[player->clientid].predicted;
+				
+				client_datas[player->clientid].predicted.read(player);
+				if(player->local)
+					local_cid = player->clientid;
+			}
+		}
+		
+		// predict
+		for(int tick = client_tick(); tick <= client_predtick(); tick++)
+		{
+			// first calculate where everyone should move
+			for(int c = 0; c < MAX_CLIENTS; c++)
+			{
+				if(!world.players[c])
+					continue;
+				
+				mem_zero(&world.players[c]->input, sizeof(world.players[c]->input));
+				if(local_cid == c)
+				{
+					// apply player input
+					int *input = client_get_input(tick);
+					if(input)
+						world.players[c]->input = *((player_input*)input);
+				}
+				
+				world.players[c]->tick();
+			}
+			
+			// move all players and quantize their data
+			for(int c = 0; c < MAX_CLIENTS; c++)
+			{
+				if(!world.players[c])
+					continue;
+					
+				world.players[c]->move();
+				world.players[c]->quantize();
+			}
+		}
+		
+		// get the data from the local player
+		if(local_cid != -1)
+		{
+			predicted_prev_player = predicted_player;
+			predicted_player = *world.players[local_cid];
+		}
+	}
+}
+
 extern "C" void modc_newsnapshot()
 {
 	if(must_process_events)
@@ -945,7 +1016,7 @@ static void render_tee(animstate *anim, int skin, int emote, vec2 dir, vec2 pos)
 		// first pass we draw the outline
 		// second pass we draw the filling
 		int outline = p==0 ? 1 : 0;
-		int shift = charids[skin%16];
+		int shift = skin;
 		
 		for(int f = 0; f < 2; f++)
 		{
@@ -1070,22 +1141,37 @@ void draw_round_rect(float x, float y, float w, float h, float r)
 	gfx_quads_drawTL(x+w-r, y+r, r, h-r*2); // right
 }
 
-static void render_player(const obj_player *prev, const obj_player *player)
+static void render_player(const obj_player *prev_obj, const obj_player *player_obj)
 {
-	if(player->health < 0) // dont render dead players
+	obj_player prev;
+	obj_player player;
+	prev = *prev_obj;
+	player = *player_obj;
+	
+	if(player.health < 0) // dont render dead players
 		return;
+	
+	if(player.local)
+	{
+		// apply predicted results
+		predicted_player.write(&player);
+		predicted_prev_player.write(&prev);
+	}
 		
-	int skin = gametype == GAMETYPE_DM ? player->clientid : skinseed + player->team;
+	int skin = charids[player.clientid];
+	
+	if(gametype != GAMETYPE_DM)
+		skin = player.team*9; // 0 or 9
 
-	vec2 direction = get_direction(player->angle);
-	float angle = player->angle/256.0f;
-	vec2 position = mix(vec2(prev->x, prev->y), vec2(player->x, player->y), client_intratick());
+	vec2 direction = get_direction(player.angle);
+	float angle = player.angle/256.0f;
+	vec2 position = mix(vec2(prev.x, prev.y), vec2(player.x, player.y), client_intratick());
 	
-	if(prev->health < 0) // Don't flicker from previous position
-		position = vec2(player->x, player->y);
+	if(prev.health < 0) // Don't flicker from previous position
+		position = vec2(player.x, player.y);
 	
-	bool stationary = player->vx < 1 && player->vx > -1;
-	bool inair = col_check_point(player->x, player->y+16) == 0;
+	bool stationary = player.vx < 1 && player.vx > -1;
+	bool inair = col_check_point(player.x, player.y+16) == 0;
 	
 	// evaluate animation
 	float walk_time = fmod(position.x, 100.0f)/100.0f;
@@ -1099,26 +1185,26 @@ static void render_player(const obj_player *prev, const obj_player *player)
 	else
 		anim_eval_add(&state, &data->animations[ANIM_WALK], walk_time, 1.0f);
 
-	if (player->weapon == WEAPON_HAMMER)
+	if (player.weapon == WEAPON_HAMMER)
 	{
-		float a = clamp((client_tick()-player->attacktick+client_intratick())/10.0f, 0.0f, 1.0f);
+		float a = clamp((client_tick()-player.attacktick+client_intratick())/10.0f, 0.0f, 1.0f);
 		anim_eval_add(&state, &data->animations[ANIM_HAMMER_SWING], a, 1.0f);
 	}
-	if (player->weapon == WEAPON_NINJA)
+	if (player.weapon == WEAPON_NINJA)
 	{
-		float a = clamp((client_tick()-player->attacktick+client_intratick())/40.0f, 0.0f, 1.0f);
+		float a = clamp((client_tick()-player.attacktick+client_intratick())/40.0f, 0.0f, 1.0f);
 		anim_eval_add(&state, &data->animations[ANIM_NINJA_SWING], a, 1.0f);
 	}
 		
 	// draw hook
-	if (prev->hook_active && player->hook_active)
+	if (prev.hook_state>0 && player.hook_state>0)
 	{
 		gfx_texture_set(data->images[IMAGE_GAME].id);
 		gfx_quads_begin();
 		//gfx_quads_begin();
 
 		vec2 pos = position;
-		vec2 hook_pos = mix(vec2(prev->hook_x, prev->hook_y), vec2(player->hook_x, player->hook_y), client_intratick());
+		vec2 hook_pos = mix(vec2(prev.hook_x, prev.hook_y), vec2(player.hook_x, player.hook_y), client_intratick());
 		
 		float d = distance(pos, hook_pos);
 		vec2 dir = normalize(pos-hook_pos);
@@ -1150,13 +1236,13 @@ static void render_player(const obj_player *prev, const obj_player *player)
 		gfx_quads_setrotation(state.attach.angle*pi*2+angle);
 
 		// normal weapons
-		int iw = clamp(player->weapon, 0, NUM_WEAPONS-1);
+		int iw = clamp(player.weapon, 0, NUM_WEAPONS-1);
 		select_sprite(data->weapons[iw].sprite_body, direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
 
 		vec2 dir = direction;
 		float recoil = 0.0f;
 		vec2 p;
-		if (player->weapon == WEAPON_HAMMER)
+		if (player.weapon == WEAPON_HAMMER)
 		{
 			// Static position for hammer
 			p = position;
@@ -1173,7 +1259,7 @@ static void render_player(const obj_player *prev, const obj_player *player)
 			}
 			draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
 		}
-		else if (player->weapon == WEAPON_NINJA)
+		else if (player.weapon == WEAPON_NINJA)
 		{
 			p = position;
 			p.y += data->weapons[iw].offsety;
@@ -1190,13 +1276,13 @@ static void render_player(const obj_player *prev, const obj_player *player)
 			draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
 
 			// HADOKEN
-			if ((client_tick()-player->attacktick) <= (SERVER_TICK_SPEED / 6) && data->weapons[iw].nummuzzlesprites)
+			if ((client_tick()-player.attacktick) <= (SERVER_TICK_SPEED / 6) && data->weapons[iw].nummuzzlesprites)
 			{
 				int itex = rand() % data->weapons[iw].nummuzzlesprites;
 				float alpha = 1.0f;
 				if (alpha > 0.0f && data->weapons[iw].sprite_muzzle[itex].psprite)
 				{
-					vec2 dir = vec2(player->x,player->y) - vec2(prev->x, prev->y);
+					vec2 dir = vec2(player.x,player.y) - vec2(prev.x, prev.y);
 					dir = normalize(dir);
 					float hadokenangle = atan(dir.y/dir.x);
 					if (dir.x < 0.0f)
@@ -1216,7 +1302,7 @@ static void render_player(const obj_player *prev, const obj_player *player)
 		{
 			// TODO: should be an animation
 			recoil = 0;
-			float a = (client_tick()-player->attacktick+client_intratick())/5.0f;
+			float a = (client_tick()-player.attacktick+client_intratick())/5.0f;
 			if(a < 1)
 				recoil = sinf(a*pi);
 			p = position + dir * data->weapons[iw].offsetx - dir*recoil*10.0f;
@@ -1224,13 +1310,13 @@ static void render_player(const obj_player *prev, const obj_player *player)
 			draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
 		}
 		
-		if (player->weapon == WEAPON_GUN || player->weapon == WEAPON_SHOTGUN)
+		if (player.weapon == WEAPON_GUN || player.weapon == WEAPON_SHOTGUN)
 		{
 			// check if we're firing stuff
-			if (true)///prev->attackticks)
+			if (true)///prev.attackticks)
 			{
 				float alpha = 0.0f;
-				int phase1tick = (client_tick() - player->attacktick);
+				int phase1tick = (client_tick() - player.attacktick);
 				if (phase1tick < (data->weapons[iw].muzzleduration + 3))
 				{
 					float intratick = client_intratick();
@@ -1252,14 +1338,14 @@ static void render_player(const obj_player *prev, const obj_player *player)
 					draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
 					/*gfx_quads_setcolor(1.0f,1.0f,1.0f,alpha);
 					vec2 diry(-dir.y,dir.x);
-					p += dir * muzzleparams[player->weapon].offsetx + diry * offsety;
-					gfx_quads_draw(p.x,p.y,muzzleparams[player->weapon].sizex, muzzleparams[player->weapon].sizey);*/
+					p += dir * muzzleparams[player.weapon].offsetx + diry * offsety;
+					gfx_quads_draw(p.x,p.y,muzzleparams[player.weapon].sizex, muzzleparams[player.weapon].sizey);*/
 				}
 			}
 		}
 		gfx_quads_end();
 
-		switch (player->weapon)
+		switch (player.weapon)
 		{
 			case WEAPON_GUN: render_hand(skin, p, direction, -3*pi/4, vec2(-15, 4)); break;
 			case WEAPON_SHOTGUN: render_hand(skin, p, direction, -pi/2, vec2(-5, 4)); break;
@@ -1269,9 +1355,15 @@ static void render_player(const obj_player *prev, const obj_player *player)
 	}
 
 	// render the tee
-	render_tee(&state, skin, player->emote, direction, position);
+	if(player.local && config.debug)
+	{
+		vec2 ghost_position = mix(vec2(prev_obj->x, prev_obj->y), vec2(player_obj->x, player_obj->y), client_intratick());
+		render_tee(&state, 15, player.emote, direction, ghost_position); // render ghost
+	}
+	
+	render_tee(&state, skin, player.emote, direction, position);
 
-	if(player->state == STATE_CHATTING)
+	if(player.state == STATE_CHATTING)
 	{
 		gfx_texture_set(data->images[IMAGE_CHAT_BUBBLES].id);
 		gfx_quads_begin();
@@ -1280,13 +1372,13 @@ static void render_player(const obj_player *prev, const obj_player *player)
 		gfx_quads_end();
 	}
 
-	if (client_datas[player->clientid].emoticon_start != -1 && client_datas[player->clientid].emoticon_start + 2 * client_tickspeed() > client_tick())
+	if (client_datas[player.clientid].emoticon_start != -1 && client_datas[player.clientid].emoticon_start + 2 * client_tickspeed() > client_tick())
 	{
 		gfx_texture_set(data->images[IMAGE_EMOTICONS].id);
 		gfx_quads_begin();
 
-		int since_start = client_tick() - client_datas[player->clientid].emoticon_start;
-		int from_end = client_datas[player->clientid].emoticon_start + 2 * client_tickspeed() - client_tick();
+		int since_start = client_tick() - client_datas[player.clientid].emoticon_start;
+		int from_end = client_datas[player.clientid].emoticon_start + 2 * client_tickspeed() - client_tick();
 
 		float a = 1;
 
@@ -1307,7 +1399,7 @@ static void render_player(const obj_player *prev, const obj_player *player)
 
 		gfx_quads_setcolor(1.0f,1.0f,1.0f,a);
 		// client_datas::emoticon is an offset from the first emoticon
-		select_sprite(SPRITE_OOP + client_datas[player->clientid].emoticon);
+		select_sprite(SPRITE_OOP + client_datas[player.clientid].emoticon);
 		gfx_quads_draw(position.x, position.y - 23 - 32*h, 64, 64*h);
 		gfx_quads_end();
 	}
@@ -1725,6 +1817,9 @@ void render_game()
 				gameobj = (obj_game *)data;
 		}
 	}
+	
+	local_player_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_intratick());
+	//local_player_pos = predicted_player.pos;
 	
 	// everything updated, do events
 	if(must_process_events)

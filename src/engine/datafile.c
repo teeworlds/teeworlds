@@ -100,9 +100,6 @@ DATAFILE *datafile_load(const char *filename)
 		return 0;
 	}
 	
-	//if(DEBUG)
-		//dbg_msg("datafile", "loading. size=%d", datafile.size);
-	
 	/* read in the rest except the data */
 	int size = 0;
 	size += header.num_item_types*sizeof(DATAFILE_ITEM_TYPE);
@@ -112,8 +109,8 @@ DATAFILE *datafile_load(const char *filename)
 	size += header.item_size;
 	
 	int allocsize = size;
-	allocsize += sizeof(DATAFILE); // add space for info structure
-	allocsize += header.num_raw_data*sizeof(void*); // add space for data pointers
+	allocsize += sizeof(DATAFILE); /* add space for info structure */
+	allocsize += header.num_raw_data*sizeof(void*); /* add space for data pointers */
 
 	df = (DATAFILE*)mem_alloc(allocsize, 1);
 	df->header = header;
@@ -207,9 +204,6 @@ int datafile_num_data(DATAFILE *df)
 /* always returns the size in the file */
 int datafile_get_datasize(DATAFILE *df, int index)
 {
-	//if(df->header.version == 4)
-	//	return df->info.data_sizes[index];
-	
 	if(index == df->header.num_raw_data-1)
 		return df->header.data_size-df->info.data_offsets[index];
 	return  df->info.data_offsets[index+1]-df->info.data_offsets[index];
@@ -217,7 +211,7 @@ int datafile_get_datasize(DATAFILE *df, int index)
 
 void *datafile_get_data(DATAFILE *df, int index)
 {
-	// load it if needed
+	/* load it if needed */
 	if(!df->data_ptrs[index])
 	{
 		/* fetch the data size */
