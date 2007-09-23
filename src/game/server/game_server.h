@@ -100,7 +100,7 @@ public:
 	void tick();
 };
 
-extern game_world world;
+extern game_world *world;
 
 // game object
 class gameobject : public entity

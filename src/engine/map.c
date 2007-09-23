@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "datafile.h"
 
-static DATAFILE *map;
+static DATAFILE *map = 0;
 
 void *map_get_data(int index)
 {
@@ -50,4 +50,11 @@ int map_load(const char *mapname)
 	sprintf(buf, "data/maps/%s.map", mapname);
 	map = datafile_load(buf);
 	return map != 0;
+}
+
+void map_set(void *m)
+{
+	if(map)
+		map_unload();
+	map = (DATAFILE*)m;
 }

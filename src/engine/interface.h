@@ -805,6 +805,7 @@ void snap_free_id(int id);
 
 /* other */
 void map_unload_data(int index);
+void map_set(void *m);
 
 #ifdef __cplusplus
 }

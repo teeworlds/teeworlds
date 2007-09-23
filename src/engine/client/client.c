@@ -231,14 +231,6 @@ int snap_num_items(int snapid)
 	return snapshots[snapid]->snap->num_items;
 }
 
-static void snap_init()
-{
-	snapshots[SNAP_CURRENT] = 0;
-	snapshots[SNAP_PREV] = 0;
-	recived_snapshots = 0;
-	current_predtick = 0;
-}
-
 // ------ time functions ------
 float client_intratick() { return intratick; }
 float client_intrapredtick() { return intrapredtick; }
@@ -268,8 +260,6 @@ int client_send_msg()
 
 static void client_send_info()
 {
-	recived_snapshots = 0;
-
 	msg_pack_start_system(NETMSG_INFO, MSGFLAG_VITAL);
 	msg_pack_string(modc_net_version(), 128);
 	msg_pack_string(config.player_name, 128);
@@ -472,6 +462,23 @@ static void client_set_state(int s)
 		modc_statechange(state, old);
 }
 
+/* called when the map is loaded and we should init for a new round */
+static void client_on_enter_game()
+{
+	// reset input
+	int i;
+	for(i = 0; i < 200; i++)
+		inputs[i].tick = -1;
+	current_input = 0;
+
+	// reset snapshots
+	snapshots[SNAP_CURRENT] = 0;
+	snapshots[SNAP_PREV] = 0;
+	snapstorage_purge_all(&snapshot_storage);
+	recived_snapshots = 0;
+	current_predtick = 0;
+	current_recv_tick = 0;
+}
 
 void client_connect(const char *server_address_str)
 {
@@ -500,14 +507,6 @@ void client_connect(const char *server_address_str)
 	
 	netclient_connect(net, &server_address);
 	client_set_state(CLIENTSTATE_CONNECTING);	
-	
-	current_recv_tick = 0;
-	
-	// reset input
-	int i;
-	for(i = 0; i < 200; i++)
-		inputs[i].tick = -1;
-	current_input = 0;
 }
 
 void client_disconnect()
@@ -692,13 +691,15 @@ static void client_process_packet(NETPACKET *packet)
 					dbg_msg("client/network", "loading done");
 					// now we will wait for two snapshots
 					// to finish the connection
+					
+					client_on_enter_game();
 				}
 				else
 				{
 					client_error("failure to load map");
 				}
 			}
-			else if(msg == NETMSG_SNAP || msg == NETMSG_SNAPEMPTY) //|| msg == NETMSG_SNAPSMALL || msg == NETMSG_SNAPEMPTY)
+			else if(msg == NETMSG_SNAP || msg == NETMSG_SNAPEMPTY)
 			{
 				//dbg_msg("client/network", "got snapshot");
 				int game_tick = msg_unpack_int();
@@ -791,12 +792,13 @@ static void client_process_packet(NETPACKET *packet)
 						if(msg != NETMSG_SNAPEMPTY && snapshot_crc((SNAPSHOT*)tmpbuffer3) != crc)
 						{
 							if(config.debug)
-								dbg_msg("client", "snapshot crc error");
+								dbg_msg("client", "snapshot crc error %d", snapcrcerrors);
 							snapcrcerrors++;
-							if(snapcrcerrors > 25)
+							if(snapcrcerrors > 10)
 							{
 								// to many errors, send reset
 								ack_game_tick = -1;
+								client_send_input();
 								snapcrcerrors = 0;
 							}
 							return;
@@ -845,27 +847,8 @@ static void client_process_packet(NETPACKET *packet)
 						}
 						
 						st_update(&game_time, (game_tick-2)*time_freq()/50);
-						//client_send_input();
-
-						//st_update(&predicted_time, game_tick*time_freq());
-
-						/*
-						int64 now = time_get();
-						int64 t = now - game_tick*time_freq()/50;
-						if(game_start_time == -1 || t < game_start_time)
-						{
-							if(config.debug)
-								dbg_msg("client", "adjusted time");
-							game_start_time = t;
-						}
-						
-						int64 wanted = game_start_time+(game_tick*time_freq())/50;
-						float current_latency = (now-wanted)/(float)time_freq();
-						snapshot_latency = snapshot_latency*0.95f+current_latency*0.05f;
-						*/
 						
 						// ack snapshot
-						//dbg_msg("snap!", "%d", game_tick);
 						ack_game_tick = game_tick;
 					}
 				}
@@ -931,9 +914,6 @@ static void client_run(const char *direct_connect_server)
 
 	// init menu
 	modmenu_init(); // TODO: remove
-	
-	// init snapshotting
-	snap_init();
 	
 	// init the mod
 	modc_init();

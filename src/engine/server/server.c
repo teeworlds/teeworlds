@@ -15,6 +15,7 @@
 #include <engine/network.h>
 #include <engine/config.h>
 #include <engine/packer.h>
+#include <engine/datafile.h>
 
 #include <mastersrv/mastersrv.h>
 
@@ -26,7 +27,8 @@ static int current_tick = 0;
 static int64 lastheartbeat;
 static NETADDR4 master_server;
 
-static int biggest_snapshot;
+static char current_map[64];
+
 
 void *snap_new_item(int type, int id, int size)
 {
@@ -304,9 +306,6 @@ static void server_do_snap()
 				int compsize = zerobit_compress(intdata, intsize, compdata);
 				snapshot_size = compsize;
 
-				if(snapshot_size > biggest_snapshot)
-					biggest_snapshot = snapshot_size;
-
 				const int max_size = MAX_SNAPSHOT_PACKSIZE;
 				int numpackets = (snapshot_size+max_size-1)/max_size;
 				(void)numpackets;
@@ -565,17 +564,29 @@ static void server_pump_network()
 	}
 }
 
+static int server_load_map(const char *mapname)
+{
+	DATAFILE *df;
+	char buf[512];
+	sprintf(buf, "data/maps/%s.map", mapname);
+	df = datafile_load(buf);
+	if(!df)
+		return 0;
+		
+	strcpy(current_map, mapname);
+	map_set(df);
+	return 1;
+}
+
 
 static int server_run()
 {
-	biggest_snapshot = 0;
-
 	net_init(); /* For Windows compatibility. */
 	
 	snap_init_id();
 
 	/* load map */
-	if(!map_load(config.sv_map))
+	if(!server_load_map(config.sv_map))
 	{
 		dbg_msg("server", "failed to load map. mapname='%s'", config.sv_map);
 		return -1;
@@ -632,6 +643,39 @@ static int server_run()
 
 	while(1)
 	{
+		/* load new map TODO: don't poll this */
+		if(strcmp(config.sv_map, current_map) != 0)
+		{
+			/* load map */
+			if(server_load_map(config.sv_map))
+			{
+				int c;
+				
+				/* new map loaded */
+				mods_shutdown();
+				
+				for(c = 0; c < MAX_CLIENTS; c++)
+				{
+					if(clients[c].state == SRVCLIENT_STATE_EMPTY)
+						continue;
+					
+					server_send_map(c);
+					clients[c].state = SRVCLIENT_STATE_CONNECTING;
+					clients[c].last_acked_snapshot = -1;
+					snapstorage_purge_all(&clients[c].snapshots);
+				}
+				
+				mods_init();
+				game_start_time = time_get();
+				current_tick = 0;
+			}
+			else
+			{
+				dbg_msg("server", "failed to load map. mapname='%s'", config.sv_map);
+				config_set_sv_map(&config, current_map);
+			}
+		}
+		
 		int64 t = time_get();
 		if(t > server_tick_start_time(current_tick+1))
 		{

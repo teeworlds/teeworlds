@@ -19,6 +19,8 @@ void create_sound(vec2 pos, int sound, int loopflags = 0);
 void create_targetted_sound(vec2 pos, int sound, int target, int loopflags = 0);
 class player *intersect_player(vec2 pos0, vec2 pos1, vec2 &new_pos, class entity *notthis = 0);
 
+game_world *world;
+
 //////////////////////////////////////////////////
 // Event handler
 //////////////////////////////////////////////////
@@ -253,8 +255,6 @@ void game_world::tick()
 	remove_entities();
 }
 
-game_world world;
-
 //////////////////////////////////////////////////
 // game object
 //////////////////////////////////////////////////
@@ -288,14 +288,14 @@ gameobject::gameobject()
 
 void gameobject::endround()
 {
-	world.paused = true;
+	world->paused = true;
 	game_over_tick = server_tick();
 	sudden_death = 0;
 }
 
 void gameobject::resetgame()
 {
-	world.reset_requested = true;
+	world->reset_requested = true;
 }
 
 void gameobject::startround()
@@ -305,7 +305,7 @@ void gameobject::startround()
 	round_start_tick = server_tick();
 	sudden_death = 0;
 	game_over_tick = -1;
-	world.paused = false;
+	world->paused = false;
 }
 
 void gameobject::post_reset()
@@ -424,7 +424,7 @@ void gameobject::tick()
 void gameobject::snap(int snapping_client)
 {
 	obj_game *game = (obj_game *)snap_new_item(OBJTYPE_GAME, 0, sizeof(obj_game));
-	game->paused = world.paused;
+	game->paused = world->paused;
 	game->game_over = game_over_tick==-1?0:1;
 	game->sudden_death = sudden_death;
 	
@@ -469,12 +469,12 @@ projectile::projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity
 	this->sound_impact = sound_impact;
 	this->weapon = weapon;
 	this->bounce = 0;
-	world.insert_entity(this);
+	world->insert_entity(this);
 }
 
 void projectile::reset()
 {
-	world.destroy_entity(this);
+	world->destroy_entity(this);
 }
 
 void projectile::tick()
@@ -514,7 +514,7 @@ void projectile::tick()
 			targetplayer->take_damage(normalize(vel) * max(0.001f, force), damage, owner, weapon);
 		}
 			
-		world.destroy_entity(this);
+		world->destroy_entity(this);
 	}
 }
 
@@ -551,7 +551,7 @@ void projectile_backpackrocket::tick()
 {
 	lifespan--;
 	if(!lifespan)
-		world.destroy_entity(this);
+		world->destroy_entity(this);
 		
 	vec2 oldpos = pos;
 		
@@ -592,7 +592,7 @@ void projectile_backpackrocket::tick()
 			
 		create_explosion(oldpos, owner, weapon, false);
 			
-		world.destroy_entity(this);
+		world->destroy_entity(this);
 	}	
 }
 
@@ -706,7 +706,7 @@ void player::try_respawn()
 	// check if the position is occupado
 	entity *ents[2] = {0};
 	int types[] = {OBJTYPE_PLAYER};
-	int num_ents = world.find_entities(spawnpos, 64, ents, 2, types, 1);
+	int num_ents = world->find_entities(spawnpos, 64, ents, 2, types, 1);
 	for(int i = 0; i < num_ents; i++)
 	{
 		if(ents[i] != this)
@@ -770,7 +770,7 @@ void player::release_hooks()
 {
 	/*
 	// TODO: loop thru players only
-	for(entity *ent = world.first_entity; ent; ent = ent->next_entity)
+	for(entity *ent = world->first_entity; ent; ent = ent->next_entity)
 	{
 		if(ent && ent->objtype == OBJTYPE_PLAYER)
 		{
@@ -839,7 +839,7 @@ int player::handle_ninja()
 			vec2 dir = pos - oldpos;
 			float radius = phys_size * 2.0f; //length(dir * 0.5f);
 			vec2 center = oldpos + dir * 0.5f;
-			int num = world.find_entities(center, radius, ents, 64, &type, 1);
+			int num = world->find_entities(center, radius, ents, 64, &type, 1);
 			
 			for (int i = 0; i < num; i++)
 			{
@@ -999,7 +999,7 @@ int player::handle_weapons()
 		vec2 dir = lookdir * data->weapons[active_weapon].meleereach;
 		float radius = length(dir * 0.5f);
 		vec2 center = pos + dir * 0.5f;
-		int num = world.find_entities(center, radius, ents, 64, &type, 1);
+		int num = world->find_entities(center, radius, ents, 64, &type, 1);
 		
 		for (int i = 0; i < num; i++)
 		{
@@ -1106,7 +1106,7 @@ void player::tick()
 	
 	
 	// handle weapons
-	int retflags = handle_weapons();
+	handle_weapons();
 	/*
 	if (!(retflags & (MODIFIER_RETURNFLAGS_OVERRIDEVELOCITY | MODIFIER_RETURNFLAGS_OVERRIDEPOSITION)))
 	{
@@ -1329,7 +1329,7 @@ powerup::powerup(int _type, int _subtype)
 	reset();
 	
 	// TODO: should this be done here?
-	world.insert_entity(this);
+	world->insert_entity(this);
 }
 
 void powerup::reset()
@@ -1412,7 +1412,7 @@ void powerup::tick()
 				// loop through all players, setting their emotes
 				entity *ents[64];
 				const int types[] = {OBJTYPE_PLAYER};
-				int num = world.find_entities(vec2(0, 0), 1000000, ents, 64, types, 1);
+				int num = world->find_entities(vec2(0, 0), 1000000, ents, 64, types, 1);
 				for (int i = 0; i < num; i++)
 				{
 					player *p = (player *)ents[i];
@@ -1467,7 +1467,7 @@ flag::flag(int _team)
 	reset();
 	
 	// TODO: should this be done here?
-	world.insert_entity(this);
+	world->insert_entity(this);
 }
 
 void flag::reset()
@@ -1477,7 +1477,7 @@ void flag::reset()
 
 void flag::tick()
 {
-	// THIS CODE NEEDS TO BE REWRITTEN. ITS NOT SAVE AT ALL
+	// THIS CODE NEEDS TO BE REWRITTEN. ITS NOT SAFE AT ALL
 	
 	// wait for respawn
 	if(spawntick > 0)
@@ -1493,7 +1493,7 @@ void flag::tick()
 	{
 		player *players[MAX_CLIENTS];
 		int types[] = {OBJTYPE_PLAYER};
-		int num = world.find_entities(pos, 32.0f, (entity**)players, MAX_CLIENTS, types, 1);
+		int num = world->find_entities(pos, 32.0f, (entity**)players, MAX_CLIENTS, types, 1);
 		for(int i = 0; i < num; i++)
 		{
 			if(players[i]->team != team)
@@ -1589,7 +1589,7 @@ void create_explosion(vec2 p, int owner, int weapon, bool bnodamage)
 		entity *ents[64];
 		const float radius = 128.0f;
 		const float innerradius = 42.0f;
-		int num = world.find_entities(p, radius, ents, 64);
+		int num = world->find_entities(p, radius, ents, 64);
 		for(int i = 0; i < num; i++)
 		{
 			vec2 diff = ents[i]->pos - p;
@@ -1667,7 +1667,7 @@ player* intersect_player(vec2 pos0, vec2 pos1, vec2& new_pos, entity* notthis)
 	float radius = length(dir * 0.5f);
 	vec2 center = pos0 + dir * 0.5f;
 	const int types[] = {OBJTYPE_PLAYER};
-	int num = world.find_entities(center, radius, ents, 64, types, 1);
+	int num = world->find_entities(center, radius, ents, 64, types, 1);
 	for (int i = 0; i < num; i++)
 	{
 		// Check if entity is a player
@@ -1686,9 +1686,9 @@ void mods_tick()
 {
 	// clear all events
 	events.clear();
-	world.tick();
+	world->tick();
 	
-	if(world.paused) // make sure that the game object always updates
+	if(world->paused) // make sure that the game object always updates
 		gameobj->tick();
 
 	if(config.dbg_bots)
@@ -1715,13 +1715,13 @@ void mods_tick()
 
 void mods_snap(int client_id)
 {
-	world.snap(client_id);
+	world->snap(client_id);
 	events.snap(client_id);
 }
 
 void mods_client_input(int client_id, void *input)
 {
-	if(!world.paused)
+	if(!world->paused)
 	{
 		if (memcmp(&players[client_id].input, input, sizeof(player_input)) != 0)
 			players[client_id].last_action = server_tick();
@@ -1771,7 +1771,7 @@ void mods_client_enter(int client_id)
 {
 	players[client_id].init();
 	players[client_id].client_id = client_id;
-	world.insert_entity(&players[client_id]);
+	world->insert_entity(&players[client_id]);
 	players[client_id].respawn();
 	
 	CLIENT_INFO info; // fetch login name
@@ -1822,7 +1822,7 @@ void mods_client_drop(int client_id)
 
 	dbg_msg("game", "leave player='%d:%s'", client_id, players[client_id].name);
 	
-	world.remove_entity(&players[client_id]);
+	world->remove_entity(&players[client_id]);
 	players[client_id].client_id = -1;
 }
 
@@ -1863,17 +1863,20 @@ extern unsigned char internal_data[];
 
 void mods_init()
 {
-	data = load_data_from_memory(internal_data);
+	if(!data) /* only load once */
+		data = load_data_from_memory(internal_data);
+		
 	col_init(32);
 
+	world = new game_world;
 	players = new player[MAX_CLIENTS];
 	gameobj = new gameobject;
 	
 	// setup core world	
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		players[i].core.world = &world.core;
-		world.core.players[i] = &players[i].core;
+		players[i].core.world = &world->core;
+		world->core.players[i] = &players[i].core;
 	}
 
 	//
@@ -1942,15 +1945,24 @@ void mods_init()
 
 			flag *f = new flag(i);
 			f->pos = gameobj->flagsstands[i];
-			//world.insert_entity(f);
+			//world->insert_entity(f);
 			dbg_msg("game", "flag at %f,%f", f->pos.x, f->pos.y);
 		}
 	}
 	
-	world.insert_entity(gameobj);
+	world->insert_entity(gameobj);
 }
 
-void mods_shutdown() {}
+void mods_shutdown()
+{
+	delete [] players;
+	delete gameobj;
+	delete world;
+	gameobj = 0;
+	players = 0;
+	world = 0;
+}
+	
 void mods_presnap() {}
 void mods_postsnap() {}
 
