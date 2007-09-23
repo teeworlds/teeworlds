@@ -782,6 +782,8 @@ void client_connect(const char *address);
 void client_disconnect();
 void client_quit();
 
+void client_rcon(const char *cmd);
+
 void client_serverbrowse_refresh(int lan);
 int client_serverbrowse_getlist(SERVER_INFO **servers);
 

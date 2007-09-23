@@ -465,6 +465,16 @@ static void server_process_client_packet(NETPACKET *packet)
 			clients[cid].current_input++;
 			clients[cid].current_input %= 200;
 		}
+		else if(msg == NETMSG_CMD)
+		{
+			const char *pw = msg_unpack_string();
+			const char *cmd = msg_unpack_string();
+			if(config.rcon_password[0] != 0 && strcmp(pw, config.rcon_password) == 0)
+			{
+				dbg_msg("server", "cid=%d rcon='%s'", cid, cmd);
+				config_set(cmd);
+			}
+		}
 		else
 		{
 			dbg_msg("server", "strange message cid=%d msg=%d data_size=%d", cid, msg, packet->data_size);

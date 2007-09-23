@@ -299,6 +299,15 @@ static void client_send_error(const char *error)
 }
 
 
+void client_rcon(const char *cmd)
+{
+	msg_pack_start_system(NETMSG_CMD, MSGFLAG_VITAL);
+	msg_pack_string(config.rcon_password, 32);
+	msg_pack_string(cmd, 256);
+	msg_pack_end();
+	client_send_msg();
+}
+
 static void client_send_input()
 {
 	if(current_predtick <= 0)

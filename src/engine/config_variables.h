@@ -6,6 +6,7 @@ MACRO_CONFIG_STR(player_name, 32, "nameless tee")
 MACRO_CONFIG_STR(clan_name, 32, "")
 MACRO_CONFIG_STR(password, 32, "")
 
+MACRO_CONFIG_STR(rcon_password, 32, "")
 
 MACRO_CONFIG_INT(debug, 0, 0, 1)
 MACRO_CONFIG_INT(stress, 0, 0, 0)

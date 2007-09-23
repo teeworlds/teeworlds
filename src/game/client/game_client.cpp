@@ -1649,10 +1649,15 @@ void render_game()
 						config_set(&chat_input[1]);
 					else
 					{
-						msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
-						msg_pack_string(chat_input, 512);
-						msg_pack_end();
-						client_send_msg();
+						if(inp_key_pressed(KEY_RSHIFT) || inp_key_pressed(KEY_LSHIFT))
+							client_rcon(chat_input);
+						else
+						{
+							msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
+							msg_pack_string(chat_input, 512);
+							msg_pack_end();
+							client_send_msg();
+						}
 					}
 				}
 			}
