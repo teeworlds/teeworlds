@@ -15,6 +15,12 @@
 #define GL_COMPRESSED_RGB_ARB 0x84ED
 #define GL_COMPRESSED_RGBA_ARB 0x84EE
 
+enum
+{
+	DRAWING_QUADS=1,
+	DRAWING_LINES=2,
+};
+
 //
 typedef struct { float x, y, z; } VEC3;
 typedef struct { float u, v; } TEXCOORD;
@@ -39,7 +45,7 @@ static int do_screenshot = 0;
 static int screen_width = -1;
 static int screen_height = -1;
 static float rotation = 0;
-static int quads_drawing = 0;
+static int drawing = 0;
 
 static float screen_x0 = 0;
 static float screen_y0 = 0;
@@ -71,39 +77,48 @@ static const unsigned char null_texture_data[] = {
 	0x00,0x00,0xff,0xff, 0x00,0x00,0xff,0xff, 0xff,0xff,0x00,0xff, 0xff,0xff,0x00,0xff, 
 };
 
-static void draw_quad(int _bflush)
+static void flush()
 {
-	if (!_bflush && ((num_vertices + 4) < vertex_buffer_size))
-	{
-		// Just add
-		num_vertices += 4;
-	}
-	else if (num_vertices)
-	{
-		if (!_bflush)
-			num_vertices += 4;
-			
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		glVertexPointer(3, GL_FLOAT,
-				sizeof(VERTEX),
-				(char*)vertices);
-		glTexCoordPointer(2, GL_FLOAT,
-				sizeof(VERTEX),
-				(char*)vertices + sizeof(float)*3);
-		glColorPointer(4, GL_FLOAT,
-				sizeof(VERTEX),
-				(char*)vertices + sizeof(float)*5);
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnableClientState(GL_COLOR_ARRAY);
-		glDrawArrays(GL_QUADS, 0, num_vertices);
+	if(num_vertices == 0)
+		return;
 		
-		// Reset pointer
-		num_vertices = 0;
-	}
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glVertexPointer(3, GL_FLOAT,
+			sizeof(VERTEX),
+			(char*)vertices);
+	glTexCoordPointer(2, GL_FLOAT,
+			sizeof(VERTEX),
+			(char*)vertices + sizeof(float)*3);
+	glColorPointer(4, GL_FLOAT,
+			sizeof(VERTEX),
+			(char*)vertices + sizeof(float)*5);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+	
+	if(drawing == DRAWING_QUADS)
+		glDrawArrays(GL_QUADS, 0, num_vertices);
+	else if(drawing == DRAWING_LINES)
+		glDrawArrays(GL_LINES, 0, num_vertices);
+	
+	// Reset pointer
+	num_vertices = 0;	
+}
+
+static void draw_line()
+{
+	num_vertices += 2;
+	if((num_vertices + 2) >= vertex_buffer_size)
+		flush();
+}
+
+static void draw_quad()
+{
+	num_vertices += 4;
+	if((num_vertices + 4) >= vertex_buffer_size)
+		flush();
 }
 
 int gfx_init()
@@ -499,7 +514,7 @@ int gfx_screenheight()
 
 void gfx_texture_set(int slot)
 {
-	dbg_assert(quads_drawing == 0, "called gfx_texture_set within quads_begin");
+	dbg_assert(drawing == 0, "called gfx_texture_set within begin");
 	if(slot == -1)
 		glDisable(GL_TEXTURE_2D);
 	else
@@ -551,49 +566,49 @@ void gfx_setoffset(float x, float y)
 
 void gfx_quads_begin()
 {
-	dbg_assert(quads_drawing == 0, "called quads_begin twice");
-	quads_drawing++;
+	dbg_assert(drawing == 0, "called quads_begin twice");
+	drawing = DRAWING_QUADS;
 	
 	gfx_quads_setsubset(0,0,1,1);
 	gfx_quads_setrotation(0);
-	gfx_quads_setcolor(1,1,1,1);
+	gfx_setcolor(1,1,1,1);
 }
 
 void gfx_quads_end()
 {
-	dbg_assert(quads_drawing == 1, "called quads_end without quads_begin");
-	draw_quad(1);
-	quads_drawing--;
+	dbg_assert(drawing == DRAWING_QUADS, "called quads_end without begin");
+	flush();
+	drawing = 0;
 }
 
 
 void gfx_quads_setrotation(float angle)
 {
-	dbg_assert(quads_drawing == 1, "called gfx_quads_setrotation without quads_begin");
+	dbg_assert(drawing == DRAWING_QUADS, "called gfx_quads_setrotation without begin");
 	rotation = angle;
 }
 
-void gfx_quads_setcolorvertex(int i, float r, float g, float b, float a)
+void gfx_setcolorvertex(int i, float r, float g, float b, float a)
 {
-	dbg_assert(quads_drawing == 1, "called gfx_quads_setcolorvertex without quads_begin");
+	dbg_assert(drawing != 0, "called gfx_quads_setcolorvertex without begin");
 	color[i].r = r;
 	color[i].g = g;
 	color[i].b = b;
 	color[i].a = a;
 }
 
-void gfx_quads_setcolor(float r, float g, float b, float a)
+void gfx_setcolor(float r, float g, float b, float a)
 {
-	dbg_assert(quads_drawing == 1, "called gfx_quads_setcolor without quads_begin");
-	gfx_quads_setcolorvertex(0, r, g, b, a);
-	gfx_quads_setcolorvertex(1, r, g, b, a);
-	gfx_quads_setcolorvertex(2, r, g, b, a);
-	gfx_quads_setcolorvertex(3, r, g, b, a);
+	dbg_assert(drawing != 0, "called gfx_quads_setcolor without begin");
+	gfx_setcolorvertex(0, r, g, b, a);
+	gfx_setcolorvertex(1, r, g, b, a);
+	gfx_setcolorvertex(2, r, g, b, a);
+	gfx_setcolorvertex(3, r, g, b, a);
 }
 
 void gfx_quads_setsubset(float tl_u, float tl_v, float br_u, float br_v)
 {
-	dbg_assert(quads_drawing == 1, "called gfx_quads_setsubset without quads_begin");
+	dbg_assert(drawing == DRAWING_QUADS, "called gfx_quads_setsubset without begin");
 
 	texture[0].u = tl_u;
 	texture[0].v = tl_v;
@@ -631,7 +646,7 @@ void gfx_quads_draw(float x, float y, float w, float h)
 
 void gfx_quads_drawTL(float x, float y, float width, float height)
 {
-	dbg_assert(quads_drawing == 1, "called quads_draw without quads_begin");
+	dbg_assert(drawing == DRAWING_QUADS, "called quads_draw without begin");
 	
 	VEC3 center;
 	center.x = x + width/2;
@@ -662,7 +677,7 @@ void gfx_quads_drawTL(float x, float y, float width, float height)
 	vertices[num_vertices + 3].color = color[3];
 	rotate(&center, &vertices[num_vertices + 3].pos);
 	
-	draw_quad(0);
+	draw_quad();
 }
 
 void gfx_quads_draw_freeform(
@@ -671,7 +686,7 @@ void gfx_quads_draw_freeform(
 	float x2, float y2,
 	float x3, float y3)
 {
-	dbg_assert(quads_drawing == 1, "called quads_draw_freeform without quads_begin");
+	dbg_assert(drawing == DRAWING_QUADS, "called quads_draw_freeform without begin");
 	
 	vertices[num_vertices].pos.x = x0;
 	vertices[num_vertices].pos.y = y0;
@@ -693,7 +708,7 @@ void gfx_quads_draw_freeform(
 	vertices[num_vertices + 3].tex = texture[3];
 	vertices[num_vertices + 3].color = color[3];
 	
-	draw_quad(0);
+	draw_quad();
 }
 
 void gfx_quads_text(float x, float y, float size, const char *text)
@@ -883,4 +898,37 @@ float gfx_pretty_text_width(float size, const char *text_, int length)
 	}
 
 	return w;
+}
+
+
+
+void gfx_lines_begin()
+{
+	dbg_assert(drawing == 0, "called begin twice");
+	drawing = DRAWING_LINES;
+	gfx_setcolor(1,1,1,1);
+}
+
+void gfx_lines_end()
+{
+	dbg_assert(drawing == DRAWING_LINES, "called end without begin");
+	flush();
+	drawing = 0;
+}
+
+void gfx_lines_draw(float x0, float y0, float x1, float y1)
+{
+	dbg_assert(drawing == DRAWING_LINES, "called draw without begin");
+	
+	vertices[num_vertices].pos.x = x0;
+	vertices[num_vertices].pos.y = y0;
+	vertices[num_vertices].tex = texture[0];
+	vertices[num_vertices].color = color[0];
+
+	vertices[num_vertices + 1].pos.x = x1;
+	vertices[num_vertices + 1].pos.y = y1;
+	vertices[num_vertices + 1].tex = texture[1];
+	vertices[num_vertices + 1].color = color[1];
+	
+	draw_line();
 }

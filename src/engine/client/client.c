@@ -33,10 +33,6 @@ static int info_request_begin;
 static int info_request_end;
 static int snapshot_part;
 static int64 local_start_time;
-static int64 game_start_time;
-
-static float snapshot_latency = 0;
-static float prediction_latency = 0;
 
 static int extra_polating = 0;
 static int debug_font;
@@ -47,6 +43,8 @@ static NETADDR4 server_address;
 static int window_must_refocus = 0;
 static int snaploss = 0;
 static int snapcrcerrors = 0;
+
+static int ack_game_tick = -1;
 
 static int current_recv_tick = 0;
 
@@ -62,10 +60,123 @@ static struct // TODO: handle input better
 {
 	int data[MAX_INPUT_SIZE]; // the input data
 	int tick; // the tick that the input is for
-	float latency; // prediction latency when we sent this input
+	int64 game_time; // prediction latency when we sent this input
+	int64 time;
 } inputs[200];
 static int current_input = 0;
 
+enum
+{
+	GRAPH_MAX=256,
+};
+
+typedef struct
+{
+	float min, max;
+	float values[GRAPH_MAX];
+	int index;
+} GRAPH;
+
+static void graph_add(GRAPH *g, float v)
+{
+	g->values[g->index] = v;
+	g->index = (g->index+1)&(GRAPH_MAX-1);
+}
+
+static void graph_render(GRAPH *g, float x, float y, float w, float h)
+{
+	int i;
+	gfx_texture_set(-1);
+	
+	gfx_quads_begin();
+	gfx_setcolor(0, 0, 0, 1);
+	gfx_quads_drawTL(x, y, w, h);
+	gfx_quads_end();
+		
+	gfx_lines_begin();
+	gfx_setcolor(0.5f, 0.5f, 0.5f, 1);
+	gfx_lines_draw(x, y+(h*3)/4, x+w, y+(h*3)/4);
+	gfx_lines_draw(x, y+h/2, x+w, y+h/2);
+	gfx_lines_draw(x, y+h/4, x+w, y+h/4);
+	for(i = 1; i < GRAPH_MAX; i++)
+	{
+		float a0 = (i-1)/(float)GRAPH_MAX;
+		float a1 = i/(float)GRAPH_MAX;
+		int i0 = (g->index+i-1)&(GRAPH_MAX-1);
+		int i1 = (g->index+i)&(GRAPH_MAX-1);
+		
+		float v0 = g->values[i0];
+		float v1 = g->values[i1];
+		
+		gfx_setcolor(0, 1, 0, 1);
+		gfx_lines_draw(x+a0*w, y+h-v0*h, x+a1*w, y+h-v1*h);
+	}
+	gfx_lines_end();
+}
+
+typedef struct
+{
+	int64 snap;
+	int64 current;
+	int64 target;
+	
+	int64 rlast;
+	int64 tlast;
+	GRAPH graph;
+} SMOOTHTIME;
+
+static void st_init(SMOOTHTIME *st, int64 target)
+{
+	st->snap = time_get();
+	st->current = target;
+	st->target = target;
+}
+
+static int64 st_get(SMOOTHTIME *st, int64 now)
+{
+	int64 c = st->current + (now - st->snap);
+	int64 t = st->target + (now - st->snap);
+	
+	// it's faster to adjust upward instead of downward
+	// we might need to adjust these abit
+	float adjust_speed = 0.3f;
+	if(t < c)
+		adjust_speed *= 5.0f;
+	
+	float a = ((now-st->snap)/(float)time_freq())*adjust_speed;
+	if(a > 1)
+		a = 1;
+		
+	int64 r = c + (int64)((t-c)*a);
+	
+	{
+		int64 drt = now - st->rlast;
+		int64 dtt = r - st->tlast;
+		
+		st->rlast = now;
+		st->tlast = r;
+		
+		if(drt == 0)
+			graph_add(&st->graph, 0.5f);
+		else
+			graph_add(&st->graph, (((dtt/(float)drt)-1.0f)*2.5f)+0.5f);
+	}
+	
+	return r;
+}
+
+static void st_update(SMOOTHTIME *st, int64 target)
+{
+	int64 now = time_get();
+	st->current = st_get(st, now);
+	st->snap = now;
+	st->target = target;
+}
+
+SMOOTHTIME game_time;
+SMOOTHTIME predicted_time;
+
+GRAPH intra_graph;
 
 // --- input snapping ---
 static int input_data[MAX_INPUT_SIZE] = {0};
@@ -125,8 +236,7 @@ static void snap_init()
 	snapshots[SNAP_CURRENT] = 0;
 	snapshots[SNAP_PREV] = 0;
 	recived_snapshots = 0;
-	game_start_time = -1;
-	
+	current_predtick = 0;
 }
 
 // ------ time functions ------
@@ -159,7 +269,6 @@ int client_send_msg()
 static void client_send_info()
 {
 	recived_snapshots = 0;
-	game_start_time = -1;
 
 	msg_pack_start_system(NETMSG_INFO, MSGFLAG_VITAL);
 	msg_pack_string(modc_net_version(), 128);
@@ -192,12 +301,18 @@ static void client_send_error(const char *error)
 
 static void client_send_input()
 {
+	if(current_predtick <= 0)
+		return;
+		
 	msg_pack_start_system(NETMSG_INPUT, 0);
+	msg_pack_int(ack_game_tick);
 	msg_pack_int(current_predtick);
 	msg_pack_int(input_data_size);
-	
+
+	int64 now = time_get();	
 	inputs[current_input].tick = current_predtick;
-	inputs[current_input].latency = prediction_latency;
+	inputs[current_input].game_time = st_get(&predicted_time, now);
+	inputs[current_input].time = now;
 	
 	int i;
 	for(i = 0; i < input_data_size/4; i++)
@@ -384,9 +499,6 @@ void client_connect(const char *server_address_str)
 	for(i = 0; i < 200; i++)
 		inputs[i].tick = -1;
 	current_input = 0;
-	
-	snapshot_latency = 0;
-	prediction_latency = 0;
 }
 
 void client_disconnect()
@@ -424,17 +536,23 @@ static void client_debug_render()
 	static float frametime_avg = 0;
 	frametime_avg = frametime_avg*0.9f + frametime*0.1f;
 	char buffer[512];
-	sprintf(buffer, "send: %6d recv: %6d snaploss: %d snaplatency: %4.2f %c  predlatency: %4.2f  mem %dk   gfxmem: %dk  fps: %3d",
+	sprintf(buffer, "ticks: %8d %8d send: %6d recv: %6d snaploss: %d %c  mem %dk   gfxmem: %dk  fps: %3d",
+		current_tick, current_predtick,
 		(current.send_bytes-prev.send_bytes)*10,
 		(current.recv_bytes-prev.recv_bytes)*10,
 		snaploss,
-		snapshot_latency*1000.0f, extra_polating?'E':' ',
-		prediction_latency*1000.0f,
+		extra_polating?'E':' ',
 		mem_allocated()/1024,
 		gfx_memory_usage()/1024,
 		(int)(1.0f/frametime_avg));
 	gfx_quads_text(2, 2, 16, buffer);
 	
+	
+	// render graphs
+	gfx_mapscreen(0,0,400.0f,300.0f);
+	graph_render(&game_time.graph, 300, 10, 90, 50);
+	graph_render(&predicted_time.graph, 300, 10+50+10, 90, 50);
+	graph_render(&intra_graph, 300, 10+50+10+50+10, 90, 50);
 }
 
 void client_quit()
@@ -597,18 +715,14 @@ static void client_process_packet(NETPACKET *packet)
 					{
 						if(inputs[k].tick == input_predtick)
 						{
-							float wanted_latency = inputs[k].latency - time_left/1000.0f + 0.01f;
-							if(wanted_latency > prediction_latency)
-								prediction_latency = prediction_latency*0.90f + wanted_latency*0.10f;
-							else
-								prediction_latency = prediction_latency*0.95f + wanted_latency*0.05f;
-							//dbg_msg("DEBUG", "predlatency=%f", prediction_latency);
+							//-1000/50
+							int margin = 1000/50;
+							int64 target = inputs[k].game_time + (time_get() - inputs[k].time);
+							st_update(&predicted_time, target - (int64)(((time_left-margin)/1000.0f)*time_freq()));
 							break;
 						}
 					}
 				}
-				
-				//dbg_msg("DEBUG", "new predlatency=%f", prediction_latency);
 				
 				if(snapshot_part == part && game_tick > current_recv_tick)
 				{
@@ -642,10 +756,7 @@ static void client_process_packet(NETPACKET *packet)
 								
 								// ack snapshot
 								// TODO: combine this with the input message
-								msg_pack_start_system(NETMSG_SNAPACK, 0);
-								msg_pack_int(-1);
-								msg_pack_end();
-								client_send_msg();
+								ack_game_tick = -1;
 								return;
 							}
 						}
@@ -668,18 +779,15 @@ static void client_process_packet(NETPACKET *packet)
 						
 						unsigned char tmpbuffer3[MAX_SNAPSHOT_SIZE];
 						int snapsize = snapshot_unpack_delta(deltashot, (SNAPSHOT*)tmpbuffer3, deltadata, deltasize);
-						if(snapshot_crc((SNAPSHOT*)tmpbuffer3) != crc)
+						if(msg != NETMSG_SNAPEMPTY && snapshot_crc((SNAPSHOT*)tmpbuffer3) != crc)
 						{
 							if(config.debug)
-								dbg_msg("client", "snapshot crc error\n");
+								dbg_msg("client", "snapshot crc error");
 							snapcrcerrors++;
 							if(snapcrcerrors > 25)
 							{
 								// to many errors, send reset
-								msg_pack_start_system(NETMSG_SNAPACK, 0);
-								msg_pack_int(-1);
-								msg_pack_end();
-								client_send_msg();
+								ack_game_tick = -1;
 								snapcrcerrors = 0;
 							}
 							return;
@@ -718,12 +826,21 @@ static void client_process_packet(NETPACKET *packet)
 						// we got two snapshots until we see us self as connected
 						if(recived_snapshots == 2)
 						{
+							// start at 200ms and work from there
+							st_init(&predicted_time, (game_tick+10)*time_freq()/50);
+							st_init(&game_time, (game_tick-2)*time_freq()/50);
 							snapshots[SNAP_PREV] = snapshot_storage.first;
 							snapshots[SNAP_CURRENT] = snapshot_storage.last;
 							local_start_time = time_get();
 							client_set_state(CLIENTSTATE_ONLINE);
 						}
+						
+						st_update(&game_time, (game_tick-2)*time_freq()/50);
+						//client_send_input();
 
+						//st_update(&predicted_time, game_tick*time_freq());
+
+						/*
 						int64 now = time_get();
 						int64 t = now - game_tick*time_freq()/50;
 						if(game_start_time == -1 || t < game_start_time)
@@ -736,17 +853,16 @@ static void client_process_packet(NETPACKET *packet)
 						int64 wanted = game_start_time+(game_tick*time_freq())/50;
 						float current_latency = (now-wanted)/(float)time_freq();
 						snapshot_latency = snapshot_latency*0.95f+current_latency*0.05f;
+						*/
 						
 						// ack snapshot
-						msg_pack_start_system(NETMSG_SNAPACK, 0);
-						msg_pack_int(game_tick);
-						msg_pack_end();
-						client_send_msg();
+						//dbg_msg("snap!", "%d", game_tick);
+						ack_game_tick = game_tick;
 					}
 				}
 				else
 				{
-					dbg_msg("client", "snapshot reset!");
+					dbg_msg("client", "snapsht reset!");
 					snapshot_part = 0;
 				}
 			}
@@ -758,7 +874,6 @@ static void client_process_packet(NETPACKET *packet)
 		}
 	}
 }
-
 
 static void client_pump_network()
 {
@@ -842,16 +957,14 @@ static void client_run(const char *direct_connect_server)
 		if(recived_snapshots >= 3)
 		{
 			int repredict = 0;
-			int64 now = time_get();
+			//int64 now = time_get();
+			int64 now = st_get(&game_time, time_get());
 			while(1)
 			{
 				SNAPSTORAGE_HOLDER *cur = snapshots[SNAP_CURRENT];
-				int64 tickstart = game_start_time + (cur->tick+1)*time_freq()/50;
-				int64 t = tickstart;
-				if(snapshot_latency > 0)
-					t += (int64)(time_freq()*(snapshot_latency*1.1f));
+				int64 tickstart = (cur->tick)*time_freq()/50;
 
-				if(t < now)
+				if(tickstart < now)
 				{
 					SNAPSTORAGE_HOLDER *next = snapshots[SNAP_CURRENT]->next;
 					if(next)
@@ -880,36 +993,28 @@ static void client_run(const char *direct_connect_server)
 					break;
 				}
 			}
+
+			//tg_add(&game_time_graph, now, extra_polating);
 			
 			if(snapshots[SNAP_CURRENT] && snapshots[SNAP_PREV])
 			{
-				int64 curtick_start = game_start_time + (snapshots[SNAP_CURRENT]->tick+1)*time_freq()/50;
-				if(snapshot_latency > 0)
-					curtick_start += (int64)(time_freq()*(snapshot_latency*1.1f));
-					
-				int64 prevtick_start = game_start_time + (snapshots[SNAP_PREV]->tick+1)*time_freq()/50;
-				if(snapshot_latency > 0)
-					prevtick_start += (int64)(time_freq()*(snapshot_latency*1.1f));
-					
+				int64 curtick_start = (snapshots[SNAP_CURRENT]->tick)*time_freq()/50;
+				int64 prevtick_start = (snapshots[SNAP_PREV]->tick)*time_freq()/50;
 				intratick = (now - prevtick_start) / (float)(curtick_start-prevtick_start);
-
-				// 25 frames ahead
-				int64 last_pred_game_time = 0;
-				int64 predicted_game_time = (now - game_start_time) + (int64)(time_freq()*prediction_latency);
-				if(predicted_game_time < last_pred_game_time)
-					predicted_game_time = last_pred_game_time;
-				last_pred_game_time = predicted_game_time;
 				
-				//int64 predictiontime = game_start_time + time_freq()+ prediction_latency*SERVER_TICK_SPEED
-				int new_predtick = (predicted_game_time*SERVER_TICK_SPEED) / time_freq();
+				graph_add(&intra_graph, intratick*0.25f);
 				
-				int64 predtick_start_time = (new_predtick*time_freq())/SERVER_TICK_SPEED;
-				intrapredtick = (predicted_game_time - predtick_start_time)*SERVER_TICK_SPEED/(float)time_freq();
+				int64 pred_now = st_get(&predicted_time, time_get());
+				//tg_add(&predicted_time_graph, pred_now, 0);
+				int prev_pred_tick = (int)(pred_now*50/time_freq());
+				int new_pred_tick = prev_pred_tick+1;
+				curtick_start = new_pred_tick*time_freq()/50;
+				prevtick_start = prev_pred_tick*time_freq()/50;
+				intrapredtick = (pred_now - prevtick_start) / (float)(curtick_start-prevtick_start);
 				
-				if(new_predtick > current_predtick)
+				if(new_pred_tick > current_predtick)
 				{
-					//dbg_msg("")
-					current_predtick = new_predtick;
+					current_predtick = new_pred_tick;
 					repredict = 1;
 					
 					// send input
@@ -918,9 +1023,13 @@ static void client_run(const char *direct_connect_server)
 			}
 			
 			//intrapredtick = current_predtick
-			
+
+			// only do sane predictions			
 			if(repredict)
-				modc_predict();
+			{
+				if(current_predtick > current_tick && current_predtick < current_tick+50)
+					modc_predict();
+			}
 		}
 
 		// STRESS TEST: join the server again
@@ -970,11 +1079,15 @@ static void client_run(const char *direct_connect_server)
 		
 			if(inp_key_pressed(KEY_F5))
 			{
+				ack_game_tick = -1;
+				client_send_input();
+				/*
 				// ack snapshot
 				msg_pack_start_system(NETMSG_SNAPACK, 0);
 				msg_pack_int(-1);
 				msg_pack_end();
 				client_send_msg();
+				*/
 			}
 		}
 			

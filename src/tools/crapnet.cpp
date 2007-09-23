@@ -100,10 +100,10 @@ int run(int port, NETADDR4 dest)
 				net_udp4_send(socket, &p->send_to, p->data, p->data_size);
 				
 				// update lag
-				double flux = 0; //rand()/(double)RAND_MAX;
+				double flux = rand()/(double)RAND_MAX;
 				int ms_spike = 0;
-				int ms_flux = 00;
-				int ms_ping = 100;
+				int ms_flux = 50;
+				int ms_ping = 50;
 				current_latency = ((time_freq()*ms_ping)/1000) + (int64)(((time_freq()*ms_flux)/1000)*flux); // 50ms
 				
 				if(ms_spike && (p->id%100) == 0)

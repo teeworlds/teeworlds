@@ -138,38 +138,6 @@ void draw_sprite(float x, float y, float size)
 	gfx_quads_draw(x, y, size*sprite_w_scale, size*sprite_h_scale);
 }
 
-/*
-void move_point(vec2 *inout_pos, vec2 *inout_vel, float elasticity)
-{
-	vec2 pos = *inout_pos;
-	vec2 vel = *inout_vel;
-	if(col_check_point(pos + vel))
-	{
-		int affected = 0;
-		if(col_check_point(pos.x + vel.x, pos.y))
-		{
-			inout_vel->x *= -elasticity;
-			affected++;
-		}
-
-		if(col_check_point(pos.x, pos.y + vel.y))
-		{
-			inout_vel->y *= -elasticity;
-			affected++;
-		}
-		
-		if(affected == 0)
-		{
-			inout_vel->x *= -elasticity;
-			inout_vel->y *= -elasticity;
-		}
-	}
-	else
-	{
-		*inout_pos = pos + vel;
-	}
-}*/
-
 class damage_indicators
 {
 public:
@@ -238,7 +206,7 @@ public:
 				destroy_i(&items[i]);
 			else
 			{
-				gfx_quads_setcolor(1.0f,1.0f,1.0f, items[i].life/0.1f);
+				gfx_setcolor(1.0f,1.0f,1.0f, items[i].life/0.1f);
 				gfx_quads_setrotation(items[i].startangle + items[i].life * 2.0f);
 				select_sprite(SPRITE_STAR1);
 				draw_sprite(pos.x, pos.y, 48.0f);
@@ -341,7 +309,7 @@ public:
 			
 			gfx_quads_setrotation(particles[i].rot);
 			
-			gfx_quads_setcolor(
+			gfx_setcolor(
 				data->particles[type].color_r,
 				data->particles[type].color_g,
 				data->particles[type].color_b,
@@ -461,7 +429,7 @@ static void render_loading(float percent)
 	
 	gfx_texture_set(-1);
 	gfx_quads_begin();
-	gfx_quads_setcolor(0,0,0,0.50f);
+	gfx_setcolor(0,0,0,0.50f);
 	draw_round_rect(x, y, w, h, 40.0f);
 	gfx_quads_end();
 
@@ -472,7 +440,7 @@ static void render_loading(float percent)
 
 	gfx_texture_set(-1);
 	gfx_quads_begin();
-	gfx_quads_setcolor(1,1,1,1.0f);
+	gfx_setcolor(1,1,1,1.0f);
 	draw_round_rect(x+40, y+h-75, (w-80)*percent, 25, 5.0f);
 	gfx_quads_end();
 
@@ -870,7 +838,7 @@ static void render_flag(const obj_flag *prev, const obj_flag *current)
 	pos.x += cosf(client_localtime()*2.0f+offset)*2.5f;
 	pos.y += sinf(client_localtime()*2.0f+offset)*2.5f;
 
-    gfx_quads_setcolor(current->team ? 1 : 0,0,current->team ? 0 : 1,1);
+    gfx_setcolor(current->team ? 1 : 0,0,current->team ? 0 : 1,1);
 	gfx_quads_setsubset(
 		0, // startx
 		0, // starty
@@ -1338,7 +1306,7 @@ static void render_player(const obj_player *prev_obj, const obj_player *player_o
 					p += dir * data->weapons[iw].muzzleoffsetx + diry * offsety;
 
 					draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
-					/*gfx_quads_setcolor(1.0f,1.0f,1.0f,alpha);
+					/*gfx_setcolor(1.0f,1.0f,1.0f,alpha);
 					vec2 diry(-dir.y,dir.x);
 					p += dir * muzzleparams[player.weapon].offsetx + diry * offsety;
 					gfx_quads_draw(p.x,p.y,muzzleparams[player.weapon].sizex, muzzleparams[player.weapon].sizey);*/
@@ -1399,7 +1367,7 @@ static void render_player(const obj_player *prev_obj, const obj_player *player_o
 
 		gfx_quads_setrotation(pi/6*wiggle_angle);
 
-		gfx_quads_setcolor(1.0f,1.0f,1.0f,a);
+		gfx_setcolor(1.0f,1.0f,1.0f,a);
 		// client_datas::emoticon is an offset from the first emoticon
 		select_sprite(SPRITE_OOP + client_datas[player.clientid].emoticon);
 		gfx_quads_draw(position.x, position.y - 23 - 32*h, 64, 64*h);
@@ -1415,7 +1383,7 @@ void render_sun(float x, float y)
 	gfx_blend_additive();
 	gfx_quads_begin();
 	const int rays = 10;
-	gfx_quads_setcolor(1.0f,1.0f,1.0f,0.025f);
+	gfx_setcolor(1.0f,1.0f,1.0f,0.025f);
 	for(int r = 0; r < rays; r++)
 	{
 		float a = r/(float)rays + client_localtime()*0.025f;
@@ -1423,10 +1391,10 @@ void render_sun(float x, float y)
 		vec2 dir0(sinf((a-size)*pi*2.0f), cosf((a-size)*pi*2.0f));
 		vec2 dir1(sinf((a+size)*pi*2.0f), cosf((a+size)*pi*2.0f));
 		
-		gfx_quads_setcolorvertex(0, 1.0f,1.0f,1.0f,0.025f);
-		gfx_quads_setcolorvertex(1, 1.0f,1.0f,1.0f,0.025f);
-		gfx_quads_setcolorvertex(2, 1.0f,1.0f,1.0f,0.0f);
-		gfx_quads_setcolorvertex(3, 1.0f,1.0f,1.0f,0.0f);
+		gfx_setcolorvertex(0, 1.0f,1.0f,1.0f,0.025f);
+		gfx_setcolorvertex(1, 1.0f,1.0f,1.0f,0.025f);
+		gfx_setcolorvertex(2, 1.0f,1.0f,1.0f,0.0f);
+		gfx_setcolorvertex(3, 1.0f,1.0f,1.0f,0.0f);
 		const float range = 1000.0f;
 		gfx_quads_draw_freeform(
 			pos.x+dir0.x, pos.y+dir0.y,
@@ -1497,7 +1465,7 @@ int emoticon_selector_render()
 	
 	gfx_texture_set(-1);
 	gfx_quads_begin();
-	gfx_quads_setcolor(0,0,0,0.3f);
+	gfx_setcolor(0,0,0,0.3f);
 	draw_circle(200, 150, 80, 64);
 	gfx_quads_end();
 
@@ -1524,7 +1492,7 @@ int emoticon_selector_render()
 
     gfx_texture_set(data->images[IMAGE_CURSOR].id);
     gfx_quads_begin();
-    gfx_quads_setcolor(1,1,1,1);
+    gfx_setcolor(1,1,1,1);
     gfx_quads_drawTL(emoticon_selector_mouse.x+200,emoticon_selector_mouse.y+150,12,12);
     gfx_quads_end();
 
@@ -1550,7 +1518,7 @@ void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, c
 	
 	gfx_texture_set(-1);
 	gfx_quads_begin();
-	gfx_quads_setcolor(0,0,0,0.5f);
+	gfx_setcolor(0,0,0,0.5f);
 	draw_round_rect(x-10.f, y-10.f, w, h, 40.0f);
 	gfx_quads_end();
 	
@@ -1620,7 +1588,7 @@ void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, c
 			// background so it's easy to find the local player
 			gfx_texture_set(-1);
 			gfx_quads_begin();
-			gfx_quads_setcolor(1,1,1,0.25f);
+			gfx_setcolor(1,1,1,0.25f);
 			draw_round_rect(x, y, w-20, 48, 20.0f);
 			gfx_quads_end();
 		}

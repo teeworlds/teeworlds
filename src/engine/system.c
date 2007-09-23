@@ -258,8 +258,12 @@ int64 time_get()
 	gettimeofday(&val, NULL);
 	return (int64)val.tv_sec*(int64)1000000+(int64)val.tv_usec;
 #elif defined(CONF_FAMILY_WINDOWS)
+	static int64 last = 0;
 	int64 t;
 	QueryPerformanceCounter((PLARGE_INTEGER)&t);
+	if(t<last) /* for some reason, QPC can return values in the past */
+		return last;
+	last = t;
 	return t;
 #else
 	#error not implemented

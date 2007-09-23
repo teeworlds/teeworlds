@@ -61,7 +61,7 @@ void draw_area(gui_tileset_enum tileset, int areax, int areay, int areaw, int ar
     gfx_blend_normal();
     gfx_texture_set(data->images[IMAGE_GUI_WIDGETS].id);
     gfx_quads_begin();
-    gfx_quads_setcolor(1,1,1,1);
+    gfx_setcolor(1,1,1,1);
 	gfx_quads_setsubset(
 		ts_x, // startx
 		ts_y, // starty
@@ -180,7 +180,7 @@ void draw_background(float t)
 
     gfx_texture_set(data->images[IMAGE_MENU_BUTTERFLY].id);
     gfx_quads_begin();
-    gfx_quads_setcolor(1, 1, 1, 1);
+    gfx_setcolor(1, 1, 1, 1);
 	gfx_quads_setsubset(
 		flip ? (frame + 1) * 0.25f : frame * 0.25f, // startx
 		0.0f, // starty
@@ -983,7 +983,7 @@ static int settings_render(bool ingame)
 		
 		gfx_texture_set(-1);
 		gfx_quads_begin();
-		gfx_quads_setcolor(0,0,0,0.5f);
+		gfx_setcolor(0,0,0,0.5f);
 		draw_round_rect(10, 120, 780, 460, 30.0f);
 		gfx_quads_end();
 	}
@@ -1066,7 +1066,7 @@ static int ingame_main_render()
 	
 	gfx_texture_set(-1);
 	gfx_quads_begin();
-	gfx_quads_setcolor(0,0,0,0.5f);
+	gfx_setcolor(0,0,0,0.5f);
 	draw_round_rect(170, 120, 460, 360, 30.0f);
 	gfx_quads_end();
 	
@@ -1179,7 +1179,7 @@ static int kerning_render()
     	gfx_blend_normal();
     	gfx_texture_set(-1);
     	gfx_quads_begin();
-    	gfx_quads_setcolor(0,0,0,0.5);
+    	gfx_setcolor(0,0,0,0.5);
     	gfx_quads_drawTL(700,35*i+20,1,30);
 		gfx_quads_drawTL(700+45*(current_font->m_CharEndTable[(int)s[0]]-current_font->m_CharStartTable[(int)s[0]]),35*i+20,1,30);
     	gfx_quads_end();
@@ -1281,7 +1281,7 @@ int render_popup(const char *caption, const char *text, const char *button_text)
 	
 	gfx_texture_set(-1);
 	gfx_quads_begin();
-	gfx_quads_setcolor(0,0,0,0.50f);
+	gfx_setcolor(0,0,0,0.50f);
 	draw_round_rect(x, y, w, h, 40.0f);
 	gfx_quads_end();
 
@@ -1435,7 +1435,7 @@ extern "C" int modmenu_render(int ingame) // TODO: nastyness
 
     gfx_texture_set(data->images[IMAGE_CURSOR].id);
     gfx_quads_begin();
-    gfx_quads_setcolor(1,1,1,1);
+    gfx_setcolor(1,1,1,1);
     gfx_quads_drawTL(mx,my,24,24);
     gfx_quads_end();
 

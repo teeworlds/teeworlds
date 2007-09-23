@@ -383,7 +383,7 @@ static void ui_do_frame(float x, float y, float w, float h)
 	gfx_texture_set(-1);
 	gfx_blend_normal();
 	gfx_quads_begin();
-	gfx_quads_setcolor(0.0f, 0.0f, 0.0f, 1.0f);
+	gfx_setcolor(0.0f, 0.0f, 0.0f, 1.0f);
 	gfx_quads_drawTL(x, y, w, h);
 	gfx_quads_end();
 	gfx_blend_normal();	
@@ -484,7 +484,7 @@ static int ui_do_tilemap(void *id, tilemap *tm, int flags, float x, float y, flo
 			gfx_texture_set(-1);
 			gfx_blend_additive();
 			gfx_quads_begin();
-			gfx_quads_setcolor(1.0f, 0.0f, 0.0f, 0.25f);
+			gfx_setcolor(1.0f, 0.0f, 0.0f, 0.25f);
 			gfx_quads_drawTL((tmx-brush.width/2)*scale, (tmy-brush.height/2)*scale, brush.width*scale, brush.height*scale);
 			gfx_quads_end();
 			gfx_blend_normal();
@@ -521,7 +521,7 @@ static int ui_do_tilemap(void *id, tilemap *tm, int flags, float x, float y, flo
 			gfx_texture_set(-1);
 			gfx_blend_additive();
 			gfx_quads_begin();
-			gfx_quads_setcolor(1.0f, 1.0f, 1.0f, 0.25f);
+			gfx_setcolor(1.0f, 1.0f, 1.0f, 0.25f);
 			gfx_quads_drawTL(select_wx, select_wy, select_ww, select_wh);
 			gfx_quads_end();
 			gfx_blend_normal();
@@ -597,11 +597,11 @@ static int ui_do_entity(void *id, entity *ent, int selected)
 	gfx_texture_set(-1);
 	gfx_quads_begin();
 	if(selected)
-		gfx_quads_setcolor(1.0f, 0.5f, 0.5f, 0.95f);
+		gfx_setcolor(1.0f, 0.5f, 0.5f, 0.95f);
 	else if(ui_hot_item() == id)
-		gfx_quads_setcolor(1.0f, 1.0f, 1.0f, 0.95f);
+		gfx_setcolor(1.0f, 1.0f, 1.0f, 0.95f);
 	else
-		gfx_quads_setcolor(0.75f, 0.75f, 0.75f, 0.95f);
+		gfx_setcolor(0.75f, 0.75f, 0.75f, 0.95f);
 		
 	gfx_quads_drawTL(x-w/2, y-w/2, w, h);
 	gfx_quads_end();
@@ -646,11 +646,11 @@ void draw_editor_button(void *id, const char *text, int checked, float x, float 
     gfx_texture_set(-1);
     gfx_quads_begin(); 
     if(ui_hot_item() == id)
-        gfx_quads_setcolor(1,1,1,1);
+        gfx_setcolor(1,1,1,1);
     else if(checked)
-        gfx_quads_setcolor(0.75f,0.5f,0.5f,1);
+        gfx_setcolor(0.75f,0.5f,0.5f,1);
     else
-        gfx_quads_setcolor(0.5f,0.5f,0.5f,1);
+        gfx_setcolor(0.5f,0.5f,0.5f,1);
 
     gfx_quads_drawTL(x,y,w,h);
     gfx_quads_end();
@@ -872,7 +872,7 @@ static void editor_render()
 			gfx_texture_set(checker_texture);
 			gfx_blend_normal();
 			gfx_quads_begin();
-			gfx_quads_setcolor(1.0f, 1.0f, 1.0f, 1.0f);
+			gfx_setcolor(1.0f, 1.0f, 1.0f, 1.0f);
 			gfx_quads_setsubset(0,0,32.0f, 32.0f);
 			gfx_quads_drawTL(chooser_x, chooser_y, 16*16.0f, 16*16.0f);
 			gfx_quads_end();
@@ -1135,11 +1135,11 @@ static int editor_loop()
 		// render butt ugly mouse cursor
 		gfx_texture_set(-1);
 		gfx_quads_begin();
-		gfx_quads_setcolor(0,0,0,1);
+		gfx_setcolor(0,0,0,1);
 		gfx_quads_draw_freeform(mx,my,mx,my,
 								mx+7,my,
 								mx,my+7);
-		gfx_quads_setcolor(1,1,1,1);
+		gfx_setcolor(1,1,1,1);
 		gfx_quads_draw_freeform(mx+1,my+1,mx+1,my+1,
 								mx+5,my+1,
 								mx+1,my+5);

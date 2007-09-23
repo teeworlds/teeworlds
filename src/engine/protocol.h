@@ -17,7 +17,6 @@ enum
 	/* sent by client */
 	NETMSG_ENTERGAME,
 	NETMSG_INPUT,
-	NETMSG_SNAPACK,
 	
 	/* sent by both */
 	NETMSG_ERROR,

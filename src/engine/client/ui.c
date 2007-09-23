@@ -70,7 +70,7 @@ void ui_do_image(int texture, float x, float y, float w, float h)
     gfx_blend_normal();
     gfx_texture_set(texture);
     gfx_quads_begin();
-    gfx_quads_setcolor(1,1,1,1);
+    gfx_setcolor(1,1,1,1);
     gfx_quads_setsubset(
         0.0f, // startx
         0.0f, // starty

@@ -436,6 +436,11 @@ static void server_process_client_packet(NETPACKET *packet)
 		}
 		else if(msg == NETMSG_INPUT)
 		{
+			clients[cid].last_acked_snapshot = msg_unpack_int();
+			int64 tagtime;
+			if(snapstorage_get(&clients[cid].snapshots, clients[cid].last_acked_snapshot, &tagtime, 0) >= 0)
+				clients[cid].latency = (int)(((time_get()-tagtime)*1000)/time_freq());
+			
 			int tick = msg_unpack_int();
 			int size = msg_unpack_int();
 			int i;
@@ -459,13 +464,6 @@ static void server_process_client_packet(NETPACKET *packet)
 			//time_get()
 			clients[cid].current_input++;
 			clients[cid].current_input %= 200;
-		}
-		else if(msg == NETMSG_SNAPACK)
-		{
-			clients[cid].last_acked_snapshot = msg_unpack_int();
-			int64 tagtime;
-			if(snapstorage_get(&clients[cid].snapshots, clients[cid].last_acked_snapshot, &tagtime, 0) >= 0)
-				clients[cid].latency = (int)(((time_get()-tagtime)*1000)/time_freq());
 		}
 		else
 		{

@@ -250,7 +250,7 @@ void gfx_quads_setrotation(float angle);
 		The color values are from 0.0 to 1.0.
 		The color is reset when <gfx_quads_begin> is called.
 */
-void gfx_quads_setcolorvertex(int i, float r, float g, float b, float a);
+void gfx_setcolorvertex(int i, float r, float g, float b, float a);
 
 /*
 	Function: gfx_quads_setcolor
@@ -266,7 +266,7 @@ void gfx_quads_setcolorvertex(int i, float r, float g, float b, float a);
 		The color values are from 0.0 to 1.0.
 		The color is reset when <gfx_quads_begin> is called.
 */
-void gfx_quads_setcolor(float r, float g, float b, float a);
+void gfx_setcolor(float r, float g, float b, float a);
 
 /*
 	Function: gfx_quads_setsubset
@@ -792,6 +792,10 @@ float gfx_pretty_text_width(float size, const char *text, int length);
 void gfx_getscreen(float *tl_x, float *tl_y, float *br_x, float *br_y);
 int gfx_memory_usage();
 void gfx_screenshot();
+
+void gfx_lines_begin();
+void gfx_lines_draw(float x0, float y0, float x1, float y1);
+void gfx_lines_end();
 
 /* server snap id */
 int snap_new_id();
