@@ -70,10 +70,10 @@ enum
 	Typedefs for callbacks.
 */
 
-typedef unsigned (*png_write_callback_t)(void* input, size_t size, size_t numel, void* user_pointer);
-typedef unsigned (*png_read_callback_t)(void* output, size_t size, size_t numel, void* user_pointer);
+typedef unsigned (*png_write_callback_t)(void* input, unsigned long size, unsigned long numel, void* user_pointer);
+typedef unsigned (*png_read_callback_t)(void* output, unsigned long size, unsigned long numel, void* user_pointer);
 typedef void (*png_free_t)(void* p);
-typedef void * (*png_alloc_t)(size_t s);
+typedef void * (*png_alloc_t)(unsigned long s);
 
 typedef struct
 {
@@ -100,7 +100,7 @@ typedef struct
 
 	This function initializes pnglite. The parameters can be used to set your own memory allocation routines following these formats:
 
-	> void* (*custom_alloc)(size_t s)
+	> void* (*custom_alloc)(unsigned long s)
 	> void (*custom_free)(void* p)
 	Parameters:
 		pngalloc - Pointer to custom allocation routine. If 0 is passed, malloc from libc will be used.
@@ -136,8 +136,8 @@ int png_open_file_write(png_t *png, const char* filename);
 
 	This function reads or writes a png from/to the specified callback. The callbacks should be of the format:
 
-	> size_t (*png_write_callback_t)(void* input, size_t size, size_t numel, void* user_pointer);
-	> size_t (*png_read_callback_t)(void* output, size_t size, size_t numel, void* user_pointer).
+	> unsigned long (*png_write_callback_t)(void* input, unsigned long size, unsigned long numel, void* user_pointer);
+	> unsigned long (*png_read_callback_t)(void* output, unsigned long size, unsigned long numel, void* user_pointer).
 
 	Only one callback has to be specified. The read callback in case of PNG reading, otherwise the write callback.
 

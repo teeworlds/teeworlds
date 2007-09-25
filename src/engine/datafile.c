@@ -92,8 +92,10 @@ DATAFILE *datafile_load(const char *filename)
 			return 0;
 		}
 	}
-	
-	/* TODO: swap the header */
+
+#if defined(CONF_ARCH_ENDIAN_BIG)
+	swap_endian(&header, sizeof(int), sizeof(header)/sizeof(int));	
+#endif
 	if(header.version != 3 && header.version != 4)
 	{
 		dbg_msg("datafile", "wrong version. version=%x", header.version);
@@ -129,16 +131,10 @@ DATAFILE *datafile_load(const char *filename)
 		dbg_msg("datafile", "couldn't load the whole thing, wanted=%d got=%d", size, readsize);
 		return 0;
 	}
-/*
+
 #if defined(CONF_ARCH_ENDIAN_BIG)
-	unsigned *dst = (unsigned*)df;
-	unsigned char *src = (unsigned char*)df;
-	for(unsigned i = 0; i < swapsize; i++)
-	{
-		unsigned j = i << 2;
-		dst[i] = src[j] | src[j+1]<<8 | src[j+2]<<16 | src[j+3]<<24;
-	}
-#endif*/
+	swap_endian(df->data, sizeof(int), header.swaplen);
+#endif
 	
 	if(DEBUG)
 		dbg_msg("datafile", "item_size=%d", df->header.item_size);

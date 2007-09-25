@@ -4,356 +4,306 @@
 
 #include <engine/external/portaudio/portaudio.h>
 #include <engine/external/wavpack/wavpack.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 
 enum
 {
-	NUM_FRAMES_STOP = 512,
-	NUM_FRAMES_LERP = 512,
+	NUM_SOUNDS = 512,
+	NUM_VOICES = 64,
+	NUM_CHANNELS = 4,
 };
 
-static const float NUM_FRAMES_STOP_INV = 1.0f/(float)NUM_FRAMES_STOP;
-static const float NUM_FRAMES_LERP_INV = 1.0f/(float)NUM_FRAMES_LERP;
-
-static const float GLOBAL_VOLUME_SCALE = 0.75f;
-static float master_volume = 1.0f;
-
-static const float GLOBAL_SOUND_DELAY = 0.05f;
-
-// --- sound ---
-typedef struct
+enum
 {
-	/*
-public:
-	sound_data() :
-		data(0x0),
-		num_samples(0),
-		rate(0),
-		channels(0),
-		sustain_start(-1),
-		sustain_end(-1),
-		last_played(0)
-	{ }*/
+	MAX_FRAMES = 1024
+};
 
+static struct sound
+{
 	short *data;
 	int num_samples;
 	int rate;
 	int channels;
-	int sustain_start;
-	int sustain_end;
-	int64 last_played;
-} SOUND_DATA;
+	int loop_start;
+	int loop_end;
+} sounds[NUM_SOUNDS] = { {0x0, 0, 0, 0, -1, -1} };
 
-
-static float clampf(float val, float lower, float upper)
+static struct voice
 {
-	if(val > upper)
-		return upper;
-	if(val < lower)
-		return lower;
-	return val;
-}
-
-
-static int clampi(int val, int lower, int upper)
-{
-	if(val > upper)
-		return upper;
-	if(val < lower)
-		return lower;
-	return val;
-}
-/*
-template<typename T>
-inline const T clamp(const T val, const T lower, const T upper)
-{
-	if(val > upper)
-		return upper;
-	if(val < lower)
-		return lower;
-	return val;
-}*/
-
-
-typedef struct
-{
-/*
-public:
-	channel()
-	{ data = 0; lerp = -1; stop = -1; }
-*/
-	
-	SOUND_DATA *data;
+	volatile struct sound *sound;
 	int tick;
-	int loop;
-	float pan;
-	float vol;
-	float old_vol;
-	float new_vol;
-	int lerp;
 	int stop;
-} MIXER_CHANNEL;
+	int loop;
+	float vol;
+	float pan;
+	float x;
+	float y;
+	volatile struct voice *prev;
+	volatile struct voice *next;
+} voices[NUM_VOICES] = { {0x0, 0, -1, -1, 1.0f, 0.0f, 0.0f, 0.0f, 0x0, 0x0} };
 
-enum
+#define CHANNEL_POSITION_VOLUME 1
+#define CHANNEL_POSITION_PAN 2
+
+static struct channel
 {
-	MAX_CHANNELS=32,
-	MAX_FILL_FRAMES=256,
-};
+	volatile struct voice *first_voice;
+	float vol;
+	float pan;
+	int flags;
+} channels[NUM_CHANNELS] = { {0x0, 1.0f, 0.0f, 0} };
 
-static MIXER_CHANNEL channels[MAX_CHANNELS];
-static int buffer[MAX_FILL_FRAMES*2];
+static float center_x = 0.0f;
+static float center_y = 0.0f;
+static float master_vol = 1.0f;
+static float master_pan = 0.0f;
+static float pan_deadzone = 256.0f;
+static float pan_falloff = 1.0f;
+static float volume_deadzone = 256.0f;
+static float volume_falloff = 1.0f;
 
-static void mixer_fill_mono(int *out, unsigned long frames, MIXER_CHANNEL *c, float dv)
+static inline short int2short(int i)
 {
-	float pl = clampf(1.0f - c->pan, 0.0f, 1.0f);
-	float pr = clampf(1.0f + c->pan, 0.0f, 1.0f);
-	unsigned long i;
+	if(i > 0x7fff)
+		return 0x7fff;
+	else if(i < -0x7fff)
+		return -0x7fff;
+	return i;
+}
 
+static inline float sgn(float f)
+{
+	if(f < 0.0f)
+		return -1.0f;
+	return 1.0f;
+}
+
+static void reset_voice(struct voice *v)
+{
+	v->sound = 0x0;
+	v->tick = 0;
+	v->stop = -1;
+	v->loop = -1;
+	v->vol = 1.0f;
+	v->pan = 0.0f;
+	v->x = 0.0f;
+	v->y = 0.0f;
+	v->next = 0x0;
+	v->prev = 0x0;
+}
+
+static inline void fill_mono(int *out, unsigned frames, struct voice *v, float fvol, float fpan)
+{
+	int ivol = (int) (31.0f * fvol);
+	int ipan = (int) (31.0f * ipan);
+
+	unsigned i;
 	for(i = 0; i < frames; i++)
 	{
-		float val = c->vol * master_volume * c->data->data[c->tick];
-
-		out[i<<1] += (int)(pl*val);
-		out[(i<<1)+1] += (int)(pr*val);
-		c->tick++;
-		c->vol += dv;
-		if(c->vol < 0.0f) c->vol = 0.0f;
+		unsigned j = i<<1;
+		int val = v->sound->data[v->tick] * ivol;
+		out[j] += val;
+		out[j+1] += val;
+		v->tick++;
 	}
 }
 
-static void mixer_fill_stereo(int *out, unsigned long frames, MIXER_CHANNEL *c, float dv)
+static inline void fill_stereo(int *out, unsigned frames, struct voice *v, float fvol, float fpan)
 {
-	float pl = clampf(1.0f - c->pan, 0.0f, 1.0f);
-	float pr = clampf(1.0f + c->pan, 0.0f, 1.0f);
-	unsigned long i;
+	int ivol = (int) (31.0f * fvol);
+	int ipan = (int) (31.0f * ipan);
 
+	unsigned i;
 	for(i = 0; i < frames; i++)
 	{
-		int vl = (int)(pl*c->vol * master_volume * c->data->data[c->tick]);
-		int vr = (int)(pr*c->vol * master_volume * c->data->data[c->tick + 1]);
-		out[i<<1] += vl;
-		out[(i<<1)+1] += vr;
-		c->tick += 2;
-		c->vol += dv;
-		if(c->vol < 0.0f) c->vol = 0.0f;
+		unsigned j = i<<1;
+		out[j] += v->sound->data[v->tick] * ivol;
+		out[j+1] += v->sound->data[v->tick+1] * ivol;
+		v->tick += 2;
 	}
 }
 
-static void mixer_fill(void *output, unsigned long frames)
+static void mix(short *out, unsigned frames)
 {
-	short *out = (short*)output;
+	static int main_buffer[MAX_FRAMES*2];
 
-	dbg_assert(frames <= MAX_FILL_FRAMES, "not enough fill frames in buffer");
-	unsigned long i;
-	int c;
+	dbg_assert(frames <= MAX_FRAMES, "too many frames to fill");
 
+	unsigned i;
 	for(i = 0; i < frames; i++)
 	{
-		buffer[i<<1] = 0;
-		buffer[(i<<1)+1] = 0;
+		unsigned j = i<<1;
+		main_buffer[j] = 0;
+		main_buffer[j+1] = 0;
 	}
 
-	for(c = 0; c < MAX_CHANNELS; c++)
+	unsigned cid;
+	for(cid = 0; cid < NUM_CHANNELS; cid++)
 	{
-		unsigned long filled = 0;
-		while(channels[c].data && filled < frames)
+		struct channel *c = &channels[cid];
+		struct voice *v = (struct voice*)c->first_voice;
+
+		while(v)
 		{
-			unsigned long frames_left = (channels[c].data->num_samples - channels[c].tick) >> (channels[c].data->channels-1);
-			unsigned long to_fill = frames>frames_left?frames_left:frames;
-			float dv = 0.0f;
-
-			if(channels[c].stop >= 0)
-				to_fill = (unsigned)channels[c].stop>frames_left?frames:channels[c].stop;
-			if(channels[c].loop >= 0 &&
-					channels[c].data->sustain_start >= 0)
+			unsigned filled = 0;
+			while(v->sound && filled < frames)
 			{
-				unsigned long tmp = channels[c].data->sustain_end - channels[c].tick;
-				to_fill = tmp>frames?frames:tmp;
+				// calculate maximum frames to fill
+				unsigned frames_left = (v->sound->num_samples - v->tick) >> (v->sound->channels-1);
+				unsigned long to_fill = frames>frames_left?frames_left:frames;
+				float vol = 1.0f;
+				float pan = 0.0f;
+
+				// clamp to_fill if voice should stop
+				if(v->stop >= 0)
+					to_fill = (unsigned)v->stop>frames_left?frames:v->stop;
+
+				// clamp to_fill if we are about to loop
+				if(v->loop >= 0 && v->sound->loop_start >= 0)
+				{
+					unsigned tmp = v->sound->loop_end - v->tick;
+					to_fill = tmp>to_fill?to_fill:tmp;
+				}
+
+				// calculate voice volume and delta
+				if(c->flags & CHANNEL_POSITION_VOLUME)
+				{
+					float dx = v->x - center_x;
+					float dy = v->y - center_y;
+					float dist = dx*dx + dy*dy;
+					if(dist < volume_deadzone*volume_deadzone)
+						vol = master_vol * c->vol;
+					else
+						vol = master_vol * c->vol / ((dist - volume_deadzone*volume_deadzone)*volume_falloff); //TODO: use some fast 1/x^2
+				}
+				else
+				{
+					vol = master_vol * c->vol * v->vol;
+				}
+
+				// calculate voice pan and delta
+				if(c->flags & CHANNEL_POSITION_PAN)
+				{
+					float dx = v->x - center_x;
+					if(fabs(dx) < pan_deadzone)
+						pan = master_pan + c->pan;
+					else
+						pan = master_pan + c->pan + sgn(dx)*(fabs(dx) - pan_deadzone)/pan_falloff;
+				}
+				else
+				{
+					pan = master_pan + c->pan + v->pan;
+				}
+
+				// fill the main buffer
+				if(v->sound->channels == 1)
+					fill_mono(&main_buffer[filled], to_fill, v, vol, pan);
+				else
+					fill_stereo(&main_buffer[filled], to_fill, v, vol, pan);
+
+				// reset tick of we hit loop point
+				if(v->loop >= 0 &&
+						v->sound->loop_start >= 0 &&
+						v->tick >= v->sound->loop_end)
+					v->tick = v->sound->loop_start;
+
+				// stop sample if nessecary
+				if(v->stop >= 0)
+					v->stop -=  to_fill;
+				if(v->tick >= v->sound->num_samples || v->stop == 0)
+				{
+					if(v->next)
+						v->next->prev = v->prev;
+
+					if(v->prev)
+						v->prev->next = v->next;
+					else
+						channels[cid].first_voice = v->next;
+
+					dbg_msg("snd", "sound stopped");
+
+					reset_voice(v);
+				}
+
+				filled += to_fill;
 			}
 
-			if(channels[c].lerp >= 0)
-			{
-					dv = (channels[c].new_vol - channels[c].old_vol) * NUM_FRAMES_LERP_INV;
-			}
-
-			if(channels[c].data->channels == 1)
-				mixer_fill_mono(buffer, to_fill, &channels[c], dv);
-			else
-				mixer_fill_stereo(buffer, to_fill, &channels[c], dv);
-
-			if(channels[c].loop >= 0 &&
-					channels[c].data->sustain_start >= 0 &&
-					channels[c].tick >= channels[c].data->sustain_end)
-				channels[c].tick = channels[c].data->sustain_start;
-
-			if(channels[c].stop >= 0)
-				channels[c].stop -=  to_fill;
-			if(channels[c].tick >= channels[c].data->num_samples ||
-					channels[c].stop == 0)
-				channels[c].data = 0;
-
-			channels[c].lerp -= to_fill;
-			if(channels[c].lerp < 0)
-				channels[c].lerp = -1;
-
-
-			filled += to_fill;
+			v = (struct voice*)v->next;
 		}
 	}
 
+	// clamp accumulated values
 	for(i = 0; i < frames; i++)
 	{
-		out[i<<1] = (short)clampi(buffer[i<<1], -0x7fff, 0x7fff);
-		out[(i<<1)+1] = (short)clampi(buffer[(i<<1)+1], -0x7fff, 0x7fff);
+		int j = i<<1;
+		int vl = main_buffer[j];
+		int vr = main_buffer[j+1];
+
+		out[j] = int2short(vl>>5);
+		out[j+1] = int2short(vr>>5);
 	}
 }
-
-int mixer_play(SOUND_DATA *sound, unsigned loop, float vol, float pan)
-{
-	if(time_get() - sound->last_played < (int64)(time_freq()*GLOBAL_SOUND_DELAY))
-		return -1;
-
-	int c;
-	for(c = 0; c < MAX_CHANNELS; c++)
-	{
-		if(channels[c].data == 0)
-		{
-			channels[c].data = sound;
-			channels[c].tick = 0;
-			channels[c].loop = loop;
-			channels[c].vol = vol * GLOBAL_VOLUME_SCALE;
-			channels[c].pan = pan;
-			channels[c].stop = -1;
-			channels[c].lerp = -1;
-			sound->last_played = time_get();
-			return c;
-		}
-	}
-
-	return -1;
-}
-
-static void mixer_stop(int id)
-{
-	dbg_assert(id >= 0 && id < MAX_CHANNELS, "id out of bounds");
-	channels[id].old_vol = channels[id].vol;
-	channels[id].stop = NUM_FRAMES_STOP;
-}
-
-static void mixer_set_vol(int id, float vol)
-{
-	dbg_assert(id >= 0 && id < MAX_CHANNELS, "id out of bounds");
-	channels[id].new_vol = vol * GLOBAL_VOLUME_SCALE;
-	channels[id].old_vol = channels[id].vol;
-	channels[id].lerp = NUM_FRAMES_LERP;
-}
-
-typedef struct
-{
-	SOUND_DATA sound;
-	int next;
-} SOUND;
-
-enum
-{
-	MAX_SOUNDS = 1024,
-};
-
-static SOUND sounds[MAX_SOUNDS];
-static int first_free_sound;
-
-static PaStream *stream = 0;
 
 static int pacallback(const void *in, void *out, unsigned long frames, const PaStreamCallbackTimeInfo* time, PaStreamCallbackFlags status, void *user)
 {
-	mixer_fill(out, frames);
+	mix(out, frames);
 	return 0;
 }
 
+static PaStream *stream;
+
 int snd_init()
 {
-	int i;
-	first_free_sound = 0;
-	for(i = 0; i < MAX_SOUNDS; i++)
-		sounds[i].next = i+1;
-	sounds[MAX_SOUNDS-1].next = -1;
-	
-	// init PA
 	PaStreamParameters params;
 	PaError err = Pa_Initialize();
-	if(err != paNoError)
-	{
-		dbg_msg("audio_stream", "portaudio error: %s", Pa_GetErrorText(err));
-		return 0;
-	}
-
 	params.device = Pa_GetDefaultOutputDevice();
-	if(params.device == -1)
-	{
-		dbg_msg("audio_stream", "no default output device");
-		return 0;
-	}
 	params.channelCount = 2;
 	params.sampleFormat = paInt16;
 	params.suggestedLatency = Pa_GetDeviceInfo(params.device)->defaultLowOutputLatency;
 	params.hostApiSpecificStreamInfo = 0x0;
 
 	err = Pa_OpenStream(
-		&stream,        /* passes back stream pointer */
-		0,              /* no input channels */
-		&params,		/* pointer to parameters */
-		44100,          /* sample rate */
-		128,            /* frames per buffer */
-		paClipOff,		/* no clamping */
-		pacallback,		/* specify our custom callback */
-		0); /* pass our data through to callback */	
-
-	if(err != paNoError)
-	{
-		dbg_msg("audio_stream", "portaudio error: %s", Pa_GetErrorText(err));
-		return 0;
-	}
-	
+			&stream,        /* passes back stream pointer */
+			0,              /* no input channels */
+			&params,                /* pointer to parameters */
+			44100,          /* sample rate */
+			128,            /* frames per buffer */
+			paClipOff,              /* no clamping */
+			pacallback,             /* specify our custom callback */
+			0x0); /* pass our data through to callback */
 	err = Pa_StartStream(stream);
-	if(err != paNoError)
-	{
-		dbg_msg("audio_stream", "portaudio error: %s", Pa_GetErrorText(err));
-		return 0;
-	}
-	
-	return 1;	
+
+	return 0;
 }
 
 int snd_shutdown()
 {
 	Pa_StopStream(stream);
-	stream = NULL;
-	Pa_Terminate();	
-	return 1;
+	Pa_Terminate();
+
+	return 0;
 }
 
-float snd_get_master_volume()
+void snd_set_center(int x, int y)
 {
-	return master_volume;
+	center_x = x;
+	center_y = y;
 }
 
-void snd_set_master_volume(float val)
+int snd_alloc_id()
 {
-	if(val < 0.0f)
-		val = 0.0f;
-	else if(val > 1.0f)
-		val = 1.0f;
+	unsigned sid;
+	for(sid = 0; sid < NUM_SOUNDS; sid++)
+	{
+		if(sounds[sid].data == 0x0)
+		{
+			return sid;
+		}
+	}
 
-	master_volume = val;
-}
-
-static int snd_alloc_sound()
-{
-	if(first_free_sound < 0)
-		return -1;
-	int id = first_free_sound;
-	first_free_sound = sounds[id].next;
-	sounds[id].next = -1;
-	return id;
+	return -1;
 }
 
 static FILE *file = NULL;
@@ -365,10 +315,14 @@ static int read_data(void *buffer, int size)
 
 int snd_load_wv(const char *filename)
 {
-	SOUND_DATA snd;
-	int id = -1;
-
+	struct sound *snd;
+	int sid = -1;
 	char error[100];
+
+	sid = snd_alloc_id();
+	if(sid < 0)
+		return -1;
+	snd = &sounds[sid];
 
 	file = fopen(filename, "rb"); // TODO: use system.h stuff for this
 
@@ -380,18 +334,18 @@ int snd_load_wv(const char *filename)
 		unsigned int samplerate = WavpackGetSampleRate(context);
 		int channels = WavpackGetNumChannels(context);
 
-		snd.channels = channels;
-		snd.rate = samplerate;
+		snd->channels = channels;
+		snd->rate = samplerate;
 
-		if(snd.channels > 2)
+		if(snd->channels > 2)
 		{
 			dbg_msg("sound/wv", "file is not mono or stereo. filename='%s'", filename);
 			return -1;
 		}
 
-		if(snd.rate != 44100)
+		if(snd->rate != 44100)
 		{
-			dbg_msg("sound/wv", "file is %d Hz, not 44100 Hz. filename='%s'", snd.rate, filename);
+			dbg_msg("sound/wv", "file is %d Hz, not 44100 Hz. filename='%s'", snd->rate, filename);
 			return -1;
 		}
 		
@@ -405,8 +359,8 @@ int snd_load_wv(const char *filename)
 		WavpackUnpackSamples(context, data, samples); // TODO: check return value
 		int *src = data;
 		
-		snd.data = (short *)mem_alloc(2*samples*channels, 1);
-		short *dst = snd.data;
+		snd->data = (short *)mem_alloc(2*samples*channels, 1);
+		short *dst = snd->data;
 
 		int i;
 		for (i = 0; i < samples*channels; i++)
@@ -414,12 +368,9 @@ int snd_load_wv(const char *filename)
 
 		mem_free(data);
 
-		snd.num_samples = samples;
-		snd.sustain_start = -1;
-		snd.sustain_end = -1;
-		snd.last_played = 0;
-		id = snd_alloc_sound();
-		sounds[id].sound = snd;
+		snd->num_samples = samples;
+		snd->loop_start = -1;
+		snd->loop_end = -1;
 	}
 	else
 	{
@@ -429,23 +380,14 @@ int snd_load_wv(const char *filename)
 	fclose(file);
 	file = NULL;
 
-	if(id >= 0)
-	{
-		if(config.debug)
-			dbg_msg("sound/wv", "loaded %s", filename);
-	}
-	else
-	{
-		dbg_msg("sound/wv", "failed to load %s", filename);
-	}
+	if(config.debug)
+		dbg_msg("sound/wv", "loaded %s", filename);
 
-	return id;
+	return sid;
 }
 
 int snd_load_wav(const char *filename)
 {
-	SOUND_DATA snd;
-	
 	// open file for reading
 	IOHANDLE file;
 	file = io_open(filename, IOFLAG_READ);
@@ -455,7 +397,14 @@ int snd_load_wav(const char *filename)
 		return -1;
 	}
 
-	int id = -1;
+	struct sound *snd;
+	int sid = -1;
+
+	sid = snd_alloc_id();
+	if(sid < 0)
+		return -1;
+	snd = &sounds[sid];
+
 	int state = 0;
 	while(1)
 	{
@@ -503,8 +452,8 @@ int snd_load_wav(const char *filename)
 				
 				// decode format
 				int compression_code = fmt[0] | (fmt[1]<<8);
-				snd.channels = fmt[2] | (fmt[3]<<8);
-				snd.rate = fmt[4] | (fmt[5]<<8) | (fmt[6]<<16) | (fmt[7]<<24);
+				snd->channels = fmt[2] | (fmt[3]<<8);
+				snd->rate = fmt[4] | (fmt[5]<<8) | (fmt[6]<<16) | (fmt[7]<<24);
 
 				if(compression_code != 1)
 				{
@@ -512,15 +461,15 @@ int snd_load_wav(const char *filename)
 					return -1;
 				}
 				
-				if(snd.channels > 2)
+				if(snd->channels > 2)
 				{
 					dbg_msg("sound/wav", "file is not mono or stereo. filename='%s'", filename);
 					return -1;
 				}
 
-				if(snd.rate != 44100)
+				if(snd->rate != 44100)
 				{
-					dbg_msg("sound/wav", "file is %d Hz, not 44100 Hz. filename='%s'", snd.rate, filename);
+					dbg_msg("sound/wav", "file is %d Hz, not 44100 Hz. filename='%s'", snd->rate, filename);
 					return -1;
 				}
 				
@@ -542,21 +491,14 @@ int snd_load_wav(const char *filename)
 			// read the data
 			if(head[0] == 'd' && head[1] == 'a' && head[2] == 't' && head[3] == 'a')
 			{
-				snd.data = (short*)mem_alloc(chunk_size, 1);
-				io_read(file, snd.data, chunk_size);
-				snd.num_samples = chunk_size/(2);
+				snd->data = (short*)mem_alloc(chunk_size, 1);
+				io_read(file, snd->data, chunk_size);
+				snd->num_samples = chunk_size/(2);
 #if defined(CONF_ARCH_ENDIAN_BIG)
-				for(unsigned i = 0; i < (unsigned)snd.num_samples; i++)
-				{
-					unsigned j = i << 1;
-					snd.data[i] = ((short)((char*)snd.data)[j]) + ((short)((char*)snd.data)[j+1] << 8);
-				}
+				swap_endian(snd->data, sizeof(short), snd->num_samples);
 #endif
-				snd.sustain_start = -1;
-				snd.sustain_end = -1;
-				snd.last_played = 0;
-				id = snd_alloc_sound();
-				sounds[id].sound = snd;
+				snd->loop_start = -1;
+				snd->loop_end = -1;
 				state++;
 			}
 			else
@@ -580,8 +522,8 @@ int snd_load_wav(const char *filename)
 					io_read(file, loop, sizeof(loop));
 					unsigned start = (loop[8] | (loop[9]<<8) | (loop[10]<<16) | (loop[11]<<24));
 					unsigned end = (loop[12] | (loop[13]<<8) | (loop[14]<<16) | (loop[15]<<24));
-					sounds[id].sound.sustain_start = start * sounds[id].sound.channels;
-					sounds[id].sound.sustain_end = end * sounds[id].sound.channels;
+					snd->loop_start = start * snd->channels;
+					snd->loop_end = end * snd->channels;
 				}
 
 				if(num_loops > 1)
@@ -597,38 +539,47 @@ int snd_load_wav(const char *filename)
 			io_skip(file, chunk_size);
 	}
 
-	if(id >= 0)
+	if(config.debug)
+		dbg_msg("sound/wav", "loaded %s", filename);
+
+	return sid;
+}
+
+int snd_play(int cid, int sid, int loop, int x, int y)
+{
+	int vid;
+	for(vid = 0; vid < NUM_VOICES; vid++)
 	{
-		if(config.debug)
-			dbg_msg("sound/wav", "loaded %s", filename);
+		if(voices[vid].sound == 0x0)
+		{
+			voices[vid].tick = 0;
+			voices[vid].x = x;
+			voices[vid].y = y;
+			voices[vid].sound = &sounds[sid];
+			if(loop == SND_LOOP)
+				voices[vid].loop = voices[vid].sound->loop_end;
+			else
+				voices[vid].loop = -1;
+
+			// add voice to channel last, to avoid threding errors
+			voices[vid].next = channels[cid].first_voice;
+			if(channels[cid].first_voice)
+				channels[cid].first_voice->prev = &voices[vid];
+			channels[cid].first_voice = &voices[vid];
+			return vid;
+		}
 	}
-	else
-		dbg_msg("sound/wav", "failed to load %s", filename);
 
-	return id;
+	return -1;
 }
 
-int snd_play(int id, int loop, float vol, float pan)
+void snd_set_master_volume(float val)
 {
-	if(id < 0)
-	{
-		dbg_msg("snd", "bad sound id");
-		return -1;
-	}
-
-	dbg_assert(sounds[id].sound.data != 0, "null sound");
-	dbg_assert(sounds[id].next == -1, "sound isn't allocated");
-	return mixer_play(&sounds[id].sound, loop, vol, pan);
+	master_vol = val;
 }
 
-void snd_stop(int id)
+void snd_stop(int vid)
 {
-	if(id >= 0)
-		mixer_stop(id);
-}
-
-void snd_set_vol(int id, float vol)
-{
-	if(id >= 0)
-		mixer_set_vol(id, vol);
+	//TODO: lerp volume to 0
+	voices[vid].stop = 0;
 }

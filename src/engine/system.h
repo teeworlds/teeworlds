@@ -515,6 +515,8 @@ int net_addr4_cmp(const NETADDR4 *a, const NETADDR4 *b);
 
 void mem_debug_dump();
 int mem_allocated();
+
+void swap_endian(void *data, unsigned elem_size, unsigned num);
 #ifdef __cplusplus
 }
 #endif

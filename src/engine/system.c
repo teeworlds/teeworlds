@@ -567,3 +567,29 @@ int fs_listdir(const char *dir, fs_listdir_callback cb, void *user)
 	return 0;
 #endif
 }
+
+void swap_endian(void *data, unsigned elem_size, unsigned num)
+{
+	char *src = (char*) data;
+	char *dst = src + (elem_size - 1);
+
+	while(num)
+	{
+		unsigned n = elem_size>>1;
+		char tmp;
+		while(n)
+		{
+			tmp = *src;
+			*src = *dst;
+			*dst = tmp;
+
+			src++;
+			dst--;
+			n--;
+		}
+
+		src = src + (elem_size>>1);
+		dst = src + (elem_size - 1);
+		num--;
+	}
+}

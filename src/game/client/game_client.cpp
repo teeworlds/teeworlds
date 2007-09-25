@@ -53,7 +53,7 @@ void snd_play_random(int setid, float vol, float pan)
 		
 	if(set->num_sounds == 1)
 	{
-		snd_play(set->sounds[0].id, SND_PLAY_ONCE, vol, pan);
+		snd_play(0, set->sounds[0].id, SND_PLAY_ONCE, 0, 0);
 		return;
 	}
 	
@@ -62,7 +62,7 @@ void snd_play_random(int setid, float vol, float pan)
 	do {
 		id = rand() % set->num_sounds;
 	} while(id == set->last);
-	snd_play(set->sounds[id].id, SND_PLAY_ONCE, vol, pan);
+	snd_play(0, set->sounds[id].id, SND_PLAY_ONCE, 0, 1);
 	set->last = id;
 }
 
@@ -2149,7 +2149,7 @@ extern "C" void modc_render()
 	else // if (client_state() != CLIENTSTATE_CONNECTING && client_state() != CLIENTSTATE_LOADING)
 	{
 		if (music_menu_id == -1)
-			music_menu_id = snd_play(music_menu, SND_LOOP, 1.0f, 0.0f);
+			music_menu_id = snd_play(0, music_menu, SND_LOOP, 0, 0);
 		
 		//netaddr4 server_address;
 		if(modmenu_render(false) == -1)
@@ -2182,9 +2182,9 @@ extern "C" void modc_message(int msg)
 		chat_add_line(cid, message);
 
 		if(cid >= 0)
-			snd_play(data->sounds[SOUND_CHAT_CLIENT].sounds[0].id, SND_PLAY_ONCE, 1.0f, 0.0f);
+			snd_play(0, data->sounds[SOUND_CHAT_CLIENT].sounds[0].id, SND_PLAY_ONCE, 0, 0);
 		else
-			snd_play(data->sounds[SOUND_CHAT_SERVER].sounds[0].id, SND_PLAY_ONCE, 1.0f, 0.0f);
+			snd_play(0, data->sounds[SOUND_CHAT_SERVER].sounds[0].id, SND_PLAY_ONCE, 0, 0);
 	}
 	else if(msg == MSG_SETNAME)
 	{
