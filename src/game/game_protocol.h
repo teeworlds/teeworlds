@@ -144,6 +144,7 @@ struct obj_flag
 {
 	int x, y;
 	int team;
+	int local_carry;
 };
 
 

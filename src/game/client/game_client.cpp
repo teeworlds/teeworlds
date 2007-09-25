@@ -835,11 +835,11 @@ static void render_flag(const obj_flag *prev, const obj_flag *current)
 	gfx_quads_setrotation(angle);
 	
 	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
-	float offset = pos.y/32.0f + pos.x/32.0f;
-	pos.x += cosf(client_localtime()*2.0f+offset)*2.5f;
-	pos.y += sinf(client_localtime()*2.0f+offset)*2.5f;
+	
+	if(current->local_carry)
+		pos = local_player_pos;
 
-    gfx_setcolor(current->team ? 1 : 0,0,current->team ? 0 : 1,1);
+    gfx_setcolor(current->team ? 0 : 1,0,current->team ? 1 : 0,1);
 	gfx_quads_setsubset(
 		0, // startx
 		0, // starty
@@ -1532,8 +1532,8 @@ void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, c
 			title = "Score Board";
 	}
 
-	float tw = gfx_pretty_text_width( 64, "Game Over", -1);
-	gfx_pretty_text(x+w/2-tw/2, y, 64, "Game Over", -1);
+	float tw = gfx_pretty_text_width( 64, title, -1);
+	gfx_pretty_text(x+w/2-tw/2, y, 64, title, -1);
 	
 
 	y += 64.0f;
@@ -1796,7 +1796,6 @@ void render_game()
 	}
 	
 	local_player_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_intrapredtick());
-	//local_player_pos = predicted_player.pos;
 	
 	// everything updated, do events
 	if(must_process_events)
@@ -1871,39 +1870,52 @@ void render_game()
 	tilemap_render(32.0f, 0);
 	
 	// render items
-	int num = snap_num_items(SNAP_CURRENT);
-	for(int i = 0; i < num; i++)
 	{
-		SNAP_ITEM item;
-		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-		
-		if(item.type == OBJTYPE_PLAYER)
+		int num = snap_num_items(SNAP_CURRENT);
+		for(int i = 0; i < num; i++)
 		{
-			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-			if(prev)
+			SNAP_ITEM item;
+			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+			
+			if(item.type == OBJTYPE_PROJECTILE)
 			{
-				client_datas[((const obj_player *)data)->clientid].team = ((const obj_player *)data)->team;
-				render_player((const obj_player *)prev, (const obj_player *)data);
+				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+				if(prev)
+					render_projectile((const obj_projectile *)prev, (const obj_projectile *)data, item.id);
+			}
+			else if(item.type == OBJTYPE_POWERUP)
+			{
+				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+				if(prev)
+					render_powerup((const obj_powerup *)prev, (const obj_powerup *)data);
+			}
+			else if(item.type == OBJTYPE_FLAG)
+			{
+				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+				if (prev)
+					render_flag((const obj_flag *)prev, (const obj_flag *)data);
 			}
 		}
-		else if(item.type == OBJTYPE_PROJECTILE)
+	}
+
+	// render players above all	
+	{
+		int num = snap_num_items(SNAP_CURRENT);
+		for(int i = 0; i < num; i++)
 		{
-			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-			if(prev)
-				render_projectile((const obj_projectile *)prev, (const obj_projectile *)data, item.id);
-		}
-		else if(item.type == OBJTYPE_POWERUP)
-		{
-			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-			if(prev)
-				render_powerup((const obj_powerup *)prev, (const obj_powerup *)data);
-		}
-		else if(item.type == OBJTYPE_FLAG)
-		{
-			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-			if (prev)
-				render_flag((const obj_flag *)prev, (const obj_flag *)data);
-		}
+			SNAP_ITEM item;
+			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+			
+			if(item.type == OBJTYPE_PLAYER)
+			{
+				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+				if(prev)
+				{
+					client_datas[((const obj_player *)data)->clientid].team = ((const obj_player *)data)->team;
+					render_player((const obj_player *)prev, (const obj_player *)data);
+				}
+			}
+		}	
 	}
 
 	// render particles
@@ -2128,8 +2140,8 @@ void render_game()
 		}
 		else
 		{
-			render_scoreboard(gameobj, width/2-w-20, 150.0f, w, 0, "Team A");
-			render_scoreboard(gameobj, width/2 + 20, 150.0f, w, 1, "Team B");
+			render_scoreboard(gameobj, width/2-w-20, 150.0f, w, 0, "Red Team");
+			render_scoreboard(gameobj, width/2 + 20, 150.0f, w, 1, "Blue Team");
 		}
 
 	}
@@ -2179,7 +2191,7 @@ extern "C" void modc_message(int msg)
 	if(msg == MSG_CHAT)
 	{
 		int cid = msg_unpack_int();
-		int targets = msg_unpack_int();
+		int team = msg_unpack_int();
 		const char *message = msg_unpack_string();
 		dbg_msg("message", "chat cid=%d msg='%s'", cid, message);
 		chat_add_line(cid, message);

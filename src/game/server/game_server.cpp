@@ -2,10 +2,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <engine/config.h>
-#include "../game.h"
 #include "../version.h"
-#include "data.h"
 #include "game_server.h"
+#include "srv_common.h"
+#include "srv_ctf.h"
+#include "srv_tdm.h"
+#include "srv_dm.h"
 
 data_container *data = 0x0;
 
@@ -279,8 +281,6 @@ gameobject::gameobject()
 	}
 		
 	//
-	
-	//
 	game_over_tick = -1;
 	sudden_death = 0;
 	round_start_tick = server_tick();
@@ -317,174 +317,20 @@ void gameobject::post_reset()
 	}
 }
 
-
-
-void gameobject::on_player_spawn(class player *p)
-{
-}
-
 void gameobject::on_player_death(class player *victim, class player *killer, int weapon)
 {
-	// drop flags
-	for(int fi = 0; fi < 2; fi++)
-	{
-		flag *f = flags[fi];
-		if(f && f->carrying_player == victim)
-			f->carrying_player = 0;
-	}
-}
-
-void gameobject::tick_ctf()
-{
-	// do flags
-	for(int fi = 0; fi < 2; fi++)
-	{
-		flag *f = flags[fi];
-		
-		//
-		if(f->carrying_player)
-		{
-			// update flag position
-			f->pos = f->carrying_player->pos;
-			
-			if(gameobj->flags[fi^1]->at_stand)
-			{
-				if(distance(f->pos, gameobj->flags[fi^1]->pos) < 24)
-				{
-					// CAPTURE! \o/
-					for(int i = 0; i < 2; i++)
-						gameobj->flags[i]->reset();
-				}
-			}			
-		}
-		else
-		{
-			player *players[MAX_CLIENTS];
-			int types[] = {OBJTYPE_PLAYER};
-			int num = world->find_entities(f->pos, 32.0f, (entity**)players, MAX_CLIENTS, types, 1);
-			for(int i = 0; i < num; i++)
-			{
-				if(players[i]->team == f->team)
-				{
-					// return the flag
-					f->reset();
-				}
-				else
-				{
-					// take the flag
-					f->at_stand = 0;
-					f->carrying_player = players[i];
-					break;
-				}
-			}
-			
-			if(!f->carrying_player)
-			{
-				f->vel.y += gravity;
-				move_box(&f->pos, &f->vel, vec2(f->phys_size, f->phys_size), 0.5f);
-			}
-		}
-	}
-}
-
-void gameobject::tick_dm()
-{
-	if(game_over_tick == -1)
-	{
-		// game is running
-		
-		// gather some stats
-		int topscore = 0;
-		int topscore_count = 0;
-		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
-			if(players[i].client_id != -1)
-			{
-				if(players[i].score > topscore)
-				{
-					topscore = players[i].score;
-					topscore_count = 1;
-				}
-				else if(players[i].score == topscore)
-					topscore_count++;
-			}
-		}
-		
-		// check score win condition
-		if((config.scorelimit > 0 && topscore >= config.scorelimit) ||
-			(config.timelimit > 0 && (server_tick()-round_start_tick) >= config.timelimit*server_tickspeed()*60))
-		{
-			if(topscore_count == 1)
-				endround();
-			else
-				sudden_death = 1;
-		}
-	}
+	// do scoreing
+	if(!killer)
+		return;
+	if(killer == victim)
+		victim->score--; // klant arschel
 	else
-	{
-		// game over.. wait for restart
-		if(server_tick() > game_over_tick+server_tickspeed()*10)
-			startround();
-	}
+		killer->score++; // good shit
 }
 
-void gameobject::tick_tdm()
-{
-	if(game_over_tick == -1)
-	{
-		// game is running
-		
-		// gather some stats
-		int totalscore[2] = {0,0};
-		int topscore_count = 0;
-		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
-			if(players[i].client_id != -1)
-				totalscore[players[i].team] += players[i].score;
-		}
-		if (totalscore[0] >= config.scorelimit)
-			topscore_count++;
-		if (totalscore[1] >= config.scorelimit)
-			topscore_count++;
-		
-		// check score win condition
-		if((config.scorelimit > 0 && (totalscore[0] >= config.scorelimit || totalscore[1] >= config.scorelimit)) ||
-			(config.timelimit > 0 && (server_tick()-round_start_tick) >= config.timelimit*server_tickspeed()*60))
-		{
-			if(topscore_count == 1)
-				endround();
-			else
-				sudden_death = 1;
-		}
-	}
-	else
-	{
-		// game over.. wait for restart
-		if(server_tick() > game_over_tick+server_tickspeed()*10)
-			startround();
-	}
-}
 
 void gameobject::tick()
 {
-	switch(gametype)
-	{
-	case GAMETYPE_CTF:
-		{
-			tick_ctf();
-			break;
-		}
-	case GAMETYPE_TDM:
-		{
-			tick_tdm();
-			break;
-		}
-	default:
-		{
-			tick_dm();
-			break;
-		}
-	}
 }
 
 void gameobject::snap(int snapping_client)
@@ -1179,18 +1025,6 @@ bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 	// check for death
 	if(health <= 0)
 	{
-		// apply score
-		if(from != -1)
-		{
-			if(from == client_id)
-				score--;
-			else
-			{
-				player *p = get_player(from);
-				p->score++;
-			}
-		}
-		
 		die(from, weapon);
 
 		// set attacker's face to happy (taunt!)
@@ -1417,55 +1251,6 @@ void powerup::snap(int snapping_client)
 }
 
 // POWERUP END ///////////////////////
-
-//////////////////////////////////////////////////
-// FLAG
-//////////////////////////////////////////////////
-flag::flag(int _team)
-: entity(OBJTYPE_FLAG)
-{
-	team = _team;
-	proximity_radius = phys_size;
-	carrying_player = 0x0;
-	
-	reset();
-	
-	// TODO: should this be done here?
-	world->insert_entity(this);
-}
-
-void flag::reset()
-{
-	carrying_player = 0;
-	at_stand = 1;
-	pos = stand_pos;
-	spawntick = -1;
-}
-
-void flag::tick()
-{
-}
-
-bool flag::is_grounded()
-{
-	if(col_check_point((int)(pos.x+phys_size/2), (int)(pos.y+phys_size/2+5)))
-		return true;
-	if(col_check_point((int)(pos.x-phys_size/2), (int)(pos.y+phys_size/2+5)))
-		return true;
-	return false;
-}
-
-void flag::snap(int snapping_client)
-{
-	if(spawntick != -1)
-		return;
-
-	obj_flag *flag = (obj_flag *)snap_new_item(OBJTYPE_FLAG, id, sizeof(obj_flag));
-	flag->x = (int)pos.x;
-	flag->y = (int)pos.y;
-	flag->team = team;
-}
-// FLAG END ///////////////////////
 
 player *get_player(int index)
 {
@@ -1792,7 +1577,14 @@ void mods_init()
 
 	world = new game_world;
 	players = new player[MAX_CLIENTS];
-	gameobj = new gameobject;
+	
+	// select gametype
+	if(strcmp(config.gametype, "ctf") == 0)
+		gameobj = new gameobject_ctf;
+	else if(strcmp(config.gametype, "tdm") == 0)
+		gameobj = new gameobject_tdm;
+	else
+		gameobj = new gameobject_dm;
 	
 	// setup core world	
 	for(int i = 0; i < MAX_CLIENTS; i++)
@@ -1857,20 +1649,6 @@ void mods_init()
 	
 	if(gameobj->gametype == GAMETYPE_CTF)
 	{
-		// fetch flagstands
-		for(int i = 0; i < 2; i++)
-		{
-			mapres_flagstand *stand;
-			stand = (mapres_flagstand *)map_find_item(MAPRES_FLAGSTAND_RED+i, 0);
-			if(stand)
-			{
-				flag *f = new flag(i);
-				f->stand_pos = vec2(stand->x, stand->y);
-				f->pos = f->stand_pos;
-				gameobj->flags[i] = f;
-				dbg_msg("game", "flag at %f,%f", f->pos.x, f->pos.y);
-			}
-		}
 	}
 	
 	world->insert_entity(gameobj);
