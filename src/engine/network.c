@@ -477,9 +477,7 @@ static int conn_update(NETCONNECTION *conn)
 		(now-conn->last_recv_time) > time_freq()*10)
 	{
 		conn->state = NETWORK_CONNSTATE_ERROR;
-		char buf[128];
-		sprintf(buf, "timeout %lld %lld %lld %lld", now-conn->last_recv_time, now, conn->last_recv_time, time_freq()*10);
-		conn_set_error(conn, buf);
+		conn_set_error(conn, "timeout");
 	}
 	
 	/* check for large buffer errors */
