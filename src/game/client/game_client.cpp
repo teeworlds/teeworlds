@@ -731,6 +731,7 @@ extern "C" void modc_newsnapshot()
 		if((client_tick()%250) == 0)
 		{
 			msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
+			msg_pack_int(-1);
 			msg_pack_string("galenskap!!!!", 512);
 			msg_pack_end();
 			client_send_msg();
@@ -1654,6 +1655,7 @@ void render_game()
 						else
 						{
 							msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
+							msg_pack_int(-1);
 							msg_pack_string(chat_input, 512);
 							msg_pack_end();
 							client_send_msg();
@@ -2177,6 +2179,7 @@ extern "C" void modc_message(int msg)
 	if(msg == MSG_CHAT)
 	{
 		int cid = msg_unpack_int();
+		int targets = msg_unpack_int();
 		const char *message = msg_unpack_string();
 		dbg_msg("message", "chat cid=%d msg='%s'", cid, message);
 		chat_add_line(cid, message);

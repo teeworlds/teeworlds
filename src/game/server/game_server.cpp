@@ -317,8 +317,74 @@ void gameobject::post_reset()
 	}
 }
 
+
+
+void gameobject::on_player_spawn(class player *p)
+{
+}
+
+void gameobject::on_player_death(class player *victim, class player *killer, int weapon)
+{
+	// drop flags
+	for(int fi = 0; fi < 2; fi++)
+	{
+		flag *f = flags[fi];
+		if(f && f->carrying_player == victim)
+			f->carrying_player = 0;
+	}
+}
+
 void gameobject::tick_ctf()
 {
+	// do flags
+	for(int fi = 0; fi < 2; fi++)
+	{
+		flag *f = flags[fi];
+		
+		//
+		if(f->carrying_player)
+		{
+			// update flag position
+			f->pos = f->carrying_player->pos;
+			
+			if(gameobj->flags[fi^1]->at_stand)
+			{
+				if(distance(f->pos, gameobj->flags[fi^1]->pos) < 24)
+				{
+					// CAPTURE! \o/
+					for(int i = 0; i < 2; i++)
+						gameobj->flags[i]->reset();
+				}
+			}			
+		}
+		else
+		{
+			player *players[MAX_CLIENTS];
+			int types[] = {OBJTYPE_PLAYER};
+			int num = world->find_entities(f->pos, 32.0f, (entity**)players, MAX_CLIENTS, types, 1);
+			for(int i = 0; i < num; i++)
+			{
+				if(players[i]->team == f->team)
+				{
+					// return the flag
+					f->reset();
+				}
+				else
+				{
+					// take the flag
+					f->at_stand = 0;
+					f->carrying_player = players[i];
+					break;
+				}
+			}
+			
+			if(!f->carrying_player)
+			{
+				f->vel.y += gravity;
+				move_box(&f->pos, &f->vel, vec2(f->phys_size, f->phys_size), 0.5f);
+			}
+		}
+	}
 }
 
 void gameobject::tick_dm()
@@ -528,74 +594,6 @@ void projectile::snap(int snapping_client)
 	proj->type = type;
 }
 
-
-//////////////////////////////////////////////////
-// projectile_backpackrocket
-//////////////////////////////////////////////////
-projectile_backpackrocket::projectile_backpackrocket(vec2 pos, vec2 target, int owner, entity* powner)
-: projectile(WEAPON_PROJECTILETYPE_ROCKET, owner, pos, vec2(0,0), 100, powner, 0, 0, 0, -1, WEAPON_ROCKET_BACKPACK)
-{
-	stage = 0;
-	start_tick = server_tick();
-	vel = vec2(0,-10.0f);
-	this->target = target;
-	start = pos;
-	midpoint = pos;
-	midpoint.y = target.y;
-	direction = normalize(target-midpoint);
-	deply_ticks = (int)( distance(start, midpoint)/(float)server_tickspeed() * 5.0f );
-	dbg_msg("rocket_bp", "%f %d", distance(start, midpoint), deply_ticks);
-}
-
-void projectile_backpackrocket::tick()
-{
-	lifespan--;
-	if(!lifespan)
-		world->destroy_entity(this);
-		
-	vec2 oldpos = pos;
-		
-	if(stage == 0)
-	{
-		float time = (server_tick()-start_tick)/(float)(deply_ticks);
-		if(midpoint.y > start.y)
-			pos.y = mix(start.y, midpoint.y, 1-sinf((1-time)*pi/2));
-		else
-			pos.y = mix(start.y, midpoint.y, sinf(time*pi/2));
-
-		float a = (server_tick()-start_tick)/(float)server_tickspeed()*pi*7.5f;
-		vel.x = sinf(a)*30.0f;
-		vel.y = cosf(a)*30.0f;
-		
-		if(server_tick() > start_tick+deply_ticks)
-		{
-			pos = midpoint;
-			direction = normalize(target-pos);
-			vel = vec2(0,0);
-			stage = 1;
-		}
-	}
-	else if(stage == 1)
-	{
-		vel += direction*1.5f;
-		vel.x = clamp(vel.x, -20.0f, 20.0f);
-		pos += vel;
-	}
-
-	// check player intersection as well
-	vec2 new_pos;
-	entity *targetplayer = (entity*)intersect_player(oldpos, pos, new_pos, powner);
-	if(targetplayer || lifespan < 0 || col_check_point((int)pos.x, (int)pos.y))
-	{
-		if (lifespan >= 0)
-			create_sound(pos, sound_impact);
-			
-		create_explosion(oldpos, owner, weapon, false);
-			
-		world->destroy_entity(this);
-	}	
-}
-
 //////////////////////////////////////////////////
 // player
 //////////////////////////////////////////////////
@@ -619,7 +617,6 @@ void player::init()
 	extrapowerflags = 0;
 	ninjaactivationtick = 0;
 
-
 	latency_accum = 0;
 	latency_accum_min = 0;
 	latency_accum_max = 0;
@@ -632,9 +629,6 @@ void player::init()
 
 void player::reset()
 {
-	release_hooked();
-	release_hooks();
-	
 	pos = vec2(0.0f, 0.0f);
 	core.vel = vec2(0.0f, 0.0f);
 	//direction = vec2(0.0f, 1.0f);
@@ -747,6 +741,8 @@ void player::try_respawn()
 	// Create sound and spawn effects
 	create_sound(pos, SOUND_PLAYER_SPAWN);
 	create_spawn(pos);
+	
+	gameobj->on_player_spawn(this);
 }
 
 bool player::is_grounded()
@@ -756,29 +752,6 @@ bool player::is_grounded()
 	if(col_check_point((int)(pos.x-phys_size/2), (int)(pos.y+phys_size/2+5)))
 		return true;
 	return false;
-}
-
-// releases the hooked player
-void player::release_hooked()
-{
-	//hook_state = HOOK_RETRACTED;
-	//hooked_player = 0x0;
-}
-
-// release all hooks to this player	
-void player::release_hooks()
-{
-	/*
-	// TODO: loop thru players only
-	for(entity *ent = world->first_entity; ent; ent = ent->next_entity)
-	{
-		if(ent && ent->objtype == OBJTYPE_PLAYER)
-		{
-			player *p = (player*)ent;
-			if(p->hooked_player == this)
-				p->release_hooked();
-		}
-	}*/
 }
 
 int player::handle_ninja()
@@ -806,8 +779,8 @@ int player::handle_ninja()
 		create_sound(pos, SOUND_NINJA_FIRE);
 		
 		// release all hooks when ninja is activated
-		release_hooked();
-		release_hooks();
+		//release_hooked();
+		//release_hooks();
 	}
 
 	currentmovetime--;
@@ -966,14 +939,7 @@ int player::handle_weapons()
 						}
 						create_sound(pos, SOUND_SHOTGUN_FIRE);
 						break;
-					}
-					case WEAPON_ROCKET_BACKPACK:
-						new projectile_backpackrocket(
-							pos+vec2(0,0),
-							pos+vec2(input.target_x,input.target_y),
-							client_id,
-							this);
-						break;						
+					}	
 				}
 				
 				weapons[active_weapon].ammo--;
@@ -1141,6 +1107,8 @@ void player::tick_defered()
 
 void player::die(int killer, int weapon)
 {
+	gameobj->on_player_death(this, get_player(killer), weapon);
+	
 	dbg_msg("game", "kill killer='%d:%s' victim='%d:%s' weapon=%d", killer, players[killer].name, client_id, name, weapon);
 	
 	// send the kill message
@@ -1153,10 +1121,6 @@ void player::die(int killer, int weapon)
 	
 	// a nice sound
 	create_sound(pos, SOUND_PLAYER_DIE);
-	
-	// release all hooks
-	release_hooked();
-	release_hooks();
 	
 	// set dead state
 	dead = true;
@@ -1173,9 +1137,9 @@ bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 	if(from == client_id)
 		dmg = max(1, dmg/2);
 
-	// CTF and TDM,
-	if (gameobj->gametype != GAMETYPE_DM && from >= 0 && players[from].team == team)
-		return false;
+	// CTF and TDM (TODO: check for FF)
+	//if (gameobj->gametype != GAMETYPE_DM && from >= 0 && players[from].team == team)
+		//return false;
 
 	damage_taken++;
 
@@ -1472,60 +1436,14 @@ flag::flag(int _team)
 
 void flag::reset()
 {
+	carrying_player = 0;
+	at_stand = 1;
+	pos = stand_pos;
 	spawntick = -1;
 }
 
 void flag::tick()
 {
-	// THIS CODE NEEDS TO BE REWRITTEN. ITS NOT SAFE AT ALL
-	
-	// wait for respawn
-	if(spawntick > 0)
-	{
-		if(server_tick() > spawntick)
-			spawntick = -1;
-		else
-			return;
-	}
-
-	// Check if a player intersected us
-	if(!carrying_player)
-	{
-		player *players[MAX_CLIENTS];
-		int types[] = {OBJTYPE_PLAYER};
-		int num = world->find_entities(pos, 32.0f, (entity**)players, MAX_CLIENTS, types, 1);
-		for(int i = 0; i < num; i++)
-		{
-			if(players[i]->team != team)
-			{
-				carrying_player = players[i];
-				break;
-			}
-		}
-		
-		if(!carrying_player)
-		{
-			vel.y += 0.25f;
-			vec2 new_pos = pos + vel;
-
-			col_intersect_line(pos, new_pos, &new_pos);
-
-			pos = new_pos;
-
-			if (is_grounded())
-				vel.x = vel.y = 0;
-		}
-	}
-	else
-	{
-		if (carrying_player->dead)
-			carrying_player = 0x0;
-		else
-		{
-			vel = carrying_player->pos - pos;
-			pos = carrying_player->pos;
-		}
-	}
 }
 
 bool flag::is_grounded()
@@ -1731,15 +1649,16 @@ void mods_client_input(int client_id, void *input)
 	}
 }
 
-void send_chat_all(int cid, const char *msg)
+void send_chat(int cid, int team, const char *msg)
 {
 	if(cid >= 0 && cid < MAX_CLIENTS)
-		dbg_msg("chat", "%d:%s: %s", cid, players[cid].name, msg);
+		dbg_msg("chat", "%d:%d:%s: %s", cid, team, players[cid].name, msg);
 	else
 		dbg_msg("chat", "*** %s", msg);
 	
 	msg_pack_start(MSG_CHAT, MSGFLAG_VITAL);
 	msg_pack_int(cid);
+	msg_pack_int(team);
 	msg_pack_string(msg, 512);
 	msg_pack_end();
 	server_send_msg(-1);
@@ -1755,7 +1674,7 @@ void send_set_name(int cid, const char *old_name, const char *new_name)
 
 	char msg[256];
 	sprintf(msg, "*** %s changed name to %s", old_name, new_name);
-	send_chat_all(-1, msg);
+	send_chat(-1, -1, msg);
 }
 
 void send_emoticon(int cid, int emoticon)
@@ -1811,17 +1730,18 @@ void mods_client_enter(int client_id)
 
 	char buf[512];
 	sprintf(buf, "%s has joined the game", players[client_id].name);
-	send_chat_all(-1, buf);
+	send_chat(-1, -1, buf);
 }
 
 void mods_client_drop(int client_id)
 {
 	char buf[512];
 	sprintf(buf, "%s has left the game", players[client_id].name);
-	send_chat_all(-1, buf);
+	send_chat(-1, -1, buf);
 
 	dbg_msg("game", "leave player='%d:%s'", client_id, players[client_id].name);
 	
+	gameobj->on_player_death(&players[client_id], 0, -1);
 	world->remove_entity(&players[client_id]);
 	players[client_id].client_id = -1;
 }
@@ -1830,7 +1750,9 @@ void mods_message(int msg, int client_id)
 {
 	if(msg == MSG_SAY)
 	{
-		send_chat_all(client_id, msg_unpack_string());
+		int team = msg_unpack_int();
+		const char *text = msg_unpack_string();
+		send_chat(client_id, team, text);
 	}
 	else if (msg == MSG_SWITCHTEAM)
 	{
@@ -1941,12 +1863,13 @@ void mods_init()
 			mapres_flagstand *stand;
 			stand = (mapres_flagstand *)map_find_item(MAPRES_FLAGSTAND_RED+i, 0);
 			if(stand)
-				gameobj->flagsstands[i] = vec2(stand->x, stand->y);
-
-			flag *f = new flag(i);
-			f->pos = gameobj->flagsstands[i];
-			//world->insert_entity(f);
-			dbg_msg("game", "flag at %f,%f", f->pos.x, f->pos.y);
+			{
+				flag *f = new flag(i);
+				f->stand_pos = vec2(stand->x, stand->y);
+				f->pos = f->stand_pos;
+				gameobj->flags[i] = f;
+				dbg_msg("game", "flag at %f,%f", f->pos.x, f->pos.y);
+			}
 		}
 	}
 	

@@ -79,13 +79,13 @@ void move_box(vec2 *inout_pos, vec2 *inout_vel, vec2 size, float elasticity)
 				if(test_box(vec2(pos.x, new_pos.y), size))
 				{
 					new_pos.y = pos.y;
-					vel.y = 0;
+					vel.y *= -elasticity;
 				}
 				
 				if(test_box(vec2(new_pos.x, pos.y), size))
 				{
 					new_pos.x = pos.x;
-					vel.x = 0;
+					vel.x *= -elasticity;
 				}
 			}
 			

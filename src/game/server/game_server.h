@@ -115,7 +115,6 @@ class gameobject : public entity
 	
 public:
 	class flag *flags[2];
-	vec2 flagsstands[2];
 	
 	int gametype;
 	gameobject();
@@ -124,6 +123,10 @@ public:
 	virtual void tick_dm();
 	virtual void tick_tdm();
 	virtual void tick_ctf();
+	
+	virtual void on_player_spawn(class player *p);
+	virtual void on_player_death(class player *victim, class player *killer, int weapon);
+	
 	virtual void snap(int snapping_client);
 	virtual int getteam(int notthisid);
 };
@@ -181,20 +184,6 @@ public:
 	virtual void snap(int snapping_client);
 };
 
-class projectile_backpackrocket : public projectile
-{
-	int stage;
-	int start_tick;
-	int deply_ticks;
-	vec2 target;
-	vec2 start;
-	vec2 midpoint;
-	vec2 direction;
-public:
-	projectile_backpackrocket(vec2 pos, vec2 target, int owner, entity* powner);
-	virtual void tick();
-};
-
 // player entity
 class player : public entity
 {
@@ -230,11 +219,6 @@ public:
 
 	int last_action;
 	
-	// we need a defered position so we can handle the physics correctly
-	//vec2 defered_pos;
-	//vec2 vel;
-	//vec2 direction;
-
 	//
 	int client_id;
 	char name[64];
@@ -257,6 +241,7 @@ public:
 	int currentactivation;
 	int currentmovetime;
 
+	//
 	int score;
 	int team;
 	int state;
@@ -265,20 +250,16 @@ public:
 	bool dead;
 	int die_tick;
 	
+	// latency calculations
 	int latency_accum;
 	int latency_accum_min;
 	int latency_accum_max;
 	int latency_avg;
 	int latency_min;
 	int latency_max;
-	
+
+	// the player core for the physics	
 	player_core core;
-	
-	//int hook_state;
-	//int hook_tick;
-	//player *hooked_player;
-	//vec2 hook_pos;
-	//vec2 hook_dir;
 
 	//
 	player();
@@ -292,9 +273,6 @@ public:
 	bool is_grounded();
 	
 	void set_weapon(int w);
-
-	void release_hooked();
-	void release_hooks();
 	
 	int handle_weapons();
 	int handle_ninja();
@@ -317,9 +295,12 @@ public:
 	static const int phys_size = 14;
 	player *carrying_player;
 	vec2 vel;
+	vec2 stand_pos;
 	
 	int team;
 	int spawntick;
+	int at_stand;
+	
 	flag(int _team);
 
 	bool is_grounded();

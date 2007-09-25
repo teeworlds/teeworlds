@@ -18,6 +18,8 @@
 
 #include <mastersrv/mastersrv.h>
 
+const int prediction_margin = 5;
+
 /*
 	Server Time
 	Client Mirror Time
@@ -726,9 +728,8 @@ static void client_process_packet(NETPACKET *packet)
 						if(inputs[k].tick == input_predtick)
 						{
 							//-1000/50
-							int margin = 1000/50;
 							int64 target = inputs[k].game_time + (time_get() - inputs[k].time);
-							st_update(&predicted_time, target - (int64)(((time_left-margin)/1000.0f)*time_freq()));
+							st_update(&predicted_time, target - (int64)(((time_left-prediction_margin)/1000.0f)*time_freq()));
 							break;
 						}
 					}
@@ -839,14 +840,14 @@ static void client_process_packet(NETPACKET *packet)
 						{
 							// start at 200ms and work from there
 							st_init(&predicted_time, (game_tick+10)*time_freq()/50);
-							st_init(&game_time, (game_tick-2)*time_freq()/50);
+							st_init(&game_time, (game_tick-1)*time_freq()/50);
 							snapshots[SNAP_PREV] = snapshot_storage.first;
 							snapshots[SNAP_CURRENT] = snapshot_storage.last;
 							local_start_time = time_get();
 							client_set_state(CLIENTSTATE_ONLINE);
 						}
 						
-						st_update(&game_time, (game_tick-2)*time_freq()/50);
+						st_update(&game_time, (game_tick-1)*time_freq()/50);
 						
 						// ack snapshot
 						ack_game_tick = game_tick;
