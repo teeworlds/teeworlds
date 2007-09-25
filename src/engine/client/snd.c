@@ -259,6 +259,8 @@ int snd_init()
 	PaStreamParameters params;
 	PaError err = Pa_Initialize();
 	params.device = Pa_GetDefaultOutputDevice();
+	if(params.device < 0)
+		return 1;
 	params.channelCount = 2;
 	params.sampleFormat = paInt16;
 	params.suggestedLatency = Pa_GetDeviceInfo(params.device)->defaultLowOutputLatency;
