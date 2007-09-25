@@ -39,7 +39,20 @@ void move_point(vec2 *inout_pos, vec2 *inout_vel, float elasticity, int *bounces
 	}
 }
 
-// TODO: OPT: rewrite this smarter!
+static bool test_box(vec2 pos, vec2 size)
+{
+	size *= 0.5f;
+	if(col_check_point(pos.x-size.x, pos.y-size.y))
+		return true;
+	if(col_check_point(pos.x+size.x, pos.y-size.y))
+		return true;
+	if(col_check_point(pos.x-size.x, pos.y+size.y))
+		return true;
+	if(col_check_point(pos.x+size.x, pos.y+size.y))
+		return true;
+	return false;
+}
+
 void move_box(vec2 *inout_pos, vec2 *inout_vel, vec2 size, float elasticity)
 {
 	// do the move
@@ -49,56 +62,35 @@ void move_box(vec2 *inout_pos, vec2 *inout_vel, vec2 size, float elasticity)
 	float distance = length(vel);
 	int max = (int)distance;
 	
-	vec2 offsets[4] = {	vec2(-size.x/2, -size.y/2), vec2( size.x/2, -size.y/2),
-						vec2(-size.x/2,  size.y/2), vec2( size.x/2,  size.y/2)};
-	
 	if(distance > 0.00001f)
 	{
-		vec2 old_pos = pos;
+		//vec2 old_pos = pos;
+		float fraction = 1.0f/(float)(max+1);
 		for(int i = 0; i <= max; i++)
 		{
-			float amount = i/(float)max;
-			if(max == 0)
-				amount = 0;
+			//float amount = i/(float)max;
+			//if(max == 0)
+				//amount = 0;
 			
-			vec2 new_pos = pos + vel*amount; // TODO: this row is not nice
-
-			for(int p = 0; p < 4; p++)
+			vec2 new_pos = pos + vel*fraction; // TODO: this row is not nice
+			
+			if(test_box(new_pos, size))
 			{
-				vec2 np = new_pos+offsets[p];
-				vec2 op = old_pos+offsets[p];
-				if(col_check_point(np))
+				if(test_box(vec2(pos.x, new_pos.y), size))
 				{
-					int affected = 0;
-					if(col_check_point(np.x, op.y))
-					{
-						vel.x = -vel.x*elasticity;
-						pos.x = old_pos.x;
-						new_pos.x = old_pos.x;
-						affected++;
-					}
-
-					if(col_check_point(op.x, np.y))
-					{
-						vel.y = -vel.y*elasticity;
-						pos.y = old_pos.y;
-						new_pos.y = old_pos.y;
-						affected++;
-					}
-					
-					if(!affected)
-					{
-						new_pos = old_pos;
-						pos = old_pos;
-						vel *= -elasticity;
-					}
+					new_pos.y = pos.y;
+					vel.y = 0;
+				}
+				
+				if(test_box(vec2(new_pos.x, pos.y), size))
+				{
+					new_pos.x = pos.x;
+					vel.x = 0;
 				}
 			}
 			
-			old_pos = new_pos;
+			pos = new_pos;
 		}
-		
-		pos = old_pos;
 	}
 	
 	*inout_pos = pos;
