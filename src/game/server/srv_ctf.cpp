@@ -27,8 +27,9 @@ void gameobject_ctf::on_player_spawn(class player *p)
 {
 }
 
-void gameobject_ctf::on_player_death(class player *victim, class player *killer, int weapon)
+void gameobject_ctf::on_player_death(class player *victim, class player *killer, int weaponid)
 {
+	gameobject::on_player_death(victim, killer, weaponid);
 	// drop flags
 	for(int fi = 0; fi < 2; fi++)
 	{
@@ -73,7 +74,8 @@ void gameobject_ctf::tick()
 				if(players[i]->team == f->team)
 				{
 					// return the flag
-					f->reset();
+					if(!f->at_stand)
+						f->reset();
 				}
 				else
 				{
@@ -115,19 +117,6 @@ void flag::reset()
 	at_stand = 1;
 	pos = stand_pos;
 	spawntick = -1;
-}
-
-void flag::tick()
-{
-}
-
-bool flag::is_grounded()
-{
-	if(col_check_point((int)(pos.x+phys_size/2), (int)(pos.y+phys_size/2+5)))
-		return true;
-	if(col_check_point((int)(pos.x-phys_size/2), (int)(pos.y+phys_size/2+5)))
-		return true;
-	return false;
 }
 
 void flag::snap(int snapping_client)

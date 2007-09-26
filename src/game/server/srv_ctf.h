@@ -27,9 +27,6 @@ public:
 	
 	flag(int _team);
 
-	bool is_grounded();
-	
 	virtual void reset();
-	virtual void tick();
 	virtual void snap(int snapping_client);
 };
