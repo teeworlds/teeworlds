@@ -15,6 +15,7 @@
 #include <engine/network.h>
 #include <engine/config.h>
 #include <engine/packer.h>
+#include <engine/memheap.h>
 
 #include <mastersrv/mastersrv.h>
 
@@ -31,8 +32,6 @@ const int prediction_margin = 5;
 	Prediction Latency
 		Upstream latency
 */
-static int info_request_begin;
-static int info_request_end;
 static int snapshot_part;
 static int64 local_start_time;
 
@@ -346,29 +345,119 @@ int *client_get_input(int tick)
 }
 
 // ------ server browse ----
-static struct 
+typedef struct SERVERENTRY_t SERVERENTRY;
+struct SERVERENTRY_t
 {
-	SERVER_INFO infos[MAX_SERVERS];
-	int64 request_times[MAX_SERVERS];
-	NETADDR4 addresses[MAX_SERVERS];
-	int num;
-} servers;
+	NETADDR4 addr;
+	int64 request_time;
+	SERVER_INFO info;
+	
+	SERVERENTRY *next_ip; // ip hashed list
+	
+	SERVERENTRY *prev_req; // request list
+	SERVERENTRY *next_req;
+};
+
+HEAP *serverlist_heap = 0;
+SERVERENTRY **serverlist = 0;
+
+SERVERENTRY *serverlist_ip[256] = {0}; // ip hash list
+
+SERVERENTRY *first_req_server = 0; // request list
+SERVERENTRY *last_req_server = 0;
+
+int num_servers = 0;
+int num_server_capasity = 0;
 
 static int serverlist_lan = 1;
 
-int client_serverbrowse_getlist(SERVER_INFO **serverlist)
+SERVER_INFO *client_serverbrowse_get(int index)
 {
-	*serverlist = servers.infos;
-	return servers.num;
+	if(index < 0 || index >= num_servers)
+		return 0;
+	return &serverlist[index]->info;
+}
+
+int client_serverbrowse_num()
+{
+	return num_servers;
 }
 
 static void client_serverbrowse_init()
 {
-	servers.num = 0;
+}
+
+static void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *info)
+{
+	int hash = addr->ip[0];
+	SERVERENTRY *entry = serverlist_ip[hash];
+	while(entry)
+	{
+		if(net_addr4_cmp(&entry->addr, addr) == 0)
+		{
+			/* update the server that we already have */
+			entry->info = *info;
+			if(!request)
+				entry->info.latency = (time_get()-entry->request_time)*1000/time_freq();
+			return;
+		}
+		entry = entry->next_ip;
+	}
+
+	/* create new entry */	
+	entry = (SERVERENTRY *)memheap_allocate(serverlist_heap, sizeof(SERVERENTRY));
+	mem_zero(entry, sizeof(SERVERENTRY));
+	
+	/* set the info */
+	entry->addr = *addr;
+	entry->info = *info;
+
+	/* add to the hash list */	
+	entry->next_ip = serverlist_ip[hash];
+	serverlist_ip[hash] = entry;
+	
+	if(num_servers == num_server_capasity)
+	{
+		num_server_capasity += 100;
+		SERVERENTRY **newlist = mem_alloc(num_server_capasity*sizeof(SERVERENTRY*), 1);
+		memcpy(newlist, serverlist, num_servers*sizeof(SERVERENTRY*));
+		mem_free(serverlist);
+		serverlist = newlist;
+	}
+	
+	/* add to list */
+	serverlist[num_servers] = entry;
+	num_servers++;
+	
+	/* */
+	entry->prev_req = 0;
+	entry->next_req = 0;
+	
+	if(request)
+	{
+		/* add it to the list of servers that we should request info from */
+		entry->prev_req = last_req_server;
+		if(last_req_server)
+			last_req_server->next_req = entry;
+		else
+			first_req_server = entry;
+		last_req_server = entry;
+	}
 }
 
 void client_serverbrowse_refresh(int lan)
 {
+	/* clear out everything */
+	if(serverlist_heap)
+		memheap_destroy(serverlist_heap);
+	serverlist_heap = memheap_create();
+	num_servers = 0;
+	num_server_capasity = 0;
+	mem_zero(serverlist_ip, sizeof(serverlist_ip));
+	first_req_server = 0;
+	last_req_server = 0;
+	
+	/* */
 	serverlist_lan = lan;
 	
 	if(serverlist_lan)
@@ -389,7 +478,7 @@ void client_serverbrowse_refresh(int lan)
 		netclient_send(net, &packet);	
 		
 		// reset the list
-		servers.num = 0;		
+		//servers.num = 0;
 	}
 	else
 	{
@@ -405,27 +494,28 @@ void client_serverbrowse_refresh(int lan)
 		netclient_send(net, &packet);	
 		
 		// reset the list
-		servers.num = 0;
+		//servers.num = 0;
 	}
 }
 
 
-static void client_serverbrowse_request(int id)
+static void client_serverbrowse_request(SERVERENTRY *entry)
 {
 	if(config.debug)
 	{
 		dbg_msg("client", "requesting server info from %d.%d.%d.%d:%d",
-			servers.addresses[id].ip[0], servers.addresses[id].ip[1], servers.addresses[id].ip[2],
-			servers.addresses[id].ip[3], servers.addresses[id].port);
+			entry->addr.ip[0], entry->addr.ip[1], entry->addr.ip[2],
+			entry->addr.ip[3], entry->addr.port);
 	}
-	NETPACKET packet;
-	packet.client_id = -1;
-	packet.address = servers.addresses[id];
-	packet.flags = PACKETFLAG_CONNLESS;
-	packet.data_size = sizeof(SERVERBROWSE_GETINFO);
-	packet.data = SERVERBROWSE_GETINFO;
-	netclient_send(net, &packet);
-	servers.request_times[id] = time_get();
+	
+	NETPACKET p;
+	p.client_id = -1;
+	p.address = entry->addr;
+	p.flags = PACKETFLAG_CONNLESS;
+	p.data_size = sizeof(SERVERBROWSE_GETINFO);
+	p.data = SERVERBROWSE_GETINFO;
+	netclient_send(net, &p);
+	entry->request_time = time_get();
 }
 
 static void client_serverbrowse_update()
@@ -433,7 +523,55 @@ static void client_serverbrowse_update()
 	int64 timeout = time_freq();
 	int64 now = time_get();
 	int max_requests = 10;
+	int count;
 	
+	SERVERENTRY *entry, *next;
+	
+	/* do timeouts */
+	entry = first_req_server;
+	while(1)
+	{
+		if(!entry) // no more entries
+			break;
+			
+		next = entry->next_req;
+		
+		if(entry->request_time && entry->request_time+timeout < now)
+		{
+			/* timeout */
+			if(entry->prev_req)
+				entry->prev_req->next_req = entry->next_req;
+			else
+				first_req_server = entry->next_req;
+				
+			if(entry->next_req)
+				entry->next_req->prev_req = entry->prev_req;
+			else
+				last_req_server = entry->prev_req;
+		}
+			
+		entry = next;
+	}
+
+	/* do timeouts */
+	entry = first_req_server;
+	count = 0;
+	while(1)
+	{
+		if(!entry) // no more entries
+			break;
+			
+		if(count == max_requests) // no more then 10 concurrent requests
+			break;
+			
+		if(entry->request_time == 0)
+			client_serverbrowse_request(entry);
+		
+		count++;
+		entry = entry->next_req;
+	}
+		
+	/*
 	// timeout old requests
 	while(info_request_begin < servers.num && info_request_begin < info_request_end)
 	{
@@ -448,7 +586,7 @@ static void client_serverbrowse_update()
 	{
 		client_serverbrowse_request(info_request_end);
 		info_request_end++;
-	}
+	}*/
 }
 
 // ------ state handling -----
@@ -597,7 +735,30 @@ static void client_process_packet(NETPACKET *packet)
 		if(packet->data_size >= (int)sizeof(SERVERBROWSE_LIST) &&
 			memcmp(packet->data, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST)) == 0)
 		{
+			int size = packet->data_size-sizeof(SERVERBROWSE_LIST);
+			//mem_copy(servers.addresses, (char*)packet->data+sizeof(SERVERBROWSE_LIST), size);
+			int num = size/sizeof(NETADDR4);
+			NETADDR4 *addrs = (NETADDR4 *)((char*)packet->data+sizeof(SERVERBROWSE_LIST));
+			
+			int i;
+			for(i = 0; i < num; i++)
+			{
+				NETADDR4 addr = addrs[i];
+				SERVER_INFO info = {0};
+				
+				info.latency = 999;
+				sprintf(info.address, "%d.%d.%d.%d:%d",
+					addr.ip[0], addr.ip[1], addr.ip[2],
+					addr.ip[3], addr.port);
+				sprintf(info.name, "%d.%d.%d.%d:%d",
+					addr.ip[0], addr.ip[1], addr.ip[2],
+					addr.ip[3], addr.port);
+				
+				client_serverbrowse_set(addrs+i, 1, &info);
+			}
+			
 			// server listing
+			/*
 			int size = packet->data_size-sizeof(SERVERBROWSE_LIST);
 			mem_copy(servers.addresses, (char*)packet->data+sizeof(SERVERBROWSE_LIST), size);
 			servers.num = size/sizeof(NETADDR4);
@@ -621,7 +782,7 @@ static void client_process_packet(NETPACKET *packet)
 				sprintf(servers.infos[i].name, "%d.%d.%d.%d:%d",
 					servers.addresses[i].ip[0], servers.addresses[i].ip[1], servers.addresses[i].ip[2],
 					servers.addresses[i].ip[3], servers.addresses[i].port);
-			}
+			}*/
 		}
 
 		if(packet->data_size >= (int)sizeof(SERVERBROWSE_INFO) &&
@@ -630,46 +791,27 @@ static void client_process_packet(NETPACKET *packet)
 			// we got ze info
 			UNPACKER up;
 			unpacker_reset(&up, (unsigned char*)packet->data+sizeof(SERVERBROWSE_INFO), packet->data_size-sizeof(SERVERBROWSE_INFO));
-			
-			if(serverlist_lan)
-			{
-				if(servers.num != MAX_SERVERS)
-				{
-					int i = servers.num;
-					strncpy(servers.infos[i].name, unpacker_get_string(&up), 128);
-					strncpy(servers.infos[i].map, unpacker_get_string(&up), 128);
-					servers.infos[i].max_players = unpacker_get_int(&up);
-					servers.infos[i].num_players = unpacker_get_int(&up);
-					servers.infos[i].latency = 0;
-					
-					sprintf(servers.infos[i].address, "%d.%d.%d.%d:%d",
-						packet->address.ip[0], packet->address.ip[1], packet->address.ip[2],
-						packet->address.ip[3], packet->address.port);
+			SERVER_INFO info = {0};
 
-					if(config.debug)
-						dbg_msg("client", "got server info");
-					servers.num++;
-					
-				}
-			}
-			else
+			strncpy(info.version, unpacker_get_string(&up), 32);
+			strncpy(info.name, unpacker_get_string(&up), 64);
+			strncpy(info.map, unpacker_get_string(&up), 32);
+			info.game_type = atol(unpacker_get_string(&up));
+			info.flags = atol(unpacker_get_string(&up));
+			info.progression = atol(unpacker_get_string(&up));
+			info.num_players = atol(unpacker_get_string(&up));
+			info.max_players = atol(unpacker_get_string(&up));
+			
+			int i;
+			for(i = 0; i < info.num_players; i++)
 			{
-				int i;
-				for(i = 0; i < servers.num; i++)
-				{
-					if(net_addr4_cmp(&servers.addresses[i], &packet->address) == 0)
-					{
-						strncpy(servers.infos[i].name, unpacker_get_string(&up), 128);
-						strncpy(servers.infos[i].map, unpacker_get_string(&up), 128);
-						servers.infos[i].max_players = unpacker_get_int(&up);
-						servers.infos[i].num_players = unpacker_get_int(&up);
-						servers.infos[i].latency = ((time_get() - servers.request_times[i])*1000)/time_freq();
-						if(config.debug)
-							dbg_msg("client", "got server info");
-						break;
-					}
-				}
+				strncpy(info.player_names[i], unpacker_get_string(&up), 48);
+				info.player_scores[i] = atol(unpacker_get_string(&up));
 			}
+			
+			/* TODO: unpack players aswell */
+			client_serverbrowse_set(&packet->address, 0, &info);
+
 		}
 	}
 	else
@@ -898,8 +1040,6 @@ static void client_run(const char *direct_connect_server)
 {
 	local_start_time = time_get();
 	snapshot_part = 0;
-	info_request_begin = 0;
-	info_request_end = 0;
 	
 	client_serverbrowse_init();
 	

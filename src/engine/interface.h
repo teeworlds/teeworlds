@@ -13,7 +13,7 @@ extern "C" {
 
 enum 
 {
-	MAX_CLIENTS=8,
+	MAX_CLIENTS=16,
 	SERVER_TICK_SPEED=50, /* TODO: this should be removed */
 	SNAP_CURRENT=0,
 	SNAP_PREV=1,
@@ -55,12 +55,18 @@ typedef struct
 
 typedef struct
 {
+	int progression;
+	int game_type;
 	int max_players;
 	int num_players;
+	int flags;
 	int latency; /* in ms */
-	char name[128];
-	char map[128];
-	char address[128];
+	char name[64];
+	char map[32];
+	char version[32];
+	char address[24];
+	char player_names[16][48];
+	int player_scores[16];
 } SERVER_INFO;
 
 /* image loaders */
@@ -785,7 +791,8 @@ void client_quit();
 void client_rcon(const char *cmd);
 
 void client_serverbrowse_refresh(int lan);
-int client_serverbrowse_getlist(SERVER_INFO **servers);
+SERVER_INFO *client_serverbrowse_get(int index);
+int client_serverbrowse_num();
 
 /* undocumented graphics stuff */
 void gfx_pretty_text(float x, float y, float size, const char *text, int max_width);

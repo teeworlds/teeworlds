@@ -631,8 +631,7 @@ static int do_server_list(float x, float y, int *scroll_index, int *selected_ind
 	const float real_width = item_width + 20;
 	const float real_height = item_height * visible_items + spacing * (visible_items - 1);
 
-	SERVER_INFO *servers;
-	int num_servers = client_serverbrowse_getlist(&servers);
+	int num_servers = client_serverbrowse_num();
 
 	int r = -1;
 
@@ -644,7 +643,7 @@ static int do_server_list(float x, float y, int *scroll_index, int *selected_ind
 			//ui_do_image(empty_item_texture, x, y + i * item_height + i * spacing, item_width, item_height);
 		else
 		{
-			SERVER_INFO *item = &servers[item_index];
+			SERVER_INFO *item = client_serverbrowse_get(item_index);
 
 			bool clicked = false;
 			clicked = ui_do_button(item, item->name, 0, x, y + i * item_height + i * spacing, item_width, item_height,
@@ -718,10 +717,10 @@ static int main_render()
 
 	if (last_selected_index != selected_index && selected_index != -1)
 	{
-		SERVER_INFO *servers;
-		client_serverbrowse_getlist(&servers);
+		SERVER_INFO *server;
+		server = client_serverbrowse_get(selected_index);
 
-		strcpy(address, servers[selected_index].address);
+		strcpy(address, server->address);
 	}
 
 	static int refresh_button, join_button, quit_button;
