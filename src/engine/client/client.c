@@ -387,6 +387,54 @@ static void client_serverbrowse_init()
 {
 }
 
+static int serverbrowse_sort = BROWSESORT_NONE;
+
+static int client_serverbrowse_sort_compare_name(const void *ai, const void *bi)
+{
+	SERVERENTRY **a = (SERVERENTRY **)ai;
+	SERVERENTRY **b = (SERVERENTRY **)bi;
+	return strcmp((*a)->info.name, (*b)->info.name);
+}
+
+static int client_serverbrowse_sort_compare_map(const void *ai, const void *bi)
+{
+	SERVERENTRY **a = (SERVERENTRY **)ai;
+	SERVERENTRY **b = (SERVERENTRY **)bi;
+	return strcmp((*a)->info.map, (*b)->info.map);
+}
+
+static int client_serverbrowse_sort_compare_ping(const void *ai, const void *bi)
+{
+	SERVERENTRY **a = (SERVERENTRY **)ai;
+	SERVERENTRY **b = (SERVERENTRY **)bi;
+	return (*a)->info.latency > (*b)->info.latency;
+}
+
+static int client_serverbrowse_sort_compare_numplayers(const void *ai, const void *bi)
+{
+	SERVERENTRY **a = (SERVERENTRY **)ai;
+	SERVERENTRY **b = (SERVERENTRY **)bi;
+	return (*a)->info.num_players > (*b)->info.num_players;
+}
+
+static void client_serverbrowse_sort()
+{
+	if(serverbrowse_sort == BROWSESORT_NAME)
+		qsort(serverlist, num_servers, sizeof(SERVERENTRY *), client_serverbrowse_sort_compare_name);
+	else if(serverbrowse_sort == BROWSESORT_PING)
+		qsort(serverlist, num_servers, sizeof(SERVERENTRY *), client_serverbrowse_sort_compare_ping);
+	else if(serverbrowse_sort == BROWSESORT_MAP)
+		qsort(serverlist, num_servers, sizeof(SERVERENTRY *), client_serverbrowse_sort_compare_map);
+	else if(serverbrowse_sort == BROWSESORT_NUMPLAYERS)
+		qsort(serverlist, num_servers, sizeof(SERVERENTRY *), client_serverbrowse_sort_compare_numplayers);
+}
+
+void client_serverbrowse_set_sort(int mode)
+{
+	serverbrowse_sort = mode;
+	client_serverbrowse_sort(); /* resort */
+}
+
 static void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *info)
 {
 	int hash = addr->ip[0];
@@ -399,6 +447,7 @@ static void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *in
 			entry->info = *info;
 			if(!request)
 				entry->info.latency = (time_get()-entry->request_time)*1000/time_freq();
+			client_serverbrowse_sort();
 			return;
 		}
 		entry = entry->next_ip;
@@ -443,6 +492,8 @@ static void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *in
 			first_req_server = entry;
 		last_req_server = entry;
 	}
+	
+	client_serverbrowse_sort();
 }
 
 void client_serverbrowse_refresh(int lan)
@@ -570,23 +621,6 @@ static void client_serverbrowse_update()
 		count++;
 		entry = entry->next_req;
 	}
-		
-	/*
-	// timeout old requests
-	while(info_request_begin < servers.num && info_request_begin < info_request_end)
-	{
-		if(now > servers.request_times[info_request_begin]+timeout)
-			info_request_begin++;
-		else
-			break;
-	}
-	
-	// send new requests
-	while(info_request_end < servers.num && info_request_end-info_request_begin < max_requests)
-	{
-		client_serverbrowse_request(info_request_end);
-		info_request_end++;
-	}*/
 }
 
 // ------ state handling -----

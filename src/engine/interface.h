@@ -26,6 +26,12 @@ enum
 	CLIENTSTATE_LOADING,
 	CLIENTSTATE_ONLINE,
 	CLIENTSTATE_QUITING,
+	
+	BROWSESORT_NONE = 0,
+	BROWSESORT_NAME,
+	BROWSESORT_PING,
+	BROWSESORT_MAP,
+	BROWSESORT_NUMPLAYERS,
 };
 
 typedef struct
@@ -793,6 +799,7 @@ void client_rcon(const char *cmd);
 void client_serverbrowse_refresh(int lan);
 SERVER_INFO *client_serverbrowse_get(int index);
 int client_serverbrowse_num();
+void client_serverbrowse_set_sort(int mode);
 
 /* undocumented graphics stuff */
 void gfx_pretty_text(float x, float y, float size, const char *text, int max_width);

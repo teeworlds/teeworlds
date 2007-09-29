@@ -182,6 +182,11 @@ int main(int argc, char **argv)
 			argc--; argv++;
 			player_scores[num_players] = atoi(*argv);
 		}
+		else if(strcmp(*argv, "-a") == 0)
+		{
+			argc--; argv++;
+			map = *argv;
+		}
 		else if(strcmp(*argv, "-x") == 0)
 		{
 			argc--; argv++;
@@ -192,7 +197,7 @@ int main(int argc, char **argv)
 			argc--; argv++;
 			game_type = atoi(*argv);
 		}
-		else if(strcmp(*argv, "-p") == 0)
+		else if(strcmp(*argv, "-g") == 0)
 		{
 			argc--; argv++;
 			progression = atoi(*argv);
