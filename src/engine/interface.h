@@ -61,6 +61,9 @@ typedef struct
 
 typedef struct
 {
+	int sorted_index;
+	int server_index;
+	
 	int progression;
 	int game_type;
 	int max_players;
@@ -797,9 +800,14 @@ void client_quit();
 void client_rcon(const char *cmd);
 
 void client_serverbrowse_refresh(int lan);
+
+SERVER_INFO *client_serverbrowse_sorted_get(int index);
+int client_serverbrowse_sorted_num();
+
 SERVER_INFO *client_serverbrowse_get(int index);
 int client_serverbrowse_num();
-void client_serverbrowse_set_sort(int mode);
+
+int client_serverbrowse_num_requests();
 
 /* undocumented graphics stuff */
 void gfx_pretty_text(float x, float y, float size, const char *text, int max_width);

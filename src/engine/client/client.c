@@ -344,12 +344,15 @@ int *client_get_input(int tick)
 	return 0;
 }
 
-// ------ server browse ----
+/* ------ server browse ---- */
+/* TODO: move all this to a separate file */
+
 typedef struct SERVERENTRY_t SERVERENTRY;
 struct SERVERENTRY_t
 {
 	NETADDR4 addr;
 	int64 request_time;
+	int got_info;
 	SERVER_INFO info;
 	
 	SERVERENTRY *next_ip; // ip hashed list
@@ -358,18 +361,26 @@ struct SERVERENTRY_t
 	SERVERENTRY *next_req;
 };
 
-HEAP *serverlist_heap = 0;
-SERVERENTRY **serverlist = 0;
+static HEAP *serverlist_heap = 0;
+static SERVERENTRY **serverlist = 0;
+static int *sorted_serverlist = 0;
 
-SERVERENTRY *serverlist_ip[256] = {0}; // ip hash list
+static SERVERENTRY *serverlist_ip[256] = {0}; // ip hash list
 
-SERVERENTRY *first_req_server = 0; // request list
-SERVERENTRY *last_req_server = 0;
+static SERVERENTRY *first_req_server = 0; // request list
+static SERVERENTRY *last_req_server = 0;
+static int num_requests = 0;
 
-int num_servers = 0;
-int num_server_capasity = 0;
+static int num_sorted_servers = 0;
+static int num_sorted_servers_capacity = 0;
+static int num_servers = 0;
+static int num_server_capacity = 0;
+
+static int sorthash = 0;
 
 static int serverlist_lan = 1;
+
+int client_serverbrowse_num() { return num_servers; }
 
 SERVER_INFO *client_serverbrowse_get(int index)
 {
@@ -378,61 +389,135 @@ SERVER_INFO *client_serverbrowse_get(int index)
 	return &serverlist[index]->info;
 }
 
-int client_serverbrowse_num()
+int client_serverbrowse_sorted_num() { return num_sorted_servers; }
+
+SERVER_INFO *client_serverbrowse_sorted_get(int index)
 {
-	return num_servers;
+	if(index < 0 || index >= num_sorted_servers)
+		return 0;
+	return &serverlist[sorted_serverlist[index]]->info;
+}
+
+
+int client_serverbrowse_num_requests()
+{
+	return num_requests;
 }
 
 static void client_serverbrowse_init()
 {
 }
 
-static int serverbrowse_sort = BROWSESORT_NONE;
-
 static int client_serverbrowse_sort_compare_name(const void *ai, const void *bi)
 {
-	SERVERENTRY **a = (SERVERENTRY **)ai;
-	SERVERENTRY **b = (SERVERENTRY **)bi;
-	return strcmp((*a)->info.name, (*b)->info.name);
+	SERVERENTRY *a = serverlist[*(const int*)ai];
+	SERVERENTRY *b = serverlist[*(const int*)bi];
+	return strcmp(a->info.name, b->info.name);
 }
 
 static int client_serverbrowse_sort_compare_map(const void *ai, const void *bi)
 {
-	SERVERENTRY **a = (SERVERENTRY **)ai;
-	SERVERENTRY **b = (SERVERENTRY **)bi;
-	return strcmp((*a)->info.map, (*b)->info.map);
+	SERVERENTRY *a = serverlist[*(const int*)ai];
+	SERVERENTRY *b = serverlist[*(const int*)bi];
+	return strcmp(a->info.map, b->info.map);
 }
 
 static int client_serverbrowse_sort_compare_ping(const void *ai, const void *bi)
 {
-	SERVERENTRY **a = (SERVERENTRY **)ai;
-	SERVERENTRY **b = (SERVERENTRY **)bi;
-	return (*a)->info.latency > (*b)->info.latency;
+	SERVERENTRY *a = serverlist[*(const int*)ai];
+	SERVERENTRY *b = serverlist[*(const int*)bi];
+	return a->info.latency > b->info.latency;
 }
 
 static int client_serverbrowse_sort_compare_numplayers(const void *ai, const void *bi)
 {
-	SERVERENTRY **a = (SERVERENTRY **)ai;
-	SERVERENTRY **b = (SERVERENTRY **)bi;
-	return (*a)->info.num_players > (*b)->info.num_players;
+	SERVERENTRY *a = serverlist[*(const int*)ai];
+	SERVERENTRY *b = serverlist[*(const int*)bi];
+	return a->info.num_players > b->info.num_players;
+}
+
+static void client_serverbrowse_filter()
+{
+	int i = 0;
+	num_sorted_servers = 0;
+
+	/* allocate the sorted list */	
+	if(num_sorted_servers_capacity < num_servers)
+	{
+		if(sorted_serverlist)
+			mem_free(sorted_serverlist);
+		num_sorted_servers_capacity = num_servers;
+		sorted_serverlist = mem_alloc(num_sorted_servers_capacity*sizeof(int), 1);
+	}
+	
+	/* filter the servers */
+	for(i = 0; i < num_servers; i++)
+	{
+		int filtered = 0;
+
+		if(config.b_filter_empty && serverlist[i]->info.num_players == 0)
+			filtered = 1;
+		else if(config.b_filter_full && serverlist[i]->info.num_players == serverlist[i]->info.max_players)
+			filtered = 1;
+		else if(config.b_filter_pw && serverlist[i]->info.flags&1)
+			filtered = 1;
+			
+		if(filtered == 0)
+			sorted_serverlist[num_sorted_servers++] = i;
+	}
+}
+
+static int client_serverbrowse_sorthash()
+{
+	int i = config.b_sort&3;
+	i |= config.b_filter_empty<<4;
+	i |= config.b_filter_full<<5;
+	i |= config.b_filter_pw<<6;
+	return i;
 }
 
 static void client_serverbrowse_sort()
 {
-	if(serverbrowse_sort == BROWSESORT_NAME)
-		qsort(serverlist, num_servers, sizeof(SERVERENTRY *), client_serverbrowse_sort_compare_name);
-	else if(serverbrowse_sort == BROWSESORT_PING)
-		qsort(serverlist, num_servers, sizeof(SERVERENTRY *), client_serverbrowse_sort_compare_ping);
-	else if(serverbrowse_sort == BROWSESORT_MAP)
-		qsort(serverlist, num_servers, sizeof(SERVERENTRY *), client_serverbrowse_sort_compare_map);
-	else if(serverbrowse_sort == BROWSESORT_NUMPLAYERS)
-		qsort(serverlist, num_servers, sizeof(SERVERENTRY *), client_serverbrowse_sort_compare_numplayers);
+	int i;
+	
+	/* create filtered list */
+	client_serverbrowse_filter();
+	
+	/* sort */
+	if(config.b_sort == BROWSESORT_NAME)
+		qsort(sorted_serverlist, num_sorted_servers, sizeof(int), client_serverbrowse_sort_compare_name);
+	else if(config.b_sort == BROWSESORT_PING)
+		qsort(sorted_serverlist, num_sorted_servers, sizeof(int), client_serverbrowse_sort_compare_ping);
+	else if(config.b_sort == BROWSESORT_MAP)
+		qsort(sorted_serverlist, num_sorted_servers, sizeof(int), client_serverbrowse_sort_compare_map);
+	else if(config.b_sort == BROWSESORT_NUMPLAYERS)
+		qsort(sorted_serverlist, num_sorted_servers, sizeof(int), client_serverbrowse_sort_compare_numplayers);
+	
+	/* set indexes */
+	for(i = 0; i < num_sorted_servers; i++)
+		serverlist[sorted_serverlist[i]]->info.sorted_index = i;
+	
+	sorthash = client_serverbrowse_sorthash();
 }
 
-void client_serverbrowse_set_sort(int mode)
+static void client_serverbrowse_remove_request(SERVERENTRY *entry)
 {
-	serverbrowse_sort = mode;
-	client_serverbrowse_sort(); /* resort */
+	if(entry->prev_req || entry->next_req || first_req_server == entry)
+	{
+		if(entry->prev_req)
+			entry->prev_req->next_req = entry->next_req;
+		else
+			first_req_server = entry->next_req;
+			
+		if(entry->next_req)
+			entry->next_req->prev_req = entry->prev_req;
+		else
+			last_req_server = entry->prev_req;
+			
+		entry->prev_req = 0;
+		entry->next_req = 0;
+		num_requests--;
+	}
 }
 
 static void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *info)
@@ -446,7 +531,12 @@ static void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *in
 			/* update the server that we already have */
 			entry->info = *info;
 			if(!request)
+			{
 				entry->info.latency = (time_get()-entry->request_time)*1000/time_freq();
+				client_serverbrowse_remove_request(entry);
+			}
+			
+			entry->got_info = 1;
 			client_serverbrowse_sort();
 			return;
 		}
@@ -465,10 +555,10 @@ static void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *in
 	entry->next_ip = serverlist_ip[hash];
 	serverlist_ip[hash] = entry;
 	
-	if(num_servers == num_server_capasity)
+	if(num_servers == num_server_capacity)
 	{
-		num_server_capasity += 100;
-		SERVERENTRY **newlist = mem_alloc(num_server_capasity*sizeof(SERVERENTRY*), 1);
+		num_server_capacity += 100;
+		SERVERENTRY **newlist = mem_alloc(num_server_capacity*sizeof(SERVERENTRY*), 1);
 		memcpy(newlist, serverlist, num_servers*sizeof(SERVERENTRY*));
 		mem_free(serverlist);
 		serverlist = newlist;
@@ -476,12 +566,10 @@ static void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *in
 	
 	/* add to list */
 	serverlist[num_servers] = entry;
+	entry->info.server_index = num_servers;
 	num_servers++;
 	
 	/* */
-	entry->prev_req = 0;
-	entry->next_req = 0;
-	
 	if(request)
 	{
 		/* add it to the list of servers that we should request info from */
@@ -491,6 +579,8 @@ static void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *in
 		else
 			first_req_server = entry;
 		last_req_server = entry;
+		
+		num_requests++;
 	}
 	
 	client_serverbrowse_sort();
@@ -503,10 +593,12 @@ void client_serverbrowse_refresh(int lan)
 		memheap_destroy(serverlist_heap);
 	serverlist_heap = memheap_create();
 	num_servers = 0;
-	num_server_capasity = 0;
+	num_sorted_servers = 0;
 	mem_zero(serverlist_ip, sizeof(serverlist_ip));
 	first_req_server = 0;
 	last_req_server = 0;
+	num_requests = 0;
+	
 	
 	/* */
 	serverlist_lan = lan;
@@ -573,7 +665,6 @@ static void client_serverbrowse_update()
 {
 	int64 timeout = time_freq();
 	int64 now = time_get();
-	int max_requests = 10;
 	int count;
 	
 	SERVERENTRY *entry, *next;
@@ -590,15 +681,8 @@ static void client_serverbrowse_update()
 		if(entry->request_time && entry->request_time+timeout < now)
 		{
 			/* timeout */
-			if(entry->prev_req)
-				entry->prev_req->next_req = entry->next_req;
-			else
-				first_req_server = entry->next_req;
-				
-			if(entry->next_req)
-				entry->next_req->prev_req = entry->prev_req;
-			else
-				last_req_server = entry->prev_req;
+			client_serverbrowse_remove_request(entry);
+			num_requests--;
 		}
 			
 		entry = next;
@@ -612,7 +696,7 @@ static void client_serverbrowse_update()
 		if(!entry) // no more entries
 			break;
 			
-		if(count == max_requests) // no more then 10 concurrent requests
+		if(count == config.b_max_requests) // no more then 10 concurrent requests
 			break;
 			
 		if(entry->request_time == 0)
@@ -621,6 +705,10 @@ static void client_serverbrowse_update()
 		count++;
 		entry = entry->next_req;
 	}
+	
+	/* check if we need to resort */
+	if(sorthash != client_serverbrowse_sorthash())
+		client_serverbrowse_sort();
 }
 
 // ------ state handling -----
@@ -770,7 +858,6 @@ static void client_process_packet(NETPACKET *packet)
 			memcmp(packet->data, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST)) == 0)
 		{
 			int size = packet->data_size-sizeof(SERVERBROWSE_LIST);
-			//mem_copy(servers.addresses, (char*)packet->data+sizeof(SERVERBROWSE_LIST), size);
 			int num = size/sizeof(NETADDR4);
 			NETADDR4 *addrs = (NETADDR4 *)((char*)packet->data+sizeof(SERVERBROWSE_LIST));
 			
@@ -779,44 +866,22 @@ static void client_process_packet(NETPACKET *packet)
 			{
 				NETADDR4 addr = addrs[i];
 				SERVER_INFO info = {0};
+
+#if defined(CONF_ARCH_ENDIAN_BIG)
+				const char *tmp = (const char *)&addr.port;
+				addr.port = (tmp[1]<<8) | tmp[0];
+#endif
 				
 				info.latency = 999;
 				sprintf(info.address, "%d.%d.%d.%d:%d",
 					addr.ip[0], addr.ip[1], addr.ip[2],
 					addr.ip[3], addr.port);
-				sprintf(info.name, "%d.%d.%d.%d:%d",
+				sprintf(info.name, "\255%d.%d.%d.%d:%d", /* the \255 is to make sure that it's sorted last */
 					addr.ip[0], addr.ip[1], addr.ip[2],
 					addr.ip[3], addr.port);
 				
 				client_serverbrowse_set(addrs+i, 1, &info);
 			}
-			
-			// server listing
-			/*
-			int size = packet->data_size-sizeof(SERVERBROWSE_LIST);
-			mem_copy(servers.addresses, (char*)packet->data+sizeof(SERVERBROWSE_LIST), size);
-			servers.num = size/sizeof(NETADDR4);
-
-			info_request_begin = 0;
-			info_request_end = 0;
-
-			int i;
-			for(i = 0; i < servers.num; i++)
-			{
-				servers.infos[i].num_players = 0;
-				servers.infos[i].max_players = 0;
-				servers.infos[i].latency = 999;
-#if defined(CONF_ARCH_ENDIAN_BIG)
-				const char *tmp = (const char *)&servers.addresses[i].port;
-				servers.addresses[i].port = (tmp[1]<<8) | tmp[0];
-#endif
-				sprintf(servers.infos[i].address, "%d.%d.%d.%d:%d",
-					servers.addresses[i].ip[0], servers.addresses[i].ip[1], servers.addresses[i].ip[2],
-					servers.addresses[i].ip[3], servers.addresses[i].port);
-				sprintf(servers.infos[i].name, "%d.%d.%d.%d:%d",
-					servers.addresses[i].ip[0], servers.addresses[i].ip[1], servers.addresses[i].ip[2],
-					servers.addresses[i].ip[3], servers.addresses[i].port);
-			}*/
 		}
 
 		if(packet->data_size >= (int)sizeof(SERVERBROWSE_INFO) &&
@@ -845,7 +910,6 @@ static void client_process_packet(NETPACKET *packet)
 			
 			/* TODO: unpack players aswell */
 			client_serverbrowse_set(&packet->address, 0, &info);
-
 		}
 	}
 	else

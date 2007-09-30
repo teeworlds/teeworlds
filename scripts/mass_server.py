@@ -40,8 +40,7 @@ for s in xrange(0, 150):
 	cmd += '-a "%s" ' % random.choice(maps[t])
 	cmd += '-g %d ' % random.randint(0, 100)
 	cmd += '-t %d ' % t # dm, tdm, ctf
-	#cmd += "-f %d " % random.randint(0, 2) # dm, tdm, ctf
-	
+	cmd += "-f %d " % random.randint(0, 1) # password protected
 		
 	for p in xrange(0, random.randint(0, max)):
 		cmd += '-p "%s" %d ' % (get_nick(), random.randint(0, 20))

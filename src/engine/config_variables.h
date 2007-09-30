@@ -12,6 +12,12 @@ MACRO_CONFIG_INT(debug, 0, 0, 1)
 MACRO_CONFIG_INT(stress, 0, 0, 0)
 MACRO_CONFIG_STR(cl_stress_server, 32, "localhost")
 
+MACRO_CONFIG_INT(b_filter_full, 0, 1, 0)
+MACRO_CONFIG_INT(b_filter_empty, 0, 1, 0)
+MACRO_CONFIG_INT(b_filter_pw, 0, 1, 0)
+MACRO_CONFIG_INT(b_sort, 0, 0, 0)
+MACRO_CONFIG_INT(b_max_requests, 10, 0, 0)
+
 MACRO_CONFIG_INT(gfx_screen_width, 800, 0, 0)
 MACRO_CONFIG_INT(gfx_screen_height, 600, 0, 0)
 MACRO_CONFIG_INT(gfx_fullscreen, 1, 0, 1)

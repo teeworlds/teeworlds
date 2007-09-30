@@ -631,7 +631,7 @@ static int do_server_list(float x, float y, int *scroll_index, int *selected_ind
 	const float real_width = item_width + 20;
 	const float real_height = item_height * visible_items + spacing * (visible_items - 1);
 
-	int num_servers = client_serverbrowse_num();
+	int num_servers = client_serverbrowse_sorted_num();
 
 	int r = -1;
 
@@ -643,7 +643,7 @@ static int do_server_list(float x, float y, int *scroll_index, int *selected_ind
 			//ui_do_image(empty_item_texture, x, y + i * item_height + i * spacing, item_width, item_height);
 		else
 		{
-			SERVER_INFO *item = client_serverbrowse_get(item_index);
+			SERVER_INFO *item = client_serverbrowse_sorted_get(item_index);
 
 			bool clicked = false;
 			clicked = ui_do_button(item, item->name, 0, x, y + i * item_height + i * spacing, item_width, item_height,
@@ -751,11 +751,24 @@ static int main_render()
 		config_copy = config;
 		screen = SCREEN_SETTINGS_GENERAL;
 	}
+	
+	// render status text
+	if(client_serverbrowse_num_requests())
+	{
+		char buf[512];
+		sprintf(buf, "Refreshing %d servers...", client_serverbrowse_num_requests());
+		ui_do_label(20, 400, buf, 28);
+	}
+	else
+	{
+		char buf[512];
+		sprintf(buf, "%d of %d servers", client_serverbrowse_sorted_num(), client_serverbrowse_num());
+		ui_do_label(20, 400, buf, 28);
+	}
 
-	/*static int editor_button;
-	if (ui_do_button(&editor_button, "Kerning Editor", 0, 20, 470, 170, 48, draw_teewars_button))
-		screen = SCREEN_KERNING;*/
-
+	config.b_filter_empty = ui_do_check_box(&config.b_filter_empty, 20, 600-80, 32, 32, config.b_filter_empty);
+	config.b_filter_full = ui_do_check_box(&config.b_filter_full, 20+50, 600-80, 32, 32, config.b_filter_full);
+	config.b_filter_pw = ui_do_check_box(&config.b_filter_pw, 20+100, 600-80, 32, 32, config.b_filter_pw);
 	return 0;
 }
 
