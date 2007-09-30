@@ -377,6 +377,7 @@ static int num_servers = 0;
 static int num_server_capacity = 0;
 
 static int sorthash = 0;
+static char filterstring[64] = {0};
 
 static int serverlist_lan = 1;
 
@@ -461,6 +462,11 @@ static void client_serverbrowse_filter()
 			filtered = 1;
 		else if(config.b_filter_pw && serverlist[i]->info.flags&1)
 			filtered = 1;
+		else if(config.b_filter_string[0] != 0)
+		{
+			if(strstr(serverlist[i]->info.name, config.b_filter_string) == 0)
+				filtered = 1;
+		}
 			
 		if(filtered == 0)
 			sorted_serverlist[num_sorted_servers++] = i;
@@ -497,6 +503,7 @@ static void client_serverbrowse_sort()
 	for(i = 0; i < num_sorted_servers; i++)
 		serverlist[sorted_serverlist[i]]->info.sorted_index = i;
 	
+	strncpy(filterstring, config.b_filter_string, sizeof(filterstring)-1); 
 	sorthash = client_serverbrowse_sorthash();
 }
 
@@ -707,7 +714,8 @@ static void client_serverbrowse_update()
 	}
 	
 	/* check if we need to resort */
-	if(sorthash != client_serverbrowse_sorthash())
+	/* TODO: remove the strcmp */
+	if(sorthash != client_serverbrowse_sorthash() || strcmp(filterstring, config.b_filter_string) != 0)
 		client_serverbrowse_sort();
 }
 

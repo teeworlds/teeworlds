@@ -766,6 +766,7 @@ static int main_render()
 		ui_do_label(20, 400, buf, 28);
 	}
 
+	ui_do_edit_box(&config.b_filter_string, 20+150, 600-80, 200, 36, config.b_filter_string, sizeof(config.b_filter_string));
 	config.b_filter_empty = ui_do_check_box(&config.b_filter_empty, 20, 600-80, 32, 32, config.b_filter_empty);
 	config.b_filter_full = ui_do_check_box(&config.b_filter_full, 20+50, 600-80, 32, 32, config.b_filter_full);
 	config.b_filter_pw = ui_do_check_box(&config.b_filter_pw, 20+100, 600-80, 32, 32, config.b_filter_pw);

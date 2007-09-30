@@ -12,6 +12,8 @@ MACRO_CONFIG_INT(debug, 0, 0, 1)
 MACRO_CONFIG_INT(stress, 0, 0, 0)
 MACRO_CONFIG_STR(cl_stress_server, 32, "localhost")
 
+MACRO_CONFIG_STR(b_filter_string, 64, "")
+
 MACRO_CONFIG_INT(b_filter_full, 0, 1, 0)
 MACRO_CONFIG_INT(b_filter_empty, 0, 1, 0)
 MACRO_CONFIG_INT(b_filter_pw, 0, 1, 0)
