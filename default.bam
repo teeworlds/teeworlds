@@ -153,43 +153,29 @@ function build(settings)
 		settings.linker.flags = ""
 	end
 
-	server_settings = settings:copy()
 
 	-- set some platform specific settings
 	settings.cc.includes:add("src")
 	settings.cc.includes:add("src/external/zlib")
-	settings.cc.includes:add("src/external/glfw/include")
 
 	if family == "unix" then
    		if platform == "macosx" then
 			glfw_platform = "macosx"
-			settings.linker.frameworks:add("OpenGL")
-            settings.linker.frameworks:add("AGL")
-            settings.linker.frameworks:add("Carbon")
-			settings.linker.frameworks:add("CoreAudio")
-			settings.linker.frameworks:add("AudioToolbox")
-			settings.linker.frameworks:add("AudioUnit")
 		else
 			glfw_platform = "x11"
 			settings.linker.libs:add("pthread")
-            settings.linker.libs:add("asound")
-			settings.linker.libs:add("X11")
-			settings.linker.libs:add("GL")
-			settings.linker.libs:add("GLU")
 		end
 	elseif family == "windows" then
 		glfw_platform = "win32"
 		settings.linker.libs:add("gdi32.lib")
 		settings.linker.libs:add("user32.lib")
-		settings.linker.libs:add("opengl32.lib")
-		settings.linker.libs:add("glu32.lib")
 		settings.linker.libs:add("ws2_32.lib")
-		settings.linker.libs:add("dsound.lib")
 		settings.linker.libs:add("ole32.lib")
 	end
 	
 	-- build glfw
 	glfw_settings = settings:copy()
+	glfw_settings.cc.includes:add("src/external/glfw/include")
 	glfw_settings.cc.includes:add("src/engine/external/glfw/lib")
 	glfw_settings.cc.includes:add("src/engine/external/glfw/lib/" .. glfw_platform)
 
@@ -201,23 +187,48 @@ function build(settings)
 	engine_settings = settings:copy()
 	
 	if family == "windows" then
-		engine_settings.cc.flags = "/wd4244"
+		engine_settings.cc.flags = "/wd4244 /TP"
 	else
-		engine_settings.cc.flags = "-Wall"
+		engine_settings.cc.flags = "-Wall -std=c99"
 		engine_settings.linker.flags = ""
 	end
+
+	-- server
+	server_settings = engine_settings:copy()
+
+	-- client
+	client_settings = engine_settings:copy()
+	client_settings.cc.includes:add("src/external/glfw/include")
+
+	if family == "unix" then
+   		if platform == "macosx" then
+			client_settings.linker.frameworks:add("OpenGL")
+            client_settings.linker.frameworks:add("AGL")
+            client_settings.linker.frameworks:add("Carbon")
+			client_settings.linker.frameworks:add("CoreAudio")
+			client_settings.linker.frameworks:add("AudioToolbox")
+			client_settings.linker.frameworks:add("AudioUnit")
+		else
+            client_settings.linker.libs:add("asound")
+			client_settings.linker.libs:add("X11")
+			client_settings.linker.libs:add("GL")
+			client_settings.linker.libs:add("GLU")
+		end
+	elseif family == "windows" then
+		client_settings.linker.libs:add("opengl32.lib")
+		client_settings.linker.libs:add("glu32.lib")
+		client_settings.linker.libs:add("dsound.lib")
+	end
+
+	external_settings = settings:copy()
+	zlib = Compile(external_settings, Collect("src/engine/external/zlib/*.c"))
+	wavpack = Compile(external_settings, Collect("src/engine/external/wavpack/*.c"))
+	pnglite = Compile(external_settings, Collect("src/engine/external/pnglite/*.c"))
+	portaudio = Compile(external_settings, Collect("src/engine/external/pa.c"))
 	
-	engine = Compile(engine_settings, Collect(
-		"src/engine/*.c",
-		"src/engine/external/zlib/*.c"))
-		
-	client = Compile(engine_settings, Collect(
-		"src/engine/client/*.c",
-		"src/engine/external/pnglite/*.c",
-		"src/engine/external/pa.c",
-		"src/engine/external/wavpack/*.c"))
-		
-	server = Compile(engine_settings, Collect("src/engine/server/*.c"))
+	engine = Compile(engine_settings, Collect("src/engine/*.c"))
+	client = Compile(client_settings, Collect("src/engine/client/*.c"))
+	server = Compile(server_settings, Collect("src/engine/server/*.c"))
 	
 	masterserver = Compile(settings, Collect("src/mastersrv/*.cpp"))
 	game_shared = Compile(settings, Collect("src/game/*.cpp"), nethash)
@@ -232,13 +243,19 @@ function build(settings)
 	tools = {}
 	for i,v in objs do
 		toolname = PathFilename(PathBase(v))
-		tools[i] = Link(settings, toolname, v, engine)
+		tools[i] = Link(settings, toolname, v, engine, zlib)
 	end
 	
 	-- build client, server and master server
-	client_exe = Link(settings, "teewars", game_shared, game_client, engine, client, editor, glfw, pa, client_libs, client_link_other)
-	server_exe = Link(server_settings, "teewars_srv", engine, server, game_shared, game_server)
-	masterserver_exe = Link(server_settings, "mastersrv", masterserver, engine)
+	client_exe = Link(client_settings, "teewars", game_shared, game_client,
+		engine, client, editor, glfw, portaudio, zlib, pnglite, wavpack,
+		client_link_other)
+
+	server_exe = Link(server_settings, "teewars_srv", engine, server,
+		game_shared, game_server, zlib)
+
+	masterserver_exe = Link(server_settings, "mastersrv", masterserver,
+		engine, zlib)
 
 	-- make targets
 	c = PseudoTarget("client".."_"..settings.config_name, client_exe)
