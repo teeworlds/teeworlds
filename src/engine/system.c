@@ -360,7 +360,7 @@ NETSOCKET net_udp4_create(NETADDR4 bindaddr)
 #endif
 
 	/* set boardcast */
-	setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast));
+	setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (const char*)&broadcast, sizeof(broadcast));
 	
 	/* return */
 	return sock;
@@ -372,7 +372,7 @@ int net_udp4_send(NETSOCKET sock, const NETADDR4 *addr, const void *data, int si
 	int d;
 	mem_zero(&sa, sizeof(sa));
 	netaddr4_to_sockaddr(addr, &sa);
-	d = sendto((int)sock, data, size, 0, &sa, sizeof(sa));
+	d = sendto((int)sock, (const char*)data, size, 0, &sa, sizeof(sa));
 	return d;
 }
 
@@ -381,7 +381,7 @@ int net_udp4_recv(NETSOCKET sock, NETADDR4 *addr, void *data, int maxsize)
 	struct sockaddr from;
 	int bytes;
 	socklen_t fromlen = sizeof(struct sockaddr);
-	bytes = recvfrom(sock, data, maxsize, 0, &from, &fromlen);
+	bytes = recvfrom(sock, (char*)data, maxsize, 0, &from, &fromlen);
 	if(bytes > 0)
 	{
 		sockaddr_to_netaddr4(&from, addr);
@@ -486,14 +486,14 @@ int net_tcp4_connect_non_blocking(NETSOCKET sock, const NETADDR4 *a)
 int net_tcp4_send(NETSOCKET sock, const void *data, int size)
 {
   int d;
-  d = send((int)sock, data, size, 0);
+  d = send((int)sock, (const char*)data, size, 0);
   return d;
 }
 
 int net_tcp4_recv(NETSOCKET sock, void *data, int maxsize)
 {
   int bytes;
-  bytes = recv((int)sock, data, maxsize, 0);
+  bytes = recv((int)sock, (char*)data, maxsize, 0);
   return bytes;
 }
 

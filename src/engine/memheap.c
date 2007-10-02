@@ -23,7 +23,7 @@ static CHUNK *memheap_newchunk()
 	char *mem;
 	
 	/* allocate memory */
-	mem = mem_alloc(sizeof(CHUNK)+chunksize, 1);
+	mem = (char*)mem_alloc(sizeof(CHUNK)+chunksize, 1);
 	if(!mem)
 		return 0x0;
 

@@ -117,7 +117,7 @@ DATAFILE *datafile_load(const char *filename)
 	df = (DATAFILE*)mem_alloc(allocsize, 1);
 	df->header = header;
 	df->data_start_offset = sizeof(DATAFILE_HEADER) + size;
-	df->data_ptrs = (void*)(df+1);
+	df->data_ptrs = (char**)(df+1);
 	df->data = (char *)(df+1)+header.num_raw_data*sizeof(char *);
 	df->file = file;
 	
@@ -227,7 +227,7 @@ void *datafile_get_data(DATAFILE *df, int index)
 			
 			/* decompress the data, TODO: check for errors */
 			unsigned long s = uncompressed_size;
-			uncompress((void*)df->data_ptrs[index], &s, temp, datasize);
+			uncompress((Bytef*)df->data_ptrs[index], &s, (Bytef*)temp, datasize);
 			
 			/* clean up the temporary buffers */
 			mem_free(temp);
@@ -361,7 +361,7 @@ struct DATAFILE_OUT_t
 DATAFILE_OUT *datafile_create(const char *filename)
 {
 	int i;
-	DATAFILE_OUT *df = mem_alloc(sizeof(DATAFILE_OUT), 1);
+	DATAFILE_OUT *df = (DATAFILE_OUT*)mem_alloc(sizeof(DATAFILE_OUT), 1);
 	df->file = io_open(filename, IOFLAG_WRITE);
 	if(!df->file)
 	{
@@ -426,7 +426,7 @@ int datafile_add_data(DATAFILE_OUT *df, int size, void *data)
 	void *compdata = mem_alloc(size, 1); /* temporary buffer that we use duing compression */
 	info->uncompressed_size = size;
 	unsigned long s = size;
-	if(compress(compdata, &s, data, size) != Z_OK)
+	if(compress((Bytef*)compdata, &s, (Bytef*)data, size) != Z_OK)
 		dbg_assert(0, "zlib error");
 	info->compressed_size = (int)s;
 	info->compressed_data = mem_alloc(info->compressed_size, 1);
