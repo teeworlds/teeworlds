@@ -454,6 +454,7 @@ extern "C" void modc_init()
 
 	// TODO: should be removed
 	music_menu = snd_load_wav("data/audio/music_menu.wav");
+	snd_set_listener_pos(0.0f, 0.0f);
 
 	float total = data->num_sounds+data->num_images;
 	float current = 0;

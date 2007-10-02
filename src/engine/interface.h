@@ -356,9 +356,10 @@ float snd_get_master_volume();
 void snd_set_master_volume(float val);
 int snd_load_wav(const char *filename);
 int snd_load_wv(const char *filename);
-int snd_play(int cid, int sid, int loop, int x, int y);
+int snd_play(int cid, int sid, int loop, float x, float y);
 void snd_stop(int id);
 void snd_set_vol(int id, float vol);
+void snd_set_listener_pos(float x, float y);
 int snd_shutdown();
 
 /*

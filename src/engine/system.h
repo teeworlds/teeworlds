@@ -297,10 +297,8 @@ typedef struct LOCKINTERNAL *LOCK;
 LOCK lock_create();
 void lock_destroy(LOCK lock);
 
-void lock_shared(LOCK lock);
-void lock_exclusive(LOCK lock);
-int lock_try_shared(LOCK lock);
-int lock_try_exclusive(LOCK lock);
+int lock_try(LOCK lock);
+void lock_wait(LOCK lock);
 void lock_release(LOCK lock);
 
 /**** Group: Timer ****/

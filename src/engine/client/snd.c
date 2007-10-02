@@ -20,6 +20,8 @@ enum
 	MAX_FRAMES = 1024
 };
 
+static LOCK sound_lock = 0;
+
 static struct sound
 {
 	short *data;
@@ -128,6 +130,7 @@ static inline void fill_stereo(int *out, unsigned frames, struct voice *v, float
 static void mix(short *out, unsigned frames)
 {
 	static int main_buffer[MAX_FRAMES*2];
+	unsigned locked = 0;
 
 	dbg_assert(frames <= MAX_FRAMES, "too many frames to fill");
 
@@ -148,7 +151,9 @@ static void mix(short *out, unsigned frames)
 		while(v)
 		{
 			unsigned filled = 0;
-			while(v->sound && filled < frames)
+			unsigned step = 1;
+
+			while(v && v->sound && filled < frames)
 			{
 				// calculate maximum frames to fill
 				unsigned frames_left = (v->sound->num_samples - v->tick) >> (v->sound->channels-1);
@@ -214,6 +219,14 @@ static void mix(short *out, unsigned frames)
 					v->stop -=  to_fill;
 				if(v->tick >= v->sound->num_samples || v->stop == 0)
 				{
+					struct voice *vn = v->next;
+					if(!locked)
+					{
+						lock_wait(sound_lock);
+						locked = 1;
+					}
+
+
 					if(v->next)
 						v->next->prev = v->prev;
 
@@ -225,14 +238,20 @@ static void mix(short *out, unsigned frames)
 					dbg_msg("snd", "sound stopped");
 
 					reset_voice(v);
+					step = 0;
+					v = vn;
 				}
 
 				filled += to_fill;
 			}
 
-			v = (struct voice*)v->next;
+			if(step)
+				v = (struct voice*)v->next;
 		}
 	}
+
+	if(locked)
+		lock_release(sound_lock);
 
 	// clamp accumulated values
 	for(i = 0; i < frames; i++)
@@ -266,6 +285,8 @@ int snd_init()
 	params.suggestedLatency = Pa_GetDeviceInfo(params.device)->defaultLowOutputLatency;
 	params.hostApiSpecificStreamInfo = 0x0;
 
+	sound_lock = lock_create();
+
 	err = Pa_OpenStream(
 			&stream,        /* passes back stream pointer */
 			0,              /* no input channels */
@@ -284,6 +305,8 @@ int snd_shutdown()
 {
 	Pa_StopStream(stream);
 	Pa_Terminate();
+
+	lock_destroy(sound_lock);
 
 	return 0;
 }
@@ -547,9 +570,10 @@ int snd_load_wav(const char *filename)
 	return sid;
 }
 
-int snd_play(int cid, int sid, int loop, int x, int y)
+int snd_play(int cid, int sid, int loop, float x, float y)
 {
 	int vid;
+	dbg_msg("snd", "try adding sound");
 	for(vid = 0; vid < NUM_VOICES; vid++)
 	{
 		if(voices[vid].sound == 0x0)
@@ -563,15 +587,18 @@ int snd_play(int cid, int sid, int loop, int x, int y)
 			else
 				voices[vid].loop = -1;
 
-			// add voice to channel last, to avoid threding errors
+			lock_wait(sound_lock);
+			dbg_msg("snd", "sound added");
 			voices[vid].next = channels[cid].first_voice;
 			if(channels[cid].first_voice)
 				channels[cid].first_voice->prev = &voices[vid];
 			channels[cid].first_voice = &voices[vid];
+			lock_release(sound_lock);
 			return vid;
 		}
 	}
 
+	dbg_msg("snd", "failed");
 	return -1;
 }
 
@@ -584,4 +611,10 @@ void snd_stop(int vid)
 {
 	//TODO: lerp volume to 0
 	voices[vid].stop = 0;
+}
+
+void snd_set_listener_pos(float x, float y)
+{
+	center_x = x;
+	center_y = y;
 }

@@ -4,6 +4,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "detect.h"
 #include "system.h"
 
 #if defined(CONF_FAMILY_UNIX)
@@ -18,6 +19,7 @@
 	#include <netdb.h>      
 	#include <netinet/in.h>
 	#include <fcntl.h>
+	#include <pthread.h>
 
 	#include <dirent.h>
 	#include <unistd.h>
@@ -247,6 +249,61 @@ void thread_sleep(int milliseconds)
 	Sleep(milliseconds);
 #else
 	#error not implemented
+#endif
+}
+
+#if defined(CONF_FAMILY_UNIX)
+typedef pthread_mutex_t LOCKINTERNAL;
+#else
+	#error not implemented on this platform
+#endif
+
+LOCK lock_create()
+{
+	LOCKINTERNAL *l = (LOCKINTERNAL*)mem_alloc(sizeof(LOCKINTERNAL), 4);
+
+#if defined(CONF_FAMILY_UNIX)
+	pthread_mutex_init(l, 0x0);
+#else
+	#error not implemented on this platform
+#endif
+	return l;
+}
+
+void lock_destroy(LOCK lock)
+{
+#if defined(CONF_FAMILY_UNIX)
+	pthread_mutex_destroy(lock);
+#else
+	#error not implemented on this platform
+#endif
+	mem_free(lock);
+}
+
+int lock_try(LOCK lock)
+{
+#if defined(CONF_FAMILY_UNIX)
+	return pthread_mutex_trylock(lock);
+#else
+	#error not implemented on this platform
+#endif
+}
+
+void lock_wait(LOCK lock)
+{
+#if defined(CONF_FAMILY_UNIX)
+	pthread_mutex_lock(lock);
+#else
+	#error not implemented on this platform
+#endif
+}
+
+void lock_release(LOCK lock)
+{
+#if defined(CONF_FAMILY_UNIX)
+	pthread_mutex_unlock(lock);
+#else
+	#error not implemented on this platform
 #endif
 }
 
