@@ -284,7 +284,7 @@ static void server_do_snap()
 			
 			int input_predtick = -1;
 			int64 timeleft = 0;
-			for(k = 0; k < 200; k++) // TODO: do this better
+			for(k = 0; k < 200; k++) /* TODO: do this better */
 			{
 				if(clients[i].inputs[k].game_tick == current_tick)
 				{
@@ -460,7 +460,6 @@ static void server_process_client_packet(NETPACKET *packet)
 			for(i = 0; i < size/4; i++)
 				input->data[i] = msg_unpack_int();
 				
-			//time_get()
 			clients[cid].current_input++;
 			clients[cid].current_input %= 200;
 		}
@@ -489,13 +488,10 @@ static void server_process_client_packet(NETPACKET *packet)
 static void server_send_serverinfo(NETADDR4 *addr)
 {
 	NETPACKET packet;
-	
 	PACKER p;
-	packer_reset(&p);
-	packer_add_raw(&p, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
-	packer_add_string(&p, config.sv_name, 128);
-	packer_add_string(&p, config.sv_map, 32);
-	packer_add_int(&p, netserver_max_clients(net)); /* max_players */
+	char buf[128];
+
+	/* count the players */	
 	int c = 0;
 	int i;
 	for(i = 0; i < MAX_CLIENTS; i++)
@@ -503,7 +499,27 @@ static void server_send_serverinfo(NETADDR4 *addr)
 		if(!clients[i].state != SRVCLIENT_STATE_EMPTY)
 			c++;
 	}
-	packer_add_int(&p, c); /* num_players */
+	
+	packer_reset(&p);
+	packer_add_string(&p, mods_net_version(), 32);
+	packer_add_string(&p, config.sv_name, 64);
+	packer_add_string(&p, config.sv_map, 32);
+	packer_add_string(&p, "0", 2); /* gametype */
+	packer_add_string(&p, "0", 2); /* flags */
+	packer_add_string(&p, "0", 4); /* progression */
+	
+	sprintf(buf, "%d", c); packer_add_string(&p, buf, 3);  /* num players */
+	sprintf(buf, "%d", netserver_max_clients(net)); packer_add_string(&p, buf, 3); /* max players */
+
+	for(i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(!clients[i].state != SRVCLIENT_STATE_EMPTY)
+		{
+			packer_add_string(&p, clients[i].name, 48);  /* player name */
+			packer_add_string(&p, "0", 6); /* score */
+		}
+	}
+	
 	
 	packet.client_id = -1;
 	packet.address = *addr;

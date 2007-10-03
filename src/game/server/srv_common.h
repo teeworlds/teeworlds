@@ -117,6 +117,8 @@ protected:
 	int game_over_tick;
 	int sudden_death;
 	
+	int teamscore[2];
+	
 public:
 	int gametype;
 	gameobject();

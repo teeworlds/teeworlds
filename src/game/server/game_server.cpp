@@ -306,6 +306,8 @@ void gameobject::startround()
 	sudden_death = 0;
 	game_over_tick = -1;
 	world->paused = false;
+	teamscore[0] = 0;
+	teamscore[1] = 0;
 }
 
 void gameobject::post_reset()
@@ -344,6 +346,9 @@ void gameobject::snap(int snapping_client)
 	game->time_limit = config.timelimit;
 	game->round_start_tick = round_start_tick;
 	game->gametype = gametype;
+	
+	game->teamscore[0] = teamscore[0];
+	game->teamscore[1] = teamscore[1];
 }
 
 int gameobject::getteam(int notthisid)

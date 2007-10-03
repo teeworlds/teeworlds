@@ -277,6 +277,9 @@ int snd_init()
 {
 	PaStreamParameters params;
 	PaError err = Pa_Initialize();
+
+	sound_lock = lock_create();
+
 	params.device = Pa_GetDefaultOutputDevice();
 	if(params.device < 0)
 		return 1;
@@ -285,7 +288,6 @@ int snd_init()
 	params.suggestedLatency = Pa_GetDeviceInfo(params.device)->defaultLowOutputLatency;
 	params.hostApiSpecificStreamInfo = 0x0;
 
-	sound_lock = lock_create();
 
 	err = Pa_OpenStream(
 			&stream,        /* passes back stream pointer */

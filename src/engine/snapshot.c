@@ -136,7 +136,7 @@ static void undiff_item(int *past, int *diff, int *out, int size)
 }
 
 
-// TODO: OPT: this should be made much faster
+/* TODO: OPT: this should be made much faster */
 int snapshot_create_delta(SNAPSHOT *from, SNAPSHOT *to, void *dstdata)
 {
 	SNAPSHOT_DELTA *delta = (SNAPSHOT_DELTA *)dstdata;

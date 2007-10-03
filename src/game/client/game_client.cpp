@@ -1562,10 +1562,31 @@ void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, c
 	}
 
 	float tw = gfx_pretty_text_width( 64, title, -1);
-	gfx_pretty_text(x+w/2-tw/2, y, 64, title, -1);
-	
 
+	if(team == -1)
+	{
+		gfx_pretty_text(x+w/2-tw/2, y, 64, title, -1);
+	}
+	else
+	{
+		gfx_pretty_text(x+10, y, 64, title, -1);
+		
+		char buf[128];
+		sprintf(buf, "%d", gameobj->teamscore[team&1]);
+		tw = gfx_pretty_text_width(64, buf, -1);
+		gfx_pretty_text(x+w-tw-40, y, 64, buf, -1);
+	}
+	
 	y += 64.0f;
+	
+	/*
+	if(team)
+	{
+		char buf[128];
+		sprintf(buf, "%4d", gameobj->teamscore[team&1]);
+		gfx_pretty_text(x+w/2-tw/2, y, 32, buf, -1);
+	}*/
+
 
 	// find players
 	const obj_player *players[MAX_CLIENTS] = {0};

@@ -124,6 +124,8 @@ struct obj_game
 	int score_limit;
 	int time_limit;
 	int gametype;
+	
+	int teamscore[2];
 };
 
 struct obj_projectile

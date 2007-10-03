@@ -59,6 +59,7 @@ void gameobject_ctf::tick()
 				if(distance(f->pos, flags[fi^1]->pos) < 24)
 				{
 					// CAPTURE! \o/
+					teamscore[fi^1]++;
 					for(int i = 0; i < 2; i++)
 						flags[i]->reset();
 				}

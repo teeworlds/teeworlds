@@ -554,6 +554,10 @@ sprites {
 		powerup_weapon 3 0 6 2
 		powerup_ninja 3 10 7 2
 		powerup_timefield 3 0 6 2
+
+		flag_blue 12 8 4 8
+		flag_red 16 8 4 8
+
 	}
 	
 	tees images.char_default 16 64 {

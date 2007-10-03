@@ -810,6 +810,8 @@ int client_serverbrowse_num();
 
 int client_serverbrowse_num_requests();
 
+void client_serverbrowse_update();
+
 /* undocumented graphics stuff */
 void gfx_pretty_text(float x, float y, float size, const char *text, int max_width);
 float gfx_pretty_text_width(float size, const char *text, int length);
