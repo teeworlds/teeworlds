@@ -516,10 +516,10 @@ static bool must_process_events = false;
 static void process_events(int s)
 {
 	int num = snap_num_items(s);
-	for(int i = 0; i < num; i++)
+	for(int index = 0; index < num; index++)
 	{
 		SNAP_ITEM item;
-		const void *data = snap_get_item(s, i, &item);
+		const void *data = snap_get_item(s, index, &item);
 		
 		if(item.type == EVENT_DAMAGEINDICATION)
 		{
@@ -827,11 +827,16 @@ static void render_powerup(const obj_powerup *prev, const obj_powerup *current)
 static void render_flag(const obj_flag *prev, const obj_flag *current)
 {
 	float angle = 0.0f;
-	float size = 64.0f;
+	float size = 36.0f;
 
     gfx_blend_normal();
-    gfx_texture_set(-1);
+    gfx_texture_set(data->images[IMAGE_GAME].id);
     gfx_quads_begin();
+
+	if(current->team == 0) // red team
+		select_sprite(SPRITE_FLAG_RED);
+	else
+		select_sprite(SPRITE_FLAG_BLUE);
 	
 	gfx_quads_setrotation(angle);
 	
@@ -839,14 +844,10 @@ static void render_flag(const obj_flag *prev, const obj_flag *current)
 	
 	if(current->local_carry)
 		pos = local_player_pos;
-
+		
     gfx_setcolor(current->team ? 0 : 1,0,current->team ? 1 : 0,1);
-	gfx_quads_setsubset(
-		0, // startx
-		0, // starty
-		1, // endx
-		1); // endy								
-    gfx_quads_draw(pos.x,pos.y,size,size);
+    //draw_sprite(pos.x, pos.y, size);
+    gfx_quads_draw(pos.x, pos.y-size*0.75f, size, size*2);
     gfx_quads_end();
 }
 
@@ -1501,6 +1502,34 @@ int emoticon_selector_render()
 	return return_now ? selected_emoticon : -1;
 }
 
+void render_goals(obj_game *gameobj, float x, float y, float w)
+{
+	float h = 50.0f;
+
+	gfx_blend_normal();
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_setcolor(0,0,0,0.5f);
+	draw_round_rect(x-10.f, y-10.f, w, h, 10.0f);
+	gfx_quads_end();
+	
+	// render goals
+	//y = ystart+h-54;
+	if(gameobj && gameobj->time_limit)
+	{
+		char buf[64];
+		sprintf(buf, "Time Limit: %d min", gameobj->time_limit);
+		gfx_pretty_text(x+w/2, y, 32, buf, -1);
+	}
+	if(gameobj && gameobj->score_limit)
+	{
+		char buf[64];
+		sprintf(buf, "Score Limit: %d", gameobj->score_limit);
+		gfx_pretty_text(x+40, y, 32, buf, -1);
+	}
+
+}
+
 void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, const char *title)
 {
 	//float w = 550.0f;
@@ -1513,11 +1542,10 @@ void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, c
 	anim_eval(&data->animations[ANIM_BASE], 0, &idlestate);
 	anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);	
 	
-	float ystart = y;
+	//float ystart = y;
 	float h = 600.0f;
 
 	gfx_blend_normal();
-	
 	gfx_texture_set(-1);
 	gfx_quads_begin();
 	gfx_setcolor(0,0,0,0.5f);
@@ -1607,21 +1635,6 @@ void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, c
 		render_tee(&idlestate, player->clientid, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28));
 		y += 50.0f;
 	}
-	
-	// render goals
-	y = ystart+h-54;
-	if(gameobj && gameobj->time_limit)
-	{
-		char buf[64];
-		sprintf(buf, "Time Limit: %d min", gameobj->time_limit);
-		gfx_pretty_text(x+w/2, y, 32, buf, -1);
-	}
-	if(gameobj && gameobj->score_limit)
-	{
-		char buf[64];
-		sprintf(buf, "Score Limit: %d", gameobj->score_limit);
-		gfx_pretty_text(x+40, y, 32, buf, -1);
-	}				
 }
 
 void render_game()
@@ -2144,6 +2157,8 @@ void render_game()
 			render_scoreboard(gameobj, width/2-w-20, 150.0f, w, 0, "Red Team");
 			render_scoreboard(gameobj, width/2 + 20, 150.0f, w, 1, "Blue Team");
 		}
+		
+		render_goals(gameobj, width/2-w/2, 150+600+25, w);
 
 	}
 }
