@@ -2126,6 +2126,27 @@ void render_game()
 			float w = gfx_pretty_text_width(16, text, -1);
 			gfx_pretty_text(200-w/2, 2, 16, text, -1);
 		}
+		
+		if(gametype == GAMETYPE_TDM || gametype == GAMETYPE_CTF)
+		{
+			for(int t = 0; t < 2; t++)
+			{
+				gfx_blend_normal();
+				gfx_texture_set(-1);
+				gfx_quads_begin();
+				if(t == 0)
+					gfx_setcolor(1,0,0,0.5f);
+				else
+					gfx_setcolor(0,0,1,0.5f);
+				draw_round_rect(320+t*35, 300-15, 30, 50, 5.0f);
+				gfx_quads_end();
+				
+				char buf[32];
+				sprintf(buf, "%d", gameobj->teamscore[t]);
+				float w = gfx_pretty_text_width(14, buf, -1);
+				gfx_pretty_text(320+t*35+30/2-w/2, 300-15, 14, buf, -1);
+			}
+		}
 	}
 
 	if (menu_active)
