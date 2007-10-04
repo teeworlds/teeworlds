@@ -25,6 +25,8 @@ MACRO_CONFIG_STR(gametype, 32, "dm")
 MACRO_CONFIG_INT(dbg_bots, 0, 0, 7)
 MACRO_CONFIG_INT(cl_predict, 1, 0, 1)
 
+MACRO_CONFIG_STR(sv_maprotation, 512, "")
+
 MACRO_CONFIG_INT(dynamic_camera, 1, 0, 1)
 
 

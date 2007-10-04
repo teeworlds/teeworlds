@@ -284,6 +284,7 @@ gameobject::gameobject()
 	game_over_tick = -1;
 	sudden_death = 0;
 	round_start_tick = server_tick();
+	round_count = 0;
 }
 
 void gameobject::endround()
@@ -298,9 +299,48 @@ void gameobject::resetgame()
 	world->reset_requested = true;
 }
 
+static bool is_separator(char c)
+{
+	return c == ';' || c == ' ' || c == ',' || c == '\t';
+}
+
 void gameobject::startround()
 {
 	resetgame();
+	
+	if(strlen(config.sv_maprotation))
+	{
+		char buf[512];
+		const char *s = strstr(config.sv_maprotation, config.sv_map);
+		if(s == 0)
+			s = config.sv_maprotation; // restart rotation
+		else
+		{
+			s += strlen(config.sv_map); // skip this map
+			while(is_separator(s[0]))
+				s++;
+			if(s[0] == 0)
+				s = config.sv_maprotation; // restart rotation
+		}
+			
+		int i = 0;
+		for(; i < 512; i++)
+		{
+			buf[i] = s[i];
+			if(is_separator(s[i]) || s[i] == 0)
+			{
+				buf[i] = 0;
+				break;
+			}
+		}
+		
+		i = 0; // skip spaces
+		while(is_separator(buf[i]))
+			i++;
+		
+		dbg_msg("game", "rotating map to %s", &buf[i]);
+		strcpy(config.sv_map, &buf[i]);
+	}
 	
 	round_start_tick = server_tick();
 	sudden_death = 0;
@@ -308,6 +348,7 @@ void gameobject::startround()
 	world->paused = false;
 	teamscore[0] = 0;
 	teamscore[1] = 0;
+	round_count++;
 }
 
 void gameobject::post_reset()
@@ -1416,27 +1457,6 @@ void mods_tick()
 	
 	if(world->paused) // make sure that the game object always updates
 		gameobj->tick();
-
-	if(config.dbg_bots)
-	{
-		static int count = 0;
-		if(count >= 0)
-		{
-			count++;
-			if(count == 10)
-			{
-				for(int i = 0; i < config.dbg_bots ; i++)
-				{
-					mods_client_enter(MAX_CLIENTS-i-1);
-					strcpy(players[MAX_CLIENTS-i-1].name, "(bot)");
-					if(gameobj->gametype != GAMETYPE_DM)
-						players[MAX_CLIENTS-i-1].team = i&1;
-				}
-				
-				count = -1;
-			}
-		}
-	}
 }
 
 void mods_snap(int client_id)
@@ -1696,6 +1716,29 @@ void mods_init()
 	}
 	
 	world->insert_entity(gameobj);
+	
+
+	if(config.dbg_bots)
+	{
+		/*
+		static int count = 0;
+		if(count >= 0)
+		{
+			count++;
+			if(count == 10)
+			{*/
+				for(int i = 0; i < config.dbg_bots ; i++)
+				{
+					mods_client_enter(MAX_CLIENTS-i-1);
+					strcpy(players[MAX_CLIENTS-i-1].name, "(bot)");
+					if(gameobj->gametype != GAMETYPE_DM)
+						players[MAX_CLIENTS-i-1].team = i&1;
+				}
+				/*
+				count = -1;
+			}
+		}*/
+	}	
 }
 
 void mods_shutdown()

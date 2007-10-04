@@ -119,6 +119,8 @@ protected:
 	
 	int teamscore[2];
 	
+	int round_count;
+	
 public:
 	int gametype;
 	gameobject();
