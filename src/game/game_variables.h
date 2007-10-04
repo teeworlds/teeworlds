@@ -7,6 +7,10 @@ MACRO_CONFIG_INT(key_weapon1, '1', 32, 512)
 MACRO_CONFIG_INT(key_weapon2, '2', 32, 512)
 MACRO_CONFIG_INT(key_weapon3, '3', 32, 512)
 MACRO_CONFIG_INT(key_weapon4, '4', 32, 512)
+
+MACRO_CONFIG_INT(key_next_weapon, 382, 32, 512)
+MACRO_CONFIG_INT(key_prev_weapon, 383, 32, 512)
+
 MACRO_CONFIG_INT(key_emoticon, 'E', 32, 512)
 
 MACRO_CONFIG_INT(key_chat, 'T', 32, 512)

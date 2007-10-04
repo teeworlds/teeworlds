@@ -9,6 +9,8 @@ f = file("src/engine/keys.h", "w")
 
 keynames = {}
 KEY_MOUSE_FIRST = 256+128
+KEY_MOUSE_WHEEL_DOWN = KEY_MOUSE_FIRST-2
+KEY_MOUSE_WHEEL_UP = KEY_MOUSE_FIRST-1
 
 print >>f, "#ifndef ENGINE_KEYS_H"
 print >>f, "#define ENGINE_KEYS_H"
@@ -31,11 +33,16 @@ for line in lines:
 		# print to file					
 		print >>f, "\t%s = %s," % (key.upper(), value)
 		
-			# add to keynames
+		# add to keynames
 		exec("%s = %s" % (key, value))
 		exec("keynames[%s] = '%s'" % (value, key))
 
 # do mouse buttons
+print >>f, "\tKEY_MOUSE_WHEEL_DOWN = %d," % (KEY_MOUSE_WHEEL_DOWN)
+print >>f, "\tKEY_MOUSE_WHEEL_UP = %d," % (KEY_MOUSE_WHEEL_UP)
+keynames[KEY_MOUSE_WHEEL_DOWN] = 'KEY_MOUSE_WHEEL_DOWN'
+keynames[KEY_MOUSE_WHEEL_UP] = 'KEY_MOUSE_WHEEL_UP'
+
 print >>f, "\tKEY_MOUSE_FIRST = %d," % KEY_MOUSE_FIRST
 for line in lines:
 	if "GLFW_MOUSE" in line and not "CURSOR" in line:

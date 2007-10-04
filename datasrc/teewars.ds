@@ -324,6 +324,32 @@ projectileparticles {
 }
 
 weapons {
+	hammer {
+		sprite_body sprites.game.weapon_hammer_body
+		sprite_cursor sprites.game.weapon_hammer_cursor
+		sprite_proj sprites.game.weapon_hammer_proj
+		sprite_muzzles {
+		}
+		
+		nummuzzlesprites 0
+		muzzleoffsetx 0.0
+		muzzleoffsety 0.0
+		maxammo 10
+		costammo 0
+		recoil 10
+		firedelay 150
+		muzzleduration 0
+		visual_size 96
+		offsetx 4.0
+		offsety -20.0
+		meleedamage 4
+		meleereach 40
+		ammoregentime 0
+		duration -1
+		movetime 0
+		velocity 0
+	}
+	
 	gun {
 		sprite_body sprites.game.weapon_gun_body
 		sprite_cursor sprites.game.weapon_gun_cursor
@@ -348,32 +374,6 @@ weapons {
 		meleedamage 0
 		meleereach 0
 		ammoregentime 500
-		duration -1
-		movetime 0
-		velocity 0
-	}
-	
-	rocket {
-		sprite_body sprites.game.weapon_rocket_body
-		sprite_cursor sprites.game.weapon_rocket_cursor
-		sprite_proj sprites.game.weapon_rocket_proj
-		sprite_muzzles {
-		}
-		
-		nummuzzlesprites 0
-		muzzleoffsetx 0.0
-		muzzleoffsety 0.0
-		maxammo 10
-		costammo 1
-		recoil 10
-		firedelay 600
-		muzzleduration 0
-		visual_size 96
-		offsetx 24.0
-		offsety -2.0
-		meleedamage 0
-		meleereach 0
-		ammoregentime 0
 		duration -1
 		movetime 0
 		velocity 0
@@ -407,36 +407,11 @@ weapons {
 		movetime 0
 		velocity 0
 	}
-	
-	hammer {
-		sprite_body sprites.game.weapon_hammer_body
-		sprite_cursor sprites.game.weapon_hammer_cursor
-		sprite_proj sprites.game.weapon_hammer_proj
-		sprite_muzzles {
-		}
-		
-		nummuzzlesprites 0
-		muzzleoffsetx 0.0
-		muzzleoffsety 0.0
-		maxammo 10
-		costammo 0
-		recoil 10
-		firedelay 150
-		muzzleduration 0
-		visual_size 96
-		offsetx 4.0
-		offsety -20.0
-		meleedamage 4
-		meleereach 40
-		ammoregentime 0
-		duration -1
-		movetime 0
-		velocity 0
-	}
-	rocket_backpack {
-		sprite_body sprites.game.weapon_hammer_body
-		sprite_cursor sprites.game.weapon_hammer_cursor
-		sprite_proj sprites.game.weapon_hammer_proj
+
+	rocket {
+		sprite_body sprites.game.weapon_rocket_body
+		sprite_cursor sprites.game.weapon_rocket_cursor
+		sprite_proj sprites.game.weapon_rocket_proj
 		sprite_muzzles {
 		}
 		
@@ -446,18 +421,19 @@ weapons {
 		maxammo 10
 		costammo 1
 		recoil 10
-		firedelay 100
+		firedelay 600
 		muzzleduration 0
-		visual_size 64
-		offsetx 4.0
-		offsety -20.0
-		meleedamage 1
-		meleereach 25
+		visual_size 96
+		offsetx 24.0
+		offsety -2.0
+		meleedamage 0
+		meleereach 0
 		ammoregentime 0
 		duration -1
 		movetime 0
 		velocity 0
 	}
+		
 	ninja {
 		sprite_body sprites.game.weapon_ninja_body
 		sprite_cursor sprites.game.weapon_ninja_cursor

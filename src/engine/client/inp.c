@@ -80,7 +80,7 @@ void inp_update()
         keyboard_first = 0;
         inp_update();
     }
-
+    
     keyboard_current = keyboard_current^1;
     int i, v;
     for(i = 0; i < KEY_LAST; i++)
@@ -91,5 +91,15 @@ void inp_update()
 			v = glfwGetKey(i) == GLFW_PRESS ? 1 : 0;
         keyboard_state[keyboard_current][i] = v;
     }
+
+	// handle mouse wheel
+    i = glfwGetMouseWheel();
+    keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_UP] = 0;
+    keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_DOWN] = 0;
+    if(i > 0)
+    	keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_UP] = 1;
+    if(i < 0)
+    	keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_DOWN] = 1;
+    glfwSetMouseWheel(0);
 
 }

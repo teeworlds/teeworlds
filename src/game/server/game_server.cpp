@@ -725,16 +725,34 @@ int player::handle_weapons()
 	}
 
 	// switch weapon if wanted		
-	if(input.activeweapon >= 0 && input.activeweapon < NUM_WEAPONS && weapons[input.activeweapon].got && 
-		data->weapons[active_weapon].duration <= 0)
+	if(input.activeweapon && data->weapons[active_weapon].duration <= 0)
 	{
-		if (active_weapon != input.activeweapon)
-			create_sound(pos, SOUND_WEAPON_SWITCH);
+		int new_weapon = active_weapon;
+		if(input.activeweapon > 0) // straight selection
+			new_weapon = input.activeweapon-1;
+		else if(input.activeweapon == -1 && !previnput.activeweapon) // next weapon
+		{
+			do
+				new_weapon = (new_weapon+1)%NUM_WEAPONS;
+			while(!weapons[new_weapon].got);
+		}
+		else if(input.activeweapon == -2 && !previnput.activeweapon)
+		{
+			do
+				new_weapon = (new_weapon-1)<0?NUM_WEAPONS-1:new_weapon-1;
+			while(!weapons[new_weapon].got);
+		}
+			
+		if(new_weapon >= 0 && new_weapon < NUM_WEAPONS && weapons[new_weapon].got)
+		{
+			if(active_weapon != new_weapon)
+				create_sound(pos, SOUND_WEAPON_SWITCH);
 
-		last_weapon = active_weapon;
-		active_weapon = input.activeweapon;
+			last_weapon = active_weapon;
+			active_weapon = new_weapon;
+		}
 	}
-
+	
 	if(!previnput.fire && input.fire)
 	{
 		if(reload_timer == 0)

@@ -1780,7 +1780,7 @@ void render_game()
 			
 		input.target_x = (int)mouse_pos.x;
 		input.target_y = (int)mouse_pos.y;
-		input.activeweapon = -1;
+		input.activeweapon = 0;
 	
 		if(chat_mode != CHATMODE_NONE)
 			input.state = STATE_CHATTING;
@@ -1795,13 +1795,14 @@ void render_game()
 			// TODO: this is not very well done. it should check this some other way
 			input.fire = emoticon_selector_active ? 0 : inp_key_pressed(config.key_fire);
 			input.hook = inp_key_pressed(config.key_hook);
-
-			//input.blink = inp_key_pressed('S');
+			
 			// Weapon switching
-			if(inp_key_pressed(config.key_weapon1)) input.activeweapon = 0;
-			if(inp_key_pressed(config.key_weapon2)) input.activeweapon = 1;
-			if(inp_key_pressed(config.key_weapon3)) input.activeweapon = 2;
-			if(inp_key_pressed(config.key_weapon4)) input.activeweapon = 3;
+			if(inp_key_pressed(config.key_next_weapon)) input.activeweapon = -1;
+			if(inp_key_pressed(config.key_prev_weapon)) input.activeweapon = -2;
+			if(inp_key_pressed(config.key_weapon1)) input.activeweapon = 1;
+			if(inp_key_pressed(config.key_weapon2)) input.activeweapon = 2;
+			if(inp_key_pressed(config.key_weapon3)) input.activeweapon = 3;
+			if(inp_key_pressed(config.key_weapon4)) input.activeweapon = 4;
 		}
 		
 		// stress testing
