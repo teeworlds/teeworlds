@@ -292,7 +292,7 @@ int thread_wait(); /* NOT IMPLEMENTED */
 void thread_sleep(int milliseconds);
 
 /**** Group: Locks ****/
-typedef struct LOCKINTERNAL *LOCK;
+typedef void* LOCK;
 
 LOCK lock_create();
 void lock_destroy(LOCK lock);

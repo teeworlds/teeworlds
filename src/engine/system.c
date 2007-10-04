@@ -25,6 +25,7 @@
 	#include <unistd.h>
 #elif defined(CONF_FAMILY_WINDOWS)
 	#define WIN32_LEAN_AND_MEAN 
+	#define _WIN32_WINNT 0x0400
 	#include <windows.h>
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
@@ -33,6 +34,10 @@
 	#define EWOULDBLOCK WSAEWOULDBLOCK
 #else
 	#error NOT IMPLEMENTED
+#endif
+
+#if defined(__cplusplus)
+extern "C" {
 #endif
 
 IOHANDLE logfile = 0;
@@ -254,26 +259,32 @@ void thread_sleep(int milliseconds)
 
 #if defined(CONF_FAMILY_UNIX)
 typedef pthread_mutex_t LOCKINTERNAL;
+#elif defined(CONF_FAMILY_WINDOWS)
+typedef CRITICAL_SECTION LOCKINTERNAL;
 #else
 	#error not implemented on this platform
 #endif
 
 LOCK lock_create()
 {
-	LOCKINTERNAL *l = (LOCKINTERNAL*)mem_alloc(sizeof(LOCKINTERNAL), 4);
+	LOCKINTERNAL *lock = (LOCKINTERNAL*)mem_alloc(sizeof(LOCKINTERNAL), 4);
 
 #if defined(CONF_FAMILY_UNIX)
-	pthread_mutex_init(l, 0x0);
+	pthread_mutex_init(lock, 0x0);
+#elif defined(CONF_FAMILY_WINDOWS)
+	InitializeCriticalSection((LPCRITICAL_SECTION)lock);
 #else
 	#error not implemented on this platform
 #endif
-	return l;
+	return lock;
 }
 
 void lock_destroy(LOCK lock)
 {
 #if defined(CONF_FAMILY_UNIX)
 	pthread_mutex_destroy(lock);
+#elif defined(CONF_FAMILY_WINDOWS)
+	DeleteCriticalSection((LPCRITICAL_SECTION)lock);
 #else
 	#error not implemented on this platform
 #endif
@@ -284,6 +295,8 @@ int lock_try(LOCK lock)
 {
 #if defined(CONF_FAMILY_UNIX)
 	return pthread_mutex_trylock(lock);
+#elif defined(CONF_FAMILY_WINDOWS)
+	return TryEnterCriticalSection((LPCRITICAL_SECTION)lock);
 #else
 	#error not implemented on this platform
 #endif
@@ -293,6 +306,8 @@ void lock_wait(LOCK lock)
 {
 #if defined(CONF_FAMILY_UNIX)
 	pthread_mutex_lock(lock);
+#elif defined(CONF_FAMILY_WINDOWS)
+	EnterCriticalSection((LPCRITICAL_SECTION)lock);
 #else
 	#error not implemented on this platform
 #endif
@@ -302,6 +317,8 @@ void lock_release(LOCK lock)
 {
 #if defined(CONF_FAMILY_UNIX)
 	pthread_mutex_unlock(lock);
+#elif defined(CONF_FAMILY_WINDOWS)
+	LeaveCriticalSection((LPCRITICAL_SECTION)lock);
 #else
 	#error not implemented on this platform
 #endif
@@ -650,3 +667,7 @@ void swap_endian(void *data, unsigned elem_size, unsigned num)
 		num--;
 	}
 }
+
+#if defined(__cplusplus)
+}
+#endif
