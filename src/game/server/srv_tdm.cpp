@@ -32,10 +32,6 @@ void gameobject_tdm::tick()
 				sudden_death = 1;
 		}
 	}
-	else
-	{
-		// game over.. wait for restart
-		if(server_tick() > game_over_tick+server_tickspeed()*10)
-			startround();
-	}
+	
+	gameobject::tick();
 }

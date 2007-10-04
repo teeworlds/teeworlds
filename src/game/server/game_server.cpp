@@ -308,40 +308,6 @@ void gameobject::startround()
 {
 	resetgame();
 	
-	if(strlen(config.sv_maprotation))
-	{
-		char buf[512];
-		const char *s = strstr(config.sv_maprotation, config.sv_map);
-		if(s == 0)
-			s = config.sv_maprotation; // restart rotation
-		else
-		{
-			s += strlen(config.sv_map); // skip this map
-			while(is_separator(s[0]))
-				s++;
-			if(s[0] == 0)
-				s = config.sv_maprotation; // restart rotation
-		}
-			
-		int i = 0;
-		for(; i < 512; i++)
-		{
-			buf[i] = s[i];
-			if(is_separator(s[i]) || s[i] == 0)
-			{
-				buf[i] = 0;
-				break;
-			}
-		}
-		
-		i = 0; // skip spaces
-		while(is_separator(buf[i]))
-			i++;
-		
-		dbg_msg("game", "rotating map to %s", &buf[i]);
-		strcpy(config.sv_map, &buf[i]);
-	}
-	
 	round_start_tick = server_tick();
 	sudden_death = 0;
 	game_over_tick = -1;
@@ -349,6 +315,43 @@ void gameobject::startround()
 	teamscore[0] = 0;
 	teamscore[1] = 0;
 	round_count++;
+}
+
+void gameobject::cyclemap()
+{
+	if(!strlen(config.sv_maprotation))
+		return;
+	// handle maprotation
+	char buf[512];
+	const char *s = strstr(config.sv_maprotation, config.sv_map);
+	if(s == 0)
+		s = config.sv_maprotation; // restart rotation
+	else
+	{
+		s += strlen(config.sv_map); // skip this map
+		while(is_separator(s[0]))
+			s++;
+		if(s[0] == 0)
+			s = config.sv_maprotation; // restart rotation
+	}
+		
+	int i = 0;
+	for(; i < 512; i++)
+	{
+		buf[i] = s[i];
+		if(is_separator(s[i]) || s[i] == 0)
+		{
+			buf[i] = 0;
+			break;
+		}
+	}
+	
+	i = 0; // skip spaces
+	while(is_separator(buf[i]))
+		i++;
+	
+	dbg_msg("game", "rotating map to %s", &buf[i]);
+	strcpy(config.sv_map, &buf[i]);
 }
 
 void gameobject::post_reset()
@@ -374,6 +377,15 @@ void gameobject::on_player_death(class player *victim, class player *killer, int
 
 void gameobject::tick()
 {
+	if(game_over_tick != -1)
+	{
+		// game over.. wait for restart
+		if(server_tick() > game_over_tick+server_tickspeed()*10)
+		{
+			cyclemap();
+			startround();
+		}
+	}
 }
 
 void gameobject::snap(int snapping_client)
@@ -810,7 +822,7 @@ int player::handle_weapons()
 						break;
 
 					case WEAPON_GUN:
-						new projectile(projectile::WEAPON_PROJECTILETYPE_GUN,
+						new projectile(WEAPON_GUN,
 							client_id,
 							pos+vec2(0,0),
 							direction*30.0f,
@@ -821,7 +833,7 @@ int player::handle_weapons()
 						break;
 					case WEAPON_ROCKET:
 					{
-						new projectile(projectile::WEAPON_PROJECTILETYPE_ROCKET,
+						new projectile(WEAPON_ROCKET,
 							client_id,
 							pos+vec2(0,0),
 							direction*15.0f,
@@ -838,7 +850,7 @@ int player::handle_weapons()
 						{
 							float a = get_angle(direction);
 							a += i*0.08f;
-							new projectile(projectile::WEAPON_PROJECTILETYPE_SHOTGUN,
+							new projectile(WEAPON_SHOTGUN,
 								client_id,
 								pos+vec2(0,0),
 								vec2(cosf(a), sinf(a))*25.0f,
@@ -1457,6 +1469,12 @@ void mods_tick()
 	
 	if(world->paused) // make sure that the game object always updates
 		gameobj->tick();
+	
+	if(config.restart)
+	{
+		gameobj->startround();
+		config.restart = 0;
+	}
 }
 
 void mods_snap(int client_id)

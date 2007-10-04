@@ -109,9 +109,8 @@ extern game_world *world;
 class gameobject : public entity
 {
 protected:
+	void cyclemap();
 	void resetgame();
-	void startround();
-	void endround();
 	
 	int round_start_tick;
 	int game_over_tick;
@@ -124,6 +123,10 @@ protected:
 public:
 	int gametype;
 	gameobject();
+
+	void startround();
+	void endround();
+
 	virtual void post_reset();
 	virtual void tick();
 	
@@ -160,10 +163,6 @@ public:
 	enum
 	{
 		PROJECTILE_FLAGS_EXPLODE = 1 << 0,
-		
-		WEAPON_PROJECTILETYPE_GUN		= 0,
-		WEAPON_PROJECTILETYPE_ROCKET	= 1,
-		WEAPON_PROJECTILETYPE_SHOTGUN	= 2,
 	};
 	
 	vec2 vel;
