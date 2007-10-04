@@ -1446,12 +1446,29 @@ void send_chat(int cid, int team, const char *msg)
 	else
 		dbg_msg("chat", "*** %s", msg);
 	
-	msg_pack_start(MSG_CHAT, MSGFLAG_VITAL);
-	msg_pack_int(cid);
-	msg_pack_int(team);
-	msg_pack_string(msg, 512);
-	msg_pack_end();
-	server_send_msg(-1);
+	if(team == -1)
+	{
+		msg_pack_start(MSG_CHAT, MSGFLAG_VITAL);
+		msg_pack_int(cid);
+		msg_pack_int(0);
+		msg_pack_string(msg, 512);
+		msg_pack_end();
+		server_send_msg(-1);
+	}
+	else
+	{
+		msg_pack_start(MSG_CHAT, MSGFLAG_VITAL);
+		msg_pack_int(cid);
+		msg_pack_int(1);
+		msg_pack_string(msg, 512);
+		msg_pack_end();
+				
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(players[i].client_id != -1 && players[i].team == team)
+				server_send_msg(i);
+		}
+	}
 }
 
 void send_set_name(int cid, const char *old_name, const char *new_name)
@@ -1542,6 +1559,10 @@ void mods_message(int msg, int client_id)
 	{
 		int team = msg_unpack_int();
 		const char *text = msg_unpack_string();
+		if(team)
+			team = players[client_id].team;
+		else
+			team = -1;
 		send_chat(client_id, team, text);
 	}
 	else if (msg == MSG_SWITCHTEAM)

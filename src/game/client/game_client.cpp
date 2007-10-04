@@ -25,7 +25,14 @@ static int skinseed = 0;
 static int music_menu = -1;
 static int music_menu_id = -1;
 
-static bool chat_active = false;
+enum
+{
+	CHATMODE_NONE=0,
+	CHATMODE_ALL,
+	CHATMODE_TEAM,
+};
+
+static int chat_mode = CHATMODE_NONE;
 static bool menu_active = false;
 static bool emoticon_selector_active = false;
 
@@ -370,6 +377,7 @@ struct chatline
 {
 	int tick;
 	int client_id;
+	int team;
 	char text[512+64];
 };
 
@@ -383,16 +391,19 @@ void chat_reset()
 	chat_current_line = 0;
 }
 
-void chat_add_line(int client_id, const char *line)
+void chat_add_line(int client_id, int team, const char *line)
 {
 	chat_current_line = (chat_current_line+1)%chat_max_lines;
 	chat_lines[chat_current_line].tick = client_tick();
 	chat_lines[chat_current_line].client_id = client_id;
+	chat_lines[chat_current_line].team = team;
 
 	if(client_id == -1) // server message
 		sprintf(chat_lines[chat_current_line].text, "*** %s", line);
 	else
-		sprintf(chat_lines[chat_current_line].text, "%s: %s", client_datas[client_id].name, line); // TODO: abit nasty
+	{
+		sprintf(chat_lines[chat_current_line].text, "%s: %s", client_datas[client_id].name, line);
+	}
 }
 
 struct killmsg
@@ -453,7 +464,7 @@ extern "C" void modc_init()
 	data = load_data_from_memory(internal_data);
 
 	// TODO: should be removed
-	music_menu = snd_load_wav("data/audio/music_menu.wav");
+	music_menu = snd_load_wv("data/audio/music_menu.wv");
 	snd_set_listener_pos(0.0f, 0.0f);
 
 	float total = data->num_sounds+data->num_images;
@@ -1666,17 +1677,17 @@ void render_game()
 
 	if (inp_key_down(KEY_ESC))
 	{
-		if (chat_active)
-			chat_active = false;
+		if (chat_mode)
+			chat_mode = CHATMODE_NONE;
 		else
 			menu_active = !menu_active;
 	}
 	
 	if (!menu_active)
 	{
-		if(inp_key_down(KEY_ENTER))
+		if(chat_mode != CHATMODE_NONE)
 		{
-			if(chat_active)
+			if(inp_key_down(KEY_ENTER))
 			{
 				// send message
 				if(chat_input_len)
@@ -1690,24 +1701,20 @@ void render_game()
 						else
 						{
 							msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
-							msg_pack_int(-1);
+							if(chat_mode == CHATMODE_ALL)
+								msg_pack_int(0);
+							else
+								msg_pack_int(1);
 							msg_pack_string(chat_input, 512);
 							msg_pack_end();
 							client_send_msg();
 						}
 					}
 				}
+				
+				chat_mode = CHATMODE_NONE;
 			}
-			else
-			{
-				mem_zero(chat_input, sizeof(chat_input));
-				chat_input_len = 0;
-			}
-			chat_active = !chat_active;
-		}
-		
-		if(chat_active)
-		{
+			
 			int c = inp_last_char();
 			int k = inp_last_key();
 		
@@ -1730,6 +1737,23 @@ void render_game()
 				}
 			}
 			
+		}
+		else
+		{
+			if(chat_mode == CHATMODE_NONE)
+			{
+				if(inp_key_down(config.key_chat))
+					chat_mode = CHATMODE_ALL;
+
+				if(inp_key_down(config.key_teamchat))
+					chat_mode = CHATMODE_TEAM;
+				
+				if(chat_mode != CHATMODE_NONE)
+				{
+					mem_zero(chat_input, sizeof(chat_input));
+					chat_input_len = 0;
+				}
+			}
 		}
 	}
 	
@@ -1758,7 +1782,7 @@ void render_game()
 		input.target_y = (int)mouse_pos.y;
 		input.activeweapon = -1;
 	
-		if(chat_active)
+		if(chat_mode != CHATMODE_NONE)
 			input.state = STATE_CHATTING;
 		else if(menu_active)
 			input.state = STATE_IN_MENU;
@@ -1841,7 +1865,7 @@ void render_game()
 	
 	if(config.debug)
 	{
-		if(!chat_active && inp_key_pressed(KEY_F8))
+		if(chat_mode != CHATMODE_NONE && inp_key_pressed(KEY_F8))
 			zoom = 1.0f;
 	}
 	
@@ -2071,11 +2095,16 @@ void render_game()
 		float x = 10.0f;
 		float y = 300.0f-50.0f;
 		float starty = -1;
-		if(chat_active)
+		if(chat_mode != CHATMODE_NONE)
 		{
 			// render chat input
 			char buf[sizeof(chat_input)+16];
-			sprintf(buf, "Chat: %s_", chat_input);
+			if(chat_mode == CHATMODE_ALL)
+				sprintf(buf, "All: %s_", chat_input);
+			else if(chat_mode == CHATMODE_TEAM)
+				sprintf(buf, "Team: %s_", chat_input);
+			else
+				sprintf(buf, "Chat: %s_", chat_input);
 			gfx_pretty_text(x, y, 10.0f, buf, 380);
 			starty = y;
 		}
@@ -2091,9 +2120,17 @@ void render_game()
 
 			int lines = int(gfx_pretty_text_width(10, chat_lines[r].text, -1)) / 380 + 1;
 			
+			gfx_pretty_text_color(1,1,1,1);
+			if(chat_lines[r].client_id == -1)
+				gfx_pretty_text_color(1,1,0.5f,1); // system
+			else if(chat_lines[r].team)
+				gfx_pretty_text_color(0.5f,1,0.5f,1); // team message
+			
 			gfx_pretty_text(x, y - 8 * (lines - 1), 10, chat_lines[r].text, 380);
 			y -= 8 * lines;
 		}
+		
+		gfx_pretty_text_color(1,1,1,1);
 	}
 	
 	// render goals
@@ -2251,8 +2288,8 @@ extern "C" void modc_message(int msg)
 		int cid = msg_unpack_int();
 		int team = msg_unpack_int();
 		const char *message = msg_unpack_string();
-		dbg_msg("message", "chat cid=%d msg='%s'", cid, message);
-		chat_add_line(cid, message);
+		dbg_msg("message", "chat cid=%d team=%d msg='%s'", cid, team, message);
+		chat_add_line(cid, team, message);
 
 		if(cid >= 0)
 			snd_play(0, data->sounds[SOUND_CHAT_CLIENT].sounds[0].id, SND_PLAY_ONCE, 0, 0);

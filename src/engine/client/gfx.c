@@ -807,12 +807,28 @@ static int word_length(const char *text)
 	}
 }
 
+
+
+static float pretty_r=1;
+static float pretty_g=1;
+static float pretty_b=1;
+static float pretty_a=1;
+
+void gfx_pretty_text_color(float r, float g, float b, float a)
+{
+	pretty_r = r;
+	pretty_g = g;
+	pretty_b = b;
+	pretty_a = a;
+}
+
 float gfx_pretty_text_raw(float x, float y, float size, const char *text_, int length)
 {
 	const unsigned char *text = (unsigned char *)text_;
 	const float spacing = 0.05f;
 	gfx_texture_set(current_font->font_texture);
 	gfx_quads_begin();
+	gfx_setcolor(pretty_r, pretty_g, pretty_b, pretty_a);
 	
 	if(length < 0)
 		length = strlen(text_);
@@ -846,6 +862,8 @@ float gfx_pretty_text_raw(float x, float y, float size, const char *text_, int l
 	
 	return x;
 }
+
+
 
 void gfx_pretty_text(float x, float y, float size, const char *text, int max_width)
 {
