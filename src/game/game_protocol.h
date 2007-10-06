@@ -125,6 +125,8 @@ struct obj_game
 	int time_limit;
 	int gametype;
 	
+	int warmup;
+	
 	int teamscore[2];
 };
 

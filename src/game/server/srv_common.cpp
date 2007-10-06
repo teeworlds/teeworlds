@@ -23,6 +23,7 @@ gameobject::gameobject()
 	}
 		
 	//
+	do_warmup(config.warmup);
 	game_over_tick = -1;
 	sudden_death = 0;
 	round_start_tick = server_tick();
@@ -31,6 +32,9 @@ gameobject::gameobject()
 
 void gameobject::endround()
 {
+	if(warmup) // game can't end when we are running warmup
+		return;
+		
 	world->paused = true;
 	game_over_tick = server_tick();
 	sudden_death = 0;
@@ -116,9 +120,22 @@ void gameobject::on_player_death(class player *victim, class player *killer, int
 		killer->score++; // good shit
 }
 
+void gameobject::do_warmup(int seconds)
+{
+	warmup = seconds*SERVER_TICK_SPEED;
+}
+
 
 void gameobject::tick()
 {
+	// do warmup
+	if(warmup)
+	{
+		warmup--;
+		if(!warmup)
+			resetgame();
+	}
+	
 	if(game_over_tick != -1)
 	{
 		// game over.. wait for restart
@@ -141,6 +158,8 @@ void gameobject::snap(int snapping_client)
 	game->time_limit = config.timelimit;
 	game->round_start_tick = round_start_tick;
 	game->gametype = gametype;
+	
+	game->warmup = warmup;
 	
 	game->teamscore[0] = teamscore[0];
 	game->teamscore[1] = teamscore[1];

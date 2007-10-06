@@ -1309,7 +1309,11 @@ void mods_tick()
 	
 	if(config.restart)
 	{
-		gameobj->startround();
+		if(config.restart > 1)
+			gameobj->do_warmup(config.restart);
+		else
+			gameobj->startround();
+			
 		config.restart = 0;
 	}
 }

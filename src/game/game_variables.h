@@ -31,4 +31,6 @@ MACRO_CONFIG_STR(sv_maprotation, 512, "")
 
 MACRO_CONFIG_INT(dynamic_camera, 1, 0, 1)
 
+MACRO_CONFIG_INT(warmup, 0, 0, 0)
+
 

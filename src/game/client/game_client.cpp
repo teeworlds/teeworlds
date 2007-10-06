@@ -2189,6 +2189,22 @@ void render_game()
 				gfx_pretty_text(320+t*35+30/2-w/2, 300-15, 14, buf, -1);
 			}
 		}
+		
+		// render warmup timer
+		if(gameobj->warmup)
+		{
+			char buf[256];
+			float w = gfx_pretty_text_width(24, "Warmup", -1);
+			gfx_pretty_text(200+-w/2, 50, 24, "Warmup", -1);
+			
+			int seconds = gameobj->warmup/SERVER_TICK_SPEED;
+			if(seconds < 5)
+				sprintf(buf, "%d.%d", seconds, (gameobj->warmup*10/SERVER_TICK_SPEED)%10);
+			else
+				sprintf(buf, "%d", seconds);
+			w = gfx_pretty_text_width(24, buf, -1);
+			gfx_pretty_text(200+-w/2, 75, 24, buf, -1);
+		}
 	}
 
 	if (menu_active)

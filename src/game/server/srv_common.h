@@ -118,12 +118,15 @@ protected:
 	
 	int teamscore[2];
 	
+	int warmup;
 	int round_count;
 	
 public:
 	int gametype;
 	gameobject();
 
+	void do_warmup(int seconds);
+	
 	void startround();
 	void endround();
 
