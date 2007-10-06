@@ -7,7 +7,7 @@
 
 enum
 {
-	MAX_SNAPSHOT_SIZE=64*1024,
+	MAX_SNAPSHOT_SIZE=64*1024
 };
 
 typedef struct
@@ -69,7 +69,7 @@ int snapstorage_get(SNAPSTORAGE *ss, int tick, int64 *tagtime, SNAPSHOT **data);
 
 enum
 {
-	SNAPBUILD_MAX_ITEMS = 512,
+	SNAPBUILD_MAX_ITEMS = 512
 };
 
 typedef struct SNAPBUILD

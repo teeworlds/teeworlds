@@ -10,7 +10,7 @@ int *snapshot_offsets(SNAPSHOT *snap) { return (int *)(snap+1); }
 char *snapshot_datastart(SNAPSHOT *snap) { return (char*)(snapshot_offsets(snap)+snap->num_items); }
 
 SNAPSHOT_ITEM *snapshot_get_item(SNAPSHOT *snap, int index)
-{ return (SNAPSHOT_ITEM *)(snapshot_datastart(snap) + snapshot_offsets(snap)[index]); };
+{ return (SNAPSHOT_ITEM *)(snapshot_datastart(snap) + snapshot_offsets(snap)[index]); }
 
 int snapshot_get_item_datasize(SNAPSHOT *snap, int index)
 {
@@ -417,9 +417,9 @@ int snapbuild_finish(SNAPBUILD *sb, void *snapdata)
 {
 	/* flattern and make the snapshot */
 	SNAPSHOT *snap = (SNAPSHOT *)snapdata;
+	int offset_size = sizeof(int)*sb->num_items;
 	snap->data_size = sb->data_size;
 	snap->num_items = sb->num_items;
-	int offset_size = sizeof(int)*sb->num_items;
 	mem_copy(snapshot_offsets(snap), sb->offsets, offset_size);
 	mem_copy(snapshot_datastart(snap), sb->data, sb->data_size);
 	return sizeof(SNAPSHOT) + offset_size + sb->data_size;

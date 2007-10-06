@@ -3,7 +3,7 @@
 #include <engine/system.h>
 #include <engine/interface.h>
 
-static int keyboard_state[2][1024]; // TODO: fix this!!
+static int keyboard_state[2][1024]; /* TODO: fix this!! */
 static int keyboard_current = 0;
 static int keyboard_first = 1;
 
@@ -66,7 +66,6 @@ void inp_mouse_mode_relative()
 	glfwDisable(GLFW_MOUSE_CURSOR);
 }
 
-//int inp_mouse_scroll() { return input::mouse_scroll(); }
 int inp_key_pressed(int key) { return keyboard_state[keyboard_current][key]; }
 int inp_key_was_pressed(int key) { return keyboard_state[keyboard_current^1][key]; }
 int inp_key_down(int key) { return inp_key_pressed(key)&&!inp_key_was_pressed(key); }
@@ -74,15 +73,16 @@ int inp_button_pressed(int button) { return keyboard_state[keyboard_current][but
 
 void inp_update()
 {
+    int i, v;
+
     if(keyboard_first)
     {
-        // make sure to reset
+        /* make sure to reset */
         keyboard_first = 0;
         inp_update();
     }
     
     keyboard_current = keyboard_current^1;
-    int i, v;
     for(i = 0; i < KEY_LAST; i++)
     {
 	    if (i >= KEY_MOUSE_FIRST)
@@ -92,7 +92,7 @@ void inp_update()
         keyboard_state[keyboard_current][i] = v;
     }
 
-	// handle mouse wheel
+	/* handle mouse wheel */
     i = glfwGetMouseWheel();
     keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_UP] = 0;
     keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_DOWN] = 0;

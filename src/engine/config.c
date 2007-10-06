@@ -36,7 +36,9 @@ char *linereader_get(LINEREADER *lr)
 			/* fetch more */
 
 			/* move the remaining part to the front */
+			unsigned read;
 			unsigned left = lr->buffer_size - line_start;
+
 			if(line_start > lr->buffer_size)
 				left = 0;
 			if(left)
@@ -44,7 +46,7 @@ char *linereader_get(LINEREADER *lr)
 			lr->buffer_pos = left;
 
 			/* fill the buffer */
-			unsigned read = io_read(lr->io, &lr->buffer[lr->buffer_pos], lr->buffer_max_size-lr->buffer_pos);
+			read = io_read(lr->io, &lr->buffer[lr->buffer_pos], lr->buffer_max_size-lr->buffer_pos);
 			lr->buffer_size = left + read;
 			line_start = 0;
 
@@ -92,11 +94,12 @@ void config_reset()
 void strip_spaces(char **p)
 {
 	char *s = *p;
+	char *end;
 	
 	while (*s == ' ')
 		++s;
 
-	char *end = s + strlen(s);
+	end = s + strlen(s);
 	while (end > s && *(end - 1) == ' ')
 		*--end = 0;
 }
@@ -108,14 +111,14 @@ void config_set(const char *line)
 	{
 		char var[256];
 		char val[256];
+		char *var_str = var;
+		char *val_str = val;
 
 		strcpy(val, c+1);
 
 		mem_copy(var, line, c - line);
 		var[c - line] = 0;
 
-		char *var_str = var;
-		char *val_str = val;
 
 		strip_spaces(&var_str);
 		strip_spaces(&val_str);
@@ -133,6 +136,7 @@ void config_set(const char *line)
 void config_load(const char *filename)
 {
 	char full_path[1024];
+	IOHANDLE file;
 	if (filename[0] == '~')
 	{
 		char *home = getenv("HOME");
@@ -144,8 +148,7 @@ void config_load(const char *filename)
 	}
 
 	dbg_msg("config/load", "loading %s", filename);
-
-	IOHANDLE file = io_open(filename, IOFLAG_READ);
+	file = io_open(filename, IOFLAG_READ);
 	
 	if(file)
 	{
@@ -163,6 +166,7 @@ void config_load(const char *filename)
 void config_save(const char *filename)
 {
 	char full_path[1024];
+	IOHANDLE file;
 	if (filename[0] == '~')
 	{
 		char *home = getenv("HOME");
@@ -176,7 +180,7 @@ void config_save(const char *filename)
 
 	dbg_msg("config/save", "saving config to %s", filename);
 
-	IOHANDLE file = io_open(filename, IOFLAG_WRITE);
+	file = io_open(filename, IOFLAG_WRITE);
 
 	if(file)
 	{

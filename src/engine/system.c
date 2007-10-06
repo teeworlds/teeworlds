@@ -276,13 +276,13 @@ LOCK lock_create()
 #else
 	#error not implemented on this platform
 #endif
-	return lock;
+	return (LOCK)lock;
 }
 
 void lock_destroy(LOCK lock)
 {
 #if defined(CONF_FAMILY_UNIX)
-	pthread_mutex_destroy(lock);
+	pthread_mutex_destroy((LOCKINTERNAL *)lock);
 #elif defined(CONF_FAMILY_WINDOWS)
 	DeleteCriticalSection((LPCRITICAL_SECTION)lock);
 #else
@@ -294,7 +294,7 @@ void lock_destroy(LOCK lock)
 int lock_try(LOCK lock)
 {
 #if defined(CONF_FAMILY_UNIX)
-	return pthread_mutex_trylock(lock);
+	return pthread_mutex_trylock((LOCKINTERNAL *)lock);
 #elif defined(CONF_FAMILY_WINDOWS)
 	return TryEnterCriticalSection((LPCRITICAL_SECTION)lock);
 #else
@@ -305,7 +305,7 @@ int lock_try(LOCK lock)
 void lock_wait(LOCK lock)
 {
 #if defined(CONF_FAMILY_UNIX)
-	pthread_mutex_lock(lock);
+	pthread_mutex_lock((LOCKINTERNAL *)lock);
 #elif defined(CONF_FAMILY_WINDOWS)
 	EnterCriticalSection((LPCRITICAL_SECTION)lock);
 #else
@@ -316,7 +316,7 @@ void lock_wait(LOCK lock)
 void lock_release(LOCK lock)
 {
 #if defined(CONF_FAMILY_UNIX)
-	pthread_mutex_unlock(lock);
+	pthread_mutex_unlock((LOCKINTERNAL *)lock);
 #elif defined(CONF_FAMILY_WINDOWS)
 	LeaveCriticalSection((LPCRITICAL_SECTION)lock);
 #else

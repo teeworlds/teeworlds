@@ -20,7 +20,7 @@ enum
 	NETMSG_CMD,
 	
 	/* sent by both */
-	NETMSG_ERROR,
+	NETMSG_ERROR
 };
 
 

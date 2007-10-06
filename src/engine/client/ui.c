@@ -5,7 +5,6 @@
 /********************************************************
  UI                                                      
 *********************************************************/
-//static unsigned mouse_buttons_last = 0;
 
 struct pretty_font
 {
@@ -20,8 +19,8 @@ static void *hot_item = 0;
 static void *active_item = 0;
 static void *last_active_item = 0;
 static void *becomming_hot_item = 0;
-static float mouse_x, mouse_y; // in gui space
-static float mouse_wx, mouse_wy; // in world space
+static float mouse_x, mouse_y; /* in gui space */
+static float mouse_wx, mouse_wy; /* in world space */
 static unsigned mouse_buttons = 0;
 
 float ui_mouse_x() { return mouse_x; }
@@ -39,7 +38,6 @@ void *ui_last_active_item() { return last_active_item; }
 
 int ui_update(float mx, float my, float mwx, float mwy, int buttons)
 {
-    //mouse_buttons_last = mouse_buttons;
     mouse_x = mx;
     mouse_y = my;
     mouse_wx = mwx;
@@ -51,12 +49,6 @@ int ui_update(float mx, float my, float mwx, float mwy, int buttons)
     becomming_hot_item = 0;
     return 0;
 }
-
-/*
-static int ui_mouse_button_released(int index)
-{
-    return ((mouse_buttons_last>>index)&1) && !();
-}*/
 
 int ui_mouse_inside(float x, float y, float w, float h)
 {
@@ -72,10 +64,10 @@ void ui_do_image(int texture, float x, float y, float w, float h)
     gfx_quads_begin();
     gfx_setcolor(1,1,1,1);
     gfx_quads_setsubset(
-        0.0f, // startx
-        0.0f, // starty
-        1.0f, // endx
-        1.0f); // endy                                
+        0.0f, /* startx */
+        0.0f, /* starty */
+        1.0f, /* endx */
+        1.0f); /* endy */                              
     gfx_quads_drawTL(x,y,w,h);
     gfx_quads_end();
 }
@@ -89,7 +81,7 @@ void ui_do_label(float x, float y, const char *text, float size)
 
 int ui_do_button(void *id, const char *text, int checked, float x, float y, float w, float h, draw_button_callback draw_func, void *extra)
 {
-    // logic
+    /* logic */
     int r = 0;
     int inside = ui_mouse_inside(x,y,w,h);
 

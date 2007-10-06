@@ -302,8 +302,14 @@ void lock_wait(LOCK lock);
 void lock_release(LOCK lock);
 
 /**** Group: Timer ****/
+#ifdef __GNUC__
+/* if compiled with -pedantic-errors it will complain about long
+	not being a C90 thing.
+*/
+__extension__ typedef long long int64;
+#else
 typedef long long int64;
-
+#endif
 /*****
 	Function: time_get
 	
@@ -331,7 +337,7 @@ int64 time_freq();
 typedef int NETSOCKET;
 enum
 {
-	NETSOCKET_INVALID = -1,
+	NETSOCKET_INVALID = -1
 };
 
 typedef struct 

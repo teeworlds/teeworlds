@@ -1,4 +1,3 @@
-
 #include <engine/external/glfw/include/GL/glfw.h>
 #include <engine/external/pnglite/pnglite.h>
 
@@ -11,17 +10,17 @@
 #include <stdio.h>
 #include <math.h>
 
-// compressed textures
+/* compressed textures */
 #define GL_COMPRESSED_RGB_ARB 0x84ED
 #define GL_COMPRESSED_RGBA_ARB 0x84EE
 
 enum
 {
 	DRAWING_QUADS=1,
-	DRAWING_LINES=2,
+	DRAWING_LINES=2
 };
 
-//
+/* */
 typedef struct { float x, y, z; } VEC3;
 typedef struct { float u, v; } TEXCOORD;
 typedef struct { float r, g, b, a; } COLOR;
@@ -103,7 +102,7 @@ static void flush()
 	else if(drawing == DRAWING_LINES)
 		glDrawArrays(GL_LINES, 0, num_vertices);
 	
-	// Reset pointer
+	/* Reset pointer */
 	num_vertices = 0;	
 }
 
@@ -123,6 +122,8 @@ static void draw_quad()
 
 int gfx_init()
 {
+	int i;
+
 	screen_width = config.gfx_screen_width;
 	screen_height = config.gfx_screen_height;
 
@@ -155,11 +156,11 @@ int gfx_init()
 	
 	glfwSetWindowTitle("Teewars");
 	
-	// We don't want to see the window when we run the stress testing
+	/* We don't want to see the window when we run the stress testing */
 	if(config.stress)
 		glfwIconifyWindow();
 	
-	// Init vertices
+	/* Init vertices */
 	if (vertices)
 		mem_free(vertices);
 	vertices = (VERTEX*)mem_alloc(sizeof(VERTEX) * vertex_buffer_size, 1);
@@ -172,36 +173,32 @@ int gfx_init()
 											  context.version_rev());*/
 
 	gfx_mapscreen(0,0,config.gfx_screen_width, config.gfx_screen_height);
-	
-	// TODO: make wrappers for this
+
+	/* set some default settings */	
 	glEnable(GL_BLEND);
-	
-	// model
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	
-	// Set all z to -5.0f
-	int i;
+	/* Set all z to -5.0f */
 	for (i = 0; i < vertex_buffer_size; i++)
 		vertices[i].pos.z = -5.0f;
 
-	// init textures
+	/* init textures */
 	first_free_texture = 0;
 	for(i = 0; i < MAX_TEXTURES; i++)
 		textures[i].next = i+1;
 	textures[MAX_TEXTURES-1].next = -1;
 	
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	// init input
+	/* init input */
 	inp_init();
 	
-	// create null texture, will get id=0
+	/* create null texture, will get id=0 */
 	gfx_load_texture_raw(4,4,IMG_RGBA,null_texture_data);
 
-	// set vsync as needed
+	/* set vsync as needed */
 	gfx_set_vsync(config.gfx_vsync);
 
 	return 1;
@@ -242,8 +239,8 @@ int gfx_get_video_modes(VIDEO_MODE *list, int maxcount)
 {
 	if(config.gfx_display_all_modes)
 	{
-		mem_copy(list, fakemodes, sizeof(fakemodes));
 		int count = sizeof(fakemodes)/sizeof(VIDEO_MODE);
+		mem_copy(list, fakemodes, sizeof(fakemodes));
 		if(maxcount < count)
 			count = maxcount;
 		return count;
@@ -268,13 +265,11 @@ int gfx_unload_texture(int index)
 
 void gfx_blend_normal()
 {
-	// TODO: wrapper for this
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void gfx_blend_additive()
 {
-	// TODO: wrapper for this
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 }
 
@@ -291,24 +286,29 @@ static unsigned char sample(int w, int h, const unsigned char *data, int u, int 
 int gfx_load_texture_raw(int w, int h, int format, const void *data)
 {
 	int mipmap = 1;
+	unsigned char *texdata = (unsigned char *)data;
+	unsigned char *tmpdata = 0;
+	int oglformat = 0;
 	
-	// grab texture
+	/* grab texture */
 	int tex = first_free_texture;
 	first_free_texture = textures[tex].next;
 	textures[tex].next = -1;
 	
-	// resample if needed
-	unsigned char *texdata = (unsigned char *)data;
-	unsigned char *tmpdata = 0;
+	/* resample if needed */
 	if(config.gfx_texture_quality==0)
 	{
 		if(w > 16 && h > 16 && format == IMG_RGBA)
 		{
-			w/=2;
-			h/=2;
-			unsigned char *tmpdata = (unsigned char *)mem_alloc(w*h*4, 1);
+			unsigned char *tmpdata;
 			int c = 0;
 			int x, y;
+
+			tmpdata = (unsigned char *)mem_alloc(w*h*4, 1);
+
+			w/=2;
+			h/=2;
+
 			for(y = 0; y < h; y++)
 				for(x = 0; x < w; x++, c++)
 				{
@@ -324,8 +324,7 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data)
 	if(config.debug)
 		dbg_msg("gfx", "%d = %dx%d", tex, w, h);
 	
-	// upload texture
-	int oglformat = 0;
+	/* upload texture */
 	if(config.gfx_texture_compression)
 	{
 		oglformat = GL_COMPRESSED_RGBA_ARB;
@@ -345,7 +344,7 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	gluBuild2DMipmaps(GL_TEXTURE_2D, oglformat, w, h, oglformat, GL_UNSIGNED_BYTE, texdata);
 	
-	// calculate memory usage
+	/* calculate memory usage */
 	textures[tex].memsize = w*h*4;
 	if(mipmap)
 	{
@@ -390,13 +389,14 @@ int gfx_load_mip_texture_raw(int w, int h, int format, const void *data)
 	return tex;
 }
 */
-// simple uncompressed RGBA loaders
+
+/* simple uncompressed RGBA loaders */
 int gfx_load_texture(const char *filename)
 {
 	int l = strlen(filename);
+	IMAGE_INFO img;
 	if(l < 3)
 		return 0;
-	IMAGE_INFO img;
 	if(gfx_load_png(&img, filename))
 	{
 		int id = gfx_load_texture_raw(img.width, img.height, img.format, img.data);
@@ -409,10 +409,12 @@ int gfx_load_texture(const char *filename)
 
 int gfx_load_png(IMAGE_INFO *img, const char *filename)
 {
-	// open file for reading
+	unsigned char *buffer;
+	png_t png;
+	
+	/* open file for reading */
 	png_init(0,0);
 
-	png_t png;
 	if(png_open_file(&png, filename) != PNG_NO_ERROR)
 	{
 		dbg_msg("game/png", "failed to open file. filename='%s'", filename);
@@ -425,7 +427,7 @@ int gfx_load_png(IMAGE_INFO *img, const char *filename)
 		png_close_file(&png);
 	}
 		
-	unsigned char *buffer = (unsigned char *)mem_alloc(png.width * png.height * png.bpp, 1);
+	buffer = (unsigned char *)mem_alloc(png.width * png.height * png.bpp, 1);
 	png_get_data(&png, buffer);
 	png_close_file(&png);
 	
@@ -456,15 +458,15 @@ void gfx_swap()
 {
 	if(do_screenshot)
 	{
-		// fetch image data
+		/* fetch image data */
+		int y;
 		int w = screen_width;
 		int h = screen_height;
 		unsigned char *pixel_data = (unsigned char *)mem_alloc(w*(h+1)*3, 1);
 		unsigned char *temp_row = pixel_data+w*h*3;
 		glReadPixels(0,0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pixel_data);
 		
-		// flip the pixel because opengl works from bottom left corner
-		int y;
+		/* flip the pixel because opengl works from bottom left corner */
 		for(y = 0; y < h/2; y++)
 		{
 			mem_copy(temp_row, pixel_data+y*w*3, w*3);
@@ -472,28 +474,29 @@ void gfx_swap()
 			mem_copy(pixel_data+(h-y-1)*w*3, temp_row,w*3);
 		}
 		
-		// find filename
-		char filename[64];
+		/* find filename */
 		{
+			char filename[64];
 			static int index = 1;
+			png_t png;
+
 			for(; index < 1000; index++)
 			{
-				sprintf(filename, "screenshot%04d.png", index);
 				IOHANDLE io = io_open(filename, IOFLAG_READ);
+				sprintf(filename, "screenshot%04d.png", index);
 				if(io)
 					io_close(io);
 				else
 					break;
 			}
-		}
 		
-		// save png
-		png_t png;
-		png_open_file_write(&png, filename);
-		png_set_data(&png, w, h, 8, PNG_TRUECOLOR, (unsigned char *)pixel_data);
-		png_close_file(&png);
+			/* save png */
+			png_open_file_write(&png, filename);
+			png_set_data(&png, w, h, 8, PNG_TRUECOLOR, (unsigned char *)pixel_data);
+			png_close_file(&png);
+		}
 
-		// clean up
+		/* clean up */
 		mem_free(pixel_data);
 		do_screenshot = 0;
 	}
@@ -551,13 +554,6 @@ void gfx_getscreen(float *tl_x, float *tl_y, float *br_x, float *br_y)
 
 void gfx_setoffset(float x, float y)
 {
-	//const float scale = 1.0f;
-	//mat4 mat = mat4::identity;
-	//mat.m[0] = scale;
-	//mat.m[5] = scale;
-	//mat.m[10] = scale;
-	//mat.m[12] = x*scale;
-	//mat.m[13] = y*scale;
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	glTranslatef(x, y, 0);
@@ -612,23 +608,15 @@ void gfx_quads_setsubset(float tl_u, float tl_v, float br_u, float br_v)
 
 	texture[0].u = tl_u;
 	texture[0].v = tl_v;
-	//g_pVertices[g_iVertexEnd].tex.u = tl_u;
-	//g_pVertices[g_iVertexEnd].tex.v = tl_v;
 
 	texture[1].u = br_u;
 	texture[1].v = tl_v;
-	//g_pVertices[g_iVertexEnd + 2].tex.u = br_u;
-	//g_pVertices[g_iVertexEnd + 2].tex.v = tl_v;
 
 	texture[2].u = br_u;
 	texture[2].v = br_v;
-	//g_pVertices[g_iVertexEnd + 1].tex.u = tl_u;
-	//g_pVertices[g_iVertexEnd + 1].tex.v = br_v;
 
 	texture[3].u = tl_u;
 	texture[3].v = br_v;
-	//g_pVertices[g_iVertexEnd + 3].tex.u = br_u;
-	//g_pVertices[g_iVertexEnd + 3].tex.v = br_v;
 }
 
 static void rotate(VEC3 *center, VEC3 *point)
@@ -646,9 +634,10 @@ void gfx_quads_draw(float x, float y, float w, float h)
 
 void gfx_quads_drawTL(float x, float y, float width, float height)
 {
-	dbg_assert(drawing == DRAWING_QUADS, "called quads_draw without begin");
-	
 	VEC3 center;
+
+	dbg_assert(drawing == DRAWING_QUADS, "called quads_draw without begin");
+
 	center.x = x + width/2;
 	center.y = y + height/2;
 	center.z = 0;
@@ -713,8 +702,10 @@ void gfx_quads_draw_freeform(
 
 void gfx_quads_text(float x, float y, float size, const char *text)
 {
-	gfx_quads_begin();
 	float startx = x;
+
+	gfx_quads_begin();
+
 	while(*text)
 	{
 		char c = *text;
@@ -836,21 +827,21 @@ float gfx_pretty_text_raw(float x, float y, float size, const char *text_, int l
 	while(length)
 	{
 		const int c = *text;
-		text++;
-	
 		const float width = current_font->m_CharEndTable[c] - current_font->m_CharStartTable[c];
+		double x_nudge = 0;
+
+		text++;
 
 		x -= size * current_font->m_CharStartTable[c];
 		
 		gfx_quads_setsubset(
-			(c%16)/16.0f, // startx
-			(c/16)/16.0f, // starty
-			(c%16)/16.0f+1.0f/16.0f, // endx
-			(c/16)/16.0f+1.0f/16.0f); // endy
+			(c%16)/16.0f, /* startx */
+			(c/16)/16.0f, /* starty */
+			(c%16)/16.0f+1.0f/16.0f, /* endx */
+			(c/16)/16.0f+1.0f/16.0f); /* endy */
 
 		gfx_quads_drawTL(x, y, size, size);
 
-		double x_nudge = 0;
 		if(length > 1 && text[1])
 			x_nudge = extra_kerning[text[0] + text[1] * 256];
 
@@ -894,8 +885,8 @@ float gfx_pretty_text_width(float size, const char *text_, int length)
 	const float spacing = 0.05f;
 	float w = 0.0f;
 	const unsigned char *text = (unsigned char *)text_;
-
 	const unsigned char *stop;
+
 	if (length == -1)
 		stop = text + strlen((char*)text);
 	else

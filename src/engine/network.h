@@ -32,7 +32,7 @@ enum
 	
 	NETSTATE_OFFLINE=0,
 	NETSTATE_CONNECTING,
-	NETSTATE_ONLINE,
+	NETSTATE_ONLINE
 };
 
 typedef int (*NETFUNC_DELCLIENT)(int cid, void *user);

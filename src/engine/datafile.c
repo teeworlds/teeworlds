@@ -71,6 +71,9 @@ DATAFILE *datafile_load(const char *filename)
 	unsigned *dst;
 	unsigned char *src;
 	unsigned j;
+	int size = 0;
+	int allocsize = 0;
+	
 	(void)dst;
 	(void)src;
 	(void)j;
@@ -103,14 +106,14 @@ DATAFILE *datafile_load(const char *filename)
 	}
 	
 	/* read in the rest except the data */
-	int size = 0;
+	size = 0;
 	size += header.num_item_types*sizeof(DATAFILE_ITEM_TYPE);
 	size += (header.num_items+header.num_raw_data)*sizeof(int);
 	if(header.version == 4)
 		size += header.num_raw_data*sizeof(int); /* v4 has uncompressed data sizes aswell */
 	size += header.item_size;
 	
-	int allocsize = size;
+	allocsize = size;
 	allocsize += sizeof(DATAFILE); /* add space for info structure */
 	allocsize += header.num_raw_data*sizeof(void*); /* add space for data pointers */
 
@@ -216,9 +219,11 @@ void *datafile_get_data(DATAFILE *df, int index)
 		if(df->header.version == 4)
 		{
 			/* v4 has compressed data */
-			dbg_msg("datafile", "loading data index=%d size=%d", index, datasize);
 			void *temp = (char *)mem_alloc(datasize, 1);
 			unsigned long uncompressed_size = df->info.data_sizes[index];
+			unsigned long s;
+
+			dbg_msg("datafile", "loading data index=%d size=%d", index, datasize);
 			df->data_ptrs[index] = (char *)mem_alloc(uncompressed_size, 1);
 			
 			/* read the compressed data */
@@ -226,7 +231,7 @@ void *datafile_get_data(DATAFILE *df, int index)
 			io_read(df->file, temp, datasize);
 			
 			/* decompress the data, TODO: check for errors */
-			unsigned long s = uncompressed_size;
+			s = uncompressed_size;
 			uncompress((Bytef*)df->data_ptrs[index], &s, (Bytef*)temp, datasize);
 			
 			/* clean up the temporary buffers */
@@ -424,8 +429,9 @@ int datafile_add_data(DATAFILE_OUT *df, int size, void *data)
 {
 	DATA_INFO *info = &df->datas[df->num_datas];
 	void *compdata = mem_alloc(size, 1); /* temporary buffer that we use duing compression */
-	info->uncompressed_size = size;
 	unsigned long s = size;
+
+	info->uncompressed_size = size;
 	if(compress((Bytef*)compdata, &s, (Bytef*)data, size) != Z_OK)
 		dbg_assert(0, "zlib error");
 	info->compressed_size = (int)s;
@@ -439,17 +445,18 @@ int datafile_add_data(DATAFILE_OUT *df, int size, void *data)
 
 int datafile_finish(DATAFILE_OUT *df)
 {
-	/* we should now write this file! */
-	if(DEBUG)
-		dbg_msg("datafile", "writing");
-
 	int itemsize = 0;
 	int i, count, offset;
 	int typessize, headersize, offsetsize, filesize, swapsize;
 	int datasize = 0;
 	DATAFILE_ITEM_TYPE info;
 	DATAFILE_ITEM itm;
-	
+	DATAFILE_HEADER header;
+
+	/* we should now write this file! */
+	if(DEBUG)
+		dbg_msg("datafile", "writing");
+
 	/* calculate sizes */
 	for(i = 0; i < df->num_items; i++)
 	{
@@ -475,25 +482,26 @@ int datafile_finish(DATAFILE_OUT *df)
 		dbg_msg("datafile", "num_item_types=%d typessize=%d itemsize=%d datasize=%d", df->num_item_types, typessize, itemsize, datasize);
 	
 	/* construct header */
-	DATAFILE_HEADER header;
-	header.id[0] = 'D';
-	header.id[1] = 'A';
-	header.id[2] = 'T';
-	header.id[3] = 'A';
-	header.version = 4;
-	header.size = filesize - 16;
-	header.swaplen = swapsize - 16;
-	header.num_item_types = df->num_item_types;
-	header.num_items = df->num_items;
-	header.num_raw_data = df->num_datas;
-	header.item_size = itemsize;
-	header.data_size = datasize;
-	
-	/* TODO: apply swapping */
-	/* write header */
-	if(DEBUG)
-		dbg_msg("datafile", "headersize=%d", sizeof(header));
-	io_write(df->file, &header, sizeof(header));
+	{
+		header.id[0] = 'D';
+		header.id[1] = 'A';
+		header.id[2] = 'T';
+		header.id[3] = 'A';
+		header.version = 4;
+		header.size = filesize - 16;
+		header.swaplen = swapsize - 16;
+		header.num_item_types = df->num_item_types;
+		header.num_items = df->num_items;
+		header.num_raw_data = df->num_datas;
+		header.item_size = itemsize;
+		header.data_size = datasize;
+		
+		/* TODO: apply swapping */
+		/* write header */
+		if(DEBUG)
+			dbg_msg("datafile", "headersize=%d", sizeof(header));
+		io_write(df->file, &header, sizeof(header));
+	}
 	
 	/* write types */
 	for(i = 0, count = 0; i < 0xffff; i++)

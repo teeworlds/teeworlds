@@ -153,7 +153,6 @@ function build(settings)
 		settings.linker.flags = ""
 	end
 
-
 	-- set some platform specific settings
 	settings.cc.includes:add("src")
 	settings.cc.includes:add("src/external/zlib")
@@ -187,9 +186,9 @@ function build(settings)
 	engine_settings = settings:copy()
 	
 	if family == "windows" then
-		engine_settings.cc.flags = "/wd4244 /TP"
+		engine_settings.cc.flags = "/wd4244"
 	else
-		engine_settings.cc.flags = "-Wall -std=c99"
+		engine_settings.cc.flags = "-Wall -pedantic-errors"
 		engine_settings.linker.flags = ""
 	end
 

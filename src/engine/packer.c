@@ -71,10 +71,11 @@ int unpacker_get_int(UNPACKER *p)
 
 const char *unpacker_get_string(UNPACKER *p)
 {
+	const char *ptr;
 	if(p->current >= p->end)
 		return "";
 		
-	const char *ptr = (const char *)p->current;
+	ptr = (const char *)p->current;
 	while(*p->current) /* skip the string */
 		p->current++;
 	p->current++;

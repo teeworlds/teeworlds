@@ -31,7 +31,7 @@ enum
 	BROWSESORT_NAME,
 	BROWSESORT_PING,
 	BROWSESORT_MAP,
-	BROWSESORT_NUMPLAYERS,
+	BROWSESORT_NUMPLAYERS
 };
 
 typedef struct
@@ -751,7 +751,7 @@ int inp_key_code(const char *key_name);
 /* message packing */
 enum
 {
-	MSGFLAG_VITAL=1,
+	MSGFLAG_VITAL=1
 };
 
 void msg_pack_start_system(int msg, int flags);

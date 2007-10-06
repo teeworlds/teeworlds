@@ -42,8 +42,9 @@ const MSG_INFO *msg_get_info()
 static UNPACKER msg_unpacker;
 int msg_unpack_start(const void *data, int data_size, int *system)
 {
+	int msg;
 	unpacker_reset(&msg_unpacker, (const unsigned char *)data, data_size);
-	int msg = msg_unpack_int();
+	msg = msg_unpack_int();
 	*system = msg&1;
 	return msg>>1;
 }

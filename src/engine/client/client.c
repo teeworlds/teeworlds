@@ -53,26 +53,26 @@ static int snapcrcerrors = 0;
 static int ack_game_tick = -1;
 static int current_recv_tick = 0;
 
-// current time
+/* current time */
 static int current_tick = 0;
 static float intratick = 0;
 
-// predicted time
+/* predicted time */
 static int current_predtick = 0;
 static float intrapredtick = 0;
 
-static struct // TODO: handle input better
+static struct /* TODO: handle input better */
 {
-	int data[MAX_INPUT_SIZE]; // the input data
-	int tick; // the tick that the input is for
-	int64 game_time; // prediction latency when we sent this input
+	int data[MAX_INPUT_SIZE]; /* the input data */
+	int tick; /* the tick that the input is for */
+	int64 game_time; /* prediction latency when we sent this input */
 	int64 time;
 } inputs[200];
 static int current_input = 0;
 
 enum
 {
-	GRAPH_MAX=256,
+	GRAPH_MAX=256
 };
 
 typedef struct
@@ -139,20 +139,22 @@ static void st_init(SMOOTHTIME *st, int64 target)
 
 static int64 st_get(SMOOTHTIME *st, int64 now)
 {
+	float adjust_speed, a;
 	int64 c = st->current + (now - st->snap);
 	int64 t = st->target + (now - st->snap);
+	int64 r;
 	
-	// it's faster to adjust upward instead of downward
-	// we might need to adjust these abit
-	float adjust_speed = 0.3f;
+	/* it's faster to adjust upward instead of downward */
+	/* we might need to adjust these abit */
+	adjust_speed = 0.3f;
 	if(t < c)
 		adjust_speed *= 5.0f;
 	
-	float a = ((now-st->snap)/(float)time_freq())*adjust_speed;
+	a = ((now-st->snap)/(float)time_freq())*adjust_speed;
 	if(a > 1)
 		a = 1;
 		
-	int64 r = c + (int64)((t-c)*a);
+	r = c + (int64)((t-c)*a);
 	
 	{
 		int64 drt = now - st->rlast;
@@ -183,7 +185,7 @@ SMOOTHTIME predicted_time;
 
 GRAPH intra_graph;
 
-// --- input snapping ---
+/* --- input snapping --- */
 static int input_data[MAX_INPUT_SIZE] = {0};
 static int input_data_size;
 static int input_is_changed = 1;
@@ -195,10 +197,10 @@ void snap_input(void *data, int size)
 	input_data_size = size;
 }
 
-// -- snapshot handling ---
+/* -- snapshot handling --- */
 enum
 {
-	NUM_SNAPSHOT_TYPES=2,
+	NUM_SNAPSHOT_TYPES=2
 };
 
 SNAPSTORAGE snapshot_storage;
@@ -206,12 +208,13 @@ static SNAPSTORAGE_HOLDER *snapshots[NUM_SNAPSHOT_TYPES];
 static int recived_snapshots;
 static char snapshot_incomming_data[MAX_SNAPSHOT_SIZE];
 
-// ---
+/* --- */
 
 const void *snap_get_item(int snapid, int index, SNAP_ITEM *item)
 {
+	SNAPSHOT_ITEM *i;
 	dbg_assert(snapid >= 0 && snapid < NUM_SNAPSHOT_TYPES, "invalid snapid");
-	SNAPSHOT_ITEM *i = snapshot_get_item(snapshots[snapid]->snap, index);
+	i = snapshot_get_item(snapshots[snapid]->snap, index);
 	item->type = snapitem_type(i);
 	item->id = snapitem_id(i);
 	return (void *)snapitem_data(i);
@@ -219,7 +222,7 @@ const void *snap_get_item(int snapid, int index, SNAP_ITEM *item)
 
 const void *snap_find_item(int snapid, int type, int id)
 {
-	// TODO: linear search. should be fixed.
+	/* TODO: linear search. should be fixed. */
 	int i;
 	for(i = 0; i < snapshots[snapid]->snap->num_items; i++)
 	{
@@ -236,7 +239,7 @@ int snap_num_items(int snapid)
 	return snapshots[snapid]->snap->num_items;
 }
 
-// ------ time functions ------
+/* ------ time functions ------ */
 float client_intratick() { return intratick; }
 float client_intrapredtick() { return intrapredtick; }
 int client_tick() { return current_tick; }
@@ -245,7 +248,7 @@ int client_tickspeed() { return SERVER_TICK_SPEED; }
 float client_frametime() { return frametime; }
 float client_localtime() { return (time_get()-local_start_time)/(float)(time_freq()); }
 
-// ----- send functions -----
+/* ----- send functions ----- */
 int client_send_msg()
 {
 	const MSG_INFO *info = msg_get_info();
@@ -288,8 +291,6 @@ static void client_send_error(const char *error)
 	packet p(NETMSG_CLIENT_ERROR);
 	p.write_str(error);
 	send_packet(&p);
-	//send_packet(&p);
-	//send_packet(&p);
 	*/
 }
 
@@ -305,6 +306,9 @@ void client_rcon(const char *cmd)
 
 static void client_send_input()
 {
+	int64 now = time_get();	
+	int i;
+
 	if(current_predtick <= 0)
 		return;
 		
@@ -313,12 +317,10 @@ static void client_send_input()
 	msg_pack_int(current_predtick);
 	msg_pack_int(input_data_size);
 
-	int64 now = time_get();	
 	inputs[current_input].tick = current_predtick;
 	inputs[current_input].game_time = st_get(&predicted_time, now);
 	inputs[current_input].time = now;
 	
-	int i;
 	for(i = 0; i < input_data_size/4; i++)
 	{
 		inputs[current_input].data[i] = input_data[i];
@@ -348,14 +350,14 @@ int *client_get_input(int tick)
 	return 0;
 }
 
-// ------ state handling -----
+/* ------ state handling ----- */
 static int state;
 int client_state() { return state; }
 static void client_set_state(int s)
 {
+	int old = state;
 	if(config.debug)
 		dbg_msg("client", "state change. last=%d current=%d", state, s);
-	int old = state;
 	state = s;
 	if(old != s)
 		modc_statechange(state, old);
@@ -364,13 +366,13 @@ static void client_set_state(int s)
 /* called when the map is loaded and we should init for a new round */
 static void client_on_enter_game()
 {
-	// reset input
+	/* reset input */
 	int i;
 	for(i = 0; i < 200; i++)
 		inputs[i].tick = -1;
 	current_input = 0;
 
-	// reset snapshots
+	/* reset snapshots */
 	snapshots[SNAP_CURRENT] = 0;
 	snapshots[SNAP_PREV] = 0;
 	snapstorage_purge_all(&snapshot_storage);
@@ -381,12 +383,15 @@ static void client_on_enter_game()
 
 void client_connect(const char *server_address_str)
 {
-	dbg_msg("client", "connecting to '%s'", server_address_str);
 	char buf[512];
-	strncpy(buf, server_address_str, 512);
-	
 	const char *port_str = 0;
 	int k;
+	int port = 8303;
+
+	dbg_msg("client", "connecting to '%s'", server_address_str);
+
+	strncpy(buf, server_address_str, 512);
+
 	for(k = 0; buf[k]; k++)
 	{
 		if(buf[k] == ':')
@@ -397,7 +402,6 @@ void client_connect(const char *server_address_str)
 		}
 	}
 	
-	int port = 8303;
 	if(port_str)
 		port = atoi(port_str);
 		
@@ -424,6 +428,11 @@ static int client_load_data()
 
 static void client_debug_render()
 {
+	static NETSTATS prev, current;
+	static int64 last_snap = 0;
+	static float frametime_avg = 0;
+	char buffer[512];
+
 	if(!config.debug)
 		return;
 		
@@ -431,8 +440,6 @@ static void client_debug_render()
 	gfx_texture_set(debug_font);
 	gfx_mapscreen(0,0,gfx_screenwidth(),gfx_screenheight());
 	
-	static NETSTATS prev, current;
-	static int64 last_snap = 0;
 	if(time_get()-last_snap > time_freq()/10)
 	{
 		last_snap = time_get();
@@ -440,9 +447,7 @@ static void client_debug_render()
 		netclient_stats(net, &current);
 	}
 	
-	static float frametime_avg = 0;
 	frametime_avg = frametime_avg*0.9f + frametime*0.1f;
-	char buffer[512];
 	sprintf(buffer, "ticks: %8d %8d send: %6d recv: %6d snaploss: %d  mem %dk   gfxmem: %dk  fps: %3d",
 		current_tick, current_predtick,
 		(current.send_bytes-prev.send_bytes)*10,
@@ -454,7 +459,7 @@ static void client_debug_render()
 	gfx_quads_text(2, 2, 16, buffer);
 	
 	
-	// render graphs
+	/* render graphs */
 	gfx_mapscreen(0,0,400.0f,300.0f);
 	graph_render(&game_time.graph, 300, 10, 90, 50);
 	graph_render(&predicted_time.graph, 300, 10+50+10, 90, 50);
@@ -482,14 +487,14 @@ static void client_error(const char *msg)
 {
 	dbg_msg("client", "error: %s", msg);
 	client_send_error(msg);
-	client_set_state(CLIENTSTATE_QUITING);
+	client_set_state(CLIENTSTATE_OFFLINE);
 }
 
 static void client_process_packet(NETPACKET *packet)
 {
 	if(packet->client_id == -1)
 	{
-		// connectionlesss
+		/* connectionlesss */
 		if(packet->data_size >= (int)sizeof(SERVERBROWSE_LIST) &&
 			memcmp(packet->data, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST)) == 0)
 		{
@@ -523,10 +528,12 @@ static void client_process_packet(NETPACKET *packet)
 		if(packet->data_size >= (int)sizeof(SERVERBROWSE_INFO) &&
 			memcmp(packet->data, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
 		{
-			// we got ze info
+			/* we got ze info */
 			UNPACKER up;
-			unpacker_reset(&up, (unsigned char*)packet->data+sizeof(SERVERBROWSE_INFO), packet->data_size-sizeof(SERVERBROWSE_INFO));
 			SERVER_INFO info = {0};
+			int i;
+
+			unpacker_reset(&up, (unsigned char*)packet->data+sizeof(SERVERBROWSE_INFO), packet->data_size-sizeof(SERVERBROWSE_INFO));
 
 			strncpy(info.version, unpacker_get_string(&up), 32);
 			strncpy(info.name, unpacker_get_string(&up), 64);
@@ -537,7 +544,6 @@ static void client_process_packet(NETPACKET *packet)
 			info.num_players = atol(unpacker_get_string(&up));
 			info.max_players = atol(unpacker_get_string(&up));
 			
-			int i;
 			for(i = 0; i < info.num_players; i++)
 			{
 				strncpy(info.player_names[i], unpacker_get_string(&up), 48);
@@ -550,12 +556,12 @@ static void client_process_packet(NETPACKET *packet)
 	}
 	else
 	{
-		
 		int sys;
 		int msg = msg_unpack_start(packet->data, packet->data_size, &sys);
+
 		if(sys)
 		{
-			// system message
+			/* system message */
 			if(msg == NETMSG_MAP)
 			{
 				const char *map = msg_unpack_string();
@@ -567,8 +573,8 @@ static void client_process_packet(NETPACKET *packet)
 					modc_entergame();
 					client_send_entergame();
 					dbg_msg("client/network", "loading done");
-					// now we will wait for two snapshots
-					// to finish the connection
+					/* now we will wait for two snapshots */
+					/* to finish the connection */
 					
 					client_on_enter_game();
 				}
@@ -579,7 +585,7 @@ static void client_process_packet(NETPACKET *packet)
 			}
 			else if(msg == NETMSG_SNAP || msg == NETMSG_SNAPEMPTY)
 			{
-				//dbg_msg("client/network", "got snapshot");
+				/*dbg_msg("client/network", "got snapshot"); */
 				int game_tick = msg_unpack_int();
 				int delta_tick = game_tick-msg_unpack_int();
 				int input_predtick = msg_unpack_int();
@@ -603,7 +609,7 @@ static void client_process_packet(NETPACKET *packet)
 					{
 						if(inputs[k].tick == input_predtick)
 						{
-							//-1000/50
+							/*-1000/50 */
 							int64 target = inputs[k].game_time + (time_get() - inputs[k].time);
 							st_update(&predicted_time, target - (int64)(((time_left-prediction_margin)/1000.0f)*time_freq()));
 							break;
@@ -613,47 +619,52 @@ static void client_process_packet(NETPACKET *packet)
 				
 				if(snapshot_part == part && game_tick > current_recv_tick)
 				{
-					// TODO: clean this up abit
+					/* TODO: clean this up abit */
 					const char *d = (const char *)msg_unpack_raw(part_size);
 					mem_copy((char*)snapshot_incomming_data + part*MAX_SNAPSHOT_PACKSIZE, d, part_size);
 					snapshot_part++;
 				
 					if(snapshot_part == num_parts)
 					{
+						static SNAPSHOT emptysnap;
+						SNAPSHOT *deltashot = &emptysnap;
+						int purgetick;
+						void *deltadata;
+						int deltasize;
+						unsigned char tmpbuffer[MAX_SNAPSHOT_SIZE];
+						unsigned char tmpbuffer2[MAX_SNAPSHOT_SIZE];
+						unsigned char tmpbuffer3[MAX_SNAPSHOT_SIZE];
+						int snapsize;
+
 						snapshot_part = 0;
 						
-						// find snapshot that we should use as delta 
-						static SNAPSHOT emptysnap;
+						/* find snapshot that we should use as delta */
 						emptysnap.data_size = 0;
 						emptysnap.num_items = 0;
 						
-						SNAPSHOT *deltashot = &emptysnap;
-						
-						// find delta
+						/* find delta */
 						if(delta_tick >= 0)
 						{
 							int deltashot_size = snapstorage_get(&snapshot_storage, delta_tick, 0, &deltashot);
 							
 							if(deltashot_size < 0)
 							{
-								// couldn't find the delta snapshots that the server used
-								// to compress this snapshot. force the server to resync
+								/* couldn't find the delta snapshots that the server used */
+								/* to compress this snapshot. force the server to resync */
 								if(config.debug)
 									dbg_msg("client", "error, couldn't find the delta snapshot");
 								
-								// ack snapshot
-								// TODO: combine this with the input message
+								/* ack snapshot */
+								/* TODO: combine this with the input message */
 								ack_game_tick = -1;
 								return;
 							}
 						}
 
-						// decompress snapshot
-						void *deltadata = snapshot_empty_delta();
-						int deltasize = sizeof(int)*3;
+						/* decompress snapshot */
+						deltadata = snapshot_empty_delta();
+						deltasize = sizeof(int)*3;
 
-						unsigned char tmpbuffer[MAX_SNAPSHOT_SIZE];
-						unsigned char tmpbuffer2[MAX_SNAPSHOT_SIZE];
 						if(part_size)
 						{
 							int compsize = zerobit_decompress(snapshot_incomming_data, part_size, tmpbuffer);
@@ -662,10 +673,10 @@ static void client_process_packet(NETPACKET *packet)
 							deltasize = intsize;
 						}
 
-						//dbg_msg("UNPACK", "%d unpacked with %d", game_tick, delta_tick);
+						/*dbg_msg("UNPACK", "%d unpacked with %d", game_tick, delta_tick); */
 						
-						unsigned char tmpbuffer3[MAX_SNAPSHOT_SIZE];
-						int snapsize = snapshot_unpack_delta(deltashot, (SNAPSHOT*)tmpbuffer3, deltadata, deltasize);
+						purgetick = delta_tick;
+						snapsize = snapshot_unpack_delta(deltashot, (SNAPSHOT*)tmpbuffer3, deltadata, deltasize);
 						if(msg != NETMSG_SNAPEMPTY && snapshot_crc((SNAPSHOT*)tmpbuffer3) != crc)
 						{
 							if(config.debug)
@@ -673,7 +684,7 @@ static void client_process_packet(NETPACKET *packet)
 							snapcrcerrors++;
 							if(snapcrcerrors > 10)
 							{
-								// to many errors, send reset
+								/* to many errors, send reset */
 								ack_game_tick = -1;
 								client_send_input();
 								snapcrcerrors = 0;
@@ -686,24 +697,24 @@ static void client_process_packet(NETPACKET *packet)
 								snapcrcerrors--;
 						}
 
-						// purge old snapshots				
-						int purgetick = delta_tick;
+						/* purge old snapshots */
+						purgetick = delta_tick;
 						if(snapshots[SNAP_PREV] && snapshots[SNAP_PREV]->tick < purgetick)
 							purgetick = snapshots[SNAP_PREV]->tick;
 						if(snapshots[SNAP_CURRENT] && snapshots[SNAP_CURRENT]->tick < purgetick)
 							purgetick = snapshots[SNAP_PREV]->tick;
 						snapstorage_purge_until(&snapshot_storage, purgetick);
-						//client_snapshot_purge_until(game_tick-50);
+						/*client_snapshot_purge_until(game_tick-50); */
 						
-						// add new
+						/* add new */
 						snapstorage_add(&snapshot_storage, game_tick, time_get(), snapsize, (SNAPSHOT*)tmpbuffer3);
-						//SNAPSTORAGE_HOLDER *snap = client_snapshot_add(game_tick, time_get(), tmpbuffer3, snapsize);
+						/*SNAPSTORAGE_HOLDER *snap = client_snapshot_add(game_tick, time_get(), tmpbuffer3, snapsize); */
 						
-						//int ncrc = snapshot_crc((snapshot*)tmpbuffer3);
-						//if(crc != ncrc)
-						//	dbg_msg("client", "client snapshot crc failure %d %d", crc, ncrc);
+						/*int ncrc = snapshot_crc((snapshot*)tmpbuffer3); */
+						/*if(crc != ncrc) */
+						/*	dbg_msg("client", "client snapshot crc failure %d %d", crc, ncrc); */
 						
-						// apply snapshot, cycle pointers
+						/* apply snapshot, cycle pointers */
 						recived_snapshots++;
 						
 
@@ -711,10 +722,10 @@ static void client_process_packet(NETPACKET *packet)
 							snaploss += game_tick-current_recv_tick-1;
 						current_recv_tick = game_tick;
 						
-						// we got two snapshots until we see us self as connected
+						/* we got two snapshots until we see us self as connected */
 						if(recived_snapshots == 2)
 						{
-							// start at 200ms and work from there
+							/* start at 200ms and work from there */
 							st_init(&predicted_time, (game_tick+10)*time_freq()/50);
 							st_init(&game_time, (game_tick-1)*time_freq()/50);
 							snapshots[SNAP_PREV] = snapshot_storage.first;
@@ -725,7 +736,7 @@ static void client_process_packet(NETPACKET *packet)
 						
 						st_update(&game_time, (game_tick-1)*time_freq()/50);
 						
-						// ack snapshot
+						/* ack snapshot */
 						ack_game_tick = game_tick;
 					}
 				}
@@ -738,7 +749,7 @@ static void client_process_packet(NETPACKET *packet)
 		}
 		else
 		{
-			// game message
+			/* game message */
 			modc_message(msg);
 		}
 	}
@@ -746,78 +757,81 @@ static void client_process_packet(NETPACKET *packet)
 
 static void client_pump_network()
 {
+	NETPACKET packet;
+
 	netclient_update(net);
 
-	// check for errors		
+	/* check for errors */
 	if(client_state() != CLIENTSTATE_OFFLINE && netclient_state(net) == NETSTATE_OFFLINE)
 	{
 		client_set_state(CLIENTSTATE_OFFLINE);
 		dbg_msg("client", "offline error='%s'", netclient_error_string(net));
 	}
 
-	//
+	/* */
 	if(client_state() == CLIENTSTATE_CONNECTING && netclient_state(net) == NETSTATE_ONLINE)
 	{
-		// we switched to online
+		/* we switched to online */
 		dbg_msg("client", "connected, sending info");
 		client_set_state(CLIENTSTATE_LOADING);
 		client_send_info();
 	}
 	
-	// process packets
-	NETPACKET packet;
+	/* process packets */
 	while(netclient_recv(net, &packet))
 		client_process_packet(&packet);
 }
 
 static void client_run(const char *direct_connect_server)
 {
-	local_start_time = time_get();
-	snapshot_part = 0;
-	
-	// init graphics and sound
-	if(!gfx_init())
-		return;
-
-	snd_init(); // sound is allowed to fail
-	
-	// load data
-	if(!client_load_data())
-		return;
-
-	// init menu
-	modmenu_init(); // TODO: remove
-	
-	// init the mod
-	modc_init();
-	dbg_msg("client", "version %s", modc_net_version());
-	
-	// open socket
 	NETADDR4 bindaddr;
-	mem_zero(&bindaddr, sizeof(bindaddr));
-	net = netclient_open(bindaddr, 0);
-	
-	// connect to the server if wanted
-	if(direct_connect_server)
-		client_connect(direct_connect_server);
-		
 	int64 reporttime = time_get();
 	int64 reportinterval = time_freq()*1;
 	int frames = 0;
+
+	local_start_time = time_get();
+	snapshot_part = 0;
 	
+	/* init graphics and sound */
+	if(!gfx_init())
+		return;
+
+	snd_init(); /* sound is allowed to fail */
+	
+	/* load data */
+	if(!client_load_data())
+		return;
+
+	/* init menu */
+	modmenu_init(); /* TODO: remove */
+	
+	/* init the mod */
+	modc_init();
+	dbg_msg("client", "version %s", modc_net_version());
+	
+	/* open socket */
+	mem_zero(&bindaddr, sizeof(bindaddr));
+	net = netclient_open(bindaddr, 0);
+	
+	/* connect to the server if wanted */
+	if(direct_connect_server)
+		client_connect(direct_connect_server);
+		
 	inp_mouse_mode_relative();
 	
 	while (1)
 	{	
-		frames++;
 		int64 frame_start_time = time_get();
 
-		// switch snapshot
+		/* switch snapshot */
 		if(recived_snapshots >= 3)
 		{
 			int repredict = 0;
-			//int64 now = time_get();
 			int64 now = st_get(&game_time, time_get());
+
+			frames++;
+
+			/*int64 now = time_get(); */
 			while(1)
 			{
 				SNAPSTORAGE_HOLDER *cur = snapshots[SNAP_CURRENT];
@@ -831,7 +845,7 @@ static void client_run(const char *direct_connect_server)
 						snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
 						snapshots[SNAP_CURRENT] = next;
 						
-						// set tick
+						/* set tick */
 						current_tick = snapshots[SNAP_CURRENT]->tick;
 						
 						if(snapshots[SNAP_CURRENT] && snapshots[SNAP_PREV])
@@ -851,14 +865,15 @@ static void client_run(const char *direct_connect_server)
 			{
 				int64 curtick_start = (snapshots[SNAP_CURRENT]->tick)*time_freq()/50;
 				int64 prevtick_start = (snapshots[SNAP_PREV]->tick)*time_freq()/50;
-				intratick = (now - prevtick_start) / (float)(curtick_start-prevtick_start);
-				
-				graph_add(&intra_graph, intratick*0.25f);
-				
 				int64 pred_now = st_get(&predicted_time, time_get());
-				//tg_add(&predicted_time_graph, pred_now, 0);
+				/*tg_add(&predicted_time_graph, pred_now, 0); */
 				int prev_pred_tick = (int)(pred_now*50/time_freq());
 				int new_pred_tick = prev_pred_tick+1;
+
+				intratick = (now - prevtick_start) / (float)(curtick_start-prevtick_start);
+
+				graph_add(&intra_graph, intratick*0.25f);
+
 				curtick_start = new_pred_tick*time_freq()/50;
 				prevtick_start = prev_pred_tick*time_freq()/50;
 				intrapredtick = (pred_now - prevtick_start) / (float)(curtick_start-prevtick_start);
@@ -868,14 +883,14 @@ static void client_run(const char *direct_connect_server)
 					current_predtick = new_pred_tick;
 					repredict = 1;
 					
-					// send input
+					/* send input */
 					client_send_input();
 				}
 			}
 			
-			//intrapredtick = current_predtick
+			/*intrapredtick = current_predtick */
 
-			// only do sane predictions			
+			/* only do sane predictions */
 			if(repredict)
 			{
 				if(current_predtick > current_tick && current_predtick < current_tick+50)
@@ -883,14 +898,14 @@ static void client_run(const char *direct_connect_server)
 			}
 		}
 
-		// STRESS TEST: join the server again
+		/* STRESS TEST: join the server again */
 		if(client_state() == CLIENTSTATE_OFFLINE && config.stress && (frames%100) == 0)
 			client_connect(config.cl_stress_server);
 		
-		// update input
+		/* update input */
 		inp_update();
 		
-		// refocus
+		/* refocus */
 		if(!gfx_window_active())
 		{
 			if(window_must_refocus == 0)
@@ -913,11 +928,11 @@ static void client_run(const char *direct_connect_server)
 			}
 		}
 
-		// screenshot button
+		/* screenshot button */
 		if(inp_key_down(config.key_screenshot))
 			gfx_screenshot();
 
-		// panic button
+		/* panic button */
 		if(config.debug)
 		{
 			if(inp_key_pressed(KEY_F1))
@@ -932,23 +947,16 @@ static void client_run(const char *direct_connect_server)
 			{
 				ack_game_tick = -1;
 				client_send_input();
-				/*
-				// ack snapshot
-				msg_pack_start_system(NETMSG_SNAPACK, 0);
-				msg_pack_int(-1);
-				msg_pack_end();
-				client_send_msg();
-				*/
 			}
 		}
 			
-		// pump the network
+		/* pump the network */
 		client_pump_network();
 		
-		// update the server browser
+		/* update the server browser */
 		client_serverbrowse_update();
 		
-		// render
+		/* render */
 		if(config.stress)
 		{
 			if((frames%10) == 0)
@@ -963,11 +971,11 @@ static void client_run(const char *direct_connect_server)
 			gfx_swap();
 		}
 		
-		// check conditions
+		/* check conditions */
 		if(client_state() == CLIENTSTATE_QUITING)
 			break;
 
-		// be nice
+		/* be nice */
 		if(config.cpu_throttle || !gfx_window_active())
 			thread_sleep(1);
 		
@@ -982,14 +990,14 @@ static void client_run(const char *direct_connect_server)
 			reporttime += reportinterval;
 		}
 		
-		// update frametime
+		/* update frametime */
 		frametime = (time_get()-frame_start_time)/(float)time_freq();
 	}
 	
 	modc_shutdown();
 	client_disconnect();
 
-	modmenu_shutdown(); // TODO: remove this
+	modmenu_shutdown(); /* TODO: remove this */
 	
 	gfx_shutdown();
 	snd_shutdown();
@@ -998,21 +1006,23 @@ static void client_run(const char *direct_connect_server)
 
 int editor_main(int argc, char **argv);
 
-//client main_client;
+/*client main_client; */
 
 int main(int argc, char **argv)
 {
-	dbg_msg("client", "starting...");
-	
-	config_reset();
-
 #ifdef CONF_PLATFORM_MACOSX
 	const char *config_filename = "~/.teewars";
 #else
 	const char *config_filename = "default.cfg";
 #endif
-
 	int i;
+	const char *direct_connect_server = 0x0;
+	int editor = 0;
+
+	dbg_msg("client", "starting...");
+	
+	config_reset();
+
 	for(i = 1; i < argc; i++)
 	{
 		if(argv[i][0] == '-' && argv[i][1] == 'f' && argv[i][2] == 0 && argc - i > 1)
@@ -1024,19 +1034,17 @@ int main(int argc, char **argv)
 
 	config_load(config_filename);
 
-	const char *direct_connect_server = 0x0;
 	snd_set_master_volume(config.volume / 255.0f);
-	int editor = 0;
 
-	// init network, need to be done first so we can do lookups
+	/* init network, need to be done first so we can do lookups */
 	net_init();
 
-	// parse arguments
+	/* parse arguments */
 	for(i = 1; i < argc; i++)
 	{
 		if(argv[i][0] == '-' && argv[i][1] == 'c' && argv[i][2] == 0 && argc - i > 1)
 		{
-			// -c SERVER:PORT
+			/* -c SERVER:PORT */
 			i++;
 			direct_connect_server = argv[i];
 		}
@@ -1052,7 +1060,7 @@ int main(int argc, char **argv)
 		editor_main(argc, argv);
 	else
 	{
-		// start the client
+		/* start the client */
 		client_run(direct_connect_server);
 	}
 	return 0;

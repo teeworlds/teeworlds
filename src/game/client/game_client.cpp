@@ -355,6 +355,10 @@ public:
 	{
 		int particlespersecond = data->projectileinfo[projectiletype].particlespersecond;
 		int lastaddtick = lastadd[projectileid % LISTSIZE];
+		
+		if(!particlespersecond)
+			return;
+		
 		if ((client_tick() - lastaddtick) > (client_tickspeed() / particlespersecond))
 		{
 			lastadd[projectileid % LISTSIZE] = client_tick();
@@ -477,10 +481,10 @@ extern "C" void modc_init()
 		for(int i = 0; i < data->sounds[s].num_sounds; i++)
 		{
 			int id;
-			if (strcmp(data->sounds[s].sounds[i].filename + strlen(data->sounds[s].sounds[i].filename) - 3, ".wv") == 0)
-				id = snd_load_wv(data->sounds[s].sounds[i].filename);
-			else
-				id = snd_load_wav(data->sounds[s].sounds[i].filename);
+			//if (strcmp(data->sounds[s].sounds[i].filename + strlen(data->sounds[s].sounds[i].filename) - 3, ".wv") == 0)
+			id = snd_load_wv(data->sounds[s].sounds[i].filename);
+			//else
+			//	id = snd_load_wav(data->sounds[s].sounds[i].filename);
 
 			data->sounds[s].sounds[i].id = id;
 		}

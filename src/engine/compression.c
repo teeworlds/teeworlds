@@ -124,6 +124,7 @@ long zerobit_decompress(const void *src_, int size, void *dst_)
 	unsigned char *src = (unsigned char *)src_;
 	unsigned char *dst = (unsigned char *)dst_;
 	unsigned char *end = src + size;
+
 	
 	while(src != end)
 	{
@@ -140,7 +141,6 @@ long zerobit_decompress(const void *src_, int size, void *dst_)
 		}
 	}
 	
-	long l = (long)(dst-(unsigned char *)dst_);
-	return l;
+	return (long)(dst-(unsigned char *)dst_);
 }
 

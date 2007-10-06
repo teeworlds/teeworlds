@@ -33,7 +33,7 @@ enum
 	NETWORK_PACKETFLAG_RESEND=0x10,
 	NETWORK_PACKETFLAG_CONNLESS=0x20,
 	
-	NETWORK_MAX_SEQACK=0x1000,
+	NETWORK_MAX_SEQACK=0x1000
 };
 
 static int current_token = 1;
@@ -56,6 +56,8 @@ typedef struct
 static void send_packet(NETSOCKET socket, NETADDR4 *addr, NETPACKETDATA *packet)
 {
 	unsigned char buffer[NETWORK_MAX_PACKET_SIZE];
+	int send_size = NETWORK_HEADER_SIZE+packet->data_size;
+
 	buffer[0] = packet->flags;
 	buffer[1] = ((packet->seq>>4)&0xf0) | ((packet->ack>>8)&0x0f);
 	buffer[2] = packet->seq;
@@ -63,7 +65,6 @@ static void send_packet(NETSOCKET socket, NETADDR4 *addr, NETPACKETDATA *packet)
 	buffer[4] = packet->token>>8;
 	buffer[5] = packet->token&0xff;
 	mem_copy(buffer+NETWORK_HEADER_SIZE, packet->data, packet->data_size);
-	int send_size = NETWORK_HEADER_SIZE+packet->data_size;
 	net_udp4_send(socket, addr, buffer, send_size);
 }
 
@@ -242,10 +243,11 @@ static void conn_ack(NETCONNECTION *conn, int ack)
 	while(1)
 	{
 		RINGBUFFER_ITEM *item = conn->buffer.first;
+		NETPACKETDATA *resend;
 		if(!item)
 			break;
 			
-		NETPACKETDATA *resend = (NETPACKETDATA *)rb_item_data(item);
+		resend = (NETPACKETDATA *)rb_item_data(item);
 		if(resend->seq <= ack || (ack < NETWORK_MAX_SEQACK/3 && resend->seq > NETWORK_MAX_SEQACK/2))
 			rb_pop_first(&conn->buffer);
 		else
@@ -276,12 +278,11 @@ static void conn_resend(NETCONNECTION *conn)
 
 static void conn_send(NETCONNECTION *conn, int flags, int data_size, const void *data)
 {
-	if(flags&NETWORK_PACKETFLAG_VITAL)
-	{
-		conn->seq = (conn->seq+1)%NETWORK_MAX_SEQACK;
-	}
-	
 	NETPACKETDATA p;
+
+	if(flags&NETWORK_PACKETFLAG_VITAL)
+		conn->seq = (conn->seq+1)%NETWORK_MAX_SEQACK;
+
 	p.ID[0] = 'T';
 	p.ID[1] = 'W';
 	p.version = NETWORK_VERSION;
@@ -448,28 +449,32 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 
 static int conn_update(NETCONNECTION *conn)
 {
+	int64 now = time_get();
+
 	if(conn->state == NETWORK_CONNSTATE_OFFLINE || conn->state == NETWORK_CONNSTATE_ERROR)
 		return 0;
 
 	/* watch out for major hitches */
-	int64 now = time_get();
-	int64 delta = now-conn->last_update_time;
-	if(conn->last_update_time && delta > time_freq()/2)
 	{
-		dbg_msg("conn", "hitch %d", (int)((delta*1000)/time_freq()));
-
-		conn->last_recv_time += delta;
-
-		RINGBUFFER_ITEM *item = conn->buffer.first;
-		while(item)
+		int64 delta = now-conn->last_update_time;
+		if(conn->last_update_time && delta > time_freq()/2)
 		{
-			NETPACKETDATA *resend = (NETPACKETDATA *)rb_item_data(item);
-			resend->first_send_time += delta;
-			item = item->next;
+			RINGBUFFER_ITEM *item = conn->buffer.first;
+	
+			dbg_msg("conn", "hitch %d", (int)((delta*1000)/time_freq()));
+			conn->last_recv_time += delta;
+	
+			while(item)
+			{
+				NETPACKETDATA *resend = (NETPACKETDATA *)rb_item_data(item);
+				resend->first_send_time += delta;
+				item = item->next;
+			}
 		}
+
+		conn->last_update_time = now;
 	}
 		
-	conn->last_update_time = now;
 	
 	/* check for timeout */
 	if(conn->state != NETWORK_CONNSTATE_OFFLINE &&
@@ -750,9 +755,9 @@ int netserver_send(NETSERVER *s, NETPACKET *packet)
 	}
 	else
 	{
+		int flags  = 0;
 		dbg_assert(packet->client_id >= 0, "errornous client id");
 		dbg_assert(packet->client_id < s->max_clients, "errornous client id");
-		int flags  = 0;
 		if(packet->flags&PACKETFLAG_VITAL)
 			flags |= NETWORK_PACKETFLAG_VITAL;
 		conn_send(&s->slots[packet->client_id].conn, flags, packet->data_size, packet->data);
@@ -762,11 +767,11 @@ int netserver_send(NETSERVER *s, NETPACKET *packet)
 
 void netserver_stats(NETSERVER *s, NETSTATS *stats)
 {
-	mem_zero(stats, sizeof(NETSTATS));
-	
 	int num_stats = sizeof(NETSTATS)/sizeof(int);
 	int *istats = (int *)stats;
 	int c, i;
+
+	mem_zero(stats, sizeof(NETSTATS));
 	
 	for(c = 0; c < s->max_clients; c++)
 	{
@@ -817,14 +822,15 @@ int netclient_recv(NETCLIENT *c, NETPACKET *packet)
 	while(1)
 	{
 		NETADDR4 addr;
+		NETPACKETDATA data;
+		int r;
 		int bytes = net_udp4_recv(c->socket, &addr, c->recv_buffer, NETWORK_MAX_PACKET_SIZE);
 
 		/* no more packets for now */
 		if(bytes <= 0)
 			break;
 		
-		NETPACKETDATA data;
-		int r = check_packet(c->recv_buffer, bytes, &data);
+		r = check_packet(c->recv_buffer, bytes, &data);
 		
 		if(r == 0)
 		{
@@ -881,9 +887,8 @@ int netclient_send(NETCLIENT *c, NETPACKET *packet)
 	}
 	else
 	{
-		dbg_assert(packet->client_id == 0, "errornous client id");
-
 		int flags = 0;		
+		dbg_assert(packet->client_id == 0, "errornous client id");
 		if(packet->flags&PACKETFLAG_VITAL)
 			flags |= NETWORK_PACKETFLAG_VITAL;
 		conn_send(&c->conn, flags, packet->data_size, packet->data);

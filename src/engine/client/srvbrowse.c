@@ -23,9 +23,9 @@ struct SERVERENTRY_t
 	int got_info;
 	SERVER_INFO info;
 	
-	SERVERENTRY *next_ip; // ip hashed list
+	SERVERENTRY *next_ip; /* ip hashed list */
 	
-	SERVERENTRY *prev_req; // request list
+	SERVERENTRY *prev_req; /* request list */
 	SERVERENTRY *next_req;
 };
 
@@ -33,9 +33,9 @@ static HEAP *serverlist_heap = 0;
 static SERVERENTRY **serverlist = 0;
 static int *sorted_serverlist = 0;
 
-static SERVERENTRY *serverlist_ip[256] = {0}; // ip hash list
+static SERVERENTRY *serverlist_ip[256] = {0}; /* ip hash list */
 
-static SERVERENTRY *first_req_server = 0; // request list
+static SERVERENTRY *first_req_server = 0; /* request list */
 static SERVERENTRY *last_req_server = 0;
 static int num_requests = 0;
 
@@ -228,8 +228,9 @@ void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *info)
 	
 	if(num_servers == num_server_capacity)
 	{
+		SERVERENTRY **newlist;
 		num_server_capacity += 100;
-		SERVERENTRY **newlist = mem_alloc(num_server_capacity*sizeof(SERVERENTRY*), 1);
+		newlist = mem_alloc(num_server_capacity*sizeof(SERVERENTRY*), 1);
 		memcpy(newlist, serverlist, num_servers*sizeof(SERVERENTRY*));
 		mem_free(serverlist);
 		serverlist = newlist;
@@ -314,6 +315,8 @@ void client_serverbrowse_refresh(int lan)
 
 static void client_serverbrowse_request(SERVERENTRY *entry)
 {
+	NETPACKET p;
+
 	if(config.debug)
 	{
 		dbg_msg("client", "requesting server info from %d.%d.%d.%d:%d",
@@ -321,7 +324,6 @@ static void client_serverbrowse_request(SERVERENTRY *entry)
 			entry->addr.ip[3], entry->addr.port);
 	}
 	
-	NETPACKET p;
 	p.client_id = -1;
 	p.address = entry->addr;
 	p.flags = PACKETFLAG_CONNLESS;
@@ -336,14 +338,13 @@ void client_serverbrowse_update()
 	int64 timeout = time_freq();
 	int64 now = time_get();
 	int count;
-	
 	SERVERENTRY *entry, *next;
 	
 	/* do timeouts */
 	entry = first_req_server;
 	while(1)
 	{
-		if(!entry) // no more entries
+		if(!entry) /* no more entries */
 			break;
 			
 		next = entry->next_req;
@@ -363,10 +364,11 @@ void client_serverbrowse_update()
 	count = 0;
 	while(1)
 	{
-		if(!entry) // no more entries
+		if(!entry) /* no more entries */
 			break;
-			
-		if(count == config.b_max_requests) // no more then 10 concurrent requests
+		
+		/* no more then 10 concurrent requests */
+		if(count == config.b_max_requests)
 			break;
 			
 		if(entry->request_time == 0)

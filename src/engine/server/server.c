@@ -58,7 +58,7 @@ enum
 {
 	SRVCLIENT_STATE_EMPTY = 0,
 	SRVCLIENT_STATE_CONNECTING = 1,
-	SRVCLIENT_STATE_INGAME = 2,
+	SRVCLIENT_STATE_INGAME = 2
 };
 
 typedef struct 
@@ -110,6 +110,7 @@ static void snap_init_id()
 
 int snap_new_id()
 {
+	int id;
 	dbg_assert(snap_id_inited == 1, "requesting id too soon");
 	
 	/* process timed ids */
@@ -130,7 +131,7 @@ int snap_new_id()
 		snap_id_usage--;
 	}
 	
-	int id = snap_first_free_id;
+	id = snap_first_free_id;
 	dbg_assert(id != -1, "id error");
 	snap_first_free_id = snap_ids[snap_first_free_id].next;
 	snap_ids[id].state = 1;
@@ -254,12 +255,22 @@ static void server_do_snap()
 			char data[MAX_SNAPSHOT_SIZE];
 			char deltadata[MAX_SNAPSHOT_SIZE];
 			char compdata[MAX_SNAPSHOT_SIZE];
+			int snapshot_size;
+			int crc;
+			static SNAPSHOT emptysnap;
+			SNAPSHOT *deltashot = &emptysnap;
+			int deltashot_size;
+			int delta_tick = -1;
+			int input_predtick = -1;
+			int64 timeleft = 0;
+			int deltasize;
+
 			snapbuild_init(&builder);
 			mods_snap(i);
 
 			/* finish snapshot */
-			int snapshot_size = snapbuild_finish(&builder, data);
-			int crc = snapshot_crc((SNAPSHOT*)data);
+			snapshot_size = snapbuild_finish(&builder, data);
+			crc = snapshot_crc((SNAPSHOT*)data);
 
 			/* remove old snapshos */
 			/* keep 1 seconds worth of snapshots */
@@ -269,21 +280,15 @@ static void server_do_snap()
 			snapstorage_add(&clients[i].snapshots, current_tick, time_get(), snapshot_size, data);
 			
 			/* find snapshot that we can preform delta against */
-			static SNAPSHOT emptysnap;
 			emptysnap.data_size = 0;
 			emptysnap.num_items = 0;
 			
-			SNAPSHOT *deltashot = &emptysnap;
-			int deltashot_size;
-			int delta_tick = -1;
 			{
 				deltashot_size = snapstorage_get(&clients[i].snapshots, clients[i].last_acked_snapshot, 0, &deltashot);
 				if(deltashot_size >= 0)
 					delta_tick = clients[i].last_acked_snapshot;
 			}
 			
-			int input_predtick = -1;
-			int64 timeleft = 0;
 			for(k = 0; k < 200; k++) /* TODO: do this better */
 			{
 				if(clients[i].inputs[k].game_tick == current_tick)
@@ -295,21 +300,20 @@ static void server_do_snap()
 			}
 			
 			/* create delta */
-			int deltasize = snapshot_create_delta(deltashot, (SNAPSHOT*)data, deltadata);
+			deltasize = snapshot_create_delta(deltashot, (SNAPSHOT*)data, deltadata);
 			
 			if(deltasize)
 			{
 				/* compress it */
 				unsigned char intdata[MAX_SNAPSHOT_SIZE];
 				int intsize = intpack_compress(deltadata, deltasize, intdata);
-				
-				int compsize = zerobit_compress(intdata, intsize, compdata);
-				snapshot_size = compsize;
-
+				int snapshot_size = zerobit_compress(intdata, intsize, compdata);
 				const int max_size = MAX_SNAPSHOT_PACKSIZE;
 				int numpackets = (snapshot_size+max_size-1)/max_size;
-				(void)numpackets;
 				int n, left;
+
+				(void)numpackets;
+
 				for(n = 0, left = snapshot_size; left; n++)
 				{
 					int chunk = left < max_size ? left : max_size;
@@ -406,6 +410,8 @@ static void server_process_client_packet(NETPACKET *packet)
 		if(msg == NETMSG_INFO)
 		{
 			char version[64];
+			const char *password;
+			const char *skin;
 			strncpy(version, msg_unpack_string(), 64);
 			if(strcmp(version, mods_net_version()) != 0)
 			{
@@ -418,8 +424,8 @@ static void server_process_client_packet(NETPACKET *packet)
 			
 			strncpy(clients[cid].name, msg_unpack_string(), MAX_NAME_LENGTH);
 			strncpy(clients[cid].clan, msg_unpack_string(), MAX_CLANNAME_LENGTH);
-			const char *password = msg_unpack_string();
-			const char *skin = msg_unpack_string();
+			password = msg_unpack_string();
+			skin = msg_unpack_string();
 			(void)password; /* ignore these variables */
 			(void)skin;
 			server_send_map(cid);
@@ -435,16 +441,18 @@ static void server_process_client_packet(NETPACKET *packet)
 		}
 		else if(msg == NETMSG_INPUT)
 		{
-			clients[cid].last_acked_snapshot = msg_unpack_int();
+			int tick, size, i;
+			CLIENT_INPUT *input;
 			int64 tagtime;
+
+			clients[cid].last_acked_snapshot = msg_unpack_int();
 			if(snapstorage_get(&clients[cid].snapshots, clients[cid].last_acked_snapshot, &tagtime, 0) >= 0)
 				clients[cid].latency = (int)(((time_get()-tagtime)*1000)/time_freq());
 			
-			int tick = msg_unpack_int();
-			int size = msg_unpack_int();
-			int i;
+			tick = msg_unpack_int();
+			size = msg_unpack_int();
 			
-			CLIENT_INPUT *input = &clients[cid].inputs[clients[cid].current_input];
+			input = &clients[cid].inputs[clients[cid].current_input];
 			input->timeleft = server_tick_start_time(tick)-time_get();
 			input->pred_tick = tick;
 			
@@ -543,10 +551,11 @@ static void server_send_fwcheckresponse(NETADDR4 *addr)
 
 static void server_pump_network()
 {
+	NETPACKET packet;
+
 	netserver_update(net);
 	
 	/* process packets */
-	NETPACKET packet;
 	while(netserver_recv(net, &packet))
 	{
 		if(packet.client_id == -1)
@@ -597,6 +606,8 @@ static int server_load_map(const char *mapname)
 
 static int server_run()
 {
+	NETADDR4 bindaddr;
+
 	net_init(); /* For Windows compatibility. */
 	
 	snap_init_id();
@@ -609,8 +620,6 @@ static int server_run()
 	}
 	
 	/* start server */
-	NETADDR4 bindaddr;
-
 	if(strlen(config.sv_bindaddr) && net_host_lookup(config.sv_bindaddr, config.sv_port, &bindaddr) != 0)
 	{
 		/* sweet! */
@@ -641,130 +650,132 @@ static int server_run()
 	mods_init();
 	dbg_msg("server", "version %s", mods_net_version());
 
-	int64 time_per_heartbeat = time_freq() * 30;
-	lastheartbeat = 0;
-
-	int64 reporttime = time_get();
-	int reportinterval = 3;
-
-	int64 simulationtime = 0;
-	int64 snaptime = 0;
-	int64 networktime = 0;
-	int64 totaltime = 0;
-	
-	game_start_time = time_get();
-
-	if(config.debug)
-		dbg_msg("server", "baseline memory usage %dk", mem_allocated()/1024);
-
-	while(1)
+	/* start game */
 	{
-		/* load new map TODO: don't poll this */
-		if(strcmp(config.sv_map, current_map) != 0)
-		{
-			/* load map */
-			if(server_load_map(config.sv_map))
-			{
-				int c;
-				
-				/* new map loaded */
-				mods_shutdown();
-				
-				for(c = 0; c < MAX_CLIENTS; c++)
-				{
-					if(clients[c].state == SRVCLIENT_STATE_EMPTY)
-						continue;
-					
-					server_send_map(c);
-					clients[c].state = SRVCLIENT_STATE_CONNECTING;
-					clients[c].last_acked_snapshot = -1;
-					snapstorage_purge_all(&clients[c].snapshots);
-				}
-				
-				mods_init();
-				game_start_time = time_get();
-				current_tick = 0;
-			}
-			else
-			{
-				dbg_msg("server", "failed to load map. mapname='%s'", config.sv_map);
-				config_set_sv_map(&config, current_map);
-			}
-		}
+		int64 time_per_heartbeat = time_freq() * 30;
+		int64 reporttime = time_get();
+		int reportinterval = 3;
+	
+		int64 simulationtime = 0;
+		int64 snaptime = 0;
+		int64 networktime = 0;
+		int64 totaltime = 0;
 		
-		int64 t = time_get();
-		if(t > server_tick_start_time(current_tick+1))
+		lastheartbeat = 0;
+		game_start_time = time_get();
+	
+		if(config.debug)
+			dbg_msg("server", "baseline memory usage %dk", mem_allocated()/1024);
+
+		while(1)
 		{
-			/* apply new input */
+			int64 t = time_get();
+			/* load new map TODO: don't poll this */
+			if(strcmp(config.sv_map, current_map) != 0)
 			{
-				int c, i;
-				for(c = 0; c < MAX_CLIENTS; c++)
+				/* load map */
+				if(server_load_map(config.sv_map))
 				{
-					if(clients[c].state == SRVCLIENT_STATE_EMPTY)
-						continue;
-					for(i = 0; i < 200; i++)
+					int c;
+					
+					/* new map loaded */
+					mods_shutdown();
+					
+					for(c = 0; c < MAX_CLIENTS; c++)
 					{
-						if(clients[c].inputs[i].game_tick == server_tick())
-						{
-							mods_client_input(c, clients[c].inputs[i].data);
-							break;
-						}
+						if(clients[c].state == SRVCLIENT_STATE_EMPTY)
+							continue;
+						
+						server_send_map(c);
+						clients[c].state = SRVCLIENT_STATE_CONNECTING;
+						clients[c].last_acked_snapshot = -1;
+						snapstorage_purge_all(&clients[c].snapshots);
 					}
+					
+					mods_init();
+					game_start_time = time_get();
+					current_tick = 0;
+				}
+				else
+				{
+					dbg_msg("server", "failed to load map. mapname='%s'", config.sv_map);
+					config_set_sv_map(&config, current_map);
 				}
 			}
 			
-			/* progress game */
+			if(t > server_tick_start_time(current_tick+1))
+			{
+				/* apply new input */
+				{
+					int c, i;
+					for(c = 0; c < MAX_CLIENTS; c++)
+					{
+						if(clients[c].state == SRVCLIENT_STATE_EMPTY)
+							continue;
+						for(i = 0; i < 200; i++)
+						{
+							if(clients[c].inputs[i].game_tick == server_tick())
+							{
+								mods_client_input(c, clients[c].inputs[i].data);
+								break;
+							}
+						}
+					}
+				}
+				
+				/* progress game */
+				{
+					int64 start = time_get();
+					server_do_tick();
+					simulationtime += time_get()-start;
+				}
+	
+				/* snap game */
+				{
+					int64 start = time_get();
+					server_do_snap();
+					snaptime += time_get()-start;
+				}
+			}
+	
+			if(config.sv_sendheartbeats)
+			{
+				if (t > lastheartbeat+time_per_heartbeat)
+				{
+					server_send_heartbeat();
+					lastheartbeat = t+time_per_heartbeat;
+				}
+			}
+	
 			{
 				int64 start = time_get();
-				server_do_tick();
-				simulationtime += time_get()-start;
+				server_pump_network();
+				networktime += time_get()-start;
 			}
-
-			/* snap game */
+	
+			if(reporttime < time_get())
 			{
-				int64 start = time_get();
-				server_do_snap();
-				snaptime += time_get()-start;
+				if(config.debug)
+				{
+					dbg_msg("server", "sim=%.02fms snap=%.02fms net=%.02fms total=%.02fms load=%.02f%% ids=%d/%d",
+						(simulationtime/reportinterval)/(double)time_freq()*1000,
+						(snaptime/reportinterval)/(double)time_freq()*1000,
+						(networktime/reportinterval)/(double)time_freq()*1000,
+						(totaltime/reportinterval)/(double)time_freq()*1000,
+						(totaltime)/reportinterval/(double)time_freq()*100.0f,
+						snap_id_inusage, snap_id_usage);
+				}
+	
+				simulationtime = 0;
+				snaptime = 0;
+				networktime = 0;
+				totaltime = 0;
+	
+				reporttime += time_freq()*reportinterval;
 			}
+			totaltime += time_get()-t;
+			thread_sleep(1);
 		}
-
-		if(config.sv_sendheartbeats)
-		{
-			if (t > lastheartbeat+time_per_heartbeat)
-			{
-				server_send_heartbeat();
-				lastheartbeat = t+time_per_heartbeat;
-			}
-		}
-
-		{
-			int64 start = time_get();
-			server_pump_network();
-			networktime += time_get()-start;
-		}
-
-		if(reporttime < time_get())
-		{
-			if(config.debug)
-			{
-				dbg_msg("server", "sim=%.02fms snap=%.02fms net=%.02fms total=%.02fms load=%.02f%% ids=%d/%d",
-					(simulationtime/reportinterval)/(double)time_freq()*1000,
-					(snaptime/reportinterval)/(double)time_freq()*1000,
-					(networktime/reportinterval)/(double)time_freq()*1000,
-					(totaltime/reportinterval)/(double)time_freq()*1000,
-					(totaltime)/reportinterval/(double)time_freq()*100.0f,
-					snap_id_inusage, snap_id_usage);
-			}
-
-			simulationtime = 0;
-			snaptime = 0;
-			networktime = 0;
-			totaltime = 0;
-
-			reporttime += time_freq()*reportinterval;
-		}
-		totaltime += time_get()-t;
-		thread_sleep(1);
 	}
 
 	mods_shutdown();
@@ -776,17 +787,17 @@ static int server_run()
 
 int main(int argc, char **argv)
 {
-	dbg_msg("server", "starting...");
-
-	config_reset();
-
 #ifdef CONF_PLATFORM_MACOSX
 	const char *config_filename = "~/.teewars";
 #else
 	const char *config_filename = "default.cfg";
 #endif
-
 	int i;
+
+	dbg_msg("server", "starting...");
+
+	config_reset();
+
 	for(i = 1; i < argc; i++)
 	{
 		if(argv[i][0] == '-' && argv[i][1] == 'f' && argv[i][2] == 0 && argc - i > 1)
