@@ -428,6 +428,14 @@ static void server_process_client_packet(NETPACKET *packet)
 			skin = msg_unpack_string();
 			(void)password; /* ignore these variables */
 			(void)skin;
+			
+			if(config.password[0] != 0 && strcmp(config.password, password) != 0)
+			{
+				/* wrong password */
+				netserver_drop(net, cid, "wrong password");
+				return;
+			}
+			
 			server_send_map(cid);
 		}
 		else if(msg == NETMSG_ENTERGAME)
