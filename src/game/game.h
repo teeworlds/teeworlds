@@ -12,6 +12,11 @@ inline vec2 get_direction(int angle)
 	return vec2(cosf(a), sinf(a));
 }
 
+inline vec2 get_dir(float a)
+{
+	return vec2(cosf(a), sinf(a));
+}
+
 inline float get_angle(vec2 dir)
 {
 	float a = atan(dir.y/dir.x);

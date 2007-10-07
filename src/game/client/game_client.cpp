@@ -4,6 +4,7 @@
 #include <string.h>
 
 extern "C" {
+	#include <engine/external/glfw/include/GL/glfw.h> // DEBUG TESTING
 	#include <engine/client/ui.h>
 	#include <engine/config.h>
 };
@@ -1673,8 +1674,123 @@ void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, c
 	}
 }
 
+void mapscreen_to_world(float center_x, float center_y, float zoom)
+{
+	const float default_zoom = 3.0f;
+	float width = 400*default_zoom*zoom;
+	float height = 300*default_zoom*zoom;
+	gfx_mapscreen(center_x-width/2, center_y-height/2, center_x+width/2, center_y+height/2);
+}
+
+// renders the complete game world
+void render_world(float center_x, float center_y, float zoom)
+{
+	const float default_zoom = 3.0f;
+	float width = 400*default_zoom*zoom;
+	float height = 300*default_zoom*zoom;
+	
+	gfx_mapscreen(center_x-width/2, center_y-height/2, center_x+width/2, center_y+height/2);
+	
+	// draw background
+
+	// draw the sun
+	if(config.gfx_high_detail)
+	{
+		render_sun(20+center_x*0.6f, 20+center_y*0.6f);
+		
+		static vec2 cloud_pos[6] = {vec2(-500,0),vec2(-500,200),vec2(-500,400)};
+		static float cloud_speed[6] = {30, 20, 10};
+		static int cloud_sprites[6] = {SPRITE_CLOUD1, SPRITE_CLOUD2, SPRITE_CLOUD3};
+		
+		gfx_texture_set(data->images[IMAGE_CLOUDS].id);
+		gfx_quads_begin();
+		for(int i = 0; i < 3; i++)
+		{
+			float parallax_amount = 0.55f;
+			select_sprite(cloud_sprites[i]);
+			draw_sprite((cloud_pos[i].x+fmod(client_localtime()*cloud_speed[i]+i*100.0f, 3000.0f))+center_x*parallax_amount,
+				cloud_pos[i].y+center_y*parallax_amount, 300);
+		}
+		gfx_quads_end();
+
+		
+		// draw backdrop
+		gfx_texture_set(data->images[IMAGE_BACKDROP].id);
+		gfx_quads_begin();
+		float parallax_amount = 0.25f;
+		for(int x = -1; x < 3; x++)
+			gfx_quads_drawTL(1024*x+center_x*parallax_amount, (center_y)*parallax_amount+150+512, 1024, 512);
+		gfx_quads_end();
+	}
+	
+	// render background tilemaps
+	tilemap_render(32.0f, 0);
+	
+	// render items
+	{
+		int num = snap_num_items(SNAP_CURRENT);
+		for(int i = 0; i < num; i++)
+		{
+			SNAP_ITEM item;
+			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+			
+			if(item.type == OBJTYPE_PROJECTILE)
+			{
+				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+				if(prev)
+					render_projectile((const obj_projectile *)prev, (const obj_projectile *)data, item.id);
+			}
+			else if(item.type == OBJTYPE_POWERUP)
+			{
+				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+				if(prev)
+					render_powerup((const obj_powerup *)prev, (const obj_powerup *)data);
+			}
+			else if(item.type == OBJTYPE_FLAG)
+			{
+				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+				if (prev)
+					render_flag((const obj_flag *)prev, (const obj_flag *)data);
+			}
+		}
+	}
+
+	// render players above all	
+	{
+		int num = snap_num_items(SNAP_CURRENT);
+		for(int i = 0; i < num; i++)
+		{
+			SNAP_ITEM item;
+			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+			
+			if(item.type == OBJTYPE_PLAYER)
+			{
+				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+				if(prev)
+				{
+					client_datas[((const obj_player *)data)->clientid].team = ((const obj_player *)data)->team;
+					render_player((const obj_player *)prev, (const obj_player *)data);
+				}
+			}
+		}	
+	}
+
+	// render particles
+	temp_system.update(client_frametime());
+	temp_system.render();
+
+	// render foreground tilemaps
+	tilemap_render(32.0f, 1);
+	
+	// render damage indications
+	damageind.render();	
+}
+
 void render_game()
 {	
+	float width = 400*3.0f;
+	float height = 300*3.0f;
+		
 	animstate idlestate;
 	anim_eval(&data->animations[ANIM_BASE], 0, &idlestate);
 	anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);	
@@ -1687,6 +1803,7 @@ void render_game()
 			menu_active = !menu_active;
 	}
 	
+	// handle chat input
 	if (!menu_active)
 	{
 		if(chat_mode != CHATMODE_NONE)
@@ -1696,14 +1813,16 @@ void render_game()
 				// send message
 				if(chat_input_len)
 				{
-					if(chat_input[0] == '/')
+					if(chat_input[0] == '/') // check for local command
 						config_set(&chat_input[1]);
 					else
 					{
+						// check for remote command
 						if(inp_key_pressed(KEY_RSHIFT) || inp_key_pressed(KEY_LSHIFT))
 							client_rcon(chat_input);
 						else
 						{
+							// send chat message
 							msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
 							if(chat_mode == CHATMODE_ALL)
 								msg_pack_int(0);
@@ -1762,9 +1881,7 @@ void render_game()
 	}
 	
 	if (!menu_active)
-	{
 		inp_clear();
-	}
 	
 	// fetch new input
 	if(!menu_active && (!emoticon_selector_active || emoticon_selector_inactive_override))
@@ -1865,20 +1982,6 @@ void render_game()
 	if(must_process_events)
 		process_events(SNAP_PREV);
 
-	// pseudo format
-	float zoom = 3.0f;
-	
-	if(config.debug)
-	{
-		if(chat_mode != CHATMODE_NONE && inp_key_pressed(KEY_F8))
-			zoom = 1.0f;
-	}
-	
-	float width = 400*zoom;
-	float height = 300*zoom;
-	float screen_x = 0;
-	float screen_y = 0;
-	
 	// center at char but can be moved when mouse is far away
 	float offx = 0, offy = 0;
 	if (config.dynamic_camera)
@@ -1891,105 +1994,98 @@ void render_game()
 		offx = offx*2/3;
 		offy = offy*2/3;
 	}
-		
-	screen_x = local_player_pos.x+offx;
-	screen_y = local_player_pos.y+offy;
 	
-	gfx_mapscreen(screen_x-width/2, screen_y-height/2, screen_x+width/2, screen_y+height/2);
-	
-	// draw background
+	// render the world
 	gfx_clear(0.65f,0.78f,0.9f);
+	render_world(local_player_pos.x+offx, local_player_pos.y+offy, 1.0f);
 
-	// draw the sun
-	if(config.gfx_high_detail)
+	// DEBUG TESTING
+	if(inp_key_pressed('F'))
 	{
-		render_sun(20+screen_x*0.6f, 20+screen_y*0.6f);
+		gfx_clear_mask(0);
+
+		gfx_texture_set(-1);
+		gfx_blend_normal();
 		
-		static vec2 cloud_pos[6] = {vec2(-500,0),vec2(-500,200),vec2(-500,400)};
-		static float cloud_speed[6] = {30, 20, 10};
-		static int cloud_sprites[6] = {SPRITE_CLOUD1, SPRITE_CLOUD2, SPRITE_CLOUD3};
+		gfx_mask_op(MASK_NONE, 1);
 		
-		gfx_texture_set(data->images[IMAGE_CLOUDS].id);
 		gfx_quads_begin();
-		for(int i = 0; i < 3; i++)
-		{
-			float parallax_amount = 0.55f;
-			select_sprite(cloud_sprites[i]);
-			draw_sprite((cloud_pos[i].x+fmod(client_localtime()*cloud_speed[i]+i*100.0f, 3000.0f))+screen_x*parallax_amount,
-				cloud_pos[i].y+screen_y*parallax_amount, 300);
-		}
-		gfx_quads_end();
-
+		gfx_setcolor(0.65f,0.78f,0.9f,1.0f);
 		
-		// draw backdrop
-		gfx_texture_set(data->images[IMAGE_BACKDROP].id);
-		gfx_quads_begin();
-		float parallax_amount = 0.25f;
-		for(int x = -1; x < 3; x++)
-			gfx_quads_drawTL(1024*x+screen_x*parallax_amount, (screen_y)*parallax_amount+150+512, 1024, 512);
+		float fov = pi/4.0f;
+		float fade = 0.7f;
+		
+		
+		float a = get_angle(normalize(vec2(mouse_pos.x, mouse_pos.y)));
+		vec2 d = get_dir(a);
+		vec2 d0 = get_dir(a-fov/2.0f);
+		vec2 d1 = get_dir(a+fov/2.0f);
+
+		vec2 cd0 = get_dir(a-(fov*fade)/2.0f); // center direction
+		vec2 cd1 = get_dir(a+(fov*fade)/2.0f);
+		
+		vec2 p0n = local_player_pos + d0*32.0f;
+		vec2 p1n = local_player_pos + d1*32.0f;
+		vec2 p0f = local_player_pos + d0*1000.0f;
+		vec2 p1f = local_player_pos + d1*1000.0f;
+
+		vec2 cn = local_player_pos + d*32.0f;
+		vec2 cf = local_player_pos + d*1000.0f;
+
+		vec2 cp0n = local_player_pos + cd0*32.0f;
+		vec2 cp0f = local_player_pos + cd0*1000.0f;
+		vec2 cp1n = local_player_pos + cd1*32.0f;
+		vec2 cp1f = local_player_pos + cd1*1000.0f;
+
+		gfx_quads_draw_freeform(
+			p0n.x,p0n.y,
+			p1n.x,p1n.y,
+			p0f.x,p0f.y,
+			p1f.x,p1f.y);
 		gfx_quads_end();
-	}
-	
-	// render map
-	tilemap_render(32.0f, 0);
-	
-	// render items
-	{
-		int num = snap_num_items(SNAP_CURRENT);
-		for(int i = 0; i < num; i++)
-		{
-			SNAP_ITEM item;
-			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+		
+		gfx_mask_op(MASK_SET, 0);
+		
+		render_world(local_player_pos.x+offx, local_player_pos.y+offy, 2.0f);
+		
+		gfx_mask_op(MASK_NONE, 0);
+		
+		mapscreen_to_world(local_player_pos.x+offx, local_player_pos.y+offy, 1.0f);
+
+		gfx_texture_set(-1);
+		gfx_blend_normal();
+		gfx_quads_begin();
+		gfx_setcolor(0.5f,0.9f,0.5f,0.25f);
+		float r=0.5f, g=1.0f, b=0.5f;
+		
+		gfx_setcolor(r,g,b,0.1f);
+		gfx_quads_draw_freeform(
+			cn.x,cn.y,
+			cn.x,cn.y,
+			cp0f.x,cp0f.y,
+			cp1f.x,cp1f.y);
+
+		gfx_setcolorvertex(0, r, g, b, 0.1f);
+		gfx_setcolorvertex(1, 0, 0, 0, 0.9f);
+		gfx_setcolorvertex(2, r, g, b, 0.1f);
+		gfx_setcolorvertex(3, 0, 0, 0, 0.9f);
+		gfx_quads_draw_freeform(
+			cn.x,cn.y,
+			p0n.x,p0n.y,
+			cp0f.x,cp0f.y,
+			p0f.x,p0f.y);
+
+		gfx_quads_draw_freeform(
+			cn.x,cn.y,
+			p1n.x,p1n.y,
+			cp1f.x,cp1f.y,
+			p1f.x,p1f.y);
 			
-			if(item.type == OBJTYPE_PROJECTILE)
-			{
-				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-				if(prev)
-					render_projectile((const obj_projectile *)prev, (const obj_projectile *)data, item.id);
-			}
-			else if(item.type == OBJTYPE_POWERUP)
-			{
-				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-				if(prev)
-					render_powerup((const obj_powerup *)prev, (const obj_powerup *)data);
-			}
-			else if(item.type == OBJTYPE_FLAG)
-			{
-				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-				if (prev)
-					render_flag((const obj_flag *)prev, (const obj_flag *)data);
-			}
-		}
+		gfx_quads_end();
+				
+		
+		//gfx_mapscreen(0,0,400*3,300*3);
 	}
-
-	// render players above all	
-	{
-		int num = snap_num_items(SNAP_CURRENT);
-		for(int i = 0; i < num; i++)
-		{
-			SNAP_ITEM item;
-			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-			
-			if(item.type == OBJTYPE_PLAYER)
-			{
-				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-				if(prev)
-				{
-					client_datas[((const obj_player *)data)->clientid].team = ((const obj_player *)data)->team;
-					render_player((const obj_player *)prev, (const obj_player *)data);
-				}
-			}
-		}	
-	}
-
-	// render particles
-	temp_system.update(client_frametime());
-	temp_system.render();
-
-	tilemap_render(32.0f, 1);
-	
-	// render damage indications
-	damageind.render();
 	
 	if(local_player)
 	{

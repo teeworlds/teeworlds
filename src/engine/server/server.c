@@ -765,13 +765,12 @@ static int server_run()
 			{
 				if(config.debug)
 				{
-					dbg_msg("server", "sim=%.02fms snap=%.02fms net=%.02fms total=%.02fms load=%.02f%% ids=%d/%d",
+					dbg_msg("server", "sim=%.02fms snap=%.02fms net=%.02fms total=%.02fms load=%.02f%%",
 						(simulationtime/reportinterval)/(double)time_freq()*1000,
 						(snaptime/reportinterval)/(double)time_freq()*1000,
 						(networktime/reportinterval)/(double)time_freq()*1000,
 						(totaltime/reportinterval)/(double)time_freq()*1000,
-						(totaltime)/reportinterval/(double)time_freq()*100.0f,
-						snap_id_inusage, snap_id_usage);
+						(totaltime)/reportinterval/(double)time_freq()*100.0f);
 				}
 	
 				simulationtime = 0;

@@ -84,6 +84,9 @@ struct player_input
 	int blink;
 	int activeweapon;
 	int state;
+	
+	int next_weapon;
+	int prev_weapon;
 };
 
 

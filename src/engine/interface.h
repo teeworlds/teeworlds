@@ -21,6 +21,11 @@ enum
 	IMG_RGB=0,
 	IMG_RGBA=1,
 	
+	MASK_NONE=0,
+	MASK_SET,
+	MASK_ZERO,
+
+	
 	CLIENTSTATE_OFFLINE=0,
 	CLIENTSTATE_CONNECTING,
 	CLIENTSTATE_LOADING,
@@ -825,6 +830,10 @@ void gfx_screenshot();
 void gfx_lines_begin();
 void gfx_lines_draw(float x0, float y0, float x1, float y1);
 void gfx_lines_end();
+
+void gfx_mask_op(int mask, int write);
+void gfx_clear_mask(int fill);
+
 
 /* server snap id */
 int snap_new_id();

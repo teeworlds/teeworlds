@@ -146,13 +146,16 @@ int gfx_init()
 	}
 	else
 	{
-		int result = glfwOpenWindow(screen_width, screen_height, 0, 0, 0, 0, 0, 0, GLFW_WINDOW);
+		int result = glfwOpenWindow(screen_width, screen_height, 0, 0, 0, 0, 24, 0, GLFW_WINDOW);
 		if(result != GL_TRUE)
 		{
 			dbg_msg("game", "failed to create gl context");
 			return 0;
 		}
 	}
+	
+	glGetIntegerv(GL_DEPTH_BITS, &i);
+	dbg_msg("gfx", "depthbits = %d", i);
 	
 	glfwSetWindowTitle("Teewars");
 	
@@ -176,8 +179,11 @@ int gfx_init()
 
 	/* set some default settings */	
 	glEnable(GL_BLEND);
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+	gfx_mask_op(MASK_NONE, 0);
 	
 	/* Set all z to -5.0f */
 	for (i = 0; i < vertex_buffer_size; i++)
@@ -204,6 +210,36 @@ int gfx_init()
 	return 1;
 }
 
+void gfx_clear_mask(int fill)
+{
+	/*if(fill)
+		glClearDepth(0.0f);
+	else*/
+	
+	int i;
+	glGetIntegerv(GL_DEPTH_WRITEMASK, &i);
+	glDepthMask(GL_TRUE);
+	glClearDepth(0.0f);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	glDepthMask(i);
+}
+
+void gfx_mask_op(int mask, int write)
+{
+	glEnable(GL_DEPTH_TEST);
+	
+	if(write)
+		glDepthMask(GL_TRUE);
+	else
+		glDepthMask(GL_FALSE);
+	
+	if(mask == MASK_NONE)
+		glDepthFunc(GL_ALWAYS);
+	else if(mask == MASK_SET)
+		glDepthFunc(GL_LEQUAL);
+	else if(mask == MASK_ZERO)
+		glDepthFunc(GL_NOTEQUAL);
+}
 
 int gfx_window_active()
 {
@@ -689,13 +725,13 @@ void gfx_quads_draw_freeform(
 
 	vertices[num_vertices + 2].pos.x = x3;
 	vertices[num_vertices + 2].pos.y = y3;
-	vertices[num_vertices + 2].tex = texture[2];
-	vertices[num_vertices + 2].color = color[2];
+	vertices[num_vertices + 2].tex = texture[3];
+	vertices[num_vertices + 2].color = color[3];
 
 	vertices[num_vertices + 3].pos.x = x2;
 	vertices[num_vertices + 3].pos.y = y2;
-	vertices[num_vertices + 3].tex = texture[3];
-	vertices[num_vertices + 3].color = color[3];
+	vertices[num_vertices + 3].tex = texture[2];
+	vertices[num_vertices + 3].color = color[2];
 	
 	draw_quad();
 }
