@@ -188,7 +188,11 @@ function build(settings)
 	if family == "windows" then
 		engine_settings.cc.flags = "/wd4244"
 	else
-		engine_settings.cc.flags = "-Wall -pedantic-errors"
+   		if platform == "macosx" then
+			engine_settings.cc.flags = "-Wall"
+		else
+			engine_settings.cc.flags = "-Wall -pedantic-errors"
+		end
 		engine_settings.linker.flags = ""
 	end
 
