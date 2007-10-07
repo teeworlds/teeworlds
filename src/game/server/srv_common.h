@@ -49,7 +49,7 @@ public:
 	enum
 	{
 		FLAG_DESTROY=0x00000001,
-		FLAG_ALIVE=0x00000002,
+		FLAG_PHYSICS=0x00000002,
 	};
 	
 	entity(int objtype);
@@ -272,6 +272,8 @@ public:
 		
 	void try_respawn();
 	void respawn();
+	
+	void set_team(int team);
 
 	bool is_grounded();
 	

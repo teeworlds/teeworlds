@@ -75,7 +75,7 @@ entity::entity(int objtype)
 {
 	this->objtype = objtype;
 	pos = vec2(0,0);
-	flags = FLAG_ALIVE;
+	flags = FLAG_PHYSICS;
 	proximity_radius = 0;
 	
 	id = snap_new_id();
@@ -108,7 +108,7 @@ int game_world::find_entities(vec2 pos, float radius, entity **ents, int max)
 	int num = 0;
 	for(entity *ent = first_entity; ent; ent = ent->next_entity)
 	{
-		if(!(ent->flags&entity::FLAG_ALIVE))
+		if(!(ent->flags&entity::FLAG_PHYSICS))
 			continue;
 			
 		if(distance(ent->pos, pos) < radius+ent->proximity_radius)
@@ -130,7 +130,7 @@ int game_world::find_entities(vec2 pos, float radius, entity **ents, int max, co
 	{
 		for(entity *ent = first_entity_types[types[t]]; ent; ent = ent->next_type_entity)
 		{
-			if(!(ent->flags&entity::FLAG_ALIVE))
+			if(!(ent->flags&entity::FLAG_PHYSICS))
 				continue;
 			
 			if(distance(ent->pos, pos) < radius+ent->proximity_radius)
@@ -354,7 +354,7 @@ void player::init()
 	name[3] = 'b';
 	name[4] = 0;
 	client_id = -1;
-	team = 0;
+	team = -1; // -1 == spectator
 	extrapowerflags = 0;
 	ninjaactivationtick = 0;
 
@@ -403,6 +403,22 @@ void player::respawn()
 {
 	spawning = true;
 }
+
+
+void player::set_team(int new_team)
+{
+	team = new_team;
+	die(client_id, -1);
+	score--;
+	
+	dbg_msg("game", "cid=%d team=%d", client_id, team);
+	
+	if(team == -1)
+		clear_flag(FLAG_PHYSICS);
+	else
+		set_flag(FLAG_PHYSICS);
+}
+
 
 bool try_spawntype(int t, vec2 *pos)
 {
@@ -459,7 +475,7 @@ void player::try_respawn()
 	armor = 0;
 	jumped = 0;
 	dead = false;
-	set_flag(entity::FLAG_ALIVE);
+	set_flag(entity::FLAG_PHYSICS);
 	state = STATE_PLAYING;
 	
 	core.hook_state = HOOK_IDLE;
@@ -810,6 +826,13 @@ void player::tick()
 		}
 	}
 	
+	if(team == -1)
+	{
+		// spectator
+		return;
+	}
+	
+	
 	if(spawning)
 		try_respawn();
 
@@ -884,7 +907,7 @@ void player::die(int killer, int weapon)
 	// set dead state
 	dead = true;
 	die_tick = server_tick();
-	clear_flag(entity::FLAG_ALIVE);
+	clear_flag(FLAG_PHYSICS);
 	create_death(pos);
 }
 
@@ -1408,12 +1431,13 @@ void mods_client_enter(int client_id)
 
 	dbg_msg("game", "join player='%d:%s'", client_id, players[client_id].name);
 
-	if (gameobj->gametype == GAMETYPE_TDM)
-	{
-		// Check which team the player should be on
+	// Check which team the player should be on
+	if(gameobj->gametype == GAMETYPE_DM)
+		players[client_id].team = 0;
+	else
 		players[client_id].team = gameobj->getteam(client_id);
-	}
-	
+
+	//	
 	msg_pack_start(MSG_SETNAME, MSGFLAG_VITAL);
 	msg_pack_int(client_id);
 	msg_pack_string(players[client_id].name, 64);
@@ -1462,12 +1486,10 @@ void mods_message(int msg, int client_id)
 			team = -1;
 		send_chat(client_id, team, text);
 	}
-	else if (msg == MSG_SWITCHTEAM)
+	else if (msg == MSG_SETTEAM)
 	{
 		// Switch team on given client and kill/respawn him
-		players[client_id].team = !players[client_id].team;
-		players[client_id].die(client_id, -1);
-		players[client_id].score--;
+		players[client_id].set_team(msg_unpack_int());
 	}
 	else if (msg == MSG_CHANGENAME)
 	{

@@ -1790,6 +1790,41 @@ void render_game()
 {	
 	float width = 400*3.0f;
 	float height = 300*3.0f;
+	
+	bool spectate = false;
+		
+	// setup world view
+	obj_game *gameobj = 0;
+	{
+		// 1. fetch local player
+		// 2. set him to the center
+		int num = snap_num_items(SNAP_CURRENT);
+		for(int i = 0; i < num; i++)
+		{
+			SNAP_ITEM item;
+			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+			
+			if(item.type == OBJTYPE_PLAYER)
+			{
+				obj_player *player = (obj_player *)data;
+				if(player->local)
+				{
+					local_player = player;
+					local_player_pos = vec2(player->x, player->y);
+					
+					const void *p = snap_find_item(SNAP_PREV, item.type, item.id);
+					if(p)
+						local_player_pos = mix(vec2(((obj_player *)p)->x, ((obj_player *)p)->y), local_player_pos, client_intratick());
+				}
+			}
+			else if(item.type == OBJTYPE_GAME)
+				gameobj = (obj_game *)data;
+		}
+	}
+	
+	local_player_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_intrapredtick());
+	if(local_player && local_player->team == -1)
+		spectate = true;
 		
 	animstate idlestate;
 	anim_eval(&data->animations[ANIM_BASE], 0, &idlestate);
@@ -1889,9 +1924,12 @@ void render_game()
 		int x, y;
 		inp_mouse_relative(&x, &y);
 		mouse_pos += vec2(x, y);
-		float l = length(mouse_pos);
-		if(l > 600.0f)
-			mouse_pos = normalize(mouse_pos)*600.0f;
+		if(!spectate)
+		{
+			float l = length(mouse_pos);
+			if(l > 600.0f)
+				mouse_pos = normalize(mouse_pos)*600.0f;
+		}
 	}
 	
 	// snap input
@@ -1946,37 +1984,6 @@ void render_game()
 
 		snap_input(&input, sizeof(input));
 	}
-
-	// setup world view
-	obj_game *gameobj = 0;
-	{
-		// 1. fetch local player
-		// 2. set him to the center
-		int num = snap_num_items(SNAP_CURRENT);
-		for(int i = 0; i < num; i++)
-		{
-			SNAP_ITEM item;
-			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-			
-			if(item.type == OBJTYPE_PLAYER)
-			{
-				obj_player *player = (obj_player *)data;
-				if(player->local)
-				{
-					local_player = player;
-					local_player_pos = vec2(player->x, player->y);
-
-					const void *p = snap_find_item(SNAP_PREV, item.type, item.id);
-					if(p)
-						local_player_pos = mix(vec2(((obj_player *)p)->x, ((obj_player *)p)->y), local_player_pos, client_intratick());
-				}
-			}
-			else if(item.type == OBJTYPE_GAME)
-				gameobj = (obj_game *)data;
-		}
-	}
-	
-	local_player_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_intrapredtick());
 	
 	// everything updated, do events
 	if(must_process_events)
@@ -1997,7 +2004,10 @@ void render_game()
 	
 	// render the world
 	gfx_clear(0.65f,0.78f,0.9f);
-	render_world(local_player_pos.x+offx, local_player_pos.y+offy, 1.0f);
+	if(spectate)
+		render_world(mouse_pos.x, mouse_pos.y, 1.0f);
+	else
+		render_world(local_player_pos.x+offx, local_player_pos.y+offy, 1.0f);
 
 	// DEBUG TESTING
 	if(inp_key_pressed('F'))
@@ -2088,7 +2098,7 @@ void render_game()
 		//gfx_mapscreen(0,0,400*3,300*3);
 	}
 	
-	if(local_player)
+	if(local_player && !spectate)
 	{
 		gfx_texture_set(data->images[IMAGE_GAME].id);
 		gfx_quads_begin();
@@ -2336,7 +2346,7 @@ void render_game()
 	
 	// render score board
 	if(inp_key_pressed(KEY_TAB) || // user requested
-		(local_player && local_player->health == -1) || // player dead
+		(!spectate && (local_player && local_player->health == -1)) || // not spectating and is dead
 		(gameobj && gameobj->game_over) // game over
 		)
 	{
@@ -2372,6 +2382,16 @@ extern "C" void modc_render()
 		}
 		
 		render_game();
+		
+		// handle team switching
+		if(config.team != -10)
+		{
+			msg_pack_start(MSG_SETTEAM, MSGFLAG_VITAL);
+			msg_pack_int(config.team);
+			msg_pack_end();
+			client_send_msg();
+			config.team = -10;
+		}
 	}
 	else // if (client_state() != CLIENTSTATE_CONNECTING && client_state() != CLIENTSTATE_LOADING)
 	{
