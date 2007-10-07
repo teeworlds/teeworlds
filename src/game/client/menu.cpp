@@ -515,6 +515,16 @@ int ui_do_check_box(void *id, float x, float y, float w, float h, int value)
 	return r;
 }
 
+int ui_do_button_rect(void *id, const char *text, int checked, struct rect *r, draw_button_callback draw_func, void *extra)
+{
+    return ui_do_button(id, text, checked, r->x, r->y, r->w, r->h, draw_func, extra);
+}
+
+void ui_do_label_rect(struct rect *r, char *str, float size)
+{
+    ui_do_label(r->x + 3, r->y + r->h/2 - size/2, str, size);
+}
+
 int do_scroll_bar_horiz(void *id, float x, float y, float width, int steps, int last_index)
 {
 	int r = last_index;
@@ -698,7 +708,163 @@ const float row6_y = row5_y + 40;
 const float row7_y = row6_y + 40;
 
 static char address[128] = "localhost:8303";
-	
+
+static float colors[7][3] =
+{
+    { 0, 0, 1 },
+    { 0, 1, 0 },
+    { 0, 1, 1 },
+    { 1, 0, 0 },
+    { 1, 0, 1 },
+    { 1, 1, 0 },
+    { 1, 1, 1 },
+};
+
+static void draw_rect(struct rect *r)
+{
+    float *color = colors[rand()%7];
+    gfx_setcolor(color[0], color[1], color[2], 1);
+
+    gfx_lines_draw(r->x, r->y, r->x+r->w, r->y);
+    gfx_lines_draw(r->x+r->w, r->y, r->x+r->w, r->y+r->h);
+    gfx_lines_draw(r->x+r->w, r->y+r->h, r->x, r->y+r->h);
+    gfx_lines_draw(r->x, r->y+r->h, r->x, r->y);
+}
+
+static void draw_rects(struct rect *rects, int count)
+{
+    gfx_texture_set(-1);
+    gfx_lines_begin();
+
+    for (int i = 0; i < count; i++)
+    {
+        struct rect *r = &rects[i];
+
+        float *color = colors[i%7];
+
+        gfx_setcolor(color[0], color[1], color[2], 1);
+
+        gfx_lines_draw(r->x, r->y, r->x+r->w, r->y);
+        gfx_lines_draw(r->x+r->w, r->y, r->x+r->w, r->y+r->h);
+        gfx_lines_draw(r->x+r->w, r->y+r->h, r->x, r->y+r->h);
+        gfx_lines_draw(r->x, r->y+r->h, r->x, r->y);
+    }
+
+    gfx_lines_end();
+}
+
+static void print_rect(struct rect *r)
+{
+    printf("x: %f y: %f w: %f h: %f\n", r->x, r->y, r->w, r->h);
+}
+
+static void tab_menu_render(struct rect *r)
+{
+    static struct rect button1;
+    static struct rect button2;
+    static struct rect button3;
+    static struct rect rest1;
+    static struct rect rest2;
+    static struct rect rest3;
+
+    ui_vsplit_l(r, 160, &button1, &rest1);
+    ui_vsplit_l(&rest1, 160, &button2, &rest2);
+    ui_vsplit_l(&rest2, 160, &button3, &rest3);
+
+    if (ui_do_button_rect(&button1, "Browser", 0, &button1, draw_teewars_button, 0))
+    {
+		screen = SCREEN_MAIN;
+    }
+
+    if (ui_do_button_rect(&button2, "Settings", 0, &button2, draw_teewars_button, 0))
+    {
+        screen = SCREEN_SETTINGS_GENERAL;
+    }
+
+    ui_do_label_rect(&rest3, "Name:", 36);
+}
+
+static void ui_settings_render(struct rect *r)
+{
+    static struct rect sub_menu_selector;
+    static struct rect center;
+
+    ui_vsplit_l(r, 100, &sub_menu_selector, &center);
+
+	switch (screen)
+	{
+		/*case SCREEN_SETTINGS_GENERAL: settings_general_render(); break;
+		case SCREEN_SETTINGS_CONTROLS: settings_controls_render(); break;
+		case SCREEN_SETTINGS_VIDEO: settings_video_render(); break;
+		case SCREEN_SETTINGS_VIDEO_SELECT_MODE: settings_video_render_select_mode(); break;
+		case SCREEN_SETTINGS_VIDEO_CUSTOM: settings_video_render_custom(); break;
+		case SCREEN_SETTINGS_SOUND: settings_sound_render(); break;*/
+	}
+}
+
+static void middle_render(struct rect *r)
+{
+    bool ingame = false;
+    
+	switch (screen)
+	{
+		case SCREEN_MAIN:
+        {
+            if (ingame)
+                {}
+                //return ingame_main_render();
+            else
+            {
+                static struct rect browser;
+                ui_margin(r, 5, &browser);
+                ui_do_button_rect(&browser, "b", 0, &browser, draw_teewars_button, 0);
+            }
+            break;
+        }
+		case SCREEN_DISCONNECTED:
+        {
+            break;
+            //return disconnected_render();
+        }
+		case SCREEN_CONNECTING:
+        {
+            break;
+            //return connecting_render();
+        }
+		case SCREEN_SETTINGS_GENERAL:
+		case SCREEN_SETTINGS_CONTROLS:
+		case SCREEN_SETTINGS_VIDEO:
+		case SCREEN_SETTINGS_VIDEO_SELECT_MODE:
+		case SCREEN_SETTINGS_VIDEO_CUSTOM:
+		case SCREEN_SETTINGS_SOUND:
+        {
+            ui_settings_render(r);
+            //return settings_render(ingame);
+        }
+		case SCREEN_KERNING:
+        {
+            break;
+            //return kerning_render();
+        }
+		default: dbg_msg("menu", "invalid screen selected..."); break;
+    }
+}
+
+static int ui_menu_render(struct rect *r)
+{
+    static struct rect top;
+    static struct rect temp;
+    static struct rect middle;
+    static struct rect bottom;
+
+    ui_hsplit_t(r, 48, &top, &temp);
+    ui_hsplit_b(&temp, 32, &middle, &bottom);
+    tab_menu_render(&top);
+    middle_render(&middle);
+
+    return -ui_do_button_rect(&bottom, "Quit", 0, &bottom, draw_teewars_button, 0);
+}
+
 static int main_render()
 {
 	static bool inited = false;
@@ -725,6 +891,7 @@ static int main_render()
 
 	static int refresh_button, join_button, quit_button;
 	static int use_lan = 0;
+
 
 	if (ui_do_button(&refresh_button, "Refresh", 0, 20, 460, 170, 48, draw_teewars_button, 0))
 		client_serverbrowse_refresh(use_lan);
@@ -770,6 +937,8 @@ static int main_render()
 	config.b_filter_empty = ui_do_check_box(&config.b_filter_empty, 20, 600-80, 32, 32, config.b_filter_empty);
 	config.b_filter_full = ui_do_check_box(&config.b_filter_full, 20+50, 600-80, 32, 32, config.b_filter_full);
 	config.b_filter_pw = ui_do_check_box(&config.b_filter_pw, 20+100, 600-80, 32, 32, config.b_filter_pw);
+
+
 	return 0;
 }
 
@@ -826,19 +995,6 @@ static int settings_controls_render()
 		ui_do_label(column1_x, row1_y + 40 * i, key.name, 36);
 		key.assign_func(&config_copy, ui_do_key_reader(key.key, column2_x, row1_y + 40 * i, 150, 36, *key.key));
 	}
-	// KEYS
-	/*
-	ui_do_label(column1_x, row1_y + 0, "Move Left:", 36);
-	config_set_key_move_left(&config_copy, ui_do_key_reader(&config_copy.key_move_left, column2_x, row1_y + 0, 150, 36, config_copy.key_move_left));
-	ui_do_label(column1_x, row1_y + 40, "Move Right:", 36);
-	config_set_key_move_right(&config_copy, ui_do_key_reader(&config_copy.key_move_right, column2_x, row1_y + 40, 150, 36, config_copy.key_move_right));
-	ui_do_label(column1_x, row1_y + 80, "Jump:", 36);
-	config_set_key_jump(&config_copy, ui_do_key_reader(&config_copy.key_jump, column2_x, row1_y + 80, 150, 36, config_copy.key_jump));
-	ui_do_label(column1_x, row1_y + 120, "Fire:", 36);
-	config_set_key_fire(&config_copy, ui_do_key_reader(&config_copy.key_fire, column2_x, row1_y + 120, 150, 36, config_copy.key_fire));
-	ui_do_label(column1_x, row1_y + 160, "Hook:", 36);
-	config_set_key_hook(&config_copy, ui_do_key_reader(&config_copy.key_hook, column2_x, row1_y + 160, 150, 36, config_copy.key_hook));
-	*/
 
 	scroll_index = do_scroll_bar_vert(&scroll_index, 600, row1_y, 40 * 6, key_count - 6, scroll_index);
 
@@ -1390,6 +1546,31 @@ static int menu_render(bool ingame)
 		gfx_mapscreen(0, 0, 800, 600);
 	}
 
+    {
+    struct rect *screen = ui_screen();
+
+    static float scale = 1.0f;
+
+    if (inp_key_pressed('I'))
+        scale += 0.01;
+    if (inp_key_pressed('O'))
+        scale -= 0.01;
+
+    dbg_msg("year", "%f", scale);
+
+    ui_scale(scale);
+
+    int retn = ui_menu_render(screen);
+
+    gfx_texture_set(-1);
+    gfx_lines_begin();
+    ui_foreach_rect(draw_rect);
+    gfx_lines_end();
+
+    return retn;
+    }
+
+    /*
 	switch (screen)
 	{
 		case SCREEN_MAIN: return ingame ? ingame_main_render() : main_render();
@@ -1403,7 +1584,7 @@ static int menu_render(bool ingame)
 		case SCREEN_SETTINGS_SOUND: return settings_render(ingame);
 		case SCREEN_KERNING: return kerning_render();
 		default: dbg_msg("menu", "invalid screen selected..."); return 0;
-	}
+	}*/
 }
 
 extern "C" void modmenu_init() // TODO: nastyness
