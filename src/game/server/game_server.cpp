@@ -602,6 +602,30 @@ int player::handle_ninja()
 	return 0;
 }
 
+struct input_count
+{
+	int presses;
+	int releases;
+};
+
+static input_count count_input(int prev, int cur)
+{
+	input_count c = {0,0};
+	prev &= INPUT_STATE_MASK;
+	cur &= INPUT_STATE_MASK;
+	int i = prev;
+	while(i != cur)
+	{
+		i = (i+1)&INPUT_STATE_MASK;
+		if(i&1)
+			c.presses++;
+		else
+			c.releases++;
+	}
+	
+	return c;		
+}
+
 int player::handle_weapons()
 {
 	vec2 direction = normalize(vec2(input.target_x, input.target_y));
@@ -630,26 +654,30 @@ int player::handle_weapons()
 		return handle_ninja();
 	}
 
-	// switch weapon if wanted		
-	if(input.activeweapon && data->weapons[active_weapon].duration <= 0)
+	// switch weapon if wanted
+	if(data->weapons[active_weapon].duration <= 0)
 	{
 		int new_weapon = active_weapon;
-		if(input.activeweapon > 0) // straight selection
-			new_weapon = input.activeweapon-1;
-		else if(input.activeweapon == -1 && !previnput.activeweapon) // next weapon
+		int next = count_input(previnput.next_weapon, input.next_weapon).presses;
+		int prev = count_input(previnput.prev_weapon, input.prev_weapon).presses;
+		while(next) // next weapon selection
 		{
-			do
-				new_weapon = (new_weapon+1)%NUM_WEAPONS;
-			while(!weapons[new_weapon].got);
+			new_weapon = (new_weapon+1)%NUM_WEAPONS;
+			if(weapons[new_weapon].got)
+				next--;
 		}
-		else if(input.activeweapon == -2 && !previnput.activeweapon)
+
+		while(prev) // prev weapon selection
 		{
-			do
-				new_weapon = (new_weapon-1)<0?NUM_WEAPONS-1:new_weapon-1;
-			while(!weapons[new_weapon].got);
+			new_weapon = (new_weapon-1)<0?NUM_WEAPONS-1:new_weapon-1;
+			if(weapons[new_weapon].got)
+				prev--;
 		}
-			
-		if(new_weapon >= 0 && new_weapon < NUM_WEAPONS && weapons[new_weapon].got)
+		
+		if(input.wanted_weapon) // direct weapon selection
+			new_weapon = input.wanted_weapon-1;
+				
+		if(new_weapon != active_weapon && new_weapon >= 0 && new_weapon < NUM_WEAPONS && weapons[new_weapon].got)
 		{
 			if(active_weapon != new_weapon)
 				create_sound(pos, SOUND_WEAPON_SWITCH);
@@ -659,7 +687,7 @@ int player::handle_weapons()
 		}
 	}
 	
-	if(!previnput.fire && input.fire)
+	if(count_input(previnput.fire, input.fire).presses) //previnput.fire != input.fire && (input.fire&1))
 	{
 		if(reload_timer == 0)
 		{
@@ -727,6 +755,7 @@ int player::handle_weapons()
 			}
 		}
 	}
+	
 	// Update weapons
 	if (active_weapon == WEAPON_HAMMER && reload_timer > 0)
 	{
@@ -841,7 +870,7 @@ void player::tick()
 	{
 		if(server_tick()-die_tick >= server_tickspeed()*5) // auto respawn after 3 sec
 			respawn();
-		if(input.fire && server_tick()-die_tick >= server_tickspeed()/2) // auto respawn after 0.5 sec
+		if((input.fire&1) && server_tick()-die_tick >= server_tickspeed()/2) // auto respawn after 0.5 sec
 			respawn();
 		return;
 	}

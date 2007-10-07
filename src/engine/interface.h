@@ -766,6 +766,10 @@ void inp_init();
 void inp_mouse_mode_absolute();
 void inp_mouse_mode_relative();
 
+int inp_key_presses(int key);
+int inp_key_releases(int key);
+int inp_key_state(int key);
+
 const char *inp_key_name(int k);
 int inp_key_code(const char *key_name);
 

@@ -1,3 +1,4 @@
+#include <string.h>
 #include <engine/external/glfw/include/GL/glfw.h>
 
 #include <engine/system.h>
@@ -6,6 +7,19 @@
 static int keyboard_state[2][1024]; /* TODO: fix this!! */
 static int keyboard_current = 0;
 static int keyboard_first = 1;
+
+
+static struct
+{
+	unsigned char presses;
+	unsigned char releases;
+} input_count[2][1024] = {{{0}}, {{0}}};
+
+static unsigned char input_state[2][1024] = {{0}, {0}};
+
+/*static unsigned char input_state[2][1024] = {{0},{0}};*/
+/*static unsigned char input_state[1024] = {{0},{0}};*/
+static int input_current = 0;
 
 void inp_mouse_relative(int *x, int *y)
 {
@@ -29,15 +43,55 @@ static void char_callback(int character, int action)
 
 static void key_callback(int key, int action)
 {
-    if(action == GLFW_PRESS)
-	    last_k = key;
+	if(action == GLFW_PRESS)
+		last_k = key;
+	
+	if(action == GLFW_PRESS)
+		input_count[input_current^1][key].presses++;
+	if(action == GLFW_RELEASE)
+		input_count[input_current^1][key].releases++;
+	input_state[input_current^1][key] = action;
 }
+
+static void mousebutton_callback(int button, int action)
+{
+	if(action == GLFW_PRESS)
+		input_count[input_current^1][KEY_MOUSE_FIRST+button].presses++;
+	if(action == GLFW_RELEASE)
+		input_count[input_current^1][KEY_MOUSE_FIRST+button].releases++;
+	input_state[input_current^1][KEY_MOUSE_FIRST+button] = action;
+}
+
+
+static void mousewheel_callback(int pos)
+{
+	if(pos > 0)
+	{
+		while(pos-- != 0)
+		{
+			input_count[input_current^1][KEY_MOUSE_WHEEL_UP].presses++;
+			input_count[input_current^1][KEY_MOUSE_WHEEL_UP].releases++;
+		}
+	}
+	else if(pos < 0)
+	{
+		while(pos++ != 0)
+		{
+			input_count[input_current^1][KEY_MOUSE_WHEEL_DOWN].presses++;
+			input_count[input_current^1][KEY_MOUSE_WHEEL_DOWN].releases++;
+		}	
+	}
+	glfwSetMouseWheel(0);
+}
+
 
 void inp_init()
 {
 	glfwEnable(GLFW_KEY_REPEAT);
 	glfwSetCharCallback(char_callback);
 	glfwSetKeyCallback(key_callback);
+	glfwSetMouseButtonCallback(mousebutton_callback);
+	glfwSetMouseWheelCallback(mousewheel_callback);
 }
 
 char inp_last_char()
@@ -66,6 +120,21 @@ void inp_mouse_mode_relative()
 	glfwDisable(GLFW_MOUSE_CURSOR);
 }
 
+int inp_key_presses(int key)
+{
+	return input_count[input_current][key].presses;
+}
+
+int inp_key_releases(int key)
+{
+	return input_count[input_current][key].releases;
+}
+
+int inp_key_state(int key)
+{
+	return input_state[input_current][key];
+}
+
 int inp_key_pressed(int key) { return keyboard_state[keyboard_current][key]; }
 int inp_key_was_pressed(int key) { return keyboard_state[keyboard_current^1][key]; }
 int inp_key_down(int key) { return inp_key_pressed(key)&&!inp_key_was_pressed(key); }
@@ -74,6 +143,11 @@ int inp_button_pressed(int button) { return keyboard_state[keyboard_current][but
 void inp_update()
 {
     int i, v;
+    
+	/* clear and begin count on the other one */
+	mem_zero(&input_count[input_current], sizeof(input_count[input_current]));
+	memcpy(input_state[input_current], input_state[input_current^1], sizeof(input_state[input_current]));
+	input_current^=1;
 
     if(keyboard_first)
     {
@@ -93,13 +167,13 @@ void inp_update()
     }
 
 	/* handle mouse wheel */
-    i = glfwGetMouseWheel();
+	/*
+	i = glfwGetMouseWheel();
     keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_UP] = 0;
     keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_DOWN] = 0;
-    if(i > 0)
+    if(w > 0)
     	keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_UP] = 1;
-    if(i < 0)
+    if(w < 0)
     	keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_DOWN] = 1;
-    glfwSetMouseWheel(0);
-
+    glfwSetMouseWheel(0);*/
 }

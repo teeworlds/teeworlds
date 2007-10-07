@@ -60,6 +60,11 @@ enum
 
 enum
 {
+	INPUT_STATE_MASK=0x1f,
+};
+
+enum
+{
 	STATE_UNKNOWN=0,
 	STATE_PLAYING,
 	STATE_IN_MENU,
@@ -82,9 +87,9 @@ struct player_input
 	int fire;
 	int hook;
 	int blink;
-	int activeweapon;
 	int state;
 	
+	int wanted_weapon;
 	int next_weapon;
 	int prev_weapon;
 };

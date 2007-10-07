@@ -1786,6 +1786,14 @@ void render_world(float center_x, float center_y, float zoom)
 	damageind.render();	
 }
 
+static void do_input(int *v, int key)
+{
+	*v += inp_key_presses(key) + inp_key_releases(key);
+	if((*v&1) != inp_key_state(key))
+		(*v)++;
+	*v &= INPUT_STATE_MASK;
+}
+
 void render_game()
 {	
 	float width = 400*3.0f;
@@ -1934,12 +1942,10 @@ void render_game()
 	
 	// snap input
 	{
-		player_input input;
-		mem_zero(&input, sizeof(input));
+		static player_input input = {0};
 			
 		input.target_x = (int)mouse_pos.x;
 		input.target_y = (int)mouse_pos.y;
-		input.activeweapon = 0;
 	
 		if(chat_mode != CHATMODE_NONE)
 			input.state = STATE_CHATTING;
@@ -1948,27 +1954,36 @@ void render_game()
 		else
 		{
 			input.state = STATE_PLAYING;
-			input.left = inp_key_pressed(config.key_move_left);
-			input.right = inp_key_pressed(config.key_move_right);
-			input.jump = inp_key_pressed(config.key_jump);
-			// TODO: this is not very well done. it should check this some other way
-			input.fire = emoticon_selector_active ? 0 : inp_key_pressed(config.key_fire);
-			input.hook = inp_key_pressed(config.key_hook);
+			input.left = inp_key_state(config.key_move_left);
+			input.right = inp_key_state(config.key_move_right);
+			input.hook = inp_key_state(config.key_hook);
+			input.jump  = inp_key_state(config.key_jump);
 			
-			// Weapon switching
-			if(inp_key_pressed(config.key_next_weapon)) input.activeweapon = -1;
-			if(inp_key_pressed(config.key_prev_weapon)) input.activeweapon = -2;
-			if(inp_key_pressed(config.key_weapon1)) input.activeweapon = 1;
-			if(inp_key_pressed(config.key_weapon2)) input.activeweapon = 2;
-			if(inp_key_pressed(config.key_weapon3)) input.activeweapon = 3;
-			if(inp_key_pressed(config.key_weapon4)) input.activeweapon = 4;
+			if(!emoticon_selector_active)
+				do_input(&input.fire, config.key_fire);
+			
+			// weapon selection
+			do_input(&input.next_weapon, config.key_next_weapon);
+			do_input(&input.prev_weapon, config.key_prev_weapon);
+			
+			if(inp_key_presses(config.key_next_weapon) || inp_key_presses(config.key_prev_weapon))
+				input.wanted_weapon = 0;
+			else
+			{
+				if(inp_key_presses(config.key_weapon1)) input.wanted_weapon = 1;
+				if(inp_key_presses(config.key_weapon2)) input.wanted_weapon = 2;
+				if(inp_key_presses(config.key_weapon3)) input.wanted_weapon = 3;
+				if(inp_key_presses(config.key_weapon4)) input.wanted_weapon = 4;
+			}
 		}
 		
 		// stress testing
 		if(config.stress)
 		{
-			float t = client_localtime();
+			//float t = client_localtime();
 			mem_zero(&input, sizeof(input));
+			
+			/*
 			input.left = 1;
 			input.jump = ((int)t)&1;
 			input.fire = ((int)(t*10))&1;
@@ -1976,6 +1991,7 @@ void render_game()
 			input.activeweapon = ((int)t)%NUM_WEAPONS;
 			input.target_x = (int)(sinf(t*3)*100.0f);
 			input.target_y = (int)(cosf(t*3)*100.0f);
+			*/
 			
 			//input.target_x = (int)((rand()/(float)RAND_MAX)*64-32);
 			//input.target_y = (int)((rand()/(float)RAND_MAX)*64-32);
