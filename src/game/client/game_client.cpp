@@ -2012,7 +2012,7 @@ void render_game()
 		gfx_quads_begin();
 		gfx_setcolor(0.65f,0.78f,0.9f,1.0f);
 		
-		float fov = pi/4.0f;
+		float fov = pi/6.0f;
 		float fade = 0.7f;
 		
 		
@@ -2057,18 +2057,19 @@ void render_game()
 		gfx_quads_begin();
 		gfx_setcolor(0.5f,0.9f,0.5f,0.25f);
 		float r=0.5f, g=1.0f, b=0.5f;
+		float r2=r*0.25f, g2=g*0.25f, b2=b*0.25f;
 		
-		gfx_setcolor(r,g,b,0.1f);
+		gfx_setcolor(r,g,b,0.2f);
 		gfx_quads_draw_freeform(
 			cn.x,cn.y,
 			cn.x,cn.y,
 			cp0f.x,cp0f.y,
 			cp1f.x,cp1f.y);
 
-		gfx_setcolorvertex(0, r, g, b, 0.1f);
-		gfx_setcolorvertex(1, 0, 0, 0, 0.9f);
-		gfx_setcolorvertex(2, r, g, b, 0.1f);
-		gfx_setcolorvertex(3, 0, 0, 0, 0.9f);
+		gfx_setcolorvertex(0, r, g, b, 0.2f);
+		gfx_setcolorvertex(1, r2, g2, b2, 0.9f);
+		gfx_setcolorvertex(2, r, g, b, 0.2f);
+		gfx_setcolorvertex(3, r2, g2, b2, 0.9f);
 		gfx_quads_draw_freeform(
 			cn.x,cn.y,
 			p0n.x,p0n.y,

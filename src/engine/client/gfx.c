@@ -134,10 +134,22 @@ int gfx_init()
 		screen_width = 320;
 		screen_height = 240;
 	}
+
+	/* set antialiasing	*/
+	if(config.gfx_fsaa_samples)
+		glfwOpenWindowHint(GLFW_FSAA_SAMPLES, config.gfx_fsaa_samples);
 	
+	/* set refresh rate */
+	if(config.gfx_refresh_rate)
+		glfwOpenWindowHint(GLFW_REFRESH_RATE, config.gfx_refresh_rate);
+	
+	/* no resizing allowed */
+	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, 1);
+		
+	/* open window */	
 	if(config.gfx_fullscreen)
 	{
-		int result = glfwOpenWindow(screen_width, screen_height, 8, 8, 8, 0, 0, 0, GLFW_FULLSCREEN);
+		int result = glfwOpenWindow(screen_width, screen_height, 8, 8, 8, 0, 24, 0, GLFW_FULLSCREEN);
 		if(result != GL_TRUE)
 		{
 			dbg_msg("game", "failed to create gl context");
