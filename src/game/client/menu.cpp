@@ -1546,45 +1546,46 @@ static int menu_render(bool ingame)
 		gfx_mapscreen(0, 0, 800, 600);
 	}
 
+	if(config.dbg_new_gui)
     {
-    struct rect *screen = ui_screen();
+		struct rect *screen = ui_screen();
 
-    static float scale = 1.0f;
+		static float scale = 1.0f;
 
-    if (inp_key_pressed('I'))
-        scale += 0.01;
-    if (inp_key_pressed('O'))
-        scale -= 0.01;
+		if (inp_key_pressed('I'))
+			scale += 0.01;
+		if (inp_key_pressed('O'))
+			scale -= 0.01;
 
-    dbg_msg("year", "%f", scale);
+		dbg_msg("year", "%f", scale);
 
-    ui_scale(scale);
+		ui_scale(scale);
+		int retn = ui_menu_render(screen);
 
-    int retn = ui_menu_render(screen);
+		gfx_texture_set(-1);
+		gfx_lines_begin();
+		ui_foreach_rect(draw_rect);
+		gfx_lines_end();
 
-    gfx_texture_set(-1);
-    gfx_lines_begin();
-    ui_foreach_rect(draw_rect);
-    gfx_lines_end();
-
-    return retn;
+		return retn;
     }
-
-    /*
-	switch (screen)
-	{
-		case SCREEN_MAIN: return ingame ? ingame_main_render() : main_render();
-		case SCREEN_DISCONNECTED: return disconnected_render();
-		case SCREEN_CONNECTING: return connecting_render();
-		case SCREEN_SETTINGS_GENERAL:
-		case SCREEN_SETTINGS_CONTROLS:
-		case SCREEN_SETTINGS_VIDEO:
-		case SCREEN_SETTINGS_VIDEO_SELECT_MODE:
-		case SCREEN_SETTINGS_VIDEO_CUSTOM:
-		case SCREEN_SETTINGS_SOUND: return settings_render(ingame);
-		case SCREEN_KERNING: return kerning_render();
-		default: dbg_msg("menu", "invalid screen selected..."); return 0;
-	}*/
+    else
+    {
+		switch (screen)
+		{
+			case SCREEN_MAIN: return ingame ? ingame_main_render() : main_render();
+			case SCREEN_DISCONNECTED: return disconnected_render();
+			case SCREEN_CONNECTING: return connecting_render();
+			case SCREEN_SETTINGS_GENERAL:
+			case SCREEN_SETTINGS_CONTROLS:
+			case SCREEN_SETTINGS_VIDEO:
+			case SCREEN_SETTINGS_VIDEO_SELECT_MODE:
+			case SCREEN_SETTINGS_VIDEO_CUSTOM:
+			case SCREEN_SETTINGS_SOUND: return settings_render(ingame);
+			case SCREEN_KERNING: return kerning_render();
+			default: dbg_msg("menu", "invalid screen selected..."); return 0;
+		}
+    }
 }
 
 extern "C" void modmenu_init() // TODO: nastyness
