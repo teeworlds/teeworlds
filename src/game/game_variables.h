@@ -36,3 +36,6 @@ MACRO_CONFIG_INT(team, -10, -1, 0)
 
 MACRO_CONFIG_INT(dbg_new_gui, 0, 0, 1)
 
+
+MACRO_CONFIG_STR(sv_msg, 512, "")
+

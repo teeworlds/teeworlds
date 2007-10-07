@@ -1320,44 +1320,6 @@ player* intersect_player(vec2 pos0, vec2 pos1, vec2& new_pos, entity* notthis)
 	return 0;
 }
 
-// Server hooks
-void mods_tick()
-{
-	// clear all events
-	events.clear();
-	world->tick();
-	
-	if(world->paused) // make sure that the game object always updates
-		gameobj->tick();
-	
-	if(config.restart)
-	{
-		if(config.restart > 1)
-			gameobj->do_warmup(config.restart);
-		else
-			gameobj->startround();
-			
-		config.restart = 0;
-	}
-}
-
-void mods_snap(int client_id)
-{
-	world->snap(client_id);
-	events.snap(client_id);
-}
-
-void mods_client_input(int client_id, void *input)
-{
-	if(!world->paused)
-	{
-		if (memcmp(&players[client_id].input, input, sizeof(player_input)) != 0)
-			players[client_id].last_action = server_tick();
-
-		//players[client_id].previnput = players[client_id].input;
-		players[client_id].input = *(player_input*)input;
-	}
-}
 
 void send_chat(int cid, int team, const char *msg)
 {
@@ -1388,6 +1350,52 @@ void send_chat(int cid, int team, const char *msg)
 			if(players[i].client_id != -1 && players[i].team == team)
 				server_send_msg(i);
 		}
+	}
+}
+
+
+// Server hooks
+void mods_tick()
+{
+	// clear all events
+	events.clear();
+	world->tick();
+	
+	if(world->paused) // make sure that the game object always updates
+		gameobj->tick();
+	
+	if(config.restart)
+	{
+		if(config.restart > 1)
+			gameobj->do_warmup(config.restart);
+		else
+			gameobj->startround();
+			
+		config.restart = 0;
+	}
+	
+	if(config.sv_msg[0] != 0)
+	{
+		send_chat(-1, 0, config.sv_msg);
+		config.sv_msg[0] = 0;
+	}
+}
+
+void mods_snap(int client_id)
+{
+	world->snap(client_id);
+	events.snap(client_id);
+}
+
+void mods_client_input(int client_id, void *input)
+{
+	if(!world->paused)
+	{
+		if (memcmp(&players[client_id].input, input, sizeof(player_input)) != 0)
+			players[client_id].last_action = server_tick();
+
+		//players[client_id].previnput = players[client_id].input;
+		players[client_id].input = *(player_input*)input;
 	}
 }
 
