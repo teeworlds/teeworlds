@@ -57,7 +57,7 @@ static int mixing_rate = 48000;
 void snd_set_channel(int cid, float vol, float pan)
 {
 	channels[cid].vol = (int)(vol*255.0f);
-	channels[cid].pan = (int)(pan*255.0f);
+	channels[cid].pan = (int)(pan*255.0f); /* TODO: this is only on and off right now */
 }
 
 static int play(int cid, int sid, int flags, float x, float y)
@@ -112,7 +112,7 @@ void snd_stop(int vid)
 	lock_release(sound_lock);
 }
 
-/* there should be a faster way todo this */
+/* TODO: there should be a faster way todo this */
 static short int2short(int i)
 {
 	if(i > 0x7fff)
@@ -165,6 +165,7 @@ static void mix(short *final_out, unsigned frames)
 			/* volume calculation */
 			if(v->flags&SNDFLAG_POS && v->channel->pan)
 			{
+				/* TODO: we should respect the channel panning value */
 				const int range = 1500; /* magic value, remove */
 				int dx = v->x - center_x;
 				int dy = v->y - center_y;
@@ -205,6 +206,7 @@ static void mix(short *final_out, unsigned frames)
 	lock_release(sound_lock);
 
 	/* clamp accumulated values */
+	/* TODO: this seams slow */
 	for(i = 0; i < frames; i++)
 	{
 		int j = i<<1;
