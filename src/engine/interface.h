@@ -25,6 +25,9 @@ enum
 	MASK_SET,
 	MASK_ZERO,
 
+	SNDFLAG_LOOP=1,
+	SNDFLAG_POS=2,
+	SNDFLAG_ALL=3,
 	
 	CLIENTSTATE_OFFLINE=0,
 	CLIENTSTATE_CONNECTING,
@@ -366,21 +369,21 @@ void gfx_quads_draw_freeform(
 void gfx_quads_text(float x, float y, float size, const char *text);
 
 /* sound (client) */
-enum
-{
-	SND_PLAY_ONCE = 0,
-	SND_LOOP
-};
-	
 int snd_init();
+
 float snd_get_master_volume();
 void snd_set_master_volume(float val);
-int snd_load_wav(const char *filename);
+
+void snd_set_channel(int cid, float vol, float pan);
+
 int snd_load_wv(const char *filename);
-int snd_play(int cid, int sid, int loop, float x, float y);
+
+int snd_play_at(int cid, int sid, int flags, float x, float y);
+int snd_play(int cid, int sid, int flags);
+
 void snd_stop(int id);
-void snd_set_vol(int id, float vol);
 void snd_set_listener_pos(float x, float y);
+
 int snd_shutdown();
 
 /*

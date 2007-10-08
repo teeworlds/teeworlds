@@ -16,6 +16,14 @@ extern "C" {
 #include "data.h"
 #include "menu.h"
 
+// sound channels
+enum
+{
+	CHN_GUI=0,
+	CHN_MUSIC,
+	CHN_WORLD,
+};
+
 data_container *data = 0x0;
 
 static int charids[16] = {2,10,0,4,12,6,9,1,3,15,13,11,7,5,8,14};
@@ -52,7 +60,7 @@ struct client_data
 
 inline float frandom() { return rand()/(float)(RAND_MAX); }
 
-void snd_play_random(int setid, float vol, float pan)
+void snd_play_random(int chn, int setid, float vol, vec2 pos)
 {
 	soundset *set = &data->sounds[setid];
 	
@@ -61,7 +69,7 @@ void snd_play_random(int setid, float vol, float pan)
 		
 	if(set->num_sounds == 1)
 	{
-		snd_play(0, set->sounds[0].id, SND_PLAY_ONCE, 0, 0);
+		snd_play_at(chn, set->sounds[0].id, 0, pos.x, pos.y);
 		return;
 	}
 	
@@ -70,7 +78,7 @@ void snd_play_random(int setid, float vol, float pan)
 	do {
 		id = rand() % set->num_sounds;
 	} while(id == set->last);
-	snd_play(0, set->sounds[id].id, SND_PLAY_ONCE, 0, 1);
+	snd_play_at(chn, set->sounds[id].id, 0, pos.x, pos.y);
 	set->last = id;
 }
 
@@ -465,6 +473,11 @@ static void render_loading(float percent)
 
 extern "C" void modc_init()
 {
+	// setup sound channels
+	snd_set_channel(CHN_GUI, 1.0f, 0.0f);
+	snd_set_channel(CHN_MUSIC, 1.0f, 0.0f);
+	snd_set_channel(CHN_WORLD, 1.0f, 1.0f);
+	
 	// load the data container
 	data = load_data_from_memory(internal_data);
 
@@ -653,14 +666,14 @@ static void process_events(int s)
 			int soundid = ev->sound; //(ev->sound & SOUND_MASK);
 			//bool bstartloop = (ev->sound & SOUND_LOOPFLAG_STARTLOOP) != 0;
 			//bool bstoploop = (ev->sound & SOUND_LOOPFLAG_STOPLOOP) != 0;
-			float vol, pan;
-			sound_vol_pan(p, &vol, &pan);
+			//float vol, pan;
+			//sound_vol_pan(p, &vol, &pan);
 			
 			if(soundid >= 0 && soundid < NUM_SOUNDS)
 			{
 				// TODO: we need to control the volume of the diffrent sounds
 				// 		depening on the category
-				snd_play_random(soundid, vol, pan);
+				snd_play_random(CHN_WORLD, soundid, 1.0f, p);
 			}
 		}
 	}
@@ -1833,6 +1846,9 @@ void render_game()
 	local_player_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_intrapredtick());
 	if(local_player && local_player->team == -1)
 		spectate = true;
+
+	// set listner pos
+	snd_set_listener_pos(local_player_pos.x, local_player_pos.y);
 		
 	animstate idlestate;
 	anim_eval(&data->animations[ANIM_BASE], 0, &idlestate);
@@ -2412,7 +2428,9 @@ extern "C" void modc_render()
 	else // if (client_state() != CLIENTSTATE_CONNECTING && client_state() != CLIENTSTATE_LOADING)
 	{
 		if (music_menu_id == -1)
-			music_menu_id = snd_play(0, music_menu, SND_LOOP, 0, 0);
+		{
+			music_menu_id = snd_play(CHN_MUSIC, music_menu, SNDFLAG_LOOP);
+		}
 		
 		//netaddr4 server_address;
 		if(modmenu_render(false) == -1)
@@ -2446,9 +2464,9 @@ extern "C" void modc_message(int msg)
 		chat_add_line(cid, team, message);
 
 		if(cid >= 0)
-			snd_play(0, data->sounds[SOUND_CHAT_CLIENT].sounds[0].id, SND_PLAY_ONCE, 0, 0);
+			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_CLIENT].sounds[0].id, 0);
 		else
-			snd_play(0, data->sounds[SOUND_CHAT_SERVER].sounds[0].id, SND_PLAY_ONCE, 0, 0);
+			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_SERVER].sounds[0].id, 0);
 	}
 	else if(msg == MSG_SETNAME)
 	{

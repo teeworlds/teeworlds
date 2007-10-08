@@ -20,6 +20,8 @@ MACRO_CONFIG_INT(b_filter_pw, 0, 1, 0)
 MACRO_CONFIG_INT(b_sort, 0, 0, 0)
 MACRO_CONFIG_INT(b_max_requests, 10, 0, 0)
 
+MACRO_CONFIG_INT(snd_rate, 48000, 0, 0)
+
 MACRO_CONFIG_INT(gfx_screen_width, 800, 0, 0)
 MACRO_CONFIG_INT(gfx_screen_height, 600, 0, 0)
 MACRO_CONFIG_INT(gfx_fullscreen, 1, 0, 1)
