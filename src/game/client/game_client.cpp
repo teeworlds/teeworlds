@@ -2422,7 +2422,6 @@ extern "C" void modc_render()
 			msg_pack_int(config.team);
 			msg_pack_end();
 			client_send_msg();
-			config.team = -10;
 		}
 	}
 	else // if (client_state() != CLIENTSTATE_CONNECTING && client_state() != CLIENTSTATE_LOADING)
@@ -2436,6 +2435,9 @@ extern "C" void modc_render()
 		if(modmenu_render(false) == -1)
 			client_quit();
 	}
+	
+	//
+	config.team = -10;
 }
 
 
