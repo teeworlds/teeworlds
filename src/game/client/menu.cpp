@@ -126,6 +126,9 @@ void draw_box(int box_type, gui_tileset_enum tileset, float x, float y, float w,
 	draw_area(tileset, cx, cy, dx-cx, dy-cy, x+w-(dx-cx), y+h-(dy-cy), dx-cx, dy-cy);
 }
 
+extern "C"
+{
+
 struct pretty_font
 {
     float m_CharStartTable[256];
@@ -134,6 +137,8 @@ struct pretty_font
 };  
 
 extern pretty_font *current_font;
+
+}
 
 extern void render_sun(float x, float y);
 extern void select_sprite(int id, int flags=0, int sx=0, int sy=0);
@@ -1263,7 +1268,7 @@ static int ingame_main_render()
 	return 0;
 }
 
-extern double extra_kerning[256*256];
+extern "C" double extra_kerning[256*256];
 
 static int kerning_render()
 {

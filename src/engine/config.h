@@ -1,6 +1,10 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 typedef struct
 { 
     #define MACRO_CONFIG_INT(name,def,min,max) int name;
@@ -28,5 +32,9 @@ void config_save(const char *filename);
 #include "config_variables.h"
 #undef MACRO_CONFIG_INT
 #undef MACRO_CONFIG_STR
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
