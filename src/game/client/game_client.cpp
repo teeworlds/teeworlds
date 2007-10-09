@@ -2042,7 +2042,7 @@ void render_game()
 		render_world(local_player_pos.x+offx, local_player_pos.y+offy, 1.0f);
 
 	// DEBUG TESTING
-	if(inp_key_pressed('F'))
+	if(inp_key_pressed('M'))
 	{
 		gfx_clear_mask(0);
 
@@ -2355,7 +2355,7 @@ void render_game()
 		return;
 	}
 
-	if (inp_key_pressed(config.key_emoticon))
+	if(chat_mode == CHATMODE_NONE && !menu_active && inp_key_pressed(config.key_emoticon))
 	{
 		if (!emoticon_selector_active)
 		{
