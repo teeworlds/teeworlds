@@ -1,6 +1,7 @@
 const array:int sound = sounds.*
 const array:int weapon = weapons.*
 const array:int powerup = powerups.*
+const array:int gametype = playerstats.*
 
 struct weapon {
 	int firedelay = firedelay@1
@@ -12,6 +13,8 @@ struct weapon {
 	int duration = duration@1
 	int movetime = movetime@1
 	int velocity = velocity@1
+	float chargetime = chargetime@1
+	float overchargetime = overchargetime@1
 }
 
 struct powerupinf {

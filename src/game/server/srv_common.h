@@ -166,6 +166,11 @@ public:
 	enum
 	{
 		PROJECTILE_FLAGS_EXPLODE = 1 << 0,
+
+		WEAPON_PROJECTILETYPE_GUN		= 0,
+		WEAPON_PROJECTILETYPE_ROCKET	= 1,
+		WEAPON_PROJECTILETYPE_SHOTGUN	= 2,
+		WEAPON_PROJECTILETYPE_SNIPER	= 6,
 	};
 	
 	vec2 vel;
@@ -198,6 +203,12 @@ public:
 		MODIFIER_RETURNFLAGS_OVERRIDEVELOCITY		= 1 << 0,
 		MODIFIER_RETURNFLAGS_OVERRIDEPOSITION		= 1 << 1,
 		MODIFIER_RETURNFLAGS_OVERRIDEGRAVITY		= 1 << 2,
+
+		MODIFIER_RETURNFLAGS_NOHOOK					= 1 << 3,
+
+
+		WEAPONSTAGE_SNIPER_NEUTRAL					= 0,
+		WEAPONSTAGE_SNIPER_CHARGING					= 1,
 	};
 
 	// weapon info
@@ -208,6 +219,8 @@ public:
 		int ammoregenstart;
 		int ammo;
 		int ammocost;
+		int weaponstage;
+		int chargetick;
 		bool got;
 	} weapons[NUM_WEAPONS];
 	int active_weapon;
@@ -281,6 +294,7 @@ public:
 	
 	int handle_weapons();
 	int handle_ninja();
+	int handle_sniper();
 
 	virtual void tick();
 	virtual void tick_defered();

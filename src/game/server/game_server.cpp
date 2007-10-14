@@ -489,6 +489,8 @@ void player::try_respawn()
 	weapons[WEAPON_HAMMER].ammo = -1;
 	weapons[WEAPON_GUN].got = true;
 	weapons[WEAPON_GUN].ammo = data->weapons[WEAPON_GUN].maxammo;
+
+
 	
 	active_weapon = WEAPON_GUN;
 	last_weapon = WEAPON_HAMMER;
@@ -626,6 +628,68 @@ static input_count count_input(int prev, int cur)
 	return c;		
 }
 
+int player::handle_sniper()
+{
+	struct input_count button = count_input(previnput.fire, input.fire);
+	if (button.releases)
+	{
+		vec2 direction = normalize(vec2(input.target_x, input.target_y));
+		// Check if we were charging, if so fire
+		if (weapons[WEAPON_SNIPER].weaponstage >= WEAPONSTAGE_SNIPER_CHARGING)
+		{
+			new projectile(projectile::WEAPON_PROJECTILETYPE_SNIPER,
+							client_id, pos+vec2(0,0), direction*50.0f,
+							100 + weapons[WEAPON_SNIPER].weaponstage * 20,this, weapons[WEAPON_SNIPER].weaponstage, 0, 0, -1, WEAPON_SNIPER);
+			create_sound(pos, SOUND_SNIPER_FIRE);
+		}
+		// Add blowback
+		core.vel = -direction * 10.0f * weapons[WEAPON_SNIPER].weaponstage;
+
+		// update ammo and stuff
+		weapons[WEAPON_SNIPER].ammo = max(0,weapons[WEAPON_SNIPER].ammo - weapons[WEAPON_SNIPER].weaponstage);
+		weapons[WEAPON_SNIPER].weaponstage = WEAPONSTAGE_SNIPER_NEUTRAL;
+		weapons[WEAPON_SNIPER].chargetick = 0;
+	}
+	else if (input.fire & 1)
+	{
+		// Charge!! (if we are on the ground)
+		if (is_grounded() && weapons[WEAPON_SNIPER].ammo > 0)
+		{
+			if (!weapons[WEAPON_SNIPER].chargetick)
+			{
+				weapons[WEAPON_SNIPER].chargetick = server_tick();
+				dbg_msg("game", "Chargetick='%d:'", server_tick());
+			}
+			if ((server_tick() - weapons[WEAPON_SNIPER].chargetick) > server_tickspeed() * data->weapons[active_weapon].chargetime)
+			{
+				if (weapons[WEAPON_SNIPER].ammo > weapons[WEAPON_SNIPER].weaponstage)
+				{
+					weapons[WEAPON_SNIPER].weaponstage++;
+					weapons[WEAPON_SNIPER].chargetick = server_tick();
+				}
+				else if ((server_tick() - weapons[WEAPON_SNIPER].chargetick) > server_tickspeed() * data->weapons[active_weapon].overchargetime)
+				{
+					// Ooopsie, weapon exploded
+					create_explosion(pos, client_id, WEAPON_SNIPER, false);
+					create_sound(pos, SOUND_ROCKET_EXPLODE);
+					// remove this weapon and change weapon to gun
+					weapons[WEAPON_SNIPER].got = false;
+					weapons[WEAPON_SNIPER].ammo = 0;
+					last_weapon = active_weapon;
+					active_weapon = WEAPON_GUN;
+					return 0;
+				}
+			}
+
+			// While charging, don't move
+			return MODIFIER_RETURNFLAGS_OVERRIDEVELOCITY|MODIFIER_RETURNFLAGS_NOHOOK;
+		}
+		else if (weapons[WEAPON_SNIPER].weaponstage)
+			weapons[WEAPON_SNIPER].weaponstage = WEAPONSTAGE_SNIPER_NEUTRAL;
+	}
+	return 0;
+}
+
 int player::handle_weapons()
 {
 	vec2 direction = normalize(vec2(input.target_x, input.target_y));
@@ -685,6 +749,12 @@ int player::handle_weapons()
 			last_weapon = active_weapon;
 			active_weapon = new_weapon;
 		}
+	}
+
+	if (active_weapon == WEAPON_SNIPER)
+	{
+		// don't update other weapons while sniper is active
+		return handle_sniper();
 	}
 	
 	if(count_input(previnput.fire, input.fire).presses) //previnput.fire != input.fire && (input.fire&1))
@@ -881,7 +951,6 @@ void player::tick()
 	core.input = input;
 	core.tick();
 	
-	
 	// handle weapons
 	handle_weapons();
 	/*
@@ -1042,6 +1111,7 @@ void player::snap(int snaping_client)
 	player->latency_flux = latency_max-latency_min;
 
 	player->ammocount = weapons[active_weapon].ammo;
+	player->weaponstage = weapons[active_weapon].weaponstage;
 	player->health = 0;
 	player->armor = 0;
 	player->local = 0;

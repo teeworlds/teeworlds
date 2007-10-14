@@ -120,3 +120,4 @@ const array:int image = images.*
 const array:int sprite = sprites.*.*
 const array:int anim = animations.*
 const array:int powerup = powerups.*
+const array:int gametype = playerstats.*

@@ -70,9 +70,9 @@ enum
 	STATE_IN_MENU,
 	STATE_CHATTING,
 	
-	GAMETYPE_DM=0,
-	GAMETYPE_TDM,
-	GAMETYPE_CTF,
+	//GAMETYPE_DM=0,
+	//GAMETYPE_TDM,
+	//GAMETYPE_CTF,
 };
 
 struct player_input
@@ -181,6 +181,7 @@ struct obj_player : public obj_player_core
 	int health;
 	int armor;
 	int ammocount;
+	int weaponstage;
 	
 	int weapon; // current active weapon
 

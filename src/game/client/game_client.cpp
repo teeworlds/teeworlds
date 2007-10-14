@@ -58,6 +58,45 @@ struct client_data
 	player_core predicted;
 } client_datas[MAX_CLIENTS];
 
+class client_effects
+{
+public:
+	float zoom;
+	float currentzoom;
+	float stage;
+	int lastzoomin;
+	int lastincrease;
+
+	client_effects()
+	{
+		currentzoom = zoom = 3.0f;
+		stage = 0.0f;
+	}
+
+	float getorgzoom() { return zoom; }
+	
+	float getzoom(int tick, float intratick, obj_player* player)
+	{
+		float currentstage = ((float)player->weaponstage) * 0.1f;
+		if (currentstage < stage)
+		{
+			if ((tick - lastincrease) > (client_tickspeed() / 2))
+				stage = currentstage;
+		}
+		else
+		{
+			lastincrease = tick;
+			stage = currentstage;
+		}
+
+		float targetzoom = 3.0f + stage;
+		currentzoom = LERP(currentzoom, targetzoom, 0.1);
+		return currentzoom;
+	}
+};
+
+client_effects cl_effects;
+
 inline float frandom() { return rand()/(float)(RAND_MAX); }
 
 void snd_play_random(int chn, int setid, float vol, vec2 pos)
@@ -804,8 +843,8 @@ static void render_projectile(const obj_projectile *prev, const obj_projectile *
 	
 	// TODO: do this, but nice
 	//temp_system.new_particle(pos, vec2(0,0), 0.3f, 14.0f, 0, 0.95f);
-
-	gfx_quads_draw(pos.x, pos.y,32,32);
+	
+	gfx_quads_draw(pos.x, pos.y, 32, 32);
 	gfx_quads_setrotation(0);
 	gfx_quads_end();
 }
@@ -1990,6 +2029,8 @@ void render_game()
 				if(inp_key_presses(config.key_weapon2)) input.wanted_weapon = 2;
 				if(inp_key_presses(config.key_weapon3)) input.wanted_weapon = 3;
 				if(inp_key_presses(config.key_weapon4)) input.wanted_weapon = 4;
+				if(inp_key_presses(config.key_weapon5)) input.wanted_weapon = 5;
+				if(inp_key_presses(config.key_weapon6)) input.wanted_weapon = 6;
 			}
 		}
 		
@@ -2041,8 +2082,12 @@ void render_game()
 	else
 		render_world(local_player_pos.x+offx, local_player_pos.y+offy, 1.0f);
 
+
+	// pseudo format
+	// ZOOM ZOOM
+	float zoom = cl_effects.getzoom(client_tick(), client_intratick(), local_player);//orgzoom + ((float)local_player->weaponstage) * 0.1f;
 	// DEBUG TESTING
-	if(inp_key_pressed('M'))
+	if(inp_key_pressed('M') || zoom > 3.01f)
 	{
 		gfx_clear_mask(0);
 
@@ -2054,7 +2099,12 @@ void render_game()
 		gfx_quads_begin();
 		gfx_setcolor(0.65f,0.78f,0.9f,1.0f);
 		
-		float fov = pi/6.0f;
+		float fov;
+		if (zoom > 3.01f)
+			fov = pi * (zoom - 3.0f) / 6.0f;
+		else
+			fov = pi / 6.0f;
+
 		float fade = 0.7f;
 		
 		
@@ -2138,6 +2188,10 @@ void render_game()
 		// render cursor
 		if (!menu_active && (!emoticon_selector_active || emoticon_selector_inactive_override))
 		{
+			//float width = 400 * cl_effects.getorgzoom();
+			//float height = 300 * cl_effects.getorgzoom();
+			//gfx_mapscreen(screen_x-width/2, screen_y-height/2, screen_x+width/2, screen_y+height/2);
+
 			select_sprite(data->weapons[local_player->weapon%data->num_weapons].sprite_cursor);
 			float cursorsize = 64;
 			draw_sprite(local_player_pos.x+mouse_pos.x, local_player_pos.y+mouse_pos.y, cursorsize);
@@ -2148,9 +2202,14 @@ void render_game()
 		gfx_quads_end();
 		gfx_quads_begin();
 		gfx_mapscreen(0,0,400,300);
+		// if weaponstage is active, put a "glow" around the stage ammo
+		select_sprite(SPRITE_TEE_BODY);
+		for (int i = 0; i < local_player->weaponstage; i++)
+			gfx_quads_drawTL(local_player->ammocount * 12 -i*12, 32, 11, 11);
 		select_sprite(data->weapons[local_player->weapon%data->num_weapons].sprite_proj);
 		for (int i = 0; i < local_player->ammocount; i++)
 			gfx_quads_drawTL(10+i*12,34,10,10);
+
 		gfx_quads_end();
 
 		gfx_texture_set(data->images[IMAGE_GAME].id);
