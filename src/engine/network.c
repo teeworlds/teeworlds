@@ -17,7 +17,8 @@ enum
 	NETWORK_VERSION = 1,
 	
 	NETWORK_HEADER_SIZE = 6,
-	NETWORK_MAX_PACKET_SIZE = 1024,
+	NETWORK_MAX_PAYLOAD = 1024,
+	NETWORK_MAX_PACKET_SIZE = NETWORK_HEADER_SIZE+NETWORK_MAX_PAYLOAD,
 	NETWORK_MAX_CLIENTS = 16,
 	
 	NETWORK_CONNSTATE_OFFLINE=0,
@@ -738,6 +739,8 @@ int netserver_recv(NETSERVER *s, NETPACKET *packet)
 
 int netserver_send(NETSERVER *s, NETPACKET *packet)
 {
+	dbg_assert(packet->data_size < NETWORK_MAX_PAYLOAD, "packet payload too big");
+	
 	if(packet->flags&PACKETFLAG_CONNLESS)
 	{
 		/* send connectionless packet */
@@ -775,9 +778,12 @@ void netserver_stats(NETSERVER *s, NETSTATS *stats)
 	
 	for(c = 0; c < s->max_clients; c++)
 	{
-		int *sstats = (int *)(&(s->slots[c].conn.stats));
-		for(i = 0; i < num_stats; i++)
-			istats[i] += sstats[i];
+		if(s->slots[c].conn.state != NETWORK_CONNSTATE_OFFLINE)
+		{
+			int *sstats = (int *)(&(s->slots[c].conn.stats));
+			for(i = 0; i < num_stats; i++)
+				istats[i] += sstats[i];
+		}
 	}
 }
 
@@ -869,6 +875,8 @@ int netclient_recv(NETCLIENT *c, NETPACKET *packet)
 
 int netclient_send(NETCLIENT *c, NETPACKET *packet)
 {
+	dbg_assert(packet->data_size < NETWORK_MAX_PAYLOAD, "packet payload too big");
+	
 	if(packet->flags&PACKETFLAG_CONNLESS)
 	{
 		/* send connectionless packet */

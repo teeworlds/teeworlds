@@ -68,7 +68,7 @@ void gameobject_ctf::tick()
 		else
 		{
 			player *players[MAX_CLIENTS];
-			int types[] = {OBJTYPE_PLAYER};
+			int types[] = {OBJTYPE_PLAYER_CHARACTER};
 			int num = world->find_entities(f->pos, 32.0f, (entity**)players, MAX_CLIENTS, types, 1);
 			for(int i = 0; i < num; i++)
 			{
@@ -96,9 +96,7 @@ void gameobject_ctf::tick()
 	}
 }
 
-//////////////////////////////////////////////////
-// FLAG
-//////////////////////////////////////////////////
+// Flag
 flag::flag(int _team)
 : entity(OBJTYPE_FLAG)
 {
@@ -135,4 +133,3 @@ void flag::snap(int snapping_client)
 	else
 		flag->local_carry = 0;
 }
-// FLAG END ///////////////////////

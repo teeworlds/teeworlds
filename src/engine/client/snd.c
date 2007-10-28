@@ -334,13 +334,22 @@ int snd_load_wv(const char *filename)
 	int sid = -1;
 	char error[100];
 	WavpackContext *context;
+	
+	/* don't waste memory on sound when we are stress testing */
+	if(config.stress)
+		return -1;
+
+	file = fopen(filename, "rb"); /* TODO: use system.h stuff for this */
+	if(!file)
+	{
+		dbg_msg("sound/wv", "failed to open %s", filename);
+		return -1;
+	}
 
 	sid = snd_alloc_id();
 	if(sid < 0)
 		return -1;
 	snd = &samples[sid];
-
-	file = fopen(filename, "rb"); /* TODO: use system.h stuff for this */
 
 	context = WavpackOpenFileInput(read_data, error);
 	if (context)

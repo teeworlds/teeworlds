@@ -22,7 +22,8 @@ enum
 {
 	OBJTYPE_NULL=0,
 	OBJTYPE_GAME,
-	OBJTYPE_PLAYER,
+	OBJTYPE_PLAYER_INFO,
+	OBJTYPE_PLAYER_CHARACTER, // use this if you are searching for the player entity
 	OBJTYPE_PROJECTILE,
 	OBJTYPE_POWERUP,
 	OBJTYPE_FLAG,
@@ -69,7 +70,7 @@ enum
 	STATE_PLAYING,
 	STATE_IN_MENU,
 	STATE_CHATTING,
-	
+
 	//GAMETYPE_DM=0,
 	//GAMETYPE_TDM,
 	//GAMETYPE_CTF,
@@ -79,46 +80,45 @@ struct player_input
 {
 	int left;
 	int right;
-	
+
 	int target_x;
 	int target_y;
-	
+
 	int jump;
 	int fire;
 	int hook;
 	int blink;
 	int state;
-	
+
 	int wanted_weapon;
 	int next_weapon;
 	int prev_weapon;
 };
 
-
-struct ev_explosion
+struct ev_common
 {
 	int x, y;
 };
 
-struct ev_spawn
+struct ev_explosion : public ev_common
 {
-	int x, y;
 };
 
-struct ev_death
+struct ev_spawn : public ev_common
 {
-	int x, y;
 };
 
-struct ev_sound
+struct ev_death : public ev_common
 {
-	int x, y;
-	int sound; // if (0x80000000 flag is set -> looping) if (0x40000000 is set -> stop looping
 };
 
-struct ev_damageind
+struct ev_sound : public ev_common
 {
-	int x, y;
+	int sound;
+};
+
+struct ev_damageind : public ev_common
+{
 	int angle;
 };
 
@@ -128,13 +128,13 @@ struct obj_game
 	int game_over;
 	int sudden_death;
 	int paused;
-	
+
 	int score_limit;
 	int time_limit;
 	int gametype;
-	
+
 	int warmup;
-	
+
 	int teamscore[2];
 };
 
@@ -156,10 +156,10 @@ struct obj_flag
 {
 	int x, y;
 	int team;
-	int local_carry;
+	int local_carry; // is set if the local player has the flag
 };
 
-
+// core object needed for physics
 struct obj_player_core
 {
 	int x, y;
@@ -172,25 +172,31 @@ struct obj_player_core
 	int hook_dx, hook_dy;
 };
 
-struct obj_player : public obj_player_core
+// info about the player that is only needed when it's on screen
+struct obj_player_character : public obj_player_core
 {
-	int local;
-	int clientid;
 	int state;
 
 	int health;
 	int armor;
 	int ammocount;
 	int weaponstage;
-	
+
 	int weapon; // current active weapon
 
+	int emote;
+
 	int attacktick; // num attack ticks left of current attack
-	
+};
+
+// information about the player that is always needed
+struct obj_player_info
+{
+	int local;
+	int clientid;
+
+	int team;
 	int score;
 	int latency;
 	int latency_flux;
-	int emote;
-	
-	int team;
 };

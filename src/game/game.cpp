@@ -101,6 +101,10 @@ void player_core::tick()
 {
 	float phys_size = 28.0f;
 	
+	#define MACRO_CHECK_VELOCITY { dbg_assert(length(vel) < 1000.0f, "velocity error"); }
+	
+	MACRO_CHECK_VELOCITY
+	
 	bool grounded = false;
 	if(col_check_point((int)(pos.x+phys_size/2), (int)(pos.y+phys_size/2+5)))
 		grounded = true;
@@ -110,6 +114,8 @@ void player_core::tick()
 	vec2 direction = normalize(vec2(input.target_x, input.target_y));
 
 	vel.y += gravity;
+	
+	MACRO_CHECK_VELOCITY
 	
 	float max_speed = grounded ? ground_control_speed : air_control_speed;
 	float accel = grounded ? ground_control_accel : air_control_accel;
@@ -121,8 +127,12 @@ void player_core::tick()
 	if(input.right)
 		vel.x = saturated_add(-max_speed, max_speed, vel.x, accel);
 		
+	MACRO_CHECK_VELOCITY
+		
 	if(!input.left && !input.right)
 		vel.x *= friction;
+	
+	MACRO_CHECK_VELOCITY
 	
 	// handle jumping
 	if(input.jump)
@@ -136,7 +146,9 @@ void player_core::tick()
 	}
 	else
 		jumped = 0;
-		
+	
+	MACRO_CHECK_VELOCITY
+	
 	// do hook
 	if(input.hook)
 	{
@@ -247,8 +259,11 @@ void player_core::tick()
 			// check if we are under the legal limit for the hook
 			if(length(new_vel) < hook_drag_speed || length(new_vel) < length(vel))
 				vel = new_vel; // no problem. apply
+				
 		}
 	}
+	
+	MACRO_CHECK_VELOCITY
 	
 	if(true)
 	{
@@ -265,11 +280,13 @@ void player_core::tick()
 			// handle player <-> player collision
 			float d = distance(pos, p->pos);
 			vec2 dir = normalize(pos - p->pos);
-			if(d < phys_size*1.25f)
+			if(d < phys_size*1.25f && d > 1.0f)
 			{
 				float a = phys_size*1.25f - d;
 				vel = vel + dir*a;
 			}
+			
+			MACRO_CHECK_VELOCITY
 			
 			// handle hook influence
 			if(hooked_player == i)
@@ -279,6 +296,8 @@ void player_core::tick()
 					float accel = hook_drag_accel * (d/hook_length);
 					vel.x = saturated_add(-hook_drag_speed, hook_drag_speed, vel.x, -accel*dir.x);
 					vel.y = saturated_add(-hook_drag_speed, hook_drag_speed, vel.y, -accel*dir.y);
+					
+					MACRO_CHECK_VELOCITY
 				}
 			}
 		}

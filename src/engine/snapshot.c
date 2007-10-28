@@ -94,26 +94,11 @@ void snapshot_debug_dump(SNAPSHOT *snap)
 
 static int diff_item(int *past, int *current, int *out, int size)
 {
-	/*
 	int needed = 0;
 	while(size)
 	{
 		*out = *current-*past;
-		if(*out)
-			needed = 1;
-		out++;
-		current++;
-		past++;
-		size--;
-	}*/
-
-	int needed = 0;
-	while(size)
-	{
-		*out = *current-*past;
-		if(*out)
-			needed = 1;
-		
+		needed |= *out;
 		out++;
 		past++;
 		current++;

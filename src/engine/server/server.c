@@ -739,6 +739,10 @@ static int server_run()
 				}
 	
 				/* snap game */
+				if(config.sv_bandwidth_mode == 0 ||
+					(config.sv_bandwidth_mode == 1 && current_tick%2) ||
+					(config.sv_bandwidth_mode == 2 && (current_tick%3) == 0 ))
+				/* if(current_tick&1) */
 				{
 					int64 start = time_get();
 					server_do_snap();
@@ -765,12 +769,21 @@ static int server_run()
 			{
 				if(config.debug)
 				{
-					dbg_msg("server", "sim=%.02fms snap=%.02fms net=%.02fms total=%.02fms load=%.02f%%",
+					static NETSTATS prev_stats;
+					NETSTATS stats;
+					netserver_stats(net, &stats);
+					dbg_msg("server", "sim=%.02fms snap=%.02fms net=%.02fms tot=%.02fms load=%.02f%%",
 						(simulationtime/reportinterval)/(double)time_freq()*1000,
 						(snaptime/reportinterval)/(double)time_freq()*1000,
 						(networktime/reportinterval)/(double)time_freq()*1000,
 						(totaltime/reportinterval)/(double)time_freq()*1000,
 						(totaltime)/reportinterval/(double)time_freq()*100.0f);
+
+					dbg_msg("server", "send=%8d recv=%8d",
+						(stats.send_bytes - prev_stats.send_bytes)/reportinterval,
+						(stats.recv_bytes - prev_stats.recv_bytes)/reportinterval);
+						
+					prev_stats = stats;
 				}
 	
 				simulationtime = 0;

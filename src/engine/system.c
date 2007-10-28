@@ -81,6 +81,7 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 	vprintf(fmt, args);
 	va_end(args);
 	printf("\n");
+	fflush(stdout);
 }
 
 int memory_alloced = 0;

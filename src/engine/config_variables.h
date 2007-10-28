@@ -46,3 +46,5 @@ MACRO_CONFIG_STR(sv_map, 128, "dm1")
 
 MACRO_CONFIG_INT(sv_max_clients, 8, 1, 16)
 
+MACRO_CONFIG_INT(sv_bandwidth_mode, 0, 0, 2)
+

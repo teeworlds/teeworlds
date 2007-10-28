@@ -46,8 +46,10 @@ static bool menu_active = false;
 static bool emoticon_selector_active = false;
 
 static vec2 mouse_pos;
-static vec2 local_player_pos;
-static obj_player *local_player;
+static vec2 local_character_pos;
+static const obj_player_character *local_character = 0;
+static const obj_player_info *local_info = 0;
+static const obj_game *gameobj = 0;
 
 struct client_data
 {
@@ -74,8 +76,8 @@ public:
 	}
 
 	float getorgzoom() { return zoom; }
-	
-	float getzoom(int tick, float intratick, obj_player* player)
+
+	float getzoom(int tick, float intratick, const obj_player_character *player)
 	{
 		float currentstage = ((float)player->weaponstage) * 0.1f;
 		if (currentstage < stage)
@@ -102,16 +104,16 @@ inline float frandom() { return rand()/(float)(RAND_MAX); }
 void snd_play_random(int chn, int setid, float vol, vec2 pos)
 {
 	soundset *set = &data->sounds[setid];
-	
+
 	if(!set->num_sounds)
 		return;
-		
+
 	if(set->num_sounds == 1)
 	{
 		snd_play_at(chn, set->sounds[0].id, 0, pos.x, pos.y);
 		return;
 	}
-	
+
 	// play a random one
 	int id;
 	do {
@@ -133,7 +135,7 @@ static const float volume_music = 0.8f;
 
 void sound_vol_pan(const vec2& p, float *vol, float *pan)
 {
-	vec2 player_to_ev = p - local_player_pos;
+	vec2 player_to_ev = p - local_character_pos;
 	*pan = 0.0f;
 	*vol = 1.0f;
 
@@ -170,11 +172,11 @@ static void select_sprite(sprite *spr, int flags=0, int sx=0, int sy=0)
 	int h = spr->h;
 	int cx = spr->set->gridx;
 	int cy = spr->set->gridy;
-	
+
 	float f = sqrtf(h*h + w*w);
 	sprite_w_scale = w/f;
 	sprite_h_scale = h/f;
-	
+
 	if(flags&SPRITE_FLAG_FLIP_Y)
 		gfx_quads_setsubset(x/(float)cx,(y+h)/(float)cy,(x+w)/(float)cx,y/(float)cy);
 	else
@@ -204,7 +206,7 @@ public:
 		float life;
 		float startangle;
 	};
-	
+
 	enum
 	{
 		MAX_ITEMS=64,
@@ -215,10 +217,10 @@ public:
 		lastupdate = 0;
 		num_items = 0;
 	}
-	
+
 	item items[MAX_ITEMS];
 	int num_items;
-	
+
 	item *create_i()
 	{
 		if (num_items < MAX_ITEMS)
@@ -229,13 +231,13 @@ public:
 		}
 		return 0;
 	}
-	
+
 	void destroy_i(item *i)
 	{
 		num_items--;
 		*i = items[num_items];
 	}
-	
+
 	void create(vec2 pos, vec2 dir)
 	{
 		item *i = create_i();
@@ -247,7 +249,7 @@ public:
 			i->startangle = (( (float)rand()/(float)RAND_MAX) - 1.0f) * 2.0f * pi;
 		}
 	}
-	
+
 	void render()
 	{
 		gfx_texture_set(data->images[IMAGE_GAME].id);
@@ -255,7 +257,7 @@ public:
 		for(int i = 0; i < num_items;)
 		{
 			vec2 pos = mix(items[i].pos+items[i].dir*75.0f, items[i].pos, clamp((items[i].life-0.60f)/0.15f, 0.0f, 1.0f));
-			
+
 			items[i].life -= client_frametime();
 			if(items[i].life < 0.0f)
 				destroy_i(&items[i]);
@@ -270,7 +272,7 @@ public:
 		}
 		gfx_quads_end();
 	}
-	
+
 };
 
 static damage_indicators damageind;
@@ -285,14 +287,14 @@ public:
 		float life;
 		float max_life;
 		float size;
-		
+
 		float rot;
 		float rotspeed;
-		
+
 		float gravity;
 		float friction;
 		int iparticle;
-		
+
 		vec4 color;
 	};
 
@@ -300,15 +302,15 @@ public:
 	{
 		MAX_PARTICLES=1024,
 	};
-	
+
 	particle particles[MAX_PARTICLES];
 	int num_particles;
-	
+
 	particle_system()
 	{
 		num_particles = 0;
 	}
-	
+
 	void new_particle(vec2 pos, vec2 vel, float life, float size, float gravity, float friction)
 	{
 		if (num_particles >= MAX_PARTICLES)
@@ -326,7 +328,7 @@ public:
 		particles[num_particles].rotspeed = frandom() * 10.0f;
 		num_particles++;
 	}
-	
+
 	void update(float time_passed)
 	{
 		for(int i = 0; i < num_particles; i++)
@@ -338,7 +340,7 @@ public:
 			particles[i].vel = vel* (1.0f/time_passed);
 			particles[i].life += time_passed;
 			particles[i].rot += time_passed * particles[i].rotspeed;
-			
+
 			// check particle death
 			if(particles[i].life > particles[i].max_life)
 			{
@@ -348,31 +350,31 @@ public:
 			}
 		}
 	}
-	
+
 	void render()
 	{
 		gfx_blend_additive();
 		gfx_texture_set(data->images[IMAGE_GAME].id);
 		gfx_quads_begin();
-		
+
 		for(int i = 0; i < num_particles; i++)
 		{
 			int type = particles[i].iparticle;
 			select_sprite(data->particles[type].spr);
 			float a = 1 - particles[i].life / particles[i].max_life;
 			vec2 p = particles[i].pos;
-			
+
 			gfx_quads_setrotation(particles[i].rot);
-			
+
 			gfx_setcolor(
 				data->particles[type].color_r,
 				data->particles[type].color_g,
 				data->particles[type].color_b,
 				pow(a, 0.75f));
-				
+
 			gfx_quads_draw(p.x, p.y,particles[i].size,particles[i].size);
 		}
-		gfx_quads_end();		
+		gfx_quads_end();
 		gfx_blend_normal();
 	}
 };
@@ -386,13 +388,13 @@ public:
 	{
 		LISTSIZE = 1000,
 	};
-	// meh, just use size % 
+	// meh, just use size %
 	int lastadd[LISTSIZE];
 	projectile_particles()
 	{
 		reset();
 	}
-	
+
 	void reset()
 	{
 		for (int i = 0; i < LISTSIZE; i++)
@@ -403,24 +405,24 @@ public:
 	{
 		int particlespersecond = data->projectileinfo[projectiletype].particlespersecond;
 		int lastaddtick = lastadd[projectileid % LISTSIZE];
-		
+
 		if(!particlespersecond)
 			return;
-		
+
 		if ((client_tick() - lastaddtick) > (client_tickspeed() / particlespersecond))
 		{
 			lastadd[projectileid % LISTSIZE] = client_tick();
 			float life = data->projectileinfo[projectiletype].particlelife;
 			float size = data->projectileinfo[projectiletype].particlesize;
 			vec2 v = vel * 0.2f + normalize(vec2(frandom()-0.5f, -frandom()))*(32.0f+frandom()*32.0f);
-			
+
 			// add the particle (from projectiletype later on, but meh...)
 			temp_system.new_particle(pos, v, life, size, 0, 0.95f);
 		}
 	}
 };
 static projectile_particles proj_particles;
- 
+
 static char chat_input[512];
 static unsigned chat_input_len;
 static const int chat_max_lines = 10;
@@ -489,7 +491,7 @@ static void render_loading(float percent)
 	float y = 600/2-h/2;
 
 	gfx_blend_normal();
-	
+
 	gfx_texture_set(-1);
 	gfx_quads_begin();
 	gfx_setcolor(0,0,0,0.50f);
@@ -497,7 +499,7 @@ static void render_loading(float percent)
 	gfx_quads_end();
 
 	const char *caption = "Loading";
-	
+
 	tw = gfx_pretty_text_width(48.0f, caption, -1);
 	ui_do_label(x+w/2-tw/2, y+20, caption, 48.0f);
 
@@ -516,7 +518,7 @@ extern "C" void modc_init()
 	snd_set_channel(CHN_GUI, 1.0f, 0.0f);
 	snd_set_channel(CHN_MUSIC, 1.0f, 0.0f);
 	snd_set_channel(CHN_WORLD, 1.0f, 1.0f);
-	
+
 	// load the data container
 	data = load_data_from_memory(internal_data);
 
@@ -541,10 +543,10 @@ extern "C" void modc_init()
 
 			data->sounds[s].sounds[i].id = id;
 		}
-		
+
 		current++;
 	}
-	
+
 	// load textures
 	for(int i = 0; i < data->num_images; i++)
 	{
@@ -560,9 +562,9 @@ extern "C" void modc_entergame()
 	img_init();
 	tilemap_init();
 	chat_reset();
-	
+
 	proj_particles.reset();
-	
+
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		client_datas[i].name[0] = 0;
@@ -570,7 +572,7 @@ extern "C" void modc_entergame()
 		client_datas[i].emoticon = 0;
 		client_datas[i].emoticon_start = -1;
 	}
-		
+
 	for(int i = 0; i < killmsg_max; i++)
 		killmsgs[i].tick = -100000;
 }
@@ -588,7 +590,7 @@ static void process_events(int s)
 	{
 		SNAP_ITEM item;
 		const void *data = snap_get_item(s, index, &item);
-		
+
 		if(item.type == EVENT_DAMAGEINDICATION)
 		{
 			ev_damageind *ev = (ev_damageind *)data;
@@ -598,19 +600,19 @@ static void process_events(int s)
 		{
 			ev_explosion *ev = (ev_explosion *)data;
 			vec2 p(ev->x, ev->y);
-			
+
 			// center explosion
 			temp_system.new_particle(p, vec2(0,0), 0.3f, 96.0f, 0, 0.95f);
 			temp_system.new_particle(p, vec2(0,0), 0.3f, 64.0f, 0, 0.95f);
 			temp_system.new_particle(p, vec2(0,0), 0.3f, 32.0f, 0, 0.95f);
 			temp_system.new_particle(p, vec2(0,0), 0.3f, 16.0f, 0, 0.95f);
-			
+
 			for(int i = 0; i < 16; i++)
 			{
 				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(128.0f+frandom()*128.0f);
 				temp_system.new_particle(p, v, 0.2f+0.25f*frandom(), 16.0f, 0, 0.985f);
 			}
-			
+
 			for(int i = 0; i < 16; i++)
 			{
 				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(256.0f+frandom()*512.0f);
@@ -627,7 +629,7 @@ static void process_events(int s)
 		{
 			ev_explosion *ev = (ev_explosion *)data;
 			vec2 p(ev->x, ev->y);
-			
+
 			// center explosion
 			vec2 v = normalize(vec2(frandom()-0.5f, -frandom()))*(32.0f+frandom()*32.0f);
 			temp_system.new_particle(p, v, 1.2f, 64.0f, 0, 0.95f);
@@ -635,13 +637,13 @@ static void process_events(int s)
 			temp_system.new_particle(p, v, 1.2f, 32.0f, 0, 0.95f);
 			v = normalize(vec2(frandom()-0.5f, -frandom()))*(128.0f+frandom()*128.0f);
 			temp_system.new_particle(p, v, 1.2f, 16.0f, 0, 0.95f);
-			
+
 			for(int i = 0; i < 8; i++)
 			{
 				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(64.0f+frandom()*64.0f);
 				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 0, 0.985f);
 			}
-			
+
 			for(int i = 0; i < 8; i++)
 			{
 				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(128.0f+frandom()*256.0f);
@@ -652,7 +654,7 @@ static void process_events(int s)
 		{
 			ev_explosion *ev = (ev_explosion *)data;
 			vec2 p(ev->x, ev->y);
-			
+
 			// center explosion
 			vec2 v = normalize(vec2(frandom()-0.5f, -frandom()))*(32.0f+frandom()*32.0f);
 			temp_system.new_particle(p, v, 1.2f, 64.0f, 0, 0.95f);
@@ -660,13 +662,13 @@ static void process_events(int s)
 			temp_system.new_particle(p, v, 1.2f, 32.0f, 0, 0.95f);
 			v = normalize(vec2(frandom()-0.5f, -frandom()))*(128.0f+frandom()*128.0f);
 			temp_system.new_particle(p, v, 1.2f, 16.0f, 0, 0.95f);
-			
+
 			for(int i = 0; i < 8; i++)
 			{
 				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(64.0f+frandom()*64.0f);
 				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 0, 0.985f);
 			}
-			
+
 			for(int i = 0; i < 8; i++)
 			{
 				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(128.0f+frandom()*256.0f);
@@ -677,7 +679,7 @@ static void process_events(int s)
 		{
 			ev_explosion *ev = (ev_explosion *)data;
 			vec2 p(ev->x, ev->y);
-			
+
 			// center explosion
 			vec2 v = normalize(vec2(frandom()-0.5f, -frandom()))*(32.0f+frandom()*32.0f);
 			temp_system.new_particle(p, v, 1.2f, 64.0f, 0, 0.95f);
@@ -685,13 +687,13 @@ static void process_events(int s)
 			temp_system.new_particle(p, v, 1.2f, 32.0f, 0, 0.95f);
 			v = normalize(vec2(frandom()-0.5f, -frandom()))*(128.0f+frandom()*128.0f);
 			temp_system.new_particle(p, v, 1.2f, 16.0f, 0, 0.95f);
-			
+
 			for(int i = 0; i < 8; i++)
 			{
 				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(64.0f+frandom()*64.0f);
 				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 0, 0.985f);
 			}
-			
+
 			for(int i = 0; i < 8; i++)
 			{
 				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(128.0f+frandom()*256.0f);
@@ -707,7 +709,7 @@ static void process_events(int s)
 			//bool bstoploop = (ev->sound & SOUND_LOOPFLAG_STOPLOOP) != 0;
 			//float vol, pan;
 			//sound_vol_pan(p, &vol, &pan);
-			
+
 			if(soundid >= 0 && soundid < NUM_SOUNDS)
 			{
 				// TODO: we need to control the volume of the diffrent sounds
@@ -716,7 +718,7 @@ static void process_events(int s)
 			}
 		}
 	}
-	
+
 	must_process_events = false;
 }
 
@@ -729,25 +731,30 @@ extern "C" void modc_predict()
 	{
 		world_core world;
 		int local_cid = -1;
-		
+
 		// search for players
 		for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
 		{
 			SNAP_ITEM item;
 			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-			
-			if(item.type == OBJTYPE_PLAYER)
+			int client_id = item.id;
+
+			if(item.type == OBJTYPE_PLAYER_CHARACTER)
 			{
-				const obj_player *player = (const obj_player *)data;
-				client_datas[player->clientid].predicted.world = &world;
-				world.players[player->clientid] = &client_datas[player->clientid].predicted;
-				
-				client_datas[player->clientid].predicted.read(player);
-				if(player->local)
-					local_cid = player->clientid;
+				const obj_player_character *character = (const obj_player_character *)data;
+				client_datas[client_id].predicted.world = &world;
+				world.players[client_id] = &client_datas[client_id].predicted;
+
+				client_datas[client_id].predicted.read(character);
+			}
+			else if(item.type == OBJTYPE_PLAYER_INFO)
+			{
+				const obj_player_info *info = (const obj_player_info *)data;
+				if(info->local)
+					local_cid = client_id;
 			}
 		}
-		
+
 		// predict
 		for(int tick = client_tick(); tick <= client_predtick(); tick++)
 		{
@@ -756,7 +763,7 @@ extern "C" void modc_predict()
 			{
 				if(!world.players[c])
 					continue;
-				
+
 				mem_zero(&world.players[c]->input, sizeof(world.players[c]->input));
 				if(local_cid == c)
 				{
@@ -765,23 +772,23 @@ extern "C" void modc_predict()
 					if(input)
 						world.players[c]->input = *((player_input*)input);
 				}
-				
+
 				world.players[c]->tick();
 			}
-			
+
 			// move all players and quantize their data
 			for(int c = 0; c < MAX_CLIENTS; c++)
 			{
 				if(!world.players[c])
 					continue;
-					
+
 				world.players[c]->move();
 				world.players[c]->quantize();
 			}
 		}
-		
+
 		// get the data from the local player
-		if(local_cid != -1)
+		if(local_cid != -1 && world.players[local_cid])
 		{
 			predicted_prev_player = predicted_player;
 			predicted_player = *world.players[local_cid];
@@ -794,7 +801,7 @@ extern "C" void modc_newsnapshot()
 	if(must_process_events)
 		process_events(SNAP_PREV);
 	must_process_events = true;
-	
+
 	if(config.stress)
 	{
 		if((client_tick()%250) == 0)
@@ -804,6 +811,47 @@ extern "C" void modc_newsnapshot()
 			msg_pack_string("galenskap!!!!", 512);
 			msg_pack_end();
 			client_send_msg();
+		}
+	}
+
+	// clear out the invalid pointers
+	local_character = 0;
+	local_info = 0;
+	gameobj = 0;
+
+	// setup world view
+	{
+		// 1. fetch local player
+		// 2. set him to the center
+		int num = snap_num_items(SNAP_CURRENT);
+		for(int i = 0; i < num; i++)
+		{
+			SNAP_ITEM item;
+			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+
+			if(item.type == OBJTYPE_PLAYER_INFO)
+			{
+				const obj_player_info *info = (const obj_player_info *)data;
+				if(info->local)
+				{
+					local_info = info;
+					const void *data = snap_find_item(SNAP_CURRENT, OBJTYPE_PLAYER_CHARACTER, item.id);
+					if(data)
+					{
+						local_character = (const obj_player_character *)data;
+						local_character_pos = vec2(local_character->x, local_character->y);
+
+						const void *p = snap_find_item(SNAP_PREV, OBJTYPE_PLAYER_CHARACTER, item.id);
+						if(p)
+						{
+							local_character_pos = mix(vec2(((obj_player_character *)p)->x, ((obj_player_character *)p)->y),
+								local_character_pos, client_intratick());
+						}
+					}
+				}
+			}
+			else if(item.type == OBJTYPE_GAME)
+				gameobj = (obj_game *)data;
 		}
 	}
 }
@@ -828,22 +876,22 @@ static void render_projectile(const obj_projectile *prev, const obj_projectile *
 {
 	gfx_texture_set(data->images[IMAGE_GAME].id);
 	gfx_quads_begin();
-	
+
 	select_sprite(data->weapons[current->type%data->num_weapons].sprite_proj);
 	vec2 vel = mix(vec2(prev->vx, prev->vy), vec2(current->vx, current->vy), client_intratick());
 	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
-	
+
 	// add particle for this projectile
 	proj_particles.addparticle(current->type, itemid, pos, vel);
-	
+
 	if(length(vel) > 0.00001f)
 		gfx_quads_setrotation(get_angle(vel));
 	else
 		gfx_quads_setrotation(0);
-	
+
 	// TODO: do this, but nice
 	//temp_system.new_particle(pos, vec2(0,0), 0.3f, 14.0f, 0, 0.95f);
-	
+
 	gfx_quads_draw(pos.x, pos.y, 32, 32);
 	gfx_quads_setrotation(0);
 	gfx_quads_end();
@@ -872,7 +920,7 @@ static void render_powerup(const obj_powerup *prev, const obj_powerup *current)
 			SPRITE_POWERUP_TIMEFIELD
 			};
 		select_sprite(c[current->type]);
-		
+
 		if(c[current->type] == SPRITE_POWERUP_NINJA)
 		{
 			proj_particles.addparticle(0, 0,
@@ -882,9 +930,9 @@ static void render_powerup(const obj_powerup *prev, const obj_powerup *current)
 			pos.x += 10.0f;
 		}
 	}
-	
+
 	gfx_quads_setrotation(angle);
-	
+
 	float offset = pos.y/32.0f + pos.x/32.0f;
 	pos.x += cosf(client_localtime()*2.0f+offset)*2.5f;
 	pos.y += sinf(client_localtime()*2.0f+offset)*2.5f;
@@ -905,14 +953,14 @@ static void render_flag(const obj_flag *prev, const obj_flag *current)
 		select_sprite(SPRITE_FLAG_RED);
 	else
 		select_sprite(SPRITE_FLAG_BLUE);
-	
+
 	gfx_quads_setrotation(angle);
-	
+
 	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
-	
+
 	if(current->local_carry)
-		pos = local_player_pos;
-		
+		pos = local_character_pos;
+
     gfx_setcolor(current->team ? 0 : 1,0,current->team ? 1 : 0,1);
     //draw_sprite(pos.x, pos.y, size);
     gfx_quads_draw(pos.x, pos.y-size*0.75f, size, size*2);
@@ -949,7 +997,7 @@ static void anim_seq_eval(sequence *seq, float time, keyframe *frame)
 				blend = (time - frame1->time) / (frame2->time - frame1->time);
 				break;
 			}
-		}		
+		}
 
 		if (frame1 && frame2)
 		{
@@ -1045,10 +1093,10 @@ static void render_tee(animstate *anim, int skin, int emote, vec2 dir, vec2 pos)
 {
 	vec2 direction =  dir;
 	vec2 position = pos;
-	
+
 	gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
 	gfx_quads_begin();
-	
+
 	// draw foots
 	for(int p = 0; p < 2; p++)
 	{
@@ -1056,7 +1104,7 @@ static void render_tee(animstate *anim, int skin, int emote, vec2 dir, vec2 pos)
 		// second pass we draw the filling
 		int outline = p==0 ? 1 : 0;
 		int shift = skin;
-		
+
 		for(int f = 0; f < 2; f++)
 		{
 			float basesize = 10.0f;
@@ -1066,7 +1114,7 @@ static void render_tee(animstate *anim, int skin, int emote, vec2 dir, vec2 pos)
 				// draw body
 				select_sprite(outline?SPRITE_TEE_BODY_OUTLINE:SPRITE_TEE_BODY, 0, 0, shift*4);
 				gfx_quads_draw(position.x+anim->body.x, position.y+anim->body.y, 4*basesize, 4*basesize);
-				
+
 				// draw eyes
 				if(p == 1)
 				{
@@ -1096,18 +1144,18 @@ static void render_tee(animstate *anim, int skin, int emote, vec2 dir, vec2 pos)
 
 			// draw feet
 			select_sprite(outline?SPRITE_TEE_FOOT_OUTLINE:SPRITE_TEE_FOOT, 0, 0, shift*4);
-			
+
 			keyframe *foot = f ? &anim->front_foot : &anim->back_foot;
-			
+
 			float w = basesize*2.5f;
 			float h = basesize*1.425f;
-			
+
 			gfx_quads_setrotation(foot->angle*pi*2);
 			gfx_quads_draw(position.x+foot->x, position.y+foot->y, w, h);
 		}
 	}
-	
-	gfx_quads_end();	
+
+	gfx_quads_end();
 }
 
 void draw_circle(float x, float y, float r, int segments)
@@ -1124,7 +1172,7 @@ void draw_circle(float x, float y, float r, int segments)
 		float sa1 = sinf(a1);
 		float sa2 = sinf(a2);
 		float sa3 = sinf(a3);
-		
+
 		gfx_quads_draw_freeform(
 			x, y,
 			x+ca1*r, y+sa1*r,
@@ -1147,7 +1195,7 @@ void draw_round_rect(float x, float y, float w, float h, float r)
 		float sa1 = sinf(a1);
 		float sa2 = sinf(a2);
 		float sa3 = sinf(a3);
-		
+
 		gfx_quads_draw_freeform(
 			x+r, y+r,
 			x+(1-ca1)*r, y+(1-sa1)*r,
@@ -1172,7 +1220,7 @@ void draw_round_rect(float x, float y, float w, float h, float r)
 			x+w-r+ca3*r, y+h-r+sa3*r,
 			x+w-r+ca2*r, y+h-r+sa2*r);
 	}
-	
+
 	gfx_quads_drawTL(x+r, y+r, w-r*2, h-r*2); // center
 	gfx_quads_drawTL(x+r, y, w-r*2, r); // top
 	gfx_quads_drawTL(x+r, y+h-r, w-r*2, r); // bottom
@@ -1180,41 +1228,48 @@ void draw_round_rect(float x, float y, float w, float h, float r)
 	gfx_quads_drawTL(x+w-r, y+r, r, h-r*2); // right
 }
 
-static void render_player(const obj_player *prev_obj, const obj_player *player_obj)
+static void render_player(
+	const obj_player_character *prev_char,
+	const obj_player_character *player_char,
+	const obj_player_info *prev_info,
+	const obj_player_info *player_info
+	)
 {
-	obj_player prev;
-	obj_player player;
-	prev = *prev_obj;
-	player = *player_obj;
-	
+	obj_player_character prev;
+	obj_player_character player;
+	prev = *prev_char;
+	player = *player_char;
+
+	obj_player_info info = *player_info;
+
 	float intratick = client_intratick();
-	
+
 	if(player.health < 0) // dont render dead players
 		return;
-	
-	if(player.local)
+
+	if(info.local)
 	{
 		// apply predicted results
 		predicted_player.write(&player);
 		predicted_prev_player.write(&prev);
 		intratick = client_intrapredtick();
 	}
-		
-	int skin = charids[player.clientid];
-	
+
+	int skin = charids[info.clientid];
+
 	if(gametype != GAMETYPE_DM)
-		skin = player.team*9; // 0 or 9
+		skin = info.team*9; // 0 or 9
 
 	vec2 direction = get_direction(player.angle);
 	float angle = player.angle/256.0f;
 	vec2 position = mix(vec2(prev.x, prev.y), vec2(player.x, player.y), intratick);
-	
+
 	if(prev.health < 0) // Don't flicker from previous position
 		position = vec2(player.x, player.y);
-	
+
 	bool stationary = player.vx < 1 && player.vx > -1;
 	bool inair = col_check_point(player.x, player.y+16) == 0;
-	
+
 	// evaluate animation
 	float walk_time = fmod(position.x, 100.0f)/100.0f;
 	animstate state;
@@ -1237,7 +1292,7 @@ static void render_player(const obj_player *prev_obj, const obj_player *player_o
 		float a = clamp((client_tick()-player.attacktick+intratick)/40.0f, 0.0f, 1.0f);
 		anim_eval_add(&state, &data->animations[ANIM_NINJA_SWING], a, 1.0f);
 	}
-		
+
 	// draw hook
 	if (prev.hook_state>0 && player.hook_state>0)
 	{
@@ -1247,16 +1302,16 @@ static void render_player(const obj_player *prev_obj, const obj_player *player_o
 
 		vec2 pos = position;
 		vec2 hook_pos = mix(vec2(prev.hook_x, prev.hook_y), vec2(player.hook_x, player.hook_y), intratick);
-		
+
 		float d = distance(pos, hook_pos);
 		vec2 dir = normalize(pos-hook_pos);
 
 		gfx_quads_setrotation(get_angle(dir)+pi);
-		
+
 		// render head
 		select_sprite(SPRITE_HOOK_HEAD);
 		gfx_quads_draw(hook_pos.x, hook_pos.y, 24,16);
-		
+
 		// render chain
 		select_sprite(SPRITE_HOOK_CHAIN);
 		for(float f = 24; f < d; f += 24)
@@ -1305,7 +1360,7 @@ static void render_player(const obj_player *prev_obj, const obj_player *player_o
 		{
 			p = position;
 			p.y += data->weapons[iw].offsety;
-			
+
 			if(direction.x < 0)
 			{
 				gfx_quads_setrotation(-pi/2-state.attach.angle*pi*2);
@@ -1351,7 +1406,7 @@ static void render_player(const obj_player *prev_obj, const obj_player *player_o
 			p.y += data->weapons[iw].offsety;
 			draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
 		}
-		
+
 		if (player.weapon == WEAPON_GUN || player.weapon == WEAPON_SHOTGUN)
 		{
 			// check if we're firing stuff
@@ -1392,16 +1447,16 @@ static void render_player(const obj_player *prev_obj, const obj_player *player_o
 			case WEAPON_SHOTGUN: render_hand(skin, p, direction, -pi/2, vec2(-5, 4)); break;
 			case WEAPON_ROCKET: render_hand(skin, p, direction, -pi/2, vec2(-4, 7)); break;
 		}
-		
+
 	}
 
 	// render the tee
-	if(player.local && config.debug)
+	if(info.local && config.debug)
 	{
-		vec2 ghost_position = mix(vec2(prev_obj->x, prev_obj->y), vec2(player_obj->x, player_obj->y), client_intratick());
+		vec2 ghost_position = mix(vec2(prev_char->x, prev_char->y), vec2(player_char->x, player_char->y), client_intratick());
 		render_tee(&state, 15, player.emote, direction, ghost_position); // render ghost
 	}
-	
+
 	render_tee(&state, skin, player.emote, direction, position);
 
 	if(player.state == STATE_CHATTING)
@@ -1413,13 +1468,13 @@ static void render_player(const obj_player *prev_obj, const obj_player *player_o
 		gfx_quads_end();
 	}
 
-	if (client_datas[player.clientid].emoticon_start != -1 && client_datas[player.clientid].emoticon_start + 2 * client_tickspeed() > client_tick())
+	if (client_datas[info.clientid].emoticon_start != -1 && client_datas[info.clientid].emoticon_start + 2 * client_tickspeed() > client_tick())
 	{
 		gfx_texture_set(data->images[IMAGE_EMOTICONS].id);
 		gfx_quads_begin();
 
-		int since_start = client_tick() - client_datas[player.clientid].emoticon_start;
-		int from_end = client_datas[player.clientid].emoticon_start + 2 * client_tickspeed() - client_tick();
+		int since_start = client_tick() - client_datas[info.clientid].emoticon_start;
+		int from_end = client_datas[info.clientid].emoticon_start + 2 * client_tickspeed() - client_tick();
 
 		float a = 1;
 
@@ -1440,7 +1495,7 @@ static void render_player(const obj_player *prev_obj, const obj_player *player_o
 
 		gfx_setcolor(1.0f,1.0f,1.0f,a);
 		// client_datas::emoticon is an offset from the first emoticon
-		select_sprite(SPRITE_OOP + client_datas[player.clientid].emoticon);
+		select_sprite(SPRITE_OOP + client_datas[info.clientid].emoticon);
 		gfx_quads_draw(position.x, position.y - 23 - 32*h, 64, 64*h);
 		gfx_quads_end();
 	}
@@ -1461,7 +1516,7 @@ void render_sun(float x, float y)
 		float size = (1.0f/(float)rays)*0.25f;
 		vec2 dir0(sinf((a-size)*pi*2.0f), cosf((a-size)*pi*2.0f));
 		vec2 dir1(sinf((a+size)*pi*2.0f), cosf((a+size)*pi*2.0f));
-		
+
 		gfx_setcolorvertex(0, 1.0f,1.0f,1.0f,0.025f);
 		gfx_setcolorvertex(1, 1.0f,1.0f,1.0f,0.025f);
 		gfx_setcolorvertex(2, 1.0f,1.0f,1.0f,0.0f);
@@ -1475,11 +1530,11 @@ void render_sun(float x, float y)
 	}
 	gfx_quads_end();
 	gfx_blend_normal();
-	
+
 	gfx_texture_set(data->images[IMAGE_SUN].id);
 	gfx_quads_begin();
 	gfx_quads_draw(pos.x, pos.y, 256, 256);
-	gfx_quads_end();	
+	gfx_quads_end();
 }
 
 static bool emoticon_selector_inactive_override = false;
@@ -1507,7 +1562,7 @@ int emoticon_selector_render()
 
 	static bool mouse_down = false;
 	bool return_now = false;
-	int selected_emoticon; 
+	int selected_emoticon;
 
 	if (length(emoticon_selector_mouse) < 50)
 		selected_emoticon = -1;
@@ -1533,7 +1588,7 @@ int emoticon_selector_render()
 	gfx_mapscreen(0,0,400,300);
 
 	gfx_blend_normal();
-	
+
 	gfx_texture_set(-1);
 	gfx_quads_begin();
 	gfx_setcolor(0,0,0,0.3f);
@@ -1570,7 +1625,7 @@ int emoticon_selector_render()
 	return return_now ? selected_emoticon : -1;
 }
 
-void render_goals(obj_game *gameobj, float x, float y, float w)
+void render_goals(float x, float y, float w)
 {
 	float h = 50.0f;
 
@@ -1580,7 +1635,7 @@ void render_goals(obj_game *gameobj, float x, float y, float w)
 	gfx_setcolor(0,0,0,0.5f);
 	draw_round_rect(x-10.f, y-10.f, w, h, 10.0f);
 	gfx_quads_end();
-	
+
 	// render goals
 	//y = ystart+h-54;
 	if(gameobj && gameobj->time_limit)
@@ -1598,7 +1653,7 @@ void render_goals(obj_game *gameobj, float x, float y, float w)
 
 }
 
-void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, const char *title)
+void render_scoreboard(float x, float y, float w, int team, const char *title)
 {
 	//float w = 550.0f;
 	//float x = width/2-w/2;
@@ -1608,8 +1663,8 @@ void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, c
 
 	animstate idlestate;
 	anim_eval(&data->animations[ANIM_BASE], 0, &idlestate);
-	anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);	
-	
+	anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);
+
 	//float ystart = y;
 	float h = 600.0f;
 
@@ -1619,7 +1674,7 @@ void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, c
 	gfx_setcolor(0,0,0,0.5f);
 	draw_round_rect(x-10.f, y-10.f, w, h, 40.0f);
 	gfx_quads_end();
-	
+
 	// render title
 	if(!title)
 	{
@@ -1638,15 +1693,15 @@ void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, c
 	else
 	{
 		gfx_pretty_text(x+10, y, 64, title, -1);
-		
+
 		char buf[128];
 		sprintf(buf, "%d", gameobj->teamscore[team&1]);
 		tw = gfx_pretty_text_width(64, buf, -1);
 		gfx_pretty_text(x+w-tw-40, y, 64, buf, -1);
 	}
-	
+
 	y += 64.0f;
-	
+
 	/*
 	if(team)
 	{
@@ -1657,20 +1712,20 @@ void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, c
 
 
 	// find players
-	const obj_player *players[MAX_CLIENTS] = {0};
+	const obj_player_info *players[MAX_CLIENTS] = {0};
 	int num_players = 0;
 	for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
 	{
 		SNAP_ITEM item;
 		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-		
-		if(item.type == OBJTYPE_PLAYER)
+
+		if(item.type == OBJTYPE_PLAYER_INFO)
 		{
-			players[num_players] = (const obj_player *)data;
+			players[num_players] = (const obj_player_info *)data;
 			num_players++;
 		}
 	}
-	
+
 	// sort players
 	for(int k = 0; k < num_players; k++) // ffs, bubblesort
 	{
@@ -1678,7 +1733,7 @@ void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, c
 		{
 			if(players[i]->score < players[i+1]->score)
 			{
-				const obj_player *tmp = players[i];
+				const obj_player_info *tmp = players[i];
 				players[i] = players[i+1];
 				players[i+1] = tmp;
 			}
@@ -1694,15 +1749,15 @@ void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, c
 	// render player scores
 	for(int i = 0; i < num_players; i++)
 	{
-		const obj_player *player = players[i];
-		
+		const obj_player_info *info = players[i];
+
 		// make sure that we render the correct team
-		if(team != -1 && player->team != team)
+		if(team != -1 && info->team != team)
 			continue;
-		
+
 		char buf[128];
 		float font_size = 46.0f;
-		if(player->local)
+		if(info->local)
 		{
 			// background so it's easy to find the local player
 			gfx_texture_set(-1);
@@ -1711,17 +1766,17 @@ void render_scoreboard(obj_game *gameobj, float x, float y, float w, int team, c
 			draw_round_rect(x, y, w-20, 48, 20.0f);
 			gfx_quads_end();
 		}
-		
-		sprintf(buf, "%4d", player->score);
+
+		sprintf(buf, "%4d", info->score);
 		gfx_pretty_text(x+60-gfx_pretty_text_width(font_size,buf,-1), y, font_size, buf, -1);
-		gfx_pretty_text(x+128, y, font_size, client_datas[player->clientid].name, -1);
-		
-		sprintf(buf, "%4d", player->latency);
+		gfx_pretty_text(x+128, y, font_size, client_datas[info->clientid].name, -1);
+
+		sprintf(buf, "%4d", info->latency);
 		float tw = gfx_pretty_text_width(font_size, buf, -1);
 		gfx_pretty_text(x+w-tw-35, y, font_size, buf, -1);
 
 		// render avatar
-		render_tee(&idlestate, player->clientid, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28));
+		render_tee(&idlestate, info->clientid, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28));
 		y += 50.0f;
 	}
 }
@@ -1737,23 +1792,19 @@ void mapscreen_to_world(float center_x, float center_y, float zoom)
 // renders the complete game world
 void render_world(float center_x, float center_y, float zoom)
 {
-	const float default_zoom = 3.0f;
-	float width = 400*default_zoom*zoom;
-	float height = 300*default_zoom*zoom;
-	
-	gfx_mapscreen(center_x-width/2, center_y-height/2, center_x+width/2, center_y+height/2);
-	
-	// draw background
+	mapscreen_to_world(center_x, center_y, zoom);
+	//gfx_mapscreen(center_x-width/2, center_y-height/2, center_x+width/2, center_y+height/2);
 
 	// draw the sun
 	if(config.gfx_high_detail)
 	{
 		render_sun(20+center_x*0.6f, 20+center_y*0.6f);
-		
+
+		// draw clouds
 		static vec2 cloud_pos[6] = {vec2(-500,0),vec2(-500,200),vec2(-500,400)};
 		static float cloud_speed[6] = {30, 20, 10};
 		static int cloud_sprites[6] = {SPRITE_CLOUD1, SPRITE_CLOUD2, SPRITE_CLOUD3};
-		
+
 		gfx_texture_set(data->images[IMAGE_CLOUDS].id);
 		gfx_quads_begin();
 		for(int i = 0; i < 3; i++)
@@ -1765,7 +1816,7 @@ void render_world(float center_x, float center_y, float zoom)
 		}
 		gfx_quads_end();
 
-		
+
 		// draw backdrop
 		gfx_texture_set(data->images[IMAGE_BACKDROP].id);
 		gfx_quads_begin();
@@ -1774,10 +1825,10 @@ void render_world(float center_x, float center_y, float zoom)
 			gfx_quads_drawTL(1024*x+center_x*parallax_amount, (center_y)*parallax_amount+150+512, 1024, 512);
 		gfx_quads_end();
 	}
-	
+
 	// render background tilemaps
 	tilemap_render(32.0f, 0);
-	
+
 	// render items
 	{
 		int num = snap_num_items(SNAP_CURRENT);
@@ -1785,7 +1836,7 @@ void render_world(float center_x, float center_y, float zoom)
 		{
 			SNAP_ITEM item;
 			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-			
+
 			if(item.type == OBJTYPE_PROJECTILE)
 			{
 				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
@@ -1807,24 +1858,31 @@ void render_world(float center_x, float center_y, float zoom)
 		}
 	}
 
-	// render players above all	
+	// render players above all
 	{
 		int num = snap_num_items(SNAP_CURRENT);
 		for(int i = 0; i < num; i++)
 		{
 			SNAP_ITEM item;
 			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-			
-			if(item.type == OBJTYPE_PLAYER)
+
+			if(item.type == OBJTYPE_PLAYER_CHARACTER)
 			{
 				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-				if(prev)
+				const void *prev_info = snap_find_item(SNAP_PREV, OBJTYPE_PLAYER_INFO, item.id);
+				const void *info = snap_find_item(SNAP_CURRENT, OBJTYPE_PLAYER_INFO, item.id);
+				if(prev && prev_info && info)
 				{
-					client_datas[((const obj_player *)data)->clientid].team = ((const obj_player *)data)->team;
-					render_player((const obj_player *)prev, (const obj_player *)data);
+					client_datas[((const obj_player_info *)data)->clientid].team = ((const obj_player_info *)data)->team;
+					render_player(
+							(const obj_player_character *)prev,
+							(const obj_player_character *)data,
+							(const obj_player_info *)prev_info,
+							(const obj_player_info *)info
+						);
 				}
 			}
-		}	
+		}
 	}
 
 	// render particles
@@ -1833,9 +1891,9 @@ void render_world(float center_x, float center_y, float zoom)
 
 	// render foreground tilemaps
 	tilemap_render(32.0f, 1);
-	
+
 	// render damage indications
-	damageind.render();	
+	damageind.render();
 }
 
 static void do_input(int *v, int key)
@@ -1847,51 +1905,22 @@ static void do_input(int *v, int key)
 }
 
 void render_game()
-{	
+{
 	float width = 400*3.0f;
 	float height = 300*3.0f;
-	
+
 	bool spectate = false;
-		
-	// setup world view
-	obj_game *gameobj = 0;
-	{
-		// 1. fetch local player
-		// 2. set him to the center
-		int num = snap_num_items(SNAP_CURRENT);
-		for(int i = 0; i < num; i++)
-		{
-			SNAP_ITEM item;
-			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-			
-			if(item.type == OBJTYPE_PLAYER)
-			{
-				obj_player *player = (obj_player *)data;
-				if(player->local)
-				{
-					local_player = player;
-					local_player_pos = vec2(player->x, player->y);
-					
-					const void *p = snap_find_item(SNAP_PREV, item.type, item.id);
-					if(p)
-						local_player_pos = mix(vec2(((obj_player *)p)->x, ((obj_player *)p)->y), local_player_pos, client_intratick());
-				}
-			}
-			else if(item.type == OBJTYPE_GAME)
-				gameobj = (obj_game *)data;
-		}
-	}
-	
-	local_player_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_intrapredtick());
-	if(local_player && local_player->team == -1)
+
+	local_character_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_intrapredtick());
+	if(local_info && local_info->team == -1)
 		spectate = true;
 
 	// set listner pos
-	snd_set_listener_pos(local_player_pos.x, local_player_pos.y);
-		
+	snd_set_listener_pos(local_character_pos.x, local_character_pos.y);
+
 	animstate idlestate;
 	anim_eval(&data->animations[ANIM_BASE], 0, &idlestate);
-	anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);	
+	anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);
 
 	if (inp_key_down(KEY_ESC))
 	{
@@ -1900,7 +1929,7 @@ void render_game()
 		else
 			menu_active = !menu_active;
 	}
-	
+
 	// handle chat input
 	if (!menu_active)
 	{
@@ -1932,13 +1961,13 @@ void render_game()
 						}
 					}
 				}
-				
+
 				chat_mode = CHATMODE_NONE;
 			}
-			
+
 			int c = inp_last_char();
 			int k = inp_last_key();
-		
+
 			if (!(c >= 0 && c < 32))
 			{
 				if (chat_input_len < sizeof(chat_input) - 1)
@@ -1957,7 +1986,7 @@ void render_game()
 					chat_input_len--;
 				}
 			}
-			
+
 		}
 		else
 		{
@@ -1968,7 +1997,7 @@ void render_game()
 
 				if(inp_key_down(config.key_teamchat))
 					chat_mode = CHATMODE_TEAM;
-				
+
 				if(chat_mode != CHATMODE_NONE)
 				{
 					mem_zero(chat_input, sizeof(chat_input));
@@ -1977,10 +2006,10 @@ void render_game()
 			}
 		}
 	}
-	
+
 	if (!menu_active)
 		inp_clear();
-	
+
 	// fetch new input
 	if(!menu_active && (!emoticon_selector_active || emoticon_selector_inactive_override))
 	{
@@ -1994,14 +2023,14 @@ void render_game()
 				mouse_pos = normalize(mouse_pos)*600.0f;
 		}
 	}
-	
+
 	// snap input
 	{
 		static player_input input = {0};
-			
+
 		input.target_x = (int)mouse_pos.x;
 		input.target_y = (int)mouse_pos.y;
-	
+
 		if(chat_mode != CHATMODE_NONE)
 			input.state = STATE_CHATTING;
 		else if(menu_active)
@@ -2013,14 +2042,14 @@ void render_game()
 			input.right = inp_key_state(config.key_move_right);
 			input.hook = inp_key_state(config.key_hook);
 			input.jump  = inp_key_state(config.key_jump);
-			
+
 			if(!emoticon_selector_active)
 				do_input(&input.fire, config.key_fire);
-			
+
 			// weapon selection
 			do_input(&input.next_weapon, config.key_next_weapon);
 			do_input(&input.prev_weapon, config.key_prev_weapon);
-			
+
 			if(inp_key_presses(config.key_next_weapon) || inp_key_presses(config.key_prev_weapon))
 				input.wanted_weapon = 0;
 			else
@@ -2033,31 +2062,26 @@ void render_game()
 				if(inp_key_presses(config.key_weapon6)) input.wanted_weapon = 6;
 			}
 		}
-		
+
 		// stress testing
 		if(config.stress)
 		{
-			//float t = client_localtime();
+			float t = client_localtime();
 			mem_zero(&input, sizeof(input));
-			
-			/*
-			input.left = 1;
-			input.jump = ((int)t)&1;
-			input.fire = ((int)(t*10))&1;
-			input.hook = ((int)t)&1;
-			input.activeweapon = ((int)t)%NUM_WEAPONS;
+
+			input.left = ((int)t/2)&1;
+			input.right = ((int)t/2+1)&1;
+			input.jump = ((int)t);
+			input.fire = ((int)(t*10));
+			input.hook = ((int)(t*2))&1;
+			input.wanted_weapon = ((int)t)%NUM_WEAPONS;
 			input.target_x = (int)(sinf(t*3)*100.0f);
 			input.target_y = (int)(cosf(t*3)*100.0f);
-			*/
-			
-			//input.target_x = (int)((rand()/(float)RAND_MAX)*64-32);
-			//input.target_y = (int)((rand()/(float)RAND_MAX)*64-32);
-			
 		}
 
 		snap_input(&input, sizeof(input));
 	}
-	
+
 	// everything updated, do events
 	if(must_process_events)
 		process_events(SNAP_PREV);
@@ -2074,18 +2098,40 @@ void render_game()
 		offx = offx*2/3;
 		offy = offy*2/3;
 	}
-	
+
 	// render the world
 	gfx_clear(0.65f,0.78f,0.9f);
 	if(spectate)
 		render_world(mouse_pos.x, mouse_pos.y, 1.0f);
 	else
-		render_world(local_player_pos.x+offx, local_player_pos.y+offy, 1.0f);
+	{
+		render_world(local_character_pos.x+offx, local_character_pos.y+offy, 1.0f);
+
+		// draw screen box
+		if(0)
+		{
+			gfx_texture_set(-1);
+			gfx_blend_normal();
+			gfx_lines_begin();
+				float cx = local_character_pos.x+offx;
+				float cy = local_character_pos.y+offy;
+				float w = 400*3/2;
+				float h = 300*3/2;
+				gfx_lines_draw(cx-w,cy-h,cx+w,cy-h);
+				gfx_lines_draw(cx+w,cy-h,cx+w,cy+h);
+				gfx_lines_draw(cx+w,cy+h,cx-w,cy+h);
+				gfx_lines_draw(cx-w,cy+h,cx-w,cy-h);
+			gfx_lines_end();
+		}
+	}
 
 
 	// pseudo format
 	// ZOOM ZOOM
-	float zoom = cl_effects.getzoom(client_tick(), client_intratick(), local_player);//orgzoom + ((float)local_player->weaponstage) * 0.1f;
+	float zoom = 3.0;
+	if(local_character)
+		cl_effects.getzoom(client_tick(), client_intratick(), local_character);
+
 	// DEBUG TESTING
 	if(inp_key_pressed('M') || zoom > 3.01f)
 	{
@@ -2093,12 +2139,12 @@ void render_game()
 
 		gfx_texture_set(-1);
 		gfx_blend_normal();
-		
+
 		gfx_mask_op(MASK_NONE, 1);
-		
+
 		gfx_quads_begin();
 		gfx_setcolor(0.65f,0.78f,0.9f,1.0f);
-		
+
 		float fov;
 		if (zoom > 3.01f)
 			fov = pi * (zoom - 3.0f) / 6.0f;
@@ -2106,8 +2152,8 @@ void render_game()
 			fov = pi / 6.0f;
 
 		float fade = 0.7f;
-		
-		
+
+
 		float a = get_angle(normalize(vec2(mouse_pos.x, mouse_pos.y)));
 		vec2 d = get_dir(a);
 		vec2 d0 = get_dir(a-fov/2.0f);
@@ -2115,19 +2161,19 @@ void render_game()
 
 		vec2 cd0 = get_dir(a-(fov*fade)/2.0f); // center direction
 		vec2 cd1 = get_dir(a+(fov*fade)/2.0f);
-		
-		vec2 p0n = local_player_pos + d0*32.0f;
-		vec2 p1n = local_player_pos + d1*32.0f;
-		vec2 p0f = local_player_pos + d0*1000.0f;
-		vec2 p1f = local_player_pos + d1*1000.0f;
 
-		vec2 cn = local_player_pos + d*32.0f;
-		vec2 cf = local_player_pos + d*1000.0f;
+		vec2 p0n = local_character_pos + d0*32.0f;
+		vec2 p1n = local_character_pos + d1*32.0f;
+		vec2 p0f = local_character_pos + d0*1000.0f;
+		vec2 p1f = local_character_pos + d1*1000.0f;
 
-		vec2 cp0n = local_player_pos + cd0*32.0f;
-		vec2 cp0f = local_player_pos + cd0*1000.0f;
-		vec2 cp1n = local_player_pos + cd1*32.0f;
-		vec2 cp1f = local_player_pos + cd1*1000.0f;
+		vec2 cn = local_character_pos + d*32.0f;
+		vec2 cf = local_character_pos + d*1000.0f;
+
+		vec2 cp0n = local_character_pos + cd0*32.0f;
+		vec2 cp0f = local_character_pos + cd0*1000.0f;
+		vec2 cp1n = local_character_pos + cd1*32.0f;
+		vec2 cp1f = local_character_pos + cd1*1000.0f;
 
 		gfx_quads_draw_freeform(
 			p0n.x,p0n.y,
@@ -2135,14 +2181,14 @@ void render_game()
 			p0f.x,p0f.y,
 			p1f.x,p1f.y);
 		gfx_quads_end();
-		
+
 		gfx_mask_op(MASK_SET, 0);
-		
-		render_world(local_player_pos.x+offx, local_player_pos.y+offy, 2.0f);
-		
+
+		render_world(local_character_pos.x+offx, local_character_pos.y+offy, 2.0f);
+
 		gfx_mask_op(MASK_NONE, 0);
-		
-		mapscreen_to_world(local_player_pos.x+offx, local_player_pos.y+offy, 1.0f);
+
+		mapscreen_to_world(local_character_pos.x+offx, local_character_pos.y+offy, 1.0f);
 
 		gfx_texture_set(-1);
 		gfx_blend_normal();
@@ -2150,7 +2196,7 @@ void render_game()
 		gfx_setcolor(0.5f,0.9f,0.5f,0.25f);
 		float r=0.5f, g=1.0f, b=0.5f;
 		float r2=r*0.25f, g2=g*0.25f, b2=b*0.25f;
-		
+
 		gfx_setcolor(r,g,b,0.2f);
 		gfx_quads_draw_freeform(
 			cn.x,cn.y,
@@ -2173,28 +2219,24 @@ void render_game()
 			p1n.x,p1n.y,
 			cp1f.x,cp1f.y,
 			p1f.x,p1f.y);
-			
+
 		gfx_quads_end();
-				
-		
+
+
 		//gfx_mapscreen(0,0,400*3,300*3);
 	}
-	
-	if(local_player && !spectate)
+
+	if(local_character && !spectate)
 	{
 		gfx_texture_set(data->images[IMAGE_GAME].id);
 		gfx_quads_begin();
-		
+
 		// render cursor
 		if (!menu_active && (!emoticon_selector_active || emoticon_selector_inactive_override))
 		{
-			//float width = 400 * cl_effects.getorgzoom();
-			//float height = 300 * cl_effects.getorgzoom();
-			//gfx_mapscreen(screen_x-width/2, screen_y-height/2, screen_x+width/2, screen_y+height/2);
-
-			select_sprite(data->weapons[local_player->weapon%data->num_weapons].sprite_cursor);
+			select_sprite(data->weapons[local_character->weapon%data->num_weapons].sprite_cursor);
 			float cursorsize = 64;
-			draw_sprite(local_player_pos.x+mouse_pos.x, local_player_pos.y+mouse_pos.y, cursorsize);
+			draw_sprite(local_character_pos.x+mouse_pos.x, local_character_pos.y+mouse_pos.y, cursorsize);
 		}
 
 		// render ammo count
@@ -2204,10 +2246,10 @@ void render_game()
 		gfx_mapscreen(0,0,400,300);
 		// if weaponstage is active, put a "glow" around the stage ammo
 		select_sprite(SPRITE_TEE_BODY);
-		for (int i = 0; i < local_player->weaponstage; i++)
-			gfx_quads_drawTL(local_player->ammocount * 12 -i*12, 32, 11, 11);
-		select_sprite(data->weapons[local_player->weapon%data->num_weapons].sprite_proj);
-		for (int i = 0; i < local_player->ammocount; i++)
+		for (int i = 0; i < local_character->weaponstage; i++)
+			gfx_quads_drawTL(local_character->ammocount * 12 -i*12, 32, 11, 11);
+		select_sprite(data->weapons[local_character->weapon%data->num_weapons].sprite_proj);
+		for (int i = 0; i < local_character->ammocount; i++)
 			gfx_quads_drawTL(10+i*12,34,10,10);
 
 		gfx_quads_end();
@@ -2215,12 +2257,12 @@ void render_game()
 		gfx_texture_set(data->images[IMAGE_GAME].id);
 		gfx_quads_begin();
 		int h = 0;
-		
+
 		// render health
 		select_sprite(SPRITE_HEALTH_FULL);
-		for(; h < local_player->health; h++)
+		for(; h < local_character->health; h++)
 			gfx_quads_drawTL(10+h*12,10,10,10);
-		
+
 		select_sprite(SPRITE_HEALTH_EMPTY);
 		for(; h < 10; h++)
 			gfx_quads_drawTL(10+h*12,10,10,10);
@@ -2228,38 +2270,38 @@ void render_game()
 		// render armor meter
 		h = 0;
 		select_sprite(SPRITE_ARMOR_FULL);
-		for(; h < local_player->armor; h++)
+		for(; h < local_character->armor; h++)
 			gfx_quads_drawTL(10+h*12,22,10,10);
-		
+
 		select_sprite(SPRITE_ARMOR_EMPTY);
 		for(; h < 10; h++)
 			gfx_quads_drawTL(10+h*12,22,10,10);
 		gfx_quads_end();
 	}
-	
+
 	// render kill messages
 	{
 		gfx_mapscreen(0, 0, width*1.5f, height*1.5f);
 		float startx = width*1.5f-10.0f;
 		float y = 10.0f;
-		
+
 		for(int i = 0; i < killmsg_max; i++)
 		{
-			
+
 			int r = (killmsg_current+i+1)%killmsg_max;
 			if(client_tick() > killmsgs[r].tick+50*10)
 				continue;
-			
+
 			float font_size = 48.0f;
 			float killername_w = gfx_pretty_text_width(font_size, client_datas[killmsgs[r].killer].name, -1);
 			float victimname_w = gfx_pretty_text_width(font_size, client_datas[killmsgs[r].victim].name, -1);
-			
+
 			float x = startx;
-			
+
 			// render victim name
 			x -= victimname_w;
 			gfx_pretty_text(x, y, font_size, client_datas[killmsgs[r].victim].name, -1);
-			
+
 			// render victim tee
 			x -= 24.0f;
 			int skin = gametype == GAMETYPE_TDM ? skinseed + client_datas[killmsgs[r].victim].team : killmsgs[r].victim;
@@ -2283,15 +2325,15 @@ void render_game()
 			skin = gametype == GAMETYPE_TDM ? skinseed + client_datas[killmsgs[r].killer].team : killmsgs[r].killer;
 			render_tee(&idlestate, skin, EMOTE_ANGRY, vec2(1,0), vec2(x, y+28));
 			x -= 32.0f;
-			
+
 			// render killer name
 			x -= killername_w;
 			gfx_pretty_text(x, y, font_size, client_datas[killmsgs[r].killer].name, -1);
-			
+
 			y += 44;
 		}
 	}
-	
+
 	// render chat
 	{
 		gfx_mapscreen(0,0,400,300);
@@ -2311,9 +2353,9 @@ void render_game()
 			gfx_pretty_text(x, y, 10.0f, buf, 380);
 			starty = y;
 		}
-		
+
 		y -= 10;
-		
+
 		int i;
 		for(i = 0; i < chat_max_lines; i++)
 		{
@@ -2322,20 +2364,20 @@ void render_game()
 				break;
 
 			int lines = int(gfx_pretty_text_width(10, chat_lines[r].text, -1)) / 380 + 1;
-			
+
 			gfx_pretty_text_color(1,1,1,1);
 			if(chat_lines[r].client_id == -1)
 				gfx_pretty_text_color(1,1,0.5f,1); // system
 			else if(chat_lines[r].team)
 				gfx_pretty_text_color(0.5f,1,0.5f,1); // team message
-			
+
 			gfx_pretty_text(x, y - 8 * (lines - 1), 10, chat_lines[r].text, 380);
 			y -= 8 * lines;
 		}
-		
+
 		gfx_pretty_text_color(1,1,1,1);
 	}
-	
+
 	// render goals
 	if(gameobj)
 	{
@@ -2348,13 +2390,13 @@ void render_game()
 			if(gameobj->time_limit)
 			{
 				time = gameobj->time_limit*60 - ((client_tick()-gameobj->round_start_tick)/client_tickspeed());
-				
+
 				if(gameobj->game_over)
 					time  = 0;
-			}	
+			}
 			else
 				time = (client_tick()-gameobj->round_start_tick)/client_tickspeed();
-			
+
 			sprintf(buf, "%d:%02d", time /60, time %60);
 			float w = gfx_pretty_text_width(16, buf, -1);
 			gfx_pretty_text(200-w/2, 2, 16, buf, -1);
@@ -2366,7 +2408,7 @@ void render_game()
 			float w = gfx_pretty_text_width(16, text, -1);
 			gfx_pretty_text(200-w/2, 2, 16, text, -1);
 		}
-		
+
 		if(gametype == GAMETYPE_TDM || gametype == GAMETYPE_CTF)
 		{
 			for(int t = 0; t < 2; t++)
@@ -2380,21 +2422,21 @@ void render_game()
 					gfx_setcolor(0,0,1,0.5f);
 				draw_round_rect(320+t*35, 300-15, 30, 50, 5.0f);
 				gfx_quads_end();
-				
+
 				char buf[32];
 				sprintf(buf, "%d", gameobj->teamscore[t]);
 				float w = gfx_pretty_text_width(14, buf, -1);
 				gfx_pretty_text(320+t*35+30/2-w/2, 300-15, 14, buf, -1);
 			}
 		}
-		
+
 		// render warmup timer
 		if(gameobj->warmup)
 		{
 			char buf[256];
 			float w = gfx_pretty_text_width(24, "Warmup", -1);
 			gfx_pretty_text(200+-w/2, 50, 24, "Warmup", -1);
-			
+
 			int seconds = gameobj->warmup/SERVER_TICK_SPEED;
 			if(seconds < 5)
 				sprintf(buf, "%d.%d", seconds, (gameobj->warmup*10/SERVER_TICK_SPEED)%10);
@@ -2409,7 +2451,7 @@ void render_game()
 	{
 		if (modmenu_render(true))
 			menu_active = false;
-			
+
 		//ingamemenu_render();
 		return;
 	}
@@ -2434,29 +2476,29 @@ void render_game()
 		if (emoticon != -1)
 			send_emoticon(emoticon);
 	}
-	
+
 	// render score board
 	if(inp_key_pressed(KEY_TAB) || // user requested
-		(!spectate && (local_player && local_player->health == -1)) || // not spectating and is dead
+		(!spectate && (local_character && local_character->health == -1)) || // not spectating and is dead
 		(gameobj && gameobj->game_over) // game over
 		)
 	{
 		gfx_mapscreen(0, 0, width, height);
 
 		float w = 550.0f;
-		
+
 		if (gameobj && gameobj->gametype == GAMETYPE_DM)
 		{
-			render_scoreboard(gameobj, width/2-w/2, 150.0f, w, -1, 0);
+			render_scoreboard(width/2-w/2, 150.0f, w, -1, 0);
 			//render_scoreboard(gameobj, 0, 0, -1, 0);
 		}
 		else
 		{
-			render_scoreboard(gameobj, width/2-w-20, 150.0f, w, 0, "Red Team");
-			render_scoreboard(gameobj, width/2 + 20, 150.0f, w, 1, "Blue Team");
+			render_scoreboard(width/2-w-20, 150.0f, w, 0, "Red Team");
+			render_scoreboard(width/2 + 20, 150.0f, w, 1, "Blue Team");
 		}
-		
-		render_goals(gameobj, width/2-w/2, 150+600+25, w);
+
+		render_goals(width/2-w/2, 150+600+25, w);
 
 	}
 }
@@ -2471,9 +2513,9 @@ extern "C" void modc_render()
 			snd_stop(music_menu_id);
 			music_menu_id = -1;
 		}
-		
+
 		render_game();
-		
+
 		// handle team switching
 		if(config.team != -10)
 		{
@@ -2489,12 +2531,12 @@ extern "C" void modc_render()
 		{
 			music_menu_id = snd_play(CHN_MUSIC, music_menu, SNDFLAG_LOOP);
 		}
-		
+
 		//netaddr4 server_address;
 		if(modmenu_render(false) == -1)
 			client_quit();
 	}
-	
+
 	//
 	config.team = -10;
 }

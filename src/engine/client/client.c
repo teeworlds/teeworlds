@@ -1007,6 +1007,14 @@ static void client_run(const char *direct_connect_server)
 int editor_main(int argc, char **argv);
 
 /*client main_client; */
+/*
+const char *user_directory()
+{
+	static char path[512] = {0};
+	
+}*/
+
+
 
 int main(int argc, char **argv)
 {

@@ -531,9 +531,14 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data)
 	unsigned char *texdata = (unsigned char *)data;
 	unsigned char *tmpdata = 0;
 	int oglformat = 0;
+	int tex = 0;
+	
+	/* don't waste memory on texture if we are stress testing */
+	if(config.stress)
+		return -1;
 	
 	/* grab texture */
-	int tex = first_free_texture;
+	tex = first_free_texture;
 	first_free_texture = textures[tex].next;
 	textures[tex].next = -1;
 	
