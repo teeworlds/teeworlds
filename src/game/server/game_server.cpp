@@ -1125,13 +1125,12 @@ void player::snap(int snaping_client)
 
 		core.write(character);
 
-		if(snaping_client != client_id)
-		{
-			character->vx = 0; // make sure that we don't send these to clients who don't need them
+		// this is to make sure that players that are just standing still
+		// isn't sent. this is because the physics keep bouncing between
+		// 0-128 when just standing.
+		// TODO: fix the physics so this isn't needed
+		if(snaping_client != client_id && abs(character->vy) < 256.0f)
 			character->vy = 0;
-			character->hook_dx = 0;
-			character->hook_dy = 0;
-		}
 
 		if (emote_stop < server_tick())
 		{
