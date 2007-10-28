@@ -109,7 +109,7 @@ inline bool col_check_point(vec2 p) { return col_check_point(p.x, p.y); }
 struct mapres_entity
 {
 	int x, y;
-	int *data;
+	int data[1];
 };
 
 struct mapres_spawnpoint

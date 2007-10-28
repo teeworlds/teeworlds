@@ -154,6 +154,37 @@ static void tilemap_destroy(tilemap *tm)
 	tm->height = 0;
 }
 
+static void tilemap_vflip(tilemap *tm)
+{
+	for(int iy = 0; iy < tm->height; iy++)
+		for(int ix = 0; ix < tm->width/2; ix++)
+		{
+			tile tmp = tm->tiles[iy*tm->width+ix];
+			tm->tiles[iy*tm->width+ix] = tm->tiles[iy*tm->width+tm->width-ix-1];
+			tm->tiles[iy*tm->width+tm->width-ix-1] = tmp;
+		}
+		
+	for(int iy = 0; iy < tm->height; iy++)
+		for(int ix = 0; ix < tm->width; ix++)
+			tm->tiles[iy*tm->width+ix].flags ^= TILEFLAG_VFLIP;
+
+}
+
+static void tilemap_hflip(tilemap *tm)
+{
+	for(int iy = 0; iy < tm->height/2; iy++)
+		for(int ix = 0; ix < tm->width; ix++)
+		{
+			tile tmp = tm->tiles[iy*tm->width+ix];
+			tm->tiles[iy*tm->width+ix] = tm->tiles[tm->height*tm->width-tm->width-tm->width*iy+ix];
+			tm->tiles[tm->height*tm->width-tm->width-tm->width*iy+ix] = tmp;
+		}
+
+	for(int iy = 0; iy < tm->height; iy++)
+		for(int ix = 0; ix < tm->width; ix++)
+			tm->tiles[iy*tm->width+ix].flags ^= TILEFLAG_HFLIP;
+}
+
 static int tilemap_blit(tilemap *dst, tilemap *src, int x, int y)
 {
 	int count = 0;
@@ -353,13 +384,28 @@ static void render_tilemap(tilemap *tm, float sx, float sy, float scale)
 		for(int x = 0; x < tm->width; x++)
 		{
 			unsigned char d = tm->tiles[y*tm->width+x].index;
+			unsigned char f = tm->tiles[y*tm->width+x].flags;
 			if(d)
 			{
-				gfx_quads_setsubset(
-					(d%16)/16.0f+frac,
-					(d/16)/16.0f+frac,
-					(d%16)/16.0f+1.0f/16.0f-frac,
-					(d/16)/16.0f+1.0f/16.0f-frac);
+				float u0 = (d%16)/16.0f+frac;
+				float v0 = (d/16)/16.0f+frac;
+				float u1 = (d%16)/16.0f+1.0f/16.0f-frac;
+				float v1 = (d/16)/16.0f+1.0f/16.0f-frac;
+				if(f&TILEFLAG_VFLIP)
+				{
+					float tmp = u0;
+					u0 = u1;
+					u1 = tmp;
+				}
+
+				if(f&TILEFLAG_HFLIP)
+				{
+					float tmp = v0;
+					v0 = v1;
+					v1 = tmp;
+				}
+				
+				gfx_quads_setsubset(u0,v0,u1,v1);
 				gfx_quads_drawTL(sx+x*scale, sy+y*scale, scale, scale);
 			}
 
@@ -861,6 +907,12 @@ static void editor_render()
 			if(ui_mouse_button(1) || inp_key_pressed('C'))
 				tilemap_destroy(&brush);
 		}
+
+		// flip buttons
+		if(inp_key_down('N') && brush.tiles)
+			tilemap_vflip(&brush);
+		if(inp_key_down('M') && brush.tiles)
+			tilemap_hflip(&brush);
 		
 		if(inp_key_pressed(KEY_SPACE))
 		{

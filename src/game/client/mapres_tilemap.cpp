@@ -60,28 +60,36 @@ void tilemap_render(float scale, int fg)
 					int c = mx + my*tmap->width;
 						
 					unsigned char d = data[c*2];
+					unsigned char f = data[c*2+1];
 					if(d)
 					{
-						/*
-						gfx_quads_setsubset(
-							(d%16)/16.0f*s+frac,
-							(d/16)/16.0f*s+frac,
-							((d%16)/16.0f+1.0f/16.0f)*s-frac,
-							((d/16)/16.0f+1.0f/16.0f)*s-frac);
-							*/
-						
 						int tx = d%16;
 						int ty = d/16;
 						int px0 = tx*(1024/16);
 						int py0 = ty*(1024/16);
 						int px1 = (tx+1)*(1024/16)-1;
 						int py1 = (ty+1)*(1024/16)-1;
+						
+						float u0 = nudge + px0/texsize+frac;
+						float v0 = nudge + py0/texsize+frac;
+						float u1 = nudge + px1/texsize+frac;
+						float v1 = nudge + py1/texsize+frac;
+						
+						if(f&TILEFLAG_VFLIP)
+						{
+							float tmp = u0;
+							u0 = u1;
+							u1 = tmp;
+						}
 
-						gfx_quads_setsubset(
-							nudge + px0/texsize+frac,
-							nudge + py0/texsize+frac,
-							nudge + px1/texsize-frac,
-							nudge + py1/texsize-frac);
+						if(f&TILEFLAG_HFLIP)
+						{
+							float tmp = v0;
+							v0 = v1;
+							v1 = tmp;
+						}
+						
+						gfx_quads_setsubset(u0,v0,u1,v1);
 
 						gfx_quads_drawTL(x*scale, y*scale, scale, scale);
 					}
