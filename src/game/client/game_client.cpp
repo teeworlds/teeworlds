@@ -48,6 +48,7 @@ static bool emoticon_selector_active = false;
 static vec2 mouse_pos;
 static vec2 local_character_pos;
 static const obj_player_character *local_character = 0;
+static const obj_player_character *local_prev_character = 0;
 static const obj_player_info *local_info = 0;
 static const obj_game *gameobj = 0;
 
@@ -581,8 +582,6 @@ extern "C" void modc_shutdown()
 {
 }
 
-static bool must_process_events = false;
-
 static void process_events(int s)
 {
 	int num = snap_num_items(s);
@@ -718,8 +717,6 @@ static void process_events(int s)
 			}
 		}
 	}
-
-	must_process_events = false;
 }
 
 static player_core predicted_prev_player;
@@ -728,79 +725,77 @@ static player_core predicted_player;
 extern "C" void modc_predict()
 {
 	// repredict player
+	world_core world;
+	int local_cid = -1;
+
+	// search for players
+	for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
 	{
-		world_core world;
-		int local_cid = -1;
+		SNAP_ITEM item;
+		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+		int client_id = item.id;
 
-		// search for players
-		for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
+		if(item.type == OBJTYPE_PLAYER_CHARACTER)
 		{
-			SNAP_ITEM item;
-			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-			int client_id = item.id;
+			const obj_player_character *character = (const obj_player_character *)data;
+			client_datas[client_id].predicted.world = &world;
+			world.players[client_id] = &client_datas[client_id].predicted;
 
-			if(item.type == OBJTYPE_PLAYER_CHARACTER)
-			{
-				const obj_player_character *character = (const obj_player_character *)data;
-				client_datas[client_id].predicted.world = &world;
-				world.players[client_id] = &client_datas[client_id].predicted;
+			client_datas[client_id].predicted.read(character);
+		}
+		else if(item.type == OBJTYPE_PLAYER_INFO)
+		{
+			const obj_player_info *info = (const obj_player_info *)data;
+			if(info->local)
+				local_cid = client_id;
+		}
+	}
 
-				client_datas[client_id].predicted.read(character);
-			}
-			else if(item.type == OBJTYPE_PLAYER_INFO)
+	// predict
+	for(int tick = client_tick()+1; tick <= client_predtick(); tick++)
+	{
+		// first calculate where everyone should move
+		for(int c = 0; c < MAX_CLIENTS; c++)
+		{
+			if(!world.players[c])
+				continue;
+
+			mem_zero(&world.players[c]->input, sizeof(world.players[c]->input));
+			if(local_cid == c)
 			{
-				const obj_player_info *info = (const obj_player_info *)data;
-				if(info->local)
-					local_cid = client_id;
+				// apply player input
+				int *input = client_get_input(tick);
+				if(input)
+					world.players[c]->input = *((player_input*)input);
 			}
+
+			world.players[c]->tick();
 		}
 
-		// predict
-		for(int tick = client_tick(); tick <= client_predtick(); tick++)
+		// move all players and quantize their data
+		for(int c = 0; c < MAX_CLIENTS; c++)
 		{
-			// first calculate where everyone should move
-			for(int c = 0; c < MAX_CLIENTS; c++)
+			if(!world.players[c])
+				continue;
+
+			world.players[c]->move();
+			world.players[c]->quantize();
+			
+			// get the data from the local player
+			if(local_cid == c && world.players[local_cid])
 			{
-				if(!world.players[c])
-					continue;
-
-				mem_zero(&world.players[c]->input, sizeof(world.players[c]->input));
-				if(local_cid == c)
-				{
-					// apply player input
-					int *input = client_get_input(tick);
-					if(input)
-						world.players[c]->input = *((player_input*)input);
-				}
-
-				world.players[c]->tick();
+				if(tick == client_predtick())
+					predicted_player = *world.players[local_cid];
+				else if(tick == client_predtick()-1)
+					predicted_prev_player = *world.players[local_cid];
 			}
-
-			// move all players and quantize their data
-			for(int c = 0; c < MAX_CLIENTS; c++)
-			{
-				if(!world.players[c])
-					continue;
-
-				world.players[c]->move();
-				world.players[c]->quantize();
-			}
-		}
-
-		// get the data from the local player
-		if(local_cid != -1 && world.players[local_cid])
-		{
-			predicted_prev_player = predicted_player;
-			predicted_player = *world.players[local_cid];
 		}
 	}
 }
 
 extern "C" void modc_newsnapshot()
 {
-	if(must_process_events)
-		process_events(SNAP_PREV);
-	must_process_events = true;
+	process_events(SNAP_CURRENT);
 
 	if(config.stress)
 	{
@@ -816,6 +811,7 @@ extern "C" void modc_newsnapshot()
 
 	// clear out the invalid pointers
 	local_character = 0;
+	local_prev_character = 0;
 	local_info = 0;
 	gameobj = 0;
 
@@ -843,10 +839,7 @@ extern "C" void modc_newsnapshot()
 
 						const void *p = snap_find_item(SNAP_PREV, OBJTYPE_PLAYER_CHARACTER, item.id);
 						if(p)
-						{
-							local_character_pos = mix(vec2(((obj_player_character *)p)->x, ((obj_player_character *)p)->y),
-								local_character_pos, client_intratick());
-						}
+							local_prev_character = (obj_player_character *)p;
 					}
 				}
 			}
@@ -1247,7 +1240,7 @@ static void render_player(
 	if(player.health < 0) // dont render dead players
 		return;
 
-	if(info.local)
+	if(info.local && config.cl_predict)
 	{
 		// apply predicted results
 		predicted_player.write(&player);
@@ -1911,7 +1904,15 @@ void render_game()
 
 	bool spectate = false;
 
-	local_character_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_intrapredtick());
+	if(config.cl_predict)
+		local_character_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_intrapredtick());
+	else if(local_character && local_prev_character)
+	{
+		local_character_pos = mix(
+			vec2(local_prev_character->x, local_prev_character->y),
+			vec2(local_character->x, local_character->y), client_intratick());
+	}
+	
 	if(local_info && local_info->team == -1)
 		spectate = true;
 
@@ -2081,10 +2082,6 @@ void render_game()
 
 		snap_input(&input, sizeof(input));
 	}
-
-	// everything updated, do events
-	if(must_process_events)
-		process_events(SNAP_PREV);
 
 	// center at char but can be moved when mouse is far away
 	float offx = 0, offy = 0;

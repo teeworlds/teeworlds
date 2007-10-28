@@ -19,7 +19,7 @@
 
 #include <mastersrv/mastersrv.h>
 
-const int prediction_margin = 5;
+const int prediction_margin = 60; /*(int)(1000/(SERVER_TICK_SPEED*1.2f));*/
 
 /*
 	Server Time

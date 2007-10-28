@@ -236,13 +236,6 @@ int server_send_msg(int client_id)
 	return 0;
 }
 
-
-static void server_do_tick()
-{
-	current_tick++;
-	mods_tick();
-}
-
 static void server_do_snap()
 {
 	int i, k;
@@ -464,7 +457,7 @@ static void server_process_client_packet(NETPACKET *packet)
 			input->timeleft = server_tick_start_time(tick)-time_get();
 			input->pred_tick = tick;
 			
-			if(tick < server_tick())
+			if(tick <= server_tick())
 			{
 				/* TODO: how should we handle this */
 				dbg_msg("server", "input got in late for=%d cur=%d", tick, server_tick());
@@ -713,6 +706,8 @@ static int server_run()
 			
 			if(t > server_tick_start_time(current_tick+1))
 			{
+				current_tick++;
+				
 				/* apply new input */
 				{
 					int c, i;
@@ -734,7 +729,7 @@ static int server_run()
 				/* progress game */
 				{
 					int64 start = time_get();
-					server_do_tick();
+					mods_tick();
 					simulationtime += time_get()-start;
 				}
 	
