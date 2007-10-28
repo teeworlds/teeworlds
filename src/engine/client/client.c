@@ -19,7 +19,7 @@
 
 #include <mastersrv/mastersrv.h>
 
-const int prediction_margin = 60; /*(int)(1000/(SERVER_TICK_SPEED*1.2f));*/
+const int prediction_margin = 5; /* magic network prediction value */
 
 /*
 	Server Time
@@ -72,7 +72,7 @@ static int current_input = 0;
 
 enum
 {
-	GRAPH_MAX=256
+	GRAPH_MAX=128
 };
 
 typedef struct
@@ -82,10 +82,17 @@ typedef struct
 	int index;
 } GRAPH;
 
+static void graph_init(GRAPH *g, float min, float max)
+{
+	g->min = min;
+	g->max = max;
+	g->index = 0;
+}
+
 static void graph_add(GRAPH *g, float v)
 {
-	g->values[g->index] = v;
 	g->index = (g->index+1)&(GRAPH_MAX-1);
+	g->values[g->index] = v;
 }
 
 static void graph_render(GRAPH *g, float x, float y, float w, float h)
@@ -99,9 +106,10 @@ static void graph_render(GRAPH *g, float x, float y, float w, float h)
 	gfx_quads_end();
 		
 	gfx_lines_begin();
+	gfx_setcolor(0.95f, 0.95f, 0.95f, 1);
+	gfx_lines_draw(x, y+h/2, x+w, y+h/2);
 	gfx_setcolor(0.5f, 0.5f, 0.5f, 1);
 	gfx_lines_draw(x, y+(h*3)/4, x+w, y+(h*3)/4);
-	gfx_lines_draw(x, y+h/2, x+w, y+h/2);
 	gfx_lines_draw(x, y+h/4, x+w, y+h/4);
 	for(i = 1; i < GRAPH_MAX; i++)
 	{
@@ -135,6 +143,7 @@ static void st_init(SMOOTHTIME *st, int64 target)
 	st->snap = time_get();
 	st->current = target;
 	st->target = target;
+	graph_init(&st->graph, 0.0f, 1.0f);
 }
 
 static int64 st_get(SMOOTHTIME *st, int64 now)
@@ -146,28 +155,17 @@ static int64 st_get(SMOOTHTIME *st, int64 now)
 	
 	/* it's faster to adjust upward instead of downward */
 	/* we might need to adjust these abit */
-	adjust_speed = 0.3f;
-	if(t < c)
-		adjust_speed *= 5.0f;
+	adjust_speed = 0.25f; /*0.99f;*/
+	if(t > c)
+		adjust_speed = 500.0f;
 	
-	a = ((now-st->snap)/(float)time_freq())*adjust_speed;
-	if(a > 1)
-		a = 1;
+	a = ((now-st->snap)/(float)time_freq()) * adjust_speed;
+	if(a > 1.0f)
+		a = 1.0f;
 		
 	r = c + (int64)((t-c)*a);
 	
-	{
-		int64 drt = now - st->rlast;
-		int64 dtt = r - st->tlast;
-		
-		st->rlast = now;
-		st->tlast = r;
-		
-		if(drt == 0)
-			graph_add(&st->graph, 0.5f);
-		else
-			graph_add(&st->graph, (((dtt/(float)drt)-1.0f)*2.5f)+0.5f);
-	}
+	graph_add(&st->graph, a+0.5f);
 	
 	return r;
 }
@@ -189,6 +187,7 @@ GRAPH intra_graph;
 static int input_data[MAX_INPUT_SIZE] = {0};
 static int input_data_size;
 static int input_is_changed = 1;
+static GRAPH input_late_graph;
 void snap_input(void *data, int size)
 {
 	if(input_data_size != size || memcmp(input_data, data, size))
@@ -409,7 +408,10 @@ void client_connect(const char *server_address_str)
 		dbg_msg("client", "could not find the address of %s, connecting to localhost", buf);
 	
 	netclient_connect(net, &server_address);
-	client_set_state(CLIENTSTATE_CONNECTING);	
+	client_set_state(CLIENTSTATE_CONNECTING);
+	
+	graph_init(&intra_graph, 0.0f, 1.0f);
+	graph_init(&input_late_graph, 0.0f, 1.0f);
 }
 
 void client_disconnect()
@@ -464,6 +466,8 @@ static void client_debug_render()
 	graph_render(&game_time.graph, 300, 10, 90, 50);
 	graph_render(&predicted_time.graph, 300, 10+50+10, 90, 50);
 	graph_render(&intra_graph, 300, 10+50+10+50+10, 90, 50);
+	graph_render(&input_late_graph, 300, 10+50+10+50+10+50+10, 90, 50);
+	
 }
 
 void client_quit()
@@ -605,11 +609,17 @@ static void client_process_packet(NETPACKET *packet)
 				if(time_left)
 				{
 					int k;
+					
+					graph_add(&input_late_graph, time_left/100.0f+0.5f);
+					
+					if(time_left < 0)
+						dbg_msg("client", "input was late with %d ms", time_left);
+					
 					for(k = 0; k < 200; k++) /* TODO: do this better */
 					{
 						if(inputs[k].tick == input_predtick)
 						{
-							/*-1000/50 */
+							/*-1000/50 prediction_margin */
 							int64 target = inputs[k].game_time + (time_get() - inputs[k].time);
 							st_update(&predicted_time, target - (int64)(((time_left-prediction_margin)/1000.0f)*time_freq()));
 							break;
