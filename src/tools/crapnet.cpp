@@ -96,8 +96,8 @@ int run(int port, NETADDR4 dest)
 				}
 				
 				// send and remove packet
-				//if((rand()%10) != 0) // heavy packetloss
-				net_udp4_send(socket, &p->send_to, p->data, p->data_size);
+				//if((rand()%20) != 0) // heavy packetloss
+				//	net_udp4_send(socket, &p->send_to, p->data, p->data_size);
 				
 				// update lag
 				double flux = rand()/(double)RAND_MAX;

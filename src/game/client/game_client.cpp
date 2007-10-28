@@ -47,6 +47,7 @@ static bool emoticon_selector_active = false;
 
 static vec2 mouse_pos;
 static vec2 local_character_pos;
+static vec2 local_target_pos;
 static const obj_player_character *local_character = 0;
 static const obj_player_character *local_prev_character = 0;
 static const obj_player_info *local_info = 0;
@@ -1443,13 +1444,14 @@ static void render_player(
 
 	}
 
-	// render the tee
+	// render the "shadow" tee
 	if(info.local && config.debug)
 	{
 		vec2 ghost_position = mix(vec2(prev_char->x, prev_char->y), vec2(player_char->x, player_char->y), client_intratick());
 		render_tee(&state, 15, player.emote, direction, ghost_position); // render ghost
 	}
 
+	// render the tee
 	render_tee(&state, skin, player.emote, direction, position);
 
 	if(player.state == STATE_CHATTING)
@@ -1491,6 +1493,20 @@ static void render_player(
 		select_sprite(SPRITE_OOP + client_datas[info.clientid].emoticon);
 		gfx_quads_draw(position.x, position.y - 23 - 32*h, 64, 64*h);
 		gfx_quads_end();
+	}
+	
+	// render name plate
+	if(!info.local && config.cl_nameplates)
+	{
+		//gfx_pretty_text_color
+		float a = 1;
+		if(config.cl_nameplates == 1)
+			a = clamp(1-powf(distance(local_target_pos, position)/200.0f,16.0f), 0.0f, 1.0f);
+			
+		const char *name = client_datas[info.clientid].name;
+		float tw = gfx_pretty_text_width(28.0f, name, -1);
+		gfx_pretty_text_color(1,1,1,a);
+		gfx_pretty_text(position.x-tw/2.0f, position.y-60, 28.0f, name, -1);
 	}
 }
 
@@ -2025,6 +2041,8 @@ void render_game()
 		}
 	}
 
+	local_target_pos = local_character_pos + mouse_pos;
+
 	// snap input
 	{
 		static player_input input = {0};
@@ -2233,7 +2251,7 @@ void render_game()
 		{
 			select_sprite(data->weapons[local_character->weapon%data->num_weapons].sprite_cursor);
 			float cursorsize = 64;
-			draw_sprite(local_character_pos.x+mouse_pos.x, local_character_pos.y+mouse_pos.y, cursorsize);
+			draw_sprite(local_target_pos.x, local_target_pos.y, cursorsize);
 		}
 
 		// render ammo count
