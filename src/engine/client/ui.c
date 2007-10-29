@@ -1,5 +1,6 @@
 #include <engine/system.h>
 #include <engine/interface.h>
+#include <engine/config.h>
 #include "ui.h"
 
 /********************************************************
@@ -107,3 +108,169 @@ int ui_do_button(void *id, const char *text, int checked, float x, float y, floa
     return r;
 }
 
+static float scale = 1.0f;
+#define MEMORY_SIZE 10*1024
+static struct rect memory[MEMORY_SIZE];
+static int memory_used = 0;
+static struct rect screen = { 0.0f, 0.0f, 800.0f, 600.0f };
+
+void ui_foreach_rect(rect_fun fun)
+{
+    int hrm;
+    for (hrm = 0; hrm < memory_used; hrm++)
+        fun(&memory[hrm]);
+}
+
+static void add_rect(struct rect *r)
+{
+    if (memory_used < MEMORY_SIZE)
+        memory[memory_used++] = *r;
+    else
+        dbg_msg("ui", "rect memory full.");
+}
+
+struct rect *ui_screen()
+{
+    if (config.debug)
+    {
+        memory_used = 0;
+    }
+
+    return &screen;
+}
+
+void ui_scale(float s)
+{
+    scale = s;
+}
+
+void ui_hsplit_t(const struct rect *original, int pixels, struct rect *top, struct rect *bottom)
+{
+    struct rect r = *original;
+    pixels *= scale;
+
+    if (top)
+    {
+        top->x = r.x;
+        top->y = r.y;
+        top->w = r.w;
+        top->h = pixels;
+    }
+
+    if (bottom)
+    {
+        bottom->x = r.x;
+        bottom->y = r.y + pixels;
+        bottom->w = r.w;
+        bottom->h = r.h - pixels;
+    }
+
+    if (config.debug)
+    {
+        if (top)
+            add_rect(top);
+        if (bottom)
+            add_rect(bottom);
+    }
+}
+
+void ui_hsplit_b(const struct rect *original, int pixels, struct rect *top, struct rect *bottom)
+{
+    struct rect r = *original;
+    pixels *= scale;
+
+    if (top)
+    {
+        top->x = r.x;
+        top->y = r.y;
+        top->w = r.w;
+        top->h = r.h - pixels;
+    }
+
+    if (bottom)
+    {
+        bottom->x = r.x;
+        bottom->y = r.y + r.h - pixels;
+        bottom->w = r.w;
+        bottom->h = pixels;
+    }
+
+    if (config.debug)
+    {
+        if (top)
+            add_rect(top);
+        if (bottom)
+            add_rect(bottom);
+    }
+}
+
+void ui_vsplit_l(const struct rect *original, int pixels, struct rect *left, struct rect *right)
+{
+    struct rect r = *original;
+    pixels *= scale;
+
+    if (left)
+    {
+        left->x = r.x;
+        left->y = r.y;
+        left->w = pixels;
+        left->h = r.h;
+    }
+
+    if (right)
+    {
+        right->x = r.x + pixels;
+        right->y = r.y;
+        right->w = r.w - pixels;
+        right->h = r.h;
+    }
+
+    if (config.debug)
+    {
+        if (left)
+            add_rect(left);
+        if (right)
+            add_rect(right);
+    }
+}
+
+void ui_vsplit_r(const struct rect *original, int pixels, struct rect *left, struct rect *right)
+{
+    struct rect r = *original;
+    pixels *= scale;
+
+    if (left)
+    {
+        left->x = r.x;
+        left->y = r.y;
+        left->w = r.w - pixels;
+        left->h = r.h;
+    }
+
+    if (right)
+    {
+        right->x = r.x + r.w - pixels;
+        right->y = r.y;
+        right->w = pixels;
+        right->h = r.h;
+    }
+
+    if (config.debug)
+    {
+        if (left)
+            add_rect(left);
+        if (right)
+            add_rect(right);
+    }
+}
+
+void ui_margin(const struct rect *original, int pixels, struct rect *other_rect)
+{
+    struct rect r = *original;
+    pixels *= scale;
+
+    other_rect->x = r.x + pixels;
+    other_rect->y = r.y + pixels;
+    other_rect->w = r.w - 2*pixels;
+    other_rect->h = r.h - 2*pixels;
+}

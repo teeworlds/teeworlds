@@ -520,16 +520,6 @@ int ui_do_check_box(void *id, float x, float y, float w, float h, int value)
 	return r;
 }
 
-int ui_do_button_rect(void *id, const char *text, int checked, struct rect *r, draw_button_callback draw_func, void *extra)
-{
-    return ui_do_button(id, text, checked, r->x, r->y, r->w, r->h, draw_func, extra);
-}
-
-void ui_do_label_rect(struct rect *r, char *str, float size)
-{
-    ui_do_label(r->x + 3, r->y + r->h/2 - size/2, str, size);
-}
-
 int do_scroll_bar_horiz(void *id, float x, float y, float width, int steps, int last_index)
 {
 	int r = last_index;
@@ -638,6 +628,39 @@ int do_scroll_bar_vert(void *id, float x, float y, float height, int steps, int 
 	return r;
 }
 
+int ui_do_button_rect(const void *id, const char *text, int checked, const struct rect *r, draw_button_callback draw_func, void *extra)
+{
+    return ui_do_button((void *)id, text, checked, r->x, r->y, r->w, r->h, draw_func, extra);
+}
+
+void ui_do_label_rect(const struct rect *r, char *str)
+{
+    float size = r->h;
+    ui_do_label(r->x + 3, r->y + r->h/2 - size/2, str, size);
+}
+
+void ui_do_edit_box_rect(const void *id, const struct rect *r, char *buffer, int bufferSize)
+{
+    ui_do_edit_box((void *)id, r->x, r->y, r->w, r->h, buffer, bufferSize);
+}
+
+int ui_do_check_box_rect(const void *id, const struct rect *r, int checked)
+{
+    return ui_do_check_box((void *)id, r->x, r->y, 32, 32, checked);
+}
+
+int ui_do_key_reader_rect(const void *id, const struct rect *r, int key)
+{
+    return ui_do_key_reader((void *)id, r->x, r->y, r->w, r->h, key);
+}
+
+int do_scroll_bar_horiz_rect(const void *id, const struct rect *r, int steps, int last_index)
+{
+    return do_scroll_bar_horiz((void *)id, r->x, r->y, r->w, steps, last_index);
+    //return do_scroll_bar_horiz((void *)id, r->x, r->y, r->w, r->h, steps, last_index);
+}
+
+
 static int do_server_list(float x, float y, int *scroll_index, int *selected_index, int visible_items)
 {
 	const float spacing = 3.f;
@@ -686,7 +709,9 @@ static int do_server_list(float x, float y, int *scroll_index, int *selected_ind
 
 enum
 {
-	SCREEN_MAIN,
+	SCREEN_SERVERS,
+	SCREEN_NEWS,
+	SCREEN_HOST,
 	SCREEN_DISCONNECTED,
 	SCREEN_CONNECTING,
 	SCREEN_SETTINGS_GENERAL,
@@ -698,7 +723,7 @@ enum
 	SCREEN_KERNING
 };
 
-static int screen = SCREEN_MAIN;
+static int screen = SCREEN_SERVERS;
 static CONFIGURATION config_copy;
 
 const float column1_x = 250;
@@ -725,7 +750,7 @@ static float colors[7][3] =
     { 1, 1, 1 },
 };
 
-static void draw_rect(struct rect *r)
+static void draw_rect(const struct rect *r)
 {
     float *color = colors[rand()%7];
     gfx_setcolor(color[0], color[1], color[2], 1);
@@ -736,84 +761,175 @@ static void draw_rect(struct rect *r)
     gfx_lines_draw(r->x, r->y+r->h, r->x, r->y);
 }
 
-static void draw_rects(struct rect *rects, int count)
+void ui_settings_general_render(const struct rect *r)
 {
-    gfx_texture_set(-1);
-    gfx_lines_begin();
+    static struct rect row1;
+    static struct rect row2;
+    static struct rect rest;
 
-    for (int i = 0; i < count; i++)
-    {
-        struct rect *r = &rects[i];
+    static struct rect cells[4];
 
-        float *color = colors[i%7];
+    ui_hsplit_t(r, 50, &row1, &rest);
+    ui_hsplit_t(&rest, 50, &row2, &rest);
 
-        gfx_setcolor(color[0], color[1], color[2], 1);
+    ui_vsplit_l(&row1, 100, &cells[0], &cells[1]);
+    ui_vsplit_l(&row2, 100, &cells[2], &cells[3]);
 
-        gfx_lines_draw(r->x, r->y, r->x+r->w, r->y);
-        gfx_lines_draw(r->x+r->w, r->y, r->x+r->w, r->y+r->h);
-        gfx_lines_draw(r->x+r->w, r->y+r->h, r->x, r->y+r->h);
-        gfx_lines_draw(r->x, r->y+r->h, r->x, r->y);
-    }
+	// NAME
+	ui_do_label_rect(&cells[0], "Name:");
+	ui_do_edit_box_rect(config_copy.player_name, &cells[1], config_copy.player_name, sizeof(config_copy.player_name));
 
-    gfx_lines_end();
+	// Dynamic camera
+	ui_do_label_rect(&cells[2], "Dynamic Camera:");
+	config_set_dynamic_camera(&config_copy, ui_do_check_box_rect(&config_copy.dynamic_camera, &cells[3], config_copy.dynamic_camera));
 }
 
-static void print_rect(struct rect *r)
+typedef void (*assign_func_callback)(CONFIGURATION *config, int value);
+
+struct key_thing
 {
-    printf("x: %f y: %f w: %f h: %f\n", r->x, r->y, r->w, r->h);
+	char name[32];
+	int *key;
+	assign_func_callback assign_func;
+};
+
+static void ui_settings_controls_render(const struct rect *r)
+{
+	static int scroll_index = 0;
+
+	const key_thing keys[] = 
+	{
+		{ "Move Left:", &config_copy.key_move_left, config_set_key_move_left },
+		{ "Move Right:", &config_copy.key_move_right, config_set_key_move_right },
+		{ "Jump:", &config_copy.key_jump, config_set_key_jump },
+		{ "Fire:", &config_copy.key_fire, config_set_key_fire },
+		{ "Hook:", &config_copy.key_hook, config_set_key_hook },
+		{ "Hammer:", &config_copy.key_weapon1, config_set_key_weapon1 },
+		{ "Pistol:", &config_copy.key_weapon2, config_set_key_weapon2 },
+		{ "Shotgun:", &config_copy.key_weapon3, config_set_key_weapon3 },
+		{ "Grenade:", &config_copy.key_weapon4, config_set_key_weapon4 },
+		{ "Next Weapon:", &config_copy.key_next_weapon, config_set_key_next_weapon },
+		{ "Prev. Weapon:", &config_copy.key_prev_weapon, config_set_key_prev_weapon },
+		{ "Emoticon:", &config_copy.key_emoticon, config_set_key_emoticon },
+		{ "Screenshot:", &config_copy.key_screenshot, config_set_key_screenshot },
+	};
+
+	const int key_count = sizeof(keys) / sizeof(key_thing);
+
+    struct rect rest = *r;
+
+	for (int i = 0; i < key_count; i++)
+    {
+        struct rect row;
+        struct rect left, right;
+
+        ui_hsplit_t(&rest, 32, &row, &rest);
+        ui_vsplit_l(&row, 128, &left, &right);
+
+		key_thing key = keys[i + scroll_index];
+		
+		ui_do_label_rect(&left, key.name);
+		key.assign_func(&config_copy, ui_do_key_reader_rect(key.key, &right, *key.key));
+    }
 }
 
-static void tab_menu_render(struct rect *r)
+void ui_settings_video_render(const struct rect *r)
 {
-    static struct rect button1;
-    static struct rect button2;
-    static struct rect button3;
-    static struct rect rest1;
-    static struct rect rest2;
-    static struct rect rest3;
-
-    ui_vsplit_l(r, 160, &button1, &rest1);
-    ui_vsplit_l(&rest1, 160, &button2, &rest2);
-    ui_vsplit_l(&rest2, 160, &button3, &rest3);
-
-    if (ui_do_button_rect(&button1, "Browser", 0, &button1, draw_teewars_button, 0))
-    {
-		screen = SCREEN_MAIN;
-    }
-
-    if (ui_do_button_rect(&button2, "Settings", 0, &button2, draw_teewars_button, 0))
-    {
-        screen = SCREEN_SETTINGS_GENERAL;
-    }
-
-    ui_do_label_rect(&rest3, "Name:", 36);
 }
 
-static void ui_settings_render(struct rect *r)
+void ui_settings_video_render_select_mode(const struct rect *r)
+{
+}
+
+void ui_settings_video_render_custom(const struct rect *r)
+{
+}
+
+void ui_settings_sound_render(const struct rect *r)
+{
+    struct rect row;
+    struct rect left, right;
+
+    ui_hsplit_t(r, 32, &row, 0x0);
+    ui_vsplit_l(&row, 128, &left, &right);
+
+	ui_do_label_rect(&left, "Volume:");
+	
+	config_set_volume(&config_copy, do_scroll_bar_horiz_rect(&config_copy.volume, &right, 256, config_copy.volume));
+	snd_set_master_volume(config_copy.volume / 255.0f);
+}
+
+static void tab_menu_button_render(const struct rect *r, char *name, int s)
+{
+    if (ui_do_button_rect(r, name, 0, r, draw_teewars_button, 0))
+        screen = s;
+}
+
+static void tab_menu_render(const struct rect *r)
+{
+    static struct rect button_news;
+    static struct rect button_servers;
+    static struct rect button_host;
+    static struct rect button_settings;
+    static struct rect rest;
+
+    ui_vsplit_l(r, 130, &button_news, &rest);
+    ui_vsplit_l(&rest, 130, &button_servers, &rest);
+    ui_vsplit_l(&rest, 130, &button_host, &rest);
+    ui_vsplit_l(&rest, 130, &button_settings, &rest);
+
+    tab_menu_button_render(&button_news, "News", SCREEN_NEWS);
+    tab_menu_button_render(&button_servers, "Servers", SCREEN_SERVERS);
+    tab_menu_button_render(&button_host, "Host", SCREEN_HOST);
+    tab_menu_button_render(&button_settings, "Settings", SCREEN_SETTINGS_GENERAL);
+}
+
+static void settings_tab_menu_render(const struct rect *r)
+{
+    static struct rect button_general;
+    static struct rect button_controls;
+    static struct rect button_video;
+    static struct rect button_sound;
+    static struct rect rest;
+
+    ui_hsplit_t(r, 60, &button_general, &rest);
+    ui_hsplit_t(&rest, 60, &button_controls, &rest);
+    ui_hsplit_t(&rest, 60, &button_video, &rest);
+    ui_hsplit_t(&rest, 60, &button_sound, &rest);
+
+    tab_menu_button_render(&button_general, "General", SCREEN_SETTINGS_GENERAL);
+    tab_menu_button_render(&button_controls, "Controls", SCREEN_SETTINGS_CONTROLS);
+    tab_menu_button_render(&button_video, "Video", SCREEN_SETTINGS_VIDEO);
+    tab_menu_button_render(&button_sound, "Sound", SCREEN_SETTINGS_SOUND);
+}
+
+static void ui_settings_render(const struct rect *r)
 {
     static struct rect sub_menu_selector;
     static struct rect center;
 
     ui_vsplit_l(r, 100, &sub_menu_selector, &center);
 
+    settings_tab_menu_render(&sub_menu_selector);
+
 	switch (screen)
 	{
-		/*case SCREEN_SETTINGS_GENERAL: settings_general_render(); break;
-		case SCREEN_SETTINGS_CONTROLS: settings_controls_render(); break;
-		case SCREEN_SETTINGS_VIDEO: settings_video_render(); break;
-		case SCREEN_SETTINGS_VIDEO_SELECT_MODE: settings_video_render_select_mode(); break;
-		case SCREEN_SETTINGS_VIDEO_CUSTOM: settings_video_render_custom(); break;
-		case SCREEN_SETTINGS_SOUND: settings_sound_render(); break;*/
+		case SCREEN_SETTINGS_GENERAL: ui_settings_general_render(&center); break;
+		case SCREEN_SETTINGS_CONTROLS: ui_settings_controls_render(&center); break;
+		case SCREEN_SETTINGS_VIDEO: ui_settings_video_render(&center); break;
+		case SCREEN_SETTINGS_VIDEO_SELECT_MODE: ui_settings_video_render_select_mode(&center); break;
+		case SCREEN_SETTINGS_VIDEO_CUSTOM: ui_settings_video_render_custom(&center); break;
+		case SCREEN_SETTINGS_SOUND: ui_settings_sound_render(&center); break;
 	}
 }
 
-static void middle_render(struct rect *r)
+static void middle_render(const struct rect *r)
 {
     bool ingame = false;
     
 	switch (screen)
 	{
-		case SCREEN_MAIN:
+		case SCREEN_SERVERS:
         {
             if (ingame)
                 {}
@@ -821,12 +937,61 @@ static void middle_render(struct rect *r)
             else
             {
                 static struct rect browser;
+                static bool inited = false;
                 ui_margin(r, 5, &browser);
                 ui_do_button_rect(&browser, "b", 0, &browser, draw_teewars_button, 0);
+
+                if (!inited)
+                {
+                    client_serverbrowse_refresh(0);
+                    inited = true;
+                }
+
+                {
+                    int server_count = client_serverbrowse_sorted_num();
+                    int i;
+
+                    struct rect rest = *r;
+
+                    for (i = 0; i < server_count; i++)
+                    {
+                        SERVER_INFO *info = client_serverbrowse_sorted_get(i);
+                        struct rect row;
+                        struct rect col_name, col_players, col_players_max, col_map, col_latency, col_progression;
+                        char temp[16];
+
+                        ui_hsplit_t(&rest, 32, &row, &rest);
+                        ui_margin(&row, 1, &row);
+
+                        ui_vsplit_l(&row, 400, &col_name, &row);
+                        ui_vsplit_l(&row, 40, &col_players, &row);
+                        ui_vsplit_l(&row, 40, &col_players_max, &row);
+                        ui_vsplit_l(&row, 80, &col_map, &row);
+                        ui_vsplit_l(&row, 40, &col_latency, &row);
+                        ui_vsplit_l(&row, 40, &col_progression, &row);
+
+                        ui_do_label_rect(&col_name, info->name);
+
+                        sprintf(temp, "%i", info->num_players);
+                        ui_do_label_rect(&col_players, temp);
+                        sprintf(temp, "%i", info->max_players);
+                        ui_do_label_rect(&col_players_max, temp);
+                        ui_do_label_rect(&col_map, info->map);
+
+                        sprintf(temp, "%i", info->latency);
+                        ui_do_label_rect(&col_latency, temp);
+                        sprintf(temp, "%i", info->progression);
+                        ui_do_label_rect(&col_progression, temp);
+                    }
+                }
             }
             break;
         }
-		case SCREEN_DISCONNECTED:
+		case SCREEN_NEWS:
+        {
+            break;
+        }
+		case SCREEN_HOST:
         {
             break;
             //return disconnected_render();
@@ -844,26 +1009,24 @@ static void middle_render(struct rect *r)
 		case SCREEN_SETTINGS_SOUND:
         {
             ui_settings_render(r);
-            //return settings_render(ingame);
+            break;
         }
 		case SCREEN_KERNING:
         {
             break;
-            //return kerning_render();
         }
 		default: dbg_msg("menu", "invalid screen selected..."); break;
     }
 }
 
-static int ui_menu_render(struct rect *r)
+static int ui_menu_render(const struct rect *r)
 {
     static struct rect top;
-    static struct rect temp;
     static struct rect middle;
     static struct rect bottom;
 
-    ui_hsplit_t(r, 48, &top, &temp);
-    ui_hsplit_b(&temp, 32, &middle, &bottom);
+    ui_hsplit_t(r, 48, &top, &middle);
+    ui_hsplit_b(&middle, 32, &middle, &bottom);
     tab_menu_render(&top);
     middle_render(&middle);
 
@@ -960,15 +1123,6 @@ static int settings_general_render()
 
 	return 0;
 }
-
-typedef void (*assign_func_callback)(CONFIGURATION *config, int value);
-
-struct key_thing
-{
-	char name[32];
-	int *key;
-	assign_func_callback assign_func;
-};
 
 static int settings_controls_render()
 {
@@ -1199,7 +1353,7 @@ static int settings_render(bool ingame)
 #else
 		config_save("default.cfg");
 #endif
-		screen = SCREEN_MAIN;
+		screen = SCREEN_SERVERS;
 	}
 	
 	// CANCEL BUTTON
@@ -1207,7 +1361,7 @@ static int settings_render(bool ingame)
 	if (ui_do_button(&cancel_button, "Cancel", 0, 620, 490, 150, 48, draw_teewars_button, 0))
 	{
 		snd_set_master_volume(config.volume / 255.0f);
-		screen = SCREEN_MAIN;
+		screen = SCREEN_SERVERS;
 	}
 
 	return 0;
@@ -1438,7 +1592,7 @@ static int kerning_render()
 	// CANCEL BUTTON
 	static int cancel_button;
 	if (ui_do_button(&cancel_button, "Cancel", 0, 620, 520, 150, 48, draw_teewars_button, 0))
-		screen = SCREEN_MAIN;
+		screen = SCREEN_SERVERS;
 
 	return 0;
 }
@@ -1482,11 +1636,11 @@ int render_popup(const char *caption, const char *text, const char *button_text)
 static int disconnected_render()
 {
 	if(strlen(client_error_string()) == 0)
-		screen = SCREEN_MAIN;
+		screen = SCREEN_SERVERS;
 	else
 	{
 		if(render_popup("Disconnected", client_error_string(), "Back"))
-			screen = SCREEN_MAIN;
+			screen = SCREEN_SERVERS;
 	}
 	return 0;
 }
@@ -1498,7 +1652,7 @@ static int connecting_render()
 	if(render_popup("Connecting", buf, "Abort"))
 	{
 		client_disconnect();
-		screen = SCREEN_MAIN;
+		screen = SCREEN_SERVERS;
 	}
 	return 0;
 }
@@ -1517,7 +1671,7 @@ void menu_do_connecting()
 
 void menu_do_connected()
 {
-	screen = SCREEN_MAIN;
+	screen = SCREEN_SERVERS;
 }
 
 static int menu_render(bool ingame)
@@ -1562,8 +1716,6 @@ static int menu_render(bool ingame)
 		if (inp_key_pressed('O'))
 			scale -= 0.01;
 
-		dbg_msg("year", "%f", scale);
-
 		ui_scale(scale);
 		int retn = ui_menu_render(screen);
 
@@ -1578,7 +1730,7 @@ static int menu_render(bool ingame)
     {
 		switch (screen)
 		{
-			case SCREEN_MAIN: return ingame ? ingame_main_render() : main_render();
+			case SCREEN_SERVERS: return ingame ? ingame_main_render() : main_render();
 			case SCREEN_DISCONNECTED: return disconnected_render();
 			case SCREEN_CONNECTING: return connecting_render();
 			case SCREEN_SETTINGS_GENERAL:

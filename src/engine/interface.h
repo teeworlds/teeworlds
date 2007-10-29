@@ -89,22 +89,20 @@ typedef struct
 struct rect
 {
     float x, y, w, h;
-
 };
 
 struct rect *ui_screen();
-typedef void (*rect_fun)(struct rect *r);
+typedef void (*rect_fun)(const struct rect *r);
 void ui_foreach_rect(rect_fun fun);
 void ui_scale(float scale);
-void ui_hsplit_t(struct rect *original, int pixels, struct rect *top, struct rect *bottom);
-void ui_hsplit_b(struct rect *original, int pixels, struct rect *top, struct rect *bottom);
-void ui_vsplit_l(struct rect *original, int pixels, struct rect *left, struct rect *right);
-void ui_vsplit_r(struct rect *original, int pixels, struct rect *left, struct rect *right);
-void ui_margin(struct rect *original, int pixels, struct rect *new_rect);
+void ui_hsplit_t(const struct rect *original, int pixels, struct rect *top, struct rect *bottom);
+void ui_hsplit_b(const struct rect *original, int pixels, struct rect *top, struct rect *bottom);
+void ui_vsplit_l(const struct rect *original, int pixels, struct rect *left, struct rect *right);
+void ui_vsplit_r(const struct rect *original, int pixels, struct rect *left, struct rect *right);
+void ui_margin(const struct rect *original, int pixels, struct rect *new_rect);
 
 /* image loaders */
 int gfx_load_png(IMAGE_INFO *img, const char *filename);
-
 
 /*
 	Group: Graphics
