@@ -72,8 +72,8 @@ void tilemap_render(float scale, int fg)
 						
 						float u0 = nudge + px0/texsize+frac;
 						float v0 = nudge + py0/texsize+frac;
-						float u1 = nudge + px1/texsize+frac;
-						float v1 = nudge + py1/texsize+frac;
+						float u1 = nudge + px1/texsize-frac;
+						float v1 = nudge + py1/texsize-frac;
 						
 						if(f&TILEFLAG_VFLIP)
 						{
