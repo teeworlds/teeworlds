@@ -21,6 +21,8 @@ gameobject_ctf::gameobject_ctf()
 			// report massive failure
 		}
 	}
+
+	is_teamplay = true;
 }
 
 void gameobject_ctf::on_player_spawn(class player *p)

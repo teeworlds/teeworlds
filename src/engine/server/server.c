@@ -57,8 +57,9 @@ static int snap_id_inited = 0;
 enum
 {
 	SRVCLIENT_STATE_EMPTY = 0,
-	SRVCLIENT_STATE_CONNECTING = 1,
-	SRVCLIENT_STATE_INGAME = 2
+	SRVCLIENT_STATE_CONNECTING,
+	SRVCLIENT_STATE_READY,
+	SRVCLIENT_STATE_INGAME
 };
 
 typedef struct 
@@ -159,6 +160,20 @@ void snap_free_id(int id)
 		snap_first_timed_id = id;
 		snap_last_timed_id = id;
 	}
+}
+
+const char *server_clientname(int client_id)
+{
+	if(client_id < 0 || client_id > MAX_CLIENTS || clients[client_id].state < SRVCLIENT_STATE_READY)
+		return "(invalid client)";
+	return clients[client_id].name;
+}
+
+void server_setclientname(int client_id, const char *name)
+{
+	if(client_id < 0 || client_id > MAX_CLIENTS || clients[client_id].state < SRVCLIENT_STATE_READY)
+		return;
+	strncpy(clients[client_id].name, name, MAX_NAME_LENGTH);
 }
 
 int server_tick()
@@ -404,7 +419,6 @@ static void server_process_client_packet(NETPACKET *packet)
 		{
 			char version[64];
 			const char *password;
-			const char *skin;
 			strncpy(version, msg_unpack_string(), 64);
 			if(strcmp(version, mods_net_version()) != 0)
 			{
@@ -418,9 +432,6 @@ static void server_process_client_packet(NETPACKET *packet)
 			strncpy(clients[cid].name, msg_unpack_string(), MAX_NAME_LENGTH);
 			strncpy(clients[cid].clan, msg_unpack_string(), MAX_CLANNAME_LENGTH);
 			password = msg_unpack_string();
-			skin = msg_unpack_string();
-			(void)password; /* ignore these variables */
-			(void)skin;
 			
 			if(config.password[0] != 0 && strcmp(config.password, password) != 0)
 			{
@@ -430,6 +441,15 @@ static void server_process_client_packet(NETPACKET *packet)
 			}
 			
 			server_send_map(cid);
+		}
+		else if(msg == NETMSG_READY)
+		{
+			if(clients[cid].state == SRVCLIENT_STATE_CONNECTING)
+			{
+				dbg_msg("server", "player is ready. cid=%x", cid);
+				clients[cid].state = SRVCLIENT_STATE_READY;
+				mods_connected(cid);
+			}
 		}
 		else if(msg == NETMSG_ENTERGAME)
 		{

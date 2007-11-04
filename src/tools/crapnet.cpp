@@ -97,12 +97,12 @@ int run(int port, NETADDR4 dest)
 				
 				// send and remove packet
 				//if((rand()%20) != 0) // heavy packetloss
-				//	net_udp4_send(socket, &p->send_to, p->data, p->data_size);
+				net_udp4_send(socket, &p->send_to, p->data, p->data_size);
 				
 				// update lag
 				double flux = rand()/(double)RAND_MAX;
 				int ms_spike = 0;
-				int ms_flux = 50;
+				int ms_flux = 20;
 				int ms_ping = 50;
 				current_latency = ((time_freq()*ms_ping)/1000) + (int64)(((time_freq()*ms_flux)/1000)*flux); // 50ms
 				

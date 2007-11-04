@@ -19,7 +19,7 @@
 
 #include <mastersrv/mastersrv.h>
 
-const int prediction_margin = 5; /* magic network prediction value */
+const int prediction_margin = 10; /* magic network prediction value */
 
 /*
 	Server Time
@@ -182,6 +182,7 @@ SMOOTHTIME game_time;
 SMOOTHTIME predicted_time;
 
 GRAPH intra_graph;
+GRAPH predict_graph;
 
 /* --- input snapping --- */
 static int input_data[MAX_INPUT_SIZE] = {0};
@@ -272,14 +273,21 @@ static void client_send_info()
 	msg_pack_string(config.player_name, 128);
 	msg_pack_string(config.clan_name, 128);
 	msg_pack_string(config.password, 128);
-	msg_pack_string("myskin", 128);
 	msg_pack_end();
 	client_send_msg();
 }
 
+
 static void client_send_entergame()
 {
 	msg_pack_start_system(NETMSG_ENTERGAME, MSGFLAG_VITAL);
+	msg_pack_end();
+	client_send_msg();
+}
+
+static void client_send_ready()
+{
+	msg_pack_start_system(NETMSG_READY, MSGFLAG_VITAL);
 	msg_pack_end();
 	client_send_msg();
 }
@@ -380,6 +388,14 @@ static void client_on_enter_game()
 	current_recv_tick = 0;
 }
 
+void client_entergame()
+{
+	/* now we will wait for two snapshots */
+	/* to finish the connection */
+	client_send_entergame();
+	client_on_enter_game();
+}
+
 void client_connect(const char *server_address_str)
 {
 	char buf[512];
@@ -412,6 +428,8 @@ void client_connect(const char *server_address_str)
 	
 	graph_init(&intra_graph, 0.0f, 1.0f);
 	graph_init(&input_late_graph, 0.0f, 1.0f);
+	graph_init(&predict_graph, 0.0f, 200.0f);
+	
 }
 
 void client_disconnect()
@@ -463,8 +481,9 @@ static void client_debug_render()
 	
 	/* render graphs */
 	gfx_mapscreen(0,0,400.0f,300.0f);
-	graph_render(&game_time.graph, 300, 10, 90, 50);
+	graph_render(&predict_graph, 300, 10, 90, 50);
 	graph_render(&predicted_time.graph, 300, 10+50+10, 90, 50);
+	
 	graph_render(&intra_graph, 300, 10+50+10+50+10, 90, 50);
 	graph_render(&input_late_graph, 300, 10+50+10+50+10+50+10, 90, 50);
 	
@@ -574,13 +593,15 @@ static void client_process_packet(NETPACKET *packet)
 				
 				if(map_load(map))
 				{
+					dbg_msg("client/network", "loading done");
+					client_send_ready();
+					modc_connected();
+					
+					/*
 					modc_entergame();
 					client_send_entergame();
-					dbg_msg("client/network", "loading done");
-					/* now we will wait for two snapshots */
-					/* to finish the connection */
-					
-					client_on_enter_game();
+					*/
+					/*client_on_enter_game();*/
 				}
 				else
 				{
@@ -736,12 +757,17 @@ static void client_process_packet(NETPACKET *packet)
 						if(recived_snapshots == 2)
 						{
 							/* start at 200ms and work from there */
-							st_init(&predicted_time, (game_tick+10)*time_freq()/50);
+							st_init(&predicted_time, game_tick*time_freq()/50);
 							st_init(&game_time, (game_tick-1)*time_freq()/50);
 							snapshots[SNAP_PREV] = snapshot_storage.first;
 							snapshots[SNAP_CURRENT] = snapshot_storage.last;
 							local_start_time = time_get();
 							client_set_state(CLIENTSTATE_ONLINE);
+						}
+						
+						{
+							int64 now = time_get();
+							graph_add(&predict_graph, (st_get(&predicted_time, now)-st_get(&game_time, now))/(float)time_freq());
 						}
 						
 						st_update(&game_time, (game_tick-1)*time_freq()/50);
@@ -950,15 +976,16 @@ static void client_run(const char *direct_connect_server)
 			if(inp_key_pressed(KEY_F2))
 				inp_mouse_mode_relative();
 
-			if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed('Q'))
-				break;
-		
 			if(inp_key_pressed(KEY_F5))
 			{
 				ack_game_tick = -1;
 				client_send_input();
 			}
 		}
+
+		/* panic quit button */
+		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_pressed('Q'))
+			break;
 			
 		/* pump the network */
 		client_pump_network();

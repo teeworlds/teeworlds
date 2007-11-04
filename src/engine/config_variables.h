@@ -2,7 +2,9 @@
 
 MACRO_CONFIG_INT(volume, 200, 0, 255)
 MACRO_CONFIG_INT(cpu_throttle, 0, 0, 1)
+
 MACRO_CONFIG_STR(player_name, 32, "nameless tee")
+
 MACRO_CONFIG_STR(clan_name, 32, "")
 MACRO_CONFIG_STR(password, 32, "")
 

@@ -38,15 +38,17 @@ enum
 enum
 {
 	MSG_NULL=0,
-	MSG_SAY,
-	MSG_CHAT,
-	MSG_SETNAME,
-	MSG_KILLMSG,
+	MSG_SAY, // client -> server
+	MSG_CHAT, // server -> client
+	MSG_SETINFO, // server -> client - contains name, skin and color info
+	MSG_KILLMSG, // server -> client
 	MSG_SETTEAM,
 	MSG_JOIN,
 	MSG_QUIT,
 	MSG_EMOTICON,
-	MSG_CHANGENAME,
+	MSG_STARTINFO, // client -> server
+	MSG_CHANGEINFO, // client -> server
+	MSG_READY_TO_ENTER // server -> client
 };
 
 enum

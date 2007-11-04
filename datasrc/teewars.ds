@@ -618,19 +618,20 @@ sprites {
 
 	}
 	
-	tees images.char_default 16 64 {
-		tee_body 0 0 4 4
-		tee_body_outline 4 0 4 4
-		tee_foot 8 3 2 1
-		tee_foot_outline 13 2 2 1
-		tee_hand 8 0 2 2
-		tee_hand_outline 13 0 2 2
+	tees images.char_default 8 4 {
+		tee_body 0 0 3 3
+		tee_body_outline 3 0 3 3
+		tee_foot 6 1 2 1
+		tee_foot_outline 6 2 2 1
+		tee_hand 6 0 1 1
+		tee_hand_outline 7 0 1 1
 		
-		tee_eye_normal 10 2 1 1
-		tee_eye_pain 11 3 1 1
-		tee_eye_happy 11 2 1 1
-		tee_eye_surprise 12 0 1 1
-		tee_eye_angry 10 3 1 1
+		tee_eye_normal 2 3 1 1
+		tee_eye_angry 3 3 1 1
+		tee_eye_pain 4 3 1 1
+		tee_eye_happy 5 3 1 1
+		tee_eye_dead 6 3 1 1
+		tee_eye_surprise 7 3 1 1
 	}
 
 	chatbubbles images.chat_bubbles 4 4 {

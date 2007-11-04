@@ -28,6 +28,7 @@ gameobject::gameobject()
 	sudden_death = 0;
 	round_start_tick = server_tick();
 	round_count = 0;
+	is_teamplay = false;
 }
 
 void gameobject::endround()

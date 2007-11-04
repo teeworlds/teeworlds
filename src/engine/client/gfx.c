@@ -536,8 +536,10 @@ void gfx_swap()
 
 			for(; index < 1000; index++)
 			{
-				IOHANDLE io = io_open(filename, IOFLAG_READ);
+				IOHANDLE io;
 				sprintf(filename, "screenshot%04d.png", index);
+				io = io_open(filename, IOFLAG_READ);
+				
 				if(io)
 					io_close(io);
 				else

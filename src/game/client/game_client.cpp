@@ -26,10 +26,8 @@ enum
 
 data_container *data = 0x0;
 
-static int charids[16] = {2,10,0,4,12,6,9,1,3,15,13,11,7,5,8,14};
-
 int gametype = GAMETYPE_DM;
-static int skinseed = 0;
+//static int skinseed = 0;
 
 static int music_menu = -1;
 static int music_menu_id = -1;
@@ -53,13 +51,42 @@ static const obj_player_character *local_prev_character = 0;
 static const obj_player_info *local_info = 0;
 static const obj_game *gameobj = 0;
 
-struct client_data
+// do this better and nicer
+struct skin
+{
+	int org_texture;
+	int color_texture;
+	char name[31];
+	const char term[1];
+};
+
+enum
+{
+	MAX_SKINS=256,
+};
+
+struct tee_render_info
+{
+	int texture;
+	vec4 color;
+};
+
+static skin skins[MAX_SKINS] = {{-1, -1, {0}, {0}}};
+static int num_skins = 0;
+
+static struct client_data
 {
 	char name[64];
+	char skin_name[64];
+	int skin_id;
+	int skin_color;
 	int team;
 	int emoticon;
 	int emoticon_start;
 	player_core predicted;
+	
+	tee_render_info skin_info;
+	
 } client_datas[MAX_CLIENTS];
 
 class client_effects
@@ -514,6 +541,46 @@ static void render_loading(float percent)
 	gfx_swap();
 }
 
+static void skinscan(const char *name, int is_dir, void *user)
+{
+	int l = strlen(name);
+	if(l < 4 || is_dir || num_skins == MAX_SKINS)
+		return;
+	if(strcmp(name+l-4, ".png") != 0)
+		return;
+		
+	char buf[512];
+	sprintf(buf, "data/skins/%s", name);
+	IMAGE_INFO info;
+	if(!gfx_load_png(&info, buf))
+	{
+		dbg_msg("game", "failed to load skin from %s", name);
+		return;
+	}
+	
+	skins[num_skins].org_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data);
+	
+	// create colorless version
+	unsigned char *d = (unsigned char *)info.data;
+	int step = info.format == IMG_RGBA ? 4 : 3;
+	
+	for(int i = 0; i < info.width*info.height; i++)
+	{
+		int v = (d[i*step]+d[i*step+1]+d[i*step+2])/3;
+		d[i*step] = v;
+		d[i*step+1] = v;
+		d[i*step+2] = v;
+	}
+	
+	skins[num_skins].color_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data);
+	mem_free(info.data);
+
+	// set skin data	
+	strncpy(skins[num_skins].name, name, min((int)sizeof(skins[num_skins].name),l-4));
+	dbg_msg("game", "load skin %s", skins[num_skins].name);
+	num_skins++;
+}
+
 extern "C" void modc_init()
 {
 	// setup sound channels
@@ -556,27 +623,13 @@ extern "C" void modc_init()
 		data->images[i].id = gfx_load_texture(data->images[i].filename);
 		current++;
 	}
+	
+	// load skins
+	fs_listdir("data/skins", skinscan, 0);
 }
 
 extern "C" void modc_entergame()
 {
-	col_init(32);
-	img_init();
-	tilemap_init();
-	chat_reset();
-
-	proj_particles.reset();
-
-	for(int i = 0; i < MAX_CLIENTS; i++)
-	{
-		client_datas[i].name[0] = 0;
-		client_datas[i].team = 0;
-		client_datas[i].emoticon = 0;
-		client_datas[i].emoticon_start = -1;
-	}
-
-	for(int i = 0; i < killmsg_max; i++)
-		killmsgs[i].tick = -100000;
 }
 
 extern "C" void modc_shutdown()
@@ -755,6 +808,10 @@ extern "C" void modc_predict()
 	// predict
 	for(int tick = client_tick()+1; tick <= client_predtick(); tick++)
 	{
+		// fetch the local
+		if(tick == client_predtick() && world.players[local_cid])
+			predicted_prev_player = *world.players[local_cid];
+		
 		// first calculate where everyone should move
 		for(int c = 0; c < MAX_CLIENTS; c++)
 		{
@@ -781,16 +838,10 @@ extern "C" void modc_predict()
 
 			world.players[c]->move();
 			world.players[c]->quantize();
-			
-			// get the data from the local player
-			if(local_cid == c && world.players[local_cid])
-			{
-				if(tick == client_predtick())
-					predicted_player = *world.players[local_cid];
-				else if(tick == client_predtick()-1)
-					predicted_prev_player = *world.players[local_cid];
-			}
 		}
+		
+		if(tick == client_predtick() && world.players[local_cid])
+			predicted_player = *world.players[local_cid];
 	}
 }
 
@@ -850,10 +901,15 @@ extern "C" void modc_newsnapshot()
 	}
 }
 
-void send_changename_request(const char *name)
+void send_info(bool start)
 {
-	msg_pack_start(MSG_CHANGENAME, MSGFLAG_VITAL);
-	msg_pack_string(name, 64);
+	if(start)
+		msg_pack_start(MSG_STARTINFO, MSGFLAG_VITAL);
+	else
+		msg_pack_start(MSG_CHANGEINFO, MSGFLAG_VITAL);
+	msg_pack_string(config.player_name, 64);
+	msg_pack_string(config.player_skin, 64);
+	msg_pack_int(config.player_color);
 	msg_pack_end();
 	client_send_msg();
 }
@@ -1043,10 +1099,11 @@ static void anim_eval_add(animstate *state, animation *anim, float time, float a
 	anim_add(state, &add, amount);
 }
 
-static void render_hand(int skin, vec2 center_pos, vec2 dir, float angle_offset, vec2 post_rot_offset)
+static void render_hand(int skin_id, vec2 center_pos, vec2 dir, float angle_offset, vec2 post_rot_offset)
 {
 	// for drawing hand
-	int shift = charids[skin%16];
+	skin_id = skin_id%num_skins;
+	
 	float basesize = 10.0f;
 	//dir = normalize(hook_pos-pos);
 
@@ -1066,7 +1123,8 @@ static void render_hand(int skin, vec2 center_pos, vec2 dir, float angle_offset,
 	hand_pos += dirx * post_rot_offset.x;
 	hand_pos += diry * post_rot_offset.y;
 
-	gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
+	//gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
+	gfx_texture_set(skins[skin_id].color_texture);
 	gfx_quads_begin();
 
 	// two passes
@@ -1074,7 +1132,7 @@ static void render_hand(int skin, vec2 center_pos, vec2 dir, float angle_offset,
 	{
 		bool outline = i == 0;
 
-		select_sprite(outline?SPRITE_TEE_HAND_OUTLINE:SPRITE_TEE_HAND, 0, 0, shift*4);
+		select_sprite(outline?SPRITE_TEE_HAND_OUTLINE:SPRITE_TEE_HAND, 0, 0, 0);
 		gfx_quads_setrotation(angle);
 		gfx_quads_draw(hand_pos.x, hand_pos.y, 2*basesize, 2*basesize);
 	}
@@ -1083,30 +1141,33 @@ static void render_hand(int skin, vec2 center_pos, vec2 dir, float angle_offset,
 	gfx_quads_end();
 }
 
-static void render_tee(animstate *anim, int skin, int emote, vec2 dir, vec2 pos)
+static void render_tee(animstate *anim, tee_render_info *info, int emote, vec2 dir, vec2 pos)
 {
-	vec2 direction =  dir;
+	vec2 direction = dir;
 	vec2 position = pos;
 
-	gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
+	//gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
+	gfx_texture_set(info->texture);
 	gfx_quads_begin();
+	gfx_setcolor(info->color.r, info->color.g, info->color.b, info->color.a);
+	//gfx_quads_draw(pos.x, pos.y-128, 128, 128);
 
-	// draw foots
+	// first pass we draw the outline
+	// second pass we draw the filling
 	for(int p = 0; p < 2; p++)
 	{
-		// first pass we draw the outline
-		// second pass we draw the filling
 		int outline = p==0 ? 1 : 0;
-		int shift = skin;
+		//int shift = skin;
 
 		for(int f = 0; f < 2; f++)
 		{
-			float basesize = 10.0f;
+			float basesize = 16.0f;
 			if(f == 1)
 			{
 				gfx_quads_setrotation(anim->body.angle*pi*2);
+
 				// draw body
-				select_sprite(outline?SPRITE_TEE_BODY_OUTLINE:SPRITE_TEE_BODY, 0, 0, shift*4);
+				select_sprite(outline?SPRITE_TEE_BODY_OUTLINE:SPRITE_TEE_BODY, 0, 0, 0);
 				gfx_quads_draw(position.x+anim->body.x, position.y+anim->body.y, 4*basesize, 4*basesize);
 
 				// draw eyes
@@ -1115,34 +1176,34 @@ static void render_tee(animstate *anim, int skin, int emote, vec2 dir, vec2 pos)
 					switch (emote)
 					{
 						case EMOTE_PAIN:
-							select_sprite(SPRITE_TEE_EYE_PAIN, 0, 0, shift*4);
+							select_sprite(SPRITE_TEE_EYE_PAIN, 0, 0, 0);
 							break;
 						case EMOTE_HAPPY:
-							select_sprite(SPRITE_TEE_EYE_HAPPY, 0, 0, shift*4);
+							select_sprite(SPRITE_TEE_EYE_HAPPY, 0, 0, 0);
 							break;
 						case EMOTE_SURPRISE:
-							select_sprite(SPRITE_TEE_EYE_SURPRISE, 0, 0, shift*4);
+							select_sprite(SPRITE_TEE_EYE_SURPRISE, 0, 0, 0);
 							break;
 						case EMOTE_ANGRY:
-							select_sprite(SPRITE_TEE_EYE_ANGRY, 0, 0, shift*4);
+							select_sprite(SPRITE_TEE_EYE_ANGRY, 0, 0, 0);
 							break;
 						default:
-							select_sprite(SPRITE_TEE_EYE_NORMAL, 0, 0, shift*4);
+							select_sprite(SPRITE_TEE_EYE_NORMAL, 0, 0, 0);
 							break;
 					}
 					int h = emote == EMOTE_BLINK ? (int)(basesize/3) : (int)(basesize);
-					gfx_quads_draw(position.x-4+direction.x*4, position.y-8+direction.y*3, basesize, h);
-					gfx_quads_draw(position.x+4+direction.x*4, position.y-8+direction.y*3, -basesize, h);
+					gfx_quads_draw(position.x-4+direction.x*4, position.y-8+direction.y*3, basesize*1.5f, h*1.5f);
+					gfx_quads_draw(position.x+4+direction.x*4, position.y-8+direction.y*3, -basesize*1.5f, h*1.5f);
 				}
 			}
 
 			// draw feet
-			select_sprite(outline?SPRITE_TEE_FOOT_OUTLINE:SPRITE_TEE_FOOT, 0, 0, shift*4);
+			select_sprite(outline?SPRITE_TEE_FOOT_OUTLINE:SPRITE_TEE_FOOT, 0, 0, 0);
 
 			keyframe *foot = f ? &anim->front_foot : &anim->back_foot;
 
-			float w = basesize*2.5f;
-			float h = basesize*1.425f;
+			float w = basesize*2.5f*1.5f;
+			float h = basesize*1.425f*1.5f;
 
 			gfx_quads_setrotation(foot->angle*pi*2);
 			gfx_quads_draw(position.x+foot->x, position.y+foot->y, w, h);
@@ -1249,10 +1310,10 @@ static void render_player(
 		intratick = client_intrapredtick();
 	}
 
-	int skin = charids[info.clientid];
-
-	if(gametype != GAMETYPE_DM)
-		skin = info.team*9; // 0 or 9
+	// TODO: proper skin selection
+	int skin_id = client_datas[info.clientid].skin_id; //charids[info.clientid];
+	//if(gametype != GAMETYPE_DM)
+		//skin_id = info.team*9; // 0 or 9
 
 	vec2 direction = get_direction(player.angle);
 	float angle = player.angle/256.0f;
@@ -1317,7 +1378,7 @@ static void render_player(
 		gfx_quads_setrotation(0);
 		gfx_quads_end();
 
-		render_hand(skin, position, normalize(hook_pos-pos), -pi/2, vec2(20, 0));
+		render_hand(skin_id, position, normalize(hook_pos-pos), -pi/2, vec2(20, 0));
 	}
 
 	// draw gun
@@ -1437,9 +1498,9 @@ static void render_player(
 
 		switch (player.weapon)
 		{
-			case WEAPON_GUN: render_hand(skin, p, direction, -3*pi/4, vec2(-15, 4)); break;
-			case WEAPON_SHOTGUN: render_hand(skin, p, direction, -pi/2, vec2(-5, 4)); break;
-			case WEAPON_ROCKET: render_hand(skin, p, direction, -pi/2, vec2(-4, 7)); break;
+			case WEAPON_GUN: render_hand(skin_id, p, direction, -3*pi/4, vec2(-15, 4)); break;
+			case WEAPON_SHOTGUN: render_hand(skin_id, p, direction, -pi/2, vec2(-5, 4)); break;
+			case WEAPON_ROCKET: render_hand(skin_id, p, direction, -pi/2, vec2(-4, 7)); break;
 		}
 
 	}
@@ -1448,11 +1509,13 @@ static void render_player(
 	if(info.local && config.debug)
 	{
 		vec2 ghost_position = mix(vec2(prev_char->x, prev_char->y), vec2(player_char->x, player_char->y), client_intratick());
-		render_tee(&state, 15, player.emote, direction, ghost_position); // render ghost
+		tee_render_info ghost = client_datas[info.clientid].skin_info;
+		ghost.color.a = 0.5f;
+		render_tee(&state, &ghost, player.emote, direction, ghost_position); // render ghost
 	}
 
 	// render the tee
-	render_tee(&state, skin, player.emote, direction, position);
+	render_tee(&state, &client_datas[info.clientid].skin_info, player.emote, direction, position);
 
 	if(player.state == STATE_CHATTING)
 	{
@@ -1785,7 +1848,7 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 		gfx_pretty_text(x+w-tw-35, y, font_size, buf, -1);
 
 		// render avatar
-		render_tee(&idlestate, info->clientid, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28));
+		render_tee(&idlestate, &client_datas[info->clientid].skin_info, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28));
 		y += 50.0f;
 	}
 }
@@ -1882,7 +1945,7 @@ void render_world(float center_x, float center_y, float zoom)
 				const void *info = snap_find_item(SNAP_CURRENT, OBJTYPE_PLAYER_INFO, item.id);
 				if(prev && prev_info && info)
 				{
-					client_datas[((const obj_player_info *)data)->clientid].team = ((const obj_player_info *)data)->team;
+					client_datas[((const obj_player_info *)info)->clientid].team = ((const obj_player_info *)info)->team;
 					render_player(
 							(const obj_player_character *)prev,
 							(const obj_player_character *)data,
@@ -1905,6 +1968,22 @@ void render_world(float center_x, float center_y, float zoom)
 	damageind.render();
 }
 
+static void next_skin()
+{
+	int skin_id = 0;
+	for(int i = 0; i < num_skins; i++)
+	{
+		if(strcmp(config.player_skin, skins[i].name) == 0)
+		{
+			skin_id = (i+1)%num_skins;
+			break;
+		}
+	}
+	
+	config_set_player_skin(&config, skins[skin_id].name);
+	send_info(false);
+}
+
 static void do_input(int *v, int key)
 {
 	*v += inp_key_presses(key) + inp_key_releases(key);
@@ -1915,6 +1994,9 @@ static void do_input(int *v, int key)
 
 void render_game()
 {
+	if(inp_key_down('L'))
+		next_skin();
+	
 	float width = 400*3.0f;
 	float height = 300*3.0f;
 
@@ -2319,8 +2401,8 @@ void render_game()
 
 			// render victim tee
 			x -= 24.0f;
-			int skin = gametype == GAMETYPE_TDM ? skinseed + client_datas[killmsgs[r].victim].team : killmsgs[r].victim;
-			render_tee(&idlestate, skin, EMOTE_PAIN, vec2(-1,0), vec2(x, y+28));
+			//int skin = gametype == GAMETYPE_TDM ? skinseed + client_datas[killmsgs[r].victim].team : killmsgs[r].victim;
+			render_tee(&idlestate, &client_datas[killmsgs[r].victim].skin_info, EMOTE_PAIN, vec2(-1,0), vec2(x, y+28));
 			x -= 32.0f;
 
 			// render weapon
@@ -2337,8 +2419,8 @@ void render_game()
 
 			// render killer tee
 			x -= 24.0f;
-			skin = gametype == GAMETYPE_TDM ? skinseed + client_datas[killmsgs[r].killer].team : killmsgs[r].killer;
-			render_tee(&idlestate, skin, EMOTE_ANGRY, vec2(1,0), vec2(x, y+28));
+			//skin = gametype == GAMETYPE_TDM ? skinseed + client_datas[killmsgs[r].killer].team : killmsgs[r].killer;
+			render_tee(&idlestate, &client_datas[killmsgs[r].killer].skin_info, EMOTE_ANGRY, vec2(1,0), vec2(x, y+28));
 			x -= 32.0f;
 
 			// render killer name
@@ -2532,6 +2614,7 @@ extern "C" void modc_render()
 		render_game();
 
 		// handle team switching
+		// TODO: FUGLY!!!
 		if(config.team != -10)
 		{
 			msg_pack_start(MSG_SETTEAM, MSGFLAG_VITAL);
@@ -2586,11 +2669,33 @@ extern "C" void modc_message(int msg)
 		else
 			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_SERVER].sounds[0].id, 0);
 	}
-	else if(msg == MSG_SETNAME)
+	else if(msg == MSG_SETINFO)
 	{
 		int cid = msg_unpack_int();
 		const char *name = msg_unpack_string();
+		const char *skinname = msg_unpack_string();
+		int color = msg_unpack_int();
+		(void)color;
 		strncpy(client_datas[cid].name, name, 64);
+		strncpy(client_datas[cid].skin_name, skinname, 64);
+		client_datas[cid].skin_info.color = vec4(1,1,1,1); //color;
+		
+		// find new skin
+		client_datas[cid].skin_id = 0;
+		for(int i = 0; i < num_skins; i++)
+		{
+			if(strcmp(skins[i].name, client_datas[cid].skin_name) == 0)
+			{
+				client_datas[cid].skin_id = i;
+				break;
+			}
+		}
+		
+		client_datas[cid].skin_info.texture = skins[client_datas[cid].skin_id].org_texture;
+	}
+	else if(msg == MSG_READY_TO_ENTER)
+	{
+		client_entergame();
 	}
 	else if(msg == MSG_KILLMSG)
 	{
@@ -2609,5 +2714,28 @@ extern "C" void modc_message(int msg)
 	}
 }
 
+extern "C" void modc_connected()
+{
+	// init some stuff
+	col_init(32);
+	img_init();
+	tilemap_init();
+	chat_reset();
+
+	proj_particles.reset();
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		client_datas[i].name[0] = 0;
+		client_datas[i].team = 0;
+		client_datas[i].emoticon = 0;
+		client_datas[i].emoticon_start = -1;
+	}
+
+	for(int i = 0; i < killmsg_max; i++)
+		killmsgs[i].tick = -100000;
+		
+	send_info(true);
+}
 
 extern "C" const char *modc_net_version() { return TEEWARS_NETVERSION; }

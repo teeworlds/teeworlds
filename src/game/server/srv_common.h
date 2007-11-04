@@ -121,6 +121,8 @@ protected:
 	int warmup;
 	int round_count;
 	
+	bool is_teamplay;
+	
 public:
 	int gametype;
 	gameobject();
@@ -237,7 +239,8 @@ public:
 	
 	//
 	int client_id;
-	char name[64];
+	char skin_name[64];
+	int skin_color;
 
 	// input	
 	player_input previnput;
@@ -287,7 +290,7 @@ public:
 	void respawn();
 	
 	void set_team(int team);
-
+	
 	bool is_grounded();
 	
 	void set_weapon(int w);

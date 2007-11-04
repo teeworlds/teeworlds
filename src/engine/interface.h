@@ -743,9 +743,12 @@ int modmenu_render(int ingame);
 
 
 /* undocumented callbacks */
+void modc_connected();
 void modc_message(int msg);
 void modc_predict();
+
 void mods_message(int msg, int client_id);
+void mods_connected(int client_id);
 
 
 const char *modc_net_version();
@@ -753,6 +756,9 @@ const char *mods_net_version();
 
 /* server */
 int server_getclientinfo(int client_id, CLIENT_INFO *info);
+const char *server_clientname(int client_id);
+void server_setclientname(int client_id, const char *name);
+
 int server_tick();
 int server_tickspeed();
 
@@ -823,6 +829,7 @@ int *client_get_input(int tick);
 void client_connect(const char *address);
 void client_disconnect();
 void client_quit();
+void client_entergame();
 
 void client_rcon(const char *cmd);
 

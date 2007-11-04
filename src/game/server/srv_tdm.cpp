@@ -2,6 +2,11 @@
 #include "srv_common.h"
 #include "srv_tdm.h"
 
+gameobject_tdm::gameobject_tdm()
+{
+	is_teamplay = true;
+}
+
 void gameobject_tdm::tick()
 {
 	if(game_over_tick == -1)

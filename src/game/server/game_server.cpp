@@ -355,11 +355,6 @@ player::player()
 void player::init()
 {
 	proximity_radius = phys_size;
-	name[0] = 'n';
-	name[1] = 'o';
-	name[2] = 'o';
-	name[3] = 'b';
-	name[4] = 0;
 	client_id = -1;
 	team = -1; // -1 == spectator
 	extrapowerflags = 0;
@@ -405,7 +400,6 @@ void player::set_weapon(int w)
 	last_weapon = active_weapon;
 	active_weapon = w;
 }
-
 
 void player::respawn()
 {
@@ -504,9 +498,8 @@ void player::try_respawn()
 	weapons[WEAPON_GUN].got = true;
 	weapons[WEAPON_GUN].ammo = data->weapons[WEAPON_GUN].maxammo;
 
-	weapons[WEAPON_SNIPER].got = true;
-	weapons[WEAPON_SNIPER].ammo = data->weapons[WEAPON_SNIPER].maxammo;
-
+	//weapons[WEAPON_SNIPER].got = true;
+	//weapons[WEAPON_SNIPER].ammo = data->weapons[WEAPON_SNIPER].maxammo;
 
 	active_weapon = WEAPON_GUN;
 	last_weapon = WEAPON_HAMMER;
@@ -1006,7 +999,9 @@ void player::die(int killer, int weapon)
 {
 	gameobj->on_player_death(this, get_player(killer), weapon);
 
-	dbg_msg("game", "kill killer='%d:%s' victim='%d:%s' weapon=%d", killer, players[killer].name, client_id, name, weapon);
+	dbg_msg("game", "kill killer='%d:%s' victim='%d:%s' weapon=%d",
+		killer, server_clientname(killer),
+		client_id, server_clientname(client_id), weapon);
 
 	// send the kill message
 	msg_pack_start(MSG_KILLMSG, MSGFLAG_VITAL);
@@ -1292,7 +1287,8 @@ void powerup::tick()
 
 		if(respawntime >= 0)
 		{
-			dbg_msg("game", "pickup player='%d:%s' item=%d/%d", pplayer->client_id, pplayer->name, type, subtype);
+			dbg_msg("game", "pickup player='%d:%s' item=%d/%d",
+				pplayer->client_id, server_clientname(pplayer->client_id), type, subtype);
 			spawntick = server_tick() + server_tickspeed() * respawntime;
 		}
 	}
@@ -1448,7 +1444,7 @@ player* intersect_player(vec2 pos0, vec2 pos1, vec2& new_pos, entity* notthis)
 void send_chat(int cid, int team, const char *msg)
 {
 	if(cid >= 0 && cid < MAX_CLIENTS)
-		dbg_msg("chat", "%d:%d:%s: %s", cid, team, players[cid].name, msg);
+		dbg_msg("chat", "%d:%d:%s: %s", cid, team, server_clientname(cid), msg);
 	else
 		dbg_msg("chat", "*** %s", msg);
 
@@ -1523,17 +1519,15 @@ void mods_client_input(int client_id, void *input)
 	}
 }
 
-void send_set_name(int cid, const char *old_name, const char *new_name)
+void send_info(int who, int to_who)
 {
-	msg_pack_start(MSG_SETNAME, MSGFLAG_VITAL);
-	msg_pack_int(cid);
-	msg_pack_string(new_name, 64);
+	msg_pack_start(MSG_SETINFO, MSGFLAG_VITAL);
+	msg_pack_int(who);
+	msg_pack_string(server_clientname(who), 64);
+	msg_pack_string(players[who].skin_name, 64);
+	msg_pack_int(players[who].skin_color);
 	msg_pack_end();
-	server_send_msg(-1);
-
-	char msg[256];
-	sprintf(msg, "*** %s changed name to %s", old_name, new_name);
-	send_chat(-1, -1, msg);
+	server_send_msg(to_who);
 }
 
 void send_emoticon(int cid, int emoticon)
@@ -1547,21 +1541,21 @@ void send_emoticon(int cid, int emoticon)
 
 void mods_client_enter(int client_id)
 {
-	players[client_id].init();
-	players[client_id].client_id = client_id;
 	world->insert_entity(&players[client_id]);
 	players[client_id].respawn();
+	dbg_msg("game", "join player='%d:%s'", client_id, server_clientname(client_id));
+	
+	char buf[512];
+	sprintf(buf, "%s has joined the game", server_clientname(client_id));
+	send_chat(-1, -1, buf);	
+}
 
-	CLIENT_INFO info; // fetch login name
-	if(server_getclientinfo(client_id, &info))
-	{
-		strcpy(players[client_id].name, info.name);
-	}
-	else
-		strcpy(players[client_id].name, "(bot)");
+void mods_connected(int client_id)
+{
+	players[client_id].init();
+	players[client_id].client_id = client_id;
 
-
-	dbg_msg("game", "join player='%d:%s'", client_id, players[client_id].name);
+	//dbg_msg("game", "join player='%d:%s'", client_id, server_clientname(client_id));
 
 	// Check which team the player should be on
 	if(gameobj->gametype == GAMETYPE_DM)
@@ -1570,9 +1564,10 @@ void mods_client_enter(int client_id)
 		players[client_id].team = gameobj->getteam(client_id);
 
 	//
-	msg_pack_start(MSG_SETNAME, MSGFLAG_VITAL);
+	/*
+	msg_pack_start(MSG_SETINFO, MSGFLAG_VITAL);
 	msg_pack_int(client_id);
-	msg_pack_string(players[client_id].name, 64);
+	msg_pack_string(server_clientname(client_id), 64);
 	msg_pack_end();
 	server_send_msg(-1);
 
@@ -1580,26 +1575,23 @@ void mods_client_enter(int client_id)
 	{
 		if(players[client_id].client_id != -1)
 		{
-			msg_pack_start(MSG_SETNAME, MSGFLAG_VITAL);
+			msg_pack_start(MSG_SETINFO, MSGFLAG_VITAL);
 			msg_pack_int(i);
-			msg_pack_string(players[i].name, 64);
+			msg_pack_string(server_clientname(i), 64);
 			msg_pack_end();
 			server_send_msg(client_id);
 		}
-	}
+	}*/
 
-	char buf[512];
-	sprintf(buf, "%s has joined the game", players[client_id].name);
-	send_chat(-1, -1, buf);
 }
 
 void mods_client_drop(int client_id)
 {
 	char buf[512];
-	sprintf(buf, "%s has left the game", players[client_id].name);
+	sprintf(buf, "%s has left the game", server_clientname(client_id));
 	send_chat(-1, -1, buf);
 
-	dbg_msg("game", "leave player='%d:%s'", client_id, players[client_id].name);
+	dbg_msg("game", "leave player='%d:%s'", client_id, server_clientname(client_id));
 
 	gameobj->on_player_death(&players[client_id], 0, -1);
 	world->remove_entity(&players[client_id]);
@@ -1623,18 +1615,50 @@ void mods_message(int msg, int client_id)
 		// Switch team on given client and kill/respawn him
 		players[client_id].set_team(msg_unpack_int());
 	}
-	else if (msg == MSG_CHANGENAME)
+	else if (msg == MSG_CHANGEINFO || msg == MSG_STARTINFO)
 	{
 		const char *name = msg_unpack_string();
+		const char *skin_name = msg_unpack_string();
+		int skin_color = msg_unpack_int();
 
 		// check for invalid chars
 		const char *p = name;
 		while (*p)
-			if (*p++ < 32)
+		{
+			if(*p < 32)
 				return;
+			p++;
+		}
 
-		send_set_name(client_id, players[client_id].name, name);
-		strcpy(players[client_id].name, name);
+
+		//
+		if(msg == MSG_CHANGEINFO && strcmp(name, server_clientname(client_id)) != 0)
+		{
+			char msg[256];
+			sprintf(msg, "*** %s changed name to %s", server_clientname(client_id), name);
+			send_chat(-1, -1, msg);
+		}
+
+		//send_set_name(client_id, players[client_id].name, name);
+		strncpy(players[client_id].skin_name, skin_name, 64);
+		server_setclientname(client_id, name);
+		players[client_id].skin_color = skin_color;
+		
+		if(msg == MSG_STARTINFO)
+		{
+			// send all info to this client
+			for(int i = 0; i < MAX_CLIENTS; i++)
+			{
+				if(players[i].client_id != -1)
+					send_info(i, client_id);
+			}
+			
+			msg_pack_start(MSG_READY_TO_ENTER, MSGFLAG_VITAL);
+			msg_pack_end();
+			server_send_msg(client_id);			
+		}
+		
+		send_info(client_id, -1);
 	}
 	else if (msg == MSG_EMOTICON)
 	{
@@ -1742,8 +1766,9 @@ void mods_init()
 			{*/
 				for(int i = 0; i < config.dbg_bots ; i++)
 				{
+					mods_connected(MAX_CLIENTS-i-1);
 					mods_client_enter(MAX_CLIENTS-i-1);
-					strcpy(players[MAX_CLIENTS-i-1].name, "(bot)");
+					//strcpy(players[MAX_CLIENTS-i-1].name, "(bot)");
 					if(gameobj->gametype != GAMETYPE_DM)
 						players[MAX_CLIENTS-i-1].team = i&1;
 				}
