@@ -2751,6 +2751,8 @@ extern "C" void modc_connected()
 		killmsgs[i].tick = -100000;
 		
 	send_info(true);
+	
+	config.ui_page = 5;
 }
 
 extern "C" const char *modc_net_version() { return TEEWARS_NETVERSION; }

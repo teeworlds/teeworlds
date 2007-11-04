@@ -24,14 +24,20 @@ extern "C" {
 
 extern data_container *data;
 
-#if 0
-static const vec4 color_tabbar_inactive(1,1,1,0.25f);
-static const vec4 color_tabbar_active(1,1,1,0.5f);
-#else
-static const vec4 color_tabbar_inactive(0,0,0,0.25f);
-static const vec4 color_tabbar_active(0,0,0,0.5f);
-#endif
+static vec4 gui_color(0.9f,0.78f,0.65f, 0.5f);
 
+static vec4 color_tabbar_inactive_outgame(0,0,0,0.25f);
+static vec4 color_tabbar_active_outgame(0,0,0,0.5f);
+
+static float color_ingame_scale_i = 0.5f;
+static float color_ingame_scale_a = 0.2f;
+static vec4 color_tabbar_inactive_ingame(gui_color.r*color_ingame_scale_i, gui_color.g*color_ingame_scale_i, gui_color.b*color_ingame_scale_i,0.75f);
+static vec4 color_tabbar_active_ingame(gui_color.r*color_ingame_scale_a, gui_color.g*color_ingame_scale_a, gui_color.b*color_ingame_scale_a,0.85f);
+//static vec4 color_tabbar_inactive_ingame(0.2f,0.2f,0.2f,0.5f);
+//static vec4 color_tabbar_active_ingame(0.2f,0.2f,0.2f,0.75f);
+
+static vec4 color_tabbar_inactive = color_tabbar_inactive_outgame;
+static vec4 color_tabbar_active = color_tabbar_active_outgame;
 
 enum
 {
@@ -52,6 +58,7 @@ enum
 	PAGE_LAN,
 	PAGE_FAVORITES,
 	PAGE_SETTINGS,
+	PAGE_GAME,
 };
 
 typedef struct 
@@ -263,7 +270,14 @@ static void ui2_draw_rect(const RECT *r, vec4 color, int corners, float rounding
 static void ui2_draw_menu_button(const void *id, const char *text, int checked, const RECT *r, void *extra)
 {
 	ui2_draw_rect(r, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
-	ui2_do_label(r, text, 22, 0);
+	ui2_do_label(r, text, 24, 0);
+}
+
+
+static void ui2_draw_keyselect_button(const void *id, const char *text, int checked, const RECT *r, void *extra)
+{
+	ui2_draw_rect(r, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
+	ui2_do_label(r, text, 18, 0);
 }
 
 static void ui2_draw_menu_tab_button(const void *id, const char *text, int checked, const RECT *r, void *extra)
@@ -541,9 +555,9 @@ int ui2_do_key_reader(void *id, const RECT *rect, int key)
 
 	// draw
 	if (ui_active_item() == id)
-		ui2_draw_menu_button(id, "???", 0, rect, 0);
+		ui2_draw_keyselect_button(id, "???", 0, rect, 0);
 	else
-		ui2_draw_menu_button(id, inp_key_name(key), 0, rect, 0);
+		ui2_draw_keyselect_button(id, inp_key_name(key), 0, rect, 0);
 		
 	//ui2_do_label(rect, 
 	/*
@@ -572,9 +586,18 @@ static int menu2_render_menubar(RECT r)
 	RECT button;
 	
 	ui2_vsplit_l(&box, 110.0f, &button, &box);
-	static int news_button=0;
-	if (ui2_do_button(&news_button, "News", config.ui_page==PAGE_NEWS, &button, ui2_draw_menu_tab_button, 0))
-		config.ui_page = PAGE_NEWS;
+	if(client_state() == CLIENTSTATE_OFFLINE)
+	{
+		static int news_button=0;
+		if (ui2_do_button(&news_button, "News", config.ui_page==PAGE_NEWS, &button, ui2_draw_menu_tab_button, 0))
+			config.ui_page = PAGE_NEWS;
+	}
+	else
+	{
+		static int game_button=0;
+		if (ui2_do_button(&game_button, "Game", config.ui_page==PAGE_GAME, &button, ui2_draw_menu_tab_button, 0))
+			config.ui_page = PAGE_GAME;
+	}
 		
 	ui2_vsplit_l(&box, 30.0f, 0, &box);
 	ui2_vsplit_l(&box, 110.0f, &button, &box);
@@ -606,7 +629,7 @@ static int menu2_render_menubar(RECT r)
 static void menu2_render_background()
 {
 	//gfx_clear(0.65f,0.78f,0.9f);
-	gfx_clear(0.9f,0.78f,0.65f);
+	gfx_clear(gui_color.r, gui_color.g, gui_color.b);
 	//gfx_clear(0.78f,0.9f,0.65f);
 	
 	gfx_texture_set(data->images[IMAGE_BANNER].id);
@@ -1022,13 +1045,12 @@ static void menu2_render_settings(RECT main_view)
 	
 	// render background
 	RECT temp, tabbar;
-	ui2_hsplit_t(&main_view, 50.0f, &temp, &main_view);
-	ui2_draw_rect(&temp, color_tabbar_active, CORNER_T|CORNER_BR, 10.0f);
-	
 	ui2_vsplit_r(&main_view, 120.0f, &main_view, &tabbar);
 	ui2_draw_rect(&main_view, color_tabbar_active, CORNER_B, 10.0f);
+	ui2_hsplit_t(&tabbar, 50.0f, &temp, &tabbar);
+	ui2_draw_rect(&temp, color_tabbar_active, CORNER_R, 10.0f);
 	
-	// player, controls, network, graphics, sound
+	ui2_hsplit_t(&main_view, 10.0f, 0, &main_view);
 	
 	RECT button;
 	
@@ -1042,9 +1064,6 @@ static void menu2_render_settings(RECT main_view)
 		if(ui2_do_button(tabs[i], tabs[i], settings_page == i, &button, ui2_draw_settings_tab_button, 0))
 			settings_page = i;
 	}
-
-	//ui2_hsplit_t(&tabbar, 10, &button, &tabbar);
-	//ui2_draw_rect(&tabbar, color_tabbar_active, CORNER_R, 10.0f);
 	
 	ui2_margin(&main_view, 10.0f, &main_view);
 	
@@ -1063,6 +1082,35 @@ static void menu2_render_news(RECT main_view)
 	ui2_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
 }
 
+
+static void menu2_render_game(RECT main_view)
+{
+	RECT button;
+	ui2_hsplit_t(&main_view, 45.0f, &main_view, 0);
+	ui2_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
+
+	ui2_hsplit_t(&main_view, 10.0f, 0, &main_view);
+	ui2_hsplit_t(&main_view, 25.0f, &main_view, 0);
+	ui2_vmargin(&main_view, 10.0f, &main_view);
+	
+	ui2_vsplit_r(&main_view, 120.0f, &main_view, &button);
+	static int disconnect_button = 0;
+	if(ui2_do_button(&disconnect_button, "Disconnect", 0, &button, ui2_draw_menu_button, 0))
+		client_disconnect();
+
+	ui2_vsplit_l(&main_view, 120.0f, &button, &main_view);
+	static int spectate_button = 0;
+	if(ui2_do_button(&spectate_button, "Spectate", 0, &button, ui2_draw_menu_button, 0))
+		;
+		
+	ui2_vsplit_l(&main_view, 10.0f, &button, &main_view);
+	ui2_vsplit_l(&main_view, 120.0f, &button, &main_view);
+	static int change_team_button = 0;
+	if(ui2_do_button(&change_team_button, "Change Team", 0, &button, ui2_draw_menu_button, 0))
+		;
+
+}
+
 int menu2_render()
 {
 	gfx_mapscreen(0,0,800,600);
@@ -1079,7 +1127,17 @@ int menu2_render()
 	if (inp_key_down('O'))
 		ui2_set_scale(ui2_scale()+0.1f);
 	
-	menu2_render_background();
+	if(client_state() == CLIENTSTATE_ONLINE)
+	{
+		color_tabbar_inactive = color_tabbar_inactive_ingame;
+		color_tabbar_active = color_tabbar_active_ingame;
+	}
+	else
+	{
+		menu2_render_background();
+		color_tabbar_inactive = color_tabbar_inactive_outgame;
+		color_tabbar_active = color_tabbar_active_outgame;
+	}
 	
 	RECT screen = *ui2_screen();
 	RECT tab_bar;
@@ -1094,7 +1152,9 @@ int menu2_render()
 	menu2_render_menubar(tab_bar);
 		
 	// render current page
-	if(config.ui_page == PAGE_NEWS)
+	if(config.ui_page == PAGE_GAME)
+		menu2_render_game(main_view);
+	else if(config.ui_page == PAGE_NEWS)
 		menu2_render_news(main_view);
 	else if(config.ui_page == PAGE_INTERNET)
 		menu2_render_serverbrowser(main_view);
