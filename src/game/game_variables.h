@@ -44,6 +44,7 @@ MACRO_CONFIG_STR(player_skin, 64, "default")
 
 MACRO_CONFIG_INT(dbg_new_gui, 0, 0, 1)
 
+MACRO_CONFIG_INT(ui_page, 0, 0, 5)
 
 MACRO_CONFIG_STR(sv_msg, 512, "")
 

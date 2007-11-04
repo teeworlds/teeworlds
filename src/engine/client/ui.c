@@ -16,10 +16,10 @@ struct pretty_font
 
 extern struct pretty_font *current_font;
 
-static void *hot_item = 0;
-static void *active_item = 0;
-static void *last_active_item = 0;
-static void *becomming_hot_item = 0;
+static const void *hot_item = 0;
+static const void *active_item = 0;
+static const void *last_active_item = 0;
+static const void *becomming_hot_item = 0;
 static float mouse_x, mouse_y; /* in gui space */
 static float mouse_wx, mouse_wy; /* in world space */
 static unsigned mouse_buttons = 0;
@@ -30,12 +30,12 @@ float ui_mouse_world_x() { return mouse_wx; }
 float ui_mouse_world_y() { return mouse_wy; }
 int ui_mouse_button(int index) { return (mouse_buttons>>index)&1; }
 
-void ui_set_hot_item(void *id) { becomming_hot_item = id; }
-void ui_set_active_item(void *id) { active_item = id; if (id) last_active_item = id; }
+void ui_set_hot_item(const void *id) { becomming_hot_item = id; }
+void ui_set_active_item(const void *id) { active_item = id; if (id) last_active_item = id; }
 void ui_clear_last_active_item() { last_active_item = 0; }
-void *ui_hot_item() { return hot_item; }
-void *ui_active_item() { return active_item; }
-void *ui_last_active_item() { return last_active_item; }
+const void *ui_hot_item() { return hot_item; }
+const void *ui_active_item() { return active_item; }
+const void *ui_last_active_item() { return last_active_item; }
 
 int ui_update(float mx, float my, float mwx, float mwy, int buttons)
 {
@@ -80,7 +80,7 @@ void ui_do_label(float x, float y, const char *text, float size)
     gfx_pretty_text(x, y, size, text, -1);
 }
 
-int ui_do_button(void *id, const char *text, int checked, float x, float y, float w, float h, draw_button_callback draw_func, void *extra)
+int ui_do_button(const void *id, const char *text, int checked, float x, float y, float w, float h, draw_button_callback draw_func, void *extra)
 {
     /* logic */
     int r = 0;

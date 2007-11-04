@@ -1236,7 +1236,7 @@ void draw_circle(float x, float y, float r, int segments)
 	}
 }
 
-void draw_round_rect(float x, float y, float w, float h, float r)
+void draw_round_rect_ext(float x, float y, float w, float h, float r, int corners)
 {
 	int num = 8;
 	for(int i = 0; i < num; i+=2)
@@ -1251,24 +1251,28 @@ void draw_round_rect(float x, float y, float w, float h, float r)
 		float sa2 = sinf(a2);
 		float sa3 = sinf(a3);
 
+		if(corners&1) // TL
 		gfx_quads_draw_freeform(
 			x+r, y+r,
 			x+(1-ca1)*r, y+(1-sa1)*r,
 			x+(1-ca3)*r, y+(1-sa3)*r,
 			x+(1-ca2)*r, y+(1-sa2)*r);
 
+		if(corners&2) // TR
 		gfx_quads_draw_freeform(
 			x+w-r, y+r,
 			x+w-r+ca1*r, y+(1-sa1)*r,
 			x+w-r+ca3*r, y+(1-sa3)*r,
 			x+w-r+ca2*r, y+(1-sa2)*r);
 
+		if(corners&4) // BL
 		gfx_quads_draw_freeform(
 			x+r, y+h-r,
 			x+(1-ca1)*r, y+h-r+sa1*r,
 			x+(1-ca3)*r, y+h-r+sa3*r,
 			x+(1-ca2)*r, y+h-r+sa2*r);
 
+		if(corners&8) // BR
 		gfx_quads_draw_freeform(
 			x+w-r, y+h-r,
 			x+w-r+ca1*r, y+h-r+sa1*r,
@@ -1281,7 +1285,18 @@ void draw_round_rect(float x, float y, float w, float h, float r)
 	gfx_quads_drawTL(x+r, y+h-r, w-r*2, r); // bottom
 	gfx_quads_drawTL(x, y+r, r, h-r*2); // left
 	gfx_quads_drawTL(x+w-r, y+r, r, h-r*2); // right
+	
+	if(!(corners&1)) gfx_quads_drawTL(x, y, r, r); // TL
+	if(!(corners&2)) gfx_quads_drawTL(x+w, y, -r, r); // TR
+	if(!(corners&4)) gfx_quads_drawTL(x, y+h, r, -r); // BL
+	if(!(corners&8)) gfx_quads_drawTL(x+w, y+h, -r, -r); // BR
 }
+
+void draw_round_rect(float x, float y, float w, float h, float r)
+{
+	draw_round_rect_ext(x,y,w,h,r,0xf);
+}
+
 
 static void render_player(
 	const obj_player_character *prev_char,

@@ -686,7 +686,7 @@ static int editor_reset()
 	return 0;
 }
 
-void draw_editor_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
+void draw_editor_button(const void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
 {
     gfx_blend_normal();
     gfx_texture_set(-1);

@@ -195,12 +195,12 @@ void draw_background(float t)
     gfx_quads_end();
 }
 
-void draw_image_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
+void draw_image_button(const void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
 {
 	ui_do_image(*(int *)id, x, y, w, h);
 }
 
-void draw_single_part_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
+void draw_single_part_button(const void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
 {
 	gui_tileset_enum tileset;
 
@@ -215,7 +215,7 @@ void draw_single_part_button(void *id, const char *text, int checked, float x, f
 	draw_part((int)((char*)extra-(char*)0), tileset, x, y, w, h);
 }
 
-void draw_menu_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
+void draw_menu_button(const void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
 {
 	int box_type;
 	if ((int)((char*)extra-(char*)0))
@@ -227,7 +227,7 @@ void draw_menu_button(void *id, const char *text, int checked, float x, float y,
 	ui_do_label(x + 10, y, text, 28);
 }
 
-void draw_teewars_button(void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
+void draw_teewars_button(const void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)
 {
 	const float font_size = h-6.0f;//42.0f;
 
@@ -1758,6 +1758,8 @@ void modmenu_shutdown()
 {
 }
 
+extern int menu2_render();
+
 extern "C" int modmenu_render(int ingame) // TODO: nastyness
 {
 	static int mouse_x = 0;
@@ -1788,7 +1790,9 @@ extern "C" int modmenu_render(int ingame) // TODO: nastyness
     }
 
     //int r = menu_render(server_address, str, max_len);
-	int r = menu_render(ingame);
+	//int r = menu2_render(ingame);
+	(void)menu_render;
+	int r = menu2_render();
 
     gfx_texture_set(data->images[IMAGE_CURSOR].id);
     gfx_quads_begin();

@@ -48,6 +48,7 @@ static VOICE voices[NUM_VOICES] = { {0} };
 static CHANNEL channels[NUM_CHANNELS] = { {255, 0} };
 
 static LOCK sound_lock = 0;
+static int sound_enabled = 0;
 
 static int center_x = 0;
 static int center_y = 0;
@@ -231,9 +232,12 @@ int snd_init()
 	PaStreamParameters params;
 	PaError err = Pa_Initialize();
 	
-	mixing_rate = config.snd_rate;
-
 	sound_lock = lock_create();
+	
+	if(!config.snd_enable)
+		return 0;
+	
+	mixing_rate = config.snd_rate;
 
 	params.device = Pa_GetDefaultOutputDevice();
 	if(params.device < 0)
@@ -242,7 +246,6 @@ int snd_init()
 	params.sampleFormat = paInt16;
 	params.suggestedLatency = Pa_GetDeviceInfo(params.device)->defaultLowOutputLatency;
 	params.hostApiSpecificStreamInfo = 0x0;
-
 
 	err = Pa_OpenStream(
 			&stream,        /* passes back stream pointer */
@@ -255,6 +258,7 @@ int snd_init()
 			0x0); /* pass our data through to callback */
 	err = Pa_StartStream(stream);
 
+	sound_enabled = 1;
 	return 0;
 }
 
@@ -338,6 +342,10 @@ int snd_load_wv(const char *filename)
 	/* don't waste memory on sound when we are stress testing */
 	if(config.stress)
 		return -1;
+		
+	/* no need to load sound when we are running with no sound */
+	if(!sound_enabled)
+		return 1;
 
 	file = fopen(filename, "rb"); /* TODO: use system.h stuff for this */
 	if(!file)
