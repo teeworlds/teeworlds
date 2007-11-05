@@ -24,7 +24,9 @@ extern "C" {
 
 extern data_container *data;
 
-static vec4 gui_color(0.9f,0.78f,0.65f, 0.5f);
+//static vec4 gui_color(0.9f,0.78f,0.65f, 0.5f);
+//static vec4 gui_color(0.78f,0.9f,0.65f, 0.5f);
+static vec4 gui_color(0.65f,0.78f,0.9f, 0.5f);
 
 static vec4 color_tabbar_inactive_outgame(0,0,0,0.25f);
 static vec4 color_tabbar_active_outgame(0,0,0,0.5f);
@@ -286,7 +288,7 @@ static void ui2_draw_menu_tab_button(const void *id, const char *text, int check
 		ui2_draw_rect(r, color_tabbar_active, CORNER_T, 10.0f);
 	else
 		ui2_draw_rect(r, color_tabbar_inactive, CORNER_T, 10.0f);
-	ui2_do_label(r, text, 28, 0);
+	ui2_do_label(r, text, 26, 0);
 }
 
 
@@ -327,7 +329,7 @@ static void ui2_draw_list_row(const void *id, const char *text, int checked, con
 	ui2_do_label(r, text, 18, -1);
 }
 
-static void ui2_draw_checkbox(const void *id, const char *text, int checked, const RECT *r, void *extra)
+static void ui2_draw_checkbox_common(const void *id, const char *text, const char *boxtext, const RECT *r)
 {
 	RECT c = *r;
 	RECT t = *r;
@@ -338,26 +340,20 @@ static void ui2_draw_checkbox(const void *id, const char *text, int checked, con
 	
 	ui2_margin(&c, 2.0f, &c);
 	ui2_draw_rect(&c, vec4(1,1,1,0.25f), CORNER_ALL, 3.0f);
-	if(checked)
-		ui2_do_label(&c, "X", 16, 0);
-	ui2_do_label(&t, text, 18, -1);
+	ui2_do_label(&c, boxtext, 16, 0);
+	ui2_do_label(&t, text, 18, -1);	
 }
 
-static void ui2_draw_fsaa(const void *id, const char *text, int checked, const RECT *r, void *extra)
+static void ui2_draw_checkbox(const void *id, const char *text, int checked, const RECT *r, void *extra)
 {
-	RECT c = *r;
-	RECT t = *r;
-	c.w = c.h;
-	t.x += c.w;
-	t.w -= c.w;
-	ui2_vsplit_l(&t, 5.0f, 0, &t);
-	
-	ui2_margin(&c, 2.0f, &c);
-	ui2_draw_rect(&c, vec4(1,1,1,0.25f), CORNER_ALL, 3.0f);
+	ui2_draw_checkbox_common(id, text, checked?"X":"", r);
+}
+
+static void ui2_draw_checkbox_number(const void *id, const char *text, int checked, const RECT *r, void *extra)
+{
 	char buf[16];
 	sprintf(buf, "%d", checked);
-	ui2_do_label(&c, buf, 16, 0);
-	ui2_do_label(&t, text, 18, -1);
+	ui2_draw_checkbox_common(id, text, buf, r);
 }
 
 int ui2_do_edit_box(void *id, const RECT *rect, char *str, int str_size)
@@ -585,7 +581,7 @@ static int menu2_render_menubar(RECT r)
 	RECT box = r;
 	RECT button;
 	
-	ui2_vsplit_l(&box, 110.0f, &button, &box);
+	ui2_vsplit_l(&box, 90.0f, &button, &box);
 	if(client_state() == CLIENTSTATE_OFFLINE)
 	{
 		static int news_button=0;
@@ -606,13 +602,13 @@ static int menu2_render_menubar(RECT r)
 		config.ui_page = PAGE_INTERNET;
 
 	ui2_vsplit_l(&box, 4.0f, 0, &box);
-	ui2_vsplit_l(&box, 110.0f, &button, &box);
+	ui2_vsplit_l(&box, 90.0f, &button, &box);
 	static int lan_button=0;
 	if (ui2_do_button(&lan_button, "LAN", config.ui_page==PAGE_LAN, &button, ui2_draw_menu_tab_button, 0))
 		config.ui_page = PAGE_LAN;
 
 	ui2_vsplit_l(&box, 4.0f, 0, &box);
-	ui2_vsplit_l(&box, 110.0f, &button, &box);
+	ui2_vsplit_l(&box, 120.0f, &button, &box);
 	static int favorites_button=0;
 	if (ui2_do_button(&favorites_button, "Favorites", config.ui_page==PAGE_FAVORITES, &button, ui2_draw_menu_tab_button, 0))
 		config.ui_page = PAGE_FAVORITES;
@@ -738,6 +734,9 @@ static void menu2_render_serverbrowser(RECT main_view)
 			config.b_sort = cols[i].sort;
 	}
 	
+	
+	ui2_draw_rect(&view, vec4(0,0,0,0.15f), 0, 0);
+	
 	RECT scroll;
 	ui2_vsplit_r(&view, 15, &view, &scroll);
 	
@@ -758,19 +757,52 @@ static void menu2_render_serverbrowser(RECT main_view)
 	for (int i = start, k = 0; i < num_servers && k < num; i++, k++)
 	{
 		int item_index = i;
+		SERVER_INFO *item = client_serverbrowse_sorted_get(item_index);
 		RECT row;
-		ui2_hsplit_t(&view, 20.0f, &row, &view);
 			
 		int l = selected_index==item_index;
 		
 		if(l)
 		{
-			RECT r = row;
+			RECT whole;
+			int h = (item->num_players+2)/3;
+			ui2_hsplit_t(&view, 25.0f+h*15.0f, &whole, &view);
+			
+			RECT r = whole;
 			ui2_margin(&r, 1.5f, &r);
 			ui2_draw_rect(&r, vec4(1,1,1,0.5f), CORNER_ALL, 4.0f);
-		}
 			
-		SERVER_INFO *item = client_serverbrowse_sorted_get(item_index);
+			ui2_hsplit_t(&whole, 20.0f, &row, &whole);
+			ui2_vsplit_l(&whole, 50.0f, 0, &whole);
+			
+			for(int p = 0; p < item->num_players; p+=3)
+			{
+				RECT player_row;
+				RECT player_rect;
+				RECT player_score;
+				RECT player_name;
+				ui2_hsplit_t(&whole, 15.0f, &player_row, &whole);
+				
+				for(int a = 0; a < 3; a++)
+				{
+					if(p+a >= item->num_players)
+						break;
+						
+					ui2_vsplit_l(&player_row, 170.0f, &player_rect, &player_row);
+					ui2_vsplit_l(&player_rect, 30.0f, &player_score, &player_name);
+					ui2_vsplit_l(&player_name, 10.0f, 0, &player_name);
+					char buf[32];
+					sprintf(buf, "%d", item->player_scores[p+a]);
+					ui2_do_label(&player_score, buf, 16.0f, 1);
+					ui2_do_label(&player_name, item->player_names[p+a], 16.0f, -1);
+				}
+			}
+			
+			k += h;
+			i += h;
+		}
+		else
+			ui2_hsplit_t(&view, 20.0f, &row, &view);
 
 		for(int c = 0; c < num_cols; c++)
 		{
@@ -960,6 +992,8 @@ static void menu2_render_settings_graphics(RECT main_view)
 	ui2_do_label(&footer, buf, 18.0f, -1);
 
 	// modes
+	ui2_draw_rect(&modelist, vec4(0,0,0,0.15f), 0, 0);
+
 	RECT scroll;
 	ui2_vsplit_r(&modelist, 15, &modelist, &scroll);
 
@@ -992,7 +1026,7 @@ static void menu2_render_settings_graphics(RECT main_view)
 			selected = 1;
 		}
 		
-		sprintf(buf, "%dx%d %d bit", modes[i].width, modes[i].height, depth);
+		sprintf(buf, "  %dx%d %d bit", modes[i].width, modes[i].height, depth);
 		if(ui2_do_button(&modes[i], buf, selected, &button, ui2_draw_list_row, 0))
 		{
 			config.gfx_color_depth = depth;
@@ -1014,7 +1048,7 @@ static void menu2_render_settings_graphics(RECT main_view)
 		config.gfx_vsync ^= 1;
 
 	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-	if (ui2_do_button(&config.gfx_fsaa_samples, "FSAA samples", config.gfx_fsaa_samples, &button, ui2_draw_fsaa, 0))
+	if (ui2_do_button(&config.gfx_fsaa_samples, "FSAA samples", config.gfx_fsaa_samples, &button, ui2_draw_checkbox_number, 0))
 	{
 		dbg_msg("d", "clicked!");
 		if(config.gfx_fsaa_samples < 2) config.gfx_fsaa_samples = 2;
@@ -1046,7 +1080,7 @@ static void menu2_render_settings(RECT main_view)
 	// render background
 	RECT temp, tabbar;
 	ui2_vsplit_r(&main_view, 120.0f, &main_view, &tabbar);
-	ui2_draw_rect(&main_view, color_tabbar_active, CORNER_B, 10.0f);
+	ui2_draw_rect(&main_view, color_tabbar_active, CORNER_B|CORNER_TL, 10.0f);
 	ui2_hsplit_t(&tabbar, 50.0f, &temp, &tabbar);
 	ui2_draw_rect(&temp, color_tabbar_active, CORNER_R, 10.0f);
 	
@@ -1147,7 +1181,7 @@ int menu2_render()
 	ui2_margin(&screen, 10.0f, &screen);
 	
 	// do tab bar
-	ui2_hsplit_t(&screen, 30.0f, &tab_bar, &main_view);
+	ui2_hsplit_t(&screen, 26.0f, &tab_bar, &main_view);
 	ui2_vmargin(&tab_bar, 20.0f, &tab_bar);
 	menu2_render_menubar(tab_bar);
 		
