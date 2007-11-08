@@ -524,7 +524,7 @@ static void server_send_serverinfo(NETADDR4 *addr)
 	int i;
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(!clients[i].state != SRVCLIENT_STATE_EMPTY)
+		if(clients[i].state != SRVCLIENT_STATE_EMPTY)
 			c++;
 	}
 	
