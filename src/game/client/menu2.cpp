@@ -922,7 +922,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 		ui2_hsplit_t(&toolbox, 20.0f, &button, &toolbox);
 		ui2_do_label(&button, "Host address:", 18, -1);
 		ui2_vsplit_l(&button, 100.0f, 0, &button);
-		ui2_do_edit_box(&address, &button, address, sizeof(address));
+		ui2_do_edit_box(&address, &button, config.ui_server_address, sizeof(config.ui_server_address));
 	}
 }
 
