@@ -555,24 +555,6 @@ int ui2_do_key_reader(void *id, const RECT *rect, int key)
 		ui2_draw_keyselect_button(id, "???", 0, rect, 0);
 	else
 		ui2_draw_keyselect_button(id, inp_key_name(key), 0, rect, 0);
-		
-	//ui2_do_label(rect, 
-	/*
-	int box_type;
-	if (ui_active_item() == id || ui_hot_item() == id)
-		box_type = GUI_BOX_SCREEN_INFO;
-	else
-		box_type = GUI_BOX_SCREEN_TEXTBOX;
-	draw_box(box_type, tileset_regular, x, y, w, h);
-	
-	const char *str = inp_key_name(key);
-	ui_do_label(x + 10, y, str, 36);
-	if (ui_active_item() == id)
-	{
-		float w = gfx_pretty_text_width(36.0f, str, -1);
-		ui_do_label(x + 10 + w, y, "_", 36);
-	}*/
-
 	return new_key;
 }
 

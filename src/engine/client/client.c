@@ -358,7 +358,7 @@ int *client_get_input(int tick)
 }
 
 /* ------ state handling ----- */
-static int state;
+static int state = CLIENTSTATE_OFFLINE;
 int client_state() { return state; }
 static void client_set_state(int s)
 {
@@ -836,7 +836,7 @@ static void client_run()
 	net = netclient_open(bindaddr, 0);
 	
 	/* connect to the server if wanted */
-	if(config.cl_connect)
+	if(config.cl_connect[0] != 0)
 		client_connect(config.cl_connect);
 		
 	inp_mouse_mode_relative();
