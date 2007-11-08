@@ -564,21 +564,26 @@ static int menu2_render_menubar(RECT r)
 	RECT box = r;
 	RECT button;
 	
-	ui2_vsplit_l(&box, 90.0f, &button, &box);
 	if(client_state() == CLIENTSTATE_OFFLINE)
 	{
-		static int news_button=0;
-		if (ui2_do_button(&news_button, "News", config.ui_page==PAGE_NEWS, &button, ui2_draw_menu_tab_button, 0))
-			config.ui_page = PAGE_NEWS;
+		if(0) // this is not done yet
+		{
+			ui2_vsplit_l(&box, 90.0f, &button, &box);
+			static int news_button=0;
+			if (ui2_do_button(&news_button, "News", config.ui_page==PAGE_NEWS, &button, ui2_draw_menu_tab_button, 0))
+				config.ui_page = PAGE_NEWS;
+			ui2_vsplit_l(&box, 30.0f, 0, &box); 
+		}
 	}
 	else
 	{
+		ui2_vsplit_l(&box, 90.0f, &button, &box);
 		static int game_button=0;
 		if (ui2_do_button(&game_button, "Game", config.ui_page==PAGE_GAME, &button, ui2_draw_menu_tab_button, 0))
 			config.ui_page = PAGE_GAME;
+		ui2_vsplit_l(&box, 30.0f, 0, &box); 
 	}
 		
-	ui2_vsplit_l(&box, 30.0f, 0, &box);
 	ui2_vsplit_l(&box, 110.0f, &button, &box);
 	static int internet_button=0;
 	if (ui2_do_button(&internet_button, "Internet", config.ui_page==PAGE_INTERNET, &button, ui2_draw_menu_tab_button, 0))
@@ -590,13 +595,15 @@ static int menu2_render_menubar(RECT r)
 	if (ui2_do_button(&lan_button, "LAN", config.ui_page==PAGE_LAN, &button, ui2_draw_menu_tab_button, 0))
 		config.ui_page = PAGE_LAN;
 
-	ui2_vsplit_l(&box, 4.0f, 0, &box);
-	ui2_vsplit_l(&box, 120.0f, &button, &box);
-	static int favorites_button=0;
-	if (ui2_do_button(&favorites_button, "Favorites", config.ui_page==PAGE_FAVORITES, &button, ui2_draw_menu_tab_button, 0))
-		config.ui_page = PAGE_FAVORITES;
+	if(0) // this one is not done yet
+	{
+		ui2_vsplit_l(&box, 4.0f, 0, &box);
+		ui2_vsplit_l(&box, 120.0f, &button, &box);
+		static int favorites_button=0;
+		if (ui2_do_button(&favorites_button, "Favorites", config.ui_page==PAGE_FAVORITES, &button, ui2_draw_menu_tab_button, 0))
+			config.ui_page = PAGE_FAVORITES;
+	}
 
-	//ui2_vsplit_l(&box, 20.0f, 0, &box);
 	ui2_vsplit_r(&box, 110.0f, &box, &button);
 	static int settings_button=0;
 	if (ui2_do_button(&settings_button, "Settings", config.ui_page==PAGE_SETTINGS, &button, ui2_draw_menu_tab_button, 0))
@@ -621,8 +628,6 @@ static void menu2_render_background()
 
 static void menu2_render_serverbrowser(RECT main_view)
 {
-	static char address[128] = "localhost:8303";
-
 	ui2_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
 	
 	RECT view;
@@ -847,7 +852,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 			if(s)
 			{
 				new_selected = item_index;
-				strncpy(address, item->address, sizeof(address));
+				strncpy(config.ui_server_address, item->address, sizeof(config.ui_server_address));
 			}
 		}
 	}
@@ -892,7 +897,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 		ui2_vmargin(&button, 2.0f, &button);
 		static int join_button = 0;
 		if(ui2_do_button(&join_button, "Connect", 0, &button, ui2_draw_menu_button, 0))
-			client_connect(address);
+			client_connect(config.ui_server_address);
 
 		ui2_vsplit_r(&buttons, 20.0f, &buttons, &button);
 		ui2_vsplit_r(&buttons, 100.0f, &buttons, &button);
@@ -904,7 +909,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 		ui2_hsplit_t(&toolbox, 20.0f, &button, &toolbox);
 		ui2_do_label(&button, "Host address:", 18, -1);
 		ui2_vsplit_l(&button, 100.0f, 0, &button);
-		ui2_do_edit_box(&address, &button, config.ui_server_address, sizeof(config.ui_server_address));
+		ui2_do_edit_box(&config.ui_server_address, &button, config.ui_server_address, sizeof(config.ui_server_address));
 	}
 }
 
