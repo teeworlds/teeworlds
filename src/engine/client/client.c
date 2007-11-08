@@ -6,6 +6,7 @@
 #include <math.h>
 
 #include <engine/system.h>
+#include <engine/engine.h>
 #include <engine/interface.h>
 #include "ui.h"
 
@@ -301,7 +302,6 @@ static void client_send_error(const char *error)
 	*/
 }
 
-
 void client_rcon(const char *cmd)
 {
 	msg_pack_start_system(NETMSG_CMD, MSGFLAG_VITAL);
@@ -452,10 +452,10 @@ static void client_debug_render()
 	static int64 last_snap = 0;
 	static float frametime_avg = 0;
 	char buffer[512];
-
+	
 	if(!config.debug)
 		return;
-		
+	
 	gfx_blend_normal();
 	gfx_texture_set(debug_font);
 	gfx_mapscreen(0,0,gfx_screenwidth(),gfx_screenheight());
@@ -477,7 +477,6 @@ static void client_debug_render()
 		gfx_memory_usage()/1024,
 		(int)(1.0f/frametime_avg));
 	gfx_quads_text(2, 2, 16, buffer);
-	
 	
 	/* render graphs */
 	gfx_mapscreen(0,0,400.0f,300.0f);
@@ -596,12 +595,6 @@ static void client_process_packet(NETPACKET *packet)
 					dbg_msg("client/network", "loading done");
 					client_send_ready();
 					modc_connected();
-					
-					/*
-					modc_entergame();
-					client_send_entergame();
-					*/
-					/*client_on_enter_game();*/
 				}
 				else
 				{
@@ -739,11 +732,6 @@ static void client_process_packet(NETPACKET *packet)
 						
 						/* add new */
 						snapstorage_add(&snapshot_storage, game_tick, time_get(), snapsize, (SNAPSHOT*)tmpbuffer3);
-						/*SNAPSTORAGE_HOLDER *snap = client_snapshot_add(game_tick, time_get(), tmpbuffer3, snapsize); */
-						
-						/*int ncrc = snapshot_crc((snapshot*)tmpbuffer3); */
-						/*if(crc != ncrc) */
-						/*	dbg_msg("client", "client snapshot crc failure %d %d", crc, ncrc); */
 						
 						/* apply snapshot, cycle pointers */
 						recived_snapshots++;
@@ -818,7 +806,7 @@ static void client_pump_network()
 		client_process_packet(&packet);
 }
 
-static void client_run(const char *direct_connect_server)
+static void client_run()
 {
 	NETADDR4 bindaddr;
 	int64 reporttime = time_get();
@@ -832,15 +820,13 @@ static void client_run(const char *direct_connect_server)
 	if(!gfx_init())
 		return;
 
-	snd_init(); /* sound is allowed to fail */
+	/* sound is allowed to fail */
+	snd_init();
 	
 	/* load data */
 	if(!client_load_data())
 		return;
 
-	/* init menu */
-	modmenu_init(); /* TODO: remove */
-	
 	/* init the mod */
 	modc_init();
 	dbg_msg("client", "version %s", modc_net_version());
@@ -850,14 +836,15 @@ static void client_run(const char *direct_connect_server)
 	net = netclient_open(bindaddr, 0);
 	
 	/* connect to the server if wanted */
-	if(direct_connect_server)
-		client_connect(direct_connect_server);
+	if(config.cl_connect)
+		client_connect(config.cl_connect);
 		
 	inp_mouse_mode_relative();
 	
 	while (1)
 	{	
 		int64 frame_start_time = time_get();
+		frames++;
 
 		/* switch snapshot */
 		if(recived_snapshots >= 3)
@@ -865,9 +852,6 @@ static void client_run(const char *direct_connect_server)
 			int repredict = 0;
 			int64 now = st_get(&game_time, time_get());
 
-			frames++;
-
-			/*int64 now = time_get(); */
 			while(1)
 			{
 				SNAPSTORAGE_HOLDER *cur = snapshots[SNAP_CURRENT];
@@ -923,8 +907,6 @@ static void client_run(const char *direct_connect_server)
 					client_send_input();
 				}
 			}
-			
-			/*intrapredtick = current_predtick */
 
 			/* only do sane predictions */
 			if(repredict)
@@ -968,7 +950,7 @@ static void client_run(const char *direct_connect_server)
 		if(inp_key_down(config.key_screenshot))
 			gfx_screenshot();
 
-		/* panic button */
+		/* some debug keys */
 		if(config.debug)
 		{
 			if(inp_key_pressed(KEY_F1))
@@ -1034,8 +1016,6 @@ static void client_run(const char *direct_connect_server)
 	modc_shutdown();
 	client_disconnect();
 
-	modmenu_shutdown(); /* TODO: remove this */
-	
 	gfx_shutdown();
 	snd_shutdown();
 }
@@ -1043,70 +1023,17 @@ static void client_run(const char *direct_connect_server)
 
 int editor_main(int argc, char **argv);
 
-/*client main_client; */
-/*
-const char *user_directory()
-{
-	static char path[512] = {0};
-	
-}*/
-
-
-
 int main(int argc, char **argv)
 {
-#ifdef CONF_PLATFORM_MACOSX
-	const char *config_filename = "~/.teewars";
-#else
-	const char *config_filename = "default.cfg";
-#endif
-	int i;
-	const char *direct_connect_server = 0x0;
-	int editor = 0;
-
+	/* init the engine */
 	dbg_msg("client", "starting...");
+	engine_init("Teewars", argc, argv);
 	
-	config_reset();
-
-	for(i = 1; i < argc; i++)
-	{
-		if(argv[i][0] == '-' && argv[i][1] == 'f' && argv[i][2] == 0 && argc - i > 1)
-		{
-			config_filename = argv[i+1];
-			i++;
-		}
-	}
-
-	config_load(config_filename);
-
-	snd_set_master_volume(config.volume / 255.0f);
-
-	/* init network, need to be done first so we can do lookups */
-	net_init();
-
-	/* parse arguments */
-	for(i = 1; i < argc; i++)
-	{
-		if(argv[i][0] == '-' && argv[i][1] == 'c' && argv[i][2] == 0 && argc - i > 1)
-		{
-			/* -c SERVER:PORT */
-			i++;
-			direct_connect_server = argv[i];
-		}
-		else if(argv[i][0] == '-' && argv[i][1] == 'e' && argv[i][2] == 0)
-		{
-			editor = 1;
-		}
-		else
-			config_set(argv[i]);
-	}
-	
-	if(editor)
+	if(config.cl_editor)
 		editor_main(argc, argv);
 	else
-	{
-		/* start the client */
-		client_run(direct_connect_server);
-	}
+		client_run();
+		
+	engine_writeconfig();
 	return 0;
 }

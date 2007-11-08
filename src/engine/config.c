@@ -135,18 +135,7 @@ void config_set(const char *line)
 
 void config_load(const char *filename)
 {
-	char full_path[1024];
 	IOHANDLE file;
-	if (filename[0] == '~')
-	{
-		char *home = getenv("HOME");
-		if (home)
-		{
-			sprintf(full_path, "%s%s", home, filename+1);
-			filename = full_path;
-		}
-	}
-
 	dbg_msg("config/load", "loading %s", filename);
 	file = io_open(filename, IOFLAG_READ);
 	
@@ -165,19 +154,7 @@ void config_load(const char *filename)
 
 void config_save(const char *filename)
 {
-	char full_path[1024];
 	IOHANDLE file;
-	if (filename[0] == '~')
-	{
-		char *home = getenv("HOME");
-		if (home)
-		{
-			sprintf(full_path, "%s%s", home, filename+1);
-			filename = full_path;
-		}
-	}
-
-
 	dbg_msg("config/save", "saving config to %s", filename);
 
 	file = io_open(filename, IOFLAG_WRITE);

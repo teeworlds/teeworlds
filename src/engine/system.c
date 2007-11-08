@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <ctype.h>
 #include <time.h>
 
 #include "detect.h"
@@ -12,6 +13,7 @@
 	#include <unistd.h>
 
 	/* unix net includes */
+	#include <sys/stat.h>
 	#include <sys/types.h>
 	#include <sys/socket.h>
 	#include <sys/ioctl.h>
@@ -640,6 +642,37 @@ int fs_listdir(const char *dir, fs_listdir_callback cb, void *user)
 	/* close the directory and return */
 	closedir(d);
 	return 0;
+#endif
+}
+
+int fs_storage_path(const char *appname, char *path, int max)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	#error not implement
+#else
+	char *home = getenv("HOME");
+	int i;
+	if(!home)
+		return 0;
+	
+	snprintf(path, max, "%s/.%s", home, appname);
+	for(i = strlen(home)+2; path[i]; i++)
+		path[i] = tolower(path[i]);
+	
+	return 1;
+#endif
+}
+
+int fs_makedir(const char *path)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	#error not implement
+#else
+	if(mkdir(path, 0755) == 0)
+		return 0;
+	if(errno == EEXIST)
+		return 0;
+	return 1;
 #endif
 }
 

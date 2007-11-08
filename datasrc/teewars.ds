@@ -349,21 +349,6 @@ projectileparticles {
 	}
 }
 
-playerstats {
-	dm {
-		maxhealth 10
-		maxarmor 10
-	}
-	tdm {
-		maxhealth 10
-		maxarmor 10
-	}
-	ctf {
-		maxhealth 10
-		maxarmor 10
-	}
-}
-
 weapons {
 	hammer {
 		sprite_body sprites.game.weapon_hammer_body

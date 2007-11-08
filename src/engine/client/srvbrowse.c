@@ -94,6 +94,20 @@ static int client_serverbrowse_sort_compare_ping(const void *ai, const void *bi)
 	return a->info.latency > b->info.latency;
 }
 
+static int client_serverbrowse_sort_compare_gametype(const void *ai, const void *bi)
+{
+	SERVERENTRY *a = serverlist[*(const int*)ai];
+	SERVERENTRY *b = serverlist[*(const int*)bi];
+	return a->info.game_type > b->info.game_type;
+}
+
+static int client_serverbrowse_sort_compare_progression(const void *ai, const void *bi)
+{
+	SERVERENTRY *a = serverlist[*(const int*)ai];
+	SERVERENTRY *b = serverlist[*(const int*)bi];
+	return a->info.progression > b->info.progression;
+}
+
 static int client_serverbrowse_sort_compare_numplayers(const void *ai, const void *bi)
 {
 	SERVERENTRY *a = serverlist[*(const int*)ai];
@@ -139,7 +153,7 @@ static void client_serverbrowse_filter()
 
 static int client_serverbrowse_sorthash()
 {
-	int i = config.b_sort&3;
+	int i = config.b_sort&0xf;
 	i |= config.b_filter_empty<<4;
 	i |= config.b_filter_full<<5;
 	i |= config.b_filter_pw<<6;
@@ -162,6 +176,10 @@ static void client_serverbrowse_sort()
 		qsort(sorted_serverlist, num_sorted_servers, sizeof(int), client_serverbrowse_sort_compare_map);
 	else if(config.b_sort == BROWSESORT_NUMPLAYERS)
 		qsort(sorted_serverlist, num_sorted_servers, sizeof(int), client_serverbrowse_sort_compare_numplayers);
+	else if(config.b_sort == BROWSESORT_GAMETYPE)
+		qsort(sorted_serverlist, num_sorted_servers, sizeof(int), client_serverbrowse_sort_compare_gametype);
+	else if(config.b_sort == BROWSESORT_PROGRESSION)
+		qsort(sorted_serverlist, num_sorted_servers, sizeof(int), client_serverbrowse_sort_compare_progression);
 	
 	/* set indexes */
 	for(i = 0; i < num_sorted_servers; i++)

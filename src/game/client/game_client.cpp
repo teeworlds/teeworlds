@@ -583,6 +583,9 @@ static void skinscan(const char *name, int is_dir, void *user)
 
 extern "C" void modc_init()
 {
+	// init menu
+	modmenu_init();
+	
 	// setup sound channels
 	snd_set_channel(CHN_GUI, 1.0f, 0.0f);
 	snd_set_channel(CHN_MUSIC, 1.0f, 0.0f);
@@ -634,6 +637,8 @@ extern "C" void modc_entergame()
 
 extern "C" void modc_shutdown()
 {
+	// shutdown the menu
+	modmenu_shutdown();
 }
 
 static void process_events(int s)

@@ -13,6 +13,8 @@ MACRO_CONFIG_STR(rcon_password, 32, "")
 MACRO_CONFIG_INT(debug, 0, 0, 1)
 MACRO_CONFIG_INT(stress, 0, 0, 0)
 MACRO_CONFIG_STR(cl_stress_server, 32, "localhost")
+MACRO_CONFIG_STR(cl_connect, 32, "")
+MACRO_CONFIG_INT(cl_editor, 0, 0, 1)
 
 MACRO_CONFIG_STR(b_filter_string, 64, "")
 

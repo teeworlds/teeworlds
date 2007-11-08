@@ -15,6 +15,7 @@ extern "C" {
 
 #include "../mapres.h"
 #include "../version.h"
+#include "../game_protocol.h"
 
 #include "mapres_image.h"
 #include "mapres_tilemap.h"
@@ -680,18 +681,23 @@ static void menu2_render_serverbrowser(RECT main_view)
 		FIXED=1,
 		SPACER=2,
 		
-		COL_START=0,
+		COL_FLAGS=0,
 		COL_NAME,
+		COL_GAMETYPE,
 		COL_MAP,
 		COL_PLAYERS,
 		COL_PING,
+		COL_PROGRESS,
 	};
 	
 	static column cols[] = {
-		{0, 			BROWSESORT_NONE,		" ",		-1, 30.0f, 0, {0}, {0}},
+		{-1,			-1,						" ",		-1, 10.0f, 0, {0}, {0}},
+		{COL_FLAGS,		-1,						" ",		-1, 15.0f, 0, {0}, {0}},
 		{COL_NAME,		BROWSESORT_NAME,		"Name",		0, 300.0f, 0, {0}, {0}},
+		{COL_GAMETYPE,	BROWSESORT_GAMETYPE,	"Type",		1, 50.0f, 0, {0}, {0}},
 		{COL_MAP,		BROWSESORT_MAP,			"Map", 		1, 100.0f, 0, {0}, {0}},
 		{COL_PLAYERS,	BROWSESORT_NUMPLAYERS,	"Players",	1, 60.0f, 0, {0}, {0}},
+		{COL_PROGRESS,	BROWSESORT_PROGRESSION,	"%",		1, 40.0f, FIXED, {0}, {0}},
 		{COL_PING,		BROWSESORT_PING,		"Ping",		1, 40.0f, FIXED, {0}, {0}},
 	};
 	
@@ -731,7 +737,10 @@ static void menu2_render_serverbrowser(RECT main_view)
 	for(int i = 0; i < num_cols; i++)
 	{
 		if(ui2_do_button(cols[i].caption, cols[i].caption, config.b_sort == cols[i].sort, &cols[i].rect, ui2_draw_grid_header, 0))
-			config.b_sort = cols[i].sort;
+		{
+			if(cols[i].sort != -1)
+				config.b_sort = cols[i].sort;
+		}
 	}
 	
 	
@@ -754,6 +763,8 @@ static void menu2_render_serverbrowser(RECT main_view)
 		start = 0;
 	
 	//int r = -1;
+	int new_selected = selected_index;
+	
 	for (int i = start, k = 0; i < num_servers && k < num; i++, k++)
 	{
 		int item_index = i;
@@ -764,8 +775,10 @@ static void menu2_render_serverbrowser(RECT main_view)
 		
 		if(l)
 		{
+			// selected server, draw the players on it
 			RECT whole;
 			int h = (item->num_players+2)/3;
+			
 			ui2_hsplit_t(&view, 25.0f+h*15.0f, &whole, &view);
 			
 			RECT r = whole;
@@ -798,8 +811,8 @@ static void menu2_render_serverbrowser(RECT main_view)
 				}
 			}
 			
-			k += h;
-			i += h;
+			k += h*3/4;
+			i += h*3/4;
 		}
 		else
 			ui2_hsplit_t(&view, 20.0f, &row, &view);
@@ -816,8 +829,10 @@ static void menu2_render_serverbrowser(RECT main_view)
 			int s = 0;
 			int id = cols[c].id;
 
-			if(c == 0)
+			if(id == COL_FLAGS)
 			{
+				if(item->flags&1)
+					s = ui2_do_button(item, "P", l, &button, ui2_draw_grid_cell, 0);
 			}
 			else if(id == COL_NAME)
 				s = ui2_do_button(item, item->name, l, &button, ui2_draw_grid_cell, 0);
@@ -833,14 +848,30 @@ static void menu2_render_serverbrowser(RECT main_view)
 				sprintf(temp, "%i", item->latency);
 				s = ui2_do_button(item, temp, l, &button, ui2_draw_grid_cell, 0);
 			}
+			else if(id == COL_PROGRESS)
+			{
+				sprintf(temp, "%i", item->progression);
+				s = ui2_do_button(item, temp, l, &button, ui2_draw_grid_cell, 0);
+			}
+			else if(id == COL_GAMETYPE)
+			{
+				const char *type = "???";
+				if(item->game_type == GAMETYPE_DM) type = "DM";
+				else if(item->game_type == GAMETYPE_TDM) type = "TDM";
+				else if(item->game_type == GAMETYPE_CTF) type = "CTF";
+				s = ui2_do_button(item, type, l, &button, ui2_draw_grid_cell, 0);
+			}
 			
 			if(s)
 			{
-				selected_index = item_index;
+				new_selected = item_index;
 				strncpy(address, item->address, sizeof(address));
 			}
 		}
 	}
+	
+	selected_index = new_selected;
+
 	
 	// render quick search
 	RECT button;

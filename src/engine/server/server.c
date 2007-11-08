@@ -4,7 +4,7 @@
 
 #include <engine/system.h>
 #include <engine/config.h>
-
+#include <engine/engine.h>
 #include <engine/interface.h>
 
 #include <engine/protocol.h>
@@ -28,7 +28,6 @@ static int64 lastheartbeat;
 static NETADDR4 master_server;
 
 static char current_map[64];
-
 
 void *snap_new_item(int type, int id, int size)
 {
@@ -822,32 +821,8 @@ static int server_run()
 
 int main(int argc, char **argv)
 {
-#ifdef CONF_PLATFORM_MACOSX
-	const char *config_filename = "~/.teewars";
-#else
-	const char *config_filename = "default.cfg";
-#endif
-	int i;
-
 	dbg_msg("server", "starting...");
-
-	config_reset();
-
-	for(i = 1; i < argc; i++)
-	{
-		if(argv[i][0] == '-' && argv[i][1] == 'f' && argv[i][2] == 0 && argc - i > 1)
-		{
-			config_filename = argv[i+1];
-			i++;
-		}
-	}
-
-	config_load(config_filename);
-
-	/* parse arguments */
-	for(i = 1; i < argc; i++)
-		config_set(argv[i]);
-
+	engine_init("Teewars", argc, argv);
 	server_run();
 	return 0;
 }

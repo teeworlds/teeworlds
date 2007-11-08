@@ -3,6 +3,7 @@
 
 #include <engine/system.h>
 #include <engine/interface.h>
+#include <engine/engine.h>
 #include <engine/config.h>
 #include <engine/keys.h>
 
@@ -530,16 +531,18 @@ void gfx_swap()
 		
 		/* find filename */
 		{
-			char filename[64];
+			char wholepath[1024];
+			char filename[128];
 			static int index = 1;
 			png_t png;
 
 			for(; index < 1000; index++)
 			{
 				IOHANDLE io;
-				sprintf(filename, "screenshot%04d.png", index);
-				io = io_open(filename, IOFLAG_READ);
+				sprintf(filename, "screenshots/screenshot%04d.png", index);
+				engine_savepath(filename, wholepath, sizeof(wholepath));
 				
+				io = io_open(wholepath, IOFLAG_READ);
 				if(io)
 					io_close(io);
 				else
@@ -547,7 +550,8 @@ void gfx_swap()
 			}
 		
 			/* save png */
-			png_open_file_write(&png, filename);
+			dbg_msg("client", "saved screenshot to '%s'", wholepath);
+			png_open_file_write(&png, wholepath);
 			png_set_data(&png, w, h, 8, PNG_TRUECOLOR, (unsigned char *)pixel_data);
 			png_close_file(&png);
 		}

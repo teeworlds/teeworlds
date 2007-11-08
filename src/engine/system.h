@@ -515,6 +515,8 @@ int net_init();
 /* NOT DOCUMENTED */
 typedef void (*fs_listdir_callback)(const char *name, int is_dir, void *user);
 int fs_listdir(const char *dir, fs_listdir_callback cb, void *user);
+int fs_storage_path(const char *appname, char *path, int max);
+int fs_makedir(const char *path);
 int net_addr4_cmp(const NETADDR4 *a, const NETADDR4 *b);
 
 void mem_debug_dump();
