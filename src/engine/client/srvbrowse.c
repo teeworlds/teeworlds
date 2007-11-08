@@ -298,10 +298,10 @@ void client_serverbrowse_refresh(int lan)
 		NETPACKET packet;
 		packet.client_id = -1;
 		mem_zero(&packet, sizeof(packet));
-		packet.address.ip[0] = 0;
-		packet.address.ip[1] = 0;
-		packet.address.ip[2] = 0;
-		packet.address.ip[3] = 0;
+		packet.address.ip[0] = 255;
+		packet.address.ip[1] = 255;
+		packet.address.ip[2] = 255;
+		packet.address.ip[3] = 255;
 		packet.address.port = 8303;
 		packet.flags = PACKETFLAG_CONNLESS;
 		packet.data_size = sizeof(SERVERBROWSE_GETINFO);

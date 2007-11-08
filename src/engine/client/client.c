@@ -523,8 +523,8 @@ static void client_process_packet(NETPACKET *packet)
 			int size = packet->data_size-sizeof(SERVERBROWSE_LIST);
 			int num = size/sizeof(NETADDR4);
 			NETADDR4 *addrs = (NETADDR4 *)((char*)packet->data+sizeof(SERVERBROWSE_LIST));
-			
 			int i;
+			
 			for(i = 0; i < num; i++)
 			{
 				NETADDR4 addr = addrs[i];
@@ -554,6 +554,8 @@ static void client_process_packet(NETPACKET *packet)
 			UNPACKER up;
 			SERVER_INFO info = {0};
 			int i;
+
+			dbg_msg("temp", "got server info");
 
 			unpacker_reset(&up, (unsigned char*)packet->data+sizeof(SERVERBROWSE_INFO), packet->data_size-sizeof(SERVERBROWSE_INFO));
 

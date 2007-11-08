@@ -450,6 +450,8 @@ int net_udp4_send(NETSOCKET sock, const NETADDR4 *addr, const void *data, int si
 	mem_zero(&sa, sizeof(sa));
 	netaddr4_to_sockaddr(addr, &sa);
 	d = sendto((int)sock, (const char*)data, size, 0, &sa, sizeof(sa));
+	if(d < 0)
+		dbg_msg("net", "sendto error %d %x", d, d);
 	return d;
 }
 

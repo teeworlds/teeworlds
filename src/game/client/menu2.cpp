@@ -587,13 +587,19 @@ static int menu2_render_menubar(RECT r)
 	ui2_vsplit_l(&box, 110.0f, &button, &box);
 	static int internet_button=0;
 	if (ui2_do_button(&internet_button, "Internet", config.ui_page==PAGE_INTERNET, &button, ui2_draw_menu_tab_button, 0))
+	{
+		client_serverbrowse_refresh(0);
 		config.ui_page = PAGE_INTERNET;
+	}
 
 	ui2_vsplit_l(&box, 4.0f, 0, &box);
 	ui2_vsplit_l(&box, 90.0f, &button, &box);
 	static int lan_button=0;
 	if (ui2_do_button(&lan_button, "LAN", config.ui_page==PAGE_LAN, &button, ui2_draw_menu_tab_button, 0))
+	{
+		client_serverbrowse_refresh(1);
 		config.ui_page = PAGE_LAN;
+	}
 
 	if(0) // this one is not done yet
 	{
@@ -729,7 +735,6 @@ static void menu2_render_serverbrowser(RECT main_view)
 				config.b_sort = cols[i].sort;
 		}
 	}
-	
 	
 	ui2_draw_rect(&view, vec4(0,0,0,0.15f), 0, 0);
 	
@@ -904,7 +909,12 @@ static void menu2_render_serverbrowser(RECT main_view)
 		ui2_vmargin(&button, 2.0f, &button);
 		static int refresh_button = 0;
 		if(ui2_do_button(&refresh_button, "Refresh", 0, &button, ui2_draw_menu_button, 0))
-			client_serverbrowse_refresh(0);
+		{
+			if(config.ui_page == PAGE_INTERNET)
+				client_serverbrowse_refresh(0);
+			else if(config.ui_page == PAGE_LAN)
+				client_serverbrowse_refresh(1);
+		}
 		
 		ui2_hsplit_t(&toolbox, 20.0f, &button, &toolbox);
 		ui2_do_label(&button, "Host address:", 18, -1);
@@ -1170,7 +1180,10 @@ int menu2_render()
 	static bool first = true;
 	if(first)
 	{
-		client_serverbrowse_refresh(0);
+		if(config.ui_page == PAGE_INTERNET)
+			client_serverbrowse_refresh(0);
+		else if(config.ui_page == PAGE_LAN)
+			client_serverbrowse_refresh(1);
 		first = false;
 	}
 
