@@ -191,24 +191,8 @@ images {
 		filename "data/sun.png"
 	}
 	
-	char_default {
-		filename "data/char_teefault.png"
-	}
-	
 	backdrop {
 		filename "data/mountain_paralax.png"
-	}
-
-	gui_widgets {
-		filename "data/gui_widgets.png"
-	}
-
-	menu_background {
-		filename "data/menu_background.png"
-	}
-
-	menu_butterfly {
-		filename "data/menu_butterfly.png"
 	}
 
 	cursor {
@@ -221,10 +205,6 @@ images {
 	
 	clouds {
 		filename "data/cloudmap.png"
-	}
-
-	chat_bubbles {
-		filename "data/chatbubbles.png"
 	}
 
 	emoticons {
@@ -617,10 +597,6 @@ sprites {
 		tee_eye_happy 5 3 1 1
 		tee_eye_dead 6 3 1 1
 		tee_eye_surprise 7 3 1 1
-	}
-
-	chatbubbles images.chat_bubbles 4 4 {
-		chat_dotdot 0 1 1 1
 	}
 
 	emoticons images.emoticons 4 4 {

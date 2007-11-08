@@ -37,6 +37,7 @@ enum gui_tileset_enum
 
 void draw_area(gui_tileset_enum tileset, int areax, int areay, int areaw, int areah, float x, float y, float w, float h)
 {
+/*
 	const float tex_w = 512.0, tex_h = 512.0;
 
 	switch (tileset)
@@ -69,6 +70,7 @@ void draw_area(gui_tileset_enum tileset, int areax, int areay, int areaw, int ar
 		te_y); // endy								
     gfx_quads_drawTL(x,y,w,h);
     gfx_quads_end();
+    */
 }
 
 void draw_part(int part_type, gui_tileset_enum tileset, float x, float y, float w, float h)
@@ -163,11 +165,14 @@ void draw_background(float t)
 		draw_sprite(4000 - fmod(t * 60 + 500, 4512), 300+130, 256);
     gfx_quads_end();
 
+	/*
     gfx_texture_set(data->images[IMAGE_MENU_BACKGROUND].id);
     gfx_quads_begin();
 	    gfx_quads_drawTL(0, 430, 1600, 1600/2);
     gfx_quads_end();
+    */
 
+/*
 	int frame = int(t * 10) % 3;
 
 	//float x_path = -t
@@ -193,6 +198,7 @@ void draw_background(float t)
 		0.5f); // endy								
     gfx_quads_drawTL(1250 + x_nudge, 480 + y_nudge, 64, 64);
     gfx_quads_end();
+    */
 }
 
 void draw_image_button(const void *id, const char *text, int checked, float x, float y, float w, float h, void *extra)

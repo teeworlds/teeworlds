@@ -1539,9 +1539,9 @@ static void render_player(
 
 	if(player.state == STATE_CHATTING)
 	{
-		gfx_texture_set(data->images[IMAGE_CHAT_BUBBLES].id);
+		gfx_texture_set(data->images[IMAGE_EMOTICONS].id);
 		gfx_quads_begin();
-		select_sprite(SPRITE_CHAT_DOTDOT);
+		select_sprite(SPRITE_DOTDOT);
 		gfx_quads_draw(position.x + 24, position.y - 40, 64,64);
 		gfx_quads_end();
 	}
