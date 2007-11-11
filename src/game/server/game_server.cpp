@@ -270,7 +270,7 @@ projectile::projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity
 {
 	this->type = type;
 	this->pos = pos;
-	this->vel = vel;
+	this->vel = vel * SERVER_TICK_SPEED; // TODO: remove this
 	this->lifespan = span;
 	this->owner = owner;
 	this->powner = powner;
@@ -280,6 +280,7 @@ projectile::projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity
 	this->sound_impact = sound_impact;
 	this->weapon = weapon;
 	this->bounce = 0;
+	this->start_tick = server_tick();
 	world->insert_entity(this);
 }
 
@@ -290,36 +291,26 @@ void projectile::reset()
 
 void projectile::tick()
 {
-	vec2 oldpos = pos;
-
-	int collide = 0;
-	if(bounce)
-	{
-		int numbounces;
-		vel.y += 0.25f;
-		move_point(&pos, &vel, 0.25f, &numbounces);
-		bounce -= numbounces;
-	}
-	else
-	{
-		vel.y += 0.25f;
-		pos += vel;
-		collide = col_check_point((int)pos.x, (int)pos.y);
-	}
+	float gravity = -400;
+	float pt = (server_tick()-start_tick-1)/(float)SERVER_TICK_SPEED;
+	float ct = (server_tick()-start_tick)/(float)SERVER_TICK_SPEED;
+	vec2 prevpos = calc_pos(pos, vel, gravity, pt);
+	vec2 curpos = calc_pos(pos, vel, gravity, ct);
 
 	lifespan--;
-
-	// check player intersection as well
+	
+	int collide = col_check_point((int)curpos.x, (int)curpos.y);
+	
 	vec2 new_pos;
-	entity *targetplayer = (entity*)intersect_player(oldpos, pos, new_pos, powner);
-
-	if(targetplayer || lifespan < 0 || collide || bounce < 0)
+	entity *targetplayer = (entity*)intersect_player(prevpos, curpos, new_pos, powner);
+	
+	if(targetplayer || collide || lifespan < 0 )
 	{
 		if (lifespan >= 0 || weapon == WEAPON_ROCKET)
 			create_sound(pos, sound_impact);
 
 		if (flags & PROJECTILE_FLAGS_EXPLODE)
-			create_explosion(oldpos, owner, weapon, false);
+			create_explosion(prevpos, owner, weapon, false);
 		else if (targetplayer)
 		{
 			targetplayer->take_damage(normalize(vel) * max(0.001f, force), damage, owner, weapon);
@@ -331,14 +322,18 @@ void projectile::tick()
 
 void projectile::snap(int snapping_client)
 {
-	if(distance(players[snapping_client].pos, pos) > 1000.0f)
+	float ct = (server_tick()-start_tick)/(float)SERVER_TICK_SPEED;
+	vec2 curpos = calc_pos(pos, vel, -7.5f*SERVER_TICK_SPEED, ct);
+
+	if(distance(players[snapping_client].pos, curpos) > 1000.0f)
 		return;
 
 	obj_projectile *proj = (obj_projectile *)snap_new_item(OBJTYPE_PROJECTILE, id, sizeof(obj_projectile));
 	proj->x = (int)pos.x;
 	proj->y = (int)pos.y;
-	proj->vx = (int)vel.x; // TODO: should be an angle
+	proj->vx = (int)vel.x;
 	proj->vy = (int)vel.y;
+	proj->start_tick = start_tick;
 	proj->type = type;
 }
 

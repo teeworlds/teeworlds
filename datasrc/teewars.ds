@@ -210,6 +210,10 @@ images {
 	emoticons {
 		filename "data/emoticons.png"
 	}
+	
+	browseicons {
+		filename "data/browse_icons.png"
+	}
 }
 
 particles {
@@ -616,6 +620,13 @@ sprites {
 		blank1 1 3 1 1
 		deadtee 2 3 1 1
 		blank2 3 3 1 1
+	}
+	
+	browseicons images.browseicons 4 1 {
+		browse_lock 0 0 1 1
+		browse_progress1 1 0 1 1
+		browse_progress2 2 0 1 1
+		browse_progress3 3 0 1 1
 	}
 }
 

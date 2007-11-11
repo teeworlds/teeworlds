@@ -932,9 +932,17 @@ static void render_projectile(const obj_projectile *prev, const obj_projectile *
 	gfx_texture_set(data->images[IMAGE_GAME].id);
 	gfx_quads_begin();
 
+	// get positions
+	float gravity = -400;
+	float ct = (client_tick()-current->start_tick)/(float)SERVER_TICK_SPEED + client_intratick()*1/(float)SERVER_TICK_SPEED;
+	vec2 startpos(current->x, current->y);
+	vec2 startvel(current->vx, current->vy);
+	vec2 pos = calc_pos(startpos, startvel, gravity, ct);
+	vec2 prevpos = calc_pos(startpos, startvel, gravity, ct-0.001f);
+
 	select_sprite(data->weapons[current->type%data->num_weapons].sprite_proj);
-	vec2 vel = mix(vec2(prev->vx, prev->vy), vec2(current->vx, current->vy), client_intratick());
-	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
+	vec2 vel = pos-prevpos;
+	//vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
 
 	// add particle for this projectile
 	proj_particles.addparticle(current->type, itemid, pos, vel);

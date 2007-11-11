@@ -555,8 +555,6 @@ static void client_process_packet(NETPACKET *packet)
 			SERVER_INFO info = {0};
 			int i;
 
-			dbg_msg("temp", "got server info");
-
 			unpacker_reset(&up, (unsigned char*)packet->data+sizeof(SERVERBROWSE_INFO), packet->data_size-sizeof(SERVERBROWSE_INFO));
 
 			strncpy(info.version, unpacker_get_string(&up), 32);
@@ -567,6 +565,9 @@ static void client_process_packet(NETPACKET *packet)
 			info.progression = atol(unpacker_get_string(&up));
 			info.num_players = atol(unpacker_get_string(&up));
 			info.max_players = atol(unpacker_get_string(&up));
+			sprintf(info.address, "%d.%d.%d.%d:%d",
+				packet->address.ip[0], packet->address.ip[1], packet->address.ip[2],
+				packet->address.ip[3], packet->address.port);
 			
 			for(i = 0; i < info.num_players; i++)
 			{

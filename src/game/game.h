@@ -26,6 +26,15 @@ inline float get_angle(vec2 dir)
 }
 
 
+inline vec2 calc_pos(vec2 p, vec2 v, float gravity, float t)
+{
+	vec2 n;
+	n.x = p.x + v.x*t;
+	n.y = p.y + v.y*t - gravity*(t*t);
+	return n;
+}
+
+
 template<typename T>
 inline T saturated_add(T min, T max, T current, T modifier)
 {

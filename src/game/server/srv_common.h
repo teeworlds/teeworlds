@@ -186,6 +186,7 @@ public:
 	int weapon;
 	int bounce;
 	float force;
+	int start_tick;
 	
 	projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity* powner,
 		int damage, int flags, float force, int sound_impact, int weapon);

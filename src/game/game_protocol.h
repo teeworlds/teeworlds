@@ -143,8 +143,10 @@ struct obj_game
 struct obj_projectile
 {
 	int type;
+	int tick;
 	int x, y;
 	int vx, vy; // should be an angle instead
+	int start_tick;
 };
 
 struct obj_powerup

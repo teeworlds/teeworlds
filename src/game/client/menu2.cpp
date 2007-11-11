@@ -62,6 +62,7 @@ enum
 	PAGE_FAVORITES,
 	PAGE_SETTINGS,
 	PAGE_GAME,
+	PAGE_SYSTEM,
 };
 
 typedef struct 
@@ -71,6 +72,8 @@ typedef struct
 
 static float scale = 1.0f;
 static RECT screen = { 0.0f, 0.0f, 800.0f, 600.0f };
+
+extern void select_sprite(int id, int flags=0, int sx=0, int sy=0);
 
 RECT *ui2_screen()
 {
@@ -270,6 +273,27 @@ static void ui2_draw_rect(const RECT *r, vec4 color, int corners, float rounding
 	gfx_quads_end();
 }
 
+static void ui2_draw_browse_icon(const void *id, const char *text, int checked, const RECT *r, void *extra)
+{
+	gfx_texture_set(data->images[IMAGE_BROWSEICONS].id);
+	gfx_quads_begin();
+	if(text[0] == 'L')
+		select_sprite(SPRITE_BROWSE_LOCK);
+	else
+	{
+		int i = atoi(text);
+		if(i < 33)
+			select_sprite(SPRITE_BROWSE_PROGRESS1);
+		else if(i < 66)
+			select_sprite(SPRITE_BROWSE_PROGRESS2);
+		else
+			select_sprite(SPRITE_BROWSE_PROGRESS3);
+	}
+	//draw_round_rect_ext(r->x,r->y,r->w,r->h,rounding*ui2_scale(), corners);
+	gfx_quads_drawTL(r->x,r->y,r->w,r->h);
+	gfx_quads_end();
+}
+
 static void ui2_draw_menu_button(const void *id, const char *text, int checked, const RECT *r, void *extra)
 {
 	ui2_draw_rect(r, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
@@ -313,10 +337,14 @@ static void ui2_draw_grid_header(const void *id, const char *text, int checked, 
 	ui2_do_label(&t, text, 18, -1);
 }
 
-static void ui2_draw_grid_cell(const void *id, const char *text, int checked, const RECT *r, void *extra)
+static void ui2_draw_grid_cell_l(const void *id, const char *text, int checked, const RECT *r, void *extra)
 {
-	//ui2_draw_round_rect(r, 2.0f, vec4(1,1,1,1));
 	ui2_do_label(r, text, 18, -1);
+}
+
+static void ui2_draw_grid_cell_r(const void *id, const char *text, int checked, const RECT *r, void *extra)
+{
+	ui2_do_label(r, text, 18, 1);
 }
 
 static void ui2_draw_list_row(const void *id, const char *text, int checked, const RECT *r, void *extra)
@@ -581,7 +609,7 @@ static int menu2_render_menubar(RECT r)
 		static int game_button=0;
 		if (ui2_do_button(&game_button, "Game", config.ui_page==PAGE_GAME, &button, ui2_draw_menu_tab_button, 0))
 			config.ui_page = PAGE_GAME;
-		ui2_vsplit_l(&box, 30.0f, 0, &box); 
+		ui2_vsplit_l(&box, 30.0f, 0, &box);
 	}
 		
 	ui2_vsplit_l(&box, 110.0f, &button, &box);
@@ -610,6 +638,14 @@ static int menu2_render_menubar(RECT r)
 			config.ui_page = PAGE_FAVORITES;
 	}
 
+	/*
+	ui2_vsplit_r(&box, 110.0f, &box, &button);
+	static int system_button=0;
+	if (ui2_do_button(&system_button, "System", config.ui_page==PAGE_SYSTEM, &button, ui2_draw_menu_tab_button, 0))
+		config.ui_page = PAGE_SYSTEM;
+		
+	ui2_vsplit_r(&box, 30.0f, &box, 0);
+	*/
 	ui2_vsplit_r(&box, 110.0f, &box, &button);
 	static int settings_button=0;
 	if (ui2_do_button(&settings_button, "Settings", config.ui_page==PAGE_SETTINGS, &button, ui2_draw_menu_tab_button, 0))
@@ -685,12 +721,13 @@ static void menu2_render_serverbrowser(RECT main_view)
 	
 	static column cols[] = {
 		{-1,			-1,						" ",		-1, 10.0f, 0, {0}, {0}},
-		{COL_FLAGS,		-1,						" ",		-1, 15.0f, 0, {0}, {0}},
+		{COL_FLAGS,		-1,						" ",		-1, 20.0f, 0, {0}, {0}},
 		{COL_NAME,		BROWSESORT_NAME,		"Name",		0, 300.0f, 0, {0}, {0}},
 		{COL_GAMETYPE,	BROWSESORT_GAMETYPE,	"Type",		1, 50.0f, 0, {0}, {0}},
 		{COL_MAP,		BROWSESORT_MAP,			"Map", 		1, 100.0f, 0, {0}, {0}},
 		{COL_PLAYERS,	BROWSESORT_NUMPLAYERS,	"Players",	1, 60.0f, 0, {0}, {0}},
-		{COL_PROGRESS,	BROWSESORT_PROGRESSION,	"%",		1, 40.0f, FIXED, {0}, {0}},
+		{-1,			-1,						" ",		1, 10.0f, 0, {0}, {0}},
+		{COL_PROGRESS,	BROWSESORT_PROGRESSION,	"%",		1, 20.0f, FIXED, {0}, {0}},
 		{COL_PING,		BROWSESORT_PING,		"Ping",		1, 40.0f, FIXED, {0}, {0}},
 	};
 	
@@ -804,7 +841,6 @@ static void menu2_render_serverbrowser(RECT main_view)
 			}
 			
 			k += h*3/4;
-			i += h*3/4;
 		}
 		else
 			ui2_hsplit_t(&view, 20.0f, &row, &view);
@@ -824,26 +860,26 @@ static void menu2_render_serverbrowser(RECT main_view)
 			if(id == COL_FLAGS)
 			{
 				if(item->flags&1)
-					s = ui2_do_button(item, "P", l, &button, ui2_draw_grid_cell, 0);
+					s = ui2_do_button(item, "L", l, &button, ui2_draw_browse_icon, 0);
 			}
 			else if(id == COL_NAME)
-				s = ui2_do_button(item, item->name, l, &button, ui2_draw_grid_cell, 0);
+				s = ui2_do_button(item, item->name, l, &button, ui2_draw_grid_cell_l, 0);
 			else if(id == COL_MAP)
-				s = ui2_do_button(item, item->map, l, &button, ui2_draw_grid_cell, 0);
+				s = ui2_do_button(item, item->map, l, &button, ui2_draw_grid_cell_l, 0);
 			else if(id == COL_PLAYERS)
 			{
 				sprintf(temp, "%i/%i", item->num_players, item->max_players);
-				s = ui2_do_button(item, temp, l, &button, ui2_draw_grid_cell, 0);
+				s = ui2_do_button(item, temp, l, &button, ui2_draw_grid_cell_r, 0);
 			}
 			else if(id == COL_PING)
 			{
 				sprintf(temp, "%i", item->latency);
-				s = ui2_do_button(item, temp, l, &button, ui2_draw_grid_cell, 0);
+				s = ui2_do_button(item, temp, l, &button, ui2_draw_grid_cell_r, 0);
 			}
 			else if(id == COL_PROGRESS)
 			{
 				sprintf(temp, "%i", item->progression);
-				s = ui2_do_button(item, temp, l, &button, ui2_draw_grid_cell, 0);
+				s = ui2_do_button(item, temp, l, &button, ui2_draw_browse_icon, 0);
 			}
 			else if(id == COL_GAMETYPE)
 			{
@@ -851,12 +887,13 @@ static void menu2_render_serverbrowser(RECT main_view)
 				if(item->game_type == GAMETYPE_DM) type = "DM";
 				else if(item->game_type == GAMETYPE_TDM) type = "TDM";
 				else if(item->game_type == GAMETYPE_CTF) type = "CTF";
-				s = ui2_do_button(item, type, l, &button, ui2_draw_grid_cell, 0);
+				s = ui2_do_button(item, type, l, &button, ui2_draw_grid_cell_l, 0);
 			}
 			
 			if(s)
 			{
 				new_selected = item_index;
+				dbg_msg("dbg", "addr = %s", item->address);
 				strncpy(config.ui_server_address, item->address, sizeof(config.ui_server_address));
 			}
 		}
@@ -1215,6 +1252,9 @@ int menu2_render()
 	ui2_hsplit_t(&screen, 26.0f, &tab_bar, &main_view);
 	ui2_vmargin(&tab_bar, 20.0f, &tab_bar);
 	menu2_render_menubar(tab_bar);
+
+	// do bottom bar
+	//ui2_hsplit_b(&main_view, 26.0f, &main_view, &bottom_bar);
 		
 	// render current page
 	if(config.ui_page == PAGE_GAME)
@@ -1232,3 +1272,5 @@ int menu2_render()
 	
 	return 0;
 }
+
+
