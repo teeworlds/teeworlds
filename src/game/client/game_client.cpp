@@ -41,6 +41,7 @@ enum
 
 static int chat_mode = CHATMODE_NONE;
 bool menu_active = false;
+bool menu_game_active = false;
 static bool emoticon_selector_active = false;
 
 static vec2 mouse_pos;
@@ -959,7 +960,7 @@ static void render_flag(const obj_flag *prev, const obj_flag *current)
 
 	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
 
-	if(current->local_carry)
+	if(local_info && current->carried_by == local_info->clientid)
 		pos = local_character_pos;
 
     gfx_setcolor(current->team ? 0 : 1,0,current->team ? 1 : 0,1);
@@ -1989,7 +1990,11 @@ void render_game()
 		if (chat_mode)
 			chat_mode = CHATMODE_NONE;
 		else
+		{
 			menu_active = !menu_active;
+			if(menu_active)
+				menu_game_active = true;
+		}
 	}
 
 	// handle chat input
@@ -2610,11 +2615,18 @@ void menu_do_connected();
 extern "C" void modc_statechange(int state, int old)
 {
 	if(state == CLIENTSTATE_OFFLINE)
+	{
 	 	menu_do_disconnected();
+	 	menu_game_active = false;
+	}
 	if(state == CLIENTSTATE_CONNECTING)
 		menu_do_connecting();
 	if (state == CLIENTSTATE_ONLINE)
+	{
+		menu_active = false;
+	 	menu_game_active = true;
 		menu_do_connected();
+	}
 }
 
 extern "C" void modc_message(int msg)
@@ -2703,8 +2715,6 @@ extern "C" void modc_connected()
 		killmsgs[i].tick = -100000;
 		
 	send_info(true);
-	
-	config.ui_page = 5;
 }
 
 extern "C" const char *modc_net_version() { return TEEWARS_NETVERSION; }

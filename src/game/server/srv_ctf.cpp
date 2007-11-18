@@ -129,9 +129,8 @@ void flag::snap(int snapping_client)
 	flag->x = (int)pos.x;
 	flag->y = (int)pos.y;
 	flag->team = team;
+	flag->carried_by = -1;
 	
-	if(carrying_player && carrying_player->client_id == snapping_client)
-		flag->local_carry = 1;
-	else
-		flag->local_carry = 0;
+	if(carrying_player)
+		flag->carried_by = carrying_player->client_id;
 }

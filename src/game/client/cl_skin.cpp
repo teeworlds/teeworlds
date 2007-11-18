@@ -10,7 +10,7 @@ enum
 	MAX_SKINS=256,
 };
 
-static skin skins[MAX_SKINS] = {0};
+static skin skins[MAX_SKINS] = {{0}};
 static int num_skins = 0;
 
 static void skinscan(const char *name, int is_dir, void *user)

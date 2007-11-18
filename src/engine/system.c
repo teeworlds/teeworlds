@@ -31,7 +31,7 @@
 	#include <windows.h>
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
-	#include <shlobj.h> // for SHGetFolderPathAndSubDir
+	#include <shlobj.h> /* for SHGetFolderPathAndSubDir */
 	#include <fcntl.h>
 	#include <direct.h>
 	#include <errno.h>

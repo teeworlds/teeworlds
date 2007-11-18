@@ -160,7 +160,7 @@ struct obj_flag
 {
 	int x, y;
 	int team;
-	int local_carry; // is set if the local player has the flag
+	int carried_by; // is set if the local player has the flag
 };
 
 // core object needed for physics
