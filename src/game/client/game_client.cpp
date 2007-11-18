@@ -50,6 +50,7 @@ static vec2 local_target_pos;
 static const obj_player_character *local_character = 0;
 static const obj_player_character *local_prev_character = 0;
 const obj_player_info *local_info = 0;
+static const obj_flag *flags[2] = {0,0};
 static const obj_game *gameobj = 0;
 
 static struct client_data
@@ -166,6 +167,7 @@ void sound_vol_pan(const vec2& p, float *vol, float *pan)
 enum
 {
 	SPRITE_FLAG_FLIP_Y=1,
+	SPRITE_FLAG_FLIP_X=2,
 };
 
 static float sprite_w_scale;
@@ -183,11 +185,28 @@ static void select_sprite(sprite *spr, int flags=0, int sx=0, int sy=0)
 	float f = sqrtf(h*h + w*w);
 	sprite_w_scale = w/f;
 	sprite_h_scale = h/f;
+	
+	float x1 = x/(float)cx;
+	float x2 = (x+w)/(float)cx;
+	float y1 = y/(float)cy;
+	float y2 = (y+h)/(float)cy;
+	float temp = 0;
 
 	if(flags&SPRITE_FLAG_FLIP_Y)
-		gfx_quads_setsubset(x/(float)cx,(y+h)/(float)cy,(x+w)/(float)cx,y/(float)cy);
-	else
-		gfx_quads_setsubset(x/(float)cx,y/(float)cy,(x+w)/(float)cx,(y+h)/(float)cy);
+	{
+		temp = y1;
+		y1 = y2;
+		y2 = temp;
+	}
+
+	if(flags&SPRITE_FLAG_FLIP_X)
+	{
+		temp = x1;
+		x1 = x2;
+		x2 = temp;
+	}
+	
+	gfx_quads_setsubset(x1, y1, x2, y2);
 }
 
 void select_sprite(int id, int flags=0, int sx=0, int sy=0)
@@ -472,6 +491,7 @@ struct killmsg
 	int weapon;
 	int victim;
 	int killer;
+	int mode_special; // for CTF, if the guy is carrying a flag for example
 	int tick;
 };
 
@@ -807,6 +827,8 @@ extern "C" void modc_newsnapshot()
 	local_character = 0;
 	local_prev_character = 0;
 	local_info = 0;
+	flags[0] = 0;
+	flags[1] = 0;
 	gameobj = 0;
 
 	// setup world view
@@ -839,6 +861,10 @@ extern "C" void modc_newsnapshot()
 			}
 			else if(item.type == OBJTYPE_GAME)
 				gameobj = (obj_game *)data;
+			else if(item.type == OBJTYPE_FLAG)
+			{
+				flags[item.id%2] = (const obj_flag *)data;
+			}
 		}
 	}
 }
@@ -2286,9 +2312,6 @@ void render_game()
 			p1f.x,p1f.y);
 
 		gfx_quads_end();
-
-
-		//gfx_mapscreen(0,0,400*3,300*3);
 	}
 
 	if(local_character && !spectate)
@@ -2369,10 +2392,27 @@ void render_game()
 
 			// render victim tee
 			x -= 24.0f;
-			//int skin = gametype == GAMETYPE_TDM ? skinseed + client_datas[killmsgs[r].victim].team : killmsgs[r].victim;
+			
+			if(gameobj && gameobj->gametype == GAMETYPE_CTF)
+			{
+				if(killmsgs[r].mode_special&1)
+				{
+					gfx_blend_normal();
+					gfx_texture_set(data->images[IMAGE_GAME].id);
+					gfx_quads_begin();
+
+					if(client_datas[killmsgs[r].victim].team == 0) select_sprite(SPRITE_FLAG_BLUE);
+					else select_sprite(SPRITE_FLAG_RED);
+					
+					float size = 56.0f;
+					gfx_quads_drawTL(x, y-16, size/2, size);
+					gfx_quads_end();					
+				}
+			}
+			
 			render_tee(&idlestate, &client_datas[killmsgs[r].victim].skin_info, EMOTE_PAIN, vec2(-1,0), vec2(x, y+28));
 			x -= 32.0f;
-
+			
 			// render weapon
 			x -= 44.0f;
 			if (killmsgs[r].weapon >= 0)
@@ -2385,15 +2425,34 @@ void render_game()
 			}
 			x -= 52.0f;
 
-			// render killer tee
-			x -= 24.0f;
-			//skin = gametype == GAMETYPE_TDM ? skinseed + client_datas[killmsgs[r].killer].team : killmsgs[r].killer;
-			render_tee(&idlestate, &client_datas[killmsgs[r].killer].skin_info, EMOTE_ANGRY, vec2(1,0), vec2(x, y+28));
-			x -= 32.0f;
+			if(killmsgs[r].victim != killmsgs[r].killer)
+			{
+				if(gameobj && gameobj->gametype == GAMETYPE_CTF)
+				{
+					if(killmsgs[r].mode_special&2)
+					{
+						gfx_blend_normal();
+						gfx_texture_set(data->images[IMAGE_GAME].id);
+						gfx_quads_begin();
 
-			// render killer name
-			x -= killername_w;
-			gfx_pretty_text(x, y, font_size, client_datas[killmsgs[r].killer].name, -1);
+						if(client_datas[killmsgs[r].killer].team == 0) select_sprite(SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
+						else select_sprite(SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
+						
+						float size = 56.0f;
+						gfx_quads_drawTL(x-56, y-16, size/2, size);
+						gfx_quads_end();				
+					}
+				}				
+				
+				// render killer tee
+				x -= 24.0f;
+				render_tee(&idlestate, &client_datas[killmsgs[r].killer].skin_info, EMOTE_ANGRY, vec2(1,0), vec2(x, y+28));
+				x -= 32.0f;
+
+				// render killer name
+				x -= killername_w;
+				gfx_pretty_text(x, y, font_size, client_datas[killmsgs[r].killer].name, -1);
+			}
 
 			y += 44;
 		}
@@ -2474,6 +2533,7 @@ void render_game()
 			gfx_pretty_text(200-w/2, 2, 16, text, -1);
 		}
 
+		// render small score hud
 		if(gametype == GAMETYPE_TDM || gametype == GAMETYPE_CTF)
 		{
 			for(int t = 0; t < 2; t++)
@@ -2485,13 +2545,47 @@ void render_game()
 					gfx_setcolor(1,0,0,0.5f);
 				else
 					gfx_setcolor(0,0,1,0.5f);
-				draw_round_rect(320+t*35, 300-15, 30, 50, 5.0f);
+				draw_round_rect(400-40, 300-40-15+t*20, 50, 18, 5.0f);
 				gfx_quads_end();
 
 				char buf[32];
 				sprintf(buf, "%d", gameobj->teamscore[t]);
 				float w = gfx_pretty_text_width(14, buf, -1);
-				gfx_pretty_text(320+t*35+30/2-w/2, 300-15, 14, buf, -1);
+				
+				if(gametype == GAMETYPE_CTF)
+				{
+					gfx_pretty_text(400-20-w/2+5, 300-40-15+t*20+2, 14, buf, -1);
+					if(flags[t])
+					{
+ 						if(flags[t]->carried_by == -2 || (flags[t]->carried_by == -1 && ((client_tick()/10)&1)))
+ 						{
+							gfx_blend_normal();
+							gfx_texture_set(data->images[IMAGE_GAME].id);
+							gfx_quads_begin();
+
+							if(t == 0) select_sprite(SPRITE_FLAG_RED);
+							else select_sprite(SPRITE_FLAG_BLUE);
+							
+							float size = 16;					
+							gfx_quads_drawTL(400-40+5, 300-40-15+t*20+1, size/2, size);
+							gfx_quads_end();
+						}
+						else if(flags[t]->carried_by >= 0)
+						{
+							int id = flags[t]->carried_by%MAX_CLIENTS;
+							const char *name = client_datas[id].name;
+							float w = gfx_pretty_text_width(10, name, -1);
+							gfx_pretty_text(400-40-5-w, 300-40-15+t*20+2, 10, name, -1);
+							tee_render_info info = client_datas[id].skin_info;
+							info.size = 18.0f;
+							
+							render_tee(&idlestate, &info, EMOTE_NORMAL, vec2(1,0),
+								vec2(400-40+10, 300-40-15+9+t*20+1));
+						}
+					}
+				}
+				else
+					gfx_pretty_text(400-20-w/2, 300-40-15+t*20+2, 14, buf, -1);
 			}
 		}
 
@@ -2682,6 +2776,7 @@ extern "C" void modc_message(int msg)
 		killmsgs[killmsg_current].killer = msg_unpack_int();
 		killmsgs[killmsg_current].victim = msg_unpack_int();
 		killmsgs[killmsg_current].weapon = msg_unpack_int();
+		killmsgs[killmsg_current].mode_special = msg_unpack_int();
 		killmsgs[killmsg_current].tick = client_tick();
 	}
 	else if (msg == MSG_EMOTICON)

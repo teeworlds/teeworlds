@@ -136,7 +136,7 @@ public:
 	virtual void tick();
 	
 	virtual void on_player_spawn(class player *p) {}
-	virtual void on_player_death(class player *victim, class player *killer, int weapon);
+	virtual int on_player_death(class player *victim, class player *killer, int weapon);
 	
 	virtual void on_player_info_change(class player *p);
 	

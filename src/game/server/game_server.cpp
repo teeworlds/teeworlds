@@ -992,17 +992,18 @@ void player::tick_defered()
 
 void player::die(int killer, int weapon)
 {
-	gameobj->on_player_death(this, get_player(killer), weapon);
+	int mode_special = gameobj->on_player_death(this, get_player(killer), weapon);
 
-	dbg_msg("game", "kill killer='%d:%s' victim='%d:%s' weapon=%d",
+	dbg_msg("game", "kill killer='%d:%s' victim='%d:%s' weapon=%d special=%d",
 		killer, server_clientname(killer),
-		client_id, server_clientname(client_id), weapon);
+		client_id, server_clientname(client_id), weapon, mode_special);
 
 	// send the kill message
 	msg_pack_start(MSG_KILLMSG, MSGFLAG_VITAL);
 	msg_pack_int(killer);
 	msg_pack_int(client_id);
 	msg_pack_int(weapon);
+	msg_pack_int(mode_special);
 	msg_pack_end();
 	server_send_msg(-1);
 

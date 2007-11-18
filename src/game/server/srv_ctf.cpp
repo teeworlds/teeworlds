@@ -29,16 +29,25 @@ void gameobject_ctf::on_player_spawn(class player *p)
 {
 }
 
-void gameobject_ctf::on_player_death(class player *victim, class player *killer, int weaponid)
+int gameobject_ctf::on_player_death(class player *victim, class player *killer, int weaponid)
 {
 	gameobject::on_player_death(victim, killer, weaponid);
+	int had_flag = 0;
+	
 	// drop flags
 	for(int fi = 0; fi < 2; fi++)
 	{
 		flag *f = flags[fi];
+		if(f && f->carrying_player == killer)
+			had_flag |= 2;
 		if(f && f->carrying_player == victim)
+		{
 			f->carrying_player = 0;
+			had_flag |= 1;
+		}
 	}
+	
+	return had_flag;
 }
 
 void gameobject_ctf::tick()
@@ -125,12 +134,14 @@ void flag::snap(int snapping_client)
 	if(spawntick != -1)
 		return;
 
-	obj_flag *flag = (obj_flag *)snap_new_item(OBJTYPE_FLAG, id, sizeof(obj_flag));
+	obj_flag *flag = (obj_flag *)snap_new_item(OBJTYPE_FLAG, team, sizeof(obj_flag));
 	flag->x = (int)pos.x;
 	flag->y = (int)pos.y;
 	flag->team = team;
 	flag->carried_by = -1;
 	
-	if(carrying_player)
+	if(at_stand)
+		flag->carried_by = -2;
+	else if(carrying_player)
 		flag->carried_by = carrying_player->client_id;
 }

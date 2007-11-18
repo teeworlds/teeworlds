@@ -127,15 +127,16 @@ void gameobject::on_player_info_change(class player *p)
 }
 
 
-void gameobject::on_player_death(class player *victim, class player *killer, int weapon)
+int gameobject::on_player_death(class player *victim, class player *killer, int weapon)
 {
 	// do scoreing
 	if(!killer)
-		return;
+		return 0;
 	if(killer == victim)
 		victim->score--; // klant arschel
 	else
 		killer->score++; // good shit
+	return 0;
 }
 
 void gameobject::do_warmup(int seconds)
