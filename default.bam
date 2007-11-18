@@ -170,6 +170,7 @@ function build(settings)
 		settings.linker.libs:add("user32.lib")
 		settings.linker.libs:add("ws2_32.lib")
 		settings.linker.libs:add("ole32.lib")
+		settings.linker.libs:add("shell32.lib")
 	end
 	
 	-- build glfw

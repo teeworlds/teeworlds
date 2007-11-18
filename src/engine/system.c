@@ -31,7 +31,10 @@
 	#include <windows.h>
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
+	#include <shlobj.h> // for SHGetFolderPathAndSubDir
 	#include <fcntl.h>
+	#include <direct.h>
+	#include <errno.h>
 
 	#define EWOULDBLOCK WSAEWOULDBLOCK
 #else
@@ -650,13 +653,19 @@ int fs_listdir(const char *dir, fs_listdir_callback cb, void *user)
 int fs_storage_path(const char *appname, char *path, int max)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	#error not implement
+	HRESULT r;
+	char home[MAX_PATH];
+	r = SHGetFolderPath (NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, home);
+	if(r != 0)
+			return 1;
+	_snprintf(path, max, "%s/%s", home, appname);
+	return 0;
 #else
 	char *home = getenv("HOME");
 	int i;
 	if(!home)
 		return 0;
-	
+
 	snprintf(path, max, "%s/.%s", home, appname);
 	for(i = strlen(home)+2; path[i]; i++)
 		path[i] = tolower(path[i]);
@@ -668,7 +677,11 @@ int fs_storage_path(const char *appname, char *path, int max)
 int fs_makedir(const char *path)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	#error not implement
+	if(_mkdir(path) == 0)
+			return 0;
+	if(errno == EEXIST)
+		return 0;
+	return 1;
 #else
 	if(mkdir(path, 0755) == 0)
 		return 0;

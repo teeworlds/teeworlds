@@ -6,7 +6,7 @@ typedef struct
 	int org_texture;
 	int color_texture;
 	char name[31];
-	const char term[1];
+	char term[1];
 } skin;
 
 vec4 skin_get_color(int v);

@@ -9,7 +9,7 @@ static char application_save_path[512] = {0};
 
 const char *engine_savepath(const char *filename, char *buffer, int max)
 {
-	snprintf(buffer, max, "%s/%s", application_save_path, filename);
+	sprintf(buffer, "%s/%s", application_save_path, filename);
 	return buffer;
 }
 
