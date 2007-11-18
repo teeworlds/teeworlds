@@ -2198,7 +2198,7 @@ void render_game()
 		cl_effects.getzoom(client_tick(), client_intratick(), local_character);
 
 	// DEBUG TESTING
-	if(inp_key_pressed('M') || zoom > 3.01f)
+	if(zoom > 3.01f)
 	{
 		gfx_clear_mask(0);
 
