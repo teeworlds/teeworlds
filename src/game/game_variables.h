@@ -31,7 +31,6 @@ MACRO_CONFIG_INT(cl_predict, 1, 0, 1)
 
 MACRO_CONFIG_INT(cl_nameplates, 0, 0, 2)
 
-
 MACRO_CONFIG_STR(sv_maprotation, 512, "")
 
 MACRO_CONFIG_INT(dynamic_camera, 1, 0, 1)
@@ -48,6 +47,7 @@ MACRO_CONFIG_INT(dbg_new_gui, 0, 0, 1)
 
 MACRO_CONFIG_INT(ui_page, 1, 0, 5)
 MACRO_CONFIG_STR(ui_server_address, 128, "localhost:8303")
+MACRO_CONFIG_INT(ui_scale, 100, 1, 100000)
 
 
 MACRO_CONFIG_STR(sv_msg, 512, "")

@@ -78,7 +78,7 @@ typedef struct
     float x, y, w, h;
 } RECT;
 
-static float scale = 1.0f;
+//static float scale = 1.0f;
 static RECT screen = { 0.0f, 0.0f, 800.0f, 600.0f };
 
 extern void select_sprite(int id, int flags=0, int sx=0, int sy=0);
@@ -90,18 +90,18 @@ RECT *ui2_screen()
 
 void ui2_set_scale(float s)
 {
-    scale = s;
+    config.ui_scale = (int)(s*100.0f);
 }
 
 float ui2_scale()
 {
-    return scale;
+    return config.ui_scale/100.0f;
 }
 
 void ui2_hsplit_t(const RECT *original, float cut, RECT *top, RECT *bottom)
 {
     RECT r = *original;
-    cut *= scale;
+    cut *= ui2_scale();
 
     if (top)
     {
@@ -123,7 +123,7 @@ void ui2_hsplit_t(const RECT *original, float cut, RECT *top, RECT *bottom)
 void ui2_hsplit_b(const RECT *original, float cut, RECT *top, RECT *bottom)
 {
     RECT r = *original;
-    cut *= scale;
+    cut *= ui2_scale();
 
     if (top)
     {
@@ -145,7 +145,7 @@ void ui2_hsplit_b(const RECT *original, float cut, RECT *top, RECT *bottom)
 void ui2_vsplit_l(const RECT *original, float cut, RECT *left, RECT *right)
 {
     RECT r = *original;
-    cut *= scale;
+    cut *= ui2_scale();
 
     if (left)
     {
@@ -167,7 +167,7 @@ void ui2_vsplit_l(const RECT *original, float cut, RECT *left, RECT *right)
 void ui2_vsplit_r(const RECT *original, float cut, RECT *left, RECT *right)
 {
     RECT r = *original;
-    cut *= scale;
+    cut *= ui2_scale();
 
     if (left)
     {
@@ -189,7 +189,7 @@ void ui2_vsplit_r(const RECT *original, float cut, RECT *left, RECT *right)
 void ui2_margin(const RECT *original, float cut, RECT *other_rect)
 {
     RECT r = *original;
-	cut *= scale;
+	cut *= ui2_scale();
 
     other_rect->x = r.x + cut;
     other_rect->y = r.y + cut;
@@ -200,7 +200,7 @@ void ui2_margin(const RECT *original, float cut, RECT *other_rect)
 void ui2_vmargin(const RECT *original, float cut, RECT *other_rect)
 {
     RECT r = *original;
-	cut *= scale;
+	cut *= ui2_scale();
 
     other_rect->x = r.x + cut;
     other_rect->y = r.y;
@@ -211,7 +211,7 @@ void ui2_vmargin(const RECT *original, float cut, RECT *other_rect)
 void ui2_hmargin(const RECT *original, float cut, RECT *other_rect)
 {
     RECT r = *original;
-	cut *= scale;
+	cut *= ui2_scale();
 
     other_rect->x = r.x;
     other_rect->y = r.y + cut;
@@ -1462,10 +1462,12 @@ int menu2_render()
 		first = false;
 	}
 
+	/*
 	if (inp_key_down('I') && ui2_scale() > 0.2f)
 		ui2_set_scale(ui2_scale()-0.1f);
 	if (inp_key_down('O'))
 		ui2_set_scale(ui2_scale()+0.1f);
+		*/
 	
 	if(client_state() == CLIENTSTATE_ONLINE)
 	{
