@@ -15,6 +15,8 @@ extern "C" {
 #include "mapres_tilemap.h"
 #include "data.h"
 #include "menu.h"
+#include "cl_skin.h"
+#include "cl_render.h"
 
 // sound channels
 enum
@@ -24,10 +26,13 @@ enum
 	CHN_WORLD,
 };
 
+// red team color = 54090
+// blue team color = 10998628
+
+
 data_container *data = 0x0;
 
 int gametype = GAMETYPE_DM;
-//static int skinseed = 0;
 
 static int music_menu = -1;
 static int music_menu_id = -1;
@@ -50,29 +55,6 @@ static const obj_player_character *local_character = 0;
 static const obj_player_character *local_prev_character = 0;
 static const obj_player_info *local_info = 0;
 static const obj_game *gameobj = 0;
-
-// do this better and nicer
-struct skin
-{
-	int org_texture;
-	int color_texture;
-	char name[31];
-	const char term[1];
-};
-
-enum
-{
-	MAX_SKINS=256,
-};
-
-struct tee_render_info
-{
-	int texture;
-	vec4 color;
-};
-
-static skin skins[MAX_SKINS] = {{-1, -1, {0}, {0}}};
-static int num_skins = 0;
 
 static struct client_data
 {
@@ -541,46 +523,6 @@ static void render_loading(float percent)
 	gfx_swap();
 }
 
-static void skinscan(const char *name, int is_dir, void *user)
-{
-	int l = strlen(name);
-	if(l < 4 || is_dir || num_skins == MAX_SKINS)
-		return;
-	if(strcmp(name+l-4, ".png") != 0)
-		return;
-		
-	char buf[512];
-	sprintf(buf, "data/skins/%s", name);
-	IMAGE_INFO info;
-	if(!gfx_load_png(&info, buf))
-	{
-		dbg_msg("game", "failed to load skin from %s", name);
-		return;
-	}
-	
-	skins[num_skins].org_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data);
-	
-	// create colorless version
-	unsigned char *d = (unsigned char *)info.data;
-	int step = info.format == IMG_RGBA ? 4 : 3;
-	
-	for(int i = 0; i < info.width*info.height; i++)
-	{
-		int v = (d[i*step]+d[i*step+1]+d[i*step+2])/3;
-		d[i*step] = v;
-		d[i*step+1] = v;
-		d[i*step+2] = v;
-	}
-	
-	skins[num_skins].color_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data);
-	mem_free(info.data);
-
-	// set skin data	
-	strncpy(skins[num_skins].name, name, min((int)sizeof(skins[num_skins].name),l-4));
-	dbg_msg("game", "load skin %s", skins[num_skins].name);
-	num_skins++;
-}
-
 extern "C" void modc_init()
 {
 	// init menu
@@ -627,8 +569,7 @@ extern "C" void modc_init()
 		current++;
 	}
 	
-	// load skins
-	fs_listdir("data/skins", skinscan, 0);
+	skin_init();
 }
 
 extern "C" void modc_entergame()
@@ -914,7 +855,7 @@ void send_info(bool start)
 		msg_pack_start(MSG_CHANGEINFO, MSGFLAG_VITAL);
 	msg_pack_string(config.player_name, 64);
 	msg_pack_string(config.player_skin, 64);
-	msg_pack_int(config.player_color);
+	msg_pack_int(config.player_color_body);
 	msg_pack_end();
 	client_send_msg();
 }
@@ -1030,7 +971,7 @@ static void render_flag(const obj_flag *prev, const obj_flag *current)
     gfx_quads_end();
 }
 
-static void anim_seq_eval(sequence *seq, float time, keyframe *frame)
+void anim_seq_eval(sequence *seq, float time, keyframe *frame)
 {
 	if(seq->num_frames == 0)
 	{
@@ -1072,17 +1013,7 @@ static void anim_seq_eval(sequence *seq, float time, keyframe *frame)
 	}
 }
 
-struct animstate
-{
-	keyframe body;
-	keyframe back_foot;
-	keyframe front_foot;
-	keyframe attach;
-};
-
-
-
-static void anim_eval(animation *anim, float time, animstate *state)
+void anim_eval(animation *anim, float time, animstate *state)
 {
 	anim_seq_eval(&anim->body, time, &state->body);
 	anim_seq_eval(&anim->back_foot, time, &state->back_foot);
@@ -1090,14 +1021,14 @@ static void anim_eval(animation *anim, float time, animstate *state)
 	anim_seq_eval(&anim->attach, time, &state->attach);
 }
 
-static void anim_add_keyframe(keyframe *seq, keyframe *added, float amount)
+void anim_add_keyframe(keyframe *seq, keyframe *added, float amount)
 {
 	seq->x += added->x*amount;
 	seq->y += added->y*amount;
 	seq->angle += added->angle*amount;
 }
 
-static void anim_add(animstate *state, animstate *added, float amount)
+void anim_add(animstate *state, animstate *added, float amount)
 {
 	anim_add_keyframe(&state->body, &added->body, amount);
 	anim_add_keyframe(&state->back_foot, &added->back_foot, amount);
@@ -1105,7 +1036,7 @@ static void anim_add(animstate *state, animstate *added, float amount)
 	anim_add_keyframe(&state->attach, &added->attach, amount);
 }
 
-static void anim_eval_add(animstate *state, animation *anim, float time, float amount)
+void anim_eval_add(animstate *state, animation *anim, float time, float amount)
 {
 	animstate add;
 	anim_eval(anim, time, &add);
@@ -1115,7 +1046,7 @@ static void anim_eval_add(animstate *state, animation *anim, float time, float a
 static void render_hand(int skin_id, vec2 center_pos, vec2 dir, float angle_offset, vec2 post_rot_offset)
 {
 	// for drawing hand
-	skin_id = skin_id%num_skins;
+	const skin *s = skin_get(skin_id);
 	
 	float basesize = 10.0f;
 	//dir = normalize(hook_pos-pos);
@@ -1137,7 +1068,7 @@ static void render_hand(int skin_id, vec2 center_pos, vec2 dir, float angle_offs
 	hand_pos += diry * post_rot_offset.y;
 
 	//gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
-	gfx_texture_set(skins[skin_id].color_texture);
+	gfx_texture_set(s->color_texture);
 	gfx_quads_begin();
 
 	// two passes
@@ -1154,7 +1085,7 @@ static void render_hand(int skin_id, vec2 center_pos, vec2 dir, float angle_offs
 	gfx_quads_end();
 }
 
-static void render_tee(animstate *anim, tee_render_info *info, int emote, vec2 dir, vec2 pos)
+void render_tee(animstate *anim, tee_render_info *info, int emote, vec2 dir, vec2 pos)
 {
 	vec2 direction = dir;
 	vec2 position = pos;
@@ -1162,7 +1093,6 @@ static void render_tee(animstate *anim, tee_render_info *info, int emote, vec2 d
 	//gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
 	gfx_texture_set(info->texture);
 	gfx_quads_begin();
-	gfx_setcolor(info->color.r, info->color.g, info->color.b, info->color.a);
 	//gfx_quads_draw(pos.x, pos.y-128, 128, 128);
 
 	// first pass we draw the outline
@@ -1170,18 +1100,20 @@ static void render_tee(animstate *anim, tee_render_info *info, int emote, vec2 d
 	for(int p = 0; p < 2; p++)
 	{
 		int outline = p==0 ? 1 : 0;
-		//int shift = skin;
 
 		for(int f = 0; f < 2; f++)
 		{
-			float basesize = 16.0f;
+			float animscale = info->size * 1.0f/64.0f;
+			float basesize = info->size;
 			if(f == 1)
 			{
 				gfx_quads_setrotation(anim->body.angle*pi*2);
 
 				// draw body
+				gfx_setcolor(info->color_body.r, info->color_body.g, info->color_body.b, info->color_body.a);
+				vec2 body_pos = position + vec2(anim->body.x, anim->body.y)*animscale;
 				select_sprite(outline?SPRITE_TEE_BODY_OUTLINE:SPRITE_TEE_BODY, 0, 0, 0);
-				gfx_quads_draw(position.x+anim->body.x, position.y+anim->body.y, 4*basesize, 4*basesize);
+				gfx_quads_draw(body_pos.x, body_pos.y, basesize, basesize);
 
 				// draw eyes
 				if(p == 1)
@@ -1204,22 +1136,27 @@ static void render_tee(animstate *anim, tee_render_info *info, int emote, vec2 d
 							select_sprite(SPRITE_TEE_EYE_NORMAL, 0, 0, 0);
 							break;
 					}
-					int h = emote == EMOTE_BLINK ? (int)(basesize/3) : (int)(basesize);
-					gfx_quads_draw(position.x-4+direction.x*4, position.y-8+direction.y*3, basesize*1.5f, h*1.5f);
-					gfx_quads_draw(position.x+4+direction.x*4, position.y-8+direction.y*3, -basesize*1.5f, h*1.5f);
+					
+					float eyescale = basesize*0.40f;
+					float h = emote == EMOTE_BLINK ? basesize*0.15f : eyescale;
+					float eyeseparation = (0.075f - 0.010f*fabs(direction.x))*basesize;
+					vec2 offset = vec2(direction.x*0.125f, -0.05f+direction.y*0.10f)*basesize;
+					gfx_quads_draw(body_pos.x-eyeseparation+offset.x, body_pos.y+offset.y, eyescale, h);
+					gfx_quads_draw(body_pos.x+eyeseparation+offset.x, body_pos.y+offset.y, -eyescale, h);
 				}
 			}
 
 			// draw feet
+			gfx_setcolor(info->color_feet.r, info->color_feet.g, info->color_feet.b, info->color_feet.a);
 			select_sprite(outline?SPRITE_TEE_FOOT_OUTLINE:SPRITE_TEE_FOOT, 0, 0, 0);
 
 			keyframe *foot = f ? &anim->front_foot : &anim->back_foot;
 
-			float w = basesize*2.5f*1.5f;
-			float h = basesize*1.425f*1.5f;
+			float w = basesize;
+			float h = basesize/2;
 
 			gfx_quads_setrotation(foot->angle*pi*2);
-			gfx_quads_draw(position.x+foot->x, position.y+foot->y, w, h);
+			gfx_quads_draw(position.x+foot->x*animscale, position.y+foot->y*animscale, w, h);
 		}
 	}
 
@@ -1538,7 +1475,8 @@ static void render_player(
 	{
 		vec2 ghost_position = mix(vec2(prev_char->x, prev_char->y), vec2(player_char->x, player_char->y), client_intratick());
 		tee_render_info ghost = client_datas[info.clientid].skin_info;
-		ghost.color.a = 0.5f;
+		ghost.color_body.a = 0.5f;
+		ghost.color_feet.a = 0.5f;
 		render_tee(&state, &ghost, player.emote, direction, ghost_position); // render ghost
 	}
 
@@ -1999,16 +1937,16 @@ void render_world(float center_x, float center_y, float zoom)
 static void next_skin()
 {
 	int skin_id = 0;
-	for(int i = 0; i < num_skins; i++)
+	for(int i = 0; i < skin_num(); i++)
 	{
-		if(strcmp(config.player_skin, skins[i].name) == 0)
+		if(strcmp(config.player_skin, skin_get(i)->name) == 0)
 		{
-			skin_id = (i+1)%num_skins;
+			skin_id = (i+1)%skin_num();
 			break;
 		}
 	}
 	
-	config_set_player_skin(&config, skins[skin_id].name);
+	config_set_player_skin(&config, skin_get(skin_id)->name);
 	send_info(false);
 }
 
@@ -2706,20 +2644,15 @@ extern "C" void modc_message(int msg)
 		(void)color;
 		strncpy(client_datas[cid].name, name, 64);
 		strncpy(client_datas[cid].skin_name, skinname, 64);
-		client_datas[cid].skin_info.color = vec4(1,1,1,1); //color;
+		client_datas[cid].skin_info.color_body = vec4(1,1,1,1); //color;
+		client_datas[cid].skin_info.color_feet = vec4(1,1,1,1); //color;
+		client_datas[cid].skin_info.size = 64;
 		
 		// find new skin
-		client_datas[cid].skin_id = 0;
-		for(int i = 0; i < num_skins; i++)
-		{
-			if(strcmp(skins[i].name, client_datas[cid].skin_name) == 0)
-			{
-				client_datas[cid].skin_id = i;
-				break;
-			}
-		}
-		
-		client_datas[cid].skin_info.texture = skins[client_datas[cid].skin_id].org_texture;
+		client_datas[cid].skin_id = skin_find(client_datas[cid].skin_name);
+		if(client_datas[cid].skin_id < 0)
+			client_datas[cid].skin_id = 0;
+		client_datas[cid].skin_info.texture = skin_get(client_datas[cid].skin_id)->org_texture;
 	}
 	else if(msg == MSG_READY_TO_ENTER)
 	{

@@ -39,7 +39,9 @@ MACRO_CONFIG_INT(dynamic_camera, 1, 0, 1)
 MACRO_CONFIG_INT(warmup, 0, 0, 0)
 MACRO_CONFIG_INT(team, -10, -1, 0)
 
-MACRO_CONFIG_INT(player_color, -1, -1, 256)
+MACRO_CONFIG_INT(player_use_custom_color, 0, 0, 1)
+MACRO_CONFIG_INT(player_color_body, 65408, 0, 0)
+MACRO_CONFIG_INT(player_color_feet, 65408, 0, 0)
 MACRO_CONFIG_STR(player_skin, 64, "default")
 
 MACRO_CONFIG_INT(dbg_new_gui, 0, 0, 1)

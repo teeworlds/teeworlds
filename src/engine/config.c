@@ -188,7 +188,7 @@ void config_save(const char *filename)
 #undef MACRO_CONFIG_INT
 #undef MACRO_CONFIG_STR
 
-#define MACRO_CONFIG_INT(name,def,min,max) void config_set_ ## name (CONFIGURATION *c, int val) { if (val < min) val = min; if (max != 0 && val > max) val = max; c->name = val; }
+#define MACRO_CONFIG_INT(name,def,min,max) void config_set_ ## name (CONFIGURATION *c, int val) { if(min != max) { if (val < min) val = min; if (max != 0 && val > max) val = max; } c->name = val; }
 #define MACRO_CONFIG_STR(name,len,def) void config_set_ ## name (CONFIGURATION *c, const char *str) { strncpy(c->name, str, len-1); c->name[sizeof(c->name)-1] = 0; }
 #include "config_variables.h"
 #undef MACRO_CONFIG_INT

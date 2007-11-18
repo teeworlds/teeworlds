@@ -1,4 +1,5 @@
 #include "snapshot.h"
+#include "compression.h"
 
 
 int *snapitem_data(SNAPSHOT_ITEM *item) { return (int *)(item+1); }
@@ -108,11 +109,25 @@ static int diff_item(int *past, int *current, int *out, int size)
 	return needed;
 }
 
+int snapshot_data_rate[0xffff] = {0};
+int snapshot_data_updates[0xffff] = {0};
+static int snapshot_current = 0;
+
 static void undiff_item(int *past, int *diff, int *out, int size)
 {
 	while(size)
 	{
 		*out = *past+*diff;
+		
+		if(*diff == 0)
+			snapshot_data_rate[snapshot_current] += 1;
+		else
+		{
+			unsigned char buf[16];
+			unsigned char *end = vint_pack(buf,  *diff);
+			snapshot_data_rate[snapshot_current] += (int)(end - (unsigned char*)buf) * 8;
+		}
+		
 		out++;
 		past++;
 		diff++;
@@ -260,6 +275,7 @@ int snapshot_unpack_delta(SNAPSHOT *from, SNAPSHOT *to, void *srcdata, int data_
 		itemsize = *data++;
 		type = *data++;
 		id = *data++;
+		snapshot_current = type;
 		
 		key = (type<<16)|id;
 		
@@ -273,9 +289,14 @@ int snapshot_unpack_delta(SNAPSHOT *from, SNAPSHOT *to, void *srcdata, int data_
 		{
 			/* we got an update so we need to apply the diff */
 			undiff_item((int *)snapitem_data(snapshot_get_item(from, fromindex)), data, newdata, itemsize/4);
+			snapshot_data_updates[snapshot_current]++;
 		}
 		else /* no previous, just copy the data */
+		{
 			mem_copy(newdata, data, itemsize);
+			snapshot_data_rate[snapshot_current] += itemsize*8;
+			snapshot_data_updates[snapshot_current]++;
+		}
 			
 		data += itemsize/4;
 	}

@@ -446,6 +446,9 @@ static int client_load_data()
 	return 1;
 }
 
+extern int snapshot_data_rate[0xffff];
+extern int snapshot_data_updates[0xffff];
+
 static void client_debug_render()
 {
 	static NETSTATS prev, current;
@@ -477,6 +480,20 @@ static void client_debug_render()
 		gfx_memory_usage()/1024,
 		(int)(1.0f/frametime_avg));
 	gfx_quads_text(2, 2, 16, buffer);
+	
+	/* render rates */
+	{
+		int i;
+		for(i = 0; i < 256; i++)
+		{
+			if(snapshot_data_rate[i])
+			{
+				sprintf(buffer, "%4d : %8d %8d %8d", i, snapshot_data_rate[i]/8, snapshot_data_updates[i],
+					(snapshot_data_rate[i]/snapshot_data_updates[i])/8);
+				gfx_quads_text(2, 100+i*8, 16, buffer);
+			}
+		}
+	}
 	
 	/* render graphs */
 	gfx_mapscreen(0,0,400.0f,300.0f);

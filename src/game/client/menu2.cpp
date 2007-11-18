@@ -21,6 +21,8 @@ extern "C" {
 #include "mapres_tilemap.h"
 
 #include "data.h"
+#include "cl_render.h"
+#include "cl_skin.h"
 #include <mastersrv/mastersrv.h>
 
 extern data_container *data;
@@ -497,8 +499,6 @@ float ui2_do_scrollbar_v(const void *id, const RECT *rect, float current)
 
 	handle.y += (rect->h-handle.h)*current;
 
-	//dbg_msg("scroll", "%f %f %f %f", handle.x,handle.y,handle.w,handle.h);
-	
 	/* logic */
     float ret = current;
     int inside = ui_mouse_inside(handle.x,handle.y,handle.w,handle.h);
@@ -506,11 +506,7 @@ float ui2_do_scrollbar_v(const void *id, const RECT *rect, float current)
 	if(ui_active_item() == id)
 	{
 		if(!ui_mouse_button(0))
-		{
-			//if(inside)
-			//	ret = 1;
 			ui_set_active_item(0);
-		}
 		
 		float min = rect->y;
 		float max = rect->h-handle.h;
@@ -541,6 +537,62 @@ float ui2_do_scrollbar_v(const void *id, const RECT *rect, float current)
 	ui2_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_L, 2.5f);
 	slider.x = rail.x+rail.w;
 	ui2_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_R, 2.5f);
+
+	slider = handle;
+	ui2_margin(&slider, 5.0f, &slider);
+	ui2_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_ALL, 2.5f);
+	
+    return ret;
+}
+
+
+
+float ui2_do_scrollbar_h(const void *id, const RECT *rect, float current)
+{
+	RECT handle;
+	static float offset_x;
+	ui2_vsplit_l(rect, 33, &handle, 0);
+
+	handle.x += (rect->w-handle.w)*current;
+
+	/* logic */
+    float ret = current;
+    int inside = ui_mouse_inside(handle.x,handle.y,handle.w,handle.h);
+
+	if(ui_active_item() == id)
+	{
+		if(!ui_mouse_button(0))
+			ui_set_active_item(0);
+		
+		float min = rect->x;
+		float max = rect->w-handle.w;
+		float cur = ui_mouse_x()-offset_x;
+		ret = (cur-min)/max;
+		if(ret < 0.0f) ret = 0.0f;
+		if(ret > 1.0f) ret = 1.0f;
+	}
+	else if(ui_hot_item() == id)
+	{
+		if(ui_mouse_button(0))
+		{
+			ui_set_active_item(id);
+			offset_x = ui_mouse_x()-handle.x;
+		}
+	}
+	
+	if(inside)
+		ui_set_hot_item(id);
+
+	// render
+	RECT rail;
+	ui2_hmargin(rect, 5.0f, &rail);
+	ui2_draw_rect(&rail, vec4(1,1,1,0.25f), 0, 0.0f);
+
+	RECT slider = handle;
+	slider.h = rail.y-slider.y;
+	ui2_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_T, 2.5f);
+	slider.y = rail.y+rail.h;
+	ui2_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_B, 2.5f);
 
 	slider = handle;
 	ui2_margin(&slider, 5.0f, &slider);
@@ -756,7 +808,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 			ui2_vsplit_r(&headers, 2, &headers, &cols[i].spacer);
 		}
 	}
-
+	
 	for(int i = 0; i < num_cols; i++)
 	{
 		if(cols[i].direction == 0)
@@ -960,20 +1012,192 @@ static void menu2_render_serverbrowser(RECT main_view)
 	}
 }
 
+
+// these converter functions were nicked from some random internet pages
+static float hue_to_rgb(float v1, float v2, float h)
+{
+   if(h < 0) h += 1;
+   if(h > 1) h -= 1;
+   if((6 * h) < 1) return v1 + ( v2 - v1 ) * 6 * h;
+   if((2 * h) < 1) return v2;
+   if((3 * h) < 2) return v1 + ( v2 - v1 ) * ((2.0f/3.0f) - h) * 6;
+   return v1;
+}
+
+vec3 hsl_to_rgb(vec3 in)
+{
+	float v1, v2;
+	vec3 out;
+
+	if(in.s == 0)
+	{
+		out.r = in.l;
+		out.g = in.l;
+		out.b = in.l;
+	}
+	else
+	{
+		if(in.l < 0.5f) 
+			v2 = in.l * (1 + in.s);
+		else           
+			v2 = (in.l+in.s) - (in.s*in.l);
+
+		v1 = 2 * in.l - v2;
+
+		out.r = hue_to_rgb(v1, v2, in.h + (1.0f/3.0f));
+		out.g = hue_to_rgb(v1, v2, in.h);
+		out.b = hue_to_rgb(v1, v2, in.h - (1.0f/3.0f));
+	} 
+
+	return out;
+}
+
+static vec4 get_color(int v)
+{
+	vec3 r = hsl_to_rgb(vec3((v>>16)/255.0f, ((v>>8)&0xff)/255.0f, 0.5f+(v&0xff)/255.0f*0.5f));
+	return vec4(r.r, r.g, r.b, 1.0f);
+}
+
 static void menu2_render_settings_player(RECT main_view)
 {
 	RECT button;
+	RECT skinselection;
+	ui2_vsplit_l(&main_view, 300.0f, &main_view, &skinselection);
+
+
+	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
+
+	// render settings
+	{	
+		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		ui2_do_label(&button, "Name:", 18.0, -1);
+		ui2_vsplit_l(&button, 80.0f, 0, &button);
+		ui2_vsplit_l(&button, 180.0f, &button, 0);
+		ui2_do_edit_box(config.player_name, &button, config.player_name, sizeof(config.player_name));
+
+		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		if (ui2_do_button(&config.dynamic_camera, "Dynamic camera", config.dynamic_camera, &button, ui2_draw_checkbox, 0))
+			config.dynamic_camera ^= 1;
+			
+		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		if (ui2_do_button(&config.player_color_body, "Custom colors", config.player_use_custom_color, &button, ui2_draw_checkbox, 0))
+			config.player_use_custom_color = config.player_use_custom_color?0:1;
+		
+		if(config.player_use_custom_color)
+		{
+			int *colors[2];
+			colors[0] = &config.player_color_body;
+			colors[1] = &config.player_color_feet;
+			
+			const char *parts[] = {"Body", "Feet"};
+			const char *labels[] = {"Hue", "Sat.", "Lht."};
+			static int color_slider[2][3] = {{0}};
+			//static float v[2][3] = {{0, 0.5f, 0.25f}, {0, 0.5f, 0.25f}};
+				
+			for(int i = 0; i < 2; i++)
+			{
+				RECT text;
+				ui2_hsplit_t(&main_view, 20.0f, &text, &main_view);
+				ui2_vsplit_l(&text, 15.0f, 0, &text);
+				ui2_do_label(&text, parts[i], 18, -1);
+				
+				int prevcolor = *colors[i];
+				int color = 0;
+				for(int s = 0; s < 3; s++)
+				{
+					RECT text;
+					ui2_hsplit_t(&main_view, 19.0f, &button, &main_view);
+					ui2_vsplit_l(&button, 30.0f, 0, &button);
+					ui2_vsplit_l(&button, 30.0f, &text, &button);
+					ui2_vsplit_r(&button, 5.0f, &button, 0);
+					ui2_hsplit_t(&button, 4.0f, 0, &button);
+					
+					float k = ((prevcolor>>((2-s)*8))&0xff)  / 255.0f;
+					k = ui2_do_scrollbar_h(&color_slider[i][s], &button, k);
+					color <<= 8;
+					color += clamp((int)(k*255), 0, 255);
+					ui2_do_label(&text, labels[s], 20, -1);
+					 
+				}
+				
+				*colors[i] = color;
+				ui2_hsplit_t(&main_view, 5.0f, 0, &main_view);
+			}
+		}
+	}
+		
+	// draw header
+	RECT header, footer;
+	ui2_hsplit_t(&skinselection, 20, &header, &skinselection);
+	ui2_draw_rect(&header, vec4(1,1,1,0.25f), CORNER_T, 5.0f); 
+	ui2_do_label(&header, "Skins", 18.0f, 0);
+
+	// draw footers	
+	ui2_hsplit_b(&skinselection, 20, &skinselection, &footer);
+	ui2_draw_rect(&footer, vec4(1,1,1,0.25f), CORNER_B, 5.0f); 
+	ui2_vsplit_l(&footer, 10.0f, 0, &footer);
+
+	// modes
+	ui2_draw_rect(&skinselection, vec4(0,0,0,0.15f), 0, 0);
+
+	RECT scroll;
+	ui2_vsplit_r(&skinselection, 15, &skinselection, &scroll);
+
+	RECT list = skinselection;
+	ui2_hsplit_t(&list, 50, &button, &list);
 	
-	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-	ui2_do_label(&button, "Name:", 18.0, -1);
-	ui2_vsplit_l(&button, 80.0f, 0, &button);
-	ui2_vsplit_l(&button, 180.0f, &button, 0);
-	ui2_do_edit_box(config.player_name, &button, config.player_name, sizeof(config.player_name));
+	int num = (int)(skinselection.h/button.h);
+	static float scrollvalue = 0;
+	static int scrollbar = 0;
+	ui2_hmargin(&scroll, 5.0f, &scroll);
+	scrollvalue = ui2_do_scrollbar_v(&scrollbar, &scroll, scrollvalue);
 
-	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-	if (ui2_do_button(&config.dynamic_camera, "Dynamic camera", config.dynamic_camera, &button, ui2_draw_checkbox, 0))
-		config.dynamic_camera ^= 1;
-
+	int start = (int)((skin_num()-num)*scrollvalue);
+	if(start < 0)
+		start = 0;
+		
+	animstate state;
+	anim_eval(&data->animations[ANIM_BASE], 0, &state);
+	anim_eval_add(&state, &data->animations[ANIM_IDLE], 0, 1.0f);
+	//anim_eval_add(&state, &data->animations[ANIM_WALK], fmod(client_localtime(), 1.0f), 1.0f);
+		
+	for(int i = start; i < start+num && i < skin_num(); i++)
+	{
+		const skin *s = skin_get(i);
+		char buf[128];
+		sprintf(buf, "%s", s->name);
+		int selected = 0;
+		if(strcmp(s->name, config.player_skin) == 0)
+			selected = 1;
+		
+		tee_render_info info;
+		info.texture = s->org_texture;
+		info.color_body = vec4(1,1,1,1);
+		info.color_feet = vec4(1,1,1,1);
+		if(config.player_use_custom_color)
+		{
+			info.color_body = get_color(config.player_color_body);
+			info.color_feet = get_color(config.player_color_feet);
+			info.texture = s->color_texture;
+		}
+			
+		info.size = ui2_scale()*50.0f;
+		
+		RECT icon;
+		RECT text;
+		ui2_vsplit_l(&button, 50.0f, &icon, &text);
+		
+		if(ui2_do_button(s, "", selected, &button, ui2_draw_list_row, 0))
+			config_set_player_skin(&config, s->name);
+		
+		ui2_hsplit_t(&text, 12.0f, 0, &text); // some margin from the top
+		ui2_do_label(&text, buf, 24, 0);
+		
+		ui2_hsplit_t(&icon, 5.0f, 0, &icon); // some margin from the top
+		render_tee(&state, &info, 0, vec2(1, 0), vec2(icon.x+icon.w/2, icon.y+icon.h/2));
+		
+		ui2_hsplit_t(&list, 50, &button, &list);
+	}
 }
 
 typedef void (*assign_func_callback)(CONFIGURATION *config, int value);
@@ -1212,6 +1436,24 @@ static void menu2_render_game(RECT main_view)
 
 int menu2_render()
 {
+	/*
+	gfx_mapscreen(0,0,2*4/3.0f,2);
+	gfx_clear(gui_color.r, gui_color.g, gui_color.b);
+	
+	animstate state;
+	anim_eval(&data->animations[ANIM_BASE], 0, &state);
+	//anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);
+	anim_eval_add(&state, &data->animations[ANIM_WALK], fmod(client_localtime(), 1.0f), 1.0f);
+		
+	tee_render_info info;
+	info.texture = skin_get(1)->org_texture;
+	info.color = vec4(1,1,1,1);
+	info.size = 1.0f; //ui2_scale()*16.0f;
+	render_tee(&state, &info, 0, vec2(sinf(client_localtime()*3), cosf(client_localtime()*3)), vec2(1,1));
+		
+	return 0;
+	*/
+	
 	gfx_mapscreen(0,0,800,600);
 	
 	static bool first = true;

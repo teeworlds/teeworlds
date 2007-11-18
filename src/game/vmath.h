@@ -70,9 +70,9 @@ template<typename T>
 class vector3_base
 {
 public:
-	union { T x,r; };
-	union { T y,g; };
-	union { T z,b; };
+	union { T x,r,h; };
+	union { T y,g,s; };
+	union { T z,b,v,l; };
 
 	vector3_base() {}
 	vector3_base(float nx, float ny, float nz)
