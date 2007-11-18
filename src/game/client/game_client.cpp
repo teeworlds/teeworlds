@@ -2371,7 +2371,7 @@ void render_game()
 	{
 		gfx_mapscreen(0, 0, width*1.5f, height*1.5f);
 		float startx = width*1.5f-10.0f;
-		float y = 10.0f;
+		float y = 20.0f;
 
 		for(int i = 0; i < killmsg_max; i++)
 		{
