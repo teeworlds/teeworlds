@@ -1012,52 +1012,6 @@ static void menu2_render_serverbrowser(RECT main_view)
 	}
 }
 
-
-// these converter functions were nicked from some random internet pages
-static float hue_to_rgb(float v1, float v2, float h)
-{
-   if(h < 0) h += 1;
-   if(h > 1) h -= 1;
-   if((6 * h) < 1) return v1 + ( v2 - v1 ) * 6 * h;
-   if((2 * h) < 1) return v2;
-   if((3 * h) < 2) return v1 + ( v2 - v1 ) * ((2.0f/3.0f) - h) * 6;
-   return v1;
-}
-
-vec3 hsl_to_rgb(vec3 in)
-{
-	float v1, v2;
-	vec3 out;
-
-	if(in.s == 0)
-	{
-		out.r = in.l;
-		out.g = in.l;
-		out.b = in.l;
-	}
-	else
-	{
-		if(in.l < 0.5f) 
-			v2 = in.l * (1 + in.s);
-		else           
-			v2 = (in.l+in.s) - (in.s*in.l);
-
-		v1 = 2 * in.l - v2;
-
-		out.r = hue_to_rgb(v1, v2, in.h + (1.0f/3.0f));
-		out.g = hue_to_rgb(v1, v2, in.h);
-		out.b = hue_to_rgb(v1, v2, in.h - (1.0f/3.0f));
-	} 
-
-	return out;
-}
-
-static vec4 get_color(int v)
-{
-	vec3 r = hsl_to_rgb(vec3((v>>16)/255.0f, ((v>>8)&0xff)/255.0f, 0.5f+(v&0xff)/255.0f*0.5f));
-	return vec4(r.r, r.g, r.b, 1.0f);
-}
-
 static void menu2_render_settings_player(RECT main_view)
 {
 	RECT button;
@@ -1176,8 +1130,8 @@ static void menu2_render_settings_player(RECT main_view)
 		info.color_feet = vec4(1,1,1,1);
 		if(config.player_use_custom_color)
 		{
-			info.color_body = get_color(config.player_color_body);
-			info.color_feet = get_color(config.player_color_feet);
+			info.color_body = skin_get_color(config.player_color_body);
+			info.color_feet = skin_get_color(config.player_color_feet);
 			info.texture = s->color_texture;
 		}
 			

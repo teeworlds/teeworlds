@@ -1,3 +1,4 @@
+#include "../vmath.h"
 
 // do this better and nicer
 typedef struct 
@@ -8,6 +9,7 @@ typedef struct
 	const char term[1];
 } skin;
 
+vec4 skin_get_color(int v);
 void skin_init();
 int skin_num();
 const skin *skin_get(int index);

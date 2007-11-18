@@ -110,6 +110,23 @@ void gameobject::post_reset()
 	}
 }
 
+
+	
+void gameobject::on_player_info_change(class player *p)
+{
+	const int team_colors[2] = {54090, 10998628};
+	if(is_teamplay)
+	{
+		if(p->team >= 0 || p->team <= 1)
+		{
+			p->use_custom_color = 1;
+			p->color_body = team_colors[p->team];
+			p->color_feet = team_colors[p->team];
+		}
+	}
+}
+
+
 void gameobject::on_player_death(class player *victim, class player *killer, int weapon)
 {
 	// do scoreing

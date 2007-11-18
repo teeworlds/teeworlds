@@ -138,6 +138,8 @@ public:
 	virtual void on_player_spawn(class player *p) {}
 	virtual void on_player_death(class player *victim, class player *killer, int weapon);
 	
+	virtual void on_player_info_change(class player *p);
+	
 	virtual void snap(int snapping_client);
 	virtual int getteam(int notthisid);
 };
@@ -241,7 +243,9 @@ public:
 	//
 	int client_id;
 	char skin_name[64];
-	int skin_color;
+	int use_custom_color;
+	int color_body;
+	int color_feet;
 
 	// input	
 	player_input previnput;

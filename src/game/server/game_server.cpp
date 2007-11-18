@@ -1520,7 +1520,9 @@ void send_info(int who, int to_who)
 	msg_pack_int(who);
 	msg_pack_string(server_clientname(who), 64);
 	msg_pack_string(players[who].skin_name, 64);
-	msg_pack_int(players[who].skin_color);
+	msg_pack_int(players[who].use_custom_color);
+	msg_pack_int(players[who].color_body);
+	msg_pack_int(players[who].color_feet);
 	msg_pack_end();
 	server_send_msg(to_who);
 }
@@ -1550,34 +1552,13 @@ void mods_connected(int client_id)
 	players[client_id].init();
 	players[client_id].client_id = client_id;
 
-	//dbg_msg("game", "join player='%d:%s'", client_id, server_clientname(client_id));
+	//dbg_msg("game", "connected player='%d:%s'", client_id, server_clientname(client_id));
 
 	// Check which team the player should be on
 	if(gameobj->gametype == GAMETYPE_DM)
 		players[client_id].team = 0;
 	else
 		players[client_id].team = gameobj->getteam(client_id);
-
-	//
-	/*
-	msg_pack_start(MSG_SETINFO, MSGFLAG_VITAL);
-	msg_pack_int(client_id);
-	msg_pack_string(server_clientname(client_id), 64);
-	msg_pack_end();
-	server_send_msg(-1);
-
-	for(int i = 0; i < MAX_CLIENTS; i++)
-	{
-		if(players[client_id].client_id != -1)
-		{
-			msg_pack_start(MSG_SETINFO, MSGFLAG_VITAL);
-			msg_pack_int(i);
-			msg_pack_string(server_clientname(i), 64);
-			msg_pack_end();
-			server_send_msg(client_id);
-		}
-	}*/
-
 }
 
 void mods_client_drop(int client_id)
@@ -1614,7 +1595,9 @@ void mods_message(int msg, int client_id)
 	{
 		const char *name = msg_unpack_string();
 		const char *skin_name = msg_unpack_string();
-		int skin_color = msg_unpack_int();
+		players[client_id].use_custom_color = msg_unpack_int();
+		players[client_id].color_body = msg_unpack_int();
+		players[client_id].color_feet = msg_unpack_int();
 
 		// check for invalid chars
 		const char *p = name;
@@ -1624,7 +1607,6 @@ void mods_message(int msg, int client_id)
 				return;
 			p++;
 		}
-
 
 		//
 		if(msg == MSG_CHANGEINFO && strcmp(name, server_clientname(client_id)) != 0)
@@ -1637,7 +1619,8 @@ void mods_message(int msg, int client_id)
 		//send_set_name(client_id, players[client_id].name, name);
 		strncpy(players[client_id].skin_name, skin_name, 64);
 		server_setclientname(client_id, name);
-		players[client_id].skin_color = skin_color;
+		
+		gameobj->on_player_info_change(&players[client_id]);
 		
 		if(msg == MSG_STARTINFO)
 		{

@@ -4,7 +4,6 @@
 #include <string.h>
 
 extern "C" {
-	#include <engine/external/glfw/include/GL/glfw.h> // DEBUG TESTING
 	#include <engine/client/ui.h>
 	#include <engine/config.h>
 };
@@ -25,10 +24,6 @@ enum
 	CHN_MUSIC,
 	CHN_WORLD,
 };
-
-// red team color = 54090
-// blue team color = 10998628
-
 
 data_container *data = 0x0;
 
@@ -855,7 +850,9 @@ void send_info(bool start)
 		msg_pack_start(MSG_CHANGEINFO, MSGFLAG_VITAL);
 	msg_pack_string(config.player_name, 64);
 	msg_pack_string(config.player_skin, 64);
+	msg_pack_int(config.player_use_custom_color);
 	msg_pack_int(config.player_color_body);
+	msg_pack_int(config.player_color_feet);
 	msg_pack_end();
 	client_send_msg();
 }
@@ -2640,19 +2637,28 @@ extern "C" void modc_message(int msg)
 		int cid = msg_unpack_int();
 		const char *name = msg_unpack_string();
 		const char *skinname = msg_unpack_string();
-		int color = msg_unpack_int();
-		(void)color;
+		
 		strncpy(client_datas[cid].name, name, 64);
 		strncpy(client_datas[cid].skin_name, skinname, 64);
-		client_datas[cid].skin_info.color_body = vec4(1,1,1,1); //color;
-		client_datas[cid].skin_info.color_feet = vec4(1,1,1,1); //color;
+		
+		int use_custom_color = msg_unpack_int();
+		client_datas[cid].skin_info.color_body = skin_get_color(msg_unpack_int());
+		client_datas[cid].skin_info.color_feet = skin_get_color(msg_unpack_int());
 		client_datas[cid].skin_info.size = 64;
 		
 		// find new skin
 		client_datas[cid].skin_id = skin_find(client_datas[cid].skin_name);
 		if(client_datas[cid].skin_id < 0)
 			client_datas[cid].skin_id = 0;
-		client_datas[cid].skin_info.texture = skin_get(client_datas[cid].skin_id)->org_texture;
+		
+		if(use_custom_color)
+			client_datas[cid].skin_info.texture = skin_get(client_datas[cid].skin_id)->color_texture;
+		else
+		{
+			client_datas[cid].skin_info.texture = skin_get(client_datas[cid].skin_id)->org_texture;
+			client_datas[cid].skin_info.color_body = vec4(1,1,1,1);
+			client_datas[cid].skin_info.color_feet = vec4(1,1,1,1);
+		}
 	}
 	else if(msg == MSG_READY_TO_ENTER)
 	{
