@@ -1590,6 +1590,14 @@ void mods_message(int msg, int client_id)
 	{
 		// Switch team on given client and kill/respawn him
 		players[client_id].set_team(msg_unpack_int());
+		gameobj->on_player_info_change(&players[client_id]);
+		
+		// send all info to this client
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(players[i].client_id != -1)
+				send_info(i, -1);
+		}		
 	}
 	else if (msg == MSG_CHANGEINFO || msg == MSG_STARTINFO)
 	{
@@ -1735,25 +1743,14 @@ void mods_init()
 
 	if(config.dbg_bots)
 	{
-		/*
-		static int count = 0;
-		if(count >= 0)
+
+		for(int i = 0; i < config.dbg_bots ; i++)
 		{
-			count++;
-			if(count == 10)
-			{*/
-				for(int i = 0; i < config.dbg_bots ; i++)
-				{
-					mods_connected(MAX_CLIENTS-i-1);
-					mods_client_enter(MAX_CLIENTS-i-1);
-					//strcpy(players[MAX_CLIENTS-i-1].name, "(bot)");
-					if(gameobj->gametype != GAMETYPE_DM)
-						players[MAX_CLIENTS-i-1].team = i&1;
-				}
-				/*
-				count = -1;
-			}
-		}*/
+			mods_connected(MAX_CLIENTS-i-1);
+			mods_client_enter(MAX_CLIENTS-i-1);
+			if(gameobj->gametype != GAMETYPE_DM)
+				players[MAX_CLIENTS-i-1].team = i&1;
+		}
 	}
 }
 

@@ -27,6 +27,11 @@ extern "C" {
 
 extern data_container *data;
 
+// abit uglyness
+extern const obj_player_info *local_info;
+extern bool menu_active;
+
+
 //static vec4 gui_color(0.9f,0.78f,0.65f, 0.5f);
 //static vec4 gui_color(0.78f,0.9f,0.65f, 0.5f);
 static vec4 gui_color(0.65f,0.78f,0.9f, 0.5f);
@@ -1375,17 +1380,46 @@ static void menu2_render_game(RECT main_view)
 	if(ui2_do_button(&disconnect_button, "Disconnect", 0, &button, ui2_draw_menu_button, 0))
 		client_disconnect();
 
-	ui2_vsplit_l(&main_view, 120.0f, &button, &main_view);
-	static int spectate_button = 0;
-	if(ui2_do_button(&spectate_button, "Spectate", 0, &button, ui2_draw_menu_button, 0))
-		;
-		
-	ui2_vsplit_l(&main_view, 10.0f, &button, &main_view);
-	ui2_vsplit_l(&main_view, 120.0f, &button, &main_view);
-	static int change_team_button = 0;
-	if(ui2_do_button(&change_team_button, "Change Team", 0, &button, ui2_draw_menu_button, 0))
-		;
 
+
+	if(local_info)
+	{
+		if(local_info->team != -1)
+		{
+			ui2_vsplit_l(&main_view, 10.0f, &button, &main_view);
+			ui2_vsplit_l(&main_view, 120.0f, &button, &main_view);
+			static int spectate_button = 0;
+			if(ui2_do_button(&spectate_button, "Spectate", 0, &button, ui2_draw_menu_button, 0))
+			{
+				config.team = -1;
+				menu_active = false;
+			}
+		}
+
+		if(local_info->team != 0)
+		{
+			ui2_vsplit_l(&main_view, 10.0f, &button, &main_view);
+			ui2_vsplit_l(&main_view, 120.0f, &button, &main_view);
+			static int spectate_button = 0;
+			if(ui2_do_button(&spectate_button, "Join Red", 0, &button, ui2_draw_menu_button, 0))
+			{
+				config.team = 0;
+				menu_active = false;
+			}
+		}
+
+		if(local_info->team != 1)
+		{
+			ui2_vsplit_l(&main_view, 10.0f, &button, &main_view);
+			ui2_vsplit_l(&main_view, 120.0f, &button, &main_view);
+			static int spectate_button = 0;
+			if(ui2_do_button(&spectate_button, "Join Blue", 0, &button, ui2_draw_menu_button, 0))
+			{
+				config.team = 1;
+				menu_active = false;
+			}
+		}
+	}
 }
 
 int menu2_render()

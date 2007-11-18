@@ -40,7 +40,7 @@ enum
 };
 
 static int chat_mode = CHATMODE_NONE;
-static bool menu_active = false;
+bool menu_active = false;
 static bool emoticon_selector_active = false;
 
 static vec2 mouse_pos;
@@ -48,7 +48,7 @@ static vec2 local_character_pos;
 static vec2 local_target_pos;
 static const obj_player_character *local_character = 0;
 static const obj_player_character *local_prev_character = 0;
-static const obj_player_info *local_info = 0;
+const obj_player_info *local_info = 0;
 static const obj_game *gameobj = 0;
 
 static struct client_data
