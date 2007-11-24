@@ -48,7 +48,8 @@ enum
 	MSG_EMOTICON,
 	MSG_STARTINFO, // client -> server
 	MSG_CHANGEINFO, // client -> server
-	MSG_READY_TO_ENTER // server -> client
+	MSG_READY_TO_ENTER, // server -> client
+    MSG_WEAPON_PICKUP
 };
 
 enum

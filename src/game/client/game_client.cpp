@@ -53,6 +53,8 @@ const obj_player_info *local_info = 0;
 static const obj_flag *flags[2] = {0,0};
 static const obj_game *gameobj = 0;
 
+static int picked_up_weapon = 0;
+
 static struct client_data
 {
 	char name[64];
@@ -2147,7 +2149,11 @@ void render_game()
 
 			if(inp_key_presses(config.key_next_weapon) || inp_key_presses(config.key_prev_weapon))
 				input.wanted_weapon = 0;
-			else
+			else if (config.autoswitch_weapons && picked_up_weapon)
+            {
+                input.wanted_weapon = picked_up_weapon;
+            }
+            else
 			{
 				if(inp_key_presses(config.key_weapon1)) input.wanted_weapon = 1;
 				if(inp_key_presses(config.key_weapon2)) input.wanted_weapon = 2;
@@ -2156,6 +2162,8 @@ void render_game()
 				if(inp_key_presses(config.key_weapon5)) input.wanted_weapon = 5;
 				if(inp_key_presses(config.key_weapon6)) input.wanted_weapon = 6;
 			}
+
+            picked_up_weapon = 0;
 		}
 
 		// stress testing
@@ -2766,6 +2774,12 @@ extern "C" void modc_message(int msg)
 			client_datas[cid].skin_info.color_feet = vec4(1,1,1,1);
 		}
 	}
+    else if(msg == MSG_WEAPON_PICKUP)
+    {
+        int weapon = msg_unpack_int();
+
+        picked_up_weapon = weapon+1;
+    }
 	else if(msg == MSG_READY_TO_ENTER)
 	{
 		client_entergame();

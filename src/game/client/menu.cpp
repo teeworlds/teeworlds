@@ -944,8 +944,24 @@ static void middle_render(const struct rect *r)
             {
                 static struct rect browser;
                 static bool inited = false;
+
                 ui_margin(r, 5, &browser);
-                ui_do_button_rect(&browser, "b", 0, &browser, draw_teewars_button, 0);
+
+                {
+                    struct rect button_row;
+                    static struct rect button_refresh, button_connect;
+
+                    ui_hsplit_b(&browser, 30, &browser, &button_row);
+                    ui_vsplit_l(&button_row, 100, &button_refresh, &button_row);
+                    ui_vsplit_l(&button_row, 100, &button_connect, &button_row);
+
+                    if (ui_do_button_rect(&button_refresh, "Refresh", 0, &button_refresh, draw_teewars_button, 0))
+                        client_serverbrowse_refresh(0);
+
+                    if (ui_do_button_rect(&button_connect, "Connect", 0, &button_connect, draw_teewars_button, 0))
+                    {}
+
+                }
 
                 if (!inited)
                 {
@@ -957,7 +973,34 @@ static void middle_render(const struct rect *r)
                     int server_count = client_serverbrowse_sorted_num();
                     int i;
 
-                    struct rect rest = *r;
+                    struct rect rest = browser;
+
+                    struct rect button_row;
+
+                    static struct rect button_name, button_players, button_players_max, button_map, button_latency, button_progression;
+
+                    ui_hsplit_t(&rest, 32, &button_row, &rest);
+                    ui_margin(&button_row, 1, &button_row);
+
+                    ui_vsplit_l(&button_row, 400, &button_name, &button_row);
+                    ui_vsplit_l(&button_row, 40, &button_players, &button_row);
+                    ui_vsplit_l(&button_row, 40, &button_players_max, &button_row);
+                    ui_vsplit_l(&button_row, 80, &button_map, &button_row);
+                    ui_vsplit_l(&button_row, 40, &button_latency, &button_row);
+                    ui_vsplit_l(&button_row, 40, &button_progression, &button_row);
+
+                    if (ui_do_button_rect(&button_name, "Name", 0, &button_name, draw_teewars_button, 0))
+                        config.b_sort = BROWSESORT_NAME;
+                    if (ui_do_button_rect(&button_players, "Players", 0, &button_players, draw_teewars_button, 0))
+                        config.b_sort = BROWSESORT_NUMPLAYERS;
+                    if (ui_do_button_rect(&button_players_max, "Max Players", 0, &button_players_max, draw_teewars_button, 0))
+                        config.b_sort = BROWSESORT_NUMPLAYERS; // TODO: real enum here
+                    if (ui_do_button_rect(&button_map, "Map", 0, &button_map, draw_teewars_button, 0))
+                        config.b_sort = BROWSESORT_MAP;
+                    if (ui_do_button_rect(&button_latency, "Ping", 0, &button_latency, draw_teewars_button, 0))
+                        config.b_sort = BROWSESORT_PING;
+                    if (ui_do_button_rect(&button_progression, "Progression", 0, &button_progression, draw_teewars_button, 0))
+                        config.b_sort = BROWSESORT_PING; // TODO: real enum here
 
                     for (i = 0; i < server_count; i++)
                     {
@@ -966,7 +1009,12 @@ static void middle_render(const struct rect *r)
                         struct rect col_name, col_players, col_players_max, col_map, col_latency, col_progression;
                         char temp[16];
 
+
                         ui_hsplit_t(&rest, 32, &row, &rest);
+
+                        if (rest.h < 0)
+                            break;
+
                         ui_margin(&row, 1, &row);
 
                         ui_vsplit_l(&row, 400, &col_name, &row);
@@ -1728,10 +1776,10 @@ static int menu_render(bool ingame)
 		ui_scale(scale);
 		int retn = ui_menu_render(screen);
 
-		gfx_texture_set(-1);
+        /*gfx_texture_set(-1);
 		gfx_lines_begin();
 		ui_foreach_rect(draw_rect);
-		gfx_lines_end();
+		gfx_lines_end();*/
 
 		return retn;
     }

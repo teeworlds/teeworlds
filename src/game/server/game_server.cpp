@@ -1189,6 +1189,9 @@ void powerup::reset()
 		spawntick = -1;
 }
 
+
+void send_weapon_pickup(int cid, int weapon);
+
 void powerup::tick()
 {
 	// wait for respawn
@@ -1245,6 +1248,8 @@ void powerup::tick()
 						create_sound(pos, SOUND_PICKUP_ROCKET);
 					else if(subtype == WEAPON_SHOTGUN)
 						create_sound(pos, SOUND_PICKUP_SHOTGUN);
+
+                    send_weapon_pickup(pplayer->client_id, subtype);
 				}
 			}
 			break;
@@ -1535,6 +1540,14 @@ void send_emoticon(int cid, int emoticon)
 	msg_pack_int(emoticon % 16);
 	msg_pack_end();
 	server_send_msg(-1);
+}
+
+void send_weapon_pickup(int cid, int weapon)
+{
+	msg_pack_start(MSG_WEAPON_PICKUP, MSGFLAG_VITAL);
+	msg_pack_int(weapon);
+	msg_pack_end();
+	server_send_msg(cid);
 }
 
 void mods_client_enter(int client_id)
