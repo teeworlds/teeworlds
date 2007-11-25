@@ -1049,6 +1049,12 @@ static void menu2_render_settings_player(RECT main_view)
 			config.dynamic_camera ^= 1;
 			
 		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		if (ui2_do_button(&config.autoswitch_weapons, "Switch weapon on pickup", config.autoswitch_weapons, &button, ui2_draw_checkbox, 0))
+			config.autoswitch_weapons ^= 1;
+			
+		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		
+		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
 		if (ui2_do_button(&config.player_color_body, "Custom colors", config.player_use_custom_color, &button, ui2_draw_checkbox, 0))
 			config.player_use_custom_color = config.player_use_custom_color?0:1;
 		
