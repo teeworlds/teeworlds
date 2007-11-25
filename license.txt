@@ -1,0 +1,26 @@
+Copyright (c) 2007, Magnus Auvinen 
+ 
+All rights reserved. 
+ 
+This software is provided 'as-is', without any express or implied 
+warranty. In no event will the authors be held liable for any damages 
+arising from the use of this software. 
+ 
+Redistribution and use in source and binary forms, without modification, 
+are permitted.
+
+------------------------------------------------------------------------
+
+IMPORTANT NOTE! The source under src/engine/external are stripped
+libraries with their own licenses. Mostly BSD or zlib/libpng license.
+
+------------------------------------------------------------------------
+
+With that being said, contact us if there is anything you want to do
+that the license does not premit.
+
+Why we have choosen this licens is because we want people to be able to
+send in patches, bug-fixes and compile the game for their platform. We
+don't want to have several diffrent versions floating around the net
+with their own little features etc. There should only be one Teewars
+and that one should be the very best it can be.
