@@ -1,3 +1,4 @@
+/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #ifndef BASE_SYSTEM_H
 #define BASE_SYSTEM_H
 

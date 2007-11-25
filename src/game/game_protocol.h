@@ -1,3 +1,4 @@
+/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 // NOTE: Be very careful when editing this file as it will change the network version
 
 // --------- PHYSICS TWEAK! --------

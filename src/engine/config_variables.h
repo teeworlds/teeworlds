@@ -1,3 +1,4 @@
+/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include "../game/game_variables.h"
 
 MACRO_CONFIG_INT(volume, 200, 0, 255)

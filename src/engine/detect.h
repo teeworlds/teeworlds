@@ -1,3 +1,4 @@
+/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #ifndef BASELIB_FILE_CONFIG_H
 #define BASELIB_FILE_CONFIG_H
 

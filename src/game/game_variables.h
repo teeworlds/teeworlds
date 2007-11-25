@@ -1,3 +1,4 @@
+/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 MACRO_CONFIG_INT(key_move_left, 'A', 32, 512)
 MACRO_CONFIG_INT(key_move_right, 'D', 32, 512)
 MACRO_CONFIG_INT(key_jump, 32, 32, 512)

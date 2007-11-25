@@ -1,3 +1,4 @@
+/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include "system.h"
 #include "datafile.h"
 #include "external/zlib/zlib.h"

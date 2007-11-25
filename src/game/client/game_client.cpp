@@ -1,3 +1,4 @@
+/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <game/math.h>
 #include <stdlib.h>
 #include <stdio.h>

@@ -1,3 +1,4 @@
+/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <engine/system.h>
 #include <game/vmath.h>
 #include <game/math.h>

@@ -1,3 +1,4 @@
+/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 
 /* variable int packing */
 unsigned char *vint_pack(unsigned char *dst, int i);

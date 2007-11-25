@@ -1,3 +1,4 @@
+/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 /* AUTO GENERATED! DO NOT EDIT MANUALLY! */
 
 #include <string.h>

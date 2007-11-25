@@ -1,3 +1,4 @@
+/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <string.h>
 #include <engine/external/glfw/include/GL/glfw.h>
 
