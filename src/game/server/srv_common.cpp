@@ -115,7 +115,7 @@ void gameobject::post_reset()
 	
 void gameobject::on_player_info_change(class player *p)
 {
-	const int team_colors[2] = {54090, 10998628};
+	const int team_colors[2] = {65387, 10223467};
 	if(is_teamplay)
 	{
 		if(p->team >= 0 || p->team <= 1)

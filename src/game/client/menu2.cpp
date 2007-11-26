@@ -1439,23 +1439,38 @@ static void menu2_render_game(RECT main_view)
 
 int menu2_render()
 {
-	/*
-	gfx_mapscreen(0,0,2*4/3.0f,2);
-	gfx_clear(gui_color.r, gui_color.g, gui_color.b);
-	
-	animstate state;
-	anim_eval(&data->animations[ANIM_BASE], 0, &state);
-	//anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);
-	anim_eval_add(&state, &data->animations[ANIM_WALK], fmod(client_localtime(), 1.0f), 1.0f);
+	if(1)
+	{
+		gfx_mapscreen(0,0,10*4/3.0f,10);
+		gfx_clear(gui_color.r, gui_color.g, gui_color.b);
 		
-	tee_render_info info;
-	info.texture = skin_get(1)->org_texture;
-	info.color = vec4(1,1,1,1);
-	info.size = 1.0f; //ui2_scale()*16.0f;
-	render_tee(&state, &info, 0, vec2(sinf(client_localtime()*3), cosf(client_localtime()*3)), vec2(1,1));
-		
-	return 0;
-	*/
+		animstate state;
+		anim_eval(&data->animations[ANIM_BASE], 0, &state);
+		anim_eval_add(&state, &data->animations[ANIM_IDLE], 0, 1.0f);
+		//anim_eval_add(&state, &data->animations[ANIM_WALK], fmod(client_localtime(), 1.0f), 1.0f);
+			
+		for(int i = 0; i < skin_num(); i++)
+		{
+			float x = (i/8)*3;
+			float y = (i%8);
+			for(int c = 0; c < 2; c++)
+			{
+				//int colors[2] = {54090, 10998628};
+				//int colors[2] = {65432, 9895832}; // NEW
+				int colors[2] = {65387, 10223467}; // NEW
+				
+				tee_render_info info;
+				info.texture = skin_get(i)->color_texture;
+				info.color_feet = info.color_body = skin_get_color(colors[c]);
+				//info.color_feet = info.color_body = vec4(1,1,1,1);
+				info.size = 1.0f; //ui2_scale()*16.0f;
+				//render_tee(&state, &info, 0, vec2(sinf(client_localtime()*3), cosf(client_localtime()*3)), vec2(1+x+c,1+y));
+				render_tee(&state, &info, 0, vec2(1,0), vec2(1+x+c,1+y));
+			}
+		}
+			
+		return 0;
+	}
 	
 	gfx_mapscreen(0,0,800,600);
 	

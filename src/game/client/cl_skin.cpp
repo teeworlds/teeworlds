@@ -45,6 +45,43 @@ static void skinscan(const char *name, int is_dir, void *user)
 		d[i*step+2] = v;
 	}
 	
+	if(1)
+	{
+		int bs = 96; // body size
+		int pitch = info.width*4;
+		int freq[256] = {0};
+
+		for(int y = 0; y < bs; y++)
+			for(int x = 0; x < bs; x++)
+			{
+				if(d[y*pitch+x*4+3] > 128)
+					freq[d[y*pitch+x*4]]++;
+			}
+				
+		int org_weight = 0;
+		int new_weight = 192;
+		for(int i = 1; i < 256; i++)
+		{
+			if(freq[org_weight] < freq[i])
+				org_weight = i;
+		}
+
+		int inv_org_weight = 255-org_weight;
+		int inv_new_weight = 255-new_weight;
+		for(int y = 0; y < bs; y++)
+			for(int x = 0; x < bs; x++)
+			{
+				int v = d[y*pitch+x*4];
+				if(v <= org_weight)
+					v = (int)(((v/(float)org_weight) * new_weight));
+				else
+					v = (int)(((v-org_weight)/(float)inv_org_weight)*inv_new_weight + new_weight);
+				d[y*pitch+x*4] = v;
+				d[y*pitch+x*4+1] = v;
+				d[y*pitch+x*4+2] = v;
+			}
+	}
+	
 	skins[num_skins].color_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data);
 	mem_free(info.data);
 
