@@ -26,18 +26,7 @@ int gameobject_tdm::on_player_death(class player *victim, class player *killer, 
 
 void gameobject_tdm::tick()
 {
-	if(game_over_tick == -1 && !warmup)
-	{
-		// check score win condition
-		if((config.scorelimit > 0 && (teamscore[0] >= config.scorelimit || teamscore[1] >= config.scorelimit)) ||
-			(config.timelimit > 0 && (server_tick()-round_start_tick) >= config.timelimit*server_tickspeed()*60))
-		{
-			if(teamscore[0] != teamscore[0])
-				endround();
-			else
-				sudden_death = 1;
-		}
-	}
+	do_team_wincheck();
 	
 	gameobject::tick();
 }

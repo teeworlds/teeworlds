@@ -199,4 +199,20 @@ int gameobject::getteam(int notthisid)
 	return numplayers[0] > numplayers[1] ? 1 : 0;
 }
 
+void gameobject::do_team_wincheck()
+{
+	if(game_over_tick == -1 && !warmup)
+	{
+		// check score win condition
+		if((config.scorelimit > 0 && (teamscore[0] >= config.scorelimit || teamscore[1] >= config.scorelimit)) ||
+			(config.timelimit > 0 && (server_tick()-round_start_tick) >= config.timelimit*server_tickspeed()*60))
+		{
+			if(teamscore[0] != teamscore[1])
+				endround();
+			else
+				sudden_death = 1;
+		}
+	}
+}
+
 gameobject *gameobj = 0;

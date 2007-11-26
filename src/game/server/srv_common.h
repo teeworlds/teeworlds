@@ -128,6 +128,7 @@ public:
 	int gametype;
 	gameobject();
 
+	void do_team_wincheck();
 	void do_warmup(int seconds);
 	
 	void startround();
