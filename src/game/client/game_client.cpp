@@ -1602,7 +1602,6 @@ void render_sun(float x, float y)
 	gfx_quads_end();
 }
 
-static bool emoticon_selector_inactive_override = false;
 static vec2 emoticon_selector_mouse;
 
 void emoticon_selector_reset()
@@ -1625,29 +1624,18 @@ int emoticon_selector_render()
 	if (selected_angle < 0)
 		selected_angle += 2*pi;
 
-	static bool mouse_down = false;
+	//static bool mouse_down = false;
 	bool return_now = false;
-	int selected_emoticon;
+	int selected_emoticon = -1;
 
-	if (length(emoticon_selector_mouse) < 50)
-		selected_emoticon = -1;
-	else
+	if (length(emoticon_selector_mouse) > 50)
 		selected_emoticon = (int)(selected_angle / (2*pi) * 12.0f);
 
-	if (inp_key_pressed(KEY_MOUSE_1))
+	if(!inp_key_pressed(config.key_emoticon))
 	{
-		mouse_down = true;
-	}
-	else if (mouse_down)
-	{
-		mouse_down = false;
-
-		if (selected_emoticon != -1)
-		{
-			return_now = true;
-			emoticon_selector_active = false;
-			emoticon_selector_inactive_override = true;
-		}
+		return_now = true;
+		emoticon_selector_active = false;
+		//emoticon_selector_inactive_override = true;
 	}
 
 	gfx_mapscreen(0,0,400,300);
@@ -1961,22 +1949,6 @@ void render_world(float center_x, float center_y, float zoom)
 	damageind.render();
 }
 
-static void next_skin()
-{
-	int skin_id = 0;
-	for(int i = 0; i < skin_num(); i++)
-	{
-		if(strcmp(config.player_skin, skin_get(i)->name) == 0)
-		{
-			skin_id = (i+1)%skin_num();
-			break;
-		}
-	}
-	
-	config_set_player_skin(&config, skin_get(skin_id)->name);
-	send_info(false);
-}
-
 static void do_input(int *v, int key)
 {
 	*v += inp_key_presses(key) + inp_key_releases(key);
@@ -2104,7 +2076,7 @@ void render_game()
 		inp_clear();
 
 	// fetch new input
-	if(!menu_active && (!emoticon_selector_active || emoticon_selector_inactive_override))
+	if(!menu_active && !emoticon_selector_active)
 	{
 		int x, y;
 		inp_mouse_relative(&x, &y);
@@ -2326,7 +2298,7 @@ void render_game()
 		gfx_quads_begin();
 
 		// render cursor
-		if (!menu_active && (!emoticon_selector_active || emoticon_selector_inactive_override))
+		if (!menu_active && !emoticon_selector_active)
 		{
 			select_sprite(data->weapons[local_character->weapon%data->num_weapons].sprite_cursor);
 			float cursorsize = 64;
@@ -2621,25 +2593,25 @@ void render_game()
 		return;
 	}
 
-	if(chat_mode == CHATMODE_NONE && !menu_active && !spectate && inp_key_pressed(config.key_emoticon))
+	if(chat_mode == CHATMODE_NONE && !menu_active && !spectate)
 	{
-		if (!emoticon_selector_active)
+		if(!emoticon_selector_active && inp_key_pressed(config.key_emoticon))
 		{
 			emoticon_selector_active = true;
 			emoticon_selector_reset();
 		}
 	}
 	else
-	{
 		emoticon_selector_active = false;
-		emoticon_selector_inactive_override = false;
-	}
 
-	if (emoticon_selector_active && !emoticon_selector_inactive_override)
+	if(emoticon_selector_active)
 	{
 		int emoticon = emoticon_selector_render();
 		if (emoticon != -1)
+		{
 			send_emoticon(emoticon);
+			emoticon_selector_active = false;
+		}
 	}
 
 	// render score board
