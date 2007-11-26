@@ -23,8 +23,8 @@ public:
 	vec2 stand_pos;
 	
 	int team;
-	int spawntick;
 	int at_stand;
+	int drop_tick;
 	
 	flag(int _team);
 

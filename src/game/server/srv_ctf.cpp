@@ -43,6 +43,7 @@ int gameobject_ctf::on_player_death(class player *victim, class player *killer, 
 			had_flag |= 2;
 		if(f && f->carrying_player == victim)
 		{
+			f->drop_tick = server_tick();
 			f->carrying_player = 0;
 			had_flag |= 1;
 		}
@@ -101,8 +102,13 @@ void gameobject_ctf::tick()
 			
 			if(!f->carrying_player)
 			{
-				f->vel.y += gravity;
-				move_box(&f->pos, &f->vel, vec2(f->phys_size, f->phys_size), 0.5f);
+				if(server_tick() > f->drop_tick + SERVER_TICK_SPEED*30)
+					f->reset();
+				else
+				{
+					f->vel.y += gravity;
+					move_box(&f->pos, &f->vel, vec2(f->phys_size, f->phys_size), 0.5f);
+				}
 			}
 		}
 	}
@@ -127,14 +133,10 @@ void flag::reset()
 	carrying_player = 0;
 	at_stand = 1;
 	pos = stand_pos;
-	spawntick = -1;
 }
 
 void flag::snap(int snapping_client)
 {
-	if(spawntick != -1)
-		return;
-
 	obj_flag *flag = (obj_flag *)snap_new_item(OBJTYPE_FLAG, team, sizeof(obj_flag));
 	flag->x = (int)pos.x;
 	flag->y = (int)pos.y;
