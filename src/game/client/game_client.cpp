@@ -2314,6 +2314,9 @@ void render_game()
 			float cursorsize = 64;
 			draw_sprite(local_target_pos.x, local_target_pos.y, cursorsize);
 		}
+		
+		float x = 5;
+		float y = 5;
 
 		// render ammo count
 		// render gui stuff
@@ -2323,10 +2326,10 @@ void render_game()
 		// if weaponstage is active, put a "glow" around the stage ammo
 		select_sprite(SPRITE_TEE_BODY);
 		for (int i = 0; i < local_character->weaponstage; i++)
-			gfx_quads_drawTL(local_character->ammocount * 12 -i*12, 32, 11, 11);
+			gfx_quads_drawTL(x+local_character->ammocount * 12 -i*12, y+22, 11, 11);
 		select_sprite(data->weapons[local_character->weapon%data->num_weapons].sprite_proj);
 		for (int i = 0; i < local_character->ammocount; i++)
-			gfx_quads_drawTL(10+i*12,34,10,10);
+			gfx_quads_drawTL(x+i*12,y+24,10,10);
 
 		gfx_quads_end();
 
@@ -2337,21 +2340,21 @@ void render_game()
 		// render health
 		select_sprite(SPRITE_HEALTH_FULL);
 		for(; h < local_character->health; h++)
-			gfx_quads_drawTL(10+h*12,10,10,10);
+			gfx_quads_drawTL(x+h*12,y,10,10);
 
 		select_sprite(SPRITE_HEALTH_EMPTY);
 		for(; h < 10; h++)
-			gfx_quads_drawTL(10+h*12,10,10,10);
+			gfx_quads_drawTL(x+h*12,y,10,10);
 
 		// render armor meter
 		h = 0;
 		select_sprite(SPRITE_ARMOR_FULL);
 		for(; h < local_character->armor; h++)
-			gfx_quads_drawTL(10+h*12,22,10,10);
+			gfx_quads_drawTL(x+h*12,y+12,10,10);
 
 		select_sprite(SPRITE_ARMOR_EMPTY);
 		for(; h < 10; h++)
-			gfx_quads_drawTL(10+h*12,22,10,10);
+			gfx_quads_drawTL(x+h*12,y+12,10,10);
 		gfx_quads_end();
 	}
 
