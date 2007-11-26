@@ -929,12 +929,15 @@ void player::tick()
 		}
 	}
 
-	if(team == -1)
-	{
-		// spectator
-		return;
-	}
+	// enable / disable physics
+	if(team == -1 || dead)
+		world->core.players[client_id] = 0;
+	else
+		world->core.players[client_id] = &core;
 
+	// spectator
+	if(team == -1)
+		return;
 
 	if(spawning)
 		try_respawn();
@@ -985,6 +988,12 @@ void player::tick_defered()
 	core.quantize();
 	//dbg_msg("", "%d %.0f,%.0f -> %.0f,%.0f", client_id, pos.x, pos.y, core.pos.x, core.pos.y);
 	pos = core.pos;
+	
+	if(team == -1)
+	{
+		pos.x = input.target_x;
+		pos.y = input.target_y;
+	}
 
 	// apply the new position
 	//pos = defered_pos;
@@ -1689,10 +1698,7 @@ void mods_init()
 
 	// setup core world
 	for(int i = 0; i < MAX_CLIENTS; i++)
-	{
 		players[i].core.world = &world->core;
-		world->core.players[i] = &players[i].core;
-	}
 
 	//
 	int start, num;

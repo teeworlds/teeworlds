@@ -760,6 +760,7 @@ const char *mods_net_version();
 int server_getclientinfo(int client_id, CLIENT_INFO *info);
 const char *server_clientname(int client_id);
 void server_setclientname(int client_id, const char *name);
+void server_setprogression(int v);
 
 int server_tick();
 int server_tickspeed();
