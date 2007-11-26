@@ -2624,7 +2624,7 @@ void render_game()
 		return;
 	}
 
-	if(chat_mode == CHATMODE_NONE && !menu_active && inp_key_pressed(config.key_emoticon))
+	if(chat_mode == CHATMODE_NONE && !menu_active && !spectate && inp_key_pressed(config.key_emoticon))
 	{
 		if (!emoticon_selector_active)
 		{
