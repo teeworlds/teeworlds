@@ -1439,7 +1439,7 @@ static void menu2_render_game(RECT main_view)
 
 int menu2_render()
 {
-	if(1)
+	if(0)
 	{
 		gfx_mapscreen(0,0,10*4/3.0f,10);
 		gfx_clear(gui_color.r, gui_color.g, gui_color.b);
