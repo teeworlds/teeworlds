@@ -543,7 +543,7 @@ static void server_send_serverinfo(NETADDR4 *addr)
 
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(!clients[i].state != SRVCLIENT_STATE_EMPTY)
+		if(clients[i].state != SRVCLIENT_STATE_EMPTY)
 		{
 			packer_add_string(&p, clients[i].name, 48);  /* player name */
 			packer_add_string(&p, "0", 6); /* score */
