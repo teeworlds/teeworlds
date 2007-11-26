@@ -974,7 +974,7 @@ static void render_powerup(const obj_powerup *prev, const obj_powerup *current)
 static void render_flag(const obj_flag *prev, const obj_flag *current)
 {
 	float angle = 0.0f;
-	float size = 36.0f;
+	float size = 42.0f;
 
     gfx_blend_normal();
     gfx_texture_set(data->images[IMAGE_GAME].id);
