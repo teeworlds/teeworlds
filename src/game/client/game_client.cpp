@@ -1747,10 +1747,13 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 	{
 		gfx_pretty_text(x+10, y, 64, title, -1);
 
-		char buf[128];
-		sprintf(buf, "%d", gameobj->teamscore[team&1]);
-		tw = gfx_pretty_text_width(64, buf, -1);
-		gfx_pretty_text(x+w-tw-40, y, 64, buf, -1);
+		if(gameobj)
+		{
+			char buf[128];
+			sprintf(buf, "%d", gameobj->teamscore[team&1]);
+			tw = gfx_pretty_text_width(64, buf, -1);
+			gfx_pretty_text(x+w-tw-40, y, 64, buf, -1);
+		}
 	}
 
 	y += 64.0f;
@@ -1965,7 +1968,14 @@ void render_game()
 	bool spectate = false;
 
 	if(config.cl_predict)
-		local_character_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_intrapredtick());
+	{
+		if(!local_character || (local_character->health < 0) || (gameobj && gameobj->game_over))
+		{
+			// don't use predicted
+		}
+		else
+			local_character_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_intrapredtick());
+	}
 	else if(local_character && local_prev_character)
 	{
 		local_character_pos = mix(
@@ -2616,7 +2626,7 @@ void render_game()
 
 	// render score board
 	if(inp_key_pressed(KEY_TAB) || // user requested
-		(!spectate && (local_character && local_character->health == -1)) || // not spectating and is dead
+		(!spectate && (!local_character || local_character->health < 0)) || // not spectating and is dead
 		(gameobj && gameobj->game_over) // game over
 		)
 	{

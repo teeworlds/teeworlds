@@ -960,20 +960,6 @@ void player::tick()
 
 	// handle weapons
 	handle_weapons();
-	/*
-	if (!(retflags & (MODIFIER_RETURNFLAGS_OVERRIDEVELOCITY | MODIFIER_RETURNFLAGS_OVERRIDEPOSITION)))
-	{
-		// add gravity
-		//if (!(retflags & MODIFIER_RETURNFLAGS_OVERRIDEGRAVITY))
-			//vel.y += gravity;
-
-		// do the move
-		defered_pos = pos;
-		move_box(&core.pos, &vel, vec2(phys_size, phys_size), 0);
-	}*/
-
-	//defered_pos = core.pos;
-	//jumped = core.jumped;
 
 	state = input.state;
 
@@ -984,19 +970,18 @@ void player::tick()
 
 void player::tick_defered()
 {
-	core.move();
-	core.quantize();
-	//dbg_msg("", "%d %.0f,%.0f -> %.0f,%.0f", client_id, pos.x, pos.y, core.pos.x, core.pos.y);
-	pos = core.pos;
+	if(!dead)
+	{
+		core.move();
+		core.quantize();
+		pos = core.pos;
+	}
 	
 	if(team == -1)
 	{
 		pos.x = input.target_x;
 		pos.y = input.target_y;
 	}
-
-	// apply the new position
-	//pos = defered_pos;
 }
 
 void player::die(int killer, int weapon)
