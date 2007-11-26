@@ -1987,9 +1987,6 @@ static void do_input(int *v, int key)
 
 void render_game()
 {
-	if(inp_key_down('L'))
-		next_skin();
-	
 	float width = 400*3.0f;
 	float height = 300*3.0f;
 
