@@ -407,7 +407,6 @@ void player::set_team(int new_team)
 {
 	team = new_team;
 	die(client_id, -1);
-	score--;
 
 	dbg_msg("game", "cid=%d team=%d", client_id, team);
 
