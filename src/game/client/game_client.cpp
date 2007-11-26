@@ -2530,9 +2530,9 @@ void render_game()
 				gfx_texture_set(-1);
 				gfx_quads_begin();
 				if(t == 0)
-					gfx_setcolor(1,0,0,0.5f);
+					gfx_setcolor(1,0,0,0.25f);
 				else
-					gfx_setcolor(0,0,1,0.5f);
+					gfx_setcolor(0,0,1,0.25f);
 				draw_round_rect(400-40, 300-40-15+t*20, 50, 18, 5.0f);
 				gfx_quads_end();
 
