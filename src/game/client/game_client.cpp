@@ -1296,10 +1296,16 @@ static void render_player(
 
 	if(info.local && config.cl_predict)
 	{
-		// apply predicted results
-		predicted_player.write(&player);
-		predicted_prev_player.write(&prev);
-		intratick = client_intrapredtick();
+		if(!local_character || (local_character->health < 0) || (gameobj && gameobj->game_over))
+		{
+		}
+		else
+		{
+			// apply predicted results
+			predicted_player.write(&player);
+			predicted_prev_player.write(&prev);
+			intratick = client_intrapredtick();
+		}
 	}
 
 	// TODO: proper skin selection
