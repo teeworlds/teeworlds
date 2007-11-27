@@ -261,6 +261,10 @@ int gfx_window_active()
 	return glfwGetWindowParam(GLFW_ACTIVE) == GL_TRUE ? 1 : 0;
 }
 
+int gfx_window_open()
+{
+	return glfwGetWindowParam(GLFW_OPENED) == GL_TRUE ? 1 : 0;
+}
 
 VIDEO_MODE fakemodes[] = {
 	{320,240,8,8,8}, {400,300,8,8,8}, {640,480,8,8,8},

@@ -24,6 +24,7 @@ enum
 	CHN_GUI=0,
 	CHN_MUSIC,
 	CHN_WORLD,
+	CHN_GLOBAL,
 };
 
 data_container *data = 0x0;
@@ -550,7 +551,8 @@ extern "C" void modc_init()
 	// setup sound channels
 	snd_set_channel(CHN_GUI, 1.0f, 0.0f);
 	snd_set_channel(CHN_MUSIC, 1.0f, 0.0f);
-	snd_set_channel(CHN_WORLD, 1.0f, 1.0f);
+	snd_set_channel(CHN_WORLD, 0.9f, 1.0f);
+	snd_set_channel(CHN_GLOBAL, 1.0f, 0.0f);
 
 	// load the data container
 	data = load_data_from_memory(internal_data);
@@ -718,22 +720,11 @@ static void process_events(int s)
 				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 128.0f, 0.985f);
 			}
 		}
-		else if(item.type == EVENT_SOUND)
+		else if(item.type == EVENT_SOUND_WORLD)
 		{
 			ev_sound *ev = (ev_sound *)data;
-			vec2 p(ev->x, ev->y);
-			int soundid = ev->sound; //(ev->sound & SOUND_MASK);
-			//bool bstartloop = (ev->sound & SOUND_LOOPFLAG_STARTLOOP) != 0;
-			//bool bstoploop = (ev->sound & SOUND_LOOPFLAG_STOPLOOP) != 0;
-			//float vol, pan;
-			//sound_vol_pan(p, &vol, &pan);
-
-			if(soundid >= 0 && soundid < NUM_SOUNDS)
-			{
-				// TODO: we need to control the volume of the diffrent sounds
-				// 		depening on the category
-				snd_play_random(CHN_WORLD, soundid, 1.0f, p);
-			}
+			if(ev->sound >= 0 && ev->sound < NUM_SOUNDS)
+				snd_play_random(CHN_WORLD, ev->sound, 1.0f, vec2(ev->x, ev->y));
 		}
 	}
 }
@@ -2788,6 +2779,11 @@ extern "C" void modc_message(int msg)
 		int emoticon = msg_unpack_int();
 		client_datas[cid].emoticon = emoticon;
 		client_datas[cid].emoticon_start = client_tick();
+	}
+	else if(msg == MSG_SOUND_GLOBAL)
+	{
+		int soundid = msg_unpack_int();
+		snd_play_random(CHN_GLOBAL, soundid, 1.0f, vec2(0,0));
 	}
 }
 

@@ -2,6 +2,9 @@
 #include "../game.h"
 #include "data.h"
 
+
+void create_sound_global(int sound, int target=-1);
+
 //
 class event_handler
 {

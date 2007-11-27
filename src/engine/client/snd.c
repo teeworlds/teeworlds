@@ -381,11 +381,12 @@ int snd_load_wv(const char *filename)
 			return -1;
 		}
 
+		/*
 		if(snd->rate != 44100)
 		{
 			dbg_msg("sound/wv", "file is %d Hz, not 44100 Hz. filename='%s'", snd->rate, filename);
 			return -1;
-		}
+		}*/
 		
 		if(bitspersample != 16)
 		{

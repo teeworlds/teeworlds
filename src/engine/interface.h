@@ -118,6 +118,7 @@ int gfx_get_video_modes(VIDEO_MODE *list, int maxcount);
 void gfx_set_vsync(int val);
 
 int gfx_window_active();
+int gfx_window_open();
 
 /* textures */
 /*

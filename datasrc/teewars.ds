@@ -179,6 +179,22 @@ sounds {
 	chat_client {
 		"data/audio/sfx_msg-client.wv"
 	}
+
+	ctf_drop {
+		"data/audio/sfx_ctf_drop.wv"
+	}
+
+	ctf_return {
+		"data/audio/sfx_ctf_rtn.wv"
+	}
+	
+	ctf_grab {
+		"data/audio/sfx_ctf_grab_pl.wv"
+	}
+
+	ctf_capture {
+		"data/audio/sfx_ctf_cap_pl.wv"
+	}
 }
 
 

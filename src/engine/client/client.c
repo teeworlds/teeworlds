@@ -989,6 +989,9 @@ static void client_run()
 		/* panic quit button */
 		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_pressed('Q'))
 			break;
+		
+		if(!gfx_window_open())
+			break;
 			
 		/* pump the network */
 		client_pump_network();

@@ -1398,7 +1398,7 @@ void create_targetted_sound(vec2 pos, int sound, int target, int loopingflags)
 		return;
 
 	// create a sound
-	ev_sound *ev = (ev_sound *)events.create(EVENT_SOUND, sizeof(ev_sound), target);
+	ev_sound *ev = (ev_sound *)events.create(EVENT_SOUND_WORLD, sizeof(ev_sound), target);
 	if(ev)
 	{
 		ev->x = (int)pos.x;
@@ -1410,6 +1410,16 @@ void create_targetted_sound(vec2 pos, int sound, int target, int loopingflags)
 void create_sound(vec2 pos, int sound, int loopingflags)
 {
 	create_targetted_sound(pos, sound, -1, loopingflags);
+}
+
+void create_sound_global(int sound, int target)
+{
+	if (sound < 0)
+		return;
+
+	msg_pack_start(MSG_SOUND_GLOBAL, MSGFLAG_VITAL);
+	msg_pack_int(sound);
+	server_send_msg(-1);
 }
 
 // TODO: should be more general
