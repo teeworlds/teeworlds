@@ -110,8 +110,6 @@ void gameobject::post_reset()
 			players[i].respawn();
 	}
 }
-
-
 	
 void gameobject::on_player_info_change(class player *p)
 {
@@ -165,6 +163,34 @@ void gameobject::tick()
 			startround();
 		}
 	}
+	
+	
+	// update browse info
+	int prog = -1;
+	if(config.timelimit > 0)
+		prog = max(prog, (server_tick()-round_start_tick) * 100 / (config.timelimit*server_tickspeed()*60));
+
+	if(config.scorelimit)
+	{
+		if(is_teamplay)
+		{
+			prog = max(prog, (teamscore[0]*100)/config.scorelimit);
+			prog = max(prog, (teamscore[1]*100)/config.scorelimit);
+		}
+		else
+		{
+			for(int i = 0; i < MAX_CLIENTS; i++)
+			{
+				if(players[i].client_id != -1)
+					prog = max(prog, (players[i].score*100)/config.scorelimit);
+			}
+		}
+	}
+
+	if(warmup)
+		prog = -1;
+	
+	server_setbrowseinfo(gametype, prog);
 }
 
 void gameobject::snap(int snapping_client)

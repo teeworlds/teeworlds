@@ -25,6 +25,9 @@ static SNAPBUILD builder;
 static int64 game_start_time;
 static int current_tick = 0;
 
+static int browseinfo_gametype = -1;
+static int browseinfo_progression = -1;
+
 static int64 lastheartbeat;
 static NETADDR4 master_server;
 
@@ -174,6 +177,12 @@ void server_setclientname(int client_id, const char *name)
 	if(client_id < 0 || client_id > MAX_CLIENTS || clients[client_id].state < SRVCLIENT_STATE_READY)
 		return;
 	strncpy(clients[client_id].name, name, MAX_NAME_LENGTH);
+}
+
+void server_setbrowseinfo(int game_type, int progression)
+{
+	browseinfo_gametype = game_type;
+	browseinfo_progression = progression;
 }
 
 int server_tick()
@@ -534,9 +543,21 @@ static void server_send_serverinfo(NETADDR4 *addr)
 	packer_add_string(&p, mods_net_version(), 32);
 	packer_add_string(&p, config.sv_name, 64);
 	packer_add_string(&p, config.sv_map, 32);
-	packer_add_string(&p, "0", 2); /* gametype */
-	packer_add_string(&p, "0", 2); /* flags */
-	packer_add_string(&p, "0", 4); /* progression */
+
+	/* gametype */
+	sprintf(buf, "%d", browseinfo_gametype);
+	packer_add_string(&p, buf, 2);
+
+	/* flags */
+	i = 0;
+	if(strlen(config.password))
+		i |= 1;
+	sprintf(buf, "%d", i);
+	packer_add_string(&p, buf, 2);
+
+	/* progression */
+	sprintf(buf, "%d", browseinfo_progression);
+	packer_add_string(&p, buf, 4);
 	
 	sprintf(buf, "%d", c); packer_add_string(&p, buf, 3);  /* num players */
 	sprintf(buf, "%d", netserver_max_clients(net)); packer_add_string(&p, buf, 3); /* max players */
