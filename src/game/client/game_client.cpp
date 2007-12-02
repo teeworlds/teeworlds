@@ -34,6 +34,8 @@ int gametype = GAMETYPE_DM;
 static int music_menu = -1;
 static int music_menu_id = -1;
 
+extern void modmenu_render();
+
 enum
 {
 	CHATMODE_NONE=0,
@@ -545,9 +547,6 @@ static void render_loading(float percent)
 
 extern "C" void modc_init()
 {
-	// init menu
-	modmenu_init();
-	
 	// setup sound channels
 	snd_set_channel(CHN_GUI, 1.0f, 0.0f);
 	snd_set_channel(CHN_MUSIC, 1.0f, 0.0f);
@@ -600,7 +599,6 @@ extern "C" void modc_entergame()
 extern "C" void modc_shutdown()
 {
 	// shutdown the menu
-	modmenu_shutdown();
 }
 
 static void process_events(int s)
@@ -2596,10 +2594,7 @@ void render_game()
 
 	if (menu_active)
 	{
-		if (modmenu_render(true))
-			menu_active = false;
-
-		//ingamemenu_render();
+		modmenu_render();
 		return;
 	}
 
@@ -2676,13 +2671,9 @@ extern "C" void modc_render()
 	else // if (client_state() != CLIENTSTATE_CONNECTING && client_state() != CLIENTSTATE_LOADING)
 	{
 		if (music_menu_id == -1)
-		{
 			music_menu_id = snd_play(CHN_MUSIC, music_menu, SNDFLAG_LOOP);
-		}
 
-		//netaddr4 server_address;
-		if(modmenu_render(false) == -1)
-			client_quit();
+		modmenu_render();
 	}
 
 	//
@@ -2701,9 +2692,9 @@ extern "C" void modc_statechange(int state, int old)
 	 	menu_do_disconnected();
 	 	menu_game_active = false;
 	}
-	if(state == CLIENTSTATE_CONNECTING)
+	else if(state == CLIENTSTATE_CONNECTING)
 		menu_do_connecting();
-	if (state == CLIENTSTATE_ONLINE)
+	else if (state == CLIENTSTATE_ONLINE)
 	{
 		menu_active = false;
 	 	menu_game_active = true;

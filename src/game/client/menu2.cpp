@@ -1536,3 +1536,54 @@ int menu2_render()
 }
 
 
+void menu_do_disconnected()
+{
+}
+
+void menu_do_connecting()
+{
+}
+
+void menu_do_connected()
+{
+}
+
+void modmenu_render()
+{
+	static int mouse_x = 0;
+	static int mouse_y = 0;
+
+    // handle mouse movement
+    float mx, my;
+    {
+        int rx, ry;
+        inp_mouse_relative(&rx, &ry);
+        mouse_x += rx;
+        mouse_y += ry;
+        if(mouse_x < 0) mouse_x = 0;
+        if(mouse_y < 0) mouse_y = 0;
+        if(mouse_x > gfx_screenwidth()) mouse_x = gfx_screenwidth();
+        if(mouse_y > gfx_screenheight()) mouse_y = gfx_screenheight();
+            
+        // update the ui
+        mx = (mouse_x/(float)gfx_screenwidth())*800.0f;
+        my = (mouse_y/(float)gfx_screenheight())*600.0f;
+            
+        int buttons = 0;
+        if(inp_key_pressed(KEY_MOUSE_1)) buttons |= 1;
+        if(inp_key_pressed(KEY_MOUSE_2)) buttons |= 2;
+        if(inp_key_pressed(KEY_MOUSE_3)) buttons |= 4;
+            
+        ui_update(mx,my,mx*3.0f,my*3.0f,buttons);
+    }
+    
+	menu2_render();
+
+    gfx_texture_set(data->images[IMAGE_CURSOR].id);
+    gfx_quads_begin();
+    gfx_setcolor(1,1,1,1);
+    gfx_quads_drawTL(mx,my,24,24);
+    gfx_quads_end();
+
+	inp_clear();
+}

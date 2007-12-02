@@ -1,4 +1,6 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+#if 0
+
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
@@ -1859,3 +1861,5 @@ extern "C" int modmenu_render(int ingame) // TODO: nastyness
 
 	return r;
 }
+
+#endif

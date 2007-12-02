@@ -719,32 +719,6 @@ void modc_render();
 */
 void modc_statechange(int new_state, int old_state);
 
-/*
-    Group: Menu Callbacks
-*/
-/*
-    Function: modmenu_init
-        Called when the menu starts.
-    
-    Remarks:
-        The menu should load resources that are used during the entire
-        time of the menu use.
-*/
-void modmenu_init();
-
-/*
-    Function: modmenu_shutdown
-        Called when the menu closes down.
-*/
-void modmenu_shutdown();
-
-/*
-    Function: modmenu_render
-        Called every frame to let the menu render it self.
-*/
-int modmenu_render(int ingame);
-
-
 /* undocumented callbacks */
 void modc_connected();
 void modc_message(int msg);

@@ -47,6 +47,7 @@ static int64 local_start_time;
 
 static int debug_font;
 static float frametime = 0.0001f;
+static int frames = 0;
 static NETADDR4 server_address;
 static int window_must_refocus = 0;
 static int snaploss = 0;
@@ -827,12 +828,99 @@ static void client_pump_network()
 		client_process_packet(&packet);
 }
 
+static void client_update()
+{
+
+	/* switch snapshot */
+	if(recived_snapshots >= 3)
+	{
+		int repredict = 0;
+		int64 now = st_get(&game_time, time_get());
+
+		while(1)
+		{
+			SNAPSTORAGE_HOLDER *cur = snapshots[SNAP_CURRENT];
+			int64 tickstart = (cur->tick)*time_freq()/50;
+
+			if(tickstart < now)
+			{
+				SNAPSTORAGE_HOLDER *next = snapshots[SNAP_CURRENT]->next;
+				if(next)
+				{
+					snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
+					snapshots[SNAP_CURRENT] = next;
+					
+					/* set tick */
+					current_tick = snapshots[SNAP_CURRENT]->tick;
+					
+					if(snapshots[SNAP_CURRENT] && snapshots[SNAP_PREV])
+					{
+						modc_newsnapshot();
+						repredict = 1;
+					}
+				}
+				else
+					break;
+			}
+			else
+				break;
+		}
+
+		if(snapshots[SNAP_CURRENT] && snapshots[SNAP_PREV])
+		{
+			int64 curtick_start = (snapshots[SNAP_CURRENT]->tick)*time_freq()/50;
+			int64 prevtick_start = (snapshots[SNAP_PREV]->tick)*time_freq()/50;
+			int64 pred_now = st_get(&predicted_time, time_get());
+			/*tg_add(&predicted_time_graph, pred_now, 0); */
+			int prev_pred_tick = (int)(pred_now*50/time_freq());
+			int new_pred_tick = prev_pred_tick+1;
+
+			intratick = (now - prevtick_start) / (float)(curtick_start-prevtick_start);
+
+			graph_add(&intra_graph, intratick*0.25f);
+
+			curtick_start = new_pred_tick*time_freq()/50;
+			prevtick_start = prev_pred_tick*time_freq()/50;
+			intrapredtick = (pred_now - prevtick_start) / (float)(curtick_start-prevtick_start);
+			
+			if(new_pred_tick > current_predtick)
+			{
+				current_predtick = new_pred_tick;
+				repredict = 1;
+				
+				/* send input */
+				client_send_input();
+			}
+		}
+
+		/* only do sane predictions */
+		if(repredict)
+		{
+			if(current_predtick > current_tick && current_predtick < current_tick+50)
+				modc_predict();
+		}
+	}
+
+	/* STRESS TEST: join the server again */
+	if(client_state() == CLIENTSTATE_OFFLINE && config.stress && (frames%100) == 0)
+		client_connect(config.cl_stress_server);
+	
+	/* pump the network */
+	client_pump_network();
+	
+	/* update the server browser */
+	client_serverbrowse_update();
+}
+
+extern int editor_update_and_render();
+extern void editor_init();
+
 static void client_run()
 {
 	NETADDR4 bindaddr;
 	int64 reporttime = time_get();
 	int64 reportinterval = time_freq()*1;
-	int frames = 0;
+	int editor_active = 0;
 
 	local_start_time = time_get();
 	snapshot_part = 0;
@@ -840,6 +928,9 @@ static void client_run()
 	/* init graphics and sound */
 	if(!gfx_init())
 		return;
+
+	/* init the editor */
+	editor_init();
 
 	/* sound is allowed to fail */
 	snd_init();
@@ -866,80 +957,6 @@ static void client_run()
 	{	
 		int64 frame_start_time = time_get();
 		frames++;
-
-		/* switch snapshot */
-		if(recived_snapshots >= 3)
-		{
-			int repredict = 0;
-			int64 now = st_get(&game_time, time_get());
-
-			while(1)
-			{
-				SNAPSTORAGE_HOLDER *cur = snapshots[SNAP_CURRENT];
-				int64 tickstart = (cur->tick)*time_freq()/50;
-
-				if(tickstart < now)
-				{
-					SNAPSTORAGE_HOLDER *next = snapshots[SNAP_CURRENT]->next;
-					if(next)
-					{
-						snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
-						snapshots[SNAP_CURRENT] = next;
-						
-						/* set tick */
-						current_tick = snapshots[SNAP_CURRENT]->tick;
-						
-						if(snapshots[SNAP_CURRENT] && snapshots[SNAP_PREV])
-						{
-							modc_newsnapshot();
-							repredict = 1;
-						}
-					}
-					else
-						break;
-				}
-				else
-					break;
-			}
-
-			if(snapshots[SNAP_CURRENT] && snapshots[SNAP_PREV])
-			{
-				int64 curtick_start = (snapshots[SNAP_CURRENT]->tick)*time_freq()/50;
-				int64 prevtick_start = (snapshots[SNAP_PREV]->tick)*time_freq()/50;
-				int64 pred_now = st_get(&predicted_time, time_get());
-				/*tg_add(&predicted_time_graph, pred_now, 0); */
-				int prev_pred_tick = (int)(pred_now*50/time_freq());
-				int new_pred_tick = prev_pred_tick+1;
-
-				intratick = (now - prevtick_start) / (float)(curtick_start-prevtick_start);
-
-				graph_add(&intra_graph, intratick*0.25f);
-
-				curtick_start = new_pred_tick*time_freq()/50;
-				prevtick_start = prev_pred_tick*time_freq()/50;
-				intrapredtick = (pred_now - prevtick_start) / (float)(curtick_start-prevtick_start);
-				
-				if(new_pred_tick > current_predtick)
-				{
-					current_predtick = new_pred_tick;
-					repredict = 1;
-					
-					/* send input */
-					client_send_input();
-				}
-			}
-
-			/* only do sane predictions */
-			if(repredict)
-			{
-				if(current_predtick > current_tick && current_predtick < current_tick+50)
-					modc_predict();
-			}
-		}
-
-		/* STRESS TEST: join the server again */
-		if(client_state() == CLIENTSTATE_OFFLINE && config.stress && (frames%100) == 0)
-			client_connect(config.cl_stress_server);
 		
 		/* update input */
 		inp_update();
@@ -972,6 +989,7 @@ static void client_run()
 			gfx_screenshot();
 
 		/* some debug keys */
+		/*
 		if(config.debug)
 		{
 			if(inp_key_pressed(KEY_F1))
@@ -984,34 +1002,41 @@ static void client_run()
 				ack_game_tick = -1;
 				client_send_input();
 			}
-		}
+		}*/
 
 		/* panic quit button */
 		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_pressed('Q'))
 			break;
+
+		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_down('E'))
+			editor_active = editor_active^1;
 		
 		if(!gfx_window_open())
 			break;
 			
-		/* pump the network */
-		client_pump_network();
-		
-		/* update the server browser */
-		client_serverbrowse_update();
-		
 		/* render */
-		if(config.stress)
+		if(editor_active)
 		{
-			if((frames%10) == 0)
+			editor_update_and_render();
+			gfx_swap();
+		}
+		else
+		{
+			client_update();
+			
+			if(config.stress)
+			{
+				if((frames%10) == 0)
+				{
+					client_render();
+					gfx_swap();
+				}
+			}
+			else
 			{
 				client_render();
 				gfx_swap();
 			}
-		}
-		else
-		{
-			client_render();
-			gfx_swap();
 		}
 		
 		/* check conditions */
@@ -1053,10 +1078,7 @@ int main(int argc, char **argv)
 	dbg_msg("client", "starting...");
 	engine_init("Teewars", argc, argv);
 	
-	if(config.cl_editor)
-		editor_main(argc, argv);
-	else
-		client_run();
+	client_run();
 		
 	engine_writeconfig();
 	return 0;

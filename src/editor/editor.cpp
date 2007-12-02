@@ -105,6 +105,7 @@ struct tilemap
 {
 	int width;
 	int height;
+	int render_flags;
 	tile *tiles;
 };
 
@@ -116,6 +117,7 @@ static void tilemap_new(tilemap *tm, int width, int height)
 	
 	tm->width = width;
 	tm->height = height;
+	tm->render_flags = 0;
 	tm->tiles = (tile *)mem_alloc(size, 1);
 	mem_zero(tm->tiles, size);
 }
@@ -219,6 +221,7 @@ static const int MAX_LAYERS = 64;
 static layer layers[MAX_LAYERS];
 static int num_layers = 0;
 static int current_layer = 0;
+static int current_hover_layer = -1;
 
 static int layers_remove(int index)
 {
@@ -377,10 +380,20 @@ static tileset *tilesets_get(int index)
 /********************************************************
  UI                                                      
 *********************************************************/
-static void render_tilemap(tilemap *tm, float sx, float sy, float scale)
+
+static const int TILEMAPFLAG_READONLY = 1;
+static const int TILEMAPFLAG_UISPACE = 2;
+static const int TILEMAPFLAG_HILIGHTED = 4;
+
+static void render_tilemap(tilemap *tm, float sx, float sy, float scale, int flags)
 {
 	float frac = (1.0f/1024.0f); //2.0f;
+	
 	gfx_quads_begin();
+	
+	if(flags&TILEMAPFLAG_HILIGHTED)
+		gfx_setcolor(1.0f,0.5f,0.5f,1.0f);
+	
 	for(int y = 0; y < tm->height; y++)
 		for(int x = 0; x < tm->width; x++)
 		{
@@ -444,16 +457,12 @@ static const char *editor_filename = 0;
 static int editor_mode = 0; // 0 == tiles, 1 == ents
 static int editor_selected_ent = -1;
 
-static const int TILEMAPFLAG_READONLY = 1;
-static const int TILEMAPFLAG_UISPACE = 2;
-
 static int ui_do_tilemap(void *id, tilemap *tm, int flags, float x, float y, float scale)
 {
 	/*
 	int do_input = 1;
-	if(inp_key_pressed(input::lalt) || inp_key_pressed(input::ralt))
+	if(inp_key_pressed(KEY_LALT) || inp_key_pressed(KEY_RALT))
 		do_input = 0;*/
-	
 	
 	float mx = ui_mouse_world_x();
 	float my = ui_mouse_world_y();
@@ -519,14 +528,14 @@ static int ui_do_tilemap(void *id, tilemap *tm, int flags, float x, float y, flo
 	ui_set_hot_item(id);
 	
 	// render the tilemap
-	render_tilemap(tm, x, y, scale);
+	render_tilemap(tm, x, y, scale, flags);
 	
 	if(ui_hot_item() == id)
 	{
 		if(brush.tiles != 0)
 		{
 			// draw brush
-			render_tilemap(&brush, (tmx-brush.width/2)*scale, (tmy-brush.height/2)*scale, scale);
+			render_tilemap(&brush, (tmx-brush.width/2)*scale, (tmy-brush.height/2)*scale, scale, flags);
 			
 			gfx_texture_set(-1);
 			gfx_blend_additive();
@@ -704,278 +713,12 @@ void draw_editor_button(const void *id, const char *text, int checked, float x, 
     gfx_pretty_text(x+1, y-1, 6.5f, text, -1);
 }
 
-static int editor_loadimage = -1;
 
-static void editor_listdir_callback(const char *name, int is_dir, void *user)
-{
-	if(name[0] == '.') // skip this shit!
-		return;
-	
-	int *y = (int*)user;
-	if(ui_do_button((void*)(*y + 1), name, 0, 10, 10 + *y * 8, 100, 6, draw_editor_button, 0))
-	{
-		char buf[512];
-		sprintf(buf, "tilesets/%s", name);
-		
-		IMAGE_INFO img;
-		if(!gfx_load_png(&img, buf))
-			return;
-		
-		tilesets_set_img(editor_loadimage, img.width, img.height, img.data);
-		editor_loadimage = -1;
-	}
-	*y += 1;
-}
-
-static void editor_render_loadfile_dialog()
-{
-	gfx_clear(0.2f,0.2f,0.8f);
-	// GUI coordsys
-	gfx_mapscreen(0,0,400.0f,300.0f);
-	
-	int index = 0;
-	fs_listdir("tilesets", editor_listdir_callback, &index);
-	
-	if(inp_key_pressed(KEY_ESC))
-		editor_loadimage = -1;
-}
-
-static void editor_render()
-{
-	if(editor_loadimage != -1)
-	{
-		editor_render_loadfile_dialog();
-		return;
-	}
-	
-	// background color
-	gfx_clear(0.2f,0.2f,0.8f);
-	
-	// world coordsys
-	float zoom = world_zoom;
-	gfx_mapscreen(world_offset_x,world_offset_y,world_offset_x+400.0f*zoom,world_offset_y+300.0f*zoom);
-
-	for(int i = 0; i < layers_count(); i++)
-	{
-		layer *l = layers_get(i);
-		
-		gfx_texture_set(-1);
-		if(l->tileset_id >= 0 && l->tileset_id < tilesets_count())
-			gfx_texture_set(tilesets_get(l->tileset_id)->tex_id);
-		
-		if(editor_mode == 0)
-		{
-			if(l == layers_get_current())
-			{
-				// do current layer
-				ui_do_tilemap(&l->tm, &l->tm, 0, 0, 0, 32.0f);
-			}
-			else if(l->visible)
-			{
-				// render layer
-				render_tilemap(&l->tm, 0, 0, 32.0f);
-			}
-		}
-		else
-			render_tilemap(&l->tm, 0, 0, 32.0f);			
-	}
-
-	if(editor_mode == 1)
-	{
-		// ents mode
-		for(int i = 0; i < ents_count(); i++)
-		{
-			if(ui_do_entity(ents_get(i), ents_get(i), i == editor_selected_ent))
-				editor_selected_ent = i;
-			
-		}
-	}
-	
-	// GUI coordsys
-	gfx_mapscreen(0,0,400.0f,300.0f);
-
-	// toolbox
-	float toolbox_width = 50.0f;
-	
-	ui_do_frame(0, 0, toolbox_width, 300);
-	
-	if(editor_mode == 0)
-	{
-		float layerbox_x = 0;
-		float layerbox_y = 0;
-		int count = 1;
-		int main_layer = -1;
-		for(int i = 0; i < layers_count(); i++)
-		{
-			layer *l = layers_get(i);
-			char buf[128];
-			if(l->main_layer)
-			{
-				main_layer = i;
-				sprintf(buf, "Main\n(%dx%d)", l->tm.width, l->tm.height);
-				count = 1;
-			}
-			else
-			{
-				if(main_layer == -1)
-					sprintf(buf, "Bg %d\n(%dx%d)", count, l->tm.width, l->tm.height);
-				else
-					sprintf(buf, "Fg %d\n(%dx%d)", count, l->tm.width, l->tm.height);
-				count++;
-			}
-			
-			// show / hide layer
-			const char *text = " ";
-			if(layers_get(i)->visible)
-				text = "V";
-
-			if(ui_do_button(&layers_get(i)->visible, text, 0, layerbox_x, layerbox_y+i*14, 6, 6, draw_editor_button, 0))
-				layers_get(i)->visible = layers_get(i)->visible^1;
-			
-			// layer bytton
-			if(ui_do_button(&layers_get(i)->tileset_id, buf, current_layer == i, layerbox_x+8, layerbox_y+i*14, toolbox_width-8, 12, draw_editor_button, 0))
-				current_layer = i;
-		}
-		
-		// draw buttons
-		{
-			static int push_button, pull_button;
-			float y = 150;
-			float x = 0;
-			if(ui_do_button(&push_button, "push", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
-				current_layer = layers_moveup(current_layer);
-			y += 7;
-			
-			if(ui_do_button(&pull_button, "pull", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
-				current_layer = layers_movedown(current_layer);
-			y += 10;
-
-			static int w_inc, w_dec;
-			int resize_amount = 10;
-			if(ui_do_button(&w_dec, "width-", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
-				tilemap_resize(&layers_get_current()->tm, layers_get_current()->tm.width-resize_amount, layers_get_current()->tm.height, resize_amount);
-			y += 7;
-			if(ui_do_button(&w_inc, "width+", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
-				tilemap_resize(&layers_get_current()->tm, layers_get_current()->tm.width+resize_amount, layers_get_current()->tm.height, resize_amount);
-			y += 10;
-
-			static int h_inc, h_dec;
-			if(ui_do_button(&h_dec, "height-", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
-				tilemap_resize(&layers_get_current()->tm, layers_get_current()->tm.width, layers_get_current()->tm.height-resize_amount, resize_amount);
-			y += 7;
-			if(ui_do_button(&h_inc, "height+", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
-				tilemap_resize(&layers_get_current()->tm, layers_get_current()->tm.width, layers_get_current()->tm.height+resize_amount, resize_amount);
-			y += 10;
-		}
-
-
-		float tilesetsbox_x = 0;
-		float tilesetsbox_y = 230;
-		for(int i = 0; i < tilesets_count(); i++)
-		{
-			char buf[128];
-			sprintf(buf, "#%d %dx%d", i, tilesets_get(i)->img.width, tilesets_get(i)->img.height);
-			if(ui_do_button(&tilesets_get(i)->img.width, "L", layers_get(current_layer)->tileset_id == i, tilesetsbox_x, tilesetsbox_y+i*7, 6, 6, draw_editor_button, 0))
-			{
-				// load image
-				editor_loadimage = i;
-			}
-
-			if(ui_do_button(tilesets_get(i), buf, layers_get(current_layer)->tileset_id == i, tilesetsbox_x+16, tilesetsbox_y+i*7, toolbox_width-16, 6, draw_editor_button, 0))
-			{
-				// select tileset for layer
-				dbg_msg("editor", "settings tileset %d=%d", current_layer, i);
-				layers_get(current_layer)->tileset_id = i;
-			}
-
-			if(ui_do_button(&tilesets_get(i)->img.height, "D", layers_get(current_layer)->tileset_id == i, tilesetsbox_x+8, tilesetsbox_y+i*7, 6, 6, draw_editor_button, 0)
-				&& (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL)))
-			{
-				dbg_msg("editor", "deleting tileset %d", i);
-				tilesets_delete(i);
-				i--;
-			}
-		}
-
-		// (add) button for tilesets
-		static int add_tileset;
-		if(ui_do_button(&add_tileset, "(Add)", 0, tilesetsbox_x, tilesetsbox_y+tilesets_count()*7+3, toolbox_width, 6, draw_editor_button, 0))
-			tilesets_new();
-		
-		if(brush.tiles != 0)
-		{
-			// right mouse button or C clears the brush
-			if(ui_mouse_button(1) || inp_key_pressed('C'))
-				tilemap_destroy(&brush);
-		}
-
-		// flip buttons
-		if(inp_key_down('N') && brush.tiles)
-			tilemap_vflip(&brush);
-		if(inp_key_down('M') && brush.tiles)
-			tilemap_hflip(&brush);
-		
-		if(inp_key_pressed(KEY_SPACE))
-		{
-			// render chooser
-			float chooser_x = toolbox_width+10.0f;
-			float chooser_y = 10.0f;
-			
-			
-			gfx_texture_set(checker_texture);
-			gfx_blend_normal();
-			gfx_quads_begin();
-			gfx_setcolor(1.0f, 1.0f, 1.0f, 1.0f);
-			gfx_quads_setsubset(0,0,32.0f, 32.0f);
-			gfx_quads_drawTL(chooser_x, chooser_y, 16*16.0f, 16*16.0f);
-			gfx_quads_end();
-			gfx_blend_normal();	
-				
-			gfx_texture_set(-1);
-			layer *l = layers_get_current();
-			if(l && l->tileset_id >= 0 && l->tileset_id < tilesets_count())
-				gfx_texture_set(tilesets_get(l->tileset_id)->tex_id);
-			ui_do_tilemap(&chooser, &chooser, TILEMAPFLAG_READONLY|TILEMAPFLAG_UISPACE, chooser_x, chooser_y, 16.0f);
-		}
-	}
-	else
-	{
-		int current_type = -1;
-		if(editor_selected_ent >= 0 && editor_selected_ent < ents_count())
-			current_type = ents_get(editor_selected_ent)->type;
-		
-		float y = 0;
-		for(int i = 0; ent_types[i].name; i++)
-		{
-			if(ui_do_button(&ent_types[i], ent_types[i].name, current_type==i, 0, y, toolbox_width, 6, draw_editor_button, 0))
-			{
-				if(editor_selected_ent >= 0 && editor_selected_ent < ents_count())
-					ents_get(editor_selected_ent)->type = i;
-			}
-			y += 8;
-		}
-
-		y += 8;
-		static int add, del;
-		if(ui_do_button(&add, "Add", 0, 0, y, toolbox_width, 6, draw_editor_button, 0))
-		{
-			int x = (int)(world_offset_x+400*zoom/2)/32*32+16;
-			int y = (int)(world_offset_y+300*zoom/2)/32*32+16;
-			
-			if(editor_selected_ent >= 0 && editor_selected_ent < ents_count())
-				ents_new(ents_get(editor_selected_ent)->type, x, y);
-			else
-				ents_new(0, x, y);
-		}
-		
-		y += 8;
-		if(ui_do_button(&del, "Del", 0, 0, y, toolbox_width, 6, draw_editor_button, 0))
-			ents_delete(editor_selected_ent);
-	}
-}
 
 int editor_load(const char *filename)
 {
+	editor_reset();
+	
 	DATAFILE *df = datafile_load(filename);
 	if(!df)
 		return 0;
@@ -1132,153 +875,468 @@ int editor_save(const char *filename)
 	return 0;
 }
 
-static int editor_loop()
+
+static int editor_loadimage = -1;
+static int editor_loadmap = -1;
+
+static void editor_listdir_callback(const char *name, int is_dir, void *user)
 {
-	int mouse_x = 0;
-	int mouse_y = 0;
+	if(name[0] == '.') // skip this shit!
+		return;
 	
-	inp_mouse_mode_relative();
-	
-	while(!(inp_key_pressed(KEY_LCTRL) && inp_key_pressed('Q')))
-	{	
-		// update input
-		inp_update();
+	int *y = (int*)user;
+	if(ui_do_button((void*)(*y + 1), name, 0, 10, 10 + *y * 8, 100, 6, draw_editor_button, 0))
+	{
+		char buf[512];
+		sprintf(buf, "tilesets/%s", name);
 		
-		// handle mouse movement
-		float mx, my, mwx, mwy;
-		int rx, ry;
-		{
-			inp_mouse_relative(&rx, &ry);
-			mouse_x += rx;
-			mouse_y += ry;
-			if(mouse_x < 0) mouse_x = 0;
-			if(mouse_y < 0) mouse_y = 0;
-			if(mouse_x > gfx_screenwidth()) mouse_x = gfx_screenwidth();
-			if(mouse_y > gfx_screenheight()) mouse_y = gfx_screenheight();
-
-			// update the ui
-			mx = (mouse_x/(float)gfx_screenwidth())*400.0f;
-			my = (mouse_y/(float)gfx_screenheight())*300.0f;
-			mwx = world_offset_x+mx*world_zoom; // adjust to zoom and offset
-			mwy = world_offset_y+my*world_zoom; // adjust to zoom and offset
-			
-			int buttons = 0;
-			if(inp_key_pressed(KEY_MOUSE_1)) buttons |= 1;
-			if(inp_key_pressed(KEY_MOUSE_2)) buttons |= 2;
-			if(inp_key_pressed(KEY_MOUSE_3)) buttons |= 4;
-			
-			ui_update(mx,my,mwx,mwy,buttons);
-		}
+		IMAGE_INFO img;
+		if(!gfx_load_png(&img, buf))
+			return;
 		
-		//
-		editor_render();
-
-		if(inp_key_pressed(KEY_LALT) || inp_key_pressed(KEY_RALT))
-		{
-			static int moveid;
-			ui_set_hot_item(&moveid);
-			if(inp_key_pressed(KEY_MOUSE_1))
-			{
-				world_offset_x -= rx*2;
-				world_offset_y -= ry*2;
-			}
-		}
-		
-		
-		// render butt ugly mouse cursor
-		gfx_texture_set(-1);
-		gfx_quads_begin();
-		gfx_setcolor(0,0,0,1);
-		gfx_quads_draw_freeform(mx,my,mx,my,
-								mx+7,my,
-								mx,my+7);
-		gfx_setcolor(1,1,1,1);
-		gfx_quads_draw_freeform(mx+1,my+1,mx+1,my+1,
-								mx+5,my+1,
-								mx+1,my+5);
-		gfx_quads_end();
-		
-		// swap the buffers
-		gfx_swap();
-		
-		//
-		if(inp_key_pressed(KEY_F1))
-			inp_mouse_mode_absolute();
-		if(inp_key_pressed(KEY_F2))
-			inp_mouse_mode_relative();
-
-		// mode switch
-		if(inp_key_down(KEY_TAB))
-			editor_mode ^= 1;
-		
-		// zoom in
-		if(inp_key_down(KEY_KP_ADD))
-		{
-			world_zoom--;
-			if(world_zoom < 3)
-				world_zoom = 3;
-		}
-		
-		// zoom out
-		if(inp_key_down(KEY_KP_SUBTRACT))
-		{
-			world_zoom++;
-			if(world_zoom > 8)
-				world_zoom = 8;
-		}
-		
-		if(inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))
-		{
-			if(inp_key_down('L'))
-			{
-				int w = 50, h = 50;
-				for(int i = 0; i < layers_count(); i++)
-				{
-					layer *l = layers_get(i);	
-					if(l->main_layer)
-					{
-						w = l->tm.width;
-						h = l->tm.height;
-						break;
-					}
-				}					
-				// copy main layer size
-				layers_new(w, h);
-			}
-			
-			if(inp_key_down('S'))
-			{
-				dbg_msg("editor", "save");
-				editor_save(editor_filename);
-			}
-
-		}
-		
-		if(inp_key_down(KEY_F5))
-		{
-			dbg_msg("editor", "quick save");
-			editor_save("quicksave.map");
-		}
-		
-		if(inp_key_down(KEY_F8))
-		{
-			dbg_msg("editor", "quick load");
-			int s = current_layer;
-			editor_reset();
-			editor_load("quicksave.map");
-			current_layer = s;
-			if(current_layer >= layers_count())
-				current_layer = layers_count();
-				
-		}
-		
-		// be nice
-		thread_sleep(1);
+		tilesets_set_img(editor_loadimage, img.width, img.height, img.data);
+		editor_loadimage = -1;
 	}
-	
-	return 0;
+	*y += 1;
 }
 
+static void editor_render_loadfile_dialog()
+{
+	// GUI coordsys
+	gfx_clear(0.2f,0.2f,0.8f);
+	gfx_mapscreen(0,0,400.0f,300.0f);
+	
+	int index = 0;
+	fs_listdir("tilesets", editor_listdir_callback, &index);
+	
+	if(inp_key_pressed(KEY_ESC))
+		editor_loadimage = -1;
+}
+
+static void editor_listdir_map_callback(const char *name, int is_dir, void *user)
+{
+	if(name[0] == '.') // skip this shit!
+		return;
+	
+	int *y = (int*)user;
+	if(ui_do_button((void*)(*y + 1), name, 0, 10, 10 + *y * 8, 100, 6, draw_editor_button, 0))
+	{
+		char buf[512];
+		sprintf(buf, "data/maps/%s", name);
+		
+		editor_load(buf);
+		editor_loadmap = -1;
+	}
+	*y += 1;
+}
+
+static void editor_render_loadmap_dialog()
+{
+	// GUI coordsys
+	gfx_clear(0.2f,0.2f,0.8f);
+	gfx_mapscreen(0,0,400.0f,300.0f);
+	
+	int index = 0;
+	fs_listdir("data/maps", editor_listdir_map_callback, &index);
+	
+	if(inp_key_pressed(KEY_ESC))
+		editor_loadmap = -1;
+}
+
+static void editor_render_normal()
+{
+	// background color
+	gfx_clear(0.2f,0.2f,0.8f);
+	
+	// world coordsys
+	float zoom = world_zoom;
+	gfx_mapscreen(world_offset_x,world_offset_y,world_offset_x+400.0f*zoom,world_offset_y+300.0f*zoom);
+
+	for(int i = 0; i < layers_count(); i++)
+	{
+		layer *l = layers_get(i);
+		
+		gfx_texture_set(-1);
+		if(l->tileset_id >= 0 && l->tileset_id < tilesets_count())
+			gfx_texture_set(tilesets_get(l->tileset_id)->tex_id);
+			
+		int f = 0;
+		if(current_hover_layer == i)
+			f = TILEMAPFLAG_HILIGHTED;
+		
+		if(editor_mode == 0)
+		{
+			if(l == layers_get_current())
+			{
+				// do current layer
+				ui_do_tilemap(&l->tm, &l->tm, f, 0, 0, 32.0f);
+			}
+			else if(l->visible)
+			{
+				// render layer
+				render_tilemap(&l->tm, 0, 0, 32.0f, f);
+			}
+		}
+		else
+			render_tilemap(&l->tm, 0, 0, 32.0f, f);
+	}
+
+	if(editor_mode == 1)
+	{
+		// ents mode
+		for(int i = 0; i < ents_count(); i++)
+		{
+			if(ui_do_entity(ents_get(i), ents_get(i), i == editor_selected_ent))
+				editor_selected_ent = i;
+			
+		}
+	}
+	
+	// GUI coordsys
+	gfx_mapscreen(0,0,400.0f,300.0f);
+
+	// toolbox
+	float toolbox_width = 50.0f;
+	
+	ui_do_frame(0, 0, toolbox_width, 300);
+	
+	if(editor_mode == 0)
+	{
+		float layerbox_x = 0;
+		float layerbox_y = 0;
+		int count = 1;
+		int main_layer = -1;
+		
+		current_hover_layer = -1;
+		for(int i = 0; i < layers_count(); i++)
+		{
+			layer *l = layers_get(i);
+			char buf[128];
+			if(l->main_layer)
+			{
+				main_layer = i;
+				sprintf(buf, "Main\n(%dx%d)", l->tm.width, l->tm.height);
+				count = 1;
+			}
+			else
+			{
+				if(main_layer == -1)
+					sprintf(buf, "Bg %d\n(%dx%d)", count, l->tm.width, l->tm.height);
+				else
+					sprintf(buf, "Fg %d\n(%dx%d)", count, l->tm.width, l->tm.height);
+				count++;
+			}
+			
+			// show / hide layer
+			const char *text = " ";
+			if(layers_get(i)->visible)
+				text = "V";
+
+			if(ui_do_button(&layers_get(i)->visible, text, 0, layerbox_x, layerbox_y+i*14, 6, 6, draw_editor_button, 0))
+				layers_get(i)->visible = layers_get(i)->visible^1;
+			
+			// layer bytton
+			if(ui_mouse_inside(layerbox_x+8, layerbox_y+i*14, toolbox_width-8, 12))
+				current_hover_layer = i;
+				
+			if(ui_do_button(&layers_get(i)->tileset_id, buf, current_layer == i, layerbox_x+8, layerbox_y+i*14, toolbox_width-8, 12, draw_editor_button, 0))
+				current_layer = i;
+		}
+		
+		// draw buttons
+		{
+			static int push_button, pull_button;
+			float y = 150;
+			float x = 0;
+			if(ui_do_button(&push_button, "push", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
+				current_layer = layers_moveup(current_layer);
+			y += 7;
+			
+			if(ui_do_button(&pull_button, "pull", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
+				current_layer = layers_movedown(current_layer);
+			y += 10;
+
+			static int w_inc, w_dec;
+			int resize_amount = 10;
+			if(ui_do_button(&w_dec, "width-", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
+				tilemap_resize(&layers_get_current()->tm, layers_get_current()->tm.width-resize_amount, layers_get_current()->tm.height, resize_amount);
+			y += 7;
+			if(ui_do_button(&w_inc, "width+", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
+				tilemap_resize(&layers_get_current()->tm, layers_get_current()->tm.width+resize_amount, layers_get_current()->tm.height, resize_amount);
+			y += 10;
+
+			static int h_inc, h_dec;
+			if(ui_do_button(&h_dec, "height-", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
+				tilemap_resize(&layers_get_current()->tm, layers_get_current()->tm.width, layers_get_current()->tm.height-resize_amount, resize_amount);
+			y += 7;
+			if(ui_do_button(&h_inc, "height+", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
+				tilemap_resize(&layers_get_current()->tm, layers_get_current()->tm.width, layers_get_current()->tm.height+resize_amount, resize_amount);
+			y += 10;
+		}
+
+
+		float tilesetsbox_x = 0;
+		float tilesetsbox_y = 230;
+		for(int i = 0; i < tilesets_count(); i++)
+		{
+			char buf[128];
+			sprintf(buf, "#%d %dx%d", i, tilesets_get(i)->img.width, tilesets_get(i)->img.height);
+			if(ui_do_button(&tilesets_get(i)->img.width, "L", layers_get(current_layer)->tileset_id == i, tilesetsbox_x, tilesetsbox_y+i*7, 6, 6, draw_editor_button, 0))
+			{
+				// load image
+				editor_loadimage = i;
+			}
+
+			if(ui_do_button(tilesets_get(i), buf, layers_get(current_layer)->tileset_id == i, tilesetsbox_x+16, tilesetsbox_y+i*7, toolbox_width-16, 6, draw_editor_button, 0))
+			{
+				// select tileset for layer
+				dbg_msg("editor", "settings tileset %d=%d", current_layer, i);
+				layers_get(current_layer)->tileset_id = i;
+			}
+
+			if(ui_do_button(&tilesets_get(i)->img.height, "D", layers_get(current_layer)->tileset_id == i, tilesetsbox_x+8, tilesetsbox_y+i*7, 6, 6, draw_editor_button, 0)
+				&& (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL)))
+			{
+				dbg_msg("editor", "deleting tileset %d", i);
+				tilesets_delete(i);
+				i--;
+			}
+		}
+
+		// (add) button for tilesets
+		static int add_tileset;
+		if(ui_do_button(&add_tileset, "(Add)", 0, tilesetsbox_x, tilesetsbox_y+tilesets_count()*7+3, toolbox_width, 6, draw_editor_button, 0))
+			tilesets_new();
+		
+		if(brush.tiles != 0)
+		{
+			// right mouse button or C clears the brush
+			if(ui_mouse_button(1) || inp_key_pressed('C'))
+				tilemap_destroy(&brush);
+		}
+
+		// flip buttons
+		if(inp_key_down('N') && brush.tiles)
+			tilemap_vflip(&brush);
+		if(inp_key_down('M') && brush.tiles)
+			tilemap_hflip(&brush);
+		
+		if(inp_key_pressed(KEY_SPACE))
+		{
+			// render chooser
+			float chooser_x = toolbox_width+10.0f;
+			float chooser_y = 10.0f;
+			
+			
+			gfx_texture_set(checker_texture);
+			gfx_blend_normal();
+			gfx_quads_begin();
+			gfx_setcolor(1.0f, 1.0f, 1.0f, 1.0f);
+			gfx_quads_setsubset(0,0,32.0f, 32.0f);
+			gfx_quads_drawTL(chooser_x, chooser_y, 16*16.0f, 16*16.0f);
+			gfx_quads_end();
+			gfx_blend_normal();	
+				
+			gfx_texture_set(-1);
+			layer *l = layers_get_current();
+			if(l && l->tileset_id >= 0 && l->tileset_id < tilesets_count())
+				gfx_texture_set(tilesets_get(l->tileset_id)->tex_id);
+			ui_do_tilemap(&chooser, &chooser, TILEMAPFLAG_READONLY|TILEMAPFLAG_UISPACE, chooser_x, chooser_y, 16.0f);
+		}
+	}
+	else
+	{
+		int current_type = -1;
+		if(editor_selected_ent >= 0 && editor_selected_ent < ents_count())
+			current_type = ents_get(editor_selected_ent)->type;
+		
+		float y = 0;
+		for(int i = 0; ent_types[i].name; i++)
+		{
+			if(ui_do_button(&ent_types[i], ent_types[i].name, current_type==i, 0, y, toolbox_width, 6, draw_editor_button, 0))
+			{
+				if(editor_selected_ent >= 0 && editor_selected_ent < ents_count())
+					ents_get(editor_selected_ent)->type = i;
+			}
+			y += 8;
+		}
+
+		y += 8;
+		static int add, del;
+		if(ui_do_button(&add, "Add", 0, 0, y, toolbox_width, 6, draw_editor_button, 0))
+		{
+			int x = (int)(world_offset_x+400*zoom/2)/32*32+16;
+			int y = (int)(world_offset_y+300*zoom/2)/32*32+16;
+			
+			if(editor_selected_ent >= 0 && editor_selected_ent < ents_count())
+				ents_new(ents_get(editor_selected_ent)->type, x, y);
+			else
+				ents_new(0, x, y);
+		}
+		
+		y += 8;
+		if(ui_do_button(&del, "Del", 0, 0, y, toolbox_width, 6, draw_editor_button, 0))
+			ents_delete(editor_selected_ent);
+	}
+	
+}
+
+static void editor_render()
+{
+	if(editor_loadimage != -1)
+		editor_render_loadfile_dialog();
+	else if(editor_loadmap != -1)
+		editor_render_loadmap_dialog();
+	else
+		editor_render_normal();
+	
+	// render butt ugly mouse cursor
+	float mx = ui_mouse_x();
+	float my = ui_mouse_y();
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_setcolor(0,0,0,1);
+	gfx_quads_draw_freeform(mx,my,mx,my,
+							mx+7,my,
+							mx,my+7);
+	gfx_setcolor(1,1,1,1);
+	gfx_quads_draw_freeform(mx+1,my+1,mx+1,my+1,
+							mx+5,my+1,
+							mx+1,my+5);
+	gfx_quads_end();	
+}
+
+extern "C" void editor_update_and_render()
+{
+	static int mouse_x = 0;
+	static int mouse_y = 0;
+		
+	// handle mouse movement
+	float mx, my, mwx, mwy;
+	int rx, ry;
+	{
+		inp_mouse_relative(&rx, &ry);
+		mouse_x += rx;
+		mouse_y += ry;
+		if(mouse_x < 0) mouse_x = 0;
+		if(mouse_y < 0) mouse_y = 0;
+		if(mouse_x > gfx_screenwidth()) mouse_x = gfx_screenwidth();
+		if(mouse_y > gfx_screenheight()) mouse_y = gfx_screenheight();
+
+		// update the ui
+		mx = (mouse_x/(float)gfx_screenwidth())*400.0f;
+		my = (mouse_y/(float)gfx_screenheight())*300.0f;
+		mwx = world_offset_x+mx*world_zoom; // adjust to zoom and offset
+		mwy = world_offset_y+my*world_zoom; // adjust to zoom and offset
+		
+		int buttons = 0;
+		if(inp_key_pressed(KEY_MOUSE_1)) buttons |= 1;
+		if(inp_key_pressed(KEY_MOUSE_2)) buttons |= 2;
+		if(inp_key_pressed(KEY_MOUSE_3)) buttons |= 4;
+		
+		ui_update(mx,my,mwx,mwy,buttons);
+	}
+	
+	// render the editor
+	editor_render();
+
+	if(inp_key_pressed(KEY_LALT) || inp_key_pressed(KEY_RALT))
+	{
+		// steal focus
+		static int moveid;
+		ui_set_hot_item(&moveid);
+
+		if(inp_key_pressed(KEY_MOUSE_1))
+		{
+			world_offset_x -= rx*2;
+			world_offset_y -= ry*2;
+		}
+	}
+
+	//
+	if(inp_key_pressed(KEY_F1))
+		inp_mouse_mode_absolute();
+	if(inp_key_pressed(KEY_F2))
+		inp_mouse_mode_relative();
+
+	// mode switch
+	if(inp_key_down(KEY_TAB))
+		editor_mode ^= 1;
+	
+	// zoom in
+	if(inp_key_down(KEY_KP_ADD))
+	{
+		world_zoom--;
+		if(world_zoom < 3)
+			world_zoom = 3;
+	}
+	
+	// zoom out
+	if(inp_key_down(KEY_KP_SUBTRACT))
+	{
+		world_zoom++;
+		if(world_zoom > 8)
+			world_zoom = 8;
+	}
+	
+	if(inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))
+	{
+		if(inp_key_down('L'))
+		{
+			int w = 50, h = 50;
+			for(int i = 0; i < layers_count(); i++)
+			{
+				layer *l = layers_get(i);	
+				if(l->main_layer)
+				{
+					w = l->tm.width;
+					h = l->tm.height;
+					break;
+				}
+			}					
+			// copy main layer size
+			layers_new(w, h);
+		}
+		
+		if(inp_key_down('O'))
+			editor_loadmap = 1;
+		
+		if(inp_key_down('S'))
+		{
+			dbg_msg("editor", "save");
+			editor_save(editor_filename);
+		}
+
+	}
+	
+	if(inp_key_down(KEY_F5))
+	{
+		dbg_msg("editor", "quick save");
+		editor_save("quicksave.map");
+	}
+	
+	if(inp_key_down(KEY_F8))
+	{
+		dbg_msg("editor", "quick load");
+		int s = current_layer;
+		editor_reset();
+		editor_load("quicksave.map");
+		current_layer = s;
+		if(current_layer >= layers_count())
+			current_layer = layers_count();
+			
+	}
+}
+
+extern "C" void editor_init()
+{
+	// reset and start
+	font_texture = gfx_load_texture("data/debug_font.png");
+	checker_texture = gfx_load_texture("data/checker.png");
+	editor_reset();
+}
+
+/*
 extern void modmenu_init();
 
 extern "C" int editor_main(int argc, char **argv)
@@ -1310,13 +1368,6 @@ extern "C" int editor_main(int argc, char **argv)
 	if(!gfx_init())
 		return -1;
 	
-	modmenu_init();
-	
-	// reset and start
-	font_texture = gfx_load_texture("data/debug_font.png");
-	checker_texture = gfx_load_texture("data/checker.png");
-	editor_reset();
-
 	// load or new
 	if(!editor_load(editor_filename))
 	{
@@ -1327,4 +1378,4 @@ extern "C" int editor_main(int argc, char **argv)
 	editor_loop();
 	
 	return 0;
-}
+}*/
