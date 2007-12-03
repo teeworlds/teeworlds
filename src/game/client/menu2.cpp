@@ -1437,6 +1437,34 @@ static void menu2_render_game(RECT main_view)
 	}
 }
 
+
+enum
+{
+	POPUP_NONE=0,
+	POPUP_CONNECTING,
+	POPUP_DISCONNECTED,
+};
+
+static int popup = POPUP_NONE;
+
+
+void menu_do_disconnected()
+{
+	if(strlen(client_error_string()))
+		popup = POPUP_DISCONNECTED;
+}
+
+void menu_do_connecting()
+{
+	popup = POPUP_CONNECTING;
+}
+
+void menu_do_connected()
+{
+	popup = POPUP_NONE;
+}
+
+
 int menu2_render()
 {
 	if(0)
@@ -1510,43 +1538,119 @@ int menu2_render()
 	// some margin around the screen
 	ui2_margin(&screen, 10.0f, &screen);
 	
-	// do tab bar
-	ui2_hsplit_t(&screen, 26.0f, &tab_bar, &main_view);
-	ui2_vmargin(&tab_bar, 20.0f, &tab_bar);
-	menu2_render_menubar(tab_bar);
+	if(popup == POPUP_NONE)
+	{
+		// do tab bar
+		ui2_hsplit_t(&screen, 26.0f, &tab_bar, &main_view);
+		ui2_vmargin(&tab_bar, 20.0f, &tab_bar);
+		menu2_render_menubar(tab_bar);
 
-	// do bottom bar
-	//ui2_hsplit_b(&main_view, 26.0f, &main_view, &bottom_bar);
+		// do bottom bar
+		//ui2_hsplit_b(&main_view, 26.0f, &main_view, &bottom_bar);
+			
+		// render current page
+		if(menu_game_active)
+			menu2_render_game(main_view);
+		else if(config.ui_page == PAGE_NEWS)
+			menu2_render_news(main_view);
+		else if(config.ui_page == PAGE_INTERNET)
+			menu2_render_serverbrowser(main_view);
+		else if(config.ui_page == PAGE_LAN)
+			menu2_render_serverbrowser(main_view);
+		else if(config.ui_page == PAGE_FAVORITES)
+			menu2_render_serverbrowser(main_view);
+		else if(config.ui_page == PAGE_SETTINGS)
+			menu2_render_settings(main_view);
+	}
+	else
+	{
+		// make sure that other windows doesn't do anything funnay!
+		//ui_set_hot_item(0);
+		//ui_set_active_item(0);
+		const char *title = "";
+		const char *extra_text = "";
+		const char *button_text = "";
 		
-	// render current page
-	if(menu_game_active)
-		menu2_render_game(main_view);
-	else if(config.ui_page == PAGE_NEWS)
-		menu2_render_news(main_view);
-	else if(config.ui_page == PAGE_INTERNET)
-		menu2_render_serverbrowser(main_view);
-	else if(config.ui_page == PAGE_LAN)
-		menu2_render_serverbrowser(main_view);
-	else if(config.ui_page == PAGE_FAVORITES)
-		menu2_render_serverbrowser(main_view);
-	else if(config.ui_page == PAGE_SETTINGS)
-		menu2_render_settings(main_view);
+		if(popup == POPUP_CONNECTING)
+		{
+			title = "Connecting to";
+			extra_text = config.ui_server_address;  // TODO: query the client about the address
+			button_text = "Abort";
+		}
+		else if(popup == POPUP_DISCONNECTED)
+		{
+			title = "Disconnected";
+			extra_text = client_error_string();
+			button_text = "Ok";
+		}
+		
+		RECT box, part;
+		box = screen;
+		ui2_vmargin(&box, 150.0f, &box);
+		ui2_hmargin(&box, 200.0f, &box);
+		
+		// render the box
+		ui2_draw_rect(&box, vec4(0,0,0,0.5f), CORNER_ALL, 15.0f);
+		 
+		ui2_hsplit_t(&box, 20.f, &part, &box);
+		ui2_hsplit_t(&box, 24.f, &part, &box);
+		ui2_do_label(&part, title, 24.f, 0);
+		ui2_hsplit_t(&box, 20.f, &part, &box);
+		ui2_hsplit_t(&box, 24.f, &part, &box);
+		ui2_do_label(&part, extra_text, 20.f, 0);
+
+		
+		ui2_hsplit_b(&box, 20.f, &box, &part);
+		ui2_hsplit_b(&box, 24.f, &box, &part);
+		ui2_vmargin(&part, 120.0f, &part);
+
+		static int button = 0;
+		if(ui2_do_button(&button, button_text, 0, &part, ui2_draw_menu_button, 0) || inp_key_down(KEY_ESC) || inp_key_down(KEY_ENTER))
+		{
+			if(popup == POPUP_CONNECTING)
+				client_disconnect();
+			popup = POPUP_NONE;
+		}
+	}
 	
 	return 0;
 }
 
-
-void menu_do_disconnected()
+/*
+int menu2_render_popup(const char *caption, const char *text, const char *button_text)
 {
-}
+	float tw;
 
-void menu_do_connecting()
-{
-}
+	float w = 700;
+	float h = 300;
+	float x = 800/2-w/2;
+	float y = 600/2-h/2;
 
-void menu_do_connected()
-{
-}
+	gfx_blend_normal();
+	
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_setcolor(0,0,0,0.50f);
+	draw_round_rect(x, y, w, h, 40.0f);
+	gfx_quads_end();
+
+	tw = gfx_pretty_text_width(48.0f, caption, -1);
+	ui_do_label(x+w/2-tw/2, y+20, caption, 48.0f);
+	
+	tw = gfx_pretty_text_width(32.0f, text, -1);
+    gfx_pretty_text(x+w/2-tw/2, y+130, 32.0f, text, -1);
+
+	if(button_text)
+	{
+		static int back_button = 0;
+		if(ui_do_button(&back_button, button_text, 0, x+w/2-100, y+220, 200, 48, draw_teewars_button, 0))
+			return 1;
+		if(inp_key_down(KEY_ESC) || inp_key_down(KEY_ENTER))
+			return 1;
+	}
+		
+	return 0;
+}*/
 
 void modmenu_render()
 {
@@ -1578,7 +1682,7 @@ void modmenu_render()
     }
     
 	menu2_render();
-
+	
     gfx_texture_set(data->images[IMAGE_CURSOR].id);
     gfx_quads_begin();
     gfx_setcolor(1,1,1,1);

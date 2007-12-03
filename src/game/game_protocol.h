@@ -34,6 +34,8 @@ enum
 	EVENT_SMOKE,
 	EVENT_SPAWN,
 	EVENT_DEATH,
+	
+	EVENT_DUMMY
 };
 
 enum
