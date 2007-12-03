@@ -602,3 +602,29 @@ int datafile_finish(DATAFILE_OUT *df)
 		dbg_msg("datafile", "done");
 	return 0;
 }
+
+#define BUFFER_SIZE 64*1024
+
+int datafile_crc(const char *filename)
+{
+	unsigned char buffer[BUFFER_SIZE];
+	IOHANDLE file;
+	int crc = 0;
+	unsigned bytes = 0;
+	
+	file = io_open(filename, IOFLAG_READ);
+	if(!file)
+		return 0;
+		
+	while(1)
+	{
+		bytes = io_read(file, buffer, BUFFER_SIZE);
+		if(bytes <= 0)
+			break;
+		crc = crc32(crc, buffer, bytes);
+	}
+	
+	io_close(file);
+
+	return crc;	
+}

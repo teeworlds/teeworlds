@@ -1450,6 +1450,7 @@ static int popup = POPUP_NONE;
 
 void menu_do_disconnected()
 {
+	popup = POPUP_NONE;
 	if(strlen(client_error_string()))
 		popup = POPUP_DISCONNECTED;
 }

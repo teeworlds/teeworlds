@@ -17,6 +17,8 @@ int datafile_num_items(DATAFILE *df);
 int datafile_num_data(DATAFILE *df);
 void datafile_unload(DATAFILE *df);
 
+int datafile_crc(const char *filename);
+
 /* write access */
 typedef struct DATAFILE_OUT_t DATAFILE_OUT;
 DATAFILE_OUT *datafile_create(const char *filename);

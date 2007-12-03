@@ -334,6 +334,10 @@ static void conn_disconnect(NETCONNECTION *conn, const char *reason)
 		else
 			conn_send(conn, NETWORK_PACKETFLAG_CLOSE, 0, 0);
 	}
+	
+	conn->error_string[0] = 0;
+	if(reason)
+		strcpy(conn->error_string, reason);
 	conn_reset(conn);
 }
 

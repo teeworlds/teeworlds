@@ -18,6 +18,7 @@
 #include <engine/config.h>
 #include <engine/packer.h>
 #include <engine/memheap.h>
+#include <engine/datafile.h>
 
 #include <mastersrv/mastersrv.h>
 
@@ -295,15 +296,6 @@ static void client_send_ready()
 	client_send_msg();
 }
 
-static void client_send_error(const char *error)
-{
-	/*
-	packet p(NETMSG_CLIENT_ERROR);
-	p.write_str(error);
-	send_packet(&p);
-	*/
-}
-
 void client_rcon(const char *cmd)
 {
 	msg_pack_start_system(NETMSG_CMD, MSGFLAG_VITAL);
@@ -434,10 +426,16 @@ void client_connect(const char *server_address_str)
 	
 }
 
+void client_disconnect_with_reason(const char *reason)
+{
+	netclient_disconnect(net, reason);
+	client_set_state(CLIENTSTATE_OFFLINE);
+	map_unload();
+}
+
 void client_disconnect()
 {
-	client_send_error("disconnected");
-	netclient_disconnect(net, "disconnected");
+	netclient_disconnect(net, 0);
 	client_set_state(CLIENTSTATE_OFFLINE);
 	map_unload();
 }
@@ -524,11 +522,35 @@ static void client_render()
 	client_debug_render();
 }
 
-static void client_error(const char *msg)
+static const char *client_load_map(const char *mapname, int wanted_crc)
 {
-	dbg_msg("client", "error: %s", msg);
-	client_send_error(msg);
-	client_set_state(CLIENTSTATE_OFFLINE);
+	static char errormsg[128];
+	DATAFILE *df;
+	char buf[512];
+	int crc;
+	
+	dbg_msg("client", "loading map, map=%s wanted crc=%08x", mapname, wanted_crc);
+	client_set_state(CLIENTSTATE_LOADING);
+	
+	sprintf(buf, "data/maps/%s.map", mapname);
+	df = datafile_load(buf);
+	if(!df)
+	{
+		sprintf(errormsg, "map '%s' not found", mapname);
+		return errormsg;
+	}
+	
+	/* get the crc of the map */
+	crc = datafile_crc(buf);
+	if(crc != wanted_crc)
+	{
+		datafile_unload(df);
+		sprintf(errormsg, "map differs from the server. %08x != %08x", crc, wanted_crc);
+		return errormsg;
+	}
+	
+	map_set(df);
+	return NULL;
 }
 
 static void client_process_packet(NETPACKET *packet)
@@ -609,10 +631,10 @@ static void client_process_packet(NETPACKET *packet)
 			if(msg == NETMSG_MAP)
 			{
 				const char *map = msg_unpack_string();
-				dbg_msg("client/network", "connection accepted, map=%s", map);
-				client_set_state(CLIENTSTATE_LOADING);
-				
-				if(map_load(map))
+				int map_crc = msg_unpack_int();
+				const char *error = client_load_map(map, map_crc);
+
+				if(!error)
 				{
 					dbg_msg("client/network", "loading done");
 					client_send_ready();
@@ -620,7 +642,7 @@ static void client_process_packet(NETPACKET *packet)
 				}
 				else
 				{
-					client_error("failure to load map");
+					client_disconnect_with_reason(error);
 				}
 			}
 			else if(msg == NETMSG_SNAP || msg == NETMSG_SNAPEMPTY)

@@ -32,6 +32,7 @@ static int64 lastheartbeat;
 static NETADDR4 master_server;
 
 static char current_map[64];
+static int current_map_crc;
 
 void *snap_new_item(int type, int id, int size)
 {
@@ -401,6 +402,7 @@ static void server_send_map(int cid)
 {
 	msg_pack_start_system(NETMSG_MAP, MSGFLAG_VITAL);
 	msg_pack_string(config.sv_map, 0);
+	msg_pack_int(current_map_crc);
 	msg_pack_end();
 	server_send_msg(cid);
 }
@@ -640,6 +642,10 @@ static int server_load_map(const char *mapname)
 	df = datafile_load(buf);
 	if(!df)
 		return 0;
+	
+	/* get the crc of the map */
+	current_map_crc = datafile_crc(buf);
+	dbg_msg("server", "%s crc is %08x", buf, current_map_crc);
 		
 	strcpy(current_map, mapname);
 	map_set(df);
@@ -651,7 +657,7 @@ static int server_run()
 {
 	NETADDR4 bindaddr;
 
-	net_init(); /* For Windows compatibility. */
+	net_init();
 	
 	snap_init_id();
 
