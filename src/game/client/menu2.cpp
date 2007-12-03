@@ -1443,16 +1443,25 @@ enum
 	POPUP_NONE=0,
 	POPUP_CONNECTING,
 	POPUP_DISCONNECTED,
+	POPUP_PASSWORD,
 };
 
 static int popup = POPUP_NONE;
 
-
 void menu_do_disconnected()
 {
 	popup = POPUP_NONE;
-	if(strlen(client_error_string()))
-		popup = POPUP_DISCONNECTED;
+	if(client_error_string() && client_error_string()[0] != 0)
+	{
+		if(strstr(client_error_string(), "password"))
+		{
+			popup = POPUP_PASSWORD;
+			ui_set_hot_item(&config.password);
+			ui_set_active_item(&config.password);
+		}
+		else
+			popup = POPUP_DISCONNECTED;
+	}
 }
 
 void menu_do_connecting()
@@ -1584,11 +1593,17 @@ int menu2_render()
 			extra_text = client_error_string();
 			button_text = "Ok";
 		}
+		else if(popup == POPUP_PASSWORD)
+		{
+			title = "Password Error";
+			extra_text = client_error_string();
+			button_text = "Try Again";
+		}
 		
 		RECT box, part;
 		box = screen;
 		ui2_vmargin(&box, 150.0f, &box);
-		ui2_hmargin(&box, 200.0f, &box);
+		ui2_hmargin(&box, 150.0f, &box);
 		
 		// render the box
 		ui2_draw_rect(&box, vec4(0,0,0,0.5f), CORNER_ALL, 15.0f);
@@ -1600,17 +1615,50 @@ int menu2_render()
 		ui2_hsplit_t(&box, 24.f, &part, &box);
 		ui2_do_label(&part, extra_text, 20.f, 0);
 
-		
-		ui2_hsplit_b(&box, 20.f, &box, &part);
-		ui2_hsplit_b(&box, 24.f, &box, &part);
-		ui2_vmargin(&part, 120.0f, &part);
-
-		static int button = 0;
-		if(ui2_do_button(&button, button_text, 0, &part, ui2_draw_menu_button, 0) || inp_key_down(KEY_ESC) || inp_key_down(KEY_ENTER))
+		if(popup == POPUP_PASSWORD)
 		{
-			if(popup == POPUP_CONNECTING)
-				client_disconnect();
-			popup = POPUP_NONE;
+			RECT label, textbox, tryagain, abort;
+			
+			ui2_hsplit_b(&box, 20.f, &box, &part);
+			ui2_hsplit_b(&box, 24.f, &box, &part);
+			ui2_vmargin(&part, 120.0f, &part);
+			
+			ui2_vsplit_l(&part, 100.0f, &abort, &part);
+			ui2_vsplit_r(&part, 100.0f, 0, &tryagain);
+
+			static int button_abort = 0;
+			if(ui2_do_button(&button_abort, "Abort", 0, &abort, ui2_draw_menu_button, 0) || inp_key_down(KEY_ESC))
+				popup = POPUP_NONE;
+
+			static int button_tryagain = 0;
+			if(ui2_do_button(&button_tryagain, "Try again", 0, &tryagain, ui2_draw_menu_button, 0) || inp_key_down(KEY_ENTER))
+			{
+				client_connect(config.ui_server_address);
+			}
+			
+			ui2_hsplit_b(&box, 60.f, &box, &part);
+			ui2_hsplit_b(&box, 24.f, &box, &part);
+			
+			ui2_vsplit_l(&part, 60.0f, 0, &label);
+			ui2_vsplit_l(&label, 100.0f, 0, &textbox);
+			ui2_vsplit_l(&textbox, 20.0f, 0, &textbox);
+			ui2_vsplit_r(&textbox, 60.0f, &textbox, 0);
+			ui2_do_label(&label, "Password:", 20, -1);
+			ui2_do_edit_box(&config.password, &textbox, config.password, sizeof(config.password));
+		}
+		else
+		{
+			ui2_hsplit_b(&box, 20.f, &box, &part);
+			ui2_hsplit_b(&box, 24.f, &box, &part);
+			ui2_vmargin(&part, 120.0f, &part);
+
+			static int button = 0;
+			if(ui2_do_button(&button, button_text, 0, &part, ui2_draw_menu_button, 0) || inp_key_down(KEY_ESC) || inp_key_down(KEY_ENTER))
+			{
+				if(popup == POPUP_CONNECTING)
+					client_disconnect();
+				popup = POPUP_NONE;
+			}
 		}
 	}
 	
