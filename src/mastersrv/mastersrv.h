@@ -1,18 +1,9 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-static const int MASTERSERVER_PORT = 8383;
+static const int MASTERSERVER_PORT = 8300;
 
 enum {
 	MAX_SERVERS = 200
 };
-
-/*enum {
-	SERVERBROWSE_NULL=0,
-	SERVERBROWSE_HEARTBEAT,
-	SERVERBROWSE_GETLIST,
-	SERVERBROWSE_LIST,
-	SERVERBROWSE_GETINFO,
-	SERVERBROWSE_INFO,
-};*/
 
 static const unsigned char SERVERBROWSE_HEARTBEAT[] = {255, 255, 255, 255, 'b', 'e', 'a', 't'};
 
