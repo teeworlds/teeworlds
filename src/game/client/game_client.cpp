@@ -31,9 +31,6 @@ data_container *data = 0x0;
 
 int gametype = GAMETYPE_DM;
 
-static int music_menu = -1;
-static int music_menu_id = -1;
-
 extern void modmenu_render();
 
 enum
@@ -557,7 +554,6 @@ extern "C" void modc_init()
 	data = load_data_from_memory(internal_data);
 
 	// TODO: should be removed
-	music_menu = snd_load_wv("data/audio/music_menu.wv");
 	snd_set_listener_pos(0.0f, 0.0f);
 
 	float total = data->num_sounds+data->num_images;
@@ -2650,12 +2646,6 @@ extern "C" void modc_render()
 	// this should be moved around abit
 	if(client_state() == CLIENTSTATE_ONLINE)
 	{
-		if (music_menu_id != -1)
-		{
-			snd_stop(music_menu_id);
-			music_menu_id = -1;
-		}
-
 		render_game();
 
 		// handle team switching
@@ -2670,9 +2660,6 @@ extern "C" void modc_render()
 	}
 	else // if (client_state() != CLIENTSTATE_CONNECTING && client_state() != CLIENTSTATE_LOADING)
 	{
-		if (music_menu_id == -1)
-			music_menu_id = snd_play(CHN_MUSIC, music_menu, SNDFLAG_LOOP);
-
 		modmenu_render();
 	}
 
