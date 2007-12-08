@@ -1735,8 +1735,11 @@ void mods_init()
 			break;
 
 		case ITEM_NINJA:
-			type = POWERUP_NINJA;
-			subtype = WEAPON_NINJA;
+			if(config.sv_powerups)
+			{
+				type = POWERUP_NINJA;
+				subtype = WEAPON_NINJA;
+			}
 			break;
 		};
 

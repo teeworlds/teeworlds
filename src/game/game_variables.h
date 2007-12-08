@@ -34,6 +34,7 @@ MACRO_CONFIG_INT(cl_predict, 1, 0, 1)
 MACRO_CONFIG_INT(cl_nameplates, 0, 0, 2)
 
 MACRO_CONFIG_STR(sv_maprotation, 512, "")
+MACRO_CONFIG_INT(sv_powerups, 1, 0, 1)
 
 MACRO_CONFIG_INT(dynamic_camera, 1, 0, 1)
 
