@@ -1518,9 +1518,9 @@ static void render_player(
 						offsety = -offsety;
 
 					vec2 diry(-dir.y,dir.x);
-					p += dir * data->weapons[iw].muzzleoffsetx + diry * offsety;
+					vec2 muzzlepos = p + dir * data->weapons[iw].muzzleoffsetx + diry * offsety;
 
-					draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
+					draw_sprite(muzzlepos.x, muzzlepos.y, data->weapons[iw].visual_size);
 					/*gfx_setcolor(1.0f,1.0f,1.0f,alpha);
 					vec2 diry(-dir.y,dir.x);
 					p += dir * muzzleparams[player.weapon].offsetx + diry * offsety;
