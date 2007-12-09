@@ -1190,6 +1190,17 @@ static void menu2_render_settings_controls(RECT main_view)
 {
 	ui2_vsplit_l(&main_view, 300.0f, &main_view, 0);
 	
+	{
+		RECT button, label;
+		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		ui2_vsplit_l(&button, 110.0f, &label, &button);
+		ui2_do_label(&label, "Mouse sens.", 18.0f, -1);
+		config.inp_mousesens = (int)(ui2_do_scrollbar_h(&config.inp_mousesens, &button, config.inp_mousesens/500.0f)*500.0f);
+		//*key.key = ui2_do_key_reader(key.key, &button, *key.key);
+		ui2_hsplit_t(&main_view, 20.0f, 0, &main_view);
+	}
+
+	
 	typedef struct 
 	{
 		char name[32];

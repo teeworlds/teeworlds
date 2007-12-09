@@ -4,6 +4,7 @@
 
 #include <engine/system.h>
 #include <engine/interface.h>
+#include <engine/config.h>
 
 static int keyboard_state[2][1024]; /* TODO: fix this!! */
 static int keyboard_current = 0;
@@ -18,15 +19,27 @@ static struct
 
 static unsigned char input_state[2][1024] = {{0}, {0}};
 
-/*static unsigned char input_state[2][1024] = {{0},{0}};*/
-/*static unsigned char input_state[1024] = {{0},{0}};*/
 static int input_current = 0;
 
 void inp_mouse_relative(int *x, int *y)
 {
 	static int last_x = 0, last_y = 0;
+	static int last_sens = 100.0f;
 	int nx, ny;
+	float sens = config.inp_mousesens/100.0f;
+	
+	if(last_sens != config.inp_mousesens)
+	{
+		last_x = (last_x/(float)last_sens)*(float)config.inp_mousesens;
+		last_y = (last_y/(float)last_sens)*(float)config.inp_mousesens;
+		last_sens = config.inp_mousesens;
+	}
+	
+	
 	glfwGetMousePos(&nx, &ny);
+	nx *= sens;
+	ny *= sens;
+	
 	*x = nx-last_x;
 	*y = ny-last_y;
 	last_x = nx;
@@ -39,7 +52,7 @@ static int last_k = 0;
 static void char_callback(int character, int action)
 {
 	if(action == GLFW_PRESS && character < 256)
-	last_c = (char)character;
+		last_c = (char)character;
 }
 
 static void key_callback(int key, int action)
