@@ -852,6 +852,8 @@ static void client_pump_network()
 
 static void client_update()
 {
+	if(client_state() == CLIENTSTATE_OFFLINE)
+		return;
 
 	/* switch snapshot */
 	if(recived_snapshots >= 3)
