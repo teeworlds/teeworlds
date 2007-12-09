@@ -3,7 +3,7 @@
 import random
 import os
 
-masterservers = ["localhost 8383"]
+masterservers = ["localhost 8300"]
 
 maps = [
 	["dm1", "dm2", "dm6"],

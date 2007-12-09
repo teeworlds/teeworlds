@@ -14,7 +14,7 @@ extern "C" {
 
 enum 
 {
-	MAX_CLIENTS=16,
+	MAX_CLIENTS=12,
 	SERVER_TICK_SPEED=50, /* TODO: this should be removed */
 	SNAP_CURRENT=0,
 	SNAP_PREV=1,

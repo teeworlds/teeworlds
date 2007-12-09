@@ -123,12 +123,18 @@ sounds {
 		"data/audio/hook_loop-02.wv"
 	}
 	
-	hook_attach {
+	hook_attach_ground {
 		"data/audio/hook_attach-01.wv"
 		"data/audio/hook_attach-02.wv"
 		"data/audio/hook_attach-03.wv"
 	}
 	
+	hook_attach_player {
+		"data/audio/foley_body_impact-01.wv"
+		"data/audio/foley_body_impact-02.wv"
+		"data/audio/foley_body_impact-03.wv"
+	}
+		
 	pickup_health {
 		"data/audio/sfx_pickup_hrt-01.wv"
 		"data/audio/sfx_pickup_hrt-02.wv"

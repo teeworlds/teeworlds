@@ -696,25 +696,26 @@ static void process_events(int s)
 		{
 			ev_explosion *ev = (ev_explosion *)data;
 			vec2 p(ev->x, ev->y);
+			vec4 c(0.5f, 0.1f, 0.1f, 1.0f);
 
 			// center explosion
 			vec2 v = normalize(vec2(frandom()-0.5f, -frandom()))*(32.0f+frandom()*32.0f);
-			temp_system.new_particle(p, v, 1.2f, 64.0f, 0, 0.95f);
+			temp_system.new_particle(p, v, 1.2f, 64.0f, 0, 0.95f, c);
 			v = normalize(vec2(frandom()-0.5f, -frandom()))*(128.0f+frandom()*128.0f);
-			temp_system.new_particle(p, v, 1.2f, 32.0f, 0, 0.95f);
+			temp_system.new_particle(p, v, 1.2f, 32.0f, 0, 0.95f, c);
 			v = normalize(vec2(frandom()-0.5f, -frandom()))*(128.0f+frandom()*128.0f);
-			temp_system.new_particle(p, v, 1.2f, 16.0f, 0, 0.95f);
+			temp_system.new_particle(p, v, 1.2f, 16.0f, 0, 0.95f, c);
 
 			for(int i = 0; i < 8; i++)
 			{
 				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(64.0f+frandom()*64.0f);
-				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 0, 0.985f);
+				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 0, 0.985f, c);
 			}
 
 			for(int i = 0; i < 8; i++)
 			{
 				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(128.0f+frandom()*256.0f);
-				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 128.0f, 0.985f);
+				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 128.0f, 0.985f, c);
 			}
 		}
 		else if(item.type == EVENT_SOUND_WORLD)
@@ -823,8 +824,8 @@ extern "C" void modc_predict()
 					snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
 				}
 				//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
-				if(events&COREEVENT_HOOK_ATTACH_PLAYER) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH, 1.0f, pos);
-				if(events&COREEVENT_HOOK_ATTACH_GROUND) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH, 1.0f, pos);
+				if(events&COREEVENT_HOOK_ATTACH_PLAYER) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, pos);
+				if(events&COREEVENT_HOOK_ATTACH_GROUND) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, pos);
 				//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
 			}
 
@@ -1499,7 +1500,7 @@ static void render_player(
 		if (player.weapon == WEAPON_GUN || player.weapon == WEAPON_SHOTGUN)
 		{
 			// check if we're firing stuff
-			if (true)///prev.attackticks)
+			if (true)//prev.attackticks)
 			{
 				float alpha = 0.0f;
 				int phase1tick = (client_tick() - player.attacktick);

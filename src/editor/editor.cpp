@@ -453,7 +453,7 @@ static tilemap brush = {0};
 static tilemap chooser = {0};
 static float world_offset_x = 0, world_offset_y = 0;
 static int world_zoom = 3;
-static const char *editor_filename = 0;
+static char editor_filename[128] = {0};
 static int editor_mode = 0; // 0 == tiles, 1 == ents
 static int editor_selected_ent = -1;
 
@@ -785,7 +785,8 @@ int editor_load(const char *filename)
 			ents_new(type, e->x, e->y);
 		}
 	}
-
+	
+	datafile_unload(df);
 	return 1;
 }
 
@@ -925,6 +926,7 @@ static void editor_listdir_map_callback(const char *name, int is_dir, void *user
 		sprintf(buf, "data/maps/%s", name);
 		
 		editor_load(buf);
+		strcpy(editor_filename, buf);
 		editor_loadmap = -1;
 	}
 	*y += 1;
@@ -1267,16 +1269,16 @@ extern "C" void editor_update_and_render()
 	if(inp_key_down(KEY_KP_ADD))
 	{
 		world_zoom--;
-		if(world_zoom < 3)
-			world_zoom = 3;
+		if(world_zoom < 1)
+			world_zoom = 1;
 	}
 	
 	// zoom out
 	if(inp_key_down(KEY_KP_SUBTRACT))
 	{
 		world_zoom++;
-		if(world_zoom > 8)
-			world_zoom = 8;
+		if(world_zoom > 16)
+			world_zoom = 16;
 	}
 	
 	if(inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))
@@ -1305,6 +1307,7 @@ extern "C" void editor_update_and_render()
 		{
 			dbg_msg("editor", "save");
 			editor_save(editor_filename);
+			client_rcon("sv_map_reload=1");
 		}
 
 	}
@@ -1334,6 +1337,9 @@ extern "C" void editor_init()
 	font_texture = gfx_load_texture("data/debug_font.png");
 	checker_texture = gfx_load_texture("data/checker.png");
 	editor_reset();
+	
+	layer *l = layers_get(layers_new(50, 50));
+	l->main_layer = 1;
 }
 
 /*
