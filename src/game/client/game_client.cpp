@@ -38,6 +38,8 @@ enum
 	CHATMODE_NONE=0,
 	CHATMODE_ALL,
 	CHATMODE_TEAM,
+	CHATMODE_CONSOLE,
+	CHATMODE_REMOTECONSOLE,
 };
 
 static int chat_mode = CHATMODE_NONE;
@@ -725,6 +727,7 @@ static void process_events(int s)
 
 static player_core predicted_prev_player;
 static player_core predicted_player;
+static int last_new_predicted_tick = -1;
 
 extern "C" void modc_predict()
 {
@@ -756,11 +759,18 @@ extern "C" void modc_predict()
 	}
 
 	// predict
+	int num_predicted = 0;
+	int got = 0;
 	for(int tick = client_tick()+1; tick <= client_predtick(); tick++)
 	{
+		num_predicted++;
+		
 		// fetch the local
 		if(tick == client_predtick() && world.players[local_cid])
+		{
+			got|=1;
 			predicted_prev_player = *world.players[local_cid];
+		}
 		
 		// first calculate where everyone should move
 		for(int c = 0; c < MAX_CLIENTS; c++)
@@ -788,11 +798,26 @@ extern "C" void modc_predict()
 
 			world.players[c]->move();
 			world.players[c]->quantize();
+			
+			if(tick > last_new_predicted_tick)
+			{
+				last_new_predicted_tick = tick;
+				/*
+				dbg_msg("predict", "%d %d %d", tick,
+					(int)world.players[c]->pos.x, (int)world.players[c]->pos.y,
+					(int)world.players[c]->vel.x, (int)world.players[c]->vel.y);*/
+			}
 		}
 		
 		if(tick == client_predtick() && world.players[local_cid])
+		{
+			got|=2;
 			predicted_player = *world.players[local_cid];
+		}
 	}
+	
+	if(got!=3)
+		dbg_msg("predict", "way few predictions %d %d", num_predicted, got);
 }
 
 extern "C" void modc_newsnapshot()
@@ -1845,34 +1870,52 @@ void render_world(float center_x, float center_y, float zoom)
 	// draw the sun
 	if(config.gfx_high_detail)
 	{
-		render_sun(20+center_x*0.6f, 20+center_y*0.6f);
-
-		// draw clouds
-		static vec2 cloud_pos[6] = {vec2(-500,0),vec2(-500,200),vec2(-500,400)};
-		static float cloud_speed[6] = {30, 20, 10};
-		static int cloud_sprites[6] = {SPRITE_CLOUD1, SPRITE_CLOUD2, SPRITE_CLOUD3};
-
-		gfx_texture_set(data->images[IMAGE_CLOUDS].id);
-		gfx_quads_begin();
-		for(int i = 0; i < 3; i++)
+		if(0)
 		{
-			float parallax_amount = 0.55f;
-			select_sprite(cloud_sprites[i]);
-			draw_sprite((cloud_pos[i].x+fmod(client_localtime()*cloud_speed[i]+i*100.0f, 3000.0f))+center_x*parallax_amount,
-				cloud_pos[i].y+center_y*parallax_amount, 300);
+			gfx_mapscreen(0,0,1,1);
+			gfx_texture_set(-1);
+			gfx_quads_begin();
+				vec4 top(0x11/(float)0xff, 0x1a/(float)0xff, 0x21/(float)0xff, 1.0f);
+				vec4 bottom(0x2a/(float)0xff, 0x40/(float)0xff, 0x52/(float)0xff, 1.0f);
+				gfx_setcolorvertex(0, top.r, top.g, top.b, top.a);
+				gfx_setcolorvertex(1, top.r, top.g, top.b, top.a);
+				gfx_setcolorvertex(2, bottom.r, bottom.g, bottom.b, bottom.a);
+				gfx_setcolorvertex(3, bottom.r, bottom.g, bottom.b, bottom.a);
+				gfx_quads_drawTL(0, 0, 1, 1);
+			gfx_quads_end();
+			
+			mapscreen_to_world(center_x, center_y, zoom);
 		}
-		gfx_quads_end();
+		else
+		{
+			render_sun(20+center_x*0.6f, 20+center_y*0.6f);
 
+			// draw clouds
+			static vec2 cloud_pos[6] = {vec2(-500,0),vec2(-500,200),vec2(-500,400)};
+			static float cloud_speed[6] = {30, 20, 10};
+			static int cloud_sprites[6] = {SPRITE_CLOUD1, SPRITE_CLOUD2, SPRITE_CLOUD3};
 
-		// draw backdrop
-		gfx_texture_set(data->images[IMAGE_BACKDROP].id);
-		gfx_quads_begin();
-		float parallax_amount = 0.25f;
-		for(int x = -1; x < 3; x++)
-			gfx_quads_drawTL(1024*x+center_x*parallax_amount, (center_y)*parallax_amount+150+512, 1024, 512);
-		gfx_quads_end();
+			gfx_texture_set(data->images[IMAGE_CLOUDS].id);
+			gfx_quads_begin();
+			for(int i = 0; i < 3; i++)
+			{
+				float parallax_amount = 0.55f;
+				select_sprite(cloud_sprites[i]);
+				draw_sprite((cloud_pos[i].x+fmod(client_localtime()*cloud_speed[i]+i*100.0f, 3000.0f))+center_x*parallax_amount,
+					cloud_pos[i].y+center_y*parallax_amount, 300);
+			}
+			gfx_quads_end();
+
+			// draw backdrop
+			gfx_texture_set(data->images[IMAGE_BACKDROP].id);
+			gfx_quads_begin();
+			float parallax_amount = 0.25f;
+			for(int x = -1; x < 3; x++)
+				gfx_quads_drawTL(1024*x+center_x*parallax_amount, (center_y)*parallax_amount+150+512, 1024, 512);
+			gfx_quads_end();
+		}
 	}
-
+	
 	// render background tilemaps
 	tilemap_render(32.0f, 0);
 
@@ -2006,25 +2049,21 @@ void render_game()
 				// send message
 				if(chat_input_len)
 				{
-					if(chat_input[0] == '/') // check for local command
-						config_set(&chat_input[1]);
+					if(chat_mode == CHATMODE_CONSOLE)
+						config_set(chat_input);
+					else if(chat_mode == CHATMODE_REMOTECONSOLE)
+						client_rcon(chat_input);
 					else
 					{
-						// check for remote command
-						if(inp_key_pressed(KEY_RSHIFT) || inp_key_pressed(KEY_LSHIFT))
-							client_rcon(chat_input);
+						// send chat message
+						msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
+						if(chat_mode == CHATMODE_ALL)
+							msg_pack_int(0);
 						else
-						{
-							// send chat message
-							msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
-							if(chat_mode == CHATMODE_ALL)
-								msg_pack_int(0);
-							else
-								msg_pack_int(1);
-							msg_pack_string(chat_input, 512);
-							msg_pack_end();
-							client_send_msg();
-						}
+							msg_pack_int(1);
+						msg_pack_string(chat_input, 512);
+						msg_pack_end();
+						client_send_msg();
 					}
 				}
 
@@ -2063,6 +2102,12 @@ void render_game()
 
 				if(inp_key_down(config.key_teamchat))
 					chat_mode = CHATMODE_TEAM;
+
+				if(inp_key_down(config.key_console))
+					chat_mode = CHATMODE_CONSOLE;
+				
+				if(inp_key_down(config.key_remoteconsole))
+					chat_mode = CHATMODE_REMOTECONSOLE;
 
 				if(chat_mode != CHATMODE_NONE)
 				{
@@ -2454,6 +2499,10 @@ void render_game()
 				sprintf(buf, "All: %s_", chat_input);
 			else if(chat_mode == CHATMODE_TEAM)
 				sprintf(buf, "Team: %s_", chat_input);
+			else if(chat_mode == CHATMODE_CONSOLE)
+				sprintf(buf, "Console: %s_", chat_input);
+			else if(chat_mode == CHATMODE_REMOTECONSOLE)
+				sprintf(buf, "Rcon: %s_", chat_input);
 			else
 				sprintf(buf, "Chat: %s_", chat_input);
 			gfx_pretty_text(x, y, 10.0f, buf, 380);
