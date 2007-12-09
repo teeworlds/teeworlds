@@ -1601,6 +1601,7 @@ void mods_client_drop(int client_id)
 
 	gameobj->on_player_death(&players[client_id], 0, -1);
 	world->remove_entity(&players[client_id]);
+	world->core.players[client_id] = 0x0;
 	players[client_id].client_id = -1;
 }
 

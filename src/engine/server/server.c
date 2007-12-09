@@ -388,7 +388,13 @@ static int new_client_callback(int cid, void *user)
 
 static int del_client_callback(int cid, void *user)
 {
-	mods_client_drop(cid);
+	/* notify the mod about the drop */
+	if(clients[cid].state == SRVCLIENT_STATE_READY ||
+		clients[cid].state == SRVCLIENT_STATE_INGAME)
+	{
+		mods_client_drop(cid);
+	}
+
 	clients[cid].state = SRVCLIENT_STATE_EMPTY;
 	clients[cid].name[0] = 0;
 	clients[cid].clan[0] = 0;
