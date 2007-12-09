@@ -246,7 +246,8 @@ int ui2_do_button(const void *id, const char *text, int checked, const RECT *r, 
 	if(inside)
 		ui_set_hot_item(id);
 
-    draw_func(id, text, checked, r, extra);
+	if(draw_func)
+    	draw_func(id, text, checked, r, extra);
     return ret;
 }
 
@@ -282,23 +283,22 @@ static void ui2_draw_rect(const RECT *r, vec4 color, int corners, float rounding
 	gfx_quads_end();
 }
 
-static void ui2_draw_browse_icon(const void *id, const char *text, int checked, const RECT *r, void *extra)
+static void ui2_draw_browse_icon(int what, const RECT *r)
 {
 	gfx_texture_set(data->images[IMAGE_BROWSEICONS].id);
 	gfx_quads_begin();
-	if(text[0] == 'L')
-		select_sprite(SPRITE_BROWSE_LOCK);
-	else
+	select_sprite(SPRITE_BROWSE_PROGRESS1); // default
+	if(what <= 100)
 	{
-		int i = atoi(text);
-		if(i < 33)
-			select_sprite(SPRITE_BROWSE_PROGRESS1);
-		else if(i < 66)
+		if(what < 66)
 			select_sprite(SPRITE_BROWSE_PROGRESS2);
 		else
 			select_sprite(SPRITE_BROWSE_PROGRESS3);
 	}
-	//draw_round_rect_ext(r->x,r->y,r->w,r->h,rounding*ui2_scale(), corners);
+	else if(what&0x100)
+	{
+		select_sprite(SPRITE_BROWSE_LOCK);
+	}
 	gfx_quads_drawTL(r->x,r->y,r->w,r->h);
 	gfx_quads_end();
 }
@@ -345,7 +345,7 @@ static void ui2_draw_grid_header(const void *id, const char *text, int checked, 
 	ui2_vsplit_l(r, 5.0f, 0, &t);
 	ui2_do_label(&t, text, 18, -1);
 }
-
+/*
 static void ui2_draw_grid_cell_l(const void *id, const char *text, int checked, const RECT *r, void *extra)
 {
 	ui2_do_label(r, text, 18, -1);
@@ -354,7 +354,7 @@ static void ui2_draw_grid_cell_l(const void *id, const char *text, int checked, 
 static void ui2_draw_grid_cell_r(const void *id, const char *text, int checked, const RECT *r, void *extra)
 {
 	ui2_do_label(r, text, 18, 1);
-}
+}*/
 
 static void ui2_draw_list_row(const void *id, const char *text, int checked, const RECT *r, void *extra)
 {
@@ -913,6 +913,13 @@ static void menu2_render_serverbrowser(RECT main_view)
 		else
 			ui2_hsplit_t(&view, 20.0f, &row, &view);
 
+		if(ui2_do_button(item, "", l, &row, 0, 0))
+		{
+			new_selected = item_index;
+			dbg_msg("dbg", "addr = %s", item->address);
+			strncpy(config.ui_server_address, item->address, sizeof(config.ui_server_address));
+		}
+
 		for(int c = 0; c < num_cols; c++)
 		{
 			RECT button;
@@ -922,32 +929,33 @@ static void menu2_render_serverbrowser(RECT main_view)
 			button.h = row.h;
 			button.w = cols[c].rect.w;
 			
-			int s = 0;
+			//int s = 0;
 			int id = cols[c].id;
 
+			//s = ui2_do_button(item, "L", l, &button, ui2_draw_browse_icon, 0);
+			
 			if(id == COL_FLAGS)
 			{
 				if(item->flags&1)
-					s = ui2_do_button(item, "L", l, &button, ui2_draw_browse_icon, 0);
+					ui2_draw_browse_icon(0x100, &button);
 			}
 			else if(id == COL_NAME)
-				s = ui2_do_button(item, item->name, l, &button, ui2_draw_grid_cell_l, 0);
+				ui2_do_label(&button, item->name, 20.0f, -1);
 			else if(id == COL_MAP)
-				s = ui2_do_button(item, item->map, l, &button, ui2_draw_grid_cell_l, 0);
+				ui2_do_label(&button, item->map, 20.0f, -1);
 			else if(id == COL_PLAYERS)
 			{
 				sprintf(temp, "%i/%i", item->num_players, item->max_players);
-				s = ui2_do_button(item, temp, l, &button, ui2_draw_grid_cell_r, 0);
+				ui2_do_label(&button, temp, 20.0f, 1);
 			}
 			else if(id == COL_PING)
 			{
 				sprintf(temp, "%i", item->latency);
-				s = ui2_do_button(item, temp, l, &button, ui2_draw_grid_cell_r, 0);
+				ui2_do_label(&button, temp, 20.0f, 1);
 			}
 			else if(id == COL_PROGRESS)
 			{
-				sprintf(temp, "%i", item->progression);
-				s = ui2_do_button(item, temp, l, &button, ui2_draw_browse_icon, 0);
+				ui2_draw_browse_icon(item->progression, &button);
 			}
 			else if(id == COL_GAMETYPE)
 			{
@@ -955,15 +963,15 @@ static void menu2_render_serverbrowser(RECT main_view)
 				if(item->game_type == GAMETYPE_DM) type = "DM";
 				else if(item->game_type == GAMETYPE_TDM) type = "TDM";
 				else if(item->game_type == GAMETYPE_CTF) type = "CTF";
-				s = ui2_do_button(item, type, l, &button, ui2_draw_grid_cell_l, 0);
+				ui2_do_label(&button, type, 20.0f, 0);
 			}
-			
+			/*
 			if(s)
 			{
 				new_selected = item_index;
 				dbg_msg("dbg", "addr = %s", item->address);
 				strncpy(config.ui_server_address, item->address, sizeof(config.ui_server_address));
-			}
+			}*/
 		}
 	}
 	
