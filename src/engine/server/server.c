@@ -720,8 +720,10 @@ static int server_run()
 		{
 			int64 t = time_get();
 			/* load new map TODO: don't poll this */
-			if(strcmp(config.sv_map, current_map) != 0)
+			if(strcmp(config.sv_map, current_map) != 0 || config.sv_map_reload)
 			{
+				config.sv_map_reload = 0;
+				
 				/* load map */
 				if(server_load_map(config.sv_map))
 				{

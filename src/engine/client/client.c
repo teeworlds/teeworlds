@@ -1038,6 +1038,7 @@ static void client_run()
 		/* render */
 		if(editor_active)
 		{
+			client_update();
 			editor_update_and_render();
 			gfx_swap();
 		}

@@ -49,6 +49,7 @@ MACRO_CONFIG_STR(sv_bindaddr, 128, "")
 MACRO_CONFIG_INT(sv_port, 8303, 0, 0)
 MACRO_CONFIG_INT(sv_sendheartbeats, 1, 0, 1)
 MACRO_CONFIG_STR(sv_map, 128, "dm1")
+MACRO_CONFIG_INT(sv_map_reload, 0, 0, 1)
 
 MACRO_CONFIG_INT(sv_max_clients, 8, 1, 16)
 
