@@ -252,6 +252,13 @@ void player_core::tick()
 			player_core *p = world->players[hooked_player];
 			if(p)
 				hook_pos = p->pos;
+			else
+			{
+				// release hook
+				hooked_player = -1;
+				hook_state = HOOK_RETRACTED;
+				hook_pos = pos;					
+			}
 			
 			// keep players hooked for a max of 1.5sec
 			//if(server_tick() > hook_tick+(server_tickspeed()*3)/2)
