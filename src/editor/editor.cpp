@@ -51,6 +51,8 @@ static ent_type ent_types[] = {
 };
 
 
+static int map_theme = 0;
+
 /********************************************************
  ENTITIES                                                
 *********************************************************/
@@ -785,6 +787,14 @@ int editor_load(const char *filename)
 			ents_new(type, e->x, e->y);
 		}
 	}
+
+	// load theme	
+	{
+		mapres_theme *e = (mapres_theme *)datafile_find_item(df, MAPRES_TEMP_THEME, 0);
+		map_theme = 0;
+		if(e)
+			map_theme = e->id;
+	}
 	
 	datafile_unload(df);
 	return 1;
@@ -869,6 +879,11 @@ int editor_save(const char *filename)
 		}
 	}
 	
+	// save theme
+	mapres_theme t;
+	t.id = map_theme;
+	datafile_add_item(df, MAPRES_TEMP_THEME, 0, sizeof(mapres_theme), &t);
+	
 	// finish and clean up
 	datafile_finish(df);
 	mem_free(collisiondata);
@@ -904,7 +919,8 @@ static void editor_listdir_callback(const char *name, int is_dir, void *user)
 static void editor_render_loadfile_dialog()
 {
 	// GUI coordsys
-	gfx_clear(0.2f,0.2f,0.8f);
+	gfx_clear(0.5f,0.5f,0.5f);
+		
 	gfx_mapscreen(0,0,400.0f,300.0f);
 	
 	int index = 0;
@@ -948,8 +964,12 @@ static void editor_render_loadmap_dialog()
 static void editor_render_normal()
 {
 	// background color
-	gfx_clear(0.2f,0.2f,0.8f);
-	
+	if(map_theme == 1)
+		gfx_clear(0x11/(float)0xff, 0x1a/(float)0xff, 0x21/(float)0xff);
+	else 
+		gfx_clear(0.65f,0.78f,0.9f);
+		
+
 	// world coordsys
 	float zoom = world_zoom;
 	gfx_mapscreen(world_offset_x,world_offset_y,world_offset_x+400.0f*zoom,world_offset_y+300.0f*zoom);
@@ -1050,6 +1070,12 @@ static void editor_render_normal()
 			static int push_button, pull_button;
 			float y = 150;
 			float x = 0;
+
+			const char *themes[] = {"theme: summer", "theme: winter"};
+			if(ui_do_button(&map_theme, themes[map_theme%2], 0, x, y, toolbox_width, 6, draw_editor_button, 0))
+				map_theme = (map_theme+1)%2;
+			y += 15;
+
 			if(ui_do_button(&push_button, "push", 0, x, y, toolbox_width, 6, draw_editor_button, 0))
 				current_layer = layers_moveup(current_layer);
 			y += 7;

@@ -11,6 +11,7 @@ extern "C" {
 
 #include "../game.h"
 #include "../version.h"
+#include "../mapres.h"
 #include "mapres_image.h"
 #include "mapres_tilemap.h"
 #include "data.h"
@@ -1901,7 +1902,11 @@ void render_world(float center_x, float center_y, float zoom)
 	// draw the sun
 	if(config.gfx_high_detail)
 	{
-		if(1)
+		int id = 0;
+		mapres_theme *t = (mapres_theme *)map_find_item(MAPRES_TEMP_THEME, 0);
+		if(t)
+			id = t->id;
+		if(id == 1)
 		{
 			gfx_mapscreen(0,0,1,1);
 			gfx_texture_set(-1);

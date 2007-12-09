@@ -7,3 +7,8 @@ enum
 	MAPRES_COLLISIONMAP=0x8003,
 	MAPRES_TEMP_THEME=0x8fff,
 };
+
+struct mapres_theme
+{
+	int id;
+};
