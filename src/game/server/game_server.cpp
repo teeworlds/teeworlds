@@ -985,7 +985,14 @@ void player::tick_defered()
 		int mask = cmask_all_except_one(client_id);
 		
 		if(events&COREEVENT_GROUND_JUMP) create_sound(pos, SOUND_PLAYER_JUMP, mask);
-		if(events&COREEVENT_AIR_JUMP) create_sound(pos, SOUND_PLAYER_JUMP, mask);
+		if(events&COREEVENT_AIR_JUMP)
+		{
+			create_sound(pos, SOUND_PLAYER_JUMP, mask);
+			ev_common *c = (ev_common *)::events.create(EVENT_AIR_JUMP, sizeof(ev_common), mask);
+			c->x = (int)pos.x;
+			c->y = (int)pos.y;
+		}
+		
 		//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
 		if(events&COREEVENT_HOOK_ATTACH_PLAYER) create_sound(pos, SOUND_HOOK_ATTACH_PLAYER, mask);
 		if(events&COREEVENT_HOOK_ATTACH_GROUND) create_sound(pos, SOUND_HOOK_ATTACH_GROUND, mask);

@@ -507,6 +507,17 @@ static int killmsg_current = 0;
 
 extern unsigned char internal_data[];
 
+void create_air_jump_effect(vec2 pos)
+{
+	const int count = 12;
+	for(int i = 0; i <= count; i++)
+	{
+		float a = i/(float)count;
+		vec2 v = vec2((a-0.5f)*512.0f, 0);
+		temp_system.new_particle(pos+vec2(0,28), v, 0.4f, 16.0f, 0, 0.985f, vec4(0.25f,0.4f,1,1));
+	}
+}
+
 
 extern void draw_round_rect(float x, float y, float w, float h, float r);
 extern int render_popup(const char *caption, const char *text, const char *button_text);
@@ -612,6 +623,11 @@ static void process_events(int s)
 		{
 			ev_damageind *ev = (ev_damageind *)data;
 			damageind.create(vec2(ev->x, ev->y), get_direction(ev->angle));
+		}
+		else if(item.type == EVENT_AIR_JUMP)
+		{
+			ev_common *ev = (ev_common *)data;
+			create_air_jump_effect(vec2(ev->x, ev->y));
 		}
 		else if(item.type == EVENT_EXPLOSION)
 		{
@@ -806,14 +822,7 @@ extern "C" void modc_predict()
 				if(events&COREEVENT_GROUND_JUMP) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
 				if(events&COREEVENT_AIR_JUMP)
 				{
-					const int count = 12;
-					for(int i = 0; i <= count; i++)
-					{
-						float a = i/(float)count;
-						vec2 v = vec2((a-0.5f)*512.0f, 0);
-						temp_system.new_particle(pos+vec2(0,28), v, 0.4f, 16.0f, 0, 0.985f, vec4(0.25f,0.4f,1,1));
-					}
-
+					create_air_jump_effect(pos);
 					snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
 				}
 				//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
