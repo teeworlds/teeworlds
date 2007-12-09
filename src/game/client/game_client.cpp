@@ -1614,6 +1614,28 @@ static void render_player(
 	}
 }
 
+void render_moon(float x, float y)
+{
+	gfx_texture_set(data->images[IMAGE_MOON].id);
+	gfx_quads_begin();
+	gfx_quads_draw(x, y, 512, 512);
+	gfx_quads_end();
+}
+
+void render_stars()
+{
+	gfx_texture_set(data->images[IMAGE_STARS].id);
+	gfx_quads_begin();
+	gfx_quads_end();
+}
+
+void render_snow()
+{
+	gfx_texture_set(data->images[IMAGE_SNOW].id);
+	gfx_quads_begin();
+	gfx_quads_end();
+}
+
 void render_sun(float x, float y)
 {
 	vec2 pos(x, y);
@@ -1919,6 +1941,10 @@ void render_world(float center_x, float center_y, float zoom)
 				gfx_setcolorvertex(3, bottom.r, bottom.g, bottom.b, bottom.a);
 				gfx_quads_drawTL(0, 0, 1, 1);
 			gfx_quads_end();
+
+			render_stars();
+			render_moon(20+center_x*0.6f, 20+center_y*0.6f);
+			render_snow();
 			
 			mapscreen_to_world(center_x, center_y, zoom);
 		}

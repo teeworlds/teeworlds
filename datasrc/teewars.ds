@@ -212,6 +212,18 @@ images {
 	sun {
 		filename "data/sun.png"
 	}
+
+	moon {
+		filename "data/moon.png"
+	}
+
+	stars {
+		filename "data/stars.png"
+	}
+
+	snow {
+		filename "data/snow.png"
+	}
 	
 	backdrop {
 		filename "data/mountain_paralax.png"
