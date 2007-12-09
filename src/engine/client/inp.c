@@ -72,6 +72,9 @@ static void key_callback(int key, int action)
 static void mousebutton_callback(int button, int action)
 {
 	if(action == GLFW_PRESS)
+		last_k = KEY_MOUSE_FIRST+button;
+		
+	if(action == GLFW_PRESS)
 		input_count[input_current^1][KEY_MOUSE_FIRST+button].presses++;
 	if(action == GLFW_RELEASE)
 	{
