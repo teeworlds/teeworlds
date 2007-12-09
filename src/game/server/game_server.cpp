@@ -383,6 +383,7 @@ void player::reset()
 
 	mem_zero(&input, sizeof(input));
 	mem_zero(&previnput, sizeof(previnput));
+	num_inputs = 0;
 
 	last_action = -1;
 
@@ -913,6 +914,11 @@ int player::handle_weapons()
 
 void player::tick()
 {
+	// check if we have enough input
+	// this is to prevent initial weird clicks
+	if(num_inputs < 2)
+		previnput = input;
+	
 	// do latency stuff
 	{
 		CLIENT_INFO info;
@@ -1540,6 +1546,7 @@ void mods_client_input(int client_id, void *input)
 
 		//players[client_id].previnput = players[client_id].input;
 		players[client_id].input = *(player_input*)input;
+		players[client_id].num_inputs++;
 	}
 }
 

@@ -260,6 +260,7 @@ public:
 	// input	
 	player_input previnput;
 	player_input input;
+	int num_inputs;
 	int jumped;
 	
 	int damage_taken_tick;
