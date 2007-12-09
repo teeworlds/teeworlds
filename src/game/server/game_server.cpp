@@ -292,6 +292,9 @@ void projectile::reset()
 void projectile::tick()
 {
 	float gravity = -400;
+	if(type != WEAPON_ROCKET)
+		gravity = -100;
+	
 	float pt = (server_tick()-start_tick-1)/(float)SERVER_TICK_SPEED;
 	float ct = (server_tick()-start_tick)/(float)SERVER_TICK_SPEED;
 	vec2 prevpos = calc_pos(pos, vel, gravity, pt);
@@ -802,14 +805,16 @@ int player::handle_weapons()
 						int shotspread = 2;
 						for(int i = -shotspread; i <= shotspread; i++)
 						{
+							float spreading[] = {-0.12f, -0.05f, 0, 0.05f, 0.12f};
 							float a = get_angle(direction);
-							a += i*0.08f;
+							float v = 1.0f-fabs(i/(float)shotspread);
+							a += spreading[i+2];
 							new projectile(WEAPON_SHOTGUN,
 								client_id,
 								pos+vec2(0,0),
-								vec2(cosf(a), sinf(a))*25.0f,
+								vec2(cosf(a), sinf(a))*(30.0f + 15.0f*v),
 								//vec2(cosf(a), sinf(a))*20.0f,
-								(int)(server_tickspeed()*0.4f),
+								(int)(server_tickspeed()*0.3f),
 								this,
 								1, 0, 0, -1, WEAPON_SHOTGUN);
 						}
