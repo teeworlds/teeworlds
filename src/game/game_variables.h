@@ -20,6 +20,9 @@ MACRO_CONFIG_INT(key_emoticon, 'E', 32, 512)
 MACRO_CONFIG_INT(key_chat, 'T', 32, 512)
 MACRO_CONFIG_INT(key_teamchat, 'Y', 32, 512)
 
+MACRO_CONFIG_INT(key_console, 256+2, 32, 512)
+MACRO_CONFIG_INT(key_remoteconsole, 256+3, 32, 512)
+
 MACRO_CONFIG_INT(autoswitch_weapons, 0, 0, 1)
 MACRO_CONFIG_INT(scroll_weapon, 1, 0, 1)
 

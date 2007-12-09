@@ -1202,6 +1202,10 @@ static void menu2_render_settings_controls(RECT main_view)
 		{ "Next Weapon:", &config.key_next_weapon },
 		{ "Prev. Weapon:", &config.key_prev_weapon },
 		{ "Emoticon:", &config.key_emoticon },
+		{ "Chat:", &config.key_chat },
+		{ "Team Chat:", &config.key_teamchat },
+		{ "Console:", &config.key_console },
+		{ "Remote Console:", &config.key_remoteconsole },
 		{ "Screenshot:", &config.key_screenshot },
 	};
 
