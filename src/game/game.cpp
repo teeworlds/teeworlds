@@ -174,7 +174,7 @@ void player_core::tick()
 			hook_pos = pos;
 			hook_dir = direction;
 			hooked_player = -1;
-			hook_tick = -1;
+			hook_tick = 0;
 			triggered_events |= COREEVENT_HOOK_LAUNCH;
 		}
 		else if(hook_state == HOOK_FLYING)
@@ -244,7 +244,7 @@ void player_core::tick()
 		hook_state = HOOK_IDLE;
 		hook_pos = pos;
 	}
-		
+	
 	if(hook_state == HOOK_GRABBED)
 	{
 		if(hooked_player != -1)
@@ -280,6 +280,15 @@ void player_core::tick()
 			if(length(new_vel) < hook_drag_speed || length(new_vel) < length(vel))
 				vel = new_vel; // no problem. apply
 				
+		}
+
+		// release hook		
+		hook_tick++;
+		if(hook_tick > SERVER_TICK_SPEED*2)
+		{
+			hooked_player = -1;
+			hook_state = HOOK_RETRACTED;
+			hook_pos = pos;			
 		}
 	}
 	
@@ -336,6 +345,7 @@ void player_core::write(obj_player_core *obj_core)
 	obj_core->vx = (int)(vel.x*256.0f);
 	obj_core->vy = (int)(vel.y*256.0f);
 	obj_core->hook_state = hook_state;
+	obj_core->hook_tick = hook_tick;
 	obj_core->hook_x = (int)hook_pos.x;
 	obj_core->hook_y = (int)hook_pos.y;
 	obj_core->hook_dx = (int)(hook_dir.x*256.0f);
@@ -362,6 +372,7 @@ void player_core::read(const obj_player_core *obj_core)
 	vel.x = obj_core->vx/256.0f;
 	vel.y = obj_core->vy/256.0f;
 	hook_state = obj_core->hook_state;
+	hook_tick = obj_core->hook_tick;
 	hook_pos.x = obj_core->hook_x;
 	hook_pos.y = obj_core->hook_y;
 	hook_dir.x = obj_core->hook_dx/256.0f;

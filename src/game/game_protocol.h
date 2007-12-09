@@ -179,6 +179,7 @@ struct obj_player_core
 
 	int hooked_player;
 	int hook_state;
+	int hook_tick;
 	int hook_x, hook_y;
 	int hook_dx, hook_dy;
 };
