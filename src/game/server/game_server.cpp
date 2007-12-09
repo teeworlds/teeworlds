@@ -501,6 +501,7 @@ void player::try_respawn()
 
 	active_weapon = WEAPON_GUN;
 	last_weapon = WEAPON_HAMMER;
+	wanted_weapon = WEAPON_GUN;
 
 	reload_timer = 0;
 
@@ -720,42 +721,44 @@ int player::handle_weapons()
 		reload_timer--;
 		return 0;
 	}
+	
 	if (active_weapon == WEAPON_NINJA)
 	{
 		// don't update other weapons while ninja is active
 		return handle_ninja();
 	}
 
+	// select weapon
+	int next = count_input(previnput.next_weapon, input.next_weapon).presses;
+	int prev = count_input(previnput.prev_weapon, input.prev_weapon).presses;
+	while(next) // next weapon selection
+	{
+		wanted_weapon = (wanted_weapon+1)%NUM_WEAPONS;
+		if(weapons[wanted_weapon].got)
+			next--;
+	}
+
+	while(prev) // prev weapon selection
+	{
+		wanted_weapon = (wanted_weapon-1)<0?NUM_WEAPONS-1:wanted_weapon-1;
+		if(weapons[wanted_weapon].got)
+			prev--;
+	}
+
+	if(input.wanted_weapon) // direct weapon selection
+		wanted_weapon = input.wanted_weapon-1;
+
+
 	// switch weapon if wanted
 	if(data->weapons[active_weapon].duration <= 0)
 	{
-		int new_weapon = active_weapon;
-		int next = count_input(previnput.next_weapon, input.next_weapon).presses;
-		int prev = count_input(previnput.prev_weapon, input.prev_weapon).presses;
-		while(next) // next weapon selection
+		if(wanted_weapon != active_weapon && wanted_weapon >= 0 && wanted_weapon < NUM_WEAPONS && weapons[wanted_weapon].got)
 		{
-			new_weapon = (new_weapon+1)%NUM_WEAPONS;
-			if(weapons[new_weapon].got)
-				next--;
-		}
-
-		while(prev) // prev weapon selection
-		{
-			new_weapon = (new_weapon-1)<0?NUM_WEAPONS-1:new_weapon-1;
-			if(weapons[new_weapon].got)
-				prev--;
-		}
-
-		if(input.wanted_weapon) // direct weapon selection
-			new_weapon = input.wanted_weapon-1;
-
-		if(new_weapon != active_weapon && new_weapon >= 0 && new_weapon < NUM_WEAPONS && weapons[new_weapon].got)
-		{
-			if(active_weapon != new_weapon)
+			if(active_weapon != wanted_weapon)
 				create_sound(pos, SOUND_WEAPON_SWITCH);
 
 			last_weapon = active_weapon;
-			active_weapon = new_weapon;
+			active_weapon = wanted_weapon;
 		}
 	}
 

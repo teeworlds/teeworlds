@@ -240,6 +240,7 @@ public:
 	} weapons[NUM_WEAPONS];
 	int active_weapon;
 	int last_weapon;
+	int wanted_weapon;
 	int reload_timer;
 	int attack_tick;
 	
