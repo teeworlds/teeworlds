@@ -1900,7 +1900,7 @@ void render_world(float center_x, float center_y, float zoom)
 	// draw the sun
 	if(config.gfx_high_detail)
 	{
-		if(0)
+		if(1)
 		{
 			gfx_mapscreen(0,0,1,1);
 			gfx_texture_set(-1);
