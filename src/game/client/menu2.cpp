@@ -33,6 +33,16 @@ extern const obj_player_info *local_info;
 extern bool menu_active;
 extern bool menu_game_active;
 
+enum
+{
+	POPUP_NONE=0,
+	POPUP_CONNECTING,
+	POPUP_DISCONNECTED,
+	POPUP_PASSWORD,
+	POPUP_QUIT, 
+};
+
+static int popup = POPUP_NONE;
 
 //static vec4 gui_color(0.9f,0.78f,0.65f, 0.5f);
 //static vec4 gui_color(0.78f,0.9f,0.65f, 0.5f);
@@ -711,6 +721,13 @@ static int menu2_render_menubar(RECT r)
 		
 	ui2_vsplit_r(&box, 30.0f, &box, 0);
 	*/
+	
+	ui2_vsplit_r(&box, 110.0f, &box, &button);
+	static int quit_button=0;
+	if (ui2_do_button(&quit_button, "Quit", 0, &button, ui2_draw_menu_tab_button, 0))
+		popup = POPUP_QUIT;
+
+	ui2_vsplit_r(&box, 10.0f, &box, &button);
 	ui2_vsplit_r(&box, 110.0f, &box, &button);
 	static int settings_button=0;
 	if (ui2_do_button(&settings_button, "Settings", active_page==PAGE_SETTINGS, &button, ui2_draw_menu_tab_button, 0))
@@ -1340,7 +1357,6 @@ static void menu2_render_settings_graphics(RECT main_view)
 	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
 	if (ui2_do_button(&config.gfx_fsaa_samples, "FSAA samples", config.gfx_fsaa_samples, &button, ui2_draw_checkbox_number, 0))
 	{
-		dbg_msg("d", "clicked!");
 		if(config.gfx_fsaa_samples < 2) config.gfx_fsaa_samples = 2;
 		else if(config.gfx_fsaa_samples < 4) config.gfx_fsaa_samples = 4;
 		else if(config.gfx_fsaa_samples < 6) config.gfx_fsaa_samples = 6;
@@ -1462,17 +1478,6 @@ static void menu2_render_game(RECT main_view)
 	}
 }
 
-
-enum
-{
-	POPUP_NONE=0,
-	POPUP_CONNECTING,
-	POPUP_DISCONNECTED,
-	POPUP_PASSWORD,
-};
-
-static int popup = POPUP_NONE;
-
 void menu_do_disconnected()
 {
 	popup = POPUP_NONE;
@@ -1498,7 +1503,6 @@ void menu_do_connected()
 {
 	popup = POPUP_NONE;
 }
-
 
 int menu2_render()
 {
@@ -1546,13 +1550,6 @@ int menu2_render()
 			client_serverbrowse_refresh(1);
 		first = false;
 	}
-
-	/*
-	if (inp_key_down('I') && ui2_scale() > 0.2f)
-		ui2_set_scale(ui2_scale()-0.1f);
-	if (inp_key_down('O'))
-		ui2_set_scale(ui2_scale()+0.1f);
-		*/
 	
 	if(client_state() == CLIENTSTATE_ONLINE)
 	{
@@ -1576,12 +1573,12 @@ int menu2_render()
 	if(popup == POPUP_NONE)
 	{
 		// do tab bar
+		RECT bottom_bar;
 		ui2_hsplit_t(&screen, 26.0f, &tab_bar, &main_view);
+		ui2_hsplit_b(&main_view, 26.0f, &main_view, &bottom_bar);
 		ui2_vmargin(&tab_bar, 20.0f, &tab_bar);
+		ui2_margin(&bottom_bar, 20.0f, &bottom_bar);
 		menu2_render_menubar(tab_bar);
-
-		// do bottom bar
-		//ui2_hsplit_b(&main_view, 26.0f, &main_view, &bottom_bar);
 			
 		// render current page
 		if(menu_game_active)
@@ -1624,6 +1621,12 @@ int menu2_render()
 			extra_text = client_error_string();
 			button_text = "Try Again";
 		}
+		else if(popup == POPUP_QUIT)
+		{
+			title = "Quit";
+			extra_text = "Are you sure that you want to quit?";
+		}
+		
 		
 		RECT box, part;
 		box = screen;
@@ -1640,7 +1643,25 @@ int menu2_render()
 		ui2_hsplit_t(&box, 24.f, &part, &box);
 		ui2_do_label(&part, extra_text, 20.f, 0);
 
-		if(popup == POPUP_PASSWORD)
+		if(popup == POPUP_QUIT)
+		{
+			RECT tryagain, abort;
+			ui2_hsplit_b(&box, 20.f, &box, &part);
+			ui2_hsplit_b(&box, 24.f, &box, &part);
+			ui2_vmargin(&part, 120.0f, &part);
+			
+			ui2_vsplit_l(&part, 100.0f, &abort, &part);
+			ui2_vsplit_r(&part, 100.0f, 0, &tryagain);
+
+			static int button_abort = 0;
+			if(ui2_do_button(&button_abort, "No", 0, &abort, ui2_draw_menu_button, 0) || inp_key_down(KEY_ESC))
+				popup = POPUP_NONE;
+
+			static int button_tryagain = 0;
+			if(ui2_do_button(&button_tryagain, "Yes", 0, &tryagain, ui2_draw_menu_button, 0) || inp_key_down(KEY_ENTER))
+				client_quit();
+		}
+		else if(popup == POPUP_PASSWORD)
 		{
 			RECT label, textbox, tryagain, abort;
 			
