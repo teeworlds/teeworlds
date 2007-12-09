@@ -20,6 +20,7 @@ gameobject_ctf::gameobject_ctf()
 		else
 		{
 			// report massive failure
+			flags[i] = 0;
 		}
 	}
 
@@ -63,6 +64,9 @@ void gameobject_ctf::tick()
 	for(int fi = 0; fi < 2; fi++)
 	{
 		flag *f = flags[fi];
+		
+		if(!f)
+			continue;
 		
 		//
 		if(f->carrying_player)

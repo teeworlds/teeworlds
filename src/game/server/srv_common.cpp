@@ -30,6 +30,8 @@ gameobject::gameobject()
 	round_start_tick = server_tick();
 	round_count = 0;
 	is_teamplay = false;
+	teamscore[0] = 0;
+	teamscore[1] = 0;	
 }
 
 void gameobject::endround()
