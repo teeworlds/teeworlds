@@ -751,6 +751,7 @@ void inp_update();
 void inp_init();
 void inp_mouse_mode_absolute();
 void inp_mouse_mode_relative();
+int inp_mouse_doubleclick();
 
 int inp_key_presses(int key);
 int inp_key_releases(int key);

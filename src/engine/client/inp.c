@@ -20,6 +20,8 @@ static struct
 static unsigned char input_state[2][1024] = {{0}, {0}};
 
 static int input_current = 0;
+static unsigned int last_release = 0;
+static unsigned int release_delta = -1;
 
 void inp_mouse_relative(int *x, int *y)
 {
@@ -72,7 +74,14 @@ static void mousebutton_callback(int button, int action)
 	if(action == GLFW_PRESS)
 		input_count[input_current^1][KEY_MOUSE_FIRST+button].presses++;
 	if(action == GLFW_RELEASE)
+	{
+		if(button == 0)
+		{
+			release_delta = time_get() - last_release;
+			last_release = time_get();
+		}
 		input_count[input_current^1][KEY_MOUSE_FIRST+button].releases++;
+	}
 	input_state[input_current^1][KEY_MOUSE_FIRST+button] = action;
 }
 
@@ -132,6 +141,11 @@ void inp_mouse_mode_absolute()
 void inp_mouse_mode_relative()
 {
 	glfwDisable(GLFW_MOUSE_CURSOR);
+}
+
+int inp_mouse_doubleclick()
+{
+	return release_delta < (time_freq() >> 2);
 }
 
 int inp_key_presses(int key)

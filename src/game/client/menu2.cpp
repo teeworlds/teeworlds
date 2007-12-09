@@ -918,6 +918,8 @@ static void menu2_render_serverbrowser(RECT main_view)
 			new_selected = item_index;
 			dbg_msg("dbg", "addr = %s", item->address);
 			strncpy(config.ui_server_address, item->address, sizeof(config.ui_server_address));
+			if(inp_mouse_doubleclick())
+				client_connect(config.ui_server_address);
 		}
 
 		for(int c = 0; c < num_cols; c++)
