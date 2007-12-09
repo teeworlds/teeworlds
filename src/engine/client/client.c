@@ -852,11 +852,8 @@ static void client_pump_network()
 
 static void client_update()
 {
-	if(client_state() == CLIENTSTATE_OFFLINE)
-		return;
-
 	/* switch snapshot */
-	if(recived_snapshots >= 3)
+	if(client_state() != CLIENTSTATE_OFFLINE && recived_snapshots >= 3)
 	{
 		int repredict = 0;
 		int64 now = st_get(&game_time, time_get());
