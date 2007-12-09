@@ -136,17 +136,29 @@ void player_core::tick()
 	MACRO_CHECK_VELOCITY
 	
 	// handle jumping
+	// 1 bit = to keep track if a jump has been made on this input
+	// 2 bit = to keep track if a air-jump has been made
+	if(grounded)
+		jumped &= ~2;
+	
 	if(input.jump)
 	{
-		if(!jumped && grounded)
+		if(!(jumped&1))
 		{
-			//create_sound(pos, SOUND_PLAYER_JUMP);
-			vel.y = -ground_jump_speed;
-			jumped++;
+			if(grounded)
+			{
+				vel.y = -ground_jump_speed;
+				jumped |= 1;
+			}
+			else if(!(jumped&2))
+			{
+				vel.y = -ground_air_speed;
+				jumped |= 3;
+			}
 		}
 	}
 	else
-		jumped = 0;
+		jumped &= ~1;
 	
 	MACRO_CHECK_VELOCITY
 	
@@ -322,6 +334,7 @@ void player_core::write(obj_player_core *obj_core)
 	obj_core->hook_dx = (int)(hook_dir.x*256.0f);
 	obj_core->hook_dy = (int)(hook_dir.y*256.0f);
 	obj_core->hooked_player = hooked_player;
+	obj_core->jumped = jumped;
 
 	float a = 0;
 	if(input.target_x == 0)
@@ -347,7 +360,7 @@ void player_core::read(const obj_player_core *obj_core)
 	hook_dir.x = obj_core->hook_dx/256.0f;
 	hook_dir.y = obj_core->hook_dy/256.0f;
 	hooked_player = obj_core->hooked_player;
-	jumped = 0;
+	jumped = obj_core->jumped;
 }
 
 void player_core::quantize()

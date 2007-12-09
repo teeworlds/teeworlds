@@ -5,7 +5,8 @@
 const float ground_control_speed = 7.0f;
 const float ground_control_accel = 2.0f;
 const float ground_friction = 0.5f;
-const float ground_jump_speed = 13.5f;
+const float ground_jump_speed = 12.6f;
+const float ground_air_speed = 11.5f;
 const float air_control_speed = 5.0f;
 const float air_control_accel = 1.5f;
 const float air_friction = 0.95f;
@@ -174,6 +175,7 @@ struct obj_player_core
 	int x, y;
 	int vx, vy;
 	int angle;
+	int jumped;
 
 	int hooked_player;
 	int hook_state;
