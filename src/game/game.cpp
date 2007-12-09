@@ -101,6 +101,7 @@ void move_box(vec2 *inout_pos, vec2 *inout_vel, vec2 size, float elasticity)
 void player_core::tick()
 {
 	float phys_size = 28.0f;
+	triggered_events = 0;
 	
 	#define MACRO_CHECK_VELOCITY { dbg_assert(length(vel) < 1000.0f, "velocity error"); }
 	
@@ -147,11 +148,13 @@ void player_core::tick()
 		{
 			if(grounded)
 			{
+				triggered_events |= COREEVENT_GROUND_JUMP;
 				vel.y = -ground_jump_speed;
 				jumped |= 1;
 			}
 			else if(!(jumped&2))
 			{
+				triggered_events |= COREEVENT_AIR_JUMP;
 				vel.y = -ground_air_speed;
 				jumped |= 3;
 			}
@@ -172,6 +175,7 @@ void player_core::tick()
 			hook_dir = direction;
 			hooked_player = -1;
 			hook_tick = -1;
+			triggered_events |= COREEVENT_HOOK_LAUNCH;
 		}
 		else if(hook_state == HOOK_FLYING)
 		{
@@ -187,6 +191,7 @@ void player_core::tick()
 				//if(p != this && !p->dead && distance(p->pos, new_pos) < p->phys_size)
 				if(distance(p->pos, new_pos) < phys_size)
 				{
+					triggered_events |= COREEVENT_HOOK_ATTACH_PLAYER;
 					hook_state = HOOK_GRABBED;
 					hooked_player = i;
 					break;
@@ -212,11 +217,13 @@ void player_core::tick()
 				// check against ground
 				if(col_intersect_line(hook_pos, new_pos, &new_pos))
 				{
+					triggered_events |= COREEVENT_HOOK_ATTACH_GROUND;
 					hook_state = HOOK_GRABBED;
 					hook_pos = new_pos;	
 				}
 				else if(distance(pos, new_pos) > hook_length)
 				{
+					triggered_events |= COREEVENT_HOOK_RETRACT;
 					hook_state = HOOK_RETRACTED;
 				}
 				else

@@ -5,6 +5,11 @@
 
 void create_sound_global(int sound, int target=-1);
 
+inline int cmask_all() { return -1; }
+inline int cmask_one(int cid) { return 1<<cid; }
+inline int cmask_all_except_one(int cid) { return 0x7fffffff^cmask_one(cid); }
+inline bool cmask_is_set(int mask, int cid) { return mask&cmask_one(cid) != 0; }
+
 //
 class event_handler
 {
@@ -14,14 +19,14 @@ class event_handler
 	int types[MAX_EVENTS];  // TODO: remove some of these arrays
 	int offsets[MAX_EVENTS];
 	int sizes[MAX_EVENTS];
-	int targets[MAX_EVENTS];
+	int client_masks[MAX_EVENTS];
 	char data[MAX_DATASIZE];
 	
 	int current_offset;
 	int num_events;
 public:
 	event_handler();
-	void *create(int type, int size, int target = -1);
+	void *create(int type, int size, int mask = -1);
 	void clear();
 	void snap(int snapping_client);
 };

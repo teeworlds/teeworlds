@@ -18,8 +18,7 @@ void create_explosion(vec2 p, int owner, int weapon, bool bnodamage);
 void create_smoke(vec2 p);
 void create_spawn(vec2 p);
 void create_death(vec2 p);
-void create_sound(vec2 pos, int sound, int loopflags = 0);
-void create_targetted_sound(vec2 pos, int sound, int target, int loopflags = 0);
+void create_sound(vec2 pos, int sound, int mask=-1);
 class player *intersect_player(vec2 pos0, vec2 pos1, vec2 &new_pos, class entity *notthis = 0);
 
 game_world *world;
@@ -32,7 +31,7 @@ event_handler::event_handler()
 	clear();
 }
 
-void *event_handler::create(int type, int size, int target)
+void *event_handler::create(int type, int size, int mask)
 {
 	if(num_events == MAX_EVENTS)
 		return 0;
@@ -43,7 +42,7 @@ void *event_handler::create(int type, int size, int target)
 	offsets[num_events] = current_offset;
 	types[num_events] = type;
 	sizes[num_events] = size;
-	targets[num_events] = target;
+	client_masks[num_events] = mask;
 	current_offset += size;
 	num_events++;
 	return p;
@@ -59,7 +58,7 @@ void event_handler::snap(int snapping_client)
 {
 	for(int i = 0; i < num_events; i++)
 	{
-		if (targets[i] == -1 || targets[i] == snapping_client)
+		if(cmask_is_set(client_masks[i], snapping_client))
 		{
 			ev_common *ev = (ev_common *)&data[offsets[i]];
 			if(distance(players[snapping_client].pos, vec2(ev->x, ev->y)) < 1500.0f)
@@ -975,6 +974,18 @@ void player::tick_defered()
 		core.move();
 		core.quantize();
 		pos = core.pos;
+
+		int events = core.triggered_events;
+		int mask = cmask_all_except_one(client_id);
+		
+		if(events&COREEVENT_GROUND_JUMP) create_sound(pos, SOUND_PLAYER_JUMP, mask);
+		if(events&COREEVENT_AIR_JUMP) create_sound(pos, SOUND_PLAYER_JUMP, mask);
+		//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
+		if(events&COREEVENT_HOOK_ATTACH_PLAYER) create_sound(pos, SOUND_HOOK_ATTACH, mask);
+		if(events&COREEVENT_HOOK_ATTACH_GROUND) create_sound(pos, SOUND_HOOK_ATTACH, mask);
+		//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
+		
+		
 	}
 	
 	if(team == -1)
@@ -1056,7 +1067,7 @@ bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 
 	// do damage hit sound
 	if(from >= 0)
-		create_targetted_sound(get_player(from)->pos, SOUND_HIT, from);
+		create_sound(get_player(from)->pos, SOUND_HIT, cmask_one(from));
 
 	// check for death
 	if(health <= 0)
@@ -1197,7 +1208,7 @@ void powerup::tick()
 			spawntick = -1;
 
 			if(type == POWERUP_WEAPON)
-				create_sound(pos, SOUND_WEAPON_SPAWN, 0);
+				create_sound(pos, SOUND_WEAPON_SPAWN);
 		}
 		else
 			return;
@@ -1214,7 +1225,7 @@ void powerup::tick()
 		case POWERUP_HEALTH:
 			if(pplayer->health < 10)
 			{
-				create_sound(pos, SOUND_PICKUP_HEALTH, 0);
+				create_sound(pos, SOUND_PICKUP_HEALTH);
 				pplayer->health = min(10, pplayer->health + data->powerupinfo[type].amount);
 				respawntime = data->powerupinfo[type].respawntime;
 			}
@@ -1222,7 +1233,7 @@ void powerup::tick()
 		case POWERUP_ARMOR:
 			if(pplayer->armor < 10)
 			{
-				create_sound(pos, SOUND_PICKUP_ARMOR, 0);
+				create_sound(pos, SOUND_PICKUP_ARMOR);
 				pplayer->armor = min(10, pplayer->armor + data->powerupinfo[type].amount);
 				respawntime = data->powerupinfo[type].respawntime;
 			}
@@ -1392,24 +1403,19 @@ void create_death(vec2 p)
 	}
 }
 
-void create_targetted_sound(vec2 pos, int sound, int target, int loopingflags)
+void create_sound(vec2 pos, int sound, int mask)
 {
 	if (sound < 0)
 		return;
 
 	// create a sound
-	ev_sound *ev = (ev_sound *)events.create(EVENT_SOUND_WORLD, sizeof(ev_sound), target);
+	ev_sound *ev = (ev_sound *)events.create(EVENT_SOUND_WORLD, sizeof(ev_sound), mask);
 	if(ev)
 	{
 		ev->x = (int)pos.x;
 		ev->y = (int)pos.y;
-		ev->sound = sound | loopingflags;
+		ev->sound = sound;
 	}
-}
-
-void create_sound(vec2 pos, int sound, int loopingflags)
-{
-	create_targetted_sound(pos, sound, -1, loopingflags);
 }
 
 void create_sound_global(int sound, int target)

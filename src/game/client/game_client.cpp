@@ -342,7 +342,7 @@ public:
 		num_particles = 0;
 	}
 
-	void new_particle(vec2 pos, vec2 vel, float life, float size, float gravity, float friction)
+	void new_particle(vec2 pos, vec2 vel, float life, float size, float gravity, float friction, vec4 color=vec4(1,1,1,1))
 	{
 		if (num_particles >= MAX_PARTICLES)
 			return;
@@ -357,6 +357,7 @@ public:
 		particles[num_particles].friction = friction;
 		particles[num_particles].rot = frandom()*pi*2;
 		particles[num_particles].rotspeed = frandom() * 10.0f;
+		particles[num_particles].color = color;
 		num_particles++;
 	}
 
@@ -398,10 +399,10 @@ public:
 			gfx_quads_setrotation(particles[i].rot);
 
 			gfx_setcolor(
-				data->particles[type].color_r,
-				data->particles[type].color_g,
-				data->particles[type].color_b,
-				pow(a, 0.75f));
+				data->particles[type].color_r * particles[i].color.r,
+				data->particles[type].color_g * particles[i].color.g,
+				data->particles[type].color_b * particles[i].color.b,
+				pow(a, 0.75f) * particles[i].color.a);
 
 			gfx_quads_draw(p.x, p.y,particles[i].size,particles[i].size);
 		}
@@ -798,15 +799,40 @@ extern "C" void modc_predict()
 
 			world.players[c]->move();
 			world.players[c]->quantize();
+		}
+		
+		if(tick > last_new_predicted_tick)
+		{
+			last_new_predicted_tick = tick;
 			
-			if(tick > last_new_predicted_tick)
+			if(local_cid != -1 && world.players[local_cid])
 			{
-				last_new_predicted_tick = tick;
-				/*
-				dbg_msg("predict", "%d %d %d", tick,
-					(int)world.players[c]->pos.x, (int)world.players[c]->pos.y,
-					(int)world.players[c]->vel.x, (int)world.players[c]->vel.y);*/
+				vec2 pos = world.players[local_cid]->pos;
+				int events = world.players[local_cid]->triggered_events;
+				if(events&COREEVENT_GROUND_JUMP) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
+				if(events&COREEVENT_AIR_JUMP)
+				{
+					const int count = 12;
+					for(int i = 0; i <= count; i++)
+					{
+						float a = i/(float)count;
+						vec2 v = vec2((a-0.5f)*512.0f, 0);
+						temp_system.new_particle(pos+vec2(0,28), v, 0.4f, 16.0f, 0, 0.985f, vec4(0.25f,0.4f,1,1));
+					}
+
+					snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
+				}
+				//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
+				if(events&COREEVENT_HOOK_ATTACH_PLAYER) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH, 1.0f, pos);
+				if(events&COREEVENT_HOOK_ATTACH_GROUND) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH, 1.0f, pos);
+				//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
 			}
+
+
+			/*
+			dbg_msg("predict", "%d %d %d", tick,
+				(int)world.players[c]->pos.x, (int)world.players[c]->pos.y,
+				(int)world.players[c]->vel.x, (int)world.players[c]->vel.y);*/
 		}
 		
 		if(tick == client_predtick() && world.players[local_cid])

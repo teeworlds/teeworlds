@@ -69,7 +69,14 @@ enum
 	HOOK_RETRACTED=-1,
 	HOOK_IDLE=0,
 	HOOK_FLYING,
-	HOOK_GRABBED
+	HOOK_GRABBED,
+	
+	COREEVENT_GROUND_JUMP=0x01,
+	COREEVENT_AIR_JUMP=0x02,
+	COREEVENT_HOOK_LAUNCH=0x04,
+	COREEVENT_HOOK_ATTACH_PLAYER=0x08,
+	COREEVENT_HOOK_ATTACH_GROUND=0x10,
+	COREEVENT_HOOK_RETRACT=0x20,
 };
 
 class world_core
@@ -99,6 +106,8 @@ public:
 	
 	int jumped;
 	player_input input;
+	
+	int triggered_events;
 	
 	void tick();
 	void move();
