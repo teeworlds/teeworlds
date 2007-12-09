@@ -1921,7 +1921,7 @@ void render_world(float center_x, float center_y, float zoom)
 	mapscreen_to_world(center_x, center_y, zoom);
 	//gfx_mapscreen(center_x-width/2, center_y-height/2, center_x+width/2, center_y+height/2);
 
-	// draw the sun
+	// render background environment
 	if(config.gfx_high_detail)
 	{
 		int id = 0;
@@ -1930,6 +1930,7 @@ void render_world(float center_x, float center_y, float zoom)
 			id = t->id;
 		if(id == 1)
 		{
+			// Winter night
 			gfx_mapscreen(0,0,1,1);
 			gfx_texture_set(-1);
 			gfx_quads_begin();
@@ -1944,12 +1945,12 @@ void render_world(float center_x, float center_y, float zoom)
 
 			render_stars();
 			render_moon(20+center_x*0.6f, 20+center_y*0.6f);
-			render_snow();
 			
 			mapscreen_to_world(center_x, center_y, zoom);
 		}
 		else
 		{
+			// Summer day
 			render_sun(20+center_x*0.6f, 20+center_y*0.6f);
 
 			// draw clouds
@@ -2043,6 +2044,19 @@ void render_world(float center_x, float center_y, float zoom)
 
 	// render foreground tilemaps
 	tilemap_render(32.0f, 1);
+	
+	// render front environment effects
+	if(config.gfx_high_detail)
+	{
+		int id = 0;
+		mapres_theme *t = (mapres_theme *)map_find_item(MAPRES_TEMP_THEME, 0);
+		if(t)
+			id = t->id;
+		if(id == 1)
+		{
+			render_snow();
+		}
+	}
 
 	// render damage indications
 	damageind.render();
