@@ -519,6 +519,31 @@ bool player::is_grounded()
 	return false;
 }
 
+struct input_count
+{
+	int presses;
+	int releases;
+};
+
+static input_count count_input(int prev, int cur)
+{
+	input_count c = {0,0};
+	prev &= INPUT_STATE_MASK;
+	cur &= INPUT_STATE_MASK;
+	int i = prev;
+	while(i != cur)
+	{
+		i = (i+1)&INPUT_STATE_MASK;
+		if(i&1)
+			c.presses++;
+		else
+			c.releases++;
+	}
+
+	return c;
+}
+
+
 int player::handle_ninja()
 {
 	vec2 direction = normalize(vec2(input.target_x, input.target_y));
@@ -531,7 +556,7 @@ int player::handle_ninja()
 	}
 
 	// Check if it should activate
-	if ((input.fire && !(previnput.fire)) && (server_tick() > currentcooldown))
+	if (count_input(previnput.fire, input.fire).presses && (server_tick() > currentcooldown))
 	{
 		// ok then, activate ninja
 		attack_tick = server_tick();
@@ -608,30 +633,6 @@ int player::handle_ninja()
 		return MODIFIER_RETURNFLAGS_OVERRIDEVELOCITY | MODIFIER_RETURNFLAGS_OVERRIDEPOSITION | MODIFIER_RETURNFLAGS_OVERRIDEGRAVITY;
 	}
 	return 0;
-}
-
-struct input_count
-{
-	int presses;
-	int releases;
-};
-
-static input_count count_input(int prev, int cur)
-{
-	input_count c = {0,0};
-	prev &= INPUT_STATE_MASK;
-	cur &= INPUT_STATE_MASK;
-	int i = prev;
-	while(i != cur)
-	{
-		i = (i+1)&INPUT_STATE_MASK;
-		if(i&1)
-			c.presses++;
-		else
-			c.releases++;
-	}
-
-	return c;
 }
 
 int player::handle_sniper()

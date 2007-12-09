@@ -761,18 +761,11 @@ extern "C" void modc_predict()
 	}
 
 	// predict
-	int num_predicted = 0;
-	int got = 0;
 	for(int tick = client_tick()+1; tick <= client_predtick(); tick++)
 	{
-		num_predicted++;
-		
 		// fetch the local
 		if(tick == client_predtick() && world.players[local_cid])
-		{
-			got|=1;
 			predicted_prev_player = *world.players[local_cid];
-		}
 		
 		// first calculate where everyone should move
 		for(int c = 0; c < MAX_CLIENTS; c++)
@@ -837,14 +830,19 @@ extern "C" void modc_predict()
 		}
 		
 		if(tick == client_predtick() && world.players[local_cid])
-		{
-			got|=2;
 			predicted_player = *world.players[local_cid];
-		}
 	}
-	
-	if(got!=3)
-		dbg_msg("predict", "way few predictions %d %d", num_predicted, got);
+}
+
+static void clear_object_pointers()
+{
+	// clear out the invalid pointers
+	local_character = 0;
+	local_prev_character = 0;
+	local_info = 0;
+	flags[0] = 0;
+	flags[1] = 0;
+	gameobj = 0;
 }
 
 extern "C" void modc_newsnapshot()
@@ -863,13 +861,7 @@ extern "C" void modc_newsnapshot()
 		}
 	}
 
-	// clear out the invalid pointers
-	local_character = 0;
-	local_prev_character = 0;
-	local_info = 0;
-	flags[0] = 0;
-	flags[1] = 0;
-	gameobj = 0;
+	clear_object_pointers();
 
 	// setup world view
 	{
@@ -2753,6 +2745,8 @@ void menu_do_connected();
 
 extern "C" void modc_statechange(int state, int old)
 {
+	clear_object_pointers();
+	
 	if(state == CLIENTSTATE_OFFLINE)
 	{
 	 	menu_do_disconnected();
@@ -2853,6 +2847,9 @@ extern "C" void modc_connected()
 	chat_reset();
 
 	proj_particles.reset();
+	
+	clear_object_pointers();
+	last_new_predicted_tick = -1;
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
