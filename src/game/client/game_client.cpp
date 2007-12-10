@@ -2115,6 +2115,16 @@ void render_game()
 		}
 	}
 
+	// make sure to send our info again if the menu closes	
+	static bool menu_was_active = false;
+	if(menu_active)
+		menu_was_active = true;
+	else if(menu_was_active)
+	{
+		send_info(false);
+		menu_was_active = false;
+	}
+
 	// handle chat input
 	if (!menu_active)
 	{
