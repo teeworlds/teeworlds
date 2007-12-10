@@ -557,6 +557,7 @@ int player::handle_ninja()
 	if ((server_tick() - ninjaactivationtick) > (data->weapons[WEAPON_NINJA].duration * server_tickspeed() / 1000))
 	{
 		// time's up, return
+		weapons[WEAPON_NINJA].got = false;
 		active_weapon = last_weapon;
 		set_weapon(active_weapon);
 		return 0;
