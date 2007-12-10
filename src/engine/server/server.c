@@ -770,9 +770,9 @@ static int server_run()
 						snapstorage_purge_all(&clients[c].snapshots);
 					}
 					
-					mods_init();
 					game_start_time = time_get();
 					current_tick = 0;
+					mods_init();
 				}
 				else
 				{

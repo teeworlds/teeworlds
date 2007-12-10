@@ -166,7 +166,7 @@ void gameobject::tick()
 	{
 		warmup--;
 		if(!warmup)
-			resetgame();
+			startround();
 	}
 	
 	if(game_over_tick != -1)
