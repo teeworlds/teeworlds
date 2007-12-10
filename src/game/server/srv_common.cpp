@@ -145,6 +145,19 @@ void gameobject::do_warmup(int seconds)
 	warmup = seconds*SERVER_TICK_SPEED;
 }
 
+bool gameobject::is_friendly_fire(int cid1, int cid2)
+{
+	if(cid1 == cid2)
+		return false;
+	
+	if(is_teamplay)
+	{
+		if(players[cid1].team == players[cid2].team)
+			return true;
+	}
+	
+	return false;
+}
 
 void gameobject::tick()
 {

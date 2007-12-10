@@ -141,7 +141,9 @@ public:
 	
 	void startround();
 	void endround();
-
+	
+	bool is_friendly_fire(int cid1, int cid2);
+	
 	virtual void post_reset();
 	virtual void tick();
 	

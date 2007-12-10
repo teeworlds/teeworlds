@@ -31,8 +31,8 @@ MACRO_CONFIG_STR(gametype, 32, "dm")
 MACRO_CONFIG_INT(restart, 0, 0, 120)
 
 MACRO_CONFIG_INT(dbg_bots, 0, 0, 7)
-MACRO_CONFIG_INT(cl_predict, 1, 0, 1)
 
+MACRO_CONFIG_INT(cl_predict, 1, 0, 1)
 MACRO_CONFIG_INT(cl_nameplates, 0, 0, 1)
 MACRO_CONFIG_INT(cl_nameplates_always, 0, 0, 1)
 
@@ -55,6 +55,7 @@ MACRO_CONFIG_INT(ui_page, 1, 0, 5)
 MACRO_CONFIG_STR(ui_server_address, 128, "localhost:8303")
 MACRO_CONFIG_INT(ui_scale, 100, 1, 100000)
 
-
 MACRO_CONFIG_STR(sv_msg, 512, "")
+MACRO_CONFIG_INT(sv_teamdamage, 0, 0, 1)
+
 

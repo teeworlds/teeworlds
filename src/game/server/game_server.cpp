@@ -1064,6 +1064,9 @@ void player::die(int killer, int weapon)
 bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 {
 	core.vel += force;
+	
+	if(gameobj->is_friendly_fire(client_id, from) && !config.sv_teamdamage)
+		return false;
 
 	// player only inflicts half damage on self
 	if(from == client_id)
