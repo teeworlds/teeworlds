@@ -404,7 +404,7 @@ static void ui2_draw_checkbox_number(const void *id, const char *text, int check
 	ui2_draw_checkbox_common(id, text, buf, r);
 }
 
-int ui2_do_edit_box(void *id, const RECT *rect, char *str, int str_size)
+int ui2_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hidden=false)
 {
     int inside = ui_mouse_inside(rect->x,rect->y,rect->w,rect->h);
 	int r = 0;
@@ -496,11 +496,25 @@ int ui2_do_edit_box(void *id, const RECT *rect, char *str, int str_size)
 	RECT textbox = *rect;
 	ui2_draw_rect(&textbox, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
 	ui2_vmargin(&textbox, 5.0f, &textbox);
-	ui2_do_label(&textbox, str, 18, -1);
+	
+	const char *display_str = str;
+	char stars[128];
+	
+	if(hidden)
+	{
+		unsigned s = strlen(str);
+		if(s >= sizeof(stars))
+			s = sizeof(stars)-1;
+		memset(stars, '*', s);
+		stars[s] = 0;
+		display_str = stars;
+	}
+	
+	ui2_do_label(&textbox, display_str, 18, -1);
 
 	if (ui_last_active_item() == id && !just_got_active)
 	{
-		float w = gfx_pretty_text_width(18.0f, str, at_index);
+		float w = gfx_pretty_text_width(18.0f, display_str, at_index);
 		textbox.x += w*ui2_scale();
 		ui2_do_label(&textbox, "_", 18, -1);
 	}
@@ -1432,6 +1446,20 @@ static void menu2_render_settings_sound(RECT main_view)
 }
 
 
+static void menu2_render_settings_network(RECT main_view)
+{
+	RECT button;
+	ui2_vsplit_l(&main_view, 300.0f, &main_view, 0);
+	
+	{
+		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		ui2_do_label(&button, "Rcon Password", 18.0, -1);
+		ui2_vsplit_l(&button, 110.0f, 0, &button);
+		ui2_vsplit_l(&button, 180.0f, &button, 0);
+		ui2_do_edit_box(&config.rcon_password, &button, config.rcon_password, sizeof(config.rcon_password), true);
+	}
+}
+
 static void menu2_render_settings(RECT main_view)
 {
 	static int settings_page = 0;
@@ -1465,7 +1493,7 @@ static void menu2_render_settings(RECT main_view)
 	else if(settings_page == 1)
 		menu2_render_settings_controls(main_view);
 	else if(settings_page == 2)
-		{}
+		menu2_render_settings_network(main_view);
 	else if(settings_page == 3)
 		menu2_render_settings_graphics(main_view);
 	else if(settings_page == 4)
@@ -1742,7 +1770,7 @@ int menu2_render()
 			ui2_vsplit_l(&textbox, 20.0f, 0, &textbox);
 			ui2_vsplit_r(&textbox, 60.0f, &textbox, 0);
 			ui2_do_label(&label, "Password:", 20, -1);
-			ui2_do_edit_box(&config.password, &textbox, config.password, sizeof(config.password));
+			ui2_do_edit_box(&config.password, &textbox, config.password, sizeof(config.password), true);
 		}
 		else
 		{
