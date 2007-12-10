@@ -1611,6 +1611,7 @@ static void render_player(
 		float tw = gfx_pretty_text_width(28.0f, name, -1);
 		gfx_pretty_text_color(1,1,1,a);
 		gfx_pretty_text(position.x-tw/2.0f, position.y-60, 28.0f, name, -1);
+		gfx_pretty_text_color(1,1,1,1);
 	}
 }
 
