@@ -2222,7 +2222,10 @@ void render_game()
 		}
 	}
 
-	local_target_pos = local_character_pos + mouse_pos;
+	if(spectate)
+		local_target_pos = mouse_pos;
+	else
+		local_target_pos = local_character_pos + mouse_pos;
 
 	// snap input
 	{
