@@ -480,6 +480,10 @@ static void client_debug_render()
 		gfx_memory_usage()/1024,
 		(int)(1.0f/frametime_avg));
 	gfx_quads_text(2, 2, 16, buffer);
+
+	sprintf(buffer, "ui: %p %p", ui_hot_item(), ui_active_item());
+	gfx_quads_text(2, 16, 16, buffer);
+
 	
 	/* render rates */
 	{
