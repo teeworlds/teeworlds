@@ -645,17 +645,24 @@ static void client_process_packet(NETPACKET *packet)
 					client_disconnect_with_reason(error);
 				}
 			}
-			else if(msg == NETMSG_SNAP || msg == NETMSG_SNAPEMPTY)
+			else if(msg == NETMSG_SNAP || msg == NETMSG_SNAPSINGLE || msg == NETMSG_SNAPEMPTY)
 			{
 				/*dbg_msg("client/network", "got snapshot"); */
+				int num_parts = 1;
+				int part = 0;
 				int game_tick = msg_unpack_int();
 				int delta_tick = game_tick-msg_unpack_int();
 				int input_predtick = msg_unpack_int();
 				int time_left = msg_unpack_int();
-				int num_parts = 1;
-				int part = 0;
 				int part_size = 0;
 				int crc = 0;
+				int complete_size = 0;
+				
+				if(msg == NETMSG_SNAP)
+				{
+					num_parts = msg_unpack_int();
+					part = msg_unpack_int();
+				}
 				
 				if(msg != NETMSG_SNAPEMPTY)
 				{
@@ -703,6 +710,8 @@ static void client_process_packet(NETPACKET *packet)
 						unsigned char tmpbuffer2[MAX_SNAPSHOT_SIZE];
 						unsigned char tmpbuffer3[MAX_SNAPSHOT_SIZE];
 						int snapsize;
+						
+						complete_size = (num_parts-1) * MAX_SNAPSHOT_PACKSIZE + part_size;
 
 						snapshot_part = 0;
 						
@@ -733,9 +742,9 @@ static void client_process_packet(NETPACKET *packet)
 						deltadata = snapshot_empty_delta();
 						deltasize = sizeof(int)*3;
 
-						if(part_size)
+						if(complete_size)
 						{
-							int compsize = zerobit_decompress(snapshot_incomming_data, part_size, tmpbuffer);
+							int compsize = zerobit_decompress(snapshot_incomming_data, complete_size, tmpbuffer);
 							int intsize = intpack_decompress(tmpbuffer, compsize, tmpbuffer2);
 							deltadata = tmpbuffer2;
 							deltasize = intsize;

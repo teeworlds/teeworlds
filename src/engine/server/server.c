@@ -48,8 +48,8 @@ typedef struct
 	int timeout_tick;
 } SNAP_ID;
 
-static const int MAX_IDS = 8*1024; /* should be lowered */
-static SNAP_ID snap_ids[8*1024];
+static const int MAX_IDS = 16*1024; /* should be lowered */
+static SNAP_ID snap_ids[16*1024];
 static int snap_first_free_id;
 static int snap_first_timed_id;
 static int snap_last_timed_id;
@@ -113,6 +113,23 @@ static void snap_init_id()
 	snap_id_inited = 1;
 }
 
+static void snap_remove_first_timeout()
+{
+	int next_timed = snap_ids[snap_first_timed_id].next;
+	
+	/* add it to the free list */
+	snap_ids[snap_first_timed_id].next = snap_first_free_id;
+	snap_ids[snap_first_timed_id].state = 0;
+	snap_first_free_id = snap_first_timed_id;
+	
+	/* remove it from the timed list */
+	snap_first_timed_id = next_timed;
+	if(snap_first_timed_id == -1)
+		snap_last_timed_id = -1;
+		
+	snap_id_usage--;
+}
+
 int snap_new_id()
 {
 	int id;
@@ -120,21 +137,7 @@ int snap_new_id()
 	
 	/* process timed ids */
 	while(snap_first_timed_id != -1 && snap_ids[snap_first_timed_id].timeout_tick < server_tick())
-	{
-		int next_timed = snap_ids[snap_first_timed_id].next;
-		
-		/* add it to the free list */
-		snap_ids[snap_first_timed_id].next = snap_first_free_id;
-		snap_ids[snap_first_timed_id].state = 0;
-		snap_first_free_id = snap_first_timed_id;
-		
-		/* remove it from the timed list */
-		snap_first_timed_id = next_timed;
-		if(snap_first_timed_id == -1)
-			snap_last_timed_id = -1;
-			
-		snap_id_usage--;
-	}
+		snap_remove_first_timeout();
 	
 	id = snap_first_free_id;
 	dbg_assert(id != -1, "id error");
@@ -143,6 +146,13 @@ int snap_new_id()
 	snap_id_usage++;
 	snap_id_inusage++;
 	return id;
+}
+
+void snap_timeout_ids()
+{
+	/* process timed ids */
+	while(snap_first_timed_id != -1)
+		snap_remove_first_timeout();
 }
 
 void snap_free_id(int id)
@@ -329,19 +339,28 @@ static void server_do_snap()
 				const int max_size = MAX_SNAPSHOT_PACKSIZE;
 				int numpackets = (snapshot_size+max_size-1)/max_size;
 				int n, left;
-
-				(void)numpackets;
-
+				
 				for(n = 0, left = snapshot_size; left; n++)
 				{
 					int chunk = left < max_size ? left : max_size;
 					left -= chunk;
 
-					msg_pack_start_system(NETMSG_SNAP, 0);
+					if(numpackets == 1)
+						msg_pack_start_system(NETMSG_SNAPSINGLE, 0);
+					else
+						msg_pack_start_system(NETMSG_SNAP, 0);
+						
 					msg_pack_int(current_tick);
 					msg_pack_int(current_tick-delta_tick); /* compressed with */
 					msg_pack_int(input_predtick);
 					msg_pack_int((timeleft*1000)/time_freq());
+					
+					if(numpackets != 1)
+					{
+						msg_pack_int(numpackets);
+						msg_pack_int(n);
+					}
+					
 					msg_pack_int(crc);
 					msg_pack_int(chunk);
 					msg_pack_raw(&compdata[n*max_size], chunk);
@@ -647,6 +666,9 @@ static int server_load_map(const char *mapname)
 	df = datafile_load(buf);
 	if(!df)
 		return 0;
+	
+	/* reinit snapshot ids */
+	snap_timeout_ids();
 	
 	/* get the crc of the map */
 	current_map_crc = datafile_crc(buf);
