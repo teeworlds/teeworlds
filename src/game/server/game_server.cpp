@@ -906,7 +906,8 @@ int player::handle_weapons()
 				dir = normalize(target->pos - pos);
 			else
 				dir = vec2(0,-1);
-			target->core.vel += dir * 25.0f + vec2(0,-5.0f);
+				
+			target->core.vel += normalize(dir + vec2(0,-1.1f)) * 10.0f;
 		}
 	}
 	
