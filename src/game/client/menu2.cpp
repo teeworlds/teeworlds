@@ -675,8 +675,8 @@ static int menu2_render_menubar(RECT r)
 	RECT box = r;
 	RECT button;
 	
-	int current_page = config.ui_page;
 	int active_page = config.ui_page;
+	int new_page = -1;
 	if(menu_game_active)
 		active_page = -1;
 	
@@ -687,7 +687,7 @@ static int menu2_render_menubar(RECT r)
 			ui2_vsplit_l(&box, 90.0f, &button, &box);
 			static int news_button=0;
 			if (ui2_do_button(&news_button, "News", active_page==PAGE_NEWS, &button, ui2_draw_menu_tab_button, 0))
-				config.ui_page = PAGE_NEWS;
+				new_page = PAGE_NEWS;
 			ui2_vsplit_l(&box, 30.0f, 0, &box); 
 		}
 	}
@@ -706,7 +706,7 @@ static int menu2_render_menubar(RECT r)
 	if (ui2_do_button(&internet_button, "Internet", active_page==PAGE_INTERNET, &button, ui2_draw_menu_tab_button, 0))
 	{
 		client_serverbrowse_refresh(0);
-		config.ui_page = PAGE_INTERNET;
+		new_page = PAGE_INTERNET;
 	}
 
 	ui2_vsplit_l(&box, 4.0f, 0, &box);
@@ -715,7 +715,7 @@ static int menu2_render_menubar(RECT r)
 	if (ui2_do_button(&lan_button, "LAN", active_page==PAGE_LAN, &button, ui2_draw_menu_tab_button, 0))
 	{
 		client_serverbrowse_refresh(1);
-		config.ui_page = PAGE_LAN;
+		new_page = PAGE_LAN;
 	}
 
 	if(0) // this one is not done yet
@@ -724,7 +724,7 @@ static int menu2_render_menubar(RECT r)
 		ui2_vsplit_l(&box, 120.0f, &button, &box);
 		static int favorites_button=0;
 		if (ui2_do_button(&favorites_button, "Favorites", active_page==PAGE_FAVORITES, &button, ui2_draw_menu_tab_button, 0))
-			config.ui_page = PAGE_FAVORITES;
+			new_page  = PAGE_FAVORITES;
 	}
 
 	/*
@@ -745,10 +745,13 @@ static int menu2_render_menubar(RECT r)
 	ui2_vsplit_r(&box, 110.0f, &box, &button);
 	static int settings_button=0;
 	if (ui2_do_button(&settings_button, "Settings", active_page==PAGE_SETTINGS, &button, ui2_draw_menu_tab_button, 0))
-		config.ui_page = PAGE_SETTINGS;
+		new_page = PAGE_SETTINGS;
 	
-	if(current_page != config.ui_page)
+	if(new_page != -1)
+	{
+		config.ui_page = new_page;
 		menu_game_active = false;
+	}
 		
 	return 0;
 }
