@@ -291,7 +291,7 @@ void player_core::tick()
 
 		// release hook		
 		hook_tick++;
-		if(hook_tick > SERVER_TICK_SPEED*2)
+		if(hooked_player != -1 && hook_tick > SERVER_TICK_SPEED*2)
 		{
 			hooked_player = -1;
 			hook_state = HOOK_RETRACTED;
