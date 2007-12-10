@@ -281,6 +281,11 @@ int gfx_init()
 	return 1;
 }
 
+float gfx_screenaspect()
+{
+    return gfx_screenwidth()/(float)gfx_screenheight();
+}
+
 void gfx_clear_mask(int fill)
 {
 	/*if(fill)

@@ -114,6 +114,8 @@ int gfx_init();
 void gfx_shutdown();
 void gfx_swap();
 
+float gfx_screenaspect();
+
 int gfx_get_video_modes(VIDEO_MODE *list, int maxcount);
 void gfx_set_vsync(int val);
 

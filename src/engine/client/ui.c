@@ -113,7 +113,7 @@ static float scale = 1.0f;
 #define MEMORY_SIZE 10*1024
 static struct rect memory[MEMORY_SIZE];
 static int memory_used = 0;
-static struct rect screen = { 0.0f, 0.0f, 800.0f, 600.0f };
+static struct rect screen = { 0.0f, 0.0f, 848.0f, 480.0f };
 
 void ui_foreach_rect(rect_fun fun)
 {

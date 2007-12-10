@@ -43,6 +43,12 @@ enum
 	CHATMODE_REMOTECONSOLE,
 };
 
+typedef struct 
+{
+    float x, y, w, h;
+} RECT;
+RECT *ui2_screen();
+
 static int chat_mode = CHATMODE_NONE;
 bool menu_active = false;
 bool menu_game_active = false;
@@ -526,14 +532,15 @@ extern int render_popup(const char *caption, const char *text, const char *butto
 static void render_loading(float percent)
 {
 	gfx_clear(0.65f,0.78f,0.9f);
-	gfx_mapscreen(0,0,800.0f,600.0f);
+    RECT screen = *ui2_screen();
+	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
 
 	float tw;
 
 	float w = 700;
 	float h = 200;
-	float x = 800/2-w/2;
-	float y = 600/2-h/2;
+	float x = screen.w/2-w/2;
+	float y = screen.h/2-h/2;
 
 	gfx_blend_normal();
 
@@ -1688,35 +1695,35 @@ int emoticon_selector_render()
 	emoticon_selector_mouse.x += x;
 	emoticon_selector_mouse.y += y;
 
-	if (length(emoticon_selector_mouse) > 70)
-		emoticon_selector_mouse = normalize(emoticon_selector_mouse) * 70;
+	if (length(emoticon_selector_mouse) > 140)
+		emoticon_selector_mouse = normalize(emoticon_selector_mouse) * 140;
 
 	float selected_angle = get_angle(emoticon_selector_mouse) + 2*pi/24;
 	if (selected_angle < 0)
 		selected_angle += 2*pi;
 
-	//static bool mouse_down = false;
 	bool return_now = false;
 	int selected_emoticon = -1;
 
-	if (length(emoticon_selector_mouse) > 50)
+	if (length(emoticon_selector_mouse) > 100)
 		selected_emoticon = (int)(selected_angle / (2*pi) * 12.0f);
 
 	if(!inp_key_pressed(config.key_emoticon))
 	{
 		return_now = true;
 		emoticon_selector_active = false;
-		//emoticon_selector_inactive_override = true;
 	}
 
-	gfx_mapscreen(0,0,400,300);
+    RECT screen = *ui2_screen();
+
+	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
 
 	gfx_blend_normal();
 
 	gfx_texture_set(-1);
 	gfx_quads_begin();
 	gfx_setcolor(0,0,0,0.3f);
-	draw_circle(200, 150, 80, 64);
+	draw_circle(screen.w/2, screen.h/2, 160, 64);
 	gfx_quads_end();
 
 	gfx_texture_set(data->images[IMAGE_EMOTICONS].id);
@@ -1730,12 +1737,12 @@ int emoticon_selector_render()
 
 		bool selected = selected_emoticon == i;
 
-		float size = selected ? 48 : 32;
+		float size = selected ? 96 : 64;
 
-		float nudge_x = 60 * cos(angle);
-		float nudge_y = 60 * sin(angle);
+		float nudge_x = 120 * cos(angle);
+		float nudge_y = 120 * sin(angle);
 		select_sprite(SPRITE_OOP + i);
-		gfx_quads_draw(200 + nudge_x, 150 + nudge_y, size, size);
+		gfx_quads_draw(screen.w/2 + nudge_x, screen.h/2 + nudge_y, size, size);
 	}
 
 	gfx_quads_end();
@@ -1743,7 +1750,7 @@ int emoticon_selector_render()
     gfx_texture_set(data->images[IMAGE_CURSOR].id);
     gfx_quads_begin();
     gfx_setcolor(1,1,1,1);
-    gfx_quads_drawTL(emoticon_selector_mouse.x+200,emoticon_selector_mouse.y+150,12,12);
+    gfx_quads_drawTL(emoticon_selector_mouse.x+screen.w/2,emoticon_selector_mouse.y+screen.h/2,24,24);
     gfx_quads_end();
 
 	return return_now ? selected_emoticon : -1;
@@ -1910,9 +1917,11 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 
 void mapscreen_to_world(float center_x, float center_y, float zoom)
 {
-	const float default_zoom = 3.0f;
-	float width = 400*default_zoom*zoom;
-	float height = 300*default_zoom*zoom;
+    RECT screen = *ui2_screen();
+
+	const float default_zoom = 1.5f;
+	float width = screen.w*default_zoom*zoom;
+	float height = screen.h*default_zoom*zoom;
 	gfx_mapscreen(center_x-width/2, center_y-height/2, center_x+width/2, center_y+height/2);
 }
 

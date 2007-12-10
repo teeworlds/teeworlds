@@ -89,13 +89,21 @@ typedef struct
     float x, y, w, h;
 } RECT;
 
-//static float scale = 1.0f;
-static RECT screen = { 0.0f, 0.0f, 800.0f, 600.0f };
+static RECT screen = { 0.0f, 0.0f, 848.0f, 480.0f };
 
 extern void select_sprite(int id, int flags=0, int sx=0, int sy=0);
 
 RECT *ui2_screen()
 {
+    float aspect = gfx_screenaspect();
+    float w, h;
+
+    h = 600;
+    w = aspect*h;
+
+    screen.w = w;
+    screen.h = h;
+
     return &screen;
 }
 
@@ -1625,7 +1633,8 @@ int menu2_render()
 		return 0;
 	}
 	
-	gfx_mapscreen(0,0,800,600);
+    RECT screen = *ui2_screen();
+	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
 	
 	static bool first = true;
 	if(first)
@@ -1649,7 +1658,6 @@ int menu2_render()
 		color_tabbar_active = color_tabbar_active_outgame;
 	}
 	
-	RECT screen = *ui2_screen();
 	RECT tab_bar;
 	RECT main_view;
 
@@ -1799,6 +1807,7 @@ void modmenu_render()
 	static int mouse_x = 0;
 	static int mouse_y = 0;
 
+
     // handle mouse movement
     float mx, my;
     {
@@ -1812,8 +1821,9 @@ void modmenu_render()
         if(mouse_y > gfx_screenheight()) mouse_y = gfx_screenheight();
             
         // update the ui
-        mx = (mouse_x/(float)gfx_screenwidth())*800.0f;
-        my = (mouse_y/(float)gfx_screenheight())*600.0f;
+        RECT *screen = ui2_screen();
+        mx = (mouse_x/(float)gfx_screenwidth())*screen->w;
+        my = (mouse_y/(float)gfx_screenheight())*screen->h;
             
         int buttons = 0;
         if(inp_key_pressed(KEY_MOUSE_1)) buttons |= 1;
