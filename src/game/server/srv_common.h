@@ -8,7 +8,7 @@ void create_sound_global(int sound, int target=-1);
 inline int cmask_all() { return -1; }
 inline int cmask_one(int cid) { return 1<<cid; }
 inline int cmask_all_except_one(int cid) { return 0x7fffffff^cmask_one(cid); }
-inline bool cmask_is_set(int mask, int cid) { return mask&cmask_one(cid) != 0; }
+inline bool cmask_is_set(int mask, int cid) { return (mask&cmask_one(cid)) != 0; }
 
 //
 class event_handler
