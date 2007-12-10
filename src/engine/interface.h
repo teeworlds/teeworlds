@@ -372,9 +372,6 @@ void gfx_quads_text(float x, float y, float size, const char *text);
 /* sound (client) */
 int snd_init();
 
-float snd_get_master_volume();
-void snd_set_master_volume(float val);
-
 void snd_set_channel(int cid, float vol, float pan);
 
 int snd_load_wv(const char *filename);

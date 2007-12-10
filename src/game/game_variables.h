@@ -24,7 +24,6 @@ MACRO_CONFIG_INT(key_console, 256+2, 32, 512)
 MACRO_CONFIG_INT(key_remoteconsole, 256+3, 32, 512)
 
 MACRO_CONFIG_INT(autoswitch_weapons, 0, 0, 1)
-MACRO_CONFIG_INT(scroll_weapon, 1, 0, 1)
 
 MACRO_CONFIG_INT(scorelimit, 20, 0, 1000)
 MACRO_CONFIG_INT(timelimit, 0, 0, 1000)
@@ -34,7 +33,8 @@ MACRO_CONFIG_INT(restart, 0, 0, 120)
 MACRO_CONFIG_INT(dbg_bots, 0, 0, 7)
 MACRO_CONFIG_INT(cl_predict, 1, 0, 1)
 
-MACRO_CONFIG_INT(cl_nameplates, 0, 0, 2)
+MACRO_CONFIG_INT(cl_nameplates, 0, 0, 1)
+MACRO_CONFIG_INT(cl_nameplates_always, 0, 0, 1)
 
 MACRO_CONFIG_STR(sv_maprotation, 512, "")
 MACRO_CONFIG_INT(sv_powerups, 1, 0, 1)

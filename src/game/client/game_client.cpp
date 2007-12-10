@@ -1604,7 +1604,7 @@ static void render_player(
 	{
 		//gfx_pretty_text_color
 		float a = 1;
-		if(config.cl_nameplates == 1)
+		if(config.cl_nameplates_always != 0)
 			a = clamp(1-powf(distance(local_target_pos, position)/200.0f,16.0f), 0.0f, 1.0f);
 			
 		const char *name = client_datas[info.clientid].name;

@@ -207,17 +207,21 @@ static void mix(short *final_out, unsigned frames)
 	/* release the lock */
 	lock_release(sound_lock);
 
-	/* clamp accumulated values */
-	/* TODO: this seams slow */
-	for(i = 0; i < frames; i++)
 	{
-		int j = i<<1;
-		int vl = mix_buffer[j]>>8;
-		int vr = mix_buffer[j+1]>>8;
+		int master_vol = config.snd_volume;
+		
+		/* clamp accumulated values */
+		/* TODO: this seams slow */
+		for(i = 0; i < frames; i++)
+		{
+			int j = i<<1;
+			int vl = ((mix_buffer[j]*master_vol)/101)>>8;
+			int vr = ((mix_buffer[j+1]*master_vol)/101)>>8;
 
-		final_out[j] = int2short(vl);
-		final_out[j+1] = int2short(vr);
-	}	
+			final_out[j] = int2short(vl);
+			final_out[j+1] = int2short(vr);
+		}
+	}
 }
 
 static int pacallback(const void *in, void *out, unsigned long frames, const PaStreamCallbackTimeInfo* time, PaStreamCallbackFlags status, void *user)
@@ -423,11 +427,6 @@ int snd_load_wv(const char *filename)
 
 	rate_convert(sid);
 	return sid;
-}
-
-void snd_set_master_volume(float vol)
-{
-	/*master_vol = vol;*/
 }
 
 void snd_set_listener_pos(float x, float y)

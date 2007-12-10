@@ -1081,6 +1081,18 @@ static void menu2_render_settings_player(RECT main_view)
 			config.autoswitch_weapons ^= 1;
 			
 		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		if (ui2_do_button(&config.cl_nameplates, "Show name plates", config.cl_nameplates, &button, ui2_draw_checkbox, 0))
+			config.cl_nameplates ^= 1;
+
+		if(config.cl_nameplates)
+		{
+			ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
+			ui2_vsplit_l(&button, 15.0f, 0, &button);
+			if (ui2_do_button(&config.cl_nameplates_always, "Always show name plates", config.cl_nameplates_always, &button, ui2_draw_checkbox, 0))
+				config.cl_nameplates_always ^= 1;
+		}
+			
+		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
 		
 		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
 		if (ui2_do_button(&config.player_color_body, "Custom colors", config.player_use_custom_color, &button, ui2_draw_checkbox, 0))
@@ -1214,11 +1226,11 @@ static void menu2_render_settings_controls(RECT main_view)
 		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
 		ui2_vsplit_l(&button, 110.0f, &label, &button);
 		ui2_do_label(&label, "Mouse sens.", 18.0f, -1);
+		ui2_hmargin(&button, 2.0f, &button);
 		config.inp_mousesens = (int)(ui2_do_scrollbar_h(&config.inp_mousesens, &button, config.inp_mousesens/500.0f)*500.0f);
 		//*key.key = ui2_do_key_reader(key.key, &button, *key.key);
 		ui2_hsplit_t(&main_view, 20.0f, 0, &main_view);
 	}
-
 	
 	typedef struct 
 	{
@@ -1379,6 +1391,47 @@ static void menu2_render_settings_graphics(RECT main_view)
 		config.gfx_high_detail ^= 1;
 }
 
+static void menu2_render_settings_sound(RECT main_view)
+{
+	RECT button;
+	ui2_vsplit_l(&main_view, 300.0f, &main_view, 0);
+	
+	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
+	if (ui2_do_button(&config.snd_enable, "Use Sounds", config.snd_enable, &button, ui2_draw_checkbox, 0))
+		config.snd_enable ^= 1;
+	
+	if(!config.snd_enable)
+		return;
+	
+	// sample rate box
+	{
+		char buf[64];
+		sprintf(buf, "%d", config.snd_rate);
+		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		ui2_do_label(&button, "Sample Rate", 18.0, -1);
+		ui2_vsplit_l(&button, 110.0f, 0, &button);
+		ui2_vsplit_l(&button, 180.0f, &button, 0);
+		ui2_do_edit_box(&config.snd_rate, &button, buf, sizeof(buf));
+		config.snd_rate = atoi(buf);
+
+		if(config.snd_rate < 1)
+			config.snd_rate = 1;
+	}
+	
+	// volume slider
+	{
+		RECT button, label;
+		ui2_hsplit_t(&main_view, 5.0f, &button, &main_view);
+		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		ui2_vsplit_l(&button, 110.0f, &label, &button);
+		ui2_hmargin(&button, 2.0f, &button);
+		ui2_do_label(&label, "Sound Volume", 18.0f, -1);
+		config.snd_volume = (int)(ui2_do_scrollbar_h(&config.snd_volume, &button, config.snd_volume/100.0f)*100.0f);
+		ui2_hsplit_t(&main_view, 20.0f, 0, &main_view);
+	}
+}
+
+
 static void menu2_render_settings(RECT main_view)
 {
 	static int settings_page = 0;
@@ -1415,6 +1468,8 @@ static void menu2_render_settings(RECT main_view)
 		{}
 	else if(settings_page == 3)
 		menu2_render_settings_graphics(main_view);
+	else if(settings_page == 4)
+		menu2_render_settings_sound(main_view);
 }
 
 static void menu2_render_news(RECT main_view)
@@ -1573,11 +1628,8 @@ int menu2_render()
 	if(popup == POPUP_NONE)
 	{
 		// do tab bar
-		RECT bottom_bar;
 		ui2_hsplit_t(&screen, 26.0f, &tab_bar, &main_view);
-		ui2_hsplit_b(&main_view, 26.0f, &main_view, &bottom_bar);
 		ui2_vmargin(&tab_bar, 20.0f, &tab_bar);
-		ui2_margin(&bottom_bar, 20.0f, &bottom_bar);
 		menu2_render_menubar(tab_bar);
 			
 		// render current page
@@ -1710,42 +1762,6 @@ int menu2_render()
 	
 	return 0;
 }
-
-/*
-int menu2_render_popup(const char *caption, const char *text, const char *button_text)
-{
-	float tw;
-
-	float w = 700;
-	float h = 300;
-	float x = 800/2-w/2;
-	float y = 600/2-h/2;
-
-	gfx_blend_normal();
-	
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_setcolor(0,0,0,0.50f);
-	draw_round_rect(x, y, w, h, 40.0f);
-	gfx_quads_end();
-
-	tw = gfx_pretty_text_width(48.0f, caption, -1);
-	ui_do_label(x+w/2-tw/2, y+20, caption, 48.0f);
-	
-	tw = gfx_pretty_text_width(32.0f, text, -1);
-    gfx_pretty_text(x+w/2-tw/2, y+130, 32.0f, text, -1);
-
-	if(button_text)
-	{
-		static int back_button = 0;
-		if(ui_do_button(&back_button, button_text, 0, x+w/2-100, y+220, 200, 48, draw_teewars_button, 0))
-			return 1;
-		if(inp_key_down(KEY_ESC) || inp_key_down(KEY_ENTER))
-			return 1;
-	}
-		
-	return 0;
-}*/
 
 void modmenu_render()
 {

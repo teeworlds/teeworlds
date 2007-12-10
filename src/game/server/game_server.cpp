@@ -390,6 +390,10 @@ void player::reset()
 	emote_stop = 0;
 	damage_taken_tick = 0;
 	attack_tick = 0;
+	
+	active_weapon = WEAPON_GUN;
+	last_weapon = WEAPON_HAMMER;
+	wanted_weapon = WEAPON_GUN;
 }
 
 void player::destroy() {  }
@@ -398,6 +402,8 @@ void player::set_weapon(int w)
 {
 	last_weapon = active_weapon;
 	active_weapon = w;
+	if(active_weapon < 0 || active_weapon >= NUM_WEAPONS)
+		active_weapon = 0;
 }
 
 void player::respawn()
@@ -439,7 +445,7 @@ bool try_spawntype(int t, vec2 *outpos)
 void player::try_respawn()
 {
 	vec2 spawnpos = vec2(100.0f, -60.0f);
-
+	
 	// get spawn point
 	if(gameobj->gametype == GAMETYPE_CTF)
 	{
@@ -477,7 +483,6 @@ void player::try_respawn()
 	core.vel = vec2(0,0);
 	core.hooked_player = -1;
 
-
 	health = 10;
 	armor = 0;
 	jumped = 0;
@@ -498,7 +503,6 @@ void player::try_respawn()
 
 	//weapons[WEAPON_SNIPER].got = true;
 	//weapons[WEAPON_SNIPER].ammo = data->weapons[WEAPON_SNIPER].maxammo;
-
 	active_weapon = WEAPON_GUN;
 	last_weapon = WEAPON_HAMMER;
 	wanted_weapon = WEAPON_GUN;
@@ -554,6 +558,7 @@ int player::handle_ninja()
 	{
 		// time's up, return
 		active_weapon = last_weapon;
+		set_weapon(active_weapon);
 		return 0;
 	}
 
@@ -634,11 +639,14 @@ int player::handle_ninja()
 		}
 		return MODIFIER_RETURNFLAGS_OVERRIDEVELOCITY | MODIFIER_RETURNFLAGS_OVERRIDEPOSITION | MODIFIER_RETURNFLAGS_OVERRIDEGRAVITY;
 	}
+
 	return 0;
 }
 
 int player::handle_sniper()
 {
+	return 0;
+	
 	struct input_count button = count_input(previnput.fire, input.fire);
 	if (button.releases)
 	{
@@ -731,34 +739,42 @@ int player::handle_weapons()
 	// select weapon
 	int next = count_input(previnput.next_weapon, input.next_weapon).presses;
 	int prev = count_input(previnput.prev_weapon, input.prev_weapon).presses;
-	while(next) // next weapon selection
+	
+	if(next < 128) // make sure we only try sane stuff
 	{
-		wanted_weapon = (wanted_weapon+1)%NUM_WEAPONS;
-		if(weapons[wanted_weapon].got)
-			next--;
+		while(next) // next weapon selection
+		{
+			wanted_weapon = (wanted_weapon+1)%NUM_WEAPONS;
+			if(weapons[wanted_weapon].got)
+				next--;
+		}
 	}
 
-	while(prev) // prev weapon selection
+	if(prev < 128) // make sure we only try sane stuff
 	{
-		wanted_weapon = (wanted_weapon-1)<0?NUM_WEAPONS-1:wanted_weapon-1;
-		if(weapons[wanted_weapon].got)
-			prev--;
+		while(prev) // prev weapon selection
+		{
+			wanted_weapon = (wanted_weapon-1)<0?NUM_WEAPONS-1:wanted_weapon-1;
+			if(weapons[wanted_weapon].got)
+				prev--;
+		}
 	}
 
 	if(input.wanted_weapon) // direct weapon selection
 		wanted_weapon = input.wanted_weapon-1;
 
+	if(wanted_weapon < 0 || wanted_weapon >= NUM_WEAPONS)
+		wanted_weapon = 0;
 
 	// switch weapon if wanted
 	if(data->weapons[active_weapon].duration <= 0)
 	{
-		if(wanted_weapon != active_weapon && wanted_weapon >= 0 && wanted_weapon < NUM_WEAPONS && weapons[wanted_weapon].got)
+		if(wanted_weapon != -1 && wanted_weapon != active_weapon && wanted_weapon >= 0 && wanted_weapon < NUM_WEAPONS && weapons[wanted_weapon].got)
 		{
 			if(active_weapon != wanted_weapon)
 				create_sound(pos, SOUND_WEAPON_SWITCH);
 
-			last_weapon = active_weapon;
-			active_weapon = wanted_weapon;
+			set_weapon(wanted_weapon);
 		}
 	}
 
@@ -892,6 +908,7 @@ int player::handle_weapons()
 			target->core.vel += dir * 25.0f + vec2(0,-5.0f);
 		}
 	}
+	
 	if (data->weapons[active_weapon].ammoregentime)
 	{
 		// If equipped and not active, regen ammo?
@@ -912,6 +929,7 @@ int player::handle_weapons()
 			weapons[active_weapon].ammoregenstart = -1;
 		}
 	}
+	
 	return 0;
 }
 
@@ -921,7 +939,7 @@ void player::tick()
 	// this is to prevent initial weird clicks
 	if(num_inputs < 2)
 		previnput = input;
-	
+
 	// do latency stuff
 	{
 		CLIENT_INFO info;
@@ -1006,7 +1024,6 @@ void player::tick_defered()
 		if(events&COREEVENT_HOOK_ATTACH_PLAYER) create_sound(pos, SOUND_HOOK_ATTACH_PLAYER, mask);
 		if(events&COREEVENT_HOOK_ATTACH_GROUND) create_sound(pos, SOUND_HOOK_ATTACH_GROUND, mask);
 		//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
-		
 		
 	}
 	

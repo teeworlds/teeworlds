@@ -27,6 +27,7 @@ MACRO_CONFIG_INT(b_max_requests, 10, 0, 1000)
 
 MACRO_CONFIG_INT(snd_rate, 48000, 0, 0)
 MACRO_CONFIG_INT(snd_enable, 1, 0, 1)
+MACRO_CONFIG_INT(snd_volume, 100, 0, 100)
 
 MACRO_CONFIG_INT(gfx_screen_width, 800, 0, 0)
 MACRO_CONFIG_INT(gfx_screen_height, 600, 0, 0)
