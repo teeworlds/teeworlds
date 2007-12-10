@@ -75,15 +75,17 @@ void move_box(vec2 *inout_pos, vec2 *inout_vel, vec2 size, float elasticity)
 			
 			vec2 new_pos = pos + vel*fraction; // TODO: this row is not nice
 			
-			if(test_box(new_pos, size))
+			// make sure that we quantize. this is to make sure that when we set
+			// the final position that we don't move it into the ground.
+			if(test_box(vec2((int)new_pos.x,(int) new_pos.y), size))
 			{
-				if(test_box(vec2(pos.x, new_pos.y), size))
+				if(test_box(vec2((int)pos.x, (int)new_pos.y), size))
 				{
 					new_pos.y = pos.y;
 					vel.y *= -elasticity;
 				}
 				
-				if(test_box(vec2(new_pos.x, pos.y), size))
+				if(test_box(vec2((int)new_pos.x, (int)pos.y), size))
 				{
 					new_pos.x = pos.x;
 					vel.x *= -elasticity;
