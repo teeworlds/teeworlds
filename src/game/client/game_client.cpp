@@ -2106,9 +2106,6 @@ void render_game()
 	if(local_info && local_info->team == -1)
 		spectate = true;
 
-	// set listner pos
-	snd_set_listener_pos(local_character_pos.x, local_character_pos.y);
-
 	animstate idlestate;
 	anim_eval(&data->animations[ANIM_BASE], 0, &idlestate);
 	anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);
@@ -2231,10 +2228,17 @@ void render_game()
 		}
 	}
 
+	// set listner pos
 	if(spectate)
+	{
 		local_target_pos = mouse_pos;
+		snd_set_listener_pos(mouse_pos.x, mouse_pos.y);
+	}
 	else
+	{
 		local_target_pos = local_character_pos + mouse_pos;
+		snd_set_listener_pos(local_character_pos.x, local_character_pos.y);
+	}
 
 	// snap input
 	{

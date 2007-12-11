@@ -185,6 +185,11 @@ static void mix(short *final_out, unsigned frames)
 					lvol = (lvol*(range-dist))/range;
 					rvol = (rvol*(range-dist))/range;
 				}
+				else
+				{
+					lvol = 0;
+					rvol = 0;
+				}
 			}
 
 			/* process all frames */
