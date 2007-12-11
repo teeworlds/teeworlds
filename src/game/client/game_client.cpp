@@ -892,7 +892,7 @@ extern "C" void modc_newsnapshot()
 {
 	process_events(SNAP_CURRENT);
 
-	if(config.stress)
+	if(config.dbg_stress)
 	{
 		if((client_tick()%250) == 0)
 		{
@@ -2294,7 +2294,7 @@ void render_game()
 
 			if(inp_key_presses(config.key_next_weapon) || inp_key_presses(config.key_prev_weapon))
 				input.wanted_weapon = 0;
-			else if (config.autoswitch_weapons && picked_up_weapon)
+			else if (config.cl_autoswitch_weapons && picked_up_weapon)
             {
                 input.wanted_weapon = picked_up_weapon;
             }
@@ -2312,7 +2312,7 @@ void render_game()
 		}
 
 		// stress testing
-		if(config.stress)
+		if(config.dbg_stress)
 		{
 			float t = client_localtime();
 			mem_zero(&input, sizeof(input));
@@ -2332,7 +2332,7 @@ void render_game()
 
 	// center at char but can be moved when mouse is far away
 	float offx = 0, offy = 0;
-	if (config.dynamic_camera)
+	if (config.cl_dynamic_camera)
 	{
 		int deadzone = 300;
 		if(mouse_pos.x > deadzone) offx = mouse_pos.x-deadzone;
@@ -2849,10 +2849,10 @@ extern "C" void modc_render()
 
 		// handle team switching
 		// TODO: FUGLY!!!
-		if(config.team != -10)
+		if(config.cl_team != -10)
 		{
 			msg_pack_start(MSG_SETTEAM, MSGFLAG_VITAL);
-			msg_pack_int(config.team);
+			msg_pack_int(config.cl_team);
 			msg_pack_end();
 			client_send_msg();
 		}
@@ -2863,7 +2863,7 @@ extern "C" void modc_render()
 	}
 
 	//
-	config.team = -10;
+	config.cl_team = -10;
 }
 
 

@@ -1098,12 +1098,12 @@ static void menu2_render_settings_player(RECT main_view)
 		ui2_do_edit_box(config.player_name, &button, config.player_name, sizeof(config.player_name));
 
 		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		if (ui2_do_button(&config.dynamic_camera, "Dynamic camera", config.dynamic_camera, &button, ui2_draw_checkbox, 0))
-			config.dynamic_camera ^= 1;
+		if (ui2_do_button(&config.cl_dynamic_camera, "Dynamic camera", config.cl_dynamic_camera, &button, ui2_draw_checkbox, 0))
+			config.cl_dynamic_camera ^= 1;
 			
 		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		if (ui2_do_button(&config.autoswitch_weapons, "Switch weapon on pickup", config.autoswitch_weapons, &button, ui2_draw_checkbox, 0))
-			config.autoswitch_weapons ^= 1;
+		if (ui2_do_button(&config.cl_autoswitch_weapons, "Switch weapon on pickup", config.cl_autoswitch_weapons, &button, ui2_draw_checkbox, 0))
+			config.cl_autoswitch_weapons ^= 1;
 			
 		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
 		if (ui2_do_button(&config.cl_nameplates, "Show name plates", config.cl_nameplates, &button, ui2_draw_checkbox, 0))
@@ -1541,7 +1541,7 @@ static void menu2_render_game(RECT main_view)
 			static int spectate_button = 0;
 			if(ui2_do_button(&spectate_button, "Spectate", 0, &button, ui2_draw_menu_button, 0))
 			{
-				config.team = -1;
+				config.cl_team = -1;
 				menu_active = false;
 			}
 		}
@@ -1553,7 +1553,7 @@ static void menu2_render_game(RECT main_view)
 			static int spectate_button = 0;
 			if(ui2_do_button(&spectate_button, "Join Red", 0, &button, ui2_draw_menu_button, 0))
 			{
-				config.team = 0;
+				config.cl_team = 0;
 				menu_active = false;
 			}
 		}
@@ -1565,7 +1565,7 @@ static void menu2_render_game(RECT main_view)
 			static int spectate_button = 0;
 			if(ui2_do_button(&spectate_button, "Join Blue", 0, &button, ui2_draw_menu_button, 0))
 			{
-				config.team = 1;
+				config.cl_team = 1;
 				menu_active = false;
 			}
 		}

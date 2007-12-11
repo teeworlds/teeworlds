@@ -712,7 +712,7 @@ int player::handle_weapons()
 {
 	vec2 direction = normalize(vec2(input.target_x, input.target_y));
 
-	if(config.stress)
+	if(config.dbg_stress)
 	{
 		for(int i = 0; i < NUM_WEAPONS; i++)
 		{
@@ -1539,14 +1539,14 @@ void mods_tick()
 	if(world->paused) // make sure that the game object always updates
 		gameobj->tick();
 
-	if(config.restart)
+	if(config.sv_restart)
 	{
-		if(config.restart > 1)
-			gameobj->do_warmup(config.restart);
+		if(config.sv_restart > 1)
+			gameobj->do_warmup(config.sv_restart);
 		else
 			gameobj->startround();
 
-		config.restart = 0;
+		config.sv_restart = 0;
 	}
 
 	if(config.sv_msg[0] != 0)
@@ -1736,9 +1736,9 @@ void mods_init()
 	players = new player[MAX_CLIENTS];
 
 	// select gametype
-	if(strcmp(config.gametype, "ctf") == 0)
+	if(strcmp(config.sv_gametype, "ctf") == 0)
 		gameobj = new gameobject_ctf;
-	else if(strcmp(config.gametype, "tdm") == 0)
+	else if(strcmp(config.sv_gametype, "tdm") == 0)
 		gameobj = new gameobject_tdm;
 	else
 		gameobj = new gameobject_dm;

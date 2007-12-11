@@ -27,8 +27,8 @@ void gameobject_dm::tick()
 		}
 		
 		// check score win condition
-		if((config.scorelimit > 0 && topscore >= config.scorelimit) ||
-			(config.timelimit > 0 && (server_tick()-round_start_tick) >= config.timelimit*server_tickspeed()*60))
+		if((config.sv_scorelimit > 0 && topscore >= config.sv_scorelimit) ||
+			(config.sv_timelimit > 0 && (server_tick()-round_start_tick) >= config.sv_timelimit*server_tickspeed()*60))
 		{
 			if(topscore_count == 1)
 				endround();

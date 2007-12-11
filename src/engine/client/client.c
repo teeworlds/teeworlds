@@ -950,8 +950,8 @@ static void client_update()
 	}
 
 	/* STRESS TEST: join the server again */
-	if(client_state() == CLIENTSTATE_OFFLINE && config.stress && (frames%100) == 0)
-		client_connect(config.cl_stress_server);
+	if(client_state() == CLIENTSTATE_OFFLINE && config.dbg_stress && (frames%100) == 0)
+		client_connect(config.dbg_stress_server);
 	
 	/* pump the network */
 	client_pump_network();
@@ -996,8 +996,11 @@ static void client_run()
 	net = netclient_open(bindaddr, 0);
 	
 	/* connect to the server if wanted */
+	/*
 	if(config.cl_connect[0] != 0)
 		client_connect(config.cl_connect);
+	config.cl_connect[0] = 0;
+	*/
 		
 	inp_mouse_mode_relative();
 	
@@ -1073,7 +1076,7 @@ static void client_run()
 		{
 			client_update();
 			
-			if(config.stress)
+			if(config.dbg_stress)
 			{
 				if((frames%10) == 0)
 				{
@@ -1093,7 +1096,7 @@ static void client_run()
 			break;
 
 		/* be nice */
-		if(config.cpu_throttle || !gfx_window_active())
+		if(config.cl_cpu_throttle || !gfx_window_active())
 			thread_sleep(1);
 		
 		if(reporttime < time_get())

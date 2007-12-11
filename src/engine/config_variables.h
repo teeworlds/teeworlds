@@ -1,20 +1,14 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include "../game/game_variables.h"
 
-MACRO_CONFIG_INT(volume, 200, 0, 255)
-MACRO_CONFIG_INT(cpu_throttle, 0, 0, 1)
 
 MACRO_CONFIG_STR(player_name, 32, "nameless tee")
-
 MACRO_CONFIG_STR(clan_name, 32, "")
 MACRO_CONFIG_STR(password, 32, "")
-
 MACRO_CONFIG_STR(rcon_password, 32, "")
 
-MACRO_CONFIG_INT(debug, 0, 0, 1)
-MACRO_CONFIG_INT(stress, 0, 0, 0)
-MACRO_CONFIG_STR(cl_stress_server, 32, "localhost")
-MACRO_CONFIG_STR(cl_connect, 32, "")
+MACRO_CONFIG_INT(cl_cpu_throttle, 0, 0, 1)
+/*MACRO_CONFIG_STR(cl_connect, 32, "")*/
 MACRO_CONFIG_INT(cl_editor, 0, 0, 1)
 
 MACRO_CONFIG_STR(b_filter_string, 64, "")
@@ -52,8 +46,10 @@ MACRO_CONFIG_INT(sv_port, 8303, 0, 0)
 MACRO_CONFIG_INT(sv_sendheartbeats, 1, 0, 1)
 MACRO_CONFIG_STR(sv_map, 128, "dm1")
 MACRO_CONFIG_INT(sv_map_reload, 0, 0, 1)
-
 MACRO_CONFIG_INT(sv_max_clients, 8, 1, 12)
-
 MACRO_CONFIG_INT(sv_bandwidth_mode, 0, 0, 2)
+
+MACRO_CONFIG_INT(debug, 0, 0, 1)
+MACRO_CONFIG_INT(dbg_stress, 0, 0, 0)
+MACRO_CONFIG_STR(dbg_stress_server, 32, "localhost")
 

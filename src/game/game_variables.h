@@ -23,26 +23,15 @@ MACRO_CONFIG_INT(key_teamchat, 'Y', 32, 512)
 MACRO_CONFIG_INT(key_console, 256+2, 32, 512)
 MACRO_CONFIG_INT(key_remoteconsole, 256+3, 32, 512)
 
-MACRO_CONFIG_INT(autoswitch_weapons, 0, 0, 1)
-
-MACRO_CONFIG_INT(scorelimit, 20, 0, 1000)
-MACRO_CONFIG_INT(timelimit, 0, 0, 1000)
-MACRO_CONFIG_STR(gametype, 32, "dm")
-MACRO_CONFIG_INT(restart, 0, 0, 120)
 
 MACRO_CONFIG_INT(dbg_bots, 0, 0, 7)
 
 MACRO_CONFIG_INT(cl_predict, 1, 0, 1)
 MACRO_CONFIG_INT(cl_nameplates, 0, 0, 1)
 MACRO_CONFIG_INT(cl_nameplates_always, 0, 0, 1)
-
-MACRO_CONFIG_STR(sv_maprotation, 512, "")
-MACRO_CONFIG_INT(sv_powerups, 1, 0, 1)
-
-MACRO_CONFIG_INT(dynamic_camera, 1, 0, 1)
-
-MACRO_CONFIG_INT(warmup, 0, 0, 0)
-MACRO_CONFIG_INT(team, -10, -1, 0)
+MACRO_CONFIG_INT(cl_dynamic_camera, 1, 0, 1)
+MACRO_CONFIG_INT(cl_team, -10, -1, 0)
+MACRO_CONFIG_INT(cl_autoswitch_weapons, 0, 0, 1)
 
 MACRO_CONFIG_INT(player_use_custom_color, 0, 0, 1)
 MACRO_CONFIG_INT(player_color_body, 65408, 0, 0)
@@ -55,7 +44,15 @@ MACRO_CONFIG_INT(ui_page, 1, 0, 5)
 MACRO_CONFIG_STR(ui_server_address, 128, "localhost:8303")
 MACRO_CONFIG_INT(ui_scale, 100, 1, 100000)
 
+MACRO_CONFIG_INT(sv_warmup, 0, 0, 0)
 MACRO_CONFIG_STR(sv_msg, 512, "")
 MACRO_CONFIG_INT(sv_teamdamage, 0, 0, 1)
+MACRO_CONFIG_STR(sv_maprotation, 512, "")
+MACRO_CONFIG_INT(sv_powerups, 1, 0, 1)
+MACRO_CONFIG_INT(sv_scorelimit, 20, 0, 1000)
+MACRO_CONFIG_INT(sv_timelimit, 0, 0, 1000)
+MACRO_CONFIG_STR(sv_gametype, 32, "dm")
+MACRO_CONFIG_INT(sv_restart, 0, 0, 120)
+
 
 

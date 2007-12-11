@@ -350,7 +350,7 @@ int snd_load_wv(const char *filename)
 	WavpackContext *context;
 	
 	/* don't waste memory on sound when we are stress testing */
-	if(config.stress)
+	if(config.dbg_stress)
 		return -1;
 		
 	/* no need to load sound when we are running with no sound */

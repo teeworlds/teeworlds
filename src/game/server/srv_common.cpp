@@ -7,12 +7,12 @@ gameobject::gameobject()
 : entity(OBJTYPE_GAME)
 {
 	// select gametype
-	if(strcmp(config.gametype, "ctf") == 0)
+	if(strcmp(config.sv_gametype, "ctf") == 0)
 	{
 		gametype = GAMETYPE_CTF;
 		dbg_msg("game", "-- Capture The Flag --");
 	}
-	else if(strcmp(config.gametype, "tdm") == 0)
+	else if(strcmp(config.sv_gametype, "tdm") == 0)
 	{
 		gametype = GAMETYPE_TDM;
 		dbg_msg("game", "-- Team Death Match --");
@@ -24,7 +24,7 @@ gameobject::gameobject()
 	}
 		
 	//
-	do_warmup(config.warmup);
+	do_warmup(config.sv_warmup);
 	game_over_tick = -1;
 	sudden_death = 0;
 	round_start_tick = server_tick();
@@ -187,22 +187,22 @@ void gameobject::tick()
 	
 	// update browse info
 	int prog = -1;
-	if(config.timelimit > 0)
-		prog = max(prog, (server_tick()-round_start_tick) * 100 / (config.timelimit*server_tickspeed()*60));
+	if(config.sv_timelimit > 0)
+		prog = max(prog, (server_tick()-round_start_tick) * 100 / (config.sv_timelimit*server_tickspeed()*60));
 
-	if(config.scorelimit)
+	if(config.sv_scorelimit)
 	{
 		if(is_teamplay)
 		{
-			prog = max(prog, (teamscore[0]*100)/config.scorelimit);
-			prog = max(prog, (teamscore[1]*100)/config.scorelimit);
+			prog = max(prog, (teamscore[0]*100)/config.sv_scorelimit);
+			prog = max(prog, (teamscore[1]*100)/config.sv_scorelimit);
 		}
 		else
 		{
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
 				if(players[i].client_id != -1)
-					prog = max(prog, (players[i].score*100)/config.scorelimit);
+					prog = max(prog, (players[i].score*100)/config.sv_scorelimit);
 			}
 		}
 	}
@@ -220,8 +220,8 @@ void gameobject::snap(int snapping_client)
 	game->game_over = game_over_tick==-1?0:1;
 	game->sudden_death = sudden_death;
 	
-	game->score_limit = config.scorelimit;
-	game->time_limit = config.timelimit;
+	game->score_limit = config.sv_scorelimit;
+	game->time_limit = config.sv_timelimit;
 	game->round_start_tick = round_start_tick;
 	game->gametype = gametype;
 	
@@ -250,8 +250,8 @@ void gameobject::do_team_wincheck()
 	if(game_over_tick == -1 && !warmup)
 	{
 		// check score win condition
-		if((config.scorelimit > 0 && (teamscore[0] >= config.scorelimit || teamscore[1] >= config.scorelimit)) ||
-			(config.timelimit > 0 && (server_tick()-round_start_tick) >= config.timelimit*server_tickspeed()*60))
+		if((config.sv_scorelimit > 0 && (teamscore[0] >= config.sv_scorelimit || teamscore[1] >= config.sv_scorelimit)) ||
+			(config.sv_timelimit > 0 && (server_tick()-round_start_tick) >= config.sv_timelimit*server_tickspeed()*60))
 		{
 			if(teamscore[0] != teamscore[1])
 				endround();

@@ -185,7 +185,7 @@ int gfx_init()
 
 	glfwInit();
 
-	if(config.stress)
+	if(config.dbg_stress)
 	{
 		screen_width = 320;
 		screen_height = 240;
@@ -228,7 +228,7 @@ int gfx_init()
 	glfwSetWindowTitle("Teewars");
 	
 	/* We don't want to see the window when we run the stress testing */
-	if(config.stress)
+	if(config.dbg_stress)
 		glfwIconifyWindow();
 	
 	/* Init vertices */
@@ -408,7 +408,7 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data)
 	int tex = 0;
 	
 	/* don't waste memory on texture if we are stress testing */
-	if(config.stress)
+	if(config.dbg_stress)
 		return -1;
 	
 	/* grab texture */
