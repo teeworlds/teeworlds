@@ -919,6 +919,13 @@ int netclient_state(NETCLIENT *c)
 	return NETSTATE_CONNECTING;
 }
 
+int netclient_gotproblems(NETCLIENT *c)
+{
+	if(time_get() - c->conn.last_recv_time > time_freq())
+		return 1;
+	return 0;
+}
+
 void netclient_stats(NETCLIENT *c, NETSTATS *stats)
 {
 	*stats = c->conn.stats;

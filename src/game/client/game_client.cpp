@@ -2762,6 +2762,14 @@ void render_game()
 			emoticon_selector_active = false;
 		}
 	}
+	
+	if(client_connection_problems())
+	{
+		gfx_mapscreen(0, 0, 400, 300);
+		const char *text = "Connection Problems...";
+		float w = gfx_pretty_text_width(24, text, -1);
+		gfx_pretty_text(200-w/2, 50, 24, text, -1);
+	}
 
 	// render score board
 	if(inp_key_pressed(KEY_TAB) || // user requested

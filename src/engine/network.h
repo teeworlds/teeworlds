@@ -59,6 +59,7 @@ int netclient_send(NETCLIENT *c, NETPACKET *packet);
 int netclient_close(NETCLIENT *c);
 int netclient_update(NETCLIENT *c);
 int netclient_state(NETCLIENT *c);
+int netclient_gotproblems(NETCLIENT *c);
 void netclient_stats(NETCLIENT *c, NETSTATS *stats);
 const char *netclient_error_string(NETCLIENT *c);
 

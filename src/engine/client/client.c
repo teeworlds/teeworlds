@@ -305,6 +305,11 @@ void client_rcon(const char *cmd)
 	client_send_msg();
 }
 
+int client_connection_problems()
+{
+	return netclient_gotproblems(net);
+}
+
 static void client_send_input()
 {
 	int64 now = time_get();	

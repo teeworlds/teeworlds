@@ -804,6 +804,7 @@ float client_localtime();
 int client_state();
 const char *client_error_string();
 int *client_get_input(int tick);
+int client_connection_problems();
 
 void client_connect(const char *address);
 void client_disconnect();
@@ -811,6 +812,7 @@ void client_quit();
 void client_entergame();
 
 void client_rcon(const char *cmd);
+
 
 void client_serverbrowse_refresh(int lan);
 
