@@ -79,7 +79,7 @@ void gameobject_ctf::tick()
 				if(distance(f->pos, flags[fi^1]->pos) < 24)
 				{
 					// CAPTURE! \o/
-					teamscore[fi^1]++;
+					teamscore[fi^1] += 100;
 					for(int i = 0; i < 2; i++)
 						flags[i]->reset();
 					
@@ -107,6 +107,8 @@ void gameobject_ctf::tick()
 				else
 				{
 					// take the flag
+					if(f->at_stand)
+						teamscore[fi^1]++;
 					f->at_stand = 0;
 					f->carrying_player = players[i];
 					create_sound_global(SOUND_CTF_GRAB);
