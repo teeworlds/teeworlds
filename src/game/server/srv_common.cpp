@@ -134,9 +134,14 @@ int gameobject::on_player_death(class player *victim, class player *killer, int 
 	if(!killer)
 		return 0;
 	if(killer == victim)
-		victim->score--; // klant arschel
+		victim->score--; // suicide
 	else
-		killer->score++; // good shit
+	{
+		if(is_teamplay && victim->team == killer->team)
+			killer->score--; // teamkill
+		else
+			killer->score++; // normal kill
+	}
 	return 0;
 }
 

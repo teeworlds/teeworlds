@@ -47,6 +47,10 @@ int gameobject_ctf::on_player_death(class player *victim, class player *killer, 
 			create_sound_global(SOUND_CTF_DROP);
 			f->drop_tick = server_tick();
 			f->carrying_player = 0;
+			
+			if(killer->team != victim->team)
+				killer->score++;
+				
 			had_flag |= 1;
 		}
 	}
@@ -80,6 +84,7 @@ void gameobject_ctf::tick()
 				{
 					// CAPTURE! \o/
 					teamscore[fi^1] += 100;
+					f->carrying_player->score += 5;
 					for(int i = 0; i < 2; i++)
 						flags[i]->reset();
 					
@@ -100,6 +105,7 @@ void gameobject_ctf::tick()
 					// return the flag
 					if(!f->at_stand)
 					{
+						players[i]->score += 1;
 						create_sound_global(SOUND_CTF_RETURN);
 						f->reset();
 					}
@@ -111,6 +117,7 @@ void gameobject_ctf::tick()
 						teamscore[fi^1]++;
 					f->at_stand = 0;
 					f->carrying_player = players[i];
+					f->carrying_player->score += 1;
 					create_sound_global(SOUND_CTF_GRAB);
 					break;
 				}
