@@ -753,10 +753,15 @@ static void process_events(int s)
 
 static player_core predicted_prev_player;
 static player_core predicted_player;
+static int predicted_tick = 0;
 static int last_new_predicted_tick = -1;
 
 extern "C" void modc_predict()
 {
+	player_core before_prev_player = predicted_prev_player;
+	player_core before_player = predicted_player;
+
+
 	// repredict player
 	world_core world;
 	int local_cid = -1;
@@ -849,6 +854,27 @@ extern "C" void modc_predict()
 		if(tick == client_predtick() && world.players[local_cid])
 			predicted_player = *world.players[local_cid];
 	}
+	
+	if(config.debug && predicted_tick == client_predtick())
+	{
+		if(predicted_player.pos.x != before_player.pos.x ||
+			predicted_player.pos.y != before_player.pos.y)
+		{
+			dbg_msg("client", "prediction error, (%d %d) (%d %d)", 
+				(int)before_player.pos.x, (int)before_player.pos.y,
+				(int)predicted_player.pos.x, (int)predicted_player.pos.y);
+		}
+
+		if(predicted_prev_player.pos.x != before_prev_player.pos.x ||
+			predicted_prev_player.pos.y != before_prev_player.pos.y)
+		{
+			dbg_msg("client", "prediction error, prev (%d %d) (%d %d)", 
+				(int)before_prev_player.pos.x, (int)before_prev_player.pos.y,
+				(int)predicted_prev_player.pos.x, (int)predicted_prev_player.pos.y);
+		}
+	}
+	
+	predicted_tick = client_predtick();
 }
 
 static void clear_object_pointers()
@@ -2441,7 +2467,7 @@ void render_game()
 		gfx_quads_end();
 	}
 
-	if(local_character && !spectate)
+	if(local_character && !spectate && !(gameobj && gameobj->game_over))
 	{
 		gfx_texture_set(data->images[IMAGE_GAME].id);
 		gfx_quads_begin();
@@ -2668,7 +2694,7 @@ void render_game()
 		}
 
 		// render small score hud
-		if(gametype == GAMETYPE_TDM || gametype == GAMETYPE_CTF)
+		if(!(gameobj && gameobj->game_over) && (gametype == GAMETYPE_TDM || gametype == GAMETYPE_CTF))
 		{
 			for(int t = 0; t < 2; t++)
 			{
@@ -2792,6 +2818,19 @@ void render_game()
 		}
 		else
 		{
+				
+			if(gameobj && gameobj->game_over)
+			{
+				const char *text = "DRAW!";
+				if(gameobj->teamscore[0] > gameobj->teamscore[1])
+					text = "Red Team Wins!";
+				else if(gameobj->teamscore[1] > gameobj->teamscore[0])
+					text = "Blue Team Wins!";
+					
+				float w = gfx_pretty_text_width(92.0f, text, -1);
+				gfx_pretty_text(width/2-w/2, 45, 92.0f, text, -1);
+			}
+			
 			render_scoreboard(width/2-w-20, 150.0f, w, 0, "Red Team");
 			render_scoreboard(width/2 + 20, 150.0f, w, 1, "Blue Team");
 		}

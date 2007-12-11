@@ -48,6 +48,8 @@ static int64 local_start_time;
 
 static int debug_font;
 static float frametime = 0.0001f;
+static float frametime_low = 1.0f;
+static float frametime_high = 0.0f;
 static int frames = 0;
 static NETADDR4 server_address;
 static int window_must_refocus = 0;
@@ -875,6 +877,7 @@ static void client_update()
 	{
 		int repredict = 0;
 		int64 now = st_get(&game_time, time_get());
+		int64 pred_now = st_get(&predicted_time, time_get());
 
 		while(1)
 		{
@@ -909,10 +912,10 @@ static void client_update()
 		{
 			int64 curtick_start = (snapshots[SNAP_CURRENT]->tick)*time_freq()/50;
 			int64 prevtick_start = (snapshots[SNAP_PREV]->tick)*time_freq()/50;
-			int64 pred_now = st_get(&predicted_time, time_get());
 			/*tg_add(&predicted_time_graph, pred_now, 0); */
 			int prev_pred_tick = (int)(pred_now*50/time_freq());
 			int new_pred_tick = prev_pred_tick+1;
+			static float last_intrapred = 0;
 
 			intratick = (now - prevtick_start) / (float)(curtick_start-prevtick_start);
 
@@ -922,14 +925,20 @@ static void client_update()
 			prevtick_start = prev_pred_tick*time_freq()/50;
 			intrapredtick = (pred_now - prevtick_start) / (float)(curtick_start-prevtick_start);
 			
+			
 			if(new_pred_tick > current_predtick)
 			{
+				last_intrapred = intrapredtick;
 				current_predtick = new_pred_tick;
 				repredict = 1;
 				
 				/* send input */
 				client_send_input();
 			}
+			
+			if(intrapredtick < last_intrapred)
+				dbg_msg("client", "prediction time goes backwards, that can't be good");
+			last_intrapred = intrapredtick;
 		}
 
 		/* only do sane predictions */
@@ -1091,15 +1100,24 @@ static void client_run()
 		{
 			if(config.debug)
 			{
-				dbg_msg("client/report", "fps=%.02f netstate=%d",
-					frames/(float)(reportinterval/time_freq()), netclient_state(net));
+				dbg_msg("client/report", "fps=%.02f (%.02f %.02f) netstate=%d",
+					frames/(float)(reportinterval/time_freq()),
+					1.0f/frametime_high,
+					1.0f/frametime_low,
+					netclient_state(net));
 			}
+			frametime_low = 1;
+			frametime_high = 0;
 			frames = 0;
 			reporttime += reportinterval;
 		}
 		
 		/* update frametime */
 		frametime = (time_get()-frame_start_time)/(float)time_freq();
+		if(frametime < frametime_low)
+			frametime_low = frametime;
+		if(frametime > frametime_high)
+			frametime_high = frametime;
 	}
 	
 	modc_shutdown();

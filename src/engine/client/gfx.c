@@ -628,6 +628,7 @@ void gfx_swap()
 	}
 	
 	glfwSwapBuffers();
+	glFinish();
 	glfwPollEvents();
 }
 
