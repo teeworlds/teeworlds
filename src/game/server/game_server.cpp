@@ -1011,7 +1011,6 @@ void player::tick_defered()
 		vec2 start_pos = core.pos;
 		vec2 start_vel = core.vel;
 		bool stuck_before = test_box(core.pos, vec2(28.0f, 28.0f));
-		
 		core.move();
 		bool stuck_after_move = test_box(core.pos, vec2(28.0f, 28.0f));
 		core.quantize();
@@ -1020,11 +1019,14 @@ void player::tick_defered()
 		
 		if(!stuck_before && (stuck_after_move || stuck_after_quant))
 		{
-			dbg_msg("player", "STUCK!!! %f %f %f %f %x %x %x %x", 
+			dbg_msg("player", "STUCK!!! %d %d %d %f %f %f %f %x %x %x %x", 
+				stuck_before,
+				stuck_after_move,
+				stuck_after_quant,
 				start_pos.x, start_pos.y,
 				start_vel.x, start_vel.y,
-				start_pos.x, start_pos.y,
-				start_vel.x, start_vel.y);
+				*((unsigned *)&start_pos.x), *((unsigned *)&start_pos.y),
+				*((unsigned *)&start_vel.x), *((unsigned *)&start_vel.y));
 		}
 		
 

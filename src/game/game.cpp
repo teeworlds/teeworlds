@@ -75,18 +75,30 @@ void move_box(vec2 *inout_pos, vec2 *inout_vel, vec2 size, float elasticity)
 			
 			vec2 new_pos = pos + vel*fraction; // TODO: this row is not nice
 			
-			// make sure that we quantize. this is to make sure that when we set
-			// the final position that we don't move it into the ground.
-			if(test_box(vec2((int)new_pos.x,(int) new_pos.y), size))
+			if(test_box(vec2(new_pos.x, new_pos.y), size))
 			{
-				if(test_box(vec2((int)pos.x, (int)new_pos.y), size))
+				int hits = 0;
+				
+				if(test_box(vec2(pos.x, new_pos.y), size))
 				{
 					new_pos.y = pos.y;
 					vel.y *= -elasticity;
+					hits++;
 				}
 				
-				if(test_box(vec2((int)new_pos.x, (int)pos.y), size))
+				if(test_box(vec2(new_pos.x, pos.y), size))
 				{
+					new_pos.x = pos.x;
+					vel.x *= -elasticity;
+					hits++;
+				}
+				
+				// neither of the tests got a collision.
+				// this is a real _corner case_!
+				if(hits == 0)
+				{
+					new_pos.y = pos.y;
+					vel.y *= -elasticity;
 					new_pos.x = pos.x;
 					vel.x *= -elasticity;
 				}
