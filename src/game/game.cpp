@@ -40,7 +40,7 @@ void move_point(vec2 *inout_pos, vec2 *inout_vel, float elasticity, int *bounces
 	}
 }
 
-static bool test_box(vec2 pos, vec2 size)
+bool test_box(vec2 pos, vec2 size)
 {
 	size *= 0.5f;
 	if(col_check_point(pos.x-size.x, pos.y-size.y))

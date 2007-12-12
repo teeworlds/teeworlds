@@ -44,11 +44,8 @@ private:
 
 	entity *prev_type_entity;
 	entity *next_type_entity;
-
-	int index;
 protected:
 	int id;
-	
 public:
 	float proximity_radius;
 	unsigned flags;

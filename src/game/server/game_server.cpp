@@ -634,7 +634,8 @@ int player::handle_ninja()
 				// hit a player, give him damage and stuffs...
 				create_sound(ents[i]->pos, SOUND_NINJA_HIT);
 				// set his velocity to fast upward (for now)
-				hitobjects[numobjectshit++] = ents[i];
+				if(numobjectshit < 10)
+					hitobjects[numobjectshit++] = ents[i];
 				ents[i]->take_damage(vec2(0,10.0f), data->weapons[WEAPON_NINJA].meleedamage, client_id,WEAPON_NINJA);
 			}
 		}
@@ -898,7 +899,8 @@ int player::handle_weapons()
 			// set his velocity to fast upward (for now)
 			create_smoke(ents[i]->pos);
 			create_sound(pos, SOUND_HAMMER_HIT);
-			hitobjects[numobjectshit++] = ents[i];
+			if(numobjectshit < 10)
+				hitobjects[numobjectshit++] = ents[i];
 			ents[i]->take_damage(vec2(0,-1.0f), data->weapons[active_weapon].meleedamage, client_id, active_weapon);
 			player* target = (player*)ents[i];
 			vec2 dir;
@@ -1006,9 +1008,25 @@ void player::tick_defered()
 {
 	if(!dead)
 	{
+		vec2 start_pos = core.pos;
+		vec2 start_vel = core.vel;
+		bool stuck_before = test_box(core.pos, vec2(28.0f, 28.0f));
+		
 		core.move();
+		bool stuck_after_move = test_box(core.pos, vec2(28.0f, 28.0f));
 		core.quantize();
+		bool stuck_after_quant = test_box(core.pos, vec2(28.0f, 28.0f));
 		pos = core.pos;
+		
+		if(!stuck_before && (stuck_after_move || stuck_after_quant))
+		{
+			dbg_msg("player", "STUCK!!! %f %f %f %f %x %x %x %x", 
+				start_pos.x, start_pos.y,
+				start_vel.x, start_vel.y,
+				start_pos.x, start_pos.y,
+				start_vel.x, start_vel.y);
+		}
+		
 
 		int events = core.triggered_events;
 		int mask = cmask_all_except_one(client_id);

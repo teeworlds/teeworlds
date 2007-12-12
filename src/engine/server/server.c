@@ -45,7 +45,7 @@ typedef struct
 {
 	short next;
 	short state; /* 0 = free, 1 = alloced, 2 = timed */
-	int timeout_tick;
+	int timeout;
 } SNAP_ID;
 
 static const int MAX_IDS = 16*1024; /* should be lowered */
@@ -133,10 +133,12 @@ static void snap_remove_first_timeout()
 int snap_new_id()
 {
 	int id;
+	int64 now = time_get();
 	dbg_assert(snap_id_inited == 1, "requesting id too soon");
 	
+	
 	/* process timed ids */
-	while(snap_first_timed_id != -1 && snap_ids[snap_first_timed_id].timeout_tick < server_tick())
+	while(snap_first_timed_id != -1 && snap_ids[snap_first_timed_id].timeout < now)
 		snap_remove_first_timeout();
 	
 	id = snap_first_free_id;
@@ -161,7 +163,7 @@ void snap_free_id(int id)
 
 	snap_id_inusage--;
 	snap_ids[id].state = 2;
-	snap_ids[id].timeout_tick = server_tick() + server_tickspeed()*5;
+	snap_ids[id].timeout = time_get()+time_freq()*5;
 	snap_ids[id].next = -1;
 	
 	if(snap_last_timed_id != -1)

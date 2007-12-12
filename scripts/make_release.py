@@ -1,6 +1,6 @@
 import shutil, os, sys, zipfile
 
-valid_platforms = ["win32", "linux86", "linux86_64", "src"]
+#valid_platforms = ["win32", "linux86", "linux86_64", "src"]
 
 if len(sys.argv) != 3:
 	print "wrong number of arguments"
@@ -18,16 +18,16 @@ include_exe = True
 include_src = False
 
 if platform == "src":
-	include_data = False
+	include_data = True
 	include_exe = False
 	include_src = True
 	use_zip = 1
 	use_gz = 1
 
-if not platform in valid_platforms:
-	print "not a valid platform"
-	print valid_platforms
-	sys.exit(-1)
+#if not platform in valid_platforms:
+#	print "not a valid platform"
+#	print valid_platforms
+#	sys.exit(-1)
 
 if platform == 'win32':
 	exe_ext = ".exe"

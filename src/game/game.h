@@ -61,6 +61,7 @@ inline T saturated_add(T min, T max, T current, T modifier)
 
 void move_point(vec2 *inout_pos, vec2 *inout_vel, float elasticity, int *bounces);
 void move_box(vec2 *inout_pos, vec2 *inout_vel, vec2 size, float elasticity);
+bool test_box(vec2 pos, vec2 size);
 
 
 // hooking stuff
