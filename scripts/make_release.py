@@ -59,6 +59,8 @@ shutil.copy("license.txt", package_dir)
 if include_data:
 	os.mkdir(os.path.join(package_dir, "data"))
 	copydir("data", package_dir)
+	if platform[:3] == "win":
+		shutil.copy("other/config_directory.bat", package_dir)
 
 if include_exe:
 	shutil.copy("teewars"+exe_ext, package_dir)
