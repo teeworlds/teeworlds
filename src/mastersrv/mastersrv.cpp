@@ -16,6 +16,7 @@ enum {
 static struct check_server
 {
 	NETADDR4 address;
+	NETADDR4 alt_address;
 	int try_count;
 	int64 try_time;
 } check_servers[MAX_SERVERS];
@@ -65,7 +66,7 @@ void send_check(NETADDR4 *addr)
 	net_checker.send(&p);
 }
 
-void add_checkserver(NETADDR4 *info)
+void add_checkserver(NETADDR4 *info, NETADDR4 *alt)
 {
 	// add server
 	if(num_checkservers == MAX_SERVERS)
@@ -74,9 +75,11 @@ void add_checkserver(NETADDR4 *info)
 		return;
 	}
 	
-	dbg_msg("mastersrv", "checking: %d.%d.%d.%d:%d",
-		info->ip[0], info->ip[1], info->ip[2], info->ip[3], info->port);
+	dbg_msg("mastersrv", "checking: %d.%d.%d.%d:%d (%d.%d.%d.%d:%d)",
+		info->ip[0], info->ip[1], info->ip[2], info->ip[3], info->port,
+		alt->ip[0], alt->ip[1], alt->ip[2], alt->ip[3], alt->port);
 	check_servers[num_checkservers].address = *info;
+	check_servers[num_checkservers].alt_address = *alt;
 	check_servers[num_checkservers].try_count = 0;
 	check_servers[num_checkservers].try_time = 0;
 	num_checkservers++;
@@ -119,11 +122,13 @@ void update_servers()
 	{
 		if(now > check_servers[i].try_time+freq)
 		{
-			if(check_servers[i].try_count == 5)
+			if(check_servers[i].try_count == 10)
 			{
 				dbg_msg("mastersrv", "check failed: %d.%d.%d.%d:%d",
 					check_servers[i].address.ip[0], check_servers[i].address.ip[1],
-					check_servers[i].address.ip[2], check_servers[i].address.ip[3],check_servers[i].address.port);
+					check_servers[i].address.ip[2], check_servers[i].address.ip[3],check_servers[i].address.port,
+					check_servers[i].alt_address.ip[0], check_servers[i].alt_address.ip[1],
+					check_servers[i].alt_address.ip[2], check_servers[i].alt_address.ip[3],check_servers[i].alt_address.port);
 					
 				// FAIL!!
 				send_error(&check_servers[i].address);
@@ -135,7 +140,10 @@ void update_servers()
 			{
 				check_servers[i].try_count++;
 				check_servers[i].try_time = now;
-				send_check(&check_servers[i].address);
+				if(check_servers[i].try_count > 5)
+					send_check(&check_servers[i].alt_address);
+				else
+					send_check(&check_servers[i].address);
 			}
 		}
 	}
@@ -186,11 +194,18 @@ int main(int argc, char **argv)
 		NETPACKET packet;
 		while(net_op.recv(&packet))
 		{
-			if(packet.data_size == sizeof(SERVERBROWSE_HEARTBEAT) &&
+			if(packet.data_size == sizeof(SERVERBROWSE_HEARTBEAT)+2 &&
 				memcmp(packet.data, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT)) == 0)
 			{
+				NETADDR4 alt;
+				unsigned char *d = (unsigned char *)packet.data;
+				alt = packet.address;
+				alt.port =
+					(d[sizeof(SERVERBROWSE_HEARTBEAT)]<<8) |
+					d[sizeof(SERVERBROWSE_HEARTBEAT)+1];
+				
 				// add it
-				add_checkserver(&packet.address);
+				add_checkserver(&packet.address, &alt);
 			}
 			else if(packet.data_size == sizeof(SERVERBROWSE_GETLIST) &&
 				memcmp(packet.data, SERVERBROWSE_GETLIST, sizeof(SERVERBROWSE_GETLIST)) == 0)
