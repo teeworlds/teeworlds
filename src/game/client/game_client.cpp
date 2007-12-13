@@ -1656,15 +1656,127 @@ void render_moon(float x, float y)
 
 void render_stars()
 {
+	struct star
+	{
+		vec2 p;
+		float tingle;
+		float rot;
+		float size;
+	};
+	
+	static const int NUM_STARS = 100;
+	static star stars[NUM_STARS];
+	static bool init = true;
+	if(init)
+	{
+		for(int i = 0; i < NUM_STARS; i++)
+		{
+			stars[i].p.x = (frandom()-0.5f)*800*3;
+			stars[i].p.y = (frandom()-0.5f)*600*3;
+			stars[i].tingle = frandom();
+			stars[i].rot = frandom()*pi;
+			stars[i].size = 10.0f+frandom()*10.0f;
+		}
+		
+		init = false;
+	}
+
+	int64 now = time_get();
+	int64 freq = time_freq()*5;
+	float t = (now%freq)/(float)freq;
 	gfx_texture_set(data->images[IMAGE_STARS].id);
 	gfx_quads_begin();
+	gfx_quads_setsubset(0,0,0.5f,1);
+	for(int i = 0; i < NUM_STARS; i++)
+	{
+		float a = fmod(t+stars[i].tingle, 1.0f);
+		gfx_quads_setrotation(stars[i].rot);
+		gfx_setcolor(1,1,1,0.25f+sinf(a*pi)*0.75f);
+		gfx_quads_draw(stars[i].p.x, stars[i].p.y, stars[i].size, stars[i].size);
+	}
+	
 	gfx_quads_end();
 }
 
 void render_snow()
 {
+	//gfx_mapscreen(0,0,800,600);
+	vec2 tl, br;
+	gfx_getscreen(&tl.x, &tl.y, &br.x, &br.y);
+	
+	struct flake
+	{
+		vec2 p;
+		float tingle;
+		float rot;
+		float size;
+		float yspeed;
+		float xspeed;
+	};
+	
+	static const int NUM_FLAKES = 100;
+	static flake flakes[NUM_FLAKES];
+	static bool init = true;
+	
+	float w = br.x-tl.x;
+	float h = br.y-tl.y;
+	
+	if(init)
+	{
+		for(int i = 0; i < NUM_FLAKES; i++)
+		{
+			flakes[i].p.x = frandom()*w;
+			flakes[i].p.y = frandom()*h;
+			flakes[i].tingle = frandom();
+			flakes[i].rot = frandom()*pi;
+			flakes[i].size = 50.0f+frandom()*10.0f;
+			flakes[i].yspeed = 50+frandom()*20.0f;
+			flakes[i].xspeed = flakes[i].yspeed * (0.4+frandom()*0.4f);
+		}
+		
+		init = false;
+	}
+	
+	int basex = (int)(tl.x/w);
+	float splitx = tl.x-basex*w;
+	int basey = (int)(tl.y/h);
+	float splity = tl.y-basey*h;
+	
+	int64 now = time_get();
+	int64 freq = time_freq()*5;	
+	float f = client_frametime();
+	float t = (now%freq)/(float)freq;
 	gfx_texture_set(data->images[IMAGE_SNOW].id);
 	gfx_quads_begin();
+	for(int i = 0; i < NUM_FLAKES; i++)
+	{
+		flakes[i].p.x -= f*flakes[i].xspeed;
+		flakes[i].p.y += f*flakes[i].yspeed;
+		if(flakes[i].p.x < 0)
+			flakes[i].p.x += w;
+		if(flakes[i].p.y > h)
+			flakes[i].p.y -= h;
+			
+		float x = flakes[i].p.x + basex*w;
+		float y = flakes[i].p.y + basey*h;
+		
+		if(flakes[i].p.x < splitx)
+			x += w;
+		if(flakes[i].p.y < splity)
+			y += h;
+		//flakes[i].p.y += f*100;
+		
+		/*
+		if(flakes[i].p.x < -50)
+			flakes[i].p.x += (800+50+50);
+		if(flakes[i].p.y > 650)
+			flakes[i].p.y -= (600 + 50 +50);*/
+			
+		gfx_quads_setrotation(flakes[i].rot);
+		gfx_setcolor(1,1,1,1);
+		gfx_quads_draw(x, y, flakes[i].size, flakes[i].size);
+	}
+		
 	gfx_quads_end();
 }
 
@@ -1956,13 +2068,14 @@ void render_world(float center_x, float center_y, float zoom)
 	//gfx_mapscreen(center_x-width/2, center_y-height/2, center_x+width/2, center_y+height/2);
 
 	// render background environment
+	int theme_id = 0;
+	mapres_theme *t = (mapres_theme *)map_find_item(MAPRES_TEMP_THEME, 0);
+	if(t)
+		theme_id = t->id;
+	
 	if(config.gfx_high_detail)
 	{
-		int id = 0;
-		mapres_theme *t = (mapres_theme *)map_find_item(MAPRES_TEMP_THEME, 0);
-		if(t)
-			id = t->id;
-		if(id == 1)
+		if(theme_id == 1)
 		{
 			// Winter night
 			gfx_mapscreen(0,0,1,1);
@@ -1977,8 +2090,12 @@ void render_world(float center_x, float center_y, float zoom)
 				gfx_quads_drawTL(0, 0, 1, 1);
 			gfx_quads_end();
 
+			mapscreen_to_world(center_x*0.1f, center_y*0.1f, zoom);
 			render_stars();
-			render_moon(20+center_x*0.6f, 20+center_y*0.6f);
+			
+			mapscreen_to_world(center_x, center_y, zoom);
+			
+			render_moon(center_x*0.8f, center_y*0.8f);
 			
 			mapscreen_to_world(center_x, center_y, zoom);
 		}
@@ -2082,12 +2199,9 @@ void render_world(float center_x, float center_y, float zoom)
 	// render front environment effects
 	if(config.gfx_high_detail)
 	{
-		int id = 0;
-		mapres_theme *t = (mapres_theme *)map_find_item(MAPRES_TEMP_THEME, 0);
-		if(t)
-			id = t->id;
-		if(id == 1)
+		if(theme_id == 1)
 		{
+			//mapscreen_to_world(center_x, center_y, zoom);
 			render_snow();
 		}
 	}

@@ -48,7 +48,7 @@ int gameobject_ctf::on_player_death(class player *victim, class player *killer, 
 			f->drop_tick = server_tick();
 			f->carrying_player = 0;
 			
-			if(killer->team != victim->team)
+			if(killer && killer->team != victim->team)
 				killer->score++;
 				
 			had_flag |= 1;
