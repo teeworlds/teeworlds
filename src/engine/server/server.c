@@ -435,12 +435,24 @@ static void server_send_map(int cid)
 	
 static void server_send_heartbeat()
 {
+	static unsigned char data[sizeof(SERVERBROWSE_HEARTBEAT) + 2];
+	unsigned short port = config.sv_port;
 	NETPACKET packet;
+	
+	mem_copy(data, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT));
+	
 	packet.client_id = -1;
 	packet.address = master_server;
 	packet.flags = PACKETFLAG_CONNLESS;
-	packet.data_size = sizeof(SERVERBROWSE_HEARTBEAT);
-	packet.data = SERVERBROWSE_HEARTBEAT;
+	packet.data_size = sizeof(SERVERBROWSE_HEARTBEAT) + 2;
+	packet.data = &data;
+
+	/* supply the set port that the master can use if it has problems */	
+	if(config.sv_external_port)
+		port = config.sv_external_port;
+	data[sizeof(SERVERBROWSE_HEARTBEAT)] = port >> 8;
+	data[sizeof(SERVERBROWSE_HEARTBEAT)+1] = port&0xff;
+	
 	netserver_send(net, &packet);
 }
 
