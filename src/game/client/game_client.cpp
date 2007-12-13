@@ -1700,9 +1700,12 @@ void render_stars()
 
 void render_snow()
 {
-	//gfx_mapscreen(0,0,800,600);
 	vec2 tl, br;
 	gfx_getscreen(&tl.x, &tl.y, &br.x, &br.y);
+	tl.x += 1000; // this is here to fix positions below 0,0
+	tl.y += 1000;
+	br.x += 1000;
+	br.y += 1000;
 	
 	struct flake
 	{
@@ -1742,10 +1745,7 @@ void render_snow()
 	int basey = (int)(tl.y/h);
 	float splity = tl.y-basey*h;
 	
-	int64 now = time_get();
-	int64 freq = time_freq()*5;	
 	float f = client_frametime();
-	float t = (now%freq)/(float)freq;
 	gfx_texture_set(data->images[IMAGE_SNOW].id);
 	gfx_quads_begin();
 	for(int i = 0; i < NUM_FLAKES; i++)
@@ -1764,16 +1764,11 @@ void render_snow()
 			x += w;
 		if(flakes[i].p.y < splity)
 			y += h;
-		//flakes[i].p.y += f*100;
-		
-		/*
-		if(flakes[i].p.x < -50)
-			flakes[i].p.x += (800+50+50);
-		if(flakes[i].p.y > 650)
-			flakes[i].p.y -= (600 + 50 +50);*/
+			
+		x -= 1000;
+		y -= 1000;
 			
 		gfx_quads_setrotation(flakes[i].rot);
-		gfx_setcolor(1,1,1,1);
 		gfx_quads_draw(x, y, flakes[i].size, flakes[i].size);
 	}
 		
