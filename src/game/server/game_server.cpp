@@ -437,8 +437,6 @@ bool try_spawntype(int t, vec2 *outpos)
 		return false;
 
 	int id = rand()%num;
-	dbg_msg("spawn", "%d trying to spawn at %d", server_tick(), id);
-
 	mapres_spawnpoint *sp = (mapres_spawnpoint*)map_get_item(start + id, NULL, NULL);
 	*outpos = vec2((float)sp->x, (float)sp->y);
 	return true;
@@ -471,13 +469,9 @@ void player::try_respawn()
 	for(int i = 0; i < num_ents; i++)
 	{
 		if(ents[i] != this)
-		{
-			dbg_msg("spawn", "%d failed", server_tick());
 			return;
-		}
 	}
-
-	dbg_msg("spawn", "%d spawned", server_tick());
+	
 	spawning = false;
 	pos = spawnpos;
 
