@@ -140,10 +140,10 @@ void update_servers()
 			{
 				check_servers[i].try_count++;
 				check_servers[i].try_time = now;
-				if(check_servers[i].try_count > 5)
-					send_check(&check_servers[i].alt_address);
-				else
+				if(check_servers[i].try_count&1)
 					send_check(&check_servers[i].address);
+				else
+					send_check(&check_servers[i].alt_address);
 			}
 		}
 	}
