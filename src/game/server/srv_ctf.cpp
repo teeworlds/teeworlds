@@ -47,6 +47,7 @@ int gameobject_ctf::on_player_death(class player *victim, class player *killer, 
 			create_sound_global(SOUND_CTF_DROP);
 			f->drop_tick = server_tick();
 			f->carrying_player = 0;
+			f->vel = vec2(0,0);
 			
 			if(killer && killer->team != victim->team)
 				killer->score++;
@@ -159,6 +160,7 @@ void flag::reset()
 	carrying_player = 0;
 	at_stand = 1;
 	pos = stand_pos;
+	vel = vec2(0,0);
 }
 
 void flag::snap(int snapping_client)
