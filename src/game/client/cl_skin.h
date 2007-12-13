@@ -15,3 +15,6 @@ void skin_init();
 int skin_num();
 const skin *skin_get(int index);
 int skin_find(const char *name);
+
+
+vec3 hsl_to_rgb(vec3 in);

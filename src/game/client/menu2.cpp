@@ -46,6 +46,7 @@ static int popup = POPUP_NONE;
 
 //static vec4 gui_color(0.9f,0.78f,0.65f, 0.5f);
 //static vec4 gui_color(0.78f,0.9f,0.65f, 0.5f);
+
 static vec4 gui_color(0.65f,0.78f,0.9f, 0.5f);
 
 static vec4 color_tabbar_inactive_outgame(0,0,0,0.25f);
@@ -1414,6 +1415,31 @@ static void menu2_render_settings_graphics(RECT main_view)
 	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
 	if (ui2_do_button(&config.gfx_high_detail, "High Detail", config.gfx_high_detail, &button, ui2_draw_checkbox, 0))
 		config.gfx_high_detail ^= 1;
+
+	//
+	
+	RECT text;
+	ui2_hsplit_t(&main_view, 20.0f, 0, &main_view);
+	ui2_hsplit_t(&main_view, 20.0f, &text, &main_view);
+	//ui2_vsplit_l(&text, 15.0f, 0, &text);
+	ui2_do_label(&text, "UI Color", 18, -1);
+	
+	const char *labels[] = {"Hue", "Sat.", "Lht.", "Alpha"};
+	int *color_slider[4] = {&config.ui_color_hue, &config.ui_color_sat, &config.ui_color_lht, &config.ui_color_alpha};
+	for(int s = 0; s < 4; s++)
+	{
+		RECT text;
+		ui2_hsplit_t(&main_view, 19.0f, &button, &main_view);
+		ui2_vmargin(&button, 15.0f, &button);
+		ui2_vsplit_l(&button, 30.0f, &text, &button);
+		ui2_vsplit_r(&button, 5.0f, &button, 0);
+		ui2_hsplit_t(&button, 4.0f, 0, &button);
+		
+		float k = (*color_slider[s]) / 255.0f;
+		k = ui2_do_scrollbar_h(color_slider[s], &button, k);
+		*color_slider[s] = (int)(k*255.0f);
+		ui2_do_label(&text, labels[s], 20, -1);
+	}		
 }
 
 static void menu2_render_settings_sound(RECT main_view)
@@ -1806,6 +1832,28 @@ void modmenu_render()
 {
 	static int mouse_x = 0;
 	static int mouse_y = 0;
+
+	// update colors
+
+	vec3 rgb = hsl_to_rgb(vec3(config.ui_color_hue/255.0f, config.ui_color_sat/255.0f, config.ui_color_lht/255.0f));
+	gui_color = vec4(rgb.r, rgb.g, rgb.b, config.ui_color_alpha/255.0f);
+
+	color_tabbar_inactive_outgame = vec4(0,0,0,0.25f);
+	color_tabbar_active_outgame = vec4(0,0,0,0.5f);
+
+	color_ingame_scale_i = 0.5f;
+	color_ingame_scale_a = 0.2f;
+	color_tabbar_inactive_ingame = vec4(
+		gui_color.r*color_ingame_scale_i,
+		gui_color.g*color_ingame_scale_i,
+		gui_color.b*color_ingame_scale_i,
+		gui_color.a*0.8f);
+	
+	color_tabbar_active_ingame = vec4(
+		gui_color.r*color_ingame_scale_a,
+		gui_color.g*color_ingame_scale_a,
+		gui_color.b*color_ingame_scale_a,
+		gui_color.a);
 
 
     // handle mouse movement

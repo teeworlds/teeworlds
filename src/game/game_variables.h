@@ -44,6 +44,12 @@ MACRO_CONFIG_INT(ui_page, 1, 0, 5)
 MACRO_CONFIG_STR(ui_server_address, 128, "localhost:8303")
 MACRO_CONFIG_INT(ui_scale, 100, 1, 100000)
 
+MACRO_CONFIG_INT(ui_color_hue, 160, 0, 255)
+MACRO_CONFIG_INT(ui_color_sat, 70, 0, 255)
+MACRO_CONFIG_INT(ui_color_lht, 175, 0, 255)
+MACRO_CONFIG_INT(ui_color_alpha, 228, 0, 255)
+
+
 MACRO_CONFIG_INT(sv_warmup, 0, 0, 0)
 MACRO_CONFIG_STR(sv_msg, 512, "")
 MACRO_CONFIG_INT(sv_teamdamage, 0, 0, 1)
