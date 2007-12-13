@@ -231,7 +231,8 @@ int main(int argc, char **argv)
 				// remove it from checking
 				for(int i = 0; i < num_checkservers; i++)
 				{
-					if(net_addr4_cmp(&check_servers[i].address, &packet.address) == 0)
+					if(net_addr4_cmp(&check_servers[i].address, &packet.address) == 0 ||
+						net_addr4_cmp(&check_servers[i].alt_address, &packet.address) == 0)
 					{
 						num_checkservers--;
 						check_servers[i] = check_servers[num_checkservers];
