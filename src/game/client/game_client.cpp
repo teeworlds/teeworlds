@@ -1507,11 +1507,9 @@ static void render_player(
 				float alpha = 1.0f;
 				if (alpha > 0.0f && data->weapons[iw].sprite_muzzle[itex].psprite)
 				{
-					vec2 dir = vec2(player.x,player.y) - vec2(prev.x, prev.y);
+					vec2 dir = vec2(player_char->x,player_char->y) - vec2(prev_char->x, prev_char->y);
 					dir = normalize(dir);
-					float hadokenangle = atan(dir.y/dir.x);
-					if (dir.x < 0.0f)
-						hadokenangle += pi;
+					float hadokenangle = get_angle(dir);
 					gfx_quads_setrotation(hadokenangle);
 					//float offsety = -data->weapons[iw].muzzleoffsety;
 					select_sprite(data->weapons[iw].sprite_muzzle[itex].psprite, 0);

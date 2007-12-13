@@ -356,7 +356,6 @@ void player::init()
 	client_id = -1;
 	team = -1; // -1 == spectator
 	extrapowerflags = 0;
-	ninjaactivationtick = 0;
 
 	latency_accum = 0;
 	latency_accum_min = 0;
@@ -390,6 +389,9 @@ void player::reset()
 	emote_stop = 0;
 	damage_taken_tick = 0;
 	attack_tick = 0;
+	numobjectshit = 0;
+	ninjaactivationtick = 0;
+	currentmovetime = 0;
 	
 	active_weapon = WEAPON_GUN;
 	last_weapon = WEAPON_HAMMER;
@@ -571,6 +573,7 @@ int player::handle_ninja()
 		activationdir = direction;
 		currentmovetime = data->weapons[WEAPON_NINJA].movetime * server_tickspeed() / 1000;
 		currentcooldown = data->weapons[WEAPON_NINJA].firedelay * server_tickspeed() / 1000 + server_tick();
+		
 		// reset hit objects
 		numobjectshit = 0;
 
@@ -1038,8 +1041,11 @@ void player::tick_defered()
 		{
 			create_sound(pos, SOUND_PLAYER_JUMP, mask);
 			ev_common *c = (ev_common *)::events.create(EVENT_AIR_JUMP, sizeof(ev_common), mask);
-			c->x = (int)pos.x;
-			c->y = (int)pos.y;
+			if(c)
+			{
+				c->x = (int)pos.x;
+				c->y = (int)pos.y;
+			}
 		}
 		
 		//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);

@@ -14,7 +14,7 @@ inline bool cmask_is_set(int mask, int cid) { return (mask&cmask_one(cid)) != 0;
 class event_handler
 {
 	static const int MAX_EVENTS = 128;
-	static const int MAX_DATASIZE = 128*4;
+	static const int MAX_DATASIZE = 128*64;
 
 	int types[MAX_EVENTS];  // TODO: remove some of these arrays
 	int offsets[MAX_EVENTS];
