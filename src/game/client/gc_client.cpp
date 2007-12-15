@@ -528,41 +528,7 @@ void create_air_jump_effect(vec2 pos)
 
 extern void draw_round_rect(float x, float y, float w, float h, float r);
 extern int render_popup(const char *caption, const char *text, const char *button_text);
-
-static void render_loading(float percent)
-{
-	gfx_clear(0.65f,0.78f,0.9f);
-    RECT screen = *ui2_screen();
-	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
-
-	float tw;
-
-	float w = 700;
-	float h = 200;
-	float x = screen.w/2-w/2;
-	float y = screen.h/2-h/2;
-
-	gfx_blend_normal();
-
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_setcolor(0,0,0,0.50f);
-	draw_round_rect(x, y, w, h, 40.0f);
-	gfx_quads_end();
-
-	const char *caption = "Loading";
-
-	tw = gfx_pretty_text_width(48.0f, caption, -1);
-	ui_do_label(x+w/2-tw/2, y+20, caption, 48.0f);
-
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_setcolor(1,1,1,1.0f);
-	draw_round_rect(x+40, y+h-75, (w-80)*percent, 25, 5.0f);
-	gfx_quads_end();
-
-	gfx_swap();
-}
+void render_loading(float percent);
 
 extern "C" void modc_init()
 {

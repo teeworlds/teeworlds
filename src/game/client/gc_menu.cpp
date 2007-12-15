@@ -162,6 +162,29 @@ void ui2_hsplit_b(const RECT *original, float cut, RECT *top, RECT *bottom)
     }
 }
 
+
+void ui2_vsplit_mid(const RECT *original, RECT *left, RECT *right)
+{
+    RECT r = *original;
+    float cut = r.w/2;
+
+    if (left)
+    {
+        left->x = r.x;
+        left->y = r.y;
+        left->w = cut;
+        left->h = r.h;
+    }
+
+    if (right)
+    {
+        right->x = r.x + cut;
+        right->y = r.y;
+        right->w = r.w - cut;
+        right->h = r.h;
+    }
+}
+
 void ui2_vsplit_l(const RECT *original, float cut, RECT *left, RECT *right)
 {
     RECT r = *original;
@@ -767,9 +790,7 @@ static int menu2_render_menubar(RECT r)
 
 static void menu2_render_background()
 {
-	//gfx_clear(0.65f,0.78f,0.9f);
 	gfx_clear(gui_color.r, gui_color.g, gui_color.b);
-	//gfx_clear(0.78f,0.9f,0.65f);
 	
 	gfx_texture_set(data->images[IMAGE_BANNER].id);
 	gfx_quads_begin();
@@ -777,6 +798,46 @@ static void menu2_render_background()
 	gfx_quads_setrotation(-pi/4+0.15f);
 	gfx_quads_draw(400, 300, 1000, 250);
 	gfx_quads_end();
+}
+
+void render_loading(float percent)
+{
+	// need up date this here to get correct
+	vec3 rgb = hsl_to_rgb(vec3(config.ui_color_hue/255.0f, config.ui_color_sat/255.0f, config.ui_color_lht/255.0f));
+	gui_color = vec4(rgb.r, rgb.g, rgb.b, config.ui_color_alpha/255.0f);
+	
+	gfx_clear(gui_color.r, gui_color.g, gui_color.b);
+	
+    RECT screen = *ui2_screen();
+	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
+
+	float tw;
+
+	float w = 700;
+	float h = 200;
+	float x = screen.w/2-w/2;
+	float y = screen.h/2-h/2;
+
+	gfx_blend_normal();
+
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_setcolor(0,0,0,0.50f);
+	draw_round_rect(x, y, w, h, 40.0f);
+	gfx_quads_end();
+
+	const char *caption = "Loading";
+
+	tw = gfx_pretty_text_width(48.0f, caption, -1);
+	ui_do_label(x+w/2-tw/2, y+20, caption, 48.0f);
+
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_setcolor(1,1,1,1.0f);
+	draw_round_rect(x+40, y+h-75, (w-80)*percent, 25, 5.0f);
+	gfx_quads_end();
+
+	gfx_swap();
 }
 
 static void menu2_render_serverbrowser(RECT main_view)
@@ -797,8 +858,11 @@ static void menu2_render_serverbrowser(RECT main_view)
 	ui2_hsplit_b(&view, 5.0f, &view, 0);
 	ui2_hsplit_b(&view, 20.0f, &view, &status);
 
-	ui2_vsplit_r(&filters, 300.0f, &filters, &toolbox);
-	ui2_vsplit_r(&filters, 150.0f, &filters, 0);
+	//ui2_vsplit_r(&filters, 300.0f, &filters, &toolbox);
+	//ui2_vsplit_r(&filters, 150.0f, &filters, 0);
+
+	ui2_vsplit_mid(&filters, &filters, &toolbox);
+	ui2_vsplit_r(&filters, 50.0f, &filters, 0);
 	
 	// split of the scrollbar
 	ui2_draw_rect(&headers, vec4(1,1,1,0.25f), CORNER_T, 5.0f);
@@ -1762,20 +1826,22 @@ int menu2_render()
 
 		if(popup == POPUP_QUIT)
 		{
-			RECT tryagain, abort;
+			RECT yes, no;
 			ui2_hsplit_b(&box, 20.f, &box, &part);
 			ui2_hsplit_b(&box, 24.f, &box, &part);
-			ui2_vmargin(&part, 120.0f, &part);
+			ui2_vmargin(&part, 80.0f, &part);
 			
-			ui2_vsplit_l(&part, 100.0f, &abort, &part);
-			ui2_vsplit_r(&part, 100.0f, 0, &tryagain);
+			ui2_vsplit_mid(&part, &yes, &no);
+			
+			ui2_vmargin(&yes, 20.0f, &yes);
+			ui2_vmargin(&no, 20.0f, &no);
 
 			static int button_abort = 0;
-			if(ui2_do_button(&button_abort, "No", 0, &abort, ui2_draw_menu_button, 0) || inp_key_down(KEY_ESC))
+			if(ui2_do_button(&button_abort, "No", 0, &no, ui2_draw_menu_button, 0) || inp_key_down(KEY_ESC))
 				popup = POPUP_NONE;
 
 			static int button_tryagain = 0;
-			if(ui2_do_button(&button_tryagain, "Yes", 0, &tryagain, ui2_draw_menu_button, 0) || inp_key_down(KEY_ENTER))
+			if(ui2_do_button(&button_tryagain, "Yes", 0, &yes, ui2_draw_menu_button, 0) || inp_key_down(KEY_ENTER))
 				client_quit();
 		}
 		else if(popup == POPUP_PASSWORD)
