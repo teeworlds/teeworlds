@@ -1317,8 +1317,6 @@ void powerup::reset()
 		spawntick = server_tick() + server_tickspeed() * data->powerupinfo[type].startspawntime;
 	else
 		spawntick = -1;
-		
-	spawntick = -1;
 }
 
 
@@ -1423,7 +1421,6 @@ void powerup::tick()
 			dbg_msg("game", "pickup player='%d:%s' item=%d/%d",
 				pplayer->client_id, server_clientname(pplayer->client_id), type, subtype);
 			spawntick = server_tick() + server_tickspeed() * respawntime;
-			spawntick = server_tick() + server_tickspeed();
 		}
 	}
 }
