@@ -13,6 +13,7 @@ platform = sys.argv[2]
 exe_ext = ""
 use_zip = 0
 use_gz = 1
+use_bundle = 0
 include_data = True
 include_exe = True
 include_src = False
@@ -33,6 +34,10 @@ if platform == 'win32':
 	exe_ext = ".exe"
 	use_zip = 1
 	use_gz = 0
+if platform == 'osx':
+	use_zip = 1
+	use_gz = 0
+	use_bundle = 1
 
 def copydir(src, dst, excl=[]):
 	for root, dirs, files in os.walk(src, topdown=True):
@@ -56,13 +61,13 @@ print "adding files"
 shutil.copy("readme.txt", package_dir)
 shutil.copy("license.txt", package_dir)
 
-if include_data:
+if include_data and not use_bundle:
 	os.mkdir(os.path.join(package_dir, "data"))
 	copydir("data", package_dir)
 	if platform[:3] == "win":
 		shutil.copy("other/config_directory.bat", package_dir)
 
-if include_exe:
+if include_exe and not use_bundle:
 	shutil.copy("teewars"+exe_ext, package_dir)
 	shutil.copy("teewars_srv"+exe_ext, package_dir)
 	
@@ -71,6 +76,18 @@ if include_src:
 		os.mkdir(os.path.join(package_dir, p))
 		copydir(p, package_dir)
 	shutil.copy("default.bam", package_dir)
+
+if use_bundle:
+	bundle_content_dir = os.path.join(package_dir, "Teewars.app/Contents")
+	bundle_bin_dir = os.path.join(bundle_content_dir, "MaxOS")
+	bundle_resource_dir = os.path.join(bundle_content_dir, "Resources")
+	os.mkdir(os.path.join(package_dir, "Teewars.app"))
+	os.mkdir(bundle_content_dir)
+	os.mkdir(bundle_bin_dir)
+	os.mkdir(bundle_resource_dir)
+	os.mkdir(os.path.join(bundle_resource_dir, "data"))
+	copydir("data", bundle_resource_dir)
+	shutil.copy("teewars"+ext_ext, bundle_bin_dir)
 
 if use_zip:
 	print "making zip archive"
