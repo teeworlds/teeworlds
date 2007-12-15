@@ -117,10 +117,6 @@ void player_core::tick()
 	float phys_size = 28.0f;
 	triggered_events = 0;
 	
-	#define MACRO_CHECK_VELOCITY { dbg_assert(length(vel) < 1000.0f, "velocity error"); }
-	
-	MACRO_CHECK_VELOCITY
-	
 	bool grounded = false;
 	if(col_check_point((int)(pos.x+phys_size/2), (int)(pos.y+phys_size/2+5)))
 		grounded = true;
@@ -130,8 +126,6 @@ void player_core::tick()
 	vec2 direction = normalize(vec2(input.target_x, input.target_y));
 
 	vel.y += gravity;
-	
-	MACRO_CHECK_VELOCITY
 	
 	float max_speed = grounded ? ground_control_speed : air_control_speed;
 	float accel = grounded ? ground_control_accel : air_control_accel;
@@ -143,12 +137,8 @@ void player_core::tick()
 	if(input.right)
 		vel.x = saturated_add(-max_speed, max_speed, vel.x, accel);
 		
-	MACRO_CHECK_VELOCITY
-		
 	if(!input.left && !input.right)
 		vel.x *= friction;
-	
-	MACRO_CHECK_VELOCITY
 	
 	// handle jumping
 	// 1 bit = to keep track if a jump has been made on this input
@@ -176,8 +166,6 @@ void player_core::tick()
 	}
 	else
 		jumped &= ~1;
-	
-	MACRO_CHECK_VELOCITY
 	
 	// do hook
 	if(input.hook)
@@ -313,8 +301,6 @@ void player_core::tick()
 		}
 	}
 	
-	MACRO_CHECK_VELOCITY
-	
 	if(true)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
@@ -341,8 +327,6 @@ void player_core::tick()
 				vel = vel + dir*a*v;
 			}
 			
-			MACRO_CHECK_VELOCITY
-			
 			// handle hook influence
 			if(hooked_player == i)
 			{
@@ -357,8 +341,6 @@ void player_core::tick()
 					// add a little bit force to the guy who has the grip
 					vel.x = saturated_add(-hook_drag_speed, hook_drag_speed, vel.x, -accel*dir.x*0.25f);
 					vel.y = saturated_add(-hook_drag_speed, hook_drag_speed, vel.y, -accel*dir.y*0.25f);
-					
-					MACRO_CHECK_VELOCITY
 				}
 			}
 		}

@@ -344,7 +344,8 @@ static void conn_disconnect(NETCONNECTION *conn, const char *reason)
 
 static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 {
-	conn->last_recv_time = time_get();
+	int64 now = time_get();
+	conn->last_recv_time = now;
 	conn->stats.recv_packets++;
 	conn->stats.recv_bytes += p->data_size + NETWORK_HEADER_SIZE;
 	
@@ -367,10 +368,14 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 		if(p->flags == NETWORK_PACKETFLAG_CONNECT)
 		{
 			/* send response and init connection */
+			conn_reset(conn);
 			conn->state = NETWORK_CONNSTATE_ONLINE;
 			conn->connected++;
 			conn->peeraddr = *addr;
 			conn->token = p->token;
+			conn->last_send_time = now;
+			conn->last_recv_time = now;
+			conn->last_update_time = now;
 			conn_send(conn, NETWORK_PACKETFLAG_CONNECT|NETWORK_PACKETFLAG_ACCEPT, 0, 0);
 			if(config.debug)
 				dbg_msg("connection", "got connection, sending connect+accept");
