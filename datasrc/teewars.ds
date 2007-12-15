@@ -486,37 +486,6 @@ weapons {
 		overchargetime 0.0
 	}
 		
-	ninja {
-		sprite_body sprites.game.weapon_ninja_body
-		sprite_cursor sprites.game.weapon_ninja_cursor
-		sprite_proj sprites.game.weapon_ninja_proj
-		sprite_muzzles {
-			sprites.game.hadoken1
-			sprites.game.hadoken2
-			sprites.game.hadoken3
-		}
-		
-		nummuzzlesprites 3
-		muzzleoffsetx 40.0
-		muzzleoffsety -4.0
-		maxammo 0
-		costammo 0
-		recoil 0
-		firedelay 800
-		muzzleduration 0
-		visual_size 96
-		offsetx 0.0
-		offsety 0.0
-		meleedamage 9
-		meleereach 0
-		ammoregentime 0
-		duration 15000
-		movetime 200
-		velocity 50
-		chargetime 0.0
-		overchargetime 0.0
-	}
-	
 	sniper {
 		sprite_body sprites.game.weapon_rocket_body
 		sprite_cursor sprites.game.weapon_rocket_cursor
@@ -547,6 +516,38 @@ weapons {
 		chargetime 0.5
 		overchargetime 10.0
 	}
+
+	ninja {
+		sprite_body sprites.game.weapon_ninja_body
+		sprite_cursor sprites.game.weapon_ninja_cursor
+		sprite_proj sprites.game.weapon_ninja_proj
+		sprite_muzzles {
+			sprites.game.hadoken1
+			sprites.game.hadoken2
+			sprites.game.hadoken3
+		}
+		
+		nummuzzlesprites 3
+		muzzleoffsetx 40.0
+		muzzleoffsety -4.0
+		maxammo 0
+		costammo 0
+		recoil 0
+		firedelay 800
+		muzzleduration 0
+		visual_size 96
+		offsetx 0.0
+		offsety 0.0
+		meleedamage 9
+		meleereach 0
+		ammoregentime 0
+		duration 15000
+		movetime 200
+		velocity 50
+		chargetime 0.0
+		overchargetime 0.0
+	}
+		
 }
 	
 sprites {

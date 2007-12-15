@@ -389,7 +389,8 @@ void player::reset()
 	damage_taken_tick = 0;
 	attack_tick = 0;
 	numobjectshit = 0;
-	ninjaactivationtick = 0;
+	ninja_activationtick = 0;
+	sniper_chargetick = -1;
 	currentmovetime = 0;
 	
 	active_weapon = WEAPON_GUN;
@@ -481,6 +482,10 @@ void player::try_respawn()
 	health = 10;
 	armor = 0;
 	jumped = 0;
+	
+	ninja_activationtick = 0;
+	sniper_chargetick = -1;
+	
 	dead = false;
 	set_flag(entity::FLAG_PHYSICS);
 	state = STATE_PLAYING;
@@ -549,7 +554,7 @@ int player::handle_ninja()
 {
 	vec2 direction = normalize(vec2(input.target_x, input.target_y));
 
-	if ((server_tick() - ninjaactivationtick) > (data->weapons[WEAPON_NINJA].duration * server_tickspeed() / 1000))
+	if ((server_tick() - ninja_activationtick) > (data->weapons[WEAPON_NINJA].duration * server_tickspeed() / 1000))
 	{
 		// time's up, return
 		weapons[WEAPON_NINJA].got = false;
@@ -643,10 +648,48 @@ int player::handle_ninja()
 
 int player::handle_sniper()
 {
-	return 0;
-	
+	/*
 	struct input_count button = count_input(previnput.fire, input.fire);
-	if (button.releases)
+	
+	bool must_release = false;
+	int current_load = (server_tick()-sniper_chargetick) / server_tickspeed() + 1;
+	
+	if(input.fire&1)
+	{
+		if(sniper_chargetick == -1)
+		{
+			// start charge
+			sniper_chargetick = server_tick();
+		}
+		else
+		{
+			if(current_load > weapons[WEAPON_SNIPER].ammo+3)
+				must_release = true;
+		}
+	}
+
+	if(button.releases || must_release)
+	{
+		vec2 direction = normalize(vec2(input.target_x, input.target_y));
+		
+		// released
+		sniper_chargetick = -1;
+		
+		if(current_load > weapons[WEAPON_SNIPER].ammo)
+			current_load = weapons[WEAPON_SNIPER].ammo;
+			
+		weapons[WEAPON_SNIPER].ammo -= current_load;
+
+		new projectile(projectile::WEAPON_PROJECTILETYPE_SNIPER,
+						client_id, pos+vec2(0,0), direction*50.0f,
+						100, this, current_load, 0, 0, -1, WEAPON_SNIPER);
+		create_sound(pos, SOUND_SNIPER_FIRE);
+
+	}
+	*/
+
+	/*
+	if(button.releases)
 	{
 		vec2 direction = normalize(vec2(input.target_x, input.target_y));
 		// Check if we were charging, if so fire
@@ -697,11 +740,11 @@ int player::handle_sniper()
 			}
 
 			// While charging, don't move
-			return MODIFIER_RETURNFLAGS_OVERRIDEVELOCITY|MODIFIER_RETURNFLAGS_NOHOOK;
+			return 0;
 		}
 		else if (weapons[WEAPON_SNIPER].weaponstage)
 			weapons[WEAPON_SNIPER].weaponstage = WEAPONSTAGE_SNIPER_NEUTRAL;
-	}
+	}*/
 	return 0;
 }
 
@@ -776,11 +819,11 @@ int player::handle_weapons()
 		}
 	}
 
+	// don't update other weapons while sniper is active
+	/*
 	if (active_weapon == WEAPON_SNIPER)
-	{
-		// don't update other weapons while sniper is active
 		return handle_sniper();
-	}
+	*/
 
 	if(count_input(previnput.fire, input.fire).presses) //previnput.fire != input.fire && (input.fire&1))
 	{
@@ -792,12 +835,15 @@ int player::handle_weapons()
 				switch(active_weapon)
 				{
 					case WEAPON_HAMMER:
+					{
 						// reset objects hit
 						numobjectshit = 0;
 						create_sound(pos, SOUND_HAMMER_FIRE);
 						break;
+					}
 
 					case WEAPON_GUN:
+					{
 						new projectile(WEAPON_GUN,
 							client_id,
 							pos+vec2(0,0),
@@ -807,6 +853,7 @@ int player::handle_weapons()
 							1, 0, 0, -1, WEAPON_GUN);
 						create_sound(pos, SOUND_GUN_FIRE);
 						break;
+					}
 					case WEAPON_ROCKET:
 					{
 						new projectile(WEAPON_ROCKET,
@@ -840,6 +887,20 @@ int player::handle_weapons()
 						create_sound(pos, SOUND_SHOTGUN_FIRE);
 						break;
 					}
+					
+					case WEAPON_SNIPER:
+					{
+						new projectile(WEAPON_SNIPER,
+							client_id,
+							pos+vec2(0,0),
+							direction*300.0f,
+							100,
+							this,
+							1, 0, 0, -1, WEAPON_SNIPER);
+						create_sound(pos, SOUND_SNIPER_FIRE);						
+						break;
+					}
+					
 				}
 
 				weapons[active_weapon].ammo--;
@@ -1324,7 +1385,7 @@ void powerup::tick()
 		case POWERUP_NINJA:
 			{
 				// activate ninja on target player
-				pplayer->ninjaactivationtick = server_tick();
+				pplayer->ninja_activationtick = server_tick();
 				pplayer->weapons[WEAPON_NINJA].got = true;
 				pplayer->last_weapon = pplayer->active_weapon;
 				pplayer->active_weapon = WEAPON_NINJA;

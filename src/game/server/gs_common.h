@@ -234,7 +234,6 @@ public:
 		int ammo;
 		int ammocost;
 		int weaponstage;
-		int chargetick;
 		bool got;
 	} weapons[NUM_WEAPONS];
 	int active_weapon;
@@ -242,6 +241,8 @@ public:
 	int wanted_weapon;
 	int reload_timer;
 	int attack_tick;
+	
+	int sniper_chargetick;
 	
 	int damage_taken;
 
@@ -270,7 +271,7 @@ public:
 
 	// ninja
 	vec2 activationdir;
-	int ninjaactivationtick;
+	int ninja_activationtick;
 	int extrapowerflags;
 	int currentcooldown;
 	int currentactivation;
