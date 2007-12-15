@@ -138,7 +138,11 @@ networkdata = DataCompile(
 		"src/game/generated/g_protocol_ids.h",
 		"src/game/generated/g_protocol_ids.cpp")
 
-nethash = CHash("src/game/generated/nethash.c", "src/engine/e_protocol.h", "src/game/g_protocol.h", networkdata.header)
+nethash = CHash(
+	"src/game/generated/nethash.c",
+	"src/engine/e_protocol.h",
+	"src/game/g_protocol.h",
+	"src/game/g_game.cpp", networkdata.header)
 
 client_link_other = {}
 if family == "windows" then
