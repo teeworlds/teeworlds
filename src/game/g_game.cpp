@@ -279,8 +279,8 @@ void player_core::tick()
 				//release_hooked();
 		}
 		
-		// Old version feels much better (to me atleast)
-		if(distance(hook_pos, pos) > 46.0f)
+		// don't do this hook rutine when we are hook to a player
+		if(hooked_player == -1 && distance(hook_pos, pos) > 46.0f)
 		{
 			vec2 hookvel = normalize(hook_pos-pos)*hook_drag_accel;
 			// the hook as more power to drag you up then down.
@@ -333,7 +333,12 @@ void player_core::tick()
 			if(d < phys_size*1.25f && d > 1.0f)
 			{
 				float a = phys_size*1.25f - d;
-				vel = vel + dir*a;
+				
+				// make sure that we don't add excess force by checking the
+				// direction against the current velocity
+				vec2 veldir = normalize(vel);
+				float v = 1-(dot(veldir, dir)+1)/2;
+				vel = vel + dir*a*v;
 			}
 			
 			MACRO_CHECK_VELOCITY
@@ -344,8 +349,14 @@ void player_core::tick()
 				if(d > phys_size*1.50f) // TODO: fix tweakable variable
 				{
 					float accel = hook_drag_accel * (d/hook_length);
-					vel.x = saturated_add(-hook_drag_speed, hook_drag_speed, vel.x, -accel*dir.x);
-					vel.y = saturated_add(-hook_drag_speed, hook_drag_speed, vel.y, -accel*dir.y);
+					
+					// add force to the hooked player
+					p->vel.x = saturated_add(-hook_drag_speed, hook_drag_speed, p->vel.x, accel*dir.x*1.5f);
+					p->vel.y = saturated_add(-hook_drag_speed, hook_drag_speed, p->vel.y, accel*dir.y*1.5f);
+
+					// add a little bit force to the guy who has the grip
+					vel.x = saturated_add(-hook_drag_speed, hook_drag_speed, vel.x, -accel*dir.x*0.25f);
+					vel.y = saturated_add(-hook_drag_speed, hook_drag_speed, vel.y, -accel*dir.y*0.25f);
 					
 					MACRO_CHECK_VELOCITY
 				}
