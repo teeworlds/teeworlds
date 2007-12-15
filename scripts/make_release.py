@@ -79,7 +79,7 @@ if include_src:
 
 if use_bundle:
 	bundle_content_dir = os.path.join(package_dir, "Teewars.app/Contents")
-	bundle_bin_dir = os.path.join(bundle_content_dir, "MaxOS")
+	bundle_bin_dir = os.path.join(bundle_content_dir, "MacOS")
 	bundle_resource_dir = os.path.join(bundle_content_dir, "Resources")
 	os.mkdir(os.path.join(package_dir, "Teewars.app"))
 	os.mkdir(bundle_content_dir)
@@ -87,7 +87,31 @@ if use_bundle:
 	os.mkdir(bundle_resource_dir)
 	os.mkdir(os.path.join(bundle_resource_dir, "data"))
 	copydir("data", bundle_resource_dir)
-	shutil.copy("teewars"+ext_ext, bundle_bin_dir)
+	shutil.copy("other/icons/Teewars.icns", bundle_resource_dir)
+	shutil.copy("teewars"+exe_ext, bundle_bin_dir)
+	file(os.path.join(bundle_content_dir, "Info.plist"), "w").write("""
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+        <key>CFBundleDevelopmentRegion</key>
+        <string>English</string>
+        <key>CFBundleExecutable</key>
+        <string>teewars</string>
+        <key>CFBundleIconFile</key>
+        <string>Teewars</string>
+        <key>CFBundleInfoDictionaryVersion</key>
+        <string>6.0</string>
+        <key>CFBundlePackageType</key>
+        <string>APPL</string>
+        <key>CFBundleSignature</key>
+        <string>????</string>
+        <key>CFBundleVersion</key>
+        <string>%s</string>
+</dict>
+</plist>
+	""" % (version))
+	file(os.path.join(bundle_content_dir, "PkgInfo"), "w").write("APPL????")
 
 if use_zip:
 	print "making zip archive"
