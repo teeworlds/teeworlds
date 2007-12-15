@@ -417,7 +417,7 @@ int net_host_lookup(const char *hostname, unsigned short port, NETADDR4 *addr)
 NETSOCKET net_udp4_create(NETADDR4 bindaddr)
 {
 	struct sockaddr addr;
-	unsigned int mode = 1;
+	unsigned long mode = 1;
 	int broadcast = 1;
 
 	/* create socket */
@@ -435,9 +435,9 @@ NETSOCKET net_udp4_create(NETADDR4 bindaddr)
 	
 	/* set non-blocking */
 #if defined(CONF_FAMILY_WINDOWS)
-	ioctlsocket(sock, FIONBIO, (unsigned long *)&mode);
+	ioctlsocket(sock, FIONBIO, mode);
 #else
-	ioctl(sock, FIONBIO, (unsigned long *)&mode);
+	ioctl(sock, FIONBIO, mode);
 #endif
 
 	/* set boardcast */
@@ -504,21 +504,21 @@ NETSOCKET net_tcp4_create(const NETADDR4 *a)
 
 int net_tcp4_set_non_blocking(NETSOCKET sock)
 {
-	unsigned int mode = 1;
+	unsigned long mode = 1;
 #if defined(CONF_FAMILY_WINDOWS)
-	return ioctlsocket(sock, FIONBIO, (unsigned long *)&mode);
+	return ioctlsocket(sock, FIONBIO, mode);
 #else
-	return ioctl(sock, FIONBIO, (unsigned long *)&mode);
+	return ioctl(sock, FIONBIO, mode);
 #endif
 }
 
 int net_tcp4_set_blocking(NETSOCKET sock)
 {
-	unsigned int mode = 0;
+	unsigned long mode = 0;
 #if defined(CONF_FAMILY_WINDOWS)
-	return ioctlsocket(sock, FIONBIO, (unsigned long *)&mode);
+	return ioctlsocket(sock, FIONBIO, mode);
 #else
-	return ioctl(sock, FIONBIO, (unsigned long *)&mode);
+	return ioctl(sock, FIONBIO, mode);
 #endif
 }
 
