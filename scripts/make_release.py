@@ -34,7 +34,7 @@ if platform == 'win32':
 	exe_ext = ".exe"
 	use_zip = 1
 	use_gz = 0
-if platform == 'osx':
+if 'osx_' in platform:
 	use_zip = 1
 	use_gz = 0
 	use_bundle = 1
