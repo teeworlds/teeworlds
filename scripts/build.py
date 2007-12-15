@@ -107,10 +107,12 @@ if 1:
 	print "*** building bam ***"
 	os.chdir("bam")
 	output = "bam"
+	bam_cmd = "./bam"
 	if os.name == "nt":
 		if os.system("make_win32_msvc2005.bat") != 0:
 			bail("failed to build bam")
 		output += ".exe"
+		bam_cmd = "bam"
 	else:
 		if os.system("sh make_unix.sh") != 0:
 			bail("failed to build bam")
@@ -121,7 +123,7 @@ if 1:
 if 1:
 	print "*** building teewars ***"
 	os.chdir(src_dir)
-	if os.system("./bam server_release client_release") != 0:
+	if os.system("%s server_release client_release" % bam_cmd) != 0:
 		bail("failed to build teewars")
 	os.chdir(root_dir)
 
