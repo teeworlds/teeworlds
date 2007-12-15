@@ -96,17 +96,17 @@ void gameobject_ctf::tick()
 		}
 		else
 		{
-			player *players[MAX_CLIENTS];
+			player *close_players[MAX_CLIENTS];
 			int types[] = {OBJTYPE_PLAYER_CHARACTER};
-			int num = world->find_entities(f->pos, 32.0f, (entity**)players, MAX_CLIENTS, types, 1);
+			int num = world->find_entities(f->pos, 32.0f, (entity**)close_players, MAX_CLIENTS, types, 1);
 			for(int i = 0; i < num; i++)
 			{
-				if(players[i]->team == f->team)
+				if(close_players[i]->team == f->team)
 				{
 					// return the flag
 					if(!f->at_stand)
 					{
-						players[i]->score += 1;
+						close_players[i]->score += 1;
 						create_sound_global(SOUND_CTF_RETURN);
 						f->reset();
 					}
@@ -117,15 +117,15 @@ void gameobject_ctf::tick()
 					if(f->at_stand)
 						teamscore[fi^1]++;
 					f->at_stand = 0;
-					f->carrying_player = players[i];
+					f->carrying_player = close_players[i];
 					f->carrying_player->score += 1;
 					
 					for(int c = 0; c < MAX_CLIENTS; c++)
 					{
-						if(!players[c])
+						if(players[c].client_id != -1)
 							continue;
 							
-						if(players[c]->team == fi)
+						if(players[c].team == fi)
 							create_sound_global(SOUND_CTF_GRAB_EN, c);
 						else
 							create_sound_global(SOUND_CTF_GRAB_PL, c);
