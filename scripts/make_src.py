@@ -1,7 +1,7 @@
-import os, shutil, zipfile
+import os, shutil, zipfile, sys
 
-version = "0.3.0-test"
-svn_tree = "trunk"
+version = sys.argv[1]
+svn_tree = "tags/release-%s" % version
 
 # make clean
 if 1:
