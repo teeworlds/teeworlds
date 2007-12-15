@@ -175,6 +175,12 @@ static void draw_quad()
 		flush();
 }
 
+static void screen_resize(int width, int height)
+{
+	screen_width = width;
+	screen_height = height;
+	glViewport(0, 0, screen_width, screen_height);
+}
 
 int gfx_init()
 {
@@ -200,7 +206,7 @@ int gfx_init()
 		glfwOpenWindowHint(GLFW_REFRESH_RATE, config.gfx_refresh_rate);
 	
 	/* no resizing allowed */
-	glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, 1);
+	/* glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, 1); */
 		
 	/* open window */	
 	if(config.gfx_fullscreen)
@@ -221,6 +227,8 @@ int gfx_init()
 			return 0;
 		}
 	}
+	
+	glfwSetWindowSizeCallback(screen_resize);
 	
 	glGetIntegerv(GL_DEPTH_BITS, &i);
 	dbg_msg("gfx", "depthbits = %d", i);
