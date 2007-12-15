@@ -1831,7 +1831,7 @@ int menu2_render()
 			ui2_hsplit_b(&box, 24.f, &box, &part);
 			ui2_vmargin(&part, 80.0f, &part);
 			
-			ui2_vsplit_mid(&part, &yes, &no);
+			ui2_vsplit_mid(&part, &no, &yes);
 			
 			ui2_vmargin(&yes, 20.0f, &yes);
 			ui2_vmargin(&no, 20.0f, &no);
