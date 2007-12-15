@@ -1687,8 +1687,8 @@ void render_snow()
 	static flake flakes[NUM_FLAKES];
 	static bool init = true;
 	
-	float w = br.x-tl.x;
-	float h = br.y-tl.y;
+	float w = 400*6;
+	float h = 300*6;
 	
 	if(init)
 	{
