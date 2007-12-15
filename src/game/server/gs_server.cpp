@@ -1093,7 +1093,7 @@ void player::tick_defered()
 		if(events&COREEVENT_GROUND_JUMP) create_sound(pos, SOUND_PLAYER_JUMP, mask);
 		if(events&COREEVENT_AIR_JUMP)
 		{
-			create_sound(pos, SOUND_PLAYER_JUMP, mask);
+			create_sound(pos, SOUND_PLAYER_AIRJUMP, mask);
 			ev_common *c = (ev_common *)::events.create(EVENT_AIR_JUMP, sizeof(ev_common), mask);
 			if(c)
 			{

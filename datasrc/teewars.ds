@@ -86,6 +86,12 @@ sounds {
 		"data/audio/foley_land-04.wv"
 	}
 	
+	player_airjump {
+		"data/audio/foley_dbljump-01.wv"
+		"data/audio/foley_dbljump-02.wv"
+		"data/audio/foley_dbljump-03.wv"
+	}
+
 	player_jump {
 		"data/audio/foley_foot_left-01.wv"
 		"data/audio/foley_foot_left-02.wv"

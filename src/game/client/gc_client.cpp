@@ -802,7 +802,7 @@ extern "C" void modc_predict()
 				if(events&COREEVENT_AIR_JUMP)
 				{
 					create_air_jump_effect(pos);
-					snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
+					snd_play_random(CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, pos);
 				}
 				//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
 				if(events&COREEVENT_HOOK_ATTACH_PLAYER) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, pos);

@@ -208,7 +208,6 @@ static void mix(short *final_out, unsigned frames)
 			
 		}
 	}
-
 	/* release the lock */
 	lock_release(sound_lock);
 
@@ -249,9 +248,24 @@ int snd_init()
 	
 	mixing_rate = config.snd_rate;
 
-	params.device = Pa_GetDefaultOutputDevice();
+	{
+		int num = Pa_GetDeviceCount();
+		int i;
+		const PaDeviceInfo *info;
+		
+		for(i = 0; i < num; i++)
+		{
+			info = Pa_GetDeviceInfo(i);
+			dbg_msg("snd", "device #%d name='%s'", i, info->name);
+		}
+	}
+
+	params.device = config.snd_device;
+	if(params.device == -1)
+		params.device = Pa_GetDefaultOutputDevice();
 	if(params.device < 0)
 		return 1;
+	dbg_msg("snd", "device = %d", params.device);
 	params.channelCount = 2;
 	params.sampleFormat = paInt16;
 	params.suggestedLatency = Pa_GetDeviceInfo(params.device)->defaultLowOutputLatency;
