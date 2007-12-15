@@ -2014,11 +2014,11 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 
 void mapscreen_to_world(float center_x, float center_y, float zoom)
 {
-    RECT screen = *ui2_screen();
+    //RECT screen = *ui2_screen();
 
-	const float default_zoom = 1.5f;
-	float width = screen.w*default_zoom*zoom;
-	float height = screen.h*default_zoom*zoom;
+	//const float default_zoom = 1.5f;
+	float width = 300*3*zoom*gfx_screenaspect();
+	float height = 300*3*zoom;
 	gfx_mapscreen(center_x-width/2, center_y-height/2, center_x+width/2, center_y+height/2);
 }
 
@@ -2181,8 +2181,8 @@ static void do_input(int *v, int key)
 
 void render_game()
 {
-	float width = 400*3.0f;
-	float height = 300*3.0f;
+	float width = 400*3.0f*gfx_screenaspect();
+	float height = 400*3.0f;
 
 	bool spectate = false;
 
@@ -2560,7 +2560,8 @@ void render_game()
 		// render gui stuff
 		gfx_quads_end();
 		gfx_quads_begin();
-		gfx_mapscreen(0,0,400,300);
+		gfx_mapscreen(0,0,300*gfx_screenaspect(),300);
+		
 		// if weaponstage is active, put a "glow" around the stage ammo
 		select_sprite(SPRITE_TEE_BODY);
 		for (int i = 0; i < local_character->weaponstage; i++)
@@ -2689,7 +2690,7 @@ void render_game()
 
 	// render chat
 	{
-		gfx_mapscreen(0,0,400,300);
+		gfx_mapscreen(0,0,300*gfx_screenaspect(),300);
 		float x = 10.0f;
 		float y = 300.0f-50.0f;
 		float starty = -1;
@@ -2739,7 +2740,11 @@ void render_game()
 	if(gameobj)
 	{
 		gametype = gameobj->gametype;
-		gfx_mapscreen(0,0,400,300);
+		
+		float whole = 300*gfx_screenaspect();
+		float half = whole/2.0f;
+		
+		gfx_mapscreen(0,0,300*gfx_screenaspect(),300);
 		if(!gameobj->sudden_death)
 		{
 			char buf[32];
@@ -2756,14 +2761,14 @@ void render_game()
 
 			sprintf(buf, "%d:%02d", time /60, time %60);
 			float w = gfx_pretty_text_width(16, buf, -1);
-			gfx_pretty_text(200-w/2, 2, 16, buf, -1);
+			gfx_pretty_text(half-w/2, 2, 16, buf, -1);
 		}
 
 		if(gameobj->sudden_death)
 		{
 			const char *text = "Sudden Death";
 			float w = gfx_pretty_text_width(16, text, -1);
-			gfx_pretty_text(200-w/2, 2, 16, text, -1);
+			gfx_pretty_text(half-w/2, 2, 16, text, -1);
 		}
 
 		// render small score hud
@@ -2778,7 +2783,7 @@ void render_game()
 					gfx_setcolor(1,0,0,0.25f);
 				else
 					gfx_setcolor(0,0,1,0.25f);
-				draw_round_rect(400-40, 300-40-15+t*20, 50, 18, 5.0f);
+				draw_round_rect(whole-40, 300-40-15+t*20, 50, 18, 5.0f);
 				gfx_quads_end();
 
 				char buf[32];
@@ -2787,7 +2792,7 @@ void render_game()
 				
 				if(gametype == GAMETYPE_CTF)
 				{
-					gfx_pretty_text(400-20-w/2+5, 300-40-15+t*20+2, 14, buf, -1);
+					gfx_pretty_text(whole-20-w/2+5, 300-40-15+t*20+2, 14, buf, -1);
 					if(flags[t])
 					{
  						if(flags[t]->carried_by == -2 || (flags[t]->carried_by == -1 && ((client_tick()/10)&1)))
@@ -2800,7 +2805,7 @@ void render_game()
 							else select_sprite(SPRITE_FLAG_BLUE);
 							
 							float size = 16;					
-							gfx_quads_drawTL(400-40+5, 300-40-15+t*20+1, size/2, size);
+							gfx_quads_drawTL(whole-40+5, 300-40-15+t*20+1, size/2, size);
 							gfx_quads_end();
 						}
 						else if(flags[t]->carried_by >= 0)
@@ -2808,17 +2813,17 @@ void render_game()
 							int id = flags[t]->carried_by%MAX_CLIENTS;
 							const char *name = client_datas[id].name;
 							float w = gfx_pretty_text_width(10, name, -1);
-							gfx_pretty_text(400-40-5-w, 300-40-15+t*20+2, 10, name, -1);
+							gfx_pretty_text(whole-40-5-w, 300-40-15+t*20+2, 10, name, -1);
 							tee_render_info info = client_datas[id].skin_info;
 							info.size = 18.0f;
 							
 							render_tee(&idlestate, &info, EMOTE_NORMAL, vec2(1,0),
-								vec2(400-40+10, 300-40-15+9+t*20+1));
+								vec2(whole-40+10, 300-40-15+9+t*20+1));
 						}
 					}
 				}
 				else
-					gfx_pretty_text(400-20-w/2, 300-40-15+t*20+2, 14, buf, -1);
+					gfx_pretty_text(whole-20-w/2, 300-40-15+t*20+2, 14, buf, -1);
 			}
 		}
 
@@ -2868,10 +2873,10 @@ void render_game()
 	
 	if(client_connection_problems())
 	{
-		gfx_mapscreen(0, 0, 400, 300);
+		gfx_mapscreen(0, 0, 300*gfx_screenaspect(), 300);
 		const char *text = "Connection Problems...";
 		float w = gfx_pretty_text_width(24, text, -1);
-		gfx_pretty_text(200-w/2, 50, 24, text, -1);
+		gfx_pretty_text(200*gfx_screenaspect()-w/2, 50, 24, text, -1);
 	}
 
 	// render score board
