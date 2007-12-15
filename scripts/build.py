@@ -87,12 +87,14 @@ os.chdir(root_dir)
 # download
 if flag_download:
 	print "*** downloading bam source package ***"
-	if not fetch_file("www.teewars.com", "/files/beta/bam.zip", "bam.zip"):
-		bail("couldn't find source package and couldn't download it")
+	if not fetch_file("www.teewars.com", "/files/bam.zip", "bam.zip"):
+		if not fetch_file("www.teewars.com", "/files/beta/bam.zip", "bam.zip"):
+			bail("couldn't find source package and couldn't download it")
 		
 	print "*** downloading teewars source package ***"
-	if not fetch_file("www.teewars.com", "/files/beta/%s" % src_package, src_package):
-		bail("couldn't find source package and couldn't download it")
+	if not fetch_file("www.teewars.com", "/files/%s" % src_package, src_package):
+		if not fetch_file("www.teewars.com", "/files/beta/%s" % src_package, src_package):
+			bail("couldn't find source package and couldn't download it")
 
 # unpack
 print "*** unpacking source ***"

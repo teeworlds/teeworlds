@@ -3,6 +3,9 @@ import os, shutil, zipfile, sys
 version = sys.argv[1]
 svn_tree = "tags/release-%s" % version
 
+if len(sys.argv) > 2:
+	svn_tree = sys.argv[2]
+
 # make clean
 if 1:
 	try: shutil.rmtree("srcwork")
