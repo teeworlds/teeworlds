@@ -1550,7 +1550,7 @@ void create_sound_global(int sound, int target)
 
 	msg_pack_start(MSG_SOUND_GLOBAL, MSGFLAG_VITAL);
 	msg_pack_int(sound);
-	server_send_msg(-1);
+	server_send_msg(target);
 }
 
 // TODO: should be more general

@@ -200,8 +200,12 @@ sounds {
 		"data/audio/sfx_ctf_rtn.wv"
 	}
 	
-	ctf_grab {
+	ctf_grab_pl {
 		"data/audio/sfx_ctf_grab_pl.wv"
+	}
+
+	ctf_grab_en {
+		"data/audio/sfx_ctf_grab_en.wv"
 	}
 
 	ctf_capture {

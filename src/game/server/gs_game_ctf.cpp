@@ -119,7 +119,17 @@ void gameobject_ctf::tick()
 					f->at_stand = 0;
 					f->carrying_player = players[i];
 					f->carrying_player->score += 1;
-					create_sound_global(SOUND_CTF_GRAB);
+					
+					for(int c = 0; c < MAX_CLIENTS; c++)
+					{
+						if(!players[c])
+							continue;
+							
+						if(players[c]->team == fi)
+							create_sound_global(SOUND_CTF_GRAB_EN, c);
+						else
+							create_sound_global(SOUND_CTF_GRAB_PL, c);
+					}
 					break;
 				}
 			}
