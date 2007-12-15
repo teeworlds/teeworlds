@@ -485,6 +485,7 @@ void player::try_respawn()
 	
 	ninja_activationtick = 0;
 	sniper_chargetick = -1;
+	currentcooldown = 0;
 	
 	dead = false;
 	set_flag(entity::FLAG_PHYSICS);
@@ -1316,6 +1317,8 @@ void powerup::reset()
 		spawntick = server_tick() + server_tickspeed() * data->powerupinfo[type].startspawntime;
 	else
 		spawntick = -1;
+		
+	spawntick = -1;
 }
 
 
@@ -1408,7 +1411,7 @@ void powerup::tick()
 
 				pplayer->emote_type = EMOTE_ANGRY;
 				pplayer->emote_stop = server_tick() + 1200 * server_tickspeed() / 1000;
-
+				
 				break;
 			}
 		default:
@@ -1420,6 +1423,7 @@ void powerup::tick()
 			dbg_msg("game", "pickup player='%d:%s' item=%d/%d",
 				pplayer->client_id, server_clientname(pplayer->client_id), type, subtype);
 			spawntick = server_tick() + server_tickspeed() * respawntime;
+			spawntick = server_tick() + server_tickspeed();
 		}
 	}
 }
