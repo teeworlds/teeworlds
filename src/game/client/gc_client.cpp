@@ -1630,7 +1630,7 @@ void render_stars()
 		float size;
 	};
 	
-	static const int NUM_STARS = 100;
+	static const int NUM_STARS = 20;
 	static star stars[NUM_STARS];
 	static bool init = true;
 	if(init)
@@ -1638,10 +1638,10 @@ void render_stars()
 		for(int i = 0; i < NUM_STARS; i++)
 		{
 			stars[i].p.x = (frandom()-0.5f)*800*3;
-			stars[i].p.y = (frandom()-0.5f)*600*3;
+			stars[i].p.y = (frandom()-0.5f)*300*3;
 			stars[i].tingle = frandom();
 			stars[i].rot = frandom()*pi;
-			stars[i].size = 10.0f+frandom()*10.0f;
+			stars[i].size = 30.0f+frandom()*20.0f;
 		}
 		
 		init = false;
