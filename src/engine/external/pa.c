@@ -1,5 +1,5 @@
 /* Include the auto configuration */
-#include <engine/detect.h>
+#include <engine/e_detect.h>
 
 /* common part */
 #include "portaudio/pa_converters.c"

@@ -1,5 +1,5 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <engine/datafile.h>
+#include <engine/e_datafile.h>
 
 int main(int argc, char **argv)
 {

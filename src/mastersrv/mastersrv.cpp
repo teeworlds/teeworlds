@@ -2,8 +2,8 @@
 #include <string.h>
 
 extern "C" {
-	#include <engine/system.h>
-	#include <engine/network.h>
+	#include <engine/e_system.h>
+	#include <engine/e_network.h>
 }
 
 #include "mastersrv.h"

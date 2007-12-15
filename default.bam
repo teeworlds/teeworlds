@@ -40,9 +40,10 @@ function dc_header(output, data, script)
 	return os.execute(dc_compiler .. " " .. data .. " " .. script .. " -h " .. output)
 end
 
-function dc_source(output, data, script)
-	print("dc_source " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script))
-	return os.execute(dc_compiler .. " " .. data .. " " .. script .. " -s " .. output)
+function dc_source(output, data, script, headerfile)
+	print("dc_source " .. PathFilename(output) .. "+" .. PathFilename(headerfile) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script))
+	cmd = dc_compiler .. " " .. data .. " " .. script .. " -s " .. output .. " " .. headerfile
+	return os.execute(cmd)
 end
 
 function dc_data(output, data, script)
@@ -94,14 +95,14 @@ function DataCompile(datafile, scriptfile, headerfile, sourcefile, outputdatafil
 	datafile = Path(datafile)
 	scriptfile = Path(scriptfile)
 	headerfile = Path(headerfile)
-	
+
 	bam_add_job("dc_header", headerfile, datafile, scriptfile)
 	bam_add_dependency(headerfile, datafile)
 	bam_add_dependency(headerfile, scriptfile)
 	
 	if sourcefile then
 		sourcefile = Path(sourcefile)
-		bam_add_job("dc_source", sourcefile, datafile, scriptfile)
+		bam_add_job("dc_source", sourcefile, datafile, scriptfile, headerfile)
 		bam_add_dependency(sourcefile, datafile)
 		bam_add_dependency(sourcefile, scriptfile)
 		bam_add_dependency(sourcefile, headerfile)
@@ -120,31 +121,49 @@ end
 serverdata = DataCompile(
 		"datasrc/teewars.ds", 
 		"datasrc/server.dts", 
-		"src/game/server/data.h",
-		"src/game/server/data/server_data.cpp",
-		"src/game/server/data/server_internal.cpp")
+		"src/game/generated/gs_data.h",
+		"src/game/generated/gs_data.cpp",
+		"src/game/generated/gs_internaldata.cpp")
 
 clientdata = DataCompile(
 		"datasrc/teewars.ds", 
 		"datasrc/client.dts", 
-		"src/game/client/data.h",
-		"src/game/client/data/client_data.cpp",
-		"src/game/client/data/client_internal.cpp")
+		"src/game/generated/gc_data.h",
+		"src/game/generated/gc_data.cpp",
+		"src/game/generated/gc_internaldata.cpp")
 
 networkdata = DataCompile(
 		"datasrc/teewars.ds", 
 		"datasrc/network.dts", 
-		"src/game/protocol_ids.h")
+		"src/game/generated/g_protocol_ids.h",
+		"src/game/generated/g_protocol_ids.cpp")
 
-nethash = CHash("src/game/nethash.c", "src/engine/protocol.h", "src/game/game_protocol.h", networkdata.header)
+nethash = CHash("src/game/generated/nethash.c", "src/engine/e_protocol.h", "src/game/g_protocol.h", networkdata.header)
 
 client_link_other = {}
 if family == "windows" then
 	client_link_other = {ResCompile("other/icons/teewars.rc")}
 end
 
+
+-- [TODO: Should be in C]
+function file_ext(s)
+	for ext in string.gfind(s, "%.%a+$") do
+		return string.sub(ext, 2)
+	end
+	return ""
+end
+
+function intermediate_output_func(dir, input, extension)
+	if not (dir == "") then
+		return Path(dir .. "/" .. PathBase(PathFilename(input)) .. extension)
+	end
+	return PathBase(input) .. extension
+end
+
 function build(settings)
 	settings.objdir = Path("objs")
+	settings.cc.output = intermediate_output_func
 
 	if family == "windows" then
 		settings.cc.flags = "/wd4244"

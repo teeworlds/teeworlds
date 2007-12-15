@@ -3,18 +3,18 @@
 #include <string.h>
 
 extern "C" {
-	#include <engine/system.h>
-	#include <engine/client/ui.h>
-	#include <engine/interface.h>
-	#include <engine/datafile.h>
-	#include <engine/config.h>
+	#include <engine/e_system.h>
+	#include <engine/client/ec_ui.h>
+	#include <engine/e_interface.h>
+	#include <engine/e_datafile.h>
+	#include <engine/e_config.h>
 }
 
-#include <game/client/mapres_image.h>
-#include <game/client/mapres_tilemap.h>
+#include <game/client/gc_mapres_image.h>
+#include <game/client/gc_mapres_tilemap.h>
 //#include "game/mapres_col.h"
-#include <game/mapres.h>
-#include <game/game.h>
+#include <game/g_mapres.h>
+#include <game/g_game.h>
 
 static int font_texture = 0;
 static int checker_texture = 0;

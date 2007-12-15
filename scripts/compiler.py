@@ -2,6 +2,7 @@
 
 import sys
 import struct
+import os
 
 option_ptrsize = struct.calcsize("P")
 option_intsize = struct.calcsize("l")
@@ -491,10 +492,10 @@ class translator:
 		print >>out, ""
 		
 
-	def emit_source_code(self, out):
+	def emit_source_code(self, out, header_filename):
 		print >>out, '''
 
-#include "../data.h"
+#include "%s"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -502,7 +503,7 @@ static void patch_ptr(char **ptr, char *base)
 {
 	*ptr = base+(size_t)(*ptr);
 }
-'''
+''' % header_filename
 
 		for s in self.structs:
 			s.emit_source_code(out)
@@ -611,11 +612,13 @@ output_filename = 0
 coutput_filename = 0
 header_filename = 0
 source_filename = 0
+sheader_filename = 0
 
 if sys.argv[3] == '-h':
 	header_filename = sys.argv[4]
 elif sys.argv[3] == '-s':
 	source_filename = sys.argv[4]
+	sheader_filename = sys.argv[5]
 elif sys.argv[3] == '-d':
 	output_filename = sys.argv[4]
 elif sys.argv[3] == '-c':
@@ -629,7 +632,7 @@ translator = create_translator(script, srcdata)
 if header_filename:
 	translator.emit_header_code(file(header_filename, "w"))
 if source_filename:
-	translator.emit_source_code(file(source_filename, "w"))
+	translator.emit_source_code(file(source_filename, "w"), os.path.basename(sheader_filename))
 
 if output_filename:
 	rawdata = translator.emit_data()
