@@ -122,13 +122,13 @@ void gameobject_ctf::tick()
 					
 					for(int c = 0; c < MAX_CLIENTS; c++)
 					{
-						if(players[c].client_id != -1)
+						if(players[c].client_id == -1)
 							continue;
 							
 						if(players[c].team == fi)
-							create_sound_global(SOUND_CTF_GRAB_EN, c);
+							create_sound_global(SOUND_CTF_GRAB_EN, players[c].client_id);
 						else
-							create_sound_global(SOUND_CTF_GRAB_PL, c);
+							create_sound_global(SOUND_CTF_GRAB_PL, players[c].client_id);
 					}
 					break;
 				}
