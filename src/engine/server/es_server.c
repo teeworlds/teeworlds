@@ -349,33 +349,6 @@ static void server_do_snap()
 				perf_start(&scope);
 				deltasize = snapshot_create_delta(deltashot, (SNAPSHOT*)data, deltadata);
 				perf_end();
-				
-				if(scope.last_delta > time_freq()/50)
-				{
-					static int id = 0;
-					char buf[64];
-					IOHANDLE f;
-					id++;
-					
-					dbg_msg("server", "took very long time to create delta, saving info");
-					
-					sprintf(buf, "%d_from.raw", id);
-					f = io_open(buf, IOFLAG_WRITE);
-					if(f)
-					{
-						io_write(f, deltashot, deltashot_size);
-						io_close(f);
-					}
-
-					sprintf(buf, "%d_to.raw", id);
-					f = io_open(buf, IOFLAG_WRITE);
-					if(f)
-					{
-						io_write(f, data, snapshot_size);
-						io_close(f);
-					}
-
-				}
 			}
 
 			
