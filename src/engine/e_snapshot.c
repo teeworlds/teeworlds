@@ -1,4 +1,5 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+#include <stdlib.h>
 #include "e_snapshot.h"
 #include "e_compression.h"
 #include "e_interface.h"
@@ -33,8 +34,47 @@ int snapshot_get_item_index(SNAPSHOT *snap, int key)
     }
     return -1;
 }
+typedef struct 
+{
+	int num;
+	int keys[64];
+	int index[64];
+} ITEMLIST;
+static ITEMLIST sorted[256];
 
+static int snapshot_generate_hash(SNAPSHOT *snap)
+{
+	int i, key, hashid;
 
+    for(i = 0; i < 256; i++)
+    	sorted[i].num = 0;
+    	
+    for(i = 0; i < snap->num_items; i++)
+    {
+    	key = snapitem_key(snapshot_get_item(snap, i));
+    	hashid = ((key>>8)&0xf0) | (key&0xf);
+    	if(sorted[hashid].num != 64)
+    	{
+			sorted[hashid].index[sorted[hashid].num] = i;
+			sorted[hashid].keys[sorted[hashid].num] = key;
+			sorted[hashid].num++;
+		}
+	}
+    return 0;
+}
+
+int snapshot_get_item_index_hashed(SNAPSHOT *snap, int key)
+{
+   	int hashid = ((key>>8)&0xf0) | (key&0xf);
+   	int i;
+   	for(i = 0; i < sorted[hashid].num; i++)
+   	{
+   		if(sorted[hashid].keys[i] == key)
+   			return sorted[hashid].index[i];
+	}
+	
+	return -1;
+}
 
 typedef struct
 {
@@ -141,6 +181,7 @@ static void undiff_item(int *past, int *diff, int *out, int size)
 /* TODO: OPT: this should be made much faster */
 int snapshot_create_delta(SNAPSHOT *from, SNAPSHOT *to, void *dstdata)
 {
+	static PERFORMACE_INFO hash_scope = {"hash", 0};
 	SNAPSHOT_DELTA *delta = (SNAPSHOT_DELTA *)dstdata;
 	int *data = (int *)delta->data;
 	int i, itemsize, pastindex;
@@ -153,6 +194,10 @@ int snapshot_create_delta(SNAPSHOT *from, SNAPSHOT *to, void *dstdata)
 	delta->num_deleted_items = 0;
 	delta->num_update_items = 0;
 	delta->num_temp_items = 0;
+	
+	perf_start(&hash_scope);
+	snapshot_generate_hash(to);
+	perf_end();
 
 	/* pack deleted stuff */
 	{
@@ -162,7 +207,7 @@ int snapshot_create_delta(SNAPSHOT *from, SNAPSHOT *to, void *dstdata)
 		for(i = 0; i < from->num_items; i++)
 		{
 			fromitem = snapshot_get_item(from, i);
-			if(snapshot_get_item_index(to, (snapitem_key(fromitem))) == -1)
+			if(snapshot_get_item_index_hashed(to, (snapitem_key(fromitem))) == -1)
 			{
 				/* deleted */
 				delta->num_deleted_items++;
@@ -174,22 +219,35 @@ int snapshot_create_delta(SNAPSHOT *from, SNAPSHOT *to, void *dstdata)
 		perf_end();
 	}
 	
+	perf_start(&hash_scope);
+	snapshot_generate_hash(from);
+	perf_end();
+	
 	/* pack updated stuff */
 	{
 		static PERFORMACE_INFO scope = {"update", 0};
+		int pastindecies[1024];
 		perf_start(&scope);
+
+		/* fetch previous indices */
+		/* we do this as a separate pass because it helps the cache */
+		{
+			static PERFORMACE_INFO scope = {"find", 0};
+			perf_start(&scope);
+			for(i = 0; i < to->num_items; i++)
+			{
+				curitem = snapshot_get_item(to, i);  /* O(1) .. O(n) */
+				pastindecies[i] = snapshot_get_item_index_hashed(from, snapitem_key(curitem)); /* O(n) .. O(n^n)*/
+			}
+			perf_end();
+		}		
 			
 		for(i = 0; i < to->num_items; i++)
 		{
 			/* do delta */
-			{
-				static PERFORMACE_INFO scope = {"find", 0};
-				perf_start(&scope);
-				itemsize = snapshot_get_item_datasize(to, i);
-				curitem = snapshot_get_item(to, i);
-				pastindex = snapshot_get_item_index(from, snapitem_key(curitem));
-				perf_end();
-			}
+			itemsize = snapshot_get_item_datasize(to, i); /* O(1) .. O(n) */
+			curitem = snapshot_get_item(to, i);  /* O(1) .. O(n) */
+			pastindex = pastindecies[i];
 			
 			if(pastindex != -1)
 			{
@@ -202,7 +260,6 @@ int snapshot_create_delta(SNAPSHOT *from, SNAPSHOT *to, void *dstdata)
 					*data++ = itemsize;
 					*data++ = snapitem_type(curitem);
 					*data++ = snapitem_id(curitem);
-					/*data++ = curitem->key();*/
 					data += itemsize/4;
 					delta->num_update_items++;
 				}
@@ -216,7 +273,6 @@ int snapshot_create_delta(SNAPSHOT *from, SNAPSHOT *to, void *dstdata)
 				*data++ = itemsize;
 				*data++ = snapitem_type(curitem);
 				*data++ = snapitem_id(curitem);
-				/*data++ = curitem->key();*/
 				
 				mem_copy(data, snapitem_data(curitem), itemsize);
 				size_count += itemsize;
