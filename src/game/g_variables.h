@@ -33,6 +33,8 @@ MACRO_CONFIG_INT(cl_dynamic_camera, 1, 0, 1)
 MACRO_CONFIG_INT(cl_team, -10, -1, 0)
 MACRO_CONFIG_INT(cl_autoswitch_weapons, 0, 0, 1)
 
+MACRO_CONFIG_INT(cl_show_welcome, 1, 0, 1)
+
 MACRO_CONFIG_INT(player_use_custom_color, 0, 0, 1)
 MACRO_CONFIG_INT(player_color_body, 65408, 0, 0)
 MACRO_CONFIG_INT(player_color_feet, 65408, 0, 0)

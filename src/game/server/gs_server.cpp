@@ -1951,7 +1951,6 @@ void mods_init()
 
 	if(config.dbg_bots)
 	{
-
 		for(int i = 0; i < config.dbg_bots ; i++)
 		{
 			mods_connected(MAX_CLIENTS-i-1);

@@ -31,6 +31,7 @@ enum
 data_container *data = 0x0;
 
 extern void modmenu_render();
+extern void menu_init();
 
 enum
 {
@@ -530,6 +531,8 @@ void render_loading(float percent);
 
 extern "C" void modc_init()
 {
+	menu_init();
+	
 	// setup sound channels
 	snd_set_channel(CHN_GUI, 1.0f, 0.0f);
 	snd_set_channel(CHN_MUSIC, 1.0f, 0.0f);

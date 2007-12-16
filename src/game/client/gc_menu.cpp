@@ -38,6 +38,7 @@ extern bool menu_game_active;
 enum
 {
 	POPUP_NONE=0,
+	POPUP_FIRST_LAUNCH,
 	POPUP_CONNECTING,
 	POPUP_DISCONNECTED,
 	POPUP_PASSWORD,
@@ -296,21 +297,21 @@ int ui2_do_button(const void *id, const char *text, int checked, const RECT *r, 
 }
 
 
-void ui2_do_label(const RECT *r, const char *text, float size, int align)
+void ui2_do_label(const RECT *r, const char *text, float size, int align, int max_width = -1)
 {
     gfx_blend_normal();
     size *= ui2_scale();
     if(align == 0)
     {
-    	float tw = gfx_pretty_text_width(size, text, -1);
-    	gfx_pretty_text(r->x + r->w/2-tw/2, r->y, size, text, -1);
+    	float tw = gfx_pretty_text_width(size, text, max_width);
+    	gfx_pretty_text(r->x + r->w/2-tw/2, r->y, size, text, max_width);
 	}
 	else if(align < 0)
-    	gfx_pretty_text(r->x, r->y, size, text, -1);
+    	gfx_pretty_text(r->x, r->y, size, text, max_width);
 	else if(align > 0)
 	{
-    	float tw = gfx_pretty_text_width(size, text, -1);
-    	gfx_pretty_text(r->x + r->w-tw, r->y, size, text, -1);
+    	float tw = gfx_pretty_text_width(size, text, max_width);
+    	gfx_pretty_text(r->x + r->w-tw, r->y, size, text, max_width);
 	}
 }
 
@@ -1707,6 +1708,13 @@ void menu_do_connected()
 	popup = POPUP_NONE;
 }
 
+void menu_init()
+{
+	if(config.cl_show_welcome)
+		popup = POPUP_FIRST_LAUNCH;
+	config.cl_show_welcome = 0;
+}
+
 int menu2_render()
 {
 	if(0)
@@ -1826,7 +1834,15 @@ int menu2_render()
 			title = "Quit";
 			extra_text = "Are you sure that you want to quit?";
 		}
-		
+		else if(popup == POPUP_FIRST_LAUNCH)
+		{
+			title = "Welcome to Teewars";
+			extra_text =
+			"As this is the first time you launch Teewars, please enter your nick name below. "
+			"It's recommended that you check the settings to adjust them to your liking "
+			"before joining a server.";
+			button_text = "Ok";
+		}
 		
 		RECT box, part;
 		box = screen;
@@ -1841,7 +1857,8 @@ int menu2_render()
 		ui2_do_label(&part, title, 24.f, 0);
 		ui2_hsplit_t(&box, 20.f, &part, &box);
 		ui2_hsplit_t(&box, 24.f, &part, &box);
-		ui2_do_label(&part, extra_text, 20.f, 0);
+		ui2_vmargin(&part, 20.f, &part);
+		ui2_do_label(&part, extra_text, 20.f, -1, (int)part.w);
 
 		if(popup == POPUP_QUIT)
 		{
@@ -1895,6 +1912,28 @@ int menu2_render()
 			ui2_vsplit_r(&textbox, 60.0f, &textbox, 0);
 			ui2_do_label(&label, "Password:", 20, -1);
 			ui2_do_edit_box(&config.password, &textbox, config.password, sizeof(config.password), true);
+		}
+		else if(popup == POPUP_FIRST_LAUNCH)
+		{
+			RECT label, textbox;
+			
+			ui2_hsplit_b(&box, 20.f, &box, &part);
+			ui2_hsplit_b(&box, 24.f, &box, &part);
+			ui2_vmargin(&part, 80.0f, &part);
+			
+			static int enter_button = 0;
+			if(ui2_do_button(&enter_button, "Enter", 0, &part, ui2_draw_menu_button, 0) || inp_key_down(KEY_ENTER))
+				popup = POPUP_NONE;
+			
+			ui2_hsplit_b(&box, 60.f, &box, &part);
+			ui2_hsplit_b(&box, 24.f, &box, &part);
+			
+			ui2_vsplit_l(&part, 60.0f, 0, &label);
+			ui2_vsplit_l(&label, 100.0f, 0, &textbox);
+			ui2_vsplit_l(&textbox, 20.0f, 0, &textbox);
+			ui2_vsplit_r(&textbox, 60.0f, &textbox, 0);
+			ui2_do_label(&label, "Nickname:", 20, -1);
+			ui2_do_edit_box(&config.player_name, &textbox, config.player_name, sizeof(config.player_name));			
 		}
 		else
 		{
