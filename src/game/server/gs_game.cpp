@@ -238,7 +238,8 @@ int gameobject::getteam(int notthisid)
 	{
 		if(players[i].client_id != -1 && players[i].client_id != notthisid)
 		{
-			numplayers[players[i].team]++;
+			if(players[i].team == 0 || players[i].team == 1)
+				numplayers[players[i].team]++;
 		}
 	}
 
