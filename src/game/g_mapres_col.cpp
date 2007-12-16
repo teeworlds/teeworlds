@@ -19,6 +19,16 @@ struct collision
 static collision col;
 static int global_dividor;
 
+int col_width()
+{
+	return col.w;
+}
+
+int col_height()
+{
+	return col.h;	
+}
+
 int col_init(int dividor)
 {
 	mapres_collision *c = (mapres_collision*)map_find_item(MAPRES_COLLISIONMAP,0);

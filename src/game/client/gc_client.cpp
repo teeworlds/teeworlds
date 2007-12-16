@@ -2323,7 +2323,14 @@ void render_game()
 		int x, y;
 		inp_mouse_relative(&x, &y);
 		mouse_pos += vec2(x, y);
-		if(!spectate)
+		if(spectate)
+		{
+			if(mouse_pos.x < 200.0f) mouse_pos.x = 200.0f;
+			if(mouse_pos.y < 200.0f) mouse_pos.y = 200.0f;
+			if(mouse_pos.x > col_width()*32-200.0f) mouse_pos.x = col_width()*32-200.0f;
+			if(mouse_pos.y > col_height()*32-200.0f) mouse_pos.y = col_height()*32-200.0f;
+		}
+		else
 		{
 			float l = length(mouse_pos);
 			if(l > 600.0f)
