@@ -1869,11 +1869,13 @@ int menu2_render()
 			
 			ui2_hsplit_b(&box, 20.f, &box, &part);
 			ui2_hsplit_b(&box, 24.f, &box, &part);
-			ui2_vmargin(&part, 120.0f, &part);
+			ui2_vmargin(&part, 80.0f, &part);
 			
-			ui2_vsplit_l(&part, 100.0f, &abort, &part);
-			ui2_vsplit_r(&part, 100.0f, 0, &tryagain);
-
+			ui2_vsplit_mid(&part, &abort, &tryagain);
+			
+			ui2_vmargin(&tryagain, 20.0f, &tryagain);
+			ui2_vmargin(&abort, 20.0f, &abort);
+			
 			static int button_abort = 0;
 			if(ui2_do_button(&button_abort, "Abort", 0, &abort, ui2_draw_menu_button, 0) || inp_key_down(KEY_ESC))
 				popup = POPUP_NONE;
