@@ -346,14 +346,11 @@ static void server_do_snap()
 			/* create delta */
 			{
 				static PERFORMACE_INFO scope = {"delta", 0};
-				static int temp = 0;
 				perf_start(&scope);
 				deltasize = snapshot_create_delta(deltashot, (SNAPSHOT*)data, deltadata);
 				perf_end();
 				
-				temp++;
-				
-				if(scope.last_delta > time_freq()/50 || (temp%1000) == 0)
+				if(scope.last_delta > time_freq()/50)
 				{
 					static int id = 0;
 					char buf[64];
