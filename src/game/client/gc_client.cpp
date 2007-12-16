@@ -2049,7 +2049,23 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 		gfx_pretty_text(x+w-tw-35, y, font_size, buf, -1);
 
 		// render avatar
+		if((flags[0] && flags[0]->carried_by == info->clientid) || (flags[1] && flags[1]->carried_by == info->clientid))
+		{
+			gfx_blend_normal();
+			gfx_texture_set(data->images[IMAGE_GAME].id);
+			gfx_quads_begin();
+
+			if(info->team == 0) select_sprite(SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
+			else select_sprite(SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
+			
+			float size = 64.0f;
+			gfx_quads_drawTL(x+55, y-15, size/2, size);
+			gfx_quads_end();
+		}
+		
 		render_tee(&idlestate, &client_datas[info->clientid].skin_info, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28));
+
+		
 		y += 50.0f;
 	}
 }
