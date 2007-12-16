@@ -914,14 +914,14 @@ int player::handle_weapons()
 						int shotspread = 2;
 						for(int i = -shotspread; i <= shotspread; i++)
 						{
-							float spreading[] = {-0.12f, -0.05f, 0, 0.05f, 0.12f};
+							float spreading[] = {-0.185f, -0.070f, 0, 0.070f, 0.185f};
 							float a = get_angle(direction);
 							float v = 1.0f-fabs(i/(float)shotspread);
 							a += spreading[i+2];
 							new projectile(WEAPON_SHOTGUN,
 								client_id,
 								pos+vec2(0,0),
-								vec2(cosf(a), sinf(a))*(30.0f + 15.0f*v),
+								vec2(cosf(a), sinf(a))*(28.0f + 12.0f*v),
 								//vec2(cosf(a), sinf(a))*20.0f,
 								(int)(server_tickspeed()*0.3f),
 								this,
