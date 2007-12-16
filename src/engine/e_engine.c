@@ -69,3 +69,76 @@ void engine_writeconfig()
 	char buf[1024];
 	config_save(engine_savepath("default.cfg", buf, sizeof(buf)));
 }
+
+
+static int perf_tick = 1;
+static PERFORMACE_INFO *current = 0;
+
+void perf_init()
+{
+}
+
+void perf_next()
+{
+	perf_tick++;
+	current = 0;
+}
+
+void perf_start(PERFORMACE_INFO *info)
+{
+	if(info->tick != perf_tick)
+	{
+		info->parent = current;
+		info->first_child = 0;
+		info->next_child = 0;
+		
+		if(info->parent)
+		{
+			info->next_child = info->parent->first_child;
+			info->parent->first_child = info;
+		}
+		
+		info->tick = perf_tick;
+		info->biggest = 0;
+		info->total = 0;
+	}
+	
+	current = info;
+	current->start = time_get();
+}
+
+void perf_end()
+{
+	int64 delta = time_get()-current->start;
+	current->total += delta;
+	
+	if(delta > current->biggest)
+		current->biggest = delta;
+	
+	current = current->parent;
+}
+
+static void perf_dump_imp(PERFORMACE_INFO *info, int indent)
+{
+	char buf[512] = {0};
+	int64 freq = time_freq();
+	int i;
+	
+	for(i = 0; i < indent; i++)
+		buf[i] = ' ';
+	
+	sprintf(&buf[indent], "%-20s %8.2f %8.2f", info->name, info->total*1000/(float)freq, info->biggest*1000/(float)freq);
+	dbg_msg("perf", "%s", buf);
+	
+	info = info->first_child;
+	while(info)
+	{
+		perf_dump_imp(info, indent+2);
+		info = info->next_child;
+	}
+}
+
+void perf_dump(PERFORMACE_INFO *top)
+{
+	perf_dump_imp(top, 0);
+}

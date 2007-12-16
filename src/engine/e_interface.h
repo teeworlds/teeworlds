@@ -11,6 +11,7 @@ extern "C" {
 */
 
 #include "e_keys.h"
+#include "e_system.h"
 
 enum 
 {
@@ -87,6 +88,24 @@ typedef struct
 	char player_names[16][48];
 	int player_scores[16];
 } SERVER_INFO;
+
+typedef struct PERFORMACE_INFO_t
+{
+	const char *name;
+	struct PERFORMACE_INFO_t *parent;
+	struct PERFORMACE_INFO_t *first_child;
+	struct PERFORMACE_INFO_t *next_child;
+	int tick;
+	int64 start;
+	int64 total;
+	int64 biggest;
+} PERFORMACE_INFO;
+
+void perf_init();
+void perf_next();
+void perf_start(PERFORMACE_INFO *info);
+void perf_end();
+void perf_dump();
 
 struct rect
 {

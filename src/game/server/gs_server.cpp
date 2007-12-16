@@ -249,26 +249,54 @@ void game_world::tick()
 
 	if(!paused)
 	{
+		static PERFORMACE_INFO scopes[OBJTYPE_FLAG+1] =
+		{
+			{"null", 0},
+			{"game", 0},
+			{"player_info", 0},
+			{"player_character", 0},
+			{"projectile", 0},
+			{"powerup", 0},
+			{"flag", 0}
+		};
+
+		static PERFORMACE_INFO scopes_def[OBJTYPE_FLAG+1] =
+		{
+			{"null", 0},
+			{"game", 0},
+			{"player_info", 0},
+			{"player_character", 0},
+			{"projectile", 0},
+			{"powerup", 0},
+			{"flag", 0}
+		};
+				
+		static PERFORMACE_INFO tick_scope = {"tick", 0};
+		perf_start(&tick_scope);
+		
 		// update all objects
 		for(entity *ent = first_entity; ent; ent = ent->next_entity)
 		{
-			int64 start = time_get();
+			if(ent->objtype >= 0 && ent->objtype < OBJTYPE_FLAG)
+				perf_start(&scopes[ent->objtype]);
 			ent->tick();
-			int64 delta = time_get()-start;
-			
-			if(config.debug && delta > time_freq()/10)
-				dbg_msg("world", "entity tick hitch warning! %.2f ms objtype=%d", delta/(float)time_freq()*1000, ent->objtype);
+			if(ent->objtype >= 0 && ent->objtype < OBJTYPE_FLAG)
+				perf_end();
 		}
+		
+		perf_end();
 
+		static PERFORMACE_INFO deftick_scope = {"tick_defered", 0};
+		perf_start(&deftick_scope);
 		for(entity *ent = first_entity; ent; ent = ent->next_entity)
 		{
-			int64 start = time_get();
+			if(ent->objtype >= 0 && ent->objtype < OBJTYPE_FLAG)
+				perf_start(&scopes_def[ent->objtype]);
 			ent->tick_defered();
-			int64 delta = time_get()-start;
-			
-			if(config.debug && delta > time_freq()/10)
-				dbg_msg("world", "entity defered tick hitch warning! %.2f ms objtype=%d", delta/(float)time_freq()*1000, ent->objtype);
+			if(ent->objtype >= 0 && ent->objtype < OBJTYPE_FLAG)
+				perf_end();
 		}
+		perf_end();
 	}
 
 	remove_entities();
@@ -1637,6 +1665,7 @@ void mods_tick()
 {
 	// clear all events
 	events.clear();
+	
 	world->tick();
 
 	if(world->paused) // make sure that the game object always updates

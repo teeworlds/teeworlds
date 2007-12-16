@@ -276,7 +276,13 @@ int server_send_msg(int client_id)
 static void server_do_snap()
 {
 	int i, k;
-	mods_presnap();
+	
+	{
+		static PERFORMACE_INFO scope = {"presnap", 0};
+		perf_start(&scope);
+		mods_presnap();
+		perf_end();
+	}
 
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
@@ -294,9 +300,17 @@ static void server_do_snap()
 			int input_predtick = -1;
 			int64 timeleft = 0;
 			int deltasize;
+			static PERFORMACE_INFO scope = {"build", 0};
+			perf_start(&scope);
 
 			snapbuild_init(&builder);
-			mods_snap(i);
+
+			{
+				static PERFORMACE_INFO scope = {"modsnap", 0};
+				perf_start(&scope);
+				mods_snap(i);
+				perf_end();
+			}
 
 			/* finish snapshot */
 			snapshot_size = snapbuild_finish(&builder, data);
@@ -330,17 +344,48 @@ static void server_do_snap()
 			}
 			
 			/* create delta */
-			deltasize = snapshot_create_delta(deltashot, (SNAPSHOT*)data, deltadata);
+			{
+				static PERFORMACE_INFO scope = {"delta", 0};
+				perf_start(&scope);
+				deltasize = snapshot_create_delta(deltashot, (SNAPSHOT*)data, deltadata);
+				perf_end();
+			}
+
 			
 			if(deltasize)
 			{
 				/* compress it */
 				unsigned char intdata[MAX_SNAPSHOT_SIZE];
-				int intsize = intpack_compress(deltadata, deltasize, intdata);
-				int snapshot_size = zerobit_compress(intdata, intsize, compdata);
+				int intsize;
+				int snapshot_size;
 				const int max_size = MAX_SNAPSHOT_PACKSIZE;
-				int numpackets = (snapshot_size+max_size-1)/max_size;
+				int numpackets;
 				int n, left;
+
+				{				
+					static PERFORMACE_INFO scope = {"compress", 0};
+					perf_start(&scope);
+					
+					{
+						static PERFORMACE_INFO scope = {"int", 0};
+						perf_start(&scope);
+						intsize = intpack_compress(deltadata, deltasize, intdata);
+						perf_end();
+					}
+					
+					{
+						static PERFORMACE_INFO scope = {"zero", 0};
+						perf_start(&scope);
+						snapshot_size = zerobit_compress(intdata, intsize, compdata);
+						perf_end();
+					}
+					perf_end();
+				}
+				
+
+				numpackets = (snapshot_size+max_size-1)/max_size;
+				
+				
 				
 				for(n = 0, left = snapshot_size; left; n++)
 				{
@@ -380,6 +425,8 @@ static void server_do_snap()
 				msg_pack_end();
 				server_send_msg(i);
 			}
+			
+			perf_end();
 		}
 	}
 
@@ -755,7 +802,11 @@ static int server_run()
 
 		while(1)
 		{
+			static PERFORMACE_INFO rootscope = {"root", 0};
 			int64 t = time_get();
+			
+			perf_start(&rootscope);
+			
 			/* load new map TODO: don't poll this */
 			if(strcmp(config.sv_map, current_map) != 0 || config.sv_map_reload)
 			{
@@ -797,7 +848,11 @@ static int server_run()
 				
 				/* apply new input */
 				{
+					static PERFORMACE_INFO scope = {"input", 0};
 					int c, i;
+					
+					perf_start(&scope);
+					
 					for(c = 0; c < MAX_CLIENTS; c++)
 					{
 						if(clients[c].state == SRVCLIENT_STATE_EMPTY)
@@ -811,18 +866,16 @@ static int server_run()
 							}
 						}
 					}
+					
+					perf_end();
 				}
 				
 				/* progress game */
 				{
-					int64 start = time_get();
-					int64 delta;
+					static PERFORMACE_INFO scope = {"tick", 0};
+					perf_start(&scope);
 					mods_tick();
-					delta = time_get()-start;
-					simulationtime += delta;
-					
-					if(config.debug && delta > time_freq()/10)
-						dbg_msg("server", "hitch warning! %.2f ms", delta/(float)time_freq()*1000);
+					perf_end();
 				}
 	
 				/* snap game */
@@ -831,9 +884,10 @@ static int server_run()
 					(config.sv_bandwidth_mode == 2 && (current_tick%3) == 0 ))
 				/* if(current_tick&1) */
 				{
-					int64 start = time_get();
+					static PERFORMACE_INFO scope = {"snap", 0};
+					perf_start(&scope);
 					server_do_snap();
-					snaptime += time_get()-start;
+					perf_end();
 				}
 			}
 	
@@ -847,10 +901,13 @@ static int server_run()
 			}
 	
 			{
-				int64 start = time_get();
+				static PERFORMACE_INFO scope = {"net", 0};
+				perf_start(&scope);
 				server_pump_network();
-				networktime += time_get()-start;
+				perf_end();
 			}
+
+			perf_end();
 	
 			if(reporttime < time_get())
 			{
@@ -859,12 +916,17 @@ static int server_run()
 					static NETSTATS prev_stats;
 					NETSTATS stats;
 					netserver_stats(net, &stats);
+					
+					perf_next();
+					perf_dump(&rootscope);
+					
+					/*
 					dbg_msg("server", "sim=%.02fms snap=%.02fms net=%.02fms tot=%.02fms load=%.02f%%",
 						(simulationtime/reportinterval)/(double)time_freq()*1000,
 						(snaptime/reportinterval)/(double)time_freq()*1000,
 						(networktime/reportinterval)/(double)time_freq()*1000,
 						(totaltime/reportinterval)/(double)time_freq()*1000,
-						(totaltime)/reportinterval/(double)time_freq()*100.0f);
+						(totaltime)/reportinterval/(double)time_freq()*100.0f);*/
 
 					dbg_msg("server", "send=%8d recv=%8d",
 						(stats.send_bytes - prev_stats.send_bytes)/reportinterval,
