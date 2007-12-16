@@ -99,6 +99,7 @@ typedef struct PERFORMACE_INFO_t
 	int64 start;
 	int64 total;
 	int64 biggest;
+	int64 last_delta;
 } PERFORMACE_INFO;
 
 void perf_init();

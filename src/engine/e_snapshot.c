@@ -1,6 +1,7 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include "e_snapshot.h"
 #include "e_compression.h"
+#include "e_interface.h"
 
 
 int *snapitem_data(SNAPSHOT_ITEM *item) { return (int *)(item+1); }
@@ -154,52 +155,80 @@ int snapshot_create_delta(SNAPSHOT *from, SNAPSHOT *to, void *dstdata)
 	delta->num_temp_items = 0;
 
 	/* pack deleted stuff */
-	for(i = 0; i < from->num_items; i++)
 	{
-		fromitem = snapshot_get_item(from, i);
-		if(snapshot_get_item_index(to, (snapitem_key(fromitem))) == -1)
+		static PERFORMACE_INFO scope = {"delete", 0};
+		perf_start(&scope);
+		
+		for(i = 0; i < from->num_items; i++)
 		{
-			/* deleted */
-			delta->num_deleted_items++;
-			*data = snapitem_key(fromitem);
-			data++;
+			fromitem = snapshot_get_item(from, i);
+			if(snapshot_get_item_index(to, (snapitem_key(fromitem))) == -1)
+			{
+				/* deleted */
+				delta->num_deleted_items++;
+				*data = snapitem_key(fromitem);
+				data++;
+			}
 		}
+		
+		perf_end();
 	}
 	
 	/* pack updated stuff */
-	for(i = 0; i < to->num_items; i++)
 	{
-		/* do delta */
-		itemsize = snapshot_get_item_datasize(to, i);
-		
-		curitem = snapshot_get_item(to, i);
-		pastindex = snapshot_get_item_index(from, snapitem_key(curitem));
-		if(pastindex != -1)
+		static PERFORMACE_INFO scope = {"update", 0};
+		perf_start(&scope);
+			
+		for(i = 0; i < to->num_items; i++)
 		{
-			pastitem = snapshot_get_item(from, pastindex);
-			if(diff_item((int*)snapitem_data(pastitem), (int*)snapitem_data(curitem), data+3, itemsize/4))
+			/* do delta */
 			{
+				static PERFORMACE_INFO scope = {"find", 0};
+				perf_start(&scope);
+				itemsize = snapshot_get_item_datasize(to, i);
+				curitem = snapshot_get_item(to, i);
+				pastindex = snapshot_get_item_index(from, snapitem_key(curitem));
+				perf_end();
+			}
+			
+			if(pastindex != -1)
+			{
+				static PERFORMACE_INFO scope = {"diff", 0};
+				perf_start(&scope);
+		
+				pastitem = snapshot_get_item(from, pastindex);
+				if(diff_item((int*)snapitem_data(pastitem), (int*)snapitem_data(curitem), data+3, itemsize/4))
+				{
+					*data++ = itemsize;
+					*data++ = snapitem_type(curitem);
+					*data++ = snapitem_id(curitem);
+					/*data++ = curitem->key();*/
+					data += itemsize/4;
+					delta->num_update_items++;
+				}
+				perf_end();
+			}
+			else
+			{
+				static PERFORMACE_INFO scope = {"copy", 0};
+				perf_start(&scope);
+				
 				*data++ = itemsize;
 				*data++ = snapitem_type(curitem);
 				*data++ = snapitem_id(curitem);
 				/*data++ = curitem->key();*/
+				
+				mem_copy(data, snapitem_data(curitem), itemsize);
+				size_count += itemsize;
 				data += itemsize/4;
 				delta->num_update_items++;
+				count++;
+				
+				perf_end();
 			}
 		}
-		else
-		{
-			*data++ = itemsize;
-			*data++ = snapitem_type(curitem);
-			*data++ = snapitem_id(curitem);
-			/*data++ = curitem->key();*/
-			
-			mem_copy(data, snapitem_data(curitem), itemsize);
-			size_count += itemsize;
-			data += itemsize/4;
-			delta->num_update_items++;
-			count++;
-		}
+		
+		perf_end();
 	}
 	
 	if(0)

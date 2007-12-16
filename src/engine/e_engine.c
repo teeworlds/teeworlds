@@ -109,11 +109,11 @@ void perf_start(PERFORMACE_INFO *info)
 
 void perf_end()
 {
-	int64 delta = time_get()-current->start;
-	current->total += delta;
+	current->last_delta = time_get()-current->start;
+	current->total += current->last_delta;
 	
-	if(delta > current->biggest)
-		current->biggest = delta;
+	if(current->last_delta > current->biggest)
+		current->biggest = current->last_delta;
 	
 	current = current->parent;
 }
