@@ -1882,7 +1882,42 @@ void render_goals(float x, float y, float w)
 		sprintf(buf, "Score Limit: %d", gameobj->score_limit);
 		gfx_pretty_text(x+40, y, 32, buf, -1);
 	}
+}
 
+void render_spectators(float x, float y, float w)
+{
+	char buffer[1024*4];
+	int count = 0;
+	float h = 120.0f;
+	
+	strcpy(buffer, "Spectators: ");
+
+	gfx_blend_normal();
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_setcolor(0,0,0,0.5f);
+	draw_round_rect(x-10.f, y-10.f, w, h, 10.0f);
+	gfx_quads_end();
+	
+	for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
+	{
+		SNAP_ITEM item;
+		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+
+		if(item.type == OBJTYPE_PLAYER_INFO)
+		{
+			const obj_player_info *info = (const obj_player_info *)data;
+			if(info->team == -1)
+			{
+				if(count)
+					strcat(buffer, ", ");
+				strcat(buffer, client_datas[info->clientid].name);
+				count++;
+			}
+		}
+	}
+	
+	gfx_pretty_text(x+10, y, 32, buffer, (int)w-20);
 }
 
 void render_scoreboard(float x, float y, float w, int team, const char *title)
@@ -1987,7 +2022,7 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 		const obj_player_info *info = players[i];
 
 		// make sure that we render the correct team
-		if(team != -1 && info->team != team)
+		if(team == -1 || info->team != team)
 			continue;
 
 		char buf[128];
@@ -2910,11 +2945,11 @@ void render_game()
 	{
 		gfx_mapscreen(0, 0, width, height);
 
-		float w = 550.0f;
+		float w = 650.0f;
 
 		if (gameobj && gameobj->gametype == GAMETYPE_DM)
 		{
-			render_scoreboard(width/2-w/2, 150.0f, w, -1, 0);
+			render_scoreboard(width/2-w/2, 150.0f, w, 0, 0);
 			//render_scoreboard(gameobj, 0, 0, -1, 0);
 		}
 		else
@@ -2937,7 +2972,7 @@ void render_game()
 		}
 
 		render_goals(width/2-w/2, 150+600+25, w);
-
+		render_spectators(width/2-w/2, 150+600+25+50+25, w);
 	}
 }
 

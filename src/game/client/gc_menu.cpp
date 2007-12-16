@@ -1638,7 +1638,21 @@ static void menu2_render_game(RECT main_view)
 			}
 		}
 		
-		if(gameobj->gametype != GAMETYPE_DM)
+		if(gameobj->gametype == GAMETYPE_DM)
+		{
+			if(local_info->team != 0)
+			{
+				ui2_vsplit_l(&main_view, 10.0f, &button, &main_view);
+				ui2_vsplit_l(&main_view, 120.0f, &button, &main_view);
+				static int spectate_button = 0;
+				if(ui2_do_button(&spectate_button, "Join Game", 0, &button, ui2_draw_menu_button, 0))
+				{
+					config.cl_team = 0;
+					menu_active = false;
+				}
+			}						
+		}
+		else
 		{
 			if(local_info->team != 0)
 			{
