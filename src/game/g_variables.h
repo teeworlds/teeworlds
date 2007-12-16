@@ -24,7 +24,7 @@ MACRO_CONFIG_INT(key_console, 256+2, 32, 512)
 MACRO_CONFIG_INT(key_remoteconsole, 256+3, 32, 512)
 
 
-MACRO_CONFIG_INT(dbg_bots, 0, 0, 7)
+MACRO_CONFIG_INT(dbg_bots, 0, 0, 11)
 
 MACRO_CONFIG_INT(cl_predict, 1, 0, 1)
 MACRO_CONFIG_INT(cl_nameplates, 0, 0, 1)

@@ -1957,7 +1957,6 @@ void mods_init()
 			mods_client_enter(MAX_CLIENTS-i-1);
 			if(gameobj->gametype != GAMETYPE_DM)
 				players[MAX_CLIENTS-i-1].team = i&1;
-			players[MAX_CLIENTS-i-1].team = -1;
 		}
 	}
 }

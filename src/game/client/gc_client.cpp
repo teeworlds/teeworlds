@@ -1936,7 +1936,7 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 	anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);
 
 	//float ystart = y;
-	float h = 600.0f;
+	float h = 750.0f;
 
 	gfx_blend_normal();
 	gfx_texture_set(-1);
@@ -2974,8 +2974,8 @@ void render_game()
 			render_scoreboard(width/2 + 20, 150.0f, w, 1, "Blue Team");
 		}
 
-		render_goals(width/2-w/2, 150+600+25, w);
-		render_spectators(width/2-w/2, 150+600+25+50+25, w);
+		render_goals(width/2-w/2, 150+750+25, w);
+		render_spectators(width/2-w/2, 150+750+25+50+25, w);
 	}
 }
 
