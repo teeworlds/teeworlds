@@ -527,11 +527,7 @@ static void server_process_client_packet(NETPACKET *packet)
 			input->pred_tick = tick;
 			
 			if(tick <= server_tick())
-			{
-				/* TODO: how should we handle this */
-				dbg_msg("server", "input got in late for=%d cur=%d", tick, server_tick());
 				tick = server_tick()+1;
-			}
 
 			input->game_tick = tick;
 			
@@ -826,7 +822,7 @@ static int server_run()
 					simulationtime += delta;
 					
 					if(config.debug && delta > time_freq()/10)
-						dbg_msg("server", "hitch warning! %.2f ms", delta/(float)time_freq());
+						dbg_msg("server", "hitch warning! %.2f ms", delta/(float)time_freq()*1000);
 				}
 	
 				/* snap game */

@@ -257,7 +257,7 @@ void game_world::tick()
 			int64 delta = time_get()-start;
 			
 			if(config.debug && delta > time_freq()/10)
-				dbg_msg("world", "entity tick hitch warning! %.2f ms objtype=%d", delta/(float)time_freq(), ent->objtype);
+				dbg_msg("world", "entity tick hitch warning! %.2f ms objtype=%d", delta/(float)time_freq()*1000, ent->objtype);
 		}
 
 		for(entity *ent = first_entity; ent; ent = ent->next_entity)
@@ -267,7 +267,7 @@ void game_world::tick()
 			int64 delta = time_get()-start;
 			
 			if(config.debug && delta > time_freq()/10)
-				dbg_msg("world", "entity defered tick hitch warning! %.2f ms objtype=%d", delta/(float)time_freq(), ent->objtype);
+				dbg_msg("world", "entity defered tick hitch warning! %.2f ms objtype=%d", delta/(float)time_freq()*1000, ent->objtype);
 		}
 	}
 
@@ -1573,7 +1573,6 @@ void create_sound_global(int sound, int target)
 	msg_pack_start(MSG_SOUND_GLOBAL, MSGFLAG_VITAL);
 	msg_pack_int(sound);
 	server_send_msg(target);
-	dbg_msg("globalsound", "%d %d", sound, target);
 }
 
 // TODO: should be more general

@@ -89,7 +89,6 @@ void gameobject_ctf::tick()
 					for(int i = 0; i < 2; i++)
 						flags[i]->reset();
 					
-					dbg_msg("", "capture sound %d", SOUND_CTF_CAPTURE);
 					create_sound_global(SOUND_CTF_CAPTURE);
 				}
 			}			
