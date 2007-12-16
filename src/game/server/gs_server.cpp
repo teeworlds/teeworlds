@@ -251,10 +251,24 @@ void game_world::tick()
 	{
 		// update all objects
 		for(entity *ent = first_entity; ent; ent = ent->next_entity)
+		{
+			int64 start = time_get();
 			ent->tick();
+			int64 delta = time_get()-start;
+			
+			if(config.debug && delta > time_freq()/10)
+				dbg_msg("world", "entity tick hitch warning! %.2f ms objtype=%d", delta/(float)time_freq(), ent->objtype);
+		}
 
 		for(entity *ent = first_entity; ent; ent = ent->next_entity)
+		{
+			int64 start = time_get();
 			ent->tick_defered();
+			int64 delta = time_get()-start;
+			
+			if(config.debug && delta > time_freq()/10)
+				dbg_msg("world", "entity defered tick hitch warning! %.2f ms objtype=%d", delta/(float)time_freq(), ent->objtype);
+		}
 	}
 
 	remove_entities();
@@ -1095,7 +1109,6 @@ void player::tick_defered()
 				*((unsigned *)&start_pos.x), *((unsigned *)&start_pos.y),
 				*((unsigned *)&start_vel.x), *((unsigned *)&start_vel.y));
 		}
-		
 
 		int events = core.triggered_events;
 		int mask = cmask_all_except_one(client_id);

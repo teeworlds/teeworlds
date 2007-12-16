@@ -820,8 +820,13 @@ static int server_run()
 				/* progress game */
 				{
 					int64 start = time_get();
+					int64 delta;
 					mods_tick();
-					simulationtime += time_get()-start;
+					delta = time_get()-start;
+					simulationtime += delta;
+					
+					if(config.debug && delta > time_freq()/10)
+						dbg_msg("server", "hitch warning! %.2f ms", delta/(float)time_freq());
 				}
 	
 				/* snap game */
