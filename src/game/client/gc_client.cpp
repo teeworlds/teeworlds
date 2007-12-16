@@ -2874,7 +2874,19 @@ void render_game()
 		gfx_mapscreen(0, 0, 300*gfx_screenaspect(), 300);
 		const char *text = "Connection Problems...";
 		float w = gfx_pretty_text_width(24, text, -1);
-		gfx_pretty_text(200*gfx_screenaspect()-w/2, 50, 24, text, -1);
+		gfx_pretty_text(150*gfx_screenaspect()-w/2, 50, 24, text, -1);
+	}
+	
+	if(config.debug && local_character && local_prev_character)
+	{
+		gfx_mapscreen(0, 0, 300*gfx_screenaspect(), 300);
+		
+		float speed = distance(vec2(local_prev_character->x, local_prev_character->y),
+			vec2(local_character->x, local_character->y));
+		
+		char buf[512];
+		sprintf(buf, "%f", speed);
+		gfx_pretty_text(150, 50, 24, buf, -1);
 	}
 
 	// render score board

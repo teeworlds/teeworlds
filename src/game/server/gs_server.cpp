@@ -1069,6 +1069,8 @@ void player::tick_defered()
 		vec2 start_pos = core.pos;
 		vec2 start_vel = core.vel;
 		bool stuck_before = test_box(core.pos, vec2(28.0f, 28.0f));
+		if(length(core.vel) > 100.0f)
+			dbg_msg("server", "insane move! (%f,%f) %f", core.vel.x, core.vel.y, length(core.vel));
 		core.move();
 		bool stuck_after_move = test_box(core.pos, vec2(28.0f, 28.0f));
 		core.quantize();
