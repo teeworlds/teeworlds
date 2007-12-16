@@ -1704,6 +1704,10 @@ void mods_client_input(int client_id, void *input)
 		//players[client_id].previnput = players[client_id].input;
 		players[client_id].input = *(player_input*)input;
 		players[client_id].num_inputs++;
+		
+		if(players[client_id].input.target_x == 0 && players[client_id].input.target_y == 0)
+			players[client_id].input.target_y = -1;
+			
 	}
 }
 
