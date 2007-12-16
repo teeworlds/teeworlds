@@ -158,6 +158,7 @@ static int client_serverbrowse_sorthash()
 	i |= config.b_filter_empty<<4;
 	i |= config.b_filter_full<<5;
 	i |= config.b_filter_pw<<6;
+	i |= config.b_sort_order<<7;
 	return i;
 }
 
@@ -181,6 +182,17 @@ static void client_serverbrowse_sort()
 		qsort(sorted_serverlist, num_sorted_servers, sizeof(int), client_serverbrowse_sort_compare_gametype);
 	else if(config.b_sort == BROWSESORT_PROGRESSION)
 		qsort(sorted_serverlist, num_sorted_servers, sizeof(int), client_serverbrowse_sort_compare_progression);
+	
+	/* invert the list if requested */
+	if(config.b_sort_order)
+	{
+		for(i = 0; i < num_sorted_servers/2; i++)
+		{
+			int temp = sorted_serverlist[i];
+			sorted_serverlist[i] = sorted_serverlist[num_sorted_servers-i-1];
+			sorted_serverlist[num_sorted_servers-i-1] = temp;
+		}
+	}
 	
 	/* set indexes */
 	for(i = 0; i < num_sorted_servers; i++)

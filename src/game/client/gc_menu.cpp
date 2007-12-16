@@ -947,7 +947,13 @@ static void menu2_render_serverbrowser(RECT main_view)
 		if(ui2_do_button(cols[i].caption, cols[i].caption, config.b_sort == cols[i].sort, &cols[i].rect, ui2_draw_grid_header, 0))
 		{
 			if(cols[i].sort != -1)
+			{
+				if(config.b_sort == cols[i].sort)
+					config.b_sort_order ^= 1;
+				else
+					config.b_sort_order = 0;
 				config.b_sort = cols[i].sort;
+			}
 		}
 	}
 	
