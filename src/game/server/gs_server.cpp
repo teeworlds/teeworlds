@@ -1069,8 +1069,15 @@ void player::tick_defered()
 		vec2 start_pos = core.pos;
 		vec2 start_vel = core.vel;
 		bool stuck_before = test_box(core.pos, vec2(28.0f, 28.0f));
-		if(length(core.vel) > 100.0f)
-			dbg_msg("server", "insane move! (%f,%f) %f", core.vel.x, core.vel.y, length(core.vel));
+		
+		// TODO: this should be moved into the g_game
+		// but not done to preserve the nethash
+		if(length(core.vel) > 150.0f)
+		{
+			dbg_msg("server", "insane move! clamping (%f,%f) %f", core.vel.x, core.vel.y, length(core.vel));
+			core.vel = normalize(core.vel) * 150.0f;
+		}
+		
 		core.move();
 		bool stuck_after_move = test_box(core.pos, vec2(28.0f, 28.0f));
 		core.quantize();

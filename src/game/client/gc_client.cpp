@@ -784,6 +784,12 @@ extern "C" void modc_predict()
 			if(!world.players[c])
 				continue;
 
+			
+			// TODO: this should be moved into the g_game
+			// but not done to preserve the nethash
+			if(length(world.players[c]->vel) > 150.0f)
+				world.players[c]->vel = normalize(world.players[c]->vel) * 150.0f;
+
 			world.players[c]->move();
 			world.players[c]->quantize();
 		}
