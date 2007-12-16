@@ -22,6 +22,39 @@ class player *intersect_player(vec2 pos0, vec2 pos1, vec2 &new_pos, class entity
 
 game_world *world;
 
+void send_chat(int cid, int team, const char *msg)
+{
+	if(cid >= 0 && cid < MAX_CLIENTS)
+		dbg_msg("chat", "%d:%d:%s: %s", cid, team, server_clientname(cid), msg);
+	else
+		dbg_msg("chat", "*** %s", msg);
+
+	if(team == -1)
+	{
+		msg_pack_start(MSG_CHAT, MSGFLAG_VITAL);
+		msg_pack_int(cid);
+		msg_pack_int(0);
+		msg_pack_string(msg, 512);
+		msg_pack_end();
+		server_send_msg(-1);
+	}
+	else
+	{
+		msg_pack_start(MSG_CHAT, MSGFLAG_VITAL);
+		msg_pack_int(cid);
+		msg_pack_int(1);
+		msg_pack_string(msg, 512);
+		msg_pack_end();
+
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(players[i].client_id != -1 && players[i].team == team)
+				server_send_msg(i);
+		}
+	}
+}
+
+
 //////////////////////////////////////////////////
 // Event handler
 //////////////////////////////////////////////////
@@ -455,18 +488,37 @@ void player::respawn()
 	spawning = true;
 }
 
+const char *get_team_name(int team)
+{
+	if(gameobj->gametype == GAMETYPE_DM)
+	{
+		if(team == 0)
+			return "game";
+	}
+	else
+	{
+		if(team == 0)
+			return "red team";
+		else if(team == 1)
+			return "blue team";
+	}
+	
+	return "spectators";
+}
 
 void player::set_team(int new_team)
 {
+	if(team == new_team)
+		return;
+		
+	char buf[512];
+	sprintf(buf, "%s joined the %s", server_clientname(client_id), get_team_name(new_team));
+	send_chat(-1, -1, buf); 
+	
 	team = new_team;
 	die(client_id, -1);
-
+	score = 0;
 	dbg_msg("game", "cid=%d team=%d", client_id, team);
-
-	if(team == -1)
-		clear_flag(FLAG_PHYSICS);
-	else
-		set_flag(FLAG_PHYSICS);
 }
 
 
@@ -1628,40 +1680,6 @@ player* intersect_player(vec2 pos0, vec2 pos1, vec2& new_pos, entity* notthis)
 	return 0;
 }
 
-
-void send_chat(int cid, int team, const char *msg)
-{
-	if(cid >= 0 && cid < MAX_CLIENTS)
-		dbg_msg("chat", "%d:%d:%s: %s", cid, team, server_clientname(cid), msg);
-	else
-		dbg_msg("chat", "*** %s", msg);
-
-	if(team == -1)
-	{
-		msg_pack_start(MSG_CHAT, MSGFLAG_VITAL);
-		msg_pack_int(cid);
-		msg_pack_int(0);
-		msg_pack_string(msg, 512);
-		msg_pack_end();
-		server_send_msg(-1);
-	}
-	else
-	{
-		msg_pack_start(MSG_CHAT, MSGFLAG_VITAL);
-		msg_pack_int(cid);
-		msg_pack_int(1);
-		msg_pack_string(msg, 512);
-		msg_pack_end();
-
-		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
-			if(players[i].client_id != -1 && players[i].team == team)
-				server_send_msg(i);
-		}
-	}
-}
-
-
 // Server hooks
 void mods_tick()
 {
@@ -1685,7 +1703,7 @@ void mods_tick()
 
 	if(config.sv_msg[0] != 0)
 	{
-		send_chat(-1, 0, config.sv_msg);
+		send_chat(-1, -1, config.sv_msg);
 		config.sv_msg[0] = 0;
 	}
 }
@@ -1748,10 +1766,11 @@ void mods_client_enter(int client_id)
 	world->insert_entity(&players[client_id]);
 	players[client_id].respawn();
 	dbg_msg("game", "join player='%d:%s'", client_id, server_clientname(client_id));
-	
+
+
 	char buf[512];
-	sprintf(buf, "%s has joined the game", server_clientname(client_id));
-	send_chat(-1, -1, buf);	
+	sprintf(buf, "%s entered and joined the %s", server_clientname(client_id), get_team_name(players[client_id].team));
+	send_chat(-1, -1, buf); 
 }
 
 void mods_connected(int client_id)
