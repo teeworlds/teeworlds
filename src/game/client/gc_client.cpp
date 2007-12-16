@@ -30,8 +30,6 @@ enum
 
 data_container *data = 0x0;
 
-int gametype = GAMETYPE_DM;
-
 extern void modmenu_render();
 
 enum
@@ -61,7 +59,7 @@ static const obj_player_character *local_character = 0;
 static const obj_player_character *local_prev_character = 0;
 const obj_player_info *local_info = 0;
 static const obj_flag *flags[2] = {0,0};
-static const obj_game *gameobj = 0;
+const obj_game *gameobj = 0;
 
 static int picked_up_weapon = 0;
 
@@ -2739,7 +2737,7 @@ void render_game()
 	// render goals
 	if(gameobj)
 	{
-		gametype = gameobj->gametype;
+		int gametype = gameobj->gametype;
 		
 		float whole = 300*gfx_screenaspect();
 		float half = whole/2.0f;

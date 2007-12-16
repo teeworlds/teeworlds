@@ -30,6 +30,8 @@ extern data_container *data;
 
 // abit uglyness
 extern const obj_player_info *local_info;
+extern const obj_game *gameobj;
+
 extern bool menu_active;
 extern bool menu_game_active;
 
@@ -1622,7 +1624,7 @@ static void menu2_render_game(RECT main_view)
 	if(ui2_do_button(&disconnect_button, "Disconnect", 0, &button, ui2_draw_menu_button, 0))
 		client_disconnect();
 
-	if(local_info)
+	if(local_info && gameobj)
 	{
 		if(local_info->team != -1)
 		{
@@ -1635,28 +1637,31 @@ static void menu2_render_game(RECT main_view)
 				menu_active = false;
 			}
 		}
-
-		if(local_info->team != 0)
+		
+		if(gameobj->gametype != GAMETYPE_DM)
 		{
-			ui2_vsplit_l(&main_view, 10.0f, &button, &main_view);
-			ui2_vsplit_l(&main_view, 120.0f, &button, &main_view);
-			static int spectate_button = 0;
-			if(ui2_do_button(&spectate_button, "Join Red", 0, &button, ui2_draw_menu_button, 0))
+			if(local_info->team != 0)
 			{
-				config.cl_team = 0;
-				menu_active = false;
+				ui2_vsplit_l(&main_view, 10.0f, &button, &main_view);
+				ui2_vsplit_l(&main_view, 120.0f, &button, &main_view);
+				static int spectate_button = 0;
+				if(ui2_do_button(&spectate_button, "Join Red", 0, &button, ui2_draw_menu_button, 0))
+				{
+					config.cl_team = 0;
+					menu_active = false;
+				}
 			}
-		}
 
-		if(local_info->team != 1)
-		{
-			ui2_vsplit_l(&main_view, 10.0f, &button, &main_view);
-			ui2_vsplit_l(&main_view, 120.0f, &button, &main_view);
-			static int spectate_button = 0;
-			if(ui2_do_button(&spectate_button, "Join Blue", 0, &button, ui2_draw_menu_button, 0))
+			if(local_info->team != 1)
 			{
-				config.cl_team = 1;
-				menu_active = false;
+				ui2_vsplit_l(&main_view, 10.0f, &button, &main_view);
+				ui2_vsplit_l(&main_view, 120.0f, &button, &main_view);
+				static int spectate_button = 0;
+				if(ui2_do_button(&spectate_button, "Join Blue", 0, &button, ui2_draw_menu_button, 0))
+				{
+					config.cl_team = 1;
+					menu_active = false;
+				}
 			}
 		}
 	}
