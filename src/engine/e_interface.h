@@ -754,6 +754,7 @@ const char *mods_net_version();
 int server_getclientinfo(int client_id, CLIENT_INFO *info);
 const char *server_clientname(int client_id);
 void server_setclientname(int client_id, const char *name);
+void server_setclientscore(int client_id, int score);
 
 void server_setbrowseinfo(int game_type, int progression);
 

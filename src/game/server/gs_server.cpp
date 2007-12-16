@@ -1039,6 +1039,8 @@ int player::handle_weapons()
 
 void player::tick()
 {
+	server_setclientscore(client_id, score);
+	
 	// check if we have enough input
 	// this is to prevent initial weird clicks
 	if(num_inputs < 2)

@@ -89,6 +89,7 @@ typedef struct
 	
 	char name[MAX_NAME_LENGTH];
 	char clan[MAX_CLANNAME_LENGTH];
+	int score;
 } CLIENT;
 
 static CLIENT clients[MAX_CLIENTS];
@@ -190,6 +191,13 @@ void server_setclientname(int client_id, const char *name)
 	if(client_id < 0 || client_id > MAX_CLIENTS || clients[client_id].state < SRVCLIENT_STATE_READY)
 		return;
 	strncpy(clients[client_id].name, name, MAX_NAME_LENGTH);
+}
+
+void server_setclientscore(int client_id, int score)
+{
+	if(client_id < 0 || client_id > MAX_CLIENTS || clients[client_id].state < SRVCLIENT_STATE_READY)
+		return;
+	clients[client_id].score = score;
 }
 
 void server_setbrowseinfo(int game_type, int progression)
@@ -451,6 +459,7 @@ static int new_client_callback(int cid, void *user)
 	
 	snapstorage_purge_all(&clients[cid].snapshots);
 	clients[cid].last_acked_snapshot = -1;
+	clients[cid].score = 0;
 	return 0;
 }
 
@@ -650,7 +659,7 @@ static void server_send_serverinfo(NETADDR4 *addr)
 		if(clients[i].state != SRVCLIENT_STATE_EMPTY)
 		{
 			packer_add_string(&p, clients[i].name, 48);  /* player name */
-			packer_add_string(&p, "0", 6); /* score */
+			sprintf(buf, "%d", clients[i].score); packer_add_string(&p, buf, 6);  /* player score */
 		}
 	}
 	
