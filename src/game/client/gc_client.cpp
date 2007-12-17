@@ -470,7 +470,9 @@ struct chatline
 	int tick;
 	int client_id;
 	int team;
-	char text[512+64];
+	int name_color;
+	char name[64];
+	char text[512];
 };
 
 chatline chat_lines[chat_max_lines];
@@ -489,12 +491,25 @@ void chat_add_line(int client_id, int team, const char *line)
 	chat_lines[chat_current_line].tick = client_tick();
 	chat_lines[chat_current_line].client_id = client_id;
 	chat_lines[chat_current_line].team = team;
+	chat_lines[chat_current_line].name_color = -1;
 
 	if(client_id == -1) // server message
-		sprintf(chat_lines[chat_current_line].text, "*** %s", line);
+	{
+		strcpy(chat_lines[chat_current_line].name, "*** ");
+		sprintf(chat_lines[chat_current_line].text, "%s", line);
+	}
 	else
 	{
-		sprintf(chat_lines[chat_current_line].text, "%s: %s", client_datas[client_id].name, line);
+		if(gameobj && gameobj->gametype != GAMETYPE_DM)
+		{
+			if(client_datas[client_id].team == 0)
+				chat_lines[chat_current_line].name_color = 0;
+			else if(client_datas[client_id].team == 1)
+				chat_lines[chat_current_line].name_color = 1;
+		}
+		
+		strcpy(chat_lines[chat_current_line].name, client_datas[client_id].name);
+		sprintf(chat_lines[chat_current_line].text, ": %s", line);
 	}
 }
 
@@ -2786,15 +2801,32 @@ void render_game()
 			if(client_tick() > chat_lines[r].tick+50*15)
 				break;
 
-			int lines = int(gfx_pretty_text_width(10, chat_lines[r].text, -1)) / 380 + 1;
+			float begin = x;
 
+			// render name
 			gfx_pretty_text_color(1,1,1,1);
 			if(chat_lines[r].client_id == -1)
 				gfx_pretty_text_color(1,1,0.5f,1); // system
 			else if(chat_lines[r].team)
 				gfx_pretty_text_color(0.5f,1,0.5f,1); // team message
+			else if(chat_lines[r].name_color == 0)
+				gfx_pretty_text_color(1.0f,0.5f,0.5f,1); // 
+			else if(chat_lines[r].name_color == 1)
+				gfx_pretty_text_color(0.5f,0.5f,1.0f,1); // 
+				
+			// render line
+			int lines = int(gfx_pretty_text_width(10, chat_lines[r].text, -1)) / 300 + 1;
+			
+			gfx_pretty_text(begin, y - 8 * (lines - 1), 10, chat_lines[r].name, -1);
+			begin += gfx_pretty_text_width(10, chat_lines[r].name, -1);
 
-			gfx_pretty_text(x, y - 8 * (lines - 1), 10, chat_lines[r].text, 380);
+			gfx_pretty_text_color(1,1,1,1);
+			if(chat_lines[r].client_id == -1)
+				gfx_pretty_text_color(1,1,0.5f,1); // system
+			else if(chat_lines[r].team)
+				gfx_pretty_text_color(0.65f,1,0.65f,1); // team message
+
+			gfx_pretty_text(begin, y - 8 * (lines - 1), 10, chat_lines[r].text, 300);
 			y -= 8 * lines;
 		}
 
