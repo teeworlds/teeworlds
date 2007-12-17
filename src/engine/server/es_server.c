@@ -206,6 +206,12 @@ void server_setbrowseinfo(int game_type, int progression)
 	browseinfo_progression = progression;
 }
 
+void server_kick(int client_id, const char *reason)
+{
+	if(clients[client_id].state != SRVCLIENT_STATE_EMPTY)
+		netserver_drop(net, client_id, reason);
+}
+
 int server_tick()
 {
 	return current_tick;
@@ -478,7 +484,6 @@ static int del_client_callback(int cid, void *user)
 	snapstorage_purge_all(&clients[cid].snapshots);
 	return 0;
 }
-
 
 static void server_send_map(int cid)
 {

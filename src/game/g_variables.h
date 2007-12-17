@@ -32,6 +32,7 @@ MACRO_CONFIG_INT(cl_nameplates_always, 0, 0, 1)
 MACRO_CONFIG_INT(cl_dynamic_camera, 1, 0, 1)
 MACRO_CONFIG_INT(cl_team, -10, -1, 0)
 MACRO_CONFIG_INT(cl_autoswitch_weapons, 0, 0, 1)
+MACRO_CONFIG_INT(cl_show_player_ids, 0, 0, 1)
 
 MACRO_CONFIG_INT(cl_show_welcome, 1, 0, 1)
 
@@ -61,6 +62,7 @@ MACRO_CONFIG_INT(sv_scorelimit, 20, 0, 1000)
 MACRO_CONFIG_INT(sv_timelimit, 0, 0, 1000)
 MACRO_CONFIG_STR(sv_gametype, 32, "dm")
 MACRO_CONFIG_INT(sv_restart, 0, 0, 120)
+MACRO_CONFIG_INT(sv_kick, -1, 0, 0)
 
 
 

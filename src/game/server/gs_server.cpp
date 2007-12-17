@@ -1706,6 +1706,12 @@ void mods_tick()
 		send_chat(-1, -1, config.sv_msg);
 		config.sv_msg[0] = 0;
 	}
+	
+	if(config.sv_kick != -1)
+	{
+		server_kick(config.sv_kick, "kicked");
+		config.sv_kick = -1;
+	}
 }
 
 void mods_snap(int client_id)

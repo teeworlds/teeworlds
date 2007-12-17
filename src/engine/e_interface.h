@@ -757,6 +757,7 @@ void server_setclientname(int client_id, const char *name);
 void server_setclientscore(int client_id, int score);
 
 void server_setbrowseinfo(int game_type, int progression);
+void server_kick(int client_id, const char *reason);
 
 int server_tick();
 int server_tickspeed();

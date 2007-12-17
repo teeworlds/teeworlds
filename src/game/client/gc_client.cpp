@@ -1940,12 +1940,6 @@ void render_spectators(float x, float y, float w)
 
 void render_scoreboard(float x, float y, float w, int team, const char *title)
 {
-	//float w = 550.0f;
-	//float x = width/2-w/2;
-	//;
-	//float y = ystart;
-	//float w = 550.0f;
-
 	animstate idlestate;
 	anim_eval(&data->animations[ANIM_BASE], 0, &idlestate);
 	anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);
@@ -2057,7 +2051,14 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 
 		sprintf(buf, "%4d", info->score);
 		gfx_pretty_text(x+60-gfx_pretty_text_width(font_size,buf,-1), y, font_size, buf, -1);
-		gfx_pretty_text(x+128, y, font_size, client_datas[info->clientid].name, -1);
+		
+		if(config.cl_show_player_ids)
+		{
+			sprintf(buf, "%d | %s", info->clientid, client_datas[info->clientid].name);
+			gfx_pretty_text(x+128, y, font_size, buf, -1);
+		}
+		else
+			gfx_pretty_text(x+128, y, font_size, client_datas[info->clientid].name, -1);
 
 		sprintf(buf, "%4d", info->latency);
 		float tw = gfx_pretty_text_width(font_size, buf, -1);
