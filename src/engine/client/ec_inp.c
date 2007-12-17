@@ -98,6 +98,8 @@ static void mousewheel_callback(int pos)
 			input_count[input_current^1][KEY_MOUSE_WHEEL_UP].presses++;
 			input_count[input_current^1][KEY_MOUSE_WHEEL_UP].releases++;
 		}
+		
+		last_k = KEY_MOUSE_WHEEL_UP;
 	}
 	else if(pos < 0)
 	{
@@ -106,6 +108,8 @@ static void mousewheel_callback(int pos)
 			input_count[input_current^1][KEY_MOUSE_WHEEL_DOWN].presses++;
 			input_count[input_current^1][KEY_MOUSE_WHEEL_DOWN].releases++;
 		}	
+
+		last_k = KEY_MOUSE_WHEEL_DOWN;
 	}
 	glfwSetMouseWheel(0);
 }
