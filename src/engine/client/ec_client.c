@@ -22,7 +22,7 @@
 
 #include <mastersrv/mastersrv.h>
 
-const int prediction_margin = 10; /* magic network prediction value */
+const int prediction_margin = 7; /* magic network prediction value */
 
 /*
 	Server Time
@@ -161,9 +161,9 @@ static int64 st_get(SMOOTHTIME *st, int64 now)
 	
 	/* it's faster to adjust upward instead of downward */
 	/* we might need to adjust these abit */
-	adjust_speed = 0.25f; /*0.99f;*/
+	adjust_speed = 0.2f; /*0.99f;*/
 	if(t > c)
-		adjust_speed = 500.0f;
+		adjust_speed = 350.0f;
 	
 	a = ((now-st->snap)/(float)time_freq()) * adjust_speed;
 	if(a > 1.0f)
