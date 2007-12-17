@@ -63,7 +63,11 @@ enum
 	SRVCLIENT_STATE_EMPTY = 0,
 	SRVCLIENT_STATE_CONNECTING,
 	SRVCLIENT_STATE_READY,
-	SRVCLIENT_STATE_INGAME
+	SRVCLIENT_STATE_INGAME,
+	
+	SRVCLIENT_SNAPRATE_INIT=0,
+	SRVCLIENT_SNAPRATE_FULL,
+	SRVCLIENT_SNAPRATE_RECOVER
 };
 
 typedef struct 
@@ -80,6 +84,7 @@ typedef struct
 	/* connection state info */
 	int state;
 	int latency;
+	int snap_rate;
 	
 	int last_acked_snapshot;
 	SNAPSTORAGE snapshots;
@@ -300,7 +305,18 @@ static void server_do_snap()
 
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(clients[i].state == SRVCLIENT_STATE_INGAME)
+		/* client must be ingame to recive snapshots */
+		if(clients[i].state != SRVCLIENT_STATE_INGAME)
+			continue;
+			
+		/* this client is trying to recover, don't spam snapshots */
+		if(clients[i].snap_rate == SRVCLIENT_SNAPRATE_RECOVER && (server_tick()%50) != 0)
+			continue;
+			
+		/* this client is trying to recover, don't spam snapshots */
+		if(clients[i].snap_rate == SRVCLIENT_SNAPRATE_INIT && (server_tick()%10) != 0)
+			continue;
+			
 		{
 			char data[MAX_SNAPSHOT_SIZE];
 			char deltadata[MAX_SNAPSHOT_SIZE];
@@ -345,6 +361,12 @@ static void server_do_snap()
 				deltashot_size = snapstorage_get(&clients[i].snapshots, clients[i].last_acked_snapshot, 0, &deltashot);
 				if(deltashot_size >= 0)
 					delta_tick = clients[i].last_acked_snapshot;
+				else
+				{
+					/* no acked package found, force client to recover rate */
+					if(clients[i].snap_rate == SRVCLIENT_SNAPRATE_FULL)
+						clients[i].snap_rate = SRVCLIENT_SNAPRATE_RECOVER;
+				}
 			}
 			
 			for(k = 0; k < 200; k++) /* TODO: do this better */
@@ -465,6 +487,7 @@ static int new_client_callback(int cid, void *user)
 	
 	snapstorage_purge_all(&clients[cid].snapshots);
 	clients[cid].last_acked_snapshot = -1;
+	clients[cid].snap_rate = SRVCLIENT_SNAPRATE_INIT;
 	clients[cid].score = 0;
 	return 0;
 }
@@ -577,6 +600,9 @@ static void server_process_client_packet(NETPACKET *packet)
 			int64 tagtime;
 
 			clients[cid].last_acked_snapshot = msg_unpack_int();
+			if(clients[cid].last_acked_snapshot > 0)
+				clients[cid].snap_rate = SRVCLIENT_SNAPRATE_FULL;
+				
 			if(snapstorage_get(&clients[cid].snapshots, clients[cid].last_acked_snapshot, &tagtime, 0) >= 0)
 				clients[cid].latency = (int)(((time_get()-tagtime)*1000)/time_freq());
 			
@@ -803,11 +829,6 @@ static int server_run()
 		int64 reporttime = time_get();
 		int reportinterval = 3;
 	
-		int64 simulationtime = 0;
-		int64 snaptime = 0;
-		int64 networktime = 0;
-		int64 totaltime = 0;
-		
 		lastheartbeat = 0;
 		game_start_time = time_get();
 	
@@ -818,6 +839,7 @@ static int server_run()
 		{
 			static PERFORMACE_INFO rootscope = {"root", 0};
 			int64 t = time_get();
+			int new_ticks = 0;
 			
 			perf_start(&rootscope);
 			
@@ -842,6 +864,7 @@ static int server_run()
 						server_send_map(c);
 						clients[c].state = SRVCLIENT_STATE_CONNECTING;
 						clients[c].last_acked_snapshot = -1;
+						clients[c].snap_rate = SRVCLIENT_SNAPRATE_RECOVER;
 						snapstorage_purge_all(&clients[c].snapshots);
 					}
 					
@@ -856,9 +879,10 @@ static int server_run()
 				}
 			}
 			
-			if(t > server_tick_start_time(current_tick+1))
+			while(t > server_tick_start_time(current_tick+1))
 			{
 				current_tick++;
+				new_ticks++;
 				
 				/* apply new input */
 				{
@@ -891,12 +915,12 @@ static int server_run()
 					mods_tick();
 					perf_end();
 				}
-	
-				/* snap game */
-				if(config.sv_bandwidth_mode == 0 ||
-					(config.sv_bandwidth_mode == 1 && current_tick%2) ||
-					(config.sv_bandwidth_mode == 2 && (current_tick%3) == 0 ))
-				/* if(current_tick&1) */
+			}
+			
+			/* snap game */
+			if(new_ticks)
+			{
+				if(config.sv_bandwidth_mode == 1 || (current_tick%2) == 0)
 				{
 					static PERFORMACE_INFO scope = {"snap", 0};
 					perf_start(&scope);
@@ -932,15 +956,9 @@ static int server_run()
 					netserver_stats(net, &stats);
 					
 					perf_next();
-					perf_dump(&rootscope);
 					
-					/*
-					dbg_msg("server", "sim=%.02fms snap=%.02fms net=%.02fms tot=%.02fms load=%.02f%%",
-						(simulationtime/reportinterval)/(double)time_freq()*1000,
-						(snaptime/reportinterval)/(double)time_freq()*1000,
-						(networktime/reportinterval)/(double)time_freq()*1000,
-						(totaltime/reportinterval)/(double)time_freq()*1000,
-						(totaltime)/reportinterval/(double)time_freq()*100.0f);*/
+					if(config.dbg_pref)
+						perf_dump(&rootscope);
 
 					dbg_msg("server", "send=%8d recv=%8d",
 						(stats.send_bytes - prev_stats.send_bytes)/reportinterval,
@@ -949,15 +967,17 @@ static int server_run()
 					prev_stats = stats;
 				}
 	
-				simulationtime = 0;
-				snaptime = 0;
-				networktime = 0;
-				totaltime = 0;
-	
 				reporttime += time_freq()*reportinterval;
 			}
-			totaltime += time_get()-t;
-			thread_sleep(1);
+			
+			if(config.dbg_hitch)
+			{
+				thread_sleep(config.dbg_hitch);
+				config.dbg_hitch = 0;
+			}
+			else
+				thread_sleep(1);
+			
 		}
 	}
 

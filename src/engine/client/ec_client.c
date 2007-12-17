@@ -799,7 +799,6 @@ static void client_process_packet(NETPACKET *packet)
 						
 						/* apply snapshot, cycle pointers */
 						recived_snapshots++;
-						
 
 						if(current_recv_tick > 0)
 							snaploss += game_tick-current_recv_tick-1;
@@ -1098,6 +1097,12 @@ static void client_run()
 		/* be nice */
 		if(config.cl_cpu_throttle || !gfx_window_active())
 			thread_sleep(1);
+			
+		if(config.dbg_hitch)
+		{
+			thread_sleep(config.dbg_hitch);
+			config.dbg_hitch = 0;
+		}
 		
 		if(reporttime < time_get())
 		{

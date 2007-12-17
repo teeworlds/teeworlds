@@ -51,6 +51,7 @@ RECT *ui2_screen();
 static int chat_mode = CHATMODE_NONE;
 bool menu_active = false;
 bool menu_game_active = false;
+static int snapshot_count = 0;
 static bool emoticon_selector_active = false;
 
 static vec2 mouse_pos;
@@ -878,6 +879,7 @@ static void clear_object_pointers()
 
 extern "C" void modc_newsnapshot()
 {
+	snapshot_count++;
 	process_events(SNAP_CURRENT);
 
 	if(config.dbg_stress)
@@ -2930,7 +2932,7 @@ void render_game()
 		{
 			char buf[256];
 			float w = gfx_pretty_text_width(24, "Warmup", -1);
-			gfx_pretty_text(200+-w/2, 50, 24, "Warmup", -1);
+			gfx_pretty_text(150*gfx_screenaspect()+-w/2, 50, 24, "Warmup", -1);
 
 			int seconds = gameobj->warmup/SERVER_TICK_SPEED;
 			if(seconds < 5)
@@ -2938,7 +2940,7 @@ void render_game()
 			else
 				sprintf(buf, "%d", seconds);
 			w = gfx_pretty_text_width(24, buf, -1);
-			gfx_pretty_text(200+-w/2, 75, 24, buf, -1);
+			gfx_pretty_text(150*gfx_screenaspect()+-w/2, 75, 24, buf, -1);
 		}
 	}
 
@@ -3074,6 +3076,8 @@ extern "C" void modc_statechange(int state, int old)
 	{
 		menu_active = false;
 	 	menu_game_active = true;
+	 	snapshot_count = 0;
+	 	
 		menu_do_connected();
 	}
 }
