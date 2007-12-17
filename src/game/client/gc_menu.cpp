@@ -682,7 +682,9 @@ int ui2_do_key_reader(void *id, const RECT *rect, int key)
 		int k = inp_last_key();
 		if (k)
 		{
-			new_key = k;
+			if(k != KEY_ESC)
+				new_key = k;
+				
 			ui_set_active_item(0);
 			mouse_released = false;
 		}
