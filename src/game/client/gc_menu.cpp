@@ -795,14 +795,28 @@ static int menu2_render_menubar(RECT r)
 
 static void menu2_render_background()
 {
-	gfx_clear(gui_color.r, gui_color.g, gui_color.b);
-	
-	gfx_texture_set(data->images[IMAGE_BANNER].id);
+	RECT s = *ui2_screen();
+
+	gfx_texture_set(-1);
 	gfx_quads_begin();
-	gfx_setcolor(0,0,0,0.05f);
-	gfx_quads_setrotation(-pi/4+0.15f);
-	gfx_quads_draw(400, 300, 1000, 250);
+		vec4 bottom(gui_color.r*0.6f, gui_color.g*0.6f, gui_color.b*0.6f, 1.0f);
+		vec4 top(gui_color.r, gui_color.g, gui_color.b, 1.0f);
+		gfx_setcolorvertex(0, top.r, top.g, top.b, top.a);
+		gfx_setcolorvertex(1, top.r, top.g, top.b, top.a);
+		gfx_setcolorvertex(2, bottom.r, bottom.g, bottom.b, bottom.a);
+		gfx_setcolorvertex(3, bottom.r, bottom.g, bottom.b, bottom.a);
+		gfx_quads_drawTL(0, 0, s.w, s.h);
 	gfx_quads_end();
+	
+	if(data->images[IMAGE_BANNER].id != 0)
+	{
+		gfx_texture_set(data->images[IMAGE_BANNER].id);
+		gfx_quads_begin();
+		gfx_setcolor(0,0,0,0.05f);
+		gfx_quads_setrotation(-pi/4+0.15f);
+		gfx_quads_draw(400, 300, 1000, 250);
+		gfx_quads_end();
+	}
 }
 
 void render_loading(float percent)
@@ -811,10 +825,10 @@ void render_loading(float percent)
 	vec3 rgb = hsl_to_rgb(vec3(config.ui_color_hue/255.0f, config.ui_color_sat/255.0f, config.ui_color_lht/255.0f));
 	gui_color = vec4(rgb.r, rgb.g, rgb.b, config.ui_color_alpha/255.0f);
 	
-	gfx_clear(gui_color.r, gui_color.g, gui_color.b);
-	
     RECT screen = *ui2_screen();
 	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
+	
+	menu2_render_background();
 
 	float tw;
 
@@ -838,7 +852,7 @@ void render_loading(float percent)
 
 	gfx_texture_set(-1);
 	gfx_quads_begin();
-	gfx_setcolor(1,1,1,1.0f);
+	gfx_setcolor(1,1,1,0.75f);
 	draw_round_rect(x+40, y+h-75, (w-80)*percent, 25, 5.0f);
 	gfx_quads_end();
 

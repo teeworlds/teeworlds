@@ -563,6 +563,14 @@ extern "C" void modc_init()
 	float total = data->num_sounds+data->num_images;
 	float current = 0;
 
+	// load textures
+	for(int i = 0; i < data->num_images; i++)
+	{
+		render_loading(current/total);
+		data->images[i].id = gfx_load_texture(data->images[i].filename);
+		current++;
+	}
+	
 	// load sounds
 	for(int s = 0; s < data->num_sounds; s++)
 	{
@@ -581,14 +589,6 @@ extern "C" void modc_init()
 		current++;
 	}
 
-	// load textures
-	for(int i = 0; i < data->num_images; i++)
-	{
-		render_loading(current/total);
-		data->images[i].id = gfx_load_texture(data->images[i].filename);
-		current++;
-	}
-	
 	skin_init();
 }
 
