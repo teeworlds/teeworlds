@@ -1684,8 +1684,6 @@ player* intersect_player(vec2 pos0, vec2 pos1, vec2& new_pos, entity* notthis)
 void mods_tick()
 {
 	// clear all events
-	events.clear();
-	
 	world->tick();
 
 	if(world->paused) // make sure that the game object always updates
@@ -1997,6 +1995,9 @@ void mods_shutdown()
 }
 
 void mods_presnap() {}
-void mods_postsnap() {}
+void mods_postsnap()
+{
+	events.clear();
+}
 
 extern "C" const char *mods_net_version() { return TEEWARS_NETVERSION; }
