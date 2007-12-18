@@ -30,6 +30,9 @@ enum
 
 data_container *data = 0x0;
 
+static player_input input_data = {0};
+static int input_target_lock = 0;
+
 extern void modmenu_render();
 extern void menu_init();
 
@@ -63,7 +66,7 @@ const obj_player_info *local_info = 0;
 static const obj_flag *flags[2] = {0,0};
 const obj_game *gameobj = 0;
 
-static int picked_up_weapon = 0;
+static int picked_up_weapon = -1;
 
 static struct client_data
 {
@@ -967,7 +970,7 @@ static void render_projectile(const obj_projectile *prev, const obj_projectile *
 	if(current->type != WEAPON_ROCKET)
 		gravity = -100;
 
-	float ct = (client_tick()-current->start_tick)/(float)SERVER_TICK_SPEED + client_intratick()*1/(float)SERVER_TICK_SPEED;
+	float ct = (client_tick()-current->start_tick)/(float)SERVER_TICK_SPEED + client_ticktime()*1/(float)SERVER_TICK_SPEED;
 	vec2 startpos(current->x, current->y);
 	vec2 startvel(current->vx, current->vy);
 	vec2 pos = calc_pos(startpos, startvel, gravity, ct);
@@ -2247,12 +2250,14 @@ void render_world(float center_x, float center_y, float zoom)
 	damageind.render();
 }
 
-static void do_input(int *v, int key)
+static int do_input(int *v, int key)
 {
 	*v += inp_key_presses(key) + inp_key_releases(key);
 	if((*v&1) != inp_key_state(key))
 		(*v)++;
 	*v &= INPUT_STATE_MASK;
+	
+	return (*v&1);
 }
 
 void render_game()
@@ -2422,69 +2427,39 @@ void render_game()
 		snd_set_listener_pos(local_character_pos.x, local_character_pos.y);
 	}
 
-	// snap input
+	// update some input
 	{
-		static player_input input = {0};
+		if(!emoticon_selector_active)
+		{
+			if(do_input(&input_data.fire, config.key_fire))
+			{
+				// this is done so that we are sure to send the
+				// target when we actually fired
+				input_data.target_x = (int)mouse_pos.x;
+				input_data.target_y = (int)mouse_pos.y;
+				input_target_lock = 1;
+			}
+		}
 
-		input.target_x = (int)mouse_pos.x;
-		input.target_y = (int)mouse_pos.y;
+		// weapon selection
+		do_input(&input_data.next_weapon, config.key_next_weapon);
+		do_input(&input_data.prev_weapon, config.key_prev_weapon);
 
-		if(chat_mode != CHATMODE_NONE)
-			input.state = STATE_CHATTING;
-		else if(menu_active)
-			input.state = STATE_IN_MENU;
+		if(inp_key_presses(config.key_next_weapon) || inp_key_presses(config.key_prev_weapon))
+			input_data.wanted_weapon = 0;
+		else if (config.cl_autoswitch_weapons && picked_up_weapon != -1)
+			input_data.wanted_weapon = picked_up_weapon;
 		else
 		{
-			input.state = STATE_PLAYING;
-			input.left = inp_key_state(config.key_move_left);
-			input.right = inp_key_state(config.key_move_right);
-			input.hook = inp_key_state(config.key_hook);
-			input.jump  = inp_key_state(config.key_jump);
-
-			if(!emoticon_selector_active)
-				do_input(&input.fire, config.key_fire);
-
-			// weapon selection
-			do_input(&input.next_weapon, config.key_next_weapon);
-			do_input(&input.prev_weapon, config.key_prev_weapon);
-
-			if(inp_key_presses(config.key_next_weapon) || inp_key_presses(config.key_prev_weapon))
-				input.wanted_weapon = 0;
-			else if (config.cl_autoswitch_weapons && picked_up_weapon)
-            {
-                input.wanted_weapon = picked_up_weapon;
-            }
-            else
-			{
-				if(inp_key_presses(config.key_weapon1)) input.wanted_weapon = 1;
-				if(inp_key_presses(config.key_weapon2)) input.wanted_weapon = 2;
-				if(inp_key_presses(config.key_weapon3)) input.wanted_weapon = 3;
-				if(inp_key_presses(config.key_weapon4)) input.wanted_weapon = 4;
-				if(inp_key_presses(config.key_weapon5)) input.wanted_weapon = 5;
-				if(inp_key_presses(config.key_weapon6)) input.wanted_weapon = 6;
-			}
-
-            picked_up_weapon = 0;
+			if(inp_key_presses(config.key_weapon1)) input_data.wanted_weapon = 1;
+			if(inp_key_presses(config.key_weapon2)) input_data.wanted_weapon = 2;
+			if(inp_key_presses(config.key_weapon3)) input_data.wanted_weapon = 3;
+			if(inp_key_presses(config.key_weapon4)) input_data.wanted_weapon = 4;
+			if(inp_key_presses(config.key_weapon5)) input_data.wanted_weapon = 5;
+			if(inp_key_presses(config.key_weapon6)) input_data.wanted_weapon = 6;
 		}
-
-		// stress testing
-		if(config.dbg_stress)
-		{
-			float t = client_localtime();
-			mem_zero(&input, sizeof(input));
-
-			input.left = ((int)t/2)&1;
-			input.right = ((int)t/2+1)&1;
-			input.jump = ((int)t);
-			input.fire = ((int)(t*10));
-			input.hook = ((int)(t*2))&1;
-			input.wanted_weapon = ((int)t)%NUM_WEAPONS;
-			input.target_x = (int)(sinf(t*3)*100.0f);
-			input.target_y = (int)(cosf(t*3)*100.0f);
-		}
-
-		snap_input(&input, sizeof(input));
 	}
+
 
 	// center at char but can be moved when mouse is far away
 	float offx = 0, offy = 0;
@@ -3060,6 +3035,51 @@ extern "C" void modc_render()
 void menu_do_disconnected();
 void menu_do_connecting();
 void menu_do_connected();
+
+extern "C" int modc_snap_input(int *data)
+{
+	picked_up_weapon = -1;
+
+	if(!input_target_lock)
+	{
+		input_data.target_x = (int)mouse_pos.x;
+		input_data.target_y = (int)mouse_pos.y;
+	}
+	input_target_lock = 0;
+
+	if(chat_mode != CHATMODE_NONE)
+		input_data.state = STATE_CHATTING;
+	else if(menu_active)
+		input_data.state = STATE_IN_MENU;
+	else
+	{
+		input_data.state = STATE_PLAYING;
+		input_data.left = inp_key_state(config.key_move_left);
+		input_data.right = inp_key_state(config.key_move_right);
+		input_data.hook = inp_key_state(config.key_hook);
+		input_data.jump  = inp_key_state(config.key_jump);
+	}
+
+	// stress testing
+	if(config.dbg_stress)
+	{
+		float t = client_localtime();
+		mem_zero(&input_data, sizeof(input_data));
+
+		input_data.left = ((int)t/2)&1;
+		input_data.right = ((int)t/2+1)&1;
+		input_data.jump = ((int)t);
+		input_data.fire = ((int)(t*10));
+		input_data.hook = ((int)(t*2))&1;
+		input_data.wanted_weapon = ((int)t)%NUM_WEAPONS;
+		input_data.target_x = (int)(sinf(t*3)*100.0f);
+		input_data.target_y = (int)(cosf(t*3)*100.0f);
+	}
+
+	// copy and return size	
+	mem_copy(data, &input_data, sizeof(input_data));
+	return sizeof(input_data);
+}
 
 extern "C" void modc_statechange(int state, int old)
 {

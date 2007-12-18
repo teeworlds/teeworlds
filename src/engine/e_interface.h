@@ -742,6 +742,7 @@ void modc_statechange(int new_state, int old_state);
 void modc_connected();
 void modc_message(int msg);
 void modc_predict();
+int modc_snap_input(int *data);
 
 void mods_message(int msg, int client_id);
 void mods_connected(int client_id);
@@ -817,7 +818,11 @@ int client_send_msg();
 /* client */
 int client_tick();
 int client_predtick();
-float client_intratick();
+
+float client_intratick(); 
+
+float client_ticktime();
+
 float client_intrapredtick();
 int client_tickspeed();
 float client_frametime();

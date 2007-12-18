@@ -62,6 +62,7 @@ static int current_recv_tick = 0;
 /* current time */
 static int current_tick = 0;
 static float intratick = 0;
+static float ticktime = 0;
 
 /* predicted time */
 static int current_predtick = 0;
@@ -191,17 +192,7 @@ GRAPH intra_graph;
 GRAPH predict_graph;
 
 /* --- input snapping --- */
-static int input_data[MAX_INPUT_SIZE] = {0};
-static int input_data_size;
-static int input_is_changed = 1;
 static GRAPH input_late_graph;
-void snap_input(void *data, int size)
-{
-	if(input_data_size != size || memcmp(input_data, data, size))
-		input_is_changed = 1;
-	mem_copy(input_data, data, size);
-	input_data_size = size;
-}
 
 /* -- snapshot handling --- */
 enum
@@ -248,6 +239,7 @@ int snap_num_items(int snapid)
 /* ------ time functions ------ */
 float client_intratick() { return intratick; }
 float client_intrapredtick() { return intrapredtick; }
+float client_ticktime() { return ticktime; }
 int client_tick() { return current_tick; }
 int client_predtick() { return current_predtick; }
 int client_tickspeed() { return SERVER_TICK_SPEED; }
@@ -315,25 +307,26 @@ int client_connection_problems()
 static void client_send_input()
 {
 	int64 now = time_get();	
-	int i;
+	int i, size;
 
 	if(current_predtick <= 0)
 		return;
-		
+	
+	/* fetch input */	
+	size = modc_snap_input(inputs[current_input].data);
+	
 	msg_pack_start_system(NETMSG_INPUT, 0);
 	msg_pack_int(ack_game_tick);
 	msg_pack_int(current_predtick);
-	msg_pack_int(input_data_size);
+	msg_pack_int(size);
 
 	inputs[current_input].tick = current_predtick;
 	inputs[current_input].game_time = st_get(&predicted_time, now);
 	inputs[current_input].time = now;
-	
-	for(i = 0; i < input_data_size/4; i++)
-	{
-		inputs[current_input].data[i] = input_data[i];
-		msg_pack_int(input_data[i]);
-	}
+
+	/* pack it */	
+	for(i = 0; i < size/4; i++)
+		msg_pack_int(inputs[current_input].data[i]);
 	
 	current_input++;
 	current_input%=200;
@@ -875,6 +868,7 @@ static void client_update()
 	if(client_state() != CLIENTSTATE_OFFLINE && recived_snapshots >= 3)
 	{
 		int repredict = 0;
+		int64 freq = time_freq();
 		int64 now = st_get(&game_time, time_get());
 		int64 pred_now = st_get(&predicted_time, time_get());
 
@@ -917,6 +911,7 @@ static void client_update()
 			static float last_intrapred = 0;
 
 			intratick = (now - prevtick_start) / (float)(curtick_start-prevtick_start);
+			ticktime = (now - curtick_start) / (freq/(float)SERVER_TICK_SPEED);
 
 			graph_add(&intra_graph, intratick*0.25f);
 
