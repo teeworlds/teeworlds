@@ -920,9 +920,13 @@ int player::handle_weapons()
 		return handle_sniper();
 	*/
 
-	if(count_input(previnput.fire, input.fire).presses) //previnput.fire != input.fire && (input.fire&1))
+	if(reload_timer == 0)
 	{
-		if(reload_timer == 0)
+		bool fullauto = false;
+		if(active_weapon == WEAPON_ROCKET || active_weapon == WEAPON_SHOTGUN)
+			fullauto = true;
+		
+		if(count_input(previnput.fire, input.fire).presses || (fullauto && input.fire&1))
 		{
 			// fire!
 			if(weapons[active_weapon].ammo)

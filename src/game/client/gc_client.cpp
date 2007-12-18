@@ -1358,6 +1358,7 @@ static void render_player(
 	obj_player_info info = *player_info;
 
 	float intratick = client_intratick();
+	float ticktime = client_ticktime();
 
 	if(player.health < 0) // dont render dead players
 		return;
@@ -1405,12 +1406,12 @@ static void render_player(
 
 	if (player.weapon == WEAPON_HAMMER)
 	{
-		float a = clamp((client_tick()-player.attacktick+intratick)/10.0f, 0.0f, 1.0f);
+		float a = clamp((client_tick()-player.attacktick+ticktime)/10.0f, 0.0f, 1.0f);
 		anim_eval_add(&state, &data->animations[ANIM_HAMMER_SWING], a, 1.0f);
 	}
 	if (player.weapon == WEAPON_NINJA)
 	{
-		float a = clamp((client_tick()-player.attacktick+intratick)/40.0f, 0.0f, 1.0f);
+		float a = clamp((client_tick()-player.attacktick+ticktime)/40.0f, 0.0f, 1.0f);
 		anim_eval_add(&state, &data->animations[ANIM_NINJA_SWING], a, 1.0f);
 	}
 
