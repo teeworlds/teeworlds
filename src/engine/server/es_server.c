@@ -920,7 +920,7 @@ static int server_run()
 			/* snap game */
 			if(new_ticks)
 			{
-				if(config.sv_bandwidth_mode == 1 || (current_tick%2) == 0)
+				if(config.sv_high_bandwidth || (current_tick%2) == 0)
 				{
 					static PERFORMACE_INFO scope = {"snap", 0};
 					perf_start(&scope);

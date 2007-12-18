@@ -1788,11 +1788,17 @@ void mods_connected(int client_id)
 
 	//dbg_msg("game", "connected player='%d:%s'", client_id, server_clientname(client_id));
 
+	
 	// Check which team the player should be on
-	if(gameobj->gametype == GAMETYPE_DM)
-		players[client_id].team = 0;
+	if(config.sv_tournament_mode)
+		players[client_id].team = -1;
 	else
-		players[client_id].team = gameobj->getteam(client_id);
+	{
+		if(gameobj->gametype == GAMETYPE_DM)
+			players[client_id].team = 0;
+		else
+			players[client_id].team = gameobj->getteam(client_id);
+	}
 }
 
 void mods_client_drop(int client_id)

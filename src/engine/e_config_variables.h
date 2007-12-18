@@ -50,7 +50,7 @@ MACRO_CONFIG_INT(sv_sendheartbeats, 1, 0, 1)
 MACRO_CONFIG_STR(sv_map, 128, "dm1")
 MACRO_CONFIG_INT(sv_map_reload, 0, 0, 1)
 MACRO_CONFIG_INT(sv_max_clients, 8, 1, 12)
-MACRO_CONFIG_INT(sv_bandwidth_mode, 0, 0, 2)
+MACRO_CONFIG_INT(sv_high_bandwidth, 0, 0, 1)
 
 MACRO_CONFIG_INT(debug, 0, 0, 1)
 MACRO_CONFIG_INT(dbg_stress, 0, 0, 0)
