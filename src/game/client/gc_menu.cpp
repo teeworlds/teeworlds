@@ -986,6 +986,18 @@ static void menu2_render_serverbrowser(RECT main_view)
 	static int selected_index = -1;
 	ui2_hmargin(&scroll, 5.0f, &scroll);
 	scrollvalue = ui2_do_scrollbar_v(&scrollbar, &scroll, scrollvalue);
+	
+	int scrollnum = num_servers-num;
+	if(scrollnum > 0)
+	{
+		if(inp_key_presses(KEY_MOUSE_WHEEL_UP))
+			scrollvalue -= 1.0f/scrollnum;
+		if(inp_key_presses(KEY_MOUSE_WHEEL_DOWN))
+			scrollvalue += 1.0f/scrollnum;
+			
+		if(scrollvalue < 0) scrollvalue = 0;
+		if(scrollvalue > 1) scrollvalue = 1;
+	}
 
 	int start = (int)((num_servers-num)*scrollvalue);
 	if(start < 0)
