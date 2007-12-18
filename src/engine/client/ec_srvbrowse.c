@@ -92,28 +92,36 @@ static int client_serverbrowse_sort_compare_ping(const void *ai, const void *bi)
 {
 	SERVERENTRY *a = serverlist[*(const int*)ai];
 	SERVERENTRY *b = serverlist[*(const int*)bi];
-	return a->info.latency > b->info.latency;
+	if(a->info.latency > b->info.latency) return 1;
+	if(a->info.latency < b->info.latency) return -1;
+	return 0;
 }
 
 static int client_serverbrowse_sort_compare_gametype(const void *ai, const void *bi)
 {
 	SERVERENTRY *a = serverlist[*(const int*)ai];
 	SERVERENTRY *b = serverlist[*(const int*)bi];
-	return a->info.game_type > b->info.game_type;
+	if(a->info.game_type > b->info.game_type) return 1;
+	if(a->info.game_type < b->info.game_type) return -1;
+	return 0;
 }
 
 static int client_serverbrowse_sort_compare_progression(const void *ai, const void *bi)
 {
 	SERVERENTRY *a = serverlist[*(const int*)ai];
 	SERVERENTRY *b = serverlist[*(const int*)bi];
-	return a->info.progression > b->info.progression;
+	if(a->info.progression > b->info.progression) return 1;
+	if(a->info.progression < b->info.progression) return -1;
+	return 0;
 }
 
 static int client_serverbrowse_sort_compare_numplayers(const void *ai, const void *bi)
 {
 	SERVERENTRY *a = serverlist[*(const int*)ai];
 	SERVERENTRY *b = serverlist[*(const int*)bi];
-	return a->info.num_players > b->info.num_players;
+	if(a->info.num_players > b->info.num_players) return 1;
+	if(a->info.num_players < b->info.num_players) return -1;
+	return 0;
 }
 
 static void client_serverbrowse_filter()
