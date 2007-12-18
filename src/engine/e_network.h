@@ -47,6 +47,7 @@ int netserver_send(NETSERVER *s, NETPACKET *packet);
 int netserver_close(NETSERVER *s);
 int netserver_update(NETSERVER *s);
 int netserver_drop(NETSERVER *s, int client_id, const char *reason);
+int netserver_client_addr(NETSERVER *s, int client_id, NETADDR4 *addr);
 int netserver_max_clients(NETSERVER *s);
 void netserver_stats(NETSERVER *s, NETSTATS *stats);
 

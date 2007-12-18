@@ -707,6 +707,28 @@ static void server_send_serverinfo(NETADDR4 *addr)
 	netserver_send(net, &packet);
 }
 
+static void server_dump_status()
+{
+	int i;
+	NETADDR4 addr;
+	dbg_msg("server", "-- status --");
+	for(i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(clients[i].state == SRVCLIENT_STATE_INGAME)
+		{
+			netserver_client_addr(net, i, &addr);
+			dbg_msg("server", "id=%d addr=%d.%d.%d.%d:%d name='%s' score=%d",
+				i, addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3], addr.port,
+				clients[i].name, clients[i].score);
+		}
+	}
+	dbg_msg("server", "-- end status --");
+
+	config.sv_status = 0;
+}
+			
+
+
 
 static void server_send_fwcheckresponse(NETADDR4 *addr)
 {
@@ -972,6 +994,12 @@ static int server_run()
 				}
 	
 				reporttime += time_freq()*reportinterval;
+			}
+			
+			if(config.sv_status)
+			{
+				server_dump_status();
+				config.sv_status = 0;
 			}
 			
 			if(config.dbg_hitch)

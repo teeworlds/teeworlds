@@ -572,8 +572,6 @@ static float evaluate_spawn(spawneval *eval, vec2 pos)
 	else
 		score += 1.0f/d;
 	
-	dbg_msg("", "(%f,%f) = %f", pos.x, pos.y, score);
-	
 	return score;
 }
 

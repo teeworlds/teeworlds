@@ -798,6 +798,12 @@ void netserver_stats(NETSERVER *s, NETSTATS *stats)
 	}
 }
 
+int netserver_client_addr(NETSERVER *s, int client_id, NETADDR4 *addr)
+{
+	*addr = s->slots[client_id].conn.peeraddr;
+	return 1;
+}
+
 NETCLIENT *netclient_open(NETADDR4 bindaddr, int flags)
 {
 	NETCLIENT *client = (NETCLIENT *)mem_alloc(sizeof(NETCLIENT), 1);
