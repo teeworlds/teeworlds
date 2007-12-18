@@ -870,6 +870,9 @@ void gfx_lines_end();
 void gfx_mask_op(int mask, int write);
 void gfx_clear_mask(int fill);
 
+void gfx_clip_enable(int x, int y, int w, int h);
+void gfx_clip_disable();
+
 /* server snap id */
 int snap_new_id();
 void snap_free_id(int id);

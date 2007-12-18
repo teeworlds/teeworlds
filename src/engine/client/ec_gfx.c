@@ -1024,3 +1024,14 @@ void gfx_lines_draw(float x0, float y0, float x1, float y1)
 	
 	draw_line();
 }
+
+void gfx_clip_enable(int x, int y, int w, int h)
+{
+	glScissor(x, gfx_screenheight()-(y+h), w, h);
+	glEnable(GL_SCISSOR_TEST);
+}
+
+void gfx_clip_disable()
+{
+	glDisable(GL_SCISSOR_TEST);
+}

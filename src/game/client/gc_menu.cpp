@@ -121,6 +121,18 @@ float ui2_scale()
     return config.ui_scale/100.0f;
 }
 
+void ui2_clip_enable(const RECT *r)
+{
+	float xscale = gfx_screenwidth()/ui2_screen()->w;
+	float yscale = gfx_screenheight()/ui2_screen()->h;
+	gfx_clip_enable((int)(r->x*xscale), (int)(r->y*yscale), (int)(r->w*xscale), (int)(r->h*yscale));
+}
+
+void ui2_clip_disable()
+{
+	gfx_clip_disable();
+}
+
 void ui2_hsplit_t(const RECT *original, float cut, RECT *top, RECT *bottom)
 {
     RECT r = *original;
@@ -987,7 +999,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 	ui2_hmargin(&scroll, 5.0f, &scroll);
 	scrollvalue = ui2_do_scrollbar_v(&scrollbar, &scroll, scrollvalue);
 	
-	int scrollnum = num_servers-num;
+	int scrollnum = num_servers-num+10;
 	if(scrollnum > 0)
 	{
 		if(inp_key_presses(KEY_MOUSE_WHEEL_UP))
@@ -998,15 +1010,23 @@ static void menu2_render_serverbrowser(RECT main_view)
 		if(scrollvalue < 0) scrollvalue = 0;
 		if(scrollvalue > 1) scrollvalue = 1;
 	}
+	else
+		scrollnum = 0;
 
-	int start = (int)((num_servers-num)*scrollvalue);
+	// set clipping
+	ui2_clip_enable(&view);
+	
+	int start = (int)(scrollnum*scrollvalue);
 	if(start < 0)
 		start = 0;
+	//float extra = (scrollvalue - start/(float)(num_servers-num)) / (1.0f/scrollnum);
+	view.y -= scrollvalue*scrollnum*cols[0].rect.h;
 	
 	//int r = -1;
 	int new_selected = selected_index;
+
 	
-	for (int i = start, k = 0; i < num_servers && k < num; i++, k++)
+	for (int i = 0; i < num_servers; i++)
 	{
 		int item_index = i;
 		SERVER_INFO *item = client_serverbrowse_sorted_get(item_index);
@@ -1052,7 +1072,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 				}
 			}
 			
-			k += h*3/4;
+			//k += h*3/4;
 		}
 		else
 			ui2_hsplit_t(&view, 20.0f, &row, &view);
@@ -1120,6 +1140,8 @@ static void menu2_render_serverbrowser(RECT main_view)
 			}*/
 		}
 	}
+
+	ui2_clip_disable();
 	
 	selected_index = new_selected;
 
