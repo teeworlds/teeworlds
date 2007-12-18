@@ -1079,9 +1079,16 @@ static void menu2_render_serverbrowser(RECT main_view)
 			ui2_hsplit_t(&view, 20.0f, &row, &view);
 
 		// make sure that only those in view can be selected
-		if(row.y > original_view.y)
+		if(row.y+row.h > original_view.y)
 		{
-			if(ui2_do_button(item, "", l, &row, 0, 0))
+			RECT temp = row;
+			if(row.y < original_view.y) // clip the selection
+			{
+				temp.h -= original_view.y-temp.y;
+				temp.y = original_view.y;
+			}
+			
+			if(ui2_do_button(item, "", l, &temp, 0, 0))
 			{
 				new_selected = item_index;
 				dbg_msg("dbg", "addr = %s", item->address);
