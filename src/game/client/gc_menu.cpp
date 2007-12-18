@@ -1019,7 +1019,8 @@ static void menu2_render_serverbrowser(RECT main_view)
 	int start = (int)(scrollnum*scrollvalue);
 	if(start < 0)
 		start = 0;
-	//float extra = (scrollvalue - start/(float)(num_servers-num)) / (1.0f/scrollnum);
+	
+	RECT original_view = view;
 	view.y -= scrollvalue*scrollnum*cols[0].rect.h;
 	
 	//int r = -1;
@@ -1077,14 +1078,22 @@ static void menu2_render_serverbrowser(RECT main_view)
 		else
 			ui2_hsplit_t(&view, 20.0f, &row, &view);
 
-		if(ui2_do_button(item, "", l, &row, 0, 0))
+		// make sure that only those in view can be selected
+		if(row.y > original_view.y)
 		{
-			new_selected = item_index;
-			dbg_msg("dbg", "addr = %s", item->address);
-			strncpy(config.ui_server_address, item->address, sizeof(config.ui_server_address));
-			if(inp_mouse_doubleclick())
-				client_connect(config.ui_server_address);
+			if(ui2_do_button(item, "", l, &row, 0, 0))
+			{
+				new_selected = item_index;
+				dbg_msg("dbg", "addr = %s", item->address);
+				strncpy(config.ui_server_address, item->address, sizeof(config.ui_server_address));
+				if(inp_mouse_doubleclick())
+					client_connect(config.ui_server_address);
+			}
 		}
+		
+		// check if we need to do more
+		if(row.y > original_view.y+original_view.h)
+			break;
 
 		for(int c = 0; c < num_cols; c++)
 		{
