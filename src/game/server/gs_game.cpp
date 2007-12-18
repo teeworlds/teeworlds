@@ -209,7 +209,7 @@ void gameobject::tick()
 
 	if(warmup)
 		prog = -1;
-	
+		
 	server_setbrowseinfo(gametype, prog);
 }
 
@@ -260,6 +260,15 @@ void gameobject::do_team_wincheck()
 				sudden_death = 1;
 		}
 	}
+}
+
+int gameobject::clampteam(int team)
+{
+	if(team < 0) // spectator
+		return -1;
+	if(is_teamplay)
+		return team&1;
+	return  0;
 }
 
 gameobject *gameobj = 0;

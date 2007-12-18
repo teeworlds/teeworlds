@@ -209,6 +209,10 @@ void server_setbrowseinfo(int game_type, int progression)
 {
 	browseinfo_gametype = game_type;
 	browseinfo_progression = progression;
+	if(browseinfo_progression > 100)
+		browseinfo_progression = 100;
+	if(browseinfo_progression < -1)
+		browseinfo_progression = -1;
 }
 
 void server_kick(int client_id, const char *reason)

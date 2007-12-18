@@ -451,6 +451,7 @@ void player::reset()
 	clear_flag(entity::FLAG_PHYSICS);
 	spawning = false;
 	die_tick = 0;
+	die_pos = vec2(0,0);
 	damage_taken = 0;
 	state = STATE_UNKNOWN;
 
@@ -508,6 +509,8 @@ const char *get_team_name(int team)
 
 void player::set_team(int new_team)
 {
+	// clamp the team
+	new_team = gameobj->clampteam(new_team);
 	if(team == new_team)
 		return;
 		
@@ -521,19 +524,79 @@ void player::set_team(int new_team)
 	dbg_msg("game", "cid=%d team=%d", client_id, team);
 }
 
+struct spawneval
+{
+	spawneval()
+	{
+		got = false;
+		friendly_team = -1;
+		die_pos = vec2(0,0);
+		pos = vec2(100,100);
+	}
+		
+	vec2 pos;
+	bool got;
+	int friendly_team;
+	float score;
+	vec2 die_pos;
+};
 
-bool try_spawntype(int t, vec2 *outpos)
+static float evaluate_spawn(spawneval *eval, vec2 pos)
+{
+	float score = 0.0f;
+	
+	for(int c = 0; c < MAX_CLIENTS; c++)
+	{
+		if(players[c].client_id == -1)
+			continue;
+			
+		// don't count dead people
+		if(!(players[c].flags&entity::FLAG_PHYSICS))
+			continue;
+		
+		// don't count friends
+		if(eval->friendly_team != -1 && players[c].team == eval->friendly_team)
+			continue;
+			
+		float d = distance(pos, players[c].pos);
+		if(d == 0)
+			score += 1000000000.0f;
+		else
+			score += 1.0f/d;
+	}
+	
+	// weight in the die posititon
+	float d = distance(pos, eval->die_pos);
+	if(d == 0)
+		score += 1000000000.0f;
+	else
+		score += 1.0f/d;
+	
+	dbg_msg("", "(%f,%f) = %f", pos.x, pos.y, score);
+	
+	return score;
+}
+
+static void evaluate_spawn_type(spawneval *eval, int t)
 {
 	// get spawn point
 	int start, num;
 	map_get_type(t, &start, &num);
 	if(!num)
-		return false;
+		return;
 
-	int id = rand()%num;
-	mapres_spawnpoint *sp = (mapres_spawnpoint*)map_get_item(start + id, NULL, NULL);
-	*outpos = vec2((float)sp->x, (float)sp->y);
-	return true;
+	for(int i  = 0; i < num; i++)
+	{
+		mapres_spawnpoint *sp = (mapres_spawnpoint*)map_get_item(start + i, NULL, NULL);
+		vec2 p = vec2((float)sp->x, (float)sp->y);
+		float s = evaluate_spawn(eval, p);
+		if(!eval->got || eval->score > s)
+		{
+			eval->got = true;
+			eval->score = s;
+			eval->pos = p;
+		}
+	}
 }
 
 void player::try_respawn()
@@ -541,20 +604,33 @@ void player::try_respawn()
 	vec2 spawnpos = vec2(100.0f, -60.0f);
 	
 	// get spawn point
+	spawneval eval;
+	eval.die_pos = die_pos;
+	
 	if(gameobj->gametype == GAMETYPE_CTF)
 	{
+		eval.friendly_team = team;
+		
 		// try first try own team spawn, then normal spawn and then enemy
-		if(!try_spawntype(MAPRES_SPAWNPOINT_RED+(team&1), &spawnpos))
+		evaluate_spawn_type(&eval, MAPRES_SPAWNPOINT_RED+(team&1));
+		if(!eval.got)
 		{
-			if(!try_spawntype(MAPRES_SPAWNPOINT, &spawnpos))
-				try_spawntype(MAPRES_SPAWNPOINT_RED+((team+1)&1), &spawnpos);
+			evaluate_spawn_type(&eval, MAPRES_SPAWNPOINT);
+			if(!eval.got)
+				evaluate_spawn_type(&eval, MAPRES_SPAWNPOINT_RED+((team+1)&1));
 		}
 	}
 	else
 	{
-		if(!try_spawntype(MAPRES_SPAWNPOINT, &spawnpos))
-			try_spawntype(MAPRES_SPAWNPOINT_RED+(rand()&1), &spawnpos);
+		if(gameobj->gametype == GAMETYPE_TDM)
+			eval.friendly_team = team;
+			
+		evaluate_spawn_type(&eval, MAPRES_SPAWNPOINT);
+		evaluate_spawn_type(&eval, MAPRES_SPAWNPOINT_RED);
+		evaluate_spawn_type(&eval, MAPRES_SPAWNPOINT_BLUE);
 	}
+	
+	spawnpos = eval.pos;
 
 	// check if the position is occupado
 	entity *ents[2] = {0};
@@ -1246,6 +1322,7 @@ void player::die(int killer, int weapon)
 	create_sound(pos, SOUND_PLAYER_DIE);
 
 	// set dead state
+	die_pos = pos;
 	dead = true;
 	die_tick = server_tick();
 	clear_flag(FLAG_PHYSICS);

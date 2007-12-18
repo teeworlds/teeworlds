@@ -151,6 +151,7 @@ public:
 	
 	virtual void snap(int snapping_client);
 	virtual int getteam(int notthisid);
+	int clampteam(int team);
 };
 
 extern gameobject *gameobj;
@@ -285,6 +286,7 @@ public:
 	bool spawning;
 	bool dead;
 	int die_tick;
+	vec2 die_pos;
 	
 	// latency calculations
 	int latency_accum;

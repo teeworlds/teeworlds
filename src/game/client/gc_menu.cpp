@@ -345,7 +345,10 @@ static void ui2_draw_browse_icon(int what, const RECT *r)
 	gfx_texture_set(data->images[IMAGE_BROWSEICONS].id);
 	gfx_quads_begin();
 	select_sprite(SPRITE_BROWSE_PROGRESS1); // default
-	if(what <= 100)
+	if(what == -1)
+	{
+	}
+	else if(what <= 100)
 	{
 		if(what < 66)
 			select_sprite(SPRITE_BROWSE_PROGRESS2);
@@ -1137,6 +1140,8 @@ static void menu2_render_serverbrowser(RECT main_view)
 			}
 			else if(id == COL_PROGRESS)
 			{
+				if(item->progression > 100)
+					item->progression = 100;
 				ui2_draw_browse_icon(item->progression, &button);
 			}
 			else if(id == COL_GAMETYPE)
