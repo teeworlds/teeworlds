@@ -926,6 +926,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 		COL_PLAYERS,
 		COL_PING,
 		COL_PROGRESS,
+		COL_VERSION,
 	};
 	
 	static column cols[] = {
@@ -936,6 +937,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 		{COL_MAP,		BROWSESORT_MAP,			"Map", 		1, 100.0f, 0, {0}, {0}},
 		{COL_PLAYERS,	BROWSESORT_NUMPLAYERS,	"Players",	1, 60.0f, 0, {0}, {0}},
 		{-1,			-1,						" ",		1, 10.0f, 0, {0}, {0}},
+		{COL_VERSION,	-1,						"Ver",		1, 40.0f, FIXED, {0}, {0}},
 		{COL_PROGRESS,	BROWSESORT_PROGRESSION,	"%",		1, 20.0f, FIXED, {0}, {0}},
 		{COL_PING,		BROWSESORT_PING,		"Ping",		1, 40.0f, FIXED, {0}, {0}},
 	};
@@ -1144,6 +1146,13 @@ static void menu2_render_serverbrowser(RECT main_view)
 					item->progression = 100;
 				ui2_draw_browse_icon(item->progression, &button);
 			}
+			else if(id == COL_VERSION)
+			{
+				const char *version = item->version;
+				if(strcmp(version, "0.3 e2d7973c6647a13c") == 0) // TODO: remove me later on
+					version = "0.3.0";
+				ui2_do_label(&button, version, 20.0f, 1);
+			}			
 			else if(id == COL_GAMETYPE)
 			{
 				const char *type = "???";

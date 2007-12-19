@@ -1924,11 +1924,11 @@ void mods_message(int msg, int client_id)
 		players[client_id].color_feet = msg_unpack_int();
 
 		// check for invalid chars
-		const char *p = name;
+		unsigned char *p = (unsigned char *)name;
 		while (*p)
 		{
 			if(*p < 32)
-				return;
+				*p = ' ';
 			p++;
 		}
 
@@ -2086,3 +2086,4 @@ void mods_postsnap()
 }
 
 extern "C" const char *mods_net_version() { return TEEWARS_NETVERSION; }
+extern "C" const char *mods_version() { return TEEWARS_VERSION; }

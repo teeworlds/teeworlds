@@ -667,7 +667,7 @@ static void server_send_serverinfo(NETADDR4 *addr)
 	
 	packer_reset(&p);
 	packer_add_raw(&p, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
-	packer_add_string(&p, mods_net_version(), 32);
+	packer_add_string(&p, mods_version(), 32);
 	packer_add_string(&p, config.sv_name, 64);
 	packer_add_string(&p, config.sv_map, 32);
 

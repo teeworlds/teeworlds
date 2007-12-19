@@ -750,6 +750,7 @@ void mods_connected(int client_id);
 
 const char *modc_net_version();
 const char *mods_net_version();
+const char *mods_version();
 
 /* server */
 int server_getclientinfo(int client_id, CLIENT_INFO *info);
