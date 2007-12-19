@@ -3,15 +3,20 @@
 
 @interface ServerView : NSTextView
 {
+	NSTask *task;
 	NSFileHandle *file;
 }
-- (void)listenTo: (NSFileHandle*)f;
+- (void)listenTo: (NSTask*)t;
 @end
 
 @implementation ServerView
-- (void)listenTo: (NSFileHandle*)f;
+- (void)listenTo: (NSTask*)t;
 {
-	file = f;
+	NSPipe *pipe;
+	task = t;
+    pipe = [NSPipe pipe];
+    [task setStandardOutput: pipe];
+    file = [pipe fileHandleForReading];
 
 	[[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(outputNotification:) name: NSFileHandleReadCompletionNotification object: file];
 
@@ -35,6 +40,7 @@
 
 -(void)windowWillClose:(NSNotification *)notification
 {
+	[task terminate]
     [NSApp terminate:self];
 }
 @end
@@ -49,12 +55,6 @@ int main(int argc, char **argv)
 	NSTask *task;
     task = [[NSTask alloc] init];
 	[task setCurrentDirectoryPath: [mainBundle resourcePath]]; 
-	NSPipe *pipe;
-	NSFileHandle *file;
-    pipe = [NSPipe pipe];
-    [task setStandardOutput: pipe];
-    file = [pipe fileHandleForReading];
-
 
 	if(mod & optionKey)
 	{
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
 		[window setDelegate: view];
 		[window makeKeyAndOrderFront: nil];
 
-		[view listenTo: file];
+		[view listenTo: task];
 		[task setLaunchPath: [mainBundle pathForAuxiliaryExecutable: @"teewars_srv"]];
 		[task launch];
 		[NSApp run];
@@ -93,10 +93,7 @@ int main(int argc, char **argv)
 		// run client
 		[task setLaunchPath: [mainBundle pathForAuxiliaryExecutable: @"teewars"]];
 		[task launch];
-		[task waitUntilExit];
 	}
-
-
 
     [NSApp release];
     [pool release];

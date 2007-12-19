@@ -707,7 +707,7 @@ int  _glfwPlatformOpenWindow( int width,
             return GL_FALSE;
         }
 
-        if (_glfwLibrary.Unbundled)
+        //if (_glfwLibrary.Unbundled)
         {
             if( GetCurrentProcess( &psn ) != noErr )
             {

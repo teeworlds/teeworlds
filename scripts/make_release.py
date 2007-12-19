@@ -99,7 +99,7 @@ if use_bundle:
         <key>CFBundleDevelopmentRegion</key>
         <string>English</string>
         <key>CFBundleExecutable</key>
-        <string>TeeLaunch</string>
+        <string>teewars</string>
         <key>CFBundleIconFile</key>
         <string>Teewars</string>
         <key>CFBundleInfoDictionaryVersion</key>
