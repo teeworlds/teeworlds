@@ -939,7 +939,8 @@ static void menu2_render_serverbrowser(RECT main_view)
 		{COL_MAP,		BROWSESORT_MAP,			"Map", 		1, 100.0f, 0, {0}, {0}},
 		{COL_PLAYERS,	BROWSESORT_NUMPLAYERS,	"Players",	1, 60.0f, 0, {0}, {0}},
 		{-1,			-1,						" ",		1, 10.0f, 0, {0}, {0}},
-		{COL_VERSION,	-1,						"Ver",		1, 40.0f, FIXED, {0}, {0}},
+		{COL_VERSION,	-1,						"Ver",		1, 45.0f, FIXED, {0}, {0}},
+		{-1,			-1,						" ",		1, 5.0f, 0, {0}, {0}},
 		{COL_PROGRESS,	BROWSESORT_PROGRESSION,	"%",		1, 20.0f, FIXED, {0}, {0}},
 		{COL_PING,		BROWSESORT_PING,		"Ping",		1, 40.0f, FIXED, {0}, {0}},
 	};
