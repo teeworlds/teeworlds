@@ -35,6 +35,8 @@ extern const obj_game *gameobj;
 extern bool menu_active;
 extern bool menu_game_active;
 
+static bool need_restart = false;
+
 enum
 {
 	POPUP_NONE=0,
@@ -1530,6 +1532,8 @@ static void menu2_render_settings_graphics(RECT main_view)
 			config.gfx_color_depth = depth;
 			config.gfx_screen_width = modes[i].width;
 			config.gfx_screen_height = modes[i].height;
+			if(!selected)
+				need_restart = true;
 		}
 		
 		ui2_hsplit_t(&list, 20, &button, &list);
@@ -1539,7 +1543,10 @@ static void menu2_render_settings_graphics(RECT main_view)
 	// switches
 	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
 	if (ui2_do_button(&config.gfx_fullscreen, "Fullscreen", config.gfx_fullscreen, &button, ui2_draw_checkbox, 0))
+	{
 		config.gfx_fullscreen ^= 1;
+		need_restart = true;
+	}
 
 	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
 	if (ui2_do_button(&config.gfx_vsync, "V-Sync", config.gfx_vsync, &button, ui2_draw_checkbox, 0))
@@ -1554,16 +1561,23 @@ static void menu2_render_settings_graphics(RECT main_view)
 		else if(config.gfx_fsaa_samples < 8) config.gfx_fsaa_samples = 8;
 		else if(config.gfx_fsaa_samples < 16) config.gfx_fsaa_samples = 16;
 		else if(config.gfx_fsaa_samples >= 16) config.gfx_fsaa_samples = 0;
+		need_restart = true;
 	}
 		
 	ui2_hsplit_t(&main_view, 40.0f, &button, &main_view);
 	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
 	if (ui2_do_button(&config.gfx_texture_quality, "Quality Textures", config.gfx_texture_quality, &button, ui2_draw_checkbox, 0))
+	{
 		config.gfx_texture_quality ^= 1;
+		need_restart = true;
+	}
 
 	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
 	if (ui2_do_button(&config.gfx_texture_compression, "Texture Compression", config.gfx_texture_compression, &button, ui2_draw_checkbox, 0))
+	{
 		config.gfx_texture_compression ^= 1;
+		need_restart = true;
+	}
 
 	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
 	if (ui2_do_button(&config.gfx_high_detail, "High Detail", config.gfx_high_detail, &button, ui2_draw_checkbox, 0))
@@ -1602,7 +1616,10 @@ static void menu2_render_settings_sound(RECT main_view)
 	
 	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
 	if (ui2_do_button(&config.snd_enable, "Use Sounds", config.snd_enable, &button, ui2_draw_checkbox, 0))
+	{
 		config.snd_enable ^= 1;
+		need_restart = true;
+	}
 	
 	if(!config.snd_enable)
 		return;
@@ -1616,7 +1633,11 @@ static void menu2_render_settings_sound(RECT main_view)
 		ui2_vsplit_l(&button, 110.0f, 0, &button);
 		ui2_vsplit_l(&button, 180.0f, &button, 0);
 		ui2_do_edit_box(&config.snd_rate, &button, buf, sizeof(buf));
+		int before = config.snd_rate;
 		config.snd_rate = atoi(buf);
+		
+		if(config.snd_rate != before)
+			need_restart = true;
 
 		if(config.snd_rate < 1)
 			config.snd_rate = 1;
@@ -1688,6 +1709,13 @@ static void menu2_render_settings(RECT main_view)
 		menu2_render_settings_graphics(main_view);
 	else if(settings_page == 4)
 		menu2_render_settings_sound(main_view);
+
+	if(need_restart)
+	{
+		RECT restart_warning;
+		ui2_hsplit_b(&main_view, 40, &main_view, &restart_warning);
+		ui2_do_label(&restart_warning, "You must restart Teewars for all settings to take effect.", 20, -1, 220);
+	}
 }
 
 static void menu2_render_news(RECT main_view)
