@@ -1423,7 +1423,20 @@ static void render_player(
 		//gfx_quads_begin();
 
 		vec2 pos = position;
-		vec2 hook_pos = mix(vec2(prev.hook_x, prev.hook_y), vec2(player.hook_x, player.hook_y), intratick);
+		vec2 hook_pos;
+		
+		if(player_char->hooked_player != -1)
+		{
+			if(local_info && player_char->hooked_player == local_info->clientid)
+			{
+				hook_pos = mix(vec2(predicted_prev_player.pos.x, predicted_prev_player.pos.y),
+					vec2(predicted_player.pos.x, predicted_player.pos.y), client_intrapredtick());
+			}
+			else
+				hook_pos = mix(vec2(prev_char->hook_x, prev_char->hook_y), vec2(player_char->hook_x, player_char->hook_y), client_intratick());
+		}
+		else
+			hook_pos = mix(vec2(prev.hook_x, prev.hook_y), vec2(player.hook_x, player.hook_y), intratick);
 
 		float d = distance(pos, hook_pos);
 		vec2 dir = normalize(pos-hook_pos);
