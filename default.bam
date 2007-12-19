@@ -299,18 +299,18 @@ function build(settings)
 	m = PseudoTarget("masterserver".."_"..settings.config_name, masterserver_exe)
 	t = PseudoTarget("tools".."_"..settings.config_name, tools)
 
-	if platform == "macosx" then
-		o = PseudoTarget("TeeLaunch".."_"..settings.config_name, osxlaunch_exe)
-	else
-		o = { }
-	end
-
 	Target(c)
 	Target(s)
 	Target(m)
 	Target(t)
-	Target(o)
-	all = PseudoTarget(settings.config_name, c, s, m, t, o)
+	
+	if platform == "macosx" then
+		o = PseudoTarget("TeeLaunch".."_"..settings.config_name, osxlaunch_exe)
+		all = PseudoTarget(settings.config_name, c, s, m, t, o)
+	else
+		all = PseudoTarget(settings.config_name, c, s, m, t)
+	end
+
 	Target(all)
 	return all
 end
