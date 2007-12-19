@@ -89,6 +89,8 @@ if use_bundle:
 	copydir("data", bundle_resource_dir)
 	shutil.copy("other/icons/Teewars.icns", bundle_resource_dir)
 	shutil.copy("teewars"+exe_ext, bundle_bin_dir)
+	shutil.copy("teewars_srv"+exe_ext, bundle_bin_dir)
+	shutil.copy("TeeLaunch"+exe_ext, bundle_bin_dir)
 	file(os.path.join(bundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -97,7 +99,7 @@ if use_bundle:
         <key>CFBundleDevelopmentRegion</key>
         <string>English</string>
         <key>CFBundleExecutable</key>
-        <string>teewars</string>
+        <string>TeeLaunch</string>
         <key>CFBundleIconFile</key>
         <string>Teewars</string>
         <key>CFBundleInfoDictionaryVersion</key>

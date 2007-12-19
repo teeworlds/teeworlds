@@ -232,6 +232,7 @@ function build(settings)
 			client_settings.linker.frameworks:add("OpenGL")
             client_settings.linker.frameworks:add("AGL")
             client_settings.linker.frameworks:add("Carbon")
+            client_settings.linker.frameworks:add("Cocoa")
 			client_settings.linker.frameworks:add("CoreAudio")
 			client_settings.linker.frameworks:add("AudioToolbox")
 			client_settings.linker.frameworks:add("AudioUnit")
@@ -263,6 +264,10 @@ function build(settings)
 	game_server = Compile(settings, Collect("src/game/server/*.cpp"), serverdata.source, serverdata.cdata)
 	editor = Compile(settings, Collect("src/editor/*.cpp"))
 
+	if platform == "macosx" then
+		osxlaunch = Compile(settings, Collect("src/osxlaunch/*.m"))
+	end
+
 	-- build tools (TODO: fix this so we don't get double _d_d stuff)
 	tools_src = Collect("src/tools/*.cpp", "src/tools/*.c")
 	
@@ -284,16 +289,28 @@ function build(settings)
 	masterserver_exe = Link(server_settings, "mastersrv", masterserver,
 		engine, zlib)
 
+	if platform == "macosx" then
+		osxlaunch_exe = Link(client_settings, "TeeLaunch", osxlaunch)
+	end
+
 	-- make targets
 	c = PseudoTarget("client".."_"..settings.config_name, client_exe)
 	s = PseudoTarget("server".."_"..settings.config_name, server_exe)
 	m = PseudoTarget("masterserver".."_"..settings.config_name, masterserver_exe)
 	t = PseudoTarget("tools".."_"..settings.config_name, tools)
+
+	if platform == "macosx" then
+		o = PseudoTarget("TeeLaunch".."_"..settings.config_name, osxlaunch_exe)
+	else
+		o = { }
+	end
+
 	Target(c)
 	Target(s)
 	Target(m)
 	Target(t)
-	all = PseudoTarget(settings.config_name, c, s, m, t)
+	Target(o)
+	all = PseudoTarget(settings.config_name, c, s, m, t, o)
 	Target(all)
 	return all
 end
