@@ -2802,9 +2802,9 @@ void render_game()
 			else if(chat_lines[r].team)
 				gfx_pretty_text_color(0.5f,1,0.5f,1); // team message
 			else if(chat_lines[r].name_color == 0)
-				gfx_pretty_text_color(1.0f,0.5f,0.5f,1); // 
+				gfx_pretty_text_color(1.0f,0.5f,0.5f,1); // red
 			else if(chat_lines[r].name_color == 1)
-				gfx_pretty_text_color(0.5f,0.5f,1.0f,1); // 
+				gfx_pretty_text_color(0.7f,0.7f,1.0f,1); // blue
 				
 			// render line
 			int lines = int(gfx_pretty_text_width(10, chat_lines[r].text, -1)) / 300 + 1;
