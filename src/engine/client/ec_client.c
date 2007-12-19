@@ -553,6 +553,7 @@ static const char *client_load_map(const char *mapname, int wanted_crc)
 		return errormsg;
 	}
 	
+	recived_snapshots = 0;
 	map_set(df);
 	return NULL;
 }
