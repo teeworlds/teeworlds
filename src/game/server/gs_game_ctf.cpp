@@ -81,7 +81,7 @@ void gameobject_ctf::tick()
 			
 			if(flags[fi^1]->at_stand)
 			{
-				if(distance(f->pos, flags[fi^1]->pos) < 24)
+				if(distance(f->pos, flags[fi^1]->pos) < 32)
 				{
 					// CAPTURE! \o/
 					teamscore[fi^1] += 100;
