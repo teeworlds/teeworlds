@@ -1000,7 +1000,7 @@ int player::handle_weapons()
 		if(active_weapon == WEAPON_ROCKET || active_weapon == WEAPON_SHOTGUN)
 			fullauto = true;
 		
-		if(count_input(previnput.fire, input.fire).presses || (fullauto && input.fire&1))
+		if(count_input(previnput.fire, input.fire).presses || ((fullauto && input.fire&1) && weapons[active_weapon].ammo))
 		{
 			// fire!
 			if(weapons[active_weapon].ammo)
