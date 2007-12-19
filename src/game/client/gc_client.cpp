@@ -2442,6 +2442,7 @@ void render_game()
 	}
 
 	// update some input
+	if(!menu_active && chat_mode == CHATMODE_NONE)
 	{
 		if(!emoticon_selector_active)
 		{
