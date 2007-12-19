@@ -40,7 +40,7 @@
 
 -(void)windowWillClose:(NSNotification *)notification
 {
-	[task terminate]
+	[task terminate];
     [NSApp terminate:self];
 }
 @end
