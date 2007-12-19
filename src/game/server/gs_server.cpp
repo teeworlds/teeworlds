@@ -1213,10 +1213,12 @@ void player::tick()
 	// TODO: rework the input to be more robust
 	if(dead)
 	{
+		if(server_tick()-die_tick >= server_tickspeed()/2 && count_input(previnput.fire, input.fire).presses)
+			die_tick = -1;
 		if(server_tick()-die_tick >= server_tickspeed()*5) // auto respawn after 3 sec
 			respawn();
-		if((input.fire&1) && server_tick()-die_tick >= server_tickspeed()/2) // auto respawn after 0.5 sec
-			respawn();
+		//if((input.fire&1) && server_tick()-die_tick >= server_tickspeed()/2) // auto respawn after 0.5 sec
+			//respawn();
 		return;
 	}
 
