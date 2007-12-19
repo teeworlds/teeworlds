@@ -579,7 +579,7 @@ static void client_process_packet(NETPACKET *packet)
 				const char *tmp = (const char *)&addr.port;
 				addr.port = (tmp[1]<<8) | tmp[0];
 #endif
-				
+
 				info.latency = 999;
 				sprintf(info.address, "%d.%d.%d.%d:%d",
 					addr.ip[0], addr.ip[1], addr.ip[2],
@@ -588,7 +588,7 @@ static void client_process_packet(NETPACKET *packet)
 					addr.ip[0], addr.ip[1], addr.ip[2],
 					addr.ip[3], addr.port);
 				
-				client_serverbrowse_set(addrs+i, 1, &info);
+				client_serverbrowse_set(&addr, 1, &info);
 			}
 		}
 
