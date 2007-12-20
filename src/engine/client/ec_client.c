@@ -396,6 +396,8 @@ void client_connect(const char *server_address_str)
 	const char *port_str = 0;
 	int k;
 	int port = 8303;
+	
+	client_disconnect();
 
 	dbg_msg("client", "connecting to '%s'", server_address_str);
 
@@ -435,9 +437,7 @@ void client_disconnect_with_reason(const char *reason)
 
 void client_disconnect()
 {
-	netclient_disconnect(net, 0);
-	client_set_state(CLIENTSTATE_OFFLINE);
-	map_unload();
+	client_disconnect_with_reason(0);
 }
 
 static int client_load_data()

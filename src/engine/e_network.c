@@ -208,6 +208,7 @@ static void conn_reset(NETCONNECTION *conn)
 	conn->last_recv_time = 0;
 	conn->last_update_time = 0;
 	conn->token = -1;
+	mem_zero(&conn->peeraddr, sizeof(conn->peeraddr));
 	
 	rb_clear(&conn->buffer);
 }
