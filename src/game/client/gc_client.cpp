@@ -495,7 +495,7 @@ void chat_add_line(int client_id, int team, const char *line)
 	chat_lines[chat_current_line].tick = client_tick();
 	chat_lines[chat_current_line].client_id = client_id;
 	chat_lines[chat_current_line].team = team;
-	chat_lines[chat_current_line].name_color = -1;
+	chat_lines[chat_current_line].name_color = -2;
 
 	if(client_id == -1) // server message
 	{
@@ -504,6 +504,9 @@ void chat_add_line(int client_id, int team, const char *line)
 	}
 	else
 	{
+		if(client_datas[client_id].team == -1)
+			chat_lines[chat_current_line].name_color = -1;
+
 		if(gameobj && gameobj->gametype != GAMETYPE_DM)
 		{
 			if(client_datas[client_id].team == 0)
@@ -2229,9 +2232,11 @@ void render_world(float center_x, float center_y, float zoom)
 				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
 				const void *prev_info = snap_find_item(SNAP_PREV, OBJTYPE_PLAYER_INFO, item.id);
 				const void *info = snap_find_item(SNAP_CURRENT, OBJTYPE_PLAYER_INFO, item.id);
+
+				client_datas[((const obj_player_info *)info)->clientid].team = ((const obj_player_info *)info)->team;
+				
 				if(prev && prev_info && info)
 				{
-					client_datas[((const obj_player_info *)info)->clientid].team = ((const obj_player_info *)info)->team;
 					render_player(
 							(const obj_player_character *)prev,
 							(const obj_player_character *)data,
@@ -2797,15 +2802,17 @@ void render_game()
 			float begin = x;
 
 			// render name
-			gfx_pretty_text_color(1,1,1,1);
+			gfx_pretty_text_color(0.8f,0.8f,0.8f,1);
 			if(chat_lines[r].client_id == -1)
 				gfx_pretty_text_color(1,1,0.5f,1); // system
 			else if(chat_lines[r].team)
-				gfx_pretty_text_color(0.5f,1,0.5f,1); // team message
+				gfx_pretty_text_color(0.45f,0.9f,0.45f,1); // team message
 			else if(chat_lines[r].name_color == 0)
 				gfx_pretty_text_color(1.0f,0.5f,0.5f,1); // red
 			else if(chat_lines[r].name_color == 1)
 				gfx_pretty_text_color(0.7f,0.7f,1.0f,1); // blue
+			else if(chat_lines[r].name_color == -1)
+				gfx_pretty_text_color(0.75f,0.5f,0.75f, 1); // spectator
 				
 			// render line
 			int lines = int(gfx_pretty_text_width(10, chat_lines[r].text, -1)) / 300 + 1;
