@@ -1040,6 +1040,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 		int item_index = i;
 		SERVER_INFO *item = client_serverbrowse_sorted_get(item_index);
 		RECT row;
+        RECT select_hit_box;
 			
 		int l = selected_index==item_index;
 		
@@ -1050,6 +1051,8 @@ static void menu2_render_serverbrowser(RECT main_view)
 			int h = (item->num_players+2)/3;
 			
 			ui2_hsplit_t(&view, 25.0f+h*15.0f, &whole, &view);
+
+            select_hit_box = whole;
 			
 			RECT r = whole;
 			ui2_margin(&r, 1.5f, &r);
@@ -1057,6 +1060,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 			
 			ui2_hsplit_t(&whole, 20.0f, &row, &whole);
 			ui2_vsplit_l(&whole, 50.0f, 0, &whole);
+
 			
 			for(int p = 0; p < item->num_players; p+=3)
 			{
@@ -1084,19 +1088,21 @@ static void menu2_render_serverbrowser(RECT main_view)
 			//k += h*3/4;
 		}
 		else
+        {
 			ui2_hsplit_t(&view, 20.0f, &row, &view);
+            select_hit_box = row;
+        }
 
 		// make sure that only those in view can be selected
 		if(row.y+row.h > original_view.y)
 		{
-			RECT temp = row;
-			if(row.y < original_view.y) // clip the selection
+			if(select_hit_box.y < original_view.y) // clip the selection
 			{
-				temp.h -= original_view.y-temp.y;
-				temp.y = original_view.y;
+				select_hit_box.h -= original_view.y-select_hit_box.y;
+				select_hit_box.y = original_view.y;
 			}
 			
-			if(ui2_do_button(item, "", l, &temp, 0, 0))
+			if(ui2_do_button(item, "", l, &select_hit_box, 0, 0))
 			{
 				new_selected = item_index;
 				dbg_msg("dbg", "addr = %s", item->address);
