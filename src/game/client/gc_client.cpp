@@ -1063,7 +1063,7 @@ static void render_flag(const obj_flag *prev, const obj_flag *current)
 	if(local_info && current->carried_by == local_info->clientid)
 		pos = local_character_pos;
 
-    gfx_setcolor(current->team ? 0 : 1,0,current->team ? 1 : 0,1);
+    //gfx_setcolor(current->team ? 0 : 1,0,current->team ? 1 : 0,1);
     //draw_sprite(pos.x, pos.y, size);
     gfx_quads_draw(pos.x, pos.y-size*0.75f, size, size*2);
     gfx_quads_end();
