@@ -554,6 +554,7 @@ int gfx_load_png(IMAGE_INFO *img, const char *filename)
 	{
 		dbg_msg("game/png", "invalid format. filename='%s'", filename);
 		png_close_file(&png);
+        return 0;
 	}
 		
 	buffer = (unsigned char *)mem_alloc(png.width * png.height * png.bpp, 1);

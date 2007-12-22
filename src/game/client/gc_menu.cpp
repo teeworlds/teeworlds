@@ -1831,6 +1831,8 @@ void menu_do_connected()
 
 void menu_init()
 {
+    int i;
+
 	if(config.cl_show_welcome)
 		popup = POPUP_FIRST_LAUNCH;
 	config.cl_show_welcome = 0;
