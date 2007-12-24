@@ -856,6 +856,7 @@ void client_serverbrowse_update();
 
 /* undocumented graphics stuff */
 
+void gfx_text(void *font, float x, float y, const char *text, float size);
 void gfx_pretty_text_color(float r, float g, float b, float a);
 void gfx_pretty_text(float x, float y, float size, const char *text, int max_width);
 float gfx_pretty_text_width(float size, const char *text, int length);

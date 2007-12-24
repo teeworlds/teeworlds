@@ -9,6 +9,7 @@ def convert(input, output):
                 dic = {}
 
                 for part in parts:
+                    print parts, part
                     key, value = part.split('=')
 
                     try:
@@ -19,8 +20,26 @@ def convert(input, output):
                 return dic
 
             def get_entry(line):
+                while line[-1] == "\r" or line[-1] == "\n":
+                    line = line[0:-1]
+                parts = []
 
-                parts = line.split()
+                quote = 0
+                part = ""
+
+                for c in line:
+                    if c == "\"":
+                        quote = 1-quote
+                    elif c == " " and not quote:
+                        if part:
+                            parts.append(part)
+                            part = ""
+                    else:
+                        part += c
+
+                if part:
+                    parts.append(part)
+
                 type = parts[0]
 
                 dic = build_dic(parts[1:])
@@ -80,7 +99,8 @@ def convert(input, output):
                 kernings.append(None)
 
             def save_char(dic):
-                chars[dic["id"]] = dic
+                if dic["id"] < 256:
+                    chars[dic["id"]] = dic
 
             def save_kerning(dic):
                 kernings[dic["first"] + dic["second"]*256] = dic

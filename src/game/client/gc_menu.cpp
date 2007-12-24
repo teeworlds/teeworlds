@@ -12,6 +12,7 @@ extern "C" {
 	#include <engine/e_interface.h>
 	#include <engine/e_config.h>
 	#include <engine/client/ec_ui.h>
+	#include <engine/client/ec_font.h>
 }
 
 #include "../g_mapres.h"
@@ -1875,6 +1876,34 @@ int menu2_render()
 	
     RECT screen = *ui2_screen();
 	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
+
+    if (1)
+    {
+        static FONT_SET font_set;
+        static bool first = true;
+
+        if (first)
+        {
+            font_set_load(&font_set, "fonts/vera%d.tfnt", "fonts/vera%d.png", 4, 8, 10, 12, 14);
+            first = false;
+        }
+
+        gfx_clear(0.65f,0.78f,0.9f);
+        //gfx_pretty_text_color(0.0f, 0.0f, 0.0f, 1.0f);
+        //gfx_pretty_text_color(0.0f, 0.0f, 0.0f, 1.0f);
+
+        for (int i = 0; i < 24; i++)
+        {
+            float size = i * 0.5 + 8;
+            char temp[64];
+            sprintf(temp, "%f: Ingen tomte i jul", size);
+            gfx_pretty_text(50, 10 + i*int(size), size, temp, -1);
+            gfx_text(&font_set, 400, 10 + i*int(size), temp, size);
+        }
+
+
+        return 0;
+    }
 	
 	static bool first = true;
 	if(first)

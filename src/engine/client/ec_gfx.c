@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "ec_font.h"
+
 /* compressed textures */
 #define GL_COMPRESSED_RGB_ARB 0x84ED
 #define GL_COMPRESSED_RGBA_ARB 0x84EE
@@ -882,12 +884,46 @@ static int word_length(const char *text)
 	}
 }
 
-
-
 static float pretty_r=1;
 static float pretty_g=1;
 static float pretty_b=1;
 static float pretty_a=1;
+
+void gfx_text(void *font_set_v, float x, float y, const char *text, float size)
+{
+    const unsigned char *c = (unsigned char *)text;
+
+    FONT_SET *font_set = font_set_v;
+    FONT *font = font_set_pick(font_set, size);
+
+    gfx_texture_set(font->texture);
+
+	gfx_quads_begin();
+	gfx_setcolor(pretty_r, pretty_g, pretty_b, pretty_a);
+    
+    while (*c)
+    {
+        float tex_x0, tex_y0, tex_x1, tex_y1;
+        float width, height;
+        float x_offset, y_offset, x_advance;
+
+        float advance;
+
+        font_character_info(font, *c, &tex_x0, &tex_y0, &tex_x1, &tex_y1, &width, &height, &x_offset, &y_offset, &x_advance);
+
+		gfx_quads_setsubset(tex_x0, tex_y0, tex_x1, tex_y1);
+
+		gfx_quads_drawTL(x+x_offset*size, y+y_offset*size, width*size, height*size);
+
+        advance = x_advance + font_kerning(font, *c, *(c+1));
+
+        x += advance*size;
+
+        c++;
+    }
+
+	gfx_quads_end();
+}
 
 void gfx_pretty_text_color(float r, float g, float b, float a)
 {
