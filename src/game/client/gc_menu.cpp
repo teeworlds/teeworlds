@@ -1884,7 +1884,7 @@ int menu2_render()
 
         if (first)
         {
-            font_set_load(&font_set, "fonts/vera%d.tfnt", "fonts/vera%d.png", 4, 8, 10, 12, 14);
+            font_set_load(&font_set, "fonts/DefaultFont_%dpx_32bit_outline.tfnt", "fonts/DefaultFont_%dpx_32bit_outline_00.png", 7, 10, 11, 12, 13, 14, 16, 36);
             first = false;
         }
 

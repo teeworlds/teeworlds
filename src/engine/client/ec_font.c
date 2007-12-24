@@ -63,7 +63,7 @@ int font_load(FONT *font, const char *filename)
                 float height = font_data.characters[i].height*scale_factor_y;
                 float x_offset = font_data.characters[i].x_offset*scale_factor_x;
                 float y_offset = font_data.characters[i].y_offset*scale_factor_y;
-                float x_advance = (font_data.characters[i].x_advance>>6)*scale_factor_x;
+                float x_advance = (font_data.characters[i].x_advance)*scale_factor_x;
 
                 font->characters[i].tex_x0 = tex_x0;
                 font->characters[i].tex_y0 = tex_y0;
