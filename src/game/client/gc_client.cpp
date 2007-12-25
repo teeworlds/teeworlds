@@ -3066,6 +3066,9 @@ extern "C" int modc_snap_input(int *data)
 	{
 		input_data.target_x = (int)mouse_pos.x;
 		input_data.target_y = (int)mouse_pos.y;
+		
+		if(!input_data.target_x && !input_data.target_y)
+			input_data.target_y = 1;
 	}
 	input_target_lock = 0;
 

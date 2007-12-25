@@ -899,21 +899,21 @@ float gfx_text_raw(void *font_set_v, float x, float y, float size, const char *t
     float fake_to_screen_y = (screen_height/(screen_y1-screen_y0));
 
     FONT *font;
+    int actual_size;
+    int i;
+    float draw_x;
 
-    // to correct coords, convert to screen coords, round, and convert back
+    /* to correct coords, convert to screen coords, round, and convert back */
     int actual_x = x * fake_to_screen_x;
     int actual_y = y * fake_to_screen_y;
     x = actual_x / fake_to_screen_x;
     y = actual_y / fake_to_screen_y;
 
-    // same with size
-    int actual_size = size * fake_to_screen_y;
+    /* same with size */
+    actual_size = size * fake_to_screen_y;
     size = actual_size / fake_to_screen_y;
 
     font = font_set_pick(font_set, actual_size);
-
-    int i;
-    float draw_x;
 
     if (length < 0)
         length = strlen(text);
@@ -1052,8 +1052,8 @@ float gfx_pretty_text_raw(float x, float y, float size, const char *text_, int l
 
 void gfx_pretty_text(float x, float y, float size, const char *text, int max_width)
 {
-    //gfx_text(gfx_font_set, x, y, 0.8*size, text, max_width);
-    //return;
+    /*gfx_text(gfx_font_set, x, y, 0.8*size, text, max_width);
+    return;*/
 	if(max_width == -1)
 		gfx_pretty_text_raw(x, y, size, text, -1);
 	else
@@ -1078,7 +1078,7 @@ void gfx_pretty_text(float x, float y, float size, const char *text, int max_wid
 
 float gfx_pretty_text_width(float size, const char *text_, int length)
 {
-    //return gfx_text_width(gfx_font_set, 0.8*size, text_, length);
+    /*return gfx_text_width(gfx_font_set, 0.8*size, text_, length);*/
 
 	const float spacing = 0.05f;
 	float w = 0.0f;

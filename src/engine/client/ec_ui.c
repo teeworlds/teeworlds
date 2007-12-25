@@ -275,4 +275,3 @@ void ui_margin(const struct rect *original, int pixels, struct rect *other_rect)
     other_rect->w = r.w - 2*pixels;
     other_rect->h = r.h - 2*pixels;
 }
-
