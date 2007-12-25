@@ -837,8 +837,24 @@ static void menu2_render_background()
 	}
 }
 
+extern void *gfx_font_set;
+
 void render_loading(float percent)
 {
+    if (1)
+    {
+        static FONT_SET font_set;
+        static bool first = true;
+
+        gfx_font_set = &font_set;
+
+        if (first)
+        {
+            font_set_load(&font_set, "fonts/tahoma%d.tfnt", "fonts/tahoma%d.png", "fonts/tahoma%d_b.png", 8, 6, 8, 10, 12, 14, 16, 20, 24);
+            first = false;
+        }
+    }
+
 	// need up date this here to get correct
 	vec3 rgb = hsl_to_rgb(vec3(config.ui_color_hue/255.0f, config.ui_color_sat/255.0f, config.ui_color_lht/255.0f));
 	gui_color = vec4(rgb.r, rgb.g, rgb.b, config.ui_color_alpha/255.0f);
@@ -1877,17 +1893,8 @@ int menu2_render()
     RECT screen = *ui2_screen();
 	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
 
-    if (1)
+    if (0)
     {
-        static FONT_SET font_set;
-        static bool first = true;
-
-        if (first)
-        {
-            font_set_load(&font_set, "fonts/DefaultFont_%dpx_32bit_outline.tfnt", "fonts/DefaultFont_%dpx_32bit_outline_00.png", 7, 10, 11, 12, 13, 14, 16, 36);
-            first = false;
-        }
-
         gfx_clear(0.65f,0.78f,0.9f);
         //gfx_pretty_text_color(0.0f, 0.0f, 0.0f, 1.0f);
         //gfx_pretty_text_color(0.0f, 0.0f, 0.0f, 1.0f);
@@ -1898,12 +1905,12 @@ int menu2_render()
             char temp[64];
             sprintf(temp, "%f: Ingen tomte i jul", size);
             gfx_pretty_text(50, 10 + i*int(size), size, temp, -1);
-            gfx_text(&font_set, 400, 10 + i*int(size), temp, size);
+            gfx_text(gfx_font_set, 400, 10 + i*int(size), size, temp, -1);
         }
-
 
         return 0;
     }
+
 	
 	static bool first = true;
 	if(first)

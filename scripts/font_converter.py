@@ -1,6 +1,7 @@
 from __future__ import with_statement
 import struct
 import sys
+import re
 
 def convert(input, output):
     with open(input, "r") as in_file:
@@ -9,7 +10,6 @@ def convert(input, output):
                 dic = {}
 
                 for part in parts:
-                    print parts, part
                     key, value = part.split('=')
 
                     try:
@@ -132,10 +132,17 @@ def convert(input, output):
                 else:
                     write_default_kerning()
 
-if len(sys.argv) != 3:
-    print "font converter! converts .fnt files to teewars .tfnt"
-    print "usage: font_converter <input> <output>"
-else:
+if len(sys.argv) >= 2:
     print "converting..."
-    convert(sys.argv[1], sys.argv[2])
+
+    filenames = sys.argv[1:]
+    for filename in filenames:
+        input = filename
+        output = re.sub("fnt$", "tfnt", input)
+            
+        print "input: %s, output: %s" % (input, output)
+        convert(input, output)
     print "done!"
+else:
+    print "font converter! converts .fnt files to teewars .tfnt"
+    print "usage: font_converter <input>"

@@ -229,6 +229,7 @@ int gfx_init()
 			return 0;
 		}
 	}
+
 	
 	glfwSetWindowSizeCallback(screen_resize);
 	
@@ -889,40 +890,115 @@ static float pretty_g=1;
 static float pretty_b=1;
 static float pretty_a=1;
 
-void gfx_text(void *font_set_v, float x, float y, const char *text, float size)
+FONT *gfx_font_set;
+
+float gfx_text_raw(void *font_set_v, float x, float y, float size, const char *text, int length)
 {
-    const unsigned char *c = (unsigned char *)text;
-
     FONT_SET *font_set = font_set_v;
-    FONT *font = font_set_pick(font_set, size);
+    float fake_to_screen_x = (screen_width/(screen_x1-screen_x0));
+    float fake_to_screen_y = (screen_height/(screen_y1-screen_y0));
 
-    gfx_texture_set(font->texture);
+    FONT *font;
 
-	gfx_quads_begin();
-	gfx_setcolor(pretty_r, pretty_g, pretty_b, pretty_a);
-    
-    while (*c)
+    // to correct coords, convert to screen coords, round, and convert back
+    int actual_x = x * fake_to_screen_x;
+    int actual_y = y * fake_to_screen_y;
+    x = actual_x / fake_to_screen_x;
+    y = actual_y / fake_to_screen_y;
+
+    // same with size
+    int actual_size = size * fake_to_screen_y;
+    size = actual_size / fake_to_screen_y;
+
+    font = font_set_pick(font_set, actual_size);
+
+    int i;
+    float draw_x;
+
+    if (length < 0)
+        length = strlen(text);
+
+    for (i = 0; i < 2; i++)
     {
-        float tex_x0, tex_y0, tex_x1, tex_y1;
-        float width, height;
-        float x_offset, y_offset, x_advance;
+        const unsigned char *c = (unsigned char *)text;
+        int to_render = length;
+        draw_x = x;
 
-        float advance;
+        if (i == 0)
+            gfx_texture_set(font->outline_texture);
+        else
+            gfx_texture_set(font->text_texture);
 
-        font_character_info(font, *c, &tex_x0, &tex_y0, &tex_x1, &tex_y1, &width, &height, &x_offset, &y_offset, &x_advance);
+        gfx_quads_begin();
+        if (i == 0)
+            gfx_setcolor(0.0f, 0.0f, 0.0f, 0.3f);
+        else
+            gfx_setcolor(pretty_r, pretty_g, pretty_b, pretty_a);
+        
+        while (to_render--)
+        {
+            float tex_x0, tex_y0, tex_x1, tex_y1;
+            float width, height;
+            float x_offset, y_offset, x_advance;
 
-		gfx_quads_setsubset(tex_x0, tex_y0, tex_x1, tex_y1);
+            float advance;
 
-		gfx_quads_drawTL(x+x_offset*size, y+y_offset*size, width*size, height*size);
+            font_character_info(font, *c, &tex_x0, &tex_y0, &tex_x1, &tex_y1, &width, &height, &x_offset, &y_offset, &x_advance);
 
-        advance = x_advance + font_kerning(font, *c, *(c+1));
+            gfx_quads_setsubset(tex_x0, tex_y0, tex_x1, tex_y1);
 
-        x += advance*size;
+            gfx_quads_drawTL(draw_x+x_offset*size, y+y_offset*size, width*size, height*size);
 
-        c++;
+            advance = x_advance + font_kerning(font, *c, *(c+1));
+
+            draw_x += advance*size;
+
+            c++;
+        }
+
+        gfx_quads_end();
     }
 
-	gfx_quads_end();
+    return draw_x;
+}
+
+void gfx_text(void *font_set_v, float x, float y, float size, const char *text, int max_width)
+{
+	if(max_width == -1)
+		gfx_text_raw(font_set_v, x, y, size, text, -1);
+	else
+	{
+		float startx = x;
+		while(*text)
+		{
+			int wlen = word_length(text);
+			float w = gfx_text_width(font_set_v, size, text, wlen);
+			if(x+w-startx > max_width)
+			{
+				y += size;
+				x = startx;
+			}
+			
+			x = gfx_text_raw(font_set_v, x, y, size, text, wlen);
+			
+			text += wlen;
+		}
+	}
+    gfx_text_raw(font_set_v, x, y, size, text, -1);
+}
+
+float gfx_text_width(void *font_set_v, float size, const char *text, int length)
+{
+    FONT_SET *font_set = font_set_v;
+    FONT *font;
+    float fake_to_screen_y = (screen_height/(screen_y1-screen_y0));
+
+    int actual_size = size * fake_to_screen_y;
+    size = actual_size / fake_to_screen_y;
+
+    font = font_set_pick(font_set, actual_size);
+
+    return font_text_width(font, text, size, length);
 }
 
 void gfx_pretty_text_color(float r, float g, float b, float a)
@@ -974,10 +1050,10 @@ float gfx_pretty_text_raw(float x, float y, float size, const char *text_, int l
 	return x;
 }
 
-
-
 void gfx_pretty_text(float x, float y, float size, const char *text, int max_width)
 {
+    //gfx_text(gfx_font_set, x, y, 0.8*size, text, max_width);
+    //return;
 	if(max_width == -1)
 		gfx_pretty_text_raw(x, y, size, text, -1);
 	else
@@ -1002,6 +1078,8 @@ void gfx_pretty_text(float x, float y, float size, const char *text, int max_wid
 
 float gfx_pretty_text_width(float size, const char *text_, int length)
 {
+    //return gfx_text_width(gfx_font_set, 0.8*size, text_, length);
+
 	const float spacing = 0.05f;
 	float w = 0.0f;
 	const unsigned char *text = (unsigned char *)text_;

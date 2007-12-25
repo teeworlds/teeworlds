@@ -427,6 +427,10 @@ void snapstorage_purge_until(SNAPSTORAGE *ss, int tick)
 			return; /* no more to remove */
 		mem_free(h);
 		
+        // did we come to the end of the list?
+        if (!next)
+            break;
+
 		ss->first = next;
 		next->prev = 0x0;
 		

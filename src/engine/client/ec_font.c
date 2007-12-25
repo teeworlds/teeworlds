@@ -30,7 +30,6 @@ int font_load(FONT *font, const char *filename)
     FONT_DATA font_data;
 	IOHANDLE file;
 
-	dbg_msg("font/load", "loading %s", filename);
 	file = io_open(filename, IOFLAG_READ);
 	
 	if(file)
@@ -43,8 +42,6 @@ int font_load(FONT *font, const char *filename)
 #if defined(CONF_ARCH_ENDIAN_BIG)
         swap_endian(&font_data, 2, sizeof(FONT_DATA)/2);
 #endif
-
-        dbg_msg("font/load", "width: %d, height: %d, sizeof(FONT_DATA): %d", font_data.width, font_data.height, sizeof(FONT_DATA));
 
         {
             float scale_factor_x = 1.0f/font_data.size;
@@ -79,7 +76,7 @@ int font_load(FONT *font, const char *filename)
 
             for (i = 0; i < 256*256; i++)
             {
-                font->kerning[i] = font_data.kerning[i]*scale_factor_x;
+                font->kerning[i] = (char)font_data.kerning[i];
             }
         }
 
@@ -91,7 +88,7 @@ int font_load(FONT *font, const char *filename)
 
 int gfx_load_texture(const char *filename);
 
-int font_set_load(FONT_SET *font_set, const char *font_filename, const char *texture_filename, int fonts, ...)
+int font_set_load(FONT_SET *font_set, const char *font_filename, const char *text_texture_filename, const char *outline_texture_filename, int fonts, ...)
 {
     int i;
     va_list va; 
@@ -103,36 +100,36 @@ int font_set_load(FONT_SET *font_set, const char *font_filename, const char *tex
     {
         int size;
         char composed_font_filename[256];
-        char composed_texture_filename[256];
+        char composed_text_texture_filename[256];
+        char composed_outline_texture_filename[256];
         FONT *font = &font_set->fonts[i];
 
         size = va_arg(va, int);
         sprintf(composed_font_filename, font_filename, size);
-        sprintf(composed_texture_filename, texture_filename, size);
+        sprintf(composed_text_texture_filename, text_texture_filename, size);
+        sprintf(composed_outline_texture_filename, outline_texture_filename, size);
 
         if (font_load(font, composed_font_filename))
         {
+            dbg_msg("font/loading", "failed loading font %s.", composed_font_filename);
             va_end(va);
             return -1;
         }
 
         font->size = size;
-        font->texture = gfx_load_texture(composed_texture_filename);
-
-        dbg_msg("font_set/loading", "filename: %s", composed_font_filename);
+        font->text_texture = gfx_load_texture(composed_text_texture_filename);
+        font->outline_texture = gfx_load_texture(composed_outline_texture_filename);
     }
 
     va_end(va);
     return 0;
 }
 
-float font_set_string_width(FONT_SET *font_set, const char *string, float size)
+float font_text_width(FONT *font, const char *text, float size, int length)
 {
     float width = 0.0f;
 
-    const unsigned char *c = (unsigned char *)string;
-
-    FONT *font = &font_set->fonts[0];
+    const unsigned char *c = (unsigned char *)text;
 
     while (*c)
     {
@@ -167,7 +164,7 @@ void font_character_info(FONT *font, unsigned char c, float *tex_x0, float *tex_
 
 float font_kerning(FONT *font, unsigned char c1, unsigned char c2)
 {
-    return font->kerning[c1 + c2*256];
+    return font->kerning[c1 + c2*256] / (float)font->size;
 }
 
 FONT *font_set_pick(FONT_SET *font_set, float size)
