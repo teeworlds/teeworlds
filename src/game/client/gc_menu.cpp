@@ -837,7 +837,7 @@ static void menu2_render_background()
 	}
 }
 
-extern void *gfx_font_set;
+extern "C" void *gfx_font_set;
 
 void render_loading(float percent)
 {
