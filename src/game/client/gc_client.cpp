@@ -972,6 +972,8 @@ static void render_projectile(const obj_projectile *prev, const obj_projectile *
 	float gravity = -400;
 	if(current->type != WEAPON_ROCKET)
 		gravity = -100;
+	if(current->type == WEAPON_BOMB)
+		gravity = 0;
 
 	float ct = (client_tick()-current->start_tick)/(float)SERVER_TICK_SPEED + client_ticktime()*1/(float)SERVER_TICK_SPEED;
 	vec2 startpos(current->x, current->y);

@@ -527,6 +527,37 @@ weapons {
 		overchargetime 10.0
 	}
 
+	bomb {
+		sprite_body sprites.game.weapon_rocket_body
+		sprite_cursor sprites.game.weapon_rocket_cursor
+		sprite_proj sprites.game.weapon_rocket_proj
+		sprite_muzzles {
+			sprites.game.weapon_shotgun_muzzle1
+			sprites.game.weapon_shotgun_muzzle2
+			sprites.game.weapon_shotgun_muzzle3
+		}
+		
+		nummuzzlesprites 3
+		muzzleoffsetx 0.0
+		muzzleoffsety 0.0
+		maxammo 10
+		costammo 1
+		recoil 10
+		firedelay 800
+		muzzleduration 0
+		visual_size 128
+		offsetx 24.0
+		offsety -2.0
+		meleedamage 0
+		meleereach 0
+		ammoregentime 0
+		duration -1
+		movetime 0
+		velocity 0
+		chargetime 1.0
+		overchargetime 10.0
+	}
+
 	ninja {
 		sprite_body sprites.game.weapon_ninja_body
 		sprite_cursor sprites.game.weapon_ninja_cursor

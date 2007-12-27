@@ -335,6 +335,31 @@ void game_world::tick()
 	remove_entities();
 }
 
+struct input_count
+{
+	int presses;
+	int releases;
+};
+
+static input_count count_input(int prev, int cur)
+{
+	input_count c = {0,0};
+	prev &= INPUT_STATE_MASK;
+	cur &= INPUT_STATE_MASK;
+	int i = prev;
+	while(i != cur)
+	{
+		i = (i+1)&INPUT_STATE_MASK;
+		if(i&1)
+			c.presses++;
+		else
+			c.releases++;
+	}
+
+	return c;
+}
+
+
 //////////////////////////////////////////////////
 // projectile
 //////////////////////////////////////////////////
@@ -368,6 +393,8 @@ void projectile::tick()
 	float gravity = -400;
 	if(type != WEAPON_ROCKET)
 		gravity = -100;
+	if(type == WEAPON_BOMB)
+		gravity = 0;
 	
 	float pt = (server_tick()-start_tick-1)/(float)SERVER_TICK_SPEED;
 	float ct = (server_tick()-start_tick)/(float)SERVER_TICK_SPEED;
@@ -380,10 +407,17 @@ void projectile::tick()
 	
 	vec2 new_pos;
 	entity *targetplayer = (entity*)intersect_player(prevpos, curpos, new_pos, powner);
+	player *p = (player*) powner;
 	
-	if(targetplayer || collide || lifespan < 0 )
+	if(targetplayer || collide || lifespan < 0 || (type == WEAPON_BOMB && count_input(p->previnput.fire, p->input.fire).releases))
 	{
-		if (lifespan >= 0 || weapon == WEAPON_ROCKET)
+		if(type == WEAPON_BOMB)
+		{
+			p->bomb_firetick = -1;
+			p->reload_timer = data->weapons[WEAPON_BOMB].firedelay * server_tickspeed() / 1000;
+		}
+
+		if (lifespan >= 0 || weapon == WEAPON_ROCKET || weapon == WEAPON_BOMB)
 			create_sound(pos, sound_impact);
 
 		if (flags & PROJECTILE_FLAGS_EXPLODE)
@@ -467,6 +501,7 @@ void player::reset()
 	numobjectshit = 0;
 	ninja_activationtick = 0;
 	sniper_chargetick = -1;
+	bomb_firetick = -1;
 	currentmovetime = 0;
 	
 	active_weapon = WEAPON_GUN;
@@ -672,6 +707,8 @@ void player::try_respawn()
 
 	//weapons[WEAPON_SNIPER].got = true;
 	//weapons[WEAPON_SNIPER].ammo = data->weapons[WEAPON_SNIPER].maxammo;
+	weapons[WEAPON_BOMB].got = true;
+	weapons[WEAPON_BOMB].ammo = data->weapons[WEAPON_BOMB].maxammo;
 	active_weapon = WEAPON_GUN;
 	last_weapon = WEAPON_HAMMER;
 	wanted_weapon = WEAPON_GUN;
@@ -692,30 +729,6 @@ bool player::is_grounded()
 	if(col_check_point((int)(pos.x-phys_size/2), (int)(pos.y+phys_size/2+5)))
 		return true;
 	return false;
-}
-
-struct input_count
-{
-	int presses;
-	int releases;
-};
-
-static input_count count_input(int prev, int cur)
-{
-	input_count c = {0,0};
-	prev &= INPUT_STATE_MASK;
-	cur &= INPUT_STATE_MASK;
-	int i = prev;
-	while(i != cur)
-	{
-		i = (i+1)&INPUT_STATE_MASK;
-		if(i&1)
-			c.presses++;
-		else
-			c.releases++;
-	}
-
-	return c;
 }
 
 
@@ -917,6 +930,32 @@ int player::handle_sniper()
 	return 0;
 }
 
+int player::handle_bomb()
+{
+	struct input_count button = count_input(previnput.fire, input.fire);
+
+	if(button.releases)
+	{
+	}
+	else if(input.fire & 1 && bomb_firetick == -1 && reload_timer == 0)
+	{
+		vec2 direction = normalize(vec2(input.target_x, input.target_y));
+		new projectile(WEAPON_BOMB,
+				client_id,
+				pos+vec2(0,0),
+				direction*7.0f,
+				100,
+				this,
+				1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, SOUND_ROCKET_EXPLODE, WEAPON_ROCKET);
+		create_sound(pos, SOUND_ROCKET_FIRE);
+		bomb_firetick = server_tick();
+		attack_tick = server_tick();
+		weapons[active_weapon].ammo--;
+	}
+
+	return 0;
+}
+
 int player::handle_weapons()
 {
 	vec2 direction = normalize(vec2(input.target_x, input.target_y));
@@ -993,6 +1032,8 @@ int player::handle_weapons()
 	if (active_weapon == WEAPON_SNIPER)
 		return handle_sniper();
 	*/
+	if (active_weapon == WEAPON_BOMB)
+		return handle_bomb();
 
 	if(reload_timer == 0)
 	{
@@ -1662,8 +1703,15 @@ void create_explosion(vec2 p, int owner, int weapon, bool bnodamage)
 	{
 		// deal damage
 		entity *ents[64];
-		const float radius = 128.0f;
-		const float innerradius = 42.0f;
+		float radius = 128.0f;
+		float innerradius = 42.0f;
+
+		if(weapon == WEAPON_BOMB)
+		{
+			radius = 256.0f;
+			innerradius = 64.0f;
+		}
+
 		int num = world->find_entities(p, radius, ents, 64);
 		for(int i = 0; i < num; i++)
 		{

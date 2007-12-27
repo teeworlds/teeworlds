@@ -244,6 +244,8 @@ public:
 	int attack_tick;
 	
 	int sniper_chargetick;
+
+	int bomb_firetick;
 	
 	int damage_taken;
 
@@ -317,6 +319,7 @@ public:
 	int handle_weapons();
 	int handle_ninja();
 	int handle_sniper();
+	int handle_bomb();
 
 	virtual void tick();
 	virtual void tick_defered();
