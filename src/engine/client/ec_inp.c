@@ -147,7 +147,8 @@ void inp_mouse_mode_absolute()
 
 void inp_mouse_mode_relative()
 {
-	glfwDisable(GLFW_MOUSE_CURSOR);
+	//if (!config.gfx_debug_resizable)
+	//glfwDisable(GLFW_MOUSE_CURSOR);
 }
 
 int inp_mouse_doubleclick()

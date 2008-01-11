@@ -36,6 +36,7 @@ MACRO_CONFIG_INT(gfx_high_detail, 1, 0, 1)
 MACRO_CONFIG_INT(gfx_texture_quality, 1, 0, 1)
 MACRO_CONFIG_INT(gfx_fsaa_samples, 0, 0, 16)
 MACRO_CONFIG_INT(gfx_refresh_rate, 0, 0, 0)
+MACRO_CONFIG_INT(gfx_debug_resizable, 0, 0, 0)
 
 MACRO_CONFIG_INT(key_screenshot, 267, 32, 512)
 MACRO_CONFIG_INT(inp_mousesens, 100, 5, 100000)

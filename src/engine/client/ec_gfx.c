@@ -208,7 +208,8 @@ int gfx_init()
 		glfwOpenWindowHint(GLFW_REFRESH_RATE, config.gfx_refresh_rate);
 	
 	/* no resizing allowed */
-	/* glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, 1); */
+	if (!config.gfx_debug_resizable)
+		glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, 1);
 		
 	/* open window */	
 	if(config.gfx_fullscreen)
@@ -281,13 +282,13 @@ int gfx_init()
 	inp_init();
 	
 	/* create null texture, will get id=0 */
-	gfx_load_texture_raw(4,4,IMG_RGBA,null_texture_data);
+	gfx_load_texture_raw(4,4,IMG_RGBA,null_texture_data,IMG_RGBA);
 
 	/* set vsync as needed */
 	gfx_set_vsync(config.gfx_vsync);
 
 	/* UGLY as hell, please remove */
-    current_font->font_texture = gfx_load_texture("data/big_font.png");
+    current_font->font_texture = gfx_load_texture("data/big_font.png", IMG_AUTO);
 
 	return 1;
 }
@@ -410,12 +411,13 @@ static unsigned char sample(int w, int h, const unsigned char *data, int u, int 
 	data[((v+1)*w+u+1)*4+offset])/4;
 }
 
-int gfx_load_texture_raw(int w, int h, int format, const void *data)
+int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_format)
 {
 	int mipmap = 1;
 	unsigned char *texdata = (unsigned char *)data;
 	unsigned char *tmpdata = 0;
 	int oglformat = 0;
+	int store_oglformat = 0;
 	int tex = 0;
 	
 	/* don't waste memory on texture if we are stress testing */
@@ -455,36 +457,52 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data)
 	
 	if(config.debug)
 		dbg_msg("gfx", "%d = %dx%d", tex, w, h);
+
+	oglformat = GL_RGBA;
+	if(format == IMG_RGB)
+		oglformat = GL_RGB;
+	else if(format == IMG_ALPHA)
+		oglformat = GL_ALPHA;
 	
 	/* upload texture */
 	if(config.gfx_texture_compression)
 	{
-		oglformat = GL_COMPRESSED_RGBA_ARB;
-		if(format == IMG_RGB)
-			oglformat = GL_COMPRESSED_RGB_ARB;
+		store_oglformat = GL_COMPRESSED_RGBA_ARB;
+		if(store_format == IMG_RGB)
+			store_oglformat = GL_COMPRESSED_RGB_ARB;
+		else if(store_format == IMG_ALPHA)
+			store_oglformat = GL_COMPRESSED_ALPHA_ARB;
 	}
 	else
 	{
-		oglformat = GL_RGBA;
-		if(format == IMG_RGB)
-			oglformat = GL_RGB;
+		store_oglformat = GL_RGBA;
+		if(store_format == IMG_RGB)
+			store_oglformat = GL_RGB;
+		else if(store_format == IMG_ALPHA)
+			store_oglformat = GL_ALPHA;
 	}
 		
 	glGenTextures(1, &textures[tex].tex);
 	glBindTexture(GL_TEXTURE_2D, textures[tex].tex);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	gluBuild2DMipmaps(GL_TEXTURE_2D, oglformat, w, h, oglformat, GL_UNSIGNED_BYTE, texdata);
+	gluBuild2DMipmaps(GL_TEXTURE_2D, store_oglformat, w, h, oglformat, GL_UNSIGNED_BYTE, texdata);
 	
 	/* calculate memory usage */
-	textures[tex].memsize = w*h*4;
+	int pixel_size = 4;
+	if(store_format == IMG_RGB)
+		pixel_size = 3;
+	else if(store_format == IMG_ALPHA)
+		pixel_size = 1;
+
+	textures[tex].memsize = w*h*pixel_size;
 	if(mipmap)
 	{
 		while(w > 2 && h > 2)
 		{
 			w>>=1;
 			h>>=1;
-			textures[tex].memsize += w*h*4;
+			textures[tex].memsize += w*h*pixel_size;
 		}
 	}
 	
@@ -523,7 +541,7 @@ int gfx_load_mip_texture_raw(int w, int h, int format, const void *data)
 */
 
 /* simple uncompressed RGBA loaders */
-int gfx_load_texture(const char *filename)
+int gfx_load_texture(const char *filename, int store_format)
 {
 	int l = strlen(filename);
 	IMAGE_INFO img;
@@ -531,7 +549,10 @@ int gfx_load_texture(const char *filename)
 		return 0;
 	if(gfx_load_png(&img, filename))
 	{
-		int id = gfx_load_texture_raw(img.width, img.height, img.format, img.data);
+		if (store_format == IMG_AUTO)
+			store_format = img.format;
+
+		int id = gfx_load_texture_raw(img.width, img.height, img.format, img.data, store_format);
 		mem_free(img.data);
 		return id;
 	}
@@ -1052,8 +1073,9 @@ float gfx_pretty_text_raw(float x, float y, float size, const char *text_, int l
 
 void gfx_pretty_text(float x, float y, float size, const char *text, int max_width)
 {
-    /*gfx_text(gfx_font_set, x, y, 0.8*size, text, max_width);
-    return;*/
+    gfx_text(gfx_font_set, x, y, size, text, max_width);
+    return;
+    
 	if(max_width == -1)
 		gfx_pretty_text_raw(x, y, size, text, -1);
 	else
@@ -1078,7 +1100,7 @@ void gfx_pretty_text(float x, float y, float size, const char *text, int max_wid
 
 float gfx_pretty_text_width(float size, const char *text_, int length)
 {
-    /*return gfx_text_width(gfx_font_set, 0.8*size, text_, length);*/
+    return gfx_text_width(gfx_font_set, size, text_, length);
 
 	const float spacing = 0.05f;
 	float w = 0.0f;

@@ -20,8 +20,10 @@ enum
 	SNAP_CURRENT=0,
 	SNAP_PREV=1,
 	
+	IMG_AUTO=-1,
 	IMG_RGB=0,
 	IMG_RGBA=1,
+	IMG_ALPHA=2,
 	
 	MASK_NONE=0,
 	MASK_SET,
@@ -149,6 +151,7 @@ int gfx_window_open();
 	
 	Arguments:
 		filename - Null terminated string to the file to load.
+		store_format - What format to store on gfx card as.
 	
 	Returns:
 		An ID to the texture. -1 on failure.
@@ -156,7 +159,7 @@ int gfx_window_open();
 	See Also:
 		<gfx_unload_texture>
 */
-int gfx_load_texture(const char *filename);
+int gfx_load_texture(const char *filename, int store_format);
 
 /*
 	Function: gfx_load_texture_raw
@@ -177,7 +180,7 @@ int gfx_load_texture(const char *filename);
 	See Also:
 		<gfx_unload_texture>
 */
-int gfx_load_texture_raw(int w, int h, int format, const void *data);
+int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_format);
 /*int gfx_load_mip_texture_raw(int w, int h, int format, const void *data);*/
 
 /*

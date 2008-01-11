@@ -1417,7 +1417,7 @@ bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 	damage_taken_tick = server_tick();
 
 	// do damage hit sound
-	if(from >= 0)
+	if(from >= 0 && from != client_id)
 		create_sound(get_player(from)->pos, SOUND_HIT, cmask_one(from));
 
 	// check for death

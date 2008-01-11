@@ -574,7 +574,7 @@ extern "C" void modc_init()
 	for(int i = 0; i < data->num_images; i++)
 	{
 		render_loading(current/total);
-		data->images[i].id = gfx_load_texture(data->images[i].filename);
+		data->images[i].id = gfx_load_texture(data->images[i].filename, IMG_AUTO);
 		current++;
 	}
 	
@@ -1916,13 +1916,13 @@ void render_goals(float x, float y, float w)
 	{
 		char buf[64];
 		sprintf(buf, "Time Limit: %d min", gameobj->time_limit);
-		gfx_pretty_text(x+w/2, y, 32, buf, -1);
+		gfx_pretty_text(x+w/2, y, 24.0f, buf, -1);
 	}
 	if(gameobj && gameobj->score_limit)
 	{
 		char buf[64];
 		sprintf(buf, "Score Limit: %d", gameobj->score_limit);
-		gfx_pretty_text(x+40, y, 32, buf, -1);
+		gfx_pretty_text(x+40, y, 24.0f, buf, -1);
 	}
 }
 
@@ -1987,26 +1987,26 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 			title = "Score Board";
 	}
 
-	float tw = gfx_pretty_text_width( 64, title, -1);
+	float tw = gfx_pretty_text_width(48, title, -1);
 
 	if(team == -1)
 	{
-		gfx_pretty_text(x+w/2-tw/2, y, 64, title, -1);
+		gfx_pretty_text(x+w/2-tw/2, y, 48, title, -1);
 	}
 	else
 	{
-		gfx_pretty_text(x+10, y, 64, title, -1);
+		gfx_pretty_text(x+10, y, 48, title, -1);
 
 		if(gameobj)
 		{
 			char buf[128];
 			sprintf(buf, "%d", gameobj->teamscore[team&1]);
-			tw = gfx_pretty_text_width(64, buf, -1);
-			gfx_pretty_text(x+w-tw-40, y, 64, buf, -1);
+			tw = gfx_pretty_text_width(48, buf, -1);
+			gfx_pretty_text(x+w-tw-30, y, 48, buf, -1);
 		}
 	}
 
-	y += 64.0f;
+	y += 54.0f;
 
 	/*
 	if(team)
@@ -2047,10 +2047,10 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 	}
 
 	// render headlines
-	gfx_pretty_text(x+10, y, 32, "Score", -1);
-	gfx_pretty_text(x+125, y, 32, "Name", -1);
-	gfx_pretty_text(x+w-70, y, 32, "Ping", -1);
-	y += 38.0f;
+	gfx_pretty_text(x+10, y, 24.0f, "Score", -1);
+	gfx_pretty_text(x+125, y, 24.0f, "Name", -1);
+	gfx_pretty_text(x+w-70, y, 24.0f, "Ping", -1);
+	y += 29.0f;
 
 	// render player scores
 	for(int i = 0; i < num_players; i++)
@@ -2062,7 +2062,7 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 			continue;
 
 		char buf[128];
-		float font_size = 46.0f;
+		float font_size = 35.0f;
 		if(info->local)
 		{
 			// background so it's easy to find the local player
@@ -2788,11 +2788,11 @@ void render_game()
 				sprintf(buf, "Rcon: %s_", chat_input);
 			else
 				sprintf(buf, "Chat: %s_", chat_input);
-			gfx_pretty_text(x, y, 10.0f, buf, 380);
+			gfx_pretty_text(x, y, 8.0f, buf, 380);
 			starty = y;
 		}
 
-		y -= 10;
+		y -= 8;
 
 		int i;
 		for(i = 0; i < chat_max_lines; i++)
@@ -2819,7 +2819,7 @@ void render_game()
 			// render line
 			int lines = int(gfx_pretty_text_width(10, chat_lines[r].text, -1)) / 300 + 1;
 			
-			gfx_pretty_text(begin, y - 8 * (lines - 1), 10, chat_lines[r].name, -1);
+			gfx_pretty_text(begin, y - 8 * (lines - 1), 8, chat_lines[r].name, -1);
 			begin += gfx_pretty_text_width(10, chat_lines[r].name, -1);
 
 			gfx_pretty_text_color(1,1,1,1);
@@ -2828,8 +2828,8 @@ void render_game()
 			else if(chat_lines[r].team)
 				gfx_pretty_text_color(0.65f,1,0.65f,1); // team message
 
-			gfx_pretty_text(begin, y - 8 * (lines - 1), 10, chat_lines[r].text, 300);
-			y -= 8 * lines;
+			gfx_pretty_text(begin, y - 8 * (lines - 1), 8, chat_lines[r].text, 300);
+			y -= 6 * lines;
 		}
 
 		gfx_pretty_text_color(1,1,1,1);

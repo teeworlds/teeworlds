@@ -31,7 +31,7 @@ static void skinscan(const char *name, int is_dir, void *user)
 		return;
 	}
 	
-	skins[num_skins].org_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data);
+	skins[num_skins].org_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data, info.format);
 	
 	// create colorless version
 	unsigned char *d = (unsigned char *)info.data;
@@ -82,7 +82,7 @@ static void skinscan(const char *name, int is_dir, void *user)
 			}
 	}
 	
-	skins[num_skins].color_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data);
+	skins[num_skins].color_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data, info.format);
 	mem_free(info.data);
 
 	// set skin data	

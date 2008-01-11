@@ -369,14 +369,14 @@ static void ui2_draw_browse_icon(int what, const RECT *r)
 static void ui2_draw_menu_button(const void *id, const char *text, int checked, const RECT *r, void *extra)
 {
 	ui2_draw_rect(r, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
-	ui2_do_label(r, text, 24, 0);
+	ui2_do_label(r, text, 18.0f, 0);
 }
 
 
 static void ui2_draw_keyselect_button(const void *id, const char *text, int checked, const RECT *r, void *extra)
 {
 	ui2_draw_rect(r, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
-	ui2_do_label(r, text, 18, 0);
+	ui2_do_label(r, text, 14.0f, 0);
 }
 
 static void ui2_draw_menu_tab_button(const void *id, const char *text, int checked, const RECT *r, void *extra)
@@ -385,7 +385,7 @@ static void ui2_draw_menu_tab_button(const void *id, const char *text, int check
 		ui2_draw_rect(r, color_tabbar_active, CORNER_T, 10.0f);
 	else
 		ui2_draw_rect(r, color_tabbar_inactive, CORNER_T, 10.0f);
-	ui2_do_label(r, text, 26, 0);
+	ui2_do_label(r, text, 22.0f, 0);
 }
 
 
@@ -395,7 +395,7 @@ static void ui2_draw_settings_tab_button(const void *id, const char *text, int c
 		ui2_draw_rect(r, color_tabbar_active, CORNER_R, 10.0f);
 	else
 		ui2_draw_rect(r, color_tabbar_inactive, CORNER_R, 10.0f);
-	ui2_do_label(r, text, 24, 0);
+	ui2_do_label(r, text, 20.0f, 0);
 }
 
 static void ui2_draw_grid_header(const void *id, const char *text, int checked, const RECT *r, void *extra)
@@ -406,7 +406,7 @@ static void ui2_draw_grid_header(const void *id, const char *text, int checked, 
 	//	ui2_draw_rect(r, vec4(1,1,1,0.1f), CORNER_T, 5.0f);
 	RECT t;
 	ui2_vsplit_l(r, 5.0f, 0, &t);
-	ui2_do_label(&t, text, 18, -1);
+	ui2_do_label(&t, text, 14.0f, -1);
 }
 /*
 static void ui2_draw_grid_cell_l(const void *id, const char *text, int checked, const RECT *r, void *extra)
@@ -427,7 +427,7 @@ static void ui2_draw_list_row(const void *id, const char *text, int checked, con
 		ui2_margin(&sr, 1.5f, &sr);
 		ui2_draw_rect(&sr, vec4(1,1,1,0.5f), CORNER_ALL, 4.0f);
 	}
-	ui2_do_label(r, text, 18, -1);
+	ui2_do_label(r, text, 14.0f, -1);
 }
 
 static void ui2_draw_checkbox_common(const void *id, const char *text, const char *boxtext, const RECT *r)
@@ -441,8 +441,9 @@ static void ui2_draw_checkbox_common(const void *id, const char *text, const cha
 	
 	ui2_margin(&c, 2.0f, &c);
 	ui2_draw_rect(&c, vec4(1,1,1,0.25f), CORNER_ALL, 3.0f);
-	ui2_do_label(&c, boxtext, 16, 0);
-	ui2_do_label(&t, text, 18, -1);	
+	c.y += 2;
+	ui2_do_label(&c, boxtext, 12.0f, 0);
+	ui2_do_label(&t, text, 14.0f, -1);	
 }
 
 static void ui2_draw_checkbox(const void *id, const char *text, int checked, const RECT *r, void *extra)
@@ -475,7 +476,7 @@ int ui2_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hi
 
 			for (int i = 1; i <= len; i++)
 			{
-				if (gfx_pretty_text_width(18.0f, str, i) + 10 > mx_rel)
+				if (gfx_pretty_text_width(14.0f, str, i) + 10 > mx_rel)
 				{
 					at_index = i - 1;
 					break;
@@ -563,13 +564,13 @@ int ui2_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hi
 		display_str = stars;
 	}
 	
-	ui2_do_label(&textbox, display_str, 18, -1);
+	ui2_do_label(&textbox, display_str, 14, -1);
 
 	if (ui_last_active_item() == id && !just_got_active)
 	{
-		float w = gfx_pretty_text_width(18.0f, display_str, at_index);
+		float w = gfx_pretty_text_width(14.0f, display_str, at_index);
 		textbox.x += w*ui2_scale();
-		ui2_do_label(&textbox, "_", 18, -1);
+		ui2_do_label(&textbox, "_", 14, -1);
 	}
 
 	return r;
@@ -850,8 +851,11 @@ void render_loading(float percent)
 
         if (first)
         {
-            font_set_load(&font_set, "fonts/tahoma%d.tfnt", "fonts/tahoma%d.png", "fonts/tahoma%d_b.png", 8, 6, 8, 10, 12, 14, 16, 20, 24);
+			int before = gfx_memory_usage();
+            font_set_load(&font_set, "fonts/default_font%d.tfnt", "fonts/default_font%d.png", "fonts/default_font%d_b.png", 14, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 36);
             first = false;
+			int after = gfx_memory_usage();
+			dbg_msg("font", "gfx memory usage: %d", after-before);
         }
     }
 
@@ -904,11 +908,18 @@ static void menu2_render_serverbrowser(RECT main_view)
 	RECT filters;
 	RECT status;
 	RECT toolbox;
-	
+	RECT server_details;
+	RECT server_scoreboard;
+
 	//ui2_hsplit_t(&view, 20.0f, &status, &view);
-	ui2_hsplit_t(&view, 20.0f, &headers, &view);
 	ui2_hsplit_b(&view, 90.0f, &view, &filters);
-	ui2_hsplit_b(&view, 5.0f, &view, 0);
+
+	// split off a piece for details and scoreboard
+	ui2_vsplit_r(&view, 200.0f, &view, &server_details);
+
+	// server list
+	ui2_hsplit_t(&view, 20.0f, &headers, &view);
+	ui2_hsplit_b(&view, 5.0f, &view, 0x0);
 	ui2_hsplit_b(&view, 20.0f, &view, &status);
 
 	//ui2_vsplit_r(&filters, 300.0f, &filters, &toolbox);
@@ -956,9 +967,9 @@ static void menu2_render_serverbrowser(RECT main_view)
 		{COL_MAP,		BROWSESORT_MAP,			"Map", 		1, 100.0f, 0, {0}, {0}},
 		{COL_PLAYERS,	BROWSESORT_NUMPLAYERS,	"Players",	1, 60.0f, 0, {0}, {0}},
 		{-1,			-1,						" ",		1, 10.0f, 0, {0}, {0}},
-		{COL_VERSION,	-1,						"Ver",		1, 45.0f, FIXED, {0}, {0}},
+		//{COL_VERSION,	-1,						"Ver",		1, 45.0f, FIXED, {0}, {0}},
 		{-1,			-1,						" ",		1, 5.0f, 0, {0}, {0}},
-		{COL_PROGRESS,	BROWSESORT_PROGRESSION,	"%",		1, 20.0f, FIXED, {0}, {0}},
+		//{COL_PROGRESS,	BROWSESORT_PROGRESSION,	"%",		1, 20.0f, FIXED, {0}, {0}},
 		{COL_PING,		BROWSESORT_PING,		"Ping",		1, 40.0f, FIXED, {0}, {0}},
 	};
 	
@@ -1050,7 +1061,6 @@ static void menu2_render_serverbrowser(RECT main_view)
 	
 	//int r = -1;
 	int new_selected = selected_index;
-
 	
 	for (int i = 0; i < num_servers; i++)
 	{
@@ -1097,8 +1107,8 @@ static void menu2_render_serverbrowser(RECT main_view)
 					ui2_vsplit_l(&player_name, 10.0f, 0, &player_name);
 					char buf[32];
 					sprintf(buf, "%d", item->player_scores[p+a]);
-					ui2_do_label(&player_score, buf, 16.0f, 1);
-					ui2_do_label(&player_name, item->player_names[p+a], 16.0f, -1);
+					ui2_do_label(&player_score, buf, 12.0f, 1);
+					ui2_do_label(&player_name, item->player_names[p+a], 12.0f, -1);
 				}
 			}
 			
@@ -1153,18 +1163,18 @@ static void menu2_render_serverbrowser(RECT main_view)
 					ui2_draw_browse_icon(0x100, &button);
 			}
 			else if(id == COL_NAME)
-				ui2_do_label(&button, item->name, 20.0f, -1);
+				ui2_do_label(&button, item->name, 15.0f, -1);
 			else if(id == COL_MAP)
-				ui2_do_label(&button, item->map, 20.0f, -1);
+				ui2_do_label(&button, item->map, 15.0f, -1);
 			else if(id == COL_PLAYERS)
 			{
 				sprintf(temp, "%i/%i", item->num_players, item->max_players);
-				ui2_do_label(&button, temp, 20.0f, 1);
+				ui2_do_label(&button, temp, 15.0f, 1);
 			}
 			else if(id == COL_PING)
 			{
 				sprintf(temp, "%i", item->latency);
-				ui2_do_label(&button, temp, 20.0f, 1);
+				ui2_do_label(&button, temp, 15.0f, 1);
 			}
 			else if(id == COL_PROGRESS)
 			{
@@ -1177,7 +1187,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 				const char *version = item->version;
 				if(strcmp(version, "0.3 e2d7973c6647a13c") == 0) // TODO: remove me later on
 					version = "0.3.0";
-				ui2_do_label(&button, version, 20.0f, 1);
+				ui2_do_label(&button, version, 15.0f, 1);
 			}			
 			else if(id == COL_GAMETYPE)
 			{
@@ -1185,7 +1195,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 				if(item->game_type == GAMETYPE_DM) type = "DM";
 				else if(item->game_type == GAMETYPE_TDM) type = "TDM";
 				else if(item->game_type == GAMETYPE_CTF) type = "CTF";
-				ui2_do_label(&button, type, 20.0f, 0);
+				ui2_do_label(&button, type, 15.0f, 0);
 			}
 			/*
 			if(s)
@@ -1200,12 +1210,104 @@ static void menu2_render_serverbrowser(RECT main_view)
 	ui2_clip_disable();
 	
 	selected_index = new_selected;
+	
 
+	SERVER_INFO *selected_server = client_serverbrowse_sorted_get(selected_index);
+	RECT server_header;
+
+	ui2_vsplit_l(&server_details, 10.0f, 0x0, &server_details);
+
+	// split off a piece to use for scoreboard
+	ui2_hsplit_t(&server_details, 140.0f, &server_details, &server_scoreboard);
+	ui2_hsplit_b(&server_details, 10.0f, &server_details, 0x0);
+
+	// server details
+	ui2_hsplit_t(&server_details, 20.0f, &server_header, &server_details);
+	ui2_draw_rect(&server_header, vec4(1,1,1,0.25f), CORNER_T, 4.0f);
+	ui2_draw_rect(&server_details, vec4(0,0,0,0.15f), CORNER_B, 4.0f);
+	ui2_vsplit_l(&server_header, 8.0f, 0x0, &server_header);
+	ui2_do_label(&server_header, "Server Details: ", 14.0f, -1);
+
+	ui2_vsplit_l(&server_details, 5.0f, 0x0, &server_details);
+
+	ui2_margin(&server_details, 3.0f, &server_details);
+
+	if (selected_server)
+	{
+		const float row_height = 18.0f;
+		RECT row;
+		static char *labels[] = { "Version:", "Game Type:", "Progression:", "Ping:" };
+
+		ui2_hsplit_t(&server_details, row_height, &row, &server_details);
+		ui2_do_label(&row, selected_server->name, 15.0f, -1);
+
+		ui2_hsplit_t(&server_details, row_height, &row, &server_details);
+		ui2_vsplit_l(&row, 1.0f, 0x0, &row);
+		ui2_do_label(&row, selected_server->address, 14.0f, -1);
+
+		RECT left_column;
+		RECT right_column;
+
+		ui2_vsplit_l(&server_details, 5.0f, 0x0, &server_details);
+		ui2_vsplit_l(&server_details, 80.0f, &left_column, &right_column);
+
+		for (int i = 0; i < 4; i++)
+		{
+			ui2_hsplit_t(&left_column, 15.0f, &row, &left_column);
+			ui2_do_label(&row, labels[i], 13.0f, -1);
+		}
+
+		ui2_hsplit_t(&right_column, 15.0f, &row, &right_column);
+		ui2_do_label(&row, selected_server->version, 13.0f, -1);
+
+		ui2_hsplit_t(&right_column, 15.0f, &row, &right_column);
+		static char *game_types[] = { "DM", "TDM", "CTF" };
+		if (selected_server->game_type >= 0 && selected_server->game_type < (int)(sizeof(game_types)/sizeof(*game_types)))
+			ui2_do_label(&row, game_types[selected_server->game_type], 13.0f, -1);
+
+		char temp[16];
+
+		sprintf(temp, "%d%%", selected_server->progression);
+		ui2_hsplit_t(&right_column, 15.0f, &row, &right_column);
+		ui2_do_label(&row, temp, 13.0f, -1);
+
+		sprintf(temp, "%d", selected_server->latency);
+		ui2_hsplit_t(&right_column, 15.0f, &row, &right_column);
+		ui2_do_label(&row, temp, 13.0f, -1);
+	}
+	
+	// server scoreboard
+	ui2_hsplit_b(&server_scoreboard, 10.0f, &server_scoreboard, 0x0);
+	ui2_hsplit_t(&server_scoreboard, 20.0f, &server_header, &server_scoreboard);
+	ui2_draw_rect(&server_header, vec4(1,1,1,0.25f), CORNER_T, 4.0f);
+	ui2_draw_rect(&server_scoreboard, vec4(0,0,0,0.15f), CORNER_B, 4.0f);
+	ui2_vsplit_l(&server_header, 8.0f, 0x0, &server_header);
+	ui2_do_label(&server_header, "Scoreboard: ", 14.0f, -1);
+
+	ui2_vsplit_l(&server_scoreboard, 5.0f, 0x0, &server_scoreboard);
+
+	ui2_margin(&server_scoreboard, 3.0f, &server_scoreboard);
+
+	if (selected_server)
+	{
+		for (int i = 0; i < selected_server->num_players; i++)
+		{
+			RECT row;
+			char temp[16];
+			ui2_hsplit_t(&server_scoreboard, 16.0f, &row, &server_scoreboard);
+
+			sprintf(temp, "%d", selected_server->player_scores[i]);
+			ui2_do_label(&row, temp, 14.0f, -1);
+
+			ui2_vsplit_l(&row, 25.0f, 0x0, &row);
+			ui2_do_label(&row, selected_server->player_names[i], 14.0f, -1);
+		}
+	}
 	
 	// render quick search
 	RECT button;
 	ui2_hsplit_t(&filters, 20.0f, &button, &filters);
-	ui2_do_label(&button, "Quick search: ", 18, -1);
+	ui2_do_label(&button, "Quick search: ", 14.0f, -1);
 	ui2_vsplit_l(&button, 95.0f, 0, &button);
 	ui2_do_edit_box(&config.b_filter_string, &button, config.b_filter_string, sizeof(config.b_filter_string));
 
@@ -1222,13 +1324,12 @@ static void menu2_render_serverbrowser(RECT main_view)
 	if (ui2_do_button(&config.b_filter_pw, "Is not password protected", config.b_filter_pw, &button, ui2_draw_checkbox, 0))
 		config.b_filter_pw ^= 1;
 
-
 	// render status
 	ui2_draw_rect(&status, vec4(1,1,1,0.25f), CORNER_B, 5.0f);
 	ui2_vmargin(&status, 50.0f, &status);
 	char buf[128];
 	sprintf(buf, "%d of %d servers", client_serverbrowse_sorted_num(), client_serverbrowse_num());
-	ui2_do_label(&status, buf, 18.0f, -1);
+	ui2_do_label(&status, buf, 14.0f, -1);
 
 	// render toolbox
 	{
@@ -1254,7 +1355,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 		}
 		
 		ui2_hsplit_t(&toolbox, 20.0f, &button, &toolbox);
-		ui2_do_label(&button, "Host address:", 18, -1);
+		ui2_do_label(&button, "Host address:", 14.0f, -1);
 		ui2_vsplit_l(&button, 100.0f, 0, &button);
 		ui2_do_edit_box(&config.ui_server_address, &button, config.ui_server_address, sizeof(config.ui_server_address));
 	}
@@ -1272,7 +1373,7 @@ static void menu2_render_settings_player(RECT main_view)
 	// render settings
 	{	
 		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		ui2_do_label(&button, "Name:", 18.0, -1);
+		ui2_do_label(&button, "Name:", 14.0, -1);
 		ui2_vsplit_l(&button, 80.0f, 0, &button);
 		ui2_vsplit_l(&button, 180.0f, &button, 0);
 		ui2_do_edit_box(config.player_name, &button, config.player_name, sizeof(config.player_name));
@@ -1319,7 +1420,7 @@ static void menu2_render_settings_player(RECT main_view)
 				RECT text;
 				ui2_hsplit_t(&main_view, 20.0f, &text, &main_view);
 				ui2_vsplit_l(&text, 15.0f, 0, &text);
-				ui2_do_label(&text, parts[i], 18, -1);
+				ui2_do_label(&text, parts[i], 14.0f, -1);
 				
 				int prevcolor = *colors[i];
 				int color = 0;
@@ -1336,7 +1437,7 @@ static void menu2_render_settings_player(RECT main_view)
 					k = ui2_do_scrollbar_h(&color_slider[i][s], &button, k);
 					color <<= 8;
 					color += clamp((int)(k*255), 0, 255);
-					ui2_do_label(&text, labels[s], 20, -1);
+					ui2_do_label(&text, labels[s], 15.0f, -1);
 					 
 				}
 				
@@ -1411,7 +1512,7 @@ static void menu2_render_settings_player(RECT main_view)
 			config_set_player_skin(&config, s->name);
 		
 		ui2_hsplit_t(&text, 12.0f, 0, &text); // some margin from the top
-		ui2_do_label(&text, buf, 24, 0);
+		ui2_do_label(&text, buf, 18.0f, 0);
 		
 		ui2_hsplit_t(&icon, 5.0f, 0, &icon); // some margin from the top
 		render_tee(&state, &info, 0, vec2(1, 0), vec2(icon.x+icon.w/2, icon.y+icon.h/2));
@@ -1430,7 +1531,7 @@ static void menu2_render_settings_controls(RECT main_view)
 		RECT button, label;
 		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
 		ui2_vsplit_l(&button, 110.0f, &label, &button);
-		ui2_do_label(&label, "Mouse sens.", 18.0f, -1);
+		ui2_do_label(&label, "Mouse sens.", 14.0f, -1);
 		ui2_hmargin(&button, 2.0f, &button);
 		config.inp_mousesens = (int)(ui2_do_scrollbar_h(&config.inp_mousesens, &button, config.inp_mousesens/500.0f)*500.0f);
 		//*key.key = ui2_do_key_reader(key.key, &button, *key.key);
@@ -1473,7 +1574,7 @@ static void menu2_render_settings_controls(RECT main_view)
     	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
     	ui2_vsplit_l(&button, 110.0f, &label, &button);
     	
-		ui2_do_label(&label, key.name, 18.0f, -1);
+		ui2_do_label(&label, key.name, 14.0f, -1);
 		*key.key = ui2_do_key_reader(key.key, &button, *key.key);
     	ui2_hsplit_t(&main_view, 5.0f, 0, &main_view);
     }	
@@ -1506,14 +1607,14 @@ static void menu2_render_settings_graphics(RECT main_view)
 	// draw header
 	ui2_hsplit_t(&modelist, 20, &header, &modelist);
 	ui2_draw_rect(&header, vec4(1,1,1,0.25f), CORNER_T, 5.0f); 
-	ui2_do_label(&header, "Display Modes", 18.0f, 0);
+	ui2_do_label(&header, "Display Modes", 14.0f, 0);
 
 	// draw footers	
 	ui2_hsplit_b(&modelist, 20, &modelist, &footer);
 	sprintf(buf, "Current: %dx%d %d bit", config.gfx_screen_width, config.gfx_screen_height, config.gfx_color_depth);
 	ui2_draw_rect(&footer, vec4(1,1,1,0.25f), CORNER_B, 5.0f); 
 	ui2_vsplit_l(&footer, 10.0f, 0, &footer);
-	ui2_do_label(&footer, buf, 18.0f, -1);
+	ui2_do_label(&footer, buf, 14.0f, -1);
 
 	// modes
 	ui2_draw_rect(&modelist, vec4(0,0,0,0.15f), 0, 0);
@@ -1613,7 +1714,7 @@ static void menu2_render_settings_graphics(RECT main_view)
 	ui2_hsplit_t(&main_view, 20.0f, 0, &main_view);
 	ui2_hsplit_t(&main_view, 20.0f, &text, &main_view);
 	//ui2_vsplit_l(&text, 15.0f, 0, &text);
-	ui2_do_label(&text, "UI Color", 18, -1);
+	ui2_do_label(&text, "UI Color", 14.0f, -1);
 	
 	const char *labels[] = {"Hue", "Sat.", "Lht.", "Alpha"};
 	int *color_slider[4] = {&config.ui_color_hue, &config.ui_color_sat, &config.ui_color_lht, &config.ui_color_alpha};
@@ -1629,7 +1730,7 @@ static void menu2_render_settings_graphics(RECT main_view)
 		float k = (*color_slider[s]) / 255.0f;
 		k = ui2_do_scrollbar_h(color_slider[s], &button, k);
 		*color_slider[s] = (int)(k*255.0f);
-		ui2_do_label(&text, labels[s], 20, -1);
+		ui2_do_label(&text, labels[s], 15.0f, -1);
 	}		
 }
 
@@ -1653,7 +1754,7 @@ static void menu2_render_settings_sound(RECT main_view)
 		char buf[64];
 		sprintf(buf, "%d", config.snd_rate);
 		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		ui2_do_label(&button, "Sample Rate", 18.0, -1);
+		ui2_do_label(&button, "Sample Rate", 14.0f, -1);
 		ui2_vsplit_l(&button, 110.0f, 0, &button);
 		ui2_vsplit_l(&button, 180.0f, &button, 0);
 		ui2_do_edit_box(&config.snd_rate, &button, buf, sizeof(buf));
@@ -1674,7 +1775,7 @@ static void menu2_render_settings_sound(RECT main_view)
 		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
 		ui2_vsplit_l(&button, 110.0f, &label, &button);
 		ui2_hmargin(&button, 2.0f, &button);
-		ui2_do_label(&label, "Sound Volume", 18.0f, -1);
+		ui2_do_label(&label, "Sound Volume", 14.0f, -1);
 		config.snd_volume = (int)(ui2_do_scrollbar_h(&config.snd_volume, &button, config.snd_volume/100.0f)*100.0f);
 		ui2_hsplit_t(&main_view, 20.0f, 0, &main_view);
 	}
@@ -1688,7 +1789,7 @@ static void menu2_render_settings_network(RECT main_view)
 	
 	{
 		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		ui2_do_label(&button, "Rcon Password", 18.0, -1);
+		ui2_do_label(&button, "Rcon Password", 14.0, -1);
 		ui2_vsplit_l(&button, 110.0f, 0, &button);
 		ui2_vsplit_l(&button, 180.0f, &button, 0);
 		ui2_do_edit_box(&config.rcon_password, &button, config.rcon_password, sizeof(config.rcon_password), true);
@@ -1738,7 +1839,7 @@ static void menu2_render_settings(RECT main_view)
 	{
 		RECT restart_warning;
 		ui2_hsplit_b(&main_view, 40, &main_view, &restart_warning);
-		ui2_do_label(&restart_warning, "You must restart Teewars for all settings to take effect.", 20, -1, 220);
+		ui2_do_label(&restart_warning, "You must restart Teewars for all settings to take effect.", 15.0f, -1, 220);
 	}
 }
 

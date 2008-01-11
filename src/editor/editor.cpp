@@ -365,7 +365,7 @@ static int tilesets_set_img(int index, int w, int h, void *data)
 	if(tilesets[index].img.data)
 		mem_free(tilesets[index].img.data);
 	tilesets[index].img.data = data;
-	tilesets[index].tex_id = gfx_load_texture_raw(w, h, IMG_RGBA, data);
+	tilesets[index].tex_id = gfx_load_texture_raw(w, h, IMG_RGBA, data, IMG_RGBA);
 	return index;
 }
 
@@ -1360,8 +1360,8 @@ extern "C" void editor_update_and_render()
 extern "C" void editor_init()
 {
 	// reset and start
-	font_texture = gfx_load_texture("data/debug_font.png");
-	checker_texture = gfx_load_texture("data/checker.png");
+	font_texture = gfx_load_texture("data/debug_font.png", IMG_AUTO);
+	checker_texture = gfx_load_texture("data/checker.png", IMG_AUTO);
 	editor_reset();
 	
 	layer *l = layers_get(layers_new(50, 50));

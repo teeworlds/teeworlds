@@ -1,6 +1,7 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
 #include <engine/e_system.h>
 #include "ec_font.h"
 
@@ -86,7 +87,8 @@ int font_load(FONT *font, const char *filename)
         return -1;
 }
 
-int gfx_load_texture(const char *filename);
+int gfx_load_texture(const char *filename, int store_format);
+#define IMG_ALPHA 2
 
 int font_set_load(FONT_SET *font_set, const char *font_filename, const char *text_texture_filename, const char *outline_texture_filename, int fonts, ...)
 {
@@ -117,8 +119,8 @@ int font_set_load(FONT_SET *font_set, const char *font_filename, const char *tex
         }
 
         font->size = size;
-        font->text_texture = gfx_load_texture(composed_text_texture_filename);
-        font->outline_texture = gfx_load_texture(composed_outline_texture_filename);
+        font->text_texture = gfx_load_texture(composed_text_texture_filename, IMG_ALPHA);
+        font->outline_texture = gfx_load_texture(composed_outline_texture_filename, IMG_ALPHA);
     }
 
     va_end(va);
@@ -130,16 +132,24 @@ float font_text_width(FONT *font, const char *text, float size, int length)
     float width = 0.0f;
 
     const unsigned char *c = (unsigned char *)text;
+    int chars_left;
+    if (length == -1)
+        chars_left = strlen(text);
+    else
+        chars_left = length;
 
-    while (*c)
+    while (chars_left--)
     {
         float tex_x0, tex_y0, tex_x1, tex_y1;
         float char_width, char_height;
         float x_offset, y_offset, x_advance;
+        float advance;
 
         font_character_info(font, *c, &tex_x0, &tex_y0, &tex_x1, &tex_y1, &char_width, &char_height, &x_offset, &y_offset, &x_advance);
 
-        width += x_advance;
+        advance = x_advance + font_kerning(font, *c, *(c+1));
+
+        width += advance;
 
         c++;
     }

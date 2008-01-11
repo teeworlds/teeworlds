@@ -28,7 +28,7 @@ typedef struct
 typedef struct
 {
     int font_count;
-    FONT fonts[8];
+    FONT fonts[14];
 } FONT_SET;
 
 int font_load(FONT *font, const char *filename);
