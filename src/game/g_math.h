@@ -2,6 +2,8 @@
 #ifndef BASE_MATH_H
 #define BASE_MATH_H
 
+#include <stdlib.h>
+
 template <typename T>
 inline T clamp(T val, T min, T max)
 {
@@ -22,6 +24,9 @@ inline T mix(const T a, const T b, TB amount)
 {
 	return a + (b-a)*amount;
 }
+
+inline float frandom() { return rand()/(float)(RAND_MAX); }
+
 const float pi = 3.1415926535897932384626433f;
 
 template <typename T> inline T min(T a, T b) { return a<b?a:b; }

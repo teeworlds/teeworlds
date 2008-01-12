@@ -1,84 +1,8 @@
 #include <game/client/gc_mapres_tilemap.h>
 #include <game/g_math.h>
-#include "editor.hpp"
-
-static void render_tilemap(TILE *tiles, int w, int h, float scale)
-{
-			//gfx_texture_set(img_get(tmap->image));
-	float screen_x0, screen_y0, screen_x1, screen_y1;
-	gfx_getscreen(&screen_x0, &screen_y0, &screen_x1, &screen_y1);
-
-	// calculate the final pixelsize for the tiles	
-	float tile_pixelsize = 1024/32.0f;
-	float final_tilesize = scale/(screen_x1-screen_x0) * gfx_screenwidth();
-	float final_tilesize_scale = final_tilesize/tile_pixelsize;
-	
-	gfx_quads_begin();
-	
-	int starty = (int)(screen_y0/scale)-1;
-	int startx = (int)(screen_x0/scale)-1;
-	int endy = (int)(screen_y1/scale)+1;
-	int endx = (int)(screen_x1/scale)+1;
-	
-	// adjust the texture shift according to mipmap level
-	float texsize = 1024.0f;
-	float frac = (1.25f/texsize) * (1/final_tilesize_scale);
-	float nudge = (0.5f/texsize) * (1/final_tilesize_scale);
-
-	for(int y = starty; y < endy; y++)
-		for(int x = startx; x < endx; x++)
-		{
-			int mx = x;
-			int my = y;
-			if(mx<0)
-				continue; // mx = 0;
-			if(mx>=w)
-				continue; // mx = w-1;
-			if(my<0)
-				continue; // my = 0;
-			if(my>=h)
-				continue; // my = h-1;
-			
-			int c = mx + my*w;
-				
-			unsigned char index = tiles[c].index;
-			if(index)
-			{
-				unsigned char flags = tiles[c].flags;
-				int tx = index%16;
-				int ty = index/16;
-				int px0 = tx*(1024/16);
-				int py0 = ty*(1024/16);
-				int px1 = (tx+1)*(1024/16)-1;
-				int py1 = (ty+1)*(1024/16)-1;
-				
-				float u0 = nudge + px0/texsize+frac;
-				float v0 = nudge + py0/texsize+frac;
-				float u1 = nudge + px1/texsize-frac;
-				float v1 = nudge + py1/texsize-frac;
-				
-				if(flags&TILEFLAG_VFLIP)
-				{
-					float tmp = u0;
-					u0 = u1;
-					u1 = tmp;
-				}
-
-				if(flags&TILEFLAG_HFLIP)
-				{
-					float tmp = v0;
-					v0 = v1;
-					v1 = tmp;
-				}
-				
-				gfx_quads_setsubset(u0,v0,u1,v1);
-
-				gfx_quads_drawTL(x*scale, y*scale, scale, scale);
-			}
-		}
-	
-	gfx_quads_end();
-}
+#include <game/generated/gc_data.h>
+#include <game/client/gc_render.h>
+#include "ed_editor.hpp"
 
 LAYER_TILES::LAYER_TILES(int w, int h)
 {

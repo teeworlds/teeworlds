@@ -23,6 +23,7 @@ extern "C" {
 
 #include "../generated/gc_data.h"
 #include "gc_render.h"
+#include "gc_anim.h"
 #include "gc_skin.h"
 #include "gc_ui.h"
 #include <mastersrv/mastersrv.h>
@@ -72,11 +73,6 @@ enum
 	PAGE_SETTINGS,
 	PAGE_SYSTEM,
 };
-
-extern void select_sprite(int id, int flags=0, int sx=0, int sy=0);
-
-extern void draw_round_rect_ext(float x, float y, float w, float h, float r, int corners);
-extern void draw_round_rect(float x, float y, float w, float h, float r);
 
 static void ui_draw_rect(const RECT *r, vec4 color, int corners, float rounding)
 {
@@ -258,12 +254,6 @@ int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hid
 		
 		r = 1;
 	}
-
-	int box_type;
-	if (ui_active_item() == id || ui_hot_item() == id || ui_last_active_item() == id)
-		box_type = GUI_BOX_SCREEN_INFO;
-	else
-		box_type = GUI_BOX_SCREEN_TEXTBOX;
 
 	bool just_got_active = false;
 	
@@ -1972,7 +1962,7 @@ int menu2_render()
 	return 0;
 }
 
-void modmenu_render()
+void menu_render()
 {
 	static int mouse_x = 0;
 	static int mouse_y = 0;

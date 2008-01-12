@@ -1,6 +1,9 @@
+/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+
 #include <stdlib.h>
 #include <math.h>
 #include "array.h"
+#include "../g_mapitems.h"
 
 extern "C" {
 	#include <engine/e_system.h>
@@ -28,75 +31,13 @@ enum
 	
 	DIALOG_NONE=0,
 	DIALOG_LOAD_IMAGE,
-	
-	LAYERTYPE_INVALID=0,
-	LAYERTYPE_GAME,
-	LAYERTYPE_TILES,
-	LAYERTYPE_QUADS,
 };
-
-typedef struct
-{
-	int x, y; // 22.10 fixed point
-} POINT;
-
-// float to fixed
-inline int f2fx(float v) { return (int)(v*(float)(1<<10)); }
-inline float fx2f(int v) { return v*(1.0f/(1<<10)); }
-
-typedef struct // as in file
-{
-	int r, g, b, a;
-} COLOR;
-
-typedef struct // as in file
-{
-	POINT points[5];
-	COLOR colors[4];
-	POINT texcoords[4];
-	
-	int pos_env;
-	int pos_env_offset;
-	
-	int color_env;
-	int color_env_offset;
-} QUAD;
 
 typedef struct // as in file
 {
 	POINT position;
 	int type;
 } ENTITY;
-
-enum
-{
-	ENTITY_NULL=0,
-	ENTITY_SPAWN,
-	ENTITY_SPAWN_RED,
-	ENTITY_SPAWN_BLUE,
-	ENTITY_FLAGSTAND_RED,
-	ENTITY_FLAGSTAND_BLUE,
-	ENTITY_ARMOR_1,
-	ENTITY_HEATH_1,
-	ENTITY_WEAPON_SHOTGUN,
-	ENTITY_WEAPON_ROCKET,
-	ENTITY_POWERUP_NINJA,
-	NUM_ENTITIES,
-	
-	TILE_AIR=0,
-	TILE_SOLID,
-	TILE_NOHOOK,
-	
-	ENTITY_OFFSET=255-16*4,
-};
-
-typedef struct // as in file
-{
-	unsigned char index;
-	unsigned char flags;
-	unsigned char reserved1;
-	unsigned char reserved2;
-} TILE;
 
 enum
 {
@@ -531,39 +472,3 @@ public:
 
 	virtual void render_properties(RECT *toolbox);
 };
-
-
-inline void calc_screen_params(float amount, float wmax, float hmax, float aspect, float *w, float *h)
-{
-	float f = sqrt(amount) / sqrt(aspect);
-	*w = f*aspect;
-	*h = f;
-	
-	// limit the view
-	if(*w > wmax)
-	{
-		*w = wmax;
-		*h = *w/aspect;
-	}
-	
-	if(*h > hmax)
-	{
-		*h = hmax;
-		*w = *h*aspect;
-	}
-}
-
-inline void mapscreen_to_world(float center_x, float center_y, float parallax_x, float parallax_y,
-	float offset_x, float offset_y, float aspect, float zoom, float *points)
-{
-	float width, height;
-	calc_screen_params(1300*1000, 1500, 1050, aspect, &width, &height);
-	center_x *= parallax_x;
-	center_y *= parallax_y;
-	width *= zoom;
-	height *= zoom;
-	points[0] = offset_x+center_x-width/2;
-	points[1] = offset_y+center_y-height/2;
-	points[2] = offset_x+center_x+width/2;
-	points[3] = offset_y+center_y+height/2;
-}

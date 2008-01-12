@@ -1,3 +1,5 @@
+/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,8 +17,9 @@ extern "C" {
 //#include "game/mapres_col.h"
 #include <game/g_mapres.h>
 #include <game/g_game.h>
+#include <game/client/gc_render.h>
 
-#include "editor.hpp"
+#include "ed_editor.hpp"
 
 static int checker_texture = 0;
 static int background_texture = 0;
@@ -116,9 +119,6 @@ int LAYERGROUP::swap_layers(int index0, int index1)
 /********************************************************
  OTHER
 *********************************************************/
-extern void draw_round_rect_ext(float x, float y, float w, float h, float r, int corners);
-extern void draw_round_rect(float x, float y, float w, float h, float r);
-
 static void ui_draw_rect(const RECT *r, vec4 color, int corners, float rounding)
 {
 	gfx_texture_set(-1);
@@ -1961,67 +1961,6 @@ void EDITOR::make_game_group(LAYERGROUP *group)
 	editor.game_group->name = "Game";
 }
 
-typedef struct 
-{
-	int version;
-	int width;
-	int height;
-	int external;
-	int image_name;
-	int image_data;
-} MAPITEM_IMAGE;
-
-typedef struct
-{
-	int version;
-	int offset_x;
-	int offset_y;
-	int parallax_x;
-	int parallax_y;
-
-	int start_layer;
-	int num_layers;
-} MAPITEM_GROUP;
-
-typedef struct
-{
-	int version;
-	int type;
-	int flags;
-} MAPITEM_LAYER;
-
-typedef struct
-{
-	MAPITEM_LAYER layer;
-	int version;
-	
-	int width;
-	int height;
-	int flags;
-	
-	COLOR color;
-	int color_env;
-	int color_env_offset;
-	
-	int image;
-	int data;
-} MAPITEM_LAYER_TILEMAP;
-
-typedef struct
-{
-	MAPITEM_LAYER layer;
-	int version;
-	
-	int num_quads;
-	int data;
-	int image;
-} MAPITEM_LAYER_QUADS;
-
-typedef struct
-{
-	int version;
-} MAPITEM_VERSION;
-
 template<typename T>
 static int make_version(int i, const T &v)
 { return (i<<16)+sizeof(T); }
@@ -2411,6 +2350,7 @@ extern "C" void editor_init()
 	editor.show_envelope_editor = 1;
 #endif
 
+/*
 	if(1)
 	{
 		float w, h;
@@ -2426,7 +2366,7 @@ extern "C" void editor_init()
 		calc_screen_params(amount, max, max, 9.0f/16.0f, &w, &h); dbg_msg("", "%f %f %f", w, h, w*h);
 		calc_screen_params(amount, max, max, 16.0f/3.0f, &w, &h); dbg_msg("", "%f %f %f", w, h, w*h);
 		calc_screen_params(amount, max, max, 3.0f/16.0f, &w, &h); dbg_msg("", "%f %f %f", w, h, w*h);
-	}
+	}*/
 }
 
 extern "C" void editor_update_and_render()

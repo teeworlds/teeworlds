@@ -1,4 +1,7 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+#ifndef GAME_GAME_H
+#define GAME_GAME_H
+
 #include <engine/e_system.h>
 #include <game/g_math.h>
 #include <math.h>
@@ -169,3 +172,5 @@ enum
 	ITEM_ARMOR=0x00030001,
 	ITEM_NINJA=0x00040001,
 };
+
+#endif

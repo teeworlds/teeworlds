@@ -1,5 +1,5 @@
 #include <game/client/gc_mapres_tilemap.h>
-#include "editor.hpp"
+#include "ed_editor.hpp"
 
 
 LAYER_GAME::LAYER_GAME(int w, int h)

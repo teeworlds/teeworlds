@@ -17,126 +17,52 @@ extern "C" {
 #include "../generated/gc_data.h"
 #include "gc_menu.h"
 #include "gc_skin.h"
-#include "gc_render.h"
 #include "gc_ui.h"
+#include "gc_client.h"
+#include "gc_render.h"
+#include "gc_anim.h"
 
-// sound channels
-enum
-{
-	CHN_GUI=0,
-	CHN_MUSIC,
-	CHN_WORLD,
-	CHN_GLOBAL,
-};
-
-data_container *data = 0x0;
-
-static player_input input_data = {0};
-static int input_target_lock = 0;
-
+struct data_container *data = 0;
 static int64 debug_firedelay = 0;
 
-extern void modmenu_render();
-extern void menu_init();
+player_input input_data = {0};
+int input_target_lock = 0;
 
-enum
-{
-	CHATMODE_NONE=0,
-	CHATMODE_ALL,
-	CHATMODE_TEAM,
-	CHATMODE_CONSOLE,
-	CHATMODE_REMOTECONSOLE,
-};
-
-static int chat_mode = CHATMODE_NONE;
+int chat_mode = CHATMODE_NONE;
 bool menu_active = false;
 bool menu_game_active = false;
-static int snapshot_count = 0;
 static bool emoticon_selector_active = false;
 
-static vec2 mouse_pos;
-static vec2 local_character_pos;
-static vec2 local_target_pos;
-static const obj_player_character *local_character = 0;
-static const obj_player_character *local_prev_character = 0;
+
+vec2 mouse_pos;
+vec2 local_character_pos;
+vec2 local_target_pos;
+const obj_player_character *local_character = 0;
+const obj_player_character *local_prev_character = 0;
 const obj_player_info *local_info = 0;
-static const obj_flag *flags[2] = {0,0};
+const obj_flag *flags[2] = {0,0};
 const obj_game *gameobj = 0;
 
-static int picked_up_weapon = -1;
+int picked_up_weapon = -1;
 
-static struct client_data
+client_data client_datas[MAX_CLIENTS];
+void client_data::update_render_info()
 {
-	char name[64];
-	char skin_name[64];
-	int skin_id;
-	int skin_color;
-	int team;
-	int emoticon;
-	int emoticon_start;
-	player_core predicted;
-	
-	tee_render_info skin_info; // this is what the server reports
-	tee_render_info render_info; // this is what we use
-	
-	void update_render_info()
-	{
-		render_info = skin_info;
+	render_info = skin_info;
 
-		// force team colors
-		if(gameobj && gameobj->gametype != GAMETYPE_DM)
+	// force team colors
+	if(gameobj && gameobj->gametype != GAMETYPE_DM)
+	{
+		const int team_colors[2] = {65387, 10223467};
+		if(team >= 0 || team <= 1)
 		{
-			const int team_colors[2] = {65387, 10223467};
-			if(team >= 0 || team <= 1)
-			{
-				render_info.texture = skin_get(skin_id)->color_texture;
-				render_info.color_body = skin_get_color(team_colors[team]);
-				render_info.color_feet = skin_get_color(team_colors[team]);
-			}
-		}		
-	}
-} client_datas[MAX_CLIENTS];
-
-class client_effects
-{
-public:
-	float zoom;
-	float currentzoom;
-	float stage;
-	int lastzoomin;
-	int lastincrease;
-
-	client_effects()
-	{
-		currentzoom = zoom = 3.0f;
-		stage = 0.0f;
-	}
-
-	float getorgzoom() { return zoom; }
-
-	float getzoom(int tick, float intratick, const obj_player_character *player)
-	{
-		float currentstage = ((float)player->weaponstage) * 0.1f;
-		if (currentstage < stage)
-		{
-			if ((tick - lastincrease) > (client_tickspeed() / 2))
-				stage = currentstage;
+			render_info.texture = skin_get(skin_id)->color_texture;
+			render_info.color_body = skin_get_color(team_colors[team]);
+			render_info.color_feet = skin_get_color(team_colors[team]);
 		}
-		else
-		{
-			lastincrease = tick;
-			stage = currentstage;
-		}
+	}		
+}
 
-		float targetzoom = 3.0f + stage;
-		currentzoom = LERP(currentzoom, targetzoom, 0.1);
-		return currentzoom;
-	}
-};
-
-client_effects cl_effects;
-
-inline float frandom() { return rand()/(float)(RAND_MAX); }
 
 void snd_play_random(int chn, int setid, float vol, vec2 pos)
 {
@@ -158,96 +84,6 @@ void snd_play_random(int chn, int setid, float vol, vec2 pos)
 	} while(id == set->last);
 	snd_play_at(chn, set->sounds[id].id, 0, pos.x, pos.y);
 	set->last = id;
-}
-
-// sound volume tweak
-static const float stereo_separation = 0.001f;
-static const float stereo_separation_deadzone = 200.0f;
-static const float volume_distance_falloff = 200.0f;
-static const float volume_distance_deadzone = 320.0f;
-static const float volume_gun = 0.5f;
-static const float volume_tee = 0.5f;
-static const float volume_hit = 0.5f;
-static const float volume_music = 0.8f;
-
-void sound_vol_pan(const vec2& p, float *vol, float *pan)
-{
-	vec2 player_to_ev = p - local_character_pos;
-	*pan = 0.0f;
-	*vol = 1.0f;
-
-	if(fabs(player_to_ev.x) > stereo_separation_deadzone)
-	{
-		*pan = stereo_separation * (player_to_ev.x - sign(player_to_ev.x)*stereo_separation_deadzone);
-		if(*pan < -1.0f) *pan = -1.0f;
-		if(*pan > 1.0f) *pan = 1.0f;
-	}
-
-	float len = length(player_to_ev);
-	if(len > volume_distance_deadzone)
-	{
-		*vol = volume_distance_falloff / (len - volume_distance_deadzone);
-
-		if(*vol < 0.0f) *vol = 0.0f;
-		if(*vol > 1.0f) *vol = 1.0f;
-	}
-}
-
-enum
-{
-	SPRITE_FLAG_FLIP_Y=1,
-	SPRITE_FLAG_FLIP_X=2,
-};
-
-static float sprite_w_scale;
-static float sprite_h_scale;
-
-static void select_sprite(sprite *spr, int flags=0, int sx=0, int sy=0)
-{
-	int x = spr->x+sx;
-	int y = spr->y+sy;
-	int w = spr->w;
-	int h = spr->h;
-	int cx = spr->set->gridx;
-	int cy = spr->set->gridy;
-
-	float f = sqrtf(h*h + w*w);
-	sprite_w_scale = w/f;
-	sprite_h_scale = h/f;
-	
-	float x1 = x/(float)cx;
-	float x2 = (x+w)/(float)cx;
-	float y1 = y/(float)cy;
-	float y2 = (y+h)/(float)cy;
-	float temp = 0;
-
-	if(flags&SPRITE_FLAG_FLIP_Y)
-	{
-		temp = y1;
-		y1 = y2;
-		y2 = temp;
-	}
-
-	if(flags&SPRITE_FLAG_FLIP_X)
-	{
-		temp = x1;
-		x1 = x2;
-		x2 = temp;
-	}
-	
-	gfx_quads_setsubset(x1, y1, x2, y2);
-}
-
-void select_sprite(int id, int flags=0, int sx=0, int sy=0)
-{
-	if(id < 0 || id > data->num_sprites)
-		return;
-	select_sprite(&data->sprites[id], flags, sx, sy);
-}
-
-void draw_sprite(float x, float y, float size)
-{
-	gfx_quads_draw(x, y, size*sprite_w_scale, size*sprite_h_scale);
 }
 
 class damage_indicators
@@ -477,7 +313,13 @@ public:
 		}
 	}
 };
+
 static projectile_particles proj_particles;
+
+void reset_projectile_particles() // TODO: remove
+{
+	proj_particles.reset();
+}
 
 static char chat_input[512];
 static unsigned chat_input_len;
@@ -534,22 +376,11 @@ void chat_add_line(int client_id, int team, const char *line)
 	}
 }
 
-struct killmsg
-{
-	int weapon;
-	int victim;
-	int killer;
-	int mode_special; // for CTF, if the guy is carrying a flag for example
-	int tick;
-};
 
-static const int killmsg_max = 5;
 killmsg killmsgs[killmsg_max];
-static int killmsg_current = 0;
+int killmsg_current = 0;
 
-extern unsigned char internal_data[];
-
-void create_air_jump_effect(vec2 pos)
+void effect_air_jump(vec2 pos)
 {
 	const int count = 12;
 	for(int i = 0; i <= count; i++)
@@ -560,83 +391,15 @@ void create_air_jump_effect(vec2 pos)
 	}
 }
 
-
-extern void draw_round_rect(float x, float y, float w, float h, float r);
 extern int render_popup(const char *caption, const char *text, const char *button_text);
-void render_loading(float percent);
 
-extern "C" void modc_init()
+void process_events(int snaptype)
 {
-	static FONT_SET default_font;
-
-	int before = gfx_memory_usage();
-	font_set_load(&default_font, "fonts/default_font%d.tfnt", "fonts/default_font%d.png", "fonts/default_font%d_b.png", 14, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 36);
-	dbg_msg("font", "gfx memory usage: %d", gfx_memory_usage()-before);
-	
-	gfx_text_set_default_font(&default_font);
-
-	menu_init();
-	
-	// setup sound channels
-	snd_set_channel(CHN_GUI, 1.0f, 0.0f);
-	snd_set_channel(CHN_MUSIC, 1.0f, 0.0f);
-	snd_set_channel(CHN_WORLD, 0.9f, 1.0f);
-	snd_set_channel(CHN_GLOBAL, 1.0f, 0.0f);
-
-	// load the data container
-	data = load_data_from_memory(internal_data);
-
-	// TODO: should be removed
-	snd_set_listener_pos(0.0f, 0.0f);
-
-	float total = data->num_sounds+data->num_images;
-	float current = 0;
-
-	// load textures
-	for(int i = 0; i < data->num_images; i++)
-	{
-		render_loading(current/total);
-		data->images[i].id = gfx_load_texture(data->images[i].filename, IMG_AUTO);
-		current++;
-	}
-	
-	// load sounds
-	for(int s = 0; s < data->num_sounds; s++)
-	{
-		render_loading(current/total);
-		for(int i = 0; i < data->sounds[s].num_sounds; i++)
-		{
-			int id;
-			//if (strcmp(data->sounds[s].sounds[i].filename + strlen(data->sounds[s].sounds[i].filename) - 3, ".wv") == 0)
-			id = snd_load_wv(data->sounds[s].sounds[i].filename);
-			//else
-			//	id = snd_load_wav(data->sounds[s].sounds[i].filename);
-
-			data->sounds[s].sounds[i].id = id;
-		}
-
-		current++;
-	}
-
-	skin_init();
-}
-
-extern "C" void modc_entergame()
-{
-}
-
-extern "C" void modc_shutdown()
-{
-	// shutdown the menu
-}
-
-static void process_events(int s)
-{
-	int num = snap_num_items(s);
+	int num = snap_num_items(snaptype);
 	for(int index = 0; index < num; index++)
 	{
 		SNAP_ITEM item;
-		const void *data = snap_get_item(s, index, &item);
+		const void *data = snap_get_item(snaptype, index, &item);
 
 		if(item.type == EVENT_DAMAGEINDICATION)
 		{
@@ -646,7 +409,7 @@ static void process_events(int s)
 		else if(item.type == EVENT_AIR_JUMP)
 		{
 			ev_common *ev = (ev_common *)data;
-			create_air_jump_effect(vec2(ev->x, ev->y));
+			effect_air_jump(vec2(ev->x, ev->y));
 		}
 		else if(item.type == EVENT_EXPLOSION)
 		{
@@ -762,139 +525,7 @@ static void process_events(int s)
 	}
 }
 
-static player_core predicted_prev_player;
-static player_core predicted_player;
-static int predicted_tick = 0;
-static int last_new_predicted_tick = -1;
-
-extern "C" void modc_predict()
-{
-	player_core before_prev_player = predicted_prev_player;
-	player_core before_player = predicted_player;
-
-
-	// repredict player
-	world_core world;
-	int local_cid = -1;
-
-	// search for players
-	for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
-	{
-		SNAP_ITEM item;
-		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-		int client_id = item.id;
-
-		if(item.type == OBJTYPE_PLAYER_CHARACTER)
-		{
-			const obj_player_character *character = (const obj_player_character *)data;
-			client_datas[client_id].predicted.world = &world;
-			world.players[client_id] = &client_datas[client_id].predicted;
-
-			client_datas[client_id].predicted.read(character);
-		}
-		else if(item.type == OBJTYPE_PLAYER_INFO)
-		{
-			const obj_player_info *info = (const obj_player_info *)data;
-			if(info->local)
-				local_cid = client_id;
-		}
-	}
-
-	// predict
-	for(int tick = client_tick()+1; tick <= client_predtick(); tick++)
-	{
-		// fetch the local
-		if(tick == client_predtick() && world.players[local_cid])
-			predicted_prev_player = *world.players[local_cid];
-		
-		// first calculate where everyone should move
-		for(int c = 0; c < MAX_CLIENTS; c++)
-		{
-			if(!world.players[c])
-				continue;
-
-			mem_zero(&world.players[c]->input, sizeof(world.players[c]->input));
-			if(local_cid == c)
-			{
-				// apply player input
-				int *input = client_get_input(tick);
-				if(input)
-					world.players[c]->input = *((player_input*)input);
-			}
-
-			world.players[c]->tick();
-		}
-
-		// move all players and quantize their data
-		for(int c = 0; c < MAX_CLIENTS; c++)
-		{
-			if(!world.players[c])
-				continue;
-
-			
-			// TODO: this should be moved into the g_game
-			// but not done to preserve the nethash
-			if(length(world.players[c]->vel) > 150.0f)
-				world.players[c]->vel = normalize(world.players[c]->vel) * 150.0f;
-
-			world.players[c]->move();
-			world.players[c]->quantize();
-		}
-		
-		if(tick > last_new_predicted_tick)
-		{
-			last_new_predicted_tick = tick;
-			
-			if(local_cid != -1 && world.players[local_cid])
-			{
-				vec2 pos = world.players[local_cid]->pos;
-				int events = world.players[local_cid]->triggered_events;
-				if(events&COREEVENT_GROUND_JUMP) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
-				if(events&COREEVENT_AIR_JUMP)
-				{
-					create_air_jump_effect(pos);
-					snd_play_random(CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, pos);
-				}
-				//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
-				if(events&COREEVENT_HOOK_ATTACH_PLAYER) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, pos);
-				if(events&COREEVENT_HOOK_ATTACH_GROUND) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, pos);
-				//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
-			}
-
-
-			/*
-			dbg_msg("predict", "%d %d %d", tick,
-				(int)world.players[c]->pos.x, (int)world.players[c]->pos.y,
-				(int)world.players[c]->vel.x, (int)world.players[c]->vel.y);*/
-		}
-		
-		if(tick == client_predtick() && world.players[local_cid])
-			predicted_player = *world.players[local_cid];
-	}
-	
-	if(config.debug && predicted_tick == client_predtick())
-	{
-		if(predicted_player.pos.x != before_player.pos.x ||
-			predicted_player.pos.y != before_player.pos.y)
-		{
-			dbg_msg("client", "prediction error, (%d %d) (%d %d)", 
-				(int)before_player.pos.x, (int)before_player.pos.y,
-				(int)predicted_player.pos.x, (int)predicted_player.pos.y);
-		}
-
-		if(predicted_prev_player.pos.x != before_prev_player.pos.x ||
-			predicted_prev_player.pos.y != before_prev_player.pos.y)
-		{
-			dbg_msg("client", "prediction error, prev (%d %d) (%d %d)", 
-				(int)before_prev_player.pos.x, (int)before_prev_player.pos.y,
-				(int)predicted_prev_player.pos.x, (int)predicted_prev_player.pos.y);
-		}
-	}
-	
-	predicted_tick = client_predtick();
-}
-
-static void clear_object_pointers()
+void clear_object_pointers()
 {
 	// clear out the invalid pointers
 	local_character = 0;
@@ -903,69 +534,6 @@ static void clear_object_pointers()
 	flags[0] = 0;
 	flags[1] = 0;
 	gameobj = 0;
-}
-
-extern "C" void modc_newsnapshot()
-{
-	snapshot_count++;
-	process_events(SNAP_CURRENT);
-
-	if(config.dbg_stress)
-	{
-		if((client_tick()%250) == 0)
-		{
-			msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
-			msg_pack_int(-1);
-			msg_pack_string("galenskap!!!!", 512);
-			msg_pack_end();
-			client_send_msg();
-		}
-	}
-
-	clear_object_pointers();
-
-	// setup world view
-	{
-		// 1. fetch local player
-		// 2. set him to the center
-		int num = snap_num_items(SNAP_CURRENT);
-		for(int i = 0; i < num; i++)
-		{
-			SNAP_ITEM item;
-			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-
-			if(item.type == OBJTYPE_PLAYER_INFO)
-			{
-				const obj_player_info *info = (const obj_player_info *)data;
-				
-				client_datas[info->clientid].team = info->team;
-				
-				if(info->local)
-				{
-					local_info = info;
-					const void *data = snap_find_item(SNAP_CURRENT, OBJTYPE_PLAYER_CHARACTER, item.id);
-					if(data)
-					{
-						local_character = (const obj_player_character *)data;
-						local_character_pos = vec2(local_character->x, local_character->y);
-
-						const void *p = snap_find_item(SNAP_PREV, OBJTYPE_PLAYER_CHARACTER, item.id);
-						if(p)
-							local_prev_character = (obj_player_character *)p;
-					}
-				}
-			}
-			else if(item.type == OBJTYPE_GAME)
-				gameobj = (obj_game *)data;
-			else if(item.type == OBJTYPE_FLAG)
-			{
-				flags[item.id%2] = (const obj_flag *)data;
-			}
-		}
-	}
-
-	for(int i = 0; i < MAX_CLIENTS; i++)
-		client_datas[i].update_render_info();
 }
 
 void send_info(bool start)
@@ -989,121 +557,6 @@ void send_emoticon(int emoticon)
 	msg_pack_int(emoticon);
 	msg_pack_end();
 	client_send_msg();
-}
-
-static void render_projectile(const obj_projectile *current, int itemid)
-{
-	if(debug_firedelay)
-	{
-		debug_firedelay = time_get()-debug_firedelay;
-		dbg_msg("game", "firedelay=%.2f ms", debug_firedelay/(float)time_freq()*1000.0f);
-		debug_firedelay = 0;
-	}
-	
-	gfx_texture_set(data->images[IMAGE_GAME].id);
-	gfx_quads_begin();
-
-	// get positions
-	float gravity = -400;
-	if(current->type != WEAPON_ROCKET)
-		gravity = -100;
-	if(current->type == WEAPON_BOMB)
-		gravity = 0;
-
-	float ct = (client_tick()-current->start_tick)/(float)SERVER_TICK_SPEED + client_ticktime()*1/(float)SERVER_TICK_SPEED;
-	vec2 startpos(current->x, current->y);
-	vec2 startvel(current->vx, current->vy);
-	vec2 pos = calc_pos(startpos, startvel, gravity, ct);
-	vec2 prevpos = calc_pos(startpos, startvel, gravity, ct-0.001f);
-
-	select_sprite(data->weapons[current->type%data->num_weapons].sprite_proj);
-	vec2 vel = pos-prevpos;
-	//vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
-
-	// add particle for this projectile
-	proj_particles.addparticle(current->type, itemid, pos, vel);
-
-	if(length(vel) > 0.00001f)
-		gfx_quads_setrotation(get_angle(vel));
-	else
-		gfx_quads_setrotation(0);
-
-	// TODO: do this, but nice
-	//temp_system.new_particle(pos, vec2(0,0), 0.3f, 14.0f, 0, 0.95f);
-
-	gfx_quads_draw(pos.x, pos.y, 32, 32);
-	gfx_quads_setrotation(0);
-	gfx_quads_end();
-}
-
-static void render_powerup(const obj_powerup *prev, const obj_powerup *current)
-{
-	gfx_texture_set(data->images[IMAGE_GAME].id);
-	gfx_quads_begin();
-	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
-	float angle = 0.0f;
-	float size = 64.0f;
-	if (current->type == POWERUP_WEAPON)
-	{
-		angle = 0; //-pi/6;//-0.25f * pi * 2.0f;
-		select_sprite(data->weapons[current->subtype%data->num_weapons].sprite_body);
-		size = data->weapons[current->subtype%data->num_weapons].visual_size;
-	}
-	else
-	{
-		const int c[] = {
-			SPRITE_POWERUP_HEALTH,
-			SPRITE_POWERUP_ARMOR,
-			SPRITE_POWERUP_WEAPON,
-			SPRITE_POWERUP_NINJA,
-			SPRITE_POWERUP_TIMEFIELD
-			};
-		select_sprite(c[current->type]);
-
-		if(c[current->type] == SPRITE_POWERUP_NINJA)
-		{
-			proj_particles.addparticle(0, 0,
-				pos+vec2((frandom()-0.5f)*80.0f, (frandom()-0.5f)*20.0f),
-				vec2((frandom()-0.5f)*10.0f, (frandom()-0.5f)*10.0f));
-			size *= 2.0f;
-			pos.x += 10.0f;
-		}
-	}
-
-	gfx_quads_setrotation(angle);
-
-	float offset = pos.y/32.0f + pos.x/32.0f;
-	pos.x += cosf(client_localtime()*2.0f+offset)*2.5f;
-	pos.y += sinf(client_localtime()*2.0f+offset)*2.5f;
-	draw_sprite(pos.x, pos.y, size);
-	gfx_quads_end();
-}
-
-static void render_flag(const obj_flag *prev, const obj_flag *current)
-{
-	float angle = 0.0f;
-	float size = 42.0f;
-
-    gfx_blend_normal();
-    gfx_texture_set(data->images[IMAGE_GAME].id);
-    gfx_quads_begin();
-
-	if(current->team == 0) // red team
-		select_sprite(SPRITE_FLAG_RED);
-	else
-		select_sprite(SPRITE_FLAG_BLUE);
-
-	gfx_quads_setrotation(angle);
-
-	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
-
-	if(local_info && current->carried_by == local_info->clientid)
-		pos = local_character_pos;
-
-    //gfx_setcolor(current->team ? 0 : 1,0,current->team ? 1 : 0,1);
-    //draw_sprite(pos.x, pos.y, size);
-    gfx_quads_draw(pos.x, pos.y-size*0.75f, size, size*2);
-    gfx_quads_end();
 }
 
 void anim_seq_eval(sequence *seq, float time, keyframe *frame)
@@ -1178,127 +631,6 @@ void anim_eval_add(animstate *state, animation *anim, float time, float amount)
 	anim_add(state, &add, amount);
 }
 
-static void render_hand(tee_render_info *info, vec2 center_pos, vec2 dir, float angle_offset, vec2 post_rot_offset)
-{
-	// for drawing hand
-	//const skin *s = skin_get(skin_id);
-	
-	float basesize = 10.0f;
-	//dir = normalize(hook_pos-pos);
-
-	vec2 hand_pos = center_pos + dir;
-	float angle = get_angle(dir);
-	if (dir.x < 0)
-		angle -= angle_offset;
-	else
-		angle += angle_offset;
-
-	vec2 dirx = dir;
-	vec2 diry(-dir.y,dir.x);
-
-	if (dir.x < 0)
-		diry = -diry;
-
-	hand_pos += dirx * post_rot_offset.x;
-	hand_pos += diry * post_rot_offset.y;
-
-	//gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
-	gfx_texture_set(info->texture);
-	gfx_quads_begin();
-	gfx_setcolor(info->color_body.r, info->color_body.g, info->color_body.b, info->color_body.a);
-
-	// two passes
-	for (int i = 0; i < 2; i++)
-	{
-		bool outline = i == 0;
-
-		select_sprite(outline?SPRITE_TEE_HAND_OUTLINE:SPRITE_TEE_HAND, 0, 0, 0);
-		gfx_quads_setrotation(angle);
-		gfx_quads_draw(hand_pos.x, hand_pos.y, 2*basesize, 2*basesize);
-	}
-
-	gfx_quads_setrotation(0);
-	gfx_quads_end();
-}
-
-void render_tee(animstate *anim, tee_render_info *info, int emote, vec2 dir, vec2 pos)
-{
-	vec2 direction = dir;
-	vec2 position = pos;
-
-	//gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
-	gfx_texture_set(info->texture);
-	gfx_quads_begin();
-	//gfx_quads_draw(pos.x, pos.y-128, 128, 128);
-
-	// first pass we draw the outline
-	// second pass we draw the filling
-	for(int p = 0; p < 2; p++)
-	{
-		int outline = p==0 ? 1 : 0;
-
-		for(int f = 0; f < 2; f++)
-		{
-			float animscale = info->size * 1.0f/64.0f;
-			float basesize = info->size;
-			if(f == 1)
-			{
-				gfx_quads_setrotation(anim->body.angle*pi*2);
-
-				// draw body
-				gfx_setcolor(info->color_body.r, info->color_body.g, info->color_body.b, info->color_body.a);
-				vec2 body_pos = position + vec2(anim->body.x, anim->body.y)*animscale;
-				select_sprite(outline?SPRITE_TEE_BODY_OUTLINE:SPRITE_TEE_BODY, 0, 0, 0);
-				gfx_quads_draw(body_pos.x, body_pos.y, basesize, basesize);
-
-				// draw eyes
-				if(p == 1)
-				{
-					switch (emote)
-					{
-						case EMOTE_PAIN:
-							select_sprite(SPRITE_TEE_EYE_PAIN, 0, 0, 0);
-							break;
-						case EMOTE_HAPPY:
-							select_sprite(SPRITE_TEE_EYE_HAPPY, 0, 0, 0);
-							break;
-						case EMOTE_SURPRISE:
-							select_sprite(SPRITE_TEE_EYE_SURPRISE, 0, 0, 0);
-							break;
-						case EMOTE_ANGRY:
-							select_sprite(SPRITE_TEE_EYE_ANGRY, 0, 0, 0);
-							break;
-						default:
-							select_sprite(SPRITE_TEE_EYE_NORMAL, 0, 0, 0);
-							break;
-					}
-					
-					float eyescale = basesize*0.40f;
-					float h = emote == EMOTE_BLINK ? basesize*0.15f : eyescale;
-					float eyeseparation = (0.075f - 0.010f*fabs(direction.x))*basesize;
-					vec2 offset = vec2(direction.x*0.125f, -0.05f+direction.y*0.10f)*basesize;
-					gfx_quads_draw(body_pos.x-eyeseparation+offset.x, body_pos.y+offset.y, eyescale, h);
-					gfx_quads_draw(body_pos.x+eyeseparation+offset.x, body_pos.y+offset.y, -eyescale, h);
-				}
-			}
-
-			// draw feet
-			gfx_setcolor(info->color_feet.r, info->color_feet.g, info->color_feet.b, info->color_feet.a);
-			select_sprite(outline?SPRITE_TEE_FOOT_OUTLINE:SPRITE_TEE_FOOT, 0, 0, 0);
-
-			keyframe *foot = f ? &anim->front_foot : &anim->back_foot;
-
-			float w = basesize;
-			float h = basesize/2;
-
-			gfx_quads_setrotation(foot->angle*pi*2);
-			gfx_quads_draw(position.x+foot->x*animscale, position.y+foot->y*animscale, w, h);
-		}
-	}
-
-	gfx_quads_end();
-}
-
 void draw_circle(float x, float y, float r, int segments)
 {
 	float f_segments = (float)segments;
@@ -1319,373 +651,6 @@ void draw_circle(float x, float y, float r, int segments)
 			x+ca1*r, y+sa1*r,
 			x+ca3*r, y+sa3*r,
 			x+ca2*r, y+sa2*r);
-	}
-}
-
-void draw_round_rect_ext(float x, float y, float w, float h, float r, int corners)
-{
-	int num = 8;
-	for(int i = 0; i < num; i+=2)
-	{
-		float a1 = i/(float)num * pi/2;
-		float a2 = (i+1)/(float)num * pi/2;
-		float a3 = (i+2)/(float)num * pi/2;
-		float ca1 = cosf(a1);
-		float ca2 = cosf(a2);
-		float ca3 = cosf(a3);
-		float sa1 = sinf(a1);
-		float sa2 = sinf(a2);
-		float sa3 = sinf(a3);
-
-		if(corners&1) // TL
-		gfx_quads_draw_freeform(
-			x+r, y+r,
-			x+(1-ca1)*r, y+(1-sa1)*r,
-			x+(1-ca3)*r, y+(1-sa3)*r,
-			x+(1-ca2)*r, y+(1-sa2)*r);
-
-		if(corners&2) // TR
-		gfx_quads_draw_freeform(
-			x+w-r, y+r,
-			x+w-r+ca1*r, y+(1-sa1)*r,
-			x+w-r+ca3*r, y+(1-sa3)*r,
-			x+w-r+ca2*r, y+(1-sa2)*r);
-
-		if(corners&4) // BL
-		gfx_quads_draw_freeform(
-			x+r, y+h-r,
-			x+(1-ca1)*r, y+h-r+sa1*r,
-			x+(1-ca3)*r, y+h-r+sa3*r,
-			x+(1-ca2)*r, y+h-r+sa2*r);
-
-		if(corners&8) // BR
-		gfx_quads_draw_freeform(
-			x+w-r, y+h-r,
-			x+w-r+ca1*r, y+h-r+sa1*r,
-			x+w-r+ca3*r, y+h-r+sa3*r,
-			x+w-r+ca2*r, y+h-r+sa2*r);
-	}
-
-	gfx_quads_drawTL(x+r, y+r, w-r*2, h-r*2); // center
-	gfx_quads_drawTL(x+r, y, w-r*2, r); // top
-	gfx_quads_drawTL(x+r, y+h-r, w-r*2, r); // bottom
-	gfx_quads_drawTL(x, y+r, r, h-r*2); // left
-	gfx_quads_drawTL(x+w-r, y+r, r, h-r*2); // right
-	
-	if(!(corners&1)) gfx_quads_drawTL(x, y, r, r); // TL
-	if(!(corners&2)) gfx_quads_drawTL(x+w, y, -r, r); // TR
-	if(!(corners&4)) gfx_quads_drawTL(x, y+h, r, -r); // BL
-	if(!(corners&8)) gfx_quads_drawTL(x+w, y+h, -r, -r); // BR
-}
-
-void draw_round_rect(float x, float y, float w, float h, float r)
-{
-	draw_round_rect_ext(x,y,w,h,r,0xf);
-}
-
-
-static void render_player(
-	const obj_player_character *prev_char,
-	const obj_player_character *player_char,
-	const obj_player_info *prev_info,
-	const obj_player_info *player_info
-	)
-{
-	obj_player_character prev;
-	obj_player_character player;
-	prev = *prev_char;
-	player = *player_char;
-
-	obj_player_info info = *player_info;
-
-	float intratick = client_intratick();
-	float ticktime = client_ticktime();
-
-	if(player.health < 0) // dont render dead players
-		return;
-
-	if(info.local && config.cl_predict)
-	{
-		if(!local_character || (local_character->health < 0) || (gameobj && gameobj->game_over))
-		{
-		}
-		else
-		{
-			// apply predicted results
-			predicted_player.write(&player);
-			predicted_prev_player.write(&prev);
-			intratick = client_intrapredtick();
-		}
-	}
-
-	vec2 direction = get_direction(player.angle);
-	float angle = player.angle/256.0f;
-	vec2 position = mix(vec2(prev.x, prev.y), vec2(player.x, player.y), intratick);
-
-	if(prev.health < 0) // Don't flicker from previous position
-		position = vec2(player.x, player.y);
-
-	bool stationary = player.vx < 1 && player.vx > -1;
-	bool inair = col_check_point(player.x, player.y+16) == 0;
-
-	// evaluate animation
-	float walk_time = fmod(position.x, 100.0f)/100.0f;
-	animstate state;
-	anim_eval(&data->animations[ANIM_BASE], 0, &state);
-
-	if(inair)
-		anim_eval_add(&state, &data->animations[ANIM_INAIR], 0, 1.0f); // TODO: some sort of time here
-	else if(stationary)
-		anim_eval_add(&state, &data->animations[ANIM_IDLE], 0, 1.0f); // TODO: some sort of time here
-	else
-		anim_eval_add(&state, &data->animations[ANIM_WALK], walk_time, 1.0f);
-
-	if (player.weapon == WEAPON_HAMMER)
-	{
-		float a = clamp((client_tick()-player.attacktick+ticktime)/10.0f, 0.0f, 1.0f);
-		anim_eval_add(&state, &data->animations[ANIM_HAMMER_SWING], a, 1.0f);
-	}
-	if (player.weapon == WEAPON_NINJA)
-	{
-		float a = clamp((client_tick()-player.attacktick+ticktime)/40.0f, 0.0f, 1.0f);
-		anim_eval_add(&state, &data->animations[ANIM_NINJA_SWING], a, 1.0f);
-	}
-
-	// draw hook
-	if (prev.hook_state>0 && player.hook_state>0)
-	{
-		gfx_texture_set(data->images[IMAGE_GAME].id);
-		gfx_quads_begin();
-		//gfx_quads_begin();
-
-		vec2 pos = position;
-		vec2 hook_pos;
-		
-		if(player_char->hooked_player != -1)
-		{
-			if(local_info && player_char->hooked_player == local_info->clientid)
-			{
-				hook_pos = mix(vec2(predicted_prev_player.pos.x, predicted_prev_player.pos.y),
-					vec2(predicted_player.pos.x, predicted_player.pos.y), client_intrapredtick());
-			}
-			else
-				hook_pos = mix(vec2(prev_char->hook_x, prev_char->hook_y), vec2(player_char->hook_x, player_char->hook_y), client_intratick());
-		}
-		else
-			hook_pos = mix(vec2(prev.hook_x, prev.hook_y), vec2(player.hook_x, player.hook_y), intratick);
-
-		float d = distance(pos, hook_pos);
-		vec2 dir = normalize(pos-hook_pos);
-
-		gfx_quads_setrotation(get_angle(dir)+pi);
-
-		// render head
-		select_sprite(SPRITE_HOOK_HEAD);
-		gfx_quads_draw(hook_pos.x, hook_pos.y, 24,16);
-
-		// render chain
-		select_sprite(SPRITE_HOOK_CHAIN);
-		for(float f = 24; f < d; f += 24)
-		{
-			vec2 p = hook_pos + dir*f;
-			gfx_quads_draw(p.x, p.y,24,16);
-		}
-
-		gfx_quads_setrotation(0);
-		gfx_quads_end();
-
-		render_hand(&client_datas[info.clientid].render_info, position, normalize(hook_pos-pos), -pi/2, vec2(20, 0));
-	}
-
-	// draw gun
-	{
-		gfx_texture_set(data->images[IMAGE_GAME].id);
-		gfx_quads_begin();
-		gfx_quads_setrotation(state.attach.angle*pi*2+angle);
-
-		// normal weapons
-		int iw = clamp(player.weapon, 0, NUM_WEAPONS-1);
-		select_sprite(data->weapons[iw].sprite_body, direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
-
-		vec2 dir = direction;
-		float recoil = 0.0f;
-		vec2 p;
-		if (player.weapon == WEAPON_HAMMER)
-		{
-			// Static position for hammer
-			p = position;
-			p.y += data->weapons[iw].offsety;
-			// if attack is under way, bash stuffs
-			if(direction.x < 0)
-			{
-				gfx_quads_setrotation(-pi/2-state.attach.angle*pi*2);
-				p.x -= data->weapons[iw].offsetx;
-			}
-			else
-			{
-				gfx_quads_setrotation(-pi/2+state.attach.angle*pi*2);
-			}
-			draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
-		}
-		else if (player.weapon == WEAPON_NINJA)
-		{
-			p = position;
-			p.y += data->weapons[iw].offsety;
-
-			if(direction.x < 0)
-			{
-				gfx_quads_setrotation(-pi/2-state.attach.angle*pi*2);
-				p.x -= data->weapons[iw].offsetx;
-			}
-			else
-			{
-				gfx_quads_setrotation(-pi/2+state.attach.angle*pi*2);
-			}
-			draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
-
-			// HADOKEN
-			if ((client_tick()-player.attacktick) <= (SERVER_TICK_SPEED / 6) && data->weapons[iw].nummuzzlesprites)
-			{
-				int itex = rand() % data->weapons[iw].nummuzzlesprites;
-				float alpha = 1.0f;
-				if (alpha > 0.0f && data->weapons[iw].sprite_muzzle[itex].psprite)
-				{
-					vec2 dir = vec2(player_char->x,player_char->y) - vec2(prev_char->x, prev_char->y);
-					dir = normalize(dir);
-					float hadokenangle = get_angle(dir);
-					gfx_quads_setrotation(hadokenangle);
-					//float offsety = -data->weapons[iw].muzzleoffsety;
-					select_sprite(data->weapons[iw].sprite_muzzle[itex].psprite, 0);
-					vec2 diry(-dir.y,dir.x);
-					p = position;
-					float offsetx = data->weapons[iw].muzzleoffsetx;
-					p -= dir * offsetx;
-					draw_sprite(p.x, p.y, 160.0f);
-				}
-			}
-		}
-		else
-		{
-			// TODO: should be an animation
-			recoil = 0;
-			float a = (client_tick()-player.attacktick+intratick)/5.0f;
-			if(a < 1)
-				recoil = sinf(a*pi);
-			p = position + dir * data->weapons[iw].offsetx - dir*recoil*10.0f;
-			p.y += data->weapons[iw].offsety;
-			draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
-		}
-
-		if (player.weapon == WEAPON_GUN || player.weapon == WEAPON_SHOTGUN)
-		{
-			// check if we're firing stuff
-			if (true)//prev.attackticks)
-			{
-				float alpha = 0.0f;
-				int phase1tick = (client_tick() - player.attacktick);
-				if (phase1tick < (data->weapons[iw].muzzleduration + 3))
-				{
-					float t = ((((float)phase1tick) + intratick)/(float)data->weapons[iw].muzzleduration);
-					alpha = LERP(2.0, 0.0f, min(1.0f,max(0.0f,t)));
-				}
-
-				int itex = rand() % data->weapons[iw].nummuzzlesprites;
-				if (alpha > 0.0f && data->weapons[iw].sprite_muzzle[itex].psprite)
-				{
-					float offsety = -data->weapons[iw].muzzleoffsety;
-					select_sprite(data->weapons[iw].sprite_muzzle[itex].psprite, direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
-					if(direction.x < 0)
-						offsety = -offsety;
-
-					vec2 diry(-dir.y,dir.x);
-					vec2 muzzlepos = p + dir * data->weapons[iw].muzzleoffsetx + diry * offsety;
-
-					draw_sprite(muzzlepos.x, muzzlepos.y, data->weapons[iw].visual_size);
-					/*gfx_setcolor(1.0f,1.0f,1.0f,alpha);
-					vec2 diry(-dir.y,dir.x);
-					p += dir * muzzleparams[player.weapon].offsetx + diry * offsety;
-					gfx_quads_draw(p.x,p.y,muzzleparams[player.weapon].sizex, muzzleparams[player.weapon].sizey);*/
-				}
-			}
-		}
-		gfx_quads_end();
-
-		switch (player.weapon)
-		{
-			case WEAPON_GUN: render_hand(&client_datas[info.clientid].render_info, p, direction, -3*pi/4, vec2(-15, 4)); break;
-			case WEAPON_SHOTGUN: render_hand(&client_datas[info.clientid].render_info, p, direction, -pi/2, vec2(-5, 4)); break;
-			case WEAPON_ROCKET: render_hand(&client_datas[info.clientid].render_info, p, direction, -pi/2, vec2(-4, 7)); break;
-		}
-
-	}
-
-	// render the "shadow" tee
-	if(info.local && config.debug)
-	{
-		vec2 ghost_position = mix(vec2(prev_char->x, prev_char->y), vec2(player_char->x, player_char->y), client_intratick());
-		tee_render_info ghost = client_datas[info.clientid].render_info;
-		ghost.color_body.a = 0.5f;
-		ghost.color_feet.a = 0.5f;
-		render_tee(&state, &ghost, player.emote, direction, ghost_position); // render ghost
-	}
-
-	// render the tee
-	render_tee(&state, &client_datas[info.clientid].render_info, player.emote, direction, position);
-
-	if(player.state == STATE_CHATTING)
-	{
-		gfx_texture_set(data->images[IMAGE_EMOTICONS].id);
-		gfx_quads_begin();
-		select_sprite(SPRITE_DOTDOT);
-		gfx_quads_draw(position.x + 24, position.y - 40, 64,64);
-		gfx_quads_end();
-	}
-
-	if (client_datas[info.clientid].emoticon_start != -1 && client_datas[info.clientid].emoticon_start + 2 * client_tickspeed() > client_tick())
-	{
-		gfx_texture_set(data->images[IMAGE_EMOTICONS].id);
-		gfx_quads_begin();
-
-		int since_start = client_tick() - client_datas[info.clientid].emoticon_start;
-		int from_end = client_datas[info.clientid].emoticon_start + 2 * client_tickspeed() - client_tick();
-
-		float a = 1;
-
-		if (from_end < client_tickspeed() / 5)
-			a = from_end / (client_tickspeed() / 5.0);
-
-		float h = 1;
-		if (since_start < client_tickspeed() / 10)
-			h = since_start / (client_tickspeed() / 10.0);
-
-		float wiggle = 0;
-		if (since_start < client_tickspeed() / 5)
-			wiggle = since_start / (client_tickspeed() / 5.0);
-
-		float wiggle_angle = sin(5*wiggle);
-
-		gfx_quads_setrotation(pi/6*wiggle_angle);
-
-		gfx_setcolor(1.0f,1.0f,1.0f,a);
-		// client_datas::emoticon is an offset from the first emoticon
-		select_sprite(SPRITE_OOP + client_datas[info.clientid].emoticon);
-		gfx_quads_draw(position.x, position.y - 23 - 32*h, 64, 64*h);
-		gfx_quads_end();
-	}
-	
-	// render name plate
-	if(!info.local && config.cl_nameplates)
-	{
-		//gfx_text_color
-		float a = 1;
-		if(config.cl_nameplates_always == 0)
-			a = clamp(1-powf(distance(local_target_pos, position)/200.0f,16.0f), 0.0f, 1.0f);
-			
-		const char *name = client_datas[info.clientid].name;
-		float tw = gfx_text_width(0, 28.0f, name, -1);
-		gfx_text_color(1,1,1,a);
-		gfx_text(0, position.x-tw/2.0f, position.y-60, 28.0f, name, -1);
-		gfx_text_color(1,1,1,1);
 	}
 }
 
@@ -2570,8 +1535,6 @@ void render_game()
 	// pseudo format
 	// ZOOM ZOOM
 	float zoom = 3.0;
-	if(local_character)
-		cl_effects.getzoom(client_tick(), client_intratick(), local_character);
 
 	// DEBUG TESTING
 	if(zoom > 3.01f)
@@ -2989,7 +1952,7 @@ void render_game()
 
 	if (menu_active)
 	{
-		modmenu_render();
+		menu_render();
 		return;
 	}
 
@@ -3073,211 +2036,3 @@ void render_game()
 	}
 }
 
-extern "C" void modc_render()
-{
-	// this should be moved around abit
-	if(client_state() == CLIENTSTATE_ONLINE)
-	{
-		render_game();
-
-		// handle team switching
-		// TODO: FUGLY!!!
-		if(config.cl_team != -10)
-		{
-			msg_pack_start(MSG_SETTEAM, MSGFLAG_VITAL);
-			msg_pack_int(config.cl_team);
-			msg_pack_end();
-			client_send_msg();
-		}
-	}
-	else // if (client_state() != CLIENTSTATE_CONNECTING && client_state() != CLIENTSTATE_LOADING)
-	{
-		modmenu_render();
-	}
-
-	//
-	config.cl_team = -10;
-}
-
-
-void menu_do_disconnected();
-void menu_do_connecting();
-void menu_do_connected();
-
-extern "C" int modc_snap_input(int *data)
-{
-	picked_up_weapon = -1;
-
-	if(!input_target_lock)
-	{
-		input_data.target_x = (int)mouse_pos.x;
-		input_data.target_y = (int)mouse_pos.y;
-		
-		if(!input_data.target_x && !input_data.target_y)
-			input_data.target_y = 1;
-	}
-	input_target_lock = 0;
-
-	if(chat_mode != CHATMODE_NONE)
-		input_data.state = STATE_CHATTING;
-	else if(menu_active)
-		input_data.state = STATE_IN_MENU;
-	else
-	{
-		input_data.state = STATE_PLAYING;
-		input_data.left = inp_key_state(config.key_move_left);
-		input_data.right = inp_key_state(config.key_move_right);
-		input_data.hook = inp_key_state(config.key_hook);
-		input_data.jump  = inp_key_state(config.key_jump);
-	}
-
-	// stress testing
-	if(config.dbg_stress)
-	{
-		float t = client_localtime();
-		mem_zero(&input_data, sizeof(input_data));
-
-		input_data.left = ((int)t/2)&1;
-		input_data.right = ((int)t/2+1)&1;
-		input_data.jump = ((int)t);
-		input_data.fire = ((int)(t*10));
-		input_data.hook = ((int)(t*2))&1;
-		input_data.wanted_weapon = ((int)t)%NUM_WEAPONS;
-		input_data.target_x = (int)(sinf(t*3)*100.0f);
-		input_data.target_y = (int)(cosf(t*3)*100.0f);
-	}
-
-	// copy and return size	
-	mem_copy(data, &input_data, sizeof(input_data));
-	return sizeof(input_data);
-}
-
-extern "C" void modc_statechange(int state, int old)
-{
-	clear_object_pointers();
-	
-	if(state == CLIENTSTATE_OFFLINE)
-	{
-	 	menu_do_disconnected();
-	 	menu_game_active = false;
-	}
-	else if(state == CLIENTSTATE_LOADING)
-		menu_do_connecting();
-	else if(state == CLIENTSTATE_CONNECTING)
-		menu_do_connecting();
-	else if (state == CLIENTSTATE_ONLINE)
-	{
-		menu_active = false;
-	 	menu_game_active = true;
-	 	snapshot_count = 0;
-	 	
-		menu_do_connected();
-	}
-}
-
-extern "C" void modc_message(int msg)
-{
-	if(msg == MSG_CHAT)
-	{
-		int cid = msg_unpack_int();
-		int team = msg_unpack_int();
-		const char *message = msg_unpack_string();
-		dbg_msg("message", "chat cid=%d team=%d msg='%s'", cid, team, message);
-		chat_add_line(cid, team, message);
-
-		if(cid >= 0)
-			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_CLIENT].sounds[0].id, 0);
-		else
-			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_SERVER].sounds[0].id, 0);
-	}
-	else if(msg == MSG_SETINFO)
-	{
-		int cid = msg_unpack_int();
-		const char *name = msg_unpack_string();
-		const char *skinname = msg_unpack_string();
-		
-		strncpy(client_datas[cid].name, name, 64);
-		strncpy(client_datas[cid].skin_name, skinname, 64);
-		
-		int use_custom_color = msg_unpack_int();
-		client_datas[cid].skin_info.color_body = skin_get_color(msg_unpack_int());
-		client_datas[cid].skin_info.color_feet = skin_get_color(msg_unpack_int());
-		client_datas[cid].skin_info.size = 64;
-		
-		// find new skin
-		client_datas[cid].skin_id = skin_find(client_datas[cid].skin_name);
-		if(client_datas[cid].skin_id < 0)
-			client_datas[cid].skin_id = 0;
-		
-		if(use_custom_color)
-			client_datas[cid].skin_info.texture = skin_get(client_datas[cid].skin_id)->color_texture;
-		else
-		{
-			client_datas[cid].skin_info.texture = skin_get(client_datas[cid].skin_id)->org_texture;
-			client_datas[cid].skin_info.color_body = vec4(1,1,1,1);
-			client_datas[cid].skin_info.color_feet = vec4(1,1,1,1);
-		}
-		
-		client_datas[cid].update_render_info();
-	}
-    else if(msg == MSG_WEAPON_PICKUP)
-    {
-        int weapon = msg_unpack_int();
-
-        picked_up_weapon = weapon+1;
-    }
-	else if(msg == MSG_READY_TO_ENTER)
-	{
-		client_entergame();
-	}
-	else if(msg == MSG_KILLMSG)
-	{
-		killmsg_current = (killmsg_current+1)%killmsg_max;
-		killmsgs[killmsg_current].killer = msg_unpack_int();
-		killmsgs[killmsg_current].victim = msg_unpack_int();
-		killmsgs[killmsg_current].weapon = msg_unpack_int();
-		killmsgs[killmsg_current].mode_special = msg_unpack_int();
-		killmsgs[killmsg_current].tick = client_tick();
-	}
-	else if (msg == MSG_EMOTICON)
-	{
-		int cid = msg_unpack_int();
-		int emoticon = msg_unpack_int();
-		client_datas[cid].emoticon = emoticon;
-		client_datas[cid].emoticon_start = client_tick();
-	}
-	else if(msg == MSG_SOUND_GLOBAL)
-	{
-		int soundid = msg_unpack_int();
-		snd_play_random(CHN_GLOBAL, soundid, 1.0f, vec2(0,0));
-	}
-}
-
-extern "C" void modc_connected()
-{
-	// init some stuff
-	col_init(32);
-	img_init();
-	tilemap_init();
-	chat_reset();
-
-	proj_particles.reset();
-	
-	clear_object_pointers();
-	last_new_predicted_tick = -1;
-
-	for(int i = 0; i < MAX_CLIENTS; i++)
-	{
-		client_datas[i].name[0] = 0;
-		client_datas[i].team = 0;
-		client_datas[i].emoticon = 0;
-		client_datas[i].emoticon_start = -1;
-	}
-
-	for(int i = 0; i < killmsg_max; i++)
-		killmsgs[i].tick = -100000;
-		
-	send_info(true);
-}
-
-extern "C" const char *modc_net_version() { return TEEWARS_NETVERSION; }

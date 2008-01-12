@@ -1,5 +1,7 @@
-#include "editor.hpp"
+#include "ed_editor.hpp"
 #include <game/g_math.h>
+#include <game/generated/gc_data.h>
+#include <game/client/gc_render.h>
 
 LAYER_QUADS::LAYER_QUADS()
 {
@@ -10,88 +12,6 @@ LAYER_QUADS::LAYER_QUADS()
 
 LAYER_QUADS::~LAYER_QUADS()
 {
-}
-
-static void rotate(POINT *center, POINT *point, float rotation)
-{
-	int x = point->x - center->x;
-	int y = point->y - center->y;
-	point->x = (int)(x * cosf(rotation) - y * sinf(rotation) + center->x);
-	point->y = (int)(x * sinf(rotation) + y * cosf(rotation) + center->y);
-}
-
-static void render_quads(QUAD *quads, int num_quads)
-{
-	gfx_quads_begin();
-	float conv = 1/255.0f;
-	for(int i = 0; i < num_quads; i++)
-	{
-		QUAD *q = &quads[i];
-		
-		gfx_quads_setsubset_free(
-			fx2f(q->texcoords[0].x), fx2f(q->texcoords[0].y),
-			fx2f(q->texcoords[1].x), fx2f(q->texcoords[1].y),
-			fx2f(q->texcoords[2].x), fx2f(q->texcoords[2].y),
-			fx2f(q->texcoords[3].x), fx2f(q->texcoords[3].y)
-		);
-
-		float r=1, g=1, b=1, a=1;
-		float offset_x = 0;
-		float offset_y = 0;
-		float rot = 0;
-		
-		if(editor.animate)
-		{
-			if(q->pos_env >= 0 && q->pos_env < editor.map.envelopes.len())
-			{
-				ENVELOPE *e = editor.map.envelopes[q->pos_env];
-				float t = editor.animate_time+q->pos_env_offset/1000.0f;
-				offset_x = e->eval(t, 0);
-				offset_y = e->eval(t, 1);
-				rot = e->eval(t, 2);
-			}
-			
-			if(q->color_env >= 0 && q->color_env < editor.map.envelopes.len())
-			{
-				ENVELOPE *e = editor.map.envelopes[q->color_env];
-				float t = editor.animate_time+q->color_env_offset/1000.0f;
-				r = e->eval(t, 0);
-				g = e->eval(t, 1);
-				b = e->eval(t, 2);
-				a = e->eval(t, 3);
-			}
-		}
-		
-		gfx_setcolorvertex(0, q->colors[0].r*conv*r, q->colors[0].g*conv*g, q->colors[0].b*conv*b, q->colors[0].a*conv*a);
-		gfx_setcolorvertex(1, q->colors[1].r*conv*r, q->colors[1].g*conv*g, q->colors[1].b*conv*b, q->colors[1].a*conv*a);
-		gfx_setcolorvertex(2, q->colors[2].r*conv*r, q->colors[2].g*conv*g, q->colors[2].b*conv*b, q->colors[2].a*conv*a);
-		gfx_setcolorvertex(3, q->colors[3].r*conv*r, q->colors[3].g*conv*g, q->colors[3].b*conv*b, q->colors[3].a*conv*a);
-
-		POINT *points = q->points;
-	
-		if(rot != 0)
-		{
-			static POINT rotated[4];
-			rotated[0] = q->points[0];
-			rotated[1] = q->points[1];
-			rotated[2] = q->points[2];
-			rotated[3] = q->points[3];
-			points = rotated;
-			
-			rotate(&q->points[4], &rotated[0], rot);
-			rotate(&q->points[4], &rotated[1], rot);
-			rotate(&q->points[4], &rotated[2], rot);
-			rotate(&q->points[4], &rotated[3], rot);
-		}
-		
-		gfx_quads_draw_freeform(
-			fx2f(points[0].x)+offset_x, fx2f(points[0].y)+offset_y,
-			fx2f(points[1].x)+offset_x, fx2f(points[1].y)+offset_y,
-			fx2f(points[2].x)+offset_x, fx2f(points[2].y)+offset_y,
-			fx2f(points[3].x)+offset_x, fx2f(points[3].y)+offset_y
-		);
-	}
-	gfx_quads_end();	
 }
 
 void LAYER_QUADS::render()

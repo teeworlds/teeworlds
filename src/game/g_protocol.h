@@ -1,6 +1,9 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 // NOTE: Be very careful when editing this file as it will change the network version
 
+#ifndef GAME_PROTOCOL_H
+#define GAME_PROTOCOL_H
+
 // --------- PHYSICS TWEAK! --------
 const float ground_control_speed = 7.0f;
 const float ground_control_accel = 2.0f;
@@ -213,3 +216,5 @@ struct obj_player_info
 	int latency;
 	int latency_flux;
 };
+
+#endif

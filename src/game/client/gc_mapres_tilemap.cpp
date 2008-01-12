@@ -5,6 +5,12 @@
 #include "gc_mapres_image.h"
 #include "../g_mapres.h"
 
+enum
+{
+	TILEFLAG_VFLIP=1,
+	TILEFLAG_HFLIP=2,
+};
+	
 int tilemap_init()
 {
 	return 0;
