@@ -2569,8 +2569,8 @@ extern "C" void editor_update_and_render()
 		
 		if(mouse_x < 0) mouse_x = 0;
 		if(mouse_y < 0) mouse_y = 0;
-		if(mouse_x > ui_screen()->w) mouse_x = (int)ui_screen()->w;
-		if(mouse_y > ui_screen()->h) mouse_y = (int)ui_screen()->h;
+		if(mouse_x >= ui_screen()->w) mouse_x = (int)ui_screen()->w-1;
+		if(mouse_y >= ui_screen()->h) mouse_y = (int)ui_screen()->h-1;
 
 		// update the ui
 		mx = mouse_x;
