@@ -70,6 +70,7 @@ static vec4 color_tabbar_active = color_tabbar_active_outgame;
 
 enum
 {
+	/*
 	CORNER_TL=1,
 	CORNER_TR=2,
 	CORNER_BL=4,
@@ -81,6 +82,7 @@ enum
 	CORNER_L=CORNER_TL|CORNER_BL,
 	
 	CORNER_ALL=CORNER_T|CORNER_B,
+	*/
 	
 	PAGE_NEWS=0,
 	PAGE_INTERNET,
@@ -90,11 +92,11 @@ enum
 	//PAGE_GAME, // not a real page
 	PAGE_SYSTEM,
 };
-
+/*
 typedef struct 
 {
     float x, y, w, h;
-} RECT;
+} RECT;*/
 
 static RECT screen = { 0.0f, 0.0f, 848.0f, 480.0f };
 
@@ -286,7 +288,7 @@ int ui2_do_button(const void *id, const char *text, int checked, const RECT *r, 
 {
     /* logic */
     int ret = 0;
-    int inside = ui_mouse_inside(r->x,r->y,r->w,r->h);
+    int inside = ui_mouse_inside(r);
 
 	if(ui_active_item() == id)
 	{
@@ -461,7 +463,7 @@ static void ui2_draw_checkbox_number(const void *id, const char *text, int check
 
 int ui2_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hidden=false)
 {
-    int inside = ui_mouse_inside(rect->x,rect->y,rect->w,rect->h);
+    int inside = ui_mouse_inside(rect);
 	int r = 0;
 	static int at_index = 0;
 
@@ -592,7 +594,7 @@ float ui2_do_scrollbar_v(const void *id, const RECT *rect, float current)
 
 	/* logic */
     float ret = current;
-    int inside = ui_mouse_inside(handle.x,handle.y,handle.w,handle.h);
+    int inside = ui_mouse_inside(&handle);
 
 	if(ui_active_item() == id)
 	{
@@ -648,7 +650,7 @@ float ui2_do_scrollbar_h(const void *id, const RECT *rect, float current)
 
 	/* logic */
     float ret = current;
-    int inside = ui_mouse_inside(handle.x,handle.y,handle.w,handle.h);
+    int inside = ui_mouse_inside(&handle);
 
 	if(ui_active_item() == id)
 	{
@@ -696,7 +698,7 @@ int ui2_do_key_reader(void *id, const RECT *rect, int key)
 {
 	// process
 	static bool mouse_released = true;
-	int inside = ui_mouse_inside(rect->x, rect->y, rect->w, rect->h);
+	int inside = ui_mouse_inside(rect);
 	int new_key = key;
 	
 	if(!ui_mouse_button(0))
@@ -895,7 +897,10 @@ void render_loading(float percent)
 	const char *caption = "Loading";
 
 	tw = gfx_pretty_text_width(48.0f, caption, -1);
-	ui_do_label(x+w/2-tw/2, y+20, caption, 48.0f);
+	RECT r;
+	r.x = x+w/2;
+	r.y = y+20;
+	ui_do_label(&r, caption, 48.0f, 0, -1);
 
 	gfx_texture_set(-1);
 	gfx_quads_begin();

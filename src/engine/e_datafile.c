@@ -251,6 +251,23 @@ void *datafile_get_data(DATAFILE *df, int index)
 	return df->data_ptrs[index];
 }
 
+void *datafile_get_data_swapped(DATAFILE *df, int index)
+{
+	void *ptr = datafile_get_data(df, index);
+	int size = datafile_get_datasize(df, index);
+	(void)size; /* not used on LE machines */
+	
+	if(!ptr)
+		return ptr;
+
+#if defined(CONF_ARCH_ENDIAN_BIG)
+	swap_endian(ptr, sizeof(int), size);
+#endif
+
+	return ptr;
+}
+
+
 void datafile_unload_data(DATAFILE *df, int index)
 {
 	/* */
@@ -429,8 +446,8 @@ int datafile_add_item(DATAFILE_OUT *df, int type, int id, int size, void *data)
 int datafile_add_data(DATAFILE_OUT *df, int size, void *data)
 {
 	DATA_INFO *info = &df->datas[df->num_datas];
-	void *compdata = mem_alloc(size, 1); /* temporary buffer that we use duing compression */
-	unsigned long s = size;
+	unsigned long s = size*2;
+	void *compdata = mem_alloc(s, 1); /* temporary buffer that we use duing compression */
 
 	info->uncompressed_size = size;
 	if(compress((Bytef*)compdata, &s, (Bytef*)data, size) != Z_OK)
@@ -443,6 +460,22 @@ int datafile_add_data(DATAFILE_OUT *df, int size, void *data)
 	df->num_datas++;
 	return df->num_datas-1;
 }
+
+int datafile_add_data_swapped(DATAFILE_OUT *df, int size, void *data)
+{
+#if defined(CONF_ARCH_ENDIAN_BIG)
+	void *swapped = mem_alloc(size, 1); /* temporary buffer that we use duing compression */
+	int index;
+	mem_copy(swapped, data, size);
+	swap_endian(&swapped, sizeof(int), size/sizeof(int));
+	index = datafile_add_data(df, size, swapped);
+	mem_free(swapped);
+	return index;
+#else
+	return datafile_add_data(df, size, data);
+#endif
+}
+
 
 int datafile_finish(DATAFILE_OUT *df)
 {

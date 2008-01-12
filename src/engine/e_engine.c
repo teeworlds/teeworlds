@@ -16,6 +16,15 @@ const char *engine_savepath(const char *filename, char *buffer, int max)
 
 void engine_init(const char *appname, int argc, char **argv)
 {
+	dbg_msg("engine", "running on %s-%s-%s", CONF_FAMILY_STRING, CONF_PLATFORM_STRING, CONF_ARCH_STRING);
+#ifdef CONF_ARCH_ENDIAN_LITTLE
+	dbg_msg("engine", "arch is little endian");
+#elif defined(CONF_ARCH_ENDIAN_BIG)
+	dbg_msg("engine", "arch is big endian");
+#else
+	dbg_msg("engine", "unknown endian");
+#endif
+
 	/* init the network */
 	net_init();
 

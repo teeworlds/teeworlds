@@ -49,10 +49,7 @@ void gameobject::resetgame()
 	world->reset_requested = true;
 }
 
-static bool is_separator(char c)
-{
-	return c == ';' || c == ' ' || c == ',' || c == '\t';
-}
+static bool is_separator(char c) { return c == ';' || c == ' ' || c == ',' || c == '\t'; }
 
 void gameobject::startround()
 {

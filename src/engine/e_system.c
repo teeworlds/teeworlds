@@ -106,7 +106,7 @@ struct memtail
 	int guard;
 };
 
-struct memheader *first = 0;
+static struct memheader *first = 0;
 
 int mem_allocated()
 {

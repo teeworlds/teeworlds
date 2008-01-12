@@ -18,6 +18,8 @@
 #define GL_COMPRESSED_RGB_ARB 0x84ED
 #define GL_COMPRESSED_RGBA_ARB 0x84EE
 
+#define TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
+
 enum
 {
 	DRAWING_QUADS=1,
@@ -612,8 +614,31 @@ void gfx_screenshot()
 	do_screenshot = 1;
 }
 
+static int64 next_frame = 0;
+static int record = 0;
+
 void gfx_swap()
 {
+	if(record)
+	{
+		int w = screen_width;
+		int h = screen_height;
+		unsigned char *pixel_data = (unsigned char *)mem_alloc(w*(h+1)*3, 1);
+		/*unsigned char *temp_row = pixel_data+w*h*3;*/
+		glReadPixels(0,0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pixel_data);
+
+		/* clean up */
+		mem_free(pixel_data);
+
+		if(next_frame)
+			next_frame += time_freq()/30;
+		else
+			next_frame = time_get() + time_freq()/30;
+
+		while(time_get() < next_frame)
+			(void)0;
+	}
+	
 	if(do_screenshot)
 	{
 		/* fetch image data */
@@ -642,8 +667,8 @@ void gfx_swap()
 			for(; index < 1000; index++)
 			{
 				IOHANDLE io;
-				sprintf(filename, "screenshots/screenshot%04d.png", index);
-				engine_savepath(filename, wholepath, sizeof(wholepath));
+				sprintf(wholepath, "/home/kma/Desktop/prq/blogimg/editor/screenshot%04d.png", index);
+				/*engine_savepath(filename, wholepath, sizeof(wholepath));*/
 				
 				io = io_open(wholepath, IOFLAG_READ);
 				if(io)
@@ -782,6 +807,26 @@ void gfx_quads_setsubset(float tl_u, float tl_v, float br_u, float br_v)
 	texture[3].u = tl_u;
 	texture[3].v = br_v;
 }
+
+void gfx_quads_setsubset_free(
+	float x0, float y0,
+	float x1, float y1,
+	float x2, float y2,
+	float x3, float y3)
+{
+	texture[0].u = x0;
+	texture[0].v = y0;
+
+	texture[1].u = x1;
+	texture[1].v = y1;
+
+	texture[2].u = x2;
+	texture[2].v = y2;
+
+	texture[3].u = x3;
+	texture[3].v = y3;
+}
+
 
 static void rotate(VEC3 *center, VEC3 *point)
 {

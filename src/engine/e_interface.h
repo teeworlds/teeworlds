@@ -110,6 +110,7 @@ void perf_start(PERFORMACE_INFO *info);
 void perf_end();
 void perf_dump();
 
+/*
 struct rect
 {
     float x, y, w, h;
@@ -123,7 +124,7 @@ void ui_hsplit_t(const struct rect *original, int pixels, struct rect *top, stru
 void ui_hsplit_b(const struct rect *original, int pixels, struct rect *top, struct rect *bottom);
 void ui_vsplit_l(const struct rect *original, int pixels, struct rect *left, struct rect *right);
 void ui_vsplit_r(const struct rect *original, int pixels, struct rect *left, struct rect *right);
-void ui_margin(const struct rect *original, int pixels, struct rect *new_rect);
+void ui_margin(const struct rect *original, int pixels, struct rect *new_rect);*/
 
 /* image loaders */
 int gfx_load_png(IMAGE_INFO *img, const char *filename);
@@ -893,6 +894,12 @@ void gfx_clear_mask(int fill);
 
 void gfx_clip_enable(int x, int y, int w, int h);
 void gfx_clip_disable();
+
+void gfx_quads_setsubset_free(
+	float x0, float y0,
+	float x1, float y1,
+	float x2, float y2,
+	float x3, float y3);
 
 /* server snap id */
 int snap_new_id();

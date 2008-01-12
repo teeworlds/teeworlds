@@ -47,10 +47,6 @@ enum
 	CHATMODE_REMOTECONSOLE,
 };
 
-typedef struct 
-{
-    float x, y, w, h;
-} RECT;
 RECT *ui2_screen();
 
 static int chat_mode = CHATMODE_NONE;
@@ -1885,7 +1881,7 @@ int emoticon_selector_render()
 		emoticon_selector_active = false;
 	}
 
-    RECT screen = *ui2_screen();
+    RECT screen = *ui_screen();
 
 	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
 

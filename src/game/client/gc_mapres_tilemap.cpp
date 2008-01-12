@@ -9,6 +9,13 @@ int tilemap_init()
 {
 	return 0;
 }
+/*
+struct render_info
+{
+	unsigned char *data;
+};
+
+void tilemap_render_one()*/
 
 void tilemap_render(float scale, int fg)
 {
