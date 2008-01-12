@@ -562,20 +562,7 @@ inline void mapscreen_to_world(float center_x, float center_y, float parallax_x,
 	width *= zoom;
 	height *= zoom;
 	points[0] = offset_x+center_x-width/2;
-	points[1] = offset_x+center_y-height/2;
-	points[2] = offset_x+center_x+width/2;
-	points[3] = offset_x+center_y+height/2;
-}
-/*
-inline void mapscreen_to_world(float center_x, float center_y, float parallax_x, float parallax_y,
-	float offset_x, float offset_y, float aspect, float zoom, float *points)
-{
-	float width = 300*3*zoom*aspect;
-	float height = 300*3*zoom;
-	center_x *= parallax_x;
-	center_y *= parallax_y;
-	points[0] = offset_x+center_x-width/2;
 	points[1] = offset_y+center_y-height/2;
 	points[2] = offset_x+center_x+width/2;
 	points[3] = offset_y+center_y+height/2;
-}*/
+}
