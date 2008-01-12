@@ -4,7 +4,6 @@
 
 extern "C" {
 	#include <engine/e_system.h>
-	#include <engine/client/ec_ui.h>
 	#include <engine/e_interface.h>
 	#include <engine/e_datafile.h>
 	#include <engine/e_config.h>
@@ -12,6 +11,7 @@ extern "C" {
 
 #include <game/client/gc_mapres_image.h>
 #include <game/client/gc_mapres_tilemap.h>
+#include <game/client/gc_ui.h>
 //#include "game/mapres_col.h"
 #include <game/g_mapres.h>
 #include <game/g_game.h>
@@ -129,124 +129,7 @@ static void ui_draw_rect(const RECT *r, vec4 color, int corners, float rounding)
 }
 
 // copied from gc_menu.cpp, should be more generalized
-
-int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hidden=false)
-{
-    int inside = ui_mouse_inside(rect);
-	int r = 0;
-	static int at_index = 0;
-
-	if(ui_last_active_item() == id)
-	{
-		int len = strlen(str);
-
-		if (inside && ui_mouse_button(0))
-		{
-			int mx_rel = (int)(ui_mouse_x() - rect->x);
-
-			for (int i = 1; i <= len; i++)
-			{
-				if (gfx_pretty_text_width(14.0f, str, i) + 10 > mx_rel)
-				{
-					at_index = i - 1;
-					break;
-				}
-
-				if (i == len)
-					at_index = len;
-			}
-		}
-
-		if (at_index > len)
-			at_index = len;
-			
-		for(int i = 0; i < inp_num_events(); i++)
-		{
-			INPUTEVENT e = inp_get_event(i);
-			char c = e.ch;
-			int k = e.key;
-
-			if (!(c >= 0 && c < 32))
-			{
-				if (len < str_size - 1 && at_index < str_size - 1)
-				{
-					memmove(str + at_index + 1, str + at_index, len - at_index + 1);
-					str[at_index] = c;
-					at_index++;
-				}
-			}
-
-			if (k == KEY_BACKSPACE && at_index > 0)
-			{
-				memmove(str + at_index - 1, str + at_index, len - at_index + 1);
-				at_index--;
-			}
-			else if (k == KEY_DEL && at_index < len)
-				memmove(str + at_index, str + at_index + 1, len - at_index);
-			else if (k == KEY_ENTER)
-				ui_clear_last_active_item();
-			else if (k == KEY_LEFT && at_index > 0)
-				at_index--;
-			else if (k == KEY_RIGHT && at_index < len)
-				at_index++;
-			else if (k == KEY_HOME)
-				at_index = 0;
-			else if (k == KEY_END)
-				at_index = len;
-		}
-		
-		r = 1;
-	}
-
-	bool just_got_active = false;
-	
-	if(ui_active_item() == id)
-	{
-		if(!ui_mouse_button(0))
-			ui_set_active_item(0);
-	}
-	else if(ui_hot_item() == id)
-	{
-		if(ui_mouse_button(0))
-		{
-			if (ui_last_active_item() != id)
-				just_got_active = true;
-			ui_set_active_item(id);
-		}
-	}
-	
-	if(inside)
-		ui_set_hot_item(id);
-
-	RECT textbox = *rect;
-	ui_draw_rect(&textbox, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
-	ui_vmargin(&textbox, 5.0f, &textbox);
-	
-	const char *display_str = str;
-	char stars[128];
-	
-	if(hidden)
-	{
-		unsigned s = strlen(str);
-		if(s >= sizeof(stars))
-			s = sizeof(stars)-1;
-		memset(stars, '*', s);
-		stars[s] = 0;
-		display_str = stars;
-	}
-	
-	ui_do_label(&textbox, display_str, 14, -1, -1);
-
-	if (ui_last_active_item() == id && !just_got_active)
-	{
-		float w = gfx_pretty_text_width(14.0f, display_str, at_index);
-		textbox.x += w*ui_scale();
-		ui_do_label(&textbox, "_", 14, -1, -1);
-	}
-
-	return r;
-}
-
+extern int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hidden=false);
 
 static vec4 get_button_color(const void *id, int checked)
 {
@@ -2569,8 +2452,8 @@ extern "C" void editor_update_and_render()
 		
 		if(mouse_x < 0) mouse_x = 0;
 		if(mouse_y < 0) mouse_y = 0;
-		if(mouse_x >= ui_screen()->w) mouse_x = (int)ui_screen()->w-1;
-		if(mouse_y >= ui_screen()->h) mouse_y = (int)ui_screen()->h-1;
+		if(mouse_x > ui_screen()->w) mouse_x = (int)ui_screen()->w;
+		if(mouse_y > ui_screen()->h) mouse_y = (int)ui_screen()->h;
 
 		// update the ui
 		mx = mouse_x;

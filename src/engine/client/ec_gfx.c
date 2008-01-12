@@ -82,59 +82,6 @@ static const unsigned char null_texture_data[] = {
 	0x00,0x00,0xff,0xff, 0x00,0x00,0xff,0xff, 0xff,0xff,0x00,0xff, 0xff,0xff,0x00,0xff, 
 };
 
-
-typedef struct
-{
-	float m_CharStartTable[256];
-	float m_CharEndTable[256];
-	int font_texture;
-} pretty_font;
-
-pretty_font default_font = 
-{
-{
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-        0, 0.421875, 0.359375, 0.265625, 0.25, 0.1875, 0.25, 0.4375, 0.390625, 0.390625, 0.34375, 0.28125, 0.421875, 0.390625, 0.4375, 0.203125, 
-        0.265625, 0.28125, 0.28125, 0.265625, 0.25, 0.28125, 0.28125, 0.265625, 0.28125, 0.265625, 0.4375, 0.421875, 0.3125, 0.28125, 0.3125, 0.3125, 
-        0.25, 0.234375, 0.28125, 0.265625, 0.265625, 0.296875, 0.3125, 0.25, 0.25, 0.421875, 0.28125, 0.265625, 0.328125, 0.171875, 0.234375, 0.25, 
-        0.28125, 0.234375, 0.265625, 0.265625, 0.28125, 0.265625, 0.234375, 0.09375, 0.234375, 0.234375, 0.265625, 0.390625, 0.203125, 0.390625, 0.296875, 0.28125, 
-        0.375, 0.3125, 0.3125, 0.3125, 0.296875, 0.3125, 0.359375, 0.296875, 0.3125, 0.4375, 0.390625, 0.328125, 0.4375, 0.203125, 0.3125, 0.296875, 
-        0.3125, 0.296875, 0.359375, 0.3125, 0.328125, 0.3125, 0.296875, 0.203125, 0.296875, 0.296875, 0.328125, 0.375, 0.421875, 0.375, 0.28125, 0.3125, 
-        0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 
-        0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 
-        0, 0.421875, 0.3125, 0.265625, 0.25, 0.25, 0.421875, 0.265625, 0.375, 0.21875, 0.375, 0.328125, 0.3125, 0, 0.21875, 0.28125, 
-        0.359375, 0.28125, 0.34375, 0.34375, 0.421875, 0.3125, 0.265625, 0.421875, 0.421875, 0.34375, 0.375, 0.328125, 0.125, 0.125, 0.125, 0.296875, 
-        0.234375, 0.234375, 0.234375, 0.234375, 0.234375, 0.234375, 0.109375, 0.265625, 0.296875, 0.296875, 0.296875, 0.296875, 0.375, 0.421875, 0.359375, 0.390625, 
-        0.21875, 0.234375, 0.25, 0.25, 0.25, 0.25, 0.25, 0.296875, 0.21875, 0.265625, 0.265625, 0.265625, 0.265625, 0.234375, 0.28125, 0.3125, 
-        0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.1875, 0.3125, 0.3125, 0.3125, 0.3125, 0.3125, 0.375, 0.421875, 0.359375, 0.390625, 
-        0.3125, 0.3125, 0.296875, 0.296875, 0.296875, 0.296875, 0.296875, 0.28125, 0.28125, 0.3125, 0.3125, 0.3125, 0.3125, 0.296875, 0.3125, 0.296875, 
-},
-{
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-        0.2, 0.5625, 0.625, 0.71875, 0.734375, 0.796875, 0.765625, 0.546875, 0.59375, 0.59375, 0.65625, 0.703125, 0.546875, 0.59375, 0.5625, 0.6875, 
-        0.71875, 0.609375, 0.703125, 0.703125, 0.71875, 0.703125, 0.703125, 0.6875, 0.703125, 0.703125, 0.5625, 0.546875, 0.671875, 0.703125, 0.671875, 0.671875, 
-        0.734375, 0.75, 0.734375, 0.734375, 0.734375, 0.6875, 0.6875, 0.734375, 0.71875, 0.5625, 0.65625, 0.765625, 0.703125, 0.8125, 0.75, 0.734375, 
-        0.734375, 0.765625, 0.71875, 0.71875, 0.703125, 0.71875, 0.75, 0.890625, 0.75, 0.75, 0.71875, 0.59375, 0.6875, 0.59375, 0.6875, 0.703125, 
-        0.5625, 0.671875, 0.6875, 0.671875, 0.671875, 0.671875, 0.625, 0.671875, 0.671875, 0.5625, 0.546875, 0.703125, 0.5625, 0.78125, 0.671875, 0.671875, 
-        0.6875, 0.671875, 0.65625, 0.671875, 0.65625, 0.671875, 0.6875, 0.78125, 0.6875, 0.671875, 0.65625, 0.609375, 0.546875, 0.609375, 0.703125, 0.671875, 
-        0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 
-        0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 
-        0, 0.5625, 0.671875, 0.734375, 0.734375, 0.734375, 0.546875, 0.71875, 0.609375, 0.765625, 0.609375, 0.65625, 0.671875, 0, 0.765625, 0.703125, 
-        0.625, 0.703125, 0.640625, 0.640625, 0.609375, 0.671875, 0.703125, 0.546875, 0.5625, 0.578125, 0.609375, 0.65625, 0.859375, 0.859375, 0.859375, 0.671875, 
-        0.75, 0.75, 0.75, 0.75, 0.75, 0.75, 0.84375, 0.734375, 0.6875, 0.6875, 0.6875, 0.6875, 0.5625, 0.609375, 0.640625, 0.59375, 
-        0.734375, 0.75, 0.734375, 0.734375, 0.734375, 0.734375, 0.734375, 0.6875, 0.765625, 0.71875, 0.71875, 0.71875, 0.71875, 0.75, 0.734375, 0.6875, 
-        0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.796875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.5625, 0.609375, 0.625, 0.59375, 
-        0.6875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.703125, 0.703125, 0.671875, 0.671875, 0.671875, 0.671875, 0.671875, 0.6875, 0.671875, 
-},
-0
-};
-
-double extra_kerning[256*256] = {0};
-
-pretty_font *current_font = &default_font;
-
 static void flush()
 {
 	if(num_vertices == 0)
@@ -288,10 +235,6 @@ int gfx_init()
 
 	/* set vsync as needed */
 	gfx_set_vsync(config.gfx_vsync);
-
-	/* UGLY as hell, please remove */
-    current_font->font_texture = gfx_load_texture("data/big_font.png", IMG_AUTO);
-
 	return 1;
 }
 
@@ -302,10 +245,6 @@ float gfx_screenaspect()
 
 void gfx_clear_mask(int fill)
 {
-	/*if(fill)
-		glClearDepth(0.0f);
-	else*/
-	
 	int i;
 	glGetIntegerv(GL_DEPTH_WRITEMASK, &i);
 	glDepthMask(GL_TRUE);
@@ -514,35 +453,6 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 	mem_free(tmpdata);
 	return tex;
 }
-/*
-int gfx_load_mip_texture_raw(int w, int h, int format, const void *data)
-{
-	// grab texture
-	int tex = first_free_texture;
-	first_free_texture = textures[tex].next;
-	textures[tex].next = -1;
-	
-	// set data and return
-	// TODO: should be RGBA, not BGRA
-	dbg_msg("gfx", "%d = %dx%d", tex, w, h);
-	dbg_assert(format == IMG_RGBA, "not an RGBA image");
-
-	unsigned mip_w = w;
-	unsigned mip_h = h;
-	unsigned level = 0;
-	const unsigned char *ptr = (const unsigned char*)data;
-	while(mip_w > 0 && mip_h > 0)
-	{
-		dbg_msg("gfx mip", "%d = %dx%d", level, mip_w, mip_h);
-		textures[tex].tex.data2d_mip(mip_w, mip_h, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, level, ptr);
-		level++;
-		ptr = ptr + mip_w*mip_h*4;
-		mip_w = mip_w>>1;
-		mip_h = mip_h>>1;
-	}
-	return tex;
-}
-*/
 
 /* simple uncompressed RGBA loaders */
 int gfx_load_texture(const char *filename, int store_format)
@@ -667,8 +577,7 @@ void gfx_swap()
 			for(; index < 1000; index++)
 			{
 				IOHANDLE io;
-				sprintf(wholepath, "/home/kma/Desktop/prq/blogimg/editor/screenshot%04d.png", index);
-				/*engine_savepath(filename, wholepath, sizeof(wholepath));*/
+				engine_savepath(filename, wholepath, sizeof(wholepath));
 				
 				io = io_open(wholepath, IOFLAG_READ);
 				if(io)
@@ -955,12 +864,16 @@ static int word_length(const char *text)
 	}
 }
 
-static float pretty_r=1;
-static float pretty_g=1;
-static float pretty_b=1;
-static float pretty_a=1;
+static float text_r=1;
+static float text_g=1;
+static float text_b=1;
+static float text_a=1;
 
-FONT *gfx_font_set;
+static FONT_SET *default_font_set = 0;
+void gfx_text_set_default_font(void *font)
+{
+	default_font_set = (FONT_SET *)font;
+}
 
 float gfx_text_raw(void *font_set_v, float x, float y, float size, const char *text, int length)
 {
@@ -983,6 +896,9 @@ float gfx_text_raw(void *font_set_v, float x, float y, float size, const char *t
     actual_size = size * fake_to_screen_y;
     size = actual_size / fake_to_screen_y;
 
+    if(!font_set)
+    	font_set = default_font_set;
+
     font = font_set_pick(font_set, actual_size);
 
     if (length < 0)
@@ -1003,7 +919,7 @@ float gfx_text_raw(void *font_set_v, float x, float y, float size, const char *t
         if (i == 0)
             gfx_setcolor(0.0f, 0.0f, 0.0f, 0.3f);
         else
-            gfx_setcolor(pretty_r, pretty_g, pretty_b, pretty_a);
+            gfx_setcolor(text_r, text_g, text_b, text_a);
         
         while (to_render--)
         {
@@ -1062,123 +978,23 @@ float gfx_text_width(void *font_set_v, float size, const char *text, int length)
     FONT_SET *font_set = font_set_v;
     FONT *font;
     float fake_to_screen_y = (screen_height/(screen_y1-screen_y0));
-
     int actual_size = size * fake_to_screen_y;
     size = actual_size / fake_to_screen_y;
+    
+    if(!font_set)
+    	font_set = default_font_set;
 
     font = font_set_pick(font_set, actual_size);
-
     return font_text_width(font, text, size, length);
 }
 
-void gfx_pretty_text_color(float r, float g, float b, float a)
+void gfx_text_color(float r, float g, float b, float a)
 {
-	pretty_r = r;
-	pretty_g = g;
-	pretty_b = b;
-	pretty_a = a;
+	text_r = r;
+	text_g = g;
+	text_b = b;
+	text_a = a;
 }
-
-float gfx_pretty_text_raw(float x, float y, float size, const char *text_, int length)
-{
-	const unsigned char *text = (unsigned char *)text_;
-	const float spacing = 0.05f;
-	gfx_texture_set(current_font->font_texture);
-	gfx_quads_begin();
-	gfx_setcolor(pretty_r, pretty_g, pretty_b, pretty_a);
-	
-	if(length < 0)
-		length = strlen(text_);
-	
-	while(length)
-	{
-		const int c = *text;
-		const float width = current_font->m_CharEndTable[c] - current_font->m_CharStartTable[c];
-		double x_nudge = 0;
-
-		text++;
-
-		x -= size * current_font->m_CharStartTable[c];
-		
-		gfx_quads_setsubset(
-			(c%16)/16.0f, /* startx */
-			(c/16)/16.0f, /* starty */
-			(c%16)/16.0f+1.0f/16.0f, /* endx */
-			(c/16)/16.0f+1.0f/16.0f); /* endy */
-
-		gfx_quads_drawTL(x, y, size, size);
-
-		if(length > 1 && text[1])
-			x_nudge = extra_kerning[text[0] + text[1] * 256];
-
-		x += (width + current_font->m_CharStartTable[c] + spacing + x_nudge) * size;
-		length--;
-	}
-
-	gfx_quads_end();
-	
-	return x;
-}
-
-void gfx_pretty_text(float x, float y, float size, const char *text, int max_width)
-{
-    gfx_text(gfx_font_set, x, y, size, text, max_width);
-    return;
-    
-	if(max_width == -1)
-		gfx_pretty_text_raw(x, y, size, text, -1);
-	else
-	{
-		float startx = x;
-		while(*text)
-		{
-			int wlen = word_length(text);
-			float w = gfx_pretty_text_width(size, text, wlen);
-			if(x+w-startx > max_width)
-			{
-				y += size-2;
-				x = startx;
-			}
-			
-			x = gfx_pretty_text_raw(x, y, size, text, wlen);
-			
-			text += wlen;
-		}
-	}
-}
-
-float gfx_pretty_text_width(float size, const char *text_, int length)
-{
-    return gfx_text_width(gfx_font_set, size, text_, length);
-	/*
-	const float spacing = 0.05f;
-	float w = 0.0f;
-	const unsigned char *text = (unsigned char *)text_;
-	const unsigned char *stop;
-
-	if (length == -1)
-		stop = text + strlen((char*)text);
-	else
-		stop = text + length;
-
-	while (text < stop)
-	{
-		const int c = *text;
-		const float width = current_font->m_CharEndTable[c] - current_font->m_CharStartTable[c];
-
-		double x_nudge = 0;
-		if (text[1])
-			x_nudge = extra_kerning[text[0] + text[1] * 256];
-
-		w += (width + spacing + x_nudge) * size;
-
-		text++;
-	}
-
-	return w;*/
-}
-
-
 
 void gfx_lines_begin()
 {

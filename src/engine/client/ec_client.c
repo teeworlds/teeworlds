@@ -9,7 +9,6 @@
 #include <engine/e_system.h>
 #include <engine/e_engine.h>
 #include <engine/e_interface.h>
-#include "ec_ui.h"
 
 #include <engine/e_protocol.h>
 #include <engine/e_snapshot.h>
@@ -499,10 +498,6 @@ static void client_debug_render()
 		(int)(1.0f/frametime_avg));
 	gfx_quads_text(2, 2, 16, buffer);
 
-	sprintf(buffer, "ui: %p %p", ui_hot_item(), ui_active_item());
-	gfx_quads_text(2, 16, 16, buffer);
-
-	
 	/* render rates */
 	{
 		int i;

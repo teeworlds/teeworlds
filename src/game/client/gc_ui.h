@@ -2,12 +2,6 @@
 #ifndef _UI_H
 #define _UI_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-
 typedef struct 
 {
     float x, y, w, h;
@@ -64,11 +58,7 @@ void ui_hmargin(const RECT *original, float cut, RECT *other_rect);
 
 typedef void (*ui_draw_button_func)(const void *id, const char *text, int checked, const RECT *r, const void *extra);
 int ui_do_button(const void *id, const char *text, int checked, const RECT *r, ui_draw_button_func draw_func, const void *extra);
-void ui_do_label(const RECT *r, const char *text, float size, int align, int max_width);
+void ui_do_label(const RECT *r, const char *text, float size, int align, int max_width = -1);
 
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

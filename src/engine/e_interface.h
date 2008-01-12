@@ -877,9 +877,8 @@ void client_serverbrowse_update();
 
 void gfx_text(void *font, float x, float y, float size, const char *text, int max_width);
 float gfx_text_width(void *font, float size, const char *text, int length);
-void gfx_pretty_text_color(float r, float g, float b, float a);
-void gfx_pretty_text(float x, float y, float size, const char *text, int max_width);
-float gfx_pretty_text_width(float size, const char *text, int length);
+void gfx_text_color(float r, float g, float b, float a);
+void gfx_text_set_default_font(void *font);
 
 void gfx_getscreen(float *tl_x, float *tl_y, float *br_x, float *br_y);
 int gfx_memory_usage();

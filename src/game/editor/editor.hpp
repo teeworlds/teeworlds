@@ -4,11 +4,12 @@
 
 extern "C" {
 	#include <engine/e_system.h>
-	#include <engine/client/ec_ui.h>
 	#include <engine/e_interface.h>
 	#include <engine/e_datafile.h>
 	#include <engine/e_config.h>
 }
+
+#include <game/client/gc_ui.h>
 
 // EDITOR SPECIFIC
 template<typename T>

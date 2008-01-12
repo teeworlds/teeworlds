@@ -262,7 +262,7 @@ function build(settings)
 	game_shared = Compile(settings, Collect("src/game/*.cpp"), nethash)
 	game_client = Compile(settings, Collect("src/game/client/*.cpp"), clientdata.source, clientdata.cdata)
 	game_server = Compile(settings, Collect("src/game/server/*.cpp"), serverdata.source, serverdata.cdata)
-	editor = Compile(settings, Collect("src/editor/*.cpp"))
+	game_editor = Compile(settings, Collect("src/game/editor/*.cpp"))
 
 	if platform == "macosx" then
 		osxlaunch = Compile(settings, Collect("src/osxlaunch/*.m"))
@@ -280,7 +280,7 @@ function build(settings)
 	
 	-- build client, server and master server
 	client_exe = Link(client_settings, "teewars", game_shared, game_client,
-		engine, client, editor, glfw, portaudio, zlib, pnglite, wavpack,
+		engine, client, game_editor, glfw, portaudio, zlib, pnglite, wavpack,
 		client_link_other)
 
 	server_exe = Link(server_settings, "teewars_srv", engine, server,

@@ -11,7 +11,6 @@ extern "C" {
 	#include <engine/e_system.h>
 	#include <engine/e_interface.h>
 	#include <engine/e_config.h>
-	#include <engine/client/ec_ui.h>
 	#include <engine/client/ec_font.h>
 }
 
@@ -25,6 +24,7 @@ extern "C" {
 #include "../generated/gc_data.h"
 #include "gc_render.h"
 #include "gc_skin.h"
+#include "gc_ui.h"
 #include <mastersrv/mastersrv.h>
 
 extern data_container *data;
@@ -50,9 +50,6 @@ enum
 
 static int popup = POPUP_NONE;
 
-//static vec4 gui_color(0.9f,0.78f,0.65f, 0.5f);
-//static vec4 gui_color(0.78f,0.9f,0.65f, 0.5f);
-
 static vec4 gui_color(0.65f,0.78f,0.9f, 0.5f);
 
 static vec4 color_tabbar_inactive_outgame(0,0,0,0.25f);
@@ -62,290 +59,35 @@ static float color_ingame_scale_i = 0.5f;
 static float color_ingame_scale_a = 0.2f;
 static vec4 color_tabbar_inactive_ingame(gui_color.r*color_ingame_scale_i, gui_color.g*color_ingame_scale_i, gui_color.b*color_ingame_scale_i,0.75f);
 static vec4 color_tabbar_active_ingame(gui_color.r*color_ingame_scale_a, gui_color.g*color_ingame_scale_a, gui_color.b*color_ingame_scale_a,0.85f);
-//static vec4 color_tabbar_inactive_ingame(0.2f,0.2f,0.2f,0.5f);
-//static vec4 color_tabbar_active_ingame(0.2f,0.2f,0.2f,0.75f);
 
 static vec4 color_tabbar_inactive = color_tabbar_inactive_outgame;
 static vec4 color_tabbar_active = color_tabbar_active_outgame;
 
 enum
 {
-	/*
-	CORNER_TL=1,
-	CORNER_TR=2,
-	CORNER_BL=4,
-	CORNER_BR=8,
-	
-	CORNER_T=CORNER_TL|CORNER_TR,
-	CORNER_B=CORNER_BL|CORNER_BR,
-	CORNER_R=CORNER_TR|CORNER_BR,
-	CORNER_L=CORNER_TL|CORNER_BL,
-	
-	CORNER_ALL=CORNER_T|CORNER_B,
-	*/
-	
 	PAGE_NEWS=0,
 	PAGE_INTERNET,
 	PAGE_LAN,
 	PAGE_FAVORITES,
 	PAGE_SETTINGS,
-	//PAGE_GAME, // not a real page
 	PAGE_SYSTEM,
 };
-/*
-typedef struct 
-{
-    float x, y, w, h;
-} RECT;*/
-
-static RECT screen = { 0.0f, 0.0f, 848.0f, 480.0f };
 
 extern void select_sprite(int id, int flags=0, int sx=0, int sy=0);
-
-RECT *ui2_screen()
-{
-    float aspect = gfx_screenaspect();
-    float w, h;
-
-    h = 600;
-    w = aspect*h;
-
-    screen.w = w;
-    screen.h = h;
-
-    return &screen;
-}
-
-void ui2_set_scale(float s)
-{
-    config.ui_scale = (int)(s*100.0f);
-}
-
-float ui2_scale()
-{
-    return config.ui_scale/100.0f;
-}
-
-void ui2_clip_enable(const RECT *r)
-{
-	float xscale = gfx_screenwidth()/ui2_screen()->w;
-	float yscale = gfx_screenheight()/ui2_screen()->h;
-	gfx_clip_enable((int)(r->x*xscale), (int)(r->y*yscale), (int)(r->w*xscale), (int)(r->h*yscale));
-}
-
-void ui2_clip_disable()
-{
-	gfx_clip_disable();
-}
-
-void ui2_hsplit_t(const RECT *original, float cut, RECT *top, RECT *bottom)
-{
-    RECT r = *original;
-    cut *= ui2_scale();
-
-    if (top)
-    {
-        top->x = r.x;
-        top->y = r.y;
-        top->w = r.w;
-        top->h = cut;
-    }
-
-    if (bottom)
-    {
-        bottom->x = r.x;
-        bottom->y = r.y + cut;
-        bottom->w = r.w;
-        bottom->h = r.h - cut;
-    }
-}
-
-void ui2_hsplit_b(const RECT *original, float cut, RECT *top, RECT *bottom)
-{
-    RECT r = *original;
-    cut *= ui2_scale();
-
-    if (top)
-    {
-        top->x = r.x;
-        top->y = r.y;
-        top->w = r.w;
-        top->h = r.h - cut;
-    }
-
-    if (bottom)
-    {
-        bottom->x = r.x;
-        bottom->y = r.y + r.h - cut;
-        bottom->w = r.w;
-        bottom->h = cut;
-    }
-}
-
-
-void ui2_vsplit_mid(const RECT *original, RECT *left, RECT *right)
-{
-    RECT r = *original;
-    float cut = r.w/2;
-
-    if (left)
-    {
-        left->x = r.x;
-        left->y = r.y;
-        left->w = cut;
-        left->h = r.h;
-    }
-
-    if (right)
-    {
-        right->x = r.x + cut;
-        right->y = r.y;
-        right->w = r.w - cut;
-        right->h = r.h;
-    }
-}
-
-void ui2_vsplit_l(const RECT *original, float cut, RECT *left, RECT *right)
-{
-    RECT r = *original;
-    cut *= ui2_scale();
-
-    if (left)
-    {
-        left->x = r.x;
-        left->y = r.y;
-        left->w = cut;
-        left->h = r.h;
-    }
-
-    if (right)
-    {
-        right->x = r.x + cut;
-        right->y = r.y;
-        right->w = r.w - cut;
-        right->h = r.h;
-    }
-}
-
-void ui2_vsplit_r(const RECT *original, float cut, RECT *left, RECT *right)
-{
-    RECT r = *original;
-    cut *= ui2_scale();
-
-    if (left)
-    {
-        left->x = r.x;
-        left->y = r.y;
-        left->w = r.w - cut;
-        left->h = r.h;
-    }
-
-    if (right)
-    {
-        right->x = r.x + r.w - cut;
-        right->y = r.y;
-        right->w = cut;
-        right->h = r.h;
-    }
-}
-
-void ui2_margin(const RECT *original, float cut, RECT *other_rect)
-{
-    RECT r = *original;
-	cut *= ui2_scale();
-
-    other_rect->x = r.x + cut;
-    other_rect->y = r.y + cut;
-    other_rect->w = r.w - 2*cut;
-    other_rect->h = r.h - 2*cut;
-}
-
-void ui2_vmargin(const RECT *original, float cut, RECT *other_rect)
-{
-    RECT r = *original;
-	cut *= ui2_scale();
-
-    other_rect->x = r.x + cut;
-    other_rect->y = r.y;
-    other_rect->w = r.w - 2*cut;
-    other_rect->h = r.h;
-}
-
-void ui2_hmargin(const RECT *original, float cut, RECT *other_rect)
-{
-    RECT r = *original;
-	cut *= ui2_scale();
-
-    other_rect->x = r.x;
-    other_rect->y = r.y + cut;
-    other_rect->w = r.w;
-    other_rect->h = r.h - 2*cut;
-}
-
-typedef void (*ui2_draw_button_func)(const void *id, const char *text, int checked, const RECT *r, void *extra);
-
-int ui2_do_button(const void *id, const char *text, int checked, const RECT *r, ui2_draw_button_func draw_func, void *extra)
-{
-    /* logic */
-    int ret = 0;
-    int inside = ui_mouse_inside(r);
-
-	if(ui_active_item() == id)
-	{
-		if(!ui_mouse_button(0))
-		{
-			if(inside)
-				ret = 1;
-			ui_set_active_item(0);
-		}
-	}
-	else if(ui_hot_item() == id)
-	{
-		if(ui_mouse_button(0))
-			ui_set_active_item(id);
-	}
-	
-	if(inside)
-		ui_set_hot_item(id);
-
-	if(draw_func)
-    	draw_func(id, text, checked, r, extra);
-    return ret;
-}
-
-
-void ui2_do_label(const RECT *r, const char *text, float size, int align, int max_width = -1)
-{
-    gfx_blend_normal();
-    size *= ui2_scale();
-    if(align == 0)
-    {
-    	float tw = gfx_pretty_text_width(size, text, max_width);
-    	gfx_pretty_text(r->x + r->w/2-tw/2, r->y, size, text, max_width);
-	}
-	else if(align < 0)
-    	gfx_pretty_text(r->x, r->y, size, text, max_width);
-	else if(align > 0)
-	{
-    	float tw = gfx_pretty_text_width(size, text, max_width);
-    	gfx_pretty_text(r->x + r->w-tw, r->y, size, text, max_width);
-	}
-}
-
 
 extern void draw_round_rect_ext(float x, float y, float w, float h, float r, int corners);
 extern void draw_round_rect(float x, float y, float w, float h, float r);
 
-static void ui2_draw_rect(const RECT *r, vec4 color, int corners, float rounding)
+static void ui_draw_rect(const RECT *r, vec4 color, int corners, float rounding)
 {
 	gfx_texture_set(-1);
 	gfx_quads_begin();
 	gfx_setcolor(color.r, color.g, color.b, color.a);
-	draw_round_rect_ext(r->x,r->y,r->w,r->h,rounding*ui2_scale(), corners);
+	draw_round_rect_ext(r->x,r->y,r->w,r->h,rounding*ui_scale(), corners);
 	gfx_quads_end();
 }
 
-static void ui2_draw_browse_icon(int what, const RECT *r)
+static void ui_draw_browse_icon(int what, const RECT *r)
 {
 	gfx_texture_set(data->images[IMAGE_BROWSEICONS].id);
 	gfx_quads_begin();
@@ -368,100 +110,88 @@ static void ui2_draw_browse_icon(int what, const RECT *r)
 	gfx_quads_end();
 }
 
-static void ui2_draw_menu_button(const void *id, const char *text, int checked, const RECT *r, void *extra)
+static void ui_draw_menu_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
-	ui2_draw_rect(r, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
-	ui2_do_label(r, text, 18.0f, 0);
+	ui_draw_rect(r, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
+	ui_do_label(r, text, 18.0f, 0);
 }
 
 
-static void ui2_draw_keyselect_button(const void *id, const char *text, int checked, const RECT *r, void *extra)
+static void ui_draw_keyselect_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
-	ui2_draw_rect(r, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
-	ui2_do_label(r, text, 14.0f, 0);
+	ui_draw_rect(r, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
+	ui_do_label(r, text, 14.0f, 0);
 }
 
-static void ui2_draw_menu_tab_button(const void *id, const char *text, int checked, const RECT *r, void *extra)
+static void ui_draw_menu_tab_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(checked)
-		ui2_draw_rect(r, color_tabbar_active, CORNER_T, 10.0f);
+		ui_draw_rect(r, color_tabbar_active, CORNER_T, 10.0f);
 	else
-		ui2_draw_rect(r, color_tabbar_inactive, CORNER_T, 10.0f);
-	ui2_do_label(r, text, 22.0f, 0);
+		ui_draw_rect(r, color_tabbar_inactive, CORNER_T, 10.0f);
+	ui_do_label(r, text, 22.0f, 0);
 }
 
 
-static void ui2_draw_settings_tab_button(const void *id, const char *text, int checked, const RECT *r, void *extra)
+static void ui_draw_settings_tab_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(checked)
-		ui2_draw_rect(r, color_tabbar_active, CORNER_R, 10.0f);
+		ui_draw_rect(r, color_tabbar_active, CORNER_R, 10.0f);
 	else
-		ui2_draw_rect(r, color_tabbar_inactive, CORNER_R, 10.0f);
-	ui2_do_label(r, text, 20.0f, 0);
+		ui_draw_rect(r, color_tabbar_inactive, CORNER_R, 10.0f);
+	ui_do_label(r, text, 20.0f, 0);
 }
 
-static void ui2_draw_grid_header(const void *id, const char *text, int checked, const RECT *r, void *extra)
+static void ui_draw_grid_header(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(checked)
-		ui2_draw_rect(r, vec4(1,1,1,0.5f), CORNER_T, 5.0f);
-	//else
-	//	ui2_draw_rect(r, vec4(1,1,1,0.1f), CORNER_T, 5.0f);
+		ui_draw_rect(r, vec4(1,1,1,0.5f), CORNER_T, 5.0f);
 	RECT t;
-	ui2_vsplit_l(r, 5.0f, 0, &t);
-	ui2_do_label(&t, text, 14.0f, -1);
-}
-/*
-static void ui2_draw_grid_cell_l(const void *id, const char *text, int checked, const RECT *r, void *extra)
-{
-	ui2_do_label(r, text, 18, -1);
+	ui_vsplit_l(r, 5.0f, 0, &t);
+	ui_do_label(&t, text, 14.0f, -1);
 }
 
-static void ui2_draw_grid_cell_r(const void *id, const char *text, int checked, const RECT *r, void *extra)
-{
-	ui2_do_label(r, text, 18, 1);
-}*/
-
-static void ui2_draw_list_row(const void *id, const char *text, int checked, const RECT *r, void *extra)
+static void ui_draw_list_row(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(checked)
 	{
 		RECT sr = *r;
-		ui2_margin(&sr, 1.5f, &sr);
-		ui2_draw_rect(&sr, vec4(1,1,1,0.5f), CORNER_ALL, 4.0f);
+		ui_margin(&sr, 1.5f, &sr);
+		ui_draw_rect(&sr, vec4(1,1,1,0.5f), CORNER_ALL, 4.0f);
 	}
-	ui2_do_label(r, text, 14.0f, -1);
+	ui_do_label(r, text, 14.0f, -1);
 }
 
-static void ui2_draw_checkbox_common(const void *id, const char *text, const char *boxtext, const RECT *r)
+static void ui_draw_checkbox_common(const void *id, const char *text, const char *boxtext, const RECT *r)
 {
 	RECT c = *r;
 	RECT t = *r;
 	c.w = c.h;
 	t.x += c.w;
 	t.w -= c.w;
-	ui2_vsplit_l(&t, 5.0f, 0, &t);
+	ui_vsplit_l(&t, 5.0f, 0, &t);
 	
-	ui2_margin(&c, 2.0f, &c);
-	ui2_draw_rect(&c, vec4(1,1,1,0.25f), CORNER_ALL, 3.0f);
+	ui_margin(&c, 2.0f, &c);
+	ui_draw_rect(&c, vec4(1,1,1,0.25f), CORNER_ALL, 3.0f);
 	c.y += 2;
-	ui2_do_label(&c, boxtext, 12.0f, 0);
-	ui2_do_label(&t, text, 14.0f, -1);	
+	ui_do_label(&c, boxtext, 12.0f, 0);
+	ui_do_label(&t, text, 14.0f, -1);	
 }
 
-static void ui2_draw_checkbox(const void *id, const char *text, int checked, const RECT *r, void *extra)
+static void ui_draw_checkbox(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
-	ui2_draw_checkbox_common(id, text, checked?"X":"", r);
+	ui_draw_checkbox_common(id, text, checked?"X":"", r);
 }
 
 
-static void ui2_draw_checkbox_number(const void *id, const char *text, int checked, const RECT *r, void *extra)
+static void ui_draw_checkbox_number(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	char buf[16];
 	sprintf(buf, "%d", checked);
-	ui2_draw_checkbox_common(id, text, buf, r);
+	ui_draw_checkbox_common(id, text, buf, r);
 }
 
-int ui2_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hidden=false)
+int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hidden=false)
 {
     int inside = ui_mouse_inside(rect);
 	int r = 0;
@@ -477,7 +207,7 @@ int ui2_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hi
 
 			for (int i = 1; i <= len; i++)
 			{
-				if (gfx_pretty_text_width(14.0f, str, i) + 10 > mx_rel)
+				if (gfx_text_width(0, 14.0f, str, i) + 10 > mx_rel)
 				{
 					at_index = i - 1;
 					break;
@@ -556,8 +286,8 @@ int ui2_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hi
 		ui_set_hot_item(id);
 
 	RECT textbox = *rect;
-	ui2_draw_rect(&textbox, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
-	ui2_vmargin(&textbox, 5.0f, &textbox);
+	ui_draw_rect(&textbox, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
+	ui_vmargin(&textbox, 5.0f, &textbox);
 	
 	const char *display_str = str;
 	char stars[128];
@@ -572,23 +302,23 @@ int ui2_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hi
 		display_str = stars;
 	}
 	
-	ui2_do_label(&textbox, display_str, 14, -1);
+	ui_do_label(&textbox, display_str, 14, -1);
 
 	if (ui_last_active_item() == id && !just_got_active)
 	{
-		float w = gfx_pretty_text_width(14.0f, display_str, at_index);
-		textbox.x += w*ui2_scale();
-		ui2_do_label(&textbox, "_", 14, -1);
+		float w = gfx_text_width(0, 14.0f, display_str, at_index);
+		textbox.x += w*ui_scale();
+		ui_do_label(&textbox, "_", 14, -1);
 	}
 
 	return r;
 }
 
-float ui2_do_scrollbar_v(const void *id, const RECT *rect, float current)
+float ui_do_scrollbar_v(const void *id, const RECT *rect, float current)
 {
 	RECT handle;
 	static float offset_y;
-	ui2_hsplit_t(rect, 33, &handle, 0);
+	ui_hsplit_t(rect, 33, &handle, 0);
 
 	handle.y += (rect->h-handle.h)*current;
 
@@ -622,29 +352,29 @@ float ui2_do_scrollbar_v(const void *id, const RECT *rect, float current)
 
 	// render
 	RECT rail;
-	ui2_vmargin(rect, 5.0f, &rail);
-	ui2_draw_rect(&rail, vec4(1,1,1,0.25f), 0, 0.0f);
+	ui_vmargin(rect, 5.0f, &rail);
+	ui_draw_rect(&rail, vec4(1,1,1,0.25f), 0, 0.0f);
 
 	RECT slider = handle;
 	slider.w = rail.x-slider.x;
-	ui2_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_L, 2.5f);
+	ui_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_L, 2.5f);
 	slider.x = rail.x+rail.w;
-	ui2_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_R, 2.5f);
+	ui_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_R, 2.5f);
 
 	slider = handle;
-	ui2_margin(&slider, 5.0f, &slider);
-	ui2_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_ALL, 2.5f);
+	ui_margin(&slider, 5.0f, &slider);
+	ui_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_ALL, 2.5f);
 	
     return ret;
 }
 
 
 
-float ui2_do_scrollbar_h(const void *id, const RECT *rect, float current)
+float ui_do_scrollbar_h(const void *id, const RECT *rect, float current)
 {
 	RECT handle;
 	static float offset_x;
-	ui2_vsplit_l(rect, 33, &handle, 0);
+	ui_vsplit_l(rect, 33, &handle, 0);
 
 	handle.x += (rect->w-handle.w)*current;
 
@@ -678,23 +408,23 @@ float ui2_do_scrollbar_h(const void *id, const RECT *rect, float current)
 
 	// render
 	RECT rail;
-	ui2_hmargin(rect, 5.0f, &rail);
-	ui2_draw_rect(&rail, vec4(1,1,1,0.25f), 0, 0.0f);
+	ui_hmargin(rect, 5.0f, &rail);
+	ui_draw_rect(&rail, vec4(1,1,1,0.25f), 0, 0.0f);
 
 	RECT slider = handle;
 	slider.h = rail.y-slider.y;
-	ui2_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_T, 2.5f);
+	ui_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_T, 2.5f);
 	slider.y = rail.y+rail.h;
-	ui2_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_B, 2.5f);
+	ui_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_B, 2.5f);
 
 	slider = handle;
-	ui2_margin(&slider, 5.0f, &slider);
-	ui2_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_ALL, 2.5f);
+	ui_margin(&slider, 5.0f, &slider);
+	ui_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_ALL, 2.5f);
 	
     return ret;
 }
 
-int ui2_do_key_reader(void *id, const RECT *rect, int key)
+int ui_do_key_reader(void *id, const RECT *rect, int key)
 {
 	// process
 	static bool mouse_released = true;
@@ -730,9 +460,9 @@ int ui2_do_key_reader(void *id, const RECT *rect, int key)
 
 	// draw
 	if (ui_active_item() == id)
-		ui2_draw_keyselect_button(id, "???", 0, rect, 0);
+		ui_draw_keyselect_button(id, "???", 0, rect, 0);
 	else
-		ui2_draw_keyselect_button(id, inp_key_name(key), 0, rect, 0);
+		ui_draw_keyselect_button(id, inp_key_name(key), 0, rect, 0);
 	return new_key;
 }
 
@@ -751,35 +481,35 @@ static int menu2_render_menubar(RECT r)
 	{
 		if(0) // this is not done yet
 		{
-			ui2_vsplit_l(&box, 90.0f, &button, &box);
+			ui_vsplit_l(&box, 90.0f, &button, &box);
 			static int news_button=0;
-			if (ui2_do_button(&news_button, "News", active_page==PAGE_NEWS, &button, ui2_draw_menu_tab_button, 0))
+			if (ui_do_button(&news_button, "News", active_page==PAGE_NEWS, &button, ui_draw_menu_tab_button, 0))
 				new_page = PAGE_NEWS;
-			ui2_vsplit_l(&box, 30.0f, 0, &box); 
+			ui_vsplit_l(&box, 30.0f, 0, &box); 
 		}
 	}
 	else
 	{
-		ui2_vsplit_l(&box, 90.0f, &button, &box);
+		ui_vsplit_l(&box, 90.0f, &button, &box);
 		static int game_button=0;
-		if (ui2_do_button(&game_button, "Game", menu_game_active, &button, ui2_draw_menu_tab_button, 0))
+		if (ui_do_button(&game_button, "Game", menu_game_active, &button, ui_draw_menu_tab_button, 0))
 			menu_game_active = true;
 			
-		ui2_vsplit_l(&box, 30.0f, 0, &box);
+		ui_vsplit_l(&box, 30.0f, 0, &box);
 	}
 		
-	ui2_vsplit_l(&box, 110.0f, &button, &box);
+	ui_vsplit_l(&box, 110.0f, &button, &box);
 	static int internet_button=0;
-	if (ui2_do_button(&internet_button, "Internet", active_page==PAGE_INTERNET, &button, ui2_draw_menu_tab_button, 0))
+	if (ui_do_button(&internet_button, "Internet", active_page==PAGE_INTERNET, &button, ui_draw_menu_tab_button, 0))
 	{
 		client_serverbrowse_refresh(0);
 		new_page = PAGE_INTERNET;
 	}
 
-	ui2_vsplit_l(&box, 4.0f, 0, &box);
-	ui2_vsplit_l(&box, 90.0f, &button, &box);
+	ui_vsplit_l(&box, 4.0f, 0, &box);
+	ui_vsplit_l(&box, 90.0f, &button, &box);
 	static int lan_button=0;
-	if (ui2_do_button(&lan_button, "LAN", active_page==PAGE_LAN, &button, ui2_draw_menu_tab_button, 0))
+	if (ui_do_button(&lan_button, "LAN", active_page==PAGE_LAN, &button, ui_draw_menu_tab_button, 0))
 	{
 		client_serverbrowse_refresh(1);
 		new_page = PAGE_LAN;
@@ -787,31 +517,31 @@ static int menu2_render_menubar(RECT r)
 
 	if(0) // this one is not done yet
 	{
-		ui2_vsplit_l(&box, 4.0f, 0, &box);
-		ui2_vsplit_l(&box, 120.0f, &button, &box);
+		ui_vsplit_l(&box, 4.0f, 0, &box);
+		ui_vsplit_l(&box, 120.0f, &button, &box);
 		static int favorites_button=0;
-		if (ui2_do_button(&favorites_button, "Favorites", active_page==PAGE_FAVORITES, &button, ui2_draw_menu_tab_button, 0))
+		if (ui_do_button(&favorites_button, "Favorites", active_page==PAGE_FAVORITES, &button, ui_draw_menu_tab_button, 0))
 			new_page  = PAGE_FAVORITES;
 	}
 
 	/*
-	ui2_vsplit_r(&box, 110.0f, &box, &button);
+	ui_vsplit_r(&box, 110.0f, &box, &button);
 	static int system_button=0;
-	if (ui2_do_button(&system_button, "System", config.ui_page==PAGE_SYSTEM, &button, ui2_draw_menu_tab_button, 0))
+	if (ui_do_button(&system_button, "System", config.ui_page==PAGE_SYSTEM, &button, ui_draw_menu_tab_button, 0))
 		config.ui_page = PAGE_SYSTEM;
 		
-	ui2_vsplit_r(&box, 30.0f, &box, 0);
+	ui_vsplit_r(&box, 30.0f, &box, 0);
 	*/
 	
-	ui2_vsplit_r(&box, 110.0f, &box, &button);
+	ui_vsplit_r(&box, 110.0f, &box, &button);
 	static int quit_button=0;
-	if (ui2_do_button(&quit_button, "Quit", 0, &button, ui2_draw_menu_tab_button, 0))
+	if (ui_do_button(&quit_button, "Quit", 0, &button, ui_draw_menu_tab_button, 0))
 		popup = POPUP_QUIT;
 
-	ui2_vsplit_r(&box, 10.0f, &box, &button);
-	ui2_vsplit_r(&box, 110.0f, &box, &button);
+	ui_vsplit_r(&box, 10.0f, &box, &button);
+	ui_vsplit_r(&box, 110.0f, &box, &button);
 	static int settings_button=0;
-	if (ui2_do_button(&settings_button, "Settings", active_page==PAGE_SETTINGS, &button, ui2_draw_menu_tab_button, 0))
+	if (ui_do_button(&settings_button, "Settings", active_page==PAGE_SETTINGS, &button, ui_draw_menu_tab_button, 0))
 		new_page = PAGE_SETTINGS;
 	
 	if(new_page != -1)
@@ -825,7 +555,7 @@ static int menu2_render_menubar(RECT r)
 
 static void menu2_render_background()
 {
-	RECT s = *ui2_screen();
+	RECT s = *ui_screen();
 
 	gfx_texture_set(-1);
 	gfx_quads_begin();
@@ -853,28 +583,11 @@ extern "C" void *gfx_font_set;
 
 void render_loading(float percent)
 {
-    if (1)
-    {
-        static FONT_SET font_set;
-        static bool first = true;
-
-        gfx_font_set = &font_set;
-
-        if (first)
-        {
-			int before = gfx_memory_usage();
-            font_set_load(&font_set, "fonts/default_font%d.tfnt", "fonts/default_font%d.png", "fonts/default_font%d_b.png", 14, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 36);
-            first = false;
-			int after = gfx_memory_usage();
-			dbg_msg("font", "gfx memory usage: %d", after-before);
-        }
-    }
-
 	// need up date this here to get correct
 	vec3 rgb = hsl_to_rgb(vec3(config.ui_color_hue/255.0f, config.ui_color_sat/255.0f, config.ui_color_lht/255.0f));
 	gui_color = vec4(rgb.r, rgb.g, rgb.b, config.ui_color_alpha/255.0f);
 	
-    RECT screen = *ui2_screen();
+    RECT screen = *ui_screen();
 	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
 	
 	menu2_render_background();
@@ -896,7 +609,7 @@ void render_loading(float percent)
 
 	const char *caption = "Loading";
 
-	tw = gfx_pretty_text_width(48.0f, caption, -1);
+	tw = gfx_text_width(0, 48.0f, caption, -1);
 	RECT r;
 	r.x = x+w/2;
 	r.y = y+20;
@@ -913,10 +626,10 @@ void render_loading(float percent)
 
 static void menu2_render_serverbrowser(RECT main_view)
 {
-	ui2_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
+	ui_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
 	
 	RECT view;
-	ui2_margin(&main_view, 10.0f, &view);
+	ui_margin(&main_view, 10.0f, &view);
 	
 	RECT headers;
 	RECT filters;
@@ -925,27 +638,27 @@ static void menu2_render_serverbrowser(RECT main_view)
 	RECT server_details;
 	RECT server_scoreboard;
 
-	//ui2_hsplit_t(&view, 20.0f, &status, &view);
-	ui2_hsplit_b(&view, 110.0f, &view, &filters);
+	//ui_hsplit_t(&view, 20.0f, &status, &view);
+	ui_hsplit_b(&view, 110.0f, &view, &filters);
 
 	// split off a piece for details and scoreboard
-	ui2_vsplit_r(&view, 200.0f, &view, &server_details);
+	ui_vsplit_r(&view, 200.0f, &view, &server_details);
 
 	// server list
-	ui2_hsplit_t(&view, 20.0f, &headers, &view);
-	//ui2_hsplit_b(&view, 110.0f, &view, &filters);
-	ui2_hsplit_b(&view, 5.0f, &view, 0);
-	ui2_hsplit_b(&view, 20.0f, &view, &status);
+	ui_hsplit_t(&view, 20.0f, &headers, &view);
+	//ui_hsplit_b(&view, 110.0f, &view, &filters);
+	ui_hsplit_b(&view, 5.0f, &view, 0);
+	ui_hsplit_b(&view, 20.0f, &view, &status);
 
-	//ui2_vsplit_r(&filters, 300.0f, &filters, &toolbox);
-	//ui2_vsplit_r(&filters, 150.0f, &filters, 0);
+	//ui_vsplit_r(&filters, 300.0f, &filters, &toolbox);
+	//ui_vsplit_r(&filters, 150.0f, &filters, 0);
 
-	ui2_vsplit_mid(&filters, &filters, &toolbox);
-	ui2_vsplit_r(&filters, 50.0f, &filters, 0);
+	ui_vsplit_mid(&filters, &filters, &toolbox);
+	ui_vsplit_r(&filters, 50.0f, &filters, 0);
 	
 	// split of the scrollbar
-	ui2_draw_rect(&headers, vec4(1,1,1,0.25f), CORNER_T, 5.0f);
-	ui2_vsplit_r(&headers, 20.0f, &headers, 0);
+	ui_draw_rect(&headers, vec4(1,1,1,0.25f), CORNER_T, 5.0f);
+	ui_vsplit_r(&headers, 20.0f, &headers, 0);
 	
 	struct column
 	{
@@ -995,12 +708,12 @@ static void menu2_render_serverbrowser(RECT main_view)
 	{
 		if(cols[i].direction == -1)
 		{
-			ui2_vsplit_l(&headers, cols[i].width, &cols[i].rect, &headers);
+			ui_vsplit_l(&headers, cols[i].width, &cols[i].rect, &headers);
 			
 			if(i+1 < num_cols)
 			{
 				//cols[i].flags |= SPACER;
-				ui2_vsplit_l(&headers, 2, &cols[i].spacer, &headers);
+				ui_vsplit_l(&headers, 2, &cols[i].spacer, &headers);
 			}
 		}
 	}
@@ -1009,8 +722,8 @@ static void menu2_render_serverbrowser(RECT main_view)
 	{
 		if(cols[i].direction == 1)
 		{
-			ui2_vsplit_r(&headers, cols[i].width, &headers, &cols[i].rect);
-			ui2_vsplit_r(&headers, 2, &headers, &cols[i].spacer);
+			ui_vsplit_r(&headers, cols[i].width, &headers, &cols[i].rect);
+			ui_vsplit_r(&headers, 2, &headers, &cols[i].spacer);
 		}
 	}
 	
@@ -1023,7 +736,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 	// do headers
 	for(int i = 0; i < num_cols; i++)
 	{
-		if(ui2_do_button(cols[i].caption, cols[i].caption, config.b_sort == cols[i].sort, &cols[i].rect, ui2_draw_grid_header, 0))
+		if(ui_do_button(cols[i].caption, cols[i].caption, config.b_sort == cols[i].sort, &cols[i].rect, ui_draw_grid_header, 0))
 		{
 			if(cols[i].sort != -1)
 			{
@@ -1036,10 +749,10 @@ static void menu2_render_serverbrowser(RECT main_view)
 		}
 	}
 	
-	ui2_draw_rect(&view, vec4(0,0,0,0.15f), 0, 0);
+	ui_draw_rect(&view, vec4(0,0,0,0.15f), 0, 0);
 	
 	RECT scroll;
-	ui2_vsplit_r(&view, 15, &view, &scroll);
+	ui_vsplit_r(&view, 15, &view, &scroll);
 	
 	int num_servers = client_serverbrowse_sorted_num();
 	
@@ -1047,8 +760,8 @@ static void menu2_render_serverbrowser(RECT main_view)
 	static int scrollbar = 0;
 	static float scrollvalue = 0;
 	//static int selected_index = -1;
-	ui2_hmargin(&scroll, 5.0f, &scroll);
-	scrollvalue = ui2_do_scrollbar_v(&scrollbar, &scroll, scrollvalue);
+	ui_hmargin(&scroll, 5.0f, &scroll);
+	scrollvalue = ui_do_scrollbar_v(&scrollbar, &scroll, scrollvalue);
 	
 	int scrollnum = num_servers-num+10;
 	if(scrollnum > 0)
@@ -1065,7 +778,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 		scrollnum = 0;
 
 	// set clipping
-	ui2_clip_enable(&view);
+	ui_clip_enable(&view);
 	
 	int start = (int)(scrollnum*scrollvalue);
 	if(start < 0)
@@ -1094,16 +807,16 @@ static void menu2_render_serverbrowser(RECT main_view)
 			RECT whole;
 			int h = (item->num_players+2)/3;
 			
-			ui2_hsplit_t(&view, 25.0f+h*15.0f, &whole, &view);
+			ui_hsplit_t(&view, 25.0f+h*15.0f, &whole, &view);
 
             select_hit_box = whole;
 			
 			RECT r = whole;
-			ui2_margin(&r, 1.5f, &r);
-			ui2_draw_rect(&r, vec4(1,1,1,0.5f), CORNER_ALL, 4.0f);
+			ui_margin(&r, 1.5f, &r);
+			ui_draw_rect(&r, vec4(1,1,1,0.5f), CORNER_ALL, 4.0f);
 			
-			ui2_hsplit_t(&whole, 20.0f, &row, &whole);
-			ui2_vsplit_l(&whole, 50.0f, 0, &whole);
+			ui_hsplit_t(&whole, 20.0f, &row, &whole);
+			ui_vsplit_l(&whole, 50.0f, 0, &whole);
 
 			
 			for(int p = 0; p < item->num_players; p+=3)
@@ -1112,20 +825,20 @@ static void menu2_render_serverbrowser(RECT main_view)
 				RECT player_rect;
 				RECT player_score;
 				RECT player_name;
-				ui2_hsplit_t(&whole, 15.0f, &player_row, &whole);
+				ui_hsplit_t(&whole, 15.0f, &player_row, &whole);
 				
 				for(int a = 0; a < 3; a++)
 				{
 					if(p+a >= item->num_players)
 						break;
 						
-					ui2_vsplit_l(&player_row, 170.0f, &player_rect, &player_row);
-					ui2_vsplit_l(&player_rect, 30.0f, &player_score, &player_name);
-					ui2_vsplit_l(&player_name, 10.0f, 0, &player_name);
+					ui_vsplit_l(&player_row, 170.0f, &player_rect, &player_row);
+					ui_vsplit_l(&player_rect, 30.0f, &player_score, &player_name);
+					ui_vsplit_l(&player_name, 10.0f, 0, &player_name);
 					char buf[32];
 					sprintf(buf, "%d", item->player_scores[p+a]);
-					ui2_do_label(&player_score, buf, 12.0f, 1);
-					ui2_do_label(&player_name, item->player_names[p+a], 12.0f, -1);
+					ui_do_label(&player_score, buf, 12.0f, 1);
+					ui_do_label(&player_name, item->player_names[p+a], 12.0f, -1);
 				}
 			}
 			
@@ -1133,7 +846,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 		}
 		else
         {
-			ui2_hsplit_t(&view, 20.0f, &row, &view);
+			ui_hsplit_t(&view, 20.0f, &row, &view);
             select_hit_box = row;
         }
 
@@ -1146,7 +859,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 				select_hit_box.y = original_view.y;
 			}
 			
-			if(ui2_do_button(item, "", selected, &select_hit_box, 0, 0))
+			if(ui_do_button(item, "", selected, &select_hit_box, 0, 0))
 			{
 				new_selected = item_index;
 			}
@@ -1168,39 +881,39 @@ static void menu2_render_serverbrowser(RECT main_view)
 			//int s = 0;
 			int id = cols[c].id;
 
-			//s = ui2_do_button(item, "L", l, &button, ui2_draw_browse_icon, 0);
+			//s = ui_do_button(item, "L", l, &button, ui_draw_browse_icon, 0);
 			
 			if(id == COL_FLAGS)
 			{
 				if(item->flags&1)
-					ui2_draw_browse_icon(0x100, &button);
+					ui_draw_browse_icon(0x100, &button);
 			}
 			else if(id == COL_NAME)
-				ui2_do_label(&button, item->name, 15.0f, -1);
+				ui_do_label(&button, item->name, 15.0f, -1);
 			else if(id == COL_MAP)
-				ui2_do_label(&button, item->map, 15.0f, -1);
+				ui_do_label(&button, item->map, 15.0f, -1);
 			else if(id == COL_PLAYERS)
 			{
 				sprintf(temp, "%i/%i", item->num_players, item->max_players);
-				ui2_do_label(&button, temp, 15.0f, 1);
+				ui_do_label(&button, temp, 15.0f, 1);
 			}
 			else if(id == COL_PING)
 			{
 				sprintf(temp, "%i", item->latency);
-				ui2_do_label(&button, temp, 15.0f, 1);
+				ui_do_label(&button, temp, 15.0f, 1);
 			}
 			else if(id == COL_PROGRESS)
 			{
 				if(item->progression > 100)
 					item->progression = 100;
-				ui2_draw_browse_icon(item->progression, &button);
+				ui_draw_browse_icon(item->progression, &button);
 			}
 			else if(id == COL_VERSION)
 			{
 				const char *version = item->version;
 				if(strcmp(version, "0.3 e2d7973c6647a13c") == 0) // TODO: remove me later on
 					version = "0.3.0";
-				ui2_do_label(&button, version, 15.0f, 1);
+				ui_do_label(&button, version, 15.0f, 1);
 			}			
 			else if(id == COL_GAMETYPE)
 			{
@@ -1208,12 +921,12 @@ static void menu2_render_serverbrowser(RECT main_view)
 				if(item->game_type == GAMETYPE_DM) type = "DM";
 				else if(item->game_type == GAMETYPE_TDM) type = "TDM";
 				else if(item->game_type == GAMETYPE_CTF) type = "CTF";
-				ui2_do_label(&button, type, 15.0f, 0);
+				ui_do_label(&button, type, 15.0f, 0);
 			}
 		}
 	}
 
-	ui2_clip_disable();
+	ui_clip_disable();
 	
 	if(new_selected != -1)
 	{
@@ -1227,22 +940,22 @@ static void menu2_render_serverbrowser(RECT main_view)
 	SERVER_INFO *selected_server = client_serverbrowse_sorted_get(selected_index);
 	RECT server_header;
 
-	ui2_vsplit_l(&server_details, 10.0f, 0x0, &server_details);
+	ui_vsplit_l(&server_details, 10.0f, 0x0, &server_details);
 
 	// split off a piece to use for scoreboard
-	ui2_hsplit_t(&server_details, 140.0f, &server_details, &server_scoreboard);
-	ui2_hsplit_b(&server_details, 10.0f, &server_details, 0x0);
+	ui_hsplit_t(&server_details, 140.0f, &server_details, &server_scoreboard);
+	ui_hsplit_b(&server_details, 10.0f, &server_details, 0x0);
 
 	// server details
-	ui2_hsplit_t(&server_details, 20.0f, &server_header, &server_details);
-	ui2_draw_rect(&server_header, vec4(1,1,1,0.25f), CORNER_T, 4.0f);
-	ui2_draw_rect(&server_details, vec4(0,0,0,0.15f), CORNER_B, 4.0f);
-	ui2_vsplit_l(&server_header, 8.0f, 0x0, &server_header);
-	ui2_do_label(&server_header, "Server Details: ", 14.0f, -1);
+	ui_hsplit_t(&server_details, 20.0f, &server_header, &server_details);
+	ui_draw_rect(&server_header, vec4(1,1,1,0.25f), CORNER_T, 4.0f);
+	ui_draw_rect(&server_details, vec4(0,0,0,0.15f), CORNER_B, 4.0f);
+	ui_vsplit_l(&server_header, 8.0f, 0x0, &server_header);
+	ui_do_label(&server_header, "Server Details: ", 14.0f, -1);
 
-	ui2_vsplit_l(&server_details, 5.0f, 0x0, &server_details);
+	ui_vsplit_l(&server_details, 5.0f, 0x0, &server_details);
 
-	ui2_margin(&server_details, 3.0f, &server_details);
+	ui_margin(&server_details, 3.0f, &server_details);
 
 	if (selected_server)
 	{
@@ -1250,32 +963,32 @@ static void menu2_render_serverbrowser(RECT main_view)
 		RECT row;
 		static char *labels[] = { "Version:", "Game Type:", "Progression:", "Ping:" };
 
-		ui2_hsplit_t(&server_details, row_height, &row, &server_details);
-		ui2_do_label(&row, selected_server->name, 15.0f, -1);
+		ui_hsplit_t(&server_details, row_height, &row, &server_details);
+		ui_do_label(&row, selected_server->name, 15.0f, -1);
 
-		ui2_hsplit_t(&server_details, row_height, &row, &server_details);
-		ui2_vsplit_l(&row, 1.0f, 0x0, &row);
-		ui2_do_label(&row, selected_server->address, 14.0f, -1);
+		ui_hsplit_t(&server_details, row_height, &row, &server_details);
+		ui_vsplit_l(&row, 1.0f, 0x0, &row);
+		ui_do_label(&row, selected_server->address, 14.0f, -1);
 
 		RECT left_column;
 		RECT right_column;
 
-		ui2_vsplit_l(&server_details, 5.0f, 0x0, &server_details);
-		ui2_vsplit_l(&server_details, 80.0f, &left_column, &right_column);
+		ui_vsplit_l(&server_details, 5.0f, 0x0, &server_details);
+		ui_vsplit_l(&server_details, 80.0f, &left_column, &right_column);
 
 		for (int i = 0; i < 4; i++)
 		{
-			ui2_hsplit_t(&left_column, 15.0f, &row, &left_column);
-			ui2_do_label(&row, labels[i], 13.0f, -1);
+			ui_hsplit_t(&left_column, 15.0f, &row, &left_column);
+			ui_do_label(&row, labels[i], 13.0f, -1);
 		}
 
-		ui2_hsplit_t(&right_column, 15.0f, &row, &right_column);
-		ui2_do_label(&row, selected_server->version, 13.0f, -1);
+		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
+		ui_do_label(&row, selected_server->version, 13.0f, -1);
 
-		ui2_hsplit_t(&right_column, 15.0f, &row, &right_column);
+		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
 		static char *game_types[] = { "DM", "TDM", "CTF" };
 		if (selected_server->game_type >= 0 && selected_server->game_type < (int)(sizeof(game_types)/sizeof(*game_types)))
-			ui2_do_label(&row, game_types[selected_server->game_type], 13.0f, -1);
+			ui_do_label(&row, game_types[selected_server->game_type], 13.0f, -1);
 
 		char temp[16];
 
@@ -1283,25 +996,25 @@ static void menu2_render_serverbrowser(RECT main_view)
 			sprintf(temp, "N/A");
 		else
 			sprintf(temp, "%d%%", selected_server->progression);
-		ui2_hsplit_t(&right_column, 15.0f, &row, &right_column);
-		ui2_do_label(&row, temp, 13.0f, -1);
+		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
+		ui_do_label(&row, temp, 13.0f, -1);
 
 		sprintf(temp, "%d", selected_server->latency);
-		ui2_hsplit_t(&right_column, 15.0f, &row, &right_column);
-		ui2_do_label(&row, temp, 13.0f, -1);
+		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
+		ui_do_label(&row, temp, 13.0f, -1);
 	}
 	
 	// server scoreboard
-	ui2_hsplit_b(&server_scoreboard, 10.0f, &server_scoreboard, 0x0);
-	ui2_hsplit_t(&server_scoreboard, 20.0f, &server_header, &server_scoreboard);
-	ui2_draw_rect(&server_header, vec4(1,1,1,0.25f), CORNER_T, 4.0f);
-	ui2_draw_rect(&server_scoreboard, vec4(0,0,0,0.15f), CORNER_B, 4.0f);
-	ui2_vsplit_l(&server_header, 8.0f, 0x0, &server_header);
-	ui2_do_label(&server_header, "Scoreboard: ", 14.0f, -1);
+	ui_hsplit_b(&server_scoreboard, 10.0f, &server_scoreboard, 0x0);
+	ui_hsplit_t(&server_scoreboard, 20.0f, &server_header, &server_scoreboard);
+	ui_draw_rect(&server_header, vec4(1,1,1,0.25f), CORNER_T, 4.0f);
+	ui_draw_rect(&server_scoreboard, vec4(0,0,0,0.15f), CORNER_B, 4.0f);
+	ui_vsplit_l(&server_header, 8.0f, 0x0, &server_header);
+	ui_do_label(&server_header, "Scoreboard: ", 14.0f, -1);
 
-	ui2_vsplit_l(&server_scoreboard, 5.0f, 0x0, &server_scoreboard);
+	ui_vsplit_l(&server_scoreboard, 5.0f, 0x0, &server_scoreboard);
 
-	ui2_margin(&server_scoreboard, 3.0f, &server_scoreboard);
+	ui_margin(&server_scoreboard, 3.0f, &server_scoreboard);
 
 	if (selected_server)
 	{
@@ -1309,88 +1022,88 @@ static void menu2_render_serverbrowser(RECT main_view)
 		{
 			RECT row;
 			char temp[16];
-			ui2_hsplit_t(&server_scoreboard, 16.0f, &row, &server_scoreboard);
+			ui_hsplit_t(&server_scoreboard, 16.0f, &row, &server_scoreboard);
 
 			sprintf(temp, "%d", selected_server->player_scores[i]);
-			ui2_do_label(&row, temp, 14.0f, -1);
+			ui_do_label(&row, temp, 14.0f, -1);
 
-			ui2_vsplit_l(&row, 25.0f, 0x0, &row);
-			ui2_do_label(&row, selected_server->player_names[i], 14.0f, -1);
+			ui_vsplit_l(&row, 25.0f, 0x0, &row);
+			ui_do_label(&row, selected_server->player_names[i], 14.0f, -1);
 		}
 	}
 	
 	RECT button;
 	RECT types;
-	ui2_hsplit_t(&filters, 20.0f, &button, &filters);
-	ui2_do_label(&button, "Quick search: ", 14.0f, -1);
-	ui2_vsplit_l(&button, 95.0f, 0, &button);
-	ui2_do_edit_box(&config.b_filter_string, &button, config.b_filter_string, sizeof(config.b_filter_string));
+	ui_hsplit_t(&filters, 20.0f, &button, &filters);
+	ui_do_label(&button, "Quick search: ", 14.0f, -1);
+	ui_vsplit_l(&button, 95.0f, 0, &button);
+	ui_do_edit_box(&config.b_filter_string, &button, config.b_filter_string, sizeof(config.b_filter_string));
 
-	ui2_vsplit_l(&filters, 180.0f, &filters, &types);
+	ui_vsplit_l(&filters, 180.0f, &filters, &types);
 
 	// render filters
-	ui2_hsplit_t(&filters, 20.0f, &button, &filters);
-	if (ui2_do_button(&config.b_filter_empty, "Has people playing", config.b_filter_empty, &button, ui2_draw_checkbox, 0))
+	ui_hsplit_t(&filters, 20.0f, &button, &filters);
+	if (ui_do_button(&config.b_filter_empty, "Has people playing", config.b_filter_empty, &button, ui_draw_checkbox, 0))
 		config.b_filter_empty ^= 1;
 
-	ui2_hsplit_t(&filters, 20.0f, &button, &filters);
-	if (ui2_do_button(&config.b_filter_full, "Server not full", config.b_filter_full, &button, ui2_draw_checkbox, 0))
+	ui_hsplit_t(&filters, 20.0f, &button, &filters);
+	if (ui_do_button(&config.b_filter_full, "Server not full", config.b_filter_full, &button, ui_draw_checkbox, 0))
 		config.b_filter_full ^= 1;
 
-	ui2_hsplit_t(&filters, 20.0f, &button, &filters);
-	if (ui2_do_button(&config.b_filter_pw, "No password", config.b_filter_pw, &button, ui2_draw_checkbox, 0))
+	ui_hsplit_t(&filters, 20.0f, &button, &filters);
+	if (ui_do_button(&config.b_filter_pw, "No password", config.b_filter_pw, &button, ui_draw_checkbox, 0))
 		config.b_filter_pw ^= 1;
 
-	ui2_hsplit_t(&filters, 2.0f, &button, &filters); // ping
-	ui2_hsplit_t(&filters, 20.0f, &button, &filters);
+	ui_hsplit_t(&filters, 2.0f, &button, &filters); // ping
+	ui_hsplit_t(&filters, 20.0f, &button, &filters);
 	{
 		RECT editbox;
-		ui2_vsplit_l(&button, 40.0f, &editbox, &button);
-		ui2_vsplit_l(&button, 5.0f, &button, &button);
+		ui_vsplit_l(&button, 40.0f, &editbox, &button);
+		ui_vsplit_l(&button, 5.0f, &button, &button);
 		
 		char buf[8];
 		sprintf(buf, "%d", config.b_filter_ping);
-		ui2_do_edit_box(&config.b_filter_ping, &editbox, buf, sizeof(buf));
+		ui_do_edit_box(&config.b_filter_ping, &editbox, buf, sizeof(buf));
 		config.b_filter_ping = atoi(buf);
 		
-		ui2_do_label(&button, "Maximum ping", 14.0f, -1);
+		ui_do_label(&button, "Maximum ping", 14.0f, -1);
 	}
 
-	ui2_hsplit_t(&types, 20.0f, &button, &types);
-	if (ui2_do_button(&config.b_filter_gametype, "DM", config.b_filter_gametype&(1<<GAMETYPE_DM), &button, ui2_draw_checkbox, 0))
+	ui_hsplit_t(&types, 20.0f, &button, &types);
+	if (ui_do_button(&config.b_filter_gametype, "DM", config.b_filter_gametype&(1<<GAMETYPE_DM), &button, ui_draw_checkbox, 0))
 		config.b_filter_gametype ^= (1<<GAMETYPE_DM);
 
-	ui2_hsplit_t(&types, 20.0f, &button, &types);
-	if (ui2_do_button((char *)&config.b_filter_gametype + 1, "TDM", config.b_filter_gametype&(1<<GAMETYPE_TDM), &button, ui2_draw_checkbox, 0))
+	ui_hsplit_t(&types, 20.0f, &button, &types);
+	if (ui_do_button((char *)&config.b_filter_gametype + 1, "TDM", config.b_filter_gametype&(1<<GAMETYPE_TDM), &button, ui_draw_checkbox, 0))
 		config.b_filter_gametype ^= (1<<GAMETYPE_TDM);
 
-	ui2_hsplit_t(&types, 20.0f, &button, &types);
-	if (ui2_do_button((char *)&config.b_filter_gametype + 2, "CTF", config.b_filter_gametype&(1<<GAMETYPE_CTF), &button, ui2_draw_checkbox, 0))
+	ui_hsplit_t(&types, 20.0f, &button, &types);
+	if (ui_do_button((char *)&config.b_filter_gametype + 2, "CTF", config.b_filter_gametype&(1<<GAMETYPE_CTF), &button, ui_draw_checkbox, 0))
 		config.b_filter_gametype ^= (1<<GAMETYPE_CTF);
 
 	// render status
-	ui2_draw_rect(&status, vec4(1,1,1,0.25f), CORNER_B, 5.0f);
-	ui2_vmargin(&status, 50.0f, &status);
+	ui_draw_rect(&status, vec4(1,1,1,0.25f), CORNER_B, 5.0f);
+	ui_vmargin(&status, 50.0f, &status);
 	char buf[128];
 	sprintf(buf, "%d of %d servers", client_serverbrowse_sorted_num(), client_serverbrowse_num());
-	ui2_do_label(&status, buf, 14.0f, -1);
+	ui_do_label(&status, buf, 14.0f, -1);
 
 	// render toolbox
 	{
 		RECT buttons, button;
-		ui2_hsplit_b(&toolbox, 25.0f, &toolbox, &buttons);
+		ui_hsplit_b(&toolbox, 25.0f, &toolbox, &buttons);
 
-		ui2_vsplit_r(&buttons, 100.0f, &buttons, &button);
-		ui2_vmargin(&button, 2.0f, &button);
+		ui_vsplit_r(&buttons, 100.0f, &buttons, &button);
+		ui_vmargin(&button, 2.0f, &button);
 		static int join_button = 0;
-		if(ui2_do_button(&join_button, "Connect", 0, &button, ui2_draw_menu_button, 0))
+		if(ui_do_button(&join_button, "Connect", 0, &button, ui_draw_menu_button, 0))
 			client_connect(config.ui_server_address);
 
-		ui2_vsplit_r(&buttons, 20.0f, &buttons, &button);
-		ui2_vsplit_r(&buttons, 100.0f, &buttons, &button);
-		ui2_vmargin(&button, 2.0f, &button);
+		ui_vsplit_r(&buttons, 20.0f, &buttons, &button);
+		ui_vsplit_r(&buttons, 100.0f, &buttons, &button);
+		ui_vmargin(&button, 2.0f, &button);
 		static int refresh_button = 0;
-		if(ui2_do_button(&refresh_button, "Refresh", 0, &button, ui2_draw_menu_button, 0))
+		if(ui_do_button(&refresh_button, "Refresh", 0, &button, ui_draw_menu_button, 0))
 		{
 			if(config.ui_page == PAGE_INTERNET)
 				client_serverbrowse_refresh(0);
@@ -1398,10 +1111,10 @@ static void menu2_render_serverbrowser(RECT main_view)
 				client_serverbrowse_refresh(1);
 		}
 		
-		ui2_hsplit_t(&toolbox, 20.0f, &button, &toolbox);
-		ui2_do_label(&button, "Host address:", 14.0f, -1);
-		ui2_vsplit_l(&button, 100.0f, 0, &button);
-		ui2_do_edit_box(&config.ui_server_address, &button, config.ui_server_address, sizeof(config.ui_server_address));
+		ui_hsplit_t(&toolbox, 20.0f, &button, &toolbox);
+		ui_do_label(&button, "Host address:", 14.0f, -1);
+		ui_vsplit_l(&button, 100.0f, 0, &button);
+		ui_do_edit_box(&config.ui_server_address, &button, config.ui_server_address, sizeof(config.ui_server_address));
 	}
 }
 
@@ -1409,43 +1122,43 @@ static void menu2_render_settings_player(RECT main_view)
 {
 	RECT button;
 	RECT skinselection;
-	ui2_vsplit_l(&main_view, 300.0f, &main_view, &skinselection);
+	ui_vsplit_l(&main_view, 300.0f, &main_view, &skinselection);
 
 
-	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
+	ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
 
 	// render settings
 	{	
-		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		ui2_do_label(&button, "Name:", 14.0, -1);
-		ui2_vsplit_l(&button, 80.0f, 0, &button);
-		ui2_vsplit_l(&button, 180.0f, &button, 0);
-		ui2_do_edit_box(config.player_name, &button, config.player_name, sizeof(config.player_name));
+		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		ui_do_label(&button, "Name:", 14.0, -1);
+		ui_vsplit_l(&button, 80.0f, 0, &button);
+		ui_vsplit_l(&button, 180.0f, &button, 0);
+		ui_do_edit_box(config.player_name, &button, config.player_name, sizeof(config.player_name));
 
-		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		if (ui2_do_button(&config.cl_dynamic_camera, "Dynamic camera", config.cl_dynamic_camera, &button, ui2_draw_checkbox, 0))
+		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		if (ui_do_button(&config.cl_dynamic_camera, "Dynamic camera", config.cl_dynamic_camera, &button, ui_draw_checkbox, 0))
 			config.cl_dynamic_camera ^= 1;
 			
-		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		if (ui2_do_button(&config.cl_autoswitch_weapons, "Switch weapon on pickup", config.cl_autoswitch_weapons, &button, ui2_draw_checkbox, 0))
+		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		if (ui_do_button(&config.cl_autoswitch_weapons, "Switch weapon on pickup", config.cl_autoswitch_weapons, &button, ui_draw_checkbox, 0))
 			config.cl_autoswitch_weapons ^= 1;
 			
-		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		if (ui2_do_button(&config.cl_nameplates, "Show name plates", config.cl_nameplates, &button, ui2_draw_checkbox, 0))
+		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		if (ui_do_button(&config.cl_nameplates, "Show name plates", config.cl_nameplates, &button, ui_draw_checkbox, 0))
 			config.cl_nameplates ^= 1;
 
 		if(config.cl_nameplates)
 		{
-			ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-			ui2_vsplit_l(&button, 15.0f, 0, &button);
-			if (ui2_do_button(&config.cl_nameplates_always, "Always show name plates", config.cl_nameplates_always, &button, ui2_draw_checkbox, 0))
+			ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+			ui_vsplit_l(&button, 15.0f, 0, &button);
+			if (ui_do_button(&config.cl_nameplates_always, "Always show name plates", config.cl_nameplates_always, &button, ui_draw_checkbox, 0))
 				config.cl_nameplates_always ^= 1;
 		}
 			
-		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
 		
-		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		if (ui2_do_button(&config.player_color_body, "Custom colors", config.player_use_custom_color, &button, ui2_draw_checkbox, 0))
+		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		if (ui_do_button(&config.player_color_body, "Custom colors", config.player_use_custom_color, &button, ui_draw_checkbox, 0))
 			config.player_use_custom_color = config.player_use_custom_color?0:1;
 		
 		if(config.player_use_custom_color)
@@ -1462,60 +1175,60 @@ static void menu2_render_settings_player(RECT main_view)
 			for(int i = 0; i < 2; i++)
 			{
 				RECT text;
-				ui2_hsplit_t(&main_view, 20.0f, &text, &main_view);
-				ui2_vsplit_l(&text, 15.0f, 0, &text);
-				ui2_do_label(&text, parts[i], 14.0f, -1);
+				ui_hsplit_t(&main_view, 20.0f, &text, &main_view);
+				ui_vsplit_l(&text, 15.0f, 0, &text);
+				ui_do_label(&text, parts[i], 14.0f, -1);
 				
 				int prevcolor = *colors[i];
 				int color = 0;
 				for(int s = 0; s < 3; s++)
 				{
 					RECT text;
-					ui2_hsplit_t(&main_view, 19.0f, &button, &main_view);
-					ui2_vsplit_l(&button, 30.0f, 0, &button);
-					ui2_vsplit_l(&button, 30.0f, &text, &button);
-					ui2_vsplit_r(&button, 5.0f, &button, 0);
-					ui2_hsplit_t(&button, 4.0f, 0, &button);
+					ui_hsplit_t(&main_view, 19.0f, &button, &main_view);
+					ui_vsplit_l(&button, 30.0f, 0, &button);
+					ui_vsplit_l(&button, 30.0f, &text, &button);
+					ui_vsplit_r(&button, 5.0f, &button, 0);
+					ui_hsplit_t(&button, 4.0f, 0, &button);
 					
 					float k = ((prevcolor>>((2-s)*8))&0xff)  / 255.0f;
-					k = ui2_do_scrollbar_h(&color_slider[i][s], &button, k);
+					k = ui_do_scrollbar_h(&color_slider[i][s], &button, k);
 					color <<= 8;
 					color += clamp((int)(k*255), 0, 255);
-					ui2_do_label(&text, labels[s], 15.0f, -1);
+					ui_do_label(&text, labels[s], 15.0f, -1);
 					 
 				}
 				
 				*colors[i] = color;
-				ui2_hsplit_t(&main_view, 5.0f, 0, &main_view);
+				ui_hsplit_t(&main_view, 5.0f, 0, &main_view);
 			}
 		}
 	}
 		
 	// draw header
 	RECT header, footer;
-	ui2_hsplit_t(&skinselection, 20, &header, &skinselection);
-	ui2_draw_rect(&header, vec4(1,1,1,0.25f), CORNER_T, 5.0f); 
-	ui2_do_label(&header, "Skins", 18.0f, 0);
+	ui_hsplit_t(&skinselection, 20, &header, &skinselection);
+	ui_draw_rect(&header, vec4(1,1,1,0.25f), CORNER_T, 5.0f); 
+	ui_do_label(&header, "Skins", 18.0f, 0);
 
 	// draw footers	
-	ui2_hsplit_b(&skinselection, 20, &skinselection, &footer);
-	ui2_draw_rect(&footer, vec4(1,1,1,0.25f), CORNER_B, 5.0f); 
-	ui2_vsplit_l(&footer, 10.0f, 0, &footer);
+	ui_hsplit_b(&skinselection, 20, &skinselection, &footer);
+	ui_draw_rect(&footer, vec4(1,1,1,0.25f), CORNER_B, 5.0f); 
+	ui_vsplit_l(&footer, 10.0f, 0, &footer);
 
 	// modes
-	ui2_draw_rect(&skinselection, vec4(0,0,0,0.15f), 0, 0);
+	ui_draw_rect(&skinselection, vec4(0,0,0,0.15f), 0, 0);
 
 	RECT scroll;
-	ui2_vsplit_r(&skinselection, 15, &skinselection, &scroll);
+	ui_vsplit_r(&skinselection, 15, &skinselection, &scroll);
 
 	RECT list = skinselection;
-	ui2_hsplit_t(&list, 50, &button, &list);
+	ui_hsplit_t(&list, 50, &button, &list);
 	
 	int num = (int)(skinselection.h/button.h);
 	static float scrollvalue = 0;
 	static int scrollbar = 0;
-	ui2_hmargin(&scroll, 5.0f, &scroll);
-	scrollvalue = ui2_do_scrollbar_v(&scrollbar, &scroll, scrollvalue);
+	ui_hmargin(&scroll, 5.0f, &scroll);
+	scrollvalue = ui_do_scrollbar_v(&scrollbar, &scroll, scrollvalue);
 
 	int start = (int)((skin_num()-num)*scrollvalue);
 	if(start < 0)
@@ -1546,22 +1259,22 @@ static void menu2_render_settings_player(RECT main_view)
 			info.texture = s->color_texture;
 		}
 			
-		info.size = ui2_scale()*50.0f;
+		info.size = ui_scale()*50.0f;
 		
 		RECT icon;
 		RECT text;
-		ui2_vsplit_l(&button, 50.0f, &icon, &text);
+		ui_vsplit_l(&button, 50.0f, &icon, &text);
 		
-		if(ui2_do_button(s, "", selected, &button, ui2_draw_list_row, 0))
+		if(ui_do_button(s, "", selected, &button, ui_draw_list_row, 0))
 			config_set_player_skin(&config, s->name);
 		
-		ui2_hsplit_t(&text, 12.0f, 0, &text); // some margin from the top
-		ui2_do_label(&text, buf, 18.0f, 0);
+		ui_hsplit_t(&text, 12.0f, 0, &text); // some margin from the top
+		ui_do_label(&text, buf, 18.0f, 0);
 		
-		ui2_hsplit_t(&icon, 5.0f, 0, &icon); // some margin from the top
+		ui_hsplit_t(&icon, 5.0f, 0, &icon); // some margin from the top
 		render_tee(&state, &info, 0, vec2(1, 0), vec2(icon.x+icon.w/2, icon.y+icon.h/2));
 		
-		ui2_hsplit_t(&list, 50, &button, &list);
+		ui_hsplit_t(&list, 50, &button, &list);
 	}
 }
 
@@ -1569,17 +1282,17 @@ typedef void (*assign_func_callback)(CONFIGURATION *config, int value);
 
 static void menu2_render_settings_controls(RECT main_view)
 {
-	ui2_vsplit_l(&main_view, 300.0f, &main_view, 0);
+	ui_vsplit_l(&main_view, 300.0f, &main_view, 0);
 	
 	{
 		RECT button, label;
-		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		ui2_vsplit_l(&button, 110.0f, &label, &button);
-		ui2_do_label(&label, "Mouse sens.", 14.0f, -1);
-		ui2_hmargin(&button, 2.0f, &button);
-		config.inp_mousesens = (int)(ui2_do_scrollbar_h(&config.inp_mousesens, &button, config.inp_mousesens/500.0f)*500.0f);
-		//*key.key = ui2_do_key_reader(key.key, &button, *key.key);
-		ui2_hsplit_t(&main_view, 20.0f, 0, &main_view);
+		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		ui_vsplit_l(&button, 110.0f, &label, &button);
+		ui_do_label(&label, "Mouse sens.", 14.0f, -1);
+		ui_hmargin(&button, 2.0f, &button);
+		config.inp_mousesens = (int)(ui_do_scrollbar_h(&config.inp_mousesens, &button, config.inp_mousesens/500.0f)*500.0f);
+		//*key.key = ui_do_key_reader(key.key, &button, *key.key);
+		ui_hsplit_t(&main_view, 20.0f, 0, &main_view);
 	}
 	
 	typedef struct 
@@ -1615,12 +1328,12 @@ static void menu2_render_settings_controls(RECT main_view)
     {
 		KEYINFO key = keys[i];
     	RECT button, label;
-    	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-    	ui2_vsplit_l(&button, 110.0f, &label, &button);
+    	ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+    	ui_vsplit_l(&button, 110.0f, &label, &button);
     	
-		ui2_do_label(&label, key.name, 14.0f, -1);
-		*key.key = ui2_do_key_reader(key.key, &button, *key.key);
-    	ui2_hsplit_t(&main_view, 5.0f, 0, &main_view);
+		ui_do_label(&label, key.name, 14.0f, -1);
+		*key.key = ui_do_key_reader(key.key, &button, *key.key);
+    	ui_hsplit_t(&main_view, 5.0f, 0, &main_view);
     }	
 }
 
@@ -1637,43 +1350,43 @@ static void menu2_render_settings_graphics(RECT main_view)
 		num_modes = gfx_get_video_modes(modes, MAX_RESOLUTIONS);
 	
 	RECT modelist;
-	ui2_vsplit_l(&main_view, 300.0f, &main_view, &modelist);
+	ui_vsplit_l(&main_view, 300.0f, &main_view, &modelist);
 	
 	// draw allmodes switch
 	RECT header, footer;
-	ui2_hsplit_t(&modelist, 20, &button, &modelist);
-	if (ui2_do_button(&config.gfx_display_all_modes, "Show only supported", config.gfx_display_all_modes^1, &button, ui2_draw_checkbox, 0))
+	ui_hsplit_t(&modelist, 20, &button, &modelist);
+	if (ui_do_button(&config.gfx_display_all_modes, "Show only supported", config.gfx_display_all_modes^1, &button, ui_draw_checkbox, 0))
 	{
 		config.gfx_display_all_modes ^= 1;
 		num_modes = gfx_get_video_modes(modes, MAX_RESOLUTIONS);
 	}
 	
 	// draw header
-	ui2_hsplit_t(&modelist, 20, &header, &modelist);
-	ui2_draw_rect(&header, vec4(1,1,1,0.25f), CORNER_T, 5.0f); 
-	ui2_do_label(&header, "Display Modes", 14.0f, 0);
+	ui_hsplit_t(&modelist, 20, &header, &modelist);
+	ui_draw_rect(&header, vec4(1,1,1,0.25f), CORNER_T, 5.0f); 
+	ui_do_label(&header, "Display Modes", 14.0f, 0);
 
 	// draw footers	
-	ui2_hsplit_b(&modelist, 20, &modelist, &footer);
+	ui_hsplit_b(&modelist, 20, &modelist, &footer);
 	sprintf(buf, "Current: %dx%d %d bit", config.gfx_screen_width, config.gfx_screen_height, config.gfx_color_depth);
-	ui2_draw_rect(&footer, vec4(1,1,1,0.25f), CORNER_B, 5.0f); 
-	ui2_vsplit_l(&footer, 10.0f, 0, &footer);
-	ui2_do_label(&footer, buf, 14.0f, -1);
+	ui_draw_rect(&footer, vec4(1,1,1,0.25f), CORNER_B, 5.0f); 
+	ui_vsplit_l(&footer, 10.0f, 0, &footer);
+	ui_do_label(&footer, buf, 14.0f, -1);
 
 	// modes
-	ui2_draw_rect(&modelist, vec4(0,0,0,0.15f), 0, 0);
+	ui_draw_rect(&modelist, vec4(0,0,0,0.15f), 0, 0);
 
 	RECT scroll;
-	ui2_vsplit_r(&modelist, 15, &modelist, &scroll);
+	ui_vsplit_r(&modelist, 15, &modelist, &scroll);
 
 	RECT list = modelist;
-	ui2_hsplit_t(&list, 20, &button, &list);
+	ui_hsplit_t(&list, 20, &button, &list);
 	
 	int num = (int)(modelist.h/button.h);
 	static float scrollvalue = 0;
 	static int scrollbar = 0;
-	ui2_hmargin(&scroll, 5.0f, &scroll);
-	scrollvalue = ui2_do_scrollbar_v(&scrollbar, &scroll, scrollvalue);
+	ui_hmargin(&scroll, 5.0f, &scroll);
+	scrollvalue = ui_do_scrollbar_v(&scrollbar, &scroll, scrollvalue);
 
 	int start = (int)((num_modes-num)*scrollvalue);
 	if(start < 0)
@@ -1696,7 +1409,7 @@ static void menu2_render_settings_graphics(RECT main_view)
 		}
 		
 		sprintf(buf, "  %dx%d %d bit", modes[i].width, modes[i].height, depth);
-		if(ui2_do_button(&modes[i], buf, selected, &button, ui2_draw_list_row, 0))
+		if(ui_do_button(&modes[i], buf, selected, &button, ui_draw_list_row, 0))
 		{
 			config.gfx_color_depth = depth;
 			config.gfx_screen_width = modes[i].width;
@@ -1705,24 +1418,24 @@ static void menu2_render_settings_graphics(RECT main_view)
 				need_restart = true;
 		}
 		
-		ui2_hsplit_t(&list, 20, &button, &list);
+		ui_hsplit_t(&list, 20, &button, &list);
 	}
 	
 	
 	// switches
-	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-	if (ui2_do_button(&config.gfx_fullscreen, "Fullscreen", config.gfx_fullscreen, &button, ui2_draw_checkbox, 0))
+	ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+	if (ui_do_button(&config.gfx_fullscreen, "Fullscreen", config.gfx_fullscreen, &button, ui_draw_checkbox, 0))
 	{
 		config.gfx_fullscreen ^= 1;
 		need_restart = true;
 	}
 
-	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-	if (ui2_do_button(&config.gfx_vsync, "V-Sync", config.gfx_vsync, &button, ui2_draw_checkbox, 0))
+	ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+	if (ui_do_button(&config.gfx_vsync, "V-Sync", config.gfx_vsync, &button, ui_draw_checkbox, 0))
 		config.gfx_vsync ^= 1;
 
-	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-	if (ui2_do_button(&config.gfx_fsaa_samples, "FSAA samples", config.gfx_fsaa_samples, &button, ui2_draw_checkbox_number, 0))
+	ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+	if (ui_do_button(&config.gfx_fsaa_samples, "FSAA samples", config.gfx_fsaa_samples, &button, ui_draw_checkbox_number, 0))
 	{
 		if(config.gfx_fsaa_samples < 2) config.gfx_fsaa_samples = 2;
 		else if(config.gfx_fsaa_samples < 4) config.gfx_fsaa_samples = 4;
@@ -1733,58 +1446,58 @@ static void menu2_render_settings_graphics(RECT main_view)
 		need_restart = true;
 	}
 		
-	ui2_hsplit_t(&main_view, 40.0f, &button, &main_view);
-	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-	if (ui2_do_button(&config.gfx_texture_quality, "Quality Textures", config.gfx_texture_quality, &button, ui2_draw_checkbox, 0))
+	ui_hsplit_t(&main_view, 40.0f, &button, &main_view);
+	ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+	if (ui_do_button(&config.gfx_texture_quality, "Quality Textures", config.gfx_texture_quality, &button, ui_draw_checkbox, 0))
 	{
 		config.gfx_texture_quality ^= 1;
 		need_restart = true;
 	}
 
-	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-	if (ui2_do_button(&config.gfx_texture_compression, "Texture Compression", config.gfx_texture_compression, &button, ui2_draw_checkbox, 0))
+	ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+	if (ui_do_button(&config.gfx_texture_compression, "Texture Compression", config.gfx_texture_compression, &button, ui_draw_checkbox, 0))
 	{
 		config.gfx_texture_compression ^= 1;
 		need_restart = true;
 	}
 
-	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-	if (ui2_do_button(&config.gfx_high_detail, "High Detail", config.gfx_high_detail, &button, ui2_draw_checkbox, 0))
+	ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+	if (ui_do_button(&config.gfx_high_detail, "High Detail", config.gfx_high_detail, &button, ui_draw_checkbox, 0))
 		config.gfx_high_detail ^= 1;
 
 	//
 	
 	RECT text;
-	ui2_hsplit_t(&main_view, 20.0f, 0, &main_view);
-	ui2_hsplit_t(&main_view, 20.0f, &text, &main_view);
-	//ui2_vsplit_l(&text, 15.0f, 0, &text);
-	ui2_do_label(&text, "UI Color", 14.0f, -1);
+	ui_hsplit_t(&main_view, 20.0f, 0, &main_view);
+	ui_hsplit_t(&main_view, 20.0f, &text, &main_view);
+	//ui_vsplit_l(&text, 15.0f, 0, &text);
+	ui_do_label(&text, "UI Color", 14.0f, -1);
 	
 	const char *labels[] = {"Hue", "Sat.", "Lht.", "Alpha"};
 	int *color_slider[4] = {&config.ui_color_hue, &config.ui_color_sat, &config.ui_color_lht, &config.ui_color_alpha};
 	for(int s = 0; s < 4; s++)
 	{
 		RECT text;
-		ui2_hsplit_t(&main_view, 19.0f, &button, &main_view);
-		ui2_vmargin(&button, 15.0f, &button);
-		ui2_vsplit_l(&button, 30.0f, &text, &button);
-		ui2_vsplit_r(&button, 5.0f, &button, 0);
-		ui2_hsplit_t(&button, 4.0f, 0, &button);
+		ui_hsplit_t(&main_view, 19.0f, &button, &main_view);
+		ui_vmargin(&button, 15.0f, &button);
+		ui_vsplit_l(&button, 30.0f, &text, &button);
+		ui_vsplit_r(&button, 5.0f, &button, 0);
+		ui_hsplit_t(&button, 4.0f, 0, &button);
 		
 		float k = (*color_slider[s]) / 255.0f;
-		k = ui2_do_scrollbar_h(color_slider[s], &button, k);
+		k = ui_do_scrollbar_h(color_slider[s], &button, k);
 		*color_slider[s] = (int)(k*255.0f);
-		ui2_do_label(&text, labels[s], 15.0f, -1);
+		ui_do_label(&text, labels[s], 15.0f, -1);
 	}		
 }
 
 static void menu2_render_settings_sound(RECT main_view)
 {
 	RECT button;
-	ui2_vsplit_l(&main_view, 300.0f, &main_view, 0);
+	ui_vsplit_l(&main_view, 300.0f, &main_view, 0);
 	
-	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-	if (ui2_do_button(&config.snd_enable, "Use Sounds", config.snd_enable, &button, ui2_draw_checkbox, 0))
+	ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+	if (ui_do_button(&config.snd_enable, "Use Sounds", config.snd_enable, &button, ui_draw_checkbox, 0))
 	{
 		config.snd_enable ^= 1;
 		need_restart = true;
@@ -1793,19 +1506,19 @@ static void menu2_render_settings_sound(RECT main_view)
 	if(!config.snd_enable)
 		return;
 	
-	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-	if (ui2_do_button(&config.snd_nonactive_mute, "Mute when not active", config.snd_nonactive_mute, &button, ui2_draw_checkbox, 0))
+	ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+	if (ui_do_button(&config.snd_nonactive_mute, "Mute when not active", config.snd_nonactive_mute, &button, ui_draw_checkbox, 0))
 		config.snd_nonactive_mute ^= 1;
 		
 	// sample rate box
 	{
 		char buf[64];
 		sprintf(buf, "%d", config.snd_rate);
-		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		ui2_do_label(&button, "Sample Rate", 14.0f, -1);
-		ui2_vsplit_l(&button, 110.0f, 0, &button);
-		ui2_vsplit_l(&button, 180.0f, &button, 0);
-		ui2_do_edit_box(&config.snd_rate, &button, buf, sizeof(buf));
+		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		ui_do_label(&button, "Sample Rate", 14.0f, -1);
+		ui_vsplit_l(&button, 110.0f, 0, &button);
+		ui_vsplit_l(&button, 180.0f, &button, 0);
+		ui_do_edit_box(&config.snd_rate, &button, buf, sizeof(buf));
 		int before = config.snd_rate;
 		config.snd_rate = atoi(buf);
 		
@@ -1819,13 +1532,13 @@ static void menu2_render_settings_sound(RECT main_view)
 	// volume slider
 	{
 		RECT button, label;
-		ui2_hsplit_t(&main_view, 5.0f, &button, &main_view);
-		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		ui2_vsplit_l(&button, 110.0f, &label, &button);
-		ui2_hmargin(&button, 2.0f, &button);
-		ui2_do_label(&label, "Sound Volume", 14.0f, -1);
-		config.snd_volume = (int)(ui2_do_scrollbar_h(&config.snd_volume, &button, config.snd_volume/100.0f)*100.0f);
-		ui2_hsplit_t(&main_view, 20.0f, 0, &main_view);
+		ui_hsplit_t(&main_view, 5.0f, &button, &main_view);
+		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		ui_vsplit_l(&button, 110.0f, &label, &button);
+		ui_hmargin(&button, 2.0f, &button);
+		ui_do_label(&label, "Sound Volume", 14.0f, -1);
+		config.snd_volume = (int)(ui_do_scrollbar_h(&config.snd_volume, &button, config.snd_volume/100.0f)*100.0f);
+		ui_hsplit_t(&main_view, 20.0f, 0, &main_view);
 	}
 }
 
@@ -1833,14 +1546,14 @@ static void menu2_render_settings_sound(RECT main_view)
 static void menu2_render_settings_network(RECT main_view)
 {
 	RECT button;
-	ui2_vsplit_l(&main_view, 300.0f, &main_view, 0);
+	ui_vsplit_l(&main_view, 300.0f, &main_view, 0);
 	
 	{
-		ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		ui2_do_label(&button, "Rcon Password", 14.0, -1);
-		ui2_vsplit_l(&button, 110.0f, 0, &button);
-		ui2_vsplit_l(&button, 180.0f, &button, 0);
-		ui2_do_edit_box(&config.rcon_password, &button, config.rcon_password, sizeof(config.rcon_password), true);
+		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		ui_do_label(&button, "Rcon Password", 14.0, -1);
+		ui_vsplit_l(&button, 110.0f, 0, &button);
+		ui_vsplit_l(&button, 180.0f, &button, 0);
+		ui_do_edit_box(&config.rcon_password, &button, config.rcon_password, sizeof(config.rcon_password), true);
 	}
 }
 
@@ -1850,12 +1563,12 @@ static void menu2_render_settings(RECT main_view)
 	
 	// render background
 	RECT temp, tabbar;
-	ui2_vsplit_r(&main_view, 120.0f, &main_view, &tabbar);
-	ui2_draw_rect(&main_view, color_tabbar_active, CORNER_B|CORNER_TL, 10.0f);
-	ui2_hsplit_t(&tabbar, 50.0f, &temp, &tabbar);
-	ui2_draw_rect(&temp, color_tabbar_active, CORNER_R, 10.0f);
+	ui_vsplit_r(&main_view, 120.0f, &main_view, &tabbar);
+	ui_draw_rect(&main_view, color_tabbar_active, CORNER_B|CORNER_TL, 10.0f);
+	ui_hsplit_t(&tabbar, 50.0f, &temp, &tabbar);
+	ui_draw_rect(&temp, color_tabbar_active, CORNER_R, 10.0f);
 	
-	ui2_hsplit_t(&main_view, 10.0f, 0, &main_view);
+	ui_hsplit_t(&main_view, 10.0f, 0, &main_view);
 	
 	RECT button;
 	
@@ -1864,13 +1577,13 @@ static void menu2_render_settings(RECT main_view)
 
 	for(int i = 0; i < num_tabs; i++)
 	{
-		ui2_hsplit_t(&tabbar, 10, &button, &tabbar);
-		ui2_hsplit_t(&tabbar, 26, &button, &tabbar);
-		if(ui2_do_button(tabs[i], tabs[i], settings_page == i, &button, ui2_draw_settings_tab_button, 0))
+		ui_hsplit_t(&tabbar, 10, &button, &tabbar);
+		ui_hsplit_t(&tabbar, 26, &button, &tabbar);
+		if(ui_do_button(tabs[i], tabs[i], settings_page == i, &button, ui_draw_settings_tab_button, 0))
 			settings_page = i;
 	}
 	
-	ui2_margin(&main_view, 10.0f, &main_view);
+	ui_margin(&main_view, 10.0f, &main_view);
 	
 	if(settings_page == 0)
 		menu2_render_settings_player(main_view);
@@ -1886,40 +1599,40 @@ static void menu2_render_settings(RECT main_view)
 	if(need_restart)
 	{
 		RECT restart_warning;
-		ui2_hsplit_b(&main_view, 40, &main_view, &restart_warning);
-		ui2_do_label(&restart_warning, "You must restart Teewars for all settings to take effect.", 15.0f, -1, 220);
+		ui_hsplit_b(&main_view, 40, &main_view, &restart_warning);
+		ui_do_label(&restart_warning, "You must restart Teewars for all settings to take effect.", 15.0f, -1, 220);
 	}
 }
 
 static void menu2_render_news(RECT main_view)
 {
-	ui2_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
+	ui_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
 }
 
 
 static void menu2_render_game(RECT main_view)
 {
 	RECT button;
-	ui2_hsplit_t(&main_view, 45.0f, &main_view, 0);
-	ui2_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
+	ui_hsplit_t(&main_view, 45.0f, &main_view, 0);
+	ui_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
 
-	ui2_hsplit_t(&main_view, 10.0f, 0, &main_view);
-	ui2_hsplit_t(&main_view, 25.0f, &main_view, 0);
-	ui2_vmargin(&main_view, 10.0f, &main_view);
+	ui_hsplit_t(&main_view, 10.0f, 0, &main_view);
+	ui_hsplit_t(&main_view, 25.0f, &main_view, 0);
+	ui_vmargin(&main_view, 10.0f, &main_view);
 	
-	ui2_vsplit_r(&main_view, 120.0f, &main_view, &button);
+	ui_vsplit_r(&main_view, 120.0f, &main_view, &button);
 	static int disconnect_button = 0;
-	if(ui2_do_button(&disconnect_button, "Disconnect", 0, &button, ui2_draw_menu_button, 0))
+	if(ui_do_button(&disconnect_button, "Disconnect", 0, &button, ui_draw_menu_button, 0))
 		client_disconnect();
 
 	if(local_info && gameobj)
 	{
 		if(local_info->team != -1)
 		{
-			ui2_vsplit_l(&main_view, 10.0f, &button, &main_view);
-			ui2_vsplit_l(&main_view, 120.0f, &button, &main_view);
+			ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
+			ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
 			static int spectate_button = 0;
-			if(ui2_do_button(&spectate_button, "Spectate", 0, &button, ui2_draw_menu_button, 0))
+			if(ui_do_button(&spectate_button, "Spectate", 0, &button, ui_draw_menu_button, 0))
 			{
 				config.cl_team = -1;
 				menu_active = false;
@@ -1930,10 +1643,10 @@ static void menu2_render_game(RECT main_view)
 		{
 			if(local_info->team != 0)
 			{
-				ui2_vsplit_l(&main_view, 10.0f, &button, &main_view);
-				ui2_vsplit_l(&main_view, 120.0f, &button, &main_view);
+				ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
+				ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
 				static int spectate_button = 0;
-				if(ui2_do_button(&spectate_button, "Join Game", 0, &button, ui2_draw_menu_button, 0))
+				if(ui_do_button(&spectate_button, "Join Game", 0, &button, ui_draw_menu_button, 0))
 				{
 					config.cl_team = 0;
 					menu_active = false;
@@ -1944,10 +1657,10 @@ static void menu2_render_game(RECT main_view)
 		{
 			if(local_info->team != 0)
 			{
-				ui2_vsplit_l(&main_view, 10.0f, &button, &main_view);
-				ui2_vsplit_l(&main_view, 120.0f, &button, &main_view);
+				ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
+				ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
 				static int spectate_button = 0;
-				if(ui2_do_button(&spectate_button, "Join Red", 0, &button, ui2_draw_menu_button, 0))
+				if(ui_do_button(&spectate_button, "Join Red", 0, &button, ui_draw_menu_button, 0))
 				{
 					config.cl_team = 0;
 					menu_active = false;
@@ -1956,10 +1669,10 @@ static void menu2_render_game(RECT main_view)
 
 			if(local_info->team != 1)
 			{
-				ui2_vsplit_l(&main_view, 10.0f, &button, &main_view);
-				ui2_vsplit_l(&main_view, 120.0f, &button, &main_view);
+				ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
+				ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
 				static int spectate_button = 0;
-				if(ui2_do_button(&spectate_button, "Join Blue", 0, &button, ui2_draw_menu_button, 0))
+				if(ui_do_button(&spectate_button, "Join Blue", 0, &button, ui_draw_menu_button, 0))
 				{
 					config.cl_team = 1;
 					menu_active = false;
@@ -2028,7 +1741,7 @@ int menu2_render()
 				info.texture = skin_get(i)->color_texture;
 				info.color_feet = info.color_body = skin_get_color(colors[c]);
 				//info.color_feet = info.color_body = vec4(1,1,1,1);
-				info.size = 1.0f; //ui2_scale()*16.0f;
+				info.size = 1.0f; //ui_scale()*16.0f;
 				//render_tee(&state, &info, 0, vec2(sinf(client_localtime()*3), cosf(client_localtime()*3)), vec2(1+x+c,1+y));
 				render_tee(&state, &info, 0, vec2(1,0), vec2(1+x+c,1+y));
 			}
@@ -2037,21 +1750,20 @@ int menu2_render()
 		return 0;
 	}
 	
-    RECT screen = *ui2_screen();
+    RECT screen = *ui_screen();
 	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
 
     if (0)
     {
         gfx_clear(0.65f,0.78f,0.9f);
-        //gfx_pretty_text_color(0.0f, 0.0f, 0.0f, 1.0f);
-        //gfx_pretty_text_color(0.0f, 0.0f, 0.0f, 1.0f);
+
 
         for (int i = 0; i < 24; i++)
         {
             float size = i * 0.5 + 8;
             char temp[64];
             sprintf(temp, "%f: Ingen tomte i jul", size);
-            gfx_pretty_text(50, 10 + i*int(size), size, temp, -1);
+            gfx_text(0, 50, 10 + i*int(size), size, temp, -1);
             gfx_text(gfx_font_set, 400, 10 + i*int(size), size, temp, -1);
         }
 
@@ -2085,13 +1797,13 @@ int menu2_render()
 	RECT main_view;
 
 	// some margin around the screen
-	ui2_margin(&screen, 10.0f, &screen);
+	ui_margin(&screen, 10.0f, &screen);
 	
 	if(popup == POPUP_NONE)
 	{
 		// do tab bar
-		ui2_hsplit_t(&screen, 26.0f, &tab_bar, &main_view);
-		ui2_vmargin(&tab_bar, 20.0f, &tab_bar);
+		ui_hsplit_t(&screen, 26.0f, &tab_bar, &main_view);
+		ui_vmargin(&tab_bar, 20.0f, &tab_bar);
 		menu2_render_menubar(tab_bar);
 			
 		// render current page
@@ -2152,103 +1864,103 @@ int menu2_render()
 		
 		RECT box, part;
 		box = screen;
-		ui2_vmargin(&box, 150.0f, &box);
-		ui2_hmargin(&box, 150.0f, &box);
+		ui_vmargin(&box, 150.0f, &box);
+		ui_hmargin(&box, 150.0f, &box);
 		
 		// render the box
-		ui2_draw_rect(&box, vec4(0,0,0,0.5f), CORNER_ALL, 15.0f);
+		ui_draw_rect(&box, vec4(0,0,0,0.5f), CORNER_ALL, 15.0f);
 		 
-		ui2_hsplit_t(&box, 20.f, &part, &box);
-		ui2_hsplit_t(&box, 24.f, &part, &box);
-		ui2_do_label(&part, title, 24.f, 0);
-		ui2_hsplit_t(&box, 20.f, &part, &box);
-		ui2_hsplit_t(&box, 24.f, &part, &box);
-		ui2_vmargin(&part, 20.f, &part);
-		ui2_do_label(&part, extra_text, 20.f, -1, (int)part.w);
+		ui_hsplit_t(&box, 20.f, &part, &box);
+		ui_hsplit_t(&box, 24.f, &part, &box);
+		ui_do_label(&part, title, 24.f, 0);
+		ui_hsplit_t(&box, 20.f, &part, &box);
+		ui_hsplit_t(&box, 24.f, &part, &box);
+		ui_vmargin(&part, 20.f, &part);
+		ui_do_label(&part, extra_text, 20.f, -1, (int)part.w);
 
 		if(popup == POPUP_QUIT)
 		{
 			RECT yes, no;
-			ui2_hsplit_b(&box, 20.f, &box, &part);
-			ui2_hsplit_b(&box, 24.f, &box, &part);
-			ui2_vmargin(&part, 80.0f, &part);
+			ui_hsplit_b(&box, 20.f, &box, &part);
+			ui_hsplit_b(&box, 24.f, &box, &part);
+			ui_vmargin(&part, 80.0f, &part);
 			
-			ui2_vsplit_mid(&part, &no, &yes);
+			ui_vsplit_mid(&part, &no, &yes);
 			
-			ui2_vmargin(&yes, 20.0f, &yes);
-			ui2_vmargin(&no, 20.0f, &no);
+			ui_vmargin(&yes, 20.0f, &yes);
+			ui_vmargin(&no, 20.0f, &no);
 
 			static int button_abort = 0;
-			if(ui2_do_button(&button_abort, "No", 0, &no, ui2_draw_menu_button, 0) || inp_key_down(KEY_ESC))
+			if(ui_do_button(&button_abort, "No", 0, &no, ui_draw_menu_button, 0) || inp_key_down(KEY_ESC))
 				popup = POPUP_NONE;
 
 			static int button_tryagain = 0;
-			if(ui2_do_button(&button_tryagain, "Yes", 0, &yes, ui2_draw_menu_button, 0) || inp_key_down(KEY_ENTER))
+			if(ui_do_button(&button_tryagain, "Yes", 0, &yes, ui_draw_menu_button, 0) || inp_key_down(KEY_ENTER))
 				client_quit();
 		}
 		else if(popup == POPUP_PASSWORD)
 		{
 			RECT label, textbox, tryagain, abort;
 			
-			ui2_hsplit_b(&box, 20.f, &box, &part);
-			ui2_hsplit_b(&box, 24.f, &box, &part);
-			ui2_vmargin(&part, 80.0f, &part);
+			ui_hsplit_b(&box, 20.f, &box, &part);
+			ui_hsplit_b(&box, 24.f, &box, &part);
+			ui_vmargin(&part, 80.0f, &part);
 			
-			ui2_vsplit_mid(&part, &abort, &tryagain);
+			ui_vsplit_mid(&part, &abort, &tryagain);
 			
-			ui2_vmargin(&tryagain, 20.0f, &tryagain);
-			ui2_vmargin(&abort, 20.0f, &abort);
+			ui_vmargin(&tryagain, 20.0f, &tryagain);
+			ui_vmargin(&abort, 20.0f, &abort);
 			
 			static int button_abort = 0;
-			if(ui2_do_button(&button_abort, "Abort", 0, &abort, ui2_draw_menu_button, 0) || inp_key_down(KEY_ESC))
+			if(ui_do_button(&button_abort, "Abort", 0, &abort, ui_draw_menu_button, 0) || inp_key_down(KEY_ESC))
 				popup = POPUP_NONE;
 
 			static int button_tryagain = 0;
-			if(ui2_do_button(&button_tryagain, "Try again", 0, &tryagain, ui2_draw_menu_button, 0) || inp_key_down(KEY_ENTER))
+			if(ui_do_button(&button_tryagain, "Try again", 0, &tryagain, ui_draw_menu_button, 0) || inp_key_down(KEY_ENTER))
 			{
 				client_connect(config.ui_server_address);
 			}
 			
-			ui2_hsplit_b(&box, 60.f, &box, &part);
-			ui2_hsplit_b(&box, 24.f, &box, &part);
+			ui_hsplit_b(&box, 60.f, &box, &part);
+			ui_hsplit_b(&box, 24.f, &box, &part);
 			
-			ui2_vsplit_l(&part, 60.0f, 0, &label);
-			ui2_vsplit_l(&label, 100.0f, 0, &textbox);
-			ui2_vsplit_l(&textbox, 20.0f, 0, &textbox);
-			ui2_vsplit_r(&textbox, 60.0f, &textbox, 0);
-			ui2_do_label(&label, "Password:", 20, -1);
-			ui2_do_edit_box(&config.password, &textbox, config.password, sizeof(config.password), true);
+			ui_vsplit_l(&part, 60.0f, 0, &label);
+			ui_vsplit_l(&label, 100.0f, 0, &textbox);
+			ui_vsplit_l(&textbox, 20.0f, 0, &textbox);
+			ui_vsplit_r(&textbox, 60.0f, &textbox, 0);
+			ui_do_label(&label, "Password:", 20, -1);
+			ui_do_edit_box(&config.password, &textbox, config.password, sizeof(config.password), true);
 		}
 		else if(popup == POPUP_FIRST_LAUNCH)
 		{
 			RECT label, textbox;
 			
-			ui2_hsplit_b(&box, 20.f, &box, &part);
-			ui2_hsplit_b(&box, 24.f, &box, &part);
-			ui2_vmargin(&part, 80.0f, &part);
+			ui_hsplit_b(&box, 20.f, &box, &part);
+			ui_hsplit_b(&box, 24.f, &box, &part);
+			ui_vmargin(&part, 80.0f, &part);
 			
 			static int enter_button = 0;
-			if(ui2_do_button(&enter_button, "Enter", 0, &part, ui2_draw_menu_button, 0) || inp_key_down(KEY_ENTER))
+			if(ui_do_button(&enter_button, "Enter", 0, &part, ui_draw_menu_button, 0) || inp_key_down(KEY_ENTER))
 				popup = POPUP_NONE;
 			
-			ui2_hsplit_b(&box, 60.f, &box, &part);
-			ui2_hsplit_b(&box, 24.f, &box, &part);
+			ui_hsplit_b(&box, 60.f, &box, &part);
+			ui_hsplit_b(&box, 24.f, &box, &part);
 			
-			ui2_vsplit_l(&part, 60.0f, 0, &label);
-			ui2_vsplit_l(&label, 100.0f, 0, &textbox);
-			ui2_vsplit_l(&textbox, 20.0f, 0, &textbox);
-			ui2_vsplit_r(&textbox, 60.0f, &textbox, 0);
-			ui2_do_label(&label, "Nickname:", 20, -1);
-			ui2_do_edit_box(&config.player_name, &textbox, config.player_name, sizeof(config.player_name));			
+			ui_vsplit_l(&part, 60.0f, 0, &label);
+			ui_vsplit_l(&label, 100.0f, 0, &textbox);
+			ui_vsplit_l(&textbox, 20.0f, 0, &textbox);
+			ui_vsplit_r(&textbox, 60.0f, &textbox, 0);
+			ui_do_label(&label, "Nickname:", 20, -1);
+			ui_do_edit_box(&config.player_name, &textbox, config.player_name, sizeof(config.player_name));			
 		}
 		else
 		{
-			ui2_hsplit_b(&box, 20.f, &box, &part);
-			ui2_hsplit_b(&box, 24.f, &box, &part);
-			ui2_vmargin(&part, 120.0f, &part);
+			ui_hsplit_b(&box, 20.f, &box, &part);
+			ui_hsplit_b(&box, 24.f, &box, &part);
+			ui_vmargin(&part, 120.0f, &part);
 
 			static int button = 0;
-			if(ui2_do_button(&button, button_text, 0, &part, ui2_draw_menu_button, 0) || inp_key_down(KEY_ESC) || inp_key_down(KEY_ENTER))
+			if(ui_do_button(&button, button_text, 0, &part, ui_draw_menu_button, 0) || inp_key_down(KEY_ESC) || inp_key_down(KEY_ENTER))
 			{
 				if(popup == POPUP_CONNECTING)
 					client_disconnect();
@@ -2301,7 +2013,7 @@ void modmenu_render()
         if(mouse_y > gfx_screenheight()) mouse_y = gfx_screenheight();
             
         // update the ui
-        RECT *screen = ui2_screen();
+        RECT *screen = ui_screen();
         mx = (mouse_x/(float)gfx_screenwidth())*screen->w;
         my = (mouse_y/(float)gfx_screenheight())*screen->h;
             

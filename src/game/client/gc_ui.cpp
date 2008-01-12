@@ -2,21 +2,11 @@
 #include <engine/e_system.h>
 #include <engine/e_interface.h>
 #include <engine/e_config.h>
-#include "ec_ui.h"
+#include "gc_ui.h"
 
 /********************************************************
  UI                                                      
 *********************************************************/
-
-struct pretty_font
-{
-    float m_CharStartTable[256];
-	float m_CharEndTable[256];
-	int font_texture;
-};
-
-extern struct pretty_font *current_font;
-
 static const void *hot_item = 0;
 static const void *active_item = 0;
 static const void *last_active_item = 0;
@@ -279,14 +269,14 @@ void ui_do_label(const RECT *r, const char *text, float size, int align, int max
     size *= ui_scale();
     if(align == 0)
     {
-    	float tw = gfx_pretty_text_width(size, text, max_width);
-    	gfx_pretty_text(r->x + r->w/2-tw/2, r->y, size, text, max_width);
+    	float tw = gfx_text_width(0, size, text, max_width);
+    	gfx_text(0, r->x + r->w/2-tw/2, r->y, size, text, max_width);
 	}
 	else if(align < 0)
-    	gfx_pretty_text(r->x, r->y, size, text, max_width);
+    	gfx_text(0, r->x, r->y, size, text, max_width);
 	else if(align > 0)
 	{
-    	float tw = gfx_pretty_text_width(size, text, max_width);
-    	gfx_pretty_text(r->x + r->w-tw, r->y, size, text, max_width);
+    	float tw = gfx_text_width(0, size, text, max_width);
+    	gfx_text(0, r->x + r->w-tw, r->y, size, text, max_width);
 	}
 }

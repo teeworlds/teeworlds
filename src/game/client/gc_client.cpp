@@ -5,8 +5,8 @@
 #include <string.h>
 
 extern "C" {
-	#include <engine/client/ec_ui.h>
 	#include <engine/e_config.h>
+	#include <engine/client/ec_font.h>
 };
 
 #include "../g_game.h"
@@ -18,6 +18,7 @@ extern "C" {
 #include "gc_menu.h"
 #include "gc_skin.h"
 #include "gc_render.h"
+#include "gc_ui.h"
 
 // sound channels
 enum
@@ -46,8 +47,6 @@ enum
 	CHATMODE_CONSOLE,
 	CHATMODE_REMOTECONSOLE,
 };
-
-RECT *ui2_screen();
 
 static int chat_mode = CHATMODE_NONE;
 bool menu_active = false;
@@ -568,6 +567,14 @@ void render_loading(float percent);
 
 extern "C" void modc_init()
 {
+	static FONT_SET default_font;
+
+	int before = gfx_memory_usage();
+	font_set_load(&default_font, "fonts/default_font%d.tfnt", "fonts/default_font%d.png", "fonts/default_font%d_b.png", 14, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 36);
+	dbg_msg("font", "gfx memory usage: %d", gfx_memory_usage()-before);
+	
+	gfx_text_set_default_font(&default_font);
+
 	menu_init();
 	
 	// setup sound channels
@@ -1669,16 +1676,16 @@ static void render_player(
 	// render name plate
 	if(!info.local && config.cl_nameplates)
 	{
-		//gfx_pretty_text_color
+		//gfx_text_color
 		float a = 1;
 		if(config.cl_nameplates_always == 0)
 			a = clamp(1-powf(distance(local_target_pos, position)/200.0f,16.0f), 0.0f, 1.0f);
 			
 		const char *name = client_datas[info.clientid].name;
-		float tw = gfx_pretty_text_width(28.0f, name, -1);
-		gfx_pretty_text_color(1,1,1,a);
-		gfx_pretty_text(position.x-tw/2.0f, position.y-60, 28.0f, name, -1);
-		gfx_pretty_text_color(1,1,1,1);
+		float tw = gfx_text_width(0, 28.0f, name, -1);
+		gfx_text_color(1,1,1,a);
+		gfx_text(0, position.x-tw/2.0f, position.y-60, 28.0f, name, -1);
+		gfx_text_color(1,1,1,1);
 	}
 }
 
@@ -1940,13 +1947,13 @@ void render_goals(float x, float y, float w)
 	{
 		char buf[64];
 		sprintf(buf, "Time Limit: %d min", gameobj->time_limit);
-		gfx_pretty_text(x+w/2, y, 24.0f, buf, -1);
+		gfx_text(0, x+w/2, y, 24.0f, buf, -1);
 	}
 	if(gameobj && gameobj->score_limit)
 	{
 		char buf[64];
 		sprintf(buf, "Score Limit: %d", gameobj->score_limit);
-		gfx_pretty_text(x+40, y, 24.0f, buf, -1);
+		gfx_text(0, x+40, y, 24.0f, buf, -1);
 	}
 }
 
@@ -1983,7 +1990,7 @@ void render_spectators(float x, float y, float w)
 		}
 	}
 	
-	gfx_pretty_text(x+10, y, 32, buffer, (int)w-20);
+	gfx_text(0, x+10, y, 32, buffer, (int)w-20);
 }
 
 void render_scoreboard(float x, float y, float w, int team, const char *title)
@@ -2011,22 +2018,22 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 			title = "Score Board";
 	}
 
-	float tw = gfx_pretty_text_width(48, title, -1);
+	float tw = gfx_text_width(0, 48, title, -1);
 
 	if(team == -1)
 	{
-		gfx_pretty_text(x+w/2-tw/2, y, 48, title, -1);
+		gfx_text(0, x+w/2-tw/2, y, 48, title, -1);
 	}
 	else
 	{
-		gfx_pretty_text(x+10, y, 48, title, -1);
+		gfx_text(0, x+10, y, 48, title, -1);
 
 		if(gameobj)
 		{
 			char buf[128];
 			sprintf(buf, "%d", gameobj->teamscore[team&1]);
-			tw = gfx_pretty_text_width(48, buf, -1);
-			gfx_pretty_text(x+w-tw-30, y, 48, buf, -1);
+			tw = gfx_text_width(0, 48, buf, -1);
+			gfx_text(0, x+w-tw-30, y, 48, buf, -1);
 		}
 	}
 
@@ -2037,7 +2044,7 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 	{
 		char buf[128];
 		sprintf(buf, "%4d", gameobj->teamscore[team&1]);
-		gfx_pretty_text(x+w/2-tw/2, y, 32, buf, -1);
+		gfx_text(0, x+w/2-tw/2, y, 32, buf, -1);
 	}*/
 
 
@@ -2071,9 +2078,9 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 	}
 
 	// render headlines
-	gfx_pretty_text(x+10, y, 24.0f, "Score", -1);
-	gfx_pretty_text(x+125, y, 24.0f, "Name", -1);
-	gfx_pretty_text(x+w-70, y, 24.0f, "Ping", -1);
+	gfx_text(0, x+10, y, 24.0f, "Score", -1);
+	gfx_text(0, x+125, y, 24.0f, "Name", -1);
+	gfx_text(0, x+w-70, y, 24.0f, "Ping", -1);
 	y += 29.0f;
 
 	// render player scores
@@ -2098,19 +2105,19 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 		}
 
 		sprintf(buf, "%4d", info->score);
-		gfx_pretty_text(x+60-gfx_pretty_text_width(font_size,buf,-1), y, font_size, buf, -1);
+		gfx_text(0, x+60-gfx_text_width(0, font_size,buf,-1), y, font_size, buf, -1);
 		
 		if(config.cl_show_player_ids)
 		{
 			sprintf(buf, "%d | %s", info->clientid, client_datas[info->clientid].name);
-			gfx_pretty_text(x+128, y, font_size, buf, -1);
+			gfx_text(0, x+128, y, font_size, buf, -1);
 		}
 		else
-			gfx_pretty_text(x+128, y, font_size, client_datas[info->clientid].name, -1);
+			gfx_text(0, x+128, y, font_size, client_datas[info->clientid].name, -1);
 
 		sprintf(buf, "%4d", info->latency);
-		float tw = gfx_pretty_text_width(font_size, buf, -1);
-		gfx_pretty_text(x+w-tw-35, y, font_size, buf, -1);
+		float tw = gfx_text_width(0, font_size, buf, -1);
+		gfx_text(0, x+w-tw-35, y, font_size, buf, -1);
 
 		// render avatar
 		if((flags[0] && flags[0]->carried_by == info->clientid) || (flags[1] && flags[1]->carried_by == info->clientid))
@@ -2136,8 +2143,6 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 
 void mapscreen_to_world(float center_x, float center_y, float zoom)
 {
-    //RECT screen = *ui2_screen();
-
 	//const float default_zoom = 1.5f;
 	float width = 300*3*zoom*gfx_screenaspect();
 	float height = 300*3*zoom;
@@ -2730,14 +2735,14 @@ void render_game()
 				continue;
 
 			float font_size = 48.0f;
-			float killername_w = gfx_pretty_text_width(font_size, client_datas[killmsgs[r].killer].name, -1);
-			float victimname_w = gfx_pretty_text_width(font_size, client_datas[killmsgs[r].victim].name, -1);
+			float killername_w = gfx_text_width(0, font_size, client_datas[killmsgs[r].killer].name, -1);
+			float victimname_w = gfx_text_width(0, font_size, client_datas[killmsgs[r].victim].name, -1);
 
 			float x = startx;
 
 			// render victim name
 			x -= victimname_w;
-			gfx_pretty_text(x, y, font_size, client_datas[killmsgs[r].victim].name, -1);
+			gfx_text(0, x, y, font_size, client_datas[killmsgs[r].victim].name, -1);
 
 			// render victim tee
 			x -= 24.0f;
@@ -2800,7 +2805,7 @@ void render_game()
 
 				// render killer name
 				x -= killername_w;
-				gfx_pretty_text(x, y, font_size, client_datas[killmsgs[r].killer].name, -1);
+				gfx_text(0, x, y, font_size, client_datas[killmsgs[r].killer].name, -1);
 			}
 
 			y += 44;
@@ -2827,7 +2832,7 @@ void render_game()
 				sprintf(buf, "Rcon: %s_", chat_input);
 			else
 				sprintf(buf, "Chat: %s_", chat_input);
-			gfx_pretty_text(x, y, 8.0f, buf, 380);
+			gfx_text(0, x, y, 8.0f, buf, 380);
 			starty = y;
 		}
 
@@ -2843,35 +2848,35 @@ void render_game()
 			float begin = x;
 
 			// render name
-			gfx_pretty_text_color(0.8f,0.8f,0.8f,1);
+			gfx_text_color(0.8f,0.8f,0.8f,1);
 			if(chat_lines[r].client_id == -1)
-				gfx_pretty_text_color(1,1,0.5f,1); // system
+				gfx_text_color(1,1,0.5f,1); // system
 			else if(chat_lines[r].team)
-				gfx_pretty_text_color(0.45f,0.9f,0.45f,1); // team message
+				gfx_text_color(0.45f,0.9f,0.45f,1); // team message
 			else if(chat_lines[r].name_color == 0)
-				gfx_pretty_text_color(1.0f,0.5f,0.5f,1); // red
+				gfx_text_color(1.0f,0.5f,0.5f,1); // red
 			else if(chat_lines[r].name_color == 1)
-				gfx_pretty_text_color(0.7f,0.7f,1.0f,1); // blue
+				gfx_text_color(0.7f,0.7f,1.0f,1); // blue
 			else if(chat_lines[r].name_color == -1)
-				gfx_pretty_text_color(0.75f,0.5f,0.75f, 1); // spectator
+				gfx_text_color(0.75f,0.5f,0.75f, 1); // spectator
 				
 			// render line
-			int lines = int(gfx_pretty_text_width(10, chat_lines[r].text, -1)) / 300 + 1;
+			int lines = int(gfx_text_width(0, 10, chat_lines[r].text, -1)) / 300 + 1;
 			
-			gfx_pretty_text(begin, y - 8 * (lines - 1), 8, chat_lines[r].name, -1);
-			begin += gfx_pretty_text_width(10, chat_lines[r].name, -1);
+			gfx_text(0, begin, y - 8 * (lines - 1), 8, chat_lines[r].name, -1);
+			begin += gfx_text_width(0, 10, chat_lines[r].name, -1);
 
-			gfx_pretty_text_color(1,1,1,1);
+			gfx_text_color(1,1,1,1);
 			if(chat_lines[r].client_id == -1)
-				gfx_pretty_text_color(1,1,0.5f,1); // system
+				gfx_text_color(1,1,0.5f,1); // system
 			else if(chat_lines[r].team)
-				gfx_pretty_text_color(0.65f,1,0.65f,1); // team message
+				gfx_text_color(0.65f,1,0.65f,1); // team message
 
-			gfx_pretty_text(begin, y - 8 * (lines - 1), 8, chat_lines[r].text, 300);
+			gfx_text(0, begin, y - 8 * (lines - 1), 8, chat_lines[r].text, 300);
 			y -= 6 * lines;
 		}
 
-		gfx_pretty_text_color(1,1,1,1);
+		gfx_text_color(1,1,1,1);
 	}
 
 	// render goals
@@ -2898,15 +2903,15 @@ void render_game()
 				time = (client_tick()-gameobj->round_start_tick)/client_tickspeed();
 
 			sprintf(buf, "%d:%02d", time /60, time %60);
-			float w = gfx_pretty_text_width(16, buf, -1);
-			gfx_pretty_text(half-w/2, 2, 16, buf, -1);
+			float w = gfx_text_width(0, 16, buf, -1);
+			gfx_text(0, half-w/2, 2, 16, buf, -1);
 		}
 
 		if(gameobj->sudden_death)
 		{
 			const char *text = "Sudden Death";
-			float w = gfx_pretty_text_width(16, text, -1);
-			gfx_pretty_text(half-w/2, 2, 16, text, -1);
+			float w = gfx_text_width(0, 16, text, -1);
+			gfx_text(0, half-w/2, 2, 16, text, -1);
 		}
 
 		// render small score hud
@@ -2926,11 +2931,11 @@ void render_game()
 
 				char buf[32];
 				sprintf(buf, "%d", gameobj->teamscore[t]);
-				float w = gfx_pretty_text_width(14, buf, -1);
+				float w = gfx_text_width(0, 14, buf, -1);
 				
 				if(gametype == GAMETYPE_CTF)
 				{
-					gfx_pretty_text(whole-20-w/2+5, 300-40-15+t*20+2, 14, buf, -1);
+					gfx_text(0, whole-20-w/2+5, 300-40-15+t*20+2, 14, buf, -1);
 					if(flags[t])
 					{
  						if(flags[t]->carried_by == -2 || (flags[t]->carried_by == -1 && ((client_tick()/10)&1)))
@@ -2950,8 +2955,8 @@ void render_game()
 						{
 							int id = flags[t]->carried_by%MAX_CLIENTS;
 							const char *name = client_datas[id].name;
-							float w = gfx_pretty_text_width(10, name, -1);
-							gfx_pretty_text(whole-40-5-w, 300-40-15+t*20+2, 10, name, -1);
+							float w = gfx_text_width(0, 10, name, -1);
+							gfx_text(0, whole-40-5-w, 300-40-15+t*20+2, 10, name, -1);
 							tee_render_info info = client_datas[id].render_info;
 							info.size = 18.0f;
 							
@@ -2961,7 +2966,7 @@ void render_game()
 					}
 				}
 				else
-					gfx_pretty_text(whole-20-w/2, 300-40-15+t*20+2, 14, buf, -1);
+					gfx_text(0, whole-20-w/2, 300-40-15+t*20+2, 14, buf, -1);
 			}
 		}
 
@@ -2969,16 +2974,16 @@ void render_game()
 		if(gameobj->warmup)
 		{
 			char buf[256];
-			float w = gfx_pretty_text_width(24, "Warmup", -1);
-			gfx_pretty_text(150*gfx_screenaspect()+-w/2, 50, 24, "Warmup", -1);
+			float w = gfx_text_width(0, 24, "Warmup", -1);
+			gfx_text(0, 150*gfx_screenaspect()+-w/2, 50, 24, "Warmup", -1);
 
 			int seconds = gameobj->warmup/SERVER_TICK_SPEED;
 			if(seconds < 5)
 				sprintf(buf, "%d.%d", seconds, (gameobj->warmup*10/SERVER_TICK_SPEED)%10);
 			else
 				sprintf(buf, "%d", seconds);
-			w = gfx_pretty_text_width(24, buf, -1);
-			gfx_pretty_text(150*gfx_screenaspect()+-w/2, 75, 24, buf, -1);
+			w = gfx_text_width(0, 24, buf, -1);
+			gfx_text(0, 150*gfx_screenaspect()+-w/2, 75, 24, buf, -1);
 		}
 	}
 
@@ -3013,8 +3018,8 @@ void render_game()
 	{
 		gfx_mapscreen(0, 0, 300*gfx_screenaspect(), 300);
 		const char *text = "Connection Problems...";
-		float w = gfx_pretty_text_width(24, text, -1);
-		gfx_pretty_text(150*gfx_screenaspect()-w/2, 50, 24, text, -1);
+		float w = gfx_text_width(0, 24, text, -1);
+		gfx_text(0, 150*gfx_screenaspect()-w/2, 50, 24, text, -1);
 	}
 	
 	if(config.debug && local_character && local_prev_character)
@@ -3026,7 +3031,7 @@ void render_game()
 		
 		char buf[512];
 		sprintf(buf, "%f", speed);
-		gfx_pretty_text(150, 50, 24, buf, -1);
+		gfx_text(0, 150, 50, 24, buf, -1);
 	}
 
 	// render score board
@@ -3055,8 +3060,8 @@ void render_game()
 				else if(gameobj->teamscore[1] > gameobj->teamscore[0])
 					text = "Blue Team Wins!";
 					
-				float w = gfx_pretty_text_width(92.0f, text, -1);
-				gfx_pretty_text(width/2-w/2, 45, 92.0f, text, -1);
+				float w = gfx_text_width(0, 92.0f, text, -1);
+				gfx_text(0, width/2-w/2, 45, 92.0f, text, -1);
 			}
 			
 			render_scoreboard(width/2-w-20, 150.0f, w, 0, "Red Team");
