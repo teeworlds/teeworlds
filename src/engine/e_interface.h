@@ -396,6 +396,7 @@ void gfx_quads_text(float x, float y, float size, const char *text);
 
 /* sound (client) */
 int snd_init();
+int snd_update();
 
 void snd_set_channel(int cid, float vol, float pan);
 
@@ -758,6 +759,9 @@ const char *mods_version();
 /* server */
 int server_getclientinfo(int client_id, CLIENT_INFO *info);
 const char *server_clientname(int client_id);
+
+/* grabs the latest input for the client. not withholding anything */
+int *server_latestinput(int client_id, int *size);
 void server_setclientname(int client_id, const char *name);
 void server_setclientscore(int client_id, int score);
 
@@ -770,9 +774,19 @@ int server_tickspeed();
 /* input */
 int inp_key_was_pressed(int key);
 int inp_key_down(int key);
-char inp_last_char();
-int inp_last_key();
-void inp_clear();
+
+
+
+typedef struct
+{
+	char ch;
+	int key;
+} INPUTEVENT;
+
+int inp_num_events();
+INPUTEVENT inp_get_event(int index);
+void inp_clear_events();
+
 void inp_update();
 void inp_init();
 void inp_mouse_mode_absolute();
@@ -831,6 +845,7 @@ float client_intrapredtick();
 int client_tickspeed();
 float client_frametime();
 float client_localtime();
+void client_direct_input(int *input, int size);
 
 int client_state();
 const char *client_error_string();

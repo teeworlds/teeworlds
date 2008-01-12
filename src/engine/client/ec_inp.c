@@ -48,19 +48,56 @@ void inp_mouse_relative(int *x, int *y)
 	last_y = ny;
 }
 
-static char last_c = 0;
-static int last_k = 0;
+enum
+{
+	INPUT_BUFFER_SIZE=32
+};
+
+static INPUTEVENT input_events[INPUT_BUFFER_SIZE];
+static int num_events = 0;
+
+static void add_event(char c, int key)
+{
+	if(num_events != INPUT_BUFFER_SIZE)
+	{
+		input_events[num_events].ch = c;
+		input_events[num_events].key = key;
+		num_events++;
+	}
+}
+
+int inp_num_events()
+{
+	return num_events;
+}
+
+void inp_clear_events()
+{
+	num_events = 0;
+}
+
+INPUTEVENT inp_get_event(int index)
+{
+	if(index < 0 || index >= num_events)
+	{
+		INPUTEVENT e = {0,0};
+		return e;
+	}
+	
+	return input_events[index];
+}
+
 
 static void char_callback(int character, int action)
 {
 	if(action == GLFW_PRESS && character < 256)
-		last_c = (char)character;
+		add_event((char)character, 0);
 }
 
 static void key_callback(int key, int action)
 {
 	if(action == GLFW_PRESS)
-		last_k = key;
+		add_event(0, key);
 	
 	if(action == GLFW_PRESS)
 		input_count[input_current^1][key].presses++;
@@ -72,7 +109,7 @@ static void key_callback(int key, int action)
 static void mousebutton_callback(int button, int action)
 {
 	if(action == GLFW_PRESS)
-		last_k = KEY_MOUSE_FIRST+button;
+		add_event(0, KEY_MOUSE_FIRST+button);
 		
 	if(action == GLFW_PRESS)
 		input_count[input_current^1][KEY_MOUSE_FIRST+button].presses++;
@@ -99,7 +136,7 @@ static void mousewheel_callback(int pos)
 			input_count[input_current^1][KEY_MOUSE_WHEEL_UP].releases++;
 		}
 		
-		last_k = KEY_MOUSE_WHEEL_UP;
+		add_event(0, KEY_MOUSE_WHEEL_UP);
 	}
 	else if(pos < 0)
 	{
@@ -109,7 +146,7 @@ static void mousewheel_callback(int pos)
 			input_count[input_current^1][KEY_MOUSE_WHEEL_DOWN].releases++;
 		}	
 
-		last_k = KEY_MOUSE_WHEEL_DOWN;
+		add_event(0, KEY_MOUSE_WHEEL_DOWN);
 	}
 	glfwSetMouseWheel(0);
 }
@@ -124,22 +161,6 @@ void inp_init()
 	glfwSetMouseWheelCallback(mousewheel_callback);
 }
 
-char inp_last_char()
-{
-	return last_c;
-}
-
-int inp_last_key()
-{
-	return last_k;
-}
-
-void inp_clear()
-{
-	last_k = 0;
-	last_c = 0;
-}
-
 void inp_mouse_mode_absolute()
 {
 	glfwEnable(GLFW_MOUSE_CURSOR);
@@ -147,8 +168,8 @@ void inp_mouse_mode_absolute()
 
 void inp_mouse_mode_relative()
 {
-	//if (!config.gfx_debug_resizable)
-	//glfwDisable(GLFW_MOUSE_CURSOR);
+	/*if (!config.gfx_debug_resizable)*/
+	glfwDisable(GLFW_MOUSE_CURSOR);
 }
 
 int inp_mouse_doubleclick()

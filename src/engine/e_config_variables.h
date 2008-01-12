@@ -16,6 +16,9 @@ MACRO_CONFIG_STR(b_filter_string, 64, "")
 MACRO_CONFIG_INT(b_filter_full, 0, 0, 1)
 MACRO_CONFIG_INT(b_filter_empty, 0, 0, 1)
 MACRO_CONFIG_INT(b_filter_pw, 0, 0, 1)
+MACRO_CONFIG_INT(b_filter_ping, 999, 0, 999)
+MACRO_CONFIG_INT(b_filter_gametype, 0xf, 0, 0xf)
+
 MACRO_CONFIG_INT(b_sort, 0, 0, 256)
 MACRO_CONFIG_INT(b_sort_order, 0, 0, 1)
 MACRO_CONFIG_INT(b_max_requests, 10, 0, 1000)
@@ -24,6 +27,8 @@ MACRO_CONFIG_INT(snd_rate, 48000, 0, 0)
 MACRO_CONFIG_INT(snd_enable, 1, 0, 1)
 MACRO_CONFIG_INT(snd_volume, 100, 0, 100)
 MACRO_CONFIG_INT(snd_device, -1, 0, 0)
+
+MACRO_CONFIG_INT(snd_nonactive_mute, 0, 0, 1)
 
 MACRO_CONFIG_INT(gfx_screen_width, 800, 0, 0)
 MACRO_CONFIG_INT(gfx_screen_height, 600, 0, 0)

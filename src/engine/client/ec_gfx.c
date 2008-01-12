@@ -489,20 +489,22 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 	gluBuild2DMipmaps(GL_TEXTURE_2D, store_oglformat, w, h, oglformat, GL_UNSIGNED_BYTE, texdata);
 	
 	/* calculate memory usage */
-	int pixel_size = 4;
-	if(store_format == IMG_RGB)
-		pixel_size = 3;
-	else if(store_format == IMG_ALPHA)
-		pixel_size = 1;
-
-	textures[tex].memsize = w*h*pixel_size;
-	if(mipmap)
 	{
-		while(w > 2 && h > 2)
+		int pixel_size = 4;
+		if(store_format == IMG_RGB)
+			pixel_size = 3;
+		else if(store_format == IMG_ALPHA)
+			pixel_size = 1;
+
+		textures[tex].memsize = w*h*pixel_size;
+		if(mipmap)
 		{
-			w>>=1;
-			h>>=1;
-			textures[tex].memsize += w*h*pixel_size;
+			while(w > 2 && h > 2)
+			{
+				w>>=1;
+				h>>=1;
+				textures[tex].memsize += w*h*pixel_size;
+			}
 		}
 	}
 	
@@ -544,7 +546,9 @@ int gfx_load_mip_texture_raw(int w, int h, int format, const void *data)
 int gfx_load_texture(const char *filename, int store_format)
 {
 	int l = strlen(filename);
+	int id;
 	IMAGE_INFO img;
+	
 	if(l < 3)
 		return 0;
 	if(gfx_load_png(&img, filename))
@@ -552,7 +556,7 @@ int gfx_load_texture(const char *filename, int store_format)
 		if (store_format == IMG_AUTO)
 			store_format = img.format;
 
-		int id = gfx_load_texture_raw(img.width, img.height, img.format, img.data, store_format);
+		id = gfx_load_texture_raw(img.width, img.height, img.format, img.data, store_format);
 		mem_free(img.data);
 		return id;
 	}
@@ -1101,7 +1105,7 @@ void gfx_pretty_text(float x, float y, float size, const char *text, int max_wid
 float gfx_pretty_text_width(float size, const char *text_, int length)
 {
     return gfx_text_width(gfx_font_set, size, text_, length);
-
+	/*
 	const float spacing = 0.05f;
 	float w = 0.0f;
 	const unsigned char *text = (unsigned char *)text_;
@@ -1126,7 +1130,7 @@ float gfx_pretty_text_width(float size, const char *text_, int length)
 		text++;
 	}
 
-	return w;
+	return w;*/
 }
 
 

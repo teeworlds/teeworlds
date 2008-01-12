@@ -589,9 +589,10 @@ static float evaluate_spawn(spawneval *eval, vec2 pos)
 		if(!(players[c].flags&entity::FLAG_PHYSICS))
 			continue;
 		
-		// don't count friends
+		// team mates are not as dangerous as enemies
+		float scoremod = 1.0f;
 		if(eval->friendly_team != -1 && players[c].team == eval->friendly_team)
-			continue;
+			scoremod = 0.5f;
 			
 		float d = distance(pos, players[c].pos);
 		if(d == 0)
@@ -734,7 +735,7 @@ bool player::is_grounded()
 
 int player::handle_ninja()
 {
-	vec2 direction = normalize(vec2(input.target_x, input.target_y));
+	vec2 direction = normalize(vec2(latest_input.target_x, latest_input.target_y));
 
 	if ((server_tick() - ninja_activationtick) > (data->weapons[WEAPON_NINJA].duration * server_tickspeed() / 1000))
 	{
@@ -746,7 +747,7 @@ int player::handle_ninja()
 	}
 
 	// Check if it should activate
-	if (count_input(previnput.fire, input.fire).presses && (server_tick() > currentcooldown))
+	if (count_input(latest_previnput.fire, latest_input.fire).presses && (server_tick() > currentcooldown))
 	{
 		// ok then, activate ninja
 		attack_tick = server_tick();
@@ -958,7 +959,7 @@ int player::handle_bomb()
 
 int player::handle_weapons()
 {
-	vec2 direction = normalize(vec2(input.target_x, input.target_y));
+	vec2 direction = normalize(vec2(latest_input.target_x, latest_input.target_y));
 
 	if(config.dbg_stress)
 	{
@@ -986,8 +987,8 @@ int player::handle_weapons()
 	}
 
 	// select weapon
-	int next = count_input(previnput.next_weapon, input.next_weapon).presses;
-	int prev = count_input(previnput.prev_weapon, input.prev_weapon).presses;
+	int next = count_input(latest_previnput.next_weapon, latest_input.next_weapon).presses;
+	int prev = count_input(latest_previnput.prev_weapon, latest_input.prev_weapon).presses;
 	
 	if(next < 128) // make sure we only try sane stuff
 	{
@@ -1009,7 +1010,7 @@ int player::handle_weapons()
 		}
 	}
 
-	if(input.wanted_weapon) // direct weapon selection
+	if(latest_input.wanted_weapon) // direct weapon selection
 		wanted_weapon = input.wanted_weapon-1;
 
 	if(wanted_weapon < 0 || wanted_weapon >= NUM_WEAPONS)
@@ -1041,7 +1042,7 @@ int player::handle_weapons()
 		if(active_weapon == WEAPON_ROCKET || active_weapon == WEAPON_SHOTGUN)
 			fullauto = true;
 		
-		if(count_input(previnput.fire, input.fire).presses || ((fullauto && input.fire&1) && weapons[active_weapon].ammo))
+		if(count_input(latest_previnput.fire, latest_input.fire).presses || ((fullauto && latest_input.fire&1) && weapons[active_weapon].ammo))
 		{
 			// fire!
 			if(weapons[active_weapon].ammo)
@@ -1211,12 +1212,26 @@ int player::handle_weapons()
 void player::tick()
 {
 	server_setclientscore(client_id, score);
+
+	// grab latest input
+	{
+		int size = 0;
+		int *input = server_latestinput(client_id, &size);
+		if(input)
+		{
+			mem_copy(&latest_previnput, &latest_input, sizeof(latest_input));
+			mem_copy(&latest_input, input, sizeof(latest_input));
+		}
+	}
 	
 	// check if we have enough input
 	// this is to prevent initial weird clicks
 	if(num_inputs < 2)
+	{
+		latest_previnput = latest_input;
 		previnput = input;
-
+	}
+	
 	// do latency stuff
 	{
 		CLIENT_INFO info;
@@ -1254,7 +1269,7 @@ void player::tick()
 	// TODO: rework the input to be more robust
 	if(dead)
 	{
-		if(server_tick()-die_tick >= server_tickspeed()/2 && count_input(previnput.fire, input.fire).presses)
+		if(server_tick()-die_tick >= server_tickspeed()/2 && count_input(latest_previnput.fire, latest_input.fire).presses)
 			die_tick = -1;
 		if(server_tick()-die_tick >= server_tickspeed()*5) // auto respawn after 3 sec
 			respawn();
@@ -1466,7 +1481,7 @@ void player::snap(int snaping_client)
 			info->local = 1;
 	}
 
-	if(health > 0 && distance(players[snaping_client].pos, pos) < 1000.0f)
+	if(health > 0 && team >= 0 && distance(players[snaping_client].pos, pos) < 1000.0f)
 	{
 		obj_player_character *character = (obj_player_character *)snap_new_item(OBJTYPE_PLAYER_CHARACTER, client_id, sizeof(obj_player_character));
 

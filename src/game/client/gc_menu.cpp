@@ -451,6 +451,7 @@ static void ui2_draw_checkbox(const void *id, const char *text, int checked, con
 	ui2_draw_checkbox_common(id, text, checked?"X":"", r);
 }
 
+
 static void ui2_draw_checkbox_number(const void *id, const char *text, int checked, const RECT *r, void *extra)
 {
 	char buf[16];
@@ -466,8 +467,6 @@ int ui2_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hi
 
 	if(ui_last_active_item() == id)
 	{
-		int c = inp_last_char();
-		int k = inp_last_key();
 		int len = strlen(str);
 
 		if (inside && ui_mouse_button(0))
@@ -489,35 +488,42 @@ int ui2_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hi
 
 		if (at_index > len)
 			at_index = len;
-
-		if (!(c >= 0 && c < 32))
+			
+		for(int i = 0; i < inp_num_events(); i++)
 		{
-			if (len < str_size - 1 && at_index < str_size - 1)
+			INPUTEVENT e = inp_get_event(i);
+			char c = e.ch;
+			int k = e.key;
+
+			if (!(c >= 0 && c < 32))
 			{
-				memmove(str + at_index + 1, str + at_index, len - at_index + 1);
-				str[at_index] = c;
-				at_index++;
+				if (len < str_size - 1 && at_index < str_size - 1)
+				{
+					memmove(str + at_index + 1, str + at_index, len - at_index + 1);
+					str[at_index] = c;
+					at_index++;
+				}
 			}
-		}
 
-		if (k == KEY_BACKSPACE && at_index > 0)
-		{
-			memmove(str + at_index - 1, str + at_index, len - at_index + 1);
-			at_index--;
+			if (k == KEY_BACKSPACE && at_index > 0)
+			{
+				memmove(str + at_index - 1, str + at_index, len - at_index + 1);
+				at_index--;
+			}
+			else if (k == KEY_DEL && at_index < len)
+				memmove(str + at_index, str + at_index + 1, len - at_index);
+			else if (k == KEY_ENTER)
+				ui_clear_last_active_item();
+			else if (k == KEY_LEFT && at_index > 0)
+				at_index--;
+			else if (k == KEY_RIGHT && at_index < len)
+				at_index++;
+			else if (k == KEY_HOME)
+				at_index = 0;
+			else if (k == KEY_END)
+				at_index = len;
 		}
-		else if (k == KEY_DEL && at_index < len)
-			memmove(str + at_index, str + at_index + 1, len - at_index);
-		else if (k == KEY_ENTER)
-			ui_clear_last_active_item();
-		else if (k == KEY_LEFT && at_index > 0)
-			at_index--;
-		else if (k == KEY_RIGHT && at_index < len)
-			at_index++;
-		else if (k == KEY_HOME)
-			at_index = 0;
-		else if (k == KEY_END)
-			at_index = len;
-
+		
 		r = 1;
 	}
 
@@ -698,14 +704,17 @@ int ui2_do_key_reader(void *id, const RECT *rect, int key)
 
 	if(ui_active_item() == id)
 	{
-		int k = inp_last_key();
-		if (k)
+		for(int i = 0; i < inp_num_events(); i++)
 		{
-			if(k != KEY_ESC)
-				new_key = k;
-				
-			ui_set_active_item(0);
-			mouse_released = false;
+			INPUTEVENT e = inp_get_event(i);
+			if(e.key && e.key != KEY_ESC)
+			{
+				new_key = e.key;
+				ui_set_active_item(0);
+				mouse_released = false;
+				inp_clear_events();
+				break;
+			}
 		}
 	}
 	else if(ui_hot_item() == id)
@@ -912,14 +921,15 @@ static void menu2_render_serverbrowser(RECT main_view)
 	RECT server_scoreboard;
 
 	//ui2_hsplit_t(&view, 20.0f, &status, &view);
-	ui2_hsplit_b(&view, 90.0f, &view, &filters);
+	ui2_hsplit_b(&view, 110.0f, &view, &filters);
 
 	// split off a piece for details and scoreboard
 	ui2_vsplit_r(&view, 200.0f, &view, &server_details);
 
 	// server list
 	ui2_hsplit_t(&view, 20.0f, &headers, &view);
-	ui2_hsplit_b(&view, 5.0f, &view, 0x0);
+	//ui2_hsplit_b(&view, 110.0f, &view, &filters);
+	ui2_hsplit_b(&view, 5.0f, &view, 0);
 	ui2_hsplit_b(&view, 20.0f, &view, &status);
 
 	//ui2_vsplit_r(&filters, 300.0f, &filters, &toolbox);
@@ -1031,7 +1041,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 	int num = (int)(view.h/cols[0].rect.h);
 	static int scrollbar = 0;
 	static float scrollvalue = 0;
-	static int selected_index = -1;
+	//static int selected_index = -1;
 	ui2_hmargin(&scroll, 5.0f, &scroll);
 	scrollvalue = ui2_do_scrollbar_v(&scrollbar, &scroll, scrollvalue);
 	
@@ -1059,8 +1069,8 @@ static void menu2_render_serverbrowser(RECT main_view)
 	RECT original_view = view;
 	view.y -= scrollvalue*scrollnum*cols[0].rect.h;
 	
-	//int r = -1;
-	int new_selected = selected_index;
+	int new_selected = -1;
+	int selected_index = -1;
 	
 	for (int i = 0; i < num_servers; i++)
 	{
@@ -1069,10 +1079,12 @@ static void menu2_render_serverbrowser(RECT main_view)
 		RECT row;
         RECT select_hit_box;
 			
-		int l = selected_index==item_index;
+		int selected = strcmp(item->address, config.ui_server_address) == 0; //selected_index==item_index;
 		
-		if(l)
+		if(selected)
 		{
+			selected_index = i;
+			
 			// selected server, draw the players on it
 			RECT whole;
 			int h = (item->num_players+2)/3;
@@ -1129,13 +1141,9 @@ static void menu2_render_serverbrowser(RECT main_view)
 				select_hit_box.y = original_view.y;
 			}
 			
-			if(ui2_do_button(item, "", l, &select_hit_box, 0, 0))
+			if(ui2_do_button(item, "", selected, &select_hit_box, 0, 0))
 			{
 				new_selected = item_index;
-				dbg_msg("dbg", "addr = %s", item->address);
-				strncpy(config.ui_server_address, item->address, sizeof(config.ui_server_address));
-				if(inp_mouse_doubleclick())
-					client_connect(config.ui_server_address);
 			}
 		}
 		
@@ -1197,21 +1205,20 @@ static void menu2_render_serverbrowser(RECT main_view)
 				else if(item->game_type == GAMETYPE_CTF) type = "CTF";
 				ui2_do_label(&button, type, 15.0f, 0);
 			}
-			/*
-			if(s)
-			{
-				new_selected = item_index;
-				dbg_msg("dbg", "addr = %s", item->address);
-				strncpy(config.ui_server_address, item->address, sizeof(config.ui_server_address));
-			}*/
 		}
 	}
 
 	ui2_clip_disable();
 	
-	selected_index = new_selected;
+	if(new_selected != -1)
+	{
+		// select the new server
+		SERVER_INFO *item = client_serverbrowse_sorted_get(new_selected);
+		strncpy(config.ui_server_address, item->address, sizeof(config.ui_server_address));
+		if(inp_mouse_doubleclick())
+			client_connect(config.ui_server_address);
+	}
 	
-
 	SERVER_INFO *selected_server = client_serverbrowse_sorted_get(selected_index);
 	RECT server_header;
 
@@ -1267,7 +1274,10 @@ static void menu2_render_serverbrowser(RECT main_view)
 
 		char temp[16];
 
-		sprintf(temp, "%d%%", selected_server->progression);
+		if(selected_server->progression < 0)
+			sprintf(temp, "N/A");
+		else
+			sprintf(temp, "%d%%", selected_server->progression);
 		ui2_hsplit_t(&right_column, 15.0f, &row, &right_column);
 		ui2_do_label(&row, temp, 13.0f, -1);
 
@@ -1304,12 +1314,14 @@ static void menu2_render_serverbrowser(RECT main_view)
 		}
 	}
 	
-	// render quick search
 	RECT button;
+	RECT types;
 	ui2_hsplit_t(&filters, 20.0f, &button, &filters);
 	ui2_do_label(&button, "Quick search: ", 14.0f, -1);
 	ui2_vsplit_l(&button, 95.0f, 0, &button);
 	ui2_do_edit_box(&config.b_filter_string, &button, config.b_filter_string, sizeof(config.b_filter_string));
+
+	ui2_vsplit_l(&filters, 180.0f, &filters, &types);
 
 	// render filters
 	ui2_hsplit_t(&filters, 20.0f, &button, &filters);
@@ -1321,8 +1333,35 @@ static void menu2_render_serverbrowser(RECT main_view)
 		config.b_filter_full ^= 1;
 
 	ui2_hsplit_t(&filters, 20.0f, &button, &filters);
-	if (ui2_do_button(&config.b_filter_pw, "Is not password protected", config.b_filter_pw, &button, ui2_draw_checkbox, 0))
+	if (ui2_do_button(&config.b_filter_pw, "No password", config.b_filter_pw, &button, ui2_draw_checkbox, 0))
 		config.b_filter_pw ^= 1;
+
+	ui2_hsplit_t(&filters, 2.0f, &button, &filters); // ping
+	ui2_hsplit_t(&filters, 20.0f, &button, &filters);
+	{
+		RECT editbox;
+		ui2_vsplit_l(&button, 40.0f, &editbox, &button);
+		ui2_vsplit_l(&button, 5.0f, &button, &button);
+		
+		char buf[8];
+		sprintf(buf, "%d", config.b_filter_ping);
+		ui2_do_edit_box(&config.b_filter_ping, &editbox, buf, sizeof(buf));
+		config.b_filter_ping = atoi(buf);
+		
+		ui2_do_label(&button, "Maximum ping", 14.0f, -1);
+	}
+
+	ui2_hsplit_t(&types, 20.0f, &button, &types);
+	if (ui2_do_button(&config.b_filter_gametype, "DM", config.b_filter_gametype&(1<<GAMETYPE_DM), &button, ui2_draw_checkbox, 0))
+		config.b_filter_gametype ^= (1<<GAMETYPE_DM);
+
+	ui2_hsplit_t(&types, 20.0f, &button, &types);
+	if (ui2_do_button((char *)&config.b_filter_gametype + 1, "TDM", config.b_filter_gametype&(1<<GAMETYPE_TDM), &button, ui2_draw_checkbox, 0))
+		config.b_filter_gametype ^= (1<<GAMETYPE_TDM);
+
+	ui2_hsplit_t(&types, 20.0f, &button, &types);
+	if (ui2_do_button((char *)&config.b_filter_gametype + 2, "CTF", config.b_filter_gametype&(1<<GAMETYPE_CTF), &button, ui2_draw_checkbox, 0))
+		config.b_filter_gametype ^= (1<<GAMETYPE_CTF);
 
 	// render status
 	ui2_draw_rect(&status, vec4(1,1,1,0.25f), CORNER_B, 5.0f);
@@ -1749,6 +1788,10 @@ static void menu2_render_settings_sound(RECT main_view)
 	if(!config.snd_enable)
 		return;
 	
+	ui2_hsplit_t(&main_view, 20.0f, &button, &main_view);
+	if (ui2_do_button(&config.snd_nonactive_mute, "Mute when not active", config.snd_nonactive_mute, &button, ui2_draw_checkbox, 0))
+		config.snd_nonactive_mute ^= 1;
+		
 	// sample rate box
 	{
 		char buf[64];
@@ -2273,5 +2316,5 @@ void modmenu_render()
     gfx_quads_drawTL(mx,my,24,24);
     gfx_quads_end();
 
-	inp_clear();
+	inp_clear_events();
 }

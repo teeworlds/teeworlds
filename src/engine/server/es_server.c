@@ -89,6 +89,7 @@ typedef struct
 	int last_acked_snapshot;
 	SNAPSTORAGE snapshots;
 	
+	CLIENT_INPUT latestinput;
 	CLIENT_INPUT inputs[200]; /* TODO: handle input better */
 	int current_input;
 	
@@ -182,6 +183,13 @@ void snap_free_id(int id)
 		snap_first_timed_id = id;
 		snap_last_timed_id = id;
 	}
+}
+
+int *server_latestinput(int client_id, int *size)
+{
+	if(client_id < 0 || client_id > MAX_CLIENTS || clients[client_id].state < SRVCLIENT_STATE_READY)
+		return 0;
+	return clients[client_id].latestinput.data;
 }
 
 const char *server_clientname(int client_id)
@@ -489,6 +497,8 @@ static int new_client_callback(int cid, void *user)
 	}
 	clients[cid].current_input = 0;
 	
+	mem_zero(&clients[cid].latestinput, sizeof(clients[cid].latestinput));
+	
 	snapstorage_purge_all(&clients[cid].snapshots);
 	clients[cid].last_acked_snapshot = -1;
 	clients[cid].snap_rate = SRVCLIENT_SNAPRATE_INIT;
@@ -624,7 +634,9 @@ static void server_process_client_packet(NETPACKET *packet)
 			
 			for(i = 0; i < size/4; i++)
 				input->data[i] = msg_unpack_int();
-				
+			
+			mem_copy(clients[cid].latestinput.data, input->data, MAX_INPUT_SIZE*sizeof(int));
+			
 			clients[cid].current_input++;
 			clients[cid].current_input %= 200;
 		}

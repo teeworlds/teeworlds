@@ -41,7 +41,7 @@ MACRO_CONFIG_INT(player_color_body, 65408, 0, 0)
 MACRO_CONFIG_INT(player_color_feet, 65408, 0, 0)
 MACRO_CONFIG_STR(player_skin, 64, "default")
 
-MACRO_CONFIG_INT(dbg_new_gui, 0, 0, 1)
+MACRO_CONFIG_INT(dbg_firedelay, 0, 0, 1)
 
 MACRO_CONFIG_INT(ui_page, 1, 0, 5)
 MACRO_CONFIG_STR(ui_server_address, 128, "localhost:8303")

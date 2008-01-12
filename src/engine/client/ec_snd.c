@@ -55,6 +55,7 @@ static int center_x = 0;
 static int center_y = 0;
 
 static int mixing_rate = 48000;
+static volatile int sound_volume = 100;
 
 void snd_set_channel(int cid, float vol, float pan)
 {
@@ -135,9 +136,12 @@ static void mix(short *final_out, unsigned frames)
 {
 	int mix_buffer[MAX_FRAMES*2] = {0};
 	int i, s;
+	int master_vol;
 
 	/* aquire lock while we are mixing */
 	lock_wait(sound_lock);
+	
+	master_vol = sound_volume;
 	
 	for(i = 0; i < NUM_VOICES; i++)
 	{
@@ -208,12 +212,12 @@ static void mix(short *final_out, unsigned frames)
 			
 		}
 	}
+	
+	
 	/* release the lock */
 	lock_release(sound_lock);
 
 	{
-		int master_vol = config.snd_volume;
-		
 		/* clamp accumulated values */
 		/* TODO: this seams slow */
 		for(i = 0; i < frames; i++)
@@ -283,6 +287,25 @@ int snd_init()
 	err = Pa_StartStream(stream);
 
 	sound_enabled = 1;
+	snd_update(); /* update the volume */
+	return 0;
+}
+
+int snd_update()
+{
+	/* update volume */
+	int wanted_volume = config.snd_volume;
+	
+	if(!gfx_window_active() && config.snd_nonactive_mute)
+		wanted_volume = 0;
+	
+	if(wanted_volume != sound_volume)
+	{
+		lock_wait(sound_lock);
+		sound_volume = wanted_volume;
+		lock_release(sound_lock);
+	}
+	
 	return 0;
 }
 

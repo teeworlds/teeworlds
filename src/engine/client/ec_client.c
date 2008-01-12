@@ -304,6 +304,24 @@ int client_connection_problems()
 	return netclient_gotproblems(net);
 }
 
+void client_direct_input(int *input, int size)
+{
+	int i;
+	msg_pack_start_system(NETMSG_INPUT, 0);
+	msg_pack_int(ack_game_tick);
+	msg_pack_int(current_predtick);
+	msg_pack_int(size);
+	
+	for(i = 0; i < size/4; i++)
+		msg_pack_int(input[i]);	
+		
+	msg_pack_end();
+	client_send_msg();
+	
+	dbg_msg("client", "sent direct input");
+}
+
+
 static void client_send_input()
 {
 	int64 now = time_get();	
@@ -312,7 +330,7 @@ static void client_send_input()
 	if(current_predtick <= 0)
 		return;
 	
-	/* fetch input */	
+	/* fetch input */
 	size = modc_snap_input(inputs[current_input].data);
 	
 	msg_pack_start_system(NETMSG_INPUT, 0);
@@ -1006,6 +1024,9 @@ static void client_run()
 		
 		/* update input */
 		inp_update();
+
+		/* update sound */		
+		snd_update();
 		
 		/* refocus */
 		if(!gfx_window_active())

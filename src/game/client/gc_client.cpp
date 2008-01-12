@@ -33,6 +33,8 @@ data_container *data = 0x0;
 static player_input input_data = {0};
 static int input_target_lock = 0;
 
+static int64 debug_firedelay = 0;
+
 extern void modmenu_render();
 extern void menu_init();
 
@@ -79,8 +81,25 @@ static struct client_data
 	int emoticon_start;
 	player_core predicted;
 	
-	tee_render_info skin_info;
+	tee_render_info skin_info; // this is what the server reports
+	tee_render_info render_info; // this is what we use
 	
+	void update_render_info()
+	{
+		render_info = skin_info;
+
+		// force team colors
+		if(gameobj && gameobj->gametype != GAMETYPE_DM)
+		{
+			const int team_colors[2] = {65387, 10223467};
+			if(team >= 0 || team <= 1)
+			{
+				render_info.texture = skin_get(skin_id)->color_texture;
+				render_info.color_body = skin_get_color(team_colors[team]);
+				render_info.color_feet = skin_get_color(team_colors[team]);
+			}
+		}		
+	}
 } client_datas[MAX_CLIENTS];
 
 class client_effects
@@ -915,6 +934,9 @@ extern "C" void modc_newsnapshot()
 			if(item.type == OBJTYPE_PLAYER_INFO)
 			{
 				const obj_player_info *info = (const obj_player_info *)data;
+				
+				client_datas[info->clientid].team = info->team;
+				
 				if(info->local)
 				{
 					local_info = info;
@@ -938,6 +960,9 @@ extern "C" void modc_newsnapshot()
 			}
 		}
 	}
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
+		client_datas[i].update_render_info();
 }
 
 void send_info(bool start)
@@ -963,8 +988,15 @@ void send_emoticon(int emoticon)
 	client_send_msg();
 }
 
-static void render_projectile(const obj_projectile *prev, const obj_projectile *current, int itemid)
+static void render_projectile(const obj_projectile *current, int itemid)
 {
+	if(debug_firedelay)
+	{
+		debug_firedelay = time_get()-debug_firedelay;
+		dbg_msg("game", "firedelay=%.2f ms", debug_firedelay/(float)time_freq()*1000.0f);
+		debug_firedelay = 0;
+	}
+	
 	gfx_texture_set(data->images[IMAGE_GAME].id);
 	gfx_quads_begin();
 
@@ -1143,10 +1175,10 @@ void anim_eval_add(animstate *state, animation *anim, float time, float amount)
 	anim_add(state, &add, amount);
 }
 
-static void render_hand(int skin_id, vec2 center_pos, vec2 dir, float angle_offset, vec2 post_rot_offset)
+static void render_hand(tee_render_info *info, vec2 center_pos, vec2 dir, float angle_offset, vec2 post_rot_offset)
 {
 	// for drawing hand
-	const skin *s = skin_get(skin_id);
+	//const skin *s = skin_get(skin_id);
 	
 	float basesize = 10.0f;
 	//dir = normalize(hook_pos-pos);
@@ -1168,8 +1200,9 @@ static void render_hand(int skin_id, vec2 center_pos, vec2 dir, float angle_offs
 	hand_pos += diry * post_rot_offset.y;
 
 	//gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
-	gfx_texture_set(s->color_texture);
+	gfx_texture_set(info->texture);
 	gfx_quads_begin();
+	gfx_setcolor(info->color_body.r, info->color_body.g, info->color_body.b, info->color_body.a);
 
 	// two passes
 	for (int i = 0; i < 2; i++)
@@ -1382,11 +1415,6 @@ static void render_player(
 		}
 	}
 
-	// TODO: proper skin selection
-	int skin_id = client_datas[info.clientid].skin_id; //charids[info.clientid];
-	//if(gametype != GAMETYPE_DM)
-		//skin_id = info.team*9; // 0 or 9
-
 	vec2 direction = get_direction(player.angle);
 	float angle = player.angle/256.0f;
 	vec2 position = mix(vec2(prev.x, prev.y), vec2(player.x, player.y), intratick);
@@ -1463,7 +1491,7 @@ static void render_player(
 		gfx_quads_setrotation(0);
 		gfx_quads_end();
 
-		render_hand(skin_id, position, normalize(hook_pos-pos), -pi/2, vec2(20, 0));
+		render_hand(&client_datas[info.clientid].render_info, position, normalize(hook_pos-pos), -pi/2, vec2(20, 0));
 	}
 
 	// draw gun
@@ -1581,9 +1609,9 @@ static void render_player(
 
 		switch (player.weapon)
 		{
-			case WEAPON_GUN: render_hand(skin_id, p, direction, -3*pi/4, vec2(-15, 4)); break;
-			case WEAPON_SHOTGUN: render_hand(skin_id, p, direction, -pi/2, vec2(-5, 4)); break;
-			case WEAPON_ROCKET: render_hand(skin_id, p, direction, -pi/2, vec2(-4, 7)); break;
+			case WEAPON_GUN: render_hand(&client_datas[info.clientid].render_info, p, direction, -3*pi/4, vec2(-15, 4)); break;
+			case WEAPON_SHOTGUN: render_hand(&client_datas[info.clientid].render_info, p, direction, -pi/2, vec2(-5, 4)); break;
+			case WEAPON_ROCKET: render_hand(&client_datas[info.clientid].render_info, p, direction, -pi/2, vec2(-4, 7)); break;
 		}
 
 	}
@@ -1592,14 +1620,14 @@ static void render_player(
 	if(info.local && config.debug)
 	{
 		vec2 ghost_position = mix(vec2(prev_char->x, prev_char->y), vec2(player_char->x, player_char->y), client_intratick());
-		tee_render_info ghost = client_datas[info.clientid].skin_info;
+		tee_render_info ghost = client_datas[info.clientid].render_info;
 		ghost.color_body.a = 0.5f;
 		ghost.color_feet.a = 0.5f;
 		render_tee(&state, &ghost, player.emote, direction, ghost_position); // render ghost
 	}
 
 	// render the tee
-	render_tee(&state, &client_datas[info.clientid].skin_info, player.emote, direction, position);
+	render_tee(&state, &client_datas[info.clientid].render_info, player.emote, direction, position);
 
 	if(player.state == STATE_CHATTING)
 	{
@@ -2103,7 +2131,7 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 			gfx_quads_end();
 		}
 		
-		render_tee(&idlestate, &client_datas[info->clientid].skin_info, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28));
+		render_tee(&idlestate, &client_datas[info->clientid].render_info, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28));
 
 		
 		y += 50.0f;
@@ -2202,9 +2230,9 @@ void render_world(float center_x, float center_y, float zoom)
 
 			if(item.type == OBJTYPE_PROJECTILE)
 			{
-				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-				if(prev)
-					render_projectile((const obj_projectile *)prev, (const obj_projectile *)data, item.id);
+				//const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+				//if(prev)
+				render_projectile((const obj_projectile *)data, item.id);
 			}
 			else if(item.type == OBJTYPE_POWERUP)
 			{
@@ -2235,8 +2263,6 @@ void render_world(float center_x, float center_y, float zoom)
 				const void *prev_info = snap_find_item(SNAP_PREV, OBJTYPE_PLAYER_INFO, item.id);
 				const void *info = snap_find_item(SNAP_CURRENT, OBJTYPE_PLAYER_INFO, item.id);
 
-				client_datas[((const obj_player_info *)info)->clientid].team = ((const obj_player_info *)info)->team;
-				
 				if(prev && prev_info && info)
 				{
 					render_player(
@@ -2364,28 +2390,29 @@ void render_game()
 				chat_mode = CHATMODE_NONE;
 			}
 
-			int c = inp_last_char();
-			int k = inp_last_key();
-
-			if (!(c >= 0 && c < 32))
+			for(int i = 0; i < inp_num_events(); i++)
 			{
-				if (chat_input_len < sizeof(chat_input) - 1)
+				INPUTEVENT e = inp_get_event(i);
+
+				if (!(e.ch >= 0 && e.ch < 32))
 				{
-					chat_input[chat_input_len] = c;
-					chat_input[chat_input_len+1] = 0;
-					chat_input_len++;
+					if (chat_input_len < sizeof(chat_input) - 1)
+					{
+						chat_input[chat_input_len] = e.ch;
+						chat_input[chat_input_len+1] = 0;
+						chat_input_len++;
+					}
+				}
+
+				if(e.key == KEY_BACKSPACE)
+				{
+					if(chat_input_len > 0)
+					{
+						chat_input[chat_input_len-1] = 0;
+						chat_input_len--;
+					}
 				}
 			}
-
-			if(k == KEY_BACKSPACE)
-			{
-				if(chat_input_len > 0)
-				{
-					chat_input[chat_input_len-1] = 0;
-					chat_input_len--;
-				}
-			}
-
 		}
 		else
 		{
@@ -2413,7 +2440,7 @@ void render_game()
 	}
 
 	if (!menu_active)
-		inp_clear();
+		inp_clear_events();
 
 	// fetch new input
 	if(!menu_active && !emoticon_selector_active)
@@ -2451,6 +2478,8 @@ void render_game()
 	// update some input
 	if(!menu_active && chat_mode == CHATMODE_NONE)
 	{
+		bool do_direct = false;
+		
 		if(!emoticon_selector_active)
 		{
 			if(do_input(&input_data.fire, config.key_fire))
@@ -2460,6 +2489,17 @@ void render_game()
 				input_data.target_x = (int)mouse_pos.x;
 				input_data.target_y = (int)mouse_pos.y;
 				input_target_lock = 1;
+				
+				if(inp_key_presses(config.key_fire))
+				{
+					if(config.dbg_firedelay)
+					{
+						if(debug_firedelay == 0)
+							debug_firedelay = time_get();
+					}
+					
+					do_direct = true;
+				}
 			}
 		}
 
@@ -2480,6 +2520,9 @@ void render_game()
 			if(inp_key_presses(config.key_weapon5)) input_data.wanted_weapon = 5;
 			if(inp_key_presses(config.key_weapon6)) input_data.wanted_weapon = 6;
 		}
+		
+		if(do_direct) // do direct input if wanted
+			client_direct_input((int *)&input_data, sizeof(input_data));
 	}
 
 
@@ -2720,7 +2763,7 @@ void render_game()
 				}
 			}
 			
-			render_tee(&idlestate, &client_datas[killmsgs[r].victim].skin_info, EMOTE_PAIN, vec2(-1,0), vec2(x, y+28));
+			render_tee(&idlestate, &client_datas[killmsgs[r].victim].render_info, EMOTE_PAIN, vec2(-1,0), vec2(x, y+28));
 			x -= 32.0f;
 			
 			// render weapon
@@ -2756,7 +2799,7 @@ void render_game()
 				
 				// render killer tee
 				x -= 24.0f;
-				render_tee(&idlestate, &client_datas[killmsgs[r].killer].skin_info, EMOTE_ANGRY, vec2(1,0), vec2(x, y+28));
+				render_tee(&idlestate, &client_datas[killmsgs[r].killer].render_info, EMOTE_ANGRY, vec2(1,0), vec2(x, y+28));
 				x -= 32.0f;
 
 				// render killer name
@@ -2913,7 +2956,7 @@ void render_game()
 							const char *name = client_datas[id].name;
 							float w = gfx_pretty_text_width(10, name, -1);
 							gfx_pretty_text(whole-40-5-w, 300-40-15+t*20+2, 10, name, -1);
-							tee_render_info info = client_datas[id].skin_info;
+							tee_render_info info = client_datas[id].render_info;
 							info.size = 18.0f;
 							
 							render_tee(&idlestate, &info, EMOTE_NORMAL, vec2(1,0),
@@ -3117,6 +3160,8 @@ extern "C" void modc_statechange(int state, int old)
 	 	menu_do_disconnected();
 	 	menu_game_active = false;
 	}
+	else if(state == CLIENTSTATE_LOADING)
+		menu_do_connecting();
 	else if(state == CLIENTSTATE_CONNECTING)
 		menu_do_connecting();
 	else if (state == CLIENTSTATE_ONLINE)
@@ -3171,6 +3216,8 @@ extern "C" void modc_message(int msg)
 			client_datas[cid].skin_info.color_body = vec4(1,1,1,1);
 			client_datas[cid].skin_info.color_feet = vec4(1,1,1,1);
 		}
+		
+		client_datas[cid].update_render_info();
 	}
     else if(msg == MSG_WEAPON_PICKUP)
     {

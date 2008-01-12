@@ -261,6 +261,11 @@ public:
 	int color_body;
 	int color_feet;
 
+
+	// these are non-heldback inputs
+	player_input latest_previnput;
+	player_input latest_input;
+
 	// input	
 	player_input previnput;
 	player_input input;
