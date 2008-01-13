@@ -9,6 +9,8 @@ public:
 	gameobject_ctf();
 	virtual void tick();
 	
+	virtual bool on_entity(int index, vec2 pos);
+	
 	virtual void on_player_spawn(class player *p);
 	virtual int on_player_death(class player *victim, class player *killer, int weapon);
 };

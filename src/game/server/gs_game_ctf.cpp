@@ -1,30 +1,29 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+#include <game/g_mapitems.h>
 #include "gs_common.h"
 #include "gs_game_ctf.h"
 
 gameobject_ctf::gameobject_ctf()
 {
-	// fetch flagstands
-	for(int i = 0; i < 2; i++)
-	{
-		mapres_flagstand *stand;
-		stand = (mapres_flagstand *)map_find_item(MAPRES_FLAGSTAND_RED+i, 0);
-		if(stand)
-		{
-			flag *f = new flag(i);
-			f->stand_pos = vec2(stand->x, stand->y);
-			f->pos = f->stand_pos;
-			flags[i] = f;
-			//dbg_msg("game", "flag at %f,%f", f->pos.x, f->pos.y);
-		}
-		else
-		{
-			// report massive failure
-			flags[i] = 0;
-		}
-	}
-
 	is_teamplay = true;
+}
+
+bool gameobject_ctf::on_entity(int index, vec2 pos)
+{
+	if(gameobject::on_entity(index, pos))
+		return true;
+	
+	int team = -1;
+	if(index == ENTITY_FLAGSTAND_RED) team = 0;
+	if(index == ENTITY_FLAGSTAND_BLUE) team = 1;
+	if(team == -1)
+		return false;
+		
+	flag *f = new flag(team);
+	f->stand_pos = pos;
+	f->pos = pos;
+	flags[team] = f;
+	return true;
 }
 
 void gameobject_ctf::on_player_spawn(class player *p)

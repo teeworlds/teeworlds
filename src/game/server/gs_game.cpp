@@ -1,7 +1,8 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <engine/e_config.h>
-#include "gs_common.h"
 #include <string.h>
+#include <engine/e_config.h>
+#include <game/g_mapitems.h>
+#include "gs_common.h"
 
 gameobject::gameobject()
 : entity(OBJTYPE_GAME)
@@ -32,6 +33,51 @@ gameobject::gameobject()
 	is_teamplay = false;
 	teamscore[0] = 0;
 	teamscore[1] = 0;	
+}
+
+// UGLY!!!!
+extern vec2 spawn_points[3][64];
+extern int num_spawn_points[3];
+
+bool gameobject::on_entity(int index, vec2 pos)
+{
+	int type = -1;
+	int subtype = 0;
+	
+	if(index == ENTITY_SPAWN)
+		spawn_points[0][num_spawn_points[0]++] = pos;
+	else if(index == ENTITY_SPAWN_RED)
+		spawn_points[1][num_spawn_points[1]++] = pos;
+	else if(index == ENTITY_SPAWN_BLUE)
+		spawn_points[2][num_spawn_points[2]++] = pos;
+	else if(index == ENTITY_ARMOR_1)
+		type = POWERUP_ARMOR;
+	else if(index == ENTITY_HEALTH_1)
+		type = POWERUP_HEALTH;
+	else if(index == ENTITY_WEAPON_SHOTGUN)
+	{
+		type = POWERUP_WEAPON;
+		subtype = WEAPON_SHOTGUN;
+	}
+	else if(index == ENTITY_WEAPON_ROCKET)
+	{
+		type = POWERUP_WEAPON;
+		subtype = WEAPON_ROCKET;
+	}
+	else if(index == ENTITY_POWERUP_NINJA)
+	{
+		type = POWERUP_NINJA;
+		subtype = WEAPON_NINJA;
+	}
+	
+	if(type != -1)
+	{
+		powerup *ppower = new powerup(type, subtype);
+		ppower->pos = pos;
+		return true;
+	}
+
+	return false;
 }
 
 void gameobject::endround()

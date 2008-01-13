@@ -141,6 +141,8 @@ public:
 	
 	bool is_friendly_fire(int cid1, int cid2);
 	
+	virtual bool on_entity(int index, vec2 pos);
+	
 	virtual void post_reset();
 	virtual void tick();
 	

@@ -12,10 +12,7 @@ extern "C" {
 }
 
 #include <game/client/gc_map_image.h>
-#include <game/client/gc_mapres_tilemap.h>
 #include <game/client/gc_ui.h>
-//#include "game/mapres_col.h"
-#include <game/g_mapres.h>
 #include <game/g_game.h>
 #include <game/client/gc_render.h>
 
@@ -26,13 +23,34 @@ static int background_texture = 0;
 static int cursor_texture = 0;
 static int entities_texture = 0;
 
-
+// backwards compatiblity
 class mapres_image
 {
 public:
 	int width;
 	int height;
 	int image_data;
+};
+
+
+struct mapres_tilemap
+{
+	int image;
+	int width;
+	int height;
+	int x, y;
+	int scale;
+	int data;
+	int main;
+};
+
+enum
+{
+	MAPRES_REGISTERED=0x8000,
+	MAPRES_IMAGE=0x8001,
+	MAPRES_TILEMAP=0x8002,
+	MAPRES_COLLISIONMAP=0x8003,
+	MAPRES_TEMP_THEME=0x8fff,
 };
 
 

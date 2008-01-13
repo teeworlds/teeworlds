@@ -2081,41 +2081,8 @@ void mods_init()
 		for(int x = 0; x < tmap->width; x++)
 		{
 			int index = tiles[y*tmap->width+x].index - ENTITY_OFFSET;
-			int type = -1;
-			int subtype = 0;
 			vec2 pos(x*32.0f+16.0f, y*32.0f+16.0f);
-		
-			if(index == ENTITY_SPAWN)
-				spawn_points[0][num_spawn_points[0]++] = pos;
-			else if(index == ENTITY_SPAWN_RED)
-				spawn_points[1][num_spawn_points[1]++] = pos;
-			else if(index == ENTITY_SPAWN_BLUE)
-				spawn_points[2][num_spawn_points[2]++] = pos;
-			else if(index == ENTITY_ARMOR_1)
-				type = POWERUP_ARMOR;
-			else if(index == ENTITY_HEALTH_1)
-				type = POWERUP_HEALTH;
-			else if(index == ENTITY_WEAPON_SHOTGUN)
-			{
-				type = POWERUP_WEAPON;
-				subtype = WEAPON_SHOTGUN;
-			}
-			else if(index == ENTITY_WEAPON_ROCKET)
-			{
-				type = POWERUP_WEAPON;
-				subtype = WEAPON_ROCKET;
-			}
-			else if(index == ENTITY_POWERUP_NINJA)
-			{
-				type = POWERUP_NINJA;
-				subtype = WEAPON_NINJA;
-			}
-			
-			if(type != -1)
-			{
-				powerup *ppower = new powerup(type, subtype);
-				ppower->pos = pos;
-			}
+			gameobj->on_entity(index, pos);
 		}
 	}
 
