@@ -308,6 +308,8 @@ enum
 	PROPTYPE_INT_STEP,
 	PROPTYPE_INT_SCROLL,
 	PROPTYPE_COLOR,
+	PROPTYPE_IMAGE,
+	PROPTYPE_ENVELOPE,
 	
 	PROPS_NONE=0,
 	PROPS_GROUP,
@@ -478,3 +480,4 @@ public:
 
 int do_editor_button(const void *id, const char *text, int checked, const RECT *r, ui_draw_button_func draw_func, int flags, const char *tooltip);
 void draw_editor_button(const void *id, const char *text, int checked, const RECT *r, const void *extra);
+void draw_editor_button_menuitem(const void *id, const char *text, int checked, const RECT *r, const void *extra);

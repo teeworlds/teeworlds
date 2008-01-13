@@ -25,10 +25,15 @@ static int entities_texture = 0;
 
 
 // popup menu handling
-static RECT ui_popup_rect;
-static void *ui_popup_id = 0;
-static int (*ui_popup_func)(RECT rect);
-static int ui_popup_is_menu = 0;
+static struct
+{
+	RECT rect;
+	void *id;
+	int (*func)(RECT rect);
+	int is_menu;
+	void *extra;
+} ui_popups[8];
+static int ui_num_popups = 0;
 
 EDITOR editor;
 
@@ -181,13 +186,14 @@ static void draw_editor_button_menu(const void *id, const char *text, int checke
 	*/
 
 	RECT r = *rect;
-	if(ui_popup_id == id)
+	/*
+	if(ui_popups[id == id)
 	{
 		ui_draw_rect(&r, vec4(0.5f,0.5f,0.5f,0.75f), CORNER_T, 3.0f);
 		ui_margin(&r, 1.0f, &r);
 		ui_draw_rect(&r, vec4(0,0,0,0.75f), CORNER_T, 3.0f);
 	}
-	else
+	else*/
 		ui_draw_rect(&r, vec4(0.5f,0.5f,0.5f, 1.0f), CORNER_T, 3.0f);
 	
 
@@ -198,10 +204,10 @@ static void draw_editor_button_menu(const void *id, const char *text, int checke
 	//RECT t = *r;
 }
 
-static void draw_editor_button_menuitem(const void *id, const char *text, int checked, const RECT *r, const void *extra)
+void draw_editor_button_menuitem(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
-	if(ui_hot_item() == id)
+	if(ui_hot_item() == id || checked)
 		ui_draw_rect(r, get_button_color(id, checked), CORNER_ALL, 3.0f);
 	
 	RECT t = *r;
@@ -340,56 +346,58 @@ static int ui_do_value_selector(void *id, RECT *r, const char *label, int curren
 	return current;
 }
 
-static void ui_invoke_popup_menu(void *id, int flags, float x, float y, float w, float h, int (*func)(RECT rect))
+static void ui_invoke_popup_menu(void *id, int flags, float x, float y, float w, float h, int (*func)(RECT rect), void *extra=0)
 {
 	dbg_msg("", "invoked");
-	ui_popup_is_menu = flags;
-	ui_popup_id = id;
-	ui_popup_rect.x = x;
-	ui_popup_rect.y = y;
-	ui_popup_rect.w = w;
-	ui_popup_rect.h = h;
-	ui_popup_func = func;
+	ui_popups[ui_num_popups].id = id;
+	ui_popups[ui_num_popups].is_menu = flags;
+	ui_popups[ui_num_popups].rect.x = x;
+	ui_popups[ui_num_popups].rect.y = y;
+	ui_popups[ui_num_popups].rect.w = w;
+	ui_popups[ui_num_popups].rect.h = h;
+	ui_popups[ui_num_popups].func = func;
+	ui_popups[ui_num_popups].extra = extra;
+	ui_num_popups++;
 }
 
 static void ui_do_popup_menu()
 {
-	if(!ui_popup_id)
-		return;
-		
-	bool inside = ui_mouse_inside(&ui_popup_rect);
-	ui_set_hot_item(&ui_popup_id);
-	
-	if(ui_active_item() == &ui_popup_id)
+	for(int i = 0; i < ui_num_popups; i++)
 	{
-		if(!ui_mouse_button(0))
+		bool inside = ui_mouse_inside(&ui_popups[i].rect);
+		ui_set_hot_item(&ui_popups[i].id);
+		
+		if(ui_active_item() == &ui_popups[i].id)
 		{
-			if(!inside)
-				ui_popup_id = 0;
-			ui_set_active_item(0);
+			if(!ui_mouse_button(0))
+			{
+				if(!inside)
+					ui_num_popups--;
+				ui_set_active_item(0);
+			}
 		}
-	}
-	else if(ui_hot_item() == &ui_popup_id)
-	{
-		if(ui_mouse_button(0))
-			ui_set_active_item(&ui_popup_id);
-	}
-	
-	int corners = CORNER_ALL;
-	if(ui_popup_is_menu)
-		corners = CORNER_R|CORNER_B;
-	
-	RECT r = ui_popup_rect;
-	ui_draw_rect(&r, vec4(0.5f,0.5f,0.5f,0.75f), corners, 3.0f);
-	ui_margin(&ui_popup_rect, 1.0f, &r);
-	ui_draw_rect(&r, vec4(0,0,0,0.75f), corners, 3.0f);
-	ui_margin(&ui_popup_rect, 4.0f, &r);
-	
-	if(ui_popup_func(r))
-		ui_popup_id = 0;
+		else if(ui_hot_item() == &ui_popups[i].id)
+		{
+			if(ui_mouse_button(0))
+				ui_set_active_item(&ui_popups[i].id);
+		}
 		
-	if(inp_key_pressed(KEY_ESC))
-		ui_popup_id = 0;
+		int corners = CORNER_ALL;
+		if(ui_popups[i].is_menu)
+			corners = CORNER_R|CORNER_B;
+		
+		RECT r = ui_popups[i].rect;
+		ui_draw_rect(&r, vec4(0.5f,0.5f,0.5f,0.75f), corners, 3.0f);
+		ui_margin(&r, 1.0f, &r);
+		ui_draw_rect(&r, vec4(0,0,0,0.75f), corners, 3.0f);
+		ui_margin(&r, 4.0f, &r);
+		
+		if(ui_popups[i].func(r))
+			ui_num_popups--;
+			
+		if(inp_key_down(KEY_ESC))
+			ui_num_popups--;
+	}
 }
 
 LAYERGROUP *EDITOR::get_selected_group()
@@ -1205,6 +1213,51 @@ static void do_map_editor(RECT view, RECT toolbar)
 	ui_clip_disable();
 }
 
+static int select_image_selected = -100;
+static int select_image_current = -100;
+
+static int popup_select_image(RECT view)
+{
+	RECT buttonbar, imageview;
+	ui_vsplit_l(&view, 80.0f, &buttonbar, &view);
+	ui_margin(&view, 10.0f, &imageview);
+	
+	int show_image = select_image_current;
+	
+	for(int i = -1; i < editor.map.images.len(); i++)
+	{
+		RECT button;
+		ui_hsplit_t(&buttonbar, 12.0f, &button, &buttonbar);
+		ui_hsplit_t(&buttonbar, 2.0f, 0, &buttonbar);
+		
+		if(ui_mouse_inside(&button))
+			show_image = i;
+			
+		if(i == -1)
+		{
+			if(do_editor_button(&editor.map.images[i], "None", i==select_image_current, &button, draw_editor_button_menuitem, 0, 0))
+				select_image_selected = -1;
+		}
+		else
+		{
+			char buf[64];
+			sprintf(buf, "%d", i);
+			if(do_editor_button(&editor.map.images[i], buf, i==select_image_current, &button, draw_editor_button_menuitem, 0, 0))
+				select_image_selected = i;
+		}
+	}
+	
+	if(show_image >= 0 && show_image < editor.map.images.len())
+		gfx_texture_set(editor.map.images[show_image]->tex_id);
+	else
+		gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_quads_drawTL(imageview.x, imageview.y, imageview.w, imageview.h);
+	gfx_quads_end();
+
+	return 0;
+}
+
 int EDITOR::do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val)
 {
 	int change = -1;
@@ -1278,6 +1331,24 @@ int EDITOR::do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val
 			{
 				*new_val = new_color;
 				change = i;
+			}
+		}
+		else if(props[i].type == PROPTYPE_IMAGE)
+		{
+			if(do_editor_button(&ids[i], "Choose", 0, &shifter, draw_editor_button, 0, 0))
+			{
+				static int select_image_popup_id = 0;
+				select_image_selected = -100;
+				select_image_current = props[i].value;
+				ui_invoke_popup_menu(&select_image_popup_id, 0, ui_mouse_x(), ui_mouse_y(), 400, 300, popup_select_image);
+			}
+			
+			if(select_image_selected != -100)
+			{
+				*new_val = select_image_selected;
+				change = i;
+				select_image_current = select_image_selected;
+				select_image_selected = -100;
 			}
 		}
 	}
@@ -2253,8 +2324,6 @@ static void editor_render()
 	if(editor.gui_active)
 		render_statusbar(statusbar);
 	
-	//do_propsdialog();
-
 	// render butt ugly mouse cursor
 	float mx = ui_mouse_x();
 	float my = ui_mouse_y();

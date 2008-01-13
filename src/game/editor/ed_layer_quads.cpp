@@ -169,7 +169,7 @@ int LAYER_QUADS::render_properties(RECT *toolbox)
 		};
 		
 		PROPERTY props[] = {
-			{"Image", image, PROPTYPE_INT_STEP, -1, 0},
+			{"Image", image, PROPTYPE_IMAGE, -1, 0},
 			{0},
 		};
 		
