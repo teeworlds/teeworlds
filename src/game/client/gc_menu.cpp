@@ -183,7 +183,7 @@ static void ui_draw_checkbox_number(const void *id, const char *text, int checke
 	ui_draw_checkbox_common(id, text, buf, r);
 }
 
-int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hidden=false)
+int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float font_size, bool hidden=false)
 {
     int inside = ui_mouse_inside(rect);
 	int r = 0;
@@ -199,7 +199,7 @@ int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hid
 
 			for (int i = 1; i <= len; i++)
 			{
-				if (gfx_text_width(0, 14.0f, str, i) + 10 > mx_rel)
+				if (gfx_text_width(0, font_size, str, i) + 10 > mx_rel)
 				{
 					at_index = i - 1;
 					break;
@@ -288,13 +288,13 @@ int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hid
 		display_str = stars;
 	}
 	
-	ui_do_label(&textbox, display_str, 14, -1);
+	ui_do_label(&textbox, display_str, font_size, -1);
 
 	if (ui_last_active_item() == id && !just_got_active)
 	{
-		float w = gfx_text_width(0, 14.0f, display_str, at_index);
+		float w = gfx_text_width(0, font_size, display_str, at_index);
 		textbox.x += w*ui_scale();
-		ui_do_label(&textbox, "_", 14, -1);
+		ui_do_label(&textbox, "_", font_size, -1);
 	}
 
 	return r;
@@ -1023,7 +1023,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 	ui_hsplit_t(&filters, 20.0f, &button, &filters);
 	ui_do_label(&button, "Quick search: ", 14.0f, -1);
 	ui_vsplit_l(&button, 95.0f, 0, &button);
-	ui_do_edit_box(&config.b_filter_string, &button, config.b_filter_string, sizeof(config.b_filter_string));
+	ui_do_edit_box(&config.b_filter_string, &button, config.b_filter_string, sizeof(config.b_filter_string), 14.0f);
 
 	ui_vsplit_l(&filters, 180.0f, &filters, &types);
 
@@ -1049,7 +1049,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 		
 		char buf[8];
 		sprintf(buf, "%d", config.b_filter_ping);
-		ui_do_edit_box(&config.b_filter_ping, &editbox, buf, sizeof(buf));
+		ui_do_edit_box(&config.b_filter_ping, &editbox, buf, sizeof(buf), 14.0f);
 		config.b_filter_ping = atoi(buf);
 		
 		ui_do_label(&button, "Maximum ping", 14.0f, -1);
@@ -1100,7 +1100,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 		ui_hsplit_t(&toolbox, 20.0f, &button, &toolbox);
 		ui_do_label(&button, "Host address:", 14.0f, -1);
 		ui_vsplit_l(&button, 100.0f, 0, &button);
-		ui_do_edit_box(&config.ui_server_address, &button, config.ui_server_address, sizeof(config.ui_server_address));
+		ui_do_edit_box(&config.ui_server_address, &button, config.ui_server_address, sizeof(config.ui_server_address), 14.0f);
 	}
 }
 
@@ -1119,7 +1119,7 @@ static void menu2_render_settings_player(RECT main_view)
 		ui_do_label(&button, "Name:", 14.0, -1);
 		ui_vsplit_l(&button, 80.0f, 0, &button);
 		ui_vsplit_l(&button, 180.0f, &button, 0);
-		ui_do_edit_box(config.player_name, &button, config.player_name, sizeof(config.player_name));
+		ui_do_edit_box(config.player_name, &button, config.player_name, sizeof(config.player_name), 14.0f);
 
 		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
 		if (ui_do_button(&config.cl_dynamic_camera, "Dynamic camera", config.cl_dynamic_camera, &button, ui_draw_checkbox, 0))
@@ -1504,7 +1504,7 @@ static void menu2_render_settings_sound(RECT main_view)
 		ui_do_label(&button, "Sample Rate", 14.0f, -1);
 		ui_vsplit_l(&button, 110.0f, 0, &button);
 		ui_vsplit_l(&button, 180.0f, &button, 0);
-		ui_do_edit_box(&config.snd_rate, &button, buf, sizeof(buf));
+		ui_do_edit_box(&config.snd_rate, &button, buf, sizeof(buf), 14.0f);
 		int before = config.snd_rate;
 		config.snd_rate = atoi(buf);
 		
@@ -1937,7 +1937,7 @@ int menu2_render()
 			ui_vsplit_l(&textbox, 20.0f, 0, &textbox);
 			ui_vsplit_r(&textbox, 60.0f, &textbox, 0);
 			ui_do_label(&label, "Nickname:", 20, -1);
-			ui_do_edit_box(&config.player_name, &textbox, config.player_name, sizeof(config.player_name));			
+			ui_do_edit_box(&config.player_name, &textbox, config.player_name, sizeof(config.player_name), 14.0f);
 		}
 		else
 		{

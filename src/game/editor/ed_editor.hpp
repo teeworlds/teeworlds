@@ -30,7 +30,7 @@ enum
 	MODE_IMAGES,
 	
 	DIALOG_NONE=0,
-	DIALOG_LOAD_IMAGE,
+	DIALOG_FILE,
 };
 
 typedef struct // as in file
@@ -342,7 +342,6 @@ public:
 		gui_active = true;
 		proof_borders = false;
 		
-		
 		animate = false;
 		animate_start = 0;
 		animate_time = 0;
@@ -351,6 +350,10 @@ public:
 		
 		show_envelope_editor = 0;
 	}
+	
+	void do_file_dialog(const char *title, const char *button_text,
+		const char *basepath, const char *default_name,
+		void (*func)(const char *filename));
 	
 	void make_game_group(LAYERGROUP *group);
 	void make_game_layer(LAYER *layer);

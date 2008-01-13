@@ -577,6 +577,7 @@ void gfx_swap()
 			for(; index < 1000; index++)
 			{
 				IOHANDLE io;
+				sprintf(filename, "screenshots/screenshot%04d.png", index);
 				engine_savepath(filename, wholepath, sizeof(wholepath));
 				
 				io = io_open(wholepath, IOFLAG_READ);

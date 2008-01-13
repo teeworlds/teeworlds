@@ -157,7 +157,7 @@ static void ui_draw_rect(const RECT *r, vec4 color, int corners, float rounding)
 }
 
 // copied from gc_menu.cpp, should be more generalized
-extern int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, bool hidden=false);
+extern int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float font_size, bool hidden=false);
 
 static vec4 get_button_color(const void *id, int checked)
 {
@@ -179,42 +179,53 @@ static vec4 get_button_color(const void *id, int checked)
 static void draw_editor_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), CORNER_ALL, 2.0f);
+	ui_draw_rect(r, get_button_color(id, checked), CORNER_ALL, 3.0f);
 	ui_do_label(r, text, 10, 0, -1);
+}
+
+static void draw_editor_button_file(const void *id, const char *text, int checked, const RECT *r, const void *extra)
+{
+	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
+	if(ui_hot_item() == id)
+		ui_draw_rect(r, get_button_color(id, checked), CORNER_ALL, 3.0f);
+	
+	RECT t = *r;
+	ui_vmargin(&t, 5.0f, &t);
+	ui_do_label(&t, text, 10, -1, -1);
 }
 
 static void draw_editor_button_l(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), CORNER_L, 2.0f);
+	ui_draw_rect(r, get_button_color(id, checked), CORNER_L, 3.0f);
 	ui_do_label(r, text, 10, 0, -1);
 }
 
 static void draw_editor_button_m(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), 0, 2.0f);
+	ui_draw_rect(r, get_button_color(id, checked), 0, 3.0f);
 	ui_do_label(r, text, 10, 0, -1);
 }
 
 static void draw_editor_button_r(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), CORNER_R, 2.0f);
+	ui_draw_rect(r, get_button_color(id, checked), CORNER_R, 3.0f);
 	ui_do_label(r, text, 10, 0, -1);
 }
 
 static void draw_inc_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(ui_hot_item == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), CORNER_R, 2.0f);
+	ui_draw_rect(r, get_button_color(id, checked), CORNER_R, 3.0f);
 	ui_do_label(r, ">", 10, 0, -1);
 }
 
 static void draw_dec_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(ui_hot_item == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), CORNER_L, 2.0f);
+	ui_draw_rect(r, get_button_color(id, checked), CORNER_L, 3.0f);
 	ui_do_label(r, "<", 10, 0, -1);
 }
 
@@ -1406,6 +1417,21 @@ static void render_layers(RECT toolbox, RECT toolbar, RECT view)
 	}
 }
 
+static void add_image(const char *filename)
+{
+	char buf[512];
+	sprintf(buf, "tilesets/%s", filename);
+
+	IMAGE imginfo;
+	if(!gfx_load_png(&imginfo, buf))
+		return;
+
+	IMAGE *img = new IMAGE;
+	*img = imginfo;
+	img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO);
+	editor.map.images.add(img);
+}
+
 static void render_images(RECT toolbox, RECT toolbar, RECT view)
 {
 	static int selected_image = 0;
@@ -1447,7 +1473,7 @@ static void render_images(RECT toolbox, RECT toolbar, RECT view)
 	static int new_image_button = 0;
 	ui_vsplit_l(&toolbar, 40.0f, &slot, &toolbar);
 	if(ui_do_button(&new_image_button, "Add", 0, &slot, draw_editor_button, "Load a new image to use in the map"))
-		editor.dialog = DIALOG_LOAD_IMAGE;
+		editor.do_file_dialog("Add Image", "Add", "tilesets", "", add_image);
 
 	// replace image
 	static int replace_image_button = 0;
@@ -1463,49 +1489,97 @@ static void render_images(RECT toolbox, RECT toolbar, RECT view)
 	if(ui_do_button(&remove_button, "Remove", 0, &slot, draw_editor_button, "Discards the selected image (NOT IMPEMENTED)"))
 		(void)0;
 }
-	
+
+
+static const char *file_dialog_title = 0;
+static const char *file_dialog_button_text = 0;
+static void (*file_dialog_func)(const char *filename);
+static char file_dialog_filename[512] = {0};
+
 static void editor_listdir_callback(const char *name, int is_dir, void *user)
 {
-	if(name[0] == '.') // skip this shit!
+	if(name[0] == '.' || is_dir) // skip this shit!
 		return;
 	
 	RECT *view = (RECT *)user;
 	RECT button;
 	ui_hsplit_t(view, 15.0f, &button, view);
 	ui_hsplit_t(view, 2.0f, 0, view);
+	//char buf[512];
 	
-	if(ui_do_button((void*)(10+(int)button.y), name, 0, &button, draw_editor_button, 0))
-	{
-		char buf[512];
-		sprintf(buf, "tilesets/%s", name);
-		
-		IMAGE imginfo;
-		if(!gfx_load_png(&imginfo, buf))
-			return;
-		
-		IMAGE *img = new IMAGE;
-		*img = imginfo;
-		img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO);
-		editor.map.images.add(img);
-		
-		//tilesets_set_img(tilesets_new(), img.width, img.height, img.data);
-		editor.dialog = DIALOG_NONE;
-	}
+	if(ui_do_button((void*)(10+(int)button.y), name, 0, &button, draw_editor_button_file, 0))
+		strncpy(file_dialog_filename, name, sizeof(file_dialog_filename));
 }
 
-static void render_dialog_load_image()
+static void render_file_dialog()
 {
 	// GUI coordsys
-	gfx_clear(0.25f,0.25f,0.25f);
-		
 	gfx_mapscreen(ui_screen()->x, ui_screen()->y, ui_screen()->w, ui_screen()->h);
 	
 	RECT view = *ui_screen();
+	ui_draw_rect(&view, vec4(0,0,0,0.25f), 0, 0);
+	ui_vmargin(&view, 150.0f, &view);
+	ui_hmargin(&view, 50.0f, &view);
+	ui_draw_rect(&view, vec4(0,0,0,0.75f), CORNER_ALL, 5.0f);
+	ui_margin(&view, 10.0f, &view);
+
+	RECT title, filebox, filebox_label, buttonbar;
+	ui_hsplit_t(&view, 18.0f, &title, &view);
+	ui_hsplit_t(&view, 5.0f, 0, &view); // some spacing
+	ui_hsplit_b(&view, 14.0f, &view, &buttonbar);
+	ui_hsplit_b(&view, 10.0f, &view, 0); // some spacing
+	ui_hsplit_b(&view, 14.0f, &view, &filebox);
+	ui_vsplit_l(&filebox, 50.0f, &filebox_label, &filebox);
+	
+	// title
+	ui_draw_rect(&title, vec4(1,1,1,0.25f), CORNER_ALL, 5.0f);
+	ui_vmargin(&title, 10.0f, &title);
+	ui_do_label(&title, file_dialog_title, 14.0f, -1, -1);
+	
+	// filebox
+	ui_do_label(&filebox_label, "Filename:", 10.0f, -1, -1);
+	
+	static int filebox_id = 0;
+	ui_do_edit_box(&filebox_id, &filebox, file_dialog_filename, sizeof(file_dialog_filename), 10.0f);
+	
+	// the list
 	fs_listdir("tilesets", editor_listdir_callback, &view);
 	
-	if(inp_key_pressed(KEY_ESC))
+	// the buttons
+	static int ok_button = 0;	
+	static int cancel_button = 0;	
+
+	RECT button;
+	ui_vsplit_r(&buttonbar, 50.0f, &buttonbar, &button);
+	if(ui_do_button(&ok_button, file_dialog_button_text, 0, &button, draw_editor_button, 0))
+	{
+		if(file_dialog_func)
+			file_dialog_func(file_dialog_filename);
+		editor.dialog = DIALOG_NONE;
+	}
+
+	ui_vsplit_r(&buttonbar, 40.0f, &buttonbar, &button);
+	ui_vsplit_r(&buttonbar, 50.0f, &buttonbar, &button);
+	if(ui_do_button(&cancel_button, "Cancel", 0, &button, draw_editor_button, 0) || inp_key_pressed(KEY_ESC))
 		editor.dialog = DIALOG_NONE;
 }
+
+void EDITOR::do_file_dialog(const char *title, const char *button_text,
+	const char *basepath, const char *default_name,
+	void (*func)(const char *filename))
+{
+	file_dialog_title = title;
+	file_dialog_button_text = button_text;
+	file_dialog_func = func;
+	file_dialog_filename[0] = 0;
+	
+	if(default_name)
+		strncpy(file_dialog_filename, default_name, sizeof(file_dialog_filename));
+		
+	editor.dialog = DIALOG_FILE;
+}
+
+
 
 static void render_modebar(RECT view)
 {
@@ -1630,7 +1704,7 @@ static void render_envelopeeditor(RECT view)
 
 			ui_vsplit_l(&toolbar, 80.0f, &button, &toolbar);
 			static int name_box = 0;
-			ui_do_edit_box(&name_box, &button, envelope->name, sizeof(envelope->name));
+			ui_do_edit_box(&name_box, &button, envelope->name, sizeof(envelope->name), 10.0f);
 		}
 	}
 	
@@ -1976,9 +2050,7 @@ static void editor_render()
 		}
 	}
 	
-	if(editor.dialog == DIALOG_LOAD_IMAGE)
-		render_dialog_load_image();
-	else if(editor.mode == MODE_MAP)
+	if(editor.mode == MODE_MAP)
 		render_map(toolbox, view);
 	else if(editor.mode == MODE_LAYERS)
 		render_layers(toolbox, toolbar, view);
@@ -1994,6 +2066,9 @@ static void editor_render()
 			render_envelopeeditor(envelope_editor);
 		render_statusbar(statusbar);
 	}
+
+	if(editor.dialog == DIALOG_FILE)
+		render_file_dialog();
 	
 	//do_propsdialog();
 
