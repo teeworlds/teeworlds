@@ -631,7 +631,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 	ui_vsplit_r(&view, 200.0f, &view, &server_details);
 
 	// server list
-	ui_hsplit_t(&view, 20.0f, &headers, &view);
+	ui_hsplit_t(&view, 16.0f, &headers, &view);
 	//ui_hsplit_b(&view, 110.0f, &view, &filters);
 	ui_hsplit_b(&view, 5.0f, &view, 0);
 	ui_hsplit_b(&view, 20.0f, &view, &status);
@@ -684,7 +684,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 		//{COL_VERSION,	-1,						"Ver",		1, 45.0f, FIXED, {0}, {0}},
 		{-1,			-1,						" ",		1, 5.0f, 0, {0}, {0}},
 		//{COL_PROGRESS,	BROWSESORT_PROGRESSION,	"%",		1, 20.0f, FIXED, {0}, {0}},
-		{COL_PING,		BROWSESORT_PING,		"Ping",		1, 40.0f, FIXED, {0}, {0}},
+		{COL_PING,		BROWSESORT_PING,		"Ping",		1, 25.0f, FIXED, {0}, {0}},
 	};
 	
 	int num_cols = sizeof(cols)/sizeof(column);
@@ -785,6 +785,8 @@ static void menu2_render_serverbrowser(RECT main_view)
 			
 		int selected = strcmp(item->address, config.ui_server_address) == 0; //selected_index==item_index;
 		
+		
+			/*
 		if(selected)
 		{
 			selected_index = i;
@@ -832,9 +834,19 @@ static void menu2_render_serverbrowser(RECT main_view)
 		}
 		else
         {
-			ui_hsplit_t(&view, 20.0f, &row, &view);
+			*/
+			ui_hsplit_t(&view, 17.0f, &row, &view);
             select_hit_box = row;
-        }
+		//}
+
+		if(selected)
+		{
+			selected_index = i;
+			RECT r = row;
+			ui_margin(&r, 1.5f, &r);
+			ui_draw_rect(&r, vec4(1,1,1,0.5f), CORNER_ALL, 4.0f);
+		}
+
 
 		// make sure that only those in view can be selected
 		if(row.y+row.h > original_view.y)
@@ -875,18 +887,18 @@ static void menu2_render_serverbrowser(RECT main_view)
 					ui_draw_browse_icon(0x100, &button);
 			}
 			else if(id == COL_NAME)
-				ui_do_label(&button, item->name, 15.0f, -1);
+				ui_do_label(&button, item->name, 12.0f, -1);
 			else if(id == COL_MAP)
-				ui_do_label(&button, item->map, 15.0f, -1);
+				ui_do_label(&button, item->map, 12.0f, -1);
 			else if(id == COL_PLAYERS)
 			{
 				sprintf(temp, "%i/%i", item->num_players, item->max_players);
-				ui_do_label(&button, temp, 15.0f, 1);
+				ui_do_label(&button, temp, 12.0f, 1);
 			}
 			else if(id == COL_PING)
 			{
 				sprintf(temp, "%i", item->latency);
-				ui_do_label(&button, temp, 15.0f, 1);
+				ui_do_label(&button, temp, 12.0f, 1);
 			}
 			else if(id == COL_PROGRESS)
 			{
@@ -899,7 +911,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 				const char *version = item->version;
 				if(strcmp(version, "0.3 e2d7973c6647a13c") == 0) // TODO: remove me later on
 					version = "0.3.0";
-				ui_do_label(&button, version, 15.0f, 1);
+				ui_do_label(&button, version, 12.0f, 1);
 			}			
 			else if(id == COL_GAMETYPE)
 			{
@@ -907,7 +919,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 				if(item->game_type == GAMETYPE_DM) type = "DM";
 				else if(item->game_type == GAMETYPE_TDM) type = "TDM";
 				else if(item->game_type == GAMETYPE_CTF) type = "CTF";
-				ui_do_label(&button, type, 15.0f, 0);
+				ui_do_label(&button, type, 12.0f, 0);
 			}
 		}
 	}

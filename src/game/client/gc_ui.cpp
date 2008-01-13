@@ -27,6 +27,7 @@ void ui_set_hot_item(const void *id) { becomming_hot_item = id; }
 void ui_set_active_item(const void *id) { active_item = id; if (id) last_active_item = id; }
 void ui_clear_last_active_item() { last_active_item = 0; }
 const void *ui_hot_item() { return hot_item; }
+const void *ui_next_hot_item() { return becomming_hot_item; }
 const void *ui_active_item() { return active_item; }
 const void *ui_last_active_item() { return last_active_item; }
 
@@ -234,25 +235,36 @@ void ui_hmargin(const RECT *original, float cut, RECT *other_rect)
     other_rect->h = r.h - 2*cut;
 }
 
+
 int ui_do_button(const void *id, const char *text, int checked, const RECT *r, ui_draw_button_func draw_func, const void *extra)
 {
     /* logic */
     int ret = 0;
     int inside = ui_mouse_inside(r);
+	static int button_used = 0;
 
 	if(ui_active_item() == id)
 	{
-		if(!ui_mouse_button(0))
+		if(!ui_mouse_button(button_used))
 		{
 			if(inside && checked >= 0)
-				ret = 1;
+				ret = 1+button_used;
 			ui_set_active_item(0);
 		}
 	}
 	else if(ui_hot_item() == id)
 	{
 		if(ui_mouse_button(0))
+		{
 			ui_set_active_item(id);
+			button_used = 0;
+		}
+		
+		if(ui_mouse_button(1))
+		{
+			ui_set_active_item(id);
+			button_used = 1;
+		}
 	}
 	
 	if(inside)

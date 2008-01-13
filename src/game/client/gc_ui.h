@@ -35,6 +35,7 @@ void ui_set_hot_item(const void *id);
 void ui_set_active_item(const void *id);
 void ui_clear_last_active_item();
 const void *ui_hot_item();
+const void *ui_next_hot_item();
 const void *ui_active_item();
 const void *ui_last_active_item();
 

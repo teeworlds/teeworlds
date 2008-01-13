@@ -12,8 +12,9 @@ LAYER_GAME::~LAYER_GAME()
 {
 }
 
-void LAYER_GAME::render_properties(RECT *toolbox)
+int LAYER_GAME::render_properties(RECT *toolbox)
 {
-	LAYER_TILES::render_properties(toolbox);
+	int r = LAYER_TILES::render_properties(toolbox);
 	image = -1;
+	return r;
 }

@@ -157,7 +157,7 @@ void LAYER_QUADS::get_size(float *w, float *h)
 
 extern int selected_points;
 
-void LAYER_QUADS::render_properties(RECT *toolbox)
+int LAYER_QUADS::render_properties(RECT *toolbox)
 {
 	// layer props
 	if(editor.props == PROPS_LAYER)
@@ -276,6 +276,8 @@ void LAYER_QUADS::render_properties(RECT *toolbox)
 			}
 		}
 	}	
+	
+	return 0;
 }
 
 

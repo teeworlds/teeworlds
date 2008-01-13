@@ -184,10 +184,26 @@ void LAYER_TILES::resize(int new_w, int new_h)
 }
 
 
-void LAYER_TILES::render_properties(RECT *toolbox)
+int LAYER_TILES::render_properties(RECT *toolbox)
 {
-	if(editor.props != PROPS_LAYER)
-		return;
+	RECT button;
+	ui_hsplit_b(toolbox, 12.0f, toolbox, &button);
+	bool in_gamegroup = editor.game_group->layers.find(this) != -1;
+	static int col_button = 0;
+	if(do_editor_button(&col_button, "Make Collision", in_gamegroup?0:-1, &button, draw_editor_button, 0, "Constructs collision from the this layer"))
+	{
+		LAYER_TILES *gl = editor.game_layer;
+		int w = min(gl->width, width);
+		int h = min(gl->height, height);
+		for(int y = 0; y < h; y++)
+			for(int x = 0; x < w; x++)
+			{
+				if(gl->tiles[y*gl->width+x].index <= TILE_SOLID)
+					gl->tiles[y*gl->width+x].index = tiles[y*width+x].index?TILE_SOLID:TILE_AIR;
+			}
+			
+		return 1;
+	}
 	
 	enum
 	{
@@ -214,4 +230,6 @@ void LAYER_TILES::render_properties(RECT *toolbox)
 		resize(new_val, height);
 	else if(prop == PROP_HEIGHT && new_val > 1)
 		resize(width, new_val);
+	
+	return 0;
 }

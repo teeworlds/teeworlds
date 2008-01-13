@@ -25,8 +25,7 @@ void swap(T &a, T &b)
 
 enum
 {
-	MODE_MAP=0,
-	MODE_LAYERS,
+	MODE_LAYERS=0,
 	MODE_IMAGES,
 	
 	DIALOG_NONE=0,
@@ -198,7 +197,7 @@ public:
 	virtual void brush_flip_y() {}
 	
 	virtual void render() {}
-	virtual void render_properties(RECT *toolbox) {}
+	virtual int render_properties(RECT *toolbox) { return 0; }
 	
 	virtual void get_size(float *w, float *h) { *w = 0; *h = 0;}
 	
@@ -351,13 +350,14 @@ public:
 		show_envelope_editor = 0;
 	}
 	
-	void do_file_dialog(const char *title, const char *button_text,
+	void invoke_file_dialog(const char *title, const char *button_text,
 		const char *basepath, const char *default_name,
 		void (*func)(const char *filename));
 	
 	void make_game_group(LAYERGROUP *group);
 	void make_game_layer(LAYER *layer);
 	
+	void reset(bool create_default=true);
 	int save(const char *filename);
 	int load(const char *filename);
 
@@ -431,7 +431,7 @@ public:
 	virtual void brush_flip_x();
 	virtual void brush_flip_y();
 	
-	virtual void render_properties(RECT *toolbox);
+	virtual int render_properties(RECT *toolbox);
 
 	void get_size(float *w, float *h) { *w = width*32.0f;  *h = height*32.0f; }
 	
@@ -458,7 +458,7 @@ public:
 	virtual void brush_flip_x();
 	virtual void brush_flip_y();
 	
-	virtual void render_properties(RECT *toolbox);
+	virtual int render_properties(RECT *toolbox);
 	
 	void get_size(float *w, float *h);
 	
@@ -473,5 +473,8 @@ public:
 	LAYER_GAME(int w, int h);
 	~LAYER_GAME();
 
-	virtual void render_properties(RECT *toolbox);
+	virtual int render_properties(RECT *toolbox);
 };
+
+int do_editor_button(const void *id, const char *text, int checked, const RECT *r, ui_draw_button_func draw_func, int flags, const char *tooltip);
+void draw_editor_button(const void *id, const char *text, int checked, const RECT *r, const void *extra);

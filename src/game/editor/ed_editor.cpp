@@ -23,37 +23,12 @@ static int background_texture = 0;
 static int cursor_texture = 0;
 static int entities_texture = 0;
 
-// backwards compatiblity
-class mapres_image
-{
-public:
-	int width;
-	int height;
-	int image_data;
-};
 
-
-struct mapres_tilemap
-{
-	int image;
-	int width;
-	int height;
-	int x, y;
-	int scale;
-	int data;
-	int main;
-};
-
-enum
-{
-	MAPRES_REGISTERED=0x8000,
-	MAPRES_IMAGE=0x8001,
-	MAPRES_TILEMAP=0x8002,
-	MAPRES_COLLISIONMAP=0x8003,
-	MAPRES_TEMP_THEME=0x8fff,
-};
-
-
+// popup menu handling
+static RECT ui_popup_rect;
+static void *ui_popup_id = 0;
+static int (*ui_popup_func)(RECT rect);
+static int ui_popup_is_menu = 0;
 
 EDITOR editor;
 
@@ -147,6 +122,9 @@ int LAYERGROUP::swap_layers(int index0, int index1)
 /********************************************************
  OTHER
 *********************************************************/
+
+static int ui_got_context = 0;
+
 static void ui_draw_rect(const RECT *r, vec4 color, int corners, float rounding)
 {
 	gfx_texture_set(-1);
@@ -176,7 +154,7 @@ static vec4 get_button_color(const void *id, int checked)
 	return vec4(1,1,1,0.5f);
 }
 
-static void draw_editor_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
+void draw_editor_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
 	ui_draw_rect(r, get_button_color(id, checked), CORNER_ALL, 3.0f);
@@ -184,6 +162,43 @@ static void draw_editor_button(const void *id, const char *text, int checked, co
 }
 
 static void draw_editor_button_file(const void *id, const char *text, int checked, const RECT *r, const void *extra)
+{
+	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
+	if(ui_hot_item() == id)
+		ui_draw_rect(r, get_button_color(id, checked), CORNER_ALL, 3.0f);
+	
+	RECT t = *r;
+	ui_vmargin(&t, 5.0f, &t);
+	ui_do_label(&t, text, 10, -1, -1);
+}
+
+static void draw_editor_button_menu(const void *id, const char *text, int checked, const RECT *rect, const void *extra)
+{
+	/*
+	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
+	if(ui_hot_item() == id)
+		ui_draw_rect(r, get_button_color(id, checked), CORNER_ALL, 3.0f);
+	*/
+
+	RECT r = *rect;
+	if(ui_popup_id == id)
+	{
+		ui_draw_rect(&r, vec4(0.5f,0.5f,0.5f,0.75f), CORNER_T, 3.0f);
+		ui_margin(&r, 1.0f, &r);
+		ui_draw_rect(&r, vec4(0,0,0,0.75f), CORNER_T, 3.0f);
+	}
+	else
+		ui_draw_rect(&r, vec4(0.5f,0.5f,0.5f, 1.0f), CORNER_T, 3.0f);
+	
+
+	r = *rect;
+	ui_vmargin(&r, 5.0f, &r);
+	ui_do_label(&r, text, 10, -1, -1);
+	
+	//RECT t = *r;
+}
+
+static void draw_editor_button_menuitem(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
 	if(ui_hot_item() == id)
@@ -229,6 +244,23 @@ static void draw_dec_button(const void *id, const char *text, int checked, const
 	ui_do_label(r, "<", 10, 0, -1);
 }
 
+enum
+{
+	BUTTON_CONTEXT=1,
+};
+
+int do_editor_button(const void *id, const char *text, int checked, const RECT *r, ui_draw_button_func draw_func, int flags, const char *tooltip)
+{
+	if(ui_mouse_inside(r))
+	{
+		if(flags&BUTTON_CONTEXT)
+			ui_got_context = 1;
+		if(tooltip)
+			editor.tooltip = tooltip;
+	}
+	
+	return ui_do_button(id, text, checked, r, draw_func, 0);
+}
 
 
 static void render_background(RECT view, int texture, float size, float brightness)
@@ -308,6 +340,57 @@ static int ui_do_value_selector(void *id, RECT *r, const char *label, int curren
 	return current;
 }
 
+static void ui_invoke_popup_menu(void *id, int flags, float x, float y, float w, float h, int (*func)(RECT rect))
+{
+	dbg_msg("", "invoked");
+	ui_popup_is_menu = flags;
+	ui_popup_id = id;
+	ui_popup_rect.x = x;
+	ui_popup_rect.y = y;
+	ui_popup_rect.w = w;
+	ui_popup_rect.h = h;
+	ui_popup_func = func;
+}
+
+static void ui_do_popup_menu()
+{
+	if(!ui_popup_id)
+		return;
+		
+	bool inside = ui_mouse_inside(&ui_popup_rect);
+	ui_set_hot_item(&ui_popup_id);
+	
+	if(ui_active_item() == &ui_popup_id)
+	{
+		if(!ui_mouse_button(0))
+		{
+			if(!inside)
+				ui_popup_id = 0;
+			ui_set_active_item(0);
+		}
+	}
+	else if(ui_hot_item() == &ui_popup_id)
+	{
+		if(ui_mouse_button(0))
+			ui_set_active_item(&ui_popup_id);
+	}
+	
+	int corners = CORNER_ALL;
+	if(ui_popup_is_menu)
+		corners = CORNER_R|CORNER_B;
+	
+	RECT r = ui_popup_rect;
+	ui_draw_rect(&r, vec4(0.5f,0.5f,0.5f,0.75f), corners, 3.0f);
+	ui_margin(&ui_popup_rect, 1.0f, &r);
+	ui_draw_rect(&r, vec4(0,0,0,0.75f), corners, 3.0f);
+	ui_margin(&ui_popup_rect, 4.0f, &r);
+	
+	if(ui_popup_func(r))
+		ui_popup_id = 0;
+		
+	if(inp_key_pressed(KEY_ESC))
+		ui_popup_id = 0;
+}
 
 LAYERGROUP *EDITOR::get_selected_group()
 {
@@ -353,7 +436,7 @@ static void do_toolbar(RECT toolbar)
 	// animate button
 	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
 	static int animate_button = 0;
-	if(ui_do_button(&animate_button, "Anim", editor.animate, &button, draw_editor_button, "[ctrl+m] Toggle animation") ||
+	if(do_editor_button(&animate_button, "Anim", editor.animate, &button, draw_editor_button, 0, "[ctrl+m] Toggle animation") ||
 		(inp_key_down('M') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))))
 	{
 		editor.animate_start = time_get();
@@ -365,7 +448,7 @@ static void do_toolbar(RECT toolbar)
 	// proof button
 	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
 	static int proof_button = 0;
-	if(ui_do_button(&proof_button, "Proof", editor.proof_borders, &button, draw_editor_button, "[ctrl-p] Toggles proof borders. These borders represent what a player maximum can see.") ||
+	if(do_editor_button(&proof_button, "Proof", editor.proof_borders, &button, draw_editor_button, 0, "[ctrl-p] Toggles proof borders. These borders represent what a player maximum can see.") ||
 		(inp_key_down('P') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))))
 	{
 		editor.proof_borders = !editor.proof_borders;
@@ -376,12 +459,12 @@ static void do_toolbar(RECT toolbar)
 	// zoom group
 	ui_vsplit_l(&toolbar, 16.0f, &button, &toolbar);
 	static int zoom_out_button = 0;
-	if(ui_do_button(&zoom_out_button, "ZO", 0, &button, draw_editor_button_l, "[NumPad-] Zoom out") || inp_key_down(KEY_KP_SUBTRACT))
+	if(do_editor_button(&zoom_out_button, "ZO", 0, &button, draw_editor_button_l, 0, "[NumPad-] Zoom out") || inp_key_down(KEY_KP_SUBTRACT))
 		editor.zoom_level += 50;
 		
 	ui_vsplit_l(&toolbar, 16.0f, &button, &toolbar);
 	static int zoom_normal_button = 0;
-	if(ui_do_button(&zoom_normal_button, "1:1", 0, &button, draw_editor_button_m, "[NumPad*] Zoom to normal and remove editor offset") || inp_key_down(KEY_KP_MULTIPLY))
+	if(do_editor_button(&zoom_normal_button, "1:1", 0, &button, draw_editor_button_m, 0, "[NumPad*] Zoom to normal and remove editor offset") || inp_key_down(KEY_KP_MULTIPLY))
 	{
 		editor.editor_offset_x = 0;
 		editor.editor_offset_y = 0;
@@ -390,7 +473,7 @@ static void do_toolbar(RECT toolbar)
 		
 	ui_vsplit_l(&toolbar, 16.0f, &button, &toolbar);
 	static int zoom_in_button = 0;
-	if(ui_do_button(&zoom_in_button, "ZI", 0, &button, draw_editor_button_r, "[NumPad+] Zoom in") || inp_key_down(KEY_KP_ADD))
+	if(do_editor_button(&zoom_in_button, "ZI", 0, &button, draw_editor_button_r, 0, "[NumPad+] Zoom in") || inp_key_down(KEY_KP_ADD))
 		editor.zoom_level -= 50;
 	
 	if(editor.zoom_level < 50)
@@ -407,7 +490,7 @@ static void do_toolbar(RECT toolbar)
 		// flip buttons
 		ui_vsplit_l(&toolbar, 20.0f, &button, &toolbar);
 		static int flipx_button = 0;
-		if(ui_do_button(&flipx_button, "^X", enabled, &button, draw_editor_button_l, "Flip brush horizontal"))
+		if(do_editor_button(&flipx_button, "^X", enabled, &button, draw_editor_button_l, 0, "Flip brush horizontal"))
 		{
 			for(int i = 0; i < brush.layers.len(); i++)
 				brush.layers[i]->brush_flip_x();
@@ -415,7 +498,7 @@ static void do_toolbar(RECT toolbar)
 			
 		ui_vsplit_l(&toolbar, 20.0f, &button, &toolbar);
 		static int flipy_button = 0;
-		if(ui_do_button(&flipy_button, "^Y", enabled, &button, draw_editor_button_r, "Flip brush vertical"))
+		if(do_editor_button(&flipy_button, "^Y", enabled, &button, draw_editor_button_r, 0, "Flip brush vertical"))
 		{
 			for(int i = 0; i < brush.layers.len(); i++)
 				brush.layers[i]->brush_flip_y();
@@ -430,8 +513,8 @@ static void do_toolbar(RECT toolbar)
 		static int new_button = 0;
 		
 		LAYER_QUADS *qlayer = (LAYER_QUADS *)editor.get_selected_layer_type(0, LAYERTYPE_QUADS);
-		LAYER_TILES *tlayer = (LAYER_TILES *)editor.get_selected_layer_type(0, LAYERTYPE_TILES);
-		if(ui_do_button(&new_button, "Add Quad", qlayer?0:-1, &button, draw_editor_button, "Adds a new quad"))
+		//LAYER_TILES *tlayer = (LAYER_TILES *)editor.get_selected_layer_type(0, LAYERTYPE_TILES);
+		if(do_editor_button(&new_button, "Add Quad", qlayer?0:-1, &button, draw_editor_button, 0, "Adds a new quad"))
 		{
 			if(qlayer)
 			{
@@ -453,7 +536,7 @@ static void do_toolbar(RECT toolbar)
 		ui_vsplit_l(&toolbar, 10.0f, &button, &toolbar);
 		ui_vsplit_l(&toolbar, 60.0f, &button, &toolbar);
 		static int sq_button = 0;
-		if(ui_do_button(&sq_button, "Sq. Quad", editor.get_selected_quad()?0:-1, &button, draw_editor_button, "Squares the current quad"))
+		if(do_editor_button(&sq_button, "Sq. Quad", editor.get_selected_quad()?0:-1, &button, draw_editor_button, 0, "Squares the current quad"))
 		{
 			QUAD *q = editor.get_selected_quad();
 			if(q)
@@ -478,11 +561,12 @@ static void do_toolbar(RECT toolbar)
 			}
 		}
 
+		/*
 		ui_vsplit_l(&toolbar, 20.0f, &button, &toolbar);
 		ui_vsplit_l(&toolbar, 60.0f, &button, &toolbar);
 		bool in_gamegroup = editor.game_group->layers.find(tlayer) != -1;
 		static int col_button = 0;
-		if(ui_do_button(&col_button, "Make Col", (in_gamegroup&&tlayer)?0:-1, &button, draw_editor_button, "Constructs collision from the current layer"))
+		if(do_editor_button(&col_button, "Make Col", (in_gamegroup&&tlayer)?0:-1, &button, draw_editor_button, 0, "Constructs collision from the current layer"))
 		{
 			LAYER_TILES *gl = editor.game_layer;
 			int w = min(gl->width, tlayer->width);
@@ -494,7 +578,7 @@ static void do_toolbar(RECT toolbar)
 					if(gl->tiles[y*gl->width+x].index <= TILE_SOLID)
 						gl->tiles[y*gl->width+x].index = tlayer->tiles[y*tlayer->width+x].index?TILE_SOLID:TILE_AIR;
 				}
-		}
+		}*/
 	}
 }
 
@@ -849,7 +933,7 @@ static void do_map_editor(RECT view, RECT toolbar)
 	if(inside)
 	{
 		ui_set_hot_item(editor_id);
-		
+				
 		// do global operations like pan and zoom
 		if(ui_active_item() == 0 && ui_mouse_button(0))
 		{
@@ -869,6 +953,7 @@ static void do_map_editor(RECT view, RECT toolbar)
 		}
 
 		// brush editing
+		if(ui_hot_item() == editor_id)
 		{
 			if(brush.is_empty())
 				editor.tooltip = "Use left mouse button to drag and create a brush.";
@@ -987,58 +1072,59 @@ static void do_map_editor(RECT view, RECT toolbar)
 			}
 		}
 		
-		if(!show_picker && brush.is_empty())
+		// quad editing
 		{
-			// fetch layers
-			LAYERGROUP *g = editor.get_selected_group();
-			if(g)
-				g->mapscreen();
-				
-			for(int k = 0; k < num_edit_layers; k++)
+			if(!show_picker && brush.is_empty())
 			{
-				if(edit_layers[k]->type == LAYERTYPE_QUADS)
+				// fetch layers
+				LAYERGROUP *g = editor.get_selected_group();
+				if(g)
+					g->mapscreen();
+					
+				for(int k = 0; k < num_edit_layers; k++)
 				{
-					LAYER_QUADS *layer = (LAYER_QUADS *)edit_layers[k];
-	
-					gfx_texture_set(-1);
-					gfx_quads_begin();				
-					for(int i = 0; i < layer->quads.len(); i++)
+					if(edit_layers[k]->type == LAYERTYPE_QUADS)
 					{
-						for(int v = 0; v < 4; v++)
-							do_quad_point(&layer->quads[i], i, v);
-							
-						do_quad(&layer->quads[i], i);
+						LAYER_QUADS *layer = (LAYER_QUADS *)edit_layers[k];
+		
+						gfx_texture_set(-1);
+						gfx_quads_begin();				
+						for(int i = 0; i < layer->quads.len(); i++)
+						{
+							for(int v = 0; v < 4; v++)
+								do_quad_point(&layer->quads[i], i, v);
+								
+							do_quad(&layer->quads[i], i);
+						}
+						gfx_quads_end();
 					}
-					gfx_quads_end();
+				}
+				
+				gfx_mapscreen(ui_screen()->x, ui_screen()->y, ui_screen()->w, ui_screen()->h);
+			}		
+			
+			// do panning
+			if(ui_active_item() == editor_id)
+			{
+				if(operation == OP_PAN_WORLD)
+				{
+					editor.world_offset_x -= editor.mouse_delta_x*editor.world_zoom;
+					editor.world_offset_y -= editor.mouse_delta_y*editor.world_zoom;
+				}
+				else if(operation == OP_PAN_EDITOR)
+				{
+					editor.editor_offset_x -= editor.mouse_delta_x*editor.world_zoom;
+					editor.editor_offset_y -= editor.mouse_delta_y*editor.world_zoom;
+				}
+
+				// release mouse
+				if(!ui_mouse_button(0))
+				{
+					operation = OP_NONE;
+					ui_set_active_item(0);
 				}
 			}
-			
-			gfx_mapscreen(ui_screen()->x, ui_screen()->y, ui_screen()->w, ui_screen()->h);
-		}		
-		
-		// do panning
-		if(ui_active_item() == editor_id)
-		{
-			if(operation == OP_PAN_WORLD)
-			{
-				editor.world_offset_x -= editor.mouse_delta_x*editor.world_zoom;
-				editor.world_offset_y -= editor.mouse_delta_y*editor.world_zoom;
-			}
-			else if(operation == OP_PAN_EDITOR)
-			{
-				editor.editor_offset_x -= editor.mouse_delta_x*editor.world_zoom;
-				editor.editor_offset_y -= editor.mouse_delta_y*editor.world_zoom;
-			}
 		}
-
-		
-		// release mouse
-		if(!ui_mouse_button(0))
-		{
-			operation = OP_NONE;
-			ui_set_active_item(0);
-		}
-		
 	}
 
 	// render screen sizes	
@@ -1143,7 +1229,7 @@ int EDITOR::do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val
 			ui_draw_rect(&shifter, vec4(1,1,1,0.5f), 0, 0.0f);
 			ui_do_label(&shifter, buf, 10.0f, 0, -1);
 			
-			if(ui_do_button(&ids[i], 0, 0, &dec, draw_dec_button, "Decrease"))
+			if(do_editor_button(&ids[i], 0, 0, &dec, draw_dec_button, 0, "Decrease"))
 			{
 				if(inp_key_pressed(KEY_LSHIFT) || inp_key_pressed(KEY_RSHIFT))
 					*new_val = props[i].value-5;
@@ -1151,7 +1237,7 @@ int EDITOR::do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val
 					*new_val = props[i].value-1;
 				change = i;
 			}
-			if(ui_do_button(((char *)&ids[i])+1, 0, 0, &inc, draw_inc_button, "Increase"))
+			if(do_editor_button(((char *)&ids[i])+1, 0, 0, &inc, draw_inc_button, 0, "Increase"))
 			{
 				if(inp_key_pressed(KEY_LSHIFT) || inp_key_pressed(KEY_RSHIFT))
 					*new_val = props[i].value+5;
@@ -1199,10 +1285,143 @@ int EDITOR::do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val
 	return change;
 }
 
+static int popup_group(RECT view)
+{
+	// remove group button
+	RECT button;
+	ui_hsplit_b(&view, 12.0f, &view, &button);
+	static int delete_button = 0;
+	if(do_editor_button(&delete_button, "Delete Group", 0, &button, draw_editor_button, 0, "Delete group"))
+	{
+		editor.map.delete_group(selected_group);
+		return 1;
+	}
+
+	// new tile layer
+	ui_hsplit_b(&view, 10.0f, &view, &button);
+	ui_hsplit_b(&view, 12.0f, &view, &button);
+	static int new_quad_layer_button = 0;
+	if(do_editor_button(&new_quad_layer_button, "Add Quads Layer", 0, &button, draw_editor_button, 0, "Creates a new quad layer"))
+	{
+		LAYER *l = new LAYER_QUADS;
+		editor.map.groups[selected_group]->add_layer(l);
+		selected_layer = editor.map.groups[selected_group]->layers.len()-1;
+		editor.props = PROPS_LAYER;
+		return 1;
+	}
+
+	// new quad layer
+	ui_hsplit_b(&view, 5.0f, &view, &button);
+	ui_hsplit_b(&view, 12.0f, &view, &button);
+	static int new_tile_layer_button = 0;
+	if(do_editor_button(&new_tile_layer_button, "Add Tile Layer", 0, &button, draw_editor_button, 0, "Creates a new tile layer"))
+	{
+		LAYER *l = new LAYER_TILES(50, 50);
+		editor.map.groups[selected_group]->add_layer(l);
+		selected_layer = editor.map.groups[selected_group]->layers.len()-1;
+		editor.props = PROPS_LAYER;
+		return 1;
+	}
+	
+	enum
+	{
+		PROP_ORDER=0,
+		PROP_POS_X,
+		PROP_POS_Y,
+		PROP_PARA_X,
+		PROP_PARA_Y,
+		NUM_PROPS,
+	};
+	
+	PROPERTY props[] = {
+		{"Order", selected_group, PROPTYPE_INT_STEP, 0, editor.map.groups.len()-1},
+		{"Pos X", -editor.map.groups[selected_group]->offset_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Pos Y", -editor.map.groups[selected_group]->offset_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Para X", editor.map.groups[selected_group]->parallax_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Para Y", editor.map.groups[selected_group]->parallax_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{0},
+	};
+	
+	static int ids[NUM_PROPS] = {0};
+	int new_val = 0;
+	
+	// cut the properties that isn't needed
+	if(editor.get_selected_group()->game_group)
+		props[PROP_POS_X].name = 0;
+		
+	int prop = editor.do_properties(&view, props, ids, &new_val);
+	if(prop == PROP_ORDER)
+		selected_group = editor.map.swap_groups(selected_group, new_val);
+		
+	// these can not be changed on the game group
+	if(!editor.get_selected_group()->game_group)
+	{
+		if(prop == PROP_PARA_X)
+			editor.map.groups[selected_group]->parallax_x = new_val;
+		else if(prop == PROP_PARA_Y)
+			editor.map.groups[selected_group]->parallax_y = new_val;
+		else if(prop == PROP_POS_X)
+			editor.map.groups[selected_group]->offset_x = -new_val;
+		else if(prop == PROP_POS_Y)
+			editor.map.groups[selected_group]->offset_y = -new_val;
+	}
+	
+	return 0;
+}
+
+static int popup_layer(RECT view)
+{
+	// remove layer button
+	RECT button;
+	ui_hsplit_b(&view, 12.0f, &view, &button);
+	static int delete_button = 0;
+	if(do_editor_button(&delete_button, "Delete Layer", 0, &button, draw_editor_button, 0, "Deletes the layer"))
+	{
+		editor.map.groups[selected_group]->delete_layer(selected_layer);
+		return 1;
+	}
+
+	ui_hsplit_b(&view, 10.0f, &view, 0);
+	
+	LAYERGROUP *current_group = editor.map.groups[selected_group];
+	LAYER *current_layer = editor.get_selected_layer(0);
+	
+	enum
+	{
+		PROP_GROUP=0,
+		PROP_ORDER,
+		NUM_PROPS,
+	};
+	
+	PROPERTY props[] = {
+		{"Group", selected_group, PROPTYPE_INT_STEP, 0, editor.map.groups.len()-1},
+		{"Order", selected_layer, PROPTYPE_INT_STEP, 0, current_group->layers.len()},
+		{0},
+	};
+	
+	static int ids[NUM_PROPS] = {0};
+	int new_val = 0;
+	int prop = editor.do_properties(&view, props, ids, &new_val);		
+	
+	if(prop == PROP_ORDER)
+		selected_layer = current_group->swap_layers(selected_layer, new_val);
+	else if(prop == PROP_GROUP && current_layer->type != LAYERTYPE_GAME)
+	{
+		if(new_val >= 0 && new_val < editor.map.groups.len())
+		{
+			current_group->layers.remove(current_layer);
+			editor.map.groups[new_val]->layers.add(current_layer);
+			selected_group = new_val;
+			selected_layer = editor.map.groups[new_val]->layers.len()-1;
+		}
+	}
+		
+	return current_layer->render_properties(&view);
+}
+
 static void render_layers(RECT toolbox, RECT toolbar, RECT view)
 {
 	RECT layersbox = toolbox;
-	RECT propsbox;
 
 	do_map_editor(view, toolbar);
 	
@@ -1220,62 +1439,6 @@ static void render_layers(RECT toolbox, RECT toolbar, RECT view)
 	if(valid_group && selected_layer >= 0 && selected_layer < editor.map.groups[selected_group]->layers.len())
 		valid_layer = 1;
 		
-	int valid_group_mask = valid_group ? 0 : -1;
-	int valid_layer_mask = valid_layer ? 0 : -1;
-	
-	{
-		ui_hsplit_t(&layersbox, 12.0f, &slot, &layersbox);
-		
-		// new layer group
-		ui_vsplit_l(&slot, 12.0f, &button, &slot);
-		static int new_layer_group_button = 0;
-		if(ui_do_button(&new_layer_group_button, "G+", 0, &button, draw_editor_button, "New group"))
-		{
-			editor.map.new_group();
-			selected_group = editor.map.groups.len()-1;
-			editor.props = PROPS_GROUP;
-		}
-			
-		// new tile layer
-		ui_vsplit_l(&slot, 10.0f, &button, &slot);
-		ui_vsplit_l(&slot, 12.0f, &button, &slot);
-		static int new_tile_layer_button = 0;
-		if(ui_do_button(&new_tile_layer_button, "T+", valid_group_mask, &button, draw_editor_button, "New tile layer"))
-		{
-			LAYER *l = new LAYER_TILES(50, 50);
-			editor.map.groups[selected_group]->add_layer(l);
-			selected_layer = editor.map.groups[selected_group]->layers.len()-1;
-			editor.props = PROPS_LAYER;
-		}
-
-		// new quad layer
-		ui_vsplit_l(&slot, 2.0f, &button, &slot);
-		ui_vsplit_l(&slot, 12.0f, &button, &slot);
-		static int new_quad_layer_button = 0;
-		if(ui_do_button(&new_quad_layer_button, "Q+", valid_group_mask, &button, draw_editor_button, "New quad layer"))
-		{
-			LAYER *l = new LAYER_QUADS;
-			editor.map.groups[selected_group]->add_layer(l);
-			selected_layer = editor.map.groups[selected_group]->layers.len()-1;
-			editor.props = PROPS_LAYER;
-		}
-
-		// remove layer
-		ui_vsplit_r(&slot, 12.0f, &slot, &button);
-		static int delete_layer_button = 0;
-		if(ui_do_button(&delete_layer_button, "L-", valid_layer_mask, &button, draw_editor_button, "Delete layer"))
-			editor.map.groups[selected_group]->delete_layer(selected_layer);
-
-		// remove group
-		ui_vsplit_r(&slot, 2.0f, &slot, &button);
-		ui_vsplit_r(&slot, 12.0f, &slot, &button);
-		static int delete_group_button = 0;
-		if(ui_do_button(&delete_group_button, "G-", valid_group_mask, &button, draw_editor_button, "Delete group"))
-			editor.map.delete_group(selected_group);
-	}
-
-	ui_hsplit_t(&layersbox, 5.0f, &slot, &layersbox);
-	
 	// render layers	
 	{
 		for(int g = 0; g < editor.map.groups.len(); g++)
@@ -1283,16 +1446,22 @@ static void render_layers(RECT toolbox, RECT toolbar, RECT view)
 			RECT visible_toggle;
 			ui_hsplit_t(&layersbox, 12.0f, &slot, &layersbox);
 			ui_vsplit_l(&slot, 12, &visible_toggle, &slot);
-			if(ui_do_button(&editor.map.groups[g]->visible, editor.map.groups[g]->visible?"V":"H", 0, &visible_toggle, draw_editor_button_l, "Toggle group visibility"))
+			if(do_editor_button(&editor.map.groups[g]->visible, editor.map.groups[g]->visible?"V":"H", 0, &visible_toggle, draw_editor_button_l, 0, "Toggle group visibility"))
 				editor.map.groups[g]->visible = !editor.map.groups[g]->visible;
 
 			sprintf(buf, "#%d %s", g, editor.map.groups[g]->name);
-			if(ui_do_button(&editor.map.groups[g], buf, g==selected_group, &slot, draw_editor_button_r, "Select group"))
+			if(int result = do_editor_button(&editor.map.groups[g], buf, g==selected_group, &slot, draw_editor_button_r,
+				BUTTON_CONTEXT, "Select group. Right click for properties."))
 			{
 				selected_group = g;
 				selected_layer = 0;
 				editor.props = PROPS_GROUP;
+				
+				static int group_popup_id = 0;
+				if(result == 2)
+					ui_invoke_popup_menu(&group_popup_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 150, popup_group);
 			}
+			
 			
 			ui_hsplit_t(&layersbox, 2.0f, &slot, &layersbox);
 			
@@ -1303,127 +1472,49 @@ static void render_layers(RECT toolbox, RECT toolbar, RECT view)
 				ui_vsplit_l(&slot, 12.0f, 0, &button);
 				ui_vsplit_l(&button, 15, &visible_toggle, &button);
 
-				if(ui_do_button(&editor.map.groups[g]->layers[i]->visible, editor.map.groups[g]->layers[i]->visible?"V":"H", 0, &visible_toggle, draw_editor_button_l, "Toggle layer visibility"))
+				if(do_editor_button(&editor.map.groups[g]->layers[i]->visible, editor.map.groups[g]->layers[i]->visible?"V":"H", 0, &visible_toggle, draw_editor_button_l, 0, "Toggle layer visibility"))
 					editor.map.groups[g]->layers[i]->visible = !editor.map.groups[g]->layers[i]->visible;
 
 				sprintf(buf, "#%d %s ", i, editor.map.groups[g]->layers[i]->type_name);
-				if(ui_do_button(editor.map.groups[g]->layers[i], buf, g==selected_group&&i==selected_layer, &button, draw_editor_button_r, "Select layer"))
+				if(int result = do_editor_button(editor.map.groups[g]->layers[i], buf, g==selected_group&&i==selected_layer, &button, draw_editor_button_r,
+					BUTTON_CONTEXT, "Select layer. Right click for properties."))
 				{
 					selected_layer = i;
 					selected_group = g;
 					editor.props = PROPS_LAYER;
+					static int layer_popup_id = 0;
+					if(result == 2)
+						ui_invoke_popup_menu(&layer_popup_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 130, popup_layer);
 				}
+				
+				
 				ui_hsplit_t(&layersbox, 2.0f, &slot, &layersbox);
 			}
 			ui_hsplit_t(&layersbox, 5.0f, &slot, &layersbox);
 		}
 	}
 	
-	propsbox = layersbox;
-	
-	// group properties
-	if(editor.props == PROPS_GROUP && valid_group)
+
 	{
-		ui_hsplit_t(&propsbox, 12.0f, &slot, &propsbox);
-		ui_do_label(&slot, "Group Props", 12.0f, -1, -1);
-	
-		enum
+		ui_hsplit_t(&layersbox, 12.0f, &slot, &layersbox);
+
+		static int new_group_button = 0;
+		if(do_editor_button(&new_group_button, "Add Group", 0, &slot, draw_editor_button, 0, "Adds a new group"))
 		{
-			PROP_ORDER=0,
-			PROP_POS_X,
-			PROP_POS_Y,
-			PROP_PARA_X,
-			PROP_PARA_Y,
-			NUM_PROPS,
-		};
-		
-		PROPERTY props[] = {
-			{"Order", selected_group, PROPTYPE_INT_STEP, 0, editor.map.groups.len()-1},
-			{"Pos X", -editor.map.groups[selected_group]->offset_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-			{"Pos Y", -editor.map.groups[selected_group]->offset_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-			{"Para X", editor.map.groups[selected_group]->parallax_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-			{"Para Y", editor.map.groups[selected_group]->parallax_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-			{0},
-		};
-		
-		static int ids[NUM_PROPS] = {0};
-		int new_val = 0;
-		
-		// cut the properties that isn't needed
-		if(editor.get_selected_group()->game_group)
-			props[PROP_POS_X].name = 0;
-			
-		int prop = editor.do_properties(&propsbox, props, ids, &new_val);
-		if(prop == PROP_ORDER)
-			selected_group = editor.map.swap_groups(selected_group, new_val);
-			
-		// these can not be changed on the game group
-		if(!editor.get_selected_group()->game_group)
-		{
-			if(prop == PROP_PARA_X)
-				editor.map.groups[selected_group]->parallax_x = new_val;
-			else if(prop == PROP_PARA_Y)
-				editor.map.groups[selected_group]->parallax_y = new_val;
-			else if(prop == PROP_POS_X)
-				editor.map.groups[selected_group]->offset_x = -new_val;
-			else if(prop == PROP_POS_Y)
-				editor.map.groups[selected_group]->offset_y = -new_val;
+			editor.map.new_group();
+			selected_group = editor.map.groups.len()-1;
+			editor.props = PROPS_GROUP;
 		}
 	}
+
+	ui_hsplit_t(&layersbox, 5.0f, &slot, &layersbox);
 	
-	// layer properties
-	if(editor.get_selected_layer(0))
-	{
-		LAYERGROUP *current_group = editor.map.groups[selected_group];
-		LAYER *current_layer = editor.get_selected_layer(0);
-		
-		if(editor.props == PROPS_LAYER)
-		{
-			ui_hsplit_t(&propsbox, 15.0f, &slot, &propsbox);
-			ui_do_label(&slot, "Layer Props", 12.0f, -1, -1);
-			
-			enum
-			{
-				PROP_GROUP=0,
-				PROP_ORDER,
-				NUM_PROPS,
-			};
-			
-			PROPERTY props[] = {
-				{"Group", selected_group, PROPTYPE_INT_STEP, 0, editor.map.groups.len()-1},
-				{"Order", selected_layer, PROPTYPE_INT_STEP, 0, current_group->layers.len()},
-				{0},
-			};
-			
-			static int ids[NUM_PROPS] = {0};
-			int new_val = 0;
-			int prop = editor.do_properties(&propsbox, props, ids, &new_val);		
-			
-			if(prop == PROP_ORDER)
-				selected_layer = current_group->swap_layers(selected_layer, new_val);
-			else if(prop == PROP_GROUP && current_layer->type != LAYERTYPE_GAME)
-			{
-				if(new_val >= 0 && new_val < editor.map.groups.len())
-				{
-					current_group->layers.remove(current_layer);
-					editor.map.groups[new_val]->layers.add(current_layer);
-					selected_group = new_val;
-					selected_layer = editor.map.groups[new_val]->layers.len()-1;
-				}
-			}
-		}
-			
-		current_layer->render_properties(&propsbox);
-	}
 }
 
 static void add_image(const char *filename)
 {
-	char buf[512];
-	sprintf(buf, "tilesets/%s", filename);
-
 	IMAGE imginfo;
-	if(!gfx_load_png(&imginfo, buf))
+	if(!gfx_load_png(&imginfo, filename))
 		return;
 
 	IMAGE *img = new IMAGE;
@@ -1431,6 +1522,33 @@ static void add_image(const char *filename)
 	img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO);
 	editor.map.images.add(img);
 }
+
+
+static int popup_image(RECT view)
+{
+	static int replace_button = 0;	
+	static int remove_button = 0;	
+
+	RECT slot;
+	ui_hsplit_t(&view, 2.0f, &slot, &view);
+	ui_hsplit_t(&view, 12.0f, &slot, &view);
+	if(do_editor_button(&replace_button, "Replace", 0, &slot, draw_editor_button_menuitem, 0, "Replaces the image with a new one"))
+	{
+		//editor.reset();
+		return 1;
+	}
+
+	ui_hsplit_t(&view, 10.0f, &slot, &view);
+	ui_hsplit_t(&view, 12.0f, &slot, &view);
+	if(do_editor_button(&remove_button, "Remove", 0, &slot, draw_editor_button_menuitem, 0, "Removes the image from the map"))
+	{
+		//editor.invoke_file_dialog("Open Map", "Open", "data/maps/", "", callback_open_map);
+		return 1;
+	}
+
+	return 0;
+}
+
 
 static void render_images(RECT toolbox, RECT toolbar, RECT view)
 {
@@ -1443,8 +1561,15 @@ static void render_images(RECT toolbox, RECT toolbar, RECT view)
 		RECT slot;
 		ui_hsplit_t(&toolbox, 12.0f, &slot, &toolbox);
 		
-		if(ui_do_button(&editor.map.images[i], buf, selected_image == i, &slot, draw_editor_button, "Select image"))
+		if(int result = do_editor_button(&editor.map.images[i], buf, selected_image == i, &slot, draw_editor_button,
+			BUTTON_CONTEXT, "Select image"))
+		{
 			selected_image = i;
+			
+			static int popup_image_id = 0;
+			if(result == 2)
+				ui_invoke_popup_menu(&popup_image_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 50, popup_image);
+		}
 		
 		ui_hsplit_t(&toolbox, 2.0f, 0, &toolbox);
 		
@@ -1471,23 +1596,10 @@ static void render_images(RECT toolbox, RECT toolbar, RECT view)
 	
 	// new image
 	static int new_image_button = 0;
-	ui_vsplit_l(&toolbar, 40.0f, &slot, &toolbar);
-	if(ui_do_button(&new_image_button, "Add", 0, &slot, draw_editor_button, "Load a new image to use in the map"))
-		editor.do_file_dialog("Add Image", "Add", "tilesets", "", add_image);
-
-	// replace image
-	static int replace_image_button = 0;
-	ui_vsplit_l(&toolbar, 10.0f, &slot, &toolbar);
-	ui_vsplit_l(&toolbar, 60.0f, &slot, &toolbar);
-	if(ui_do_button(&replace_image_button, "Replace", 0, &slot, draw_editor_button, "Replaces the selected image with a new one (NOT IMPEMENTED)"))
-		(void)0;
-
-	// remove image
-	static int remove_button = 0;
-	ui_vsplit_l(&toolbar, 40.0f, &slot, &toolbar);
-	ui_vsplit_l(&toolbar, 60.0f, &slot, &toolbar);
-	if(ui_do_button(&remove_button, "Remove", 0, &slot, draw_editor_button, "Discards the selected image (NOT IMPEMENTED)"))
-		(void)0;
+	ui_hsplit_t(&toolbox, 10.0f, &slot, &toolbox);
+	ui_hsplit_t(&toolbox, 12.0f, &slot, &toolbox);
+	if(do_editor_button(&new_image_button, "Add", 0, &slot, draw_editor_button, 0, "Load a new image to use in the map"))
+		editor.invoke_file_dialog("Add Image", "Add", "tilesets/", "", add_image);
 }
 
 
@@ -1495,6 +1607,8 @@ static const char *file_dialog_title = 0;
 static const char *file_dialog_button_text = 0;
 static void (*file_dialog_func)(const char *filename);
 static char file_dialog_filename[512] = {0};
+static char file_dialog_path[512] = {0};
+static char file_dialog_complete_filename[512] = {0};
 
 static void editor_listdir_callback(const char *name, int is_dir, void *user)
 {
@@ -1507,8 +1621,21 @@ static void editor_listdir_callback(const char *name, int is_dir, void *user)
 	ui_hsplit_t(view, 2.0f, 0, view);
 	//char buf[512];
 	
-	if(ui_do_button((void*)(10+(int)button.y), name, 0, &button, draw_editor_button_file, 0))
+	if(do_editor_button((void*)(10+(int)button.y), name, 0, &button, draw_editor_button_file, 0, 0))
+	{
 		strncpy(file_dialog_filename, name, sizeof(file_dialog_filename));
+		
+		file_dialog_complete_filename[0] = 0;
+		strcat(file_dialog_complete_filename, file_dialog_path);
+		strcat(file_dialog_complete_filename, file_dialog_filename);
+
+		if(inp_mouse_doubleclick())
+		{
+			if(file_dialog_func)
+				file_dialog_func(file_dialog_complete_filename);
+			editor.dialog = DIALOG_NONE;
+		}
+	}
 }
 
 static void render_file_dialog()
@@ -1541,9 +1668,13 @@ static void render_file_dialog()
 	
 	static int filebox_id = 0;
 	ui_do_edit_box(&filebox_id, &filebox, file_dialog_filename, sizeof(file_dialog_filename), 10.0f);
+
+	file_dialog_complete_filename[0] = 0;
+	strcat(file_dialog_complete_filename, file_dialog_path);
+	strcat(file_dialog_complete_filename, file_dialog_filename);
 	
 	// the list
-	fs_listdir("tilesets", editor_listdir_callback, &view);
+	fs_listdir(file_dialog_path, editor_listdir_callback, &view);
 	
 	// the buttons
 	static int ok_button = 0;	
@@ -1551,20 +1682,20 @@ static void render_file_dialog()
 
 	RECT button;
 	ui_vsplit_r(&buttonbar, 50.0f, &buttonbar, &button);
-	if(ui_do_button(&ok_button, file_dialog_button_text, 0, &button, draw_editor_button, 0))
+	if(do_editor_button(&ok_button, file_dialog_button_text, 0, &button, draw_editor_button, 0, 0))
 	{
 		if(file_dialog_func)
-			file_dialog_func(file_dialog_filename);
+			file_dialog_func(file_dialog_complete_filename);
 		editor.dialog = DIALOG_NONE;
 	}
 
 	ui_vsplit_r(&buttonbar, 40.0f, &buttonbar, &button);
 	ui_vsplit_r(&buttonbar, 50.0f, &buttonbar, &button);
-	if(ui_do_button(&cancel_button, "Cancel", 0, &button, draw_editor_button, 0) || inp_key_pressed(KEY_ESC))
+	if(do_editor_button(&cancel_button, "Cancel", 0, &button, draw_editor_button, 0, 0) || inp_key_pressed(KEY_ESC))
 		editor.dialog = DIALOG_NONE;
 }
 
-void EDITOR::do_file_dialog(const char *title, const char *button_text,
+void EDITOR::invoke_file_dialog(const char *title, const char *button_text,
 	const char *basepath, const char *default_name,
 	void (*func)(const char *filename))
 {
@@ -1572,9 +1703,12 @@ void EDITOR::do_file_dialog(const char *title, const char *button_text,
 	file_dialog_button_text = button_text;
 	file_dialog_func = func;
 	file_dialog_filename[0] = 0;
+	file_dialog_path[0] = 0;
 	
 	if(default_name)
 		strncpy(file_dialog_filename, default_name, sizeof(file_dialog_filename));
+	if(basepath)
+		strncpy(file_dialog_path, basepath, sizeof(file_dialog_path));
 		
 	editor.dialog = DIALOG_FILE;
 }
@@ -1588,18 +1722,13 @@ static void render_modebar(RECT view)
 	// mode buttons
 	{
 		ui_vsplit_l(&view, 40.0f, &button, &view);
-		static int map_button = 0;
-		if(ui_do_button(&map_button, "Map", editor.mode == MODE_MAP, &button, draw_editor_button_l, "Switch to edit global map settings"))
-			editor.mode = MODE_MAP;
-		
-		ui_vsplit_l(&view, 40.0f, &button, &view);
 		static int tile_button = 0;
-		if(ui_do_button(&tile_button, "Layers", editor.mode == MODE_LAYERS, &button, draw_editor_button_m, "Switch to edit layers"))
+		if(do_editor_button(&tile_button, "Layers", editor.mode == MODE_LAYERS, &button, draw_editor_button_m, 0, "Switch to edit layers"))
 			editor.mode = MODE_LAYERS;
 
 		ui_vsplit_l(&view, 40.0f, &button, &view);
 		static int img_button = 0;
-		if(ui_do_button(&img_button, "Images", editor.mode == MODE_IMAGES, &button, draw_editor_button_r, "Switch to manage images"))
+		if(do_editor_button(&img_button, "Images", editor.mode == MODE_IMAGES, &button, draw_editor_button_r, 0, "Switch to manage images"))
 			editor.mode = MODE_IMAGES;
 	}
 
@@ -1614,7 +1743,7 @@ static void render_statusbar(RECT view)
 	RECT button;
 	ui_vsplit_r(&view, 60.0f, &view, &button);
 	static int envelope_button = 0;
-	if(ui_do_button(&envelope_button, "Envelopes", editor.show_envelope_editor, &button, draw_editor_button, "Toggles the envelope editor"))
+	if(do_editor_button(&envelope_button, "Envelopes", editor.show_envelope_editor, &button, draw_editor_button, 0, "Toggles the envelope editor"))
 		editor.show_envelope_editor = (editor.show_envelope_editor+1)%4;
 	
 	if(editor.tooltip)
@@ -1656,13 +1785,13 @@ static void render_envelopeeditor(RECT view)
 		
 		ui_vsplit_r(&toolbar, 50.0f, &toolbar, &button);
 		static int new_4d_button = 0;
-		if(ui_do_button(&new_4d_button, "Color+", 0, &button, draw_editor_button, "Creates a new color envelope"))
+		if(do_editor_button(&new_4d_button, "Color+", 0, &button, draw_editor_button, 0, "Creates a new color envelope"))
 			new_env = editor.map.new_envelope(4);
 
 		ui_vsplit_r(&toolbar, 5.0f, &toolbar, &button);
 		ui_vsplit_r(&toolbar, 50.0f, &toolbar, &button);
 		static int new_2d_button = 0;
-		if(ui_do_button(&new_2d_button, "Pos.+", 0, &button, draw_editor_button, "Creates a new pos envelope"))
+		if(do_editor_button(&new_2d_button, "Pos.+", 0, &button, draw_editor_button, 0, "Creates a new pos envelope"))
 			new_env = editor.map.new_envelope(3);
 		
 		if(new_env) // add the default points
@@ -1689,11 +1818,11 @@ static void render_envelopeeditor(RECT view)
 		ui_do_label(&shifter, buf, 10.0f, 0, -1);
 		
 		static int prev_button = 0;
-		if(ui_do_button(&prev_button, 0, 0, &dec, draw_dec_button, "Previous Envelope"))
+		if(do_editor_button(&prev_button, 0, 0, &dec, draw_dec_button, 0, "Previous Envelope"))
 			selected_envelope--;
 		
 		static int next_button = 0;
-		if(ui_do_button(&next_button, 0, 0, &inc, draw_inc_button, "Next Envelope"))
+		if(do_editor_button(&next_button, 0, 0, &inc, draw_inc_button, 0, "Next Envelope"))
 			selected_envelope++;
 			
 		if(envelope)
@@ -1739,7 +1868,7 @@ static void render_envelopeeditor(RECT view)
 				else if(i == envelope->channels-1) draw_func = draw_editor_button_r;
 				else draw_func = draw_editor_button_m;
 				
-				if(ui_do_button(&channel_buttons[i], names[envelope->channels-1][i], active_channels&bit, &button, draw_func, 0))
+				if(do_editor_button(&channel_buttons[i], names[envelope->channels-1][i], active_channels&bit, &button, draw_func, 0, 0))
 					active_channels ^= bit;
 			}
 		}		
@@ -1834,7 +1963,7 @@ static void render_envelopeeditor(RECT view)
 					"N", "L", "S", "F", "M"
 					};
 				
-				if(ui_do_button(id, type_name[envelope->points[i].curvetype], 0, &v, draw_editor_button, "Switch curve type"))
+				if(do_editor_button(id, type_name[envelope->points[i].curvetype], 0, &v, draw_editor_button, 0, "Switch curve type"))
 					envelope->points[i].curvetype = (envelope->points[i].curvetype+1)%NUM_CURVETYPES;
 			}
 		}
@@ -1970,7 +2099,17 @@ static void render_envelopeeditor(RECT view)
 	}
 }
 
-static void render_map(RECT toolbox, RECT view)
+static void callback_open_map(const char *filename)
+{
+	editor.load(filename);
+}
+
+static void callback_save_map(const char *filename)
+{
+	editor.save(filename);
+}
+
+static int popup_menu_file(RECT view)
 {
 	static int new_map_button = 0;	
 	static int save_button = 0;	
@@ -1978,29 +2117,60 @@ static void render_map(RECT toolbox, RECT view)
 	static int open_button = 0;	
 
 	RECT slot;
-	ui_hsplit_t(&toolbox, 2.0f, &slot, &toolbox);
-	ui_hsplit_t(&toolbox, 15.0f, &slot, &toolbox);
-	if(ui_do_button(&new_map_button, "New", 0, &slot, draw_editor_button, "Creates a new map"))
-		(void)0;
+	ui_hsplit_t(&view, 2.0f, &slot, &view);
+	ui_hsplit_t(&view, 12.0f, &slot, &view);
+	if(do_editor_button(&new_map_button, "New", 0, &slot, draw_editor_button_menuitem, 0, "Creates a new map"))
+	{
+		editor.reset();
+		return 1;
+	}
 
-	ui_hsplit_t(&toolbox, 10.0f, &slot, &toolbox);
-	ui_hsplit_t(&toolbox, 15.0f, &slot, &toolbox);
-	if(ui_do_button(&open_button, "Open", 0, &slot, draw_editor_button, "Opens a map for editing"))
-		(void)0;
+	ui_hsplit_t(&view, 10.0f, &slot, &view);
+	ui_hsplit_t(&view, 12.0f, &slot, &view);
+	if(do_editor_button(&open_button, "Open", 0, &slot, draw_editor_button_menuitem, 0, "Opens a map for editing"))
+	{
+		editor.invoke_file_dialog("Open Map", "Open", "data/maps/", "", callback_open_map);
+		return 1;
+	}
 
-	ui_hsplit_t(&toolbox, 10.0f, &slot, &toolbox);
-	ui_hsplit_t(&toolbox, 15.0f, &slot, &toolbox);
-	if(ui_do_button(&save_button, "Save", 0, &slot, draw_editor_button, "Saves the current map"))
-		(void)0;
+	ui_hsplit_t(&view, 10.0f, &slot, &view);
+	ui_hsplit_t(&view, 12.0f, &slot, &view);
+	if(do_editor_button(&save_button, "Save", 0, &slot, draw_editor_button_menuitem, 0, "Saves the current map"))
+	{
+		return 1;
+	}
 
-	ui_hsplit_t(&toolbox, 2.0f, &slot, &toolbox);
-	ui_hsplit_t(&toolbox, 15.0f, &slot, &toolbox);
-	if(ui_do_button(&save_as_button, "Save As", 0, &slot, draw_editor_button, "Saves the current map under a new name"))
-		(void)0;
-
+	ui_hsplit_t(&view, 2.0f, &slot, &view);
+	ui_hsplit_t(&view, 12.0f, &slot, &view);
+	if(do_editor_button(&save_as_button, "Save As", 0, &slot, draw_editor_button_menuitem, 0, "Saves the current map under a new name"))
+	{
+		editor.invoke_file_dialog("Save Map", "Save", "data/maps/", "", callback_save_map);
+		return 1;
+	}
 		
+	return 0;
 }
+
+static void render_menubar(RECT menubar)
+{
+	static RECT file /*, view, help*/;
+
+	ui_vsplit_l(&menubar, 60.0f, &file, &menubar);
+	if(do_editor_button(&file, "File", 0, &file, draw_editor_button_menu, 0, 0))
+		ui_invoke_popup_menu(&file, 1, file.x, file.y+file.h-1.0f, 120, 150, popup_menu_file);
 	
+	/*
+	ui_vsplit_l(&menubar, 5.0f, 0, &menubar);
+	ui_vsplit_l(&menubar, 60.0f, &view, &menubar);
+	if(do_editor_button(&view, "View", 0, &view, draw_editor_button_menu, 0, 0))
+		(void)0;
+
+	ui_vsplit_l(&menubar, 5.0f, 0, &menubar);
+	ui_vsplit_l(&menubar, 60.0f, &help, &menubar);
+	if(do_editor_button(&help, "Help", 0, &help, draw_editor_button_menu, 0, 0))
+		(void)0;
+		*/
+}
 
 static void editor_render()
 {
@@ -2015,18 +2185,22 @@ static void editor_render()
 	// render checker
 	render_background(view, checker_texture, 32.0f, 1.0f);
 	
-	RECT modebar, toolbar, statusbar, envelope_editor, toolbox;
+	RECT menubar, modebar, toolbar, statusbar, envelope_editor, toolbox;
 	
 	if(editor.gui_active)
 	{
 		
-		ui_hsplit_t(&view, 16.0f, &toolbar, &view);
+		ui_hsplit_t(&view, 16.0f, &menubar, &view);
 		ui_vsplit_l(&view, 80.0f, &toolbox, &view);
+		ui_hsplit_t(&view, 16.0f, &toolbar, &view);
 		ui_hsplit_b(&view, 16.0f, &view, &statusbar);
 
 				
 		float brightness = 0.25f;
 
+		render_background(menubar, background_texture, 128.0f, brightness*0);
+		ui_margin(&menubar, 2.0f, &menubar);
+		
 		render_background(toolbox, background_texture, 128.0f, brightness);
 		ui_margin(&toolbox, 2.0f, &toolbox);
 		
@@ -2050,9 +2224,7 @@ static void editor_render()
 		}
 	}
 	
-	if(editor.mode == MODE_MAP)
-		render_map(toolbox, view);
-	else if(editor.mode == MODE_LAYERS)
+	if(editor.mode == MODE_LAYERS)
 		render_layers(toolbox, toolbar, view);
 	else if(editor.mode == MODE_IMAGES)
 		render_images(toolbox, toolbar, view);
@@ -2061,14 +2233,25 @@ static void editor_render()
 
 	if(editor.gui_active)
 	{
+		render_menubar(menubar);
+		
 		render_modebar(modebar);
 		if(editor.show_envelope_editor)
 			render_envelopeeditor(envelope_editor);
-		render_statusbar(statusbar);
 	}
 
 	if(editor.dialog == DIALOG_FILE)
+	{
+		static int null_ui_target = 0;
+		ui_set_hot_item(&null_ui_target);
 		render_file_dialog();
+	}
+	
+	
+	ui_do_popup_menu();
+
+	if(editor.gui_active)
+		render_statusbar(statusbar);
 	
 	//do_propsdialog();
 
@@ -2077,11 +2260,13 @@ static void editor_render()
 	float my = ui_mouse_y();
 	gfx_texture_set(cursor_texture);
 	gfx_quads_begin();
+	if(ui_got_context)
+		gfx_setcolor(1,0,0,1);
 	gfx_quads_drawTL(mx,my, 16.0f, 16.0f);
 	gfx_quads_end();	
 }
 
-void editor_reset(bool create_default=true)
+void EDITOR::reset(bool create_default)
 {
 	editor.map.groups.deleteall();
 	editor.map.envelopes.deleteall();
@@ -2117,8 +2302,38 @@ template<typename T>
 static int make_version(int i, const T &v)
 { return (i<<16)+sizeof(T); }
 
+// backwards compatiblity
 void editor_load_old(DATAFILE *df)
 {
+	class mapres_image
+	{
+	public:
+		int width;
+		int height;
+		int image_data;
+	};
+
+
+	struct mapres_tilemap
+	{
+		int image;
+		int width;
+		int height;
+		int x, y;
+		int scale;
+		int data;
+		int main;
+	};
+
+	enum
+	{
+		MAPRES_REGISTERED=0x8000,
+		MAPRES_IMAGE=0x8001,
+		MAPRES_TILEMAP=0x8002,
+		MAPRES_COLLISIONMAP=0x8003,
+		MAPRES_TEMP_THEME=0x8fff,
+	};
+
 	// load tilemaps
 	int game_width = 0;
 	int game_height = 0;
@@ -2220,7 +2435,7 @@ void editor_load_old(DATAFILE *df)
 				}
 						
 				if(id > 0 && x >= 0 && x < g->width && y >= 0 && y < g->height)
-					g->tiles[y*g->width+x].index = id;
+					g->tiles[y*g->width+x].index = id+ENTITY_OFFSET;
 			}
 		}
 	}
@@ -2349,12 +2564,12 @@ int EDITOR::load(const char *filename)
 	if(!item)
 	{
 		// import old map
-		editor_reset();
+		editor.reset();
 		editor_load_old(df);
 	}
 	else if(item->version == 1)
 	{
-		editor_reset(false);
+		editor.reset(false);
 		
 		// load images
 		{
@@ -2469,7 +2684,7 @@ extern "C" void editor_init()
 	tileset_picker.make_palette();
 	tileset_picker.readonly = true;
 	
-	editor_reset();
+	editor.reset();
 	//editor.load("debug_test.map");
 	
 #if 0
@@ -2490,24 +2705,6 @@ extern "C" void editor_init()
 	
 	editor.show_envelope_editor = 1;
 #endif
-
-/*
-	if(1)
-	{
-		float w, h;
-		float amount = 1300*1000;
-		float max = 1500;
-		dbg_msg("", "%f %f %f %f", (900*(5/4.0f))*900.0f, (900*(4/3.0f))*900.0f, (900*(16/9.0f))*900.0f, (900*(16/10.0f))*900.0f);
-		dbg_msg("", "%f", 900*(16/9.0f));
-		calc_screen_params(amount, max, max, 5.0f/4.0f, &w, &h); dbg_msg("", "5:4 %f %f %f", w, h, w*h);
-		calc_screen_params(amount, max, max, 4.0f/3.0f, &w, &h); dbg_msg("", "4:3 %f %f %f", w, h, w*h);
-		calc_screen_params(amount, max, max, 16.0f/9.0f, &w, &h); dbg_msg("", "16:9 %f %f %f", w, h, w*h);
-		calc_screen_params(amount, max, max, 16.0f/10.0f, &w, &h); dbg_msg("", "16:10 %f %f %f", w, h, w*h);
-		
-		calc_screen_params(amount, max, max, 9.0f/16.0f, &w, &h); dbg_msg("", "%f %f %f", w, h, w*h);
-		calc_screen_params(amount, max, max, 16.0f/3.0f, &w, &h); dbg_msg("", "%f %f %f", w, h, w*h);
-		calc_screen_params(amount, max, max, 3.0f/16.0f, &w, &h); dbg_msg("", "%f %f %f", w, h, w*h);
-	}*/
 }
 
 extern "C" void editor_update_and_render()
@@ -2516,6 +2713,7 @@ extern "C" void editor_update_and_render()
 	static int mouse_y = 0;
 
 	editor.animate_time = (time_get()-editor.animate_start)/(float)time_freq();
+	ui_got_context = 0;
 
 	// handle mouse movement
 	float mx, my, mwx, mwy;
