@@ -529,6 +529,7 @@ static int record = 0;
 
 void gfx_swap()
 {
+	#if 0
 	if(record)
 	{
 		int w = screen_width;
@@ -597,10 +598,39 @@ void gfx_swap()
 		mem_free(pixel_data);
 		do_screenshot = 0;
 	}
+	#endif
 	
-	glfwSwapBuffers();
-	glFinish();
-	glfwPollEvents();
+	{
+		static PERFORMACE_INFO pscope = {"glfwSwapBuffers", 0};
+		perf_start(&pscope);
+		glFinish();
+		glfwSwapBuffers();
+		perf_end();
+	}
+	
+	if(0)
+	{
+		static PERFORMACE_INFO pscope = {"glFlush", 0};
+		perf_start(&pscope);
+		glFlush();
+		perf_end();
+	}
+
+	if(0)
+	{
+		static PERFORMACE_INFO pscope = {"glFinish", 0};
+		perf_start(&pscope);
+		glFinish();
+		perf_end();
+	}
+
+	if(0)
+	{
+		static PERFORMACE_INFO pscope = {"glfwPollEvents", 0};
+		perf_start(&pscope);
+		glfwPollEvents();
+		perf_end();
+	}
 }
 
 int gfx_screenwidth()

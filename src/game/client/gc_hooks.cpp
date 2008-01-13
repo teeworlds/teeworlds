@@ -11,10 +11,12 @@ extern "C" {
 #include <game/g_game.h>
 #include <game/g_version.h>
 
+#include <game/g_layers.h>
+
 #include "gc_client.h"
 #include "gc_skin.h"
 #include "gc_render.h"
-#include "gc_mapres_image.h"
+#include "gc_map_image.h"
 #include "gc_mapres_tilemap.h"
 
 extern unsigned char internal_data[];
@@ -472,10 +474,11 @@ extern "C" void modc_message(int msg)
 extern "C" void modc_connected()
 {
 	// init some stuff
-	col_init(32);
-	
+	layers_init();
+	col_init();
 	img_init();
-	tilemap_init();
+	
+	//tilemap_init();
 	chat_reset();
 
 	reset_projectile_particles();

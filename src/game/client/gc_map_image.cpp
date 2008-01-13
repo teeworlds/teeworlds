@@ -1,8 +1,8 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <engine/e_system.h>
 #include <engine/e_interface.h>
-#include "gc_mapres_image.h"
-#include "../g_mapres.h"
+#include <game/g_mapitems.h>
+#include "gc_map_image.h"
 
 static int map_textures[64] = {0};
 static int count = 0;
@@ -83,14 +83,15 @@ static void calc_mipmaps(void *data_in, unsigned width, unsigned height, void *d
 		mip_h = mip_h>>1;
 	}
 }
-*/
 extern int DEBUGTEST_MAPIMAGE;
+*/
+
 
 int img_init()
 {
 	int start, count;
-	map_get_type(MAPRES_IMAGE, &start, &count);
-	dbg_msg("mapres_image", "start=%d count=%d", start, count);
+	map_get_type(MAPITEMTYPE_IMAGE, &start, &count);
+	dbg_msg("image", "start=%d count=%d", start, count);
 	for(int i = 0; i < 64; i++)
 	{
 		if(map_textures[i])
@@ -103,14 +104,12 @@ int img_init()
 	//void *data_res = (void*)mem_alloc(1024*1024*4*2, 16);
 	for(int i = 0; i < count; i++)
 	{
-		mapres_image *img = (mapres_image *)map_get_item(start+i, 0, 0);
+		MAPITEM_IMAGE *img = (MAPITEM_IMAGE *)map_get_item(start+i, 0, 0);
 		void *data = map_get_data(img->image_data);
-		//calc_mipmaps(data, img->width, img->height, data_res);
 		map_textures[i] = gfx_load_texture_raw(img->width, img->height, IMG_RGBA, data, IMG_RGBA);
 		map_unload_data(img->image_data);
 	}
 
-	//mem_free(data_res);
 	return count;
 }
 

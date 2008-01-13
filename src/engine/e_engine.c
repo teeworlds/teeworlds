@@ -118,6 +118,9 @@ void perf_start(PERFORMACE_INFO *info)
 
 void perf_end()
 {
+	if(!current)
+		return;
+		
 	current->last_delta = time_get()-current->start;
 	current->total += current->last_delta;
 	

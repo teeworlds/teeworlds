@@ -62,6 +62,7 @@ MACRO_CONFIG_INT(sv_status, 0, 0, 1)
 MACRO_CONFIG_INT(debug, 0, 0, 1)
 MACRO_CONFIG_INT(dbg_stress, 0, 0, 0)
 MACRO_CONFIG_INT(dbg_pref, 0, 0, 1)
+MACRO_CONFIG_INT(dbg_graphs, 0, 0, 1)
 MACRO_CONFIG_INT(dbg_hitch, 0, 0, 0)
 MACRO_CONFIG_STR(dbg_stress_server, 32, "localhost")
 

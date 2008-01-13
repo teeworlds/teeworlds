@@ -9,6 +9,11 @@ void *map_get_data(int index)
 	return datafile_get_data(map, index);
 }
 
+void *map_get_data_swapped(int index)
+{
+	return datafile_get_data_swapped(map, index);
+}
+
 void map_unload_data(int index)
 {
 	datafile_unload_data(map, index);

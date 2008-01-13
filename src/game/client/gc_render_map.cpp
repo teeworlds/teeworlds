@@ -88,7 +88,7 @@ void render_quads(QUAD *quads, int num_quads)
 }
 
 
-void render_tilemap(TILE *tiles, int w, int h, float scale)
+void render_tilemap(TILE *tiles, int w, int h, float scale, int flags)
 {
 			//gfx_texture_set(img_get(tmap->image));
 	float screen_x0, screen_y0, screen_x1, screen_y1;
@@ -116,14 +116,29 @@ void render_tilemap(TILE *tiles, int w, int h, float scale)
 		{
 			int mx = x;
 			int my = y;
-			if(mx<0)
-				continue; // mx = 0;
-			if(mx>=w)
-				continue; // mx = w-1;
-			if(my<0)
-				continue; // my = 0;
-			if(my>=h)
-				continue; // my = h-1;
+			
+			if(flags)
+			{
+				if(mx<0)
+					mx = 0;
+				if(mx>=w)
+					mx = w-1;
+				if(my<0)
+					my = 0;
+				if(my>=h)
+					my = h-1;
+			}
+			else
+			{
+				if(mx<0)
+					continue; // mx = 0;
+				if(mx>=w)
+					continue; // mx = w-1;
+				if(my<0)
+					continue; // my = 0;
+				if(my>=h)
+					continue; // my = h-1;
+			}
 			
 			int c = mx + my*w;
 				

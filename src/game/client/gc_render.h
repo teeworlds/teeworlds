@@ -37,6 +37,8 @@ void render_game();
 void render_world(float center_x, float center_y, float zoom);
 void render_loading(float percent);
 
+void render_damage_indicators();
+
 // object render methods (gc_render_obj.cpp)
 void render_tee(class animstate *anim, tee_render_info *info, int emote, vec2 dir, vec2 pos);
 void render_flag(const struct obj_flag *prev, const struct obj_flag *current);
@@ -48,7 +50,7 @@ void render_player(
 	
 // map render methods (gc_render_map.cpp)
 void render_quads(QUAD *quads, int num_quads);
-void render_tilemap(TILE *tiles, int w, int h, float scale);
+void render_tilemap(TILE *tiles, int w, int h, float scale, int flags);
 
 // helpers
 void mapscreen_to_world(float center_x, float center_y, float parallax_x, float parallax_y,

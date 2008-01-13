@@ -513,13 +513,15 @@ static void client_debug_render()
 	}
 	
 	/* render graphs */
-	gfx_mapscreen(0,0,400.0f,300.0f);
-	graph_render(&predict_graph, 300, 10, 90, 50);
-	graph_render(&predicted_time.graph, 300, 10+50+10, 90, 50);
-	
-	graph_render(&intra_graph, 300, 10+50+10+50+10, 90, 50);
-	graph_render(&input_late_graph, 300, 10+50+10+50+10+50+10, 90, 50);
-	
+	if(config.dbg_graphs)
+	{
+		gfx_mapscreen(0,0,400.0f,300.0f);
+		graph_render(&predict_graph, 300, 10, 90, 50);
+		graph_render(&predicted_time.graph, 300, 10+50+10, 90, 50);
+		
+		graph_render(&intra_graph, 300, 10+50+10+50+10, 90, 50);
+		graph_render(&input_late_graph, 300, 10+50+10+50+10+50+10, 90, 50);
+	}
 }
 
 void client_quit()
@@ -808,7 +810,7 @@ static void client_process_packet(NETPACKET *packet)
 						recived_snapshots++;
 
 						if(current_recv_tick > 0)
-							snaploss += game_tick-current_recv_tick-1;
+							snaploss += game_tick-current_recv_tick-2;
 						current_recv_tick = game_tick;
 						
 						/* we got two snapshots until we see us self as connected */
@@ -978,6 +980,9 @@ static void client_run()
 	int64 reportinterval = time_freq()*1;
 	int editor_active = 0;
 
+	static PERFORMACE_INFO rootscope = {"root", 0};
+	perf_start(&rootscope);
+
 	local_start_time = time_get();
 	snapshot_part = 0;
 	
@@ -1014,14 +1019,27 @@ static void client_run()
 	
 	while (1)
 	{	
+		static PERFORMACE_INFO rootscope = {"root", 0};
 		int64 frame_start_time = time_get();
 		frames++;
 		
+		perf_start(&rootscope);
+		
 		/* update input */
-		inp_update();
+		{
+			static PERFORMACE_INFO scope = {"inp_update", 0};
+			perf_start(&scope);
+			inp_update();
+			perf_end();
+		}
 
 		/* update sound */		
-		snd_update();
+		{
+			static PERFORMACE_INFO scope = {"snd_update", 0};
+			perf_start(&scope);
+			snd_update();
+			perf_end();
+		}
 		
 		/* refocus */
 		if(!gfx_window_active())
@@ -1085,7 +1103,12 @@ static void client_run()
 		}
 		else
 		{
-			client_update();
+			{
+				static PERFORMACE_INFO scope = {"client_update", 0};
+				perf_start(&scope);
+				client_update();
+				perf_end();
+			}
 			
 			if(config.dbg_stress)
 			{
@@ -1097,10 +1120,24 @@ static void client_run()
 			}
 			else
 			{
-				client_render();
-				gfx_swap();
+				{
+					static PERFORMACE_INFO scope = {"client_render", 0};
+					perf_start(&scope);
+					client_render();
+					perf_end();
+				}
+
+				{
+					static PERFORMACE_INFO scope = {"gfx_swap", 0};
+					perf_start(&scope);
+					gfx_swap();
+					perf_end();
+				}
 			}
 		}
+
+		perf_end();
+
 		
 		/* check conditions */
 		if(client_state() == CLIENTSTATE_QUITING)
@@ -1130,6 +1167,10 @@ static void client_run()
 			frametime_high = 0;
 			frames = 0;
 			reporttime += reportinterval;
+			perf_next();
+			
+			if(config.dbg_pref)
+				perf_dump(&rootscope);
 		}
 		
 		/* update frametime */

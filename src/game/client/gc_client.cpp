@@ -12,7 +12,8 @@ extern "C" {
 #include "../g_game.h"
 #include "../g_version.h"
 #include "../g_mapres.h"
-#include "gc_mapres_image.h"
+#include "../g_layers.h"
+#include "gc_map_image.h"
 #include "gc_mapres_tilemap.h"
 #include "../generated/gc_data.h"
 #include "gc_menu.h"
@@ -166,7 +167,17 @@ public:
 
 };
 
-static damage_indicators damageind;
+static damage_indicators dmgind;
+
+void effect_damage_indicator(vec2 pos, vec2 dir)
+{
+	dmgind.create(pos, dir);
+}
+
+void render_damage_indicators()
+{
+	dmgind.render();
+}
 
 class particle_system
 {
@@ -404,7 +415,7 @@ void process_events(int snaptype)
 		if(item.type == EVENT_DAMAGEINDICATION)
 		{
 			ev_damageind *ev = (ev_damageind *)data;
-			damageind.create(vec2(ev->x, ev->y), get_direction(ev->angle));
+			effect_damage_indicator(vec2(ev->x, ev->y), get_direction(ev->angle));
 		}
 		else if(item.type == EVENT_AIR_JUMP)
 		{
@@ -1106,163 +1117,6 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 	}
 }
 
-void mapscreen_to_world(float center_x, float center_y, float zoom)
-{
-	//const float default_zoom = 1.5f;
-	float width = 300*3*zoom*gfx_screenaspect();
-	float height = 300*3*zoom;
-	gfx_mapscreen(center_x-width/2, center_y-height/2, center_x+width/2, center_y+height/2);
-}
-
-// renders the complete game world
-void render_world(float center_x, float center_y, float zoom)
-{
-	mapscreen_to_world(center_x, center_y, zoom);
-	//gfx_mapscreen(center_x-width/2, center_y-height/2, center_x+width/2, center_y+height/2);
-
-	// render background environment
-	int theme_id = 0;
-	mapres_theme *t = (mapres_theme *)map_find_item(MAPRES_TEMP_THEME, 0);
-	if(t)
-		theme_id = t->id;
-	
-	if(config.gfx_high_detail)
-	{
-		if(theme_id == 1)
-		{
-			// Winter night
-			gfx_mapscreen(0,0,1,1);
-			gfx_texture_set(-1);
-			gfx_quads_begin();
-				vec4 top(0x11/(float)0xff, 0x1a/(float)0xff, 0x21/(float)0xff, 1.0f);
-				vec4 bottom(0x2a/(float)0xff, 0x40/(float)0xff, 0x52/(float)0xff, 1.0f);
-				gfx_setcolorvertex(0, top.r, top.g, top.b, top.a);
-				gfx_setcolorvertex(1, top.r, top.g, top.b, top.a);
-				gfx_setcolorvertex(2, bottom.r, bottom.g, bottom.b, bottom.a);
-				gfx_setcolorvertex(3, bottom.r, bottom.g, bottom.b, bottom.a);
-				gfx_quads_drawTL(0, 0, 1, 1);
-			gfx_quads_end();
-
-			mapscreen_to_world(center_x*0.1f, center_y*0.1f, zoom);
-			render_stars();
-			
-			mapscreen_to_world(center_x, center_y, zoom);
-			
-			render_moon(center_x*0.8f, center_y*0.8f);
-			
-			mapscreen_to_world(center_x, center_y, zoom);
-		}
-		else
-		{
-			// Summer day
-			render_sun(20+center_x*0.6f, 20+center_y*0.6f);
-
-			// draw clouds
-			static vec2 cloud_pos[6] = {vec2(-500,0),vec2(-500,200),vec2(-500,400)};
-			static float cloud_speed[6] = {30, 20, 10};
-			static int cloud_sprites[6] = {SPRITE_CLOUD1, SPRITE_CLOUD2, SPRITE_CLOUD3};
-
-			gfx_texture_set(data->images[IMAGE_CLOUDS].id);
-			gfx_quads_begin();
-			for(int i = 0; i < 3; i++)
-			{
-				float parallax_amount = 0.55f;
-				select_sprite(cloud_sprites[i]);
-				draw_sprite((cloud_pos[i].x+fmod(client_localtime()*cloud_speed[i]+i*100.0f, 3000.0f))+center_x*parallax_amount,
-					cloud_pos[i].y+center_y*parallax_amount, 300);
-			}
-			gfx_quads_end();
-
-			// draw backdrop
-			gfx_texture_set(data->images[IMAGE_BACKDROP].id);
-			gfx_quads_begin();
-			float parallax_amount = 0.25f;
-			for(int x = -1; x < 3; x++)
-				gfx_quads_drawTL(1024*x+center_x*parallax_amount, (center_y)*parallax_amount+150+512, 1024, 512);
-			gfx_quads_end();
-		}
-	}
-	
-	// render background tilemaps
-	tilemap_render(32.0f, 0);
-
-	// render items
-	{
-		int num = snap_num_items(SNAP_CURRENT);
-		for(int i = 0; i < num; i++)
-		{
-			SNAP_ITEM item;
-			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-
-			if(item.type == OBJTYPE_PROJECTILE)
-			{
-				//const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-				//if(prev)
-				render_projectile((const obj_projectile *)data, item.id);
-			}
-			else if(item.type == OBJTYPE_POWERUP)
-			{
-				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-				if(prev)
-					render_powerup((const obj_powerup *)prev, (const obj_powerup *)data);
-			}
-			else if(item.type == OBJTYPE_FLAG)
-			{
-				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-				if (prev)
-					render_flag((const obj_flag *)prev, (const obj_flag *)data);
-			}
-		}
-	}
-
-	// render players above all
-	{
-		int num = snap_num_items(SNAP_CURRENT);
-		for(int i = 0; i < num; i++)
-		{
-			SNAP_ITEM item;
-			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-
-			if(item.type == OBJTYPE_PLAYER_CHARACTER)
-			{
-				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-				const void *prev_info = snap_find_item(SNAP_PREV, OBJTYPE_PLAYER_INFO, item.id);
-				const void *info = snap_find_item(SNAP_CURRENT, OBJTYPE_PLAYER_INFO, item.id);
-
-				if(prev && prev_info && info)
-				{
-					render_player(
-							(const obj_player_character *)prev,
-							(const obj_player_character *)data,
-							(const obj_player_info *)prev_info,
-							(const obj_player_info *)info
-						);
-				}
-			}
-		}
-	}
-
-	// render particles
-	temp_system.update(client_frametime());
-	temp_system.render();
-
-	// render foreground tilemaps
-	tilemap_render(32.0f, 1);
-	
-	// render front environment effects
-	if(config.gfx_high_detail)
-	{
-		if(theme_id == 1)
-		{
-			//mapscreen_to_world(center_x, center_y, zoom);
-			render_snow();
-		}
-	}
-
-	// render damage indications
-	damageind.render();
-}
-
 static int do_input(int *v, int key)
 {
 	*v += inp_key_presses(key) + inp_key_releases(key);
@@ -1534,6 +1388,7 @@ void render_game()
 
 	// pseudo format
 	// ZOOM ZOOM
+	/*
 	float zoom = 3.0;
 
 	// DEBUG TESTING
@@ -1625,7 +1480,7 @@ void render_game()
 			p1f.x,p1f.y);
 
 		gfx_quads_end();
-	}
+	}*/
 
 	if(local_character && !spectate && !(gameobj && gameobj->game_over))
 	{
@@ -1993,8 +1848,8 @@ void render_game()
 			vec2(local_character->x, local_character->y));
 		
 		char buf[512];
-		sprintf(buf, "%f", speed);
-		gfx_text(0, 150, 50, 24, buf, -1);
+		sprintf(buf, "%.2f", speed);
+		gfx_text(0, 150, 50, 12, buf, -1);
 	}
 
 	// render score board

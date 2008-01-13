@@ -11,7 +11,7 @@ extern "C" {
 	#include <engine/e_config.h>
 }
 
-#include <game/client/gc_mapres_image.h>
+#include <game/client/gc_map_image.h>
 #include <game/client/gc_mapres_tilemap.h>
 #include <game/client/gc_ui.h>
 //#include "game/mapres_col.h"
@@ -25,6 +25,16 @@ static int checker_texture = 0;
 static int background_texture = 0;
 static int cursor_texture = 0;
 static int entities_texture = 0;
+
+
+class mapres_image
+{
+public:
+	int width;
+	int height;
+	int image_data;
+};
+
 
 
 EDITOR editor;
@@ -1965,17 +1975,6 @@ template<typename T>
 static int make_version(int i, const T &v)
 { return (i<<16)+sizeof(T); }
 
-enum
-{
-	MAPITEMTYPE_VERSION=0,
-	MAPITEMTYPE_INFO,
-	MAPITEMTYPE_IMAGE,
-	MAPITEMTYPE_ENVELOPE,
-	MAPITEMTYPE_GROUP,
-	MAPITEMTYPE_LAYER,
-};
-
-
 void editor_load_old(DATAFILE *df)
 {
 	// load tilemaps
@@ -2075,7 +2074,7 @@ void editor_load_old(DATAFILE *df)
 					else if(e->data[0] == ITEM_WEAPON_ROCKET) id = ENTITY_WEAPON_ROCKET;
 					else if(e->data[0] == ITEM_NINJA) id = ENTITY_POWERUP_NINJA;
 					else if(e->data[0] == ITEM_ARMOR) id = ENTITY_ARMOR_1;
-					else if(e->data[0] == ITEM_HEALTH) id = ENTITY_HEATH_1;
+					else if(e->data[0] == ITEM_HEALTH) id = ENTITY_HEALTH_1;
 				}
 						
 				if(id > 0 && x >= 0 && x < g->width && y >= 0 && y < g->height)

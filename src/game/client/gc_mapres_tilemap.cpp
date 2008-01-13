@@ -1,4 +1,5 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+/*
 #include <engine/e_interface.h>
 #include <engine/e_config.h>
 #include "gc_mapres_tilemap.h"
@@ -15,13 +16,6 @@ int tilemap_init()
 {
 	return 0;
 }
-/*
-struct render_info
-{
-	unsigned char *data;
-};
-
-void tilemap_render_one()*/
 
 void tilemap_render(float scale, int fg)
 {
@@ -113,3 +107,4 @@ void tilemap_render(float scale, int fg)
 		}
 	}
 }
+*/

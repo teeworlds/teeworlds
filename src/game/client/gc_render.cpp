@@ -2,12 +2,14 @@
 #include <math.h>
 #include <engine/e_interface.h>
 #include <engine/e_config.h>
-#include "../generated/gc_data.h"
-#include "../g_protocol.h"
-#include "../g_math.h"
+#include <game/generated/gc_data.h>
+#include <game/g_protocol.h>
+#include <game/g_math.h>
+#include <game/g_layers.h>
 #include "gc_render.h"
 #include "gc_anim.h"
 #include "gc_client.h"
+#include "gc_map_image.h"
 
 static float sprite_w_scale;
 static float sprite_h_scale;
@@ -234,4 +236,145 @@ void mapscreen_to_world(float center_x, float center_y, float parallax_x, float 
 	points[1] = offset_y+center_y-height/2;
 	points[2] = offset_x+center_x+width/2;
 	points[3] = offset_y+center_y+height/2;
+}
+
+static void mapscreen_to_group(float center_x, float center_y, MAPITEM_GROUP *group)
+{
+	float points[4];
+	mapscreen_to_world(center_x, center_y, group->parallax_x/100.0f, group->parallax_y/100.0f,
+		group->offset_x, group->offset_y, gfx_screenaspect(), 1.0f, points);
+	gfx_mapscreen(points[0], points[1], points[2], points[3]);
+}
+
+void render_layers(float center_x, float center_y, int pass)
+{
+	bool passed_gamelayer = false;
+	for(int g = 0; g < layers_num_groups(); g++)
+	{
+		MAPITEM_GROUP *group = layers_get_group(g);
+		
+		mapscreen_to_group(center_x, center_y, group);
+		
+		for(int l = 0; l < group->num_layers; l++)
+		{
+			MAPITEM_LAYER *layer = layers_get_layer(group->start_layer+l);
+			bool render = false;
+			bool is_game_layer = false;
+			
+			if(layer == (MAPITEM_LAYER*)layers_game())
+			{
+				is_game_layer = true;
+				passed_gamelayer = 1;
+			}
+				
+			if(pass == 0)
+			{
+				if(passed_gamelayer)
+					return;
+				render = true;
+			}
+			else
+			{
+				if(passed_gamelayer && !is_game_layer)
+					render = true;
+			}
+			
+			if(render)
+			{
+				if(layer->type == LAYERTYPE_TILES)
+				{
+					MAPITEM_LAYER_TILEMAP *tmap = (MAPITEM_LAYER_TILEMAP *)layer;
+					if(tmap->image == -1)
+						gfx_texture_set(-1);
+					else
+						gfx_texture_set(img_get(tmap->image));
+					TILE *tiles = (TILE *)map_get_data(tmap->data);
+					render_tilemap(tiles, tmap->width, tmap->height, 32.0f, 1);
+				}
+				else if(layer->type == LAYERTYPE_QUADS)
+				{
+					MAPITEM_LAYER_QUADS *qlayer = (MAPITEM_LAYER_QUADS *)layer;
+					if(qlayer->image == -1)
+						gfx_texture_set(-1);
+					else
+						gfx_texture_set(img_get(qlayer->image));
+					QUAD *quads = (QUAD *)map_get_data_swapped(qlayer->data);
+					render_quads(quads, qlayer->num_quads);
+				}
+			}
+		}
+	}
+}
+
+// renders the complete game world
+void render_world(float center_x, float center_y, float zoom)
+{
+	// render background layers
+	render_layers(center_x, center_y, 0);
+
+	// render items
+	{
+		int num = snap_num_items(SNAP_CURRENT);
+		for(int i = 0; i < num; i++)
+		{
+			SNAP_ITEM item;
+			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+
+			if(item.type == OBJTYPE_PROJECTILE)
+			{
+				//const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+				//if(prev)
+				render_projectile((const obj_projectile *)data, item.id);
+			}
+			else if(item.type == OBJTYPE_POWERUP)
+			{
+				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+				if(prev)
+					render_powerup((const obj_powerup *)prev, (const obj_powerup *)data);
+			}
+			else if(item.type == OBJTYPE_FLAG)
+			{
+				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+				if (prev)
+					render_flag((const obj_flag *)prev, (const obj_flag *)data);
+			}
+		}
+	}
+
+	// render players above all
+	{
+		int num = snap_num_items(SNAP_CURRENT);
+		for(int i = 0; i < num; i++)
+		{
+			SNAP_ITEM item;
+			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+
+			if(item.type == OBJTYPE_PLAYER_CHARACTER)
+			{
+				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+				const void *prev_info = snap_find_item(SNAP_PREV, OBJTYPE_PLAYER_INFO, item.id);
+				const void *info = snap_find_item(SNAP_CURRENT, OBJTYPE_PLAYER_INFO, item.id);
+
+				if(prev && prev_info && info)
+				{
+					render_player(
+							(const obj_player_character *)prev,
+							(const obj_player_character *)data,
+							(const obj_player_info *)prev_info,
+							(const obj_player_info *)info
+						);
+				}
+			}
+		}
+	}
+
+	// render particles
+	//temp_system.update(client_frametime());
+	//temp_system.render();
+
+	// render foreground layers
+	render_layers(center_x, center_y, 1);
+
+	// render damage indications
+	render_damage_indicators();
 }

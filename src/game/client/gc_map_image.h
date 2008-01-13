@@ -8,12 +8,3 @@ int img_num();
 
 // fetches the texture id for the image
 int img_get(int index);
-
-
-class mapres_image
-{
-public:
-	int width;
-	int height;
-	int image_data;
-};

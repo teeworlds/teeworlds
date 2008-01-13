@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <engine/e_config.h>
-#include "../g_version.h"
+#include <game/g_version.h>
+#include <game/g_collision.h>
+#include <game/g_layers.h>
 #include "gs_common.h"
 #include "gs_game_ctf.h"
 #include "gs_game_tdm.h"
@@ -559,6 +561,9 @@ void player::set_team(int new_team)
 	dbg_msg("game", "cid=%d team=%d", client_id, team);
 }
 
+vec2 spawn_points[3][64];
+int num_spawn_points[3] = {0};
+
 struct spawneval
 {
 	spawneval()
@@ -614,15 +619,17 @@ static float evaluate_spawn(spawneval *eval, vec2 pos)
 static void evaluate_spawn_type(spawneval *eval, int t)
 {
 	// get spawn point
+	/*
 	int start, num;
 	map_get_type(t, &start, &num);
 	if(!num)
 		return;
-
-	for(int i  = 0; i < num; i++)
+	*/
+	for(int i  = 0; i < num_spawn_points[t]; i++)
 	{
-		mapres_spawnpoint *sp = (mapres_spawnpoint*)map_get_item(start + i, NULL, NULL);
-		vec2 p = vec2((float)sp->x, (float)sp->y);
+		//num_spawn_points[t]
+		//mapres_spawnpoint *sp = (mapres_spawnpoint*)map_get_item(start + i, NULL, NULL);
+		vec2 p = spawn_points[t][i];// vec2((float)sp->x, (float)sp->y);
 		float s = evaluate_spawn(eval, p);
 		if(!eval->got || eval->score > s)
 		{
@@ -641,17 +648,19 @@ void player::try_respawn()
 	spawneval eval;
 	eval.die_pos = die_pos;
 	
+	eval.pos = vec2(100, 100);
+	
 	if(gameobj->gametype == GAMETYPE_CTF)
 	{
 		eval.friendly_team = team;
 		
 		// try first try own team spawn, then normal spawn and then enemy
-		evaluate_spawn_type(&eval, MAPRES_SPAWNPOINT_RED+(team&1));
+		evaluate_spawn_type(&eval, 1+(team&1));
 		if(!eval.got)
 		{
-			evaluate_spawn_type(&eval, MAPRES_SPAWNPOINT);
+			evaluate_spawn_type(&eval, 0);
 			if(!eval.got)
-				evaluate_spawn_type(&eval, MAPRES_SPAWNPOINT_RED+((team+1)&1));
+				evaluate_spawn_type(&eval, 1+((team+1)&1));
 		}
 	}
 	else
@@ -659,9 +668,9 @@ void player::try_respawn()
 		if(gameobj->gametype == GAMETYPE_TDM)
 			eval.friendly_team = team;
 			
-		evaluate_spawn_type(&eval, MAPRES_SPAWNPOINT);
-		evaluate_spawn_type(&eval, MAPRES_SPAWNPOINT_RED);
-		evaluate_spawn_type(&eval, MAPRES_SPAWNPOINT_BLUE);
+		evaluate_spawn_type(&eval, 0);
+		evaluate_spawn_type(&eval, 1);
+		evaluate_spawn_type(&eval, 2);
 	}
 	
 	spawnpos = eval.pos;
@@ -2041,7 +2050,8 @@ void mods_init()
 	if(!data) /* only load once */
 		data = load_data_from_memory(internal_data);
 
-	col_init(32);
+	layers_init();
+	col_init();
 
 	world = new game_world;
 	players = new player[MAX_CLIENTS];
@@ -2058,69 +2068,58 @@ void mods_init()
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		players[i].core.world = &world->core;
 
-	//
-	int start, num;
-	map_get_type(MAPRES_ITEM, &start, &num);
-
-	// TODO: this is way more complicated then it should be
-	for(int i = 0; i < num; i++)
+	// create all entities from the game layer
+	MAPITEM_LAYER_TILEMAP *tmap = layers_game();
+	TILE *tiles = (TILE *)map_get_data(tmap->data);
+	
+	num_spawn_points[0] = 0;
+	num_spawn_points[1] = 0;
+	num_spawn_points[2] = 0;
+	
+	for(int y = 0; y < tmap->height; y++)
 	{
-		mapres_item *it = (mapres_item *)map_get_item(start+i, 0, 0);
-
-		int type = -1;
-		int subtype = 0;
-
-		switch(it->type)
+		for(int x = 0; x < tmap->width; x++)
 		{
-		case ITEM_WEAPON_GUN:
-			type = POWERUP_WEAPON;
-			subtype = WEAPON_GUN;
-			break;
-		case ITEM_WEAPON_SHOTGUN:
-			type = POWERUP_WEAPON;
-			subtype = WEAPON_SHOTGUN;
-			break;
-		case ITEM_WEAPON_ROCKET:
-			type = POWERUP_WEAPON;
-			subtype = WEAPON_ROCKET;
-			break;
-		case ITEM_WEAPON_HAMMER:
-			type = POWERUP_WEAPON;
-			subtype = WEAPON_HAMMER;
-			break;
-
-		case ITEM_HEALTH:
-			type = POWERUP_HEALTH;
-			break;
-
-		case ITEM_ARMOR:
-			type = POWERUP_ARMOR;
-			break;
-
-		case ITEM_NINJA:
-			if(config.sv_powerups)
+			int index = tiles[y*tmap->width+x].index - ENTITY_OFFSET;
+			int type = -1;
+			int subtype = 0;
+			vec2 pos(x*32.0f+16.0f, y*32.0f+16.0f);
+		
+			if(index == ENTITY_SPAWN)
+				spawn_points[0][num_spawn_points[0]++] = pos;
+			else if(index == ENTITY_SPAWN_RED)
+				spawn_points[1][num_spawn_points[1]++] = pos;
+			else if(index == ENTITY_SPAWN_BLUE)
+				spawn_points[2][num_spawn_points[2]++] = pos;
+			else if(index == ENTITY_ARMOR_1)
+				type = POWERUP_ARMOR;
+			else if(index == ENTITY_HEALTH_1)
+				type = POWERUP_HEALTH;
+			else if(index == ENTITY_WEAPON_SHOTGUN)
+			{
+				type = POWERUP_WEAPON;
+				subtype = WEAPON_SHOTGUN;
+			}
+			else if(index == ENTITY_WEAPON_ROCKET)
+			{
+				type = POWERUP_WEAPON;
+				subtype = WEAPON_ROCKET;
+			}
+			else if(index == ENTITY_POWERUP_NINJA)
 			{
 				type = POWERUP_NINJA;
 				subtype = WEAPON_NINJA;
 			}
-			break;
-		};
-
-		if(type != -1)
-		{
-			 // LOL, the only new in the entire game code
-			 // perhaps we can get rid of it. seems like a stupid thing to have
-			powerup *ppower = new powerup(type, subtype);
-			ppower->pos = vec2(it->x, it->y);
+			
+			if(type != -1)
+			{
+				powerup *ppower = new powerup(type, subtype);
+				ppower->pos = pos;
+			}
 		}
 	}
 
-	if(gameobj->gametype == GAMETYPE_CTF)
-	{
-	}
-
 	world->insert_entity(gameobj);
-
 
 	if(config.dbg_bots)
 	{

@@ -18,9 +18,6 @@ extern "C" {
 #include "../g_version.h"
 #include "../g_protocol.h"
 
-#include "gc_mapres_image.h"
-#include "gc_mapres_tilemap.h"
-
 #include "../generated/gc_data.h"
 #include "gc_render.h"
 #include "gc_anim.h"

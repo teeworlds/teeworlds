@@ -6,7 +6,7 @@
 #include <game/g_math.h>
 #include <math.h>
 #include "../engine/e_interface.h"
-#include "g_mapres_col.h"
+#include "g_collision.h"
 
 #include "g_protocol.h"
 
@@ -126,7 +126,7 @@ public:
 #define min(a, b) ( a > b ? b : a)
 #define max(a, b) ( a > b ? a : b)
 
-inline bool col_check_point(float x, float y) { return col_check_point((int)x, (int)y) != 0; }
+inline bool col_check_point(float x, float y) { return col_is_solid((int)x, (int)y) != 0; }
 inline bool col_check_point(vec2 p) { return col_check_point(p.x, p.y); }
 
 struct mapres_entity

@@ -519,6 +519,7 @@ void map_get_type(int type, int *start, int *num);
 		A pointer to the raw data, otherwise 0.
 */
 void *map_get_data(int index);
+void *map_get_data_swapped(int index);
 
 /*
 	Group: Network (Server)

@@ -91,3 +91,4 @@ void reset_projectile_particles();
 void send_info(bool start);
 
 void effect_air_jump(vec2 pos);
+void effect_damage_indicator(vec2 pos, vec2 dir);
