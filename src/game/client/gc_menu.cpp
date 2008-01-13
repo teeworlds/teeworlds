@@ -14,7 +14,6 @@ extern "C" {
 	#include <engine/client/ec_font.h>
 }
 
-#include "../g_mapres.h"
 #include "../g_version.h"
 #include "../g_protocol.h"
 

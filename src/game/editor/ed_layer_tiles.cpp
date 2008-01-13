@@ -1,4 +1,3 @@
-#include <game/client/gc_mapres_tilemap.h>
 #include <game/g_math.h>
 #include <game/generated/gc_data.h>
 #include <game/client/gc_render.h>

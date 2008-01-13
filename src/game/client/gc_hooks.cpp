@@ -17,7 +17,6 @@ extern "C" {
 #include "gc_skin.h"
 #include "gc_render.h"
 #include "gc_map_image.h"
-#include "gc_mapres_tilemap.h"
 
 extern unsigned char internal_data[];
 

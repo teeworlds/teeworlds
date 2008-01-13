@@ -11,10 +11,8 @@ extern "C" {
 
 #include "../g_game.h"
 #include "../g_version.h"
-#include "../g_mapres.h"
 #include "../g_layers.h"
 #include "gc_map_image.h"
-#include "gc_mapres_tilemap.h"
 #include "../generated/gc_data.h"
 #include "gc_menu.h"
 #include "gc_skin.h"

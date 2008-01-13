@@ -179,42 +179,42 @@ static vec4 get_button_color(const void *id, int checked)
 static void draw_editor_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), CORNER_ALL, 5.0f);
+	ui_draw_rect(r, get_button_color(id, checked), CORNER_ALL, 2.0f);
 	ui_do_label(r, text, 10, 0, -1);
 }
 
 static void draw_editor_button_l(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), CORNER_L, 5.0f);
+	ui_draw_rect(r, get_button_color(id, checked), CORNER_L, 2.0f);
 	ui_do_label(r, text, 10, 0, -1);
 }
 
 static void draw_editor_button_m(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), 0, 5.0f);
+	ui_draw_rect(r, get_button_color(id, checked), 0, 2.0f);
 	ui_do_label(r, text, 10, 0, -1);
 }
 
 static void draw_editor_button_r(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), CORNER_R, 5.0f);
+	ui_draw_rect(r, get_button_color(id, checked), CORNER_R, 2.0f);
 	ui_do_label(r, text, 10, 0, -1);
 }
 
 static void draw_inc_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(ui_hot_item == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), CORNER_R, 5.0f);
+	ui_draw_rect(r, get_button_color(id, checked), CORNER_R, 2.0f);
 	ui_do_label(r, ">", 10, 0, -1);
 }
 
 static void draw_dec_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(ui_hot_item == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), CORNER_L, 5.0f);
+	ui_draw_rect(r, get_button_color(id, checked), CORNER_L, 2.0f);
 	ui_do_label(r, "<", 10, 0, -1);
 }
 
@@ -293,7 +293,7 @@ static int ui_do_value_selector(void *id, RECT *r, const char *label, int curren
 	char buf[128];
 	sprintf(buf, "%s %d", label, current);
 	ui_draw_rect(r, get_button_color(id, 0), CORNER_ALL, 5.0f);
-	ui_do_label(r, buf, 12, 0, -1);
+	ui_do_label(r, buf, 10, 0, -1);
 	return current;
 }
 
@@ -339,6 +339,30 @@ static void do_toolbar(RECT toolbar)
 {
 	RECT button;
 
+	// animate button
+	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
+	static int animate_button = 0;
+	if(ui_do_button(&animate_button, "Anim", editor.animate, &button, draw_editor_button, "[ctrl+m] Toggle animation") ||
+		(inp_key_down('M') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))))
+	{
+		editor.animate_start = time_get();
+		editor.animate = !editor.animate;
+	}
+
+	ui_vsplit_l(&toolbar, 5.0f, 0, &toolbar);
+
+	// proof button
+	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
+	static int proof_button = 0;
+	if(ui_do_button(&proof_button, "Proof", editor.proof_borders, &button, draw_editor_button, "[ctrl-p] Toggles proof borders. These borders represent what a player maximum can see.") ||
+		(inp_key_down('P') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))))
+	{
+		editor.proof_borders = !editor.proof_borders;
+	}
+
+	ui_vsplit_l(&toolbar, 15.0f, 0, &toolbar);
+	
+	// zoom group
 	ui_vsplit_l(&toolbar, 16.0f, &button, &toolbar);
 	static int zoom_out_button = 0;
 	if(ui_do_button(&zoom_out_button, "ZO", 0, &button, draw_editor_button_l, "[NumPad-] Zoom out") || inp_key_down(KEY_KP_SUBTRACT))
@@ -1382,7 +1406,7 @@ static void render_layers(RECT toolbox, RECT toolbar, RECT view)
 	}
 }
 
-static void render_images(RECT toolbox, RECT view)
+static void render_images(RECT toolbox, RECT toolbar, RECT view)
 {
 	static int selected_image = 0;
 	
@@ -1391,7 +1415,7 @@ static void render_images(RECT toolbox, RECT view)
 		char buf[128];
 		sprintf(buf, "#%d %dx%d", i, editor.map.images[i]->width, editor.map.images[i]->height);
 		RECT slot;
-		ui_hsplit_t(&toolbox, 15.0f, &slot, &toolbox);
+		ui_hsplit_t(&toolbox, 12.0f, &slot, &toolbox);
 		
 		if(ui_do_button(&editor.map.images[i], buf, selected_image == i, &slot, draw_editor_button, "Select image"))
 			selected_image = i;
@@ -1418,14 +1442,26 @@ static void render_images(RECT toolbox, RECT view)
 	
 	RECT slot;
 	ui_hsplit_t(&toolbox, 5.0f, &slot, &toolbox);
-	ui_hsplit_t(&toolbox, 15.0f, &slot, &toolbox);
-
+	
 	// new image
 	static int new_image_button = 0;
-	if(ui_do_button(&new_image_button, "(Load New Image)", 0, &slot, draw_editor_button, "Load a new image to use in the map"))
+	ui_vsplit_l(&toolbar, 40.0f, &slot, &toolbar);
+	if(ui_do_button(&new_image_button, "Add", 0, &slot, draw_editor_button, "Load a new image to use in the map"))
 		editor.dialog = DIALOG_LOAD_IMAGE;
 
-	ui_hsplit_t(&toolbox, 15.0f, &slot, &toolbox);
+	// replace image
+	static int replace_image_button = 0;
+	ui_vsplit_l(&toolbar, 10.0f, &slot, &toolbar);
+	ui_vsplit_l(&toolbar, 60.0f, &slot, &toolbar);
+	if(ui_do_button(&replace_image_button, "Replace", 0, &slot, draw_editor_button, "Replaces the selected image with a new one (NOT IMPEMENTED)"))
+		(void)0;
+
+	// remove image
+	static int remove_button = 0;
+	ui_vsplit_l(&toolbar, 40.0f, &slot, &toolbar);
+	ui_vsplit_l(&toolbar, 60.0f, &slot, &toolbar);
+	if(ui_do_button(&remove_button, "Remove", 0, &slot, draw_editor_button, "Discards the selected image (NOT IMPEMENTED)"))
+		(void)0;
 }
 	
 static void editor_listdir_callback(const char *name, int is_dir, void *user)
@@ -1495,27 +1531,6 @@ static void render_modebar(RECT view)
 
 	ui_vsplit_l(&view, 5.0f, 0, &view);
 	
-	// animate button
-	ui_vsplit_l(&view, 30.0f, &button, &view);
-	static int animate_button = 0;
-	if(ui_do_button(&animate_button, "Anim", editor.animate, &button, draw_editor_button, "[ctrl+m] Toggle animation") ||
-		(inp_key_down('M') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))))
-	{
-		editor.animate_start = time_get();
-		editor.animate = !editor.animate;
-	}
-
-	ui_vsplit_l(&view, 5.0f, 0, &view);
-
-	// proof button
-	ui_vsplit_l(&view, 30.0f, &button, &view);
-	static int proof_button = 0;
-	if(ui_do_button(&proof_button, "Proof", editor.proof_borders, &button, draw_editor_button, "[ctrl-p] Toggles proof borders. These borders represent what a player maximum can see.") ||
-		(inp_key_down('P') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))))
-	{
-		editor.proof_borders = !editor.proof_borders;
-	}
-	
 	// spacing
 	//ui_vsplit_l(&view, 10.0f, 0, &view);
 }
@@ -1529,7 +1544,7 @@ static void render_statusbar(RECT view)
 		editor.show_envelope_editor = (editor.show_envelope_editor+1)%4;
 	
 	if(editor.tooltip)
-		ui_do_label(&view, editor.tooltip, 12.0f, -1, -1);
+		ui_do_label(&view, editor.tooltip, 10.0f, -1, -1);
 }
 
 static void render_envelopeeditor(RECT view)
@@ -1546,8 +1561,8 @@ static void render_envelopeeditor(RECT view)
 		show_colorbar = true;
 
 	RECT toolbar, curvebar, colorbar;
-	ui_hsplit_t(&view, 20.0f, &toolbar, &view);
-	ui_hsplit_t(&view, 20.0f, &curvebar, &view);
+	ui_hsplit_t(&view, 15.0f, &toolbar, &view);
+	ui_hsplit_t(&view, 15.0f, &curvebar, &view);
 	ui_margin(&toolbar, 2.0f, &toolbar);
 	ui_margin(&curvebar, 2.0f, &curvebar);
 
@@ -1597,7 +1612,7 @@ static void render_envelopeeditor(RECT view)
 		char buf[512];
 		sprintf(buf, "%d/%d", selected_envelope+1, editor.map.envelopes.len());
 		ui_draw_rect(&shifter, vec4(1,1,1,0.5f), 0, 0.0f);
-		ui_do_label(&shifter, buf, 14.0f, 0, -1);
+		ui_do_label(&shifter, buf, 10.0f, 0, -1);
 		
 		static int prev_button = 0;
 		if(ui_do_button(&prev_button, 0, 0, &dec, draw_dec_button, "Previous Envelope"))
@@ -1611,7 +1626,7 @@ static void render_envelopeeditor(RECT view)
 		{
 			ui_vsplit_l(&toolbar, 15.0f, &button, &toolbar);
 			ui_vsplit_l(&toolbar, 35.0f, &button, &toolbar);
-			ui_do_label(&button, "Name:", 14.0f, -1, -1);
+			ui_do_label(&button, "Name:", 10.0f, -1, -1);
 
 			ui_vsplit_l(&toolbar, 80.0f, &button, &toolbar);
 			static int name_box = 0;
@@ -1876,10 +1891,42 @@ static void render_envelopeeditor(RECT view)
 
 			char buf[512];
 			sprintf(buf, "%.3f %.3f", current_time/1000.0f, fx2f(current_value));
-			ui_do_label(&toolbar, buf, 14.0f, 0, -1);
+			ui_do_label(&toolbar, buf, 10.0f, 0, -1);
 		}
 	}
 }
+
+static void render_map(RECT toolbox, RECT view)
+{
+	static int new_map_button = 0;	
+	static int save_button = 0;	
+	static int save_as_button = 0;	
+	static int open_button = 0;	
+
+	RECT slot;
+	ui_hsplit_t(&toolbox, 2.0f, &slot, &toolbox);
+	ui_hsplit_t(&toolbox, 15.0f, &slot, &toolbox);
+	if(ui_do_button(&new_map_button, "New", 0, &slot, draw_editor_button, "Creates a new map"))
+		(void)0;
+
+	ui_hsplit_t(&toolbox, 10.0f, &slot, &toolbox);
+	ui_hsplit_t(&toolbox, 15.0f, &slot, &toolbox);
+	if(ui_do_button(&open_button, "Open", 0, &slot, draw_editor_button, "Opens a map for editing"))
+		(void)0;
+
+	ui_hsplit_t(&toolbox, 10.0f, &slot, &toolbox);
+	ui_hsplit_t(&toolbox, 15.0f, &slot, &toolbox);
+	if(ui_do_button(&save_button, "Save", 0, &slot, draw_editor_button, "Saves the current map"))
+		(void)0;
+
+	ui_hsplit_t(&toolbox, 2.0f, &slot, &toolbox);
+	ui_hsplit_t(&toolbox, 15.0f, &slot, &toolbox);
+	if(ui_do_button(&save_as_button, "Save As", 0, &slot, draw_editor_button, "Saves the current map under a new name"))
+		(void)0;
+
+		
+}
+	
 
 static void editor_render()
 {
@@ -1894,24 +1941,24 @@ static void editor_render()
 	// render checker
 	render_background(view, checker_texture, 32.0f, 1.0f);
 	
-	RECT modebar, toolbar, statusbar, envelope_editor, propsbar;
+	RECT modebar, toolbar, statusbar, envelope_editor, toolbox;
 	
 	if(editor.gui_active)
 	{
 		
 		ui_hsplit_t(&view, 16.0f, &toolbar, &view);
-		ui_vsplit_l(&view, 80.0f, &propsbar, &view);
+		ui_vsplit_l(&view, 80.0f, &toolbox, &view);
 		ui_hsplit_b(&view, 16.0f, &view, &statusbar);
 
 				
 		float brightness = 0.25f;
 
-		render_background(propsbar, background_texture, 128.0f, brightness);
-		ui_margin(&propsbar, 2.0f, &propsbar);
+		render_background(toolbox, background_texture, 128.0f, brightness);
+		ui_margin(&toolbox, 2.0f, &toolbox);
 		
 		render_background(toolbar, background_texture, 128.0f, brightness);
 		ui_margin(&toolbar, 2.0f, &toolbar);
-		ui_vsplit_l(&toolbar, 220.0f, &modebar, &toolbar);
+		ui_vsplit_l(&toolbar, 150.0f, &modebar, &toolbar);
 
 		render_background(statusbar, background_texture, 128.0f, brightness);
 		ui_margin(&statusbar, 2.0f, &statusbar);
@@ -1931,10 +1978,12 @@ static void editor_render()
 	
 	if(editor.dialog == DIALOG_LOAD_IMAGE)
 		render_dialog_load_image();
+	else if(editor.mode == MODE_MAP)
+		render_map(toolbox, view);
 	else if(editor.mode == MODE_LAYERS)
-		render_layers(propsbar, toolbar, view);
+		render_layers(toolbox, toolbar, view);
 	else if(editor.mode == MODE_IMAGES)
-		render_images(propsbar, view);
+		render_images(toolbox, toolbar, view);
 		
 	gfx_mapscreen(ui_screen()->x, ui_screen()->y, ui_screen()->w, ui_screen()->h);
 

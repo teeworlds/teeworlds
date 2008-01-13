@@ -1,4 +1,3 @@
-#include <game/client/gc_mapres_tilemap.h>
 #include "ed_editor.hpp"
 
 
