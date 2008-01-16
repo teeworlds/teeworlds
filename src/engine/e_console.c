@@ -240,7 +240,7 @@ static int console_validate(COMMAND *command, struct lexer_result *result)
 				return -1;
 			break;
 		default:
-			// unknown char, so just continue...
+			/* unknown char, so just continue... */
 			c++;
 			continue;
 		}
@@ -275,9 +275,10 @@ void console_execute(const char *str)
 	else if (result.num_tokens > 0)
 	{
 		const char *name;
+		COMMAND *command;
 		extract_result_string(&result, 0, &name);
 
-		COMMAND *command = console_find_command(name);
+		command = console_find_command(name);
 
 		if (command)
 		{

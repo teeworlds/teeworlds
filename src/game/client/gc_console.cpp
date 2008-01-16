@@ -17,7 +17,7 @@ static unsigned int console_input_len = 0;
 static char console_input[256] = {0};
 static int active = 0;
 
-static char backlog[256][256] = {0};
+static char backlog[256][256] = {{0}};
 static int backlog_len;
 
 static void client_console_print(const char *str)
