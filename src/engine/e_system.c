@@ -8,6 +8,7 @@
 
 #include "e_detect.h"
 #include "e_system.h"
+#include "e_console.h"
 
 #if defined(CONF_FAMILY_UNIX)
 	#include <sys/time.h>
@@ -88,6 +89,18 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 	va_end(args);
 	printf("\n");
 	fflush(stdout);
+
+	{
+		char str[2048];
+
+		sprintf(str, "[%s]: ", sys);
+
+		va_start(args, fmt);
+		vsprintf(str+strlen(str), fmt, args);
+		va_end(args);
+
+		console_print(str);
+	}
 }
 
 int memory_alloced = 0;

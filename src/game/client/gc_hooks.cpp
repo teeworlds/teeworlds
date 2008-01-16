@@ -17,6 +17,7 @@ extern "C" {
 #include "gc_skin.h"
 #include "gc_render.h"
 #include "gc_map_image.h"
+#include "gc_console.h"
 
 extern unsigned char internal_data[];
 
@@ -36,6 +37,8 @@ extern "C" void modc_init()
 	gfx_text_set_default_font(&default_font);
 
 	menu_init();
+
+	client_console_init();
 	
 	// setup sound channels
 	snd_set_channel(CHN_GUI, 1.0f, 0.0f);
@@ -288,10 +291,10 @@ extern "C" void modc_newsnapshot()
 		client_datas[i].update_render_info();
 }
 
-
-
 extern "C" void modc_render()
 {
+	console_handle_input();
+
 	// this should be moved around abit
 	if(client_state() == CLIENTSTATE_ONLINE)
 	{
@@ -310,6 +313,11 @@ extern "C" void modc_render()
 	else // if (client_state() != CLIENTSTATE_CONNECTING && client_state() != CLIENTSTATE_LOADING)
 	{
 		menu_render();
+		if (console_active())
+		{
+			console_render();
+			return;
+		}
 	}
 
 	//

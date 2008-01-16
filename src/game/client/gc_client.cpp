@@ -20,6 +20,7 @@ extern "C" {
 #include "gc_client.h"
 #include "gc_render.h"
 #include "gc_anim.h"
+#include "gc_console.h"
 
 struct data_container *data = 0;
 static int64 debug_firedelay = 0;

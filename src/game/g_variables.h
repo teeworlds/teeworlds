@@ -23,6 +23,7 @@ MACRO_CONFIG_INT(key_teamchat, 'Y', 32, 512)
 MACRO_CONFIG_INT(key_console, 256+2, 32, 512)
 MACRO_CONFIG_INT(key_remoteconsole, 256+3, 32, 512)
 
+MACRO_CONFIG_INT(key_toggleconsole, 256+4, 32, 512)
 
 MACRO_CONFIG_INT(dbg_bots, 0, 0, 11)
 

@@ -5,6 +5,7 @@
 #include <engine/e_system.h>
 #include <engine/e_interface.h>
 #include <engine/e_config.h>
+#include <engine/e_console.h>
 
 static char application_save_path[512] = {0};
 
@@ -39,6 +40,9 @@ void engine_init(const char *appname, int argc, char **argv)
 			fs_makedir(path);
 		}
 	}
+
+	/* init console */
+	console_init();
 	
 	/* reset the config */
 	config_reset();

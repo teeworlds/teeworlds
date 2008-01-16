@@ -7,7 +7,6 @@
 #include "e_system.h"
 #include "e_config.h"
 
-
 /* buffered stream for reading lines, should perhaps be something smaller */
 typedef struct
 {
