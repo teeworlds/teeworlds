@@ -31,8 +31,6 @@ struct lexer_result
     unsigned int num_tokens; 
 }; 
 
-int lex(const char *line, struct lexer_result *result);
-
 int extract_result_string(struct lexer_result *result, int index, const char **str);
 int extract_result_int(struct lexer_result *result, int index, int *i);
 int extract_result_float(struct lexer_result *result, int index, float *f);

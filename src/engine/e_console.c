@@ -18,10 +18,32 @@ enum
 static const char *store_string(struct lexer_result *res, const char *str, int len)
 {
 	const char *ptr = res->next_string;
+	int escaped = 0;
 
+	while (len)
+	{
+		if (!escaped && *str == '\\')
+		{
+			escaped = 1;
+		}
+		else
+		{
+			escaped = 0;
+
+			*res->next_string++ = *str;
+		}
+
+		str++;
+		len--;
+	}
+
+	*res->next_string++ = 0;
+
+	/*
 	memcpy(res->next_string, str, len);
 	res->next_string[len] = 0;
 	res->next_string += len+1;
+	*/
 
 	return ptr;
 }
@@ -39,12 +61,12 @@ static void save_token(struct lexer_result *res, int *index, const char **start,
     ++*index; 
 } 
  
-int digit(char c) 
+static int digit(char c) 
 { 
     return '0' <= c && c <= '9'; 
 } 
  
-int lex(const char *line, struct lexer_result *res) 
+static int lex(const char *line, struct lexer_result *res) 
 { 
     int state = STATE_START, i = 0; 
 	int length_left = CONSOLE_MAX_STR_LENGTH;
@@ -53,10 +75,10 @@ int lex(const char *line, struct lexer_result *res)
 
 	memset(res, 0, sizeof(*res));
 	res->next_string = res->string_storage;
- 
+
     for (c = start = line; *c != '\0' && res->num_tokens < MAX_TOKENS && length_left; ++c, --length_left) 
     { 
-        /* printf("State: %d\n", state); */
+        /* printf("State: %d.. c: %c\n", state, *c); */
         switch (state) 
         { 
         case STATE_START: 
@@ -66,7 +88,9 @@ int lex(const char *line, struct lexer_result *res)
                 state = STATE_INT; 
             else if (*c == '.') 
                 state = STATE_POT_FLOAT; 
-            else 
+            else if (*c == '"')
+				state = STATE_QUOTED;
+			else
                 state = STATE_STRING; 
             break; 
  
@@ -106,7 +130,10 @@ int lex(const char *line, struct lexer_result *res)
  
         case STATE_QUOTED: 
             if (*c == '"') 
+			{
+				++start;
                 save_token(res, &i, &start, c, &state, TOKEN_STRING); 
+			}
             else if (*c == '\\') 
                 state = STATE_ESCAPE; 
             break; 
