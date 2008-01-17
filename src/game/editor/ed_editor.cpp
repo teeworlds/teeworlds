@@ -24,16 +24,7 @@ static int cursor_texture = 0;
 static int entities_texture = 0;
 
 
-// popup menu handling
-static struct
-{
-	RECT rect;
-	void *id;
-	int (*func)(RECT rect);
-	int is_menu;
-	void *extra;
-} ui_popups[8];
-static int ui_num_popups = 0;
+static const void *ui_got_context = 0;
 
 EDITOR editor;
 
@@ -127,17 +118,6 @@ int LAYERGROUP::swap_layers(int index0, int index1)
 /********************************************************
  OTHER
 *********************************************************/
-
-static int ui_got_context = 0;
-
-static void ui_draw_rect(const RECT *r, vec4 color, int corners, float rounding)
-{
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_setcolor(color.r, color.g, color.b, color.a);
-	draw_round_rect_ext(r->x,r->y,r->w,r->h,rounding*ui_scale(), corners);
-	gfx_quads_end();
-}
 
 // copied from gc_menu.cpp, should be more generalized
 extern int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float font_size, bool hidden=false);
@@ -260,7 +240,7 @@ int do_editor_button(const void *id, const char *text, int checked, const RECT *
 	if(ui_mouse_inside(r))
 	{
 		if(flags&BUTTON_CONTEXT)
-			ui_got_context = 1;
+			ui_got_context = id;
 		if(tooltip)
 			editor.tooltip = tooltip;
 	}
@@ -279,13 +259,6 @@ static void render_background(RECT view, int texture, float size, float brightne
 	gfx_quads_drawTL(view.x, view.y, view.w, view.h);
 	gfx_quads_end();
 }
-
-
-static int selected_layer = 0;
-static int selected_group = 0;
-static int selected_quad = -1;
-int selected_points = 0;
-static int selected_envelope = 0;
 
 static LAYERGROUP brush;
 static LAYER_TILES tileset_picker(16, 16);
@@ -344,60 +317,6 @@ static int ui_do_value_selector(void *id, RECT *r, const char *label, int curren
 	ui_draw_rect(r, get_button_color(id, 0), CORNER_ALL, 5.0f);
 	ui_do_label(r, buf, 10, 0, -1);
 	return current;
-}
-
-static void ui_invoke_popup_menu(void *id, int flags, float x, float y, float w, float h, int (*func)(RECT rect), void *extra=0)
-{
-	dbg_msg("", "invoked");
-	ui_popups[ui_num_popups].id = id;
-	ui_popups[ui_num_popups].is_menu = flags;
-	ui_popups[ui_num_popups].rect.x = x;
-	ui_popups[ui_num_popups].rect.y = y;
-	ui_popups[ui_num_popups].rect.w = w;
-	ui_popups[ui_num_popups].rect.h = h;
-	ui_popups[ui_num_popups].func = func;
-	ui_popups[ui_num_popups].extra = extra;
-	ui_num_popups++;
-}
-
-static void ui_do_popup_menu()
-{
-	for(int i = 0; i < ui_num_popups; i++)
-	{
-		bool inside = ui_mouse_inside(&ui_popups[i].rect);
-		ui_set_hot_item(&ui_popups[i].id);
-		
-		if(ui_active_item() == &ui_popups[i].id)
-		{
-			if(!ui_mouse_button(0))
-			{
-				if(!inside)
-					ui_num_popups--;
-				ui_set_active_item(0);
-			}
-		}
-		else if(ui_hot_item() == &ui_popups[i].id)
-		{
-			if(ui_mouse_button(0))
-				ui_set_active_item(&ui_popups[i].id);
-		}
-		
-		int corners = CORNER_ALL;
-		if(ui_popups[i].is_menu)
-			corners = CORNER_R|CORNER_B;
-		
-		RECT r = ui_popups[i].rect;
-		ui_draw_rect(&r, vec4(0.5f,0.5f,0.5f,0.75f), corners, 3.0f);
-		ui_margin(&r, 1.0f, &r);
-		ui_draw_rect(&r, vec4(0,0,0,0.75f), corners, 3.0f);
-		ui_margin(&r, 4.0f, &r);
-		
-		if(ui_popups[i].func(r))
-			ui_num_popups--;
-			
-		if(inp_key_down(KEY_ESC))
-			ui_num_popups--;
-	}
 }
 
 LAYERGROUP *EDITOR::get_selected_group()
@@ -540,53 +459,6 @@ static void do_toolbar(RECT toolbar)
 				}
 			}
 		}
-
-		ui_vsplit_l(&toolbar, 10.0f, &button, &toolbar);
-		ui_vsplit_l(&toolbar, 60.0f, &button, &toolbar);
-		static int sq_button = 0;
-		if(do_editor_button(&sq_button, "Sq. Quad", editor.get_selected_quad()?0:-1, &button, draw_editor_button, 0, "Squares the current quad"))
-		{
-			QUAD *q = editor.get_selected_quad();
-			if(q)
-			{
-				int top = q->points[0].y;
-				int left = q->points[0].x;
-				int bottom = q->points[0].y;
-				int right = q->points[0].x;
-				
-				for(int k = 1; k < 4; k++)
-				{
-					if(q->points[k].y < top) top = q->points[k].y;
-					if(q->points[k].x < left) left = q->points[k].x;
-					if(q->points[k].y > bottom) bottom = q->points[k].y;
-					if(q->points[k].x > right) right = q->points[k].x;
-				}
-				
-				q->points[0].x = left; q->points[0].y = top;
-				q->points[1].x = right; q->points[1].y = top;
-				q->points[2].x = left; q->points[2].y = bottom;
-				q->points[3].x = right; q->points[3].y = bottom;
-			}
-		}
-
-		/*
-		ui_vsplit_l(&toolbar, 20.0f, &button, &toolbar);
-		ui_vsplit_l(&toolbar, 60.0f, &button, &toolbar);
-		bool in_gamegroup = editor.game_group->layers.find(tlayer) != -1;
-		static int col_button = 0;
-		if(do_editor_button(&col_button, "Make Col", (in_gamegroup&&tlayer)?0:-1, &button, draw_editor_button, 0, "Constructs collision from the current layer"))
-		{
-			LAYER_TILES *gl = editor.game_layer;
-			int w = min(gl->width, tlayer->width);
-			int h = min(gl->height, tlayer->height);
-			dbg_msg("", "w=%d h=%d", w, h);
-			for(int y = 0; y < h; y++)
-				for(int x = 0; x < w; x++)
-				{
-					if(gl->tiles[y*gl->width+x].index <= TILE_SOLID)
-						gl->tiles[y*gl->width+x].index = tlayer->tiles[y*tlayer->width+x].index?TILE_SOLID:TILE_AIR;
-				}
-		}*/
 	}
 }
 
@@ -606,6 +478,7 @@ static void do_quad(QUAD *q, int index)
 		OP_MOVE_ALL,
 		OP_MOVE_PIVOT,
 		OP_ROTATE,
+		OP_CONTEXT_MENU,
 	};
 	
 	// some basic values
@@ -628,7 +501,7 @@ static void do_quad(QUAD *q, int index)
 		ui_set_hot_item(id);
 
 	// draw selection background	
-	if(selected_quad == index)
+	if(editor.selected_quad == index)
 	{
 		gfx_setcolor(0,0,0,1);
 		gfx_quads_draw(center_x, center_y, 7.0f, 7.0f);
@@ -664,17 +537,33 @@ static void do_quad(QUAD *q, int index)
 		last_wx = wx;
 		last_wy = wy;
 		
-		if(!ui_mouse_button(0))
+		if(operation == OP_CONTEXT_MENU)
 		{
-			editor.lock_mouse = false;
-			operation = OP_NONE;
-			ui_set_active_item(0);
+			if(!ui_mouse_button(1))
+			{
+				static int quad_popup_id = 0;
+				ui_invoke_popup_menu(&quad_popup_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 150, popup_quad);
+				editor.lock_mouse = false;
+				operation = OP_NONE;
+				ui_set_active_item(0);
+			}
 		}
+		else
+		{
+			if(!ui_mouse_button(0))
+			{
+				editor.lock_mouse = false;
+				operation = OP_NONE;
+				ui_set_active_item(0);
+			}
+		}			
 
 		gfx_setcolor(1,1,1,1);
 	}
 	else if(ui_hot_item() == id)
 	{
+		ui_got_context = id;
+		
 		gfx_setcolor(1,1,1,1);
 		editor.tooltip = "Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate";
 		
@@ -696,10 +585,16 @@ static void do_quad(QUAD *q, int index)
 				operation = OP_MOVE_ALL;
 				
 			ui_set_active_item(id);
-			selected_quad = index;
-			editor.props = PROPS_QUAD;
+			editor.selected_quad = index;
 			last_wx = wx;
 			last_wy = wy;
+		}
+		
+		if(ui_mouse_button(1))
+		{
+			editor.selected_quad = index;
+			operation = OP_CONTEXT_MENU;
+			ui_set_active_item(id);
 		}
 	}
 	else
@@ -724,7 +619,7 @@ static void do_quad_point(QUAD *q, int quad_index, int v)
 		ui_set_hot_item(id);
 
 	// draw selection background	
-	if(selected_quad == quad_index && selected_points&(1<<v))
+	if(editor.selected_quad == quad_index && editor.selected_points&(1<<v))
 	{
 		gfx_setcolor(0,0,0,1);
 		gfx_quads_draw(px, py, 7.0f, 7.0f);
@@ -734,7 +629,8 @@ static void do_quad_point(QUAD *q, int quad_index, int v)
 	{
 		OP_NONE=0,
 		OP_MOVEPOINT,
-		OP_MOVEUV
+		OP_MOVEUV,
+		OP_CONTEXT_MENU
 	};
 	
 	static bool moved;
@@ -755,7 +651,7 @@ static void do_quad_point(QUAD *q, int quad_index, int v)
 			if(operation == OP_MOVEPOINT)
 			{
 				for(int m = 0; m < 4; m++)
-					if(selected_points&(1<<m))
+					if(editor.selected_points&(1<<m))
 					{
 						q->points[m].x += f2fx(dx);
 						q->points[m].y += f2fx(dy);
@@ -764,7 +660,7 @@ static void do_quad_point(QUAD *q, int quad_index, int v)
 			else if(operation == OP_MOVEUV)
 			{
 				for(int m = 0; m < 4; m++)
-					if(selected_points&(1<<m))
+					if(editor.selected_points&(1<<m))
 					{
 						q->texcoords[m].x += f2fx(dx*0.001f);
 						q->texcoords[m].y += f2fx(dy*0.001f);
@@ -772,25 +668,37 @@ static void do_quad_point(QUAD *q, int quad_index, int v)
 			}
 		}
 		
-		if(!ui_mouse_button(0))
+		if(operation == OP_CONTEXT_MENU)
 		{
-			if(!moved)
+			if(!ui_mouse_button(1))
 			{
-				if(inp_key_pressed(KEY_LSHIFT) || inp_key_pressed(KEY_RSHIFT))
-					selected_points ^= 1<<v;
-				else
-					selected_points = 1<<v;
-					
-				editor.props = PROPS_QUAD_POINT;
+				static int point_popup_id = 0;
+				ui_invoke_popup_menu(&point_popup_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 150, popup_point);
+				ui_set_active_item(0);
 			}
-			editor.lock_mouse = false;
-			ui_set_active_item(0);
+		}
+		else
+		{
+			if(!ui_mouse_button(0))
+			{
+				if(!moved)
+				{
+					if(inp_key_pressed(KEY_LSHIFT) || inp_key_pressed(KEY_RSHIFT))
+						editor.selected_points ^= 1<<v;
+					else
+						editor.selected_points = 1<<v;
+				}
+				editor.lock_mouse = false;
+				ui_set_active_item(0);
+			}
 		}
 
 		gfx_setcolor(1,1,1,1);
 	}
 	else if(ui_hot_item() == id)
 	{
+		ui_got_context = id;
+		
 		gfx_setcolor(1,1,1,1);
 		editor.tooltip = "Left mouse button to move. Hold shift to move the texture.";
 		
@@ -806,17 +714,22 @@ static void do_quad_point(QUAD *q, int quad_index, int v)
 			else
 				operation = OP_MOVEPOINT;
 				
-			if(!(selected_points&(1<<v)))
+			if(!(editor.selected_points&(1<<v)))
 			{
 				if(inp_key_pressed(KEY_LSHIFT) || inp_key_pressed(KEY_RSHIFT))
-					selected_points |= 1<<v;
+					editor.selected_points |= 1<<v;
 				else
-					selected_points = 1<<v;
+					editor.selected_points = 1<<v;
 				moved = true;
 			}
 															
-			editor.props = PROPS_QUAD_POINT;
-			selected_quad = quad_index;
+			editor.selected_quad = quad_index;
+		}
+		else if(ui_mouse_button(1))
+		{
+			operation = OP_CONTEXT_MENU;
+			editor.selected_quad = quad_index;
+			ui_set_active_item(id);
 		}
 	}
 	else
@@ -1015,7 +928,7 @@ static void do_map_editor(RECT view, RECT toolbar)
 					}
 					else
 					{
-						editor.map.groups[selected_group]->mapscreen();
+						//editor.map.groups[selected_group]->mapscreen();
 						for(int k = 0; k < num_edit_layers; k++)
 							edit_layers[k]->brush_selecting(r);
 						gfx_mapscreen(ui_screen()->x, ui_screen()->y, ui_screen()->w, ui_screen()->h);
@@ -1180,13 +1093,13 @@ static void do_map_editor(RECT view, RECT toolbar)
 			mem_copy(last_points, points, sizeof(points));
 		}
 
-		if(0)
+		if(1)
 		{
-			gfx_setcolor(1.0f,0,0,1);		
-			for(int i = 0; i < 4; i++)
+			gfx_setcolor(1,0,0,1);
+			for(int i = 0; i < 2; i++)
 			{
 				float points[4];
-				float aspects[] = {4.0f/3.0f, 5.0f/4.0f, 16.0f/10.0f, 16.0f/9.0f};
+				float aspects[] = {4.0f/3.0f, 16.0f/10.0f, 5.0f/4.0f, 16.0f/9.0f};
 				float aspect = aspects[i];
 				
 				mapscreen_to_world(
@@ -1203,6 +1116,7 @@ static void do_map_editor(RECT view, RECT toolbar)
 				gfx_lines_draw(r.x+r.w, r.y, r.x+r.w, r.y+r.h);
 				gfx_lines_draw(r.x+r.w, r.y+r.h, r.x, r.y+r.h);
 				gfx_lines_draw(r.x, r.y+r.h, r.x, r.y);
+				gfx_setcolor(0,1,0,1);
 			}
 		}
 			
@@ -1213,50 +1127,6 @@ static void do_map_editor(RECT view, RECT toolbar)
 	ui_clip_disable();
 }
 
-static int select_image_selected = -100;
-static int select_image_current = -100;
-
-static int popup_select_image(RECT view)
-{
-	RECT buttonbar, imageview;
-	ui_vsplit_l(&view, 80.0f, &buttonbar, &view);
-	ui_margin(&view, 10.0f, &imageview);
-	
-	int show_image = select_image_current;
-	
-	for(int i = -1; i < editor.map.images.len(); i++)
-	{
-		RECT button;
-		ui_hsplit_t(&buttonbar, 12.0f, &button, &buttonbar);
-		ui_hsplit_t(&buttonbar, 2.0f, 0, &buttonbar);
-		
-		if(ui_mouse_inside(&button))
-			show_image = i;
-			
-		if(i == -1)
-		{
-			if(do_editor_button(&editor.map.images[i], "None", i==select_image_current, &button, draw_editor_button_menuitem, 0, 0))
-				select_image_selected = -1;
-		}
-		else
-		{
-			char buf[64];
-			sprintf(buf, "%d", i);
-			if(do_editor_button(&editor.map.images[i], buf, i==select_image_current, &button, draw_editor_button_menuitem, 0, 0))
-				select_image_selected = i;
-		}
-	}
-	
-	if(show_image >= 0 && show_image < editor.map.images.len())
-		gfx_texture_set(editor.map.images[show_image]->tex_id);
-	else
-		gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_quads_drawTL(imageview.x, imageview.y, imageview.w, imageview.h);
-	gfx_quads_end();
-
-	return 0;
-}
 
 int EDITOR::do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val)
 {
@@ -1335,159 +1205,25 @@ int EDITOR::do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val
 		}
 		else if(props[i].type == PROPTYPE_IMAGE)
 		{
-			if(do_editor_button(&ids[i], "Choose", 0, &shifter, draw_editor_button, 0, 0))
-			{
-				static int select_image_popup_id = 0;
-				select_image_selected = -100;
-				select_image_current = props[i].value;
-				ui_invoke_popup_menu(&select_image_popup_id, 0, ui_mouse_x(), ui_mouse_y(), 400, 300, popup_select_image);
-			}
+			char buf[64];
+			if(props[i].value < 0)
+				strcpy(buf, "None");
+			else
+				sprintf(buf, "%d",  props[i].value);
 			
-			if(select_image_selected != -100)
+			if(do_editor_button(&ids[i], buf, 0, &shifter, draw_editor_button, 0, 0))
+				popup_select_image_invoke(props[i].value, ui_mouse_x(), ui_mouse_y());
+			
+			int r = popup_select_image_result();
+			if(r >= -1)
 			{
-				*new_val = select_image_selected;
+				*new_val = r;
 				change = i;
-				select_image_current = select_image_selected;
-				select_image_selected = -100;
 			}
 		}
 	}
 	
 	return change;
-}
-
-static int popup_group(RECT view)
-{
-	// remove group button
-	RECT button;
-	ui_hsplit_b(&view, 12.0f, &view, &button);
-	static int delete_button = 0;
-	if(do_editor_button(&delete_button, "Delete Group", 0, &button, draw_editor_button, 0, "Delete group"))
-	{
-		editor.map.delete_group(selected_group);
-		return 1;
-	}
-
-	// new tile layer
-	ui_hsplit_b(&view, 10.0f, &view, &button);
-	ui_hsplit_b(&view, 12.0f, &view, &button);
-	static int new_quad_layer_button = 0;
-	if(do_editor_button(&new_quad_layer_button, "Add Quads Layer", 0, &button, draw_editor_button, 0, "Creates a new quad layer"))
-	{
-		LAYER *l = new LAYER_QUADS;
-		editor.map.groups[selected_group]->add_layer(l);
-		selected_layer = editor.map.groups[selected_group]->layers.len()-1;
-		editor.props = PROPS_LAYER;
-		return 1;
-	}
-
-	// new quad layer
-	ui_hsplit_b(&view, 5.0f, &view, &button);
-	ui_hsplit_b(&view, 12.0f, &view, &button);
-	static int new_tile_layer_button = 0;
-	if(do_editor_button(&new_tile_layer_button, "Add Tile Layer", 0, &button, draw_editor_button, 0, "Creates a new tile layer"))
-	{
-		LAYER *l = new LAYER_TILES(50, 50);
-		editor.map.groups[selected_group]->add_layer(l);
-		selected_layer = editor.map.groups[selected_group]->layers.len()-1;
-		editor.props = PROPS_LAYER;
-		return 1;
-	}
-	
-	enum
-	{
-		PROP_ORDER=0,
-		PROP_POS_X,
-		PROP_POS_Y,
-		PROP_PARA_X,
-		PROP_PARA_Y,
-		NUM_PROPS,
-	};
-	
-	PROPERTY props[] = {
-		{"Order", selected_group, PROPTYPE_INT_STEP, 0, editor.map.groups.len()-1},
-		{"Pos X", -editor.map.groups[selected_group]->offset_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Pos Y", -editor.map.groups[selected_group]->offset_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Para X", editor.map.groups[selected_group]->parallax_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Para Y", editor.map.groups[selected_group]->parallax_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{0},
-	};
-	
-	static int ids[NUM_PROPS] = {0};
-	int new_val = 0;
-	
-	// cut the properties that isn't needed
-	if(editor.get_selected_group()->game_group)
-		props[PROP_POS_X].name = 0;
-		
-	int prop = editor.do_properties(&view, props, ids, &new_val);
-	if(prop == PROP_ORDER)
-		selected_group = editor.map.swap_groups(selected_group, new_val);
-		
-	// these can not be changed on the game group
-	if(!editor.get_selected_group()->game_group)
-	{
-		if(prop == PROP_PARA_X)
-			editor.map.groups[selected_group]->parallax_x = new_val;
-		else if(prop == PROP_PARA_Y)
-			editor.map.groups[selected_group]->parallax_y = new_val;
-		else if(prop == PROP_POS_X)
-			editor.map.groups[selected_group]->offset_x = -new_val;
-		else if(prop == PROP_POS_Y)
-			editor.map.groups[selected_group]->offset_y = -new_val;
-	}
-	
-	return 0;
-}
-
-static int popup_layer(RECT view)
-{
-	// remove layer button
-	RECT button;
-	ui_hsplit_b(&view, 12.0f, &view, &button);
-	static int delete_button = 0;
-	if(do_editor_button(&delete_button, "Delete Layer", 0, &button, draw_editor_button, 0, "Deletes the layer"))
-	{
-		editor.map.groups[selected_group]->delete_layer(selected_layer);
-		return 1;
-	}
-
-	ui_hsplit_b(&view, 10.0f, &view, 0);
-	
-	LAYERGROUP *current_group = editor.map.groups[selected_group];
-	LAYER *current_layer = editor.get_selected_layer(0);
-	
-	enum
-	{
-		PROP_GROUP=0,
-		PROP_ORDER,
-		NUM_PROPS,
-	};
-	
-	PROPERTY props[] = {
-		{"Group", selected_group, PROPTYPE_INT_STEP, 0, editor.map.groups.len()-1},
-		{"Order", selected_layer, PROPTYPE_INT_STEP, 0, current_group->layers.len()},
-		{0},
-	};
-	
-	static int ids[NUM_PROPS] = {0};
-	int new_val = 0;
-	int prop = editor.do_properties(&view, props, ids, &new_val);		
-	
-	if(prop == PROP_ORDER)
-		selected_layer = current_group->swap_layers(selected_layer, new_val);
-	else if(prop == PROP_GROUP && current_layer->type != LAYERTYPE_GAME)
-	{
-		if(new_val >= 0 && new_val < editor.map.groups.len())
-		{
-			current_group->layers.remove(current_layer);
-			editor.map.groups[new_val]->layers.add(current_layer);
-			selected_group = new_val;
-			selected_layer = editor.map.groups[new_val]->layers.len()-1;
-		}
-	}
-		
-	return current_layer->render_properties(&view);
 }
 
 static void render_layers(RECT toolbox, RECT toolbar, RECT view)
@@ -1504,10 +1240,10 @@ static void render_layers(RECT toolbox, RECT toolbar, RECT view)
 
 	int valid_group = 0;
 	int valid_layer = 0;
-	if(selected_group >= 0 && selected_group < editor.map.groups.len())
+	if(editor.selected_group >= 0 && editor.selected_group < editor.map.groups.len())
 		valid_group = 1;
 
-	if(valid_group && selected_layer >= 0 && selected_layer < editor.map.groups[selected_group]->layers.len())
+	if(valid_group && editor.selected_layer >= 0 && editor.selected_layer < editor.map.groups[editor.selected_group]->layers.len())
 		valid_layer = 1;
 		
 	// render layers	
@@ -1521,12 +1257,11 @@ static void render_layers(RECT toolbox, RECT toolbar, RECT view)
 				editor.map.groups[g]->visible = !editor.map.groups[g]->visible;
 
 			sprintf(buf, "#%d %s", g, editor.map.groups[g]->name);
-			if(int result = do_editor_button(&editor.map.groups[g], buf, g==selected_group, &slot, draw_editor_button_r,
+			if(int result = do_editor_button(&editor.map.groups[g], buf, g==editor.selected_group, &slot, draw_editor_button_r,
 				BUTTON_CONTEXT, "Select group. Right click for properties."))
 			{
-				selected_group = g;
-				selected_layer = 0;
-				editor.props = PROPS_GROUP;
+				editor.selected_group = g;
+				editor.selected_layer = 0;
 				
 				static int group_popup_id = 0;
 				if(result == 2)
@@ -1547,12 +1282,11 @@ static void render_layers(RECT toolbox, RECT toolbar, RECT view)
 					editor.map.groups[g]->layers[i]->visible = !editor.map.groups[g]->layers[i]->visible;
 
 				sprintf(buf, "#%d %s ", i, editor.map.groups[g]->layers[i]->type_name);
-				if(int result = do_editor_button(editor.map.groups[g]->layers[i], buf, g==selected_group&&i==selected_layer, &button, draw_editor_button_r,
+				if(int result = do_editor_button(editor.map.groups[g]->layers[i], buf, g==editor.selected_group&&i==editor.selected_layer, &button, draw_editor_button_r,
 					BUTTON_CONTEXT, "Select layer. Right click for properties."))
 				{
-					selected_layer = i;
-					selected_group = g;
-					editor.props = PROPS_LAYER;
+					editor.selected_layer = i;
+					editor.selected_group = g;
 					static int layer_popup_id = 0;
 					if(result == 2)
 						ui_invoke_popup_menu(&layer_popup_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 130, popup_layer);
@@ -1573,8 +1307,7 @@ static void render_layers(RECT toolbox, RECT toolbar, RECT view)
 		if(do_editor_button(&new_group_button, "Add Group", 0, &slot, draw_editor_button, 0, "Adds a new group"))
 		{
 			editor.map.new_group();
-			selected_group = editor.map.groups.len()-1;
-			editor.props = PROPS_GROUP;
+			editor.selected_group = editor.map.groups.len()-1;
 		}
 	}
 
@@ -1794,12 +1527,12 @@ static void render_modebar(RECT view)
 	{
 		ui_vsplit_l(&view, 40.0f, &button, &view);
 		static int tile_button = 0;
-		if(do_editor_button(&tile_button, "Layers", editor.mode == MODE_LAYERS, &button, draw_editor_button_m, 0, "Switch to edit layers"))
+		if(do_editor_button(&tile_button, "Layers", editor.mode == MODE_LAYERS, &button, draw_editor_button_m, 0, "Switch to edit layers."))
 			editor.mode = MODE_LAYERS;
 
 		ui_vsplit_l(&view, 40.0f, &button, &view);
 		static int img_button = 0;
-		if(do_editor_button(&img_button, "Images", editor.mode == MODE_IMAGES, &button, draw_editor_button_r, 0, "Switch to manage images"))
+		if(do_editor_button(&img_button, "Images", editor.mode == MODE_IMAGES, &button, draw_editor_button_r, 0, "Switch to manage images."))
 			editor.mode = MODE_IMAGES;
 	}
 
@@ -1814,21 +1547,30 @@ static void render_statusbar(RECT view)
 	RECT button;
 	ui_vsplit_r(&view, 60.0f, &view, &button);
 	static int envelope_button = 0;
-	if(do_editor_button(&envelope_button, "Envelopes", editor.show_envelope_editor, &button, draw_editor_button, 0, "Toggles the envelope editor"))
+	if(do_editor_button(&envelope_button, "Envelopes", editor.show_envelope_editor, &button, draw_editor_button, 0, "Toggles the envelope editor."))
 		editor.show_envelope_editor = (editor.show_envelope_editor+1)%4;
 	
 	if(editor.tooltip)
-		ui_do_label(&view, editor.tooltip, 10.0f, -1, -1);
+	{
+		if(ui_got_context == ui_hot_item())
+		{
+			char buf[512];
+			sprintf(buf, "%s Right click for context menu.", editor.tooltip);
+			ui_do_label(&view, buf, 10.0f, -1, -1);
+		}
+		else
+			ui_do_label(&view, editor.tooltip, 10.0f, -1, -1);
+	}
 }
 
 static void render_envelopeeditor(RECT view)
 {
-	if(selected_envelope < 0) selected_envelope = 0;
-	if(selected_envelope >= editor.map.envelopes.len()) selected_envelope--;
+	if(editor.selected_envelope < 0) editor.selected_envelope = 0;
+	if(editor.selected_envelope >= editor.map.envelopes.len()) editor.selected_envelope--;
 
 	ENVELOPE *envelope = 0;
-	if(selected_envelope >= 0 && selected_envelope < editor.map.envelopes.len())
-		envelope = editor.map.envelopes[selected_envelope];
+	if(editor.selected_envelope >= 0 && editor.selected_envelope < editor.map.envelopes.len())
+		envelope = editor.map.envelopes[editor.selected_envelope];
 
 	bool show_colorbar = false;
 	if(envelope && envelope->channels == 4)
@@ -1884,17 +1626,17 @@ static void render_envelopeeditor(RECT view)
 		ui_vsplit_r(&shifter, 15.0f, &shifter, &inc);
 		ui_vsplit_l(&shifter, 15.0f, &dec, &shifter);
 		char buf[512];
-		sprintf(buf, "%d/%d", selected_envelope+1, editor.map.envelopes.len());
+		sprintf(buf, "%d/%d", editor.selected_envelope+1, editor.map.envelopes.len());
 		ui_draw_rect(&shifter, vec4(1,1,1,0.5f), 0, 0.0f);
 		ui_do_label(&shifter, buf, 10.0f, 0, -1);
 		
 		static int prev_button = 0;
 		if(do_editor_button(&prev_button, 0, 0, &dec, draw_dec_button, 0, "Previous Envelope"))
-			selected_envelope--;
+			editor.selected_envelope--;
 		
 		static int next_button = 0;
 		if(do_editor_button(&next_button, 0, 0, &inc, draw_inc_button, 0, "Next Envelope"))
-			selected_envelope++;
+			editor.selected_envelope++;
 			
 		if(envelope)
 		{
@@ -1948,7 +1690,7 @@ static void render_envelopeeditor(RECT view)
 		if(end_time < 1)
 			end_time = 1;
 		
-		envelope->find_top_bottom();
+		envelope->find_top_bottom(active_channels);
 		float top = envelope->top;
 		float bottom = envelope->bottom;
 		
@@ -1973,11 +1715,11 @@ static void render_envelopeeditor(RECT view)
 					// add point
 					int time = (int)(((ui_mouse_x()-view.x)*timescale)*1000.0f);
 					//float env_y = (ui_mouse_y()-view.y)/timescale;
+					float channels[4];
+					envelope->eval(time, channels);
 					envelope->add_point(time,
-						f2fx(envelope->eval(time, 0)),
-						f2fx(envelope->eval(time, 1)),
-						f2fx(envelope->eval(time, 2)),
-						f2fx(envelope->eval(time, 3)));
+						f2fx(channels[0]), f2fx(channels[1]),
+						f2fx(channels[2]), f2fx(channels[3]));
 				}
 				
 				editor.tooltip = "Press right mouse button to create a new point";
@@ -1988,6 +1730,7 @@ static void render_envelopeeditor(RECT view)
 
 		// render lines
 		{
+			ui_clip_enable(&view);
 			gfx_texture_set(-1);
 			gfx_lines_begin();
 			for(int c = 0; c < envelope->channels; c++)
@@ -1998,12 +1741,16 @@ static void render_envelopeeditor(RECT view)
 					gfx_setcolor(colors[c].r*0.5f,colors[c].g*0.5f,colors[c].b*0.5f,1);
 				
 				float prev_x = 0;
-				float prev_value = envelope->eval(0.000001f, c);
+				float results[4];
+				envelope->eval(0.000001f, results);
+				float prev_value = results[c];
+				
 				int steps = (int)((view.w/ui_screen()->w) * gfx_screenwidth());
 				for(int i = 1; i <= steps; i++)
 				{
 					float a = i/(float)steps;
-					float v = envelope->eval(a*end_time, c);
+					envelope->eval(a*end_time, results);
+					float v = results[c];
 					v = (v-bottom)/(top-bottom);
 					
 					gfx_lines_draw(view.x + prev_x*view.w, view.y+view.h - prev_value*view.h, view.x + a*view.w, view.y+view.h - v*view.h);
@@ -2012,6 +1759,7 @@ static void render_envelopeeditor(RECT view)
 				}
 			}
 			gfx_lines_end();
+			ui_clip_disable();
 		}
 		
 		// render curve options
@@ -2243,7 +1991,7 @@ static void render_menubar(RECT menubar)
 		*/
 }
 
-static void editor_render()
+void EDITOR::render()
 {
 	// basic start
 	gfx_clear(1.0f,0.0f,1.0f);
@@ -2329,7 +2077,7 @@ static void editor_render()
 	float my = ui_mouse_y();
 	gfx_texture_set(cursor_texture);
 	gfx_quads_begin();
-	if(ui_got_context)
+	if(ui_got_context == ui_hot_item())
 		gfx_setcolor(1,0,0,1);
 	gfx_quads_drawTL(mx,my, 16.0f, 16.0f);
 	gfx_quads_end();	
@@ -2351,6 +2099,13 @@ void EDITOR::reset(bool create_default)
 		editor.make_game_layer(new LAYER_GAME(50, 50));
 		editor.game_group->add_layer(editor.game_layer);
 	}
+	
+	selected_layer = 0;
+	selected_group = 0;
+	selected_quad = -1;
+	selected_points = 0;
+	selected_envelope = 0;
+	
 }
 
 void EDITOR::make_game_layer(LAYER *layer)
@@ -2365,381 +2120,6 @@ void EDITOR::make_game_group(LAYERGROUP *group)
 	editor.game_group = group;
 	editor.game_group->game_group = true;
 	editor.game_group->name = "Game";
-}
-
-template<typename T>
-static int make_version(int i, const T &v)
-{ return (i<<16)+sizeof(T); }
-
-// backwards compatiblity
-void editor_load_old(DATAFILE *df)
-{
-	class mapres_image
-	{
-	public:
-		int width;
-		int height;
-		int image_data;
-	};
-
-
-	struct mapres_tilemap
-	{
-		int image;
-		int width;
-		int height;
-		int x, y;
-		int scale;
-		int data;
-		int main;
-	};
-
-	enum
-	{
-		MAPRES_REGISTERED=0x8000,
-		MAPRES_IMAGE=0x8001,
-		MAPRES_TILEMAP=0x8002,
-		MAPRES_COLLISIONMAP=0x8003,
-		MAPRES_TEMP_THEME=0x8fff,
-	};
-
-	// load tilemaps
-	int game_width = 0;
-	int game_height = 0;
-	{
-		int start, num;
-		datafile_get_type(df, MAPRES_TILEMAP, &start, &num);
-		for(int t = 0; t < num; t++)
-		{
-			mapres_tilemap *tmap = (mapres_tilemap *)datafile_get_item(df, start+t,0,0);
-			
-			LAYER_TILES *l = new LAYER_TILES(tmap->width, tmap->height);
-			
-			if(tmap->main)
-			{
-				// move game layer to correct position
-				for(int i = 0; i < editor.map.groups[0]->layers.len()-1; i++)
-				{
-					if(editor.map.groups[0]->layers[i] == editor.game_layer)
-						editor.map.groups[0]->swap_layers(i, i+1);
-				}
-				
-				game_width = tmap->width;
-				game_height = tmap->height;
-			}
-
-			// add new layer
-			editor.map.groups[0]->add_layer(l);
-
-			// process the data
-			unsigned char *src_data = (unsigned char *)datafile_get_data(df, tmap->data);
-			TILE *dst_data = l->tiles;
-			
-			for(int y = 0; y < tmap->height; y++)
-				for(int x = 0; x < tmap->width; x++, dst_data++, src_data+=2)
-				{
-					dst_data->index = src_data[0];
-					dst_data->flags = src_data[1];
-				}
-				
-			l->image = tmap->image;
-		}
-	}
-	
-	// load images
-	{
-		int start, count;
-		datafile_get_type(df, MAPRES_IMAGE, &start, &count);
-		for(int i = 0; i < count; i++)
-		{
-			mapres_image *imgres = (mapres_image *)datafile_get_item(df, start+i, 0, 0);
-			void *data = datafile_get_data(df, imgres->image_data);
-
-			IMAGE *img = new IMAGE;
-			img->width = imgres->width;
-			img->height = imgres->height;
-			img->format = IMG_RGBA;
-			
-			// copy image data
-			img->data = mem_alloc(img->width*img->height*4, 1);
-			mem_copy(img->data, data, img->width*img->height*4);
-			img->tex_id = gfx_load_texture_raw(img->width, img->height, img->format, img->data, IMG_AUTO);
-			editor.map.images.add(img);
-			
-			// unload image
-			datafile_unload_data(df, imgres->image_data);
-		}
-	}
-	
-	// load entities
-	{
-		LAYER_GAME *g = editor.game_layer;
-		g->resize(game_width, game_height);
-		for(int t = MAPRES_ENTS_START; t < MAPRES_ENTS_END; t++)
-		{
-			// fetch entities of this class
-			int start, num;
-			datafile_get_type(df, t, &start, &num);
-
-
-			for(int i = 0; i < num; i++)
-			{
-				mapres_entity *e = (mapres_entity *)datafile_get_item(df, start+i,0,0);
-				int x = e->x/32;
-				int y = e->y/32;
-				int id = -1;
-					
-				if(t == MAPRES_SPAWNPOINT) id = ENTITY_SPAWN;
-				else if(t == MAPRES_SPAWNPOINT_RED) id = ENTITY_SPAWN_RED;
-				else if(t == MAPRES_SPAWNPOINT_BLUE) id = ENTITY_SPAWN_BLUE;
-				else if(t == MAPRES_FLAGSTAND_RED) id = ENTITY_FLAGSTAND_RED;
-				else if(t == MAPRES_FLAGSTAND_BLUE) id = ENTITY_FLAGSTAND_BLUE;
-				else if(t == MAPRES_ITEM)
-				{
-					if(e->data[0] == ITEM_WEAPON_SHOTGUN) id = ENTITY_WEAPON_SHOTGUN;
-					else if(e->data[0] == ITEM_WEAPON_ROCKET) id = ENTITY_WEAPON_ROCKET;
-					else if(e->data[0] == ITEM_NINJA) id = ENTITY_POWERUP_NINJA;
-					else if(e->data[0] == ITEM_ARMOR) id = ENTITY_ARMOR_1;
-					else if(e->data[0] == ITEM_HEALTH) id = ENTITY_HEALTH_1;
-				}
-						
-				if(id > 0 && x >= 0 && x < g->width && y >= 0 && y < g->height)
-					g->tiles[y*g->width+x].index = id+ENTITY_OFFSET;
-			}
-		}
-	}
-}
-
-int EDITOR::save(const char *filename)
-{
-	dbg_msg("editor", "saving to '%s'...", filename);
-	DATAFILE_OUT *df = datafile_create(filename);
-	if(!df)
-	{
-		dbg_msg("editor", "failed to open file '%s'...", filename);
-		return 0;
-	}
-		
-	// save version
-	{
-		MAPITEM_VERSION item;
-		item.version = 1;
-		datafile_add_item(df, MAPITEMTYPE_VERSION, 0, sizeof(item), &item);
-	}
-
-	// save images
-	for(int i = 0; i < map.images.len(); i++)
-	{
-		IMAGE *img = map.images[i];
-		MAPITEM_IMAGE item;
-		item.version = 1;
-		
-		item.width = img->width;
-		item.height = img->height;
-		item.external = 0;
-		item.image_name = -1;
-		item.image_data = datafile_add_data(df, item.width*item.height*4, img->data);
-		datafile_add_item(df, MAPITEMTYPE_IMAGE, i, sizeof(item), &item);
-	}
-	
-	// save layers
-	int layer_count = 0;
-	for(int g = 0; g < map.groups.len(); g++)
-	{
-		LAYERGROUP *group = map.groups[g];
-		MAPITEM_GROUP gitem;
-		gitem.version = 1;
-		
-		gitem.parallax_x = group->parallax_x;
-		gitem.parallax_y = group->parallax_y;
-		gitem.offset_x = group->offset_x;
-		gitem.offset_y = group->offset_y;
-		gitem.start_layer = layer_count;
-		gitem.num_layers = 0;
-		
-		for(int l = 0; l < group->layers.len(); l++)
-		{
-			if(group->layers[l]->type == LAYERTYPE_TILES)
-			{
-				dbg_msg("editor", "saving tiles layer");
-				LAYER_TILES *layer = (LAYER_TILES *)group->layers[l];
-				MAPITEM_LAYER_TILEMAP item;
-				item.version = 2;
-				
-				item.layer.flags = 0;
-				item.layer.type = layer->type;
-				
-				item.color.r = 255; // not in use right now
-				item.color.g = 255;
-				item.color.b = 255;
-				item.color.a = 255;
-				item.color_env = -1;
-				item.color_env_offset = 0;
-				
-				item.width = layer->width;
-				item.height = layer->height;
-				item.flags = layer->game;
-				item.image = layer->image;
-				item.data = datafile_add_data(df, layer->width*layer->height*sizeof(TILE), layer->tiles);
-				datafile_add_item(df, MAPITEMTYPE_LAYER, layer_count, sizeof(item), &item);
-				
-				gitem.num_layers++;
-				layer_count++;
-			}
-			else if(group->layers[l]->type == LAYERTYPE_QUADS)
-			{
-				dbg_msg("editor", "saving quads layer");
-				LAYER_QUADS *layer = (LAYER_QUADS *)group->layers[l];
-				if(layer->quads.len())
-				{
-					MAPITEM_LAYER_QUADS item;
-					item.version = 1;
-					item.layer.flags = 0;
-					item.layer.type = layer->type;
-					item.image = layer->image;
-					
-					// add the data
-					item.num_quads = layer->quads.len();
-					item.data = datafile_add_data_swapped(df, layer->quads.len()*sizeof(QUAD), layer->quads.getptr());
-					datafile_add_item(df, MAPITEMTYPE_LAYER, layer_count, sizeof(item), &item);
-					
-					// clean up
-					//mem_free(quads);
-
-					gitem.num_layers++;
-					layer_count++;
-				}
-			}
-		}
-		
-		datafile_add_item(df, MAPITEMTYPE_GROUP, g, sizeof(gitem), &gitem);
-	}
-	
-	// finish the data file
-	datafile_finish(df);
-	dbg_msg("editor", "done");
-	return 1;
-}
-
-
-int EDITOR::load(const char *filename)
-{
-	DATAFILE *df = datafile_load(filename);
-	if(!df)
-		return 0;
-
-	// check version
-	MAPITEM_VERSION *item = (MAPITEM_VERSION *)datafile_find_item(df, MAPITEMTYPE_VERSION, 0);
-	if(!item)
-	{
-		// import old map
-		editor.reset();
-		editor_load_old(df);
-	}
-	else if(item->version == 1)
-	{
-		editor.reset(false);
-		
-		// load images
-		{
-			int start, num;
-			datafile_get_type(df, MAPITEMTYPE_IMAGE, &start, &num);
-			for(int i = 0; i < num; i++)
-			{
-				MAPITEM_IMAGE *item = (MAPITEM_IMAGE *)datafile_get_item(df, start+i, 0, 0);
-				void *data = datafile_get_data(df, item->image_data);
-				
-				IMAGE *img = new IMAGE;
-				img->width = item->width;
-				img->height = item->height;
-				img->format = IMG_RGBA;
-				
-				// copy image data
-				img->data = mem_alloc(img->width*img->height*4, 1);
-				mem_copy(img->data, data, img->width*img->height*4);
-				img->tex_id = gfx_load_texture_raw(img->width, img->height, img->format, img->data, IMG_AUTO);
-				editor.map.images.add(img);
-				
-				// unload image
-				datafile_unload_data(df, item->image_data);
-			}
-		}
-		
-		// load groups
-		{
-			int layers_start, layers_num;
-			datafile_get_type(df, MAPITEMTYPE_LAYER, &layers_start, &layers_num);
-			
-			int start, num;
-			datafile_get_type(df, MAPITEMTYPE_GROUP, &start, &num);
-			for(int g = 0; g < num; g++)
-			{
-				MAPITEM_GROUP *gitem = (MAPITEM_GROUP *)datafile_get_item(df, start+g, 0, 0);
-				LAYERGROUP *group = map.new_group();
-				group->parallax_x = gitem->parallax_x;
-				group->parallax_y = gitem->parallax_y;
-				group->offset_x = gitem->offset_x;
-				group->offset_y = gitem->offset_y;
-				
-				for(int l = 0; l < gitem->num_layers; l++)
-				{
-					MAPITEM_LAYER *layer_item = (MAPITEM_LAYER *)datafile_get_item(df, layers_start+gitem->start_layer+l, 0, 0);
-					if(!layer_item)
-						continue;
-						
-					if(layer_item->type == LAYERTYPE_TILES)
-					{
-						MAPITEM_LAYER_TILEMAP *tilemap_item = (MAPITEM_LAYER_TILEMAP *)layer_item;
-						LAYER_TILES *tiles = 0;
-						
-						if(tilemap_item->flags&1)
-						{
-							tiles = new LAYER_GAME(tilemap_item->width, tilemap_item->height);
-							editor.make_game_layer(tiles);
-							make_game_group(group);
-						}
-						else
-							tiles = new LAYER_TILES(tilemap_item->width, tilemap_item->height);
-						
-						group->add_layer(tiles);
-						void *data = datafile_get_data(df, tilemap_item->data);
-						tiles->image = tilemap_item->image;
-						tiles->game = tilemap_item->flags&1;
-						
-						mem_copy(tiles->tiles, data, tiles->width*tiles->height*sizeof(TILE));
-						
-						if(tiles->game && tilemap_item->version == make_version(1, *tilemap_item))
-						{
-							for(int i = 0; i < tiles->width*tiles->height; i++)
-							{
-								if(tiles->tiles[i].index)
-									tiles->tiles[i].index += ENTITY_OFFSET;
-							}
-						}
-						
-						datafile_unload_data(df, tilemap_item->data);
-					}
-					else if(layer_item->type == LAYERTYPE_QUADS)
-					{
-						MAPITEM_LAYER_QUADS *quads_item = (MAPITEM_LAYER_QUADS *)layer_item;
-						LAYER_QUADS *layer = new LAYER_QUADS;
-						layer->image = quads_item->image;
-						if(layer->image < -1 || layer->image >= map.images.len())
-							layer->image = -1;
-						void *data = datafile_get_data_swapped(df, quads_item->data);
-						group->add_layer(layer);
-						layer->quads.setsize(quads_item->num_quads);
-						mem_copy(layer->quads.getptr(), data, sizeof(QUAD)*quads_item->num_quads);
-						datafile_unload_data(df, quads_item->data);
-					}
-				}
-			}
-		}
-	}
-	
-	datafile_unload(df);
-	
-	return 0;
 }
 
 
@@ -2839,11 +2219,14 @@ extern "C" void editor_update_and_render()
 
 	if(inp_key_down(KEY_F5))
 		editor.save("data/maps/debug_test2.map");
+
+	if(inp_key_down(KEY_F6))
+		editor.load("data/maps/debug_test2.map");
 	
 	if(inp_key_down(KEY_F8))
 		editor.load("data/maps/debug_test.map");
 	
-	editor_render();
+	editor.render();
 	inp_clear_events();
 }
 

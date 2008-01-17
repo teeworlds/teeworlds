@@ -125,6 +125,15 @@ void draw_round_rect(float x, float y, float w, float h, float r)
 	draw_round_rect_ext(x,y,w,h,r,0xf);
 }
 
+void ui_draw_rect(const RECT *r, vec4 color, int corners, float rounding)
+{
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_setcolor(color.r, color.g, color.b, color.a);
+	draw_round_rect_ext(r->x,r->y,r->w,r->h,rounding*ui_scale(), corners);
+	gfx_quads_end();
+}
+
 void render_tee(animstate *anim, tee_render_info *info, int emote, vec2 dir, vec2 pos)
 {
 	vec2 direction = dir;
@@ -246,6 +255,14 @@ static void mapscreen_to_group(float center_x, float center_y, MAPITEM_GROUP *gr
 	gfx_mapscreen(points[0], points[1], points[2], points[3]);
 }
 
+static void envelope_eval(float time_offset, int env, float *channels)
+{
+	channels[0] = 0;
+	channels[1] = 0;
+	channels[2] = 0;
+	channels[3] = 0;
+}
+
 void render_layers(float center_x, float center_y, int pass)
 {
 	bool passed_gamelayer = false;
@@ -299,7 +316,7 @@ void render_layers(float center_x, float center_y, int pass)
 					else
 						gfx_texture_set(img_get(qlayer->image));
 					QUAD *quads = (QUAD *)map_get_data_swapped(qlayer->data);
-					render_quads(quads, qlayer->num_quads);
+					render_quads(quads, qlayer->num_quads, envelope_eval);
 				}
 			}
 		}

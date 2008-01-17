@@ -3,6 +3,70 @@
 #include "../g_math.h"
 #include "gc_client.h"
 
+void render_eval_envelope(ENVPOINT *points, int num_points, int channels, float time, float *result)
+{
+	if(num_points == 0)
+	{
+		result[0] = 0;
+		result[1] = 0;
+		result[2] = 0;
+		result[3] = 0;
+		return;
+	}
+	
+	if(num_points == 1)
+	{
+		result[0] = fx2f(points[0].values[0]);
+		result[1] = fx2f(points[0].values[1]);
+		result[2] = fx2f(points[0].values[2]);
+		result[3] = fx2f(points[0].values[3]);
+		return;
+	}
+	
+	time = fmod(time, points[num_points-1].time/1000.0f)*1000.0f;
+	for(int i = 0; i < num_points-1; i++)
+	{
+		if(time >= points[i].time && time <= points[i+1].time)
+		{
+			float delta = points[i+1].time-points[i].time;
+			float a = (time-points[i].time)/delta;
+
+
+			if(points[i].curvetype == CURVETYPE_SMOOTH)
+				a = -2*a*a*a + 3*a*a; // second hermite basis
+			else if(points[i].curvetype == CURVETYPE_SLOW)
+				a = a*a*a;
+			else if(points[i].curvetype == CURVETYPE_FAST)
+			{
+				a = 1-a;
+				a = 1-a*a*a;
+			}
+			else if (points[i].curvetype == CURVETYPE_STEP)
+				a = 0;
+			else
+			{
+				// linear
+			}
+					
+			for(int c = 0; c < channels; c++)
+			{
+				float v0 = fx2f(points[i].values[c]);
+				float v1 = fx2f(points[i+1].values[c]);
+				result[c] = v0 + (v1-v0) * a;
+			}
+			
+			return;
+		}
+	}
+	
+	result[0] = fx2f(points[num_points-1].values[0]);
+	result[1] = fx2f(points[num_points-1].values[1]);
+	result[2] = fx2f(points[num_points-1].values[2]);
+	result[3] = fx2f(points[num_points-1].values[3]);
+	return;
+}
+
+
 static void rotate(POINT *center, POINT *point, float rotation)
 {
 	int x = point->x - center->x;
@@ -11,7 +75,7 @@ static void rotate(POINT *center, POINT *point, float rotation)
 	point->y = (int)(x * sinf(rotation) + y * cosf(rotation) + center->y);
 }
 
-void render_quads(QUAD *quads, int num_quads)
+void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, int env, float *channels))
 {
 	gfx_quads_begin();
 	float conv = 1/255.0f;
@@ -31,29 +95,25 @@ void render_quads(QUAD *quads, int num_quads)
 		float offset_y = 0;
 		float rot = 0;
 		
-		/*
 		// TODO: fix this
-		if(editor.animate)
+		if(q->pos_env >= 0)
 		{
-			if(q->pos_env >= 0 && q->pos_env < editor.map.envelopes.len())
-			{
-				ENVELOPE *e = editor.map.envelopes[q->pos_env];
-				float t = editor.animate_time+q->pos_env_offset/1000.0f;
-				offset_x = e->eval(t, 0);
-				offset_y = e->eval(t, 1);
-				rot = e->eval(t, 2);
-			}
-			
-			if(q->color_env >= 0 && q->color_env < editor.map.envelopes.len())
-			{
-				ENVELOPE *e = editor.map.envelopes[q->color_env];
-				float t = editor.animate_time+q->color_env_offset/1000.0f;
-				r = e->eval(t, 0);
-				g = e->eval(t, 1);
-				b = e->eval(t, 2);
-				a = e->eval(t, 3);
-			}
-		}*/
+			float channels[4];
+			eval(q->pos_env_offset/1000.0f, q->pos_env, channels);
+			offset_x = channels[0];
+			offset_y = channels[1];
+			rot = channels[2];
+		}
+		
+		if(q->color_env >= 0)
+		{
+			float channels[4];
+			eval(q->color_env_offset/1000.0f, q->color_env, channels);
+			r = channels[0];
+			g = channels[1];
+			b = channels[2];
+			a = channels[3];
+		}
 		
 		gfx_setcolorvertex(0, q->colors[0].r*conv*r, q->colors[0].g*conv*g, q->colors[0].b*conv*b, q->colors[0].a*conv*a);
 		gfx_setcolorvertex(1, q->colors[1].r*conv*r, q->colors[1].g*conv*g, q->colors[1].b*conv*b, q->colors[1].a*conv*a);

@@ -4,6 +4,7 @@
 #include <math.h>
 #include "array.h"
 #include "../g_mapitems.h"
+#include "../client/gc_render.h"
 
 extern "C" {
 	#include <engine/e_system.h>
@@ -32,29 +33,11 @@ enum
 	DIALOG_FILE,
 };
 
-typedef struct // as in file
+typedef struct
 {
 	POINT position;
 	int type;
 } ENTITY;
-
-enum
-{
-	CURVETYPE_STEP=0,
-	CURVETYPE_LINEAR,
-	CURVETYPE_SLOW,
-	CURVETYPE_FAST,
-	CURVETYPE_SMOOTH,
-	NUM_CURVETYPES,
-	
-};
-
-typedef struct // as in file
-{
-	int time; // in ms
-	int curvetype;
-	int values[4]; // 1-4 depending on envelope (22.10 fixed point)
-} ENVPOINT;
 
 class ENVELOPE
 {
@@ -86,10 +69,10 @@ public:
 	void resort()
 	{
 		qsort(points.getptr(), points.len(), sizeof(ENVPOINT), sort_comp);
-		find_top_bottom();
+		find_top_bottom(0xf);
 	}
 
-	void find_top_bottom()
+	void find_top_bottom(int channelmask)
 	{
 		top = -1000000000.0f;
 		bottom = 1000000000.0f;
@@ -97,54 +80,20 @@ public:
 		{
 			for(int c = 0; c < channels; c++)
 			{
-				float v = fx2f(points[i].values[c]);
-				if(v > top) top = v;
-				if(v < bottom) bottom = v;
+				if(channelmask&(1<<c))
+				{
+					float v = fx2f(points[i].values[c]);
+					if(v > top) top = v;
+					if(v < bottom) bottom = v;
+				}
 			}
 		}
 	}
 	
-	float eval(float time, int channel)
+	int eval(float time, float *result)
 	{
-		if(channel >= channels)
-			return 0;
-		if(points.len() == 0)
-			return 0;
-		if(points.len() == 1)
-			return points[0].values[channel];
-		
-		time = fmod(time, end_time())*1000.0f;
-		for(int i = 0; i < points.len() - 1; i++)
-		{
-			if(time >= points[i].time && time <= points[i+1].time)
-			{
-				float delta = points[i+1].time-points[i].time;
-				float a = (time-points[i].time)/delta;
-				
-				float v0 = fx2f(points[i].values[channel]);
-				float v1 = fx2f(points[i+1].values[channel]);
-				
-				if(points[i].curvetype == CURVETYPE_SMOOTH)
-					a = -2*a*a*a + 3*a*a; // second hermite basis
-				else if(points[i].curvetype == CURVETYPE_SLOW)
-					a = a*a*a;
-				else if(points[i].curvetype == CURVETYPE_FAST)
-				{
-					a = 1-a;
-					a = 1-a*a*a;
-				}
-				else if (points[i].curvetype == CURVETYPE_STEP)
-					a = 0;
-				else
-				{
-					// linear
-				}
-		
-				return v0 + (v1-v0) * a;
-			}
-		}
-		
-		return points[points.len()-1].values[channel];
+		render_eval_envelope(points.getptr(), points.len(), channels, time, result);
+		return channels;
 	}
 	
 	void add_point(int time, int v0, int v1=0, int v2=0, int v3=0)
@@ -310,12 +259,6 @@ enum
 	PROPTYPE_COLOR,
 	PROPTYPE_IMAGE,
 	PROPTYPE_ENVELOPE,
-	
-	PROPS_NONE=0,
-	PROPS_GROUP,
-	PROPS_LAYER,
-	PROPS_QUAD,
-	PROPS_QUAD_POINT,
 };
 
 class EDITOR
@@ -347,8 +290,6 @@ public:
 		animate_start = 0;
 		animate_time = 0;
 		
-		props = PROPS_NONE;
-		
 		show_envelope_editor = 0;
 	}
 	
@@ -362,6 +303,7 @@ public:
 	void reset(bool create_default=true);
 	int save(const char *filename);
 	int load(const char *filename);
+	void render();
 
 	QUAD *get_selected_quad();
 	LAYER *get_selected_layer_type(int index, int type);
@@ -395,9 +337,13 @@ public:
 	int64 animate_start;
 	float animate_time;
 	
-	int props;
-	
 	int show_envelope_editor;
+	
+	int selected_layer;
+	int selected_group;
+	int selected_quad;
+	int selected_points;
+	int selected_envelope;
 	
 	MAP map;
 };
@@ -468,7 +414,6 @@ public:
 	array<QUAD> quads;
 };
 
-
 class LAYER_GAME : public LAYER_TILES
 {
 public:
@@ -481,3 +426,14 @@ public:
 int do_editor_button(const void *id, const char *text, int checked, const RECT *r, ui_draw_button_func draw_func, int flags, const char *tooltip);
 void draw_editor_button(const void *id, const char *text, int checked, const RECT *r, const void *extra);
 void draw_editor_button_menuitem(const void *id, const char *text, int checked, const RECT *r, const void *extra);
+
+void ui_invoke_popup_menu(void *id, int flags, float x, float y, float w, float h, int (*func)(RECT rect), void *extra=0);
+void ui_do_popup_menu();
+
+int popup_group(RECT view);
+int popup_layer(RECT view);
+int popup_quad(RECT view);
+int popup_point(RECT view);
+
+void popup_select_image_invoke(int current, float x, float y);
+int popup_select_image_result();

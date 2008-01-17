@@ -8,7 +8,6 @@ gameobject_tdm::gameobject_tdm()
 	is_teamplay = true;
 }
 
-
 int gameobject_tdm::on_player_death(class player *victim, class player *killer, int weapon)
 {
 	gameobject::on_player_death(victim, killer, weapon);
@@ -26,7 +25,6 @@ int gameobject_tdm::on_player_death(class player *victim, class player *killer, 
 
 void gameobject_tdm::tick()
 {
-	do_team_wincheck();
-	
+	do_team_score_wincheck();
 	gameobject::tick();
 }

@@ -4,6 +4,7 @@
 
 #include "../g_vmath.h"
 #include "../g_mapitems.h"
+#include "gc_ui.h"
 
 struct tee_render_info
 {
@@ -30,6 +31,7 @@ void draw_sprite(float x, float y, float size);
 // rects
 void draw_round_rect(float x, float y, float w, float h, float r);
 void draw_round_rect_ext(float x, float y, float w, float h, float r, int corners);
+void ui_draw_rect(const RECT *r, vec4 color, int corners, float rounding);
 
 // larger rendering methods
 void menu_render();
@@ -49,7 +51,8 @@ void render_player(
 	const struct obj_player_info *prev_info, const struct obj_player_info *player_info);
 	
 // map render methods (gc_render_map.cpp)
-void render_quads(QUAD *quads, int num_quads);
+void render_eval_envelope(ENVPOINT *points, int num_points, int channels, float time, float *result);
+void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, int env, float *channels));
 void render_tilemap(TILE *tiles, int w, int h, float scale, int flags);
 
 // helpers

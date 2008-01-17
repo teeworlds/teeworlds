@@ -62,7 +62,7 @@ void gameobject_ctf::tick()
 {
 	gameobject::tick();
 
-	do_team_wincheck();
+	do_team_score_wincheck();
 	
 	// do flags
 	for(int fi = 0; fi < 2; fi++)

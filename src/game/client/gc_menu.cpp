@@ -70,15 +70,6 @@ enum
 	PAGE_SYSTEM,
 };
 
-static void ui_draw_rect(const RECT *r, vec4 color, int corners, float rounding)
-{
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_setcolor(color.r, color.g, color.b, color.a);
-	draw_round_rect_ext(r->x,r->y,r->w,r->h,rounding*ui_scale(), corners);
-	gfx_quads_end();
-}
-
 static void ui_draw_browse_icon(int what, const RECT *r)
 {
 	gfx_texture_set(data->images[IMAGE_BROWSEICONS].id);

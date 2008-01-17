@@ -16,6 +16,15 @@ enum
 	MAPITEMTYPE_ENVELOPE,
 	MAPITEMTYPE_GROUP,
 	MAPITEMTYPE_LAYER,
+	MAPITEMTYPE_ENVPOINTS,
+	
+
+	CURVETYPE_STEP=0,
+	CURVETYPE_LINEAR,
+	CURVETYPE_SLOW,
+	CURVETYPE_FAST,
+	CURVETYPE_SMOOTH,
+	NUM_CURVETYPES,
 	
 	// game layer tiles
 	ENTITY_NULL=0,
@@ -132,6 +141,22 @@ typedef struct
 {
 	int version;
 } MAPITEM_VERSION;
+
+typedef struct
+{
+	int time; // in ms
+	int curvetype;
+	int values[4]; // 1-4 depending on envelope (22.10 fixed point)
+} ENVPOINT;
+
+typedef struct
+{
+	int version;
+	int channels;
+	int start_point;
+	int num_points;
+	int name;
+} MAPITEM_ENVELOPE;
 
 // float to fixed
 inline int f2fx(float v) { return (int)(v*(float)(1<<10)); }

@@ -214,7 +214,7 @@ int LAYER_TILES::render_properties(RECT *toolbox)
 	};
 	
 	PROPERTY props[] = {
-		{"Image", image, PROPTYPE_INT_STEP, 0, 0},
+		{"Image", image, PROPTYPE_IMAGE, 0, 0},
 		{"Width", width, PROPTYPE_INT_STEP, 1, 1000000000},
 		{"Height", height, PROPTYPE_INT_STEP, 1, 1000000000},
 		{0},

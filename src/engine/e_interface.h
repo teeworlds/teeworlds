@@ -110,40 +110,71 @@ void perf_start(PERFORMACE_INFO *info);
 void perf_end();
 void perf_dump();
 
-/*
-struct rect
-{
-    float x, y, w, h;
-};
+int gfx_init();
+void gfx_shutdown();
+void gfx_swap();
+int gfx_window_active();
+int gfx_window_open();
 
-struct rect *ui_screen();
-typedef void (*rect_fun)(const struct rect *r);
-void ui_foreach_rect(rect_fun fun);
-void ui_scale(float scale);
-void ui_hsplit_t(const struct rect *original, int pixels, struct rect *top, struct rect *bottom);
-void ui_hsplit_b(const struct rect *original, int pixels, struct rect *top, struct rect *bottom);
-void ui_vsplit_l(const struct rect *original, int pixels, struct rect *left, struct rect *right);
-void ui_vsplit_r(const struct rect *original, int pixels, struct rect *left, struct rect *right);
-void ui_margin(const struct rect *original, int pixels, struct rect *new_rect);*/
+void gfx_set_vsync(int val);
+void gfx_mask_op(int mask, int write);
+void gfx_clear_mask(int fill);
 
-/* image loaders */
-int gfx_load_png(IMAGE_INFO *img, const char *filename);
+int snd_init();
+int snd_shutdown();
+int snd_update();
+
+int map_load(const char *mapname);
+void map_unload();
+
+void map_set(void *m);
+
 
 /*
 	Group: Graphics
 */
 
-int gfx_init();
-void gfx_shutdown();
-void gfx_swap();
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 float gfx_screenaspect();
 
-int gfx_get_video_modes(VIDEO_MODE *list, int maxcount);
-void gfx_set_vsync(int val);
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
 
-int gfx_window_active();
-int gfx_window_open();
+	See Also:
+		<other_func>
+*/
+int gfx_get_video_modes(VIDEO_MODE *list, int maxcount);
+
+/* image loaders */
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
+int gfx_load_png(IMAGE_INFO *img, const char *filename);
 
 /* textures */
 /*
@@ -170,6 +201,8 @@ int gfx_load_texture(const char *filename, int store_format);
 		w - Width of the texture.
 		h - Height of the texture.
 		data - Pointer to the pixel data.
+		format - Format of the pixel data.
+		store_format - The format to store the texture on the graphics card.
 	
 	Returns:
 		An ID to the texture. -1 on failure.
@@ -182,7 +215,6 @@ int gfx_load_texture(const char *filename, int store_format);
 		<gfx_unload_texture>
 */
 int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_format);
-/*int gfx_load_mip_texture_raw(int w, int h, int format, const void *data);*/
 
 /*
 	Function: gfx_texture_set
@@ -208,6 +240,17 @@ void gfx_texture_set(int id);
 */
 int gfx_unload_texture(int id);
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void gfx_clear(float r, float g, float b);
 
 /*
@@ -387,29 +430,115 @@ void gfx_quads_drawTL(float x, float y, float width, float height);
 */
 void gfx_quads_draw(float x, float y, float w, float h);
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void gfx_quads_draw_freeform(
 	float x0, float y0,
 	float x1, float y1,
 	float x2, float y2,
 	float x3, float y3);
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void gfx_quads_text(float x, float y, float size, const char *text);
 
 /* sound (client) */
-int snd_init();
-int snd_update();
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void snd_set_channel(int cid, float vol, float pan);
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int snd_load_wv(const char *filename);
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int snd_play_at(int cid, int sid, int flags, float x, float y);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int snd_play(int cid, int sid, int flags);
 
-void snd_stop(int id);
-void snd_set_listener_pos(float x, float y);
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
 
-int snd_shutdown();
+	See Also:
+		<other_func>
+*/
+void snd_stop(int id);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
+void snd_set_listener_pos(float x, float y);
 
 /*
 	Group: Input
@@ -425,6 +554,17 @@ int snd_shutdown();
 */
 void inp_mouse_relative(int *x, int *y);
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int inp_mouse_scroll();
 
 /*
@@ -445,9 +585,6 @@ int inp_key_pressed(int key);
 /*
 	Group: Map
 */
-
-int map_load(const char *mapname);
-void map_unload();
 
 /*
 	Function: map_is_loaded
@@ -519,6 +656,18 @@ void map_get_type(int type, int *start, int *num);
 		A pointer to the raw data, otherwise 0.
 */
 void *map_get_data(int index);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void *map_get_data_swapped(int index);
 
 /*
@@ -745,36 +894,267 @@ void modc_render();
 void modc_statechange(int new_state, int old_state);
 
 /* undocumented callbacks */
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void modc_connected();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void modc_message(int msg);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void modc_predict();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int modc_snap_input(int *data);
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void mods_message(int msg, int client_id);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void mods_connected(int client_id);
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
 
+	See Also:
+		<other_func>
+*/
 const char *modc_net_version();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 const char *mods_net_version();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 const char *mods_version();
 
 /* server */
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int server_getclientinfo(int client_id, CLIENT_INFO *info);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 const char *server_clientname(int client_id);
 
 /* grabs the latest input for the client. not withholding anything */
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int *server_latestinput(int client_id, int *size);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void server_setclientname(int client_id, const char *name);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void server_setclientscore(int client_id, int score);
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void server_setbrowseinfo(int game_type, int progression);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void server_kick(int client_id, const char *reason);
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int server_tick();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int server_tickspeed();
 
 /* input */
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int inp_key_was_pressed(int key);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int inp_key_down(int key);
 
 
@@ -785,21 +1165,126 @@ typedef struct
 	int key;
 } INPUTEVENT;
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int inp_num_events();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 INPUTEVENT inp_get_event(int index);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void inp_clear_events();
 
 void inp_update();
 void inp_init();
 void inp_mouse_mode_absolute();
 void inp_mouse_mode_relative();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int inp_mouse_doubleclick();
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int inp_key_presses(int key);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int inp_key_releases(int key);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int inp_key_state(int key);
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 const char *inp_key_name(int k);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int inp_key_code(const char *key_name);
 
 /* message packing */
@@ -809,10 +1294,70 @@ enum
 };
 
 void msg_pack_start_system(int msg, int flags);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void msg_pack_start(int msg, int flags);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void msg_pack_int(int i);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void msg_pack_string(const char *p, int limit);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void msg_pack_raw(const void *data, int size);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void msg_pack_end();
 
 typedef struct
@@ -827,74 +1372,557 @@ const MSG_INFO *msg_get_info();
 
 /* message unpacking */
 int msg_unpack_start(const void *data, int data_size, int *system);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int msg_unpack_int();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 const char *msg_unpack_string();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 const unsigned char *msg_unpack_raw(int size);
 
 /* message sending */
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int server_send_msg(int client_id); /* client_id == -1 == broadcast */
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int client_send_msg();
 
 /* client */
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int client_tick();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int client_predtick();
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 float client_intratick(); 
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 float client_ticktime();
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 float client_intrapredtick();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int client_tickspeed();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 float client_frametime();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 float client_localtime();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void client_direct_input(int *input, int size);
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int client_state();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 const char *client_error_string();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int *client_get_input(int tick);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int client_connection_problems();
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void client_connect(const char *address);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void client_disconnect();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void client_quit();
+
 void client_entergame();
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void client_rcon(const char *cmd);
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
 
+	See Also:
+		<other_func>
+*/
 void client_serverbrowse_refresh(int lan);
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 SERVER_INFO *client_serverbrowse_sorted_get(int index);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int client_serverbrowse_sorted_num();
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 SERVER_INFO *client_serverbrowse_get(int index);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int client_serverbrowse_num();
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int client_serverbrowse_num_requests();
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void client_serverbrowse_update();
 
 /* undocumented graphics stuff */
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void gfx_text(void *font, float x, float y, float size, const char *text, int max_width);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 float gfx_text_width(void *font, float size, const char *text, int length);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void gfx_text_color(float r, float g, float b, float a);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void gfx_text_set_default_font(void *font);
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void gfx_getscreen(float *tl_x, float *tl_y, float *br_x, float *br_y);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int gfx_memory_usage();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void gfx_screenshot();
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void gfx_lines_begin();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void gfx_lines_draw(float x0, float y0, float x1, float y1);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void gfx_lines_end();
 
-void gfx_mask_op(int mask, int write);
-void gfx_clear_mask(int fill);
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
 
+	See Also:
+		<other_func>
+*/
 void gfx_clip_enable(int x, int y, int w, int h);
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void gfx_clip_disable();
 
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void gfx_quads_setsubset_free(
 	float x0, float y0,
 	float x1, float y1,
@@ -902,12 +1930,46 @@ void gfx_quads_setsubset_free(
 	float x3, float y3);
 
 /* server snap id */
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 int snap_new_id();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void snap_free_id(int id);
 
 /* other */
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
 void map_unload_data(int index);
-void map_set(void *m);
+
 
 #ifdef __cplusplus
 }
