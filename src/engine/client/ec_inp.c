@@ -177,6 +177,12 @@ int inp_mouse_doubleclick()
 	return release_delta < (time_freq() >> 2);
 }
 
+void inp_clear_key_states()
+{
+	mem_zero(keyboard_state, sizeof(keyboard_state));
+	mem_zero(input_count, sizeof(input_count));
+}
+
 int inp_key_presses(int key)
 {
 	return input_count[input_current][key].presses;

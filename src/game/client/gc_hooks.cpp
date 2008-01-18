@@ -25,6 +25,10 @@ extern void menu_init();
 extern bool menu_active;
 extern bool menu_game_active;
 
+extern "C" void modc_preinit()
+{
+	client_console_init();
+}
 
 extern "C" void modc_init()
 {
@@ -37,8 +41,6 @@ extern "C" void modc_init()
 	gfx_text_set_default_font(&default_font);
 
 	menu_init();
-
-	client_console_init();
 	
 	// setup sound channels
 	snd_set_channel(CHN_GUI, 1.0f, 0.0f);
@@ -299,6 +301,8 @@ extern "C" void modc_render()
 	if(client_state() == CLIENTSTATE_ONLINE)
 	{
 		render_game();
+		if (console_active())
+			console_render();
 
 		// handle team switching
 		// TODO: FUGLY!!!
@@ -314,10 +318,8 @@ extern "C" void modc_render()
 	{
 		menu_render();
 		if (console_active())
-		{
 			console_render();
-			return;
-		}
+		return;
 	}
 
 	//
@@ -346,10 +348,22 @@ extern "C" int modc_snap_input(int *data)
 	else
 	{
 		input_data.state = STATE_PLAYING;
-		input_data.left = inp_key_state(config.key_move_left);
-		input_data.right = inp_key_state(config.key_move_right);
-		input_data.hook = inp_key_state(config.key_hook);
-		input_data.jump  = inp_key_state(config.key_jump);
+
+		// TODO: this doesn't feel too pretty... look into it?
+		if (console_active())
+		{
+			input_data.left = 0;
+			input_data.right = 0;
+			input_data.hook = 0;
+			input_data.jump = 0;
+		}
+		else
+		{
+			input_data.left = inp_key_state(config.key_move_left);
+			input_data.right = inp_key_state(config.key_move_right);
+			input_data.hook = inp_key_state(config.key_hook);
+			input_data.jump  = inp_key_state(config.key_jump);
+		}
 	}
 
 	// stress testing

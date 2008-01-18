@@ -40,13 +40,35 @@ static void client_console_print(const char *str)
 	//dbg_msg("console", "FROM CLIENT!! %s", str);
 }
 
+static void connect_command(struct lexer_result *result, void *user_data)
+{
+	const char *address;
+	extract_result_string(result, 1, &address);
+	client_connect(address);
+}
+
+static void disconnect_command(struct lexer_result *result, void *user_data)
+{
+	client_disconnect();
+}
+
+static void quit_command(struct lexer_result *result, void *user_data)
+{
+	client_quit();
+}
+
 void client_console_init()
 {
 	console_register_print_callback(client_console_print);
+	MACRO_REGISTER_COMMAND("quit", "", quit_command, 0x0);
+	MACRO_REGISTER_COMMAND("connect", "s", connect_command, 0x0);
+	MACRO_REGISTER_COMMAND("disconnect", "", disconnect_command, 0x0);
 }
 
 void console_handle_input()
 {
+	int was_active = active;
+
 	for(int i = 0; i < inp_num_events(); i++)
 	{
 		INPUTEVENT e = inp_get_event(i);
@@ -76,17 +98,23 @@ void console_handle_input()
 					console_input_len--;
 				}
 			}
-			else if(e.key == KEY_ENTER)
+			else if(e.key == KEY_ENTER || e.key == KEY_KP_ENTER)
 			{
-				console_execute(console_input);
-				console_input[0] = 0;
-				console_input_len = 0;
+				if (console_input_len)
+				{
+					console_execute(console_input);
+					console_input[0] = 0;
+					console_input_len = 0;
+				}
 			}
 		}
 	}
 
-	if (active)
+	if (was_active || active)
+	{
 		inp_clear_events();
+		inp_clear_key_states();
+	}
 }
 
 void console_toggle()
@@ -108,15 +136,17 @@ void console_render()
 
 	{
 		float font_size = 12.0f;
-		float row_spacing = font_size*1.4f;
-		float width = gfx_text_width(0, 12, console_input, -1);
-		float x = 3, y = console_height - row_spacing - 2;
+		float row_height = font_size*1.4f;
+		float width = gfx_text_width(0, font_size, console_input, -1);
+		float x = 3, y = console_height - row_height - 2;
 		int backlog_index = backlog_len-1;
+		float prompt_width = gfx_text_width(0, font_size, ">", -1)+2;
 
-		gfx_text(0, x, y, font_size, console_input, -1);
-		gfx_text(0, x+width+1, y, font_size, "_", -1);
+		gfx_text(0, x, y, font_size, ">", -1);
+		gfx_text(0, x+prompt_width, y, font_size, console_input, -1);
+		gfx_text(0, x+prompt_width+width+1, y, font_size, "_", -1);
 
-		y -= row_spacing;
+		y -= row_height;
 
 		while (y > 0.0f && backlog_index >= 0)
 		{
@@ -124,7 +154,7 @@ void console_render()
 			gfx_text(0, x, y, font_size, line, -1);
 
 			backlog_index--;
-			y -= row_spacing;
+			y -= row_height;
 		}
 	}
 }

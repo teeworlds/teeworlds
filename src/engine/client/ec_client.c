@@ -1193,6 +1193,9 @@ int editor_main(int argc, char **argv);
 
 int main(int argc, char **argv)
 {
+	/* preinit the mod */
+	modc_preinit();
+
 	/* init the engine */
 	dbg_msg("client", "starting...");
 	engine_init("Teewars", argc, argv);

@@ -1183,7 +1183,7 @@ void render_game()
 	{
 		if(chat_mode != CHATMODE_NONE)
 		{
-			if(inp_key_down(KEY_ENTER))
+			if(inp_key_down(KEY_ENTER) || inp_key_down(KEY_KP_ENTER))
 			{
 				// send message
 				if(chat_input_len)

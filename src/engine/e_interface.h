@@ -845,6 +845,15 @@ void mods_postsnap();
 /*
 	Group: Client Callbacks
 */
+
+/*
+	Function: modc_preinit
+		Called when the client starts, but before the engine is initialized.
+	
+	Remarks:
+*/
+void modc_preinit();
+
 /*
 	Function: modc_init
 		Called when the client starts.
@@ -1221,6 +1230,19 @@ void inp_mouse_mode_relative();
 		<other_func>
 */
 int inp_mouse_doubleclick();
+
+/*
+	Function: TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
+void inp_clear_key_states();
 
 /*
 	Function: TODO
