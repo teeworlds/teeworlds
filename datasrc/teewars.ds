@@ -572,12 +572,6 @@ weapons {
 }
 	
 sprites {
-	coulds images.clouds 16 16 {
-		cloud1 0 0 16 7
-		cloud2 0 7 11 8
-		cloud3 11 7 5 5
-	}
-	
 	game images.game 32 16 {
 	
 		health_full 21 0 2 2
