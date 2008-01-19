@@ -1,4 +1,5 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+#include <stdio.h>
 #include <engine/e_system.h>
 #include <engine/e_client_interface.h>
 #include <game/g_mapitems.h>
@@ -97,7 +98,7 @@ int img_init()
 		if(map_textures[i])
 		{
 			gfx_unload_texture(map_textures[i]);
-			map_textures[i] = 0;
+			map_textures[i] = -1;
 		}
 	}
 
@@ -105,9 +106,19 @@ int img_init()
 	for(int i = 0; i < count; i++)
 	{
 		MAPITEM_IMAGE *img = (MAPITEM_IMAGE *)map_get_item(start+i, 0, 0);
-		void *data = map_get_data(img->image_data);
-		map_textures[i] = gfx_load_texture_raw(img->width, img->height, IMG_RGBA, data, IMG_RGBA);
-		map_unload_data(img->image_data);
+		if(img->external)
+		{
+			char buf[256];
+			char *name = (char *)map_get_data(img->image_name);
+			sprintf(buf, "data/mapres/%s.png", name);
+			map_textures[i] = gfx_load_texture(buf, IMG_AUTO);
+		}
+		else
+		{
+			void *data = map_get_data(img->image_data);
+			map_textures[i] = gfx_load_texture_raw(img->width, img->height, IMG_RGBA, data, IMG_RGBA);
+			map_unload_data(img->image_data);
+		}
 	}
 
 	return count;
