@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include <engine/e_interface.h>
+#include <engine/e_client_interface.h>
 
 extern "C" {
 	#include <engine/e_config.h>

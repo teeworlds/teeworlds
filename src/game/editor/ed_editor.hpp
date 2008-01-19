@@ -8,7 +8,7 @@
 
 extern "C" {
 	#include <engine/e_system.h>
-	#include <engine/e_interface.h>
+	#include <engine/e_client_interface.h>
 	#include <engine/e_datafile.h>
 	#include <engine/e_config.h>
 }

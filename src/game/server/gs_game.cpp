@@ -1,6 +1,7 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <string.h>
 #include <engine/e_config.h>
+#include <engine/e_server_interface.h>
 #include <game/g_mapitems.h>
 #include "gs_common.h"
 
@@ -190,7 +191,7 @@ int gameobject::on_player_death(class player *victim, class player *killer, int 
 
 void gameobject::do_warmup(int seconds)
 {
-	warmup = seconds*SERVER_TICK_SPEED;
+	warmup = seconds*server_tickspeed();
 }
 
 bool gameobject::is_friendly_fire(int cid1, int cid2)

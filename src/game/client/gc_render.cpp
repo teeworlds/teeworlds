@@ -1,6 +1,6 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <math.h>
-#include <engine/e_interface.h>
+#include <engine/e_client_interface.h>
 #include <engine/e_config.h>
 #include <game/generated/gc_data.h>
 #include <game/g_protocol.h>

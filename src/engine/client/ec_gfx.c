@@ -3,7 +3,7 @@
 #include <engine/external/pnglite/pnglite.h>
 
 #include <engine/e_system.h>
-#include <engine/e_interface.h>
+#include <engine/e_client_interface.h>
 #include <engine/e_engine.h>
 #include <engine/e_config.h>
 #include <engine/e_keys.h>

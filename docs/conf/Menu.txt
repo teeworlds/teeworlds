@@ -1,0 +1,79 @@
+Format: 1.35
+
+
+# You can add a title and sub-title to your menu like this:
+# Title: [project name]
+# SubTitle: [subtitle]
+
+# You can add a footer to your documentation like this:
+# Footer: [text]
+# If you want to add a copyright notice, this would be the place to do it.
+
+
+# --------------------------------------------------------------------------
+# 
+# Cut and paste the lines below to change the order in which your files
+# appear on the menu.  Don't worry about adding or removing files, Natural
+# Docs will take care of that.
+# 
+# You can further organize the menu by grouping the entries.  Add a
+# "Group: [name] {" line to start a group, and add a "}" to end it.
+# 
+# You can add text and web links to the menu by adding "Text: [text]" and
+# "Link: [name] ([URL])" lines, respectively.
+# 
+# The formatting and comments are auto-generated, so don't worry about
+# neatness when editing the file.  Natural Docs will clean it up the next
+# time it is run.  When working with groups, just deal with the braces and
+# forget about the indentation and comments.
+# 
+# --------------------------------------------------------------------------
+
+
+Group: Articles  {
+
+   File: Prediction  (docs/prediction.txt)
+   File: Time on the client  (docs/client_time.txt)
+   }  # Group: Articles
+
+Group: Reference  {
+
+   File: Lowlevel Library  (no auto-title, e_system.h)
+
+   Group: Common Interface  {
+
+      File: Engine Interface  (e_if_other.h)
+      File: Message Packing  (no auto-title, e_if_msg.h)
+      }  # Group: Common Interface
+
+   Group: Client Interface  {
+
+      File: General  (no auto-title, e_if_client.h)
+      File: Sound  (no auto-title, e_if_snd.h)
+      File: Input  (no auto-title, e_if_inp.h)
+      File: Graphics  (no auto-title, e_if_gfx.h)
+      }  # Group: Client Interface
+
+   Group: Server Interface  {
+
+      File: General  (no auto-title, e_if_server.h)
+      }  # Group: Server Interface
+
+   Group: Mod Hooks  {
+
+      File: Client Side  (no auto-title, e_if_modc.h)
+      File: Server Side  (no auto-title, e_if_mods.h)
+      }  # Group: Mod Hooks
+
+   }  # Group: Reference
+
+Group: Index  {
+
+   Index: Everything
+   Constant Index: Constants
+   File Index: Files
+   Function Index: Functions
+   Class Index: Classes
+   Variable Index: Variables
+   }  # Group: Index
+

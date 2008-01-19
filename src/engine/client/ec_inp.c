@@ -3,7 +3,7 @@
 #include <engine/external/glfw/include/GL/glfw.h>
 
 #include <engine/e_system.h>
-#include <engine/e_interface.h>
+#include <engine/e_client_interface.h>
 #include <engine/e_config.h>
 
 static int keyboard_state[2][1024]; /* TODO: fix this!! */
@@ -53,7 +53,7 @@ enum
 	INPUT_BUFFER_SIZE=32
 };
 
-static INPUTEVENT input_events[INPUT_BUFFER_SIZE];
+static INPUT_EVENT input_events[INPUT_BUFFER_SIZE];
 static int num_events = 0;
 
 static void add_event(char c, int key)
@@ -76,11 +76,11 @@ void inp_clear_events()
 	num_events = 0;
 }
 
-INPUTEVENT inp_get_event(int index)
+INPUT_EVENT inp_get_event(int index)
 {
 	if(index < 0 || index >= num_events)
 	{
-		INPUTEVENT e = {0,0};
+		INPUT_EVENT e = {0,0};
 		return e;
 	}
 	

@@ -3,9 +3,9 @@
 #define GAME_GAME_H
 
 #include <engine/e_system.h>
+#include <engine/e_common_interface.h>
 #include <game/g_math.h>
 #include <math.h>
-#include "../engine/e_interface.h"
 #include "g_collision.h"
 
 #include "g_protocol.h"

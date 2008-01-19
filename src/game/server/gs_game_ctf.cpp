@@ -1,4 +1,5 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+#include <engine/e_server_interface.h>
 #include <game/g_mapitems.h>
 #include "gs_common.h"
 #include "gs_game_ctf.h"
@@ -134,7 +135,7 @@ void gameobject_ctf::tick()
 			
 			if(!f->carrying_player && !f->at_stand)
 			{
-				if(server_tick() > f->drop_tick + SERVER_TICK_SPEED*30)
+				if(server_tick() > f->drop_tick + server_tickspeed()*30)
 				{
 					create_sound_global(SOUND_CTF_RETURN);
 					f->reset();

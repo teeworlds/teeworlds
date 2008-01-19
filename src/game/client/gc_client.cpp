@@ -7,6 +7,7 @@
 extern "C" {
 	#include <engine/e_config.h>
 	#include <engine/client/ec_font.h>
+	#include <engine/e_client_interface.h>
 };
 
 #include "../g_game.h"
@@ -1140,7 +1141,7 @@ void render_game()
 			// don't use predicted
 		}
 		else
-			local_character_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_intrapredtick());
+			local_character_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_predintratick());
 	}
 	else if(local_character && local_prev_character)
 	{
@@ -1211,7 +1212,7 @@ void render_game()
 
 			for(int i = 0; i < inp_num_events(); i++)
 			{
-				INPUTEVENT e = inp_get_event(i);
+				INPUT_EVENT e = inp_get_event(i);
 
 				if (!(e.ch >= 0 && e.ch < 32))
 				{

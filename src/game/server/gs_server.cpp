@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <engine/e_config.h>
+#include <engine/e_server_interface.h>
 #include <game/g_version.h>
 #include <game/g_collision.h>
 #include <game/g_layers.h>
@@ -371,7 +372,7 @@ projectile::projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity
 {
 	this->type = type;
 	this->pos = pos;
-	this->vel = vel * SERVER_TICK_SPEED; // TODO: remove this
+	this->vel = vel * server_tickspeed(); // TODO: remove this
 	this->lifespan = span;
 	this->owner = owner;
 	this->powner = powner;
@@ -398,8 +399,8 @@ void projectile::tick()
 	if(type == WEAPON_BOMB)
 		gravity = 0;
 	
-	float pt = (server_tick()-start_tick-1)/(float)SERVER_TICK_SPEED;
-	float ct = (server_tick()-start_tick)/(float)SERVER_TICK_SPEED;
+	float pt = (server_tick()-start_tick-1)/(float)server_tickspeed();
+	float ct = (server_tick()-start_tick)/(float)server_tickspeed();
 	vec2 prevpos = calc_pos(pos, vel, gravity, pt);
 	vec2 curpos = calc_pos(pos, vel, gravity, ct);
 
@@ -435,8 +436,8 @@ void projectile::tick()
 
 void projectile::snap(int snapping_client)
 {
-	float ct = (server_tick()-start_tick)/(float)SERVER_TICK_SPEED;
-	vec2 curpos = calc_pos(pos, vel, -7.5f*SERVER_TICK_SPEED, ct);
+	float ct = (server_tick()-start_tick)/(float)server_tickspeed();
+	vec2 curpos = calc_pos(pos, vel, -7.5f*server_tickspeed(), ct);
 
 	if(distance(players[snapping_client].pos, curpos) > 1000.0f)
 		return;

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "e_snapshot.h"
 #include "e_compression.h"
-#include "e_interface.h"
+#include "e_common_interface.h"
 
 
 int *snapitem_data(SNAPSHOT_ITEM *item) { return (int *)(item+1); }

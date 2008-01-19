@@ -8,7 +8,7 @@
 
 #include <engine/e_system.h>
 #include <engine/e_engine.h>
-#include <engine/e_interface.h>
+#include <engine/e_client_interface.h>
 
 #include <engine/e_protocol.h>
 #include <engine/e_snapshot.h>
@@ -65,7 +65,7 @@ static float ticktime = 0;
 
 /* predicted time */
 static int current_predtick = 0;
-static float intrapredtick = 0;
+static float predintratick = 0;
 
 static struct /* TODO: handle input better */
 {
@@ -237,7 +237,7 @@ int snap_num_items(int snapid)
 
 /* ------ time functions ------ */
 float client_intratick() { return intratick; }
-float client_intrapredtick() { return intrapredtick; }
+float client_predintratick() { return predintratick; }
 float client_ticktime() { return ticktime; }
 int client_tick() { return current_tick; }
 int client_predtick() { return current_predtick; }
@@ -924,7 +924,7 @@ static void client_update()
 			/*tg_add(&predicted_time_graph, pred_now, 0); */
 			int prev_pred_tick = (int)(pred_now*50/time_freq());
 			int new_pred_tick = prev_pred_tick+1;
-			static float last_intrapred = 0;
+			static float last_predintra = 0;
 
 			intratick = (now - prevtick_start) / (float)(curtick_start-prevtick_start);
 			ticktime = (now - curtick_start) / (freq/(float)SERVER_TICK_SPEED);
@@ -933,12 +933,11 @@ static void client_update()
 
 			curtick_start = new_pred_tick*time_freq()/50;
 			prevtick_start = prev_pred_tick*time_freq()/50;
-			intrapredtick = (pred_now - prevtick_start) / (float)(curtick_start-prevtick_start);
-			
+			predintratick = (pred_now - prevtick_start) / (float)(curtick_start-prevtick_start);
 			
 			if(new_pred_tick > current_predtick)
 			{
-				last_intrapred = intrapredtick;
+				last_predintra = predintratick;
 				current_predtick = new_pred_tick;
 				repredict = 1;
 				
@@ -946,9 +945,9 @@ static void client_update()
 				client_send_input();
 			}
 			
-			if(intrapredtick < last_intrapred)
+			if(predintratick < last_predintra)
 				dbg_msg("client", "prediction time goes backwards, that can't be good");
-			last_intrapred = intrapredtick;
+			last_predintra = predintratick;
 		}
 
 		/* only do sane predictions */

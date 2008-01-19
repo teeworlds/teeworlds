@@ -1,5 +1,5 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include "e_interface.h"
+#include "e_common_interface.h"
 #include "e_packer.h"
 
 /* message packing */

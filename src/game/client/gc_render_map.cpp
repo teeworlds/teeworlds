@@ -1,5 +1,5 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <engine/e_interface.h>
+#include <engine/e_client_interface.h>
 #include "../g_math.h"
 #include "gc_client.h"
 

@@ -2,7 +2,7 @@
 #include <engine/e_system.h>
 #include <game/g_vmath.h>
 #include <math.h>
-#include <engine/e_interface.h>
+#include <engine/e_common_interface.h>
 #include <game/g_math.h>
 #include <game/g_mapitems.h>
 #include <game/g_layers.h>

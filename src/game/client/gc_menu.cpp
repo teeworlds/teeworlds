@@ -9,7 +9,7 @@
 
 extern "C" {
 	#include <engine/e_system.h>
-	#include <engine/e_interface.h>
+	#include <engine/e_client_interface.h>
 	#include <engine/e_config.h>
 	#include <engine/client/ec_font.h>
 }
@@ -206,7 +206,7 @@ int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float fo
 			
 		for(int i = 0; i < inp_num_events(); i++)
 		{
-			INPUTEVENT e = inp_get_event(i);
+			INPUT_EVENT e = inp_get_event(i);
 			char c = e.ch;
 			int k = e.key;
 
@@ -415,7 +415,7 @@ int ui_do_key_reader(void *id, const RECT *rect, int key)
 	{
 		for(int i = 0; i < inp_num_events(); i++)
 		{
-			INPUTEVENT e = inp_get_event(i);
+			INPUT_EVENT e = inp_get_event(i);
 			if(e.key && e.key != KEY_ESC)
 			{
 				new_key = e.key;

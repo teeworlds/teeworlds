@@ -2,7 +2,7 @@
 
 extern "C" {
 	#include <engine/e_system.h>
-	#include <engine/e_interface.h>
+	#include <engine/e_client_interface.h>
 	#include <engine/e_config.h>
 	#include <engine/e_console.h>
 	#include <engine/client/ec_font.h>
@@ -71,7 +71,7 @@ void console_handle_input()
 
 	for(int i = 0; i < inp_num_events(); i++)
 	{
-		INPUTEVENT e = inp_get_event(i);
+		INPUT_EVENT e = inp_get_event(i);
 
 		if (e.key == KEY_F3)
 		{

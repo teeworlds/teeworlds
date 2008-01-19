@@ -1,6 +1,6 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <math.h>
-#include <engine/e_interface.h>
+#include <engine/e_client_interface.h>
 #include <engine/e_config.h>
 #include "../generated/gc_data.h"
 #include "../g_protocol.h"
@@ -202,7 +202,7 @@ void render_player(
 			// apply predicted results
 			predicted_player.write(&player);
 			predicted_prev_player.write(&prev);
-			intratick = client_intrapredtick();
+			intratick = client_predintratick();
 		}
 	}
 
@@ -254,7 +254,7 @@ void render_player(
 			if(local_info && player_char->hooked_player == local_info->clientid)
 			{
 				hook_pos = mix(vec2(predicted_prev_player.pos.x, predicted_prev_player.pos.y),
-					vec2(predicted_player.pos.x, predicted_player.pos.y), client_intrapredtick());
+					vec2(predicted_player.pos.x, predicted_player.pos.y), client_predintratick());
 			}
 			else
 				hook_pos = mix(vec2(prev_char->hook_x, prev_char->hook_y), vec2(player_char->hook_x, player_char->hook_y), client_intratick());

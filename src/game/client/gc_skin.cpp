@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <engine/e_system.h>
-#include <engine/e_interface.h>
+#include <engine/e_client_interface.h>
 #include "gc_skin.h"
 #include "../g_math.h"
 

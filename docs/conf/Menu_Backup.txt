@@ -1,0 +1,66 @@
+Format: 1.35
+
+
+# You can add a title and sub-title to your menu like this:
+# Title: [project name]
+# SubTitle: [subtitle]
+
+# You can add a footer to your documentation like this:
+# Footer: [text]
+# If you want to add a copyright notice, this would be the place to do it.
+
+
+# --------------------------------------------------------------------------
+# 
+# Cut and paste the lines below to change the order in which your files
+# appear on the menu.  Don't worry about adding or removing files, Natural
+# Docs will take care of that.
+# 
+# You can further organize the menu by grouping the entries.  Add a
+# "Group: [name] {" line to start a group, and add a "}" to end it.
+# 
+# You can add text and web links to the menu by adding "Text: [text]" and
+# "Link: [name] ([URL])" lines, respectively.
+# 
+# The formatting and comments are auto-generated, so don't worry about
+# neatness when editing the file.  Natural Docs will clean it up the next
+# time it is run.  When working with groups, just deal with the braces and
+# forget about the indentation and comments.
+# 
+# --------------------------------------------------------------------------
+
+
+File: e_system.h  (e_system.h)
+File: Engine Interface  (e_interface.h)
+
+Group: External  {
+
+   Group: Glfw  {
+
+      File: Does this work?  (external/glfw/lib/x11/x11_window.c)
+      File: glfw.h  (external/glfw/include/GL/glfw.h)
+      File: lib/win32/win32_window.c  (external/glfw/lib/win32/win32_window.c)
+      File: Only Linux joystick input is supported at the moment. Other  (external/glfw/lib/x11/x11_joystick.c)
+      File: Some compilers complains about hinst and x never being used -  (external/glfw/lib/win32/win32_dllmain.c)
+      }  # Group: Glfw
+
+   File: pnglite/pnglite.h  (external/pnglite/pnglite.h)
+
+   Group: Portaudio  {
+
+      File: for the default AudioUnit, we could use the  (external/portaudio/pa_mac_core.c)
+      File: make sure this validation list is kept syncronised with the one in  (external/portaudio/pa_front.c)
+      File: this code depends on the sample format constants being in  (external/portaudio/pa_converters.c)
+      }  # Group: Portaudio
+
+   File: the deflate() code requires max_lazy >= MIN_MATCH and max_chain >= 4  (external/zlib/deflate.c)
+   }  # Group: External
+
+Group: Index  {
+
+   Index: Everything
+   File Index: Files
+   Function Index: Functions
+   Variable Index: Variables
+   }  # Group: Index
+

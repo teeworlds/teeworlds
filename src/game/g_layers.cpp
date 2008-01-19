@@ -1,4 +1,4 @@
-#include <engine/e_interface.h>
+#include <engine/e_common_interface.h>
 #include "g_layers.h"
 
 static MAPITEM_LAYER_TILEMAP *game_layer;

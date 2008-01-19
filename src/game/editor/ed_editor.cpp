@@ -6,7 +6,7 @@
 
 extern "C" {
 	#include <engine/e_system.h>
-	#include <engine/e_interface.h>
+	#include <engine/e_common_interface.h>
 	#include <engine/e_datafile.h>
 	#include <engine/e_config.h>
 }

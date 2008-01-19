@@ -118,9 +118,9 @@ void player_core::tick()
 	triggered_events = 0;
 	
 	bool grounded = false;
-	if(col_is_solid((int)(pos.x+phys_size/2), (int)(pos.y+phys_size/2+5)))
+	if(col_check_point((int)(pos.x+phys_size/2), (int)(pos.y+phys_size/2+5)))
 		grounded = true;
-	if(col_is_solid((int)(pos.x-phys_size/2), (int)(pos.y+phys_size/2+5)))
+	if(col_check_point((int)(pos.x-phys_size/2), (int)(pos.y+phys_size/2+5)))
 		grounded = true;
 	
 	vec2 direction = normalize(vec2(input.target_x, input.target_y));
