@@ -16,6 +16,15 @@ LAYER_QUADS::~LAYER_QUADS()
 
 static void envelope_eval(float time_offset, int env, float *channels)
 {
+	if(env < 0 || env > editor.map.envelopes.len())
+	{
+		channels[0] = 0;
+		channels[1] = 0;
+		channels[2] = 0;
+		channels[3] = 0;
+		return;
+	}
+		
 	ENVELOPE *e = editor.map.envelopes[env];
 	float t = editor.animate_time+time_offset;
 	e->eval(t, channels);
