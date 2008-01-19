@@ -1,3 +1,4 @@
+#include <string.h>
 #include "ed_editor.hpp"
 
 template<typename T>
@@ -214,7 +215,7 @@ int EDITOR::save(const char *filename)
 		item.width = img->width;
 		item.height = img->height;
 		item.external = 0;
-		item.image_name = -1;
+		item.image_name = datafile_add_data(df, strlen(img->name)+1, img->name);
 		item.image_data = datafile_add_data(df, item.width*item.height*4, img->data);
 		datafile_add_item(df, MAPITEMTYPE_IMAGE, i, sizeof(item), &item);
 	}
@@ -353,11 +354,15 @@ int EDITOR::load(const char *filename)
 			{
 				MAPITEM_IMAGE *item = (MAPITEM_IMAGE *)datafile_get_item(df, start+i, 0, 0);
 				void *data = datafile_get_data(df, item->image_data);
+				char *name = (char *)datafile_get_data(df, item->image_name);
 				
 				IMAGE *img = new IMAGE;
 				img->width = item->width;
 				img->height = item->height;
 				img->format = IMG_RGBA;
+				
+				if(name)
+					strncpy(img->name, name, 128);
 				
 				// copy image data
 				img->data = mem_alloc(img->width*img->height*4, 1);
@@ -367,6 +372,7 @@ int EDITOR::load(const char *filename)
 				
 				// unload image
 				datafile_unload_data(df, item->image_data);
+				datafile_unload_data(df, item->image_name);
 			}
 		}
 		

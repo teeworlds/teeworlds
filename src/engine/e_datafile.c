@@ -270,6 +270,9 @@ void *datafile_get_data_swapped(DATAFILE *df, int index)
 
 void datafile_unload_data(DATAFILE *df, int index)
 {
+	if(index < 0)
+		return;
+		
 	/* */
 	mem_free(df->data_ptrs[index]);
 	df->data_ptrs[index] = 0x0;
@@ -446,12 +449,17 @@ int datafile_add_item(DATAFILE_OUT *df, int type, int id, int size, void *data)
 int datafile_add_data(DATAFILE_OUT *df, int size, void *data)
 {
 	DATA_INFO *info = &df->datas[df->num_datas];
-	unsigned long s = size*2;
+	unsigned long s = compressBound(size);
 	void *compdata = mem_alloc(s, 1); /* temporary buffer that we use duing compression */
 
-	info->uncompressed_size = size;
-	if(compress((Bytef*)compdata, &s, (Bytef*)data, size) != Z_OK)
+	int result = compress((Bytef*)compdata, &s, (Bytef*)data, size);
+	if(result != Z_OK)
+	{
+		dbg_msg("datafile", "compression error %d", result);
 		dbg_assert(0, "zlib error");
+	}
+		
+	info->uncompressed_size = size;
 	info->compressed_size = (int)s;
 	info->compressed_data = mem_alloc(info->compressed_size, 1);
 	mem_copy(info->compressed_data, compdata, info->compressed_size);

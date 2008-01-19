@@ -343,9 +343,7 @@ int popup_select_image(RECT view)
 		}
 		else
 		{
-			char buf[64];
-			sprintf(buf, "%d", i);
-			if(do_editor_button(&editor.map.images[i], buf, i==select_image_current, &button, draw_editor_button_menuitem, 0, 0))
+			if(do_editor_button(&editor.map.images[i], editor.map.images[i]->name, i==select_image_current, &button, draw_editor_button_menuitem, 0, 0))
 				select_image_selected = i;
 		}
 	}

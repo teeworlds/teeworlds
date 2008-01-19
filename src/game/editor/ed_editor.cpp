@@ -1209,7 +1209,7 @@ int EDITOR::do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val
 			if(props[i].value < 0)
 				strcpy(buf, "None");
 			else
-				sprintf(buf, "%d",  props[i].value);
+				sprintf(buf, "%s",  editor.map.images[props[i].value]->name);
 			
 			if(do_editor_button(&ids[i], buf, 0, &shifter, draw_editor_button, 0, 0))
 				popup_select_image_invoke(props[i].value, ui_mouse_x(), ui_mouse_y());
@@ -1315,6 +1315,38 @@ static void render_layers(RECT toolbox, RECT toolbar, RECT view)
 	
 }
 
+static void extract_name(const char *filename, char *name)
+{
+	int len = strlen(filename);
+	int start = len;
+	int end = len;
+	
+	while(start > 0)
+	{
+		start--;
+		if(filename[start] == '/' || filename[start] == '\\')
+		{
+			start++;
+			break;
+		}
+	}
+	
+	end = start;
+	for(int i = start; i < len; i++)
+	{
+		if(filename[i] == '.')
+			end = i;
+	}
+	
+	if(end == start)
+		end = len;
+	
+	int final_len = end-start;
+	mem_copy(name, &filename[start], final_len);
+	name[final_len] = 0;
+	dbg_msg("", "%s %s %d %d", filename, name, start, end);
+}
+
 static void replace_image(const char *filename)
 {
 	IMAGE imginfo;
@@ -1324,6 +1356,7 @@ static void replace_image(const char *filename)
 	IMAGE *img = editor.map.images[editor.selected_image];
 	gfx_unload_texture(img->tex_id);
 	*img = imginfo;
+	extract_name(filename, img->name);
 	img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO);
 }
 
@@ -1332,6 +1365,8 @@ static void add_image(const char *filename)
 	IMAGE imginfo;
 	if(!gfx_load_png(&imginfo, filename))
 		return;
+
+	//gfx_unload_texture
 
 	IMAGE *img = new IMAGE;
 	*img = imginfo;
@@ -1383,7 +1418,7 @@ static void render_images(RECT toolbox, RECT toolbar, RECT view)
 	for(int i = 0; i < editor.map.images.len(); i++)
 	{
 		char buf[128];
-		sprintf(buf, "#%d %dx%d", i, editor.map.images[i]->width, editor.map.images[i]->height);
+		sprintf(buf, "%s", editor.map.images[i]->name);
 		RECT slot;
 		ui_hsplit_t(&toolbox, 12.0f, &slot, &toolbox);
 		
