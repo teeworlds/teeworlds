@@ -223,36 +223,12 @@ images {
 		filename "data/game.png"
 	}
 
-	sun {
-		filename "data/sun.png"
-	}
-
-	moon {
-		filename "data/moon.png"
-	}
-
-	stars {
-		filename "data/stars.png"
-	}
-
-	snow {
-		filename "data/snow.png"
-	}
-	
-	backdrop {
-		filename "data/mountain_paralax.png"
-	}
-
 	cursor {
 		filename "data/gui_cursor.png"
 	}
 
 	banner {
 		filename "data/gui_logo.png"
-	}
-	
-	clouds {
-		filename "data/cloudmap.png"
 	}
 
 	emoticons {
