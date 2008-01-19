@@ -3,9 +3,9 @@ C/C++
 /home/kma/code/teewars/trunk/src/engine/e_memheap.h	1197706562	0	/home/kma/code/teewars/trunk/src/engine/e_memheap.h
 /home/kma/code/teewars/trunk/src/engine/client/ec_font.h	1200146774	0	/home/kma/code/teewars/trunk/src/engine/client/ec_font.h
 /home/kma/code/teewars/trunk/src/engine/e_console.c	1200611479	0	/home/kma/code/teewars/trunk/src/engine/e_console.c
-/home/kma/code/teewars/trunk/src/engine/e_if_modc.h	1200736124	1	Client Hooks
+/home/kma/code/teewars/trunk/src/engine/e_if_modc.h	1200740313	1	Client Hooks
 /home/kma/code/teewars/trunk/src/engine/e_protocol.h	1197711693	0	/home/kma/code/teewars/trunk/src/engine/e_protocol.h
-/home/kma/code/teewars/trunk/src/engine/client/ec_inp.c	1200709481	0	/home/kma/code/teewars/trunk/src/engine/client/ec_inp.c
+/home/kma/code/teewars/trunk/src/engine/client/ec_inp.c	1200740188	0	/home/kma/code/teewars/trunk/src/engine/client/ec_inp.c
 /home/kma/code/teewars/trunk/src/engine/e_memheap.c	1197707815	0	/home/kma/code/teewars/trunk/src/engine/e_memheap.c
 /home/kma/code/teewars/trunk/src/engine/e_if_snd.h	1200736177	1	Sound
 /home/kma/code/teewars/trunk/src/engine/e_keynames.c	1197706547	0	/home/kma/code/teewars/trunk/src/engine/e_keynames.c
@@ -23,7 +23,7 @@ C/C++
 /home/kma/code/teewars/trunk/src/engine/e_snapshot.h	1197707840	0	/home/kma/code/teewars/trunk/src/engine/e_snapshot.h
 /home/kma/code/teewars/trunk/src/engine/e_client_interface.h	1200739926	0	/home/kma/code/teewars/trunk/src/engine/e_client_interface.h
 /home/kma/code/teewars/trunk/src/engine/e_if_mods.h	1200736122	1	Server Hooks
-/home/kma/code/teewars/trunk/src/engine/client/ec_client.c	1200709471	0	/home/kma/code/teewars/trunk/src/engine/client/ec_client.c
+/home/kma/code/teewars/trunk/src/engine/client/ec_client.c	1200740188	0	/home/kma/code/teewars/trunk/src/engine/client/ec_client.c
 /home/kma/code/teewars/trunk/src/engine/client/ec_srvbrowse.c	1200709484	0	/home/kma/code/teewars/trunk/src/engine/client/ec_srvbrowse.c
 /home/kma/code/teewars/trunk/src/engine/e_detect.h	1197706565	0	/home/kma/code/teewars/trunk/src/engine/e_detect.h
 /home/kma/code/teewars/trunk/src/engine/e_compression.c	1197707819	0	/home/kma/code/teewars/trunk/src/engine/e_compression.c
@@ -45,7 +45,7 @@ C/C++
 /home/kma/code/teewars/trunk/src/engine/client/ec_snd.c	1200709488	0	/home/kma/code/teewars/trunk/src/engine/client/ec_snd.c
 /home/kma/code/teewars/trunk/src/engine/e_common_interface.h	1200739880	0	/home/kma/code/teewars/trunk/src/engine/e_common_interface.h
 /home/kma/code/teewars/trunk/src/engine/e_network.c	1198110343	0	/home/kma/code/teewars/trunk/src/engine/e_network.c
-/home/kma/code/teewars/trunk/src/engine/e_if_inp.h	1200736117	1	Input
+/home/kma/code/teewars/trunk/src/engine/e_if_inp.h	1200740278	1	Input
 /home/kma/code/teewars/trunk/src/engine/e_if_other.h	1200739887	1	Engine Interface
-/home/kma/code/teewars/trunk/src/engine/e_datafile.c	1200146774	0	/home/kma/code/teewars/trunk/src/engine/e_datafile.c
+/home/kma/code/teewars/trunk/src/engine/e_datafile.c	1200747775	0	/home/kma/code/teewars/trunk/src/engine/e_datafile.c
 /home/kma/code/teewars/trunk/src/engine/client/ec_gfx.c	1200709490	0	/home/kma/code/teewars/trunk/src/engine/client/ec_gfx.c

@@ -214,9 +214,15 @@ public:
 	{
 		tex_id = -1;
 		name[0] = 0;
+		external = 0;
+		width = 0;
+		height = 0;
+		data = 0;
+		format = 0;
 	}
 	
 	int tex_id;
+	int external;
 	char name[128];
 };
 

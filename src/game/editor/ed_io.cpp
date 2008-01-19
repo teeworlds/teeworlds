@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 #include "ed_editor.hpp"
 
 template<typename T>
@@ -214,9 +215,12 @@ int EDITOR::save(const char *filename)
 		
 		item.width = img->width;
 		item.height = img->height;
-		item.external = 0;
+		item.external = img->external;
 		item.image_name = datafile_add_data(df, strlen(img->name)+1, img->name);
-		item.image_data = datafile_add_data(df, item.width*item.height*4, img->data);
+		if(img->external)
+			item.image_data = -1;
+		else
+			item.image_data = datafile_add_data(df, item.width*item.height*4, img->data);
 		datafile_add_item(df, MAPITEMTYPE_IMAGE, i, sizeof(item), &item);
 	}
 	
@@ -353,21 +357,43 @@ int EDITOR::load(const char *filename)
 			for(int i = 0; i < num; i++)
 			{
 				MAPITEM_IMAGE *item = (MAPITEM_IMAGE *)datafile_get_item(df, start+i, 0, 0);
-				void *data = datafile_get_data(df, item->image_data);
 				char *name = (char *)datafile_get_data(df, item->image_name);
-				
+
+				// copy base info				
 				IMAGE *img = new IMAGE;
-				img->width = item->width;
-				img->height = item->height;
-				img->format = IMG_RGBA;
-				
+				img->external = item->external;
+
+				if(item->external)
+				{
+					char buf[256];
+					sprintf(buf, "data/mapres/%s.png", name);
+					
+					// load external
+					IMAGE imginfo;
+					if(gfx_load_png(&imginfo, buf))
+					{
+						*img = imginfo;
+						img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO);
+						img->external = 1;
+					}
+				}
+				else
+				{
+					img->width = item->width;
+					img->height = item->height;
+					img->format = IMG_RGBA;
+					
+					// copy image data
+					void *data = datafile_get_data(df, item->image_data);
+					img->data = mem_alloc(img->width*img->height*4, 1);
+					mem_copy(img->data, data, img->width*img->height*4);
+					img->tex_id = gfx_load_texture_raw(img->width, img->height, img->format, img->data, IMG_AUTO);
+				}
+
+				// copy image name
 				if(name)
 					strncpy(img->name, name, 128);
-				
-				// copy image data
-				img->data = mem_alloc(img->width*img->height*4, 1);
-				mem_copy(img->data, data, img->width*img->height*4);
-				img->tex_id = gfx_load_texture_raw(img->width, img->height, img->format, img->data, IMG_AUTO);
+
 				editor.map.images.add(img);
 				
 				// unload image

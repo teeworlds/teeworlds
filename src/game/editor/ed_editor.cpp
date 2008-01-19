@@ -1366,11 +1366,10 @@ static void add_image(const char *filename)
 	if(!gfx_load_png(&imginfo, filename))
 		return;
 
-	//gfx_unload_texture
-
 	IMAGE *img = new IMAGE;
 	*img = imginfo;
 	img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO);
+	img->external = 1; // external by default
 	editor.map.images.add(img);
 }
 
@@ -1392,9 +1391,31 @@ static int popup_image(RECT view)
 	RECT slot;
 	ui_hsplit_t(&view, 2.0f, &slot, &view);
 	ui_hsplit_t(&view, 12.0f, &slot, &view);
+	IMAGE *img = editor.map.images[editor.selected_image];
+	
+	static int external_button = 0;
+	if(img->external)
+	{
+		if(do_editor_button(&external_button, "Embedd", 0, &slot, draw_editor_button_menuitem, 0, "Embedds the image into the map file."))
+		{
+			img->external = 0;
+			return 1;
+		}
+	}
+	else
+	{		
+		if(do_editor_button(&external_button, "Make external", 0, &slot, draw_editor_button_menuitem, 0, "Removes the image from the map file."))
+		{
+			img->external = 1;
+			return 1;
+		}
+	}
+
+	ui_hsplit_t(&view, 10.0f, &slot, &view);
+	ui_hsplit_t(&view, 12.0f, &slot, &view);
 	if(do_editor_button(&replace_button, "Replace", 0, &slot, draw_editor_button_menuitem, 0, "Replaces the image with a new one"))
 	{
-		editor.invoke_file_dialog("Replace Image", "Replace", "tilesets/", "", replace_image);
+		editor.invoke_file_dialog("Replace Image", "Replace", "data/mapres/", "", replace_image);
 		return 1;
 	}
 
@@ -1402,7 +1423,7 @@ static int popup_image(RECT view)
 	ui_hsplit_t(&view, 12.0f, &slot, &view);
 	if(do_editor_button(&remove_button, "Remove", 0, &slot, draw_editor_button_menuitem, 0, "Removes the image from the map"))
 	{
-		delete editor.map.images[editor.selected_image];
+		delete img;
 		editor.map.images.removebyindex(editor.selected_image);
 		modify_index_deleted_index = editor.selected_image;
 		editor.map.modify_image_index(modify_index_deleted);
@@ -1415,40 +1436,55 @@ static int popup_image(RECT view)
 
 static void render_images(RECT toolbox, RECT toolbar, RECT view)
 {
-	for(int i = 0; i < editor.map.images.len(); i++)
+	for(int e = 0; e < 2; e++) // two passes, first embedded, then external
 	{
-		char buf[128];
-		sprintf(buf, "%s", editor.map.images[i]->name);
 		RECT slot;
-		ui_hsplit_t(&toolbox, 12.0f, &slot, &toolbox);
+		ui_hsplit_t(&toolbox, 15.0f, &slot, &toolbox);
+		if(e == 0)
+			ui_do_label(&slot, "Embedded", 12.0f, 0);
+		else
+			ui_do_label(&slot, "External", 12.0f, 0);
 		
-		if(int result = do_editor_button(&editor.map.images[i], buf, editor.selected_image == i, &slot, draw_editor_button,
-			BUTTON_CONTEXT, "Select image"))
+		for(int i = 0; i < editor.map.images.len(); i++)
 		{
-			editor.selected_image = i;
+			if((e && !editor.map.images[i]->external) ||
+				(!e && editor.map.images[i]->external))
+			{
+				continue;
+			}
 			
-			static int popup_image_id = 0;
-			if(result == 2)
-				ui_invoke_popup_menu(&popup_image_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 50, popup_image);
-		}
-		
-		ui_hsplit_t(&toolbox, 2.0f, 0, &toolbox);
-		
-		// render image
-		if(editor.selected_image == i)
-		{
-			RECT r;
-			ui_margin(&view, 10.0f, &r);
-			if(r.h < r.w)
-				r.w = r.h;
-			else
-				r.h = r.w;
-			gfx_texture_set(editor.map.images[i]->tex_id);
-			gfx_blend_normal();
-			gfx_quads_begin();
-			gfx_quads_drawTL(r.x, r.y, r.w, r.h);
-			gfx_quads_end();
+			char buf[128];
+			sprintf(buf, "%s", editor.map.images[i]->name);
+			ui_hsplit_t(&toolbox, 12.0f, &slot, &toolbox);
 			
+			if(int result = do_editor_button(&editor.map.images[i], buf, editor.selected_image == i, &slot, draw_editor_button,
+				BUTTON_CONTEXT, "Select image"))
+			{
+				editor.selected_image = i;
+				
+				static int popup_image_id = 0;
+				if(result == 2)
+					ui_invoke_popup_menu(&popup_image_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 80, popup_image);
+			}
+			
+			ui_hsplit_t(&toolbox, 2.0f, 0, &toolbox);
+			
+			// render image
+			if(editor.selected_image == i)
+			{
+				RECT r;
+				ui_margin(&view, 10.0f, &r);
+				if(r.h < r.w)
+					r.w = r.h;
+				else
+					r.h = r.w;
+				gfx_texture_set(editor.map.images[i]->tex_id);
+				gfx_blend_normal();
+				gfx_quads_begin();
+				gfx_quads_drawTL(r.x, r.y, r.w, r.h);
+				gfx_quads_end();
+				
+			}
 		}
 	}
 	
@@ -1460,7 +1496,7 @@ static void render_images(RECT toolbox, RECT toolbar, RECT view)
 	ui_hsplit_t(&toolbox, 10.0f, &slot, &toolbox);
 	ui_hsplit_t(&toolbox, 12.0f, &slot, &toolbox);
 	if(do_editor_button(&new_image_button, "Add", 0, &slot, draw_editor_button, 0, "Load a new image to use in the map"))
-		editor.invoke_file_dialog("Add Image", "Add", "tilesets/", "", add_image);
+		editor.invoke_file_dialog("Add Image", "Add", "data/mapres/", "", add_image);
 }
 
 
@@ -2191,26 +2227,6 @@ extern "C" void editor_init()
 	tileset_picker.readonly = true;
 	
 	editor.reset();
-	//editor.load("debug_test.map");
-	
-#if 0
-	IMAGE *img = new IMAGE;
-	gfx_load_png(img, "tilesets/grassland_main.png");
-	img->tex_id = gfx_load_texture_raw(img->width, img->height, img->format, img->data);
-	editor.map.images.add(img);
-	
-
-	ENVELOPE *e = editor.map.new_envelope(4);
-	e->add_point(0, 0, 0);
-	e->add_point(1000, f2fx(1), f2fx(0.75f));
-	e->add_point(2000, f2fx(0.75f), f2fx(1));
-	e->add_point(3000, 0, 0);
-	
-	editor.animate = true;
-	editor.animate_start = time_get();
-	
-	editor.show_envelope_editor = 1;
-#endif
 }
 
 extern "C" void editor_update_and_render()
