@@ -35,8 +35,8 @@ extern "C" void modc_init()
 	static FONT_SET default_font;
 
 	int before = gfx_memory_usage();
-	font_set_load(&default_font, "fonts/default_font%d.tfnt", "fonts/default_font%d.png", "fonts/default_font%d_b.png", 14, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 36);
-	dbg_msg("font", "gfx memory usage: %d", gfx_memory_usage()-before);
+	font_set_load(&default_font, "data/fonts/default_font%d.tfnt", "data/fonts/default_font%d.png", "data/fonts/default_font%d_b.png", 14, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 36);
+	dbg_msg("font", "gfx memory used for font textures: %d", gfx_memory_usage()-before);
 	
 	gfx_text_set_default_font(&default_font);
 
