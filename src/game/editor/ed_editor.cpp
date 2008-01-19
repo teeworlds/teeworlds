@@ -1315,6 +1315,18 @@ static void render_layers(RECT toolbox, RECT toolbar, RECT view)
 	
 }
 
+static void replace_image(const char *filename)
+{
+	IMAGE imginfo;
+	if(!gfx_load_png(&imginfo, filename))
+		return;
+	
+	IMAGE *img = editor.map.images[editor.selected_image];
+	gfx_unload_texture(img->tex_id);
+	*img = imginfo;
+	img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO);
+}
+
 static void add_image(const char *filename)
 {
 	IMAGE imginfo;
@@ -1328,6 +1340,15 @@ static void add_image(const char *filename)
 }
 
 
+static int modify_index_deleted_index;
+static void modify_index_deleted(int *index)
+{
+	if(*index == modify_index_deleted_index)
+		*index = -1;
+	else if(*index > modify_index_deleted_index)
+		*index = *index - 1;
+}
+
 static int popup_image(RECT view)
 {
 	static int replace_button = 0;	
@@ -1338,7 +1359,7 @@ static int popup_image(RECT view)
 	ui_hsplit_t(&view, 12.0f, &slot, &view);
 	if(do_editor_button(&replace_button, "Replace", 0, &slot, draw_editor_button_menuitem, 0, "Replaces the image with a new one"))
 	{
-		//editor.reset();
+		editor.invoke_file_dialog("Replace Image", "Replace", "tilesets/", "", replace_image);
 		return 1;
 	}
 
@@ -1346,7 +1367,10 @@ static int popup_image(RECT view)
 	ui_hsplit_t(&view, 12.0f, &slot, &view);
 	if(do_editor_button(&remove_button, "Remove", 0, &slot, draw_editor_button_menuitem, 0, "Removes the image from the map"))
 	{
-		//editor.invoke_file_dialog("Open Map", "Open", "data/maps/", "", callback_open_map);
+		delete editor.map.images[editor.selected_image];
+		editor.map.images.removebyindex(editor.selected_image);
+		modify_index_deleted_index = editor.selected_image;
+		editor.map.modify_image_index(modify_index_deleted);
 		return 1;
 	}
 
@@ -1356,8 +1380,6 @@ static int popup_image(RECT view)
 
 static void render_images(RECT toolbox, RECT toolbar, RECT view)
 {
-	static int selected_image = 0;
-	
 	for(int i = 0; i < editor.map.images.len(); i++)
 	{
 		char buf[128];
@@ -1365,10 +1387,10 @@ static void render_images(RECT toolbox, RECT toolbar, RECT view)
 		RECT slot;
 		ui_hsplit_t(&toolbox, 12.0f, &slot, &toolbox);
 		
-		if(int result = do_editor_button(&editor.map.images[i], buf, selected_image == i, &slot, draw_editor_button,
+		if(int result = do_editor_button(&editor.map.images[i], buf, editor.selected_image == i, &slot, draw_editor_button,
 			BUTTON_CONTEXT, "Select image"))
 		{
-			selected_image = i;
+			editor.selected_image = i;
 			
 			static int popup_image_id = 0;
 			if(result == 2)
@@ -1378,7 +1400,7 @@ static void render_images(RECT toolbox, RECT toolbar, RECT view)
 		ui_hsplit_t(&toolbox, 2.0f, 0, &toolbox);
 		
 		// render image
-		if(selected_image == i)
+		if(editor.selected_image == i)
 		{
 			RECT r;
 			ui_margin(&view, 10.0f, &r);
@@ -1552,7 +1574,7 @@ static void render_statusbar(RECT view)
 	
 	if(editor.tooltip)
 	{
-		if(ui_got_context == ui_hot_item())
+		if(ui_got_context && ui_got_context == ui_hot_item())
 		{
 			char buf[512];
 			sprintf(buf, "%s Right click for context menu.", editor.tooltip);
@@ -2105,7 +2127,7 @@ void EDITOR::reset(bool create_default)
 	selected_quad = -1;
 	selected_points = 0;
 	selected_envelope = 0;
-	
+	selected_image = 0;
 }
 
 void EDITOR::make_game_layer(LAYER *layer)
@@ -2161,7 +2183,10 @@ extern "C" void editor_update_and_render()
 	static int mouse_x = 0;
 	static int mouse_y = 0;
 
-	editor.animate_time = (time_get()-editor.animate_start)/(float)time_freq();
+	if(editor.animate)
+		editor.animate_time = (time_get()-editor.animate_start)/(float)time_freq();
+	else
+		editor.animate_time = 0;
 	ui_got_context = 0;
 
 	// handle mouse movement

@@ -233,3 +233,13 @@ int LAYER_TILES::render_properties(RECT *toolbox)
 	
 	return 0;
 }
+
+
+void LAYER_TILES::modify_image_index(index_modify_func func)
+{
+	func(&image);
+}
+
+void LAYER_TILES::modify_envelope_index(index_modify_func func)
+{
+}

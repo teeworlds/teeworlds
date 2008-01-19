@@ -15,6 +15,8 @@ extern "C" {
 
 #include <game/client/gc_ui.h>
 
+typedef void (*index_modify_func)(int *index);
+
 // EDITOR SPECIFIC
 template<typename T>
 void swap(T &a, T &b)
@@ -148,6 +150,9 @@ public:
 	virtual void render() {}
 	virtual int render_properties(RECT *toolbox) { return 0; }
 	
+	virtual void modify_image_index(index_modify_func func) {}
+	virtual void modify_envelope_index(index_modify_func func) {}
+	
 	virtual void get_size(float *w, float *h) { *w = 0; *h = 0;}
 	
 	const char *type_name;
@@ -188,6 +193,18 @@ public:
 	
 	void delete_layer(int index);
 	int swap_layers(int index0, int index1);
+
+	void modify_image_index(index_modify_func func)
+	{
+		for(int i = 0; i < layers.len(); i++)
+			layers[i]->modify_image_index(func);
+	}
+	
+	void modify_envelope_index(index_modify_func func)
+	{
+		for(int i = 0; i < layers.len(); i++)
+			layers[i]->modify_envelope_index(func);
+	}
 };
 
 class IMAGE : public IMAGE_INFO
@@ -238,6 +255,18 @@ public:
 		if(index < 0 || index >= groups.len()) return;
 		delete groups[index];
 		groups.removebyindex(index);
+	}
+	
+	void modify_image_index(index_modify_func func)
+	{
+		for(int i = 0; i < groups.len(); i++)
+			groups[i]->modify_image_index(func);
+	}
+	
+	void modify_envelope_index(index_modify_func func)
+	{
+		for(int i = 0; i < groups.len(); i++)
+			groups[i]->modify_envelope_index(func);
 	}
 };
 
@@ -344,6 +373,7 @@ public:
 	int selected_quad;
 	int selected_points;
 	int selected_envelope;
+	int selected_image;
 	
 	MAP map;
 };
@@ -381,6 +411,9 @@ public:
 	
 	virtual int render_properties(RECT *toolbox);
 
+	virtual void modify_image_index(index_modify_func func);
+	virtual void modify_envelope_index(index_modify_func func);
+
 	void get_size(float *w, float *h) { *w = width*32.0f;  *h = height*32.0f; }
 	
 	int tex_id;
@@ -407,6 +440,9 @@ public:
 	virtual void brush_flip_y();
 	
 	virtual int render_properties(RECT *toolbox);
+
+	virtual void modify_image_index(index_modify_func func);
+	virtual void modify_envelope_index(index_modify_func func);
 	
 	void get_size(float *w, float *h);
 	
