@@ -318,13 +318,14 @@ void player_core::tick()
 			vec2 dir = normalize(pos - p->pos);
 			if(d < phys_size*1.25f && d > 1.0f)
 			{
-				float a = phys_size*1.25f - d;
+				float a = (phys_size*1.45f - d);
 				
 				// make sure that we don't add excess force by checking the
 				// direction against the current velocity
 				vec2 veldir = normalize(vel);
 				float v = 1-(dot(veldir, dir)+1)/2;
-				vel = vel + dir*a*v;
+				vel = vel + dir*a*(v*0.75f);
+				vel = vel * 0.85f;
 			}
 			
 			// handle hook influence
@@ -345,6 +346,10 @@ void player_core::tick()
 			}
 		}
 	}	
+
+	// clamp the velocity to something sane
+	if(length(vel) > 100.0f)
+		vel = normalize(vel) * 100.0f;
 }
 
 void player_core::move()
