@@ -608,36 +608,56 @@ static void client_process_packet(NETPACKET *packet)
 			}
 		}
 
-		if(packet->data_size >= (int)sizeof(SERVERBROWSE_INFO) &&
-			memcmp(packet->data, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
 		{
-			/* we got ze info */
-			UNPACKER up;
-			SERVER_INFO info = {0};
-			int i;
-
-			unpacker_reset(&up, (unsigned char*)packet->data+sizeof(SERVERBROWSE_INFO), packet->data_size-sizeof(SERVERBROWSE_INFO));
-
-			strncpy(info.version, unpacker_get_string(&up), 32);
-			strncpy(info.name, unpacker_get_string(&up), 64);
-			strncpy(info.map, unpacker_get_string(&up), 32);
-			info.game_type = atol(unpacker_get_string(&up));
-			info.flags = atol(unpacker_get_string(&up));
-			info.progression = atol(unpacker_get_string(&up));
-			info.num_players = atol(unpacker_get_string(&up));
-			info.max_players = atol(unpacker_get_string(&up));
-			sprintf(info.address, "%d.%d.%d.%d:%d",
-				packet->address.ip[0], packet->address.ip[1], packet->address.ip[2],
-				packet->address.ip[3], packet->address.port);
+			int got_info_packet = 0;
 			
-			for(i = 0; i < info.num_players; i++)
+			if(client_serverbrowse_lan())
 			{
-				strncpy(info.player_names[i], unpacker_get_string(&up), 48);
-				info.player_scores[i] = atol(unpacker_get_string(&up));
+				if(packet->data_size >= (int)sizeof(SERVERBROWSE_INFO_LAN) &&
+					memcmp(packet->data, SERVERBROWSE_INFO_LAN, sizeof(SERVERBROWSE_INFO_LAN)) == 0)
+				{
+					got_info_packet = 1;
+				}
 			}
-			
-			/* TODO: unpack players aswell */
-			client_serverbrowse_set(&packet->address, 0, &info);
+			else
+			{
+				if(packet->data_size >= (int)sizeof(SERVERBROWSE_INFO) &&
+					memcmp(packet->data, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
+				{
+					got_info_packet = 1;
+				}
+			}
+
+			if(got_info_packet)
+			{
+				/* we got ze info */
+				UNPACKER up;
+				SERVER_INFO info = {0};
+				int i;
+
+				unpacker_reset(&up, (unsigned char*)packet->data+sizeof(SERVERBROWSE_INFO), packet->data_size-sizeof(SERVERBROWSE_INFO));
+
+				strncpy(info.version, unpacker_get_string(&up), 32);
+				strncpy(info.name, unpacker_get_string(&up), 64);
+				strncpy(info.map, unpacker_get_string(&up), 32);
+				info.game_type = atol(unpacker_get_string(&up));
+				info.flags = atol(unpacker_get_string(&up));
+				info.progression = atol(unpacker_get_string(&up));
+				info.num_players = atol(unpacker_get_string(&up));
+				info.max_players = atol(unpacker_get_string(&up));
+				sprintf(info.address, "%d.%d.%d.%d:%d",
+					packet->address.ip[0], packet->address.ip[1], packet->address.ip[2],
+					packet->address.ip[3], packet->address.port);
+				
+				for(i = 0; i < info.num_players; i++)
+				{
+					strncpy(info.player_names[i], unpacker_get_string(&up), 48);
+					info.player_scores[i] = atol(unpacker_get_string(&up));
+				}
+				
+				/* TODO: unpack players aswell */
+				client_serverbrowse_set(&packet->address, 0, &info);
+			}
 		}
 	}
 	else

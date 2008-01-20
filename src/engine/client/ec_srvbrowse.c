@@ -50,6 +50,7 @@ static char filterstring[64] = {0};
 
 static int serverlist_lan = 1;
 
+int client_serverbrowse_lan() { return serverlist_lan; }
 int client_serverbrowse_num() { return num_servers; }
 
 SERVER_INFO *client_serverbrowse_get(int index)
@@ -331,8 +332,8 @@ void client_serverbrowse_refresh(int lan)
 		packet.address.ip[3] = 255;
 		packet.address.port = 8303;
 		packet.flags = PACKETFLAG_CONNLESS;
-		packet.data_size = sizeof(SERVERBROWSE_GETINFO);
-		packet.data = SERVERBROWSE_GETINFO;
+		packet.data_size = sizeof(SERVERBROWSE_GETINFO_LAN);
+		packet.data = SERVERBROWSE_GETINFO_LAN;
 		netclient_send(net, &packet);	
 
 		if(config.debug)

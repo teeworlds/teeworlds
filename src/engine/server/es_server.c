@@ -662,7 +662,7 @@ static void server_process_client_packet(NETPACKET *packet)
 	}
 }
 
-static void server_send_serverinfo(NETADDR4 *addr)
+static void server_send_serverinfo(NETADDR4 *addr, int lan)
 {
 	NETPACKET packet;
 	PACKER p;
@@ -678,7 +678,10 @@ static void server_send_serverinfo(NETADDR4 *addr)
 	}
 	
 	packer_reset(&p);
-	packer_add_raw(&p, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
+	if(lan)
+		packer_add_raw(&p, SERVERBROWSE_INFO_LAN, sizeof(SERVERBROWSE_INFO_LAN));
+	else
+		packer_add_raw(&p, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
 	packer_add_string(&p, mods_version(), 32);
 	packer_add_string(&p, config.sv_name, 64);
 	packer_add_string(&p, config.sv_map, 32);
@@ -768,7 +771,12 @@ static void server_pump_network()
 			if(packet.data_size == sizeof(SERVERBROWSE_GETINFO) &&
 				memcmp(packet.data, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
 			{
-				server_send_serverinfo(&packet.address);
+				server_send_serverinfo(&packet.address, 0);
+			}
+			else if(packet.data_size == sizeof(SERVERBROWSE_GETINFO_LAN) &&
+				memcmp(packet.data, SERVERBROWSE_GETINFO_LAN, sizeof(SERVERBROWSE_GETINFO_LAN)) == 0)
+			{
+				server_send_serverinfo(&packet.address, 1);
 			}
 			else if(packet.data_size == sizeof(SERVERBROWSE_FWCHECK) &&
 				memcmp(packet.data, SERVERBROWSE_FWCHECK, sizeof(SERVERBROWSE_FWCHECK)) == 0)

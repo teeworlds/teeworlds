@@ -537,6 +537,30 @@ void gfx_swap()
 		/*unsigned char *temp_row = pixel_data+w*h*3;*/
 		glReadPixels(0,0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pixel_data);
 
+
+		{
+			IOHANDLE io;
+			char filename[128];
+			char header[18] = {0};
+			sprintf(filename, "capture/frame%04d.tga", record);
+			record++;
+			
+			io = io_open(filename, IOFLAG_WRITE);
+
+			header[2] = 2; /* rgb */
+			header[12] = w&255; /* width */
+			header[13] = w>>8; 
+			header[14] = h&255; /* height */
+			header[15] = h>>8; 
+			header[16] = 24;
+			
+			io_write(io, header, sizeof(header));
+			io_write(io, pixel_data, w*h*3);
+			
+			io_close(io);
+		}
+		
+
 		/* clean up */
 		mem_free(pixel_data);
 

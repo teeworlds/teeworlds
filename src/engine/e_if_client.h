@@ -256,6 +256,19 @@ int client_serverbrowse_num_requests();
 */
 void client_serverbrowse_update();
 
+/*
+	Function: client_serverbrowse_lan
+		TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
+int client_serverbrowse_lan();
 
 /**********************************************************************************
 	Group: Actions
