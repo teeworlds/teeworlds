@@ -39,12 +39,12 @@ static CHUNK *memheap_newchunk()
 }
 
 /******************/
-static void *memheap_allocate_from_chunk(CHUNK *chunk, int size)
+static void *memheap_allocate_from_chunk(CHUNK *chunk, unsigned int size)
 {
 	char *mem;
 	
 	/* check if we need can fit the allocation */
-	if(chunk->current + size >= chunk->end)
+	if(chunk->current + size > chunk->end)
 		return (void*)0x0;
 
 	/* get memory and move the pointer forward */
@@ -81,7 +81,7 @@ void memheap_destroy(HEAP *heap)
 }
 
 /* */
-void *memheap_allocate(HEAP *heap, int size)
+void *memheap_allocate(HEAP *heap, unsigned int size)
 {
 	char *mem;
 
