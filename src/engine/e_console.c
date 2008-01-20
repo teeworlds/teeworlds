@@ -86,6 +86,8 @@ static int lex(const char *line, struct lexer_result *res)
                 start = c + 1; 
             else if (digit(*c)) 
                 state = STATE_INT; 
+            else if (*c == '-') 
+                state = STATE_INT; 
             else if (*c == '.') 
                 state = STATE_POT_FLOAT; 
             else if (*c == '"')
