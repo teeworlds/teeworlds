@@ -197,7 +197,7 @@ void render_tee(animstate *anim, tee_render_info *info, int emote, vec2 dir, vec
 
 			// draw feet
 			gfx_setcolor(info->color_feet.r, info->color_feet.g, info->color_feet.b, info->color_feet.a);
-			select_sprite(outline?SPRITE_TEE_FOOT_OUTLINE:SPRITE_TEE_FOOT, 0, 0, 0);
+			select_sprite((outline||!info->got_airjump)?SPRITE_TEE_FOOT_OUTLINE:SPRITE_TEE_FOOT, 0, 0, 0);
 
 			keyframe *foot = f ? &anim->front_foot : &anim->back_foot;
 
@@ -278,7 +278,7 @@ void render_layers(float center_x, float center_y, int pass)
 			bool render = false;
 			bool is_game_layer = false;
 			
-			if(layer == (MAPITEM_LAYER*)layers_game())
+			if(layer == (MAPITEM_LAYER*)layers_game_layer())
 			{
 				is_game_layer = true;
 				passed_gamelayer = 1;
@@ -306,7 +306,7 @@ void render_layers(float center_x, float center_y, int pass)
 					else
 						gfx_texture_set(img_get(tmap->image));
 					TILE *tiles = (TILE *)map_get_data(tmap->data);
-					render_tilemap(tiles, tmap->width, tmap->height, 32.0f, 1);
+					render_tilemap(tiles, tmap->width, tmap->height, 32.0f, vec4(1,1,1,1), 1);
 				}
 				else if(layer->type == LAYERTYPE_QUADS)
 				{
@@ -323,71 +323,82 @@ void render_layers(float center_x, float center_y, int pass)
 	}
 }
 
+static void render_items()
+{
+	int num = snap_num_items(SNAP_CURRENT);
+	for(int i = 0; i < num; i++)
+	{
+		SNAP_ITEM item;
+		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+
+		if(item.type == OBJTYPE_PROJECTILE)
+		{
+			render_projectile((const obj_projectile *)data, item.id);
+		}
+		else if(item.type == OBJTYPE_POWERUP)
+		{
+			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+			if(prev)
+				render_powerup((const obj_powerup *)prev, (const obj_powerup *)data);
+		}
+		else if(item.type == OBJTYPE_FLAG)
+		{
+			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+			if (prev)
+				render_flag((const obj_flag *)prev, (const obj_flag *)data);
+		}
+	}
+}
+
+
+static void render_players()
+{
+	int num = snap_num_items(SNAP_CURRENT);
+	for(int i = 0; i < num; i++)
+	{
+		SNAP_ITEM item;
+		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+
+		if(item.type == OBJTYPE_PLAYER_CHARACTER)
+		{
+			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
+			const void *prev_info = snap_find_item(SNAP_PREV, OBJTYPE_PLAYER_INFO, item.id);
+			const void *info = snap_find_item(SNAP_CURRENT, OBJTYPE_PLAYER_INFO, item.id);
+
+			if(prev && prev_info && info)
+			{
+				render_player(
+						(const obj_player_character *)prev,
+						(const obj_player_character *)data,
+						(const obj_player_info *)prev_info,
+						(const obj_player_info *)info
+					);
+			}
+		}
+	}
+}
+
 // renders the complete game world
 void render_world(float center_x, float center_y, float zoom)
 {
 	// render background layers
 	render_layers(center_x, center_y, 0);
 
-	// render items
-	{
-		int num = snap_num_items(SNAP_CURRENT);
-		for(int i = 0; i < num; i++)
-		{
-			SNAP_ITEM item;
-			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+	// render trails
+	particle_render(PARTGROUP_PROJECTILE_TRAIL);
 
-			if(item.type == OBJTYPE_PROJECTILE)
-			{
-				//const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-				//if(prev)
-				render_projectile((const obj_projectile *)data, item.id);
-			}
-			else if(item.type == OBJTYPE_POWERUP)
-			{
-				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-				if(prev)
-					render_powerup((const obj_powerup *)prev, (const obj_powerup *)data);
-			}
-			else if(item.type == OBJTYPE_FLAG)
-			{
-				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-				if (prev)
-					render_flag((const obj_flag *)prev, (const obj_flag *)data);
-			}
-		}
-	}
+	// render items
+	render_items();
 
 	// render players above all
-	{
-		int num = snap_num_items(SNAP_CURRENT);
-		for(int i = 0; i < num; i++)
-		{
-			SNAP_ITEM item;
-			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-
-			if(item.type == OBJTYPE_PLAYER_CHARACTER)
-			{
-				const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-				const void *prev_info = snap_find_item(SNAP_PREV, OBJTYPE_PLAYER_INFO, item.id);
-				const void *info = snap_find_item(SNAP_CURRENT, OBJTYPE_PLAYER_INFO, item.id);
-
-				if(prev && prev_info && info)
-				{
-					render_player(
-							(const obj_player_character *)prev,
-							(const obj_player_character *)data,
-							(const obj_player_info *)prev_info,
-							(const obj_player_info *)info
-						);
-				}
-			}
-		}
-	}
+	render_players();
 
 	// render particles
-	//temp_system.update(client_frametime());
-	//temp_system.render();
+	particle_render(PARTGROUP_EXPLOSIONS);
+	particle_render(PARTGROUP_GENERAL);
+	
+	if(config.dbg_flow)
+		flow_dbg_render();
 
 	// render foreground layers
 	render_layers(center_x, center_y, 1);

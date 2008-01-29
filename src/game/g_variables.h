@@ -25,15 +25,16 @@ MACRO_CONFIG_INT(key_remoteconsole, 256+3, 32, 512)
 
 MACRO_CONFIG_INT(key_toggleconsole, 256+4, 32, 512)
 
-MACRO_CONFIG_INT(dbg_bots, 0, 0, 11)
 
 MACRO_CONFIG_INT(cl_predict, 1, 0, 1)
 MACRO_CONFIG_INT(cl_nameplates, 0, 0, 1)
 MACRO_CONFIG_INT(cl_nameplates_always, 0, 0, 1)
 MACRO_CONFIG_INT(cl_dynamic_camera, 1, 0, 1)
-MACRO_CONFIG_INT(cl_team, -10, -1, 0)
 MACRO_CONFIG_INT(cl_autoswitch_weapons, 0, 0, 1)
 MACRO_CONFIG_INT(cl_show_player_ids, 0, 0, 1)
+
+
+MACRO_CONFIG_INT(cl_flow, 0, 0, 1)
 
 MACRO_CONFIG_INT(cl_show_welcome, 1, 0, 1)
 
@@ -42,7 +43,9 @@ MACRO_CONFIG_INT(player_color_body, 65408, 0, 0)
 MACRO_CONFIG_INT(player_color_feet, 65408, 0, 0)
 MACRO_CONFIG_STR(player_skin, 64, "default")
 
+MACRO_CONFIG_INT(dbg_bots, 0, 0, 11)
 MACRO_CONFIG_INT(dbg_firedelay, 0, 0, 1)
+MACRO_CONFIG_INT(dbg_flow, 0, 0, 1)
 
 MACRO_CONFIG_INT(ui_page, 1, 0, 5)
 MACRO_CONFIG_STR(ui_server_address, 128, "localhost:8303")

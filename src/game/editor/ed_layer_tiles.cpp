@@ -34,7 +34,7 @@ void LAYER_TILES::render()
 	if(image >= 0 && image < editor.map.images.len())
 		tex_id = editor.map.images[image]->tex_id;
 	gfx_texture_set(tex_id);
-	render_tilemap(tiles, width, height, 32.0f, 0);
+	render_tilemap(tiles, width, height, 32.0f, vec4(1,1,1,1), 0);
 }
 
 int LAYER_TILES::convert_x(float x) const { return (int)(x/32.0f); }

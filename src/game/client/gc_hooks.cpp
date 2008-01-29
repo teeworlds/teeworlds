@@ -40,6 +40,7 @@ extern "C" void modc_init()
 	
 	gfx_text_set_default_font(&default_font);
 
+	particle_reset();
 	menu_init();
 	
 	// setup sound channels
@@ -300,13 +301,11 @@ extern "C" void modc_render()
 
 		// handle team switching
 		// TODO: FUGLY!!!
+		/*
 		if(config.cl_team != -10)
 		{
-			msg_pack_start(MSG_SETTEAM, MSGFLAG_VITAL);
-			msg_pack_int(config.cl_team);
-			msg_pack_end();
-			client_send_msg();
-		}
+
+		}*/
 	}
 	else // if (client_state() != CLIENTSTATE_CONNECTING && client_state() != CLIENTSTATE_LOADING)
 	{
@@ -317,7 +316,7 @@ extern "C" void modc_render()
 	}
 
 	//
-	config.cl_team = -10;
+	//config.cl_team = -10;
 }
 
 
@@ -492,11 +491,12 @@ extern "C" void modc_connected()
 	layers_init();
 	col_init();
 	img_init();
+	flow_init();
 	
 	//tilemap_init();
 	chat_reset();
 
-	reset_projectile_particles();
+	particle_reset();
 	
 	clear_object_pointers();
 	last_new_predicted_tick = -1;

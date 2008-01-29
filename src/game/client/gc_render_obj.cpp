@@ -1,5 +1,6 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <math.h>
+#include <stdio.h>
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
 #include "../generated/gc_data.h"
@@ -27,8 +28,6 @@ void render_projectile(const obj_projectile *current, int itemid)
 	float gravity = -400;
 	if(current->type != WEAPON_ROCKET)
 		gravity = -100;
-	if(current->type == WEAPON_BOMB)
-		gravity = 0;
 
 	float ct = (client_tick()-current->start_tick)/(float)SERVER_TICK_SPEED + client_ticktime()*1/(float)SERVER_TICK_SPEED;
 	vec2 startpos(current->x, current->y);
@@ -39,17 +38,26 @@ void render_projectile(const obj_projectile *current, int itemid)
 	select_sprite(data->weapons[current->type%data->num_weapons].sprite_proj);
 	vec2 vel = pos-prevpos;
 	//vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
+	
 
 	// add particle for this projectile
-	//proj_particles.addparticle(current->type, itemid, pos, vel);
-
-	if(length(vel) > 0.00001f)
-		gfx_quads_setrotation(get_angle(vel));
+	if(current->type == WEAPON_ROCKET)
+	{
+		effect_smoketrail(pos, vel*-1);
+		flow_add(pos, vel*1000*client_frametime(), 10.0f);
+		gfx_quads_setrotation(client_localtime()*pi*2*2 + itemid);
+	}
 	else
-		gfx_quads_setrotation(0);
+	{
+		effect_bullettrail(pos);
+		flow_add(pos, vel*1000*client_frametime(), 10.0f);
 
-	// TODO: do this, but nice
-	//temp_system.new_particle(pos, vec2(0,0), 0.3f, 14.0f, 0, 0.95f);
+		if(length(vel) > 0.00001f)
+			gfx_quads_setrotation(get_angle(vel));
+		else
+			gfx_quads_setrotation(0);
+
+	}
 
 	gfx_quads_draw(pos.x, pos.y, 32, 32);
 	gfx_quads_setrotation(0);
@@ -185,6 +193,7 @@ void render_player(
 	player = *player_char;
 
 	obj_player_info info = *player_info;
+	tee_render_info render_info = client_datas[info.clientid].render_info;
 
 	float intratick = client_intratick();
 	float ticktime = client_ticktime();
@@ -209,6 +218,11 @@ void render_player(
 	vec2 direction = get_direction(player.angle);
 	float angle = player.angle/256.0f;
 	vec2 position = mix(vec2(prev.x, prev.y), vec2(player.x, player.y), intratick);
+	vec2 vel = vec2(player.x, player.y)-vec2(prev.x, prev.y);
+	
+	flow_add(position, vel*100.0f, 10.0f);
+	
+	render_info.got_airjump = player.jumped&2?0:1;
 
 	if(prev.health < 0) // Don't flicker from previous position
 		position = vec2(player.x, player.y);
@@ -411,14 +425,14 @@ void render_player(
 	if(info.local && config.debug)
 	{
 		vec2 ghost_position = mix(vec2(prev_char->x, prev_char->y), vec2(player_char->x, player_char->y), client_intratick());
-		tee_render_info ghost = client_datas[info.clientid].render_info;
+		tee_render_info ghost = render_info;
 		ghost.color_body.a = 0.5f;
 		ghost.color_feet.a = 0.5f;
 		render_tee(&state, &ghost, player.emote, direction, ghost_position); // render ghost
 	}
 
 	// render the tee
-	render_tee(&state, &client_datas[info.clientid].render_info, player.emote, direction, position);
+	render_tee(&state, &render_info, player.emote, direction, position);
 
 	if(player.state == STATE_CHATTING)
 	{

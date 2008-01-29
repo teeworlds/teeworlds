@@ -22,6 +22,7 @@ extern "C" {
 #include "gc_anim.h"
 #include "gc_skin.h"
 #include "gc_ui.h"
+#include "gc_client.h"
 #include <mastersrv/mastersrv.h>
 
 extern data_container *data;
@@ -1623,7 +1624,7 @@ static void menu2_render_game(RECT main_view)
 			static int spectate_button = 0;
 			if(ui_do_button(&spectate_button, "Spectate", 0, &button, ui_draw_menu_button, 0))
 			{
-				config.cl_team = -1;
+				send_switch_team(-1);
 				menu_active = false;
 			}
 		}
@@ -1637,7 +1638,7 @@ static void menu2_render_game(RECT main_view)
 				static int spectate_button = 0;
 				if(ui_do_button(&spectate_button, "Join Game", 0, &button, ui_draw_menu_button, 0))
 				{
-					config.cl_team = 0;
+					send_switch_team(0);
 					menu_active = false;
 				}
 			}						
@@ -1651,7 +1652,7 @@ static void menu2_render_game(RECT main_view)
 				static int spectate_button = 0;
 				if(ui_do_button(&spectate_button, "Join Red", 0, &button, ui_draw_menu_button, 0))
 				{
-					config.cl_team = 0;
+					send_switch_team(0);
 					menu_active = false;
 				}
 			}
@@ -1663,7 +1664,7 @@ static void menu2_render_game(RECT main_view)
 				static int spectate_button = 0;
 				if(ui_do_button(&spectate_button, "Join Blue", 0, &button, ui_draw_menu_button, 0))
 				{
-					config.cl_team = 1;
+					send_switch_team(1);
 					menu_active = false;
 				}
 			}

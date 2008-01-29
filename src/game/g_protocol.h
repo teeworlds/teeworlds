@@ -5,12 +5,13 @@
 #define GAME_PROTOCOL_H
 
 // --------- PHYSICS TWEAK! --------
-const float ground_control_speed = 7.0f;
-const float ground_control_accel = 2.0f;
+const float ticks_per_second = 50.0f;
+const float ground_control_speed = 350.0f / ticks_per_second;
+const float ground_control_accel = 100.0f / ticks_per_second;
 const float ground_friction = 0.5f;
 const float ground_jump_speed = 12.6f;
 const float ground_air_speed = 11.5f;
-const float air_control_speed = 5.0f;
+const float air_control_speed = 250.0f / ticks_per_second;
 const float air_control_accel = 1.5f;
 const float air_friction = 0.95f;
 const float hook_length = 34*10.0f;
@@ -18,6 +19,8 @@ const float hook_fire_speed = 45.0f;
 const float hook_drag_accel = 3.0f;
 const float hook_drag_speed = 15.0f;
 const float gravity = 0.5f;
+const float terminal_velocity = 20.0f;
+
 const float wall_friction = 0.80f;
 const float wall_jump_speed_up = ground_jump_speed*0.8f;
 const float wall_jump_speed_out = ground_jump_speed*0.8f;
@@ -36,7 +39,7 @@ enum
 	EVENT_DAMAGEINDICATION,
 	EVENT_SOUND_WORLD,
 	EVENT_SMOKE,
-	EVENT_SPAWN,
+	EVENT_PLAYERSPAWN,
 	EVENT_DEATH,
 	EVENT_AIR_JUMP,
 	

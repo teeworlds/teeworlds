@@ -284,7 +284,7 @@ void player_core::tick()
 				hookvel.x *= 0.75f;
 			
 			vec2 new_vel = vel+hookvel;
-			
+
 			// check if we are under the legal limit for the hook
 			if(length(new_vel) < hook_drag_speed || length(new_vel) < length(vel))
 				vel = new_vel; // no problem. apply
@@ -348,8 +348,8 @@ void player_core::tick()
 	}	
 
 	// clamp the velocity to something sane
-	if(length(vel) > 100.0f)
-		vel = normalize(vel) * 100.0f;
+	if(length(vel) > terminal_velocity)
+		vel = normalize(vel) * terminal_velocity;
 }
 
 void player_core::move()

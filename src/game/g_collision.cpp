@@ -16,9 +16,9 @@ int col_height() { return height; }
 
 int col_init()
 {
-	width = layers_game()->width;
-	height = layers_game()->height;
-	tiles = (TILE *)map_get_data(layers_game()->data);
+	width = layers_game_layer()->width;
+	height = layers_game_layer()->height;
+	tiles = (TILE *)map_get_data(layers_game_layer()->data);
 	return 1;
 }
 

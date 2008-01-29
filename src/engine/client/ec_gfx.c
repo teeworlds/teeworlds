@@ -163,7 +163,7 @@ int gfx_init()
 	/* open window */	
 	if(config.gfx_fullscreen)
 	{
-		int result = glfwOpenWindow(screen_width, screen_height, 8, 8, 8, 0, 24, 0, GLFW_FULLSCREEN);
+		int result = glfwOpenWindow(screen_width, screen_height, 8, 8, 8, 8, 24, 8, GLFW_FULLSCREEN);
 		if(result != GL_TRUE)
 		{
 			dbg_msg("game", "failed to create gl context");
@@ -172,19 +172,22 @@ int gfx_init()
 	}
 	else
 	{
-		int result = glfwOpenWindow(screen_width, screen_height, 0, 0, 0, 0, 24, 0, GLFW_WINDOW);
+		int result = glfwOpenWindow(screen_width, screen_height, 0, 0, 0, 8, 24, 8, GLFW_WINDOW);
 		if(result != GL_TRUE)
 		{
 			dbg_msg("game", "failed to create gl context");
 			return 0;
 		}
 	}
-
 	
 	glfwSetWindowSizeCallback(screen_resize);
 	
+	glGetIntegerv(GL_ALPHA_BITS, &i);
+	dbg_msg("gfx", "alphabits = %d", i);
 	glGetIntegerv(GL_DEPTH_BITS, &i);
 	dbg_msg("gfx", "depthbits = %d", i);
+	glGetIntegerv(GL_STENCIL_BITS, &i);
+	dbg_msg("gfx", "stencilbits = %d", i);
 	
 	glfwSetWindowTitle("Teewars");
 	
@@ -212,6 +215,10 @@ int gfx_init()
 	glDisable(GL_DEPTH_TEST);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
+/*	glAlphaFunc(GL_GREATER, 0);
+	glEnable(GL_ALPHA_TEST);*/
+
+
 	gfx_mask_op(MASK_NONE, 0);
 	
 	/* Set all z to -5.0f */
@@ -325,6 +332,8 @@ void gfx_set_vsync(int val)
 
 int gfx_unload_texture(int index)
 {
+	if(index < 0)
+		return 0;
 	glDeleteTextures(1, &textures[index].tex);
 	textures[index].next = first_free_texture;
 	memory_usage -= textures[index].memsize;

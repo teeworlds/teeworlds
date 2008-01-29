@@ -12,6 +12,7 @@ extern "C" {
 #include <cstdio>
 
 #include "gc_ui.h"
+#include "gc_client.h"
 
 static unsigned int console_input_len = 0;
 static char console_input[256] = {0};
@@ -57,12 +58,20 @@ static void quit_command(struct lexer_result *result, void *user_data)
 	client_quit();
 }
 
+static void con_team(struct lexer_result *result, void *user_data)
+{
+	int new_team;
+	extract_result_int(result, 1, &new_team);
+	send_switch_team(new_team);
+}
+
 void client_console_init()
 {
 	console_register_print_callback(client_console_print);
 	MACRO_REGISTER_COMMAND("quit", "", quit_command, 0x0);
 	MACRO_REGISTER_COMMAND("connect", "s", connect_command, 0x0);
 	MACRO_REGISTER_COMMAND("disconnect", "", disconnect_command, 0x0);
+	MACRO_REGISTER_COMMAND("team", "i", con_team, 0x0);
 }
 
 void console_handle_input()

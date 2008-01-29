@@ -13,6 +13,7 @@ extern "C" {
 #include "../g_game.h"
 #include "../g_version.h"
 #include "../g_layers.h"
+#include "../g_math.h"
 #include "gc_map_image.h"
 #include "../generated/gc_data.h"
 #include "gc_menu.h"
@@ -22,6 +23,8 @@ extern "C" {
 #include "gc_render.h"
 #include "gc_anim.h"
 #include "gc_console.h"
+
+#include <GL/gl.h>
 
 struct data_container *data = 0;
 static int64 debug_firedelay = 0;
@@ -85,6 +88,15 @@ void snd_play_random(int chn, int setid, float vol, vec2 pos)
 	} while(id == set->last);
 	snd_play_at(chn, set->sounds[id].id, 0, pos.x, pos.y);
 	set->last = id;
+}
+
+
+void send_switch_team(int team)
+{
+	msg_pack_start(MSG_SETTEAM, MSGFLAG_VITAL);
+	msg_pack_int(team);
+	msg_pack_end();
+	client_send_msg();	
 }
 
 class damage_indicators
@@ -179,159 +191,6 @@ void render_damage_indicators()
 	dmgind.render();
 }
 
-class particle_system
-{
-public:
-	struct particle
-	{
-		vec2 pos;
-		vec2 vel;
-		float life;
-		float max_life;
-		float size;
-
-		float rot;
-		float rotspeed;
-
-		float gravity;
-		float friction;
-		int iparticle;
-
-		vec4 color;
-	};
-
-	enum
-	{
-		MAX_PARTICLES=1024,
-	};
-
-	particle particles[MAX_PARTICLES];
-	int num_particles;
-
-	particle_system()
-	{
-		num_particles = 0;
-	}
-
-	void new_particle(vec2 pos, vec2 vel, float life, float size, float gravity, float friction, vec4 color=vec4(1,1,1,1))
-	{
-		if (num_particles >= MAX_PARTICLES)
-			return;
-
-		particles[num_particles].iparticle = rand() % data->num_particles;
-		particles[num_particles].pos = pos;
-		particles[num_particles].vel = vel;
-		particles[num_particles].life = life - (data->particles[particles[num_particles].iparticle].lifemod/100.0f) * life;
-		particles[num_particles].size = size;
-		particles[num_particles].max_life = life;
-		particles[num_particles].gravity = gravity;
-		particles[num_particles].friction = friction;
-		particles[num_particles].rot = frandom()*pi*2;
-		particles[num_particles].rotspeed = frandom() * 10.0f;
-		particles[num_particles].color = color;
-		num_particles++;
-	}
-
-	void update(float time_passed)
-	{
-		for(int i = 0; i < num_particles; i++)
-		{
-			particles[i].vel.y += particles[i].gravity*time_passed;
-			particles[i].vel *= particles[i].friction;
-			vec2 vel = particles[i].vel*time_passed;
-			move_point(&particles[i].pos, &vel, 0.1f+0.9f*frandom(), NULL);
-			particles[i].vel = vel* (1.0f/time_passed);
-			particles[i].life += time_passed;
-			particles[i].rot += time_passed * particles[i].rotspeed;
-
-			// check particle death
-			if(particles[i].life > particles[i].max_life)
-			{
-				num_particles--;
-				particles[i] = particles[num_particles];
-				i--;
-			}
-		}
-	}
-
-	void render()
-	{
-		gfx_blend_additive();
-		gfx_texture_set(data->images[IMAGE_GAME].id);
-		gfx_quads_begin();
-
-		for(int i = 0; i < num_particles; i++)
-		{
-			int type = particles[i].iparticle;
-			select_sprite(data->particles[type].spr);
-			float a = 1 - particles[i].life / particles[i].max_life;
-			vec2 p = particles[i].pos;
-
-			gfx_quads_setrotation(particles[i].rot);
-
-			gfx_setcolor(
-				data->particles[type].color_r * particles[i].color.r,
-				data->particles[type].color_g * particles[i].color.g,
-				data->particles[type].color_b * particles[i].color.b,
-				pow(a, 0.75f) * particles[i].color.a);
-
-			gfx_quads_draw(p.x, p.y,particles[i].size,particles[i].size);
-		}
-		gfx_quads_end();
-		gfx_blend_normal();
-	}
-};
-
-static particle_system temp_system;
-
-class projectile_particles
-{
-public:
-	enum
-	{
-		LISTSIZE = 1000,
-	};
-	// meh, just use size %
-	int lastadd[LISTSIZE];
-	projectile_particles()
-	{
-		reset();
-	}
-
-	void reset()
-	{
-		for (int i = 0; i < LISTSIZE; i++)
-			lastadd[i] = -1000;
-	}
-
-	void addparticle(int projectiletype, int projectileid, vec2 pos, vec2 vel)
-	{
-		int particlespersecond = data->projectileinfo[projectiletype].particlespersecond;
-		int lastaddtick = lastadd[projectileid % LISTSIZE];
-
-		if(!particlespersecond)
-			return;
-
-		if ((client_tick() - lastaddtick) > (client_tickspeed() / particlespersecond))
-		{
-			lastadd[projectileid % LISTSIZE] = client_tick();
-			float life = data->projectileinfo[projectiletype].particlelife;
-			float size = data->projectileinfo[projectiletype].particlesize;
-			vec2 v = vel * 0.2f + normalize(vec2(frandom()-0.5f, -frandom()))*(32.0f+frandom()*32.0f);
-
-			// add the particle (from projectiletype later on, but meh...)
-			temp_system.new_particle(pos, v, life, size, 0, 0.95f);
-		}
-	}
-};
-
-static projectile_particles proj_particles;
-
-void reset_projectile_particles() // TODO: remove
-{
-	proj_particles.reset();
-}
-
 static char chat_input[512];
 static unsigned chat_input_len;
 static const int chat_max_lines = 10;
@@ -391,16 +250,7 @@ void chat_add_line(int client_id, int team, const char *line)
 killmsg killmsgs[killmsg_max];
 int killmsg_current = 0;
 
-void effect_air_jump(vec2 pos)
-{
-	const int count = 12;
-	for(int i = 0; i <= count; i++)
-	{
-		float a = i/(float)count;
-		vec2 v = vec2((a-0.5f)*512.0f, 0);
-		temp_system.new_particle(pos+vec2(0,28), v, 0.4f, 16.0f, 0, 0.985f, vec4(0.25f,0.4f,1,1));
-	}
-}
+//bool add_trail = false;
 
 extern int render_popup(const char *caption, const char *text, const char *button_text);
 
@@ -425,107 +275,22 @@ void process_events(int snaptype)
 		else if(item.type == EVENT_EXPLOSION)
 		{
 			ev_explosion *ev = (ev_explosion *)data;
-			vec2 p(ev->x, ev->y);
-
-			// center explosion
-			temp_system.new_particle(p, vec2(0,0), 0.3f, 96.0f, 0, 0.95f);
-			temp_system.new_particle(p, vec2(0,0), 0.3f, 64.0f, 0, 0.95f);
-			temp_system.new_particle(p, vec2(0,0), 0.3f, 32.0f, 0, 0.95f);
-			temp_system.new_particle(p, vec2(0,0), 0.3f, 16.0f, 0, 0.95f);
-
-			for(int i = 0; i < 16; i++)
-			{
-				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(128.0f+frandom()*128.0f);
-				temp_system.new_particle(p, v, 0.2f+0.25f*frandom(), 16.0f, 0, 0.985f);
-			}
-
-			for(int i = 0; i < 16; i++)
-			{
-				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(256.0f+frandom()*512.0f);
-				temp_system.new_particle(p, v, 0.2f+0.25f*frandom(), 16.0f, 128.0f, 0.985f);
-			}
-
-			for(int i = 0; i < 64; i++)
-			{
-				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(frandom()*256.0f);
-				temp_system.new_particle(p, v, 0.2f+0.25f*frandom(), 24.0f, 128.0f, 0.985f);
-			}
+			effect_explosion(vec2(ev->x, ev->y));
 		}
 		else if(item.type == EVENT_SMOKE)
 		{
 			ev_explosion *ev = (ev_explosion *)data;
 			vec2 p(ev->x, ev->y);
-
-			// center explosion
-			vec2 v = normalize(vec2(frandom()-0.5f, -frandom()))*(32.0f+frandom()*32.0f);
-			temp_system.new_particle(p, v, 1.2f, 64.0f, 0, 0.95f);
-			v = normalize(vec2(frandom()-0.5f, -frandom()))*(128.0f+frandom()*128.0f);
-			temp_system.new_particle(p, v, 1.2f, 32.0f, 0, 0.95f);
-			v = normalize(vec2(frandom()-0.5f, -frandom()))*(128.0f+frandom()*128.0f);
-			temp_system.new_particle(p, v, 1.2f, 16.0f, 0, 0.95f);
-
-			for(int i = 0; i < 8; i++)
-			{
-				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(64.0f+frandom()*64.0f);
-				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 0, 0.985f);
-			}
-
-			for(int i = 0; i < 8; i++)
-			{
-				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(128.0f+frandom()*256.0f);
-				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 128.0f, 0.985f);
-			}
 		}
-		else if(item.type == EVENT_SPAWN)
+		else if(item.type == EVENT_PLAYERSPAWN)
 		{
 			ev_explosion *ev = (ev_explosion *)data;
-			vec2 p(ev->x, ev->y);
-
-			// center explosion
-			vec2 v = normalize(vec2(frandom()-0.5f, -frandom()))*(32.0f+frandom()*32.0f);
-			temp_system.new_particle(p, v, 1.2f, 64.0f, 0, 0.95f);
-			v = normalize(vec2(frandom()-0.5f, -frandom()))*(128.0f+frandom()*128.0f);
-			temp_system.new_particle(p, v, 1.2f, 32.0f, 0, 0.95f);
-			v = normalize(vec2(frandom()-0.5f, -frandom()))*(128.0f+frandom()*128.0f);
-			temp_system.new_particle(p, v, 1.2f, 16.0f, 0, 0.95f);
-
-			for(int i = 0; i < 8; i++)
-			{
-				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(64.0f+frandom()*64.0f);
-				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 0, 0.985f);
-			}
-
-			for(int i = 0; i < 8; i++)
-			{
-				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(128.0f+frandom()*256.0f);
-				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 128.0f, 0.985f);
-			}
+			effect_playerspawn(vec2(ev->x, ev->y));
 		}
 		else if(item.type == EVENT_DEATH)
 		{
 			ev_explosion *ev = (ev_explosion *)data;
-			vec2 p(ev->x, ev->y);
-			vec4 c(0.5f, 0.1f, 0.1f, 1.0f);
-
-			// center explosion
-			vec2 v = normalize(vec2(frandom()-0.5f, -frandom()))*(32.0f+frandom()*32.0f);
-			temp_system.new_particle(p, v, 1.2f, 64.0f, 0, 0.95f, c);
-			v = normalize(vec2(frandom()-0.5f, -frandom()))*(128.0f+frandom()*128.0f);
-			temp_system.new_particle(p, v, 1.2f, 32.0f, 0, 0.95f, c);
-			v = normalize(vec2(frandom()-0.5f, -frandom()))*(128.0f+frandom()*128.0f);
-			temp_system.new_particle(p, v, 1.2f, 16.0f, 0, 0.95f, c);
-
-			for(int i = 0; i < 8; i++)
-			{
-				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(64.0f+frandom()*64.0f);
-				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 0, 0.985f, c);
-			}
-
-			for(int i = 0; i < 8; i++)
-			{
-				vec2 v = normalize(vec2(frandom()-0.5f, frandom()-0.5f))*(128.0f+frandom()*256.0f);
-				temp_system.new_particle(p, v, 0.5f+0.5f*frandom(), 16.0f, 128.0f, 0.985f, c);
-			}
+			effect_playerdeath(vec2(ev->x, ev->y));
 		}
 		else if(item.type == EVENT_SOUND_WORLD)
 		{
@@ -964,6 +729,11 @@ static int do_input(int *v, int key)
 
 void render_game()
 {
+	// update the effects
+	effects_update();
+	particle_update(client_frametime());
+
+	
 	float width = 400*3.0f*gfx_screenaspect();
 	float height = 400*3.0f;
 
@@ -1195,12 +965,16 @@ void render_game()
 	}
 
 	// render the world
+	float zoom = 1.0f;
+	if(inp_key_pressed('E'))
+		zoom = 0.5f;
+	
 	gfx_clear(0.65f,0.78f,0.9f);
 	if(spectate)
-		render_world(mouse_pos.x, mouse_pos.y, 1.0f);
+		render_world(mouse_pos.x, mouse_pos.y, zoom);
 	else
 	{
-		render_world(local_character_pos.x+offx, local_character_pos.y+offy, 1.0f);
+		render_world(local_character_pos.x+offx, local_character_pos.y+offy, zoom);
 
 		// draw screen box
 		if(0)
@@ -1683,7 +1457,7 @@ void render_game()
 			vec2(local_character->x, local_character->y));
 		
 		char buf[512];
-		sprintf(buf, "%.2f", speed);
+		sprintf(buf, "%.2f", speed/2);
 		gfx_text(0, 150, 50, 12, buf, -1);
 	}
 

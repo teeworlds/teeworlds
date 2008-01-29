@@ -524,6 +524,9 @@ void mem_debug_dump();
 int mem_allocated();
 
 void swap_endian(void *data, unsigned elem_size, unsigned num);
+
+/* #define cache_prefetch(addr) __builtin_prefetch(addr) */
+
 #ifdef __cplusplus
 }
 #endif

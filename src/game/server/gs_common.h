@@ -248,8 +248,6 @@ public:
 	int attack_tick;
 	
 	int sniper_chargetick;
-
-	int bomb_firetick;
 	
 	int damage_taken;
 

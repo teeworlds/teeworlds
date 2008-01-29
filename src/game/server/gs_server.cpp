@@ -18,7 +18,7 @@ class player* get_player(int index);
 void create_damageind(vec2 p, float angle_mod, int amount);
 void create_explosion(vec2 p, int owner, int weapon, bool bnodamage);
 void create_smoke(vec2 p);
-void create_spawn(vec2 p);
+void create_playerspawn(vec2 p);
 void create_death(vec2 p);
 void create_sound(vec2 pos, int sound, int mask=-1);
 class player *intersect_player(vec2 pos0, vec2 pos1, vec2 &new_pos, class entity *notthis = 0);
@@ -396,8 +396,6 @@ void projectile::tick()
 	float gravity = -400;
 	if(type != WEAPON_ROCKET)
 		gravity = -100;
-	if(type == WEAPON_BOMB)
-		gravity = 0;
 	
 	float pt = (server_tick()-start_tick-1)/(float)server_tickspeed();
 	float ct = (server_tick()-start_tick)/(float)server_tickspeed();
@@ -410,17 +408,10 @@ void projectile::tick()
 	
 	vec2 new_pos;
 	entity *targetplayer = (entity*)intersect_player(prevpos, curpos, new_pos, powner);
-	player *p = (player*) powner;
 	
-	if(targetplayer || collide || lifespan < 0 || (type == WEAPON_BOMB && count_input(p->previnput.fire, p->input.fire).releases))
+	if(targetplayer || collide || lifespan < 0)
 	{
-		if(type == WEAPON_BOMB)
-		{
-			p->bomb_firetick = -1;
-			p->reload_timer = data->weapons[WEAPON_BOMB].firedelay * server_tickspeed() / 1000;
-		}
-
-		if (lifespan >= 0 || weapon == WEAPON_ROCKET || weapon == WEAPON_BOMB)
+		if (lifespan >= 0 || weapon == WEAPON_ROCKET)
 			create_sound(pos, sound_impact);
 
 		if (flags & PROJECTILE_FLAGS_EXPLODE)
@@ -504,7 +495,6 @@ void player::reset()
 	numobjectshit = 0;
 	ninja_activationtick = 0;
 	sniper_chargetick = -1;
-	bomb_firetick = -1;
 	currentmovetime = 0;
 	
 	active_weapon = WEAPON_GUN;
@@ -718,8 +708,6 @@ void player::try_respawn()
 
 	//weapons[WEAPON_SNIPER].got = true;
 	//weapons[WEAPON_SNIPER].ammo = data->weapons[WEAPON_SNIPER].maxammo;
-	weapons[WEAPON_BOMB].got = true;
-	weapons[WEAPON_BOMB].ammo = data->weapons[WEAPON_BOMB].maxammo;
 	active_weapon = WEAPON_GUN;
 	last_weapon = WEAPON_HAMMER;
 	wanted_weapon = WEAPON_GUN;
@@ -728,7 +716,7 @@ void player::try_respawn()
 
 	// Create sound and spawn effects
 	create_sound(pos, SOUND_PLAYER_SPAWN);
-	create_spawn(pos);
+	create_playerspawn(pos);
 
 	gameobj->on_player_spawn(this);
 }
@@ -941,32 +929,6 @@ int player::handle_sniper()
 	return 0;
 }
 
-int player::handle_bomb()
-{
-	struct input_count button = count_input(previnput.fire, input.fire);
-
-	if(button.releases)
-	{
-	}
-	else if(input.fire & 1 && bomb_firetick == -1 && reload_timer == 0)
-	{
-		vec2 direction = normalize(vec2(input.target_x, input.target_y));
-		new projectile(WEAPON_BOMB,
-				client_id,
-				pos+vec2(0,0),
-				direction*7.0f,
-				100,
-				this,
-				1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, SOUND_ROCKET_EXPLODE, WEAPON_ROCKET);
-		create_sound(pos, SOUND_ROCKET_FIRE);
-		bomb_firetick = server_tick();
-		attack_tick = server_tick();
-		weapons[active_weapon].ammo--;
-	}
-
-	return 0;
-}
-
 int player::handle_weapons()
 {
 	vec2 direction = normalize(vec2(latest_input.target_x, latest_input.target_y));
@@ -1043,8 +1005,6 @@ int player::handle_weapons()
 	if (active_weapon == WEAPON_SNIPER)
 		return handle_sniper();
 	*/
-	if (active_weapon == WEAPON_BOMB)
-		return handle_bomb();
 
 	if(reload_timer == 0)
 	{
@@ -1073,7 +1033,7 @@ int player::handle_weapons()
 							client_id,
 							pos+vec2(0,0),
 							direction*30.0f,
-							100,
+							server_tickspeed(),
 							this,
 							1, 0, 0, -1, WEAPON_GUN);
 						create_sound(pos, SOUND_GUN_FIRE);
@@ -1105,7 +1065,7 @@ int player::handle_weapons()
 								pos+vec2(0,0),
 								vec2(cosf(a), sinf(a))*(28.0f + 12.0f*v),
 								//vec2(cosf(a), sinf(a))*20.0f,
-								(int)(server_tickspeed()*0.3f),
+								(int)(server_tickspeed()*0.25f),
 								this,
 								1, 0, 0, -1, WEAPON_SHOTGUN);
 						}
@@ -1723,12 +1683,6 @@ void create_explosion(vec2 p, int owner, int weapon, bool bnodamage)
 		float radius = 128.0f;
 		float innerradius = 42.0f;
 
-		if(weapon == WEAPON_BOMB)
-		{
-			radius = 256.0f;
-			innerradius = 64.0f;
-		}
-
 		int num = world->find_entities(p, radius, ents, 64);
 		for(int i = 0; i < num; i++)
 		{
@@ -1756,10 +1710,10 @@ void create_smoke(vec2 p)
 	}
 }
 
-void create_spawn(vec2 p)
+void create_playerspawn(vec2 p)
 {
 	// create the event
-	ev_spawn *ev = (ev_spawn *)events.create(EVENT_SPAWN, sizeof(ev_spawn));
+	ev_spawn *ev = (ev_spawn *)events.create(EVENT_PLAYERSPAWN, sizeof(ev_spawn));
 	if(ev)
 	{
 		ev->x = (int)p.x;
@@ -2062,7 +2016,7 @@ void mods_init()
 		players[i].core.world = &world->core;
 
 	// create all entities from the game layer
-	MAPITEM_LAYER_TILEMAP *tmap = layers_game();
+	MAPITEM_LAYER_TILEMAP *tmap = layers_game_layer();
 	TILE *tiles = (TILE *)map_get_data(tmap->data);
 	
 	num_spawn_points[0] = 0;

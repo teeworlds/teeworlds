@@ -8,10 +8,20 @@
 
 struct tee_render_info
 {
+	tee_render_info()
+	{
+		texture = -1;
+		color_body = vec4(1,1,1,1);
+		color_feet = vec4(1,1,1,1);
+		size = 1.0f;
+		got_airjump = 1;
+	};
+	
 	int texture;
 	vec4 color_body;
 	vec4 color_feet;
 	float size;
+	int got_airjump;
 };
 
 // sprite renderings
@@ -40,6 +50,7 @@ void render_world(float center_x, float center_y, float zoom);
 void render_loading(float percent);
 
 void render_damage_indicators();
+void render_particles();
 
 // object render methods (gc_render_obj.cpp)
 void render_tee(class animstate *anim, tee_render_info *info, int emote, vec2 dir, vec2 pos);
@@ -53,7 +64,7 @@ void render_player(
 // map render methods (gc_render_map.cpp)
 void render_eval_envelope(ENVPOINT *points, int num_points, int channels, float time, float *result);
 void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, int env, float *channels));
-void render_tilemap(TILE *tiles, int w, int h, float scale, int flags);
+void render_tilemap(TILE *tiles, int w, int h, float scale, vec4 color, int flags);
 
 // helpers
 void mapscreen_to_world(float center_x, float center_y, float parallax_x, float parallax_y,

@@ -148,7 +148,7 @@ void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, in
 }
 
 
-void render_tilemap(TILE *tiles, int w, int h, float scale, int flags)
+void render_tilemap(TILE *tiles, int w, int h, float scale, vec4 color, int flags)
 {
 			//gfx_texture_set(img_get(tmap->image));
 	float screen_x0, screen_y0, screen_x1, screen_y1;
@@ -160,6 +160,7 @@ void render_tilemap(TILE *tiles, int w, int h, float scale, int flags)
 	float final_tilesize_scale = final_tilesize/tile_pixelsize;
 	
 	gfx_quads_begin();
+	gfx_setcolor(color.r, color.g, color.b, color.a);
 	
 	int starty = (int)(screen_y0/scale)-1;
 	int startx = (int)(screen_x0/scale)-1;

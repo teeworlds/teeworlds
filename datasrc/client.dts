@@ -27,23 +27,8 @@ struct soundset {
 	array:sound sounds = *
 }
 
-struct particleinfo {
-	ptr:sprite spr = sprite@1
-	float color_r = color@1
-	float color_g = color@2
-	float color_b = color@3
-	float color_a = color@4
-	int lifemod = life@1
-}
-
 struct spriteptr {
 	ptr:sprite psprite = @0
-}
-
-struct projectileparticles {
-	int particlespersecond = particlespersecond@1
-	float particlesize = particlesize@1
-	float particlelife = particlelife@1
 }
 
 struct weapon {
@@ -85,12 +70,9 @@ struct data_container {
 	array:spriteset spritesets = sprites.*
 	array:sprite sprites = sprites.*.*
 	array:weapon weapons = weapons.*
-	array:particleinfo particles = particles.*
-	array:projectileparticles projectileinfo = projectileparticles.*
 
 	array:soundset sounds = sounds.*
 	array:animation animations = animations.*
-
 }
 
 const array:int weapon = weapons.*

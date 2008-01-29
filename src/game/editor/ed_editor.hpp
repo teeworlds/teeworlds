@@ -221,6 +221,11 @@ public:
 		format = 0;
 	}
 	
+	~IMAGE()
+	{
+		gfx_unload_texture(tex_id);
+	}
+	
 	int tex_id;
 	int external;
 	char name[128];
