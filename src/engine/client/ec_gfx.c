@@ -163,7 +163,7 @@ int gfx_init()
 	/* open window */	
 	if(config.gfx_fullscreen)
 	{
-		int result = glfwOpenWindow(screen_width, screen_height, 8, 8, 8, 8, 24, 8, GLFW_FULLSCREEN);
+		int result = glfwOpenWindow(screen_width, screen_height, 8, 8, 8, 0, 24, 0, GLFW_FULLSCREEN);
 		if(result != GL_TRUE)
 		{
 			dbg_msg("game", "failed to create gl context");
@@ -172,7 +172,7 @@ int gfx_init()
 	}
 	else
 	{
-		int result = glfwOpenWindow(screen_width, screen_height, 0, 0, 0, 8, 24, 8, GLFW_WINDOW);
+		int result = glfwOpenWindow(screen_width, screen_height, 0, 0, 0, 0, 24, 0, GLFW_WINDOW);
 		if(result != GL_TRUE)
 		{
 			dbg_msg("game", "failed to create gl context");
