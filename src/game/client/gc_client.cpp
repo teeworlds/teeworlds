@@ -5,8 +5,8 @@
 #include <string.h>
 
 extern "C" {
-	#include <engine/e_config.h>
-	#include <engine/client/ec_font.h>
+	#include <engine/e_config.h> // TODO: this shouldn't be here
+	#include <engine/client/ec_font.h> // TODO: this shouldn't be here
 	#include <engine/e_client_interface.h>
 };
 
@@ -23,8 +23,6 @@ extern "C" {
 #include "gc_render.h"
 #include "gc_anim.h"
 #include "gc_console.h"
-
-#include <GL/gl.h>
 
 struct data_container *data = 0;
 static int64 debug_firedelay = 0;

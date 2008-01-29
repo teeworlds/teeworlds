@@ -457,7 +457,6 @@ void player::init()
 	proximity_radius = phys_size;
 	client_id = -1;
 	team = -1; // -1 == spectator
-	extrapowerflags = 0;
 
 	latency_accum = 0;
 	latency_accum_min = 0;
@@ -481,7 +480,7 @@ void player::reset()
 	die_tick = 0;
 	die_pos = vec2(0,0);
 	damage_taken = 0;
-	state = STATE_UNKNOWN;
+	player_state = PLAYERSTATE_UNKNOWN;
 
 	mem_zero(&input, sizeof(input));
 	mem_zero(&previnput, sizeof(previnput));
@@ -493,9 +492,8 @@ void player::reset()
 	damage_taken_tick = 0;
 	attack_tick = 0;
 	numobjectshit = 0;
-	ninja_activationtick = 0;
-	sniper_chargetick = -1;
-	currentmovetime = 0;
+	
+	mem_zero(&ninja, sizeof(ninja));
 	
 	active_weapon = WEAPON_GUN;
 	last_weapon = WEAPON_HAMMER;
@@ -687,13 +685,11 @@ void player::try_respawn()
 	armor = 0;
 	jumped = 0;
 	
-	ninja_activationtick = 0;
-	sniper_chargetick = -1;
-	currentcooldown = 0;
+	mem_zero(&ninja, sizeof(ninja));
 	
 	dead = false;
 	set_flag(entity::FLAG_PHYSICS);
-	state = STATE_PLAYING;
+	player_state = PLAYERSTATE_PLAYING;
 
 	core.hook_state = HOOK_IDLE;
 
@@ -735,7 +731,7 @@ int player::handle_ninja()
 {
 	vec2 direction = normalize(vec2(latest_input.target_x, latest_input.target_y));
 
-	if ((server_tick() - ninja_activationtick) > (data->weapons[WEAPON_NINJA].duration * server_tickspeed() / 1000))
+	if ((server_tick() - ninja.activationtick) > (data->weapons[WEAPON_NINJA].duration * server_tickspeed() / 1000))
 	{
 		// time's up, return
 		weapons[WEAPON_NINJA].got = false;
@@ -745,13 +741,13 @@ int player::handle_ninja()
 	}
 
 	// Check if it should activate
-	if (count_input(latest_previnput.fire, latest_input.fire).presses && (server_tick() > currentcooldown))
+	if (count_input(latest_previnput.fire, latest_input.fire).presses && (server_tick() > ninja.currentcooldown))
 	{
 		// ok then, activate ninja
 		attack_tick = server_tick();
-		activationdir = direction;
-		currentmovetime = data->weapons[WEAPON_NINJA].movetime * server_tickspeed() / 1000;
-		currentcooldown = data->weapons[WEAPON_NINJA].firedelay * server_tickspeed() / 1000 + server_tick();
+		ninja.activationdir = direction;
+		ninja.currentmovetime = data->weapons[WEAPON_NINJA].movetime * server_tickspeed() / 1000;
+		ninja.currentcooldown = data->weapons[WEAPON_NINJA].firedelay * server_tickspeed() / 1000 + server_tick();
 		
 		// reset hit objects
 		numobjectshit = 0;
@@ -763,24 +759,24 @@ int player::handle_ninja()
 		//release_hooks();
 	}
 
-	currentmovetime--;
+	ninja.currentmovetime--;
 
-	if (currentmovetime == 0)
+	if (ninja.currentmovetime == 0)
 	{
 		// reset player velocity
 		core.vel *= 0.2f;
 		//return MODIFIER_RETURNFLAGS_OVERRIDEWEAPON;
 	}
 
-	if (currentmovetime > 0)
+	if (ninja.currentmovetime > 0)
 	{
 		// Set player velocity
-		core.vel = activationdir * data->weapons[WEAPON_NINJA].velocity;
+		core.vel = ninja.activationdir * data->weapons[WEAPON_NINJA].velocity;
 		vec2 oldpos = pos;
 		move_box(&core.pos, &core.vel, vec2(phys_size, phys_size), 0.0f);
 		// reset velocity so the client doesn't predict stuff
 		core.vel = vec2(0.0f,0.0f);
-		if ((currentmovetime % 2) == 0)
+		if ((ninja.currentmovetime % 2) == 0)
 		{
 			create_smoke(pos);
 		}
@@ -821,111 +817,9 @@ int player::handle_ninja()
 				ents[i]->take_damage(vec2(0,10.0f), data->weapons[WEAPON_NINJA].meleedamage, client_id,WEAPON_NINJA);
 			}
 		}
-		return MODIFIER_RETURNFLAGS_OVERRIDEVELOCITY | MODIFIER_RETURNFLAGS_OVERRIDEPOSITION | MODIFIER_RETURNFLAGS_OVERRIDEGRAVITY;
+		return 0;
 	}
 
-	return 0;
-}
-
-int player::handle_sniper()
-{
-	/*
-	struct input_count button = count_input(previnput.fire, input.fire);
-	
-	bool must_release = false;
-	int current_load = (server_tick()-sniper_chargetick) / server_tickspeed() + 1;
-	
-	if(input.fire&1)
-	{
-		if(sniper_chargetick == -1)
-		{
-			// start charge
-			sniper_chargetick = server_tick();
-		}
-		else
-		{
-			if(current_load > weapons[WEAPON_SNIPER].ammo+3)
-				must_release = true;
-		}
-	}
-
-	if(button.releases || must_release)
-	{
-		vec2 direction = normalize(vec2(input.target_x, input.target_y));
-		
-		// released
-		sniper_chargetick = -1;
-		
-		if(current_load > weapons[WEAPON_SNIPER].ammo)
-			current_load = weapons[WEAPON_SNIPER].ammo;
-			
-		weapons[WEAPON_SNIPER].ammo -= current_load;
-
-		new projectile(projectile::WEAPON_PROJECTILETYPE_SNIPER,
-						client_id, pos+vec2(0,0), direction*50.0f,
-						100, this, current_load, 0, 0, -1, WEAPON_SNIPER);
-		create_sound(pos, SOUND_SNIPER_FIRE);
-
-	}
-	*/
-
-	/*
-	if(button.releases)
-	{
-		vec2 direction = normalize(vec2(input.target_x, input.target_y));
-		// Check if we were charging, if so fire
-		if (weapons[WEAPON_SNIPER].weaponstage >= WEAPONSTAGE_SNIPER_CHARGING)
-		{
-			new projectile(projectile::WEAPON_PROJECTILETYPE_SNIPER,
-							client_id, pos+vec2(0,0), direction*50.0f,
-							100 + weapons[WEAPON_SNIPER].weaponstage * 20,this, weapons[WEAPON_SNIPER].weaponstage, 0, 0, -1, WEAPON_SNIPER);
-			create_sound(pos, SOUND_SNIPER_FIRE);
-		}
-		// Add blowback
-		core.vel = -direction * 10.0f * weapons[WEAPON_SNIPER].weaponstage;
-
-		// update ammo and stuff
-		weapons[WEAPON_SNIPER].ammo = max(0,weapons[WEAPON_SNIPER].ammo - weapons[WEAPON_SNIPER].weaponstage);
-		weapons[WEAPON_SNIPER].weaponstage = WEAPONSTAGE_SNIPER_NEUTRAL;
-		weapons[WEAPON_SNIPER].chargetick = 0;
-	}
-	else if (input.fire & 1)
-	{
-		// Charge!! (if we are on the ground)
-		if (is_grounded() && weapons[WEAPON_SNIPER].ammo > 0)
-		{
-			if (!weapons[WEAPON_SNIPER].chargetick)
-			{
-				weapons[WEAPON_SNIPER].chargetick = server_tick();
-				dbg_msg("game", "Chargetick='%d:'", server_tick());
-			}
-			if ((server_tick() - weapons[WEAPON_SNIPER].chargetick) > server_tickspeed() * data->weapons[active_weapon].chargetime)
-			{
-				if (weapons[WEAPON_SNIPER].ammo > weapons[WEAPON_SNIPER].weaponstage)
-				{
-					weapons[WEAPON_SNIPER].weaponstage++;
-					weapons[WEAPON_SNIPER].chargetick = server_tick();
-				}
-				else if ((server_tick() - weapons[WEAPON_SNIPER].chargetick) > server_tickspeed() * data->weapons[active_weapon].overchargetime)
-				{
-					// Ooopsie, weapon exploded
-					create_explosion(pos, client_id, WEAPON_SNIPER, false);
-					create_sound(pos, SOUND_ROCKET_EXPLODE);
-					// remove this weapon and change weapon to gun
-					weapons[WEAPON_SNIPER].got = false;
-					weapons[WEAPON_SNIPER].ammo = 0;
-					last_weapon = active_weapon;
-					active_weapon = WEAPON_GUN;
-					return 0;
-				}
-			}
-
-			// While charging, don't move
-			return 0;
-		}
-		else if (weapons[WEAPON_SNIPER].weaponstage)
-			weapons[WEAPON_SNIPER].weaponstage = WEAPONSTAGE_SNIPER_NEUTRAL;
-	}*/
 	return 0;
 }
 
@@ -999,12 +893,6 @@ int player::handle_weapons()
 			set_weapon(wanted_weapon);
 		}
 	}
-
-	// don't update other weapons while sniper is active
-	/*
-	if (active_weapon == WEAPON_SNIPER)
-		return handle_sniper();
-	*/
 
 	if(reload_timer == 0)
 	{
@@ -1257,7 +1145,7 @@ void player::tick()
 	// handle weapons
 	handle_weapons();
 
-	state = input.state;
+	player_state = input.player_state;
 
 	// Previnput
 	previnput = input;
@@ -1468,7 +1356,6 @@ void player::snap(int snaping_client)
 		character->health = 0;
 		character->armor = 0;
 		character->weapon = active_weapon;
-		character->weaponstage = weapons[active_weapon].weaponstage;
 		character->attacktick = attack_tick;
 
 		if(client_id == snaping_client)
@@ -1492,7 +1379,7 @@ void player::snap(int snaping_client)
 				character->emote = EMOTE_BLINK;
 		}
 
-		character->state = state;
+		character->player_state = player_state;
 	}
 }
 
@@ -1589,7 +1476,7 @@ void powerup::tick()
 		case POWERUP_NINJA:
 			{
 				// activate ninja on target player
-				pplayer->ninja_activationtick = server_tick();
+				pplayer->ninja.activationtick = server_tick();
 				pplayer->weapons[WEAPON_NINJA].got = true;
 				pplayer->last_weapon = pplayer->active_weapon;
 				pplayer->active_weapon = WEAPON_NINJA;

@@ -434,7 +434,7 @@ void render_player(
 	// render the tee
 	render_tee(&state, &render_info, player.emote, direction, position);
 
-	if(player.state == STATE_CHATTING)
+	if(player.player_state == PLAYERSTATE_CHATTING)
 	{
 		gfx_texture_set(data->images[IMAGE_EMOTICONS].id);
 		gfx_quads_begin();

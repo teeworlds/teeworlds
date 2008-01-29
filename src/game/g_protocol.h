@@ -81,10 +81,10 @@ enum
 
 enum
 {
-	STATE_UNKNOWN=0,
-	STATE_PLAYING,
-	STATE_IN_MENU,
-	STATE_CHATTING,
+	PLAYERSTATE_UNKNOWN=0,
+	PLAYERSTATE_PLAYING,
+	PLAYERSTATE_IN_MENU,
+	PLAYERSTATE_CHATTING,
 
 	GAMETYPE_DM=0,
 	GAMETYPE_TDM,
@@ -103,7 +103,8 @@ struct player_input
 	int fire;
 	int hook;
 	int blink;
-	int state;
+
+	int player_state;
 
 	int wanted_weapon;
 	int next_weapon;
@@ -193,7 +194,7 @@ struct obj_player_core
 // info about the player that is only needed when it's on screen
 struct obj_player_character : public obj_player_core
 {
-	int state;
+	int player_state;
 
 	int health;
 	int armor;

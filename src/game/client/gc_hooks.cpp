@@ -298,27 +298,15 @@ extern "C" void modc_render()
 		render_game();
 		if (console_active())
 			console_render();
-
-		// handle team switching
-		// TODO: FUGLY!!!
-		/*
-		if(config.cl_team != -10)
-		{
-
-		}*/
 	}
-	else // if (client_state() != CLIENTSTATE_CONNECTING && client_state() != CLIENTSTATE_LOADING)
+	else
 	{
 		menu_render();
 		if (console_active())
 			console_render();
 		return;
 	}
-
-	//
-	//config.cl_team = -10;
 }
-
 
 extern "C" int modc_snap_input(int *data)
 {
@@ -335,12 +323,12 @@ extern "C" int modc_snap_input(int *data)
 	input_target_lock = 0;
 
 	if(chat_mode != CHATMODE_NONE)
-		input_data.state = STATE_CHATTING;
+		input_data.player_state = PLAYERSTATE_CHATTING;
 	else if(menu_active)
-		input_data.state = STATE_IN_MENU;
+		input_data.player_state = PLAYERSTATE_IN_MENU;
 	else
 	{
-		input_data.state = STATE_PLAYING;
+		input_data.player_state = PLAYERSTATE_PLAYING;
 
 		// TODO: this doesn't feel too pretty... look into it?
 		if (console_active())

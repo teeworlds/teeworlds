@@ -216,19 +216,6 @@ class player : public entity
 {
 public:
 	static const int phys_size = 28;
-	
-	enum // what are these?
-	{
-		MODIFIER_RETURNFLAGS_OVERRIDEVELOCITY		= 1 << 0,
-		MODIFIER_RETURNFLAGS_OVERRIDEPOSITION		= 1 << 1,
-		MODIFIER_RETURNFLAGS_OVERRIDEGRAVITY		= 1 << 2,
-
-		MODIFIER_RETURNFLAGS_NOHOOK					= 1 << 3,
-
-
-		WEAPONSTAGE_SNIPER_NEUTRAL					= 0,
-		WEAPONSTAGE_SNIPER_CHARGING					= 1,
-	};
 
 	// weapon info
 	entity* hitobjects[10];
@@ -238,23 +225,21 @@ public:
 		int ammoregenstart;
 		int ammo;
 		int ammocost;
-		int weaponstage;
 		bool got;
 	} weapons[NUM_WEAPONS];
+	
 	int active_weapon;
 	int last_weapon;
 	int wanted_weapon;
 	int reload_timer;
 	int attack_tick;
 	
-	int sniper_chargetick;
-	
 	int damage_taken;
 
 	int emote_type;
 	int emote_stop;
 
-	int last_action;
+	int last_action; // last tick that the player took any action ie some input
 	
 	//
 	int client_id;
@@ -262,7 +247,6 @@ public:
 	int use_custom_color;
 	int color_body;
 	int color_feet;
-
 
 	// these are non-heldback inputs
 	player_input latest_previnput;
@@ -280,17 +264,18 @@ public:
 	int armor;
 
 	// ninja
-	vec2 activationdir;
-	int ninja_activationtick;
-	int extrapowerflags;
-	int currentcooldown;
-	int currentactivation;
-	int currentmovetime;
+	struct
+	{
+		vec2 activationdir;
+		int activationtick;
+		int currentcooldown;
+		int currentmovetime;
+	} ninja;
 
 	//
 	int score;
 	int team;
-	int state;
+	int player_state; // if the client is chatting, accessing a menu or so
 	
 	bool spawning;
 	bool dead;
@@ -325,8 +310,6 @@ public:
 	
 	int handle_weapons();
 	int handle_ninja();
-	int handle_sniper();
-	int handle_bomb();
 
 	virtual void tick();
 	virtual void tick_defered();
