@@ -1210,8 +1210,44 @@ static void client_run()
 
 int editor_main(int argc, char **argv);
 
+#include "../e_ringbuffer.h"
+
 int main(int argc, char **argv)
 {
+	RINGBUFFER *buf;
+	char data[65536];
+	int i;
+
+	buf = rb_init(data, sizeof(data));
+
+	static char *texts[] = 
+	{
+		"Hej",
+		"Påå", 
+		"Dig",
+		"Min",
+		"Fin",
+		"Tje",
+		"Je!",
+		"Lol",
+		"Osv",
+		"Tam",
+		"Rof"
+	};
+
+	for (i = 0; i < 1000000; i++)
+	{
+		RBITEM *item = rb_allocate(buf, 4);
+		strcpy(item->data, texts[i & 10]);
+
+		for (item = rb_first(buf); item != rb_last(buf); item = item->next)
+		{
+			printf("lol\n");
+		}
+	}
+
+
+
 	/* preinit the mod */
 	modc_preinit();
 

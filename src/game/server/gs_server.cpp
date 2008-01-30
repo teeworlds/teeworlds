@@ -547,7 +547,7 @@ void player::set_team(int new_team)
 	team = new_team;
 	die(client_id, -1);
 	score = 0;
-	dbg_msg("game", "cid=%d team=%d", client_id, team);
+	dbg_msg("game", "team_join player='%d:%s' team=%d", client_id, server_clientname(client_id), team);
 }
 
 vec2 spawn_points[3][64];
@@ -1762,6 +1762,8 @@ void mods_client_enter(int client_id)
 	char buf[512];
 	sprintf(buf, "%s entered and joined the %s", server_clientname(client_id), get_team_name(players[client_id].team));
 	send_chat(-1, -1, buf); 
+
+	dbg_msg("game", "team_join player='%d:%s' team=%d", client_id, server_clientname(client_id), players[client_id].team);
 }
 
 void mods_connected(int client_id)

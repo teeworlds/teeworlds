@@ -296,16 +296,13 @@ extern "C" void modc_render()
 	if(client_state() == CLIENTSTATE_ONLINE)
 	{
 		render_game();
-		if (console_active())
-			console_render();
 	}
 	else
 	{
 		menu_render();
-		if (console_active())
-			console_render();
-		return;
 	}
+
+	console_render();
 }
 
 extern "C" int modc_snap_input(int *data)

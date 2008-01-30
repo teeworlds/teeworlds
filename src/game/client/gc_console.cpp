@@ -14,12 +14,30 @@ extern "C" {
 #include "gc_ui.h"
 #include "gc_client.h"
 
+#include "../g_version.h"
+
+enum
+{
+	CONSOLE_CLOSED,
+	CONSOLE_OPENING,
+	CONSOLE_OPEN,
+	CONSOLE_CLOSING,
+};
+
 static unsigned int console_input_len = 0;
 static char console_input[256] = {0};
-static int active = 0;
+static int console_state = CONSOLE_CLOSED;
+static float state_change_end = 0.0f;
+static const float state_change_duration = 0.2f;
 
 static char backlog[256][256] = {{0}};
 static int backlog_len;
+
+static float time_now()
+{
+	static long long time_start = time_get();
+	return float(time_get()-time_start)/float(time_freq());
+}
 
 static void client_console_print(const char *str)
 {
@@ -30,7 +48,14 @@ static void client_console_print(const char *str)
 
 	if (backlog_len >= 256)
 	{
-		puts("console backlog full");
+		static int warning = 0;
+		if (!warning)
+		{
+			puts("console backlog full");
+			warning = 1;
+		}
+
+		return;
 	}
 
 	memcpy(backlog[backlog_len], str, len);
@@ -76,7 +101,7 @@ void client_console_init()
 
 void console_handle_input()
 {
-	int was_active = active;
+	int was_active = console_active();
 
 	for(int i = 0; i < inp_num_events(); i++)
 	{
@@ -87,7 +112,7 @@ void console_handle_input()
 			console_toggle();
 		}
 
-		if (active)
+		if (console_active())
 		{
 			if (!(e.ch >= 0 && e.ch < 32))
 			{
@@ -119,7 +144,7 @@ void console_handle_input()
 		}
 	}
 
-	if (was_active || active)
+	if (was_active || console_active())
 	{
 		inp_clear_events();
 		inp_clear_key_states();
@@ -128,14 +153,65 @@ void console_handle_input()
 
 void console_toggle()
 {
-	active ^= 1;
+	if (console_state == CONSOLE_CLOSED || console_state == CONSOLE_OPEN)
+	{
+		state_change_end = time_now()+state_change_duration;
+	}
+	else
+	{
+		float progress = state_change_end-time_now();
+		float reversed_progress = state_change_duration-progress;
+
+		state_change_end = time_now()+reversed_progress;
+	}
+
+	if (console_state == CONSOLE_CLOSED || console_state == CONSOLE_CLOSING)
+		console_state = CONSOLE_OPENING;
+	else
+		console_state = CONSOLE_CLOSING;
+}
+
+// only defined for 0<=t<=1
+static float console_scale_func(float t)
+{
+	//return t;
+	return cosf((1.0f-t)*M_PI*0.5f);
 }
 
 void console_render()
 {
     RECT screen = *ui_screen();
-	float console_height = screen.h*3/5.0f;
+	float console_max_height = screen.h*3/5.0f;
+	float console_height;
+
+	float progress = (time_now()-(state_change_end-state_change_duration))/float(state_change_duration);
+
+	if (progress >= 1.0f)
+	{
+		if (console_state == CONSOLE_CLOSING)
+			console_state = CONSOLE_CLOSED;
+		else if (console_state == CONSOLE_OPENING)
+			console_state = CONSOLE_OPEN;
+
+		progress = 1.0f;
+	}
+	
+	if (console_state == CONSOLE_CLOSED)
+		return;
+
+	float console_height_scale;
+
+	if (console_state == CONSOLE_OPENING)
+		console_height_scale = console_scale_func(progress);
+	else if (console_state == CONSOLE_CLOSING)
+		console_height_scale = console_scale_func(1.0f-progress);
+	else //if (console_state == CONSOLE_OPEN)
+		console_height_scale = console_scale_func(1.0f);
+
+	console_height = console_height_scale*console_max_height;
+
 	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
+
 
     gfx_texture_set(-1);
     gfx_quads_begin();
@@ -155,6 +231,11 @@ void console_render()
 		gfx_text(0, x+prompt_width, y, font_size, console_input, -1);
 		gfx_text(0, x+prompt_width+width+1, y, font_size, "_", -1);
 
+		char buf[64];
+		sprintf(buf, "Teewars v%s", TEEWARS_VERSION);
+		float version_width = gfx_text_width(0, font_size, buf, -1);
+		gfx_text(0, screen.w-version_width-5, y, font_size, buf, -1);
+
 		y -= row_height;
 
 		while (y > 0.0f && backlog_index >= 0)
@@ -170,6 +251,6 @@ void console_render()
 
 int console_active()
 {
-	return active;
+	return console_state != CONSOLE_CLOSED;
 }
 

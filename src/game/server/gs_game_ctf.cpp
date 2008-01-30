@@ -86,6 +86,9 @@ void gameobject_ctf::tick()
 					// CAPTURE! \o/
 					teamscore[fi^1] += 100;
 					f->carrying_player->score += 5;
+
+					dbg_msg("game", "flag_capture player='%d:%s'", f->carrying_player->client_id, server_clientname(f->carrying_player->client_id));
+
 					for(int i = 0; i < 2; i++)
 						flags[i]->reset();
 					
@@ -105,7 +108,11 @@ void gameobject_ctf::tick()
 					// return the flag
 					if(!f->at_stand)
 					{
-						close_players[i]->score += 1;
+						player *p = close_players[i];
+						p->score += 1;
+
+						dbg_msg("game", "flag_return player='%d:%s'", p->client_id, server_clientname(p->client_id));
+
 						create_sound_global(SOUND_CTF_RETURN);
 						f->reset();
 					}
@@ -118,6 +125,8 @@ void gameobject_ctf::tick()
 					f->at_stand = 0;
 					f->carrying_player = close_players[i];
 					f->carrying_player->score += 1;
+
+					dbg_msg("game", "flag_grab player='%d:%s'", f->carrying_player->client_id, server_clientname(f->carrying_player->client_id));
 					
 					for(int c = 0; c < MAX_CLIENTS; c++)
 					{
