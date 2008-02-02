@@ -557,8 +557,6 @@ static void menu2_render_background()
 	}
 }
 
-extern "C" void *gfx_font_set;
-
 void render_loading(float percent)
 {
 	// need up date this here to get correct
@@ -1743,24 +1741,6 @@ int menu2_render()
     RECT screen = *ui_screen();
 	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
 
-    if (0)
-    {
-        gfx_clear(0.65f,0.78f,0.9f);
-
-
-        for (int i = 0; i < 24; i++)
-        {
-            float size = i * 0.5 + 8;
-            char temp[64];
-            sprintf(temp, "%f: Ingen tomte i jul", size);
-            gfx_text(0, 50, 10 + i*int(size), size, temp, -1);
-            gfx_text(gfx_font_set, 400, 10 + i*int(size), size, temp, -1);
-        }
-
-        return 0;
-    }
-
-	
 	static bool first = true;
 	if(first)
 	{

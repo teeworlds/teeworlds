@@ -16,6 +16,10 @@ extern "C" {
 
 #include "../g_version.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 enum
 {
 	CONSOLE_CLOSED,
@@ -28,7 +32,7 @@ static unsigned int console_input_len = 0;
 static char console_input[256] = {0};
 static int console_state = CONSOLE_CLOSED;
 static float state_change_end = 0.0f;
-static const float state_change_duration = 0.2f;
+static const float state_change_duration = 0.1f;
 
 static char backlog[256][256] = {{0}};
 static int backlog_len;
@@ -175,7 +179,7 @@ void console_toggle()
 static float console_scale_func(float t)
 {
 	//return t;
-	return cosf((1.0f-t)*M_PI*0.5f);
+	return sinf(acosf(1.0f-t));
 }
 
 void console_render()
