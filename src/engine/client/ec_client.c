@@ -18,6 +18,7 @@
 #include <engine/e_packer.h>
 #include <engine/e_memheap.h>
 #include <engine/e_datafile.h>
+#include <engine/e_console.h>
 
 #include <mastersrv/mastersrv.h>
 
@@ -1207,20 +1208,49 @@ static void client_run()
 	snd_shutdown();
 }
 
+static void connect_command(void *result, void *user_data)
+{
+	const char *address;
+	console_result_string(result, 1, &address);
+	client_connect(address);
+}
+
+static void disconnect_command(void *result, void *user_data)
+{
+	client_disconnect();
+}
+
+static void quit_command(void *result, void *user_data)
+{
+	client_quit();
+}
+
+static void client_register_commands()
+{
+	MACRO_REGISTER_COMMAND("quit", "", quit_command, 0x0);
+	MACRO_REGISTER_COMMAND("connect", "s", connect_command, 0x0);
+	MACRO_REGISTER_COMMAND("disconnect", "", disconnect_command, 0x0);
+}
 
 int editor_main(int argc, char **argv);
 
 int main(int argc, char **argv)
 {
-	/* preinit the mod */
-	modc_preinit();
-
 	/* init the engine */
 	dbg_msg("client", "starting...");
-	engine_init("Teewars", argc, argv);
+	engine_init("Teewars");
 	
+	/* register all console commands */
+	client_register_commands();
+	modc_console_init();
+	
+	/* parse the command line arguments */
+	engine_parse_arguments(argc, argv);
+	
+	/* run the client*/
 	client_run();
-		
+	
+	/* write down the config and quit */	
 	engine_writeconfig();
 	return 0;
 }

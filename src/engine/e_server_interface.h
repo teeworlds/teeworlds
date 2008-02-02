@@ -11,6 +11,8 @@ extern "C" {
 #include "e_if_msg.h"
 #include "e_if_mods.h"
 
+#include "e_console.h" /* TODO: clean this up*/
+
 #ifdef __cplusplus
 }
 #endif

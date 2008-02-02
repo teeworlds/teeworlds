@@ -3,6 +3,8 @@
 #include "../generated/gs_data.h"
 
 
+extern tuning_params tuning;
+
 void create_sound_global(int sound, int target=-1);
 
 inline int cmask_all() { return -1; }

@@ -23,10 +23,10 @@ void config_reset();
 void config_load(const char *filename);
 void config_save(const char *filename);
 
-typedef int (*config_int_getter)(CONFIGURATION *c);
-typedef const char *(*config_str_getter)(CONFIGURATION *c);
-typedef void (*config_int_setter)(CONFIGURATION *c, int val);
-typedef void (*config_str_setter)(CONFIGURATION *c, const char *str);
+typedef int (*CONFIG_INT_GETTER)(CONFIGURATION *c);
+typedef const char *(*CONFIG_STR_GETTER)(CONFIGURATION *c);
+typedef void (*CONFIG_INT_SETTER)(CONFIGURATION *c, int val);
+typedef void (*CONFIG_STR_SETTER)(CONFIGURATION *c, const char *str);
 
 #define MACRO_CONFIG_INT(name,def,min,max) int config_get_ ## name (CONFIGURATION *c);
 #define MACRO_CONFIG_STR(name,len,def) const char *config_get_ ## name (CONFIGURATION *c);

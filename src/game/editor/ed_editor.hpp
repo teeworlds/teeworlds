@@ -4,6 +4,7 @@
 #include <math.h>
 #include "array.h"
 #include "../g_mapitems.h"
+#include "../g_math.h"
 #include "../client/gc_render.h"
 
 extern "C" {

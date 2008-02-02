@@ -1,5 +1,49 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+#include <string.h>
 #include "g_game.h"
+
+const char *tuning_params::names[] =
+{
+	#define MACRO_TUNING_PARAM(name,value) #name,
+	#include "g_tuning.h"
+	#undef MACRO_TUNING_PARAM
+};
+
+
+bool tuning_params::set(int index, float value)
+{
+	if(index < 0 || index >= num())
+		return false;
+	((tune_param *)this)[index] = value;
+	return true;
+}
+
+bool tuning_params::get(int index, float *value)
+{
+	if(index < 0 || index >= num())
+		return false;
+	*value = (float)((tune_param *)this)[index];
+	return true;
+}
+
+bool tuning_params::set(const char *name, float value)
+{
+	for(int i = 0; i < num(); i++)
+		if(strcmp(name, names[i]) == 0)
+			return set(i, value);
+	return false;
+}
+
+bool tuning_params::get(const char *name, float *value)
+{
+	for(int i = 0; i < num(); i++)
+		if(strcmp(name, names[i]) == 0)
+			return get(i, value);
+	
+	return false;
+}
+
+
 
 // TODO: OPT: rewrite this smarter!
 void move_point(vec2 *inout_pos, vec2 *inout_vel, float elasticity, int *bounces)
@@ -125,11 +169,11 @@ void player_core::tick()
 	
 	vec2 direction = normalize(vec2(input.target_x, input.target_y));
 
-	vel.y += gravity;
+	vel.y += world->tuning.gravity;
 	
-	float max_speed = grounded ? ground_control_speed : air_control_speed;
-	float accel = grounded ? ground_control_accel : air_control_accel;
-	float friction = grounded ? ground_friction : air_friction;
+	float max_speed = grounded ? world->tuning.ground_control_speed : world->tuning.air_control_speed;
+	float accel = grounded ? world->tuning.ground_control_accel : world->tuning.air_control_accel;
+	float friction = grounded ? world->tuning.ground_friction : world->tuning.air_friction;
 	
 	// handle movement
 	if(input.left)
@@ -153,13 +197,13 @@ void player_core::tick()
 			if(grounded)
 			{
 				triggered_events |= COREEVENT_GROUND_JUMP;
-				vel.y = -ground_jump_speed;
+				vel.y = -world->tuning.ground_jump_impulse;
 				jumped |= 1;
 			}
 			else if(!(jumped&2))
 			{
 				triggered_events |= COREEVENT_AIR_JUMP;
-				vel.y = -ground_air_speed;
+				vel.y = -world->tuning.air_jump_impulse;
 				jumped |= 3;
 			}
 		}
@@ -181,7 +225,7 @@ void player_core::tick()
 		}
 		else if(hook_state == HOOK_FLYING)
 		{
-			vec2 new_pos = hook_pos+hook_dir*hook_fire_speed;
+			vec2 new_pos = hook_pos+hook_dir*world->tuning.hook_fire_speed;
 
 			// Check against other players first
 			for(int i = 0; i < MAX_CLIENTS; i++)
@@ -223,7 +267,7 @@ void player_core::tick()
 					hook_state = HOOK_GRABBED;
 					hook_pos = new_pos;	
 				}
-				else if(distance(pos, new_pos) > hook_length)
+				else if(distance(pos, new_pos) > world->tuning.hook_length)
 				{
 					triggered_events |= COREEVENT_HOOK_RETRACT;
 					hook_state = HOOK_RETRACTED;
@@ -270,7 +314,7 @@ void player_core::tick()
 		// don't do this hook rutine when we are hook to a player
 		if(hooked_player == -1 && distance(hook_pos, pos) > 46.0f)
 		{
-			vec2 hookvel = normalize(hook_pos-pos)*hook_drag_accel;
+			vec2 hookvel = normalize(hook_pos-pos)*world->tuning.hook_drag_accel;
 			// the hook as more power to drag you up then down.
 			// this makes it easier to get on top of an platform
 			if(hookvel.y > 0)
@@ -286,7 +330,7 @@ void player_core::tick()
 			vec2 new_vel = vel+hookvel;
 
 			// check if we are under the legal limit for the hook
-			if(length(new_vel) < hook_drag_speed || length(new_vel) < length(vel))
+			if(length(new_vel) < world->tuning.hook_drag_speed || length(new_vel) < length(vel))
 				vel = new_vel; // no problem. apply
 				
 		}
@@ -333,23 +377,24 @@ void player_core::tick()
 			{
 				if(d > phys_size*1.50f) // TODO: fix tweakable variable
 				{
-					float accel = hook_drag_accel * (d/hook_length);
+					float accel = world->tuning.hook_drag_accel * (d/world->tuning.hook_length);
+					float drag_speed = world->tuning.hook_drag_speed;
 					
 					// add force to the hooked player
-					p->vel.x = saturated_add(-hook_drag_speed, hook_drag_speed, p->vel.x, accel*dir.x*1.5f);
-					p->vel.y = saturated_add(-hook_drag_speed, hook_drag_speed, p->vel.y, accel*dir.y*1.5f);
+					p->vel.x = saturated_add(-drag_speed, drag_speed, p->vel.x, accel*dir.x*1.5f);
+					p->vel.y = saturated_add(-drag_speed, drag_speed, p->vel.y, accel*dir.y*1.5f);
 
 					// add a little bit force to the guy who has the grip
-					vel.x = saturated_add(-hook_drag_speed, hook_drag_speed, vel.x, -accel*dir.x*0.25f);
-					vel.y = saturated_add(-hook_drag_speed, hook_drag_speed, vel.y, -accel*dir.y*0.25f);
+					vel.x = saturated_add(-drag_speed, drag_speed, vel.x, -accel*dir.x*0.25f);
+					vel.y = saturated_add(-drag_speed, drag_speed, vel.y, -accel*dir.y*0.25f);
 				}
 			}
 		}
 	}	
 
 	// clamp the velocity to something sane
-	if(length(vel) > terminal_velocity)
-		vel = normalize(vel) * terminal_velocity;
+	if(length(vel) > world->tuning.terminal_velocity)
+		vel = normalize(vel) * world->tuning.terminal_velocity;
 }
 
 void player_core::move()

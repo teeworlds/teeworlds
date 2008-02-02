@@ -225,6 +225,9 @@ void server_setbrowseinfo(int game_type, int progression)
 
 void server_kick(int client_id, const char *reason)
 {
+	if(client_id < 0 || client_id > MAX_CLIENTS)
+		return;
+		
 	if(clients[client_id].state != SRVCLIENT_STATE_EMPTY)
 		netserver_drop(net, client_id, reason);
 }
@@ -647,7 +650,7 @@ static void server_process_client_packet(NETPACKET *packet)
 			if(config.rcon_password[0] != 0 && strcmp(pw, config.rcon_password) == 0)
 			{
 				dbg_msg("server", "cid=%d rcon='%s'", cid, cmd);
-				config_set(cmd);
+				console_execute(cmd);
 			}
 		}
 		else
@@ -1039,11 +1042,26 @@ static int server_run()
 	return 0;
 }
 
+static void server_register_commands()
+{
+	
+}
+
 
 int main(int argc, char **argv)
 {
+	/* init the engine */
 	dbg_msg("server", "starting...");
-	engine_init("Teewars", argc, argv);
+	engine_init("Teewars");
+	
+	/* register all console commands */
+	server_register_commands();
+	mods_console_init();
+	
+	/* parse the command line arguments */
+	engine_parse_arguments(argc, argv);
+	
+	/* run the server */
 	server_run();
 	return 0;
 }

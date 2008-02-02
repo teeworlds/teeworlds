@@ -25,6 +25,7 @@ extern const obj_player_character *local_prev_character;
 extern const obj_player_info *local_info;
 extern const obj_flag *flags[2];
 extern const obj_game *gameobj;
+extern tuning_params tuning;
 
 // predicted players
 extern player_core predicted_prev_player;

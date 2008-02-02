@@ -1,8 +1,36 @@
+#include "e_system.h"
 #include "e_console.h"
 #include "e_config.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+
+#define CONSOLE_MAX_STR_LENGTH 255
+/* the maximum number of tokens occurs in a string of length CONSOLE_MAX_STR_LENGTH with tokens size 1 separated by single spaces */
+#define MAX_TOKENS (CONSOLE_MAX_STR_LENGTH+1)/2
+ 
+enum 
+{ 
+    TOKEN_INT, 
+    TOKEN_FLOAT, 
+    TOKEN_STRING 
+}; 
+ 
+typedef struct
+{ 
+    int type; 
+	const char *stored_string;
+} TOKEN;
+ 
+typedef struct
+{ 
+	char string_storage[CONSOLE_MAX_STR_LENGTH+1];
+	char *next_string;
+
+    TOKEN tokens[MAX_TOKENS]; 
+    unsigned int num_tokens; 
+} LEXER_RESULT; 
 
 enum 
 { 
@@ -15,7 +43,7 @@ enum
     STATE_ESCAPE 
 }; 
 
-static const char *store_string(struct lexer_result *res, const char *str, int len)
+static const char *store_string(LEXER_RESULT *res, const char *str, int len)
 {
 	const char *ptr = res->next_string;
 	int escaped = 0;
@@ -48,10 +76,10 @@ static const char *store_string(struct lexer_result *res, const char *str, int l
 	return ptr;
 }
 
-static void save_token(struct lexer_result *res, int *index, const char **start, const char *end, int *state, int type) 
+static void save_token(LEXER_RESULT *res, int *index, const char **start, const char *end, int *state, int type) 
 { 
     /* printf("Saving token with length %d\n", end - *start); */
-    struct token *tok = &res->tokens[*index]; 
+    TOKEN *tok = &res->tokens[*index]; 
 	tok->stored_string = store_string(res, *start, end - *start);
     tok->type = type; 
     ++res->num_tokens; 
@@ -66,14 +94,14 @@ static int digit(char c)
     return '0' <= c && c <= '9'; 
 } 
  
-static int lex(const char *line, struct lexer_result *res) 
+static int lex(const char *line, LEXER_RESULT *res) 
 { 
     int state = STATE_START, i = 0; 
 	int length_left = CONSOLE_MAX_STR_LENGTH;
     const char *start, *c; 
     res->num_tokens = 0; 
 
-	memset(res, 0, sizeof(*res));
+	mem_zero(res, sizeof(*res));
 	res->next_string = res->string_storage;
 
     for (c = start = line; *c != '\0' && res->num_tokens < MAX_TOKENS && length_left; ++c, --length_left) 
@@ -170,33 +198,35 @@ static int lex(const char *line, struct lexer_result *res)
 	return 0;
 }
 
-int extract_result_string(struct lexer_result *result, int index, const char **str)
+int console_result_string(void *res, int index, const char **str)
 {
+	LEXER_RESULT *result = (LEXER_RESULT *)res;
+	
 	if (index < 0 || index >= result->num_tokens)
 		return -1;
 	else
 	{
-		struct token *t = &result->tokens[index];
-
+		TOKEN *t = &result->tokens[index];
 		*str = t->stored_string;
-
 		return 0;
 	}
 }
 
-int extract_result_int(struct lexer_result *result, int index, int *i)
+int console_result_int(void *res, int index, int *i)
 {
+	LEXER_RESULT *result = (LEXER_RESULT *)res;
+	
 	if (index < 0 || index >= result->num_tokens)
 		return -1;
 	else
 	{
-		struct token *t = &result->tokens[index];
+		TOKEN *t = &result->tokens[index];
 		const char *str;
 
 		if (t->type != TOKEN_INT)
 			return -2;
 
-		extract_result_string(result, index, &str);
+		console_result_string(result, index, &str);
 
 		*i = atoi(str);
 
@@ -204,19 +234,21 @@ int extract_result_int(struct lexer_result *result, int index, int *i)
 	}
 }
 
-int extract_result_float(struct lexer_result *result, int index, float *f)
+int console_result_float(void *res, int index, float *f)
 {
+	LEXER_RESULT *result = (LEXER_RESULT *)res;
+	
 	if (index < 0 || index >= result->num_tokens)
 		return -1;
 	else
 	{
-		struct token *t = &result->tokens[index];
+		TOKEN *t = &result->tokens[index];
 		const char *str;
 
 		if (t->type != TOKEN_INT && t->type != TOKEN_FLOAT)
 			return -2;
 
-		extract_result_string(result, index, &str);
+		console_result_string(result, index, &str);
 
 		*f = atof(str);
 
@@ -243,7 +275,7 @@ void console_register(COMMAND *cmd)
 }
 
 
-static int console_validate(COMMAND *command, struct lexer_result *result)
+static int console_validate(COMMAND *command, LEXER_RESULT *result)
 {
 	const char *c = command->params;
 	int i = 1;
@@ -257,15 +289,15 @@ static int console_validate(COMMAND *command, struct lexer_result *result)
 		switch (*c)
 		{
 		case 's':
-			if (extract_result_string(result, i, &dummy_s))
+			if (console_result_string(result, i, &dummy_s))
 				return -1;
 			break;
 		case 'i':
-			if (extract_result_int(result, i, &dummy_i))
+			if (console_result_int(result, i, &dummy_i))
 				return -1;
 			break;
 		case 'f':
-			if (extract_result_float(result, i, &dummy_f))
+			if (console_result_float(result, i, &dummy_f))
 				return -1;
 			break;
 		default:
@@ -296,7 +328,7 @@ void console_print(const char *str)
 
 void console_execute(const char *str)
 {
-	struct lexer_result result;
+	LEXER_RESULT result;
 	int error;
 
 	if ((error = lex(str, &result)))
@@ -305,7 +337,7 @@ void console_execute(const char *str)
 	{
 		const char *name;
 		COMMAND *command;
-		extract_result_string(&result, 0, &name);
+		console_result_string(&result, 0, &name);
 
 		command = console_find_command(name);
 
@@ -329,33 +361,32 @@ void console_execute(const char *str)
 	}
 }
 
-static void echo_command(struct lexer_result *result, void *user_data)
+static void echo_command(void *result, void *user_data)
 {
 	const char *str;
-	extract_result_string(result, 1, &str);
-
+	console_result_string(result, 1, &str);
 	console_print(str);
 }
 
 
-struct int_variable_data
+typedef struct 
 {
-	config_int_getter getter;
-	config_int_setter setter;
-};
+	CONFIG_INT_GETTER getter;
+	CONFIG_INT_SETTER setter;
+} INT_VARIABLE_DATA;
 
-struct str_variable_data
+typedef struct
 {
-	config_str_getter getter;
-	config_str_setter setter;
-};
+	CONFIG_STR_GETTER getter;
+	CONFIG_STR_SETTER setter;
+} STR_VARIABLE_DATA;
 
-static void int_variable_command(struct lexer_result *result, void *user_data)
+static void int_variable_command(void *result, void *user_data)
 {
-	struct int_variable_data *data = (struct int_variable_data *)user_data;
+	INT_VARIABLE_DATA *data = (INT_VARIABLE_DATA *)user_data;
 	int new_val;
 
-	if (extract_result_int(result, 1, &new_val))
+	if (console_result_int(result, 1, &new_val))
 	{
 		char buf[256];
 		sprintf(buf, "Value: %d", data->getter(&config));
@@ -367,12 +398,12 @@ static void int_variable_command(struct lexer_result *result, void *user_data)
 	}
 }
 
-static void str_variable_command(struct lexer_result *result, void *user_data)
+static void str_variable_command(void *result, void *user_data)
 {
-	struct str_variable_data *data = (struct str_variable_data *)user_data;
+	STR_VARIABLE_DATA *data = (STR_VARIABLE_DATA *)user_data;
 	const char *new_val;
 
-	if (extract_result_string(result, 1, &new_val))
+	if (console_result_string(result, 1, &new_val))
 	{
 		char buf[256];
 		sprintf(buf, "Value: %s", data->getter(&config));
@@ -388,8 +419,8 @@ void console_init()
 {
 	MACRO_REGISTER_COMMAND("echo", "s", echo_command, 0x0);
 
-    #define MACRO_CONFIG_INT(name,def,min,max) { static struct int_variable_data data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?i", int_variable_command, &data) }
-    #define MACRO_CONFIG_STR(name,len,def) { static struct str_variable_data data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?s", str_variable_command, &data) }
+    #define MACRO_CONFIG_INT(name,def,min,max) { static INT_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?i", int_variable_command, &data) }
+    #define MACRO_CONFIG_STR(name,len,def) { static STR_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?s", str_variable_command, &data) }
 
     #include "e_config_variables.h" 
 

@@ -161,8 +161,7 @@ typedef struct IOINTERNAL *IOHANDLE;
 
 /****
 	Function: io_open
-	
-	Opens a file.
+		Opens a file.
 
 	Parameters:
 		filename - File to open.
@@ -176,8 +175,7 @@ IOHANDLE io_open(const char *filename, int flags);
 
 /****
 	Function: io_read
-	
-	Reads data into a buffer from a file.
+		Reads data into a buffer from a file.
 
 	Parameters:
 		io - Handle to the file to read data from.
@@ -192,8 +190,7 @@ unsigned io_read(IOHANDLE io, void *buffer, unsigned size);
 
 /*****
 	Function: io_skip
-	
-	Skips data in a file.
+		Skips data in a file.
 	
 	Parameters:
 		io - Handle to the file.
@@ -221,8 +218,7 @@ unsigned io_write(IOHANDLE io, const void *buffer, unsigned size);
 
 /*****
 	Function: io_seek
-	
-	Seeks to a specified offset in the file.
+		Seeks to a specified offset in the file.
 	
 	Parameters:
 		io - Handle to the file.
@@ -236,8 +232,7 @@ int io_seek(IOHANDLE io, int offset, int origin);
 
 /*****
 	Function: io_tell
-	
-	Gets the current position in the file.
+		Gets the current position in the file.
 	
 	Parameters:
 		io - Handle to the file.
@@ -249,8 +244,7 @@ long int io_tell(IOHANDLE io);
 
 /*****
 	Function: io_length
-	
-	Gets the total length of the file. Resetting cursor to the beginning
+		Gets the total length of the file. Resetting cursor to the beginning
 	
 	Parameters:
 		io - Handle to the file.
@@ -262,8 +256,7 @@ long int io_length(IOHANDLE io);
 
 /*****
 	Function: io_close
-	
-	Closes a file.
+		Closes a file.
 	
 	Parameters:
 		io - Handle to the file.

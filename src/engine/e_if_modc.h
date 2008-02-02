@@ -6,10 +6,10 @@
 	Section: Client Hooks
 *********************************************************************************/
 /*
-	Function: modc_preinit
+	Function: modc_console_init
 		TODO
 */
-void modc_preinit();
+void modc_console_init();
 
 /*
 	Function: modc_init

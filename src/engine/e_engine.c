@@ -47,28 +47,29 @@ void engine_init(const char *appname, int argc, char **argv)
 	
 	/* reset the config */
 	config_reset();
-	
-	/* load the configuration */
-	{
-		int i;
-		int abs = 0;
-		const char *config_filename = "default.cfg";
-		char buf[1024];
-		for(i = 1; i < argc; i++)
-		{
-			if(argv[i][0] == '-' && argv[i][1] == 'f' && argv[i][2] == 0 && argc - i > 1)
-			{
-				config_filename = argv[i+1];
-				abs = 1;
-				i++;
-			}
-		}
+}
 
-		if(abs)
-			config_load(config_filename);
-		else
-			config_load(engine_savepath(config_filename, buf, sizeof(buf)));
+void engine_parse_arguments(int argc, char **argv)
+{
+	/* load the configuration */
+	int i;
+	int abs = 0;
+	const char *config_filename = "default.cfg";
+	char buf[1024];
+	for(i = 1; i < argc; i++)
+	{
+		if(argv[i][0] == '-' && argv[i][1] == 'f' && argv[i][2] == 0 && argc - i > 1)
+		{
+			config_filename = argv[i+1];
+			abs = 1;
+			i++;
+		}
 	}
+
+	if(abs)
+		config_load(config_filename);
+	else
+		config_load(engine_savepath(config_filename, buf, sizeof(buf)));
 	
 	/* search arguments for overrides */
 	{

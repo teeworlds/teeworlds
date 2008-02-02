@@ -151,7 +151,7 @@ void gameobject_ctf::tick()
 				}
 				else
 				{
-					f->vel.y += gravity;
+					f->vel.y += world->core.tuning.gravity;
 					move_box(&f->pos, &f->vel, vec2(f->phys_size, f->phys_size), 0.5f);
 				}
 			}

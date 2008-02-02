@@ -70,7 +70,7 @@ int snapstorage_get(SNAPSTORAGE *ss, int tick, int64 *tagtime, SNAPSHOT **data);
 
 enum
 {
-	SNAPBUILD_MAX_ITEMS = 512
+	SNAPBUILD_MAX_ITEMS = 1024*2
 };
 
 typedef struct SNAPBUILD

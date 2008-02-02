@@ -35,6 +35,7 @@ bool menu_active = false;
 bool menu_game_active = false;
 static bool emoticon_selector_active = false;
 
+tuning_params tuning;
 
 vec2 mouse_pos;
 vec2 local_character_pos;
@@ -1439,14 +1440,6 @@ void render_game()
 		}
 	}
 	
-	if(client_connection_problems())
-	{
-		gfx_mapscreen(0, 0, 300*gfx_screenaspect(), 300);
-		const char *text = "Connection Problems...";
-		float w = gfx_text_width(0, 24, text, -1);
-		gfx_text(0, 150*gfx_screenaspect()-w/2, 50, 24, text, -1);
-	}
-	
 	if(config.debug && local_character && local_prev_character)
 	{
 		gfx_mapscreen(0, 0, 300*gfx_screenaspect(), 300);
@@ -1496,5 +1489,73 @@ void render_game()
 		render_goals(width/2-w/2, 150+750+25, w);
 		render_spectators(width/2-w/2, 150+750+25+50+25, w);
 	}
+	
+	
+	
+	{
+		gfx_mapscreen(0, 0, 300*gfx_screenaspect(), 300);
+
+		if(client_connection_problems())
+		{
+			const char *text = "Connection Problems...";
+			float w = gfx_text_width(0, 24, text, -1);
+			gfx_text(0, 150*gfx_screenaspect()-w/2, 50, 24, text, -1);
+		}
+		
+		tuning_params standard_tuning;
+
+		// render warning about non standard tuning
+		bool flash = time_get()/(time_freq()/2)%2 == 0;
+		if(config.cl_warning_tuning && memcmp(&standard_tuning, &tuning, sizeof(tuning_params)) != 0)
+		{
+			const char *text = "Warning! Server is running non-standard tuning.";
+			if(flash)
+				gfx_text_color(1,0.4f,0.4f,1.0f);
+			else
+				gfx_text_color(0.75f,0.2f,0.2f,1.0f);
+			gfx_text(0x0, 5, 40, 6, text, -1);
+			gfx_text_color(1,1,1,1);
+		}
+		
+		// render tuning debugging
+		if(config.dbg_tuning)
+		{
+			float y = 50.0f;
+			int count = 0;
+			for(int i = 0; i < tuning.num(); i++)
+			{
+				char buf[128];
+				float current, standard;
+				tuning.get(i, &current);
+				standard_tuning.get(i, &standard);
+				
+				if(standard == current)
+					gfx_text_color(1,1,1,1.0f);
+				else
+					gfx_text_color(1,0.25f,0.25f,1.0f);
+		
+				float w;
+				float x = 5.0f;
+				
+				sprintf(buf, "%.2f", standard);
+				x += 20.0f;
+				w = gfx_text_width(0, 5, buf, -1);
+				gfx_text(0x0, x-w, y+count*6, 5, buf, -1);
+
+				sprintf(buf, "%.2f", current);
+				x += 20.0f;
+				w = gfx_text_width(0, 5, buf, -1);
+				gfx_text(0x0, x-w, y+count*6, 5, buf, -1);
+
+				x += 5.0f;
+				gfx_text(0x0, x, y+count*6, 5, tuning.names[i], -1);
+				
+				count++;
+			}
+		}
+		
+		gfx_text_color(1,1,1,1);
+	}
+	
 }
 

@@ -5,6 +5,7 @@
 extern "C" {
 	#include <engine/e_config.h>
 	#include <engine/client/ec_font.h>
+	#include <engine/e_console.h>
 };
 
 #include <game/generated/gc_data.h>
@@ -25,7 +26,7 @@ extern void menu_init();
 extern bool menu_active;
 extern bool menu_game_active;
 
-extern "C" void modc_preinit()
+extern "C" void modc_console_init()
 {
 	client_console_init();
 }
@@ -109,6 +110,7 @@ extern "C" void modc_predict()
 
 	// repredict player
 	world_core world;
+	world.tuning = tuning;
 	int local_cid = -1;
 
 	// search for players
@@ -437,10 +439,15 @@ extern "C" void modc_message(int msg)
 		
 		client_datas[cid].update_render_info();
 	}
+	else if(msg == MSG_TUNE_PARAMS)
+	{
+		int *params = (int *)&tuning;
+		for(unsigned i = 0; i < sizeof(tuning_params)/sizeof(int); i++)
+			params[i] = msg_unpack_int();
+	}
     else if(msg == MSG_WEAPON_PICKUP)
     {
         int weapon = msg_unpack_int();
-
         picked_up_weapon = weapon+1;
     }
 	else if(msg == MSG_READY_TO_ENTER)

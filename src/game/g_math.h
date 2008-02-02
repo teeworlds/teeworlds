@@ -27,6 +27,32 @@ inline T mix(const T a, const T b, TB amount)
 
 inline float frandom() { return rand()/(float)(RAND_MAX); }
 
+// float to fixed
+inline int f2fx(float v) { return (int)(v*(float)(1<<10)); }
+inline float fx2f(int v) { return v*(1.0f/(1<<10)); }
+
+class fxp
+{
+	int value;
+public:
+	void set(int v) { value = v; }
+	int get() const { return value; }
+	fxp &operator = (int v) { value = v<<10; return *this; }
+	fxp &operator = (float v) { value = (int)(v*(float)(1<<10)); return *this; }
+	operator float() const { return value/(float)(1<<10); }
+};
+
+class tune_param
+{
+	int value;
+public:
+	void set(int v) { value = v; }
+	int get() const { return value; }
+	tune_param &operator = (int v) { value = (int)(v*100.0f); return *this; }
+	tune_param &operator = (float v) { value = (int)(v*100.0f); return *this; }
+	operator float() const { return value/100.0f; }
+};
+
 const float pi = 3.1415926535897932384626433f;
 
 template <typename T> inline T min(T a, T b) { return a<b?a:b; }

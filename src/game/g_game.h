@@ -4,11 +4,34 @@
 
 #include <engine/e_system.h>
 #include <engine/e_common_interface.h>
-#include <game/g_math.h>
 #include <math.h>
+#include "g_math.h"
 #include "g_collision.h"
-
 #include "g_protocol.h"
+
+struct tuning_params
+{
+	tuning_params()
+	{
+		const float ticks_per_second = 50.0f;
+		#define MACRO_TUNING_PARAM(name,value) name = value;
+		#include "g_tuning.h"
+		#undef MACRO_TUNING_PARAM
+	}
+
+	static const char *names[];
+	
+	#define MACRO_TUNING_PARAM(name,value) tune_param name;
+	#include "g_tuning.h"
+	#undef MACRO_TUNING_PARAM
+	
+	static int num() { return sizeof(tuning_params)/sizeof(int); }
+	bool set(int index, float value);
+	bool set(const char *name, float value);
+	bool get(int index, float *value);
+	bool get(const char *name, float *value);
+};
+
 
 inline vec2 get_direction(int angle)
 {
@@ -90,7 +113,8 @@ public:
 	{
 		mem_zero(players, sizeof(players));
 	}
-		
+	
+	tuning_params tuning;
 	class player_core *players[MAX_CLIENTS];
 };
 

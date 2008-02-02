@@ -14,6 +14,8 @@
 
 data_container *data = 0x0;
 
+tuning_params tuning;
+
 class player* get_player(int index);
 void create_damageind(vec2 p, float angle_mod, int amount);
 void create_explosion(vec2 p, int owner, int weapon, bool bnodamage);
@@ -57,6 +59,16 @@ void send_chat(int cid, int team, const char *msg)
 	}
 }
 
+
+void send_tuning_params(int cid)
+{
+	msg_pack_start(MSG_TUNE_PARAMS, MSGFLAG_VITAL);
+	int *params = (int *)&tuning;
+	for(unsigned i = 0; i < sizeof(tuning_params)/sizeof(int); i++)
+		msg_pack_int(params[i]);
+	msg_pack_end();
+	server_send_msg(cid);
+}
 
 //////////////////////////////////////////////////
 // Event handler
@@ -1670,7 +1682,7 @@ player* intersect_player(vec2 pos0, vec2 pos1, vec2& new_pos, entity* notthis)
 // Server hooks
 void mods_tick()
 {
-	// clear all events
+	world->core.tuning = tuning;
 	world->tick();
 
 	if(world->paused) // make sure that the game object always updates
@@ -1858,13 +1870,19 @@ void mods_message(int msg, int client_id)
 		
 		if(msg == MSG_STARTINFO)
 		{
+			// a client that connected!
+			
 			// send all info to this client
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
 				if(players[i].client_id != -1)
 					send_info(i, client_id);
 			}
+
+			// send tuning parameters to client
+			send_tuning_params(client_id);
 			
+			//
 			msg_pack_start(MSG_READY_TO_ENTER, MSGFLAG_VITAL);
 			msg_pack_end();
 			server_send_msg(client_id);			
@@ -1880,6 +1898,57 @@ void mods_message(int msg, int client_id)
 }
 
 extern unsigned char internal_data[];
+
+
+static void con_tune_param(void *result, void *user_data)
+{
+	const char *param_name;
+	float new_value;
+
+	if(console_result_string(result, 1, &param_name) == 0)
+	{
+		if(console_result_float(result, 2, &new_value) == 0)
+		{
+			if(tuning.set(param_name, new_value))
+			{
+				dbg_msg("tuning", "%s changed to %.2f", param_name, new_value);
+				send_tuning_params(-1);
+			}
+			else
+				console_print("No such tuning parameter");
+		}
+		else
+		{
+			//console_print("");
+		}
+	}
+}
+
+static void con_tune_reset(void *result, void *user_data)
+{
+	tuning_params p;
+	tuning = p;
+	send_tuning_params(-1);
+	console_print("tuning reset");
+}
+
+static void con_tune_dump(void *result, void *user_data)
+{
+	for(int i = 0; i < tuning.num(); i++)
+	{
+		float v;
+		tuning.get(i, &v);
+		dbg_msg("tuning", "%s %.2f", tuning.names[i], v);
+	}
+}
+
+
+void mods_console_init()
+{
+	MACRO_REGISTER_COMMAND("tune", "s?i", con_tune_param, 0);
+	MACRO_REGISTER_COMMAND("tune_reset", "", con_tune_reset, 0);
+	MACRO_REGISTER_COMMAND("tune_dump", "", con_tune_dump, 0);
+}
 
 void mods_init()
 {
