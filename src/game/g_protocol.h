@@ -12,6 +12,7 @@ enum
 	OBJTYPE_PLAYER_INFO,
 	OBJTYPE_PLAYER_CHARACTER, // use this if you are searching for the player entity
 	OBJTYPE_PROJECTILE,
+	OBJTYPE_LASER,
 	OBJTYPE_POWERUP,
 	OBJTYPE_FLAG,
 	EVENT_EXPLOSION,
@@ -136,10 +137,17 @@ struct obj_game
 
 struct obj_projectile
 {
-	int type;
 	int x, y;
 	int vx, vy; // should be an angle instead
+	int type;
 	int start_tick;
+};
+
+struct obj_laser
+{
+	int x, y;
+	int from_x, from_y;
+	int eval_tick;
 };
 
 struct obj_powerup

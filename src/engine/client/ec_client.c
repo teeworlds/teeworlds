@@ -947,7 +947,7 @@ static void client_update()
 			int new_pred_tick = prev_pred_tick+1;
 			static float last_predintra = 0;
 
-			intratick = (now - prevtick_start) / (float)(curtick_start-prevtick_start);
+			intratick = (now - curtick_start) / (float)(curtick_start-prevtick_start);
 			ticktime = (now - curtick_start) / (freq/(float)SERVER_TICK_SPEED);
 
 			graph_add(&intra_graph, intratick*0.25f);

@@ -57,6 +57,7 @@ void render_tee(class animstate *anim, tee_render_info *info, int emote, vec2 di
 void render_flag(const struct obj_flag *prev, const struct obj_flag *current);
 void render_powerup(const struct obj_powerup *prev, const struct obj_powerup *current);
 void render_projectile(const struct obj_projectile *current, int itemid);
+void render_laser(const struct obj_laser *current);
 void render_player(
 	const struct obj_player_character *prev_char, const struct obj_player_character *player_char,
 	const struct obj_player_info *prev_info, const struct obj_player_info *player_info);

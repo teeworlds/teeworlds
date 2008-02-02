@@ -406,7 +406,7 @@ void projectile::reset()
 void projectile::tick()
 {
 	float gravity = -400;
-	if(type != WEAPON_ROCKET)
+	if(type != WEAPON_GRENADE)
 		gravity = -100;
 	
 	float pt = (server_tick()-start_tick-1)/(float)server_tickspeed();
@@ -423,7 +423,7 @@ void projectile::tick()
 	
 	if(targetplayer || collide || lifespan < 0)
 	{
-		if (lifespan >= 0 || weapon == WEAPON_ROCKET)
+		if (lifespan >= 0 || weapon == WEAPON_GRENADE)
 			create_sound(pos, sound_impact);
 
 		if (flags & PROJECTILE_FLAGS_EXPLODE)
@@ -453,6 +453,110 @@ void projectile::snap(int snapping_client)
 	proj->start_tick = start_tick;
 	proj->type = type;
 }
+
+
+//////////////////////////////////////////////////
+// laser
+//////////////////////////////////////////////////
+laser::laser(vec2 pos, vec2 direction, float start_energy, player *owner)
+: entity(OBJTYPE_LASER)
+{
+	this->pos = pos;
+	this->owner = owner;
+	energy = start_energy;
+	dir = direction;
+	bounces = 0;
+	do_bounce();
+	
+	world->insert_entity(this);
+}
+
+
+bool laser::hit_player(vec2 from, vec2 to)
+{
+	vec2 at;
+	player *hit = intersect_player(pos, to, at, owner);
+	if(!hit)
+		return false;
+
+	this->from = from;
+	pos = at;
+	energy = -1;		
+	hit->take_damage(vec2(0,0), tuning.laser_damage, owner->client_id, WEAPON_LASER);
+	return true;
+}
+
+void laser::do_bounce()
+{
+	eval_tick = server_tick();
+	
+	if(energy < 0)
+	{
+		//dbg_msg("laser", "%d removed", server_tick());
+		world->destroy_entity(this);
+		return;
+	}
+	
+	vec2 to = pos + dir*energy;
+	
+	if(col_intersect_line(pos, to, &to))
+	{
+		if(!hit_player(pos, to))
+		{
+			// intersected
+			from = pos;
+			pos = to - dir*2;
+			vec2 temp_pos = pos;
+			vec2 temp_dir = dir*4.0f;
+			
+			move_point(&temp_pos, &temp_dir, 1.0f, 0);
+			dir = normalize(temp_dir);
+			
+			energy -= distance(from, pos) + tuning.laser_bounce_cost;
+			bounces++;
+			
+			if(bounces > tuning.laser_bounce_num)
+				energy = -1;
+		}
+	}
+	else
+	{
+		if(!hit_player(pos, to))
+		{
+			from = pos;
+			pos = to;
+			energy = -1;
+		}
+	}
+		
+	//dbg_msg("laser", "%d done %f %f %f %f", server_tick(), from.x, from.y, pos.x, pos.y);
+}
+	
+void laser::reset()
+{
+	world->destroy_entity(this);
+}
+
+void laser::tick()
+{
+	if(server_tick() > eval_tick+(server_tickspeed()*tuning.laser_bounce_delay)/1000.0f)
+		do_bounce();
+
+}
+
+void laser::snap(int snapping_client)
+{
+	if(distance(players[snapping_client].pos, pos) > 1000.0f)
+		return;
+
+	obj_laser *obj = (obj_laser *)snap_new_item(OBJTYPE_LASER, id, sizeof(obj_laser));
+	obj->x = (int)pos.x;
+	obj->y = (int)pos.y;
+	obj->from_x = (int)from.x;
+	obj->from_y = (int)from.y;
+	obj->eval_tick = eval_tick;
+}
+
 
 //////////////////////////////////////////////////
 // player
@@ -714,8 +818,9 @@ void player::try_respawn()
 	weapons[WEAPON_GUN].got = true;
 	weapons[WEAPON_GUN].ammo = data->weapons[WEAPON_GUN].maxammo;
 
-	//weapons[WEAPON_SNIPER].got = true;
-	//weapons[WEAPON_SNIPER].ammo = data->weapons[WEAPON_SNIPER].maxammo;
+	weapons[WEAPON_LASER].got = true;
+	weapons[WEAPON_LASER].ammo = 100000; //data->weapons[WEAPON_LASER].maxammo;
+	
 	active_weapon = WEAPON_GUN;
 	last_weapon = WEAPON_HAMMER;
 	wanted_weapon = WEAPON_GUN;
@@ -909,7 +1014,7 @@ int player::handle_weapons()
 	if(reload_timer == 0)
 	{
 		bool fullauto = false;
-		if(active_weapon == WEAPON_ROCKET || active_weapon == WEAPON_SHOTGUN)
+		if(active_weapon == WEAPON_GRENADE || active_weapon == WEAPON_SHOTGUN)
 			fullauto = true;
 		
 		if(count_input(latest_previnput.fire, latest_input.fire).presses || ((fullauto && latest_input.fire&1) && weapons[active_weapon].ammo))
@@ -932,23 +1037,23 @@ int player::handle_weapons()
 						new projectile(WEAPON_GUN,
 							client_id,
 							pos+vec2(0,0),
-							direction*30.0f,
+							direction*tuning.gun_speed,
 							server_tickspeed(),
 							this,
 							1, 0, 0, -1, WEAPON_GUN);
 						create_sound(pos, SOUND_GUN_FIRE);
 						break;
 					}
-					case WEAPON_ROCKET:
+					case WEAPON_GRENADE:
 					{
-						new projectile(WEAPON_ROCKET,
+						new projectile(WEAPON_GRENADE,
 							client_id,
 							pos+vec2(0,0),
-							direction*15.0f,
+							direction*tuning.grenade_speed,
 							100,
 							this,
-							1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, SOUND_ROCKET_EXPLODE, WEAPON_ROCKET);
-						create_sound(pos, SOUND_ROCKET_FIRE);
+							1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
+						create_sound(pos, SOUND_GRENADE_FIRE);
 						break;
 					}
 					case WEAPON_SHOTGUN:
@@ -960,11 +1065,11 @@ int player::handle_weapons()
 							float a = get_angle(direction);
 							float v = 1.0f-fabs(i/(float)shotspread);
 							a += spreading[i+2];
+							float speed = mix((float)tuning.shotgun_speed_wide, (float)tuning.shotgun_speed_center, v);
 							new projectile(WEAPON_SHOTGUN,
 								client_id,
 								pos+vec2(0,0),
-								vec2(cosf(a), sinf(a))*(28.0f + 12.0f*v),
-								//vec2(cosf(a), sinf(a))*20.0f,
+								vec2(cosf(a), sinf(a))*speed,
 								(int)(server_tickspeed()*0.25f),
 								this,
 								1, 0, 0, -1, WEAPON_SHOTGUN);
@@ -973,16 +1078,10 @@ int player::handle_weapons()
 						break;
 					}
 					
-					case WEAPON_SNIPER:
+					case WEAPON_LASER:
 					{
-						new projectile(WEAPON_SNIPER,
-							client_id,
-							pos+vec2(0,0),
-							direction*300.0f,
-							100,
-							this,
-							1, 0, 0, -1, WEAPON_SNIPER);
-						create_sound(pos, SOUND_SNIPER_FIRE);						
+						new laser(pos, direction, tuning.laser_reach, this);
+						create_sound(pos, SOUND_LASER_FIRE);
 						break;
 					}
 					
@@ -1476,8 +1575,8 @@ void powerup::tick()
 					respawntime = data->powerupinfo[type].respawntime;
 
 					// TODO: data compiler should take care of stuff like this
-					if(subtype == WEAPON_ROCKET)
-						create_sound(pos, SOUND_PICKUP_ROCKET);
+					if(subtype == WEAPON_GRENADE)
+						create_sound(pos, SOUND_PICKUP_GRENADE);
 					else if(subtype == WEAPON_SHOTGUN)
 						create_sound(pos, SOUND_PICKUP_SHOTGUN);
 
@@ -1656,10 +1755,82 @@ void create_sound_global(int sound, int target)
 	server_send_msg(target);
 }
 
+float closest_point_on_line(vec2 line_point0, vec2 line_point1, vec2 target_point)
+{
+	vec2 c = target_point - line_point0;
+	vec2 v = (line_point1 - line_point0);
+	v = normalize(v);
+	float d = length(line_point0-line_point1);
+	float t = dot(v, c);
+
+	if (t < 0) return 0;
+	if (t > d) return 1;
+
+	return t;
+}
+
 // TODO: should be more general
+player *intersect_player(vec2 pos0, vec2 pos1, vec2& new_pos, entity *notthis)
+{
+	// Find other players
+	float closest_time = distance(pos0, pos1) * 100.0f;
+	vec2 line_dir = normalize(pos1-pos0);
+	player *closest = 0;
+		
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(players[i].client_id < 0 || (entity *)&players[i] == notthis)
+			continue;
+			
+		if(!(players[i].flags&entity::FLAG_PHYSICS))
+			continue;
+
+		float t = closest_point_on_line(pos0, pos1, players[i].pos);
+		vec2 intersect_pos = pos0 + line_dir*t;
+		float len = distance(players[i].pos, intersect_pos);
+		if(len < player::phys_size)
+		{
+			if(t < closest_time)
+			{
+				new_pos = intersect_pos;
+				closest_time = t;
+				closest = &players[i];
+			}
+		}
+	}
+	
+	return closest;
+	
+	/*
+	entity *ents[64];
+	vec2 dir = pos1 - pos0;
+	float radius = length(dir * 0.5f);
+	vec2 center = pos0 + dir * 0.5f;
+	const int types[] = {OBJTYPE_PLAYER_CHARACTER};
+	int num = world->find_entities(center, radius, ents, 64, types, 1);
+	for (int i = 0; i < num; i++)
+	{
+		// Check if entity is a player
+		if (ents[i] != notthis)
+		{
+			new_pos = ents[i]->pos;
+			return (player*)ents[i];
+		}
+	}
+
+	return 0;*/
+}
+
+
+
+// TODO: should be more general
+
+	/*
 player* intersect_player(vec2 pos0, vec2 pos1, vec2& new_pos, entity* notthis)
 {
 	// Find other players
+	
+	
 	entity *ents[64];
 	vec2 dir = pos1 - pos0;
 	float radius = length(dir * 0.5f);
@@ -1678,6 +1849,7 @@ player* intersect_player(vec2 pos0, vec2 pos1, vec2& new_pos, entity* notthis)
 
 	return 0;
 }
+*/
 
 // Server hooks
 void mods_tick()

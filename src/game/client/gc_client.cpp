@@ -1117,7 +1117,7 @@ void render_game()
 		for (int i = 0; i < local_character->weaponstage; i++)
 			gfx_quads_drawTL(x+local_character->ammocount * 12 -i*12, y+22, 11, 11);
 		select_sprite(data->weapons[local_character->weapon%data->num_weapons].sprite_proj);
-		for (int i = 0; i < local_character->ammocount; i++)
+		for (int i = 0; i < min(local_character->ammocount, 10); i++)
 			gfx_quads_drawTL(x+i*12,y+24,10,10);
 
 		gfx_quads_end();

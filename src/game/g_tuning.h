@@ -15,3 +15,15 @@ MACRO_TUNING_PARAM(gravity, 0.5f)
 MACRO_TUNING_PARAM(terminal_velocity, 1000.0f / ticks_per_second)
 
 /* weapon tuning */
+MACRO_TUNING_PARAM(gun_speed, 30.0f)
+
+MACRO_TUNING_PARAM(shotgun_speed_center, 40.0f)
+MACRO_TUNING_PARAM(shotgun_speed_wide, 30.0f)
+
+MACRO_TUNING_PARAM(grenade_speed, 15.0f)
+
+MACRO_TUNING_PARAM(laser_reach, 800.0f)
+MACRO_TUNING_PARAM(laser_bounce_delay, 150)
+MACRO_TUNING_PARAM(laser_bounce_num, 2)
+MACRO_TUNING_PARAM(laser_bounce_cost, 32)
+MACRO_TUNING_PARAM(laser_damage, 8)

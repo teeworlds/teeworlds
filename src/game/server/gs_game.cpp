@@ -60,10 +60,10 @@ bool gameobject::on_entity(int index, vec2 pos)
 		type = POWERUP_WEAPON;
 		subtype = WEAPON_SHOTGUN;
 	}
-	else if(index == ENTITY_WEAPON_ROCKET)
+	else if(index == ENTITY_WEAPON_GRENADE)
 	{
 		type = POWERUP_WEAPON;
-		subtype = WEAPON_ROCKET;
+		subtype = WEAPON_GRENADE;
 	}
 	else if(index == ENTITY_POWERUP_NINJA)
 	{

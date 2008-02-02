@@ -43,8 +43,6 @@ bool tuning_params::get(const char *name, float *value)
 	return false;
 }
 
-
-
 // TODO: OPT: rewrite this smarter!
 void move_point(vec2 *inout_pos, vec2 *inout_vel, float elasticity, int *bounces)
 {

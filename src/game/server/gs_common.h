@@ -213,6 +213,27 @@ public:
 	virtual void snap(int snapping_client);
 };
 
+class laser : public entity
+{
+	vec2 from;
+	vec2 dir;
+	float energy;
+	int bounces;
+	int eval_tick;
+	player *owner;
+	
+	bool hit_player(vec2 from, vec2 to);
+	void do_bounce();
+	
+public:
+	
+	laser(vec2 pos, vec2 direction, float start_energy, player *owner);
+	
+	virtual void reset();
+	virtual void tick();
+	virtual void snap(int snapping_client);
+};
+
 // player entity
 class player : public entity
 {

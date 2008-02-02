@@ -26,7 +26,7 @@ void render_projectile(const obj_projectile *current, int itemid)
 
 	// get positions
 	float gravity = -400;
-	if(current->type != WEAPON_ROCKET)
+	if(current->type != WEAPON_GRENADE)
 		gravity = -100;
 
 	float ct = (client_tick()-current->start_tick)/(float)SERVER_TICK_SPEED + client_ticktime()*1/(float)SERVER_TICK_SPEED;
@@ -41,7 +41,7 @@ void render_projectile(const obj_projectile *current, int itemid)
 	
 
 	// add particle for this projectile
-	if(current->type == WEAPON_ROCKET)
+	if(current->type == WEAPON_GRENADE)
 	{
 		effect_smoketrail(pos, vel*-1);
 		flow_add(pos, vel*1000*client_frametime(), 10.0f);
@@ -134,6 +134,72 @@ void render_flag(const obj_flag *prev, const obj_flag *current)
     gfx_quads_draw(pos.x, pos.y-size*0.75f, size, size*2);
     gfx_quads_end();
 }
+
+
+void render_laser(const struct obj_laser *current)
+{
+
+	vec2 pos = vec2(current->x, current->y);
+	vec2 from = vec2(current->from_x, current->from_y);
+	vec2 dir = normalize(pos-from);
+
+
+
+	float ticks = client_tick() + client_intratick() - current->eval_tick;
+	float ms = (ticks/50.0f) * 1000.0f;
+	float a =  ms / tuning.laser_bounce_delay;
+	a = clamp(a, 0.0f, 1.0f);
+	float ia = 1-a;
+	
+	
+	
+	vec2 out(dir.y, -dir.x);
+	
+	out = out * (4.0f*ia);
+
+	gfx_blend_normal();
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	
+	vec4 start_color(0.25f,0.25f,0.5f,1.0f);
+	vec4 end_color(0.85f,0.85f,1.0f,1.0f);
+	start_color = end_color;
+	
+	gfx_setcolorvertex(0, start_color.r, start_color.g, start_color.b, start_color.a);
+	gfx_setcolorvertex(1, start_color.r, start_color.g, start_color.b, start_color.a);
+	gfx_setcolorvertex(2, end_color.r, end_color.g, end_color.b, end_color.a);
+	gfx_setcolorvertex(3, end_color.r, end_color.g, end_color.b, end_color.a);
+	
+	from = mix(from, pos, a);
+	
+	gfx_quads_draw_freeform(
+			from.x-out.x, from.y-out.y,
+			from.x+out.x, from.y+out.y,
+			pos.x-out.x, pos.y-out.y,
+			pos.x+out.x, pos.y+out.y
+		);
+		
+	gfx_quads_end();
+	
+	// render head
+	{
+		gfx_blend_normal();
+		gfx_texture_set(data->images[IMAGE_PARTICLES].id);
+		gfx_quads_begin();
+
+		gfx_setcolor(end_color.r, end_color.g, end_color.b, end_color.a);
+	
+		int sprites[] = {SPRITE_PART_SPLAT01, SPRITE_PART_SPLAT02, SPRITE_PART_SPLAT03};
+		select_sprite(sprites[client_tick()%3]);
+		gfx_quads_setrotation(client_tick());
+		gfx_quads_draw(pos.x, pos.y, 32,32);
+		gfx_quads_end();
+	}
+	
+	gfx_blend_normal();	
+}
+
+
 
 
 
@@ -416,7 +482,7 @@ void render_player(
 		{
 			case WEAPON_GUN: render_hand(&client_datas[info.clientid].render_info, p, direction, -3*pi/4, vec2(-15, 4)); break;
 			case WEAPON_SHOTGUN: render_hand(&client_datas[info.clientid].render_info, p, direction, -pi/2, vec2(-5, 4)); break;
-			case WEAPON_ROCKET: render_hand(&client_datas[info.clientid].render_info, p, direction, -pi/2, vec2(-4, 7)); break;
+			case WEAPON_GRENADE: render_hand(&client_datas[info.clientid].render_info, p, direction, -pi/2, vec2(-4, 7)); break;
 		}
 
 	}

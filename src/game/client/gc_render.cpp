@@ -341,6 +341,10 @@ static void render_items()
 			if(prev)
 				render_powerup((const obj_powerup *)prev, (const obj_powerup *)data);
 		}
+		else if(item.type == OBJTYPE_LASER)
+		{
+			render_laser((const obj_laser *)data);
+		}
 		else if(item.type == OBJTYPE_FLAG)
 		{
 			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
