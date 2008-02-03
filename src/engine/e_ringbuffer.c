@@ -184,16 +184,17 @@ void *ringbuf_prev(RINGBUFFER *rb, void *current)
 void *ringbuf_next(RINGBUFFER *rb, void *current)
 {
 	RBITEM *item = ((RBITEM *)current) - 1;
+
+	/* we have gone around */
+	if(item == rb->last_alloc)
+		return 0;
+
 	while(1)
 	{
 		/* back up one step */
 		item = item->next;
 		if(!item)
 			item = rb->first;
-			
-		/* we have gone around */
-		if(item == rb->last_alloc)
-			return 0;
 			
 		if(!(item->flags&RBFLAG_FREE))
 			return item+1;
