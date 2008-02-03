@@ -1,3 +1,5 @@
+#include <engine/e_system.h>
+
 enum
 {
 	RBFLAG_FREE=1
@@ -39,6 +41,7 @@ RINGBUFFER *rb_init(void *memory, int size)
 
 static RBITEM *rb_free(RINGBUFFER *rb, RBITEM *item)
 {
+	dbg_assert(!(item->flags&RBFLAG_FREE), "trying to  free element that is already freed");
 	item->flags |= RBFLAG_FREE;
 
 	/* merge with all free items backwards */
@@ -47,6 +50,8 @@ static RBITEM *rb_free(RINGBUFFER *rb, RBITEM *item)
 		item->prev->size += item->size;
 		item->prev->next = item->next;
 		item = item->prev;
+		if(item->next)
+			item->next->prev = item;
 	}
 
 	/* merge with all free items forwards */
@@ -54,12 +59,35 @@ static RBITEM *rb_free(RINGBUFFER *rb, RBITEM *item)
 	{
 		item->size += item->next->size;
 		item->next = item->next->next;
+		if(item->next)
+			item->next->prev = item;
 	}
 	
 	if(!item->next)
 		rb->last = item;
 	
 	return item;
+}
+
+void rb_validate(RINGBUFFER *rb)
+{
+	RBITEM *prev = 0;
+	RBITEM *cur = rb->first;
+	int freechunks = 0;
+	
+	while(cur)
+	{
+		if(cur->flags&RBFLAG_FREE)
+			freechunks++;
+			
+		dbg_assert(freechunks <= 2, "too many free chunks");
+		dbg_assert(cur->prev == prev, "pointers doesn't match");
+		dbg_assert(!prev || prev->next == cur, "pointers doesn't match");
+		dbg_assert(cur->next || cur == rb->last, "last isn't last");
+
+		prev = cur;
+		cur = cur->next;
+	}
 }
 
 static RBITEM *rb_try_allocate(RINGBUFFER *rb, int wanted_size)
@@ -88,7 +116,7 @@ static RBITEM *rb_try_allocate(RINGBUFFER *rb, int wanted_size)
 			rb->last = new_item;
 	}
 	
-	item->flags ^= ~RBFLAG_FREE;
+	item->flags &= ~RBFLAG_FREE;
 	rb->next_alloc = item->next;
 	if(!rb->next_alloc)
 		rb->next_alloc = rb->first;
@@ -101,7 +129,7 @@ void *rb_allocate(RINGBUFFER *rb, int size)
 {
 	int wanted_size = (size+sizeof(RBITEM)+sizeof(RBITEM)-1)/sizeof(RBITEM)*sizeof(RBITEM);
 	RBITEM *block = 0;
-	
+
 	/* check if we even can fit this block */
 	if(wanted_size > rb->size)
 		return 0;
@@ -113,7 +141,7 @@ void *rb_allocate(RINGBUFFER *rb, int size)
 	/* first attempt */
 	block = rb_try_allocate(rb, wanted_size);
 	if(block)
-		return (void *)(block+1);
+		return block+1;
 	
 	/* ok, we need to wipe some blocks in order to get space */
 	while(1)
@@ -121,18 +149,21 @@ void *rb_allocate(RINGBUFFER *rb, int size)
 		if(rb->next_alloc->next)
 			rb->next_alloc = rb_free(rb, rb->next_alloc->next);
 		else
+		{
 			rb->next_alloc = rb->first;
+			rb->next_alloc = rb_free(rb, rb->next_alloc);
+		}
 
 		/* try allocate again */
 		block = rb_try_allocate(rb, wanted_size);
 		if(block)
-			return (void *)(block+1);
+			return block+1;
 	}
 }
 
 void *rb_prev(RINGBUFFER *rb, void *current)
 {
-	RBITEM *item = (RBITEM *)current - 1;
+	RBITEM *item = ((RBITEM *)current) - 1;
 	while(1)
 	{
 		/* back up one step */
@@ -145,14 +176,14 @@ void *rb_prev(RINGBUFFER *rb, void *current)
 			return 0;
 			
 		if(!(item->flags&RBFLAG_FREE))
-			return item;
+			return item+1;
 	}
 }
 
 
 void *rb_next(RINGBUFFER *rb, void *current)
 {
-	RBITEM *item = (RBITEM *)current - 1;
+	RBITEM *item = ((RBITEM *)current) - 1;
 	while(1)
 	{
 		/* back up one step */
@@ -165,16 +196,21 @@ void *rb_next(RINGBUFFER *rb, void *current)
 			return 0;
 			
 		if(!(item->flags&RBFLAG_FREE))
-			return item;
+			return item+1;
 	}
+}
+
+void *rb_item_ptr(void *p)
+{
+	return ((RBITEM *)p) - 1;
 }
 
 void *rb_first(RINGBUFFER *rb)
 {
-	return rb_next(rb, (void *)(rb->last_alloc+1));
+	return rb_next(rb, rb->last_alloc+1);
 }
 
 void *rb_last(RINGBUFFER *rb)
 {
-	return (void *)(rb->last_alloc+1);
+	return rb->last_alloc+1;
 }
