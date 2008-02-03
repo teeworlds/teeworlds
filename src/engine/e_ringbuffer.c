@@ -24,7 +24,7 @@ typedef struct
     int size;
 } RINGBUFFER; 
  
-RINGBUFFER *rb_init(void *memory, int size)
+RINGBUFFER *ringbuf_init(void *memory, int size)
 {
 	RINGBUFFER *rb = (RINGBUFFER *)memory;
 	rb->memory = rb+1;
@@ -39,7 +39,7 @@ RINGBUFFER *rb_init(void *memory, int size)
 	return rb;
 }
 
-static RBITEM *rb_free(RINGBUFFER *rb, RBITEM *item)
+static RBITEM *ringbuf_free(RINGBUFFER *rb, RBITEM *item)
 {
 	dbg_assert(!(item->flags&RBFLAG_FREE), "trying to  free element that is already freed");
 	item->flags |= RBFLAG_FREE;
@@ -69,7 +69,7 @@ static RBITEM *rb_free(RINGBUFFER *rb, RBITEM *item)
 	return item;
 }
 
-void rb_validate(RINGBUFFER *rb)
+void ringbuf_validate(RINGBUFFER *rb)
 {
 	RBITEM *prev = 0;
 	RBITEM *cur = rb->first;
@@ -90,7 +90,7 @@ void rb_validate(RINGBUFFER *rb)
 	}
 }
 
-static RBITEM *rb_try_allocate(RINGBUFFER *rb, int wanted_size)
+static RBITEM *ringbuf_try_allocate(RINGBUFFER *rb, int wanted_size)
 {
 	RBITEM *item = rb->next_alloc;
 	
@@ -125,7 +125,7 @@ static RBITEM *rb_try_allocate(RINGBUFFER *rb, int wanted_size)
 	return item;
 }
 
-void *rb_allocate(RINGBUFFER *rb, int size)
+void *ringbuf_allocate(RINGBUFFER *rb, int size)
 {
 	int wanted_size = (size+sizeof(RBITEM)+sizeof(RBITEM)-1)/sizeof(RBITEM)*sizeof(RBITEM);
 	RBITEM *block = 0;
@@ -136,10 +136,10 @@ void *rb_allocate(RINGBUFFER *rb, int size)
 
 	/* free the block if it is in use */
 	if(!(rb->next_alloc->flags&RBFLAG_FREE))
-		rb->next_alloc = rb_free(rb, rb->next_alloc);
+		rb->next_alloc = ringbuf_free(rb, rb->next_alloc);
 		
 	/* first attempt */
-	block = rb_try_allocate(rb, wanted_size);
+	block = ringbuf_try_allocate(rb, wanted_size);
 	if(block)
 		return block+1;
 	
@@ -147,21 +147,21 @@ void *rb_allocate(RINGBUFFER *rb, int size)
 	while(1)
 	{
 		if(rb->next_alloc->next)
-			rb->next_alloc = rb_free(rb, rb->next_alloc->next);
+			rb->next_alloc = ringbuf_free(rb, rb->next_alloc->next);
 		else
 		{
 			rb->next_alloc = rb->first;
-			rb->next_alloc = rb_free(rb, rb->next_alloc);
+			rb->next_alloc = ringbuf_free(rb, rb->next_alloc);
 		}
 
 		/* try allocate again */
-		block = rb_try_allocate(rb, wanted_size);
+		block = ringbuf_try_allocate(rb, wanted_size);
 		if(block)
 			return block+1;
 	}
 }
 
-void *rb_prev(RINGBUFFER *rb, void *current)
+void *ringbuf_prev(RINGBUFFER *rb, void *current)
 {
 	RBITEM *item = ((RBITEM *)current) - 1;
 	while(1)
@@ -181,7 +181,7 @@ void *rb_prev(RINGBUFFER *rb, void *current)
 }
 
 
-void *rb_next(RINGBUFFER *rb, void *current)
+void *ringbuf_next(RINGBUFFER *rb, void *current)
 {
 	RBITEM *item = ((RBITEM *)current) - 1;
 	while(1)
@@ -200,17 +200,17 @@ void *rb_next(RINGBUFFER *rb, void *current)
 	}
 }
 
-void *rb_item_ptr(void *p)
+void *ringbuf_item_ptr(void *p)
 {
 	return ((RBITEM *)p) - 1;
 }
 
-void *rb_first(RINGBUFFER *rb)
+void *ringbuf_first(RINGBUFFER *rb)
 {
-	return rb_next(rb, rb->last_alloc+1);
+	return ringbuf_next(rb, rb->last_alloc+1);
 }
 
-void *rb_last(RINGBUFFER *rb)
+void *ringbuf_last(RINGBUFFER *rb)
 {
 	return rb->last_alloc+1;
 }

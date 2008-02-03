@@ -10,13 +10,13 @@ typedef struct
 	int size;
 } RINGBUFFER; 
  
-RINGBUFFER *rb_init(void *memory, int size);
-void *rb_allocate(RINGBUFFER *rb, int size);
-void rb_validate(RINGBUFFER *rb);
+RINGBUFFER *ringbuf_init(void *memory, int size);
+void *ringbuf_allocate(RINGBUFFER *rb, int size);
+void ringbuf_validate(RINGBUFFER *rb);
 
-void *rb_item_ptr(void *p);
+void *ringbuf_item_ptr(void *p);
 
-void *rb_prev(RINGBUFFER *rb, void *current);
-void *rb_next(RINGBUFFER *rb, void *current);
-void *rb_first(RINGBUFFER *rb);
-void *rb_last(RINGBUFFER *rb);
+void *ringbuf_prev(RINGBUFFER *rb, void *current);
+void *ringbuf_next(RINGBUFFER *rb, void *current);
+void *ringbuf_first(RINGBUFFER *rb);
+void *ringbuf_last(RINGBUFFER *rb);
