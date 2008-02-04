@@ -5,6 +5,7 @@ extern "C" {
 	#include <engine/e_client_interface.h>
 	#include <engine/e_config.h>
 	#include <engine/e_console.h>
+	#include <engine/e_ringbuffer.h>
 	#include <engine/client/ec_font.h>
 }
 
@@ -24,22 +25,23 @@ enum
 	CONSOLE_CLOSING,
 };
 
+static char console_history_data[65536];
+static RINGBUFFER *console_history;
+
+static char console_backlog_data[65536];
+static RINGBUFFER *console_backlog;
+
 static unsigned int console_input_len = 0;
 static char console_input[256] = {0};
 static int console_state = CONSOLE_CLOSED;
 static float state_change_end = 0.0f;
 static const float state_change_duration = 0.1f;
 
-static char backlog[256][256] = {{0}};
-static int backlog_len;
-
 static float time_now()
 {
 	static long long time_start = time_get();
 	return float(time_get()-time_start)/float(time_freq());
 }
-
-
 
 static void client_console_print(const char *str)
 {
@@ -48,24 +50,8 @@ static void client_console_print(const char *str)
 	if (len > 255)
 		len = 255;
 
-	if (backlog_len >= 256)
-	{
-		static int warning = 0;
-		if (!warning)
-		{
-			puts("console backlog full");
-			warning = 1;
-		}
-
-		return;
-	}
-
-	memcpy(backlog[backlog_len], str, len);
-	backlog[backlog_len][len] = 0;
-
-	backlog_len++;
-
-	//dbg_msg("console", "FROM CLIENT!! %s", str);
+	char *entry = (char *)ringbuf_allocate(console_backlog, len+1);
+	memcpy(entry, str, len+1);
 }
 
 
@@ -76,12 +62,37 @@ static void con_team(void *result, void *user_data)
 	send_switch_team(new_team);
 }
 
-void client_console_init()
+static void command_history(void *result, void *user_data)
 {
-	console_register_print_callback(client_console_print);
-	MACRO_REGISTER_COMMAND("team", "i", con_team, 0x0);
+	char *entry = (char *)ringbuf_first(console_history);
+
+	while (entry)
+	{
+		dbg_msg("console/history", entry);
+
+		entry = (char *)ringbuf_next(console_history, entry);
+	}
 }
 
+void send_kill(int client_id);
+
+static void command_kill(void *result, void *user_data)
+{
+	send_kill(-1);
+}
+
+void client_console_init()
+{
+	console_history = ringbuf_init(console_history_data, sizeof(console_history_data));
+	console_backlog = ringbuf_init(console_backlog_data, sizeof(console_backlog_data));
+
+	console_register_print_callback(client_console_print);
+	MACRO_REGISTER_COMMAND("team", "i", con_team, 0x0);
+	MACRO_REGISTER_COMMAND("history", "", command_history, 0x0);
+	MACRO_REGISTER_COMMAND("kill", "", command_kill, 0x0);
+}
+
+static char *console_history_entry = 0x0;
 
 void console_handle_input()
 {
@@ -105,6 +116,8 @@ void console_handle_input()
 					console_input[console_input_len] = e.ch;
 					console_input[console_input_len+1] = 0;
 					console_input_len++;
+
+					console_history_entry = 0x0;
 				}
 			}
 
@@ -114,13 +127,65 @@ void console_handle_input()
 				{
 					console_input[console_input_len-1] = 0;
 					console_input_len--;
+
+					console_history_entry = 0x0;
 				}
 			}
 			else if(e.key == KEY_ENTER || e.key == KEY_KP_ENTER)
 			{
 				if (console_input_len)
 				{
+					char *entry = (char *)ringbuf_allocate(console_history, console_input_len+1);
+					memcpy(entry, console_input, console_input_len+1);
+					
 					console_execute(console_input);
+					console_input[0] = 0;
+					console_input_len = 0;
+
+					console_history_entry = 0x0;
+				}
+			}
+			else if (e.key == KEY_UP)
+			{
+				if (console_history_entry)
+				{
+					char *test = (char *)ringbuf_prev(console_history, console_history_entry);
+
+					if (test)
+						console_history_entry = test;
+				}
+				else
+					console_history_entry = (char *)ringbuf_last(console_history);
+
+				if (console_history_entry)
+				{
+					unsigned int len = strlen(console_history_entry);
+					if (len < sizeof(console_input) - 1)
+					{
+						memcpy(console_input, console_history_entry, len+1);
+
+						console_input_len = len;
+					}
+				}
+
+			}
+			else if (e.key == KEY_DOWN)
+			{
+				if (console_history_entry)
+					console_history_entry = (char *)ringbuf_next(console_history, console_history_entry);
+
+				if (console_history_entry)
+				{
+					unsigned int len = strlen(console_history_entry);
+					if (len < sizeof(console_input) - 1)
+					{
+						memcpy(console_input, console_history_entry, len+1);
+
+						console_input_len = len;
+					}
+				}
+				else
+				{
 					console_input[0] = 0;
 					console_input_len = 0;
 				}
@@ -208,7 +273,6 @@ void console_render()
 		float row_height = font_size*1.4f;
 		float width = gfx_text_width(0, font_size, console_input, -1);
 		float x = 3, y = console_height - row_height - 2;
-		int backlog_index = backlog_len-1;
 		float prompt_width = gfx_text_width(0, font_size, ">", -1)+2;
 
 		gfx_text(0, x, y, font_size, ">", -1);
@@ -222,13 +286,13 @@ void console_render()
 
 		y -= row_height;
 
-		while (y > 0.0f && backlog_index >= 0)
+		char *entry = (char *)ringbuf_last(console_backlog);
+		while (y > 0.0f && entry)
 		{
-			const char *line = backlog[backlog_index];
-			gfx_text(0, x, y, font_size, line, -1);
-
-			backlog_index--;
+			gfx_text(0, x, y, font_size, entry, -1);
 			y -= row_height;
+
+			entry = (char *)ringbuf_prev(console_backlog, entry);
 		}
 	}
 }

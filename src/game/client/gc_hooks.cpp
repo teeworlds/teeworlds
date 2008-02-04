@@ -186,7 +186,7 @@ extern "C" void modc_predict()
 					snd_play_random(CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, pos);
 				}
 				//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
-				if(events&COREEVENT_HOOK_ATTACH_PLAYER) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, pos);
+				//if(events&COREEVENT_HOOK_ATTACH_PLAYER) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, pos);
 				if(events&COREEVENT_HOOK_ATTACH_GROUND) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, pos);
 				//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
 			}

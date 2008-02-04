@@ -43,6 +43,7 @@ enum
     MSG_WEAPON_PICKUP,
     MSG_SOUND_GLOBAL,
     MSG_TUNE_PARAMS,
+	MSG_KILL,
 };
 
 enum

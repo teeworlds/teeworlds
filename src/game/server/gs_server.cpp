@@ -1320,6 +1320,9 @@ void player::tick_defered()
 
 void player::die(int killer, int weapon)
 {
+	if (dead || team == -1)
+		return;
+
 	int mode_special = gameobj->on_player_death(this, get_player(killer), weapon);
 
 	dbg_msg("game", "kill killer='%d:%s' victim='%d:%s' weapon=%d special=%d",
@@ -2066,6 +2069,13 @@ void mods_message(int msg, int client_id)
 	{
 		int emoteicon = msg_unpack_int();
 		send_emoticon(client_id, emoteicon % 16);
+	}
+	else if (msg == MSG_KILL)
+	{
+		//int kill_client_id = msg_unpack_int(); // to be used to kill players from rcon? hihi
+
+		player *pplayer = get_player(client_id);
+		pplayer->die(client_id, -1);
 	}
 }
 

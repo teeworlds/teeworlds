@@ -1,3 +1,5 @@
+#ifndef _RINGBUFFER_H
+#define _RINGBUFFER_H
 
 typedef struct
 {
@@ -20,3 +22,5 @@ void *ringbuf_prev(RINGBUFFER *rb, void *current);
 void *ringbuf_next(RINGBUFFER *rb, void *current);
 void *ringbuf_first(RINGBUFFER *rb);
 void *ringbuf_last(RINGBUFFER *rb);
+
+#endif

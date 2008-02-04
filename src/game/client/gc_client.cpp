@@ -334,6 +334,14 @@ void send_emoticon(int emoticon)
 	client_send_msg();
 }
 
+void send_kill(int client_id)
+{
+	msg_pack_start(MSG_KILL, MSGFLAG_VITAL);
+	msg_pack_int(client_id);
+	msg_pack_end();
+	client_send_msg();
+}
+
 void anim_seq_eval(sequence *seq, float time, keyframe *frame)
 {
 	if(seq->num_frames == 0)

@@ -206,9 +206,11 @@ void *ringbuf_item_ptr(void *p)
 	return ((RBITEM *)p) - 1;
 }
 
-void *ringbuf_first(RINGBUFFER *rb)
-{
-	return ringbuf_next(rb, rb->last_alloc+1);
+void *ringbuf_first(RINGBUFFER *rb) 
+{ 
+    if(rb->last_alloc && rb->last_alloc->next) 
+        return ringbuf_next(rb, rb->last_alloc->next+1); 
+    return 0x0; 
 }
 
 void *ringbuf_last(RINGBUFFER *rb)
