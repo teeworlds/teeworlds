@@ -11,7 +11,7 @@ sounds {
 		"data/audio/wp_shotty_fire-03.wv"
 	}
 	
-	laser_fire {
+	rifle_fire {
 		"data/audio/wp_shotty_fire-01.wv"
 		"data/audio/wp_shotty_fire-02.wv"
 		"data/audio/wp_shotty_fire-03.wv"
@@ -374,9 +374,9 @@ weapons {
 		velocity 0
 	}
 		
-	laser {
-		sprite_body sprites.game.weapon_laser_body
-		sprite_cursor sprites.game.weapon_laser_cursor
+	rifle {
+		sprite_body sprites.game.weapon_rifle_body
+		sprite_cursor sprites.game.weapon_rifle_cursor
 		sprite_proj sprites.game.weapon_shotgun_proj
 		sprite_muzzles {
 		}
@@ -386,7 +386,7 @@ weapons {
 		muzzleoffsety 0.0
 		maxammo 10
 		recoil 10
-		firedelay 600
+		firedelay 800
 		muzzleduration 0
 		visual_size 128
 		offsetx 24.0
@@ -491,8 +491,8 @@ sprites {
 		weapon_ninja_cursor 0 10 2 2
 		weapon_ninja_proj 0 0 0 0
 
-		weapon_laser_body 2 12 9 3
-		weapon_laser_cursor 0 12 2 2
+		weapon_rifle_body 2 12 9 3
+		weapon_rifle_cursor 0 12 2 2
 		
 		hook_chain 2 0 1 1
 		hook_head 3 0 2 1

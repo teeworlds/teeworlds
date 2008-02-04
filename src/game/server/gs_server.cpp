@@ -482,7 +482,7 @@ bool laser::hit_player(vec2 from, vec2 to)
 	this->from = from;
 	pos = at;
 	energy = -1;		
-	hit->take_damage(vec2(0,0), tuning.laser_damage, owner->client_id, WEAPON_LASER);
+	hit->take_damage(vec2(0,0), tuning.laser_damage, owner->client_id, WEAPON_RIFLE);
 	return true;
 }
 
@@ -818,8 +818,8 @@ void player::try_respawn()
 	weapons[WEAPON_GUN].got = true;
 	weapons[WEAPON_GUN].ammo = data->weapons[WEAPON_GUN].maxammo;
 
-	weapons[WEAPON_LASER].got = true;
-	weapons[WEAPON_LASER].ammo = 100000; //data->weapons[WEAPON_LASER].maxammo;
+	weapons[WEAPON_RIFLE].got = true;
+	weapons[WEAPON_RIFLE].ammo = 100000; //data->weapons[WEAPON_LASER].maxammo;
 	
 	active_weapon = WEAPON_GUN;
 	last_weapon = WEAPON_HAMMER;
@@ -1078,10 +1078,10 @@ int player::handle_weapons()
 						break;
 					}
 					
-					case WEAPON_LASER:
+					case WEAPON_RIFLE:
 					{
 						new laser(pos, direction, tuning.laser_reach, this);
-						create_sound(pos, SOUND_LASER_FIRE);
+						create_sound(pos, SOUND_RIFLE_FIRE);
 						break;
 					}
 					

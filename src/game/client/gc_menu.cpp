@@ -1300,6 +1300,7 @@ static void menu2_render_settings_controls(RECT main_view)
 		{ "Pistol:", &config.key_weapon2 },
 		{ "Shotgun:", &config.key_weapon3 },
 		{ "Grenade:", &config.key_weapon4 },
+		{ "Rifle:", &config.key_weapon5 },
 		{ "Next Weapon:", &config.key_next_weapon },
 		{ "Prev. Weapon:", &config.key_prev_weapon },
 		{ "Emoticon:", &config.key_emoticon },
