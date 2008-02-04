@@ -184,6 +184,8 @@ void mem_debug_dump()
 		io_write(f, buf, strlen(buf));
 		header = header->next;
 	}
+	
+	io_close(f);
 }
 
 

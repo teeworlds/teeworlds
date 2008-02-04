@@ -8,6 +8,13 @@
 #include <engine/e_config.h>
 #include <engine/e_console.h>
 
+
+static void con_dbg_dumpmem(void *result, void *user_data)
+{
+	mem_debug_dump();
+}
+
+
 static char application_save_path[512] = {0};
 
 const char *engine_savepath(const char *filename, char *buffer, int max)
@@ -15,6 +22,7 @@ const char *engine_savepath(const char *filename, char *buffer, int max)
 	sprintf(buffer, "%s/%s", application_save_path, filename);
 	return buffer;
 }
+
 
 void engine_init(const char *appname, int argc, char **argv)
 {
@@ -44,6 +52,9 @@ void engine_init(const char *appname, int argc, char **argv)
 
 	/* init console */
 	console_init();
+
+	MACRO_REGISTER_COMMAND("dbg_dumpmem", "", con_dbg_dumpmem, 0x0);
+	
 	
 	/* reset the config */
 	config_reset();

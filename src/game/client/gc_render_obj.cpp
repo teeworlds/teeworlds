@@ -152,10 +152,9 @@ void render_laser(const struct obj_laser *current)
 	float ia = 1-a;
 	
 	
-	
 	vec2 out(dir.y, -dir.x);
 	
-	out = out * (4.0f*ia);
+	out = out * (6.0f*ia);
 
 	gfx_blend_normal();
 	gfx_texture_set(-1);

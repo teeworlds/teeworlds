@@ -424,7 +424,7 @@ void projectile::tick()
 	if(targetplayer || collide || lifespan < 0)
 	{
 		if (lifespan >= 0 || weapon == WEAPON_GRENADE)
-			create_sound(pos, sound_impact);
+			create_sound(curpos, sound_impact);
 
 		if (flags & PROJECTILE_FLAGS_EXPLODE)
 			create_explosion(prevpos, owner, weapon, false);

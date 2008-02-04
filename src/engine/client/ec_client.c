@@ -19,6 +19,7 @@
 #include <engine/e_memheap.h>
 #include <engine/e_datafile.h>
 #include <engine/e_console.h>
+#include <engine/e_ringbuffer.h>
 
 #include <mastersrv/mastersrv.h>
 
