@@ -147,6 +147,7 @@ public:
 	virtual void brush_place(LAYER *brush, float x, float y) {}
 	virtual void brush_flip_x() {}
 	virtual void brush_flip_y() {}
+	virtual void brush_rotate(float amount) {}
 	
 	virtual void render() {}
 	virtual int render_properties(RECT *toolbox) { return 0; }
@@ -450,6 +451,7 @@ public:
 	virtual void brush_place(LAYER *brush, float wx, float wy);
 	virtual void brush_flip_x();
 	virtual void brush_flip_y();
+	virtual void brush_rotate(float amount);
 	
 	virtual int render_properties(RECT *toolbox);
 

@@ -261,6 +261,24 @@ static void envelope_eval(float time_offset, int env, float *channels)
 	channels[1] = 0;
 	channels[2] = 0;
 	channels[3] = 0;
+
+	ENVPOINT *points;
+
+	{
+		int start, num;
+		map_get_type(MAPITEMTYPE_ENVPOINTS, &start, &num);
+		if(num)
+			points = (ENVPOINT *)map_get_item(start, 0, 0);
+	}
+	
+	int start, num;
+	map_get_type(MAPITEMTYPE_ENVELOPE, &start, &num);
+	
+	if(env >= num)
+		return;
+	
+	MAPITEM_ENVELOPE *item = (MAPITEM_ENVELOPE *)map_get_item(start+env, 0, 0);
+	render_eval_envelope(points+item->start_point, item->num_points, 4, client_localtime()+time_offset, channels);
 }
 
 void render_layers(float center_x, float center_y, int pass)

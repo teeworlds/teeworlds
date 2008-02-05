@@ -380,7 +380,7 @@ void render_player(
 		if (player.weapon == WEAPON_HAMMER)
 		{
 			// Static position for hammer
-			p = position;
+			p = position + vec2(state.attach.x, state.attach.y);
 			p.y += data->weapons[iw].offsety;
 			// if attack is under way, bash stuffs
 			if(direction.x < 0)

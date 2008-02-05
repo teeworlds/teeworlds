@@ -102,7 +102,7 @@ void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, in
 			eval(q->pos_env_offset/1000.0f, q->pos_env, channels);
 			offset_x = channels[0];
 			offset_y = channels[1];
-			rot = channels[2];
+			rot = channels[2]/360.0f*pi*2;
 		}
 		
 		if(q->color_env >= 0)

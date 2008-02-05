@@ -157,6 +157,35 @@ void LAYER_QUADS::brush_flip_y()
 {
 }
 
+void rotate(vec2 *center, vec2 *point, float rotation)
+{
+	float x = point->x - center->x;
+	float y = point->y - center->y;
+	point->x = x * cosf(rotation) - y * sinf(rotation) + center->x;
+	point->y = x * sinf(rotation) + y * cosf(rotation) + center->y;
+}
+
+void LAYER_QUADS::brush_rotate(float amount)
+{
+	vec2 center;
+	get_size(&center.x, &center.y);
+	center.x /= 2;
+	center.y /= 2;
+
+	for(int i = 0; i < quads.len(); i++)
+	{
+		QUAD *q = &quads[i];
+		
+		for(int p = 0; p < 5; p++)
+		{
+			vec2 pos(fx2f(q->points[p].x), fx2f(q->points[p].y));
+			rotate(&center, &pos, amount);
+			q->points[p].x = f2fx(pos.x);
+			q->points[p].y = f2fx(pos.y);
+		}
+	}
+}
+
 void LAYER_QUADS::get_size(float *w, float *h)
 {
 	*w = 0; *h = 0;

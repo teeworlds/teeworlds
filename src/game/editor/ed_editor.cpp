@@ -430,6 +430,30 @@ static void do_toolbar(RECT toolbar)
 			for(int i = 0; i < brush.layers.len(); i++)
 				brush.layers[i]->brush_flip_y();
 		}
+
+		// rotate buttons
+		ui_vsplit_l(&toolbar, 20.0f, &button, &toolbar);
+		
+		ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
+		static int rotation_amount = 90;
+		rotation_amount = ui_do_value_selector(&rotation_amount, &button, "", rotation_amount, 1, 360, 2.0f);
+		
+		ui_vsplit_l(&toolbar, 5.0f, &button, &toolbar);
+		ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
+		static int ccw_button = 0;
+		if(do_editor_button(&ccw_button, "CCW", enabled, &button, draw_editor_button_l, 0, "[R] Rotates the brush counter clockwise") || inp_key_down('R'))
+		{
+			for(int i = 0; i < brush.layers.len(); i++)
+				brush.layers[i]->brush_rotate(-rotation_amount/360.0f*pi*2);
+		}
+			
+		ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
+		static int cw_button = 0;
+		if(do_editor_button(&cw_button, "CW", enabled, &button, draw_editor_button_r, 0, "[T] Rotates the brush clockwise") || inp_key_down('T'))
+		{
+			for(int i = 0; i < brush.layers.len(); i++)
+				brush.layers[i]->brush_rotate(rotation_amount/360.0f*pi*2);
+		}
 	}
 
 	// quad manipulation
