@@ -69,7 +69,7 @@ typedef struct
 
 enum
 {
-	MAX_TEXTURES = 128
+	MAX_TEXTURES = 1024*4
 };
 
 static TEXTURE textures[MAX_TEXTURES];
