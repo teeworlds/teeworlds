@@ -386,4 +386,33 @@ int client_connection_problems();
 */
 int client_state();
 
+/*
+	Function: client_mapdownload_amount
+		TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
+int client_mapdownload_amount();
+
+/*
+	Function: client_mapdownload_totalsize
+		TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
+int client_mapdownload_totalsize();
+
+
 #endif

@@ -47,6 +47,10 @@ void engine_init(const char *appname, int argc, char **argv)
 			strcpy(path, application_save_path);
 			strcat(path, "/screenshots");
 			fs_makedir(path);
+
+			strcpy(path, application_save_path);
+			strcat(path, "/maps");
+			fs_makedir(path);
 		}
 	}
 

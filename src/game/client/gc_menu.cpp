@@ -1796,21 +1796,30 @@ int menu2_render()
 		// make sure that other windows doesn't do anything funnay!
 		//ui_set_hot_item(0);
 		//ui_set_active_item(0);
+		char buf[128];
 		const char *title = "";
 		const char *extra_text = "";
 		const char *button_text = "";
+		int extra_align = 0;
 		
 		if(popup == POPUP_CONNECTING)
 		{
 			title = "Connecting to";
 			extra_text = config.ui_server_address;  // TODO: query the client about the address
 			button_text = "Abort";
+			if(client_mapdownload_totalsize() > 0)
+			{
+				title = "Downloading map";
+				sprintf(buf, "%d/%d KiB", client_mapdownload_amount()/1024, client_mapdownload_totalsize()/1024);
+				extra_text = buf;
+			}
 		}
 		else if(popup == POPUP_DISCONNECTED)
 		{
 			title = "Disconnected";
 			extra_text = client_error_string();
 			button_text = "Ok";
+			extra_align = -1;
 		}
 		else if(popup == POPUP_PASSWORD)
 		{
@@ -1831,6 +1840,7 @@ int menu2_render()
 			"It's recommended that you check the settings to adjust them to your liking "
 			"before joining a server.";
 			button_text = "Ok";
+			extra_align = -1;
 		}
 		
 		RECT box, part;
@@ -1847,7 +1857,11 @@ int menu2_render()
 		ui_hsplit_t(&box, 20.f, &part, &box);
 		ui_hsplit_t(&box, 24.f, &part, &box);
 		ui_vmargin(&part, 20.f, &part);
-		ui_do_label(&part, extra_text, 20.f, -1, (int)part.w);
+		
+		if(extra_align == -1)
+			ui_do_label(&part, extra_text, 20.f, -1, (int)part.w);
+		else
+			ui_do_label(&part, extra_text, 20.f, 0, -1);
 
 		if(popup == POPUP_QUIT)
 		{

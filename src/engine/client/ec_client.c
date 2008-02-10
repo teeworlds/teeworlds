@@ -43,7 +43,6 @@ NETCLIENT *net;
 /* TODO: ugly, fix me */
 extern void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *info);
 
-
 static int snapshot_part;
 static int64 local_start_time;
 
@@ -62,6 +61,14 @@ static int current_recv_tick = 0;
 
 /* pinging */
 static int64 ping_start_time = 0;
+
+/* map download */
+static char mapdownload_filename[256] = {0};
+static IOHANDLE mapdownload_file = 0;
+static int mapdownload_chunk = 0;
+static int mapdownload_crc = 0;
+static int mapdownload_amount = -1;
+static int mapdownload_totalsize = -1;
 
 /* current time */
 static int current_tick = 0;
@@ -546,26 +553,23 @@ static void client_render()
 	client_debug_render();
 }
 
-static const char *client_load_map(const char *mapname, int wanted_crc)
+static const char *client_load_map(const char *filename, int wanted_crc)
 {
 	static char errormsg[128];
 	DATAFILE *df;
-	char buf[512];
 	int crc;
 	
-	dbg_msg("client", "loading map, map=%s wanted crc=%08x", mapname, wanted_crc);
 	client_set_state(CLIENTSTATE_LOADING);
 	
-	sprintf(buf, "data/maps/%s.map", mapname);
-	df = datafile_load(buf);
+	df = datafile_load(filename);
 	if(!df)
 	{
-		sprintf(errormsg, "map '%s' not found", mapname);
+		sprintf(errormsg, "map '%s' not found", filename);
 		return errormsg;
 	}
 	
 	/* get the crc of the map */
-	crc = datafile_crc(buf);
+	crc = datafile_crc(filename);
 	if(crc != wanted_crc)
 	{
 		datafile_unload(df);
@@ -573,9 +577,31 @@ static const char *client_load_map(const char *mapname, int wanted_crc)
 		return errormsg;
 	}
 	
+	dbg_msg("client", "loaded map '%s'", filename);
 	recived_snapshots = 0;
 	map_set(df);
 	return NULL;
+}
+
+static const char *client_load_map_search(const char *mapname, int wanted_crc)
+{
+	const char *error = 0;
+	char buf[512];
+	char buf2[512];
+	dbg_msg("client", "loading map, map=%s wanted crc=%08x", mapname, wanted_crc);
+	client_set_state(CLIENTSTATE_LOADING);
+	
+	/* try the normal maps folder */
+	sprintf(buf, "data/maps/%s.map", mapname);
+	error = client_load_map(buf, wanted_crc);
+	if(!error)
+		return error;
+
+	/* try the downloaded maps */
+	sprintf(buf2, "%s_%8x.map", mapname, wanted_crc);
+	engine_savepath(buf2, buf, sizeof(buf));
+	error = client_load_map(buf, wanted_crc);
+	return error;
 }
 
 static void client_process_packet(NETPACKET *packet)
@@ -677,17 +703,94 @@ static void client_process_packet(NETPACKET *packet)
 			{
 				const char *map = msg_unpack_string();
 				int map_crc = msg_unpack_int();
-				const char *error = client_load_map(map, map_crc);
-
-				if(!error)
+				const char *error = 0;
+				int i;
+				
+				for(i = 0; map[i]; i++) /* protect the player from nasty map names */
 				{
-					dbg_msg("client/network", "loading done");
-					client_send_ready();
-					modc_connected();
+					if(map[i] == '/' || map[i] == '\\')
+						error = "strange character in map name";
+				}
+				
+				if(error)
+					client_disconnect_with_reason(error);
+				else
+				{
+					error = client_load_map_search(map, map_crc);
+
+					if(!error)
+					{
+						dbg_msg("client/network", "loading done");
+						client_send_ready();
+						modc_connected();
+					}
+					else
+					{
+						char buf[512];
+						sprintf(buf, "%s_%8x.map", map, map_crc);
+						engine_savepath(buf, mapdownload_filename, sizeof(mapdownload_filename));
+
+						dbg_msg("client/network", "starting to download map to '%s'", mapdownload_filename);
+						
+						mapdownload_chunk = 0;
+						mapdownload_file = io_open(mapdownload_filename, IOFLAG_WRITE);
+						mapdownload_crc = map_crc;
+						mapdownload_totalsize = -1;
+						mapdownload_amount = 0;
+						
+						msg_pack_start_system(NETMSG_REQUEST_MAP_DATA, 0);
+						msg_pack_int(mapdownload_chunk);
+						msg_pack_end();
+						client_send_msg();
+										
+						if(config.debug)
+							dbg_msg("client/network", "requested chunk %d", mapdownload_chunk);
+					}
+				}
+			}
+			else if(msg == NETMSG_MAP_DATA)
+			{
+				int last = msg_unpack_int();
+				int total_size = msg_unpack_int();
+				int size = msg_unpack_int();
+				const unsigned char *data = msg_unpack_raw(size);
+				io_write(mapdownload_file, data, size);
+				
+				mapdownload_totalsize = total_size;
+				mapdownload_amount += size;
+				
+				if(last)
+				{
+					const char *error;
+					dbg_msg("client/network", "download complete, loading map");
+					
+					io_close(mapdownload_file);
+					mapdownload_file = 0;
+					mapdownload_amount = 0;
+					mapdownload_totalsize = -1;
+					
+					/* load map */
+					error = client_load_map(mapdownload_filename, mapdownload_crc);
+					if(!error)
+					{
+						dbg_msg("client/network", "loading done");
+						client_send_ready();
+						modc_connected();
+					}
+					else
+						client_disconnect_with_reason(error);
 				}
 				else
 				{
-					client_disconnect_with_reason(error);
+					/* request new chunk */
+					mapdownload_chunk++;
+					msg_pack_start_system(NETMSG_REQUEST_MAP_DATA, 0);
+					msg_pack_int(mapdownload_chunk);
+					msg_pack_end();
+					client_send_msg();
+
+					if(config.debug)
+						dbg_msg("client/network", "requested chunk %d", mapdownload_chunk);
 				}
 			}
 			else if(msg == NETMSG_PING)
@@ -883,6 +986,9 @@ static void client_process_packet(NETPACKET *packet)
 		}
 	}
 }
+
+int client_mapdownload_amount() { return mapdownload_amount; }
+int client_mapdownload_totalsize() { return mapdownload_totalsize; }
 
 static void client_pump_network()
 {

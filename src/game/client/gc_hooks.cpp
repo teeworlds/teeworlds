@@ -394,7 +394,6 @@ extern "C" void modc_statechange(int state, int old)
 	}
 }
 
-
 obj_projectile extraproj_projectiles[MAX_EXTRA_PROJECTILES];
 int extraproj_num;
 

@@ -33,6 +33,8 @@ static NETADDR4 master_server;
 
 static char current_map[64];
 static int current_map_crc;
+static unsigned char *current_map_data = 0;
+static int current_map_size = 0;
 
 void *snap_new_item(int type, int id, int size)
 {
@@ -592,6 +594,32 @@ static void server_process_client_packet(NETPACKET *packet)
 			
 			server_send_map(cid);
 		}
+		else if(msg == NETMSG_REQUEST_MAP_DATA)
+		{
+			int chunk = msg_unpack_int();
+			int chunk_size = 1024-128;
+			int offset = chunk * chunk_size;
+			int last = 0;
+			
+			if(offset+chunk_size >= current_map_size)
+			{
+				chunk_size = current_map_size-offset;
+				if(chunk_size < 0)
+					chunk_size = 0;
+				last = 1;
+			}
+			
+			msg_pack_start_system(NETMSG_MAP_DATA, MSGFLAG_VITAL);
+			msg_pack_int(last);
+			msg_pack_int(current_map_size);
+			msg_pack_int(chunk_size);
+			msg_pack_raw(&current_map_data[offset], chunk_size);
+			msg_pack_end();
+			server_send_msg(cid);
+			
+			if(config.debug)
+				dbg_msg("server", "sending chunk %d with size %d", chunk, chunk_size);
+		}
 		else if(msg == NETMSG_READY)
 		{
 			if(clients[cid].state == SRVCLIENT_STATE_CONNECTING)
@@ -831,6 +859,17 @@ static int server_load_map(const char *mapname)
 		
 	strcpy(current_map, mapname);
 	map_set(df);
+	
+	/* load compelate map into memory for download */
+	{
+		IOHANDLE file = io_open(buf, IOFLAG_READ);
+		current_map_size = (int)io_length(file);
+		if(current_map_data)
+			mem_free(current_map_data);
+		current_map_data = (unsigned char *)mem_alloc(current_map_size, 1);
+		io_read(file, current_map_data, current_map_size);
+		io_close(file);
+	}
 	return 1;
 }
 
