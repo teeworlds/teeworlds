@@ -36,6 +36,20 @@ extern int picked_up_weapon;
 extern player_input input_data;
 extern int input_target_lock;
 
+// debug
+extern int64 debug_firedelay;
+
+// extra projs
+enum
+{
+	MAX_EXTRA_PROJECTILES=32,
+};
+
+extern obj_projectile extraproj_projectiles[MAX_EXTRA_PROJECTILES];
+extern int extraproj_num;
+
+void extraproj_reset();
+
 // chat
 enum
 {

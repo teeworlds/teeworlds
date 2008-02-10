@@ -370,6 +370,18 @@ static void render_items()
 				render_flag((const obj_flag *)prev, (const obj_flag *)data);
 		}
 	}
+
+	// render extra projectiles	
+	for(int i = 0; i < extraproj_num; i++)
+	{
+		if(extraproj_projectiles[i].start_tick < client_tick())
+		{
+			extraproj_projectiles[i] = extraproj_projectiles[extraproj_num-1];
+			extraproj_num--;
+		}
+		else
+			render_projectile(&extraproj_projectiles[i], 0);
+	}
 }
 
 

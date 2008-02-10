@@ -394,6 +394,15 @@ extern "C" void modc_statechange(int state, int old)
 	}
 }
 
+
+obj_projectile extraproj_projectiles[MAX_EXTRA_PROJECTILES];
+int extraproj_num;
+
+void extraproj_reset()
+{
+	extraproj_num = 0;
+}
+
 extern "C" void modc_message(int msg)
 {
 	if(msg == MSG_CHAT)
@@ -408,6 +417,23 @@ extern "C" void modc_message(int msg)
 			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_CLIENT].sounds[0].id, 0);
 		else
 			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_SERVER].sounds[0].id, 0);
+	}
+	else if(msg == MSG_EXTRA_PROJECTILE)
+	{
+		int num = msg_unpack_int();
+		
+		for(int k = 0; k < num; k++)
+		{
+			obj_projectile proj;
+			for(unsigned i = 0; i < sizeof(obj_projectile)/sizeof(int); i++)
+				((int *)&proj)[i] = msg_unpack_int();
+				
+			if(extraproj_num != MAX_EXTRA_PROJECTILES)
+			{
+				extraproj_projectiles[extraproj_num] = proj;
+				extraproj_num++;
+			}
+		}
 	}
 	else if(msg == MSG_SETINFO)
 	{
@@ -487,8 +513,8 @@ extern "C" void modc_connected()
 	
 	//tilemap_init();
 	chat_reset();
-
 	particle_reset();
+	extraproj_reset();
 	
 	clear_object_pointers();
 	last_new_predicted_tick = -1;

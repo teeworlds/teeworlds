@@ -265,14 +265,14 @@ void console_render()
 
 	gfx_texture_set(data->images[IMAGE_CONSOLE_BG].id);
     gfx_quads_begin();
-    gfx_setcolor(0.2f, 0.2f, 0.2f,0.8f);
+    gfx_setcolor(0.2f, 0.2f, 0.2f,0.9f);
     gfx_quads_setsubset(0,-console_height*0.075f,screen.w*0.075f*0.5f,0);
     gfx_quads_drawTL(0,0,screen.w,console_height);
     gfx_quads_end();
 
 	gfx_texture_set(data->images[IMAGE_CONSOLE_BAR].id);
     gfx_quads_begin();
-    gfx_setcolor(1.0f, 1.0f, 1.0f, 0.8f);
+    gfx_setcolor(1.0f, 1.0f, 1.0f, 0.9f);
     gfx_quads_setsubset(0,0.1f,screen.w*0.015f,1-0.1f);
     gfx_quads_drawTL(0,console_height-10.0f,screen.w,10.0f);
     gfx_quads_end();

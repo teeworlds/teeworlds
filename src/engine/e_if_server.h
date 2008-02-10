@@ -36,6 +36,7 @@ int server_getclientinfo(int client_id, CLIENT_INFO *info);
 const char *server_clientname(int client_id);
 
 /* grabs the latest input for the client. not withholding anything */
+
 /*
 	Function: server_latestinput
 		TODO

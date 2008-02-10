@@ -642,6 +642,9 @@ static void server_process_client_packet(NETPACKET *packet)
 			
 			clients[cid].current_input++;
 			clients[cid].current_input %= 200;
+		
+			/* call the mod with the fresh input data */
+			mods_client_direct_input(cid, clients[cid].latestinput.data);
 		}
 		else if(msg == NETMSG_CMD)
 		{
@@ -652,6 +655,12 @@ static void server_process_client_packet(NETPACKET *packet)
 				dbg_msg("server", "cid=%d rcon='%s'", cid, cmd);
 				console_execute(cmd);
 			}
+		}
+		else if(msg == NETMSG_PING)
+		{
+			msg_pack_start_system(NETMSG_PING_REPLY, 0);
+			msg_pack_end();
+			server_send_msg(cid);
 		}
 		else
 		{
@@ -948,7 +957,7 @@ static int server_run()
 						{
 							if(clients[c].inputs[i].game_tick == server_tick())
 							{
-								mods_client_input(c, clients[c].inputs[i].data);
+								mods_client_predicted_input(c, clients[c].inputs[i].data);
 								break;
 							}
 						}
@@ -986,7 +995,7 @@ static int server_run()
 					lastheartbeat = t+time_per_heartbeat;
 				}
 			}
-	
+
 			{
 				static PERFORMACE_INFO scope = {"net", 0};
 				perf_start(&scope);
@@ -1025,6 +1034,10 @@ static int server_run()
 				config.sv_status = 0;
 			}
 			
+			/* wait for incomming data */
+			net_socket_read_wait(netserver_socket(net), 5);
+	
+			/*
 			if(config.dbg_hitch)
 			{
 				thread_sleep(config.dbg_hitch);
@@ -1032,7 +1045,7 @@ static int server_run()
 			}
 			else
 				thread_sleep(1);
-			
+			*/
 		}
 	}
 

@@ -44,6 +44,8 @@ enum
     MSG_SOUND_GLOBAL,
     MSG_TUNE_PARAMS,
 	MSG_KILL,
+    MSG_EXTRA_PROJECTILE, // server -> client
+	
 };
 
 enum

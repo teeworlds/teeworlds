@@ -13,13 +13,12 @@
 
 void render_projectile(const obj_projectile *current, int itemid)
 {
-	/*
 	if(debug_firedelay)
 	{
-		debug_firedelay = time_get()-debug_firedelay;
-		dbg_msg("game", "firedelay=%.2f ms", debug_firedelay/(float)time_freq()*1000.0f);
+		int64 delay = time_get()-debug_firedelay;
+		dbg_msg("game", "firedelay=%.2f ms", delay/(float)time_freq()*1000.0f);
 		debug_firedelay = 0;
-	}*/
+	}
 	
 	gfx_texture_set(data->images[IMAGE_GAME].id);
 	gfx_quads_begin();

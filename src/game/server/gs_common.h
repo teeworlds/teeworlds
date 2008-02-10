@@ -186,11 +186,6 @@ public:
 	enum
 	{
 		PROJECTILE_FLAGS_EXPLODE = 1 << 0,
-
-		WEAPON_PROJECTILETYPE_GUN		= 0,
-		WEAPON_PROJECTILETYPE_ROCKET	= 1,
-		WEAPON_PROJECTILETYPE_SHOTGUN	= 2,
-		WEAPON_PROJECTILETYPE_SNIPER	= 6,
 	};
 	
 	vec2 vel;
@@ -208,6 +203,9 @@ public:
 	
 	projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity* powner,
 		int damage, int flags, float force, int sound_impact, int weapon);
+
+	void fill_info(obj_projectile *proj);
+
 	virtual void reset();
 	virtual void tick();
 	virtual void snap(int snapping_client);
@@ -333,6 +331,9 @@ public:
 	
 	int handle_weapons();
 	int handle_ninja();
+	
+	void on_direct_input(player_input *input);
+	void fire_weapon();
 
 	virtual void tick();
 	virtual void tick_defered();

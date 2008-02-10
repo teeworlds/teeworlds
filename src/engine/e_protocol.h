@@ -46,6 +46,8 @@ enum
 	NETMSG_CMD,
 	
 	/* sent by both */
+	NETMSG_PING,
+	NETMSG_PING_REPLY,
 	NETMSG_ERROR
 };
 

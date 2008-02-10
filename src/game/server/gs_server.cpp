@@ -437,6 +437,16 @@ void projectile::tick()
 	}
 }
 
+void projectile::fill_info(obj_projectile *proj)
+{
+	proj->x = (int)pos.x;
+	proj->y = (int)pos.y;
+	proj->vx = (int)vel.x;
+	proj->vy = (int)vel.y;
+	proj->start_tick = start_tick;
+	proj->type = type;
+}
+
 void projectile::snap(int snapping_client)
 {
 	float ct = (server_tick()-start_tick)/(float)server_tickspeed();
@@ -446,12 +456,7 @@ void projectile::snap(int snapping_client)
 		return;
 
 	obj_projectile *proj = (obj_projectile *)snap_new_item(OBJTYPE_PROJECTILE, id, sizeof(obj_projectile));
-	proj->x = (int)pos.x;
-	proj->y = (int)pos.y;
-	proj->vx = (int)vel.x;
-	proj->vy = (int)vel.y;
-	proj->start_tick = start_tick;
-	proj->type = type;
+	fill_info(proj);
 }
 
 
@@ -940,6 +945,138 @@ int player::handle_ninja()
 	return 0;
 }
 
+void player::fire_weapon()
+{
+	if(reload_timer != 0)
+		return;
+	
+	vec2 direction = normalize(vec2(latest_input.target_x, latest_input.target_y));
+	
+	bool fullauto = false;
+	if(active_weapon == WEAPON_GRENADE || active_weapon == WEAPON_SHOTGUN)
+		fullauto = true;
+
+	//if(count_input(latest_previnput.fire, latest_input.fire).presses) || ((fullauto && latest_input.fire&1) && weapons[active_weapon].ammo))
+	if(!count_input(latest_previnput.fire, latest_input.fire).presses)
+		return;
+	
+	// check for ammo
+	if(!weapons[active_weapon].ammo)
+	{
+		create_sound(pos, SOUND_WEAPON_NOAMMO);
+		return;
+	}
+
+	
+	switch(active_weapon)
+	{
+		case WEAPON_HAMMER:
+		{
+			// reset objects hit
+			numobjectshit = 0;
+			create_sound(pos, SOUND_HAMMER_FIRE);
+			break;
+		}
+
+		case WEAPON_GUN:
+		{
+			projectile *proj = new projectile(WEAPON_GUN,
+				client_id,
+				pos+vec2(0,0),
+				direction*tuning.gun_speed,
+				server_tickspeed(),
+				this,
+				1, 0, 0, -1, WEAPON_GUN);
+				
+			// pack the projectile and send it to the client directly
+			obj_projectile p;
+			proj->fill_info(&p);
+			
+			msg_pack_start(MSG_EXTRA_PROJECTILE, 0);
+			msg_pack_int(1);
+			for(unsigned i = 0; i < sizeof(obj_projectile)/sizeof(int); i++)
+				msg_pack_int(((int *)&p)[i]);
+			msg_pack_end();
+			server_send_msg(client_id);
+							
+			create_sound(pos, SOUND_GUN_FIRE);
+			break;
+		}
+		case WEAPON_GRENADE:
+		{
+			projectile *proj = new projectile(WEAPON_GRENADE,
+				client_id,
+				pos+vec2(0,0),
+				direction*tuning.grenade_speed,
+				100,
+				this,
+				1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
+
+			// pack the projectile and send it to the client directly
+			obj_projectile p;
+			proj->fill_info(&p);
+			
+			msg_pack_start(MSG_EXTRA_PROJECTILE, 0);
+			msg_pack_int(1);
+			for(unsigned i = 0; i < sizeof(obj_projectile)/sizeof(int); i++)
+				msg_pack_int(((int *)&p)[i]);
+			msg_pack_end();
+			server_send_msg(client_id);
+
+			create_sound(pos, SOUND_GRENADE_FIRE);
+			break;
+		}
+		case WEAPON_SHOTGUN:
+		{
+			int shotspread = 2;
+
+			msg_pack_start(MSG_EXTRA_PROJECTILE, 0);
+			msg_pack_int(shotspread*2+1);
+			
+			for(int i = -shotspread; i <= shotspread; i++)
+			{
+				float spreading[] = {-0.185f, -0.070f, 0, 0.070f, 0.185f};
+				float a = get_angle(direction);
+				float v = 1.0f-fabs(i/(float)shotspread);
+				a += spreading[i+2];
+				float speed = mix((float)tuning.shotgun_speed_wide, (float)tuning.shotgun_speed_center, v);
+				projectile *proj = new projectile(WEAPON_SHOTGUN,
+					client_id,
+					pos+vec2(0,0),
+					vec2(cosf(a), sinf(a))*speed,
+					(int)(server_tickspeed()*0.25f),
+					this,
+					1, 0, 0, -1, WEAPON_SHOTGUN);
+					
+				// pack the projectile and send it to the client directly
+				obj_projectile p;
+				proj->fill_info(&p);
+				
+				for(unsigned i = 0; i < sizeof(obj_projectile)/sizeof(int); i++)
+					msg_pack_int(((int *)&p)[i]);
+			}
+
+			msg_pack_end();
+			server_send_msg(client_id);					
+			
+			create_sound(pos, SOUND_SHOTGUN_FIRE);
+			break;
+		}
+		
+		case WEAPON_RIFLE:
+		{
+			new laser(pos, direction, tuning.laser_reach, this);
+			create_sound(pos, SOUND_RIFLE_FIRE);
+			break;
+		}
+		
+	}
+
+	weapons[active_weapon].ammo--;
+	attack_tick = server_tick();
+	reload_timer = data->weapons[active_weapon].firedelay * server_tickspeed() / 1000;
+}
+
 int player::handle_weapons()
 {
 	vec2 direction = normalize(vec2(latest_input.target_x, latest_input.target_y));
@@ -1011,8 +1148,10 @@ int player::handle_weapons()
 		}
 	}
 
-	if(reload_timer == 0)
-	{
+	//if(reload_timer == 0)
+	fire_weapon();
+	//}
+	/*
 		bool fullauto = false;
 		if(active_weapon == WEAPON_GRENADE || active_weapon == WEAPON_SHOTGUN)
 			fullauto = true;
@@ -1096,7 +1235,7 @@ int player::handle_weapons()
 				create_sound(pos, SOUND_WEAPON_NOAMMO);
 			}
 		}
-	}
+	}*/
 
 	// Update weapons
 	if (active_weapon == WEAPON_HAMMER && reload_timer > 0)
@@ -1178,11 +1317,19 @@ int player::handle_weapons()
 	return 0;
 }
 
+void player::on_direct_input(player_input *new_input)
+{
+	mem_copy(&latest_previnput, &latest_input, sizeof(latest_input));
+	mem_copy(&latest_input, new_input, sizeof(latest_input));
+	fire_weapon();
+}
+
 void player::tick()
 {
 	server_setclientscore(client_id, score);
 
 	// grab latest input
+	/*
 	{
 		int size = 0;
 		int *input = server_latestinput(client_id, &size);
@@ -1191,7 +1338,7 @@ void player::tick()
 			mem_copy(&latest_previnput, &latest_input, sizeof(latest_input));
 			mem_copy(&latest_input, input, sizeof(latest_input));
 		}
-	}
+	}*/
 	
 	// check if we have enough input
 	// this is to prevent initial weird clicks
@@ -1434,7 +1581,7 @@ void player::snap(int snaping_client)
 	{
 		obj_player_info *info = (obj_player_info *)snap_new_item(OBJTYPE_PLAYER_INFO, client_id, sizeof(obj_player_info));
 
-		info->latency = latency_avg;
+		info->latency = latency_min;
 		info->latency_flux = latency_max-latency_min;
 		info->local = 0;
 		info->clientid = client_id;
@@ -1892,7 +2039,21 @@ void mods_snap(int client_id)
 	events.snap(client_id);
 }
 
-void mods_client_input(int client_id, void *input)
+void mods_client_direct_input(int client_id, void *input)
+{
+	if(!world->paused)
+		players[client_id].on_direct_input((player_input *)input);
+	
+	/*
+	if(i->fire)
+	{
+		msg_pack_start(MSG_EXTRA_PROJECTILE, 0);
+		msg_pack_end();
+		server_send_msg(client_id);
+	}*/
+}
+
+void mods_client_predicted_input(int client_id, void *input)
 {
 	if(!world->paused)
 	{
@@ -1905,7 +2066,6 @@ void mods_client_input(int client_id, void *input)
 		
 		if(players[client_id].input.target_x == 0 && players[client_id].input.target_y == 0)
 			players[client_id].input.target_y = -1;
-			
 	}
 }
 

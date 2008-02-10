@@ -51,7 +51,7 @@ void mods_client_enter(int cid);
 void mods_client_drop(int cid);
 
 /*
-	Function: mods_client_input
+	Function: mods_client_direct_input
 		Called when the server recives new input from a client.
 
 	Arguments:
@@ -59,7 +59,19 @@ void mods_client_drop(int cid);
 		input - Pointer to the input data.
 		size - Size of the data. (NOT IMPLEMENTED YET)
 */
-void mods_client_input(int cid, void *input);
+void mods_client_direct_input(int cid, void *input);
+
+/*
+	Function: mods_client_predicted_input
+		Called when the server applys the predicted input on the client.
+
+	Arguments:
+		cid - Client ID. Is 0 - MAX_CLIENTS.
+		input - Pointer to the input data.
+		size - Size of the data. (NOT IMPLEMENTED YET)
+*/
+void mods_client_predicted_input(int cid, void *input);
+
 
 /*
 	Function: mods_tick

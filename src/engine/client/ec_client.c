@@ -60,6 +60,9 @@ static int snapcrcerrors = 0;
 static int ack_game_tick = -1;
 static int current_recv_tick = 0;
 
+/* pinging */
+static int64 ping_start_time = 0;
+
 /* current time */
 static int current_tick = 0;
 static float intratick = 0;
@@ -687,6 +690,14 @@ static void client_process_packet(NETPACKET *packet)
 					client_disconnect_with_reason(error);
 				}
 			}
+			else if(msg == NETMSG_PING)
+			{
+				msg_pack_start_system(NETMSG_PING_REPLY, 0);
+				msg_pack_end();
+				client_send_msg();
+			}
+			else if(msg == NETMSG_PING_REPLY)
+				dbg_msg("client/network", "latency %.2f", (time_get() - ping_start_time)*1000 / (float)time_freq());
 			else if(msg == NETMSG_SNAP || msg == NETMSG_SNAPSINGLE || msg == NETMSG_SNAPEMPTY)
 			{
 				/*dbg_msg("client/network", "got snapshot"); */
@@ -1209,28 +1220,37 @@ static void client_run()
 	snd_shutdown();
 }
 
-static void connect_command(void *result, void *user_data)
+static void con_connect(void *result, void *user_data)
 {
 	const char *address;
 	console_result_string(result, 1, &address);
 	client_connect(address);
 }
 
-static void disconnect_command(void *result, void *user_data)
+static void con_disconnect(void *result, void *user_data)
 {
 	client_disconnect();
 }
 
-static void quit_command(void *result, void *user_data)
+static void con_quit(void *result, void *user_data)
 {
 	client_quit();
 }
 
+static void con_ping(void *result, void *user_data)
+{
+	msg_pack_start_system(NETMSG_PING, 0);
+	msg_pack_end();
+	client_send_msg();
+	ping_start_time = time_get();
+}
+
 static void client_register_commands()
 {
-	MACRO_REGISTER_COMMAND("quit", "", quit_command, 0x0);
-	MACRO_REGISTER_COMMAND("connect", "s", connect_command, 0x0);
-	MACRO_REGISTER_COMMAND("disconnect", "", disconnect_command, 0x0);
+	MACRO_REGISTER_COMMAND("quit", "", con_quit, 0x0);
+	MACRO_REGISTER_COMMAND("connect", "s", con_connect, 0x0);
+	MACRO_REGISTER_COMMAND("disconnect", "", con_disconnect, 0x0);
+	MACRO_REGISTER_COMMAND("ping", "", con_ping, 0x0);
 }
 
 int editor_main(int argc, char **argv);

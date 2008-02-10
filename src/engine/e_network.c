@@ -799,6 +799,11 @@ void netserver_stats(NETSERVER *s, NETSTATS *stats)
 	}
 }
 
+NETSOCKET netserver_socket(NETSERVER *s)
+{
+	return s->socket;
+}
+
 int netserver_client_addr(NETSERVER *s, int client_id, NETADDR4 *addr)
 {
 	*addr = s->slots[client_id].conn.peeraddr;

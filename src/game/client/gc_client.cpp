@@ -25,7 +25,7 @@ extern "C" {
 #include "gc_console.h"
 
 struct data_container *data = 0;
-static int64 debug_firedelay = 0;
+int64 debug_firedelay = 0;
 
 player_input input_data = {0};
 int input_target_lock = 0;

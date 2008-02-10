@@ -512,6 +512,7 @@ int fs_listdir(const char *dir, fs_listdir_callback cb, void *user);
 int fs_storage_path(const char *appname, char *path, int max);
 int fs_makedir(const char *path);
 int net_addr4_cmp(const NETADDR4 *a, const NETADDR4 *b);
+int net_socket_read_wait(NETSOCKET sock, int time);
 
 void mem_debug_dump();
 int mem_allocated();
