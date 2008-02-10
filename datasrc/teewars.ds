@@ -242,6 +242,13 @@ images {
 	browseicons {
 		filename "data/browse_icons.png"
 	}
+
+	console_bg {
+		filename "data/console.png"
+	}
+	console_bar {
+		filename "data/console_bar.png"
+	}
 }
 
 powerups {

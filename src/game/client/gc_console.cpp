@@ -1,4 +1,5 @@
 #include "gc_console.h"
+#include "../generated/gc_data.h"
 
 extern "C" {
 	#include <engine/e_system.h>
@@ -262,11 +263,21 @@ void console_render()
 	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
 
 
-    gfx_texture_set(-1);
+	gfx_texture_set(data->images[IMAGE_CONSOLE_BG].id);
     gfx_quads_begin();
-    gfx_setcolor(0.4,0.2,0.2,0.8);
+    gfx_setcolor(0.2f, 0.2f, 0.2f,0.8f);
+    gfx_quads_setsubset(0,-console_height*0.075f,screen.w*0.075f*0.5f,0);
     gfx_quads_drawTL(0,0,screen.w,console_height);
     gfx_quads_end();
+
+	gfx_texture_set(data->images[IMAGE_CONSOLE_BAR].id);
+    gfx_quads_begin();
+    gfx_setcolor(1.0f, 1.0f, 1.0f, 0.8f);
+    gfx_quads_setsubset(0,0.1f,screen.w*0.015f,1-0.1f);
+    gfx_quads_drawTL(0,console_height-10.0f,screen.w,10.0f);
+    gfx_quads_end();
+    
+    console_height -= 10.0f;
 
 	{
 		float font_size = 12.0f;

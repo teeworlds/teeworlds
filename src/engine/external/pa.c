@@ -23,9 +23,13 @@
 		#include "portaudio/pa_ringbuffer.c"
 	#else
 		#define HAVE_SYS_SOUNDCARD_H
+		
 		#define PA_USE_ALSA
 		#include "portaudio/pa_linux_alsa.c"
-		//#include "portaudio/pa_unix_oss.c"
+		
+		/*#define PA_USE_OSS
+		#include "portaudio/pa_unix_oss.c" */
+		
 		#include "portaudio/pa_unix_hostapis.c"
 	#endif
 #elif defined(CONF_FAMILY_WINDOWS)
