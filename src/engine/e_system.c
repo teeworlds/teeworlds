@@ -735,9 +735,10 @@ void swap_endian(void *data, unsigned elem_size, unsigned num)
 
 int net_socket_read_wait(NETSOCKET sock, int time)
 {
+	/*
 #if defined(CONF_FAMILY_WINDOWS)
 	#error Not implemented
-#else
+#else*/
     struct timeval tv;
     fd_set readfds;
 
@@ -752,7 +753,8 @@ int net_socket_read_wait(NETSOCKET sock, int time)
     if(FD_ISSET(sock, &readfds))
     	return 1;
     return 0;
-#endif
+    /*
+#endif*/
 }
 
 #if defined(__cplusplus)
