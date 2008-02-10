@@ -268,13 +268,6 @@ int io_close(IOHANDLE io);
 
 /**** Group: Threads ****/
 
-int thread_create(); /* NOT IMPLEMENTED */
-int thread_destory(); /* NOT IMPLEMENTED */
-
-int thread_run(); /* NOT IMPLEMENTED */
-int thread_pause(); /* NOT IMPLEMENTED */
-int thread_wait(); /* NOT IMPLEMENTED */
-
 /*****
 	Function: thread_sleep
 	
@@ -516,6 +509,12 @@ int net_socket_read_wait(NETSOCKET sock, int time);
 
 void mem_debug_dump();
 int mem_allocated();
+
+void *thread_create(void (*threadfunc)(void *), void *user);
+void thread_wait(void *thread);
+void thread_destroy(void *thread);
+void thread_yield();
+unsigned time_timestamp();
 
 void swap_endian(void *data, unsigned elem_size, unsigned num);
 

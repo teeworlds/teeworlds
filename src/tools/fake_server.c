@@ -45,20 +45,29 @@ int player_scores[16] = {0};
 int num_players = 0;
 int max_players = 0;
 
+
+
 static void send_heartbeats()
 {
-	int i = 0;
+	static unsigned char data[sizeof(SERVERBROWSE_HEARTBEAT) + 2];
+	NETPACKET packet;
+	int i;
+	
+	mem_copy(data, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT));
+	
+	packet.client_id = -1;
+	packet.flags = PACKETFLAG_CONNLESS;
+	packet.data_size = sizeof(SERVERBROWSE_HEARTBEAT) + 2;
+	packet.data = &data;
 
-	NETPACKET p;
-	p.client_id = -1;
-	p.flags = PACKETFLAG_CONNLESS;
-	p.data_size = sizeof(SERVERBROWSE_HEARTBEAT);
-	p.data = SERVERBROWSE_HEARTBEAT;
-
+	/* supply the set port that the master can use if it has problems */	
+	data[sizeof(SERVERBROWSE_HEARTBEAT)] = 0;
+	data[sizeof(SERVERBROWSE_HEARTBEAT)+1] = 0;
+	
 	for(i = 0; i < num_masters; i++)
 	{
-		p.address = master_servers[i];
-		netserver_send(net, &p);
+		packet.address = master_servers[i];
+		netserver_send(net, &packet);
 	}
 }
 

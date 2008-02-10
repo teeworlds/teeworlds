@@ -1098,11 +1098,35 @@ static void client_update()
 	}
 
 	/* STRESS TEST: join the server again */
-	if(client_state() == CLIENTSTATE_OFFLINE && config.dbg_stress && (frames%100) == 0)
-		client_connect(config.dbg_stress_server);
+	if(config.dbg_stress)
+	{
+		static int64 action_taken = 0;
+		int64 now = time_get();
+		if(client_state() == CLIENTSTATE_OFFLINE)
+		{
+			if(now > action_taken+time_freq()*2)
+			{
+				dbg_msg("stress", "reconnecting!");
+				client_connect(config.dbg_stress_server);
+				action_taken = now;
+			}
+		}
+		else
+		{
+			if(now > action_taken+time_freq()*(10+config.dbg_stress))
+			{
+				dbg_msg("stress", "disconnecting!");
+				client_disconnect();
+				action_taken = now;
+			}
+		}
+	}
 	
 	/* pump the network */
 	client_pump_network();
+	
+	/* update the maser server registry */
+	mastersrv_update();
 	
 	/* update the server browser */
 	client_serverbrowse_update();
@@ -1128,12 +1152,15 @@ static void client_run()
 	if(!gfx_init())
 		return;
 
+	/* start refreshing addresses while we load */
+	mastersrv_refresh_addresses();
+	
 	/* init the editor */
 	editor_init();
 
 	/* sound is allowed to fail */
 	snd_init();
-	
+
 	/* load data */
 	if(!client_load_data())
 		return;

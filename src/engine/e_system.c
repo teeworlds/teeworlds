@@ -268,6 +268,45 @@ int io_close(IOHANDLE io)
 	return 1;
 }
 
+void *thread_create(void (*threadfunc)(void *), void *u)
+{
+#if defined(CONF_FAMILY_UNIX)
+	pthread_t id;
+	pthread_create(&id, NULL, (void *(*)(void*))threadfunc, u);
+	return (void*)id;
+#elif defined(CONF_FAMILY_WINDOWS)
+	return CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)threadfunc, u, 0, NULL);
+#else
+	#error not implemented
+#endif
+}
+
+void thread_wait(void *thread)
+{
+#if defined(CONF_FAMILY_UNIX)
+	pthread_join((pthread_t)thread, NULL);
+#elif defined(CONF_FAMILY_WINDOWS)
+	WaitForSingleObject((HANDLE)thread, INFINITE);
+#else
+	#error not implemented
+#endif
+}
+
+void thread_destroy(void *thread)
+{
+}
+
+void thread_yield()
+{
+#if defined(CONF_FAMILY_UNIX)
+	sched_yield();
+#elif defined(CONF_FAMILY_WINDOWS)
+	Sleep(0);
+#else
+	#error not implemented
+#endif
+}
+
 void thread_sleep(int milliseconds)
 {
 #if defined(CONF_FAMILY_UNIX)
@@ -278,6 +317,9 @@ void thread_sleep(int milliseconds)
 	#error not implemented
 #endif
 }
+
+
+
 
 #if defined(CONF_FAMILY_UNIX)
 typedef pthread_mutex_t LOCKINTERNAL;
@@ -755,6 +797,11 @@ int net_socket_read_wait(NETSOCKET sock, int time)
     return 0;
     /*
 #endif*/
+}
+
+unsigned time_timestamp()
+{
+	return time(0);
 }
 
 #if defined(__cplusplus)

@@ -4,6 +4,7 @@
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
 #include <engine/e_memheap.h>
+#include <engine/e_engine.h>
 
 #include <mastersrv/mastersrv.h>
 
@@ -341,18 +342,27 @@ void client_serverbrowse_refresh(int lan)
 	}
 	else
 	{
-		NETADDR4 master_server;
+		NETADDR4 addr;
 		NETPACKET p;
-
-		net_host_lookup(config.masterserver, MASTERSERVER_PORT, &master_server);
+		int i;
+		
+		/*net_host_lookup(config.masterserver, MASTERSERVER_PORT, &master_server);*/
 
 		mem_zero(&p, sizeof(p));
 		p.client_id = -1;
-		p.address = master_server;
 		p.flags = PACKETFLAG_CONNLESS;
 		p.data_size = sizeof(SERVERBROWSE_GETLIST);
 		p.data = SERVERBROWSE_GETLIST;
-		netclient_send(net, &p);	
+		
+		for(i = 0; i < MAX_MASTERSERVERS; i++)
+		{
+			addr = mastersrv_get(i);
+			if(!addr.ip[0] && !addr.ip[1] && !addr.ip[2] && !addr.ip[3])
+				continue;
+			
+			p.address = addr;
+			netclient_send(net, &p);	
+		}
 
 		if(config.debug)
 			dbg_msg("client", "requesting server list");

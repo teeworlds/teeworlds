@@ -27,6 +27,14 @@ static struct packet_data
 	unsigned char header[sizeof(SERVERBROWSE_LIST)];
 	NETADDR4 servers[MAX_SERVERS];
 } data;
+
+static struct count_packet_data
+{
+	unsigned char header[sizeof(SERVERBROWSE_COUNT)];
+	unsigned char high;
+	unsigned char low;
+} count_data;
+
 static int64 server_expire[MAX_SERVERS];
 static int num_servers = 0;
 
@@ -41,6 +49,9 @@ void send_ok(NETADDR4 *addr)
 	p.flags = PACKETFLAG_CONNLESS;
 	p.data_size = sizeof(SERVERBROWSE_FWOK);
 	p.data = SERVERBROWSE_FWOK;
+	
+	// send on both to be sure
+	net_checker.send(&p);
 	net_op.send(&p);
 }
 
@@ -183,6 +194,8 @@ int main(int argc, char **argv)
 	// TODO: check socket for errors
 	
 	mem_copy(data.header, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
+	mem_copy(count_data.header, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT));
+	
 	dbg_msg("mastersrv", "started");
 	
 	while(1)
@@ -206,6 +219,21 @@ int main(int argc, char **argv)
 				
 				// add it
 				add_checkserver(&packet.address, &alt);
+			}
+			else if(packet.data_size == sizeof(SERVERBROWSE_GETCOUNT) &&
+				memcmp(packet.data, SERVERBROWSE_GETCOUNT, sizeof(SERVERBROWSE_GETCOUNT)) == 0)
+			{
+				dbg_msg("mastersrv", "count requested, responding with %d", num_servers);
+				
+				NETPACKET p;
+				p.client_id = -1;
+				p.address = packet.address;
+				p.flags = PACKETFLAG_CONNLESS;
+				p.data_size = sizeof(count_data);
+				p.data = &count_data;
+				count_data.high = (num_servers>>8)&0xff;
+				count_data.low = num_servers&0xff;
+				net_op.send(&p);
 			}
 			else if(packet.data_size == sizeof(SERVERBROWSE_GETLIST) &&
 				memcmp(packet.data, SERVERBROWSE_GETLIST, sizeof(SERVERBROWSE_GETLIST)) == 0)

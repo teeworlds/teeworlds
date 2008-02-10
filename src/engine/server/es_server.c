@@ -29,7 +29,7 @@ static int browseinfo_gametype = -1;
 static int browseinfo_progression = -1;
 
 static int64 lastheartbeat;
-static NETADDR4 master_server;
+/*static NETADDR4 master_server;*/
 
 static char current_map[64];
 static int current_map_crc;
@@ -101,7 +101,7 @@ typedef struct
 } CLIENT;
 
 static CLIENT clients[MAX_CLIENTS];
-static NETSERVER *net;
+NETSERVER *net;
 
 static void snap_init_id()
 {
@@ -535,29 +535,6 @@ static void server_send_map(int cid)
 	msg_pack_end();
 	server_send_msg(cid);
 }
-	
-static void server_send_heartbeat()
-{
-	static unsigned char data[sizeof(SERVERBROWSE_HEARTBEAT) + 2];
-	unsigned short port = config.sv_port;
-	NETPACKET packet;
-	
-	mem_copy(data, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT));
-	
-	packet.client_id = -1;
-	packet.address = master_server;
-	packet.flags = PACKETFLAG_CONNLESS;
-	packet.data_size = sizeof(SERVERBROWSE_HEARTBEAT) + 2;
-	packet.data = &data;
-
-	/* supply the set port that the master can use if it has problems */	
-	if(config.sv_external_port)
-		port = config.sv_external_port;
-	data[sizeof(SERVERBROWSE_HEARTBEAT)] = port >> 8;
-	data[sizeof(SERVERBROWSE_HEARTBEAT)+1] = port&0xff;
-	
-	netserver_send(net, &packet);
-}
 
 static void server_process_client_packet(NETPACKET *packet)
 {
@@ -631,7 +608,7 @@ static void server_process_client_packet(NETPACKET *packet)
 		}
 		else if(msg == NETMSG_ENTERGAME)
 		{
-			if(clients[cid].state != SRVCLIENT_STATE_INGAME)
+			if(clients[cid].state == SRVCLIENT_STATE_READY)
 			{
 				dbg_msg("server", "player as entered the game. cid=%x", cid);
 				clients[cid].state = SRVCLIENT_STATE_INGAME;
@@ -783,18 +760,8 @@ static void server_dump_status()
 }
 			
 
-
-
-static void server_send_fwcheckresponse(NETADDR4 *addr)
-{
-	NETPACKET packet;
-	packet.client_id = -1;
-	packet.address = *addr;
-	packet.flags = PACKETFLAG_CONNLESS;
-	packet.data_size = sizeof(SERVERBROWSE_FWRESPONSE);
-	packet.data = SERVERBROWSE_FWRESPONSE;
-	netserver_send(net, &packet);
-}
+extern int register_process_packet(NETPACKET *packet);
+extern int register_update();
 
 static void server_pump_network()
 {
@@ -808,32 +775,18 @@ static void server_pump_network()
 		if(packet.client_id == -1)
 		{
 			/* stateless */
-			if(packet.data_size == sizeof(SERVERBROWSE_GETINFO) &&
-				memcmp(packet.data, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
+			if(!register_process_packet(&packet))
 			{
-				server_send_serverinfo(&packet.address, 0);
-			}
-			else if(packet.data_size == sizeof(SERVERBROWSE_GETINFO_LAN) &&
-				memcmp(packet.data, SERVERBROWSE_GETINFO_LAN, sizeof(SERVERBROWSE_GETINFO_LAN)) == 0)
-			{
-				server_send_serverinfo(&packet.address, 1);
-			}
-			else if(packet.data_size == sizeof(SERVERBROWSE_FWCHECK) &&
-				memcmp(packet.data, SERVERBROWSE_FWCHECK, sizeof(SERVERBROWSE_FWCHECK)) == 0)
-			{
-				server_send_fwcheckresponse(&packet.address);
-			}
-			else if(packet.data_size == sizeof(SERVERBROWSE_FWOK) &&
-				memcmp(packet.data, SERVERBROWSE_FWOK, sizeof(SERVERBROWSE_FWOK)) == 0)
-			{
-				if(config.debug)
-					dbg_msg("server", "no firewall/nat problems detected");
-			}
-			else if(packet.data_size == sizeof(SERVERBROWSE_FWERROR) &&
-				memcmp(packet.data, SERVERBROWSE_FWERROR, sizeof(SERVERBROWSE_FWERROR)) == 0)
-			{
-				dbg_msg("server", "ERROR: the master server reports that clients can not connect to this server.");
-				dbg_msg("server", "ERROR: configure your firewall/nat to let trough udp on port %d.", config.sv_port);
+				if(packet.data_size == sizeof(SERVERBROWSE_GETINFO) &&
+					memcmp(packet.data, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
+				{
+					server_send_serverinfo(&packet.address, 0);
+				}
+				else if(packet.data_size == sizeof(SERVERBROWSE_GETINFO_LAN) &&
+					memcmp(packet.data, SERVERBROWSE_GETINFO_LAN, sizeof(SERVERBROWSE_GETINFO_LAN)) == 0)
+				{
+					server_send_serverinfo(&packet.address, 1);
+				}
 			}
 		}
 		else
@@ -873,7 +826,6 @@ static int server_load_map(const char *mapname)
 	return 1;
 }
 
-
 static int server_run()
 {
 	NETADDR4 bindaddr;
@@ -910,19 +862,12 @@ static int server_run()
 	netserver_set_callbacks(net, new_client_callback, del_client_callback, 0);
 	
 	dbg_msg("server", "server name is '%s'", config.sv_name);
-	dbg_msg("server", "masterserver is '%s'", config.masterserver);
-	if(net_host_lookup(config.masterserver, MASTERSERVER_PORT, &master_server) != 0)
-	{
-		/* TODO: fix me */
-		/*master_server = netaddr4(0, 0, 0, 0, 0); */
-	}
-
+	
 	mods_init();
 	dbg_msg("server", "version %s", mods_net_version());
 
 	/* start game */
 	{
-		int64 time_per_heartbeat = time_freq() * 30;
 		int64 reporttime = time_get();
 		int reportinterval = 3;
 	
@@ -1025,15 +970,10 @@ static int server_run()
 					perf_end();
 				}
 			}
+			
+			/* master server stuff */
+			register_update();
 	
-			if(config.sv_sendheartbeats)
-			{
-				if (t > lastheartbeat+time_per_heartbeat)
-				{
-					server_send_heartbeat();
-					lastheartbeat = t+time_per_heartbeat;
-				}
-			}
 
 			{
 				static PERFORMACE_INFO scope = {"net", 0};
