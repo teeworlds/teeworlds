@@ -221,7 +221,7 @@ static const char *conn_error(NETCONNECTION *conn)
 
 static void conn_set_error(NETCONNECTION *conn, const char *str)
 {
-	strcpy(conn->error_string, str);
+	str_copy(conn->error_string, str, sizeof(conn->error_string));
 }
 
 /*
@@ -337,7 +337,7 @@ static void conn_disconnect(NETCONNECTION *conn, const char *reason)
 
 		conn->error_string[0] = 0;
 		if(reason)
-			strcpy(conn->error_string, reason);
+			str_copy(conn->error_string, reason, sizeof(conn->error_string));
 	}
 	
 	conn_reset(conn);

@@ -23,7 +23,7 @@ static void skinscan(const char *name, int is_dir, void *user)
 		return;
 		
 	char buf[512];
-	sprintf(buf, "data/skins/%s", name);
+	str_format(buf, sizeof(buf), "data/skins/%s", name);
 	IMAGE_INFO info;
 	if(!gfx_load_png(&info, buf))
 	{

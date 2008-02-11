@@ -359,7 +359,7 @@ void console_execute(const char *str)
 			if (console_validate(command, &result))
 			{
 				char buf[256];
-				sprintf(buf, "Invalid arguments... Usage: %s %s", command->name, command->params);
+				str_format(buf, sizeof(buf), "Invalid arguments... Usage: %s %s", command->name, command->params);
 				console_print(buf);
 			}
 			else
@@ -368,7 +368,7 @@ void console_execute(const char *str)
 		else
 		{
 			char buf[256];
-			sprintf(buf, "No such command: %s.", name);
+			str_format(buf, sizeof(buf), "No such command: %s.", name);
 			console_print(buf);
 		}
 	}
@@ -402,7 +402,7 @@ static void int_variable_command(void *result, void *user_data)
 	if (console_result_int(result, 1, &new_val))
 	{
 		char buf[256];
-		sprintf(buf, "Value: %d", data->getter(&config));
+		str_format(buf, sizeof(buf), "Value: %d", data->getter(&config));
 		console_print(buf);
 	}
 	else
@@ -419,7 +419,7 @@ static void str_variable_command(void *result, void *user_data)
 	if (console_result_string(result, 1, &new_val))
 	{
 		char buf[256];
-		sprintf(buf, "Value: %s", data->getter(&config));
+		str_format(buf, sizeof(buf), "Value: %s", data->getter(&config));
 		console_print(buf);
 	}
 	else

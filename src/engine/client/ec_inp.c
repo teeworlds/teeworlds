@@ -209,7 +209,7 @@ void inp_update()
     
 	/* clear and begin count on the other one */
 	mem_zero(&input_count[input_current], sizeof(input_count[input_current]));
-	memcpy(input_state[input_current], input_state[input_current^1], sizeof(input_state[input_current]));
+	mem_copy(input_state[input_current], input_state[input_current^1], sizeof(input_state[input_current]));
 	input_current^=1;
 
     if(keyboard_first)

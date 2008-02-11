@@ -13,7 +13,7 @@ CONFIGURATION config;
 void config_reset()
 {
     #define MACRO_CONFIG_INT(name,def,min,max) config.name = def;
-    #define MACRO_CONFIG_STR(name,len,def) strncpy(config.name, def, len);
+    #define MACRO_CONFIG_STR(name,len,def) str_copy(config.name, def, len);
  
     #include "e_config_variables.h" 
  
@@ -44,11 +44,9 @@ void config_set(const char *line)
 		char *var_str = var;
 		char *val_str = val;
 
-		strcpy(val, c+1);
-
+		str_copy(val, c+1, sizeof(val));
 		mem_copy(var, line, c - line);
 		var[c - line] = 0;
-
 
 		strip_spaces(&var_str);
 		strip_spaces(&val_str);
@@ -98,7 +96,7 @@ void config_save(const char *filename)
 #endif
 		const int newline_len = sizeof(newline)-1;
 		
-    	#define MACRO_CONFIG_INT(name,def,min,max) { char str[256]; sprintf(str, "%s=%i%s", #name, config.name, newline); io_write(file, str, strlen(str)); }
+    	#define MACRO_CONFIG_INT(name,def,min,max) { char str[256]; str_format(str, sizeof(str), "%s=%i%s", #name, config.name, newline); io_write(file, str, strlen(str)); }
     	#define MACRO_CONFIG_STR(name,len,def) { io_write(file, #name, strlen(#name)); io_write(file, "=", 1); io_write(file, config.name, strlen(config.name)); io_write(file, newline, newline_len); }
  
     	#include "e_config_variables.h" 
@@ -119,7 +117,7 @@ void config_save(const char *filename)
 #undef MACRO_CONFIG_STR
 
 #define MACRO_CONFIG_INT(name,def,min,max) void config_set_ ## name (CONFIGURATION *c, int val) { if(min != max) { if (val < min) val = min; if (max != 0 && val > max) val = max; } c->name = val; }
-#define MACRO_CONFIG_STR(name,len,def) void config_set_ ## name (CONFIGURATION *c, const char *str) { strncpy(c->name, str, len-1); c->name[sizeof(c->name)-1] = 0; }
+#define MACRO_CONFIG_STR(name,len,def) void config_set_ ## name (CONFIGURATION *c, const char *str) { str_copy(c->name, str, len-1); c->name[sizeof(c->name)-1] = 0; }
 #include "e_config_variables.h"
 #undef MACRO_CONFIG_INT
 #undef MACRO_CONFIG_STR

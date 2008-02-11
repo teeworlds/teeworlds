@@ -110,7 +110,7 @@ int img_init()
 		{
 			char buf[256];
 			char *name = (char *)map_get_data(img->image_name);
-			sprintf(buf, "data/mapres/%s.png", name);
+			str_format(buf, sizeof(buf), "data/mapres/%s.png", name);
 			map_textures[i] = gfx_load_texture(buf, IMG_AUTO);
 		}
 		else

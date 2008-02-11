@@ -205,7 +205,7 @@ void server_setclientname(int client_id, const char *name)
 {
 	if(client_id < 0 || client_id > MAX_CLIENTS || clients[client_id].state < SRVCLIENT_STATE_READY)
 		return;
-	strncpy(clients[client_id].name, name, MAX_NAME_LENGTH);
+	str_copy(clients[client_id].name, name, MAX_NAME_LENGTH);
 }
 
 void server_setclientscore(int client_id, int score)
@@ -548,18 +548,18 @@ static void server_process_client_packet(NETPACKET *packet)
 		{
 			char version[64];
 			const char *password;
-			strncpy(version, msg_unpack_string(), 64);
+			str_copy(version, msg_unpack_string(), 64);
 			if(strcmp(version, mods_net_version()) != 0)
 			{
 				/* OH FUCK! wrong version, drop him */
 				char reason[256];
-				sprintf(reason, "wrong version. server is running %s.", mods_net_version());
+				str_format(reason, sizeof(reason), "wrong version. server is running %s.", mods_net_version());
 				netserver_drop(net, cid, reason);
 				return;
 			}
 			
-			strncpy(clients[cid].name, msg_unpack_string(), MAX_NAME_LENGTH);
-			strncpy(clients[cid].clan, msg_unpack_string(), MAX_CLANNAME_LENGTH);
+			str_copy(clients[cid].name, msg_unpack_string(), MAX_NAME_LENGTH);
+			str_copy(clients[cid].clan, msg_unpack_string(), MAX_CLANNAME_LENGTH);
 			password = msg_unpack_string();
 			
 			if(config.password[0] != 0 && strcmp(config.password, password) != 0)
@@ -704,29 +704,29 @@ static void server_send_serverinfo(NETADDR4 *addr, int lan)
 	packer_add_string(&p, config.sv_map, 32);
 
 	/* gametype */
-	sprintf(buf, "%d", browseinfo_gametype);
+	str_format(buf, sizeof(buf), "%d", browseinfo_gametype);
 	packer_add_string(&p, buf, 2);
 
 	/* flags */
 	i = 0;
-	if(strlen(config.password))
+	if(config.password[0])
 		i |= 1;
-	sprintf(buf, "%d", i);
+	str_format(buf, sizeof(buf), "%d", i);
 	packer_add_string(&p, buf, 2);
 
 	/* progression */
-	sprintf(buf, "%d", browseinfo_progression);
+	str_format(buf, sizeof(buf), "%d", browseinfo_progression);
 	packer_add_string(&p, buf, 4);
 	
-	sprintf(buf, "%d", c); packer_add_string(&p, buf, 3);  /* num players */
-	sprintf(buf, "%d", netserver_max_clients(net)); packer_add_string(&p, buf, 3); /* max players */
+	str_format(buf, sizeof(buf), "%d", c); packer_add_string(&p, buf, 3);  /* num players */
+	str_format(buf, sizeof(buf), "%d", netserver_max_clients(net)); packer_add_string(&p, buf, 3); /* max players */
 
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(clients[i].state != SRVCLIENT_STATE_EMPTY)
 		{
 			packer_add_string(&p, clients[i].name, 48);  /* player name */
-			sprintf(buf, "%d", clients[i].score); packer_add_string(&p, buf, 6);  /* player score */
+			str_format(buf, sizeof(buf), "%d", clients[i].score); packer_add_string(&p, buf, 6);  /* player score */
 		}
 	}
 	
@@ -798,7 +798,7 @@ static int server_load_map(const char *mapname)
 {
 	DATAFILE *df;
 	char buf[512];
-	sprintf(buf, "data/maps/%s.map", mapname);
+	str_format(buf, sizeof(buf), "data/maps/%s.map", mapname);
 	df = datafile_load(buf);
 	if(!df)
 		return 0;
@@ -810,7 +810,7 @@ static int server_load_map(const char *mapname)
 	current_map_crc = datafile_crc(buf);
 	dbg_msg("server", "%s crc is %08x", buf, current_map_crc);
 		
-	strcpy(current_map, mapname);
+	str_copy(current_map, mapname, sizeof(current_map));
 	map_set(df);
 	
 	/* load compelate map into memory for download */
@@ -842,7 +842,7 @@ static int server_run()
 	}
 	
 	/* start server */
-	if(strlen(config.sv_bindaddr) && net_host_lookup(config.sv_bindaddr, config.sv_port, &bindaddr) != 0)
+	if(config.sv_bindaddr[0] && net_host_lookup(config.sv_bindaddr, config.sv_port, &bindaddr) != 0)
 	{
 		/* sweet! */
 	}

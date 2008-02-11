@@ -520,6 +520,13 @@ void swap_endian(void *data, unsigned elem_size, unsigned num);
 
 /* #define cache_prefetch(addr) __builtin_prefetch(addr) */
 
+/*typedef unsigned char [256] pstr;
+void pstr_format(pstr *str, )*/
+
+void str_append(char *dst, const char *src, int dst_size);
+void str_copy(char *dst, const char *src, int dst_size);
+void str_format(char *buffer, int buffer_size, const char *format, ...);
+
 #ifdef __cplusplus
 }
 #endif

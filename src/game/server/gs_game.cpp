@@ -115,6 +115,7 @@ void gameobject::cyclemap()
 {
 	if(!strlen(config.sv_maprotation))
 		return;
+		
 	// handle maprotation
 	char buf[512];
 	const char *s = strstr(config.sv_maprotation, config.sv_map);
@@ -145,7 +146,7 @@ void gameobject::cyclemap()
 		i++;
 	
 	dbg_msg("game", "rotating map to %s", &buf[i]);
-	strcpy(config.sv_map, &buf[i]);
+	str_copy(config.sv_map, &buf[i], sizeof(config.sv_map));
 }
 
 void gameobject::post_reset()

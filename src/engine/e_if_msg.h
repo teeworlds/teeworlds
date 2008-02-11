@@ -89,7 +89,7 @@ typedef struct
 const MSG_INFO *msg_get_info();
 
 /* message unpacking */
-int msg_unpack_start(const void *data, int data_size, int *system);
+int msg_unpack_start(const void *data, int data_size, int *is_system);
 
 /*
 	Function: msg_unpack_int

@@ -663,7 +663,7 @@ void player::set_team(int new_team)
 		return;
 		
 	char buf[512];
-	sprintf(buf, "%s joined the %s", server_clientname(client_id), get_team_name(new_team));
+	str_format(buf, sizeof(buf), "%s joined the %s", server_clientname(client_id), get_team_name(new_team));
 	send_chat(-1, -1, buf); 
 	
 	team = new_team;
@@ -2108,7 +2108,7 @@ void mods_client_enter(int client_id)
 
 
 	char buf[512];
-	sprintf(buf, "%s entered and joined the %s", server_clientname(client_id), get_team_name(players[client_id].team));
+	str_format(buf, sizeof(buf), "%s entered and joined the %s", server_clientname(client_id), get_team_name(players[client_id].team));
 	send_chat(-1, -1, buf); 
 
 	dbg_msg("game", "team_join player='%d:%s' team=%d", client_id, server_clientname(client_id), players[client_id].team);
@@ -2138,7 +2138,7 @@ void mods_connected(int client_id)
 void mods_client_drop(int client_id)
 {
 	char buf[512];
-	sprintf(buf, "%s has left the game", server_clientname(client_id));
+	str_format(buf, sizeof(buf),  "%s has left the game", server_clientname(client_id));
 	send_chat(-1, -1, buf);
 
 	dbg_msg("game", "leave player='%d:%s'", client_id, server_clientname(client_id));
@@ -2196,12 +2196,12 @@ void mods_message(int msg, int client_id)
 		if(msg == MSG_CHANGEINFO && strcmp(name, server_clientname(client_id)) != 0)
 		{
 			char msg[256];
-			sprintf(msg, "*** %s changed name to %s", server_clientname(client_id), name);
+			str_format(msg, sizeof(msg), "*** %s changed name to %s", server_clientname(client_id), name);
 			send_chat(-1, -1, msg);
 		}
 
 		//send_set_name(client_id, players[client_id].name, name);
-		strncpy(players[client_id].skin_name, skin_name, 64);
+		str_copy(players[client_id].skin_name, skin_name, sizeof(players[client_id].skin_name));
 		server_setclientname(client_id, name);
 		
 		gameobj->on_player_info_change(&players[client_id]);

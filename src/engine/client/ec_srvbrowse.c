@@ -214,7 +214,7 @@ static void client_serverbrowse_sort()
 	for(i = 0; i < num_sorted_servers; i++)
 		serverlist[sorted_serverlist[i]]->info.sorted_index = i;
 	
-	strncpy(filterstring, config.b_filter_string, sizeof(filterstring)-1); 
+	str_copy(filterstring, config.b_filter_string, sizeof(filterstring)); 
 	sorthash = client_serverbrowse_sorthash();
 }
 
@@ -278,7 +278,7 @@ void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *info)
 		SERVERENTRY **newlist;
 		num_server_capacity += 100;
 		newlist = mem_alloc(num_server_capacity*sizeof(SERVERENTRY*), 1);
-		memcpy(newlist, serverlist, num_servers*sizeof(SERVERENTRY*));
+		mem_copy(newlist, serverlist, num_servers*sizeof(SERVERENTRY*));
 		mem_free(serverlist);
 		serverlist = newlist;
 	}

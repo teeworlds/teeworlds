@@ -9,7 +9,7 @@ extern "C"{
 typedef struct
 { 
     #define MACRO_CONFIG_INT(name,def,min,max) int name;
-    #define MACRO_CONFIG_STR(name,len,def) char name[len];
+    #define MACRO_CONFIG_STR(name,len,def) char name[len]; /* Flawfinder: ignore */
     #include "e_config_variables.h" 
     #undef MACRO_CONFIG_INT 
     #undef MACRO_CONFIG_STR 

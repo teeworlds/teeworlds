@@ -107,9 +107,9 @@ int font_set_load(FONT_SET *font_set, const char *font_filename, const char *tex
         FONT *font = &font_set->fonts[i];
 
         size = va_arg(va, int);
-        sprintf(composed_font_filename, font_filename, size);
-        sprintf(composed_text_texture_filename, text_texture_filename, size);
-        sprintf(composed_outline_texture_filename, outline_texture_filename, size);
+        str_format(composed_font_filename, sizeof(composed_font_filename), font_filename, size);
+        str_format(composed_text_texture_filename, sizeof(composed_text_texture_filename), text_texture_filename, size);
+        str_format(composed_outline_texture_filename, sizeof(composed_outline_texture_filename), outline_texture_filename, size);
 
         if (font_load(font, composed_font_filename))
         {

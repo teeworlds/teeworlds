@@ -77,7 +77,7 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 #if defined(CONF_FAMILY_WINDOWS)
 	char str[1024];
 	va_start(args, fmt);
-	vsprintf(str, fmt, args);
+	_vnsprintf(str, sizeof(str), fmt, args);
 	va_end(args);
 	OutputDebugString(str);
 	OutputDebugString("\n");
@@ -92,11 +92,17 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 
 	{
 		char str[2048];
+		int len;
 
-		sprintf(str, "[%s]: ", sys);
+		str_format(str, sizeof(str), "[%s]: ", sys);
 
 		va_start(args, fmt);
-		vsprintf(str+strlen(str), fmt, args);
+		len = strlen(str);
+#if defined(CONF_FAMILY_WINDOWS)
+		_vsnprintf(str+len, sizeof(str)-len, fmt, args);
+#else
+		vsnprintf(str+len, sizeof(str)-len, fmt, args);
+#endif
 		va_end(args);
 
 		console_print(str);
@@ -180,7 +186,7 @@ void mem_debug_dump()
 	
 	while(header)
 	{
-		sprintf(buf, "%s(%d): %d\n", header->filename, header->line, header->size);
+		str_format(buf, sizeof(buf), "%s(%d): %d\n", header->filename, header->line, header->size);
 		io_write(f, buf, strlen(buf));
 		header = header->next;
 	}
@@ -675,8 +681,7 @@ int fs_listdir(const char *dir, fs_listdir_callback cb, void *user)
 	WIN32_FIND_DATA finddata;
 	HANDLE handle;
 	char buffer[1024*2];
-	strcpy(buffer, dir);
-	strcat(buffer, "/*");
+	str_format(buffer, sizeof(buffer), "%s/*", dir);
 
 	handle = FindFirstFileA(buffer, &finddata);
 
@@ -777,10 +782,6 @@ void swap_endian(void *data, unsigned elem_size, unsigned num)
 
 int net_socket_read_wait(NETSOCKET sock, int time)
 {
-	/*
-#if defined(CONF_FAMILY_WINDOWS)
-	#error Not implemented
-#else*/
     struct timeval tv;
     fd_set readfds;
 
@@ -795,13 +796,50 @@ int net_socket_read_wait(NETSOCKET sock, int time)
     if(FD_ISSET(sock, &readfds))
     	return 1;
     return 0;
-    /*
-#endif*/
 }
 
 unsigned time_timestamp()
 {
 	return time(0);
+}
+
+void str_append(char *dst, const char *src, int dst_size)
+{
+	int s = strlen(dst);
+	int i = 0;
+	while(s < dst_size)
+	{
+		dst[s] = src[i];
+		if(!src[i]) /* check for null termination */
+			break;
+		s++;
+		i++;
+	}
+	
+	dst[dst_size-1] = 0; /* assure null termination */
+}
+
+void str_copy(char *dst, const char *src, int dst_size)
+{
+	strncpy(dst, src, dst_size);
+	dst[dst_size-1] = 0; /* assure null termination */
+}
+
+void str_format(char *buffer, int buffer_size, const char *format, ...)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	va_list ap;
+	va_start(ap, format);
+	_vsnprintf(buffer, buffer_size, format, ap);
+    va_end(ap);
+#else
+	va_list ap;
+	va_start(ap, format);
+	vsnprintf(buffer, buffer_size, format, ap);
+    va_end(ap);
+#endif
+
+	buffer[buffer_size-1] = 0; /* assure null termination */
 }
 
 #if defined(__cplusplus)

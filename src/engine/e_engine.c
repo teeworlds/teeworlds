@@ -20,7 +20,7 @@ static char application_save_path[512] = {0};
 
 const char *engine_savepath(const char *filename, char *buffer, int max)
 {
-	sprintf(buffer, "%s/%s", application_save_path, filename);
+	str_format(buffer, max, "%s/%s", application_save_path, filename);
 	return buffer;
 }
 
@@ -45,12 +45,10 @@ void engine_init(const char *appname)
 		fs_storage_path(appname, application_save_path, sizeof(application_save_path));
 		if(fs_makedir(application_save_path) == 0)
 		{		
-			strcpy(path, application_save_path);
-			strcat(path, "/screenshots");
+			str_format(path, sizeof(path), "%s/screenshots", application_save_path);
 			fs_makedir(path);
 
-			strcpy(path, application_save_path);
-			strcat(path, "/maps");
+			str_format(path, sizeof(path), "%s/maps", application_save_path);
 			fs_makedir(path);
 		}
 	}
@@ -165,7 +163,7 @@ static void perf_dump_imp(PERFORMACE_INFO *info, int indent)
 	for(i = 0; i < indent; i++)
 		buf[i] = ' ';
 	
-	sprintf(&buf[indent], "%-20s %8.2f %8.2f", info->name, info->total*1000/(float)freq, info->biggest*1000/(float)freq);
+	str_format(&buf[indent], sizeof(buf)-indent, "%-20s %8.2f %8.2f", info->name, info->total*1000/(float)freq, info->biggest*1000/(float)freq);
 	dbg_msg("perf", "%s", buf);
 	
 	info = info->first_child;
@@ -374,7 +372,7 @@ int mastersrv_save()
 	for(i = 0; i < MAX_MASTERSERVERS; i++)
 	{
 		char buf[1024];
-		sprintf(buf, "%s %d.%d.%d.%d\n", master_servers[i].hostname,
+		str_format(buf, sizeof(buf), "%s %d.%d.%d.%d\n", master_servers[i].hostname,
 			master_servers[i].addr.ip[0], master_servers[i].addr.ip[1],
 			master_servers[i].addr.ip[2], master_servers[i].addr.ip[3]);
 			

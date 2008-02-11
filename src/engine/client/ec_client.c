@@ -430,7 +430,7 @@ void client_connect(const char *server_address_str)
 
 	dbg_msg("client", "connecting to '%s'", server_address_str);
 
-	strncpy(buf, server_address_str, 512);
+	str_copy(buf, server_address_str, sizeof(buf));
 
 	for(k = 0; buf[k]; k++)
 	{
@@ -500,7 +500,7 @@ static void client_debug_render()
 	}
 	
 	frametime_avg = frametime_avg*0.9f + frametime*0.1f;
-	sprintf(buffer, "ticks: %8d %8d send: %6d recv: %6d snaploss: %d  mem %dk   gfxmem: %dk  fps: %3d",
+	str_format(buffer, sizeof(buffer), "ticks: %8d %8d send: %6d recv: %6d snaploss: %d  mem %dk   gfxmem: %dk  fps: %3d",
 		current_tick, current_predtick,
 		(current.send_bytes-prev.send_bytes)*10,
 		(current.recv_bytes-prev.recv_bytes)*10,
@@ -517,7 +517,7 @@ static void client_debug_render()
 		{
 			if(snapshot_data_rate[i])
 			{
-				sprintf(buffer, "%4d : %8d %8d %8d", i, snapshot_data_rate[i]/8, snapshot_data_updates[i],
+				str_format(buffer, sizeof(buffer), "%4d : %8d %8d %8d", i, snapshot_data_rate[i]/8, snapshot_data_updates[i],
 					(snapshot_data_rate[i]/snapshot_data_updates[i])/8);
 				gfx_quads_text(2, 100+i*8, 16, buffer);
 			}
@@ -564,7 +564,7 @@ static const char *client_load_map(const char *filename, int wanted_crc)
 	df = datafile_load(filename);
 	if(!df)
 	{
-		sprintf(errormsg, "map '%s' not found", filename);
+		str_format(errormsg, sizeof(errormsg), "map '%s' not found", filename);
 		return errormsg;
 	}
 	
@@ -573,7 +573,7 @@ static const char *client_load_map(const char *filename, int wanted_crc)
 	if(crc != wanted_crc)
 	{
 		datafile_unload(df);
-		sprintf(errormsg, "map differs from the server. %08x != %08x", crc, wanted_crc);
+		str_format(errormsg, sizeof(errormsg), "map differs from the server. %08x != %08x", crc, wanted_crc);
 		return errormsg;
 	}
 	
@@ -592,13 +592,13 @@ static const char *client_load_map_search(const char *mapname, int wanted_crc)
 	client_set_state(CLIENTSTATE_LOADING);
 	
 	/* try the normal maps folder */
-	sprintf(buf, "data/maps/%s.map", mapname);
+	str_format(buf, sizeof(buf), "data/maps/%s.map", mapname);
 	error = client_load_map(buf, wanted_crc);
 	if(!error)
 		return error;
 
 	/* try the downloaded maps */
-	sprintf(buf2, "%s_%8x.map", mapname, wanted_crc);
+	str_format(buf2, sizeof(buf2), "%s_%8x.map", mapname, wanted_crc);
 	engine_savepath(buf2, buf, sizeof(buf));
 	error = client_load_map(buf, wanted_crc);
 	return error;
@@ -628,10 +628,10 @@ static void client_process_packet(NETPACKET *packet)
 #endif
 
 				info.latency = 999;
-				sprintf(info.address, "%d.%d.%d.%d:%d",
+				str_format(info.address, sizeof(info.address), "%d.%d.%d.%d:%d",
 					addr.ip[0], addr.ip[1], addr.ip[2],
 					addr.ip[3], addr.port);
-				sprintf(info.name, "\255%d.%d.%d.%d:%d", /* the \255 is to make sure that it's sorted last */
+				str_format(info.name, sizeof(info.name), "\255%d.%d.%d.%d:%d", /* the \255 is to make sure that it's sorted last */
 					addr.ip[0], addr.ip[1], addr.ip[2],
 					addr.ip[3], addr.port);
 				
@@ -668,21 +668,21 @@ static void client_process_packet(NETPACKET *packet)
 
 				unpacker_reset(&up, (unsigned char*)packet->data+sizeof(SERVERBROWSE_INFO), packet->data_size-sizeof(SERVERBROWSE_INFO));
 
-				strncpy(info.version, unpacker_get_string(&up), 32);
-				strncpy(info.name, unpacker_get_string(&up), 64);
-				strncpy(info.map, unpacker_get_string(&up), 32);
+				str_copy(info.version, unpacker_get_string(&up), sizeof(info.version));
+				str_copy(info.name, unpacker_get_string(&up), sizeof(info.name));
+				str_copy(info.map, unpacker_get_string(&up), sizeof(info.map));
 				info.game_type = atol(unpacker_get_string(&up));
 				info.flags = atol(unpacker_get_string(&up));
 				info.progression = atol(unpacker_get_string(&up));
 				info.num_players = atol(unpacker_get_string(&up));
 				info.max_players = atol(unpacker_get_string(&up));
-				sprintf(info.address, "%d.%d.%d.%d:%d",
+				str_format(info.address, sizeof(info.address), "%d.%d.%d.%d:%d",
 					packet->address.ip[0], packet->address.ip[1], packet->address.ip[2],
 					packet->address.ip[3], packet->address.port);
 				
 				for(i = 0; i < info.num_players; i++)
 				{
-					strncpy(info.player_names[i], unpacker_get_string(&up), 48);
+					str_copy(info.player_names[i], unpacker_get_string(&up), sizeof(info.player_names[i]));
 					info.player_scores[i] = atol(unpacker_get_string(&up));
 				}
 				
@@ -727,7 +727,7 @@ static void client_process_packet(NETPACKET *packet)
 					else
 					{
 						char buf[512];
-						sprintf(buf, "%s_%8x.map", map, map_crc);
+						str_format(buf, sizeof(buf), "%s_%8x.map", map, map_crc);
 						engine_savepath(buf, mapdownload_filename, sizeof(mapdownload_filename));
 
 						dbg_msg("client/network", "starting to download map to '%s'", mapdownload_filename);

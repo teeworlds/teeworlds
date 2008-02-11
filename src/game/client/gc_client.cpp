@@ -224,8 +224,8 @@ void chat_add_line(int client_id, int team, const char *line)
 
 	if(client_id == -1) // server message
 	{
-		strcpy(chat_lines[chat_current_line].name, "*** ");
-		sprintf(chat_lines[chat_current_line].text, "%s", line);
+		str_copy(chat_lines[chat_current_line].name, "*** ", sizeof(chat_lines[chat_current_line].name));
+		str_format(chat_lines[chat_current_line].text, sizeof(chat_lines[chat_current_line].text), "%s", line);
 	}
 	else
 	{
@@ -240,8 +240,8 @@ void chat_add_line(int client_id, int team, const char *line)
 				chat_lines[chat_current_line].name_color = 1;
 		}
 		
-		strcpy(chat_lines[chat_current_line].name, client_datas[client_id].name);
-		sprintf(chat_lines[chat_current_line].text, ": %s", line);
+		str_copy(chat_lines[chat_current_line].name, client_datas[client_id].name, sizeof(chat_lines[chat_current_line].name));
+		str_format(chat_lines[chat_current_line].text, sizeof(chat_lines[chat_current_line].text), ": %s", line);
 	}
 }
 
@@ -529,13 +529,13 @@ void render_goals(float x, float y, float w)
 	if(gameobj && gameobj->time_limit)
 	{
 		char buf[64];
-		sprintf(buf, "Time Limit: %d min", gameobj->time_limit);
+		str_format(buf, sizeof(buf), "Time Limit: %d min", gameobj->time_limit);
 		gfx_text(0, x+w/2, y, 24.0f, buf, -1);
 	}
 	if(gameobj && gameobj->score_limit)
 	{
 		char buf[64];
-		sprintf(buf, "Score Limit: %d", gameobj->score_limit);
+		str_format(buf, sizeof(buf), "Score Limit: %d", gameobj->score_limit);
 		gfx_text(0, x+40, y, 24.0f, buf, -1);
 	}
 }
@@ -546,7 +546,7 @@ void render_spectators(float x, float y, float w)
 	int count = 0;
 	float h = 120.0f;
 	
-	strcpy(buffer, "Spectators: ");
+	str_copy(buffer, sizeof(buffer), "Spectators: ");
 
 	gfx_blend_normal();
 	gfx_texture_set(-1);
@@ -614,22 +614,13 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 		if(gameobj)
 		{
 			char buf[128];
-			sprintf(buf, "%d", gameobj->teamscore[team&1]);
+			str_format(buf, buf, "%d", gameobj->teamscore[team&1]);
 			tw = gfx_text_width(0, 48, buf, -1);
 			gfx_text(0, x+w-tw-30, y, 48, buf, -1);
 		}
 	}
 
 	y += 54.0f;
-
-	/*
-	if(team)
-	{
-		char buf[128];
-		sprintf(buf, "%4d", gameobj->teamscore[team&1]);
-		gfx_text(0, x+w/2-tw/2, y, 32, buf, -1);
-	}*/
-
 
 	// find players
 	const obj_player_info *players[MAX_CLIENTS] = {0};
@@ -687,18 +678,18 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 			gfx_quads_end();
 		}
 
-		sprintf(buf, "%4d", info->score);
+		str_format(buf, sizeof(buf), "%4d", info->score);
 		gfx_text(0, x+60-gfx_text_width(0, font_size,buf,-1), y, font_size, buf, -1);
 		
 		if(config.cl_show_player_ids)
 		{
-			sprintf(buf, "%d | %s", info->clientid, client_datas[info->clientid].name);
+			str_format(buf, sizeof(buf), "%d | %s", info->clientid, client_datas[info->clientid].name);
 			gfx_text(0, x+128, y, font_size, buf, -1);
 		}
 		else
 			gfx_text(0, x+128, y, font_size, client_datas[info->clientid].name, -1);
 
-		sprintf(buf, "%4d", info->latency);
+		str_format(buf, sizeof(buf), "%4d", info->latency);
 		float tw = gfx_text_width(0, font_size, buf, -1);
 		gfx_text(0, x+w-tw-35, y, font_size, buf, -1);
 
@@ -1257,15 +1248,15 @@ void render_game()
 			// render chat input
 			char buf[sizeof(chat_input)+16];
 			if(chat_mode == CHATMODE_ALL)
-				sprintf(buf, "All: %s_", chat_input);
+				str_format(buf, sizeof(buf), "All: %s_", chat_input);
 			else if(chat_mode == CHATMODE_TEAM)
-				sprintf(buf, "Team: %s_", chat_input);
+				str_format(buf, sizeof(buf), "Team: %s_", chat_input);
 			else if(chat_mode == CHATMODE_CONSOLE)
-				sprintf(buf, "Console: %s_", chat_input);
+				str_format(buf, sizeof(buf), "Console: %s_", chat_input);
 			else if(chat_mode == CHATMODE_REMOTECONSOLE)
-				sprintf(buf, "Rcon: %s_", chat_input);
+				str_format(buf, sizeof(buf), "Rcon: %s_", chat_input);
 			else
-				sprintf(buf, "Chat: %s_", chat_input);
+				str_format(buf, sizeof(buf), "Chat: %s_", chat_input);
 			gfx_text(0, x, y, 8.0f, buf, 380);
 			starty = y;
 		}
@@ -1336,7 +1327,7 @@ void render_game()
 			else
 				time = (client_tick()-gameobj->round_start_tick)/client_tickspeed();
 
-			sprintf(buf, "%d:%02d", time /60, time %60);
+			str_format(buf, sizeof(buf), "%d:%02d", time /60, time %60);
 			float w = gfx_text_width(0, 16, buf, -1);
 			gfx_text(0, half-w/2, 2, 16, buf, -1);
 		}
@@ -1364,7 +1355,7 @@ void render_game()
 				gfx_quads_end();
 
 				char buf[32];
-				sprintf(buf, "%d", gameobj->teamscore[t]);
+				str_format(buf, sizeof(buf), "%d", gameobj->teamscore[t]);
 				float w = gfx_text_width(0, 14, buf, -1);
 				
 				if(gametype == GAMETYPE_CTF)
@@ -1413,9 +1404,9 @@ void render_game()
 
 			int seconds = gameobj->warmup/SERVER_TICK_SPEED;
 			if(seconds < 5)
-				sprintf(buf, "%d.%d", seconds, (gameobj->warmup*10/SERVER_TICK_SPEED)%10);
+				str_format(buf, sizeof(buf), "%d.%d", seconds, (gameobj->warmup*10/SERVER_TICK_SPEED)%10);
 			else
-				sprintf(buf, "%d", seconds);
+				str_format(buf, sizeof(buf), "%d", seconds);
 			w = gfx_text_width(0, 24, buf, -1);
 			gfx_text(0, 150*gfx_screenaspect()+-w/2, 75, 24, buf, -1);
 		}
@@ -1456,7 +1447,7 @@ void render_game()
 			vec2(local_character->x, local_character->y));
 		
 		char buf[512];
-		sprintf(buf, "%.2f", speed/2);
+		str_format(buf, sizeof(buf), "%.2f", speed/2);
 		gfx_text(0, 150, 50, 12, buf, -1);
 	}
 
@@ -1545,12 +1536,12 @@ void render_game()
 				float w;
 				float x = 5.0f;
 				
-				sprintf(buf, "%.2f", standard);
+				str_format(buf, sizeof(buf), "%.2f", standard);
 				x += 20.0f;
 				w = gfx_text_width(0, 5, buf, -1);
 				gfx_text(0x0, x-w, y+count*6, 5, buf, -1);
 
-				sprintf(buf, "%.2f", current);
+				str_format(buf, sizeof(buf), "%.2f", current);
 				x += 20.0f;
 				w = gfx_text_width(0, 5, buf, -1);
 				gfx_text(0x0, x-w, y+count*6, 5, buf, -1);

@@ -171,7 +171,7 @@ static void ui_draw_checkbox(const void *id, const char *text, int checked, cons
 static void ui_draw_checkbox_number(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	char buf[16];
-	sprintf(buf, "%d", checked);
+	str_format(buf, sizeof(buf), "%d", checked);
 	ui_draw_checkbox_common(id, text, buf, r);
 }
 
@@ -882,12 +882,12 @@ static void menu2_render_serverbrowser(RECT main_view)
 				ui_do_label(&button, item->map, 12.0f, -1);
 			else if(id == COL_PLAYERS)
 			{
-				sprintf(temp, "%i/%i", item->num_players, item->max_players);
+				str_format(temp, sizeof(temp), "%i/%i", item->num_players, item->max_players);
 				ui_do_label(&button, temp, 12.0f, 1);
 			}
 			else if(id == COL_PING)
 			{
-				sprintf(temp, "%i", item->latency);
+				str_format(temp, sizeof(temp), "%i", item->latency);
 				ui_do_label(&button, temp, 12.0f, 1);
 			}
 			else if(id == COL_PROGRESS)
@@ -981,13 +981,13 @@ static void menu2_render_serverbrowser(RECT main_view)
 		char temp[16];
 
 		if(selected_server->progression < 0)
-			sprintf(temp, "N/A");
+			str_format(temp, sizeof(temp), "N/A");
 		else
-			sprintf(temp, "%d%%", selected_server->progression);
+			str_format(temp, sizeof(temp), "%d%%", selected_server->progression);
 		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
 		ui_do_label(&row, temp, 13.0f, -1);
 
-		sprintf(temp, "%d", selected_server->latency);
+		str_format(temp, sizeof(temp), "%d", selected_server->latency);
 		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
 		ui_do_label(&row, temp, 13.0f, -1);
 	}
@@ -1012,7 +1012,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 			char temp[16];
 			ui_hsplit_t(&server_scoreboard, 16.0f, &row, &server_scoreboard);
 
-			sprintf(temp, "%d", selected_server->player_scores[i]);
+			str_format(temp, sizeof(temp), "%d", selected_server->player_scores[i]);
 			ui_do_label(&row, temp, 14.0f, -1);
 
 			ui_vsplit_l(&row, 25.0f, 0x0, &row);
@@ -1050,7 +1050,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 		ui_vsplit_l(&button, 5.0f, &button, &button);
 		
 		char buf[8];
-		sprintf(buf, "%d", config.b_filter_ping);
+		str_format(buf, sizeof(buf), "%d", config.b_filter_ping);
 		ui_do_edit_box(&config.b_filter_ping, &editbox, buf, sizeof(buf), 14.0f);
 		config.b_filter_ping = atoi(buf);
 		
@@ -1073,7 +1073,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 	ui_draw_rect(&status, vec4(1,1,1,0.25f), CORNER_B, 5.0f);
 	ui_vmargin(&status, 50.0f, &status);
 	char buf[128];
-	sprintf(buf, "%d of %d servers", client_serverbrowse_sorted_num(), client_serverbrowse_num());
+	str_format(buf, sizeof(buf), "%d of %d servers", client_serverbrowse_sorted_num(), client_serverbrowse_num());
 	ui_do_label(&status, buf, 14.0f, -1);
 
 	// render toolbox
@@ -1231,7 +1231,7 @@ static void menu2_render_settings_player(RECT main_view)
 	{
 		const skin *s = skin_get(i);
 		char buf[128];
-		sprintf(buf, "%s", s->name);
+		str_format(buf, sizeof(buf), "%s", s->name);
 		int selected = 0;
 		if(strcmp(s->name, config.player_skin) == 0)
 			selected = 1;
@@ -1357,7 +1357,7 @@ static void menu2_render_settings_graphics(RECT main_view)
 
 	// draw footers	
 	ui_hsplit_b(&modelist, 20, &modelist, &footer);
-	sprintf(buf, "Current: %dx%d %d bit", config.gfx_screen_width, config.gfx_screen_height, config.gfx_color_depth);
+	str_format(buf, sizeof(buf), "Current: %dx%d %d bit", config.gfx_screen_width, config.gfx_screen_height, config.gfx_color_depth);
 	ui_draw_rect(&footer, vec4(1,1,1,0.25f), CORNER_B, 5.0f); 
 	ui_vsplit_l(&footer, 10.0f, 0, &footer);
 	ui_do_label(&footer, buf, 14.0f, -1);
@@ -1397,7 +1397,7 @@ static void menu2_render_settings_graphics(RECT main_view)
 			selected = 1;
 		}
 		
-		sprintf(buf, "  %dx%d %d bit", modes[i].width, modes[i].height, depth);
+		str_format(buf, sizeof(buf), "  %dx%d %d bit", modes[i].width, modes[i].height, depth);
 		if(ui_do_button(&modes[i], buf, selected, &button, ui_draw_list_row, 0))
 		{
 			config.gfx_color_depth = depth;
@@ -1502,7 +1502,7 @@ static void menu2_render_settings_sound(RECT main_view)
 	// sample rate box
 	{
 		char buf[64];
-		sprintf(buf, "%d", config.snd_rate);
+		str_format(buf, sizeof(buf), "%d", config.snd_rate);
 		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
 		ui_do_label(&button, "Sample Rate", 14.0f, -1);
 		ui_vsplit_l(&button, 110.0f, 0, &button);
@@ -1810,7 +1810,7 @@ int menu2_render()
 			if(client_mapdownload_totalsize() > 0)
 			{
 				title = "Downloading map";
-				sprintf(buf, "%d/%d KiB", client_mapdownload_amount()/1024, client_mapdownload_totalsize()/1024);
+				str_format(buf, sizeof(buf), "%d/%d KiB", client_mapdownload_amount()/1024, client_mapdownload_totalsize()/1024);
 				extra_text = buf;
 			}
 		}

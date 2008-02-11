@@ -52,7 +52,7 @@ static void client_console_print(const char *str)
 		len = 255;
 
 	char *entry = (char *)ringbuf_allocate(console_backlog, len+1);
-	memcpy(entry, str, len+1);
+	mem_copy(entry, str, len+1);
 }
 
 
@@ -137,7 +137,7 @@ void console_handle_input()
 				if (console_input_len)
 				{
 					char *entry = (char *)ringbuf_allocate(console_history, console_input_len+1);
-					memcpy(entry, console_input, console_input_len+1);
+					mem_copy(entry, console_input, console_input_len+1);
 					
 					console_execute(console_input);
 					console_input[0] = 0;
@@ -163,7 +163,7 @@ void console_handle_input()
 					unsigned int len = strlen(console_history_entry);
 					if (len < sizeof(console_input) - 1)
 					{
-						memcpy(console_input, console_history_entry, len+1);
+						mem_copy(console_input, console_history_entry, len+1);
 
 						console_input_len = len;
 					}
@@ -180,7 +180,7 @@ void console_handle_input()
 					unsigned int len = strlen(console_history_entry);
 					if (len < sizeof(console_input) - 1)
 					{
-						memcpy(console_input, console_history_entry, len+1);
+						mem_copy(console_input, console_history_entry, len+1);
 
 						console_input_len = len;
 					}
@@ -304,7 +304,7 @@ void console_render()
 		gfx_text(0, x+prompt_width+width+1, y, font_size, "_", -1);
 
 		char buf[64];
-		sprintf(buf, "Teewars v%s", TEEWARS_VERSION);
+		str_format(buf, sizeof(buf), "Teewars v%s", TEEWARS_VERSION);
 		float version_width = gfx_text_width(0, font_size, buf, -1);
 		gfx_text(0, screen.w-version_width-5, y, font_size, buf, -1);
 
