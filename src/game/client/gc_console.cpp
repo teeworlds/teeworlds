@@ -262,7 +262,17 @@ void console_render()
 
 	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
 
+	// do shadow
+	gfx_texture_set(-1);
+    gfx_quads_begin();
+    gfx_setcolorvertex(0, 0,0,0, 0.5f);
+    gfx_setcolorvertex(1, 0,0,0, 0.5f);
+    gfx_setcolorvertex(2, 0,0,0, 0.0f);
+    gfx_setcolorvertex(3, 0,0,0, 0.0f);
+    gfx_quads_drawTL(0,console_height,screen.w,10.0f);
+    gfx_quads_end();
 
+	// do background
 	gfx_texture_set(data->images[IMAGE_CONSOLE_BG].id);
     gfx_quads_begin();
     gfx_setcolor(0.2f, 0.2f, 0.2f,0.9f);
@@ -270,18 +280,21 @@ void console_render()
     gfx_quads_drawTL(0,0,screen.w,console_height);
     gfx_quads_end();
 
+	// do the lower bar
 	gfx_texture_set(data->images[IMAGE_CONSOLE_BAR].id);
     gfx_quads_begin();
     gfx_setcolor(1.0f, 1.0f, 1.0f, 0.9f);
     gfx_quads_setsubset(0,0.1f,screen.w*0.015f,1-0.1f);
     gfx_quads_drawTL(0,console_height-10.0f,screen.w,10.0f);
     gfx_quads_end();
+
+
     
     console_height -= 10.0f;
 
 	{
-		float font_size = 12.0f;
-		float row_height = font_size*1.4f;
+		float font_size = 10.0f;
+		float row_height = font_size*1.25f;
 		float width = gfx_text_width(0, font_size, console_input, -1);
 		float x = 3, y = console_height - row_height - 2;
 		float prompt_width = gfx_text_width(0, font_size, ">", -1)+2;
