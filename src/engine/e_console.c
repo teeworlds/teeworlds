@@ -198,6 +198,7 @@ static int lex(const char *line, LEXER_RESULT *res)
     case STATE_STRING: 
     case STATE_QUOTED: 
     case STATE_POT_FLOAT: 
+	case STATE_POT_NEGATIVE:
         save_token(res, &i, &start, c, &state, TOKEN_STRING); 
         break; 
     case STATE_ESCAPE: 
