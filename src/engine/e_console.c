@@ -38,6 +38,7 @@ enum
     STATE_INT, 
     STATE_FLOAT, 
     STATE_POT_FLOAT, 
+	STATE_POT_NEGATIVE,
     STATE_STRING, 
     STATE_QUOTED, 
     STATE_ESCAPE 
@@ -115,7 +116,7 @@ static int lex(const char *line, LEXER_RESULT *res)
             else if (digit(*c)) 
                 state = STATE_INT; 
             else if (*c == '-') 
-                state = STATE_INT; 
+                state = STATE_POT_NEGATIVE; 
             else if (*c == '.') 
                 state = STATE_POT_FLOAT; 
             else if (*c == '"')
@@ -123,6 +124,17 @@ static int lex(const char *line, LEXER_RESULT *res)
 			else
                 state = STATE_STRING; 
             break; 
+
+		case STATE_POT_NEGATIVE:
+			if (digit(*c))
+				state = STATE_INT;
+			else if (*c == '.')
+				state = STATE_POT_FLOAT;
+			else if (*c == ' ')
+                save_token(res, &i, &start, c, &state, TOKEN_STRING); 
+			else
+				state = STATE_STRING;
+			break;
  
         case STATE_INT: 
             if (digit(*c)) 
@@ -189,7 +201,7 @@ static int lex(const char *line, LEXER_RESULT *res)
         save_token(res, &i, &start, c, &state, TOKEN_STRING); 
         break; 
     case STATE_ESCAPE: 
-        puts("LOL MALFORMED"); 
+		dbg_msg("console/lexer", "Misplaced escape character");
         break; 
     default: 
         break; 
