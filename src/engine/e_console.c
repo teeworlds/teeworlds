@@ -12,14 +12,14 @@
  
 enum 
 { 
-    TOKEN_INT, 
-    TOKEN_FLOAT, 
-    TOKEN_STRING 
+	TOKEN_INT, 
+	TOKEN_FLOAT, 
+	TOKEN_STRING 
 }; 
  
 typedef struct
 { 
-    int type; 
+	int type; 
 	const char *stored_string;
 } TOKEN;
  
@@ -28,20 +28,20 @@ typedef struct
 	char string_storage[CONSOLE_MAX_STR_LENGTH+1];
 	char *next_string;
 
-    TOKEN tokens[MAX_TOKENS]; 
-    unsigned int num_tokens; 
+	TOKEN tokens[MAX_TOKENS]; 
+	unsigned int num_tokens; 
 } LEXER_RESULT; 
 
 enum 
 { 
-    STATE_START, 
-    STATE_INT, 
-    STATE_FLOAT, 
-    STATE_POT_FLOAT, 
+	STATE_START, 
+	STATE_INT, 
+	STATE_FLOAT, 
+	STATE_POT_FLOAT, 
 	STATE_POT_NEGATIVE,
-    STATE_STRING, 
-    STATE_QUOTED, 
-    STATE_ESCAPE 
+	STATE_STRING, 
+	STATE_QUOTED, 
+	STATE_ESCAPE 
 }; 
 
 static const char *store_string(LEXER_RESULT *res, const char *str, int len)
@@ -79,51 +79,51 @@ static const char *store_string(LEXER_RESULT *res, const char *str, int len)
 
 static void save_token(LEXER_RESULT *res, int *index, const char **start, const char *end, int *state, int type) 
 { 
-    /* printf("Saving token with length %d\n", end - *start); */
-    TOKEN *tok = &res->tokens[*index]; 
+	/* printf("Saving token with length %d\n", end - *start); */
+	TOKEN *tok = &res->tokens[*index]; 
 	tok->stored_string = store_string(res, *start, end - *start);
-    tok->type = type; 
-    ++res->num_tokens; 
+	tok->type = type; 
+	++res->num_tokens; 
  
-    *start = end + 1; 
-    *state = STATE_START; 
-    ++*index; 
+	*start = end + 1; 
+	*state = STATE_START; 
+	++*index; 
 } 
  
 static int digit(char c) 
 { 
-    return '0' <= c && c <= '9'; 
+	return '0' <= c && c <= '9'; 
 } 
  
 static int lex(const char *line, LEXER_RESULT *res) 
 { 
-    int state = STATE_START, i = 0; 
+	int state = STATE_START, i = 0; 
 	int length_left = CONSOLE_MAX_STR_LENGTH;
-    const char *start, *c; 
-    res->num_tokens = 0; 
+	const char *start, *c; 
+	res->num_tokens = 0; 
 
 	mem_zero(res, sizeof(*res));
 	res->next_string = res->string_storage;
 
-    for (c = start = line; *c != '\0' && res->num_tokens < MAX_TOKENS && length_left; ++c, --length_left) 
-    { 
-        /* printf("State: %d.. c: %c\n", state, *c); */
-        switch (state) 
-        { 
-        case STATE_START: 
-            if (*c == ' ') 
-                start = c + 1; 
-            else if (digit(*c)) 
-                state = STATE_INT; 
-            else if (*c == '-') 
-                state = STATE_POT_NEGATIVE; 
-            else if (*c == '.') 
-                state = STATE_POT_FLOAT; 
-            else if (*c == '"')
+	for (c = start = line; *c != '\0' && res->num_tokens < MAX_TOKENS && length_left; ++c, --length_left) 
+	{ 
+		/* printf("State: %d.. c: %c\n", state, *c); */
+		switch (state) 
+		{ 
+		case STATE_START: 
+			if (*c == ' ') 
+				start = c + 1; 
+			else if (digit(*c)) 
+				state = STATE_INT; 
+			else if (*c == '-') 
+				state = STATE_POT_NEGATIVE; 
+			else if (*c == '.') 
+				state = STATE_POT_FLOAT; 
+			else if (*c == '"')
 				state = STATE_QUOTED;
 			else
-                state = STATE_STRING; 
-            break; 
+				state = STATE_STRING; 
+			break; 
 
 		case STATE_POT_NEGATIVE:
 			if (digit(*c))
@@ -131,82 +131,82 @@ static int lex(const char *line, LEXER_RESULT *res)
 			else if (*c == '.')
 				state = STATE_POT_FLOAT;
 			else if (*c == ' ')
-                save_token(res, &i, &start, c, &state, TOKEN_STRING); 
+				save_token(res, &i, &start, c, &state, TOKEN_STRING); 
 			else
 				state = STATE_STRING;
 			break;
  
-        case STATE_INT: 
-            if (digit(*c)) 
-                ; 
-            else if (*c == '.') 
-                state = STATE_FLOAT; 
-            else if (*c == ' ') 
-                save_token(res, &i, &start, c, &state, TOKEN_INT); 
-            else 
-                state = STATE_STRING; 
-            break; 
+		case STATE_INT: 
+			if (digit(*c)) 
+				; 
+			else if (*c == '.') 
+				state = STATE_FLOAT; 
+			else if (*c == ' ') 
+				save_token(res, &i, &start, c, &state, TOKEN_INT); 
+			else 
+				state = STATE_STRING; 
+			break; 
  
-        case STATE_FLOAT: 
-            if (digit(*c)) 
-                ; 
-            else if (*c == ' ') 
-                save_token(res, &i, &start, c, &state, TOKEN_FLOAT); 
-            else 
-                state = STATE_STRING; 
-            break; 
+		case STATE_FLOAT: 
+			if (digit(*c)) 
+				; 
+			else if (*c == ' ') 
+				save_token(res, &i, &start, c, &state, TOKEN_FLOAT); 
+			else 
+				state = STATE_STRING; 
+			break; 
  
-        case STATE_POT_FLOAT: 
-            if (digit(*c)) 
-                state = STATE_FLOAT; 
-            else if (*c == ' ') 
-                save_token(res, &i, &start, c, &state, TOKEN_STRING); 
-            else 
-                state = STATE_STRING; 
-            break; 
+		case STATE_POT_FLOAT: 
+			if (digit(*c)) 
+				state = STATE_FLOAT; 
+			else if (*c == ' ') 
+				save_token(res, &i, &start, c, &state, TOKEN_STRING); 
+			else 
+				state = STATE_STRING; 
+			break; 
  
-        case STATE_STRING: 
-            if (*c == ' ') 
-                save_token(res, &i, &start, c, &state, TOKEN_STRING); 
-            break; 
+		case STATE_STRING: 
+			if (*c == ' ') 
+				save_token(res, &i, &start, c, &state, TOKEN_STRING); 
+			break; 
  
-        case STATE_QUOTED: 
-            if (*c == '"') 
+		case STATE_QUOTED: 
+			if (*c == '"') 
 			{
 				++start;
-                save_token(res, &i, &start, c, &state, TOKEN_STRING); 
+				save_token(res, &i, &start, c, &state, TOKEN_STRING); 
 			}
-            else if (*c == '\\') 
-                state = STATE_ESCAPE; 
-            break; 
+			else if (*c == '\\') 
+				state = STATE_ESCAPE; 
+			break; 
  
-        case STATE_ESCAPE: 
-            if (*c != ' ') 
-                state = STATE_QUOTED; 
-            break; 
-        } 
-    } 
+		case STATE_ESCAPE: 
+			if (*c != ' ') 
+				state = STATE_QUOTED; 
+			break; 
+		} 
+	} 
  
-    switch (state) 
-    { 
-    case STATE_INT: 
-        save_token(res, &i, &start, c, &state, TOKEN_INT); 
-        break; 
-    case STATE_FLOAT: 
-        save_token(res, &i, &start, c, &state, TOKEN_FLOAT); 
-        break; 
-    case STATE_STRING: 
-    case STATE_QUOTED: 
-    case STATE_POT_FLOAT: 
+	switch (state) 
+	{ 
+	case STATE_INT: 
+		save_token(res, &i, &start, c, &state, TOKEN_INT); 
+		break; 
+	case STATE_FLOAT: 
+		save_token(res, &i, &start, c, &state, TOKEN_FLOAT); 
+		break; 
+	case STATE_STRING: 
+	case STATE_QUOTED: 
+	case STATE_POT_FLOAT: 
 	case STATE_POT_NEGATIVE:
-        save_token(res, &i, &start, c, &state, TOKEN_STRING); 
-        break; 
-    case STATE_ESCAPE: 
+		save_token(res, &i, &start, c, &state, TOKEN_STRING); 
+		break; 
+	case STATE_ESCAPE: 
 		dbg_msg("console/lexer", "Misplaced escape character");
-        break; 
-    default: 
-        break; 
-    } 
+		break; 
+	default: 
+		break; 
+	} 
 
 	return 0;
 }
@@ -432,11 +432,11 @@ void console_init()
 {
 	MACRO_REGISTER_COMMAND("echo", "s", echo_command, 0x0);
 
-    #define MACRO_CONFIG_INT(name,def,min,max) { static INT_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?i", int_variable_command, &data) }
-    #define MACRO_CONFIG_STR(name,len,def) { static STR_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?s", str_variable_command, &data) }
+	#define MACRO_CONFIG_INT(name,def,min,max) { static INT_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?i", int_variable_command, &data) }
+	#define MACRO_CONFIG_STR(name,len,def) { static STR_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?s", str_variable_command, &data) }
 
-    #include "e_config_variables.h" 
+	#include "e_config_variables.h" 
 
-    #undef MACRO_CONFIG_INT 
-    #undef MACRO_CONFIG_STR 
+	#undef MACRO_CONFIG_INT 
+	#undef MACRO_CONFIG_STR 
 }
