@@ -546,7 +546,7 @@ void render_spectators(float x, float y, float w)
 	int count = 0;
 	float h = 120.0f;
 	
-	str_copy(buffer, sizeof(buffer), "Spectators: ");
+	str_copy(buffer, "Spectators: ", sizeof(buffer));
 
 	gfx_blend_normal();
 	gfx_texture_set(-1);
@@ -614,7 +614,7 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 		if(gameobj)
 		{
 			char buf[128];
-			str_format(buf, buf, "%d", gameobj->teamscore[team&1]);
+			str_format(buf, sizeof(buf), "%d", gameobj->teamscore[team&1]);
 			tw = gfx_text_width(0, 48, buf, -1);
 			gfx_text(0, x+w-tw-30, y, 48, buf, -1);
 		}

@@ -133,4 +133,19 @@ const char *msg_unpack_string();
 */
 const unsigned char *msg_unpack_raw(int size);
 
+/*
+	Function: msg_unpack_error
+		TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
+int msg_unpack_error();
+
+
 #endif

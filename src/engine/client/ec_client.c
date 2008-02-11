@@ -262,6 +262,10 @@ int client_send_msg()
 {
 	const MSG_INFO *info = msg_get_info();
 	NETPACKET packet;
+	
+	if(!info)
+		return -1;
+		
 	mem_zero(&packet, sizeof(NETPACKET));
 	
 	packet.client_id = 0;
@@ -687,7 +691,8 @@ static void client_process_packet(NETPACKET *packet)
 				}
 				
 				/* TODO: unpack players aswell */
-				client_serverbrowse_set(&packet->address, 0, &info);
+				if(!up.error)
+					client_serverbrowse_set(&packet->address, 0, &info);
 			}
 		}
 	}
@@ -705,6 +710,9 @@ static void client_process_packet(NETPACKET *packet)
 				int map_crc = msg_unpack_int();
 				const char *error = 0;
 				int i;
+
+				if(msg_unpack_error())
+					return;
 				
 				for(i = 0; map[i]; i++) /* protect the player from nasty map names */
 				{
@@ -813,6 +821,7 @@ static void client_process_packet(NETPACKET *packet)
 				int part_size = 0;
 				int crc = 0;
 				int complete_size = 0;
+				const char *data = 0;
 				
 				if(msg == NETMSG_SNAP)
 				{
@@ -825,6 +834,11 @@ static void client_process_packet(NETPACKET *packet)
 					crc = msg_unpack_int();
 					part_size = msg_unpack_int();
 				}
+
+				data = (const char *)msg_unpack_raw(part_size);
+				
+				if(msg_unpack_error())
+					return;
 				
 				/* TODO: adjust our prediction time */
 				if(time_left)
@@ -851,8 +865,7 @@ static void client_process_packet(NETPACKET *packet)
 				if(snapshot_part == part && game_tick > current_recv_tick)
 				{
 					/* TODO: clean this up abit */
-					const char *d = (const char *)msg_unpack_raw(part_size);
-					mem_copy((char*)snapshot_incomming_data + part*MAX_SNAPSHOT_PACKSIZE, d, part_size);
+					mem_copy((char*)snapshot_incomming_data + part*MAX_SNAPSHOT_PACKSIZE, data, part_size);
 					snapshot_part++;
 				
 					if(snapshot_part == num_parts)

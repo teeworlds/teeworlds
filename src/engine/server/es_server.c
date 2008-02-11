@@ -284,6 +284,9 @@ int server_send_msg(int client_id)
 {
 	const MSG_INFO *info = msg_get_info();
 	NETPACKET packet;
+	if(!info)
+		return -1;
+		
 	mem_zero(&packet, sizeof(NETPACKET));
 	
 	packet.client_id = client_id;
