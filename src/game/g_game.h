@@ -137,6 +137,7 @@ public:
 	
 	int triggered_events;
 	
+	void reset();
 	void tick();
 	void move();
 	

@@ -1448,7 +1448,7 @@ void render_game()
 			vec2(netobjects.local_character->x, netobjects.local_character->y));
 		
 		char buf[512];
-		str_format(buf, sizeof(buf), "%.2f", speed/2);
+		str_format(buf, sizeof(buf), "%.2f %d", speed/2, netobj_num_corrections());
 		gfx_text(0, 150, 50, 12, buf, -1);
 	}
 

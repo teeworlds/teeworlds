@@ -595,7 +595,11 @@ void player::init()
 void player::reset()
 {
 	pos = vec2(0.0f, 0.0f);
-	core.vel = vec2(0.0f, 0.0f);
+	core.reset();
+	
+	emote_type = 0;
+	emote_stop = -1;
+	
 	//direction = vec2(0.0f, 1.0f);
 	score = 0;
 	dead = true;

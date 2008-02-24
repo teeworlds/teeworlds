@@ -154,6 +154,20 @@ void move_box(vec2 *inout_pos, vec2 *inout_vel, vec2 size, float elasticity)
 	*inout_vel = vel;
 }
 
+
+void player_core::reset()
+{
+	pos = vec2(0,0);
+	vel = vec2(0,0);
+	hook_pos = vec2(0,0);
+	hook_dir = vec2(0,0);
+	hook_tick = 0;
+	hook_state = HOOK_IDLE;
+	hooked_player = -1;
+	jumped = 0;
+	triggered_events = 0;
+}
+
 void player_core::tick()
 {
 	float phys_size = 28.0f;

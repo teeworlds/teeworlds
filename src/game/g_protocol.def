@@ -130,7 +130,7 @@ object player_core
 	any vx, vy
 
 	any angle
-	range(0, 2) jumped
+	range(0, 3) jumped
 
 	clientid hooked_player
 	range(0, 3) hook_state

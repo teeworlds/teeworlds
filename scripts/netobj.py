@@ -184,6 +184,7 @@ def emit_header_file(f, p):
 
 	print >>f, "int netobj_secure(int type, void *data, int size);"
 	print >>f, "const char *netobj_get_name(int type);"
+	print >>f, "int netobj_num_corrections();"
 	print >>f, ""
 
 	for obj in p.objects:
@@ -199,11 +200,15 @@ def emit_source_file(f, p, protofilename):
 	for l in p.source_raw:
 		print >>f, l
 
+	print >>f, ""
+	print >>f, "static int num_corrections = 0;"
+	print >>f, "int netobj_num_corrections() { return num_corrections; }"
+	print >>f, ""
 	print >>f, "static int netobj_clamp_int(int v, int min, int max)"
 	print >>f, "{"
-	print >>f, "if(v<min) return min;"
-	print >>f, "if(v>max) return max;"
-	print >>f, "return v;"
+	print >>f, "\tif(v<min) { num_corrections++; return min; }"
+	print >>f, "\tif(v>max) { num_corrections++; return max; }"
+	print >>f, "\treturn v;"
 	print >>f, "}"
 	print >>f, ""
 	
