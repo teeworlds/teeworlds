@@ -6,7 +6,7 @@
 #include "gs_common.h"
 
 gameobject::gameobject()
-: entity(OBJTYPE_GAME)
+: entity(NETOBJTYPE_GAME)
 {
 	// select gametype
 	if(strcmp(config.sv_gametype, "ctf") == 0)
@@ -260,7 +260,7 @@ void gameobject::tick()
 
 void gameobject::snap(int snapping_client)
 {
-	obj_game *game = (obj_game *)snap_new_item(OBJTYPE_GAME, 0, sizeof(obj_game));
+	NETOBJ_GAME *game = (NETOBJ_GAME *)snap_new_item(NETOBJTYPE_GAME, 0, sizeof(NETOBJ_GAME));
 	game->paused = world->paused;
 	game->game_over = game_over_tick==-1?0:1;
 	game->sudden_death = sudden_death;
@@ -272,8 +272,8 @@ void gameobject::snap(int snapping_client)
 	
 	game->warmup = warmup;
 	
-	game->teamscore[0] = teamscore[0];
-	game->teamscore[1] = teamscore[1];
+	game->teamscore_red = teamscore[0];
+	game->teamscore_blue = teamscore[1];
 }
 
 int gameobject::getteam(int notthisid)

@@ -349,25 +349,25 @@ static void render_items()
 		SNAP_ITEM item;
 		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 
-		if(item.type == OBJTYPE_PROJECTILE)
+		if(item.type == NETOBJTYPE_PROJECTILE)
 		{
-			render_projectile((const obj_projectile *)data, item.id);
+			render_projectile((const NETOBJ_PROJECTILE *)data, item.id);
 		}
-		else if(item.type == OBJTYPE_POWERUP)
+		else if(item.type == NETOBJTYPE_POWERUP)
 		{
 			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
 			if(prev)
-				render_powerup((const obj_powerup *)prev, (const obj_powerup *)data);
+				render_powerup((const NETOBJ_POWERUP *)prev, (const NETOBJ_POWERUP *)data);
 		}
-		else if(item.type == OBJTYPE_LASER)
+		else if(item.type == NETOBJTYPE_LASER)
 		{
-			render_laser((const obj_laser *)data);
+			render_laser((const NETOBJ_LASER *)data);
 		}
-		else if(item.type == OBJTYPE_FLAG)
+		else if(item.type == NETOBJTYPE_FLAG)
 		{
 			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
 			if (prev)
-				render_flag((const obj_flag *)prev, (const obj_flag *)data);
+				render_flag((const NETOBJ_FLAG *)prev, (const NETOBJ_FLAG *)data);
 		}
 	}
 
@@ -393,19 +393,19 @@ static void render_players()
 		SNAP_ITEM item;
 		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 
-		if(item.type == OBJTYPE_PLAYER_CHARACTER)
+		if(item.type == NETOBJTYPE_PLAYER_CHARACTER)
 		{
 			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-			const void *prev_info = snap_find_item(SNAP_PREV, OBJTYPE_PLAYER_INFO, item.id);
-			const void *info = snap_find_item(SNAP_CURRENT, OBJTYPE_PLAYER_INFO, item.id);
+			const void *prev_info = snap_find_item(SNAP_PREV, NETOBJTYPE_PLAYER_INFO, item.id);
+			const void *info = snap_find_item(SNAP_CURRENT, NETOBJTYPE_PLAYER_INFO, item.id);
 
 			if(prev && prev_info && info)
 			{
 				render_player(
-						(const obj_player_character *)prev,
-						(const obj_player_character *)data,
-						(const obj_player_info *)prev_info,
-						(const obj_player_info *)info
+						(const NETOBJ_PLAYER_CHARACTER *)prev,
+						(const NETOBJ_PLAYER_CHARACTER *)data,
+						(const NETOBJ_PLAYER_INFO *)prev_info,
+						(const NETOBJ_PLAYER_INFO *)info
 					);
 			}
 		}

@@ -487,8 +487,8 @@ class translator:
 		for s in self.structs:
 			s.emit_header_code(out)
 		print >>out, ""
-		print >>out, "data_container *load_data_from_file(const char *filename);"
-		print >>out, "data_container *load_data_from_memory(unsigned char *filename);"
+		print >>out, "struct data_container *load_data_from_file(const char *filename);"
+		print >>out, "struct data_container *load_data_from_memory(unsigned char *filename);"
 		print >>out, ""
 		
 

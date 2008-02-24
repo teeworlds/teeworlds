@@ -1,0 +1,211 @@
+
+raw_source
+	#include "g_protocol.h"
+	#include "g_protocol_ids.h"
+	#include <engine/e_common_interface.h>
+	#define max_int 100000
+end
+
+raw_header
+	enum
+	{
+		// emotes
+		EMOTE_NORMAL=0,
+		EMOTE_PAIN,
+		EMOTE_HAPPY,
+		EMOTE_SURPRISE,
+		EMOTE_ANGRY,
+		EMOTE_BLINK,
+		NUM_EMOTES,
+		
+		// playerstates
+		PLAYERSTATE_UNKNOWN=0,
+		PLAYERSTATE_PLAYING,
+		PLAYERSTATE_IN_MENU,
+		PLAYERSTATE_CHATTING,
+		NUM_PLAYERSTATES,
+
+		// game types
+		GAMETYPE_DM=0,
+		GAMETYPE_TDM,
+		GAMETYPE_CTF,
+		NUM_GAMETYPES,
+		
+		// other stuff
+		INPUT_STATE_MASK=0x1f,
+	};
+	
+	enum
+	{
+		MSG_NULL=0,
+		MSG_SAY, // client -> server
+		MSG_CHAT, // server -> client
+		MSG_SETINFO, // server -> client - contains name, skin and color info
+		MSG_KILLMSG, // server -> client
+		MSG_SETTEAM,
+		MSG_JOIN,
+		MSG_QUIT,
+		MSG_EMOTICON,
+		MSG_STARTINFO, // client -> server
+		MSG_CHANGEINFO, // client -> server
+		MSG_READY_TO_ENTER, // server -> client
+		MSG_WEAPON_PICKUP,
+		MSG_SOUND_GLOBAL,
+		MSG_TUNE_PARAMS,
+		MSG_KILL,
+		MSG_EXTRA_PROJECTILE, // server -> client
+		
+	};
+	
+end
+
+
+
+object player_input
+	any left
+	any right
+
+	any target_x
+	any target_y
+
+	any jump
+	any fire
+	any hook
+	any blink
+
+	any player_state
+
+	any wanted_weapon
+	any next_weapon
+	any prev_weapon
+end
+
+object projectile
+	any x, y
+	any vx, vy
+	range(0, NUM_WEAPONS) type
+	range(0, max_int) start_tick
+end
+
+object laser
+	any x
+	any y
+	any from_x
+	any from_y
+	range(0, max_int) eval_tick
+end
+
+object powerup
+	any x, y
+	range(0, max_int) type
+	range(0, max_int) subtype
+end
+
+object flag
+	any x, y
+	range(0, 1) team
+	clientid carried_by
+end
+
+object game
+	range(0, max_int) round_start_tick
+	
+	range(0, 1) game_over
+	range(0, 1) sudden_death
+	range(0, 1) paused
+
+	range(0, max_int) score_limit
+	range(0, max_int) time_limit
+	range(0, NUM_GAMETYPES-1) gametype
+
+	range(0, max_int) warmup
+
+	any teamscore_red
+	any teamscore_blue
+end
+
+// core object needed for physics
+object player_core
+	any x, y
+	any vx, vy
+
+	any angle
+	range(0, 2) jumped
+
+	clientid hooked_player
+	range(0, 3) hook_state
+	range(0, max_int) hook_tick
+
+	any hook_x
+	any hook_y
+	any hook_dx
+	any hook_dy
+end
+
+// info about the player that is only needed when it's on screen
+object player_character extends player_core
+	range(0, NUM_PLAYERSTATES-1) player_state
+	
+	range(0, 10) health
+	range(0, 10) armor
+	range(0, 10) ammocount
+	range(0, 10) weaponstage
+
+	range(0, NUM_WEAPONS-1) weapon
+	range(0, NUM_EMOTES-1) emote
+	
+	range(0, max_int) attacktick
+end
+
+// information about the player that is always needed
+object player_info
+	range(0, 1) local
+	clientid cid
+	range(-1, 1) team
+	
+	any score
+	
+	any latency
+	any latency_flux
+end
+
+event common
+	any x, y
+end
+
+event explosion
+	any x, y
+end
+
+event spawn
+	any x, y
+end
+
+event death
+	any x, y
+end
+
+event air_jump
+	any x, y
+end
+
+event sound_global
+	any x, y
+	range(0, NUM_SOUNDS-1) soundid
+end
+
+event sound_world
+	any x, y
+	range(0, NUM_SOUNDS-1) soundid
+end
+
+event damageind
+	any x, y
+	any angle
+end
+
+//msg say
+//	clientid cid
+//	range(-1, 1) team
+//	string message
+//end

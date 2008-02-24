@@ -27,10 +27,6 @@ extern "C" {
 
 extern data_container *data;
 
-// abit uglyness
-extern const obj_player_info *local_info;
-extern const obj_game *gameobj;
-
 extern bool menu_active;
 extern bool menu_game_active;
 
@@ -1614,9 +1610,9 @@ static void menu2_render_game(RECT main_view)
 	if(ui_do_button(&disconnect_button, "Disconnect", 0, &button, ui_draw_menu_button, 0))
 		client_disconnect();
 
-	if(local_info && gameobj)
+	if(netobjects.local_info && netobjects.gameobj)
 	{
-		if(local_info->team != -1)
+		if(netobjects.local_info->team != -1)
 		{
 			ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
 			ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
@@ -1628,9 +1624,9 @@ static void menu2_render_game(RECT main_view)
 			}
 		}
 		
-		if(gameobj->gametype == GAMETYPE_DM)
+		if(netobjects.gameobj->gametype == GAMETYPE_DM)
 		{
-			if(local_info->team != 0)
+			if(netobjects.local_info->team != 0)
 			{
 				ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
 				ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
@@ -1644,7 +1640,7 @@ static void menu2_render_game(RECT main_view)
 		}
 		else
 		{
-			if(local_info->team != 0)
+			if(netobjects.local_info->team != 0)
 			{
 				ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
 				ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
@@ -1656,7 +1652,7 @@ static void menu2_render_game(RECT main_view)
 				}
 			}
 
-			if(local_info->team != 1)
+			if(netobjects.local_info->team != 1)
 			{
 				ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
 				ui_vsplit_l(&main_view, 120.0f, &button, &main_view);

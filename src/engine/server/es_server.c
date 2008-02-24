@@ -371,14 +371,14 @@ static void server_do_snap()
 			snapstorage_purge_until(&clients[i].snapshots, current_tick-SERVER_TICK_SPEED);
 			
 			/* save it the snapshot */
-			snapstorage_add(&clients[i].snapshots, current_tick, time_get(), snapshot_size, data);
+			snapstorage_add(&clients[i].snapshots, current_tick, time_get(), snapshot_size, data, 0);
 			
 			/* find snapshot that we can preform delta against */
 			emptysnap.data_size = 0;
 			emptysnap.num_items = 0;
 			
 			{
-				deltashot_size = snapstorage_get(&clients[i].snapshots, clients[i].last_acked_snapshot, 0, &deltashot);
+				deltashot_size = snapstorage_get(&clients[i].snapshots, clients[i].last_acked_snapshot, 0, &deltashot, 0);
 				if(deltashot_size >= 0)
 					delta_tick = clients[i].last_acked_snapshot;
 				else
@@ -625,15 +625,19 @@ static void server_process_client_packet(NETPACKET *packet)
 			int64 tagtime;
 
 			clients[cid].last_acked_snapshot = msg_unpack_int();
-			if(clients[cid].last_acked_snapshot > 0)
-				clients[cid].snap_rate = SRVCLIENT_SNAPRATE_FULL;
-				
-			if(snapstorage_get(&clients[cid].snapshots, clients[cid].last_acked_snapshot, &tagtime, 0) >= 0)
-				clients[cid].latency = (int)(((time_get()-tagtime)*1000)/time_freq());
-			
 			tick = msg_unpack_int();
 			size = msg_unpack_int();
 			
+			/* check for errors */
+			if(msg_unpack_error() || size/4 > MAX_INPUT_SIZE)
+				return;
+			
+			if(clients[cid].last_acked_snapshot > 0)
+				clients[cid].snap_rate = SRVCLIENT_SNAPRATE_FULL;
+				
+			if(snapstorage_get(&clients[cid].snapshots, clients[cid].last_acked_snapshot, &tagtime, 0, 0) >= 0)
+				clients[cid].latency = (int)(((time_get()-tagtime)*1000)/time_freq());
+
 			input = &clients[cid].inputs[clients[cid].current_input];
 			input->timeleft = server_tick_start_time(tick)-time_get();
 			input->pred_tick = tick;

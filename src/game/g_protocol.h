@@ -4,7 +4,10 @@
 #ifndef GAME_PROTOCOL_H
 #define GAME_PROTOCOL_H
 
+#include <game/generated/g_protocol.h>
+
 // Network stuff
+/*
 enum
 {
 	OBJTYPE_NULL=0,
@@ -209,6 +212,6 @@ struct obj_player_info
 	int score;
 	int latency;
 	int latency_flux;
-};
+};*/
 
 #endif

@@ -52,6 +52,7 @@ typedef struct SNAPSTORAGE_HOLDER_t
 	
 	int snap_size;
 	SNAPSHOT *snap;
+	SNAPSHOT *alt_snap;
 } SNAPSTORAGE_HOLDER;
  
 typedef struct SNAPSTORAGE_t
@@ -63,8 +64,8 @@ typedef struct SNAPSTORAGE_t
 void snapstorage_init(SNAPSTORAGE *ss);
 void snapstorage_purge_all(SNAPSTORAGE *ss);
 void snapstorage_purge_until(SNAPSTORAGE *ss, int tick);
-void snapstorage_add(SNAPSTORAGE *ss, int tick, int64 tagtime, int data_size, void *data);
-int snapstorage_get(SNAPSTORAGE *ss, int tick, int64 *tagtime, SNAPSHOT **data);
+void snapstorage_add(SNAPSTORAGE *ss, int tick, int64 tagtime, int data_size, void *data, int create_alt);
+int snapstorage_get(SNAPSTORAGE *ss, int tick, int64 *tagtime, SNAPSHOT **data, SNAPSHOT **alt_data);
 
 /* SNAPBUILD */
 

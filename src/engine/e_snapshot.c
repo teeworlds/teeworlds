@@ -1,6 +1,7 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <stdlib.h>
 #include "e_snapshot.h"
+#include "e_engine.h"
 #include "e_compression.h"
 #include "e_common_interface.h"
 
@@ -317,6 +318,8 @@ int snapshot_unpack_delta(SNAPSHOT *from, SNAPSHOT *to, void *srcdata, int data_
 	SNAPBUILD builder;
 	SNAPSHOT_DELTA *delta = (SNAPSHOT_DELTA *)srcdata;
 	int *data = (int *)delta->data;
+	int *end = (int *)(((char *)srcdata + data_size));
+	
 	SNAPSHOT_ITEM *fromitem;
 	int i, d, keep, itemsize;
 	int *deleted;
@@ -329,6 +332,8 @@ int snapshot_unpack_delta(SNAPSHOT *from, SNAPSHOT *to, void *srcdata, int data_
 	/* unpack deleted stuff */
 	deleted = data;
 	data += delta->num_deleted_items;
+	if(data > end)
+		return -1;
 
 	/* copy all non deleted stuff */
 	for(i = 0; i < from->num_items; i++)
@@ -358,10 +363,16 @@ int snapshot_unpack_delta(SNAPSHOT *from, SNAPSHOT *to, void *srcdata, int data_
 	/* unpack updated stuff */
 	for(i = 0; i < delta->num_update_items; i++)
 	{
+		if(data+3 > end)
+			return -1;
+		
 		itemsize = *data++;
 		type = *data++;
 		id = *data++;
 		snapshot_current = type;
+		
+		if(data+itemsize/4 > end)
+			return -1;
 		
 		key = (type<<16)|id;
 		
@@ -442,10 +453,16 @@ void snapstorage_purge_until(SNAPSTORAGE *ss, int tick)
 	ss->last = 0;
 }
 
-void snapstorage_add(SNAPSTORAGE *ss, int tick, int64 tagtime, int data_size, void *data)
+void snapstorage_add(SNAPSTORAGE *ss, int tick, int64 tagtime, int data_size, void *data, int create_alt)
 {
 	/* allocate memory for holder + snapshot_data */
-	SNAPSTORAGE_HOLDER *h = (SNAPSTORAGE_HOLDER *)mem_alloc(sizeof(SNAPSTORAGE_HOLDER)+data_size, 1);
+	SNAPSTORAGE_HOLDER *h;
+	int total_size = sizeof(SNAPSTORAGE_HOLDER)+data_size;
+	
+	if(create_alt)
+		total_size += data_size;
+	
+	h = (SNAPSTORAGE_HOLDER *)mem_alloc(total_size, 1);
 	
 	/* set data */
 	h->tick = tick;
@@ -453,6 +470,15 @@ void snapstorage_add(SNAPSTORAGE *ss, int tick, int64 tagtime, int data_size, vo
 	h->snap_size = data_size;
 	h->snap = (SNAPSHOT*)(h+1);
 	mem_copy(h->snap, data, data_size);
+
+	if(create_alt) /* create alternative if wanted */
+	{
+		h->alt_snap = (SNAPSHOT*)(((char *)h->snap) + data_size);
+		mem_copy(h->alt_snap, data, data_size);
+	}
+	else
+		h->alt_snap = 0;
+		
 	
 	/* link */
 	h->next = 0;
@@ -464,7 +490,7 @@ void snapstorage_add(SNAPSTORAGE *ss, int tick, int64 tagtime, int data_size, vo
 	ss->last = h;
 }
 
-int snapstorage_get(SNAPSTORAGE *ss, int tick, int64 *tagtime, SNAPSHOT **data)
+int snapstorage_get(SNAPSTORAGE *ss, int tick, int64 *tagtime, SNAPSHOT **data, SNAPSHOT **alt_data)
 {
 	SNAPSTORAGE_HOLDER *h = ss->first;
 	
@@ -476,6 +502,8 @@ int snapstorage_get(SNAPSTORAGE *ss, int tick, int64 *tagtime, SNAPSHOT **data)
 				*tagtime = h->tagtime;
 			if(data)
 				*data = h->snap;
+			if(alt_data)
+				*alt_data = h->alt_snap;
 			return h->snap_size;
 		}
 		
@@ -524,6 +552,14 @@ int snapbuild_finish(SNAPBUILD *sb, void *snapdata)
 void *snapbuild_new_item(SNAPBUILD *sb, int type, int id, int size)
 {
 	SNAPSHOT_ITEM *obj = (SNAPSHOT_ITEM *)(sb->data+sb->data_size);
+
+	if(engine_stress(0.01f))
+	{
+		size += ((rand()%5) - 2)*4;
+		if(size < 0)
+			size = 0;
+	}
+
 	mem_zero(obj, sizeof(SNAPSHOT_ITEM) + size);
 	obj->type_and_id = (type<<16)|id;
 	sb->offsets[sb->num_items] = sb->data_size;

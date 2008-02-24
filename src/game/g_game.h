@@ -133,15 +133,15 @@ public:
 	int hooked_player;
 	
 	int jumped;
-	player_input input;
+	NETOBJ_PLAYER_INPUT input;
 	
 	int triggered_events;
 	
 	void tick();
 	void move();
 	
-	void read(const obj_player_core *obj_core);
-	void write(obj_player_core *obj_core);
+	void read(const NETOBJ_PLAYER_CORE *obj_core);
+	void write(NETOBJ_PLAYER_CORE *obj_core);
 	void quantize();
 };
 

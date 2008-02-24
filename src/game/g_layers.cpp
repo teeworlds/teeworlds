@@ -33,12 +33,10 @@ void layers_init()
 				
 				if(tilemap->flags&1)
 				{
-					dbg_msg("layers", "game");
 					game_layer = tilemap;
 					p = 2;
 				}
 			}
-			dbg_msg("layers", "%d %d", i, layer->type);
 		}
 	}
 }

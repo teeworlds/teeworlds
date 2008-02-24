@@ -99,7 +99,7 @@ void gameobject_ctf::tick()
 		else
 		{
 			player *close_players[MAX_CLIENTS];
-			int types[] = {OBJTYPE_PLAYER_CHARACTER};
+			int types[] = {NETOBJTYPE_PLAYER_CHARACTER};
 			int num = world->find_entities(f->pos, 32.0f, (entity**)close_players, MAX_CLIENTS, types, 1);
 			for(int i = 0; i < num; i++)
 			{
@@ -161,7 +161,7 @@ void gameobject_ctf::tick()
 
 // Flag
 flag::flag(int _team)
-: entity(OBJTYPE_FLAG)
+: entity(NETOBJTYPE_FLAG)
 {
 	team = _team;
 	proximity_radius = phys_size;
@@ -183,7 +183,7 @@ void flag::reset()
 
 void flag::snap(int snapping_client)
 {
-	obj_flag *flag = (obj_flag *)snap_new_item(OBJTYPE_FLAG, team, sizeof(obj_flag));
+	NETOBJ_FLAG *flag = (NETOBJ_FLAG *)snap_new_item(NETOBJTYPE_FLAG, team, sizeof(NETOBJ_FLAG));
 	flag->x = (int)pos.x;
 	flag->y = (int)pos.y;
 	flag->team = team;

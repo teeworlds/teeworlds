@@ -27,7 +27,7 @@ extern "C" {
 struct data_container *data = 0;
 int64 debug_firedelay = 0;
 
-player_input input_data = {0};
+NETOBJ_PLAYER_INPUT input_data = {0};
 int input_target_lock = 0;
 
 int chat_mode = CHATMODE_NONE;
@@ -40,11 +40,16 @@ tuning_params tuning;
 vec2 mouse_pos;
 vec2 local_character_pos;
 vec2 local_target_pos;
-const obj_player_character *local_character = 0;
-const obj_player_character *local_prev_character = 0;
-const obj_player_info *local_info = 0;
-const obj_flag *flags[2] = {0,0};
-const obj_game *gameobj = 0;
+
+/*
+const NETOBJ_PLAYER_CHARACTER *local_character = 0;
+const NETOBJ_PLAYER_CHARACTER *local_prev_character = 0;
+const NETOBJ_PLAYER_INFO *local_info = 0;
+const NETOBJ_FLAG *flags[2] = {0,0};
+const NETOBJ_GAME *gameobj = 0;
+*/
+
+snapstate netobjects;
 
 int picked_up_weapon = -1;
 
@@ -54,7 +59,7 @@ void client_data::update_render_info()
 	render_info = skin_info;
 
 	// force team colors
-	if(gameobj && gameobj->gametype != GAMETYPE_DM)
+	if(netobjects.gameobj && netobjects.gameobj->gametype != GAMETYPE_DM)
 	{
 		const int team_colors[2] = {65387, 10223467};
 		if(team >= 0 || team <= 1)
@@ -232,7 +237,7 @@ void chat_add_line(int client_id, int team, const char *line)
 		if(client_datas[client_id].team == -1)
 			chat_lines[chat_current_line].name_color = -1;
 
-		if(gameobj && gameobj->gametype != GAMETYPE_DM)
+		if(netobjects.gameobj && netobjects.gameobj->gametype != GAMETYPE_DM)
 		{
 			if(client_datas[client_id].team == 0)
 				chat_lines[chat_current_line].name_color = 0;
@@ -261,41 +266,40 @@ void process_events(int snaptype)
 		SNAP_ITEM item;
 		const void *data = snap_get_item(snaptype, index, &item);
 
-		if(item.type == EVENT_DAMAGEINDICATION)
+		if(item.type == NETEVENTTYPE_DAMAGEIND)
 		{
-			ev_damageind *ev = (ev_damageind *)data;
+			NETEVENT_DAMAGEIND *ev = (NETEVENT_DAMAGEIND *)data;
 			effect_damage_indicator(vec2(ev->x, ev->y), get_direction(ev->angle));
 		}
-		else if(item.type == EVENT_AIR_JUMP)
+		else if(item.type == NETEVENTTYPE_AIR_JUMP)
 		{
-			ev_common *ev = (ev_common *)data;
+			NETEVENT_COMMON *ev = (NETEVENT_COMMON *)data;
 			effect_air_jump(vec2(ev->x, ev->y));
 		}
-		else if(item.type == EVENT_EXPLOSION)
+		else if(item.type == NETEVENTTYPE_EXPLOSION)
 		{
-			ev_explosion *ev = (ev_explosion *)data;
+			NETEVENT_EXPLOSION *ev = (NETEVENT_EXPLOSION *)data;
 			effect_explosion(vec2(ev->x, ev->y));
 		}
-		else if(item.type == EVENT_SMOKE)
+		/*else if(item.type == EVENT_SMOKE)
 		{
-			ev_explosion *ev = (ev_explosion *)data;
+			EV_EXPLOSION *ev = (EV_EXPLOSION *)data;
 			vec2 p(ev->x, ev->y);
-		}
-		else if(item.type == EVENT_PLAYERSPAWN)
+		}*/
+		else if(item.type == NETEVENTTYPE_SPAWN)
 		{
-			ev_explosion *ev = (ev_explosion *)data;
+			NETEVENT_SPAWN *ev = (NETEVENT_SPAWN *)data;
 			effect_playerspawn(vec2(ev->x, ev->y));
 		}
-		else if(item.type == EVENT_DEATH)
+		else if(item.type == NETEVENTTYPE_DEATH)
 		{
-			ev_explosion *ev = (ev_explosion *)data;
+			NETEVENT_DEATH *ev = (NETEVENT_DEATH *)data;
 			effect_playerdeath(vec2(ev->x, ev->y));
 		}
-		else if(item.type == EVENT_SOUND_WORLD)
+		else if(item.type == NETEVENTTYPE_SOUND_WORLD)
 		{
-			ev_sound *ev = (ev_sound *)data;
-			if(ev->sound >= 0 && ev->sound < NUM_SOUNDS)
-				snd_play_random(CHN_WORLD, ev->sound, 1.0f, vec2(ev->x, ev->y));
+			NETEVENT_SOUND_WORLD *ev = (NETEVENT_SOUND_WORLD *)data;
+			snd_play_random(CHN_WORLD, ev->soundid, 1.0f, vec2(ev->x, ev->y));
 		}
 	}
 }
@@ -303,12 +307,7 @@ void process_events(int snaptype)
 void clear_object_pointers()
 {
 	// clear out the invalid pointers
-	local_character = 0;
-	local_prev_character = 0;
-	local_info = 0;
-	flags[0] = 0;
-	flags[1] = 0;
-	gameobj = 0;
+	mem_zero(&netobjects, sizeof(netobjects));
 }
 
 void send_info(bool start)
@@ -526,16 +525,16 @@ void render_goals(float x, float y, float w)
 
 	// render goals
 	//y = ystart+h-54;
-	if(gameobj && gameobj->time_limit)
+	if(netobjects.gameobj && netobjects.gameobj->time_limit)
 	{
 		char buf[64];
-		str_format(buf, sizeof(buf), "Time Limit: %d min", gameobj->time_limit);
+		str_format(buf, sizeof(buf), "Time Limit: %d min", netobjects.gameobj->time_limit);
 		gfx_text(0, x+w/2, y, 24.0f, buf, -1);
 	}
-	if(gameobj && gameobj->score_limit)
+	if(netobjects.gameobj && netobjects.gameobj->score_limit)
 	{
 		char buf[64];
-		str_format(buf, sizeof(buf), "Score Limit: %d", gameobj->score_limit);
+		str_format(buf, sizeof(buf), "Score Limit: %d", netobjects.gameobj->score_limit);
 		gfx_text(0, x+40, y, 24.0f, buf, -1);
 	}
 }
@@ -560,14 +559,14 @@ void render_spectators(float x, float y, float w)
 		SNAP_ITEM item;
 		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 
-		if(item.type == OBJTYPE_PLAYER_INFO)
+		if(item.type == NETOBJTYPE_PLAYER_INFO)
 		{
-			const obj_player_info *info = (const obj_player_info *)data;
+			const NETOBJ_PLAYER_INFO *info = (const NETOBJ_PLAYER_INFO *)data;
 			if(info->team == -1)
 			{
 				if(count)
 					strcat(buffer, ", ");
-				strcat(buffer, client_datas[info->clientid].name);
+				strcat(buffer, client_datas[info->cid].name);
 				count++;
 			}
 		}
@@ -595,7 +594,7 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 	// render title
 	if(!title)
 	{
-		if(gameobj->game_over)
+		if(netobjects.gameobj->game_over)
 			title = "Game Over";
 		else
 			title = "Score Board";
@@ -611,10 +610,11 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 	{
 		gfx_text(0, x+10, y, 48, title, -1);
 
-		if(gameobj)
+		if(netobjects.gameobj)
 		{
 			char buf[128];
-			str_format(buf, sizeof(buf), "%d", gameobj->teamscore[team&1]);
+			int score = team ? netobjects.gameobj->teamscore_blue : netobjects.gameobj->teamscore_red;
+			str_format(buf, sizeof(buf), "%d", score);
 			tw = gfx_text_width(0, 48, buf, -1);
 			gfx_text(0, x+w-tw-30, y, 48, buf, -1);
 		}
@@ -623,16 +623,16 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 	y += 54.0f;
 
 	// find players
-	const obj_player_info *players[MAX_CLIENTS] = {0};
+	const NETOBJ_PLAYER_INFO *players[MAX_CLIENTS] = {0};
 	int num_players = 0;
 	for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
 	{
 		SNAP_ITEM item;
 		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 
-		if(item.type == OBJTYPE_PLAYER_INFO)
+		if(item.type == NETOBJTYPE_PLAYER_INFO)
 		{
-			players[num_players] = (const obj_player_info *)data;
+			players[num_players] = (const NETOBJ_PLAYER_INFO *)data;
 			num_players++;
 		}
 	}
@@ -644,7 +644,7 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 		{
 			if(players[i]->score < players[i+1]->score)
 			{
-				const obj_player_info *tmp = players[i];
+				const NETOBJ_PLAYER_INFO *tmp = players[i];
 				players[i] = players[i+1];
 				players[i+1] = tmp;
 			}
@@ -660,7 +660,7 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 	// render player scores
 	for(int i = 0; i < num_players; i++)
 	{
-		const obj_player_info *info = players[i];
+		const NETOBJ_PLAYER_INFO *info = players[i];
 
 		// make sure that we render the correct team
 		if(team == -1 || info->team != team)
@@ -683,18 +683,19 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 		
 		if(config.cl_show_player_ids)
 		{
-			str_format(buf, sizeof(buf), "%d | %s", info->clientid, client_datas[info->clientid].name);
+			str_format(buf, sizeof(buf), "%d | %s", info->cid, client_datas[info->cid].name);
 			gfx_text(0, x+128, y, font_size, buf, -1);
 		}
 		else
-			gfx_text(0, x+128, y, font_size, client_datas[info->clientid].name, -1);
+			gfx_text(0, x+128, y, font_size, client_datas[info->cid].name, -1);
 
 		str_format(buf, sizeof(buf), "%4d", info->latency);
 		float tw = gfx_text_width(0, font_size, buf, -1);
 		gfx_text(0, x+w-tw-35, y, font_size, buf, -1);
 
 		// render avatar
-		if((flags[0] && flags[0]->carried_by == info->clientid) || (flags[1] && flags[1]->carried_by == info->clientid))
+		if((netobjects.flags[0] && netobjects.flags[0]->carried_by == info->cid) ||
+			(netobjects.flags[1] && netobjects.flags[1]->carried_by == info->cid))
 		{
 			gfx_blend_normal();
 			gfx_texture_set(data->images[IMAGE_GAME].id);
@@ -708,7 +709,7 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 			gfx_quads_end();
 		}
 		
-		render_tee(&idlestate, &client_datas[info->clientid].render_info, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28));
+		render_tee(&idlestate, &client_datas[info->cid].render_info, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28));
 
 		
 		y += 50.0f;
@@ -739,21 +740,21 @@ void render_game()
 
 	if(config.cl_predict)
 	{
-		if(!local_character || (local_character->health < 0) || (gameobj && gameobj->game_over))
+		if(!netobjects.local_character || (netobjects.local_character->health < 0) || (netobjects.gameobj && netobjects.gameobj->game_over))
 		{
 			// don't use predicted
 		}
 		else
 			local_character_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_predintratick());
 	}
-	else if(local_character && local_prev_character)
+	else if(netobjects.local_character && netobjects.local_prev_character)
 	{
 		local_character_pos = mix(
-			vec2(local_prev_character->x, local_prev_character->y),
-			vec2(local_character->x, local_character->y), client_intratick());
+			vec2(netobjects.local_prev_character->x, netobjects.local_prev_character->y),
+			vec2(netobjects.local_character->x, netobjects.local_character->y), client_intratick());
 	}
 	
-	if(local_info && local_info->team == -1)
+	if(netobjects.local_info && netobjects.local_info->team == -1)
 		spectate = true;
 
 	animstate idlestate;
@@ -1089,7 +1090,7 @@ void render_game()
 		gfx_quads_end();
 	}*/
 
-	if(local_character && !spectate && !(gameobj && gameobj->game_over))
+	if(netobjects.local_character && !spectate && !(netobjects.gameobj && netobjects.gameobj->game_over))
 	{
 		gfx_texture_set(data->images[IMAGE_GAME].id);
 		gfx_quads_begin();
@@ -1097,7 +1098,7 @@ void render_game()
 		// render cursor
 		if (!menu_active && !emoticon_selector_active)
 		{
-			select_sprite(data->weapons[local_character->weapon%data->num_weapons].sprite_cursor);
+			select_sprite(data->weapons[netobjects.local_character->weapon%data->num_weapons].sprite_cursor);
 			float cursorsize = 64;
 			draw_sprite(local_target_pos.x, local_target_pos.y, cursorsize);
 		}
@@ -1113,10 +1114,10 @@ void render_game()
 		
 		// if weaponstage is active, put a "glow" around the stage ammo
 		select_sprite(SPRITE_TEE_BODY);
-		for (int i = 0; i < local_character->weaponstage; i++)
-			gfx_quads_drawTL(x+local_character->ammocount * 12 -i*12, y+22, 11, 11);
-		select_sprite(data->weapons[local_character->weapon%data->num_weapons].sprite_proj);
-		for (int i = 0; i < min(local_character->ammocount, 10); i++)
+		for (int i = 0; i < netobjects.local_character->weaponstage; i++)
+			gfx_quads_drawTL(x+netobjects.local_character->ammocount * 12 -i*12, y+22, 11, 11);
+		select_sprite(data->weapons[netobjects.local_character->weapon%data->num_weapons].sprite_proj);
+		for (int i = 0; i < min(netobjects.local_character->ammocount, 10); i++)
 			gfx_quads_drawTL(x+i*12,y+24,10,10);
 
 		gfx_quads_end();
@@ -1127,7 +1128,7 @@ void render_game()
 
 		// render health
 		select_sprite(SPRITE_HEALTH_FULL);
-		for(; h < local_character->health; h++)
+		for(; h < netobjects.local_character->health; h++)
 			gfx_quads_drawTL(x+h*12,y,10,10);
 
 		select_sprite(SPRITE_HEALTH_EMPTY);
@@ -1137,7 +1138,7 @@ void render_game()
 		// render armor meter
 		h = 0;
 		select_sprite(SPRITE_ARMOR_FULL);
-		for(; h < local_character->armor; h++)
+		for(; h < netobjects.local_character->armor; h++)
 			gfx_quads_drawTL(x+h*12,y+12,10,10);
 
 		select_sprite(SPRITE_ARMOR_EMPTY);
@@ -1172,7 +1173,7 @@ void render_game()
 			// render victim tee
 			x -= 24.0f;
 			
-			if(gameobj && gameobj->gametype == GAMETYPE_CTF)
+			if(netobjects.gameobj && netobjects.gameobj->gametype == GAMETYPE_CTF)
 			{
 				if(killmsgs[r].mode_special&1)
 				{
@@ -1206,7 +1207,7 @@ void render_game()
 
 			if(killmsgs[r].victim != killmsgs[r].killer)
 			{
-				if(gameobj && gameobj->gametype == GAMETYPE_CTF)
+				if(netobjects.gameobj && netobjects.gameobj->gametype == GAMETYPE_CTF)
 				{
 					if(killmsgs[r].mode_special&2)
 					{
@@ -1305,34 +1306,34 @@ void render_game()
 	}
 
 	// render goals
-	if(gameobj)
+	if(netobjects.gameobj)
 	{
-		int gametype = gameobj->gametype;
+		int gametype = netobjects.gameobj->gametype;
 		
 		float whole = 300*gfx_screenaspect();
 		float half = whole/2.0f;
 		
 		gfx_mapscreen(0,0,300*gfx_screenaspect(),300);
-		if(!gameobj->sudden_death)
+		if(!netobjects.gameobj->sudden_death)
 		{
 			char buf[32];
 			int time = 0;
-			if(gameobj->time_limit)
+			if(netobjects.gameobj->time_limit)
 			{
-				time = gameobj->time_limit*60 - ((client_tick()-gameobj->round_start_tick)/client_tickspeed());
+				time = netobjects.gameobj->time_limit*60 - ((client_tick()-netobjects.gameobj->round_start_tick)/client_tickspeed());
 
-				if(gameobj->game_over)
+				if(netobjects.gameobj->game_over)
 					time  = 0;
 			}
 			else
-				time = (client_tick()-gameobj->round_start_tick)/client_tickspeed();
+				time = (client_tick()-netobjects.gameobj->round_start_tick)/client_tickspeed();
 
 			str_format(buf, sizeof(buf), "%d:%02d", time /60, time %60);
 			float w = gfx_text_width(0, 16, buf, -1);
 			gfx_text(0, half-w/2, 2, 16, buf, -1);
 		}
 
-		if(gameobj->sudden_death)
+		if(netobjects.gameobj->sudden_death)
 		{
 			const char *text = "Sudden Death";
 			float w = gfx_text_width(0, 16, text, -1);
@@ -1340,7 +1341,7 @@ void render_game()
 		}
 
 		// render small score hud
-		if(!(gameobj && gameobj->game_over) && (gametype == GAMETYPE_TDM || gametype == GAMETYPE_CTF))
+		if(!(netobjects.gameobj && netobjects.gameobj->game_over) && (gametype == GAMETYPE_TDM || gametype == GAMETYPE_CTF))
 		{
 			for(int t = 0; t < 2; t++)
 			{
@@ -1355,15 +1356,15 @@ void render_game()
 				gfx_quads_end();
 
 				char buf[32];
-				str_format(buf, sizeof(buf), "%d", gameobj->teamscore[t]);
+				str_format(buf, sizeof(buf), "%d", t?netobjects.gameobj->teamscore_blue:netobjects.gameobj->teamscore_red);
 				float w = gfx_text_width(0, 14, buf, -1);
 				
 				if(gametype == GAMETYPE_CTF)
 				{
 					gfx_text(0, whole-20-w/2+5, 300-40-15+t*20+2, 14, buf, -1);
-					if(flags[t])
+					if(netobjects.flags[t])
 					{
- 						if(flags[t]->carried_by == -2 || (flags[t]->carried_by == -1 && ((client_tick()/10)&1)))
+ 						if(netobjects.flags[t]->carried_by == -2 || (netobjects.flags[t]->carried_by == -1 && ((client_tick()/10)&1)))
  						{
 							gfx_blend_normal();
 							gfx_texture_set(data->images[IMAGE_GAME].id);
@@ -1376,9 +1377,9 @@ void render_game()
 							gfx_quads_drawTL(whole-40+5, 300-40-15+t*20+1, size/2, size);
 							gfx_quads_end();
 						}
-						else if(flags[t]->carried_by >= 0)
+						else if(netobjects.flags[t]->carried_by >= 0)
 						{
-							int id = flags[t]->carried_by%MAX_CLIENTS;
+							int id = netobjects.flags[t]->carried_by%MAX_CLIENTS;
 							const char *name = client_datas[id].name;
 							float w = gfx_text_width(0, 10, name, -1);
 							gfx_text(0, whole-40-5-w, 300-40-15+t*20+2, 10, name, -1);
@@ -1396,15 +1397,15 @@ void render_game()
 		}
 
 		// render warmup timer
-		if(gameobj->warmup)
+		if(netobjects.gameobj->warmup)
 		{
 			char buf[256];
 			float w = gfx_text_width(0, 24, "Warmup", -1);
 			gfx_text(0, 150*gfx_screenaspect()+-w/2, 50, 24, "Warmup", -1);
 
-			int seconds = gameobj->warmup/SERVER_TICK_SPEED;
+			int seconds = netobjects.gameobj->warmup/SERVER_TICK_SPEED;
 			if(seconds < 5)
-				str_format(buf, sizeof(buf), "%d.%d", seconds, (gameobj->warmup*10/SERVER_TICK_SPEED)%10);
+				str_format(buf, sizeof(buf), "%d.%d", seconds, (netobjects.gameobj->warmup*10/SERVER_TICK_SPEED)%10);
 			else
 				str_format(buf, sizeof(buf), "%d", seconds);
 			w = gfx_text_width(0, 24, buf, -1);
@@ -1439,12 +1440,12 @@ void render_game()
 		}
 	}
 	
-	if(config.debug && local_character && local_prev_character)
+	if(config.debug && netobjects.local_character && netobjects.local_prev_character)
 	{
 		gfx_mapscreen(0, 0, 300*gfx_screenaspect(), 300);
 		
-		float speed = distance(vec2(local_prev_character->x, local_prev_character->y),
-			vec2(local_character->x, local_character->y));
+		float speed = distance(vec2(netobjects.local_prev_character->x, netobjects.local_prev_character->y),
+			vec2(netobjects.local_character->x, netobjects.local_character->y));
 		
 		char buf[512];
 		str_format(buf, sizeof(buf), "%.2f", speed/2);
@@ -1453,15 +1454,15 @@ void render_game()
 
 	// render score board
 	if(inp_key_pressed(KEY_TAB) || // user requested
-		(!spectate && (!local_character || local_character->health < 0)) || // not spectating and is dead
-		(gameobj && gameobj->game_over) // game over
+		(!spectate && (!netobjects.local_character || netobjects.local_character->health < 0)) || // not spectating and is dead
+		(netobjects.gameobj && netobjects.gameobj->game_over) // game over
 		)
 	{
 		gfx_mapscreen(0, 0, width, height);
 
 		float w = 650.0f;
 
-		if (gameobj && gameobj->gametype == GAMETYPE_DM)
+		if(netobjects.gameobj && netobjects.gameobj->gametype == GAMETYPE_DM)
 		{
 			render_scoreboard(width/2-w/2, 150.0f, w, 0, 0);
 			//render_scoreboard(gameobj, 0, 0, -1, 0);
@@ -1469,12 +1470,12 @@ void render_game()
 		else
 		{
 				
-			if(gameobj && gameobj->game_over)
+			if(netobjects.gameobj && netobjects.gameobj->game_over)
 			{
 				const char *text = "DRAW!";
-				if(gameobj->teamscore[0] > gameobj->teamscore[1])
+				if(netobjects.gameobj->teamscore_red > netobjects.gameobj->teamscore_blue)
 					text = "Red Team Wins!";
-				else if(gameobj->teamscore[1] > gameobj->teamscore[0])
+				else if(netobjects.gameobj->teamscore_blue > netobjects.gameobj->teamscore_red)
 					text = "Blue Team Wins!";
 					
 				float w = gfx_text_width(0, 92.0f, text, -1);

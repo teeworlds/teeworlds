@@ -54,13 +54,13 @@ void render_particles();
 
 // object render methods (gc_render_obj.cpp)
 void render_tee(class animstate *anim, tee_render_info *info, int emote, vec2 dir, vec2 pos);
-void render_flag(const struct obj_flag *prev, const struct obj_flag *current);
-void render_powerup(const struct obj_powerup *prev, const struct obj_powerup *current);
-void render_projectile(const struct obj_projectile *current, int itemid);
-void render_laser(const struct obj_laser *current);
+void render_flag(const struct NETOBJ_FLAG *prev, const struct NETOBJ_FLAG *current);
+void render_powerup(const struct NETOBJ_POWERUP *prev, const struct NETOBJ_POWERUP *current);
+void render_projectile(const struct NETOBJ_PROJECTILE *current, int itemid);
+void render_laser(const struct NETOBJ_LASER *current);
 void render_player(
-	const struct obj_player_character *prev_char, const struct obj_player_character *player_char,
-	const struct obj_player_info *prev_info, const struct obj_player_info *player_info);
+	const struct NETOBJ_PLAYER_CHARACTER *prev_char, const struct NETOBJ_PLAYER_CHARACTER *player_char,
+	const struct NETOBJ_PLAYER_INFO *prev_info, const struct NETOBJ_PLAYER_INFO *player_info);
 	
 // map render methods (gc_render_map.cpp)
 void render_eval_envelope(ENVPOINT *points, int num_points, int channels, float time, float *result);

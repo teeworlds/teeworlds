@@ -1,6 +1,7 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <engine/e_system.h>
 #include <engine/e_server_interface.h>
@@ -24,6 +25,15 @@ const char *engine_savepath(const char *filename, char *buffer, int max)
 	return buffer;
 }
 
+
+int engine_stress(float probability)
+{
+	if(!config.dbg_stress)
+		return 0;
+	if(rand()/(float)RAND_MAX < probability)
+		return 1;
+	return 0;
+}
 
 void engine_init(const char *appname)
 {

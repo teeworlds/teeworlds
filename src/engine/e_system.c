@@ -47,6 +47,10 @@
 extern "C" {
 #endif
 
+IOHANDLE io_stdin() { return (IOHANDLE)stdin; }
+IOHANDLE io_stdout() { return (IOHANDLE)stdout; }
+IOHANDLE io_stderr() { return (IOHANDLE)stderr; }
+
 IOHANDLE logfile = 0;
 
 void dbg_assert_imp(const char *filename, int line, int test, const char *msg)
@@ -462,19 +466,21 @@ int net_addr4_cmp(const NETADDR4 *a, const NETADDR4 *b)
 
 int net_host_lookup(const char *hostname, unsigned short port, NETADDR4 *addr)
 {
-	struct hostent* ip = gethostbyname(hostname);
+	struct addrinfo hints;
+	struct addrinfo *result;
+	int e;
+	
+	mem_zero(&hints, sizeof(hints));
+	hints.ai_family = AF_INET;
 
-	if(ip && ip->h_length > 0)
-	{
-		addr->ip[0] = ip->h_addr_list[0][0];
-		addr->ip[1] = ip->h_addr_list[0][1];
-		addr->ip[2] = ip->h_addr_list[0][2];
-		addr->ip[3] = ip->h_addr_list[0][3];
-		addr->port = port;
-		return 0;
-	}
+	e = getaddrinfo(hostname, NULL, &hints, &result);
+	if(e != 0 || !result)
+		return -1;
 
-	return -1;
+	sockaddr_to_netaddr4(result->ai_addr, addr);
+	freeaddrinfo(result);
+	addr->port = port;
+	return 0;
 }
 
 NETSOCKET net_udp4_create(NETADDR4 bindaddr)
@@ -840,6 +846,31 @@ void str_format(char *buffer, int buffer_size, const char *format, ...)
 #endif
 
 	buffer[buffer_size-1] = 0; /* assure null termination */
+}
+
+
+
+/* makes sure that the string only contains the characters between 32 and 127 */
+void str_sanitize_strong(char *str)
+{
+	while(*str)
+	{
+		*str &= 0x7f;
+		if(*str < 32)
+			*str = 32;
+		str++;
+	}
+}
+
+/* makes sure that the string only contains the characters between 32 and 255 + \r\n\t */
+void str_sanitize(char *str)
+{
+	while(*str)
+	{
+		if(*str < 32 && !(*str == '\r') && !(*str == '\n') && !(*str == '\t'))
+			*str = ' ';
+		str++;
+	}
 }
 
 #if defined(__cplusplus)

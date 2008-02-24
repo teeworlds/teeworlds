@@ -526,6 +526,12 @@ void pstr_format(pstr *str, )*/
 void str_append(char *dst, const char *src, int dst_size);
 void str_copy(char *dst, const char *src, int dst_size);
 void str_format(char *buffer, int buffer_size, const char *format, ...);
+void str_sanitize_strong(char *str);
+void str_sanitize(char *str);
+
+IOHANDLE io_stdin();
+IOHANDLE io_stdout();
+IOHANDLE io_stderr();
 
 #ifdef __cplusplus
 }

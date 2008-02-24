@@ -20,11 +20,29 @@ extern vec2 local_character_pos;
 extern vec2 local_target_pos;
 
 // snap pointers
-extern const obj_player_character *local_character;
-extern const obj_player_character *local_prev_character;
-extern const obj_player_info *local_info;
-extern const obj_flag *flags[2];
-extern const obj_game *gameobj;
+struct snapstate
+{
+	const NETOBJ_PLAYER_CHARACTER *local_character;
+	const NETOBJ_PLAYER_CHARACTER *local_prev_character;
+	const NETOBJ_PLAYER_INFO *local_info;
+	const NETOBJ_FLAG *flags[2];
+	const NETOBJ_GAME *gameobj;
+
+	const NETOBJ_PLAYER_INFO *player_infos[MAX_CLIENTS];
+	const NETOBJ_PLAYER_INFO *info_by_score[MAX_CLIENTS];
+	int num_players;
+};
+
+extern snapstate netobjects;
+
+/*
+extern const NETOBJ_PLAYER_CHARACTER *local_character;
+extern const NETOBJ_PLAYER_CHARACTER *local_prev_character;
+extern const NETOBJ_PLAYER_INFO *local_info;
+extern const NETOBJ_FLAG *flags[2];
+extern const NETOBJ_GAME *gameobj;
+* */
+
 extern tuning_params tuning;
 
 // predicted players
@@ -33,7 +51,7 @@ extern player_core predicted_player;
 
 // input
 extern int picked_up_weapon;
-extern player_input input_data;
+extern NETOBJ_PLAYER_INPUT input_data;
 extern int input_target_lock;
 
 // debug
@@ -45,7 +63,7 @@ enum
 	MAX_EXTRA_PROJECTILES=32,
 };
 
-extern obj_projectile extraproj_projectiles[MAX_EXTRA_PROJECTILES];
+extern NETOBJ_PROJECTILE extraproj_projectiles[MAX_EXTRA_PROJECTILES];
 extern int extraproj_num;
 
 void extraproj_reset();

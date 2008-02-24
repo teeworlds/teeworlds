@@ -54,7 +54,6 @@ typedef struct
 	unsigned char *data;
 } NETPACKETDATA;
 
-
 static void send_packet(NETSOCKET socket, NETADDR4 *addr, NETPACKETDATA *packet)
 {
 	unsigned char buffer[NETWORK_MAX_PACKET_SIZE];
@@ -356,7 +355,18 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 		conn->remote_closed = 1;
 		
 		if(p->data_size)
-			conn_set_error(conn, (char *)p->data);
+		{
+			/* make sure to sanitize the error string form the other party*/
+			char str[128];
+			if(p->data_size < 128)
+				str_copy(str, (char *)p->data, p->data_size);
+			else
+				str_copy(str, (char *)p->data, 128);
+			str_sanitize_strong(str);
+			
+			/* set the error string */
+			conn_set_error(conn, str);
+		}
 		else
 			conn_set_error(conn, "no reason given");
 		if(config.debug)
@@ -739,7 +749,7 @@ int netserver_recv(NETSERVER *s, NETPACKET *packet)
 		else
 		{
 			/* errornous packet, drop it */
-			dbg_msg("server", "crazy packet");
+			/* dbg_msg("server", "crazy packet"); */
 		}
 		
 		/* read header */
@@ -751,7 +761,11 @@ int netserver_recv(NETSERVER *s, NETPACKET *packet)
 
 int netserver_send(NETSERVER *s, NETPACKET *packet)
 {
-	dbg_assert(packet->data_size < NETWORK_MAX_PAYLOAD, "packet payload too big");
+	if(packet->data_size >= NETWORK_MAX_PAYLOAD)
+	{
+		dbg_msg("netserver", "packet payload too big. %d. dropping packet", packet->data_size);
+		return -1;
+	}
 	
 	if(packet->flags&PACKETFLAG_CONNLESS)
 	{
@@ -898,7 +912,11 @@ int netclient_recv(NETCLIENT *c, NETPACKET *packet)
 
 int netclient_send(NETCLIENT *c, NETPACKET *packet)
 {
-	dbg_assert(packet->data_size < NETWORK_MAX_PAYLOAD, "packet payload too big");
+	if(packet->data_size >= NETWORK_MAX_PAYLOAD)
+	{
+		dbg_msg("netclient", "packet payload too big. %d. dropping packet", packet->data_size);
+		return -1;
+	}
 	
 	if(packet->flags&PACKETFLAG_CONNLESS)
 	{

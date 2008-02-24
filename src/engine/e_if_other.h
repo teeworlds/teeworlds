@@ -34,6 +34,7 @@ typedef struct
 {
 	int type;
 	int id;
+	int datasize;
 } SNAP_ITEM;
 
 /*
@@ -234,7 +235,7 @@ int snap_num_items(int snapid);
 	Returns:
 		Returns a pointer to the item if it exists, otherwise NULL.
 */
-const void *snap_get_item(int snapid, int index, SNAP_ITEM *item);
+void *snap_get_item(int snapid, int index, SNAP_ITEM *item);
 
 /*
 	Function: snap_find_item
@@ -250,7 +251,19 @@ const void *snap_get_item(int snapid, int index, SNAP_ITEM *item);
 	Returns:
 		Returns a pointer to the item if it exists, otherwise NULL.
 */
-const void *snap_find_item(int snapid, int type, int id);
+void *snap_find_item(int snapid, int type, int id);
+
+/*
+	Function: snap_invalidate_item
+		Marks an item as invalid byt setting type and id to 0xffffffff.
+	
+	Arguments:
+		snapid - Snapshot ID to the data to fetch.
+			* SNAP_PREV for previous snapshot.
+			* SNAP_CUR for current snapshot.
+		index - Index of the item.
+*/
+void snap_invalidate_item(int snapid, int index);
 
 /*
 	Function: snap_input

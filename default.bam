@@ -5,6 +5,11 @@ if family == "windows" then
 	dc_compiler = "scripts\\compiler.py"
 end
 
+netobj_compiler = "python scripts/netobj.py"
+if family == "windows" then
+	netobj_compiler = "scripts\\netobj.py"
+end
+
 dat2c_compiler = "python scripts/dat2c.py"
 if family == "windows" then
 	dat2c_compiler = "scripts\\dat2c.py"
@@ -56,6 +61,15 @@ function dc_cdata(output, data, script)
 	return os.execute(dc_compiler .. " " .. data .. " " .. script .. " -c " .. output)
 end
 
+function netobj_source(output, proto)
+	print("netobj source " .. PathFilename(output) .. " = " .. PathFilename(proto))
+	return os.execute(netobj_compiler .. " source " .. proto .. " " .. output)
+end
+
+function netobj_header(output, proto)
+	print("netobj header " .. PathFilename(output) .. " = " .. PathFilename(proto))
+	return os.execute(netobj_compiler .. " header " .. proto .. " " .. output)
+end
 
 function CHash(output, ...)
 	local inputs = {}
@@ -89,6 +103,17 @@ function Dat2c(datafile, sourcefile, arrayname)
 	bam_add_job("dat2c", sourcefile, datafile, arrayname)
 	bam_add_dependency(sourcefile, datafile)
 	return sourcefile
+end
+
+function NetObjCompile(protofile, sourcefile, headerfile)
+	protofile = Path(protofile)
+	sourcefile = Path(sourcefile)
+	headerfile = Path(headerfile)
+	bam_add_job("netobj_source", sourcefile, protofile)
+	bam_add_job("netobj_header", headerfile, protofile)
+	bam_add_dependency(sourcefile, protofile)
+	bam_add_dependency(headerfile, protofile)
+	return {source = sourcefile, header=headerfile}
 end
 
 function DataCompile(datafile, scriptfile, headerfile, sourcefile, outputdatafile)
@@ -137,11 +162,16 @@ networkdata = DataCompile(
 		"datasrc/network.dts", 
 		"src/game/generated/g_protocol_ids.h",
 		"src/game/generated/g_protocol_ids.cpp")
+		
+netobj = NetObjCompile(
+		"src/game/g_protocol.def",
+		"src/game/generated/g_protocol.cpp",
+		"src/game/generated/g_protocol.h")
 
 nethash = CHash(
 	"src/game/generated/nethash.c",
 	"src/engine/e_protocol.h",
-	"src/game/g_protocol.h",
+	"src/game/generated/g_protocol.h",
 	"src/game/g_tuning.h",
 	"src/game/g_game.cpp", networkdata.header)
 
@@ -260,7 +290,7 @@ function build(settings)
 	server = Compile(server_settings, Collect("src/engine/server/*.c"))
 	
 	masterserver = Compile(settings, Collect("src/mastersrv/*.cpp"))
-	game_shared = Compile(settings, Collect("src/game/*.cpp"), nethash)
+	game_shared = Compile(settings, Collect("src/game/*.cpp"), nethash, netobj.source)
 	game_client = Compile(settings, Collect("src/game/client/*.cpp"), clientdata.source, clientdata.cdata)
 	game_server = Compile(settings, Collect("src/game/server/*.cpp"), serverdata.source, serverdata.cdata)
 	game_editor = Compile(settings, Collect("src/game/editor/*.cpp"))

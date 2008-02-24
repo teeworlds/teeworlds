@@ -211,30 +211,48 @@ enum
 	NUM_SNAPSHOT_TYPES=2
 };
 
+/* the game snapshots are modifiable by the game */
 SNAPSTORAGE snapshot_storage;
 static SNAPSTORAGE_HOLDER *snapshots[NUM_SNAPSHOT_TYPES];
+
 static int recived_snapshots;
 static char snapshot_incomming_data[MAX_SNAPSHOT_SIZE];
 
 /* --- */
 
-const void *snap_get_item(int snapid, int index, SNAP_ITEM *item)
+void *snap_get_item(int snapid, int index, SNAP_ITEM *item)
 {
 	SNAPSHOT_ITEM *i;
 	dbg_assert(snapid >= 0 && snapid < NUM_SNAPSHOT_TYPES, "invalid snapid");
-	i = snapshot_get_item(snapshots[snapid]->snap, index);
+	i = snapshot_get_item(snapshots[snapid]->alt_snap, index);
+	item->datasize = snapshot_get_item_datasize(snapshots[snapid]->alt_snap, index);
 	item->type = snapitem_type(i);
 	item->id = snapitem_id(i);
 	return (void *)snapitem_data(i);
 }
 
-const void *snap_find_item(int snapid, int type, int id)
+void snap_invalidate_item(int snapid, int index)
+{
+	SNAPSHOT_ITEM *i;
+	dbg_assert(snapid >= 0 && snapid < NUM_SNAPSHOT_TYPES, "invalid snapid");
+	i = snapshot_get_item(snapshots[snapid]->alt_snap, index);
+	if(i)
+	{
+		if((char *)i < (char *)snapshots[snapid]->alt_snap || (char *)i > (char *)snapshots[snapid]->alt_snap + snapshots[snapid]->snap_size)
+			dbg_msg("ASDFASDFASdf", "ASDFASDFASDF");
+		if((char *)i >= (char *)snapshots[snapid]->snap && (char *)i < (char *)snapshots[snapid]->snap + snapshots[snapid]->snap_size)
+			dbg_msg("ASDFASDFASdf", "ASDFASDFASDF");
+		i->type_and_id = -1;
+	}
+}
+
+void *snap_find_item(int snapid, int type, int id)
 {
 	/* TODO: linear search. should be fixed. */
 	int i;
 	for(i = 0; i < snapshots[snapid]->snap->num_items; i++)
 	{
-		SNAPSHOT_ITEM *itm = snapshot_get_item(snapshots[snapid]->snap, i);
+		SNAPSHOT_ITEM *itm = snapshot_get_item(snapshots[snapid]->alt_snap, i);
 		if(snapitem_type(itm) == type && snapitem_id(itm) == id)
 			return (void *)snapitem_data(itm);
 	}
@@ -762,6 +780,11 @@ static void client_process_packet(NETPACKET *packet)
 				int total_size = msg_unpack_int();
 				int size = msg_unpack_int();
 				const unsigned char *data = msg_unpack_raw(size);
+				
+				/* check fior errors */
+				if(msg_unpack_error() || size <= 0 || total_size <= 0)
+					return;
+				
 				io_write(mapdownload_file, data, size);
 				
 				mapdownload_totalsize = total_size;
@@ -834,7 +857,7 @@ static void client_process_packet(NETPACKET *packet)
 					crc = msg_unpack_int();
 					part_size = msg_unpack_int();
 				}
-
+				
 				data = (const char *)msg_unpack_raw(part_size);
 				
 				if(msg_unpack_error())
@@ -882,6 +905,7 @@ static void client_process_packet(NETPACKET *packet)
 						
 						complete_size = (num_parts-1) * MAX_SNAPSHOT_PACKSIZE + part_size;
 
+						/* reset snapshoting */
 						snapshot_part = 0;
 						
 						/* find snapshot that we should use as delta */
@@ -891,7 +915,7 @@ static void client_process_packet(NETPACKET *packet)
 						/* find delta */
 						if(delta_tick >= 0)
 						{
-							int deltashot_size = snapstorage_get(&snapshot_storage, delta_tick, 0, &deltashot);
+							int deltashot_size = snapstorage_get(&snapshot_storage, delta_tick, 0, &deltashot, 0);
 							
 							if(deltashot_size < 0)
 							{
@@ -912,17 +936,28 @@ static void client_process_packet(NETPACKET *packet)
 						deltasize = sizeof(int)*3;
 
 						if(complete_size)
-						{
+						{	
+							int intsize;
 							int compsize = zerobit_decompress(snapshot_incomming_data, complete_size, tmpbuffer);
-							int intsize = intpack_decompress(tmpbuffer, compsize, tmpbuffer2);
+							
+							if(compsize < 0) /* failure during decompression, bail */
+								return;
+								
+							intsize = intpack_decompress(tmpbuffer, compsize, tmpbuffer2);
+
+							if(intsize < 0) /* failure during decompression, bail */
+								return;
+
 							deltadata = tmpbuffer2;
 							deltasize = intsize;
 						}
-
-						/*dbg_msg("UNPACK", "%d unpacked with %d", game_tick, delta_tick); */
 						
+						/* unpack delta */
 						purgetick = delta_tick;
 						snapsize = snapshot_unpack_delta(deltashot, (SNAPSHOT*)tmpbuffer3, deltadata, deltasize);
+						if(snapsize < 0)
+							return;
+							
 						if(msg != NETMSG_SNAPEMPTY && snapshot_crc((SNAPSHOT*)tmpbuffer3) != crc)
 						{
 							if(config.debug)
@@ -950,10 +985,9 @@ static void client_process_packet(NETPACKET *packet)
 						if(snapshots[SNAP_CURRENT] && snapshots[SNAP_CURRENT]->tick < purgetick)
 							purgetick = snapshots[SNAP_PREV]->tick;
 						snapstorage_purge_until(&snapshot_storage, purgetick);
-						/*client_snapshot_purge_until(game_tick-50); */
 						
 						/* add new */
-						snapstorage_add(&snapshot_storage, game_tick, time_get(), snapsize, (SNAPSHOT*)tmpbuffer3);
+						snapstorage_add(&snapshot_storage, game_tick, time_get(), snapsize, (SNAPSHOT*)tmpbuffer3, 1);
 						
 						/* apply snapshot, cycle pointers */
 						recived_snapshots++;

@@ -120,17 +120,17 @@ extern "C" void modc_predict()
 		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 		int client_id = item.id;
 
-		if(item.type == OBJTYPE_PLAYER_CHARACTER)
+		if(item.type == NETOBJTYPE_PLAYER_CHARACTER)
 		{
-			const obj_player_character *character = (const obj_player_character *)data;
+			const NETOBJ_PLAYER_CHARACTER *character = (const NETOBJ_PLAYER_CHARACTER *)data;
 			client_datas[client_id].predicted.world = &world;
 			world.players[client_id] = &client_datas[client_id].predicted;
 
 			client_datas[client_id].predicted.read(character);
 		}
-		else if(item.type == OBJTYPE_PLAYER_INFO)
+		else if(item.type == NETOBJTYPE_PLAYER_INFO)
 		{
-			const obj_player_info *info = (const obj_player_info *)data;
+			const NETOBJ_PLAYER_INFO *info = (const NETOBJ_PLAYER_INFO *)data;
 			if(info->local)
 				local_cid = client_id;
 		}
@@ -155,7 +155,7 @@ extern "C" void modc_predict()
 				// apply player input
 				int *input = client_get_input(tick);
 				if(input)
-					world.players[c]->input = *((player_input*)input);
+					world.players[c]->input = *((NETOBJ_PLAYER_INPUT*)input);
 			}
 
 			world.players[c]->tick();
@@ -230,6 +230,23 @@ extern "C" void modc_newsnapshot()
 	static int snapshot_count = 0;
 	snapshot_count++;
 	
+	// secure snapshot
+	{
+		int num = snap_num_items(SNAP_CURRENT);
+		for(int index = 0; index < num; index++)
+		{
+			SNAP_ITEM item;
+			void *data = snap_get_item(SNAP_CURRENT, index, &item);
+			if(netobj_secure(item.type, data, item.datasize) != 0)
+			{
+				if(config.debug)
+					dbg_msg("game", "invalidated %d %d (%s) %d", index, item.type, netobj_get_name(item.type), item.id);
+				snap_invalidate_item(SNAP_CURRENT, index);
+			}
+		}
+	}
+	
+	
 	process_events(SNAP_CURRENT);
 
 	if(config.dbg_stress)
@@ -256,32 +273,32 @@ extern "C" void modc_newsnapshot()
 			SNAP_ITEM item;
 			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 
-			if(item.type == OBJTYPE_PLAYER_INFO)
+			if(item.type == NETOBJTYPE_PLAYER_INFO)
 			{
-				const obj_player_info *info = (const obj_player_info *)data;
+				const NETOBJ_PLAYER_INFO *info = (const NETOBJ_PLAYER_INFO *)data;
 				
-				client_datas[info->clientid].team = info->team;
+				client_datas[info->cid].team = info->team;
 				
 				if(info->local)
 				{
-					local_info = info;
-					const void *data = snap_find_item(SNAP_CURRENT, OBJTYPE_PLAYER_CHARACTER, item.id);
+					netobjects.local_info = info;
+					const void *data = snap_find_item(SNAP_CURRENT, NETOBJTYPE_PLAYER_CHARACTER, item.id);
 					if(data)
 					{
-						local_character = (const obj_player_character *)data;
-						local_character_pos = vec2(local_character->x, local_character->y);
+						netobjects.local_character = (const NETOBJ_PLAYER_CHARACTER *)data;
+						local_character_pos = vec2(netobjects.local_character->x, netobjects.local_character->y);
 
-						const void *p = snap_find_item(SNAP_PREV, OBJTYPE_PLAYER_CHARACTER, item.id);
+						const void *p = snap_find_item(SNAP_PREV, NETOBJTYPE_PLAYER_CHARACTER, item.id);
 						if(p)
-							local_prev_character = (obj_player_character *)p;
+							netobjects.local_prev_character = (NETOBJ_PLAYER_CHARACTER *)p;
 					}
 				}
 			}
-			else if(item.type == OBJTYPE_GAME)
-				gameobj = (obj_game *)data;
-			else if(item.type == OBJTYPE_FLAG)
+			else if(item.type == NETOBJTYPE_GAME)
+				netobjects.gameobj = (NETOBJ_GAME *)data;
+			else if(item.type == NETOBJTYPE_FLAG)
 			{
-				flags[item.id%2] = (const obj_flag *)data;
+				netobjects.flags[item.id%2] = (const NETOBJ_FLAG *)data;
 			}
 		}
 	}
@@ -394,7 +411,7 @@ extern "C" void modc_statechange(int state, int old)
 	}
 }
 
-obj_projectile extraproj_projectiles[MAX_EXTRA_PROJECTILES];
+NETOBJ_PROJECTILE extraproj_projectiles[MAX_EXTRA_PROJECTILES];
 int extraproj_num;
 
 void extraproj_reset()
@@ -409,6 +426,11 @@ extern "C" void modc_message(int msg)
 		int cid = msg_unpack_int();
 		int team = msg_unpack_int();
 		const char *message = msg_unpack_string();
+
+		/* check for errors and invalid inputs */
+		if(msg_unpack_error() || cid < 0 || cid >= MAX_CLIENTS)
+			return;
+			
 		dbg_msg("message", "chat cid=%d team=%d msg='%s'", cid, team, message);
 		chat_add_line(cid, team, message);
 
@@ -423,9 +445,12 @@ extern "C" void modc_message(int msg)
 		
 		for(int k = 0; k < num; k++)
 		{
-			obj_projectile proj;
-			for(unsigned i = 0; i < sizeof(obj_projectile)/sizeof(int); i++)
+			NETOBJ_PROJECTILE proj;
+			for(unsigned i = 0; i < sizeof(NETOBJ_PROJECTILE)/sizeof(int); i++)
 				((int *)&proj)[i] = msg_unpack_int();
+				
+			if(msg_unpack_error())
+				return;
 				
 			if(extraproj_num != MAX_EXTRA_PROJECTILES)
 			{
@@ -439,6 +464,10 @@ extern "C" void modc_message(int msg)
 		int cid = msg_unpack_int();
 		const char *name = msg_unpack_string();
 		const char *skinname = msg_unpack_string();
+		
+		/* check for errors and invalid inputs */
+		if(msg_unpack_error() || cid < 0 || cid >= MAX_CLIENTS)
+			return;
 		
 		strncpy(client_datas[cid].name, name, 64);
 		strncpy(client_datas[cid].skin_name, skinname, 64);
@@ -466,13 +495,24 @@ extern "C" void modc_message(int msg)
 	}
 	else if(msg == MSG_TUNE_PARAMS)
 	{
-		int *params = (int *)&tuning;
+		// unpack the new tuning		
+		tuning_params new_tuning;
+		int *params = (int *)&new_tuning;
 		for(unsigned i = 0; i < sizeof(tuning_params)/sizeof(int); i++)
 			params[i] = msg_unpack_int();
+
+		// check for unpacking errors
+		if(msg_unpack_error())
+			return;
+			
+		// apply new tuning
+		tuning = new_tuning;
 	}
     else if(msg == MSG_WEAPON_PICKUP)
     {
         int weapon = msg_unpack_int();
+		if(msg_unpack_error())
+			return;
         picked_up_weapon = weapon+1;
     }
 	else if(msg == MSG_READY_TO_ENTER)
@@ -481,23 +521,41 @@ extern "C" void modc_message(int msg)
 	}
 	else if(msg == MSG_KILLMSG)
 	{
+		// unpack messages
+		killmsg msg;
+		msg.killer = msg_unpack_int();
+		msg.victim = msg_unpack_int();
+		msg.weapon = msg_unpack_int();
+		msg.mode_special = msg_unpack_int();
+		msg.tick = client_tick();
+
+		// check for unpacking errors
+		if(msg_unpack_error() || msg.killer >= MAX_CLIENTS || msg.victim >= MAX_CLIENTS || msg.weapon >= NUM_WEAPONS)
+			return;
+
+		// add the message
 		killmsg_current = (killmsg_current+1)%killmsg_max;
-		killmsgs[killmsg_current].killer = msg_unpack_int();
-		killmsgs[killmsg_current].victim = msg_unpack_int();
-		killmsgs[killmsg_current].weapon = msg_unpack_int();
-		killmsgs[killmsg_current].mode_special = msg_unpack_int();
-		killmsgs[killmsg_current].tick = client_tick();
+		killmsgs[killmsg_current] = msg;
 	}
 	else if (msg == MSG_EMOTICON)
 	{
+		// unpack
 		int cid = msg_unpack_int();
 		int emoticon = msg_unpack_int();
+
+		// check for errors
+		if(msg_unpack_error() || cid < 0 || cid >= MAX_CLIENTS)
+			return;
+
+		// apply
 		client_datas[cid].emoticon = emoticon;
 		client_datas[cid].emoticon_start = client_tick();
 	}
 	else if(msg == MSG_SOUND_GLOBAL)
 	{
 		int soundid = msg_unpack_int();
+		if(msg_unpack_error() || soundid < 0)
+			return;
 		snd_play_random(CHN_GLOBAL, soundid, 1.0f, vec2(0,0));
 	}
 }

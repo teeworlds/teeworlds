@@ -107,7 +107,7 @@ void event_handler::snap(int snapping_client)
 	{
 		if(cmask_is_set(client_masks[i], snapping_client))
 		{
-			ev_common *ev = (ev_common *)&data[offsets[i]];
+			NETEVENT_COMMON *ev = (NETEVENT_COMMON *)&data[offsets[i]];
 			if(distance(players[snapping_client].pos, vec2(ev->x, ev->y)) < 1500.0f)
 			{
 				void *d = snap_new_item(types[i], i, sizes[i]);
@@ -297,6 +297,7 @@ void game_world::tick()
 
 	if(!paused)
 	{
+		/*
 		static PERFORMACE_INFO scopes[OBJTYPE_FLAG+1] =
 		{
 			{"null", 0},
@@ -320,31 +321,32 @@ void game_world::tick()
 		};
 				
 		static PERFORMACE_INFO tick_scope = {"tick", 0};
-		perf_start(&tick_scope);
+		perf_start(&tick_scope);*/
 		
 		// update all objects
 		for(entity *ent = first_entity; ent; ent = ent->next_entity)
 		{
-			if(ent->objtype >= 0 && ent->objtype < OBJTYPE_FLAG)
-				perf_start(&scopes[ent->objtype]);
+			/*if(ent->objtype >= 0 && ent->objtype < OBJTYPE_FLAG)
+				perf_start(&scopes[ent->objtype]);*/
 			ent->tick();
-			if(ent->objtype >= 0 && ent->objtype < OBJTYPE_FLAG)
-				perf_end();
+			/*if(ent->objtype >= 0 && ent->objtype < OBJTYPE_FLAG)
+				perf_end();*/
 		}
 		
+		/*
 		perf_end();
 
 		static PERFORMACE_INFO deftick_scope = {"tick_defered", 0};
-		perf_start(&deftick_scope);
+		perf_start(&deftick_scope);*/
 		for(entity *ent = first_entity; ent; ent = ent->next_entity)
 		{
-			if(ent->objtype >= 0 && ent->objtype < OBJTYPE_FLAG)
-				perf_start(&scopes_def[ent->objtype]);
+			/*if(ent->objtype >= 0 && ent->objtype < OBJTYPE_FLAG)
+				perf_start(&scopes_def[ent->objtype]);*/
 			ent->tick_defered();
-			if(ent->objtype >= 0 && ent->objtype < OBJTYPE_FLAG)
-				perf_end();
+			/*if(ent->objtype >= 0 && ent->objtype < OBJTYPE_FLAG)
+				perf_end();*/
 		}
-		perf_end();
+		/*perf_end();*/
 	}
 
 	remove_entities();
@@ -380,7 +382,7 @@ static input_count count_input(int prev, int cur)
 //////////////////////////////////////////////////
 projectile::projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity* powner,
 	int damage, int flags, float force, int sound_impact, int weapon)
-: entity(OBJTYPE_PROJECTILE)
+: entity(NETOBJTYPE_PROJECTILE)
 {
 	this->type = type;
 	this->pos = pos;
@@ -437,7 +439,7 @@ void projectile::tick()
 	}
 }
 
-void projectile::fill_info(obj_projectile *proj)
+void projectile::fill_info(NETOBJ_PROJECTILE *proj)
 {
 	proj->x = (int)pos.x;
 	proj->y = (int)pos.y;
@@ -455,7 +457,7 @@ void projectile::snap(int snapping_client)
 	if(distance(players[snapping_client].pos, curpos) > 1000.0f)
 		return;
 
-	obj_projectile *proj = (obj_projectile *)snap_new_item(OBJTYPE_PROJECTILE, id, sizeof(obj_projectile));
+	NETOBJ_PROJECTILE *proj = (NETOBJ_PROJECTILE *)snap_new_item(NETOBJTYPE_PROJECTILE, id, sizeof(NETOBJ_PROJECTILE));
 	fill_info(proj);
 }
 
@@ -464,7 +466,7 @@ void projectile::snap(int snapping_client)
 // laser
 //////////////////////////////////////////////////
 laser::laser(vec2 pos, vec2 direction, float start_energy, player *owner)
-: entity(OBJTYPE_LASER)
+: entity(NETOBJTYPE_LASER)
 {
 	this->pos = pos;
 	this->owner = owner;
@@ -554,7 +556,7 @@ void laser::snap(int snapping_client)
 	if(distance(players[snapping_client].pos, pos) > 1000.0f)
 		return;
 
-	obj_laser *obj = (obj_laser *)snap_new_item(OBJTYPE_LASER, id, sizeof(obj_laser));
+	NETOBJ_LASER *obj = (NETOBJ_LASER *)snap_new_item(NETOBJTYPE_LASER, id, sizeof(NETOBJ_LASER));
 	obj->x = (int)pos.x;
 	obj->y = (int)pos.y;
 	obj->from_x = (int)from.x;
@@ -568,7 +570,7 @@ void laser::snap(int snapping_client)
 //////////////////////////////////////////////////
 // TODO: move to separate file
 player::player()
-: entity(OBJTYPE_PLAYER_CHARACTER)
+: entity(NETOBJTYPE_PLAYER_CHARACTER)
 {
 	init();
 }
@@ -788,7 +790,7 @@ void player::try_respawn()
 
 	// check if the position is occupado
 	entity *ents[2] = {0};
-	int types[] = {OBJTYPE_PLAYER_CHARACTER};
+	int types[] = {NETOBJTYPE_PLAYER_CHARACTER};
 	int num_ents = world->find_entities(spawnpos, 64, ents, 2, types, 1);
 	for(int i = 0; i < num_ents; i++)
 	{
@@ -901,12 +903,12 @@ int player::handle_ninja()
 		core.vel = vec2(0.0f,0.0f);
 		if ((ninja.currentmovetime % 2) == 0)
 		{
-			create_smoke(pos);
+			//create_smoke(pos);
 		}
 
 		// check if we hit anything along the way
 		{
-			int type = OBJTYPE_PLAYER_CHARACTER;
+			int type = NETOBJTYPE_PLAYER_CHARACTER;
 			entity *ents[64];
 			vec2 dir = pos - oldpos;
 			float radius = phys_size * 2.0f; //length(dir * 0.5f);
@@ -990,12 +992,12 @@ void player::fire_weapon()
 				1, 0, 0, -1, WEAPON_GUN);
 				
 			// pack the projectile and send it to the client directly
-			obj_projectile p;
+			NETOBJ_PROJECTILE p;
 			proj->fill_info(&p);
 			
 			msg_pack_start(MSG_EXTRA_PROJECTILE, 0);
 			msg_pack_int(1);
-			for(unsigned i = 0; i < sizeof(obj_projectile)/sizeof(int); i++)
+			for(unsigned i = 0; i < sizeof(NETOBJ_PROJECTILE)/sizeof(int); i++)
 				msg_pack_int(((int *)&p)[i]);
 			msg_pack_end();
 			server_send_msg(client_id);
@@ -1014,12 +1016,12 @@ void player::fire_weapon()
 				1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
 
 			// pack the projectile and send it to the client directly
-			obj_projectile p;
+			NETOBJ_PROJECTILE p;
 			proj->fill_info(&p);
 			
 			msg_pack_start(MSG_EXTRA_PROJECTILE, 0);
 			msg_pack_int(1);
-			for(unsigned i = 0; i < sizeof(obj_projectile)/sizeof(int); i++)
+			for(unsigned i = 0; i < sizeof(NETOBJ_PROJECTILE)/sizeof(int); i++)
 				msg_pack_int(((int *)&p)[i]);
 			msg_pack_end();
 			server_send_msg(client_id);
@@ -1050,10 +1052,10 @@ void player::fire_weapon()
 					1, 0, 0, -1, WEAPON_SHOTGUN);
 					
 				// pack the projectile and send it to the client directly
-				obj_projectile p;
+				NETOBJ_PROJECTILE p;
 				proj->fill_info(&p);
 				
-				for(unsigned i = 0; i < sizeof(obj_projectile)/sizeof(int); i++)
+				for(unsigned i = 0; i < sizeof(NETOBJ_PROJECTILE)/sizeof(int); i++)
 					msg_pack_int(((int *)&p)[i]);
 			}
 
@@ -1245,7 +1247,7 @@ int player::handle_weapons()
 		// only one that needs update (for now)
 		// do selection for the weapon and bash anything in it
 		// check if we hit anything along the way
-		int type = OBJTYPE_PLAYER_CHARACTER;
+		int type = NETOBJTYPE_PLAYER_CHARACTER;
 		entity *ents[64];
 		vec2 lookdir(direction.x > 0.0f ? 1.0f : -1.0f, 0.0f);
 		vec2 dir = lookdir * data->weapons[active_weapon].meleereach;
@@ -1278,7 +1280,7 @@ int player::handle_weapons()
 			vec2 fdir = normalize(ents[i]->pos- pos);
 
 			// set his velocity to fast upward (for now)
-			create_smoke(ents[i]->pos);
+			//create_smoke(ents[i]->pos);
 			create_sound(pos, SOUND_HAMMER_HIT);
 			if(numobjectshit < 10)
 				hitobjects[numobjectshit++] = ents[i];
@@ -1318,7 +1320,7 @@ int player::handle_weapons()
 	return 0;
 }
 
-void player::on_direct_input(player_input *new_input)
+void player::on_direct_input(NETOBJ_PLAYER_INPUT *new_input)
 {
 	mem_copy(&latest_previnput, &latest_input, sizeof(latest_input));
 	mem_copy(&latest_input, new_input, sizeof(latest_input));
@@ -1444,7 +1446,7 @@ void player::tick_defered()
 		if(events&COREEVENT_AIR_JUMP)
 		{
 			create_sound(pos, SOUND_PLAYER_AIRJUMP, mask);
-			ev_common *c = (ev_common *)::events.create(EVENT_AIR_JUMP, sizeof(ev_common), mask);
+			NETEVENT_COMMON *c = (NETEVENT_COMMON *)::events.create(NETEVENTTYPE_AIR_JUMP, sizeof(NETEVENT_COMMON), mask);
 			if(c)
 			{
 				c->x = (int)pos.x;
@@ -1580,12 +1582,12 @@ void player::snap(int snaping_client)
 {
 	if(1)
 	{
-		obj_player_info *info = (obj_player_info *)snap_new_item(OBJTYPE_PLAYER_INFO, client_id, sizeof(obj_player_info));
+		NETOBJ_PLAYER_INFO *info = (NETOBJ_PLAYER_INFO *)snap_new_item(NETOBJTYPE_PLAYER_INFO, client_id, sizeof(NETOBJ_PLAYER_INFO));
 
 		info->latency = latency_min;
 		info->latency_flux = latency_max-latency_min;
 		info->local = 0;
-		info->clientid = client_id;
+		info->cid = client_id;
 		info->score = score;
 		info->team = team;
 
@@ -1595,7 +1597,7 @@ void player::snap(int snaping_client)
 
 	if(health > 0 && team >= 0 && distance(players[snaping_client].pos, pos) < 1000.0f)
 	{
-		obj_player_character *character = (obj_player_character *)snap_new_item(OBJTYPE_PLAYER_CHARACTER, client_id, sizeof(obj_player_character));
+		NETOBJ_PLAYER_CHARACTER *character = (NETOBJ_PLAYER_CHARACTER *)snap_new_item(NETOBJTYPE_PLAYER_CHARACTER, client_id, sizeof(NETOBJ_PLAYER_CHARACTER));
 
 		core.write(character);
 
@@ -1651,7 +1653,7 @@ player *players;
 // powerup
 //////////////////////////////////////////////////
 powerup::powerup(int _type, int _subtype)
-: entity(OBJTYPE_POWERUP)
+: entity(NETOBJTYPE_POWERUP)
 {
 	type = _type;
 	subtype = _subtype;
@@ -1747,7 +1749,7 @@ void powerup::tick()
 
 				// loop through all players, setting their emotes
 				entity *ents[64];
-				const int types[] = {OBJTYPE_PLAYER_CHARACTER};
+				const int types[] = {NETOBJTYPE_PLAYER_CHARACTER};
 				int num = world->find_entities(vec2(0, 0), 1000000, ents, 64, types, 1);
 				for (int i = 0; i < num; i++)
 				{
@@ -1782,7 +1784,7 @@ void powerup::snap(int snapping_client)
 	if(spawntick != -1)
 		return;
 
-	obj_powerup *up = (obj_powerup *)snap_new_item(OBJTYPE_POWERUP, id, sizeof(obj_powerup));
+	NETOBJ_POWERUP *up = (NETOBJ_POWERUP *)snap_new_item(NETOBJTYPE_POWERUP, id, sizeof(NETOBJ_POWERUP));
 	up->x = (int)pos.x;
 	up->y = (int)pos.y;
 	up->type = type; // TODO: two diffrent types? what gives?
@@ -1805,7 +1807,7 @@ void create_damageind(vec2 p, float angle, int amount)
 	for(int i = 0; i < amount; i++)
 	{
 		float f = mix(s, e, float(i+1)/float(amount+2));
-		ev_damageind *ev = (ev_damageind *)events.create(EVENT_DAMAGEINDICATION, sizeof(ev_damageind));
+		NETEVENT_DAMAGEIND *ev = (NETEVENT_DAMAGEIND *)events.create(NETEVENTTYPE_DAMAGEIND, sizeof(NETEVENT_DAMAGEIND));
 		if(ev)
 		{
 			ev->x = (int)p.x;
@@ -1818,7 +1820,7 @@ void create_damageind(vec2 p, float angle, int amount)
 void create_explosion(vec2 p, int owner, int weapon, bool bnodamage)
 {
 	// create the event
-	ev_explosion *ev = (ev_explosion *)events.create(EVENT_EXPLOSION, sizeof(ev_explosion));
+	NETEVENT_EXPLOSION *ev = (NETEVENT_EXPLOSION *)events.create(NETEVENTTYPE_EXPLOSION, sizeof(NETEVENT_EXPLOSION));
 	if(ev)
 	{
 		ev->x = (int)p.x;
@@ -1848,21 +1850,22 @@ void create_explosion(vec2 p, int owner, int weapon, bool bnodamage)
 	}
 }
 
+/*
 void create_smoke(vec2 p)
 {
 	// create the event
-	ev_explosion *ev = (ev_explosion *)events.create(EVENT_SMOKE, sizeof(ev_explosion));
+	EV_EXPLOSION *ev = (EV_EXPLOSION *)events.create(EVENT_SMOKE, sizeof(EV_EXPLOSION));
 	if(ev)
 	{
 		ev->x = (int)p.x;
 		ev->y = (int)p.y;
 	}
-}
+}*/
 
 void create_playerspawn(vec2 p)
 {
 	// create the event
-	ev_spawn *ev = (ev_spawn *)events.create(EVENT_PLAYERSPAWN, sizeof(ev_spawn));
+	NETEVENT_SPAWN *ev = (NETEVENT_SPAWN *)events.create(NETEVENTTYPE_SPAWN, sizeof(NETEVENT_SPAWN));
 	if(ev)
 	{
 		ev->x = (int)p.x;
@@ -1873,7 +1876,7 @@ void create_playerspawn(vec2 p)
 void create_death(vec2 p)
 {
 	// create the event
-	ev_death *ev = (ev_death *)events.create(EVENT_DEATH, sizeof(ev_death));
+	NETEVENT_DEATH *ev = (NETEVENT_DEATH *)events.create(NETEVENTTYPE_DEATH, sizeof(NETEVENT_DEATH));
 	if(ev)
 	{
 		ev->x = (int)p.x;
@@ -1887,12 +1890,12 @@ void create_sound(vec2 pos, int sound, int mask)
 		return;
 
 	// create a sound
-	ev_sound *ev = (ev_sound *)events.create(EVENT_SOUND_WORLD, sizeof(ev_sound), mask);
+	NETEVENT_SOUND_WORLD *ev = (NETEVENT_SOUND_WORLD *)events.create(NETEVENTTYPE_SOUND_WORLD, sizeof(NETEVENT_SOUND_WORLD), mask);
 	if(ev)
 	{
 		ev->x = (int)pos.x;
 		ev->y = (int)pos.y;
-		ev->sound = sound;
+		ev->soundid = sound;
 	}
 }
 
@@ -2043,7 +2046,7 @@ void mods_snap(int client_id)
 void mods_client_direct_input(int client_id, void *input)
 {
 	if(!world->paused)
-		players[client_id].on_direct_input((player_input *)input);
+		players[client_id].on_direct_input((NETOBJ_PLAYER_INPUT *)input);
 	
 	/*
 	if(i->fire)
@@ -2058,11 +2061,11 @@ void mods_client_predicted_input(int client_id, void *input)
 {
 	if(!world->paused)
 	{
-		if (memcmp(&players[client_id].input, input, sizeof(player_input)) != 0)
+		if (memcmp(&players[client_id].input, input, sizeof(NETOBJ_PLAYER_INPUT)) != 0)
 			players[client_id].last_action = server_tick();
 
 		//players[client_id].previnput = players[client_id].input;
-		players[client_id].input = *(player_input*)input;
+		players[client_id].input = *(NETOBJ_PLAYER_INPUT*)input;
 		players[client_id].num_inputs++;
 		
 		if(players[client_id].input.target_x == 0 && players[client_id].input.target_y == 0)

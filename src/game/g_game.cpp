@@ -400,7 +400,7 @@ void player_core::move()
 	move_box(&pos, &vel, vec2(28.0f, 28.0f), 0);
 }
 
-void player_core::write(obj_player_core *obj_core)
+void player_core::write(NETOBJ_PLAYER_CORE *obj_core)
 {
 	obj_core->x = (int)pos.x;
 	obj_core->y = (int)pos.y;
@@ -427,7 +427,7 @@ void player_core::write(obj_player_core *obj_core)
 	obj_core->angle = (int)(a*256.0f);
 }
 
-void player_core::read(const obj_player_core *obj_core)
+void player_core::read(const NETOBJ_PLAYER_CORE *obj_core)
 {
 	pos.x = obj_core->x;
 	pos.y = obj_core->y;
@@ -445,7 +445,7 @@ void player_core::read(const obj_player_core *obj_core)
 
 void player_core::quantize()
 {
-	obj_player_core c;
+	NETOBJ_PLAYER_CORE c;
 	write(&c);
 	read(&c);
 }

@@ -204,7 +204,7 @@ public:
 	projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity* powner,
 		int damage, int flags, float force, int sound_impact, int weapon);
 
-	void fill_info(obj_projectile *proj);
+	void fill_info(NETOBJ_PROJECTILE *proj);
 
 	virtual void reset();
 	virtual void tick();
@@ -270,12 +270,12 @@ public:
 	int color_feet;
 
 	// these are non-heldback inputs
-	player_input latest_previnput;
-	player_input latest_input;
+	NETOBJ_PLAYER_INPUT latest_previnput;
+	NETOBJ_PLAYER_INPUT latest_input;
 
 	// input	
-	player_input previnput;
-	player_input input;
+	NETOBJ_PLAYER_INPUT previnput;
+	NETOBJ_PLAYER_INPUT input;
 	int num_inputs;
 	int jumped;
 	
@@ -332,7 +332,7 @@ public:
 	int handle_weapons();
 	int handle_ninja();
 	
-	void on_direct_input(player_input *input);
+	void on_direct_input(NETOBJ_PLAYER_INPUT *input);
 	void fire_weapon();
 
 	virtual void tick();
