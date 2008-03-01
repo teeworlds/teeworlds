@@ -18,7 +18,8 @@ typedef struct COMMAND_t
 
 void console_init();
 void console_register(COMMAND *cmd);
-void console_execute(const char *str);
+void console_execute_line(const char *str);
+void console_execute_file(const char *filename);
 void console_print(const char *str);
 void console_register_print_callback(void (*callback)(const char *));
 

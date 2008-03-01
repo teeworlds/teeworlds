@@ -31,9 +31,25 @@ extern "C" void modc_console_init()
 	client_console_init();
 }
 
+static void load_sounds_thread(void *)
+{
+	// load sounds
+	for(int s = 0; s < data->num_sounds; s++)
+	{
+		//render_loading(current/total);
+		for(int i = 0; i < data->sounds[s].num_sounds; i++)
+		{
+			int id = snd_load_wv(data->sounds[s].sounds[i].filename);
+			data->sounds[s].sounds[i].id = id;
+		}
+	}
+}
+
 extern "C" void modc_init()
 {
 	static FONT_SET default_font;
+	
+	int64 start = time_get();
 
 	int before = gfx_memory_usage();
 	font_set_load(&default_font, "data/fonts/default_font%d.tfnt", "data/fonts/default_font%d.png", "data/fonts/default_font%d_b.png", 14, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 36);
@@ -56,9 +72,9 @@ extern "C" void modc_init()
 	// TODO: should be removed
 	snd_set_listener_pos(0.0f, 0.0f);
 
-	float total = data->num_sounds+data->num_images;
+	float total = data->num_images;
 	float current = 0;
-
+	
 	// load textures
 	for(int i = 0; i < data->num_images; i++)
 	{
@@ -66,8 +82,14 @@ extern "C" void modc_init()
 		data->images[i].id = gfx_load_texture(data->images[i].filename, IMG_AUTO);
 		current++;
 	}
+
+	skin_init();
 	
+	//load_sounds_thread(0);
+	thread_create(load_sounds_thread, 0);
+
 	// load sounds
+	/*
 	for(int s = 0; s < data->num_sounds; s++)
 	{
 		render_loading(current/total);
@@ -83,9 +105,11 @@ extern "C" void modc_init()
 		}
 
 		current++;
-	}
-
-	skin_init();
+	}*/
+	
+	
+	int64 end = time_get();
+	dbg_msg("", "%f.2ms", ((end-start)*1000)/(float)time_freq());
 }
 
 extern "C" void modc_entergame()
@@ -322,6 +346,11 @@ extern "C" void modc_render()
 	}
 
 	console_render();
+}
+
+extern "C" void modc_rcon_line(const char *line)
+{
+	console_rcon_print(line);
 }
 
 extern "C" int modc_snap_input(int *data)

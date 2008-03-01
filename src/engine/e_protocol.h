@@ -33,19 +33,22 @@ enum
 	NETMSG_INFO=1,
 	
 	/* sent by server */
-	NETMSG_MAP,
-	NETMSG_MAP_DATA,
-	NETMSG_SNAP,
-	NETMSG_SNAPEMPTY,
-	NETMSG_SNAPSINGLE,
-	NETMSG_SNAPSMALL,
+	NETMSG_MAP_CHANGE,		/* sent when client should switch map */
+	NETMSG_MAP_DATA,		/* map transfer, contains a chunk of the map file */
+	NETMSG_SNAP,			/* normal snapshot, multiple parts */
+	NETMSG_SNAPEMPTY,		/* empty snapshot */
+	NETMSG_SNAPSINGLE,		/* ? */
+	NETMSG_SNAPSMALL,		/* */
+	NETMSG_RCON_AUTH_STATUS,/* result of the authentication */
+	NETMSG_RCON_LINE,		/* line that should be printed to the remote console */
 	
 	/* sent by client */
-	NETMSG_READY,
+	NETMSG_READY,			/* */
 	NETMSG_ENTERGAME,
-	NETMSG_INPUT,
-	NETMSG_CMD,
-	NETMSG_REQUEST_MAP_DATA,
+	NETMSG_INPUT,			/* contains the inputdata from the client */
+	NETMSG_RCON_CMD,		/* */ 
+	NETMSG_RCON_AUTH,		/* */
+	NETMSG_REQUEST_MAP_DATA,/* */
 	
 	/* sent by both */
 	NETMSG_PING,

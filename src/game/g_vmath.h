@@ -162,6 +162,7 @@ public:
 	vector4_base operator +(const vector4_base &v) const { return vector4_base(x+v.x, y+v.y, z+v.z, w+v.w); }
 	vector4_base operator -(const vector4_base &v) const { return vector4_base(x-v.x, y-v.y, z-v.z, w-v.w); }
 	vector4_base operator -() const { return vector4_base(-x, -y, -z, -w); }
+	vector4_base operator *(const vector4_base &v) const { return vector4_base(x*v.x, y*v.y, z*v.z, w*v.w); }
 	vector4_base operator *(const T v) const { return vector4_base(x*v, y*v, z*v, w*v); }
 	
 	const vector4_base &operator =(const vector4_base &v) { x = v.x; y = v.y; z = v.z; w = v.w; return *this; }

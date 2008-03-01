@@ -215,5 +215,7 @@ void *ringbuf_first(RINGBUFFER *rb)
 
 void *ringbuf_last(RINGBUFFER *rb)
 {
+	if(rb->last_alloc == 0)
+		return 0;
 	return rb->last_alloc+1;
 }

@@ -7,6 +7,7 @@
 #include "e_system.h"
 #include "e_config.h"
 #include "e_linereader.h"
+#include "e_engine.h"
 
 CONFIGURATION config;
 
@@ -63,6 +64,7 @@ void config_set(const char *line)
 
 void config_load(const char *filename)
 {
+	/*
 	IOHANDLE file;
 	dbg_msg("config/load", "loading %s", filename);
 	file = io_open(filename, IOFLAG_READ);
@@ -77,37 +79,20 @@ void config_load(const char *filename)
 			config_set(line);
 
 		io_close(file);
-	}
+	}*/
 }
 
-void config_save(const char *filename)
+void config_save()
 {
-	IOHANDLE file;
-	dbg_msg("config/save", "saving config to %s", filename);
+	char linebuf[512];
+	
+	#define MACRO_CONFIG_INT(name,def,min,max) { str_format(linebuf, sizeof(linebuf), "%s %i", #name, config.name); engine_config_write_line(linebuf); }
+	#define MACRO_CONFIG_STR(name,len,def) { str_format(linebuf, sizeof(linebuf), "%s \"%s\"", #name, config.name); engine_config_write_line(linebuf); }
 
-	file = io_open(filename, IOFLAG_WRITE);
+	#include "e_config_variables.h" 
 
-	if(file)
-	{
-#if defined(CONF_FAMILY_WINDOWS)
-		const char newline[] = "\r\n";
-#else
-		const char newline[] = "\n";
-#endif
-		const int newline_len = sizeof(newline)-1;
-		
-    	#define MACRO_CONFIG_INT(name,def,min,max) { char str[256]; str_format(str, sizeof(str), "%s=%i%s", #name, config.name, newline); io_write(file, str, strlen(str)); }
-    	#define MACRO_CONFIG_STR(name,len,def) { io_write(file, #name, strlen(#name)); io_write(file, "=", 1); io_write(file, config.name, strlen(config.name)); io_write(file, newline, newline_len); }
- 
-    	#include "e_config_variables.h" 
- 
-    	#undef MACRO_CONFIG_INT 
-    	#undef MACRO_CONFIG_STR 
-
-		io_close(file);
-	}
-	else
-		dbg_msg("config/save", "couldn't open %s for writing. :(", filename);
+	#undef MACRO_CONFIG_INT 
+	#undef MACRO_CONFIG_STR 
 }
 
 #define MACRO_CONFIG_INT(name,def,min,max) int config_get_ ## name (CONFIGURATION *c) { return c->name; }

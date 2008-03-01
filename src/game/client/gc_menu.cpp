@@ -90,16 +90,24 @@ static void ui_draw_browse_icon(int what, const RECT *r)
 	gfx_quads_end();
 }
 
+static vec4 button_color_mul(const void *id)
+{
+	if(ui_active_item() == id)
+		return vec4(1,1,1,0.5f);
+	else if(ui_hot_item() == id)
+		return vec4(1,1,1,1.5f);
+	return vec4(1,1,1,1);
+}
+
 static void ui_draw_menu_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
-	ui_draw_rect(r, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
+	ui_draw_rect(r, vec4(1,1,1,0.5f)*button_color_mul(id), CORNER_ALL, 5.0f);
 	ui_do_label(r, text, 18.0f, 0);
 }
 
-
 static void ui_draw_keyselect_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
-	ui_draw_rect(r, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
+	ui_draw_rect(r, vec4(1,1,1,0.5f)*button_color_mul(id), CORNER_ALL, 5.0f);
 	ui_do_label(r, text, 14.0f, 0);
 }
 
@@ -152,7 +160,7 @@ static void ui_draw_checkbox_common(const void *id, const char *text, const char
 	ui_vsplit_l(&t, 5.0f, 0, &t);
 	
 	ui_margin(&c, 2.0f, &c);
-	ui_draw_rect(&c, vec4(1,1,1,0.25f), CORNER_ALL, 3.0f);
+	ui_draw_rect(&c, vec4(1,1,1,0.25f)*button_color_mul(id), CORNER_ALL, 3.0f);
 	c.y += 2;
 	ui_do_label(&c, boxtext, 12.0f, 0);
 	ui_do_label(&t, text, 14.0f, -1);	
@@ -337,7 +345,7 @@ float ui_do_scrollbar_v(const void *id, const RECT *rect, float current)
 
 	slider = handle;
 	ui_margin(&slider, 5.0f, &slider);
-	ui_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_ALL, 2.5f);
+	ui_draw_rect(&slider, vec4(1,1,1,0.25f)*button_color_mul(id), CORNER_ALL, 2.5f);
 	
     return ret;
 }
@@ -393,7 +401,7 @@ float ui_do_scrollbar_h(const void *id, const RECT *rect, float current)
 
 	slider = handle;
 	ui_margin(&slider, 5.0f, &slider);
-	ui_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_ALL, 2.5f);
+	ui_draw_rect(&slider, vec4(1,1,1,0.25f)*button_color_mul(id), CORNER_ALL, 2.5f);
 	
     return ret;
 }
@@ -761,6 +769,13 @@ static void menu2_render_serverbrowser(RECT main_view)
 	
 	int new_selected = -1;
 	int selected_index = -1;
+	int num_players = 0;
+
+	for (int i = 0; i < num_servers; i++)
+	{
+		SERVER_INFO *item = client_serverbrowse_sorted_get(i);
+		num_players += item->num_players;
+	}
 	
 	for (int i = 0; i < num_servers; i++)
 	{
@@ -1069,7 +1084,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 	ui_draw_rect(&status, vec4(1,1,1,0.25f), CORNER_B, 5.0f);
 	ui_vmargin(&status, 50.0f, &status);
 	char buf[128];
-	str_format(buf, sizeof(buf), "%d of %d servers", client_serverbrowse_sorted_num(), client_serverbrowse_num());
+	str_format(buf, sizeof(buf), "%d of %d servers, %d players", client_serverbrowse_sorted_num(), client_serverbrowse_num(), num_players);
 	ui_do_label(&status, buf, 14.0f, -1);
 
 	// render toolbox
@@ -1302,8 +1317,7 @@ static void menu2_render_settings_controls(RECT main_view)
 		{ "Emoticon:", &config.key_emoticon },
 		{ "Chat:", &config.key_chat },
 		{ "Team Chat:", &config.key_teamchat },
-		{ "Console:", &config.key_console },
-		{ "Remote Console:", &config.key_remoteconsole },
+		{ "Toggle Console:", &config.key_toggleconsole },
 		{ "Screenshot:", &config.key_screenshot },
 	};
 
@@ -1530,6 +1544,7 @@ static void menu2_render_settings_sound(RECT main_view)
 
 static void menu2_render_settings_network(RECT main_view)
 {
+	/*
 	RECT button;
 	ui_vsplit_l(&main_view, 300.0f, &main_view, 0);
 	
@@ -1539,7 +1554,7 @@ static void menu2_render_settings_network(RECT main_view)
 		ui_vsplit_l(&button, 110.0f, 0, &button);
 		ui_vsplit_l(&button, 180.0f, &button, 0);
 		ui_do_edit_box(&config.rcon_password, &button, config.rcon_password, sizeof(config.rcon_password), true);
-	}
+	}*/
 }
 
 static void menu2_render_settings(RECT main_view)

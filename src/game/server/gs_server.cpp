@@ -578,7 +578,6 @@ player::player()
 void player::init()
 {
 	proximity_radius = phys_size;
-	dbg_msg("", "%p %d -> %d (init)", this, client_id, -1);
 	client_id = -1;
 	team = -1; // -1 == spectator
 
@@ -2124,7 +2123,6 @@ void mods_client_enter(int client_id)
 void mods_connected(int client_id)
 {
 	players[client_id].init();
-	dbg_msg("", "%p %d -> %d (mods_connected)", &players[client_id], players[client_id].client_id, client_id);
 	players[client_id].client_id = client_id;
 
 	//dbg_msg("game", "connected player='%d:%s'", client_id, server_clientname(client_id));
@@ -2153,7 +2151,6 @@ void mods_client_drop(int client_id)
 	gameobj->on_player_death(&players[client_id], 0, -1);
 	world->remove_entity(&players[client_id]);
 	world->core.players[client_id] = 0x0;
-	dbg_msg("", "%p %d -> %d (mods_client_drop)", &players[client_id], players[client_id].client_id, -1);
 	players[client_id].client_id = -1;
 }
 

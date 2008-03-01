@@ -319,8 +319,39 @@ void client_entergame();
 	
 	Remarks:
 		The client must have the correct rcon password to connect.
+
+ 	See Also:
+		<client_rcon_auth, client_rcon_authed>
 */
 void client_rcon(const char *cmd);
+
+/*
+	Function: client_rcon_auth
+		TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<client_rcon, client_rcon_authed>
+*/
+void client_rcon_auth(const char *name, const char *password);
+
+/*
+	Function: client_rcon_authed
+		TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<client_rcon, client_rcon_auth>
+*/
+int client_rcon_authed();
 
 /**********************************************************************************
 	Group: Other
@@ -414,5 +445,18 @@ int client_mapdownload_amount();
 */
 int client_mapdownload_totalsize();
 
+/*
+	Function: client_save_line
+		TODO
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
+void client_save_line(const char *line);
 
 #endif

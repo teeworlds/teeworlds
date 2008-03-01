@@ -88,7 +88,7 @@ void register_update()
 	int64 now = time_get();
 	int64 freq = time_freq();
 	
-	if(!config.sv_sendheartbeats)
+	if(!config.sv_register)
 		return;
 	
 	mastersrv_update();

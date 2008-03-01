@@ -98,6 +98,7 @@ typedef struct
 	char name[MAX_NAME_LENGTH];
 	char clan[MAX_CLANNAME_LENGTH];
 	int score;
+	int authed;
 } CLIENT;
 
 static CLIENT clients[MAX_CLIENTS];
@@ -511,6 +512,7 @@ static int new_client_callback(int cid, void *user)
 	clients[cid].last_acked_snapshot = -1;
 	clients[cid].snap_rate = SRVCLIENT_SNAPRATE_INIT;
 	clients[cid].score = 0;
+	clients[cid].authed = 0;
 	return 0;
 }
 
@@ -526,17 +528,43 @@ static int del_client_callback(int cid, void *user)
 	clients[cid].state = SRVCLIENT_STATE_EMPTY;
 	clients[cid].name[0] = 0;
 	clients[cid].clan[0] = 0;
+	clients[cid].authed = 0;
 	snapstorage_purge_all(&clients[cid].snapshots);
 	return 0;
 }
 
 static void server_send_map(int cid)
 {
-	msg_pack_start_system(NETMSG_MAP, MSGFLAG_VITAL);
+	msg_pack_start_system(NETMSG_MAP_CHANGE, MSGFLAG_VITAL);
 	msg_pack_string(config.sv_map, 0);
 	msg_pack_int(current_map_crc);
 	msg_pack_end();
 	server_send_msg(cid);
+}
+
+static void server_send_rcon_line(int cid, const char *line)
+{
+	msg_pack_start_system(NETMSG_RCON_LINE, MSGFLAG_VITAL);
+	msg_pack_string(line, 512);
+	msg_pack_end();
+	server_send_msg(cid);
+}
+
+static void server_send_rcon_line_authed(const char *line)
+{
+	static volatile int reentry_guard = 0;
+	int i;
+	
+	if(reentry_guard) return;
+	reentry_guard++;
+	
+	for(i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(clients[i].state != SRVCLIENT_STATE_EMPTY && clients[i].authed)
+			server_send_rcon_line(i, line);
+	}
+	
+	reentry_guard--;
 }
 
 static void server_process_client_packet(NETPACKET *packet)
@@ -658,14 +686,43 @@ static void server_process_client_packet(NETPACKET *packet)
 			/* call the mod with the fresh input data */
 			mods_client_direct_input(cid, clients[cid].latestinput.data);
 		}
-		else if(msg == NETMSG_CMD)
+		else if(msg == NETMSG_RCON_CMD)
 		{
-			const char *pw = msg_unpack_string();
 			const char *cmd = msg_unpack_string();
-			if(config.rcon_password[0] != 0 && strcmp(pw, config.rcon_password) == 0)
+			
+			if(msg_unpack_error() == 0 && clients[cid].authed)
 			{
 				dbg_msg("server", "cid=%d rcon='%s'", cid, cmd);
-				console_execute(cmd);
+				console_execute_line(cmd);
+			}
+		}
+		else if(msg == NETMSG_RCON_AUTH)
+		{
+			const char *pw;
+			msg_unpack_string(); /* login name, not used */
+			pw = msg_unpack_string();
+			
+			if(msg_unpack_error() == 0)
+			{
+				if(config.sv_rcon_password[0] == 0)
+				{
+					server_send_rcon_line(cid, "No rcon password set on server. Set sv_rcon_password to enable the remote console.");
+				}
+				else if(strcmp(pw, config.sv_rcon_password) == 0)
+				{
+					msg_pack_start_system(NETMSG_RCON_AUTH_STATUS, MSGFLAG_VITAL);
+					msg_pack_int(1);
+					msg_pack_end();
+					server_send_msg(cid);
+					
+					clients[cid].authed = 1;
+					dbg_msg("server", "cid=%d authed", cid);
+					server_send_rcon_line(cid, "Authentication successful. Remote console access granted.");
+				}
+				else
+				{
+					server_send_rcon_line(cid, "Wrong password.");
+				}
 			}
 		}
 		else if(msg == NETMSG_PING)
@@ -838,8 +895,10 @@ static int server_run()
 	NETADDR4 bindaddr;
 
 	net_init();
-	
 	snap_init_id();
+	
+	/* */
+	console_register_print_callback(server_send_rcon_line_authed);
 
 	/* load map */
 	if(!server_load_map(config.sv_map))
@@ -1022,16 +1081,6 @@ static int server_run()
 			
 			/* wait for incomming data */
 			net_socket_read_wait(netserver_socket(net), 5);
-	
-			/*
-			if(config.dbg_hitch)
-			{
-				thread_sleep(config.dbg_hitch);
-				config.dbg_hitch = 0;
-			}
-			else
-				thread_sleep(1);
-			*/
 		}
 	}
 
@@ -1043,9 +1092,9 @@ static int server_run()
 
 static void server_register_commands()
 {
-	
+	/* kick */
+	/* status */
 }
-
 
 int main(int argc, char **argv)
 {

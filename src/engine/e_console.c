@@ -1,6 +1,7 @@
 #include "e_system.h"
 #include "e_console.h"
 #include "e_config.h"
+#include "e_linereader.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -339,7 +340,7 @@ void console_print(const char *str)
 		print_callback(str);
 }
 
-void console_execute(const char *str)
+void console_execute_line(const char *str)
 {
 	LEXER_RESULT result;
 	int error;
@@ -372,6 +373,28 @@ void console_execute(const char *str)
 			console_print(buf);
 		}
 	}
+}
+
+void console_execute_file(const char *filename)
+{
+	IOHANDLE file;
+	file = io_open(filename, IOFLAG_READ);
+	
+	if(file)
+	{
+		char *line;
+		LINEREADER lr;
+		
+		dbg_msg("console", "executing '%s'", filename);
+		linereader_init(&lr, file);
+
+		while((line = linereader_get(&lr)))
+			console_execute_line(line);
+
+		io_close(file);
+	}
+	else
+		dbg_msg("console", "failed to open '%s'", filename);
 }
 
 static void echo_command(void *result, void *user_data)

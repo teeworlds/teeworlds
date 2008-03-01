@@ -26,14 +26,150 @@ enum
 	CONSOLE_CLOSING,
 };
 
-static char console_history_data[65536];
-static RINGBUFFER *console_history;
+class CONSOLE
+{
+public:
+	char history_data[65536];
+	RINGBUFFER *history;
+	char *history_entry;
+	
+	char backlog_data[65536];
+	RINGBUFFER *backlog;
 
-static char console_backlog_data[65536];
-static RINGBUFFER *console_backlog;
+	unsigned int input_len;
+	char input[256];
+	
+	int type;
+	
+public:
+	CONSOLE(int t)
+	{
+		// clear input
+		input_len = 0;
+		mem_zero(input, sizeof(input));
+	
+		// init ringbuffers
+		history = ringbuf_init(history_data, sizeof(history_data));
+		backlog = ringbuf_init(backlog_data, sizeof(backlog_data));
+		
+		history_entry = 0x0;
+		
+		type = t;
+	}
+	
+	void execute_line(const char *line)
+	{
+		if(type == 0)
+			console_execute_line(line);
+		else
+		{
+			if(client_rcon_authed())
+				client_rcon(line);
+			else
+				client_rcon_auth("", line);
+		}
+	}
+	
+	void handle_event(INPUT_EVENT e)
+	{
+		if (!(e.ch >= 0 && e.ch < 32))
+		{
+			if (input_len < sizeof(input) - 1)
+			{
+				input[input_len] = e.ch;
+				input[input_len+1] = 0;
+				input_len++;
 
-static unsigned int console_input_len = 0;
-static char console_input[256] = {0};
+				history_entry = 0x0;
+			}
+		}
+
+		if(e.key == KEY_BACKSPACE)
+		{
+			if(input_len > 0)
+			{
+				input[input_len-1] = 0;
+				input_len--;
+
+				history_entry = 0x0;
+			}
+		}
+		else if(e.key == KEY_ENTER || e.key == KEY_KP_ENTER)
+		{
+			if (input_len)
+			{
+				char *entry = (char *)ringbuf_allocate(history, input_len+1);
+				mem_copy(entry, input, input_len+1);
+				
+				execute_line(input);
+				input[0] = 0;
+				input_len = 0;
+
+				history_entry = 0x0;
+			}
+		}
+		else if (e.key == KEY_UP)
+		{
+			if (history_entry)
+			{
+				char *test = (char *)ringbuf_prev(history, history_entry);
+
+				if (test)
+					history_entry = test;
+			}
+			else
+				history_entry = (char *)ringbuf_last(history);
+
+			if (history_entry)
+			{
+				unsigned int len = strlen(history_entry);
+				if (len < sizeof(input) - 1)
+				{
+					mem_copy(input, history_entry, len+1);
+					input_len = len;
+				}
+			}
+
+		}
+		else if (e.key == KEY_DOWN)
+		{
+			if (history_entry)
+				history_entry = (char *)ringbuf_next(history, history_entry);
+
+			if (history_entry)
+			{
+				unsigned int len = strlen(history_entry);
+				if (len < sizeof(input) - 1)
+				{
+					mem_copy(input, history_entry, len+1);
+
+					input_len = len;
+				}
+			}
+			else
+			{
+				input[0] = 0;
+				input_len = 0;
+			}
+		}		
+	}
+	
+	void print_line(const char *line)
+	{
+		int len = strlen(line);
+
+		if (len > 255)
+			len = 255;
+
+		char *entry = (char *)ringbuf_allocate(backlog, len+1);
+		mem_copy(entry, line, len+1);
+	}
+};
+
+static CONSOLE local_console(0);
+static CONSOLE remote_console(1);
+
+static int console_type = 0;
 static int console_state = CONSOLE_CLOSED;
 static float state_change_end = 0.0f;
 static const float state_change_duration = 0.1f;
@@ -44,17 +180,22 @@ static float time_now()
 	return float(time_get()-time_start)/float(time_freq());
 }
 
-static void client_console_print(const char *str)
+static CONSOLE *current_console()
 {
-	int len = strlen(str);
-
-	if (len > 255)
-		len = 255;
-
-	char *entry = (char *)ringbuf_allocate(console_backlog, len+1);
-	mem_copy(entry, str, len+1);
+    if(console_type != 0)
+    	return &remote_console;
+    return &local_console;
 }
 
+static void client_console_print(const char *str)
+{
+	local_console.print_line(str);
+}
+
+void console_rcon_print(const char *line)
+{
+	remote_console.print_line(line);
+}
 
 static void con_team(void *result, void *user_data)
 {
@@ -63,7 +204,8 @@ static void con_team(void *result, void *user_data)
 	send_switch_team(new_team);
 }
 
-static void command_history(void *result, void *user_data)
+/*
+static void con_history(void *result, void *user_data)
 {
 	char *entry = (char *)ringbuf_first(console_history);
 
@@ -73,27 +215,22 @@ static void command_history(void *result, void *user_data)
 
 		entry = (char *)ringbuf_next(console_history, entry);
 	}
-}
+}*/
 
 void send_kill(int client_id);
 
-static void command_kill(void *result, void *user_data)
+static void con_kill(void *result, void *user_data)
 {
 	send_kill(-1);
 }
 
 void client_console_init()
 {
-	console_history = ringbuf_init(console_history_data, sizeof(console_history_data));
-	console_backlog = ringbuf_init(console_backlog_data, sizeof(console_backlog_data));
-
 	console_register_print_callback(client_console_print);
 	MACRO_REGISTER_COMMAND("team", "i", con_team, 0x0);
-	MACRO_REGISTER_COMMAND("history", "", command_history, 0x0);
-	MACRO_REGISTER_COMMAND("kill", "", command_kill, 0x0);
+	//MACRO_REGISTER_COMMAND("history", "", con_history, 0x0);
+	MACRO_REGISTER_COMMAND("kill", "", con_kill, 0x0);
 }
-
-static char *console_history_entry = 0x0;
 
 void console_handle_input()
 {
@@ -103,95 +240,12 @@ void console_handle_input()
 	{
 		INPUT_EVENT e = inp_get_event(i);
 
-		if (e.key == KEY_F3)
-		{
-			console_toggle();
-		}
-
-		if (console_active())
-		{
-			if (!(e.ch >= 0 && e.ch < 32))
-			{
-				if (console_input_len < sizeof(console_input) - 1)
-				{
-					console_input[console_input_len] = e.ch;
-					console_input[console_input_len+1] = 0;
-					console_input_len++;
-
-					console_history_entry = 0x0;
-				}
-			}
-
-			if(e.key == KEY_BACKSPACE)
-			{
-				if(console_input_len > 0)
-				{
-					console_input[console_input_len-1] = 0;
-					console_input_len--;
-
-					console_history_entry = 0x0;
-				}
-			}
-			else if(e.key == KEY_ENTER || e.key == KEY_KP_ENTER)
-			{
-				if (console_input_len)
-				{
-					char *entry = (char *)ringbuf_allocate(console_history, console_input_len+1);
-					mem_copy(entry, console_input, console_input_len+1);
-					
-					console_execute(console_input);
-					console_input[0] = 0;
-					console_input_len = 0;
-
-					console_history_entry = 0x0;
-				}
-			}
-			else if (e.key == KEY_UP)
-			{
-				if (console_history_entry)
-				{
-					char *test = (char *)ringbuf_prev(console_history, console_history_entry);
-
-					if (test)
-						console_history_entry = test;
-				}
-				else
-					console_history_entry = (char *)ringbuf_last(console_history);
-
-				if (console_history_entry)
-				{
-					unsigned int len = strlen(console_history_entry);
-					if (len < sizeof(console_input) - 1)
-					{
-						mem_copy(console_input, console_history_entry, len+1);
-
-						console_input_len = len;
-					}
-				}
-
-			}
-			else if (e.key == KEY_DOWN)
-			{
-				if (console_history_entry)
-					console_history_entry = (char *)ringbuf_next(console_history, console_history_entry);
-
-				if (console_history_entry)
-				{
-					unsigned int len = strlen(console_history_entry);
-					if (len < sizeof(console_input) - 1)
-					{
-						mem_copy(console_input, console_history_entry, len+1);
-
-						console_input_len = len;
-					}
-				}
-				else
-				{
-					console_input[0] = 0;
-					console_input_len = 0;
-				}
-			}
-		}
+		if (e.key == config.key_toggleconsole)
+			console_toggle(0);
+		else if (e.key == config.key_toggleconsole+1)
+			console_toggle(1);
+		else if(console_active())
+			current_console()->handle_event(e);
 	}
 
 	if (was_active || console_active())
@@ -201,24 +255,33 @@ void console_handle_input()
 	}
 }
 
-void console_toggle()
+void console_toggle(int type)
 {
-	if (console_state == CONSOLE_CLOSED || console_state == CONSOLE_OPEN)
+	if(console_type != type && (console_state == CONSOLE_OPEN || console_state == CONSOLE_OPENING))
 	{
-		state_change_end = time_now()+state_change_duration;
+		// don't toggle console, just switch what console to use
 	}
 	else
-	{
-		float progress = state_change_end-time_now();
-		float reversed_progress = state_change_duration-progress;
+	{	
+		if (console_state == CONSOLE_CLOSED || console_state == CONSOLE_OPEN)
+		{
+			state_change_end = time_now()+state_change_duration;
+		}
+		else
+		{
+			float progress = state_change_end-time_now();
+			float reversed_progress = state_change_duration-progress;
 
-		state_change_end = time_now()+reversed_progress;
+			state_change_end = time_now()+reversed_progress;
+		}
+
+		if (console_state == CONSOLE_CLOSED || console_state == CONSOLE_CLOSING)
+			console_state = CONSOLE_OPENING;
+		else
+			console_state = CONSOLE_CLOSING;
 	}
 
-	if (console_state == CONSOLE_CLOSED || console_state == CONSOLE_CLOSING)
-		console_state = CONSOLE_OPENING;
-	else
-		console_state = CONSOLE_CLOSING;
+	console_type = type;
 }
 
 // only defined for 0<=t<=1
@@ -276,6 +339,8 @@ void console_render()
 	gfx_texture_set(data->images[IMAGE_CONSOLE_BG].id);
     gfx_quads_begin();
     gfx_setcolor(0.2f, 0.2f, 0.2f,0.9f);
+    if(console_type != 0)
+	    gfx_setcolor(0.4f, 0.2f, 0.2f,0.9f);
     gfx_quads_setsubset(0,-console_height*0.075f,screen.w*0.075f*0.5f,0);
     gfx_quads_drawTL(0,0,screen.w,console_height);
     gfx_quads_end();
@@ -287,36 +352,45 @@ void console_render()
     gfx_quads_setsubset(0,0.1f,screen.w*0.015f,1-0.1f);
     gfx_quads_drawTL(0,console_height-10.0f,screen.w,10.0f);
     gfx_quads_end();
-
-
     
     console_height -= 10.0f;
+    
+    CONSOLE *console = current_console();
 
 	{
 		float font_size = 10.0f;
 		float row_height = font_size*1.25f;
-		float width = gfx_text_width(0, font_size, console_input, -1);
+		float width = gfx_text_width(0, font_size, console->input, -1);
 		float x = 3, y = console_height - row_height - 2;
-		float prompt_width = gfx_text_width(0, font_size, ">", -1)+2;
+		const char *prompt = ">";
+		if(console_type)
+		{
+			if(client_rcon_authed())
+				prompt = "rcon>";
+			else
+				prompt = "rcon password>";
+		}
+		
+		float prompt_width = gfx_text_width(0, font_size,prompt, -1)+2;
 
-		gfx_text(0, x, y, font_size, ">", -1);
-		gfx_text(0, x+prompt_width, y, font_size, console_input, -1);
+		gfx_text(0, x, y, font_size, prompt, -1);
+		gfx_text(0, x+prompt_width, y, font_size, console->input, -1);
 		gfx_text(0, x+prompt_width+width+1, y, font_size, "_", -1);
 
-		char buf[64];
-		str_format(buf, sizeof(buf), "Teewars v%s", TEEWARS_VERSION);
+		char buf[128];
+		str_format(buf, sizeof(buf), "Teewars v%s %s", TEEWARS_VERSION);
 		float version_width = gfx_text_width(0, font_size, buf, -1);
 		gfx_text(0, screen.w-version_width-5, y, font_size, buf, -1);
 
 		y -= row_height;
 
-		char *entry = (char *)ringbuf_last(console_backlog);
+		char *entry = (char *)ringbuf_last(console->backlog);
 		while (y > 0.0f && entry)
 		{
 			gfx_text(0, x, y, font_size, entry, -1);
 			y -= row_height;
 
-			entry = (char *)ringbuf_prev(console_backlog, entry);
+			entry = (char *)ringbuf_prev(console->backlog, entry);
 		}
 	}
 }

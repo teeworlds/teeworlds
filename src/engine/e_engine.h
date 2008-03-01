@@ -3,7 +3,11 @@
 const char *engine_savepath(const char *filename, char *buffer, int max);
 void engine_init(const char *appname);
 void engine_parse_arguments(int argc, char **argv);
-void engine_writeconfig();
+
+int engine_config_write_start();
+void engine_config_write_line(const char *line);
+void engine_config_write_stop();
+
 int engine_stress(float probability);
 
 

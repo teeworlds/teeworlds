@@ -12,6 +12,18 @@
 void modc_console_init();
 
 /*
+	Function: modc_rcon_line
+		TODO
+*/
+void modc_rcon_line(const char *line);
+
+/*
+	Function: modc_save_config
+		TODO
+*/
+void modc_save_config();
+
+/*
 	Function: modc_init
 		Called when the client starts.
 	

@@ -793,22 +793,15 @@ void render_game()
 				// send message
 				if(chat_input_len)
 				{
-					if(chat_mode == CHATMODE_CONSOLE)
-						config_set(chat_input);
-					else if(chat_mode == CHATMODE_REMOTECONSOLE)
-						client_rcon(chat_input);
+					// send chat message
+					msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
+					if(chat_mode == CHATMODE_ALL)
+						msg_pack_int(0);
 					else
-					{
-						// send chat message
-						msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
-						if(chat_mode == CHATMODE_ALL)
-							msg_pack_int(0);
-						else
-							msg_pack_int(1);
-						msg_pack_string(chat_input, 512);
-						msg_pack_end();
-						client_send_msg();
-					}
+						msg_pack_int(1);
+					msg_pack_string(chat_input, 512);
+					msg_pack_end();
+					client_send_msg();
 				}
 
 				chat_mode = CHATMODE_NONE;
@@ -847,13 +840,7 @@ void render_game()
 
 				if(inp_key_down(config.key_teamchat))
 					chat_mode = CHATMODE_TEAM;
-
-				if(inp_key_down(config.key_console))
-					chat_mode = CHATMODE_CONSOLE;
 				
-				if(inp_key_down(config.key_remoteconsole))
-					chat_mode = CHATMODE_REMOTECONSOLE;
-
 				if(chat_mode != CHATMODE_NONE)
 				{
 					mem_zero(chat_input, sizeof(chat_input));
@@ -1252,10 +1239,6 @@ void render_game()
 				str_format(buf, sizeof(buf), "All: %s_", chat_input);
 			else if(chat_mode == CHATMODE_TEAM)
 				str_format(buf, sizeof(buf), "Team: %s_", chat_input);
-			else if(chat_mode == CHATMODE_CONSOLE)
-				str_format(buf, sizeof(buf), "Console: %s_", chat_input);
-			else if(chat_mode == CHATMODE_REMOTECONSOLE)
-				str_format(buf, sizeof(buf), "Rcon: %s_", chat_input);
 			else
 				str_format(buf, sizeof(buf), "Chat: %s_", chat_input);
 			gfx_text(0, x, y, 8.0f, buf, 380);

@@ -58,6 +58,7 @@ static int snapcrcerrors = 0;
 
 static int ack_game_tick = -1;
 static int current_recv_tick = 0;
+static int rcon_authed = 0;
 
 /* pinging */
 static int64 ping_start_time = 0;
@@ -323,10 +324,23 @@ static void client_send_ready()
 	client_send_msg();
 }
 
+int client_rcon_authed()
+{
+	return rcon_authed;
+}
+
+void client_rcon_auth(const char *name, const char *password)
+{
+	msg_pack_start_system(NETMSG_RCON_AUTH, MSGFLAG_VITAL);
+	msg_pack_string(name, 32);
+	msg_pack_string(password, 32);
+	msg_pack_end();
+	client_send_msg();
+}
+
 void client_rcon(const char *cmd)
 {
-	msg_pack_start_system(NETMSG_CMD, MSGFLAG_VITAL);
-	msg_pack_string(config.rcon_password, 32);
+	msg_pack_start_system(NETMSG_RCON_CMD, MSGFLAG_VITAL);
 	msg_pack_string(cmd, 256);
 	msg_pack_end();
 	client_send_msg();
@@ -470,17 +484,18 @@ void client_connect(const char *server_address_str)
 	if(net_host_lookup(buf, port, &server_address) != 0)
 		dbg_msg("client", "could not find the address of %s, connecting to localhost", buf);
 	
+	rcon_authed = 0;
 	netclient_connect(net, &server_address);
 	client_set_state(CLIENTSTATE_CONNECTING);
 	
 	graph_init(&intra_graph, 0.0f, 1.0f);
 	graph_init(&input_late_graph, 0.0f, 1.0f);
 	graph_init(&predict_graph, 0.0f, 200.0f);
-	
 }
 
 void client_disconnect_with_reason(const char *reason)
 {
+	rcon_authed = 0;
 	netclient_disconnect(net, reason);
 	client_set_state(CLIENTSTATE_OFFLINE);
 	map_unload();
@@ -722,7 +737,7 @@ static void client_process_packet(NETPACKET *packet)
 		if(sys)
 		{
 			/* system message */
-			if(msg == NETMSG_MAP)
+			if(msg == NETMSG_MAP_CHANGE)
 			{
 				const char *map = msg_unpack_string();
 				int map_crc = msg_unpack_int();
@@ -829,6 +844,21 @@ static void client_process_packet(NETPACKET *packet)
 				msg_pack_start_system(NETMSG_PING_REPLY, 0);
 				msg_pack_end();
 				client_send_msg();
+			}
+			else if(msg == NETMSG_RCON_AUTH_STATUS)
+			{
+				int result = msg_unpack_int();
+				if(msg_unpack_error() == 0)
+					rcon_authed = result;
+			}
+			else if(msg == NETMSG_RCON_LINE)
+			{
+				const char *line = msg_unpack_string();
+				if(msg_unpack_error() == 0)
+				{
+					/*dbg_msg("remote", "%s", line);*/
+					modc_rcon_line(line);
+				}
 			}
 			else if(msg == NETMSG_PING_REPLY)
 				dbg_msg("client/network", "latency %.2f", (time_get() - ping_start_time)*1000 / (float)time_freq());
@@ -1451,7 +1481,12 @@ int main(int argc, char **argv)
 	/* run the client*/
 	client_run();
 	
-	/* write down the config and quit */	
-	engine_writeconfig();
+	/* write down the config and quit */
+	if(engine_config_write_start() == 0)
+	{
+		config_save();
+		engine_config_write_stop();
+	}
+	
 	return 0;
 }

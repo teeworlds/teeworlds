@@ -78,7 +78,7 @@ void engine_parse_arguments(int argc, char **argv)
 	/* load the configuration */
 	int i;
 	int abs = 0;
-	const char *config_filename = "default.cfg";
+	const char *config_filename = "settings.cfg";
 	char buf[1024];
 	for(i = 1; i < argc; i++)
 	{
@@ -91,15 +91,15 @@ void engine_parse_arguments(int argc, char **argv)
 	}
 
 	if(abs)
-		config_load(config_filename);
+		console_execute_file(config_filename);
 	else
-		config_load(engine_savepath(config_filename, buf, sizeof(buf)));
+		console_execute_file(engine_savepath(config_filename, buf, sizeof(buf)));
 	
 	/* search arguments for overrides */
 	{
 		int i;
 		for(i = 1; i < argc; i++)
-			config_set(argv[i]);
+			console_execute_line(argv[i]);
 	}
 	
 	/* set default servers and load from disk*/
@@ -107,12 +107,43 @@ void engine_parse_arguments(int argc, char **argv)
 	mastersrv_load();
 }
 
-void engine_writeconfig()
+
+static IOHANDLE config_file = 0;
+
+int engine_config_write_start()
 {
-	char buf[1024];
-	config_save(engine_savepath("default.cfg", buf, sizeof(buf)));
+	char filename[1024];
+	config_save(engine_savepath("settings.cfg", filename, sizeof(filename)));
+	
+	config_file = io_open(filename, IOFLAG_WRITE);
+	if(config_file == 0)
+		return -1;
+	return 0;
 }
 
+void engine_config_write_line(const char *line)
+{
+	if(config_file)
+	{
+#if defined(CONF_FAMILY_WINDOWS)
+		static const char newline[] = "\r\n";
+#else
+		static const char newline[] = "\n";
+#endif
+		io_write(config_file, line, strlen(line));
+		io_write(config_file, newline, sizeof(newline)-1);
+	}
+}
+
+void engine_config_write_stop()
+{
+	io_close(config_file);
+	config_file = 0;
+}
+/*
+void engine_writeconfig()
+{
+}*/
 
 static int perf_tick = 1;
 static PERFORMACE_INFO *current = 0;
