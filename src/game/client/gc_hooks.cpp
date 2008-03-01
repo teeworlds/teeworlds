@@ -50,7 +50,6 @@ static void load_sounds_thread(void *)
 extern "C" void modc_init()
 {
 	static FONT_SET default_font;
-	
 	int64 start = time_get();
 
 	int before = gfx_memory_usage();

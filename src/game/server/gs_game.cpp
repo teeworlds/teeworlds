@@ -115,33 +115,50 @@ void gameobject::cyclemap()
 {
 	if(!strlen(config.sv_maprotation))
 		return;
-		
+
 	// handle maprotation
-	char buf[512];
-	const char *s = strstr(config.sv_maprotation, config.sv_map);
-	if(s == 0)
-		s = config.sv_maprotation; // restart rotation
-	else
+	const char *map_rotation = config.sv_maprotation;
+	const char *current_map = config.sv_map;
+	
+	int current_map_len = strlen(current_map);
+	const char *next_map = map_rotation;
+	while(*next_map)
 	{
-		s += strlen(config.sv_map); // skip this map
-		while(is_separator(s[0]))
-			s++;
-		if(s[0] == 0)
-			s = config.sv_maprotation; // restart rotation
-	}
+		int wordlen = 0;
+		while(next_map[wordlen] && !is_separator(next_map[wordlen]))
+			wordlen++;
 		
-	int i = 0;
-	for(; i < 512; i++)
+		if(wordlen == current_map_len && strncmp(next_map, current_map, current_map_len) == 0)
+		{
+			// map found
+			next_map += current_map_len;
+			while(*next_map && is_separator(*next_map))
+				next_map++;
+				
+			break;
+		}
+		
+		next_map++;
+	}
+	
+	// restart rotation
+	if(next_map[0] == 0)
+		next_map = map_rotation;
+
+	// cut out the next map	
+	char buf[512];
+	for(int i = 0; i < 512; i++)
 	{
-		buf[i] = s[i];
-		if(is_separator(s[i]) || s[i] == 0)
+		buf[i] = next_map[i];
+		if(is_separator(next_map[i]) || next_map[i] == 0)
 		{
 			buf[i] = 0;
 			break;
 		}
 	}
 	
-	i = 0; // skip spaces
+	// skip spaces
+	int i = 0;
 	while(is_separator(buf[i]))
 		i++;
 	
