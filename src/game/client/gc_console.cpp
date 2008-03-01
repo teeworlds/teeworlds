@@ -84,74 +84,77 @@ public:
 			}
 		}
 
-		if(e.key == KEY_BACKSPACE)
+		if(e.flags&INPFLAG_PRESS)
 		{
-			if(input_len > 0)
+			if(e.key == KEY_BACKSPACE)
 			{
-				input[input_len-1] = 0;
-				input_len--;
-
-				history_entry = 0x0;
-			}
-		}
-		else if(e.key == KEY_ENTER || e.key == KEY_KP_ENTER)
-		{
-			if (input_len)
-			{
-				char *entry = (char *)ringbuf_allocate(history, input_len+1);
-				mem_copy(entry, input, input_len+1);
-				
-				execute_line(input);
-				input[0] = 0;
-				input_len = 0;
-
-				history_entry = 0x0;
-			}
-		}
-		else if (e.key == KEY_UP)
-		{
-			if (history_entry)
-			{
-				char *test = (char *)ringbuf_prev(history, history_entry);
-
-				if (test)
-					history_entry = test;
-			}
-			else
-				history_entry = (char *)ringbuf_last(history);
-
-			if (history_entry)
-			{
-				unsigned int len = strlen(history_entry);
-				if (len < sizeof(input) - 1)
+				if(input_len > 0)
 				{
-					mem_copy(input, history_entry, len+1);
-					input_len = len;
+					input[input_len-1] = 0;
+					input_len--;
+
+					history_entry = 0x0;
 				}
 			}
-
-		}
-		else if (e.key == KEY_DOWN)
-		{
-			if (history_entry)
-				history_entry = (char *)ringbuf_next(history, history_entry);
-
-			if (history_entry)
+			else if(e.key == KEY_ENTER || e.key == KEY_KP_ENTER)
 			{
-				unsigned int len = strlen(history_entry);
-				if (len < sizeof(input) - 1)
+				if (input_len)
 				{
-					mem_copy(input, history_entry, len+1);
+					char *entry = (char *)ringbuf_allocate(history, input_len+1);
+					mem_copy(entry, input, input_len+1);
+					
+					execute_line(input);
+					input[0] = 0;
+					input_len = 0;
 
-					input_len = len;
+					history_entry = 0x0;
 				}
 			}
-			else
+			else if (e.key == KEY_UP)
 			{
-				input[0] = 0;
-				input_len = 0;
+				if (history_entry)
+				{
+					char *test = (char *)ringbuf_prev(history, history_entry);
+
+					if (test)
+						history_entry = test;
+				}
+				else
+					history_entry = (char *)ringbuf_last(history);
+
+				if (history_entry)
+				{
+					unsigned int len = strlen(history_entry);
+					if (len < sizeof(input) - 1)
+					{
+						mem_copy(input, history_entry, len+1);
+						input_len = len;
+					}
+				}
+
 			}
-		}		
+			else if (e.key == KEY_DOWN)
+			{
+				if (history_entry)
+					history_entry = (char *)ringbuf_next(history, history_entry);
+
+				if (history_entry)
+				{
+					unsigned int len = strlen(history_entry);
+					if (len < sizeof(input) - 1)
+					{
+						mem_copy(input, history_entry, len+1);
+
+						input_len = len;
+					}
+				}
+				else
+				{
+					input[0] = 0;
+					input_len = 0;
+				}
+			}
+		}
 	}
 	
 	void print_line(const char *line)
@@ -204,18 +207,19 @@ static void con_team(void *result, void *user_data)
 	send_switch_team(new_team);
 }
 
-/*
-static void con_history(void *result, void *user_data)
+static void con_say(void *result, void *user_data)
 {
-	char *entry = (char *)ringbuf_first(console_history);
+	const char *str;
+	console_result_string(result, 1, &str);
+	chat_say(0, str);
+}
 
-	while (entry)
-	{
-		dbg_msg("console/history", entry);
-
-		entry = (char *)ringbuf_next(console_history, entry);
-	}
-}*/
+static void con_sayteam(void *result, void *user_data)
+{
+	const char *str;
+	console_result_string(result, 1, &str);
+	chat_say(1, str);
+}
 
 void send_kill(int client_id);
 
@@ -224,12 +228,219 @@ static void con_kill(void *result, void *user_data)
 	send_kill(-1);
 }
 
+static char keybindings[KEY_LAST][128] = {{0}};
+
+const char *binds_get(int keyid)
+{
+	if(keyid > 0 && keyid < KEY_LAST)
+		return keybindings[keyid];
+	return "";
+}
+
+void binds_set(int keyid, const char *str)
+{
+	if(keyid < 0 && keyid >= KEY_LAST)
+		return;
+		
+	str_copy(keybindings[keyid], str, sizeof(keybindings[keyid]));
+	if(!keybindings[keyid][0])
+		dbg_msg("binds", "unbound %s (%d)", inp_key_name(keyid), keyid);
+	else
+		dbg_msg("binds", "bound %s (%d) = %s", inp_key_name(keyid), keyid, keybindings[keyid]);
+}
+
+static int get_key_id(const char *key_name)
+{
+	int i = atoi(key_name);
+	if(i > 0 && i < KEY_LAST)
+		return i; // numeric
+		
+	// search for key
+	for(int i = 0; i < KEY_LAST; i++)
+	{
+		if(strcmp(key_name, inp_key_name(i)) == 0)
+			return i;
+	}
+	
+	return 0;
+}
+
+static void con_binds_set(void *result, void *user_data)
+{
+	const char *key_name;
+	const char *bind_str;
+	console_result_string(result, 1, &key_name);
+	console_result_string(result, 2, &bind_str);
+	int id = get_key_id(key_name);
+	
+	if(!id)
+	{
+		dbg_msg("binds", "key %s not found", key_name);
+		return;
+	}
+	
+	binds_set(id, bind_str);
+}
+
+
+static void con_binds_remove(void *result, void *user_data)
+{
+	const char *key_name;
+	console_result_string(result, 1, &key_name);
+	int id = get_key_id(key_name);
+	
+	if(!id)
+	{
+		dbg_msg("binds", "key %s not found", key_name);
+		return;
+	}
+	
+	binds_set(id, "");
+}
+
+static void con_binds_dump(void *result, void *user_data)
+{
+	for(int i = 0; i < KEY_LAST; i++)
+	{
+		if(keybindings[i][0] == 0)
+			continue;
+		dbg_msg("binds", "%s (%d) = %s", inp_key_name(i), i, keybindings[i]);
+	}
+}
+
+void binds_save()
+{
+	char buffer[256];
+	for(int i = 0; i < KEY_LAST; i++)
+	{
+		if(keybindings[i][0] == 0)
+			continue;
+		str_format(buffer, sizeof(buffer), "binds_set %s \"%s\"", inp_key_name(i), keybindings[i]);
+		client_save_line(buffer);
+	}
+}
+
+static void con_key_input_state(void *result, void *user_data)
+{
+	int i;
+	console_result_int(result, 1, &i);
+	((int *)user_data)[0] = i;
+}
+
+static void con_key_input_counter(void *result, void *user_data)
+{
+	int stroke;
+	int *v = (int *)user_data;
+	console_result_int(result, 1, &stroke);
+	if(((*v)&1) != stroke)
+		(*v)++;
+	*v &= INPUT_STATE_MASK;
+}
+
+static void con_key_input_weapon(void *result, void *user_data)
+{
+	int w = (char *)user_data - (char *)0;
+	int stroke;
+	console_result_int(result, 1, &stroke);
+	if(stroke)
+		input_data.wanted_weapon = w;
+}
+
+static void con_chat(void *result, void *user_data)
+{
+	const char *mode;
+	console_result_string(result, 1, &mode);
+	if(strcmp(mode, "all") == 0)
+		chat_enable_mode(0);
+	else if(strcmp(mode, "team") == 0)
+		chat_enable_mode(1);
+	else
+		dbg_msg("console", "expected all or team as mode");
+}
+
+static void con_toggle_local_console(void *result, void *user_data)
+{
+	console_toggle(0);
+}
+
+static void con_toggle_remote_console(void *result, void *user_data)
+{
+	console_toggle(1);
+}
+
+
+static void con_emote(void *result, void *user_data)
+{
+	int emote;
+	console_result_int(result, 1, &emote);
+	send_emoticon(emote);
+}
+
 void client_console_init()
 {
 	console_register_print_callback(client_console_print);
+
+	//
+	MACRO_REGISTER_COMMAND("toggle_local_console", "", con_toggle_local_console, 0x0);
+	MACRO_REGISTER_COMMAND("toggle_remote_console", "", con_toggle_remote_console, 0x0);
+
+	//
 	MACRO_REGISTER_COMMAND("team", "i", con_team, 0x0);
-	//MACRO_REGISTER_COMMAND("history", "", con_history, 0x0);
 	MACRO_REGISTER_COMMAND("kill", "", con_kill, 0x0);
+	
+	// bindings
+	MACRO_REGISTER_COMMAND("binds_set", "ss", con_binds_set, 0x0);
+	MACRO_REGISTER_COMMAND("binds_remove", "s", con_binds_remove, 0x0);
+	MACRO_REGISTER_COMMAND("binds_dump", "", con_binds_dump, 0x0);
+
+	// chatting
+	MACRO_REGISTER_COMMAND("say", "s", con_say, 0x0);
+	MACRO_REGISTER_COMMAND("say_team", "s", con_sayteam, 0x0);
+	MACRO_REGISTER_COMMAND("chat", "s", con_chat, 0x0);
+	MACRO_REGISTER_COMMAND("emote", "i", con_emote, 0);
+
+	// game commands
+	MACRO_REGISTER_COMMAND("+left", "i", con_key_input_state, &input_data.left);
+	MACRO_REGISTER_COMMAND("+right", "i", con_key_input_state, &input_data.right);
+	MACRO_REGISTER_COMMAND("+jump", "i", con_key_input_state, &input_data.jump);
+	MACRO_REGISTER_COMMAND("+hook", "i", con_key_input_state, &input_data.hook);
+	MACRO_REGISTER_COMMAND("+fire", "i", con_key_input_counter, &input_data.fire);
+	MACRO_REGISTER_COMMAND("+weapon1", "i", con_key_input_weapon, (void *)1);
+	MACRO_REGISTER_COMMAND("+weapon2", "i", con_key_input_weapon, (void *)2);
+	MACRO_REGISTER_COMMAND("+weapon3", "i", con_key_input_weapon, (void *)3);
+	MACRO_REGISTER_COMMAND("+weapon4", "i", con_key_input_weapon, (void *)4);
+	MACRO_REGISTER_COMMAND("+weapon5", "i", con_key_input_weapon, (void *)5);
+
+	MACRO_REGISTER_COMMAND("+nextweapon", "i", con_key_input_counter, &input_data.next_weapon);
+	MACRO_REGISTER_COMMAND("+prevweapon", "i", con_key_input_counter, &input_data.prev_weapon);
+	
+	MACRO_REGISTER_COMMAND("+emote", "i", con_key_input_state, &emoticon_selector_active);
+	MACRO_REGISTER_COMMAND("+scoreboard", "i", con_key_input_state, &scoreboard_active);
+	
+	// set default key bindings
+	binds_set(KEY_F1, "toggle_local_console");
+	binds_set(KEY_F2, "toggle_remote_console");
+	binds_set(KEY_TAB, "+scoreboard");
+	binds_set(KEY_F10, "screenshot");
+	
+	binds_set('A', "+left");
+	binds_set('D', "+right");
+	binds_set(KEY_SPACE, "+jump");
+	binds_set(KEY_MOUSE_1, "+fire");
+	binds_set(KEY_MOUSE_2, "+hook");
+	binds_set(KEY_LSHIFT, "+emote");
+
+	binds_set('1', "+weapon1");
+	binds_set('2', "+weapon2");
+	binds_set('3', "+weapon3");
+	binds_set('4', "+weapon4");
+	binds_set('5', "+weapon5");
+	
+	binds_set(KEY_MOUSE_WHEEL_UP, "+prevweapon");
+	binds_set(KEY_MOUSE_WHEEL_DOWN, "+nextweapon");
+	
+	binds_set('T', "chat all");
+	binds_set('Y', "chat team");
 }
 
 void console_handle_input()
@@ -239,16 +450,27 @@ void console_handle_input()
 	for(int i = 0; i < inp_num_events(); i++)
 	{
 		INPUT_EVENT e = inp_get_event(i);
-
-		if (e.key == config.key_toggleconsole)
-			console_toggle(0);
-		else if (e.key == config.key_toggleconsole+1)
-			console_toggle(1);
-		else if(console_active())
-			current_console()->handle_event(e);
+		
+		if(console_active())
+		{
+			if(e.key == KEY_ESC && e.flags&INPFLAG_PRESS)
+				console_toggle(console_type);
+			else
+				current_console()->handle_event(e);
+		}
+		else
+		{
+			if(e.key > 0 && e.key < KEY_LAST && keybindings[e.key][0] != 0)
+			{
+				int stroke = 0;
+				if(e.flags&INPFLAG_PRESS)
+					stroke = 1;
+				console_execute_line_stroked(stroke, keybindings[e.key]);
+			}
+		}
 	}
 
-	if (was_active || console_active())
+	if(was_active || console_active())
 	{
 		inp_clear_events();
 		inp_clear_key_states();
@@ -325,7 +547,7 @@ void console_render()
 
 	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
 
-	// do shadow
+	// do console shadow
 	gfx_texture_set(-1);
     gfx_quads_begin();
     gfx_setcolorvertex(0, 0,0,0, 0.5f);
@@ -343,6 +565,16 @@ void console_render()
 	    gfx_setcolor(0.4f, 0.2f, 0.2f,0.9f);
     gfx_quads_setsubset(0,-console_height*0.075f,screen.w*0.075f*0.5f,0);
     gfx_quads_drawTL(0,0,screen.w,console_height);
+    gfx_quads_end();
+
+	// do small bar shadow
+	gfx_texture_set(-1);
+    gfx_quads_begin();
+    gfx_setcolorvertex(0, 0,0,0, 0.0f);
+    gfx_setcolorvertex(1, 0,0,0, 0.0f);
+    gfx_setcolorvertex(2, 0,0,0, 0.25f);
+    gfx_setcolorvertex(3, 0,0,0, 0.25f);
+    gfx_quads_drawTL(0,console_height-20,screen.w,10);
     gfx_quads_end();
 
 	// do the lower bar

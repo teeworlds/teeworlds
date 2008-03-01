@@ -224,24 +224,27 @@ int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float fo
 					at_index++;
 				}
 			}
-
-			if (k == KEY_BACKSPACE && at_index > 0)
+			
+			if(e.flags&INPFLAG_PRESS)
 			{
-				memmove(str + at_index - 1, str + at_index, len - at_index + 1);
-				at_index--;
+				if (k == KEY_BACKSPACE && at_index > 0)
+				{
+					memmove(str + at_index - 1, str + at_index, len - at_index + 1);
+					at_index--;
+				}
+				else if (k == KEY_DEL && at_index < len)
+					memmove(str + at_index, str + at_index + 1, len - at_index);
+				else if (k == KEY_ENTER)
+					ui_clear_last_active_item();
+				else if (k == KEY_LEFT && at_index > 0)
+					at_index--;
+				else if (k == KEY_RIGHT && at_index < len)
+					at_index++;
+				else if (k == KEY_HOME)
+					at_index = 0;
+				else if (k == KEY_END)
+					at_index = len;
 			}
-			else if (k == KEY_DEL && at_index < len)
-				memmove(str + at_index, str + at_index + 1, len - at_index);
-			else if (k == KEY_ENTER)
-				ui_clear_last_active_item();
-			else if (k == KEY_LEFT && at_index > 0)
-				at_index--;
-			else if (k == KEY_RIGHT && at_index < len)
-				at_index++;
-			else if (k == KEY_HOME)
-				at_index = 0;
-			else if (k == KEY_END)
-				at_index = len;
 		}
 		
 		r = 1;
@@ -421,7 +424,7 @@ int ui_do_key_reader(void *id, const RECT *rect, int key)
 		for(int i = 0; i < inp_num_events(); i++)
 		{
 			INPUT_EVENT e = inp_get_event(i);
-			if(e.key && e.key != KEY_ESC)
+			if(e.flags&INPFLAG_PRESS && e.key && e.key != KEY_ESC)
 			{
 				new_key = e.key;
 				ui_set_active_item(0);
@@ -444,7 +447,12 @@ int ui_do_key_reader(void *id, const RECT *rect, int key)
 	if (ui_active_item() == id)
 		ui_draw_keyselect_button(id, "???", 0, rect, 0);
 	else
-		ui_draw_keyselect_button(id, inp_key_name(key), 0, rect, 0);
+	{
+		if(key == 0)
+			ui_draw_keyselect_button(id, "", 0, rect, 0);
+		else
+			ui_draw_keyselect_button(id, inp_key_name(key), 0, rect, 0);
+	}
 	return new_key;
 }
 
@@ -1296,32 +1304,49 @@ static void menu2_render_settings_controls(RECT main_view)
 	
 	typedef struct 
 	{
-		char name[32];
-		int *key;
+		char *name;
+		char *command;
+		int keyid;
 	} KEYINFO;
 
-	const KEYINFO keys[] = 
+	KEYINFO keys[] = 
 	{
-		{ "Move Left:", &config.key_move_left },
-		{ "Move Right:", &config.key_move_right },
-		{ "Jump:", &config.key_jump },
-		{ "Fire:", &config.key_fire },
-		{ "Hook:", &config.key_hook },
-		{ "Hammer:", &config.key_weapon1 },
-		{ "Pistol:", &config.key_weapon2 },
-		{ "Shotgun:", &config.key_weapon3 },
-		{ "Grenade:", &config.key_weapon4 },
-		{ "Rifle:", &config.key_weapon5 },
-		{ "Next Weapon:", &config.key_next_weapon },
-		{ "Prev. Weapon:", &config.key_prev_weapon },
-		{ "Emoticon:", &config.key_emoticon },
-		{ "Chat:", &config.key_chat },
-		{ "Team Chat:", &config.key_teamchat },
-		{ "Toggle Console:", &config.key_toggleconsole },
-		{ "Screenshot:", &config.key_screenshot },
+		{ "Move Left:", "+left", 0},
+		{ "Move Right:", "+right", 0 },
+		{ "Jump:", "+jump", 0 },
+		{ "Fire:", "+fire", 0 },
+		{ "Hook:", "+hook", 0 },
+		{ "Hammer:", "+weapon1", 0 },
+		{ "Pistol:", "+weapon2", 0 },
+		{ "Shotgun:", "+weapon3", 0 },
+		{ "Grenade:", "+weapon4", 0 },
+		{ "Rifle:", "+weapon5", 0 },
+		{ "Next Weapon:", "+nextweapon", 0 },
+		{ "Prev. Weapon:", "+prevweapon", 0 },
+		{ "Emoticon:", "+emote", 0 },
+		{ "Chat:", "chat all", 0 },
+		{ "Team Chat:", "chat team", 0 },
+		{ "Console:", "toggle_local_console", 0 },
+		{ "RemoteConsole:", "toggle_remote_console", 0 },
+		{ "Screenshot:", "screenshot", 0 },
 	};
 
 	const int key_count = sizeof(keys) / sizeof(KEYINFO);
+	
+	// this is kinda slow, but whatever
+	for(int keyid = 0; keyid < KEY_LAST; keyid++)
+	{
+		const char *bind = binds_get(keyid);
+		if(!bind[0])
+			continue;
+			
+		for(int i = 0; i < key_count; i++)
+			if(strcmp(bind, keys[i].command) == 0)
+			{
+				keys[i].keyid = keyid;
+				break;
+			}
+	}
 	
 	for (int i = 0; i < key_count; i++)
     {
@@ -1331,7 +1356,13 @@ static void menu2_render_settings_controls(RECT main_view)
     	ui_vsplit_l(&button, 110.0f, &label, &button);
     	
 		ui_do_label(&label, key.name, 14.0f, -1);
-		*key.key = ui_do_key_reader(key.key, &button, *key.key);
+		int oldid = key.keyid;
+		int newid = ui_do_key_reader(keys[i].name, &button, oldid);
+		if(newid != oldid)
+		{
+			binds_set(oldid, "");
+			binds_set(newid, keys[i].command);
+		}
     	ui_hsplit_t(&main_view, 5.0f, 0, &main_view);
     }	
 }

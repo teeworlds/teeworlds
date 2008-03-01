@@ -716,8 +716,8 @@ static void server_process_client_packet(NETPACKET *packet)
 					server_send_msg(cid);
 					
 					clients[cid].authed = 1;
-					dbg_msg("server", "cid=%d authed", cid);
 					server_send_rcon_line(cid, "Authentication successful. Remote console access granted.");
+					dbg_msg("server", "cid=%d authed", cid);
 				}
 				else
 				{

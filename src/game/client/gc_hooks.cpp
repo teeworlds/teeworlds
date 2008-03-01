@@ -31,6 +31,8 @@ extern "C" void modc_console_init()
 	client_console_init();
 }
 
+//binds_save()
+
 static void load_sounds_thread(void *)
 {
 	// load sounds
@@ -110,6 +112,11 @@ extern "C" void modc_init()
 	
 	int64 end = time_get();
 	dbg_msg("", "%f.2ms", ((end-start)*1000)/(float)time_freq());
+}
+
+extern "C" void modc_save_config()
+{
+	binds_save();
 }
 
 extern "C" void modc_entergame()
@@ -355,6 +362,31 @@ extern "C" void modc_rcon_line(const char *line)
 
 extern "C" int modc_snap_input(int *data)
 {
+	static NETOBJ_PLAYER_INPUT last_data = {0};
+	
+	// update player state
+	if(chat_mode != CHATMODE_NONE)
+		input_data.player_state = PLAYERSTATE_CHATTING;
+	else if(menu_active)
+		input_data.player_state = PLAYERSTATE_IN_MENU;
+	else
+		input_data.player_state = PLAYERSTATE_PLAYING;
+	last_data.player_state = input_data.player_state;
+	
+	// we freeze the input if chat or menu is activated
+	if(menu_active || chat_mode != CHATMODE_NONE || console_active())
+	{
+		last_data.left = 0;
+		last_data.right = 0;
+		last_data.hook = 0;
+		last_data.jump = 0;
+		
+		input_data = last_data;
+			
+		mem_copy(data, &input_data, sizeof(input_data));
+		return sizeof(input_data);
+	}
+	
 	picked_up_weapon = -1;
 
 	if(!input_target_lock)
@@ -365,32 +397,8 @@ extern "C" int modc_snap_input(int *data)
 		if(!input_data.target_x && !input_data.target_y)
 			input_data.target_y = 1;
 	}
+
 	input_target_lock = 0;
-
-	if(chat_mode != CHATMODE_NONE)
-		input_data.player_state = PLAYERSTATE_CHATTING;
-	else if(menu_active)
-		input_data.player_state = PLAYERSTATE_IN_MENU;
-	else
-	{
-		input_data.player_state = PLAYERSTATE_PLAYING;
-
-		// TODO: this doesn't feel too pretty... look into it?
-		if (console_active())
-		{
-			input_data.left = 0;
-			input_data.right = 0;
-			input_data.hook = 0;
-			input_data.jump = 0;
-		}
-		else
-		{
-			input_data.left = inp_key_state(config.key_move_left);
-			input_data.right = inp_key_state(config.key_move_right);
-			input_data.hook = inp_key_state(config.key_hook);
-			input_data.jump  = inp_key_state(config.key_jump);
-		}
-	}
 
 	// stress testing
 	if(config.dbg_stress)
@@ -409,6 +417,7 @@ extern "C" int modc_snap_input(int *data)
 	}
 
 	// copy and return size	
+	last_data = input_data;
 	mem_copy(data, &input_data, sizeof(input_data));
 	return sizeof(input_data);
 }

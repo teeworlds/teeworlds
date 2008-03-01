@@ -1306,26 +1306,6 @@ static void client_run()
 			}
 		}
 
-		/* screenshot button */
-		if(inp_key_down(config.key_screenshot))
-			gfx_screenshot();
-
-		/* some debug keys */
-		/*
-		if(config.debug)
-		{
-			if(inp_key_pressed(KEY_F1))
-				inp_mouse_mode_absolute();
-			if(inp_key_pressed(KEY_F2))
-				inp_mouse_mode_relative();
-
-			if(inp_key_pressed(KEY_F5))
-			{
-				ack_game_tick = -1;
-				client_send_input();
-			}
-		}*/
-
 		/* panic quit button */
 		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_pressed('Q'))
 			break;
@@ -1455,12 +1435,23 @@ static void con_ping(void *result, void *user_data)
 	ping_start_time = time_get();
 }
 
+static void con_screenshot(void *result, void *user_data)
+{
+	gfx_screenshot();
+}
+
 static void client_register_commands()
 {
 	MACRO_REGISTER_COMMAND("quit", "", con_quit, 0x0);
 	MACRO_REGISTER_COMMAND("connect", "s", con_connect, 0x0);
 	MACRO_REGISTER_COMMAND("disconnect", "", con_disconnect, 0x0);
 	MACRO_REGISTER_COMMAND("ping", "", con_ping, 0x0);
+	MACRO_REGISTER_COMMAND("screenshot", "", con_screenshot, 0x0);
+}
+
+void client_save_line(const char *line)
+{
+	engine_config_write_line(line);	
 }
 
 int editor_main(int argc, char **argv);
@@ -1485,6 +1476,7 @@ int main(int argc, char **argv)
 	if(engine_config_write_start() == 0)
 	{
 		config_save();
+		modc_save_config();
 		engine_config_write_stop();
 	}
 	

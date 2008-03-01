@@ -56,12 +56,13 @@ enum
 static INPUT_EVENT input_events[INPUT_BUFFER_SIZE];
 static int num_events = 0;
 
-static void add_event(char c, int key)
+static void add_event(char c, int key, int flags)
 {
 	if(num_events != INPUT_BUFFER_SIZE)
 	{
 		input_events[num_events].ch = c;
 		input_events[num_events].key = key;
+		input_events[num_events].flags = flags;
 		num_events++;
 	}
 }
@@ -87,17 +88,18 @@ INPUT_EVENT inp_get_event(int index)
 	return input_events[index];
 }
 
-
 static void char_callback(int character, int action)
 {
 	if(action == GLFW_PRESS && character < 256)
-		add_event((char)character, 0);
+		add_event((char)character, 0, 0);
 }
 
 static void key_callback(int key, int action)
 {
 	if(action == GLFW_PRESS)
-		add_event(0, key);
+		add_event(0, key, INPFLAG_PRESS);
+	else
+		add_event(0, key, INPFLAG_RELEASE);
 	
 	if(action == GLFW_PRESS)
 		input_count[input_current^1][key].presses++;
@@ -109,7 +111,9 @@ static void key_callback(int key, int action)
 static void mousebutton_callback(int button, int action)
 {
 	if(action == GLFW_PRESS)
-		add_event(0, KEY_MOUSE_FIRST+button);
+		add_event(0, KEY_MOUSE_FIRST+button, INPFLAG_PRESS);
+	else
+		add_event(0, KEY_MOUSE_FIRST+button, INPFLAG_RELEASE);
 		
 	if(action == GLFW_PRESS)
 		input_count[input_current^1][KEY_MOUSE_FIRST+button].presses++;
@@ -136,7 +140,8 @@ static void mousewheel_callback(int pos)
 			input_count[input_current^1][KEY_MOUSE_WHEEL_UP].releases++;
 		}
 		
-		add_event(0, KEY_MOUSE_WHEEL_UP);
+		add_event(0, KEY_MOUSE_WHEEL_UP, INPFLAG_PRESS);
+		add_event(0, KEY_MOUSE_WHEEL_UP, INPFLAG_RELEASE);
 	}
 	else if(pos < 0)
 	{
@@ -146,7 +151,8 @@ static void mousewheel_callback(int pos)
 			input_count[input_current^1][KEY_MOUSE_WHEEL_DOWN].releases++;
 		}	
 
-		add_event(0, KEY_MOUSE_WHEEL_DOWN);
+		add_event(0, KEY_MOUSE_WHEEL_DOWN, INPFLAG_PRESS);
+		add_event(0, KEY_MOUSE_WHEEL_DOWN, INPFLAG_RELEASE);
 	}
 	glfwSetMouseWheel(0);
 }

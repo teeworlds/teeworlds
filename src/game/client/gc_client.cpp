@@ -33,7 +33,9 @@ int input_target_lock = 0;
 int chat_mode = CHATMODE_NONE;
 bool menu_active = false;
 bool menu_game_active = false;
-static bool emoticon_selector_active = false;
+int emoticon_selector_active = 0;
+int scoreboard_active = 0;
+static int emoticon_selected_emote = -1;
 
 tuning_params tuning;
 
@@ -438,12 +440,7 @@ static void draw_circle(float x, float y, float r, int segments)
 
 static vec2 emoticon_selector_mouse;
 
-void emoticon_selector_reset()
-{
-	emoticon_selector_mouse = vec2(0, 0);
-}
-
-int emoticon_selector_render()
+void emoticon_selector_render()
 {
 	int x, y;
 	inp_mouse_relative(&x, &y);
@@ -458,17 +455,8 @@ int emoticon_selector_render()
 	if (selected_angle < 0)
 		selected_angle += 2*pi;
 
-	bool return_now = false;
-	int selected_emoticon = -1;
-
 	if (length(emoticon_selector_mouse) > 100)
-		selected_emoticon = (int)(selected_angle / (2*pi) * 12.0f);
-
-	if(!inp_key_pressed(config.key_emoticon))
-	{
-		return_now = true;
-		emoticon_selector_active = false;
-	}
+		emoticon_selected_emote = (int)(selected_angle / (2*pi) * 12.0f);
 
     RECT screen = *ui_screen();
 
@@ -491,7 +479,7 @@ int emoticon_selector_render()
 		if (angle > pi)
 			angle -= 2*pi;
 
-		bool selected = selected_emoticon == i;
+		bool selected = emoticon_selected_emote == i;
 
 		float size = selected ? 96 : 64;
 
@@ -508,8 +496,6 @@ int emoticon_selector_render()
     gfx_setcolor(1,1,1,1);
     gfx_quads_drawTL(emoticon_selector_mouse.x+screen.w/2,emoticon_selector_mouse.y+screen.h/2,24,24);
     gfx_quads_end();
-
-	return return_now ? selected_emoticon : -1;
 }
 
 void render_goals(float x, float y, float w)
@@ -715,7 +701,7 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 		y += 50.0f;
 	}
 }
-
+/*
 static int do_input(int *v, int key)
 {
 	*v += inp_key_presses(key) + inp_key_releases(key);
@@ -724,6 +710,27 @@ static int do_input(int *v, int key)
 	*v &= INPUT_STATE_MASK;
 	
 	return (*v&1);
+}*/
+
+void chat_say(int team, const char *line)
+{
+	// send chat message
+	msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
+	msg_pack_int(team);
+	msg_pack_string(line, 512);
+	msg_pack_end();
+	client_send_msg();
+}
+
+void chat_enable_mode(int team)
+{
+	if(team)
+		chat_mode = CHATMODE_TEAM;
+	else
+		chat_mode = CHATMODE_ALL;
+		
+	mem_zero(chat_input, sizeof(chat_input));
+	chat_input_len = 0;
 }
 
 void render_game()
@@ -792,17 +799,7 @@ void render_game()
 			{
 				// send message
 				if(chat_input_len)
-				{
-					// send chat message
-					msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
-					if(chat_mode == CHATMODE_ALL)
-						msg_pack_int(0);
-					else
-						msg_pack_int(1);
-					msg_pack_string(chat_input, 512);
-					msg_pack_end();
-					client_send_msg();
-				}
+					chat_say(chat_mode == CHATMODE_ALL ? 0 : 1, chat_input);
 
 				chat_mode = CHATMODE_NONE;
 			}
@@ -828,23 +825,6 @@ void render_game()
 						chat_input[chat_input_len-1] = 0;
 						chat_input_len--;
 					}
-				}
-			}
-		}
-		else
-		{
-			if(chat_mode == CHATMODE_NONE)
-			{
-				if(inp_key_down(config.key_chat))
-					chat_mode = CHATMODE_ALL;
-
-				if(inp_key_down(config.key_teamchat))
-					chat_mode = CHATMODE_TEAM;
-				
-				if(chat_mode != CHATMODE_NONE)
-				{
-					mem_zero(chat_input, sizeof(chat_input));
-					chat_input_len = 0;
 				}
 			}
 		}
@@ -889,6 +869,7 @@ void render_game()
 	// update some input
 	if(!menu_active && chat_mode == CHATMODE_NONE)
 	{
+		/*
 		bool do_direct = false;
 		
 		if(!emoticon_selector_active)
@@ -933,7 +914,7 @@ void render_game()
 		}
 		
 		if(do_direct) // do direct input if wanted
-			client_direct_input((int *)&input_data, sizeof(input_data));
+			client_direct_input((int *)&input_data, sizeof(input_data));*/
 	}
 
 
@@ -1402,27 +1383,21 @@ void render_game()
 		return;
 	}
 
-	if(chat_mode == CHATMODE_NONE && !menu_active && !spectate)
-	{
-		if(!emoticon_selector_active && inp_key_pressed(config.key_emoticon))
-		{
-			emoticon_selector_active = true;
-			emoticon_selector_reset();
-		}
-	}
-	else
-		emoticon_selector_active = false;
-
+	// do emoticon
 	if(emoticon_selector_active)
+		emoticon_selector_render();
+	else
 	{
-		int emoticon = emoticon_selector_render();
-		if (emoticon != -1)
+		emoticon_selector_mouse = vec2(0,0);	
+	
+		if(emoticon_selected_emote != -1)
 		{
-			send_emoticon(emoticon);
-			emoticon_selector_active = false;
+			send_emoticon(emoticon_selected_emote);
+			emoticon_selected_emote = -1;
 		}
 	}
 	
+	// render debug stuff
 	if(config.debug && netobjects.local_character && netobjects.local_prev_character)
 	{
 		gfx_mapscreen(0, 0, 300*gfx_screenaspect(), 300);
@@ -1436,7 +1411,7 @@ void render_game()
 	}
 
 	// render score board
-	if(inp_key_pressed(KEY_TAB) || // user requested
+	if(scoreboard_active || // user requested
 		(!spectate && (!netobjects.local_character || netobjects.local_character->health < 0)) || // not spectating and is dead
 		(netobjects.gameobj && netobjects.gameobj->game_over) // game over
 		)

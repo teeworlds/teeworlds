@@ -82,6 +82,9 @@ extern int chat_mode;
 void chat_add_line(int client_id, int team, const char *line);
 void chat_reset();
 
+extern int emoticon_selector_active; // TODO: ugly
+extern int scoreboard_active; // TODO: ugly
+
 // client data
 struct client_data
 {
@@ -125,6 +128,11 @@ void process_events(int snaptype);
 void clear_object_pointers();
 void reset_projectile_particles();
 void send_info(bool start);
+void send_emoticon(int emoticon);
+
+void chat_say(int team, const char *line);
+void chat_enable_mode(int team);
+
 inline vec2 random_dir() { return normalize(vec2(frandom()-0.5f, frandom()-0.5f)); }
 
 
@@ -201,4 +209,9 @@ void flow_add(vec2 pos, vec2 vel, float size);
 void flow_dbg_render();
 void flow_init();
 void flow_update();
+
+//
+void binds_save();
+void binds_set(int keyid, const char *str);
+const char *binds_get(int keyid);
 

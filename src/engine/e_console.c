@@ -340,10 +340,14 @@ void console_print(const char *str)
 		print_callback(str);
 }
 
-void console_execute_line(const char *str)
+
+void console_execute_line_stroked(int stroke, const char *str)
 {
 	LEXER_RESULT result;
 	int error;
+	char strokestr[8] = {'0', 0};
+	if(stroke)
+		strokestr[0] = '1';
 
 	if ((error = lex(str, &result)))
 		printf("ERROR: %d\n", error);
@@ -355,16 +359,36 @@ void console_execute_line(const char *str)
 
 		command = console_find_command(name);
 
-		if (command)
+		if(command)
 		{
-			if (console_validate(command, &result))
+			int is_stroke_command = 0;
+			if(name[0] == '+')
 			{
-				char buf[256];
-				str_format(buf, sizeof(buf), "Invalid arguments... Usage: %s %s", command->name, command->params);
-				console_print(buf);
+				/* insert the stroke direction token */
+				int i;
+				for(i = result.num_tokens-2; i > 1; i--)
+				{
+					result.tokens[i+1] = result.tokens[i];
+				}
+				
+				result.tokens[1].type = TOKEN_INT;
+				result.tokens[1].stored_string = strokestr;
+				result.num_tokens++;
+
+				is_stroke_command = 1;
 			}
-			else
-				command->callback(&result, command->user_data);
+			
+			if(stroke || is_stroke_command)
+			{
+				if (console_validate(command, &result))
+				{
+					char buf[256];
+					str_format(buf, sizeof(buf), "Invalid arguments... Usage: %s %s", command->name, command->params);
+					console_print(buf);
+				}
+				else
+					command->callback(&result, command->user_data);
+			}
 		}
 		else
 		{
@@ -374,6 +398,12 @@ void console_execute_line(const char *str)
 		}
 	}
 }
+
+void console_execute_line(const char *str)
+{
+	console_execute_line_stroked(1, str);
+}
+
 
 void console_execute_file(const char *filename)
 {

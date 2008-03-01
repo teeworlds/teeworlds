@@ -1,31 +1,4 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-MACRO_CONFIG_INT(key_move_left, 'A', 32, 512)
-MACRO_CONFIG_INT(key_move_right, 'D', 32, 512)
-MACRO_CONFIG_INT(key_jump, 32, 32, 512)
-MACRO_CONFIG_INT(key_fire, 384, 32, 512)
-MACRO_CONFIG_INT(key_hook, 385, 32, 512)
-MACRO_CONFIG_INT(key_weapon1, '1', 32, 512)
-MACRO_CONFIG_INT(key_weapon2, '2', 32, 512)
-MACRO_CONFIG_INT(key_weapon3, '3', 32, 512)
-MACRO_CONFIG_INT(key_weapon4, '4', 32, 512)
-MACRO_CONFIG_INT(key_weapon5, '5', 32, 512)
-MACRO_CONFIG_INT(key_weapon6, '6', 32, 512)
-MACRO_CONFIG_INT(key_weapon7, '7', 32, 512)
-
-MACRO_CONFIG_INT(key_next_weapon, 382, 32, 512)
-MACRO_CONFIG_INT(key_prev_weapon, 383, 32, 512)
-
-MACRO_CONFIG_INT(key_emoticon, 'E', 32, 512)
-
-MACRO_CONFIG_INT(key_chat, 'T', 32, 512)
-MACRO_CONFIG_INT(key_teamchat, 'Y', 32, 512)
-
-/*MACRO_CONFIG_INT(key_console, 256+2, 32, 512)
-MACRO_CONFIG_INT(key_remoteconsole, 256+3, 32, 512)*/
-
-MACRO_CONFIG_INT(key_toggleconsole, 256+2, 32, 512)
-
-
 MACRO_CONFIG_INT(cl_predict, 1, 0, 1)
 MACRO_CONFIG_INT(cl_nameplates, 0, 0, 1)
 MACRO_CONFIG_INT(cl_nameplates_always, 0, 0, 1)

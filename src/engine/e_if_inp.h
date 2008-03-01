@@ -10,8 +10,16 @@
 /*
 	Structure: INPUT_EVENT
 */
+enum
+{
+	INPFLAG_PRESS=1,
+	INPFLAG_RELEASE=2,
+	INPFLAG_REPEAT=4
+};
+
 typedef struct
 {
+	int flags;
 	char ch;
 	int key;
 } INPUT_EVENT;
