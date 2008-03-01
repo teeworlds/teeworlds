@@ -977,7 +977,7 @@ float gfx_text_raw(void *font_set_v, float x, float y, float size, const char *t
 
         gfx_quads_begin();
         if (i == 0)
-            gfx_setcolor(0.0f, 0.0f, 0.0f, 0.3f);
+            gfx_setcolor(0.0f, 0.0f, 0.0f, 0.3f*text_a);
         else
             gfx_setcolor(text_r, text_g, text_b, text_a);
         
