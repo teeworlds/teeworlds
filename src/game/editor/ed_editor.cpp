@@ -1394,6 +1394,7 @@ static void add_image(const char *filename)
 	*img = imginfo;
 	img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO);
 	img->external = 1; // external by default
+	extract_name(filename, img->name);
 	editor.map.images.add(img);
 }
 
