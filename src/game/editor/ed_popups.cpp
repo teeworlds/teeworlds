@@ -212,6 +212,23 @@ int popup_quad(RECT view)
 	QUAD *quad = editor.get_selected_quad();
 
 	RECT button;
+	
+	// delete button
+	ui_hsplit_b(&view, 12.0f, &view, &button);
+	static int delete_button = 0;
+	if(do_editor_button(&delete_button, "Delete", 0, &button, draw_editor_button, 0, "Deletes the current quad"))
+	{
+		LAYER_QUADS *layer = (LAYER_QUADS *)editor.get_selected_layer_type(0, LAYERTYPE_QUADS);
+		if(layer)
+		{
+			layer->quads.removebyindex(editor.selected_quad);
+			editor.selected_quad--;
+		}
+		return 1;
+	}
+
+	// square button
+	ui_hsplit_b(&view, 10.0f, &view, &button);
 	ui_hsplit_b(&view, 12.0f, &view, &button);
 	static int sq_button = 0;
 	if(do_editor_button(&sq_button, "Square", 0, &button, draw_editor_button, 0, "Squares the current quad"))
@@ -235,8 +252,6 @@ int popup_quad(RECT view)
 		quad->points[3].x = right; quad->points[3].y = bottom;
 		return 1;
 	}
-
-	//ui_vsplit_b(&toolbar, 2.0f, &button, &toolbar);
 
 
 	enum
