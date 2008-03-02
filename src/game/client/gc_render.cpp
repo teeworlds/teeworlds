@@ -159,7 +159,7 @@ void render_tee(animstate *anim, tee_render_info *info, int emote, vec2 dir, vec
 				gfx_quads_setrotation(anim->body.angle*pi*2);
 
 				// draw body
-				gfx_setcolor(info->color_body.r, info->color_body.g, info->color_body.b, info->color_body.a);
+				gfx_setcolor(info->color_body.r, info->color_body.g, info->color_body.b, 1.0f);
 				vec2 body_pos = position + vec2(anim->body.x, anim->body.y)*animscale;
 				select_sprite(outline?SPRITE_TEE_BODY_OUTLINE:SPRITE_TEE_BODY, 0, 0, 0);
 				gfx_quads_draw(body_pos.x, body_pos.y, basesize, basesize);
@@ -196,7 +196,7 @@ void render_tee(animstate *anim, tee_render_info *info, int emote, vec2 dir, vec
 			}
 
 			// draw feet
-			gfx_setcolor(info->color_feet.r, info->color_feet.g, info->color_feet.b, info->color_feet.a);
+			gfx_setcolor(info->color_feet.r, info->color_feet.g, info->color_feet.b, 1.0f);
 			select_sprite((outline||!info->got_airjump)?SPRITE_TEE_FOOT_OUTLINE:SPRITE_TEE_FOOT, 0, 0, 0);
 
 			keyframe *foot = f ? &anim->front_foot : &anim->back_foot;
@@ -210,6 +210,8 @@ void render_tee(animstate *anim, tee_render_info *info, int emote, vec2 dir, vec
 	}
 
 	gfx_quads_end();
+	
+	
 }
 
 static void calc_screen_params(float amount, float wmax, float hmax, float aspect, float *w, float *h)
