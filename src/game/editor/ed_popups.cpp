@@ -75,7 +75,10 @@ int popup_group(RECT view)
 	RECT button;
 	ui_hsplit_b(&view, 12.0f, &view, &button);
 	static int delete_button = 0;
-	if(do_editor_button(&delete_button, "Delete Group", 0, &button, draw_editor_button, 0, "Delete group"))
+	
+	// don't allow deletion of game group
+	if(editor.game_group != editor.get_selected_group() &&
+		do_editor_button(&delete_button, "Delete Group", 0, &button, draw_editor_button, 0, "Delete group"))
 	{
 		editor.map.delete_group(editor.selected_group);
 		return 1;
@@ -157,7 +160,10 @@ int popup_layer(RECT view)
 	RECT button;
 	ui_hsplit_b(&view, 12.0f, &view, &button);
 	static int delete_button = 0;
-	if(do_editor_button(&delete_button, "Delete Layer", 0, &button, draw_editor_button, 0, "Deletes the layer"))
+	
+	// don't allow deletion of game layer
+	if(editor.game_layer != editor.get_selected_layer(0) &&
+		do_editor_button(&delete_button, "Delete Layer", 0, &button, draw_editor_button, 0, "Deletes the layer"))
 	{
 		editor.map.groups[editor.selected_group]->delete_layer(editor.selected_layer);
 		return 1;
