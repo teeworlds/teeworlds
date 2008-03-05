@@ -219,7 +219,13 @@ function build(settings)
 		else
 			glfw_platform = "x11"
 			pa_platform = "unix"
-			pa_hostapi = "alsa" -- todo, change me
+			
+			if platform == "linux" then
+				pa_hostapi = "alsa"
+			else
+				pa_hostapi = "oss"
+			end
+			
 			settings.linker.libs:add("pthread")
 		end
 	elseif family == "windows" then
