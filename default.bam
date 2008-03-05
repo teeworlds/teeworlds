@@ -214,12 +214,18 @@ function build(settings)
 	if family == "unix" then
    		if platform == "macosx" then
 			glfw_platform = "macosx"
+			pa_platform = "mac_osx"
+			pa_hostapi = "coreaudio"
 		else
 			glfw_platform = "x11"
+			pa_platform = "unix"
+			pa_hostapi = "alsa" -- todo, change me
 			settings.linker.libs:add("pthread")
 		end
 	elseif family == "windows" then
 		glfw_platform = "win32"
+		pa_platform = "win"
+		pa_hostapi = "dsound"
 		settings.linker.libs:add("gdi32.lib")
 		settings.linker.libs:add("user32.lib")
 		settings.linker.libs:add("ws2_32.lib")
@@ -236,7 +242,19 @@ function build(settings)
 	glfw = Compile(glfw_settings, Collect(
 		"src/engine/external/glfw/lib/*.c",
 		"src/engine/external/glfw/lib/" .. glfw_platform .. "/*.c"))
-
+		
+	-- build portaudio
+	pa_settings = settings:copy()
+	pa_settings.cc.defines:add("PA_USE_" .. string.upper(pa_hostapi))
+	pa_settings.cc.includes:add("src/engine/external/portaudio/include")
+	pa_settings.cc.includes:add("src/engine/external/portaudio/src/common")
+	pa_settings.cc.includes:add("src/engine/external/portaudio/src/os/" .. pa_platform)
+	
+	portaudio = Compile(pa_settings,
+		Collect("src/engine/external/portaudio/src/common/*.c"),
+		Collect("src/engine/external/portaudio/src/os/" .. pa_platform .. "/*.c"),
+		Collect("src/engine/external/portaudio/src/hostapi/" .. pa_hostapi .. "/*.c"))
+	
 	-- build teewars components
 	engine_settings = settings:copy()
 	
@@ -283,8 +301,7 @@ function build(settings)
 	zlib = Compile(external_settings, Collect("src/engine/external/zlib/*.c"))
 	wavpack = Compile(external_settings, Collect("src/engine/external/wavpack/*.c"))
 	pnglite = Compile(external_settings, Collect("src/engine/external/pnglite/*.c"))
-	portaudio = Compile(external_settings, Collect("src/engine/external/pa.c"))
-	
+
 	engine = Compile(engine_settings, Collect("src/engine/*.c"))
 	client = Compile(client_settings, Collect("src/engine/client/*.c"))
 	server = Compile(server_settings, Collect("src/engine/server/*.c"))

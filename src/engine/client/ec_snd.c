@@ -3,7 +3,7 @@
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
 
-#include <engine/external/portaudio/portaudio.h>
+#include <engine/external/portaudio/include/portaudio.h>
 #include <engine/external/wavpack/wavpack.h>
 #include <stdio.h>
 #include <stdlib.h>

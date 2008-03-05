@@ -345,6 +345,7 @@ public:
 	void reset(bool create_default=true);
 	int save(const char *filename);
 	int load(const char *filename);
+	int append(const char *filename);
 	void render();
 
 	QUAD *get_selected_quad();

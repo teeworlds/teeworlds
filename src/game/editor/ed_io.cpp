@@ -7,7 +7,7 @@ static int make_version(int i, const T &v)
 { return (i<<16)+sizeof(T); }
 
 // backwards compatiblity
-void editor_load_old(DATAFILE *df)
+void editor_load_old(DATAFILE *df, MAP *map)
 {
 	class mapres_image
 	{
@@ -16,7 +16,6 @@ void editor_load_old(DATAFILE *df)
 		int height;
 		int image_data;
 	};
-
 
 	struct mapres_tilemap
 	{
@@ -97,10 +96,10 @@ void editor_load_old(DATAFILE *df)
 			if(tmap->main)
 			{
 				// move game layer to correct position
-				for(int i = 0; i < editor.map.groups[0]->layers.len()-1; i++)
+				for(int i = 0; i < map->groups[0]->layers.len()-1; i++)
 				{
-					if(editor.map.groups[0]->layers[i] == editor.game_layer)
-						editor.map.groups[0]->swap_layers(i, i+1);
+					if(map->groups[0]->layers[i] == editor.game_layer)
+						map->groups[0]->swap_layers(i, i+1);
 				}
 				
 				game_width = tmap->width;
@@ -108,7 +107,7 @@ void editor_load_old(DATAFILE *df)
 			}
 
 			// add new layer
-			editor.map.groups[0]->add_layer(l);
+			map->groups[0]->add_layer(l);
 
 			// process the data
 			unsigned char *src_data = (unsigned char *)datafile_get_data(df, tmap->data);
@@ -332,6 +331,11 @@ int EDITOR::save(const char *filename)
 	return 1;
 }
 
+void load_into_map(DATAFILE *df, MAP *map)
+{
+	
+}
+
 int EDITOR::load(const char *filename)
 {
 	DATAFILE *df = datafile_load(filename);
@@ -343,8 +347,9 @@ int EDITOR::load(const char *filename)
 	if(!item)
 	{
 		// import old map
+		MAP old_mapstuff;
 		editor.reset();
-		editor_load_old(df);
+		editor_load_old(df, &old_mapstuff);
 	}
 	else if(item->version == 1)
 	{
@@ -499,5 +504,11 @@ int EDITOR::load(const char *filename)
 	
 	datafile_unload(df);
 	
+	return 0;
+}
+
+
+int EDITOR::append(const char *filename)
+{
 	return 0;
 }
