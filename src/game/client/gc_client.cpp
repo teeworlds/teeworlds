@@ -833,6 +833,14 @@ void render_game()
 	if (!menu_active)
 		inp_clear_events();
 
+
+	//
+	float camera_max_distance = 250.0f;
+	float deadzone = config.cl_mouse_deadzone;
+	float follow_factor = config.cl_mouse_followfactor/100.0f;
+	float mouse_max = min(camera_max_distance/follow_factor + deadzone, (float)config.cl_mouse_max_distance);
+	vec2 camera_offset(0, 0);
+
 	// fetch new input
 	if(!menu_active && !emoticon_selector_active)
 	{
@@ -849,8 +857,14 @@ void render_game()
 		else
 		{
 			float l = length(mouse_pos);
-			if(l > 600.0f)
-				mouse_pos = normalize(mouse_pos)*600.0f;
+			if(l > mouse_max)
+			{
+				mouse_pos = normalize(mouse_pos)*mouse_max;
+				l = mouse_max;
+			}
+
+			float offset_amount = max(l-deadzone, 0) * follow_factor;
+			camera_offset = normalize(mouse_pos)*offset_amount;
 		}
 	}
 
@@ -866,70 +880,18 @@ void render_game()
 		snd_set_listener_pos(local_character_pos.x, local_character_pos.y);
 	}
 
-	// update some input
-	if(!menu_active && chat_mode == CHATMODE_NONE)
-	{
-		/*
-		bool do_direct = false;
-		
-		if(!emoticon_selector_active)
-		{
-			if(do_input(&input_data.fire, config.key_fire))
-			{
-				// this is done so that we are sure to send the
-				// target when we actually fired
-				input_data.target_x = (int)mouse_pos.x;
-				input_data.target_y = (int)mouse_pos.y;
-				input_target_lock = 1;
-				
-				if(inp_key_presses(config.key_fire))
-				{
-					if(config.dbg_firedelay)
-					{
-						if(debug_firedelay == 0)
-							debug_firedelay = time_get();
-					}
-					
-					do_direct = true;
-				}
-			}
-		}
-
-		// weapon selection
-		do_input(&input_data.next_weapon, config.key_next_weapon);
-		do_input(&input_data.prev_weapon, config.key_prev_weapon);
-
-		if(inp_key_presses(config.key_next_weapon) || inp_key_presses(config.key_prev_weapon))
-			input_data.wanted_weapon = 0;
-		else if (config.cl_autoswitch_weapons && picked_up_weapon != -1)
-			input_data.wanted_weapon = picked_up_weapon;
-		else
-		{
-			if(inp_key_presses(config.key_weapon1)) input_data.wanted_weapon = 1;
-			if(inp_key_presses(config.key_weapon2)) input_data.wanted_weapon = 2;
-			if(inp_key_presses(config.key_weapon3)) input_data.wanted_weapon = 3;
-			if(inp_key_presses(config.key_weapon4)) input_data.wanted_weapon = 4;
-			if(inp_key_presses(config.key_weapon5)) input_data.wanted_weapon = 5;
-			if(inp_key_presses(config.key_weapon6)) input_data.wanted_weapon = 6;
-		}
-		
-		if(do_direct) // do direct input if wanted
-			client_direct_input((int *)&input_data, sizeof(input_data));*/
-	}
-
-
 	// center at char but can be moved when mouse is far away
+	/*
 	float offx = 0, offy = 0;
 	if (config.cl_dynamic_camera)
 	{
-		int deadzone = 300;
 		if(mouse_pos.x > deadzone) offx = mouse_pos.x-deadzone;
 		if(mouse_pos.x <-deadzone) offx = mouse_pos.x+deadzone;
 		if(mouse_pos.y > deadzone) offy = mouse_pos.y-deadzone;
 		if(mouse_pos.y <-deadzone) offy = mouse_pos.y+deadzone;
 		offx = offx*2/3;
 		offy = offy*2/3;
-	}
+	}*/
 
 	// render the world
 	float zoom = 1.0f;
@@ -941,7 +903,7 @@ void render_game()
 		render_world(mouse_pos.x, mouse_pos.y, zoom);
 	else
 	{
-		render_world(local_character_pos.x+offx, local_character_pos.y+offy, zoom);
+		render_world(local_character_pos.x+camera_offset.x, local_character_pos.y+camera_offset.y, zoom);
 
 		// draw screen box
 		if(0)
@@ -949,8 +911,8 @@ void render_game()
 			gfx_texture_set(-1);
 			gfx_blend_normal();
 			gfx_lines_begin();
-				float cx = local_character_pos.x+offx;
-				float cy = local_character_pos.y+offy;
+				float cx = local_character_pos.x+camera_offset.x;
+				float cy = local_character_pos.y+camera_offset.y;
 				float w = 400*3/2;
 				float h = 300*3/2;
 				gfx_lines_draw(cx-w,cy-h,cx+w,cy-h);

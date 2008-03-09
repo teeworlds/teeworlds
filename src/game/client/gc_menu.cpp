@@ -1142,10 +1142,19 @@ static void menu2_render_settings_player(RECT main_view)
 		ui_vsplit_l(&button, 180.0f, &button, 0);
 		ui_do_edit_box(config.player_name, &button, config.player_name, sizeof(config.player_name), 14.0f);
 
+		static int dynamic_camera_button = 0;
 		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		if (ui_do_button(&config.cl_dynamic_camera, "Dynamic camera", config.cl_dynamic_camera, &button, ui_draw_checkbox, 0))
-			config.cl_dynamic_camera ^= 1;
+		if(ui_do_button(&dynamic_camera_button, "Dynamic Camera", config.cl_mouse_deadzone != 0, &button, ui_draw_checkbox, 0))
+		{
+			config.cl_mouse_followfactor = 60;
+			config.cl_mouse_max_distance = 400;
 			
+			if(config.cl_mouse_deadzone)
+				config.cl_mouse_deadzone = 0;
+			else
+				config.cl_mouse_deadzone = 200;
+		}
+
 		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
 		if (ui_do_button(&config.cl_autoswitch_weapons, "Switch weapon on pickup", config.cl_autoswitch_weapons, &button, ui_draw_checkbox, 0))
 			config.cl_autoswitch_weapons ^= 1;
@@ -1154,7 +1163,7 @@ static void menu2_render_settings_player(RECT main_view)
 		if (ui_do_button(&config.cl_nameplates, "Show name plates", config.cl_nameplates, &button, ui_draw_checkbox, 0))
 			config.cl_nameplates ^= 1;
 
-		if(config.cl_nameplates)
+		//if(config.cl_nameplates)
 		{
 			ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
 			ui_vsplit_l(&button, 15.0f, 0, &button);
@@ -1573,9 +1582,9 @@ static void menu2_render_settings_sound(RECT main_view)
 }
 
 
+	/*
 static void menu2_render_settings_network(RECT main_view)
 {
-	/*
 	RECT button;
 	ui_vsplit_l(&main_view, 300.0f, &main_view, 0);
 	
@@ -1585,8 +1594,8 @@ static void menu2_render_settings_network(RECT main_view)
 		ui_vsplit_l(&button, 110.0f, 0, &button);
 		ui_vsplit_l(&button, 180.0f, &button, 0);
 		ui_do_edit_box(&config.rcon_password, &button, config.rcon_password, sizeof(config.rcon_password), true);
-	}*/
-}
+	}
+}*/
 
 static void menu2_render_settings(RECT main_view)
 {
@@ -1603,7 +1612,7 @@ static void menu2_render_settings(RECT main_view)
 	
 	RECT button;
 	
-	const char *tabs[] = {"Player", "Controls", "Network", "Graphics", "Sound"};
+	const char *tabs[] = {"Player", "Controls", "Graphics", "Sound"};
 	int num_tabs = (int)(sizeof(tabs)/sizeof(*tabs));
 
 	for(int i = 0; i < num_tabs; i++)
@@ -1621,10 +1630,8 @@ static void menu2_render_settings(RECT main_view)
 	else if(settings_page == 1)
 		menu2_render_settings_controls(main_view);
 	else if(settings_page == 2)
-		menu2_render_settings_network(main_view);
-	else if(settings_page == 3)
 		menu2_render_settings_graphics(main_view);
-	else if(settings_page == 4)
+	else if(settings_page == 3)
 		menu2_render_settings_sound(main_view);
 
 	if(need_restart)

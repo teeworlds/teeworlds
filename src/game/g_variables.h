@@ -2,12 +2,16 @@
 MACRO_CONFIG_INT(cl_predict, 1, 0, 1)
 MACRO_CONFIG_INT(cl_nameplates, 0, 0, 1)
 MACRO_CONFIG_INT(cl_nameplates_always, 0, 0, 1)
-MACRO_CONFIG_INT(cl_dynamic_camera, 1, 0, 1)
 MACRO_CONFIG_INT(cl_autoswitch_weapons, 0, 0, 1)
 MACRO_CONFIG_INT(cl_show_player_ids, 0, 0, 1)
 
 
 MACRO_CONFIG_INT(cl_warning_tuning, 1, 0, 1)
+
+
+MACRO_CONFIG_INT(cl_mouse_deadzone, 200, 0, 0)
+MACRO_CONFIG_INT(cl_mouse_followfactor, 60, 0, 200)
+MACRO_CONFIG_INT(cl_mouse_max_distance, 400, 0, 0)
 
 
 MACRO_CONFIG_INT(cl_flow, 0, 0, 1)
