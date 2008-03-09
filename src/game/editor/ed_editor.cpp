@@ -77,7 +77,7 @@ void LAYERGROUP::render()
 	
 	for(int i = 0; i < layers.len(); i++)
 	{
-		if(layers[i]->visible && layers[i] != editor.game_layer)
+		if(layers[i]->visible && layers[i] != editor.map.game_layer)
 			layers[i]->render();
 	}
 }
@@ -782,10 +782,10 @@ static void do_map_editor(RECT view, RECT toolbar)
 		}
 		
 		// render the game above everything else
-		if(editor.game_group->visible && editor.game_layer->visible)
+		if(editor.map.game_group->visible && editor.map.game_layer->visible)
 		{
-			editor.game_group->mapscreen();
-			editor.game_layer->render();
+			editor.map.game_group->mapscreen();
+			editor.map.game_layer->render();
 		}
 	}
 
@@ -1075,7 +1075,7 @@ static void do_map_editor(RECT view, RECT toolbar)
 	// render screen sizes	
 	if(editor.proof_borders)
 	{
-		LAYERGROUP *g = editor.game_group;
+		LAYERGROUP *g = editor.map.game_group;
 		g->mapscreen();
 		
 		gfx_texture_set(-1);
@@ -2036,15 +2036,9 @@ static void render_envelopeeditor(RECT view)
 	}
 }
 
-static void callback_open_map(const char *filename)
-{
-	editor.load(filename);
-}
-
-static void callback_save_map(const char *filename)
-{
-	editor.save(filename);
-}
+static void callback_open_map(const char *filename) { editor.load(filename); }
+static void callback_append_map(const char *filename) { editor.append(filename); }
+static void callback_save_map(const char *filename) { editor.save(filename); }
 
 static int popup_menu_file(RECT view)
 {
@@ -2052,6 +2046,7 @@ static int popup_menu_file(RECT view)
 	static int save_button = 0;	
 	static int save_as_button = 0;	
 	static int open_button = 0;	
+	static int append_button = 0;	
 
 	RECT slot;
 	ui_hsplit_t(&view, 2.0f, &slot, &view);
@@ -2072,7 +2067,15 @@ static int popup_menu_file(RECT view)
 
 	ui_hsplit_t(&view, 10.0f, &slot, &view);
 	ui_hsplit_t(&view, 12.0f, &slot, &view);
-	if(do_editor_button(&save_button, "Save", 0, &slot, draw_editor_button_menuitem, 0, "Saves the current map"))
+	if(do_editor_button(&append_button, "Append", 0, &slot, draw_editor_button_menuitem, 0, "Opens a map and adds everything from that map to the current one"))
+	{
+		editor.invoke_file_dialog("Append Map", "Append", "data/maps/", "", callback_append_map);
+		return 1;
+	}
+
+	ui_hsplit_t(&view, 10.0f, &slot, &view);
+	ui_hsplit_t(&view, 12.0f, &slot, &view);
+	if(do_editor_button(&save_button, "Save (NOT IMPL)", 0, &slot, draw_editor_button_menuitem, 0, "Saves the current map"))
 	{
 		return 1;
 	}
@@ -2203,20 +2206,15 @@ void EDITOR::render()
 
 void EDITOR::reset(bool create_default)
 {
-	editor.map.groups.deleteall();
-	editor.map.envelopes.deleteall();
-	editor.map.images.deleteall();
-	
-	editor.game_layer = 0;
-	editor.game_group = 0;
+	editor.map.clean();
 
 	// create default layers
 	if(create_default)
+		editor.map.create_default(entities_texture);
+	
+	/*
 	{
-		editor.make_game_group(editor.map.new_group());
-		editor.make_game_layer(new LAYER_GAME(50, 50));
-		editor.game_group->add_layer(editor.game_layer);
-	}
+	}*/
 	
 	selected_layer = 0;
 	selected_group = 0;
@@ -2226,20 +2224,38 @@ void EDITOR::reset(bool create_default)
 	selected_image = 0;
 }
 
-void EDITOR::make_game_layer(LAYER *layer)
+void MAP::make_game_layer(LAYER *layer)
 {
-	editor.game_layer = (LAYER_GAME *)layer;
-	editor.game_layer->tex_id = entities_texture;
-	editor.game_layer->readonly = true;
+	game_layer = (LAYER_GAME *)layer;
+	game_layer->tex_id = entities_texture;
+	game_layer->readonly = true;
 }
 
-void EDITOR::make_game_group(LAYERGROUP *group)
+void MAP::make_game_group(LAYERGROUP *group)
 {
-	editor.game_group = group;
-	editor.game_group->game_group = true;
-	editor.game_group->name = "Game";
+	game_group = group;
+	game_group->game_group = true;
+	game_group->name = "Game";
 }
 
+
+
+void MAP::clean()
+{
+	groups.deleteall();
+	envelopes.deleteall();
+	images.deleteall();
+	
+	game_layer = 0x0;
+	game_group = 0x0;
+}
+
+void MAP::create_default(int entities_texture)
+{
+	make_game_group(new_group());
+	make_game_layer(new LAYER_GAME(50, 50));
+	game_group->add_layer(game_layer);
+}
 
 extern "C" void editor_init()
 {

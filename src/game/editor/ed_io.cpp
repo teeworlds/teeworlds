@@ -98,7 +98,7 @@ void editor_load_old(DATAFILE *df, MAP *map)
 				// move game layer to correct position
 				for(int i = 0; i < map->groups[0]->layers.len()-1; i++)
 				{
-					if(map->groups[0]->layers[i] == editor.game_layer)
+					if(map->groups[0]->layers[i] == editor.map.game_layer)
 						map->groups[0]->swap_layers(i, i+1);
 				}
 				
@@ -142,7 +142,7 @@ void editor_load_old(DATAFILE *df, MAP *map)
 			img->data = mem_alloc(img->width*img->height*4, 1);
 			mem_copy(img->data, data, img->width*img->height*4);
 			img->tex_id = gfx_load_texture_raw(img->width, img->height, img->format, img->data, IMG_AUTO);
-			editor.map.images.add(img);
+			map->images.add(img);
 			
 			// unload image
 			datafile_unload_data(df, imgres->image_data);
@@ -151,7 +151,7 @@ void editor_load_old(DATAFILE *df, MAP *map)
 	
 	// load entities
 	{
-		LAYER_GAME *g = editor.game_layer;
+		LAYER_GAME *g = map->game_layer;
 		g->resize(game_width, game_height);
 		for(int t = MAPRES_ENTS_START; t < MAPRES_ENTS_END; t++)
 		{
@@ -190,6 +190,11 @@ void editor_load_old(DATAFILE *df, MAP *map)
 
 int EDITOR::save(const char *filename)
 {
+	return map.save(filename);
+}
+
+int MAP::save(const char *filename)
+{
 	dbg_msg("editor", "saving to '%s'...", filename);
 	DATAFILE_OUT *df = datafile_create(filename);
 	if(!df)
@@ -206,9 +211,9 @@ int EDITOR::save(const char *filename)
 	}
 
 	// save images
-	for(int i = 0; i < map.images.len(); i++)
+	for(int i = 0; i < images.len(); i++)
 	{
-		IMAGE *img = map.images[i];
+		IMAGE *img = images[i];
 		MAPITEM_IMAGE item;
 		item.version = 1;
 		
@@ -225,9 +230,9 @@ int EDITOR::save(const char *filename)
 	
 	// save layers
 	int layer_count = 0;
-	for(int g = 0; g < map.groups.len(); g++)
+	for(int g = 0; g < groups.len(); g++)
 	{
-		LAYERGROUP *group = map.groups[g];
+		LAYERGROUP *group = groups[g];
 		MAPITEM_GROUP gitem;
 		gitem.version = 1;
 		
@@ -298,13 +303,13 @@ int EDITOR::save(const char *filename)
 	
 	// save envelopes
 	int point_count = 0;
-	for(int e = 0; e < map.envelopes.len(); e++)
+	for(int e = 0; e < envelopes.len(); e++)
 	{
 		MAPITEM_ENVELOPE item;
 		item.version = 1;
-		item.channels = map.envelopes[e]->channels;
+		item.channels = envelopes[e]->channels;
 		item.start_point = point_count;
-		item.num_points = map.envelopes[e]->points.len();
+		item.num_points = envelopes[e]->points.len();
 		item.name = -1;
 		
 		datafile_add_item(df, MAPITEMTYPE_ENVELOPE, e, sizeof(item), &item);
@@ -316,10 +321,10 @@ int EDITOR::save(const char *filename)
 	ENVPOINT *points = (ENVPOINT *)mem_alloc(totalsize, 1);
 	point_count = 0;
 	
-	for(int e = 0; e < map.envelopes.len(); e++)
+	for(int e = 0; e < envelopes.len(); e++)
 	{
-		int count = map.envelopes[e]->points.len();
-		mem_copy(&points[point_count], map.envelopes[e]->points.getptr(), sizeof(ENVPOINT)*count);
+		int count = envelopes[e]->points.len();
+		mem_copy(&points[point_count], envelopes[e]->points.getptr(), sizeof(ENVPOINT)*count);
 		point_count += count;
 	}
 
@@ -331,29 +336,34 @@ int EDITOR::save(const char *filename)
 	return 1;
 }
 
-void load_into_map(DATAFILE *df, MAP *map)
+int EDITOR::load(const char *filename)
 {
-	
+	reset();
+	return map.load(filename);
 }
 
-int EDITOR::load(const char *filename)
+int MAP::load(const char *filename)
 {
 	DATAFILE *df = datafile_load(filename);
 	if(!df)
 		return 0;
+		
+	clean();
 
 	// check version
 	MAPITEM_VERSION *item = (MAPITEM_VERSION *)datafile_find_item(df, MAPITEMTYPE_VERSION, 0);
 	if(!item)
 	{
 		// import old map
+		/*
 		MAP old_mapstuff;
 		editor.reset();
 		editor_load_old(df, &old_mapstuff);
+		*/
 	}
 	else if(item->version == 1)
 	{
-		editor.reset(false);
+		//editor.reset(false);
 		
 		// load images
 		{
@@ -399,7 +409,7 @@ int EDITOR::load(const char *filename)
 				if(name)
 					strncpy(img->name, name, 128);
 
-				editor.map.images.add(img);
+				images.add(img);
 				
 				// unload image
 				datafile_unload_data(df, item->image_data);
@@ -417,7 +427,7 @@ int EDITOR::load(const char *filename)
 			for(int g = 0; g < num; g++)
 			{
 				MAPITEM_GROUP *gitem = (MAPITEM_GROUP *)datafile_get_item(df, start+g, 0, 0);
-				LAYERGROUP *group = map.new_group();
+				LAYERGROUP *group = new_group();
 				group->parallax_x = gitem->parallax_x;
 				group->parallax_y = gitem->parallax_y;
 				group->offset_x = gitem->offset_x;
@@ -437,7 +447,7 @@ int EDITOR::load(const char *filename)
 						if(tilemap_item->flags&1)
 						{
 							tiles = new LAYER_GAME(tilemap_item->width, tilemap_item->height);
-							editor.make_game_layer(tiles);
+							make_game_layer(tiles);
 							make_game_group(group);
 						}
 						else
@@ -466,7 +476,7 @@ int EDITOR::load(const char *filename)
 						MAPITEM_LAYER_QUADS *quads_item = (MAPITEM_LAYER_QUADS *)layer_item;
 						LAYER_QUADS *layer = new LAYER_QUADS;
 						layer->image = quads_item->image;
-						if(layer->image < -1 || layer->image >= map.images.len())
+						if(layer->image < -1 || layer->image >= images.len())
 							layer->image = -1;
 						void *data = datafile_get_data_swapped(df, quads_item->data);
 						group->add_layer(layer);
@@ -497,7 +507,7 @@ int EDITOR::load(const char *filename)
 				ENVELOPE *env = new ENVELOPE(item->channels);
 				env->points.setsize(item->num_points);
 				mem_copy(env->points.getptr(), &points[item->start_point], sizeof(ENVPOINT)*item->num_points);
-				map.envelopes.add(env);
+				envelopes.add(env);
 			}
 		}
 	}
@@ -507,8 +517,49 @@ int EDITOR::load(const char *filename)
 	return 0;
 }
 
+static int modify_add_amount = 0;
+static void modify_add(int *index)
+{
+	if(*index >= 0)
+		*index += modify_add_amount;
+}
 
 int EDITOR::append(const char *filename)
 {
+	MAP new_map;
+	int err;
+	err = new_map.load(filename);
+	if(err)
+		return err;
+
+	// modify indecies	
+	modify_add_amount = map.images.len();
+	new_map.modify_image_index(modify_add);
+	
+	modify_add_amount = map.envelopes.len();
+	new_map.modify_envelope_index(modify_add);
+	
+	// transfer images
+	for(int i = 0; i < new_map.images.len(); i++)
+		map.images.add(new_map.images[i]);
+	new_map.images.clear();
+	
+	// transfer envelopes
+	for(int i = 0; i < new_map.envelopes.len(); i++)
+		map.envelopes.add(new_map.envelopes[i]);
+	new_map.envelopes.clear();
+
+	// transfer groups
+	
+	for(int i = 0; i < new_map.groups.len(); i++)
+	{
+		if(new_map.groups[i] == new_map.game_group)
+			delete new_map.groups[i];
+		else
+			map.groups.add(new_map.groups[i]);
+	}
+	new_map.groups.clear();
+	
+	// all done \o/
 	return 0;
 }

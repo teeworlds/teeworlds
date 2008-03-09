@@ -188,11 +188,11 @@ int LAYER_TILES::render_properties(RECT *toolbox)
 {
 	RECT button;
 	ui_hsplit_b(toolbox, 12.0f, toolbox, &button);
-	bool in_gamegroup = editor.game_group->layers.find(this) != -1;
+	bool in_gamegroup = editor.map.game_group->layers.find(this) != -1;
 	static int col_button = 0;
 	if(do_editor_button(&col_button, "Make Collision", in_gamegroup?0:-1, &button, draw_editor_button, 0, "Constructs collision from the this layer"))
 	{
-		LAYER_TILES *gl = editor.game_layer;
+		LAYER_TILES *gl = editor.map.game_layer;
 		int w = min(gl->width, width);
 		int h = min(gl->height, height);
 		for(int y = 0; y < h; y++)
@@ -235,11 +235,11 @@ int LAYER_TILES::render_properties(RECT *toolbox)
 }
 
 
-void LAYER_TILES::modify_image_index(index_modify_func func)
+void LAYER_TILES::modify_image_index(INDEX_MODIFY_FUNC func)
 {
 	func(&image);
 }
 
-void LAYER_TILES::modify_envelope_index(index_modify_func func)
+void LAYER_TILES::modify_envelope_index(INDEX_MODIFY_FUNC func)
 {
 }

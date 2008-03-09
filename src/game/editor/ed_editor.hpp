@@ -16,7 +16,7 @@ extern "C" {
 
 #include <game/client/gc_ui.h>
 
-typedef void (*index_modify_func)(int *index);
+typedef void (*INDEX_MODIFY_FUNC)(int *index);
 
 // EDITOR SPECIFIC
 template<typename T>
@@ -152,8 +152,8 @@ public:
 	virtual void render() {}
 	virtual int render_properties(RECT *toolbox) { return 0; }
 	
-	virtual void modify_image_index(index_modify_func func) {}
-	virtual void modify_envelope_index(index_modify_func func) {}
+	virtual void modify_image_index(INDEX_MODIFY_FUNC func) {}
+	virtual void modify_envelope_index(INDEX_MODIFY_FUNC func) {}
 	
 	virtual void get_size(float *w, float *h) { *w = 0; *h = 0;}
 	
@@ -196,13 +196,13 @@ public:
 	void delete_layer(int index);
 	int swap_layers(int index0, int index1);
 
-	void modify_image_index(index_modify_func func)
+	void modify_image_index(INDEX_MODIFY_FUNC func)
 	{
 		for(int i = 0; i < layers.len(); i++)
 			layers[i]->modify_image_index(func);
 	}
 	
-	void modify_envelope_index(index_modify_func func)
+	void modify_envelope_index(INDEX_MODIFY_FUNC func)
 	{
 		for(int i = 0; i < layers.len(); i++)
 			layers[i]->modify_envelope_index(func);
@@ -235,10 +235,20 @@ public:
 
 class MAP
 {
+	void make_game_group(LAYERGROUP *group);
+	void make_game_layer(LAYER *layer);
 public:
+	MAP()
+	{
+		clean();
+	}
+
 	array<LAYERGROUP*> groups;
 	array<IMAGE*> images;
 	array<ENVELOPE*> envelopes;
+	
+	class LAYER_GAME *game_layer;
+	LAYERGROUP *game_group;
 	
 	ENVELOPE *new_envelope(int channels)
 	{
@@ -270,17 +280,24 @@ public:
 		groups.removebyindex(index);
 	}
 	
-	void modify_image_index(index_modify_func func)
+	void modify_image_index(INDEX_MODIFY_FUNC func)
 	{
 		for(int i = 0; i < groups.len(); i++)
 			groups[i]->modify_image_index(func);
 	}
 	
-	void modify_envelope_index(index_modify_func func)
+	void modify_envelope_index(INDEX_MODIFY_FUNC func)
 	{
 		for(int i = 0; i < groups.len(); i++)
 			groups[i]->modify_envelope_index(func);
 	}
+	
+	void clean();
+	void create_default(int entities_texture);
+
+	// io	
+	int save(const char *filename);
+	int load(const char *filename);
 };
 
 
@@ -339,9 +356,6 @@ public:
 		const char *basepath, const char *default_name,
 		void (*func)(const char *filename));
 	
-	void make_game_group(LAYERGROUP *group);
-	void make_game_layer(LAYER *layer);
-	
 	void reset(bool create_default=true);
 	int save(const char *filename);
 	int load(const char *filename);
@@ -352,9 +366,6 @@ public:
 	LAYER *get_selected_layer_type(int index, int type);
 	LAYER *get_selected_layer(int index);
 	LAYERGROUP *get_selected_group();
-	
-	class LAYER_GAME *game_layer;
-	LAYERGROUP *game_group;
 	
 	int do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val);
 	
@@ -425,8 +436,8 @@ public:
 	
 	virtual int render_properties(RECT *toolbox);
 
-	virtual void modify_image_index(index_modify_func func);
-	virtual void modify_envelope_index(index_modify_func func);
+	virtual void modify_image_index(INDEX_MODIFY_FUNC func);
+	virtual void modify_envelope_index(INDEX_MODIFY_FUNC func);
 
 	void get_size(float *w, float *h) { *w = width*32.0f;  *h = height*32.0f; }
 	
@@ -456,8 +467,8 @@ public:
 	
 	virtual int render_properties(RECT *toolbox);
 
-	virtual void modify_image_index(index_modify_func func);
-	virtual void modify_envelope_index(index_modify_func func);
+	virtual void modify_image_index(INDEX_MODIFY_FUNC func);
+	virtual void modify_envelope_index(INDEX_MODIFY_FUNC func);
 	
 	void get_size(float *w, float *h);
 	

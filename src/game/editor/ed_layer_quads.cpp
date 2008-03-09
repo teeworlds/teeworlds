@@ -232,12 +232,12 @@ int LAYER_QUADS::render_properties(RECT *toolbox)
 }
 
 
-void LAYER_QUADS::modify_image_index(index_modify_func func)
+void LAYER_QUADS::modify_image_index(INDEX_MODIFY_FUNC func)
 {
 	func(&image);
 }
 
-void LAYER_QUADS::modify_envelope_index(index_modify_func func)
+void LAYER_QUADS::modify_envelope_index(INDEX_MODIFY_FUNC func)
 {
 	for(int i = 0; i < quads.len(); i++)
 	{
