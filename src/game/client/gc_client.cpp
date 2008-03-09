@@ -667,13 +667,7 @@ void render_scoreboard(float x, float y, float w, int team, const char *title)
 		str_format(buf, sizeof(buf), "%4d", info->score);
 		gfx_text(0, x+60-gfx_text_width(0, font_size,buf,-1), y, font_size, buf, -1);
 		
-		if(config.cl_show_player_ids)
-		{
-			str_format(buf, sizeof(buf), "%d | %s", info->cid, client_datas[info->cid].name);
-			gfx_text(0, x+128, y, font_size, buf, -1);
-		}
-		else
-			gfx_text(0, x+128, y, font_size, client_datas[info->cid].name, -1);
+		gfx_text(0, x+128, y, font_size, client_datas[info->cid].name, -1);
 
 		str_format(buf, sizeof(buf), "%4d", info->latency);
 		float tw = gfx_text_width(0, font_size, buf, -1);
@@ -1360,6 +1354,19 @@ void render_game()
 	}
 	
 	// render debug stuff
+	
+	{
+		float w = 300*gfx_screenaspect();
+		gfx_mapscreen(0, 0, w, 300);
+
+		char buf[512];
+		if(config.cl_showfps)
+		{
+			str_format(buf, sizeof(buf), "%d", (int)(1.0f/client_frametime()));
+			gfx_text(0, w-10-gfx_text_width(0,12,buf,-1), 10, 12, buf, -1);
+		}
+	}
+	
 	if(config.debug && netobjects.local_character && netobjects.local_prev_character)
 	{
 		gfx_mapscreen(0, 0, 300*gfx_screenaspect(), 300);

@@ -3,7 +3,8 @@ MACRO_CONFIG_INT(cl_predict, 1, 0, 1)
 MACRO_CONFIG_INT(cl_nameplates, 0, 0, 1)
 MACRO_CONFIG_INT(cl_nameplates_always, 0, 0, 1)
 MACRO_CONFIG_INT(cl_autoswitch_weapons, 0, 0, 1)
-MACRO_CONFIG_INT(cl_show_player_ids, 0, 0, 1)
+
+MACRO_CONFIG_INT(cl_showfps, 0, 0, 1)
 
 
 MACRO_CONFIG_INT(cl_warning_tuning, 1, 0, 1)
