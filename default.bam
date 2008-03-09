@@ -113,6 +113,7 @@ function NetObjCompile(protofile, sourcefile, headerfile)
 	bam_add_job("netobj_header", headerfile, protofile)
 	bam_add_dependency(sourcefile, protofile)
 	bam_add_dependency(headerfile, protofile)
+	bam_dependency_cpp(protofile, {})
 	return {source = sourcefile, header=headerfile}
 end
 
