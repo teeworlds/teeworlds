@@ -195,7 +195,7 @@ def emit_header_file(f, p):
 def emit_source_file(f, p, protofilename):
 	
 	
-	print >>f, "#line 1 \"%s\"" % os.path.abspath(protofilename) 
+	print >>f, "#line 1 \"%s\"" % os.path.abspath(protofilename).replace("\\", "\\\\")
 	
 	for l in p.source_raw:
 		print >>f, l

@@ -1,7 +1,9 @@
 
 raw_source
 	#include "g_protocol.h"
-	#include "g_protocol_ids.h"
+	extern "C" {
+		#include "g_protocol_ids.h"
+	}
 	#include <engine/e_common_interface.h>
 	#define max_int 2147483647
 end
