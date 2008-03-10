@@ -9,7 +9,6 @@ extern "C" {
 #endif
 
 /* Group: Debug */
-
 /**********
 	Function: dbg_assert
 	
@@ -265,6 +264,18 @@ long int io_length(IOHANDLE io);
 		Returns 0 on success.
 *****/
 int io_close(IOHANDLE io);
+
+/*****
+	Function: io_flush
+		Empties all buffers and writes all pending data.
+	
+	Parameters:
+		io - Handle to the file.
+		
+	Returns:
+		Returns 0 on success.
+*****/
+int io_flush(IOHANDLE io);
 
 /**** Group: Threads ****/
 
@@ -528,6 +539,12 @@ void str_copy(char *dst, const char *src, int dst_size);
 void str_format(char *buffer, int buffer_size, const char *format, ...);
 void str_sanitize_strong(char *str);
 void str_sanitize(char *str);
+
+typedef void (*DBG_LOGGER)(const char *line);
+void dbg_logger(DBG_LOGGER logger);
+void dbg_logger_stdout();
+void dbg_logger_debugger();
+void dbg_logger_file(const char *filename);
 
 IOHANDLE io_stdin();
 IOHANDLE io_stdout();

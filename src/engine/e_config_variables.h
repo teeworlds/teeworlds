@@ -6,6 +6,8 @@ MACRO_CONFIG_STR(player_name, 32, "nameless tee")
 MACRO_CONFIG_STR(clan_name, 32, "")
 MACRO_CONFIG_STR(password, 32, "")
 
+MACRO_CONFIG_STR(logfile, 128, "")
+
 MACRO_CONFIG_INT(cl_cpu_throttle, 0, 0, 1)
 /*MACRO_CONFIG_STR(cl_connect, 32, "")*/
 MACRO_CONFIG_INT(cl_editor, 0, 0, 1)

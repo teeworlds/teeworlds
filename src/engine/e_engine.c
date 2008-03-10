@@ -37,6 +37,10 @@ int engine_stress(float probability)
 
 void engine_init(const char *appname)
 {
+	dbg_logger_stdout();
+	dbg_logger_debugger();
+	
+	/* */
 	dbg_msg("engine", "running on %s-%s-%s", CONF_FAMILY_STRING, CONF_PLATFORM_STRING, CONF_ARCH_STRING);
 #ifdef CONF_ARCH_ENDIAN_LITTLE
 	dbg_msg("engine", "arch is little endian");
@@ -63,11 +67,11 @@ void engine_init(const char *appname)
 		}
 	}
 
-	/* init console */
+	/* init console and add the console logger */
 	console_init();
+	dbg_logger(console_print);
 
 	MACRO_REGISTER_COMMAND("dbg_dumpmem", "", con_dbg_dumpmem, 0x0);
-	
 	
 	/* reset the config */
 	config_reset();
@@ -101,6 +105,10 @@ void engine_parse_arguments(int argc, char **argv)
 		for(i = 1; i < argc; i++)
 			console_execute_line(argv[i]);
 	}
+	
+	/* open logfile if needed */
+	if(config.logfile[0])
+		dbg_logger_file(config.logfile);
 	
 	/* set default servers and load from disk*/
 	mastersrv_default();

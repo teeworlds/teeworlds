@@ -51,7 +51,13 @@ IOHANDLE io_stdin() { return (IOHANDLE)stdin; }
 IOHANDLE io_stdout() { return (IOHANDLE)stdout; }
 IOHANDLE io_stderr() { return (IOHANDLE)stderr; }
 
-IOHANDLE logfile = 0;
+static DBG_LOGGER loggers[16];
+static int num_loggers = 0;
+
+void dbg_logger(DBG_LOGGER logger)
+{
+	loggers[num_loggers++] = logger;
+}
 
 void dbg_assert_imp(const char *filename, int line, int test, const char *msg)
 {
@@ -67,51 +73,64 @@ void dbg_break()
 	*((unsigned*)0) = 0x0;
 }
 
-int dbg_log_to_file(const char *filename)
-{
-	logfile = io_open(filename, IOFLAG_WRITE);
-	if(logfile)
-		return 1;
-	return 0;
-}
-
 void dbg_msg(const char *sys, const char *fmt, ...)
 {
 	va_list args;
-#if defined(CONF_FAMILY_WINDOWS)
 	char str[1024];
+	char *msg;
+	int i, len;
+	
+	str_format(str, sizeof(str), "[%08x][%s]: ", (int)time(0), sys);
+	len = strlen(str);
+	msg = (char *)str + len;
+	
 	va_start(args, fmt);
-	_vnsprintf(str, sizeof(str), fmt, args);
+#if defined(CONF_FAMILY_WINDOWS)
+	_vnsprintf(msg, sizeof(str)-len, fmt, args);
+#else
+	vsnprintf(msg, sizeof(str)-len, fmt, args);
+#endif
 	va_end(args);
-	OutputDebugString(str);
+	
+	for(i = 0; i < num_loggers; i++)
+		loggers[i](str);
+}
+
+static void logger_stdout(const char *line)
+{
+	printf("%s\n", line);
+}
+
+static void logger_debugger(const char *line)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	OutputDebugString(line);
 	OutputDebugString("\n");
 #endif
-
-	va_start(args, fmt);
-	printf("[%08x][%s]: ", (int)time(0), sys);
-	vprintf(fmt, args);
-	va_end(args);
-	printf("\n");
-	fflush(stdout);
-
-	{
-		char str[2048];
-		int len;
-
-		str_format(str, sizeof(str), "[%s]: ", sys);
-
-		va_start(args, fmt);
-		len = strlen(str);
-#if defined(CONF_FAMILY_WINDOWS)
-		_vsnprintf(str+len, sizeof(str)-len, fmt, args);
-#else
-		vsnprintf(str+len, sizeof(str)-len, fmt, args);
-#endif
-		va_end(args);
-
-		console_print(str);
-	}
 }
+
+
+IOHANDLE logfile = 0;
+static void logger_file(const char *line)
+{
+	io_write(logfile, line, strlen(line));
+	io_write(logfile, "\n", 1);
+	io_flush(logfile);
+}
+
+void dbg_logger_stdout() { dbg_logger(logger_stdout); }
+void dbg_logger_debugger() { dbg_logger(logger_debugger); }
+void dbg_logger_file(const char *filename)
+{
+	logfile = io_open(filename, IOFLAG_WRITE);
+	if(logfile)
+		dbg_logger(logger_file);
+	else
+		dbg_msg("dbg/logger", "failed to open '%s' for logging", filename);
+
+}
+
+/* */
 
 int memory_alloced = 0;
 
@@ -276,6 +295,12 @@ int io_close(IOHANDLE io)
 {
 	fclose((FILE*)io);
 	return 1;
+}
+
+int io_flush(IOHANDLE io)
+{
+	fflush((FILE*)io);
+	return 0;
 }
 
 void *thread_create(void (*threadfunc)(void *), void *u)
