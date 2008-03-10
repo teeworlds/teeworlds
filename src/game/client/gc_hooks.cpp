@@ -506,8 +506,12 @@ extern "C" void modc_message(int msg)
 		if(msg_unpack_error() || cid < 0 || cid >= MAX_CLIENTS)
 			return;
 		
-		strncpy(client_datas[cid].name, name, 64);
-		strncpy(client_datas[cid].skin_name, skinname, 64);
+		str_copy(client_datas[cid].name, name, 64);
+		str_copy(client_datas[cid].skin_name, skinname, 64);
+		
+		// make sure that we don't set a special skin on the client
+		if(client_datas[cid].skin_name[0] == 'x' || client_datas[cid].skin_name[1] == '_')
+			str_copy(client_datas[cid].skin_name, "default", 64);
 		
 		int use_custom_color = msg_unpack_int();
 		client_datas[cid].skin_info.color_body = skin_get_color(msg_unpack_int());

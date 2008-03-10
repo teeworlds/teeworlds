@@ -9,6 +9,7 @@
 #include "gc_render.h"
 #include "gc_anim.h"
 #include "gc_client.h"
+#include "gc_skin.h"
 
 
 void render_projectile(const NETOBJ_PROJECTILE *current, int itemid)
@@ -89,10 +90,7 @@ void render_powerup(const NETOBJ_POWERUP *prev, const NETOBJ_POWERUP *current)
 
 		if(c[current->type] == SPRITE_POWERUP_NINJA)
 		{
-			/*
-			proj_particles.addparticle(0, 0,
-				pos+vec2((frandom()-0.5f)*80.0f, (frandom()-0.5f)*20.0f),
-				vec2((frandom()-0.5f)*10.0f, (frandom()-0.5f)*10.0f));*/
+			effect_powerupshine(pos, vec2(96,18));
 			size *= 2.0f;
 			pos.x += 10.0f;
 		}
@@ -261,6 +259,10 @@ void render_player(
 
 	float intratick = client_intratick();
 	float ticktime = client_ticktime();
+	
+	bool is_teamplay = false;
+	if(netobjects.gameobj && netobjects.gameobj->gametype != GAMETYPE_DM)
+		is_teamplay = true;
 
 	if(player.health < 0) // dont render dead players
 		return;
@@ -396,6 +398,20 @@ void render_player(
 		}
 		else if (player.weapon == WEAPON_NINJA)
 		{
+			// change the skin for the player to the ninja
+			int skin = skin_find("x_ninja");
+			if(skin != -1)
+			{
+				if(is_teamplay)
+					render_info.texture = skin_get(skin)->color_texture;
+				else
+				{
+					render_info.texture = skin_get(skin)->org_texture;
+					render_info.color_body = vec4(1,1,1,1);
+					render_info.color_feet = vec4(1,1,1,1);
+				}
+			}
+			
 			p = position;
 			p.y += data->weapons[iw].offsety;
 
@@ -403,10 +419,12 @@ void render_player(
 			{
 				gfx_quads_setrotation(-pi/2-state.attach.angle*pi*2);
 				p.x -= data->weapons[iw].offsetx;
+				effect_powerupshine(p+vec2(32,0), vec2(32,12));
 			}
 			else
 			{
 				gfx_quads_setrotation(-pi/2+state.attach.angle*pi*2);
+				effect_powerupshine(p-vec2(32,0), vec2(32,12));
 			}
 			draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
 

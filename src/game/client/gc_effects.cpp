@@ -25,6 +25,27 @@ void effect_air_jump(vec2 pos)
 	particle_add(PARTGROUP_GENERAL, &p);
 }
 
+void effect_powerupshine(vec2 pos, vec2 size)
+{
+	if(!add_trail)
+		return;
+		
+	particle p;
+	p.set_default();
+	p.spr = SPRITE_PART_SLICE;
+	p.pos = pos + vec2((frandom()-0.5f)*size.x, (frandom()-0.5f)*size.y);
+	p.vel = vec2(0, 0);
+	p.life_span = 0.5f;
+	p.start_size = 16.0f;
+	p.end_size = 0;
+	p.rot = frandom()*pi*2;
+	p.rotspeed = pi*2;
+	p.gravity = 500;
+	p.friction = 0.9f;
+	p.flow_affected = 0.0f;
+	particle_add(PARTGROUP_GENERAL, &p);
+}
+
 void effect_smoketrail(vec2 pos, vec2 vel)
 {
 	if(!add_trail)

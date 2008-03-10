@@ -1258,6 +1258,11 @@ static void menu2_render_settings_player(RECT main_view)
 	for(int i = start; i < start+num && i < skin_num(); i++)
 	{
 		const skin *s = skin_get(i);
+		
+		// no special skins
+		if(s->name[0] == 'x' && s->name[1] == '_')
+			continue;
+		
 		char buf[128];
 		str_format(buf, sizeof(buf), "%s", s->name);
 		int selected = 0;

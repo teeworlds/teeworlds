@@ -269,8 +269,8 @@ powerups {
 	}
 	ninja {
 		amount 1
-		respawntime 90
-		startspawntime 90
+		respawntime 5
+		startspawntime 0
 	}
 }
 
