@@ -1261,7 +1261,10 @@ static void menu2_render_settings_player(RECT main_view)
 		
 		// no special skins
 		if(s->name[0] == 'x' && s->name[1] == '_')
+		{
+			num++;
 			continue;
+		}
 		
 		char buf[128];
 		str_format(buf, sizeof(buf), "%s", s->name);
