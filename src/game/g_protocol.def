@@ -205,9 +205,3 @@ event damageind
 	any x, y
 	any angle
 end
-
-//msg say
-//	clientid cid
-//	range(-1, 1) team
-//	string message
-//end
