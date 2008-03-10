@@ -86,7 +86,7 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 	
 	va_start(args, fmt);
 #if defined(CONF_FAMILY_WINDOWS)
-	_vnsprintf(msg, sizeof(str)-len, fmt, args);
+	_vsnprintf(msg, sizeof(str)-len, fmt, args);
 #else
 	vsnprintf(msg, sizeof(str)-len, fmt, args);
 #endif
