@@ -12,7 +12,7 @@ MACRO_CONFIG_INT(cl_warning_tuning, 1, 0, 1)
 
 MACRO_CONFIG_INT(cl_mouse_deadzone, 200, 0, 0)
 MACRO_CONFIG_INT(cl_mouse_followfactor, 60, 0, 200)
-MACRO_CONFIG_INT(cl_mouse_max_distance, 400, 0, 0)
+MACRO_CONFIG_INT(cl_mouse_max_distance, 800, 0, 0)
 
 
 MACRO_CONFIG_INT(cl_flow, 0, 0, 1)
@@ -48,9 +48,3 @@ MACRO_CONFIG_INT(sv_scorelimit, 20, 0, 1000)
 MACRO_CONFIG_INT(sv_timelimit, 0, 0, 1000)
 MACRO_CONFIG_STR(sv_gametype, 32, "dm")
 MACRO_CONFIG_INT(sv_tournament_mode, 0, 0, 1)
-
-
-/* should be removed as they are commands and not variables */
-MACRO_CONFIG_INT(sv_restart, 0, 0, 120)
-MACRO_CONFIG_STR(sv_msg, 512, "")
-MACRO_CONFIG_INT(sv_kick, -1, 0, 0)

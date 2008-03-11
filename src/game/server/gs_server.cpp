@@ -2016,28 +2016,6 @@ void mods_tick()
 
 	if(world->paused) // make sure that the game object always updates
 		gameobj->tick();
-
-	if(config.sv_restart)
-	{
-		if(config.sv_restart > 1)
-			gameobj->do_warmup(config.sv_restart);
-		else
-			gameobj->startround();
-
-		config.sv_restart = 0;
-	}
-
-	if(config.sv_msg[0] != 0)
-	{
-		send_chat(-1, -1, config.sv_msg);
-		config.sv_msg[0] = 0;
-	}
-	
-	if(config.sv_kick != -1)
-	{
-		server_kick(config.sv_kick, "kicked");
-		config.sv_kick = -1;
-	}
 }
 
 void mods_snap(int client_id)
@@ -2138,8 +2116,8 @@ void mods_connected(int client_id)
 		else
 			players[client_id].team = gameobj->getteam(client_id);
 	}
-	
-	
+
+	// send motd	
 	msg_pack_start(MSG_MOTD, MSGFLAG_VITAL);
 	msg_pack_string(config.sv_motd, 900);
 	msg_pack_end();
@@ -2298,11 +2276,32 @@ static void con_tune_dump(void *result, void *user_data)
 }
 
 
+static void con_restart(void *result, void *user_data)
+{
+	int time = 0;
+	console_result_int(result, 1, &time);
+
+	if(time)
+		gameobj->do_warmup(time);
+	else
+		gameobj->startround();
+}
+
+static void con_broadcast(void *result, void *user_data)
+{
+	const char *message;
+	console_result_string(result, 1, &message);
+	send_chat(-1, -1, message);
+}
+
 void mods_console_init()
 {
 	MACRO_REGISTER_COMMAND("tune", "s?i", con_tune_param, 0);
 	MACRO_REGISTER_COMMAND("tune_reset", "", con_tune_reset, 0);
 	MACRO_REGISTER_COMMAND("tune_dump", "", con_tune_dump, 0);
+
+	MACRO_REGISTER_COMMAND("restart", "?i", con_restart, 0);
+	MACRO_REGISTER_COMMAND("broadcast", "s", con_broadcast, 0);
 }
 
 void mods_init()

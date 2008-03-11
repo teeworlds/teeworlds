@@ -1163,13 +1163,19 @@ static void menu2_render_settings_player(RECT main_view)
 		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
 		if(ui_do_button(&dynamic_camera_button, "Dynamic Camera", config.cl_mouse_deadzone != 0, &button, ui_draw_checkbox, 0))
 		{
-			config.cl_mouse_followfactor = 60;
-			config.cl_mouse_max_distance = 400;
 			
 			if(config.cl_mouse_deadzone)
+			{
+				config.cl_mouse_followfactor = 0;
+				config.cl_mouse_max_distance = 400;
 				config.cl_mouse_deadzone = 0;
+			}
 			else
-				config.cl_mouse_deadzone = 200;
+			{
+				config.cl_mouse_followfactor = 60;
+				config.cl_mouse_max_distance = 1000;
+				config.cl_mouse_deadzone = 300;
+			}
 		}
 
 		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);

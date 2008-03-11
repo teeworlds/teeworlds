@@ -851,6 +851,8 @@ void render_game()
 		else
 		{
 			float l = length(mouse_pos);
+			if(l != l) l = 0; // detect division by zero
+			
 			if(l > mouse_max)
 			{
 				mouse_pos = normalize(mouse_pos)*mouse_max;

@@ -467,7 +467,7 @@ extern "C" void modc_message(int msg)
 		const char *message = msg_unpack_string();
 
 		/* check for errors and invalid inputs */
-		if(msg_unpack_error() || cid < 0 || cid >= MAX_CLIENTS)
+		if(msg_unpack_error() || cid < -1 || cid >= MAX_CLIENTS)
 			return;
 			
 		dbg_msg("message", "chat cid=%d team=%d msg='%s'", cid, team, message);

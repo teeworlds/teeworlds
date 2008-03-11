@@ -803,27 +803,6 @@ static void server_send_serverinfo(NETADDR4 *addr, int lan)
 	netserver_send(net, &packet);
 }
 
-static void server_dump_status()
-{
-	int i;
-	NETADDR4 addr;
-	dbg_msg("server", "-- status --");
-	for(i = 0; i < MAX_CLIENTS; i++)
-	{
-		if(clients[i].state == SRVCLIENT_STATE_INGAME)
-		{
-			netserver_client_addr(net, i, &addr);
-			dbg_msg("server", "id=%d addr=%d.%d.%d.%d:%d name='%s' score=%d",
-				i, addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3], addr.port,
-				clients[i].name, clients[i].score);
-		}
-	}
-	dbg_msg("server", "-- end status --");
-
-	config.sv_status = 0;
-}
-			
-
 extern int register_process_packet(NETPACKET *packet);
 extern int register_update();
 
@@ -1073,12 +1052,6 @@ static int server_run()
 				reporttime += time_freq()*reportinterval;
 			}
 			
-			if(config.sv_status)
-			{
-				server_dump_status();
-				config.sv_status = 0;
-			}
-			
 			/* wait for incomming data */
 			net_socket_read_wait(netserver_socket(net), 5);
 		}
@@ -1090,10 +1063,33 @@ static int server_run()
 	return 0;
 }
 
+static void con_kick(void *result, void *user_data)
+{
+	int cid;
+	console_result_int(result, 1, &cid);
+	server_kick(cid, "kicked by console");
+}
+
+static void con_status(void *result, void *user_data)
+{
+	int i;
+	NETADDR4 addr;
+	for(i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(clients[i].state == SRVCLIENT_STATE_INGAME)
+		{
+			netserver_client_addr(net, i, &addr);
+			dbg_msg("server", "id=%d addr=%d.%d.%d.%d:%d name='%s' score=%d",
+				i, addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3], addr.port,
+				clients[i].name, clients[i].score);
+		}
+	}
+}
+
 static void server_register_commands()
 {
-	/* kick */
-	/* status */
+	MACRO_REGISTER_COMMAND("kick", "i", con_kick, 0);
+	MACRO_REGISTER_COMMAND("status", "", con_status, 0);
 }
 
 int main(int argc, char **argv)
