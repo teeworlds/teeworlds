@@ -40,6 +40,9 @@ raw_header
 	enum
 	{
 		MSG_NULL=0,
+		
+		MSG_MOTD, // server -> client, message of the day
+		
 		MSG_SAY, // client -> server
 		MSG_CHAT, // server -> client
 		MSG_SETINFO, // server -> client - contains name, skin and color info

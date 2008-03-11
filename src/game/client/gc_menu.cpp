@@ -28,7 +28,7 @@ extern "C" {
 extern data_container *data;
 
 extern bool menu_active;
-extern bool menu_game_active;
+//extern bool menu_game_active;
 
 static bool need_restart = false;
 
@@ -60,12 +60,16 @@ static vec4 color_tabbar_active = color_tabbar_active_outgame;
 enum
 {
 	PAGE_NEWS=0,
+	PAGE_GAME,
+	PAGE_SERVER_INFO,
 	PAGE_INTERNET,
 	PAGE_LAN,
 	PAGE_FAVORITES,
 	PAGE_SETTINGS,
 	PAGE_SYSTEM,
 };
+
+static int menu_game_page = PAGE_GAME;
 
 static void ui_draw_browse_icon(int what, const RECT *r)
 {
@@ -464,11 +468,13 @@ static int menu2_render_menubar(RECT r)
 	
 	int active_page = config.ui_page;
 	int new_page = -1;
-	if(menu_game_active)
-		active_page = -1;
+	
+	if(client_state() != CLIENTSTATE_OFFLINE)
+		active_page = menu_game_page;
 	
 	if(client_state() == CLIENTSTATE_OFFLINE)
 	{
+		/* offline menus */
 		if(0) // this is not done yet
 		{
 			ui_vsplit_l(&box, 90.0f, &button, &box);
@@ -477,43 +483,52 @@ static int menu2_render_menubar(RECT r)
 				new_page = PAGE_NEWS;
 			ui_vsplit_l(&box, 30.0f, 0, &box); 
 		}
+
+		ui_vsplit_l(&box, 110.0f, &button, &box);
+		static int internet_button=0;
+		if (ui_do_button(&internet_button, "Internet", active_page==PAGE_INTERNET, &button, ui_draw_menu_tab_button, 0))
+		{
+			client_serverbrowse_refresh(0);
+			new_page = PAGE_INTERNET;
+		}
+
+		ui_vsplit_l(&box, 4.0f, 0, &box);
+		ui_vsplit_l(&box, 90.0f, &button, &box);
+		static int lan_button=0;
+		if (ui_do_button(&lan_button, "LAN", active_page==PAGE_LAN, &button, ui_draw_menu_tab_button, 0))
+		{
+			client_serverbrowse_refresh(1);
+			new_page = PAGE_LAN;
+		}
+
+		if(0) // this one is not done yet
+		{
+			ui_vsplit_l(&box, 4.0f, 0, &box);
+			ui_vsplit_l(&box, 120.0f, &button, &box);
+			static int favorites_button=0;
+			if (ui_do_button(&favorites_button, "Favorites", active_page==PAGE_FAVORITES, &button, ui_draw_menu_tab_button, 0))
+				new_page  = PAGE_FAVORITES;
+		}
+
+
 	}
 	else
 	{
+		/* online menus */
 		ui_vsplit_l(&box, 90.0f, &button, &box);
 		static int game_button=0;
-		if (ui_do_button(&game_button, "Game", menu_game_active, &button, ui_draw_menu_tab_button, 0))
-			menu_game_active = true;
+		if (ui_do_button(&game_button, "Game", active_page==PAGE_GAME, &button, ui_draw_menu_tab_button, 0))
+			new_page = PAGE_GAME;
+
+		ui_vsplit_l(&box, 4.0f, 0, &box);
+		ui_vsplit_l(&box, 140.0f, &button, &box);
+		static int server_info_button=0;
+		if (ui_do_button(&server_info_button, "Server Info", active_page==PAGE_SERVER_INFO, &button, ui_draw_menu_tab_button, 0))
+			new_page = PAGE_SERVER_INFO;
 			
 		ui_vsplit_l(&box, 30.0f, 0, &box);
 	}
 		
-	ui_vsplit_l(&box, 110.0f, &button, &box);
-	static int internet_button=0;
-	if (ui_do_button(&internet_button, "Internet", active_page==PAGE_INTERNET, &button, ui_draw_menu_tab_button, 0))
-	{
-		client_serverbrowse_refresh(0);
-		new_page = PAGE_INTERNET;
-	}
-
-	ui_vsplit_l(&box, 4.0f, 0, &box);
-	ui_vsplit_l(&box, 90.0f, &button, &box);
-	static int lan_button=0;
-	if (ui_do_button(&lan_button, "LAN", active_page==PAGE_LAN, &button, ui_draw_menu_tab_button, 0))
-	{
-		client_serverbrowse_refresh(1);
-		new_page = PAGE_LAN;
-	}
-
-	if(0) // this one is not done yet
-	{
-		ui_vsplit_l(&box, 4.0f, 0, &box);
-		ui_vsplit_l(&box, 120.0f, &button, &box);
-		static int favorites_button=0;
-		if (ui_do_button(&favorites_button, "Favorites", active_page==PAGE_FAVORITES, &button, ui_draw_menu_tab_button, 0))
-			new_page  = PAGE_FAVORITES;
-	}
-
 	/*
 	ui_vsplit_r(&box, 110.0f, &box, &button);
 	static int system_button=0;
@@ -536,8 +551,10 @@ static int menu2_render_menubar(RECT r)
 	
 	if(new_page != -1)
 	{
-		config.ui_page = new_page;
-		menu_game_active = false;
+		if(client_state() == CLIENTSTATE_OFFLINE)
+			config.ui_page = new_page;
+		else
+			menu_game_page = new_page;
 	}
 		
 	return 0;
@@ -1655,7 +1672,6 @@ static void menu2_render_news(RECT main_view)
 	ui_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
 }
 
-
 static void menu2_render_game(RECT main_view)
 {
 	RECT button;
@@ -1726,6 +1742,18 @@ static void menu2_render_game(RECT main_view)
 			}
 		}
 	}
+}
+
+void menu2_render_serverinfo(RECT main_view)
+{
+	// render background
+	ui_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
+	
+	// render motd
+	RECT view;
+	ui_margin(&main_view, 10.0f, &view);
+	//void gfx_text(void *font, float x, float y, float size, const char *text, int max_width);
+	gfx_text(0, view.x, view.y, 16, server_motd, -1);
 }
 
 void menu_do_disconnected()
@@ -1835,8 +1863,15 @@ int menu2_render()
 		menu2_render_menubar(tab_bar);
 			
 		// render current page
-		if(menu_game_active)
-			menu2_render_game(main_view);
+		if(client_state() != CLIENTSTATE_OFFLINE)
+		{
+			if(menu_game_page == PAGE_GAME)
+				menu2_render_game(main_view);
+			else if(menu_game_page == PAGE_SERVER_INFO)
+				menu2_render_serverinfo(main_view);
+			else if(menu_game_page == PAGE_SETTINGS)
+				menu2_render_settings(main_view);
+		}
 		else if(config.ui_page == PAGE_NEWS)
 			menu2_render_news(main_view);
 		else if(config.ui_page == PAGE_INTERNET)

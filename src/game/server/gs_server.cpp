@@ -2138,6 +2138,12 @@ void mods_connected(int client_id)
 		else
 			players[client_id].team = gameobj->getteam(client_id);
 	}
+	
+	
+	msg_pack_start(MSG_MOTD, MSGFLAG_VITAL);
+	msg_pack_string(config.sv_motd, 900);
+	msg_pack_end();
+	server_send_msg(client_id);
 }
 
 void mods_client_drop(int client_id)

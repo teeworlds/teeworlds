@@ -40,16 +40,17 @@ MACRO_CONFIG_INT(ui_color_alpha, 228, 0, 255)
 
 
 MACRO_CONFIG_INT(sv_warmup, 0, 0, 0)
-MACRO_CONFIG_STR(sv_msg, 512, "")
+MACRO_CONFIG_STR(sv_motd, 900, "")
 MACRO_CONFIG_INT(sv_teamdamage, 0, 0, 1)
 MACRO_CONFIG_STR(sv_maprotation, 512, "")
 MACRO_CONFIG_INT(sv_powerups, 1, 0, 1)
 MACRO_CONFIG_INT(sv_scorelimit, 20, 0, 1000)
 MACRO_CONFIG_INT(sv_timelimit, 0, 0, 1000)
 MACRO_CONFIG_STR(sv_gametype, 32, "dm")
-MACRO_CONFIG_INT(sv_restart, 0, 0, 120)
-MACRO_CONFIG_INT(sv_kick, -1, 0, 0)
 MACRO_CONFIG_INT(sv_tournament_mode, 0, 0, 1)
 
 
-
+/* should be removed as they are commands and not variables */
+MACRO_CONFIG_INT(sv_restart, 0, 0, 120)
+MACRO_CONFIG_STR(sv_msg, 512, "")
+MACRO_CONFIG_INT(sv_kick, -1, 0, 0)

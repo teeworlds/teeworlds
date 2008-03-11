@@ -456,6 +456,8 @@ void extraproj_reset()
 	extraproj_num = 0;
 }
 
+char server_motd[900] = {0};
+
 extern "C" void modc_message(int msg)
 {
 	if(msg == MSG_CHAT)
@@ -495,6 +497,31 @@ extern "C" void modc_message(int msg)
 				extraproj_num++;
 			}
 		}
+	}
+	else if(msg == MSG_MOTD)
+	{
+		const char *message = msg_unpack_string();
+
+		/* check for errors and invalid inputs */
+		if(msg_unpack_error())
+			return;
+
+		// process escaping			
+		str_copy(server_motd, message, sizeof(server_motd));
+		for(int i = 0; server_motd[i]; i++)
+		{
+			if(server_motd[i] == '\\')
+			{
+				if(server_motd[i+1] == 'n')
+				{
+					server_motd[i] = ' ';
+					server_motd[i+1] = '\n';
+					i++;
+				}
+			}
+		}
+			
+		dbg_msg("game", "MOTD: %s", server_motd);
 	}
 	else if(msg == MSG_SETINFO)
 	{

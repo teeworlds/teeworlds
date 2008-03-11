@@ -35,6 +35,7 @@ struct snapstate
 
 extern snapstate netobjects;
 
+extern char server_motd[900]; // FUGLY
 /*
 extern const NETOBJ_PLAYER_CHARACTER *local_character;
 extern const NETOBJ_PLAYER_CHARACTER *local_prev_character;

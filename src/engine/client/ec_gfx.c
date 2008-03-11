@@ -944,8 +944,8 @@ float gfx_text_raw(void *font_set_v, float x, float y, float size, const char *t
     FONT *font;
     int actual_size;
     int i;
-    float draw_x;
-
+    float draw_x, draw_y;
+    
     /* to correct coords, convert to screen coords, round, and convert back */
     int actual_x = x * fake_to_screen_x;
     int actual_y = y * fake_to_screen_y;
@@ -969,6 +969,7 @@ float gfx_text_raw(void *font_set_v, float x, float y, float size, const char *t
         const unsigned char *c = (unsigned char *)text;
         int to_render = length;
         draw_x = x;
+        draw_y = y;
 
         if (i == 0)
             gfx_texture_set(font->outline_texture);
@@ -988,12 +989,20 @@ float gfx_text_raw(void *font_set_v, float x, float y, float size, const char *t
             float x_offset, y_offset, x_advance;
 
             float advance;
+            
+            if(*c == '\n')
+            {
+            	draw_x = x;
+            	draw_y += size; /* is this correct? -kma */
+            	c++;
+            	continue;
+			}
 
             font_character_info(font, *c, &tex_x0, &tex_y0, &tex_x1, &tex_y1, &width, &height, &x_offset, &y_offset, &x_advance);
 
             gfx_quads_setsubset(tex_x0, tex_y0, tex_x1, tex_y1);
 
-            gfx_quads_drawTL(draw_x+x_offset*size, y+y_offset*size, width*size, height*size);
+            gfx_quads_drawTL(draw_x+x_offset*size, draw_y+y_offset*size, width*size, height*size);
 
             advance = x_advance + font_kerning(font, *c, *(c+1));
 
