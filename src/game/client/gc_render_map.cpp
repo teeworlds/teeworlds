@@ -237,6 +237,8 @@ void render_tilemap(TILE *tiles, int w, int h, float scale, vec4 color, int flag
 
 				gfx_quads_drawTL(x*scale, y*scale, scale, scale);
 			}
+			
+			x += tiles[c].skip;
 		}
 	
 	gfx_quads_end();

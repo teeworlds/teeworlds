@@ -77,7 +77,7 @@ typedef struct
 {
 	unsigned char index;
 	unsigned char flags;
-	unsigned char reserved1;
+	unsigned char skip;
 	unsigned char reserved2;
 } TILE;
 

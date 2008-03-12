@@ -52,6 +52,8 @@ void render_loading(float percent);
 void render_damage_indicators();
 void render_particles();
 
+void render_tilemap_generate_skip();
+
 // object render methods (gc_render_obj.cpp)
 void render_tee(class animstate *anim, tee_render_info *info, int emote, vec2 dir, vec2 pos);
 void render_flag(const struct NETOBJ_FLAG *prev, const struct NETOBJ_FLAG *current);

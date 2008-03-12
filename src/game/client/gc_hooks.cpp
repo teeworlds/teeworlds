@@ -636,6 +636,8 @@ extern "C" void modc_connected()
 	img_init();
 	flow_init();
 	
+	render_tilemap_generate_skip();
+	
 	//tilemap_init();
 	chat_reset();
 	particle_reset();

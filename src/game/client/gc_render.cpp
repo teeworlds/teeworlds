@@ -343,6 +343,39 @@ void render_layers(float center_x, float center_y, int pass)
 	}
 }
 
+void render_tilemap_generate_skip()
+{
+	for(int g = 0; g < layers_num_groups(); g++)
+	{
+		MAPITEM_GROUP *group = layers_get_group(g);
+		
+		for(int l = 0; l < group->num_layers; l++)
+		{
+			MAPITEM_LAYER *layer = layers_get_layer(group->start_layer+l);
+
+			if(layer->type == LAYERTYPE_TILES)
+			{
+				MAPITEM_LAYER_TILEMAP *tmap = (MAPITEM_LAYER_TILEMAP *)layer;
+				TILE *tiles = (TILE *)map_get_data(tmap->data);
+				for(int y = 0; y < tmap->height; y++)
+				{
+					for(int x = 0; x < tmap->width; x++)
+					{
+						int sx;
+						for(sx = 1; x+sx < tmap->width && sx < 255; sx++)
+						{
+							if(tiles[y*tmap->width+x+sx].index)
+								break;
+						}
+						
+						tiles[y*tmap->width+x].skip = sx-1;
+					}
+				}
+			}
+		}
+	}
+}
+
 static void render_items()
 {
 	int num = snap_num_items(SNAP_CURRENT);
