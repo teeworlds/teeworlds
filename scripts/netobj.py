@@ -239,7 +239,7 @@ def emit_source_file(f, p, protofilename):
 			print >>f, ""
 
 	if 1: # secure function table
-		print >>f, "typedef static int(*SECUREFUNC)(void *data, int size);"
+		print >>f, "typedef int(*SECUREFUNC)(void *data, int size);"
 		print >>f, "static SECUREFUNC secure_funcs[] = {"
 		print >>f, "\t" + 'secure_object_invalid,'
 		for obj in p.objects:
