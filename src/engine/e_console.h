@@ -24,9 +24,14 @@ void console_execute_file(const char *filename);
 void console_print(const char *str);
 void console_register_print_callback(void (*callback)(const char *));
 
-int console_result_string(void *result, int index, const char **str);
+/*int console_result_string(void *result, int index, const char **str);
 int console_result_int(void *result, int index, int *i);
-int console_result_float(void *result, int index, float *f);
+int console_result_float(void *result, int index, float *f);*/
+
+const char *console_arg_string(void *result, int index);
+int console_arg_int(void *result, int index);
+float console_arg_float(void *result, int index);
+int console_arg_num(void *result);
 
 #define MACRO_REGISTER_COMMAND(name, params, func, ptr) { static COMMAND cmd = { name, params, func, ptr, 0x0 }; console_register(&cmd); }
 

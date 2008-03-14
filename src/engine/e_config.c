@@ -87,7 +87,7 @@ void config_save()
 	char linebuf[512];
 	
 	#define MACRO_CONFIG_INT(name,def,min,max) { str_format(linebuf, sizeof(linebuf), "%s %i", #name, config.name); engine_config_write_line(linebuf); }
-	#define MACRO_CONFIG_STR(name,len,def) { str_format(linebuf, sizeof(linebuf), "%s \"%s\"", #name, config.name); engine_config_write_line(linebuf); }
+	#define MACRO_CONFIG_STR(name,len,def) { str_format(linebuf, sizeof(linebuf), "%s %s", #name, config.name); engine_config_write_line(linebuf); }
 
 	#include "e_config_variables.h" 
 

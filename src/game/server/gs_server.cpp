@@ -2235,26 +2235,16 @@ extern unsigned char internal_data[];
 
 static void con_tune_param(void *result, void *user_data)
 {
-	const char *param_name;
-	float new_value;
+	const char *param_name = console_arg_string(result, 0);
+	float new_value = console_arg_float(result, 1);
 
-	if(console_result_string(result, 1, &param_name) == 0)
+	if(tuning.set(param_name, new_value))
 	{
-		if(console_result_float(result, 2, &new_value) == 0)
-		{
-			if(tuning.set(param_name, new_value))
-			{
-				dbg_msg("tuning", "%s changed to %.2f", param_name, new_value);
-				send_tuning_params(-1);
-			}
-			else
-				console_print("No such tuning parameter");
-		}
-		else
-		{
-			//console_print("");
-		}
+		dbg_msg("tuning", "%s changed to %.2f", param_name, new_value);
+		send_tuning_params(-1);
 	}
+	else
+		console_print("No such tuning parameter");
 }
 
 static void con_tune_reset(void *result, void *user_data)
@@ -2278,20 +2268,15 @@ static void con_tune_dump(void *result, void *user_data)
 
 static void con_restart(void *result, void *user_data)
 {
-	int time = 0;
-	console_result_int(result, 1, &time);
-
-	if(time)
-		gameobj->do_warmup(time);
+	if(console_arg_num(result))
+		gameobj->do_warmup(console_arg_int(result, 0));
 	else
 		gameobj->startround();
 }
 
 static void con_broadcast(void *result, void *user_data)
 {
-	const char *message;
-	console_result_string(result, 1, &message);
-	send_chat(-1, -1, message);
+	send_chat(-1, -1, console_arg_string(result, 0));
 }
 
 void mods_console_init()
@@ -2301,7 +2286,7 @@ void mods_console_init()
 	MACRO_REGISTER_COMMAND("tune_dump", "", con_tune_dump, 0);
 
 	MACRO_REGISTER_COMMAND("restart", "?i", con_restart, 0);
-	MACRO_REGISTER_COMMAND("broadcast", "s", con_broadcast, 0);
+	MACRO_REGISTER_COMMAND("broadcast", "r", con_broadcast, 0);
 }
 
 void mods_init()

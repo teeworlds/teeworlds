@@ -1065,9 +1065,7 @@ static int server_run()
 
 static void con_kick(void *result, void *user_data)
 {
-	int cid;
-	console_result_int(result, 1, &cid);
-	server_kick(cid, "kicked by console");
+	server_kick(console_arg_int(result, 0), "kicked by console");
 }
 
 static void con_status(void *result, void *user_data)

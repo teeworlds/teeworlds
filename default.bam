@@ -204,7 +204,7 @@ function build(settings)
 	if family == "windows" then
 		settings.cc.flags = "/wd4244"
 	else
-		settings.cc.flags = "-Wall -fstack-protector -fstack-protector-all"
+		settings.cc.flags = "-Wall -fstack-protector -fstack-protector-all -fno-exceptions"
 		settings.linker.flags = ""
 	end
 

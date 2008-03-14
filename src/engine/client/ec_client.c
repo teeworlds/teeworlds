@@ -1412,9 +1412,7 @@ static void client_run()
 
 static void con_connect(void *result, void *user_data)
 {
-	const char *address;
-	console_result_string(result, 1, &address);
-	client_connect(address);
+	client_connect(console_arg_string(result, 0));
 }
 
 static void con_disconnect(void *result, void *user_data)
@@ -1454,13 +1452,18 @@ void client_save_line(const char *line)
 	engine_config_write_line(line);	
 }
 
-int editor_main(int argc, char **argv);
+/*int editor_main(int argc, char **argv);*/
+
+/*extern void test_parser();*/
 
 int main(int argc, char **argv)
 {
 	/* init the engine */
 	dbg_msg("client", "starting...");
 	engine_init("Teewars");
+
+/*	test_parser();
+	return 0;*/
 	
 	/* register all console commands */
 	client_register_commands();

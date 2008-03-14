@@ -202,23 +202,17 @@ void console_rcon_print(const char *line)
 
 static void con_team(void *result, void *user_data)
 {
-	int new_team;
-	console_result_int(result, 1, &new_team);
-	send_switch_team(new_team);
+	send_switch_team(console_arg_int(result, 0));
 }
 
 static void con_say(void *result, void *user_data)
 {
-	const char *str;
-	console_result_string(result, 1, &str);
-	chat_say(0, str);
+	chat_say(0, console_arg_string(result, 0));
 }
 
 static void con_sayteam(void *result, void *user_data)
 {
-	const char *str;
-	console_result_string(result, 1, &str);
-	chat_say(1, str);
+	chat_say(1, console_arg_string(result, 0));
 }
 
 void send_kill(int client_id);
@@ -267,10 +261,7 @@ static int get_key_id(const char *key_name)
 
 static void con_binds_set(void *result, void *user_data)
 {
-	const char *key_name;
-	const char *bind_str;
-	console_result_string(result, 1, &key_name);
-	console_result_string(result, 2, &bind_str);
+	const char *key_name = console_arg_string(result, 0);
 	int id = get_key_id(key_name);
 	
 	if(!id)
@@ -279,14 +270,13 @@ static void con_binds_set(void *result, void *user_data)
 		return;
 	}
 	
-	binds_set(id, bind_str);
+	binds_set(id, console_arg_string(result, 1));
 }
 
 
 static void con_binds_remove(void *result, void *user_data)
 {
-	const char *key_name;
-	console_result_string(result, 1, &key_name);
+	const char *key_name = console_arg_string(result, 0);
 	int id = get_key_id(key_name);
 	
 	if(!id)
@@ -315,24 +305,20 @@ void binds_save()
 	{
 		if(keybindings[i][0] == 0)
 			continue;
-		str_format(buffer, sizeof(buffer), "binds_set %s \"%s\"", inp_key_name(i), keybindings[i]);
+		str_format(buffer, sizeof(buffer), "binds_set %s %s", inp_key_name(i), keybindings[i]);
 		client_save_line(buffer);
 	}
 }
 
 static void con_key_input_state(void *result, void *user_data)
 {
-	int i;
-	console_result_int(result, 1, &i);
-	((int *)user_data)[0] = i;
+	((int *)user_data)[0] = console_arg_int(result, 0);
 }
 
 static void con_key_input_counter(void *result, void *user_data)
 {
-	int stroke;
 	int *v = (int *)user_data;
-	console_result_int(result, 1, &stroke);
-	if(((*v)&1) != stroke)
+	if(((*v)&1) != console_arg_int(result, 0))
 		(*v)++;
 	*v &= INPUT_STATE_MASK;
 }
@@ -340,16 +326,13 @@ static void con_key_input_counter(void *result, void *user_data)
 static void con_key_input_weapon(void *result, void *user_data)
 {
 	int w = (char *)user_data - (char *)0;
-	int stroke;
-	console_result_int(result, 1, &stroke);
-	if(stroke)
+	if(console_arg_int(result, 0))
 		input_data.wanted_weapon = w;
 }
 
 static void con_chat(void *result, void *user_data)
 {
-	const char *mode;
-	console_result_string(result, 1, &mode);
+	const char *mode = console_arg_string(result, 0);
 	if(strcmp(mode, "all") == 0)
 		chat_enable_mode(0);
 	else if(strcmp(mode, "team") == 0)
@@ -368,12 +351,9 @@ static void con_toggle_remote_console(void *result, void *user_data)
 	console_toggle(1);
 }
 
-
 static void con_emote(void *result, void *user_data)
 {
-	int emote;
-	console_result_int(result, 1, &emote);
-	send_emoticon(emote);
+	send_emoticon(console_arg_int(result, 0));
 }
 
 void client_console_init()
@@ -389,33 +369,33 @@ void client_console_init()
 	MACRO_REGISTER_COMMAND("kill", "", con_kill, 0x0);
 	
 	// bindings
-	MACRO_REGISTER_COMMAND("binds_set", "ss", con_binds_set, 0x0);
+	MACRO_REGISTER_COMMAND("binds_set", "sr", con_binds_set, 0x0);
 	MACRO_REGISTER_COMMAND("binds_remove", "s", con_binds_remove, 0x0);
 	MACRO_REGISTER_COMMAND("binds_dump", "", con_binds_dump, 0x0);
 
 	// chatting
-	MACRO_REGISTER_COMMAND("say", "s", con_say, 0x0);
-	MACRO_REGISTER_COMMAND("say_team", "s", con_sayteam, 0x0);
+	MACRO_REGISTER_COMMAND("say", "r", con_say, 0x0);
+	MACRO_REGISTER_COMMAND("say_team", "r", con_sayteam, 0x0);
 	MACRO_REGISTER_COMMAND("chat", "s", con_chat, 0x0);
 	MACRO_REGISTER_COMMAND("emote", "i", con_emote, 0);
 
 	// game commands
-	MACRO_REGISTER_COMMAND("+left", "i", con_key_input_state, &input_data.left);
-	MACRO_REGISTER_COMMAND("+right", "i", con_key_input_state, &input_data.right);
-	MACRO_REGISTER_COMMAND("+jump", "i", con_key_input_state, &input_data.jump);
-	MACRO_REGISTER_COMMAND("+hook", "i", con_key_input_state, &input_data.hook);
-	MACRO_REGISTER_COMMAND("+fire", "i", con_key_input_counter, &input_data.fire);
-	MACRO_REGISTER_COMMAND("+weapon1", "i", con_key_input_weapon, (void *)1);
-	MACRO_REGISTER_COMMAND("+weapon2", "i", con_key_input_weapon, (void *)2);
-	MACRO_REGISTER_COMMAND("+weapon3", "i", con_key_input_weapon, (void *)3);
-	MACRO_REGISTER_COMMAND("+weapon4", "i", con_key_input_weapon, (void *)4);
-	MACRO_REGISTER_COMMAND("+weapon5", "i", con_key_input_weapon, (void *)5);
+	MACRO_REGISTER_COMMAND("+left", "", con_key_input_state, &input_data.left);
+	MACRO_REGISTER_COMMAND("+right", "", con_key_input_state, &input_data.right);
+	MACRO_REGISTER_COMMAND("+jump", "", con_key_input_state, &input_data.jump);
+	MACRO_REGISTER_COMMAND("+hook", "", con_key_input_state, &input_data.hook);
+	MACRO_REGISTER_COMMAND("+fire", "", con_key_input_counter, &input_data.fire);
+	MACRO_REGISTER_COMMAND("+weapon1", "", con_key_input_weapon, (void *)1);
+	MACRO_REGISTER_COMMAND("+weapon2", "", con_key_input_weapon, (void *)2);
+	MACRO_REGISTER_COMMAND("+weapon3", "", con_key_input_weapon, (void *)3);
+	MACRO_REGISTER_COMMAND("+weapon4", "", con_key_input_weapon, (void *)4);
+	MACRO_REGISTER_COMMAND("+weapon5", "", con_key_input_weapon, (void *)5);
 
-	MACRO_REGISTER_COMMAND("+nextweapon", "i", con_key_input_counter, &input_data.next_weapon);
-	MACRO_REGISTER_COMMAND("+prevweapon", "i", con_key_input_counter, &input_data.prev_weapon);
+	MACRO_REGISTER_COMMAND("+nextweapon", "", con_key_input_counter, &input_data.next_weapon);
+	MACRO_REGISTER_COMMAND("+prevweapon", "", con_key_input_counter, &input_data.prev_weapon);
 	
-	MACRO_REGISTER_COMMAND("+emote", "i", con_key_input_state, &emoticon_selector_active);
-	MACRO_REGISTER_COMMAND("+scoreboard", "i", con_key_input_state, &scoreboard_active);
+	MACRO_REGISTER_COMMAND("+emote", "", con_key_input_state, &emoticon_selector_active);
+	MACRO_REGISTER_COMMAND("+scoreboard", "", con_key_input_state, &scoreboard_active);
 	
 	// set default key bindings
 	binds_set(KEY_F1, "toggle_local_console");
