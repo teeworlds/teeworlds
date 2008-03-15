@@ -1367,7 +1367,7 @@ static void menu2_render_settings_controls(RECT main_view)
 		{ "Chat:", "chat all", 0 },
 		{ "Team Chat:", "chat team", 0 },
 		{ "Console:", "toggle_local_console", 0 },
-		{ "RemoteConsole:", "toggle_remote_console", 0 },
+		{ "Remote Console:", "toggle_remote_console", 0 },
 		{ "Screenshot:", "screenshot", 0 },
 	};
 

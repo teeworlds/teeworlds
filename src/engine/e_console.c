@@ -298,7 +298,7 @@ void console_init()
 	MACRO_REGISTER_COMMAND("echo", "r", echo_command, 0x0);
 
 	#define MACRO_CONFIG_INT(name,def,min,max) { static INT_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?i", int_variable_command, &data) }
-	#define MACRO_CONFIG_STR(name,len,def) { static STR_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?s", str_variable_command, &data) }
+	#define MACRO_CONFIG_STR(name,len,def) { static STR_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?r", str_variable_command, &data) }
 
 	#include "e_config_variables.h" 
 
