@@ -25,15 +25,29 @@ void render_projectile(const NETOBJ_PROJECTILE *current, int itemid)
 	gfx_quads_begin();
 
 	// get positions
-	float gravity = -400;
-	if(current->type != WEAPON_GRENADE)
-		gravity = -100;
+	float curvature = 0;
+	float speed = 0;
+	if(current->type == WEAPON_GRENADE)
+	{
+		curvature = tuning.grenade_curvature;
+		speed = tuning.grenade_speed;
+	}
+	else if(current->type == WEAPON_SHOTGUN)
+	{
+		curvature = tuning.shotgun_curvature;
+		speed = tuning.shotgun_speed;
+	}
+	else if(current->type == WEAPON_GUN)
+	{
+		curvature = tuning.gun_curvature;
+		speed = tuning.gun_speed;
+	}
 
 	float ct = (client_tick()-current->start_tick)/(float)SERVER_TICK_SPEED + client_ticktime()*1/(float)SERVER_TICK_SPEED;
 	vec2 startpos(current->x, current->y);
-	vec2 startvel(current->vx, current->vy);
-	vec2 pos = calc_pos(startpos, startvel, gravity, ct);
-	vec2 prevpos = calc_pos(startpos, startvel, gravity, ct-0.001f);
+	vec2 startvel(current->vx/100.0f, current->vy/100.0f);
+	vec2 pos = calc_pos(startpos, startvel, curvature, speed, ct);
+	vec2 prevpos = calc_pos(startpos, startvel, curvature, speed, ct-0.001f);
 
 	select_sprite(data->weapons[clamp(current->type, 0, NUM_WEAPONS-1)].sprite_proj);
 	vec2 vel = pos-prevpos;
@@ -295,6 +309,7 @@ void render_player(
 
 	bool stationary = player.vx < 1 && player.vx > -1;
 	bool inair = col_check_point(player.x, player.y+16) == 0;
+	bool want_other_dir = (player.wanted_direction == -1 && vel.x > 0) || (player.wanted_direction == 1 && vel.x < 0);
 
 	// evaluate animation
 	float walk_time = fmod(position.x, 100.0f)/100.0f;
@@ -305,7 +320,7 @@ void render_player(
 		anim_eval_add(&state, &data->animations[ANIM_INAIR], 0, 1.0f); // TODO: some sort of time here
 	else if(stationary)
 		anim_eval_add(&state, &data->animations[ANIM_IDLE], 0, 1.0f); // TODO: some sort of time here
-	else
+	else if(!want_other_dir)
 		anim_eval_add(&state, &data->animations[ANIM_WALK], walk_time, 1.0f);
 
 	if (player.weapon == WEAPON_HAMMER)
@@ -317,6 +332,22 @@ void render_player(
 	{
 		float a = clamp((client_tick()-player.attacktick+ticktime)/40.0f, 0.0f, 1.0f);
 		anim_eval_add(&state, &data->animations[ANIM_NINJA_SWING], a, 1.0f);
+	}
+	
+	// do skidding
+	if(!inair && want_other_dir && length(vec2(prev.vx/256.0f, prev.vy/256.0f)*50) > 500.0f)
+	{
+		static int64 skid_sound_time = 0;
+		if(time_get()-skid_sound_time > time_freq()/10)
+		{
+			snd_play_random(CHN_WORLD, SOUND_PLAYER_SKID, 0.25f, position);
+			skid_sound_time = time_get();
+		}
+		
+		effect_skidtrail(
+			position+vec2(-player.wanted_direction*6,12),
+			vec2(-player.wanted_direction*100*length(vel),-50)
+		);
 	}
 
 	// draw hook

@@ -107,6 +107,7 @@ void particle_update(float time_passed)
 					particles[first_free].prev_part = i;
 				particles[i].prev_part = -1;
 				particles[i].next_part = first_free;
+				first_free = i;
 			}
 			
 			i = next;

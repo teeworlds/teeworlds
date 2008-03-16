@@ -2,7 +2,8 @@
 #include "gc_client.h"
 #include "../generated/gc_data.h"
 
-static bool add_trail = false;
+static bool add_50hz = false;
+static bool add_100hz = false;
 
 void effect_air_jump(vec2 pos)
 {
@@ -27,7 +28,7 @@ void effect_air_jump(vec2 pos)
 
 void effect_powerupshine(vec2 pos, vec2 size)
 {
-	if(!add_trail)
+	if(!add_50hz)
 		return;
 		
 	particle p;
@@ -48,7 +49,7 @@ void effect_powerupshine(vec2 pos, vec2 size)
 
 void effect_smoketrail(vec2 pos, vec2 vel)
 {
-	if(!add_trail)
+	if(!add_50hz)
 		return;
 		
 	particle p;
@@ -65,9 +66,28 @@ void effect_smoketrail(vec2 pos, vec2 vel)
 }
 
 
+void effect_skidtrail(vec2 pos, vec2 vel)
+{
+	if(!add_100hz)
+		return;
+	
+	particle p;
+	p.set_default();
+	p.spr = SPRITE_PART_SMOKE;
+	p.pos = pos;
+	p.vel = vel + random_dir()*50.0f;
+	p.life_span = 0.5f + frandom()*0.5f;
+	p.start_size = 24.0f + frandom()*12;
+	p.end_size = 0;
+	p.friction = 0.7f;
+	p.gravity = frandom()*-500.0f;
+	p.color = vec4(0.75f,0.75f,0.75f,1.0f);
+	particle_add(PARTGROUP_GENERAL, &p);	
+}
+
 void effect_bullettrail(vec2 pos)
 {
-	if(!add_trail)
+	if(!add_100hz)
 		return;
 		
 	particle p;
@@ -77,7 +97,7 @@ void effect_bullettrail(vec2 pos)
 	p.life_span = 0.25f + frandom()*0.25f;
 	p.start_size = 8.0f;
 	p.end_size = 0;
-	p.friction = 0.7;
+	p.friction = 0.7f;
 	particle_add(PARTGROUP_PROJECTILE_TRAIL, &p);
 }
 
@@ -170,14 +190,26 @@ void effect_explosion(vec2 pos)
 
 void effects_update()
 {
-	static float last_update = 0;
-	if(client_localtime()-last_update > 0.02f)
+	static float last_update_100hz = 0;
+	static float last_update_50hz = 0;
+
+	if(client_localtime()-last_update_100hz > 0.01f)
 	{
-		add_trail = true;
-		last_update = client_localtime();
-		flow_update();
+		add_100hz = true;
+		last_update_100hz = client_localtime();
 	}
 	else
-		add_trail = false;
+		add_100hz = false;
+
+	if(client_localtime()-last_update_50hz > 0.02f)
+	{
+		add_50hz = true;
+		last_update_50hz = client_localtime();
+	}
+	else
+		add_50hz = false;
+		
+	if(add_50hz)
+		flow_update();
 		
 }

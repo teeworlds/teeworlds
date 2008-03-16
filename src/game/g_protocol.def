@@ -151,14 +151,16 @@ end
 object player_character extends player_core
 	range(0, NUM_PLAYERSTATES-1) player_state
 	
+	range(-1, 1) wanted_direction
+	
 	range(0, 10) health
 	range(0, 10) armor
 	range(0, 10) ammocount
-	range(0, 10) weaponstage
 
 	range(0, NUM_WEAPONS-1) weapon
 	range(0, NUM_EMOTES-1) emote
 	
+	range(0, 10) weaponstage
 	range(0, max_int) attacktick
 end
 

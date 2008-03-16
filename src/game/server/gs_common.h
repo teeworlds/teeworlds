@@ -188,7 +188,7 @@ public:
 		PROJECTILE_FLAGS_EXPLODE = 1 << 0,
 	};
 	
-	vec2 vel;
+	vec2 direction;
 	entity *powner; // this is nasty, could be removed when client quits
 	int lifespan;
 	int owner;

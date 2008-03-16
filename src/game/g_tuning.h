@@ -12,15 +12,20 @@ MACRO_TUNING_PARAM(hook_fire_speed, 45.0f)
 MACRO_TUNING_PARAM(hook_drag_accel, 3.0f)
 MACRO_TUNING_PARAM(hook_drag_speed, 15.0f)
 MACRO_TUNING_PARAM(gravity, 0.5f)
-MACRO_TUNING_PARAM(terminal_velocity, 1000.0f / ticks_per_second)
+
+MACRO_TUNING_PARAM(velramp_start, 500)
+MACRO_TUNING_PARAM(velramp_range, 2000)
+MACRO_TUNING_PARAM(velramp_curvature, 1.5f)
 
 /* weapon tuning */
-MACRO_TUNING_PARAM(gun_speed, 30.0f)
+MACRO_TUNING_PARAM(gun_curvature, 1.5f)
+MACRO_TUNING_PARAM(gun_speed, 2200.0f)
 
-MACRO_TUNING_PARAM(shotgun_speed_center, 40.0f)
-MACRO_TUNING_PARAM(shotgun_speed_wide, 30.0f)
+MACRO_TUNING_PARAM(shotgun_curvature, 1.5f)
+MACRO_TUNING_PARAM(shotgun_speed, 2200.0f)
 
-MACRO_TUNING_PARAM(grenade_speed, 15.0f)
+MACRO_TUNING_PARAM(grenade_curvature, 7.0f)
+MACRO_TUNING_PARAM(grenade_speed, 900.0f)
 
 MACRO_TUNING_PARAM(laser_reach, 800.0f)
 MACRO_TUNING_PARAM(laser_bounce_delay, 150)

@@ -142,6 +142,7 @@ void effects_update();
 
 void effect_bullettrail(vec2 pos);
 void effect_smoketrail(vec2 pos, vec2 vel);
+void effect_skidtrail(vec2 pos, vec2 vel);
 void effect_explosion(vec2 pos);
 void effect_air_jump(vec2 pos);
 void effect_damage_indicator(vec2 pos, vec2 dir);

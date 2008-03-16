@@ -1373,11 +1373,15 @@ void render_game()
 	{
 		gfx_mapscreen(0, 0, 300*gfx_screenaspect(), 300);
 		
-		float speed = distance(vec2(netobjects.local_prev_character->x, netobjects.local_prev_character->y),
-			vec2(netobjects.local_character->x, netobjects.local_character->y));
+		/*float speed = distance(vec2(netobjects.local_prev_character->x, netobjects.local_prev_character->y),
+			vec2(netobjects.local_character->x, netobjects.local_character->y));*/
+
+		float velspeed = length(vec2(netobjects.local_character->vx/256.0f, netobjects.local_character->vy/256.0f))*50;
+		
+		float ramp = velocity_ramp(velspeed, tuning.velramp_start, tuning.velramp_range, tuning.velramp_curvature);
 		
 		char buf[512];
-		str_format(buf, sizeof(buf), "%.2f %d", speed/2, netobj_num_corrections());
+		str_format(buf, sizeof(buf), "%.0f\n%.0f\n%.2f\n%d", velspeed, velspeed*ramp, ramp, netobj_num_corrections());
 		gfx_text(0, 150, 50, 12, buf, -1);
 	}
 
@@ -1481,6 +1485,24 @@ void render_game()
 				
 				count++;
 			}
+			
+			y = y+count*6;
+			
+			gfx_texture_set(-1);
+			gfx_blend_normal();
+			gfx_lines_begin();
+			float height = 50.0f;
+			float pv = 1;
+			for(int i = 0; i < 100; i++)
+			{
+				float speed = i/100.0f * 3000;
+				float ramp = velocity_ramp(speed, tuning.velramp_start, tuning.velramp_range, tuning.velramp_curvature);
+				float rampedspeed = (speed * ramp)/1000.0f;
+				gfx_lines_draw((i-1)*2, y+height-pv*height, i*2, y+height-rampedspeed*height);
+				//gfx_lines_draw((i-1)*2, 200, i*2, 200);
+				pv = rampedspeed;
+			}
+			gfx_lines_end();
 		}
 		
 		gfx_text_color(1,1,1,1);

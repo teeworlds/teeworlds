@@ -154,6 +154,17 @@ void move_box(vec2 *inout_pos, vec2 *inout_vel, vec2 size, float elasticity)
 	*inout_vel = vel;
 }
 
+float hermite_basis1(float v)
+{
+	return 2*v*v*v - 3*v*v+1;
+}
+
+float velocity_ramp(float value, float start, float range, float curvature)
+{
+	if(value < start)
+		return 1.0f;
+	return 1.0f/pow(curvature, (value-start)/range);
+}
 
 void player_core::reset()
 {
@@ -405,13 +416,17 @@ void player_core::tick()
 	}	
 
 	// clamp the velocity to something sane
-	if(length(vel) > world->tuning.terminal_velocity)
-		vel = normalize(vel) * world->tuning.terminal_velocity;
+	if(length(vel) > 6000)
+		vel = normalize(vel) * 6000;
 }
 
 void player_core::move()
 {
+	float rampvalue = velocity_ramp(length(vel)*50, world->tuning.velramp_start, world->tuning.velramp_range, world->tuning.velramp_curvature);
+	
+	vel.x = vel.x*rampvalue;
 	move_box(&pos, &vel, vec2(28.0f, 28.0f), 0);
+	vel.x = vel.x*(1.0f/rampvalue);
 }
 
 void player_core::write(NETOBJ_PLAYER_CORE *obj_core)

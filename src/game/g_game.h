@@ -53,11 +53,12 @@ inline float get_angle(vec2 dir)
 }
 
 
-inline vec2 calc_pos(vec2 p, vec2 v, float gravity, float t)
+inline vec2 calc_pos(vec2 p, vec2 v, float curvature, float speed, float t)
 {
 	vec2 n;
+	t *= speed;
 	n.x = p.x + v.x*t;
-	n.y = p.y + v.y*t - gravity*(t*t);
+	n.y = p.y + v.y*t + curvature/10000*(t*t);
 	return n;
 }
 
@@ -88,7 +89,7 @@ inline T saturated_add(T min, T max, T current, T modifier)
 void move_point(vec2 *inout_pos, vec2 *inout_vel, float elasticity, int *bounces);
 void move_box(vec2 *inout_pos, vec2 *inout_vel, vec2 size, float elasticity);
 bool test_box(vec2 pos, vec2 size);
-
+float velocity_ramp(float value, float start, float range, float curvature);
 
 // hooking stuff
 enum

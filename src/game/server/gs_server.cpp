@@ -24,6 +24,7 @@ void create_playerspawn(vec2 p);
 void create_death(vec2 p);
 void create_sound(vec2 pos, int sound, int mask=-1);
 class player *intersect_player(vec2 pos0, vec2 pos1, vec2 &new_pos, class entity *notthis = 0);
+class player *closest_player(vec2 pos, float radius, entity *notthis);
 
 game_world *world;
 
@@ -380,13 +381,13 @@ static input_count count_input(int prev, int cur)
 //////////////////////////////////////////////////
 // projectile
 //////////////////////////////////////////////////
-projectile::projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity* powner,
+projectile::projectile(int type, int owner, vec2 pos, vec2 dir, int span, entity* powner,
 	int damage, int flags, float force, int sound_impact, int weapon)
 : entity(NETOBJTYPE_PROJECTILE)
 {
 	this->type = type;
 	this->pos = pos;
-	this->vel = vel * server_tickspeed(); // TODO: remove this
+	this->direction = normalize(dir);
 	this->lifespan = span;
 	this->owner = owner;
 	this->powner = powner;
@@ -407,14 +408,28 @@ void projectile::reset()
 
 void projectile::tick()
 {
-	float gravity = -400;
-	if(type != WEAPON_GRENADE)
-		gravity = -100;
+	float curvature = 0;
+	float speed = 0;
+	if(type == WEAPON_GRENADE)
+	{
+		curvature = tuning.grenade_curvature;
+		speed = tuning.grenade_speed;
+	}
+	else if(type == WEAPON_SHOTGUN)
+	{
+		curvature = tuning.shotgun_curvature;
+		speed = tuning.shotgun_speed;
+	}
+	else if(type == WEAPON_GUN)
+	{
+		curvature = tuning.gun_curvature;
+		speed = tuning.gun_speed;
+	}
 	
 	float pt = (server_tick()-start_tick-1)/(float)server_tickspeed();
 	float ct = (server_tick()-start_tick)/(float)server_tickspeed();
-	vec2 prevpos = calc_pos(pos, vel, gravity, pt);
-	vec2 curpos = calc_pos(pos, vel, gravity, ct);
+	vec2 prevpos = calc_pos(pos, direction, curvature, speed, pt);
+	vec2 curpos = calc_pos(pos, direction, curvature, speed, ct);
 
 	lifespan--;
 	
@@ -432,7 +447,7 @@ void projectile::tick()
 			create_explosion(prevpos, owner, weapon, false);
 		else if (targetplayer)
 		{
-			targetplayer->take_damage(normalize(vel) * max(0.001f, force), damage, owner, weapon);
+			targetplayer->take_damage(direction * max(0.001f, force), damage, owner, weapon);
 		}
 
 		world->destroy_entity(this);
@@ -443,19 +458,21 @@ void projectile::fill_info(NETOBJ_PROJECTILE *proj)
 {
 	proj->x = (int)pos.x;
 	proj->y = (int)pos.y;
-	proj->vx = (int)vel.x;
-	proj->vy = (int)vel.y;
+	proj->vx = (int)(direction.x*100.0f);
+	proj->vy = (int)(direction.y*100.0f);
 	proj->start_tick = start_tick;
 	proj->type = type;
 }
 
 void projectile::snap(int snapping_client)
 {
-	float ct = (server_tick()-start_tick)/(float)server_tickspeed();
-	vec2 curpos = calc_pos(pos, vel, -7.5f*server_tickspeed(), ct);
+	/*float ct = (server_tick()-start_tick)/(float)server_tickspeed();*/
+	/*vec2 curpos = calc_pos(pos, vel, -7.5f*server_tickspeed(), ct);*/
 
-	if(distance(players[snapping_client].pos, curpos) > 1000.0f)
-		return;
+	/*if(distance(players[snapping_client].pos, curpos) > 1000.0f)
+		return;*/
+		
+	/* TODO: FIX ME */
 
 	NETOBJ_PROJECTILE *proj = (NETOBJ_PROJECTILE *)snap_new_item(NETOBJTYPE_PROJECTILE, id, sizeof(NETOBJ_PROJECTILE));
 	fill_info(proj);
@@ -989,7 +1006,7 @@ void player::fire_weapon()
 			projectile *proj = new projectile(WEAPON_GUN,
 				client_id,
 				pos+vec2(0,0),
-				direction*tuning.gun_speed,
+				direction,
 				server_tickspeed(),
 				this,
 				1, 0, 0, -1, WEAPON_GUN);
@@ -1013,7 +1030,7 @@ void player::fire_weapon()
 			projectile *proj = new projectile(WEAPON_GRENADE,
 				client_id,
 				pos+vec2(0,0),
-				direction*tuning.grenade_speed,
+				direction,
 				100,
 				this,
 				1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
@@ -1043,13 +1060,12 @@ void player::fire_weapon()
 			{
 				float spreading[] = {-0.185f, -0.070f, 0, 0.070f, 0.185f};
 				float a = get_angle(direction);
-				float v = 1.0f-fabs(i/(float)shotspread);
 				a += spreading[i+2];
-				float speed = mix((float)tuning.shotgun_speed_wide, (float)tuning.shotgun_speed_center, v);
+				/*float speed = mix((float)tuning.shotgun_speed_wide, (float)tuning.shotgun_speed_center, v);*/
 				projectile *proj = new projectile(WEAPON_SHOTGUN,
 					client_id,
 					pos+vec2(0,0),
-					vec2(cosf(a), sinf(a))*speed,
+					vec2(cosf(a), sinf(a)),
 					(int)(server_tickspeed()*0.25f),
 					this,
 					1, 0, 0, -1, WEAPON_SHOTGUN);
@@ -1622,8 +1638,16 @@ void player::snap(int snaping_client)
 		character->ammocount = weapons[active_weapon].ammo;
 		character->health = 0;
 		character->armor = 0;
+		
 		character->weapon = active_weapon;
 		character->attacktick = attack_tick;
+
+		character->wanted_direction = 0;
+		if(input.left && !input.right)
+			character->wanted_direction = -1;
+		else if(!input.left && input.right)
+			character->wanted_direction = 1;
+
 
 		if(client_id == snaping_client)
 		{
@@ -1696,8 +1720,7 @@ void powerup::tick()
 			return;
 	}
 	// Check if a player intersected us
-	vec2 meh;
-	player* pplayer = intersect_player(pos, pos + vec2(0,16), meh, 0);
+	player* pplayer = closest_player(pos, 20.0f, 0);
 	if (pplayer)
 	{
 		// player picked us up, is someone was hooking us, let them go
@@ -1957,27 +1980,36 @@ player *intersect_player(vec2 pos0, vec2 pos1, vec2& new_pos, entity *notthis)
 	}
 	
 	return closest;
-	
-	/*
-	entity *ents[64];
-	vec2 dir = pos1 - pos0;
-	float radius = length(dir * 0.5f);
-	vec2 center = pos0 + dir * 0.5f;
-	const int types[] = {OBJTYPE_PLAYER_CHARACTER};
-	int num = world->find_entities(center, radius, ents, 64, types, 1);
-	for (int i = 0; i < num; i++)
-	{
-		// Check if entity is a player
-		if (ents[i] != notthis)
-		{
-			new_pos = ents[i]->pos;
-			return (player*)ents[i];
-		}
-	}
-
-	return 0;*/
 }
 
+
+player *closest_player(vec2 pos, float radius, entity *notthis)
+{
+	// Find other players
+	float closest_range = radius*2;
+	player *closest = 0;
+		
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(players[i].client_id < 0 || (entity *)&players[i] == notthis)
+			continue;
+			
+		if(!(players[i].flags&entity::FLAG_PHYSICS))
+			continue;
+
+		float len = distance(pos, players[i].pos);
+		if(len < player::phys_size+radius)
+		{
+			if(len < closest_range)
+			{
+				closest_range = len;
+				closest = &players[i];
+			}
+		}
+	}
+	
+	return closest;
+}
 
 
 // TODO: should be more general
@@ -2281,7 +2313,7 @@ static void con_broadcast(void *result, void *user_data)
 
 void mods_console_init()
 {
-	MACRO_REGISTER_COMMAND("tune", "s?i", con_tune_param, 0);
+	MACRO_REGISTER_COMMAND("tune", "si", con_tune_param, 0);
 	MACRO_REGISTER_COMMAND("tune_reset", "", con_tune_reset, 0);
 	MACRO_REGISTER_COMMAND("tune_dump", "", con_tune_dump, 0);
 

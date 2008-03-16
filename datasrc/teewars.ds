@@ -118,6 +118,13 @@ sounds {
 		"data/audio/vo_teefault_spawn-06.wv"
 		"data/audio/vo_teefault_spawn-07.wv"
 	}
+	
+	player_skid {
+		"data/audio/sfx_skid-01.wv"
+		"data/audio/sfx_skid-02.wv"
+		"data/audio/sfx_skid-03.wv"
+		"data/audio/sfx_skid-04.wv"
+	}
 
 	tee_cry {
 		"data/audio/vo_teefault_cry-01.wv"
