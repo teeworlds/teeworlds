@@ -253,6 +253,8 @@ function build(settings)
 	-- build portaudio
 	pa_settings = settings:copy()
 	pa_settings.cc.defines:add("PA_USE_" .. string.upper(pa_hostapi))
+	pa_settings.cc.defines:add("PA_NO_WMME")
+	pa_settings.cc.defines:add("PA_NO_ASIO")
 	pa_settings.cc.includes:add("src/engine/external/portaudio/include")
 	pa_settings.cc.includes:add("src/engine/external/portaudio/src/common")
 	pa_settings.cc.includes:add("src/engine/external/portaudio/src/os/" .. pa_platform)
