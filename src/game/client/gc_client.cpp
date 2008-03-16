@@ -718,13 +718,16 @@ void chat_say(int team, const char *line)
 
 void chat_enable_mode(int team)
 {
-	if(team)
-		chat_mode = CHATMODE_TEAM;
-	else
-		chat_mode = CHATMODE_ALL;
-		
-	mem_zero(chat_input, sizeof(chat_input));
-	chat_input_len = 0;
+	if(chat_mode == CHATMODE_NONE)
+	{
+		if(team)
+			chat_mode = CHATMODE_TEAM;
+		else
+			chat_mode = CHATMODE_ALL;
+			
+		mem_zero(chat_input, sizeof(chat_input));
+		chat_input_len = 0;
+	}
 }
 
 void render_game()
@@ -801,7 +804,7 @@ void render_game()
 			for(int i = 0; i < inp_num_events(); i++)
 			{
 				INPUT_EVENT e = inp_get_event(i);
-
+	
 				if (!(e.ch >= 0 && e.ch < 32))
 				{
 					if (chat_input_len < sizeof(chat_input) - 1)
@@ -812,7 +815,7 @@ void render_game()
 					}
 				}
 
-				if(e.key == KEY_BACKSPACE)
+				if(e.key == KEY_BACKSPACE && (e.flags&INPFLAG_PRESS))
 				{
 					if(chat_input_len > 0)
 					{

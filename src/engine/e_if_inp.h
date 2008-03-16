@@ -20,7 +20,7 @@ enum
 typedef struct
 {
 	int flags;
-	char ch;
+	unsigned char ch;
 	int key;
 } INPUT_EVENT;
 
