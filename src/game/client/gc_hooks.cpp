@@ -470,7 +470,6 @@ extern "C" void modc_message(int msg)
 		if(msg_unpack_error() || cid < -1 || cid >= MAX_CLIENTS)
 			return;
 			
-		dbg_msg("message", "chat cid=%d team=%d msg='%s'", cid, team, message);
 		chat_add_line(cid, team, message);
 
 		if(cid >= 0)

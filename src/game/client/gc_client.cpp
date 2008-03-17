@@ -250,6 +250,11 @@ void chat_add_line(int client_id, int team, const char *line)
 		str_copy(chat_lines[chat_current_line].name, client_datas[client_id].name, sizeof(chat_lines[chat_current_line].name));
 		str_format(chat_lines[chat_current_line].text, sizeof(chat_lines[chat_current_line].text), ": %s", line);
 	}
+	
+	if(config.debug)
+		dbg_msg("message", "chat cid=%d team=%d line='%s'", client_id, team, line);
+	dbg_msg("chat", "%s%s", chat_lines[chat_current_line].name, chat_lines[chat_current_line].text);
+	
 }
 
 
