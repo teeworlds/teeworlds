@@ -190,6 +190,7 @@ end
 
 event death
 	any x, y
+	clientid cid
 end
 
 event air_jump

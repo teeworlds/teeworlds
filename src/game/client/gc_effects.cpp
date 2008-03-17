@@ -1,5 +1,6 @@
 #include <engine/e_client_interface.h>
 #include "gc_client.h"
+#include "gc_skin.h"
 #include "../generated/gc_data.h"
 
 static bool add_50hz = false;
@@ -123,8 +124,20 @@ void effect_playerspawn(vec2 pos)
 	}
 }
 
-void effect_playerdeath(vec2 pos)
+void effect_playerdeath(vec2 pos, int cid)
 {
+	vec3 blood_color(1.0f,1.0f,1.0f);
+
+	if(cid >= 0)	
+	{
+		const skin *s = skin_get(client_datas[cid].skin_id);
+		if(s)
+		{
+			dbg_msg("", "good blood color!");
+			blood_color = s->blood_color;
+		}
+	}
+	
 	for(int i = 0; i < 64; i++)
 	{
 		particle p;
@@ -139,9 +152,9 @@ void effect_playerdeath(vec2 pos)
 		p.rotspeed = (frandom()-0.5f) * pi;
 		p.gravity = 800.0f;
 		p.friction = 0.8f;
-		p.color = mix(vec4(0.75f,0.2f,0.2f,0.75f), vec4(0.5f,0.1f,0.1f,0.75f), frandom());
+		vec3 c = blood_color * (0.75f + frandom()*0.25f);
+		p.color = vec4(c.r, c.g, c.b, 0.75f);
 		particle_add(PARTGROUP_GENERAL, &p);
-		
 	}
 }
 

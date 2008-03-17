@@ -8,6 +8,7 @@ typedef struct
 	int color_texture;
 	char name[31];
 	char term[1];
+	vec3 blood_color;
 } skin;
 
 vec4 skin_get_color(int v);

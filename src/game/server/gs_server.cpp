@@ -21,7 +21,7 @@ void create_damageind(vec2 p, float angle_mod, int amount);
 void create_explosion(vec2 p, int owner, int weapon, bool bnodamage);
 void create_smoke(vec2 p);
 void create_playerspawn(vec2 p);
-void create_death(vec2 p);
+void create_death(vec2 p, int who);
 void create_sound(vec2 pos, int sound, int mask=-1);
 class player *intersect_player(vec2 pos0, vec2 pos1, vec2 &new_pos, class entity *notthis = 0);
 class player *closest_player(vec2 pos, float radius, entity *notthis);
@@ -1523,7 +1523,7 @@ void player::die(int killer, int weapon)
 	dead = true;
 	die_tick = server_tick();
 	clear_flag(FLAG_PHYSICS);
-	create_death(pos);
+	create_death(pos, client_id);
 }
 
 bool player::take_damage(vec2 force, int dmg, int from, int weapon)
@@ -1907,7 +1907,7 @@ void create_playerspawn(vec2 p)
 	}
 }
 
-void create_death(vec2 p)
+void create_death(vec2 p, int cid)
 {
 	// create the event
 	NETEVENT_DEATH *ev = (NETEVENT_DEATH *)events.create(NETEVENTTYPE_DEATH, sizeof(NETEVENT_DEATH));
@@ -1915,6 +1915,7 @@ void create_death(vec2 p)
 	{
 		ev->x = (int)p.x;
 		ev->y = (int)p.y;
+		ev->cid = cid;
 	}
 }
 

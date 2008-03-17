@@ -1321,6 +1321,15 @@ static void menu2_render_settings_player(RECT main_view)
 		ui_hsplit_t(&icon, 5.0f, 0, &icon); // some margin from the top
 		render_tee(&state, &info, 0, vec2(1, 0), vec2(icon.x+icon.w/2, icon.y+icon.h/2));
 		
+		if(config.debug)
+		{
+			gfx_texture_set(-1);
+			gfx_quads_begin();
+			gfx_setcolor(s->blood_color.r, s->blood_color.g, s->blood_color.b, 1.0f);
+			gfx_quads_drawTL(icon.x, icon.y, 12, 12);
+			gfx_quads_end();
+		}
+		
 		ui_hsplit_t(&list, 50, &button, &list);
 	}
 }

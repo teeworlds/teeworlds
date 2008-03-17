@@ -296,7 +296,7 @@ void process_events(int snaptype)
 		else if(item.type == NETEVENTTYPE_DEATH)
 		{
 			NETEVENT_DEATH *ev = (NETEVENT_DEATH *)data;
-			effect_playerdeath(vec2(ev->x, ev->y));
+			effect_playerdeath(vec2(ev->x, ev->y), ev->cid);
 		}
 		else if(item.type == NETEVENTTYPE_SOUND_WORLD)
 		{

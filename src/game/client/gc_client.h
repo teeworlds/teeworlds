@@ -147,7 +147,7 @@ void effect_explosion(vec2 pos);
 void effect_air_jump(vec2 pos);
 void effect_damage_indicator(vec2 pos, vec2 dir);
 void effect_playerspawn(vec2 pos);
-void effect_playerdeath(vec2 pos);
+void effect_playerdeath(vec2 pos, int cid);
 void effect_powerupshine(vec2 pos, vec2 size);
 
 // particles

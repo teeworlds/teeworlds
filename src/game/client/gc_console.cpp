@@ -72,7 +72,7 @@ public:
 	
 	void handle_event(INPUT_EVENT e)
 	{
-		if (!(e.ch >= 0 && e.ch < 32))
+		if (e.ch >= 32)
 		{
 			if (input_len < sizeof(input) - 1)
 			{
