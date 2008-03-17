@@ -978,7 +978,7 @@ int player::handle_ninja()
 
 void player::fire_weapon()
 {
-	if(reload_timer != 0)
+	if(reload_timer != 0 || active_weapon == WEAPON_NINJA)
 		return;
 	
 	vec2 direction = normalize(vec2(latest_input.target_x, latest_input.target_y));
@@ -990,14 +990,13 @@ void player::fire_weapon()
 	//if(count_input(latest_previnput.fire, latest_input.fire).presses) || ((fullauto && latest_input.fire&1) && weapons[active_weapon].ammo))
 	if(!count_input(latest_previnput.fire, latest_input.fire).presses)
 		return;
-	
+		
 	// check for ammo
 	if(!weapons[active_weapon].ammo)
 	{
 		create_sound(pos, SOUND_WEAPON_NOAMMO);
 		return;
 	}
-
 	
 	switch(active_weapon)
 	{
@@ -1351,7 +1350,8 @@ void player::on_direct_input(NETOBJ_PLAYER_INPUT *new_input)
 {
 	mem_copy(&latest_previnput, &latest_input, sizeof(latest_input));
 	mem_copy(&latest_input, new_input, sizeof(latest_input));
-	fire_weapon();
+	if(team != -1 && !dead)
+		fire_weapon();
 }
 
 void player::tick()
