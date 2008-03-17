@@ -1322,7 +1322,7 @@ void render_game()
 					}
 				}
 				else
-					gfx_text(0, whole-20-w/2, 300-40-15+t*20+2, 14, buf, -1);
+					gfx_text(0, whole-20-w/2, 300-40-15+t*20, 14, buf, -1);
 			}
 		}
 
