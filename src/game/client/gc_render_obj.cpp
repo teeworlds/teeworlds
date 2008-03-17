@@ -161,37 +161,37 @@ void render_laser(const struct NETOBJ_LASER *current)
 	float ia = 1-a;
 	
 	
-	vec2 out(dir.y, -dir.x);
+	vec2 out, border;
 	
-	out = out * (6.0f*ia);
-
 	gfx_blend_normal();
 	gfx_texture_set(-1);
 	gfx_quads_begin();
 	
-	
-	vec4 inner_color(0.25f,0.25f,0.5f,1.0f);
-	vec4 outer_color(0.85f,0.85f,1.0f,1.0f);
-	
-	gfx_setcolorvertex(0, inner_color.r, inner_color.g, inner_color.b, 0.2f); // center
-	gfx_setcolorvertex(1, outer_color.r, outer_color.g, outer_color.b, 1.0f);
-	gfx_setcolorvertex(2, inner_color.r, inner_color.g, inner_color.b, 0.2f); // center
-	gfx_setcolorvertex(3, outer_color.r, outer_color.g, outer_color.b, 1.0f);
-	
-	//from = mix(from, pos, a);
-	
+	//vec4 inner_color(0.15f,0.35f,0.75f,1.0f);
+	//vec4 outer_color(0.65f,0.85f,1.0f,1.0f);
+
+	// do outline
+	vec4 outer_color(0.075f,0.075f,0.25f,1.0f);
+	gfx_setcolor(outer_color.r,outer_color.g,outer_color.b,1.0f);
+	out = vec2(dir.y, -dir.x) * (7.0f*ia);
+
 	gfx_quads_draw_freeform(
-			from.x, from.y,
+			from.x-out.x, from.y-out.y,
 			from.x+out.x, from.y+out.y,
-			pos.x, pos.y,
+			pos.x-out.x, pos.y-out.y,
 			pos.x+out.x, pos.y+out.y
 		);
 
+	// do inner	
+	vec4 inner_color(0.5f,0.5f,1.0f,1.0f);
+	out = vec2(dir.y, -dir.x) * (5.0f*ia);
+	gfx_setcolor(inner_color.r, inner_color.g, inner_color.b, 1.0f); // center
+	
 	gfx_quads_draw_freeform(
-			from.x, from.y,
 			from.x-out.x, from.y-out.y,
-			pos.x, pos.y,
-			pos.x-out.x, pos.y-out.y
+			from.x+out.x, from.y+out.y,
+			pos.x-out.x, pos.y-out.y,
+			pos.x+out.x, pos.y+out.y
 		);
 		
 	gfx_quads_end();
@@ -202,14 +202,13 @@ void render_laser(const struct NETOBJ_LASER *current)
 		gfx_texture_set(data->images[IMAGE_PARTICLES].id);
 		gfx_quads_begin();
 
-		gfx_setcolor(outer_color.r, outer_color.g, outer_color.b, outer_color.a);
-	
 		int sprites[] = {SPRITE_PART_SPLAT01, SPRITE_PART_SPLAT02, SPRITE_PART_SPLAT03};
 		select_sprite(sprites[client_tick()%3]);
 		gfx_quads_setrotation(client_tick());
+		gfx_setcolor(outer_color.r,outer_color.g,outer_color.b,1.0f);
 		gfx_quads_draw(pos.x, pos.y, 24,24);
-		//gfx_setcolor(inner_color.r, inner_color.g, inner_color.b, 1.0f);
-		//gfx_quads_draw(pos.x, pos.y, 24,24);
+		gfx_setcolor(inner_color.r, inner_color.g, inner_color.b, 1.0f);
+		gfx_quads_draw(pos.x, pos.y, 20,20);
 		gfx_quads_end();
 	}
 	

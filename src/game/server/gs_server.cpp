@@ -545,6 +545,8 @@ void laser::do_bounce()
 			
 			if(bounces > tuning.laser_bounce_num)
 				energy = -1;
+				
+			create_sound(pos, SOUND_RIFLE_BOUNCE);
 		}
 	}
 	else
@@ -569,7 +571,6 @@ void laser::tick()
 {
 	if(server_tick() > eval_tick+(server_tickspeed()*tuning.laser_bounce_delay)/1000.0f)
 	{
-		create_sound(pos, SOUND_RIFLE_BOUNCE);
 		do_bounce();
 	}
 
