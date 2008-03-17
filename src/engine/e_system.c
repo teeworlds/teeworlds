@@ -876,8 +876,9 @@ void str_format(char *buffer, int buffer_size, const char *format, ...)
 
 
 /* makes sure that the string only contains the characters between 32 and 127 */
-void str_sanitize_strong(char *str)
+void str_sanitize_strong(char *str_in)
 {
+	unsigned char *str = (unsigned char *)str_in;
 	while(*str)
 	{
 		*str &= 0x7f;
@@ -888,8 +889,9 @@ void str_sanitize_strong(char *str)
 }
 
 /* makes sure that the string only contains the characters between 32 and 255 + \r\n\t */
-void str_sanitize(char *str)
+void str_sanitize(char *str_in)
 {
+	unsigned char *str = (unsigned char *)str_in;
 	while(*str)
 	{
 		if(*str < 32 && !(*str == '\r') && !(*str == '\n') && !(*str == '\t'))
