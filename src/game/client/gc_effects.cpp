@@ -203,21 +203,21 @@ void effect_explosion(vec2 pos)
 
 void effects_update()
 {
-	static float last_update_100hz = 0;
-	static float last_update_50hz = 0;
+	static int64 last_update_100hz = 0;
+	static int64 last_update_50hz = 0;
 
-	if(client_localtime()-last_update_100hz > 0.01f)
+	if(time_get()-last_update_100hz > time_freq()/100)
 	{
 		add_100hz = true;
-		last_update_100hz = client_localtime();
+		last_update_100hz = time_get();
 	}
 	else
 		add_100hz = false;
 
-	if(client_localtime()-last_update_50hz > 0.02f)
+	if(time_get()-last_update_50hz > time_freq()/100)
 	{
 		add_50hz = true;
-		last_update_50hz = client_localtime();
+		last_update_50hz = time_get();
 	}
 	else
 		add_50hz = false;
