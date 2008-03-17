@@ -805,7 +805,7 @@ void render_game()
 			{
 				INPUT_EVENT e = inp_get_event(i);
 	
-				if(e.ch > 32)
+				if(e.ch >= 32)
 				{
 					if (chat_input_len < sizeof(chat_input) - 1)
 					{
