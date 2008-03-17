@@ -154,8 +154,6 @@ void render_laser(const struct NETOBJ_LASER *current)
 	vec2 from = vec2(current->from_x, current->from_y);
 	vec2 dir = normalize(pos-from);
 
-
-
 	float ticks = client_tick() + client_intratick() - current->eval_tick;
 	float ms = (ticks/50.0f) * 1000.0f;
 	float a =  ms / tuning.laser_bounce_delay;
@@ -171,22 +169,29 @@ void render_laser(const struct NETOBJ_LASER *current)
 	gfx_texture_set(-1);
 	gfx_quads_begin();
 	
-	vec4 start_color(0.25f,0.25f,0.5f,1.0f);
-	vec4 end_color(0.85f,0.85f,1.0f,1.0f);
-	start_color = end_color;
 	
-	gfx_setcolorvertex(0, start_color.r, start_color.g, start_color.b, start_color.a);
-	gfx_setcolorvertex(1, start_color.r, start_color.g, start_color.b, start_color.a);
-	gfx_setcolorvertex(2, end_color.r, end_color.g, end_color.b, end_color.a);
-	gfx_setcolorvertex(3, end_color.r, end_color.g, end_color.b, end_color.a);
+	vec4 inner_color(0.25f,0.25f,0.5f,1.0f);
+	vec4 outer_color(0.85f,0.85f,1.0f,1.0f);
 	
-	from = mix(from, pos, a);
+	gfx_setcolorvertex(0, inner_color.r, inner_color.g, inner_color.b, 0.2f); // center
+	gfx_setcolorvertex(1, outer_color.r, outer_color.g, outer_color.b, 1.0f);
+	gfx_setcolorvertex(2, inner_color.r, inner_color.g, inner_color.b, 0.2f); // center
+	gfx_setcolorvertex(3, outer_color.r, outer_color.g, outer_color.b, 1.0f);
+	
+	//from = mix(from, pos, a);
 	
 	gfx_quads_draw_freeform(
-			from.x-out.x, from.y-out.y,
+			from.x, from.y,
 			from.x+out.x, from.y+out.y,
-			pos.x-out.x, pos.y-out.y,
+			pos.x, pos.y,
 			pos.x+out.x, pos.y+out.y
+		);
+
+	gfx_quads_draw_freeform(
+			from.x, from.y,
+			from.x-out.x, from.y-out.y,
+			pos.x, pos.y,
+			pos.x-out.x, pos.y-out.y
 		);
 		
 	gfx_quads_end();
@@ -197,12 +202,14 @@ void render_laser(const struct NETOBJ_LASER *current)
 		gfx_texture_set(data->images[IMAGE_PARTICLES].id);
 		gfx_quads_begin();
 
-		gfx_setcolor(end_color.r, end_color.g, end_color.b, end_color.a);
+		gfx_setcolor(outer_color.r, outer_color.g, outer_color.b, outer_color.a);
 	
 		int sprites[] = {SPRITE_PART_SPLAT01, SPRITE_PART_SPLAT02, SPRITE_PART_SPLAT03};
 		select_sprite(sprites[client_tick()%3]);
 		gfx_quads_setrotation(client_tick());
-		gfx_quads_draw(pos.x, pos.y, 32,32);
+		gfx_quads_draw(pos.x, pos.y, 24,24);
+		//gfx_setcolor(inner_color.r, inner_color.g, inner_color.b, 1.0f);
+		//gfx_quads_draw(pos.x, pos.y, 24,24);
 		gfx_quads_end();
 	}
 	

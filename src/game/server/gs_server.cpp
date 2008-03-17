@@ -406,7 +406,7 @@ void projectile::reset()
 	world->destroy_entity(this);
 }
 
-void projectile::tick()
+vec2 projectile::get_pos(float time)
 {
 	float curvature = 0;
 	float speed = 0;
@@ -426,10 +426,17 @@ void projectile::tick()
 		speed = tuning.gun_speed;
 	}
 	
+	return calc_pos(pos, direction, curvature, speed, time);
+}
+
+
+void projectile::tick()
+{
+	
 	float pt = (server_tick()-start_tick-1)/(float)server_tickspeed();
 	float ct = (server_tick()-start_tick)/(float)server_tickspeed();
-	vec2 prevpos = calc_pos(pos, direction, curvature, speed, pt);
-	vec2 curpos = calc_pos(pos, direction, curvature, speed, ct);
+	vec2 prevpos = get_pos(pt);
+	vec2 curpos = get_pos(ct);
 
 	lifespan--;
 	
@@ -466,13 +473,10 @@ void projectile::fill_info(NETOBJ_PROJECTILE *proj)
 
 void projectile::snap(int snapping_client)
 {
-	/*float ct = (server_tick()-start_tick)/(float)server_tickspeed();*/
-	/*vec2 curpos = calc_pos(pos, vel, -7.5f*server_tickspeed(), ct);*/
-
-	/*if(distance(players[snapping_client].pos, curpos) > 1000.0f)
-		return;*/
-		
-	/* TODO: FIX ME */
+	float ct = (server_tick()-start_tick)/(float)server_tickspeed();
+	
+	if(distance(players[snapping_client].pos, get_pos(ct)) > 1000.0f)
+		return;
 
 	NETOBJ_PROJECTILE *proj = (NETOBJ_PROJECTILE *)snap_new_item(NETOBJTYPE_PROJECTILE, id, sizeof(NETOBJ_PROJECTILE));
 	fill_info(proj);
@@ -564,7 +568,10 @@ void laser::reset()
 void laser::tick()
 {
 	if(server_tick() > eval_tick+(server_tickspeed()*tuning.laser_bounce_delay)/1000.0f)
+	{
+		create_sound(pos, SOUND_RIFLE_BOUNCE);
 		do_bounce();
+	}
 
 }
 

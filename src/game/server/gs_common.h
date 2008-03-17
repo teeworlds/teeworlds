@@ -204,6 +204,7 @@ public:
 	projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity* powner,
 		int damage, int flags, float force, int sound_impact, int weapon);
 
+	vec2 get_pos(float time);
 	void fill_info(NETOBJ_PROJECTILE *proj);
 
 	virtual void reset();

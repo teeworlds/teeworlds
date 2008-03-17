@@ -11,12 +11,6 @@ sounds {
 		"data/audio/wp_shotty_fire-03.wv"
 	}
 	
-	rifle_fire {
-		"data/audio/wp_shotty_fire-01.wv"
-		"data/audio/wp_shotty_fire-02.wv"
-		"data/audio/wp_shotty_fire-03.wv"
-	}
-	
 	grenade_fire {
 		"data/audio/wp_flump_launch-01.wv"
 		"data/audio/wp_flump_launch-02.wv"
@@ -51,6 +45,18 @@ sounds {
 		"data/audio/wp_ninja_hit-01.wv"
 		"data/audio/wp_ninja_hit-02.wv"
 		"data/audio/wp_ninja_hit-03.wv"
+	}
+	
+	rifle_fire {
+		"data/audio/wp_rifle_fire-01.wv"
+		"data/audio/wp_rifle_fire-02.wv"
+		"data/audio/wp_rifle_fire-03.wv"
+	}
+
+	rifle_bounce {
+		"data/audio/wp_rifle_bnce-01.wv"
+		"data/audio/wp_rifle_bnce-02.wv"
+		"data/audio/wp_rifle_bnce-03.wv"
 	}
 
 	weapon_switch { 
