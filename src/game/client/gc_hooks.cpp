@@ -283,10 +283,10 @@ extern "C" void modc_newsnapshot()
 	{
 		if((client_tick()%250) == 0)
 		{
-			msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
-			msg_pack_int(-1);
-			msg_pack_string("galenskap!!!!", 512);
-			msg_pack_end();
+			NETMSG_CL_SAY msg;
+			msg.team = -1;
+			msg.message = "galenskap!!!!";
+			msg.pack(MSGFLAG_VITAL);
 			client_send_msg();
 		}
 	}
@@ -458,26 +458,10 @@ void extraproj_reset()
 
 char server_motd[900] = {0};
 
-extern "C" void modc_message(int msg)
+extern "C" void modc_message(int msgtype)
 {
-	if(msg == MSG_CHAT)
-	{
-		int cid = msg_unpack_int();
-		int team = msg_unpack_int();
-		const char *message = msg_unpack_string();
-
-		/* check for errors and invalid inputs */
-		if(msg_unpack_error() || cid < -1 || cid >= MAX_CLIENTS)
-			return;
-			
-		chat_add_line(cid, team, message);
-
-		if(cid >= 0)
-			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_CLIENT].sounds[0].id, 0);
-		else
-			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_SERVER].sounds[0].id, 0);
-	}
-	else if(msg == MSG_EXTRA_PROJECTILE)
+	// special messages
+	if(msgtype == NETMSGTYPE_SV_EXTRA_PROJECTILE)
 	{
 		int num = msg_unpack_int();
 		
@@ -496,17 +480,49 @@ extern "C" void modc_message(int msg)
 				extraproj_num++;
 			}
 		}
+		
+		return;
 	}
-	else if(msg == MSG_MOTD)
+	else if(msgtype == NETMSGTYPE_SV_TUNE_PARAMS)
 	{
-		const char *message = msg_unpack_string();
+		// unpack the new tuning
+		tuning_params new_tuning;
+		int *params = (int *)&new_tuning;
+		for(unsigned i = 0; i < sizeof(tuning_params)/sizeof(int); i++)
+			params[i] = msg_unpack_int();
 
-		/* check for errors and invalid inputs */
+		// check for unpacking errors
 		if(msg_unpack_error())
 			return;
+			
+		// apply new tuning
+		tuning = new_tuning;
+	}
+	
+	// normal 
+	void *rawmsg = netmsg_secure_unpack(msgtype);
+	if(!rawmsg)
+	{
+		dbg_msg("client", "dropped weird message '%s' (%d)", netmsg_get_name(msgtype), msgtype);
+		return;
+	}
+		
+	if(msgtype == NETMSGTYPE_SV_CHAT)
+	{
+		NETMSG_SV_CHAT *msg = (NETMSG_SV_CHAT *)rawmsg;
+		chat_add_line(msg->cid, msg->team, msg->message);
+
+		if(msg->cid >= 0)
+			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_CLIENT].sounds[0].id, 0);
+		else
+			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_SERVER].sounds[0].id, 0);
+	}
+	else if(msgtype == NETMSGTYPE_SV_MOTD)
+	{
+		NETMSG_SV_MOTD *msg = (NETMSG_SV_MOTD *)rawmsg;
 
 		// process escaping			
-		str_copy(server_motd, message, sizeof(server_motd));
+		str_copy(server_motd, msg->message, sizeof(server_motd));
 		for(int i = 0; server_motd[i]; i++)
 		{
 			if(server_motd[i] == '\\')
@@ -522,108 +538,74 @@ extern "C" void modc_message(int msg)
 			
 		dbg_msg("game", "MOTD: %s", server_motd);
 	}
-	else if(msg == MSG_SETINFO)
+	else if(msgtype == NETMSGTYPE_SV_SETINFO)
 	{
-		int cid = msg_unpack_int();
-		const char *name = msg_unpack_string();
-		const char *skinname = msg_unpack_string();
+		NETMSG_SV_SETINFO *msg = (NETMSG_SV_SETINFO *)rawmsg;
 		
-		/* check for errors and invalid inputs */
-		if(msg_unpack_error() || cid < 0 || cid >= MAX_CLIENTS)
-			return;
-		
-		str_copy(client_datas[cid].name, name, 64);
-		str_copy(client_datas[cid].skin_name, skinname, 64);
+		str_copy(client_datas[msg->cid].name, msg->name, 64);
+		str_copy(client_datas[msg->cid].skin_name, msg->skin, 64);
 		
 		// make sure that we don't set a special skin on the client
-		if(client_datas[cid].skin_name[0] == 'x' || client_datas[cid].skin_name[1] == '_')
-			str_copy(client_datas[cid].skin_name, "default", 64);
+		if(client_datas[msg->cid].skin_name[0] == 'x' || client_datas[msg->cid].skin_name[1] == '_')
+			str_copy(client_datas[msg->cid].skin_name, "default", 64);
 		
-		int use_custom_color = msg_unpack_int();
-		client_datas[cid].skin_info.color_body = skin_get_color(msg_unpack_int());
-		client_datas[cid].skin_info.color_feet = skin_get_color(msg_unpack_int());
-		client_datas[cid].skin_info.size = 64;
+		client_datas[msg->cid].skin_info.color_body = skin_get_color(msg->color_body);
+		client_datas[msg->cid].skin_info.color_feet = skin_get_color(msg->color_feet);
+		client_datas[msg->cid].skin_info.size = 64;
 		
 		// find new skin
-		client_datas[cid].skin_id = skin_find(client_datas[cid].skin_name);
-		if(client_datas[cid].skin_id < 0)
-			client_datas[cid].skin_id = 0;
+		client_datas[msg->cid].skin_id = skin_find(client_datas[msg->cid].skin_name);
+		if(client_datas[msg->cid].skin_id < 0)
+			client_datas[msg->cid].skin_id = 0;
 		
-		if(use_custom_color)
-			client_datas[cid].skin_info.texture = skin_get(client_datas[cid].skin_id)->color_texture;
+		if(msg->use_custom_color)
+			client_datas[msg->cid].skin_info.texture = skin_get(client_datas[msg->cid].skin_id)->color_texture;
 		else
 		{
-			client_datas[cid].skin_info.texture = skin_get(client_datas[cid].skin_id)->org_texture;
-			client_datas[cid].skin_info.color_body = vec4(1,1,1,1);
-			client_datas[cid].skin_info.color_feet = vec4(1,1,1,1);
+			client_datas[msg->cid].skin_info.texture = skin_get(client_datas[msg->cid].skin_id)->org_texture;
+			client_datas[msg->cid].skin_info.color_body = vec4(1,1,1,1);
+			client_datas[msg->cid].skin_info.color_feet = vec4(1,1,1,1);
 		}
 		
-		client_datas[cid].update_render_info();
+		client_datas[msg->cid].update_render_info();
 	}
-	else if(msg == MSG_TUNE_PARAMS)
-	{
-		// unpack the new tuning		
-		tuning_params new_tuning;
-		int *params = (int *)&new_tuning;
-		for(unsigned i = 0; i < sizeof(tuning_params)/sizeof(int); i++)
-			params[i] = msg_unpack_int();
-
-		// check for unpacking errors
-		if(msg_unpack_error())
-			return;
-			
-		// apply new tuning
-		tuning = new_tuning;
-	}
-    else if(msg == MSG_WEAPON_PICKUP)
+    else if(msgtype == NETMSGTYPE_SV_WEAPON_PICKUP)
     {
-        int weapon = msg_unpack_int();
-		if(msg_unpack_error())
-			return;
-        picked_up_weapon = weapon+1;
+    	NETMSG_SV_WEAPON_PICKUP *msg = (NETMSG_SV_WEAPON_PICKUP *)rawmsg;
+        picked_up_weapon = msg->weapon+1;
     }
-	else if(msg == MSG_READY_TO_ENTER)
+	else if(msgtype == NETMSGTYPE_SV_READY_TO_ENTER)
 	{
 		client_entergame();
 	}
-	else if(msg == MSG_KILLMSG)
+	else if(msgtype == NETMSGTYPE_SV_KILLMSG)
 	{
+		NETMSG_SV_KILLMSG *msg = (NETMSG_SV_KILLMSG *)rawmsg;
+		
 		// unpack messages
-		killmsg msg;
-		msg.killer = msg_unpack_int();
-		msg.victim = msg_unpack_int();
-		msg.weapon = msg_unpack_int();
-		msg.mode_special = msg_unpack_int();
-		msg.tick = client_tick();
-
-		// check for unpacking errors
-		if(msg_unpack_error() || msg.killer >= MAX_CLIENTS || msg.victim >= MAX_CLIENTS || msg.weapon >= NUM_WEAPONS)
-			return;
+		killmsg kill;
+		kill.killer = msg->killer;
+		kill.victim = msg->victim;
+		kill.weapon = msg->weapon;
+		kill.mode_special = msg->mode_special;
+		kill.tick = client_tick();
 
 		// add the message
 		killmsg_current = (killmsg_current+1)%killmsg_max;
-		killmsgs[killmsg_current] = msg;
+		killmsgs[killmsg_current] = kill;
 	}
-	else if (msg == MSG_EMOTICON)
+	else if (msgtype == NETMSGTYPE_SV_EMOTICON)
 	{
-		// unpack
-		int cid = msg_unpack_int();
-		int emoticon = msg_unpack_int();
-
-		// check for errors
-		if(msg_unpack_error() || cid < 0 || cid >= MAX_CLIENTS)
-			return;
+		NETMSG_SV_EMOTICON *msg = (NETMSG_SV_EMOTICON *)rawmsg;
 
 		// apply
-		client_datas[cid].emoticon = emoticon;
-		client_datas[cid].emoticon_start = client_tick();
+		client_datas[msg->cid].emoticon = msg->emoticon;
+		client_datas[msg->cid].emoticon_start = client_tick();
 	}
-	else if(msg == MSG_SOUND_GLOBAL)
+	else if(msgtype == NETMSGTYPE_SV_SOUND_GLOBAL)
 	{
-		int soundid = msg_unpack_int();
-		if(msg_unpack_error() || soundid < 0)
-			return;
-		snd_play_random(CHN_GLOBAL, soundid, 1.0f, vec2(0,0));
+		NETMSG_SV_SOUND_GLOBAL *msg = (NETMSG_SV_SOUND_GLOBAL *)rawmsg;
+		snd_play_random(CHN_GLOBAL, msg->soundid, 1.0f, vec2(0,0));
 	}
 }
 

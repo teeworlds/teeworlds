@@ -132,10 +132,7 @@ void effect_playerdeath(vec2 pos, int cid)
 	{
 		const skin *s = skin_get(client_datas[cid].skin_id);
 		if(s)
-		{
-			dbg_msg("", "good blood color!");
 			blood_color = s->blood_color;
-		}
 	}
 	
 	for(int i = 0; i < 64; i++)

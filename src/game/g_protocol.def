@@ -1,10 +1,10 @@
 
 raw_source
+	#include <engine/e_common_interface.h>
 	#include "g_protocol.h"
 	extern "C" {
 		#include "g_protocol_ids.h"
 	}
-	#include <engine/e_common_interface.h>
 	#define max_int 2147483647
 end
 
@@ -35,31 +35,7 @@ raw_header
 		
 		// other stuff
 		INPUT_STATE_MASK=0x1f,
-	};
-	
-	enum
-	{
-		MSG_NULL=0,
-		
-		MSG_MOTD, // server -> client, message of the day
-		
-		MSG_SAY, // client -> server
-		MSG_CHAT, // server -> client
-		MSG_SETINFO, // server -> client - contains name, skin and color info
-		MSG_KILLMSG, // server -> client
-		MSG_SETTEAM,
-		MSG_JOIN,
-		MSG_QUIT,
-		MSG_EMOTICON,
-		MSG_STARTINFO, // client -> server
-		MSG_CHANGEINFO, // client -> server
-		MSG_READY_TO_ENTER, // server -> client
-		MSG_WEAPON_PICKUP,
-		MSG_SOUND_GLOBAL,
-		MSG_TUNE_PARAMS,
-		MSG_KILL,
-		MSG_EXTRA_PROJECTILE, // server -> client
-		
+		NUM_EMOTICONS=16,
 	};
 	
 end
@@ -210,4 +186,89 @@ end
 event damageind
 	any x, y
 	any angle
+end
+
+message sv_motd
+	string message
+end
+
+message cl_say
+	range(0, 1) team
+	string message
+end
+
+message sv_chat
+	range(0, 1) team
+	clientid cid
+	string message
+end
+
+message sv_setinfo
+	clientid cid
+	string name
+	string skin
+	range(0,1) use_custom_color
+	any color_body
+	any color_feet
+end
+
+message sv_killmsg
+	clientid killer
+	clientid victim
+	range(-1,NUM_WEAPONS-1) weapon
+	any mode_special
+end
+
+message cl_setteam
+	range(-1,1) team
+end
+
+message sv_ready_to_ender
+end
+
+message sv_sound_global
+	range(0, NUM_SOUNDS-1) soundid
+end
+
+message cl_startinfo
+	clientid who
+	string name
+	string skin
+	range(0,1) use_custom_color
+	any color_body
+	any color_feet
+end
+
+message cl_changeinfo
+	clientid who
+	string name
+	string skin
+	range(0,1) use_custom_color
+	any color_body
+	any color_feet
+end
+
+message sv_weapon_pickup
+	range(0,NUM_WEAPONS-1) weapon
+end
+
+message sv_emoticon
+	clientid cid
+	range(0,NUM_EMOTICONS-1) emoticon
+end
+
+message cl_emoticon
+	range(0,NUM_EMOTICONS-1) emoticon
+end
+
+message cl_kill
+end
+
+message sv_tune_params
+end
+
+message sv_extra_projectile
+end
+
+message sv_ready_to_enter
 end

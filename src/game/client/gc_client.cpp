@@ -99,9 +99,9 @@ void snd_play_random(int chn, int setid, float vol, vec2 pos)
 
 void send_switch_team(int team)
 {
-	msg_pack_start(MSG_SETTEAM, MSGFLAG_VITAL);
-	msg_pack_int(team);
-	msg_pack_end();
+	NETMSG_CL_SETTEAM msg;
+	msg.team = team;
+	msg.pack(MSGFLAG_VITAL);
 	client_send_msg();	
 }
 
@@ -320,31 +320,40 @@ void clear_object_pointers()
 void send_info(bool start)
 {
 	if(start)
-		msg_pack_start(MSG_STARTINFO, MSGFLAG_VITAL);
+	{
+		NETMSG_CL_STARTINFO msg;
+		msg.name = config.player_name;
+		msg.skin = config.player_skin;
+		msg.use_custom_color = config.player_use_custom_color;
+		msg.color_body = config.player_color_body;
+		msg.color_feet = config.player_color_feet;
+		msg.pack(MSGFLAG_VITAL);
+	}
 	else
-		msg_pack_start(MSG_CHANGEINFO, MSGFLAG_VITAL);
-	msg_pack_string(config.player_name, 64);
-	msg_pack_string(config.player_skin, 64);
-	msg_pack_int(config.player_use_custom_color);
-	msg_pack_int(config.player_color_body);
-	msg_pack_int(config.player_color_feet);
-	msg_pack_end();
+	{
+		NETMSG_CL_CHANGEINFO msg;
+		msg.name = config.player_name;
+		msg.skin = config.player_skin;
+		msg.use_custom_color = config.player_use_custom_color;
+		msg.color_body = config.player_color_body;
+		msg.color_feet = config.player_color_feet;
+		msg.pack(MSGFLAG_VITAL);
+	}
 	client_send_msg();
 }
 
 void send_emoticon(int emoticon)
 {
-	msg_pack_start(MSG_EMOTICON, MSGFLAG_VITAL);
-	msg_pack_int(emoticon);
-	msg_pack_end();
+	NETMSG_CL_EMOTICON msg;
+	msg.emoticon = emoticon;
+	msg.pack(MSGFLAG_VITAL);
 	client_send_msg();
 }
 
 void send_kill(int client_id)
 {
-	msg_pack_start(MSG_KILL, MSGFLAG_VITAL);
-	msg_pack_int(client_id);
-	msg_pack_end();
+	NETMSG_CL_KILL msg;
+	msg.pack(MSGFLAG_VITAL);
 	client_send_msg();
 }
 
@@ -714,10 +723,10 @@ static int do_input(int *v, int key)
 void chat_say(int team, const char *line)
 {
 	// send chat message
-	msg_pack_start(MSG_SAY, MSGFLAG_VITAL);
-	msg_pack_int(team);
-	msg_pack_string(line, 512);
-	msg_pack_end();
+	NETMSG_CL_SAY msg;
+	msg.team = team;
+	msg.message = line;
+	msg.pack(MSGFLAG_VITAL);
 	client_send_msg();
 }
 

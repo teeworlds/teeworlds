@@ -28,29 +28,29 @@ class player *closest_player(vec2 pos, float radius, entity *notthis);
 
 game_world *world;
 
-void send_chat(int cid, int team, const char *msg)
+void send_chat(int cid, int team, const char *text)
 {
 	if(cid >= 0 && cid < MAX_CLIENTS)
-		dbg_msg("chat", "%d:%d:%s: %s", cid, team, server_clientname(cid), msg);
+		dbg_msg("chat", "%d:%d:%s: %s", cid, team, server_clientname(cid), text);
 	else
-		dbg_msg("chat", "*** %s", msg);
+		dbg_msg("chat", "*** %s", text);
 
 	if(team == -1)
 	{
-		msg_pack_start(MSG_CHAT, MSGFLAG_VITAL);
-		msg_pack_int(cid);
-		msg_pack_int(0);
-		msg_pack_string(msg, 512);
-		msg_pack_end();
+		NETMSG_SV_CHAT msg;
+		msg.team = 0;
+		msg.cid = cid;
+		msg.message = text;
+		msg.pack(MSGFLAG_VITAL);
 		server_send_msg(-1);
 	}
 	else
 	{
-		msg_pack_start(MSG_CHAT, MSGFLAG_VITAL);
-		msg_pack_int(cid);
-		msg_pack_int(1);
-		msg_pack_string(msg, 512);
-		msg_pack_end();
+		NETMSG_SV_CHAT msg;
+		msg.team = 1;
+		msg.cid = cid;
+		msg.message = text;
+		msg.pack(MSGFLAG_VITAL);
 
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
@@ -63,7 +63,7 @@ void send_chat(int cid, int team, const char *msg)
 
 void send_tuning_params(int cid)
 {
-	msg_pack_start(MSG_TUNE_PARAMS, MSGFLAG_VITAL);
+	msg_pack_start(NETMSGTYPE_SV_TUNE_PARAMS, MSGFLAG_VITAL);
 	int *params = (int *)&tuning;
 	for(unsigned i = 0; i < sizeof(tuning_params)/sizeof(int); i++)
 		msg_pack_int(params[i]);
@@ -1022,7 +1022,7 @@ void player::fire_weapon()
 			NETOBJ_PROJECTILE p;
 			proj->fill_info(&p);
 			
-			msg_pack_start(MSG_EXTRA_PROJECTILE, 0);
+			msg_pack_start(NETMSGTYPE_SV_EXTRA_PROJECTILE, 0);
 			msg_pack_int(1);
 			for(unsigned i = 0; i < sizeof(NETOBJ_PROJECTILE)/sizeof(int); i++)
 				msg_pack_int(((int *)&p)[i]);
@@ -1046,7 +1046,7 @@ void player::fire_weapon()
 			NETOBJ_PROJECTILE p;
 			proj->fill_info(&p);
 			
-			msg_pack_start(MSG_EXTRA_PROJECTILE, 0);
+			msg_pack_start(NETMSGTYPE_SV_EXTRA_PROJECTILE, 0);
 			msg_pack_int(1);
 			for(unsigned i = 0; i < sizeof(NETOBJ_PROJECTILE)/sizeof(int); i++)
 				msg_pack_int(((int *)&p)[i]);
@@ -1060,7 +1060,7 @@ void player::fire_weapon()
 		{
 			int shotspread = 2;
 
-			msg_pack_start(MSG_EXTRA_PROJECTILE, 0);
+			msg_pack_start(NETMSGTYPE_SV_EXTRA_PROJECTILE, 0);
 			msg_pack_int(shotspread*2+1);
 			
 			for(int i = -shotspread; i <= shotspread; i++)
@@ -1507,12 +1507,12 @@ void player::die(int killer, int weapon)
 		client_id, server_clientname(client_id), weapon, mode_special);
 
 	// send the kill message
-	msg_pack_start(MSG_KILLMSG, MSGFLAG_VITAL);
-	msg_pack_int(killer);
-	msg_pack_int(client_id);
-	msg_pack_int(weapon);
-	msg_pack_int(mode_special);
-	msg_pack_end();
+	NETMSG_SV_KILLMSG msg;
+	msg.killer = killer;
+	msg.victim = client_id;
+	msg.weapon = weapon;
+	msg.mode_special = mode_special;
+	msg.pack(MSGFLAG_VITAL);
 	server_send_msg(-1);
 
 	// a nice sound
@@ -1939,8 +1939,9 @@ void create_sound_global(int sound, int target)
 	if (sound < 0)
 		return;
 
-	msg_pack_start(MSG_SOUND_GLOBAL, MSGFLAG_VITAL);
-	msg_pack_int(sound);
+	NETMSG_SV_SOUND_GLOBAL msg;
+	msg.soundid = sound;
+	msg.pack(MSGFLAG_VITAL);
 	server_send_msg(target);
 }
 
@@ -2097,31 +2098,32 @@ void mods_client_predicted_input(int client_id, void *input)
 
 void send_info(int who, int to_who)
 {
-	msg_pack_start(MSG_SETINFO, MSGFLAG_VITAL);
-	msg_pack_int(who);
-	msg_pack_string(server_clientname(who), 64);
-	msg_pack_string(players[who].skin_name, 64);
-	msg_pack_int(players[who].use_custom_color);
-	msg_pack_int(players[who].color_body);
-	msg_pack_int(players[who].color_feet);
-	msg_pack_end();
+	NETMSG_SV_SETINFO msg;
+	msg.cid = who;
+	msg.name = server_clientname(who);
+	msg.skin = players[who].skin_name;
+	msg.use_custom_color = players[who].use_custom_color;
+	msg.color_body = players[who].color_body;
+	msg.color_feet =players[who].color_feet;
+	msg.pack(MSGFLAG_VITAL);
+	
 	server_send_msg(to_who);
 }
 
 void send_emoticon(int cid, int emoticon)
 {
-	msg_pack_start(MSG_EMOTICON, MSGFLAG_VITAL);
-	msg_pack_int(cid);
-	msg_pack_int(emoticon % 16);
-	msg_pack_end();
+	NETMSG_SV_EMOTICON msg;
+	msg.cid = cid;
+	msg.emoticon = emoticon;
+	msg.pack(MSGFLAG_VITAL);
 	server_send_msg(-1);
 }
 
 void send_weapon_pickup(int cid, int weapon)
 {
-	msg_pack_start(MSG_WEAPON_PICKUP, MSGFLAG_VITAL);
-	msg_pack_int(weapon);
-	msg_pack_end();
+	NETMSG_SV_WEAPON_PICKUP msg;
+	msg.weapon = weapon;
+	msg.pack(MSGFLAG_VITAL);
 	server_send_msg(cid);
 }
 
@@ -2158,10 +2160,10 @@ void mods_connected(int client_id)
 			players[client_id].team = gameobj->getteam(client_id);
 	}
 
-	// send motd	
-	msg_pack_start(MSG_MOTD, MSGFLAG_VITAL);
-	msg_pack_string(config.sv_motd, 900);
-	msg_pack_end();
+	// send motd
+	NETMSG_SV_MOTD msg;
+	msg.message = config.sv_motd;
+	msg.pack(MSGFLAG_VITAL);
 	server_send_msg(client_id);
 }
 
@@ -2179,22 +2181,32 @@ void mods_client_drop(int client_id)
 	players[client_id].client_id = -1;
 }
 
-void mods_message(int msg, int client_id)
+void mods_message(int msgtype, int client_id)
 {
-	if(msg == MSG_SAY)
+	void *rawmsg = netmsg_secure_unpack(msgtype);
+	if(!rawmsg)
 	{
-		int team = msg_unpack_int();
-		const char *text = msg_unpack_string();
+		dbg_msg("server", "dropped weird message '%s' (%d)", netmsg_get_name(msgtype), msgtype);
+		return;
+	}
+	
+	if(msgtype == NETMSGTYPE_CL_SAY)
+	{
+		NETMSG_CL_SAY *msg = (NETMSG_CL_SAY *)rawmsg;
+		
+		int team = msg->team;
 		if(team)
 			team = players[client_id].team;
 		else
 			team = -1;
-		send_chat(client_id, team, text);
+		send_chat(client_id, msg->team, msg->message);
 	}
-	else if (msg == MSG_SETTEAM)
+	else if (msgtype == NETMSGTYPE_CL_SETTEAM)
 	{
+		NETMSG_CL_SETTEAM *msg = (NETMSG_CL_SETTEAM *)rawmsg;
+
 		// Switch team on given client and kill/respawn him
-		players[client_id].set_team(msg_unpack_int());
+		players[client_id].set_team(msg->team);
 		gameobj->on_player_info_change(&players[client_id]);
 		
 		// send all info to this client
@@ -2204,38 +2216,38 @@ void mods_message(int msg, int client_id)
 				send_info(i, -1);
 		}		
 	}
-	else if (msg == MSG_CHANGEINFO || msg == MSG_STARTINFO)
+	else if (msgtype == NETMSGTYPE_CL_CHANGEINFO || msgtype == NETMSGTYPE_CL_STARTINFO)
 	{
-		const char *name = msg_unpack_string();
-		const char *skin_name = msg_unpack_string();
-		players[client_id].use_custom_color = msg_unpack_int();
-		players[client_id].color_body = msg_unpack_int();
-		players[client_id].color_feet = msg_unpack_int();
+		NETMSG_CL_CHANGEINFO *msg = (NETMSG_CL_CHANGEINFO *)rawmsg;
+		players[client_id].use_custom_color = msg->use_custom_color;
+		players[client_id].color_body = msg->color_body;
+		players[client_id].color_feet = msg->color_feet;
 
 		// check for invalid chars
+		/*
 		unsigned char *p = (unsigned char *)name;
 		while (*p)
 		{
 			if(*p < 32)
 				*p = ' ';
 			p++;
-		}
+		}*/
 
 		//
-		if(msg == MSG_CHANGEINFO && strcmp(name, server_clientname(client_id)) != 0)
+		if(msgtype == NETMSGTYPE_CL_CHANGEINFO && strcmp(msg->name, server_clientname(client_id)) != 0)
 		{
-			char msg[256];
-			str_format(msg, sizeof(msg), "*** %s changed name to %s", server_clientname(client_id), name);
-			send_chat(-1, -1, msg);
+			char chattext[256];
+			str_format(chattext, sizeof(chattext), "*** %s changed name to %s", server_clientname(client_id), msg->name);
+			send_chat(-1, -1, chattext);
 		}
 
 		//send_set_name(client_id, players[client_id].name, name);
-		str_copy(players[client_id].skin_name, skin_name, sizeof(players[client_id].skin_name));
-		server_setclientname(client_id, name);
+		str_copy(players[client_id].skin_name, msg->skin, sizeof(players[client_id].skin_name));
+		server_setclientname(client_id, msg->name);
 		
 		gameobj->on_player_info_change(&players[client_id]);
 		
-		if(msg == MSG_STARTINFO)
+		if(msgtype == NETMSGTYPE_CL_STARTINFO)
 		{
 			// a client that connected!
 			
@@ -2250,22 +2262,20 @@ void mods_message(int msg, int client_id)
 			send_tuning_params(client_id);
 			
 			//
-			msg_pack_start(MSG_READY_TO_ENTER, MSGFLAG_VITAL);
-			msg_pack_end();
+			NETMSG_SV_READY_TO_ENTER m;
+			m.pack(MSGFLAG_VITAL);
 			server_send_msg(client_id);			
 		}
 		
 		send_info(client_id, -1);
 	}
-	else if (msg == MSG_EMOTICON)
+	else if (msgtype == NETMSGTYPE_CL_EMOTICON)
 	{
-		int emoteicon = msg_unpack_int();
-		send_emoticon(client_id, emoteicon % 16);
+		NETMSG_CL_EMOTICON *msg = (NETMSG_CL_EMOTICON *)rawmsg;
+		send_emoticon(client_id, msg->emoticon);
 	}
-	else if (msg == MSG_KILL)
+	else if (msgtype == NETMSGTYPE_CL_KILL)
 	{
-		//int kill_client_id = msg_unpack_int(); // to be used to kill players from rcon? hihi
-
 		player *pplayer = get_player(client_id);
 		pplayer->die(client_id, -1);
 	}

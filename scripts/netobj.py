@@ -14,6 +14,10 @@ class variable:
 		return "#line %d" % self.line
 	def emit_secure(self):
 		return []
+	def emit_unpack(self):
+		return ["msg.%s = msg_unpack_int();" % self.name]
+	def emit_pack(self):
+		return ["\t\tmsg_pack_int(%s);" % self.name]
 
 class var_any(variable):
 	def __init__(self, args, name):
@@ -36,6 +40,16 @@ class var_clientid(variable):
 class var_string(variable):
 	def __init__(self, args, name):
 		variable.__init__(self, args, name)
+
+class var_string(variable):
+	def __init__(self, args, name):
+		variable.__init__(self, args, name)
+	def emit_declaration(self):
+		return ["\tconst char *%s;" % self.name]
+	def emit_unpack(self):
+		return ["msg.%s = msg_unpack_string();" % self.name]
+	def emit_pack(self):
+		return ["\t\tmsg_pack_string(%s, -1);" % self.name]
 
 class object:
 	def __init__(self, line):
@@ -95,7 +109,74 @@ class object:
 		for m in self.members:
 			lines += m.emit_secure()
 		return lines
+
+class message:
+	def __init__(self, line):
+		fields = line.split()
+		self.name = fields[1]
+		self.enum_name = "NETMSGTYPE_%s" % self.name.upper()
+		self.struct_name = "NETMSG_%s" % self.name.upper()
+		self.members = []
 		
+	def parse(self, lines):
+		global line_count
+		for index in xrange(0, len(lines)):
+			line_count += 1
+			line = lines[index]
+			if not len(line):
+				continue
+				
+			if line == "end":
+				return lines[index+1:]
+			else:
+				# check for argument
+				fields = line.split(")", 1)
+				if len(fields) == 2:
+					names = [line.strip() for line in fields[1].split(",")]
+					l = fields[0].split("(", 1)
+					type = l[0]
+					args = [line.strip() for line in l[1].split(",")]
+				else:
+					l = fields[0].split(None, 1)
+					type = l[0]
+					args = []
+					names = [line.strip() for line in l[1].split(",")]
+					
+				for name in names:
+					create_string = 'var_%s(%s, "%s")' % (type, args, name)
+					new_member = eval(create_string)
+					self.members += [new_member]
+				
+		raise BaseException("Parse error")
+	
+	def emit_declaration(self):
+		lines = []
+		lines += ["struct %s\n {" % self.struct_name]
+		for m in self.members:
+			lines += m.emit_declaration()
+		lines += ["\tvoid pack(int flags)"]
+		lines += ["\t{"]
+		lines += ["\t\tmsg_pack_start(%s, flags);" % self.enum_name]
+		for m in self.members:
+			lines += m.emit_pack()
+		lines += ["\t\tmsg_pack_end();"]
+		lines += ["\t}"]
+		lines += ["};"]
+		return lines
+
+	def emit_unpack(self):
+		lines = []
+		for m in self.members:
+			lines += m.emit_unpack()
+		return lines
+
+	def emit_pack(self):
+		lines = []
+		for m in self.members:
+			lines += m.emit_pack()
+		return lines
+		
+
 class event(object):
 	def __init__(self, line):
 		object.__init__(self, line)
@@ -123,9 +204,9 @@ class raw_reader:
 class proto:
 	def __init__(self):
 		self.objects = []
+		self.messages = []
 		self.source_raw = []
 		self.header_raw = []
-
 
 def load(filename):
 	# read the file
@@ -148,10 +229,14 @@ def load(filename):
 		
 		del lines[0]
 		
-		if fields[0] == "object" or fields[0] == "msg":
+		if fields[0] == "object":
 			new_obj = object(line)
 			lines = new_obj.parse(lines)
 			p.objects += [new_obj]
+		elif fields[0] == "message":
+			new_msg = message(line)
+			lines = new_msg.parse(lines)
+			p.messages += [new_msg]
 		elif fields[0] == "event":
 			new_obj = event(line)
 			lines = new_obj.parse(lines)
@@ -173,7 +258,7 @@ def emit_header_file(f, p):
 	for l in p.header_raw:
 		print >>f, l
 		
-	if 1: # emit the enum table
+	if 1: # emit the enum table for objects
 		print >>f, "enum {"
 		print >>f, "\tNETOBJTYPE_INVALID=0,"
 		for obj in p.objects:
@@ -182,19 +267,34 @@ def emit_header_file(f, p):
 		print >>f, "};"
 		print >>f, ""
 
+	if 1: # emit the enum table for messages
+		print >>f, "enum {"
+		print >>f, "\tNETMSGTYPE_INVALID=0,"
+		for msg in p.messages:
+			print >>f, "\t%s," % msg.enum_name
+		print >>f, "\tNUM_NETMSGTYPES"
+		print >>f, "};"
+		print >>f, ""
+
 	print >>f, "int netobj_secure(int type, void *data, int size);"
 	print >>f, "const char *netobj_get_name(int type);"
 	print >>f, "int netobj_num_corrections();"
+	print >>f, ""
+	print >>f, "void *netmsg_secure_unpack(int type);"
+	print >>f, "const char *netmsg_get_name(int type);"
 	print >>f, ""
 
 	for obj in p.objects:
 		for l in obj.emit_declaration():
 			print >>f, l
 		print >>f, ""
+
+	for msg in p.messages:
+		for l in msg.emit_declaration():
+			print >>f, l
+		print >>f, ""
 			
 def emit_source_file(f, p, protofilename):
-	
-	
 	print >>f, "#line 1 \"%s\"" % os.path.abspath(protofilename).replace("\\", "\\\\")
 	
 	for l in p.source_raw:
@@ -220,7 +320,7 @@ def emit_source_file(f, p, protofilename):
 		print >>f, '\t""'
 		print >>f, "};"
 		print >>f, ""
-
+		
 	if 1: # secure functions
 		print >>f, "static int secure_object_invalid(void *data, int size) { return 0; }"
 		for obj in p.objects:
@@ -263,7 +363,57 @@ def emit_source_file(f, p, protofilename):
 		print >>f, "\treturn object_names[type];"
 		print >>f, "};"
 		print >>f, ""
-	
+		
+	if 1: # names
+		print >>f, "static const char *message_names[] = {"
+		print >>f, "\t" + '"invalid",'
+		for msg in p.messages:
+			print >>f, '\t"%s",' % msg.name
+		print >>f, '\t""'
+		print >>f, "};"
+		print >>f, ""		
+
+	if 1: # secure functions
+		print >>f, "static void *secure_unpack_invalid() { return 0; }"
+		for msg in p.messages:
+			print >>f, "static void *secure_unpack_%s()" % msg.name
+			print >>f, "{"
+			print >>f, "\tstatic %s msg;" % msg.struct_name
+			for l in msg.emit_unpack():
+				print >>f, "\t" + l
+			print >>f, "\treturn &msg;";
+			print >>f, "}"
+			print >>f, ""		
+
+	if 1: # secure function table
+		print >>f, "typedef void *(*SECUREUNPACKFUNC)();"
+		print >>f, "static SECUREUNPACKFUNC secure_unpack_funcs[] = {"
+		print >>f, "\t" + 'secure_unpack_invalid,'
+		for msg in p.messages:
+			print >>f, "\tsecure_unpack_%s," % msg.name
+		print >>f, "\t" + '0x0'
+		print >>f, "};"
+		print >>f, ""
+		
+	if 1:
+		print >>f, "void *netmsg_secure_unpack(int type)"
+		print >>f, "{"
+		print >>f, "\tvoid *msg;"
+		print >>f, "\tif(type < 0 || type >= NUM_NETMSGTYPES) return 0;"
+		print >>f, "\tmsg = secure_unpack_funcs[type]();"
+		print >>f, "\tif(msg_unpack_error()) return 0;"
+		print >>f, "\treturn msg;"
+		print >>f, "};"
+		print >>f, ""
+
+	if 1:
+		print >>f, "const char *netmsg_get_name(int type)"
+		print >>f, "{"
+		print >>f, "\tif(type < 0 || type >= NUM_NETMSGTYPES) return \"(invalid)\";"
+		print >>f, "\treturn message_names[type];"
+		print >>f, "};"
+		print >>f, ""		
+		
 if sys.argv[1] == "header":
 	p = load(sys.argv[2])
 	emit_header_file(file(sys.argv[3], "w"), p)
