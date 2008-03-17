@@ -85,7 +85,7 @@ end
 object flag
 	any x, y
 	range(0, 1) team
-	clientid carried_by
+	range(-1,MAX_CLIENTS-1) carried_by
 end
 
 object game
@@ -113,7 +113,7 @@ object player_core
 	any angle
 	range(0, 3) jumped
 
-	clientid hooked_player
+	range(-1,MAX_CLIENTS-1) hooked_player
 	range(0, 3) hook_state
 	range(0, max_int) hook_tick
 
@@ -143,7 +143,7 @@ end
 // information about the player that is always needed
 object player_info
 	range(0, 1) local
-	clientid cid
+	range(0,MAX_CLIENTS-1) cid
 	range(-1, 1) team
 	
 	any score
@@ -166,7 +166,7 @@ end
 
 event death
 	any x, y
-	clientid cid
+	range(0,MAX_CLIENTS-1) cid
 end
 
 event air_jump
@@ -199,12 +199,12 @@ end
 
 message sv_chat
 	range(0, 1) team
-	clientid cid
+	range(-1,MAX_CLIENTS-1) cid
 	string message
 end
 
 message sv_setinfo
-	clientid cid
+	range(0,MAX_CLIENTS-1) cid
 	string name
 	string skin
 	range(0,1) use_custom_color
@@ -213,8 +213,8 @@ message sv_setinfo
 end
 
 message sv_killmsg
-	clientid killer
-	clientid victim
+	range(-1,MAX_CLIENTS-1) killer
+	range(-1,MAX_CLIENTS-1) victim
 	range(-1,NUM_WEAPONS-1) weapon
 	any mode_special
 end
@@ -231,7 +231,6 @@ message sv_sound_global
 end
 
 message cl_startinfo
-	clientid who
 	string name
 	string skin
 	range(0,1) use_custom_color
@@ -240,7 +239,6 @@ message cl_startinfo
 end
 
 message cl_changeinfo
-	clientid who
 	string name
 	string skin
 	range(0,1) use_custom_color
@@ -253,7 +251,7 @@ message sv_weapon_pickup
 end
 
 message sv_emoticon
-	clientid cid
+	range(0,MAX_CLIENTS-1) cid
 	range(0,NUM_EMOTICONS-1) emoticon
 end
 

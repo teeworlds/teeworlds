@@ -503,7 +503,7 @@ extern "C" void modc_message(int msgtype)
 	void *rawmsg = netmsg_secure_unpack(msgtype);
 	if(!rawmsg)
 	{
-		dbg_msg("client", "dropped weird message '%s' (%d)", netmsg_get_name(msgtype), msgtype);
+		dbg_msg("client", "dropped weird message '%s' (%d), failed on '%s'", netmsg_get_name(msgtype), msgtype, netmsg_failed_on());
 		return;
 	}
 		

@@ -16,6 +16,8 @@ class variable:
 		return []
 	def emit_unpack(self):
 		return ["msg.%s = msg_unpack_int();" % self.name]
+	def emit_unpack_check(self):
+		return []
 	def emit_pack(self):
 		return ["\t\tmsg_pack_int(%s);" % self.name]
 
@@ -28,14 +30,10 @@ class var_range(variable):
 		variable.__init__(self, args, name)
 		self.min = args[0]
 		self.max = args[1]
+	def emit_unpack_check(self):
+		return ["if(msg.%s < %s || msg.%s > %s) { msg_failed_on = \"%s\"; return 0; }" % (self.name, self.min, self.name, self.max, self.name)]
 	def emit_secure(self):
 		return [self.linedef(), "obj->%s = netobj_clamp_int(obj->%s, %s, %s);" % (self.name, self.name, self.min, self.max)]
-	
-class var_clientid(variable):
-	def __init__(self, args, name):
-		variable.__init__(self, args, name)
-	def emit_secure(self):
-		return [self.linedef(), "obj->%s = netobj_clamp_int(obj->%s, -1, MAX_CLIENTS);" % (self.name, self.name)]
 
 class var_string(variable):
 	def __init__(self, args, name):
@@ -168,6 +166,8 @@ class message:
 		lines = []
 		for m in self.members:
 			lines += m.emit_unpack()
+		for m in self.members:
+			lines += m.emit_unpack_check()
 		return lines
 
 	def emit_pack(self):
@@ -282,6 +282,7 @@ def emit_header_file(f, p):
 	print >>f, ""
 	print >>f, "void *netmsg_secure_unpack(int type);"
 	print >>f, "const char *netmsg_get_name(int type);"
+	print >>f, "const char *netmsg_failed_on();"
 	print >>f, ""
 
 	for obj in p.objects:
@@ -300,9 +301,10 @@ def emit_source_file(f, p, protofilename):
 	for l in p.source_raw:
 		print >>f, l
 
-	print >>f, ""
+	print >>f, "const char *msg_failed_on = \"\";"
 	print >>f, "static int num_corrections = 0;"
 	print >>f, "int netobj_num_corrections() { return num_corrections; }"
+	print >>f, "const char *netmsg_failed_on() { return msg_failed_on; }"
 	print >>f, ""
 	print >>f, "static int netobj_clamp_int(int v, int min, int max)"
 	print >>f, "{"
@@ -399,6 +401,7 @@ def emit_source_file(f, p, protofilename):
 		print >>f, "void *netmsg_secure_unpack(int type)"
 		print >>f, "{"
 		print >>f, "\tvoid *msg;"
+		print >>f, "\tmsg_failed_on = \"\";"
 		print >>f, "\tif(type < 0 || type >= NUM_NETMSGTYPES) return 0;"
 		print >>f, "\tmsg = secure_unpack_funcs[type]();"
 		print >>f, "\tif(msg_unpack_error()) return 0;"

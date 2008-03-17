@@ -2186,7 +2186,7 @@ void mods_message(int msgtype, int client_id)
 	void *rawmsg = netmsg_secure_unpack(msgtype);
 	if(!rawmsg)
 	{
-		dbg_msg("server", "dropped weird message '%s' (%d)", netmsg_get_name(msgtype), msgtype);
+		dbg_msg("server", "dropped weird message '%s' (%d), failed on '%s'", netmsg_get_name(msgtype), msgtype, netmsg_failed_on());
 		return;
 	}
 	
