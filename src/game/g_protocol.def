@@ -64,7 +64,7 @@ end
 object projectile
 	any x, y
 	any vx, vy
-	range(0, NUM_WEAPONS) type
+	range(0, NUM_WEAPONS-1) type
 	range(0, max_int) start_tick
 end
 
@@ -85,7 +85,7 @@ end
 object flag
 	any x, y
 	range(0, 1) team
-	range(-1,MAX_CLIENTS-1) carried_by
+	range(-2,MAX_CLIENTS-1) carried_by // -2 == at stand -1 == on the field
 end
 
 object game
@@ -114,7 +114,7 @@ object player_core
 	range(0, 3) jumped
 
 	range(-1,MAX_CLIENTS-1) hooked_player
-	range(0, 3) hook_state
+	range(-1,2) hook_state
 	range(0, max_int) hook_tick
 
 	any hook_x
@@ -136,7 +136,6 @@ object player_character extends player_core
 	range(0, NUM_WEAPONS-1) weapon
 	range(0, NUM_EMOTES-1) emote
 	
-	range(0, 10) weaponstage
 	range(0, max_int) attacktick
 end
 

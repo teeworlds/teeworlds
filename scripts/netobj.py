@@ -12,7 +12,7 @@ class variable:
 		return ["\tint %s;" % self.name]
 	def linedef(self):
 		return "#line %d" % self.line
-	def emit_secure(self):
+	def emit_secure(self, parent):
 		return []
 	def emit_unpack(self):
 		return ["msg.%s = msg_unpack_int();" % self.name]
@@ -32,8 +32,8 @@ class var_range(variable):
 		self.max = args[1]
 	def emit_unpack_check(self):
 		return ["if(msg.%s < %s || msg.%s > %s) { msg_failed_on = \"%s\"; return 0; }" % (self.name, self.min, self.name, self.max, self.name)]
-	def emit_secure(self):
-		return [self.linedef(), "obj->%s = netobj_clamp_int(obj->%s, %s, %s);" % (self.name, self.name, self.min, self.max)]
+	def emit_secure(self, parent):
+		return [self.linedef(), "obj->%s = netobj_clamp_int(\"%s.%s\", obj->%s, %s, %s);" % (self.name, parent.name, self.name, self.name, self.min, self.max)]
 
 class var_string(variable):
 	def __init__(self, args, name):
@@ -105,7 +105,7 @@ class object:
 	def emit_secure(self):
 		lines = []
 		for m in self.members:
-			lines += m.emit_secure()
+			lines += m.emit_secure(self)
 		return lines
 
 class message:
@@ -212,14 +212,13 @@ def load(filename):
 	# read the file
 	global line_count
 	line_count = 0
-	lines = [line.strip() for line in file(filename).readlines()]
+	lines = [line.split("//", 2)[0].strip() for line in file(filename).readlines()]
 	
 	p = proto()
 
 	while len(lines):
 		line_count += 1
 		line = lines[0]
-		line = line.split("//", 2)[0] # strip comment
 		
 		if not len(line):
 			del lines[0]
@@ -279,6 +278,7 @@ def emit_header_file(f, p):
 	print >>f, "int netobj_secure(int type, void *data, int size);"
 	print >>f, "const char *netobj_get_name(int type);"
 	print >>f, "int netobj_num_corrections();"
+	print >>f, "const char *netobj_corrected_on();"
 	print >>f, ""
 	print >>f, "void *netmsg_secure_unpack(int type);"
 	print >>f, "const char *netmsg_get_name(int type);"
@@ -302,14 +302,16 @@ def emit_source_file(f, p, protofilename):
 		print >>f, l
 
 	print >>f, "const char *msg_failed_on = \"\";"
+	print >>f, "const char *obj_corrected_on = \"\";"
 	print >>f, "static int num_corrections = 0;"
 	print >>f, "int netobj_num_corrections() { return num_corrections; }"
+	print >>f, "const char *netobj_corrected_on() { return obj_corrected_on; }"
 	print >>f, "const char *netmsg_failed_on() { return msg_failed_on; }"
 	print >>f, ""
-	print >>f, "static int netobj_clamp_int(int v, int min, int max)"
+	print >>f, "static int netobj_clamp_int(const char *error_msg, int v, int min, int max)"
 	print >>f, "{"
-	print >>f, "\tif(v<min) { num_corrections++; return min; }"
-	print >>f, "\tif(v>max) { num_corrections++; return max; }"
+	print >>f, "\tif(v<min) { obj_corrected_on = error_msg; num_corrections++; return min; }"
+	print >>f, "\tif(v>max) { obj_corrected_on = error_msg; num_corrections++; return max; }"
 	print >>f, "\treturn v;"
 	print >>f, "}"
 	print >>f, ""

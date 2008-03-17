@@ -855,7 +855,7 @@ void player::try_respawn()
 	weapons[WEAPON_GUN].ammo = data->weapons[WEAPON_GUN].maxammo;
 
 	weapons[WEAPON_RIFLE].got = true;
-	weapons[WEAPON_RIFLE].ammo = 100000; //data->weapons[WEAPON_LASER].maxammo;
+	weapons[WEAPON_RIFLE].ammo = -1;
 	
 	active_weapon = WEAPON_GUN;
 	last_weapon = WEAPON_HAMMER;
@@ -1101,7 +1101,8 @@ void player::fire_weapon()
 		
 	}
 
-	weapons[active_weapon].ammo--;
+	if(weapons[active_weapon].ammo > 0) // -1 == unlimited
+		weapons[active_weapon].ammo--;
 	attack_tick = server_tick();
 	reload_timer = data->weapons[active_weapon].firedelay * server_tickspeed() / 1000;
 }
@@ -1622,7 +1623,7 @@ void player::snap(int snaping_client)
 			info->local = 1;
 	}
 
-	if(health > 0 && team >= 0 && distance(players[snaping_client].pos, pos) < 1000.0f)
+	if(!dead && health > 0 && team >= 0 && distance(players[snaping_client].pos, pos) < 1000.0f)
 	{
 		NETOBJ_PLAYER_CHARACTER *character = (NETOBJ_PLAYER_CHARACTER *)snap_new_item(NETOBJTYPE_PLAYER_CHARACTER, client_id, sizeof(NETOBJ_PLAYER_CHARACTER));
 
@@ -1643,7 +1644,7 @@ void player::snap(int snaping_client)
 
 		character->emote = emote_type;
 
-		character->ammocount = weapons[active_weapon].ammo;
+		character->ammocount = 0;
 		character->health = 0;
 		character->armor = 0;
 		
@@ -1661,16 +1662,9 @@ void player::snap(int snaping_client)
 		{
 			character->health = health;
 			character->armor = armor;
+			if(weapons[active_weapon].ammo > 0)
+				character->ammocount = weapons[active_weapon].ammo;
 		}
-
-		if(dead)
-			character->health = -1;
-
-		//if(length(vel) > 15.0f)
-		//	player->emote = EMOTE_HAPPY;
-
-		//if(damage_taken_tick+50 > server_tick())
-		//	player->emote = EMOTE_PAIN;
 
 		if (character->emote == EMOTE_NORMAL)
 		{

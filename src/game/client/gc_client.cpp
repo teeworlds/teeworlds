@@ -1056,9 +1056,6 @@ void render_game()
 		gfx_mapscreen(0,0,300*gfx_screenaspect(),300);
 		
 		// if weaponstage is active, put a "glow" around the stage ammo
-		select_sprite(SPRITE_TEE_BODY);
-		for (int i = 0; i < netobjects.local_character->weaponstage; i++)
-			gfx_quads_drawTL(x+netobjects.local_character->ammocount * 12 -i*12, y+22, 11, 11);
 		select_sprite(data->weapons[netobjects.local_character->weapon%data->num_weapons].sprite_proj);
 		for (int i = 0; i < min(netobjects.local_character->ammocount, 10); i++)
 			gfx_quads_drawTL(x+i*12,y+24,10,10);
@@ -1300,7 +1297,7 @@ void render_game()
 				
 				if(gametype == GAMETYPE_CTF)
 				{
-					gfx_text(0, whole-20-w/2+5, 300-40-15+t*20+2, 14, buf, -1);
+					gfx_text(0, whole-20-w/2+5, 300-40-15+t*20, 14, buf, -1);
 					if(netobjects.flags[t])
 					{
  						if(netobjects.flags[t]->carried_by == -2 || (netobjects.flags[t]->carried_by == -1 && ((client_tick()/10)&1)))
@@ -1398,7 +1395,7 @@ void render_game()
 		float ramp = velocity_ramp(velspeed, tuning.velramp_start, tuning.velramp_range, tuning.velramp_curvature);
 		
 		char buf[512];
-		str_format(buf, sizeof(buf), "%.0f\n%.0f\n%.2f\n%d", velspeed, velspeed*ramp, ramp, netobj_num_corrections());
+		str_format(buf, sizeof(buf), "%.0f\n%.0f\n%.2f\n%d %s", velspeed, velspeed*ramp, ramp, netobj_num_corrections(), netobj_corrected_on());
 		gfx_text(0, 150, 50, 12, buf, -1);
 	}
 
