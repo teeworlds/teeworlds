@@ -443,7 +443,7 @@ void projectile::tick()
 	int collide = col_check_point((int)curpos.x, (int)curpos.y);
 	
 	vec2 new_pos;
-	entity *targetplayer = (entity*)intersect_player(prevpos, curpos, 8.0f, new_pos, powner);
+	entity *targetplayer = (entity*)intersect_player(prevpos, curpos, 6.0f, new_pos, powner);
 	
 	if(targetplayer || collide || lifespan < 0)
 	{
@@ -503,7 +503,7 @@ laser::laser(vec2 pos, vec2 direction, float start_energy, player *owner)
 bool laser::hit_player(vec2 from, vec2 to)
 {
 	vec2 at;
-	player *hit = intersect_player(pos, to, 8.0f, at, owner);
+	player *hit = intersect_player(pos, to, 0.0f, at, owner);
 	if(!hit)
 		return false;
 
