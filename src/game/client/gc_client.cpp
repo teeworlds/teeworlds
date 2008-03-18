@@ -850,7 +850,9 @@ void render_game()
 	float deadzone = config.cl_mouse_deadzone;
 	float follow_factor = config.cl_mouse_followfactor/100.0f;
 	float mouse_max = min(camera_max_distance/follow_factor + deadzone, (float)config.cl_mouse_max_distance);
-	vec2 camera_offset(0, 0);
+	
+	// TODO: static works, but kinda ugly, it's so that the camera doesn't jerkoff when we wanna select emote
+	static vec2 camera_offset(0, 0);
 
 	// fetch new input
 	if(!menu_active && !emoticon_selector_active)
