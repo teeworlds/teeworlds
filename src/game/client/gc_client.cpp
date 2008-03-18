@@ -868,7 +868,6 @@ void render_game()
 		else
 		{
 			float l = length(mouse_pos);
-			if(l != l) l = 0; // detect division by zero
 			
 			if(l > mouse_max)
 			{
@@ -877,7 +876,8 @@ void render_game()
 			}
 
 			float offset_amount = max(l-deadzone, 0) * follow_factor;
-			camera_offset = normalize(mouse_pos)*offset_amount;
+			if(l > 0.0001f) // make sure that this isn't 0
+				camera_offset = normalize(mouse_pos)*offset_amount;
 		}
 	}
 
