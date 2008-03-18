@@ -5,6 +5,7 @@
 #include "e_packer.h"
 #include "e_compression.h"
 #include "e_engine.h"
+#include "e_config.h"
 
 /* useful for debugging */
 #if 0
@@ -13,7 +14,7 @@
 	#define packing_error(p) p->error = 1
 #endif
 
-int stress_get_int()
+static int stress_get_int()
 {
 	static const int nasty[] = {-1, 0, 1, 66000, -66000, (-1<<31), 0x7fffffff};
 	if(rand()&1)
@@ -21,7 +22,7 @@ int stress_get_int()
 	return nasty[rand()%6];
 }
 
-const char *stress_get_string(int *size)
+static const char *stress_get_string(int *size)
 {
 	static char noise[1024];
 	int i;
@@ -35,6 +36,17 @@ const char *stress_get_string(int *size)
 	return noise;
 }
 
+
+static int stress_prob(float probability)
+{
+	if(!config.dbg_stress_network)
+		return 0;
+	if(rand()/(float)RAND_MAX < probability)
+		return 1;
+	return 0;
+}
+
+
 void packer_reset(PACKER *p)
 {
 	p->error = 0;
@@ -47,8 +59,8 @@ void packer_add_int(PACKER *p, int i)
 	if(p->error)
 		return;
 		
-	/*if(engine_stress(0.05f))
-		i = stress_get_int();*/
+	if(stress_prob(0.025f))
+		i = stress_get_int();
 	
 	/* make sure that we have space enough */
 	if(p->end - p->current < 6)
@@ -65,13 +77,11 @@ void packer_add_string(PACKER *p, const char *str, int limit)
 	if(p->error)
 		return;
 		
-	/* STRESS: do this better */
-	/*
-	if(engine_stress(0.1f))
+	if(stress_prob(0.1f))
 	{
 		str = stress_get_string(0);
 		limit = 0;
-	}*/
+	}
 	
 	/* */
 	if(limit > 0)

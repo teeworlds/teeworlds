@@ -56,6 +56,7 @@ MACRO_CONFIG_STR(sv_rcon_password, 32, "")
 
 MACRO_CONFIG_INT(debug, 0, 0, 1)
 MACRO_CONFIG_INT(dbg_stress, 0, 0, 0)
+MACRO_CONFIG_INT(dbg_stress_network, 0, 0, 0)
 MACRO_CONFIG_INT(dbg_pref, 0, 0, 1)
 MACRO_CONFIG_INT(dbg_graphs, 0, 0, 1)
 MACRO_CONFIG_INT(dbg_hitch, 0, 0, 0)

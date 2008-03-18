@@ -25,16 +25,6 @@ const char *engine_savepath(const char *filename, char *buffer, int max)
 	return buffer;
 }
 
-
-int engine_stress(float probability)
-{
-	if(!config.dbg_stress)
-		return 0;
-	if(rand()/(float)RAND_MAX < probability)
-		return 1;
-	return 0;
-}
-
 void engine_init(const char *appname)
 {
 	dbg_logger_stdout();

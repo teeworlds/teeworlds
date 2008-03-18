@@ -797,7 +797,7 @@ static void client_process_packet(NETPACKET *packet)
 				const unsigned char *data = msg_unpack_raw(size);
 				
 				/* check fior errors */
-				if(msg_unpack_error() || size <= 0 || total_size <= 0)
+				if(msg_unpack_error() || size <= 0 || total_size <= 0 || !mapdownload_file)
 					return;
 				
 				io_write(mapdownload_file, data, size);
@@ -1151,6 +1151,12 @@ static void client_update()
 			prevtick_start = prev_pred_tick*time_freq()/50;
 			predintratick = (pred_now - prevtick_start) / (float)(curtick_start-prevtick_start);
 			
+			if(new_pred_tick < snapshots[SNAP_PREV]->tick-SERVER_TICK_SPEED/10 || new_pred_tick > snapshots[SNAP_PREV]->tick+SERVER_TICK_SPEED)
+			{
+				dbg_msg("client", "prediction time reset!");
+				st_init(&predicted_time, snapshots[SNAP_CURRENT]->tick*time_freq()/50);
+			}
+			
 			if(new_pred_tick > current_predtick)
 			{
 				last_predintra = predintratick;
@@ -1161,8 +1167,6 @@ static void client_update()
 				client_send_input();
 			}
 			
-			if(predintratick < last_predintra)
-				dbg_msg("client", "prediction time goes backwards, that can't be good");
 			last_predintra = predintratick;
 		}
 

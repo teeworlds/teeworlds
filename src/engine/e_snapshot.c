@@ -313,6 +313,13 @@ int snapshot_create_delta(SNAPSHOT *from, SNAPSHOT *to, void *dstdata)
 	return (int)((char*)data-(char*)dstdata);
 }
 
+static int range_check(void *end, void *ptr, int size)
+{
+	if((const char *)ptr + size > (const char *)end)
+		return -1;
+	return 0;
+}
+
 int snapshot_unpack_delta(SNAPSHOT *from, SNAPSHOT *to, void *srcdata, int data_size)
 {
 	SNAPBUILD builder;
@@ -371,8 +378,7 @@ int snapshot_unpack_delta(SNAPSHOT *from, SNAPSHOT *to, void *srcdata, int data_
 		id = *data++;
 		snapshot_current = type;
 		
-		if(data+itemsize/4 > end)
-			return -1;
+		if(range_check(end, data, itemsize) || itemsize < 0) return -1;
 		
 		key = (type<<16)|id;
 		
@@ -380,6 +386,8 @@ int snapshot_unpack_delta(SNAPSHOT *from, SNAPSHOT *to, void *srcdata, int data_
 		newdata = snapbuild_get_item_data(&builder, key);
 		if(!newdata)
 			newdata = (int *)snapbuild_new_item(&builder, key>>16, key&0xffff, itemsize);
+
+		if(range_check(end, newdata, itemsize)) return -1;
 			
 		fromindex = snapshot_get_item_index(from, key);
 		if(fromindex != -1)
@@ -553,12 +561,12 @@ void *snapbuild_new_item(SNAPBUILD *sb, int type, int id, int size)
 {
 	SNAPSHOT_ITEM *obj = (SNAPSHOT_ITEM *)(sb->data+sb->data_size);
 
-	if(engine_stress(0.01f))
+	/*if(stress_prob(0.01f))
 	{
 		size += ((rand()%5) - 2)*4;
 		if(size < 0)
 			size = 0;
-	}
+	}*/
 
 	mem_zero(obj, sizeof(SNAPSHOT_ITEM) + size);
 	obj->type_and_id = (type<<16)|id;

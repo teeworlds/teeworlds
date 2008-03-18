@@ -34,6 +34,7 @@ int run(int port, NETADDR4 dest)
 		while(1)
 		{
 			// fetch data
+			int data_trash = 0;
 			NETADDR4 from;
 			int bytes = net_udp4_recv(socket, &from, buffer, 1024*2);
 			if(bytes <= 0)
@@ -46,10 +47,12 @@ int run(int port, NETADDR4 dest)
 			packet *p = (packet *)mem_alloc(sizeof(packet)+bytes, 1);
 
 			if(net_addr4_cmp(&from, &dest) == 0)
-				p->send_to = src;
+			{
+				p->send_to = src; // from the server
+			}
 			else
 			{
-				src = from;
+				src = from; // from the client
 				p->send_to = dest;
 			}
 
@@ -70,6 +73,17 @@ int run(int port, NETADDR4 dest)
 			p->data_size = bytes;
 			p->id = id++;
 			mem_copy(p->data, buffer, bytes);
+			
+			if(id > 20 && bytes > 6 && data_trash)
+			{
+				p->data[6+(rand()%(bytes-6))] = rand()&255; // modify a byte
+				if((rand()%10) == 0)
+				{
+					p->data_size -= rand()%32;
+					if(p->data_size < 6)
+						p->data_size = 6;
+				}
+			}
 
 			if(debug)
 				dbg_msg("crapnet", "<< %08d %d.%d.%d.%d:%5d (%d)", p->id, from.ip[0], from.ip[1], from.ip[2], from.ip[3], from.port, p->data_size);

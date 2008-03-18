@@ -165,6 +165,10 @@ extern "C" void modc_predict()
 				local_cid = client_id;
 		}
 	}
+	
+	// we can't predict without our own id
+	if(local_cid == -1)
+		return;
 
 	// predict
 	for(int tick = client_tick()+1; tick <= client_predtick(); tick++)
