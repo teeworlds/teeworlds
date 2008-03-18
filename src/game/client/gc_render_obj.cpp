@@ -136,12 +136,15 @@ void render_flag(const NETOBJ_FLAG *prev, const NETOBJ_FLAG *current)
 	gfx_quads_setrotation(angle);
 
 	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
+	
+	// make sure that the flag isn't interpolated between capture and return
+	if(prev->carried_by != current->carried_by)
+		pos = vec2(current->x, current->y);
 
+	// make sure to use predicted position if we are the carrier
 	if(netobjects.local_info && current->carried_by == netobjects.local_info->cid)
 		pos = local_character_pos;
 
-    //gfx_setcolor(current->team ? 0 : 1,0,current->team ? 1 : 0,1);
-    //draw_sprite(pos.x, pos.y, size);
     gfx_quads_draw(pos.x, pos.y-size*0.75f, size, size*2);
     gfx_quads_end();
 }
