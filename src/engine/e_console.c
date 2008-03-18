@@ -225,7 +225,7 @@ void console_execute_line(const char *str)
 	console_execute_line_stroked(1, str);
 }
 
-void console_execute_file(const char *filename)
+static void console_execute_file_real(const char *filename)
 {
 	IOHANDLE file;
 	file = io_open(filename, IOFLAG_READ);
@@ -247,9 +247,46 @@ void console_execute_file(const char *filename)
 		dbg_msg("console", "failed to open '%s'", filename);
 }
 
-static void echo_command(void *result, void *user_data)
+struct exec_file
+{
+	const char *filename;
+	struct exec_file *next;
+};
+
+void console_execute_file(const char *filename)
+{
+	static struct exec_file *first = 0;
+	struct exec_file this;
+	struct exec_file *cur;
+	struct exec_file *prev;
+
+	/* make sure that this isn't being executed already */	
+	for(cur = first; cur; cur = cur->next)
+		if(strcmp(filename, cur->filename) == 0)
+			return;
+	
+	/* push this one to the stack */
+	prev = first;
+	this.filename = filename;
+	this.next = first;
+	first = &this;
+	
+	/* execute file */
+	console_execute_file_real(filename);
+	
+	/* pop this one from the stack */
+	first = prev;
+}
+
+static void con_echo(void *result, void *user_data)
 {
 	console_print(console_arg_string(result, 0));
+}
+
+static void con_exec(void *result, void *user_data)
+{
+	console_execute_file(console_arg_string(result, 0));
+
 }
 
 
@@ -295,7 +332,8 @@ static void str_variable_command(void *result, void *user_data)
 
 void console_init()
 {
-	MACRO_REGISTER_COMMAND("echo", "r", echo_command, 0x0);
+	MACRO_REGISTER_COMMAND("echo", "r", con_echo, 0x0);
+	MACRO_REGISTER_COMMAND("exec", "r", con_exec, 0x0);
 
 	#define MACRO_CONFIG_INT(name,def,min,max) { static INT_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?i", int_variable_command, &data) }
 	#define MACRO_CONFIG_STR(name,len,def) { static STR_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?r", str_variable_command, &data) }
