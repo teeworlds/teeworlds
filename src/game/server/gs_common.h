@@ -240,7 +240,7 @@ public:
 	static const int phys_size = 28;
 
 	// weapon info
-	entity* hitobjects[10];
+	entity *hitobjects[10];
 	int numobjectshit;
 	struct weaponstat
 	{

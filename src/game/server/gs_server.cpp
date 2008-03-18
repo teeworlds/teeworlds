@@ -643,8 +643,7 @@ void player::reset()
 	emote_stop = 0;
 	damage_taken_tick = 0;
 	attack_tick = 0;
-	numobjectshit = 0;
-	
+
 	mem_zero(&ninja, sizeof(ninja));
 	
 	active_weapon = WEAPON_GUN;
@@ -1005,8 +1004,33 @@ void player::fire_weapon()
 			// reset objects hit
 			numobjectshit = 0;
 			create_sound(pos, SOUND_HAMMER_FIRE);
-			break;
-		}
+			
+			int type = NETOBJTYPE_PLAYER_CHARACTER;
+			entity *ents[64];
+			int num = world->find_entities(pos+direction*phys_size*0.75f, phys_size*0.5f, ents, 64, &type, 1);			
+
+			for (int i = 0; i < num; i++)
+			{
+				player *target = (player*)ents[i];
+				if (target == this)
+					continue;
+					
+				// hit a player, give him damage and stuffs...
+				vec2 fdir = normalize(ents[i]->pos - pos);
+
+				// set his velocity to fast upward (for now)
+				create_sound(pos, SOUND_HAMMER_HIT);
+				ents[i]->take_damage(vec2(0,-1.0f), data->weapons[active_weapon].meleedamage, client_id, active_weapon);
+				vec2 dir;
+				if (length(target->pos - pos) > 0.0f)
+					dir = normalize(target->pos - pos);
+				else
+					dir = vec2(0,-1);
+					
+				target->core.vel += normalize(dir + vec2(0,-1.1f)) * 10.0f;
+			}
+			
+		} break;
 
 		case WEAPON_GUN:
 		{
@@ -1178,151 +1202,10 @@ int player::handle_weapons()
 		}
 	}
 
-	//if(reload_timer == 0)
+	// fire weapon, if wanted
 	fire_weapon();
-	//}
-	/*
-		bool fullauto = false;
-		if(active_weapon == WEAPON_GRENADE || active_weapon == WEAPON_SHOTGUN)
-			fullauto = true;
-		
-		if(count_input(latest_previnput.fire, latest_input.fire).presses || ((fullauto && latest_input.fire&1) && weapons[active_weapon].ammo))
-		{
-			// fire!
-			if(weapons[active_weapon].ammo)
-			{
-				switch(active_weapon)
-				{
-					case WEAPON_HAMMER:
-					{
-						// reset objects hit
-						numobjectshit = 0;
-						create_sound(pos, SOUND_HAMMER_FIRE);
-						break;
-					}
 
-					case WEAPON_GUN:
-					{
-						new projectile(WEAPON_GUN,
-							client_id,
-							pos+vec2(0,0),
-							direction*tuning.gun_speed,
-							server_tickspeed(),
-							this,
-							1, 0, 0, -1, WEAPON_GUN);
-						create_sound(pos, SOUND_GUN_FIRE);
-						break;
-					}
-					case WEAPON_GRENADE:
-					{
-						new projectile(WEAPON_GRENADE,
-							client_id,
-							pos+vec2(0,0),
-							direction*tuning.grenade_speed,
-							100,
-							this,
-							1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
-						create_sound(pos, SOUND_GRENADE_FIRE);
-						break;
-					}
-					case WEAPON_SHOTGUN:
-					{
-						int shotspread = 2;
-						for(int i = -shotspread; i <= shotspread; i++)
-						{
-							float spreading[] = {-0.185f, -0.070f, 0, 0.070f, 0.185f};
-							float a = get_angle(direction);
-							float v = 1.0f-fabs(i/(float)shotspread);
-							a += spreading[i+2];
-							float speed = mix((float)tuning.shotgun_speed_wide, (float)tuning.shotgun_speed_center, v);
-							new projectile(WEAPON_SHOTGUN,
-								client_id,
-								pos+vec2(0,0),
-								vec2(cosf(a), sinf(a))*speed,
-								(int)(server_tickspeed()*0.25f),
-								this,
-								1, 0, 0, -1, WEAPON_SHOTGUN);
-						}
-						create_sound(pos, SOUND_SHOTGUN_FIRE);
-						break;
-					}
-					
-					case WEAPON_RIFLE:
-					{
-						new laser(pos, direction, tuning.laser_reach, this);
-						create_sound(pos, SOUND_RIFLE_FIRE);
-						break;
-					}
-					
-				}
-
-				weapons[active_weapon].ammo--;
-				attack_tick = server_tick();
-				reload_timer = data->weapons[active_weapon].firedelay * server_tickspeed() / 1000;
-			}
-			else
-			{
-				create_sound(pos, SOUND_WEAPON_NOAMMO);
-			}
-		}
-	}*/
-
-	// Update weapons
-	if (active_weapon == WEAPON_HAMMER && reload_timer > 0)
-	{
-		// Handle collisions
-		// only one that needs update (for now)
-		// do selection for the weapon and bash anything in it
-		// check if we hit anything along the way
-		int type = NETOBJTYPE_PLAYER_CHARACTER;
-		entity *ents[64];
-		vec2 lookdir(direction.x > 0.0f ? 1.0f : -1.0f, 0.0f);
-		vec2 dir = lookdir * data->weapons[active_weapon].meleereach;
-		float radius = length(dir * 0.5f);
-		vec2 center = pos + dir * 0.5f;
-		int num = world->find_entities(center, radius, ents, 64, &type, 1);
-
-		for (int i = 0; i < num; i++)
-		{
-			// Check if entity is a player
-			if (ents[i] == this)
-				continue;
-			// make sure we haven't hit this object before
-			bool balreadyhit = false;
-			for (int j = 0; j < numobjectshit; j++)
-			{
-				if (hitobjects[j] == ents[i])
-					balreadyhit = true;
-			}
-			if (balreadyhit)
-				continue;
-
-			// check so we are sufficiently close
-			if (distance(ents[i]->pos, pos) > (phys_size * 2.0f))
-				continue;
-
-			// hit a player, give him damage and stuffs...
-			// create sound for bash
-			//create_sound(ents[i]->pos, sound_impact);
-			vec2 fdir = normalize(ents[i]->pos- pos);
-
-			// set his velocity to fast upward (for now)
-			//create_smoke(ents[i]->pos);
-			create_sound(pos, SOUND_HAMMER_HIT);
-			if(numobjectshit < 10)
-				hitobjects[numobjectshit++] = ents[i];
-			ents[i]->take_damage(vec2(0,-1.0f), data->weapons[active_weapon].meleedamage, client_id, active_weapon);
-			player* target = (player*)ents[i];
-			vec2 dir;
-			if (length(target->pos - pos) > 0.0f)
-				dir = normalize(target->pos - pos);
-			else
-				dir = vec2(0,-1);
-				
-			target->core.vel += normalize(dir + vec2(0,-1.1f)) * 10.0f;
-		}
-	}
-	
+	// ammo regen
 	if (data->weapons[active_weapon].ammoregentime)
 	{
 		// If equipped and not active, regen ammo?
