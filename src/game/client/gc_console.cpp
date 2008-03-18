@@ -215,6 +215,20 @@ static void con_sayteam(void *result, void *user_data)
 	chat_say(1, console_arg_string(result, 0));
 }
 
+
+
+static void con_chat(void *result, void *user_data)
+{
+	const char *mode = console_arg_string(result, 0);
+	if(strcmp(mode, "all") == 0)
+		chat_enable_mode(0);
+	else if(strcmp(mode, "team") == 0)
+		chat_enable_mode(1);
+	else
+		dbg_msg("console", "expected all or team as mode");
+}
+
+
 void send_kill(int client_id);
 
 static void con_kill(void *result, void *user_data)
@@ -328,17 +342,6 @@ static void con_key_input_weapon(void *result, void *user_data)
 	int w = (char *)user_data - (char *)0;
 	if(console_arg_int(result, 0))
 		input_data.wanted_weapon = w;
-}
-
-static void con_chat(void *result, void *user_data)
-{
-	const char *mode = console_arg_string(result, 0);
-	if(strcmp(mode, "all") == 0)
-		chat_enable_mode(0);
-	else if(strcmp(mode, "team") == 0)
-		chat_enable_mode(1);
-	else
-		dbg_msg("console", "expected all or team as mode");
 }
 
 static void con_toggle_local_console(void *result, void *user_data)

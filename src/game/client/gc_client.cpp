@@ -741,6 +741,9 @@ void chat_enable_mode(int team)
 			
 		mem_zero(chat_input, sizeof(chat_input));
 		chat_input_len = 0;
+		
+		// make sure that we don't trigger something weird
+		inp_clear_events();
 	}
 }
 
@@ -779,7 +782,7 @@ void render_game()
 	anim_eval(&data->animations[ANIM_BASE], 0, &idlestate);
 	anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);
 
-	if (inp_key_down(KEY_ESC))
+	if(inp_key_down(KEY_ESC))
 	{
 		if (chat_mode)
 			chat_mode = CHATMODE_NONE;
@@ -806,15 +809,6 @@ void render_game()
 	{
 		if(chat_mode != CHATMODE_NONE)
 		{
-			if(inp_key_down(KEY_ENTER) || inp_key_down(KEY_KP_ENTER))
-			{
-				// send message
-				if(chat_input_len)
-					chat_say(chat_mode == CHATMODE_ALL ? 0 : 1, chat_input);
-
-				chat_mode = CHATMODE_NONE;
-			}
-
 			for(int i = 0; i < inp_num_events(); i++)
 			{
 				INPUT_EVENT e = inp_get_event(i);
@@ -829,6 +823,16 @@ void render_game()
 					}
 				}
 
+				if((e.key == KEY_ENTER || e.key == KEY_KP_ENTER) && (e.flags&INPFLAG_PRESS))
+				{
+					// send message
+					if(chat_input_len)
+						chat_say(chat_mode == CHATMODE_ALL ? 0 : 1, chat_input);
+
+					chat_mode = CHATMODE_NONE;
+					break;					
+				}
+				
 				if(e.key == KEY_BACKSPACE && (e.flags&INPFLAG_PRESS))
 				{
 					if(chat_input_len > 0)

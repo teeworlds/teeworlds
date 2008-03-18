@@ -197,7 +197,7 @@ message cl_say
 end
 
 message sv_chat
-	range(0, 1) team
+	range(-1, 1) team
 	range(-1,MAX_CLIENTS-1) cid
 	string message
 end

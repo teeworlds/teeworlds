@@ -2070,13 +2070,12 @@ void mods_message(int msgtype, int client_id)
 	if(msgtype == NETMSGTYPE_CL_SAY)
 	{
 		NETMSG_CL_SAY *msg = (NETMSG_CL_SAY *)rawmsg;
-		
 		int team = msg->team;
 		if(team)
 			team = players[client_id].team;
 		else
 			team = -1;
-		send_chat(client_id, msg->team, msg->message);
+		send_chat(client_id, team, msg->message);
 	}
 	else if (msgtype == NETMSGTYPE_CL_SETTEAM)
 	{
