@@ -243,11 +243,11 @@ void gfx_lines_end();
 		arg1 - desc
 	
 	Returns:
-
+		returns the number of lines written
 	See Also:
 		<other_func>
 */
-void gfx_text(void *font, float x, float y, float size, const char *text, int max_width);
+int gfx_text(void *font, float x, float y, float size, const char *text, int max_width);
 
 /*
 	Function: gfx_text_width

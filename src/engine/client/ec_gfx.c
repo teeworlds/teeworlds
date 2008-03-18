@@ -1017,8 +1017,9 @@ float gfx_text_raw(void *font_set_v, float x, float y, float size, const char *t
     return draw_x;
 }
 
-void gfx_text(void *font_set_v, float x, float y, float size, const char *text, int max_width)
+int gfx_text(void *font_set_v, float x, float y, float size, const char *text, int max_width)
 {
+	int lines = 1;
 	if(max_width == -1)
 		gfx_text_raw(font_set_v, x, y, size, text, -1);
 	else
@@ -1030,6 +1031,7 @@ void gfx_text(void *font_set_v, float x, float y, float size, const char *text, 
 			float w = gfx_text_width(font_set_v, size, text, wlen);
 			if(x+w-startx > max_width)
 			{
+				lines++;
 				y += size;
 				x = startx;
 			}
@@ -1040,6 +1042,7 @@ void gfx_text(void *font_set_v, float x, float y, float size, const char *text, 
 		}
 	}
     gfx_text_raw(font_set_v, x, y, size, text, -1);
+    return lines;
 }
 
 float gfx_text_width(void *font_set_v, float size, const char *text, int length)

@@ -1182,7 +1182,7 @@ void render_game()
 	{
 		gfx_mapscreen(0,0,300*gfx_screenaspect(),300);
 		float x = 10.0f;
-		float y = 300.0f-50.0f;
+		float y = 300.0f-30.0f;
 		float starty = -1;
 		if(chat_mode != CHATMODE_NONE)
 		{
@@ -1209,6 +1209,16 @@ void render_game()
 
 			float begin = x;
 
+
+			float fontsize = 8.0f;
+			
+			// turn of alpha so we can render once and just get the number of lines
+			// TODO: this is ugly, but have to do for now
+			gfx_text_color(1,1,1,0);
+			int lines = gfx_text(0, begin, y, fontsize, chat_lines[r].text, 300);
+
+			y -= fontsize * (lines);
+
 			// render name
 			gfx_text_color(0.8f,0.8f,0.8f,1);
 			if(chat_lines[r].client_id == -1)
@@ -1223,10 +1233,13 @@ void render_game()
 				gfx_text_color(0.75f,0.5f,0.75f, 1); // spectator
 				
 			// render line
-			int lines = int(gfx_text_width(0, 10, chat_lines[r].text, -1)) / 300 + 1;
 			
-			gfx_text(0, begin, y - 8 * (lines - 1), 8, chat_lines[r].name, -1);
-			begin += gfx_text_width(0, 10, chat_lines[r].name, -1);
+			//int lines = int(gfx_text_width(0, fontsize, chat_lines[r].text, -1)) / 300 + 1;
+
+			
+			gfx_text(0, begin, y, fontsize, chat_lines[r].name, -1);
+			begin += gfx_text_width(0, fontsize, chat_lines[r].name, -1);
+
 
 			gfx_text_color(1,1,1,1);
 			if(chat_lines[r].client_id == -1)
@@ -1234,8 +1247,7 @@ void render_game()
 			else if(chat_lines[r].team)
 				gfx_text_color(0.65f,1,0.65f,1); // team message
 
-			gfx_text(0, begin, y - 8 * (lines - 1), 8, chat_lines[r].text, 300);
-			y -= 6 * lines;
+			gfx_text(0, begin, y, fontsize, chat_lines[r].text, 300);
 		}
 
 		gfx_text_color(1,1,1,1);
