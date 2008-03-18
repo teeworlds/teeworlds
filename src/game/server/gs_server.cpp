@@ -2109,17 +2109,20 @@ void mods_message(int msgtype, int client_id)
 			p++;
 		}*/
 
-		//
-		if(msgtype == NETMSGTYPE_CL_CHANGEINFO && strcmp(msg->name, server_clientname(client_id)) != 0)
+		// copy old name
+		char oldname[MAX_NAME_LENGTH];
+		str_copy(oldname, server_clientname(client_id), MAX_NAME_LENGTH);
+		
+		server_setclientname(client_id, msg->name);
+		if(msgtype == NETMSGTYPE_CL_CHANGEINFO && strcmp(oldname, server_clientname(client_id)) != 0)
 		{
 			char chattext[256];
-			str_format(chattext, sizeof(chattext), "*** %s changed name to %s", server_clientname(client_id), msg->name);
+			str_format(chattext, sizeof(chattext), "*** %s changed name to %s", oldname, server_clientname(client_id));
 			send_chat(-1, -1, chattext);
 		}
-
-		//send_set_name(client_id, players[client_id].name, name);
+		
+		// set skin
 		str_copy(players[client_id].skin_name, msg->skin, sizeof(players[client_id].skin_name));
-		server_setclientname(client_id, msg->name);
 		
 		gameobj->on_player_info_change(&players[client_id]);
 		

@@ -202,11 +202,38 @@ const char *server_clientname(int client_id)
 	return clients[client_id].name;
 }
 
+static int server_try_setclientname(int client_id, const char *name)
+{
+	int i;
+	for(i = 0; i < MAX_CLIENTS; i++)
+		if(i != client_id && clients[i].state >= SRVCLIENT_STATE_READY)
+		{
+			if(strcmp(name, clients[i].name) == 0)
+				return -1;
+		}
+
+	str_copy(clients[client_id].name, name, MAX_NAME_LENGTH);
+	return 0;
+}
+
 void server_setclientname(int client_id, const char *name)
 {
+	char nametry[MAX_NAME_LENGTH];
+	int i;
 	if(client_id < 0 || client_id > MAX_CLIENTS || clients[client_id].state < SRVCLIENT_STATE_READY)
 		return;
-	str_copy(clients[client_id].name, name, MAX_NAME_LENGTH);
+		
+	str_copy(nametry, name, MAX_NAME_LENGTH);
+	if(server_try_setclientname(client_id, nametry))
+	{
+		/* auto rename */
+		for(i = 1;; i++)
+		{
+			str_format(nametry, MAX_NAME_LENGTH, "(%d)%s", i, name);
+			if(server_try_setclientname(client_id, nametry) == 0)
+				break;
+		}
+	}
 }
 
 void server_setclientscore(int client_id, int score)

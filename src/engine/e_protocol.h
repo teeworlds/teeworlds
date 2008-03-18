@@ -60,7 +60,6 @@ enum
 /* this should be revised */
 enum
 {
-	MAX_NAME_LENGTH=32,
 	MAX_CLANNAME_LENGTH=32,
 	MAX_INPUT_SIZE=128,
 	MAX_SNAPSHOT_PACKSIZE=900
