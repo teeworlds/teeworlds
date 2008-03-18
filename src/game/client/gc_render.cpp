@@ -238,7 +238,7 @@ void mapscreen_to_world(float center_x, float center_y, float parallax_x, float 
 	float offset_x, float offset_y, float aspect, float zoom, float *points)
 {
 	float width, height;
-	calc_screen_params(1300*1000, 1500, 1050, aspect, &width, &height);
+	calc_screen_params(1150*1000, 1500, 1050, aspect, &width, &height);
 	center_x *= parallax_x;
 	center_y *= parallax_y;
 	width *= zoom;
