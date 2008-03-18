@@ -23,7 +23,7 @@ void create_smoke(vec2 p);
 void create_playerspawn(vec2 p);
 void create_death(vec2 p, int who);
 void create_sound(vec2 pos, int sound, int mask=-1);
-class player *intersect_player(vec2 pos0, vec2 pos1, vec2 &new_pos, class entity *notthis = 0);
+class player *intersect_player(vec2 pos0, vec2 pos1, float radius, vec2 &new_pos, class entity *notthis = 0);
 class player *closest_player(vec2 pos, float radius, entity *notthis);
 
 game_world *world;
@@ -443,7 +443,7 @@ void projectile::tick()
 	int collide = col_check_point((int)curpos.x, (int)curpos.y);
 	
 	vec2 new_pos;
-	entity *targetplayer = (entity*)intersect_player(prevpos, curpos, new_pos, powner);
+	entity *targetplayer = (entity*)intersect_player(prevpos, curpos, 8.0f, new_pos, powner);
 	
 	if(targetplayer || collide || lifespan < 0)
 	{
@@ -503,7 +503,7 @@ laser::laser(vec2 pos, vec2 direction, float start_energy, player *owner)
 bool laser::hit_player(vec2 from, vec2 to)
 {
 	vec2 at;
-	player *hit = intersect_player(pos, to, at, owner);
+	player *hit = intersect_player(pos, to, 8.0f, at, owner);
 	if(!hit)
 		return false;
 
@@ -1837,7 +1837,7 @@ float closest_point_on_line(vec2 line_point0, vec2 line_point1, vec2 target_poin
 }
 
 // TODO: should be more general
-player *intersect_player(vec2 pos0, vec2 pos1, vec2& new_pos, entity *notthis)
+player *intersect_player(vec2 pos0, vec2 pos1, float radius, vec2& new_pos, entity *notthis)
 {
 	// Find other players
 	float closest_time = distance(pos0, pos1) * 100.0f;
@@ -1855,7 +1855,7 @@ player *intersect_player(vec2 pos0, vec2 pos1, vec2& new_pos, entity *notthis)
 		float t = closest_point_on_line(pos0, pos1, players[i].pos);
 		vec2 intersect_pos = pos0 + line_dir*t;
 		float len = distance(players[i].pos, intersect_pos);
-		if(len < player::phys_size)
+		if(len < player::phys_size+radius)
 		{
 			if(t < closest_time)
 			{
