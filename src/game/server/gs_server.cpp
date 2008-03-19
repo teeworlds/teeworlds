@@ -1285,9 +1285,15 @@ void player::tick()
 
 	// enable / disable physics
 	if(team == -1 || dead)
+	{
 		world->core.players[client_id] = 0;
+		clear_flag(FLAG_PHYSICS);
+	}
 	else
+	{
 		world->core.players[client_id] = &core;
+		set_flag(FLAG_PHYSICS);
+	}
 
 	// spectator
 	if(team == -1)
