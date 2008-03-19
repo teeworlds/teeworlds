@@ -51,6 +51,15 @@ extern "C" void modc_init()
 {
 	static FONT_SET default_font;
 	int64 start = time_get();
+	
+	vec2 v;
+	v = closest_point_on_line(vec2(0, 0), vec2(10, 0), vec2(5, 0));
+	dbg_msg("", "1: %f,%f", v.x, v.y);
+	v = closest_point_on_line(vec2(0, 0), vec2(20, 0), vec2(5, 0));
+	dbg_msg("", "2: %f,%f", v.x, v.y);
+	v = closest_point_on_line(vec2(0, 0), vec2(10, 0), vec2(20, 0));
+	dbg_msg("", "3: %f,%f", v.x, v.y);
+	
 
 	int before = gfx_memory_usage();
 	font_set_load(&default_font, "data/fonts/default_font%d.tfnt", "data/fonts/default_font%d.png", "data/fonts/default_font%d_b.png", 14, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 36);

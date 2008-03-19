@@ -1439,20 +1439,30 @@ bool player::take_damage(vec2 force, int dmg, int from, int weapon)
 		create_damageind(pos, 0, dmg);
 	}
 
-	if(armor)
+	if(dmg)
 	{
-		armor -= 1;
-		dmg--;
-	}
-
-	if(dmg > armor)
-	{
-		dmg -= armor;
-		armor = 0;
+		if(armor)
+		{
+			if(dmg > 1)
+			{
+				health--;
+				dmg--;
+			}
+			
+			if(dmg > armor)
+			{
+				dmg -= armor;
+				armor = 0;
+			}
+			else
+			{
+				armor -= dmg;
+				dmg = 0;
+			}
+		}
+		
 		health -= dmg;
 	}
-	else
-		armor -= dmg;
 
 	damage_taken_tick = server_tick();
 
@@ -1822,25 +1832,11 @@ void create_sound_global(int sound, int target)
 	server_send_msg(target);
 }
 
-float closest_point_on_line(vec2 line_point0, vec2 line_point1, vec2 target_point)
-{
-	vec2 c = target_point - line_point0;
-	vec2 v = (line_point1 - line_point0);
-	v = normalize(v);
-	float d = length(line_point0-line_point1);
-	float t = dot(v, c);
-
-	if (t < 0) return 0;
-	if (t > d) return 1;
-
-	return t;
-}
-
 // TODO: should be more general
 player *intersect_player(vec2 pos0, vec2 pos1, float radius, vec2& new_pos, entity *notthis)
 {
 	// Find other players
-	float closest_time = distance(pos0, pos1) * 100.0f;
+	float closest_len = distance(pos0, pos1) * 100.0f;
 	vec2 line_dir = normalize(pos1-pos0);
 	player *closest = 0;
 		
@@ -1852,15 +1848,14 @@ player *intersect_player(vec2 pos0, vec2 pos1, float radius, vec2& new_pos, enti
 		if(!(players[i].flags&entity::FLAG_PHYSICS))
 			continue;
 
-		float t = closest_point_on_line(pos0, pos1, players[i].pos);
-		vec2 intersect_pos = pos0 + line_dir*t;
+		vec2 intersect_pos = closest_point_on_line(pos0, pos1, players[i].pos);
 		float len = distance(players[i].pos, intersect_pos);
 		if(len < player::phys_size+radius)
 		{
-			if(t < closest_time)
+			if(len < closest_len)
 			{
 				new_pos = intersect_pos;
-				closest_time = t;
+				closest_len = len;
 				closest = &players[i];
 			}
 		}

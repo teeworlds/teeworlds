@@ -246,9 +246,19 @@ void player_core::tick()
 			hook_tick = 0;
 			triggered_events |= COREEVENT_HOOK_LAUNCH;
 		}
+		else if(hook_state == HOOK_GOING_TO_RETRACT)
+		{
+			triggered_events |= COREEVENT_HOOK_RETRACT;
+			hook_state = HOOK_RETRACTED;
+		}
 		else if(hook_state == HOOK_FLYING)
 		{
 			vec2 new_pos = hook_pos+hook_dir*world->tuning.hook_fire_speed;
+			if(distance(pos, new_pos) > world->tuning.hook_length)
+			{
+				hook_state = HOOK_GOING_TO_RETRACT;
+				new_pos = normalize(pos-new_pos) * world->tuning.hook_length;
+			}
 
 			// Check against other players first
 			for(int i = 0; i < MAX_CLIENTS; i++)
@@ -257,8 +267,9 @@ void player_core::tick()
 				if(!p || p == this)
 					continue;
 
-				//if(p != this && !p->dead && distance(p->pos, new_pos) < p->phys_size)
-				if(distance(p->pos, new_pos) < phys_size)
+
+				vec2 closest_point = closest_point_on_line(hook_pos, new_pos, p->pos);
+				if(distance(p->pos, closest_point) < phys_size+4.0f)
 				{
 					triggered_events |= COREEVENT_HOOK_ATTACH_PLAYER;
 					hook_state = HOOK_GRABBED;
@@ -266,20 +277,6 @@ void player_core::tick()
 					break;
 				}
 			}
-			/*
-			for(entity *ent = world.first_entity; ent; ent = ent->next_entity)
-			{
-				if(ent && ent->objtype == OBJTYPE_PLAYER)
-				{
-					player *p = (player*)ent;
-					if(p != this && !p->dead && distance(p->pos, new_pos) < p->phys_size)
-					{
-						hook_state = HOOK_GRABBED;
-						hooked_player = p;
-						break;
-					}
-				}
-			}*/
 			
 			if(hook_state == HOOK_FLYING)
 			{
@@ -290,19 +287,8 @@ void player_core::tick()
 					hook_state = HOOK_GRABBED;
 					hook_pos = new_pos;	
 				}
-				else if(distance(pos, new_pos) > world->tuning.hook_length)
-				{
-					triggered_events |= COREEVENT_HOOK_RETRACT;
-					hook_state = HOOK_RETRACTED;
-				}
 				else
 					hook_pos = new_pos;
-			}
-			
-			if(hook_state == HOOK_GRABBED)
-			{
-				//create_sound(pos, SOUND_HOOK_ATTACH);
-				//hook_tick = server_tick();
 			}
 		}
 	}
