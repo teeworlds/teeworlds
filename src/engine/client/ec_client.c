@@ -1442,6 +1442,11 @@ static void con_screenshot(void *result, void *user_data)
 	gfx_screenshot();
 }
 
+static void con_rcon(void *result, void *user_data)
+{
+	client_rcon(console_arg_string(result, 0));
+}
+
 static void client_register_commands()
 {
 	MACRO_REGISTER_COMMAND("quit", "", con_quit, 0x0);
@@ -1449,6 +1454,7 @@ static void client_register_commands()
 	MACRO_REGISTER_COMMAND("disconnect", "", con_disconnect, 0x0);
 	MACRO_REGISTER_COMMAND("ping", "", con_ping, 0x0);
 	MACRO_REGISTER_COMMAND("screenshot", "", con_screenshot, 0x0);
+	MACRO_REGISTER_COMMAND("rcon", "r", con_rcon, 0x0);
 }
 
 void client_save_line(const char *line)
