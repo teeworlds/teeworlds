@@ -120,6 +120,9 @@ int LAYER_TILES::brush_grab(LAYERGROUP *brush, RECT rect)
 
 void LAYER_TILES::brush_draw(LAYER *brush, float wx, float wy)
 {
+	if(readonly)
+		return;
+	
 	//
 	LAYER_TILES *l = (LAYER_TILES *)brush;
 	int sx = convert_x(wx);
@@ -214,11 +217,14 @@ int LAYER_TILES::render_properties(RECT *toolbox)
 	};
 	
 	PROPERTY props[] = {
-		{"Image", image, PROPTYPE_IMAGE, 0, 0},
 		{"Width", width, PROPTYPE_INT_STEP, 1, 1000000000},
 		{"Height", height, PROPTYPE_INT_STEP, 1, 1000000000},
+		{"Image", image, PROPTYPE_IMAGE, 0, 0},
 		{0},
 	};
+	
+	if(editor.map.game_layer == this)
+		props[2].name = 0;
 	
 	static int ids[NUM_PROPS] = {0};
 	int new_val = 0;
