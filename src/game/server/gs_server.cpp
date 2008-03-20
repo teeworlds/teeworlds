@@ -538,6 +538,7 @@ void laser::do_bounce()
 			vec2 temp_dir = dir*4.0f;
 			
 			move_point(&temp_pos, &temp_dir, 1.0f, 0);
+			pos = temp_pos;
 			dir = normalize(temp_dir);
 			
 			energy -= distance(from, pos) + tuning.laser_bounce_cost;
