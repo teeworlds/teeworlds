@@ -27,15 +27,16 @@ typedef struct
 RINGBUFFER *ringbuf_init(void *memory, int size)
 {
 	RINGBUFFER *rb = (RINGBUFFER *)memory;
+	mem_zero(memory, size);
+	
 	rb->memory = rb+1;
 	rb->size = (size-sizeof(RINGBUFFER))/sizeof(RBITEM)*sizeof(RBITEM);
 	rb->first = (RBITEM *)rb->memory;
 	rb->first->flags = RBFLAG_FREE;
-	rb->first->prev = 0;
 	rb->first->size = rb->size;
 	rb->last = rb->first;
 	rb->next_alloc = rb->first;
-	rb->last_alloc = 0;
+	
 	return rb;
 }
 
