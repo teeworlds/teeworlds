@@ -387,7 +387,7 @@ projectile::projectile(int type, int owner, vec2 pos, vec2 dir, int span, entity
 {
 	this->type = type;
 	this->pos = pos;
-	this->direction = normalize(dir);
+	this->direction = dir;
 	this->lifespan = span;
 	this->owner = owner;
 	this->powner = powner;
@@ -1039,7 +1039,7 @@ void player::fire_weapon()
 				client_id,
 				pos+vec2(0,0),
 				direction,
-				server_tickspeed(),
+				(int)(server_tickspeed()*tuning.gun_lifetime),
 				this,
 				1, 0, 0, -1, WEAPON_GUN);
 				
@@ -1055,32 +1055,8 @@ void player::fire_weapon()
 			server_send_msg(client_id);
 							
 			create_sound(pos, SOUND_GUN_FIRE);
-			break;
-		}
-		case WEAPON_GRENADE:
-		{
-			projectile *proj = new projectile(WEAPON_GRENADE,
-				client_id,
-				pos+vec2(0,0),
-				direction,
-				100,
-				this,
-				1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
-
-			// pack the projectile and send it to the client directly
-			NETOBJ_PROJECTILE p;
-			proj->fill_info(&p);
-			
-			msg_pack_start(NETMSGTYPE_SV_EXTRA_PROJECTILE, 0);
-			msg_pack_int(1);
-			for(unsigned i = 0; i < sizeof(NETOBJ_PROJECTILE)/sizeof(int); i++)
-				msg_pack_int(((int *)&p)[i]);
-			msg_pack_end();
-			server_send_msg(client_id);
-
-			create_sound(pos, SOUND_GRENADE_FIRE);
-			break;
-		}
+		} break;
+		
 		case WEAPON_SHOTGUN:
 		{
 			int shotspread = 2;
@@ -1093,12 +1069,13 @@ void player::fire_weapon()
 				float spreading[] = {-0.185f, -0.070f, 0, 0.070f, 0.185f};
 				float a = get_angle(direction);
 				a += spreading[i+2];
-				/*float speed = mix((float)tuning.shotgun_speed_wide, (float)tuning.shotgun_speed_center, v);*/
+				float v = 1-(abs(i)/(float)shotspread);
+				float speed = mix((float)tuning.shotgun_speeddiff, 1.0f, v);
 				projectile *proj = new projectile(WEAPON_SHOTGUN,
 					client_id,
-					pos+vec2(0,0),
-					vec2(cosf(a), sinf(a)),
-					(int)(server_tickspeed()*0.25f),
+					pos,
+					vec2(cosf(a), sinf(a))*speed,
+					(int)(server_tickspeed()*tuning.shotgun_lifetime),
 					this,
 					1, 0, 0, -1, WEAPON_SHOTGUN);
 					
@@ -1114,15 +1091,37 @@ void player::fire_weapon()
 			server_send_msg(client_id);					
 			
 			create_sound(pos, SOUND_SHOTGUN_FIRE);
-			break;
-		}
+		} break;
+
+		case WEAPON_GRENADE:
+		{
+			projectile *proj = new projectile(WEAPON_GRENADE,
+				client_id,
+				pos+vec2(0,0),
+				direction,
+				(int)(server_tickspeed()*tuning.grenade_lifetime),
+				this,
+				1, projectile::PROJECTILE_FLAGS_EXPLODE, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
+
+			// pack the projectile and send it to the client directly
+			NETOBJ_PROJECTILE p;
+			proj->fill_info(&p);
+			
+			msg_pack_start(NETMSGTYPE_SV_EXTRA_PROJECTILE, 0);
+			msg_pack_int(1);
+			for(unsigned i = 0; i < sizeof(NETOBJ_PROJECTILE)/sizeof(int); i++)
+				msg_pack_int(((int *)&p)[i]);
+			msg_pack_end();
+			server_send_msg(client_id);
+
+			create_sound(pos, SOUND_GRENADE_FIRE);
+		} break;
 		
 		case WEAPON_RIFLE:
 		{
 			new laser(pos, direction, tuning.laser_reach, this);
 			create_sound(pos, SOUND_RIFLE_FIRE);
-			break;
-		}
+		} break;
 		
 	}
 
@@ -1235,7 +1234,7 @@ void player::on_direct_input(NETOBJ_PLAYER_INPUT *new_input)
 {
 	mem_copy(&latest_previnput, &latest_input, sizeof(latest_input));
 	mem_copy(&latest_input, new_input, sizeof(latest_input));
-	if(team != -1 && !dead)
+	if(num_inputs > 2 && team != -1 && !dead)
 		fire_weapon();
 }
 

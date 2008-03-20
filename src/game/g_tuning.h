@@ -18,14 +18,18 @@ MACRO_TUNING_PARAM(velramp_range, 2000)
 MACRO_TUNING_PARAM(velramp_curvature, 1.4f)
 
 /* weapon tuning */
-MACRO_TUNING_PARAM(gun_curvature, 1.5f)
+MACRO_TUNING_PARAM(gun_curvature, 1.25f)
 MACRO_TUNING_PARAM(gun_speed, 2200.0f)
+MACRO_TUNING_PARAM(gun_lifetime, 2.0f)
 
-MACRO_TUNING_PARAM(shotgun_curvature, 1.5f)
+MACRO_TUNING_PARAM(shotgun_curvature, 1.25f)
 MACRO_TUNING_PARAM(shotgun_speed, 2200.0f)
+MACRO_TUNING_PARAM(shotgun_speeddiff, 0.8f)
+MACRO_TUNING_PARAM(shotgun_lifetime, 0.25f)
 
 MACRO_TUNING_PARAM(grenade_curvature, 7.0f)
 MACRO_TUNING_PARAM(grenade_speed, 1000.0f)
+MACRO_TUNING_PARAM(grenade_lifetime, 2.0f)
 
 MACRO_TUNING_PARAM(laser_reach, 800.0f)
 MACRO_TUNING_PARAM(laser_bounce_delay, 150)
