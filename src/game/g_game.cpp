@@ -257,8 +257,13 @@ void player_core::tick()
 			if(distance(pos, new_pos) > world->tuning.hook_length)
 			{
 				hook_state = HOOK_GOING_TO_RETRACT;
-				new_pos = normalize(pos-new_pos) * world->tuning.hook_length;
+				new_pos = pos + normalize(pos-new_pos) * world->tuning.hook_length;
 			}
+			
+			// make sure that the hook doesn't go though the ground
+			bool going_to_hit_ground = false;
+			if(col_intersect_line(hook_pos, new_pos, &new_pos))
+				going_to_hit_ground = true;
 
 			// Check against other players first
 			for(int i = 0; i < MAX_CLIENTS; i++)
@@ -267,10 +272,16 @@ void player_core::tick()
 				if(!p || p == this)
 					continue;
 
-
 				vec2 closest_point = closest_point_on_line(hook_pos, new_pos, p->pos);
 				if(distance(p->pos, closest_point) < phys_size+4.0f)
 				{
+					dbg_msg("", "state=%d p0=%f,%f p1=%f,%f t=%f,%f c=%f,%f",
+						hook_state,
+						hook_pos.x, hook_pos.y,
+						new_pos.x, new_pos.y,
+						p->pos.x, p->pos.y,
+						closest_point.x, closest_point.y
+						);
 					triggered_events |= COREEVENT_HOOK_ATTACH_PLAYER;
 					hook_state = HOOK_GRABBED;
 					hooked_player = i;
@@ -281,14 +292,13 @@ void player_core::tick()
 			if(hook_state == HOOK_FLYING)
 			{
 				// check against ground
-				if(col_intersect_line(hook_pos, new_pos, &new_pos))
+				if(going_to_hit_ground)
 				{
 					triggered_events |= COREEVENT_HOOK_ATTACH_GROUND;
 					hook_state = HOOK_GRABBED;
-					hook_pos = new_pos;	
 				}
-				else
-					hook_pos = new_pos;
+				
+				hook_pos = new_pos;
 			}
 		}
 	}
