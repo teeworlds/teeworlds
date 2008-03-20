@@ -240,7 +240,7 @@ void player_core::tick()
 		if(hook_state == HOOK_IDLE)
 		{
 			hook_state = HOOK_FLYING;
-			hook_pos = pos;
+			hook_pos = pos+direction*phys_size*0.75f;
 			hook_dir = direction;
 			hooked_player = -1;
 			hook_tick = 0;
@@ -275,13 +275,6 @@ void player_core::tick()
 				vec2 closest_point = closest_point_on_line(hook_pos, new_pos, p->pos);
 				if(distance(p->pos, closest_point) < phys_size+4.0f)
 				{
-					dbg_msg("", "state=%d p0=%f,%f p1=%f,%f t=%f,%f c=%f,%f",
-						hook_state,
-						hook_pos.x, hook_pos.y,
-						new_pos.x, new_pos.y,
-						p->pos.x, p->pos.y,
-						closest_point.x, closest_point.y
-						);
 					triggered_events |= COREEVENT_HOOK_ATTACH_PLAYER;
 					hook_state = HOOK_GRABBED;
 					hooked_player = i;
