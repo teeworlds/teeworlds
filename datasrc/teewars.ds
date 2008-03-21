@@ -404,7 +404,7 @@ weapons {
 		nummuzzlesprites 3
 		muzzleoffsetx 0.0
 		muzzleoffsety 0.0
-		maxammo 10
+		maxammo 5
 		recoil 10
 		firedelay 800
 		muzzleduration 0

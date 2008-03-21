@@ -854,8 +854,8 @@ void player::try_respawn()
 	weapons[WEAPON_GUN].got = true;
 	weapons[WEAPON_GUN].ammo = data->weapons[WEAPON_GUN].maxammo;
 
-	weapons[WEAPON_RIFLE].got = true;
-	weapons[WEAPON_RIFLE].ammo = -1;
+	/*weapons[WEAPON_RIFLE].got = true;
+	weapons[WEAPON_RIFLE].ammo = -1;*/
 	
 	active_weapon = WEAPON_GUN;
 	last_weapon = WEAPON_HAMMER;
@@ -1648,10 +1648,10 @@ void powerup::tick()
 		case POWERUP_WEAPON:
 			if(subtype >= 0 && subtype < NUM_WEAPONS)
 			{
-				if(pplayer->weapons[subtype].ammo < 10 || !pplayer->weapons[subtype].got)
+				if(pplayer->weapons[subtype].ammo < data->weapons[subtype].maxammo || !pplayer->weapons[subtype].got)
 				{
 					pplayer->weapons[subtype].got = true;
-					pplayer->weapons[subtype].ammo = min(10, pplayer->weapons[subtype].ammo + data->powerupinfo[type].amount);
+					pplayer->weapons[subtype].ammo = min(data->weapons[subtype].maxammo, pplayer->weapons[subtype].ammo + data->powerupinfo[type].amount);
 					respawntime = data->powerupinfo[type].respawntime;
 
 					// TODO: data compiler should take care of stuff like this

@@ -145,8 +145,8 @@ void LAYER_TILES::brush_flip_x()
 		for(int x = 0; x < width/2; x++)
 		{
 			TILE tmp = tiles[y*width+x];
-			tiles[y*width+x] = tiles[y*width+x+width-1-x];
-			tiles[y*width+x+width-1-x] = tmp;
+			tiles[y*width+x] = tiles[y*width+width-1-x];
+			tiles[y*width+width-1-x] = tmp;
 		}
 
 	for(int y = 0; y < height; y++)
