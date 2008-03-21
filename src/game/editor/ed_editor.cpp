@@ -78,7 +78,10 @@ void LAYERGROUP::render()
 	for(int i = 0; i < layers.len(); i++)
 	{
 		if(layers[i]->visible && layers[i] != editor.map.game_layer)
-			layers[i]->render();
+		{
+			if(editor.show_detail || !(layers[i]->flags&LAYERFLAG_DETAIL))
+				layers[i]->render();
+		}
 	}
 }
 
@@ -220,14 +223,14 @@ static void draw_inc_button(const void *id, const char *text, int checked, const
 {
 	if(ui_hot_item == id) if(extra) editor.tooltip = (const char *)extra;
 	ui_draw_rect(r, get_button_color(id, checked), CORNER_R, 3.0f);
-	ui_do_label(r, ">", 10, 0, -1);
+	ui_do_label(r, text?text:">", 10, 0, -1);
 }
 
 static void draw_dec_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	if(ui_hot_item == id) if(extra) editor.tooltip = (const char *)extra;
 	ui_draw_rect(r, get_button_color(id, checked), CORNER_L, 3.0f);
-	ui_do_label(r, "<", 10, 0, -1);
+	ui_do_label(r, text?text:"<", 10, 0, -1);
 }
 
 enum
@@ -361,6 +364,16 @@ static void do_toolbar(RECT toolbar)
 	RECT button;
 
 	// animate button
+	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
+	static int hq_button = 0;
+	if(do_editor_button(&hq_button, "Detail", editor.show_detail, &button, draw_editor_button, 0, "[ctrl+h] Toggle High Detail") ||
+		(inp_key_down('H') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))))
+	{
+		editor.show_detail = !editor.show_detail;
+	}
+
+	ui_vsplit_l(&toolbar, 5.0f, 0, &toolbar);
+	
 	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
 	static int animate_button = 0;
 	if(do_editor_button(&animate_button, "Anim", editor.animate, &button, draw_editor_button, 0, "[ctrl+m] Toggle animation") ||
@@ -1193,6 +1206,21 @@ int EDITOR::do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val
 				change = i;
 			}
 		}
+		else if(props[i].type == PROPTYPE_BOOL)
+		{
+			RECT no, yes;
+			ui_vsplit_mid(&shifter, &no, &yes);
+			if(do_editor_button(&ids[i], "No", !props[i].value, &no, draw_dec_button, 0, ""))
+			{
+				*new_val = 0;
+				change = i;
+			}
+			if(do_editor_button(((char *)&ids[i])+1, "Yes", props[i].value, &yes, draw_inc_button, 0, ""))
+			{
+				*new_val = 1;
+				change = i;
+			}
+		}		
 		else if(props[i].type == PROPTYPE_INT_SCROLL)
 		{
 			int new_value = ui_do_value_selector(&ids[i], &shifter, "", props[i].value, props[i].min, props[i].max, 1.0f);

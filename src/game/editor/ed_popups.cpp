@@ -178,12 +178,14 @@ int popup_layer(RECT view)
 	{
 		PROP_GROUP=0,
 		PROP_ORDER,
+		PROP_HQ,
 		NUM_PROPS,
 	};
 	
 	PROPERTY props[] = {
 		{"Group", editor.selected_group, PROPTYPE_INT_STEP, 0, editor.map.groups.len()-1},
 		{"Order", editor.selected_layer, PROPTYPE_INT_STEP, 0, current_group->layers.len()},
+		{"Detail", current_layer->flags&LAYERFLAG_DETAIL, PROPTYPE_BOOL, 0, 1},
 		{0},
 	};
 	
@@ -202,6 +204,12 @@ int popup_layer(RECT view)
 			editor.selected_group = new_val;
 			editor.selected_layer = editor.map.groups[new_val]->layers.len()-1;
 		}
+	}
+	else if(prop == PROP_HQ)
+	{
+		current_layer->flags &= ~LAYERFLAG_DETAIL;
+		if(new_val)
+			current_layer->flags |= LAYERFLAG_DETAIL;
 	}
 		
 	return current_layer->render_properties(&view);

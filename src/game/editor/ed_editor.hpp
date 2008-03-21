@@ -134,6 +134,7 @@ public:
 		type_name = "(invalid)";
 		visible = true;
 		readonly = false;
+		flags = 0;
 	}
 	
 	virtual ~LAYER()
@@ -159,6 +160,7 @@ public:
 	
 	const char *type_name;
 	int type;
+	int flags;
 
 	bool readonly;
 	bool visible;
@@ -313,6 +315,7 @@ struct PROPERTY
 enum
 {
 	PROPTYPE_NULL=0,
+	PROPTYPE_BOOL,
 	PROPTYPE_INT_STEP,
 	PROPTYPE_INT_SCROLL,
 	PROPTYPE_COLOR,
@@ -345,6 +348,7 @@ public:
 		gui_active = true;
 		proof_borders = false;
 		
+		show_detail = true;
 		animate = false;
 		animate_start = 0;
 		animate_time = 0;
@@ -387,6 +391,7 @@ public:
 	float mouse_delta_wx;
 	float mouse_delta_wy;
 	
+	bool show_detail;
 	bool animate;
 	int64 animate_start;
 	float animate_time;

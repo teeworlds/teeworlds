@@ -1036,7 +1036,7 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 			
 			to_render -= this_batch;
 
-			while(this_batch > 0)
+			while(this_batch-- > 0)
 			{
 				float tex_x0, tex_y0, tex_x1, tex_y1;
 				float width, height;
@@ -1062,7 +1062,6 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 				advance = x_advance + font_kerning(font, *current, *(current+1));
 				draw_x += advance*size;
 				current++;
-				this_batch--;
 			}
 		}
 

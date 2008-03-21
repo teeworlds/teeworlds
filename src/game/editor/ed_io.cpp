@@ -252,7 +252,7 @@ int MAP::save(const char *filename)
 				MAPITEM_LAYER_TILEMAP item;
 				item.version = 2;
 				
-				item.layer.flags = 0;
+				item.layer.flags = layer->flags;
 				item.layer.type = layer->type;
 				
 				item.color.r = 255; // not in use right now
@@ -280,7 +280,7 @@ int MAP::save(const char *filename)
 				{
 					MAPITEM_LAYER_QUADS item;
 					item.version = 1;
-					item.layer.flags = 0;
+					item.layer.flags =  layer->flags;
 					item.layer.type = layer->type;
 					item.image = layer->image;
 					
@@ -440,6 +440,7 @@ int MAP::load(const char *filename)
 				
 				for(int l = 0; l < gitem->num_layers; l++)
 				{
+					LAYER *layer = 0;
 					MAPITEM_LAYER *layer_item = (MAPITEM_LAYER *)datafile_get_item(df, layers_start+gitem->start_layer+l, 0, 0);
 					if(!layer_item)
 						continue;
@@ -457,6 +458,8 @@ int MAP::load(const char *filename)
 						}
 						else
 							tiles = new LAYER_TILES(tilemap_item->width, tilemap_item->height);
+
+						layer = tiles;
 						
 						group->add_layer(tiles);
 						void *data = datafile_get_data(df, tilemap_item->data);
@@ -479,16 +482,20 @@ int MAP::load(const char *filename)
 					else if(layer_item->type == LAYERTYPE_QUADS)
 					{
 						MAPITEM_LAYER_QUADS *quads_item = (MAPITEM_LAYER_QUADS *)layer_item;
-						LAYER_QUADS *layer = new LAYER_QUADS;
-						layer->image = quads_item->image;
-						if(layer->image < -1 || layer->image >= images.len())
-							layer->image = -1;
+						LAYER_QUADS *quads = new LAYER_QUADS;
+						layer = quads;
+						quads->image = quads_item->image;
+						if(quads->image < -1 || quads->image >= images.len())
+							quads->image = -1;
 						void *data = datafile_get_data_swapped(df, quads_item->data);
-						group->add_layer(layer);
-						layer->quads.setsize(quads_item->num_quads);
-						mem_copy(layer->quads.getptr(), data, sizeof(QUAD)*quads_item->num_quads);
+						group->add_layer(quads);
+						quads->quads.setsize(quads_item->num_quads);
+						mem_copy(quads->quads.getptr(), data, sizeof(QUAD)*quads_item->num_quads);
 						datafile_unload_data(df, quads_item->data);
 					}
+					
+					if(layer)
+						layer->flags = layer_item->flags;
 				}
 			}
 		}

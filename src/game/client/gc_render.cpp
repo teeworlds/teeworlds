@@ -298,6 +298,10 @@ void render_layers(float center_x, float center_y, int pass)
 			bool render = false;
 			bool is_game_layer = false;
 			
+			// skip rendering if detail layers if not wanted
+			if(layer->flags&LAYERFLAG_DETAIL && !config.gfx_high_detail)
+				continue;
+			
 			if(layer == (MAPITEM_LAYER*)layers_game_layer())
 			{
 				is_game_layer = true;
