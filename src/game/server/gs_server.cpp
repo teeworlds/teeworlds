@@ -1659,6 +1659,8 @@ void powerup::tick()
 						create_sound(pos, SOUND_PICKUP_GRENADE);
 					else if(subtype == WEAPON_SHOTGUN)
 						create_sound(pos, SOUND_PICKUP_SHOTGUN);
+					else if(subtype == WEAPON_RIFLE)
+						create_sound(pos, SOUND_PICKUP_SHOTGUN);
 
                     send_weapon_pickup(pplayer->client_id, subtype);
 				}
