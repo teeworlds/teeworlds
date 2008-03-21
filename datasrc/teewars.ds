@@ -397,7 +397,7 @@ weapons {
 	rifle {
 		sprite_body sprites.game.weapon_rifle_body
 		sprite_cursor sprites.game.weapon_rifle_cursor
-		sprite_proj sprites.game.weapon_shotgun_proj
+		sprite_proj sprites.game.weapon_rifle_proj
 		sprite_muzzles {
 		}
 		
@@ -408,7 +408,7 @@ weapons {
 		recoil 10
 		firedelay 800
 		muzzleduration 0
-		visual_size 128
+		visual_size 92
 		offsetx 24.0
 		offsety -2.0
 		meleedamage 0
@@ -511,8 +511,9 @@ sprites {
 		weapon_ninja_cursor 0 10 2 2
 		weapon_ninja_proj 0 0 0 0
 
-		weapon_rifle_body 2 12 9 3
+		weapon_rifle_body 2 12 7 3
 		weapon_rifle_cursor 0 12 2 2
+		weapon_rifle_proj 10 12 2 2
 		
 		hook_chain 2 0 1 1
 		hook_head 3 0 2 1
