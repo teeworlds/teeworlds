@@ -36,18 +36,14 @@ public:
 	char backlog_data[65536];
 	RINGBUFFER *backlog;
 
-	unsigned int input_len;
-	char input[256];
+
+	line_input input;
 	
 	int type;
 	
 public:
 	CONSOLE(int t)
 	{
-		// clear input
-		input_len = 0;
-		mem_zero(input, sizeof(input));
-	
 		// init ringbuffers
 		history = ringbuf_init(history_data, sizeof(history_data));
 		backlog = ringbuf_init(backlog_data, sizeof(backlog_data));
@@ -72,43 +68,23 @@ public:
 	
 	void handle_event(INPUT_EVENT e)
 	{
-		if (e.ch >= 32)
-		{
-			if (input_len < sizeof(input) - 1)
-			{
-				input[input_len] = e.ch;
-				input[input_len+1] = 0;
-				input_len++;
-
-				history_entry = 0x0;
-			}
-		}
-
+		bool handled = false;
+		
 		if(e.flags&INPFLAG_PRESS)
 		{
-			if(e.key == KEY_BACKSPACE)
+			if(e.key == KEY_ENTER || e.key == KEY_KP_ENTER)
 			{
-				if(input_len > 0)
+				if(input.get_string()[0])
 				{
-					input[input_len-1] = 0;
-					input_len--;
-
-					history_entry = 0x0;
-				}
-			}
-			else if(e.key == KEY_ENTER || e.key == KEY_KP_ENTER)
-			{
-				if (input_len)
-				{
-					char *entry = (char *)ringbuf_allocate(history, input_len+1);
-					mem_copy(entry, input, input_len+1);
+					char *entry = (char *)ringbuf_allocate(history, input.get_length()+1);
+					mem_copy(entry, input.get_string(), input.get_length()+1);
 					
-					execute_line(input);
-					input[0] = 0;
-					input_len = 0;
-
+					execute_line(input.get_string());
+					input.clear();
 					history_entry = 0x0;
 				}
+				
+				handled = true;
 			}
 			else if (e.key == KEY_UP)
 			{
@@ -126,12 +102,9 @@ public:
 				{
 					unsigned int len = strlen(history_entry);
 					if (len < sizeof(input) - 1)
-					{
-						mem_copy(input, history_entry, len+1);
-						input_len = len;
-					}
+						input.set(history_entry);
 				}
-
+				handled = true;
 			}
 			else if (e.key == KEY_DOWN)
 			{
@@ -142,19 +115,16 @@ public:
 				{
 					unsigned int len = strlen(history_entry);
 					if (len < sizeof(input) - 1)
-					{
-						mem_copy(input, history_entry, len+1);
-
-						input_len = len;
-					}
+						input.set(history_entry);
 				}
 				else
-				{
-					input[0] = 0;
-					input_len = 0;
-				}
+					input.clear();
+				handled = true;
 			}
 		}
+		
+		if(!handled)
+			input.process_input(e);
 	}
 	
 	void print_line(const char *line)
@@ -426,38 +396,37 @@ void client_console_init()
 	binds_set('Y', "chat team");
 }
 
-void console_handle_input()
+bool console_input_cli(INPUT_EVENT e, void *user_data)
 {
-	int was_active = console_active();
+	if(!console_active())
+		return false;
+	
+	if(e.key == KEY_ESC && (e.flags&INPFLAG_PRESS))
+		console_toggle(console_type);
+	else
+		current_console()->handle_event(e);
+	return true;
+}
 
-	for(int i = 0; i < inp_num_events(); i++)
-	{
-		INPUT_EVENT e = inp_get_event(i);
-		
-		if(console_active())
-		{
-			if(e.key == KEY_ESC && e.flags&INPFLAG_PRESS)
-				console_toggle(console_type);
-			else
-				current_console()->handle_event(e);
-		}
-		else
-		{
-			if(e.key > 0 && e.key < KEY_LAST && keybindings[e.key][0] != 0)
-			{
-				int stroke = 0;
-				if(e.flags&INPFLAG_PRESS)
-					stroke = 1;
-				console_execute_line_stroked(stroke, keybindings[e.key]);
-			}
-		}
-	}
+bool console_input_special_binds(INPUT_EVENT e, void *user_data)
+{
+	// only handle function keys
+	if(e.key < KEY_F1 || e.key > KEY_F25)
+		return false;
+	return console_input_normal_binds(e, user_data);
+}
 
-	if(was_active || console_active())
-	{
-		inp_clear_events();
-		inp_clear_key_states();
-	}
+bool console_input_normal_binds(INPUT_EVENT e, void *user_data)
+{
+	// don't handle invalid events and keys that arn't set to anything
+	if(e.key <= 0 || e.key >= KEY_LAST || keybindings[e.key][0] == 0)
+		return false;
+
+	int stroke = 0;
+	if(e.flags&INPFLAG_PRESS)
+		stroke = 1;
+	console_execute_line_stroked(stroke, keybindings[e.key]);
+	return true;
 }
 
 void console_toggle(int type)
@@ -575,30 +544,38 @@ void console_render()
 	{
 		float font_size = 10.0f;
 		float row_height = font_size*1.25f;
-		float width = gfx_text_width(0, font_size, console->input, -1);
-		float x = 3, y = console_height - row_height - 2;
-		const char *prompt = ">";
+		float x = 3;
+		float y = console_height - row_height - 2;
+
+		// render prompt		
+		TEXT_CURSOR cursor;
+		gfx_text_set_cursor(&cursor, x, y, font_size, TEXTFLAG_RENDER);
+
+		const char *prompt = "> ";
 		if(console_type)
 		{
 			if(client_rcon_authed())
-				prompt = "rcon>";
+				prompt = "rcon> ";
 			else
-				prompt = "rcon password>";
+				prompt = "rcon password> ";
 		}
+
+		gfx_text_ex(&cursor, prompt, -1);
 		
-		float prompt_width = gfx_text_width(0, font_size,prompt, -1)+2;
-
-		gfx_text(0, x, y, font_size, prompt, -1);
-		gfx_text(0, x+prompt_width, y, font_size, console->input, -1);
-		gfx_text(0, x+prompt_width+width+1, y, font_size, "_", -1);
-
+		// render console input
+		gfx_text_ex(&cursor, console->input.get_string(), console->input.cursor_offset());
+		TEXT_CURSOR marker = cursor;
+		gfx_text_ex(&marker, "|", -1);
+		gfx_text_ex(&cursor, console->input.get_string()+console->input.cursor_offset(), -1);
+		
+		// render version
 		char buf[128];
-		str_format(buf, sizeof(buf), "Teewars v%s %s", TEEWARS_VERSION);
+		str_format(buf, sizeof(buf), "Teewars v%s", TEEWARS_VERSION);
 		float version_width = gfx_text_width(0, font_size, buf, -1);
 		gfx_text(0, screen.w-version_width-5, y, font_size, buf, -1);
 
+		// render log
 		y -= row_height;
-
 		char *entry = (char *)ringbuf_last(console->backlog);
 		while (y > 0.0f && entry)
 		{

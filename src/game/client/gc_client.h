@@ -82,6 +82,53 @@ enum
 extern int chat_mode;
 void chat_add_line(int client_id, int team, const char *line);
 void chat_reset();
+bool chat_input_handle(INPUT_EVENT e, void *user_data);
+
+// line input helter
+class line_input
+{
+	char str[256];
+	unsigned len;
+	unsigned cursor_pos;
+public:
+	class callback
+	{
+	public:
+		virtual ~callback() {}
+		virtual bool event(INPUT_EVENT e) = 0;
+	};
+
+	line_input();
+	void clear();
+	void process_input(INPUT_EVENT e);
+	void set(const char *string);
+	const char *get_string() const { return str; }
+	int get_length() const { return len; }
+	unsigned cursor_offset() const { return cursor_pos; }
+};
+
+class input_stack_handler
+{
+public:
+	typedef bool (*callback)(INPUT_EVENT e, void *user);
+	
+	input_stack_handler();
+	void add_handler(callback cb, void *user_data);
+	void dispatch_input();
+	
+private:
+	enum
+	{
+		MAX_HANDLERS=16
+	};
+	
+	callback handlers[MAX_HANDLERS];
+	void *user_data[MAX_HANDLERS];
+	int num_handlers;
+};
+
+extern input_stack_handler input_stack;
+
 
 extern int emoticon_selector_active; // TODO: ugly
 extern int scoreboard_active; // TODO: ugly

@@ -52,15 +52,14 @@ extern "C" void modc_init()
 	static FONT_SET default_font;
 	int64 start = time_get();
 	
-	vec2 v;
-	v = closest_point_on_line(vec2(0, 0), vec2(10, 0), vec2(5, 0));
-	dbg_msg("", "1: %f,%f", v.x, v.y);
-	v = closest_point_on_line(vec2(0, 0), vec2(20, 0), vec2(5, 0));
-	dbg_msg("", "2: %f,%f", v.x, v.y);
-	v = closest_point_on_line(vec2(0, 0), vec2(10, 0), vec2(20, 0));
-	dbg_msg("", "3: %f,%f", v.x, v.y);
+	// setup input stack
+	input_stack.add_handler(console_input_special_binds, 0); // F1-Fx binds
+	input_stack.add_handler(console_input_cli, 0); // console
+	input_stack.add_handler(chat_input_handle, 0); // chat
+	//input_stack.add_handler() // ui
+	input_stack.add_handler(console_input_normal_binds, 0); // binds
 	
-
+	
 	int before = gfx_memory_usage();
 	font_set_load(&default_font, "data/fonts/default_font%d.tfnt", "data/fonts/default_font%d.png", "data/fonts/default_font%d_b.png", 14, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 36);
 	dbg_msg("font", "gfx memory used for font textures: %d", gfx_memory_usage()-before);
@@ -352,18 +351,13 @@ extern "C" void modc_newsnapshot()
 
 extern "C" void modc_render()
 {
-	console_handle_input();
-
 	// this should be moved around abit
 	if(client_state() == CLIENTSTATE_ONLINE)
-	{
 		render_game();
-	}
 	else
-	{
 		menu_render();
-	}
 
+	input_stack.dispatch_input();
 	console_render();
 }
 

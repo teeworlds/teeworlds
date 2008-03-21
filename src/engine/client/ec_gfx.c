@@ -935,129 +935,159 @@ void gfx_text_set_default_font(void *font)
 	default_font_set = (FONT_SET *)font;
 }
 
-float gfx_text_raw(void *font_set_v, float x, float y, float size, const char *text, int length)
+
+void gfx_text_set_cursor(TEXT_CURSOR *cursor, float x, float y, float font_size, int flags)
 {
-    FONT_SET *font_set = font_set_v;
-    float fake_to_screen_x = (screen_width/(screen_x1-screen_x0));
-    float fake_to_screen_y = (screen_height/(screen_y1-screen_y0));
-
-    FONT *font;
-    int actual_size;
-    int i;
-    float draw_x, draw_y;
-    
-    /* to correct coords, convert to screen coords, round, and convert back */
-    int actual_x = x * fake_to_screen_x;
-    int actual_y = y * fake_to_screen_y;
-    x = actual_x / fake_to_screen_x;
-    y = actual_y / fake_to_screen_y;
-
-    /* same with size */
-    actual_size = size * fake_to_screen_y;
-    size = actual_size / fake_to_screen_y;
-
-    if(!font_set)
-    	font_set = default_font_set;
-
-    font = font_set_pick(font_set, actual_size);
-
-    if (length < 0)
-        length = strlen(text);
-
-    for (i = 0; i < 2; i++)
-    {
-        const unsigned char *c = (unsigned char *)text;
-        int to_render = length;
-        draw_x = x;
-        draw_y = y;
-
-        if (i == 0)
-            gfx_texture_set(font->outline_texture);
-        else
-            gfx_texture_set(font->text_texture);
-
-        gfx_quads_begin();
-        if (i == 0)
-            gfx_setcolor(0.0f, 0.0f, 0.0f, 0.3f*text_a);
-        else
-            gfx_setcolor(text_r, text_g, text_b, text_a);
-        
-        while (to_render--)
-        {
-            float tex_x0, tex_y0, tex_x1, tex_y1;
-            float width, height;
-            float x_offset, y_offset, x_advance;
-
-            float advance;
-            
-            if(*c == '\n')
-            {
-            	draw_x = x;
-            	draw_y += size; /* is this correct? -kma */
-            	c++;
-            	continue;
-			}
-
-            font_character_info(font, *c, &tex_x0, &tex_y0, &tex_x1, &tex_y1, &width, &height, &x_offset, &y_offset, &x_advance);
-
-            gfx_quads_setsubset(tex_x0, tex_y0, tex_x1, tex_y1);
-
-            gfx_quads_drawTL(draw_x+x_offset*size, draw_y+y_offset*size, width*size, height*size);
-
-            advance = x_advance + font_kerning(font, *c, *(c+1));
-
-            draw_x += advance*size;
-
-            c++;
-        }
-
-        gfx_quads_end();
-    }
-
-    return draw_x;
+	mem_zero(cursor, sizeof(*cursor));
+	cursor->font_size = font_size;
+	cursor->start_x = x;
+	cursor->start_y = y;
+	cursor->x = x;
+	cursor->y = y;
+	cursor->line_count = 1;
+	cursor->line_width = -1;
+	cursor->flags = flags;
 }
 
-int gfx_text(void *font_set_v, float x, float y, float size, const char *text, int max_width)
+void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 {
-	int lines = 1;
-	if(max_width == -1)
-		gfx_text_raw(font_set_v, x, y, size, text, -1);
-	else
+	FONT_SET *font_set = cursor->font_set;
+	float fake_to_screen_x = (screen_width/(screen_x1-screen_x0));
+	float fake_to_screen_y = (screen_height/(screen_y1-screen_y0));
+
+	FONT *font;
+	int actual_size;
+	int i;
+	float draw_x, draw_y;
+	const char *end;
+
+	float size = cursor->font_size;
+
+	/* to correct coords, convert to screen coords, round, and convert back */
+	int actual_x = cursor->x * fake_to_screen_x;
+	int actual_y = cursor->y * fake_to_screen_y;
+	cursor->x = actual_x / fake_to_screen_x;
+	cursor->y = actual_y / fake_to_screen_y;
+
+	/* same with size */
+	actual_size = size * fake_to_screen_y;
+	size = actual_size / fake_to_screen_y;
+
+	if(!font_set)
+		font_set = default_font_set;
+
+	font = font_set_pick(font_set, actual_size);
+
+	if (length < 0)
+		length = strlen(text);
+		
+	end = text + length;
+
+	/* if we don't want to render, we can just skip the first outline pass */
+	i = 1;
+	if(cursor->flags&TEXTFLAG_RENDER)
+		i = 0;
+
+	for (i = 0; i < 2; i++)
 	{
-		float startx = x;
-		while(*text)
+		const unsigned char *current = (unsigned char *)text;
+		int to_render = length;
+		draw_x = cursor->x;
+		draw_y = cursor->y;
+
+		if(cursor->flags&TEXTFLAG_RENDER)
 		{
-			int wlen = word_length(text);
-			float w = gfx_text_width(font_set_v, size, text, wlen);
-			if(x+w-startx > max_width)
+			if (i == 0)
+				gfx_texture_set(font->outline_texture);
+			else
+				gfx_texture_set(font->text_texture);
+
+			gfx_quads_begin();
+			if (i == 0)
+				gfx_setcolor(0.0f, 0.0f, 0.0f, 0.3f*text_a);
+			else
+				gfx_setcolor(text_r, text_g, text_b, text_a);
+		}
+
+		while(to_render > 0)
+		{
+			int this_batch = to_render;
+			if(cursor->line_width > 0)
 			{
-				lines++;
-				y += size;
-				x = startx;
+				int wlen = word_length((char *)current);
+				TEXT_CURSOR compare = *cursor;
+				compare.x = draw_x;
+				compare.y = draw_y;
+				compare.flags &= ~TEXTFLAG_RENDER;
+				compare.line_width = -1;
+				gfx_text_ex(&compare, text, wlen);
+				
+				if(compare.x-cursor->start_x > cursor->line_width)
+				{
+					draw_x = cursor->start_x;
+					draw_y += size; /* is this correct? -kma */
+				}
+				
+				this_batch = wlen;
 			}
 			
-			x = gfx_text_raw(font_set_v, x, y, size, text, wlen);
+			if((const char *)current+this_batch > end)
+				this_batch = (const char *)end-(const char *)current;
 			
-			text += wlen;
+			to_render -= this_batch;
+
+			while(this_batch > 0)
+			{
+				float tex_x0, tex_y0, tex_x1, tex_y1;
+				float width, height;
+				float x_offset, y_offset, x_advance;
+				float advance;
+
+				if(*current == '\n')
+				{
+					draw_x = cursor->start_x;
+					draw_y += size; /* is this correct? -kma */
+					current++;
+					continue;
+				}
+
+				font_character_info(font, *current, &tex_x0, &tex_y0, &tex_x1, &tex_y1, &width, &height, &x_offset, &y_offset, &x_advance);
+
+				if(cursor->flags&TEXTFLAG_RENDER)
+				{
+					gfx_quads_setsubset(tex_x0, tex_y0, tex_x1, tex_y1);
+					gfx_quads_drawTL(draw_x+x_offset*size, draw_y+y_offset*size, width*size, height*size);
+				}
+
+				advance = x_advance + font_kerning(font, *current, *(current+1));
+				draw_x += advance*size;
+				current++;
+				this_batch--;
+			}
 		}
+
+		if(cursor->flags&TEXTFLAG_RENDER)
+			gfx_quads_end();
 	}
-    gfx_text_raw(font_set_v, x, y, size, text, -1);
-    return lines;
+
+	cursor->x = draw_x;
+	cursor->y = draw_y;
+}
+
+void gfx_text(void *font_set_v, float x, float y, float size, const char *text, int max_width)
+{
+	TEXT_CURSOR cursor;
+	gfx_text_set_cursor(&cursor, x, y, size, TEXTFLAG_RENDER);
+	cursor.line_width = max_width;
+	gfx_text_ex(&cursor, text, -1);
 }
 
 float gfx_text_width(void *font_set_v, float size, const char *text, int length)
 {
-    FONT_SET *font_set = font_set_v;
-    FONT *font;
-    float fake_to_screen_y = (screen_height/(screen_y1-screen_y0));
-    int actual_size = size * fake_to_screen_y;
-    size = actual_size / fake_to_screen_y;
-    
-    if(!font_set)
-    	font_set = default_font_set;
-
-    font = font_set_pick(font_set, actual_size);
-    return font_text_width(font, text, size, length);
+	TEXT_CURSOR cursor;
+	gfx_text_set_cursor(&cursor, 0, 0, size, 0);
+	gfx_text_ex(&cursor, text, length);
+	return cursor.x;
 }
 
 void gfx_text_color(float r, float g, float b, float a)

@@ -45,7 +45,9 @@ int ui_update(float mx, float my, float mwx, float mwy, int buttons)
     becomming_hot_item = 0;
     return 0;
 }
-
+/*
+bool ui_
+*/
 int ui_mouse_inside(const RECT *r)
 {
     if(mouse_x >= r->x && mouse_x <= r->x+r->w && mouse_y >= r->y && mouse_y <= r->y+r->h)

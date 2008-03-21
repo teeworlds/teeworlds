@@ -2069,6 +2069,27 @@ void menu_render()
 	static int mouse_x = 0;
 	static int mouse_y = 0;
 
+	/*
+    RECT screen = *ui_screen();
+	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
+	menu2_render_background();
+
+	TEXT_CURSOR cursor;
+	mem_zero(&cursor, sizeof(cursor));
+	cursor.font_size = 32.0f;
+	cursor.start_x = 10.0f;
+	cursor.start_y = 10.0f;
+	cursor.x = cursor.start_x;
+	cursor.y = cursor.start_y;
+	cursor.line_count = 1;
+	cursor.line_width = 200.0f;
+	cursor.flags = TEXTFLAG_RENDER;
+
+	gfx_text_new(&cursor, "The quick brown fox jumped over the lazy dog.", -1);
+	
+	DEBUG_text = 0;
+	return;*/
+
 	// update colors
 
 	vec3 rgb = hsl_to_rgb(vec3(config.ui_color_hue/255.0f, config.ui_color_sat/255.0f, config.ui_color_lht/255.0f));
@@ -2124,6 +2145,4 @@ void menu_render()
     gfx_setcolor(1,1,1,1);
     gfx_quads_drawTL(mx,my,24,24);
     gfx_quads_end();
-
-	inp_clear_events();
 }

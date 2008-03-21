@@ -197,9 +197,25 @@ void render_damage_indicators()
 	dmgind.render();
 }
 
-static char chat_input[512];
-static unsigned chat_input_len;
+static line_input chat_input;
 static const int chat_max_lines = 10;
+
+bool chat_input_handle(INPUT_EVENT e, void *user_data)
+{
+	if(chat_mode == CHATMODE_NONE)
+		return false;
+
+	if(e.flags&INPFLAG_PRESS && (e.key == KEY_ENTER || e.key == KEY_KP_ENTER))
+	{
+		if(chat_input.get_string()[0])
+			chat_say(chat_mode == CHATMODE_ALL ? 0 : 1, chat_input.get_string());
+		chat_mode = CHATMODE_NONE;
+	}
+	else
+		chat_input.process_input(e);
+	
+	return true;
+}
 
 struct chatline
 {
@@ -262,6 +278,101 @@ killmsg killmsgs[killmsg_max];
 int killmsg_current = 0;
 
 //bool add_trail = false;
+
+line_input::line_input()
+{
+	clear();
+}
+
+void line_input::clear()
+{
+	mem_zero(str, sizeof(str));
+	len = 0;
+	cursor_pos = 0;
+}
+
+void line_input::set(const char *string)
+{
+	str_copy(str, string, sizeof(str));
+	len = strlen(str);
+	cursor_pos = len;
+}
+
+void line_input::process_input(INPUT_EVENT e)
+{
+	if(cursor_pos > len)
+		cursor_pos = len;
+	
+	char c = e.ch;
+	int k = e.key;
+	
+	if (!(c >= 0 && c < 32))
+	{
+		if (len < sizeof(str) - 1 && cursor_pos < sizeof(str) - 1)
+		{
+			memmove(str + cursor_pos + 1, str + cursor_pos, len - cursor_pos + 1);
+			str[cursor_pos] = c;
+			cursor_pos++;
+			len++;
+		}
+	}
+	
+	if(e.flags&INPFLAG_PRESS)
+	{
+		if (k == KEY_BACKSPACE && cursor_pos > 0)
+		{
+			memmove(str + cursor_pos - 1, str + cursor_pos, len - cursor_pos + 1);
+			cursor_pos--;
+			len--;
+		}
+		else if (k == KEY_DEL && cursor_pos < len)
+		{
+			memmove(str + cursor_pos, str + cursor_pos + 1, len - cursor_pos);
+			len--;
+		}
+		else if (k == KEY_LEFT && cursor_pos > 0)
+			cursor_pos--;
+		else if (k == KEY_RIGHT && cursor_pos < len)
+			cursor_pos++;
+		else if (k == KEY_HOME)
+			cursor_pos = 0;
+		else if (k == KEY_END)
+			cursor_pos = len;
+	}
+}
+
+input_stack_handler::input_stack_handler()
+{
+	num_handlers = 0;
+}
+
+void input_stack_handler::add_handler(callback cb, void *user)
+{
+	user_data[num_handlers] = user;
+	handlers[num_handlers++] = cb;
+}
+
+void input_stack_handler::dispatch_input()
+{
+	for(int i = 0; i < inp_num_events(); i++)
+	{
+		INPUT_EVENT e = inp_get_event(i);
+		
+		for(int h = 0; h < num_handlers; h++)
+		{
+			if(handlers[h](e, user_data[h]))
+			{
+				//dbg_msg("", "%d char=%d key=%d flags=%d", h, e.ch, e.key, e.flags);
+				break;
+			}
+		}
+	}
+	
+	inp_clear_events();
+}
+
+
+input_stack_handler input_stack;
 
 extern int render_popup(const char *caption, const char *text, const char *button_text);
 
@@ -738,12 +849,8 @@ void chat_enable_mode(int team)
 			chat_mode = CHATMODE_TEAM;
 		else
 			chat_mode = CHATMODE_ALL;
-			
-		mem_zero(chat_input, sizeof(chat_input));
-		chat_input_len = 0;
 		
-		// make sure that we don't trigger something weird
-		inp_clear_events();
+		chat_input.clear();
 	}
 }
 
@@ -803,51 +910,6 @@ void render_game()
 		send_info(false);
 		menu_was_active = false;
 	}
-
-	// handle chat input
-	if (!menu_active)
-	{
-		if(chat_mode != CHATMODE_NONE)
-		{
-			for(int i = 0; i < inp_num_events(); i++)
-			{
-				INPUT_EVENT e = inp_get_event(i);
-	
-				if(e.ch >= 32)
-				{
-					if (chat_input_len < sizeof(chat_input) - 1)
-					{
-						chat_input[chat_input_len] = e.ch;
-						chat_input[chat_input_len+1] = 0;
-						chat_input_len++;
-					}
-				}
-
-				if((e.key == KEY_ENTER || e.key == KEY_KP_ENTER) && (e.flags&INPFLAG_PRESS))
-				{
-					// send message
-					if(chat_input_len)
-						chat_say(chat_mode == CHATMODE_ALL ? 0 : 1, chat_input);
-
-					chat_mode = CHATMODE_NONE;
-					break;					
-				}
-				
-				if(e.key == KEY_BACKSPACE && (e.flags&INPFLAG_PRESS))
-				{
-					if(chat_input_len > 0)
-					{
-						chat_input[chat_input_len-1] = 0;
-						chat_input_len--;
-					}
-				}
-			}
-		}
-	}
-
-	if (!menu_active)
-		inp_clear_events();
-
 
 	//
 	float camera_max_distance = 250.0f;
@@ -1191,19 +1253,24 @@ void render_game()
 		gfx_mapscreen(0,0,300*gfx_screenaspect(),300);
 		float x = 10.0f;
 		float y = 300.0f-30.0f;
-		float starty = -1;
 		if(chat_mode != CHATMODE_NONE)
 		{
 			// render chat input
-			char buf[sizeof(chat_input)+16];
+			TEXT_CURSOR cursor;
+			gfx_text_set_cursor(&cursor, x, y, 8.0f, TEXTFLAG_RENDER);
+			cursor.line_width = 300.0f;
+			
 			if(chat_mode == CHATMODE_ALL)
-				str_format(buf, sizeof(buf), "All: %s_", chat_input);
+				gfx_text_ex(&cursor, "All: ", -1);
 			else if(chat_mode == CHATMODE_TEAM)
-				str_format(buf, sizeof(buf), "Team: %s_", chat_input);
+				gfx_text_ex(&cursor, "Team: ", -1);
 			else
-				str_format(buf, sizeof(buf), "Chat: %s_", chat_input);
-			gfx_text(0, x, y, 8.0f, buf, 380);
-			starty = y;
+				gfx_text_ex(&cursor, "Chat: ", -1);
+				
+			gfx_text_ex(&cursor, chat_input.get_string(), chat_input.cursor_offset());
+			TEXT_CURSOR marker = cursor;
+			gfx_text_ex(&marker, "|", -1);
+			gfx_text_ex(&cursor, chat_input.get_string()+chat_input.cursor_offset(), -1);
 		}
 
 		y -= 8;
@@ -1216,16 +1283,19 @@ void render_game()
 				break;
 
 			float begin = x;
-
-
 			float fontsize = 8.0f;
 			
-			// turn of alpha so we can render once and just get the number of lines
-			// TODO: this is ugly, but have to do for now
-			gfx_text_color(1,1,1,0);
-			int lines = gfx_text(0, begin, y, fontsize, chat_lines[r].text, 300);
+			// get the y offset
+			TEXT_CURSOR cursor;
+			gfx_text_set_cursor(&cursor, begin, 0, fontsize, 0);
+			cursor.line_width = 300.0f;
+			gfx_text_ex(&cursor, chat_lines[r].name, -1);
+			gfx_text_ex(&cursor, chat_lines[r].text, -1);
+			y -= cursor.y + cursor.font_size;
 
-			y -= fontsize * (lines);
+			// reset the cursor
+			gfx_text_set_cursor(&cursor, begin, y, fontsize, TEXTFLAG_RENDER);
+			cursor.line_width = 300.0f;
 
 			// render name
 			gfx_text_color(0.8f,0.8f,0.8f,1);
@@ -1240,22 +1310,17 @@ void render_game()
 			else if(chat_lines[r].name_color == -1)
 				gfx_text_color(0.75f,0.5f,0.75f, 1); // spectator
 				
+			// render name
+			gfx_text_ex(&cursor, chat_lines[r].name, -1);
+
 			// render line
-			
-			//int lines = int(gfx_text_width(0, fontsize, chat_lines[r].text, -1)) / 300 + 1;
-
-			
-			gfx_text(0, begin, y, fontsize, chat_lines[r].name, -1);
-			begin += gfx_text_width(0, fontsize, chat_lines[r].name, -1);
-
-
 			gfx_text_color(1,1,1,1);
 			if(chat_lines[r].client_id == -1)
 				gfx_text_color(1,1,0.5f,1); // system
 			else if(chat_lines[r].team)
 				gfx_text_color(0.65f,1,0.65f,1); // team message
 
-			gfx_text(0, begin, y, fontsize, chat_lines[r].text, 300);
+			gfx_text_ex(&cursor, chat_lines[r].text, -1);
 		}
 
 		gfx_text_color(1,1,1,1);

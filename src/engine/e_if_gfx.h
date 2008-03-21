@@ -247,7 +247,7 @@ void gfx_lines_end();
 	See Also:
 		<other_func>
 */
-int gfx_text(void *font, float x, float y, float size, const char *text, int max_width);
+void gfx_text(void *font, float x, float y, float size, const char *text, int max_width);
 
 /*
 	Function: gfx_text_width
@@ -574,5 +574,31 @@ void gfx_clip_enable(int x, int y, int w, int h);
 		<other_func>
 */
 void gfx_clip_disable();
+
+
+enum
+{
+	TEXTFLAG_RENDER=1,
+	TEXTFLAG_ALLOW_NEWLINE=2
+};
+
+typedef struct
+{
+	int flags;
+	int line_count;
+	
+	float start_x;
+	float start_y;
+	float line_width;
+	float x, y;
+	void *font_set;
+	float font_size;
+} TEXT_CURSOR;
+
+void gfx_text_set_cursor(TEXT_CURSOR *cursor, float x, float y, float font_size, int flags);
+void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length);
+
+
+
 
 #endif
