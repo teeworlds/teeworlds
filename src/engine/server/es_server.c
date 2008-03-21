@@ -914,7 +914,7 @@ static int server_run()
 	}
 	
 	/* start server */
-	if(config.sv_bindaddr[0] && net_host_lookup(config.sv_bindaddr, config.sv_port, &bindaddr) != 0)
+	if(config.sv_bindaddr[0] && net_host_lookup(config.sv_bindaddr, config.sv_port, &bindaddr) == 0)
 	{
 		/* sweet! */
 	}
