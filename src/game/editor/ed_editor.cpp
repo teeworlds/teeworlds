@@ -1246,7 +1246,7 @@ int EDITOR::do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val
 			}
 		}
 	}
-	
+
 	return change;
 }
 

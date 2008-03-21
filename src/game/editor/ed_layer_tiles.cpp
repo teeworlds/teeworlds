@@ -92,7 +92,6 @@ void LAYER_TILES::brush_selecting(RECT rect)
 	snap(&rect);
 	gfx_quads_drawTL(rect.x, rect.y, rect.w, rect.h);
 	gfx_quads_end();
-	
 }
 
 int LAYER_TILES::brush_grab(LAYERGROUP *brush, RECT rect)
@@ -210,9 +209,9 @@ int LAYER_TILES::render_properties(RECT *toolbox)
 	
 	enum
 	{
-		PROP_IMAGE=0,
-		PROP_WIDTH,
+		PROP_WIDTH=0,
 		PROP_HEIGHT,
+		PROP_IMAGE,
 		NUM_PROPS,
 	};
 	
@@ -223,19 +222,19 @@ int LAYER_TILES::render_properties(RECT *toolbox)
 		{0},
 	};
 	
-	if(editor.map.game_layer == this)
+	if(editor.map.game_layer == this) // remove the image from the selection if this is the game layer
 		props[2].name = 0;
 	
 	static int ids[NUM_PROPS] = {0};
 	int new_val = 0;
 	int prop = editor.do_properties(toolbox, props, ids, &new_val);		
 	
-	if(prop == PROP_IMAGE)
-		image = new_val%editor.map.images.len();
-	else if(prop == PROP_WIDTH && new_val > 1)
+	if(prop == PROP_WIDTH && new_val > 1)
 		resize(new_val, height);
 	else if(prop == PROP_HEIGHT && new_val > 1)
 		resize(width, new_val);
+	else if(prop == PROP_IMAGE)
+		image = new_val%editor.map.images.len();
 	
 	return 0;
 }

@@ -333,6 +333,13 @@ int MAP::save(const char *filename)
 	// finish the data file
 	datafile_finish(df);
 	dbg_msg("editor", "done");
+	
+	// send rcon.. if we can
+	if(client_rcon_authed())
+	{
+		client_rcon("sv_map_reload 1");
+	}
+	
 	return 1;
 }
 
@@ -355,11 +362,9 @@ int MAP::load(const char *filename)
 	if(!item)
 	{
 		// import old map
-		/*
 		MAP old_mapstuff;
 		editor.reset();
-		editor_load_old(df, &old_mapstuff);
-		*/
+		editor_load_old(df, this);
 	}
 	else if(item->version == 1)
 	{
