@@ -37,10 +37,14 @@ static char *str_skiptoblank(char *str)
 
 /* static int digit(char c) { return '0' <= c && c <= '9'; } */
 
-static int console_parse_start(PARSE_RESULT *result, const char *string)
+static int console_parse_start(PARSE_RESULT *result, const char *string, int length)
 {
 	char *str;
-	str_copy(result->string_storage, string, sizeof(result->string_storage));
+	int len = sizeof(result->string_storage);
+	if(length < len)
+		len = length;
+		
+	str_copy(result->string_storage, string, length);
 	str = result->string_storage;
 	
 	/* get command */
@@ -184,39 +188,58 @@ void console_execute_line_stroked(int stroke, const char *str)
 	if(stroke)
 		strokestr[0] = '1';
 
-	if(console_parse_start(&result, str) != 0)
-		return;
-
-	command = console_find_command(result.command);
-
-	if(command)
+	while(str)
 	{
-		int is_stroke_command = 0;
-		if(result.command[0] == '+')
+		const char *end = str;
+		const char *next_part = 0;
+		
+		while(*end)
 		{
-			/* insert the stroke direction token */
-			result.args[result.num_args] = strokestr;
-			result.num_args++;
-			is_stroke_command = 1;
+			if(*end == ';')
+			{
+				next_part = end+1;
+				break;
+			}
+			
+			end++;
 		}
 		
-		if(stroke || is_stroke_command)
+		if(console_parse_start(&result, str, (end-str) + 1) != 0)
+			return;
+
+		command = console_find_command(result.command);
+
+		if(command)
 		{
-			if(console_parse_args(&result, command->params))
+			int is_stroke_command = 0;
+			if(result.command[0] == '+')
 			{
-				char buf[256];
-				str_format(buf, sizeof(buf), "Invalid arguments... Usage: %s %s", command->name, command->params);
-				console_print(buf);
+				/* insert the stroke direction token */
+				result.args[result.num_args] = strokestr;
+				result.num_args++;
+				is_stroke_command = 1;
 			}
-			else
-				command->callback(&result, command->user_data);
+			
+			if(stroke || is_stroke_command)
+			{
+				if(console_parse_args(&result, command->params))
+				{
+					char buf[256];
+					str_format(buf, sizeof(buf), "Invalid arguments... Usage: %s %s", command->name, command->params);
+					console_print(buf);
+				}
+				else
+					command->callback(&result, command->user_data);
+			}
 		}
-	}
-	else
-	{
-		char buf[256];
-		str_format(buf, sizeof(buf), "No such command: %s.", result.command);
-		console_print(buf);
+		else
+		{
+			char buf[256];
+			str_format(buf, sizeof(buf), "No such command: %s.", result.command);
+			console_print(buf);
+		}
+		
+		str = next_part;
 	}
 }
 
