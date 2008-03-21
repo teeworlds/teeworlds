@@ -2228,7 +2228,6 @@ void MAP::make_game_layer(LAYER *layer)
 {
 	game_layer = (LAYER_GAME *)layer;
 	game_layer->tex_id = entities_texture;
-	game_layer->readonly = true;
 }
 
 void MAP::make_game_group(LAYERGROUP *group)
