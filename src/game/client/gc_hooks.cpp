@@ -573,7 +573,7 @@ extern "C" void modc_message(int msgtype)
 			client_datas[msg->cid].skin_info.color_body = vec4(1,1,1,1);
 			client_datas[msg->cid].skin_info.color_feet = vec4(1,1,1,1);
 		}
-		
+
 		client_datas[msg->cid].update_render_info();
 	}
     else if(msgtype == NETMSGTYPE_SV_WEAPON_PICKUP)
@@ -637,14 +637,18 @@ extern "C" void modc_connected()
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		client_datas[i].name[0] = 0;
+		client_datas[i].skin_id = 0;
 		client_datas[i].team = 0;
 		client_datas[i].emoticon = 0;
 		client_datas[i].emoticon_start = -1;
+		client_datas[i].skin_info.texture = skin_get(0)->color_texture;
+		client_datas[i].skin_info.color_body = vec4(1,1,1,1);
+		client_datas[i].skin_info.color_feet = vec4(1,1,1,1);
+		client_datas[i].update_render_info();
 	}
 
 	for(int i = 0; i < killmsg_max; i++)
 		killmsgs[i].tick = -100000;
-		
 	send_info(true);
 }
 

@@ -279,6 +279,9 @@ void render_player(
 
 	NETOBJ_PLAYER_INFO info = *player_info;
 	tee_render_info render_info = client_datas[info.cid].render_info;
+	
+	// set size
+	render_info.size = 64.0f;
 
 	float intratick = client_intratick();
 	float ticktime = client_ticktime();
@@ -554,7 +557,9 @@ void render_player(
 		render_tee(&state, &ghost, player.emote, direction, ghost_position); // render ghost
 	}
 
-	// render the tee
+	render_info.size = 64.0f; // force some settings
+	render_info.color_body.a = 1.0f;
+	render_info.color_feet.a = 1.0f;
 	render_tee(&state, &render_info, player.emote, direction, position);
 
 	if(player.player_state == PLAYERSTATE_CHATTING)
@@ -610,6 +615,14 @@ void render_player(
 		float tw = gfx_text_width(0, 28.0f, name, -1);
 		gfx_text_color(1,1,1,a);
 		gfx_text(0, position.x-tw/2.0f, position.y-60, 28.0f, name, -1);
+		
+		if(config.debug) // render client id when in debug aswell
+		{
+			char buf[128];
+			str_format(buf, sizeof(buf),"%d", info.cid);
+			gfx_text(0, position.x, position.y-90, 28.0f, buf, -1);
+		}
+
 		gfx_text_color(1,1,1,1);
 	}
 }

@@ -10,7 +10,7 @@ MACRO_CONFIG_INT(cl_showfps, 0, 0, 1)
 MACRO_CONFIG_INT(cl_warning_tuning, 1, 0, 1)
 
 
-MACRO_CONFIG_INT(cl_mouse_deadzone, 200, 0, 0)
+MACRO_CONFIG_INT(cl_mouse_deadzone, 300, 0, 0)
 MACRO_CONFIG_INT(cl_mouse_followfactor, 60, 0, 200)
 MACRO_CONFIG_INT(cl_mouse_max_distance, 800, 0, 0)
 

@@ -913,7 +913,7 @@ void render_game()
 	}
 
 	//
-	float camera_max_distance = 250.0f;
+	float camera_max_distance = 200.0f;
 	float deadzone = config.cl_mouse_deadzone;
 	float follow_factor = config.cl_mouse_followfactor/100.0f;
 	float mouse_max = min(camera_max_distance/follow_factor + deadzone, (float)config.cl_mouse_max_distance);

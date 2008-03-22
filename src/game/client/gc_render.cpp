@@ -478,4 +478,78 @@ void render_world(float center_x, float center_y, float zoom)
 
 	// render damage indications
 	render_damage_indicators();
+	
+	
+	
+	// render screen sizes	
+	if(false)
+	{
+		gfx_texture_set(-1);
+		gfx_lines_begin();
+		
+		float last_points[4];
+		float start = 1.0f; //9.0f/16.0f;
+		float end = 16.0f/9.0f;
+		const int num_steps = 20;
+		for(int i = 0; i <= num_steps; i++)
+		{
+			float points[4];
+			float aspect = start + (end-start)*(i/(float)num_steps);
+			
+			mapscreen_to_world(
+				center_x, center_y,
+				1.0f, 1.0f, 0.0f, 0.0f, aspect, 1.0f, points);
+			
+			if(i == 0)
+			{
+				gfx_lines_draw(points[0], points[1], points[2], points[1]);
+				gfx_lines_draw(points[0], points[3], points[2], points[3]);
+			}
+
+			if(i != 0)
+			{
+				gfx_lines_draw(points[0], points[1], last_points[0], last_points[1]);
+				gfx_lines_draw(points[2], points[1], last_points[2], last_points[1]);
+				gfx_lines_draw(points[0], points[3], last_points[0], last_points[3]);
+				gfx_lines_draw(points[2], points[3], last_points[2], last_points[3]);
+			}
+
+			if(i == num_steps)
+			{
+				gfx_lines_draw(points[0], points[1], points[0], points[3]);
+				gfx_lines_draw(points[2], points[1], points[2], points[3]);
+			}
+			
+			mem_copy(last_points, points, sizeof(points));
+		}
+
+		if(1)
+		{
+			gfx_setcolor(1,0,0,1);
+			for(int i = 0; i < 2; i++)
+			{
+				float points[4];
+				float aspects[] = {4.0f/3.0f, 16.0f/10.0f, 5.0f/4.0f, 16.0f/9.0f};
+				float aspect = aspects[i];
+				
+				mapscreen_to_world(
+					center_x, center_y,
+					1.0f, 1.0f, 0.0f, 0.0f, aspect, 1.0f, points);
+				
+				RECT r;
+				r.x = points[0];
+				r.y = points[1];
+				r.w = points[2]-points[0];
+				r.h = points[3]-points[1];
+				
+				gfx_lines_draw(r.x, r.y, r.x+r.w, r.y);
+				gfx_lines_draw(r.x+r.w, r.y, r.x+r.w, r.y+r.h);
+				gfx_lines_draw(r.x+r.w, r.y+r.h, r.x, r.y+r.h);
+				gfx_lines_draw(r.x, r.y+r.h, r.x, r.y);
+				gfx_setcolor(0,1,0,1);
+			}
+		}
+			
+		gfx_lines_end();
+	}	
 }
