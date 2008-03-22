@@ -14,7 +14,7 @@ struct tuning_params
 	tuning_params()
 	{
 		const float ticks_per_second = 50.0f;
-		#define MACRO_TUNING_PARAM(name,value) name = value;
+		#define MACRO_TUNING_PARAM(name,value) name.set((int)(value*100.0f));
 		#include "g_tuning.h"
 		#undef MACRO_TUNING_PARAM
 	}
