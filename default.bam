@@ -321,10 +321,6 @@ function build(settings)
 	game_server = Compile(settings, Collect("src/game/server/*.cpp"), serverdata.source, serverdata.cdata)
 	game_editor = Compile(settings, Collect("src/game/editor/*.cpp"))
 
-	if platform == "macosx" then
-		osxlaunch = Compile(settings, Collect("src/osxlaunch/*.m"))
-	end
-
 	-- build tools (TODO: fix this so we don't get double _d_d stuff)
 	tools_src = Collect("src/tools/*.cpp", "src/tools/*.c")
 	
