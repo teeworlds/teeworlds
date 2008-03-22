@@ -430,7 +430,7 @@ static void do_toolbar(RECT toolbar)
 		// flip buttons
 		ui_vsplit_l(&toolbar, 20.0f, &button, &toolbar);
 		static int flipx_button = 0;
-		if(do_editor_button(&flipx_button, "^X", enabled, &button, draw_editor_button_l, 0, "Flip brush horizontal"))
+		if(do_editor_button(&flipx_button, "^X", enabled, &button, draw_editor_button_l, 0, "[N] Flip brush horizontal") || inp_key_down('N'))
 		{
 			for(int i = 0; i < brush.layers.len(); i++)
 				brush.layers[i]->brush_flip_x();
@@ -438,7 +438,7 @@ static void do_toolbar(RECT toolbar)
 			
 		ui_vsplit_l(&toolbar, 20.0f, &button, &toolbar);
 		static int flipy_button = 0;
-		if(do_editor_button(&flipy_button, "^Y", enabled, &button, draw_editor_button_r, 0, "Flip brush vertical"))
+		if(do_editor_button(&flipy_button, "^Y", enabled, &button, draw_editor_button_r, 0, "[M] Flip brush vertical") || inp_key_down('M'))
 		{
 			for(int i = 0; i < brush.layers.len(); i++)
 				brush.layers[i]->brush_flip_y();
