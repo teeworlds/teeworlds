@@ -37,7 +37,7 @@ if platform == 'win32':
 if 'osx_' in platform:
 	use_zip = 1
 	use_gz = 0
-	use_bundle = 1
+	use_bundle = 0
 
 def copydir(src, dst, excl=[]):
 	for root, dirs, files in os.walk(src, topdown=True):
