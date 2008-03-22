@@ -528,7 +528,7 @@ extern "C" void modc_message(int msgtype)
 	{
 		NETMSG_SV_BROADCAST *msg = (NETMSG_SV_BROADCAST *)rawmsg;
 		str_copy(broadcast_text, msg->message, sizeof(broadcast_text));
-		broadcast_time = time_get();
+		broadcast_time = time_get()+time_freq()*10;
 	}
 	else if(msgtype == NETMSGTYPE_SV_MOTD)
 	{
@@ -548,8 +548,23 @@ extern "C" void modc_message(int msgtype)
 				}
 			}
 		}
-			
+
 		dbg_msg("game", "MOTD: %s", server_motd);
+		
+		// take the first line as a center text
+		int len = 0;
+		for(int i = 0; server_motd[i]; i++)
+		{
+			if(server_motd[i] == '\n')
+			{
+				len = i;
+				break;
+			}
+		}
+	
+		len = min(len, (int)sizeof(broadcast_text));
+		str_copy(broadcast_text, msg->message, len);
+		broadcast_time = time_get()+time_freq()*10;
 	}
 	else if(msgtype == NETMSGTYPE_SV_SETINFO)
 	{

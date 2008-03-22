@@ -1537,10 +1537,10 @@ void render_game()
 			gfx_text(0, 150*gfx_screenaspect()-w/2, 50, 24, text, -1);
 		}
 		
-		if(time_get() < broadcast_time+time_freq()*5)
+		if(time_get() < broadcast_time)
 		{
-			float w = gfx_text_width(0, 16, broadcast_text, -1);
-			gfx_text(0, 150*gfx_screenaspect()-w/2, 50, 16, broadcast_text, -1);
+			float w = gfx_text_width(0, 14, broadcast_text, -1);
+			gfx_text(0, 150*gfx_screenaspect()-w/2, 35, 14, broadcast_text, -1);
 		}
 		
 		tuning_params standard_tuning;
