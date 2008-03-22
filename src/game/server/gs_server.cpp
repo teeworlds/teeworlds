@@ -61,6 +61,14 @@ void send_chat(int cid, int team, const char *text)
 }
 
 
+void send_broadcast(const char *text)
+{
+	NETMSG_SV_BROADCAST msg;
+	msg.message = text;
+	msg.pack(MSGFLAG_VITAL);
+	server_send_msg(-1);
+}
+
 void send_tuning_params(int cid)
 {
 	msg_pack_start(NETMSGTYPE_SV_TUNE_PARAMS, MSGFLAG_VITAL);
@@ -2215,6 +2223,11 @@ static void con_restart(void *result, void *user_data)
 
 static void con_broadcast(void *result, void *user_data)
 {
+	send_broadcast(console_arg_string(result, 0));
+}
+
+static void con_say(void *result, void *user_data)
+{
 	send_chat(-1, -1, console_arg_string(result, 0));
 }
 
@@ -2226,6 +2239,7 @@ void mods_console_init()
 
 	MACRO_REGISTER_COMMAND("restart", "?i", con_restart, 0);
 	MACRO_REGISTER_COMMAND("broadcast", "r", con_broadcast, 0);
+	MACRO_REGISTER_COMMAND("say", "r", con_say, 0);
 }
 
 void mods_init()

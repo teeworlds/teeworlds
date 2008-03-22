@@ -524,6 +524,12 @@ extern "C" void modc_message(int msgtype)
 		else
 			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_SERVER].sounds[0].id, 0);
 	}
+	else if(msgtype == NETMSGTYPE_SV_BROADCAST)
+	{
+		NETMSG_SV_BROADCAST *msg = (NETMSG_SV_BROADCAST *)rawmsg;
+		str_copy(broadcast_text, msg->message, sizeof(broadcast_text));
+		broadcast_time = time_get();
+	}
 	else if(msgtype == NETMSGTYPE_SV_MOTD)
 	{
 		NETMSG_SV_MOTD *msg = (NETMSG_SV_MOTD *)rawmsg;

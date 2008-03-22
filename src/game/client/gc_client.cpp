@@ -74,6 +74,10 @@ void client_data::update_render_info()
 }
 
 
+// broadcasts
+char broadcast_text[1024] = {0};
+int64 broadcast_time = 0;
+
 void snd_play_random(int chn, int setid, float vol, vec2 pos)
 {
 	soundset *set = &data->sounds[setid];
@@ -1523,8 +1527,6 @@ void render_game()
 		render_spectators(width/2-w/2, 150+750+25+50+25, w);
 	}
 	
-	
-	
 	{
 		gfx_mapscreen(0, 0, 300*gfx_screenaspect(), 300);
 
@@ -1533,6 +1535,12 @@ void render_game()
 			const char *text = "Connection Problems...";
 			float w = gfx_text_width(0, 24, text, -1);
 			gfx_text(0, 150*gfx_screenaspect()-w/2, 50, 24, text, -1);
+		}
+		
+		if(time_get() < broadcast_time+time_freq()*5)
+		{
+			float w = gfx_text_width(0, 16, broadcast_text, -1);
+			gfx_text(0, 150*gfx_screenaspect()-w/2, 50, 16, broadcast_text, -1);
 		}
 		
 		tuning_params standard_tuning;

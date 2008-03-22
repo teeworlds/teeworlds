@@ -75,14 +75,16 @@ enum
 	CHATMODE_NONE=0,
 	CHATMODE_ALL,
 	CHATMODE_TEAM,
-	//CHATMODE_CONSOLE,
-	//CHATMODE_REMOTECONSOLE,
 };
 
 extern int chat_mode;
 void chat_add_line(int client_id, int team, const char *line);
 void chat_reset();
 bool chat_input_handle(INPUT_EVENT e, void *user_data);
+
+// broadcasts
+extern char broadcast_text[1024];
+extern int64 broadcast_time;
 
 // line input helter
 class line_input

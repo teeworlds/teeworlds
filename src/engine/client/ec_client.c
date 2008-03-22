@@ -1221,7 +1221,6 @@ static void client_run()
 	NETADDR4 bindaddr;
 	int64 reporttime = time_get();
 	int64 reportinterval = time_freq()*1;
-	int editor_active = 0;
 
 	static PERFORMACE_INFO rootscope = {"root", 0};
 	perf_start(&rootscope);
@@ -1260,6 +1259,9 @@ static void client_run()
 		client_connect(config.cl_connect);
 	config.cl_connect[0] = 0;
 	*/
+	
+	/* never start with the editor */
+	config.cl_editor = 0;
 		
 	inp_mouse_mode_relative();
 	
@@ -1315,13 +1317,13 @@ static void client_run()
 			break;
 
 		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_down('E'))
-			editor_active = editor_active^1;
+			config.cl_editor = config.cl_editor^1;
 		
 		if(!gfx_window_open())
 			break;
 			
 		/* render */
-		if(editor_active)
+		if(config.cl_editor)
 		{
 			client_update();
 			editor_update_and_render();

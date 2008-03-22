@@ -202,6 +202,10 @@ message sv_chat
 	string message
 end
 
+message sv_broadcast
+	string message
+end
+
 message sv_setinfo
 	range(0,MAX_CLIENTS-1) cid
 	string name

@@ -243,7 +243,7 @@ static int get_key_id(const char *key_name)
 	return 0;
 }
 
-static void con_binds_set(void *result, void *user_data)
+static void con_bind(void *result, void *user_data)
 {
 	const char *key_name = console_arg_string(result, 0);
 	int id = get_key_id(key_name);
@@ -258,7 +258,7 @@ static void con_binds_set(void *result, void *user_data)
 }
 
 
-static void con_binds_remove(void *result, void *user_data)
+static void con_unbind(void *result, void *user_data)
 {
 	const char *key_name = console_arg_string(result, 0);
 	int id = get_key_id(key_name);
@@ -272,7 +272,7 @@ static void con_binds_remove(void *result, void *user_data)
 	binds_set(id, "");
 }
 
-static void con_binds_dump(void *result, void *user_data)
+static void con_dump_binds(void *result, void *user_data)
 {
 	for(int i = 0; i < KEY_LAST; i++)
 	{
@@ -289,7 +289,7 @@ void binds_save()
 	{
 		if(keybindings[i][0] == 0)
 			continue;
-		str_format(buffer, sizeof(buffer), "binds_set %s %s", inp_key_name(i), keybindings[i]);
+		str_format(buffer, sizeof(buffer), "bind %s %s", inp_key_name(i), keybindings[i]);
 		client_save_line(buffer);
 	}
 }
@@ -342,9 +342,9 @@ void client_console_init()
 	MACRO_REGISTER_COMMAND("kill", "", con_kill, 0x0);
 	
 	// bindings
-	MACRO_REGISTER_COMMAND("binds_set", "sr", con_binds_set, 0x0);
-	MACRO_REGISTER_COMMAND("binds_remove", "s", con_binds_remove, 0x0);
-	MACRO_REGISTER_COMMAND("binds_dump", "", con_binds_dump, 0x0);
+	MACRO_REGISTER_COMMAND("bind", "sr", con_bind, 0x0);
+	MACRO_REGISTER_COMMAND("unbind", "s", con_unbind, 0x0);
+	MACRO_REGISTER_COMMAND("dump_binds", "", con_dump_binds, 0x0);
 
 	// chatting
 	MACRO_REGISTER_COMMAND("say", "r", con_say, 0x0);
