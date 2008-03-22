@@ -998,6 +998,8 @@ void player::fire_weapon()
 		return;
 	}
 	
+	vec2 projectile_startpos = pos+direction*phys_size*0.75f;
+	
 	switch(active_weapon)
 	{
 		case WEAPON_HAMMER:
@@ -1037,7 +1039,7 @@ void player::fire_weapon()
 		{
 			projectile *proj = new projectile(WEAPON_GUN,
 				client_id,
-				pos+vec2(0,0),
+				projectile_startpos,
 				direction,
 				(int)(server_tickspeed()*tuning.gun_lifetime),
 				this,
@@ -1073,7 +1075,7 @@ void player::fire_weapon()
 				float speed = mix((float)tuning.shotgun_speeddiff, 1.0f, v);
 				projectile *proj = new projectile(WEAPON_SHOTGUN,
 					client_id,
-					pos,
+					projectile_startpos,
 					vec2(cosf(a), sinf(a))*speed,
 					(int)(server_tickspeed()*tuning.shotgun_lifetime),
 					this,
@@ -1097,7 +1099,7 @@ void player::fire_weapon()
 		{
 			projectile *proj = new projectile(WEAPON_GRENADE,
 				client_id,
-				pos+vec2(0,0),
+				projectile_startpos,
 				direction,
 				(int)(server_tickspeed()*tuning.grenade_lifetime),
 				this,
