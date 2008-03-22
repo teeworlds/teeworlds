@@ -114,7 +114,7 @@ object player_core
 	range(0, 3) jumped
 
 	range(-1,MAX_CLIENTS-1) hooked_player
-	range(-1,3) hook_state
+	range(-1,5) hook_state
 	range(0, max_int) hook_tick
 
 	any hook_x

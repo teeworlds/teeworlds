@@ -246,8 +246,13 @@ void player_core::tick()
 			hook_tick = 0;
 			triggered_events |= COREEVENT_HOOK_LAUNCH;
 		}
-		else if(hook_state == HOOK_GOING_TO_RETRACT)
+		else if(hook_state >= HOOK_RETRACT_START && hook_state < HOOK_RETRACT_END)
 		{
+			hook_state++;
+		}
+		else if(hook_state == HOOK_RETRACT_END)
+		{
+			hook_state = HOOK_RETRACTED;
 			triggered_events |= COREEVENT_HOOK_RETRACT;
 			hook_state = HOOK_RETRACTED;
 		}
@@ -256,7 +261,7 @@ void player_core::tick()
 			vec2 new_pos = hook_pos+hook_dir*world->tuning.hook_fire_speed;
 			if(distance(pos, new_pos) > world->tuning.hook_length)
 			{
-				hook_state = HOOK_GOING_TO_RETRACT;
+				hook_state = HOOK_RETRACT_START;
 				new_pos = pos + normalize(new_pos-pos) * world->tuning.hook_length;
 			}
 			
