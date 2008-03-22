@@ -851,6 +851,7 @@ void chat_enable_mode(int team)
 			chat_mode = CHATMODE_ALL;
 		
 		chat_input.clear();
+		inp_clear_events();
 	}
 }
 
