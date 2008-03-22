@@ -563,8 +563,16 @@ extern "C" void modc_message(int msgtype)
 		}
 	
 		len = min(len, (int)sizeof(broadcast_text));
-		str_copy(broadcast_text, msg->message, len);
-		broadcast_time = time_get()+time_freq()*10;
+		if(len)
+		{
+			str_copy(broadcast_text, msg->message, len);
+			broadcast_time = time_get()+time_freq()*10;
+		}
+		else
+		{
+			broadcast_text[0] = 0;
+			broadcast_time = 0;
+		}
 	}
 	else if(msgtype == NETMSGTYPE_SV_SETINFO)
 	{
