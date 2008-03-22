@@ -13,9 +13,9 @@ if os.name == "nt":
 	platform = "win32"
 else:
 	# get name
-	name = os.popen("uname").readline().strip().lower()
-	if name == "darwin":
-		name = "osx"
+	osname = os.popen("uname").readline().strip().lower()
+	if osname == "darwin":
+		osname = "osx"
 		
 	# get arch
 	machine = os.popen("uname -m").readline().strip().lower()
@@ -28,11 +28,11 @@ else:
 	elif "power" in machine.lower():
 		arch = "ppc"
 		
-	platform = name + "_" + arch
+	platform = osname + "_" + arch
 
 print "%s-%s-%s" % (name,version, platform)
 
-src_package = "%s-%s-src.zip" % (name,version)
+src_package = "%s-%s-src.zip" % (name, version)
 
 root_dir = os.getcwd() + "/work"
 src_dir = ""
@@ -40,6 +40,7 @@ src_dir = ""
 def fetch_file(server, url, local):
 	try:
 		conn = httplib.HTTPConnection(server)
+		print "trying %s%s" % (server, url)
 		conn.request("GET", url)
 		response = conn.getresponse()
 		if response.status != 200:
