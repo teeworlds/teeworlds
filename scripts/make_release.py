@@ -7,7 +7,7 @@ if len(sys.argv) != 3:
 	print sys.argv[0], "VERSION PLATFORM"
 	sys.exit(-1)
 
-name = "teewars"
+name = "teeworlds"
 version = sys.argv[1]
 platform = sys.argv[2]
 exe_ext = ""
@@ -68,8 +68,8 @@ if include_data and not use_bundle:
 		shutil.copy("other/config_directory.bat", package_dir)
 
 if include_exe and not use_bundle:
-	shutil.copy("teewars"+exe_ext, package_dir)
-	shutil.copy("teewars_srv"+exe_ext, package_dir)
+	shutil.copy(name+exe_ext, package_dir)
+	shutil.copy(name+"_srv"+exe_ext, package_dir)
 	
 if include_src:
 	for p in ["src", "scripts", "datasrc", "other", "objs"]:
@@ -78,18 +78,18 @@ if include_src:
 	shutil.copy("default.bam", package_dir)
 
 if use_bundle:
-	bundle_content_dir = os.path.join(package_dir, "Teewars.app/Contents")
+	bundle_content_dir = os.path.join(package_dir, "Teeworlds.app/Contents")
 	bundle_bin_dir = os.path.join(bundle_content_dir, "MacOS")
 	bundle_resource_dir = os.path.join(bundle_content_dir, "Resources")
-	os.mkdir(os.path.join(package_dir, "Teewars.app"))
+	os.mkdir(os.path.join(package_dir, "Teeworlds.app"))
 	os.mkdir(bundle_content_dir)
 	os.mkdir(bundle_bin_dir)
 	os.mkdir(bundle_resource_dir)
 	os.mkdir(os.path.join(bundle_resource_dir, "data"))
 	copydir("data", bundle_resource_dir)
-	shutil.copy("other/icons/Teewars.icns", bundle_resource_dir)
-	shutil.copy("teewars"+exe_ext, bundle_bin_dir)
-	shutil.copy("teewars_srv"+exe_ext, bundle_bin_dir)
+	shutil.copy("other/icons/Teeworlds.icns", bundle_resource_dir)
+	shutil.copy(name+exe_ext, bundle_bin_dir)
+	shutil.copy(name+"_srv"+exe_ext, bundle_bin_dir)
 	shutil.copy("TeeLaunch"+exe_ext, bundle_bin_dir)
 	file(os.path.join(bundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
@@ -99,9 +99,9 @@ if use_bundle:
         <key>CFBundleDevelopmentRegion</key>
         <string>English</string>
         <key>CFBundleExecutable</key>
-        <string>teewars</string>
+        <string>teeworlds</string>
         <key>CFBundleIconFile</key>
-        <string>Teewars</string>
+        <string>Teeworlds</string>
         <key>CFBundleInfoDictionaryVersion</key>
         <string>6.0</string>
         <key>CFBundlePackageType</key>

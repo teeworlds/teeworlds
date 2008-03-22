@@ -190,7 +190,7 @@ int gfx_init()
 	glGetIntegerv(GL_STENCIL_BITS, &i);
 	dbg_msg("gfx", "stencilbits = %d", i);
 	
-	glfwSetWindowTitle("Teewars");
+	glfwSetWindowTitle("Teeworlds");
 	
 	/* We don't want to see the window when we run the stress testing */
 	if(config.dbg_stress)

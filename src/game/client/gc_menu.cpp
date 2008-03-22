@@ -1678,7 +1678,7 @@ static void menu2_render_settings(RECT main_view)
 	{
 		RECT restart_warning;
 		ui_hsplit_b(&main_view, 40, &main_view, &restart_warning);
-		ui_do_label(&restart_warning, "You must restart Teewars for all settings to take effect.", 15.0f, -1, 220);
+		ui_do_label(&restart_warning, "You must restart the game for all settings to take effect.", 15.0f, -1, 220);
 	}
 }
 
@@ -1941,9 +1941,9 @@ int menu2_render()
 		}
 		else if(popup == POPUP_FIRST_LAUNCH)
 		{
-			title = "Welcome to Teewars";
+			title = "Welcome to Teeworlds";
 			extra_text =
-			"As this is the first time you launch Teewars, please enter your nick name below. "
+			"As this is the first time you launch the game, please enter your nick name below. "
 			"It's recommended that you check the settings to adjust them to your liking "
 			"before joining a server.";
 			button_text = "Ok";

@@ -28,10 +28,10 @@ if 1:
 	z.close()
 
 if 1:
-	os.system("svn export svn://svn.teewars.com/teewars/%s teewars" % svn_tree)
-	os.chdir("teewars")
+	os.system("svn export svn://svn.teeworlds.com/teeworlds/%s teeworlds" % svn_tree)
+	os.chdir("teeworlds")
 	os.system("python scripts/make_release.py %s src" % version)
 	os.chdir(root_dir)
-	for f in os.listdir("teewars"):
-		if "teewars" in f and "src" in f and (".zip" in f or ".tar.gz" in f):
-			shutil.copy("teewars/"+f, "../" + f)
+	for f in os.listdir("teeworlds"):
+		if "teeworlds" in f and "src" in f and (".zip" in f or ".tar.gz" in f):
+			shutil.copy("teeworlds/"+f, "../" + f)

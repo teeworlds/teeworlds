@@ -25,7 +25,7 @@
 123456789012345678901234567890123456789012345678
 0.3 2d82e361de24cb25
 my own private little server
-magnus.auvinen@teewars.somehost-strage-host.com
+magnus.auvinen@teeworlds.somehost-strage-host.com
 */
 
 NETSERVER *net;

@@ -681,4 +681,4 @@ extern "C" void modc_connected()
 	send_info(true);
 }
 
-extern "C" const char *modc_net_version() { return TEEWARS_NETVERSION; }
+extern "C" const char *modc_net_version() { return GAME_NETVERSION; }

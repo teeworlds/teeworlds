@@ -1484,7 +1484,7 @@ int main(int argc, char **argv)
 
 	/* init the engine */
 	dbg_msg("client", "starting...");
-	engine_init("Teewars");
+	engine_init("Teeworlds");
 
 /*	test_parser();
 	return 0;*/

@@ -29,4 +29,4 @@ f = ""
 for filename in sys.argv[1:]:
 	f += cstrip([l.strip() for l in file(filename)])
 
-print '#define TEEWARS_NETVERSION_HASH "%s"' % md5.new(f).hexdigest().lower()[16:]
+print '#define GAME_NETVERSION_HASH "%s"' % md5.new(f).hexdigest().lower()[16:]

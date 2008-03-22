@@ -345,7 +345,7 @@ void mastersrv_default()
 	int i;
 	mem_zero(master_servers, sizeof(master_servers));
 	for(i = 0; i < MAX_MASTERSERVERS; i++)
-		sprintf(master_servers[i].hostname, "master%d.teewars.com", i+1);
+		sprintf(master_servers[i].hostname, "master%d.teeworlds.com", i+1);
 }
 
 int mastersrv_load()

@@ -570,7 +570,7 @@ void console_render()
 		
 		// render version
 		char buf[128];
-		str_format(buf, sizeof(buf), "Teewars v%s", TEEWARS_VERSION);
+		str_format(buf, sizeof(buf), "v%s", GAME_VERSION);
 		float version_width = gfx_text_width(0, font_size, buf, -1);
 		gfx_text(0, screen.w-version_width-5, y, font_size, buf, -1);
 

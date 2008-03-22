@@ -1133,7 +1133,7 @@ int main(int argc, char **argv)
 
 	/* init the engine */
 	dbg_msg("server", "starting...");
-	engine_init("Teewars");
+	engine_init("Teeworlds");
 	
 	/* register all console commands */
 	server_register_commands();

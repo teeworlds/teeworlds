@@ -145,21 +145,21 @@ function DataCompile(datafile, scriptfile, headerfile, sourcefile, outputdatafil
 end
 
 serverdata = DataCompile(
-		"datasrc/teewars.ds", 
+		"datasrc/data.ds", 
 		"datasrc/server.dts", 
 		"src/game/generated/gs_data.h",
 		"src/game/generated/gs_data.cpp",
 		"src/game/generated/gs_internaldata.cpp")
 
 clientdata = DataCompile(
-		"datasrc/teewars.ds", 
+		"datasrc/data.ds", 
 		"datasrc/client.dts", 
 		"src/game/generated/gc_data.h",
 		"src/game/generated/gc_data.cpp",
 		"src/game/generated/gc_internaldata.cpp")
 
 networkdata = DataCompile(
-		"datasrc/teewars.ds", 
+		"datasrc/data.ds", 
 		"datasrc/network.dts", 
 		"src/game/generated/g_protocol_ids.h",
 		"src/game/generated/g_protocol_ids.cpp")
@@ -178,7 +178,7 @@ nethash = CHash(
 
 client_link_other = {}
 if family == "windows" then
-	client_link_other = {ResCompile("other/icons/teewars.rc")}
+	client_link_other = {ResCompile("other/icons/teeworlds.rc")}
 end
 
 
@@ -264,7 +264,7 @@ function build(settings)
 		Collect("src/engine/external/portaudio/src/os/" .. pa_platform .. "/*.c"),
 		Collect("src/engine/external/portaudio/src/hostapi/" .. pa_hostapi .. "/*.c"))
 	
-	-- build teewars components
+	-- build game components
 	engine_settings = settings:copy()
 	
 	if family == "windows" then
@@ -332,11 +332,11 @@ function build(settings)
 	end
 	
 	-- build client, server and master server
-	client_exe = Link(client_settings, "teewars", game_shared, game_client,
+	client_exe = Link(client_settings, "teeworlds", game_shared, game_client,
 		engine, client, game_editor, glfw, portaudio, zlib, pnglite, wavpack,
 		client_link_other)
 
-	server_exe = Link(server_settings, "teewars_srv", engine, server,
+	server_exe = Link(server_settings, "teeworlds_srv", engine, server,
 		game_shared, game_server, zlib)
 
 	masterserver_exe = Link(server_settings, "mastersrv", masterserver,

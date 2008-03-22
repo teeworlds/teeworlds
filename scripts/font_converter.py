@@ -144,5 +144,5 @@ if len(sys.argv) >= 2:
         convert(input, output)
     print "done!"
 else:
-    print "font converter! converts .fnt files to teewars .tfnt"
+    print "font converter! converts .fnt files to teeworlds .tfnt"
     print "usage: font_converter <input>"

@@ -2313,5 +2313,5 @@ void mods_postsnap()
 	events.clear();
 }
 
-extern "C" const char *mods_net_version() { return TEEWARS_NETVERSION; }
-extern "C" const char *mods_version() { return TEEWARS_VERSION; }
+extern "C" const char *mods_net_version() { return GAME_NETVERSION; }
+extern "C" const char *mods_version() { return GAME_VERSION; }

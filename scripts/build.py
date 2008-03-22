@@ -1,6 +1,10 @@
 import os, sys, shutil, httplib, zipfile
 
+name = "teeworlds"
+domain = "www.%s.com" % name
 version = sys.argv[1]
+
+
 
 flag_download = True
 flag_clean = True
@@ -26,9 +30,9 @@ else:
 		
 	platform = name + "_" + arch
 
-print "teewars-%s-%s" % (version, platform)
+print "%s-%s-%s" % (name,version, platform)
 
-src_package = "teewars-%s-src.zip" % version
+src_package = "%s-%s-src.zip" % (name,version)
 
 root_dir = os.getcwd() + "/work"
 src_dir = ""
@@ -87,20 +91,20 @@ os.chdir(root_dir)
 # download
 if flag_download:
 	print "*** downloading bam source package ***"
-	if not fetch_file("www.teewars.com", "/files/bam.zip", "bam.zip"):
-		if not fetch_file("www.teewars.com", "/files/beta/bam.zip", "bam.zip"):
+	if not fetch_file(domain, "/files/bam.zip", "bam.zip"):
+		if not fetch_file(domain, "/files/beta/bam.zip", "bam.zip"):
 			bail("couldn't find source package and couldn't download it")
 		
-	print "*** downloading teewars source package ***"
-	if not fetch_file("www.teewars.com", "/files/%s" % src_package, src_package):
-		if not fetch_file("www.teewars.com", "/files/beta/%s" % src_package, src_package):
+	print "*** downloading %s source package ***" % name
+	if not fetch_file(domain, "/files/%s" % src_package, src_package):
+		if not fetch_file(domain, "/files/beta/%s" % src_package, src_package):
 			bail("couldn't find source package and couldn't download it")
 
 # unpack
 print "*** unpacking source ***"
 unzip("bam.zip", ".")
-unzip(src_package, "teewars")
-src_dir = "teewars/"+ os.listdir("teewars/")[0]
+unzip(src_package, name)
+src_dir = name+"/"+ os.listdir(name+"/")[0]
 
 # build bam
 if 1:
@@ -119,12 +123,12 @@ if 1:
 	os.chdir(root_dir)
 	shutil.copy("bam/src/"+output, src_dir+"/"+output)
 
-# build teewars
+# build the game
 if 1:
-	print "*** building teewars ***"
+	print "*** building %s ***" % name
 	os.chdir(src_dir)
 	if os.system("%s server_release client_release" % bam_cmd) != 0:
-		bail("failed to build teewars")
+		bail("failed to build %s" % name)
 	os.chdir(root_dir)
 
 # make release
@@ -132,10 +136,10 @@ if 1:
 	print "*** making release ***"
 	os.chdir(src_dir)
 	if os.system("python scripts/make_release.py %s %s" % (version, platform)) != 0:
-		bail("failed to make a relase of teewars")
+		bail("failed to make a relase of %s"%name)
 	final_output = "FAIL"
 	for f in os.listdir("."):
-		if version in f and platform in f and "teewars" in f and (".zip" in f or ".tar.gz" in f):
+		if version in f and platform in f and name in f and (".zip" in f or ".tar.gz" in f):
 			final_output = f
 	os.chdir(root_dir)
 	shutil.copy("%s/%s" % (src_dir, final_output), "../"+final_output)
