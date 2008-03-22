@@ -1,5 +1,9 @@
 import os, shutil, zipfile, sys
 
+if len(sys.argv) <= 1:
+	print "%s VERSION [SVN TREE]" % sys.argv[0]
+	sys.exit(-1)
+
 version = sys.argv[1]
 svn_tree = "tags/release-%s" % version
 

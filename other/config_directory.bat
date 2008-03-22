@@ -1,1 +1,1 @@
-@start explorer %APPDATA%\Teewars
+@start explorer %APPDATA%\Teeworlds
