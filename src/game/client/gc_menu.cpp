@@ -971,11 +971,12 @@ static void menu2_render_serverbrowser(RECT main_view)
 	ui_hsplit_b(&server_details, 10.0f, &server_details, 0x0);
 
 	// server details
+	const float font_size = 12.0f;
 	ui_hsplit_t(&server_details, 20.0f, &server_header, &server_details);
 	ui_draw_rect(&server_header, vec4(1,1,1,0.25f), CORNER_T, 4.0f);
 	ui_draw_rect(&server_details, vec4(0,0,0,0.15f), CORNER_B, 4.0f);
 	ui_vsplit_l(&server_header, 8.0f, 0x0, &server_header);
-	ui_do_label(&server_header, "Server Details: ", 14.0f, -1);
+	ui_do_label(&server_header, "Server Details: ", font_size+2.0f, -1);
 
 	ui_vsplit_l(&server_details, 5.0f, 0x0, &server_details);
 
@@ -983,16 +984,8 @@ static void menu2_render_serverbrowser(RECT main_view)
 
 	if (selected_server)
 	{
-		const float row_height = 18.0f;
 		RECT row;
 		static char *labels[] = { "Version:", "Game Type:", "Progression:", "Ping:" };
-
-		ui_hsplit_t(&server_details, row_height, &row, &server_details);
-		ui_do_label(&row, selected_server->name, 15.0f, -1);
-
-		ui_hsplit_t(&server_details, row_height, &row, &server_details);
-		ui_vsplit_l(&row, 1.0f, 0x0, &row);
-		ui_do_label(&row, selected_server->address, 14.0f, -1);
 
 		RECT left_column;
 		RECT right_column;
@@ -1003,16 +996,16 @@ static void menu2_render_serverbrowser(RECT main_view)
 		for (int i = 0; i < 4; i++)
 		{
 			ui_hsplit_t(&left_column, 15.0f, &row, &left_column);
-			ui_do_label(&row, labels[i], 13.0f, -1);
+			ui_do_label(&row, labels[i], font_size, -1);
 		}
 
 		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
-		ui_do_label(&row, selected_server->version, 13.0f, -1);
+		ui_do_label(&row, selected_server->version, font_size, -1);
 
 		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
 		static char *game_types[] = { "DM", "TDM", "CTF" };
 		if (selected_server->game_type >= 0 && selected_server->game_type < (int)(sizeof(game_types)/sizeof(*game_types)))
-			ui_do_label(&row, game_types[selected_server->game_type], 13.0f, -1);
+			ui_do_label(&row, game_types[selected_server->game_type], font_size, -1);
 
 		char temp[16];
 
@@ -1021,11 +1014,11 @@ static void menu2_render_serverbrowser(RECT main_view)
 		else
 			str_format(temp, sizeof(temp), "%d%%", selected_server->progression);
 		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
-		ui_do_label(&row, temp, 13.0f, -1);
+		ui_do_label(&row, temp, font_size, -1);
 
 		str_format(temp, sizeof(temp), "%d", selected_server->latency);
 		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
-		ui_do_label(&row, temp, 13.0f, -1);
+		ui_do_label(&row, temp, font_size, -1);
 	}
 	
 	// server scoreboard
@@ -1034,7 +1027,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 	ui_draw_rect(&server_header, vec4(1,1,1,0.25f), CORNER_T, 4.0f);
 	ui_draw_rect(&server_scoreboard, vec4(0,0,0,0.15f), CORNER_B, 4.0f);
 	ui_vsplit_l(&server_header, 8.0f, 0x0, &server_header);
-	ui_do_label(&server_header, "Scoreboard: ", 14.0f, -1);
+	ui_do_label(&server_header, "Scoreboard: ", font_size+2.0f, -1);
 
 	ui_vsplit_l(&server_scoreboard, 5.0f, 0x0, &server_scoreboard);
 
@@ -1049,10 +1042,10 @@ static void menu2_render_serverbrowser(RECT main_view)
 			ui_hsplit_t(&server_scoreboard, 16.0f, &row, &server_scoreboard);
 
 			str_format(temp, sizeof(temp), "%d", selected_server->player_scores[i]);
-			ui_do_label(&row, temp, 14.0f, -1);
+			ui_do_label(&row, temp, font_size, -1);
 
 			ui_vsplit_l(&row, 25.0f, 0x0, &row);
-			ui_do_label(&row, selected_server->player_names[i], 14.0f, -1);
+			ui_do_label(&row, selected_server->player_names[i], font_size, -1);
 		}
 	}
 	
@@ -1078,8 +1071,26 @@ static void menu2_render_serverbrowser(RECT main_view)
 	if (ui_do_button(&config.b_filter_pw, "No password", config.b_filter_pw, &button, ui_draw_checkbox, 0))
 		config.b_filter_pw ^= 1;
 
-	ui_hsplit_t(&filters, 2.0f, &button, &filters); // ping
 	ui_hsplit_t(&filters, 20.0f, &button, &filters);
+	if (ui_do_button((char *)&config.b_filter_compatversion, "Compatible Version", config.b_filter_compatversion, &button, ui_draw_checkbox, 0))
+		config.b_filter_compatversion ^= 1;
+
+	// game types
+	ui_hsplit_t(&types, 20.0f, &button, &types);
+	if (ui_do_button(&config.b_filter_gametype, "DM", config.b_filter_gametype&(1<<GAMETYPE_DM), &button, ui_draw_checkbox, 0))
+		config.b_filter_gametype ^= (1<<GAMETYPE_DM);
+
+	ui_hsplit_t(&types, 20.0f, &button, &types);
+	if (ui_do_button((char *)&config.b_filter_gametype + 1, "TDM", config.b_filter_gametype&(1<<GAMETYPE_TDM), &button, ui_draw_checkbox, 0))
+		config.b_filter_gametype ^= (1<<GAMETYPE_TDM);
+
+	ui_hsplit_t(&types, 20.0f, &button, &types);
+	if (ui_do_button((char *)&config.b_filter_gametype + 2, "CTF", config.b_filter_gametype&(1<<GAMETYPE_CTF), &button, ui_draw_checkbox, 0))
+		config.b_filter_gametype ^= (1<<GAMETYPE_CTF);
+
+	// ping
+	ui_hsplit_t(&types, 2.0f, &button, &types);
+	ui_hsplit_t(&types, 20.0f, &button, &types);
 	{
 		RECT editbox;
 		ui_vsplit_l(&button, 40.0f, &editbox, &button);
@@ -1093,17 +1104,6 @@ static void menu2_render_serverbrowser(RECT main_view)
 		ui_do_label(&button, "Maximum ping", 14.0f, -1);
 	}
 
-	ui_hsplit_t(&types, 20.0f, &button, &types);
-	if (ui_do_button(&config.b_filter_gametype, "DM", config.b_filter_gametype&(1<<GAMETYPE_DM), &button, ui_draw_checkbox, 0))
-		config.b_filter_gametype ^= (1<<GAMETYPE_DM);
-
-	ui_hsplit_t(&types, 20.0f, &button, &types);
-	if (ui_do_button((char *)&config.b_filter_gametype + 1, "TDM", config.b_filter_gametype&(1<<GAMETYPE_TDM), &button, ui_draw_checkbox, 0))
-		config.b_filter_gametype ^= (1<<GAMETYPE_TDM);
-
-	ui_hsplit_t(&types, 20.0f, &button, &types);
-	if (ui_do_button((char *)&config.b_filter_gametype + 2, "CTF", config.b_filter_gametype&(1<<GAMETYPE_CTF), &button, ui_draw_checkbox, 0))
-		config.b_filter_gametype ^= (1<<GAMETYPE_CTF);
 
 	// render status
 	ui_draw_rect(&status, vec4(1,1,1,0.25f), CORNER_B, 5.0f);

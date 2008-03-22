@@ -17,6 +17,7 @@ MACRO_CONFIG_INT(b_filter_empty, 0, 0, 1)
 MACRO_CONFIG_INT(b_filter_pw, 0, 0, 1)
 MACRO_CONFIG_INT(b_filter_ping, 999, 0, 999)
 MACRO_CONFIG_INT(b_filter_gametype, 0xf, 0, 0xf)
+MACRO_CONFIG_INT(b_filter_compatversion, 1, 0, 1)
 
 MACRO_CONFIG_INT(b_sort, 0, 0, 256)
 MACRO_CONFIG_INT(b_sort_order, 0, 0, 1)

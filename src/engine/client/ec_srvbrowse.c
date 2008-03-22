@@ -155,6 +155,8 @@ static void client_serverbrowse_filter()
 			filtered = 1;
 		else if(!(config.b_filter_gametype&(1<<serverlist[i]->info.game_type)))
 			filtered = 1;
+		else if(config.b_filter_compatversion && strncmp(serverlist[i]->info.version, modc_net_version(), 3) != 0)
+			filtered = 1;
 		else if(config.b_filter_string[0] != 0)
 		{
 			if(strstr(serverlist[i]->info.name, config.b_filter_string) == 0)
@@ -173,7 +175,8 @@ static int client_serverbrowse_sorthash()
 	i |= config.b_filter_full<<5;
 	i |= config.b_filter_pw<<6;
 	i |= config.b_sort_order<<7;
-	i |= config.b_filter_gametype<<8;
+	i |= config.b_filter_compatversion<<8;
+	i |= config.b_filter_gametype<<9;
 	i |= config.b_filter_ping<<16;
 	return i;
 }
