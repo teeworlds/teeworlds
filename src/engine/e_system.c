@@ -760,9 +760,13 @@ int fs_storage_path(const char *appname, char *path, int max)
 	if(!home)
 		return 0;
 
+#if defined(CONF_PLATFORM_MACOSX)
+	snprintf(path, max, "%s/Library/Application Support/%s", home, appname);
+#else
 	snprintf(path, max, "%s/.%s", home, appname);
 	for(i = strlen(home)+2; path[i]; i++)
 		path[i] = tolower(path[i]);
+#endif
 	
 	return 1;
 #endif

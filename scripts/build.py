@@ -125,9 +125,6 @@ if 1:
 	os.chdir(src_dir)
 	if os.system("%s server_release client_release" % bam_cmd) != 0:
 		bail("failed to build teewars")
-	if name == 'osx':
-		if os.system("%s TeeLaunch_release" % bam_cmd) != 0:
-			bail("failed to build OSX Launcher")
 	os.chdir(root_dir)
 
 # make release

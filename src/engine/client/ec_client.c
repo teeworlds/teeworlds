@@ -1470,6 +1470,18 @@ void client_save_line(const char *line)
 
 int main(int argc, char **argv)
 {
+#if defined(CONF_PLATFORM_MACOSX)
+	char buffer[512];
+	unsigned pos = strrchr(argv[0], '/') - argv[0];
+
+	if(pos >= 512)
+		return -1;
+
+	strncpy(buffer, argv[0], 511);
+	buffer[pos] = 0;
+	chdir(buffer);
+#endif
+
 	/* init the engine */
 	dbg_msg("client", "starting...");
 	engine_init("Teewars");
