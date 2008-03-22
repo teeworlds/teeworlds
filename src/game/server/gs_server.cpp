@@ -984,11 +984,15 @@ void player::fire_weapon()
 	vec2 direction = normalize(vec2(latest_input.target_x, latest_input.target_y));
 	
 	bool fullauto = false;
-	if(active_weapon == WEAPON_GRENADE || active_weapon == WEAPON_SHOTGUN)
+	if(active_weapon == WEAPON_GRENADE || active_weapon == WEAPON_SHOTGUN || active_weapon == WEAPON_RIFLE)
 		fullauto = true;
 
-	//if(count_input(latest_previnput.fire, latest_input.fire).presses) || ((fullauto && latest_input.fire&1) && weapons[active_weapon].ammo))
-	if(!count_input(latest_previnput.fire, latest_input.fire).presses)
+
+	// check if we gonna fire
+	bool will_fire = false;
+	if(count_input(latest_previnput.fire, latest_input.fire).presses) will_fire = true;
+	if(fullauto && (latest_input.fire&1) && weapons[active_weapon].ammo) will_fire = true;
+	if(!will_fire)
 		return;
 		
 	// check for ammo
