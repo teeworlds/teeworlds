@@ -210,14 +210,16 @@ int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float fo
 			}
 		}
 
-		if (at_index > len)
-			at_index = len;
-			
 		for(int i = 0; i < inp_num_events(); i++)
 		{
 			INPUT_EVENT e = inp_get_event(i);
 			char c = e.ch;
 			int k = e.key;
+
+			if (at_index > len)
+				at_index = len;
+			
+
 
 			if (!(c >= 0 && c < 32))
 			{
