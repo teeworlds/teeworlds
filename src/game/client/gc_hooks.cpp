@@ -543,18 +543,7 @@ extern "C" void modc_message(int msgtype)
 		}
 
 		dbg_msg("game", "MOTD: %s", server_motd);
-		
-		// take the first line as a center text
-		int len = strlen(server_motd)+1;
-		for(int i = 0; server_motd[i]; i++)
-		{
-			if(server_motd[i] == '\n')
-			{
-				len = i;
-				break;
-			}
-		}
-	
+
 		if(server_motd[0])
 			server_motd_time = time_get()+time_freq()*10;
 		else
