@@ -99,6 +99,7 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 static void logger_stdout(const char *line)
 {
 	printf("%s\n", line);
+	fflush(stdout);
 }
 
 static void logger_debugger(const char *line)
