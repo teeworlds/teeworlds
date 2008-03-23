@@ -1131,6 +1131,21 @@ static void menu2_render_serverbrowser(RECT main_view)
 			else if(config.ui_page == PAGE_LAN)
 				client_serverbrowse_refresh(1);
 		}
+
+		//ui_vsplit_r(&buttons, 30.0f, &buttons, &button);
+		ui_vsplit_l(&buttons, 120.0f, &button, &buttons);
+		static int clear_button = 0;
+		if(ui_do_button(&clear_button, "Reset Filter", 0, &button, ui_draw_menu_button, 0))
+		{
+			config.b_filter_full = 0;
+			config.b_filter_empty = 0;
+			config.b_filter_pw = 0;
+			config.b_filter_ping = 999;
+			config.b_filter_gametype = 0xf;
+			config.b_filter_compatversion = 1;
+			config.b_filter_string[0] = 0;
+		}
+
 		
 		ui_hsplit_t(&toolbox, 20.0f, &button, &toolbox);
 		ui_do_label(&button, "Host address:", 14.0f, -1);
