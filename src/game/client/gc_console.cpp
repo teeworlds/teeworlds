@@ -572,10 +572,15 @@ void console_render()
 		const char *prompt = "> ";
 		if(console_type)
 		{
-			if(client_rcon_authed())
-				prompt = "rcon> ";
+			if(client_state() == CLIENTSTATE_ONLINE)
+			{
+				if(client_rcon_authed())
+					prompt = "rcon> ";
+				else
+					prompt = "ENTER PASSWORD> ";
+			}
 			else
-				prompt = "rcon password> ";
+				prompt = "NOT CONNECTED> ";
 		}
 
 		gfx_text_ex(&cursor, prompt, -1);

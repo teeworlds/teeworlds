@@ -9,6 +9,7 @@ bool console_input_normal_binds(INPUT_EVENT e, void *user_data);
 
 //void console_handle_input();
 
+void console_clear(int type);
 void console_toggle(int tpye);
 void console_render();
 int console_active();

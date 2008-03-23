@@ -279,6 +279,29 @@ void render_player(
 
 	NETOBJ_PLAYER_INFO info = *player_info;
 	tee_render_info render_info = client_datas[info.cid].render_info;
+
+	// check for teamplay modes
+	bool is_teamplay = false;
+	if(netobjects.gameobj && netobjects.gameobj->gametype != GAMETYPE_DM)
+		is_teamplay = true;
+
+	// check for ninja	
+	if (player.weapon == WEAPON_NINJA)
+	{
+		// change the skin for the player to the ninja
+		int skin = skin_find("x_ninja");
+		if(skin != -1)
+		{
+			if(is_teamplay)
+				render_info.texture = skin_get(skin)->color_texture;
+			else
+			{
+				render_info.texture = skin_get(skin)->org_texture;
+				render_info.color_body = vec4(1,1,1,1);
+				render_info.color_feet = vec4(1,1,1,1);
+			}
+		}	
+	}
 	
 	// set size
 	render_info.size = 64.0f;
@@ -286,10 +309,6 @@ void render_player(
 	float intratick = client_intratick();
 	float ticktime = client_ticktime();
 	
-	bool is_teamplay = false;
-	if(netobjects.gameobj && netobjects.gameobj->gametype != GAMETYPE_DM)
-		is_teamplay = true;
-
 	if(player.health < 0) // dont render dead players
 		return;
 
@@ -406,7 +425,7 @@ void render_player(
 		gfx_quads_setrotation(0);
 		gfx_quads_end();
 
-		render_hand(&client_datas[info.cid].render_info, position, normalize(hook_pos-pos), -pi/2, vec2(20, 0));
+		render_hand(&render_info, position, normalize(hook_pos-pos), -pi/2, vec2(20, 0));
 	}
 
 	// draw gun
@@ -441,20 +460,6 @@ void render_player(
 		}
 		else if (player.weapon == WEAPON_NINJA)
 		{
-			// change the skin for the player to the ninja
-			int skin = skin_find("x_ninja");
-			if(skin != -1)
-			{
-				if(is_teamplay)
-					render_info.texture = skin_get(skin)->color_texture;
-				else
-				{
-					render_info.texture = skin_get(skin)->org_texture;
-					render_info.color_body = vec4(1,1,1,1);
-					render_info.color_feet = vec4(1,1,1,1);
-				}
-			}
-			
 			p = position;
 			p.y += data->weapons[iw].offsety;
 
@@ -529,10 +534,6 @@ void render_player(
 					vec2 muzzlepos = p + dir * data->weapons[iw].muzzleoffsetx + diry * offsety;
 
 					draw_sprite(muzzlepos.x, muzzlepos.y, data->weapons[iw].visual_size);
-					/*gfx_setcolor(1.0f,1.0f,1.0f,alpha);
-					vec2 diry(-dir.y,dir.x);
-					p += dir * muzzleparams[player.weapon].offsetx + diry * offsety;
-					gfx_quads_draw(p.x,p.y,muzzleparams[player.weapon].sizex, muzzleparams[player.weapon].sizey);*/
 				}
 			}
 		}
@@ -540,9 +541,9 @@ void render_player(
 
 		switch (player.weapon)
 		{
-			case WEAPON_GUN: render_hand(&client_datas[info.cid].render_info, p, direction, -3*pi/4, vec2(-15, 4)); break;
-			case WEAPON_SHOTGUN: render_hand(&client_datas[info.cid].render_info, p, direction, -pi/2, vec2(-5, 4)); break;
-			case WEAPON_GRENADE: render_hand(&client_datas[info.cid].render_info, p, direction, -pi/2, vec2(-4, 7)); break;
+			case WEAPON_GUN: render_hand(&render_info, p, direction, -3*pi/4, vec2(-15, 4)); break;
+			case WEAPON_SHOTGUN: render_hand(&render_info, p, direction, -pi/2, vec2(-5, 4)); break;
+			case WEAPON_GRENADE: render_hand(&render_info, p, direction, -pi/2, vec2(-4, 7)); break;
 		}
 
 	}
