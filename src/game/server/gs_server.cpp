@@ -705,8 +705,8 @@ void player::set_team(int new_team)
 	str_format(buf, sizeof(buf), "%s joined the %s", server_clientname(client_id), get_team_name(new_team));
 	send_chat(-1, -1, buf); 
 	
-	team = new_team;
 	die(client_id, -1);
+	team = new_team;
 	score = 0;
 	dbg_msg("game", "team_join player='%d:%s' team=%d", client_id, server_clientname(client_id), team);
 }
