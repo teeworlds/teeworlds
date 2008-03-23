@@ -7,6 +7,7 @@
 #include <game/g_version.h>
 #include <game/g_collision.h>
 #include <game/g_layers.h>
+#include <game/g_math.h>
 #include "gs_common.h"
 #include "gs_game_ctf.h"
 #include "gs_game_tdm.h"
@@ -61,12 +62,44 @@ void send_chat(int cid, int team, const char *text)
 }
 
 
-void send_broadcast(const char *text)
+void send_info(int who, int to_who)
+{
+	NETMSG_SV_SETINFO msg;
+	msg.cid = who;
+	msg.name = server_clientname(who);
+	msg.skin = players[who].skin_name;
+	msg.use_custom_color = players[who].use_custom_color;
+	msg.color_body = players[who].color_body;
+	msg.color_feet =players[who].color_feet;
+	msg.pack(MSGFLAG_VITAL);
+	
+	server_send_msg(to_who);
+}
+
+void send_emoticon(int cid, int emoticon)
+{
+	NETMSG_SV_EMOTICON msg;
+	msg.cid = cid;
+	msg.emoticon = emoticon;
+	msg.pack(MSGFLAG_VITAL);
+	server_send_msg(-1);
+}
+
+void send_weapon_pickup(int cid, int weapon)
+{
+	NETMSG_SV_WEAPON_PICKUP msg;
+	msg.weapon = weapon;
+	msg.pack(MSGFLAG_VITAL);
+	server_send_msg(cid);
+}
+
+
+void send_broadcast(const char *text, int cid)
 {
 	NETMSG_SV_BROADCAST msg;
 	msg.message = text;
 	msg.pack(MSGFLAG_VITAL);
-	server_send_msg(-1);
+	server_send_msg(cid);
 }
 
 void send_tuning_params(int cid)
@@ -709,6 +742,15 @@ void player::set_team(int new_team)
 	team = new_team;
 	score = 0;
 	dbg_msg("game", "team_join player='%d:%s' team=%d", client_id, server_clientname(client_id), team);
+	
+	gameobj->on_player_info_change(&players[client_id]);
+
+	// send all info to this client
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(players[i].client_id != -1)
+			send_info(i, -1);
+	}
 }
 
 vec2 spawn_points[3][64];
@@ -1991,36 +2033,6 @@ void mods_client_predicted_input(int client_id, void *input)
 	}
 }
 
-void send_info(int who, int to_who)
-{
-	NETMSG_SV_SETINFO msg;
-	msg.cid = who;
-	msg.name = server_clientname(who);
-	msg.skin = players[who].skin_name;
-	msg.use_custom_color = players[who].use_custom_color;
-	msg.color_body = players[who].color_body;
-	msg.color_feet =players[who].color_feet;
-	msg.pack(MSGFLAG_VITAL);
-	
-	server_send_msg(to_who);
-}
-
-void send_emoticon(int cid, int emoticon)
-{
-	NETMSG_SV_EMOTICON msg;
-	msg.cid = cid;
-	msg.emoticon = emoticon;
-	msg.pack(MSGFLAG_VITAL);
-	server_send_msg(-1);
-}
-
-void send_weapon_pickup(int cid, int weapon)
-{
-	NETMSG_SV_WEAPON_PICKUP msg;
-	msg.weapon = weapon;
-	msg.pack(MSGFLAG_VITAL);
-	server_send_msg(cid);
-}
 
 void mods_client_enter(int client_id)
 {
@@ -2049,10 +2061,10 @@ void mods_connected(int client_id)
 		players[client_id].team = -1;
 	else
 	{
-		if(gameobj->gametype == GAMETYPE_DM)
+		/*if(gameobj->gametype == GAMETYPE_DM)
 			players[client_id].team = 0;
-		else
-			players[client_id].team = gameobj->getteam(client_id);
+		else*/
+		players[client_id].team = gameobj->get_auto_team(client_id);
 	}
 
 	// send motd
@@ -2100,15 +2112,14 @@ void mods_message(int msgtype, int client_id)
 		NETMSG_CL_SETTEAM *msg = (NETMSG_CL_SETTEAM *)rawmsg;
 
 		// Switch team on given client and kill/respawn him
-		players[client_id].set_team(msg->team);
-		gameobj->on_player_info_change(&players[client_id]);
-		
-		// send all info to this client
-		for(int i = 0; i < MAX_CLIENTS; i++)
+		if(gameobj->can_join_team(msg->team, client_id))
+			players[client_id].set_team(msg->team);
+		else
 		{
-			if(players[i].client_id != -1)
-				send_info(i, -1);
-		}		
+			char buf[128];
+			str_format(buf, sizeof(buf), "Only %d active players are allowed", config.sv_max_clients-config.sv_spectator_slots);
+			send_broadcast(buf, client_id);
+		}
 	}
 	else if (msgtype == NETMSGTYPE_CL_CHANGEINFO || msgtype == NETMSGTYPE_CL_STARTINFO)
 	{
@@ -2224,12 +2235,25 @@ static void con_restart(void *result, void *user_data)
 
 static void con_broadcast(void *result, void *user_data)
 {
-	send_broadcast(console_arg_string(result, 0));
+	send_broadcast(console_arg_string(result, 0), -1);
 }
 
 static void con_say(void *result, void *user_data)
 {
 	send_chat(-1, -1, console_arg_string(result, 0));
+}
+
+static void con_set_team(void *result, void *user_data)
+{
+	int client_id = clamp(console_arg_int(result, 0), 0, (int)MAX_CLIENTS);
+	int team = clamp(console_arg_int(result, 1), -1, 1);
+	
+	dbg_msg("", "%d %d", client_id, team);
+	
+	if(players[client_id].client_id != client_id)
+		return;
+	
+	players[client_id].set_team(team);
 }
 
 void mods_console_init()
@@ -2241,6 +2265,7 @@ void mods_console_init()
 	MACRO_REGISTER_COMMAND("restart", "?i", con_restart, 0);
 	MACRO_REGISTER_COMMAND("broadcast", "r", con_broadcast, 0);
 	MACRO_REGISTER_COMMAND("say", "r", con_say, 0);
+	MACRO_REGISTER_COMMAND("set_team", "ii", con_set_team, 0);
 }
 
 void mods_init()

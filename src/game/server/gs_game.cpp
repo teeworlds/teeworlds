@@ -298,7 +298,7 @@ void gameobject::snap(int snapping_client)
 	game->teamscore_blue = teamscore[1];
 }
 
-int gameobject::getteam(int notthisid)
+int gameobject::get_auto_team(int notthisid)
 {
 	int numplayers[2] = {0,0};
 	for(int i = 0; i < MAX_CLIENTS; i++)
@@ -310,7 +310,29 @@ int gameobject::getteam(int notthisid)
 		}
 	}
 
-	return numplayers[0] > numplayers[1] ? 1 : 0;
+	int team = 0;
+	if(is_teamplay)
+		team = numplayers[0] > numplayers[1] ? 1 : 0;
+		
+	if(can_join_team(team, notthisid))
+		return team;
+	return -1;
+}
+
+bool gameobject::can_join_team(int team, int notthisid)
+{
+	(void)team;
+	int numplayers[2] = {0,0};
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(players[i].client_id != -1 && players[i].client_id != notthisid)
+		{
+			if(players[i].team >= 0 || players[i].team == 1)
+				numplayers[players[i].team]++;
+		}
+	}
+	
+	return (numplayers[0] + numplayers[1]) < config.sv_max_clients-config.sv_spectator_slots;
 }
 
 void gameobject::do_player_score_wincheck()

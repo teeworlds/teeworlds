@@ -156,7 +156,8 @@ public:
 	virtual void on_player_info_change(class player *p);
 	
 	virtual void snap(int snapping_client);
-	virtual int getteam(int notthisid);
+	virtual int get_auto_team(int notthisid);
+	virtual bool can_join_team(int team, int notthisid);
 	int clampteam(int team);
 };
 
