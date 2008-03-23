@@ -95,11 +95,13 @@ void engine_parse_arguments(int argc, char **argv)
 		for(i = 1; i < argc; i++)
 			console_execute_line(argv[i]);
 	}
-	
+
+	console_execute_file(engine_savepath("autoexec.cfg", buf, sizeof(buf)));
+
 	/* open logfile if needed */
 	if(config.logfile[0])
 		dbg_logger_file(config.logfile);
-	
+
 	/* set default servers and load from disk*/
 	mastersrv_default();
 	mastersrv_load();
