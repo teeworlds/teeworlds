@@ -26,6 +26,9 @@ extern void menu_init();
 extern bool menu_active;
 extern bool menu_game_active;
 
+static float load_total;
+static float load_current;
+
 extern "C" void modc_console_init()
 {
 	client_console_init();
@@ -33,19 +36,23 @@ extern "C" void modc_console_init()
 
 //binds_save()
 
-/*static void load_sounds_thread(void *)
+static void load_sounds_thread(void *do_render)
 {
 	// load sounds
 	for(int s = 0; s < data->num_sounds; s++)
 	{
-		//render_loading(current/total);
+		if(do_render)
+			render_loading(load_current/load_total);
 		for(int i = 0; i < data->sounds[s].num_sounds; i++)
 		{
 			int id = snd_load_wv(data->sounds[s].sounds[i].filename);
 			data->sounds[s].sounds[i].id = id;
 		}
+
+		if(do_render)
+			load_current++;
 	}
-}*/
+}
 
 extern "C" void modc_init()
 {
@@ -81,39 +88,26 @@ extern "C" void modc_init()
 	// TODO: should be removed
 	snd_set_listener_pos(0.0f, 0.0f);
 
-	float total = data->num_images+data->num_sounds;
-	float current = 0;
+	// setup load amount
+	load_total = data->num_images;
+	load_current = 0;
+	if(!config.cl_threadsoundloading)
+		load_total += data->num_sounds;
 	
 	// load textures
 	for(int i = 0; i < data->num_images; i++)
 	{
-		render_loading(current/total);
+		render_loading(load_current/load_total);
 		data->images[i].id = gfx_load_texture(data->images[i].filename, IMG_AUTO);
-		current++;
+		load_current++;
 	}
 
 	skin_init();
 	
-	//load_sounds_thread(0);
-	//thread_create(load_sounds_thread, 0);
-
-	// load sounds
-	for(int s = 0; s < data->num_sounds; s++)
-	{
-		render_loading(current/total);
-		for(int i = 0; i < data->sounds[s].num_sounds; i++)
-		{
-			int id;
-			//if (strcmp(data->sounds[s].sounds[i].filename + strlen(data->sounds[s].sounds[i].filename) - 3, ".wv") == 0)
-			id = snd_load_wv(data->sounds[s].sounds[i].filename);
-			//else
-			//	id = snd_load_wav(data->sounds[s].sounds[i].filename);
-
-			data->sounds[s].sounds[i].id = id;
-		}
-
-		current++;
-	}
+	if(config.cl_threadsoundloading)
+		thread_create(load_sounds_thread, 0);
+	else
+		load_sounds_thread((void*)1);
 	
 	int64 end = time_get();
 	dbg_msg("", "%f.2ms", ((end-start)*1000)/(float)time_freq());

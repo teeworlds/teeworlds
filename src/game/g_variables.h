@@ -7,6 +7,8 @@ MACRO_CONFIG_INT(cl_autoswitch_weapons, 0, 0, 1)
 MACRO_CONFIG_INT(cl_showfps, 0, 0, 1)
 
 MACRO_CONFIG_INT(cl_airjumpindicator, 1, 0, 1)
+MACRO_CONFIG_INT(cl_threadsoundloading, 0, 0, 1)
+
 
 MACRO_CONFIG_INT(cl_warning_tuning, 1, 0, 1)
 
