@@ -229,9 +229,13 @@ void binds_set(int keyid, const char *str)
 
 static int get_key_id(const char *key_name)
 {
-	int i = atoi(key_name);
-	if(i > 0 && i < KEY_LAST)
-		return i; // numeric
+	// check for numeric
+	if(key_name[0] == '#')
+	{
+		int i = atoi(key_name+1);
+		if(i > 0 && i < KEY_LAST)
+			return i; // numeric
+	}
 		
 	// search for key
 	for(int i = 0; i < KEY_LAST; i++)
