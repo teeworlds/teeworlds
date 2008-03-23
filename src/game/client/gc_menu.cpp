@@ -219,8 +219,6 @@ int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float fo
 			if (at_index > len)
 				at_index = len;
 			
-
-
 			if (!(c >= 0 && c < 32))
 			{
 				if (len < str_size - 1 && at_index < str_size - 1)
@@ -292,9 +290,9 @@ int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float fo
 		stars[s] = 0;
 		display_str = stars;
 	}
-	
-	ui_do_label(&textbox, display_str, font_size, -1);
 
+	ui_do_label(&textbox, display_str, font_size, -1);
+	
 	if (ui_last_active_item() == id && !just_got_active)
 	{
 		float w = gfx_text_width(0, font_size, display_str, at_index);
@@ -2028,7 +2026,7 @@ int menu2_render()
 			ui_vsplit_l(&textbox, 20.0f, 0, &textbox);
 			ui_vsplit_r(&textbox, 60.0f, &textbox, 0);
 			ui_do_label(&label, "Password:", 20, -1);
-			ui_do_edit_box(&config.password, &textbox, config.password, sizeof(config.password), true);
+			ui_do_edit_box(&config.password, &textbox, config.password, sizeof(config.password), 14.0f, true);
 		}
 		else if(popup == POPUP_FIRST_LAUNCH)
 		{
@@ -2075,27 +2073,6 @@ void menu_render()
 {
 	static int mouse_x = 0;
 	static int mouse_y = 0;
-
-	/*
-    RECT screen = *ui_screen();
-	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
-	menu2_render_background();
-
-	TEXT_CURSOR cursor;
-	mem_zero(&cursor, sizeof(cursor));
-	cursor.font_size = 32.0f;
-	cursor.start_x = 10.0f;
-	cursor.start_y = 10.0f;
-	cursor.x = cursor.start_x;
-	cursor.y = cursor.start_y;
-	cursor.line_count = 1;
-	cursor.line_width = 200.0f;
-	cursor.flags = TEXTFLAG_RENDER;
-
-	gfx_text_new(&cursor, "The quick brown fox jumped over the lazy dog.", -1);
-	
-	DEBUG_text = 0;
-	return;*/
 
 	// update colors
 
@@ -2152,4 +2129,17 @@ void menu_render()
     gfx_setcolor(1,1,1,1);
     gfx_quads_drawTL(mx,my,24,24);
     gfx_quads_end();
+
+	if(config.debug)
+	{
+		RECT screen = *ui_screen();
+		gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
+
+		char buf[512];
+		str_format(buf, sizeof(buf), "%p %p %p", ui_hot_item(), ui_active_item(), ui_last_active_item());
+		TEXT_CURSOR cursor;
+		gfx_text_set_cursor(&cursor, 10, 10, 10, TEXTFLAG_RENDER);
+		gfx_text_ex(&cursor, buf, -1);
+	}
+
 }
