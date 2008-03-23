@@ -552,7 +552,7 @@ extern "C" void modc_message(int msgtype)
 		dbg_msg("game", "MOTD: %s", server_motd);
 		
 		// take the first line as a center text
-		int len = 0;
+		int len = strlen(server_motd)+1;
 		for(int i = 0; server_motd[i]; i++)
 		{
 			if(server_motd[i] == '\n')
