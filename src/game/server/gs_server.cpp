@@ -448,7 +448,8 @@ void projectile::tick()
 
 	lifespan--;
 	
-	int collide = col_check_point((int)curpos.x, (int)curpos.y);
+	int collide = col_intersect_line(prevpos, curpos, &curpos);
+	//int collide = col_check_point((int)curpos.x, (int)curpos.y);
 	
 	vec2 new_pos;
 	entity *targetplayer = (entity*)intersect_player(prevpos, curpos, 6.0f, new_pos, powner);
