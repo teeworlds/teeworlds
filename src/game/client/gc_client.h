@@ -263,6 +263,7 @@ void flow_init();
 void flow_update();
 
 //
+void binds_default();
 void binds_save();
 void binds_set(int keyid, const char *str);
 const char *binds_get(int keyid);

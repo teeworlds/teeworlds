@@ -1337,8 +1337,9 @@ typedef void (*assign_func_callback)(CONFIGURATION *config, int value);
 
 static void menu2_render_settings_controls(RECT main_view)
 {
-	ui_vsplit_l(&main_view, 300.0f, &main_view, 0);
-	
+	RECT right_part;
+	ui_vsplit_l(&main_view, 300.0f, &main_view, &right_part);
+
 	{
 		RECT button, label;
 		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
@@ -1413,6 +1414,13 @@ static void menu2_render_settings_controls(RECT main_view)
 		}
     	ui_hsplit_t(&main_view, 5.0f, 0, &main_view);
     }	
+    
+    // defaults
+	RECT button;
+	ui_hsplit_b(&right_part, 25.0f, &right_part, &button);
+	ui_vsplit_l(&button, 50.0f, 0, &button);
+	if (ui_do_button((void*)binds_default, "Reset to defaults", 0, &button, ui_draw_menu_button, 0))
+		binds_default();
 }
 
 static void menu2_render_settings_graphics(RECT main_view)

@@ -227,6 +227,37 @@ void binds_set(int keyid, const char *str)
 		dbg_msg("binds", "bound %s (%d) = %s", inp_key_name(keyid), keyid, keybindings[keyid]);
 }
 
+void binds_default()
+{
+	for(int i = 0; i < KEY_LAST; i++)
+		keybindings[i][0] = 0;
+
+	// set default key bindings
+	binds_set(KEY_F1, "toggle_local_console");
+	binds_set(KEY_F2, "toggle_remote_console");
+	binds_set(KEY_TAB, "+scoreboard");
+	binds_set(KEY_F10, "screenshot");
+	
+	binds_set('A', "+left");
+	binds_set('D', "+right");
+	binds_set(KEY_SPACE, "+jump");
+	binds_set(KEY_MOUSE_1, "+fire");
+	binds_set(KEY_MOUSE_2, "+hook");
+	binds_set(KEY_LSHIFT, "+emote");
+
+	binds_set('1', "+weapon1");
+	binds_set('2', "+weapon2");
+	binds_set('3', "+weapon3");
+	binds_set('4', "+weapon4");
+	binds_set('5', "+weapon5");
+	
+	binds_set(KEY_MOUSE_WHEEL_UP, "+prevweapon");
+	binds_set(KEY_MOUSE_WHEEL_DOWN, "+nextweapon");
+	
+	binds_set('T', "chat all");
+	binds_set('Y', "chat team");
+}
+
 static int get_key_id(const char *key_name)
 {
 	// check for numeric
@@ -374,30 +405,7 @@ void client_console_init()
 	MACRO_REGISTER_COMMAND("+emote", "", con_key_input_state, &emoticon_selector_active);
 	MACRO_REGISTER_COMMAND("+scoreboard", "", con_key_input_state, &scoreboard_active);
 	
-	// set default key bindings
-	binds_set(KEY_F1, "toggle_local_console");
-	binds_set(KEY_F2, "toggle_remote_console");
-	binds_set(KEY_TAB, "+scoreboard");
-	binds_set(KEY_F10, "screenshot");
-	
-	binds_set('A', "+left");
-	binds_set('D', "+right");
-	binds_set(KEY_SPACE, "+jump");
-	binds_set(KEY_MOUSE_1, "+fire");
-	binds_set(KEY_MOUSE_2, "+hook");
-	binds_set(KEY_LSHIFT, "+emote");
-
-	binds_set('1', "+weapon1");
-	binds_set('2', "+weapon2");
-	binds_set('3', "+weapon3");
-	binds_set('4', "+weapon4");
-	binds_set('5', "+weapon5");
-	
-	binds_set(KEY_MOUSE_WHEEL_UP, "+prevweapon");
-	binds_set(KEY_MOUSE_WHEEL_DOWN, "+nextweapon");
-	
-	binds_set('T', "chat all");
-	binds_set('Y', "chat team");
+	binds_default();
 }
 
 bool console_input_cli(INPUT_EVENT e, void *user_data)
