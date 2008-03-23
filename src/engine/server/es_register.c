@@ -21,6 +21,7 @@ enum
 static int register_state = REGISTERSTATE_START;
 static int64 register_state_start = 0;
 static int register_first = 1;
+static int register_count = 0;
 
 static void register_new_state(int state)
 {
@@ -95,6 +96,7 @@ void register_update()
 	
 	if(register_state == REGISTERSTATE_START)
 	{
+		register_count = 0;
 		register_first = 1;
 		register_new_state(REGISTERSTATE_UPDATE_ADDRS);
 		mastersrv_refresh_addresses();
@@ -201,7 +203,15 @@ void register_update()
 		
 		/* check if we should send new heartbeat again */
 		if(now > register_state_start+freq*30)
-			register_new_state(REGISTERSTATE_HEARTBEAT);
+		{
+			if(register_count == 120) /* redo the whole process after 60 minutes to balance out the master servers */
+				register_new_state(REGISTERSTATE_START);
+			else
+			{
+				register_count++;
+				register_new_state(REGISTERSTATE_HEARTBEAT);
+			}
+		}
 	}
 	else if(register_state == REGISTERSTATE_ERROR)
 	{
