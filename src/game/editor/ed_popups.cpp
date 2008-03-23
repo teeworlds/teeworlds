@@ -284,9 +284,9 @@ int popup_quad(RECT view)
 	int new_val = 0;
 	int prop = editor.do_properties(&view, props, ids, &new_val);		
 	
-	if(prop == PROP_POS_ENV) quad->pos_env = new_val;
+	if(prop == PROP_POS_ENV) quad->pos_env = clamp(new_val, -1, editor.map.envelopes.len()-1);
 	if(prop == PROP_POS_ENV_OFFSET) quad->pos_env_offset = new_val;
-	if(prop == PROP_COLOR_ENV) quad->color_env = new_val;
+	if(prop == PROP_COLOR_ENV) quad->color_env = clamp(new_val, -1, editor.map.envelopes.len()-1);
 	if(prop == PROP_COLOR_ENV_OFFSET) quad->color_env_offset = new_val;
 	
 	return 0;

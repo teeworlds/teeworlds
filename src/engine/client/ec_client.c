@@ -635,7 +635,7 @@ static const char *client_load_map_search(const char *mapname, int wanted_crc)
 		return error;
 
 	/* try the downloaded maps */
-	str_format(buf2, sizeof(buf2), "%s_%8x.map", mapname, wanted_crc);
+	str_format(buf2, sizeof(buf2), "maps/%s_%8x.map", mapname, wanted_crc);
 	engine_savepath(buf2, buf, sizeof(buf));
 	error = client_load_map(buf, wanted_crc);
 	return error;
@@ -768,7 +768,7 @@ static void client_process_packet(NETPACKET *packet)
 					else
 					{
 						char buf[512];
-						str_format(buf, sizeof(buf), "%s_%8x.map", map, map_crc);
+						str_format(buf, sizeof(buf), "maps/%s_%8x.map", map, map_crc);
 						engine_savepath(buf, mapdownload_filename, sizeof(mapdownload_filename));
 
 						dbg_msg("client/network", "starting to download map to '%s'", mapdownload_filename);
