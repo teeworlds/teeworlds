@@ -33,7 +33,7 @@ extern "C" void modc_console_init()
 
 //binds_save()
 
-static void load_sounds_thread(void *)
+/*static void load_sounds_thread(void *)
 {
 	// load sounds
 	for(int s = 0; s < data->num_sounds; s++)
@@ -45,7 +45,7 @@ static void load_sounds_thread(void *)
 			data->sounds[s].sounds[i].id = id;
 		}
 	}
-}
+}*/
 
 extern "C" void modc_init()
 {
@@ -81,7 +81,7 @@ extern "C" void modc_init()
 	// TODO: should be removed
 	snd_set_listener_pos(0.0f, 0.0f);
 
-	float total = data->num_images;
+	float total = data->num_images+data->num_sounds;
 	float current = 0;
 	
 	// load textures
@@ -95,10 +95,9 @@ extern "C" void modc_init()
 	skin_init();
 	
 	//load_sounds_thread(0);
-	thread_create(load_sounds_thread, 0);
+	//thread_create(load_sounds_thread, 0);
 
 	// load sounds
-	/*
 	for(int s = 0; s < data->num_sounds; s++)
 	{
 		render_loading(current/total);
@@ -114,8 +113,7 @@ extern "C" void modc_init()
 		}
 
 		current++;
-	}*/
-	
+	}
 	
 	int64 end = time_get();
 	dbg_msg("", "%f.2ms", ((end-start)*1000)/(float)time_freq());

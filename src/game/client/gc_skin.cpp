@@ -57,7 +57,8 @@ static void skinscan(const char *name, int is_dir, void *user)
 	
 	// create colorless version
 	int step = info.format == IMG_RGBA ? 4 : 3;
-	
+
+	// make the texture gray scale
 	for(int i = 0; i < info.width*info.height; i++)
 	{
 		int v = (d[i*step]+d[i*step+1]+d[i*step+2])/3;
@@ -72,12 +73,22 @@ static void skinscan(const char *name, int is_dir, void *user)
 		int freq[256] = {0};
 		int org_weight = 0;
 		int new_weight = 192;
+		
+		// find most common frequence
+		for(int y = 0; y < body_size; y++)
+			for(int x = 0; x < body_size; x++)
+			{
+				if(d[y*pitch+x*4+3] > 128)
+					freq[d[y*pitch+x*4]]++;
+			}
+		
 		for(int i = 1; i < 256; i++)
 		{
 			if(freq[org_weight] < freq[i])
 				org_weight = i;
 		}
 
+		// reorder
 		int inv_org_weight = 255-org_weight;
 		int inv_new_weight = 255-new_weight;
 		for(int y = 0; y < body_size; y++)
