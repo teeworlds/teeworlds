@@ -1175,7 +1175,7 @@ void render_game()
 			if(client_tick() > killmsgs[r].tick+50*10)
 				continue;
 
-			float font_size = 48.0f;
+			float font_size = 36.0f;
 			float killername_w = gfx_text_width(0, font_size, client_datas[killmsgs[r].killer].name, -1);
 			float victimname_w = gfx_text_width(0, font_size, client_datas[killmsgs[r].victim].name, -1);
 
