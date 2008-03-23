@@ -1489,11 +1489,50 @@ void render_game()
 		gfx_text(0, 150, 50, 12, buf, -1);
 	}
 
-	// render score board
-	if(scoreboard_active || // user requested
-		(!spectate && (!netobjects.local_character || netobjects.local_character->health < 0)) || // not spectating and is dead
-		(netobjects.gameobj && netobjects.gameobj->game_over) // game over
-		)
+
+	bool do_scoreboard = false;
+
+	// if we are dead
+	if(!spectate && (!netobjects.local_character || netobjects.local_character->health < 0))
+		do_scoreboard = true;
+	
+	// if we the game is over
+	if(netobjects.gameobj && netobjects.gameobj->game_over)
+		do_scoreboard = true;
+	
+	// showing motd, skip it
+	if(time_get() < server_motd_time)
+		do_scoreboard = false;
+	
+	// always show if we really want
+	if(scoreboard_active)
+	{
+		server_motd_time = 0; // disables the motd
+		do_scoreboard = true;
+	}
+		
+	// render motd
+	if(!do_scoreboard && time_get() < server_motd_time)
+	{
+		gfx_mapscreen(0, 0, width, height);
+		
+		float h = 800.0f;
+		float w = 650.0f;
+		float x = width/2 - w/2;
+		float y = 150.0f;
+
+		gfx_blend_normal();
+		gfx_texture_set(-1);
+		gfx_quads_begin();
+		gfx_setcolor(0,0,0,0.5f);
+		draw_round_rect(x, y, w, h, 40.0f);
+		gfx_quads_end();
+
+		gfx_text(0, x+40.0f, y+40.0f, 32.0f, server_motd, (int)(w-80.0f));
+	}
+
+	// render scoreboard
+	if(do_scoreboard)
 	{
 		gfx_mapscreen(0, 0, width, height);
 

@@ -35,7 +35,6 @@ struct snapstate
 
 extern snapstate netobjects;
 
-extern char server_motd[900]; // FUGLY
 /*
 extern const NETOBJ_PLAYER_CHARACTER *local_character;
 extern const NETOBJ_PLAYER_CHARACTER *local_prev_character;
@@ -85,6 +84,10 @@ bool chat_input_handle(INPUT_EVENT e, void *user_data);
 // broadcasts
 extern char broadcast_text[1024];
 extern int64 broadcast_time;
+
+// motd
+extern int64 server_motd_time;
+extern char server_motd[900]; // FUGLY
 
 // line input helter
 class line_input

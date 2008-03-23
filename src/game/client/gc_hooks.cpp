@@ -456,6 +456,7 @@ void extraproj_reset()
 }
 
 char server_motd[900] = {0};
+int64 server_motd_time = 0;
 
 extern "C" void modc_message(int msgtype)
 {
@@ -554,17 +555,10 @@ extern "C" void modc_message(int msgtype)
 			}
 		}
 	
-		len = min(len, (int)sizeof(broadcast_text));
-		if(len)
-		{
-			str_copy(broadcast_text, msg->message, len);
-			broadcast_time = time_get()+time_freq()*10;
-		}
+		if(server_motd[0])
+			server_motd_time = time_get()+time_freq()*10;
 		else
-		{
-			broadcast_text[0] = 0;
-			broadcast_time = 0;
-		}
+			server_motd_time = 0;
 	}
 	else if(msgtype == NETMSGTYPE_SV_SETINFO)
 	{
