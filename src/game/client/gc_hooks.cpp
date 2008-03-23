@@ -608,7 +608,8 @@ extern "C" void modc_message(int msgtype)
     else if(msgtype == NETMSGTYPE_SV_WEAPON_PICKUP)
     {
     	NETMSG_SV_WEAPON_PICKUP *msg = (NETMSG_SV_WEAPON_PICKUP *)rawmsg;
-        picked_up_weapon = msg->weapon+1;
+        if(config.cl_autoswitch_weapons)
+        	input_data.wanted_weapon = msg->weapon+1;
     }
 	else if(msgtype == NETMSGTYPE_SV_READY_TO_ENTER)
 	{

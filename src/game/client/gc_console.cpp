@@ -349,6 +349,12 @@ static void con_key_input_weapon(void *result, void *user_data)
 		input_data.wanted_weapon = w;
 }
 
+static void con_key_input_nextprev_weapon(void *result, void *user_data)
+{
+	con_key_input_counter(result, user_data);
+	input_data.wanted_weapon = 0;
+}
+
 static void con_toggle_local_console(void *result, void *user_data)
 {
 	console_toggle(0);
@@ -399,8 +405,8 @@ void client_console_init()
 	MACRO_REGISTER_COMMAND("+weapon4", "", con_key_input_weapon, (void *)4);
 	MACRO_REGISTER_COMMAND("+weapon5", "", con_key_input_weapon, (void *)5);
 
-	MACRO_REGISTER_COMMAND("+nextweapon", "", con_key_input_counter, &input_data.next_weapon);
-	MACRO_REGISTER_COMMAND("+prevweapon", "", con_key_input_counter, &input_data.prev_weapon);
+	MACRO_REGISTER_COMMAND("+nextweapon", "", con_key_input_nextprev_weapon, &input_data.next_weapon);
+	MACRO_REGISTER_COMMAND("+prevweapon", "", con_key_input_nextprev_weapon, &input_data.prev_weapon);
 	
 	MACRO_REGISTER_COMMAND("+emote", "", con_key_input_state, &emoticon_selector_active);
 	MACRO_REGISTER_COMMAND("+scoreboard", "", con_key_input_state, &scoreboard_active);
