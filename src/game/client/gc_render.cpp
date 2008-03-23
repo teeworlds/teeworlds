@@ -196,15 +196,26 @@ void render_tee(animstate *anim, tee_render_info *info, int emote, vec2 dir, vec
 			}
 
 			// draw feet
-			gfx_setcolor(info->color_feet.r, info->color_feet.g, info->color_feet.b, 1.0f);
-			select_sprite((outline||!info->got_airjump)?SPRITE_TEE_FOOT_OUTLINE:SPRITE_TEE_FOOT, 0, 0, 0);
-
 			keyframe *foot = f ? &anim->front_foot : &anim->back_foot;
 
 			float w = basesize;
 			float h = basesize/2;
 
 			gfx_quads_setrotation(foot->angle*pi*2);
+			
+			bool indicate = !info->got_airjump && config.cl_airjumpindicator;
+			float cs = 1.0f; // color scale
+			
+			if(outline)
+				select_sprite(SPRITE_TEE_FOOT_OUTLINE, 0, 0, 0);
+			else
+			{
+				select_sprite(SPRITE_TEE_FOOT, 0, 0, 0);
+				if(indicate)
+					cs = 0.5f;
+			}
+				
+			gfx_setcolor(info->color_feet.r*cs, info->color_feet.g*cs, info->color_feet.b*cs, 1.0f);
 			gfx_quads_draw(position.x+foot->x*animscale, position.y+foot->y*animscale, w, h);
 		}
 	}
