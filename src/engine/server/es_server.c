@@ -24,12 +24,15 @@ static SNAPBUILD builder;
 
 static int64 game_start_time;
 static int current_tick = 0;
+static int run_server = 1;
 
 static int browseinfo_gametype = -1;
 static int browseinfo_progression = -1;
 
 static int64 lastheartbeat;
 /*static NETADDR4 master_server;*/
+
+
 
 static char current_map[64];
 static int current_map_crc;
@@ -949,7 +952,7 @@ static int server_run()
 		if(config.debug)
 			dbg_msg("server", "baseline memory usage %dk", mem_allocated()/1024);
 
-		while(1)
+		while(run_server)
 		{
 			static PERFORMACE_INFO rootscope = {"root", 0};
 			int64 t = time_get();
@@ -1087,6 +1090,8 @@ static int server_run()
 	mods_shutdown();
 	map_unload();
 
+	if(current_map_data)
+		mem_free(current_map_data);
 	return 0;
 }
 
@@ -1111,10 +1116,17 @@ static void con_status(void *result, void *user_data)
 	}
 }
 
+static void con_shutdown(void *result, void *user_data)
+{
+	run_server = 0;
+	/*server_kick(console_arg_int(result, 0), "kicked by console");*/
+}
+
 static void server_register_commands()
 {
 	MACRO_REGISTER_COMMAND("kick", "i", con_kick, 0);
 	MACRO_REGISTER_COMMAND("status", "", con_status, 0);
+	MACRO_REGISTER_COMMAND("shutdown", "", con_shutdown, 0);
 }
 
 int main(int argc, char **argv)

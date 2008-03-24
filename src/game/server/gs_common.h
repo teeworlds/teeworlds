@@ -98,6 +98,7 @@ public:
 	world_core core;
 	
 	game_world();
+	~game_world();
 	int find_entities(vec2 pos, float radius, entity **ents, int max);
 	int find_entities(vec2 pos, float radius, entity **ents, int max, const int* types, int maxtypes);
 

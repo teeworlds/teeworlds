@@ -181,6 +181,7 @@ entity::entity(int objtype)
 
 entity::~entity()
 {
+	world->remove_entity(this);
 	snap_free_id(id);
 }
 
@@ -194,6 +195,13 @@ game_world::game_world()
 	first_entity = 0x0;
 	for(int i = 0; i < NUM_ENT_TYPES; i++)
 		first_entity_types[i] = 0;
+}
+
+game_world::~game_world()
+{
+	// delete all entities
+	while(first_entity)
+		delete first_entity;
 }
 
 int game_world::find_entities(vec2 pos, float radius, entity **ents, int max)
