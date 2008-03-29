@@ -121,6 +121,9 @@ void gameobject::cyclemap()
 	if(!strlen(config.sv_maprotation))
 		return;
 
+	if(round_count < config.sv_rounds_per_map-1)
+		return;
+		
 	// handle maprotation
 	const char *map_rotation = config.sv_maprotation;
 	const char *current_map = config.sv_map;

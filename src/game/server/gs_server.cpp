@@ -1989,35 +1989,6 @@ player *closest_player(vec2 pos, float radius, entity *notthis)
 	return closest;
 }
 
-
-// TODO: should be more general
-
-	/*
-player* intersect_player(vec2 pos0, vec2 pos1, vec2& new_pos, entity* notthis)
-{
-	// Find other players
-	
-	
-	entity *ents[64];
-	vec2 dir = pos1 - pos0;
-	float radius = length(dir * 0.5f);
-	vec2 center = pos0 + dir * 0.5f;
-	const int types[] = {OBJTYPE_PLAYER_CHARACTER};
-	int num = world->find_entities(center, radius, ents, 64, types, 1);
-	for (int i = 0; i < num; i++)
-	{
-		// Check if entity is a player
-		if (ents[i] != notthis)
-		{
-			new_pos = ents[i]->pos;
-			return (player*)ents[i];
-		}
-	}
-
-	return 0;
-}
-*/
-
 // Server hooks
 void mods_tick()
 {
@@ -2083,20 +2054,12 @@ void mods_connected(int client_id)
 {
 	players[client_id].init();
 	players[client_id].client_id = client_id;
-
-	//dbg_msg("game", "connected player='%d:%s'", client_id, server_clientname(client_id));
-
 	
 	// Check which team the player should be on
 	if(config.sv_tournament_mode)
 		players[client_id].team = -1;
 	else
-	{
-		/*if(gameobj->gametype == GAMETYPE_DM)
-			players[client_id].team = 0;
-		else*/
 		players[client_id].team = gameobj->get_auto_team(client_id);
-	}
 
 	// send motd
 	NETMSG_SV_MOTD msg;
