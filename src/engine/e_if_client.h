@@ -33,6 +33,11 @@ enum
 	IMG_RGBA=1,
 	IMG_ALPHA=2,
 	
+	/* Constants: Texture Loading Flags
+		TEXLOAD_NORESAMPLE - Prevents the texture from any resampling
+	*/
+	TEXLOAD_NORESAMPLE=1,
+	
 	/* Constants: Server Browser Sorting
 		BROWSESORT_NAME - Sort by name.
 		BROWSESORT_PING - Sort by ping.

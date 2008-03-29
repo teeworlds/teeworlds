@@ -1478,7 +1478,7 @@ static void replace_image(const char *filename)
 	gfx_unload_texture(img->tex_id);
 	*img = imginfo;
 	extract_name(filename, img->name);
-	img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO);
+	img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO, 0);
 }
 
 static void add_image(const char *filename)
@@ -1489,7 +1489,7 @@ static void add_image(const char *filename)
 
 	IMAGE *img = new IMAGE;
 	*img = imginfo;
-	img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO);
+	img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO, 0);
 	img->external = 1; // external by default
 	extract_name(filename, img->name);
 	editor.map.images.add(img);
@@ -2369,10 +2369,10 @@ void MAP::create_default(int entities_texture)
 
 extern "C" void editor_init()
 {
-	checker_texture = gfx_load_texture("data/editor/checker.png", IMG_AUTO);
-	background_texture = gfx_load_texture("data/editor/background.png", IMG_AUTO);
-	cursor_texture = gfx_load_texture("data/editor/cursor.png", IMG_AUTO);
-	entities_texture = gfx_load_texture("data/editor/entities.png", IMG_AUTO);
+	checker_texture = gfx_load_texture("data/editor/checker.png", IMG_AUTO, 0);
+	background_texture = gfx_load_texture("data/editor/background.png", IMG_AUTO, 0);
+	cursor_texture = gfx_load_texture("data/editor/cursor.png", IMG_AUTO, 0);
+	entities_texture = gfx_load_texture("data/editor/entities.png", IMG_AUTO, 0);
 	
 	tileset_picker.make_palette();
 	tileset_picker.readonly = true;

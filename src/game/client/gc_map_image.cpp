@@ -111,12 +111,12 @@ int img_init()
 			char buf[256];
 			char *name = (char *)map_get_data(img->image_name);
 			str_format(buf, sizeof(buf), "data/mapres/%s.png", name);
-			map_textures[i] = gfx_load_texture(buf, IMG_AUTO);
+			map_textures[i] = gfx_load_texture(buf, IMG_AUTO, 0);
 		}
 		else
 		{
 			void *data = map_get_data(img->image_data);
-			map_textures[i] = gfx_load_texture_raw(img->width, img->height, IMG_RGBA, data, IMG_RGBA);
+			map_textures[i] = gfx_load_texture_raw(img->width, img->height, IMG_RGBA, data, IMG_RGBA, 0);
 			map_unload_data(img->image_data);
 		}
 	}

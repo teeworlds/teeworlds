@@ -508,7 +508,7 @@ void client_disconnect()
 
 static int client_load_data()
 {
-	debug_font = gfx_load_texture("data/debug_font.png", IMG_AUTO);
+	debug_font = gfx_load_texture("data/debug_font.png", IMG_AUTO, TEXLOAD_NORESAMPLE);
 	return 1;
 }
 

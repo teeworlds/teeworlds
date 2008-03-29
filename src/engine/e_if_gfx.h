@@ -337,6 +337,7 @@ int gfx_load_png(IMAGE_INFO *img, const char *filename);
 	Arguments:
 		filename - Null terminated string to the file to load.
 		store_format - What format to store on gfx card as.
+		flags - controls how the texture is uploaded
 	
 	Returns:
 		An ID to the texture. -1 on failure.
@@ -344,7 +345,7 @@ int gfx_load_png(IMAGE_INFO *img, const char *filename);
 	See Also:
 		<gfx_unload_texture, gfx_load_png>
 */
-int gfx_load_texture(const char *filename, int store_format);
+int gfx_load_texture(const char *filename, int store_format, int flags);
 
 /*
 	Function: gfx_load_texture_raw
@@ -356,6 +357,7 @@ int gfx_load_texture(const char *filename, int store_format);
 		data - Pointer to the pixel data.
 		format - Format of the pixel data.
 		store_format - The format to store the texture on the graphics card.
+		flags - controls how the texture is uploaded
 	
 	Returns:
 		An ID to the texture. -1 on failure.
@@ -367,7 +369,7 @@ int gfx_load_texture(const char *filename, int store_format);
 	See Also:
 		<gfx_unload_texture>
 */
-int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_format);
+int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_format, int flags);
 
 /*
 	Function: gfx_texture_set

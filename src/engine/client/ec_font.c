@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <engine/e_system.h>
+#include <engine/e_client_interface.h>
 #include "ec_font.h"
 
 typedef struct
@@ -87,8 +88,8 @@ int font_load(FONT *font, const char *filename)
         return -1;
 }
 
-int gfx_load_texture(const char *filename, int store_format);
-#define IMG_ALPHA 2
+/*int gfx_load_texture(const char *filename, int store_format, int flags);
+#define IMG_ALPHA 2*/
 
 int font_set_load(FONT_SET *font_set, const char *font_filename, const char *text_texture_filename, const char *outline_texture_filename, int fonts, ...)
 {
@@ -119,8 +120,8 @@ int font_set_load(FONT_SET *font_set, const char *font_filename, const char *tex
         }
 
         font->size = size;
-        font->text_texture = gfx_load_texture(composed_text_texture_filename, IMG_ALPHA);
-        font->outline_texture = gfx_load_texture(composed_outline_texture_filename, IMG_ALPHA);
+        font->text_texture = gfx_load_texture(composed_text_texture_filename, IMG_ALPHA, TEXLOAD_NORESAMPLE);
+        font->outline_texture = gfx_load_texture(composed_outline_texture_filename, IMG_ALPHA, TEXLOAD_NORESAMPLE);
     }
 
     va_end(va);

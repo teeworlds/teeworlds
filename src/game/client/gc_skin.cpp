@@ -32,7 +32,7 @@ static void skinscan(const char *name, int is_dir, void *user)
 		return;
 	}
 	
-	skins[num_skins].org_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data, info.format);
+	skins[num_skins].org_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data, info.format, 0);
 	
 	int body_size = 96; // body size
 	unsigned char *d = (unsigned char *)info.data;
@@ -105,7 +105,7 @@ static void skinscan(const char *name, int is_dir, void *user)
 			}
 	}
 	
-	skins[num_skins].color_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data, info.format);
+	skins[num_skins].color_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data, info.format, 0);
 	mem_free(info.data);
 
 	// set skin data	

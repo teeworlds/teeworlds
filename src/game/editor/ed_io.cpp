@@ -141,7 +141,7 @@ void editor_load_old(DATAFILE *df, MAP *map)
 			// copy image data
 			img->data = mem_alloc(img->width*img->height*4, 1);
 			mem_copy(img->data, data, img->width*img->height*4);
-			img->tex_id = gfx_load_texture_raw(img->width, img->height, img->format, img->data, IMG_AUTO);
+			img->tex_id = gfx_load_texture_raw(img->width, img->height, img->format, img->data, IMG_AUTO, 0);
 			map->images.add(img);
 			
 			// unload image
@@ -405,7 +405,7 @@ int MAP::load(const char *filename)
 					if(gfx_load_png(&imginfo, buf))
 					{
 						*img = imginfo;
-						img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO);
+						img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO, 0);
 						img->external = 1;
 					}
 				}
@@ -419,7 +419,7 @@ int MAP::load(const char *filename)
 					void *data = datafile_get_data(df, item->image_data);
 					img->data = mem_alloc(img->width*img->height*4, 1);
 					mem_copy(img->data, data, img->width*img->height*4);
-					img->tex_id = gfx_load_texture_raw(img->width, img->height, img->format, img->data, IMG_AUTO);
+					img->tex_id = gfx_load_texture_raw(img->width, img->height, img->format, img->data, IMG_AUTO, 0);
 				}
 
 				// copy image name

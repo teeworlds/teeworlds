@@ -242,7 +242,7 @@ int gfx_init()
 	inp_init();
 	
 	/* create null texture, will get id=0 */
-	gfx_load_texture_raw(4,4,IMG_RGBA,null_texture_data,IMG_RGBA);
+	gfx_load_texture_raw(4,4,IMG_RGBA,null_texture_data,IMG_RGBA,TEXLOAD_NORESAMPLE);
 
 	/* set vsync as needed */
 	gfx_set_vsync(config.gfx_vsync);
@@ -373,7 +373,7 @@ static unsigned char sample(int w, int h, const unsigned char *data, int u, int 
 	data[((v+1)*w+u+1)*4+offset])/4;
 }
 
-int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_format)
+int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_format, int flags)
 {
 	int mipmap = 1;
 	unsigned char *texdata = (unsigned char *)data;
@@ -392,7 +392,7 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 	textures[tex].next = -1;
 	
 	/* resample if needed */
-	if(config.gfx_texture_quality==0)
+	if(!(flags&TEXLOAD_NORESAMPLE) && config.gfx_texture_quality==0)
 	{
 		if(w > 16 && h > 16 && format == IMG_RGBA)
 		{
@@ -476,7 +476,7 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 }
 
 /* simple uncompressed RGBA loaders */
-int gfx_load_texture(const char *filename, int store_format)
+int gfx_load_texture(const char *filename, int store_format, int flags)
 {
 	int l = strlen(filename);
 	int id;
@@ -489,7 +489,7 @@ int gfx_load_texture(const char *filename, int store_format)
 		if (store_format == IMG_AUTO)
 			store_format = img.format;
 
-		id = gfx_load_texture_raw(img.width, img.height, img.format, img.data, store_format);
+		id = gfx_load_texture_raw(img.width, img.height, img.format, img.data, store_format, flags);
 		mem_free(img.data);
 		return id;
 	}

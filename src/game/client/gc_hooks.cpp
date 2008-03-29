@@ -98,7 +98,7 @@ extern "C" void modc_init()
 	for(int i = 0; i < data->num_images; i++)
 	{
 		render_loading(load_current/load_total);
-		data->images[i].id = gfx_load_texture(data->images[i].filename, IMG_AUTO);
+		data->images[i].id = gfx_load_texture(data->images[i].filename, IMG_AUTO, 0);
 		load_current++;
 	}
 
