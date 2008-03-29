@@ -29,14 +29,22 @@ class player *closest_player(vec2 pos, float radius, entity *notthis);
 
 game_world *world;
 
-void send_chat(int cid, int team, const char *text)
+enum
+{
+	CHAT_ALL=-2,
+	CHAT_SPEC=-1,
+	CHAT_RED=0,
+	CHAT_BLUE=1
+};
+
+static void send_chat(int cid, int team, const char *text)
 {
 	if(cid >= 0 && cid < MAX_CLIENTS)
 		dbg_msg("chat", "%d:%d:%s: %s", cid, team, server_clientname(cid), text);
 	else
 		dbg_msg("chat", "*** %s", text);
 
-	if(team == -1)
+	if(team == CHAT_ALL)
 	{
 		NETMSG_SV_CHAT msg;
 		msg.team = 0;
@@ -745,7 +753,7 @@ void player::set_team(int new_team)
 		
 	char buf[512];
 	str_format(buf, sizeof(buf), "%s joined the %s", server_clientname(client_id), get_team_name(new_team));
-	send_chat(-1, -1, buf); 
+	send_chat(-1, CHAT_ALL, buf); 
 	
 	die(client_id, -1);
 	team = new_team;
@@ -2052,7 +2060,7 @@ void mods_client_enter(int client_id)
 
 	char buf[512];
 	str_format(buf, sizeof(buf), "%s entered and joined the %s", server_clientname(client_id), get_team_name(players[client_id].team));
-	send_chat(-1, -1, buf); 
+	send_chat(-1, CHAT_ALL, buf); 
 
 	dbg_msg("game", "team_join player='%d:%s' team=%d", client_id, server_clientname(client_id), players[client_id].team);
 }
@@ -2087,7 +2095,7 @@ void mods_client_drop(int client_id)
 {
 	char buf[512];
 	str_format(buf, sizeof(buf),  "%s has left the game", server_clientname(client_id));
-	send_chat(-1, -1, buf);
+	send_chat(-1, CHAT_ALL, buf);
 
 	dbg_msg("game", "leave player='%d:%s'", client_id, server_clientname(client_id));
 
@@ -2113,7 +2121,7 @@ void mods_message(int msgtype, int client_id)
 		if(team)
 			team = players[client_id].team;
 		else
-			team = -1;
+			team = CHAT_ALL;
 		
 		if(config.sv_spamprotection && players[client_id].last_chat+time_freq() > time_get())
 		{
@@ -2165,7 +2173,7 @@ void mods_message(int msgtype, int client_id)
 		{
 			char chattext[256];
 			str_format(chattext, sizeof(chattext), "%s changed name to %s", oldname, server_clientname(client_id));
-			send_chat(-1, -1, chattext);
+			send_chat(-1, CHAT_ALL, chattext);
 		}
 		
 		// set skin
@@ -2258,7 +2266,7 @@ static void con_broadcast(void *result, void *user_data)
 
 static void con_say(void *result, void *user_data)
 {
-	send_chat(-1, -1, console_arg_string(result, 0));
+	send_chat(-1, CHAT_ALL, console_arg_string(result, 0));
 }
 
 static void con_set_team(void *result, void *user_data)
