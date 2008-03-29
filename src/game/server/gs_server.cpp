@@ -708,7 +708,7 @@ void player::reset()
 	
 	active_weapon = WEAPON_GUN;
 	last_weapon = WEAPON_HAMMER;
-	wanted_weapon = WEAPON_GUN;
+	queued_weapon = -1;
 }
 
 void player::destroy() {  }
@@ -716,9 +716,12 @@ void player::destroy() {  }
 void player::set_weapon(int w)
 {
 	last_weapon = active_weapon;
+	queued_weapon = -1;
 	active_weapon = w;
 	if(active_weapon < 0 || active_weapon >= NUM_WEAPONS)
 		active_weapon = 0;
+		
+	create_sound(pos, SOUND_WEAPON_SWITCH);
 }
 
 void player::respawn()
@@ -927,7 +930,7 @@ void player::try_respawn()
 	
 	active_weapon = WEAPON_GUN;
 	last_weapon = WEAPON_HAMMER;
-	wanted_weapon = WEAPON_GUN;
+	queued_weapon = 0;
 
 	reload_timer = 0;
 
@@ -1044,10 +1047,60 @@ int player::handle_ninja()
 	return 0;
 }
 
+
+void player::do_weaponswitch()
+{
+	if(reload_timer == 0 && queued_weapon != -1)
+		set_weapon(queued_weapon);
+}
+
+void player::handle_weaponswitch()
+{
+	int wanted_weapon = active_weapon;
+	if(queued_weapon != -1)
+		wanted_weapon = queued_weapon;
+	
+	// select weapon
+	int next = count_input(latest_previnput.next_weapon, latest_input.next_weapon).presses;
+	int prev = count_input(latest_previnput.prev_weapon, latest_input.prev_weapon).presses;
+
+	if(next < 128) // make sure we only try sane stuff
+	{
+		while(next) // next weapon selection
+		{
+			wanted_weapon = (wanted_weapon+1)%NUM_WEAPONS;
+			if(weapons[wanted_weapon].got)
+				next--;
+		}
+	}
+
+	if(prev < 128) // make sure we only try sane stuff
+	{
+		while(prev) // prev weapon selection
+		{
+			wanted_weapon = (wanted_weapon-1)<0?NUM_WEAPONS-1:wanted_weapon-1;
+			if(weapons[wanted_weapon].got)
+				prev--;
+		}
+	}
+
+	// direct weapon selection
+	if(latest_input.wanted_weapon)
+		wanted_weapon = input.wanted_weapon-1;
+
+	// check for insane values
+	if(wanted_weapon >= 0 && wanted_weapon < NUM_WEAPONS && wanted_weapon != active_weapon && weapons[wanted_weapon].got)
+		queued_weapon = wanted_weapon;
+	
+	do_weaponswitch();
+}
+
 void player::fire_weapon()
 {
 	if(reload_timer != 0 || active_weapon == WEAPON_NINJA)
 		return;
+		
+	do_weaponswitch();
 	
 	vec2 direction = normalize(vec2(latest_input.target_x, latest_input.target_y));
 	
@@ -1234,48 +1287,6 @@ int player::handle_weapons()
 		return handle_ninja();
 	}
 
-	// select weapon
-	int next = count_input(latest_previnput.next_weapon, latest_input.next_weapon).presses;
-	int prev = count_input(latest_previnput.prev_weapon, latest_input.prev_weapon).presses;
-	
-	if(next < 128) // make sure we only try sane stuff
-	{
-		while(next) // next weapon selection
-		{
-			wanted_weapon = (wanted_weapon+1)%NUM_WEAPONS;
-			if(weapons[wanted_weapon].got)
-				next--;
-		}
-	}
-
-	if(prev < 128) // make sure we only try sane stuff
-	{
-		while(prev) // prev weapon selection
-		{
-			wanted_weapon = (wanted_weapon-1)<0?NUM_WEAPONS-1:wanted_weapon-1;
-			if(weapons[wanted_weapon].got)
-				prev--;
-		}
-	}
-
-	if(latest_input.wanted_weapon) // direct weapon selection
-		wanted_weapon = input.wanted_weapon-1;
-
-	if(wanted_weapon < 0 || wanted_weapon >= NUM_WEAPONS)
-		wanted_weapon = 0;
-
-	// switch weapon if wanted
-	if(data->weapons[active_weapon].duration <= 0)
-	{
-		if(wanted_weapon != -1 && wanted_weapon != active_weapon && wanted_weapon >= 0 && wanted_weapon < NUM_WEAPONS && weapons[wanted_weapon].got)
-		{
-			if(active_weapon != wanted_weapon)
-				create_sound(pos, SOUND_WEAPON_SWITCH);
-
-			set_weapon(wanted_weapon);
-		}
-	}
-
 	// fire weapon, if wanted
 	fire_weapon();
 
@@ -1309,7 +1320,10 @@ void player::on_direct_input(NETOBJ_PLAYER_INPUT *new_input)
 	mem_copy(&latest_previnput, &latest_input, sizeof(latest_input));
 	mem_copy(&latest_input, new_input, sizeof(latest_input));
 	if(num_inputs > 2 && team != -1 && !dead)
+	{
+		handle_weaponswitch();
 		fire_weapon();
+	}
 }
 
 void player::tick()

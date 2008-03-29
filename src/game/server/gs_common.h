@@ -254,7 +254,8 @@ public:
 	
 	int active_weapon;
 	int last_weapon;
-	int wanted_weapon;
+	int queued_weapon;
+	
 	int reload_timer;
 	int attack_tick;
 	
@@ -334,6 +335,9 @@ public:
 	bool is_grounded();
 	
 	void set_weapon(int w);
+	
+	void handle_weaponswitch();
+	void do_weaponswitch();
 	
 	int handle_weapons();
 	int handle_ninja();

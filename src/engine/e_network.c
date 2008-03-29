@@ -727,6 +727,10 @@ int netserver_recv(NETSERVER *s, NETPACKET *packet)
 					/* find matching slot */
 					for(i = 0; i < s->max_clients; i++)
 					{
+						/* must be in some sort of online state */
+						if(s->slots[i].conn.state == NETWORK_CONNSTATE_OFFLINE)
+							continue;
+							
 						if(net_addr4_cmp(&s->slots[i].conn.peeraddr, &addr) == 0)
 						{
 							if(conn_feed(&s->slots[i].conn, &data, &addr))
