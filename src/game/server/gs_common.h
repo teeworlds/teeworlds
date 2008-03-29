@@ -316,6 +316,9 @@ public:
 
 	// the player core for the physics	
 	player_core core;
+	
+	//
+	int64 last_chat;
 
 	//
 	player();

@@ -52,5 +52,6 @@ MACRO_CONFIG_INT(sv_scorelimit, 20, 0, 1000)
 MACRO_CONFIG_INT(sv_timelimit, 0, 0, 1000)
 MACRO_CONFIG_STR(sv_gametype, 32, "dm")
 MACRO_CONFIG_INT(sv_tournament_mode, 0, 0, 1)
+MACRO_CONFIG_INT(sv_spamprotection, 1, 0, 1)
 
 MACRO_CONFIG_INT(sv_spectator_slots, 0, 0, 12)

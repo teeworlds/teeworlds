@@ -683,6 +683,7 @@ void player::reset()
 	die_tick = 0;
 	die_pos = vec2(0,0);
 	damage_taken = 0;
+	last_chat = 0;
 	player_state = PLAYERSTATE_UNKNOWN;
 
 	mem_zero(&input, sizeof(input));
@@ -2113,7 +2114,16 @@ void mods_message(int msgtype, int client_id)
 			team = players[client_id].team;
 		else
 			team = -1;
-		send_chat(client_id, team, msg->message);
+		
+		if(config.sv_spamprotection && players[client_id].last_chat+time_freq() > time_get())
+		{
+			// consider this as spam
+		}
+		else
+		{
+			players[client_id].last_chat = time_get();
+			send_chat(client_id, team, msg->message);
+		}
 	}
 	else if (msgtype == NETMSGTYPE_CL_SETTEAM)
 	{
