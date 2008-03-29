@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 
-#define CONSOLE_MAX_STR_LENGTH 255
+#define CONSOLE_MAX_STR_LENGTH 1024
 /* the maximum number of tokens occurs in a string of length CONSOLE_MAX_STR_LENGTH with tokens size 1 separated by single spaces */
 #define MAX_PARTS (CONSOLE_MAX_STR_LENGTH+1)/2
 
@@ -333,7 +333,7 @@ static void int_variable_command(void *result, void *user_data)
 		data->setter(&config, console_arg_int(result, 0));
 	else
 	{
-		char buf[256];
+		char buf[1024];
 		str_format(buf, sizeof(buf), "Value: %d", data->getter(&config));
 		console_print(buf);
 	}
@@ -347,7 +347,7 @@ static void str_variable_command(void *result, void *user_data)
 		data->setter(&config, console_arg_string(result, 0));
 	else
 	{
-		char buf[256];
+		char buf[1024];
 		str_format(buf, sizeof(buf), "Value: %s", data->getter(&config));
 		console_print(buf);
 	}

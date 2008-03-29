@@ -2303,6 +2303,26 @@ void EDITOR::render()
 
 	if(editor.gui_active)
 		render_statusbar(statusbar);
+
+	//
+	if(config.ed_showkeys)
+	{
+		gfx_mapscreen(ui_screen()->x, ui_screen()->y, ui_screen()->w, ui_screen()->h);
+		TEXT_CURSOR cursor;
+		gfx_text_set_cursor(&cursor, view.x+10, view.y+view.h-24-10, 24.0f, TEXTFLAG_RENDER);
+		
+		int nkeys = 0;
+		for(int i = 0; i < KEY_LAST; i++)
+		{
+			if(inp_key_pressed(i))
+			{
+				if(nkeys)
+					gfx_text_ex(&cursor, " + ", -1);
+				gfx_text_ex(&cursor, inp_key_name(i), -1);
+				nkeys++;
+			}
+		}
+	}
 	
 	// render butt ugly mouse cursor
 	float mx = ui_mouse_x();
@@ -2312,7 +2332,8 @@ void EDITOR::render()
 	if(ui_got_context == ui_hot_item())
 		gfx_setcolor(1,0,0,1);
 	gfx_quads_drawTL(mx,my, 16.0f, 16.0f);
-	gfx_quads_end();	
+	gfx_quads_end();
+	
 }
 
 void EDITOR::reset(bool create_default)
@@ -2454,6 +2475,7 @@ extern "C" void editor_update_and_render()
 		editor.load("data/maps/debug_test.map");
 	
 	editor.render();
+	
 	inp_clear_events();
 }
 

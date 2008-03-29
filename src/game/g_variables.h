@@ -17,6 +17,8 @@ MACRO_CONFIG_INT(cl_mouse_followfactor, 60, 0, 200)
 MACRO_CONFIG_INT(cl_mouse_max_distance, 800, 0, 0)
 
 
+MACRO_CONFIG_INT(ed_showkeys, 0, 0, 1)
+
 MACRO_CONFIG_INT(cl_flow, 0, 0, 1)
 
 MACRO_CONFIG_INT(cl_show_welcome, 1, 0, 1)

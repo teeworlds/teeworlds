@@ -76,7 +76,7 @@ void dbg_break()
 void dbg_msg(const char *sys, const char *fmt, ...)
 {
 	va_list args;
-	char str[1024];
+	char str[1024*4];
 	char *msg;
 	int i, len;
 	

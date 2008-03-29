@@ -22,69 +22,9 @@ void config_reset()
     #undef MACRO_CONFIG_STR 
 }
 
-void strip_spaces(char **p)
-{
-	char *s = *p;
-	char *end;
-	
-	while (*s == ' ')
-		++s;
-
-	end = s + strlen(s);
-	while (end > s && *(end - 1) == ' ')
-		*--end = 0;
-}
-
-void config_set(const char *line)
-{
-	const char *c = strchr(line, '=');
-	if (c)
-	{
-		char var[256];
-		char val[256];
-		char *var_str = var;
-		char *val_str = val;
-
-		str_copy(val, c+1, sizeof(val));
-		mem_copy(var, line, c - line);
-		var[c - line] = 0;
-
-		strip_spaces(&var_str);
-		strip_spaces(&val_str);
-
-		#define MACRO_CONFIG_INT(name,def,min,max) { if (strcmp(#name, var_str) == 0) config_set_ ## name (&config, atoi(val_str)); }
-    	#define MACRO_CONFIG_STR(name,len,def) { if (strcmp(#name, var_str) == 0) { config_set_ ## name (&config, val_str); } }
- 
-    	#include "e_config_variables.h" 
- 
-    	#undef MACRO_CONFIG_INT 
-    	#undef MACRO_CONFIG_STR 
-	}
-}
-
-void config_load(const char *filename)
-{
-	/*
-	IOHANDLE file;
-	dbg_msg("config/load", "loading %s", filename);
-	file = io_open(filename, IOFLAG_READ);
-	
-	if(file)
-	{
-		char *line;
-		LINEREADER lr;
-		linereader_init(&lr, file);
-
-		while ((line = linereader_get(&lr)))
-			config_set(line);
-
-		io_close(file);
-	}*/
-}
-
 void config_save()
 {
-	char linebuf[512];
+	char linebuf[1024*2];
 	
 	#define MACRO_CONFIG_INT(name,def,min,max) { str_format(linebuf, sizeof(linebuf), "%s %i", #name, config.name); engine_config_write_line(linebuf); }
 	#define MACRO_CONFIG_STR(name,len,def) { str_format(linebuf, sizeof(linebuf), "%s %s", #name, config.name); engine_config_write_line(linebuf); }

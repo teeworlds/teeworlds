@@ -18,9 +18,7 @@ typedef struct
 extern CONFIGURATION config;
 
 void config_init();
-void config_set(const char *line);
 void config_reset();
-/*void config_load(const char *filename);*/
 void config_save();
 
 typedef int (*CONFIG_INT_GETTER)(CONFIGURATION *c);
