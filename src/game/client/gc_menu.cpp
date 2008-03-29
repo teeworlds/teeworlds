@@ -809,59 +809,9 @@ static void menu2_render_serverbrowser(RECT main_view)
 		int selected = strcmp(item->address, config.ui_server_address) == 0; //selected_index==item_index;
 		
 		
-			/*
-		if(selected)
-		{
-			selected_index = i;
-			
-			// selected server, draw the players on it
-			RECT whole;
-			int h = (item->num_players+2)/3;
-			
-			ui_hsplit_t(&view, 25.0f+h*15.0f, &whole, &view);
-
-            select_hit_box = whole;
-			
-			RECT r = whole;
-			ui_margin(&r, 1.5f, &r);
-			ui_draw_rect(&r, vec4(1,1,1,0.5f), CORNER_ALL, 4.0f);
-			
-			ui_hsplit_t(&whole, 20.0f, &row, &whole);
-			ui_vsplit_l(&whole, 50.0f, 0, &whole);
-
-			
-			for(int p = 0; p < item->num_players; p+=3)
-			{
-				RECT player_row;
-				RECT player_rect;
-				RECT player_score;
-				RECT player_name;
-				ui_hsplit_t(&whole, 15.0f, &player_row, &whole);
-				
-				for(int a = 0; a < 3; a++)
-				{
-					if(p+a >= item->num_players)
-						break;
-						
-					ui_vsplit_l(&player_row, 170.0f, &player_rect, &player_row);
-					ui_vsplit_l(&player_rect, 30.0f, &player_score, &player_name);
-					ui_vsplit_l(&player_name, 10.0f, 0, &player_name);
-					char buf[32];
-					sprintf(buf, "%d", item->player_scores[p+a]);
-					ui_do_label(&player_score, buf, 12.0f, 1);
-					ui_do_label(&player_name, item->player_names[p+a], 12.0f, -1);
-				}
-			}
-			
-			//k += h*3/4;
-		}
-		else
-        {
-			*/
-			ui_hsplit_t(&view, 17.0f, &row, &view);
-            select_hit_box = row;
-		//}
-
+		ui_hsplit_t(&view, 17.0f, &row, &view);
+		select_hit_box = row;
+	
 		if(selected)
 		{
 			selected_index = i;
@@ -910,13 +860,37 @@ static void menu2_render_serverbrowser(RECT main_view)
 					ui_draw_browse_icon(0x100, &button);
 			}
 			else if(id == COL_NAME)
-				ui_do_label(&button, item->name, 12.0f, -1);
+			{
+				TEXT_CURSOR cursor;
+				gfx_text_set_cursor(&cursor, button.x, button.y, 12.0f, TEXTFLAG_RENDER);
+				
+				if(config.b_filter_string[0] && (item->quicksearch_hit&BROWSEQUICK_SERVERNAME))
+				{
+					// highlight the parts that matches
+					const char *s = str_find_nocase(item->name, config.b_filter_string);
+					if(s)
+					{
+						gfx_text_ex(&cursor, item->name, (int)(s-item->name));
+						gfx_text_color(1,0.4f,0.4f,1);
+						gfx_text_ex(&cursor, s, strlen(config.b_filter_string));
+						gfx_text_color(1,1,1,1);
+						gfx_text_ex(&cursor, s+strlen(config.b_filter_string), -1);
+					}
+					else
+						gfx_text_ex(&cursor, item->name, -1);
+				}
+				else
+					gfx_text_ex(&cursor, item->name, -1);
+			}
 			else if(id == COL_MAP)
 				ui_do_label(&button, item->map, 12.0f, -1);
 			else if(id == COL_PLAYERS)
 			{
 				str_format(temp, sizeof(temp), "%i/%i", item->num_players, item->max_players);
+				if(config.b_filter_string[0] && (item->quicksearch_hit&BROWSEQUICK_PLAYERNAME))
+					gfx_text_color(1,0.4f,0.4f,1);
 				ui_do_label(&button, temp, 12.0f, 1);
+				gfx_text_color(1,1,1,1);
 			}
 			else if(id == COL_PING)
 			{
@@ -1038,11 +1012,34 @@ static void menu2_render_serverbrowser(RECT main_view)
 			char temp[16];
 			ui_hsplit_t(&server_scoreboard, 16.0f, &row, &server_scoreboard);
 
-			str_format(temp, sizeof(temp), "%d", selected_server->player_scores[i]);
+			str_format(temp, sizeof(temp), "%d", selected_server->players[i].score);
 			ui_do_label(&row, temp, font_size, -1);
 
 			ui_vsplit_l(&row, 25.0f, 0x0, &row);
-			ui_do_label(&row, selected_server->player_names[i], font_size, -1);
+		
+			TEXT_CURSOR cursor;
+			gfx_text_set_cursor(&cursor, row.x, row.y, 12.0f, TEXTFLAG_RENDER);
+			
+			const char *name = selected_server->players[i].name;
+			if(config.b_filter_string[0])
+			{
+				// highlight the parts that matches
+				const char *s = str_find_nocase(name, config.b_filter_string);
+				if(s)
+				{
+					gfx_text_ex(&cursor, name, (int)(s-name));
+					gfx_text_color(1,0.4f,0.4f,1);
+					gfx_text_ex(&cursor, s, strlen(config.b_filter_string));
+					gfx_text_color(1,1,1,1);
+					gfx_text_ex(&cursor, s+strlen(config.b_filter_string), -1);
+				}
+				else
+					gfx_text_ex(&cursor, name, -1);
+			}
+			else
+				gfx_text_ex(&cursor, name, -1);
+			
+			/*ui_do_label(&row, selected_server->player_names[i], font_size, -1);*/
 		}
 	}
 	

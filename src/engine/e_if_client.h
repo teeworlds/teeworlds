@@ -51,12 +51,24 @@ enum
 	BROWSESORT_MAP,
 	BROWSESORT_GAMETYPE,
 	BROWSESORT_PROGRESSION,
-	BROWSESORT_NUMPLAYERS
+	BROWSESORT_NUMPLAYERS,
+	
+	BROWSEQUICK_SERVERNAME=1,
+	BROWSEQUICK_PLAYERNAME=2
 };
 
 /*
 	Section: Structures
 */
+
+/*
+	Structure: SERVER_INFO_PLAYER
+*/
+typedef struct
+{
+	char name[48];
+	int score;
+} SERVER_INFO_PLAYER;
 
 /*
 	Structure: SERVER_INFO
@@ -65,6 +77,8 @@ typedef struct
 {
 	int sorted_index;
 	int server_index;
+	
+	int quicksearch_hit;
 	
 	int progression;
 	int game_type;
@@ -76,8 +90,7 @@ typedef struct
 	char map[32];
 	char version[32];
 	char address[24];
-	char player_names[16][48];
-	int player_scores[16];
+	SERVER_INFO_PLAYER players[16];
 } SERVER_INFO;
 
 /*

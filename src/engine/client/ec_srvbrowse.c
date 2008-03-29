@@ -128,7 +128,7 @@ static int client_serverbrowse_sort_compare_numplayers(const void *ai, const voi
 
 static void client_serverbrowse_filter()
 {
-	int i = 0;
+	int i = 0, p = 0;
 	num_sorted_servers = 0;
 
 	/* allocate the sorted list */	
@@ -159,7 +159,29 @@ static void client_serverbrowse_filter()
 			filtered = 1;
 		else if(config.b_filter_string[0] != 0)
 		{
-			if(strstr(serverlist[i]->info.name, config.b_filter_string) == 0)
+			int matchfound = 0;
+			
+			serverlist[i]->info.quicksearch_hit = 0;
+
+			/* match against server name */
+			if(str_find_nocase(serverlist[i]->info.name, config.b_filter_string))
+			{
+				matchfound = 1;
+				serverlist[i]->info.quicksearch_hit |= BROWSEQUICK_SERVERNAME;
+			}
+
+			/* match against players */				
+			for(p = 0; p < serverlist[i]->info.num_players; p++)
+			{
+				if(str_find_nocase(serverlist[i]->info.players[p].name, config.b_filter_string))
+				{
+					matchfound = 1;
+					serverlist[i]->info.quicksearch_hit |= BROWSEQUICK_PLAYERNAME;
+					break;
+				}
+			}
+			
+			if(!matchfound)
 				filtered = 1;
 		}
 			

@@ -643,6 +643,18 @@ static const char *client_load_map_search(const char *mapname, int wanted_crc)
 	return error;
 }
 
+
+static int player_score_comp(const void *a, const void *b)
+{
+	SERVER_INFO_PLAYER *p0 = (SERVER_INFO_PLAYER *)a;
+	SERVER_INFO_PLAYER *p1 = (SERVER_INFO_PLAYER *)b;
+	if(p0->score == p1->score)
+		return 0;
+	if(p0->score < p1->score)
+		return 1;
+	return -1;
+}
+
 static void client_process_packet(NETPACKET *packet)
 {
 	if(packet->client_id == -1)
@@ -721,13 +733,16 @@ static void client_process_packet(NETPACKET *packet)
 				
 				for(i = 0; i < info.num_players; i++)
 				{
-					str_copy(info.player_names[i], unpacker_get_string(&up), sizeof(info.player_names[i]));
-					info.player_scores[i] = atol(unpacker_get_string(&up));
+					str_copy(info.players[i].name, unpacker_get_string(&up), sizeof(info.players[i].name));
+					info.players[i].score = atol(unpacker_get_string(&up));
 				}
 				
-				/* TODO: unpack players aswell */
 				if(!up.error)
+				{
+					/* sort players */
+					qsort(info.players, info.num_players, sizeof(*info.players), player_score_comp);
 					client_serverbrowse_set(&packet->address, 0, &info);
+				}
 			}
 		}
 	}

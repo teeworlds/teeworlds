@@ -911,6 +911,35 @@ void str_sanitize(char *str_in)
 	}
 }
 
+/* case */
+int str_comp_nocase(const char *a, const char *b)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	return _stricmp(a,b);
+#else
+	return strcasecmp(a,b);
+#endif
+}
+
+const char *str_find_nocase(const char *haystack, const char *needle)
+{
+	while(*haystack) /* native implementation */
+	{
+		const char *a = haystack;
+		const char *b = needle;
+		while(*a && *b && tolower(*a) == tolower(*b))
+		{
+			a++;
+			b++;
+		}
+		if(!(*b))
+			return haystack;
+		haystack++;
+	}
+	
+	return 0;
+}
+
 #if defined(__cplusplus)
 }
 #endif
