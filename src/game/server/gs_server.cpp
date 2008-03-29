@@ -2154,7 +2154,7 @@ void mods_message(int msgtype, int client_id)
 		if(msgtype == NETMSGTYPE_CL_CHANGEINFO && strcmp(oldname, server_clientname(client_id)) != 0)
 		{
 			char chattext[256];
-			str_format(chattext, sizeof(chattext), "*** %s changed name to %s", oldname, server_clientname(client_id));
+			str_format(chattext, sizeof(chattext), "%s changed name to %s", oldname, server_clientname(client_id));
 			send_chat(-1, -1, chattext);
 		}
 		

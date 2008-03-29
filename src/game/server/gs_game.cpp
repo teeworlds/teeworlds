@@ -70,7 +70,7 @@ bool gameobject::on_entity(int index, vec2 pos)
 		type = POWERUP_WEAPON;
 		subtype = WEAPON_RIFLE;
 	}
-	else if(index == ENTITY_POWERUP_NINJA)
+	else if(index == ENTITY_POWERUP_NINJA && config.sv_powerups)
 	{
 		type = POWERUP_NINJA;
 		subtype = WEAPON_NINJA;
