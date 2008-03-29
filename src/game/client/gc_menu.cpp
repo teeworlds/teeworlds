@@ -2055,7 +2055,7 @@ int menu2_render()
 			if(ui_do_button(&enter_button, "Enter", 0, &part, ui_draw_menu_button, 0) || inp_key_down(KEY_ENTER))
 				popup = POPUP_NONE;
 			
-			ui_hsplit_b(&box, 60.f, &box, &part);
+			ui_hsplit_b(&box, 40.f, &box, &part);
 			ui_hsplit_b(&box, 24.f, &box, &part);
 			
 			ui_vsplit_l(&part, 60.0f, 0, &label);
