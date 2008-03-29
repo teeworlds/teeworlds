@@ -227,10 +227,15 @@ void binds_set(int keyid, const char *str)
 		dbg_msg("binds", "bound %s (%d) = %s", inp_key_name(keyid), keyid, keybindings[keyid]);
 }
 
-void binds_default()
+void binds_unbindall()
 {
 	for(int i = 0; i < KEY_LAST; i++)
 		keybindings[i][0] = 0;
+}
+
+void binds_default()
+{
+	binds_unbindall();
 
 	// set default key bindings
 	binds_set(KEY_F1, "toggle_local_console");
@@ -307,6 +312,13 @@ static void con_unbind(void *result, void *user_data)
 	binds_set(id, "");
 }
 
+
+static void con_unbindall(void *result, void *user_data)
+{
+	binds_unbindall();
+}
+
+
 static void con_dump_binds(void *result, void *user_data)
 {
 	for(int i = 0; i < KEY_LAST; i++)
@@ -320,6 +332,7 @@ static void con_dump_binds(void *result, void *user_data)
 void binds_save()
 {
 	char buffer[256];
+	client_save_line("unbindall");
 	for(int i = 0; i < KEY_LAST; i++)
 	{
 		if(keybindings[i][0] == 0)
@@ -385,6 +398,8 @@ void client_console_init()
 	// bindings
 	MACRO_REGISTER_COMMAND("bind", "sr", con_bind, 0x0);
 	MACRO_REGISTER_COMMAND("unbind", "s", con_unbind, 0x0);
+	MACRO_REGISTER_COMMAND("unbindall", "", con_unbindall, 0x0);
+	
 	MACRO_REGISTER_COMMAND("dump_binds", "", con_dump_binds, 0x0);
 
 	// chatting
