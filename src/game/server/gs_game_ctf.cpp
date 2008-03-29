@@ -6,6 +6,8 @@
 
 gameobject_ctf::gameobject_ctf()
 {
+	flags[0] = 0;
+	flags[1] = 0;
 	is_teamplay = true;
 }
 
@@ -65,7 +67,6 @@ void gameobject_ctf::tick()
 
 	do_team_score_wincheck();
 	
-	// do flags
 	for(int fi = 0; fi < 2; fi++)
 	{
 		flag *f = flags[fi];
@@ -79,7 +80,7 @@ void gameobject_ctf::tick()
 			// update flag position
 			f->pos = f->carrying_player->pos;
 			
-			if(flags[fi^1]->at_stand)
+			if(flags[fi^1] && flags[fi^1]->at_stand)
 			{
 				if(distance(f->pos, flags[fi^1]->pos) < 32)
 				{
