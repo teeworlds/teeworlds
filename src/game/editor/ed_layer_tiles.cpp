@@ -22,6 +22,20 @@ LAYER_TILES::~LAYER_TILES()
 	delete [] tiles;
 }
 
+void LAYER_TILES::prepare_for_save()
+{
+	for(int y = 0; y < height; y++)
+		for(int x = 0; x < width; x++)
+			tiles[y*width+x].flags &= TILEFLAG_VFLIP|TILEFLAG_HFLIP;
+
+	if(image != -1)
+	{
+		for(int y = 0; y < height; y++)
+			for(int x = 0; x < width; x++)
+				tiles[y*width+x].flags |= editor.map.images[image]->tileflags[tiles[y*width+x].index];
+	}
+}
+
 void LAYER_TILES::make_palette()
 {
 	for(int y = 0; y < height; y++)
@@ -34,7 +48,7 @@ void LAYER_TILES::render()
 	if(image >= 0 && image < editor.map.images.len())
 		tex_id = editor.map.images[image]->tex_id;
 	gfx_texture_set(tex_id);
-	render_tilemap(tiles, width, height, 32.0f, vec4(1,1,1,1), 0);
+	render_tilemap(tiles, width, height, 32.0f, vec4(1,1,1,1), LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT);
 }
 
 int LAYER_TILES::convert_x(float x) const { return (int)(x/32.0f); }

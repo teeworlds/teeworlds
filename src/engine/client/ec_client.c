@@ -585,7 +585,9 @@ const char *client_error_string()
 
 static void client_render()
 {
-	gfx_clear(0.0f,0.0f,0.0f);
+	if(config.gfx_clear)	
+		gfx_clear(1,1,0);
+
 	modc_render();
 	client_debug_render();
 }

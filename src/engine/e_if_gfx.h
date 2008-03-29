@@ -455,7 +455,7 @@ void gfx_mapscreen(float tl_x, float tl_y, float br_x, float br_y);
 		This is equal to glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA).
 	
 	See Also:
-		<gfx_blend_additive>
+		<gfx_blend_additive,gfx_blend_none>
 */
 void gfx_blend_normal();
 
@@ -468,9 +468,22 @@ void gfx_blend_normal();
 		This is equal to glBlendFunc(GL_SRC_ALPHA, GL_ONE).
 	
 	See Also:
-		<gfx_blend_normal>
+		<gfx_blend_normal,gfx_blend_none>
 */
 void gfx_blend_additive();
+
+/*
+	Function: gfx_blend_none
+		Disables blending
+
+	Remarks:
+		This must be used before calling <gfx_quads_begin>.
+	
+	See Also:
+		<gfx_blend_normal,gfx_blend_additive>
+*/
+void gfx_blend_none();
+
 
 /*
 	Function: gfx_setcolorvertex

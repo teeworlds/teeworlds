@@ -115,6 +115,11 @@ int popup_group(RECT view)
 		PROP_POS_Y,
 		PROP_PARA_X,
 		PROP_PARA_Y,
+		PROP_USE_CLIPPING,
+		PROP_CLIP_X,
+		PROP_CLIP_Y,
+		PROP_CLIP_W,
+		PROP_CLIP_H,
 		NUM_PROPS,
 	};
 	
@@ -124,6 +129,12 @@ int popup_group(RECT view)
 		{"Pos Y", -editor.map.groups[editor.selected_group]->offset_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		{"Para X", editor.map.groups[editor.selected_group]->parallax_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		{"Para Y", editor.map.groups[editor.selected_group]->parallax_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+
+		{"Use Clipping", editor.map.groups[editor.selected_group]->use_clipping, PROPTYPE_BOOL, 0, 1},
+		{"Clip X", editor.map.groups[editor.selected_group]->clip_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Clip Y", editor.map.groups[editor.selected_group]->clip_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Clip W", editor.map.groups[editor.selected_group]->clip_w, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Clip H", editor.map.groups[editor.selected_group]->clip_h, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		{0},
 	};
 	
@@ -141,14 +152,15 @@ int popup_group(RECT view)
 	// these can not be changed on the game group
 	if(!editor.get_selected_group()->game_group)
 	{
-		if(prop == PROP_PARA_X)
-			editor.map.groups[editor.selected_group]->parallax_x = new_val;
-		else if(prop == PROP_PARA_Y)
-			editor.map.groups[editor.selected_group]->parallax_y = new_val;
-		else if(prop == PROP_POS_X)
-			editor.map.groups[editor.selected_group]->offset_x = -new_val;
-		else if(prop == PROP_POS_Y)
-			editor.map.groups[editor.selected_group]->offset_y = -new_val;
+		if(prop == PROP_PARA_X) editor.map.groups[editor.selected_group]->parallax_x = new_val;
+		else if(prop == PROP_PARA_Y) editor.map.groups[editor.selected_group]->parallax_y = new_val;
+		else if(prop == PROP_POS_X) editor.map.groups[editor.selected_group]->offset_x = -new_val;
+		else if(prop == PROP_POS_Y) editor.map.groups[editor.selected_group]->offset_y = -new_val;
+		else if(prop == PROP_USE_CLIPPING) editor.map.groups[editor.selected_group]->use_clipping = new_val;
+		else if(prop == PROP_CLIP_X) editor.map.groups[editor.selected_group]->clip_x = new_val;
+		else if(prop == PROP_CLIP_Y) editor.map.groups[editor.selected_group]->clip_y = new_val;
+		else if(prop == PROP_CLIP_W) editor.map.groups[editor.selected_group]->clip_w = new_val;
+		else if(prop == PROP_CLIP_H) editor.map.groups[editor.selected_group]->clip_h = new_val;
 	}
 	
 	return 0;

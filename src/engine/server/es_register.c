@@ -202,7 +202,7 @@ void register_update()
 		register_first = 0;
 		
 		/* check if we should send new heartbeat again */
-		if(now > register_state_start+freq*30)
+		if(now > register_state_start+freq)
 		{
 			if(register_count == 120) /* redo the whole process after 60 minutes to balance out the master servers */
 				register_new_state(REGISTERSTATE_START);

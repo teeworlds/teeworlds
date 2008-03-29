@@ -88,7 +88,7 @@ static void flush()
 	if(num_vertices == 0)
 		return;
 		
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	glVertexPointer(3, GL_FLOAT,
@@ -216,11 +216,14 @@ int gfx_init()
 	glDisable(GL_DEPTH_TEST);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-/*	glAlphaFunc(GL_GREATER, 0);
-	glEnable(GL_ALPHA_TEST);*/
-
-
+	
+	glAlphaFunc(GL_GREATER, 0);
+	glEnable(GL_ALPHA_TEST);
+	glDepthMask(0);
+	
 	gfx_mask_op(MASK_NONE, 0);
+	/*glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);*/
+
 	
 	/* Set all z to -5.0f */
 	for (i = 0; i < vertex_buffer_size; i++)
@@ -342,13 +345,21 @@ int gfx_unload_texture(int index)
 	return 0;
 }
 
+void gfx_blend_none()
+{
+	glDisable(GL_BLEND);
+}
+
+
 void gfx_blend_normal()
 {
+	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void gfx_blend_additive()
 {
+	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 }
 
@@ -636,24 +647,27 @@ void gfx_swap()
 	{
 		static PERFORMACE_INFO pscope = {"glfwSwapBuffers", 0};
 		perf_start(&pscope);
-		glFinish();
 		glfwSwapBuffers();
 		perf_end();
 	}
-	
-	{
-		static PERFORMACE_INFO pscope = {"glFlush", 0};
-		perf_start(&pscope);
-		glFlush();
-		perf_end();
-	}
 
+	/*	
+	if(inp_key_pressed('P'))
 	{
-		static PERFORMACE_INFO pscope = {"glFinish", 0};
-		perf_start(&pscope);
-		glFinish();
-		perf_end();
-	}
+		{
+			static PERFORMACE_INFO pscope = {"glFlush", 0};
+			perf_start(&pscope);
+			glFlush();
+			perf_end();
+		}
+
+		{
+			static PERFORMACE_INFO pscope = {"glFinish", 0};
+			perf_start(&pscope);
+			glFinish();
+			perf_end();
+		}
+	}*/
 
 	{
 		static PERFORMACE_INFO pscope = {"glfwPollEvents", 0};

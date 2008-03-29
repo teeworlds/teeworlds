@@ -300,7 +300,9 @@ void mastersrv_update()
 		{
 			/* we got a result from the lookup ready */
 			if(master_servers[i].lookup.result == 0)
+			{
 				master_servers[i].addr = master_servers[i].lookup.addr;
+			}
 			master_servers[i].lookup.state = STATE_PROCESSED;
 		}
 
@@ -311,6 +313,13 @@ void mastersrv_update()
 	
 	if(!needs_update)
 	{
+		/* make sure to destroy the threads */
+		for(i = 0; i < NUM_LOOKUP_THREADS; i++)
+		{
+			thread_destroy(master_servers[i].lookup.thread);
+			master_servers[i].lookup.thread = 0;
+		}
+			
 		dbg_msg("engine/mastersrv", "saving addresses");
 		mastersrv_save();
 	}

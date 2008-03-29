@@ -12,31 +12,24 @@ static int layers_num = 0;
 void layers_init()
 {
 	map_get_type(MAPITEMTYPE_GROUP, &groups_start, &groups_num);
+	map_get_type(MAPITEMTYPE_LAYER, &layers_start, &layers_num);
 	
+	for(int g = 0; g < layers_num_groups(); g++)
 	{
-		int p = 0;
-		map_get_type(MAPITEMTYPE_LAYER, &layers_start, &layers_num);
-			
-		for(int i = 0; i < layers_num; i++)
+		MAPITEM_GROUP *group = layers_get_group(g);
+		for(int l = 0; l < group->num_layers; l++)
 		{
-			MAPITEM_LAYER *layer = (MAPITEM_LAYER *)map_get_item(layers_start+i, 0, 0);
+			MAPITEM_LAYER *layer = layers_get_layer(group->start_layer+l);
+			
 			if(layer->type == LAYERTYPE_TILES)
 			{
 				MAPITEM_LAYER_TILEMAP *tilemap = (MAPITEM_LAYER_TILEMAP *)layer;
-				
-				if(p)
-				{
-					p--;
-					if(p == 0)
-						tilemap->flags |= 2;
-				}
-				
 				if(tilemap->flags&1)
 				{
 					game_layer = tilemap;
-					p = 2;
+					game_group = group;
 				}
-			}
+			}			
 		}
 	}
 }

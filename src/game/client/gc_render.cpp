@@ -297,9 +297,25 @@ static void envelope_eval(float time_offset, int env, float *channels)
 void render_layers(float center_x, float center_y, int pass)
 {
 	bool passed_gamelayer = false;
+
 	for(int g = 0; g < layers_num_groups(); g++)
 	{
 		MAPITEM_GROUP *group = layers_get_group(g);
+		
+		if(group->version >= 2 && group->use_clipping)
+		{
+			// set clipping
+			float points[4];
+			mapscreen_to_group(center_x, center_y, layers_game_group());
+			gfx_getscreen(&points[0], &points[1], &points[2], &points[3]);
+			float x0 = (group->clip_x - points[0]) / (points[2]-points[0]);
+			float y0 = (group->clip_y - points[1]) / (points[3]-points[1]);
+			float x1 = ((group->clip_x+group->clip_w) - points[0]) / (points[2]-points[0]);
+			float y1 = ((group->clip_y+group->clip_h) - points[1]) / (points[3]-points[1]);
+			
+			gfx_clip_enable((int)(x0*gfx_screenwidth()), (int)(y0*gfx_screenheight()),
+				(int)((x1-x0)*gfx_screenwidth()), (int)((y1-y0)*gfx_screenheight()));
+		}		
 		
 		mapscreen_to_group(center_x, center_y, group);
 		
@@ -319,7 +335,9 @@ void render_layers(float center_x, float center_y, int pass)
 				passed_gamelayer = 1;
 			}
 				
-			if(pass == 0)
+			if(pass == -1)
+				render = true;
+			else if(pass == 0)
 			{
 				if(passed_gamelayer)
 					return;
@@ -331,7 +349,7 @@ void render_layers(float center_x, float center_y, int pass)
 					render = true;
 			}
 			
-			if(render)
+			if(render && !is_game_layer)
 			{
 				if(layer->type == LAYERTYPE_TILES)
 				{
@@ -340,8 +358,12 @@ void render_layers(float center_x, float center_y, int pass)
 						gfx_texture_set(-1);
 					else
 						gfx_texture_set(img_get(tmap->image));
+						
 					TILE *tiles = (TILE *)map_get_data(tmap->data);
-					render_tilemap(tiles, tmap->width, tmap->height, 32.0f, vec4(1,1,1,1), 1);
+					gfx_blend_none();
+					render_tilemap(tiles, tmap->width, tmap->height, 32.0f, vec4(1,1,1,1), TILERENDERFLAG_EXTEND|LAYERRENDERFLAG_OPAQUE);
+					gfx_blend_normal();
+					render_tilemap(tiles, tmap->width, tmap->height, 32.0f, vec4(1,1,1,1), TILERENDERFLAG_EXTEND|LAYERRENDERFLAG_TRANSPARENT);
 				}
 				else if(layer->type == LAYERTYPE_QUADS)
 				{
@@ -350,11 +372,19 @@ void render_layers(float center_x, float center_y, int pass)
 						gfx_texture_set(-1);
 					else
 						gfx_texture_set(img_get(qlayer->image));
+
 					QUAD *quads = (QUAD *)map_get_data_swapped(qlayer->data);
-					render_quads(quads, qlayer->num_quads, envelope_eval);
+					
+					gfx_blend_none();
+					render_quads(quads, qlayer->num_quads, envelope_eval, LAYERRENDERFLAG_OPAQUE);
+					gfx_blend_normal();
+					render_quads(quads, qlayer->num_quads, envelope_eval, LAYERRENDERFLAG_TRANSPARENT);
+						
 				}
 			}
 		}
+		
+		gfx_clip_disable();
 	}
 }
 
@@ -464,10 +494,11 @@ static void render_players()
 
 // renders the complete game world
 void render_world(float center_x, float center_y, float zoom)
-{
+{	
 	// render background layers
 	render_layers(center_x, center_y, 0);
-
+	gfx_clip_disable();
+	
 	// render trails
 	particle_render(PARTGROUP_PROJECTILE_TRAIL);
 
@@ -486,81 +517,8 @@ void render_world(float center_x, float center_y, float zoom)
 
 	// render foreground layers
 	render_layers(center_x, center_y, 1);
+	gfx_clip_disable();
 
 	// render damage indications
 	render_damage_indicators();
-	
-	
-	
-	// render screen sizes	
-	if(false)
-	{
-		gfx_texture_set(-1);
-		gfx_lines_begin();
-		
-		float last_points[4];
-		float start = 1.0f; //9.0f/16.0f;
-		float end = 16.0f/9.0f;
-		const int num_steps = 20;
-		for(int i = 0; i <= num_steps; i++)
-		{
-			float points[4];
-			float aspect = start + (end-start)*(i/(float)num_steps);
-			
-			mapscreen_to_world(
-				center_x, center_y,
-				1.0f, 1.0f, 0.0f, 0.0f, aspect, 1.0f, points);
-			
-			if(i == 0)
-			{
-				gfx_lines_draw(points[0], points[1], points[2], points[1]);
-				gfx_lines_draw(points[0], points[3], points[2], points[3]);
-			}
-
-			if(i != 0)
-			{
-				gfx_lines_draw(points[0], points[1], last_points[0], last_points[1]);
-				gfx_lines_draw(points[2], points[1], last_points[2], last_points[1]);
-				gfx_lines_draw(points[0], points[3], last_points[0], last_points[3]);
-				gfx_lines_draw(points[2], points[3], last_points[2], last_points[3]);
-			}
-
-			if(i == num_steps)
-			{
-				gfx_lines_draw(points[0], points[1], points[0], points[3]);
-				gfx_lines_draw(points[2], points[1], points[2], points[3]);
-			}
-			
-			mem_copy(last_points, points, sizeof(points));
-		}
-
-		if(1)
-		{
-			gfx_setcolor(1,0,0,1);
-			for(int i = 0; i < 2; i++)
-			{
-				float points[4];
-				float aspects[] = {4.0f/3.0f, 16.0f/10.0f, 5.0f/4.0f, 16.0f/9.0f};
-				float aspect = aspects[i];
-				
-				mapscreen_to_world(
-					center_x, center_y,
-					1.0f, 1.0f, 0.0f, 0.0f, aspect, 1.0f, points);
-				
-				RECT r;
-				r.x = points[0];
-				r.y = points[1];
-				r.w = points[2]-points[0];
-				r.h = points[3]-points[1];
-				
-				gfx_lines_draw(r.x, r.y, r.x+r.w, r.y);
-				gfx_lines_draw(r.x+r.w, r.y, r.x+r.w, r.y+r.h);
-				gfx_lines_draw(r.x+r.w, r.y+r.h, r.x, r.y+r.h);
-				gfx_lines_draw(r.x, r.y+r.h, r.x, r.y);
-				gfx_setcolor(0,1,0,1);
-			}
-		}
-			
-		gfx_lines_end();
-	}	
 }

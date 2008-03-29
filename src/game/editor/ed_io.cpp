@@ -214,6 +214,11 @@ int MAP::save(const char *filename)
 	for(int i = 0; i < images.len(); i++)
 	{
 		IMAGE *img = images[i];
+		
+		// analyse the image for when saving (should be done when we load the image)
+		// TODO!
+		img->analyse_tileflags();
+		
 		MAPITEM_IMAGE item;
 		item.version = 1;
 		
@@ -234,12 +239,17 @@ int MAP::save(const char *filename)
 	{
 		LAYERGROUP *group = groups[g];
 		MAPITEM_GROUP gitem;
-		gitem.version = 1;
+		gitem.version = MAPITEM_GROUP::CURRENT_VERSION;
 		
 		gitem.parallax_x = group->parallax_x;
 		gitem.parallax_y = group->parallax_y;
 		gitem.offset_x = group->offset_x;
 		gitem.offset_y = group->offset_y;
+		gitem.use_clipping = group->use_clipping;
+		gitem.clip_x = group->clip_x;
+		gitem.clip_y = group->clip_y;
+		gitem.clip_w = group->clip_w;
+		gitem.clip_h = group->clip_h;
 		gitem.start_layer = layer_count;
 		gitem.num_layers = 0;
 		
@@ -249,6 +259,8 @@ int MAP::save(const char *filename)
 			{
 				dbg_msg("editor", "saving tiles layer");
 				LAYER_TILES *layer = (LAYER_TILES *)group->layers[l];
+				layer->prepare_for_save();
+				
 				MAPITEM_LAYER_TILEMAP item;
 				item.version = 2;
 				
@@ -432,11 +444,24 @@ int MAP::load(const char *filename)
 			for(int g = 0; g < num; g++)
 			{
 				MAPITEM_GROUP *gitem = (MAPITEM_GROUP *)datafile_get_item(df, start+g, 0, 0);
+				
+				if(gitem->version < 1 || gitem->version > MAPITEM_GROUP::CURRENT_VERSION)
+					continue;
+				
 				LAYERGROUP *group = new_group();
 				group->parallax_x = gitem->parallax_x;
 				group->parallax_y = gitem->parallax_y;
 				group->offset_x = gitem->offset_x;
 				group->offset_y = gitem->offset_y;
+				
+				if(gitem->version >= 2)
+				{
+					group->use_clipping = gitem->use_clipping;
+					group->clip_x = gitem->clip_x;
+					group->clip_y = gitem->clip_y;
+					group->clip_w = gitem->clip_w;
+					group->clip_h = gitem->clip_h;
+				}
 				
 				for(int l = 0; l < gitem->num_layers; l++)
 				{

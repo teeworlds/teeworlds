@@ -47,6 +47,7 @@ enum
 	
 	TILEFLAG_VFLIP=1,
 	TILEFLAG_HFLIP=2,
+	TILEFLAG_OPAQUE=4,
 	
 	LAYERFLAG_DETAIL=1,
 	
@@ -81,7 +82,7 @@ typedef struct
 	unsigned char index;
 	unsigned char flags;
 	unsigned char skip;
-	unsigned char reserved2;
+	unsigned char reserved;
 } TILE;
 
 typedef struct 
@@ -94,7 +95,7 @@ typedef struct
 	int image_data;
 } MAPITEM_IMAGE;
 
-typedef struct
+struct MAPITEM_GROUP_v1
 {
 	int version;
 	int offset_x;
@@ -104,7 +105,19 @@ typedef struct
 
 	int start_layer;
 	int num_layers;
-} MAPITEM_GROUP;
+} ;
+
+
+struct MAPITEM_GROUP : public MAPITEM_GROUP_v1
+{
+	enum { CURRENT_VERSION=2 };
+	
+	int use_clipping;
+	int clip_x;
+	int clip_y;
+	int clip_w;
+	int clip_h;
+} ;
 
 typedef struct
 {

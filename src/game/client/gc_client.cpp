@@ -983,10 +983,7 @@ void render_game()
 
 	// render the world
 	float zoom = 1.0f;
-	if(inp_key_pressed('E'))
-		zoom = 0.5f;
-	
-	gfx_clear(0.65f,0.78f,0.9f);
+
 	if(spectate)
 		render_world(mouse_pos.x, mouse_pos.y, zoom);
 	else
@@ -1485,7 +1482,12 @@ void render_game()
 		float ramp = velocity_ramp(velspeed, tuning.velramp_start, tuning.velramp_range, tuning.velramp_curvature);
 		
 		char buf[512];
-		str_format(buf, sizeof(buf), "%.0f\n%.0f\n%.2f\n%d %s", velspeed, velspeed*ramp, ramp, netobj_num_corrections(), netobj_corrected_on());
+		str_format(buf, sizeof(buf), "%.0f\n%.0f\n%.2f\n%d %s\n%d %d",
+			velspeed, velspeed*ramp, ramp,
+			netobj_num_corrections(), netobj_corrected_on(),
+			netobjects.local_character->x,
+			netobjects.local_character->y
+		);
 		gfx_text(0, 150, 50, 12, buf, -1);
 	}
 

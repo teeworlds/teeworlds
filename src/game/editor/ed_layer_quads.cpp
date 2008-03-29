@@ -36,7 +36,7 @@ void LAYER_QUADS::render()
 	if(image >= 0 && image < editor.map.images.len())
 		gfx_texture_set(editor.map.images[image]->tex_id);
 		
-	render_quads(quads.getptr(), quads.len(), envelope_eval);
+	render_quads(quads.getptr(), quads.len(), envelope_eval, LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT);
 }
 
 QUAD *LAYER_QUADS::new_quad()

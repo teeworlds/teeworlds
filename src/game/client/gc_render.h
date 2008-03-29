@@ -29,6 +29,11 @@ enum
 {
 	SPRITE_FLAG_FLIP_Y=1,
 	SPRITE_FLAG_FLIP_X=2,
+	
+	LAYERRENDERFLAG_OPAQUE=1,
+	LAYERRENDERFLAG_TRANSPARENT=2,
+	
+	TILERENDERFLAG_EXTEND=4,
 };
 
 typedef struct sprite;
@@ -66,7 +71,7 @@ void render_player(
 	
 // map render methods (gc_render_map.cpp)
 void render_eval_envelope(ENVPOINT *points, int num_points, int channels, float time, float *result);
-void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, int env, float *channels));
+void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, int env, float *channels), int flags);
 void render_tilemap(TILE *tiles, int w, int h, float scale, vec4 color, int flags);
 
 // helpers

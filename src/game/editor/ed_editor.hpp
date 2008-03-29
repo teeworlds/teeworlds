@@ -177,6 +177,12 @@ public:
 	int parallax_x;
 	int parallax_y;
 	
+	int use_clipping;
+	int clip_x;
+	int clip_y;
+	int clip_w;
+	int clip_h;
+	
 	const char *name;
 	bool game_group;
 	bool visible;
@@ -230,9 +236,12 @@ public:
 		gfx_unload_texture(tex_id);
 	}
 	
+	void analyse_tileflags();
+	
 	int tex_id;
 	int external;
 	char name[128];
+	unsigned char tileflags[256];
 };
 
 class MAP
@@ -443,6 +452,8 @@ public:
 
 	virtual void modify_image_index(INDEX_MODIFY_FUNC func);
 	virtual void modify_envelope_index(INDEX_MODIFY_FUNC func);
+	
+	void prepare_for_save();
 
 	void get_size(float *w, float *h) { *w = width*32.0f;  *h = height*32.0f; }
 	

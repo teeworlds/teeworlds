@@ -75,13 +75,34 @@ static void rotate(POINT *center, POINT *point, float rotation)
 	point->y = (int)(x * sinf(rotation) + y * cosf(rotation) + center->y);
 }
 
-void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, int env, float *channels))
+void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, int env, float *channels), int renderflags)
 {
 	gfx_quads_begin();
 	float conv = 1/255.0f;
 	for(int i = 0; i < num_quads; i++)
 	{
 		QUAD *q = &quads[i];
+		
+		float r=1, g=1, b=1, a=1;
+
+		if(q->color_env >= 0)
+		{
+			float channels[4];
+			eval(q->color_env_offset/1000.0f, q->color_env, channels);
+			r = channels[0];
+			g = channels[1];
+			b = channels[2];
+			a = channels[3];
+		}		
+		
+		bool opaque = false;
+		if(a < 0.01f || (q->colors[0].a < 0.01f && q->colors[1].a < 0.01f && q->colors[2].a < 0.01f && q->colors[3].a < 0.01f))
+			opaque = true;
+			
+		if(opaque && !(renderflags&LAYERRENDERFLAG_OPAQUE))
+			continue;
+		if(!opaque && !(renderflags&LAYERRENDERFLAG_TRANSPARENT))
+			continue;
 		
 		gfx_quads_setsubset_free(
 			fx2f(q->texcoords[0].x), fx2f(q->texcoords[0].y),
@@ -90,7 +111,6 @@ void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, in
 			fx2f(q->texcoords[3].x), fx2f(q->texcoords[3].y)
 		);
 
-		float r=1, g=1, b=1, a=1;
 		float offset_x = 0;
 		float offset_y = 0;
 		float rot = 0;
@@ -105,15 +125,6 @@ void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, in
 			rot = channels[2]/360.0f*pi*2;
 		}
 		
-		if(q->color_env >= 0)
-		{
-			float channels[4];
-			eval(q->color_env_offset/1000.0f, q->color_env, channels);
-			r = channels[0];
-			g = channels[1];
-			b = channels[2];
-			a = channels[3];
-		}
 		
 		gfx_setcolorvertex(0, q->colors[0].r*conv*r, q->colors[0].g*conv*g, q->colors[0].b*conv*b, q->colors[0].a*conv*a);
 		gfx_setcolorvertex(1, q->colors[1].r*conv*r, q->colors[1].g*conv*g, q->colors[1].b*conv*b, q->colors[1].a*conv*a);
@@ -147,12 +158,12 @@ void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, in
 	gfx_quads_end();	
 }
 
-
-void render_tilemap(TILE *tiles, int w, int h, float scale, vec4 color, int flags)
+void render_tilemap(TILE *tiles, int w, int h, float scale, vec4 color, int renderflags)
 {
-			//gfx_texture_set(img_get(tmap->image));
+	//gfx_texture_set(img_get(tmap->image));
 	float screen_x0, screen_y0, screen_x1, screen_y1;
 	gfx_getscreen(&screen_x0, &screen_y0, &screen_x1, &screen_y1);
+	//gfx_mapscreen(screen_x0-50, screen_y0-50, screen_x1+50, screen_y1+50);
 
 	// calculate the final pixelsize for the tiles	
 	float tile_pixelsize = 1024/32.0f;
@@ -178,7 +189,7 @@ void render_tilemap(TILE *tiles, int w, int h, float scale, vec4 color, int flag
 			int mx = x;
 			int my = y;
 			
-			if(flags)
+			if(renderflags&TILERENDERFLAG_EXTEND)
 			{
 				if(mx<0)
 					mx = 0;
@@ -207,39 +218,55 @@ void render_tilemap(TILE *tiles, int w, int h, float scale, vec4 color, int flag
 			if(index)
 			{
 				unsigned char flags = tiles[c].flags;
-				int tx = index%16;
-				int ty = index/16;
-				int px0 = tx*(1024/16);
-				int py0 = ty*(1024/16);
-				int px1 = (tx+1)*(1024/16)-1;
-				int py1 = (ty+1)*(1024/16)-1;
 				
-				float u0 = nudge + px0/texsize+frac;
-				float v0 = nudge + py0/texsize+frac;
-				float u1 = nudge + px1/texsize-frac;
-				float v1 = nudge + py1/texsize-frac;
-				
-				if(flags&TILEFLAG_VFLIP)
+				bool render = false;
+				if(flags&TILEFLAG_OPAQUE)
 				{
-					float tmp = u0;
-					u0 = u1;
-					u1 = tmp;
+					if(renderflags&LAYERRENDERFLAG_OPAQUE)
+						render = true;
 				}
-
-				if(flags&TILEFLAG_HFLIP)
+				else
 				{
-					float tmp = v0;
-					v0 = v1;
-					v1 = tmp;
+					if(renderflags&LAYERRENDERFLAG_TRANSPARENT)
+						render = true;
 				}
 				
-				gfx_quads_setsubset(u0,v0,u1,v1);
+				if(render)
+				{
+					
+					int tx = index%16;
+					int ty = index/16;
+					int px0 = tx*(1024/16);
+					int py0 = ty*(1024/16);
+					int px1 = (tx+1)*(1024/16)-1;
+					int py1 = (ty+1)*(1024/16)-1;
+					
+					float u0 = nudge + px0/texsize+frac;
+					float v0 = nudge + py0/texsize+frac;
+					float u1 = nudge + px1/texsize-frac;
+					float v1 = nudge + py1/texsize-frac;
+					
+					if(flags&TILEFLAG_VFLIP)
+					{
+						float tmp = u0;
+						u0 = u1;
+						u1 = tmp;
+					}
 
-				gfx_quads_drawTL(x*scale, y*scale, scale, scale);
+					if(flags&TILEFLAG_HFLIP)
+					{
+						float tmp = v0;
+						v0 = v1;
+						v1 = tmp;
+					}
+					
+					gfx_quads_setsubset(u0,v0,u1,v1);
+					gfx_quads_drawTL(x*scale, y*scale, scale, scale);
+				}
 			}
-			
 			x += tiles[c].skip;
 		}
 	
 	gfx_quads_end();
+	gfx_mapscreen(screen_x0, screen_y0, screen_x1, screen_y1);
 }

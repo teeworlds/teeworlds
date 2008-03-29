@@ -37,6 +37,12 @@ LAYERGROUP::LAYERGROUP()
 	offset_y = 0;
 	parallax_x = 100;
 	parallax_y = 100;
+	
+	use_clipping = 0;
+	clip_x = 0;
+	clip_y = 0;
+	clip_w = 0;
+	clip_h = 0;
 }
 
 LAYERGROUP::~LAYERGROUP()
@@ -75,6 +81,19 @@ void LAYERGROUP::render()
 {
 	mapscreen();
 	
+	if(use_clipping)
+	{
+		float points[4];
+		editor.map.game_group->mapping(points);
+		float x0 = (clip_x - points[0]) / (points[2]-points[0]);
+		float y0 = (clip_y - points[1]) / (points[3]-points[1]);
+		float x1 = ((clip_x+clip_w) - points[0]) / (points[2]-points[0]);
+		float y1 = ((clip_y+clip_h) - points[1]) / (points[3]-points[1]);
+		
+		gfx_clip_enable((int)(x0*gfx_screenwidth()), (int)(y0*gfx_screenheight()),
+			(int)((x1-x0)*gfx_screenwidth()), (int)((y1-y0)*gfx_screenheight()));
+	}
+	
 	for(int i = 0; i < layers.len(); i++)
 	{
 		if(layers[i]->visible && layers[i] != editor.map.game_layer)
@@ -83,6 +102,8 @@ void LAYERGROUP::render()
 				layers[i]->render();
 		}
 	}
+	
+	gfx_clip_disable();
 }
 
 bool LAYERGROUP::is_empty() const { return layers.len() == 0; }
@@ -116,7 +137,37 @@ int LAYERGROUP::swap_layers(int index0, int index1)
 	if(index0 == index1) return index0;
 	swap(layers[index0], layers[index1]);
 	return index1;
-}	
+}
+
+void IMAGE::analyse_tileflags()
+{
+	mem_zero(tileflags, sizeof(tileflags));
+	
+	int tw = width/16; // tilesizes
+	int th = height/16;
+	unsigned char *pixeldata = (unsigned char *)data;
+	
+	int tile_id = 0;
+	for(int ty = 0; ty < 16; ty++)
+		for(int tx = 0; tx < 16; tx++, tile_id++)
+		{
+			bool opaque = true;
+			for(int x = 0; x < tw; x++)
+				for(int y = 0; y < th; y++)
+				{
+					int p = (ty*tw+y)*width + tx*tw+x;
+					if(pixeldata[p*4+3] < 250)
+					{
+						opaque = false;
+						break;
+					}
+				}
+				
+			if(opaque)
+				tileflags[tile_id] |= TILEFLAG_OPAQUE;
+		}
+	
+}
 
 /********************************************************
  OTHER
@@ -777,11 +828,7 @@ static void do_quad_point(QUAD *q, int quad_index, int v)
 
 static void do_map_editor(RECT view, RECT toolbar)
 {
-	// do the toolbar
-	if(editor.gui_active)
-		do_toolbar(toolbar);
-	
-	ui_clip_enable(&view);
+	//ui_clip_enable(&view);
 	
 	bool show_picker = inp_key_pressed(KEY_SPACE) != 0;
 
@@ -792,6 +839,7 @@ static void do_map_editor(RECT view, RECT toolbar)
 		{
 			if(editor.map.groups[g]->visible)
 				editor.map.groups[g]->render();
+			//ui_clip_enable(&view);
 		}
 		
 		// render the game above everything else
@@ -805,7 +853,7 @@ static void do_map_editor(RECT view, RECT toolbar)
 	static void *editor_id = (void *)&editor_id;
 	int inside = ui_mouse_inside(&view);
 
-	// fetch mouse position		
+	// fetch mouse position
 	float wx = ui_mouse_world_x();
 	float wy = ui_mouse_world_y();
 	float mx = ui_mouse_x();
@@ -1084,6 +1132,29 @@ static void do_map_editor(RECT view, RECT toolbar)
 			}
 		}
 	}
+	
+	if(editor.get_selected_group() && editor.get_selected_group()->use_clipping)
+	{
+		LAYERGROUP *g = editor.map.game_group;
+		g->mapscreen();
+		
+		gfx_texture_set(-1);
+		gfx_lines_begin();
+
+			RECT r;
+			r.x = editor.get_selected_group()->clip_x;
+			r.y = editor.get_selected_group()->clip_y;
+			r.w = editor.get_selected_group()->clip_w;
+			r.h = editor.get_selected_group()->clip_h;
+			
+			gfx_setcolor(1,0,0,1);
+			gfx_lines_draw(r.x, r.y, r.x+r.w, r.y);
+			gfx_lines_draw(r.x+r.w, r.y, r.x+r.w, r.y+r.h);
+			gfx_lines_draw(r.x+r.w, r.y+r.h, r.x, r.y+r.h);
+			gfx_lines_draw(r.x, r.y+r.h, r.x, r.y);
+			
+		gfx_lines_end();
+	}
 
 	// render screen sizes	
 	if(editor.proof_borders)
@@ -1161,7 +1232,7 @@ static void do_map_editor(RECT view, RECT toolbar)
 	}
 	
 	gfx_mapscreen(ui_screen()->x, ui_screen()->y, ui_screen()->w, ui_screen()->h);
-	ui_clip_disable();
+	//ui_clip_disable();
 }
 
 
@@ -1282,8 +1353,6 @@ static void render_layers(RECT toolbox, RECT toolbar, RECT view)
 {
 	RECT layersbox = toolbox;
 
-	do_map_editor(view, toolbar);
-	
 	if(!editor.gui_active)
 		return;
 			
@@ -1317,7 +1386,7 @@ static void render_layers(RECT toolbox, RECT toolbar, RECT view)
 				
 				static int group_popup_id = 0;
 				if(result == 2)
-					ui_invoke_popup_menu(&group_popup_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 150, popup_group);
+					ui_invoke_popup_menu(&group_popup_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 200, popup_group);
 			}
 			
 			
@@ -2163,12 +2232,27 @@ void EDITOR::render()
 		ui_hsplit_t(&view, 16.0f, &toolbar, &view);
 		ui_hsplit_b(&view, 16.0f, &view, &statusbar);
 
-				
+		if(editor.show_envelope_editor)
+		{
+			float size = 125.0f;
+			if(editor.show_envelope_editor == 2)
+				size *= 2.0f;
+			else if(editor.show_envelope_editor == 3)
+				size *= 3.0f;
+			ui_hsplit_b(&view, size, &view, &envelope_editor);
+		}
+	}
+	
+	//	a little hack for now
+	if(editor.mode == MODE_LAYERS)
+		do_map_editor(view, toolbar);
+	
+	if(editor.gui_active)
+	{
 		float brightness = 0.25f;
-
 		render_background(menubar, background_texture, 128.0f, brightness*0);
 		ui_margin(&menubar, 2.0f, &menubar);
-		
+
 		render_background(toolbox, background_texture, 128.0f, brightness);
 		ui_margin(&toolbox, 2.0f, &toolbox);
 		
@@ -2179,24 +2263,23 @@ void EDITOR::render()
 		render_background(statusbar, background_texture, 128.0f, brightness);
 		ui_margin(&statusbar, 2.0f, &statusbar);
 		
+		// do the toolbar
+		if(editor.mode == MODE_LAYERS)
+			do_toolbar(toolbar);
+		
 		if(editor.show_envelope_editor)
 		{
-			float size = 125.0f;
-			if(editor.show_envelope_editor == 2)
-				size *= 2.0f;
-			else if(editor.show_envelope_editor == 3)
-				size *= 3.0f;
-			ui_hsplit_b(&view, size, &view, &envelope_editor);
 			render_background(envelope_editor, background_texture, 128.0f, brightness);
 			ui_margin(&envelope_editor, 2.0f, &envelope_editor);
 		}
 	}
+		
 	
 	if(editor.mode == MODE_LAYERS)
 		render_layers(toolbox, toolbar, view);
 	else if(editor.mode == MODE_IMAGES)
 		render_images(toolbox, toolbar, view);
-		
+
 	gfx_mapscreen(ui_screen()->x, ui_screen()->y, ui_screen()->w, ui_screen()->h);
 
 	if(editor.gui_active)
