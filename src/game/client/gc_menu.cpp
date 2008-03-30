@@ -612,13 +612,18 @@ void render_loading(float percent)
 	draw_round_rect(x, y, w, h, 40.0f);
 	gfx_quads_end();
 
+
 	const char *caption = "Loading";
 
 	tw = gfx_text_width(0, 48.0f, caption, -1);
 	RECT r;
-	r.x = x+w/2;
+	r.x = x;
 	r.y = y+20;
+	r.w = w;
+	r.h = h;
 	ui_do_label(&r, caption, 48.0f, 0, -1);
+
+	DEBUG_trigger = 0;
 
 	gfx_texture_set(-1);
 	gfx_quads_begin();
@@ -871,7 +876,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 					if(s)
 					{
 						gfx_text_ex(&cursor, item->name, (int)(s-item->name));
-						gfx_text_color(1,0.4f,0.4f,1);
+						gfx_text_color(0.4f,0.4f,1.0f,1);
 						gfx_text_ex(&cursor, s, strlen(config.b_filter_string));
 						gfx_text_color(1,1,1,1);
 						gfx_text_ex(&cursor, s+strlen(config.b_filter_string), -1);
@@ -888,7 +893,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 			{
 				str_format(temp, sizeof(temp), "%i/%i", item->num_players, item->max_players);
 				if(config.b_filter_string[0] && (item->quicksearch_hit&BROWSEQUICK_PLAYERNAME))
-					gfx_text_color(1,0.4f,0.4f,1);
+					gfx_text_color(0.4f,0.4f,1.0f,1);
 				ui_do_label(&button, temp, 12.0f, 1);
 				gfx_text_color(1,1,1,1);
 			}
@@ -1028,7 +1033,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 				if(s)
 				{
 					gfx_text_ex(&cursor, name, (int)(s-name));
-					gfx_text_color(1,0.4f,0.4f,1);
+					gfx_text_color(0.4f,0.4f,1,1);
 					gfx_text_ex(&cursor, s, strlen(config.b_filter_string));
 					gfx_text_color(1,1,1,1);
 					gfx_text_ex(&cursor, s+strlen(config.b_filter_string), -1);
