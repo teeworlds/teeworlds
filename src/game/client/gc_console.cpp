@@ -332,12 +332,27 @@ static void con_dump_binds(void *result, void *user_data)
 void binds_save()
 {
 	char buffer[256];
+	char *end = buffer+sizeof(buffer)-8;
 	client_save_line("unbindall");
 	for(int i = 0; i < KEY_LAST; i++)
 	{
 		if(keybindings[i][0] == 0)
 			continue;
-		str_format(buffer, sizeof(buffer), "bind %s %s", inp_key_name(i), keybindings[i]);
+		str_format(buffer, sizeof(buffer), "bind %s ", inp_key_name(i));
+		
+		// process the string. we need to escape some characters
+		const char *src = keybindings[i];
+		char *dst = buffer + strlen(buffer);
+		*dst++ = '"';
+		while(*src && dst < end)
+		{
+			if(*src == '"' || *src == '\\') // escape \ and "
+				*dst++ = '\\';
+			*dst++ = *src++;
+		}
+		*dst++ = '"';
+		*dst++ = 0;
+		
 		client_save_line(buffer);
 	}
 }
