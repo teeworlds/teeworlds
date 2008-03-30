@@ -1039,7 +1039,9 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 				if(compare.x-cursor->start_x > cursor->line_width)
 				{
 					draw_x = cursor->start_x;
-					draw_y += size; /* is this correct? -kma */
+					draw_y += size;
+					draw_x = (int)(draw_x * fake_to_screen_x) / fake_to_screen_x; /* realign */
+					draw_y = (int)(draw_y * fake_to_screen_y) / fake_to_screen_y;
 				}
 				
 				this_batch = wlen;
@@ -1060,7 +1062,9 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 				if(*current == '\n')
 				{
 					draw_x = cursor->start_x;
-					draw_y += size; /* is this correct? -kma */
+					draw_y += size;
+					draw_x = (int)(draw_x * fake_to_screen_x) / fake_to_screen_x; /* realign */
+					draw_y = (int)(draw_y * fake_to_screen_y) / fake_to_screen_y;
 					current++;
 					continue;
 				}
