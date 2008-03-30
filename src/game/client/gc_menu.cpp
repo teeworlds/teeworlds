@@ -1359,7 +1359,7 @@ static void menu2_render_settings_controls(RECT main_view)
 		ui_vsplit_l(&button, 110.0f, &label, &button);
 		ui_do_label(&label, "Mouse sens.", 14.0f, -1);
 		ui_hmargin(&button, 2.0f, &button);
-		config.inp_mousesens = (int)(ui_do_scrollbar_h(&config.inp_mousesens, &button, config.inp_mousesens/500.0f)*500.0f);
+		config.inp_mousesens = (int)(ui_do_scrollbar_h(&config.inp_mousesens, &button, (config.inp_mousesens-5)/500.0f)*500.0f)+5;
 		//*key.key = ui_do_key_reader(key.key, &button, *key.key);
 		ui_hsplit_t(&main_view, 20.0f, 0, &main_view);
 	}
