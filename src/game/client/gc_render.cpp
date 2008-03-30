@@ -404,7 +404,7 @@ void render_tilemap_generate_skip()
 				TILE *tiles = (TILE *)map_get_data(tmap->data);
 				for(int y = 0; y < tmap->height; y++)
 				{
-					for(int x = 0; x < tmap->width; x++)
+					for(int x = 1; x < tmap->width; x++)
 					{
 						int sx;
 						for(sx = 1; x+sx < tmap->width && sx < 255; sx++)
