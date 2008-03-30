@@ -95,21 +95,53 @@ static int console_parse_args(PARSE_RESULT *result, const char *format)
 			}
 			
 			/* add token */
-			result->args[result->num_args++] = str;
-		
-			if(command == 'r') /* rest of the string */
-				break;
-			else if(command == 'i') /* validate int */
-				str = str_skiptoblank(str);
-			else if(command == 'f') /* validate float */
-				str = str_skiptoblank(str);
-			else if(command == 's') /* validate string */
-				str = str_skiptoblank(str);
-
-			if(str[0] != 0) /* check for end of string */
+			if(*str == '"')
 			{
-				str[0] = 0;
+				char *dst;
 				str++;
+				result->args[result->num_args++] = str;
+				
+				dst = str; /* we might have to process escape data */
+				while(1)
+				{
+					if(str[0] == '"')
+						break;
+					else if(str[0] == '\\')
+					{
+						if(str[1] == '\\')
+							str++; /* skip due to escape */
+						else if(str[1] == '"')
+							str++; /* skip due to escape */
+					}
+					else if(str[0] == 0)
+						return 1; /* return error */
+						
+					*dst = *str;
+					dst++;
+					str++;
+				}
+				
+				/* write null termination */
+				*dst = 0;
+			}
+			else
+			{
+				result->args[result->num_args++] = str;
+				
+				if(command == 'r') /* rest of the string */
+					break;
+				else if(command == 'i') /* validate int */
+					str = str_skiptoblank(str);
+				else if(command == 'f') /* validate float */
+					str = str_skiptoblank(str);
+				else if(command == 's') /* validate string */
+					str = str_skiptoblank(str);
+
+				if(str[0] != 0) /* check for end of string */
+				{
+					str[0] = 0;
+					str++;
+				}
 			}
 		}
 	}
@@ -192,10 +224,18 @@ void console_execute_line_stroked(int stroke, const char *str)
 	{
 		const char *end = str;
 		const char *next_part = 0;
+		int in_string = 0;
 		
 		while(*end)
 		{
-			if(*end == ';')
+			if(*end == '"')
+				in_string ^= 1;
+			else if(*end == '\\')
+			{
+				if(end[1] == '"')
+					end++;
+			}
+			else if(!in_string && *end == ';')
 			{
 				next_part = end+1;
 				break;
