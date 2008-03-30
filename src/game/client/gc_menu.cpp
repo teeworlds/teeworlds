@@ -623,8 +623,6 @@ void render_loading(float percent)
 	r.h = h;
 	ui_do_label(&r, caption, 48.0f, 0, -1);
 
-	DEBUG_trigger = 0;
-
 	gfx_texture_set(-1);
 	gfx_quads_begin();
 	gfx_setcolor(1,1,1,0.75f);
@@ -1368,8 +1366,8 @@ static void menu2_render_settings_controls(RECT main_view)
 	
 	typedef struct 
 	{
-		char *name;
-		char *command;
+		const char *name;
+		const char *command;
 		int keyid;
 	} KEYINFO;
 
@@ -1421,7 +1419,7 @@ static void menu2_render_settings_controls(RECT main_view)
     	
 		ui_do_label(&label, key.name, 14.0f, -1);
 		int oldid = key.keyid;
-		int newid = ui_do_key_reader(keys[i].name, &button, oldid);
+		int newid = ui_do_key_reader((void *)keys[i].name, &button, oldid);
 		if(newid != oldid)
 		{
 			binds_set(oldid, "");
