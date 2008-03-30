@@ -28,7 +28,7 @@ MACRO_CONFIG_INT(player_color_body, 65408, 0, 0)
 MACRO_CONFIG_INT(player_color_feet, 65408, 0, 0)
 MACRO_CONFIG_STR(player_skin, 64, "default")
 
-MACRO_CONFIG_INT(dbg_bots, 0, 0, 11)
+MACRO_CONFIG_INT(dbg_dummies, 0, 0, 11)
 MACRO_CONFIG_INT(dbg_firedelay, 0, 0, 1)
 MACRO_CONFIG_INT(dbg_flow, 0, 0, 1)
 MACRO_CONFIG_INT(dbg_tuning, 0, 0, 1)

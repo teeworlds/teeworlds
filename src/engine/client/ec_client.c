@@ -499,6 +499,16 @@ void client_disconnect_with_reason(const char *reason)
 	netclient_disconnect(net, reason);
 	client_set_state(CLIENTSTATE_OFFLINE);
 	map_unload();
+	
+	/* disable all downloads */
+	mapdownload_chunk = 0;
+	if(mapdownload_file)
+		io_close(mapdownload_file);
+	mapdownload_file = 0;
+	mapdownload_crc = 0;
+	mapdownload_totalsize = -1;
+	mapdownload_amount = 0;
+	
 }
 
 void client_disconnect()

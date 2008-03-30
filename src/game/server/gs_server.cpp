@@ -2314,9 +2314,9 @@ void mods_init()
 
 	world->insert_entity(gameobj);
 
-	if(config.dbg_bots)
+	if(config.dbg_dummies)
 	{
-		for(int i = 0; i < config.dbg_bots ; i++)
+		for(int i = 0; i < config.dbg_dummies ; i++)
 		{
 			mods_connected(MAX_CLIENTS-i-1);
 			mods_client_enter(MAX_CLIENTS-i-1);
