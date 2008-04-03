@@ -500,16 +500,14 @@ void projectile::tick()
 	int collide = col_intersect_line(prevpos, curpos, &curpos);
 	//int collide = col_check_point((int)curpos.x, (int)curpos.y);
 	
-	vec2 new_pos;
-	entity *targetplayer = (entity*)intersect_player(prevpos, curpos, 6.0f, new_pos, powner);
-	
+	entity *targetplayer = (entity*)intersect_player(prevpos, curpos, 6.0f, curpos, powner);
 	if(targetplayer || collide || lifespan < 0)
 	{
 		if (lifespan >= 0 || weapon == WEAPON_GRENADE)
 			create_sound(curpos, sound_impact);
 
 		if (flags & PROJECTILE_FLAGS_EXPLODE)
-			create_explosion(prevpos, owner, weapon, false);
+			create_explosion(curpos, owner, weapon, false);
 		else if (targetplayer)
 		{
 			targetplayer->take_damage(direction * max(0.001f, force), damage, owner, weapon);
