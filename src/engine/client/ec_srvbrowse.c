@@ -50,6 +50,7 @@ static int sorthash = 0;
 static char filterstring[64] = {0};
 
 static int serverlist_lan = 1;
+static int64 broadcast_time = 0;
 
 int client_serverbrowse_lan() { return serverlist_lan; }
 int client_serverbrowse_num() { return num_servers; }
@@ -266,21 +267,26 @@ static void client_serverbrowse_remove_request(SERVERENTRY *entry)
 void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *info)
 {
 	int hash = addr->ip[0];
-	SERVERENTRY *entry = serverlist_ip[hash];
+	SERVERENTRY *entry = 0;
+	
+	entry = serverlist_ip[hash];
 	while(entry)
 	{
 		if(net_addr4_cmp(&entry->addr, addr) == 0)
 		{
 			/* update the server that we already have */
-			entry->info = *info;
-			if(!request)
+			if(!serverlist_lan)
 			{
-				entry->info.latency = (time_get()-entry->request_time)*1000/time_freq();
-				client_serverbrowse_remove_request(entry);
+				entry->info = *info;
+				if(!request)
+				{
+					entry->info.latency = (time_get()-entry->request_time)*1000/time_freq();
+					client_serverbrowse_remove_request(entry);
+				}
+				
+				entry->got_info = 1;
+				client_serverbrowse_sort();
 			}
-			
-			entry->got_info = 1;
-			client_serverbrowse_sort();
 			return;
 		}
 		entry = entry->next_ip;
@@ -293,6 +299,9 @@ void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *info)
 	/* set the info */
 	entry->addr = *addr;
 	entry->info = *info;
+	
+	if(serverlist_lan)
+		entry->info.latency = (time_get()-broadcast_time)*1000/time_freq();
 
 	/* add to the hash list */	
 	entry->next_ip = serverlist_ip[hash];
@@ -360,7 +369,8 @@ void client_serverbrowse_refresh(int lan)
 		packet.flags = PACKETFLAG_CONNLESS;
 		packet.data_size = sizeof(SERVERBROWSE_GETINFO_LAN);
 		packet.data = SERVERBROWSE_GETINFO_LAN;
-		netclient_send(net, &packet);	
+		broadcast_time = time_get();
+		netclient_send(net, &packet);
 
 		if(config.debug)
 			dbg_msg("client", "broadcasting for servers");
