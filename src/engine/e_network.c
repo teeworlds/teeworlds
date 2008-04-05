@@ -416,7 +416,8 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 				else
 				{
 					/* out of sequence, request resend */
-					dbg_msg("conn", "asking for resend %d %d", p->seq, (conn->ack+1)%NETWORK_MAX_SEQACK);
+					if(config.debug)
+						dbg_msg("conn", "asking for resend %d %d", p->seq, (conn->ack+1)%NETWORK_MAX_SEQACK);
 					conn_send(conn, NETWORK_PACKETFLAG_RESEND, 0, 0);
 					return 0;
 				}
@@ -440,7 +441,8 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETDATA *p, NETADDR4 *addr)
 				conn_send(conn, NETWORK_PACKETFLAG_ACCEPT, 0, 0);
 				conn->state = NETWORK_CONNSTATE_ONLINE;
 				conn->connected++;
-				dbg_msg("connection", "got connect+accept, sending accept. connection online");
+				if(config.debug)
+					dbg_msg("connection", "got connect+accept, sending accept. connection online");
 			}
 		}
 		/*
