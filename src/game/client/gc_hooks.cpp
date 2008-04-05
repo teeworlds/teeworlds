@@ -542,10 +542,8 @@ extern "C" void modc_message(int msgtype)
 			}
 		}
 
-		dbg_msg("game", "MOTD: %s", server_motd);
-
-		if(server_motd[0])
-			server_motd_time = time_get()+time_freq()*10;
+		if(server_motd[0] && config.cl_motd_time)
+			server_motd_time = time_get()+time_freq()*config.cl_motd_time;
 		else
 			server_motd_time = 0;
 	}

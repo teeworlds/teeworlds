@@ -896,7 +896,9 @@ void render_game()
 
 	if(inp_key_down(KEY_ESC))
 	{
-		if (chat_mode)
+		if(server_motd_time)
+			server_motd_time = 0;
+		else if (chat_mode)
 			chat_mode = CHATMODE_NONE;
 		else
 		{
