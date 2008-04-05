@@ -978,6 +978,9 @@ int _glfwPlatformOpenWindow( int width, int height, int redbits,
         return GL_FALSE;
     }
 
+    // Set window & icon name
+    _glfwPlatformSetWindowTitle( "Teeworlds" );
+
     // Get the delete window WM protocol atom
     _glfwWin.WMDeleteWindow = XInternAtom( _glfwLibrary.Dpy,
                                            "WM_DELETE_WINDOW",
@@ -1071,9 +1074,6 @@ int _glfwPlatformOpenWindow( int width, int height, int redbits,
         XWarpPointer( _glfwLibrary.Dpy, None, _glfwWin.Win, 0,0,0,0,
                       _glfwWin.Width/2, _glfwWin.Height/2 );
     }
-
-    // Set window & icon name
-    _glfwPlatformSetWindowTitle( "GLFW Window" );
 
     // Connect the context to the window
     glXMakeCurrent( _glfwLibrary.Dpy, _glfwWin.Win, _glfwWin.CX );
