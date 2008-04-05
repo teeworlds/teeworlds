@@ -329,7 +329,7 @@ void render_player(
 	vec2 direction = get_direction(player.angle);
 	float angle = player.angle/256.0f;
 	vec2 position = mix(vec2(prev.x, prev.y), vec2(player.x, player.y), intratick);
-	vec2 vel = vec2(player.x, player.y)-vec2(prev.x, prev.y);
+	vec2 vel = mix(vec2(prev.vx/256.0f, prev.vy/256.0f), vec2(player.vx/256.0f, player.vy/256.0f), intratick);
 	
 	flow_add(position, vel*100.0f, 10.0f);
 	
@@ -366,7 +366,7 @@ void render_player(
 	}
 	
 	// do skidding
-	if(!inair && want_other_dir && length(vec2(prev.vx/256.0f, prev.vy/256.0f)*50) > 500.0f)
+	if(!inair && want_other_dir && length(vel*50) > 500.0f)
 	{
 		static int64 skid_sound_time = 0;
 		if(time_get()-skid_sound_time > time_freq()/10)
