@@ -466,6 +466,10 @@ bool console_input_special_binds(INPUT_EVENT e, void *user_data)
 
 bool console_input_normal_binds(INPUT_EVENT e, void *user_data)
 {
+	// need to be ingame for these binds
+	if(client_state() != CLIENTSTATE_ONLINE)
+		return false;
+	
 	// don't handle invalid events and keys that arn't set to anything
 	if(e.key <= 0 || e.key >= KEY_LAST || keybindings[e.key][0] == 0)
 		return false;
