@@ -650,6 +650,9 @@ void gfx_swap()
 		glfwSwapBuffers();
 		perf_end();
 	}
+	
+	if(config.gfx_finish)
+		glFinish();
 
 	/*	
 	if(inp_key_pressed('P'))
