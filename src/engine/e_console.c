@@ -230,15 +230,20 @@ void console_execute_line_stroked(int stroke, const char *str)
 		{
 			if(*end == '"')
 				in_string ^= 1;
-			else if(*end == '\\')
+			else if(*end == '\\') /* escape sequences */
 			{
 				if(end[1] == '"')
 					end++;
 			}
-			else if(!in_string && *end == ';')
+			else if(!in_string)
 			{
-				next_part = end+1;
-				break;
+				if(*end == ';')  /* command separator */
+				{
+					next_part = end+1;
+					break;
+				}
+				else if(*end == '#')  /* comment, no need to do anything more */
+					break;
 			}
 			
 			end++;
