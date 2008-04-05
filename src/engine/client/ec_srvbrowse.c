@@ -358,7 +358,7 @@ void client_serverbrowse_refresh(int lan)
 	
 	if(serverlist_lan)
 	{
-		NETPACKET packet;
+		NETCHUNK packet;
 		packet.client_id = -1;
 		mem_zero(&packet, sizeof(packet));
 		packet.address.ip[0] = 255;
@@ -366,7 +366,7 @@ void client_serverbrowse_refresh(int lan)
 		packet.address.ip[2] = 255;
 		packet.address.ip[3] = 255;
 		packet.address.port = 8303;
-		packet.flags = PACKETFLAG_CONNLESS;
+		packet.flags = NETSENDFLAG_CONNLESS;
 		packet.data_size = sizeof(SERVERBROWSE_GETINFO_LAN);
 		packet.data = SERVERBROWSE_GETINFO_LAN;
 		broadcast_time = time_get();
@@ -378,14 +378,14 @@ void client_serverbrowse_refresh(int lan)
 	else
 	{
 		NETADDR4 addr;
-		NETPACKET p;
+		NETCHUNK p;
 		int i;
 		
 		/*net_host_lookup(config.masterserver, MASTERSERVER_PORT, &master_server);*/
 
 		mem_zero(&p, sizeof(p));
 		p.client_id = -1;
-		p.flags = PACKETFLAG_CONNLESS;
+		p.flags = NETSENDFLAG_CONNLESS;
 		p.data_size = sizeof(SERVERBROWSE_GETLIST);
 		p.data = SERVERBROWSE_GETLIST;
 		
@@ -406,7 +406,7 @@ void client_serverbrowse_refresh(int lan)
 
 static void client_serverbrowse_request(SERVERENTRY *entry)
 {
-	NETPACKET p;
+	NETCHUNK p;
 
 	if(config.debug)
 	{
@@ -417,7 +417,7 @@ static void client_serverbrowse_request(SERVERENTRY *entry)
 	
 	p.client_id = -1;
 	p.address = entry->addr;
-	p.flags = PACKETFLAG_CONNLESS;
+	p.flags = NETSENDFLAG_CONNLESS;
 	p.data_size = sizeof(SERVERBROWSE_GETINFO);
 	p.data = SERVERBROWSE_GETINFO;
 	netclient_send(net, &p);

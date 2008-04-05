@@ -541,6 +541,7 @@ void str_sanitize_strong(char *str);
 void str_sanitize(char *str);
 int str_comp_nocase(const char *a, const char *b);
 const char *str_find_nocase(const char *haystack, const char *needle);
+void str_hex(char *dst, int dst_size, const void *data, int data_size);
 
 typedef void (*DBG_LOGGER)(const char *line);
 void dbg_logger(DBG_LOGGER logger);
@@ -551,6 +552,16 @@ void dbg_logger_file(const char *filename);
 IOHANDLE io_stdin();
 IOHANDLE io_stdout();
 IOHANDLE io_stderr();
+
+typedef struct
+{
+	int sent_packets;
+	int sent_bytes;
+	int recv_packets;
+	int recv_bytes;
+} NETSTATS;
+
+void net_stats(NETSTATS *stats);
 
 #ifdef __cplusplus
 }

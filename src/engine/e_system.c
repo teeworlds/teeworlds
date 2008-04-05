@@ -54,6 +54,8 @@ IOHANDLE io_stderr() { return (IOHANDLE)stderr; }
 static DBG_LOGGER loggers[16];
 static int num_loggers = 0;
 
+static NETSTATS network_stats = {0};
+
 void dbg_logger(DBG_LOGGER logger)
 {
 	loggers[num_loggers++] = logger;
@@ -557,6 +559,8 @@ int net_udp4_send(NETSOCKET sock, const NETADDR4 *addr, const void *data, int si
 	d = sendto((int)sock, (const char*)data, size, 0, &sa, sizeof(sa));
 	if(d < 0)
 		dbg_msg("net", "sendto error %d %x", d, d);
+	network_stats.sent_bytes += size;
+	network_stats.sent_packets++;
 	return d;
 }
 
@@ -569,6 +573,8 @@ int net_udp4_recv(NETSOCKET sock, NETADDR4 *addr, void *data, int maxsize)
 	if(bytes > 0)
 	{
 		sockaddr_to_netaddr4(&from, addr);
+		network_stats.recv_bytes += bytes;
+		network_stats.recv_packets++;
 		return bytes;
 	}
 	else if(bytes == 0)
@@ -938,6 +944,25 @@ const char *str_find_nocase(const char *haystack, const char *needle)
 	}
 	
 	return 0;
+}
+
+void str_hex(char *dst, int dst_size, const void *data, int data_size)
+{
+	static const char hex[] = "0123456789ABCDEF";
+	int b;
+
+	for(b = 0; b < data_size && b < dst_size/4-4; b++)
+	{
+		dst[b*3] = hex[((const unsigned char *)data)[b]>>4];
+		dst[b*3+1] = hex[((const unsigned char *)data)[b]&0xf];
+		dst[b*3+2] = ' ';
+		dst[b*3+3] = 0;
+	}
+}
+
+void net_stats(NETSTATS *stats_inout)
+{
+	*stats_inout = network_stats;
 }
 
 #if defined(__cplusplus)

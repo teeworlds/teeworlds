@@ -31,10 +31,10 @@ static void register_new_state(int state)
 
 static void register_send_fwcheckresponse(NETADDR4 *addr)
 {
-	NETPACKET packet;
+	NETCHUNK packet;
 	packet.client_id = -1;
 	packet.address = *addr;
-	packet.flags = PACKETFLAG_CONNLESS;
+	packet.flags = NETSENDFLAG_CONNLESS;
 	packet.data_size = sizeof(SERVERBROWSE_FWRESPONSE);
 	packet.data = SERVERBROWSE_FWRESPONSE;
 	netserver_send(net, &packet);
@@ -44,13 +44,13 @@ static void register_send_heartbeat(NETADDR4 addr)
 {
 	static unsigned char data[sizeof(SERVERBROWSE_HEARTBEAT) + 2];
 	unsigned short port = config.sv_port;
-	NETPACKET packet;
+	NETCHUNK packet;
 	
 	mem_copy(data, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT));
 	
 	packet.client_id = -1;
 	packet.address = addr;
-	packet.flags = PACKETFLAG_CONNLESS;
+	packet.flags = NETSENDFLAG_CONNLESS;
 	packet.data_size = sizeof(SERVERBROWSE_HEARTBEAT) + 2;
 	packet.data = &data;
 
@@ -64,10 +64,10 @@ static void register_send_heartbeat(NETADDR4 addr)
 
 static void register_send_count_request(NETADDR4 addr)
 {
-	NETPACKET packet;
+	NETCHUNK packet;
 	packet.client_id = -1;
 	packet.address = addr;
-	packet.flags = PACKETFLAG_CONNLESS;
+	packet.flags = NETSENDFLAG_CONNLESS;
 	packet.data_size = sizeof(SERVERBROWSE_GETCOUNT);
 	packet.data = SERVERBROWSE_GETCOUNT;
 	netserver_send(net, &packet);
@@ -221,7 +221,7 @@ void register_update()
 	}
 }
 
-static void register_got_count(NETPACKET *p)
+static void register_got_count(NETCHUNK *p)
 {
 	unsigned char *data = (unsigned char *)p->data;
 	int count = (data[sizeof(SERVERBROWSE_COUNT)]<<8) | data[sizeof(SERVERBROWSE_COUNT)+1];
@@ -237,7 +237,7 @@ static void register_got_count(NETPACKET *p)
 	}
 }
 
-int register_process_packet(NETPACKET *packet)
+int register_process_packet(NETCHUNK *packet)
 {
 	if(packet->data_size == sizeof(SERVERBROWSE_FWCHECK) &&
 		memcmp(packet->data, SERVERBROWSE_FWCHECK, sizeof(SERVERBROWSE_FWCHECK)) == 0)

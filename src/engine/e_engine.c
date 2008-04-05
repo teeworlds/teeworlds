@@ -9,6 +9,7 @@
 #include <engine/e_config.h>
 #include <engine/e_console.h>
 #include <engine/e_engine.h>
+#include <engine/e_network.h>
 #include "e_linereader.h"
 
 static void con_dbg_dumpmem(void *result, void *user_data)
@@ -42,6 +43,7 @@ void engine_init(const char *appname)
 
 	/* init the network */
 	net_init();
+	netcommon_init();
 	
 	/* create storage location */
 	{

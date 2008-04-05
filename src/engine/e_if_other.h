@@ -284,7 +284,8 @@ void snap_input(void *data, int size);
 /* message packing */
 enum
 {
-	MSGFLAG_VITAL=1
+	MSGFLAG_VITAL=1,
+	MSGFLAG_FLUSH=2
 };
 
 /* message sending */

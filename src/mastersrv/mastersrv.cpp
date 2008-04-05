@@ -43,10 +43,10 @@ static net_client net_op; // main
 
 void send_ok(NETADDR4 *addr)
 {
-	NETPACKET p;
+	NETCHUNK p;
 	p.client_id = -1;
 	p.address = *addr;
-	p.flags = PACKETFLAG_CONNLESS;
+	p.flags = NETSENDFLAG_CONNLESS;
 	p.data_size = sizeof(SERVERBROWSE_FWOK);
 	p.data = SERVERBROWSE_FWOK;
 	
@@ -57,10 +57,10 @@ void send_ok(NETADDR4 *addr)
 
 void send_error(NETADDR4 *addr)
 {
-	NETPACKET p;
+	NETCHUNK p;
 	p.client_id = -1;
 	p.address = *addr;
-	p.flags = PACKETFLAG_CONNLESS;
+	p.flags = NETSENDFLAG_CONNLESS;
 	p.data_size = sizeof(SERVERBROWSE_FWERROR);
 	p.data = SERVERBROWSE_FWERROR;
 	net_op.send(&p);
@@ -68,10 +68,10 @@ void send_error(NETADDR4 *addr)
 
 void send_check(NETADDR4 *addr)
 {
-	NETPACKET p;
+	NETCHUNK p;
 	p.client_id = -1;
 	p.address = *addr;
-	p.flags = PACKETFLAG_CONNLESS;
+	p.flags = NETSENDFLAG_CONNLESS;
 	p.data_size = sizeof(SERVERBROWSE_FWCHECK);
 	p.data = SERVERBROWSE_FWCHECK;
 	net_checker.send(&p);
@@ -204,7 +204,7 @@ int main(int argc, char **argv)
 		net_checker.update();
 		
 		// process packets
-		NETPACKET packet;
+		NETCHUNK packet;
 		while(net_op.recv(&packet))
 		{
 			if(packet.data_size == sizeof(SERVERBROWSE_HEARTBEAT)+2 &&
@@ -225,10 +225,10 @@ int main(int argc, char **argv)
 			{
 				dbg_msg("mastersrv", "count requested, responding with %d", num_servers);
 				
-				NETPACKET p;
+				NETCHUNK p;
 				p.client_id = -1;
 				p.address = packet.address;
-				p.flags = PACKETFLAG_CONNLESS;
+				p.flags = NETSENDFLAG_CONNLESS;
 				p.data_size = sizeof(count_data);
 				p.data = &count_data;
 				count_data.high = (num_servers>>8)&0xff;
@@ -240,10 +240,10 @@ int main(int argc, char **argv)
 			{
 				// someone requested the list
 				dbg_msg("mastersrv", "requested, responding with %d servers", num_servers);
-				NETPACKET p;
+				NETCHUNK p;
 				p.client_id = -1;
 				p.address = packet.address;
-				p.flags = PACKETFLAG_CONNLESS;
+				p.flags = NETSENDFLAG_CONNLESS;
 				p.data_size = num_servers*sizeof(NETADDR4)+sizeof(SERVERBROWSE_LIST);
 				p.data = &data;
 				net_op.send(&p);

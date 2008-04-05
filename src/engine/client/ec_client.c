@@ -21,6 +21,8 @@
 #include <engine/e_console.h>
 #include <engine/e_ringbuffer.h>
 
+#include <engine/e_huffman.h>
+
 #include <mastersrv/mastersrv.h>
 
 const int prediction_margin = 7; /* magic network prediction value */
@@ -280,19 +282,21 @@ float client_localtime() { return (time_get()-local_start_time)/(float)(time_fre
 int client_send_msg()
 {
 	const MSG_INFO *info = msg_get_info();
-	NETPACKET packet;
+	NETCHUNK packet;
 	
 	if(!info)
 		return -1;
 		
-	mem_zero(&packet, sizeof(NETPACKET));
+	mem_zero(&packet, sizeof(NETCHUNK));
 	
 	packet.client_id = 0;
 	packet.data = info->data;
 	packet.data_size = info->size;
 
-	if(info->flags&MSGFLAG_VITAL)	
-		packet.flags = PACKETFLAG_VITAL;
+	if(info->flags&MSGFLAG_VITAL)
+		packet.flags = NETSENDFLAG_VITAL;
+	if(info->flags&MSGFLAG_FLUSH)
+		packet.flags = NETSENDFLAG_FLUSH;
 	
 	netclient_send(net, &packet);
 	return 0;
@@ -380,7 +384,11 @@ static void client_send_input()
 	/* fetch input */
 	size = modc_snap_input(inputs[current_input].data);
 	
-	msg_pack_start_system(NETMSG_INPUT, 0);
+	if(!size)
+		return;
+	
+	/* pack input */
+	msg_pack_start_system(NETMSG_INPUT, MSGFLAG_FLUSH);
 	msg_pack_int(ack_game_tick);
 	msg_pack_int(current_predtick);
 	msg_pack_int(size);
@@ -539,18 +547,20 @@ static void client_debug_render()
 	gfx_texture_set(debug_font);
 	gfx_mapscreen(0,0,gfx_screenwidth(),gfx_screenheight());
 	
-	if(time_get()-last_snap > time_freq()/10)
+	if(time_get()-last_snap > time_freq())
 	{
 		last_snap = time_get();
 		prev = current;
-		netclient_stats(net, &current);
+		net_stats(&current);
 	}
 	
 	frametime_avg = frametime_avg*0.9f + frametime*0.1f;
-	str_format(buffer, sizeof(buffer), "ticks: %8d %8d send: %6d recv: %6d snaploss: %d  mem %dk   gfxmem: %dk  fps: %3d",
+	str_format(buffer, sizeof(buffer), "ticks: %8d %8d send: %5d/%3d recv: %5d/%3d snaploss: %d  mem %dk   gfxmem: %dk  fps: %3d",
 		current_tick, current_predtick,
-		(current.send_bytes-prev.send_bytes)*10,
-		(current.recv_bytes-prev.recv_bytes)*10,
+		(current.sent_bytes-prev.sent_bytes),
+		(current.sent_packets-prev.sent_packets),
+		(current.recv_bytes-prev.recv_bytes),
+		(current.recv_packets-prev.recv_packets),
 		snaploss,
 		mem_allocated()/1024,
 		gfx_memory_usage()/1024,
@@ -653,7 +663,6 @@ static const char *client_load_map_search(const char *mapname, int wanted_crc)
 	return error;
 }
 
-
 static int player_score_comp(const void *a, const void *b)
 {
 	SERVER_INFO_PLAYER *p0 = (SERVER_INFO_PLAYER *)a;
@@ -665,7 +674,7 @@ static int player_score_comp(const void *a, const void *b)
 	return -1;
 }
 
-static void client_process_packet(NETPACKET *packet)
+static void client_process_packet(NETCHUNK *packet)
 {
 	if(packet->client_id == -1)
 	{
@@ -955,7 +964,7 @@ static void client_process_packet(NETPACKET *packet)
 						int purgetick;
 						void *deltadata;
 						int deltasize;
-						unsigned char tmpbuffer[MAX_SNAPSHOT_SIZE];
+						/*unsigned char tmpbuffer[MAX_SNAPSHOT_SIZE];*/
 						unsigned char tmpbuffer2[MAX_SNAPSHOT_SIZE];
 						unsigned char tmpbuffer3[MAX_SNAPSHOT_SIZE];
 						int snapsize;
@@ -995,12 +1004,13 @@ static void client_process_packet(NETPACKET *packet)
 						if(complete_size)
 						{	
 							int intsize;
+							/*
 							int compsize = zerobit_decompress(snapshot_incomming_data, complete_size, tmpbuffer);
 							
-							if(compsize < 0) /* failure during decompression, bail */
-								return;
+							if(compsize < 0)  failure during decompression, bail 
+								return;*/
 								
-							intsize = intpack_decompress(tmpbuffer, compsize, tmpbuffer2);
+							intsize = intpack_decompress(snapshot_incomming_data, complete_size, tmpbuffer2);
 
 							if(intsize < 0) /* failure during decompression, bail */
 								return;
@@ -1096,7 +1106,7 @@ int client_mapdownload_totalsize() { return mapdownload_totalsize; }
 
 static void client_pump_network()
 {
-	NETPACKET packet;
+	NETCHUNK packet;
 
 	netclient_update(net);
 
@@ -1513,7 +1523,9 @@ int main(int argc, char **argv)
 	dbg_msg("client", "starting...");
 	engine_init("Teeworlds");
 
-/*	test_parser();
+/*
+	return huffman_test();
+	test_parser();
 	return 0;*/
 	
 	/* register all console commands */

@@ -310,22 +310,23 @@ int server_getclientinfo(int client_id, CLIENT_INFO *info)
 	return 0;
 }
 
-
 int server_send_msg(int client_id)
 {
 	const MSG_INFO *info = msg_get_info();
-	NETPACKET packet;
+	NETCHUNK packet;
 	if(!info)
 		return -1;
 		
-	mem_zero(&packet, sizeof(NETPACKET));
+	mem_zero(&packet, sizeof(NETCHUNK));
 	
 	packet.client_id = client_id;
 	packet.data = info->data;
 	packet.data_size = info->size;
 
-	if(info->flags&MSGFLAG_VITAL)	
-		packet.flags = PACKETFLAG_VITAL;
+	if(info->flags&MSGFLAG_VITAL)
+		packet.flags |= NETSENDFLAG_VITAL;
+	if(info->flags&MSGFLAG_FLUSH)
+		packet.flags |= NETSENDFLAG_FLUSH;
 			
 	if(client_id == -1)
 	{
@@ -442,8 +443,8 @@ static void server_do_snap()
 			if(deltasize)
 			{
 				/* compress it */
-				unsigned char intdata[MAX_SNAPSHOT_SIZE];
-				int intsize;
+				/*unsigned char intdata[MAX_SNAPSHOT_SIZE];
+				int intsize;*/
 				int snapshot_size;
 				const int max_size = MAX_SNAPSHOT_PACKSIZE;
 				int numpackets;
@@ -456,16 +457,17 @@ static void server_do_snap()
 					{
 						static PERFORMACE_INFO scope = {"int", 0};
 						perf_start(&scope);
-						intsize = intpack_compress(deltadata, deltasize, intdata);
+						snapshot_size = intpack_compress(deltadata, deltasize, compdata);
 						perf_end();
 					}
 					
+					/*
 					{
 						static PERFORMACE_INFO scope = {"zero", 0};
 						perf_start(&scope);
 						snapshot_size = zerobit_compress(intdata, intsize, compdata);
 						perf_end();
-					}
+					}*/
 					perf_end();
 				}
 				
@@ -480,9 +482,9 @@ static void server_do_snap()
 					left -= chunk;
 
 					if(numpackets == 1)
-						msg_pack_start_system(NETMSG_SNAPSINGLE, 0);
+						msg_pack_start_system(NETMSG_SNAPSINGLE, MSGFLAG_FLUSH);
 					else
-						msg_pack_start_system(NETMSG_SNAP, 0);
+						msg_pack_start_system(NETMSG_SNAP, MSGFLAG_FLUSH);
 						
 					msg_pack_int(current_tick);
 					msg_pack_int(current_tick-delta_tick); /* compressed with */
@@ -504,7 +506,7 @@ static void server_do_snap()
 			}
 			else
 			{
-				msg_pack_start_system(NETMSG_SNAPEMPTY, 0);
+				msg_pack_start_system(NETMSG_SNAPEMPTY, MSGFLAG_FLUSH);
 				msg_pack_int(current_tick);
 				msg_pack_int(current_tick-delta_tick); /* compressed with */
 				msg_pack_int(input_predtick);
@@ -597,7 +599,7 @@ static void server_send_rcon_line_authed(const char *line)
 	reentry_guard--;
 }
 
-static void server_process_client_packet(NETPACKET *packet)
+static void server_process_client_packet(NETCHUNK *packet)
 {
 	int cid = packet->client_id;
 	int sys;
@@ -763,7 +765,21 @@ static void server_process_client_packet(NETPACKET *packet)
 		}
 		else
 		{
+			char hex[] = "0123456789ABCDEF";
+			char buf[512];
+			int b;
+
+			for(b = 0; b < packet->data_size && b < 32; b++)
+			{
+				buf[b*3] = hex[((const unsigned char *)packet->data)[b]>>4];
+				buf[b*3+1] = hex[((const unsigned char *)packet->data)[b]&0xf];
+				buf[b*3+2] = ' ';
+				buf[b*3+3] = 0;
+			}
+
 			dbg_msg("server", "strange message cid=%d msg=%d data_size=%d", cid, msg, packet->data_size);
+			dbg_msg("server", "%s", buf);
+			
 		}
 	}
 	else
@@ -775,7 +791,7 @@ static void server_process_client_packet(NETPACKET *packet)
 
 static void server_send_serverinfo(NETADDR4 *addr, int lan)
 {
-	NETPACKET packet;
+	NETCHUNK packet;
 	PACKER p;
 	char buf[128];
 
@@ -827,18 +843,18 @@ static void server_send_serverinfo(NETADDR4 *addr, int lan)
 	
 	packet.client_id = -1;
 	packet.address = *addr;
-	packet.flags = PACKETFLAG_CONNLESS;
+	packet.flags = NETSENDFLAG_CONNLESS;
 	packet.data_size = packer_size(&p);
 	packet.data = packer_data(&p);
 	netserver_send(net, &packet);
 }
 
-extern int register_process_packet(NETPACKET *packet);
+extern int register_process_packet(NETCHUNK *packet);
 extern int register_update();
 
 static void server_pump_network()
 {
-	NETPACKET packet;
+	NETCHUNK packet;
 
 	netserver_update(net);
 	
@@ -1063,6 +1079,7 @@ static int server_run()
 			{
 				if(config.debug)
 				{
+					/*
 					static NETSTATS prev_stats;
 					NETSTATS stats;
 					netserver_stats(net, &stats);
@@ -1077,6 +1094,7 @@ static int server_run()
 						(stats.recv_bytes - prev_stats.recv_bytes)/reportinterval);
 						
 					prev_stats = stats;
+					*/
 				}
 	
 				reporttime += time_freq()*reportinterval;
@@ -1146,6 +1164,8 @@ int main(int argc, char **argv)
 	/* init the engine */
 	dbg_msg("server", "starting...");
 	engine_init("Teeworlds");
+	
+	netcommon_openlog("output.dat");
 	
 	/* register all console commands */
 	server_register_commands();

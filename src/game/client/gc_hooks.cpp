@@ -361,6 +361,7 @@ extern "C" void modc_rcon_line(const char *line)
 extern "C" int modc_snap_input(int *data)
 {
 	static NETOBJ_PLAYER_INPUT last_data = {0};
+	static int64 last_send_time = 0;
 	
 	// update player state
 	if(chat_mode != CHATMODE_NONE)
@@ -414,8 +415,28 @@ extern "C" int modc_snap_input(int *data)
 		input_data.target_y = (int)(cosf(t*3)*100.0f);
 	}
 
-	// copy and return size	
+	// check if we need to send input
+	bool send = false;
+	if(input_data.left != last_data.left) send = true;
+	else if(input_data.left != last_data.left) send = true;
+	else if(input_data.right != last_data.right) send = true;
+	else if(input_data.jump != last_data.jump) send = true;
+	else if(input_data.fire != last_data.fire) send = true;
+	else if(input_data.hook != last_data.hook) send = true;
+	else if(input_data.player_state != last_data.player_state) send = true;
+	else if(input_data.wanted_weapon != last_data.wanted_weapon) send = true;
+	else if(input_data.next_weapon != last_data.next_weapon) send = true;
+	else if(input_data.prev_weapon != last_data.prev_weapon) send = true;
+
+	if(time_get() > last_send_time + time_freq()/5)
+		send = true;
+
 	last_data = input_data;
+	if(!send)
+		return 0;
+		
+	// copy and return size	
+	last_send_time = time_get();
 	mem_copy(data, &input_data, sizeof(input_data));
 	return sizeof(input_data);
 }

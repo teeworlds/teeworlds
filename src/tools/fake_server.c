@@ -50,13 +50,13 @@ int max_players = 0;
 static void send_heartbeats()
 {
 	static unsigned char data[sizeof(SERVERBROWSE_HEARTBEAT) + 2];
-	NETPACKET packet;
+	NETCHUNK packet;
 	int i;
 	
 	mem_copy(data, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT));
 	
 	packet.client_id = -1;
-	packet.flags = PACKETFLAG_CONNLESS;
+	packet.flags = NETSENDFLAG_CONNLESS;
 	packet.data_size = sizeof(SERVERBROWSE_HEARTBEAT) + 2;
 	packet.data = &data;
 
@@ -111,10 +111,10 @@ static void build_infomessage()
 
 static void send_serverinfo(NETADDR4 *addr)
 {
-	NETPACKET p;
+	NETCHUNK p;
 	p.client_id = -1;
 	p.address = *addr;
-	p.flags = PACKETFLAG_CONNLESS;
+	p.flags = NETSENDFLAG_CONNLESS;
 	p.data_size = infomsg_size;
 	p.data = infomsg;
 	netserver_send(net, &p);
@@ -122,10 +122,10 @@ static void send_serverinfo(NETADDR4 *addr)
 
 static void send_fwcheckresponse(NETADDR4 *addr)
 {
-	NETPACKET p;
+	NETCHUNK p;
 	p.client_id = -1;
 	p.address = *addr;
-	p.flags = PACKETFLAG_CONNLESS;
+	p.flags = NETSENDFLAG_CONNLESS;
 	p.data_size = sizeof(SERVERBROWSE_FWRESPONSE);
 	p.data = SERVERBROWSE_FWRESPONSE;
 	netserver_send(net, &p);
@@ -141,7 +141,7 @@ static int run()
 	
 	while(1)
 	{
-		NETPACKET p;
+		NETCHUNK p;
 		netserver_update(net);
 		while(netserver_recv(net, &p))
 		{
