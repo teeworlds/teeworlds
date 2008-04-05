@@ -456,20 +456,8 @@ bool console_input_cli(INPUT_EVENT e, void *user_data)
 	return true;
 }
 
-bool console_input_special_binds(INPUT_EVENT e, void *user_data)
+static bool console_execute_event(INPUT_EVENT e)
 {
-	// only handle function keys
-	if(e.key < KEY_F1 || e.key > KEY_F25)
-		return false;
-	return console_input_normal_binds(e, user_data);
-}
-
-bool console_input_normal_binds(INPUT_EVENT e, void *user_data)
-{
-	// need to be ingame for these binds
-	if(client_state() != CLIENTSTATE_ONLINE)
-		return false;
-	
 	// don't handle invalid events and keys that arn't set to anything
 	if(e.key <= 0 || e.key >= KEY_LAST || keybindings[e.key][0] == 0)
 		return false;
@@ -479,6 +467,22 @@ bool console_input_normal_binds(INPUT_EVENT e, void *user_data)
 		stroke = 1;
 	console_execute_line_stroked(stroke, keybindings[e.key]);
 	return true;
+}
+
+bool console_input_special_binds(INPUT_EVENT e, void *user_data)
+{
+	// only handle function keys
+	if(e.key < KEY_F1 || e.key > KEY_F25)
+		return false;
+	return console_execute_event(e);
+}
+
+bool console_input_normal_binds(INPUT_EVENT e, void *user_data)
+{
+	// need to be ingame for these binds
+	if(client_state() != CLIENTSTATE_ONLINE)
+		return false;
+	return console_execute_event(e);
 }
 
 void console_toggle(int type)
