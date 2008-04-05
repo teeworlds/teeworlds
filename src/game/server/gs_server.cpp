@@ -713,6 +713,9 @@ void player::destroy() {  }
 
 void player::set_weapon(int w)
 {
+	if(w == active_weapon)
+		return;
+		
 	last_weapon = active_weapon;
 	queued_weapon = -1;
 	active_weapon = w;
@@ -958,9 +961,14 @@ int player::handle_ninja()
 		// time's up, return
 		weapons[WEAPON_NINJA].got = false;
 		active_weapon = last_weapon;
+		if(active_weapon == WEAPON_NINJA)
+			active_weapon = WEAPON_GUN;
 		set_weapon(active_weapon);
 		return 0;
 	}
+	
+	// force ninja weapon
+	set_weapon(WEAPON_NINJA);
 
 	// Check if it should activate
 	if (count_input(latest_previnput.fire, latest_input.fire).presses && (server_tick() > ninja.currentcooldown))
@@ -1048,8 +1056,17 @@ int player::handle_ninja()
 
 void player::do_weaponswitch()
 {
-	if(reload_timer == 0 && queued_weapon != -1)
-		set_weapon(queued_weapon);
+	if(reload_timer != 0) // make sure we have reloaded
+		return;
+		
+	if(queued_weapon == -1) // check for a queued weapon
+		return;
+
+	if(weapons[WEAPON_NINJA].got) // if we have ninja, no weapon selection is possible
+		return;
+
+	// switch weapon
+	set_weapon(queued_weapon);
 }
 
 void player::handle_weaponswitch()
