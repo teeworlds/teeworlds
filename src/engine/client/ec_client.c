@@ -304,7 +304,7 @@ int client_send_msg()
 
 static void client_send_info()
 {
-	msg_pack_start_system(NETMSG_INFO, MSGFLAG_VITAL);
+	msg_pack_start_system(NETMSG_INFO, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 	msg_pack_string(modc_net_version(), 128);
 	msg_pack_string(config.player_name, 128);
 	msg_pack_string(config.clan_name, 128);
@@ -316,14 +316,14 @@ static void client_send_info()
 
 static void client_send_entergame()
 {
-	msg_pack_start_system(NETMSG_ENTERGAME, MSGFLAG_VITAL);
+	msg_pack_start_system(NETMSG_ENTERGAME, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 	msg_pack_end();
 	client_send_msg();
 }
 
 static void client_send_ready()
 {
-	msg_pack_start_system(NETMSG_READY, MSGFLAG_VITAL);
+	msg_pack_start_system(NETMSG_READY, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 	msg_pack_end();
 	client_send_msg();
 }
@@ -461,6 +461,7 @@ void client_entergame()
 	/* to finish the connection */
 	client_send_entergame();
 	client_on_enter_game();
+	/*netclient_flush(net);*/
 }
 
 void client_connect(const char *server_address_str)

@@ -355,7 +355,8 @@ static void conn_want_resend(NETCONNECTION *conn)
 
 static int conn_flush(NETCONNECTION *conn)
 {
-	if(!conn->construct.num_chunks && !conn->construct.flags)
+	int num_chunks = conn->construct.num_chunks;
+	if(!num_chunks && !conn->construct.flags)
 		return 0;
 	
 	conn->construct.ack = conn->ack;
@@ -364,7 +365,7 @@ static int conn_flush(NETCONNECTION *conn)
 	
 	/* clear construct so we can start building a new package */
 	mem_zero(&conn->construct, sizeof(conn->construct));
-	return 1;
+	return num_chunks;
 }
 
 /*NETCHUNKDATA *data*/
@@ -620,10 +621,13 @@ static int conn_update(NETCONNECTION *conn)
 	if(conn->state == NET_CONNSTATE_ONLINE)
 	{
 		if(time_get()-conn->last_send_time > time_freq()/2) /* flush connection after 250ms if needed */
-			if(conn_flush(conn))
+		{
+			int num_flushed_chunks = conn_flush(conn);
+			if(num_flushed_chunks)
 			{
-				dbg_msg("connection", "flushed connection due to timeout");
+				dbg_msg("connection", "flushed connection due to timeout. %d chunks.", num_flushed_chunks);
 			}
+		}
 			
 		if(time_get()-conn->last_send_time > time_freq())
 			conn_send_control(conn, NET_CTRLMSG_KEEPALIVE, 0, 0);
@@ -1042,6 +1046,11 @@ int netclient_state(NETCLIENT *c)
 	if(c->conn.state == NET_CONNSTATE_OFFLINE)
 		return NETSTATE_OFFLINE;
 	return NETSTATE_CONNECTING;
+}
+
+int netclient_flush(NETCLIENT *c)
+{
+	return conn_flush(&c->conn);
 }
 
 int netclient_gotproblems(NETCLIENT *c)

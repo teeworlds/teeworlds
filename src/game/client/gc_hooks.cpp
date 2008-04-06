@@ -386,18 +386,11 @@ extern "C" int modc_snap_input(int *data)
 		return sizeof(input_data);
 	}
 	
-	picked_up_weapon = -1;
-
-	if(!input_target_lock)
-	{
-		input_data.target_x = (int)mouse_pos.x;
-		input_data.target_y = (int)mouse_pos.y;
-		
-		if(!input_data.target_x && !input_data.target_y)
-			input_data.target_y = 1;
-	}
-
-	input_target_lock = 0;
+	input_data.target_x = (int)mouse_pos.x;
+	input_data.target_y = (int)mouse_pos.y;
+	if(!input_data.target_x && !input_data.target_y)
+		input_data.target_y = 1;
+	
 
 	// stress testing
 	if(config.dbg_stress)
@@ -518,6 +511,7 @@ extern "C" void modc_message(int msgtype)
 			
 		// apply new tuning
 		tuning = new_tuning;
+		return;
 	}
 	
 	// normal 
@@ -663,6 +657,7 @@ extern "C" void modc_connected()
 		client_datas[i].name[0] = 0;
 		client_datas[i].skin_id = 0;
 		client_datas[i].team = 0;
+		client_datas[i].angle = 0;
 		client_datas[i].emoticon = 0;
 		client_datas[i].emoticon_start = -1;
 		client_datas[i].skin_info.texture = skin_get(0)->color_texture;

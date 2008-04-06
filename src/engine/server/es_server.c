@@ -567,7 +567,7 @@ static int del_client_callback(int cid, void *user)
 
 static void server_send_map(int cid)
 {
-	msg_pack_start_system(NETMSG_MAP_CHANGE, MSGFLAG_VITAL);
+	msg_pack_start_system(NETMSG_MAP_CHANGE, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 	msg_pack_string(config.sv_map, 0);
 	msg_pack_int(current_map_crc);
 	msg_pack_end();
@@ -649,7 +649,7 @@ static void server_process_client_packet(NETCHUNK *packet)
 				last = 1;
 			}
 			
-			msg_pack_start_system(NETMSG_MAP_DATA, MSGFLAG_VITAL);
+			msg_pack_start_system(NETMSG_MAP_DATA, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 			msg_pack_int(last);
 			msg_pack_int(current_map_size);
 			msg_pack_int(chunk_size);

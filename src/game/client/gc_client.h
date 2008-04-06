@@ -50,9 +50,7 @@ extern player_core predicted_prev_player;
 extern player_core predicted_player;
 
 // input
-extern int picked_up_weapon;
 extern NETOBJ_PLAYER_INPUT input_data;
-extern int input_target_lock;
 
 // debug
 extern int64 debug_firedelay;
@@ -152,6 +150,8 @@ struct client_data
 	
 	tee_render_info skin_info; // this is what the server reports
 	tee_render_info render_info; // this is what we use
+	
+	float angle;
 	
 	void update_render_info();
 };

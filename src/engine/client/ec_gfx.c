@@ -47,6 +47,7 @@ static COLOR color[4];
 static TEXCOORD texture[4];
 
 static int do_screenshot = 0;
+static int render_enable = 1;
 
 static int screen_width = -1;
 static int screen_height = -1;
@@ -104,10 +105,13 @@ static void flush()
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
 	
-	if(drawing == DRAWING_QUADS)
-		glDrawArrays(GL_QUADS, 0, num_vertices);
-	else if(drawing == DRAWING_LINES)
-		glDrawArrays(GL_LINES, 0, num_vertices);
+	if(render_enable)
+	{
+		if(drawing == DRAWING_QUADS)
+			glDrawArrays(GL_QUADS, 0, num_vertices);
+		else if(drawing == DRAWING_LINES)
+			glDrawArrays(GL_LINES, 0, num_vertices);
+	}
 	
 	/* Reset pointer */
 	num_vertices = 0;	
@@ -651,26 +655,8 @@ void gfx_swap()
 		perf_end();
 	}
 	
-	if(config.gfx_finish)
+	if(render_enable && config.gfx_finish)
 		glFinish();
-
-	/*	
-	if(inp_key_pressed('P'))
-	{
-		{
-			static PERFORMACE_INFO pscope = {"glFlush", 0};
-			perf_start(&pscope);
-			glFlush();
-			perf_end();
-		}
-
-		{
-			static PERFORMACE_INFO pscope = {"glFinish", 0};
-			perf_start(&pscope);
-			glFinish();
-			perf_end();
-		}
-	}*/
 
 	{
 		static PERFORMACE_INFO pscope = {"glfwPollEvents", 0};

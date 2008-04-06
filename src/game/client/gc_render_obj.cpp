@@ -312,6 +312,17 @@ void render_player(
 	if(player.health < 0) // dont render dead players
 		return;
 
+	//float angle = mix((float)prev.angle, (float)player.angle, intratick)/256.0f;
+	
+	// TODO: fix this good!
+	float mixspeed = 0.05f;
+	if(player.attacktick != prev.attacktick)
+		mixspeed = 0.1f;
+	
+	float angle = mix(client_datas[info.cid].angle, player.angle/256.0f, mixspeed);
+	client_datas[info.cid].angle = angle;
+	vec2 direction = get_direction((int)(angle*256.0f));
+	
 	if(info.local && config.cl_predict)
 	{
 		if(!netobjects.local_character || (netobjects.local_character->health < 0) || (netobjects.gameobj && netobjects.gameobj->game_over))
@@ -326,8 +337,6 @@ void render_player(
 		}
 	}
 
-	vec2 direction = get_direction(player.angle);
-	float angle = player.angle/256.0f;
 	vec2 position = mix(vec2(prev.x, prev.y), vec2(player.x, player.y), intratick);
 	vec2 vel = mix(vec2(prev.vx/256.0f, prev.vy/256.0f), vec2(player.vx/256.0f, player.vy/256.0f), intratick);
 	

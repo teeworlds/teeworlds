@@ -2189,7 +2189,7 @@ void mods_message(int msgtype, int client_id)
 			
 			//
 			NETMSG_SV_READY_TO_ENTER m;
-			m.pack(MSGFLAG_VITAL);
+			m.pack(MSGFLAG_VITAL|MSGFLAG_FLUSH);
 			server_send_msg(client_id);			
 		}
 		
