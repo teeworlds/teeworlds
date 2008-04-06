@@ -965,7 +965,6 @@ static void client_process_packet(NETCHUNK *packet)
 						int purgetick;
 						void *deltadata;
 						int deltasize;
-						/*unsigned char tmpbuffer[MAX_SNAPSHOT_SIZE];*/
 						unsigned char tmpbuffer2[MAX_SNAPSHOT_SIZE];
 						unsigned char tmpbuffer3[MAX_SNAPSHOT_SIZE];
 						int snapsize;
@@ -1004,14 +1003,7 @@ static void client_process_packet(NETCHUNK *packet)
 
 						if(complete_size)
 						{	
-							int intsize;
-							/*
-							int compsize = zerobit_decompress(snapshot_incomming_data, complete_size, tmpbuffer);
-							
-							if(compsize < 0)  failure during decompression, bail 
-								return;*/
-								
-							intsize = intpack_decompress(snapshot_incomming_data, complete_size, tmpbuffer2);
+							int intsize = intpack_decompress(snapshot_incomming_data, complete_size, tmpbuffer2);
 
 							if(intsize < 0) /* failure during decompression, bail */
 								return;

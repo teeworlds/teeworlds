@@ -40,11 +40,8 @@ raw_header
 	
 end
 
-
-
 object player_input
-	any left
-	any right
+	any direction
 
 	any target_x
 	any target_y
@@ -52,7 +49,6 @@ object player_input
 	any jump
 	any fire
 	any hook
-	any blink
 
 	any player_state
 

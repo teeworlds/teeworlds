@@ -375,8 +375,7 @@ extern "C" int modc_snap_input(int *data)
 	// we freeze the input if chat or menu is activated
 	if(menu_active || chat_mode != CHATMODE_NONE || console_active())
 	{
-		last_data.left = 0;
-		last_data.right = 0;
+		last_data.direction = 0;
 		last_data.hook = 0;
 		last_data.jump = 0;
 		
@@ -390,7 +389,13 @@ extern "C" int modc_snap_input(int *data)
 	input_data.target_y = (int)mouse_pos.y;
 	if(!input_data.target_x && !input_data.target_y)
 		input_data.target_y = 1;
-	
+		
+	// set direction
+	input_data.direction = 0;
+	if(input_direction_left && !input_direction_right)
+		input_data.direction = -1;
+	if(!input_direction_left && input_direction_right)
+		input_data.direction = 1;
 
 	// stress testing
 	if(config.dbg_stress)
@@ -398,8 +403,7 @@ extern "C" int modc_snap_input(int *data)
 		float t = client_localtime();
 		mem_zero(&input_data, sizeof(input_data));
 
-		input_data.left = ((int)t/2)&1;
-		input_data.right = ((int)t/2+1)&1;
+		input_data.direction = ((int)t/2)&1;
 		input_data.jump = ((int)t);
 		input_data.fire = ((int)(t*10));
 		input_data.hook = ((int)(t*2))&1;
@@ -410,9 +414,7 @@ extern "C" int modc_snap_input(int *data)
 
 	// check if we need to send input
 	bool send = false;
-	if(input_data.left != last_data.left) send = true;
-	else if(input_data.left != last_data.left) send = true;
-	else if(input_data.right != last_data.right) send = true;
+	if(input_data.direction != last_data.direction) send = true;
 	else if(input_data.jump != last_data.jump) send = true;
 	else if(input_data.fire != last_data.fire) send = true;
 	else if(input_data.hook != last_data.hook) send = true;

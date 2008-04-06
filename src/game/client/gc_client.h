@@ -51,6 +51,8 @@ extern player_core predicted_player;
 
 // input
 extern NETOBJ_PLAYER_INPUT input_data;
+extern int input_direction_left;
+extern int input_direction_right;
 
 // debug
 extern int64 debug_firedelay;

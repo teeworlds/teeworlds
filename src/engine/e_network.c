@@ -10,25 +10,15 @@
 /*
 
 CURRENT:
-	packet header: 4 bytes
-		unsigned char flags;
-		unsigned char ack[2];
-		unsigned char num_chunks;
-		
-	chunk header: 3-5 bytes
-		unsigned char flags;
-		unsigned char size[2];
-		(unsigned char seq[2]);
-
-FINAL:
-
 	packet header: 3 bytes
-		unsigned char flags_ack[2]; // 6bit flags, 10bit ack
-		unsigned char num_chunks;
-		
+		unsigned char flags_ack; // 6bit flags, 2bit ack
+		unsigned char ack; // 8 bit ack
+		unsigned char num_chunks; // 8 bit chunks
+
 	chunk header: 2-3 bytes
-		unsigned char flags_seq_ack[2]; // 2bit flag, 4bit seq, 10bit size
-		(unsigned char seq;) // if vital flag is set
+		unsigned char flags_size; // 2bit flags, 6 bit size
+		unsigned char size_seq; // 4bit size, 4bit seq
+		(unsigned char seq;) // 8bit seq, if vital flag is set
 		
 */
 
@@ -40,9 +30,10 @@ enum
 	NET_MAX_PAYLOAD = NET_MAX_CHUNKSIZE+16,
 	NET_MAX_PACKETSIZE = NET_MAX_PAYLOAD+16,
 	NET_MAX_CHUNKHEADERSIZE = 5,
-	NET_PACKETHEADERSIZE = 4,
+	NET_PACKETHEADERSIZE = 3,
 	NET_MAX_CLIENTS = 16,
-	NET_MAX_SEQUENCE = 1<<16,
+	NET_MAX_SEQUENCE = 1<<10,
+	NET_SEQUENCE_MASK = NET_MAX_SEQUENCE-1,
 
 	NET_CONNSTATE_OFFLINE=0,
 	NET_CONNSTATE_CONNECT=1,
@@ -229,10 +220,9 @@ static HUFFSTATE huffmanstate;
 static void send_packet(NETSOCKET socket, NETADDR4 *addr, NETPACKETCONSTRUCT *packet)
 {
 	unsigned char buffer[NET_MAX_PACKETSIZE];
-	buffer[0] = packet->flags;
-	buffer[1] = (packet->ack>>8)&0xff;
-	buffer[2] = packet->ack&0xff;
-	buffer[3] = packet->num_chunks;
+	buffer[0] = ((packet->flags<<4)&0xf0)|((packet->ack>>8)&0xf);
+	buffer[1] = packet->ack&0xff;
+	buffer[2] = packet->num_chunks;
 	if(datalog)
 	{
 		io_write(datalog, &packet->data_size, sizeof(packet->data_size));
@@ -241,45 +231,68 @@ static void send_packet(NETSOCKET socket, NETADDR4 *addr, NETPACKETCONSTRUCT *pa
 	
 	if(1)
 	{
-		int compressed_size = huffman_compress(&huffmanstate, packet->chunk_data, packet->data_size, &buffer[4], NET_MAX_PACKETSIZE-4);
-		net_udp4_send(socket, addr, buffer, 4+(compressed_size+7)/8);
+		int compressed_size = (huffman_compress(&huffmanstate, packet->chunk_data, packet->data_size, &buffer[4], NET_MAX_PACKETSIZE-4)+7)/8;
+		net_udp4_send(socket, addr, buffer, NET_PACKETHEADERSIZE+compressed_size);
 	}
 	else
 	{
 		mem_copy(&buffer[4], packet->chunk_data, packet->data_size);
-		net_udp4_send(socket, addr, buffer, 4+packet->data_size);
+		net_udp4_send(socket, addr, buffer, NET_PACKETHEADERSIZE+packet->data_size);
 	}
 }
 
-static unsigned char *unpack_chunk_header(unsigned char *data, NETCHUNKHEADER *header)
+/* TODO: rename this function */
+static int unpack_packet(unsigned char *buffer, int size, NETPACKETCONSTRUCT *packet)
 {
-	int i = 0;
-	header->flags = data[i++];
-	header->size = data[i++]<<8;
-	header->size |= data[i++];
-	header->sequence = -1;
-	if(header->flags&NET_CHUNKFLAG_VITAL)
+	/* check the size */
+	if(size < NET_PACKETHEADERSIZE || size > NET_MAX_PACKETSIZE)
+		return -1;
+	
+	/* read the packet */
+	packet->flags = buffer[0]>>4;
+	packet->ack = ((buffer[0]&0xf)<<8) | buffer[1];
+	packet->num_chunks = buffer[2];
+	packet->data_size = size - NET_PACKETHEADERSIZE;
+	
+	if(1)
 	{
-		header->sequence = data[i++]<<8;
-		header->sequence |= data[i++];
+		huffman_decompress(&huffmanstate, &buffer[4], packet->data_size, packet->chunk_data, sizeof(packet->chunk_data));
 	}
-	return &data[i];
+	else
+		mem_copy(packet->chunk_data, &buffer[4], packet->data_size);
+	
+	/* return success */
+	return 0;
 }
+
 
 /* TODO: change the arguments of this function */
 static unsigned char *pack_chunk_header(unsigned char *data, int flags, int size, int sequence)
 {
-	int i = 0;
-	data[i++] = flags;
-	data[i++] = (size>>8)&0xff;
-	data[i++] = size&0xff;
+	data[0] = ((flags&3)<<6)|((size>>4)&0x3f);
+	data[1] = (size&0xf);
 	if(flags&NET_CHUNKFLAG_VITAL)
 	{
-		data[i++] = (sequence>>8)&0xff;
-		data[i++] = sequence&0xff;
+		data[1] |= (sequence>>2)&0xf0;
+		data[2] = sequence&0xff;
+		return data + 3;
 	}
-	return &data[i];
+	return data + 2;
 }
+
+static unsigned char *unpack_chunk_header(unsigned char *data, NETCHUNKHEADER *header)
+{
+	header->flags = (data[0]>>6)&3;
+	header->size = ((data[0]&0x3f)<<4) | (data[1]&0xf);
+	header->sequence = -1;
+	if(header->flags&NET_CHUNKFLAG_VITAL)
+	{
+		header->sequence = ((data[1]&0xf0)<<2) | data[2];
+		return data + 3;
+	}
+	return data + 2;
+}
+
 
 static void conn_reset_stats(NETCONNECTION *conn)
 {
@@ -623,10 +636,8 @@ static int conn_update(NETCONNECTION *conn)
 		if(time_get()-conn->last_send_time > time_freq()/2) /* flush connection after 250ms if needed */
 		{
 			int num_flushed_chunks = conn_flush(conn);
-			if(num_flushed_chunks)
-			{
+			if(num_flushed_chunks && config.debug)
 				dbg_msg("connection", "flushed connection due to timeout. %d chunks.", num_flushed_chunks);
-			}
 		}
 			
 		if(time_get()-conn->last_send_time > time_freq())
@@ -715,28 +726,6 @@ int netserver_update(NETSERVER *s)
 	return 0;
 }
 
-/* TODO: rename this function */
-static int unpack_packet(unsigned char *buffer, int size, NETPACKETCONSTRUCT *packet)
-{
-	/* check the size */
-	if(size < NET_PACKETHEADERSIZE || size > NET_MAX_PACKETSIZE)
-		return -1;
-	
-	/* read the packet */
-	packet->flags = buffer[0];
-	packet->ack = (buffer[1]<<8) | buffer[2];
-	packet->num_chunks = buffer[3];
-	packet->data_size = size - NET_PACKETHEADERSIZE;
-	
-	if(1)
-		huffman_decompress(&huffmanstate, &buffer[4], packet->data_size, packet->chunk_data, sizeof(packet->chunk_data));
-	else
-		mem_copy(packet->chunk_data, &buffer[4], packet->data_size);
-	
-	/* return success */
-	return 0;
-}
-
 static void recvinfo_clear(NETRECVINFO *info)
 {
 	info->valid = 0;
@@ -749,8 +738,6 @@ static void recvinfo_start(NETRECVINFO *info, NETADDR4 *addr, NETCONNECTION *con
 	info->client_id = cid;
 	info->current_chunk = 0;
 	info->valid = 1;
-	if(info->data.num_chunks > 1)
-		dbg_msg("connection", "%d chunks", info->data.num_chunks);
 }
 
 /* TODO: rename this function */

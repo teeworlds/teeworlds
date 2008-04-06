@@ -443,8 +443,6 @@ static void server_do_snap()
 			if(deltasize)
 			{
 				/* compress it */
-				/*unsigned char intdata[MAX_SNAPSHOT_SIZE];
-				int intsize;*/
 				int snapshot_size;
 				const int max_size = MAX_SNAPSHOT_PACKSIZE;
 				int numpackets;
@@ -453,21 +451,7 @@ static void server_do_snap()
 				{				
 					static PERFORMACE_INFO scope = {"compress", 0};
 					perf_start(&scope);
-					
-					{
-						static PERFORMACE_INFO scope = {"int", 0};
-						perf_start(&scope);
-						snapshot_size = intpack_compress(deltadata, deltasize, compdata);
-						perf_end();
-					}
-					
-					/*
-					{
-						static PERFORMACE_INFO scope = {"zero", 0};
-						perf_start(&scope);
-						snapshot_size = zerobit_compress(intdata, intsize, compdata);
-						perf_end();
-					}*/
+					snapshot_size = intpack_compress(deltadata, deltasize, compdata);
 					perf_end();
 				}
 				

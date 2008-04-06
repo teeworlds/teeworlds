@@ -1653,11 +1653,12 @@ void player::snap(int snaping_client)
 		character->weapon = active_weapon;
 		character->attacktick = attack_tick;
 
-		character->wanted_direction = 0;
+		character->wanted_direction = input.direction;
+		/*
 		if(input.left && !input.right)
 			character->wanted_direction = -1;
 		else if(!input.left && input.right)
-			character->wanted_direction = 1;
+			character->wanted_direction = 1;*/
 
 
 		if(client_id == snaping_client)

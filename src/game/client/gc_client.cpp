@@ -29,6 +29,8 @@ int64 debug_firedelay = 0;
 
 NETOBJ_PLAYER_INPUT input_data = {0};
 int input_target_lock = 0;
+int input_direction_left = 0;
+int input_direction_right = 0;
 
 int chat_mode = CHATMODE_NONE;
 bool menu_active = false;

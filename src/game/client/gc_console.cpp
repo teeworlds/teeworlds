@@ -424,8 +424,8 @@ void client_console_init()
 	MACRO_REGISTER_COMMAND("emote", "i", con_emote, 0);
 
 	// game commands
-	MACRO_REGISTER_COMMAND("+left", "", con_key_input_state, &input_data.left);
-	MACRO_REGISTER_COMMAND("+right", "", con_key_input_state, &input_data.right);
+	MACRO_REGISTER_COMMAND("+left", "", con_key_input_state, &input_direction_left);
+	MACRO_REGISTER_COMMAND("+right", "", con_key_input_state, &input_direction_right);
 	MACRO_REGISTER_COMMAND("+jump", "", con_key_input_state, &input_data.jump);
 	MACRO_REGISTER_COMMAND("+hook", "", con_key_input_state, &input_data.hook);
 	MACRO_REGISTER_COMMAND("+fire", "", con_key_input_counter, &input_data.fire);

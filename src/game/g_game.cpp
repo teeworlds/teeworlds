@@ -199,12 +199,12 @@ void player_core::tick()
 	float friction = grounded ? world->tuning.ground_friction : world->tuning.air_friction;
 	
 	// handle movement
-	if(input.left)
+	if(input.direction < 0)
 		vel.x = saturated_add(-max_speed, max_speed, vel.x, -accel);
-	if(input.right)
+	if(input.direction > 0)
 		vel.x = saturated_add(-max_speed, max_speed, vel.x, accel);
 		
-	if(!input.left && !input.right)
+	if(input.direction == 0)
 		vel.x *= friction;
 	
 	// handle jumping
@@ -339,7 +339,7 @@ void player_core::tick()
 			
 			// the hook will boost it's power if the player wants to move
 			// in that direction. otherwise it will dampen everything abit
-			if((hookvel.x < 0 && input.left) || (hookvel.x > 0 && input.right)) 
+			if((hookvel.x < 0 && input.direction < 0) || (hookvel.x > 0 && input.direction > 0)) 
 				hookvel.x *= 0.95f;
 			else
 				hookvel.x *= 0.75f;
