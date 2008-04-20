@@ -35,41 +35,65 @@ function cmd5(output, inputs)
 	return os.execute(cmd)
 end
 
+function cmd5(output, inputs)
+	cmd = cmd5_tool .. " "
+	for i,v in inputs do
+		cmd = cmd .. v .. " " 
+	end
+	cmd = cmd .. " > " .. output
+	return {"cmd5 " .. PathFilename(output), cmd}
+end
+
 function dat2c(output, data, name)
-	print("dat2c " .. PathFilename(output) .. " = " .. PathFilename(data))
-	return os.execute(dat2c_compiler .. " " .. data .. " " .. name .. " > " .. output)
+	return {
+		"dat2c " .. PathFilename(output) .. " = " .. PathFilename(data),
+		dat2c_compiler .. " " .. data .. " " .. name .. " > " .. output,
+	}
 end
 
 function dc_header(output, data, script)
-	print("dc_header " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script))
-	return os.execute(dc_compiler .. " " .. data .. " " .. script .. " -h " .. output)
+	return {
+		"dc_header " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script),
+		dc_compiler .. " " .. data .. " " .. script .. " -h " .. output
+	}
 end
 
 function dc_source(output, data, script, headerfile)
-	print("dc_source " .. PathFilename(output) .. "+" .. PathFilename(headerfile) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script))
 	cmd = dc_compiler .. " " .. data .. " " .. script .. " -s " .. output .. " " .. headerfile
-	return os.execute(cmd)
+	return {
+		"dc_source " .. PathFilename(output) .. "+" .. PathFilename(headerfile) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script),
+		cmd
+	}
 end
 
 function dc_data(output, data, script)
-	print("dc_data " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script))
-	return os.execute(dc_compiler .. " " .. data .. " " .. script .. " -d " .. output)
+	return {
+		"dc_data " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script),
+		dc_compiler .. " " .. data .. " " .. script .. " -d " .. output
+	}
 end
 
 function dc_cdata(output, data, script)
-	print("dc_cdata " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script))
-	return os.execute(dc_compiler .. " " .. data .. " " .. script .. " -c " .. output)
+	return {
+		"dc_cdata " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script),
+		dc_compiler .. " " .. data .. " " .. script .. " -c " .. output
+	}
 end
 
 function netobj_source(output, proto)
-	print("netobj source " .. PathFilename(output) .. " = " .. PathFilename(proto))
-	return os.execute(netobj_compiler .. " source " .. proto .. " " .. output)
+	return {
+		"netobj source " .. PathFilename(output) .. " = " .. PathFilename(proto),
+		netobj_compiler .. " source " .. proto .. " " .. output
+	}
 end
 
 function netobj_header(output, proto)
-	print("netobj header " .. PathFilename(output) .. " = " .. PathFilename(proto))
-	return os.execute(netobj_compiler .. " header " .. proto .. " " .. output)
+	return {
+		"netobj header " .. PathFilename(output) .. " = " .. PathFilename(proto),
+		netobj_compiler .. " header " .. proto .. " " .. output
+	}
 end
+
 
 function CHash(output, ...)
 	local inputs = {}
@@ -113,7 +137,7 @@ function NetObjCompile(protofile, sourcefile, headerfile)
 	bam_add_job("netobj_header", headerfile, protofile)
 	bam_add_dependency(sourcefile, protofile)
 	bam_add_dependency(headerfile, protofile)
-	bam_dependency_cpp(protofile, {})
+	bam_dependency_cpp(sourcefile, {"src"})
 	return {source = sourcefile, header=headerfile}
 end
 
