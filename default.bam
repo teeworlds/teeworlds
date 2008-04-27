@@ -26,16 +26,6 @@ function rc(output, input)
 end
 
 function cmd5(output, inputs)
-	print("cmd5 " .. PathFilename(output))
-	cmd = cmd5_tool .. " "
-	for i,v in inputs do
-		cmd = cmd .. v .. " " 
-	end
-	cmd = cmd .. " > " .. output
-	return os.execute(cmd)
-end
-
-function cmd5(output, inputs)
 	cmd = cmd5_tool .. " "
 	for i,v in inputs do
 		cmd = cmd .. v .. " " 

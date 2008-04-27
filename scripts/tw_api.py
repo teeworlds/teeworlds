@@ -3,7 +3,7 @@ from socket import *
 import struct
 import sys
 
-def tw_get_server_info(address, port):
+def get_server_info(address, port):
 	try:
 		sock = socket(AF_INET, SOCK_DGRAM) 
 		sock.settimeout(1.5); 
@@ -39,7 +39,7 @@ def tw_get_server_info(address, port):
 	except:
 		return None
 		
-def tw_get_server_count(address, port):
+def get_server_count(address, port):
 	try:
 		sock = socket(AF_INET, SOCK_DGRAM) 
 		sock.settimeout(1.5); 
@@ -52,7 +52,7 @@ def tw_get_server_count(address, port):
 	except:
 		return -1
 
-def tw_get_servers(address):
+def get_servers(address):
 	counter = 0
 	master_port = 8300
 	servers = []
@@ -78,23 +78,21 @@ def tw_get_servers(address):
 		return None		
 
 
-#tw_get_server_info("10.0.0.2", 8303)
+def get_all_servers():
+	servers = []
+	for i in range(1, 16):
+		addr = "master%d.teeworlds.com"%i
+		list = get_servers(addr)
+		if list:
+			servers += list
+	return servers
 
-#sys.exit(-1)
-
-servers = []
-for i in range(1, 16):
-	addr = "master%d.teeworlds.com"%i
-	list = tw_get_servers(addr)
-	if list:
-		print "%s had %d servers" % (addr, len(list))
-		servers += list
-
+servers = get_all_servers()
 total_players = 0
 for server in servers:
 	print "checking server", server[0], server[1]
-	info = tw_get_server_info(server[0], server[1])
+	info = get_server_info(server[0], server[1])
 	if info:
 		total_players += len(info["players"])
 
-print total_players
+print total_players, "on", len(servers), 'servers'

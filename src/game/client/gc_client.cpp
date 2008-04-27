@@ -902,7 +902,7 @@ void render_game()
 			server_motd_time = 0;
 		else if (chat_mode)
 			chat_mode = CHATMODE_NONE;
-		else
+		else if(!console_active())
 		{
 			menu_active = !menu_active;
 			if(menu_active)
