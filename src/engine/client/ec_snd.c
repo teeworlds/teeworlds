@@ -3,8 +3,8 @@
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
 
-#include <engine/external/portaudio/include/portaudio.h>
 #include <engine/external/wavpack/wavpack.h>
+#include <portaudio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>

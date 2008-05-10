@@ -1,7 +1,7 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include "e_system.h"
 #include "e_datafile.h"
-#include "external/zlib/zlib.h"
+#include <zlib.h>
 
 static const int DEBUG=0;
 

@@ -1,3 +1,25 @@
+--- Setup Config --------
+config = NewConfig()
+config:add(OptFindCompiler())
+config:add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-protector -fstack-protector-all"))
+config:add(OptFindLibrary("zlib", "zlib.h", false))
+config:add(OptFindLibrary("glfw", "glfw.h", false))
+config:add(OptFindLibrary("portaudio", "portaudio.h_FAIL", false))
+
+config:add(OptFindLibrary("coreaudio", "AudioUnit/AudioUnit.h", false))
+config:add(OptFindLibrary("alsa", "alsa/asoundlib.h", false))
+config:add(OptFindLibrary("oss_sys", "sys/soundcard.h", false))
+config:add(OptFindLibrary("oss_linux", "linux/soundcard.h", false))
+config:add(OptFindLibrary("oss_machine", "machine/soundcard.h", false))
+config:add(OptFindLibrary("dsound", "dsound.h", true))
+
+--- Auto detect ------
+if not config:load("config.bam") then
+	print("--- Auto Configuration ---")
+	config:autodetect()
+	config:save("config.bam")
+	print("--- ")
+end
 
 -- data compiler
 dc_compiler = "python scripts/compiler.py"
@@ -191,17 +213,8 @@ nethash = CHash(
 	"src/game/g_game.cpp", networkdata.header)
 
 client_link_other = {}
-if family == "windows" then
+if config.compiler.value == "cl" then
 	client_link_other = {ResCompile("other/icons/teeworlds.rc")}
-end
-
-
--- [TODO: Should be in C]
-function file_ext(s)
-	for ext in string.gfind(s, "%.%a+$") do
-		return string.sub(ext, 2)
-	end
-	return ""
 end
 
 function intermediate_output_func(dir, input, extension)
@@ -215,80 +228,131 @@ function build(settings)
 	settings.objdir = Path("objs")
 	settings.cc.output = intermediate_output_func
 
-	if family == "windows" then
+	if config.compiler.value == "cl" then
 		settings.cc.flags = "/wd4244"
 	else
-		if platform == "macosx" then
-			settings.cc.flags = "-Wall -fno-exceptions"
-		else
-			settings.cc.flags = "-Wall -fstack-protector -fstack-protector-all -fno-exceptions"
+		settings.cc.flags = "-Wall -fno-exceptions "
+		if config.stackprotector.value == 1 then
+			settings.cc.flags = settings.cc.flags .. "-fstack-protector -fstack-protector-all"
 		end
 		settings.linker.flags = ""
 	end
 
 	-- set some platform specific settings
 	settings.cc.includes:add("src")
-	settings.cc.includes:add("src/external/zlib")
 
 	if family == "unix" then
    		if platform == "macosx" then
 			glfw_platform = "macosx"
 			pa_platform = "mac_osx"
-			pa_hostapi = "coreaudio"
 		else
 			glfw_platform = "x11"
 			pa_platform = "unix"
-			
-			if platform == "linux" then
-				pa_hostapi = "alsa"
-			else
-				pa_hostapi = "oss"
-			end
-			
 			settings.linker.libs:add("pthread")
 		end
 	elseif family == "windows" then
 		glfw_platform = "win32"
 		pa_platform = "win"
-		pa_hostapi = "dsound"
-		settings.linker.libs:add("gdi32.lib")
-		settings.linker.libs:add("user32.lib")
-		settings.linker.libs:add("ws2_32.lib")
-		settings.linker.libs:add("ole32.lib")
-		settings.linker.libs:add("shell32.lib")
+		settings.linker.libs:add("gdi32")
+		settings.linker.libs:add("user32")
+		settings.linker.libs:add("ws2_32")
+		settings.linker.libs:add("ole32")
+		settings.linker.libs:add("shell32")
 	end
 	
-	-- build glfw
-	glfw_settings = settings:copy()
-	glfw_settings.cc.includes:add("src/external/glfw/include")
-	glfw_settings.cc.includes:add("src/engine/external/glfw/lib")
-	glfw_settings.cc.includes:add("src/engine/external/glfw/lib/" .. glfw_platform)
+	-- build glfw if needed (not tested)
+	if config.glfw.value == 1 then
+		settings.linker.libs:add("glfw")
+		if config.glfw.include_path then
+			settings.cc.includes:add(config.glfw.include_path)
+		end
+		glfw = {}
+	else
+		glfw_settings = settings:copy()
+		glfw_settings.cc.includes:add("src/external/glfw/include")
+		glfw_settings.cc.includes:add("src/engine/external/glfw/lib")
+		glfw_settings.cc.includes:add("src/engine/external/glfw/lib/" .. glfw_platform)
 
-	glfw = Compile(glfw_settings, Collect(
-		"src/engine/external/glfw/lib/*.c",
-		"src/engine/external/glfw/lib/" .. glfw_platform .. "/*.c"))
+		glfw = Compile(glfw_settings, Collect(
+			"src/engine/external/glfw/lib/*.c",
+			"src/engine/external/glfw/lib/" .. glfw_platform .. "/*.c"))
+		
+		settings.cc.includes:add("src/engine/external/glfw/include")
+	end
 		
 	-- build portaudio
-	pa_settings = settings:copy()
-	pa_settings.cc.defines:add("PA_USE_" .. string.upper(pa_hostapi))
-	pa_settings.cc.defines:add("PA_NO_WMME")
-	pa_settings.cc.defines:add("PA_NO_ASIO")
-	pa_settings.cc.includes:add("src/engine/external/portaudio/include")
-	pa_settings.cc.includes:add("src/engine/external/portaudio/src/common")
-	pa_settings.cc.includes:add("src/engine/external/portaudio/src/os/" .. pa_platform)
+	if config.portaudio.value == 1 then
+		settings.linker.libs:add("portaudio")
+		if config.portaudio.include_path then
+			settings.cc.includes:add(config.portaudio.include_path)
+		end
+		portaudio = {}
+	else
+		pa_settings = settings:copy()
+
+		pa_hostapis = {}		
+		if config.alsa.value == 1 then pa_hostapis["alsa"] = 1 end
+		if config.dsound.value == 1 then
+			pa_hostapis["dsound"] = 1
+		else
+			pa_settings.cc.defines:add("PA_NO_DS")
+		end
+		if config.coreaudio.value == 1 then pa_hostapis["coreaudio"] = 1 end
+		
+		if config.oss_sys.value == 1 then
+			pa_hostapis["oss"] = 1
+			pa_settings.cc.defines:add("HAVE_SYS_SOUNDCARD_H")
+		elseif config.oss_linux.value == 1 then
+			pa_hostapis["oss"] = 1
+			pa_settings.cc.defines:add("HAVE_LINUX_SOUNDCARD_H")
+		elseif config.oss_machine.value == 1 then
+			pa_hostapis["oss"] = 1
+			pa_settings.cc.defines:add("HAVE_MACHINE_SOUNDCARD_H")
+		end
+		
+		pa_settings.cc.defines:add("PA_NO_WMME")
+		pa_settings.cc.defines:add("PA_NO_ASIO")
+		pa_settings.cc.includes:add("src/engine/external/portaudio/include")
+		pa_settings.cc.includes:add("src/engine/external/portaudio/src/common")
+		pa_settings.cc.includes:add("src/engine/external/portaudio/src/os/" .. pa_platform)
+		
+		pa_api_files = {}
+		for api,v in pa_hostapis do
+			pa_settings.cc.defines:add("PA_USE_"..string.upper(api))
+			pa_api_files[api] = Collect("src/engine/external/portaudio/src/hostapi/" .. api .. "/*.c")
+		end
+		
+		portaudio = Compile(pa_settings,
+			Collect("src/engine/external/portaudio/src/common/*.c"),
+			Collect("src/engine/external/portaudio/src/os/" .. pa_platform .. "/*.c"),
+			pa_api_files)
+		
+		settings.cc.includes:add("src/engine/external/portaudio/include")
+	end
 	
-	portaudio = Compile(pa_settings,
-		Collect("src/engine/external/portaudio/src/common/*.c"),
-		Collect("src/engine/external/portaudio/src/os/" .. pa_platform .. "/*.c"),
-		Collect("src/engine/external/portaudio/src/hostapi/" .. pa_hostapi .. "/*.c"))
+	-- compile zlib if needed
+	if config.zlib.value == 1 then
+		settings.linker.libs:add("z")
+		if config.zlib.include_path then
+			settings.cc.includes:add(config.zlib.include_path)
+		end
+		zlib = {}
+	else
+		zlib = Compile(settings, Collect("src/engine/external/zlib/*.c"))
+		settings.cc.includes:add("src/engine/external/zlib")
+	end
+
+	-- build the small libraries
+	wavpack = Compile(settings, Collect("src/engine/external/wavpack/*.c"))
+	pnglite = Compile(settings, Collect("src/engine/external/pnglite/*.c"))
 	
 	-- build game components
 	engine_settings = settings:copy()
 	
-	if family == "windows" then
+	if config.compiler.value == "cl" then
 		engine_settings.cc.flags = "/wd4244"
 	else
-   		if platform == "macosx" then
+   		if platform == "macosx"  or family == "windows" then
 			engine_settings.cc.flags = "-Wall"
 		else
 			engine_settings.cc.flags = "-Wall -pedantic-errors"
@@ -301,7 +365,6 @@ function build(settings)
 
 	-- client
 	client_settings = engine_settings:copy()
-	client_settings.cc.includes:add("src/external/glfw/include")
 
 	if family == "unix" then
    		if platform == "macosx" then
@@ -309,25 +372,30 @@ function build(settings)
             client_settings.linker.frameworks:add("AGL")
             client_settings.linker.frameworks:add("Carbon")
             client_settings.linker.frameworks:add("Cocoa")
-			client_settings.linker.frameworks:add("CoreAudio")
-			client_settings.linker.frameworks:add("AudioToolbox")
-			client_settings.linker.frameworks:add("AudioUnit")
+
+			if config.coreaudio.value == 1 then
+				client_settings.linker.frameworks:add("CoreAudio")
+				client_settings.linker.frameworks:add("AudioToolbox")
+				client_settings.linker.frameworks:add("AudioUnit")
+			end
 		else
-            client_settings.linker.libs:add("asound")
+			if config.alsa.value == 1 then
+            	client_settings.linker.libs:add("asound")
+            end
+            
 			client_settings.linker.libs:add("X11")
 			client_settings.linker.libs:add("GL")
 			client_settings.linker.libs:add("GLU")
 		end
 	elseif family == "windows" then
-		client_settings.linker.libs:add("opengl32.lib")
-		client_settings.linker.libs:add("glu32.lib")
-		client_settings.linker.libs:add("dsound.lib")
-	end
+		client_settings.linker.libs:add("opengl32")
+		client_settings.linker.libs:add("glu32")
+		client_settings.linker.libs:add("winmm")
 
-	external_settings = settings:copy()
-	zlib = Compile(external_settings, Collect("src/engine/external/zlib/*.c"))
-	wavpack = Compile(external_settings, Collect("src/engine/external/wavpack/*.c"))
-	pnglite = Compile(external_settings, Collect("src/engine/external/pnglite/*.c"))
+		if config.dsound.value == 1 then
+			client_settings.linker.libs:add("dsound")
+		end
+	end
 
 	engine = Compile(engine_settings, Collect("src/engine/*.c"))
 	client = Compile(client_settings, Collect("src/engine/client/*.c"))

@@ -29,11 +29,10 @@
 	#include <unistd.h>
 #elif defined(CONF_FAMILY_WINDOWS)
 	#define WIN32_LEAN_AND_MEAN 
-	#define _WIN32_WINNT 0x0400
+	#define _WIN32_WINNT 0x0501 /* required for mingw to get getaddrinfo to work */
 	#include <windows.h>
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
-	#include <shlobj.h> /* for SHGetFolderPathAndSubDir */
 	#include <fcntl.h>
 	#include <direct.h>
 	#include <errno.h>
@@ -761,10 +760,9 @@ int fs_storage_path(const char *appname, char *path, int max)
 {
 #if defined(CONF_FAMILY_WINDOWS)
 	HRESULT r;
-	char home[MAX_PATH];
-	r = SHGetFolderPath (NULL, CSIDL_APPDATA, NULL, SHGFP_TYPE_CURRENT, home);
-	if(r != 0)
-			return 1;
+	char *home = getenv("APPDATA");
+	if(!home)
+		return 1;
 	_snprintf(path, max, "%s/%s", home, appname);
 	return 0;
 #else

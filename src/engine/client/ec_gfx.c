@@ -1,5 +1,5 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <engine/external/glfw/include/GL/glfw.h>
+#include <GL/glfw.h>
 #include <engine/external/pnglite/pnglite.h>
 
 #include <engine/e_system.h>
