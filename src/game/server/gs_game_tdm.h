@@ -1,10 +1,10 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 // game object
-class gameobject_tdm : public gameobject
+class GAMECONTROLLER_TDM : public GAMECONTROLLER
 {
 public:
-	gameobject_tdm();
+	GAMECONTROLLER_TDM();
 	
-	int on_player_death(class player *victim, class player *killer, int weapon);
+	int on_player_death(class PLAYER *victim, class PLAYER *killer, int weapon);
 	virtual void tick();
 };

@@ -217,10 +217,10 @@ public:
 	}
 };
 
-class IMAGE : public IMAGE_INFO
+class EDITOR_IMAGE : public IMAGE_INFO
 {
 public:
-	IMAGE()
+	EDITOR_IMAGE()
 	{
 		tex_id = -1;
 		name[0] = 0;
@@ -231,7 +231,7 @@ public:
 		format = 0;
 	}
 	
-	~IMAGE()
+	~EDITOR_IMAGE()
 	{
 		gfx_unload_texture(tex_id);
 	}
@@ -255,7 +255,7 @@ public:
 	}
 
 	array<LAYERGROUP*> groups;
-	array<IMAGE*> images;
+	array<EDITOR_IMAGE*> images;
 	array<ENVELOPE*> envelopes;
 	
 	class LAYER_GAME *game_layer;

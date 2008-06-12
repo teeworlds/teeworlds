@@ -3,7 +3,7 @@
 #include "../generated/gs_data.h"
 
 
-extern tuning_params tuning;
+extern TUNING_PARAMS tuning;
 
 void create_sound_global(int sound, int target=-1);
 
@@ -13,7 +13,7 @@ inline int cmask_all_except_one(int cid) { return 0x7fffffff^cmask_one(cid); }
 inline bool cmask_is_set(int mask, int cid) { return (mask&cmask_one(cid)) != 0; }
 
 //
-class event_handler
+class EVENT_HANDLER
 {
 	static const int MAX_EVENTS = 128;
 	static const int MAX_DATASIZE = 128*64;
@@ -27,25 +27,25 @@ class event_handler
 	int current_offset;
 	int num_events;
 public:
-	event_handler();
+	EVENT_HANDLER();
 	void *create(int type, int size, int mask = -1);
 	void clear();
 	void snap(int snapping_client);
 };
 
-extern event_handler events;
+extern EVENT_HANDLER events;
 
 // a basic entity
-class entity
+class ENTITY
 {
 private:
-	friend class game_world;
-	friend class player;
-	entity *prev_entity;
-	entity *next_entity;
+	friend class GAMEWORLD; // thy these?
+	friend class PLAYER;
+	ENTITY *prev_entity;
+	ENTITY *next_entity;
 
-	entity *prev_type_entity;
-	entity *next_type_entity;
+	ENTITY *prev_type_entity;
+	ENTITY *next_type_entity;
 protected:
 	int id;
 public:
@@ -60,8 +60,8 @@ public:
 		FLAG_PHYSICS=0x00000002,
 	};
 	
-	entity(int objtype);
-	virtual ~entity();
+	ENTITY(int objtype);
+	virtual ~ENTITY();
 	
 	virtual void reset() {}
 	virtual void post_reset() {}
@@ -79,7 +79,7 @@ public:
 };
 
 
-class game_world
+class GAMEWORLD
 {
 	void reset();
 	void remove_entities();
@@ -90,32 +90,32 @@ public:
 	};
 
 	// TODO: two lists seams kinda not good, shouldn't be needed
-	entity *first_entity;
-	entity *first_entity_types[NUM_ENT_TYPES];
+	ENTITY *first_entity;
+	ENTITY *first_entity_types[NUM_ENT_TYPES];
 	bool paused;
 	bool reset_requested;
 	
-	world_core core;
+	WORLD_CORE core;
 	
-	game_world();
-	~game_world();
-	int find_entities(vec2 pos, float radius, entity **ents, int max);
-	int find_entities(vec2 pos, float radius, entity **ents, int max, const int* types, int maxtypes);
+	GAMEWORLD();
+	~GAMEWORLD();
+	int find_entities(vec2 pos, float radius, ENTITY **ents, int max);
+	int find_entities(vec2 pos, float radius, ENTITY **ents, int max, const int* types, int maxtypes);
 
-	void insert_entity(entity *ent);
-	void destroy_entity(entity *ent);
-	void remove_entity(entity *ent);
+	void insert_entity(ENTITY *ent);
+	void destroy_entity(ENTITY *ent);
+	void remove_entity(ENTITY *ent);
 	
 	//
 	void snap(int snapping_client);
 	void tick();
 };
 
-extern game_world *world;
+extern GAMEWORLD *world;
 
 // game object
 // TODO: should change name of this one
-class gameobject : public entity
+class GAMECONTROLLER : public ENTITY
 {
 protected:
 	void cyclemap();
@@ -134,7 +134,7 @@ protected:
 	
 public:
 	int gametype;
-	gameobject();
+	GAMECONTROLLER();
 
 	void do_team_score_wincheck();
 	void do_player_score_wincheck();
@@ -151,10 +151,10 @@ public:
 	virtual void post_reset();
 	virtual void tick();
 	
-	virtual void on_player_spawn(class player *p) {}
-	virtual int on_player_death(class player *victim, class player *killer, int weapon);
+	virtual void on_player_spawn(class PLAYER *p) {}
+	virtual int on_player_death(class PLAYER *victim, class PLAYER *killer, int weapon);
 	
-	virtual void on_player_info_change(class player *p);
+	virtual void on_player_info_change(class PLAYER *p);
 	
 	virtual void snap(int snapping_client);
 	virtual int get_auto_team(int notthisid);
@@ -162,11 +162,11 @@ public:
 	int clampteam(int team);
 };
 
-extern gameobject *gameobj;
+extern GAMECONTROLLER *gamecontroller;
 
 
 // TODO: move to seperate file
-class powerup : public entity
+class PICKUP : public ENTITY
 {
 public:
 	static const int phys_size = 14;
@@ -174,7 +174,7 @@ public:
 	int type;
 	int subtype; // weapon type for instance?
 	int spawntick;
-	powerup(int _type, int _subtype = 0);
+	PICKUP(int _type, int _subtype = 0);
 	
 	virtual void reset();
 	virtual void tick();
@@ -182,7 +182,7 @@ public:
 };
 
 // projectile entity
-class projectile : public entity
+class PROJECTILE : public ENTITY
 {
 public:
 	enum
@@ -191,7 +191,7 @@ public:
 	};
 	
 	vec2 direction;
-	entity *powner; // this is nasty, could be removed when client quits
+	ENTITY *powner; // this is nasty, could be removed when client quits
 	int lifespan;
 	int owner;
 	int type;
@@ -203,7 +203,7 @@ public:
 	float force;
 	int start_tick;
 	
-	projectile(int type, int owner, vec2 pos, vec2 vel, int span, entity* powner,
+	PROJECTILE(int type, int owner, vec2 pos, vec2 vel, int span, ENTITY* powner,
 		int damage, int flags, float force, int sound_impact, int weapon);
 
 	vec2 get_pos(float time);
@@ -214,21 +214,21 @@ public:
 	virtual void snap(int snapping_client);
 };
 
-class laser : public entity
+class LASER : public ENTITY
 {
 	vec2 from;
 	vec2 dir;
 	float energy;
 	int bounces;
 	int eval_tick;
-	player *owner;
+	PLAYER *owner;
 	
 	bool hit_player(vec2 from, vec2 to);
 	void do_bounce();
 	
 public:
 	
-	laser(vec2 pos, vec2 direction, float start_energy, player *owner);
+	LASER(vec2 pos, vec2 direction, float start_energy, PLAYER *owner);
 	
 	virtual void reset();
 	virtual void tick();
@@ -236,15 +236,15 @@ public:
 };
 
 // player entity
-class player : public entity
+class PLAYER : public ENTITY
 {
 public:
 	static const int phys_size = 28;
 
 	// weapon info
-	entity *hitobjects[10];
+	ENTITY *hitobjects[10];
 	int numobjectshit;
-	struct weaponstat
+	struct WEAPONSTAT
 	{
 		int ammoregenstart;
 		int ammo;
@@ -316,13 +316,13 @@ public:
 	int latency_max;
 
 	// the player core for the physics	
-	player_core core;
+	PLAYER_CORE core;
 	
 	//
 	int64 last_chat;
 
 	//
-	player();
+	PLAYER();
 	void init();
 	virtual void reset();
 	virtual void destroy();
@@ -354,4 +354,4 @@ public:
 	virtual void snap(int snaping_client);
 };
 
-extern player *players;
+extern PLAYER *players;

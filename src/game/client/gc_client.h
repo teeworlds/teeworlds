@@ -13,14 +13,14 @@ enum
 	CHN_GLOBAL,
 };
 
-extern struct data_container *data;
+//extern struct data_container *data;
 
 extern vec2 mouse_pos;
 extern vec2 local_character_pos;
 extern vec2 local_target_pos;
 
 // snap pointers
-struct snapstate
+struct SNAPSTATE
 {
 	const NETOBJ_PLAYER_CHARACTER *local_character;
 	const NETOBJ_PLAYER_CHARACTER *local_prev_character;
@@ -33,7 +33,7 @@ struct snapstate
 	int num_players;
 };
 
-extern snapstate netobjects;
+extern SNAPSTATE netobjects;
 
 /*
 extern const NETOBJ_PLAYER_CHARACTER *local_character;
@@ -43,11 +43,11 @@ extern const NETOBJ_FLAG *flags[2];
 extern const NETOBJ_GAME *gameobj;
 * */
 
-extern tuning_params tuning;
+extern TUNING_PARAMS tuning;
 
 // predicted players
-extern player_core predicted_prev_player;
-extern player_core predicted_player;
+extern PLAYER_CORE predicted_prev_player;
+extern PLAYER_CORE predicted_player;
 
 // input
 extern NETOBJ_PLAYER_INPUT input_data;
@@ -112,13 +112,13 @@ public:
 	unsigned cursor_offset() const { return cursor_pos; }
 };
 
-class input_stack_handler
+class INPUT_STACK_HANDLER
 {
 public:
-	typedef bool (*callback)(INPUT_EVENT e, void *user);
+	typedef bool (*CALLBACK)(INPUT_EVENT e, void *user);
 	
-	input_stack_handler();
-	void add_handler(callback cb, void *user_data);
+	INPUT_STACK_HANDLER();
+	void add_handler(CALLBACK cb, void *user_data);
 	void dispatch_input();
 	
 private:
@@ -127,19 +127,19 @@ private:
 		MAX_HANDLERS=16
 	};
 	
-	callback handlers[MAX_HANDLERS];
+	CALLBACK handlers[MAX_HANDLERS];
 	void *user_data[MAX_HANDLERS];
 	int num_handlers;
 };
 
-extern input_stack_handler input_stack;
+extern INPUT_STACK_HANDLER input_stack;
 
 
 extern int emoticon_selector_active; // TODO: ugly
 extern int scoreboard_active; // TODO: ugly
 
 // client data
-struct client_data
+struct CLIENT_DATA
 {
 	char name[64];
 	char skin_name[64];
@@ -148,20 +148,20 @@ struct client_data
 	int team;
 	int emoticon;
 	int emoticon_start;
-	player_core predicted;
+	PLAYER_CORE predicted;
 	
-	tee_render_info skin_info; // this is what the server reports
-	tee_render_info render_info; // this is what we use
+	TEE_RENDER_INFO skin_info; // this is what the server reports
+	TEE_RENDER_INFO render_info; // this is what we use
 	
 	float angle;
 	
 	void update_render_info();
 };
 
-extern client_data client_datas[MAX_CLIENTS];
+extern CLIENT_DATA client_datas[MAX_CLIENTS];
 
 // kill messages
-struct killmsg
+struct KILLMSG
 {
 	int weapon;
 	int victim;
@@ -171,7 +171,7 @@ struct killmsg
 };
 
 const int killmsg_max = 5;
-extern killmsg killmsgs[killmsg_max];
+extern KILLMSG killmsgs[killmsg_max];
 extern int killmsg_current;
 
 //
@@ -205,7 +205,7 @@ void effect_playerdeath(vec2 pos, int cid);
 void effect_powerupshine(vec2 pos, vec2 size);
 
 // particles
-struct particle
+struct PARTICLE
 {
 	void set_default()
 	{
@@ -255,7 +255,7 @@ enum
 	NUM_PARTGROUPS
 };
 
-void particle_add(int group, particle *part);
+void particle_add(int group, PARTICLE *part);
 void particle_render(int group);
 void particle_update(float time_passed);
 void particle_reset();

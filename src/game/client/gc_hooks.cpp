@@ -83,7 +83,7 @@ extern "C" void modc_init()
 	snd_set_channel(CHN_GLOBAL, 1.0f, 0.0f);
 
 	// load the data container
-	data = load_data_from_memory(internal_data);
+	//data = load_data_from_memory(internal_data);
 
 	// TODO: should be removed
 	snd_set_listener_pos(0.0f, 0.0f);
@@ -128,18 +128,18 @@ extern "C" void modc_shutdown()
 }
 
 
-player_core predicted_prev_player;
-player_core predicted_player;
+PLAYER_CORE predicted_prev_player;
+PLAYER_CORE predicted_player;
 static int predicted_tick = 0;
 static int last_new_predicted_tick = -1;
 
 extern "C" void modc_predict()
 {
-	player_core before_prev_player = predicted_prev_player;
-	player_core before_player = predicted_player;
+	PLAYER_CORE before_prev_player = predicted_prev_player;
+	PLAYER_CORE before_player = predicted_player;
 
 	// repredict player
-	world_core world;
+	WORLD_CORE world;
 	world.tuning = tuning;
 	int local_cid = -1;
 
@@ -271,10 +271,10 @@ extern "C" void modc_newsnapshot()
 		{
 			SNAP_ITEM item;
 			void *data = snap_get_item(SNAP_CURRENT, index, &item);
-			if(netobj_secure(item.type, data, item.datasize) != 0)
+			if(netobj_validate(item.type, data, item.datasize) != 0)
 			{
 				if(config.debug)
-					dbg_msg("game", "invalidated %d %d (%s) %d", index, item.type, netobj_get_name(item.type), item.id);
+					dbg_msg("game", "invalidated index=%d type=%d (%s) size=%d id=%d", index, item.type, netobj_get_name(item.type), item.datasize, item.id);
 				snap_invalidate_item(SNAP_CURRENT, index);
 			}
 		}
@@ -477,7 +477,7 @@ int64 server_motd_time = 0;
 extern "C" void modc_message(int msgtype)
 {
 	// special messages
-	if(msgtype == NETMSGTYPE_SV_EXTRA_PROJECTILE)
+	if(msgtype == NETMSGTYPE_SV_EXTRAPROJECTILE)
 	{
 		int num = msg_unpack_int();
 		
@@ -499,12 +499,12 @@ extern "C" void modc_message(int msgtype)
 		
 		return;
 	}
-	else if(msgtype == NETMSGTYPE_SV_TUNE_PARAMS)
+	else if(msgtype == NETMSGTYPE_SV_TUNEPARAMS)
 	{
 		// unpack the new tuning
-		tuning_params new_tuning;
+		TUNING_PARAMS new_tuning;
 		int *params = (int *)&new_tuning;
-		for(unsigned i = 0; i < sizeof(tuning_params)/sizeof(int); i++)
+		for(unsigned i = 0; i < sizeof(TUNING_PARAMS)/sizeof(int); i++)
 			params[i] = msg_unpack_int();
 
 		// check for unpacking errors
@@ -595,13 +595,13 @@ extern "C" void modc_message(int msgtype)
 
 		client_datas[msg->cid].update_render_info();
 	}
-    else if(msgtype == NETMSGTYPE_SV_WEAPON_PICKUP)
+    else if(msgtype == NETMSGTYPE_SV_WEAPONPICKUP)
     {
-    	NETMSG_SV_WEAPON_PICKUP *msg = (NETMSG_SV_WEAPON_PICKUP *)rawmsg;
+    	NETMSG_SV_WEAPONPICKUP *msg = (NETMSG_SV_WEAPONPICKUP *)rawmsg;
         if(config.cl_autoswitch_weapons)
         	input_data.wanted_weapon = msg->weapon+1;
     }
-	else if(msgtype == NETMSGTYPE_SV_READY_TO_ENTER)
+	else if(msgtype == NETMSGTYPE_SV_READYTOENTER)
 	{
 		client_entergame();
 	}
@@ -610,7 +610,7 @@ extern "C" void modc_message(int msgtype)
 		NETMSG_SV_KILLMSG *msg = (NETMSG_SV_KILLMSG *)rawmsg;
 		
 		// unpack messages
-		killmsg kill;
+		KILLMSG kill;
 		kill.killer = msg->killer;
 		kill.victim = msg->victim;
 		kill.weapon = msg->weapon;
@@ -629,9 +629,9 @@ extern "C" void modc_message(int msgtype)
 		client_datas[msg->cid].emoticon = msg->emoticon;
 		client_datas[msg->cid].emoticon_start = client_tick();
 	}
-	else if(msgtype == NETMSGTYPE_SV_SOUND_GLOBAL)
+	else if(msgtype == NETMSGTYPE_SV_SOUNDGLOBAL)
 	{
-		NETMSG_SV_SOUND_GLOBAL *msg = (NETMSG_SV_SOUND_GLOBAL *)rawmsg;
+		NETMSG_SV_SOUNDGLOBAL *msg = (NETMSG_SV_SOUNDGLOBAL *)rawmsg;
 		snd_play_random(CHN_GLOBAL, msg->soundid, 1.0f, vec2(0,0));
 	}
 }

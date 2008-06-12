@@ -139,7 +139,7 @@ int LAYERGROUP::swap_layers(int index0, int index1)
 	return index1;
 }
 
-void IMAGE::analyse_tileflags()
+void EDITOR_IMAGE::analyse_tileflags()
 {
 	mem_zero(tileflags, sizeof(tileflags));
 	
@@ -1470,11 +1470,11 @@ static void extract_name(const char *filename, char *name)
 
 static void replace_image(const char *filename)
 {
-	IMAGE imginfo;
+	EDITOR_IMAGE imginfo;
 	if(!gfx_load_png(&imginfo, filename))
 		return;
 	
-	IMAGE *img = editor.map.images[editor.selected_image];
+	EDITOR_IMAGE *img = editor.map.images[editor.selected_image];
 	gfx_unload_texture(img->tex_id);
 	*img = imginfo;
 	extract_name(filename, img->name);
@@ -1483,11 +1483,11 @@ static void replace_image(const char *filename)
 
 static void add_image(const char *filename)
 {
-	IMAGE imginfo;
+	EDITOR_IMAGE imginfo;
 	if(!gfx_load_png(&imginfo, filename))
 		return;
 
-	IMAGE *img = new IMAGE;
+	EDITOR_IMAGE *img = new EDITOR_IMAGE;
 	*img = imginfo;
 	img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO, 0);
 	img->external = 1; // external by default
@@ -1513,7 +1513,7 @@ static int popup_image(RECT view)
 	RECT slot;
 	ui_hsplit_t(&view, 2.0f, &slot, &view);
 	ui_hsplit_t(&view, 12.0f, &slot, &view);
-	IMAGE *img = editor.map.images[editor.selected_image];
+	EDITOR_IMAGE *img = editor.map.images[editor.selected_image];
 	
 	static int external_button = 0;
 	if(img->external)

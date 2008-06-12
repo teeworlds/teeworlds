@@ -9,9 +9,9 @@
 #include "g_collision.h"
 #include "g_protocol.h"
 
-struct tuning_params
+struct TUNING_PARAMS
 {
-	tuning_params()
+	TUNING_PARAMS()
 	{
 		const float ticks_per_second = 50.0f;
 		#define MACRO_TUNING_PARAM(name,value) name.set((int)(value*100.0f));
@@ -25,7 +25,7 @@ struct tuning_params
 	#include "g_tuning.h"
 	#undef MACRO_TUNING_PARAM
 	
-	static int num() { return sizeof(tuning_params)/sizeof(int); }
+	static int num() { return sizeof(TUNING_PARAMS)/sizeof(int); }
 	bool set(int index, float value);
 	bool set(const char *name, float value);
 	bool get(int index, float *value);
@@ -109,22 +109,22 @@ enum
 	COREEVENT_HOOK_RETRACT=0x20,
 };
 
-class world_core
+class WORLD_CORE
 {
 public:
-	world_core()
+	WORLD_CORE()
 	{
 		mem_zero(players, sizeof(players));
 	}
 	
-	tuning_params tuning;
-	class player_core *players[MAX_CLIENTS];
+	TUNING_PARAMS tuning;
+	class PLAYER_CORE *players[MAX_CLIENTS];
 };
 
-class player_core
+class PLAYER_CORE
 {
 public:
-	world_core *world;
+	WORLD_CORE *world;
 	
 	vec2 pos;
 	vec2 vel;

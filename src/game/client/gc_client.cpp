@@ -24,7 +24,7 @@ extern "C" {
 #include "gc_anim.h"
 #include "gc_console.h"
 
-struct data_container *data = 0;
+//struct data_container *data = 0;
 int64 debug_firedelay = 0;
 
 NETOBJ_PLAYER_INPUT input_data = {0};
@@ -39,7 +39,7 @@ int emoticon_selector_active = 0;
 int scoreboard_active = 0;
 static int emoticon_selected_emote = -1;
 
-tuning_params tuning;
+TUNING_PARAMS tuning;
 
 vec2 mouse_pos;
 vec2 local_character_pos;
@@ -53,12 +53,12 @@ const NETOBJ_FLAG *flags[2] = {0,0};
 const NETOBJ_GAME *gameobj = 0;
 */
 
-snapstate netobjects;
+SNAPSTATE netobjects;
 
 int picked_up_weapon = -1;
 
-client_data client_datas[MAX_CLIENTS];
-void client_data::update_render_info()
+CLIENT_DATA client_datas[MAX_CLIENTS];
+void CLIENT_DATA::update_render_info()
 {
 	render_info = skin_info;
 
@@ -82,7 +82,7 @@ int64 broadcast_time = 0;
 
 void snd_play_random(int chn, int setid, float vol, vec2 pos)
 {
-	soundset *set = &data->sounds[setid];
+	SOUNDSET *set = &data->sounds[setid];
 
 	if(!set->num_sounds)
 		return;
@@ -280,7 +280,7 @@ void chat_add_line(int client_id, int team, const char *line)
 }
 
 
-killmsg killmsgs[killmsg_max];
+KILLMSG killmsgs[killmsg_max];
 int killmsg_current = 0;
 
 //bool add_trail = false;
@@ -347,18 +347,18 @@ void line_input::process_input(INPUT_EVENT e)
 	}
 }
 
-input_stack_handler::input_stack_handler()
+INPUT_STACK_HANDLER::INPUT_STACK_HANDLER()
 {
 	num_handlers = 0;
 }
 
-void input_stack_handler::add_handler(callback cb, void *user)
+void INPUT_STACK_HANDLER::add_handler(CALLBACK cb, void *user)
 {
 	user_data[num_handlers] = user;
 	handlers[num_handlers++] = cb;
 }
 
-void input_stack_handler::dispatch_input()
+void INPUT_STACK_HANDLER::dispatch_input()
 {
 	for(int i = 0; i < inp_num_events(); i++)
 	{
@@ -378,7 +378,7 @@ void input_stack_handler::dispatch_input()
 }
 
 
-input_stack_handler input_stack;
+INPUT_STACK_HANDLER input_stack;
 
 extern int render_popup(const char *caption, const char *text, const char *button_text);
 
@@ -395,7 +395,7 @@ void process_events(int snaptype)
 			NETEVENT_DAMAGEIND *ev = (NETEVENT_DAMAGEIND *)data;
 			effect_damage_indicator(vec2(ev->x, ev->y), get_direction(ev->angle));
 		}
-		else if(item.type == NETEVENTTYPE_AIR_JUMP)
+		else if(item.type == NETEVENTTYPE_AIRJUMP)
 		{
 			NETEVENT_COMMON *ev = (NETEVENT_COMMON *)data;
 			effect_air_jump(vec2(ev->x, ev->y));
@@ -420,9 +420,9 @@ void process_events(int snaptype)
 			NETEVENT_DEATH *ev = (NETEVENT_DEATH *)data;
 			effect_playerdeath(vec2(ev->x, ev->y), ev->cid);
 		}
-		else if(item.type == NETEVENTTYPE_SOUND_WORLD)
+		else if(item.type == NETEVENTTYPE_SOUNDWORLD)
 		{
-			NETEVENT_SOUND_WORLD *ev = (NETEVENT_SOUND_WORLD *)data;
+			NETEVENT_SOUNDWORLD *ev = (NETEVENT_SOUNDWORLD *)data;
 			snd_play_random(CHN_WORLD, ev->soundid, 1.0f, vec2(ev->x, ev->y));
 		}
 	}
@@ -474,7 +474,7 @@ void send_kill(int client_id)
 	client_send_msg();
 }
 
-void anim_seq_eval(sequence *seq, float time, keyframe *frame)
+void anim_seq_eval(ANIM_SEQUENCE *seq, float time, ANIM_KEYFRAME *frame)
 {
 	if(seq->num_frames == 0)
 	{
@@ -490,8 +490,8 @@ void anim_seq_eval(sequence *seq, float time, keyframe *frame)
 	else
 	{
 		//time = max(0.0f, min(1.0f, time / duration)); // TODO: use clamp
-		keyframe *frame1 = 0;
-		keyframe *frame2 = 0;
+		ANIM_KEYFRAME *frame1 = 0;
+		ANIM_KEYFRAME *frame2 = 0;
 		float blend = 0.0f;
 
 		// TODO: make this smarter.. binary search
@@ -516,7 +516,7 @@ void anim_seq_eval(sequence *seq, float time, keyframe *frame)
 	}
 }
 
-void anim_eval(animation *anim, float time, animstate *state)
+void anim_eval(ANIMATION *anim, float time, ANIM_STATE *state)
 {
 	anim_seq_eval(&anim->body, time, &state->body);
 	anim_seq_eval(&anim->back_foot, time, &state->back_foot);
@@ -524,14 +524,14 @@ void anim_eval(animation *anim, float time, animstate *state)
 	anim_seq_eval(&anim->attach, time, &state->attach);
 }
 
-void anim_add_keyframe(keyframe *seq, keyframe *added, float amount)
+void anim_add_keyframe(ANIM_KEYFRAME *seq, ANIM_KEYFRAME *added, float amount)
 {
 	seq->x += added->x*amount;
 	seq->y += added->y*amount;
 	seq->angle += added->angle*amount;
 }
 
-void anim_add(animstate *state, animstate *added, float amount)
+void anim_add(ANIM_STATE *state, ANIM_STATE *added, float amount)
 {
 	anim_add_keyframe(&state->body, &added->body, amount);
 	anim_add_keyframe(&state->back_foot, &added->back_foot, amount);
@@ -539,9 +539,9 @@ void anim_add(animstate *state, animstate *added, float amount)
 	anim_add_keyframe(&state->attach, &added->attach, amount);
 }
 
-void anim_eval_add(animstate *state, animation *anim, float time, float amount)
+void anim_eval_add(ANIM_STATE *state, ANIMATION *anim, float time, float amount)
 {
-	animstate add;
+	ANIM_STATE add;
 	anim_eval(anim, time, &add);
 	anim_add(state, &add, amount);
 }
@@ -694,7 +694,7 @@ void render_spectators(float x, float y, float w)
 
 void render_scoreboard(float x, float y, float w, int team, const char *title)
 {
-	animstate idlestate;
+	ANIM_STATE idlestate;
 	anim_eval(&data->animations[ANIM_BASE], 0, &idlestate);
 	anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);
 
@@ -892,7 +892,7 @@ void render_game()
 	if(netobjects.local_info && netobjects.local_info->team == -1)
 		spectate = true;
 
-	animstate idlestate;
+	ANIM_STATE idlestate;
 	anim_eval(&data->animations[ANIM_BASE], 0, &idlestate);
 	anim_eval_add(&idlestate, &data->animations[ANIM_IDLE], 0, 1.0f);
 
@@ -1117,7 +1117,7 @@ void render_game()
 		// render cursor
 		if (!menu_active && !emoticon_selector_active)
 		{
-			select_sprite(data->weapons[netobjects.local_character->weapon%data->num_weapons].sprite_cursor);
+			select_sprite(data->weapons.id[netobjects.local_character->weapon%NUM_WEAPONS].sprite_cursor);
 			float cursorsize = 64;
 			draw_sprite(local_target_pos.x, local_target_pos.y, cursorsize);
 		}
@@ -1132,7 +1132,7 @@ void render_game()
 		gfx_mapscreen(0,0,300*gfx_screenaspect(),300);
 		
 		// if weaponstage is active, put a "glow" around the stage ammo
-		select_sprite(data->weapons[netobjects.local_character->weapon%data->num_weapons].sprite_proj);
+		select_sprite(data->weapons.id[netobjects.local_character->weapon%NUM_WEAPONS].sprite_proj);
 		for (int i = 0; i < min(netobjects.local_character->ammocount, 10); i++)
 			gfx_quads_drawTL(x+i*12,y+24,10,10);
 
@@ -1215,7 +1215,7 @@ void render_game()
 			{
 				gfx_texture_set(data->images[IMAGE_GAME].id);
 				gfx_quads_begin();
-				select_sprite(data->weapons[killmsgs[r].weapon].sprite_body);
+				select_sprite(data->weapons.id[killmsgs[r].weapon].sprite_body);
 				draw_sprite(x, y+28, 96);
 				gfx_quads_end();
 			}
@@ -1410,7 +1410,7 @@ void render_game()
 							const char *name = client_datas[id].name;
 							float w = gfx_text_width(0, 10, name, -1);
 							gfx_text(0, whole-40-5-w, 300-40-15+t*20+2, 10, name, -1);
-							tee_render_info info = client_datas[id].render_info;
+							TEE_RENDER_INFO info = client_datas[id].render_info;
 							info.size = 18.0f;
 							
 							render_tee(&idlestate, &info, EMOTE_NORMAL, vec2(1,0),
@@ -1588,11 +1588,11 @@ void render_game()
 			gfx_text(0, 150*gfx_screenaspect()-w/2, 35, 14, broadcast_text, -1);
 		}
 		
-		tuning_params standard_tuning;
+		TUNING_PARAMS standard_tuning;
 
 		// render warning about non standard tuning
 		bool flash = time_get()/(time_freq()/2)%2 == 0;
-		if(config.cl_warning_tuning && memcmp(&standard_tuning, &tuning, sizeof(tuning_params)) != 0)
+		if(config.cl_warning_tuning && memcmp(&standard_tuning, &tuning, sizeof(TUNING_PARAMS)) != 0)
 		{
 			const char *text = "Warning! Server is running non-standard tuning.";
 			if(flash)

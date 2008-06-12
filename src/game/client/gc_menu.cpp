@@ -25,7 +25,7 @@ extern "C" {
 #include "gc_client.h"
 #include <mastersrv/mastersrv.h>
 
-extern data_container *data;
+//extern data_container *data;
 
 extern bool menu_active;
 //extern bool menu_game_active;
@@ -959,7 +959,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 	if (selected_server)
 	{
 		RECT row;
-		static char *labels[] = { "Version:", "Game Type:", "Progression:", "Ping:" };
+		static const char *labels[] = { "Version:", "Game Type:", "Progression:", "Ping:" };
 
 		RECT left_column;
 		RECT right_column;
@@ -977,7 +977,7 @@ static void menu2_render_serverbrowser(RECT main_view)
 		ui_do_label(&row, selected_server->version, font_size, -1);
 
 		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
-		static char *game_types[] = { "DM", "TDM", "CTF" };
+		static const char *game_types[] = { "DM", "TDM", "CTF" };
 		if (selected_server->game_type >= 0 && selected_server->game_type < (int)(sizeof(game_types)/sizeof(*game_types)))
 			ui_do_label(&row, game_types[selected_server->game_type], font_size, -1);
 
@@ -1285,7 +1285,7 @@ static void menu2_render_settings_player(RECT main_view)
 	if(start < 0)
 		start = 0;
 		
-	animstate state;
+	ANIM_STATE state;
 	anim_eval(&data->animations[ANIM_BASE], 0, &state);
 	anim_eval_add(&state, &data->animations[ANIM_IDLE], 0, 1.0f);
 	//anim_eval_add(&state, &data->animations[ANIM_WALK], fmod(client_localtime(), 1.0f), 1.0f);
@@ -1307,7 +1307,7 @@ static void menu2_render_settings_player(RECT main_view)
 		if(strcmp(s->name, config.player_skin) == 0)
 			selected = 1;
 		
-		tee_render_info info;
+		TEE_RENDER_INFO info;
 		info.texture = s->org_texture;
 		info.color_body = vec4(1,1,1,1);
 		info.color_feet = vec4(1,1,1,1);
@@ -1831,7 +1831,7 @@ int menu2_render()
 		gfx_mapscreen(0,0,10*4/3.0f,10);
 		gfx_clear(gui_color.r, gui_color.g, gui_color.b);
 		
-		animstate state;
+		ANIM_STATE state;
 		anim_eval(&data->animations[ANIM_BASE], 0, &state);
 		anim_eval_add(&state, &data->animations[ANIM_IDLE], 0, 1.0f);
 		//anim_eval_add(&state, &data->animations[ANIM_WALK], fmod(client_localtime(), 1.0f), 1.0f);
@@ -1846,7 +1846,7 @@ int menu2_render()
 				//int colors[2] = {65432, 9895832}; // NEW
 				int colors[2] = {65387, 10223467}; // NEW
 				
-				tee_render_info info;
+				TEE_RENDER_INFO info;
 				info.texture = skin_get(i)->color_texture;
 				info.color_feet = info.color_body = skin_get_color(colors[c]);
 				//info.color_feet = info.color_body = vec4(1,1,1,1);

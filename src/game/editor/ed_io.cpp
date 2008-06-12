@@ -133,7 +133,7 @@ void editor_load_old(DATAFILE *df, MAP *map)
 			mapres_image *imgres = (mapres_image *)datafile_get_item(df, start+i, 0, 0);
 			void *data = datafile_get_data(df, imgres->image_data);
 
-			IMAGE *img = new IMAGE;
+			EDITOR_IMAGE *img = new EDITOR_IMAGE;
 			img->width = imgres->width;
 			img->height = imgres->height;
 			img->format = IMG_RGBA;
@@ -213,7 +213,7 @@ int MAP::save(const char *filename)
 	// save images
 	for(int i = 0; i < images.len(); i++)
 	{
-		IMAGE *img = images[i];
+		EDITOR_IMAGE *img = images[i];
 		
 		// analyse the image for when saving (should be done when we load the image)
 		// TODO!
@@ -392,7 +392,7 @@ int MAP::load(const char *filename)
 				char *name = (char *)datafile_get_data(df, item->image_name);
 
 				// copy base info				
-				IMAGE *img = new IMAGE;
+				EDITOR_IMAGE *img = new EDITOR_IMAGE;
 				img->external = item->external;
 
 				if(item->external)
@@ -401,7 +401,7 @@ int MAP::load(const char *filename)
 					sprintf(buf, "data/mapres/%s.png", name);
 					
 					// load external
-					IMAGE imginfo;
+					EDITOR_IMAGE imginfo;
 					if(gfx_load_png(&imginfo, buf))
 					{
 						*img = imginfo;

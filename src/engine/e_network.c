@@ -19,7 +19,6 @@ CURRENT:
 		unsigned char flags_size; // 2bit flags, 6 bit size
 		unsigned char size_seq; // 4bit size, 4bit seq
 		(unsigned char seq;) // 8bit seq, if vital flag is set
-		
 */
 
 enum
@@ -216,6 +215,25 @@ struct NETCLIENT_t
 static IOHANDLE datalog = 0;
 static HUFFSTATE huffmanstate;
 
+#define COMPRESSION 0
+
+typedef struct pcap_hdr_s {
+        unsigned magic_number;   /* magic number */
+        short version_major;  /* major version number */
+        short version_minor;  /* minor version number */
+        int  thiszone;       /* GMT to local correction */
+        unsigned sigfigs;        /* accuracy of timestamps */
+        unsigned snaplen;        /* max length of captured packets, in octets */
+        unsigned network;        /* data link type */
+} pcap_hdr_t;
+
+typedef struct pcaprec_hdr_s {
+        unsigned ts_sec;         /* timestamp seconds */
+        unsigned ts_usec;        /* timestamp microseconds */
+        unsigned incl_len;       /* number of octets of packet saved in file */
+        unsigned orig_len;       /* actual length of packet */
+} pcaprec_hdr_t;
+
 /* packs the data tight and sends it */
 static void send_packet(NETSOCKET socket, NETADDR4 *addr, NETPACKETCONSTRUCT *packet)
 {
@@ -229,14 +247,14 @@ static void send_packet(NETSOCKET socket, NETADDR4 *addr, NETPACKETCONSTRUCT *pa
 		io_write(datalog, &packet->chunk_data, packet->data_size);
 	}
 	
-	if(1)
+	if(COMPRESSION)
 	{
 		int compressed_size = (huffman_compress(&huffmanstate, packet->chunk_data, packet->data_size, &buffer[4], NET_MAX_PACKETSIZE-4)+7)/8;
 		net_udp4_send(socket, addr, buffer, NET_PACKETHEADERSIZE+compressed_size);
 	}
 	else
 	{
-		mem_copy(&buffer[4], packet->chunk_data, packet->data_size);
+		mem_copy(&buffer[3], packet->chunk_data, packet->data_size);
 		net_udp4_send(socket, addr, buffer, NET_PACKETHEADERSIZE+packet->data_size);
 	}
 }
@@ -246,7 +264,10 @@ static int unpack_packet(unsigned char *buffer, int size, NETPACKETCONSTRUCT *pa
 {
 	/* check the size */
 	if(size < NET_PACKETHEADERSIZE || size > NET_MAX_PACKETSIZE)
+	{
+		dbg_msg("", "packet too small");
 		return -1;
+	}
 	
 	/* read the packet */
 	packet->flags = buffer[0]>>4;
@@ -254,12 +275,12 @@ static int unpack_packet(unsigned char *buffer, int size, NETPACKETCONSTRUCT *pa
 	packet->num_chunks = buffer[2];
 	packet->data_size = size - NET_PACKETHEADERSIZE;
 	
-	if(1)
+	if(COMPRESSION)
 	{
-		huffman_decompress(&huffmanstate, &buffer[4], packet->data_size, packet->chunk_data, sizeof(packet->chunk_data));
+		huffman_decompress(&huffmanstate, &buffer[3], packet->data_size, packet->chunk_data, sizeof(packet->chunk_data));
 	}
 	else
-		mem_copy(packet->chunk_data, &buffer[4], packet->data_size);
+		mem_copy(packet->chunk_data, &buffer[3], packet->data_size);
 	
 	/* return success */
 	return 0;
@@ -435,6 +456,7 @@ static void conn_send_control(NETCONNECTION *conn, int controlmsg, const void *e
 
 static void conn_resend(NETCONNECTION *conn)
 {
+	int resend_count = 0;
 	int max = 10;
 	RINGBUFFER_ITEM *item = conn->buffer.first;
 	while(item)
@@ -443,9 +465,12 @@ static void conn_resend(NETCONNECTION *conn)
 		conn_queue_chunk(conn, resend->flags|NET_CHUNKFLAG_RESEND, resend->data_size, resend->data);
 		item = item->next;
 		max--;
+		resend_count++;
 		if(!max)
 			break;
 	}
+	
+	dbg_msg("conn", "resent %d packets", resend_count);
 }
 
 static int conn_connect(NETCONNECTION *conn, NETADDR4 *addr)

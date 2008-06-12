@@ -22,90 +22,18 @@ if not config:load("config.bam") then
 end
 
 -- data compiler
-dc_compiler = "python scripts/compiler.py"
-if family == "windows" then
-	dc_compiler = "scripts\\compiler.py"
-end
-
-netobj_compiler = "python scripts/netobj.py"
-if family == "windows" then
-	netobj_compiler = "scripts\\netobj.py"
-end
-
-dat2c_compiler = "python scripts/dat2c.py"
-if family == "windows" then
-	dat2c_compiler = "scripts\\dat2c.py"
-end
-
-cmd5_tool = "python scripts/cmd5.py"
-if family == "windows" then
-	cmd5_tool = "scripts\\cmd5.py"
-end
-
-function rc(output, input)
-	print("rc " .. PathFilename(input))
-	return os.execute("rc /fo " .. output .. " " .. input)
-end
-
-function cmd5(output, inputs)
-	cmd = cmd5_tool .. " "
-	for i,v in inputs do
-		cmd = cmd .. v .. " " 
+function Script(name)
+	if family == "windows" then
+		return str_replace(name, "/", "\\")
 	end
-	cmd = cmd .. " > " .. output
-	return {"cmd5 " .. PathFilename(output), cmd}
+	return "python " .. name
 end
 
-function dat2c(output, data, name)
-	return {
-		"dat2c " .. PathFilename(output) .. " = " .. PathFilename(data),
-		dat2c_compiler .. " " .. data .. " " .. name .. " > " .. output,
-	}
-end
-
-function dc_header(output, data, script)
-	return {
-		"dc_header " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script),
-		dc_compiler .. " " .. data .. " " .. script .. " -h " .. output
-	}
-end
-
-function dc_source(output, data, script, headerfile)
-	cmd = dc_compiler .. " " .. data .. " " .. script .. " -s " .. output .. " " .. headerfile
-	return {
-		"dc_source " .. PathFilename(output) .. "+" .. PathFilename(headerfile) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script),
-		cmd
-	}
-end
-
-function dc_data(output, data, script)
-	return {
-		"dc_data " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script),
-		dc_compiler .. " " .. data .. " " .. script .. " -d " .. output
-	}
-end
-
-function dc_cdata(output, data, script)
-	return {
-		"dc_cdata " .. PathFilename(output) .. " = " .. PathFilename(data) .. " ~ " .. PathFilename(script),
-		dc_compiler .. " " .. data .. " " .. script .. " -c " .. output
-	}
-end
-
-function netobj_source(output, proto)
-	return {
-		"netobj source " .. PathFilename(output) .. " = " .. PathFilename(proto),
-		netobj_compiler .. " source " .. proto .. " " .. output
-	}
-end
-
-function netobj_header(output, proto)
-	return {
-		"netobj header " .. PathFilename(output) .. " = " .. PathFilename(proto),
-		netobj_compiler .. " header " .. proto .. " " .. output
-	}
-end
-
+--dc_compiler = Script("scripts/compiler.py")
+--netobj_compiler = Script("scripts/netobj.py")
+dat2c_compiler = Script("scripts/dat2c.py")
+cmd5_tool = Script("scripts/cmd5.py")
+content_compiler = Script("datasrc/compile.py")
 
 function CHash(output, ...)
 	local inputs = {}
@@ -114,11 +42,14 @@ function CHash(output, ...)
 	output = Path(output)
 	
 	-- compile all the files
+	local cmd = cmd5_tool .. " "
 	for index, inname in ih do
-		table.insert(inputs, Path(inname))
+		cmd = cmd .. Path(inname) .. " " 
 	end
 	
-	bam_add_job("cmd5", output, inputs)
+	cmd = cmd .. " > " .. output
+	
+	bam_add_job(output, "cmd5 " .. output, cmd)
 	for index, inname in inputs do
 		bam_add_dependency(output, inname)
 	end
@@ -128,7 +59,7 @@ end
 function ResCompile(scriptfile)
 	scriptfile = Path(scriptfile)
 	output = PathBase(scriptfile) .. ".res"
-	bam_add_job("rc", output, scriptfile)
+	bam_add_job(output, "rc " .. scriptfile, "rc /fo " .. output .. " " .. scriptfile)
 	bam_add_dependency(output, scriptfile)
 	return output
 end
@@ -136,81 +67,48 @@ end
 function Dat2c(datafile, sourcefile, arrayname)
 	datafile = Path(datafile)
 	sourcefile = Path(sourcefile)
-	bam_add_job("dat2c", sourcefile, datafile, arrayname)
+
+	bam_add_job(
+		sourcefile,
+		"dat2c " .. PathFilename(sourcefile) .. " = " .. PathFilename(datafile),
+		dat2c_compiler .. " " .. datafile .. " " .. arrayname .. " > " .. sourcefile
+	)
 	bam_add_dependency(sourcefile, datafile)
 	return sourcefile
 end
 
-function NetObjCompile(protofile, sourcefile, headerfile)
-	protofile = Path(protofile)
-	sourcefile = Path(sourcefile)
-	headerfile = Path(headerfile)
-	bam_add_job("netobj_source", sourcefile, protofile)
-	bam_add_job("netobj_header", headerfile, protofile)
-	bam_add_dependency(sourcefile, protofile)
-	bam_add_dependency(headerfile, protofile)
-	bam_dependency_cpp(sourcefile, {"src"})
-	return {source = sourcefile, header=headerfile}
+function ContentCompile(action, output)
+	output = Path(output)
+	bam_add_job(
+		output,
+		action .. " > " .. output,
+		Script("datasrc/compile.py") .. " " .. action .. " > " .. Path(output)
+	)
+	bam_add_dependency(output, Path("datasrc/content.py")) -- do this more proper
+	bam_add_dependency(output, Path("datasrc/network.py"))
+	bam_add_dependency(output, Path("datasrc/compile.py"))
+	bam_add_dependency(output, Path("datasrc/datatypes.py"))
+	return output
 end
 
-function DataCompile(datafile, scriptfile, headerfile, sourcefile, outputdatafile)
-	datafile = Path(datafile)
-	scriptfile = Path(scriptfile)
-	headerfile = Path(headerfile)
+-- Content Compile
+network_source = ContentCompile("network_source", "src/game/generated/g_protocol.cpp")
+network_header = ContentCompile("network_header", "src/game/generated/g_protocol.h")
+client_content_source = ContentCompile("client_content_source", "src/game/generated/gc_data.cpp")
+client_content_header = ContentCompile("client_content_header", "src/game/generated/gc_data.h")
+server_content_source = ContentCompile("server_content_source", "src/game/generated/gs_data.cpp")
+server_content_header = ContentCompile("server_content_header", "src/game/generated/gs_data.h")
 
-	bam_add_job("dc_header", headerfile, datafile, scriptfile)
-	bam_add_dependency(headerfile, datafile)
-	bam_add_dependency(headerfile, scriptfile)
-	
-	if sourcefile then
-		sourcefile = Path(sourcefile)
-		bam_add_job("dc_source", sourcefile, datafile, scriptfile, headerfile)
-		bam_add_dependency(sourcefile, datafile)
-		bam_add_dependency(sourcefile, scriptfile)
-		bam_add_dependency(sourcefile, headerfile)
-	end
-		
-	if outputdatafile then
-		outputdatafile = Path(outputdatafile)
-		bam_add_job("dc_cdata", outputdatafile, datafile, scriptfile)
-		bam_add_dependency(outputdatafile, datafile)
-		bam_add_dependency(outputdatafile, scriptfile)
-	end
-		
-	return {cdata = outputdatafile, header=headerfile, source=sourcefile}
-end
-
-serverdata = DataCompile(
-		"datasrc/data.ds", 
-		"datasrc/server.dts", 
-		"src/game/generated/gs_data.h",
-		"src/game/generated/gs_data.cpp",
-		"src/game/generated/gs_internaldata.cpp")
-
-clientdata = DataCompile(
-		"datasrc/data.ds", 
-		"datasrc/client.dts", 
-		"src/game/generated/gc_data.h",
-		"src/game/generated/gc_data.cpp",
-		"src/game/generated/gc_internaldata.cpp")
-
-networkdata = DataCompile(
-		"datasrc/data.ds", 
-		"datasrc/network.dts", 
-		"src/game/generated/g_protocol_ids.h",
-		"src/game/generated/g_protocol_ids.cpp")
-		
-netobj = NetObjCompile(
-		"src/game/g_protocol.def",
-		"src/game/generated/g_protocol.cpp",
-		"src/game/generated/g_protocol.h")
+bam_add_dependency(network_source, network_header)
+bam_add_dependency(client_content_source, client_content_header)
+bam_add_dependency(server_content_source, server_content_header)
 
 nethash = CHash(
 	"src/game/generated/nethash.c",
 	"src/engine/e_protocol.h",
 	"src/game/generated/g_protocol.h",
 	"src/game/g_tuning.h",
-	"src/game/g_game.cpp", networkdata.header)
+	"src/game/g_game.cpp", network_header)
 
 client_link_other = {}
 if config.compiler.value == "cl" then
@@ -402,9 +300,9 @@ function build(settings)
 	server = Compile(server_settings, Collect("src/engine/server/*.c"))
 	
 	masterserver = Compile(settings, Collect("src/mastersrv/*.cpp"))
-	game_shared = Compile(settings, Collect("src/game/*.cpp"), nethash, netobj.source)
-	game_client = Compile(settings, Collect("src/game/client/*.cpp"), clientdata.source, clientdata.cdata)
-	game_server = Compile(settings, Collect("src/game/server/*.cpp"), serverdata.source, serverdata.cdata)
+	game_shared = Compile(settings, Collect("src/game/*.cpp"), nethash, network_source)
+	game_client = Compile(settings, Collect("src/game/client/*.cpp"), client_content_source)
+	game_server = Compile(settings, Collect("src/game/server/*.cpp"), server_content_source)
 	game_editor = Compile(settings, Collect("src/game/editor/*.cpp"))
 
 	-- build tools (TODO: fix this so we don't get double _d_d stuff)

@@ -84,15 +84,17 @@ def get_all_servers():
 		addr = "master%d.teeworlds.com"%i
 		list = get_servers(addr)
 		if list:
+			print addr, "had", len(list), "servers"
 			servers += list
 	return servers
 
 servers = get_all_servers()
 total_players = 0
-for server in servers:
-	print "checking server", server[0], server[1]
-	info = get_server_info(server[0], server[1])
-	if info:
-		total_players += len(info["players"])
+if 1:
+	for server in servers:
+		print "checking server", server[0], server[1]
+		info = get_server_info(server[0], server[1])
+		if info:
+			total_players += len(info["players"])
 
 print total_players, "on", len(servers), 'servers'

@@ -4,16 +4,16 @@
 #include "gs_common.h"
 #include "gs_game_ctf.h"
 
-gameobject_ctf::gameobject_ctf()
+GAMECONTROLLER_CTF::GAMECONTROLLER_CTF()
 {
 	flags[0] = 0;
 	flags[1] = 0;
 	is_teamplay = true;
 }
 
-bool gameobject_ctf::on_entity(int index, vec2 pos)
+bool GAMECONTROLLER_CTF::on_entity(int index, vec2 pos)
 {
-	if(gameobject::on_entity(index, pos))
+	if(GAMECONTROLLER::on_entity(index, pos))
 		return true;
 	
 	int team = -1;
@@ -22,26 +22,26 @@ bool gameobject_ctf::on_entity(int index, vec2 pos)
 	if(team == -1)
 		return false;
 		
-	flag *f = new flag(team);
+	FLAG *f = new FLAG(team);
 	f->stand_pos = pos;
 	f->pos = pos;
 	flags[team] = f;
 	return true;
 }
 
-void gameobject_ctf::on_player_spawn(class player *p)
+void GAMECONTROLLER_CTF::on_player_spawn(class PLAYER *p)
 {
 }
 
-int gameobject_ctf::on_player_death(class player *victim, class player *killer, int weaponid)
+int GAMECONTROLLER_CTF::on_player_death(class PLAYER *victim, class PLAYER *killer, int weaponid)
 {
-	gameobject::on_player_death(victim, killer, weaponid);
+	GAMECONTROLLER::on_player_death(victim, killer, weaponid);
 	int had_flag = 0;
 	
 	// drop flags
 	for(int fi = 0; fi < 2; fi++)
 	{
-		flag *f = flags[fi];
+		FLAG *f = flags[fi];
 		if(f && f->carrying_player == killer)
 			had_flag |= 2;
 		if(f && f->carrying_player == victim)
@@ -61,15 +61,15 @@ int gameobject_ctf::on_player_death(class player *victim, class player *killer, 
 	return had_flag;
 }
 
-void gameobject_ctf::tick()
+void GAMECONTROLLER_CTF::tick()
 {
-	gameobject::tick();
+	GAMECONTROLLER::tick();
 
 	do_team_score_wincheck();
 	
 	for(int fi = 0; fi < 2; fi++)
 	{
-		flag *f = flags[fi];
+		FLAG *f = flags[fi];
 		
 		if(!f)
 			continue;
@@ -99,9 +99,9 @@ void gameobject_ctf::tick()
 		}
 		else
 		{
-			player *close_players[MAX_CLIENTS];
+			PLAYER *close_players[MAX_CLIENTS];
 			int types[] = {NETOBJTYPE_PLAYER_CHARACTER};
-			int num = world->find_entities(f->pos, 32.0f, (entity**)close_players, MAX_CLIENTS, types, 1);
+			int num = world->find_entities(f->pos, 32.0f, (ENTITY**)close_players, MAX_CLIENTS, types, 1);
 			for(int i = 0; i < num; i++)
 			{
 				if(close_players[i]->team == f->team)
@@ -109,7 +109,7 @@ void gameobject_ctf::tick()
 					// return the flag
 					if(!f->at_stand)
 					{
-						player *p = close_players[i];
+						PLAYER *p = close_players[i];
 						p->score += 1;
 
 						dbg_msg("game", "flag_return player='%d:%s'", p->client_id, server_clientname(p->client_id));
@@ -161,8 +161,8 @@ void gameobject_ctf::tick()
 }
 
 // Flag
-flag::flag(int _team)
-: entity(NETOBJTYPE_FLAG)
+FLAG::FLAG(int _team)
+: ENTITY(NETOBJTYPE_FLAG)
 {
 	team = _team;
 	proximity_radius = phys_size;
@@ -174,7 +174,7 @@ flag::flag(int _team)
 	world->insert_entity(this);
 }
 
-void flag::reset()
+void FLAG::reset()
 {
 	carrying_player = 0;
 	at_stand = 1;
@@ -182,7 +182,7 @@ void flag::reset()
 	vel = vec2(0,0);
 }
 
-void flag::snap(int snapping_client)
+void FLAG::snap(int snapping_client)
 {
 	NETOBJ_FLAG *flag = (NETOBJ_FLAG *)snap_new_item(NETOBJTYPE_FLAG, team, sizeof(NETOBJ_FLAG));
 	flag->x = (int)pos.x;

@@ -6,9 +6,9 @@
 #include "../g_mapitems.h"
 #include "gc_ui.h"
 
-struct tee_render_info
+struct TEE_RENDER_INFO
 {
-	tee_render_info()
+	TEE_RENDER_INFO()
 	{
 		texture = -1;
 		color_body = vec4(1,1,1,1);
@@ -36,9 +36,9 @@ enum
 	TILERENDERFLAG_EXTEND=4,
 };
 
-typedef struct sprite;
+typedef struct SPRITE;
 
-void select_sprite(sprite *spr, int flags=0, int sx=0, int sy=0);
+void select_sprite(SPRITE *spr, int flags=0, int sx=0, int sy=0);
 void select_sprite(int id, int flags=0, int sx=0, int sy=0);
 
 void draw_sprite(float x, float y, float size);
@@ -60,9 +60,9 @@ void render_particles();
 void render_tilemap_generate_skip();
 
 // object render methods (gc_render_obj.cpp)
-void render_tee(class animstate *anim, tee_render_info *info, int emote, vec2 dir, vec2 pos);
+void render_tee(class ANIM_STATE *anim, TEE_RENDER_INFO *info, int emote, vec2 dir, vec2 pos);
 void render_flag(const struct NETOBJ_FLAG *prev, const struct NETOBJ_FLAG *current);
-void render_powerup(const struct NETOBJ_POWERUP *prev, const struct NETOBJ_POWERUP *current);
+void render_pickup(const struct NETOBJ_PICKUP *prev, const struct NETOBJ_PICKUP *current);
 void render_projectile(const struct NETOBJ_PROJECTILE *current, int itemid);
 void render_laser(const struct NETOBJ_LASER *current);
 void render_player(

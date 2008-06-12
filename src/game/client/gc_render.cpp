@@ -14,7 +14,7 @@
 static float sprite_w_scale;
 static float sprite_h_scale;
 
-void select_sprite(sprite *spr, int flags, int sx, int sy)
+void select_sprite(SPRITE *spr, int flags, int sx, int sy)
 {
 	int x = spr->x+sx;
 	int y = spr->y+sy;
@@ -134,7 +134,7 @@ void ui_draw_rect(const RECT *r, vec4 color, int corners, float rounding)
 	gfx_quads_end();
 }
 
-void render_tee(animstate *anim, tee_render_info *info, int emote, vec2 dir, vec2 pos)
+void render_tee(ANIM_STATE *anim, TEE_RENDER_INFO *info, int emote, vec2 dir, vec2 pos)
 {
 	vec2 direction = dir;
 	vec2 position = pos;
@@ -196,7 +196,7 @@ void render_tee(animstate *anim, tee_render_info *info, int emote, vec2 dir, vec
 			}
 
 			// draw feet
-			keyframe *foot = f ? &anim->front_foot : &anim->back_foot;
+			ANIM_KEYFRAME *foot = f ? &anim->front_foot : &anim->back_foot;
 
 			float w = basesize;
 			float h = basesize/2;
@@ -433,11 +433,11 @@ static void render_items()
 		{
 			render_projectile((const NETOBJ_PROJECTILE *)data, item.id);
 		}
-		else if(item.type == NETOBJTYPE_POWERUP)
+		else if(item.type == NETOBJTYPE_PICKUP)
 		{
 			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
 			if(prev)
-				render_powerup((const NETOBJ_POWERUP *)prev, (const NETOBJ_POWERUP *)data);
+				render_pickup((const NETOBJ_PICKUP *)prev, (const NETOBJ_PICKUP *)data);
 		}
 		else if(item.type == NETOBJTYPE_LASER)
 		{

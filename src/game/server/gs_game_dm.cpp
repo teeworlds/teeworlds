@@ -3,8 +3,8 @@
 #include "gs_common.h"
 #include "gs_game_dm.h"
 
-void gameobject_dm::tick()
+void GAMECONTROLLER_DM::tick()
 {
 	do_player_score_wincheck();
-	gameobject::tick();
+	GAMECONTROLLER::tick();
 }

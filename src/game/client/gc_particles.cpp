@@ -9,7 +9,7 @@ enum
 	MAX_PARTICLES=1024*8,
 };
 
-static particle particles[MAX_PARTICLES];
+static PARTICLE particles[MAX_PARTICLES];
 static int first_free = -1;
 static int first_part[NUM_PARTGROUPS] = {-1};
 
@@ -31,7 +31,7 @@ void particle_reset()
 }
 
 
-void particle_add(int group, particle *part)
+void particle_add(int group, PARTICLE *part)
 {
 	if (first_free == -1)
 		return;

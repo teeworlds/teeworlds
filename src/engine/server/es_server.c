@@ -226,6 +226,9 @@ void server_setclientname(int client_id, const char *name)
 	if(client_id < 0 || client_id > MAX_CLIENTS || clients[client_id].state < SRVCLIENT_STATE_READY)
 		return;
 		
+	if(!name)
+		return;
+		
 	str_copy(nametry, name, MAX_NAME_LENGTH);
 	if(server_try_setclientname(client_id, nametry))
 	{

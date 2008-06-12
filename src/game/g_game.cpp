@@ -2,7 +2,7 @@
 #include <string.h>
 #include "g_game.h"
 
-const char *tuning_params::names[] =
+const char *TUNING_PARAMS::names[] =
 {
 	#define MACRO_TUNING_PARAM(name,value) #name,
 	#include "g_tuning.h"
@@ -10,7 +10,7 @@ const char *tuning_params::names[] =
 };
 
 
-bool tuning_params::set(int index, float value)
+bool TUNING_PARAMS::set(int index, float value)
 {
 	if(index < 0 || index >= num())
 		return false;
@@ -18,7 +18,7 @@ bool tuning_params::set(int index, float value)
 	return true;
 }
 
-bool tuning_params::get(int index, float *value)
+bool TUNING_PARAMS::get(int index, float *value)
 {
 	if(index < 0 || index >= num())
 		return false;
@@ -26,7 +26,7 @@ bool tuning_params::get(int index, float *value)
 	return true;
 }
 
-bool tuning_params::set(const char *name, float value)
+bool TUNING_PARAMS::set(const char *name, float value)
 {
 	for(int i = 0; i < num(); i++)
 		if(strcmp(name, names[i]) == 0)
@@ -34,7 +34,7 @@ bool tuning_params::set(const char *name, float value)
 	return false;
 }
 
-bool tuning_params::get(const char *name, float *value)
+bool TUNING_PARAMS::get(const char *name, float *value)
 {
 	for(int i = 0; i < num(); i++)
 		if(strcmp(name, names[i]) == 0)
@@ -166,7 +166,7 @@ float velocity_ramp(float value, float start, float range, float curvature)
 	return 1.0f/pow(curvature, (value-start)/range);
 }
 
-void player_core::reset()
+void PLAYER_CORE::reset()
 {
 	pos = vec2(0,0);
 	vel = vec2(0,0);
@@ -179,7 +179,7 @@ void player_core::reset()
 	triggered_events = 0;
 }
 
-void player_core::tick()
+void PLAYER_CORE::tick()
 {
 	float phys_size = 28.0f;
 	triggered_events = 0;
@@ -273,7 +273,7 @@ void player_core::tick()
 			// Check against other players first
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
-				player_core *p = world->players[i];
+				PLAYER_CORE *p = world->players[i];
 				if(!p || p == this)
 					continue;
 
@@ -312,7 +312,7 @@ void player_core::tick()
 	{
 		if(hooked_player != -1)
 		{
-			player_core *p = world->players[hooked_player];
+			PLAYER_CORE *p = world->players[hooked_player];
 			if(p)
 				hook_pos = p->pos;
 			else
@@ -366,7 +366,7 @@ void player_core::tick()
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			player_core *p = world->players[i];
+			PLAYER_CORE *p = world->players[i];
 			if(!p)
 				continue;
 			
@@ -414,7 +414,7 @@ void player_core::tick()
 		vel = normalize(vel) * 6000;
 }
 
-void player_core::move()
+void PLAYER_CORE::move()
 {
 	float rampvalue = velocity_ramp(length(vel)*50, world->tuning.velramp_start, world->tuning.velramp_range, world->tuning.velramp_curvature);
 	
@@ -423,7 +423,7 @@ void player_core::move()
 	vel.x = vel.x*(1.0f/rampvalue);
 }
 
-void player_core::write(NETOBJ_PLAYER_CORE *obj_core)
+void PLAYER_CORE::write(NETOBJ_PLAYER_CORE *obj_core)
 {
 	obj_core->x = (int)pos.x;
 	obj_core->y = (int)pos.y;
@@ -450,7 +450,7 @@ void player_core::write(NETOBJ_PLAYER_CORE *obj_core)
 	obj_core->angle = (int)(a*256.0f);
 }
 
-void player_core::read(const NETOBJ_PLAYER_CORE *obj_core)
+void PLAYER_CORE::read(const NETOBJ_PLAYER_CORE *obj_core)
 {
 	pos.x = obj_core->x;
 	pos.y = obj_core->y;
@@ -466,7 +466,7 @@ void player_core::read(const NETOBJ_PLAYER_CORE *obj_core)
 	jumped = obj_core->jumped;
 }
 
-void player_core::quantize()
+void PLAYER_CORE::quantize()
 {
 	NETOBJ_PLAYER_CORE c;
 	write(&c);

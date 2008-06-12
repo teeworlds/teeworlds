@@ -49,7 +49,7 @@ void render_projectile(const NETOBJ_PROJECTILE *current, int itemid)
 	vec2 pos = calc_pos(startpos, startvel, curvature, speed, ct);
 	vec2 prevpos = calc_pos(startpos, startvel, curvature, speed, ct-0.001f);
 
-	select_sprite(data->weapons[clamp(current->type, 0, NUM_WEAPONS-1)].sprite_proj);
+	select_sprite(data->weapons.id[clamp(current->type, 0, NUM_WEAPONS-1)].sprite_proj);
 	vec2 vel = pos-prevpos;
 	//vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
 	
@@ -78,7 +78,7 @@ void render_projectile(const NETOBJ_PROJECTILE *current, int itemid)
 	gfx_quads_end();
 }
 
-void render_powerup(const NETOBJ_POWERUP *prev, const NETOBJ_POWERUP *current)
+void render_pickup(const NETOBJ_PICKUP *prev, const NETOBJ_PICKUP *current)
 {
 	gfx_texture_set(data->images[IMAGE_GAME].id);
 	gfx_quads_begin();
@@ -88,21 +88,20 @@ void render_powerup(const NETOBJ_POWERUP *prev, const NETOBJ_POWERUP *current)
 	if (current->type == POWERUP_WEAPON)
 	{
 		angle = 0; //-pi/6;//-0.25f * pi * 2.0f;
-		select_sprite(data->weapons[clamp(current->subtype, 0, NUM_WEAPONS-1)].sprite_body);
-		size = data->weapons[clamp(current->subtype, 0, NUM_WEAPONS-1)].visual_size;
+		select_sprite(data->weapons.id[clamp(current->subtype, 0, NUM_WEAPONS-1)].sprite_body);
+		size = data->weapons.id[clamp(current->subtype, 0, NUM_WEAPONS-1)].visual_size;
 	}
 	else
 	{
 		const int c[] = {
-			SPRITE_POWERUP_HEALTH,
-			SPRITE_POWERUP_ARMOR,
-			SPRITE_POWERUP_WEAPON,
-			SPRITE_POWERUP_NINJA,
-			SPRITE_POWERUP_TIMEFIELD
+			SPRITE_PICKUP_HEALTH,
+			SPRITE_PICKUP_ARMOR,
+			SPRITE_PICKUP_WEAPON,
+			SPRITE_PICKUP_NINJA
 			};
 		select_sprite(c[current->type]);
 
-		if(c[current->type] == SPRITE_POWERUP_NINJA)
+		if(c[current->type] == SPRITE_PICKUP_NINJA)
 		{
 			effect_powerupshine(pos, vec2(96,18));
 			size *= 2.0f;
@@ -157,7 +156,7 @@ void render_laser(const struct NETOBJ_LASER *current)
 	vec2 from = vec2(current->from_x, current->from_y);
 	vec2 dir = normalize(pos-from);
 
-	float ticks = client_tick() + client_intratick() - current->eval_tick;
+	float ticks = client_tick() + client_intratick() - current->start_tick;
 	float ms = (ticks/50.0f) * 1000.0f;
 	float a =  ms / tuning.laser_bounce_delay;
 	a = clamp(a, 0.0f, 1.0f);
@@ -222,7 +221,7 @@ void render_laser(const struct NETOBJ_LASER *current)
 
 
 
-static void render_hand(tee_render_info *info, vec2 center_pos, vec2 dir, float angle_offset, vec2 post_rot_offset)
+static void render_hand(TEE_RENDER_INFO *info, vec2 center_pos, vec2 dir, float angle_offset, vec2 post_rot_offset)
 {
 	// for drawing hand
 	//const skin *s = skin_get(skin_id);
@@ -278,7 +277,7 @@ void render_player(
 	player = *player_char;
 
 	NETOBJ_PLAYER_INFO info = *player_info;
-	tee_render_info render_info = client_datas[info.cid].render_info;
+	TEE_RENDER_INFO render_info = client_datas[info.cid].render_info;
 
 	// check for teamplay modes
 	bool is_teamplay = false;
@@ -353,7 +352,7 @@ void render_player(
 
 	// evaluate animation
 	float walk_time = fmod(position.x, 100.0f)/100.0f;
-	animstate state;
+	ANIM_STATE state;
 	anim_eval(&data->animations[ANIM_BASE], 0, &state);
 
 	if(inair)
@@ -445,7 +444,7 @@ void render_player(
 
 		// normal weapons
 		int iw = clamp(player.weapon, 0, NUM_WEAPONS-1);
-		select_sprite(data->weapons[iw].sprite_body, direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
+		select_sprite(data->weapons.id[iw].sprite_body, direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
 
 		vec2 dir = direction;
 		float recoil = 0.0f;
@@ -454,28 +453,28 @@ void render_player(
 		{
 			// Static position for hammer
 			p = position + vec2(state.attach.x, state.attach.y);
-			p.y += data->weapons[iw].offsety;
+			p.y += data->weapons.id[iw].offsety;
 			// if attack is under way, bash stuffs
 			if(direction.x < 0)
 			{
 				gfx_quads_setrotation(-pi/2-state.attach.angle*pi*2);
-				p.x -= data->weapons[iw].offsetx;
+				p.x -= data->weapons.id[iw].offsetx;
 			}
 			else
 			{
 				gfx_quads_setrotation(-pi/2+state.attach.angle*pi*2);
 			}
-			draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
+			draw_sprite(p.x, p.y, data->weapons.id[iw].visual_size);
 		}
 		else if (player.weapon == WEAPON_NINJA)
 		{
 			p = position;
-			p.y += data->weapons[iw].offsety;
+			p.y += data->weapons.id[iw].offsety;
 
 			if(direction.x < 0)
 			{
 				gfx_quads_setrotation(-pi/2-state.attach.angle*pi*2);
-				p.x -= data->weapons[iw].offsetx;
+				p.x -= data->weapons.id[iw].offsetx;
 				effect_powerupshine(p+vec2(32,0), vec2(32,12));
 			}
 			else
@@ -483,24 +482,24 @@ void render_player(
 				gfx_quads_setrotation(-pi/2+state.attach.angle*pi*2);
 				effect_powerupshine(p-vec2(32,0), vec2(32,12));
 			}
-			draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
+			draw_sprite(p.x, p.y, data->weapons.id[iw].visual_size);
 
 			// HADOKEN
-			if ((client_tick()-player.attacktick) <= (SERVER_TICK_SPEED / 6) && data->weapons[iw].nummuzzlesprites)
+			if ((client_tick()-player.attacktick) <= (SERVER_TICK_SPEED / 6) && data->weapons.id[iw].num_sprite_muzzles)
 			{
-				int itex = rand() % data->weapons[iw].nummuzzlesprites;
+				int itex = rand() % data->weapons.id[iw].num_sprite_muzzles;
 				float alpha = 1.0f;
-				if (alpha > 0.0f && data->weapons[iw].sprite_muzzle[itex].psprite)
+				if (alpha > 0.0f && data->weapons.id[iw].sprite_muzzles[itex])
 				{
 					vec2 dir = vec2(player_char->x,player_char->y) - vec2(prev_char->x, prev_char->y);
 					dir = normalize(dir);
 					float hadokenangle = get_angle(dir);
 					gfx_quads_setrotation(hadokenangle);
 					//float offsety = -data->weapons[iw].muzzleoffsety;
-					select_sprite(data->weapons[iw].sprite_muzzle[itex].psprite, 0);
+					select_sprite(data->weapons.id[iw].sprite_muzzles[itex], 0);
 					vec2 diry(-dir.y,dir.x);
 					p = position;
-					float offsetx = data->weapons[iw].muzzleoffsetx;
+					float offsetx = data->weapons.id[iw].muzzleoffsetx;
 					p -= dir * offsetx;
 					draw_sprite(p.x, p.y, 160.0f);
 				}
@@ -513,36 +512,37 @@ void render_player(
 			float a = (client_tick()-player.attacktick+intratick)/5.0f;
 			if(a < 1)
 				recoil = sinf(a*pi);
-			p = position + dir * data->weapons[iw].offsetx - dir*recoil*10.0f;
-			p.y += data->weapons[iw].offsety;
-			draw_sprite(p.x, p.y, data->weapons[iw].visual_size);
+			p = position + dir * data->weapons.id[iw].offsetx - dir*recoil*10.0f;
+			p.y += data->weapons.id[iw].offsety;
+			draw_sprite(p.x, p.y, data->weapons.id[iw].visual_size);
 		}
 
 		if (player.weapon == WEAPON_GUN || player.weapon == WEAPON_SHOTGUN)
 		{
 			// check if we're firing stuff
-			if (true)//prev.attackticks)
+			if(data->weapons.id[iw].num_sprite_muzzles)//prev.attackticks)
 			{
 				float alpha = 0.0f;
 				int phase1tick = (client_tick() - player.attacktick);
-				if (phase1tick < (data->weapons[iw].muzzleduration + 3))
+				if (phase1tick < (data->weapons.id[iw].muzzleduration + 3))
 				{
-					float t = ((((float)phase1tick) + intratick)/(float)data->weapons[iw].muzzleduration);
+					float t = ((((float)phase1tick) + intratick)/(float)data->weapons.id[iw].muzzleduration);
 					alpha = LERP(2.0, 0.0f, min(1.0f,max(0.0f,t)));
 				}
 
-				int itex = rand() % data->weapons[iw].nummuzzlesprites;
-				if (alpha > 0.0f && data->weapons[iw].sprite_muzzle[itex].psprite)
+				int itex = rand() % data->weapons.id[iw].num_sprite_muzzles;
+				if (alpha > 0.0f && data->weapons.id[iw].sprite_muzzles[itex])
 				{
-					float offsety = -data->weapons[iw].muzzleoffsety;
-					select_sprite(data->weapons[iw].sprite_muzzle[itex].psprite, direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
+					float offsety = -data->weapons.id[iw].muzzleoffsety;
+					select_sprite(data->weapons.id[iw].sprite_muzzles[itex], direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
 					if(direction.x < 0)
 						offsety = -offsety;
 
 					vec2 diry(-dir.y,dir.x);
-					vec2 muzzlepos = p + dir * data->weapons[iw].muzzleoffsetx + diry * offsety;
+					vec2 muzzlepos = p + dir * data->weapons.id[iw].muzzleoffsetx + diry * offsety;
 
-					draw_sprite(muzzlepos.x, muzzlepos.y, data->weapons[iw].visual_size);
+					dbg_msg("", "%d", data->weapons.id[iw].num_sprite_muzzles);
+					draw_sprite(muzzlepos.x, muzzlepos.y, data->weapons.id[iw].visual_size);
 				}
 			}
 		}
@@ -561,7 +561,7 @@ void render_player(
 	if(info.local && config.debug)
 	{
 		vec2 ghost_position = mix(vec2(prev_char->x, prev_char->y), vec2(player_char->x, player_char->y), client_intratick());
-		tee_render_info ghost = render_info;
+		TEE_RENDER_INFO ghost = render_info;
 		ghost.color_body.a = 0.5f;
 		ghost.color_feet.a = 0.5f;
 		render_tee(&state, &ghost, player.emote, direction, ghost_position); // render ghost

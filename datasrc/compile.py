@@ -1,9 +1,8 @@
 import os, imp, sys
-import datatypes
+from datatypes import *
 import content
 import network
 
-	
 def create_enum_table(names, num):
 	lines = []
 	lines += ["enum", "{"]
@@ -13,180 +12,114 @@ def create_enum_table(names, num):
 	lines += ["\t%s" % num, "};"]
 	return lines
 	
-gen_content_header = False
-gen_content_source = True
-
-
-# collect sprites
-sprites = []
-for set in content.Sprites:
-	sprites += set.sprites
-
-
-if gen_content_header:
-	
-	print """
-struct SOUND
-{
-	int id;
-	const char *filename;
-};
-
-struct SOUNDSET
-{
-	int num_sounds;
-	SOUND *sound;
-};
-
-struct IMAGE
-{
-	int id;
-	const char *filename;
-};
-
-struct SPRITESET
-{
-	IMAGE *image;
-	int gridx;
-	int gridy;
-};
-
-struct SPRITE
-{
-	SPRITESET *set;
-	int x, y, w, h;
-};
-
-"""
-
-	def generate_struct(this, name, parent_name):
-		print "struct %s" % name
-
-		print "{"
-		if parent_name:
-			print "\t%s base;" % parent_name
-		for var in this.fields[this.baselen:]:
-			for l in var.emit_declaration(): print "\t"+l
-		print "};"
-
-	generate_struct(content.WeaponBase, "WEAPONSPEC", None)
-	for weapon in content.Weapons:
-		generate_struct(weapon, "WEAPONSPEC_%s"%weapon.name.upper(), "WEAPONSPEC")
-
-	# generate enums
-	for l in create_enum_table(["SOUND_"+o.name.upper() for o in content.Sounds], "NUM_SOUNDS"): print l
-	for l in create_enum_table(["IMAGE_"+o.name.upper() for o in content.Images], "NUM_IMAGES"): print l
-	for l in create_enum_table(["SPRITE_"+o.name.upper() for o in sprites], "NUM_SPRITES"): print l
-
-	for l in create_enum_table(["WEAPONTYPE_"+o.name.upper() for o in content.Weapons], "NUM_WEAPONTYPES"): print l
-
-if gen_content_source:
-	# generate data
-	for s in content.Sounds:
-		print "static SOUND sounds_%s[%d] = {" % (s.name, len(s.files))
-		for filename in s.files:
-			print '\t{%d, "%s"},' % (-1, filename)
-		print "};"
-		
-	print "static SOUNDSET soundsets[%d] = {" % len(content.Sounds)
-	for s in content.Sounds:
-		print "\t{%d, sounds_%s}," % (len(s.files), s.name)
-		#for filename in s.files:
-		#	print "\t{%d, '%s'}," % (-1, filename)
-	print "};"
-
-	print "static IMAGE images[%d] = {" % len(content.Images)
-	for i in content.Images:
-		print '\t{%d, "%s"},' % (-1, i.filename)
-	print "};"
-
-	print "static SPRITESET spritesets[%d] = {" % len(content.Sprites)
-	for set in content.Sprites:
-		if set.image:
-			print '\t{&images[IMAGE_%s], %d, %d},' % (set.image.upper(), set.grid[0], set.grid[1])
-		else:
-			print '\t{0, %d, %d},' % (set.grid[0], set.grid[1])
-	print "};"
-
-	print "static SPRITE sprites[%d] = {" % len(sprites)
-	spritesetid = 0
-	for set in content.Sprites:
-		for sprite in set.sprites:
-			print '\t{&spritesets[%d], %d, %d, %d, %d},' % (spritesetid, sprite.pos[0], sprite.pos[1], sprite.pos[2], sprite.pos[3])
-		spritesetid += 1
-	print "};"
-
-	for weapon in content.Weapons:
-		print "static WEAPONSPEC_%s weapon_%s = {" % (weapon.name.upper(), weapon.name)
-		for var in weapon.fields:
-			for l in var.emit_definition(): print "\t"+l,
-			print ","
-		print "};"
-
-	print "struct WEAPONS"
+def EmitEnum(names, num):
+	print "enum"
 	print "{"
-	print "\tWEAPONSPEC *id[%d];" % len(content.Weapons)
-	for w in content.Weapons:
-		print "\tWEAPONSPEC_%s &weapon_%s;" % (w.name.upper(), w.name)
-	print ""
+	print "\t%s=0,"%names[0]
+	for name in names[1:]:
+		print "\t%s,"%name
+	print "\t%s" % num
 	print "};"
+		
 
-	print "static WEAPONS weapons = {{%s}," % (",".join(["&weapon_%s.base"%w.name for w in content.Weapons]))
-	for w in content.Weapons:
-		print "\tweapon_%s," % w.name
-	print "};"
+gen_network_header = False
+gen_network_source = False
+gen_client_content_header = False
+gen_client_content_source = False
+gen_server_content_header = False
+gen_server_content_source = False
 
+if "network_header" in sys.argv: gen_network_header = True
+if "network_source" in sys.argv: gen_network_source = True
+if "client_content_header" in sys.argv: gen_client_content_header = True
+if "client_content_source" in sys.argv: gen_client_content_source = True
+if "server_content_header" in sys.argv: gen_server_content_header = True
+if "server_content_source" in sys.argv: gen_server_content_source = True
 
+if gen_client_content_header or gen_server_content_header:
+	# emit the type declarations
+	contentlines = file("datasrc/content.py").readlines()
+	order = []
+	for line in contentlines:
+		line = line.strip()
+		if line[:6] == "class " and '(Struct)' in line:
+			order += [line.split()[1].split("(")[0]]
+	for name in order:
+		EmitTypeDeclaration(content.__dict__[name])
+		
+	# the container pointer
+	print 'extern DATACONTAINER *data;';
 	
-	print """
-struct DATACONTAINER
-{
-	int num_sounds;
-	SOUNDSET *sounds;
+	# enums
+	EmitEnum(["IMAGE_%s"%i.name.value.upper() for i in content.container.images.items], "NUM_IMAGES")
+	EmitEnum(["ANIM_%s"%i.name.value.upper() for i in content.container.animations.items], "NUM_ANIMS")
+	EmitEnum(["SPRITE_%s"%i.name.value.upper() for i in content.container.sprites.items], "NUM_SPRITES")
 
-	int num_images;
-	IMAGE *images;
-	
-	int num_sprites;
-	SPRITE *sprites;
+if gen_client_content_source or gen_server_content_source:
+	if gen_client_content_source:
+		print '#include "gc_data.h"'
+	if gen_server_content_source:
+		print '#include "gs_data.h"'
+	EmitDefinition(content.container, "datacontainer")
+	print 'DATACONTAINER *data = &datacontainer;';
 
-	WEAPONS &weapons;
-};"""
-
-	print "DATACONTAINER data = {"
-	print "\t%d, soundsets," % len(content.Sounds)
-	print "\t%d, images," % len(content.Images)
-	print "\t%d, sprites," % len(content.Sprites)
-	print "\tweapons,"
-	print "};"
-	
-	
 # NETWORK
-if 0:
-
-
+if gen_network_header:
+	
+	print network.RawHeader
+	
 	for e in network.Enums:
 		for l in create_enum_table(["%s_%s"%(e.name, v) for v in e.values], "NUM_%sS"%e.name): print l
 		print ""
 		
-	for l in create_enum_table([o.enum_name for o in network.Objects], "NUM_NETOBJTYPES"): print l
+	for l in create_enum_table(["NETOBJ_INVALID"]+[o.enum_name for o in network.Objects], "NUM_NETOBJTYPES"): print l
 	print ""
-	for l in create_enum_table([o.enum_name for o in network.Messages], "NUM_NETMSGTYPES"): print l
+	for l in create_enum_table(["NETMSG_INVALID"]+[o.enum_name for o in network.Messages], "NUM_NETMSGTYPES"): print l
 	print ""
 		
 	for item in network.Objects + network.Messages:
 		for line in item.emit_declaration():
 			print line
 		print ""
+		
+	EmitEnum(["SOUND_%s"%i.name.value.upper() for i in content.container.sounds.items], "NUM_SOUNDS")
+	EmitEnum(["WEAPON_%s"%i.name.value.upper() for i in content.container.weapons.id.items], "NUM_WEAPONS")
 
+	print "int netobj_validate(int type, void *data, int size);"
+	print "const char *netobj_get_name(int type);"
+	print "void *netmsg_secure_unpack(int type);"
+	print "const char *netmsg_get_name(int type);"
+	print "const char *netmsg_failed_on();"
+	print "int netobj_num_corrections();"
+	print "const char *netobj_corrected_on();"
+	
 
-if 0:		
+if gen_network_source:
 	# create names
 	lines = []
+	
+	lines += ['#include <engine/e_common_interface.h>']
+	lines += ['#include "g_protocol.h"']
+
+	lines += ['const char *msg_failed_on = "";']
+	lines += ['const char *obj_corrected_on = "";']
+	lines += ['static int num_corrections = 0;']
+	lines += ['int netobj_num_corrections() { return num_corrections; }']
+	lines += ['const char *netobj_corrected_on() { return obj_corrected_on; }']
+	lines += ['const char *netmsg_failed_on() { return msg_failed_on; }']
+	lines += ['const int max_int = 0x7fffffff;']
+
+	lines += ['static int netobj_clamp_int(const char *error_msg, int v, int min, int max)']
+	lines += ['{']
+	lines += ['\tif(v<min) { obj_corrected_on = error_msg; num_corrections++; return min; }']
+	lines += ['\tif(v>max) { obj_corrected_on = error_msg; num_corrections++; return max; }']
+	lines += ['\treturn v;']
+	lines += ['}']
+
 	lines += ["static const char *netobj_names[] = {"]
 	lines += ['\t"%s",' % o.name for o in network.Objects]
 	lines += ['\t""', "};", ""]
-	
+
 	for l in lines:
 		print l
 
@@ -197,8 +130,10 @@ if 0:
 
 	# create validate tables
 	lines = []
+	lines += ['static int validate_invalid(void *data, int size) { return -1; }']
 	lines += ["typedef int(*VALIDATEFUNC)(void *data, int size);"]
 	lines += ["static VALIDATEFUNC validate_funcs[] = {"]
+	lines += ['\tvalidate_invalid,']
 	lines += ['\tvalidate_%s,' % o.name for o in network.Objects]
 	lines += ["\t0x0", "};", ""]
 
@@ -208,6 +143,54 @@ if 0:
 	lines += ["\treturn validate_funcs[type](data, size);"]
 	lines += ["};", ""]
 	
+	lines += ['const char *netobj_get_name(int type)']
+	lines += ['{']
+	lines += ['\tif(type < 0 || type >= NUM_NETOBJTYPES) return "(out of range)";']
+	lines += ['\treturn netobj_names[type];']
+	lines += ['};']
+	lines += ['']
+
+	for item in network.Messages:
+		for line in item.emit_unpack():
+			print line
+		print ""
+
+	lines += ['static void *secure_unpack_invalid() { return 0; }']
+	lines += ['typedef void *(*SECUREUNPACKFUNC)();']
+	lines += ['static SECUREUNPACKFUNC secure_unpack_funcs[] = {']
+	lines += ['\tsecure_unpack_invalid,']
+	for msg in network.Messages:
+		lines += ['\tsecure_unpack_%s,' % msg.name]
+	lines += ['\t0x0']
+	lines += ['};']
+	
+	#
+	lines += ['void *netmsg_secure_unpack(int type)']
+	lines += ['{']
+	lines += ['\tvoid *msg;']
+	lines += ['\tmsg_failed_on = "";']
+	lines += ['\tif(type < 0 || type >= NUM_NETMSGTYPES) return 0;']
+	lines += ['\tmsg = secure_unpack_funcs[type]();']
+	lines += ['\tif(msg_unpack_error()) return 0;']
+	lines += ['\treturn msg;']
+	lines += ['};']
+	lines += ['']
+
+	lines += ['static const char *message_names[] = {']
+	lines += ['\t"invalid",']
+	for msg in network.Messages:
+		lines += ['\t"%s",' % msg.name]
+	lines += ['\t""']
+	lines += ['};']
+	lines += ['']
+
+	lines += ['const char *netmsg_get_name(int type)']
+	lines += ['{']
+	lines += ['\tif(type < 0 || type >= NUM_NETMSGTYPES) return "(out of range)";']
+	lines += ['\treturn message_names[type];']
+	lines += ['};']
+	lines += ['']
+
 	for l in lines:
 		print l
 	

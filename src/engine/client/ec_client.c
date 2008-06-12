@@ -770,7 +770,7 @@ static void client_process_packet(NETCHUNK *packet)
 	{
 		int sys;
 		int msg = msg_unpack_start(packet->data, packet->data_size, &sys);
-
+		
 		if(sys)
 		{
 			/* system message */

@@ -4,11 +4,33 @@ Emotes = ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"]
 PlayerStates = ["UNKNOWN", "PLAYING", "IN_MENU", "CHATTING"]
 GameTypes = ["DM", "TDM", "CTF"]
 
-Enums = [Enum("GAMETYPE", GameTypes), Enum("PLAYERSTATE", PlayerStates), Enum("EMOTE", Emotes)]
+Emoticons = [str(x) for x in xrange(1,16)]
+
+Powerups = ["ARMOR", "HEALTH", "WEAPON", "NINJA"]
+
+RawHeader = '''
+enum
+{
+	INPUT_STATE_MASK=0x2f,
+};
+'''
+
+RawSource = '''
+#include <engine/e_common_interface.h>
+#include "g_protocol.h"
+'''
+
+Enums = [
+	Enum("GAMETYPE", GameTypes),
+	Enum("PLAYERSTATE", PlayerStates),
+	Enum("EMOTE", Emotes),
+	Enum("POWERUP", Powerups),
+	Enum("EMOTICON", Emoticons)
+]
 
 Objects = [
 
-	NetObject("PlayerInput", [
+	NetObject("Player_Input", [
 		NetIntAny("direction"),
 		NetIntAny("target_x"),
 		NetIntAny("target_y"),
@@ -77,7 +99,7 @@ Objects = [
 		NetIntAny("teamscore_blue"),
 	]),
 
-	NetObject("PlayerCore", [
+	NetObject("Player_Core", [
 		NetIntAny("x"),
 		NetIntAny("y"),
 		NetIntAny("vx"),
@@ -96,7 +118,18 @@ Objects = [
 		NetIntAny("hook_dy"),
 	]),
 
-	NetObject("PlayerCharacter:PlayerCore", [
+	NetObject("Player_Character:Player_Core", [
+		NetIntRange("player_state", 0, 'NUM_PLAYERSTATES-1'),
+		NetIntRange("wanted_direction", -1, 1),
+		NetIntRange("health", 0, 10),
+		NetIntRange("armor", 0, 10),
+		NetIntRange("ammocount", 0, 10),
+		NetIntRange("weapon", 0, 'NUM_WEAPONS-1'),
+		NetIntRange("emote", 0, len(Emotes)),
+		NetIntRange("attacktick", 0, 'max_int'),
+	]),
+	
+	NetObject("Player_Info", [
 		NetIntRange("local", 0, 1),
 		NetIntRange("cid", 0, 'MAX_CLIENTS-1'),
 		NetIntRange("team", -1, 1),
@@ -108,26 +141,30 @@ Objects = [
 	
 	## Events
 	
-	NetEvent("CommonEvent", [
+	NetEvent("Common", [
 		NetIntAny("x"),
 		NetIntAny("y"),
 	]),
 	
 
-	NetEvent("Explosion:CommonEvent", []),
-	NetEvent("Spawn:CommonEvent", []),
-	NetEvent("Death:CommonEvent", []),
-	NetEvent("AirJump:CommonEvent", []),
+	NetEvent("Explosion:Common", []),
+	NetEvent("Spawn:Common", []),
+	
+	NetEvent("Death:Common", [
+		NetIntRange("cid", 0, 'MAX_CLIENTS-1'),
+	]),
+	
+	NetEvent("AirJump:Common", []),
 
-	NetEvent("SoundGlobal:CommonEvent", [
+	NetEvent("SoundGlobal:Common", [
 		NetIntRange("soundid", 0, 'NUM_SOUNDS-1'),
 	]),
 
-	NetEvent("SoundWorld:CommonEvent", [
+	NetEvent("SoundWorld:Common", [
 		NetIntRange("soundid", 0, 'NUM_SOUNDS-1'),
 	]),
 
-	NetEvent("DamageInd:CommonEvent", [
+	NetEvent("DamageInd:Common", [
 		NetIntAny("angle"),
 	]),
 ]

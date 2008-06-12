@@ -3,14 +3,14 @@
 #include "gs_common.h"
 #include "gs_game_tdm.h"
 
-gameobject_tdm::gameobject_tdm()
+GAMECONTROLLER_TDM::GAMECONTROLLER_TDM()
 {
 	is_teamplay = true;
 }
 
-int gameobject_tdm::on_player_death(class player *victim, class player *killer, int weapon)
+int GAMECONTROLLER_TDM::on_player_death(class PLAYER *victim, class PLAYER *killer, int weapon)
 {
-	gameobject::on_player_death(victim, killer, weapon);
+	GAMECONTROLLER::on_player_death(victim, killer, weapon);
 	
 	if(weapon >= 0)
 	{
@@ -23,8 +23,8 @@ int gameobject_tdm::on_player_death(class player *victim, class player *killer, 
 	return 0;
 }
 
-void gameobject_tdm::tick()
+void GAMECONTROLLER_TDM::tick()
 {
 	do_team_score_wincheck();
-	gameobject::tick();
+	GAMECONTROLLER::tick();
 }

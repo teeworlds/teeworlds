@@ -8,7 +8,7 @@ static bool add_100hz = false;
 
 void effect_air_jump(vec2 pos)
 {
-	particle p;
+	PARTICLE p;
 	p.set_default();
 	p.spr = SPRITE_PART_AIRJUMP;
 	p.pos = pos + vec2(-6.0f, 16.0f);
@@ -32,7 +32,7 @@ void effect_powerupshine(vec2 pos, vec2 size)
 	if(!add_50hz)
 		return;
 		
-	particle p;
+	PARTICLE p;
 	p.set_default();
 	p.spr = SPRITE_PART_SLICE;
 	p.pos = pos + vec2((frandom()-0.5f)*size.x, (frandom()-0.5f)*size.y);
@@ -53,7 +53,7 @@ void effect_smoketrail(vec2 pos, vec2 vel)
 	if(!add_50hz)
 		return;
 		
-	particle p;
+	PARTICLE p;
 	p.set_default();
 	p.spr = SPRITE_PART_SMOKE;
 	p.pos = pos;
@@ -72,7 +72,7 @@ void effect_skidtrail(vec2 pos, vec2 vel)
 	if(!add_100hz)
 		return;
 	
-	particle p;
+	PARTICLE p;
 	p.set_default();
 	p.spr = SPRITE_PART_SMOKE;
 	p.pos = pos;
@@ -91,7 +91,7 @@ void effect_bullettrail(vec2 pos)
 	if(!add_100hz)
 		return;
 		
-	particle p;
+	PARTICLE p;
 	p.set_default();
 	p.spr = SPRITE_PART_BALL;
 	p.pos = pos;
@@ -106,7 +106,7 @@ void effect_playerspawn(vec2 pos)
 {
 	for(int i = 0; i < 32; i++)
 	{
-		particle p;
+		PARTICLE p;
 		p.set_default();
 		p.spr = SPRITE_PART_SHELL;
 		p.pos = pos;
@@ -137,7 +137,7 @@ void effect_playerdeath(vec2 pos, int cid)
 	
 	for(int i = 0; i < 64; i++)
 	{
-		particle p;
+		PARTICLE p;
 		p.set_default();
 		p.spr = SPRITE_PART_SPLAT01 + (rand()%3);
 		p.pos = pos;
@@ -170,7 +170,7 @@ void effect_explosion(vec2 pos)
 		}
 		
 	// add the explosion
-	particle p;
+	PARTICLE p;
 	p.set_default();
 	p.spr = SPRITE_PART_EXPL01;
 	p.pos = pos;
@@ -183,7 +183,7 @@ void effect_explosion(vec2 pos)
 	// add the smoke
 	for(int i = 0; i < 24; i++)
 	{
-		particle p;
+		PARTICLE p;
 		p.set_default();
 		p.spr = SPRITE_PART_SMOKE;
 		p.pos = pos;

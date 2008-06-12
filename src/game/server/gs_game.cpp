@@ -5,8 +5,8 @@
 #include <game/g_mapitems.h>
 #include "gs_common.h"
 
-gameobject::gameobject()
-: entity(NETOBJTYPE_GAME)
+GAMECONTROLLER::GAMECONTROLLER()
+: ENTITY(NETOBJTYPE_GAME)
 {
 	// select gametype
 	if(strcmp(config.sv_gametype, "ctf") == 0)
@@ -40,7 +40,7 @@ gameobject::gameobject()
 extern vec2 spawn_points[3][64];
 extern int num_spawn_points[3];
 
-bool gameobject::on_entity(int index, vec2 pos)
+bool GAMECONTROLLER::on_entity(int index, vec2 pos)
 {
 	int type = -1;
 	int subtype = 0;
@@ -78,15 +78,15 @@ bool gameobject::on_entity(int index, vec2 pos)
 	
 	if(type != -1)
 	{
-		powerup *ppower = new powerup(type, subtype);
-		ppower->pos = pos;
+		PICKUP *pickup = new PICKUP(type, subtype);
+		pickup->pos = pos;
 		return true;
 	}
 
 	return false;
 }
 
-void gameobject::endround()
+void GAMECONTROLLER::endround()
 {
 	if(warmup) // game can't end when we are running warmup
 		return;
@@ -96,14 +96,14 @@ void gameobject::endround()
 	sudden_death = 0;
 }
 
-void gameobject::resetgame()
+void GAMECONTROLLER::resetgame()
 {
 	world->reset_requested = true;
 }
 
 static bool is_separator(char c) { return c == ';' || c == ' ' || c == ',' || c == '\t'; }
 
-void gameobject::startround()
+void GAMECONTROLLER::startround()
 {
 	resetgame();
 	
@@ -116,7 +116,7 @@ void gameobject::startround()
 	round_count++;
 }
 
-void gameobject::cyclemap()
+void GAMECONTROLLER::cyclemap()
 {
 	if(!strlen(config.sv_maprotation))
 		return;
@@ -174,7 +174,7 @@ void gameobject::cyclemap()
 	str_copy(config.sv_map, &buf[i], sizeof(config.sv_map));
 }
 
-void gameobject::post_reset()
+void GAMECONTROLLER::post_reset()
 {
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
@@ -183,7 +183,7 @@ void gameobject::post_reset()
 	}
 }
 	
-void gameobject::on_player_info_change(class player *p)
+void GAMECONTROLLER::on_player_info_change(class PLAYER *p)
 {
 	const int team_colors[2] = {65387, 10223467};
 	if(is_teamplay)
@@ -198,7 +198,7 @@ void gameobject::on_player_info_change(class player *p)
 }
 
 
-int gameobject::on_player_death(class player *victim, class player *killer, int weapon)
+int GAMECONTROLLER::on_player_death(class PLAYER *victim, class PLAYER *killer, int weapon)
 {
 	// do scoreing
 	if(!killer)
@@ -215,12 +215,12 @@ int gameobject::on_player_death(class player *victim, class player *killer, int 
 	return 0;
 }
 
-void gameobject::do_warmup(int seconds)
+void GAMECONTROLLER::do_warmup(int seconds)
 {
 	warmup = seconds*server_tickspeed();
 }
 
-bool gameobject::is_friendly_fire(int cid1, int cid2)
+bool GAMECONTROLLER::is_friendly_fire(int cid1, int cid2)
 {
 	if(cid1 == cid2)
 		return false;
@@ -234,7 +234,7 @@ bool gameobject::is_friendly_fire(int cid1, int cid2)
 	return false;
 }
 
-void gameobject::tick()
+void GAMECONTROLLER::tick()
 {
 	// do warmup
 	if(warmup)
@@ -283,7 +283,7 @@ void gameobject::tick()
 	server_setbrowseinfo(gametype, prog);
 }
 
-void gameobject::snap(int snapping_client)
+void GAMECONTROLLER::snap(int snapping_client)
 {
 	NETOBJ_GAME *game = (NETOBJ_GAME *)snap_new_item(NETOBJTYPE_GAME, 0, sizeof(NETOBJ_GAME));
 	game->paused = world->paused;
@@ -301,7 +301,7 @@ void gameobject::snap(int snapping_client)
 	game->teamscore_blue = teamscore[1];
 }
 
-int gameobject::get_auto_team(int notthisid)
+int GAMECONTROLLER::get_auto_team(int notthisid)
 {
 	int numplayers[2] = {0,0};
 	for(int i = 0; i < MAX_CLIENTS; i++)
@@ -322,7 +322,7 @@ int gameobject::get_auto_team(int notthisid)
 	return -1;
 }
 
-bool gameobject::can_join_team(int team, int notthisid)
+bool GAMECONTROLLER::can_join_team(int team, int notthisid)
 {
 	(void)team;
 	int numplayers[2] = {0,0};
@@ -338,7 +338,7 @@ bool gameobject::can_join_team(int team, int notthisid)
 	return (numplayers[0] + numplayers[1]) < config.sv_max_clients-config.sv_spectator_slots;
 }
 
-void gameobject::do_player_score_wincheck()
+void GAMECONTROLLER::do_player_score_wincheck()
 {
 	if(game_over_tick == -1  && !warmup)
 	{
@@ -371,7 +371,7 @@ void gameobject::do_player_score_wincheck()
 	}
 }
 
-void gameobject::do_team_score_wincheck()
+void GAMECONTROLLER::do_team_score_wincheck()
 {
 	if(game_over_tick == -1 && !warmup)
 	{
@@ -387,7 +387,7 @@ void gameobject::do_team_score_wincheck()
 	}
 }
 
-int gameobject::clampteam(int team)
+int GAMECONTROLLER::clampteam(int team)
 {
 	if(team < 0) // spectator
 		return -1;
@@ -396,4 +396,4 @@ int gameobject::clampteam(int team)
 	return  0;
 }
 
-gameobject *gameobj = 0;
+GAMECONTROLLER *gamecontroller = 0;
