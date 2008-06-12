@@ -5,9 +5,9 @@
 #include <engine/e_system.h>
 #include <engine/e_common_interface.h>
 #include <math.h>
-#include "g_math.h"
-#include "g_collision.h"
-#include "g_protocol.h"
+#include "g_math.hpp"
+#include "g_collision.hpp"
+#include "g_protocol.hpp"
 
 struct TUNING_PARAMS
 {
@@ -15,14 +15,14 @@ struct TUNING_PARAMS
 	{
 		const float ticks_per_second = 50.0f;
 		#define MACRO_TUNING_PARAM(name,value) name.set((int)(value*100.0f));
-		#include "g_tuning.h"
+		#include "g_tuning.hpp"
 		#undef MACRO_TUNING_PARAM
 	}
 
 	static const char *names[];
 	
 	#define MACRO_TUNING_PARAM(name,value) tune_param name;
-	#include "g_tuning.h"
+	#include "g_tuning.hpp"
 	#undef MACRO_TUNING_PARAM
 	
 	static int num() { return sizeof(TUNING_PARAMS)/sizeof(int); }

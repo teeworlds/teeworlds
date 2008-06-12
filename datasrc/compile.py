@@ -57,9 +57,9 @@ if gen_client_content_header or gen_server_content_header:
 
 if gen_client_content_source or gen_server_content_source:
 	if gen_client_content_source:
-		print '#include "gc_data.h"'
+		print '#include "gc_data.hpp"'
 	if gen_server_content_source:
-		print '#include "gs_data.h"'
+		print '#include "gs_data.hpp"'
 	EmitDefinition(content.container, "datacontainer")
 	print 'DATACONTAINER *data = &datacontainer;';
 
@@ -99,7 +99,7 @@ if gen_network_source:
 	lines = []
 	
 	lines += ['#include <engine/e_common_interface.h>']
-	lines += ['#include "g_protocol.h"']
+	lines += ['#include "g_protocol.hpp"']
 
 	lines += ['const char *msg_failed_on = "";']
 	lines += ['const char *obj_corrected_on = "";']

@@ -1,11 +1,11 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <string.h>
-#include "g_game.h"
+#include "g_game.hpp"
 
 const char *TUNING_PARAMS::names[] =
 {
 	#define MACRO_TUNING_PARAM(name,value) #name,
-	#include "g_tuning.h"
+	#include "g_tuning.hpp"
 	#undef MACRO_TUNING_PARAM
 };
 

@@ -1,5 +1,5 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <game/g_math.h>
+#include <game/g_math.hpp>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -10,19 +10,19 @@ extern "C" {
 	#include <engine/e_client_interface.h>
 };
 
-#include "../g_game.h"
-#include "../g_version.h"
-#include "../g_layers.h"
-#include "../g_math.h"
-#include "gc_map_image.h"
-#include "../generated/gc_data.h"
-#include "gc_menu.h"
-#include "gc_skin.h"
-#include "gc_ui.h"
-#include "gc_client.h"
-#include "gc_render.h"
-#include "gc_anim.h"
-#include "gc_console.h"
+#include "../g_game.hpp"
+#include "../g_version.hpp"
+#include "../g_layers.hpp"
+#include "../g_math.hpp"
+#include "gc_map_image.hpp"
+#include "../generated/gc_data.hpp"
+#include "gc_menu.hpp"
+#include "gc_skin.hpp"
+#include "gc_ui.hpp"
+#include "gc_client.hpp"
+#include "gc_render.hpp"
+#include "gc_anim.hpp"
+#include "gc_console.hpp"
 
 //struct data_container *data = 0;
 int64 debug_firedelay = 0;

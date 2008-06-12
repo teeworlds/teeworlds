@@ -2,10 +2,10 @@
 
 #include <stdlib.h>
 #include <math.h>
-#include "array.h"
-#include "../g_mapitems.h"
-#include "../g_math.h"
-#include "../client/gc_render.h"
+#include "array.hpp"
+#include "../g_mapitems.hpp"
+#include "../g_math.hpp"
+#include "../client/gc_render.hpp"
 
 extern "C" {
 	#include <engine/e_system.h>
@@ -14,7 +14,7 @@ extern "C" {
 	#include <engine/e_config.h>
 }
 
-#include <game/client/gc_ui.h>
+#include <game/client/gc_ui.hpp>
 
 typedef void (*INDEX_MODIFY_FUNC)(int *index);
 

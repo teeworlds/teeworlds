@@ -1,7 +1,7 @@
 #include <engine/e_client_interface.h>
-#include "gc_client.h"
-#include "gc_skin.h"
-#include "../generated/gc_data.h"
+#include "gc_client.hpp"
+#include "gc_skin.hpp"
+#include "../generated/gc_data.hpp"
 
 static bool add_50hz = false;
 static bool add_100hz = false;

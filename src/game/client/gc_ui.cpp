@@ -2,7 +2,7 @@
 #include <engine/e_system.h>
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
-#include "gc_ui.h"
+#include "gc_ui.hpp"
 
 /********************************************************
  UI                                                      

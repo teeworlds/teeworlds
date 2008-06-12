@@ -1,5 +1,5 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include "../g_vmath.h"
+#include "../g_vmath.hpp"
 
 // do this better and nicer
 typedef struct 

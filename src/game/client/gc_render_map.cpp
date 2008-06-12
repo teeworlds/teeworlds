@@ -1,7 +1,7 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <engine/e_client_interface.h>
-#include "../g_math.h"
-#include "gc_client.h"
+#include "../g_math.hpp"
+#include "gc_client.hpp"
 
 void render_eval_envelope(ENVPOINT *points, int num_points, int channels, float time, float *result)
 {

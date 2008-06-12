@@ -1,8 +1,8 @@
-#include <game/g_vmath.h>
-#include <game/g_protocol.h>
-#include <game/g_game.h>
+#include <game/g_vmath.hpp>
+#include <game/g_protocol.hpp>
+#include <game/g_game.hpp>
 
-#include <game/client/gc_render.h>
+#include <game/client/gc_render.hpp>
 
 // sound channels
 enum

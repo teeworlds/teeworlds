@@ -1,7 +1,7 @@
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
-#include "gc_client.h"
-#include "../g_layers.h"
+#include "gc_client.hpp"
+#include "../g_layers.hpp"
 
 struct FLOWCELL
 {

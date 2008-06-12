@@ -1,6 +1,6 @@
 #include <engine/e_client_interface.h>
-#include "gc_client.h"
-#include "../generated/gc_data.h"
+#include "gc_client.hpp"
+#include "../generated/gc_data.hpp"
 
 // NOTE: the way the particle system works isn't very cache friendly
 

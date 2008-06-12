@@ -11,10 +11,10 @@ extern "C" {
 	#include <engine/e_config.h>
 }
 
-#include <game/client/gc_map_image.h>
-#include <game/client/gc_ui.h>
-#include <game/g_game.h>
-#include <game/client/gc_render.h>
+#include <game/client/gc_map_image.hpp>
+#include <game/client/gc_ui.hpp>
+#include <game/g_game.hpp>
+#include <game/client/gc_render.hpp>
 
 #include "ed_editor.hpp"
 

@@ -2,8 +2,8 @@
 #include <string.h>
 #include <engine/e_config.h>
 #include <engine/e_server_interface.h>
-#include <game/g_mapitems.h>
-#include "gs_common.h"
+#include <game/g_mapitems.hpp>
+#include "gs_common.hpp"
 
 GAMECONTROLLER::GAMECONTROLLER()
 : ENTITY(NETOBJTYPE_GAME)

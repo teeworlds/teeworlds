@@ -1,6 +1,6 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include "../g_game.h"
-#include "../generated/gs_data.h"
+#include "../g_game.hpp"
+#include "../generated/gs_data.hpp"
 
 
 extern TUNING_PARAMS tuning;

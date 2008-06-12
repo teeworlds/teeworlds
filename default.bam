@@ -93,11 +93,11 @@ end
 
 -- Content Compile
 network_source = ContentCompile("network_source", "src/game/generated/g_protocol.cpp")
-network_header = ContentCompile("network_header", "src/game/generated/g_protocol.h")
+network_header = ContentCompile("network_header", "src/game/generated/g_protocol.hpp")
 client_content_source = ContentCompile("client_content_source", "src/game/generated/gc_data.cpp")
-client_content_header = ContentCompile("client_content_header", "src/game/generated/gc_data.h")
+client_content_header = ContentCompile("client_content_header", "src/game/generated/gc_data.hpp")
 server_content_source = ContentCompile("server_content_source", "src/game/generated/gs_data.cpp")
-server_content_header = ContentCompile("server_content_header", "src/game/generated/gs_data.h")
+server_content_header = ContentCompile("server_content_header", "src/game/generated/gs_data.hpp")
 
 bam_add_dependency(network_source, network_header)
 bam_add_dependency(client_content_source, client_content_header)
@@ -106,8 +106,8 @@ bam_add_dependency(server_content_source, server_content_header)
 nethash = CHash(
 	"src/game/generated/nethash.c",
 	"src/engine/e_protocol.h",
-	"src/game/generated/g_protocol.h",
-	"src/game/g_tuning.h",
+	"src/game/generated/g_protocol.hpp",
+	"src/game/g_tuning.hpp",
 	"src/game/g_game.cpp", network_header)
 
 client_link_other = {}

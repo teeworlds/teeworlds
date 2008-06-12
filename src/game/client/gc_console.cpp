@@ -1,5 +1,5 @@
-#include "gc_console.h"
-#include "../generated/gc_data.h"
+#include "gc_console.hpp"
+#include "../generated/gc_data.hpp"
 
 extern "C" {
 	#include <engine/e_system.h>
@@ -13,10 +13,10 @@ extern "C" {
 #include <cstring>
 #include <cstdio>
 
-#include "gc_ui.h"
-#include "gc_client.h"
+#include "gc_ui.hpp"
+#include "gc_client.hpp"
 
-#include "../g_version.h"
+#include "../g_version.hpp"
 
 enum
 {

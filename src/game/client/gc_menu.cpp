@@ -4,8 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <game/g_math.h>
-#include <game/g_vmath.h>
+#include <game/g_math.hpp>
+#include <game/g_vmath.hpp>
 
 extern "C" {
 	#include <engine/e_system.h>
@@ -14,15 +14,15 @@ extern "C" {
 	#include <engine/client/ec_font.h>
 }
 
-#include "../g_version.h"
-#include "../g_protocol.h"
+#include "../g_version.hpp"
+#include "../g_protocol.hpp"
 
-#include "../generated/gc_data.h"
-#include "gc_render.h"
-#include "gc_anim.h"
-#include "gc_skin.h"
-#include "gc_ui.h"
-#include "gc_client.h"
+#include "../generated/gc_data.hpp"
+#include "gc_render.hpp"
+#include "gc_anim.hpp"
+#include "gc_skin.hpp"
+#include "gc_ui.hpp"
+#include "gc_client.hpp"
 #include <mastersrv/mastersrv.h>
 
 //extern data_container *data;

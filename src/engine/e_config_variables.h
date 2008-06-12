@@ -1,5 +1,7 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include "../game/g_variables.h"
+
+/* TODO: remove this */
+#include "../game/g_variables.hpp"
 
 
 MACRO_CONFIG_STR(player_name, 32, "nameless tee")

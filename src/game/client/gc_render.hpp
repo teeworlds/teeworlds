@@ -2,9 +2,9 @@
 #ifndef GAME_CLIENT_RENDER_H
 #define GAME_CLIENT_RENDER_H
 
-#include "../g_vmath.h"
-#include "../g_mapitems.h"
-#include "gc_ui.h"
+#include "../g_vmath.hpp"
+#include "../g_mapitems.hpp"
+#include "gc_ui.hpp"
 
 struct TEE_RENDER_INFO
 {

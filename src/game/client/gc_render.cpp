@@ -2,14 +2,14 @@
 #include <math.h>
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
-#include <game/generated/gc_data.h>
-#include <game/g_protocol.h>
-#include <game/g_math.h>
-#include <game/g_layers.h>
-#include "gc_render.h"
-#include "gc_anim.h"
-#include "gc_client.h"
-#include "gc_map_image.h"
+#include <game/generated/gc_data.hpp>
+#include <game/g_protocol.hpp>
+#include <game/g_math.hpp>
+#include <game/g_layers.hpp>
+#include "gc_render.hpp"
+#include "gc_anim.hpp"
+#include "gc_client.hpp"
+#include "gc_map_image.hpp"
 
 static float sprite_w_scale;
 static float sprite_h_scale;

@@ -17,7 +17,7 @@ enum
 
 RawSource = '''
 #include <engine/e_common_interface.h>
-#include "g_protocol.h"
+#include "g_protocol.hpp"
 '''
 
 Enums = [

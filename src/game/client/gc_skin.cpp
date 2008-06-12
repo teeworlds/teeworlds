@@ -4,8 +4,8 @@
 #include <math.h>
 #include <engine/e_system.h>
 #include <engine/e_client_interface.h>
-#include "gc_skin.h"
-#include "../g_math.h"
+#include "gc_skin.hpp"
+#include "../g_math.hpp"
 
 enum
 {

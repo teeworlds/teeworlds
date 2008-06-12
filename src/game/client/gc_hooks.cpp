@@ -8,17 +8,17 @@ extern "C" {
 	#include <engine/e_console.h>
 };
 
-#include <game/generated/gc_data.h>
-#include <game/g_game.h>
-#include <game/g_version.h>
+#include <game/generated/gc_data.hpp>
+#include <game/g_game.hpp>
+#include <game/g_version.hpp>
 
-#include <game/g_layers.h>
+#include <game/g_layers.hpp>
 
-#include "gc_client.h"
-#include "gc_skin.h"
-#include "gc_render.h"
-#include "gc_map_image.h"
-#include "gc_console.h"
+#include "gc_client.hpp"
+#include "gc_skin.hpp"
+#include "gc_render.hpp"
+#include "gc_map_image.hpp"
+#include "gc_console.hpp"
 
 extern unsigned char internal_data[];
 

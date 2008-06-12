@@ -4,14 +4,14 @@
 #include <string.h>
 #include <engine/e_config.h>
 #include <engine/e_server_interface.h>
-#include <game/g_version.h>
-#include <game/g_collision.h>
-#include <game/g_layers.h>
-#include <game/g_math.h>
-#include "gs_common.h"
-#include "gs_game_ctf.h"
-#include "gs_game_tdm.h"
-#include "gs_game_dm.h"
+#include <game/g_version.hpp>
+#include <game/g_collision.hpp>
+#include <game/g_layers.hpp>
+#include <game/g_math.hpp>
+#include "gs_common.hpp"
+#include "gs_game_ctf.hpp"
+#include "gs_game_tdm.hpp"
+#include "gs_game_dm.hpp"
 
 TUNING_PARAMS tuning;
 

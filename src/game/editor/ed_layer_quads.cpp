@@ -1,7 +1,7 @@
 #include "ed_editor.hpp"
-#include <game/g_math.h>
-#include <game/generated/gc_data.h>
-#include <game/client/gc_render.h>
+#include <game/g_math.hpp>
+#include <game/generated/gc_data.hpp>
+#include <game/client/gc_render.hpp>
 
 LAYER_QUADS::LAYER_QUADS()
 {

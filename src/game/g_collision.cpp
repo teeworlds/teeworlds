@@ -1,11 +1,11 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <engine/e_system.h>
-#include <game/g_vmath.h>
+#include <game/g_vmath.hpp>
 #include <math.h>
 #include <engine/e_common_interface.h>
-#include <game/g_math.h>
-#include <game/g_mapitems.h>
-#include <game/g_layers.h>
+#include <game/g_math.hpp>
+#include <game/g_mapitems.hpp>
+#include <game/g_layers.hpp>
 
 static TILE *tiles;
 static int width = 0;

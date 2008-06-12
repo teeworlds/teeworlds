@@ -1,8 +1,8 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <engine/e_server_interface.h>
-#include <game/g_mapitems.h>
-#include "gs_common.h"
-#include "gs_game_ctf.h"
+#include <game/g_mapitems.hpp>
+#include "gs_common.hpp"
+#include "gs_game_ctf.hpp"
 
 GAMECONTROLLER_CTF::GAMECONTROLLER_CTF()
 {

@@ -4,7 +4,7 @@
 #ifndef GAME_PROTOCOL_H
 #define GAME_PROTOCOL_H
 
-#include <game/generated/g_protocol.h>
+#include <game/generated/g_protocol.hpp>
 
 // Network stuff
 /*

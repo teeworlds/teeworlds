@@ -3,13 +3,13 @@
 #include <stdio.h>
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
-#include "../generated/gc_data.h"
-#include "../g_protocol.h"
-#include "../g_math.h"
-#include "gc_render.h"
-#include "gc_anim.h"
-#include "gc_client.h"
-#include "gc_skin.h"
+#include "../generated/gc_data.hpp"
+#include "../g_protocol.hpp"
+#include "../g_math.hpp"
+#include "gc_render.hpp"
+#include "gc_anim.hpp"
+#include "gc_client.hpp"
+#include "gc_skin.hpp"
 
 
 void render_projectile(const NETOBJ_PROJECTILE *current, int itemid)
