@@ -880,7 +880,7 @@ void render_game()
 			// don't use predicted
 		}
 		else
-			local_character_pos = mix(predicted_prev_player.pos, predicted_player.pos, client_predintratick());
+			local_character_pos = mix(predicted_prev_char.pos, predicted_char.pos, client_predintratick());
 	}
 	else if(netobjects.local_character && netobjects.local_prev_character)
 	{
@@ -1663,3 +1663,8 @@ void render_game()
 	
 }
 
+
+extern "C" const char *modc_getitemname(int type)
+{
+	return netobj_get_name(type);
+}

@@ -281,6 +281,20 @@ void snap_invalidate_item(int snapid, int index);
 */
 void snap_input(void *data, int size);
 
+/*
+	Function: snap_set_staticsize
+		Tells the engine how big a specific item always will be. This
+		helps the engine to compress snapshots better.
+	
+	Arguments:
+		type - Item type
+		size - Size of the data.
+		
+	Remarks:
+		Size must be in a multiple of 4.
+*/
+void snap_set_staticsize(int type, int size);
+
 /* message packing */
 enum
 {

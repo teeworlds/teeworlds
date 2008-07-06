@@ -147,8 +147,8 @@ int snap_new_id()
 {
 	int id;
 	int64 now = time_get();
-	dbg_assert(snap_id_inited == 1, "requesting id too soon");
-	
+	if(!snap_id_inited)
+		snap_init_id();
 	
 	/* process timed ids */
 	while(snap_first_timed_id != -1 && snap_ids[snap_first_timed_id].timeout < now)
@@ -433,7 +433,7 @@ static void server_do_snap()
 					break;
 				}
 			}
-			
+	
 			/* create delta */
 			{
 				static PERFORMACE_INFO scope = {"delta", 0};
@@ -453,15 +453,17 @@ static void server_do_snap()
 
 				{				
 					static PERFORMACE_INFO scope = {"compress", 0};
+					/*char buffer[512];*/
 					perf_start(&scope);
 					snapshot_size = intpack_compress(deltadata, deltasize, compdata);
+					
+					/*str_hex(buffer, sizeof(buffer), compdata, snapshot_size);
+					dbg_msg("", "deltasize=%d -> %d : %s", deltasize, snapshot_size, buffer);*/
+					
 					perf_end();
 				}
-				
 
 				numpackets = (snapshot_size+max_size-1)/max_size;
-				
-				
 				
 				for(n = 0, left = snapshot_size; left; n++)
 				{
@@ -776,7 +778,7 @@ static void server_process_client_packet(NETCHUNK *packet)
 	}
 }
 
-static void server_send_serverinfo(NETADDR4 *addr, int lan)
+static void server_send_serverinfo(NETADDR *addr, int lan)
 {
 	NETCHUNK packet;
 	PACKER p;
@@ -904,10 +906,9 @@ static int server_load_map(const char *mapname)
 
 static int server_run()
 {
-	NETADDR4 bindaddr;
+	NETADDR bindaddr;
 
 	net_init();
-	snap_init_id();
 	
 	/* */
 	console_register_print_callback(server_send_rcon_line_authed);
@@ -920,9 +921,11 @@ static int server_run()
 	}
 	
 	/* start server */
-	if(config.sv_bindaddr[0] && net_host_lookup(config.sv_bindaddr, config.sv_port, &bindaddr) == 0)
+	/* TODO: IPv6 support */
+	if(config.sv_bindaddr[0] && net_host_lookup(config.sv_bindaddr, &bindaddr, NETTYPE_IPV4) == 0)
 	{
 		/* sweet! */
+		bindaddr.port = config.sv_port;
 	}
 	else
 	{
@@ -1108,7 +1111,7 @@ static void con_kick(void *result, void *user_data)
 static void con_status(void *result, void *user_data)
 {
 	int i;
-	NETADDR4 addr;
+	NETADDR addr;
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(clients[i].state == SRVCLIENT_STATE_INGAME)

@@ -66,7 +66,7 @@ void render_pickup(const struct NETOBJ_PICKUP *prev, const struct NETOBJ_PICKUP 
 void render_projectile(const struct NETOBJ_PROJECTILE *current, int itemid);
 void render_laser(const struct NETOBJ_LASER *current);
 void render_player(
-	const struct NETOBJ_PLAYER_CHARACTER *prev_char, const struct NETOBJ_PLAYER_CHARACTER *player_char,
+	const struct NETOBJ_CHARACTER *prev_char, const struct NETOBJ_CHARACTER *player_char,
 	const struct NETOBJ_PLAYER_INFO *prev_info, const struct NETOBJ_PLAYER_INFO *player_info);
 	
 // map render methods (gc_render_map.cpp)

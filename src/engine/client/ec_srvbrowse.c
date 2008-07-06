@@ -20,7 +20,7 @@ extern NETCLIENT *net;
 typedef struct SERVERENTRY_t SERVERENTRY;
 struct SERVERENTRY_t
 {
-	NETADDR4 addr;
+	NETADDR addr;
 	int64 request_time;
 	int got_info;
 	SERVER_INFO info;
@@ -264,7 +264,7 @@ static void client_serverbrowse_remove_request(SERVERENTRY *entry)
 	}
 }
 
-void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *info)
+void client_serverbrowse_set(NETADDR *addr, int request, SERVER_INFO *info)
 {
 	int hash = addr->ip[0];
 	SERVERENTRY *entry = 0;
@@ -272,7 +272,7 @@ void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *info)
 	entry = serverlist_ip[hash];
 	while(entry)
 	{
-		if(net_addr4_cmp(&entry->addr, addr) == 0)
+		if(net_addr_comp(&entry->addr, addr) == 0)
 		{
 			/* update the server that we already have */
 			if(!serverlist_lan)
@@ -377,7 +377,7 @@ void client_serverbrowse_refresh(int lan)
 	}
 	else
 	{
-		NETADDR4 addr;
+		NETADDR addr;
 		NETCHUNK p;
 		int i;
 		
@@ -396,7 +396,7 @@ void client_serverbrowse_refresh(int lan)
 				continue;
 			
 			p.address = addr;
-			netclient_send(net, &p);	
+			netclient_send(net, &p);
 		}
 
 		if(config.debug)

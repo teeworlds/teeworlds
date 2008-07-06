@@ -5,7 +5,7 @@ typedef struct
 	/* -1 means that it's a stateless packet */
 	/* 0 on the client means the server */
 	int client_id;
-	NETADDR4 address; /* only used when client_id == -1 */
+	NETADDR address; /* only used when client_id == -1 */
 	int flags;
 	int data_size;
 	const void *data;
@@ -45,7 +45,7 @@ void netcommon_openlog(const char *filename);
 void netcommon_init();
 
 /* server side */
-NETSERVER *netserver_open(NETADDR4 bindaddr, int max_clients, int flags);
+NETSERVER *netserver_open(NETADDR bindaddr, int max_clients, int flags);
 int netserver_set_callbacks(NETSERVER *s, NETFUNC_NEWCLIENT new_client, NETFUNC_DELCLIENT del_client, void *user);
 int netserver_recv(NETSERVER *s, NETCHUNK *chunk);
 int netserver_send(NETSERVER *s, NETCHUNK *chunk);
@@ -53,14 +53,14 @@ int netserver_close(NETSERVER *s);
 int netserver_update(NETSERVER *s);
 NETSOCKET netserver_socket(NETSERVER *s);
 int netserver_drop(NETSERVER *s, int client_id, const char *reason);
-int netserver_client_addr(NETSERVER *s, int client_id, NETADDR4 *addr);
+int netserver_client_addr(NETSERVER *s, int client_id, NETADDR *addr);
 int netserver_max_clients(NETSERVER *s);
 /*void netserver_stats(NETSERVER *s, NETSTATS *stats);*/
 
 /* client side */
-NETCLIENT *netclient_open(NETADDR4 bindaddr, int flags);
+NETCLIENT *netclient_open(NETADDR bindaddr, int flags);
 int netclient_disconnect(NETCLIENT *c, const char *reason);
-int netclient_connect(NETCLIENT *c, NETADDR4 *addr);
+int netclient_connect(NETCLIENT *c, NETADDR *addr);
 int netclient_recv(NETCLIENT *c, NETCHUNK *chunk);
 int netclient_send(NETCLIENT *c, NETCHUNK *chunk);
 int netclient_close(NETCLIENT *c);
@@ -79,7 +79,7 @@ public:
 	net_server() : ptr(0) {}
 	~net_server() { close(); }
 	
-	int open(NETADDR4 bindaddr, int max, int flags) { ptr = netserver_open(bindaddr, max, flags); return ptr != 0; }
+	int open(NETADDR bindaddr, int max, int flags) { ptr = netserver_open(bindaddr, max, flags); return ptr != 0; }
 	int close() { int r = netserver_close(ptr); ptr = 0; return r; }
 	
 	int set_callbacks(NETFUNC_NEWCLIENT new_client, NETFUNC_DELCLIENT del_client, void *user)
@@ -103,10 +103,10 @@ public:
 	net_client() : ptr(0) {}
 	~net_client() { close(); }
 	
-	int open(NETADDR4 bindaddr, int flags) { ptr = netclient_open(bindaddr, flags); return ptr != 0; }
+	int open(NETADDR bindaddr, int flags) { ptr = netclient_open(bindaddr, flags); return ptr != 0; }
 	int close() { int r = netclient_close(ptr); ptr = 0; return r; }
 	
-	int connect(NETADDR4 *addr) { return netclient_connect(ptr, addr); }
+	int connect(NETADDR *addr) { return netclient_connect(ptr, addr); }
 	int disconnect(const char *reason) { return netclient_disconnect(ptr, reason); }
 	
 	int recv(NETCHUNK *chunk) { return netclient_recv(ptr, chunk); }

@@ -6,7 +6,6 @@
 #include "gs_common.hpp"
 
 GAMECONTROLLER::GAMECONTROLLER()
-: ENTITY(NETOBJTYPE_GAME)
 {
 	// select gametype
 	if(strcmp(config.sv_gametype, "ctf") == 0)
@@ -91,14 +90,32 @@ void GAMECONTROLLER::endround()
 	if(warmup) // game can't end when we are running warmup
 		return;
 		
-	world->paused = true;
+	game.world.paused = true;
 	game_over_tick = server_tick();
 	sudden_death = 0;
 }
 
 void GAMECONTROLLER::resetgame()
 {
-	world->reset_requested = true;
+	game.world.reset_requested = true;
+}
+
+const char *GAMECONTROLLER::get_team_name(int team)
+{
+	if(is_teamplay)
+	{
+		if(team == 0)
+			return "red team";
+		else if(team == 1)
+			return "blue team";
+	}
+	else
+	{
+		if(team == 0)
+			return "game";
+	}
+	
+	return "spectators";
 }
 
 static bool is_separator(char c) { return c == ';' || c == ' ' || c == ',' || c == '\t'; }
@@ -110,7 +127,7 @@ void GAMECONTROLLER::startround()
 	round_start_tick = server_tick();
 	sudden_death = 0;
 	game_over_tick = -1;
-	world->paused = false;
+	game.world.paused = false;
 	teamscore[0] = 0;
 	teamscore[1] = 0;
 	round_count++;
@@ -178,8 +195,8 @@ void GAMECONTROLLER::post_reset()
 {
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(players[i].client_id != -1)
-			players[i].respawn();
+		if(game.players[i].client_id != -1)
+			game.players[i].respawn();
 	}
 }
 	
@@ -198,13 +215,13 @@ void GAMECONTROLLER::on_player_info_change(class PLAYER *p)
 }
 
 
-int GAMECONTROLLER::on_player_death(class PLAYER *victim, class PLAYER *killer, int weapon)
+int GAMECONTROLLER::on_character_death(class CHARACTER *victim, class PLAYER *killer, int weapon)
 {
 	// do scoreing
 	if(!killer)
 		return 0;
-	if(killer == victim)
-		victim->score--; // suicide
+	if(killer == victim->player)
+		victim->player->score--; // suicide
 	else
 	{
 		if(is_teamplay && victim->team == killer->team)
@@ -227,7 +244,7 @@ bool GAMECONTROLLER::is_friendly_fire(int cid1, int cid2)
 	
 	if(is_teamplay)
 	{
-		if(players[cid1].team == players[cid2].team)
+		if(game.players[cid1].team == game.players[cid2].team)
 			return true;
 	}
 	
@@ -271,8 +288,8 @@ void GAMECONTROLLER::tick()
 		{
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
-				if(players[i].client_id != -1)
-					prog = max(prog, (players[i].score*100)/config.sv_scorelimit);
+				if(game.players[i].client_id != -1)
+					prog = max(prog, (game.players[i].score*100)/config.sv_scorelimit);
 			}
 		}
 	}
@@ -285,20 +302,20 @@ void GAMECONTROLLER::tick()
 
 void GAMECONTROLLER::snap(int snapping_client)
 {
-	NETOBJ_GAME *game = (NETOBJ_GAME *)snap_new_item(NETOBJTYPE_GAME, 0, sizeof(NETOBJ_GAME));
-	game->paused = world->paused;
-	game->game_over = game_over_tick==-1?0:1;
-	game->sudden_death = sudden_death;
+	NETOBJ_GAME *gameobj = (NETOBJ_GAME *)snap_new_item(NETOBJTYPE_GAME, 0, sizeof(NETOBJ_GAME));
+	gameobj->paused = game.world.paused;
+	gameobj->game_over = game_over_tick==-1?0:1;
+	gameobj->sudden_death = sudden_death;
 	
-	game->score_limit = config.sv_scorelimit;
-	game->time_limit = config.sv_timelimit;
-	game->round_start_tick = round_start_tick;
-	game->gametype = gametype;
+	gameobj->score_limit = config.sv_scorelimit;
+	gameobj->time_limit = config.sv_timelimit;
+	gameobj->round_start_tick = round_start_tick;
+	gameobj->gametype = gametype;
 	
-	game->warmup = warmup;
+	gameobj->warmup = warmup;
 	
-	game->teamscore_red = teamscore[0];
-	game->teamscore_blue = teamscore[1];
+	gameobj->teamscore_red = teamscore[0];
+	gameobj->teamscore_blue = teamscore[1];
 }
 
 int GAMECONTROLLER::get_auto_team(int notthisid)
@@ -306,10 +323,10 @@ int GAMECONTROLLER::get_auto_team(int notthisid)
 	int numplayers[2] = {0,0};
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(players[i].client_id != -1 && players[i].client_id != notthisid)
+		if(game.players[i].client_id != -1 && game.players[i].client_id != notthisid)
 		{
-			if(players[i].team == 0 || players[i].team == 1)
-				numplayers[players[i].team]++;
+			if(game.players[i].team == 0 || game.players[i].team == 1)
+				numplayers[game.players[i].team]++;
 		}
 	}
 
@@ -328,10 +345,10 @@ bool GAMECONTROLLER::can_join_team(int team, int notthisid)
 	int numplayers[2] = {0,0};
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(players[i].client_id != -1 && players[i].client_id != notthisid)
+		if(game.players[i].client_id != -1 && game.players[i].client_id != notthisid)
 		{
-			if(players[i].team >= 0 || players[i].team == 1)
-				numplayers[players[i].team]++;
+			if(game.players[i].team >= 0 || game.players[i].team == 1)
+				numplayers[game.players[i].team]++;
 		}
 	}
 	
@@ -347,14 +364,14 @@ void GAMECONTROLLER::do_player_score_wincheck()
 		int topscore_count = 0;
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			if(players[i].client_id != -1)
+			if(game.players[i].client_id != -1)
 			{
-				if(players[i].score > topscore)
+				if(game.players[i].score > topscore)
 				{
-					topscore = players[i].score;
+					topscore = game.players[i].score;
 					topscore_count = 1;
 				}
-				else if(players[i].score == topscore)
+				else if(game.players[i].score == topscore)
 					topscore_count++;
 			}
 		}

@@ -465,8 +465,9 @@ int64 time_freq()
 }
 
 /* -----  network ----- */
-static void netaddr4_to_sockaddr(const NETADDR4 *src, struct sockaddr *dest)
+static void netaddr_to_sockaddr(const NETADDR *src, struct sockaddr *dest)
 {
+	/* TODO: IPv6 support */
 	struct sockaddr_in *p = (struct sockaddr_in *)dest;
 	mem_zero(p, sizeof(struct sockaddr_in));
 	p->sin_family = AF_INET;
@@ -474,9 +475,11 @@ static void netaddr4_to_sockaddr(const NETADDR4 *src, struct sockaddr *dest)
 	p->sin_addr.s_addr = htonl(src->ip[0]<<24|src->ip[1]<<16|src->ip[2]<<8|src->ip[3]);
 }
 
-static void sockaddr_to_netaddr4(const struct sockaddr *src, NETADDR4 *dst)
+static void sockaddr_to_netaddr(const struct sockaddr *src, NETADDR *dst)
 {
+	/* TODO: IPv6 support */
 	unsigned int ip = htonl(((struct sockaddr_in*)src)->sin_addr.s_addr);
+	dst->type = NETTYPE_IPV4;
 	dst->port = htons(((struct sockaddr_in*)src)->sin_port);
 	dst->ip[0] = (unsigned char)((ip>>24)&0xFF);
 	dst->ip[1] = (unsigned char)((ip>>16)&0xFF);
@@ -484,21 +487,15 @@ static void sockaddr_to_netaddr4(const struct sockaddr *src, NETADDR4 *dst)
 	dst->ip[3] = (unsigned char)(ip&0xFF);
 }
 
-int net_addr4_cmp(const NETADDR4 *a, const NETADDR4 *b)
+int net_addr_comp(const NETADDR *a, const NETADDR *b)
 {
-	if(	a->ip[0] != b->ip[0] ||
-		a->ip[1] != b->ip[1] ||
-		a->ip[2] != b->ip[2] ||
-		a->ip[3] != b->ip[3] ||
-		a->port != b->port
-	)
-		return 1;
-	return 0;
+	return mem_comp(a, b, sizeof(NETADDR));
 }
 
 
-int net_host_lookup(const char *hostname, unsigned short port, NETADDR4 *addr)
+int net_host_lookup(const char *hostname, NETADDR *addr, int types)
 {
+	/* TODO: IPv6 support */
 	struct addrinfo hints;
 	struct addrinfo *result;
 	int e;
@@ -510,14 +507,15 @@ int net_host_lookup(const char *hostname, unsigned short port, NETADDR4 *addr)
 	if(e != 0 || !result)
 		return -1;
 
-	sockaddr_to_netaddr4(result->ai_addr, addr);
+	sockaddr_to_netaddr(result->ai_addr, addr);
 	freeaddrinfo(result);
-	addr->port = port;
+	addr->port = 0;
 	return 0;
 }
 
-NETSOCKET net_udp4_create(NETADDR4 bindaddr)
+NETSOCKET net_udp_create(NETADDR bindaddr)
 {
+	/* TODO: IPv6 support */
 	struct sockaddr addr;
 	unsigned int mode = 1;
 	int broadcast = 1;
@@ -528,10 +526,10 @@ NETSOCKET net_udp4_create(NETADDR4 bindaddr)
 		return NETSOCKET_INVALID;
 	
 	/* bind, we should check for error */
-	netaddr4_to_sockaddr(&bindaddr, &addr);
+	netaddr_to_sockaddr(&bindaddr, &addr);
 	if(bind(sock, &addr, sizeof(addr)) != 0)
 	{
-		net_udp4_close(sock);
+		net_udp_close(sock);
 		return NETSOCKET_INVALID;
 	}
 	
@@ -549,12 +547,12 @@ NETSOCKET net_udp4_create(NETADDR4 bindaddr)
 	return sock;
 }
 
-int net_udp4_send(NETSOCKET sock, const NETADDR4 *addr, const void *data, int size)
+int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size)
 {
 	struct sockaddr sa;
 	int d;
 	mem_zero(&sa, sizeof(sa));
-	netaddr4_to_sockaddr(addr, &sa);
+	netaddr_to_sockaddr(addr, &sa);
 	d = sendto((int)sock, (const char*)data, size, 0, &sa, sizeof(sa));
 	if(d < 0)
 		dbg_msg("net", "sendto error %d %x", d, d);
@@ -563,7 +561,7 @@ int net_udp4_send(NETSOCKET sock, const NETADDR4 *addr, const void *data, int si
 	return d;
 }
 
-int net_udp4_recv(NETSOCKET sock, NETADDR4 *addr, void *data, int maxsize)
+int net_udp_recv(NETSOCKET sock, NETADDR *addr, void *data, int maxsize)
 {
 	struct sockaddr from;
 	int bytes;
@@ -571,7 +569,7 @@ int net_udp4_recv(NETSOCKET sock, NETADDR4 *addr, void *data, int maxsize)
 	bytes = recvfrom(sock, (char*)data, maxsize, 0, &from, &fromlen);
 	if(bytes > 0)
 	{
-		sockaddr_to_netaddr4(&from, addr);
+		sockaddr_to_netaddr(&from, addr);
 		network_stats.recv_bytes += bytes;
 		network_stats.recv_packets++;
 		return bytes;
@@ -581,7 +579,7 @@ int net_udp4_recv(NETSOCKET sock, NETADDR4 *addr, void *data, int maxsize)
 	return -1; /* error */
 }
 
-int net_udp4_close(NETSOCKET sock)
+int net_udp_close(NETSOCKET sock)
 {
 #if defined(CONF_FAMILY_WINDOWS)
 	closesocket(sock);
@@ -591,8 +589,9 @@ int net_udp4_close(NETSOCKET sock)
 	return 0;
 }
 
-NETSOCKET net_tcp4_create(const NETADDR4 *a)
+NETSOCKET net_tcp_create(const NETADDR *a)
 {
+	/* TODO: IPv6 support */
     struct sockaddr addr;
 
     /* create socket */
@@ -601,14 +600,14 @@ NETSOCKET net_tcp4_create(const NETADDR4 *a)
         return NETSOCKET_INVALID;
 
     /* bind, we should check for error */
-    netaddr4_to_sockaddr(a, &addr);
+    netaddr_to_sockaddr(a, &addr);
     bind(sock, &addr, sizeof(addr));
 
     /* return */
     return sock;
 }
 
-int net_tcp4_set_non_blocking(NETSOCKET sock)
+int net_tcp_set_non_blocking(NETSOCKET sock)
 {
 	unsigned int mode = 1;
 #if defined(CONF_FAMILY_WINDOWS)
@@ -618,7 +617,7 @@ int net_tcp4_set_non_blocking(NETSOCKET sock)
 #endif
 }
 
-int net_tcp4_set_blocking(NETSOCKET sock)
+int net_tcp_set_blocking(NETSOCKET sock)
 {
 	unsigned int mode = 0;
 #if defined(CONF_FAMILY_WINDOWS)
@@ -628,12 +627,12 @@ int net_tcp4_set_blocking(NETSOCKET sock)
 #endif
 }
 
-int net_tcp4_listen(NETSOCKET sock, int backlog)
+int net_tcp_listen(NETSOCKET sock, int backlog)
 {
 	return listen(sock, backlog);
 }
 
-int net_tcp4_accept(NETSOCKET sock, NETSOCKET *new_sock, NETADDR4 *a)
+int net_tcp_accept(NETSOCKET sock, NETSOCKET *new_sock, NETADDR *a)
 {
 	int s;
 	socklen_t sockaddr_len;
@@ -645,48 +644,48 @@ int net_tcp4_accept(NETSOCKET sock, NETSOCKET *new_sock, NETADDR4 *a)
 
 	if (s != -1)
 	{
-		sockaddr_to_netaddr4(&addr, a);
+		sockaddr_to_netaddr(&addr, a);
 		*new_sock = s;
 	}
 	return s;
 }
 
-int net_tcp4_connect(NETSOCKET sock, const NETADDR4 *a)
+int net_tcp_connect(NETSOCKET sock, const NETADDR *a)
 {
   struct sockaddr addr;
 
-  netaddr4_to_sockaddr(a, &addr);
+  netaddr_to_sockaddr(a, &addr);
   return connect(sock, &addr, sizeof(addr)); 
 }
 
-int net_tcp4_connect_non_blocking(NETSOCKET sock, const NETADDR4 *a)
+int net_tcp_connect_non_blocking(NETSOCKET sock, const NETADDR *a)
 {
 	struct sockaddr addr;
 	int res;
 
-	netaddr4_to_sockaddr(a, &addr);
-	net_tcp4_set_non_blocking(sock);
+	netaddr_to_sockaddr(a, &addr);
+	net_tcp_set_non_blocking(sock);
   	res = connect(sock, &addr, sizeof(addr));
-	net_tcp4_set_blocking(sock);
+	net_tcp_set_blocking(sock);
 
 	return res;
 }
 
-int net_tcp4_send(NETSOCKET sock, const void *data, int size)
+int net_tcp_send(NETSOCKET sock, const void *data, int size)
 {
   int d;
   d = send((int)sock, (const char*)data, size, 0);
   return d;
 }
 
-int net_tcp4_recv(NETSOCKET sock, void *data, int maxsize)
+int net_tcp_recv(NETSOCKET sock, void *data, int maxsize)
 {
   int bytes;
   bytes = recv((int)sock, (char*)data, maxsize, 0);
   return bytes;
 }
 
-int net_tcp4_close(NETSOCKET sock)
+int net_tcp_close(NETSOCKET sock)
 {
 #if defined(CONF_FAMILY_WINDOWS)
 	closesocket(sock);
@@ -956,6 +955,11 @@ void str_hex(char *dst, int dst_size, const void *data, int data_size)
 		dst[b*3+2] = ' ';
 		dst[b*3+3] = 0;
 	}
+}
+
+int mem_comp(const void *a, const void *b, int size)
+{
+	return memcmp(a,b,size);
 }
 
 void net_stats(NETSTATS *stats_inout)

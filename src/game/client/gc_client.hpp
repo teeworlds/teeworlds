@@ -1,5 +1,5 @@
 #include <game/g_vmath.hpp>
-#include <game/g_protocol.hpp>
+#include <game/generated/g_protocol.hpp>
 #include <game/g_game.hpp>
 
 #include <game/client/gc_render.hpp>
@@ -22,8 +22,8 @@ extern vec2 local_target_pos;
 // snap pointers
 struct SNAPSTATE
 {
-	const NETOBJ_PLAYER_CHARACTER *local_character;
-	const NETOBJ_PLAYER_CHARACTER *local_prev_character;
+	const NETOBJ_CHARACTER *local_character;
+	const NETOBJ_CHARACTER *local_prev_character;
 	const NETOBJ_PLAYER_INFO *local_info;
 	const NETOBJ_FLAG *flags[2];
 	const NETOBJ_GAME *gameobj;
@@ -46,8 +46,8 @@ extern const NETOBJ_GAME *gameobj;
 extern TUNING_PARAMS tuning;
 
 // predicted players
-extern PLAYER_CORE predicted_prev_player;
-extern PLAYER_CORE predicted_player;
+extern CHARACTER_CORE predicted_prev_char;
+extern CHARACTER_CORE predicted_char;
 
 // input
 extern NETOBJ_PLAYER_INPUT input_data;
@@ -148,7 +148,7 @@ struct CLIENT_DATA
 	int team;
 	int emoticon;
 	int emoticon_start;
-	PLAYER_CORE predicted;
+	CHARACTER_CORE predicted;
 	
 	TEE_RENDER_INFO skin_info; // this is what the server reports
 	TEE_RENDER_INFO render_info; // this is what we use

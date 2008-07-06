@@ -13,22 +13,22 @@ enum {
 	EXPIRE_TIME = 90
 };
 
-static struct check_server
+static struct CHECK_SERVER
 {
-	NETADDR4 address;
-	NETADDR4 alt_address;
+	NETADDR address;
+	NETADDR alt_address;
 	int try_count;
 	int64 try_time;
 } check_servers[MAX_SERVERS];
 static int num_checkservers = 0;
 
-static struct packet_data
+static struct PACKET_DATA
 {
 	unsigned char header[sizeof(SERVERBROWSE_LIST)];
-	NETADDR4 servers[MAX_SERVERS];
+	NETADDR servers[MAX_SERVERS];
 } data;
 
-static struct count_packet_data
+static struct COUNT_PACKET_DATA
 {
 	unsigned char header[sizeof(SERVERBROWSE_COUNT)];
 	unsigned char high;
@@ -41,7 +41,7 @@ static int num_servers = 0;
 static net_client net_checker; // NAT/FW checker
 static net_client net_op; // main
 
-void send_ok(NETADDR4 *addr)
+void send_ok(NETADDR *addr)
 {
 	NETCHUNK p;
 	p.client_id = -1;
@@ -55,7 +55,7 @@ void send_ok(NETADDR4 *addr)
 	net_op.send(&p);
 }
 
-void send_error(NETADDR4 *addr)
+void send_error(NETADDR *addr)
 {
 	NETCHUNK p;
 	p.client_id = -1;
@@ -66,7 +66,7 @@ void send_error(NETADDR4 *addr)
 	net_op.send(&p);
 }
 
-void send_check(NETADDR4 *addr)
+void send_check(NETADDR *addr)
 {
 	NETCHUNK p;
 	p.client_id = -1;
@@ -77,7 +77,7 @@ void send_check(NETADDR4 *addr)
 	net_checker.send(&p);
 }
 
-void add_checkserver(NETADDR4 *info, NETADDR4 *alt)
+void add_checkserver(NETADDR *info, NETADDR *alt)
 {
 	// add server
 	if(num_checkservers == MAX_SERVERS)
@@ -96,13 +96,13 @@ void add_checkserver(NETADDR4 *info, NETADDR4 *alt)
 	num_checkservers++;
 }
 
-void add_server(NETADDR4 *info)
+void add_server(NETADDR *info)
 {
 	// see if server already exists in list
 	int i;
 	for(i = 0; i < num_servers; i++)
 	{
-		if(net_addr4_cmp(&data.servers[i], info) == 0)
+		if(net_addr_comp(&data.servers[i], info) == 0)
 		{
 			dbg_msg("mastersrv", "updated: %d.%d.%d.%d:%d",
 				info->ip[0], info->ip[1], info->ip[2], info->ip[3], info->port);
@@ -183,7 +183,7 @@ void purge_servers()
 
 int main(int argc, char **argv)
 {
-	NETADDR4 bindaddr;
+	NETADDR bindaddr;
 	mem_zero(&bindaddr, sizeof(bindaddr));
 	bindaddr.port = MASTERSERVER_PORT;
 	
@@ -210,7 +210,7 @@ int main(int argc, char **argv)
 			if(packet.data_size == sizeof(SERVERBROWSE_HEARTBEAT)+2 &&
 				memcmp(packet.data, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT)) == 0)
 			{
-				NETADDR4 alt;
+				NETADDR alt;
 				unsigned char *d = (unsigned char *)packet.data;
 				alt = packet.address;
 				alt.port =
@@ -244,7 +244,7 @@ int main(int argc, char **argv)
 				p.client_id = -1;
 				p.address = packet.address;
 				p.flags = NETSENDFLAG_CONNLESS;
-				p.data_size = num_servers*sizeof(NETADDR4)+sizeof(SERVERBROWSE_LIST);
+				p.data_size = num_servers*sizeof(NETADDR)+sizeof(SERVERBROWSE_LIST);
 				p.data = &data;
 				net_op.send(&p);
 			}
@@ -259,8 +259,8 @@ int main(int argc, char **argv)
 				// remove it from checking
 				for(int i = 0; i < num_checkservers; i++)
 				{
-					if(net_addr4_cmp(&check_servers[i].address, &packet.address) == 0 ||
-						net_addr4_cmp(&check_servers[i].alt_address, &packet.address) == 0)
+					if(net_addr_comp(&check_servers[i].address, &packet.address) == 0 ||
+						net_addr_comp(&check_servers[i].alt_address, &packet.address) == 0)
 					{
 						num_checkservers--;
 						check_servers[i] = check_servers[num_checkservers];

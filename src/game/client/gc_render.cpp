@@ -3,7 +3,7 @@
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
 #include <game/generated/gc_data.hpp>
-#include <game/g_protocol.hpp>
+#include <game/generated/g_protocol.hpp>
 #include <game/g_math.hpp>
 #include <game/g_layers.hpp>
 #include "gc_render.hpp"
@@ -473,7 +473,7 @@ static void render_players()
 		SNAP_ITEM item;
 		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 
-		if(item.type == NETOBJTYPE_PLAYER_CHARACTER)
+		if(item.type == NETOBJTYPE_CHARACTER)
 		{
 			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
 			const void *prev_info = snap_find_item(SNAP_PREV, NETOBJTYPE_PLAYER_INFO, item.id);
@@ -482,8 +482,8 @@ static void render_players()
 			if(prev && prev_info && info)
 			{
 				render_player(
-						(const NETOBJ_PLAYER_CHARACTER *)prev,
-						(const NETOBJ_PLAYER_CHARACTER *)data,
+						(const NETOBJ_CHARACTER *)prev,
+						(const NETOBJ_CHARACTER *)data,
 						(const NETOBJ_PLAYER_INFO *)prev_info,
 						(const NETOBJ_PLAYER_INFO *)info
 					);

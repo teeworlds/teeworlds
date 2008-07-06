@@ -37,7 +37,7 @@ int flags = 0;
 const char *version = "0.3.0 2d82e361de24cb25";
 const char *map = "somemap";
 const char *server_name = "unnamed server";
-NETADDR4 master_servers[16] = {{{0},0}};
+NETADDR master_servers[16] = {{0,{0},0}};
 int num_masters = 0;
 
 const char *player_names[16] = {0};
@@ -109,7 +109,7 @@ static void build_infomessage()
 	}
 }
 
-static void send_serverinfo(NETADDR4 *addr)
+static void send_serverinfo(NETADDR *addr)
 {
 	NETCHUNK p;
 	p.client_id = -1;
@@ -120,7 +120,7 @@ static void send_serverinfo(NETADDR4 *addr)
 	netserver_send(net, &p);
 }
 
-static void send_fwcheckresponse(NETADDR4 *addr)
+static void send_fwcheckresponse(NETADDR *addr)
 {
 	NETCHUNK p;
 	p.client_id = -1;
@@ -134,7 +134,7 @@ static void send_fwcheckresponse(NETADDR4 *addr)
 static int run()
 {
 	int64 next_heartbeat = 0;
-	NETADDR4 bindaddr = {{0},0};
+	NETADDR bindaddr = {NETTYPE_IPV4, {0},0};
 	net = netserver_open(bindaddr, 0, 0);
 	if(!net)
 		return -1;

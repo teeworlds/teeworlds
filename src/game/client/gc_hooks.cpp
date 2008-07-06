@@ -56,6 +56,9 @@ static void load_sounds_thread(void *do_render)
 
 extern "C" void modc_init()
 {
+	for(int i = 0; i < NUM_NETOBJTYPES; i++)
+		snap_set_staticsize(i, netobj_get_size(i));
+	
 	static FONT_SET default_font;
 	int64 start = time_get();
 	
@@ -128,17 +131,17 @@ extern "C" void modc_shutdown()
 }
 
 
-PLAYER_CORE predicted_prev_player;
-PLAYER_CORE predicted_player;
+CHARACTER_CORE predicted_prev_char;
+CHARACTER_CORE predicted_char;
 static int predicted_tick = 0;
 static int last_new_predicted_tick = -1;
 
 extern "C" void modc_predict()
 {
-	PLAYER_CORE before_prev_player = predicted_prev_player;
-	PLAYER_CORE before_player = predicted_player;
+	CHARACTER_CORE before_prev_char = predicted_prev_char;
+	CHARACTER_CORE before_char = predicted_char;
 
-	// repredict player
+	// repredict character
 	WORLD_CORE world;
 	world.tuning = tuning;
 	int local_cid = -1;
@@ -150,11 +153,11 @@ extern "C" void modc_predict()
 		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 		int client_id = item.id;
 
-		if(item.type == NETOBJTYPE_PLAYER_CHARACTER)
+		if(item.type == NETOBJTYPE_CHARACTER)
 		{
-			const NETOBJ_PLAYER_CHARACTER *character = (const NETOBJ_PLAYER_CHARACTER *)data;
+			const NETOBJ_CHARACTER *character = (const NETOBJ_CHARACTER *)data;
 			client_datas[client_id].predicted.world = &world;
-			world.players[client_id] = &client_datas[client_id].predicted;
+			world.characters[client_id] = &client_datas[client_id].predicted;
 
 			client_datas[client_id].predicted.read(character);
 		}
@@ -174,45 +177,45 @@ extern "C" void modc_predict()
 	for(int tick = client_tick()+1; tick <= client_predtick(); tick++)
 	{
 		// fetch the local
-		if(tick == client_predtick() && world.players[local_cid])
-			predicted_prev_player = *world.players[local_cid];
+		if(tick == client_predtick() && world.characters[local_cid])
+			predicted_prev_char = *world.characters[local_cid];
 		
 		// first calculate where everyone should move
 		for(int c = 0; c < MAX_CLIENTS; c++)
 		{
-			if(!world.players[c])
+			if(!world.characters[c])
 				continue;
 
-			mem_zero(&world.players[c]->input, sizeof(world.players[c]->input));
+			mem_zero(&world.characters[c]->input, sizeof(world.characters[c]->input));
 			if(local_cid == c)
 			{
 				// apply player input
 				int *input = client_get_input(tick);
 				if(input)
-					world.players[c]->input = *((NETOBJ_PLAYER_INPUT*)input);
+					world.characters[c]->input = *((NETOBJ_PLAYER_INPUT*)input);
 			}
 
-			world.players[c]->tick();
+			world.characters[c]->tick();
 		}
 
 		// move all players and quantize their data
 		for(int c = 0; c < MAX_CLIENTS; c++)
 		{
-			if(!world.players[c])
+			if(!world.characters[c])
 				continue;
 
-			world.players[c]->move();
-			world.players[c]->quantize();
+			world.characters[c]->move();
+			world.characters[c]->quantize();
 		}
 		
 		if(tick > last_new_predicted_tick)
 		{
 			last_new_predicted_tick = tick;
 			
-			if(local_cid != -1 && world.players[local_cid])
+			if(local_cid != -1 && world.characters[local_cid])
 			{
-				vec2 pos = world.players[local_cid]->pos;
-				int events = world.players[local_cid]->triggered_events;
+				vec2 pos = world.characters[local_cid]->pos;
+				int events = world.characters[local_cid]->triggered_events;
 				if(events&COREEVENT_GROUND_JUMP) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
 				if(events&COREEVENT_AIR_JUMP)
 				{
@@ -232,26 +235,26 @@ extern "C" void modc_predict()
 				(int)world.players[c]->vel.x, (int)world.players[c]->vel.y);*/
 		}
 		
-		if(tick == client_predtick() && world.players[local_cid])
-			predicted_player = *world.players[local_cid];
+		if(tick == client_predtick() && world.characters[local_cid])
+			predicted_char = *world.characters[local_cid];
 	}
 	
 	if(config.debug && predicted_tick == client_predtick())
 	{
-		if(predicted_player.pos.x != before_player.pos.x ||
-			predicted_player.pos.y != before_player.pos.y)
+		if(predicted_char.pos.x != before_char.pos.x ||
+			predicted_char.pos.y != before_char.pos.y)
 		{
 			dbg_msg("client", "prediction error, (%d %d) (%d %d)", 
-				(int)before_player.pos.x, (int)before_player.pos.y,
-				(int)predicted_player.pos.x, (int)predicted_player.pos.y);
+				(int)before_char.pos.x, (int)before_char.pos.y,
+				(int)predicted_char.pos.x, (int)predicted_char.pos.y);
 		}
 
-		if(predicted_prev_player.pos.x != before_prev_player.pos.x ||
-			predicted_prev_player.pos.y != before_prev_player.pos.y)
+		if(predicted_prev_char.pos.x != before_prev_char.pos.x ||
+			predicted_prev_char.pos.y != before_prev_char.pos.y)
 		{
 			dbg_msg("client", "prediction error, prev (%d %d) (%d %d)", 
-				(int)before_prev_player.pos.x, (int)before_prev_player.pos.y,
-				(int)predicted_prev_player.pos.x, (int)predicted_prev_player.pos.y);
+				(int)before_prev_char.pos.x, (int)before_prev_char.pos.y,
+				(int)predicted_prev_char.pos.x, (int)predicted_prev_char.pos.y);
 		}
 	}
 	
@@ -316,15 +319,15 @@ extern "C" void modc_newsnapshot()
 				if(info->local)
 				{
 					netobjects.local_info = info;
-					const void *data = snap_find_item(SNAP_CURRENT, NETOBJTYPE_PLAYER_CHARACTER, item.id);
+					const void *data = snap_find_item(SNAP_CURRENT, NETOBJTYPE_CHARACTER, item.id);
 					if(data)
 					{
-						netobjects.local_character = (const NETOBJ_PLAYER_CHARACTER *)data;
+						netobjects.local_character = (const NETOBJ_CHARACTER *)data;
 						local_character_pos = vec2(netobjects.local_character->x, netobjects.local_character->y);
 
-						const void *p = snap_find_item(SNAP_PREV, NETOBJTYPE_PLAYER_CHARACTER, item.id);
+						const void *p = snap_find_item(SNAP_PREV, NETOBJTYPE_CHARACTER, item.id);
 						if(p)
-							netobjects.local_prev_character = (NETOBJ_PLAYER_CHARACTER *)p;
+							netobjects.local_prev_character = (NETOBJ_CHARACTER *)p;
 					}
 				}
 			}

@@ -7,7 +7,7 @@
 #include <math.h>
 #include "g_math.hpp"
 #include "g_collision.hpp"
-#include "g_protocol.hpp"
+#include <game/generated/g_protocol.hpp>
 
 struct TUNING_PARAMS
 {
@@ -114,14 +114,14 @@ class WORLD_CORE
 public:
 	WORLD_CORE()
 	{
-		mem_zero(players, sizeof(players));
+		mem_zero(characters, sizeof(characters));
 	}
 	
 	TUNING_PARAMS tuning;
-	class PLAYER_CORE *players[MAX_CLIENTS];
+	class CHARACTER_CORE *characters[MAX_CLIENTS];
 };
 
-class PLAYER_CORE
+class CHARACTER_CORE
 {
 public:
 	WORLD_CORE *world;
@@ -144,8 +144,8 @@ public:
 	void tick();
 	void move();
 	
-	void read(const NETOBJ_PLAYER_CORE *obj_core);
-	void write(NETOBJ_PLAYER_CORE *obj_core);
+	void read(const NETOBJ_CHARACTER_CORE *obj_core);
+	void write(NETOBJ_CHARACTER_CORE *obj_core);
 	void quantize();
 };
 

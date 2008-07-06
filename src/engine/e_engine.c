@@ -235,11 +235,11 @@ enum
 typedef struct
 {
 	char hostname[128];
-	NETADDR4 addr;
+	NETADDR addr;
 	
 	/* these are used for lookups */
 	struct {
-		NETADDR4 addr;
+		NETADDR addr;
 		int result;
 		void *thread;
 		volatile int state;
@@ -264,7 +264,7 @@ void lookup_thread(void *user)
 	for(i = 0; i < info->num; i++)
 	{
 		int index = info->start+i;
-		master_servers[index].lookup.result = net_host_lookup(master_servers[index].hostname, 8300, &master_servers[index].lookup.addr);
+		master_servers[index].lookup.result = net_host_lookup(master_servers[index].hostname, &master_servers[index].lookup.addr, NETTYPE_IPV4);
 		master_servers[index].lookup.state = STATE_RESULT;
 	}
 }
@@ -304,6 +304,7 @@ void mastersrv_update()
 			if(master_servers[i].lookup.result == 0)
 			{
 				master_servers[i].addr = master_servers[i].lookup.addr;
+				master_servers[i].addr.port = 8300;
 			}
 			master_servers[i].lookup.state = STATE_PROCESSED;
 		}
@@ -332,7 +333,7 @@ int mastersrv_refreshing()
 	return needs_update;
 }
 
-NETADDR4 mastersrv_get(int index) 
+NETADDR mastersrv_get(int index) 
 {
 	return master_servers[index].addr;
 }

@@ -29,7 +29,7 @@ static void register_new_state(int state)
 	register_state_start = time_get();
 }
 
-static void register_send_fwcheckresponse(NETADDR4 *addr)
+static void register_send_fwcheckresponse(NETADDR *addr)
 {
 	NETCHUNK packet;
 	packet.client_id = -1;
@@ -40,7 +40,7 @@ static void register_send_fwcheckresponse(NETADDR4 *addr)
 	netserver_send(net, &packet);
 }
 	
-static void register_send_heartbeat(NETADDR4 addr)
+static void register_send_heartbeat(NETADDR addr)
 {
 	static unsigned char data[sizeof(SERVERBROWSE_HEARTBEAT) + 2];
 	unsigned short port = config.sv_port;
@@ -62,7 +62,7 @@ static void register_send_heartbeat(NETADDR4 addr)
 	netserver_send(net, &packet);
 }
 
-static void register_send_count_request(NETADDR4 addr)
+static void register_send_count_request(NETADDR addr)
 {
 	NETCHUNK packet;
 	packet.client_id = -1;
@@ -75,13 +75,13 @@ static void register_send_count_request(NETADDR4 addr)
 
 typedef struct
 {
-	NETADDR4 addr;
+	NETADDR addr;
 	int count;
 	int valid;
 	int64 last_send;
 } MASTERSERVER_INFO;
 
-static MASTERSERVER_INFO masterserver_info[MAX_MASTERSERVERS] = {{{{0}}}};
+static MASTERSERVER_INFO masterserver_info[MAX_MASTERSERVERS] = {{{0}}};
 static int register_registered_server = -1;
 
 void register_update()
@@ -111,7 +111,7 @@ void register_update()
 			int i;
 			for(i = 0; i < MAX_MASTERSERVERS; i++)
 			{
-				NETADDR4 addr = mastersrv_get(i);
+				NETADDR addr = mastersrv_get(i);
 				masterserver_info[i].addr = addr;
 				masterserver_info[i].count = 0;
 				
@@ -229,7 +229,7 @@ static void register_got_count(NETCHUNK *p)
 
 	for(i = 0; i < MAX_MASTERSERVERS; i++)
 	{
-		if(net_addr4_cmp(&masterserver_info[i].addr, &p->address) == 0)
+		if(net_addr_comp(&masterserver_info[i].addr, &p->address) == 0)
 		{
 			masterserver_info[i].count = count;
 			break;

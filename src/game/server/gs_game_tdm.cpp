@@ -8,14 +8,14 @@ GAMECONTROLLER_TDM::GAMECONTROLLER_TDM()
 	is_teamplay = true;
 }
 
-int GAMECONTROLLER_TDM::on_player_death(class PLAYER *victim, class PLAYER *killer, int weapon)
+int GAMECONTROLLER_TDM::on_character_death(class CHARACTER *victim, class PLAYER *killer, int weapon)
 {
-	GAMECONTROLLER::on_player_death(victim, killer, weapon);
+	GAMECONTROLLER::on_character_death(victim, killer, weapon);
 	
 	if(weapon >= 0)
 	{
 		// do team scoring
-		if(killer == victim)
+		if(killer == victim->player)
 			teamscore[killer->team&1]--; // klant arschel
 		else
 			teamscore[killer->team&1]++; // good shit

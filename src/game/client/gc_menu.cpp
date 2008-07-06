@@ -15,7 +15,7 @@ extern "C" {
 }
 
 #include "../g_version.hpp"
-#include "../g_protocol.hpp"
+#include <game/generated/g_protocol.hpp>
 
 #include "../generated/gc_data.hpp"
 #include "gc_render.hpp"

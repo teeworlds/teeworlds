@@ -6,6 +6,15 @@
 #include "e_common_interface.h"
 
 
+/* TODO: strange arbitrary number */
+static short item_sizes[64] = {0};
+
+void snap_set_staticsize(int itemtype, int size)
+{
+	dbg_msg("","%d = %d", itemtype, size);
+	item_sizes[itemtype] = size;
+}
+
 int *snapitem_data(SNAPSHOT_ITEM *item) { return (int *)(item+1); }
 int snapitem_type(SNAPSHOT_ITEM *item) { return item->type_and_id>>16; }
 int snapitem_id(SNAPSHOT_ITEM *item) { return item->type_and_id&0xffff; }
@@ -253,14 +262,21 @@ int snapshot_create_delta(SNAPSHOT *from, SNAPSHOT *to, void *dstdata)
 			if(pastindex != -1)
 			{
 				static PERFORMACE_INFO scope = {"diff", 0};
+				int *item_data_dst = data+3;
 				perf_start(&scope);
 		
 				pastitem = snapshot_get_item(from, pastindex);
-				if(diff_item((int*)snapitem_data(pastitem), (int*)snapitem_data(curitem), data+3, itemsize/4))
+				
+				if(item_sizes[snapitem_type(curitem)])
+					item_data_dst = data+2;
+				
+				if(diff_item((int*)snapitem_data(pastitem), (int*)snapitem_data(curitem), item_data_dst, itemsize/4))
 				{
-					*data++ = itemsize;
+					
 					*data++ = snapitem_type(curitem);
 					*data++ = snapitem_id(curitem);
+					if(!item_sizes[snapitem_type(curitem)])
+						*data++ = itemsize/4;
 					data += itemsize/4;
 					delta->num_update_items++;
 				}
@@ -271,9 +287,10 @@ int snapshot_create_delta(SNAPSHOT *from, SNAPSHOT *to, void *dstdata)
 				static PERFORMACE_INFO scope = {"copy", 0};
 				perf_start(&scope);
 				
-				*data++ = itemsize;
 				*data++ = snapitem_type(curitem);
 				*data++ = snapitem_id(curitem);
+				if(!item_sizes[snapitem_type(curitem)])
+					*data++ = itemsize/4;
 				
 				mem_copy(data, snapitem_data(curitem), itemsize);
 				size_count += itemsize;
@@ -370,12 +387,19 @@ int snapshot_unpack_delta(SNAPSHOT *from, SNAPSHOT *to, void *srcdata, int data_
 	/* unpack updated stuff */
 	for(i = 0; i < delta->num_update_items; i++)
 	{
-		if(data+3 > end)
+		if(data+2 > end)
 			return -1;
 		
-		itemsize = *data++;
 		type = *data++;
 		id = *data++;
+		if(item_sizes[type])
+			itemsize = item_sizes[type];
+		else
+		{
+			if(data+1 > end)
+				return -1;
+			itemsize = (*data++) * 4;
+		}
 		snapshot_current = type;
 		
 		if(range_check(end, data, itemsize) || itemsize < 0) return -1;

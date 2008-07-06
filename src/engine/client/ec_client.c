@@ -43,7 +43,7 @@ const int prediction_margin = 7; /* magic network prediction value */
 NETCLIENT *net;
 
 /* TODO: ugly, fix me */
-extern void client_serverbrowse_set(NETADDR4 *addr, int request, SERVER_INFO *info);
+extern void client_serverbrowse_set(NETADDR *addr, int request, SERVER_INFO *info);
 
 static int snapshot_part;
 static int64 local_start_time;
@@ -53,7 +53,7 @@ static float frametime = 0.0001f;
 static float frametime_low = 1.0f;
 static float frametime_high = 0.0f;
 static int frames = 0;
-static NETADDR4 server_address;
+static NETADDR server_address;
 static int window_must_refocus = 0;
 static int snaploss = 0;
 static int snapcrcerrors = 0;
@@ -489,11 +489,13 @@ void client_connect(const char *server_address_str)
 	
 	if(port_str)
 		port = atoi(port_str);
-		
-	if(net_host_lookup(buf, port, &server_address) != 0)
+	
+	/* TODO: IPv6 support */
+	if(net_host_lookup(buf, &server_address, NETTYPE_IPV4) != 0)
 		dbg_msg("client", "could not find the address of %s, connecting to localhost", buf);
 	
 	rcon_authed = 0;
+	server_address.port = port;
 	netclient_connect(net, &server_address);
 	client_set_state(CLIENTSTATE_CONNECTING);
 	
@@ -534,6 +536,8 @@ static int client_load_data()
 extern int snapshot_data_rate[0xffff];
 extern int snapshot_data_updates[0xffff];
 
+const char *modc_getitemname(int type);
+
 static void client_debug_render()
 {
 	static NETSTATS prev, current;
@@ -555,29 +559,50 @@ static void client_debug_render()
 		net_stats(&current);
 	}
 	
+	/*
+		eth = 14
+		ip = 20
+		udp = 8
+		total = 42
+	*/
+	
 	frametime_avg = frametime_avg*0.9f + frametime*0.1f;
-	str_format(buffer, sizeof(buffer), "ticks: %8d %8d send: %5d/%3d recv: %5d/%3d snaploss: %d  mem %dk   gfxmem: %dk  fps: %3d",
+	str_format(buffer, sizeof(buffer), "ticks: %8d %8d snaploss: %d  mem %dk   gfxmem: %dk  fps: %3d",
 		current_tick, current_predtick,
-		(current.sent_bytes-prev.sent_bytes),
-		(current.sent_packets-prev.sent_packets),
-		(current.recv_bytes-prev.recv_bytes),
-		(current.recv_packets-prev.recv_packets),
 		snaploss,
 		mem_allocated()/1024,
 		gfx_memory_usage()/1024,
 		(int)(1.0f/frametime_avg));
 	gfx_quads_text(2, 2, 16, buffer);
 
+	
+	{
+		int send_packets = (current.sent_packets-prev.sent_packets);
+		int send_bytes = (current.sent_bytes-prev.sent_bytes);
+		int send_total = send_bytes + send_packets*42;
+		int recv_packets = (current.recv_packets-prev.recv_packets);
+		int recv_bytes = (current.recv_bytes-prev.recv_bytes);
+		int recv_total = recv_bytes + recv_packets*42;
+		
+		if(!send_packets) send_packets++;
+		if(!recv_packets) recv_packets++;
+		str_format(buffer, sizeof(buffer), "send: %3d %5d+%4d=%5d (%3d kbps) avg: %5d\nrecv: %3d %5d+%4d=%5d (%3d kbps) avg: %5d",
+			send_packets, send_bytes, send_packets*42, send_total, (send_total*8)/1024, send_bytes/send_packets,
+			recv_packets, recv_bytes, recv_packets*42, recv_total, (recv_total*8)/1024, recv_bytes/recv_packets);
+		gfx_quads_text(2, 14, 16, buffer);
+	}
 	/* render rates */
 	{
+		int y = 0;
 		int i;
 		for(i = 0; i < 256; i++)
 		{
 			if(snapshot_data_rate[i])
 			{
-				str_format(buffer, sizeof(buffer), "%4d : %8d %8d %8d", i, snapshot_data_rate[i]/8, snapshot_data_updates[i],
+				str_format(buffer, sizeof(buffer), "%4d %20s: %8d %8d %8d", i, modc_getitemname(i), snapshot_data_rate[i]/8, snapshot_data_updates[i],
 					(snapshot_data_rate[i]/snapshot_data_updates[i])/8);
-				gfx_quads_text(2, 100+i*8, 16, buffer);
+				gfx_quads_text(2, 100+y*12, 16, buffer);
+				y++;
 			}
 		}
 	}
@@ -684,13 +709,13 @@ static void client_process_packet(NETCHUNK *packet)
 			memcmp(packet->data, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST)) == 0)
 		{
 			int size = packet->data_size-sizeof(SERVERBROWSE_LIST);
-			int num = size/sizeof(NETADDR4);
-			NETADDR4 *addrs = (NETADDR4 *)((char*)packet->data+sizeof(SERVERBROWSE_LIST));
+			int num = size/sizeof(NETADDR);
+			NETADDR *addrs = (NETADDR *)((char*)packet->data+sizeof(SERVERBROWSE_LIST));
 			int i;
 			
 			for(i = 0; i < num; i++)
 			{
-				NETADDR4 addr = addrs[i];
+				NETADDR addr = addrs[i];
 				SERVER_INFO info = {0};
 
 #if defined(CONF_ARCH_ENDIAN_BIG)
@@ -1016,12 +1041,16 @@ static void client_process_packet(NETCHUNK *packet)
 						purgetick = delta_tick;
 						snapsize = snapshot_unpack_delta(deltashot, (SNAPSHOT*)tmpbuffer3, deltadata, deltasize);
 						if(snapsize < 0)
+						{
+							dbg_msg("client", "delta unpack failed!");
 							return;
-							
+						}
+						
 						if(msg != NETMSG_SNAPEMPTY && snapshot_crc((SNAPSHOT*)tmpbuffer3) != crc)
 						{
 							if(config.debug)
-								dbg_msg("client", "snapshot crc error %d", snapcrcerrors);
+								dbg_msg("client", "snapshot crc error #%d - tick=%d wantedcrc=%d gotcrc=%d compressed_size=%d", snapcrcerrors, game_tick, crc, snapshot_crc((SNAPSHOT*)tmpbuffer3), complete_size);
+								
 							snapcrcerrors++;
 							if(snapcrcerrors > 10)
 							{
@@ -1248,7 +1277,7 @@ extern void editor_init();
 
 static void client_run()
 {
-	NETADDR4 bindaddr;
+	NETADDR bindaddr;
 	int64 reporttime = time_get();
 	int64 reportinterval = time_freq()*1;
 

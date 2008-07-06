@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
-#include "../generated/gc_data.hpp"
-#include "../g_protocol.hpp"
+#include <game/generated/gc_data.hpp>
+#include <game/generated/g_protocol.hpp>
 #include "../g_math.hpp"
 #include "gc_render.hpp"
 #include "gc_anim.hpp"
@@ -265,14 +265,14 @@ static void render_hand(TEE_RENDER_INFO *info, vec2 center_pos, vec2 dir, float 
 }
 
 void render_player(
-	const NETOBJ_PLAYER_CHARACTER *prev_char,
-	const NETOBJ_PLAYER_CHARACTER *player_char,
+	const NETOBJ_CHARACTER *prev_char,
+	const NETOBJ_CHARACTER *player_char,
 	const NETOBJ_PLAYER_INFO *prev_info,
 	const NETOBJ_PLAYER_INFO *player_info
 	)
 {
-	NETOBJ_PLAYER_CHARACTER prev;
-	NETOBJ_PLAYER_CHARACTER player;
+	NETOBJ_CHARACTER prev;
+	NETOBJ_CHARACTER player;
 	prev = *prev_char;
 	player = *player_char;
 
@@ -330,8 +330,8 @@ void render_player(
 		else
 		{
 			// apply predicted results
-			predicted_player.write(&player);
-			predicted_prev_player.write(&prev);
+			predicted_char.write(&player);
+			predicted_prev_char.write(&prev);
 			intratick = client_predintratick();
 		}
 	}
@@ -403,8 +403,8 @@ void render_player(
 		{
 			if(netobjects.local_info && player_char->hooked_player == netobjects.local_info->cid)
 			{
-				hook_pos = mix(vec2(predicted_prev_player.pos.x, predicted_prev_player.pos.y),
-					vec2(predicted_player.pos.x, predicted_player.pos.y), client_predintratick());
+				hook_pos = mix(vec2(predicted_prev_char.pos.x, predicted_prev_char.pos.y),
+					vec2(predicted_char.pos.x, predicted_char.pos.y), client_predintratick());
 			}
 			else
 				hook_pos = mix(vec2(prev_char->hook_x, prev_char->hook_y), vec2(player_char->hook_x, player_char->hook_y), client_intratick());
@@ -541,7 +541,6 @@ void render_player(
 					vec2 diry(-dir.y,dir.x);
 					vec2 muzzlepos = p + dir * data->weapons.id[iw].muzzleoffsetx + diry * offsety;
 
-					dbg_msg("", "%d", data->weapons.id[iw].num_sprite_muzzles);
 					draw_sprite(muzzlepos.x, muzzlepos.y, data->weapons.id[iw].visual_size);
 				}
 			}

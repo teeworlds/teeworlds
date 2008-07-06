@@ -3,7 +3,7 @@
 #define ENGINE_IF_SERVER_H
 
 /*
-	Section: Server Hooks
+	Section: Server Interface
 */
 
 /* server */

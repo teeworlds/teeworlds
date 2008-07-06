@@ -29,26 +29,22 @@ bool GAMECONTROLLER_CTF::on_entity(int index, vec2 pos)
 	return true;
 }
 
-void GAMECONTROLLER_CTF::on_player_spawn(class PLAYER *p)
+int GAMECONTROLLER_CTF::on_character_death(class CHARACTER *victim, class PLAYER *killer, int weaponid)
 {
-}
-
-int GAMECONTROLLER_CTF::on_player_death(class PLAYER *victim, class PLAYER *killer, int weaponid)
-{
-	GAMECONTROLLER::on_player_death(victim, killer, weaponid);
+	GAMECONTROLLER::on_character_death(victim, killer, weaponid);
 	int had_flag = 0;
 	
 	// drop flags
 	for(int fi = 0; fi < 2; fi++)
 	{
 		FLAG *f = flags[fi];
-		if(f && f->carrying_player == killer)
+		if(f && f->carrying_character == &killer->character)
 			had_flag |= 2;
-		if(f && f->carrying_player == victim)
+		if(f && f->carrying_character == victim)
 		{
-			create_sound_global(SOUND_CTF_DROP);
+			game.create_sound_global(SOUND_CTF_DROP);
 			f->drop_tick = server_tick();
-			f->carrying_player = 0;
+			f->carrying_character = 0;
 			f->vel = vec2(0,0);
 			
 			if(killer && killer->team != victim->team)
@@ -75,10 +71,10 @@ void GAMECONTROLLER_CTF::tick()
 			continue;
 		
 		//
-		if(f->carrying_player)
+		if(f->carrying_character)
 		{
 			// update flag position
-			f->pos = f->carrying_player->pos;
+			f->pos = f->carrying_character->pos;
 			
 			if(flags[fi^1] && flags[fi^1]->at_stand)
 			{
@@ -86,35 +82,38 @@ void GAMECONTROLLER_CTF::tick()
 				{
 					// CAPTURE! \o/
 					teamscore[fi^1] += 100;
-					f->carrying_player->score += 5;
+					f->carrying_character->player->score += 5;
 
-					dbg_msg("game", "flag_capture player='%d:%s'", f->carrying_player->client_id, server_clientname(f->carrying_player->client_id));
+					dbg_msg("game", "flag_capture player='%d:%s'",
+						f->carrying_character->player->client_id,
+						server_clientname(f->carrying_character->player->client_id));
 
 					for(int i = 0; i < 2; i++)
 						flags[i]->reset();
 					
-					create_sound_global(SOUND_CTF_CAPTURE);
+					game.create_sound_global(SOUND_CTF_CAPTURE);
 				}
 			}			
 		}
 		else
 		{
-			PLAYER *close_players[MAX_CLIENTS];
-			int types[] = {NETOBJTYPE_PLAYER_CHARACTER};
-			int num = world->find_entities(f->pos, 32.0f, (ENTITY**)close_players, MAX_CLIENTS, types, 1);
+			CHARACTER *close_characters[MAX_CLIENTS];
+			int num = game.world.find_entities(f->pos, 32.0f, (ENTITY**)close_characters, MAX_CLIENTS, NETOBJTYPE_CHARACTER);
 			for(int i = 0; i < num; i++)
 			{
-				if(close_players[i]->team == f->team)
+				if(close_characters[i]->team == f->team)
 				{
 					// return the flag
 					if(!f->at_stand)
 					{
-						PLAYER *p = close_players[i];
-						p->score += 1;
+						CHARACTER *chr = close_characters[i];
+						chr->player->score += 1;
 
-						dbg_msg("game", "flag_return player='%d:%s'", p->client_id, server_clientname(p->client_id));
+						dbg_msg("game", "flag_return player='%d:%s'",
+							chr->player->client_id,
+							server_clientname(chr->player->client_id));
 
-						create_sound_global(SOUND_CTF_RETURN);
+						game.create_sound_global(SOUND_CTF_RETURN);
 						f->reset();
 					}
 				}
@@ -124,35 +123,37 @@ void GAMECONTROLLER_CTF::tick()
 					if(f->at_stand)
 						teamscore[fi^1]++;
 					f->at_stand = 0;
-					f->carrying_player = close_players[i];
-					f->carrying_player->score += 1;
+					f->carrying_character = close_characters[i];
+					f->carrying_character->player->score += 1;
 
-					dbg_msg("game", "flag_grab player='%d:%s'", f->carrying_player->client_id, server_clientname(f->carrying_player->client_id));
+					dbg_msg("game", "flag_grab player='%d:%s'",
+						f->carrying_character->player->client_id,
+						server_clientname(f->carrying_character->player->client_id));
 					
 					for(int c = 0; c < MAX_CLIENTS; c++)
 					{
-						if(players[c].client_id == -1)
+						if(game.players[c].client_id == -1)
 							continue;
 							
-						if(players[c].team == fi)
-							create_sound_global(SOUND_CTF_GRAB_EN, players[c].client_id);
+						if(game.players[c].team == fi)
+							game.create_sound_global(SOUND_CTF_GRAB_EN, game.players[c].client_id);
 						else
-							create_sound_global(SOUND_CTF_GRAB_PL, players[c].client_id);
+							game.create_sound_global(SOUND_CTF_GRAB_PL, game.players[c].client_id);
 					}
 					break;
 				}
 			}
 			
-			if(!f->carrying_player && !f->at_stand)
+			if(!f->carrying_character && !f->at_stand)
 			{
 				if(server_tick() > f->drop_tick + server_tickspeed()*30)
 				{
-					create_sound_global(SOUND_CTF_RETURN);
+					game.create_sound_global(SOUND_CTF_RETURN);
 					f->reset();
 				}
 				else
 				{
-					f->vel.y += world->core.tuning.gravity;
+					f->vel.y += game.world.core.tuning.gravity;
 					move_box(&f->pos, &f->vel, vec2(f->phys_size, f->phys_size), 0.5f);
 				}
 			}
@@ -166,17 +167,17 @@ FLAG::FLAG(int _team)
 {
 	team = _team;
 	proximity_radius = phys_size;
-	carrying_player = 0x0;
+	carrying_character = 0x0;
 	
 	reset();
 	
 	// TODO: should this be done here?
-	world->insert_entity(this);
+	game.world.insert_entity(this);
 }
 
 void FLAG::reset()
 {
-	carrying_player = 0;
+	carrying_character = 0;
 	at_stand = 1;
 	pos = stand_pos;
 	vel = vec2(0,0);
@@ -192,6 +193,6 @@ void FLAG::snap(int snapping_client)
 	
 	if(at_stand)
 		flag->carried_by = -2;
-	else if(carrying_player)
-		flag->carried_by = carrying_player->client_id;
+	else if(carrying_character)
+		flag->carried_by = carrying_character->player->client_id;
 }

@@ -166,7 +166,7 @@ float velocity_ramp(float value, float start, float range, float curvature)
 	return 1.0f/pow(curvature, (value-start)/range);
 }
 
-void PLAYER_CORE::reset()
+void CHARACTER_CORE::reset()
 {
 	pos = vec2(0,0);
 	vel = vec2(0,0);
@@ -179,7 +179,7 @@ void PLAYER_CORE::reset()
 	triggered_events = 0;
 }
 
-void PLAYER_CORE::tick()
+void CHARACTER_CORE::tick()
 {
 	float phys_size = 28.0f;
 	triggered_events = 0;
@@ -273,7 +273,7 @@ void PLAYER_CORE::tick()
 			// Check against other players first
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
-				PLAYER_CORE *p = world->players[i];
+				CHARACTER_CORE *p = world->characters[i];
 				if(!p || p == this)
 					continue;
 
@@ -312,7 +312,7 @@ void PLAYER_CORE::tick()
 	{
 		if(hooked_player != -1)
 		{
-			PLAYER_CORE *p = world->players[hooked_player];
+			CHARACTER_CORE *p = world->characters[hooked_player];
 			if(p)
 				hook_pos = p->pos;
 			else
@@ -366,7 +366,7 @@ void PLAYER_CORE::tick()
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			PLAYER_CORE *p = world->players[i];
+			CHARACTER_CORE *p = world->characters[i];
 			if(!p)
 				continue;
 			
@@ -414,7 +414,7 @@ void PLAYER_CORE::tick()
 		vel = normalize(vel) * 6000;
 }
 
-void PLAYER_CORE::move()
+void CHARACTER_CORE::move()
 {
 	float rampvalue = velocity_ramp(length(vel)*50, world->tuning.velramp_start, world->tuning.velramp_range, world->tuning.velramp_curvature);
 	
@@ -423,7 +423,7 @@ void PLAYER_CORE::move()
 	vel.x = vel.x*(1.0f/rampvalue);
 }
 
-void PLAYER_CORE::write(NETOBJ_PLAYER_CORE *obj_core)
+void CHARACTER_CORE::write(NETOBJ_CHARACTER_CORE *obj_core)
 {
 	obj_core->x = (int)pos.x;
 	obj_core->y = (int)pos.y;
@@ -450,7 +450,7 @@ void PLAYER_CORE::write(NETOBJ_PLAYER_CORE *obj_core)
 	obj_core->angle = (int)(a*256.0f);
 }
 
-void PLAYER_CORE::read(const NETOBJ_PLAYER_CORE *obj_core)
+void CHARACTER_CORE::read(const NETOBJ_CHARACTER_CORE *obj_core)
 {
 	pos.x = obj_core->x;
 	pos.y = obj_core->y;
@@ -466,9 +466,9 @@ void PLAYER_CORE::read(const NETOBJ_PLAYER_CORE *obj_core)
 	jumped = obj_core->jumped;
 }
 
-void PLAYER_CORE::quantize()
+void CHARACTER_CORE::quantize()
 {
-	NETOBJ_PLAYER_CORE c;
+	NETOBJ_CHARACTER_CORE c;
 	write(&c);
 	read(&c);
 }

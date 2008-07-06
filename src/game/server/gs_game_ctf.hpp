@@ -10,9 +10,7 @@ public:
 	virtual void tick();
 	
 	virtual bool on_entity(int index, vec2 pos);
-	
-	virtual void on_player_spawn(class PLAYER *p);
-	virtual int on_player_death(class PLAYER *victim, class PLAYER *killer, int weapon);
+	virtual int on_character_death(class CHARACTER *victim, class PLAYER *killer, int weapon);
 };
 
 // TODO: move to seperate file
@@ -20,7 +18,7 @@ class FLAG : public ENTITY
 {
 public:
 	static const int phys_size = 14;
-	PLAYER *carrying_player;
+	CHARACTER *carrying_character;
 	vec2 vel;
 	vec2 stand_pos;
 	

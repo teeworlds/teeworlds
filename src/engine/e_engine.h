@@ -24,5 +24,5 @@ int mastersrv_refresh_addresses();
 void mastersrv_update();
 int mastersrv_refreshing();
 void mastersrv_dump_servers();
-NETADDR4 mastersrv_get(int index);
+NETADDR mastersrv_get(int index);
 const char *mastersrv_name(int index);

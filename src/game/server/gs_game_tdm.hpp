@@ -5,6 +5,6 @@ class GAMECONTROLLER_TDM : public GAMECONTROLLER
 public:
 	GAMECONTROLLER_TDM();
 	
-	int on_player_death(class PLAYER *victim, class PLAYER *killer, int weapon);
+	int on_character_death(class CHARACTER *victim, class PLAYER *killer, int weapon);
 	virtual void tick();
 };

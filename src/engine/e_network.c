@@ -170,7 +170,7 @@ typedef struct
 	
 	NETPACKETCONSTRUCT construct;
 	
-	NETADDR4 peeraddr;
+	NETADDR peeraddr;
 	NETSOCKET socket;
 	NETSTATS stats;
 } NETCONNECTION;
@@ -182,7 +182,7 @@ typedef struct
 
 typedef struct
 {
-	NETADDR4 addr;
+	NETADDR addr;
 	NETCONNECTION *conn;
 	int current_chunk;
 	int client_id;
@@ -205,7 +205,7 @@ struct NETSERVER_t
 
 struct NETCLIENT_t
 {
-	NETADDR4 server_addr;
+	NETADDR server_addr;
 	NETSOCKET socket;
 	
 	NETRECVINFO recv;
@@ -215,7 +215,7 @@ struct NETCLIENT_t
 static IOHANDLE datalog = 0;
 static HUFFSTATE huffmanstate;
 
-#define COMPRESSION 0
+#define COMPRESSION 1
 
 typedef struct pcap_hdr_s {
         unsigned magic_number;   /* magic number */
@@ -235,7 +235,7 @@ typedef struct pcaprec_hdr_s {
 } pcaprec_hdr_t;
 
 /* packs the data tight and sends it */
-static void send_packet(NETSOCKET socket, NETADDR4 *addr, NETPACKETCONSTRUCT *packet)
+static void send_packet(NETSOCKET socket, NETADDR *addr, NETPACKETCONSTRUCT *packet)
 {
 	unsigned char buffer[NET_MAX_PACKETSIZE];
 	buffer[0] = ((packet->flags<<4)&0xf0)|((packet->ack>>8)&0xf);
@@ -249,13 +249,13 @@ static void send_packet(NETSOCKET socket, NETADDR4 *addr, NETPACKETCONSTRUCT *pa
 	
 	if(COMPRESSION)
 	{
-		int compressed_size = (huffman_compress(&huffmanstate, packet->chunk_data, packet->data_size, &buffer[4], NET_MAX_PACKETSIZE-4)+7)/8;
-		net_udp4_send(socket, addr, buffer, NET_PACKETHEADERSIZE+compressed_size);
+		int compressed_size = (huffman_compress(&huffmanstate, packet->chunk_data, packet->data_size, &buffer[3], NET_MAX_PACKETSIZE-4)+7)/8;
+		net_udp_send(socket, addr, buffer, NET_PACKETHEADERSIZE+compressed_size);
 	}
 	else
 	{
 		mem_copy(&buffer[3], packet->chunk_data, packet->data_size);
-		net_udp4_send(socket, addr, buffer, NET_PACKETHEADERSIZE+packet->data_size);
+		net_udp_send(socket, addr, buffer, NET_PACKETHEADERSIZE+packet->data_size);
 	}
 }
 
@@ -473,7 +473,7 @@ static void conn_resend(NETCONNECTION *conn)
 	dbg_msg("conn", "resent %d packets", resend_count);
 }
 
-static int conn_connect(NETCONNECTION *conn, NETADDR4 *addr)
+static int conn_connect(NETCONNECTION *conn, NETADDR *addr)
 {
 	if(conn->state != NET_CONNSTATE_OFFLINE)
 		return -1;
@@ -504,7 +504,7 @@ static void conn_disconnect(NETCONNECTION *conn, const char *reason)
 	conn_reset(conn);
 }
 
-static int conn_feed(NETCONNECTION *conn, NETPACKETCONSTRUCT *packet, NETADDR4 *addr)
+static int conn_feed(NETCONNECTION *conn, NETPACKETCONSTRUCT *packet, NETADDR *addr)
 {
 	int64 now = time_get();
 	conn->last_recv_time = now;
@@ -685,11 +685,11 @@ static int conn_update(NETCONNECTION *conn)
 	return 0;
 }
 
-NETSERVER *netserver_open(NETADDR4 bindaddr, int max_clients, int flags)
+NETSERVER *netserver_open(NETADDR bindaddr, int max_clients, int flags)
 {
 	int i;
 	NETSERVER *server;
-	NETSOCKET socket = net_udp4_create(bindaddr);
+	NETSOCKET socket = net_udp_create(bindaddr);
 	if(socket == NETSOCKET_INVALID)
 		return 0;
 	
@@ -756,7 +756,7 @@ static void recvinfo_clear(NETRECVINFO *info)
 	info->valid = 0;
 }
 
-static void recvinfo_start(NETRECVINFO *info, NETADDR4 *addr, NETCONNECTION *conn, int cid)
+static void recvinfo_start(NETRECVINFO *info, NETADDR *addr, NETCONNECTION *conn, int cid)
 {
 	info->addr = *addr;
 	info->conn = conn;
@@ -823,7 +823,7 @@ int netserver_recv(NETSERVER *s, NETCHUNK *chunk)
 {
 	while(1)
 	{
-		NETADDR4 addr;
+		NETADDR addr;
 		int i, bytes, found;
 			
 		/* check for a chunk */
@@ -831,7 +831,7 @@ int netserver_recv(NETSERVER *s, NETCHUNK *chunk)
 			return 1;
 		
 		/* TODO: empty the recvinfo */
-		bytes = net_udp4_recv(s->socket, &addr, s->recv.buffer, NET_MAX_PACKETSIZE);
+		bytes = net_udp_recv(s->socket, &addr, s->recv.buffer, NET_MAX_PACKETSIZE);
 
 		/* no more packets for now */
 		if(bytes <= 0)
@@ -849,7 +849,7 @@ int netserver_recv(NETSERVER *s, NETCHUNK *chunk)
 				for(i = 0; i < s->max_clients; i++)
 				{
 					if(s->slots[i].conn.state != NET_CONNSTATE_OFFLINE &&
-						net_addr4_cmp(&s->slots[i].conn.peeraddr, &addr) == 0)
+						net_addr_comp(&s->slots[i].conn.peeraddr, &addr) == 0)
 					{
 						found = 1; /* silent ignore.. we got this client already */
 						break;
@@ -884,7 +884,7 @@ int netserver_recv(NETSERVER *s, NETCHUNK *chunk)
 				/* normal packet, find matching slot */
 				for(i = 0; i < s->max_clients; i++)
 				{
-					if(net_addr4_cmp(&s->slots[i].conn.peeraddr, &addr) == 0)
+					if(net_addr_comp(&s->slots[i].conn.peeraddr, &addr) == 0)
 					{
 						if(conn_feed(&s->slots[i].conn, &s->recv.data, &addr))
 						{
@@ -952,17 +952,17 @@ NETSOCKET netserver_socket(NETSERVER *s)
 	return s->socket;
 }
 
-int netserver_client_addr(NETSERVER *s, int client_id, NETADDR4 *addr)
+int netserver_client_addr(NETSERVER *s, int client_id, NETADDR *addr)
 {
 	*addr = s->slots[client_id].conn.peeraddr;
 	return 1;
 }
 
-NETCLIENT *netclient_open(NETADDR4 bindaddr, int flags)
+NETCLIENT *netclient_open(NETADDR bindaddr, int flags)
 {
 	NETCLIENT *client = (NETCLIENT *)mem_alloc(sizeof(NETCLIENT), 1);
 	mem_zero(client, sizeof(NETCLIENT));
-	client->socket = net_udp4_create(bindaddr);
+	client->socket = net_udp_create(bindaddr);
 	conn_init(&client->conn, client->socket);
 	return client;
 }
@@ -988,7 +988,7 @@ int netclient_disconnect(NETCLIENT *c, const char *reason)
 	return 0;
 }
 
-int netclient_connect(NETCLIENT *c, NETADDR4 *addr)
+int netclient_connect(NETCLIENT *c, NETADDR *addr)
 {
 	conn_connect(&c->conn, addr);
 	return 0;
@@ -998,7 +998,7 @@ int netclient_recv(NETCLIENT *c, NETCHUNK *chunk)
 {
 	while(1)
 	{
-		NETADDR4 addr;
+		NETADDR addr;
 		int bytes;
 			
 		/* check for a chunk */
@@ -1006,7 +1006,7 @@ int netclient_recv(NETCLIENT *c, NETCHUNK *chunk)
 			return 1;
 		
 		/* TODO: empty the recvinfo */
-		bytes = net_udp4_recv(c->socket, &addr, c->recv.buffer, NET_MAX_PACKETSIZE);
+		bytes = net_udp_recv(c->socket, &addr, c->recv.buffer, NET_MAX_PACKETSIZE);
 
 		/* no more packets for now */
 		if(bytes <= 0)
@@ -1089,7 +1089,7 @@ void netcommon_openlog(const char *filename)
 
 
 static const int freq_table[256+1] = {
-31230,4545,2657,431,1950,919,444,482,2244,617,838,542,715,1814,304,240,754,212,647,186,
+1<<30,4545,2657,431,1950,919,444,482,2244,617,838,542,715,1814,304,240,754,212,647,186,
 283,131,146,166,543,164,167,136,179,859,363,113,157,154,204,108,137,180,202,176,
 872,404,168,134,151,111,113,109,120,126,129,100,41,20,16,22,18,18,17,19,
 16,37,13,21,362,166,99,78,95,88,81,70,83,284,91,187,77,68,52,68,

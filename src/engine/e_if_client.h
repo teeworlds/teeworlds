@@ -3,6 +3,10 @@
 #define ENGINE_IF_CLIENT_H
 
 /*
+	Title: Client Interface
+*/
+
+/*
 	Section: Constants
 */
 
@@ -20,7 +24,6 @@ enum
 	CLIENTSTATE_LOADING,
 	CLIENTSTATE_ONLINE,
 	CLIENTSTATE_QUITING,
-
 
 	/* Constants: Image Formats
 		IMG_AUTO - Lets the engine choose the format.

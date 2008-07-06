@@ -3,6 +3,10 @@
 #define ENGINE_IF_GFX_H
 
 /*
+	Title: Graphics
+*/
+
+/*
 	Section: Structures
 */
 
