@@ -492,7 +492,6 @@ int net_addr_comp(const NETADDR *a, const NETADDR *b)
 	return mem_comp(a, b, sizeof(NETADDR));
 }
 
-
 int net_host_lookup(const char *hostname, NETADDR *addr, int types)
 {
 	/* TODO: IPv6 support */

@@ -99,7 +99,7 @@ Objects = [
 		NetIntAny("teamscore_blue"),
 	]),
 
-	NetObject("Player_Core", [
+	NetObject("Character_Core", [
 		NetIntAny("x"),
 		NetIntAny("y"),
 		NetIntAny("vx"),
@@ -118,7 +118,7 @@ Objects = [
 		NetIntAny("hook_dy"),
 	]),
 
-	NetObject("Player_Character:Player_Core", [
+	NetObject("Character:Character_Core", [
 		NetIntRange("player_state", 0, 'NUM_PLAYERSTATES-1'),
 		NetIntRange("wanted_direction", -1, 1),
 		NetIntRange("health", 0, 10),
@@ -238,7 +238,13 @@ Messages = [
 		NetIntAny("color_feet"),
 	]),	
 
-	NetMessage("cl_changeinfo:cl_startinfo", []),
+	NetMessage("cl_changeinfo", [
+		NetString("name"),
+		NetString("skin"),
+		NetBool("use_custom_color"),
+		NetIntAny("color_body"),
+		NetIntAny("color_feet"),
+	]),
 	
 	NetMessage("cl_kill", []),
 

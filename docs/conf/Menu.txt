@@ -1,4 +1,4 @@
-Format: 1.35
+Format: 1.4
 
 
 # You can add a title and sub-title to your menu like this:
@@ -8,6 +8,22 @@ Format: 1.35
 # You can add a footer to your documentation like this:
 # Footer: [text]
 # If you want to add a copyright notice, this would be the place to do it.
+
+# You can add a timestamp to your documentation like one of these:
+# Timestamp: Generated on month day, year
+# Timestamp: Updated mm/dd/yyyy
+# Timestamp: Last updated mon day
+#
+#   m     - One or two digit month.  January is "1"
+#   mm    - Always two digit month.  January is "01"
+#   mon   - Short month word.  January is "Jan"
+#   month - Long month word.  January is "January"
+#   d     - One or two digit day.  1 is "1"
+#   dd    - Always two digit day.  1 is "01"
+#   day   - Day with letter extension.  1 is "1st"
+#   yy    - Two digit year.  2006 is "06"
+#   yyyy  - Four digit year.  2006 is "2006"
+#   year  - Four digit year.  2006 is "2006"
 
 
 # --------------------------------------------------------------------------
@@ -27,53 +43,66 @@ Format: 1.35
 # time it is run.  When working with groups, just deal with the braces and
 # forget about the indentation and comments.
 # 
+# You can use this file on other computers even if they use different
+# directories.  As long as the command line points to the same source files,
+# Natural Docs will be able to correct the locations automatically.
+# 
 # --------------------------------------------------------------------------
 
 
-Group: Articles  {
+File: OS Abstraction  (/home/kma/code/teeworlds/trunk/src/engine/e_system.h)
 
-   File: Prediction  (docs/prediction.txt)
-   File: Time on the client  (docs/client_time.txt)
-   }  # Group: Articles
+Group: Engine  {
 
-Group: Reference  {
+   Group: Overview  {
 
-   File: Lowlevel Library  (no auto-title, e_system.h)
+      File: Time on the client  (/home/kma/code/teeworlds/trunk/src/engine/docs/client_time.txt)
+      File: Prediction  (/home/kma/code/teeworlds/trunk/src/engine/docs/prediction.txt)
+      }  # Group: Overview
 
-   Group: Common Interface  {
+   Group: Reference  {
 
-      File: Engine Interface  (e_if_other.h)
-      File: Message Packing  (no auto-title, e_if_msg.h)
-      }  # Group: Common Interface
+      Group: Common  {
 
-   Group: Client Interface  {
+         File: Engine Interface  (/home/kma/code/teeworlds/trunk/src/engine/e_if_other.h)
+         File: Messaging  (/home/kma/code/teeworlds/trunk/src/engine/e_if_msg.h)
+         }  # Group: Common
 
-      File: General  (no auto-title, e_if_client.h)
-      File: Sound  (no auto-title, e_if_snd.h)
-      File: Input  (no auto-title, e_if_inp.h)
-      File: Graphics  (no auto-title, e_if_gfx.h)
-      }  # Group: Client Interface
+      Group: Client  {
 
-   Group: Server Interface  {
+         File: Client Hooks  (/home/kma/code/teeworlds/trunk/src/engine/e_if_modc.h)
+         File: Client Interface  (/home/kma/code/teeworlds/trunk/src/engine/e_if_client.h)
+         File: Graphics  (/home/kma/code/teeworlds/trunk/src/engine/e_if_gfx.h)
+         File: Input  (/home/kma/code/teeworlds/trunk/src/engine/e_if_inp.h)
+         File: Sound  (/home/kma/code/teeworlds/trunk/src/engine/e_if_snd.h)
+         }  # Group: Client
 
-      File: General  (no auto-title, e_if_server.h)
-      }  # Group: Server Interface
+      Group: Server  {
 
-   Group: Mod Hooks  {
+         File: Server Hooks  (/home/kma/code/teeworlds/trunk/src/engine/e_if_mods.h)
+         File: Server Interface  (/home/kma/code/teeworlds/trunk/src/engine/e_if_server.h)
+         }  # Group: Server
 
-      File: Client Side  (no auto-title, e_if_modc.h)
-      File: Server Side  (no auto-title, e_if_mods.h)
-      }  # Group: Mod Hooks
+      }  # Group: Reference
 
-   }  # Group: Reference
+   }  # Group: Engine
+
+Group: Game Implementation  {
+
+   File: Entity  (/home/kma/code/teeworlds/trunk/src/game/server/gs_common.hpp)
+   }  # Group: Game Implementation
 
 Group: Index  {
 
    Index: Everything
-   Constant Index: Constants
-   File Index: Files
-   Function Index: Functions
    Class Index: Classes
+   Constant Index: Constants
+   Function Index: Functions
    Variable Index: Variables
    }  # Group: Index
 
+
+
+##### Do not change or remove these lines. #####
+Data: 1(D3333RuEG3AEp39ufG3tGG7uHof63tHN\A36H93`pEG)
+Data: 1(h3333RuEG3AEp39ufG3tGG7uHof63tHN\A36H93G\`8\G)

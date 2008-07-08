@@ -66,6 +66,8 @@ if gen_client_content_source or gen_server_content_source:
 # NETWORK
 if gen_network_header:
 	
+	print "#ifndef FILE_G_PROTOCOL_H"
+	print "#define FILE_G_PROTOCOL_H"
 	print network.RawHeader
 	
 	for e in network.Enums:
@@ -87,11 +89,13 @@ if gen_network_header:
 
 	print "int netobj_validate(int type, void *data, int size);"
 	print "const char *netobj_get_name(int type);"
+	print "int netobj_get_size(int type);"
 	print "void *netmsg_secure_unpack(int type);"
 	print "const char *netmsg_get_name(int type);"
 	print "const char *netmsg_failed_on();"
 	print "int netobj_num_corrections();"
 	print "const char *netobj_corrected_on();"
+	print "#endif // FILE_G_PROTOCOL_H"
 	
 
 if gen_network_source:
@@ -117,9 +121,14 @@ if gen_network_source:
 	lines += ['}']
 
 	lines += ["static const char *netobj_names[] = {"]
+	lines += ['\t"invalid",']
 	lines += ['\t"%s",' % o.name for o in network.Objects]
 	lines += ['\t""', "};", ""]
 
+	lines += ["static int netobj_sizes[] = {"]
+	lines += ['\t0,']
+	lines += ['\tsizeof(%s),' % o.struct_name for o in network.Objects]
+	lines += ['\t0', "};", ""]
 	for l in lines:
 		print l
 
@@ -150,6 +159,13 @@ if gen_network_source:
 	lines += ['};']
 	lines += ['']
 
+	lines += ['int netobj_get_size(int type)']
+	lines += ['{']
+	lines += ['\tif(type < 0 || type >= NUM_NETOBJTYPES) return 0;']
+	lines += ['\treturn netobj_sizes[type];']
+	lines += ['};']
+	lines += ['']
+	
 	for item in network.Messages:
 		for line in item.emit_unpack():
 			print line
