@@ -9,6 +9,28 @@ inline int cmask_one(int cid) { return 1<<cid; }
 inline int cmask_all_except_one(int cid) { return 0x7fffffff^cmask_one(cid); }
 inline bool cmask_is_set(int mask, int cid) { return (mask&cmask_one(cid)) != 0; }
 
+/*
+	Tick
+		Game Context (GAMECONTEXT::tick)
+			Game World (GAMEWORLD::tick)
+				Reset world if requested (GAMEWORLD::reset)
+				All entities in the world (ENTITY::tick)
+				All entities in the world (ENTITY::tick_defered)
+				Remove entities marked for deletion (GAMEWORLD::remove_entities)
+			Game Controller (GAMECONTROLLER::tick)
+			All players (PLAYER::tick)
+			
+
+	Snap
+		Game Context (GAMECONTEXT::snap)
+			Game World (GAMEWORLD::snap)
+				All entities in the world (ENTITY::snap)
+			Game Controller (GAMECONTROLLER::snap)
+			Events handler (EVENT_HANDLER::snap)
+			All players (PLAYER::snap)
+
+*/
+
 
 
 //
@@ -78,7 +100,7 @@ public:
 	virtual void tick() {}
 
 	/*
-		Function: tick
+		Function: tick_defered
 		Called after all entities tick() function has been called.
 	*/
 	virtual void tick_defered() {}
@@ -143,6 +165,7 @@ public:
 	/*
 		Function: find_entities
 			Finds entities close to a position and returns them in a list.
+			
 		Arguments:
 			pos - Position.
 			radius - How close the entities have to be.
@@ -150,6 +173,7 @@ public:
 				to the entities.
 			max - Number of entities that fits into the ents array.
 			type - Type of the entities to find. -1 for all types.
+			
 		Returns:
 			Number of entities found and added to the ents array.
 	*/
@@ -158,12 +182,14 @@ public:
 	/*
 		Function: interserct_character
 			Finds the closest character that intersects the line.
+			
 		Arguments:
 			pos0 - Start position
 			pos2 - End position
 			radius - How for from the line the character is allowed to be.
 			new_pos - Intersection position
 			notthis - Entity to ignore intersecting with
+			
 		Returns:
 			Returns a pointer to the closest hit or NULL of there is no intersection.
 	*/
@@ -172,10 +198,12 @@ public:
 	/*
 		Function: closest_character
 			Finds the closest character to a specific point.
+			
 		Arguments:
 			pos - The center position.
 			radius - How far off the character is allowed to be
 			notthis - Entity to ignore
+			
 		Returns:
 			Returns a pointer to the closest character or NULL if no character is close enough.
 	*/
@@ -184,6 +212,7 @@ public:
 	/*
 		Function: insert_entity
 			Adds an entity to the world.
+			
 		Arguments:
 			entity - Entity to add
 	*/
@@ -192,6 +221,7 @@ public:
 	/*
 		Function: remove_entity
 			Removes an entity from the world.
+			
 		Arguments:
 			entity - Entity to remove
 	*/
@@ -200,6 +230,7 @@ public:
 	/*
 		Function: destroy_entity
 			Destroys an entity in the world.
+			
 		Arguments:
 			entity - Entity to destroy
 	*/
@@ -209,6 +240,7 @@ public:
 		Function: snap
 			Calls snap on all the entities in the world to create
 			the snapshot.
+			
 		Arguments:
 			snapping_client - ID of the client which snapshot
 			is being created.
@@ -271,9 +303,11 @@ public:
 		Function: on_entity
 			Called when the map is loaded to process an entity
 			in the map.
+			
 		Arguments:
 			index - Entity index.
 			pos - Where the entity is located in the world.
+			
 		Returns:
 			bool?
 	*/
@@ -282,6 +316,7 @@ public:
 	/*
 		Function: on_character_spawn
 			Called when a character spawns into the game world.
+			
 		Arguments:
 			chr - The character that was spawned.
 	*/
@@ -290,6 +325,7 @@ public:
 	/*
 		Function: on_character_death
 			Called when a character in the world dies.
+			
 		Arguments:
 			victim - The character that died.
 			killer - The player that killed it.

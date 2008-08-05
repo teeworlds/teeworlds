@@ -760,14 +760,14 @@ int fs_storage_path(const char *appname, char *path, int max)
 	HRESULT r;
 	char *home = getenv("APPDATA");
 	if(!home)
-		return 1;
+		return -1;
 	_snprintf(path, max, "%s/%s", home, appname);
 	return 0;
 #else
 	char *home = getenv("HOME");
 	int i;
 	if(!home)
-		return 0;
+		return -1;
 
 #if defined(CONF_PLATFORM_MACOSX)
 	snprintf(path, max, "%s/Library/Application Support/%s", home, appname);
@@ -777,7 +777,7 @@ int fs_storage_path(const char *appname, char *path, int max)
 		path[i] = tolower(path[i]);
 #endif
 	
-	return 1;
+	return 0;
 #endif
 }
 
@@ -788,13 +788,13 @@ int fs_makedir(const char *path)
 			return 0;
 	if(errno == EEXIST)
 		return 0;
-	return 1;
+	return -1;
 #else
 	if(mkdir(path, 0755) == 0)
 		return 0;
 	if(errno == EEXIST)
 		return 0;
-	return 1;
+	return -1;
 #endif
 }
 

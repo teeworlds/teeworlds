@@ -408,7 +408,7 @@ int64 time_freq();
 */
 unsigned time_timestamp();
 
-/* Group: Network General ipv4 */
+/* Group: Network General */
 typedef int NETSOCKET;
 enum
 {
@@ -420,13 +420,6 @@ enum
 	NETTYPE_ALL = ~0
 };
 
-/*
-typedef struct
-{
-	unsigned char ip[4];
-	unsigned short port;
-} NETADDR4;*/
-
 typedef struct
 {
 	unsigned int type;
@@ -435,13 +428,57 @@ typedef struct
 } NETADDR;
 
 /*
+	Function: net_init
+		Initiates network functionallity.
+	
+	Returns:
+		Returns 0 on success,
+		
+	Remarks:
+		You must call this function before using any other network
+		functions.
+*/
+int net_init();
+
+/*
 	Function: net_host_lookup
-		Does a hostname lookup by name and fills out the passed NETADDR struct with the recieved details.
+		Does a hostname lookup by name and fills out the passed
+		NETADDR struct with the recieved details.
 
 	Returns:
 		0 on success.
 */
 int net_host_lookup(const char *hostname, NETADDR *addr, int types);
+
+/*
+	Function: net_addr_comp
+		Compares two network addresses.
+	
+	Parameters:
+		a - Address to compare
+		b - Address to compare to.
+	
+	Returns:
+		<0 - Address a is lesser then address b
+		0 - Address a is equal to address b
+		>0 - Address a is greater then address b
+*/
+int net_addr_comp(const NETADDR *a, const NETADDR *b);
+
+/*
+	Function: net_addr_str
+		Turns a network address into a representive string.
+	
+	Parameters:
+		addr - Address to turn into a string.
+		string - Buffer to fill with the string.
+		max_length - Maximum size of the string.
+		
+	Remarks:
+		- The string will always be zero terminated
+
+*/
+int net_addr_str(const NETADDR *addr, char *string, int max_length);
 
 /* Group: Network UDP */
 
@@ -450,10 +487,11 @@ int net_host_lookup(const char *hostname, NETADDR *addr, int types);
 		Creates a UDP socket and binds it to a port.
 
 	Parameters:
-		port - Port to bind the socket to.
+		bindaddr - Address to bind the socket to.
 	
 	Returns:
-		On success it returns an handle to the socket. On failure it returns NETSOCKET_INVALID.
+		On success it returns an handle to the socket. On failure it
+		returns NETSOCKET_INVALID.
 */
 NETSOCKET net_udp_create(NETADDR bindaddr);
 
@@ -468,7 +506,8 @@ NETSOCKET net_udp_create(NETADDR bindaddr);
 		size - Size of the packet.
 	
 	Returns:
-		On success it returns the number of bytes sent. Returns -1 on error.
+		On success it returns the number of bytes sent. Returns -1
+		on error.
 */
 int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size);
 
@@ -483,7 +522,8 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 		maxsize - Maximum size to recive.
 	
 	Returns:
-		On success it returns the number of bytes recived. Returns -1 on error.
+		On success it returns the number of bytes recived. Returns -1
+		on error.
 */
 int net_udp_recv(NETSOCKET sock, NETADDR *addr, void *data, int maxsize);
 
@@ -504,94 +544,96 @@ int net_udp_close(NETSOCKET sock);
 
 /*
 	Function: net_tcp_create
+		Creates a TCP socket.
 	
-	DOCTODO: serp
+	Parameters:
+		bindaddr - Address to bind the socket to.
+
+	Returns:
+		On success it returns an handle to the socket. On failure it returns NETSOCKET_INVALID.
 */
 NETSOCKET net_tcp_create(const NETADDR *a);
 
 /*
-	Function: net_tcp_set_non_blocking
-
-	DOCTODO: serp
-*/
-int net_tcp_set_non_blocking(NETSOCKET sock);
-
-/*
-	Function: net_tcp_set_non_blocking
-
-	DOCTODO: serp
-*/
-int net_tcp_set_blocking(NETSOCKET sock);
-
-/*
 	Function: net_tcp_listen
-
-	DOCTODO: serp 
+		Makes the socket start listening for new connections.
+	
+	Parameters:
+		sock - Socket to start listen to.
+		backlog - Size of the queue of incomming connections to keep.
+	
+	Returns:
+		Returns 0 on success.
 */
 int net_tcp_listen(NETSOCKET sock, int backlog);
 
 /*
 	Function: net_tcp_accept
+		Polls a listning socket for a new connection.
+		
+	Parameters:
+		sock - Listning socket to poll.
+		new_sock - Pointer to a socket to fill in with the new socket.
+		addr - Pointer to an address that will be filled in the remote address (optional, can be NULL).
 	
-	DOCTODO: serp
+	Returns:
+		Returns a non-negative integer on success. Negative integer on failure.
 */
-int net_tcp_accept(NETSOCKET sock, NETSOCKET *new_sock, NETADDR *a);
+int net_tcp_accept(NETSOCKET sock, NETSOCKET *new_sock, NETADDR *addr);
 
 /*
 	Function: net_tcp_connect
-	
-	DOCTODO: serp
-*/
-int net_tcp_connect(NETSOCKET sock, const NETADDR *a);
+		Connects one socket to another.
+		
+	Parameters:
+		sock - Socket to connect.
+		addr - Address to connect to.
 
-/*
-	Function: net_tcp_connect_non_blocking
-	
-	DOCTODO: serp
+	Returns:
+		Returns 0 on success.
+			
 */
-int net_tcp_connect_non_blocking(NETSOCKET sock, const NETADDR *a);
+int net_tcp_connect(NETSOCKET sock, const NETADDR *addr);
 
 /*
 	Function: net_tcp_send
+		Sends data to a TCP stream.
 	
-	DOCTODO: serp
+	Parameters:
+		sock - Socket to send data to.
+		data - Pointer to the data to send.
+		size - Size of the data to send.
+	
+	Returns:
+		Number of bytes sent. Negative value on failure.
 */
 int net_tcp_send(NETSOCKET sock, const void *data, int size);
 
 /*
 	Function: net_tcp_recv
-	
-	DOCTODO: serp
+		Recvives data from a TCP stream.
+		
+	Parameters:
+		sock - Socket to recvive data from.
+		data - Pointer to a buffer to write the data to
+		max_size - Maximum of data to write to the buffer.
+		
+	Returns:
+		Number of bytes recvived. Negative value on failure.
 */
 int net_tcp_recv(NETSOCKET sock, void *data, int maxsize);
 
 /*
 	Function: net_tcp_close
+		Closes a TCP socket.
 	
-	DOCTODO: serp
+	Parameters:
+		sock - Socket to close.
+	
+	Returns:
+		Returns 0 on success. Negative value on failure.
 */
 int net_tcp_close(NETSOCKET sock);
-
-/*
-	Function: net_errno
-
-	DOCTODO: serp
-*/
-int net_errno();
-
-/*
-	Function: net_would_block
-
-	DOCTODO: serp
-*/
-int net_would_block();
-
-/*
-	Function: net_init
-
-	DOCTODO: serp
-*/
-int net_init();
 
 /* Group: Strings */
 
@@ -676,7 +718,7 @@ void str_sanitize(char *str);
 		b - String to compare.
 	
 	Returns:	
-		<0 - String g a is lesser then string b
+		<0 - String a is lesser then string b
 		0 - String a is equal to string b
 		>0 - String a is greater then string b
 
@@ -720,6 +762,7 @@ const char *str_find_nocase(const char *haystack, const char *needle);
 */
 void str_hex(char *dst, int dst_size, const void *data, int data_size);
 
+/* Group: Filesystem */
 
 /*
 	Function: fs_listdir
@@ -731,7 +774,7 @@ void str_hex(char *dst, int dst_size, const void *data, int data_size);
 		user - Pointer to give to the callback
 	
 	Returns:
-		DOCTODO
+		Always returns 0.
 */
 typedef void (*fs_listdir_callback)(const char *name, int is_dir, void *user);
 int fs_listdir(const char *dir, fs_listdir_callback cb, void *user);
@@ -744,7 +787,7 @@ int fs_listdir(const char *dir, fs_listdir_callback cb, void *user);
 		path - Directory to create
 	
 	Returns:
-		DOCTODO
+		Returns 0 on success. Negative value on failure.
 	
 	Remarks:
 		Does not create several directories if needed. "a/b/c" will result
@@ -757,10 +800,11 @@ int fs_makedir(const char *path);
 		Fetches per user configuration directory.
 	
 	Returns:
-		DOCTODO
+		Returns 0 on success. Negative value on failure.
 	
 	Remarks:
 		- Returns ~/.appname on UNIX based systems
+		- Returns ~/Library/Applications Support/appname on Mac OS X
 		- Returns %APPDATA%/Appname on Windows based systems
 */
 int fs_storage_path(const char *appname, char *path, int max);
@@ -770,8 +814,42 @@ int fs_storage_path(const char *appname, char *path, int max);
 	Group: Undocumented
 */
 
-int net_addr_comp(const NETADDR *a, const NETADDR *b);
-int net_addr_str(const NETADDR *addr, char *string, int max_length);
+
+/*
+	Function: net_tcp_connect_non_blocking
+	
+	DOCTODO: serp
+*/
+int net_tcp_connect_non_blocking(NETSOCKET sock, const NETADDR *a);
+
+/*
+	Function: net_tcp_set_non_blocking
+
+	DOCTODO: serp
+*/
+int net_tcp_set_non_blocking(NETSOCKET sock);
+
+/*
+	Function: net_tcp_set_non_blocking
+
+	DOCTODO: serp
+*/
+int net_tcp_set_blocking(NETSOCKET sock);
+
+/*
+	Function: net_errno
+
+	DOCTODO: serp
+*/
+int net_errno();
+
+/*
+	Function: net_would_block
+
+	DOCTODO: serp
+*/
+int net_would_block();
+
 int net_socket_read_wait(NETSOCKET sock, int time);
 
 void mem_debug_dump();

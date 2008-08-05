@@ -54,43 +54,46 @@ File: OS Abstraction  (/home/kma/code/teeworlds/trunk/src/engine/e_system.h)
 
 Group: Engine  {
 
-   Group: Overview  {
+   File: Messaging  (/home/kma/code/teeworlds/trunk/src/engine/e_if_msg.h)
 
-      File: Time on the client  (/home/kma/code/teeworlds/trunk/src/engine/docs/client_time.txt)
-      File: Prediction  (/home/kma/code/teeworlds/trunk/src/engine/docs/prediction.txt)
-      }  # Group: Overview
+   Group: Client  {
 
-   Group: Reference  {
+      Group: Overview  {
 
-      Group: Common  {
+         File: Time on the client  (/home/kma/code/teeworlds/trunk/src/engine/docs/client_time.txt)
+         File: Prediction  (/home/kma/code/teeworlds/trunk/src/engine/docs/prediction.txt)
+         File: Snapshots  (/home/kma/code/teeworlds/trunk/src/engine/docs/snapshots.txt)
+         File: Server Operation  (/home/kma/code/teeworlds/trunk/src/engine/docs/server_op.txt)
+         }  # Group: Overview
 
-         File: Engine Interface  (/home/kma/code/teeworlds/trunk/src/engine/e_if_other.h)
-         File: Messaging  (/home/kma/code/teeworlds/trunk/src/engine/e_if_msg.h)
-         }  # Group: Common
-
-      Group: Client  {
+      Group: Reference  {
 
          File: Client Hooks  (/home/kma/code/teeworlds/trunk/src/engine/e_if_modc.h)
          File: Client Interface  (/home/kma/code/teeworlds/trunk/src/engine/e_if_client.h)
+         File: Engine Interface  (/home/kma/code/teeworlds/trunk/src/engine/e_if_other.h)
          File: Graphics  (/home/kma/code/teeworlds/trunk/src/engine/e_if_gfx.h)
          File: Input  (/home/kma/code/teeworlds/trunk/src/engine/e_if_inp.h)
          File: Sound  (/home/kma/code/teeworlds/trunk/src/engine/e_if_snd.h)
-         }  # Group: Client
+         }  # Group: Reference
 
-      Group: Server  {
+      }  # Group: Client
+
+   Group: Server  {
+
+      Group: Reference  {
 
          File: Server Hooks  (/home/kma/code/teeworlds/trunk/src/engine/e_if_mods.h)
          File: Server Interface  (/home/kma/code/teeworlds/trunk/src/engine/e_if_server.h)
-         }  # Group: Server
+         }  # Group: Reference
 
-      }  # Group: Reference
+      }  # Group: Server
 
    }  # Group: Engine
 
-Group: Game Implementation  {
+Group: Game  {
 
    File: Entity  (/home/kma/code/teeworlds/trunk/src/game/server/gs_common.hpp)
-   }  # Group: Game Implementation
+   }  # Group: Game
 
 Group: Index  {
 

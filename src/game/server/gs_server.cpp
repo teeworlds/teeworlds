@@ -724,8 +724,8 @@ void GAMECONTEXT::tick()
 	world.core.tuning = tuning;
 	world.tick();
 
-	if(world.paused) // make sure that the game object always updates
-		controller->tick();
+	//if(world.paused) // make sure that the game object always updates
+	controller->tick();
 		
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
@@ -737,8 +737,8 @@ void GAMECONTEXT::tick()
 void GAMECONTEXT::snap(int client_id)
 {
 	world.snap(client_id);
-	events.snap(client_id);
 	controller->snap(client_id);
+	events.snap(client_id);
 	
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
