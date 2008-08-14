@@ -1,7 +1,8 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <engine/e_config.h>
-#include "gs_common.hpp"
-#include "gs_game_tdm.hpp"
+#include <engine/e_server_interface.h>
+#include <game/server/entities/character.hpp>
+#include <game/server/player.hpp>
+#include "tdm.hpp"
 
 GAMECONTROLLER_TDM::GAMECONTROLLER_TDM()
 {

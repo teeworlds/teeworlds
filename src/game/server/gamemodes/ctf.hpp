@@ -1,6 +1,8 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 
-// game object
+#include <game/server/gamecontroller.hpp>
+#include <game/server/entity.hpp>
+
 class GAMECONTROLLER_CTF : public GAMECONTROLLER
 {
 public:

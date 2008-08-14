@@ -1,8 +1,11 @@
 #include <new>
 #include <engine/e_server_interface.h>
 #include <engine/e_config.h>
-#include "gs_common.hpp"
+#include <game/server/gs_common.hpp>
 
+#include "character.hpp"
+#include "laser.hpp"
+#include "projectile.hpp"
 
 struct INPUT_COUNT
 {

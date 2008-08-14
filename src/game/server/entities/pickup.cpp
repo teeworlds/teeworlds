@@ -1,8 +1,10 @@
 #include <engine/e_server_interface.h>
-#include "gs_common.hpp"
+#include <game/generated/g_protocol.hpp>
+#include <game/server/gs_common.hpp>
+#include "pickup.hpp"
 
 //////////////////////////////////////////////////
-// powerup
+// pickup
 //////////////////////////////////////////////////
 PICKUP::PICKUP(int _type, int _subtype)
 : ENTITY(NETOBJTYPE_PICKUP)

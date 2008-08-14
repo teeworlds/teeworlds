@@ -1,5 +1,7 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-// game object
+
+#include <game/server/gamecontroller.hpp>
+
 class GAMECONTROLLER_DM : public GAMECONTROLLER
 {
 public:

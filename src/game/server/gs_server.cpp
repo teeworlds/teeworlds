@@ -11,9 +11,10 @@
 #include <game/g_collision.hpp>
 #include <game/g_layers.hpp>
 #include "gs_common.hpp"
-#include "gs_game_ctf.hpp"
-#include "gs_game_tdm.hpp"
-#include "gs_game_dm.hpp"
+
+#include "gamemodes/dm.hpp"
+#include "gamemodes/tdm.hpp"
+#include "gamemodes/ctf.hpp"
 
 TUNING_PARAMS tuning;
 GAMECONTEXT game;
@@ -106,12 +107,12 @@ void send_tuning_params(int cid)
 //////////////////////////////////////////////////
 // Event handler
 //////////////////////////////////////////////////
-EVENT_HANDLER::EVENT_HANDLER()
+EVENTHANDLER::EVENTHANDLER()
 {
 	clear();
 }
 
-void *EVENT_HANDLER::create(int type, int size, int mask)
+void *EVENTHANDLER::create(int type, int size, int mask)
 {
 	if(num_events == MAX_EVENTS)
 		return 0;
@@ -128,13 +129,13 @@ void *EVENT_HANDLER::create(int type, int size, int mask)
 	return p;
 }
 
-void EVENT_HANDLER::clear()
+void EVENTHANDLER::clear()
 {
 	num_events = 0;
 	current_offset = 0;
 }
 
-void EVENT_HANDLER::snap(int snapping_client)
+void EVENTHANDLER::snap(int snapping_client)
 {
 	for(int i = 0; i < num_events; i++)
 	{
@@ -325,217 +326,6 @@ void GAMEWORLD::tick()
 	}
 
 	remove_entities();
-}
-
-//////////////////////////////////////////////////
-// projectile
-//////////////////////////////////////////////////
-PROJECTILE::PROJECTILE(int type, int owner, vec2 pos, vec2 dir, int span, ENTITY* powner,
-	int damage, int flags, float force, int sound_impact, int weapon)
-: ENTITY(NETOBJTYPE_PROJECTILE)
-{
-	this->type = type;
-	this->pos = pos;
-	this->direction = dir;
-	this->lifespan = span;
-	this->owner = owner;
-	this->powner = powner;
-	this->flags = flags;
-	this->force = force;
-	this->damage = damage;
-	this->sound_impact = sound_impact;
-	this->weapon = weapon;
-	this->bounce = 0;
-	this->start_tick = server_tick();
-	game.world.insert_entity(this);
-}
-
-void PROJECTILE::reset()
-{
-	game.world.destroy_entity(this);
-}
-
-vec2 PROJECTILE::get_pos(float time)
-{
-	float curvature = 0;
-	float speed = 0;
-	if(type == WEAPON_GRENADE)
-	{
-		curvature = tuning.grenade_curvature;
-		speed = tuning.grenade_speed;
-	}
-	else if(type == WEAPON_SHOTGUN)
-	{
-		curvature = tuning.shotgun_curvature;
-		speed = tuning.shotgun_speed;
-	}
-	else if(type == WEAPON_GUN)
-	{
-		curvature = tuning.gun_curvature;
-		speed = tuning.gun_speed;
-	}
-	
-	return calc_pos(pos, direction, curvature, speed, time);
-}
-
-
-void PROJECTILE::tick()
-{
-	
-	float pt = (server_tick()-start_tick-1)/(float)server_tickspeed();
-	float ct = (server_tick()-start_tick)/(float)server_tickspeed();
-	vec2 prevpos = get_pos(pt);
-	vec2 curpos = get_pos(ct);
-
-	lifespan--;
-	
-	int collide = col_intersect_line(prevpos, curpos, &curpos);
-	//int collide = col_check_point((int)curpos.x, (int)curpos.y);
-	
-	CHARACTER *targetchr = game.world.intersect_character(prevpos, curpos, 6.0f, curpos, powner);
-	if(targetchr || collide || lifespan < 0)
-	{
-		if(lifespan >= 0 || weapon == WEAPON_GRENADE)
-			game.create_sound(curpos, sound_impact);
-
-		if(flags & PROJECTILE_FLAGS_EXPLODE)
-			game.create_explosion(curpos, owner, weapon, false);
-		else if(targetchr)
-		{
-			targetchr->take_damage(direction * max(0.001f, force), damage, owner, weapon);
-		}
-
-		game.world.destroy_entity(this);
-	}
-}
-
-void PROJECTILE::fill_info(NETOBJ_PROJECTILE *proj)
-{
-	proj->x = (int)pos.x;
-	proj->y = (int)pos.y;
-	proj->vx = (int)(direction.x*100.0f);
-	proj->vy = (int)(direction.y*100.0f);
-	proj->start_tick = start_tick;
-	proj->type = type;
-}
-
-void PROJECTILE::snap(int snapping_client)
-{
-	float ct = (server_tick()-start_tick)/(float)server_tickspeed();
-	
-	if(distance(game.players[snapping_client].view_pos, get_pos(ct)) > 1000.0f)
-		return;
-
-	NETOBJ_PROJECTILE *proj = (NETOBJ_PROJECTILE *)snap_new_item(NETOBJTYPE_PROJECTILE, id, sizeof(NETOBJ_PROJECTILE));
-	fill_info(proj);
-}
-
-
-//////////////////////////////////////////////////
-// laser
-//////////////////////////////////////////////////
-LASER::LASER(vec2 pos, vec2 direction, float start_energy, CHARACTER *owner)
-: ENTITY(NETOBJTYPE_LASER)
-{
-	this->pos = pos;
-	this->owner = owner;
-	energy = start_energy;
-	dir = direction;
-	bounces = 0;
-	do_bounce();
-	
-	game.world.insert_entity(this);
-}
-
-
-bool LASER::hit_character(vec2 from, vec2 to)
-{
-	vec2 at;
-	CHARACTER *hit = game.world.intersect_character(pos, to, 0.0f, at, owner);
-	if(!hit)
-		return false;
-
-	this->from = from;
-	pos = at;
-	energy = -1;		
-	hit->take_damage(vec2(0,0), tuning.laser_damage, owner->player->client_id, WEAPON_RIFLE);
-	return true;
-}
-
-void LASER::do_bounce()
-{
-	eval_tick = server_tick();
-	
-	if(energy < 0)
-	{
-		//dbg_msg("laser", "%d removed", server_tick());
-		game.world.destroy_entity(this);
-		return;
-	}
-	
-	vec2 to = pos + dir*energy;
-	
-	if(col_intersect_line(pos, to, &to))
-	{
-		if(!hit_character(pos, to))
-		{
-			// intersected
-			from = pos;
-			pos = to - dir*2;
-			vec2 temp_pos = pos;
-			vec2 temp_dir = dir*4.0f;
-			
-			move_point(&temp_pos, &temp_dir, 1.0f, 0);
-			pos = temp_pos;
-			dir = normalize(temp_dir);
-			
-			energy -= distance(from, pos) + tuning.laser_bounce_cost;
-			bounces++;
-			
-			if(bounces > tuning.laser_bounce_num)
-				energy = -1;
-				
-			game.create_sound(pos, SOUND_RIFLE_BOUNCE);
-		}
-	}
-	else
-	{
-		if(!hit_character(pos, to))
-		{
-			from = pos;
-			pos = to;
-			energy = -1;
-		}
-	}
-		
-	//dbg_msg("laser", "%d done %f %f %f %f", server_tick(), from.x, from.y, pos.x, pos.y);
-}
-	
-void LASER::reset()
-{
-	game.world.destroy_entity(this);
-}
-
-void LASER::tick()
-{
-	if(server_tick() > eval_tick+(server_tickspeed()*tuning.laser_bounce_delay)/1000.0f)
-	{
-		do_bounce();
-	}
-
-}
-
-void LASER::snap(int snapping_client)
-{
-	if(distance(game.players[snapping_client].view_pos, pos) > 1000.0f)
-		return;
-
-	NETOBJ_LASER *obj = (NETOBJ_LASER *)snap_new_item(NETOBJTYPE_LASER, id, sizeof(NETOBJ_LASER));
-	obj->x = (int)pos.x;
-	obj->y = (int)pos.y;
-	obj->from_x = (int)from.x;
-	obj->from_y = (int)from.y;
-	obj->start_tick = eval_tick;
 }
 
 GAMECONTEXT::GAMECONTEXT()

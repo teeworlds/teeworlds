@@ -1,8 +1,10 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <engine/e_server_interface.h>
 #include <game/g_mapitems.hpp>
-#include "gs_common.hpp"
-#include "gs_game_ctf.hpp"
+#include <game/server/entities/character.hpp>
+#include <game/server/player.hpp>
+#include <game/server/gamecontext.hpp>
+#include "ctf.hpp"
 
 GAMECONTROLLER_CTF::GAMECONTROLLER_CTF()
 {

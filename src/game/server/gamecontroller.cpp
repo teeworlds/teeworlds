@@ -5,6 +5,8 @@
 #include <game/g_mapitems.hpp>
 #include "gs_common.hpp"
 
+#include "entities/pickup.hpp"
+
 GAMECONTROLLER::GAMECONTROLLER()
 {
 	// select gametype
