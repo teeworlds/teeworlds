@@ -1,4 +1,9 @@
+#ifndef GAME_SERVER_GAMEWORLD_H
+#define GAME_SERVER_GAMEWORLD_H
 
+#include <game/g_game.hpp>
+
+class ENTITY;
 class CHARACTER;
 
 /*
@@ -124,3 +129,5 @@ public:
 	*/
 	void tick();
 };
+
+#endif

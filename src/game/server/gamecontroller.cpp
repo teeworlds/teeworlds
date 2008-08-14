@@ -3,9 +3,12 @@
 #include <engine/e_config.h>
 #include <engine/e_server_interface.h>
 #include <game/g_mapitems.hpp>
-#include "gs_common.hpp"
+
+#include <game/generated/g_protocol.hpp>
 
 #include "entities/pickup.hpp"
+#include "gamecontroller.hpp"
+#include "gamecontext.hpp"
 
 GAMECONTROLLER::GAMECONTROLLER()
 {

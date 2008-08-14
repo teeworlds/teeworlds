@@ -1,3 +1,8 @@
+#ifndef GAME_SERVER_PLAYER_H
+#define GAME_SERVER_PLAYER_H
+
+// this include should perhaps be removed
+#include "entities/character.hpp"
 
 // player object
 class PLAYER
@@ -53,3 +58,5 @@ public:
 	void on_predicted_input(NETOBJ_PLAYER_INPUT *new_input);
 	void on_disconnect();
 };
+
+#endif

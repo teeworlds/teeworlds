@@ -1,7 +1,7 @@
 #include <new>
 #include <engine/e_server_interface.h>
 #include <engine/e_config.h>
-#include <game/server/gs_common.hpp>
+#include <game/server/gamecontext.hpp>
 
 #include "character.hpp"
 #include "laser.hpp"
@@ -892,7 +892,7 @@ void PLAYER::on_disconnect()
 		
 	char buf[512];
 	str_format(buf, sizeof(buf),  "%s has left the game", server_clientname(client_id));
-	game.send_chat(-1, CHAT_ALL, buf);
+	game.send_chat(-1, GAMECONTEXT::CHAT_ALL, buf);
 
 	dbg_msg("game", "leave player='%d:%s'", client_id, server_clientname(client_id));
 
@@ -952,7 +952,7 @@ void PLAYER::set_team(int new_team)
 		
 	char buf[512];
 	str_format(buf, sizeof(buf), "%s joined the %s", server_clientname(client_id), game.controller->get_team_name(new_team));
-	game.send_chat(-1, CHAT_ALL, buf); 
+	game.send_chat(-1, GAMECONTEXT::CHAT_ALL, buf); 
 	
 	kill_character();
 	team = new_team;

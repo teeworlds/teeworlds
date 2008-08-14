@@ -1,6 +1,6 @@
 #include <engine/e_server_interface.h>
 #include <game/generated/g_protocol.hpp>
-#include <game/server/gs_common.hpp>
+#include <game/server/gamecontext.hpp>
 #include "pickup.hpp"
 
 //////////////////////////////////////////////////
