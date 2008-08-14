@@ -1,7 +1,7 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <stdlib.h>
+#include <stdlib.h> /* rand() */
+#include <base/system.h>
 
-#include "e_system.h"
 #include "e_packer.h"
 #include "e_compression.h"
 #include "e_engine.h"

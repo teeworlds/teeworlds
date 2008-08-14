@@ -1,14 +1,15 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 
+#include <base/system.h>
+#include <base/math.hpp>
+
 #include <stdlib.h>
 #include <math.h>
 #include "array.hpp"
 #include "../g_mapitems.hpp"
-#include "../g_math.hpp"
 #include "../client/gc_render.hpp"
 
 extern "C" {
-	#include <engine/e_system.h>
 	#include <engine/e_client_interface.h>
 	#include <engine/e_datafile.h>
 	#include <engine/e_config.h>

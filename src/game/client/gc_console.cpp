@@ -1,8 +1,9 @@
 #include "gc_console.hpp"
 #include "../generated/gc_data.hpp"
 
+#include <base/system.h>
+
 extern "C" {
-	#include <engine/e_system.h>
 	#include <engine/e_client_interface.h>
 	#include <engine/e_config.h>
 	#include <engine/e_console.h>

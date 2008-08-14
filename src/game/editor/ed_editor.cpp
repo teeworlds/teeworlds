@@ -1,11 +1,12 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 
+#include <base/system.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 extern "C" {
-	#include <engine/e_system.h>
 	#include <engine/e_common_interface.h>
 	#include <engine/e_datafile.h>
 	#include <engine/e_config.h>

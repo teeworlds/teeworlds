@@ -6,9 +6,9 @@
 #include <ctype.h>
 #include <time.h>
 
-#include "e_detect.h"
-#include "e_system.h"
-#include "e_console.h"
+/*#include "detect.h"*/
+#include "system.h"
+/*#include "e_console.h"*/
 
 #if defined(CONF_FAMILY_UNIX)
 	#include <sys/time.h>

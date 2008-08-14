@@ -1,8 +1,8 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <string.h>
+#include <base/system.h>
 
 extern "C" {
-	#include <engine/e_system.h>
 	#include <engine/e_network.h>
 }
 

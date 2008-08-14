@@ -6,8 +6,8 @@
 	Title: Engine Interface
 */
 
+#include <base/system.h>
 #include "e_keys.h"
-#include "e_system.h"
 
 enum 
 {

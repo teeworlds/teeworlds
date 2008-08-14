@@ -1,4 +1,5 @@
-#include <game/g_vmath.hpp>
+#include <base/vmath.hpp>
+
 #include <game/generated/g_protocol.hpp>
 #include <game/g_game.hpp>
 

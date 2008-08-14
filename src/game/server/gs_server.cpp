@@ -2,12 +2,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <base/math.hpp>
+
 #include <engine/e_config.h>
 #include <engine/e_server_interface.h>
 #include <game/g_version.hpp>
 #include <game/g_collision.hpp>
 #include <game/g_layers.hpp>
-#include <game/g_math.hpp>
 #include "gs_common.hpp"
 #include "gs_game_ctf.hpp"
 #include "gs_game_tdm.hpp"

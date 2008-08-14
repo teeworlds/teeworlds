@@ -1,11 +1,11 @@
+#include <base/system.h>
 #include <stdlib.h>
 #include <string.h>
-#include <engine/e_system.h>
 #include <engine/e_huffman.h>
 
 void huffman_init(HUFFSTATE *huff)
 {
-	mem_zero(huff, sizeof(huff));
+	mem_zero(huff, sizeof(HUFFSTATE));
 	huff->nodes[0].frequency = 1;
 	huff->nodes[0].symbol_size = -1;
 	huff->num_symbols++;
@@ -160,7 +160,10 @@ static void bitio_init(HUFFBITIO *bitio, unsigned char *data)
 
 static void bitio_flush(HUFFBITIO *bitio)
 {
-	*bitio->data = bitio->current_bits;
+	if(bitio->num == 8)
+		*bitio->data = bitio->current_bits << (8-bitio->num);
+	else
+		*bitio->data = bitio->current_bits;
 	bitio->data++;
 	bitio->num = 0;
 	bitio->current_bits = 0;

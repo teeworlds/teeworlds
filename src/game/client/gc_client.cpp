@@ -1,5 +1,6 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <game/g_math.hpp>
+#include <base/math.hpp>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -13,7 +14,6 @@ extern "C" {
 #include "../g_game.hpp"
 #include "../g_version.hpp"
 #include "../g_layers.hpp"
-#include "../g_math.hpp"
 #include "gc_map_image.hpp"
 #include "../generated/gc_data.hpp"
 #include "gc_menu.hpp"

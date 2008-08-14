@@ -1,6 +1,7 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+#include <base/system.h>
+
 #include <stdio.h>
-#include <engine/e_system.h>
 #include <engine/e_client_interface.h>
 #include <game/g_mapitems.hpp>
 #include "gc_map_image.hpp"

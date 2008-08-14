@@ -295,7 +295,7 @@ function build(settings)
 		end
 	end
 
-	engine = Compile(engine_settings, Collect("src/engine/*.c"))
+	engine = Compile(engine_settings, Collect("src/engine/*.c", "src/base/*.c"))
 	client = Compile(client_settings, Collect("src/engine/client/*.c"))
 	server = Compile(server_settings, Collect("src/engine/server/*.c"))
 	

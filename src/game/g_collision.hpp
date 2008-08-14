@@ -2,8 +2,7 @@
 #ifndef GAME_MAPRES_COL_H
 #define GAME_MAPRES_COL_H
 
-
-#include <game/g_vmath.hpp>
+#include <base/vmath.hpp>
 
 int col_init();
 int col_is_solid(int x, int y);

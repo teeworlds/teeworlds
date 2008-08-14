@@ -1,6 +1,6 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+#include <base/system.h>
 #include <engine/e_config.h>
-#include <engine/e_system.h>
 #include <engine/e_network.h>
 #include <mastersrv/mastersrv.h>
 #include <stdlib.h>

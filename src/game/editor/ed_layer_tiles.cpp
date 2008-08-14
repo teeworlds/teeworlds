@@ -1,4 +1,5 @@
-#include <game/g_math.hpp>
+#include <base/math.hpp>
+
 #include <game/generated/gc_data.hpp>
 #include <game/client/gc_render.hpp>
 #include "ed_editor.hpp"

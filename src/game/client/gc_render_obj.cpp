@@ -1,11 +1,13 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <math.h>
 #include <stdio.h>
+
+#include <base/math.hpp>
+
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
 #include <game/generated/gc_data.hpp>
 #include <game/generated/g_protocol.hpp>
-#include "../g_math.hpp"
 #include "gc_render.hpp"
 #include "gc_anim.hpp"
 #include "gc_client.hpp"

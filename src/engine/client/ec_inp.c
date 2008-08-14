@@ -2,7 +2,7 @@
 #include <string.h>
 #include <GL/glfw.h>
 
-#include <engine/e_system.h>
+#include <base/system.h>
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
 

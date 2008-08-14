@@ -4,11 +4,12 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <game/g_math.hpp>
-#include <game/g_vmath.hpp>
+#include <base/system.h>
+#include <base/math.hpp>
+#include <base/vmath.hpp>
+
 
 extern "C" {
-	#include <engine/e_system.h>
 	#include <engine/e_client_interface.h>
 	#include <engine/e_config.h>
 	#include <engine/client/ec_font.h>

@@ -2,10 +2,11 @@
 #ifndef GAME_GAME_H
 #define GAME_GAME_H
 
-#include <engine/e_system.h>
+#include <base/system.h>
+#include <base/math.hpp>
+
 #include <engine/e_common_interface.h>
 #include <math.h>
-#include "g_math.hpp"
 #include "g_collision.hpp"
 #include <game/generated/g_protocol.hpp>
 

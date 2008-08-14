@@ -2,8 +2,6 @@
 #ifndef BASE_VMATH_H
 #define BASE_VMATH_H
 
-//#include <engine/system.h>
-
 // ------------------------------------
 
 template<typename T>

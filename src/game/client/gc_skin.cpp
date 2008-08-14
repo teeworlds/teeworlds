@@ -2,10 +2,12 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
-#include <engine/e_system.h>
+
+#include <base/system.h>
+#include <base/math.hpp>
+
 #include <engine/e_client_interface.h>
 #include "gc_skin.hpp"
-#include "../g_math.hpp"
 
 enum
 {

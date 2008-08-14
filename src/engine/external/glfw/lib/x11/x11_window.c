@@ -1521,7 +1521,7 @@ void _glfwPlatformPollEvents( void )
     // or without XSync, but when the GL window is rendered over a slow
     // network I have noticed bad event syncronisation problems when XSync
     // is not used, so I decided to use it.
-    XSync( _glfwLibrary.Dpy, False );
+    //XSync( _glfwLibrary.Dpy, False );
 
     // Empty the window event queue
     while( XPending( _glfwLibrary.Dpy ) )

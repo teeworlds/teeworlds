@@ -1,6 +1,5 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include "e_system.h"
-#include <string.h>
+#include <base/system.h>
 
 /* Format: ESDDDDDD EDDDDDDD EDD...  Extended, Data, Sign */
 unsigned char *vint_pack(unsigned char *dst, int i) 

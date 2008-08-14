@@ -1,8 +1,8 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <string.h>
-#include <stdio.h>
+#include <base/system.h>
 
-#include "e_system.h"
+#include <string.h> /* strlen */
+
 #include "e_config.h"
 #include "e_network.h"
 #include "e_huffman.h"
@@ -134,9 +134,9 @@ static void rb_pop_first(RINGBUFFER *rb)
 		mem_free(rb->first);
 		rb->first = next;
 		if(rb->first)
-			rb->first->prev = NULL;
+			rb->first->prev = (void*)0;
 		else
-			rb->last = NULL;
+			rb->last = (void*)0;
 	}
 }
 

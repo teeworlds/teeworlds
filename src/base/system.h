@@ -7,7 +7,7 @@
 #ifndef BASE_SYSTEM_H
 #define BASE_SYSTEM_H
 
-#include "e_detect.h"
+#include "detect.h"
 
 #ifdef __cplusplus
 extern "C" {

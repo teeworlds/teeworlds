@@ -1,9 +1,10 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <engine/e_system.h>
-#include <game/g_vmath.hpp>
+#include <base/system.h>
+#include <base/math.hpp>
+#include <base/vmath.hpp>
+
 #include <math.h>
 #include <engine/e_common_interface.h>
-#include <game/g_math.hpp>
 #include <game/g_mapitems.hpp>
 #include <game/g_layers.hpp>
 

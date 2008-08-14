@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "e_system.h"
+#include <base/system.h>
 #include "e_config.h"
 #include "e_linereader.h"
 #include "e_engine.h"
