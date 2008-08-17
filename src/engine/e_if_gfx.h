@@ -557,7 +557,7 @@ int gfx_memory_usage();
 		TODO		
 	
 	Arguments:
-		arg1 - desc
+		filename - desc
 	
 	Returns:
 
@@ -565,6 +565,20 @@ int gfx_memory_usage();
 		<other_func>
 */
 void gfx_screenshot();
+
+/*
+	Function: gfx_screenshot_direct
+		TODO		
+	
+	Arguments:
+		filename - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
+void gfx_screenshot_direct(const char *filename);
 
 /*
 	Function: gfx_clip_enable

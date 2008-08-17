@@ -16,6 +16,7 @@ MACRO_CONFIG_INT(cl_mouse_deadzone, 300, 0, 0)
 MACRO_CONFIG_INT(cl_mouse_followfactor, 60, 0, 200)
 MACRO_CONFIG_INT(cl_mouse_max_distance, 800, 0, 0)
 
+MACRO_CONFIG_INT(cl_layershot, 0, 0, 1)
 
 MACRO_CONFIG_INT(ed_showkeys, 0, 0, 1)
 

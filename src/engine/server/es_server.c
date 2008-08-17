@@ -331,7 +331,7 @@ int server_send_msg(int client_id)
 		packet.flags |= NETSENDFLAG_VITAL;
 	if(info->flags&MSGFLAG_FLUSH)
 		packet.flags |= NETSENDFLAG_FLUSH;
-			
+	
 	if(client_id == -1)
 	{
 		/* broadcast */
@@ -594,6 +594,7 @@ static void server_process_client_packet(NETCHUNK *packet)
 	int cid = packet->client_id;
 	int sys;
 	int msg = msg_unpack_start(packet->data, packet->data_size, &sys);
+	
 	if(sys)
 	{
 		/* system message */

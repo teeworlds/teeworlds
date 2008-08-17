@@ -154,11 +154,7 @@ typedef struct
 	unsigned state;
 	
 	int token;
-	
 	int remote_closed;
-	
-	int connected;
-	int disconnected;
 	
 	RINGBUFFER buffer;
 	
@@ -213,26 +209,9 @@ struct NETCLIENT_t
 };
 
 static IOHANDLE datalog = 0;
-static HUFFSTATE huffmanstate;
+static HUFFMAN_STATE huffmanstate;
 
 #define COMPRESSION 1
-
-typedef struct pcap_hdr_s {
-        unsigned magic_number;   /* magic number */
-        short version_major;  /* major version number */
-        short version_minor;  /* minor version number */
-        int  thiszone;       /* GMT to local correction */
-        unsigned sigfigs;        /* accuracy of timestamps */
-        unsigned snaplen;        /* max length of captured packets, in octets */
-        unsigned network;        /* data link type */
-} pcap_hdr_t;
-
-typedef struct pcaprec_hdr_s {
-        unsigned ts_sec;         /* timestamp seconds */
-        unsigned ts_usec;        /* timestamp microseconds */
-        unsigned incl_len;       /* number of octets of packet saved in file */
-        unsigned orig_len;       /* actual length of packet */
-} pcaprec_hdr_t;
 
 /* packs the data tight and sends it */
 static void send_packet(NETSOCKET socket, NETADDR *addr, NETPACKETCONSTRUCT *packet)
@@ -249,7 +228,7 @@ static void send_packet(NETSOCKET socket, NETADDR *addr, NETPACKETCONSTRUCT *pac
 	
 	if(COMPRESSION)
 	{
-		int compressed_size = (huffman_compress(&huffmanstate, packet->chunk_data, packet->data_size, &buffer[3], NET_MAX_PACKETSIZE-4)+7)/8;
+		int compressed_size = huffman_compress(&huffmanstate, packet->chunk_data, packet->data_size, &buffer[3], NET_MAX_PACKETSIZE-4);
 		net_udp_send(socket, addr, buffer, NET_PACKETHEADERSIZE+compressed_size);
 	}
 	else
@@ -276,9 +255,7 @@ static int unpack_packet(unsigned char *buffer, int size, NETPACKETCONSTRUCT *pa
 	packet->data_size = size - NET_PACKETHEADERSIZE;
 	
 	if(COMPRESSION)
-	{
 		huffman_decompress(&huffmanstate, &buffer[3], packet->data_size, packet->chunk_data, sizeof(packet->chunk_data));
-	}
 	else
 		mem_copy(packet->chunk_data, &buffer[3], packet->data_size);
 	
@@ -326,12 +303,7 @@ static void conn_reset(NETCONNECTION *conn)
 	conn->ack = 0;
 	conn->remote_closed = 0;
 	
-	if(conn->state == NET_CONNSTATE_ONLINE ||
-		conn->state == NET_CONNSTATE_ERROR)
-	{
-		conn->disconnected++;
-	}
-		
+	conn->state = NET_CONNSTATE_OFFLINE;
 	conn->state = NET_CONNSTATE_OFFLINE;
 	conn->last_send_time = 0;
 	conn->last_recv_time = 0;
@@ -340,6 +312,8 @@ static void conn_reset(NETCONNECTION *conn)
 	mem_zero(&conn->peeraddr, sizeof(conn->peeraddr));
 	
 	rb_clear(&conn->buffer);
+	
+	mem_zero(&conn->construct, sizeof(conn->construct));
 }
 
 
@@ -358,8 +332,6 @@ static void conn_init(NETCONNECTION *conn, NETSOCKET socket)
 	conn_reset(conn);
 	conn_reset_stats(conn);
 	conn->socket = socket;
-	conn->connected = 0;
-	conn->disconnected = 0;
 	rb_init(&conn->buffer);
 	mem_zero(conn->error_string, sizeof(conn->error_string));
 }
@@ -489,6 +461,9 @@ static int conn_connect(NETCONNECTION *conn, NETADDR *addr)
 
 static void conn_disconnect(NETCONNECTION *conn, const char *reason)
 {
+	if(conn->state == NET_CONNSTATE_OFFLINE)
+		return;
+
 	if(conn->remote_closed == 0)
 	{
 		if(reason)
@@ -518,8 +493,6 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETCONSTRUCT *packet, NETADDR *a
 	{
 		int ctrlmsg = packet->chunk_data[0];
 		
-		dbg_msg("connection", "\tgot control message %d", ctrlmsg);
-
 		if(ctrlmsg == NET_CTRLMSG_CLOSE)
 		{
 			conn->state = NET_CONNSTATE_ERROR;
@@ -554,7 +527,6 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETCONSTRUCT *packet, NETADDR *a
 					/* send response and init connection */
 					conn_reset(conn);
 					conn->state = NET_CONNSTATE_ONLINE;
-					conn->connected++;
 					conn->peeraddr = *addr;
 					conn->last_send_time = now;
 					conn->last_recv_time = now;
@@ -571,7 +543,6 @@ static int conn_feed(NETCONNECTION *conn, NETPACKETCONSTRUCT *packet, NETADDR *a
 				{
 					conn_send_control(conn, NET_CTRLMSG_ACCEPT, 0, 0);
 					conn->state = NET_CONNSTATE_ONLINE;
-					conn->connected++;
 					if(config.debug)
 						dbg_msg("connection", "got connect+accept, sending accept. connection online");
 				}
@@ -1088,7 +1059,7 @@ void netcommon_openlog(const char *filename)
 }
 
 
-static const int freq_table[256+1] = {
+static const unsigned freq_table[256+1] = {
 1<<30,4545,2657,431,1950,919,444,482,2244,617,838,542,715,1814,304,240,754,212,647,186,
 283,131,146,166,543,164,167,136,179,859,363,113,157,154,204,108,137,180,202,176,
 872,404,168,134,151,111,113,109,120,126,129,100,41,20,16,22,18,18,17,19,
@@ -1105,13 +1076,5 @@ static const int freq_table[256+1] = {
 
 void netcommon_init()
 {
-	int i;
-	huffman_init(&huffmanstate);
-	for(i = 0; i < 256; i++)
-	{
-		unsigned char sym = (unsigned char)i;
-		huffman_add_symbol(&huffmanstate, freq_table[i], 1, &sym);
-	}
-	
-	huffman_construct_tree(&huffmanstate);
+	huffman_init(&huffmanstate, freq_table);
 }

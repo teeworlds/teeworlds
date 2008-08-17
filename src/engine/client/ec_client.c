@@ -297,7 +297,7 @@ int client_send_msg()
 		packet.flags = NETSENDFLAG_VITAL;
 	if(info->flags&MSGFLAG_FLUSH)
 		packet.flags = NETSENDFLAG_FLUSH;
-	
+
 	netclient_send(net, &packet);
 	return 0;
 }

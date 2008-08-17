@@ -36,6 +36,15 @@ if "client_content_source" in sys.argv: gen_client_content_source = True
 if "server_content_header" in sys.argv: gen_server_content_header = True
 if "server_content_source" in sys.argv: gen_server_content_source = True
 
+if gen_client_content_header:
+	print "#ifndef CLIENT_CONTENT_HEADER"
+	print "#define CLIENT_CONTENT_HEADER"
+
+if gen_server_content_header:
+	print "#ifndef SERVER_CONTENT_HEADER"
+	print "#define SERVER_CONTENT_HEADER"
+
+
 if gen_client_content_header or gen_server_content_header:
 	# emit the type declarations
 	contentlines = file("datasrc/content.py").readlines()
@@ -210,3 +219,5 @@ if gen_network_source:
 	for l in lines:
 		print l
 	
+if gen_client_content_header or gen_server_content_header:
+	print "#endif"

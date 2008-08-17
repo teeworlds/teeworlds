@@ -16,6 +16,25 @@
 static float sprite_w_scale;
 static float sprite_h_scale;
 
+static void layershot_begin()
+{
+	if(!config.cl_layershot)
+		return;
+
+	gfx_clear(0,0,0);
+}
+
+static void layershot_end()
+{
+	if(!config.cl_layershot)
+		return;
+	
+	char buf[256];
+	str_format(buf, sizeof(buf), "screenshots/layers_%04d.png", config.cl_layershot);
+	gfx_screenshot_direct(buf);
+	config.cl_layershot++;
+}
+
 void select_sprite(SPRITE *spr, int flags, int sx, int sy)
 {
 	int x = spr->x+sx;
@@ -299,7 +318,7 @@ static void envelope_eval(float time_offset, int env, float *channels)
 void render_layers(float center_x, float center_y, int pass)
 {
 	bool passed_gamelayer = false;
-
+	
 	for(int g = 0; g < layers_num_groups(); g++)
 	{
 		MAPITEM_GROUP *group = layers_get_group(g);
@@ -353,6 +372,8 @@ void render_layers(float center_x, float center_y, int pass)
 			
 			if(render && !is_game_layer)
 			{
+				layershot_begin();
+				
 				if(layer->type == LAYERTYPE_TILES)
 				{
 					MAPITEM_LAYER_TILEMAP *tmap = (MAPITEM_LAYER_TILEMAP *)layer;
@@ -381,8 +402,9 @@ void render_layers(float center_x, float center_y, int pass)
 					render_quads(quads, qlayer->num_quads, envelope_eval, LAYERRENDERFLAG_OPAQUE);
 					gfx_blend_normal();
 					render_quads(quads, qlayer->num_quads, envelope_eval, LAYERRENDERFLAG_TRANSPARENT);
-						
 				}
+				
+				layershot_end();	
 			}
 		}
 		
@@ -502,25 +524,39 @@ void render_world(float center_x, float center_y, float zoom)
 	gfx_clip_disable();
 	
 	// render trails
+	layershot_begin();
 	particle_render(PARTGROUP_PROJECTILE_TRAIL);
+	layershot_end();
 
 	// render items
+	layershot_begin();
 	render_items();
+	layershot_end();
 
 	// render players above all
+	layershot_begin();
 	render_players();
+	layershot_end();
 
 	// render particles
+	layershot_begin();
 	particle_render(PARTGROUP_EXPLOSIONS);
 	particle_render(PARTGROUP_GENERAL);
+	layershot_end();
 	
 	if(config.dbg_flow)
 		flow_dbg_render();
 
 	// render foreground layers
+	layershot_begin();
 	render_layers(center_x, center_y, 1);
+	layershot_end();
 	gfx_clip_disable();
 
 	// render damage indications
+	layershot_begin();
 	render_damage_indicators();
+	layershot_end();
+	
+	config.cl_layershot = 0;
 }

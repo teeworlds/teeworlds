@@ -168,7 +168,7 @@ int gfx_init()
 	/* open window */	
 	if(config.gfx_fullscreen)
 	{
-		int result = glfwOpenWindow(screen_width, screen_height, 8, 8, 8, 0, 24, 0, GLFW_FULLSCREEN);
+		int result = glfwOpenWindow(screen_width, screen_height, 8, 8, 8, config.gfx_alphabits, 24, 0, GLFW_FULLSCREEN);
 		if(result != GL_TRUE)
 		{
 			dbg_msg("game", "failed to create gl context");
@@ -177,7 +177,7 @@ int gfx_init()
 	}
 	else
 	{
-		int result = glfwOpenWindow(screen_width, screen_height, 0, 0, 0, 0, 24, 0, GLFW_WINDOW);
+		int result = glfwOpenWindow(screen_width, screen_height, 0, 0, 0, 8, 24, 0, GLFW_WINDOW);
 		if(result != GL_TRUE)
 		{
 			dbg_msg("game", "failed to create gl context");
@@ -600,52 +600,27 @@ void gfx_swap()
 	
 	if(do_screenshot)
 	{
-		/* fetch image data */
-		int y;
-		int w = screen_width;
-		int h = screen_height;
-		unsigned char *pixel_data = (unsigned char *)mem_alloc(w*(h+1)*3, 1);
-		unsigned char *temp_row = pixel_data+w*h*3;
-		glReadPixels(0,0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pixel_data);
-		
-		/* flip the pixel because opengl works from bottom left corner */
-		for(y = 0; y < h/2; y++)
-		{
-			mem_copy(temp_row, pixel_data+y*w*3, w*3);
-			mem_copy(pixel_data+y*w*3, pixel_data+(h-y-1)*w*3, w*3);
-			mem_copy(pixel_data+(h-y-1)*w*3, temp_row,w*3);
-		}
-		
 		/* find filename */
-		{
-			char wholepath[1024];
-			char filename[128];
-			static int index = 1;
-			png_t png;
+		char wholepath[1024];
+		char filename[128];
+		static int index = 1;
 
-			for(; index < 1000; index++)
-			{
-				IOHANDLE io;
-				sprintf(filename, "screenshots/screenshot%04d.png", index);
-				engine_savepath(filename, wholepath, sizeof(wholepath));
-				
-				io = io_open(wholepath, IOFLAG_READ);
-				if(io)
-					io_close(io);
-				else
-					break;
-			}
-		
-			/* save png */
-			dbg_msg("client", "saved screenshot to '%s'", wholepath);
-			png_open_file_write(&png, wholepath);
-			png_set_data(&png, w, h, 8, PNG_TRUECOLOR, (unsigned char *)pixel_data);
-			png_close_file(&png);
+		for(; index < 1000; index++)
+		{
+			IOHANDLE io;
+			sprintf(filename, "screenshots/screenshot%04d.png", index);
+			engine_savepath(filename, wholepath, sizeof(wholepath));
+			
+			io = io_open(wholepath, IOFLAG_READ);
+			if(io)
+				io_close(io);
+			else
+				break;
 		}
 
-		/* clean up */
-		mem_free(pixel_data);
-		do_screenshot = 0;
+		gfx_screenshot_direct(filename);
+	
+		do_screenshot = 0;	
 	}
 	
 	{
@@ -664,6 +639,42 @@ void gfx_swap()
 		glfwPollEvents();
 		perf_end();
 	}
+}
+
+void gfx_screenshot_direct(const char *filename)
+{
+	/* fetch image data */
+	int y;
+	int w = screen_width;
+	int h = screen_height;
+	unsigned char *pixel_data = (unsigned char *)mem_alloc(w*(h+1)*4, 1);
+	unsigned char *temp_row = pixel_data+w*h*4;
+	glReadPixels(0,0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixel_data);
+	
+	/* flip the pixel because opengl works from bottom left corner */
+	for(y = 0; y < h/2; y++)
+	{
+		mem_copy(temp_row, pixel_data+y*w*4, w*4);
+		mem_copy(pixel_data+y*w*4, pixel_data+(h-y-1)*w*4, w*4);
+		mem_copy(pixel_data+(h-y-1)*w*4, temp_row,w*4);
+	}
+	
+	/* find filename */
+	{
+		char wholepath[1024];
+		png_t png;
+
+		engine_savepath(filename, wholepath, sizeof(wholepath));
+	
+		/* save png */
+		dbg_msg("client", "saved screenshot to '%s'", wholepath);
+		png_open_file_write(&png, wholepath);
+		png_set_data(&png, w, h, 8, PNG_TRUECOLOR_ALPHA, (unsigned char *)pixel_data);
+		png_close_file(&png);
+	}
+
+	/* clean up */
+	mem_free(pixel_data);
 }
 
 int gfx_screenwidth()
@@ -690,7 +701,7 @@ void gfx_texture_set(int slot)
 
 void gfx_clear(float r, float g, float b)
 {
-	glClearColor(r,g,b,1.0f);
+	glClearColor(r,g,b,0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 

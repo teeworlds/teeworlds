@@ -478,7 +478,7 @@ int net_addr_comp(const NETADDR *a, const NETADDR *b);
 		- The string will always be zero terminated
 
 */
-int net_addr_str(const NETADDR *addr, char *string, int max_length);
+void net_addr_str(const NETADDR *addr, char *string, int max_length);
 
 /* Group: Network UDP */
 

@@ -479,6 +479,7 @@ static void sockaddr_to_netaddr(const struct sockaddr *src, NETADDR *dst)
 {
 	/* TODO: IPv6 support */
 	unsigned int ip = htonl(((struct sockaddr_in*)src)->sin_addr.s_addr);
+	mem_zero(dst, sizeof(NETADDR));
 	dst->type = NETTYPE_IPV4;
 	dst->port = htons(((struct sockaddr_in*)src)->sin_port);
 	dst->ip[0] = (unsigned char)((ip>>24)&0xFF);
@@ -490,6 +491,21 @@ static void sockaddr_to_netaddr(const struct sockaddr *src, NETADDR *dst)
 int net_addr_comp(const NETADDR *a, const NETADDR *b)
 {
 	return mem_comp(a, b, sizeof(NETADDR));
+}
+
+void net_addr_str(const NETADDR *addr, char *string, int max_length)
+{
+	if(addr->type == NETTYPE_IPV4)
+		str_format(string, max_length, "%d.%d.%d.%d:%d", addr->ip[0], addr->ip[1], addr->ip[2], addr->ip[3], addr->port);
+	else if(addr->type == NETTYPE_IPV6)
+	{
+		str_format(string, max_length, "[%x:%x:%x:%x:%x:%x:%x:%x]:%d",
+			(addr->ip[0]<<8)|addr->ip[1], (addr->ip[2]<<8)|addr->ip[3], (addr->ip[4]<<8)|addr->ip[5], (addr->ip[6]<<8)|addr->ip[7],
+			(addr->ip[8]<<8)|addr->ip[9], (addr->ip[10]<<8)|addr->ip[11], (addr->ip[12]<<8)|addr->ip[13], (addr->ip[14]<<8)|addr->ip[15],
+			addr->port);
+	}
+	else
+		str_format(string, max_length, "unknown type %d", addr->type);
 }
 
 int net_host_lookup(const char *hostname, NETADDR *addr, int types)
@@ -554,7 +570,16 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 	netaddr_to_sockaddr(addr, &sa);
 	d = sendto((int)sock, (const char*)data, size, 0, &sa, sizeof(sa));
 	if(d < 0)
+	{
+		char addrstr[256];
+		net_addr_str(addr, addrstr, sizeof(addrstr));
+		
 		dbg_msg("net", "sendto error %d %x", d, d);
+		dbg_msg("net", "\tsock = %d %x", sock, sock);
+		dbg_msg("net", "\tsize = %d %x", size, size);
+		dbg_msg("net", "\taddr = %s", addrstr);
+
+	}
 	network_stats.sent_bytes += size;
 	network_stats.sent_packets++;
 	return d;
