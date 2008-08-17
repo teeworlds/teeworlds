@@ -7,7 +7,7 @@
 
 #include <engine/e_common_interface.h>
 #include <math.h>
-#include "g_collision.hpp"
+#include "collision.hpp"
 #include <game/generated/g_protocol.hpp>
 
 struct TUNING_PARAMS
@@ -16,14 +16,14 @@ struct TUNING_PARAMS
 	{
 		const float ticks_per_second = 50.0f;
 		#define MACRO_TUNING_PARAM(name,value) name.set((int)(value*100.0f));
-		#include "g_tuning.hpp"
+		#include "tuning.hpp"
 		#undef MACRO_TUNING_PARAM
 	}
 
 	static const char *names[];
 	
 	#define MACRO_TUNING_PARAM(name,value) tune_param name;
-	#include "g_tuning.hpp"
+	#include "tuning.hpp"
 	#undef MACRO_TUNING_PARAM
 	
 	static int num() { return sizeof(TUNING_PARAMS)/sizeof(int); }

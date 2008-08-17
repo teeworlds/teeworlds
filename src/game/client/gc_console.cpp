@@ -17,7 +17,7 @@ extern "C" {
 #include "gc_ui.hpp"
 #include "gc_client.hpp"
 
-#include "../g_version.hpp"
+#include "../version.hpp"
 
 enum
 {

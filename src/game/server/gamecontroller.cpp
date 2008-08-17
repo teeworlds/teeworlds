@@ -2,7 +2,7 @@
 #include <string.h>
 #include <engine/e_config.h>
 #include <engine/e_server_interface.h>
-#include <game/g_mapitems.hpp>
+#include <game/mapitems.hpp>
 
 #include <game/generated/g_protocol.hpp>
 

@@ -180,7 +180,7 @@ int main(int argc, char **argv)
 		if(strcmp(*argv, "-m") == 0)
 		{
 			argc--; argv++;
-			net_host_lookup(*argv, 0, &master_servers[num_masters]);
+			net_host_lookup(*argv, &master_servers[num_masters], NETTYPE_IPV4);
 			argc--; argv++;
 			master_servers[num_masters].port = atoi(*argv);
 			num_masters++;

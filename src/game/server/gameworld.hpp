@@ -1,7 +1,7 @@
 #ifndef GAME_SERVER_GAMEWORLD_H
 #define GAME_SERVER_GAMEWORLD_H
 
-#include <game/g_game.hpp>
+#include <game/gamecore.hpp>
 
 class ENTITY;
 class CHARACTER;

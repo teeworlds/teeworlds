@@ -9,10 +9,10 @@ extern "C" {
 };
 
 #include <game/generated/gc_data.hpp>
-#include <game/g_game.hpp>
-#include <game/g_version.hpp>
+#include <game/gamecore.hpp>
+#include <game/version.hpp>
 
-#include <game/g_layers.hpp>
+#include <game/layers.hpp>
 
 #include "gc_client.hpp"
 #include "gc_skin.hpp"

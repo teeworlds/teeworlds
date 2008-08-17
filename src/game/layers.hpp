@@ -1,4 +1,4 @@
-#include "g_mapitems.hpp"
+#include "mapitems.hpp"
 
 void layers_init();
 

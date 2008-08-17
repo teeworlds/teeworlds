@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "array.hpp"
-#include "../g_mapitems.hpp"
+#include "../mapitems.hpp"
 #include "../client/gc_render.hpp"
 
 extern "C" {

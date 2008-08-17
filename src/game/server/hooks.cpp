@@ -7,12 +7,12 @@
 
 #include <engine/e_config.h>
 #include <engine/e_server_interface.h>
-#include <game/g_version.hpp>
-#include <game/g_collision.hpp>
-#include <game/g_layers.hpp>
+#include <game/version.hpp>
+#include <game/collision.hpp>
+#include <game/layers.hpp>
 
 
-#include <game/g_game.hpp>
+#include <game/gamecore.hpp>
 
 #include "gamecontext.hpp"
 #include "gamemodes/dm.hpp"

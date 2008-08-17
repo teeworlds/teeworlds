@@ -7,7 +7,7 @@
 #include <game/generated/gs_data.hpp>
 #include <game/generated/g_protocol.hpp>
 
-#include <game/g_game.hpp>
+#include <game/gamecore.hpp>
 
 class CHARACTER : public ENTITY
 {

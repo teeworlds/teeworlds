@@ -1,6 +1,6 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <engine/e_server_interface.h>
-#include <game/g_mapitems.hpp>
+#include <game/mapitems.hpp>
 #include <game/server/entities/character.hpp>
 #include <game/server/player.hpp>
 #include <game/server/gamecontext.hpp>

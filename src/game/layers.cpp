@@ -1,5 +1,5 @@
 #include <engine/e_common_interface.h>
-#include "g_layers.hpp"
+#include "layers.hpp"
 
 static MAPITEM_LAYER_TILEMAP *game_layer = 0;
 static MAPITEM_GROUP *game_group = 0;

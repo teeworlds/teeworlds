@@ -14,7 +14,7 @@ extern "C" {
 
 #include <game/client/gc_map_image.hpp>
 #include <game/client/gc_ui.hpp>
-#include <game/g_game.hpp>
+#include <game/gamecore.hpp>
 #include <game/client/gc_render.hpp>
 
 #include "ed_editor.hpp"

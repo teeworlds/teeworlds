@@ -1,7 +1,7 @@
 #include <base/vmath.hpp>
 
 #include <game/generated/g_protocol.hpp>
-#include <game/g_game.hpp>
+#include <game/gamecore.hpp>
 
 #include <game/client/gc_render.hpp>
 

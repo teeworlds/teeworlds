@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <engine/e_client_interface.h>
-#include <game/g_mapitems.hpp>
+#include <game/mapitems.hpp>
 #include "gc_map_image.hpp"
 
 static int map_textures[64] = {0};

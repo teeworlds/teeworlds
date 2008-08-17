@@ -7,7 +7,7 @@
 #include <engine/e_config.h>
 #include <game/generated/gc_data.hpp>
 #include <game/generated/g_protocol.hpp>
-#include <game/g_layers.hpp>
+#include <game/layers.hpp>
 #include "gc_render.hpp"
 #include "gc_anim.hpp"
 #include "gc_client.hpp"

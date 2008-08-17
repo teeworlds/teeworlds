@@ -15,7 +15,7 @@ extern "C" {
 	#include <engine/client/ec_font.h>
 }
 
-#include "../g_version.hpp"
+#include "../version.hpp"
 #include <game/generated/g_protocol.hpp>
 
 #include "../generated/gc_data.hpp"

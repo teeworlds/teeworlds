@@ -5,8 +5,8 @@
 
 #include <math.h>
 #include <engine/e_common_interface.h>
-#include <game/g_mapitems.hpp>
-#include <game/g_layers.hpp>
+#include <game/mapitems.hpp>
+#include <game/layers.hpp>
 
 static TILE *tiles;
 static int width = 0;

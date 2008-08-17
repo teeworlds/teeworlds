@@ -11,9 +11,9 @@ extern "C" {
 	#include <engine/e_client_interface.h>
 };
 
-#include "../g_game.hpp"
-#include "../g_version.hpp"
-#include "../g_layers.hpp"
+#include "../gamecore.hpp"
+#include "../version.hpp"
+#include "../layers.hpp"
 #include "gc_map_image.hpp"
 #include "../generated/gc_data.hpp"
 #include "gc_menu.hpp"
