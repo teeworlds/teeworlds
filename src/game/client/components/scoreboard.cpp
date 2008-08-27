@@ -1,5 +1,4 @@
 #include <string.h>
-
 #include <engine/e_client_interface.h>
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
@@ -7,6 +6,27 @@
 #include <game/client/animstate.hpp>
 #include <game/client/gc_render.hpp>
 #include "scoreboard.hpp"
+
+
+SCOREBOARD::SCOREBOARD()
+{
+	on_reset();
+}
+
+void SCOREBOARD::con_key_scoreboard(void *result, void *user_data)
+{
+	((SCOREBOARD *)user_data)->active = console_arg_int(result, 0) != 0;
+}
+
+void SCOREBOARD::on_reset()
+{
+	active = false;
+}
+
+void SCOREBOARD::on_init()
+{
+	MACRO_REGISTER_COMMAND("+scoreboard", "", con_key_scoreboard, this);
+}
 
 void SCOREBOARD::render_goals(float x, float y, float w)
 {
@@ -204,6 +224,8 @@ void SCOREBOARD::render_scoreboard(float x, float y, float w, int team, const ch
 
 void SCOREBOARD::on_render()
 {
+	if(!active)
+		return;
 	
 	// TODO: repair me
 	/*

@@ -3,10 +3,9 @@
 
 #include <base/system.h>
 
+#include <engine/e_client_interface.h>
+
 extern "C" {
-	#include <engine/e_client_interface.h>
-	#include <engine/e_config.h>
-	#include <engine/e_console.h>
 	#include <engine/e_ringbuffer.h>
 	#include <engine/client/ec_font.h>
 }

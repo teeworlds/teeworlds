@@ -1,15 +1,10 @@
 #include <string.h> // strcmp
 
-extern "C" {
-	#include <engine/e_console.h>
-}
-
 #include <engine/e_client_interface.h>
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
 
 #include <game/client/gameclient.hpp>
-//#include <game/client/gc_anim.hpp>
 #include <game/client/gc_client.hpp>
 
 #include "chat.hpp"

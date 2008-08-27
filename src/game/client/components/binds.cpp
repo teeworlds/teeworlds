@@ -1,7 +1,4 @@
-extern "C" {
-	#include <engine/e_console.h>
-}
-
+#include <engine/e_client_interface.h>
 #include "binds.hpp"
 
 BINDS::BINDS()

@@ -21,6 +21,7 @@
 #include "components/debughud.hpp"
 #include "components/controls.hpp"
 #include "components/effects.hpp"
+#include "components/scoreboard.hpp"
 
 GAMECLIENT gameclient;
 
@@ -40,6 +41,7 @@ static HUD hud;
 static DEBUGHUD debughud;
 static CONTROLS controls;
 static EFFECTS effects;
+static SCOREBOARD scoreboard;
 
 static PLAYERS players;
 static ITEMS items;
@@ -85,6 +87,7 @@ void GAMECLIENT::on_init()
 	all.add(chat);
 	all.add(&broadcast);
 	all.add(&debughud);
+	all.add(&scoreboard);
 	all.add(&motd);
 	all.add(menus);
 	all.add(console);

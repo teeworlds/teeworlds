@@ -14,6 +14,9 @@ extern "C" {
 #include "e_if_msg.h"
 #include "e_if_modc.h"
 
+#include "e_console.h"
+#include "e_config.h"
+
 #ifdef __cplusplus
 }
 #endif

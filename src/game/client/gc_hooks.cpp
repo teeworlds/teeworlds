@@ -3,9 +3,7 @@
 #include <engine/e_client_interface.h>
 
 extern "C" {
-	#include <engine/e_config.h>
 	#include <engine/client/ec_font.h>
-	#include <engine/e_console.h>
 };
 
 #include <game/generated/gc_data.hpp>

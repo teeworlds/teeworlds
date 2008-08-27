@@ -1,7 +1,7 @@
 #ifndef _RINGBUFFER_H
 #define _RINGBUFFER_H
 
-typedef struct
+typedef struct RINGBUFFER
 {
 	/* what you need */
 	struct RBITEM_t *next_alloc;
@@ -10,7 +10,7 @@ typedef struct
 	struct RBITEM_t *last;
 	void *memory;
 	int size;
-} RINGBUFFER; 
+} RINGBUFFER;
  
 RINGBUFFER *ringbuf_init(void *memory, int size);
 void *ringbuf_allocate(RINGBUFFER *rb, int size);

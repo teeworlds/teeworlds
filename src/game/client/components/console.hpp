@@ -1,11 +1,4 @@
-extern "C" {
-	#include <engine/e_client_interface.h>
-	#include <engine/e_config.h>
-	#include <engine/e_console.h>
-	#include <engine/e_ringbuffer.h>
-	#include <engine/client/ec_font.h>
-}
-
+#include <engine/e_client_interface.h>
 #include <game/client/component.hpp>
 
 class CONSOLE : public COMPONENT
@@ -14,11 +7,11 @@ class CONSOLE : public COMPONENT
 	{
 	public:
 		char history_data[65536];
-		RINGBUFFER *history;
+		struct RINGBUFFER *history;
 		char *history_entry;
 		
 		char backlog_data[65536];
-		RINGBUFFER *backlog;
+		struct RINGBUFFER *backlog;
 
 		LINEINPUT input;
 		
