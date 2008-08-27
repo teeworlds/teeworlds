@@ -572,7 +572,7 @@ static void server_send_rcon_line(int cid, const char *line)
 	server_send_msg(cid);
 }
 
-static void server_send_rcon_line_authed(const char *line)
+static void server_send_rcon_line_authed(const char *line, void *user_data)
 {
 	static volatile int reentry_guard = 0;
 	int i;
@@ -913,7 +913,7 @@ static int server_run()
 	net_init();
 	
 	/* */
-	console_register_print_callback(server_send_rcon_line_authed);
+	console_register_print_callback(server_send_rcon_line_authed, 0);
 
 	/* load map */
 	if(!server_load_map(config.sv_map))

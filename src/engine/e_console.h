@@ -22,7 +22,7 @@ void console_execute_line(const char *str);
 void console_execute_line_stroked(int stroke, const char *str);
 void console_execute_file(const char *filename);
 void console_print(const char *str);
-void console_register_print_callback(void (*callback)(const char *));
+void console_register_print_callback(void (*callback)(const char *, void *user_data), void *user_data);
 
 /*int console_result_string(void *result, int index, const char **str);
 int console_result_int(void *result, int index, int *i);

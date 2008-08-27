@@ -196,14 +196,9 @@ void HUD::render_cursor()
 	gfx_quads_begin();
 
 	// render cursor
-	// TODO: repair me
-	//if (!menu_active)
-	{
-		dbg_msg("", "%f %f", gameclient.controls->target_pos.x, gameclient.controls->target_pos.y);
-		select_sprite(data->weapons.id[gameclient.snap.local_character->weapon%NUM_WEAPONS].sprite_cursor);
-		float cursorsize = 64;
-		draw_sprite(gameclient.controls->target_pos.x, gameclient.controls->target_pos.y, cursorsize);
-	}
+	select_sprite(data->weapons.id[gameclient.snap.local_character->weapon%NUM_WEAPONS].sprite_cursor);
+	float cursorsize = 64;
+	draw_sprite(gameclient.controls->target_pos.x, gameclient.controls->target_pos.y, cursorsize);
 	gfx_quads_end();
 }
 

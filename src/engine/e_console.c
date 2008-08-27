@@ -198,17 +198,19 @@ void console_register(COMMAND *cmd)
 	first_command = cmd;
 }
 
-static void (*print_callback)(const char *) = 0x0;
+static void (*print_callback)(const char *, void *) = 0x0;
+static void *print_callback_userdata;
 
-void console_register_print_callback(void (*callback)(const char *))
+void console_register_print_callback(void (*callback)(const char *, void *), void *user_data)
 {
 	print_callback = callback;
+	print_callback_userdata = user_data;
 }
 
 void console_print(const char *str)
 {
 	if (print_callback)
-		print_callback(str);
+		print_callback(str, print_callback_userdata);
 }
 
 void console_execute_line_stroked(int stroke, const char *str)

@@ -43,10 +43,18 @@ class CONSOLE : public COMPONENT
 	int console_state;
 	float state_change_end;
 	float state_change_duration;
+
+
+	void toggle(int type);
+
+	static void client_console_print_callback(const char *str, void *user_data);
+	static void con_toggle_local_console(void *result, void *user_data);
+	static void con_toggle_remote_console(void *result, void *user_data);
 	
 public:
 	CONSOLE();
 
+	virtual void on_init();
 	virtual void on_reset();
 	virtual void on_render();
 	virtual void on_message(int msgtype, void *rawmsg);

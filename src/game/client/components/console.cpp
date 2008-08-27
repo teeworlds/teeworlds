@@ -162,7 +162,6 @@ static float console_scale_func(float t)
 
 void CONSOLE::on_render()
 {
-
     RECT screen = *ui_screen();
 	float console_max_height = screen.h*3/5.0f;
 	float console_height;
@@ -294,7 +293,70 @@ void CONSOLE::on_message(int msgtype, void *rawmsg)
 
 bool CONSOLE::on_input(INPUT_EVENT e)
 {
-	return false;
+	if(console_state == CONSOLE_CLOSED)
+		return false;
+	if(e.key >= KEY_F1 && e.key <= KEY_F25)
+		return false;
+
+	if(e.key == KEY_ESC && (e.flags&INPFLAG_PRESS))
+		toggle(console_type);
+	else
+		current_console()->on_input(e);
+		
+	return true;
+}
+
+void CONSOLE::toggle(int type)
+{
+	if(console_type != type && (console_state == CONSOLE_OPEN || console_state == CONSOLE_OPENING))
+	{
+		// don't toggle console, just switch what console to use
+	}
+	else
+	{	
+		if (console_state == CONSOLE_CLOSED || console_state == CONSOLE_OPEN)
+		{
+			state_change_end = time_now()+state_change_duration;
+		}
+		else
+		{
+			float progress = state_change_end-time_now();
+			float reversed_progress = state_change_duration-progress;
+
+			state_change_end = time_now()+reversed_progress;
+		}
+
+		if (console_state == CONSOLE_CLOSED || console_state == CONSOLE_CLOSING)
+			console_state = CONSOLE_OPENING;
+		else
+			console_state = CONSOLE_CLOSING;
+	}
+
+	console_type = type;
+}
+
+void CONSOLE::con_toggle_local_console(void *result, void *user_data)
+{
+	((CONSOLE *)user_data)->toggle(0);
+}
+
+void CONSOLE::con_toggle_remote_console(void *result, void *user_data)
+{
+	((CONSOLE *)user_data)->toggle(1);
+}
+
+void CONSOLE::client_console_print_callback(const char *str, void *user_data)
+{
+	((CONSOLE *)user_data)->local_console.print_line(str);
+}
+
+void CONSOLE::on_init()
+{
+	//
+	console_register_print_callback(client_console_print_callback, this);
+	
+	MACRO_REGISTER_COMMAND("toggle_local_console", "", con_toggle_local_console, this);
+	MACRO_REGISTER_COMMAND("toggle_remote_console", "", con_toggle_remote_console, this);
 }
 
 

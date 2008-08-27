@@ -47,7 +47,6 @@ static ITEMS items;
 static MAPLAYERS maplayers_background(MAPLAYERS::TYPE_BACKGROUND);
 static MAPLAYERS maplayers_foreground(MAPLAYERS::TYPE_FOREGROUND);
 
-
 GAMECLIENT::STACK::STACK() { num = 0; }
 void GAMECLIENT::STACK::add(class COMPONENT *component) { components[num++] = component; }
 
