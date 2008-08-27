@@ -3,7 +3,6 @@
 
 class CHAT : public COMPONENT
 {
-public:
 	LINEINPUT input;
 	
 	enum 
@@ -34,6 +33,12 @@ public:
 
 	int mode;
 	
+	static void con_say(void *result, void *user_data);
+	static void con_sayteam(void *result, void *user_data);
+	static void con_chat(void *result, void *user_data);
+	
+public:
+	
 	void add_line(int client_id, int team, const char *line);
 	//void chat_reset();
 	//bool chat_input_handle(INPUT_EVENT e, void *user_data);
@@ -42,6 +47,7 @@ public:
 	
 	void say(int team, const char *line);
 	
+	virtual void on_init();
 	virtual void on_reset();
 	virtual void on_render();
 	virtual void on_message(int msgtype, void *rawmsg);

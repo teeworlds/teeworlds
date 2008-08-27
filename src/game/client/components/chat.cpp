@@ -1,3 +1,9 @@
+#include <string.h> // strcmp
+
+extern "C" {
+	#include <engine/e_console.h>
+}
+
 #include <engine/e_client_interface.h>
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
@@ -16,6 +22,35 @@ void CHAT::on_reset()
 	current_line = 0;
 }
 
+
+
+void CHAT::con_say(void *result, void *user_data)
+{
+	((CHAT*)user_data)->say(0, console_arg_string(result, 0));
+}
+
+void CHAT::con_sayteam(void *result, void *user_data)
+{
+	((CHAT*)user_data)->say(1, console_arg_string(result, 0));
+}
+
+void CHAT::con_chat(void *result, void *user_data)
+{
+	const char *mode = console_arg_string(result, 0);
+	if(strcmp(mode, "all") == 0)
+		((CHAT*)user_data)->enable_mode(0);
+	else if(strcmp(mode, "team") == 0)
+		((CHAT*)user_data)->enable_mode(1);
+	else
+		dbg_msg("console", "expected all or team as mode");
+}
+
+void CHAT::on_init()
+{
+	MACRO_REGISTER_COMMAND("say", "r", con_say, this);
+	MACRO_REGISTER_COMMAND("say_team", "r", con_sayteam, this);
+	MACRO_REGISTER_COMMAND("chat", "s", con_chat, this);
+}
 
 bool CHAT::on_input(INPUT_EVENT e)
 {
@@ -62,8 +97,6 @@ void CHAT::on_message(int msgtype, void *rawmsg)
 			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_SERVER].sounds[0].id, 0);
 	}
 }
-
-
 
 void CHAT::add_line(int client_id, int team, const char *line)
 {
@@ -175,20 +208,6 @@ void CHAT::on_render()
 
 	gfx_text_color(1,1,1,1);
 }
-
-void con_chat(void *result, void *user_data)
-{
-	/*
-	const char *mode = console_arg_string(result, 0);
-	if(strcmp(mode, "all") == 0)
-		chat_enable_mode(0);
-	else if(strcmp(mode, "team") == 0)
-		chat_enable_mode(1);
-	else
-		dbg_msg("console", "expected all or team as mode");
-		*/
-}
-
 
 void CHAT::say(int team, const char *line)
 {
