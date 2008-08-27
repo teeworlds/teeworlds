@@ -955,6 +955,16 @@ bool MENUS::on_mousemove(float x, float y)
 
 bool MENUS::on_input(INPUT_EVENT e)
 {
+//	if(e.)
+	//
+	if(e.flags&INPFLAG_PRESS && e.key == KEY_ESC)
+	{
+		menu_active	= !menu_active;
+		return true;
+	}
+	
+	if(menu_active)
+		return true;
 	return false;
 }
 
@@ -982,13 +992,14 @@ void MENUS::on_statechange(int new_state, int old_state)
 	{
 		popup = POPUP_NONE;
 		menu_active = false;
-	 	//menu_game_active = true;
-	 	//snapshot_count = 0;
 	}
 }
 
 void MENUS::on_render()
 {
+	if(client_state() != CLIENTSTATE_ONLINE)
+		menu_active = true;
+	
 	if(!menu_active)
 		return;
 
