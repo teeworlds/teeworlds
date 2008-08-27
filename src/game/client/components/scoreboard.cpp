@@ -239,7 +239,6 @@ void SCOREBOARD::on_render()
 	if(gameclient.snap.gameobj && gameclient.snap.gameobj->game_over)
 		do_scoreboard = true;*/
 
-	
 	float width = 400*3.0f*gfx_screenaspect();
 	float height = 400*3.0f;
 	

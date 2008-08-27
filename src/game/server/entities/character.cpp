@@ -62,6 +62,9 @@ bool CHARACTER::spawn(PLAYER *player, vec2 pos, int team)
 	
 	game.world.insert_entity(this);
 	alive = true;
+
+	game.controller->on_character_spawn(this);
+
 	return true;
 }
 

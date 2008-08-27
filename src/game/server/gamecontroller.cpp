@@ -10,6 +10,42 @@
 #include "gamecontroller.hpp"
 #include "gamecontext.hpp"
 
+
+
+GAMECONTROLLER::GAMECONTROLLER()
+{
+	// select gametype
+	if(strcmp(config.sv_gametype, "ctf") == 0)
+	{
+		gametype = GAMETYPE_CTF;
+		dbg_msg("game", "-- Capture The Flag --");
+	}
+	else if(strcmp(config.sv_gametype, "tdm") == 0)
+	{
+		gametype = GAMETYPE_TDM;
+		dbg_msg("game", "-- Team Death Match --");
+	}
+	else
+	{
+		gametype = GAMETYPE_DM;
+		dbg_msg("game", "-- Death Match --");
+	}
+		
+	//
+	do_warmup(config.sv_warmup);
+	game_over_tick = -1;
+	sudden_death = 0;
+	round_start_tick = server_tick();
+	round_count = 0;
+	is_teamplay = false;
+	teamscore[0] = 0;
+	teamscore[1] = 0;
+	
+	num_spawn_points[0] = 0;
+	num_spawn_points[1] = 0;
+	num_spawn_points[2] = 0;
+}
+
 float GAMECONTROLLER::evaluate_spawn_pos(SPAWNEVAL *eval, vec2 pos)
 {
 	float score = 0.0f;
@@ -72,41 +108,9 @@ bool GAMECONTROLLER::can_spawn(PLAYER *player, vec2 *out_pos)
 	}
 	
 	*out_pos = eval.pos;
-	return eval.got;}
-
-GAMECONTROLLER::GAMECONTROLLER()
-{
-	// select gametype
-	if(strcmp(config.sv_gametype, "ctf") == 0)
-	{
-		gametype = GAMETYPE_CTF;
-		dbg_msg("game", "-- Capture The Flag --");
-	}
-	else if(strcmp(config.sv_gametype, "tdm") == 0)
-	{
-		gametype = GAMETYPE_TDM;
-		dbg_msg("game", "-- Team Death Match --");
-	}
-	else
-	{
-		gametype = GAMETYPE_DM;
-		dbg_msg("game", "-- Death Match --");
-	}
-		
-	//
-	do_warmup(config.sv_warmup);
-	game_over_tick = -1;
-	sudden_death = 0;
-	round_start_tick = server_tick();
-	round_count = 0;
-	is_teamplay = false;
-	teamscore[0] = 0;
-	teamscore[1] = 0;
-	
-	num_spawn_points[0] = 0;
-	num_spawn_points[1] = 0;
-	num_spawn_points[2] = 0;
+	return eval.got;
 }
+
 
 bool GAMECONTROLLER::on_entity(int index, vec2 pos)
 {
@@ -299,6 +303,15 @@ int GAMECONTROLLER::on_character_death(class CHARACTER *victim, class PLAYER *ki
 			killer->score++; // normal kill
 	}
 	return 0;
+}
+
+void GAMECONTROLLER::on_character_spawn(class CHARACTER *chr)
+{
+	// give default weapons
+	chr->weapons[WEAPON_HAMMER].got = 1;
+	chr->weapons[WEAPON_HAMMER].ammo = -1;
+	chr->weapons[WEAPON_GUN].got = 1;
+	chr->weapons[WEAPON_GUN].ammo = 10;
 }
 
 void GAMECONTROLLER::do_warmup(int seconds)

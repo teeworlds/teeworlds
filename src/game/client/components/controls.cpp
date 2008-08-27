@@ -22,19 +22,27 @@ static void con_key_input_counter(void *result, void *user_data)
 		(*v)++;
 	*v &= INPUT_STATE_MASK;
 }
-/*
-static void con_key_input_weapon(void *result, void *user_data)
+
+struct INPUTSET
 {
-	int w = (char *)user_data - (char *)0;
+	CONTROLS *controls;
+	int *variable;
+	int value;
+};
+
+static void con_key_input_set(void *result, void *user_data)
+{
+	INPUTSET *set = (INPUTSET *)user_data;
 	if(console_arg_int(result, 0))
-		input_data.wanted_weapon = w;
+		*set->variable = set->value;
 }
 
 static void con_key_input_nextprev_weapon(void *result, void *user_data)
 {
-	con_key_input_counter(result, user_data);
-	input_data.wanted_weapon = 0;
-}*/
+	INPUTSET *set = (INPUTSET *)user_data;
+	con_key_input_counter(result, set->variable);
+	set->controls->input_data.wanted_weapon = 0;
+}
 
 void CONTROLS::on_init()
 {
@@ -44,16 +52,15 @@ void CONTROLS::on_init()
 	MACRO_REGISTER_COMMAND("+jump", "", con_key_input_state, &input_data.jump);
 	MACRO_REGISTER_COMMAND("+hook", "", con_key_input_state, &input_data.hook);
 	MACRO_REGISTER_COMMAND("+fire", "", con_key_input_counter, &input_data.fire);
-	/*
-	MACRO_REGISTER_COMMAND("+weapon1", "", con_key_input_weapon, (void *)1);
-	MACRO_REGISTER_COMMAND("+weapon2", "", con_key_input_weapon, (void *)2);
-	MACRO_REGISTER_COMMAND("+weapon3", "", con_key_input_weapon, (void *)3);
-	MACRO_REGISTER_COMMAND("+weapon4", "", con_key_input_weapon, (void *)4);
-	MACRO_REGISTER_COMMAND("+weapon5", "", con_key_input_weapon, (void *)5);
 
-	MACRO_REGISTER_COMMAND("+nextweapon", "", con_key_input_nextprev_weapon, &input_data.next_weapon);
-	MACRO_REGISTER_COMMAND("+prevweapon", "", con_key_input_nextprev_weapon, &input_data.prev_weapon);
-	*/
+	{ static INPUTSET set = {this, &input_data.wanted_weapon, 1};  MACRO_REGISTER_COMMAND("+weapon1", "", con_key_input_set, (void *)&set); }
+	{ static INPUTSET set = {this, &input_data.wanted_weapon, 2};  MACRO_REGISTER_COMMAND("+weapon2", "", con_key_input_set, (void *)&set); }
+	{ static INPUTSET set = {this, &input_data.wanted_weapon, 3};  MACRO_REGISTER_COMMAND("+weapon3", "", con_key_input_set, (void *)&set); }
+	{ static INPUTSET set = {this, &input_data.wanted_weapon, 4};  MACRO_REGISTER_COMMAND("+weapon4", "", con_key_input_set, (void *)&set); }
+	{ static INPUTSET set = {this, &input_data.wanted_weapon, 5};  MACRO_REGISTER_COMMAND("+weapon5", "", con_key_input_set, (void *)&set); }
+
+	{ static INPUTSET set = {this, &input_data.next_weapon, 0};  MACRO_REGISTER_COMMAND("+nextweapon", "", con_key_input_nextprev_weapon, (void *)&set); }
+	{ static INPUTSET set = {this, &input_data.prev_weapon, 0};  MACRO_REGISTER_COMMAND("+prevweapon", "", con_key_input_nextprev_weapon, (void *)&set); }
 }
 
 int CONTROLS::snapinput(int *data)

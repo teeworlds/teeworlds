@@ -89,7 +89,7 @@ public:
 		Arguments:
 			chr - The character that was spawned.
 	*/
-	virtual void on_character_spawn(class CHARACTER *chr) {}
+	virtual void on_character_spawn(class CHARACTER *chr);
 	
 	/*
 		Function: on_character_death
