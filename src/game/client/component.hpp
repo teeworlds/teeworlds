@@ -8,6 +8,7 @@ class GAMECLIENT;
 class COMPONENT
 {
 public:
+	~COMPONENT() {}
 	GAMECLIENT *client;
 	
 	virtual void on_statechange(int new_state, int old_state) {};
