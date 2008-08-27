@@ -167,6 +167,11 @@ class Enum():
 		self.name = name
 		self.values = values
 
+class Flags():
+	def __init__(self, name, values):
+		self.name = name
+		self.values = values
+
 class NetObject:
 	def __init__(self, name, variables):
 		l = name.split(":")

@@ -11,6 +11,16 @@ def create_enum_table(names, num):
 		lines += ["\t%s,"%name]
 	lines += ["\t%s" % num, "};"]
 	return lines
+
+def create_flags_table(names):
+	lines = []
+	lines += ["enum", "{"]
+	i = 0
+	for name in names:
+		lines += ["\t%s = 1<<%d," % (name,i)]
+		i += 1
+	lines += ["};"]
+	return lines
 	
 def EmitEnum(names, num):
 	print "enum"
@@ -19,6 +29,15 @@ def EmitEnum(names, num):
 	for name in names[1:]:
 		print "\t%s,"%name
 	print "\t%s" % num
+	print "};"
+
+def EmitFlags(names, num):
+	print "enum"
+	print "{"
+	i = 0
+	for name in names:
+		print "\t%s = 1<<%d," % (name,i)
+		i += 1
 	print "};"
 		
 
@@ -80,7 +99,11 @@ if gen_network_header:
 	print network.RawHeader
 	
 	for e in network.Enums:
-		for l in create_enum_table(["%s_%s"%(e.name, v) for v in e.values], "NUM_%sS"%e.name): print l
+		for l in create_enum_table(["%s_%s"%(e.name, v) for v in e.values], 'NUM_%sS'%e.name): print l
+		print ""
+
+	for e in network.Flags:
+		for l in create_flags_table(["%s_%s" % (e.name, v) for v in e.values]): print l
 		print ""
 		
 	for l in create_enum_table(["NETOBJ_INVALID"]+[o.enum_name for o in network.Objects], "NUM_NETOBJTYPES"): print l

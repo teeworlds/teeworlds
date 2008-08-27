@@ -3,6 +3,7 @@ from datatypes import *
 Emotes = ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"]
 PlayerStates = ["UNKNOWN", "PLAYING", "IN_MENU", "CHATTING"]
 GameTypes = ["DM", "TDM", "CTF"]
+GameFlags = ["TEAMS"]
 
 Emoticons = [str(x) for x in xrange(1,16)]
 
@@ -26,6 +27,10 @@ Enums = [
 	Enum("EMOTE", Emotes),
 	Enum("POWERUP", Powerups),
 	Enum("EMOTICON", Emoticons)
+]
+
+Flags = [
+	Flags("GAMEFLAG", GameFlags)
 ]
 
 Objects = [
@@ -82,7 +87,7 @@ Objects = [
 	]),
 
 	NetObject("Game", [
-		NetIntRange("team", 0, 1),
+		NetIntRange("flags", 0, 256),
 		NetTick("round_start_tick"),
 		
 		NetIntRange("game_over", 0, 1),

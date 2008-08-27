@@ -301,7 +301,9 @@ function build(settings)
 	
 	masterserver = Compile(settings, Collect("src/mastersrv/*.cpp"))
 	game_shared = Compile(settings, Collect("src/game/*.cpp"), nethash, network_source)
-	game_client = Compile(settings, Collect("src/game/client/*.cpp"), client_content_source)
+	game_client = Compile(settings, Collect(
+		"src/game/client/*.cpp",
+		"src/game/client/components/*.cpp"), client_content_source)
 	game_server = Compile(settings, Collect(
 		"src/game/server/*.cpp",
 		"src/game/server/entities/*.cpp",
