@@ -211,8 +211,11 @@ void HUD::render_healthandammo()
 
 	// render ammo count
 	// render gui stuff
-	gfx_quads_begin();
+
+	gfx_texture_set(data->images[IMAGE_GAME].id);
 	gfx_mapscreen(0,0,width,300);
+	
+	gfx_quads_begin();
 	
 	// if weaponstage is active, put a "glow" around the stage ammo
 	select_sprite(data->weapons.id[gameclient.snap.local_character->weapon%NUM_WEAPONS].sprite_proj);
@@ -221,7 +224,6 @@ void HUD::render_healthandammo()
 
 	gfx_quads_end();
 
-	gfx_texture_set(data->images[IMAGE_GAME].id);
 	gfx_quads_begin();
 	int h = 0;
 
