@@ -226,6 +226,63 @@ void GAMECLIENT::on_message(int msgtype)
 	// TODO: this should be done smarter
 	for(int i = 0; i < all.num; i++)
 		all.components[i]->on_message(msgtype, rawmsg);
+	
+	// handle core messages
+	if(msgtype == NETMSGTYPE_SV_SETINFO)
+	{
+		NETMSG_SV_SETINFO *msg = (NETMSG_SV_SETINFO *)rawmsg;
+		
+		str_copy(clients[msg->cid].name, msg->name, 64);
+		str_copy(clients[msg->cid].skin_name, msg->skin, 64);
+		
+		// make sure that we don't set a special skin on the client
+		if(clients[msg->cid].skin_name[0] == 'x' || clients[msg->cid].skin_name[1] == '_')
+			str_copy(clients[msg->cid].skin_name, "default", 64);
+		
+		clients[msg->cid].skin_info.color_body = skins->get_color(msg->color_body);
+		clients[msg->cid].skin_info.color_feet = skins->get_color(msg->color_feet);
+		clients[msg->cid].skin_info.size = 64;
+		
+		// find new skin
+		clients[msg->cid].skin_id = gameclient.skins->find(clients[msg->cid].skin_name);
+		if(clients[msg->cid].skin_id < 0)
+			clients[msg->cid].skin_id = 0;
+		
+		if(msg->use_custom_color)
+			clients[msg->cid].skin_info.texture = gameclient.skins->get(clients[msg->cid].skin_id)->color_texture;
+		else
+		{
+			clients[msg->cid].skin_info.texture = gameclient.skins->get(clients[msg->cid].skin_id)->org_texture;
+			clients[msg->cid].skin_info.color_body = vec4(1,1,1,1);
+			clients[msg->cid].skin_info.color_feet = vec4(1,1,1,1);
+		}
+
+		clients[msg->cid].update_render_info();
+	}
+    else if(msgtype == NETMSGTYPE_SV_WEAPONPICKUP)
+    {
+    	// TODO: repair me
+    	/*NETMSG_SV_WEAPONPICKUP *msg = (NETMSG_SV_WEAPONPICKUP *)rawmsg;
+        if(config.cl_autoswitch_weapons)
+        	input_data.wanted_weapon = msg->weapon+1;*/
+    }
+	else if(msgtype == NETMSGTYPE_SV_READYTOENTER)
+	{
+		client_entergame();
+	}
+	else if (msgtype == NETMSGTYPE_SV_EMOTICON)
+	{
+		NETMSG_SV_EMOTICON *msg = (NETMSG_SV_EMOTICON *)rawmsg;
+
+		// apply
+		clients[msg->cid].emoticon = msg->emoticon;
+		clients[msg->cid].emoticon_start = client_tick();
+	}
+	else if(msgtype == NETMSGTYPE_SV_SOUNDGLOBAL)
+	{
+		NETMSG_SV_SOUNDGLOBAL *msg = (NETMSG_SV_SOUNDGLOBAL *)rawmsg;
+		snd_play_random(CHN_GLOBAL, msg->soundid, 1.0f, vec2(0,0));
+	}		
 }
 
 void GAMECLIENT::on_statechange(int new_state, int old_state)
@@ -505,9 +562,6 @@ void GAMECLIENT::CLIENT_DATA::update_render_info()
 		}
 	}		
 }
-
-
-
 
 void GAMECLIENT::send_switch_team(int team)
 {

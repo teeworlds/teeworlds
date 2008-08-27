@@ -188,6 +188,7 @@ extern "C" void modc_message(int msgtype)
 
 	gameclient.on_message(msgtype);
 
+#if 0
 	// normal 
 	void *rawmsg = netmsg_secure_unpack(msgtype);
 	if(!rawmsg)
@@ -237,6 +238,7 @@ extern "C" void modc_message(int msgtype)
 	}
 	else if(msgtype == NETMSGTYPE_SV_SETINFO)
 	{
+		dbg_msg("DEBUG", "got info");
 		NETMSG_SV_SETINFO *msg = (NETMSG_SV_SETINFO *)rawmsg;
 		
 		str_copy(gameclient.clients[msg->cid].name, msg->name, 64);
@@ -309,6 +311,8 @@ extern "C" void modc_message(int msgtype)
 		NETMSG_SV_SOUNDGLOBAL *msg = (NETMSG_SV_SOUNDGLOBAL *)rawmsg;
 		snd_play_random(CHN_GLOBAL, msg->soundid, 1.0f, vec2(0,0));
 	}
+	
+#endif
 }
 
 extern "C" void modc_connected()

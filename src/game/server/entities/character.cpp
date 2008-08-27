@@ -806,7 +806,6 @@ void CHARACTER::snap(int snaping_client)
 	else if(!input.left && input.right)
 		character->wanted_direction = 1;*/
 
-
 	if(player->client_id == snaping_client)
 	{
 		character->health = health;

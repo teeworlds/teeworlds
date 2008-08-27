@@ -78,10 +78,6 @@ void PLAYER::on_disconnect()
 
 	// clear this whole structure
 	init(-1);
-
-	/*game.world.remove_entity(&game.players[client_id]);
-	game.world.core.players[client_id] = 0x0;
-	game.players[client_id].client_id = -1;	*/
 }
 
 void PLAYER::on_predicted_input(NETOBJ_PLAYER_INPUT *new_input)
@@ -155,39 +151,6 @@ void PLAYER::try_respawn()
 	
 	if(!game.controller->can_spawn(this, &spawnpos))
 		return;
-	
-	// get spawn point
-	//SPAWNEVAL eval;
-	//eval.die_pos = die_pos;
-	
-	/*
-	eval.pos = vec2(100, 100);
-	
-	if(game.controller->gametype == GAMETYPE_CTF)
-	{
-		eval.friendly_team = team;
-		
-		// try first try own team spawn, then normal spawn and then enemy
-		evaluate_spawn_type(&eval, 1+(team&1));
-		if(!eval.got)
-		{
-			evaluate_spawn_type(&eval, 0);
-			if(!eval.got)
-				evaluate_spawn_type(&eval, 1+((team+1)&1));
-		}
-	}
-	else
-	{
-		if(game.controller->gametype == GAMETYPE_TDM)
-			eval.friendly_team = team;
-			
-		evaluate_spawn_type(&eval, 0);
-		evaluate_spawn_type(&eval, 1);
-		evaluate_spawn_type(&eval, 2);
-	}
-	
-	spawnpos = eval.pos;
-	*/
 
 	// check if the position is occupado
 	ENTITY *ents[2] = {0};
@@ -198,46 +161,4 @@ void PLAYER::try_respawn()
 		spawning = false;
 		character.spawn(this, spawnpos, team);
 	}
-	
-	/*
-	pos = spawnpos;
-
-	core.pos = pos;
-	core.vel = vec2(0,0);
-	core.hooked_player = -1;
-
-	health = 10;
-	armor = 0;
-	jumped = 0;
-	
-	mem_zero(&ninja, sizeof(ninja));
-	
-	dead = false;
-	player_state = PLAYERSTATE_PLAYING;
-	
-	game.world.insert_entity(this);
-
-	core.hook_state = HOOK_IDLE;
-
-	mem_zero(&input, sizeof(input));
-
-	// init weapons
-	mem_zero(&weapons, sizeof(weapons));
-	weapons[WEAPON_HAMMER].got = true;
-	weapons[WEAPON_HAMMER].ammo = -1;
-	weapons[WEAPON_GUN].got = true;
-	weapons[WEAPON_GUN].ammo = 10;
-
-	active_weapon = WEAPON_GUN;
-	last_weapon = WEAPON_HAMMER;
-	queued_weapon = 0;
-
-	reload_timer = 0;
-
-	// Create sound and spawn effects
-	game.create_sound(pos, SOUND_PLAYER_SPAWN);
-	game.create_playerspawn(pos);
-
-	game.controller->on_player_spawn(player);
-	*/
 }

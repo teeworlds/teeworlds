@@ -307,6 +307,9 @@ int GAMECONTROLLER::on_character_death(class CHARACTER *victim, class PLAYER *ki
 
 void GAMECONTROLLER::on_character_spawn(class CHARACTER *chr)
 {
+	// default health
+	chr->health = 10;
+	
 	// give default weapons
 	chr->weapons[WEAPON_HAMMER].got = 1;
 	chr->weapons[WEAPON_HAMMER].ammo = -1;
