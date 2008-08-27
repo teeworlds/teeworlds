@@ -360,7 +360,7 @@ void mods_init()
 		{
 			mods_connected(MAX_CLIENTS-i-1);
 			mods_client_enter(MAX_CLIENTS-i-1);
-			if(game.controller->gametype != GAMETYPE_DM)
+			if(game.controller->is_teamplay)
 				game.players[MAX_CLIENTS-i-1].team = i&1;
 		}
 	}

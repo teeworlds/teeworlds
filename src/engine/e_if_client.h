@@ -84,11 +84,11 @@ typedef struct
 	int quicksearch_hit;
 	
 	int progression;
-	int game_type;
 	int max_players;
 	int num_players;
 	int flags;
 	int latency; /* in ms */
+	char gametype[16];
 	char name[64];
 	char map[32];
 	char version[32];

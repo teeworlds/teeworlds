@@ -265,6 +265,8 @@ void *snap_find_item(int snapid, int type, int id)
 int snap_num_items(int snapid)
 {
 	dbg_assert(snapid >= 0 && snapid < NUM_SNAPSHOT_TYPES, "invalid snapid");
+	if(!snapshots[snapid])
+		return 0;
 	return snapshots[snapid]->snap->num_items;
 }
 
@@ -767,7 +769,7 @@ static void client_process_packet(NETCHUNK *packet)
 				str_copy(info.version, unpacker_get_string(&up), sizeof(info.version));
 				str_copy(info.name, unpacker_get_string(&up), sizeof(info.name));
 				str_copy(info.map, unpacker_get_string(&up), sizeof(info.map));
-				info.game_type = atol(unpacker_get_string(&up));
+				str_copy(info.gametype, unpacker_get_string(&up), sizeof(info.gametype));
 				info.flags = atol(unpacker_get_string(&up));
 				info.progression = atol(unpacker_get_string(&up));
 				info.num_players = atol(unpacker_get_string(&up));

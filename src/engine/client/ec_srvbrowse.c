@@ -104,9 +104,7 @@ static int client_serverbrowse_sort_compare_gametype(const void *ai, const void 
 {
 	SERVERENTRY *a = serverlist[*(const int*)ai];
 	SERVERENTRY *b = serverlist[*(const int*)bi];
-	if(a->info.game_type > b->info.game_type) return 1;
-	if(a->info.game_type < b->info.game_type) return -1;
-	return 0;
+	return strcmp(a->info.gametype, b->info.gametype);
 }
 
 static int client_serverbrowse_sort_compare_progression(const void *ai, const void *bi)
@@ -154,8 +152,9 @@ static void client_serverbrowse_filter()
 			filtered = 1;
 		else if(config.b_filter_ping < serverlist[i]->info.latency)
 			filtered = 1;
-		else if(!(config.b_filter_gametype&(1<<serverlist[i]->info.game_type)))
-			filtered = 1;
+		/* TODO: repair me
+		else if(!(config.b_filter_gametype&(1 << serverlist[i]->info.game_type)))
+			filtered = 1;*/
 		else if(config.b_filter_compatversion && strncmp(serverlist[i]->info.version, modc_net_version(), 3) != 0)
 			filtered = 1;
 		else if(config.b_filter_string[0] != 0)

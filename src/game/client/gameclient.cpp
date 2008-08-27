@@ -1,0 +1,548 @@
+#include <engine/e_client_interface.h>
+#include <game/generated/g_protocol.hpp>
+
+#include "gameclient.hpp"
+#include "gc_client.hpp"
+#include "components/killmessages.hpp"
+#include "components/chat.hpp"
+#include "components/motd.hpp"
+#include "components/broadcast.hpp"
+#include "components/console.hpp"
+#include "components/binds.hpp"
+#include "components/particles.hpp"
+#include "components/menus.hpp"
+#include "components/skins.hpp"
+#include "components/flow.hpp"
+#include "components/players.hpp"
+#include "components/items.hpp"
+#include "components/maplayers.hpp"
+#include "components/camera.hpp"
+#include "components/hud.hpp"
+#include "components/debughud.hpp"
+#include "components/controls.hpp"
+#include "components/effects.hpp"
+
+GAMECLIENT gameclient;
+
+// instanciate all systems
+static KILLMESSAGES killmessages;
+static CAMERA camera;
+static CHAT chat;
+static MOTD motd;
+static BROADCAST broadcast;
+static CONSOLE console;
+static BINDS binds;
+static PARTICLES particles;
+static MENUS menus;
+static SKINS skins;
+static FLOW flow;
+static HUD hud;
+static DEBUGHUD debughud;
+static CONTROLS controls;
+static EFFECTS effects;
+
+static PLAYERS players;
+static ITEMS items;
+
+static MAPLAYERS maplayers_background(MAPLAYERS::TYPE_BACKGROUND);
+static MAPLAYERS maplayers_foreground(MAPLAYERS::TYPE_FOREGROUND);
+
+
+GAMECLIENT::STACK::STACK() { num = 0; }
+void GAMECLIENT::STACK::add(class COMPONENT *component) { components[num++] = component; }
+
+void GAMECLIENT::on_init()
+{
+	// setup pointers
+	binds = &::binds;
+	console = &::console;
+	particles = &::particles;
+	menus = &::menus;
+	skins = &::skins;
+	chat = &::chat;
+	flow = &::flow;
+	camera = &::camera;
+	controls = &::controls;
+	effects = &::effects;
+	
+	// make a list of all the systems, make sure to add them in the corrent render order
+	all.add(skins);
+	all.add(effects); // doesn't render anything, just updates effects
+	all.add(particles);
+	all.add(binds);
+	all.add(controls);
+	all.add(camera);
+	all.add(particles); // doesn't render anything, just updates all the particles
+	
+	all.add(&maplayers_background); // first to render
+	all.add(&particles->render_trail);
+	all.add(&particles->render_explosions);
+	all.add(&items);
+	all.add(&players);
+	all.add(&maplayers_foreground);
+	all.add(&particles->render_general);
+	all.add(&hud);
+	all.add(&killmessages);
+	all.add(chat);
+	all.add(&broadcast);
+	all.add(&debughud);
+	all.add(&motd);
+	all.add(menus);
+	all.add(console);
+	
+	// build the input stack
+	input.add(console);
+	input.add(menus);
+	input.add(chat);
+	input.add(controls);
+	input.add(binds);
+
+	// init all components
+	for(int i = 0; i < all.num; i++)
+		all.components[i]->on_init();
+		
+	/*
+	input_stack.add_handler(console_input_special_binds, 0); // F1-Fx binds
+	input_stack.add_handler(console_input_cli, 0); // console
+	input_stack.add_handler(chat_input_handle, 0); // chat
+	//input_stack.add_handler() // ui
+	input_stack.add_handler(console_input_normal_binds, 0); // binds
+	*/
+}
+
+void GAMECLIENT::dispatch_input()
+{
+	// handle mouse movement
+	int x=0, y=0;
+	inp_mouse_relative(&x, &y);
+	for(int h = 0; h < input.num; h++)
+	{
+		if(input.components[h]->on_mousemove(x, y))
+			break;
+	}
+	
+	// handle key presses
+	for(int i = 0; i < inp_num_events(); i++)
+	{
+		INPUT_EVENT e = inp_get_event(i);
+		
+		for(int h = 0; h < input.num; h++)
+		{
+			if(input.components[h]->on_input(e))
+			{
+				//dbg_msg("", "%d char=%d key=%d flags=%d", h, e.ch, e.key, e.flags);
+				break;
+			}
+		}
+	}
+	
+	// clear all events for this frame
+	inp_clear_events();	
+}
+
+
+int GAMECLIENT::on_snapinput(int *data)
+{
+	return controls->snapinput(data);
+}
+
+
+void GAMECLIENT::on_connected()
+{
+	on_reset();	
+	
+	// send the inital info
+	send_info(true);
+}
+
+void GAMECLIENT::on_reset()
+{
+	// clear out the invalid pointers
+	last_new_predicted_tick = -1;
+	mem_zero(&gameclient.snap, sizeof(gameclient.snap));
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		clients[i].name[0] = 0;
+		clients[i].skin_id = 0;
+		clients[i].team = 0;
+		clients[i].angle = 0;
+		clients[i].emoticon = 0;
+		clients[i].emoticon_start = -1;
+		clients[i].skin_info.texture = gameclient.skins->get(0)->color_texture;
+		clients[i].skin_info.color_body = vec4(1,1,1,1);
+		clients[i].skin_info.color_feet = vec4(1,1,1,1);
+		clients[i].update_render_info();
+	}
+	
+	for(int i = 0; i < all.num; i++)
+		all.components[i]->on_reset();
+}
+
+
+void GAMECLIENT::update_local_character_pos()
+{
+	if(config.cl_predict)
+	{
+		if(!snap.local_character || (snap.local_character->health < 0) || (snap.gameobj && snap.gameobj->game_over))
+		{
+			// don't use predicted
+		}
+		else
+			local_character_pos = mix(predicted_prev_char.pos, predicted_char.pos, client_predintratick());
+	}
+	else if(snap.local_character && snap.local_prev_character)
+	{
+		local_character_pos = mix(
+			vec2(snap.local_prev_character->x, snap.local_prev_character->y),
+			vec2(snap.local_character->x, snap.local_character->y), client_intratick());
+	}
+}
+
+void GAMECLIENT::on_render()
+{
+	// update the local character position
+	update_local_character_pos();
+	
+	// dispatch all input to systems
+	dispatch_input();
+	
+	// render all systems
+	for(int i = 0; i < all.num; i++)
+		all.components[i]->on_render();
+}
+
+void GAMECLIENT::on_message(int msgtype)
+{
+	void *rawmsg = netmsg_secure_unpack(msgtype);
+	if(!rawmsg)
+	{
+		dbg_msg("client", "dropped weird message '%s' (%d), failed on '%s'", netmsg_get_name(msgtype), msgtype, netmsg_failed_on());
+		return;
+	}
+
+	// TODO: this should be done smarter
+	for(int i = 0; i < all.num; i++)
+		all.components[i]->on_message(msgtype, rawmsg);
+}
+
+void GAMECLIENT::on_statechange(int new_state, int old_state)
+{
+	// clear out the invalid pointers
+	mem_zero(&gameclient.snap, sizeof(gameclient.snap));
+		
+	for(int i = 0; i < all.num; i++)
+		all.components[i]->on_statechange(new_state, old_state);
+}
+
+
+
+void GAMECLIENT::process_events()
+{
+	int snaptype = SNAP_CURRENT;
+	int num = snap_num_items(snaptype);
+	for(int index = 0; index < num; index++)
+	{
+		SNAP_ITEM item;
+		const void *data = snap_get_item(snaptype, index, &item);
+
+		if(item.type == NETEVENTTYPE_DAMAGEIND)
+		{
+			NETEVENT_DAMAGEIND *ev = (NETEVENT_DAMAGEIND *)data;
+			gameclient.effects->damage_indicator(vec2(ev->x, ev->y), get_direction(ev->angle));
+		}
+		else if(item.type == NETEVENTTYPE_AIRJUMP)
+		{
+			NETEVENT_COMMON *ev = (NETEVENT_COMMON *)data;
+			gameclient.effects->air_jump(vec2(ev->x, ev->y));
+		}
+		else if(item.type == NETEVENTTYPE_EXPLOSION)
+		{
+			NETEVENT_EXPLOSION *ev = (NETEVENT_EXPLOSION *)data;
+			gameclient.effects->explosion(vec2(ev->x, ev->y));
+		}
+		else if(item.type == NETEVENTTYPE_SPAWN)
+		{
+			NETEVENT_SPAWN *ev = (NETEVENT_SPAWN *)data;
+			gameclient.effects->playerspawn(vec2(ev->x, ev->y));
+		}
+		else if(item.type == NETEVENTTYPE_DEATH)
+		{
+			NETEVENT_DEATH *ev = (NETEVENT_DEATH *)data;
+			gameclient.effects->playerdeath(vec2(ev->x, ev->y), ev->cid);
+		}
+		else if(item.type == NETEVENTTYPE_SOUNDWORLD)
+		{
+			NETEVENT_SOUNDWORLD *ev = (NETEVENT_SOUNDWORLD *)data;
+			snd_play_random(CHN_WORLD, ev->soundid, 1.0f, vec2(ev->x, ev->y));
+		}
+	}
+}
+
+void GAMECLIENT::on_snapshot()
+{
+	// clear out the invalid pointers
+	mem_zero(&gameclient.snap, sizeof(gameclient.snap));
+
+	static int snapshot_count = 0;
+	snapshot_count++;
+	
+	// secure snapshot
+	{
+		int num = snap_num_items(SNAP_CURRENT);
+		for(int index = 0; index < num; index++)
+		{
+			SNAP_ITEM item;
+			void *data = snap_get_item(SNAP_CURRENT, index, &item);
+			if(netobj_validate(item.type, data, item.datasize) != 0)
+			{
+				if(config.debug)
+					dbg_msg("game", "invalidated index=%d type=%d (%s) size=%d id=%d", index, item.type, netobj_get_name(item.type), item.datasize, item.id);
+				snap_invalidate_item(SNAP_CURRENT, index);
+			}
+		}
+	}
+		
+	process_events();
+
+	if(config.dbg_stress)
+	{
+		if((client_tick()%250) == 0)
+		{
+			NETMSG_CL_SAY msg;
+			msg.team = -1;
+			msg.message = "galenskap!!!!";
+			msg.pack(MSGFLAG_VITAL);
+			client_send_msg();
+		}
+	}
+
+	// setup world view
+	{
+		// 1. fetch local player
+		// 2. set him to the center
+		int num = snap_num_items(SNAP_CURRENT);
+		for(int i = 0; i < num; i++)
+		{
+			SNAP_ITEM item;
+			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+
+			if(item.type == NETOBJTYPE_PLAYER_INFO)
+			{
+				const NETOBJ_PLAYER_INFO *info = (const NETOBJ_PLAYER_INFO *)data;
+				
+				gameclient.clients[info->cid].team = info->team;
+				
+				if(info->local)
+				{
+					gameclient.snap.local_info = info;
+					const void *data = snap_find_item(SNAP_CURRENT, NETOBJTYPE_CHARACTER, item.id);
+					if(data)
+					{
+						gameclient.snap.local_character = (const NETOBJ_CHARACTER *)data;
+						gameclient.local_character_pos = vec2(gameclient.snap.local_character->x, gameclient.snap.local_character->y);
+
+						const void *p = snap_find_item(SNAP_PREV, NETOBJTYPE_CHARACTER, item.id);
+						if(p)
+							gameclient.snap.local_prev_character = (NETOBJ_CHARACTER *)p;
+					}
+				}
+			}
+			else if(item.type == NETOBJTYPE_GAME)
+				gameclient.snap.gameobj = (NETOBJ_GAME *)data;
+			else if(item.type == NETOBJTYPE_FLAG)
+			{
+				gameclient.snap.flags[item.id%2] = (const NETOBJ_FLAG *)data;
+			}
+		}
+	}
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
+		gameclient.clients[i].update_render_info();
+
+}
+
+void GAMECLIENT::on_predict()
+{
+	CHARACTER_CORE before_prev_char = predicted_prev_char;
+	CHARACTER_CORE before_char = predicted_char;
+
+	// repredict character
+	WORLD_CORE world;
+	world.tuning = tuning;
+	int local_cid = -1;
+
+	// search for players
+	for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
+	{
+		SNAP_ITEM item;
+		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+		int client_id = item.id;
+
+		if(item.type == NETOBJTYPE_CHARACTER)
+		{
+			const NETOBJ_CHARACTER *character = (const NETOBJ_CHARACTER *)data;
+			gameclient.clients[client_id].predicted.world = &world;
+			world.characters[client_id] = &gameclient.clients[client_id].predicted;
+
+			gameclient.clients[client_id].predicted.read(character);
+		}
+		else if(item.type == NETOBJTYPE_PLAYER_INFO)
+		{
+			const NETOBJ_PLAYER_INFO *info = (const NETOBJ_PLAYER_INFO *)data;
+			if(info->local)
+				local_cid = client_id;
+		}
+	}
+	
+	// we can't predict without our own id
+	if(local_cid == -1)
+		return;
+
+	// predict
+	for(int tick = client_tick()+1; tick <= client_predtick(); tick++)
+	{
+		// fetch the local
+		if(tick == client_predtick() && world.characters[local_cid])
+			predicted_prev_char = *world.characters[local_cid];
+		
+		// first calculate where everyone should move
+		for(int c = 0; c < MAX_CLIENTS; c++)
+		{
+			if(!world.characters[c])
+				continue;
+
+			mem_zero(&world.characters[c]->input, sizeof(world.characters[c]->input));
+			if(local_cid == c)
+			{
+				// apply player input
+				int *input = client_get_input(tick);
+				if(input)
+					world.characters[c]->input = *((NETOBJ_PLAYER_INPUT*)input);
+			}
+
+			world.characters[c]->tick();
+		}
+
+		// move all players and quantize their data
+		for(int c = 0; c < MAX_CLIENTS; c++)
+		{
+			if(!world.characters[c])
+				continue;
+
+			world.characters[c]->move();
+			world.characters[c]->quantize();
+		}
+		
+		if(tick > last_new_predicted_tick)
+		{
+			last_new_predicted_tick = tick;
+			
+			if(local_cid != -1 && world.characters[local_cid])
+			{
+				vec2 pos = world.characters[local_cid]->pos;
+				int events = world.characters[local_cid]->triggered_events;
+				if(events&COREEVENT_GROUND_JUMP) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
+				if(events&COREEVENT_AIR_JUMP)
+				{
+					gameclient.effects->air_jump(pos);
+					snd_play_random(CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, pos);
+				}
+				//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
+				//if(events&COREEVENT_HOOK_ATTACH_PLAYER) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, pos);
+				if(events&COREEVENT_HOOK_ATTACH_GROUND) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, pos);
+				//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
+			}
+
+
+			/*
+			dbg_msg("predict", "%d %d %d", tick,
+				(int)world.players[c]->pos.x, (int)world.players[c]->pos.y,
+				(int)world.players[c]->vel.x, (int)world.players[c]->vel.y);*/
+		}
+		
+		if(tick == client_predtick() && world.characters[local_cid])
+			predicted_char = *world.characters[local_cid];
+	}
+	
+	if(config.debug && predicted_tick == client_predtick())
+	{
+		if(predicted_char.pos.x != before_char.pos.x ||
+			predicted_char.pos.y != before_char.pos.y)
+		{
+			dbg_msg("client", "prediction error, (%d %d) (%d %d)", 
+				(int)before_char.pos.x, (int)before_char.pos.y,
+				(int)predicted_char.pos.x, (int)predicted_char.pos.y);
+		}
+
+		if(predicted_prev_char.pos.x != before_prev_char.pos.x ||
+			predicted_prev_char.pos.y != before_prev_char.pos.y)
+		{
+			dbg_msg("client", "prediction error, prev (%d %d) (%d %d)", 
+				(int)before_prev_char.pos.x, (int)before_prev_char.pos.y,
+				(int)predicted_prev_char.pos.x, (int)predicted_prev_char.pos.y);
+		}
+	}
+	
+	predicted_tick = client_predtick();
+}
+
+void GAMECLIENT::CLIENT_DATA::update_render_info()
+{
+	render_info = skin_info;
+
+	// force team colors
+	if(gameclient.snap.gameobj && gameclient.snap.gameobj->flags&GAMEFLAG_TEAMS)
+	{
+		const int team_colors[2] = {65387, 10223467};
+		if(team >= 0 || team <= 1)
+		{
+			render_info.texture = gameclient.skins->get(skin_id)->color_texture;
+			render_info.color_body = gameclient.skins->get_color(team_colors[team]);
+			render_info.color_feet = gameclient.skins->get_color(team_colors[team]);
+		}
+	}		
+}
+
+
+
+
+void GAMECLIENT::send_switch_team(int team)
+{
+	NETMSG_CL_SETTEAM msg;
+	msg.team = team;
+	msg.pack(MSGFLAG_VITAL);
+	client_send_msg();	
+}
+
+void GAMECLIENT::send_info(bool start)
+{
+	if(start)
+	{
+		NETMSG_CL_STARTINFO msg;
+		msg.name = config.player_name;
+		msg.skin = config.player_skin;
+		msg.use_custom_color = config.player_use_custom_color;
+		msg.color_body = config.player_color_body;
+		msg.color_feet = config.player_color_feet;
+		msg.pack(MSGFLAG_VITAL|MSGFLAG_FLUSH);
+	}
+	else
+	{
+		NETMSG_CL_CHANGEINFO msg;
+		msg.name = config.player_name;
+		msg.skin = config.player_skin;
+		msg.use_custom_color = config.player_use_custom_color;
+		msg.color_body = config.player_color_body;
+		msg.color_feet = config.player_color_feet;
+		msg.pack(MSGFLAG_VITAL);
+	}
+	client_send_msg();
+}
+
+void GAMECLIENT::send_kill(int client_id)
+{
+	NETMSG_CL_KILL msg;
+	msg.pack(MSGFLAG_VITAL);
+	client_send_msg();
+}

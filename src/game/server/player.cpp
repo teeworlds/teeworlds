@@ -149,87 +149,18 @@ void PLAYER::set_team(int new_team)
 	}
 }
 
-vec2 spawn_points[3][64];
-int num_spawn_points[3] = {0};
-
-struct SPAWNEVAL
-{
-	SPAWNEVAL()
-	{
-		got = false;
-		friendly_team = -1;
-//		die_pos = vec2(0,0);
-		pos = vec2(100,100);
-	}
-		
-	vec2 pos;
-	bool got;
-	int friendly_team;
-	float score;
-//	vec2 die_pos;
-};
-
-static float evaluate_spawn(SPAWNEVAL *eval, vec2 pos)
-{
-	float score = 0.0f;
-	CHARACTER *c = (CHARACTER *)game.world.find_first(NETOBJTYPE_CHARACTER);
-	for(; c; c = (CHARACTER *)c->typenext())
-	{
-		// team mates are not as dangerous as enemies
-		float scoremod = 1.0f;
-		if(eval->friendly_team != -1 && c->team == eval->friendly_team)
-			scoremod = 0.5f;
-			
-		float d = distance(pos, c->pos);
-		if(d == 0)
-			score += 1000000000.0f;
-		else
-			score += 1.0f/d;
-	}
-	
-	// weight in the die posititon
-	/*
-	float d = distance(pos, eval->die_pos);
-	if(d == 0)
-		score += 1000000000.0f;
-	else
-		score += 1.0f/d;*/
-	
-	return score;
-}
-
-static void evaluate_spawn_type(SPAWNEVAL *eval, int t)
-{
-	// get spawn point
-	/*
-	int start, num;
-	map_get_type(t, &start, &num);
-	if(!num)
-		return;
-	*/
-	for(int i  = 0; i < num_spawn_points[t]; i++)
-	{
-		//num_spawn_points[t]
-		//mapres_spawnpoint *sp = (mapres_spawnpoint*)map_get_item(start + i, NULL, NULL);
-		vec2 p = spawn_points[t][i];// vec2((float)sp->x, (float)sp->y);
-		float s = evaluate_spawn(eval, p);
-		if(!eval->got || eval->score > s)
-		{
-			eval->got = true;
-			eval->score = s;
-			eval->pos = p;
-		}
-	}
-}
-
 void PLAYER::try_respawn()
 {
 	vec2 spawnpos = vec2(100.0f, -60.0f);
 	
+	if(!game.controller->can_spawn(this, &spawnpos))
+		return;
+	
 	// get spawn point
-	SPAWNEVAL eval;
+	//SPAWNEVAL eval;
 	//eval.die_pos = die_pos;
 	
+	/*
 	eval.pos = vec2(100, 100);
 	
 	if(game.controller->gametype == GAMETYPE_CTF)
@@ -256,6 +187,7 @@ void PLAYER::try_respawn()
 	}
 	
 	spawnpos = eval.pos;
+	*/
 
 	// check if the position is occupado
 	ENTITY *ents[2] = {0};

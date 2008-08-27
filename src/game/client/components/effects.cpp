@@ -1,17 +1,23 @@
 #include <engine/e_client_interface.h>
-#include "gc_client.hpp"
-#include "../generated/gc_data.hpp"
+//#include <gc_client.hpp>
+#include <game/generated/gc_data.hpp>
 
-#include "components/particles.hpp"
-#include "components/skins.hpp"
-#include "components/flow.hpp"
-#include "components/damageind.hpp"
-#include "gameclient.hpp"
+#include <game/client/components/particles.hpp>
+#include <game/client/components/skins.hpp>
+#include <game/client/components/flow.hpp>
+#include <game/client/components/damageind.hpp>
+#include <game/client/gameclient.hpp>
+#include <game/client/gc_client.hpp>
 
-static bool add_50hz = false;
-static bool add_100hz = false;
+#include "effects.hpp"
 
-void effect_air_jump(vec2 pos)
+EFFECTS::EFFECTS()
+{
+	add_50hz = false;
+	add_100hz = false;
+}
+
+void EFFECTS::air_jump(vec2 pos)
 {
 	PARTICLE p;
 	p.set_default();
@@ -32,12 +38,12 @@ void effect_air_jump(vec2 pos)
 	gameclient.particles->add(PARTICLES::GROUP_GENERAL, &p);
 }
 
-void effect_damage_indicator(vec2 pos, vec2 dir)
+void EFFECTS::damage_indicator(vec2 pos, vec2 dir)
 {
 	gameclient.damageind->create(pos, dir);
 }
 
-void effect_powerupshine(vec2 pos, vec2 size)
+void EFFECTS::powerupshine(vec2 pos, vec2 size)
 {
 	if(!add_50hz)
 		return;
@@ -58,7 +64,7 @@ void effect_powerupshine(vec2 pos, vec2 size)
 	gameclient.particles->add(PARTICLES::GROUP_GENERAL, &p);
 }
 
-void effect_smoketrail(vec2 pos, vec2 vel)
+void EFFECTS::smoketrail(vec2 pos, vec2 vel)
 {
 	if(!add_50hz)
 		return;
@@ -77,7 +83,7 @@ void effect_smoketrail(vec2 pos, vec2 vel)
 }
 
 
-void effect_skidtrail(vec2 pos, vec2 vel)
+void EFFECTS::skidtrail(vec2 pos, vec2 vel)
 {
 	if(!add_100hz)
 		return;
@@ -96,7 +102,7 @@ void effect_skidtrail(vec2 pos, vec2 vel)
 	gameclient.particles->add(PARTICLES::GROUP_GENERAL, &p);	
 }
 
-void effect_bullettrail(vec2 pos)
+void EFFECTS::bullettrail(vec2 pos)
 {
 	if(!add_100hz)
 		return;
@@ -112,7 +118,7 @@ void effect_bullettrail(vec2 pos)
 	gameclient.particles->add(PARTICLES::GROUP_PROJECTILE_TRAIL, &p);
 }
 
-void effect_playerspawn(vec2 pos)
+void EFFECTS::playerspawn(vec2 pos)
 {
 	for(int i = 0; i < 32; i++)
 	{
@@ -134,7 +140,7 @@ void effect_playerspawn(vec2 pos)
 	}
 }
 
-void effect_playerdeath(vec2 pos, int cid)
+void EFFECTS::playerdeath(vec2 pos, int cid)
 {
 	vec3 blood_color(1.0f,1.0f,1.0f);
 
@@ -166,7 +172,7 @@ void effect_playerdeath(vec2 pos, int cid)
 }
 
 
-void effect_explosion(vec2 pos)
+void EFFECTS::explosion(vec2 pos)
 {
 	// add to flow
 	for(int y = -8; y <= 8; y++)
@@ -208,7 +214,7 @@ void effect_explosion(vec2 pos)
 	}
 }
 
-void effects_update()
+void EFFECTS::on_render()
 {
 	static int64 last_update_100hz = 0;
 	static int64 last_update_50hz = 0;

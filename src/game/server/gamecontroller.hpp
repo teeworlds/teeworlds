@@ -10,7 +10,28 @@
 */
 class GAMECONTROLLER
 {
+	vec2 spawn_points[3][64];
+	int num_spawn_points[3];
 protected:
+	struct SPAWNEVAL
+	{
+		SPAWNEVAL()
+		{
+			got = false;
+			friendly_team = -1;
+			pos = vec2(100,100);
+		}
+			
+		vec2 pos;
+		bool got;
+		int friendly_team;
+		float score;
+	};
+
+	float evaluate_spawn_pos(SPAWNEVAL *eval, vec2 pos);
+	void evaluate_spawn_type(SPAWNEVAL *eval, int type);
+	bool evaluate_spawn(class PLAYER *p, vec2 *pos);
+
 	void cyclemap();
 	void resetgame();
 	
@@ -23,10 +44,11 @@ protected:
 	int warmup;
 	int round_count;
 	
-	bool is_teamplay;
 	
 public:
 	int gametype;
+	bool is_teamplay;
+	
 	GAMECONTROLLER();
 
 	void do_team_score_wincheck();
@@ -81,7 +103,11 @@ public:
 	*/
 	virtual int on_character_death(class CHARACTER *victim, class PLAYER *killer, int weapon);
 
+
 	virtual void on_player_info_change(class PLAYER *p);
+
+	//
+	virtual bool can_spawn(class PLAYER *p, vec2 *pos);
 
 	/*
 	

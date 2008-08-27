@@ -10,6 +10,70 @@
 #include "gamecontroller.hpp"
 #include "gamecontext.hpp"
 
+float GAMECONTROLLER::evaluate_spawn_pos(SPAWNEVAL *eval, vec2 pos)
+{
+	float score = 0.0f;
+	CHARACTER *c = (CHARACTER *)game.world.find_first(NETOBJTYPE_CHARACTER);
+	for(; c; c = (CHARACTER *)c->typenext())
+	{
+		// team mates are not as dangerous as enemies
+		float scoremod = 1.0f;
+		if(eval->friendly_team != -1 && c->team == eval->friendly_team)
+			scoremod = 0.5f;
+			
+		float d = distance(pos, c->pos);
+		if(d == 0)
+			score += 1000000000.0f;
+		else
+			score += 1.0f/d;
+	}
+	
+	return score;
+}
+
+void GAMECONTROLLER::evaluate_spawn_type(SPAWNEVAL *eval, int t)
+{
+	// get spawn point
+	for(int i  = 0; i < num_spawn_points[t]; i++)
+	{
+		vec2 p = spawn_points[t][i];
+		float s = evaluate_spawn_pos(eval, p);
+		if(!eval->got || eval->score > s)
+		{
+			eval->got = true;
+			eval->score = s;
+			eval->pos = p;
+		}
+	}
+}
+
+bool GAMECONTROLLER::can_spawn(PLAYER *player, vec2 *out_pos)
+{
+	SPAWNEVAL eval;
+	
+	if(is_teamplay)
+	{
+		eval.friendly_team = player->team;
+		
+		// try first try own team spawn, then normal spawn and then enemy
+		evaluate_spawn_type(&eval, 1+(player->team&1));
+		if(!eval.got)
+		{
+			evaluate_spawn_type(&eval, 0);
+			if(!eval.got)
+				evaluate_spawn_type(&eval, 1+((player->team+1)&1));
+		}
+	}
+	else
+	{
+		evaluate_spawn_type(&eval, 0);
+		evaluate_spawn_type(&eval, 1);
+		evaluate_spawn_type(&eval, 2);
+	}
+	
+	*out_pos = eval.pos;
+	return eval.got;}
+
 GAMECONTROLLER::GAMECONTROLLER()
 {
 	// select gametype
@@ -37,12 +101,12 @@ GAMECONTROLLER::GAMECONTROLLER()
 	round_count = 0;
 	is_teamplay = false;
 	teamscore[0] = 0;
-	teamscore[1] = 0;	
+	teamscore[1] = 0;
+	
+	num_spawn_points[0] = 0;
+	num_spawn_points[1] = 0;
+	num_spawn_points[2] = 0;
 }
-
-// UGLY!!!!
-extern vec2 spawn_points[3][64];
-extern int num_spawn_points[3];
 
 bool GAMECONTROLLER::on_entity(int index, vec2 pos)
 {

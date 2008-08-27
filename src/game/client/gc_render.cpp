@@ -8,14 +8,14 @@
 #include <game/generated/gc_data.hpp>
 #include <game/generated/g_protocol.hpp>
 #include <game/layers.hpp>
+#include "animstate.hpp"
 #include "gc_render.hpp"
-#include "gc_anim.hpp"
 #include "gc_client.hpp"
 #include "gc_map_image.hpp"
 
 static float sprite_w_scale;
 static float sprite_h_scale;
-
+/*
 static void layershot_begin()
 {
 	if(!config.cl_layershot)
@@ -33,7 +33,7 @@ static void layershot_end()
 	str_format(buf, sizeof(buf), "screenshots/layers_%04d.png", config.cl_layershot);
 	gfx_screenshot_direct(buf);
 	config.cl_layershot++;
-}
+}*/
 
 void select_sprite(SPRITE *spr, int flags, int sx, int sy)
 {
@@ -82,8 +82,6 @@ void draw_sprite(float x, float y, float size)
 {
 	gfx_quads_draw(x, y, size*sprite_w_scale, size*sprite_h_scale);
 }
-
-
 
 void draw_round_rect_ext(float x, float y, float w, float h, float r, int corners)
 {
@@ -155,7 +153,7 @@ void ui_draw_rect(const RECT *r, vec4 color, int corners, float rounding)
 	gfx_quads_end();
 }
 
-void render_tee(ANIM_STATE *anim, TEE_RENDER_INFO *info, int emote, vec2 dir, vec2 pos)
+void render_tee(ANIMSTATE *anim, TEE_RENDER_INFO *info, int emote, vec2 dir, vec2 pos)
 {
 	vec2 direction = dir;
 	vec2 position = pos;
@@ -281,137 +279,6 @@ void mapscreen_to_world(float center_x, float center_y, float parallax_x, float 
 	points[3] = offset_y+center_y+height/2;
 }
 
-static void mapscreen_to_group(float center_x, float center_y, MAPITEM_GROUP *group)
-{
-	float points[4];
-	mapscreen_to_world(center_x, center_y, group->parallax_x/100.0f, group->parallax_y/100.0f,
-		group->offset_x, group->offset_y, gfx_screenaspect(), 1.0f, points);
-	gfx_mapscreen(points[0], points[1], points[2], points[3]);
-}
-
-static void envelope_eval(float time_offset, int env, float *channels)
-{
-	channels[0] = 0;
-	channels[1] = 0;
-	channels[2] = 0;
-	channels[3] = 0;
-
-	ENVPOINT *points;
-
-	{
-		int start, num;
-		map_get_type(MAPITEMTYPE_ENVPOINTS, &start, &num);
-		if(num)
-			points = (ENVPOINT *)map_get_item(start, 0, 0);
-	}
-	
-	int start, num;
-	map_get_type(MAPITEMTYPE_ENVELOPE, &start, &num);
-	
-	if(env >= num)
-		return;
-	
-	MAPITEM_ENVELOPE *item = (MAPITEM_ENVELOPE *)map_get_item(start+env, 0, 0);
-	render_eval_envelope(points+item->start_point, item->num_points, 4, client_localtime()+time_offset, channels);
-}
-
-void render_layers(float center_x, float center_y, int pass)
-{
-	bool passed_gamelayer = false;
-	
-	for(int g = 0; g < layers_num_groups(); g++)
-	{
-		MAPITEM_GROUP *group = layers_get_group(g);
-		
-		if(group->version >= 2 && group->use_clipping)
-		{
-			// set clipping
-			float points[4];
-			mapscreen_to_group(center_x, center_y, layers_game_group());
-			gfx_getscreen(&points[0], &points[1], &points[2], &points[3]);
-			float x0 = (group->clip_x - points[0]) / (points[2]-points[0]);
-			float y0 = (group->clip_y - points[1]) / (points[3]-points[1]);
-			float x1 = ((group->clip_x+group->clip_w) - points[0]) / (points[2]-points[0]);
-			float y1 = ((group->clip_y+group->clip_h) - points[1]) / (points[3]-points[1]);
-			
-			gfx_clip_enable((int)(x0*gfx_screenwidth()), (int)(y0*gfx_screenheight()),
-				(int)((x1-x0)*gfx_screenwidth()), (int)((y1-y0)*gfx_screenheight()));
-		}		
-		
-		mapscreen_to_group(center_x, center_y, group);
-		
-		for(int l = 0; l < group->num_layers; l++)
-		{
-			MAPITEM_LAYER *layer = layers_get_layer(group->start_layer+l);
-			bool render = false;
-			bool is_game_layer = false;
-			
-			// skip rendering if detail layers if not wanted
-			if(layer->flags&LAYERFLAG_DETAIL && !config.gfx_high_detail)
-				continue;
-			
-			if(layer == (MAPITEM_LAYER*)layers_game_layer())
-			{
-				is_game_layer = true;
-				passed_gamelayer = 1;
-			}
-				
-			if(pass == -1)
-				render = true;
-			else if(pass == 0)
-			{
-				if(passed_gamelayer)
-					return;
-				render = true;
-			}
-			else
-			{
-				if(passed_gamelayer && !is_game_layer)
-					render = true;
-			}
-			
-			if(render && !is_game_layer)
-			{
-				layershot_begin();
-				
-				if(layer->type == LAYERTYPE_TILES)
-				{
-					MAPITEM_LAYER_TILEMAP *tmap = (MAPITEM_LAYER_TILEMAP *)layer;
-					if(tmap->image == -1)
-						gfx_texture_set(-1);
-					else
-						gfx_texture_set(img_get(tmap->image));
-						
-					TILE *tiles = (TILE *)map_get_data(tmap->data);
-					gfx_blend_none();
-					render_tilemap(tiles, tmap->width, tmap->height, 32.0f, vec4(1,1,1,1), TILERENDERFLAG_EXTEND|LAYERRENDERFLAG_OPAQUE);
-					gfx_blend_normal();
-					render_tilemap(tiles, tmap->width, tmap->height, 32.0f, vec4(1,1,1,1), TILERENDERFLAG_EXTEND|LAYERRENDERFLAG_TRANSPARENT);
-				}
-				else if(layer->type == LAYERTYPE_QUADS)
-				{
-					MAPITEM_LAYER_QUADS *qlayer = (MAPITEM_LAYER_QUADS *)layer;
-					if(qlayer->image == -1)
-						gfx_texture_set(-1);
-					else
-						gfx_texture_set(img_get(qlayer->image));
-
-					QUAD *quads = (QUAD *)map_get_data_swapped(qlayer->data);
-					
-					gfx_blend_none();
-					render_quads(quads, qlayer->num_quads, envelope_eval, LAYERRENDERFLAG_OPAQUE);
-					gfx_blend_normal();
-					render_quads(quads, qlayer->num_quads, envelope_eval, LAYERRENDERFLAG_TRANSPARENT);
-				}
-				
-				layershot_end();	
-			}
-		}
-		
-		gfx_clip_disable();
-	}
-}
-
 void render_tilemap_generate_skip()
 {
 	for(int g = 0; g < layers_num_groups(); g++)
@@ -443,120 +310,4 @@ void render_tilemap_generate_skip()
 			}
 		}
 	}
-}
-
-static void render_items()
-{
-	int num = snap_num_items(SNAP_CURRENT);
-	for(int i = 0; i < num; i++)
-	{
-		SNAP_ITEM item;
-		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-
-		if(item.type == NETOBJTYPE_PROJECTILE)
-		{
-			render_projectile((const NETOBJ_PROJECTILE *)data, item.id);
-		}
-		else if(item.type == NETOBJTYPE_PICKUP)
-		{
-			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-			if(prev)
-				render_pickup((const NETOBJ_PICKUP *)prev, (const NETOBJ_PICKUP *)data);
-		}
-		else if(item.type == NETOBJTYPE_LASER)
-		{
-			render_laser((const NETOBJ_LASER *)data);
-		}
-		else if(item.type == NETOBJTYPE_FLAG)
-		{
-			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-			if (prev)
-				render_flag((const NETOBJ_FLAG *)prev, (const NETOBJ_FLAG *)data);
-		}
-	}
-
-	// render extra projectiles	
-	for(int i = 0; i < extraproj_num; i++)
-	{
-		if(extraproj_projectiles[i].start_tick < client_tick())
-		{
-			extraproj_projectiles[i] = extraproj_projectiles[extraproj_num-1];
-			extraproj_num--;
-		}
-		else
-			render_projectile(&extraproj_projectiles[i], 0);
-	}
-}
-
-
-static void render_players()
-{
-	int num = snap_num_items(SNAP_CURRENT);
-	for(int i = 0; i < num; i++)
-	{
-		SNAP_ITEM item;
-		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-
-		if(item.type == NETOBJTYPE_CHARACTER)
-		{
-			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-			const void *prev_info = snap_find_item(SNAP_PREV, NETOBJTYPE_PLAYER_INFO, item.id);
-			const void *info = snap_find_item(SNAP_CURRENT, NETOBJTYPE_PLAYER_INFO, item.id);
-
-			if(prev && prev_info && info)
-			{
-				render_player(
-						(const NETOBJ_CHARACTER *)prev,
-						(const NETOBJ_CHARACTER *)data,
-						(const NETOBJ_PLAYER_INFO *)prev_info,
-						(const NETOBJ_PLAYER_INFO *)info
-					);
-			}
-		}
-	}
-}
-
-// renders the complete game world
-void render_world(float center_x, float center_y, float zoom)
-{	
-	// render background layers
-	render_layers(center_x, center_y, 0);
-	gfx_clip_disable();
-	
-	// render trails
-	layershot_begin();
-	particle_render(PARTGROUP_PROJECTILE_TRAIL);
-	layershot_end();
-
-	// render items
-	layershot_begin();
-	render_items();
-	layershot_end();
-
-	// render players above all
-	layershot_begin();
-	render_players();
-	layershot_end();
-
-	// render particles
-	layershot_begin();
-	particle_render(PARTGROUP_EXPLOSIONS);
-	particle_render(PARTGROUP_GENERAL);
-	layershot_end();
-	
-	if(config.dbg_flow)
-		flow_dbg_render();
-
-	// render foreground layers
-	layershot_begin();
-	render_layers(center_x, center_y, 1);
-	layershot_end();
-	gfx_clip_disable();
-
-	// render damage indications
-	layershot_begin();
-	render_damage_indicators();
-	layershot_end();
-	
-	config.cl_layershot = 0;
 }

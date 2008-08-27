@@ -1,19 +1,18 @@
-#include <engine/e_client_interface.h>
-#include "gc_client.hpp"
-#include "../generated/gc_data.hpp"
+#include <base/math.hpp>
+#include <game/generated/gc_data.hpp>
+#include <game/client/gc_render.hpp>
+#include "particles.hpp"
 
-// NOTE: the way the particle system works isn't very cache friendly
-
-enum
+PARTICLES::PARTICLES()
 {
-	MAX_PARTICLES=1024*8,
-};
+	on_reset();
+	render_trail.parts = this;
+	render_explosions.parts = this;
+	render_general.parts = this;
+}
 
-static PARTICLE particles[MAX_PARTICLES];
-static int first_free = -1;
-static int first_part[NUM_PARTGROUPS] = {-1};
 
-void particle_reset()
+void PARTICLES::on_reset()
 {
 	// reset particles
 	for(int i = 0; i < MAX_PARTICLES; i++)
@@ -26,12 +25,11 @@ void particle_reset()
 	particles[MAX_PARTICLES-1].next_part = -1;
 	first_free = 0;
 
-	for(int i = 0; i < NUM_PARTGROUPS; i++)
+	for(int i = 0; i < NUM_GROUPS; i++)
 		first_part[i] = -1;
 }
 
-
-void particle_add(int group, PARTICLE *part)
+void PARTICLES::add(int group, PARTICLE *part)
 {
 	if (first_free == -1)
 		return;
@@ -55,7 +53,7 @@ void particle_add(int group, PARTICLE *part)
 	particles[id].life = 0;
 }
 
-void particle_update(float time_passed)
+void PARTICLES::update(float time_passed)
 {
 	static float friction_fraction = 0;
 	friction_fraction += time_passed;
@@ -70,13 +68,13 @@ void particle_update(float time_passed)
 		friction_fraction -= 0.05f;
 	}
 	
-	for(int g = 0; g < NUM_PARTGROUPS; g++)
+	for(int g = 0; g < NUM_GROUPS; g++)
 	{
 		int i = first_part[g];
 		while(i != -1)
 		{
 			int next = particles[i].next_part;
-			particles[i].vel += flow_get(particles[i].pos)*time_passed * particles[i].flow_affected;
+			//particles[i].vel += flow_get(particles[i].pos)*time_passed * particles[i].flow_affected;
 			particles[i].vel.y += particles[i].gravity*time_passed;
 			
 			for(int f = 0; f < friction_count; f++) // apply friction
@@ -84,7 +82,9 @@ void particle_update(float time_passed)
 			
 			// move the point
 			vec2 vel = particles[i].vel*time_passed;
-			move_point(&particles[i].pos, &vel, 0.1f+0.9f*frandom(), NULL);
+			
+			// TODO: repair me
+			//move_point(&particles[i].pos, &vel, 0.1f+0.9f*frandom(), NULL);
 			particles[i].vel = vel* (1.0f/time_passed);
 			
 			particles[i].life += time_passed;
@@ -115,7 +115,15 @@ void particle_update(float time_passed)
 	}
 }
 
-void particle_render(int group)
+void PARTICLES::on_render()
+{
+	static int64 lasttime = 0;
+	int64 t = time_get();
+	update((float)((t-lasttime)/(double)time_freq()));
+	lasttime = t;
+}
+
+void PARTICLES::render_group(int group)
 {
 	gfx_blend_normal();
 	//gfx_blend_additive();

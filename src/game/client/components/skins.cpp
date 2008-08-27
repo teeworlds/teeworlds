@@ -7,20 +7,18 @@
 #include <base/math.hpp>
 
 #include <engine/e_client_interface.h>
-#include "gc_skin.hpp"
+#include "skins.hpp"
 
-enum
+SKINS::SKINS()
 {
-	MAX_SKINS=256,
-};
+	num_skins = 0;
+}
 
-static skin skins[MAX_SKINS] = {{0}};
-static int num_skins = 0;
-
-static void skinscan(const char *name, int is_dir, void *user)
+void SKINS::skinscan(const char *name, int is_dir, void *user)
 {
+	SKINS *self = (SKINS *)user;
 	int l = strlen(name);
-	if(l < 4 || is_dir || num_skins == MAX_SKINS)
+	if(l < 4 || is_dir || self->num_skins == MAX_SKINS)
 		return;
 	if(strcmp(name+l-4, ".png") != 0)
 		return;
@@ -34,7 +32,7 @@ static void skinscan(const char *name, int is_dir, void *user)
 		return;
 	}
 	
-	skins[num_skins].org_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data, info.format, 0);
+	self->skins[self->num_skins].org_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data, info.format, 0);
 	
 	int body_size = 96; // body size
 	unsigned char *d = (unsigned char *)info.data;
@@ -54,7 +52,7 @@ static void skinscan(const char *name, int is_dir, void *user)
 				}
 			}
 			
-		skins[num_skins].blood_color = normalize(vec3(colors[0], colors[1], colors[2]));
+		self->skins[self->num_skins].blood_color = normalize(vec3(colors[0], colors[1], colors[2]));
 	}
 	
 	// create colorless version
@@ -107,33 +105,34 @@ static void skinscan(const char *name, int is_dir, void *user)
 			}
 	}
 	
-	skins[num_skins].color_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data, info.format, 0);
+	self->skins[self->num_skins].color_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data, info.format, 0);
 	mem_free(info.data);
 
 	// set skin data	
-	strncpy(skins[num_skins].name, name, min((int)sizeof(skins[num_skins].name),l-4));
-	dbg_msg("game", "load skin %s", skins[num_skins].name);
-	num_skins++;
+	strncpy(self->skins[self->num_skins].name, name, min((int)sizeof(self->skins[self->num_skins].name),l-4));
+	dbg_msg("game", "load skin %s", self->skins[self->num_skins].name);
+	self->num_skins++;
 }
 
 
-void skin_init()
+void SKINS::init()
 {
 	// load skins
-	fs_listdir("data/skins", skinscan, 0);
+	num_skins = 0;
+	fs_listdir("data/skins", skinscan, this);
 }
 
-int skin_num()
+int SKINS::num()
 {
 	return num_skins;	
 }
 
-const skin *skin_get(int index)
+const SKINS::SKIN *SKINS::get(int index)
 {
 	return &skins[index%num_skins];
 }
 
-int skin_find(const char *name)
+int SKINS::find(const char *name)
 {
 	for(int i = 0; i < num_skins; i++)
 	{
@@ -142,9 +141,6 @@ int skin_find(const char *name)
 	}
 	return -1;
 }
-
-
-
 
 // these converter functions were nicked from some random internet pages
 static float hue_to_rgb(float v1, float v2, float h)
@@ -157,7 +153,7 @@ static float hue_to_rgb(float v1, float v2, float h)
    return v1;
 }
 
-vec3 hsl_to_rgb(vec3 in)
+static vec3 hsl_to_rgb(vec3 in)
 {
 	float v1, v2;
 	vec3 out;
@@ -185,7 +181,7 @@ vec3 hsl_to_rgb(vec3 in)
 	return out;
 }
 
-vec4 skin_get_color(int v)
+vec4 SKINS::get_color(int v)
 {
 	vec3 r = hsl_to_rgb(vec3((v>>16)/255.0f, ((v>>8)&0xff)/255.0f, 0.5f+(v&0xff)/255.0f*0.5f));
 	return vec4(r.r, r.g, r.b, 1.0f);

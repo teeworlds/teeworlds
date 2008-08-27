@@ -14,11 +14,13 @@ extern "C" {
 
 #include <game/layers.hpp>
 
+
+#include "gameclient.hpp"
+#include "components/skins.hpp"
+
 #include "gc_client.hpp"
-#include "gc_skin.hpp"
 #include "gc_render.hpp"
 #include "gc_map_image.hpp"
-#include "gc_console.hpp"
 
 extern unsigned char internal_data[];
 
@@ -31,7 +33,7 @@ static float load_current;
 
 extern "C" void modc_console_init()
 {
-	client_console_init();
+	//client_console_init();
 }
 
 //binds_save()
@@ -41,8 +43,8 @@ static void load_sounds_thread(void *do_render)
 	// load sounds
 	for(int s = 0; s < data->num_sounds; s++)
 	{
-		if(do_render)
-			render_loading(load_current/load_total);
+		//if(do_render) // TODO: repair me
+			//render_loading(load_current/load_total);
 		for(int i = 0; i < data->sounds[s].num_sounds; i++)
 		{
 			int id = snd_load_wv(data->sounds[s].sounds[i].filename);
@@ -58,17 +60,11 @@ extern "C" void modc_init()
 {
 	for(int i = 0; i < NUM_NETOBJTYPES; i++)
 		snap_set_staticsize(i, netobj_get_size(i));
+		
+	gameclient.on_init();
 	
 	static FONT_SET default_font;
 	int64 start = time_get();
-	
-	// setup input stack
-	input_stack.add_handler(console_input_special_binds, 0); // F1-Fx binds
-	input_stack.add_handler(console_input_cli, 0); // console
-	input_stack.add_handler(chat_input_handle, 0); // chat
-	//input_stack.add_handler() // ui
-	input_stack.add_handler(console_input_normal_binds, 0); // binds
-	
 	
 	int before = gfx_memory_usage();
 	font_set_load(&default_font, "data/fonts/default_font%d.tfnt", "data/fonts/default_font%d.png", "data/fonts/default_font%d_b.png", 14, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 36);
@@ -76,8 +72,8 @@ extern "C" void modc_init()
 	
 	gfx_text_set_default_font(&default_font);
 
-	particle_reset();
-	menu_init();
+	//particle_reset();
+	//menu_init();
 	
 	// setup sound channels
 	snd_set_channel(CHN_GUI, 1.0f, 0.0f);
@@ -100,12 +96,14 @@ extern "C" void modc_init()
 	// load textures
 	for(int i = 0; i < data->num_images; i++)
 	{
-		render_loading(load_current/load_total);
+		// TODO: repair me
+		//render_loading(load_current/load_total);
 		data->images[i].id = gfx_load_texture(data->images[i].filename, IMG_AUTO, 0);
 		load_current++;
 	}
 
-	skin_init();
+	gameclient.skins->init();
+	//skin_init();
 	
 	if(config.cl_threadsoundloading)
 		thread_create(load_sounds_thread, 0);
@@ -118,370 +116,41 @@ extern "C" void modc_init()
 
 extern "C" void modc_save_config()
 {
-	binds_save();
-}
-
-extern "C" void modc_entergame()
-{
-}
-
-extern "C" void modc_shutdown()
-{
-	// shutdown the menu
+	//binds_save();
 }
 
 
 CHARACTER_CORE predicted_prev_char;
 CHARACTER_CORE predicted_char;
-static int predicted_tick = 0;
-static int last_new_predicted_tick = -1;
 
-extern "C" void modc_predict()
-{
-	CHARACTER_CORE before_prev_char = predicted_prev_char;
-	CHARACTER_CORE before_char = predicted_char;
-
-	// repredict character
-	WORLD_CORE world;
-	world.tuning = tuning;
-	int local_cid = -1;
-
-	// search for players
-	for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
-	{
-		SNAP_ITEM item;
-		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-		int client_id = item.id;
-
-		if(item.type == NETOBJTYPE_CHARACTER)
-		{
-			const NETOBJ_CHARACTER *character = (const NETOBJ_CHARACTER *)data;
-			client_datas[client_id].predicted.world = &world;
-			world.characters[client_id] = &client_datas[client_id].predicted;
-
-			client_datas[client_id].predicted.read(character);
-		}
-		else if(item.type == NETOBJTYPE_PLAYER_INFO)
-		{
-			const NETOBJ_PLAYER_INFO *info = (const NETOBJ_PLAYER_INFO *)data;
-			if(info->local)
-				local_cid = client_id;
-		}
-	}
-	
-	// we can't predict without our own id
-	if(local_cid == -1)
-		return;
-
-	// predict
-	for(int tick = client_tick()+1; tick <= client_predtick(); tick++)
-	{
-		// fetch the local
-		if(tick == client_predtick() && world.characters[local_cid])
-			predicted_prev_char = *world.characters[local_cid];
-		
-		// first calculate where everyone should move
-		for(int c = 0; c < MAX_CLIENTS; c++)
-		{
-			if(!world.characters[c])
-				continue;
-
-			mem_zero(&world.characters[c]->input, sizeof(world.characters[c]->input));
-			if(local_cid == c)
-			{
-				// apply player input
-				int *input = client_get_input(tick);
-				if(input)
-					world.characters[c]->input = *((NETOBJ_PLAYER_INPUT*)input);
-			}
-
-			world.characters[c]->tick();
-		}
-
-		// move all players and quantize their data
-		for(int c = 0; c < MAX_CLIENTS; c++)
-		{
-			if(!world.characters[c])
-				continue;
-
-			world.characters[c]->move();
-			world.characters[c]->quantize();
-		}
-		
-		if(tick > last_new_predicted_tick)
-		{
-			last_new_predicted_tick = tick;
-			
-			if(local_cid != -1 && world.characters[local_cid])
-			{
-				vec2 pos = world.characters[local_cid]->pos;
-				int events = world.characters[local_cid]->triggered_events;
-				if(events&COREEVENT_GROUND_JUMP) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
-				if(events&COREEVENT_AIR_JUMP)
-				{
-					effect_air_jump(pos);
-					snd_play_random(CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, pos);
-				}
-				//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
-				//if(events&COREEVENT_HOOK_ATTACH_PLAYER) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, pos);
-				if(events&COREEVENT_HOOK_ATTACH_GROUND) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, pos);
-				//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
-			}
-
-
-			/*
-			dbg_msg("predict", "%d %d %d", tick,
-				(int)world.players[c]->pos.x, (int)world.players[c]->pos.y,
-				(int)world.players[c]->vel.x, (int)world.players[c]->vel.y);*/
-		}
-		
-		if(tick == client_predtick() && world.characters[local_cid])
-			predicted_char = *world.characters[local_cid];
-	}
-	
-	if(config.debug && predicted_tick == client_predtick())
-	{
-		if(predicted_char.pos.x != before_char.pos.x ||
-			predicted_char.pos.y != before_char.pos.y)
-		{
-			dbg_msg("client", "prediction error, (%d %d) (%d %d)", 
-				(int)before_char.pos.x, (int)before_char.pos.y,
-				(int)predicted_char.pos.x, (int)predicted_char.pos.y);
-		}
-
-		if(predicted_prev_char.pos.x != before_prev_char.pos.x ||
-			predicted_prev_char.pos.y != before_prev_char.pos.y)
-		{
-			dbg_msg("client", "prediction error, prev (%d %d) (%d %d)", 
-				(int)before_prev_char.pos.x, (int)before_prev_char.pos.y,
-				(int)predicted_prev_char.pos.x, (int)predicted_prev_char.pos.y);
-		}
-	}
-	
-	predicted_tick = client_predtick();
-}
-
-
-extern "C" void modc_newsnapshot()
-{
-	static int snapshot_count = 0;
-	snapshot_count++;
-	
-	// secure snapshot
-	{
-		int num = snap_num_items(SNAP_CURRENT);
-		for(int index = 0; index < num; index++)
-		{
-			SNAP_ITEM item;
-			void *data = snap_get_item(SNAP_CURRENT, index, &item);
-			if(netobj_validate(item.type, data, item.datasize) != 0)
-			{
-				if(config.debug)
-					dbg_msg("game", "invalidated index=%d type=%d (%s) size=%d id=%d", index, item.type, netobj_get_name(item.type), item.datasize, item.id);
-				snap_invalidate_item(SNAP_CURRENT, index);
-			}
-		}
-	}
-	
-	
-	process_events(SNAP_CURRENT);
-
-	if(config.dbg_stress)
-	{
-		if((client_tick()%250) == 0)
-		{
-			NETMSG_CL_SAY msg;
-			msg.team = -1;
-			msg.message = "galenskap!!!!";
-			msg.pack(MSGFLAG_VITAL);
-			client_send_msg();
-		}
-	}
-
-	clear_object_pointers();
-
-	// setup world view
-	{
-		// 1. fetch local player
-		// 2. set him to the center
-		int num = snap_num_items(SNAP_CURRENT);
-		for(int i = 0; i < num; i++)
-		{
-			SNAP_ITEM item;
-			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-
-			if(item.type == NETOBJTYPE_PLAYER_INFO)
-			{
-				const NETOBJ_PLAYER_INFO *info = (const NETOBJ_PLAYER_INFO *)data;
-				
-				client_datas[info->cid].team = info->team;
-				
-				if(info->local)
-				{
-					netobjects.local_info = info;
-					const void *data = snap_find_item(SNAP_CURRENT, NETOBJTYPE_CHARACTER, item.id);
-					if(data)
-					{
-						netobjects.local_character = (const NETOBJ_CHARACTER *)data;
-						local_character_pos = vec2(netobjects.local_character->x, netobjects.local_character->y);
-
-						const void *p = snap_find_item(SNAP_PREV, NETOBJTYPE_CHARACTER, item.id);
-						if(p)
-							netobjects.local_prev_character = (NETOBJ_CHARACTER *)p;
-					}
-				}
-			}
-			else if(item.type == NETOBJTYPE_GAME)
-				netobjects.gameobj = (NETOBJ_GAME *)data;
-			else if(item.type == NETOBJTYPE_FLAG)
-			{
-				netobjects.flags[item.id%2] = (const NETOBJ_FLAG *)data;
-			}
-		}
-	}
-
-	for(int i = 0; i < MAX_CLIENTS; i++)
-		client_datas[i].update_render_info();
-}
-
-extern "C" void modc_render()
-{
-	// this should be moved around abit
-	if(client_state() == CLIENTSTATE_ONLINE)
-		render_game();
-	else
-		menu_render();
-
-	input_stack.dispatch_input();
-	console_render();
-}
+extern "C" void modc_entergame() {}
+extern "C" void modc_shutdown() {}
+extern "C" void modc_predict() { gameclient.on_predict(); }
+extern "C" void modc_newsnapshot() { gameclient.on_snapshot(); }
+extern "C" int modc_snap_input(int *data) { return gameclient.on_snapinput(data); }
+extern "C" void modc_statechange(int state, int old) { gameclient.on_statechange(state, old); }
+extern "C" void modc_render() { gameclient.on_render(); }
 
 extern "C" void modc_rcon_line(const char *line)
 {
-	console_rcon_print(line);
+	//console_rcon_print(line);
 }
 
-extern "C" int modc_snap_input(int *data)
-{
-	static NETOBJ_PLAYER_INPUT last_data = {0};
-	static int64 last_send_time = 0;
-	
-	// update player state
-	if(chat_mode != CHATMODE_NONE)
-		input_data.player_state = PLAYERSTATE_CHATTING;
-	else if(menu_active)
-		input_data.player_state = PLAYERSTATE_IN_MENU;
-	else
-		input_data.player_state = PLAYERSTATE_PLAYING;
-	last_data.player_state = input_data.player_state;
-	
-	// we freeze the input if chat or menu is activated
-	if(menu_active || chat_mode != CHATMODE_NONE || console_active())
-	{
-		last_data.direction = 0;
-		last_data.hook = 0;
-		last_data.jump = 0;
-		
-		input_data = last_data;
-			
-		mem_copy(data, &input_data, sizeof(input_data));
-		return sizeof(input_data);
-	}
-	
-	input_data.target_x = (int)mouse_pos.x;
-	input_data.target_y = (int)mouse_pos.y;
-	if(!input_data.target_x && !input_data.target_y)
-		input_data.target_y = 1;
-		
-	// set direction
-	input_data.direction = 0;
-	if(input_direction_left && !input_direction_right)
-		input_data.direction = -1;
-	if(!input_direction_left && input_direction_right)
-		input_data.direction = 1;
-
-	// stress testing
-	if(config.dbg_stress)
-	{
-		float t = client_localtime();
-		mem_zero(&input_data, sizeof(input_data));
-
-		input_data.direction = ((int)t/2)&1;
-		input_data.jump = ((int)t);
-		input_data.fire = ((int)(t*10));
-		input_data.hook = ((int)(t*2))&1;
-		input_data.wanted_weapon = ((int)t)%NUM_WEAPONS;
-		input_data.target_x = (int)(sinf(t*3)*100.0f);
-		input_data.target_y = (int)(cosf(t*3)*100.0f);
-	}
-
-	// check if we need to send input
-	bool send = false;
-	if(input_data.direction != last_data.direction) send = true;
-	else if(input_data.jump != last_data.jump) send = true;
-	else if(input_data.fire != last_data.fire) send = true;
-	else if(input_data.hook != last_data.hook) send = true;
-	else if(input_data.player_state != last_data.player_state) send = true;
-	else if(input_data.wanted_weapon != last_data.wanted_weapon) send = true;
-	else if(input_data.next_weapon != last_data.next_weapon) send = true;
-	else if(input_data.prev_weapon != last_data.prev_weapon) send = true;
-
-	if(time_get() > last_send_time + time_freq()/5)
-		send = true;
-
-	last_data = input_data;
-	if(!send)
-		return 0;
-		
-	// copy and return size	
-	last_send_time = time_get();
-	mem_copy(data, &input_data, sizeof(input_data));
-	return sizeof(input_data);
-}
-
-void menu_do_disconnected();
-void menu_do_connecting();
-void menu_do_connected();
-
-extern "C" void modc_statechange(int state, int old)
-{
-	clear_object_pointers();
-	
-	if(state == CLIENTSTATE_OFFLINE)
-	{
-	 	menu_do_disconnected();
-	 	menu_game_active = false;
-	}
-	else if(state == CLIENTSTATE_LOADING)
-		menu_do_connecting();
-	else if(state == CLIENTSTATE_CONNECTING)
-		menu_do_connecting();
-	else if (state == CLIENTSTATE_ONLINE)
-	{
-		menu_active = false;
-	 	menu_game_active = true;
-	 	//snapshot_count = 0;
-	 	
-		menu_do_connected();
-	}
-}
-
+/*
 NETOBJ_PROJECTILE extraproj_projectiles[MAX_EXTRA_PROJECTILES];
 int extraproj_num;
 
 void extraproj_reset()
 {
 	extraproj_num = 0;
-}
-
-char server_motd[900] = {0};
-int64 server_motd_time = 0;
+}*/
 
 extern "C" void modc_message(int msgtype)
 {
 	// special messages
 	if(msgtype == NETMSGTYPE_SV_EXTRAPROJECTILE)
 	{
+		/*
 		int num = msg_unpack_int();
 		
 		for(int k = 0; k < num; k++)
@@ -500,7 +169,7 @@ extern "C" void modc_message(int msgtype)
 			}
 		}
 		
-		return;
+		return;*/
 	}
 	else if(msgtype == NETMSGTYPE_SV_TUNEPARAMS)
 	{
@@ -518,7 +187,9 @@ extern "C" void modc_message(int msgtype)
 		tuning = new_tuning;
 		return;
 	}
-	
+
+	gameclient.on_message(msgtype);
+
 	// normal 
 	void *rawmsg = netmsg_secure_unpack(msgtype);
 	if(!rawmsg)
@@ -526,25 +197,23 @@ extern "C" void modc_message(int msgtype)
 		dbg_msg("client", "dropped weird message '%s' (%d), failed on '%s'", netmsg_get_name(msgtype), msgtype, netmsg_failed_on());
 		return;
 	}
-		
+	
+	
 	if(msgtype == NETMSGTYPE_SV_CHAT)
 	{
-		NETMSG_SV_CHAT *msg = (NETMSG_SV_CHAT *)rawmsg;
-		chat_add_line(msg->cid, msg->team, msg->message);
 
-		if(msg->cid >= 0)
-			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_CLIENT].sounds[0].id, 0);
-		else
-			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_SERVER].sounds[0].id, 0);
 	}
 	else if(msgtype == NETMSGTYPE_SV_BROADCAST)
 	{
+		/*
 		NETMSG_SV_BROADCAST *msg = (NETMSG_SV_BROADCAST *)rawmsg;
 		str_copy(broadcast_text, msg->message, sizeof(broadcast_text));
 		broadcast_time = time_get()+time_freq()*10;
+		*/
 	}
 	else if(msgtype == NETMSGTYPE_SV_MOTD)
 	{
+		/*
 		NETMSG_SV_MOTD *msg = (NETMSG_SV_MOTD *)rawmsg;
 
 		// process escaping			
@@ -566,43 +235,45 @@ extern "C" void modc_message(int msgtype)
 			server_motd_time = time_get()+time_freq()*config.cl_motd_time;
 		else
 			server_motd_time = 0;
+			*/
 	}
 	else if(msgtype == NETMSGTYPE_SV_SETINFO)
 	{
 		NETMSG_SV_SETINFO *msg = (NETMSG_SV_SETINFO *)rawmsg;
 		
-		str_copy(client_datas[msg->cid].name, msg->name, 64);
-		str_copy(client_datas[msg->cid].skin_name, msg->skin, 64);
+		str_copy(gameclient.clients[msg->cid].name, msg->name, 64);
+		str_copy(gameclient.clients[msg->cid].skin_name, msg->skin, 64);
 		
 		// make sure that we don't set a special skin on the client
-		if(client_datas[msg->cid].skin_name[0] == 'x' || client_datas[msg->cid].skin_name[1] == '_')
-			str_copy(client_datas[msg->cid].skin_name, "default", 64);
+		if(gameclient.clients[msg->cid].skin_name[0] == 'x' || gameclient.clients[msg->cid].skin_name[1] == '_')
+			str_copy(gameclient.clients[msg->cid].skin_name, "default", 64);
 		
-		client_datas[msg->cid].skin_info.color_body = skin_get_color(msg->color_body);
-		client_datas[msg->cid].skin_info.color_feet = skin_get_color(msg->color_feet);
-		client_datas[msg->cid].skin_info.size = 64;
+		gameclient.clients[msg->cid].skin_info.color_body = gameclient.skins->get_color(msg->color_body);
+		gameclient.clients[msg->cid].skin_info.color_feet = gameclient.skins->get_color(msg->color_feet);
+		gameclient.clients[msg->cid].skin_info.size = 64;
 		
 		// find new skin
-		client_datas[msg->cid].skin_id = skin_find(client_datas[msg->cid].skin_name);
-		if(client_datas[msg->cid].skin_id < 0)
-			client_datas[msg->cid].skin_id = 0;
+		gameclient.clients[msg->cid].skin_id = gameclient.skins->find(gameclient.clients[msg->cid].skin_name);
+		if(gameclient.clients[msg->cid].skin_id < 0)
+			gameclient.clients[msg->cid].skin_id = 0;
 		
 		if(msg->use_custom_color)
-			client_datas[msg->cid].skin_info.texture = skin_get(client_datas[msg->cid].skin_id)->color_texture;
+			gameclient.clients[msg->cid].skin_info.texture = gameclient.skins->get(gameclient.clients[msg->cid].skin_id)->color_texture;
 		else
 		{
-			client_datas[msg->cid].skin_info.texture = skin_get(client_datas[msg->cid].skin_id)->org_texture;
-			client_datas[msg->cid].skin_info.color_body = vec4(1,1,1,1);
-			client_datas[msg->cid].skin_info.color_feet = vec4(1,1,1,1);
+			gameclient.clients[msg->cid].skin_info.texture = gameclient.skins->get(gameclient.clients[msg->cid].skin_id)->org_texture;
+			gameclient.clients[msg->cid].skin_info.color_body = vec4(1,1,1,1);
+			gameclient.clients[msg->cid].skin_info.color_feet = vec4(1,1,1,1);
 		}
 
-		client_datas[msg->cid].update_render_info();
+		gameclient.clients[msg->cid].update_render_info();
 	}
     else if(msgtype == NETMSGTYPE_SV_WEAPONPICKUP)
     {
-    	NETMSG_SV_WEAPONPICKUP *msg = (NETMSG_SV_WEAPONPICKUP *)rawmsg;
+    	// TODO: repair me
+    	/*NETMSG_SV_WEAPONPICKUP *msg = (NETMSG_SV_WEAPONPICKUP *)rawmsg;
         if(config.cl_autoswitch_weapons)
-        	input_data.wanted_weapon = msg->weapon+1;
+        	input_data.wanted_weapon = msg->weapon+1;*/
     }
 	else if(msgtype == NETMSGTYPE_SV_READYTOENTER)
 	{
@@ -610,7 +281,10 @@ extern "C" void modc_message(int msgtype)
 	}
 	else if(msgtype == NETMSGTYPE_SV_KILLMSG)
 	{
+		/*
 		NETMSG_SV_KILLMSG *msg = (NETMSG_SV_KILLMSG *)rawmsg;
+		
+		gameclient.killmsgs.handle_message((NETMSG_SV_KILLMSG *)rawmsg);
 		
 		// unpack messages
 		KILLMSG kill;
@@ -622,15 +296,15 @@ extern "C" void modc_message(int msgtype)
 
 		// add the message
 		killmsg_current = (killmsg_current+1)%killmsg_max;
-		killmsgs[killmsg_current] = kill;
+		killmsgs[killmsg_current] = kill;*/
 	}
 	else if (msgtype == NETMSGTYPE_SV_EMOTICON)
 	{
 		NETMSG_SV_EMOTICON *msg = (NETMSG_SV_EMOTICON *)rawmsg;
 
 		// apply
-		client_datas[msg->cid].emoticon = msg->emoticon;
-		client_datas[msg->cid].emoticon_start = client_tick();
+		gameclient.clients[msg->cid].emoticon = msg->emoticon;
+		gameclient.clients[msg->cid].emoticon_start = client_tick();
 	}
 	else if(msgtype == NETMSGTYPE_SV_SOUNDGLOBAL)
 	{
@@ -645,35 +319,17 @@ extern "C" void modc_connected()
 	layers_init();
 	col_init();
 	img_init();
-	flow_init();
+	//flow_init();
 	
 	render_tilemap_generate_skip();
 	
+	gameclient.on_connected();
 	//tilemap_init();
-	chat_reset();
-	particle_reset();
-	extraproj_reset();
+	//particle_reset();
+	//extraproj_reset();
 	
-	clear_object_pointers();
-	last_new_predicted_tick = -1;
-
-	for(int i = 0; i < MAX_CLIENTS; i++)
-	{
-		client_datas[i].name[0] = 0;
-		client_datas[i].skin_id = 0;
-		client_datas[i].team = 0;
-		client_datas[i].angle = 0;
-		client_datas[i].emoticon = 0;
-		client_datas[i].emoticon_start = -1;
-		client_datas[i].skin_info.texture = skin_get(0)->color_texture;
-		client_datas[i].skin_info.color_body = vec4(1,1,1,1);
-		client_datas[i].skin_info.color_feet = vec4(1,1,1,1);
-		client_datas[i].update_render_info();
-	}
-
-	for(int i = 0; i < killmsg_max; i++)
-		killmsgs[i].tick = -100000;
-	send_info(true);
+	//last_new_predicted_tick = -1;
 }
 
 extern "C" const char *modc_net_version() { return GAME_NETVERSION; }
+extern "C" const char *modc_getitemname(int type) { return netobj_get_name(type); }

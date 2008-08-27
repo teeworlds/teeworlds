@@ -1686,8 +1686,9 @@ static void render_file_dialog()
 	// filebox
 	ui_do_label(&filebox_label, "Filename:", 10.0f, -1, -1);
 	
-	static int filebox_id = 0;
-	ui_do_edit_box(&filebox_id, &filebox, file_dialog_filename, sizeof(file_dialog_filename), 10.0f);
+	// TODO: repair me
+	//static int filebox_id = 0;
+	//ui_do_edit_box(&filebox_id, &filebox, file_dialog_filename, sizeof(file_dialog_filename), 10.0f);
 
 	file_dialog_complete_filename[0] = 0;
 	strcat(file_dialog_complete_filename, file_dialog_path);
@@ -1861,8 +1862,9 @@ static void render_envelopeeditor(RECT view)
 			ui_do_label(&button, "Name:", 10.0f, -1, -1);
 
 			ui_vsplit_l(&toolbar, 80.0f, &button, &toolbar);
-			static int name_box = 0;
-			ui_do_edit_box(&name_box, &button, envelope->name, sizeof(envelope->name), 10.0f);
+			// TODO: repair me
+			// static int name_box = 0;
+			// ui_do_edit_box(&name_box, &button, envelope->name, sizeof(envelope->name), 10.0f);
 		}
 	}
 	

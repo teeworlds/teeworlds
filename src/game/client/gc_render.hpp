@@ -50,9 +50,6 @@ void draw_round_rect_ext(float x, float y, float w, float h, float r, int corner
 void ui_draw_rect(const RECT *r, vec4 color, int corners, float rounding);
 
 // larger rendering methods
-void menu_render();
-void render_game();
-void render_world(float center_x, float center_y, float zoom);
 void render_loading(float percent);
 
 void render_damage_indicators();
@@ -61,15 +58,8 @@ void render_particles();
 void render_tilemap_generate_skip();
 
 // object render methods (gc_render_obj.cpp)
-void render_tee(class ANIM_STATE *anim, TEE_RENDER_INFO *info, int emote, vec2 dir, vec2 pos);
-void render_flag(const struct NETOBJ_FLAG *prev, const struct NETOBJ_FLAG *current);
-void render_pickup(const struct NETOBJ_PICKUP *prev, const struct NETOBJ_PICKUP *current);
-void render_projectile(const struct NETOBJ_PROJECTILE *current, int itemid);
-void render_laser(const struct NETOBJ_LASER *current);
-void render_player(
-	const struct NETOBJ_CHARACTER *prev_char, const struct NETOBJ_CHARACTER *player_char,
-	const struct NETOBJ_PLAYER_INFO *prev_info, const struct NETOBJ_PLAYER_INFO *player_info);
-	
+void render_tee(class ANIMSTATE *anim, TEE_RENDER_INFO *info, int emote, vec2 dir, vec2 pos);
+
 // map render methods (gc_render_map.cpp)
 void render_eval_envelope(ENVPOINT *points, int num_points, int channels, float time, float *result);
 void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, int env, float *channels), int flags);

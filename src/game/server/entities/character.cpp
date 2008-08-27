@@ -692,10 +692,6 @@ bool CHARACTER::take_damage(vec2 force, int dmg, int from, int weapon)
 	if(from == player->client_id)
 		dmg = max(1, dmg/2);
 
-	// CTF and TDM (TODO: check for FF)
-	//if (gameobj->gametype != GAMETYPE_DM && from >= 0 && players[from].team == team)
-		//return false;
-
 	damage_taken++;
 
 	// create healthmod indicator
