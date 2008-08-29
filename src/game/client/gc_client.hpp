@@ -5,15 +5,6 @@
 
 #include <game/client/gc_render.hpp>
 
-// sound channels
-enum
-{
-	CHN_GUI=0,
-	CHN_MUSIC,
-	CHN_WORLD,
-	CHN_GLOBAL,
-};
-
 extern TUNING_PARAMS tuning;
 
 // predicted players
@@ -31,9 +22,8 @@ extern int extraproj_num;
 void extraproj_reset();
 
 // various helpers
-void snd_play_random(int chn, int setid, float vol, vec2 pos);
-
-void chat_enable_mode(int team);
+//void snd_play_random(int chn, int setid, float vol, vec2 pos);
+//void chat_enable_mode(int team);
 
 inline vec2 random_dir() { return normalize(vec2(frandom()-0.5f, frandom()-0.5f)); }
 

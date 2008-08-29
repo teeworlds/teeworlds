@@ -360,12 +360,6 @@ void CONSOLE::on_init()
 
 
 /*
-static void client_console_print(const char *str)
-{
-	// TODO: repair me
-	//local_console.print_line(str);
-}
-
 void console_rcon_print(const char *line)
 {
 	// TODO: repair me
@@ -376,16 +370,6 @@ void console_rcon_print(const char *line)
 static void con_team(void *result, void *user_data)
 {
 	send_switch_team(console_arg_int(result, 0));
-}
-
-static void con_say(void *result, void *user_data)
-{
-	chat_say(0, console_arg_string(result, 0));
-}
-
-static void con_sayteam(void *result, void *user_data)
-{
-	chat_say(1, console_arg_string(result, 0));
 }
 
 void send_kill(int client_id);
@@ -421,16 +405,6 @@ static void con_key_input_nextprev_weapon(void *result, void *user_data)
 	input_data.wanted_weapon = 0;
 }
 
-static void con_toggle_local_console(void *result, void *user_data)
-{
-	console_toggle(0);
-}
-
-static void con_toggle_remote_console(void *result, void *user_data)
-{
-	console_toggle(1);
-}
-
 static void con_emote(void *result, void *user_data)
 {
 	send_emoticon(console_arg_int(result, 0));
@@ -458,30 +432,8 @@ void client_console_init()
 	MACRO_REGISTER_COMMAND("dump_binds", "", con_dump_binds, 0x0);
 
 	// chatting
-	MACRO_REGISTER_COMMAND("say", "r", con_say, 0x0);
-	MACRO_REGISTER_COMMAND("say_team", "r", con_sayteam, 0x0);
-	MACRO_REGISTER_COMMAND("chat", "s", con_chat, 0x0);
 	MACRO_REGISTER_COMMAND("emote", "i", con_emote, 0);
-
-	// game commands
-	MACRO_REGISTER_COMMAND("+left", "", con_key_input_state, &input_direction_left);
-	MACRO_REGISTER_COMMAND("+right", "", con_key_input_state, &input_direction_right);
-	MACRO_REGISTER_COMMAND("+jump", "", con_key_input_state, &input_data.jump);
-	MACRO_REGISTER_COMMAND("+hook", "", con_key_input_state, &input_data.hook);
-	MACRO_REGISTER_COMMAND("+fire", "", con_key_input_counter, &input_data.fire);
-	MACRO_REGISTER_COMMAND("+weapon1", "", con_key_input_weapon, (void *)1);
-	MACRO_REGISTER_COMMAND("+weapon2", "", con_key_input_weapon, (void *)2);
-	MACRO_REGISTER_COMMAND("+weapon3", "", con_key_input_weapon, (void *)3);
-	MACRO_REGISTER_COMMAND("+weapon4", "", con_key_input_weapon, (void *)4);
-	MACRO_REGISTER_COMMAND("+weapon5", "", con_key_input_weapon, (void *)5);
-
-	MACRO_REGISTER_COMMAND("+nextweapon", "", con_key_input_nextprev_weapon, &input_data.next_weapon);
-	MACRO_REGISTER_COMMAND("+prevweapon", "", con_key_input_nextprev_weapon, &input_data.prev_weapon);
-	
 	MACRO_REGISTER_COMMAND("+emote", "", con_key_input_state, &emoticon_selector_active);
-	MACRO_REGISTER_COMMAND("+scoreboard", "", con_key_input_state, &scoreboard_active);
-	
-	binds_default();
 }
 
 bool console_input_cli(INPUT_EVENT e, void *user_data)
@@ -524,41 +476,4 @@ bool console_input_normal_binds(INPUT_EVENT e, void *user_data)
 		return false;
 	return console_execute_event(e);
 }
-
-void console_toggle(int type)
-{
-	if(console_type != type && (console_state == CONSOLE_OPEN || console_state == CONSOLE_OPENING))
-	{
-		// don't toggle console, just switch what console to use
-	}
-	else
-	{	
-		if (console_state == CONSOLE_CLOSED || console_state == CONSOLE_OPEN)
-		{
-			state_change_end = time_now()+state_change_duration;
-		}
-		else
-		{
-			float progress = state_change_end-time_now();
-			float reversed_progress = state_change_duration-progress;
-
-			state_change_end = time_now()+reversed_progress;
-		}
-
-		if (console_state == CONSOLE_CLOSED || console_state == CONSOLE_CLOSING)
-			console_state = CONSOLE_OPENING;
-		else
-			console_state = CONSOLE_CLOSING;
-	}
-
-	console_type = type;
-}
-
-
-
-int console_active()
-{
-	return console_state != CONSOLE_CLOSED;
-}
-
 */

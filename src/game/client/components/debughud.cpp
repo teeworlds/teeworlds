@@ -31,7 +31,7 @@ void DEBUGHUD::render_netcorrections()
 
 	float velspeed = length(vec2(gameclient.snap.local_character->vx/256.0f, gameclient.snap.local_character->vy/256.0f))*50;
 	
-	float ramp = velocity_ramp(velspeed, tuning.velramp_start, tuning.velramp_range, tuning.velramp_curvature);
+	float ramp = velocity_ramp(velspeed, gameclient.tuning.velramp_start, gameclient.tuning.velramp_range, gameclient.tuning.velramp_curvature);
 	
 	char buf[512];
 	str_format(buf, sizeof(buf), "%.0f\n%.0f\n%.2f\n%d %s\n%d %d",
@@ -59,7 +59,7 @@ void DEBUGHUD::render_tuning()
 	{
 		char buf[128];
 		float current, standard;
-		tuning.get(i, &current);
+		gameclient.tuning.get(i, &current);
 		standard_tuning.get(i, &standard);
 		
 		if(standard == current)
@@ -96,7 +96,7 @@ void DEBUGHUD::render_tuning()
 	for(int i = 0; i < 100; i++)
 	{
 		float speed = i/100.0f * 3000;
-		float ramp = velocity_ramp(speed, tuning.velramp_start, tuning.velramp_range, tuning.velramp_curvature);
+		float ramp = velocity_ramp(speed, gameclient.tuning.velramp_start, gameclient.tuning.velramp_range, gameclient.tuning.velramp_curvature);
 		float rampedspeed = (speed * ramp)/1000.0f;
 		gfx_lines_draw((i-1)*2, y+height-pv*height, i*2, y+height-rampedspeed*height);
 		//gfx_lines_draw((i-1)*2, 200, i*2, 200);

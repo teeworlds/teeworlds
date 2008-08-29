@@ -38,8 +38,5 @@ void CAMERA::on_render()
 		
 		center = gameclient.local_character_pos + camera_offset;
 	}
-
-	// set listner pos
-	snd_set_listener_pos(center.x, center.y);
 }
 

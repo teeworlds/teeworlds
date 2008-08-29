@@ -23,18 +23,18 @@ void ITEMS::render_projectile(const NETOBJ_PROJECTILE *current, int itemid)
 	float speed = 0;
 	if(current->type == WEAPON_GRENADE)
 	{
-		curvature = tuning.grenade_curvature;
-		speed = tuning.grenade_speed;
+		curvature = gameclient.tuning.grenade_curvature;
+		speed = gameclient.tuning.grenade_speed;
 	}
 	else if(current->type == WEAPON_SHOTGUN)
 	{
-		curvature = tuning.shotgun_curvature;
-		speed = tuning.shotgun_speed;
+		curvature = gameclient.tuning.shotgun_curvature;
+		speed = gameclient.tuning.shotgun_speed;
 	}
 	else if(current->type == WEAPON_GUN)
 	{
-		curvature = tuning.gun_curvature;
-		speed = tuning.gun_speed;
+		curvature = gameclient.tuning.gun_curvature;
+		speed = gameclient.tuning.gun_speed;
 	}
 
 	float ct = (client_tick()-current->start_tick)/(float)SERVER_TICK_SPEED + client_ticktime()*1/(float)SERVER_TICK_SPEED;
@@ -151,7 +151,7 @@ void ITEMS::render_laser(const struct NETOBJ_LASER *current)
 
 	float ticks = client_tick() + client_intratick() - current->start_tick;
 	float ms = (ticks/50.0f) * 1000.0f;
-	float a =  ms / tuning.laser_bounce_delay;
+	float a =  ms / gameclient.tuning.laser_bounce_delay;
 	a = clamp(a, 0.0f, 1.0f);
 	float ia = 1-a;
 	

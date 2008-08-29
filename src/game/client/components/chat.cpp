@@ -7,6 +7,8 @@
 #include <game/client/gameclient.hpp>
 #include <game/client/gc_client.hpp>
 
+#include <game/client/components/sounds.hpp>
+
 #include "chat.hpp"
 
 void CHAT::on_reset()
@@ -16,8 +18,6 @@ void CHAT::on_reset()
 		lines[i].tick = -1000000;
 	current_line = 0;
 }
-
-
 
 void CHAT::con_say(void *result, void *user_data)
 {
@@ -87,9 +87,9 @@ void CHAT::on_message(int msgtype, void *rawmsg)
 		add_line(msg->cid, msg->team, msg->message);
 
 		if(msg->cid >= 0) // TODO: repair me
-			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_CLIENT].sounds[0].id, 0);
+			gameclient.sounds->play(SOUNDS::CHN_GUI, SOUND_CHAT_CLIENT, 0, vec2(0,0));
 		else
-			snd_play(CHN_GUI, data->sounds[SOUND_CHAT_SERVER].sounds[0].id, 0);
+			gameclient.sounds->play(SOUNDS::CHN_GUI, SOUND_CHAT_SERVER, 0, vec2(0,0));
 	}
 }
 

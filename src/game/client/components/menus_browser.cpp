@@ -2,9 +2,9 @@
 #include <string.h> // strcmp, strlen, strncpy
 #include <stdlib.h> // atoi
 
+#include <engine/e_client_interface.h>
+
 extern "C" {
-	#include <engine/e_client_interface.h>
-	#include <engine/e_config.h>
 	#include <engine/client/ec_font.h>
 }
 

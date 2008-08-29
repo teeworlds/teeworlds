@@ -32,6 +32,9 @@ class GAMECLIENT
 
 public:
 
+	// TODO: move this
+	TUNING_PARAMS tuning;
+
 	vec2 local_character_pos;
 	vec2 local_target_pos;
 
@@ -103,6 +106,7 @@ public:
 	class CAMERA *camera;
 	class CONTROLS *controls;
 	class EFFECTS *effects;
+	class SOUNDS *sounds;
 };
 
 extern GAMECLIENT gameclient;

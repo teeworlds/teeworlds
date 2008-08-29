@@ -73,12 +73,6 @@ extern "C" void modc_init()
 	//particle_reset();
 	//menu_init();
 	
-	// setup sound channels
-	snd_set_channel(CHN_GUI, 1.0f, 0.0f);
-	snd_set_channel(CHN_MUSIC, 1.0f, 0.0f);
-	snd_set_channel(CHN_WORLD, 0.9f, 1.0f);
-	snd_set_channel(CHN_GLOBAL, 1.0f, 0.0f);
-
 	// load the data container
 	//data = load_data_from_memory(internal_data);
 
@@ -145,47 +139,6 @@ void extraproj_reset()
 
 extern "C" void modc_message(int msgtype)
 {
-	// special messages
-	if(msgtype == NETMSGTYPE_SV_EXTRAPROJECTILE)
-	{
-		/*
-		int num = msg_unpack_int();
-		
-		for(int k = 0; k < num; k++)
-		{
-			NETOBJ_PROJECTILE proj;
-			for(unsigned i = 0; i < sizeof(NETOBJ_PROJECTILE)/sizeof(int); i++)
-				((int *)&proj)[i] = msg_unpack_int();
-				
-			if(msg_unpack_error())
-				return;
-				
-			if(extraproj_num != MAX_EXTRA_PROJECTILES)
-			{
-				extraproj_projectiles[extraproj_num] = proj;
-				extraproj_num++;
-			}
-		}
-		
-		return;*/
-	}
-	else if(msgtype == NETMSGTYPE_SV_TUNEPARAMS)
-	{
-		// unpack the new tuning
-		TUNING_PARAMS new_tuning;
-		int *params = (int *)&new_tuning;
-		for(unsigned i = 0; i < sizeof(TUNING_PARAMS)/sizeof(int); i++)
-			params[i] = msg_unpack_int();
-
-		// check for unpacking errors
-		if(msg_unpack_error())
-			return;
-			
-		// apply new tuning
-		tuning = new_tuning;
-		return;
-	}
-
 	gameclient.on_message(msgtype);
 }
 

@@ -1,8 +1,3 @@
-
-extern "C" {
-	#include <engine/e_config.h>
-}
-
 #include <engine/e_client_interface.h>
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
@@ -17,6 +12,7 @@ extern "C" {
 #include <game/client/components/flow.hpp>
 #include <game/client/components/skins.hpp>
 #include <game/client/components/effects.hpp>
+#include <game/client/components/sounds.hpp>
 
 #include "players.hpp"
 
@@ -178,7 +174,7 @@ void PLAYERS::render_player(
 		static int64 skid_sound_time = 0;
 		if(time_get()-skid_sound_time > time_freq()/10)
 		{
-			snd_play_random(CHN_WORLD, SOUND_PLAYER_SKID, 0.25f, position);
+			gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_PLAYER_SKID, 0.25f, position);
 			skid_sound_time = time_get();
 		}
 		

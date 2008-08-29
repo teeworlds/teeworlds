@@ -22,6 +22,7 @@
 #include "components/controls.hpp"
 #include "components/effects.hpp"
 #include "components/scoreboard.hpp"
+#include "components/sounds.hpp"
 
 GAMECLIENT gameclient;
 
@@ -42,6 +43,7 @@ static DEBUGHUD debughud;
 static CONTROLS controls;
 static EFFECTS effects;
 static SCOREBOARD scoreboard;
+static SOUNDS sounds;
 
 static PLAYERS players;
 static ITEMS items;
@@ -65,6 +67,7 @@ void GAMECLIENT::on_init()
 	camera = &::camera;
 	controls = &::controls;
 	effects = &::effects;
+	sounds = &::sounds;
 	
 	// make a list of all the systems, make sure to add them in the corrent render order
 	all.add(skins);
@@ -73,6 +76,7 @@ void GAMECLIENT::on_init()
 	all.add(binds);
 	all.add(controls);
 	all.add(camera);
+	all.add(sounds);
 	all.add(particles); // doesn't render anything, just updates all the particles
 	
 	all.add(&maplayers_background); // first to render
@@ -216,6 +220,48 @@ void GAMECLIENT::on_render()
 
 void GAMECLIENT::on_message(int msgtype)
 {
+	
+	// special messages
+	if(msgtype == NETMSGTYPE_SV_EXTRAPROJECTILE)
+	{
+		/*
+		int num = msg_unpack_int();
+		
+		for(int k = 0; k < num; k++)
+		{
+			NETOBJ_PROJECTILE proj;
+			for(unsigned i = 0; i < sizeof(NETOBJ_PROJECTILE)/sizeof(int); i++)
+				((int *)&proj)[i] = msg_unpack_int();
+				
+			if(msg_unpack_error())
+				return;
+				
+			if(extraproj_num != MAX_EXTRA_PROJECTILES)
+			{
+				extraproj_projectiles[extraproj_num] = proj;
+				extraproj_num++;
+			}
+		}
+		
+		return;*/
+	}
+	else if(msgtype == NETMSGTYPE_SV_TUNEPARAMS)
+	{
+		// unpack the new tuning
+		TUNING_PARAMS new_tuning;
+		int *params = (int *)&new_tuning;
+		for(unsigned i = 0; i < sizeof(TUNING_PARAMS)/sizeof(int); i++)
+			params[i] = msg_unpack_int();
+
+		// check for unpacking errors
+		if(msg_unpack_error())
+			return;
+			
+		// apply new tuning
+		tuning = new_tuning;
+		return;
+	}
+	
 	void *rawmsg = netmsg_secure_unpack(msgtype);
 	if(!rawmsg)
 	{
@@ -281,7 +327,7 @@ void GAMECLIENT::on_message(int msgtype)
 	else if(msgtype == NETMSGTYPE_SV_SOUNDGLOBAL)
 	{
 		NETMSG_SV_SOUNDGLOBAL *msg = (NETMSG_SV_SOUNDGLOBAL *)rawmsg;
-		snd_play_random(CHN_GLOBAL, msg->soundid, 1.0f, vec2(0,0));
+		gameclient.sounds->play(SOUNDS::CHN_GLOBAL, msg->soundid, 1.0f, vec2(0,0));
 	}		
 }
 
@@ -333,7 +379,7 @@ void GAMECLIENT::process_events()
 		else if(item.type == NETEVENTTYPE_SOUNDWORLD)
 		{
 			NETEVENT_SOUNDWORLD *ev = (NETEVENT_SOUNDWORLD *)data;
-			snd_play_random(CHN_WORLD, ev->soundid, 1.0f, vec2(ev->x, ev->y));
+			gameclient.sounds->play(SOUNDS::CHN_WORLD, ev->soundid, 1.0f, vec2(ev->x, ev->y));
 		}
 	}
 }
@@ -501,15 +547,15 @@ void GAMECLIENT::on_predict()
 			{
 				vec2 pos = world.characters[local_cid]->pos;
 				int events = world.characters[local_cid]->triggered_events;
-				if(events&COREEVENT_GROUND_JUMP) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
+				if(events&COREEVENT_GROUND_JUMP) gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
 				if(events&COREEVENT_AIR_JUMP)
 				{
 					gameclient.effects->air_jump(pos);
-					snd_play_random(CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, pos);
+					gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, pos);
 				}
 				//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
 				//if(events&COREEVENT_HOOK_ATTACH_PLAYER) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, pos);
-				if(events&COREEVENT_HOOK_ATTACH_GROUND) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, pos);
+				if(events&COREEVENT_HOOK_ATTACH_GROUND) gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, pos);
 				//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
 			}
 

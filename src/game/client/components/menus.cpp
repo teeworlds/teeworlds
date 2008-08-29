@@ -11,9 +11,9 @@
 #include "menus.hpp"
 #include "skins.hpp"
 
+#include <engine/e_client_interface.h>
+
 extern "C" {
-	#include <engine/e_client_interface.h>
-	#include <engine/e_config.h>
 	#include <engine/client/ec_font.h>
 }
 

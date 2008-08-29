@@ -173,7 +173,7 @@ void HUD::render_tunewarning()
 
 	// render warning about non standard tuning
 	bool flash = time_get()/(time_freq()/2)%2 == 0;
-	if(config.cl_warning_tuning && memcmp(&standard_tuning, &tuning, sizeof(TUNING_PARAMS)) != 0)
+	if(config.cl_warning_tuning && memcmp(&standard_tuning, &gameclient.tuning, sizeof(TUNING_PARAMS)) != 0)
 	{
 		const char *text = "Warning! Server is running non-standard tuning.";
 		if(flash)
