@@ -2,10 +2,12 @@
 
 class MOTD : public COMPONENT
 {
-public:
 	// motd
 	int64 server_motd_time;
 	char server_motd[900]; // FUGLY
+public:
+	void clear();
+	bool is_active();
 	
 	virtual void on_reset();
 	virtual void on_render();

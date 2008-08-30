@@ -11,33 +11,42 @@
 	
 void MOTD::on_reset()
 {
+	clear();
+}
+
+void MOTD::clear()
+{
 	server_motd_time = 0;
+}
+
+bool MOTD::is_active()
+{
+	return time_get() < server_motd_time;	
 }
 
 void MOTD::on_render()
 {
+	if(!is_active())
+		return;
+		
 	float width = 400*3.0f*gfx_screenaspect();
 	float height = 400*3.0f;
+
+	gfx_mapscreen(0, 0, width, height);
 	
-	// TODO: repair me
-	if(/* !do_scoreboard && */ time_get() < server_motd_time)
-	{
-		gfx_mapscreen(0, 0, width, height);
-		
-		float h = 800.0f;
-		float w = 650.0f;
-		float x = width/2 - w/2;
-		float y = 150.0f;
+	float h = 800.0f;
+	float w = 650.0f;
+	float x = width/2 - w/2;
+	float y = 150.0f;
 
-		gfx_blend_normal();
-		gfx_texture_set(-1);
-		gfx_quads_begin();
-		gfx_setcolor(0,0,0,0.5f);
-		draw_round_rect(x, y, w, h, 40.0f);
-		gfx_quads_end();
+	gfx_blend_normal();
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_setcolor(0,0,0,0.5f);
+	draw_round_rect(x, y, w, h, 40.0f);
+	gfx_quads_end();
 
-		gfx_text(0, x+40.0f, y+40.0f, 32.0f, server_motd, (int)(w-80.0f));
-	}
+	gfx_text(0, x+40.0f, y+40.0f, 32.0f, server_motd, (int)(w-80.0f));
 }
 
 void MOTD::on_message(int msgtype, void *rawmsg)
@@ -70,6 +79,11 @@ void MOTD::on_message(int msgtype, void *rawmsg)
 
 bool MOTD::on_input(INPUT_EVENT e)
 {
+	if(is_active() && e.flags&INPFLAG_PRESS && e.key == KEY_ESC)
+	{
+		clear();
+		return true;
+	}
 	return false;
 }
 

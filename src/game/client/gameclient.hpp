@@ -107,6 +107,7 @@ public:
 	class CONTROLS *controls;
 	class EFFECTS *effects;
 	class SOUNDS *sounds;
+	class MOTD *motd;
 };
 
 extern GAMECLIENT gameclient;

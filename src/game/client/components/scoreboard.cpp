@@ -5,6 +5,7 @@
 #include <game/client/gameclient.hpp>
 #include <game/client/animstate.hpp>
 #include <game/client/gc_render.hpp>
+#include <game/client/components/motd.hpp>
 #include "scoreboard.hpp"
 
 
@@ -226,6 +227,9 @@ void SCOREBOARD::on_render()
 {
 	if(!active)
 		return;
+		
+	// if the score board is active, then we should clear the motd message aswell
+	gameclient.motd->clear();
 	
 	// TODO: repair me
 	/*

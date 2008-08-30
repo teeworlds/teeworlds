@@ -70,6 +70,7 @@ void GAMECLIENT::on_init()
 	controls = &::controls;
 	effects = &::effects;
 	sounds = &::sounds;
+	motd = &::motd;
 	
 	// make a list of all the systems, make sure to add them in the corrent render order
 	all.add(skins);
@@ -95,12 +96,13 @@ void GAMECLIENT::on_init()
 	all.add(&broadcast);
 	all.add(&debughud);
 	all.add(&scoreboard);
-	all.add(&motd);
+	all.add(motd);
 	all.add(menus);
 	all.add(console);
 	
 	// build the input stack
 	input.add(console);
+	input.add(motd); // for pressing esc to remove it
 	input.add(menus);
 	input.add(chat);
 	input.add(&emoticon);
@@ -110,14 +112,6 @@ void GAMECLIENT::on_init()
 	// init all components
 	for(int i = 0; i < all.num; i++)
 		all.components[i]->on_init();
-		
-	/*
-	input_stack.add_handler(console_input_special_binds, 0); // F1-Fx binds
-	input_stack.add_handler(console_input_cli, 0); // console
-	input_stack.add_handler(chat_input_handle, 0); // chat
-	//input_stack.add_handler() // ui
-	input_stack.add_handler(console_input_normal_binds, 0); // binds
-	*/
 }
 
 void GAMECLIENT::dispatch_input()
