@@ -16,6 +16,7 @@ extern "C" {
 
 #include "e_console.h"
 #include "e_config.h"
+#include "client/ec_font.h"
 
 #ifdef __cplusplus
 }
