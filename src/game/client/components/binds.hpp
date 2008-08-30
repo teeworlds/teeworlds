@@ -6,14 +6,20 @@ class BINDS : public COMPONENT
 public:
 	BINDS();
 	
+	class BINDS_SPECIAL : public COMPONENT
+	{
+	public:
+		BINDS *binds;
+		virtual bool on_input(INPUT_EVENT e);
+	};
+	
+	BINDS_SPECIAL special_binds;
+	
 	void bind(int keyid, const char *str);
 	void set_defaults();
 	void unbindall();
 	const char *get(int keyid);
 	
-	/*virtual void on_reset();
-	virtual void on_render();
-	virtual void on_message(int msgtype, void *rawmsg);*/
 	virtual void on_init();
 	virtual bool on_input(INPUT_EVENT e);
 };

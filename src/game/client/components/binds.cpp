@@ -1,9 +1,25 @@
 #include <engine/e_client_interface.h>
 #include "binds.hpp"
 
+bool BINDS::BINDS_SPECIAL::on_input(INPUT_EVENT e)
+{
+	// don't handle invalid events and keys that arn't set to anything
+	if(e.key >= KEY_F1 && e.key <= KEY_F25 && binds->keybindings[e.key][0] != 0)
+	{
+		int stroke = 0;
+		if(e.flags&INPFLAG_PRESS)
+			stroke = 1;
+		console_execute_line_stroked(stroke, binds->keybindings[e.key]);
+		return true;
+	}
+	
+	return false;
+}
+
 BINDS::BINDS()
 {
 	mem_zero(keybindings, sizeof(keybindings));
+	special_binds.binds = this;
 }
 
 void BINDS::bind(int keyid, const char *str)
