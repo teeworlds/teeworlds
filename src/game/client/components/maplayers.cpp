@@ -27,7 +27,6 @@ static void mapscreen_to_group(float center_x, float center_y, MAPITEM_GROUP *gr
 	gfx_mapscreen(points[0], points[1], points[2], points[3]);
 }
 
-
 static void envelope_eval(float time_offset, int env, float *channels)
 {
 	channels[0] = 0;
@@ -56,6 +55,9 @@ static void envelope_eval(float time_offset, int env, float *channels)
 
 void MAPLAYERS::on_render()
 {
+	if(client_state() != CLIENTSTATE_ONLINE)
+		return;
+	
 	vec2 center = gameclient.camera->center;
 	//float center_x = gameclient.camera->center.x;
 	//float center_y = gameclient.camera->center.y;
