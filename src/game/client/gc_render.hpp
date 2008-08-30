@@ -5,7 +5,7 @@
 #include <base/vmath.hpp>
 
 #include "../mapitems.hpp"
-#include "gc_ui.hpp"
+#include "ui.hpp"
 
 struct TEE_RENDER_INFO
 {

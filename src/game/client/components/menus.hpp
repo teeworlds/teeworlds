@@ -1,7 +1,7 @@
 #include <base/vmath.hpp>
 
 #include <game/client/component.hpp>
-#include <game/client/gc_ui.hpp>
+#include <game/client/ui.hpp>
 
 class MENUS : public COMPONENT
 {	

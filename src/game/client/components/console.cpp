@@ -15,7 +15,7 @@ extern "C" {
 #include <cstring>
 #include <cstdio>
 
-#include <game/client/gc_ui.hpp>
+#include <game/client/ui.hpp>
 
 #include <game/version.hpp>
 

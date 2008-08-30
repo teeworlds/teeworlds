@@ -25,7 +25,7 @@ extern "C" {
 #include <game/client/gameclient.hpp>
 #include <game/client/animstate.hpp>
 #include <game/client/gc_render.hpp>
-#include <game/client/gc_ui.hpp>
+#include <game/client/ui.hpp>
 #include <mastersrv/mastersrv.h>
 
 vec4 MENUS::gui_color;

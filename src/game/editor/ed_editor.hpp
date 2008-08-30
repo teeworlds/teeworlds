@@ -15,7 +15,7 @@ extern "C" {
 	#include <engine/e_config.h>
 }
 
-#include <game/client/gc_ui.hpp>
+#include <game/client/ui.hpp>
 
 typedef void (*INDEX_MODIFY_FUNC)(int *index);
 

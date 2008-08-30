@@ -13,7 +13,7 @@ extern "C" {
 }
 
 #include <game/client/gc_map_image.hpp>
-#include <game/client/gc_ui.hpp>
+#include <game/client/ui.hpp>
 #include <game/gamecore.hpp>
 #include <game/client/gc_render.hpp>
 

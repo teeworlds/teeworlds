@@ -3,7 +3,7 @@
 
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
-#include "gc_ui.hpp"
+#include "ui.hpp"
 
 /********************************************************
  UI                                                      

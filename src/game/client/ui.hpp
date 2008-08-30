@@ -1,6 +1,6 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#ifndef _UI_H
-#define _UI_H
+#ifndef FILE_GAME_CLIENT_UI_H
+#define FILE_GAME_CLIENT_UI_H
 
 typedef struct 
 {

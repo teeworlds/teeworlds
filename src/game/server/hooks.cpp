@@ -11,7 +11,6 @@
 #include <game/collision.hpp>
 #include <game/layers.hpp>
 
-
 #include <game/gamecore.hpp>
 
 #include "gamecontext.hpp"

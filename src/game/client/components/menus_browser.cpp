@@ -11,7 +11,7 @@ extern "C" {
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
 
-#include <game/client/gc_ui.hpp>
+#include <game/client/ui.hpp>
 #include <game/client/gc_render.hpp>
 #include "menus.hpp"
 
