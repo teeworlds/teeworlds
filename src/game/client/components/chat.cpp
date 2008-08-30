@@ -52,7 +52,9 @@ bool CHAT::on_input(INPUT_EVENT e)
 	if(mode == MODE_NONE)
 		return false;
 
-	if(e.flags&INPFLAG_PRESS && (e.key == KEY_ENTER || e.key == KEY_KP_ENTER))
+	if(e.flags&INPFLAG_PRESS && e.key == KEY_ESC)
+		mode = MODE_NONE;
+	else if(e.flags&INPFLAG_PRESS && (e.key == KEY_ENTER || e.key == KEY_KP_ENTER))
 	{
 		if(input.get_string()[0])
 			gameclient.chat->say(mode == MODE_ALL ? 0 : 1, input.get_string());

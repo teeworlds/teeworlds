@@ -38,6 +38,10 @@ vec4 MENUS::color_tabbar_inactive_ingame;
 vec4 MENUS::color_tabbar_active_ingame;
 
 
+INPUT_EVENT MENUS::inputevents[MAX_INPUTEVENTS];
+int MENUS::num_inputevents;
+
+
 MENUS::MENUS()
 {
 	popup = POPUP_NONE;
@@ -46,6 +50,7 @@ MENUS::MENUS()
 	
 	need_restart = false;
 	menu_active = true;
+	num_inputevents = 0;
 }
 
 vec4 MENUS::button_color_mul(const void *id)
@@ -188,9 +193,9 @@ int MENUS::ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, f
 			}
 		}
 
-		for(int i = 0; i < inp_num_events(); i++)
+		for(int i = 0; i < num_inputevents; i++)
 		{
-			INPUT_EVENT e = inp_get_event(i);
+			INPUT_EVENT e = inputevents[i];
 			char c = e.ch;
 			int k = e.key;
 
@@ -403,15 +408,15 @@ int MENUS::ui_do_key_reader(void *id, const RECT *rect, int key)
 
 	if(ui_active_item() == id)
 	{
-		for(int i = 0; i < inp_num_events(); i++)
+		for(int i = 0; i < num_inputevents; i++)
 		{
-			INPUT_EVENT e = inp_get_event(i);
+			INPUT_EVENT e = inputevents[i];
 			if(e.flags&INPFLAG_PRESS && e.key && e.key != KEY_ESC)
 			{
 				new_key = e.key;
 				ui_set_active_item(0);
 				mouse_released = false;
-				inp_clear_events();
+				num_inputevents = 0;
 				break;
 			}
 		}
@@ -955,8 +960,6 @@ bool MENUS::on_mousemove(float x, float y)
 
 bool MENUS::on_input(INPUT_EVENT e)
 {
-//	if(e.)
-	//
 	if(e.flags&INPFLAG_PRESS && e.key == KEY_ESC)
 	{
 		menu_active	= !menu_active;
@@ -964,7 +967,11 @@ bool MENUS::on_input(INPUT_EVENT e)
 	}
 	
 	if(menu_active)
+	{
+		if(num_inputevents < MAX_INPUTEVENTS)
+			inputevents[num_inputevents++] = e;
 		return true;
+	}
 	return false;
 }
 
@@ -1002,7 +1009,7 @@ void MENUS::on_render()
 	
 	if(!menu_active)
 		return;
-
+		
 	// update colors
 	vec3 rgb = hsl_to_rgb(vec3(config.ui_color_hue/255.0f, config.ui_color_sat/255.0f, config.ui_color_lht/255.0f));
 	gui_color = vec4(rgb.r, rgb.g, rgb.b, config.ui_color_alpha/255.0f);
@@ -1059,4 +1066,5 @@ void MENUS::on_render()
 		gfx_text_ex(&cursor, buf, -1);
 	}
 
+	num_inputevents = 0;
 }

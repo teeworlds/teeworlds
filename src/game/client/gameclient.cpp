@@ -102,9 +102,9 @@ void GAMECLIENT::on_init()
 	
 	// build the input stack
 	input.add(console);
+	input.add(chat); // chat has higher prio due to tha you can quit it by pressing esc
 	input.add(motd); // for pressing esc to remove it
 	input.add(menus);
-	input.add(chat);
 	input.add(&emoticon);
 	input.add(controls);
 	input.add(binds);

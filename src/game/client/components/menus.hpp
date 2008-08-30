@@ -60,6 +60,11 @@ class MENUS : public COMPONENT
 	int active_page;
 	bool menu_active;
 	vec2 mouse_pos;
+
+	// TODO: this is a bit ugly but.. well.. yeah	
+	enum { MAX_INPUTEVENTS = 32 };
+	static INPUT_EVENT inputevents[MAX_INPUTEVENTS];
+	static int num_inputevents;
 	
 	// for graphic settings
 	bool need_restart;
