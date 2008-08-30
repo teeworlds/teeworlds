@@ -1,6 +1,7 @@
 #include <base/math.hpp>
 #include <game/generated/gc_data.hpp>
 #include <game/client/gc_render.hpp>
+#include <game/gamecore.hpp>
 #include "particles.hpp"
 
 PARTICLES::PARTICLES()
@@ -82,9 +83,7 @@ void PARTICLES::update(float time_passed)
 			
 			// move the point
 			vec2 vel = particles[i].vel*time_passed;
-			
-			// TODO: repair me
-			//move_point(&particles[i].pos, &vel, 0.1f+0.9f*frandom(), NULL);
+			move_point(&particles[i].pos, &vel, 0.1f+0.9f*frandom(), NULL);
 			particles[i].vel = vel* (1.0f/time_passed);
 			
 			particles[i].life += time_passed;

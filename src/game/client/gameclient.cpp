@@ -61,67 +61,29 @@ static MAPLAYERS maplayers_foreground(MAPLAYERS::TYPE_FOREGROUND);
 GAMECLIENT::STACK::STACK() { num = 0; }
 void GAMECLIENT::STACK::add(class COMPONENT *component) { components[num++] = component; }
 
+static int load_current;
+static int load_total;
 
 static void load_sounds_thread(void *do_render)
 {
 	// load sounds
 	for(int s = 0; s < data->num_sounds; s++)
 	{
-		//if(do_render) // TODO: repair me
-			//render_loading(load_current/load_total);
+		if(do_render) // TODO: repair me
+			gameclient.menus->render_loading(load_current/(float)load_total);
 		for(int i = 0; i < data->sounds[s].num_sounds; i++)
 		{
 			int id = snd_load_wv(data->sounds[s].sounds[i].filename);
 			data->sounds[s].sounds[i].id = id;
 		}
 
-		//if(do_render)
-		//	load_current++;
+		if(do_render)
+			load_current++;
 	}
 }
 
 void GAMECLIENT::on_init()
 {
-	// setup item sizes
-	for(int i = 0; i < NUM_NETOBJTYPES; i++)
-		snap_set_staticsize(i, netobj_get_size(i));
-	
-	// load default font	
-	static FONT_SET default_font;
-	int64 start = time_get();
-	
-	int before = gfx_memory_usage();
-	font_set_load(&default_font, "data/fonts/default_font%d.tfnt", "data/fonts/default_font%d.png", "data/fonts/default_font%d_b.png", 14, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 36);
-	dbg_msg("font", "gfx memory used for font textures: %d", gfx_memory_usage()-before);
-	
-	gfx_text_set_default_font(&default_font);
-
-	// setup load amount
-	/*
-	load_total = data->num_images;
-	load_current = 0;
-	if(!config.cl_threadsoundloading)
-		load_total += data->num_sounds;*/
-	
-	// load textures
-	for(int i = 0; i < data->num_images; i++)
-	{
-		// TODO: repair me
-		//render_loading(load_current/load_total);
-		data->images[i].id = gfx_load_texture(data->images[i].filename, IMG_AUTO, 0);
-		//load_current++;
-	}
-
-	gameclient.skins->init();
-	
-	if(config.cl_threadsoundloading)
-		thread_create(load_sounds_thread, 0);
-	else
-		load_sounds_thread((void*)1);
-	
-	int64 end = time_get();
-	dbg_msg("", "%f.2ms", ((end-start)*1000)/(float)time_freq());
-	
 	// setup pointers
 	binds = &::binds;
 	console = &::console;
@@ -177,6 +139,48 @@ void GAMECLIENT::on_init()
 	// init all components
 	for(int i = 0; i < all.num; i++)
 		all.components[i]->on_init();
+	
+	// setup item sizes
+	for(int i = 0; i < NUM_NETOBJTYPES; i++)
+		snap_set_staticsize(i, netobj_get_size(i));
+	
+	// load default font	
+	static FONT_SET default_font;
+	int64 start = time_get();
+	
+	int before = gfx_memory_usage();
+	font_set_load(&default_font, "data/fonts/default_font%d.tfnt", "data/fonts/default_font%d.png", "data/fonts/default_font%d_b.png", 14, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 36);
+	dbg_msg("font", "gfx memory used for font textures: %d", gfx_memory_usage()-before);
+	
+	gfx_text_set_default_font(&default_font);
+
+	config.cl_threadsoundloading = 0;
+
+	// setup load amount
+	load_total = data->num_images;
+	load_current = 0;
+	if(!config.cl_threadsoundloading)
+		load_total += data->num_sounds;
+	
+	// load textures
+	for(int i = 0; i < data->num_images; i++)
+	{
+		// TODO: repair me
+		gameclient.menus->render_loading(load_current/load_total);
+		data->images[i].id = gfx_load_texture(data->images[i].filename, IMG_AUTO, 0);
+		load_current++;
+	}
+
+	::skins.init();
+	
+	if(config.cl_threadsoundloading)
+		thread_create(load_sounds_thread, 0);
+	else
+		load_sounds_thread((void*)1);
+	
+	int64 end = time_get();
+	dbg_msg("", "%f.2ms", ((end-start)*1000)/(float)time_freq());
+	
 }
 
 void GAMECLIENT::dispatch_input()

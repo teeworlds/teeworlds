@@ -4,8 +4,9 @@ class MOTD : public COMPONENT
 {
 	// motd
 	int64 server_motd_time;
-	char server_motd[900]; // FUGLY
 public:
+	char server_motd[900];
+
 	void clear();
 	bool is_active();
 	

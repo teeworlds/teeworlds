@@ -421,9 +421,6 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 		}
 	}
 	
-	if(config.debug)
-		dbg_msg("gfx", "%d = %dx%d", tex, w, h);
-
 	oglformat = GL_RGBA;
 	if(format == IMG_RGB)
 		oglformat = GL_RGB;

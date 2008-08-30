@@ -87,7 +87,7 @@ void CHAT::on_message(int msgtype, void *rawmsg)
 		NETMSG_SV_CHAT *msg = (NETMSG_SV_CHAT *)rawmsg;
 		add_line(msg->cid, msg->team, msg->message);
 
-		if(msg->cid >= 0) // TODO: repair me
+		if(msg->cid >= 0)
 			gameclient.sounds->play(SOUNDS::CHN_GUI, SOUND_CHAT_CLIENT, 0, vec2(0,0));
 		else
 			gameclient.sounds->play(SOUNDS::CHN_GUI, SOUND_CHAT_SERVER, 0, vec2(0,0));

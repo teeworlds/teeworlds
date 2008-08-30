@@ -152,9 +152,6 @@ static void client_serverbrowse_filter()
 			filtered = 1;
 		else if(config.b_filter_ping < serverlist[i]->info.latency)
 			filtered = 1;
-		/* TODO: repair me
-		else if(!(config.b_filter_gametype&(1 << serverlist[i]->info.game_type)))
-			filtered = 1;*/
 		else if(config.b_filter_compatversion && strncmp(serverlist[i]->info.version, modc_net_version(), 3) != 0)
 			filtered = 1;
 		else if(config.b_filter_string[0] != 0)

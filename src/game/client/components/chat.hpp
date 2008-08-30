@@ -38,10 +38,9 @@ class CHAT : public COMPONENT
 	static void con_chat(void *result, void *user_data);
 	
 public:
+	bool is_active() const { return mode != MODE_NONE; }
 	
 	void add_line(int client_id, int team, const char *line);
-	//void chat_reset();
-	//bool chat_input_handle(INPUT_EVENT e, void *user_data);
 	
 	void enable_mode(int team);
 	

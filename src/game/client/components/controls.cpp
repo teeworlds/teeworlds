@@ -3,6 +3,8 @@
 #include <game/collision.hpp>
 #include <game/client/gameclient.hpp>
 #include <game/client/component.hpp>
+#include <game/client/components/chat.hpp>
+#include <game/client/components/menus.hpp>
 
 #include "controls.hpp"
 
@@ -69,17 +71,16 @@ int CONTROLS::snapinput(int *data)
 	static int64 last_send_time = 0;
 	
 	// update player state
-	/*if(chat_mode != CHATMODE_NONE) // TODO: repair me
+	if(gameclient.chat->is_active())
 		input_data.player_state = PLAYERSTATE_CHATTING;
-	else if(menu_active)
+	else if(gameclient.menus->is_active())
 		input_data.player_state = PLAYERSTATE_IN_MENU;
 	else
-		input_data.player_state = PLAYERSTATE_PLAYING;*/
+		input_data.player_state = PLAYERSTATE_PLAYING;
 	last_data.player_state = input_data.player_state;
 	
 	// we freeze the input if chat or menu is activated
-	/* repair me
-	if(menu_active || chat_mode != CHATMODE_NONE || console_active())
+	if(input_data.player_state != PLAYERSTATE_PLAYING)
 	{
 		last_data.direction = 0;
 		last_data.hook = 0;
@@ -89,7 +90,7 @@ int CONTROLS::snapinput(int *data)
 			
 		mem_copy(data, &input_data, sizeof(input_data));
 		return sizeof(input_data);
-	}*/
+	}
 	
 	input_data.target_x = (int)mouse_pos.x;
 	input_data.target_y = (int)mouse_pos.y;

@@ -22,6 +22,7 @@ extern "C" {
 
 #include <game/generated/gc_data.hpp>
 #include <game/client/components/binds.hpp>
+#include <game/client/components/motd.hpp>
 #include <game/client/gameclient.hpp>
 #include <game/client/animstate.hpp>
 #include <game/client/gc_render.hpp>
@@ -738,8 +739,7 @@ void MENUS::render_serverinfo(RECT main_view)
 	RECT view;
 	ui_margin(&main_view, 10.0f, &view);
 	//void gfx_text(void *font, float x, float y, float size, const char *text, int max_width);
-	// TODO: repair me
-	//gfx_text(0, view.x, view.y, 16, server_motd, -1);
+	gfx_text(0, view.x, view.y, 16, gameclient.motd->server_motd, -1);
 }
 
 void MENUS::init()

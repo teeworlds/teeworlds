@@ -266,7 +266,15 @@ int snd_init()
 
 	params.device = config.snd_device;
 	if(params.device == -1)
+	{
 		params.device = Pa_GetDefaultOutputDevice();
+		if(params.device < 0)
+		{
+			dbg_msg("snd", "no default device (%d)", params.device);
+			return 1;
+		}
+	}
+
 	if(params.device < 0)
 		return 1;
 	dbg_msg("snd", "device = %d", params.device);

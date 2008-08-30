@@ -72,7 +72,7 @@ class MENUS : public COMPONENT
 	// found in menus.cpp
 	int render();
 	void render_background();
-	void render_loading(float percent);
+	//void render_loading(float percent);
 	int render_menubar(RECT r);
 	void render_news(RECT main_view);
 	void render_game(RECT main_view);
@@ -90,6 +90,10 @@ class MENUS : public COMPONENT
 	
 public:
 	MENUS();
+
+	void render_loading(float percent);
+
+	bool is_active() const { return menu_active; }
 
 	void init();
 

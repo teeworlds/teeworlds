@@ -367,14 +367,6 @@ void CONSOLE::on_init()
 	MACRO_REGISTER_COMMAND("toggle_remote_console", "", con_toggle_remote_console, this);
 }
 
-
-/*
-void console_rcon_print(const char *line)
-{
-	// TODO: repair me
-	//remote_console.print_line(line);
-}*/
-
 /*
 static void con_team(void *result, void *user_data)
 {
@@ -388,34 +380,6 @@ static void con_kill(void *result, void *user_data)
 
 void send_kill(int client_id);
 
-
-
-static void con_key_input_state(void *result, void *user_data)
-{
-	((int *)user_data)[0] = console_arg_int(result, 0);
-}
-
-static void con_key_input_counter(void *result, void *user_data)
-{
-	int *v = (int *)user_data;
-	if(((*v)&1) != console_arg_int(result, 0))
-		(*v)++;
-	*v &= INPUT_STATE_MASK;
-}
-
-static void con_key_input_weapon(void *result, void *user_data)
-{
-	int w = (char *)user_data - (char *)0;
-	if(console_arg_int(result, 0))
-		input_data.wanted_weapon = w;
-}
-
-static void con_key_input_nextprev_weapon(void *result, void *user_data)
-{
-	con_key_input_counter(result, user_data);
-	input_data.wanted_weapon = 0;
-}
-
 static void con_emote(void *result, void *user_data)
 {
 	send_emoticon(console_arg_int(result, 0));
@@ -425,66 +389,12 @@ extern void con_chat(void *result, void *user_data);
 
 void client_console_init()
 {
-	console_register_print_callback(client_console_print);
-
-	//
-	MACRO_REGISTER_COMMAND("toggle_local_console", "", con_toggle_local_console, 0x0);
-	MACRO_REGISTER_COMMAND("toggle_remote_console", "", con_toggle_remote_console, 0x0);
-
 	//
 	MACRO_REGISTER_COMMAND("team", "i", con_team, 0x0);
 	MACRO_REGISTER_COMMAND("kill", "", con_kill, 0x0);
-	
-	// bindings
-	MACRO_REGISTER_COMMAND("bind", "sr", con_bind, 0x0);
-	MACRO_REGISTER_COMMAND("unbind", "s", con_unbind, 0x0);
-	MACRO_REGISTER_COMMAND("unbindall", "", con_unbindall, 0x0);
-	
-	MACRO_REGISTER_COMMAND("dump_binds", "", con_dump_binds, 0x0);
 
 	// chatting
 	MACRO_REGISTER_COMMAND("emote", "i", con_emote, 0);
 	MACRO_REGISTER_COMMAND("+emote", "", con_key_input_state, &emoticon_selector_active);
-}
-
-bool console_input_cli(INPUT_EVENT e, void *user_data)
-{
-	if(!console_active())
-		return false;
-	
-	if(e.key == KEY_ESC && (e.flags&INPFLAG_PRESS))
-		console_toggle(console_type);
-	else
-		current_console()->handle_event(e);
-	return true;
-}
-
-static bool console_execute_event(INPUT_EVENT e)
-{
-	// don't handle invalid events and keys that arn't set to anything
-	if(e.key <= 0 || e.key >= KEY_LAST || keybindings[e.key][0] == 0)
-		return false;
-
-	int stroke = 0;
-	if(e.flags&INPFLAG_PRESS)
-		stroke = 1;
-	console_execute_line_stroked(stroke, keybindings[e.key]);
-	return true;
-}
-
-bool console_input_special_binds(INPUT_EVENT e, void *user_data)
-{
-	// only handle function keys
-	if(e.key < KEY_F1 || e.key > KEY_F25)
-		return false;
-	return console_execute_event(e);
-}
-
-bool console_input_normal_binds(INPUT_EVENT e, void *user_data)
-{
-	// need to be ingame for these binds
-	if(client_state() != CLIENTSTATE_ONLINE)
-		return false;
-	return console_execute_event(e);
 }
 */
