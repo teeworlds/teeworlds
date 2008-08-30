@@ -52,9 +52,6 @@ void ui_draw_rect(const RECT *r, vec4 color, int corners, float rounding);
 // larger rendering methods
 void render_loading(float percent);
 
-void render_damage_indicators();
-void render_particles();
-
 void render_tilemap_generate_skip();
 
 // object render methods (gc_render_obj.cpp)

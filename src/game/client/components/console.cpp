@@ -349,6 +349,14 @@ void CONSOLE::client_console_print_callback(const char *str, void *user_data)
 	((CONSOLE *)user_data)->local_console.print_line(str);
 }
 
+void CONSOLE::print_line(int type, const char *line)
+{
+	if(type == 0)
+		local_console.print_line(line);
+	else if(type == 1)
+		remote_console.print_line(line);
+}
+
 void CONSOLE::on_init()
 {
 	//
@@ -372,12 +380,14 @@ static void con_team(void *result, void *user_data)
 	send_switch_team(console_arg_int(result, 0));
 }
 
-void send_kill(int client_id);
-
 static void con_kill(void *result, void *user_data)
 {
 	send_kill(-1);
 }
+
+void send_kill(int client_id);
+
+
 
 static void con_key_input_state(void *result, void *user_data)
 {

@@ -1,3 +1,5 @@
+#ifndef GAME_CLIENT_LINEINPUT_H
+#define GAME_CLIENT_LINEINPUT_H
 
 // line input helter
 class LINEINPUT
@@ -21,3 +23,5 @@ public:
 	int get_length() const { return len; }
 	unsigned cursor_offset() const { return cursor_pos; }
 };
+
+#endif

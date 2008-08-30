@@ -12,19 +12,15 @@ extern "C" {
 
 #include <game/layers.hpp>
 
-
 #include "gameclient.hpp"
 #include "components/skins.hpp"
+#include "components/console.hpp"
 
 #include "gc_client.hpp"
 #include "gc_render.hpp"
 #include "gc_map_image.hpp"
 
 extern unsigned char internal_data[];
-
-extern void menu_init();
-extern bool menu_active;
-extern bool menu_game_active;
 
 static float load_total;
 static float load_current;
@@ -33,8 +29,6 @@ extern "C" void modc_console_init()
 {
 	//client_console_init();
 }
-
-//binds_save()
 
 static void load_sounds_thread(void *do_render)
 {
@@ -70,14 +64,8 @@ extern "C" void modc_init()
 	
 	gfx_text_set_default_font(&default_font);
 
-	//particle_reset();
-	//menu_init();
-	
 	// load the data container
 	//data = load_data_from_memory(internal_data);
-
-	// TODO: should be removed
-	snd_set_listener_pos(0.0f, 0.0f);
 
 	// setup load amount
 	load_total = data->num_images;
@@ -95,7 +83,6 @@ extern "C" void modc_init()
 	}
 
 	gameclient.skins->init();
-	//skin_init();
 	
 	if(config.cl_threadsoundloading)
 		thread_create(load_sounds_thread, 0);
@@ -111,22 +98,9 @@ extern "C" void modc_save_config()
 	//binds_save();
 }
 
-
 CHARACTER_CORE predicted_prev_char;
 CHARACTER_CORE predicted_char;
 
-extern "C" void modc_entergame() {}
-extern "C" void modc_shutdown() {}
-extern "C" void modc_predict() { gameclient.on_predict(); }
-extern "C" void modc_newsnapshot() { gameclient.on_snapshot(); }
-extern "C" int modc_snap_input(int *data) { return gameclient.on_snapinput(data); }
-extern "C" void modc_statechange(int state, int old) { gameclient.on_statechange(state, old); }
-extern "C" void modc_render() { gameclient.on_render(); }
-
-extern "C" void modc_rcon_line(const char *line)
-{
-	//console_rcon_print(line);
-}
 
 /*
 NETOBJ_PROJECTILE extraproj_projectiles[MAX_EXTRA_PROJECTILES];
@@ -137,28 +111,29 @@ void extraproj_reset()
 	extraproj_num = 0;
 }*/
 
-extern "C" void modc_message(int msgtype)
-{
-	gameclient.on_message(msgtype);
-}
 
 extern "C" void modc_connected()
 {
-	// init some stuff
 	layers_init();
 	col_init();
 	img_init();
-	//flow_init();
 	
 	render_tilemap_generate_skip();
 	
 	gameclient.on_connected();
-	//tilemap_init();
-	//particle_reset();
-	//extraproj_reset();
-	
-	//last_new_predicted_tick = -1;
 }
+
+// clean hooks
+extern "C" void modc_entergame() {}
+extern "C" void modc_shutdown() {}
+extern "C" void modc_predict() { gameclient.on_predict(); }
+extern "C" void modc_newsnapshot() { gameclient.on_snapshot(); }
+extern "C" int modc_snap_input(int *data) { return gameclient.on_snapinput(data); }
+extern "C" void modc_statechange(int state, int old) { gameclient.on_statechange(state, old); }
+extern "C" void modc_render() { gameclient.on_render(); }
+extern "C" void modc_message(int msgtype) { gameclient.on_message(msgtype); }
+extern "C" void modc_rcon_line(const char *line) { gameclient.console->print_line(1, line); }
 
 extern "C" const char *modc_net_version() { return GAME_NETVERSION; }
 extern "C" const char *modc_getitemname(int type) { return netobj_get_name(type); }
+

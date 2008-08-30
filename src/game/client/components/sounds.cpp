@@ -11,6 +11,8 @@ void SOUNDS::on_init()
 	snd_set_channel(SOUNDS::CHN_MUSIC, 1.0f, 0.0f);
 	snd_set_channel(SOUNDS::CHN_WORLD, 0.9f, 1.0f);
 	snd_set_channel(SOUNDS::CHN_GLOBAL, 1.0f, 0.0f);
+
+	snd_set_listener_pos(0.0f, 0.0f);
 }
 
 void SOUNDS::on_render()

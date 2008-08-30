@@ -1,5 +1,6 @@
 #include <engine/e_client_interface.h>
 #include <game/client/component.hpp>
+#include <game/client/lineinput.hpp>
 
 class CONSOLE : public COMPONENT
 {
@@ -46,6 +47,8 @@ class CONSOLE : public COMPONENT
 	
 public:
 	CONSOLE();
+
+	void print_line(int type, const char *line);
 
 	virtual void on_init();
 	virtual void on_reset();
