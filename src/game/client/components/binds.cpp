@@ -1,3 +1,5 @@
+#include <stdlib.h> // atoi
+#include <string.h> // strcmp
 #include <engine/e_client_interface.h>
 #include "binds.hpp"
 
@@ -63,9 +65,8 @@ const char *BINDS::get(int keyid)
 
 void BINDS::set_defaults()
 {
-	unbindall();
-
 	// set default key bindings
+	unbindall();
 	bind(KEY_F1, "toggle_local_console");
 	bind(KEY_F2, "toggle_remote_console");
 	bind(KEY_TAB, "+scoreboard");
@@ -93,11 +94,69 @@ void BINDS::set_defaults()
 
 void BINDS::on_init()
 {
+	// bindings
+	MACRO_REGISTER_COMMAND("bind", "sr", con_bind, this);
+	MACRO_REGISTER_COMMAND("unbind", "s", con_unbind, this);
+	MACRO_REGISTER_COMMAND("unbindall", "", con_unbindall, this);
+	MACRO_REGISTER_COMMAND("dump_binds", "", con_dump_binds, this);
+	
+	// default bindings
 	set_defaults();
 }
 
-/*
-static int get_key_id(const char *key_name)
+
+
+void BINDS::con_bind(void *result, void *user_data)
+{
+	BINDS *binds = (BINDS *)user_data;
+	const char *key_name = console_arg_string(result, 0);
+	int id = binds->get_key_id(key_name);
+	
+	if(!id)
+	{
+		dbg_msg("binds", "key %s not found", key_name);
+		return;
+	}
+	
+	binds->bind(id, console_arg_string(result, 1));
+}
+
+
+void BINDS::con_unbind(void *result, void *user_data)
+{
+	BINDS *binds = (BINDS *)user_data;
+	const char *key_name = console_arg_string(result, 0);
+	int id = binds->get_key_id(key_name);
+	
+	if(!id)
+	{
+		dbg_msg("binds", "key %s not found", key_name);
+		return;
+	}
+	
+	binds->bind(id, "");
+}
+
+
+void BINDS::con_unbindall(void *result, void *user_data)
+{
+	BINDS *binds = (BINDS *)user_data;
+	binds->unbindall();
+}
+
+
+void BINDS::con_dump_binds(void *result, void *user_data)
+{
+	BINDS *binds = (BINDS *)user_data;
+	for(int i = 0; i < KEY_LAST; i++)
+	{
+		if(binds->keybindings[i][0] == 0)
+			continue;
+		dbg_msg("binds", "%s (%d) = %s", inp_key_name(i), i, binds->keybindings[i]);
+	}
+}
+
+int BINDS::get_key_id(const char *key_name)
 {
 	// check for numeric
 	if(key_name[0] == '#')
@@ -117,52 +176,7 @@ static int get_key_id(const char *key_name)
 	return 0;
 }
 
-static void con_bind(void *result, void *user_data)
-{
-	const char *key_name = console_arg_string(result, 0);
-	int id = get_key_id(key_name);
-	
-	if(!id)
-	{
-		dbg_msg("binds", "key %s not found", key_name);
-		return;
-	}
-	
-	binds_set(id, console_arg_string(result, 1));
-}
-
-
-static void con_unbind(void *result, void *user_data)
-{
-	const char *key_name = console_arg_string(result, 0);
-	int id = get_key_id(key_name);
-	
-	if(!id)
-	{
-		dbg_msg("binds", "key %s not found", key_name);
-		return;
-	}
-	
-	binds_set(id, "");
-}
-
-
-static void con_unbindall(void *result, void *user_data)
-{
-	binds_unbindall();
-}
-
-
-static void con_dump_binds(void *result, void *user_data)
-{
-	for(int i = 0; i < KEY_LAST; i++)
-	{
-		if(keybindings[i][0] == 0)
-			continue;
-		dbg_msg("binds", "%s (%d) = %s", inp_key_name(i), i, keybindings[i]);
-	}
-}
-
+/*
 void binds_save()
 {
 	char buffer[256];
