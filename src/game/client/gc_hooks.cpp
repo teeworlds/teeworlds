@@ -16,7 +16,6 @@ extern "C" {
 #include "components/skins.hpp"
 #include "components/console.hpp"
 
-#include "gc_client.hpp"
 #include "gc_render.hpp"
 #include "gc_map_image.hpp"
 

@@ -5,7 +5,6 @@
 #include <game/gamecore.hpp> // get_angle
 #include <game/client/animstate.hpp>
 #include <game/client/gameclient.hpp>
-#include <game/client/gc_client.hpp>
 #include <game/client/gc_ui.hpp>
 #include <game/client/gc_render.hpp>
 
@@ -125,8 +124,8 @@ void PLAYERS::render_player(
 		else
 		{
 			// apply predicted results
-			predicted_char.write(&player);
-			predicted_prev_char.write(&prev);
+			gameclient.predicted_char.write(&player);
+			gameclient.predicted_prev_char.write(&prev);
 			intratick = client_predintratick();
 		}
 	}
@@ -198,8 +197,8 @@ void PLAYERS::render_player(
 		{
 			if(gameclient.snap.local_info && player_char->hooked_player == gameclient.snap.local_info->cid)
 			{
-				hook_pos = mix(vec2(predicted_prev_char.pos.x, predicted_prev_char.pos.y),
-					vec2(predicted_char.pos.x, predicted_char.pos.y), client_predintratick());
+				hook_pos = mix(vec2(gameclient.predicted_prev_char.pos.x, gameclient.predicted_prev_char.pos.y),
+					vec2(gameclient.predicted_char.pos.x, gameclient.predicted_char.pos.y), client_predintratick());
 			}
 			else
 				hook_pos = mix(vec2(prev_char->hook_x, prev_char->hook_y), vec2(player_char->hook_x, player_char->hook_y), client_intratick());

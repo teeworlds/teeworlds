@@ -2,7 +2,6 @@
 #include <game/generated/g_protocol.hpp>
 
 #include "gameclient.hpp"
-#include "gc_client.hpp"
 #include "components/killmessages.hpp"
 #include "components/chat.hpp"
 #include "components/motd.hpp"

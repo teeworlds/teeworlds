@@ -7,9 +7,10 @@
 #include <game/client/components/flow.hpp>
 #include <game/client/components/damageind.hpp>
 #include <game/client/gameclient.hpp>
-#include <game/client/gc_client.hpp>
 
 #include "effects.hpp"
+
+inline vec2 random_dir() { return normalize(vec2(frandom()-0.5f, frandom()-0.5f)); }
 
 EFFECTS::EFFECTS()
 {

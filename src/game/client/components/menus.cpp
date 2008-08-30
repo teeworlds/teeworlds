@@ -26,7 +26,6 @@ extern "C" {
 #include <game/client/animstate.hpp>
 #include <game/client/gc_render.hpp>
 #include <game/client/gc_ui.hpp>
-#include <game/client/gc_client.hpp>
 #include <mastersrv/mastersrv.h>
 
 vec4 MENUS::gui_color;
@@ -40,6 +39,44 @@ vec4 MENUS::color_tabbar_active_ingame;
 
 INPUT_EVENT MENUS::inputevents[MAX_INPUTEVENTS];
 int MENUS::num_inputevents;
+
+inline float hue_to_rgb(float v1, float v2, float h)
+{
+   if(h < 0) h += 1;
+   if(h > 1) h -= 1;
+   if((6 * h) < 1) return v1 + ( v2 - v1 ) * 6 * h;
+   if((2 * h) < 1) return v2;
+   if((3 * h) < 2) return v1 + ( v2 - v1 ) * ((2.0f/3.0f) - h) * 6;
+   return v1;
+}
+
+inline vec3 hsl_to_rgb(vec3 in)
+{
+	float v1, v2;
+	vec3 out;
+
+	if(in.s == 0)
+	{
+		out.r = in.l;
+		out.g = in.l;
+		out.b = in.l;
+	}
+	else
+	{
+		if(in.l < 0.5f) 
+			v2 = in.l * (1 + in.s);
+		else           
+			v2 = (in.l+in.s) - (in.s*in.l);
+
+		v1 = 2 * in.l - v2;
+
+		out.r = hue_to_rgb(v1, v2, in.h + (1.0f/3.0f));
+		out.g = hue_to_rgb(v1, v2, in.h);
+		out.b = hue_to_rgb(v1, v2, in.h - (1.0f/3.0f));
+	} 
+
+	return out;
+}
 
 
 MENUS::MENUS()

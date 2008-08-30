@@ -10,7 +10,6 @@
 #include <game/layers.hpp>
 #include "animstate.hpp"
 #include "gc_render.hpp"
-#include "gc_client.hpp"
 #include "gc_map_image.hpp"
 
 static float sprite_w_scale;

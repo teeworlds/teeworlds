@@ -1,4 +1,6 @@
 //#include "gc_console.hpp"
+#include <math.h>
+
 #include <game/generated/gc_data.hpp>
 
 #include <base/system.h>
@@ -14,7 +16,6 @@ extern "C" {
 #include <cstdio>
 
 #include <game/client/gc_ui.hpp>
-#include <game/client/gc_client.hpp>
 
 #include <game/version.hpp>
 

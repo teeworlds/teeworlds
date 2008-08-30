@@ -12,7 +12,6 @@ extern "C" {
 
 #include <game/client/gameclient.hpp>
 #include <game/client/animstate.hpp>
-#include <game/client/gc_client.hpp>
 #include <game/client/gc_render.hpp>
 
 //#include "controls.hpp"
@@ -55,7 +54,7 @@ void DEBUGHUD::render_tuning()
 	
 	float y = 50.0f;
 	int count = 0;
-	for(int i = 0; i < tuning.num(); i++)
+	for(int i = 0; i < gameclient.tuning.num(); i++)
 	{
 		char buf[128];
 		float current, standard;
@@ -81,7 +80,7 @@ void DEBUGHUD::render_tuning()
 		gfx_text(0x0, x-w, y+count*6, 5, buf, -1);
 
 		x += 5.0f;
-		gfx_text(0x0, x, y+count*6, 5, tuning.names[i], -1);
+		gfx_text(0x0, x, y+count*6, 5, gameclient.tuning.names[i], -1);
 		
 		count++;
 	}

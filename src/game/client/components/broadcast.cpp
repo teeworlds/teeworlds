@@ -4,8 +4,6 @@
 #include <game/generated/gc_data.hpp>
 
 #include <game/client/gameclient.hpp>
-//#include <game/client/gc_anim.hpp>
-#include <game/client/gc_client.hpp>
 
 #include "broadcast.hpp"
 	

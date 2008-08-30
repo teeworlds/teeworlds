@@ -4,8 +4,6 @@
 
 #include <game/client/gameclient.hpp>
 #include <game/client/animstate.hpp>
-#include <game/client/gc_client.hpp>
-
 #include "killmessages.hpp"
 
 void KILLMESSAGES::on_reset()

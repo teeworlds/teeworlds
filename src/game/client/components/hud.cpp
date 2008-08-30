@@ -8,7 +8,6 @@
 
 #include <game/client/gameclient.hpp>
 #include <game/client/animstate.hpp>
-#include <game/client/gc_client.hpp>
 #include <game/client/gc_render.hpp>
 
 #include "controls.hpp"
