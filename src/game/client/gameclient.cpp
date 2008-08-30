@@ -23,6 +23,7 @@
 #include "components/effects.hpp"
 #include "components/scoreboard.hpp"
 #include "components/sounds.hpp"
+#include "components/emoticon.hpp"
 
 GAMECLIENT gameclient;
 
@@ -44,6 +45,7 @@ static CONTROLS controls;
 static EFFECTS effects;
 static SCOREBOARD scoreboard;
 static SOUNDS sounds;
+static EMOTICON emoticon;
 
 static PLAYERS players;
 static ITEMS items;
@@ -87,6 +89,7 @@ void GAMECLIENT::on_init()
 	all.add(&maplayers_foreground);
 	all.add(&particles->render_general);
 	all.add(&hud);
+	all.add(&emoticon);
 	all.add(&killmessages);
 	all.add(chat);
 	all.add(&broadcast);
@@ -100,6 +103,7 @@ void GAMECLIENT::on_init()
 	input.add(console);
 	input.add(menus);
 	input.add(chat);
+	input.add(&emoticon);
 	input.add(controls);
 	input.add(binds);
 

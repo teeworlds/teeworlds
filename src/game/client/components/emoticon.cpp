@@ -3,6 +3,7 @@
 #include <game/generated/gc_data.hpp>
 
 #include <game/gamecore.hpp> // get_angle
+#include <game/client/gameclient.hpp>
 #include <game/client/gc_ui.hpp>
 #include <game/client/gc_render.hpp>
 #include "emoticon.hpp"
@@ -12,21 +13,41 @@ EMOTICON::EMOTICON()
 	on_reset();
 }
 
+void EMOTICON::con_key_emoticon(void *result, void *user_data)
+{
+	((EMOTICON *)user_data)->active = console_arg_int(result, 0) != 0;
+}
+
+void EMOTICON::on_init()
+{
+	MACRO_REGISTER_COMMAND("+emote", "", con_key_emoticon, this);
+}
+
 void EMOTICON::on_reset()
 {
-	selector_active = 0;
+	was_active = false;
+	active = false;
 	selected_emote = -1;
 }
 
 void EMOTICON::on_message(int msgtype, void *rawmsg)
 {
+	if(msgtype == NETMSGTYPE_SV_EMOTICON)
+	{
+		NETMSG_SV_EMOTICON *msg = (NETMSG_SV_EMOTICON *)rawmsg;
+		gameclient.clients[msg->cid].emoticon = msg->emoticon;
+		gameclient.clients[msg->cid].emoticon_start = client_tick();
+	}	
 }
 
-bool EMOTICON::on_input(INPUT_EVENT e)
+bool EMOTICON::on_mousemove(float x, float y)
 {
-	return false;
+	if(!active)
+		return false;
+	
+	selector_mouse += vec2(x,y);
+	return true;
 }
-
 
 void EMOTICON::draw_circle(float x, float y, float r, int segments)
 {
@@ -54,6 +75,16 @@ void EMOTICON::draw_circle(float x, float y, float r, int segments)
 	
 void EMOTICON::on_render()
 {
+	if(!active)
+	{
+		if(was_active && selected_emote)
+			emote(selected_emote);
+		was_active = false;
+		return;
+	}
+	
+	was_active = true;
+	
 	int x, y;
 	inp_mouse_relative(&x, &y);
 
@@ -109,8 +140,6 @@ void EMOTICON::on_render()
     gfx_quads_drawTL(selector_mouse.x+screen.w/2,selector_mouse.y+screen.h/2,24,24);
     gfx_quads_end();
 }
-
-
 
 void EMOTICON::emote(int emoticon)
 {
