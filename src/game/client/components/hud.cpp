@@ -31,7 +31,6 @@ void HUD::render_goals()
 	// render_scorehud
 	// render_warmuptimer
 	
-	int gametype = gameclient.snap.gameobj->gametype;
 	int gameflags = gameclient.snap.gameobj->flags;
 	
 	float whole = 300*gfx_screenaspect();
@@ -84,7 +83,7 @@ void HUD::render_goals()
 			str_format(buf, sizeof(buf), "%d", t?gameclient.snap.gameobj->teamscore_blue:gameclient.snap.gameobj->teamscore_red);
 			float w = gfx_text_width(0, 14, buf, -1);
 			
-			if(gametype == GAMETYPE_CTF)
+			if(gameflags&GAMEFLAG_FLAGS)
 			{
 				gfx_text(0, whole-20-w/2+5, 300-40-15+t*20, 14, buf, -1);
 				if(gameclient.snap.flags[t])

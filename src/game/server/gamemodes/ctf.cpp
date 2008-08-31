@@ -10,7 +10,7 @@ GAMECONTROLLER_CTF::GAMECONTROLLER_CTF()
 {
 	flags[0] = 0;
 	flags[1] = 0;
-	is_teamplay = true;
+	game_flags = GAMEFLAG_TEAMS|GAMEFLAG_FLAGS;
 }
 
 bool GAMECONTROLLER_CTF::on_entity(int index, vec2 pos)

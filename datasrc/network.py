@@ -2,8 +2,7 @@ from datatypes import *
 
 Emotes = ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"]
 PlayerStates = ["UNKNOWN", "PLAYING", "IN_MENU", "CHATTING"]
-GameTypes = ["DM", "TDM", "CTF"]
-GameFlags = ["TEAMS"]
+GameFlags = ["TEAMS", "FLAGS"]
 
 Emoticons = [str(x) for x in xrange(1,16)]
 
@@ -22,7 +21,6 @@ RawSource = '''
 '''
 
 Enums = [
-	Enum("GAMETYPE", GameTypes),
 	Enum("PLAYERSTATE", PlayerStates),
 	Enum("EMOTE", Emotes),
 	Enum("POWERUP", Powerups),
@@ -96,7 +94,6 @@ Objects = [
 		
 		NetIntRange("score_limit", 0, 'max_int'),
 		NetIntRange("time_limit", 0, 'max_int'),
-		NetIntRange("gametype", 0, len(GameTypes)),
 		
 		NetIntRange("warmup", 0, 'max_int'),
 

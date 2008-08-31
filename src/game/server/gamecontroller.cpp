@@ -14,30 +14,15 @@
 
 GAMECONTROLLER::GAMECONTROLLER()
 {
-	// select gametype
-	if(strcmp(config.sv_gametype, "ctf") == 0)
-	{
-		gametype = GAMETYPE_CTF;
-		dbg_msg("game", "-- Capture The Flag --");
-	}
-	else if(strcmp(config.sv_gametype, "tdm") == 0)
-	{
-		gametype = GAMETYPE_TDM;
-		dbg_msg("game", "-- Team Death Match --");
-	}
-	else
-	{
-		gametype = GAMETYPE_DM;
-		dbg_msg("game", "-- Death Match --");
-	}
-		
+	gametype = config.sv_gametype;
+	
 	//
 	do_warmup(config.sv_warmup);
 	game_over_tick = -1;
 	sudden_death = 0;
 	round_start_tick = server_tick();
 	round_count = 0;
-	is_teamplay = false;
+	game_flags = 0;
 	teamscore[0] = 0;
 	teamscore[1] = 0;
 	
@@ -87,7 +72,7 @@ bool GAMECONTROLLER::can_spawn(PLAYER *player, vec2 *out_pos)
 {
 	SPAWNEVAL eval;
 	
-	if(is_teamplay)
+	if(is_teamplay())
 	{
 		eval.friendly_team = player->team;
 		
@@ -175,7 +160,7 @@ void GAMECONTROLLER::resetgame()
 
 const char *GAMECONTROLLER::get_team_name(int team)
 {
-	if(is_teamplay)
+	if(is_teamplay())
 	{
 		if(team == 0)
 			return "red team";
@@ -276,7 +261,7 @@ void GAMECONTROLLER::post_reset()
 void GAMECONTROLLER::on_player_info_change(class PLAYER *p)
 {
 	const int team_colors[2] = {65387, 10223467};
-	if(is_teamplay)
+	if(is_teamplay())
 	{
 		if(p->team >= 0 || p->team <= 1)
 		{
@@ -297,7 +282,7 @@ int GAMECONTROLLER::on_character_death(class CHARACTER *victim, class PLAYER *ki
 		victim->player->score--; // suicide
 	else
 	{
-		if(is_teamplay && victim->team == killer->team)
+		if(is_teamplay() && victim->team == killer->team)
 			killer->score--; // teamkill
 		else
 			killer->score++; // normal kill
@@ -327,7 +312,7 @@ bool GAMECONTROLLER::is_friendly_fire(int cid1, int cid2)
 	if(cid1 == cid2)
 		return false;
 	
-	if(is_teamplay)
+	if(is_teamplay())
 	{
 		if(game.players[cid1].team == game.players[cid2].team)
 			return true;
@@ -364,7 +349,7 @@ void GAMECONTROLLER::tick()
 
 	if(config.sv_scorelimit)
 	{
-		if(is_teamplay)
+		if(is_teamplay())
 		{
 			prog = max(prog, (teamscore[0]*100)/config.sv_scorelimit);
 			prog = max(prog, (teamscore[1]*100)/config.sv_scorelimit);
@@ -385,6 +370,12 @@ void GAMECONTROLLER::tick()
 	server_setbrowseinfo(gametype, prog);
 }
 
+
+bool GAMECONTROLLER::is_teamplay() const
+{
+	return game_flags&GAMEFLAG_TEAMS;
+}
+
 void GAMECONTROLLER::snap(int snapping_client)
 {
 	NETOBJ_GAME *gameobj = (NETOBJ_GAME *)snap_new_item(NETOBJTYPE_GAME, 0, sizeof(NETOBJ_GAME));
@@ -395,7 +386,7 @@ void GAMECONTROLLER::snap(int snapping_client)
 	gameobj->score_limit = config.sv_scorelimit;
 	gameobj->time_limit = config.sv_timelimit;
 	gameobj->round_start_tick = round_start_tick;
-	gameobj->gametype = gametype;
+	gameobj->flags = game_flags;
 	
 	gameobj->warmup = warmup;
 	
@@ -416,7 +407,7 @@ int GAMECONTROLLER::get_auto_team(int notthisid)
 	}
 
 	int team = 0;
-	if(is_teamplay)
+	if(is_teamplay())
 		team = numplayers[0] > numplayers[1] ? 1 : 0;
 		
 	if(can_join_team(team, notthisid))
@@ -493,7 +484,7 @@ int GAMECONTROLLER::clampteam(int team)
 {
 	if(team < 0) // spectator
 		return -1;
-	if(is_teamplay)
+	if(is_teamplay())
 		return team&1;
 	return  0;
 }

@@ -6,7 +6,7 @@
 
 GAMECONTROLLER_TDM::GAMECONTROLLER_TDM()
 {
-	is_teamplay = true;
+	game_flags = GAMEFLAG_TEAMS;
 }
 
 int GAMECONTROLLER_TDM::on_character_death(class CHARACTER *victim, class PLAYER *killer, int weapon)

@@ -35,6 +35,8 @@ protected:
 	void cyclemap();
 	void resetgame();
 	
+	const char *gametype;
+	
 	int round_start_tick;
 	int game_over_tick;
 	int sudden_death;
@@ -44,10 +46,11 @@ protected:
 	int warmup;
 	int round_count;
 	
+	int game_flags;
+	
 	
 public:
-	int gametype;
-	bool is_teamplay;
+	bool is_teamplay() const;
 	
 	GAMECONTROLLER();
 

@@ -27,7 +27,7 @@ static int64 game_start_time;
 static int current_tick = 0;
 static int run_server = 1;
 
-static int browseinfo_gametype = -1;
+static char browseinfo_gametype[16] = {0};
 static int browseinfo_progression = -1;
 
 static int64 lastheartbeat;
@@ -250,9 +250,9 @@ void server_setclientscore(int client_id, int score)
 	clients[client_id].score = score;
 }
 
-void server_setbrowseinfo(int game_type, int progression)
+void server_setbrowseinfo(const char *game_type, int progression)
 {
-	browseinfo_gametype = game_type;
+	str_copy(browseinfo_gametype, game_type, sizeof(browseinfo_gametype));
 	browseinfo_progression = progression;
 	if(browseinfo_progression > 100)
 		browseinfo_progression = 100;

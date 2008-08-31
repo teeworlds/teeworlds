@@ -62,7 +62,7 @@ void KILLMESSAGES::on_render()
 		// render victim tee
 		x -= 24.0f;
 		
-		if(gameclient.snap.gameobj && gameclient.snap.gameobj->gametype == GAMETYPE_CTF)
+		if(gameclient.snap.gameobj && gameclient.snap.gameobj->flags&GAMEFLAG_FLAGS)
 		{
 			if(killmsgs[r].mode_special&1)
 			{
@@ -96,7 +96,7 @@ void KILLMESSAGES::on_render()
 
 		if(killmsgs[r].victim != killmsgs[r].killer)
 		{
-			if(gameclient.snap.gameobj && gameclient.snap.gameobj->gametype == GAMETYPE_CTF)
+			if(gameclient.snap.gameobj && gameclient.snap.gameobj->flags&GAMEFLAG_FLAGS)
 			{
 				if(killmsgs[r].mode_special&2)
 				{

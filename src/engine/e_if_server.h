@@ -91,7 +91,7 @@ void server_setclientscore(int client_id, int score);
 	See Also:
 		<other_func>
 */
-void server_setbrowseinfo(int game_type, int progression);
+void server_setbrowseinfo(const char *game_type, int progression);
 
 /*
 	Function: server_kick
