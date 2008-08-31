@@ -73,7 +73,7 @@ static void load_sounds_thread(void *do_render)
 	// load sounds
 	for(int s = 0; s < data->num_sounds; s++)
 	{
-		if(do_render) // TODO: repair me
+		if(do_render)
 			gameclient.menus->render_loading(load_current/(float)load_total);
 		for(int i = 0; i < data->sounds[s].num_sounds; i++)
 		{
@@ -175,7 +175,6 @@ void GAMECLIENT::on_init()
 	// load textures
 	for(int i = 0; i < data->num_images; i++)
 	{
-		// TODO: repair me
 		gameclient.menus->render_loading(load_current/load_total);
 		data->images[i].id = gfx_load_texture(data->images[i].filename, IMG_AUTO, 0);
 		load_current++;
@@ -387,13 +386,6 @@ void GAMECLIENT::on_message(int msgtype)
 
 		clients[msg->cid].update_render_info();
 	}
-    else if(msgtype == NETMSGTYPE_SV_WEAPONPICKUP)
-    {
-    	// TODO: repair me
-    	/*NETMSG_SV_WEAPONPICKUP *msg = (NETMSG_SV_WEAPONPICKUP *)rawmsg;
-        if(config.cl_autoswitch_weapons)
-        	input_data.wanted_weapon = msg->weapon+1;*/
-    }
 	else if(msgtype == NETMSGTYPE_SV_READYTOENTER)
 	{
 		client_entergame();

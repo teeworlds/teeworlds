@@ -6,6 +6,7 @@
 
 GAMECONTROLLER_TDM::GAMECONTROLLER_TDM()
 {
+	gametype = "TDM";
 	game_flags = GAMEFLAG_TEAMS;
 }
 

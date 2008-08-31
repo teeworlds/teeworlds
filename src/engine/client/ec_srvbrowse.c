@@ -48,6 +48,7 @@ static int num_server_capacity = 0;
 
 static int sorthash = 0;
 static char filterstring[64] = {0};
+static char filtergametypestring[128] = {0};
 
 static int serverlist_lan = 1;
 static int64 broadcast_time = 0;
@@ -181,7 +182,13 @@ static void client_serverbrowse_filter()
 			if(!matchfound)
 				filtered = 1;
 		}
-			
+		else if(config.b_filter_gametype[0] != 0)
+		{
+			/* match against game type */
+			if(!str_find_nocase(serverlist[i]->info.gametype, config.b_filter_gametype))
+				filtered = 1;
+		}
+
 		if(filtered == 0)
 			sorted_serverlist[num_sorted_servers++] = i;
 	}
@@ -195,7 +202,6 @@ static int client_serverbrowse_sorthash()
 	i |= config.b_filter_pw<<6;
 	i |= config.b_sort_order<<7;
 	i |= config.b_filter_compatversion<<8;
-	i |= config.b_filter_gametype<<9;
 	i |= config.b_filter_ping<<16;
 	return i;
 }
@@ -236,6 +242,7 @@ static void client_serverbrowse_sort()
 	for(i = 0; i < num_sorted_servers; i++)
 		serverlist[sorted_serverlist[i]]->info.sorted_index = i;
 	
+	str_copy(filtergametypestring, config.b_filter_gametype, sizeof(filtergametypestring)); 
 	str_copy(filterstring, config.b_filter_string, sizeof(filterstring)); 
 	sorthash = client_serverbrowse_sorthash();
 }
@@ -467,6 +474,6 @@ void client_serverbrowse_update()
 	
 	/* check if we need to resort */
 	/* TODO: remove the strcmp */
-	if(sorthash != client_serverbrowse_sorthash() || strcmp(filterstring, config.b_filter_string) != 0)
+	if(sorthash != client_serverbrowse_sorthash() || strcmp(filterstring, config.b_filter_string) != 0 || strcmp(filtergametypestring, config.b_filter_gametype) != 0)
 		client_serverbrowse_sort();
 }

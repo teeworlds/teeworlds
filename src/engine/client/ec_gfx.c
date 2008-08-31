@@ -177,7 +177,7 @@ int gfx_init()
 	}
 	else
 	{
-		int result = glfwOpenWindow(screen_width, screen_height, 0, 0, 0, 8, 24, 0, GLFW_WINDOW);
+		int result = glfwOpenWindow(screen_width, screen_height, 0, 0, 0, config.gfx_alphabits, 24, 0, GLFW_WINDOW);
 		if(result != GL_TRUE)
 		{
 			dbg_msg("game", "failed to create gl context");

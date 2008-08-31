@@ -65,6 +65,16 @@ void CONTROLS::on_init()
 	{ static INPUTSET set = {this, &input_data.prev_weapon, 0};  MACRO_REGISTER_COMMAND("+prevweapon", "", con_key_input_nextprev_weapon, (void *)&set); }
 }
 
+void CONTROLS::on_message(int msg, void *rawmsg)
+{
+    if(msg == NETMSGTYPE_SV_WEAPONPICKUP)
+    {
+    	NETMSG_SV_WEAPONPICKUP *msg = (NETMSG_SV_WEAPONPICKUP *)rawmsg;
+        if(config.cl_autoswitch_weapons)
+        	input_data.wanted_weapon = msg->weapon+1;
+    }
+}
+
 int CONTROLS::snapinput(int *data)
 {
 	static NETOBJ_PLAYER_INPUT last_data = {0};

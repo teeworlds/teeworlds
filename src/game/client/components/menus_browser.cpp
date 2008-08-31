@@ -296,7 +296,17 @@ void MENUS::render_serverbrowser(RECT main_view)
 				ui_do_label(&button, version, 12.0f, 1);
 			}			
 			else if(id == COL_GAMETYPE)
-				ui_do_label(&button, item->gametype, 12.0f, 0);
+			{
+				// all these are just for nice compability
+				if(item->gametype[0] == '0' && item->gametype[1] == 0)
+					ui_do_label(&button, "DM", 12.0f, 0);
+				else if(item->gametype[0] == '1' && item->gametype[1] == 0)
+					ui_do_label(&button, "TDM", 12.0f, 0);
+				else if(item->gametype[0] == '2' && item->gametype[1] == 0)
+					ui_do_label(&button, "CTF", 12.0f, 0);
+				else
+					ui_do_label(&button, item->gametype, 12.0f, 0);
+			}
 		}
 	}
 
@@ -425,7 +435,15 @@ void MENUS::render_serverbrowser(RECT main_view)
 	ui_hsplit_t(&filters, 20.0f, &button, &filters);
 	ui_do_label(&button, "Quick search: ", 14.0f, -1);
 	ui_vsplit_l(&button, 95.0f, 0, &button);
+	ui_margin(&button, 1.0f, &button);
 	ui_do_edit_box(&config.b_filter_string, &button, config.b_filter_string, sizeof(config.b_filter_string), 14.0f);
+
+
+	ui_hsplit_t(&filters, 20.0f, &button, &filters);
+	ui_do_label(&button, "Game types: ", 14.0f, -1);
+	ui_vsplit_l(&button, 95.0f, 0, &button);
+	ui_margin(&button, 1.0f, &button);
+	ui_do_edit_box(&config.b_filter_gametype, &button, config.b_filter_gametype, sizeof(config.b_filter_gametype), 14.0f);
 
 	ui_vsplit_l(&filters, 180.0f, &filters, &types);
 
@@ -441,10 +459,6 @@ void MENUS::render_serverbrowser(RECT main_view)
 	ui_hsplit_t(&filters, 20.0f, &button, &filters);
 	if (ui_do_button(&config.b_filter_pw, "No password", config.b_filter_pw, &button, ui_draw_checkbox, 0))
 		config.b_filter_pw ^= 1;
-
-	ui_hsplit_t(&filters, 20.0f, &button, &filters);
-	if (ui_do_button((char *)&config.b_filter_compatversion, "Compatible Version", config.b_filter_compatversion, &button, ui_draw_checkbox, 0))
-		config.b_filter_compatversion ^= 1;
 
 	// game types
 	/*
@@ -462,8 +476,13 @@ void MENUS::render_serverbrowser(RECT main_view)
 	*/
 
 	// ping
+	ui_hsplit_t(&types, 20.0f, &button, &types);
+	if (ui_do_button((char *)&config.b_filter_compatversion, "Compatible Version", config.b_filter_compatversion, &button, ui_draw_checkbox, 0))
+		config.b_filter_compatversion ^= 1;
+	
 	ui_hsplit_t(&types, 2.0f, &button, &types);
 	ui_hsplit_t(&types, 20.0f, &button, &types);
+	
 	{
 		RECT editbox;
 		ui_vsplit_l(&button, 40.0f, &editbox, &button);
@@ -517,7 +536,7 @@ void MENUS::render_serverbrowser(RECT main_view)
 			config.b_filter_empty = 0;
 			config.b_filter_pw = 0;
 			config.b_filter_ping = 999;
-			config.b_filter_gametype = 0xf;
+			config.b_filter_gametype[0] = 0;
 			config.b_filter_compatversion = 1;
 			config.b_filter_string[0] = 0;
 		}

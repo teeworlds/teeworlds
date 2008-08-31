@@ -14,7 +14,7 @@
 
 GAMECONTROLLER::GAMECONTROLLER()
 {
-	gametype = config.sv_gametype;
+	gametype = "unknown";
 	
 	//
 	do_warmup(config.sv_warmup);

@@ -225,23 +225,30 @@ void SCOREBOARD::render_scoreboard(float x, float y, float w, int team, const ch
 
 void SCOREBOARD::on_render()
 {
-	if(!active)
+	bool do_scoreboard = false;
+
+	// if we activly wanna look on the scoreboard	
+	if(active)
+		do_scoreboard = true;
+		
+	if(gameclient.snap.local_info && gameclient.snap.local_info->team != -1)
+	{
+		// we are not a spectator, check if we are ead
+		if(!gameclient.snap.local_character || gameclient.snap.local_character->health < 0)
+			do_scoreboard = true;
+	}
+
+	// if we the game is over
+	if(gameclient.snap.gameobj && gameclient.snap.gameobj->game_over)
+		do_scoreboard = true;
+		
+	if(!do_scoreboard)
 		return;
 		
 	// if the score board is active, then we should clear the motd message aswell
-	gameclient.motd->clear();
+	if(active)
+		gameclient.motd->clear();
 	
-	// TODO: repair me
-	/*
-	bool do_scoreboard = false;
-
-	// if we are dead
-	if(!spectate && (!gameclient.snap.local_character || gameclient.snap.local_character->health < 0))
-		do_scoreboard = true;
-	
-	// if we the game is over
-	if(gameclient.snap.gameobj && gameclient.snap.gameobj->game_over)
-		do_scoreboard = true;*/
 
 	float width = 400*3.0f*gfx_screenaspect();
 	float height = 400*3.0f;

@@ -10,6 +10,7 @@ GAMECONTROLLER_CTF::GAMECONTROLLER_CTF()
 {
 	flags[0] = 0;
 	flags[1] = 0;
+	gametype = "CTF";
 	game_flags = GAMEFLAG_TEAMS|GAMEFLAG_FLAGS;
 }
 
