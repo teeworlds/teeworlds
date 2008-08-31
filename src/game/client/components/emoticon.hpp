@@ -12,6 +12,7 @@ class EMOTICON : public COMPONENT
 	int selected_emote;
 
 	static void con_key_emoticon(void *result, void *user_data);
+	static void con_emote(void *result, void *user_data);
 	
 public:
 	EMOTICON();
