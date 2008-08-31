@@ -11,9 +11,13 @@
 
 CURRENT:
 	packet header: 3 bytes
-		unsigned char flags_ack; // 6bit flags, 2bit ack
+		unsigned char flags_ack; // 4bit flags, 4bit ack
 		unsigned char ack; // 8 bit ack
 		unsigned char num_chunks; // 8 bit chunks
+		
+		(unsigned char padding[3])	// 24 bit extra incase it's a connection less packet
+									// this is to make sure that it's compatible with the
+									// old protocol
 
 	chunk header: 2-3 bytes
 		unsigned char flags_size; // 2bit flags, 6 bit size
@@ -41,8 +45,8 @@ enum
 	NET_CONNSTATE_ERROR=4,
 
 	NET_PACKETFLAG_CONTROL=1,
-	NET_PACKETFLAG_RESEND=2,
-	NET_PACKETFLAG_CONNLESS=4,
+	NET_PACKETFLAG_CONNLESS=2,
+	NET_PACKETFLAG_RESEND=4,
 
 	NET_CHUNKFLAG_VITAL=1,
 	NET_CHUNKFLAG_RESEND=2,
@@ -82,10 +86,10 @@ typedef struct
 	int64 first_send_time;
 } NETCHUNKDATA;
 
-typedef struct RINGBUFFER_ITEM_t
+typedef struct RINGBUFFER_ITEM
 {
-	struct RINGBUFFER_ITEM_t *next;
-	struct RINGBUFFER_ITEM_t *prev;
+	struct RINGBUFFER_ITEM *next;
+	struct RINGBUFFER_ITEM *prev;
 	int size;
 } RINGBUFFER_ITEM;
 
@@ -187,7 +191,7 @@ typedef struct
 	unsigned char buffer[NET_MAX_PACKETSIZE];
 } NETRECVINFO;
 
-struct NETSERVER_t
+struct NETSERVER
 {
 	NETSOCKET socket;
 	NETSLOT slots[NET_MAX_CLIENTS];
@@ -197,9 +201,9 @@ struct NETSERVER_t
 	void *user_ptr;
 	
 	NETRECVINFO recv;
-} ;
+};
 
-struct NETCLIENT_t
+struct NETCLIENT
 {
 	NETADDR server_addr;
 	NETSOCKET socket;
@@ -214,6 +218,19 @@ static HUFFMAN_STATE huffmanstate;
 #define COMPRESSION 1
 
 /* packs the data tight and sends it */
+static void send_packet_connless(NETSOCKET socket, NETADDR *addr, const void *data, int data_size)
+{
+	unsigned char buffer[NET_MAX_PACKETSIZE];
+	buffer[0] = 0xff;
+	buffer[1] = 0xff;
+	buffer[2] = 0xff;
+	buffer[3] = 0xff;
+	buffer[4] = 0xff;
+	buffer[5] = 0xff;
+	mem_copy(&buffer[6], data, data_size);
+	net_udp_send(socket, addr, buffer, 6+data_size);
+}
+
 static void send_packet(NETSOCKET socket, NETADDR *addr, NETPACKETCONSTRUCT *packet)
 {
 	unsigned char buffer[NET_MAX_PACKETSIZE];
@@ -254,10 +271,21 @@ static int unpack_packet(unsigned char *buffer, int size, NETPACKETCONSTRUCT *pa
 	packet->num_chunks = buffer[2];
 	packet->data_size = size - NET_PACKETHEADERSIZE;
 	
-	if(COMPRESSION)
-		huffman_decompress(&huffmanstate, &buffer[3], packet->data_size, packet->chunk_data, sizeof(packet->chunk_data));
+	if(packet->flags&NET_PACKETFLAG_CONNLESS)
+	{
+		packet->flags = NET_PACKETFLAG_CONNLESS;
+		packet->ack = 0;
+		packet->num_chunks = 0;
+		packet->data_size = size - 6;
+		mem_copy(packet->chunk_data, &buffer[6], packet->data_size);
+	}
 	else
-		mem_copy(packet->chunk_data, &buffer[3], packet->data_size);
+	{
+		if(COMPRESSION)
+			huffman_decompress(&huffmanstate, &buffer[3], packet->data_size, packet->chunk_data, sizeof(packet->chunk_data));
+		else
+			mem_copy(packet->chunk_data, &buffer[3], packet->data_size);
+	}
 	
 	/* return success */
 	return 0;
@@ -810,57 +838,68 @@ int netserver_recv(NETSERVER *s, NETCHUNK *chunk)
 		
 		if(unpack_packet(s->recv.buffer, bytes, &s->recv.data) == 0)
 		{
-			/* TODO: handle connection less packets here */
-			/* TODO: check size here */
-			if(s->recv.data.flags&NET_PACKETFLAG_CONTROL && s->recv.data.chunk_data[0] == NET_CTRLMSG_CONNECT)
+			if(s->recv.data.flags&NET_PACKETFLAG_CONNLESS)
 			{
-				found = 0;
-				
-				/* check if we already got this client */
-				for(i = 0; i < s->max_clients; i++)
-				{
-					if(s->slots[i].conn.state != NET_CONNSTATE_OFFLINE &&
-						net_addr_comp(&s->slots[i].conn.peeraddr, &addr) == 0)
-					{
-						found = 1; /* silent ignore.. we got this client already */
-						break;
-					}
-				}
-				
-				/* client that wants to connect */
-				if(!found)
+				chunk->flags = NETSENDFLAG_CONNLESS;
+				chunk->client_id = -1;
+				chunk->address = addr;
+				chunk->data_size = s->recv.data.data_size;
+				chunk->data = s->recv.data.chunk_data;
+				return 1;
+			}
+			else
+			{			
+				/* TODO: check size here */
+				if(s->recv.data.flags&NET_PACKETFLAG_CONTROL && s->recv.data.chunk_data[0] == NET_CTRLMSG_CONNECT)
 				{
 					found = 0;
 					
+					/* check if we already got this client */
 					for(i = 0; i < s->max_clients; i++)
 					{
-						if(s->slots[i].conn.state == NET_CONNSTATE_OFFLINE)
+						if(s->slots[i].conn.state != NET_CONNSTATE_OFFLINE &&
+							net_addr_comp(&s->slots[i].conn.peeraddr, &addr) == 0)
 						{
-							found = 1;
-							conn_feed(&s->slots[i].conn, &s->recv.data, &addr);
-							if(s->new_client)
-								s->new_client(i, s->user_ptr);
+							found = 1; /* silent ignore.. we got this client already */
 							break;
 						}
 					}
 					
+					/* client that wants to connect */
 					if(!found)
 					{
-						/* TODO: send server full emssage */
+						found = 0;
+						
+						for(i = 0; i < s->max_clients; i++)
+						{
+							if(s->slots[i].conn.state == NET_CONNSTATE_OFFLINE)
+							{
+								found = 1;
+								conn_feed(&s->slots[i].conn, &s->recv.data, &addr);
+								if(s->new_client)
+									s->new_client(i, s->user_ptr);
+								break;
+							}
+						}
+						
+						if(!found)
+						{
+							/* TODO: send server full emssage */
+						}
 					}
 				}
-			}
-			else
-			{
-				/* normal packet, find matching slot */
-				for(i = 0; i < s->max_clients; i++)
+				else
 				{
-					if(net_addr_comp(&s->slots[i].conn.peeraddr, &addr) == 0)
+					/* normal packet, find matching slot */
+					for(i = 0; i < s->max_clients; i++)
 					{
-						if(conn_feed(&s->slots[i].conn, &s->recv.data, &addr))
+						if(net_addr_comp(&s->slots[i].conn.peeraddr, &addr) == 0)
 						{
-							if(s->recv.data.data_size)
-								recvinfo_start(&s->recv, &addr, &s->slots[i].conn, i);
+							if(conn_feed(&s->slots[i].conn, &s->recv.data, &addr))
+							{
+								if(s->recv.data.data_size)
+									recvinfo_start(&s->recv, &addr, &s->slots[i].conn, i);
+							}
 						}
 					}
 				}
@@ -880,7 +919,8 @@ int netserver_send(NETSERVER *s, NETCHUNK *chunk)
 	
 	if(chunk->flags&NETSENDFLAG_CONNLESS)
 	{
-		/* TODO: handle connectionless */		
+		/* send connectionless packet */
+		send_packet_connless(s->socket, &chunk->address, chunk->data, chunk->data_size);
 	}
 	else
 	{
@@ -985,9 +1025,20 @@ int netclient_recv(NETCLIENT *c, NETCHUNK *chunk)
 
 		if(unpack_packet(c->recv.buffer, bytes, &c->recv.data) == 0)
 		{
-			/* TODO: handle connection less packets here */
-			if(conn_feed(&c->conn, &c->recv.data, &addr))
-				recvinfo_start(&c->recv, &addr, &c->conn, 0);
+			if(c->recv.data.flags&NET_PACKETFLAG_CONNLESS)
+			{
+				chunk->flags = NETSENDFLAG_CONNLESS;
+				chunk->client_id = -1;
+				chunk->address = addr;
+				chunk->data_size = c->recv.data.data_size;
+				chunk->data = c->recv.data.chunk_data;
+				return 1;
+			}
+			else
+			{
+				if(conn_feed(&c->conn, &c->recv.data, &addr))
+					recvinfo_start(&c->recv, &addr, &c->conn, 0);
+			}
 		}
 	}
 	return 0;
@@ -1004,7 +1055,7 @@ int netclient_send(NETCLIENT *c, NETCHUNK *chunk)
 	if(chunk->flags&NETSENDFLAG_CONNLESS)
 	{
 		/* send connectionless packet */
-		/* TODO: fix connectionless packets */
+		send_packet_connless(c->socket, &chunk->address, chunk->data, chunk->data_size);
 	}
 	else
 	{
@@ -1060,19 +1111,19 @@ void netcommon_openlog(const char *filename)
 
 
 static const unsigned freq_table[256+1] = {
-1<<30,4545,2657,431,1950,919,444,482,2244,617,838,542,715,1814,304,240,754,212,647,186,
-283,131,146,166,543,164,167,136,179,859,363,113,157,154,204,108,137,180,202,176,
-872,404,168,134,151,111,113,109,120,126,129,100,41,20,16,22,18,18,17,19,
-16,37,13,21,362,166,99,78,95,88,81,70,83,284,91,187,77,68,52,68,
-59,66,61,638,71,157,50,46,69,43,11,24,13,19,10,12,12,20,14,9,
-20,20,10,10,15,15,12,12,7,19,15,14,13,18,35,19,17,14,8,5,
-15,17,9,15,14,18,8,10,2173,134,157,68,188,60,170,60,194,62,175,71,
-148,67,167,78,211,67,156,69,1674,90,174,53,147,89,181,51,174,63,163,80,
-167,94,128,122,223,153,218,77,200,110,190,73,174,69,145,66,277,143,141,60,
-136,53,180,57,142,57,158,61,166,112,152,92,26,22,21,28,20,26,30,21,
-32,27,20,17,23,21,30,22,22,21,27,25,17,27,23,18,39,26,15,21,
-12,18,18,27,20,18,15,19,11,17,33,12,18,15,19,18,16,26,17,18,
-9,10,25,22,22,17,20,16,6,16,15,20,14,18,24,335,1517 };
+	1<<30,4545,2657,431,1950,919,444,482,2244,617,838,542,715,1814,304,240,754,212,647,186,
+	283,131,146,166,543,164,167,136,179,859,363,113,157,154,204,108,137,180,202,176,
+	872,404,168,134,151,111,113,109,120,126,129,100,41,20,16,22,18,18,17,19,
+	16,37,13,21,362,166,99,78,95,88,81,70,83,284,91,187,77,68,52,68,
+	59,66,61,638,71,157,50,46,69,43,11,24,13,19,10,12,12,20,14,9,
+	20,20,10,10,15,15,12,12,7,19,15,14,13,18,35,19,17,14,8,5,
+	15,17,9,15,14,18,8,10,2173,134,157,68,188,60,170,60,194,62,175,71,
+	148,67,167,78,211,67,156,69,1674,90,174,53,147,89,181,51,174,63,163,80,
+	167,94,128,122,223,153,218,77,200,110,190,73,174,69,145,66,277,143,141,60,
+	136,53,180,57,142,57,158,61,166,112,152,92,26,22,21,28,20,26,30,21,
+	32,27,20,17,23,21,30,22,22,21,27,25,17,27,23,18,39,26,15,21,
+	12,18,18,27,20,18,15,19,11,17,33,12,18,15,19,18,16,26,17,18,
+	9,10,25,22,22,17,20,16,6,16,15,20,14,18,24,335,1517};
 
 void netcommon_init()
 {

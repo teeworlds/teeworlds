@@ -787,12 +787,12 @@ static void server_send_serverinfo(NETADDR *addr, int lan)
 	char buf[128];
 
 	/* count the players */	
-	int c = 0;
+	int player_count = 0;
 	int i;
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(clients[i].state != SRVCLIENT_STATE_EMPTY)
-			c++;
+			player_count++;
 	}
 	
 	packer_reset(&p);
@@ -806,7 +806,7 @@ static void server_send_serverinfo(NETADDR *addr, int lan)
 
 	/* gametype */
 	str_format(buf, sizeof(buf), "%d", browseinfo_gametype);
-	packer_add_string(&p, buf, 2);
+	packer_add_string(&p, browseinfo_gametype, 16);
 
 	/* flags */
 	i = 0;
@@ -819,7 +819,7 @@ static void server_send_serverinfo(NETADDR *addr, int lan)
 	str_format(buf, sizeof(buf), "%d", browseinfo_progression);
 	packer_add_string(&p, buf, 4);
 	
-	str_format(buf, sizeof(buf), "%d", c); packer_add_string(&p, buf, 3);  /* num players */
+	str_format(buf, sizeof(buf), "%d", player_count); packer_add_string(&p, buf, 3);  /* num players */
 	str_format(buf, sizeof(buf), "%d", netserver_max_clients(net)); packer_add_string(&p, buf, 3); /* max players */
 
 	for(i = 0; i < MAX_CLIENTS; i++)

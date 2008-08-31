@@ -711,19 +711,23 @@ static void client_process_packet(NETCHUNK *packet)
 			memcmp(packet->data, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST)) == 0)
 		{
 			int size = packet->data_size-sizeof(SERVERBROWSE_LIST);
-			int num = size/sizeof(NETADDR);
-			NETADDR *addrs = (NETADDR *)((char*)packet->data+sizeof(SERVERBROWSE_LIST));
+			int num = size/sizeof(MASTERSRV_ADDR);
+			MASTERSRV_ADDR *addrs = (MASTERSRV_ADDR *)((char*)packet->data+sizeof(SERVERBROWSE_LIST));
 			int i;
-			
+
 			for(i = 0; i < num; i++)
 			{
-				NETADDR addr = addrs[i];
+				NETADDR addr;
 				SERVER_INFO info = {0};
-
-#if defined(CONF_ARCH_ENDIAN_BIG)
-				const char *tmp = (const char *)&addr.port;
-				addr.port = (tmp[1]<<8) | tmp[0];
-#endif
+				
+				/* convert address */
+				mem_zero(&addr, sizeof(addr));
+				addr.type = NETTYPE_IPV4;
+				addr.ip[0] = addrs[i].ip[0];
+				addr.ip[1] = addrs[i].ip[1];
+				addr.ip[2] = addrs[i].ip[2];
+				addr.ip[3] = addrs[i].ip[3];
+				addr.port = (addrs[i].port[1]<<8) | addrs[i].port[0];
 
 				info.latency = 999;
 				str_format(info.address, sizeof(info.address), "%d.%d.%d.%d:%d",

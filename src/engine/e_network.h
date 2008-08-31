@@ -22,8 +22,8 @@ typedef struct
 	int resend_bytes;
 } NETSTATS;*/
 
-typedef struct NETSERVER_t NETSERVER;
-typedef struct NETCLIENT_t NETCLIENT;
+typedef struct NETSERVER NETSERVER;
+typedef struct NETCLIENT NETCLIENT;
 
 enum
 {

@@ -5,6 +5,12 @@ enum {
 	MAX_SERVERS = 200
 };
 
+typedef struct MASTERSRV_ADDR
+{
+	unsigned char ip[4];
+	unsigned char port[2];
+} MASTERSRV_ADDR;
+
 static const unsigned char SERVERBROWSE_HEARTBEAT[] = {255, 255, 255, 255, 'b', 'e', 'a', 't'};
 
 static const unsigned char SERVERBROWSE_GETLIST[] = {255, 255, 255, 255, 'r', 'e', 'q', 't'};
