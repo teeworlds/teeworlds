@@ -30,6 +30,9 @@ class GAMECLIENT
 	int predicted_tick;
 	int last_new_predicted_tick;
 
+	static void con_team(void *result, void *user_data);
+	static void con_kill(void *result, void *user_data);
+	
 public:
 
 	// TODO: move this

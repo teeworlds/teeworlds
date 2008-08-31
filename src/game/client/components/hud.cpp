@@ -186,6 +186,9 @@ void HUD::render_tunewarning()
 
 void HUD::render_cursor()
 {
+	if(!gameclient.snap.local_character)
+		return;
+		
 	mapscreen_to_group(gameclient.camera->center.x, gameclient.camera->center.y, layers_game_group());
 	gfx_texture_set(data->images[IMAGE_GAME].id);
 	gfx_quads_begin();

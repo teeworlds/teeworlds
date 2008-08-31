@@ -8,27 +8,30 @@
 #include "gc_map_image.hpp"
 
 #include "gameclient.hpp"
-#include "components/killmessages.hpp"
-#include "components/chat.hpp"
-#include "components/motd.hpp"
-#include "components/broadcast.hpp"
-#include "components/console.hpp"
+
+
 #include "components/binds.hpp"
-#include "components/particles.hpp"
-#include "components/menus.hpp"
-#include "components/skins.hpp"
-#include "components/flow.hpp"
-#include "components/players.hpp"
-#include "components/items.hpp"
-#include "components/maplayers.hpp"
+#include "components/broadcast.hpp"
 #include "components/camera.hpp"
-#include "components/hud.hpp"
-#include "components/debughud.hpp"
+#include "components/chat.hpp"
+#include "components/console.hpp"
 #include "components/controls.hpp"
+#include "components/damageind.hpp"
+#include "components/debughud.hpp"
 #include "components/effects.hpp"
-#include "components/scoreboard.hpp"
-#include "components/sounds.hpp"
 #include "components/emoticon.hpp"
+#include "components/flow.hpp"
+#include "components/hud.hpp"
+#include "components/items.hpp"
+#include "components/killmessages.hpp"
+#include "components/maplayers.hpp"
+#include "components/menus.hpp"
+#include "components/motd.hpp"
+#include "components/particles.hpp"
+#include "components/players.hpp"
+#include "components/scoreboard.hpp"
+#include "components/skins.hpp"
+#include "components/sounds.hpp"
 
 GAMECLIENT gameclient;
 
@@ -51,6 +54,7 @@ static EFFECTS effects;
 static SCOREBOARD scoreboard;
 static SOUNDS sounds;
 static EMOTICON emoticon;
+static DAMAGEIND damageind;
 
 static PLAYERS players;
 static ITEMS items;
@@ -97,6 +101,7 @@ void GAMECLIENT::on_init()
 	effects = &::effects;
 	sounds = &::sounds;
 	motd = &::motd;
+	damageind = &::damageind;
 	
 	// make a list of all the systems, make sure to add them in the corrent render order
 	all.add(skins);
@@ -115,6 +120,7 @@ void GAMECLIENT::on_init()
 	all.add(&players);
 	all.add(&maplayers_foreground);
 	all.add(&particles->render_general);
+	all.add(damageind);
 	all.add(&hud);
 	all.add(&emoticon);
 	all.add(&killmessages);
@@ -139,6 +145,10 @@ void GAMECLIENT::on_init()
 	// init all components
 	for(int i = 0; i < all.num; i++)
 		all.components[i]->on_init();
+	
+	// add the some console commands
+	MACRO_REGISTER_COMMAND("team", "", con_team, this);
+	MACRO_REGISTER_COMMAND("kill", "", con_kill, this);
 	
 	// setup item sizes
 	for(int i = 0; i < NUM_NETOBJTYPES; i++)
@@ -719,4 +729,16 @@ void GAMECLIENT::send_kill(int client_id)
 	NETMSG_CL_KILL msg;
 	msg.pack(MSGFLAG_VITAL);
 	client_send_msg();
+}
+
+
+
+void GAMECLIENT::con_team(void *result, void *user_data)
+{
+	((GAMECLIENT*)user_data)->send_switch_team(console_arg_int(result, 0));
+}
+
+void GAMECLIENT::con_kill(void *result, void *user_data)
+{
+	((GAMECLIENT*)user_data)->send_kill(-1);
 }
