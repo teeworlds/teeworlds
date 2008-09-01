@@ -350,6 +350,7 @@ public:
 		world_zoom = 1.0f;
 		zoom_level = 100;
 		lock_mouse = false;
+		show_mouse_pointer = true;
 		mouse_delta_x = 0;
 		mouse_delta_y = 0;
 		mouse_delta_wx = 0;
@@ -394,6 +395,7 @@ public:
 	float world_zoom;
 	int zoom_level;
 	bool lock_mouse;
+	bool show_mouse_pointer;
 	bool gui_active;
 	bool proof_borders;
 	float mouse_delta_x;

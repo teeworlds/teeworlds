@@ -2326,15 +2326,18 @@ void EDITOR::render()
 		}
 	}
 	
-	// render butt ugly mouse cursor
-	float mx = ui_mouse_x();
-	float my = ui_mouse_y();
-	gfx_texture_set(cursor_texture);
-	gfx_quads_begin();
-	if(ui_got_context == ui_hot_item())
-		gfx_setcolor(1,0,0,1);
-	gfx_quads_drawTL(mx,my, 16.0f, 16.0f);
-	gfx_quads_end();
+	if (editor.show_mouse_pointer)
+	{
+		// render butt ugly mouse cursor
+		float mx = ui_mouse_x();
+		float my = ui_mouse_y();
+		gfx_texture_set(cursor_texture);
+		gfx_quads_begin();
+		if(ui_got_context == ui_hot_item())
+			gfx_setcolor(1,0,0,1);
+		gfx_quads_drawTL(mx,my, 16.0f, 16.0f);
+		gfx_quads_end();
+	}
 	
 }
 
@@ -2476,7 +2479,16 @@ extern "C" void editor_update_and_render()
 	if(inp_key_down(KEY_F8))
 		editor.load("data/maps/debug_test.map");
 	
+	if(inp_key_down(KEY_F10))
+		editor.show_mouse_pointer = false;
+	
 	editor.render();
+	
+	if(inp_key_down(KEY_F10))
+	{
+		gfx_screenshot();
+		editor.show_mouse_pointer = true;
+	}
 	
 	inp_clear_events();
 }
