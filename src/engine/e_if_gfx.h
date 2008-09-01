@@ -221,6 +221,34 @@ void gfx_lines_begin();
 void gfx_lines_draw(float x0, float y0, float x1, float y1);
 
 /*
+	Function: gfx_minimize
+		Minimizes the window.
+		
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
+void gfx_minimize();
+
+/*
+	Function: gfx_minimize
+		Maximizes the window.
+		
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
+void gfx_maximize();
+
+/*
 	Function: gfx_lines_end
 		TODO
 	

@@ -1153,3 +1153,13 @@ void gfx_clip_disable()
 {
 	glDisable(GL_SCISSOR_TEST);
 }
+
+void gfx_minimize()
+{
+	glfwIconifyWindow();
+}
+
+void gfx_maximize()
+{
+	glfwRestoreWindow();
+}

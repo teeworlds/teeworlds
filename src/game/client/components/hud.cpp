@@ -183,6 +183,25 @@ void HUD::render_tunewarning()
 	}
 }		
 
+void HUD::render_teambalancewarning()
+{
+	// render prompt about team-balance
+	bool flash = time_get()/(time_freq()/2)%2 == 0;
+	if (gameclient.snap.gameobj && gameclient.snap.gameobj->flags&GAMEFLAG_TEAMS != 0)
+	{	
+		if (config.cl_warning_teambalance && abs(gameclient.snap.team_size[0]-gameclient.snap.team_size[1]) >= 2)
+		{
+			const char *text = "Please balance teams!";
+			if(flash)
+				gfx_text_color(1,1,0.5f,1);
+			else
+				gfx_text_color(0.7f,0.7f,0.2f,1.0f);
+			gfx_text(0x0, 5, 50, 6, text, -1);
+			gfx_text_color(1,1,1,1);
+		}
+	}
+}
+
 void HUD::render_cursor()
 {
 	if(!gameclient.snap.local_character)
@@ -263,5 +282,6 @@ void HUD::on_render()
 	render_fps();
 	render_connectionwarning();
 	render_tunewarning();
+	render_teambalancewarning();
 	render_cursor();
 }

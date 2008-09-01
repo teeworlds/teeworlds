@@ -21,6 +21,11 @@
 
 #include <mastersrv/mastersrv.h>
 
+#if defined(CONF_FAMILY_WINDOWS) 
+	#define _WIN32_WINNT 0x0500 
+	#include <windows.h> 
+#endif 
+
 static SNAPBUILD builder;
 
 static int64 game_start_time;
@@ -1151,6 +1156,17 @@ int main(int argc, char **argv)
 	strncpy(buffer, argv[0], 511);
 	buffer[pos] = 0;
 	chdir(buffer);
+#endif
+#if defined(CONF_FAMILY_WINDOWS)
+	int i;
+	for(i = 1; i < argc; i++)
+	{
+		if(strcmp("-s", argv[i]) == 0 || strcmp("--silent", argv[i]) == 0)
+		{
+			ShowWindow(GetConsoleWindow(), SW_HIDE);
+			break;
+		}
+	}
 #endif
 
 	/* init the engine */

@@ -11,6 +11,7 @@ MACRO_CONFIG_INT(cl_threadsoundloading, 0, 0, 1)
 
 
 MACRO_CONFIG_INT(cl_warning_tuning, 1, 0, 1)
+MACRO_CONFIG_INT(cl_warning_teambalance, 1, 0, 1)
 
 MACRO_CONFIG_INT(cl_mouse_deadzone, 300, 0, 0)
 MACRO_CONFIG_INT(cl_mouse_followfactor, 60, 0, 200)

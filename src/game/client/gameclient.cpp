@@ -501,6 +501,7 @@ void GAMECLIENT::on_snapshot()
 	{
 		// 1. fetch local player
 		// 2. set him to the center
+		gameclient.snap.team_size[0] = gameclient.snap.team_size[1] = 0;
 		int num = snap_num_items(SNAP_CURRENT);
 		for(int i = 0; i < num; i++)
 		{
@@ -527,6 +528,11 @@ void GAMECLIENT::on_snapshot()
 							gameclient.snap.local_prev_character = (NETOBJ_CHARACTER *)p;
 					}
 				}
+				
+				// calculate team-balance
+				if(info->team != -1)
+					gameclient.snap.team_size[info->team]++;
+				
 			}
 			else if(item.type == NETOBJTYPE_GAME)
 				gameclient.snap.gameobj = (NETOBJ_GAME *)data;

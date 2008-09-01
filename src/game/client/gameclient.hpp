@@ -57,6 +57,7 @@ public:
 		const NETOBJ_PLAYER_INFO *player_infos[MAX_CLIENTS];
 		const NETOBJ_PLAYER_INFO *info_by_score[MAX_CLIENTS];
 		int num_players;
+		int team_size[2];
 	};
 
 	SNAPSTATE snap;
