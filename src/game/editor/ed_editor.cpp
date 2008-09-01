@@ -12,7 +12,6 @@ extern "C" {
 	#include <engine/e_config.h>
 }
 
-#include <game/client/gc_map_image.hpp>
 #include <game/client/ui.hpp>
 #include <game/gamecore.hpp>
 #include <game/client/gc_render.hpp>

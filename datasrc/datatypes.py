@@ -94,11 +94,15 @@ class Array(BaseType):
 			lines += item.EmitPreDefinition("%s[%d]"%(self.Identifyer(), i))
 			i += 1
 			
-		lines += ["static %s %s[] = {"%(self.TypeName(), self.Identifyer())]
-		for item in self.items:
-			itemlines = item.EmitDefinition("")
-			lines += ["\t" + " ".join(itemlines).replace("\t", " ") + ","]
-		lines += ["};"]
+		if len(self.items):
+			lines += ["static %s %s[] = {"%(self.TypeName(), self.Identifyer())]
+			for item in self.items:
+				itemlines = item.EmitDefinition("")
+				lines += ["\t" + " ".join(itemlines).replace("\t", " ") + ","]
+			lines += ["};"]
+		else:
+			lines += ["static %s *%s = 0;"%(self.TypeName(), self.Identifyer())]
+			
 		return lines
 	def EmitDefinition(self, name):
 		return [str(len(self.items))+","+self.Identifyer()]
