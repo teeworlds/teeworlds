@@ -1,15 +1,10 @@
-
-extern "C" {
-	#include <engine/e_config.h>
-}
-
 #include <game/layers.hpp>
 #include <game/client/gameclient.hpp>
 #include <game/client/component.hpp>
 #include <game/client/gc_render.hpp>
-#include <game/client/gc_map_image.hpp>
 
 #include <game/client/components/camera.hpp>
+#include <game/client/components/mapimages.hpp>
 
 #include "maplayers.hpp"
 
@@ -125,7 +120,7 @@ void MAPLAYERS::on_render()
 					if(tmap->image == -1)
 						gfx_texture_set(-1);
 					else
-						gfx_texture_set(img_get(tmap->image));
+						gfx_texture_set(gameclient.mapimages->get(tmap->image));
 						
 					TILE *tiles = (TILE *)map_get_data(tmap->data);
 					gfx_blend_none();
@@ -139,7 +134,7 @@ void MAPLAYERS::on_render()
 					if(qlayer->image == -1)
 						gfx_texture_set(-1);
 					else
-						gfx_texture_set(img_get(qlayer->image));
+						gfx_texture_set(gameclient.mapimages->get(qlayer->image));
 
 					QUAD *quads = (QUAD *)map_get_data_swapped(qlayer->data);
 					

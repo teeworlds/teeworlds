@@ -5,10 +5,8 @@
 
 #include <game/layers.hpp>
 #include "gc_render.hpp"
-#include "gc_map_image.hpp"
 
 #include "gameclient.hpp"
-
 
 #include "components/binds.hpp"
 #include "components/broadcast.hpp"
@@ -24,6 +22,7 @@
 #include "components/hud.hpp"
 #include "components/items.hpp"
 #include "components/killmessages.hpp"
+#include "components/mapimages.hpp"
 #include "components/maplayers.hpp"
 #include "components/menus.hpp"
 #include "components/motd.hpp"
@@ -58,6 +57,7 @@ static DAMAGEIND damageind;
 
 static PLAYERS players;
 static ITEMS items;
+static MAPIMAGES mapimages;
 
 static MAPLAYERS maplayers_background(MAPLAYERS::TYPE_BACKGROUND);
 static MAPLAYERS maplayers_foreground(MAPLAYERS::TYPE_FOREGROUND);
@@ -102,9 +102,11 @@ void GAMECLIENT::on_init()
 	sounds = &::sounds;
 	motd = &::motd;
 	damageind = &::damageind;
+	mapimages = &::mapimages;
 	
 	// make a list of all the systems, make sure to add them in the corrent render order
 	all.add(skins);
+	all.add(mapimages);
 	all.add(effects); // doesn't render anything, just updates effects
 	all.add(particles);
 	all.add(binds);
@@ -233,7 +235,6 @@ void GAMECLIENT::on_connected()
 {
 	layers_init();
 	col_init();
-	img_init();
 	render_tilemap_generate_skip();
 		
 	on_reset();	

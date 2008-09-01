@@ -530,8 +530,6 @@ int MENUS::render_menubar(RECT r)
 			if (ui_do_button(&favorites_button, "Favorites", active_page==PAGE_FAVORITES, &button, ui_draw_menu_tab_button, 0))
 				new_page  = PAGE_FAVORITES;
 		}
-
-
 	}
 	else
 	{

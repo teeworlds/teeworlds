@@ -115,6 +115,7 @@ public:
 	class EFFECTS *effects;
 	class SOUNDS *sounds;
 	class MOTD *motd;
+	class MAPIMAGES *mapimages;
 };
 
 extern GAMECLIENT gameclient;
