@@ -121,6 +121,8 @@ void mods_client_drop(int client_id)
 void mods_message(int msgtype, int client_id)
 {
 	void *rawmsg = netmsg_secure_unpack(msgtype);
+	PLAYER *p = &game.players[client_id];
+	
 	if(!rawmsg)
 	{
 		dbg_msg("server", "dropped weird message '%s' (%d), failed on '%s'", netmsg_get_name(msgtype), msgtype, netmsg_failed_on());
@@ -132,27 +134,29 @@ void mods_message(int msgtype, int client_id)
 		NETMSG_CL_SAY *msg = (NETMSG_CL_SAY *)rawmsg;
 		int team = msg->team;
 		if(team)
-			team = game.players[client_id].team;
+			team = p->team;
 		else
 			team = GAMECONTEXT::CHAT_ALL;
 		
-		if(config.sv_spamprotection && game.players[client_id].last_chat+time_freq() > time_get())
-		{
-			// consider this as spam
-		}
-		else
-		{
-			game.players[client_id].last_chat = time_get();
-			game.send_chat(client_id, team, msg->message);
-		}
+		if(config.sv_spamprotection && p->last_chat+time_freq() > time_get())
+			return;
+		
+		p->last_chat = time_get();
+		
+		game.send_chat(client_id, team, msg->message);
 	}
 	else if (msgtype == NETMSGTYPE_CL_SETTEAM)
 	{
 		NETMSG_CL_SETTEAM *msg = (NETMSG_CL_SETTEAM *)rawmsg;
+		
+		if(config.sv_spamprotection && p->last_setteam+time_freq()*3 > time_get())
+			return;
+			
+		p->last_setteam = time_get();
 
 		// Switch team on given client and kill/respawn him
 		if(game.controller->can_join_team(msg->team, client_id))
-			game.players[client_id].set_team(msg->team);
+			p->set_team(msg->team);
 		else
 		{
 			char buf[128];
@@ -163,9 +167,15 @@ void mods_message(int msgtype, int client_id)
 	else if (msgtype == NETMSGTYPE_CL_CHANGEINFO || msgtype == NETMSGTYPE_CL_STARTINFO)
 	{
 		NETMSG_CL_CHANGEINFO *msg = (NETMSG_CL_CHANGEINFO *)rawmsg;
-		game.players[client_id].use_custom_color = msg->use_custom_color;
-		game.players[client_id].color_body = msg->color_body;
-		game.players[client_id].color_feet = msg->color_feet;
+		
+		if(config.sv_spamprotection && p->last_changeinfo+time_freq()*5 > time_get())
+			return;
+			
+		p->last_changeinfo = time_get();
+		
+		p->use_custom_color = msg->use_custom_color;
+		p->color_body = msg->color_body;
+		p->color_feet = msg->color_feet;
 
 		// check for invalid chars
 		/*
@@ -190,9 +200,9 @@ void mods_message(int msgtype, int client_id)
 		}
 		
 		// set skin
-		str_copy(game.players[client_id].skin_name, msg->skin, sizeof(game.players[client_id].skin_name));
+		str_copy(p->skin_name, msg->skin, sizeof(p->skin_name));
 		
-		game.controller->on_player_info_change(&game.players[client_id]);
+		game.controller->on_player_info_change(p);
 		
 		if(msgtype == NETMSGTYPE_CL_STARTINFO)
 		{
@@ -219,12 +229,23 @@ void mods_message(int msgtype, int client_id)
 	else if (msgtype == NETMSGTYPE_CL_EMOTICON)
 	{
 		NETMSG_CL_EMOTICON *msg = (NETMSG_CL_EMOTICON *)rawmsg;
+		
+		if(config.sv_spamprotection && p->last_emote+time_freq()*5 > time_get())
+			return;
+			
+		p->last_emote = time_get();
+		
 		game.send_emoticon(client_id, msg->emoticon);
 	}
 	else if (msgtype == NETMSGTYPE_CL_KILL)
 	{
 		//PLAYER *pplayer = get_player(client_id);
-		game.players[client_id].kill_character(); //(client_id, -1);
+		if(config.sv_spamprotection && p->last_kill+time_freq()*3 > time_get())
+			return;
+		
+		p->last_kill = time_get();
+		
+		p->kill_character(); //(client_id, -1);
 	}
 }
 

@@ -24,6 +24,10 @@ public:
 
 	//
 	int64 last_chat;
+	int64 last_setteam;
+	int64 last_changeinfo;
+	int64 last_emote;
+	int64 last_kill;
 
 	// network latency calculations	
 	struct
