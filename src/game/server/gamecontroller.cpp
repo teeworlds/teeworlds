@@ -390,7 +390,7 @@ void GAMECONTROLLER::snap(int snapping_client)
 	
 	gameobj->warmup = warmup;
 	
-	gameobj->teamscore_red = teamscore[0];
+	gameobj->teamscore_red = is_teamplay() ? teamscore[0] : game.players[snapping_client].score;
 	gameobj->teamscore_blue = teamscore[1];
 }
 
