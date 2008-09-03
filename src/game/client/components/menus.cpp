@@ -104,21 +104,7 @@ void MENUS::ui_draw_browse_icon(int what, const RECT *r)
 {
 	gfx_texture_set(data->images[IMAGE_BROWSEICONS].id);
 	gfx_quads_begin();
-	select_sprite(SPRITE_BROWSE_PROGRESS1); // default
-	if(what == -1)
-	{
-	}
-	else if(what <= 100)
-	{
-		if(what < 66)
-			select_sprite(SPRITE_BROWSE_PROGRESS2);
-		else
-			select_sprite(SPRITE_BROWSE_PROGRESS3);
-	}
-	else if(what&0x100)
-	{
-		select_sprite(SPRITE_BROWSE_LOCK);
-	}
+	select_sprite(what);
 	gfx_quads_drawTL(r->x,r->y,r->w,r->h);
 	gfx_quads_end();
 }
@@ -509,7 +495,7 @@ int MENUS::render_menubar(RECT r)
 		static int internet_button=0;
 		if (ui_do_button(&internet_button, "Internet", active_page==PAGE_INTERNET, &button, ui_draw_menu_tab_button, 0))
 		{
-			client_serverbrowse_refresh(0);
+			client_serverbrowse_refresh(BROWSETYPE_INTERNET);
 			new_page = PAGE_INTERNET;
 		}
 
@@ -518,17 +504,17 @@ int MENUS::render_menubar(RECT r)
 		static int lan_button=0;
 		if (ui_do_button(&lan_button, "LAN", active_page==PAGE_LAN, &button, ui_draw_menu_tab_button, 0))
 		{
-			client_serverbrowse_refresh(1);
+			client_serverbrowse_refresh(BROWSETYPE_LAN);
 			new_page = PAGE_LAN;
 		}
 
-		if(0) // this one is not done yet
+		ui_vsplit_l(&box, 4.0f, 0, &box);
+		ui_vsplit_l(&box, 120.0f, &button, &box);
+		static int favorites_button=0;
+		if (ui_do_button(&favorites_button, "Favorites", active_page==PAGE_FAVORITES, &button, ui_draw_menu_tab_button, 0))
 		{
-			ui_vsplit_l(&box, 4.0f, 0, &box);
-			ui_vsplit_l(&box, 120.0f, &button, &box);
-			static int favorites_button=0;
-			if (ui_do_button(&favorites_button, "Favorites", active_page==PAGE_FAVORITES, &button, ui_draw_menu_tab_button, 0))
-				new_page  = PAGE_FAVORITES;
+			client_serverbrowse_refresh(BROWSETYPE_FAVORITES);
+			new_page  = PAGE_FAVORITES;
 		}
 	}
 	else

@@ -640,13 +640,15 @@ void gfx_clip_disable();
 enum
 {
 	TEXTFLAG_RENDER=1,
-	TEXTFLAG_ALLOW_NEWLINE=2
+	TEXTFLAG_ALLOW_NEWLINE=2,
+	TEXTFLAG_STOP_AT_END=4
 };
 
 typedef struct
 {
 	int flags;
 	int line_count;
+	int charcount;
 	
 	float start_x;
 	float start_y;

@@ -785,7 +785,7 @@ static void server_process_client_packet(NETCHUNK *packet)
 	}
 }
 
-static void server_send_serverinfo(NETADDR *addr, int lan)
+static void server_send_serverinfo(NETADDR *addr, int token)
 {
 	NETCHUNK packet;
 	PACKER p;
@@ -801,16 +801,17 @@ static void server_send_serverinfo(NETADDR *addr, int lan)
 	}
 	
 	packer_reset(&p);
-	if(lan)
-		packer_add_raw(&p, SERVERBROWSE_INFO_LAN, sizeof(SERVERBROWSE_INFO_LAN));
-	else
-		packer_add_raw(&p, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
+	packer_add_raw(&p, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
+
+	/* token */
+	str_format(buf, sizeof(buf), "%d", token);
+	packer_add_string(&p, buf, 6);
+	
 	packer_add_string(&p, mods_version(), 32);
 	packer_add_string(&p, config.sv_name, 64);
 	packer_add_string(&p, config.sv_map, 32);
 
 	/* gametype */
-	str_format(buf, sizeof(buf), "%d", browseinfo_gametype);
 	packer_add_string(&p, browseinfo_gametype, 16);
 
 	/* flags */
@@ -862,15 +863,10 @@ static void server_pump_network()
 			/* stateless */
 			if(!register_process_packet(&packet))
 			{
-				if(packet.data_size == sizeof(SERVERBROWSE_GETINFO) &&
+				if(packet.data_size == sizeof(SERVERBROWSE_GETINFO)+1 &&
 					memcmp(packet.data, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
 				{
-					server_send_serverinfo(&packet.address, 0);
-				}
-				else if(packet.data_size == sizeof(SERVERBROWSE_GETINFO_LAN) &&
-					memcmp(packet.data, SERVERBROWSE_GETINFO_LAN, sizeof(SERVERBROWSE_GETINFO_LAN)) == 0)
-				{
-					server_send_serverinfo(&packet.address, 1);
+					server_send_serverinfo(&packet.address, ((unsigned char *)packet.data)[sizeof(SERVERBROWSE_GETINFO)]);
 				}
 			}
 		}

@@ -68,7 +68,8 @@ void MENUS::render_serverbrowser(RECT main_view)
 		FIXED=1,
 		SPACER=2,
 		
-		COL_FLAGS=0,
+		COL_FLAG_LOCK=0,
+		COL_FLAG_FAV,
 		COL_NAME,
 		COL_GAMETYPE,
 		COL_MAP,
@@ -79,8 +80,9 @@ void MENUS::render_serverbrowser(RECT main_view)
 	};
 	
 	static column cols[] = {
-		{-1,			-1,						" ",		-1, 10.0f, 0, {0}, {0}},
-		{COL_FLAGS,		-1,						" ",		-1, 20.0f, 0, {0}, {0}},
+		{-1,			-1,						" ",		-1, 2.0f, 0, {0}, {0}},
+		{COL_FLAG_LOCK,	-1,						" ",		-1, 14.0f, 0, {0}, {0}},
+		{COL_FLAG_FAV,	-1,						" ",		-1, 14.0f, 0, {0}, {0}},
 		{COL_NAME,		BROWSESORT_NAME,		"Name",		0, 300.0f, 0, {0}, {0}},
 		{COL_GAMETYPE,	BROWSESORT_GAMETYPE,	"Type",		1, 50.0f, 0, {0}, {0}},
 		{COL_MAP,		BROWSESORT_MAP,			"Map", 		1, 100.0f, 0, {0}, {0}},
@@ -239,15 +241,21 @@ void MENUS::render_serverbrowser(RECT main_view)
 
 			//s = ui_do_button(item, "L", l, &button, ui_draw_browse_icon, 0);
 			
-			if(id == COL_FLAGS)
+			if(id == COL_FLAG_LOCK)
 			{
 				if(item->flags&1)
-					ui_draw_browse_icon(0x100, &button);
+					ui_draw_browse_icon(SPRITE_BROWSE_LOCK, &button);
+			}	
+			else if(id == COL_FLAG_FAV)
+			{
+				if(item->favorite)
+					ui_draw_browse_icon(SPRITE_BROWSE_HEART, &button);
 			}
 			else if(id == COL_NAME)
 			{
 				TEXT_CURSOR cursor;
-				gfx_text_set_cursor(&cursor, button.x, button.y, 12.0f, TEXTFLAG_RENDER);
+				gfx_text_set_cursor(&cursor, button.x, button.y, 12.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				cursor.line_width = button.w;
 				
 				if(config.b_filter_string[0] && (item->quicksearch_hit&BROWSEQUICK_SERVERNAME))
 				{
@@ -350,6 +358,21 @@ void MENUS::render_serverbrowser(RECT main_view)
 		RECT left_column;
 		RECT right_column;
 
+		// 
+		{
+			RECT button;
+			ui_hsplit_b(&server_details, 20.0f, &server_details, &button);
+			static int add_fav_button = 0;
+			if (ui_do_button(&add_fav_button, "Favorite", selected_server->favorite, &button, ui_draw_checkbox, 0))
+			{
+				if(selected_server->favorite)
+					client_serverbrowse_removefavorite(selected_server->netaddr);
+				else
+					client_serverbrowse_addfavorite(selected_server->netaddr);
+			}
+		}
+		//ui_do_label(&row, temp, font_size, -1);		
+
 		ui_vsplit_l(&server_details, 5.0f, 0x0, &server_details);
 		ui_vsplit_l(&server_details, 80.0f, &left_column, &right_column);
 
@@ -377,6 +400,7 @@ void MENUS::render_serverbrowser(RECT main_view)
 		str_format(temp, sizeof(temp), "%d", selected_server->latency);
 		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
 		ui_do_label(&row, temp, font_size, -1);
+
 	}
 	
 	// server scoreboard

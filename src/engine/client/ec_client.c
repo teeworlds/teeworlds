@@ -43,7 +43,7 @@ const int prediction_margin = 7; /* magic network prediction value */
 NETCLIENT *net;
 
 /* TODO: ugly, fix me */
-extern void client_serverbrowse_set(NETADDR *addr, int request, SERVER_INFO *info);
+extern void client_serverbrowse_set(NETADDR *addr, int request, int token, SERVER_INFO *info);
 
 static int snapshot_part;
 static int64 local_start_time;
@@ -737,39 +737,21 @@ static void client_process_packet(NETCHUNK *packet)
 					addr.ip[0], addr.ip[1], addr.ip[2],
 					addr.ip[3], addr.port);
 				
-				client_serverbrowse_set(&addr, 1, &info);
+				client_serverbrowse_set(&addr, 1, -1, &info);
 			}
 		}
 
 		{
-			int got_info_packet = 0;
-			
-			if(client_serverbrowse_lan())
-			{
-				if(packet->data_size >= (int)sizeof(SERVERBROWSE_INFO_LAN) &&
-					memcmp(packet->data, SERVERBROWSE_INFO_LAN, sizeof(SERVERBROWSE_INFO_LAN)) == 0)
-				{
-					got_info_packet = 1;
-				}
-			}
-			else
-			{
-				if(packet->data_size >= (int)sizeof(SERVERBROWSE_INFO) &&
-					memcmp(packet->data, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
-				{
-					got_info_packet = 1;
-				}
-			}
-
-			if(got_info_packet)
+			if(packet->data_size >= (int)sizeof(SERVERBROWSE_INFO) && memcmp(packet->data, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
 			{
 				/* we got ze info */
 				UNPACKER up;
 				SERVER_INFO info = {0};
 				int i;
-
+				int token = -1;
+				
 				unpacker_reset(&up, (unsigned char*)packet->data+sizeof(SERVERBROWSE_INFO), packet->data_size-sizeof(SERVERBROWSE_INFO));
-
+				token = atol(unpacker_get_string(&up));
 				str_copy(info.version, unpacker_get_string(&up), sizeof(info.version));
 				str_copy(info.name, unpacker_get_string(&up), sizeof(info.name));
 				str_copy(info.map, unpacker_get_string(&up), sizeof(info.map));
@@ -792,7 +774,7 @@ static void client_process_packet(NETCHUNK *packet)
 				{
 					/* sort players */
 					qsort(info.players, info.num_players, sizeof(*info.players), player_score_comp);
-					client_serverbrowse_set(&packet->address, 0, &info);
+					client_serverbrowse_set(&packet->address, 0, token, &info);
 				}
 			}
 		}

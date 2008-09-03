@@ -57,7 +57,11 @@ enum
 	BROWSESORT_NUMPLAYERS,
 	
 	BROWSEQUICK_SERVERNAME=1,
-	BROWSEQUICK_PLAYERNAME=2
+	BROWSEQUICK_PLAYERNAME=2,
+	
+	BROWSETYPE_INTERNET = 0,
+	BROWSETYPE_LAN = 1,
+	BROWSETYPE_FAVORITES = 2
 };
 
 /*
@@ -81,12 +85,15 @@ typedef struct
 	int sorted_index;
 	int server_index;
 	
+	NETADDR netaddr;
+	
 	int quicksearch_hit;
 	
 	int progression;
 	int max_players;
 	int num_players;
 	int flags;
+	int favorite;
 	int latency; /* in ms */
 	char gametype[16];
 	char name[64];
@@ -192,13 +199,13 @@ float client_localtime();
 		Issues a refresh of the server browser.
 	
 	Arguments:
-		lan - Tells the function if it should do a LAN listing or an Internet listing.
+		type - What type of servers to browse, internet, lan or favorites.
 	
 	Remarks:
 		This will cause a broadcast on the local network if the lan argument is set.
 		Otherwise it call ask all the master servers for their servers lists.
 */
-void client_serverbrowse_refresh(int lan);
+void client_serverbrowse_refresh(int type);
 
 /*
 	Function: client_serverbrowse_sorted_get
@@ -290,6 +297,24 @@ void client_serverbrowse_update();
 		<other_func>
 */
 int client_serverbrowse_lan();
+
+/*
+	Function: client_serverbrowse_addfavorite
+		Adds a server to the favorite list
+	
+	Arguments:
+		addr - Address of the favorite server.
+*/
+void client_serverbrowse_addfavorite(NETADDR addr);
+
+/*
+	Function: client_serverbrowse_removefavorite
+		Removes a server to the favorite list
+	
+	Arguments:
+		addr - Address of the favorite server.
+*/
+void client_serverbrowse_removefavorite(NETADDR addr);
 
 /**********************************************************************************
 	Group: Actions

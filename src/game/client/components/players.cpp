@@ -58,6 +58,22 @@ void PLAYERS::render_hand(TEE_RENDER_INFO *info, vec2 center_pos, vec2 dir, floa
 	gfx_quads_end();
 }
 
+inline float normalize_angular(float f)
+{
+	return fmod(f, pi*2);
+}
+
+inline float mix_angular(float src, float dst, float amount)
+{
+	src = normalize_angular(src);
+	dst = normalize_angular(dst);
+	float d0 = dst-src;
+	float d1 = dst-(src+pi*2);
+	if(fabs(d0) < fabs(d1))
+		return src+d0*amount;
+	return src+d1*amount;
+}
+
 void PLAYERS::render_player(
 	const NETOBJ_CHARACTER *prev_char,
 	const NETOBJ_CHARACTER *player_char,
@@ -112,7 +128,7 @@ void PLAYERS::render_player(
 	if(player.attacktick != prev.attacktick)
 		mixspeed = 0.1f;
 	
-	float angle = mix(gameclient.clients[info.cid].angle, player.angle/256.0f, mixspeed);
+	float angle = mix_angular(gameclient.clients[info.cid].angle, player.angle/256.0f, mixspeed);
 	gameclient.clients[info.cid].angle = angle;
 	vec2 direction = get_direction((int)(angle*256.0f));
 	

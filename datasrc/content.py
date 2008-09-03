@@ -359,9 +359,7 @@ container.sprites.Add(Sprite("blank2", set_emoticons, 3, 3, 1, 1))
 
 
 container.sprites.Add(Sprite("browse_lock", set_browseicons, 0,0,1,1))
-container.sprites.Add(Sprite("browse_progress1", set_browseicons, 1,0,1,1))
-container.sprites.Add(Sprite("browse_progress2", set_browseicons, 2,0,1,1))
-container.sprites.Add(Sprite("browse_progress3", set_browseicons, 3,0,1,1))
+container.sprites.Add(Sprite("browse_heart", set_browseicons, 1,0,1,1))
 
 anim = Animation("base")
 anim.body.frames.Add(AnimKeyframe(0, 0, -4, 0))

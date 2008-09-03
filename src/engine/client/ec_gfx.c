@@ -958,6 +958,7 @@ void gfx_text_set_cursor(TEXT_CURSOR *cursor, float x, float y, float font_size,
 	cursor->line_count = 1;
 	cursor->line_width = -1;
 	cursor->flags = flags;
+	cursor->charcount = 0;
 }
 
 void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
@@ -999,7 +1000,7 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 	if(cursor->flags&TEXTFLAG_RENDER)
 		i = 0;
 
-	for (i = 0; i < 2; i++)
+	for(;i < 2; i++)
 	{
 		const unsigned char *current = (unsigned char *)text;
 		int to_render = length;
@@ -1022,8 +1023,9 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 
 		while(to_render > 0)
 		{
+			int new_line = 0;
 			int this_batch = to_render;
-			if(cursor->line_width > 0)
+			if(cursor->line_width > 0 && !(cursor->flags&TEXTFLAG_STOP_AT_END))
 			{
 				int wlen = word_length((char *)current);
 				TEXT_CURSOR compare = *cursor;
@@ -1033,12 +1035,27 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 				compare.line_width = -1;
 				gfx_text_ex(&compare, text, wlen);
 				
-				if(compare.x-cursor->start_x > cursor->line_width)
+				if(compare.x-draw_x > cursor->line_width)
 				{
-					draw_x = cursor->start_x;
-					draw_y += size;
-					draw_x = (int)(draw_x * fake_to_screen_x) / fake_to_screen_x; /* realign */
-					draw_y = (int)(draw_y * fake_to_screen_y) / fake_to_screen_y;
+					/* word can't be fitted in one line, cut it */
+					TEXT_CURSOR cutter = *cursor;
+					cutter.charcount = 0;
+					cutter.x = draw_x;
+					cutter.y = draw_y;
+					cutter.flags &= ~TEXTFLAG_RENDER;
+					cutter.flags |= TEXTFLAG_STOP_AT_END;
+					
+					gfx_text_ex(&cutter, (const char *)current, wlen);
+					wlen = cutter.charcount;
+					new_line = 1;
+					
+					if(wlen <= 3) /* if we can't place 3 chars of the word on this line, take the next */
+						wlen = 0;
+				}
+				else if(compare.x-cursor->start_x > cursor->line_width)
+				{
+					new_line = 1;
+					wlen = 0;
 				}
 				
 				this_batch = wlen;
@@ -1075,8 +1092,25 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 				}
 
 				advance = x_advance + font_kerning(font, *current, *(current+1));
+								
+				if(cursor->flags&TEXTFLAG_STOP_AT_END && draw_x+advance*size-cursor->start_x > cursor->line_width)
+				{
+					/* we hit the end of the line, no more to render or count */
+					to_render = 0;
+					break;
+				}
+
 				draw_x += advance*size;
+				cursor->charcount++;
 				current++;
+			}
+			
+			if(new_line)
+			{
+				draw_x = cursor->start_x;
+				draw_y += size;
+				draw_x = (int)(draw_x * fake_to_screen_x) / fake_to_screen_x; /* realign */
+				draw_y = (int)(draw_y * fake_to_screen_y) / fake_to_screen_y;				
 			}
 		}
 
