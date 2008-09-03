@@ -589,3 +589,16 @@ void client_serverbrowse_removefavorite(NETADDR addr)
 		}
 	}
 }
+
+void client_serverbrowse_save()
+{
+	int i;
+	char addrstr[128];
+	char buffer[256];
+	for(i = 0; i < num_favorite_servers; i++)
+	{
+		net_addr_str(&favorite_servers[i], addrstr, sizeof(addrstr));
+		str_format(buffer, sizeof(buffer), "add_favorite %s", addrstr);
+		engine_config_write_line(buffer);
+	}
+}

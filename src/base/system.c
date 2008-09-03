@@ -528,6 +528,88 @@ int net_host_lookup(const char *hostname, NETADDR *addr, int types)
 	return 0;
 }
 
+static int parse_int(int *out, const char **str)
+{
+	int i = 0;
+	*out = 0;
+	if(**str < '0' || **str > '9')
+		return -1; 
+		
+	i = **str - '0';
+	(*str)++;
+
+	while(1)
+	{
+		if(**str < '0' || **str > '9')
+		{
+			*out = i;
+			return 0; 
+		}
+		
+		i = (i*10) + (**str - '0');
+		(*str)++;
+	}
+
+	return 0;
+}
+
+static int parse_char(char c, const char **str)
+{
+	if(**str != c) return -1;
+	(*str)++;
+	return 0;
+}
+
+static int parse_uint8(unsigned char *out, const char **str)
+{
+	int i;
+	if(parse_int(&i, str) != 0) return -1;
+	if(i < 0 || i > 0xff) return -1;
+	*out = i;
+	return 0;
+}
+
+static int parse_uint16(unsigned short *out, const char **str)
+{
+	int i;
+	if(parse_int(&i, str) != 0) return -1;
+	if(i < 0 || i > 0xffff) return -1;
+	*out = i;
+	return 0;
+}
+
+int net_addr_from_str(NETADDR *addr, const char *string)
+{
+	const char *str = string;
+	mem_zero(addr, sizeof(NETADDR));
+	
+	if(str[0] == '[')
+	{
+		/* TODO: ipv6 */
+	}
+	else
+	{
+		/* ipv4 */
+		if(parse_uint8(&addr->ip[0], &str)) return -1;
+		if(parse_char('.', &str)) return -1;
+		if(parse_uint8(&addr->ip[1], &str)) return -1;
+		if(parse_char('.', &str)) return -1;
+		if(parse_uint8(&addr->ip[2], &str)) return -1;
+		if(parse_char('.', &str)) return -1;
+		if(parse_uint8(&addr->ip[3], &str)) return -1;
+		if(*str == ':')
+		{
+			str++;
+			if(parse_uint16(&addr->port, &str)) return -1;
+		}
+		
+		addr->type = NETTYPE_IPV4;
+	}
+	
+	return 0;
+}
+
+
 NETSOCKET net_udp_create(NETADDR bindaddr)
 {
 	/* TODO: IPv6 support */

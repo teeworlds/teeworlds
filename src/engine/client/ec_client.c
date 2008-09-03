@@ -44,6 +44,7 @@ NETCLIENT *net;
 
 /* TODO: ugly, fix me */
 extern void client_serverbrowse_set(NETADDR *addr, int request, int token, SERVER_INFO *info);
+extern void client_serverbrowse_save();
 
 static int snapshot_part;
 static int64 local_start_time;
@@ -1496,6 +1497,13 @@ static void con_rcon(void *result, void *user_data)
 	client_rcon(console_arg_string(result, 0));
 }
 
+static void con_addfavorite(void *result, void *user_data)
+{
+	NETADDR addr;
+	if(net_addr_from_str(&addr, console_arg_string(result, 0)) == 0)
+		client_serverbrowse_addfavorite(addr);
+}
+
 static void client_register_commands()
 {
 	MACRO_REGISTER_COMMAND("quit", "", con_quit, 0x0);
@@ -1504,6 +1512,8 @@ static void client_register_commands()
 	MACRO_REGISTER_COMMAND("ping", "", con_ping, 0x0);
 	MACRO_REGISTER_COMMAND("screenshot", "", con_screenshot, 0x0);
 	MACRO_REGISTER_COMMAND("rcon", "r", con_rcon, 0x0);
+
+	MACRO_REGISTER_COMMAND("add_favorite", "s", con_addfavorite, 0x0);
 }
 
 void client_save_line(const char *line)
@@ -1552,6 +1562,7 @@ int main(int argc, char **argv)
 	if(engine_config_write_start() == 0)
 	{
 		config_save();
+		client_serverbrowse_save();
 		modc_save_config();
 		engine_config_write_stop();
 	}

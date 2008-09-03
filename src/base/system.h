@@ -480,6 +480,19 @@ int net_addr_comp(const NETADDR *a, const NETADDR *b);
 */
 void net_addr_str(const NETADDR *addr, char *string, int max_length);
 
+/*
+	Function: net_addr_from_str
+		Turns string into a network address.
+	
+	Returns:
+		0 on success
+	
+	Parameters:
+		addr - Address to fill in.
+		string - String to parse.
+*/
+int net_addr_from_str(NETADDR *addr, const char *string);
+
 /* Group: Network UDP */
 
 /*
