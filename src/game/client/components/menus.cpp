@@ -709,7 +709,7 @@ void MENUS::render_game(RECT main_view)
 					gameclient.send_switch_team(0);
 					menu_active = false;
 				}
-			}						
+			}
 		}
 	}
 }

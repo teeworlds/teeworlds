@@ -403,6 +403,20 @@ int client_rcon_authed();
 	Group: Other
 **********************************************************************************/
 /*
+	Function: client_latestversion
+		Returns 0 if there's no version difference
+	
+	Arguments:
+		arg1 - desc
+	
+	Returns:
+
+	See Also:
+		<other_func>
+*/
+const char *client_latestversion();
+
+/*
 	Function: client_get_input
 		TODO
 	

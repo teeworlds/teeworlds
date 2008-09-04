@@ -24,6 +24,7 @@
 #include <engine/e_huffman.h>
 
 #include <mastersrv/mastersrv.h>
+#include <versionsrv/versionsrv.h>
 
 const int prediction_margin = 7; /* magic network prediction value */
 
@@ -62,6 +63,9 @@ static int snapcrcerrors = 0;
 static int ack_game_tick = -1;
 static int current_recv_tick = 0;
 static int rcon_authed = 0;
+
+/* version-checking */
+static char versionstr[10] = "0";
 
 /* pinging */
 static int64 ping_start_time = 0;
@@ -383,7 +387,7 @@ static void client_send_input()
 
 	if(current_predtick <= 0)
 		return;
-	
+	 
 	/* fetch input */
 	size = modc_snap_input(inputs[current_input].data);
 	
@@ -409,6 +413,11 @@ static void client_send_input()
 	
 	msg_pack_end();
 	client_send_msg();
+}
+
+const char *client_latestversion()
+{
+	return versionstr;
 }
 
 /* TODO: OPT: do this alot smarter! */
@@ -708,6 +717,23 @@ static void client_process_packet(NETCHUNK *packet)
 	if(packet->client_id == -1)
 	{
 		/* connectionlesss */
+		if(packet->data_size == (int)(sizeof(VERSIONSRV_VERSION) + sizeof(VERSION_DATA)) &&
+			memcmp(packet->data, VERSIONSRV_VERSION, sizeof(VERSIONSRV_VERSION)) == 0)
+		{
+			unsigned char *versiondata = (unsigned char*) packet->data + sizeof(VERSIONSRV_VERSION);
+			int version_match = !memcmp(versiondata, VERSION_DATA, sizeof(VERSION_DATA));
+			
+			dbg_msg("client/version", "version does %s (%d.%d.%d)",
+				version_match ? "match" : "NOT match",
+				versiondata[1], versiondata[2], versiondata[3]);
+			
+			/* assume version is out of date when version-data doesn't match */
+			if (!version_match)
+			{
+				sprintf(versionstr, "%d.%d.%d", versiondata[1], versiondata[2], versiondata[3]);
+			}
+		}
+		
 		if(packet->data_size >= (int)sizeof(SERVERBROWSE_LIST) &&
 			memcmp(packet->data, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST)) == 0)
 		{
@@ -1263,6 +1289,33 @@ static void client_update()
 	client_serverbrowse_update();
 }
 
+static int client_getversion()
+{
+	NETADDR addr;
+	NETCHUNK packet;
+	
+	mem_zero(&addr, sizeof(NETADDR));
+	mem_zero(&packet, sizeof(NETCHUNK));
+	
+	if(net_host_lookup(config.cl_version_server, &addr, NETTYPE_IPV4))
+	{
+		dbg_msg("client/version", "could not find the address of %s, skipping version fetch", config.cl_version_server);
+		return -1;
+	}
+	
+	addr.port = VERSIONSRV_PORT;
+	
+	packet.client_id = -1;
+	packet.address = addr;
+	packet.data = VERSIONSRV_GETVERSION;
+	packet.data_size = sizeof(VERSIONSRV_GETVERSION);
+	packet.flags = NETSENDFLAG_CONNLESS;
+	
+	netclient_send(net, &packet);
+	
+	return 0;
+}
+
 extern int editor_update_and_render();
 extern void editor_init();
 
@@ -1309,6 +1362,9 @@ static void client_run()
 		client_connect(config.cl_connect);
 	config.cl_connect[0] = 0;
 	*/
+	
+	/* fetch latest client-version from versionsrv */
+	client_getversion();
 	
 	/* never start with the editor */
 	config.cl_editor = 0;

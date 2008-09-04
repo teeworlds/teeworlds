@@ -14,6 +14,7 @@ extern "C" {
 #include <game/client/ui.hpp>
 #include <game/client/gc_render.hpp>
 #include "menus.hpp"
+#include <game/version.hpp>
 
 void MENUS::render_serverbrowser_serverlist(RECT view)
 {
@@ -593,7 +594,12 @@ void MENUS::render_serverbrowser(RECT main_view)
 				client_serverbrowse_refresh(1);
 		}
 		
-		ui_do_label(&status_toolbar, "new version.. LOLZ!!", 14.0f, -1);
+		char buf[512];
+		if(strcmp(client_latestversion(), "0") != 0)
+			str_format(buf, sizeof(buf), "Teeworlds %s is out! Download it at www.teeworlds.com! Current version: %s", client_latestversion(), GAME_VERSION);
+		else
+			str_format(buf, sizeof(buf), "Current version: %s", GAME_VERSION);
+		ui_do_label(&status_toolbar, buf, 14.0f, -1);
 	}
 	
 	// do the button box
