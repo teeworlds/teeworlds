@@ -39,7 +39,7 @@ void CHAT::con_chat(void *result, void *user_data)
 		dbg_msg("console", "expected all or team as mode");
 }
 
-void CHAT::on_init()
+void CHAT::on_console_init()
 {
 	MACRO_REGISTER_COMMAND("say", "r", con_say, this);
 	MACRO_REGISTER_COMMAND("say_team", "r", con_sayteam, this);

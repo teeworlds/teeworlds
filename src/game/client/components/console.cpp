@@ -358,7 +358,7 @@ void CONSOLE::print_line(int type, const char *line)
 		remote_console.print_line(line);
 }
 
-void CONSOLE::on_init()
+void CONSOLE::on_console_init()
 {
 	//
 	console_register_print_callback(client_console_print_callback, this);

@@ -5,20 +5,14 @@
 #include "gameclient.hpp"
 #include "components/console.hpp"
 
-extern "C" void modc_console_init()
-{
-	//client_console_init();
-}
 
 
-extern "C" void modc_save_config()
-{
-	//binds_save();
-}
 
 // clean hooks
 extern "C" void modc_entergame() {}
 extern "C" void modc_shutdown() {}
+extern "C" void modc_console_init() { gameclient.on_console_init(); }
+extern "C" void modc_save_config() { gameclient.on_save(); }
 extern "C" void modc_init() { gameclient.on_init(); }
 extern "C" void modc_connected() { gameclient.on_connected(); }
 extern "C" void modc_predict() { gameclient.on_predict(); }

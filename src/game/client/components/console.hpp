@@ -50,7 +50,7 @@ public:
 
 	void print_line(int type, const char *line);
 
-	virtual void on_init();
+	virtual void on_console_init();
 	virtual void on_reset();
 	virtual void on_render();
 	virtual void on_message(int msgtype, void *rawmsg);

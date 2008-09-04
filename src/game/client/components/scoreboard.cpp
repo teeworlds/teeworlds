@@ -24,7 +24,7 @@ void SCOREBOARD::on_reset()
 	active = false;
 }
 
-void SCOREBOARD::on_init()
+void SCOREBOARD::on_console_init()
 {
 	MACRO_REGISTER_COMMAND("+scoreboard", "", con_key_scoreboard, this);
 }

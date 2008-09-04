@@ -18,7 +18,7 @@ public:
 	EMOTICON();
 	
 	virtual void on_reset();
-	virtual void on_init();
+	virtual void on_console_init();
 	virtual void on_render();
 	virtual void on_message(int msgtype, void *rawmsg);
 	virtual bool on_mousemove(float x, float y);

@@ -28,6 +28,7 @@ public:
 	void unbindall();
 	const char *get(int keyid);
 	
-	virtual void on_init();
+	virtual void on_save();
+	virtual void on_console_init();
 	virtual bool on_input(INPUT_EVENT e);
 };

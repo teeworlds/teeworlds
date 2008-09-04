@@ -90,6 +90,8 @@ public:
 	void on_connected();
 	void on_render();
 	void on_init();
+	void on_save();
+	void on_console_init();
 	void on_statechange(int new_state, int old_state);
 	void on_message(int msgtype);
 	void on_snapshot();

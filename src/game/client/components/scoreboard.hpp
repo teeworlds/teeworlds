@@ -13,7 +13,7 @@ class SCOREBOARD : public COMPONENT
 public:
 	SCOREBOARD();
 	virtual void on_reset();
-	virtual void on_init();
+	virtual void on_console_init();
 	virtual void on_render();
 };
 

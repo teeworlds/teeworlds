@@ -88,7 +88,7 @@ static void load_sounds_thread(void *do_render)
 	}
 }
 
-void GAMECLIENT::on_init()
+void GAMECLIENT::on_console_init()
 {
 	// setup pointers
 	binds = &::binds;
@@ -146,14 +146,22 @@ void GAMECLIENT::on_init()
 	input.add(&emoticon);
 	input.add(controls);
 	input.add(binds);
+		
+	// add the some console commands
+	MACRO_REGISTER_COMMAND("team", "", con_team, this);
+	MACRO_REGISTER_COMMAND("kill", "", con_kill, this);
+			
+	for(int i = 0; i < all.num; i++)
+		all.components[i]->on_console_init();
+}
+
+void GAMECLIENT::on_init()
+{
+
 
 	// init all components
 	for(int i = 0; i < all.num; i++)
 		all.components[i]->on_init();
-	
-	// add the some console commands
-	MACRO_REGISTER_COMMAND("team", "", con_team, this);
-	MACRO_REGISTER_COMMAND("kill", "", con_kill, this);
 	
 	// setup item sizes
 	for(int i = 0; i < NUM_NETOBJTYPES; i++)
@@ -195,6 +203,12 @@ void GAMECLIENT::on_init()
 	int64 end = time_get();
 	dbg_msg("", "%f.2ms", ((end-start)*1000)/(float)time_freq());
 	
+}
+
+void GAMECLIENT::on_save()
+{
+	for(int i = 0; i < all.num; i++)
+		all.components[i]->on_save();
 }
 
 void GAMECLIENT::dispatch_input()

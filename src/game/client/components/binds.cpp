@@ -92,7 +92,7 @@ void BINDS::set_defaults()
 	bind('Y', "chat team");	
 }
 
-void BINDS::on_init()
+void BINDS::on_console_init()
 {
 	// bindings
 	MACRO_REGISTER_COMMAND("bind", "sr", con_bind, this);
@@ -176,8 +176,7 @@ int BINDS::get_key_id(const char *key_name)
 	return 0;
 }
 
-/*
-void binds_save()
+void BINDS::on_save()
 {
 	char buffer[256];
 	char *end = buffer+sizeof(buffer)-8;
@@ -204,5 +203,3 @@ void binds_save()
 		client_save_line(buffer);
 	}
 }
-
-*/

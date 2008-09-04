@@ -46,7 +46,7 @@ static void con_key_input_nextprev_weapon(void *result, void *user_data)
 	set->controls->input_data.wanted_weapon = 0;
 }
 
-void CONTROLS::on_init()
+void CONTROLS::on_console_init()
 {
 	// game commands
 	MACRO_REGISTER_COMMAND("+left", "", con_key_input_state, &input_direction_left);
