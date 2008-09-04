@@ -421,29 +421,6 @@ void PLAYERS::render_player(
 		gfx_quads_draw(position.x, position.y - 23 - 32*h, 64, 64*h);
 		gfx_quads_end();
 	}
-	
-	// render name plate
-	if(!info.local && config.cl_nameplates)
-	{
-		//gfx_text_color
-		float a = 1;
-		if(config.cl_nameplates_always == 0)
-			a = clamp(1-powf(distance(gameclient.local_target_pos, position)/200.0f,16.0f), 0.0f, 1.0f);
-			
-		const char *name = gameclient.clients[info.cid].name;
-		float tw = gfx_text_width(0, 28.0f, name, -1);
-		gfx_text_color(1,1,1,a);
-		gfx_text(0, position.x-tw/2.0f, position.y-60, 28.0f, name, -1);
-		
-		if(config.debug) // render client id when in debug aswell
-		{
-			char buf[128];
-			str_format(buf, sizeof(buf),"%d", info.cid);
-			gfx_text(0, position.x, position.y-90, 28.0f, buf, -1);
-		}
-
-		gfx_text_color(1,1,1,1);
-	}
 }
 
 void PLAYERS::on_render()

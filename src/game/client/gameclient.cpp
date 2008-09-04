@@ -28,6 +28,7 @@
 #include "components/motd.hpp"
 #include "components/particles.hpp"
 #include "components/players.hpp"
+#include "components/nameplates.hpp"
 #include "components/scoreboard.hpp"
 #include "components/skins.hpp"
 #include "components/sounds.hpp"
@@ -56,6 +57,7 @@ static EMOTICON emoticon;
 static DAMAGEIND damageind;
 
 static PLAYERS players;
+static NAMEPLATES nameplates;
 static ITEMS items;
 static MAPIMAGES mapimages;
 
@@ -121,6 +123,7 @@ void GAMECLIENT::on_init()
 	all.add(&items);
 	all.add(&players);
 	all.add(&maplayers_foreground);
+	all.add(&nameplates);
 	all.add(&particles->render_general);
 	all.add(damageind);
 	all.add(&hud);
