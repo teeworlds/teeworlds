@@ -79,6 +79,10 @@ class MENUS : public COMPONENT
 	void render_serverinfo(RECT main_view);
 	
 	// found in menus_browser.cpp
+	int selected_index;
+	void render_serverbrowser_serverlist(RECT view);
+	void render_serverbrowser_serverdetail(RECT view);
+	void render_serverbrowser_filters(RECT view);
 	void render_serverbrowser(RECT main_view);
 	
 	// found in menus_settings.cpp
