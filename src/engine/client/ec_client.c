@@ -719,7 +719,6 @@ static void client_process_packet(NETCHUNK *packet)
 			for(i = 0; i < num; i++)
 			{
 				NETADDR addr;
-				SERVER_INFO info = {0};
 				
 				/* convert address */
 				mem_zero(&addr, sizeof(addr));
@@ -729,21 +728,20 @@ static void client_process_packet(NETCHUNK *packet)
 				addr.ip[2] = addrs[i].ip[2];
 				addr.ip[3] = addrs[i].ip[3];
 				addr.port = (addrs[i].port[1]<<8) | addrs[i].port[0];
-
-				info.latency = 999;
-				str_format(info.address, sizeof(info.address), "%d.%d.%d.%d:%d",
-					addr.ip[0], addr.ip[1], addr.ip[2],
-					addr.ip[3], addr.port);
-				str_format(info.name, sizeof(info.name), "\255%d.%d.%d.%d:%d", /* the \255 is to make sure that it's sorted last */
-					addr.ip[0], addr.ip[1], addr.ip[2],
-					addr.ip[3], addr.port);
 				
-				client_serverbrowse_set(&addr, 1, -1, &info);
+				client_serverbrowse_set(&addr, BROWSESET_MASTER_ADD, -1, NULL);
 			}
 		}
 
 		{
+			int packet_type = 0;
 			if(packet->data_size >= (int)sizeof(SERVERBROWSE_INFO) && memcmp(packet->data, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
+				packet_type = 2;
+
+			if(packet->data_size >= (int)sizeof(SERVERBROWSE_OLD_INFO) && memcmp(packet->data, SERVERBROWSE_OLD_INFO, sizeof(SERVERBROWSE_OLD_INFO)) == 0)
+				packet_type = 1;
+			
+			if(packet_type)
 			{
 				/* we got ze info */
 				UNPACKER up;
@@ -752,7 +750,8 @@ static void client_process_packet(NETCHUNK *packet)
 				int token = -1;
 				
 				unpacker_reset(&up, (unsigned char*)packet->data+sizeof(SERVERBROWSE_INFO), packet->data_size-sizeof(SERVERBROWSE_INFO));
-				token = atol(unpacker_get_string(&up));
+				if(packet_type >= 2)
+					token = atol(unpacker_get_string(&up));
 				str_copy(info.version, unpacker_get_string(&up), sizeof(info.version));
 				str_copy(info.name, unpacker_get_string(&up), sizeof(info.name));
 				str_copy(info.map, unpacker_get_string(&up), sizeof(info.map));
@@ -775,7 +774,10 @@ static void client_process_packet(NETCHUNK *packet)
 				{
 					/* sort players */
 					qsort(info.players, info.num_players, sizeof(*info.players), player_score_comp);
-					client_serverbrowse_set(&packet->address, 0, token, &info);
+					if(packet_type == 2)
+						client_serverbrowse_set(&packet->address, BROWSESET_TOKEN, token, &info);
+					else
+						client_serverbrowse_set(&packet->address, BROWSESET_OLD_INTERNET, -1, &info);
 				}
 			}
 		}

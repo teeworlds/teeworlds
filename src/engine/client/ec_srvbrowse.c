@@ -61,10 +61,10 @@ static char filtergametypestring[128] = {0};
 /* the token is to keep server refresh separated from each other */
 static int current_token = 1;
 
-static int serverlist_lan = 1;
+static int serverlist_type = 0;
 static int64 broadcast_time = 0;
 
-int client_serverbrowse_lan() { return serverlist_lan; }
+int client_serverbrowse_lan() { return serverlist_type == BROWSETYPE_LAN; }
 int client_serverbrowse_num() { return num_servers; }
 
 SERVER_INFO *client_serverbrowse_get(int index)
@@ -290,49 +290,60 @@ static SERVERENTRY *client_serverbrowse_find(NETADDR *addr)
 	return (SERVERENTRY*)0;
 }
 
-void client_serverbrowse_set(NETADDR *addr, int request, int token, SERVER_INFO *info)
+void client_serverbrowse_queuerequest(SERVERENTRY *entry)
+{
+	/* add it to the list of servers that we should request info from */
+	entry->prev_req = last_req_server;
+	if(last_req_server)
+		last_req_server->next_req = entry;
+	else
+		first_req_server = entry;
+	last_req_server = entry;
+	
+	num_requests++;
+}
+
+void client_serverbrowse_setinfo(SERVERENTRY *entry, SERVER_INFO *info)
+{
+	int fav = entry->info.favorite;
+	entry->info = *info;
+	entry->info.favorite = fav;
+	entry->info.netaddr = entry->addr;
+
+	/*if(!request)
+	{
+		entry->info.latency = (time_get()-entry->request_time)*1000/time_freq();
+		client_serverbrowse_remove_request(entry);
+	}*/
+	
+	entry->got_info = 1;
+	client_serverbrowse_sort();	
+}
+
+SERVERENTRY *client_serverbrowse_add(NETADDR *addr)
 {
 	int hash = addr->ip[0];
 	SERVERENTRY *entry = 0;
 	int i;
-	
-	if(token != -1 && token != current_token)
-		return;
-	
-	entry = client_serverbrowse_find(addr);
-	if(entry)
-	{
-		/* update the server that we already have */
-		if(!serverlist_lan)
-		{
-			int fav = entry->info.favorite;
-			entry->info = *info;
-			entry->info.netaddr = *addr;
-			entry->info.favorite = fav;
 
-			if(!request)
-			{
-				entry->info.latency = (time_get()-entry->request_time)*1000/time_freq();
-				client_serverbrowse_remove_request(entry);
-			}
-			
-			entry->got_info = 1;
-			client_serverbrowse_sort();
-		}
-		return;
-	}
-
-	/* create new entry */	
+	/* create new entry */
 	entry = (SERVERENTRY *)memheap_allocate(serverlist_heap, sizeof(SERVERENTRY));
 	mem_zero(entry, sizeof(SERVERENTRY));
 	
 	/* set the info */
 	entry->addr = *addr;
-	entry->info = *info;
 	entry->info.netaddr = *addr;
 	
-	if(serverlist_lan)
-		entry->info.latency = (time_get()-broadcast_time)*1000/time_freq();
+	entry->info.latency = 999;
+	str_format(entry->info.address, sizeof(entry->info.address), "%d.%d.%d.%d:%d",
+		addr->ip[0], addr->ip[1], addr->ip[2],
+		addr->ip[3], addr->port);
+	str_format(entry->info.name, sizeof(entry->info.name), "\255%d.%d.%d.%d:%d", /* the \255 is to make sure that it's sorted last */
+		addr->ip[0], addr->ip[1], addr->ip[2],
+		addr->ip[3], addr->port);	
+	
+	/*if(serverlist_type == BROWSETYPE_LAN)
+		entry->info.latency = (time_get()-broadcast_time)*1000/time_freq();*/
 
 	/* check if it's a favorite */
 	for(i = 0; i < num_favorite_servers; i++)
@@ -360,18 +371,74 @@ void client_serverbrowse_set(NETADDR *addr, int request, int token, SERVER_INFO 
 	entry->info.server_index = num_servers;
 	num_servers++;
 	
-	/* */
-	if(request)
+	return entry;
+}
+
+void client_serverbrowse_set(NETADDR *addr, int type, int token, SERVER_INFO *info)
+{
+	SERVERENTRY *entry = 0;
+	if(type == BROWSESET_MASTER_ADD)
 	{
-		/* add it to the list of servers that we should request info from */
-		entry->prev_req = last_req_server;
-		if(last_req_server)
-			last_req_server->next_req = entry;
-		else
-			first_req_server = entry;
-		last_req_server = entry;
-		
-		num_requests++;
+		if(serverlist_type != BROWSETYPE_INTERNET)
+			return;
+			
+		if(!client_serverbrowse_find(addr))
+		{
+			entry = client_serverbrowse_add(addr);
+			client_serverbrowse_queuerequest(entry);
+		}
+	}
+	else if(type == BROWSESET_FAV_ADD)
+	{
+		if(serverlist_type != BROWSETYPE_FAVORITES)
+			return;
+			
+		if(!client_serverbrowse_find(addr))
+		{
+			entry = client_serverbrowse_add(addr);
+			client_serverbrowse_queuerequest(entry);
+		}
+	}
+	else if(type == BROWSESET_TOKEN)
+	{
+		if(token != current_token)
+			return;
+			
+		entry = client_serverbrowse_find(addr);
+		if(!entry)
+			entry = client_serverbrowse_add(addr);
+		if(entry)
+		{
+			client_serverbrowse_setinfo(entry, info);
+			if(serverlist_type == BROWSETYPE_LAN)
+				entry->info.latency = (time_get()-broadcast_time)*1000/time_freq();
+			else
+				entry->info.latency = (time_get()-entry->request_time)*1000/time_freq();
+			client_serverbrowse_remove_request(entry);				
+		}
+	}
+	else if(type == BROWSESET_OLD_INTERNET)
+	{
+		entry = client_serverbrowse_find(addr);
+		if(entry)
+		{
+			client_serverbrowse_setinfo(entry, info);
+			
+			if(serverlist_type == BROWSETYPE_LAN)
+				entry->info.latency = (time_get()-broadcast_time)*1000/time_freq();
+			else
+				entry->info.latency = (time_get()-entry->request_time)*1000/time_freq();
+			client_serverbrowse_remove_request(entry);				
+		}
+	}
+	else if(type == BROWSESET_OLD_LAN)
+	{
+		entry = client_serverbrowse_find(addr);
+		if(entry)
+		if(!entry)
+			entry = client_serverbrowse_add(addr);
+		if(entry)
+			client_serverbrowse_setinfo(entry, info);
 	}
 	
 	client_serverbrowse_sort();
@@ -394,9 +461,7 @@ void client_serverbrowse_refresh(int type)
 	current_token = (current_token+1)&0xff;
 	
 	/* */
-	serverlist_lan = 0;
-	if(type == BROWSETYPE_LAN)
-		serverlist_lan = 1;
+	serverlist_type = type;
 
 	if(type == BROWSETYPE_LAN)
 	{
@@ -452,22 +517,8 @@ void client_serverbrowse_refresh(int type)
 	else if(type == BROWSETYPE_FAVORITES)
 	{
 		int i;
-		
 		for(i = 0; i < num_favorite_servers; i++)
-		{
-			SERVER_INFO info = {0};
-			NETADDR addr = favorite_servers[i];
-			
-			info.latency = 999;
-			str_format(info.address, sizeof(info.address), "%d.%d.%d.%d:%d",
-				addr.ip[0], addr.ip[1], addr.ip[2],
-				addr.ip[3], addr.port);
-			str_format(info.name, sizeof(info.name), "\255%d.%d.%d.%d:%d", /* the \255 is to make sure that it's sorted last */
-				addr.ip[0], addr.ip[1], addr.ip[2],
-				addr.ip[3], addr.port);
-			
-			client_serverbrowse_set(&addr, 1, current_token, &info);
-		}
+			client_serverbrowse_set(&favorite_servers[i], BROWSESET_FAV_ADD, -1, 0);
 	}
 }
 
@@ -492,6 +543,12 @@ static void client_serverbrowse_request(SERVERENTRY *entry)
 	p.data_size = sizeof(buffer);
 	p.data = buffer;
 	netclient_send(net, &p);
+
+	/* send old requtest style aswell */	
+	p.data_size = sizeof(SERVERBROWSE_OLD_GETINFO);
+	p.data = SERVERBROWSE_OLD_GETINFO;
+	netclient_send(net, &p);
+	
 	entry->request_time = time_get();
 }
 
@@ -567,6 +624,7 @@ void client_serverbrowse_addfavorite(NETADDR addr)
 	entry = client_serverbrowse_find(&addr);
 	if(entry)
 		entry->info.favorite = 1;
+	dbg_msg("", "added fav, %p", entry);
 }
 
 void client_serverbrowse_removefavorite(NETADDR addr)

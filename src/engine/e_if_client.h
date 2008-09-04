@@ -505,4 +505,20 @@ int client_mapdownload_totalsize();
 */
 void client_save_line(const char *line);
 
+
+
+
+
+
+enum
+{
+	BROWSESET_MASTER_ADD=1,
+	BROWSESET_FAV_ADD,
+	BROWSESET_TOKEN,
+	BROWSESET_OLD_INTERNET,
+	BROWSESET_OLD_LAN
+};
+
+void client_serverbrowse_set(NETADDR *addr, int type, int token, SERVER_INFO *info);
+
 #endif
