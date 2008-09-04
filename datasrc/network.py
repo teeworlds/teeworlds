@@ -6,7 +6,7 @@ GameFlags = ["TEAMS", "FLAGS"]
 
 Emoticons = [str(x) for x in xrange(1,16)]
 
-Powerups = ["ARMOR", "HEALTH", "WEAPON", "NINJA"]
+Powerups = ["HEALTH", "ARMOR", "WEAPON", "NINJA"]
 
 RawHeader = '''
 enum
