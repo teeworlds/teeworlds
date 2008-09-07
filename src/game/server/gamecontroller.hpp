@@ -47,12 +47,11 @@ protected:
 	int round_count;
 	
 	int game_flags;
-	
+	int unbalanced_tick;
+	bool force_balanced;
 	
 public:
 	bool is_teamplay() const;
-	
-	int unbalanced_tick;
 	
 	GAMECONTROLLER();
 
@@ -65,6 +64,8 @@ public:
 	void endround();
 	
 	bool is_friendly_fire(int cid1, int cid2);
+	
+	bool is_force_balanced();
 
 	/*
 	

@@ -27,6 +27,7 @@ GAMECONTROLLER::GAMECONTROLLER()
 	teamscore[1] = 0;
 	
 	unbalanced_tick = -1;
+	force_balanced = false;
 	
 	num_spawn_points[0] = 0;
 	num_spawn_points[1] = 0;
@@ -191,6 +192,7 @@ void GAMECONTROLLER::startround()
 	teamscore[0] = 0;
 	teamscore[1] = 0;
 	unbalanced_tick = -1;
+	force_balanced = false;
 	round_count++;
 }
 
@@ -324,6 +326,17 @@ bool GAMECONTROLLER::is_friendly_fire(int cid1, int cid2)
 	return false;
 }
 
+bool GAMECONTROLLER::is_force_balanced()
+{
+	if(force_balanced)
+	{
+		force_balanced = false;
+		return true;
+	}
+	else
+		return false;
+}
+
 void GAMECONTROLLER::tick()
 {
 	// do warmup
@@ -385,6 +398,7 @@ void GAMECONTROLLER::tick()
 			p->force_balanced = true;
 		} while (--num_balance);
 		
+		force_balanced = true;
 		unbalanced_tick = -1;
 	}
 	

@@ -145,6 +145,8 @@ void GAMEWORLD::tick()
 
 	if(!paused)
 	{
+		if(game.controller->is_force_balanced())
+			game.send_chat(-1, GAMECONTEXT::CHAT_ALL, "Teams have been balanced");
 		// update all objects
 		for(ENTITY *ent = first_entity; ent; ent = ent->next_entity)
 			ent->tick();
