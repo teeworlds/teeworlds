@@ -131,13 +131,13 @@ void CHAT::on_render()
 {
 	gfx_mapscreen(0,0,300*gfx_screenaspect(),300);
 	float x = 10.0f;
-	float y = 300.0f-30.0f;
+	float y = 300.0f-20.0f;
 	if(mode != MODE_NONE)
 	{
 		// render chat input
 		TEXT_CURSOR cursor;
 		gfx_text_set_cursor(&cursor, x, y, 8.0f, TEXTFLAG_RENDER);
-		cursor.line_width = 300.0f;
+		cursor.line_width = 200.0f;
 		
 		if(mode == MODE_ALL)
 			gfx_text_ex(&cursor, "All: ", -1);
@@ -162,7 +162,7 @@ void CHAT::on_render()
 			break;
 
 		float begin = x;
-		float fontsize = 8.0f;
+		float fontsize = 7.0f;
 		
 		// get the y offset
 		TEXT_CURSOR cursor;
@@ -172,9 +172,13 @@ void CHAT::on_render()
 		gfx_text_ex(&cursor, lines[r].text, -1);
 		y -= cursor.y + cursor.font_size;
 
+		// cut off if msgs waste too much space
+		if(y < 200.0f)
+			break;
+		
 		// reset the cursor
 		gfx_text_set_cursor(&cursor, begin, y, fontsize, TEXTFLAG_RENDER);
-		cursor.line_width = 300.0f;
+		cursor.line_width = 200.0f;
 
 		// render name
 		gfx_text_color(0.8f,0.8f,0.8f,1);
