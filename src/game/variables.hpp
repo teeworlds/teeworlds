@@ -61,3 +61,4 @@ MACRO_CONFIG_INT(sv_tournament_mode, 0, 0, 1)
 MACRO_CONFIG_INT(sv_spamprotection, 1, 0, 1)
 
 MACRO_CONFIG_INT(sv_spectator_slots, 0, 0, 12)
+MACRO_CONFIG_INT(sv_teambalance_time, 1, 0, 1000)

@@ -62,6 +62,7 @@ bool CHARACTER::spawn(PLAYER *player, vec2 pos, int team)
 	
 	game.world.insert_entity(this);
 	alive = true;
+	player->force_balanced = false;
 
 	game.controller->on_character_spawn(this);
 
@@ -563,6 +564,15 @@ void CHARACTER::tick()
 		return;
 	}
 	* */
+	
+	if(player->force_balanced)
+	{
+		char buf[128];
+		str_format(buf, sizeof(buf), "You were moved to %s due to team balancing", game.controller->get_team_name(team));
+		game.send_broadcast(buf, player->client_id);
+		
+		player->force_balanced = false;
+	}
 
 	//player_core core;
 	//core.pos = pos;

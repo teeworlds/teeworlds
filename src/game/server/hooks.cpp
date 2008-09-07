@@ -104,6 +104,8 @@ void mods_connected(int client_id)
 		game.players[client_id].team = -1;
 	else
 		game.players[client_id].team = game.controller->get_auto_team(client_id);
+		
+	(void) game.controller->check_team_balance();
 
 	// send motd
 	NETMSG_SV_MOTD msg;
@@ -115,7 +117,7 @@ void mods_connected(int client_id)
 void mods_client_drop(int client_id)
 {
 	game.players[client_id].on_disconnect();
-
+	(void) game.controller->check_team_balance();
 }
 
 void mods_message(int msgtype, int client_id)
@@ -156,7 +158,15 @@ void mods_message(int msgtype, int client_id)
 
 		// Switch team on given client and kill/respawn him
 		if(game.controller->can_join_team(msg->team, client_id))
-			p->set_team(msg->team);
+		{
+			if(game.controller->can_change_team(p, msg->team))
+			{
+				p->set_team(msg->team);
+				(void) game.controller->check_team_balance();
+			}
+			else
+				game.send_broadcast("Teams must be balanced, please join other team", client_id);
+		}
 		else
 		{
 			char buf[128];

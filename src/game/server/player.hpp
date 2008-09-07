@@ -21,6 +21,7 @@ public:
 	int client_id;
 	int team;
 	int score;
+	bool force_balanced;
 
 	//
 	int64 last_chat;

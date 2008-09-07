@@ -34,7 +34,7 @@ protected:
 
 	void cyclemap();
 	void resetgame();
-	
+
 	const char *gametype;
 	
 	int round_start_tick;
@@ -51,6 +51,8 @@ protected:
 	
 public:
 	bool is_teamplay() const;
+	
+	int unbalanced_tick;
 	
 	GAMECONTROLLER();
 
@@ -118,6 +120,8 @@ public:
 	virtual const char *get_team_name(int team);
 	virtual int get_auto_team(int notthisid);
 	virtual bool can_join_team(int team, int notthisid);
+	bool check_team_balance();
+	bool can_change_team(PLAYER *pplayer, int jointeam);
 	int clampteam(int team);
 
 	virtual void post_reset();

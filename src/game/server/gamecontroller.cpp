@@ -26,6 +26,8 @@ GAMECONTROLLER::GAMECONTROLLER()
 	teamscore[0] = 0;
 	teamscore[1] = 0;
 	
+	unbalanced_tick = -1;
+	
 	num_spawn_points[0] = 0;
 	num_spawn_points[1] = 0;
 	num_spawn_points[2] = 0;
@@ -188,6 +190,7 @@ void GAMECONTROLLER::startround()
 	game.world.paused = false;
 	teamscore[0] = 0;
 	teamscore[1] = 0;
+	unbalanced_tick = -1;
 	round_count++;
 }
 
@@ -341,6 +344,49 @@ void GAMECONTROLLER::tick()
 		}
 	}
 	
+	if (is_teamplay() && unbalanced_tick != -1 && server_tick() > unbalanced_tick+config.sv_teambalance_time*server_tickspeed()*60)
+	{
+		dbg_msg("game", "Balancing teams");
+		
+		int t[2] = {0,0};
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(game.players[i].client_id != -1 && game.players[i].team != -1)
+				t[game.players[i].team]++;
+		}
+		
+		int m = (t[0] > t[1]) ? 0 : 1;
+		int num_balance = abs(t[0]-t[1]) / 2;
+		int scorediff = abs(teamscore[0]-teamscore[1]);
+		
+		do
+		{
+			// move player who is closest to team-scorediff
+			PLAYER *p = 0;
+			int pd = teamscore[m];
+			for(int i = 0; i < MAX_CLIENTS; i++)
+			{
+				if(game.players[i].client_id == -1)
+					continue;
+				
+				if(game.players[i].team == m && (!p || abs(scorediff - game.players[i].score) < pd))
+				{
+					p = &(game.players[i]);
+					pd = abs(scorediff - game.players[i].score);
+				}
+			}
+			
+			// change in player::set_team needed: player won't lose score on team-change
+			int score_before = p->score;
+			p->set_team(m^1);
+			p->score = score_before;
+			
+			p->respawn();
+			p->force_balanced = true;
+		} while (--num_balance);
+		
+		unbalanced_tick = -1;
+	}
 	
 	// update browse info
 	int prog = -1;
@@ -429,6 +475,66 @@ bool GAMECONTROLLER::can_join_team(int team, int notthisid)
 	}
 	
 	return (numplayers[0] + numplayers[1]) < config.sv_max_clients-config.sv_spectator_slots;
+}
+
+bool GAMECONTROLLER::check_team_balance()
+{
+	if(!is_teamplay() || !config.sv_teambalance_time)
+		return true;
+	
+	int t[2] = {0, 0};
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		PLAYER *p = &(game.players[i]);
+		if(p->client_id != -1 && p->team != -1)
+			t[p->team]++;
+	}
+	
+	if(abs(t[0]-t[1]) >= 2)
+	{
+		dbg_msg("game", "Team is NOT balanced (red=%d blue=%d)", t[0], t[1]);
+		if (game.controller->unbalanced_tick == -1)
+			game.controller->unbalanced_tick = server_tick();
+		return false;
+	}
+	else
+	{
+		dbg_msg("game", "Team is balanced (red=%d blue=%d)", t[0], t[1]);
+		game.controller->unbalanced_tick = -1;
+		return true;
+	}
+}
+
+bool GAMECONTROLLER::can_change_team(PLAYER *pplayer, int jointeam)
+{
+	int t[2] = {0, 0};
+	
+	if (!is_teamplay() || jointeam == -1 || !config.sv_teambalance_time)
+		return true;
+	
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		PLAYER *p = &(game.players[i]);
+		if(p->client_id != -1 && p->team != -1)
+			t[p->team]++;
+	}
+	
+	// simulate what would happen if changed team
+	t[jointeam]++;
+	if (pplayer->team != -1)
+		t[jointeam^1]--;
+	
+	// there is a player-difference of at least 2
+	if(abs(t[0]-t[1]) >= 2)
+	{
+		// player wants to join team with less players
+		if ((t[0] < t[1] && jointeam == 0) || (t[0] > t[1] && jointeam == 1))
+			return true;
+		else
+			return false;
+	}
+	else
+		return true;
 }
 
 void GAMECONTROLLER::do_player_score_wincheck()
