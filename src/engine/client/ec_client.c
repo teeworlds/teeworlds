@@ -1289,31 +1289,37 @@ static void client_update()
 	client_serverbrowse_update();
 }
 
-static int client_getversion()
+
+static void client_versionupdate()
 {
-	NETADDR addr;
-	NETCHUNK packet;
+	static int state = 0;
+	static HOSTLOOKUP version_serveraddr;
 	
-	mem_zero(&addr, sizeof(NETADDR));
-	mem_zero(&packet, sizeof(NETCHUNK));
-	
-	if(net_host_lookup(config.cl_version_server, &addr, NETTYPE_IPV4))
+	if(state == 0)
 	{
-		dbg_msg("client/version", "could not find the address of %s, skipping version fetch", config.cl_version_server);
-		return -1;
+		engine_hostlookup(&version_serveraddr, config.cl_version_server);
+		state++;
 	}
-	
-	addr.port = VERSIONSRV_PORT;
-	
-	packet.client_id = -1;
-	packet.address = addr;
-	packet.data = VERSIONSRV_GETVERSION;
-	packet.data_size = sizeof(VERSIONSRV_GETVERSION);
-	packet.flags = NETSENDFLAG_CONNLESS;
-	
-	netclient_send(net, &packet);
-	
-	return 0;
+	else if(state == 1)
+	{
+		if(jobs_status(&version_serveraddr.job) == JOBSTATUS_DONE)
+		{
+			NETCHUNK packet;
+			
+			mem_zero(&packet, sizeof(NETCHUNK));
+			
+			version_serveraddr.addr.port = VERSIONSRV_PORT;
+			
+			packet.client_id = -1;
+			packet.address = version_serveraddr.addr;
+			packet.data = VERSIONSRV_GETVERSION;
+			packet.data_size = sizeof(VERSIONSRV_GETVERSION);
+			packet.flags = NETSENDFLAG_CONNLESS;
+			
+			netclient_send(net, &packet);
+			state++;
+		}
+	}
 }
 
 extern int editor_update_and_render();
@@ -1336,7 +1342,7 @@ static void client_run()
 		return;
 
 	/* start refreshing addresses while we load */
-	mastersrv_refresh_addresses();
+	/* mastersrv_refresh_addresses(); */
 	
 	/* init the editor */
 	editor_init();
@@ -1363,9 +1369,6 @@ static void client_run()
 	config.cl_connect[0] = 0;
 	*/
 	
-	/* fetch latest client-version from versionsrv */
-	client_getversion();
-	
 	/* never start with the editor */
 	config.cl_editor = 0;
 		
@@ -1377,7 +1380,11 @@ static void client_run()
 		int64 frame_start_time = time_get();
 		frames++;
 		
+		
 		perf_start(&rootscope);
+
+		/* */
+		client_versionupdate();
 		
 		/* update input */
 		{

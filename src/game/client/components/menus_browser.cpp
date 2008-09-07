@@ -122,7 +122,7 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 	ui_vsplit_r(&view, 15, &view, &scroll);
 	
 	int num_servers = client_serverbrowse_sorted_num();
-	
+
 	int num = (int)(view.h/cols[0].rect.h);
 	static int scrollbar = 0;
 	static float scrollvalue = 0;
@@ -312,7 +312,10 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 	ui_draw_rect(&status, vec4(1,1,1,0.25f), CORNER_B, 5.0f);
 	ui_vmargin(&status, 50.0f, &status);
 	char buf[128];
-	str_format(buf, sizeof(buf), "%d of %d servers, %d players", client_serverbrowse_sorted_num(), client_serverbrowse_num(), num_players);
+	if(client_serverbrowse_refreshingmasters())
+		str_format(buf, sizeof(buf), "Refreshing master servers...");
+	else
+		str_format(buf, sizeof(buf), "%d of %d servers, %d players", client_serverbrowse_sorted_num(), client_serverbrowse_num(), num_players);
 	ui_do_label(&status, buf, 14.0f, -1);
 }
 

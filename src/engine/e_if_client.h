@@ -535,4 +535,6 @@ enum
 
 void client_serverbrowse_set(NETADDR *addr, int type, int token, SERVER_INFO *info);
 
+
+int client_serverbrowse_refreshingmasters();
 #endif

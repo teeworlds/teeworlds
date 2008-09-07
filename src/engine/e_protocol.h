@@ -41,6 +41,9 @@ enum
 	NETMSG_SNAPSMALL,		/* */
 	NETMSG_RCON_AUTH_STATUS,/* result of the authentication */
 	NETMSG_RCON_LINE,		/* line that should be printed to the remote console */
+
+	NETMSG_AUTH_CHALLANGE,	/* */
+	NETMSG_AUTH_RESULT,		/* */
 	
 	/* sent by client */
 	NETMSG_READY,			/* */
@@ -49,6 +52,9 @@ enum
 	NETMSG_RCON_CMD,		/* */ 
 	NETMSG_RCON_AUTH,		/* */
 	NETMSG_REQUEST_MAP_DATA,/* */
+
+	NETMSG_AUTH_START,		/* */
+	NETMSG_AUTH_RESPONSE,	/* */
 	
 	/* sent by both */
 	NETMSG_PING,

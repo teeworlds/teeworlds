@@ -13,6 +13,8 @@
 #include <engine/e_network.h>
 #include "e_linereader.h"
 
+static JOBPOOL hostlookuppool;
+
 static void con_dbg_dumpmem(void *result, void *user_data)
 {
 	mem_debug_dump();
@@ -63,6 +65,8 @@ void engine_init(const char *appname)
 	/* init console and add the console logger */
 	console_init();
 	dbg_logger(console_print);
+	
+	jobs_initpool(&hostlookuppool, 1);
 
 	MACRO_REGISTER_COMMAND("dbg_dumpmem", "", con_dbg_dumpmem, 0x0);
 	
@@ -224,65 +228,29 @@ void perf_dump(PERFORMACE_INFO *top)
 }
 
 /* master server functions */
-enum
-{
-	NUM_LOOKUP_THREADS=4,
-	
-	STATE_PROCESSED=0,
-	STATE_RESULT,
-	STATE_QUERYING
-};
-
 typedef struct
 {
 	char hostname[128];
 	NETADDR addr;
 	
-	/* these are used for lookups */
-	struct {
-		NETADDR addr;
-		int result;
-		void *thread;
-		volatile int state;
-	} lookup;
+	HOSTLOOKUP lookup;
 } MASTER_INFO;
 
-typedef struct
-{
-	int start;
-	int num;
-} THREAD_INFO;
-
 static MASTER_INFO master_servers[MAX_MASTERSERVERS] = {{{0}}};
-static THREAD_INFO thread_info[NUM_LOOKUP_THREADS];
-static int needs_update = 0;
-
-void lookup_thread(void *user)
-{
-	THREAD_INFO *info = (THREAD_INFO *)user;
-	int i;
-	
-	for(i = 0; i < info->num; i++)
-	{
-		int index = info->start+i;
-		master_servers[index].lookup.result = net_host_lookup(master_servers[index].hostname, &master_servers[index].lookup.addr, NETTYPE_IPV4);
-		master_servers[index].lookup.state = STATE_RESULT;
-	}
-}
+static int needs_update = -1;
 
 int mastersrv_refresh_addresses()
 {
 	int i;
-	dbg_msg("engine/mastersrv", "refreshing master server addresses");
 	
-	/* spawn threads that does the lookups */
-	for(i = 0; i < NUM_LOOKUP_THREADS; i++)	
-	{
-		thread_info[i].start = MAX_MASTERSERVERS/NUM_LOOKUP_THREADS * i;
-		thread_info[i].num = MAX_MASTERSERVERS/NUM_LOOKUP_THREADS;
-		master_servers[i].lookup.state = STATE_QUERYING;
-		master_servers[i].lookup.thread = thread_create(lookup_thread, &thread_info[i]);
-	}
+	if(needs_update != -1)
+		return 0;
+	
+	dbg_msg("engine/mastersrv", "refreshing master server addresses");
+
+	/* add lookup jobs */
+	for(i = 0; i < MAX_MASTERSERVERS; i++)	
+		engine_hostlookup(&master_servers[i].lookup, master_servers[i].hostname);
 	
 	needs_update = 1;
 	return 0;
@@ -293,37 +261,23 @@ void mastersrv_update()
 	int i;
 	
 	/* check if we need to update */
-	if(!needs_update)
+	if(needs_update != 1)
 		return;
 	needs_update = 0;
 	
 	for(i = 0; i < MAX_MASTERSERVERS; i++)
 	{
-		if(master_servers[i].lookup.state == STATE_RESULT)
-		{
-			/* we got a result from the lookup ready */
-			if(master_servers[i].lookup.result == 0)
-			{
-				master_servers[i].addr = master_servers[i].lookup.addr;
-				master_servers[i].addr.port = 8300;
-			}
-			master_servers[i].lookup.state = STATE_PROCESSED;
-		}
-
-		/* set the needs_update flag if we isn't done */		
-		if(master_servers[i].lookup.state != STATE_PROCESSED)
+		if(jobs_status(&master_servers[i].lookup.job) != JOBSTATUS_DONE)
 			needs_update = 1;
+		else
+		{
+			master_servers[i].addr = master_servers[i].lookup.addr;
+			master_servers[i].addr.port = 8300;
+		}
 	}
 	
 	if(!needs_update)
 	{
-		/* make sure to destroy the threads */
-		for(i = 0; i < NUM_LOOKUP_THREADS; i++)
-		{
-			thread_destroy(master_servers[i].lookup.thread);
-			master_servers[i].lookup.thread = 0;
-		}
-			
 		dbg_msg("engine/mastersrv", "saving addresses");
 		mastersrv_save();
 	}
@@ -436,3 +390,18 @@ int mastersrv_save()
 	io_close(file);
 	return 0;
 }
+
+
+int hostlookup_thread(void *user)
+{
+	HOSTLOOKUP *lookup = (HOSTLOOKUP *)user;
+	net_host_lookup(lookup->hostname, &lookup->addr, NETTYPE_IPV4);
+	return 0;
+}
+
+void engine_hostlookup(HOSTLOOKUP *lookup, const char *hostname)
+{
+	str_copy(lookup->hostname, hostname, sizeof(lookup->hostname));
+	jobs_add(&hostlookuppool, &lookup->job, hostlookup_thread, lookup);
+}
+

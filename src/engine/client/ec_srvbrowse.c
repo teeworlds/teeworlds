@@ -49,6 +49,8 @@ static SERVERENTRY *first_req_server = 0; /* request list */
 static SERVERENTRY *last_req_server = 0;
 static int num_requests = 0;
 
+static int need_refresh = 0;
+
 static int num_sorted_servers = 0;
 static int num_sorted_servers_capacity = 0;
 static int num_servers = 0;
@@ -489,12 +491,63 @@ void client_serverbrowse_refresh(int type)
 	}
 	else if(type == BROWSETYPE_INTERNET)
 	{
+		need_refresh = 1;
+		mastersrv_refresh_addresses();
+	}
+	else if(type == BROWSETYPE_FAVORITES)
+	{
+		int i;
+		for(i = 0; i < num_favorite_servers; i++)
+			client_serverbrowse_set(&favorite_servers[i], BROWSESET_FAV_ADD, -1, 0);
+	}
+}
+
+static void client_serverbrowse_request(SERVERENTRY *entry)
+{
+	/*unsigned char buffer[sizeof(SERVERBROWSE_GETINFO)+1];*/
+	NETCHUNK p;
+
+	if(config.debug)
+	{
+		dbg_msg("client", "requesting server info from %d.%d.%d.%d:%d",
+			entry->addr.ip[0], entry->addr.ip[1], entry->addr.ip[2],
+			entry->addr.ip[3], entry->addr.port);
+	}
+	
+	/*mem_copy(buffer, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
+	buffer[sizeof(SERVERBROWSE_GETINFO)] = current_token;*/
+	
+	p.client_id = -1;
+	p.address = entry->addr;
+	p.flags = NETSENDFLAG_CONNLESS;
+	/*p.data_size = sizeof(buffer);
+	p.data = buffer;
+	netclient_send(net, &p);*/
+
+	/* send old requtest style aswell */	
+	p.data_size = sizeof(SERVERBROWSE_OLD_GETINFO);
+	p.data = SERVERBROWSE_OLD_GETINFO;
+	netclient_send(net, &p);
+	
+	entry->request_time = time_get();
+}
+
+void client_serverbrowse_update()
+{
+	int64 timeout = time_freq();
+	int64 now = time_get();
+	int count;
+	SERVERENTRY *entry, *next;
+	
+	/* do server list requests */
+	if(need_refresh && !mastersrv_refreshing())
+	{
 		NETADDR addr;
 		NETCHUNK p;
 		int i;
 		
-		/*net_host_lookup(config.masterserver, MASTERSERVER_PORT, &master_server);*/
-
+		need_refresh = 0;
+		
 		mem_zero(&p, sizeof(p));
 		p.client_id = -1;
 		p.flags = NETSENDFLAG_CONNLESS;
@@ -514,50 +567,6 @@ void client_serverbrowse_refresh(int type)
 		if(config.debug)
 			dbg_msg("client", "requesting server list");
 	}
-	else if(type == BROWSETYPE_FAVORITES)
-	{
-		int i;
-		for(i = 0; i < num_favorite_servers; i++)
-			client_serverbrowse_set(&favorite_servers[i], BROWSESET_FAV_ADD, -1, 0);
-	}
-}
-
-static void client_serverbrowse_request(SERVERENTRY *entry)
-{
-	unsigned char buffer[sizeof(SERVERBROWSE_GETINFO)+1];
-	NETCHUNK p;
-
-	if(config.debug)
-	{
-		dbg_msg("client", "requesting server info from %d.%d.%d.%d:%d",
-			entry->addr.ip[0], entry->addr.ip[1], entry->addr.ip[2],
-			entry->addr.ip[3], entry->addr.port);
-	}
-	
-	mem_copy(buffer, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
-	buffer[sizeof(SERVERBROWSE_GETINFO)] = current_token;
-	
-	p.client_id = -1;
-	p.address = entry->addr;
-	p.flags = NETSENDFLAG_CONNLESS;
-	p.data_size = sizeof(buffer);
-	p.data = buffer;
-	netclient_send(net, &p);
-
-	/* send old requtest style aswell */	
-	p.data_size = sizeof(SERVERBROWSE_OLD_GETINFO);
-	p.data = SERVERBROWSE_OLD_GETINFO;
-	netclient_send(net, &p);
-	
-	entry->request_time = time_get();
-}
-
-void client_serverbrowse_update()
-{
-	int64 timeout = time_freq();
-	int64 now = time_get();
-	int count;
-	SERVERENTRY *entry, *next;
 	
 	/* do timeouts */
 	entry = first_req_server;
@@ -659,4 +668,10 @@ void client_serverbrowse_save()
 		str_format(buffer, sizeof(buffer), "add_favorite %s", addrstr);
 		engine_config_write_line(buffer);
 	}
+}
+
+
+int client_serverbrowse_refreshingmasters()
+{
+	return mastersrv_refreshing();
 }

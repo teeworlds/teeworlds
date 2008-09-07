@@ -1,5 +1,7 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 
+#include "e_jobs.h"
+
 const char *engine_savepath(const char *filename, char *buffer, int max);
 void engine_init(const char *appname);
 void engine_parse_arguments(int argc, char **argv);
@@ -10,6 +12,14 @@ void engine_config_write_stop();
 
 int engine_stress(float probability);
 
+typedef struct HOSTLOOKUP
+{
+	JOB job;
+	char hostname[128];
+	NETADDR addr;
+} HOSTLOOKUP;
+
+void engine_hostlookup(HOSTLOOKUP *lookup, const char *hostname);
 
 enum
 {
