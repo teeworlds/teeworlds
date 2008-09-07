@@ -153,14 +153,13 @@ void mods_message(int msgtype, int client_id)
 		
 		if(config.sv_spamprotection && p->last_setteam+time_freq()*3 > time_get())
 			return;
-			
-		p->last_setteam = time_get();
 
 		// Switch team on given client and kill/respawn him
 		if(game.controller->can_join_team(msg->team, client_id))
 		{
 			if(game.controller->can_change_team(p, msg->team))
 			{
+				p->last_setteam = time_get();
 				p->set_team(msg->team);
 				(void) game.controller->check_team_balance();
 			}

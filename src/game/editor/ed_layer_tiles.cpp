@@ -107,6 +107,9 @@ void LAYER_TILES::brush_selecting(RECT rect)
 	snap(&rect);
 	gfx_quads_drawTL(rect.x, rect.y, rect.w, rect.h);
 	gfx_quads_end();
+	char buf[16];
+	str_format(buf, sizeof(buf), "%d,%d", convert_x(rect.w), convert_y(rect.h));
+	gfx_text(0, rect.x+3.0f, rect.y+3.0f, 15.0f*editor.world_zoom, buf, -1);
 }
 
 int LAYER_TILES::brush_grab(LAYERGROUP *brush, RECT rect)
@@ -206,8 +209,28 @@ int LAYER_TILES::render_properties(RECT *toolbox)
 	RECT button;
 	ui_hsplit_b(toolbox, 12.0f, toolbox, &button);
 	bool in_gamegroup = editor.map.game_group->layers.find(this) != -1;
+	if(editor.map.game_layer == this)
+		in_gamegroup = false;
+	static int colcl_button = 0;
+	if(do_editor_button(&colcl_button, "Clear Collision", in_gamegroup?0:-1, &button, draw_editor_button, 0, "Removes collision from this layer"))
+	{
+		LAYER_TILES *gl = editor.map.game_layer;
+		int w = min(gl->width, width);
+		int h = min(gl->height, height);
+		for(int y = 0; y < h; y++)
+			for(int x = 0; x < w; x++)
+			{
+				if(gl->tiles[y*gl->width+x].index <= TILE_SOLID)
+					if(tiles[y*width+x].index)
+						gl->tiles[y*gl->width+x].index = TILE_AIR;
+			}
+			
+		return 1;
+	}
 	static int col_button = 0;
-	if(do_editor_button(&col_button, "Make Collision", in_gamegroup?0:-1, &button, draw_editor_button, 0, "Constructs collision from the this layer"))
+	ui_hsplit_b(toolbox, 5.0f, toolbox, &button);
+	ui_hsplit_b(toolbox, 12.0f, toolbox, &button);
+	if(do_editor_button(&col_button, "Make Collision", in_gamegroup?0:-1, &button, draw_editor_button, 0, "Constructs collision from this layer"))
 	{
 		LAYER_TILES *gl = editor.map.game_layer;
 		int w = min(gl->width, width);
@@ -249,7 +272,15 @@ int LAYER_TILES::render_properties(RECT *toolbox)
 	else if(prop == PROP_HEIGHT && new_val > 1)
 		resize(width, new_val);
 	else if(prop == PROP_IMAGE)
-		image = new_val%editor.map.images.len();
+	{
+		if (new_val == -1)
+		{
+			tex_id = -1;
+			image = -1;
+		}
+		else
+			image = new_val%editor.map.images.len();
+	}
 	
 	return 0;
 }

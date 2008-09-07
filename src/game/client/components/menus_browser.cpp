@@ -614,7 +614,7 @@ void MENUS::render_serverbrowser(RECT main_view)
 		ui_vmargin(&button, 2.0f, &button);
 		//ui_vmargin(&button, 2.0f, &button);
 		static int join_button = 0;
-		if(ui_do_button(&join_button, "Connect", 0, &button, ui_draw_menu_button, 0))
+		if(ui_do_button(&join_button, "Connect", 0, &button, ui_draw_menu_button, 0) || inp_key_down(KEY_ENTER))
 			client_connect(config.ui_server_address);
 					
 		ui_hsplit_b(&button_box, 5.0f, &button_box, &button);

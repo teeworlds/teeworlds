@@ -145,27 +145,29 @@ void EDITOR_IMAGE::analyse_tileflags()
 	
 	int tw = width/16; // tilesizes
 	int th = height/16;
-	unsigned char *pixeldata = (unsigned char *)data;
-	
-	int tile_id = 0;
-	for(int ty = 0; ty < 16; ty++)
-		for(int tx = 0; tx < 16; tx++, tile_id++)
-		{
-			bool opaque = true;
-			for(int x = 0; x < tw; x++)
-				for(int y = 0; y < th; y++)
-				{
-					int p = (ty*tw+y)*width + tx*tw+x;
-					if(pixeldata[p*4+3] < 250)
+	if ( tw == th ) {
+		unsigned char *pixeldata = (unsigned char *)data;
+		
+		int tile_id = 0;
+		for(int ty = 0; ty < 16; ty++)
+			for(int tx = 0; tx < 16; tx++, tile_id++)
+			{
+				bool opaque = true;
+				for(int x = 0; x < tw; x++)
+					for(int y = 0; y < th; y++)
 					{
-						opaque = false;
-						break;
+						int p = (ty*tw+y)*width + tx*tw+x;
+						if(pixeldata[p*4+3] < 250)
+						{
+							opaque = false;
+							break;
+						}
 					}
-				}
-				
-			if(opaque)
-				tileflags[tile_id] |= TILEFLAG_OPAQUE;
-		}
+					
+				if(opaque)
+					tileflags[tile_id] |= TILEFLAG_OPAQUE;
+			}
+	}
 	
 }
 
@@ -409,10 +411,21 @@ QUAD *EDITOR::get_selected_quad()
 	return 0;
 }
 
+static void callback_open_map(const char *filename) { editor.load(filename); }
+static void callback_append_map(const char *filename) { editor.append(filename); }
+static void callback_save_map(const char *filename) { editor.save(filename); }
 
 static void do_toolbar(RECT toolbar)
 {
 	RECT button;
+	
+	// ctrl+o to open
+	if(inp_key_down('O') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL)))
+		editor.invoke_file_dialog("Open Map", "Open", "data/maps/", "", callback_open_map);
+	
+	// ctrl+s to save
+	if(inp_key_down('S') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL)))
+		editor.invoke_file_dialog("Save Map", "Save", "data/maps/", "", callback_save_map);
 
 	// animate button
 	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
@@ -830,7 +843,7 @@ static void do_map_editor(RECT view, RECT toolbar)
 {
 	//ui_clip_enable(&view);
 	
-	bool show_picker = inp_key_pressed(KEY_SPACE) != 0;
+	bool show_picker = inp_key_pressed(KEY_SPACE) != 0 && editor.dialog == DIALOG_NONE;
 
 	// render all good stuff
 	if(!show_picker)
@@ -1410,7 +1423,7 @@ static void render_layers(RECT toolbox, RECT toolbar, RECT view)
 					editor.selected_group = g;
 					static int layer_popup_id = 0;
 					if(result == 2)
-						ui_invoke_popup_menu(&layer_popup_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 130, popup_layer);
+						ui_invoke_popup_menu(&layer_popup_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 150, popup_layer);
 				}
 				
 				
@@ -2134,10 +2147,6 @@ static void render_envelopeeditor(RECT view)
 		}
 	}
 }
-
-static void callback_open_map(const char *filename) { editor.load(filename); }
-static void callback_append_map(const char *filename) { editor.append(filename); }
-static void callback_save_map(const char *filename) { editor.save(filename); }
 
 static int popup_menu_file(RECT view)
 {
