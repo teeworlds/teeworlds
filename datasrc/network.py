@@ -96,6 +96,9 @@ Objects = [
 		NetIntRange("time_limit", 0, 'max_int'),
 		
 		NetIntRange("warmup", 0, 'max_int'),
+		
+		NetIntRange("round_num", 0, 'max_int'),
+		NetIntRange("round_current", 0, 'max_int'),
 
 		NetIntAny("teamscore_red"),
 		NetIntAny("teamscore_blue"),

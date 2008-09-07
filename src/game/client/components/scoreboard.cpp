@@ -42,17 +42,29 @@ void SCOREBOARD::render_goals(float x, float y, float w)
 
 	// render goals
 	//y = ystart+h-54;
-	if(gameclient.snap.gameobj && gameclient.snap.gameobj->time_limit)
-	{
-		char buf[64];
-		str_format(buf, sizeof(buf), "Time Limit: %d min", gameclient.snap.gameobj->time_limit);
-		gfx_text(0, x+w/2, y, 24.0f, buf, -1);
-	}
+	float tw = 0.0f;
 	if(gameclient.snap.gameobj && gameclient.snap.gameobj->score_limit)
 	{
 		char buf[64];
 		str_format(buf, sizeof(buf), "Score Limit: %d", gameclient.snap.gameobj->score_limit);
-		gfx_text(0, x+40, y, 24.0f, buf, -1);
+		gfx_text(0, x+20.0f, y, 22.0f, buf, -1);
+		tw += gfx_text_width(0, 22.0f, buf, -1);
+	}
+	if(gameclient.snap.gameobj && gameclient.snap.gameobj->time_limit)
+	{
+		char buf[64];
+		str_format(buf, sizeof(buf), "Time Limit: %d min", gameclient.snap.gameobj->time_limit);
+		gfx_text(0, x+220.0f, y, 22.0f, buf, -1);
+		tw += gfx_text_width(0, 22.0f, buf, -1);
+	}
+	if(gameclient.snap.gameobj && gameclient.snap.gameobj->round_num && gameclient.snap.gameobj->round_current)
+	{
+		char buf[64];
+		str_format(buf, sizeof(buf), "Round %d/%d", gameclient.snap.gameobj->round_current, gameclient.snap.gameobj->round_num);
+		gfx_text(0, x+450.0f, y, 22.0f, buf, -1);
+		
+	/*[48c3fd4c][game/scoreboard]: timelimit x:219.428558
+	[48c3fd4c][game/scoreboard]: round x:453.142822*/
 	}
 }
 

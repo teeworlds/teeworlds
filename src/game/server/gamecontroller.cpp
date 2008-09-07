@@ -450,6 +450,9 @@ void GAMECONTROLLER::snap(int snapping_client)
 	
 	gameobj->warmup = warmup;
 	
+	gameobj->round_num = (strlen(config.sv_maprotation) || config.sv_rounds_per_map > 1) ? config.sv_rounds_per_map : 0;
+	gameobj->round_current = round_count+1;
+	
 	gameobj->teamscore_red = is_teamplay() ? teamscore[0] : game.players[snapping_client].score;
 	gameobj->teamscore_blue = teamscore[1];
 }
