@@ -44,7 +44,7 @@ void PLAYER::tick()
 	
 	if(spawning && !get_character())
 		try_respawn();
-		
+	
 	if(get_character())
 		view_pos = get_character()->pos;
 }
@@ -98,6 +98,9 @@ void PLAYER::on_direct_input(NETOBJ_PLAYER_INPUT *new_input)
 		spawning = true;
 		dbg_msg("", "I wanna spawn");
 	}
+	
+	if(!chr && team == -1)
+		view_pos = vec2(new_input->target_x, new_input->target_y);
 }
 
 CHARACTER *PLAYER::get_character()

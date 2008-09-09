@@ -157,8 +157,6 @@ bool CONTROLS::on_mousemove(float x, float y)
 {
 	mouse_pos += vec2(x, y); // TODO: ugly
 
-	bool spectate = false;
-
 	//
 	float camera_max_distance = 200.0f;
 	float follow_factor = config.cl_mouse_followfactor/100.0f;
@@ -167,7 +165,7 @@ bool CONTROLS::on_mousemove(float x, float y)
 	
 	//vec2 camera_offset(0, 0);
 
-	if(spectate)
+	if(gameclient.snap.spectate)
 	{
 		if(mouse_pos.x < 200.0f) mouse_pos.x = 200.0f;
 		if(mouse_pos.y < 200.0f) mouse_pos.y = 200.0f;

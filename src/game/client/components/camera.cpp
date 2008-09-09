@@ -20,9 +20,7 @@ void CAMERA::on_render()
 	//vec2 center;
 	zoom = 1.0f;
 	
-	bool spectate = false;
-
-	if(spectate)
+	if(gameclient.snap.spectate)
 		center = gameclient.controls->mouse_pos;
 	else
 	{

@@ -544,6 +544,9 @@ void GAMECLIENT::on_snapshot()
 						if(p)
 							gameclient.snap.local_prev_character = (NETOBJ_CHARACTER *)p;
 					}
+					
+					if (info->team == -1)
+						gameclient.snap.spectate = true;
 				}
 				
 				// calculate team-balance

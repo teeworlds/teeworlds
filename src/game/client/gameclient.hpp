@@ -58,6 +58,7 @@ public:
 		const NETOBJ_PLAYER_INFO *info_by_score[MAX_CLIENTS];
 		int num_players;
 		int team_size[2];
+		bool spectate;
 	};
 
 	SNAPSTATE snap;
