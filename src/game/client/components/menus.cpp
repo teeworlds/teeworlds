@@ -565,32 +565,6 @@ int MENUS::render_menubar(RECT r)
 	return 0;
 }
 
-void MENUS::render_background()
-{
-	RECT s = *ui_screen();
-
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-		vec4 bottom(gui_color.r*0.6f, gui_color.g*0.6f, gui_color.b*0.6f, 1.0f);
-		vec4 top(gui_color.r, gui_color.g, gui_color.b, 1.0f);
-		gfx_setcolorvertex(0, top.r, top.g, top.b, top.a);
-		gfx_setcolorvertex(1, top.r, top.g, top.b, top.a);
-		gfx_setcolorvertex(2, bottom.r, bottom.g, bottom.b, bottom.a);
-		gfx_setcolorvertex(3, bottom.r, bottom.g, bottom.b, bottom.a);
-		gfx_quads_drawTL(0, 0, s.w, s.h);
-	gfx_quads_end();
-	
-	if(data->images[IMAGE_BANNER].id != 0)
-	{
-		gfx_texture_set(data->images[IMAGE_BANNER].id);
-		gfx_quads_begin();
-		gfx_setcolor(0,0,0,0.05f);
-		gfx_quads_setrotation(-pi/4+0.15f);
-		gfx_quads_draw(400, 300, 1000, 250);
-		gfx_quads_end();
-	}
-}
-
 void MENUS::render_loading(float percent)
 {
 	// need up date this here to get correct
@@ -1066,6 +1040,11 @@ void MENUS::on_render()
     
     // render
 	render();
+	/*render_background();
+
+
+    {RECT screen = *ui_screen();
+	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);}*/
 	
 	// render cursor
     gfx_texture_set(data->images[IMAGE_CURSOR].id);
@@ -1088,4 +1067,247 @@ void MENUS::on_render()
 	}
 
 	num_inputevents = 0;
+}
+
+static void render_sunrays(float x, float y)
+{
+	vec2 pos(x, y);
+
+	gfx_texture_set(-1);
+	gfx_blend_additive();
+	gfx_quads_begin();
+	const int rays = 10;
+	gfx_setcolor(1.0f,1.0f,1.0f,0.025f);
+	for(int r = 0; r < rays; r++)
+	{
+		float a = r/(float)rays + client_localtime()*0.015f;
+		float size = (1.0f/(float)rays)*0.25f;
+		vec2 dir0(sinf((a-size)*pi*2.0f), cosf((a-size)*pi*2.0f));
+		vec2 dir1(sinf((a+size)*pi*2.0f), cosf((a+size)*pi*2.0f));
+		
+		gfx_setcolorvertex(0, 1.0f,1.0f,1.0f,0.025f);
+		gfx_setcolorvertex(1, 1.0f,1.0f,1.0f,0.025f);
+		gfx_setcolorvertex(2, 1.0f,1.0f,1.0f,0.0f);
+		gfx_setcolorvertex(3, 1.0f,1.0f,1.0f,0.0f);
+		const float range = 1000.0f;
+		gfx_quads_draw_freeform(
+			pos.x+dir0.x, pos.y+dir0.y,
+			pos.x+dir1.x, pos.y+dir1.y,
+			pos.x+dir0.x*range, pos.y+dir0.y*range,
+			pos.x+dir1.x*range, pos.y+dir1.y*range);
+	}
+	gfx_quads_end();
+	gfx_blend_normal();
+}
+
+
+static int texture_mountains = -1;
+static int texture_sun = -1;
+static int texture_grass = -1;
+
+static const int tiles_width = 50;
+static const int tiles_height = 10;
+static TILE tiles[tiles_width*tiles_height] = {{0}};
+
+class TEE
+{
+public:
+	float speed;
+	int skin;
+	float time;
+	vec2 pos;
+	//float vy;
+	
+	float jumptime;
+	float jumpstr;
+	
+	void new_jump()
+	{
+		jumptime = time + (rand()/(float)RAND_MAX)*2;
+		jumpstr = 12.6f*20 * ((rand()/(float)RAND_MAX)*0.5f+0.5f);
+	}
+	
+	void init()
+	{
+		skin = rand();
+		speed = 150.0f + (rand()/(float)RAND_MAX) * 50.0f;
+		time = (rand()/(float)RAND_MAX) * 5.0f;
+		jumptime = 0;
+		new_jump();
+	}
+	
+	void reset()
+	{
+		time = 0;
+		pos.x = -100.0f;
+
+		jumptime = 0;
+		new_jump();
+		skin = rand();
+	}
+	
+	void update(float frametime)
+	{
+		time += frametime;
+		pos.x = -100 + time*speed;
+		pos.y = 0;
+		if(time > jumptime)
+		{
+			float t = time - jumptime;
+			float j = -jumpstr*t + 25.0f*15*(t*t);
+			if(j < 0)
+				pos.y = j;
+			else
+				new_jump();
+		}
+		
+		if(pos.x > 300*2)
+			reset();
+	}
+};
+
+static const int NUM_TEES = 35;
+static TEE tees[NUM_TEES];
+
+void MENUS::render_background()
+{
+	static int load = 1;
+	if(load)
+	{
+		load = 0;
+		texture_mountains = gfx_load_texture("data/mapres/mountains.png", IMG_AUTO, 0);
+		texture_sun = gfx_load_texture("data/mapres/sun.png", IMG_AUTO, 0);
+		texture_grass = gfx_load_texture("data/mapres/grass_main.png", IMG_AUTO, 0);
+		
+		for(int i = 0; i < NUM_TEES; i++)
+			tees[i].init();
+		
+		int c = 0;
+		for(int y = 0; y < tiles_height; y++)
+			for(int x = 0; x < tiles_width; x++, c++)
+			{
+				if(y == 0)
+					tiles[c].index = 16;
+				else
+				{
+					int r = rand()&0x3f;
+					if(r == 1)
+						tiles[c].index = 2;
+					else if(r == 2)
+						tiles[c].index = 3;
+					else
+						tiles[c].index = 1;
+				}
+			}
+	}
+
+	float sw = 300*gfx_screenaspect();
+	float sh = 300;
+	gfx_mapscreen(0, 0, sw, sh);
+
+	// render backdrop color
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+		vec4 top(0.7f, 0.8f, 1.0f, 1.0f);
+		vec4 bottom = top*0.5f;//(0.6f, 0.6f, 0.6f, 1.0f);
+		gfx_setcolorvertex(0, top.r, top.g, top.b, top.a);
+		gfx_setcolorvertex(1, top.r, top.g, top.b, top.a);
+		gfx_setcolorvertex(2, bottom.r, bottom.g, bottom.b, bottom.a);
+		gfx_setcolorvertex(3, bottom.r, bottom.g, bottom.b, bottom.a);
+		gfx_quads_drawTL(0, 0, sw, sh);
+	gfx_quads_end();
+	
+	// render sunrays
+	render_sunrays(75, 50);
+
+	// render sun	
+	gfx_texture_set(texture_sun);
+	gfx_quads_begin();
+		gfx_quads_draw(75, 50, 128, 128);
+	gfx_quads_end();	
+
+
+	gfx_mapscreen(0, 0, sw, sh);
+	
+	int num_skins = gameclient.skins->num();
+	
+	for(int layer = 0; layer < 2; layer++)
+	{
+		vec4 color = layer == 0 ? vec4(0.9f, 0.95f, 1.0f, 1.0f) : vec4(1,1,1,1);
+		float scale = layer == 0 ? 0.5f : 1.0f;
+		float mountainoffset = layer == 0 ? 220 : 190;
+		float mountainstreach = layer == 0 ? 2 : 1;
+		float groundoffset = layer == 0 ? 95 : 30;
+
+		// draw mountains
+		float w = 192*2*scale;
+		float start = fmod(client_localtime()*20.0f*scale, w);
+		gfx_mapscreen(start, 0, sw+start, sh);
+		gfx_texture_set(texture_mountains);
+		gfx_quads_begin();
+			gfx_setcolor(color.r, color.g, color.b, color.a);
+			gfx_quads_drawTL(0, sh-mountainoffset, w, 192*scale*mountainstreach);
+			gfx_quads_drawTL(w, sh-mountainoffset, w, 192*scale*mountainstreach);
+			gfx_quads_drawTL(w*2, sh-mountainoffset, w, 192*scale*mountainstreach);
+			gfx_quads_drawTL(w*3, sh-mountainoffset, w, 192*scale*mountainstreach);
+		gfx_quads_end();			
+		
+		// draw ground
+		{
+			float w = 16.0f*scale*(tiles_width);
+			float start = fmod(client_localtime()*20.0f*(scale+0.25f), w);
+			float offset = -300.0f + groundoffset;
+			for(int i = 0; i < 4; i++)
+			{
+				gfx_mapscreen(start-i*w, offset, sw+start-i*w, offset+sh);
+				gfx_texture_set(texture_grass);
+				render_tilemap(tiles, tiles_width, tiles_height, 16.0f*scale, color, LAYERRENDERFLAG_OPAQUE);
+				render_tilemap(tiles, tiles_width, tiles_height, 16.0f*scale, color, LAYERRENDERFLAG_TRANSPARENT);
+			}
+		}
+		
+		if(num_skins)
+		{
+			gfx_mapscreen(0, 0, sw, sh);
+			
+			for(int i = layer; i < NUM_TEES; i+=2)
+			{
+				TEE *tee = &tees[i];
+				tee->update(client_frametime());
+				
+				ANIMSTATE state;
+				state.set(&data->animations[ANIM_BASE], 0);
+				
+				if(tee->pos.y < -0.0001f)
+					state.add(&data->animations[ANIM_INAIR], 0, 1.0f); // TODO: some sort of time here
+				else
+					state.add(&data->animations[ANIM_WALK], fmod(tee->pos.x*0.025f, 1.0f), 1.0f);
+				
+				TEE_RENDER_INFO render_info;
+				render_info.size = 24.0f*scale;
+				render_info.color_body = color;
+				render_info.color_feet = color;
+				render_info.texture = gameclient.skins->get(tee->skin%num_skins)->org_texture;
+				
+				if(layer == 0)
+					render_tee(&state, &render_info, 0, vec2(-1,0), vec2(sw+20-tee->pos.x, tee->pos.y*scale+(sh-groundoffset)-6*scale));
+				else
+					render_tee(&state, &render_info, 0, vec2(1,0), vec2(tee->pos.x, tee->pos.y*scale+(sh-groundoffset)-6*scale));
+			}
+		}		
+	}
+	
+    {RECT screen = *ui_screen();
+	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);}
+	
+	/*
+	if(data->images[IMAGE_BANNER].id != 0)
+	{
+		gfx_texture_set(data->images[IMAGE_BANNER].id);
+		gfx_quads_begin();
+		gfx_setcolor(0,0,0,0.05f);
+		gfx_quads_setrotation(-pi/4+0.15f);
+		gfx_quads_draw(400, 300, 1000, 250);
+		gfx_quads_end();
+	}*/
 }
