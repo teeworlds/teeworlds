@@ -216,10 +216,13 @@ void GAMECLIENT::dispatch_input()
 	// handle mouse movement
 	int x=0, y=0;
 	inp_mouse_relative(&x, &y);
-	for(int h = 0; h < input.num; h++)
+	if(x || y)
 	{
-		if(input.components[h]->on_mousemove(x, y))
-			break;
+		for(int h = 0; h < input.num; h++)
+		{
+			if(input.components[h]->on_mousemove(x, y))
+				break;
+		}
 	}
 	
 	// handle key presses

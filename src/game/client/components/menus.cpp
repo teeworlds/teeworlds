@@ -89,6 +89,8 @@ MENUS::MENUS()
 	need_restart = false;
 	menu_active = true;
 	num_inputevents = 0;
+	
+	last_input = time_get();
 }
 
 vec4 MENUS::button_color_mul(const void *id)
@@ -940,6 +942,8 @@ void MENUS::on_reset()
 
 bool MENUS::on_mousemove(float x, float y)
 {
+	last_input = time_get();
+	
 	if(!menu_active)
 		return false;
 		
@@ -955,6 +959,8 @@ bool MENUS::on_mousemove(float x, float y)
 
 bool MENUS::on_input(INPUT_EVENT e)
 {
+	last_input = time_get();
+	
 	if(e.flags&INPFLAG_PRESS && e.key == KEY_ESC)
 	{
 		menu_active	= !menu_active;
@@ -1039,31 +1045,55 @@ void MENUS::on_render()
 	ui_update(mx,my,mx*3.0f,my*3.0f,buttons);
     
     // render
-	render();
-	/*render_background();
-
-
-    {RECT screen = *ui_screen();
-	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);}*/
+    if(time_get()-last_input > time_freq()*30)
+    {
+    	// screen saver :)
+		render_background();
+		
+		if(data->images[IMAGE_BANNER].id != 0)
+		{
+			float sw = 300*gfx_screenaspect();
+			float sh = 300;
+			gfx_mapscreen(0, 0, sw, sh);
 	
-	// render cursor
-    gfx_texture_set(data->images[IMAGE_CURSOR].id);
-    gfx_quads_begin();
-    gfx_setcolor(1,1,1,1);
-    gfx_quads_drawTL(mx,my,24,24);
-    gfx_quads_end();
-
-	// render debug information
-	if(config.debug)
+			gfx_texture_set(data->images[IMAGE_BANNER].id);
+			gfx_quads_begin();
+			gfx_setcolor(0,0,0,1.0f);
+			//gfx_quads_setrotation(-pi/4+0.15f);
+			gfx_quads_drawTL(sw-200-20, 10, 200, 200/4);
+			gfx_setcolor(1,1,1,1.0f);
+			gfx_quads_drawTL(sw-200-20-2, 10-2, 200, 200/4);
+			gfx_quads_end();
+			
+//void gfx_text(void *font, float x, float y, float size, const char *text, int max_width);
+			
+			if((time_get()/(time_freq()/3))&1)
+				gfx_text(NULL, sw-150, 200/4, 10.0f, "INSERT COIN", -1);
+		}		
+	}
+	else
 	{
-		RECT screen = *ui_screen();
-		gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
+		render();
 
-		char buf[512];
-		str_format(buf, sizeof(buf), "%p %p %p", ui_hot_item(), ui_active_item(), ui_last_active_item());
-		TEXT_CURSOR cursor;
-		gfx_text_set_cursor(&cursor, 10, 10, 10, TEXTFLAG_RENDER);
-		gfx_text_ex(&cursor, buf, -1);
+		// render cursor
+		gfx_texture_set(data->images[IMAGE_CURSOR].id);
+		gfx_quads_begin();
+		gfx_setcolor(1,1,1,1);
+		gfx_quads_drawTL(mx,my,24,24);
+		gfx_quads_end();
+
+		// render debug information
+		if(config.debug)
+		{
+			RECT screen = *ui_screen();
+			gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
+
+			char buf[512];
+			str_format(buf, sizeof(buf), "%p %p %p", ui_hot_item(), ui_active_item(), ui_last_active_item());
+			TEXT_CURSOR cursor;
+			gfx_text_set_cursor(&cursor, 10, 10, 10, TEXTFLAG_RENDER);
+			gfx_text_ex(&cursor, buf, -1);
+		}
 	}
 
 	num_inputevents = 0;
@@ -1171,6 +1201,8 @@ static TEE tees[NUM_TEES];
 
 void MENUS::render_background()
 {
+	gfx_clear(1,1,1);
+	
 	static int load = 1;
 	if(load)
 	{
