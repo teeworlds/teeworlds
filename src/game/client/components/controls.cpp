@@ -153,6 +153,12 @@ int CONTROLS::snapinput(int *data)
 	return sizeof(input_data);	
 }
 
+void CONTROLS::on_render()
+{
+	// update target pos
+	target_pos = gameclient.local_character_pos + mouse_pos;
+}
+
 bool CONTROLS::on_mousemove(float x, float y)
 {
 	mouse_pos += vec2(x, y); // TODO: ugly
@@ -184,8 +190,6 @@ bool CONTROLS::on_mousemove(float x, float y)
 			l = mouse_max;
 		}
 		
-		target_pos = gameclient.local_character_pos + mouse_pos;
-
 		//float offset_amount = max(l-deadzone, 0.0f) * follow_factor;
 		//if(l > 0.0001f) // make sure that this isn't 0
 			//camera_offset = normalize(mouse_pos)*offset_amount;

@@ -12,6 +12,8 @@ public:
 	int input_direction_right;
 
 	CONTROLS();
+	
+	virtual void on_render();
 	virtual void on_message(int msg, void *rawmsg);
 	virtual bool on_mousemove(float x, float y);
 	virtual void on_console_init();
