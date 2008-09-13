@@ -91,6 +91,10 @@ void GAMECONTROLLER_CTF::tick()
 						f->carrying_character->player->client_id,
 						server_clientname(f->carrying_character->player->client_id));
 
+					char buf[512];
+					str_format(buf, sizeof(buf), "%s team has captured the flag!", fi^1 ? "Blue" : "Red");
+					game.send_broadcast(buf, -1);
+						
 					for(int i = 0; i < 2; i++)
 						flags[i]->reset();
 					
