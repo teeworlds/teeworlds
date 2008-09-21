@@ -38,35 +38,12 @@ void mods_client_direct_input(int client_id, void *input)
 {
 	if(!game.world.paused)
 		game.players[client_id].on_direct_input((NETOBJ_PLAYER_INPUT *)input);
-	
-	/*
-	if(i->fire)
-	{
-		msg_pack_start(MSG_EXTRA_PROJECTILE, 0);
-		msg_pack_end();
-		server_send_msg(client_id);
-	}*/
 }
 
 void mods_client_predicted_input(int client_id, void *input)
 {
 	if(!game.world.paused)
 		game.players[client_id].on_predicted_input((NETOBJ_PLAYER_INPUT *)input);
-	
-	/*
-	{
-		
-		on_predicted_input()
-		if (memcmp(&game.players[client_id].input, input, sizeof(NETOBJ_PLAYER_INPUT)) != 0)
-			game.players[client_id].last_action = server_tick();
-
-		//game.players[client_id].previnput = game.players[client_id].input;
-		game.players[client_id].input = *(NETOBJ_PLAYER_INPUT*)input;
-		game.players[client_id].num_inputs++;
-		
-		if(game.players[client_id].input.target_x == 0 && game.players[client_id].input.target_y == 0)
-			game.players[client_id].input.target_y = -1;
-	}*/
 }
 
 // Server hooks
@@ -399,6 +376,7 @@ void mods_shutdown()
 {
 	delete game.controller;
 	game.controller = 0;
+	game.clear();
 }
 
 void mods_presnap() {}
