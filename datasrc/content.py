@@ -397,7 +397,7 @@ anim.front_foot.frames.Add(AnimKeyframe(0.2, -8,-8, 0.3))
 anim.front_foot.frames.Add(AnimKeyframe(0.4,  4,-4,-0.2))
 anim.front_foot.frames.Add(AnimKeyframe(0.6,  8, 0, 0))
 anim.front_foot.frames.Add(AnimKeyframe(0.8,  8, 0, 0))
-anim.front_foot.frames.Add(AnimKeyframe(1.0,-10, 0, 0.2))
+anim.front_foot.frames.Add(AnimKeyframe(1.0,-10,-4, 0.2))
 container.animations.Add(anim)
 
 anim = Animation("hammer_swing")
