@@ -1586,10 +1586,6 @@ void client_save_line(const char *line)
 	engine_config_write_line(line);	
 }
 
-/*int editor_main(int argc, char **argv);*/
-
-/*extern void test_parser();*/
-
 int main(int argc, char **argv)
 {
 #if defined(CONF_PLATFORM_MACOSX)
@@ -1607,11 +1603,6 @@ int main(int argc, char **argv)
 	/* init the engine */
 	dbg_msg("client", "starting...");
 	engine_init("Teeworlds");
-
-/*
-	return huffman_test();
-	test_parser();
-	return 0;*/
 	
 	/* register all console commands */
 	client_register_commands();
