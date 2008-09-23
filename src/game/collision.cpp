@@ -21,6 +21,24 @@ int col_init()
 	width = layers_game_layer()->width;
 	height = layers_game_layer()->height;
 	tiles = (TILE *)map_get_data(layers_game_layer()->data);
+	
+	for(int i = 0; i < width*height; i++)
+	{
+		int index = tiles[i].index;
+		
+		if(index > 128)
+			continue;
+		
+		if(index == TILE_DEATH)
+			tiles[i].index = COLFLAG_DEATH;
+		else if(index == TILE_SOLID)
+			tiles[i].index = COLFLAG_SOLID;
+		else if(index == TILE_NOHOOK)
+			tiles[i].index = COLFLAG_SOLID|COLFLAG_NOHOOK;
+		else
+			tiles[i].index = 0;
+	}
+				
 	return 1;
 }
 
@@ -42,7 +60,7 @@ int col_is_solid(int x, int y)
 
 
 // TODO: rewrite this smarter!
-bool col_intersect_line(vec2 pos0, vec2 pos1, vec2 *out)
+int col_intersect_line(vec2 pos0, vec2 pos1, vec2 *out)
 {
 	float d = distance(pos0, pos1);
 	
@@ -54,10 +72,10 @@ bool col_intersect_line(vec2 pos0, vec2 pos1, vec2 *out)
 		{
 			if(out)
 				*out = pos;
-			return true;
+			return col_get((int)pos.x, (int)pos.y);
 		}
 	}
 	if(out)
 		*out = pos1;
-	return false;
+	return 0;
 }

@@ -8,6 +8,7 @@ enum
 {
 	COLFLAG_SOLID=1,
 	COLFLAG_DEATH=2,
+	COLFLAG_NOHOOK=4,
 };
 
 int col_init();
@@ -15,6 +16,6 @@ int col_is_solid(int x, int y);
 int col_get(int x, int y);
 int col_width();
 int col_height();
-bool col_intersect_line(vec2 pos0, vec2 pos1, vec2 *out);
+int col_intersect_line(vec2 pos0, vec2 pos1, vec2 *out);
 
 #endif

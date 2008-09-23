@@ -683,6 +683,7 @@ void GAMECLIENT::on_predict()
 				//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
 				//if(events&COREEVENT_HOOK_ATTACH_PLAYER) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, pos);
 				if(events&COREEVENT_HOOK_ATTACH_GROUND) gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, pos);
+				if(events&COREEVENT_HOOK_HIT_NOHOOK) gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
 				//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
 			}
 		}

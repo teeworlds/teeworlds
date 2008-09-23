@@ -301,8 +301,15 @@ void CHARACTER_CORE::tick(bool use_input)
 		
 		// make sure that the hook doesn't go though the ground
 		bool going_to_hit_ground = false;
-		if(col_intersect_line(hook_pos, new_pos, &new_pos))
-			going_to_hit_ground = true;
+		bool going_to_retract = false;
+		int hit = col_intersect_line(hook_pos, new_pos, &new_pos);
+		if(hit)
+		{
+			if(hit&COLFLAG_NOHOOK)
+				going_to_retract = true;
+			else
+				going_to_hit_ground = true;
+		}
 
 		// Check against other players first
 		if(world)
@@ -331,6 +338,11 @@ void CHARACTER_CORE::tick(bool use_input)
 			{
 				triggered_events |= COREEVENT_HOOK_ATTACH_GROUND;
 				hook_state = HOOK_GRABBED;
+			}
+			else if(going_to_retract)
+			{
+				triggered_events |= COREEVENT_HOOK_HIT_NOHOOK;
+				hook_state = HOOK_RETRACT_START;
 			}
 			
 			hook_pos = new_pos;
