@@ -44,23 +44,21 @@ void NAMEPLATES::on_render()
 {
 	if (!config.cl_nameplates)
 		return;
-	
-	int num = snap_num_items(SNAP_CURRENT);
-	for(int i = 0; i < num; i++)
+
+	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		SNAP_ITEM item;
-		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+		// only render active characters
+		if(!gameclient.snap.characters[i].active)
+			continue;
 
-		if(item.type == NETOBJTYPE_CHARACTER)
+		const void *info = snap_find_item(SNAP_CURRENT, NETOBJTYPE_PLAYER_INFO, i);
+
+		if(info)
 		{
-			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-			const void *info = snap_find_item(SNAP_CURRENT, NETOBJTYPE_PLAYER_INFO, item.id);
-
-			if(prev && info)
-				render_nameplate(
-					(const NETOBJ_CHARACTER *)prev,
-					(const NETOBJ_CHARACTER *)data,
-					(const NETOBJ_PLAYER_INFO *)info);
+			render_nameplate(
+				&gameclient.snap.characters[i].prev,
+				&gameclient.snap.characters[i].cur,
+				(const NETOBJ_PLAYER_INFO *)info);
 		}
 	}
 }
