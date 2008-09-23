@@ -176,7 +176,127 @@ void EDITOR_IMAGE::analyse_tileflags()
 *********************************************************/
 
 // copied from gc_menu.cpp, should be more generalized
-extern int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float font_size, bool hidden=false);
+//extern int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float font_size, bool hidden=false);
+
+int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float font_size, bool hidden=false)
+{
+    int inside = ui_mouse_inside(rect);
+	int r = 0;
+	static int at_index = 0;
+
+	if(ui_last_active_item() == id)
+	{
+		int len = strlen(str);
+
+		if (inside && ui_mouse_button(0))
+		{
+			int mx_rel = (int)(ui_mouse_x() - rect->x);
+
+			for (int i = 1; i <= len; i++)
+			{
+				if (gfx_text_width(0, font_size, str, i) + 10 > mx_rel)
+				{
+					at_index = i - 1;
+					break;
+				}
+
+				if (i == len)
+					at_index = len;
+			}
+		}
+
+		for(int i = 0; i < inp_num_events(); i++)
+		{
+			INPUT_EVENT e = inp_get_event(i);
+			char c = e.ch;
+			int k = e.key;
+
+			if (at_index > len)
+				at_index = len;
+			
+			if (!(c >= 0 && c < 32))
+			{
+				if (len < str_size - 1 && at_index < str_size - 1)
+				{
+					memmove(str + at_index + 1, str + at_index, len - at_index + 1);
+					str[at_index] = c;
+					at_index++;
+				}
+			}
+			
+			if(e.flags&INPFLAG_PRESS)
+			{
+				if (k == KEY_BACKSPACE && at_index > 0)
+				{
+					memmove(str + at_index - 1, str + at_index, len - at_index + 1);
+					at_index--;
+				}
+				else if (k == KEY_DEL && at_index < len)
+					memmove(str + at_index, str + at_index + 1, len - at_index);
+				else if (k == KEY_ENTER)
+					ui_clear_last_active_item();
+				else if (k == KEY_LEFT && at_index > 0)
+					at_index--;
+				else if (k == KEY_RIGHT && at_index < len)
+					at_index++;
+				else if (k == KEY_HOME)
+					at_index = 0;
+				else if (k == KEY_END)
+					at_index = len;
+			}
+		}
+		
+		r = 1;
+	}
+
+	bool just_got_active = false;
+	
+	if(ui_active_item() == id)
+	{
+		if(!ui_mouse_button(0))
+			ui_set_active_item(0);
+	}
+	else if(ui_hot_item() == id)
+	{
+		if(ui_mouse_button(0))
+		{
+			if (ui_last_active_item() != id)
+				just_got_active = true;
+			ui_set_active_item(id);
+		}
+	}
+	
+	if(inside)
+		ui_set_hot_item(id);
+
+	RECT textbox = *rect;
+	ui_draw_rect(&textbox, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
+	ui_vmargin(&textbox, 5.0f, &textbox);
+	
+	const char *display_str = str;
+	char stars[128];
+	
+	if(hidden)
+	{
+		unsigned s = strlen(str);
+		if(s >= sizeof(stars))
+			s = sizeof(stars)-1;
+		memset(stars, '*', s);
+		stars[s] = 0;
+		display_str = stars;
+	}
+
+	ui_do_label(&textbox, display_str, font_size, -1);
+	
+	if (ui_last_active_item() == id && !just_got_active)
+	{
+		float w = gfx_text_width(0, font_size, display_str, at_index);
+		textbox.x += w*ui_scale();
+		ui_do_label(&textbox, "_", font_size, -1);
+	}
+
+	return r;
+}
 
 static vec4 get_button_color(const void *id, int checked)
 {
@@ -1698,9 +1818,8 @@ static void render_file_dialog()
 	// filebox
 	ui_do_label(&filebox_label, "Filename:", 10.0f, -1, -1);
 	
-	// TODO: repair me
-	//static int filebox_id = 0;
-	//ui_do_edit_box(&filebox_id, &filebox, file_dialog_filename, sizeof(file_dialog_filename), 10.0f);
+	static int filebox_id = 0;
+	ui_do_edit_box(&filebox_id, &filebox, file_dialog_filename, sizeof(file_dialog_filename), 10.0f);
 
 	file_dialog_complete_filename[0] = 0;
 	strcat(file_dialog_complete_filename, file_dialog_path);
@@ -1874,9 +1993,9 @@ static void render_envelopeeditor(RECT view)
 			ui_do_label(&button, "Name:", 10.0f, -1, -1);
 
 			ui_vsplit_l(&toolbar, 80.0f, &button, &toolbar);
-			// TODO: repair me
-			// static int name_box = 0;
-			// ui_do_edit_box(&name_box, &button, envelope->name, sizeof(envelope->name), 10.0f);
+			
+			static int name_box = 0;
+			ui_do_edit_box(&name_box, &button, envelope->name, sizeof(envelope->name), 10.0f);
 		}
 	}
 	
