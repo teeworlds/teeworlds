@@ -508,6 +508,8 @@ void CHARACTER::on_direct_input(NETOBJ_PLAYER_INPUT *new_input)
 		handle_weaponswitch();
 		fire_weapon();
 	}
+	
+	mem_copy(&latest_previnput, &latest_input, sizeof(latest_input));
 }
 
 void CHARACTER::tick()
