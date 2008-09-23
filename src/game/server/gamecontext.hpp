@@ -37,7 +37,7 @@ public:
 	void clear();
 	
 	EVENTHANDLER events;
-	PLAYER players[MAX_CLIENTS];
+	PLAYER *players[MAX_CLIENTS];
 	
 	GAMECONTROLLER *controller;
 	GAMEWORLD world;

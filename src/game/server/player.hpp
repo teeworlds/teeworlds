@@ -7,8 +7,9 @@
 // player object
 class PLAYER
 {
+	CHARACTER *character;
 public:
-	PLAYER();
+	PLAYER(int client_id);
 
 	// TODO: clean this up
 	char skin_name[64];
@@ -40,8 +41,6 @@ public:
 		int min;
 		int max;	
 	} latency;
-	
-	CHARACTER character;
 	
 	// this is used for snapping so we know how we can clip the view for the player
 	vec2 view_pos;

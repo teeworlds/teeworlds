@@ -200,6 +200,7 @@ container.sounds.Add(SoundSet("hook_loop", FileList("data/audio/hook_loop-%02d.w
 
 container.sounds.Add(SoundSet("hook_attach_ground", FileList("data/audio/hook_attach-%02d.wv", 3)))
 container.sounds.Add(SoundSet("hook_attach_player", FileList("data/audio/foley_body_impact-%02d.wv", 3)))
+container.sounds.Add(SoundSet("hook_noattach", FileList("data/audio/hook_noattach-%02d.wv", 2)))
 container.sounds.Add(SoundSet("pickup_health", FileList("data/audio/sfx_pickup_hrt-%02d.wv", 2)))
 container.sounds.Add(SoundSet("pickup_armor", FileList("data/audio/sfx_pickup_arm-%02d.wv", 4)))
 

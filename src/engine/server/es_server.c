@@ -116,6 +116,9 @@ NETSERVER *net;
 static void snap_init_id()
 {
 	int i;
+	if(snap_id_inited)
+		return;
+	
 	for(i = 0; i < MAX_IDS; i++)
 	{
 		snap_ids[i].next = i+1;
@@ -911,6 +914,7 @@ static int server_run()
 {
 	NETADDR bindaddr;
 
+	snap_init_id();
 	net_init();
 	
 	/* */

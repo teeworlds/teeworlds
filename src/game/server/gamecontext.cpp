@@ -7,7 +7,11 @@ GAMECONTEXT game;
 GAMECONTEXT::GAMECONTEXT()
 {
 	for(int i = 0; i < MAX_CLIENTS; i++)
-		players[i].init(-1);
+	{
+		players[i] = 0;
+		/*players = new PLAYER();
+		players[i].init(-1);*/
+	}
 }
 
 GAMECONTEXT::~GAMECONTEXT()
@@ -169,7 +173,7 @@ void GAMECONTEXT::send_chat(int chatter_cid, int team, const char *text)
 
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			if(game.players[i].client_id != -1 && game.players[i].team == team)
+			if(game.players[i] && game.players[i]->team == team)
 				server_send_msg(i);
 		}
 	}
@@ -181,10 +185,10 @@ void GAMECONTEXT::send_info(int who, int to_who)
 	NETMSG_SV_SETINFO msg;
 	msg.cid = who;
 	msg.name = server_clientname(who);
-	msg.skin = players[who].skin_name;
-	msg.use_custom_color = players[who].use_custom_color;
-	msg.color_body = players[who].color_body;
-	msg.color_feet = players[who].color_feet;
+	msg.skin = players[who]->skin_name;
+	msg.use_custom_color = players[who]->use_custom_color;
+	msg.color_body = players[who]->color_body;
+	msg.color_feet = players[who]->color_feet;
 	msg.pack(MSGFLAG_VITAL);
 	
 	server_send_msg(to_who);
@@ -228,8 +232,8 @@ void GAMECONTEXT::tick()
 		
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(players[i].client_id != -1)
-			players[i].tick();
+		if(players[i])
+			players[i]->tick();
 	}
 }
 
@@ -241,7 +245,7 @@ void GAMECONTEXT::snap(int client_id)
 	
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(players[i].client_id != -1)
-			players[i].snap(client_id);
+		if(players[i])
+			players[i]->snap(client_id);
 	}
 }

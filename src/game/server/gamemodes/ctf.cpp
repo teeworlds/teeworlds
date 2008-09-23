@@ -41,7 +41,7 @@ int GAMECONTROLLER_CTF::on_character_death(class CHARACTER *victim, class PLAYER
 	for(int fi = 0; fi < 2; fi++)
 	{
 		FLAG *f = flags[fi];
-		if(f && f->carrying_character == &killer->character)
+		if(f && f->carrying_character == killer->get_character())
 			had_flag |= 2;
 		if(f && f->carrying_character == victim)
 		{
@@ -139,13 +139,13 @@ void GAMECONTROLLER_CTF::tick()
 					
 					for(int c = 0; c < MAX_CLIENTS; c++)
 					{
-						if(game.players[c].client_id == -1)
+						if(!game.players[c])
 							continue;
 							
-						if(game.players[c].team == fi)
-							game.create_sound_global(SOUND_CTF_GRAB_EN, game.players[c].client_id);
+						if(game.players[c]->team == fi)
+							game.create_sound_global(SOUND_CTF_GRAB_EN, game.players[c]->client_id);
 						else
-							game.create_sound_global(SOUND_CTF_GRAB_PL, game.players[c].client_id);
+							game.create_sound_global(SOUND_CTF_GRAB_PL, game.players[c]->client_id);
 					}
 					break;
 				}

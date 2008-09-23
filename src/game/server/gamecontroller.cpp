@@ -258,8 +258,8 @@ void GAMECONTROLLER::post_reset()
 {
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(game.players[i].client_id != -1)
-			game.players[i].respawn();
+		if(game.players[i])
+			game.players[i]->respawn();
 	}
 }
 	
@@ -319,7 +319,7 @@ bool GAMECONTROLLER::is_friendly_fire(int cid1, int cid2)
 	
 	if(is_teamplay())
 	{
-		if(game.players[cid1].team == game.players[cid2].team)
+		if(game.players[cid1]->team == game.players[cid2]->team)
 			return true;
 	}
 	
@@ -364,8 +364,8 @@ void GAMECONTROLLER::tick()
 		int t[2] = {0,0};
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			if(game.players[i].client_id != -1 && game.players[i].team != -1)
-				t[game.players[i].team]++;
+			if(game.players[i] && game.players[i]->team != -1)
+				t[game.players[i]->team]++;
 		}
 		
 		int m = (t[0] > t[1]) ? 0 : 1;
@@ -379,13 +379,13 @@ void GAMECONTROLLER::tick()
 			int pd = teamscore[m];
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
-				if(game.players[i].client_id == -1)
+				if(!game.players[i])
 					continue;
 				
-				if(game.players[i].team == m && (!p || abs(scorediff - game.players[i].score) < pd))
+				if(game.players[i]->team == m && (!p || abs(scorediff - game.players[i]->score) < pd))
 				{
-					p = &(game.players[i]);
-					pd = abs(scorediff - game.players[i].score);
+					p = game.players[i];
+					pd = abs(scorediff - game.players[i]->score);
 				}
 			}
 			
@@ -418,8 +418,8 @@ void GAMECONTROLLER::tick()
 		{
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
-				if(game.players[i].client_id != -1)
-					prog = max(prog, (game.players[i].score*100)/config.sv_scorelimit);
+				if(game.players[i])
+					prog = max(prog, (game.players[i]->score*100)/config.sv_scorelimit);
 			}
 		}
 	}
@@ -453,7 +453,7 @@ void GAMECONTROLLER::snap(int snapping_client)
 	gameobj->round_num = (strlen(config.sv_maprotation) || config.sv_rounds_per_map > 1) ? config.sv_rounds_per_map : 0;
 	gameobj->round_current = round_count+1;
 	
-	gameobj->teamscore_red = is_teamplay() ? teamscore[0] : game.players[snapping_client].score;
+	gameobj->teamscore_red = is_teamplay() ? teamscore[0] : game.players[snapping_client]->score;
 	gameobj->teamscore_blue = teamscore[1];
 }
 
@@ -462,10 +462,10 @@ int GAMECONTROLLER::get_auto_team(int notthisid)
 	int numplayers[2] = {0,0};
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(game.players[i].client_id != -1 && game.players[i].client_id != notthisid)
+		if(game.players[i] && i != notthisid)
 		{
-			if(game.players[i].team == 0 || game.players[i].team == 1)
-				numplayers[game.players[i].team]++;
+			if(game.players[i]->team == 0 || game.players[i]->team == 1)
+				numplayers[game.players[i]->team]++;
 		}
 	}
 
@@ -484,10 +484,10 @@ bool GAMECONTROLLER::can_join_team(int team, int notthisid)
 	int numplayers[2] = {0,0};
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(game.players[i].client_id != -1 && game.players[i].client_id != notthisid)
+		if(game.players[i] && i != notthisid)
 		{
-			if(game.players[i].team >= 0 || game.players[i].team == 1)
-				numplayers[game.players[i].team]++;
+			if(game.players[i]->team >= 0 || game.players[i]->team == 1)
+				numplayers[game.players[i]->team]++;
 		}
 	}
 	
@@ -502,8 +502,8 @@ bool GAMECONTROLLER::check_team_balance()
 	int t[2] = {0, 0};
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		PLAYER *p = &(game.players[i]);
-		if(p->client_id != -1 && p->team != -1)
+		PLAYER *p = game.players[i];
+		if(p && p->team != -1)
 			t[p->team]++;
 	}
 	
@@ -531,8 +531,8 @@ bool GAMECONTROLLER::can_change_team(PLAYER *pplayer, int jointeam)
 	
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		PLAYER *p = &(game.players[i]);
-		if(p->client_id != -1 && p->team != -1)
+		PLAYER *p = game.players[i];
+		if(p && p->team != -1)
 			t[p->team]++;
 	}
 	
@@ -563,14 +563,14 @@ void GAMECONTROLLER::do_player_score_wincheck()
 		int topscore_count = 0;
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			if(game.players[i].client_id != -1)
+			if(game.players[i])
 			{
-				if(game.players[i].score > topscore)
+				if(game.players[i]->score > topscore)
 				{
-					topscore = game.players[i].score;
+					topscore = game.players[i]->score;
 					topscore_count = 1;
 				}
-				else if(game.players[i].score == topscore)
+				else if(game.players[i]->score == topscore)
 					topscore_count++;
 			}
 		}

@@ -37,13 +37,13 @@ void send_tuning_params(int cid)
 void mods_client_direct_input(int client_id, void *input)
 {
 	if(!game.world.paused)
-		game.players[client_id].on_direct_input((NETOBJ_PLAYER_INPUT *)input);
+		game.players[client_id]->on_direct_input((NETOBJ_PLAYER_INPUT *)input);
 }
 
 void mods_client_predicted_input(int client_id, void *input)
 {
 	if(!game.world.paused)
-		game.players[client_id].on_predicted_input((NETOBJ_PLAYER_INPUT *)input);
+		game.players[client_id]->on_predicted_input((NETOBJ_PLAYER_INPUT *)input);
 }
 
 // Server hooks
@@ -60,27 +60,28 @@ void mods_snap(int client_id)
 void mods_client_enter(int client_id)
 {
 	//game.world.insert_entity(&game.players[client_id]);
-	game.players[client_id].respawn();
+	game.players[client_id]->respawn();
 	dbg_msg("game", "join player='%d:%s'", client_id, server_clientname(client_id));
 
 
 	char buf[512];
-	str_format(buf, sizeof(buf), "%s entered and joined the %s", server_clientname(client_id), game.controller->get_team_name(game.players[client_id].team));
+	str_format(buf, sizeof(buf), "%s entered and joined the %s", server_clientname(client_id), game.controller->get_team_name(game.players[client_id]->team));
 	game.send_chat(-1, GAMECONTEXT::CHAT_ALL, buf); 
 
-	dbg_msg("game", "team_join player='%d:%s' team=%d", client_id, server_clientname(client_id), game.players[client_id].team);
+	dbg_msg("game", "team_join player='%d:%s' team=%d", client_id, server_clientname(client_id), game.players[client_id]->team);
 }
 
 void mods_connected(int client_id)
 {
-	game.players[client_id].init(client_id);
+	game.players[client_id] = new PLAYER(client_id);
+	//game.players[client_id].init(client_id);
 	//game.players[client_id].client_id = client_id;
 	
 	// Check which team the player should be on
 	if(config.sv_tournament_mode)
-		game.players[client_id].team = -1;
+		game.players[client_id]->team = -1;
 	else
-		game.players[client_id].team = game.controller->get_auto_team(client_id);
+		game.players[client_id]->team = game.controller->get_auto_team(client_id);
 		
 	(void) game.controller->check_team_balance();
 
@@ -93,14 +94,15 @@ void mods_connected(int client_id)
 
 void mods_client_drop(int client_id)
 {
-	game.players[client_id].on_disconnect();
+	game.players[client_id]->on_disconnect();
 	(void) game.controller->check_team_balance();
+	delete game.players[client_id];
 }
 
 void mods_message(int msgtype, int client_id)
 {
 	void *rawmsg = netmsg_secure_unpack(msgtype);
-	PLAYER *p = &game.players[client_id];
+	PLAYER *p = game.players[client_id];
 	
 	if(!rawmsg)
 	{
@@ -197,7 +199,7 @@ void mods_message(int msgtype, int client_id)
 			// send all info to this client
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
-				if(game.players[i].client_id != -1)
+				if(game.players[i])
 					game.send_info(i, client_id);
 			}
 
@@ -293,10 +295,10 @@ static void con_set_team(void *result, void *user_data)
 	
 	dbg_msg("", "%d %d", client_id, team);
 	
-	if(game.players[client_id].client_id != client_id)
+	if(!game.players[client_id])
 		return;
 	
-	game.players[client_id].set_team(team);
+	game.players[client_id]->set_team(team);
 }
 
 void mods_console_init()
@@ -371,7 +373,7 @@ void mods_init()
 			mods_connected(MAX_CLIENTS-i-1);
 			mods_client_enter(MAX_CLIENTS-i-1);
 			if(game.controller->is_teamplay())
-				game.players[MAX_CLIENTS-i-1].team = i&1;
+				game.players[MAX_CLIENTS-i-1]->team = i&1;
 		}
 	}
 }

@@ -100,7 +100,7 @@ void PROJECTILE::snap(int snapping_client)
 {
 	float ct = (server_tick()-start_tick)/(float)server_tickspeed();
 	
-	if(distance(game.players[snapping_client].view_pos, get_pos(ct)) > 1000.0f)
+	if(distance(game.players[snapping_client]->view_pos, get_pos(ct)) > 1000.0f)
 		return;
 
 	NETOBJ_PROJECTILE *proj = (NETOBJ_PROJECTILE *)snap_new_item(NETOBJTYPE_PROJECTILE, id, sizeof(NETOBJ_PROJECTILE));

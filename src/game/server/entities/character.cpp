@@ -45,8 +45,11 @@ void CHARACTER::reset()
 
 bool CHARACTER::spawn(PLAYER *player, vec2 pos, int team)
 {
+	/*
+	~CHARACTER();
 	mem_zero(this, sizeof(CHARACTER));
-	new(this) CHARACTER();
+	new(this) CHARACTER();*/
+	
 	player_state = PLAYERSTATE_UNKNOWN;
 	emote_stop = -1;
 	last_action = -1;
@@ -657,7 +660,7 @@ void CHARACTER::tick_defered()
 		//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
 		if(events&COREEVENT_HOOK_ATTACH_PLAYER) game.create_sound(pos, SOUND_HOOK_ATTACH_PLAYER, cmask_all());
 		if(events&COREEVENT_HOOK_ATTACH_GROUND) game.create_sound(pos, SOUND_HOOK_ATTACH_GROUND, mask);
-		if(events&COREEVENT_HOOK_HIT_NOHOOK) game.create_sound(pos, SOUND_HOOK_LOOP, mask);
+		if(events&COREEVENT_HOOK_HIT_NOHOOK) game.create_sound(pos, SOUND_HOOK_NOATTACH, mask);
 		//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
 	//}
 	
@@ -705,7 +708,7 @@ void CHARACTER::die(int killer, int weapon)
 {
 	/*if (dead || team == -1)
 		return;*/
-	int mode_special = game.controller->on_character_death(this, &game.players[killer], weapon);
+	int mode_special = game.controller->on_character_death(this, game.players[killer], weapon);
 
 	dbg_msg("game", "kill killer='%d:%s' victim='%d:%s' weapon=%d special=%d",
 		killer, server_clientname(killer),
@@ -789,7 +792,7 @@ bool CHARACTER::take_damage(vec2 force, int dmg, int from, int weapon)
 
 	// do damage hit sound
 	if(from >= 0 && from != player->client_id)
-		game.create_sound(game.players[from].view_pos, SOUND_HIT, cmask_one(from));
+		game.create_sound(game.players[from]->view_pos, SOUND_HIT, cmask_one(from));
 
 	// check for death
 	if(health <= 0)
@@ -799,7 +802,7 @@ bool CHARACTER::take_damage(vec2 force, int dmg, int from, int weapon)
 		// set attacker's face to happy (taunt!)
 		if (from >= 0 && from != player->client_id)
 		{
-			CHARACTER *chr = &game.players[from].character;
+			CHARACTER *chr = game.players[from]->get_character();
 			chr->emote_type = EMOTE_HAPPY;
 			chr->emote_stop = server_tick() + server_tickspeed();
 		}
@@ -821,7 +824,7 @@ bool CHARACTER::take_damage(vec2 force, int dmg, int from, int weapon)
 
 void CHARACTER::snap(int snaping_client)
 {
-	if(distance(game.players[snaping_client].view_pos, pos) > 1000.0f)
+	if(distance(game.players[snaping_client]->view_pos, pos) > 1000.0f)
 		return;
 	
 	NETOBJ_CHARACTER *character = (NETOBJ_CHARACTER *)snap_new_item(NETOBJTYPE_CHARACTER, player->client_id, sizeof(NETOBJ_CHARACTER));

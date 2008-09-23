@@ -5,17 +5,22 @@
 #include "player.hpp"
 #include "gamecontext.hpp"
 
-PLAYER::PLAYER()
+PLAYER::PLAYER(int client_id)
 {
+	character = 0;
+	this->client_id = client_id;
 }
 
+/*
 void PLAYER::init(int client_id)
 {
 	// clear everything
+	~PLAYER();
 	mem_zero(this, sizeof(*this));
 	new(this) PLAYER();
+	
 	this->client_id = client_id;
-}
+}*/
 
 void PLAYER::tick()
 {
@@ -75,9 +80,6 @@ void PLAYER::on_disconnect()
 	game.send_chat(-1, GAMECONTEXT::CHAT_ALL, buf);
 
 	dbg_msg("game", "leave player='%d:%s'", client_id, server_clientname(client_id));
-
-	// clear this whole structure
-	init(-1);
 }
 
 void PLAYER::on_predicted_input(NETOBJ_PLAYER_INPUT *new_input)
@@ -105,16 +107,20 @@ void PLAYER::on_direct_input(NETOBJ_PLAYER_INPUT *new_input)
 
 CHARACTER *PLAYER::get_character()
 {
-	if(character.alive)
-		return &character;
+	if(character && character->alive)
+		return character;
 	return 0;
 }
 
 void PLAYER::kill_character()
 {
-	CHARACTER *chr = get_character();
-	if(chr)
-		chr->die(-1, -1);
+	//CHARACTER *chr = get_character();
+	if(character)
+	{
+		character->die(-1, -1);
+		delete character;
+		character = 0;
+	}
 }
 
 void PLAYER::respawn()
@@ -138,12 +144,12 @@ void PLAYER::set_team(int new_team)
 	score = 0;
 	dbg_msg("game", "team_join player='%d:%s' team=%d", client_id, server_clientname(client_id), team);
 	
-	game.controller->on_player_info_change(&game.players[client_id]);
+	game.controller->on_player_info_change(game.players[client_id]);
 
 	// send all info to this client
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(game.players[i].client_id != -1)
+		if(game.players[i])
 			game.send_info(i, -1);
 	}
 }
@@ -162,6 +168,7 @@ void PLAYER::try_respawn()
 	if(num_ents == 0)
 	{
 		spawning = false;
-		character.spawn(this, spawnpos, team);
+		character = new CHARACTER();
+		character->spawn(this, spawnpos, team);
 	}
 }
