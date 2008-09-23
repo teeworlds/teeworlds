@@ -282,7 +282,7 @@ float client_intratick() { return intratick; }
 float client_predintratick() { return predintratick; }
 float client_ticktime() { return ticktime; }
 int client_tick() { return current_tick; }
-int client_prevtick() { return current_tick; }
+int client_prevtick() { return prev_tick; }
 int client_predtick() { return current_predtick; }
 int client_tickspeed() { return SERVER_TICK_SPEED; }
 float client_frametime() { return frametime; }
