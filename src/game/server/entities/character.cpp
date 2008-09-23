@@ -2,6 +2,7 @@
 #include <engine/e_server_interface.h>
 #include <engine/e_config.h>
 #include <game/server/gamecontext.hpp>
+#include <game/mapitems.hpp>
 
 #include "character.hpp"
 #include "laser.hpp"
@@ -588,6 +589,9 @@ void CHARACTER::tick()
 	//core.jumped = jumped;
 	core.input = input;
 	core.tick(true);
+	
+	if(col_get(pos.x, pos.y)&COLFLAG_DEATH)
+		die(player->client_id, -1);
 
 	// handle weapons
 	handle_weapons();

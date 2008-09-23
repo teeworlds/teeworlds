@@ -352,9 +352,22 @@ void mods_init()
 	{
 		for(int x = 0; x < tmap->width; x++)
 		{
-			int index = tiles[y*tmap->width+x].index - ENTITY_OFFSET;
-			vec2 pos(x*32.0f+16.0f, y*32.0f+16.0f);
-			game.controller->on_entity(index, pos);
+			int index = tiles[y*tmap->width+x].index;
+			
+			if(index >= ENTITY_OFFSET)
+			{
+				vec2 pos(x*32.0f+16.0f, y*32.0f+16.0f);
+				game.controller->on_entity(index-ENTITY_OFFSET, pos);
+			}
+			else
+			{
+				if(index == TILE_DEATH)
+					tiles[y*tmap->width+x].index = COLFLAG_DEATH;
+				else if(index == TILE_SOLID)
+					tiles[y*tmap->width+x].index = COLFLAG_SOLID;
+				else
+					tiles[y*tmap->width+x].index = 0;
+			}
 		}
 	}
 
