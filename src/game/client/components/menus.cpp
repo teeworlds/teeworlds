@@ -1059,20 +1059,18 @@ void MENUS::on_render()
 			gfx_texture_set(data->images[IMAGE_BANNER].id);
 			gfx_quads_begin();
 			gfx_setcolor(0,0,0,1.0f);
-			//gfx_quads_setrotation(-pi/4+0.15f);
-			gfx_quads_drawTL(sw-200-20, 10, 200, 200/4);
+			gfx_quads_draw(sw/2, 50, 300, 300/4);
 			gfx_setcolor(1,1,1,1.0f);
-			gfx_quads_drawTL(sw-200-20-2, 10-2, 200, 200/4);
+			gfx_quads_draw(sw/2-2, 50-2, 300, 300/4);
 			gfx_quads_end();
 			
-//void gfx_text(void *font, float x, float y, float size, const char *text, int max_width);
-			
-			if((time_get()/(time_freq()/3))&1)
-				gfx_text(NULL, sw-150, 200/4, 10.0f, "INSERT COIN", -1);
+			//if((time_get()/(time_freq()/3))&1)
+			//	gfx_text(NULL, sw-150, sh-50, 10.0f, "INSERT COIN", -1);
 		}		
 	}
 	else
 	{
+		//render_background();
 		render();
 
 		// render cursor
@@ -1099,38 +1097,64 @@ void MENUS::on_render()
 	num_inputevents = 0;
 }
 
-static void render_sunrays(float x, float y)
-{
-	vec2 pos(x, y);
 
+static int texture_blob = -1;
+
+void MENUS::render_background()
+{
+	//gfx_clear(1,1,1);
+	//render_sunrays(0,0);
+	if(texture_blob == -1)
+		texture_blob = gfx_load_texture("data/blob.png", IMG_AUTO, 0);
+
+
+	float sw = 300*gfx_screenaspect();
+	float sh = 300;
+	gfx_mapscreen(0, 0, sw, sh);
+
+	RECT s = *ui_screen();
+
+	// render background color
 	gfx_texture_set(-1);
-	gfx_blend_additive();
 	gfx_quads_begin();
-	const int rays = 10;
-	gfx_setcolor(1.0f,1.0f,1.0f,0.025f);
-	for(int r = 0; r < rays; r++)
-	{
-		float a = r/(float)rays + client_localtime()*0.015f;
-		float size = (1.0f/(float)rays)*0.25f;
-		vec2 dir0(sinf((a-size)*pi*2.0f), cosf((a-size)*pi*2.0f));
-		vec2 dir1(sinf((a+size)*pi*2.0f), cosf((a+size)*pi*2.0f));
-		
-		gfx_setcolorvertex(0, 1.0f,1.0f,1.0f,0.025f);
-		gfx_setcolorvertex(1, 1.0f,1.0f,1.0f,0.025f);
-		gfx_setcolorvertex(2, 1.0f,1.0f,1.0f,0.0f);
-		gfx_setcolorvertex(3, 1.0f,1.0f,1.0f,0.0f);
-		const float range = 1000.0f;
-		gfx_quads_draw_freeform(
-			pos.x+dir0.x, pos.y+dir0.y,
-			pos.x+dir1.x, pos.y+dir1.y,
-			pos.x+dir0.x*range, pos.y+dir0.y*range,
-			pos.x+dir1.x*range, pos.y+dir1.y*range);
-	}
+		//vec4 bottom(gui_color.r*0.3f, gui_color.g*0.3f, gui_color.b*0.3f, 1.0f);
+		//vec4 bottom(0, 0, 0, 1.0f);
+		vec4 bottom(gui_color.r, gui_color.g, gui_color.b, 1.0f);
+		vec4 top(gui_color.r, gui_color.g, gui_color.b, 1.0f);
+		gfx_setcolorvertex(0, top.r, top.g, top.b, top.a);
+		gfx_setcolorvertex(1, top.r, top.g, top.b, top.a);
+		gfx_setcolorvertex(2, bottom.r, bottom.g, bottom.b, bottom.a);
+		gfx_setcolorvertex(3, bottom.r, bottom.g, bottom.b, bottom.a);
+		gfx_quads_drawTL(0, 0, sw, sh);
 	gfx_quads_end();
-	gfx_blend_normal();
+	
+	// render the tiles
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+		float size = 15.0f;
+		float offset_time = fmod(client_localtime()*0.15f, 2.0f);
+		for(int y = -2; y < (int)(sw/size); y++)
+			for(int x = -2; x < (int)(sh/size); x++)
+			{
+				gfx_setcolor(0,0,0,0.045f);
+				gfx_quads_drawTL((x-offset_time)*size*2+(y&1)*size, (y+offset_time)*size, size, size);
+			}
+	gfx_quads_end();
+
+	// render border fade
+	gfx_texture_set(texture_blob);
+	gfx_quads_begin();
+		gfx_setcolor(0,0,0,0.5f);
+		gfx_quads_drawTL(-100, -100, sw+200, sh+200);
+	gfx_quads_end();
+
+	// restore screen	
+    {RECT screen = *ui_screen();
+	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);}	
 }
 
 
+#if 0
 static int texture_mountains = -1;
 static int texture_sun = -1;
 static int texture_grass = -1;
@@ -1163,6 +1187,7 @@ public:
 		speed = 150.0f + (rand()/(float)RAND_MAX) * 50.0f;
 		time = (rand()/(float)RAND_MAX) * 5.0f;
 		jumptime = 0;
+		update(0);
 		new_jump();
 	}
 	
@@ -1198,6 +1223,38 @@ public:
 
 static const int NUM_TEES = 35;
 static TEE tees[NUM_TEES];
+
+
+static void render_sunrays(float x, float y)
+{
+	vec2 pos(x, y);
+
+	gfx_texture_set(-1);
+	gfx_blend_additive();
+	gfx_quads_begin();
+	const int rays = 10;
+	gfx_setcolor(1.0f,1.0f,1.0f,0.025f);
+	for(int r = 0; r < rays; r++)
+	{
+		float a = r/(float)rays + client_localtime()*0.015f;
+		float size = (1.0f/(float)rays)*0.25f;
+		vec2 dir0(sinf((a-size)*pi*2.0f), cosf((a-size)*pi*2.0f));
+		vec2 dir1(sinf((a+size)*pi*2.0f), cosf((a+size)*pi*2.0f));
+		
+		gfx_setcolorvertex(0, 1.0f,1.0f,1.0f,0.025f);
+		gfx_setcolorvertex(1, 1.0f,1.0f,1.0f,0.025f);
+		gfx_setcolorvertex(2, 1.0f,1.0f,1.0f,0.0f);
+		gfx_setcolorvertex(3, 1.0f,1.0f,1.0f,0.0f);
+		const float range = 1000.0f;
+		gfx_quads_draw_freeform(
+			pos.x+dir0.x, pos.y+dir0.y,
+			pos.x+dir1.x, pos.y+dir1.y,
+			pos.x+dir0.x*range, pos.y+dir0.y*range,
+			pos.x+dir1.x*range, pos.y+dir1.y*range);
+	}
+	gfx_quads_end();
+	gfx_blend_normal();
+}
 
 void MENUS::render_background()
 {
@@ -1308,6 +1365,7 @@ void MENUS::render_background()
 				tee->update(client_frametime());
 				
 				ANIMSTATE state;
+				mem_zero(&state, sizeof(state));
 				state.set(&data->animations[ANIM_BASE], 0);
 				
 				if(tee->pos.y < -0.0001f)
@@ -1343,3 +1401,5 @@ void MENUS::render_background()
 		gfx_quads_end();
 	}*/
 }
+
+#endif
