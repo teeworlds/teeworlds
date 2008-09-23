@@ -425,7 +425,6 @@ void PLAYERS::render_player(
 
 void PLAYERS::on_render()
 {
-	//int num = snap_num_items(SNAP_CURRENT);
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		// only render active characters

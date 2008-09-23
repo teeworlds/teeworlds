@@ -1,4 +1,5 @@
 #include <base/system.h>
+#include "e_if_other.h"
 #include "e_console.h"
 #include "e_config.h"
 #include "e_linereader.h"

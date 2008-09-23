@@ -612,7 +612,7 @@ static void server_process_client_packet(NETCHUNK *packet)
 			{
 				/* OH FUCK! wrong version, drop him */
 				char reason[256];
-				str_format(reason, sizeof(reason), "wrong version. server is running %s.", mods_net_version());
+				str_format(reason, sizeof(reason), "wrong version. server is running '%s' and client '%s'.", mods_net_version(), version);
 				netserver_drop(net, cid, reason);
 				return;
 			}
