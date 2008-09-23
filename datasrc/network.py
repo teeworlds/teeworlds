@@ -105,12 +105,14 @@ Objects = [
 	]),
 
 	NetObject("Character_Core", [
+		NetIntAny("tick"),
 		NetIntAny("x"),
 		NetIntAny("y"),
 		NetIntAny("vx"),
 		NetIntAny("vy"),
 
 		NetIntAny("angle"),
+		NetIntRange("direction", -1, 1),
 		
 		NetIntRange("jumped", 0, 3),
 		NetIntRange("hooked_player", 0, 'MAX_CLIENTS-1'),
@@ -125,7 +127,6 @@ Objects = [
 
 	NetObject("Character:Character_Core", [
 		NetIntRange("player_state", 0, 'NUM_PLAYERSTATES-1'),
-		NetIntRange("wanted_direction", -1, 1),
 		NetIntRange("health", 0, 10),
 		NetIntRange("armor", 0, 10),
 		NetIntRange("ammocount", 0, 10),
@@ -138,7 +139,7 @@ Objects = [
 		NetIntRange("local", 0, 1),
 		NetIntRange("cid", 0, 'MAX_CLIENTS-1'),
 		NetIntRange("team", -1, 1),
-		
+
 		NetIntAny("score"),
 		NetIntAny("latency"),
 		NetIntAny("latency_flux"),

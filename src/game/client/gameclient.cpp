@@ -150,15 +150,14 @@ void GAMECLIENT::on_console_init()
 	// add the some console commands
 	MACRO_REGISTER_COMMAND("team", "", con_team, this);
 	MACRO_REGISTER_COMMAND("kill", "", con_kill, this);
-			
+	
+	// let all the other components register their console commands
 	for(int i = 0; i < all.num; i++)
 		all.components[i]->on_console_init();
 }
 
 void GAMECLIENT::on_init()
 {
-
-
 	// init all components
 	for(int i = 0; i < all.num; i++)
 		all.components[i]->on_init();
@@ -249,7 +248,6 @@ int GAMECLIENT::on_snapinput(int *data)
 {
 	return controls->snapinput(data);
 }
-
 
 void GAMECLIENT::on_connected()
 {
@@ -479,14 +477,31 @@ void GAMECLIENT::process_events()
 	}
 }
 
+static void evolve(NETOBJ_CHARACTER *character, int tick)
+{
+	WORLD_CORE tempworld;
+	CHARACTER_CORE tempcore;
+	mem_zero(&tempcore, sizeof(tempcore));
+	tempcore.world = &tempworld;
+	tempcore.read(character);
+	//tempcore.input.direction = character->wanted_direction;
+	while(character->tick < tick)
+	{
+		character->tick++;
+		tempcore.tick(false);
+		tempcore.move();
+		tempcore.quantize();
+	}
+	
+	tempcore.write(character);
+}
+
 void GAMECLIENT::on_snapshot()
 {
 	// clear out the invalid pointers
 	mem_zero(&gameclient.snap, sizeof(gameclient.snap));
+	snap.local_cid = -1;
 
-	static int snapshot_count = 0;
-	snapshot_count++;
-	
 	// secure snapshot
 	{
 		int num = snap_num_items(SNAP_CURRENT);
@@ -517,11 +532,10 @@ void GAMECLIENT::on_snapshot()
 		}
 	}
 
-	// setup world view
+	// go trough all the items in the snapshot and gather the info we want
 	{
-		// 1. fetch local player
-		// 2. set him to the center
-		gameclient.snap.team_size[0] = gameclient.snap.team_size[1] = 0;
+		snap.team_size[0] = snap.team_size[1] = 0;
+		
 		int num = snap_num_items(SNAP_CURRENT);
 		for(int i = 0; i < num; i++)
 		{
@@ -532,88 +546,94 @@ void GAMECLIENT::on_snapshot()
 			{
 				const NETOBJ_PLAYER_INFO *info = (const NETOBJ_PLAYER_INFO *)data;
 				
-				gameclient.clients[info->cid].team = info->team;
+				clients[info->cid].team = info->team;
+				snap.player_infos[info->cid] = info;
 				
 				if(info->local)
 				{
-					gameclient.snap.local_info = info;
-					const void *data = snap_find_item(SNAP_CURRENT, NETOBJTYPE_CHARACTER, item.id);
-					if(data)
-					{
-						gameclient.snap.local_character = (const NETOBJ_CHARACTER *)data;
-						gameclient.local_character_pos = vec2(gameclient.snap.local_character->x, gameclient.snap.local_character->y);
-
-						const void *p = snap_find_item(SNAP_PREV, NETOBJTYPE_CHARACTER, item.id);
-						if(p)
-							gameclient.snap.local_prev_character = (NETOBJ_CHARACTER *)p;
-					}
+					snap.local_cid = item.id;
+					snap.local_info = info;
 					
 					if (info->team == -1)
-						gameclient.snap.spectate = true;
+						snap.spectate = true;
 				}
 				
 				// calculate team-balance
 				if(info->team != -1)
-					gameclient.snap.team_size[info->team]++;
+					snap.team_size[info->team]++;
 				
 			}
-			else if(item.type == NETOBJTYPE_GAME)
-				gameclient.snap.gameobj = (NETOBJ_GAME *)data;
-			else if(item.type == NETOBJTYPE_FLAG)
+			else if(item.type == NETOBJTYPE_CHARACTER)
 			{
-				gameclient.snap.flags[item.id%2] = (const NETOBJ_FLAG *)data;
+				const void *old = snap_find_item(SNAP_PREV, NETOBJTYPE_CHARACTER, item.id);
+				if(old)
+				{
+					snap.characters[item.id].active = true;
+					snap.characters[item.id].prev = *((const NETOBJ_CHARACTER *)old);
+					snap.characters[item.id].cur = *((const NETOBJ_CHARACTER *)data);
+					
+					// perform dead reckoning
+					if(snap.characters[item.id].prev.tick)
+						evolve(&snap.characters[item.id].prev, client_prevtick());
+					if(snap.characters[item.id].cur.tick)
+						evolve(&snap.characters[item.id].cur, client_tick());
+				}
 			}
+			else if(item.type == NETOBJTYPE_GAME)
+				snap.gameobj = (NETOBJ_GAME *)data;
+			else if(item.type == NETOBJTYPE_FLAG)
+				snap.flags[item.id%2] = (const NETOBJ_FLAG *)data;
+		}
+	}
+	
+	// setup local pointers
+	if(snap.local_cid >= 0)
+	{
+		SNAPSTATE::CHARACTERINFO *c = &snap.characters[snap.local_cid];
+		if(c->active)
+		{
+			snap.local_character = &c->cur;
+			snap.local_prev_character = &c->prev;
+			local_character_pos = vec2(snap.local_character->x, snap.local_character->y);
 		}
 	}
 
+	// update render info
 	for(int i = 0; i < MAX_CLIENTS; i++)
-		gameclient.clients[i].update_render_info();
-
+		clients[i].update_render_info();
 }
 
 void GAMECLIENT::on_predict()
 {
+	// store the previous values so we can detect prediction errors
 	CHARACTER_CORE before_prev_char = predicted_prev_char;
 	CHARACTER_CORE before_char = predicted_char;
+
+	// we can't predict without our own id or own character
+	if(snap.local_cid == -1 || !snap.characters[snap.local_cid].active)
+		return;
 
 	// repredict character
 	WORLD_CORE world;
 	world.tuning = tuning;
-	int local_cid = -1;
 
 	// search for players
-	for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
+	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		SNAP_ITEM item;
-		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
-		int client_id = item.id;
-
-		if(item.type == NETOBJTYPE_CHARACTER)
-		{
-			const NETOBJ_CHARACTER *character = (const NETOBJ_CHARACTER *)data;
-			gameclient.clients[client_id].predicted.world = &world;
-			world.characters[client_id] = &gameclient.clients[client_id].predicted;
-
-			gameclient.clients[client_id].predicted.read(character);
-		}
-		else if(item.type == NETOBJTYPE_PLAYER_INFO)
-		{
-			const NETOBJ_PLAYER_INFO *info = (const NETOBJ_PLAYER_INFO *)data;
-			if(info->local)
-				local_cid = client_id;
-		}
+		if(!snap.characters[i].active)
+			continue;
+			
+		gameclient.clients[i].predicted.world = &world;
+		world.characters[i] = &gameclient.clients[i].predicted;
+		gameclient.clients[i].predicted.read(&snap.characters[i].cur);
 	}
 	
-	// we can't predict without our own id
-	if(local_cid == -1)
-		return;
-
 	// predict
 	for(int tick = client_tick()+1; tick <= client_predtick(); tick++)
 	{
 		// fetch the local
-		if(tick == client_predtick() && world.characters[local_cid])
-			predicted_prev_char = *world.characters[local_cid];
+		if(tick == client_predtick() && world.characters[snap.local_cid])
+			predicted_prev_char = *world.characters[snap.local_cid];
 		
 		// first calculate where everyone should move
 		for(int c = 0; c < MAX_CLIENTS; c++)
@@ -622,15 +642,17 @@ void GAMECLIENT::on_predict()
 				continue;
 
 			mem_zero(&world.characters[c]->input, sizeof(world.characters[c]->input));
-			if(local_cid == c)
+			if(snap.local_cid == c)
 			{
 				// apply player input
 				int *input = client_get_input(tick);
 				if(input)
 					world.characters[c]->input = *((NETOBJ_PLAYER_INPUT*)input);
+				world.characters[c]->tick(true);
 			}
+			else
+				world.characters[c]->tick(false);
 
-			world.characters[c]->tick();
 		}
 
 		// move all players and quantize their data
@@ -643,14 +665,15 @@ void GAMECLIENT::on_predict()
 			world.characters[c]->quantize();
 		}
 		
+		// check if we want to trigger effects
 		if(tick > last_new_predicted_tick)
 		{
 			last_new_predicted_tick = tick;
 			
-			if(local_cid != -1 && world.characters[local_cid])
+			if(snap.local_cid != -1 && world.characters[snap.local_cid])
 			{
-				vec2 pos = world.characters[local_cid]->pos;
-				int events = world.characters[local_cid]->triggered_events;
+				vec2 pos = world.characters[snap.local_cid]->pos;
+				int events = world.characters[snap.local_cid]->triggered_events;
 				if(events&COREEVENT_GROUND_JUMP) gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
 				if(events&COREEVENT_AIR_JUMP)
 				{
@@ -662,34 +685,26 @@ void GAMECLIENT::on_predict()
 				if(events&COREEVENT_HOOK_ATTACH_GROUND) gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, pos);
 				//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
 			}
-
-
-			/*
-			dbg_msg("predict", "%d %d %d", tick,
-				(int)world.players[c]->pos.x, (int)world.players[c]->pos.y,
-				(int)world.players[c]->vel.x, (int)world.players[c]->vel.y);*/
 		}
 		
-		if(tick == client_predtick() && world.characters[local_cid])
-			predicted_char = *world.characters[local_cid];
+		if(tick == client_predtick() && world.characters[snap.local_cid])
+			predicted_char = *world.characters[snap.local_cid];
 	}
 	
-	if(config.debug && predicted_tick == client_predtick())
+	if(config.debug && config.cl_predict && predicted_tick == client_predtick())
 	{
-		if(predicted_char.pos.x != before_char.pos.x ||
-			predicted_char.pos.y != before_char.pos.y)
-		{
-			dbg_msg("client", "prediction error, (%d %d) (%d %d)", 
-				(int)before_char.pos.x, (int)before_char.pos.y,
-				(int)predicted_char.pos.x, (int)predicted_char.pos.y);
-		}
+		NETOBJ_CHARACTER_CORE before = {0}, now = {0};
+		before_char.write(&before);
+		predicted_char.write(&now);
 
-		if(predicted_prev_char.pos.x != before_prev_char.pos.x ||
-			predicted_prev_char.pos.y != before_prev_char.pos.y)
+		if(mem_comp(&before, &now, sizeof(NETOBJ_CHARACTER_CORE)) != 0)
 		{
-			dbg_msg("client", "prediction error, prev (%d %d) (%d %d)", 
-				(int)before_prev_char.pos.x, (int)before_prev_char.pos.y,
-				(int)predicted_prev_char.pos.x, (int)predicted_prev_char.pos.y);
+			dbg_msg("client", "prediction error");
+			for(unsigned i = 0; i < sizeof(NETOBJ_CHARACTER_CORE)/sizeof(int); i++)
+				if(((int *)&before)[i] != ((int *)&now)[i])
+				{
+					dbg_msg("", "\t%d %d %d", i, ((int *)&before)[i], ((int *)&now)[i]);
+				}
 		}
 	}
 	
@@ -752,8 +767,6 @@ void GAMECLIENT::send_kill(int client_id)
 	msg.pack(MSGFLAG_VITAL);
 	client_send_msg();
 }
-
-
 
 void GAMECLIENT::con_team(void *result, void *user_data)
 {

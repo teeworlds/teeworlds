@@ -179,18 +179,19 @@ void CHARACTER_CORE::reset()
 	triggered_events = 0;
 }
 
-void CHARACTER_CORE::tick()
+void CHARACTER_CORE::tick(bool use_input)
 {
 	float phys_size = 28.0f;
 	triggered_events = 0;
 	
+	// get ground state
 	bool grounded = false;
 	if(col_check_point((int)(pos.x+phys_size/2), (int)(pos.y+phys_size/2+5)))
 		grounded = true;
 	if(col_check_point((int)(pos.x-phys_size/2), (int)(pos.y+phys_size/2+5)))
 		grounded = true;
 	
-	vec2 direction = normalize(vec2(input.target_x, input.target_y));
+	vec2 target_direction = normalize(vec2(input.target_x, input.target_y));
 
 	vel.y += world->tuning.gravity;
 	
@@ -198,13 +199,72 @@ void CHARACTER_CORE::tick()
 	float accel = grounded ? world->tuning.ground_control_accel : world->tuning.air_control_accel;
 	float friction = grounded ? world->tuning.ground_friction : world->tuning.air_friction;
 	
-	// handle movement
-	if(input.direction < 0)
+	// handle input
+	if(use_input)
+	{
+		direction = input.direction;
+
+		// setup angle
+		float a = 0;
+		if(input.target_x == 0)
+			a = atan((float)input.target_y);
+		else
+			a = atan((float)input.target_y/(float)input.target_x);
+			
+		if(input.target_x < 0)
+			a = a+pi;
+			
+		angle = (int)(a*256.0f);
+
+		// handle jump
+		if(input.jump)
+		{
+			if(!(jumped&1))
+			{
+				if(grounded)
+				{
+					triggered_events |= COREEVENT_GROUND_JUMP;
+					vel.y = -world->tuning.ground_jump_impulse;
+					jumped |= 1;
+				}
+				else if(!(jumped&2))
+				{
+					triggered_events |= COREEVENT_AIR_JUMP;
+					vel.y = -world->tuning.air_jump_impulse;
+					jumped |= 3;
+				}
+			}
+		}
+		else
+			jumped &= ~1;
+
+		// handle hook
+		if(input.hook)
+		{
+			if(hook_state == HOOK_IDLE)
+			{
+				hook_state = HOOK_FLYING;
+				hook_pos = pos+target_direction*phys_size*1.5f;
+				hook_dir = target_direction;
+				hooked_player = -1;
+				hook_tick = 0;
+				triggered_events |= COREEVENT_HOOK_LAUNCH;
+			}		
+		}
+		else
+		{
+			hooked_player = -1;
+			hook_state = HOOK_IDLE;
+			hook_pos = pos;			
+		}		
+	}
+	
+	// add the speed modification according to players wanted direction
+	if(direction < 0)
 		vel.x = saturated_add(-max_speed, max_speed, vel.x, -accel);
-	if(input.direction > 0)
+	if(direction > 0)
 		vel.x = saturated_add(-max_speed, max_speed, vel.x, accel);
-		
-	if(input.direction == 0)
+	if(direction == 0)
 		vel.x *= friction;
 	
 	// handle jumping
@@ -213,64 +273,40 @@ void CHARACTER_CORE::tick()
 	if(grounded)
 		jumped &= ~2;
 	
-	if(input.jump)
-	{
-		if(!(jumped&1))
-		{
-			if(grounded)
-			{
-				triggered_events |= COREEVENT_GROUND_JUMP;
-				vel.y = -world->tuning.ground_jump_impulse;
-				jumped |= 1;
-			}
-			else if(!(jumped&2))
-			{
-				triggered_events |= COREEVENT_AIR_JUMP;
-				vel.y = -world->tuning.air_jump_impulse;
-				jumped |= 3;
-			}
-		}
-	}
-	else
-		jumped &= ~1;
-	
 	// do hook
-	if(input.hook)
+	if(hook_state == HOOK_IDLE)
 	{
-		if(hook_state == HOOK_IDLE)
+		hooked_player = -1;
+		hook_state = HOOK_IDLE;
+		hook_pos = pos;
+	}
+	else if(hook_state >= HOOK_RETRACT_START && hook_state < HOOK_RETRACT_END)
+	{
+		hook_state++;
+	}
+	else if(hook_state == HOOK_RETRACT_END)
+	{
+		hook_state = HOOK_RETRACTED;
+		triggered_events |= COREEVENT_HOOK_RETRACT;
+		hook_state = HOOK_RETRACTED;
+	}
+	else if(hook_state == HOOK_FLYING)
+	{
+		vec2 new_pos = hook_pos+hook_dir*world->tuning.hook_fire_speed;
+		if(distance(pos, new_pos) > world->tuning.hook_length)
 		{
-			hook_state = HOOK_FLYING;
-			hook_pos = pos+direction*phys_size*1.5f;
-			hook_dir = direction;
-			hooked_player = -1;
-			hook_tick = 0;
-			triggered_events |= COREEVENT_HOOK_LAUNCH;
+			hook_state = HOOK_RETRACT_START;
+			new_pos = pos + normalize(new_pos-pos) * world->tuning.hook_length;
 		}
-		else if(hook_state >= HOOK_RETRACT_START && hook_state < HOOK_RETRACT_END)
-		{
-			hook_state++;
-		}
-		else if(hook_state == HOOK_RETRACT_END)
-		{
-			hook_state = HOOK_RETRACTED;
-			triggered_events |= COREEVENT_HOOK_RETRACT;
-			hook_state = HOOK_RETRACTED;
-		}
-		else if(hook_state == HOOK_FLYING)
-		{
-			vec2 new_pos = hook_pos+hook_dir*world->tuning.hook_fire_speed;
-			if(distance(pos, new_pos) > world->tuning.hook_length)
-			{
-				hook_state = HOOK_RETRACT_START;
-				new_pos = pos + normalize(new_pos-pos) * world->tuning.hook_length;
-			}
-			
-			// make sure that the hook doesn't go though the ground
-			bool going_to_hit_ground = false;
-			if(col_intersect_line(hook_pos, new_pos, &new_pos))
-				going_to_hit_ground = true;
+		
+		// make sure that the hook doesn't go though the ground
+		bool going_to_hit_ground = false;
+		if(col_intersect_line(hook_pos, new_pos, &new_pos))
+			going_to_hit_ground = true;
 
-			// Check against other players first
+		// Check against other players first
+		if(world)
+		{
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
 				CHARACTER_CORE *p = world->characters[i];
@@ -286,26 +322,19 @@ void CHARACTER_CORE::tick()
 					break;
 				}
 			}
-			
-			if(hook_state == HOOK_FLYING)
-			{
-				// check against ground
-				if(going_to_hit_ground)
-				{
-					triggered_events |= COREEVENT_HOOK_ATTACH_GROUND;
-					hook_state = HOOK_GRABBED;
-				}
-				
-				hook_pos = new_pos;
-			}
 		}
-	}
-	else
-	{
-		//release_hooked();
-		hooked_player = -1;
-		hook_state = HOOK_IDLE;
-		hook_pos = pos;
+		
+		if(hook_state == HOOK_FLYING)
+		{
+			// check against ground
+			if(going_to_hit_ground)
+			{
+				triggered_events |= COREEVENT_HOOK_ATTACH_GROUND;
+				hook_state = HOOK_GRABBED;
+			}
+			
+			hook_pos = new_pos;
+		}
 	}
 	
 	if(hook_state == HOOK_GRABBED)
@@ -339,7 +368,7 @@ void CHARACTER_CORE::tick()
 			
 			// the hook will boost it's power if the player wants to move
 			// in that direction. otherwise it will dampen everything abit
-			if((hookvel.x < 0 && input.direction < 0) || (hookvel.x > 0 && input.direction > 0)) 
+			if((hookvel.x < 0 && direction < 0) || (hookvel.x > 0 && direction > 0)) 
 				hookvel.x *= 0.95f;
 			else
 				hookvel.x *= 0.75f;
@@ -362,7 +391,7 @@ void CHARACTER_CORE::tick()
 		}
 	}
 	
-	if(true)
+	if(world)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
@@ -437,17 +466,8 @@ void CHARACTER_CORE::write(NETOBJ_CHARACTER_CORE *obj_core)
 	obj_core->hook_dy = (int)(hook_dir.y*256.0f);
 	obj_core->hooked_player = hooked_player;
 	obj_core->jumped = jumped;
-
-	float a = 0;
-	if(input.target_x == 0)
-		a = atan((float)input.target_y);
-	else
-		a = atan((float)input.target_y/(float)input.target_x);
-		
-	if(input.target_x < 0)
-		a = a+pi;
-		
-	obj_core->angle = (int)(a*256.0f);
+	obj_core->direction = direction;
+	obj_core->angle = angle;
 }
 
 void CHARACTER_CORE::read(const NETOBJ_CHARACTER_CORE *obj_core)
@@ -464,6 +484,8 @@ void CHARACTER_CORE::read(const NETOBJ_CHARACTER_CORE *obj_core)
 	hook_dir.y = obj_core->hook_dy/256.0f;
 	hooked_player = obj_core->hooked_player;
 	jumped = obj_core->jumped;
+	direction = obj_core->direction;
+	angle = obj_core->angle;
 }
 
 void CHARACTER_CORE::quantize()

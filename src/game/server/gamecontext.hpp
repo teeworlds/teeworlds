@@ -32,6 +32,8 @@ class GAMECONTEXT
 {
 public:
 	GAMECONTEXT();
+	~GAMECONTEXT();
+	
 	void clear();
 	
 	EVENTHANDLER events;

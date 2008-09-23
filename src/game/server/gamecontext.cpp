@@ -1,3 +1,4 @@
+#include <new>
 #include <engine/e_server_interface.h>
 #include "gamecontext.hpp"
 
@@ -5,14 +6,28 @@ GAMECONTEXT game;
 
 GAMECONTEXT::GAMECONTEXT()
 {
-	clear();
+	for(int i = 0; i < MAX_CLIENTS; i++)
+		players[i].init(-1);
+}
+
+GAMECONTEXT::~GAMECONTEXT()
+{
 }
 
 void GAMECONTEXT::clear()
 {
+	this->~GAMECONTEXT();
+	mem_zero(this, sizeof(*this));
+	new (this) GAMECONTEXT();
 	// reset all players
+	/*
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		players[i].init(-1);
+	
+	world.~GAMEWORLD();
+	mem_zero(&world, sizeof(world));
+	world.GAMEWORLD();
+	*/
 }
 
 

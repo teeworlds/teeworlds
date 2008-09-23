@@ -56,9 +56,26 @@ public:
 
 		const NETOBJ_PLAYER_INFO *player_infos[MAX_CLIENTS];
 		const NETOBJ_PLAYER_INFO *info_by_score[MAX_CLIENTS];
+		
+		int local_cid;
 		int num_players;
 		int team_size[2];
 		bool spectate;
+		
+		//
+		struct CHARACTERINFO
+		{
+			bool active;
+			
+			// snapshots
+			NETOBJ_CHARACTER prev;
+			NETOBJ_CHARACTER cur;
+			
+			// interpolated position
+			vec2 position;
+		};
+		
+		CHARACTERINFO characters[MAX_CLIENTS];
 	};
 
 	SNAPSTATE snap;

@@ -34,7 +34,8 @@ static INPUT_COUNT count_input(int prev, int cur)
 // player
 CHARACTER::CHARACTER()
 : ENTITY(NETOBJTYPE_CHARACTER)
-{}
+{
+}
 
 void CHARACTER::reset()
 {
@@ -59,6 +60,10 @@ bool CHARACTER::spawn(PLAYER *player, vec2 pos, int team)
 	core.world = &game.world.core;
 	core.pos = pos;
 	game.world.core.characters[player->client_id] = &core;
+
+	reckoning_tick = 0;
+	mem_zero(&sendcore, sizeof(sendcore));
+	mem_zero(&reckoningcore, sizeof(reckoningcore));
 	
 	game.world.insert_entity(this);
 	alive = true;
@@ -578,7 +583,7 @@ void CHARACTER::tick()
 	//core.pos = pos;
 	//core.jumped = jumped;
 	core.input = input;
-	core.tick();
+	core.tick(true);
 
 	// handle weapons
 	handle_weapons();
@@ -592,6 +597,16 @@ void CHARACTER::tick()
 
 void CHARACTER::tick_defered()
 {
+	// advance the dummy
+	{
+		WORLD_CORE tempworld;
+		reckoningcore.world = &tempworld;
+		reckoningcore.tick(false);
+		reckoningcore.move();
+		reckoningcore.quantize();
+	}
+	
+	//lastsentcore;
 	/*if(!dead)
 	{*/
 		vec2 start_pos = core.pos;
@@ -641,6 +656,23 @@ void CHARACTER::tick_defered()
 	{
 		pos.x = input.target_x;
 		pos.y = input.target_y;
+	}
+	
+	// update the sendcore if needed
+	{
+		NETOBJ_CHARACTER predicted;
+		NETOBJ_CHARACTER current;
+		mem_zero(&predicted, sizeof(predicted));
+		mem_zero(&current, sizeof(current));
+		reckoningcore.write(&predicted);
+		core.write(&current);
+		
+		if(mem_comp(&predicted, &current, sizeof(NETOBJ_CHARACTER)) != 0)
+		{
+			reckoning_tick = server_tick();
+			sendcore = core;
+			reckoningcore = core;
+		}
 	}
 }
 
@@ -784,16 +816,12 @@ void CHARACTER::snap(int snaping_client)
 		return;
 	
 	NETOBJ_CHARACTER *character = (NETOBJ_CHARACTER *)snap_new_item(NETOBJTYPE_CHARACTER, player->client_id, sizeof(NETOBJ_CHARACTER));
-
-	core.write(character);
-
-	// this is to make sure that players that are just standing still
-	// isn't sent. this is because the physics keep bouncing between
-	// 0-128 when just standing.
-	// TODO: fix the physics so this isn't needed
-	if(snaping_client != player->client_id && abs(character->vy) < 256.0f)
-		character->vy = 0;
-
+	
+	// write down the core
+	character->tick = reckoning_tick;
+	sendcore.write(character);
+	
+	// set emote
 	if (emote_stop < server_tick())
 	{
 		emote_type = EMOTE_NORMAL;
@@ -809,12 +837,7 @@ void CHARACTER::snap(int snaping_client)
 	character->weapon = active_weapon;
 	character->attacktick = attack_tick;
 
-	character->wanted_direction = input.direction;
-	/*
-	if(input.left && !input.right)
-		character->wanted_direction = -1;
-	else if(!input.left && input.right)
-		character->wanted_direction = 1;*/
+	character->direction = input.direction;
 
 	if(player->client_id == snaping_client)
 	{

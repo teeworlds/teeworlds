@@ -632,7 +632,9 @@ int net_tcp_send(NETSOCKET sock, const void *data, int size);
 		max_size - Maximum of data to write to the buffer.
 		
 	Returns:
-		Number of bytes recvived. Negative value on failure.
+		Number of bytes recvived. Negative value on failure. When in
+		non-blocking mode, it returns 0 when there is no more data to
+		be fetched.
 */
 int net_tcp_recv(NETSOCKET sock, void *data, int maxsize);
 

@@ -158,7 +158,7 @@ void PLAYERS::render_player(
 
 	bool stationary = player.vx < 1 && player.vx > -1;
 	bool inair = col_check_point(player.x, player.y+16) == 0;
-	bool want_other_dir = (player.wanted_direction == -1 && vel.x > 0) || (player.wanted_direction == 1 && vel.x < 0);
+	bool want_other_dir = (player.direction == -1 && vel.x > 0) || (player.direction == 1 && vel.x < 0);
 
 	// evaluate animation
 	float walk_time = fmod(position.x, 100.0f)/100.0f;
@@ -194,8 +194,8 @@ void PLAYERS::render_player(
 		}
 		
 		gameclient.effects->skidtrail(
-			position+vec2(-player.wanted_direction*6,12),
-			vec2(-player.wanted_direction*100*length(vel),-50)
+			position+vec2(-player.direction*6,12),
+			vec2(-player.direction*100*length(vel),-50)
 		);
 	}
 
@@ -425,27 +425,27 @@ void PLAYERS::render_player(
 
 void PLAYERS::on_render()
 {
-	int num = snap_num_items(SNAP_CURRENT);
-	for(int i = 0; i < num; i++)
+	//int num = snap_num_items(SNAP_CURRENT);
+	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		SNAP_ITEM item;
-		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+		// only render active characters
+		if(!gameclient.snap.characters[i].active)
+			continue;
 
-		if(item.type == NETOBJTYPE_CHARACTER)
+		const void *prev_info = snap_find_item(SNAP_PREV, NETOBJTYPE_PLAYER_INFO, i);
+		const void *info = snap_find_item(SNAP_CURRENT, NETOBJTYPE_PLAYER_INFO, i);
+
+		if(prev_info && info)
 		{
-			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-			const void *prev_info = snap_find_item(SNAP_PREV, NETOBJTYPE_PLAYER_INFO, item.id);
-			const void *info = snap_find_item(SNAP_CURRENT, NETOBJTYPE_PLAYER_INFO, item.id);
+			NETOBJ_CHARACTER prev_char = gameclient.snap.characters[i].prev;
+			NETOBJ_CHARACTER cur_char = gameclient.snap.characters[i].cur;
 
-			if(prev && prev_info && info)
-			{
-				render_player(
-						(const NETOBJ_CHARACTER *)prev,
-						(const NETOBJ_CHARACTER *)data,
-						(const NETOBJ_PLAYER_INFO *)prev_info,
-						(const NETOBJ_PLAYER_INFO *)info
-					);
-			}
-		}
+			render_player(
+					&prev_char,
+					&cur_char,
+					(const NETOBJ_PLAYER_INFO *)prev_info,
+					(const NETOBJ_PLAYER_INFO *)info
+				);
+		}		
 	}
 }

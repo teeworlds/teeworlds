@@ -116,6 +116,11 @@ typedef struct
 */
 int client_tick();
 
+/*
+	Function: client_prevtick
+		Returns the tick of the previous snapshot.
+*/
+int client_prevtick();
 
 /*
 	Function: client_intratick

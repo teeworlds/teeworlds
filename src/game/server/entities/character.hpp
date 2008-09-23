@@ -79,6 +79,11 @@ public:
 
 	// the player core for the physics	
 	CHARACTER_CORE core;
+	
+	// info for dead reckoning
+	int reckoning_tick; // tick that we are performing dead reckoning from
+	CHARACTER_CORE sendcore; // core that we should send
+	CHARACTER_CORE reckoningcore; // the dead reckoning core
 
 	//
 	CHARACTER();

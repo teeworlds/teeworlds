@@ -137,12 +137,15 @@ public:
 	int hooked_player;
 	
 	int jumped;
+	
+	int direction;
+	int angle;
 	NETOBJ_PLAYER_INPUT input;
 	
 	int triggered_events;
 	
 	void reset();
-	void tick();
+	void tick(bool use_input);
 	void move();
 	
 	void read(const NETOBJ_CHARACTER_CORE *obj_core);

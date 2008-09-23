@@ -83,6 +83,8 @@ static int current_tick = 0;
 static float intratick = 0;
 static float ticktime = 0;
 
+static int prev_tick = 0;
+
 /* predicted time */
 static int current_predtick = 0;
 static float predintratick = 0;
@@ -280,6 +282,7 @@ float client_intratick() { return intratick; }
 float client_predintratick() { return predintratick; }
 float client_ticktime() { return ticktime; }
 int client_tick() { return current_tick; }
+int client_prevtick() { return current_tick; }
 int client_predtick() { return current_predtick; }
 int client_tickspeed() { return SERVER_TICK_SPEED; }
 float client_frametime() { return frametime; }
@@ -1193,8 +1196,9 @@ static void client_update()
 					snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
 					snapshots[SNAP_CURRENT] = next;
 					
-					/* set tick */
+					/* set ticks */
 					current_tick = snapshots[SNAP_CURRENT]->tick;
+					prev_tick = snapshots[SNAP_PREV]->tick;
 					
 					if(snapshots[SNAP_CURRENT] && snapshots[SNAP_PREV])
 					{
