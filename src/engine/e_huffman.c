@@ -1,4 +1,3 @@
-#include <stdlib.h> /* qsort */
 #include <memory.h> /* memset */
 #include "e_huffman.h"
 
@@ -7,15 +6,6 @@ typedef struct HUFFMAN_CONSTRUCT_NODE
 	unsigned short node_id;
  	int frequency;
 } HUFFMAN_CONSTRUCT_NODE;
-
-static int sort_func(const void *a, const void *b)
-{
-	if((*(HUFFMAN_CONSTRUCT_NODE **)a)->frequency > (*(HUFFMAN_CONSTRUCT_NODE **)b)->frequency)
-		return -1;
-	if((*(HUFFMAN_CONSTRUCT_NODE **)a)->frequency < (*(HUFFMAN_CONSTRUCT_NODE **)b)->frequency)
-		return 1;
-	return 0;
-}
 
 static void huffman_setbits_r(HUFFMAN_STATE *huff, HUFFMAN_NODE *node, int bits, int depth)
 {
@@ -31,10 +21,32 @@ static void huffman_setbits_r(HUFFMAN_STATE *huff, HUFFMAN_NODE *node, int bits,
 	}
 }
 
+/* TODO: this should be something faster, but it's enough for now */
+void bubblesort(HUFFMAN_CONSTRUCT_NODE **list, int size)
+{
+	int i, changed = 1;
+	HUFFMAN_CONSTRUCT_NODE *temp;
+	
+	while(changed)
+	{
+		changed = 0;
+		for(i = 0; i < size-1; i++)
+		{
+			if(list[i]->frequency < list[i+1]->frequency)
+			{
+				temp = list[i];
+				list[i] = list[i+1];
+				list[i+1] = temp;
+				changed = 1;
+			}
+		}
+	}
+}
+
 static void huffman_construct_tree(HUFFMAN_STATE *huff, const unsigned *frequencies)
 {
-	HUFFMAN_CONSTRUCT_NODE nodes_left_storage[HUFFMAN_MAX_NODES];
-	HUFFMAN_CONSTRUCT_NODE *nodes_left[HUFFMAN_MAX_NODES];
+	HUFFMAN_CONSTRUCT_NODE nodes_left_storage[HUFFMAN_MAX_SYMBOLS];
+	HUFFMAN_CONSTRUCT_NODE *nodes_left[HUFFMAN_MAX_SYMBOLS];
 	int num_nodes_left = HUFFMAN_MAX_SYMBOLS;
 	int i;
 
@@ -52,20 +64,22 @@ static void huffman_construct_tree(HUFFMAN_STATE *huff, const unsigned *frequenc
 			nodes_left_storage[i].frequency = frequencies[i];
 		nodes_left_storage[i].node_id = i;
 		nodes_left[i] = &nodes_left_storage[i];
-	}
 
+	}
 	huff->num_nodes = HUFFMAN_MAX_SYMBOLS;
 	
 	/* construct the table */
 	while(num_nodes_left > 1)
 	{
-		qsort(nodes_left, num_nodes_left, sizeof(HUFFMAN_CONSTRUCT_NODE *), sort_func);
+		/* we can't rely on stdlib's qsort for this, it can generate different results on different implementations */
+		bubblesort(nodes_left, num_nodes_left);
 		
 		huff->nodes[huff->num_nodes].num_bits = 0;
 		huff->nodes[huff->num_nodes].leafs[0] = nodes_left[num_nodes_left-1]->node_id;
 		huff->nodes[huff->num_nodes].leafs[1] = nodes_left[num_nodes_left-2]->node_id;
 		nodes_left[num_nodes_left-2]->node_id = huff->num_nodes;
 		nodes_left[num_nodes_left-2]->frequency = nodes_left[num_nodes_left-1]->frequency + nodes_left[num_nodes_left-2]->frequency;
+
 		huff->num_nodes++;
 		num_nodes_left--;
 	}
