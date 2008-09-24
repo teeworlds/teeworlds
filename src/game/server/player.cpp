@@ -19,17 +19,6 @@ PLAYER::~PLAYER()
 	character = 0;
 }
 
-/*
-void PLAYER::init(int client_id)
-{
-	// clear everything
-	~PLAYER();
-	mem_zero(this, sizeof(*this));
-	new(this) PLAYER();
-	
-	this->client_id = client_id;
-}*/
-
 void PLAYER::tick()
 {
 	server_setclientscore(client_id, score);
@@ -54,12 +43,21 @@ void PLAYER::tick()
 			latency.accum_max = 0;
 		}
 	}
-	
-	if(spawning && !get_character())
+
+	if(character)
+	{
+		if(character->alive)
+		{
+			view_pos = character->pos;
+		}
+		else
+		{
+			delete character;
+			character = 0;
+		}
+	}
+	else if(spawning)
 		try_respawn();
-	
-	if(get_character())
-		view_pos = get_character()->pos;
 }
 
 void PLAYER::snap(int snaping_client)

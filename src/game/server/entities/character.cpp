@@ -801,7 +801,7 @@ bool CHARACTER::take_damage(vec2 force, int dmg, int from, int weapon)
 	if(health <= 0)
 	{
 		die(from, weapon);
-
+		
 		// set attacker's face to happy (taunt!)
 		if (from >= 0 && from != player->client_id)
 		{
@@ -809,7 +809,7 @@ bool CHARACTER::take_damage(vec2 force, int dmg, int from, int weapon)
 			chr->emote_type = EMOTE_HAPPY;
 			chr->emote_stop = server_tick() + server_tickspeed();
 		}
-
+	
 		return false;
 	}
 
