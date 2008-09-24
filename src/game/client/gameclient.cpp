@@ -32,6 +32,7 @@
 #include "components/scoreboard.hpp"
 #include "components/skins.hpp"
 #include "components/sounds.hpp"
+#include "components/voting.hpp"
 
 GAMECLIENT gameclient;
 
@@ -55,6 +56,7 @@ static SCOREBOARD scoreboard;
 static SOUNDS sounds;
 static EMOTICON emoticon;
 static DAMAGEIND damageind;
+static VOTING voting;
 
 static PLAYERS players;
 static NAMEPLATES nameplates;
@@ -105,6 +107,7 @@ void GAMECLIENT::on_console_init()
 	motd = &::motd;
 	damageind = &::damageind;
 	mapimages = &::mapimages;
+	voting = &::voting;
 	
 	// make a list of all the systems, make sure to add them in the corrent render order
 	all.add(skins);
@@ -115,6 +118,7 @@ void GAMECLIENT::on_console_init()
 	all.add(controls);
 	all.add(camera);
 	all.add(sounds);
+	all.add(voting);
 	all.add(particles); // doesn't render anything, just updates all the particles
 	
 	all.add(&maplayers_background); // first to render

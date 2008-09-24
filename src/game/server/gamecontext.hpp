@@ -43,6 +43,14 @@ public:
 
 	void tick();
 	void snap(int client_id);
+	
+	// voting
+	void start_vote(const char *desc, const char *command);
+	void send_vote_set(int cid);
+	void send_vote_status(int cid);
+	int64 vote_closetime;
+	char vote_description[512];
+	char vote_command[512];
 
 	// helper functions
 	void create_damageind(vec2 p, float angle_mod, int amount);
@@ -68,6 +76,7 @@ public:
 	void send_weapon_pickup(int cid, int weapon);
 	void send_broadcast(const char *text, int cid);
 	void send_info(int who, int to_who);
+
 };
 
 extern GAMECONTEXT game;

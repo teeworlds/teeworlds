@@ -8,6 +8,8 @@ GAMECONTEXT::GAMECONTEXT()
 {
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		players[i] = 0;
+		
+	vote_closetime = 0;
 }
 
 GAMECONTEXT::~GAMECONTEXT()
@@ -211,6 +213,69 @@ void GAMECONTEXT::send_broadcast(const char *text, int cid)
 
 
 
+// 
+void GAMECONTEXT::start_vote(const char *desc, const char *command)
+{
+	// check if a vote is already running
+	if(vote_closetime)
+		return;
+
+	// reset votes
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(players[i])
+			players[i]->vote = 0;
+	}
+	
+	// start vote
+	vote_closetime = time_get() + time_freq()*10;
+	str_copy(vote_description, desc, sizeof(vote_description));
+	str_copy(vote_command, command, sizeof(vote_description));
+	send_vote_set(-1);
+	send_vote_status(-1);
+}
+
+void GAMECONTEXT::send_vote_set(int cid)
+{
+	NETMSG_SV_VOTE_SET msg;
+	if(vote_closetime)
+	{
+		msg.timeout = (vote_closetime-time_get())/time_freq();
+		msg.description = vote_description;
+		msg.command = vote_command;
+	}
+	else
+	{
+		msg.timeout = 0;
+		msg.description = "";
+		msg.command = "";
+	}
+	msg.pack(MSGFLAG_VITAL);
+	server_send_msg(cid);
+}
+
+void GAMECONTEXT::send_vote_status(int cid)
+{
+	NETMSG_SV_VOTE_STATUS msg = {0};
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(players[i])
+		{
+			msg.total++;
+			if(players[i]->vote > 0)
+				msg.yes++;
+			else if(players[i]->vote > 0)
+				msg.no++;
+			else
+				msg.pass++;
+		}
+	}	
+
+	msg.pack(MSGFLAG_VITAL);
+	server_send_msg(cid);
+	
+}
+
 void GAMECONTEXT::tick()
 {
 	world.core.tuning = tuning;
@@ -223,6 +288,32 @@ void GAMECONTEXT::tick()
 	{
 		if(players[i])
 			players[i]->tick();
+	}
+	
+	// update voting
+	if(vote_closetime)
+	{
+		// count votes
+		int total = 0, yes = 0, no = 0;
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(players[i])
+			{
+				total++;
+				if(players[i]->vote > 0)
+					yes++;
+				else if(players[i]->vote > 0)
+					no++;
+			}
+		}
+		
+		if(yes > (total+1)/2)
+		{
+			console_execute_line(vote_command);
+			vote_closetime = 0;
+		}
+		else if(time_get() > vote_closetime || no > (total+1)/2)
+			vote_closetime = 0;
 	}
 }
 

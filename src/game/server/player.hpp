@@ -26,6 +26,9 @@ public:
 	int team;
 	int score;
 	bool force_balanced;
+	
+	//
+	int vote;
 
 	//
 	int64 last_chat;

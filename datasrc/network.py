@@ -224,7 +224,19 @@ Messages = [
 		NetIntRange("cid", 0, 'MAX_CLIENTS-1'),
 		NetIntRange("emoticon", 0, 'NUM_EMOTICONS-1'),
 	]),
-	
+
+	NetMessage("sv_vote_set", [
+		NetIntRange("timeout", 0, 60),
+		NetString("description"),
+		NetString("command"),
+	]),
+
+	NetMessage("sv_vote_status", [
+		NetIntRange("yes", 0, 'MAX_CLIENTS'),
+		NetIntRange("no", 0, 'MAX_CLIENTS'),
+		NetIntRange("pass", 0, 'MAX_CLIENTS'),
+		NetIntRange("total", 0, 'MAX_CLIENTS'),
+	]),
 	
 	### Client messages
 	NetMessage("cl_say", [
@@ -251,11 +263,14 @@ Messages = [
 		NetIntAny("color_body"),
 		NetIntAny("color_feet"),
 	]),
-	
+
 	NetMessage("cl_kill", []),
 
 	NetMessage("cl_emoticon", [
 		NetIntRange("emoticon", 0, 'NUM_EMOTICONS-1'),
 	]),
-	
+
+	NetMessage("cl_vote", [
+		NetIntRange("vote", -1, 1),
+	]),
 ]

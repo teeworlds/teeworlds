@@ -137,6 +137,7 @@ public:
 	class SOUNDS *sounds;
 	class MOTD *motd;
 	class MAPIMAGES *mapimages;
+	class VOTING *voting;
 };
 
 extern GAMECLIENT gameclient;

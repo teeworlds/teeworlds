@@ -23,6 +23,7 @@ extern "C" {
 #include <game/generated/gc_data.hpp>
 #include <game/client/components/binds.hpp>
 #include <game/client/components/motd.hpp>
+#include <game/client/components/voting.hpp>
 #include <game/client/gameclient.hpp>
 #include <game/client/animstate.hpp>
 #include <game/client/gc_render.hpp>
@@ -620,8 +621,8 @@ void MENUS::render_news(RECT main_view)
 
 void MENUS::render_game(RECT main_view)
 {
-	RECT button;
-	ui_hsplit_t(&main_view, 45.0f, &main_view, 0);
+	RECT button, votearea;
+	ui_hsplit_t(&main_view, 45.0f, &main_view, &votearea);
 	ui_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
 
 	ui_hsplit_t(&main_view, 10.0f, 0, &main_view);
@@ -688,6 +689,23 @@ void MENUS::render_game(RECT main_view)
 			}
 		}
 	}
+	
+	ui_hsplit_t(&votearea, 10.0f, 0, &votearea);
+	ui_hsplit_t(&votearea, 25.0f+10.0f*2, &votearea, 0);
+
+	ui_draw_rect(&votearea, color_tabbar_active, CORNER_ALL, 10.0f);
+
+	ui_vmargin(&votearea, 10.0f, &votearea);
+	ui_hmargin(&votearea, 10.0f, &votearea);
+	if(gameclient.voting->is_voting())
+	{
+		
+	}
+	else
+	{
+		ui_do_label(&votearea, "No vote in progress", 18.0f, -1);
+	}
+	
 }
 
 void MENUS::render_serverinfo(RECT main_view)
