@@ -47,6 +47,7 @@ enum
 	NET_PACKETFLAG_CONTROL=1,
 	NET_PACKETFLAG_CONNLESS=2,
 	NET_PACKETFLAG_RESEND=4,
+	NET_PACKETFLAG_COMPRESSION=8,
 
 	NET_CHUNKFLAG_VITAL=1,
 	NET_CHUNKFLAG_RESEND=2,
@@ -234,24 +235,41 @@ static void send_packet_connless(NETSOCKET socket, NETADDR *addr, const void *da
 static void send_packet(NETSOCKET socket, NETADDR *addr, NETPACKETCONSTRUCT *packet)
 {
 	unsigned char buffer[NET_MAX_PACKETSIZE];
-	buffer[0] = ((packet->flags<<4)&0xf0)|((packet->ack>>8)&0xf);
-	buffer[1] = packet->ack&0xff;
-	buffer[2] = packet->num_chunks;
+	int compressed_size = -1;
+	int final_size = -1;
+	
+	/* log the data */
 	if(datalog)
 	{
 		io_write(datalog, &packet->data_size, sizeof(packet->data_size));
 		io_write(datalog, &packet->chunk_data, packet->data_size);
 	}
 	
+	/* compress if its enabled */
 	if(COMPRESSION)
+		compressed_size = huffman_compress(&huffmanstate, packet->chunk_data, packet->data_size, &buffer[3], NET_MAX_PACKETSIZE-4);
+
+	/* check if the compression was enabled, successful and good enough	*/
+	if(compressed_size > 0 && compressed_size < packet->data_size)
 	{
-		int compressed_size = huffman_compress(&huffmanstate, packet->chunk_data, packet->data_size, &buffer[3], NET_MAX_PACKETSIZE-4);
-		net_udp_send(socket, addr, buffer, NET_PACKETHEADERSIZE+compressed_size);
+		final_size = compressed_size;
+		packet->flags |= NET_PACKETFLAG_COMPRESSION;
 	}
 	else
 	{
+		/* use uncompressed data */
+		final_size = packet->data_size;
 		mem_copy(&buffer[3], packet->chunk_data, packet->data_size);
-		net_udp_send(socket, addr, buffer, NET_PACKETHEADERSIZE+packet->data_size);
+		packet->flags &= ~NET_PACKETFLAG_COMPRESSION;
+	}
+
+	/* set header and send the packet if all things are good */
+	if(final_size >= 0)
+	{
+		buffer[0] = ((packet->flags<<4)&0xf0)|((packet->ack>>8)&0xf);
+		buffer[1] = packet->ack&0xff;
+		buffer[2] = packet->num_chunks;
+		net_udp_send(socket, addr, buffer, NET_PACKETHEADERSIZE+final_size);
 	}
 }
 
@@ -261,7 +279,7 @@ static int unpack_packet(unsigned char *buffer, int size, NETPACKETCONSTRUCT *pa
 	/* check the size */
 	if(size < NET_PACKETHEADERSIZE || size > NET_MAX_PACKETSIZE)
 	{
-		dbg_msg("", "packet too small");
+		dbg_msg("", "packet too small, %d", size);
 		return -1;
 	}
 	
@@ -281,7 +299,7 @@ static int unpack_packet(unsigned char *buffer, int size, NETPACKETCONSTRUCT *pa
 	}
 	else
 	{
-		if(COMPRESSION)
+		if(packet->flags&NET_PACKETFLAG_COMPRESSION)
 			huffman_decompress(&huffmanstate, &buffer[3], packet->data_size, packet->chunk_data, sizeof(packet->chunk_data));
 		else
 			mem_copy(packet->chunk_data, &buffer[3], packet->data_size);

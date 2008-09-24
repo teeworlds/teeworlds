@@ -7,15 +7,13 @@ GAMECONTEXT game;
 GAMECONTEXT::GAMECONTEXT()
 {
 	for(int i = 0; i < MAX_CLIENTS; i++)
-	{
 		players[i] = 0;
-		/*players = new PLAYER();
-		players[i].init(-1);*/
-	}
 }
 
 GAMECONTEXT::~GAMECONTEXT()
 {
+	for(int i = 0; i < MAX_CLIENTS; i++)
+		delete players[i];
 }
 
 void GAMECONTEXT::clear()
@@ -23,15 +21,6 @@ void GAMECONTEXT::clear()
 	this->~GAMECONTEXT();
 	mem_zero(this, sizeof(*this));
 	new (this) GAMECONTEXT();
-	// reset all players
-	/*
-	for(int i = 0; i < MAX_CLIENTS; i++)
-		players[i].init(-1);
-	
-	world.~GAMEWORLD();
-	mem_zero(&world, sizeof(world));
-	world.GAMEWORLD();
-	*/
 }
 
 

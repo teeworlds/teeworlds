@@ -7,9 +7,12 @@
 // player object
 class PLAYER
 {
+	MACRO_ALLOC_POOL_ID()
+private:
 	CHARACTER *character;
 public:
 	PLAYER(int client_id);
+	~PLAYER();
 
 	// TODO: clean this up
 	char skin_name[64];

@@ -5,10 +5,18 @@
 #include "player.hpp"
 #include "gamecontext.hpp"
 
+MACRO_ALLOC_POOL_ID_IMPL(PLAYER, MAX_CLIENTS)
+
 PLAYER::PLAYER(int client_id)
 {
 	character = 0;
 	this->client_id = client_id;
+}
+
+PLAYER::~PLAYER()
+{
+	delete character;
+	character = 0;
 }
 
 /*
@@ -168,7 +176,7 @@ void PLAYER::try_respawn()
 	if(num_ents == 0)
 	{
 		spawning = false;
-		character = new CHARACTER();
+		character = new(client_id) CHARACTER();
 		character->spawn(this, spawnpos, team);
 	}
 }

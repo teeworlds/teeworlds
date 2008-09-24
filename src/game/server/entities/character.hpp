@@ -11,19 +11,8 @@
 
 class CHARACTER : public ENTITY
 {
-	/*static CHARACTER pool_data[MAX_CLIENTS];
-	static int pool_used[MAX_CLIENTS];*/
+	MACRO_ALLOC_POOL_ID()
 public:
-/*
-	void operator delete(void *character)
-	{
-		(CHARACTER *)character 
-		int id = (CHARACTER *)character - (CHARACTER *)pool_data;
-		dbg_assert(pool_used[id], "");
-		pool_used[id] = 0;
-		mem_zero(&pool_data[id], sizeof(CHARACTER));
-	}*/
-
 	// player controlling this character
 	class PLAYER *player;
 	

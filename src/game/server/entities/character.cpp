@@ -32,6 +32,9 @@ static INPUT_COUNT count_input(int prev, int cur)
 	return c;
 }
 
+
+MACRO_ALLOC_POOL_ID_IMPL(CHARACTER, MAX_CLIENTS)
+
 // player
 CHARACTER::CHARACTER()
 : ENTITY(NETOBJTYPE_CHARACTER)

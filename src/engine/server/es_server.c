@@ -38,8 +38,6 @@ static int browseinfo_progression = -1;
 static int64 lastheartbeat;
 /*static NETADDR4 master_server;*/
 
-
-
 static char current_map[64];
 static int current_map_crc;
 static unsigned char *current_map_data = 0;
@@ -521,40 +519,40 @@ static void server_do_snap()
 }
 
 
-static int new_client_callback(int cid, void *user)
+static void reset_client(int cid)
 {
-	int i;
-	clients[cid].state = SRVCLIENT_STATE_CONNECTING;
-	clients[cid].name[0] = 0;
-	clients[cid].clan[0] = 0;
-	
 	/* reset input */
+	int i;
 	for(i = 0; i < 200; i++)
 	{
 		clients[cid].inputs[i].game_tick = -1;
 		clients[cid].inputs[i].pred_tick = -1;
 	}
 	clients[cid].current_input = 0;
-	
 	mem_zero(&clients[cid].latestinput, sizeof(clients[cid].latestinput));
-	
+
 	snapstorage_purge_all(&clients[cid].snapshots);
 	clients[cid].last_acked_snapshot = -1;
 	clients[cid].snap_rate = SRVCLIENT_SNAPRATE_INIT;
 	clients[cid].score = 0;
 	clients[cid].authed = 0;
+}
+
+static int new_client_callback(int cid, void *user)
+{
+	clients[cid].state = SRVCLIENT_STATE_CONNECTING;
+	clients[cid].name[0] = 0;
+	clients[cid].clan[0] = 0;
+	reset_client(cid);
 	return 0;
 }
 
 static int del_client_callback(int cid, void *user)
 {
 	/* notify the mod about the drop */
-	if(clients[cid].state == SRVCLIENT_STATE_READY ||
-		clients[cid].state == SRVCLIENT_STATE_INGAME)
-	{
+	if(clients[cid].state >= SRVCLIENT_STATE_READY)
 		mods_client_drop(cid);
-	}
-
+	
 	clients[cid].state = SRVCLIENT_STATE_EMPTY;
 	clients[cid].name[0] = 0;
 	clients[cid].clan[0] = 0;
@@ -682,7 +680,7 @@ static void server_process_client_packet(NETCHUNK *packet)
 			int tick, size, i;
 			CLIENT_INPUT *input;
 			int64 tagtime;
-
+			
 			clients[cid].last_acked_snapshot = msg_unpack_int();
 			tick = msg_unpack_int();
 			size = msg_unpack_int();
@@ -690,7 +688,7 @@ static void server_process_client_packet(NETCHUNK *packet)
 			/* check for errors */
 			if(msg_unpack_error() || size/4 > MAX_INPUT_SIZE)
 				return;
-			
+
 			if(clients[cid].last_acked_snapshot > 0)
 				clients[cid].snap_rate = SRVCLIENT_SNAPRATE_FULL;
 				
@@ -715,7 +713,8 @@ static void server_process_client_packet(NETCHUNK *packet)
 			clients[cid].current_input %= 200;
 		
 			/* call the mod with the fresh input data */
-			mods_client_direct_input(cid, clients[cid].latestinput.data);
+			if(clients[cid].state == SRVCLIENT_STATE_INGAME)
+				mods_client_direct_input(cid, clients[cid].latestinput.data);
 		}
 		else if(msg == NETMSG_RCON_CMD)
 		{
@@ -784,7 +783,8 @@ static void server_process_client_packet(NETCHUNK *packet)
 	else
 	{
 		/* game message */
-		mods_message(msg, cid);
+		if(clients[cid].state >= SRVCLIENT_STATE_READY)
+			mods_message(msg, cid);
 	}
 }
 
@@ -992,10 +992,8 @@ static int server_run()
 							continue;
 						
 						server_send_map(c);
+						reset_client(c);
 						clients[c].state = SRVCLIENT_STATE_CONNECTING;
-						clients[c].last_acked_snapshot = -1;
-						clients[c].snap_rate = SRVCLIENT_SNAPRATE_RECOVER;
-						snapstorage_purge_all(&clients[c].snapshots);
 					}
 					
 					game_start_time = time_get();
@@ -1029,7 +1027,8 @@ static int server_run()
 						{
 							if(clients[c].inputs[i].game_tick == server_tick())
 							{
-								mods_client_predicted_input(c, clients[c].inputs[i].data);
+								if(clients[c].state == SRVCLIENT_STATE_INGAME)
+									mods_client_predicted_input(c, clients[c].inputs[i].data);
 								break;
 							}
 						}

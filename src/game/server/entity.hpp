@@ -1,14 +1,59 @@
 #ifndef GAME_SERVER_ENTITY_H
 #define GAME_SERVER_ENTITY_H
 
+#include <new>
 #include <base/vmath.hpp>
 
+#define MACRO_ALLOC_HEAP() \
+	public: \
+	void *operator new(size_t size) \
+	{ \
+		void *p = mem_alloc(size, 1); \
+		/*dbg_msg("", "++ %p %d", p, size);*/ \
+		mem_zero(p, size); \
+		return p; \
+	} \
+	void operator delete(void *p) \
+	{ \
+		/*dbg_msg("", "-- %p", p);*/ \
+		mem_free(p); \
+	} \
+	private:
+
+#define MACRO_ALLOC_POOL_ID() \
+	public: \
+	void *operator new(size_t size, int id); \
+	void operator delete(void *p); \
+	private:
+	
+#define MACRO_ALLOC_POOL_ID_IMPL(POOLTYPE, poolsize) \
+	static char pool_data_##POOLTYPE[poolsize][sizeof(POOLTYPE)] = {{0}}; \
+	static int pool_used_##POOLTYPE[poolsize] = {0}; \
+	void *POOLTYPE::operator new(size_t size, int id) \
+	{ \
+		dbg_assert(sizeof(POOLTYPE) == size, "size error"); \
+		dbg_assert(!pool_used_##POOLTYPE[id], "already used"); \
+		/*dbg_msg("pool", "++ %s %d", #POOLTYPE, id);*/ \
+		pool_used_##POOLTYPE[id] = 1; \
+		mem_zero(pool_data_##POOLTYPE[id], size); \
+		return pool_data_##POOLTYPE[id]; \
+	} \
+	void POOLTYPE::operator delete(void *p) \
+	{ \
+		int id = (POOLTYPE*)p - (POOLTYPE*)pool_data_##POOLTYPE; \
+		dbg_assert(pool_used_##POOLTYPE[id], "not used"); \
+		/*dbg_msg("pool", "-- %s %d", #POOLTYPE, id);*/ \
+		pool_used_##POOLTYPE[id] = 0; \
+		mem_zero(pool_data_##POOLTYPE[id], sizeof(POOLTYPE)); \
+	}
+	
 /*
 	Class: Entity
 		Basic entity class.
 */
 class ENTITY
 {
+	MACRO_ALLOC_HEAP()
 private:
 	friend class GAMEWORLD; // thy these?
 	ENTITY *prev_entity;
@@ -21,7 +66,6 @@ protected:
 	int id;
 	int objtype;
 public:
-	
 	ENTITY(int objtype);
 	virtual ~ENTITY();
 	

@@ -73,7 +73,7 @@ void mods_client_enter(int client_id)
 
 void mods_connected(int client_id)
 {
-	game.players[client_id] = new PLAYER(client_id);
+	game.players[client_id] = new(client_id) PLAYER(client_id);
 	//game.players[client_id].init(client_id);
 	//game.players[client_id].client_id = client_id;
 	

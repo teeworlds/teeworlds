@@ -27,7 +27,6 @@
 			All players (PLAYER::snap)
 
 */
-
 class GAMECONTEXT
 {
 public:
