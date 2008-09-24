@@ -25,8 +25,8 @@ class MENUS : public COMPONENT
 	static void ui_draw_checkbox_common(const void *id, const char *text, const char *boxtext, const RECT *r);
 	static void ui_draw_checkbox(const void *id, const char *text, int checked, const RECT *r, const void *extra);
 	static void ui_draw_checkbox_number(const void *id, const char *text, int checked, const RECT *r, const void *extra);
-
 	static int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float font_size, bool hidden=false);
+
 	static float ui_do_scrollbar_v(const void *id, const RECT *rect, float current);
 	static float ui_do_scrollbar_h(const void *id, const RECT *rect, float current);
 
@@ -81,6 +81,7 @@ class MENUS : public COMPONENT
 	void render_serverinfo(RECT main_view);
 	
 	// found in menus_browser.cpp
+	SERVER_INFO current_server_info; // should this be here?
 	int selected_index;
 	void render_serverbrowser_serverlist(RECT view);
 	void render_serverbrowser_serverdetail(RECT view);

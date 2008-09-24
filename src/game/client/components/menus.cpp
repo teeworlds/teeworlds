@@ -176,7 +176,7 @@ void MENUS::ui_draw_checkbox_common(const void *id, const char *text, const char
 	ui_draw_rect(&c, vec4(1,1,1,0.25f)*button_color_mul(id), CORNER_ALL, 3.0f);
 	c.y += 2;
 	ui_do_label(&c, boxtext, 12.0f, 0);
-	ui_do_label(&t, text, 14.0f, -1);	
+	ui_do_label(&t, text, 14.0f, -1);
 }
 
 void MENUS::ui_draw_checkbox(const void *id, const char *text, int checked, const RECT *r, const void *extra)
@@ -692,14 +692,117 @@ void MENUS::render_game(RECT main_view)
 
 void MENUS::render_serverinfo(RECT main_view)
 {
+	// count players for server info-box
+	int num_players = 0;
+	for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
+	{
+		SNAP_ITEM item;
+		snap_get_item(SNAP_CURRENT, i, &item);
+
+		if(item.type == NETOBJTYPE_PLAYER_INFO)
+		{
+			num_players++;
+		}
+	}
+
 	// render background
 	ui_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
 	
-	// render motd
-	RECT view;
+	RECT view, serverinfo, gameinfo, motd;
+	
+	float x = 0.0f;
+	float y = 0.0f;
+	
+	char buf[1024];
+	
+	// set view to use for all sub-modules
 	ui_margin(&main_view, 10.0f, &view);
-	//void gfx_text(void *font, float x, float y, float size, const char *text, int max_width);
-	gfx_text(0, view.x, view.y, 16, gameclient.motd->server_motd, -1);
+	
+	/* serverinfo */
+	ui_hsplit_t(&view, view.h/2-5.0f, &serverinfo, &motd);
+	ui_vsplit_l(&serverinfo, view.w/2-5.0f, &serverinfo, &gameinfo);
+	ui_draw_rect(&serverinfo, vec4(1,1,1,0.25f), CORNER_ALL, 10.0f);
+	
+	ui_margin(&serverinfo, 5.0f, &serverinfo);
+	
+	x = 5.0f;
+	y = 0.0f;
+	
+	gfx_text(0, serverinfo.x+x, serverinfo.y+y, 32, "Server info", 250.0f);
+	y += 32.0f+5.0f;
+	
+	mem_zero(buf, sizeof(buf));
+	str_format(
+		buf,
+		sizeof(buf),
+		"%s\n\n"
+		"Address: %s\n"
+		"Ping: %d\n"
+		"Version: %s\n"
+		"Password: %s\n",
+		current_server_info.name,
+		config.ui_server_address,
+		gameclient.snap.local_info->latency,
+		current_server_info.version,
+		current_server_info.flags&1 ? "Yes" : "No"
+	);
+	gfx_text(0, serverinfo.x+x, serverinfo.y+y, 20, buf, 250.0f);
+	
+	{
+		RECT button;
+		ui_hsplit_b(&serverinfo, 20.0f, &serverinfo, &button);
+		static int add_fav_button = 0;
+		if (ui_do_button(&add_fav_button, "Favorite", current_server_info.favorite, &button, ui_draw_checkbox, 0))
+		{
+			if(current_server_info.favorite)
+				client_serverbrowse_removefavorite(current_server_info.netaddr);
+			else
+				client_serverbrowse_addfavorite(current_server_info.netaddr);
+			current_server_info.favorite = !current_server_info.favorite;
+		}
+	}
+	
+	/* gameinfo */
+	ui_vsplit_l(&gameinfo, 10.0f, 0x0, &gameinfo);
+	ui_draw_rect(&gameinfo, vec4(1,1,1,0.25f), CORNER_ALL, 10.0f);
+	
+	ui_margin(&gameinfo, 5.0f, &gameinfo);
+	
+	x = 5.0f;
+	y = 0.0f;
+	
+	gfx_text(0, gameinfo.x+x, gameinfo.y+y, 32, "Game info", 250.0f);
+	y += 32.0f+5.0f;
+	
+	mem_zero(buf, sizeof(buf));
+	str_format(
+		buf,
+		sizeof(buf),
+		"\n\n"
+		"Gametype: %s\n"
+		"Map: %s\n"
+		"Score limit: %d\n"
+		"Time limit: %d\n"
+		"\n"
+		"Players: %d/%d\n",
+		current_server_info.gametype,
+		current_server_info.map,
+		gameclient.snap.gameobj->score_limit,
+		gameclient.snap.gameobj->time_limit,
+		gameclient.snap.team_size[0]+gameclient.snap.team_size[1],
+		current_server_info.max_players
+	);
+	gfx_text(0, gameinfo.x+x, gameinfo.y+y, 20, buf, 250.0f);
+	
+	/* motd */
+	ui_hsplit_t(&motd, 10.0f, 0, &motd);
+	ui_draw_rect(&motd, vec4(1,1,1,0.25f), CORNER_ALL, 10.0f);
+	ui_margin(&motd, 5.0f, &motd);
+	y = 0.0f;
+	x = 5.0f;
+	gfx_text(0, motd.x+x, motd.y+y, 32, "MOTD", -1);
+	y += 32.0f+5.0f;
+	gfx_text(0, motd.x+x, motd.y+y, 16, gameclient.motd->server_motd, motd.w);
 }
 
 void MENUS::init()
@@ -1059,18 +1162,20 @@ void MENUS::on_render()
 			gfx_texture_set(data->images[IMAGE_BANNER].id);
 			gfx_quads_begin();
 			gfx_setcolor(0,0,0,1.0f);
-			gfx_quads_draw(sw/2, 50, 300, 300/4);
+			//gfx_quads_setrotation(-pi/4+0.15f);
+			gfx_quads_drawTL(sw-200-20, 10, 200, 200/4);
 			gfx_setcolor(1,1,1,1.0f);
-			gfx_quads_draw(sw/2-2, 50-2, 300, 300/4);
+			gfx_quads_drawTL(sw-200-20-2, 10-2, 200, 200/4);
 			gfx_quads_end();
 			
-			//if((time_get()/(time_freq()/3))&1)
-			//	gfx_text(NULL, sw-150, sh-50, 10.0f, "INSERT COIN", -1);
+//void gfx_text(void *font, float x, float y, float size, const char *text, int max_width);
+			
+			if((time_get()/(time_freq()/3))&1)
+				gfx_text(NULL, sw-150, 200/4, 10.0f, "INSERT COIN", -1);
 		}		
 	}
 	else
 	{
-		//render_background();
 		render();
 
 		// render cursor
@@ -1097,64 +1202,38 @@ void MENUS::on_render()
 	num_inputevents = 0;
 }
 
-
-static int texture_blob = -1;
-
-void MENUS::render_background()
+static void render_sunrays(float x, float y)
 {
-	//gfx_clear(1,1,1);
-	//render_sunrays(0,0);
-	if(texture_blob == -1)
-		texture_blob = gfx_load_texture("data/blob.png", IMG_AUTO, 0);
+	vec2 pos(x, y);
 
-
-	float sw = 300*gfx_screenaspect();
-	float sh = 300;
-	gfx_mapscreen(0, 0, sw, sh);
-
-	RECT s = *ui_screen();
-
-	// render background color
 	gfx_texture_set(-1);
+	gfx_blend_additive();
 	gfx_quads_begin();
-		//vec4 bottom(gui_color.r*0.3f, gui_color.g*0.3f, gui_color.b*0.3f, 1.0f);
-		//vec4 bottom(0, 0, 0, 1.0f);
-		vec4 bottom(gui_color.r, gui_color.g, gui_color.b, 1.0f);
-		vec4 top(gui_color.r, gui_color.g, gui_color.b, 1.0f);
-		gfx_setcolorvertex(0, top.r, top.g, top.b, top.a);
-		gfx_setcolorvertex(1, top.r, top.g, top.b, top.a);
-		gfx_setcolorvertex(2, bottom.r, bottom.g, bottom.b, bottom.a);
-		gfx_setcolorvertex(3, bottom.r, bottom.g, bottom.b, bottom.a);
-		gfx_quads_drawTL(0, 0, sw, sh);
+	const int rays = 10;
+	gfx_setcolor(1.0f,1.0f,1.0f,0.025f);
+	for(int r = 0; r < rays; r++)
+	{
+		float a = r/(float)rays + client_localtime()*0.015f;
+		float size = (1.0f/(float)rays)*0.25f;
+		vec2 dir0(sinf((a-size)*pi*2.0f), cosf((a-size)*pi*2.0f));
+		vec2 dir1(sinf((a+size)*pi*2.0f), cosf((a+size)*pi*2.0f));
+		
+		gfx_setcolorvertex(0, 1.0f,1.0f,1.0f,0.025f);
+		gfx_setcolorvertex(1, 1.0f,1.0f,1.0f,0.025f);
+		gfx_setcolorvertex(2, 1.0f,1.0f,1.0f,0.0f);
+		gfx_setcolorvertex(3, 1.0f,1.0f,1.0f,0.0f);
+		const float range = 1000.0f;
+		gfx_quads_draw_freeform(
+			pos.x+dir0.x, pos.y+dir0.y,
+			pos.x+dir1.x, pos.y+dir1.y,
+			pos.x+dir0.x*range, pos.y+dir0.y*range,
+			pos.x+dir1.x*range, pos.y+dir1.y*range);
+	}
 	gfx_quads_end();
-	
-	// render the tiles
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-		float size = 15.0f;
-		float offset_time = fmod(client_localtime()*0.15f, 2.0f);
-		for(int y = -2; y < (int)(sw/size); y++)
-			for(int x = -2; x < (int)(sh/size); x++)
-			{
-				gfx_setcolor(0,0,0,0.045f);
-				gfx_quads_drawTL((x-offset_time)*size*2+(y&1)*size, (y+offset_time)*size, size, size);
-			}
-	gfx_quads_end();
-
-	// render border fade
-	gfx_texture_set(texture_blob);
-	gfx_quads_begin();
-		gfx_setcolor(0,0,0,0.5f);
-		gfx_quads_drawTL(-100, -100, sw+200, sh+200);
-	gfx_quads_end();
-
-	// restore screen	
-    {RECT screen = *ui_screen();
-	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);}	
+	gfx_blend_normal();
 }
 
 
-#if 0
 static int texture_mountains = -1;
 static int texture_sun = -1;
 static int texture_grass = -1;
@@ -1187,7 +1266,6 @@ public:
 		speed = 150.0f + (rand()/(float)RAND_MAX) * 50.0f;
 		time = (rand()/(float)RAND_MAX) * 5.0f;
 		jumptime = 0;
-		update(0);
 		new_jump();
 	}
 	
@@ -1223,38 +1301,6 @@ public:
 
 static const int NUM_TEES = 35;
 static TEE tees[NUM_TEES];
-
-
-static void render_sunrays(float x, float y)
-{
-	vec2 pos(x, y);
-
-	gfx_texture_set(-1);
-	gfx_blend_additive();
-	gfx_quads_begin();
-	const int rays = 10;
-	gfx_setcolor(1.0f,1.0f,1.0f,0.025f);
-	for(int r = 0; r < rays; r++)
-	{
-		float a = r/(float)rays + client_localtime()*0.015f;
-		float size = (1.0f/(float)rays)*0.25f;
-		vec2 dir0(sinf((a-size)*pi*2.0f), cosf((a-size)*pi*2.0f));
-		vec2 dir1(sinf((a+size)*pi*2.0f), cosf((a+size)*pi*2.0f));
-		
-		gfx_setcolorvertex(0, 1.0f,1.0f,1.0f,0.025f);
-		gfx_setcolorvertex(1, 1.0f,1.0f,1.0f,0.025f);
-		gfx_setcolorvertex(2, 1.0f,1.0f,1.0f,0.0f);
-		gfx_setcolorvertex(3, 1.0f,1.0f,1.0f,0.0f);
-		const float range = 1000.0f;
-		gfx_quads_draw_freeform(
-			pos.x+dir0.x, pos.y+dir0.y,
-			pos.x+dir1.x, pos.y+dir1.y,
-			pos.x+dir0.x*range, pos.y+dir0.y*range,
-			pos.x+dir1.x*range, pos.y+dir1.y*range);
-	}
-	gfx_quads_end();
-	gfx_blend_normal();
-}
 
 void MENUS::render_background()
 {
@@ -1365,7 +1411,6 @@ void MENUS::render_background()
 				tee->update(client_frametime());
 				
 				ANIMSTATE state;
-				mem_zero(&state, sizeof(state));
 				state.set(&data->animations[ANIM_BASE], 0);
 				
 				if(tee->pos.y < -0.0001f)
@@ -1401,5 +1446,3 @@ void MENUS::render_background()
 		gfx_quads_end();
 	}*/
 }
-
-#endif
