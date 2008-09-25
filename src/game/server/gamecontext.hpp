@@ -46,6 +46,7 @@ public:
 	
 	// voting
 	void start_vote(const char *desc, const char *command);
+	void end_vote();
 	void send_vote_set(int cid);
 	void send_vote_status(int cid);
 	int64 vote_closetime;

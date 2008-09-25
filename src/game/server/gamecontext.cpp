@@ -235,6 +235,13 @@ void GAMECONTEXT::start_vote(const char *desc, const char *command)
 	send_vote_status(-1);
 }
 
+
+void GAMECONTEXT::end_vote()
+{
+	vote_closetime = 0;
+	send_vote_set(-1);
+}
+
 void GAMECONTEXT::send_vote_set(int cid)
 {
 	NETMSG_SV_VOTE_SET msg;
@@ -261,6 +268,7 @@ void GAMECONTEXT::send_vote_status(int cid)
 	{
 		if(players[i])
 		{
+			dbg_msg("", "%d %d", i, players[i]->vote);
 			msg.total++;
 			if(players[i]->vote > 0)
 				msg.yes++;
@@ -271,6 +279,7 @@ void GAMECONTEXT::send_vote_status(int cid)
 		}
 	}	
 
+	dbg_msg("", "%d %d %d %d", msg.yes, msg.no, msg.pass, msg.total);
 	msg.pack(MSGFLAG_VITAL);
 	server_send_msg(cid);
 	
@@ -310,13 +319,13 @@ void GAMECONTEXT::tick()
 		if(yes >= (total+1)/2)
 		{
 			console_execute_line(vote_command);
-			vote_closetime = 0;
+			end_vote();
 			send_chat(-1, GAMECONTEXT::CHAT_ALL, "Vote passed");
 		}
 		else if(time_get() > vote_closetime || no >= (total+1)/2)
 		{
+			end_vote();
 			send_chat(-1, GAMECONTEXT::CHAT_ALL, "Vote failed");
-			vote_closetime = 0;
 		}
 	}
 }

@@ -149,8 +149,12 @@ void mods_message(int msgtype, int client_id)
 	}
 	else if(msgtype == NETMSGTYPE_CL_VOTE)
 	{
+		if(!game.vote_closetime)
+			return;
+			
 		NETMSG_CL_VOTE *msg = (NETMSG_CL_VOTE *)rawmsg;
 		p->vote = msg->vote;
+		dbg_msg("", "%d voted %d", client_id, msg->vote);
 		game.send_vote_status(-1);
 	}
 	else if (msgtype == NETMSGTYPE_CL_SETTEAM)

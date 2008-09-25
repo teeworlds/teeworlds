@@ -749,7 +749,8 @@ void MENUS::render_game(RECT main_view)
 				pass_area.x += yes_area.w;
 				pass_area.w -= yes_area.w;
 			}
-			else if(gameclient.voting->no)
+			
+			if(gameclient.voting->no)
 			{
 				RECT no_area = bars;
 				no_area.w *= gameclient.voting->no/(float)gameclient.voting->total;
