@@ -1,5 +1,8 @@
 #include <engine/e_client_interface.h>
 #include <game/generated/g_protocol.hpp>
+#include <base/vmath.hpp>
+#include <game/client/gc_render.hpp>
+//#include <game/client/gameclient.hpp>
 #include "voting.hpp"
 
 void VOTING::con_callvote(void *result, void *user_data)
@@ -75,4 +78,62 @@ void VOTING::on_message(int msgtype, void *rawmsg)
 void VOTING::on_render()
 {
 }
+
+
+void VOTING::render_bars(RECT bars, bool text)
+{
+	ui_draw_rect(&bars, vec4(0.8f,0.8f,0.8f,0.5f), CORNER_ALL, bars.h/3);
+	
+	RECT splitter = bars;
+	splitter.x = splitter.x+splitter.w/2;
+	splitter.w = splitter.h/2.0f;
+	splitter.x -= splitter.w/2;
+	ui_draw_rect(&splitter, vec4(0.4f,0.4f,0.4f,0.5f), CORNER_ALL, splitter.h/4);
+			
+	if(total)
+	{
+		RECT pass_area = bars;
+		if(yes)
+		{
+			RECT yes_area = bars;
+			yes_area.w *= yes/(float)total;
+			ui_draw_rect(&yes_area, vec4(0.2f,0.9f,0.2f,0.85f), CORNER_ALL, bars.h/3);
+			
+			if(text)
+			{
+				char buf[256];
+				str_format(buf, sizeof(buf), "%d", yes);
+				ui_do_label(&yes_area, buf, bars.h*0.75f, 0);
+			}
+			
+			pass_area.x += yes_area.w;
+			pass_area.w -= yes_area.w;
+		}
+		
+		if(no)
+		{
+			RECT no_area = bars;
+			no_area.w *= no/(float)total;
+			no_area.x = (bars.x + bars.w)-no_area.w;
+			ui_draw_rect(&no_area, vec4(0.9f,0.2f,0.2f,0.85f), CORNER_ALL, bars.h/3);
+			
+			if(text)
+			{
+				char buf[256];
+				str_format(buf, sizeof(buf), "%d", no);
+				ui_do_label(&no_area, buf, bars.h*0.75f, 0);
+			}
+
+			pass_area.w -= no_area.w;
+		}
+
+		if(text && pass)
+		{
+			char buf[256];
+			str_format(buf, sizeof(buf), "%d", pass);
+			ui_do_label(&pass_area, buf, bars.h*0.75f, 0);
+		}
+	}	
+}
+
 

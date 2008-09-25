@@ -29,6 +29,7 @@ public:
 	
 	//
 	int vote;
+	int64 last_votecall;
 
 	//
 	int64 last_chat;

@@ -1,4 +1,3 @@
-/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #ifndef ENGINE_KEYS_H
 #define ENGINE_KEYS_H
 /* AUTO GENERATED! DO NOT EDIT MANUALLY! */

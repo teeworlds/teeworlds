@@ -128,6 +128,22 @@ void mods_message(int msgtype, int client_id)
 	}
 	else if(msgtype == NETMSGTYPE_CL_CALLVOTE)
 	{
+		int64 now = time_get();
+		if(game.vote_closetime)
+		{
+			game.send_chat(-1, client_id, "Wait for current vote to end before calling a new one.");
+			return;
+		}
+		
+		int64 timeleft = p->last_votecall + time_freq()*60 - now;
+		if(timeleft > 0)
+		{
+			char chatmsg[512] = {0};
+			str_format(chatmsg, sizeof(chatmsg), "You must wait %d seconds before making another vote", (timeleft/time_freq())+1);
+			game.send_chat(-1, client_id, chatmsg);
+			return;
+		}
+		
 		char chatmsg[512] = {0};
 		char desc[512] = {0};
 		char cmd[512] = {0};
@@ -144,6 +160,8 @@ void mods_message(int msgtype, int client_id)
 			game.send_chat(-1, GAMECONTEXT::CHAT_ALL, chatmsg);
 			game.start_vote(desc, cmd);
 			p->vote = 1;
+			game.vote_creator = client_id;
+			p->last_votecall = now;
 			game.send_vote_status(-1);
 		}
 	}
@@ -151,11 +169,13 @@ void mods_message(int msgtype, int client_id)
 	{
 		if(!game.vote_closetime)
 			return;
-			
-		NETMSG_CL_VOTE *msg = (NETMSG_CL_VOTE *)rawmsg;
-		p->vote = msg->vote;
-		dbg_msg("", "%d voted %d", client_id, msg->vote);
-		game.send_vote_status(-1);
+
+		if(p->vote == 0)
+		{
+			NETMSG_CL_VOTE *msg = (NETMSG_CL_VOTE *)rawmsg;
+			p->vote = msg->vote;
+			game.send_vote_status(-1);
+		}
 	}
 	else if (msgtype == NETMSGTYPE_CL_SETTEAM)
 	{

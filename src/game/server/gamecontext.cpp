@@ -321,8 +321,11 @@ void GAMECONTEXT::tick()
 			console_execute_line(vote_command);
 			end_vote();
 			send_chat(-1, GAMECONTEXT::CHAT_ALL, "Vote passed");
+			
+			if(players[vote_creator])
+				players[vote_creator]->last_votecall = 0;
 		}
-		else if(time_get() > vote_closetime || no >= total/2+1)
+		else if(time_get() > vote_closetime || no >= total/2+1 || yes+no == total)
 		{
 			end_vote();
 			send_chat(-1, GAMECONTEXT::CHAT_ALL, "Vote failed");

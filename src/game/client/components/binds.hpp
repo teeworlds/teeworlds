@@ -27,6 +27,7 @@ public:
 	void set_defaults();
 	void unbindall();
 	const char *get(int keyid);
+	const char *get_key(const char *bindstr);
 	
 	virtual void on_save();
 	virtual void on_console_init();

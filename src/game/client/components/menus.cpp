@@ -621,8 +621,9 @@ void MENUS::render_news(RECT main_view)
 
 void MENUS::render_game(RECT main_view)
 {
-	RECT button, votearea;
-	ui_hsplit_t(&main_view, 45.0f, &main_view, &votearea);
+	RECT button;
+	//RECT votearea;
+	ui_hsplit_t(&main_view, 45.0f, &main_view, 0);
 	ui_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
 
 	ui_hsplit_t(&main_view, 10.0f, 0, &main_view);
@@ -690,6 +691,7 @@ void MENUS::render_game(RECT main_view)
 		}
 	}
 	
+	/*
 	RECT bars;
 	ui_hsplit_t(&votearea, 10.0f, 0, &votearea);
 	ui_hsplit_t(&votearea, 25.0f + 10.0f*3 + 25.0f, &votearea, &bars);
@@ -731,52 +733,14 @@ void MENUS::render_game(RECT main_view)
 		// do bars
 		ui_hsplit_t(&bars, 10.0f, 0, &bars);
 		ui_hmargin(&bars, 5.0f, &bars);
-		ui_draw_rect(&bars, vec4(0.8f,0.8f,0.8f,1), CORNER_ALL, 5.0f);
 		
-		if(gameclient.voting->total)
-		{
-			RECT pass_area = bars;
-			if(gameclient.voting->yes)
-			{
-				RECT yes_area = bars;
-				yes_area.w *= gameclient.voting->yes/(float)gameclient.voting->total;
-				ui_draw_rect(&yes_area, vec4(0.4f,0.8f,0.4f,1), CORNER_ALL, 5.0f);
-				
-				char buf[256];
-				str_format(buf, sizeof(buf), "%d", gameclient.voting->yes);
-				ui_do_label(&yes_area, buf, 12.0f, 0);
-				
-				pass_area.x += yes_area.w;
-				pass_area.w -= yes_area.w;
-			}
-			
-			if(gameclient.voting->no)
-			{
-				RECT no_area = bars;
-				no_area.w *= gameclient.voting->no/(float)gameclient.voting->total;
-				no_area.x = (bars.x + bars.w)-no_area.w;
-				ui_draw_rect(&no_area, vec4(0.8f,0.4f,0.4f,1), CORNER_ALL, 5.0f);
-				
-				char buf[256];
-				str_format(buf, sizeof(buf), "%d", gameclient.voting->no);
-				ui_do_label(&no_area, buf, 12.0f, 0);
+		gameclient.voting->render_bars(bars, true);
 
-				pass_area.w -= no_area.w;
-			}
-
-			if(gameclient.voting->pass)
-			{
-				char buf[256];
-				str_format(buf, sizeof(buf), "%d", gameclient.voting->pass);
-				ui_do_label(&pass_area, buf, 12.0f, 0);
-			}
-		}
 	}		
 	else
 	{
 		ui_do_label(&votearea, "No vote in progress", 18.0f, -1);
-	}
-	
+	}*/
 }
 
 void MENUS::render_serverinfo(RECT main_view)

@@ -13,6 +13,8 @@
 #include "controls.hpp"
 #include "camera.hpp"
 #include "hud.hpp"
+#include "voting.hpp"
+#include "binds.hpp"
 
 HUD::HUD()
 {
@@ -196,10 +198,33 @@ void HUD::render_teambalancewarning()
 				gfx_text_color(1,1,0.5f,1);
 			else
 				gfx_text_color(0.7f,0.7f,0.2f,1.0f);
-			gfx_text(0x0, 5, 50, 6, text, -1);
+			gfx_text(0x0, 5, 40, 6, text, -1);
 			gfx_text_color(1,1,1,1);
 		}
 	}
+}
+
+
+void HUD::render_voting()
+{
+	if(!gameclient.voting->is_voting())
+		return;
+	
+	gfx_text_color(1,1,1,1);
+	gfx_text(0x0, 5, 50, 6, gameclient.voting->vote_description(), -1);
+
+	RECT base = {5, 60, 119, 3};
+	gameclient.voting->render_bars(base, false);
+	
+	char buf[512];
+	const char *yes_key = gameclient.binds->get_key("vote yes");
+	const char *no_key = gameclient.binds->get_key("vote no");
+	str_format(buf, sizeof(buf), "%s - Vote Yes", yes_key);
+	base.y += base.h+1;
+	ui_do_label(&base, buf, 6.0f, -1);
+
+	str_format(buf, sizeof(buf), "Vote No - %s", no_key);
+	ui_do_label(&base, buf, 6.0f, 1);
 }
 
 void HUD::render_cursor()
@@ -283,5 +308,6 @@ void HUD::on_render()
 	render_connectionwarning();
 	render_tunewarning();
 	render_teambalancewarning();
+	render_voting();
 	render_cursor();
 }

@@ -5,7 +5,7 @@ glfw = "src/engine/external/glfw/include/GL/glfw.h"
 lines = [line.strip() for line in file(glfw).readlines()]
 
 # genereate keys.h file
-f = file("src/engine/keys.h", "w")
+f = file("src/engine/e_keys.h", "w")
 
 keynames = {}
 KEY_MOUSE_FIRST = 256+128
@@ -69,7 +69,7 @@ f.close()
 
 
 # generate keynames.c file
-f = file("src/engine/keynames.c", "w")
+f = file("src/engine/e_keynames.c", "w")
 print >>f, '/* AUTO GENERATED! DO NOT EDIT MANUALLY! */'
 print >>f, ''
 print >>f, "#include <string.h>"
@@ -77,7 +77,7 @@ print >>f, ""
 print >>f, "static const char key_strings[512][16] ="
 print >>f, "{"
 for i in range(0, 512):
-	n = "#%d"%i
+	n = "&%d"%i
 	if i >= 48 and i <= 57 or i >= 65 and i <= 90:
 		n = chr(i).lower()
 	elif i in keynames:

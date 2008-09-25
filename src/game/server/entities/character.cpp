@@ -682,7 +682,8 @@ void CHARACTER::tick_defered()
 		reckoningcore.write(&predicted);
 		core.write(&current);
 		
-		if(mem_comp(&predicted, &current, sizeof(NETOBJ_CHARACTER)) != 0)
+		// only allow dead reackoning for a top of 3 seconds
+		if(reckoning_tick+server_tickspeed()*3 < server_tick() || mem_comp(&predicted, &current, sizeof(NETOBJ_CHARACTER)) != 0)
 		{
 			reckoning_tick = server_tick();
 			sendcore = core;

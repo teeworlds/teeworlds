@@ -49,6 +49,7 @@ public:
 	void end_vote();
 	void send_vote_set(int cid);
 	void send_vote_status(int cid);
+	int vote_creator;
 	int64 vote_closetime;
 	char vote_description[512];
 	char vote_command[512];

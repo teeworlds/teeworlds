@@ -63,6 +63,21 @@ const char *BINDS::get(int keyid)
 	return "";
 }
 
+const char *BINDS::get_key(const char *bindstr)
+{
+	for(int keyid = 0; keyid < KEY_LAST; keyid++)
+	{
+		const char *bind = get(keyid);
+		if(!bind[0])
+			continue;
+			
+		if(strcmp(bind, bindstr) == 0)
+			return inp_key_name(keyid);
+	}
+	
+	return "";
+}
+
 void BINDS::set_defaults()
 {
 	// set default key bindings
@@ -90,6 +105,9 @@ void BINDS::set_defaults()
 	
 	bind('T', "chat all");
 	bind('Y', "chat team");	
+
+	bind(KEY_F3, "vote yes");
+	bind(KEY_F4, "vote no");	
 }
 
 void BINDS::on_console_init()
@@ -103,8 +121,6 @@ void BINDS::on_console_init()
 	// default bindings
 	set_defaults();
 }
-
-
 
 void BINDS::con_bind(void *result, void *user_data)
 {
@@ -159,7 +175,7 @@ void BINDS::con_dump_binds(void *result, void *user_data)
 int BINDS::get_key_id(const char *key_name)
 {
 	// check for numeric
-	if(key_name[0] == '#')
+	if(key_name[0] == '&')
 	{
 		int i = atoi(key_name+1);
 		if(i > 0 && i < KEY_LAST)

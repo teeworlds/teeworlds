@@ -1,4 +1,5 @@
 #include <game/client/component.hpp>
+#include <game/client/ui.hpp>
 
 class VOTING : public COMPONENT
 {
@@ -26,6 +27,8 @@ public:
 	virtual void on_console_init();
 	virtual void on_message(int msgtype, void *rawmsg);
 	virtual void on_render();
+	
+	void render_bars(RECT bars, bool text);
 	
 	void vote(int v); // -1 = no, 1 = yes
 	

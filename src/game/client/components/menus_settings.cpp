@@ -250,6 +250,8 @@ void MENUS::render_settings_controls(RECT main_view)
 		{ "Console:", "toggle_local_console", 0 },
 		{ "Remote Console:", "toggle_remote_console", 0 },
 		{ "Screenshot:", "screenshot", 0 },
+		{ "Vote Yes:", "vote yes", 0 },
+		{ "Vote No:", "vote no", 0 },
 	};
 
 	const int key_count = sizeof(keys) / sizeof(KEYINFO);
