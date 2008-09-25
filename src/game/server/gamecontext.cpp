@@ -264,7 +264,7 @@ void GAMECONTEXT::send_vote_status(int cid)
 			msg.total++;
 			if(players[i]->vote > 0)
 				msg.yes++;
-			else if(players[i]->vote > 0)
+			else if(players[i]->vote < 0)
 				msg.no++;
 			else
 				msg.pass++;
@@ -302,18 +302,22 @@ void GAMECONTEXT::tick()
 				total++;
 				if(players[i]->vote > 0)
 					yes++;
-				else if(players[i]->vote > 0)
+				else if(players[i]->vote < 0)
 					no++;
 			}
 		}
 		
-		if(yes > (total+1)/2)
+		if(yes >= (total+1)/2)
 		{
 			console_execute_line(vote_command);
 			vote_closetime = 0;
+			send_chat(-1, GAMECONTEXT::CHAT_ALL, "Vote passed");
 		}
-		else if(time_get() > vote_closetime || no > (total+1)/2)
+		else if(time_get() > vote_closetime || no >= (total+1)/2)
+		{
+			send_chat(-1, GAMECONTEXT::CHAT_ALL, "Vote failed");
 			vote_closetime = 0;
+		}
 	}
 }
 

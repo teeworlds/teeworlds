@@ -273,4 +273,9 @@ Messages = [
 	NetMessage("cl_vote", [
 		NetIntRange("vote", -1, 1),
 	]),
+	
+	NetMessage("cl_callvote", [
+		NetString("type"),
+		NetString("value"),
+	]),
 ]

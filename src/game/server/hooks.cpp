@@ -126,6 +126,33 @@ void mods_message(int msgtype, int client_id)
 		
 		game.send_chat(client_id, team, msg->message);
 	}
+	else if(msgtype == NETMSGTYPE_CL_CALLVOTE)
+	{
+		char chatmsg[512] = {0};
+		char desc[512] = {0};
+		char cmd[512] = {0};
+		NETMSG_CL_CALLVOTE *msg = (NETMSG_CL_CALLVOTE *)rawmsg;
+		if(str_comp_nocase(msg->type, "map") == 0)
+		{
+			str_format(chatmsg, sizeof(chatmsg), "Vote called to change map to '%s'", msg->value);
+			str_format(desc, sizeof(desc), "Change map to '%s'", msg->value);
+			str_format(cmd, sizeof(cmd), "sv_map %s", msg->value);
+		}
+
+		if(cmd[0])
+		{
+			game.send_chat(-1, GAMECONTEXT::CHAT_ALL, chatmsg);
+			game.start_vote(desc, cmd);
+			p->vote = 1;
+			game.send_vote_status(-1);
+		}
+	}
+	else if(msgtype == NETMSGTYPE_CL_VOTE)
+	{
+		NETMSG_CL_VOTE *msg = (NETMSG_CL_VOTE *)rawmsg;
+		p->vote = msg->vote;
+		game.send_vote_status(-1);
+	}
 	else if (msgtype == NETMSGTYPE_CL_SETTEAM)
 	{
 		NETMSG_CL_SETTEAM *msg = (NETMSG_CL_SETTEAM *)rawmsg;

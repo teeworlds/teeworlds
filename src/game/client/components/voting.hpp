@@ -29,6 +29,7 @@ public:
 	
 	void vote(int v); // -1 = no, 1 = yes
 	
+	int seconds_left() { return (closetime - time_get())/time_freq(); }
 	bool is_voting() { return closetime != 0; }
 	int taken_choice() const { return voted; }
 	const char *vote_description() const { return description; }
