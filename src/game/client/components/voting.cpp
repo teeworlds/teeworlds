@@ -7,11 +7,8 @@
 
 void VOTING::con_callvote(void *result, void *user_data)
 {
-	NETMSG_CL_CALLVOTE msg = {0};
-	msg.type = console_arg_string(result, 0);
-	msg.value = console_arg_string(result, 1);
-	msg.pack(MSGFLAG_VITAL);
-	client_send_msg();
+	VOTING *self = (VOTING*)user_data;
+	self->callvote(console_arg_string(result, 0), console_arg_string(result, 1));
 }
 
 void VOTING::con_vote(void *result, void *user_data)
@@ -21,6 +18,27 @@ void VOTING::con_vote(void *result, void *user_data)
 		self->vote(1);
 	else if(str_comp_nocase(console_arg_string(result, 0), "no") == 0)
 		self->vote(-1);
+}
+
+void VOTING::callvote(const char *type, const char *value)
+{
+	NETMSG_CL_CALLVOTE msg = {0};
+	msg.type = type;
+	msg.value = value;
+	msg.pack(MSGFLAG_VITAL);
+	client_send_msg();
+}
+
+void VOTING::callvote_kick(int client_id)
+{
+	char buf[32];
+	str_format(buf, sizeof(buf), "%d", client_id);
+	callvote("kick", buf);
+}
+
+void VOTING::callvote_map(const char *map)
+{
+	callvote("map", map);
 }
 
 void VOTING::vote(int v)

@@ -237,7 +237,11 @@ Messages = [
 		NetIntRange("pass", 0, 'MAX_CLIENTS'),
 		NetIntRange("total", 0, 'MAX_CLIENTS'),
 	]),
-	
+
+	NetMessage("sv_maplist", [
+		NetString("names"),
+	]),
+		
 	### Client messages
 	NetMessage("cl_say", [
 		NetBool("team"),

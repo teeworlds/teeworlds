@@ -21,6 +21,8 @@ class VOTING : public COMPONENT
 	char command[512];
 	int voted;
 	
+	void callvote(const char *type, const char *value);
+	
 public:
 	VOTING();
 	virtual void on_reset();
@@ -29,6 +31,9 @@ public:
 	virtual void on_render();
 	
 	void render_bars(RECT bars, bool text);
+	
+	void callvote_kick(int client_id);
+	void callvote_map(const char *map);
 	
 	void vote(int v); // -1 = no, 1 = yes
 	

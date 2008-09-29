@@ -373,7 +373,7 @@ void MENUS::render_serverbrowser_filters(RECT view)
 	}
 	
 	//ui_vsplit_r(&buttons, 30.0f, &buttons, &button);
-	ui_hsplit_b(&view, 25.0f, &view, &button);
+	ui_hsplit_b(&view, button_height, &view, &button);
 	static int clear_button = 0;
 	if(ui_do_button(&clear_button, "Reset Filter", 0, &button, ui_draw_menu_button, 0))
 	{
@@ -544,7 +544,7 @@ void MENUS::render_serverbrowser(RECT main_view)
 	// split off a piece for filters, details and scoreboard
 	ui_vsplit_r(&view, 200.0f, &view, &toolbox);
 	ui_hsplit_b(&toolbox, 120.0f, &toolbox, &button_box);
-	ui_hsplit_b(&view, 30.0f, &view, &status_toolbar);
+	ui_hsplit_b(&view, button_height+5.0f, &view, &status_toolbar);
 
 	render_serverbrowser_serverlist(view);
 	
@@ -561,7 +561,6 @@ void MENUS::render_serverbrowser(RECT main_view)
 		ui_vsplit_mid(&tab_bar, &tabbutton0, &tabbutton1);
 		ui_vsplit_r(&tabbutton0, 5.0f, &tabbutton0, 0);
 		ui_vsplit_l(&tabbutton1, 5.0f, 0, &tabbutton1);
-		
 		
 		static int filters_tab = 0;
 		if (ui_do_button(&filters_tab, "Filter", toolbox_page==0, &tabbutton0, ui_draw_menu_tab_button, 0))
@@ -612,7 +611,7 @@ void MENUS::render_serverbrowser(RECT main_view)
 		ui_vsplit_r(&button_box, 5.0f, &button_box, 0);
 		
 		RECT button;
-		ui_hsplit_b(&button_box, 25.0f, &button_box, &button);
+		ui_hsplit_b(&button_box, button_height, &button_box, &button);
 		ui_vsplit_r(&button, 120.0f, 0, &button);
 		ui_vmargin(&button, 2.0f, &button);
 		//ui_vmargin(&button, 2.0f, &button);

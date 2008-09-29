@@ -78,6 +78,9 @@ static int mapdownload_crc = 0;
 static int mapdownload_amount = -1;
 static int mapdownload_totalsize = -1;
 
+/* */
+static SERVER_INFO current_server_info = {0};
+
 /* current time */
 static int current_tick = 0;
 static float intratick = 0;
@@ -490,6 +493,7 @@ void client_connect(const char *server_address_str)
 
 	dbg_msg("client", "connecting to '%s'", server_address_str);
 
+	mem_zero(&current_server_info, sizeof(current_server_info));
 	str_copy(buf, server_address_str, sizeof(buf));
 
 	for(k = 0; buf[k]; k++)
@@ -534,7 +538,9 @@ void client_disconnect_with_reason(const char *reason)
 	mapdownload_crc = 0;
 	mapdownload_totalsize = -1;
 	mapdownload_amount = 0;
-	
+
+	/* clear the current server info */
+	mem_zero(&current_server_info, sizeof(current_server_info));
 }
 
 void client_disconnect()
@@ -1069,7 +1075,10 @@ static void client_process_packet(NETCHUNK *packet)
 						if(msg != NETMSG_SNAPEMPTY && snapshot_crc((SNAPSHOT*)tmpbuffer3) != crc)
 						{
 							if(config.debug)
-								dbg_msg("client", "snapshot crc error #%d - tick=%d wantedcrc=%d gotcrc=%d compressed_size=%d", snapcrcerrors, game_tick, crc, snapshot_crc((SNAPSHOT*)tmpbuffer3), complete_size);
+							{
+								dbg_msg("client", "snapshot crc error #%d - tick=%d wantedcrc=%d gotcrc=%d compressed_size=%d delta_tick=%d",
+									snapcrcerrors, game_tick, crc, snapshot_crc((SNAPSHOT*)tmpbuffer3), complete_size, delta_tick);
+							}
 								
 							snapcrcerrors++;
 							if(snapcrcerrors > 10)

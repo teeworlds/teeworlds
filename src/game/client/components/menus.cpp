@@ -21,13 +21,7 @@ extern "C" {
 #include <game/generated/g_protocol.hpp>
 
 #include <game/generated/gc_data.hpp>
-#include <game/client/components/binds.hpp>
-#include <game/client/components/motd.hpp>
-#include <game/client/components/voting.hpp>
 #include <game/client/gameclient.hpp>
-#include <game/client/animstate.hpp>
-#include <game/client/gc_render.hpp>
-#include <game/client/ui.hpp>
 #include <mastersrv/mastersrv.h>
 
 vec4 MENUS::gui_color;
@@ -37,7 +31,6 @@ vec4 MENUS::color_tabbar_inactive;
 vec4 MENUS::color_tabbar_active;
 vec4 MENUS::color_tabbar_inactive_ingame;
 vec4 MENUS::color_tabbar_active_ingame;
-
 
 INPUT_EVENT MENUS::inputevents[MAX_INPUTEVENTS];
 int MENUS::num_inputevents;
@@ -92,6 +85,8 @@ MENUS::MENUS()
 	num_inputevents = 0;
 	
 	last_input = time_get();
+	
+	button_height = 25.0f;
 }
 
 vec4 MENUS::button_color_mul(const void *id)
@@ -533,6 +528,12 @@ int MENUS::render_menubar(RECT r)
 		static int server_info_button=0;
 		if (ui_do_button(&server_info_button, "Server Info", active_page==PAGE_SERVER_INFO, &button, ui_draw_menu_tab_button, 0))
 			new_page = PAGE_SERVER_INFO;
+
+		ui_vsplit_l(&box, 4.0f, 0, &box);
+		ui_vsplit_l(&box, 140.0f, &button, &box);
+		static int callvote_button=0;
+		if (ui_do_button(&callvote_button, "Call Vote", active_page==PAGE_CALLVOTE, &button, ui_draw_menu_tab_button, 0))
+			new_page = PAGE_CALLVOTE;
 			
 		ui_vsplit_l(&box, 30.0f, 0, &box);
 	}
@@ -619,245 +620,6 @@ void MENUS::render_news(RECT main_view)
 	ui_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
 }
 
-void MENUS::render_game(RECT main_view)
-{
-	RECT button;
-	//RECT votearea;
-	ui_hsplit_t(&main_view, 45.0f, &main_view, 0);
-	ui_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
-
-	ui_hsplit_t(&main_view, 10.0f, 0, &main_view);
-	ui_hsplit_t(&main_view, 25.0f, &main_view, 0);
-	ui_vmargin(&main_view, 10.0f, &main_view);
-	
-	ui_vsplit_r(&main_view, 120.0f, &main_view, &button);
-	static int disconnect_button = 0;
-	if(ui_do_button(&disconnect_button, "Disconnect", 0, &button, ui_draw_menu_button, 0))
-		client_disconnect();
-
-	if(gameclient.snap.local_info && gameclient.snap.gameobj)
-	{
-		if(gameclient.snap.local_info->team != -1)
-		{
-			ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
-			ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
-			static int spectate_button = 0;
-			if(ui_do_button(&spectate_button, "Spectate", 0, &button, ui_draw_menu_button, 0))
-			{
-				gameclient.send_switch_team(-1);
-				menu_active = false;
-			}
-		}
-		
-		if(gameclient.snap.gameobj->flags & GAMEFLAG_TEAMS)
-		{
-			if(gameclient.snap.local_info->team != 0)
-			{
-				ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
-				ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
-				static int spectate_button = 0;
-				if(ui_do_button(&spectate_button, "Join Red", 0, &button, ui_draw_menu_button, 0))
-				{
-					gameclient.send_switch_team(0);
-					menu_active = false;
-				}
-			}
-
-			if(gameclient.snap.local_info->team != 1)
-			{
-				ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
-				ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
-				static int spectate_button = 0;
-				if(ui_do_button(&spectate_button, "Join Blue", 0, &button, ui_draw_menu_button, 0))
-				{
-					gameclient.send_switch_team(1);
-					menu_active = false;
-				}
-			}
-		}
-		else
-		{
-			if(gameclient.snap.local_info->team != 0)
-			{
-				ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
-				ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
-				static int spectate_button = 0;
-				if(ui_do_button(&spectate_button, "Join Game", 0, &button, ui_draw_menu_button, 0))
-				{
-					gameclient.send_switch_team(0);
-					menu_active = false;
-				}
-			}
-		}
-	}
-	
-	/*
-	RECT bars;
-	ui_hsplit_t(&votearea, 10.0f, 0, &votearea);
-	ui_hsplit_t(&votearea, 25.0f + 10.0f*3 + 25.0f, &votearea, &bars);
-
-	ui_draw_rect(&votearea, color_tabbar_active, CORNER_ALL, 10.0f);
-
-	ui_vmargin(&votearea, 20.0f, &votearea);
-	ui_hmargin(&votearea, 10.0f, &votearea);
-
-	ui_hsplit_b(&votearea, 35.0f, &votearea, &bars);
-
-	if(gameclient.voting->is_voting())
-	{
-		// do yes button
-		ui_vsplit_l(&votearea, 50.0f, &button, &votearea);
-		static int yes_button = 0;
-		if(ui_do_button(&yes_button, "Yes", 0, &button, ui_draw_menu_button, 0))
-			gameclient.voting->vote(1);
-
-		// do no button
-		ui_vsplit_l(&votearea, 5.0f, 0, &votearea);
-		ui_vsplit_l(&votearea, 50.0f, &button, &votearea);
-		static int no_button = 0;
-		if(ui_do_button(&no_button, "No", 0, &button, ui_draw_menu_button, 0))
-			gameclient.voting->vote(-1);
-		
-		// do time left
-		ui_vsplit_r(&votearea, 50.0f, &votearea, &button);
-		char buf[256];
-		str_format(buf, sizeof(buf), "%d", gameclient.voting->seconds_left());
-		ui_do_label(&button, buf, 24.0f, 0);
-
-		// do description and command
-		ui_vsplit_l(&votearea, 5.0f, 0, &votearea);
-		ui_do_label(&votearea, gameclient.voting->vote_description(), 14.0f, -1);
-		ui_hsplit_t(&votearea, 16.0f, 0, &votearea);
-		ui_do_label(&votearea, gameclient.voting->vote_command(), 10.0f, -1);
-
-		// do bars
-		ui_hsplit_t(&bars, 10.0f, 0, &bars);
-		ui_hmargin(&bars, 5.0f, &bars);
-		
-		gameclient.voting->render_bars(bars, true);
-
-	}		
-	else
-	{
-		ui_do_label(&votearea, "No vote in progress", 18.0f, -1);
-	}*/
-}
-
-void MENUS::render_serverinfo(RECT main_view)
-{
-	// count players for server info-box
-	int num_players = 0;
-	for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
-	{
-		SNAP_ITEM item;
-		snap_get_item(SNAP_CURRENT, i, &item);
-
-		if(item.type == NETOBJTYPE_PLAYER_INFO)
-		{
-			num_players++;
-		}
-	}
-
-	// render background
-	ui_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
-	
-	RECT view, serverinfo, gameinfo, motd;
-	
-	float x = 0.0f;
-	float y = 0.0f;
-	
-	char buf[1024];
-	
-	// set view to use for all sub-modules
-	ui_margin(&main_view, 10.0f, &view);
-	
-	/* serverinfo */
-	ui_hsplit_t(&view, view.h/2-5.0f, &serverinfo, &motd);
-	ui_vsplit_l(&serverinfo, view.w/2-5.0f, &serverinfo, &gameinfo);
-	ui_draw_rect(&serverinfo, vec4(1,1,1,0.25f), CORNER_ALL, 10.0f);
-	
-	ui_margin(&serverinfo, 5.0f, &serverinfo);
-	
-	x = 5.0f;
-	y = 0.0f;
-	
-	gfx_text(0, serverinfo.x+x, serverinfo.y+y, 32, "Server info", 250.0f);
-	y += 32.0f+5.0f;
-	
-	mem_zero(buf, sizeof(buf));
-	str_format(
-		buf,
-		sizeof(buf),
-		"%s\n\n"
-		"Address: %s\n"
-		"Ping: %d\n"
-		"Version: %s\n"
-		"Password: %s\n",
-		current_server_info.name,
-		config.ui_server_address,
-		gameclient.snap.local_info->latency,
-		current_server_info.version,
-		current_server_info.flags&1 ? "Yes" : "No"
-	);
-	gfx_text(0, serverinfo.x+x, serverinfo.y+y, 20, buf, 250.0f);
-	
-	{
-		RECT button;
-		ui_hsplit_b(&serverinfo, 20.0f, &serverinfo, &button);
-		static int add_fav_button = 0;
-		if (ui_do_button(&add_fav_button, "Favorite", current_server_info.favorite, &button, ui_draw_checkbox, 0))
-		{
-			if(current_server_info.favorite)
-				client_serverbrowse_removefavorite(current_server_info.netaddr);
-			else
-				client_serverbrowse_addfavorite(current_server_info.netaddr);
-			current_server_info.favorite = !current_server_info.favorite;
-		}
-	}
-	
-	/* gameinfo */
-	ui_vsplit_l(&gameinfo, 10.0f, 0x0, &gameinfo);
-	ui_draw_rect(&gameinfo, vec4(1,1,1,0.25f), CORNER_ALL, 10.0f);
-	
-	ui_margin(&gameinfo, 5.0f, &gameinfo);
-	
-	x = 5.0f;
-	y = 0.0f;
-	
-	gfx_text(0, gameinfo.x+x, gameinfo.y+y, 32, "Game info", 250.0f);
-	y += 32.0f+5.0f;
-	
-	mem_zero(buf, sizeof(buf));
-	str_format(
-		buf,
-		sizeof(buf),
-		"\n\n"
-		"Gametype: %s\n"
-		"Map: %s\n"
-		"Score limit: %d\n"
-		"Time limit: %d\n"
-		"\n"
-		"Players: %d/%d\n",
-		current_server_info.gametype,
-		current_server_info.map,
-		gameclient.snap.gameobj->score_limit,
-		gameclient.snap.gameobj->time_limit,
-		gameclient.snap.team_size[0]+gameclient.snap.team_size[1],
-		current_server_info.max_players
-	);
-	gfx_text(0, gameinfo.x+x, gameinfo.y+y, 20, buf, 250.0f);
-	
-	/* motd */
-	ui_hsplit_t(&motd, 10.0f, 0, &motd);
-	ui_draw_rect(&motd, vec4(1,1,1,0.25f), CORNER_ALL, 10.0f);
-	ui_margin(&motd, 5.0f, &motd);
-	y = 0.0f;
-	x = 5.0f;
-	gfx_text(0, motd.x+x, motd.y+y, 32, "MOTD", -1);
-	y += 32.0f+5.0f;
-	gfx_text(0, motd.x+x, motd.y+y, 16, gameclient.motd->server_motd, motd.w);
-}
-
 void MENUS::init()
 {
 	if(config.cl_show_welcome)
@@ -912,6 +674,8 @@ int MENUS::render()
 				render_game(main_view);
 			else if(game_page == PAGE_SERVER_INFO)
 				render_serverinfo(main_view);
+			else if(game_page == PAGE_CALLVOTE)
+				render_servercontrol(main_view);
 			else if(game_page == PAGE_SETTINGS)
 				render_settings(main_view);
 		}
@@ -1167,6 +931,11 @@ void MENUS::on_render()
 	if(!menu_active)
 		return;
 		
+
+
+	if(inp_key_down('M')) button_height += 1.0f;
+	if(inp_key_down('N')) button_height -= 1.0f;
+		
 	// update colors
 	vec3 rgb = hsl_to_rgb(vec3(config.ui_color_hue/255.0f, config.ui_color_sat/255.0f, config.ui_color_lht/255.0f));
 	gui_color = vec4(rgb.r, rgb.g, rgb.b, config.ui_color_alpha/255.0f);
@@ -1201,7 +970,7 @@ void MENUS::on_render()
 	ui_update(mx,my,mx*3.0f,my*3.0f,buttons);
     
     // render
-    if(time_get()-last_input > time_freq()*30)
+    if(time_get()-last_input > time_freq()*30 && client_state() == CLIENTSTATE_OFFLINE)
     {
     	// screen saver :)
 		render_background();
@@ -1308,253 +1077,3 @@ void MENUS::render_background()
     {RECT screen = *ui_screen();
 	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);}	
 }
-
-
-#if 0
-static int texture_mountains = -1;
-static int texture_sun = -1;
-static int texture_grass = -1;
-
-static const int tiles_width = 50;
-static const int tiles_height = 10;
-static TILE tiles[tiles_width*tiles_height] = {{0}};
-
-class TEE
-{
-public:
-	float speed;
-	int skin;
-	float time;
-	vec2 pos;
-	//float vy;
-	
-	float jumptime;
-	float jumpstr;
-	
-	void new_jump()
-	{
-		jumptime = time + (rand()/(float)RAND_MAX)*2;
-		jumpstr = 12.6f*20 * ((rand()/(float)RAND_MAX)*0.5f+0.5f);
-	}
-	
-	void init()
-	{
-		skin = rand();
-		speed = 150.0f + (rand()/(float)RAND_MAX) * 50.0f;
-		time = (rand()/(float)RAND_MAX) * 5.0f;
-		jumptime = 0;
-		update(0);
-		new_jump();
-	}
-	
-	void reset()
-	{
-		time = 0;
-		pos.x = -100.0f;
-
-		jumptime = 0;
-		new_jump();
-		skin = rand();
-	}
-	
-	void update(float frametime)
-	{
-		time += frametime;
-		pos.x = -100 + time*speed;
-		pos.y = 0;
-		if(time > jumptime)
-		{
-			float t = time - jumptime;
-			float j = -jumpstr*t + 25.0f*15*(t*t);
-			if(j < 0)
-				pos.y = j;
-			else
-				new_jump();
-		}
-		
-		if(pos.x > 300*2)
-			reset();
-	}
-};
-
-static const int NUM_TEES = 35;
-static TEE tees[NUM_TEES];
-
-static void render_sunrays(float x, float y)
-{
-	vec2 pos(x, y);
-
-	gfx_texture_set(-1);
-	gfx_blend_additive();
-	gfx_quads_begin();
-	const int rays = 10;
-	gfx_setcolor(1.0f,1.0f,1.0f,0.025f);
-	for(int r = 0; r < rays; r++)
-	{
-		float a = r/(float)rays + client_localtime()*0.015f;
-		float size = (1.0f/(float)rays)*0.25f;
-		vec2 dir0(sinf((a-size)*pi*2.0f), cosf((a-size)*pi*2.0f));
-		vec2 dir1(sinf((a+size)*pi*2.0f), cosf((a+size)*pi*2.0f));
-		
-		gfx_setcolorvertex(0, 1.0f,1.0f,1.0f,0.025f);
-		gfx_setcolorvertex(1, 1.0f,1.0f,1.0f,0.025f);
-		gfx_setcolorvertex(2, 1.0f,1.0f,1.0f,0.0f);
-		gfx_setcolorvertex(3, 1.0f,1.0f,1.0f,0.0f);
-		const float range = 1000.0f;
-		gfx_quads_draw_freeform(
-			pos.x+dir0.x, pos.y+dir0.y,
-			pos.x+dir1.x, pos.y+dir1.y,
-			pos.x+dir0.x*range, pos.y+dir0.y*range,
-			pos.x+dir1.x*range, pos.y+dir1.y*range);
-	}
-	gfx_quads_end();
-	gfx_blend_normal();
-}
-
-void MENUS::render_background()
-{
-	gfx_clear(1,1,1);
-	
-	static int load = 1;
-	if(load)
-	{
-		load = 0;
-		texture_mountains = gfx_load_texture("data/mapres/mountains.png", IMG_AUTO, 0);
-		texture_sun = gfx_load_texture("data/mapres/sun.png", IMG_AUTO, 0);
-		texture_grass = gfx_load_texture("data/mapres/grass_main.png", IMG_AUTO, 0);
-		
-		for(int i = 0; i < NUM_TEES; i++)
-			tees[i].init();
-		
-		int c = 0;
-		for(int y = 0; y < tiles_height; y++)
-			for(int x = 0; x < tiles_width; x++, c++)
-			{
-				if(y == 0)
-					tiles[c].index = 16;
-				else
-				{
-					int r = rand()&0x3f;
-					if(r == 1)
-						tiles[c].index = 2;
-					else if(r == 2)
-						tiles[c].index = 3;
-					else
-						tiles[c].index = 1;
-				}
-			}
-	}
-
-	float sw = 300*gfx_screenaspect();
-	float sh = 300;
-	gfx_mapscreen(0, 0, sw, sh);
-
-	// render backdrop color
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-		vec4 top(0.7f, 0.8f, 1.0f, 1.0f);
-		vec4 bottom = top*0.5f;//(0.6f, 0.6f, 0.6f, 1.0f);
-		gfx_setcolorvertex(0, top.r, top.g, top.b, top.a);
-		gfx_setcolorvertex(1, top.r, top.g, top.b, top.a);
-		gfx_setcolorvertex(2, bottom.r, bottom.g, bottom.b, bottom.a);
-		gfx_setcolorvertex(3, bottom.r, bottom.g, bottom.b, bottom.a);
-		gfx_quads_drawTL(0, 0, sw, sh);
-	gfx_quads_end();
-	
-	// render sunrays
-	render_sunrays(75, 50);
-
-	// render sun	
-	gfx_texture_set(texture_sun);
-	gfx_quads_begin();
-		gfx_quads_draw(75, 50, 128, 128);
-	gfx_quads_end();	
-
-
-	gfx_mapscreen(0, 0, sw, sh);
-	
-	int num_skins = gameclient.skins->num();
-	
-	for(int layer = 0; layer < 2; layer++)
-	{
-		vec4 color = layer == 0 ? vec4(0.9f, 0.95f, 1.0f, 1.0f) : vec4(1,1,1,1);
-		float scale = layer == 0 ? 0.5f : 1.0f;
-		float mountainoffset = layer == 0 ? 220 : 190;
-		float mountainstreach = layer == 0 ? 2 : 1;
-		float groundoffset = layer == 0 ? 95 : 30;
-
-		// draw mountains
-		float w = 192*2*scale;
-		float start = fmod(client_localtime()*20.0f*scale, w);
-		gfx_mapscreen(start, 0, sw+start, sh);
-		gfx_texture_set(texture_mountains);
-		gfx_quads_begin();
-			gfx_setcolor(color.r, color.g, color.b, color.a);
-			gfx_quads_drawTL(0, sh-mountainoffset, w, 192*scale*mountainstreach);
-			gfx_quads_drawTL(w, sh-mountainoffset, w, 192*scale*mountainstreach);
-			gfx_quads_drawTL(w*2, sh-mountainoffset, w, 192*scale*mountainstreach);
-			gfx_quads_drawTL(w*3, sh-mountainoffset, w, 192*scale*mountainstreach);
-		gfx_quads_end();			
-		
-		// draw ground
-		{
-			float w = 16.0f*scale*(tiles_width);
-			float start = fmod(client_localtime()*20.0f*(scale+0.25f), w);
-			float offset = -300.0f + groundoffset;
-			for(int i = 0; i < 4; i++)
-			{
-				gfx_mapscreen(start-i*w, offset, sw+start-i*w, offset+sh);
-				gfx_texture_set(texture_grass);
-				render_tilemap(tiles, tiles_width, tiles_height, 16.0f*scale, color, LAYERRENDERFLAG_OPAQUE);
-				render_tilemap(tiles, tiles_width, tiles_height, 16.0f*scale, color, LAYERRENDERFLAG_TRANSPARENT);
-			}
-		}
-		
-		if(num_skins)
-		{
-			gfx_mapscreen(0, 0, sw, sh);
-			
-			for(int i = layer; i < NUM_TEES; i+=2)
-			{
-				TEE *tee = &tees[i];
-				tee->update(client_frametime());
-				
-				ANIMSTATE state;
-				mem_zero(&state, sizeof(state));
-				state.set(&data->animations[ANIM_BASE], 0);
-				
-				if(tee->pos.y < -0.0001f)
-					state.add(&data->animations[ANIM_INAIR], 0, 1.0f); // TODO: some sort of time here
-				else
-					state.add(&data->animations[ANIM_WALK], fmod(tee->pos.x*0.025f, 1.0f), 1.0f);
-				
-				TEE_RENDER_INFO render_info;
-				render_info.size = 24.0f*scale;
-				render_info.color_body = color;
-				render_info.color_feet = color;
-				render_info.texture = gameclient.skins->get(tee->skin%num_skins)->org_texture;
-				
-				if(layer == 0)
-					render_tee(&state, &render_info, 0, vec2(-1,0), vec2(sw+20-tee->pos.x, tee->pos.y*scale+(sh-groundoffset)-6*scale));
-				else
-					render_tee(&state, &render_info, 0, vec2(1,0), vec2(tee->pos.x, tee->pos.y*scale+(sh-groundoffset)-6*scale));
-			}
-		}		
-	}
-	
-    {RECT screen = *ui_screen();
-	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);}
-	
-	/*
-	if(data->images[IMAGE_BANNER].id != 0)
-	{
-		gfx_texture_set(data->images[IMAGE_BANNER].id);
-		gfx_quads_begin();
-		gfx_setcolor(0,0,0,0.05f);
-		gfx_quads_setrotation(-pi/4+0.15f);
-		gfx_quads_draw(400, 300, 1000, 250);
-		gfx_quads_end();
-	}*/
-}
-
-#endif

@@ -502,7 +502,7 @@ void client_serverbrowse_refresh(int type)
 	}
 }
 
-static void client_serverbrowse_request(SERVERENTRY *entry)
+static void client_serverbrowse_request(NETADDR *addr, SERVERENTRY *entry)
 {
 	/*unsigned char buffer[sizeof(SERVERBROWSE_GETINFO)+1];*/
 	NETCHUNK p;
@@ -510,15 +510,15 @@ static void client_serverbrowse_request(SERVERENTRY *entry)
 	if(config.debug)
 	{
 		dbg_msg("client", "requesting server info from %d.%d.%d.%d:%d",
-			entry->addr.ip[0], entry->addr.ip[1], entry->addr.ip[2],
-			entry->addr.ip[3], entry->addr.port);
+			addr->ip[0], addr->ip[1], addr->ip[2],
+			addr->ip[3], addr->port);
 	}
 	
 	/*mem_copy(buffer, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
 	buffer[sizeof(SERVERBROWSE_GETINFO)] = current_token;*/
 	
 	p.client_id = -1;
-	p.address = entry->addr;
+	p.address = *addr;
 	p.flags = NETSENDFLAG_CONNLESS;
 	/*p.data_size = sizeof(buffer);
 	p.data = buffer;
@@ -529,7 +529,8 @@ static void client_serverbrowse_request(SERVERENTRY *entry)
 	p.data = SERVERBROWSE_OLD_GETINFO;
 	netclient_send(net, &p);
 	
-	entry->request_time = time_get();
+	if(entry)
+		entry->request_time = time_get();
 }
 
 void client_serverbrowse_update()
@@ -600,7 +601,7 @@ void client_serverbrowse_update()
 			break;
 			
 		if(entry->request_time == 0)
-			client_serverbrowse_request(entry);
+			client_serverbrowse_request(&entry->addr, entry);
 		
 		count++;
 		entry = entry->next_req;

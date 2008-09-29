@@ -268,7 +268,6 @@ void GAMECONTEXT::send_vote_status(int cid)
 	{
 		if(players[i])
 		{
-			dbg_msg("", "%d %d", i, players[i]->vote);
 			msg.total++;
 			if(players[i]->vote > 0)
 				msg.yes++;
@@ -279,7 +278,6 @@ void GAMECONTEXT::send_vote_status(int cid)
 		}
 	}	
 
-	dbg_msg("", "%d %d %d %d", msg.yes, msg.no, msg.pass, msg.total);
 	msg.pack(MSGFLAG_VITAL);
 	server_send_msg(cid);
 	

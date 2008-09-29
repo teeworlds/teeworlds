@@ -48,6 +48,7 @@ class MENUS : public COMPONENT
 		PAGE_NEWS=0,
 		PAGE_GAME,
 		PAGE_SERVER_INFO,
+		PAGE_CALLVOTE,
 		PAGE_INTERNET,
 		PAGE_LAN,
 		PAGE_FAVORITES,
@@ -68,8 +69,15 @@ class MENUS : public COMPONENT
 	static INPUT_EVENT inputevents[MAX_INPUTEVENTS];
 	static int num_inputevents;
 	
+	// some settings
+	float button_height;
+	
 	// for graphic settings
 	bool need_restart;
+	
+	// for call vote
+	int callvote_selectedplayer;
+	int callvote_selectedmap;
 
 	// found in menus.cpp
 	int render();
@@ -77,8 +85,13 @@ class MENUS : public COMPONENT
 	//void render_loading(float percent);
 	int render_menubar(RECT r);
 	void render_news(RECT main_view);
+	
+	// found in menus_ingame.cpp
 	void render_game(RECT main_view);
 	void render_serverinfo(RECT main_view);
+	void render_servercontrol(RECT main_view);
+	void render_servercontrol_kick(RECT main_view);
+	void render_servercontrol_map(RECT main_view);
 	
 	// found in menus_browser.cpp
 	SERVER_INFO current_server_info; // should this be here?

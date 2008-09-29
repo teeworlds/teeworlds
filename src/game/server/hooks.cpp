@@ -97,6 +97,7 @@ void mods_client_drop(int client_id)
 	game.players[client_id]->on_disconnect();
 	(void) game.controller->check_team_balance();
 	delete game.players[client_id];
+	game.players[client_id] = 0;
 }
 
 void mods_message(int msgtype, int client_id)
@@ -150,11 +151,36 @@ void mods_message(int msgtype, int client_id)
 		NETMSG_CL_CALLVOTE *msg = (NETMSG_CL_CALLVOTE *)rawmsg;
 		if(str_comp_nocase(msg->type, "map") == 0)
 		{
+			if(!config.sv_vote_map)
+			{
+				game.send_chat(-1, client_id, "Server does not allow voting on map");
+				return;
+			}
+			
 			str_format(chatmsg, sizeof(chatmsg), "Vote called to change map to '%s'", msg->value);
 			str_format(desc, sizeof(desc), "Change map to '%s'", msg->value);
 			str_format(cmd, sizeof(cmd), "sv_map %s", msg->value);
 		}
-
+		else if(str_comp_nocase(msg->type, "kick") == 0)
+		{
+			if(!config.sv_vote_kick)
+			{
+				game.send_chat(-1, client_id, "Server does not allow voting to kick players");
+				return;
+			}
+			
+			int kick_id = atoi(msg->value);
+			if(kick_id < 0 || kick_id >= MAX_CLIENTS || !game.players[kick_id])
+			{
+				game.send_chat(-1, client_id, "Invalid client id to kick");
+				return;
+			}
+			
+			str_format(chatmsg, sizeof(chatmsg), "Vote called to kick '%s'", server_clientname(kick_id));
+			str_format(desc, sizeof(desc), "Kick '%s'", server_clientname(kick_id));
+			str_format(cmd, sizeof(cmd), "kick %d", kick_id);
+		}
+		
 		if(cmd[0])
 		{
 			game.send_chat(-1, GAMECONTEXT::CHAT_ALL, chatmsg);
@@ -257,10 +283,18 @@ void mods_message(int msgtype, int client_id)
 			// send tuning parameters to client
 			send_tuning_params(client_id);
 			
+			// send maps to the client
+			{
+				NETMSG_SV_MAPLIST m;
+				m.names = config.sv_maplist;
+				m.pack(MSGFLAG_VITAL);
+				server_send_msg(client_id);
+			}
+			
 			//
 			NETMSG_SV_READYTOENTER m;
 			m.pack(MSGFLAG_VITAL|MSGFLAG_FLUSH);
-			server_send_msg(client_id);			
+			server_send_msg(client_id);
 		}
 		
 		game.send_info(client_id, -1);
