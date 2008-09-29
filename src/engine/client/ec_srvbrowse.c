@@ -192,6 +192,13 @@ static void client_serverbrowse_filter()
 				}
 			}
 			
+			/* match against map */
+			if(str_find_nocase(serverlist[i]->info.map, config.b_filter_string))
+			{
+				matchfound = 1;
+				serverlist[i]->info.quicksearch_hit |= BROWSEQUICK_MAPNAME;
+			}
+			
 			if(!matchfound)
 				filtered = 1;
 		}
