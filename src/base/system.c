@@ -26,6 +26,11 @@
 	#include <pthread.h>
 
 	#include <dirent.h>
+	
+	#if defined(CONF_PLATFORM_MACOSX)
+		#include <Carbon/Carbon.h>
+	#endif
+	
 #elif defined(CONF_FAMILY_WINDOWS)
 	#define WIN32_LEAN_AND_MEAN 
 	#define _WIN32_WINNT 0x0501 /* required for mingw to get getaddrinfo to work */
@@ -1071,6 +1076,48 @@ void net_stats(NETSTATS *stats_inout)
 {
 	*stats_inout = network_stats;
 }
+
+void gui_messagebox(const char *title, const char *message)
+{
+#if defined(CONF_PLATFORM_MACOSX)
+	DialogRef theItem;
+	DialogItemIndex itemIndex;
+
+	/* FIXME: really needed? can we rely on glfw? */
+	/* HACK - get events without a bundle */
+	ProcessSerialNumber psn;
+	GetCurrentProcess(&psn);
+	TransformProcessType(&psn,kProcessTransformToForegroundApplication);
+	SetFrontProcess(&psn);
+	/* END HACK */
+
+	CreateStandardAlert(kAlertStopAlert,
+		CFSTR(title),
+		CFSTR(message),
+		NULL,
+		&theItem);
+
+	RunStandardAlert(theItem, NULL, &itemIndex);
+#elif defined(CONF_FAMILY_UNIX)
+	static char cmd[1024];
+	/* use xmessage which is available on nearly every X11 system */
+	snprintf(cmd, 1024, "xmessage -center -title '%s' '%s'",
+		title,
+		message);
+
+	system(cmd);
+#elif defined(CONF_FAMILY_WINDOWS)
+	MessageBox(NULL,
+		message,
+		title,
+		MB_ICONEXCLAMATION | MB_OK);
+#else
+	/* this is not critical */
+	#warning not implemented
+#endif
+}
+
+
 
 #if defined(__cplusplus)
 }

@@ -889,6 +889,16 @@ typedef struct
 
 void net_stats(NETSTATS *stats);
 
+/*
+	Function: gui_messagebox
+		Display plain OS-dependent message box
+	
+	Parameters:
+		title - title of the message box
+		message - text to display
+*/
+void gui_messagebox(const char *title, const char *message);
+
 #ifdef __cplusplus
 }
 #endif
