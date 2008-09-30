@@ -1101,7 +1101,7 @@ void gui_messagebox(const char *title, const char *message)
 #elif defined(CONF_FAMILY_UNIX)
 	static char cmd[1024];
 	/* use xmessage which is available on nearly every X11 system */
-	snprintf(cmd, 1024, "xmessage -center -title '%s' '%s'",
+	snprintf(cmd, sizeof(cmd), "xmessage -center -title '%s' '%s'",
 		title,
 		message);
 
