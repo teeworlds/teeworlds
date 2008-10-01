@@ -882,7 +882,7 @@ static int server_load_map(const char *mapname)
 {
 	DATAFILE *df;
 	char buf[512];
-	str_format(buf, sizeof(buf), "data/maps/%s.map", mapname);
+	str_format(buf, sizeof(buf), "maps/%s.map", mapname);
 	df = datafile_load(buf);
 	if(!df)
 		return 0;
@@ -1145,17 +1145,6 @@ static void server_register_commands()
 
 int main(int argc, char **argv)
 {
-#if defined(CONF_PLATFORM_MACOSX)
-	char buffer[512];
-	unsigned pos = strrchr(argv[0], '/') - argv[0];
-
-	if(pos >= 512)
-		return -1;
-
-	strncpy(buffer, argv[0], 511);
-	buffer[pos] = 0;
-	chdir(buffer);
-#endif
 #if defined(CONF_FAMILY_WINDOWS)
 	int i;
 	for(i = 1; i < argc; i++)
@@ -1180,6 +1169,13 @@ int main(int argc, char **argv)
 	
 	/* parse the command line arguments */
 	engine_parse_arguments(argc, argv);
+	
+	/* change into data-dir */
+	if (!engine_chdir_datadir(argv[0]))
+	{
+		dbg_msg("server", "fatal error: data-dir cannot be found");
+		return -1;
+	}
 	
 	/* run the server */
 	server_run();

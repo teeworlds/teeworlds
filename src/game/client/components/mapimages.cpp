@@ -31,7 +31,7 @@ void MAPIMAGES::on_reset()
 		{
 			char buf[256];
 			char *name = (char *)map_get_data(img->image_name);
-			str_format(buf, sizeof(buf), "data/mapres/%s.png", name);
+			str_format(buf, sizeof(buf), "mapres/%s.png", name);
 			textures[i] = gfx_load_texture(buf, IMG_AUTO, 0);
 		}
 		else

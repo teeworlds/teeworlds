@@ -1030,7 +1030,7 @@ void MENUS::render_background()
 	//gfx_clear(1,1,1);
 	//render_sunrays(0,0);
 	if(texture_blob == -1)
-		texture_blob = gfx_load_texture("data/blob.png", IMG_AUTO, 0);
+		texture_blob = gfx_load_texture("blob.png", IMG_AUTO, 0);
 
 
 	float sw = 300*gfx_screenaspect();

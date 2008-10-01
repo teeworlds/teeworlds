@@ -550,7 +550,7 @@ void client_disconnect()
 
 static int client_load_data()
 {
-	debug_font = gfx_load_texture("data/debug_font.png", IMG_AUTO, TEXLOAD_NORESAMPLE);
+	debug_font = gfx_load_texture("debug_font.png", IMG_AUTO, TEXLOAD_NORESAMPLE);
 	return 1;
 }
 
@@ -698,7 +698,7 @@ static const char *client_load_map_search(const char *mapname, int wanted_crc)
 	client_set_state(CLIENTSTATE_LOADING);
 	
 	/* try the normal maps folder */
-	str_format(buf, sizeof(buf), "data/maps/%s.map", mapname);
+	str_format(buf, sizeof(buf), "maps/%s.map", mapname);
 	error = client_load_map(buf, wanted_crc);
 	if(!error)
 		return error;
@@ -1601,18 +1601,6 @@ void client_save_line(const char *line)
 
 int main(int argc, char **argv)
 {
-#if defined(CONF_PLATFORM_MACOSX)
-	char buffer[512];
-	unsigned pos = strrchr(argv[0], '/') - argv[0];
-
-	if(pos >= 512)
-		return -1;
-
-	strncpy(buffer, argv[0], 511);
-	buffer[pos] = 0;
-	chdir(buffer);
-#endif
-
 	/* init the engine */
 	dbg_msg("client", "starting...");
 	engine_init("Teeworlds");
@@ -1623,6 +1611,14 @@ int main(int argc, char **argv)
 	
 	/* parse the command line arguments */
 	engine_parse_arguments(argc, argv);
+	
+	/* change into data-dir */
+	if (!engine_chdir_datadir(argv[0]))
+	{
+		dbg_msg("client", "fatal error: data-dir cannot be found");
+		gui_messagebox("Error", "The data-dir cannot be found.");
+		return -1;
+	}
 	
 	/* run the client*/
 	client_run();

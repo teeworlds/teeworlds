@@ -541,11 +541,11 @@ static void do_toolbar(RECT toolbar)
 	
 	// ctrl+o to open
 	if(inp_key_down('O') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL)))
-		editor.invoke_file_dialog("Open Map", "Open", "data/maps/", "", callback_open_map);
+		editor.invoke_file_dialog("Open Map", "Open", "maps/", "", callback_open_map);
 	
 	// ctrl+s to save
 	if(inp_key_down('S') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL)))
-		editor.invoke_file_dialog("Save Map", "Save", "data/maps/", "", callback_save_map);
+		editor.invoke_file_dialog("Save Map", "Save", "maps/", "", callback_save_map);
 
 	// animate button
 	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
@@ -1670,7 +1670,7 @@ static int popup_image(RECT view)
 	ui_hsplit_t(&view, 12.0f, &slot, &view);
 	if(do_editor_button(&replace_button, "Replace", 0, &slot, draw_editor_button_menuitem, 0, "Replaces the image with a new one"))
 	{
-		editor.invoke_file_dialog("Replace Image", "Replace", "data/mapres/", "", replace_image);
+		editor.invoke_file_dialog("Replace Image", "Replace", "mapres/", "", replace_image);
 		return 1;
 	}
 
@@ -1751,7 +1751,7 @@ static void render_images(RECT toolbox, RECT toolbar, RECT view)
 	ui_hsplit_t(&toolbox, 10.0f, &slot, &toolbox);
 	ui_hsplit_t(&toolbox, 12.0f, &slot, &toolbox);
 	if(do_editor_button(&new_image_button, "Add", 0, &slot, draw_editor_button, 0, "Load a new image to use in the map"))
-		editor.invoke_file_dialog("Add Image", "Add", "data/mapres/", "", add_image);
+		editor.invoke_file_dialog("Add Image", "Add", "mapres/", "", add_image);
 }
 
 
@@ -2288,7 +2288,7 @@ static int popup_menu_file(RECT view)
 	ui_hsplit_t(&view, 12.0f, &slot, &view);
 	if(do_editor_button(&open_button, "Open", 0, &slot, draw_editor_button_menuitem, 0, "Opens a map for editing"))
 	{
-		editor.invoke_file_dialog("Open Map", "Open", "data/maps/", "", callback_open_map);
+		editor.invoke_file_dialog("Open Map", "Open", "maps/", "", callback_open_map);
 		return 1;
 	}
 
@@ -2296,7 +2296,7 @@ static int popup_menu_file(RECT view)
 	ui_hsplit_t(&view, 12.0f, &slot, &view);
 	if(do_editor_button(&append_button, "Append", 0, &slot, draw_editor_button_menuitem, 0, "Opens a map and adds everything from that map to the current one"))
 	{
-		editor.invoke_file_dialog("Append Map", "Append", "data/maps/", "", callback_append_map);
+		editor.invoke_file_dialog("Append Map", "Append", "maps/", "", callback_append_map);
 		return 1;
 	}
 
@@ -2311,7 +2311,7 @@ static int popup_menu_file(RECT view)
 	ui_hsplit_t(&view, 12.0f, &slot, &view);
 	if(do_editor_button(&save_as_button, "Save As", 0, &slot, draw_editor_button_menuitem, 0, "Saves the current map under a new name"))
 	{
-		editor.invoke_file_dialog("Save Map", "Save", "data/maps/", "", callback_save_map);
+		editor.invoke_file_dialog("Save Map", "Save", "maps/", "", callback_save_map);
 		return 1;
 	}
 		
@@ -2523,10 +2523,10 @@ void MAP::create_default(int entities_texture)
 
 extern "C" void editor_init()
 {
-	checker_texture = gfx_load_texture("data/editor/checker.png", IMG_AUTO, 0);
-	background_texture = gfx_load_texture("data/editor/background.png", IMG_AUTO, 0);
-	cursor_texture = gfx_load_texture("data/editor/cursor.png", IMG_AUTO, 0);
-	entities_texture = gfx_load_texture("data/editor/entities.png", IMG_AUTO, 0);
+	checker_texture = gfx_load_texture("editor/checker.png", IMG_AUTO, 0);
+	background_texture = gfx_load_texture("editor/background.png", IMG_AUTO, 0);
+	cursor_texture = gfx_load_texture("editor/cursor.png", IMG_AUTO, 0);
+	entities_texture = gfx_load_texture("editor/entities.png", IMG_AUTO, 0);
 	
 	tileset_picker.make_palette();
 	tileset_picker.readonly = true;
@@ -2599,13 +2599,13 @@ extern "C" void editor_update_and_render()
 		editor.gui_active = !editor.gui_active;
 
 	if(inp_key_down(KEY_F5))
-		editor.save("data/maps/debug_test2.map");
+		editor.save("maps/debug_test2.map");
 
 	if(inp_key_down(KEY_F6))
-		editor.load("data/maps/debug_test2.map");
+		editor.load("maps/debug_test2.map");
 	
 	if(inp_key_down(KEY_F8))
-		editor.load("data/maps/debug_test.map");
+		editor.load("maps/debug_test.map");
 	
 	if(inp_key_down(KEY_F10))
 		editor.show_mouse_pointer = false;

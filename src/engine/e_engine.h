@@ -10,6 +10,8 @@ int engine_config_write_start();
 void engine_config_write_line(const char *line);
 void engine_config_write_stop();
 
+int engine_chdir_datadir(char *argv0);
+
 int engine_stress(float probability);
 
 typedef struct HOSTLOOKUP

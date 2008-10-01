@@ -824,6 +824,23 @@ int fs_makedir(const char *path);
 */
 int fs_storage_path(const char *appname, char *path, int max);
 
+/*
+	Function: fs_is_dir
+		Checks if directory exists
+	
+	Returns:
+		Returns 1 on success, 0 on failure.
+*/
+int fs_is_dir(const char *path);
+
+/*
+	Function: fs_chdir
+		Changes current working directory
+	
+	Returns:
+		Returns 0 on success, 1 on failure.
+*/
+int fs_chdir(const char *path);
 
 /*
 	Group: Undocumented

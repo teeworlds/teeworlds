@@ -13,6 +13,9 @@
 #include <engine/e_network.h>
 #include "e_linereader.h"
 
+/* compiled-in data-dir path */
+#define DATA_DIR "data"
+
 static JOBPOOL hostlookuppool;
 
 static void con_dbg_dumpmem(void *result, void *user_data)
@@ -22,6 +25,7 @@ static void con_dbg_dumpmem(void *result, void *user_data)
 
 
 static char application_save_path[512] = {0};
+char *datadir_override;
 
 const char *engine_savepath(const char *filename, char *buffer, int max)
 {
@@ -87,6 +91,11 @@ void engine_parse_arguments(int argc, char **argv)
 		{
 			config_filename = argv[i+1];
 			abs = 1;
+			i++;
+		}
+		else if(argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2] == 0 && argc - i > 1)
+		{
+			datadir_override = argv[i+1];
 			i++;
 		}
 	}
@@ -405,3 +414,100 @@ void engine_hostlookup(HOSTLOOKUP *lookup, const char *hostname)
 	jobs_add(&hostlookuppool, &lookup->job, hostlookup_thread, lookup);
 }
 
+int engine_chdir_datadir(char *argv0)
+{
+#if defined(CONF_FAMILY_UNIX)
+	static const char *sdirs[] = {
+		"/usr/share/teeworlds",
+		"/usr/local/share/teeworlds"
+	};
+	static const int sdirs_count = sizeof(sdirs) / sizeof(sdirs[0]);
+#endif
+
+	int found = 0;
+	char data_dir[1024*2];
+	
+	/* 1) use provided data-dir override */
+	if (datadir_override)
+	{
+		if (fs_is_dir(datadir_override))
+		{
+			str_copy(data_dir, datadir_override, sizeof(data_dir));
+			dbg_msg("engine/datadir", "using override '%s'", data_dir);
+			found = 1;
+		}
+		else
+		{
+			dbg_msg("engine/datadir",
+				"specified data-dir '%s' does not exist",
+				datadir_override);
+			return 0;
+		}
+	}
+	
+#if defined(CONF_FAMILY_UNIX)
+	/* 2) use data-dir in PWD if present */
+	if (!found && fs_is_dir("data"))
+	{
+		strcpy(data_dir, "data");
+		found = 1;
+	}
+	
+	/* 3) use compiled-in data-dir if present */
+	if (!found && fs_is_dir(DATA_DIR))
+	{
+		strcpy(data_dir, DATA_DIR);
+		found = 1;
+	}
+	
+	/* 4) check for usable path in argv[0] */
+	if (!found)
+	{
+		unsigned int pos = strrchr(argv0, '/') - argv0;
+		
+		if (pos < sizeof(data_dir))
+		{
+			char basedir[sizeof(data_dir)];
+			strncpy(basedir, argv0, pos);
+			basedir[pos] = '\0';
+			str_format(data_dir, sizeof(data_dir),
+				"%s/data", basedir);
+			
+			if (fs_is_dir(data_dir))
+				found = 1;
+		}
+	}
+
+	/* 5) check for all default locations */
+	if (!found)
+	{
+		int i;
+		for (i = 0; i < sdirs_count; i++)
+		{
+			if (fs_is_dir(sdirs[i]))
+			{
+				strcpy(data_dir, sdirs[i]);
+				found = 1;
+				break;
+			}
+		}
+	}
+#elif defined(CONF_FAMILY_WINDOWS)
+	/* FIXME: any alternative directories to search? %PROGRAM_FILES%/.../ */
+	if (!found && fs_is_dir("data"))
+	{
+		strcpy(data_dir, "data");
+		found = 1;
+	}
+#endif
+	
+	if (found)
+	{
+		dbg_msg("engine/datadir", "using '%s'", data_dir);
+		
+		/* change working directory to data-dir */
+		fs_chdir(data_dir);
+	}
+	
+	return found;
+}

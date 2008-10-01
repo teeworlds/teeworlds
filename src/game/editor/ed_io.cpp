@@ -398,7 +398,7 @@ int MAP::load(const char *filename)
 				if(item->external)
 				{
 					char buf[256];
-					sprintf(buf, "data/mapres/%s.png", name);
+					sprintf(buf, "mapres/%s.png", name);
 					
 					// load external
 					EDITOR_IMAGE imginfo;

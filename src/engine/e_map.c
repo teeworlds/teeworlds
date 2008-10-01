@@ -53,7 +53,7 @@ int map_is_loaded()
 int map_load(const char *mapname)
 {
 	char buf[512];
-	str_format(buf, sizeof(buf), "data/maps/%s.map", mapname);
+	str_format(buf, sizeof(buf), "maps/%s.map", mapname);
 	map = datafile_load(buf);
 	return map != 0;
 }

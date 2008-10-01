@@ -24,7 +24,7 @@ void SKINS::skinscan(const char *name, int is_dir, void *user)
 		return;
 		
 	char buf[512];
-	str_format(buf, sizeof(buf), "data/skins/%s", name);
+	str_format(buf, sizeof(buf), "skins/%s", name);
 	IMAGE_INFO info;
 	if(!gfx_load_png(&info, buf))
 	{
@@ -119,7 +119,7 @@ void SKINS::init()
 {
 	// load skins
 	num_skins = 0;
-	fs_listdir("data/skins", skinscan, this);
+	fs_listdir("skins", skinscan, this);
 }
 
 int SKINS::num()
