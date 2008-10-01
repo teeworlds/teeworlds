@@ -45,7 +45,7 @@ class MENUS : public COMPONENT
 
 	enum
 	{
-		PAGE_NEWS=0,
+		PAGE_NEWS=1,
 		PAGE_GAME,
 		PAGE_SERVER_INFO,
 		PAGE_CALLVOTE,

@@ -666,6 +666,12 @@ int MENUS::render()
 		ui_hsplit_t(&screen, 26.0f, &tab_bar, &main_view);
 		ui_vmargin(&tab_bar, 20.0f, &tab_bar);
 		render_menubar(tab_bar);
+		
+		if(config.ui_page < PAGE_NEWS || config.ui_page > PAGE_SETTINGS)
+		{
+			client_serverbrowse_refresh(BROWSETYPE_INTERNET);
+			config.ui_page = PAGE_INTERNET;
+		}
 			
 		// render current page
 		if(client_state() != CLIENTSTATE_OFFLINE)
