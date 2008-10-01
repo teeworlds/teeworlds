@@ -184,8 +184,13 @@ void purge_servers()
 int main(int argc, char **argv)
 {
 	NETADDR bindaddr;
+
+	dbg_logger_stdout();
+	net_init();
+
 	mem_zero(&bindaddr, sizeof(bindaddr));
 	bindaddr.port = MASTERSERVER_PORT;
+	
 	
 	net_op.open(bindaddr, 0);
 

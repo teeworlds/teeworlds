@@ -30,9 +30,12 @@ void send_ver(NETADDR *addr)
 int main(int argc, char **argv)
 {
 	NETADDR bindaddr;
+
+	dbg_logger_stdout();
+	net_init();
+
 	mem_zero(&bindaddr, sizeof(bindaddr));
 	bindaddr.port = VERSIONSRV_PORT;
-	
 	net_op.open(bindaddr, 0);
 	
 	dbg_msg("versionsrv", "started");
