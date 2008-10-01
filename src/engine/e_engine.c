@@ -25,7 +25,7 @@ static void con_dbg_dumpmem(void *result, void *user_data)
 
 
 static char application_save_path[512] = {0};
-char *datadir_override;
+static char *datadir_override = 0;
 
 const char *engine_savepath(const char *filename, char *buffer, int max)
 {
