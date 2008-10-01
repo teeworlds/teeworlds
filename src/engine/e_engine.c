@@ -416,14 +416,6 @@ void engine_hostlookup(HOSTLOOKUP *lookup, const char *hostname)
 
 int engine_chdir_datadir(char *argv0)
 {
-#if defined(CONF_FAMILY_UNIX)
-	static const char *sdirs[] = {
-		"/usr/share/teeworlds",
-		"/usr/local/share/teeworlds"
-	};
-	static const int sdirs_count = sizeof(sdirs) / sizeof(sdirs[0]);
-#endif
-
 	int found = 0;
 	char data_dir[1024*2];
 	
@@ -445,7 +437,6 @@ int engine_chdir_datadir(char *argv0)
 		}
 	}
 	
-#if defined(CONF_FAMILY_UNIX)
 	/* 2) use data-dir in PWD if present */
 	if (!found && fs_is_dir("data"))
 	{
@@ -477,10 +468,17 @@ int engine_chdir_datadir(char *argv0)
 				found = 1;
 		}
 	}
-
+	
+#if defined(CONF_FAMILY_UNIX)
 	/* 5) check for all default locations */
 	if (!found)
 	{
+		const char *sdirs[] = {
+			"/usr/share/teeworlds",
+			"/usr/local/share/teeworlds"
+		};
+		const int sdirs_count = sizeof(sdirs) / sizeof(sdirs[0]);
+		
 		int i;
 		for (i = 0; i < sdirs_count; i++)
 		{
@@ -492,15 +490,9 @@ int engine_chdir_datadir(char *argv0)
 			}
 		}
 	}
-#elif defined(CONF_FAMILY_WINDOWS)
-	/* FIXME: any alternative directories to search? %PROGRAM_FILES%/.../ */
-	if (!found && fs_is_dir("data"))
-	{
-		strcpy(data_dir, "data");
-		found = 1;
-	}
 #endif
 	
+	/* data-dir exists */
 	if (found)
 	{
 		dbg_msg("engine/datadir", "using '%s'", data_dir);
