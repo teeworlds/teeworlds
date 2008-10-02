@@ -1134,10 +1134,10 @@ void gui_messagebox(const char *title, const char *message)
 	/* END HACK */
 
 	CreateStandardAlert(kAlertStopAlert,
-		CFSTR(title),
-		CFSTR(message),
-		NULL,
-		&theItem);
+			CFStringCreateWithCString(NULL, title, kCFStringEncodingASCII),
+			CFStringCreateWithCString(NULL, message, kCFStringEncodingASCII),
+			NULL,
+			&theItem);
 
 	RunStandardAlert(theItem, NULL, &itemIndex);
 #elif defined(CONF_FAMILY_UNIX)

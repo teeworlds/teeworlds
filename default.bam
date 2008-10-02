@@ -143,6 +143,8 @@ function build(settings)
    		if platform == "macosx" then
 			glfw_platform = "macosx"
 			pa_platform = "mac_osx"
+			settings.linker.frameworks:add("Carbon")
+			settings.linker.frameworks:add("AppKit")
 		else
 			glfw_platform = "x11"
 			pa_platform = "unix"
