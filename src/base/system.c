@@ -58,6 +58,7 @@ static DBG_LOGGER loggers[16];
 static int num_loggers = 0;
 
 static NETSTATS network_stats = {0};
+static MEMSTATS memory_stats = {0};
 
 void dbg_logger(DBG_LOGGER logger)
 {
@@ -140,41 +141,39 @@ void dbg_logger_file(const char *filename)
 
 int memory_alloced = 0;
 
-struct memheader
+typedef struct MEMHEADER
 {
 	const char *filename;
 	int line;
 	int size;
-	struct memheader *prev;
-	struct memheader *next;
-};
+	struct MEMHEADER *prev;
+	struct MEMHEADER *next;
+} MEMHEADER;
 
-struct memtail
+typedef struct MEMTAIL
 {
 	int guard;
-};
+} MEMTAIL;
 
-static struct memheader *first = 0;
-
-int mem_allocated()
-{
-	return memory_alloced;
-}
+static struct MEMHEADER *first = 0;
 
 void *mem_alloc_debug(const char *filename, int line, unsigned size, unsigned alignment)
 {
 	/* TODO: fix alignment */
 	/* TODO: add debugging */
-	struct memheader *header = (struct memheader *)malloc(size+sizeof(struct memheader)+sizeof(struct memtail));
-	struct memtail *tail = (struct memtail *)(((char*)(header+1))+size);
+	MEMHEADER *header = (struct MEMHEADER *)malloc(size+sizeof(MEMHEADER)+sizeof(MEMTAIL));
+	MEMTAIL *tail = (struct MEMTAIL *)(((char*)(header+1))+size);
 	header->size = size;
 	header->filename = filename;
 	header->line = line;
-	memory_alloced += header->size;
+
+	memory_stats.allocated += header->size;
+	memory_stats.total_allocations++;
+	memory_stats.active_allocations++;
 	
 	tail->guard = 0xbaadc0de;
 
-	header->prev = (struct memheader *)0;
+	header->prev = (MEMHEADER *)0;
 	header->next = first;
 	if(first)
 		first->prev = header;
@@ -188,13 +187,14 @@ void mem_free(void *p)
 {
 	if(p)
 	{
-		struct memheader *header = (struct memheader *)p - 1;
-		struct memtail *tail = (struct memtail *)(((char*)(header+1))+header->size);
+		MEMHEADER *header = (MEMHEADER *)p - 1;
+		MEMTAIL *tail = (MEMTAIL *)(((char*)(header+1))+header->size);
 		
 		if(tail->guard != 0xbaadc0de)
 			dbg_msg("mem", "!! %p", p);
 		/* dbg_msg("mem", "-- %p", p); */
-		memory_alloced -= header->size;
+		memory_stats.allocated -= header->size;
+		memory_stats.active_allocations--;
 		
 		if(header->prev)
 			header->prev->next = header->next;
@@ -210,7 +210,7 @@ void mem_free(void *p)
 void mem_debug_dump()
 {
 	char buf[1024];
-	struct memheader *header = first;
+	MEMHEADER *header = first;
 	IOHANDLE f = io_open("memory.txt", IOFLAG_WRITE);
 	
 	while(header)
@@ -1107,6 +1107,11 @@ void str_hex(char *dst, int dst_size, const void *data, int data_size)
 int mem_comp(const void *a, const void *b, int size)
 {
 	return memcmp(a,b,size);
+}
+
+const MEMSTATS *mem_stats()
+{
+	return &memory_stats;
 }
 
 void net_stats(NETSTATS *stats_inout)

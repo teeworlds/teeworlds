@@ -1,8 +1,24 @@
 #include <base/system.h>
 
+#include "e_ringbuffer.h"
+
 enum
 {
 	RBFLAG_FREE=1
+};
+
+/*
+
+*/
+struct RINGBUFFER
+{
+	struct RBITEM_t *next_alloc;
+	struct RBITEM_t *last_alloc;
+	struct RBITEM_t *first;
+	struct RBITEM_t *last;
+	void *memory;
+	int size;
+	int flags;
 };
 
 typedef struct RBITEM_t
@@ -12,19 +28,8 @@ typedef struct RBITEM_t
     int flags;
     int size;
 } RBITEM;
-
-typedef struct
-{
-    /* what you need */
-    RBITEM *next_alloc;
-    RBITEM *last_alloc;
-    RBITEM *first;
-    RBITEM *last;
-    void *memory;
-    int size;
-} RINGBUFFER; 
  
-RINGBUFFER *ringbuf_init(void *memory, int size)
+RINGBUFFER *ringbuf_init(void *memory, int size, int flags)
 {
 	RINGBUFFER *rb = (RINGBUFFER *)memory;
 	mem_zero(memory, size);
@@ -37,6 +42,8 @@ RINGBUFFER *ringbuf_init(void *memory, int size)
 	rb->last = rb->first;
 	rb->next_alloc = rb->first;
 	
+	rb->flags = flags;
+	
 	return rb;
 }
 
@@ -45,6 +52,10 @@ static RBITEM *ringbuf_free(RINGBUFFER *rb, RBITEM *item)
 	dbg_assert(!(item->flags&RBFLAG_FREE), "trying to  free element that is already freed");
 	item->flags |= RBFLAG_FREE;
 
+	/* TODO: this should be handled better */	
+	if(item == rb->last_alloc)
+		rb->last_alloc = 0;
+	
 	/* merge with all free items backwards */
 	while(item->prev && (item->prev->flags&RBFLAG_FREE))
 	{
@@ -66,7 +77,7 @@ static RBITEM *ringbuf_free(RINGBUFFER *rb, RBITEM *item)
 	
 	if(!item->next)
 		rb->last = item;
-	
+		
 	return item;
 }
 
@@ -126,6 +137,17 @@ static RBITEM *ringbuf_try_allocate(RINGBUFFER *rb, int wanted_size)
 	return item;
 }
 
+void ringbuf_popfirst(RINGBUFFER *rb)
+{
+	if(rb->next_alloc->next)
+		rb->next_alloc = ringbuf_free(rb, rb->next_alloc->next);
+	else
+	{
+		rb->next_alloc = rb->first;
+		rb->next_alloc = ringbuf_free(rb, rb->next_alloc);
+	}
+}
+
 void *ringbuf_allocate(RINGBUFFER *rb, int size)
 {
 	int wanted_size = (size+sizeof(RBITEM)+sizeof(RBITEM)-1)/sizeof(RBITEM)*sizeof(RBITEM);
@@ -143,17 +165,16 @@ void *ringbuf_allocate(RINGBUFFER *rb, int size)
 	block = ringbuf_try_allocate(rb, wanted_size);
 	if(block)
 		return block+1;
+
+	/* check if we just should return null */
+	if(!(rb->flags&RINGBUF_FLAG_RECYCLE))
+		return 0;
 	
 	/* ok, we need to wipe some blocks in order to get space */
 	while(1)
 	{
-		if(rb->next_alloc->next)
-			rb->next_alloc = ringbuf_free(rb, rb->next_alloc->next);
-		else
-		{
-			rb->next_alloc = rb->first;
-			rb->next_alloc = ringbuf_free(rb, rb->next_alloc);
-		}
+		/* pop one */
+		ringbuf_popfirst(rb);
 
 		/* try allocate again */
 		block = ringbuf_try_allocate(rb, wanted_size);

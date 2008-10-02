@@ -885,7 +885,6 @@ int net_would_block();
 int net_socket_read_wait(NETSOCKET sock, int time);
 
 void mem_debug_dump();
-int mem_allocated();
 
 void swap_endian(void *data, unsigned elem_size, unsigned num);
 
@@ -894,6 +893,15 @@ void dbg_logger(DBG_LOGGER logger);
 void dbg_logger_stdout();
 void dbg_logger_debugger();
 void dbg_logger_file(const char *filename);
+
+typedef struct
+{
+	int allocated;
+	int active_allocations;
+	int total_allocations;
+} MEMSTATS;
+
+const MEMSTATS *mem_stats();
 
 typedef struct
 {

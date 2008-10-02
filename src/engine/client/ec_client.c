@@ -586,12 +586,12 @@ static void client_debug_render()
 		udp = 8
 		total = 42
 	*/
-	
 	frametime_avg = frametime_avg*0.9f + frametime*0.1f;
-	str_format(buffer, sizeof(buffer), "ticks: %8d %8d snaploss: %d  mem %dk   gfxmem: %dk  fps: %3d",
+	str_format(buffer, sizeof(buffer), "ticks: %8d %8d snaploss: %d  mem %dk %d  gfxmem: %dk  fps: %3d",
 		current_tick, current_predtick,
 		snaploss,
-		mem_allocated()/1024,
+		mem_stats()->allocated/1024,
+		mem_stats()->total_allocations,
 		gfx_memory_usage()/1024,
 		(int)(1.0f/frametime_avg));
 	gfx_quads_text(2, 2, 16, buffer);

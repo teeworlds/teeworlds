@@ -34,8 +34,8 @@ enum
 CONSOLE::INSTANCE::INSTANCE(int t)
 {
 	// init ringbuffers
-	history = ringbuf_init(history_data, sizeof(history_data));
-	backlog = ringbuf_init(backlog_data, sizeof(backlog_data));
+	history = ringbuf_init(history_data, sizeof(history_data), RINGBUF_FLAG_RECYCLE);
+	backlog = ringbuf_init(backlog_data, sizeof(backlog_data), RINGBUF_FLAG_RECYCLE);
 	
 	history_entry = 0x0;
 	

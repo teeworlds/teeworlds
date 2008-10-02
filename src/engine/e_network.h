@@ -1,4 +1,7 @@
+#ifndef ENGINE_NETWORK_H
+#define ENGINE_NETWORK_H
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+
 
 typedef struct
 {
@@ -10,6 +13,14 @@ typedef struct
 	int data_size;
 	const void *data;
 } NETCHUNK;
+
+
+typedef struct
+{
+	NETADDR addr;
+	int type;
+	int expires;
+} NETBANINFO;
 
 /*typedef struct
 {
@@ -34,7 +45,10 @@ enum
 	
 	NETSTATE_OFFLINE=0,
 	NETSTATE_CONNECTING,
-	NETSTATE_ONLINE
+	NETSTATE_ONLINE,
+	
+	NETBANTYPE_SOFT=1,
+	NETBANTYPE_DROP=2
 };
 
 typedef int (*NETFUNC_DELCLIENT)(int cid, void *user);
@@ -55,6 +69,12 @@ NETSOCKET netserver_socket(NETSERVER *s);
 int netserver_drop(NETSERVER *s, int client_id, const char *reason);
 int netserver_client_addr(NETSERVER *s, int client_id, NETADDR *addr);
 int netserver_max_clients(NETSERVER *s);
+
+int netserver_ban_add(NETSERVER *s, NETADDR addr, int type, int seconds);
+int netserver_ban_remove(NETSERVER *s, NETADDR addr);
+int netserver_ban_num(NETSERVER *s); /* caution, slow */
+int netserver_ban_get(NETSERVER *s, int index, NETBANINFO *info); /* caution, slow */
+
 /*void netserver_stats(NETSERVER *s, NETSTATS *stats);*/
 
 /* client side */
@@ -120,3 +140,5 @@ public:
 };
 #endif
 
+
+#endif

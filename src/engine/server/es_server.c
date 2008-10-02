@@ -963,7 +963,7 @@ static int server_run()
 		game_start_time = time_get();
 	
 		if(config.debug)
-			dbg_msg("server", "baseline memory usage %dk", mem_allocated()/1024);
+			dbg_msg("server", "baseline memory usage %dk", mem_stats()->allocated/1024);
 
 		while(run_server)
 		{
