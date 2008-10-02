@@ -337,9 +337,9 @@ function build(settings)
 	masterserver_exe = Link(server_settings, "mastersrv", masterserver,
 		engine, zlib)
 
-	if platform == "macosx" then
-		osxlaunch_exe = Link(client_settings, "TeeLaunch", osxlaunch)
-	end
+	--if platform == "macosx" then
+	--	osxlaunch_exe = Link(client_settings, "TeeLaunch", osxlaunch)
+	--end
 
 	-- make targets
 	c = PseudoTarget("client".."_"..settings.config_name, client_exe)

@@ -10,7 +10,7 @@ class COMPONENT
 protected:
 	GAMECLIENT *client;
 public:
-	~COMPONENT() {}
+	virtual ~COMPONENT() {}
 	
 	virtual void on_statechange(int new_state, int old_state) {};
 	virtual void on_console_init() {};

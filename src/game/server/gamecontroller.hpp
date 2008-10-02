@@ -54,6 +54,7 @@ public:
 	bool is_teamplay() const;
 	
 	GAMECONTROLLER();
+	virtual ~GAMECONTROLLER();
 
 	void do_team_score_wincheck();
 	void do_player_score_wincheck();

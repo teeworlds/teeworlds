@@ -34,6 +34,10 @@ GAMECONTROLLER::GAMECONTROLLER()
 	num_spawn_points[2] = 0;
 }
 
+GAMECONTROLLER::~GAMECONTROLLER()
+{
+}
+
 float GAMECONTROLLER::evaluate_spawn_pos(SPAWNEVAL *eval, vec2 pos)
 {
 	float score = 0.0f;
