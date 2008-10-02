@@ -180,7 +180,7 @@ void MENUS::render_serverinfo(RECT main_view)
 	x = 5.0f;
 	y = 0.0f;
 	
-	gfx_text(0, serverinfo.x+x, serverinfo.y+y, 32, "Server info", 250.0f);
+	gfx_text(0, serverinfo.x+x, serverinfo.y+y, 32, "Server info", 250);
 	y += 32.0f+5.0f;
 	
 	mem_zero(buf, sizeof(buf));
@@ -198,7 +198,7 @@ void MENUS::render_serverinfo(RECT main_view)
 		current_server_info.version,
 		current_server_info.flags&1 ? "Yes" : "No"
 	);
-	gfx_text(0, serverinfo.x+x, serverinfo.y+y, 20, buf, 250.0f);
+	gfx_text(0, serverinfo.x+x, serverinfo.y+y, 20, buf, 250);
 	
 	{
 		RECT button;
@@ -223,7 +223,7 @@ void MENUS::render_serverinfo(RECT main_view)
 	x = 5.0f;
 	y = 0.0f;
 	
-	gfx_text(0, gameinfo.x+x, gameinfo.y+y, 32, "Game info", 250.0f);
+	gfx_text(0, gameinfo.x+x, gameinfo.y+y, 32, "Game info", 250);
 	y += 32.0f+5.0f;
 	
 	mem_zero(buf, sizeof(buf));
@@ -244,7 +244,7 @@ void MENUS::render_serverinfo(RECT main_view)
 		gameclient.snap.team_size[0]+gameclient.snap.team_size[1],
 		current_server_info.max_players
 	);
-	gfx_text(0, gameinfo.x+x, gameinfo.y+y, 20, buf, 250.0f);
+	gfx_text(0, gameinfo.x+x, gameinfo.y+y, 20, buf, 250);
 	
 	/* motd */
 	ui_hsplit_t(&motd, 10.0f, 0, &motd);
@@ -254,7 +254,7 @@ void MENUS::render_serverinfo(RECT main_view)
 	x = 5.0f;
 	gfx_text(0, motd.x+x, motd.y+y, 32, "MOTD", -1);
 	y += 32.0f+5.0f;
-	gfx_text(0, motd.x+x, motd.y+y, 16, gameclient.motd->server_motd, motd.w);
+	gfx_text(0, motd.x+x, motd.y+y, 16, gameclient.motd->server_motd, (int)motd.w);
 }
 
 void MENUS::render_servercontrol_map(RECT main_view)
