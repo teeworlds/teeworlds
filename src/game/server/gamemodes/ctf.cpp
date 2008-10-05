@@ -41,7 +41,7 @@ int GAMECONTROLLER_CTF::on_character_death(class CHARACTER *victim, class PLAYER
 	for(int fi = 0; fi < 2; fi++)
 	{
 		FLAG *f = flags[fi];
-		if(f && f->carrying_character == killer->get_character())
+		if(f && killer && f->carrying_character == killer->get_character())
 			had_flag |= 2;
 		if(f && f->carrying_character == victim)
 		{
@@ -184,7 +184,7 @@ FLAG::FLAG(int _team)
 
 void FLAG::reset()
 {
-	carrying_character = 0;
+	carrying_character = 0x0;
 	at_stand = 1;
 	pos = stand_pos;
 	vel = vec2(0,0);
