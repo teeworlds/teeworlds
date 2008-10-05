@@ -596,7 +596,7 @@ void CHARACTER::tick()
 	core.input = input;
 	core.tick(true);
 	
-	if(col_get(pos.x, pos.y)&COLFLAG_DEATH)
+	if(col_get((int)pos.x, (int)pos.y)&COLFLAG_DEATH)
 		die(player->client_id, -1);
 
 	// handle weapons
