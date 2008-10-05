@@ -312,8 +312,7 @@ void mods_message(int msgtype, int client_id)
 	}
 	else if (msgtype == NETMSGTYPE_CL_KILL)
 	{
-		//PLAYER *pplayer = get_player(client_id);
-		if(config.sv_spamprotection && p->last_kill+time_freq()*3 > time_get())
+		if(p->last_kill+time_freq()*3 > time_get())
 			return;
 		
 		p->last_kill = time_get();
