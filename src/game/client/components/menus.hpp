@@ -31,6 +31,7 @@ class MENUS : public COMPONENT
 	static float ui_do_scrollbar_h(const void *id, const RECT *rect, float current);
 
 	static int ui_do_key_reader(void *id, const RECT *rect, int key);
+	static void ui_do_getbuttons(int start, int stop, RECT view);
 
 
 	enum

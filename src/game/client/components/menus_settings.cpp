@@ -207,56 +207,63 @@ void MENUS::render_settings_player(RECT main_view)
 
 typedef void (*assign_func_callback)(CONFIGURATION *config, int value);
 
+typedef struct 
+{
+	const char *name;
+	const char *command;
+	int keyid;
+} KEYINFO;
+
+KEYINFO keys[] = 
+{
+	{ "Move Left:", "+left", 0},
+	{ "Move Right:", "+right", 0 },
+	{ "Jump:", "+jump", 0 },
+	{ "Fire:", "+fire", 0 },
+	{ "Hook:", "+hook", 0 },
+	{ "Hammer:", "+weapon1", 0 },
+	{ "Pistol:", "+weapon2", 0 },
+	{ "Shotgun:", "+weapon3", 0 },
+	{ "Grenade:", "+weapon4", 0 },
+	{ "Rifle:", "+weapon5", 0 },
+	{ "Next Weapon:", "+nextweapon", 0 },
+	{ "Prev. Weapon:", "+prevweapon", 0 },
+	{ "Vote Yes:", "vote yes", 0 },
+	{ "Vote No:", "vote no", 0 },
+	{ "Chat:", "chat all", 0 },
+	{ "Team Chat:", "chat team", 0 },
+	{ "Emoticon:", "+emote", 0 },
+	{ "Console:", "toggle_local_console", 0 },
+	{ "Remote Console:", "toggle_remote_console", 0 },
+	{ "Screenshot:", "screenshot", 0 },
+	{ "Scoreboard:", "+scoreboard", 0 },
+};
+
+const int key_count = sizeof(keys) / sizeof(KEYINFO);
+
+void MENUS::ui_do_getbuttons(int start, int stop, RECT view)
+{
+	for (int i = start; i < stop; i++)
+	{
+		KEYINFO key = keys[i];
+		RECT button, label;
+		ui_hsplit_t(&view, 20.0f, &button, &view);
+		ui_vsplit_l(&button, 130.0f, &label, &button);
+	
+		ui_do_label(&label, key.name, 14.0f, -1);
+		int oldid = key.keyid;
+		int newid = ui_do_key_reader((void *)keys[i].name, &button, oldid);
+		if(newid != oldid)
+		{
+			gameclient.binds->bind(oldid, "");
+			gameclient.binds->bind(newid, keys[i].command);
+		}
+		ui_hsplit_t(&view, 5.0f, 0, &view);
+	}
+}
+
 void MENUS::render_settings_controls(RECT main_view)
 {
-	RECT right_part;
-	ui_vsplit_l(&main_view, 300.0f, &main_view, &right_part);
-
-	{
-		RECT button, label;
-		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		ui_vsplit_l(&button, 110.0f, &label, &button);
-		ui_do_label(&label, "Mouse sens.", 14.0f, -1);
-		ui_hmargin(&button, 2.0f, &button);
-		config.inp_mousesens = (int)(ui_do_scrollbar_h(&config.inp_mousesens, &button, (config.inp_mousesens-5)/500.0f)*500.0f)+5;
-		//*key.key = ui_do_key_reader(key.key, &button, *key.key);
-		ui_hsplit_t(&main_view, 20.0f, 0, &main_view);
-	}
-	
-	typedef struct 
-	{
-		const char *name;
-		const char *command;
-		int keyid;
-	} KEYINFO;
-
-	KEYINFO keys[] = 
-	{
-		{ "Move Left:", "+left", 0},
-		{ "Move Right:", "+right", 0 },
-		{ "Jump:", "+jump", 0 },
-		{ "Fire:", "+fire", 0 },
-		{ "Hook:", "+hook", 0 },
-		{ "Hammer:", "+weapon1", 0 },
-		{ "Pistol:", "+weapon2", 0 },
-		{ "Shotgun:", "+weapon3", 0 },
-		{ "Grenade:", "+weapon4", 0 },
-		{ "Rifle:", "+weapon5", 0 },
-		{ "Next Weapon:", "+nextweapon", 0 },
-		{ "Prev. Weapon:", "+prevweapon", 0 },
-		{ "Emoticon:", "+emote", 0 },
-		{ "Chat:", "chat all", 0 },
-		{ "Team Chat:", "chat team", 0 },
-		{ "Console:", "toggle_local_console", 0 },
-		{ "Remote Console:", "toggle_remote_console", 0 },
-		{ "Screenshot:", "screenshot", 0 },
-		{ "Scoreboard:", "+scoreboard", 0 },
-		{ "Vote Yes:", "vote yes", 0 },
-		{ "Vote No:", "vote no", 0 },
-	};
-
-	const int key_count = sizeof(keys) / sizeof(KEYINFO);
-	
 	// this is kinda slow, but whatever
 	for(int keyid = 0; keyid < KEY_LAST; keyid++)
 	{
@@ -271,31 +278,90 @@ void MENUS::render_settings_controls(RECT main_view)
 				break;
 			}
 	}
-	
-	for (int i = 0; i < key_count; i++)
-	{
-		KEYINFO key = keys[i];
-		RECT button, label;
-		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		ui_vsplit_l(&button, 110.0f, &label, &button);
-	
-		ui_do_label(&label, key.name, 14.0f, -1);
-		int oldid = key.keyid;
-		int newid = ui_do_key_reader((void *)keys[i].name, &button, oldid);
-		if(newid != oldid)
-		{
-			gameclient.binds->bind(oldid, "");
-			gameclient.binds->bind(newid, keys[i].command);
-		}
-		ui_hsplit_t(&main_view, 5.0f, 0, &main_view);
-	}
 
+	RECT movement_settings, weapon_settings, voting_settings, chat_settings, misc_settings, reset_button;
+	ui_vsplit_l(&main_view, main_view.w/2-5.0f, &movement_settings, &voting_settings);
+	
+	/* movement settings */
+	{
+		ui_hsplit_t(&movement_settings, main_view.h/2-5.0f, &movement_settings, &weapon_settings);
+		ui_draw_rect(&movement_settings, vec4(1,1,1,0.25f), CORNER_ALL, 10.0f);
+		ui_margin(&movement_settings, 10.0f, &movement_settings);
+		
+		gfx_text(0, movement_settings.x, movement_settings.y, 14, "Movement", -1);
+		
+		ui_hsplit_t(&movement_settings, 14.0f+5.0f+10.0f, 0, &movement_settings);
+		
+		{
+			RECT button, label;
+			ui_hsplit_t(&movement_settings, 20.0f, &button, &movement_settings);
+			ui_vsplit_l(&button, 130.0f, &label, &button);
+			ui_do_label(&label, "Mouse sens.", 14.0f, -1);
+			ui_hmargin(&button, 2.0f, &button);
+			config.inp_mousesens = (int)(ui_do_scrollbar_h(&config.inp_mousesens, &button, (config.inp_mousesens-5)/500.0f)*500.0f)+5;
+			//*key.key = ui_do_key_reader(key.key, &button, *key.key);
+			ui_hsplit_t(&movement_settings, 20.0f, 0, &movement_settings);
+		}
+		
+		ui_do_getbuttons(0, 5, movement_settings);
+
+	}
+	
+	/* weapon settings */
+	{
+		ui_hsplit_t(&weapon_settings, 10.0f, 0, &weapon_settings);
+		ui_draw_rect(&weapon_settings, vec4(1,1,1,0.25f), CORNER_ALL, 10.0f);
+		ui_margin(&weapon_settings, 10.0f, &weapon_settings);
+
+		gfx_text(0, weapon_settings.x, weapon_settings.y, 14, "Weapon", -1);
+		
+		ui_hsplit_t(&weapon_settings, 14.0f+5.0f+10.0f, 0, &weapon_settings);
+		ui_do_getbuttons(5, 12, weapon_settings);
+	}
+	
+	/* voting settings */
+	{
+		ui_vsplit_l(&voting_settings, 10.0f, 0, &voting_settings);
+		ui_hsplit_t(&voting_settings, main_view.h/4-5.0f, &voting_settings, &chat_settings);
+		ui_draw_rect(&voting_settings, vec4(1,1,1,0.25f), CORNER_ALL, 10.0f);
+		ui_margin(&voting_settings, 10.0f, &voting_settings);
+	
+		gfx_text(0, voting_settings.x, voting_settings.y, 14, "Voting", -1);
+		
+		ui_hsplit_t(&voting_settings, 14.0f+5.0f+10.0f, 0, &voting_settings);
+		ui_do_getbuttons(12, 14, voting_settings);
+	}
+	
+	/* chat settings */
+	{
+		ui_hsplit_t(&chat_settings, 10.0f, 0, &chat_settings);
+		ui_hsplit_t(&chat_settings, main_view.h/4-10.0f, &chat_settings, &misc_settings);
+		ui_draw_rect(&chat_settings, vec4(1,1,1,0.25f), CORNER_ALL, 10.0f);
+		ui_margin(&chat_settings, 10.0f, &chat_settings);
+	
+		gfx_text(0, chat_settings.x, chat_settings.y, 14, "Chat", -1);
+		
+		ui_hsplit_t(&chat_settings, 14.0f+5.0f+10.0f, 0, &chat_settings);
+		ui_do_getbuttons(14, 16, chat_settings);
+	}
+	
+	/* misc settings */
+	{
+		ui_hsplit_t(&misc_settings, 10.0f, 0, &misc_settings);
+		ui_hsplit_t(&misc_settings, main_view.h/2-5.0f-45.0f, &misc_settings, &reset_button);
+		ui_draw_rect(&misc_settings, vec4(1,1,1,0.25f), CORNER_ALL, 10.0f);
+		ui_margin(&misc_settings, 10.0f, &misc_settings);
+	
+		gfx_text(0, misc_settings.x, misc_settings.y, 14, "Miscellaneous", -1);
+		
+		ui_hsplit_t(&misc_settings, 14.0f+5.0f+10.0f, 0, &misc_settings);
+		ui_do_getbuttons(16, 21, misc_settings);
+	}
+	
 	// defaults
-	RECT button;
-	ui_hsplit_b(&right_part, 25.0f, &right_part, &button);
-	ui_vsplit_l(&button, 50.0f, 0, &button);
+	ui_hsplit_t(&reset_button, 10.0f, 0, &reset_button);
 	static int default_button = 0;
-	if (ui_do_button((void*)&default_button, "Reset to defaults", 0, &button, ui_draw_menu_button, 0))
+	if (ui_do_button((void*)&default_button, "Reset to defaults", 0, &reset_button, ui_draw_menu_button, 0))
 		gameclient.binds->set_defaults();
 }
 
