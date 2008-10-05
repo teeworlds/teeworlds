@@ -162,7 +162,9 @@ static void client_serverbrowse_filter()
 			filtered = 1;
 		else if(config.b_filter_full && serverlist[i]->info.num_players == serverlist[i]->info.max_players)
 			filtered = 1;
-		else if(config.b_filter_pw && serverlist[i]->info.flags&1)
+		else if(config.b_filter_pw && serverlist[i]->info.flags&SRVFLAG_PASSWORD)
+			filtered = 1;
+		else if(config.b_filter_tuned && serverlist[i]->info.flags&SRVFLAG_TUNED)
 			filtered = 1;
 		else if(config.b_filter_ping < serverlist[i]->info.latency)
 			filtered = 1;
@@ -222,6 +224,7 @@ static int client_serverbrowse_sorthash()
 	i |= config.b_filter_pw<<6;
 	i |= config.b_sort_order<<7;
 	i |= config.b_filter_compatversion<<8;
+	i |= config.b_filter_tuned<<9;
 	i |= config.b_filter_ping<<16;
 	return i;
 }

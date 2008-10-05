@@ -165,4 +165,7 @@ const char *mods_version();
 */
 void mods_message(int msg, int client_id);
 
+
+int mods_is_tuned();
+
 #endif

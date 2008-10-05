@@ -46,6 +46,7 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 		SPACER=2,
 		
 		COL_FLAG_LOCK=0,
+		COL_FLAG_TUNED,
 		COL_FLAG_FAV,
 		COL_NAME,
 		COL_GAMETYPE,
@@ -59,6 +60,7 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 	static column cols[] = {
 		{-1,			-1,						" ",		-1, 2.0f, 0, {0}, {0}},
 		{COL_FLAG_LOCK,	-1,						" ",		-1, 14.0f, 0, {0}, {0}},
+		{COL_FLAG_TUNED,	-1,						" ",		-1, 14.0f, 0, {0}, {0}},
 		{COL_FLAG_FAV,	-1,						" ",		-1, 14.0f, 0, {0}, {0}},
 		{COL_NAME,		BROWSESORT_NAME,		"Name",		0, 300.0f, 0, {0}, {0}},
 		{COL_GAMETYPE,	BROWSESORT_GAMETYPE,	"Type",		1, 50.0f, 0, {0}, {0}},
@@ -221,9 +223,14 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 			
 			if(id == COL_FLAG_LOCK)
 			{
-				if(item->flags&1)
+				if(item->flags & SRVFLAG_PASSWORD)
 					ui_draw_browse_icon(SPRITE_BROWSE_LOCK, &button);
-			}	
+			}
+			else if(id == COL_FLAG_TUNED)
+			{
+				if(item->flags & SRVFLAG_TUNED)
+					ui_draw_browse_icon(SPRITE_BROWSE_TUNED, &button);
+			}
 			else if(id == COL_FLAG_FAV)
 			{
 				if(item->favorite)
@@ -347,6 +354,10 @@ void MENUS::render_serverbrowser_filters(RECT view)
 		config.b_filter_compatversion ^= 1;
 
 	ui_hsplit_t(&view, 20.0f, &button, &view);
+	if (ui_do_button((char *)&config.b_filter_tuned, "No tuned", config.b_filter_tuned, &button, ui_draw_checkbox, 0))
+		config.b_filter_tuned ^= 1;
+
+	ui_hsplit_t(&view, 20.0f, &button, &view);
 	ui_do_label(&button, "Game types: ", 14.0f, -1);
 	ui_vsplit_l(&button, 95.0f, 0, &button);
 	ui_margin(&button, 1.0f, &button);
@@ -383,8 +394,9 @@ void MENUS::render_serverbrowser_filters(RECT view)
 		config.b_filter_ping = 999;
 		config.b_filter_gametype[0] = 0;
 		config.b_filter_compatversion = 1;
+		config.b_filter_tuned = 1;
 		config.b_filter_string[0] = 0;
-	}		
+	}
 }
 
 void MENUS::render_serverbrowser_serverdetail(RECT view)
@@ -415,7 +427,7 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 	if (selected_server)
 	{
 		RECT row;
-		static const char *labels[] = { "Version:", "Game Type:", "Progression:", "Ping:" };
+		static const char *labels[] = { "Version:", "Game Type:", "Tuning:", "Progression:", "Ping:" };
 
 		RECT left_column;
 		RECT right_column;
@@ -438,7 +450,7 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 		ui_vsplit_l(&server_details, 5.0f, 0x0, &server_details);
 		ui_vsplit_l(&server_details, 80.0f, &left_column, &right_column);
 
-		for (int i = 0; i < 4; i++)
+		for (unsigned int i = 0; i < sizeof(labels) / sizeof(labels[0]); i++)
 		{
 			ui_hsplit_t(&left_column, 15.0f, &row, &left_column);
 			ui_do_label(&row, labels[i], font_size, -1);
@@ -451,6 +463,12 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 		ui_do_label(&row, selected_server->gametype, font_size, -1);
 
 		char temp[16];
+
+		str_format(temp, sizeof(temp), "%s", selected_server->flags & SRVFLAG_TUNED ? "non-standard" : "standard");
+
+		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
+		ui_do_label(&row, temp, font_size, -1);
+
 
 		if(selected_server->progression < 0)
 			str_format(temp, sizeof(temp), "N/A");

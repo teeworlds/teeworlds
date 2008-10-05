@@ -29,6 +29,13 @@ enum
 	MAX_NAME_LENGTH=32
 };
 
+enum
+{
+	SRVFLAG_PASSWORD = 0x1,
+	SRVFLAG_TUNED = 0x2,
+	SRVFLAG_MOD = 0x4
+};
+
 /*
 	Structure: SNAP_ITEM
 */
