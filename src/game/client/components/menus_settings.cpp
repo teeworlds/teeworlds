@@ -273,12 +273,12 @@ void MENUS::render_settings_controls(RECT main_view)
 	}
 	
 	for (int i = 0; i < key_count; i++)
-    {
+	{
 		KEYINFO key = keys[i];
-    	RECT button, label;
-    	ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
-    	ui_vsplit_l(&button, 110.0f, &label, &button);
-    	
+		RECT button, label;
+		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
+		ui_vsplit_l(&button, 110.0f, &label, &button);
+	
 		ui_do_label(&label, key.name, 14.0f, -1);
 		int oldid = key.keyid;
 		int newid = ui_do_key_reader((void *)keys[i].name, &button, oldid);
@@ -287,10 +287,10 @@ void MENUS::render_settings_controls(RECT main_view)
 			gameclient.binds->bind(oldid, "");
 			gameclient.binds->bind(newid, keys[i].command);
 		}
-    	ui_hsplit_t(&main_view, 5.0f, 0, &main_view);
-    }	
-    
-    // defaults
+		ui_hsplit_t(&main_view, 5.0f, 0, &main_view);
+	}
+
+	// defaults
 	RECT button;
 	ui_hsplit_b(&right_part, 25.0f, &right_part, &button);
 	ui_vsplit_l(&button, 50.0f, 0, &button);
