@@ -1238,6 +1238,11 @@ static void client_pump_network()
 static void client_democallback(DEMOREC_CHUNK chunk, void *data)
 {
 	/* dbg_msg("client/playback", "got %c%c%c%c", chunk.type[0], chunk.type[1], chunk.type[2], chunk.type[3]); */
+
+	/* update ticks, they could have changed */
+	const DEMOREC_PLAYBACKINFO *info = demorec_playback_info();			
+	current_tick = info->current_tick;
+	prev_tick = info->previous_tick;
 	
 	if(mem_comp(chunk.type, "SNAP", 4) == 0)
 	{
@@ -1260,7 +1265,6 @@ static void client_democallback(DEMOREC_CHUNK chunk, void *data)
 		if(!sys)
 			modc_message(msg);
 	}
-	
 }
 
 const DEMOPLAYBACK_INFO *client_demoplayer_getinfo()
