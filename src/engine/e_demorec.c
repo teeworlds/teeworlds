@@ -326,7 +326,7 @@ int demorec_playback_update()
 			int64 curtick_start = (playbackinfo.current_tick)*freq/SERVER_TICK_SPEED;
 			int64 prevtick_start = (playbackinfo.previous_tick)*freq/SERVER_TICK_SPEED;
 			playbackinfo.intratick = (playbackinfo.current_time - prevtick_start) / (float)(curtick_start-prevtick_start);
-			playbackinfo.ticktime = (playbackinfo.current_time - prevtick_start) / (float)freq;
+			playbackinfo.ticktime = (playbackinfo.current_time - prevtick_start) / (freq/(float)SERVER_TICK_SPEED);
 		}
 		
 		if(playbackinfo.current_tick == playbackinfo.previous_tick ||
