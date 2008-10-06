@@ -63,6 +63,9 @@ void engine_init(const char *appname)
 
 			str_format(path, sizeof(path), "%s/maps", application_save_path);
 			fs_makedir(path);
+
+			str_format(path, sizeof(path), "%s/demos", application_save_path);
+			fs_makedir(path);
 		}
 	}
 

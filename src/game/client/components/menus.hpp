@@ -15,6 +15,9 @@ class MENUS : public COMPONENT
 	
 	static vec4 button_color_mul(const void *id);
 
+
+	static void ui_draw_demoplayer_button(const void *id, const char *text, int checked, const RECT *r, const void *extra);
+
 	static void ui_draw_browse_icon(int what, const RECT *r);
 	static void ui_draw_menu_button(const void *id, const char *text, int checked, const RECT *r, const void *extra);
 	static void ui_draw_keyselect_button(const void *id, const char *text, int checked, const RECT *r, const void *extra);
@@ -33,6 +36,19 @@ class MENUS : public COMPONENT
 	static int ui_do_key_reader(void *id, const RECT *rect, int key);
 	static void ui_do_getbuttons(int start, int stop, RECT view);
 
+	struct LISTBOXITEM
+	{
+		int visible;
+		int selected;
+		RECT rect;
+	};
+	
+	static void ui_do_listbox_start(void *id, const RECT *rect, float row_height, const char *title, int num_items, int selected_index);
+	static LISTBOXITEM ui_do_listbox_nextitem(void *id);
+	static int ui_do_listbox_end();
+	
+	//static void demolist_listdir_callback(const char *name, int is_dir, void *user);
+	//static void demolist_list_callback(const RECT *rect, int index, void *user);
 
 	enum
 	{
@@ -53,6 +69,7 @@ class MENUS : public COMPONENT
 		PAGE_INTERNET,
 		PAGE_LAN,
 		PAGE_FAVORITES,
+		PAGE_DEMOS,
 		PAGE_SETTINGS,
 		PAGE_SYSTEM,
 	};
@@ -71,7 +88,9 @@ class MENUS : public COMPONENT
 	static int num_inputevents;
 	
 	// some settings
-	float button_height;
+	static float button_height;
+	static float listheader_height;
+	static float fontmod_height;
 	
 	// for graphic settings
 	bool need_restart;
@@ -79,6 +98,20 @@ class MENUS : public COMPONENT
 	// for call vote
 	int callvote_selectedplayer;
 	int callvote_selectedmap;
+	
+	// demo
+	struct DEMOITEM
+	{
+		char filename[512];
+		char name[256];
+	};
+	
+	DEMOITEM *demos;
+	int num_demos;
+		
+	void demolist_populate();
+	static void demolist_count_callback(const char *name, int is_dir, void *user);
+	static void demolist_fetch_callback(const char *name, int is_dir, void *user);
 
 	// found in menus.cpp
 	int render();
@@ -86,6 +119,10 @@ class MENUS : public COMPONENT
 	//void render_loading(float percent);
 	int render_menubar(RECT r);
 	void render_news(RECT main_view);
+	
+	// found in menus_demo.cpp
+	void render_demoplayer(RECT main_view);
+	void render_demolist(RECT main_view);
 	
 	// found in menus_ingame.cpp
 	void render_game(RECT main_view);

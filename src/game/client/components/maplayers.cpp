@@ -50,7 +50,7 @@ static void envelope_eval(float time_offset, int env, float *channels)
 
 void MAPLAYERS::on_render()
 {
-	if(client_state() != CLIENTSTATE_ONLINE)
+	if(client_state() != CLIENTSTATE_ONLINE && client_state() != CLIENTSTATE_DEMOPLAYBACK)
 		return;
 	
 	vec2 center = gameclient.camera->center;

@@ -283,7 +283,7 @@ void MENUS::render_servercontrol_map(RECT main_view)
 
 		ui_vmargin(&button, 5.0f, &button);
 		ui_do_label(&button, gameclient.maplist->name(i), 18.0f, -1);
-	}	
+	}
 }
 
 void MENUS::render_servercontrol_kick(RECT main_view)

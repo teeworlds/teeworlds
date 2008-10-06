@@ -8,7 +8,7 @@ MAPIMAGES::MAPIMAGES()
 	count = 0;
 }
 
-void MAPIMAGES::on_reset()
+void MAPIMAGES::on_mapload()
 {
 	// unload all textures
 	for(int i = 0; i < count; i++)

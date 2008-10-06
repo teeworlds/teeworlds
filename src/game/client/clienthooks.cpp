@@ -17,6 +17,7 @@ extern "C" void modc_init() { gameclient.on_init(); }
 extern "C" void modc_connected() { gameclient.on_connected(); }
 extern "C" void modc_predict() { gameclient.on_predict(); }
 extern "C" void modc_newsnapshot() { gameclient.on_snapshot(); }
+extern "C" void modc_recordkeyframe() { gameclient.on_recordkeyframe(); }
 extern "C" int modc_snap_input(int *data) { return gameclient.on_snapinput(data); }
 extern "C" void modc_statechange(int state, int old) { gameclient.on_statechange(state, old); }
 extern "C" void modc_render() { gameclient.on_render(); }

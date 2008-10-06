@@ -83,6 +83,10 @@ public:
 	// client data
 	struct CLIENT_DATA
 	{
+		int use_custom_color;
+		int color_body;
+		int color_feet;
+		
 		char name[64];
 		char skin_name[64];
 		int skin_id;
@@ -115,6 +119,7 @@ public:
 	void on_snapshot();
 	void on_predict();
 	int on_snapinput(int *data);
+	void on_recordkeyframe();
 
 	// actions
 	// TODO: move these

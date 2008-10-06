@@ -18,6 +18,7 @@
 #include <engine/e_config.h>
 #include <engine/e_packer.h>
 #include <engine/e_datafile.h>
+#include <engine/e_demorec.h>
 
 #include <mastersrv/mastersrv.h>
 
@@ -37,6 +38,8 @@ static int browseinfo_progression = -1;
 
 static int64 lastheartbeat;
 /*static NETADDR4 master_server;*/
+
+static IOHANDLE demorec_file = 0;
 
 static char current_map[64];
 static int current_map_crc;
@@ -65,7 +68,6 @@ static int snap_last_timed_id;
 static int snap_id_usage;
 static int snap_id_inusage;
 static int snap_id_inited = 0;
-
 
 enum
 {
@@ -338,19 +340,26 @@ int server_send_msg(int client_id)
 	if(info->flags&MSGFLAG_FLUSH)
 		packet.flags |= NETSENDFLAG_FLUSH;
 	
-	if(client_id == -1)
+	/* write message to demo recorder */
+	if(!(info->flags&MSGFLAG_NORECORD))
+		demorec_record_write("MESG", info->size, info->data);
+
+	if(!(info->flags&MSGFLAG_NOSEND))
 	{
-		/* broadcast */
-		int i;
-		for(i = 0; i < MAX_CLIENTS; i++)
-			if(clients[i].state == SRVCLIENT_STATE_INGAME)
-			{
-				packet.client_id = i;
-				netserver_send(net, &packet);
-			}
+		if(client_id == -1)
+		{
+			/* broadcast */
+			int i;
+			for(i = 0; i < MAX_CLIENTS; i++)
+				if(clients[i].state == SRVCLIENT_STATE_INGAME)
+				{
+					packet.client_id = i;
+					netserver_send(net, &packet);
+				}
+		}
+		else
+			netserver_send(net, &packet);
 	}
-	else
-		netserver_send(net, &packet);
 	return 0;
 }
 
@@ -364,7 +373,29 @@ static void server_do_snap()
 		mods_presnap();
 		perf_end();
 	}
+	
+	/* create snapshot for demo recording */
+	if(demorec_file)
+	{
+		char data[MAX_SNAPSHOT_SIZE];
+		int snapshot_size;
+		DEMOREC_TICKMARKER marker;
 
+		/* write tick marker */
+		marker.tick = server_tick();
+		swap_endian(&marker, sizeof(int), sizeof(marker)/sizeof(int));
+		demorec_record_write("TICK", sizeof(marker), &marker);
+		
+		/* build snap and possibly add some messages */
+		snapbuild_init(&builder);
+		mods_snap(-1);
+		snapshot_size = snapbuild_finish(&builder, data);
+		
+		/* write snapshot */
+		demorec_record_write("SNAP", snapshot_size, data);
+	}
+
+	/* create snapshots for all clients */
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
 		/* client must be ingame to recive snapshots */
@@ -788,6 +819,17 @@ static void server_process_client_packet(NETCHUNK *packet)
 	}
 }
 
+
+int server_ban_add(NETADDR addr, int type, int seconds)
+{
+	return netserver_ban_add(net, addr, type, seconds);	
+}
+
+int server_ban_remove(NETADDR addr)
+{
+	return netserver_ban_remove(net, addr);
+}
+
 static void server_send_serverinfo(NETADDR *addr, int token)
 {
 	NETCHUNK packet;
@@ -1116,6 +1158,15 @@ static void con_kick(void *result, void *user_data)
 	server_kick(console_arg_int(result, 0), "kicked by console");
 }
 
+static void con_ban(void *result, void *user_data)
+{
+	NETADDR addr;
+	const char *str = console_arg_string(result, 0);
+	
+	if(net_addr_from_str(&addr, str) == 0)
+		server_ban_add(addr, 1, 60);
+}
+
 static void con_status(void *result, void *user_data)
 {
 	int i;
@@ -1135,14 +1186,27 @@ static void con_status(void *result, void *user_data)
 static void con_shutdown(void *result, void *user_data)
 {
 	run_server = 0;
-	/*server_kick(console_arg_int(result, 0), "kicked by console");*/
+}
+
+static void con_record(void *result, void *user_data)
+{
+	demorec_record_start(console_arg_string(result, 0), mods_net_version(), current_map, current_map_crc, "server");
+}
+
+static void con_stoprecord(void *result, void *user_data)
+{
+	demorec_record_stop();
 }
 
 static void server_register_commands()
 {
 	MACRO_REGISTER_COMMAND("kick", "i", con_kick, 0);
+	MACRO_REGISTER_COMMAND("ban", "r", con_ban, 0);
 	MACRO_REGISTER_COMMAND("status", "", con_status, 0);
 	MACRO_REGISTER_COMMAND("shutdown", "", con_shutdown, 0);
+
+	MACRO_REGISTER_COMMAND("record", "s", con_record, 0);
+	MACRO_REGISTER_COMMAND("stoprecord", "", con_stoprecord, 0);
 }
 
 int main(int argc, char **argv)

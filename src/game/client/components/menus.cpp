@@ -32,6 +32,11 @@ vec4 MENUS::color_tabbar_active;
 vec4 MENUS::color_tabbar_inactive_ingame;
 vec4 MENUS::color_tabbar_active_ingame;
 
+
+float MENUS::button_height = 25.0f;
+float MENUS::listheader_height = 16.0f;
+float MENUS::fontmod_height = 0.8f;
+
 INPUT_EVENT MENUS::inputevents[MAX_INPUTEVENTS];
 int MENUS::num_inputevents;
 
@@ -84,9 +89,10 @@ MENUS::MENUS()
 	menu_active = true;
 	num_inputevents = 0;
 	
-	last_input = time_get();
+	demos = 0;
+	num_demos = 0;
 	
-	button_height = 25.0f;
+	last_input = time_get();
 }
 
 vec4 MENUS::button_color_mul(const void *id)
@@ -111,22 +117,27 @@ void MENUS::ui_draw_browse_icon(int what, const RECT *r)
 void MENUS::ui_draw_menu_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	ui_draw_rect(r, vec4(1,1,1,0.5f)*button_color_mul(id), CORNER_ALL, 5.0f);
-	ui_do_label(r, text, 18.0f, 0);
+	ui_do_label(r, text, r->h*fontmod_height, 0);
 }
 
 void MENUS::ui_draw_keyselect_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
 	ui_draw_rect(r, vec4(1,1,1,0.5f)*button_color_mul(id), CORNER_ALL, 5.0f);
-	ui_do_label(r, text, 14.0f, 0);
+	ui_do_label(r, text, r->h*fontmod_height, 0);
 }
 
 void MENUS::ui_draw_menu_tab_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
 {
+	int corners = CORNER_T;
+	vec4 colormod(1,1,1,1);
+	if(extra)
+		corners = *(int *)extra;
+	
 	if(checked)
-		ui_draw_rect(r, color_tabbar_active, CORNER_T, 10.0f);
+		ui_draw_rect(r, color_tabbar_active, corners, 10.0f);
 	else
-		ui_draw_rect(r, color_tabbar_inactive, CORNER_T, 10.0f);
-	ui_do_label(r, text, 22.0f, 0);
+		ui_draw_rect(r, color_tabbar_inactive, corners, 10.0f);
+	ui_do_label(r, text, r->h*fontmod_height, 0);
 }
 
 
@@ -136,7 +147,7 @@ void MENUS::ui_draw_settings_tab_button(const void *id, const char *text, int ch
 		ui_draw_rect(r, color_tabbar_active, CORNER_R, 10.0f);
 	else
 		ui_draw_rect(r, color_tabbar_inactive, CORNER_R, 10.0f);
-	ui_do_label(r, text, 20.0f, 0);
+	ui_do_label(r, text, r->h*fontmod_height, 0);
 }
 
 void MENUS::ui_draw_grid_header(const void *id, const char *text, int checked, const RECT *r, const void *extra)
@@ -145,7 +156,7 @@ void MENUS::ui_draw_grid_header(const void *id, const char *text, int checked, c
 		ui_draw_rect(r, vec4(1,1,1,0.5f), CORNER_T, 5.0f);
 	RECT t;
 	ui_vsplit_l(r, 5.0f, 0, &t);
-	ui_do_label(&t, text, 14.0f, -1);
+	ui_do_label(&t, text, r->h*fontmod_height, -1);
 }
 
 void MENUS::ui_draw_list_row(const void *id, const char *text, int checked, const RECT *r, const void *extra)
@@ -156,7 +167,7 @@ void MENUS::ui_draw_list_row(const void *id, const char *text, int checked, cons
 		ui_margin(&sr, 1.5f, &sr);
 		ui_draw_rect(&sr, vec4(1,1,1,0.5f), CORNER_ALL, 4.0f);
 	}
-	ui_do_label(r, text, 14.0f, -1);
+	ui_do_label(r, text, r->h*fontmod_height, -1);
 }
 
 void MENUS::ui_draw_checkbox_common(const void *id, const char *text, const char *boxtext, const RECT *r)
@@ -171,8 +182,8 @@ void MENUS::ui_draw_checkbox_common(const void *id, const char *text, const char
 	ui_margin(&c, 2.0f, &c);
 	ui_draw_rect(&c, vec4(1,1,1,0.25f)*button_color_mul(id), CORNER_ALL, 3.0f);
 	c.y += 2;
-	ui_do_label(&c, boxtext, 12.0f, 0);
-	ui_do_label(&t, text, 14.0f, -1);
+	ui_do_label(&c, boxtext, r->h*fontmod_height*0.75f, 0);
+	ui_do_label(&t, text, r->h*fontmod_height*0.8f, -1);
 }
 
 void MENUS::ui_draw_checkbox(const void *id, const char *text, int checked, const RECT *r, const void *extra)
@@ -489,31 +500,43 @@ int MENUS::render_menubar(RECT r)
 			ui_vsplit_l(&box, 30.0f, 0, &box); 
 		}
 
-		ui_vsplit_l(&box, 110.0f, &button, &box);
+		ui_vsplit_l(&box, 100.0f, &button, &box);
 		static int internet_button=0;
-		if (ui_do_button(&internet_button, "Internet", active_page==PAGE_INTERNET, &button, ui_draw_menu_tab_button, 0))
+		int corners = CORNER_TL;
+		if (ui_do_button(&internet_button, "Internet", active_page==PAGE_INTERNET, &button, ui_draw_menu_tab_button, &corners))
 		{
 			client_serverbrowse_refresh(BROWSETYPE_INTERNET);
 			new_page = PAGE_INTERNET;
 		}
 
-		ui_vsplit_l(&box, 4.0f, 0, &box);
-		ui_vsplit_l(&box, 90.0f, &button, &box);
+		//ui_vsplit_l(&box, 4.0f, 0, &box);
+		ui_vsplit_l(&box, 80.0f, &button, &box);
 		static int lan_button=0;
-		if (ui_do_button(&lan_button, "LAN", active_page==PAGE_LAN, &button, ui_draw_menu_tab_button, 0))
+		corners = 0;
+		if (ui_do_button(&lan_button, "LAN", active_page==PAGE_LAN, &button, ui_draw_menu_tab_button, &corners))
 		{
 			client_serverbrowse_refresh(BROWSETYPE_LAN);
 			new_page = PAGE_LAN;
 		}
 
-		ui_vsplit_l(&box, 4.0f, 0, &box);
-		ui_vsplit_l(&box, 120.0f, &button, &box);
+		//ui_vsplit_l(&box, 4.0f, 0, &box);
+		ui_vsplit_l(&box, 110.0f, &button, &box);
 		static int favorites_button=0;
-		if (ui_do_button(&favorites_button, "Favorites", active_page==PAGE_FAVORITES, &button, ui_draw_menu_tab_button, 0))
+		corners = CORNER_TR;
+		if (ui_do_button(&favorites_button, "Favorites", active_page==PAGE_FAVORITES, &button, ui_draw_menu_tab_button, &corners))
 		{
 			client_serverbrowse_refresh(BROWSETYPE_FAVORITES);
 			new_page  = PAGE_FAVORITES;
 		}
+		
+		ui_vsplit_l(&box, 4.0f*5, 0, &box);
+		ui_vsplit_l(&box, 100.0f, &button, &box);
+		static int demos_button=0;
+		if (ui_do_button(&demos_button, "Demos", active_page==PAGE_DEMOS, &button, ui_draw_menu_tab_button, 0))
+		{
+			//client_serverbrowse_refresh(BROWSETYPE_FAVORITES);
+			new_page  = PAGE_DEMOS;
+		}		
 	}
 	else
 	{
@@ -547,13 +570,13 @@ int MENUS::render_menubar(RECT r)
 	ui_vsplit_r(&box, 30.0f, &box, 0);
 	*/
 	
-	ui_vsplit_r(&box, 110.0f, &box, &button);
+	ui_vsplit_r(&box, 90.0f, &box, &button);
 	static int quit_button=0;
 	if (ui_do_button(&quit_button, "Quit", 0, &button, ui_draw_menu_tab_button, 0))
 		popup = POPUP_QUIT;
 
 	ui_vsplit_r(&box, 10.0f, &box, &button);
-	ui_vsplit_r(&box, 110.0f, &box, &button);
+	ui_vsplit_r(&box, 120.0f, &box, &button);
 	static int settings_button=0;
 	if (ui_do_button(&settings_button, "Settings", active_page==PAGE_SETTINGS, &button, ui_draw_menu_tab_button, 0))
 		new_page = PAGE_SETTINGS;
@@ -663,7 +686,7 @@ int MENUS::render()
 	if(popup == POPUP_NONE)
 	{
 		// do tab bar
-		ui_hsplit_t(&screen, 26.0f, &tab_bar, &main_view);
+		ui_hsplit_t(&screen, 24.0f, &tab_bar, &main_view);
 		ui_vmargin(&tab_bar, 20.0f, &tab_bar);
 		render_menubar(tab_bar);
 		
@@ -691,6 +714,8 @@ int MENUS::render()
 			render_serverbrowser(main_view);
 		else if(config.ui_page == PAGE_LAN)
 			render_serverbrowser(main_view);
+		else if(config.ui_page == PAGE_DEMOS)
+			render_demolist(main_view);
 		else if(config.ui_page == PAGE_FAVORITES)
 			render_serverbrowser(main_view);
 		else if(config.ui_page == PAGE_SETTINGS)
@@ -922,7 +947,7 @@ void MENUS::on_statechange(int new_state, int old_state)
 		popup = POPUP_CONNECTING;
 	else if(new_state == CLIENTSTATE_CONNECTING)
 		popup = POPUP_CONNECTING;
-	else if (new_state == CLIENTSTATE_ONLINE)
+	else if (new_state == CLIENTSTATE_ONLINE || new_state == CLIENTSTATE_DEMOPLAYBACK)
 	{
 		popup = POPUP_NONE;
 		menu_active = false;
@@ -931,16 +956,18 @@ void MENUS::on_statechange(int new_state, int old_state)
 
 void MENUS::on_render()
 {
-	if(client_state() != CLIENTSTATE_ONLINE)
+	if(client_state() != CLIENTSTATE_ONLINE && client_state() != CLIENTSTATE_DEMOPLAYBACK)
 		menu_active = true;
+
+	if(client_state() == CLIENTSTATE_DEMOPLAYBACK)
+	{
+		RECT screen = *ui_screen();
+		gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
+		render_demoplayer(screen);
+	}
 	
 	if(!menu_active)
 		return;
-		
-
-
-	if(inp_key_down('M')) button_height += 1.0f;
-	if(inp_key_down('N')) button_height -= 1.0f;
 		
 	// update colors
 	vec3 rgb = hsl_to_rgb(vec3(config.ui_color_hue/255.0f, config.ui_color_sat/255.0f, config.ui_color_lht/255.0f));
@@ -1002,8 +1029,8 @@ void MENUS::on_render()
 	}
 	else
 	{
-		//render_background();
-		render();
+		if(client_state() != CLIENTSTATE_DEMOPLAYBACK)
+			render();
 
 		// render cursor
 		gfx_texture_set(data->images[IMAGE_CURSOR].id);
@@ -1024,6 +1051,7 @@ void MENUS::on_render()
 			gfx_text_set_cursor(&cursor, 10, 10, 10, TEXTFLAG_RENDER);
 			gfx_text_ex(&cursor, buf, -1);
 		}
+		
 	}
 
 	num_inputevents = 0;

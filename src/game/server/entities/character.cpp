@@ -828,7 +828,7 @@ bool CHARACTER::take_damage(vec2 force, int dmg, int from, int weapon)
 
 void CHARACTER::snap(int snaping_client)
 {
-	if(distance(game.players[snaping_client]->view_pos, pos) > 1000.0f)
+	if(networkclipped(snaping_client))
 		return;
 	
 	NETOBJ_CHARACTER *character = (NETOBJ_CHARACTER *)snap_new_item(NETOBJTYPE_CHARACTER, player->client_id, sizeof(NETOBJ_CHARACTER));

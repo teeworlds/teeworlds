@@ -78,9 +78,7 @@ void PROJECTILE::tick()
 		if(flags & PROJECTILE_FLAGS_EXPLODE)
 			game.create_explosion(curpos, owner, weapon, false);
 		else if(targetchr)
-		{
 			targetchr->take_damage(direction * max(0.001f, force), damage, owner, weapon);
-		}
 
 		game.world.destroy_entity(this);
 	}
@@ -100,7 +98,7 @@ void PROJECTILE::snap(int snapping_client)
 {
 	float ct = (server_tick()-start_tick)/(float)server_tickspeed();
 	
-	if(distance(game.players[snapping_client]->view_pos, get_pos(ct)) > 1000.0f)
+	if(networkclipped(snapping_client, get_pos(ct)))
 		return;
 
 	NETOBJ_PROJECTILE *proj = (NETOBJ_PROJECTILE *)snap_new_item(NETOBJTYPE_PROJECTILE, id, sizeof(NETOBJ_PROJECTILE));

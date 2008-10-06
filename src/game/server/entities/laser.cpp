@@ -100,7 +100,7 @@ void LASER::tick()
 
 void LASER::snap(int snapping_client)
 {
-	if(distance(game.players[snapping_client]->view_pos, pos) > 1000.0f)
+	if(networkclipped(snapping_client))
 		return;
 
 	NETOBJ_LASER *obj = (NETOBJ_LASER *)snap_new_item(NETOBJTYPE_LASER, id, sizeof(NETOBJ_LASER));

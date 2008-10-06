@@ -18,6 +18,7 @@ public:
 	virtual void on_save() {};
 	virtual void on_reset() {};
 	virtual void on_render() {};
+	virtual void on_mapload() {};
 	virtual void on_message(int msg, void *rawmsg) {}
 	virtual bool on_mousemove(float x, float y) { return false; }
 	virtual bool on_input(INPUT_EVENT e) { return false; }

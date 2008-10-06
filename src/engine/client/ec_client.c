@@ -23,6 +23,8 @@
 
 #include <engine/e_huffman.h>
 
+#include <engine/e_demorec.h>
+
 #include <mastersrv/mastersrv.h>
 #include <versionsrv/versionsrv.h>
 
@@ -70,8 +72,13 @@ static char versionstr[10] = "0";
 /* pinging */
 static int64 ping_start_time = 0;
 
+/* */
+static char current_map[256] = {0};
+static int current_map_crc = 0;
+
 /* map download */
 static char mapdownload_filename[256] = {0};
+static char mapdownload_name[256] = {0};
 static IOHANDLE mapdownload_file = 0;
 static int mapdownload_chunk = 0;
 static int mapdownload_crc = 0;
@@ -85,7 +92,6 @@ static SERVER_INFO current_server_info = {0};
 static int current_tick = 0;
 static float intratick = 0;
 static float ticktime = 0;
-
 static int prev_tick = 0;
 
 /* predicted time */
@@ -231,6 +237,9 @@ static SNAPSTORAGE_HOLDER *snapshots[NUM_SNAPSHOT_TYPES];
 static int recived_snapshots;
 static char snapshot_incomming_data[MAX_SNAPSHOT_SIZE];
 
+static SNAPSTORAGE_HOLDER demorec_snapshotholders[NUM_SNAPSHOT_TYPES];
+static char *demorec_snapshotdata[NUM_SNAPSHOT_TYPES][2][MAX_SNAPSHOT_SIZE];
+
 /* --- */
 
 void *snap_get_item(int snapid, int index, SNAP_ITEM *item)
@@ -310,8 +319,15 @@ int client_send_msg()
 		packet.flags = NETSENDFLAG_VITAL;
 	if(info->flags&MSGFLAG_FLUSH)
 		packet.flags = NETSENDFLAG_FLUSH;
+		
+	if(info->flags&MSGFLAG_RECORD)
+	{
+		if(demorec_isrecording())
+			demorec_record_write("MESG", packet.data_size, packet.data);
+	}
 
-	netclient_send(net, &packet);
+	if(!(info->flags&MSGFLAG_NOSEND))
+		netclient_send(net, &packet);
 	return 0;
 }
 
@@ -525,6 +541,10 @@ void client_connect(const char *server_address_str)
 
 void client_disconnect_with_reason(const char *reason)
 {
+	/* stop demo playback */
+	demorec_playback_stop();
+	
+	/* */
 	rcon_authed = 0;
 	netclient_disconnect(net, reason);
 	client_set_state(CLIENTSTATE_OFFLINE);
@@ -659,7 +679,7 @@ static void client_render()
 	client_debug_render();
 }
 
-static const char *client_load_map(const char *filename, int wanted_crc)
+static const char *client_load_map(const char *name, const char *filename, int wanted_crc)
 {
 	static char errormsg[128];
 	DATAFILE *df;
@@ -676,7 +696,7 @@ static const char *client_load_map(const char *filename, int wanted_crc)
 	
 	/* get the crc of the map */
 	crc = datafile_crc(filename);
-	if(crc != wanted_crc)
+	if(0 && crc != wanted_crc) /* TODO: FIX ME!!! */
 	{
 		datafile_unload(df);
 		str_format(errormsg, sizeof(errormsg), "map differs from the server. %08x != %08x", crc, wanted_crc);
@@ -686,6 +706,10 @@ static const char *client_load_map(const char *filename, int wanted_crc)
 	dbg_msg("client", "loaded map '%s'", filename);
 	recived_snapshots = 0;
 	map_set(df);
+	
+	str_copy(current_map, name, sizeof(current_map));
+	current_map_crc = crc;
+	
 	return NULL;
 }
 
@@ -699,14 +723,14 @@ static const char *client_load_map_search(const char *mapname, int wanted_crc)
 	
 	/* try the normal maps folder */
 	str_format(buf, sizeof(buf), "maps/%s.map", mapname);
-	error = client_load_map(buf, wanted_crc);
+	error = client_load_map(mapname, buf, wanted_crc);
 	if(!error)
 		return error;
 
 	/* try the downloaded maps */
 	str_format(buf2, sizeof(buf2), "maps/%s_%8x.map", mapname, wanted_crc);
 	engine_savepath(buf2, buf, sizeof(buf));
-	error = client_load_map(buf, wanted_crc);
+	error = client_load_map(mapname, buf, wanted_crc);
 	return error;
 }
 
@@ -862,6 +886,7 @@ static void client_process_packet(NETCHUNK *packet)
 						dbg_msg("client/network", "starting to download map to '%s'", mapdownload_filename);
 						
 						mapdownload_chunk = 0;
+						str_copy(mapdownload_name, map, sizeof(mapdownload_name));
 						mapdownload_file = io_open(mapdownload_filename, IOFLAG_WRITE);
 						mapdownload_crc = map_crc;
 						mapdownload_totalsize = -1;
@@ -904,7 +929,7 @@ static void client_process_packet(NETCHUNK *packet)
 					mapdownload_totalsize = -1;
 					
 					/* load map */
-					error = client_load_map(mapdownload_filename, mapdownload_crc);
+					error = client_load_map(mapdownload_name, mapdownload_filename, mapdownload_crc);
 					if(!error)
 					{
 						dbg_msg("client/network", "loading done");
@@ -1107,6 +1132,28 @@ static void client_process_packet(NETCHUNK *packet)
 						/* add new */
 						snapstorage_add(&snapshot_storage, game_tick, time_get(), snapsize, (SNAPSHOT*)tmpbuffer3, 1);
 						
+						/* add snapshot to demo */
+						if(demorec_isrecording())
+						{
+							DEMOREC_TICKMARKER marker;
+
+							/* write tick marker */
+							marker.tick = game_tick;
+							swap_endian(&marker, sizeof(int), sizeof(marker)/sizeof(int));
+							demorec_record_write("TICK", sizeof(marker), &marker);
+							
+							/* build snap and possibly add some messages */
+							modc_recordkeyframe();
+							
+							/*
+							snapbuild_init(&builder);
+							mods_snap(-1);
+							snapshot_size = snapbuild_finish(&builder, data);*/
+							
+							/* write snapshot */
+							demorec_record_write("SNAP", snapsize, tmpbuffer3);							
+						}
+						
 						/* apply snapshot, cycle pointers */
 						recived_snapshots++;
 
@@ -1147,6 +1194,9 @@ static void client_process_packet(NETCHUNK *packet)
 		else
 		{
 			/* game message */
+			if(demorec_isrecording())
+				demorec_record_write("MESG", packet->data_size, packet->data);
+
 			modc_message(msg);
 		}
 	}
@@ -1161,20 +1211,23 @@ static void client_pump_network()
 
 	netclient_update(net);
 
-	/* check for errors */
-	if(client_state() != CLIENTSTATE_OFFLINE && netclient_state(net) == NETSTATE_OFFLINE)
+	if(client_state() != CLIENTSTATE_DEMOPLAYBACK)
 	{
-		client_set_state(CLIENTSTATE_OFFLINE);
-		dbg_msg("client", "offline error='%s'", netclient_error_string(net));
-	}
+		/* check for errors */
+		if(client_state() != CLIENTSTATE_OFFLINE && netclient_state(net) == NETSTATE_OFFLINE)
+		{
+			client_set_state(CLIENTSTATE_OFFLINE);
+			dbg_msg("client", "offline error='%s'", netclient_error_string(net));
+		}
 
-	/* */
-	if(client_state() == CLIENTSTATE_CONNECTING && netclient_state(net) == NETSTATE_ONLINE)
-	{
-		/* we switched to online */
-		dbg_msg("client", "connected, sending info");
-		client_set_state(CLIENTSTATE_LOADING);
-		client_send_info();
+		/* */
+		if(client_state() == CLIENTSTATE_CONNECTING && netclient_state(net) == NETSTATE_ONLINE)
+		{
+			/* we switched to online */
+			dbg_msg("client", "connected, sending info");
+			client_set_state(CLIENTSTATE_LOADING);
+			client_send_info();
+		}
 	}
 	
 	/* process packets */
@@ -1182,11 +1235,89 @@ static void client_pump_network()
 		client_process_packet(&packet);
 }
 
+static void client_democallback(DEMOREC_CHUNK chunk, void *data)
+{
+	/* dbg_msg("client/playback", "got %c%c%c%c", chunk.type[0], chunk.type[1], chunk.type[2], chunk.type[3]); */
+	
+	if(mem_comp(chunk.type, "SNAP", 4) == 0)
+	{
+		/* handle snapshots */
+		SNAPSTORAGE_HOLDER *temp = snapshots[SNAP_PREV];
+		snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
+		snapshots[SNAP_CURRENT] = temp;
+		
+		mem_copy(snapshots[SNAP_CURRENT]->snap, data, chunk.size);
+		mem_copy(snapshots[SNAP_CURRENT]->alt_snap, data, chunk.size);
+		
+		modc_newsnapshot();
+		modc_predict();
+	}
+	else if(mem_comp(chunk.type, "MESG", 4) == 0)
+	{
+		/* handle messages */
+		int sys = 0;
+		int msg = msg_unpack_start(data, chunk.size, &sys);
+		if(!sys)
+			modc_message(msg);
+	}
+	
+}
+
+const DEMOPLAYBACK_INFO *client_demoplayer_getinfo()
+{
+	static DEMOPLAYBACK_INFO ret;
+	const DEMOREC_PLAYBACKINFO *info = demorec_playback_info();
+	ret.first_tick = info->first_tick;
+	ret.last_tick = info->last_tick;
+	ret.current_tick = info->current_tick;
+	ret.paused = info->paused;
+	ret.speed = info->speed;
+	return &ret;
+}
+
+void client_demoplayer_setpos(float percent)
+{
+	const DEMOREC_PLAYBACKINFO *info = demorec_playback_info();
+	int point = (int)((info->seekable_points-1)*percent);
+	demorec_playback_set(point);
+}
+
+void client_demoplayer_setspeed(float speed)
+{
+	demorec_playback_setspeed(speed);
+}
+
+void client_demoplayer_setpause(int paused)
+{
+	if(paused)
+		demorec_playback_pause();
+	else
+		demorec_playback_unpause();
+}
+
 static void client_update()
 {
-	/* switch snapshot */
-	if(client_state() != CLIENTSTATE_OFFLINE && recived_snapshots >= 3)
+	if(client_state() == CLIENTSTATE_DEMOPLAYBACK)
 	{
+		demorec_playback_update();
+		if(demorec_isplaying())
+		{
+			/* update timers */
+			const DEMOREC_PLAYBACKINFO *info = demorec_playback_info();			
+			current_tick = info->current_tick;
+			prev_tick = info->previous_tick;
+			intratick = info->intratick;
+			ticktime = info->ticktime;
+		}
+		else
+		{
+			/* disconnect on error */
+			client_disconnect();
+		}
+	}
+	else if(client_state() != CLIENTSTATE_OFFLINE && recived_snapshots >= 3)
+	{
+		/* switch snapshot */
 		int repredict = 0;
 		int64 freq = time_freq();
 		int64 now = st_get(&game_time, time_get());
@@ -1393,7 +1524,6 @@ static void client_run()
 		int64 frame_start_time = time_get();
 		frames++;
 		
-		
 		perf_start(&rootscope);
 
 		/* */
@@ -1582,6 +1712,67 @@ static void con_addfavorite(void *result, void *user_data)
 		client_serverbrowse_addfavorite(addr);
 }
 
+void client_demoplayer_play(const char *filename)
+{
+	int crc;
+	client_disconnect();
+	
+	/* try to start playback */
+	demorec_playback_registercallback(client_democallback);
+	
+	if(demorec_playback_load(filename))
+		return;
+	
+	/* load map */
+	crc = (demorec_playback_info()->header.crc[0]<<24)|
+		(demorec_playback_info()->header.crc[1]<<16)|
+		(demorec_playback_info()->header.crc[2]<<8)|
+		(demorec_playback_info()->header.crc[3]);
+	client_load_map_search(demorec_playback_info()->header.map, crc);
+	modc_connected();
+	
+	/* setup buffers */	
+	mem_zero(demorec_snapshotdata, sizeof(demorec_snapshotdata));
+
+	snapshots[SNAP_CURRENT] = &demorec_snapshotholders[SNAP_CURRENT];
+	snapshots[SNAP_PREV] = &demorec_snapshotholders[SNAP_PREV];
+	
+	snapshots[SNAP_CURRENT]->snap = (SNAPSHOT *)demorec_snapshotdata[SNAP_CURRENT][0];
+	snapshots[SNAP_CURRENT]->alt_snap = (SNAPSHOT *)demorec_snapshotdata[SNAP_CURRENT][1];
+	snapshots[SNAP_CURRENT]->snap_size = 0;
+	snapshots[SNAP_CURRENT]->tick = -1;
+	
+	snapshots[SNAP_PREV]->snap = (SNAPSHOT *)demorec_snapshotdata[SNAP_PREV][0];
+	snapshots[SNAP_PREV]->alt_snap = (SNAPSHOT *)demorec_snapshotdata[SNAP_PREV][1];
+	snapshots[SNAP_PREV]->snap_size = 0;
+	snapshots[SNAP_PREV]->tick = -1;
+
+	/* enter demo playback state */
+	client_set_state(CLIENTSTATE_DEMOPLAYBACK);
+	
+	demorec_playback_play();
+	modc_entergame();
+}
+
+static void con_play(void *result, void *user_data)
+{
+	client_demoplayer_play(console_arg_string(result, 0));
+}
+
+static void con_record(void *result, void *user_data)
+{
+	char filename[512];
+	char path[512];
+	str_format(filename, sizeof(filename), "demos/%s.demo", console_arg_string(result, 0));
+	engine_savepath(filename, path, sizeof(path));
+	demorec_record_start(path, modc_net_version(), current_map, current_map_crc, "client");
+}
+
+static void con_stoprecord(void *result, void *user_data)
+{
+	demorec_record_stop();
+}
+
 static void client_register_commands()
 {
 	MACRO_REGISTER_COMMAND("quit", "", con_quit, 0x0);
@@ -1591,12 +1782,23 @@ static void client_register_commands()
 	MACRO_REGISTER_COMMAND("screenshot", "", con_screenshot, 0x0);
 	MACRO_REGISTER_COMMAND("rcon", "r", con_rcon, 0x0);
 
+	MACRO_REGISTER_COMMAND("play", "r", con_play, 0x0);
+	MACRO_REGISTER_COMMAND("record", "s", con_record, 0);
+	MACRO_REGISTER_COMMAND("stoprecord", "", con_stoprecord, 0);
+
 	MACRO_REGISTER_COMMAND("add_favorite", "s", con_addfavorite, 0x0);
 }
 
 void client_save_line(const char *line)
 {
 	engine_config_write_line(line);	
+}
+
+const char *client_user_directory()
+{
+	static char path[1024] = {0};
+	fs_storage_path("Teeworlds", path, sizeof(path));
+	return path;
 }
 
 int main(int argc, char **argv)

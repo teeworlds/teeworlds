@@ -262,8 +262,9 @@ void GAMECLIENT::on_connected()
 	layers_init();
 	col_init();
 	render_tilemap_generate_skip();
-		
-	on_reset();	
+
+	for(int i = 0; i < all.num; i++)
+		all.components[i]->on_mapload();
 	
 	// send the inital info
 	send_info(true);
@@ -313,8 +314,44 @@ void GAMECLIENT::update_local_character_pos()
 	}
 }
 
+
+static void evolve(NETOBJ_CHARACTER *character, int tick)
+{
+	WORLD_CORE tempworld;
+	CHARACTER_CORE tempcore;
+	mem_zero(&tempcore, sizeof(tempcore));
+	tempcore.world = &tempworld;
+	tempcore.read(character);
+	//tempcore.input.direction = character->wanted_direction;
+	while(character->tick < tick)
+	{
+		character->tick++;
+		tempcore.tick(false);
+		tempcore.move();
+		tempcore.quantize();
+	}
+	
+	tempcore.write(character);
+}
+
+
 void GAMECLIENT::on_render()
 {
+	// perform dead reckoning
+	// TODO: move this to a betterlocation
+	/*
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(!snap.characters[i].active)
+			continue;
+					
+		// perform dead reckoning
+		if(snap.characters[i].prev.tick)
+			evolve(&snap.characters[i].prev, client_prevtick());
+		if(snap.characters[i].cur.tick)
+			evolve(&snap.characters[i].cur, client_tick());
+	}*/
+	
 	// update the local character position
 	update_local_character_pos();
 	
@@ -393,6 +430,9 @@ void GAMECLIENT::on_message(int msgtype)
 		if(clients[msg->cid].skin_name[0] == 'x' || clients[msg->cid].skin_name[1] == '_')
 			str_copy(clients[msg->cid].skin_name, "default", 64);
 		
+		clients[msg->cid].color_body = msg->color_body;
+		clients[msg->cid].color_feet = msg->color_feet;
+		
 		clients[msg->cid].skin_info.color_body = skins->get_color(msg->color_body);
 		clients[msg->cid].skin_info.color_feet = skins->get_color(msg->color_feet);
 		clients[msg->cid].skin_info.size = 64;
@@ -401,6 +441,8 @@ void GAMECLIENT::on_message(int msgtype)
 		clients[msg->cid].skin_id = gameclient.skins->find(clients[msg->cid].skin_name);
 		if(clients[msg->cid].skin_id < 0)
 			clients[msg->cid].skin_id = 0;
+		
+		clients[msg->cid].use_custom_color = msg->use_custom_color;
 		
 		if(msg->use_custom_color)
 			clients[msg->cid].skin_info.texture = gameclient.skins->get(clients[msg->cid].skin_id)->color_texture;
@@ -485,27 +527,6 @@ void GAMECLIENT::process_events()
 	}
 }
 
-static void evolve(NETOBJ_CHARACTER *character, int tick)
-{
-	WORLD_CORE tempworld;
-	CHARACTER_CORE tempcore;
-	mem_zero(&tempcore, sizeof(tempcore));
-	tempcore.world = &tempworld;
-	tempcore.read(character);
-	//tempcore.input.direction = character->wanted_direction;
-	if(tick-character->tick > 50*3)
-		dbg_msg("", "%d -> %d = %d", character->tick, tick, tick-character->tick);
-	while(character->tick < tick)
-	{
-		character->tick++;
-		tempcore.tick(false);
-		tempcore.move();
-		tempcore.quantize();
-	}
-	
-	tempcore.write(character);
-}
-
 void GAMECLIENT::on_snapshot()
 {
 	// clear out the invalid pointers
@@ -582,7 +603,6 @@ void GAMECLIENT::on_snapshot()
 					snap.characters[item.id].prev = *((const NETOBJ_CHARACTER *)old);
 					snap.characters[item.id].cur = *((const NETOBJ_CHARACTER *)data);
 					
-					// perform dead reckoning
 					if(snap.characters[item.id].prev.tick)
 						evolve(&snap.characters[item.id].prev, client_prevtick());
 					if(snap.characters[item.id].cur.tick)
@@ -595,6 +615,9 @@ void GAMECLIENT::on_snapshot()
 				snap.flags[item.id%2] = (const NETOBJ_FLAG *)data;
 		}
 	}
+	
+	if(client_state() == CLIENTSTATE_DEMOPLAYBACK)
+		gameclient.snap.spectate = true;
 	
 	// setup local pointers
 	if(snap.local_cid >= 0)
@@ -777,6 +800,25 @@ void GAMECLIENT::send_kill(int client_id)
 	NETMSG_CL_KILL msg;
 	msg.pack(MSGFLAG_VITAL);
 	client_send_msg();
+}
+
+void GAMECLIENT::on_recordkeyframe()
+{
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(!snap.player_infos[i])
+			continue;
+			
+		NETMSG_SV_SETINFO msg;
+		msg.cid = i;
+		msg.name = clients[i].name;
+		msg.skin = clients[i].skin_name;
+		msg.use_custom_color = clients[i].use_custom_color;
+		msg.color_body = clients[i].color_body;
+		msg.color_feet = clients[i].color_feet;
+		msg.pack(MSGFLAG_NOSEND|MSGFLAG_RECORD);
+		client_send_msg();
+	}
 }
 
 void GAMECLIENT::con_team(void *result, void *user_data)

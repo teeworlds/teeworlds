@@ -16,7 +16,6 @@ enum
 	
 	SNAP_CURRENT=0,
 	SNAP_PREV=1,
-	
 
 	MASK_NONE=0,
 	MASK_SET,
@@ -306,7 +305,10 @@ void snap_set_staticsize(int type, int size);
 enum
 {
 	MSGFLAG_VITAL=1,
-	MSGFLAG_FLUSH=2
+	MSGFLAG_FLUSH=2,
+	MSGFLAG_NORECORD=4,
+	MSGFLAG_RECORD=8,
+	MSGFLAG_NOSEND=16
 };
 
 /* message sending */

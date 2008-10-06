@@ -17,12 +17,14 @@ enum
 		CLIENTSTATE_CONNECTING - The client is trying to connect to a server.
 		CLIENTSTATE_LOADING - The client has connected to a server and is loading resources.
 		CLIENTSTATE_ONLINE - The client is connected to a server and running the game.
+		CLIENTSTATE_DEMOPLAYBACK - The client is playing a demo
 		CLIENTSTATE_QUITING - The client is quiting.
 	*/
 	CLIENTSTATE_OFFLINE=0,
 	CLIENTSTATE_CONNECTING,
 	CLIENTSTATE_LOADING,
 	CLIENTSTATE_ONLINE,
+	CLIENTSTATE_DEMOPLAYBACK,
 	CLIENTSTATE_QUITING,
 
 	/* Constants: Image Formats
@@ -541,6 +543,23 @@ enum
 
 void client_serverbrowse_set(NETADDR *addr, int type, int token, SERVER_INFO *info);
 
-
 int client_serverbrowse_refreshingmasters();
+
+
+typedef struct DEMOPLAYBACK_INFO
+{
+	int first_tick;
+	int last_tick;
+	int current_tick;
+	int paused;
+	float speed;
+} DEMOPLAYBACK_INFO;
+
+void client_demoplayer_play(const char *filename);
+const DEMOPLAYBACK_INFO *client_demoplayer_getinfo();
+void client_demoplayer_setpos(float percent);
+void client_demoplayer_setpause(int paused);
+void client_demoplayer_setspeed(float speed);
+const char *client_user_directory();
+
 #endif

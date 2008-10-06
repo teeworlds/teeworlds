@@ -9,7 +9,7 @@ public:
 	
 	int get(int index) const { return textures[index]; }
 	int num() const { return count; }
-	
-	virtual void on_reset();
+
+	virtual void on_mapload();
 };
 

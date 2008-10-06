@@ -36,10 +36,10 @@ void EVENTHANDLER::snap(int snapping_client)
 {
 	for(int i = 0; i < num_events; i++)
 	{
-		if(cmask_is_set(client_masks[i], snapping_client))
+		if(snapping_client == -1 || cmask_is_set(client_masks[i], snapping_client))
 		{
 			NETEVENT_COMMON *ev = (NETEVENT_COMMON *)&data[offsets[i]];
-			if(distance(game.players[snapping_client]->view_pos, vec2(ev->x, ev->y)) < 1500.0f)
+			if(snapping_client == -1 || distance(game.players[snapping_client]->view_pos, vec2(ev->x, ev->y)) < 1500.0f)
 			{
 				void *d = snap_new_item(types[i], i, sizes[i]);
 				mem_copy(d, &data[offsets[i]], sizes[i]);

@@ -50,8 +50,6 @@ Format: 1.4
 # --------------------------------------------------------------------------
 
 
-File: OS Abstraction  (/home/kma/code/teeworlds/trunk/src/engine/e_system.h)
-
 Group: Engine  {
 
    File: Messaging  (/home/kma/code/teeworlds/trunk/src/engine/e_if_msg.h)
@@ -70,6 +68,7 @@ Group: Engine  {
 
          File: Client Hooks  (/home/kma/code/teeworlds/trunk/src/engine/e_if_modc.h)
          File: Client Interface  (/home/kma/code/teeworlds/trunk/src/engine/e_if_client.h)
+         File: e_huffman.h  (/home/kma/code/teeworlds/trunk/src/engine/e_huffman.h)
          File: Engine Interface  (/home/kma/code/teeworlds/trunk/src/engine/e_if_other.h)
          File: Graphics  (/home/kma/code/teeworlds/trunk/src/engine/e_if_gfx.h)
          File: Input  (/home/kma/code/teeworlds/trunk/src/engine/e_if_inp.h)
@@ -92,7 +91,9 @@ Group: Engine  {
 
 Group: Game  {
 
-   File: Entity  (/home/kma/code/teeworlds/trunk/src/game/server/gs_common.hpp)
+   File: Entity  (/home/kma/code/teeworlds/trunk/src/game/server/entity.hpp)
+   File: Game Controller  (/home/kma/code/teeworlds/trunk/src/game/server/gamecontroller.hpp)
+   File: Game World  (/home/kma/code/teeworlds/trunk/src/game/server/gameworld.hpp)
    }  # Group: Game
 
 Group: Index  {
@@ -102,6 +103,7 @@ Group: Index  {
    Constant Index: Constants
    Function Index: Functions
    Variable Index: Variables
+   File Index: Files
    }  # Group: Index
 
 

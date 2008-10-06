@@ -142,4 +142,6 @@ int modc_snap_input(int *data);
 */
 const char *modc_net_version();
 
+
+void modc_recordkeyframe();
 #endif

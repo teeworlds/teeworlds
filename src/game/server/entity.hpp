@@ -74,34 +74,34 @@ public:
 
 	/*
 		Function: destroy
-		Destorys the entity.
+			Destorys the entity.
 	*/
 	virtual void destroy() { delete this; }
 		
 	/*
 		Function: reset
-		Called when the game resets the map. Puts the entity
-		back to it's starting state or perhaps destroys it.
+			Called when the game resets the map. Puts the entity
+			back to it's starting state or perhaps destroys it.
 	*/
 	virtual void reset() {}
 	
 	/*
 		Function: tick
-		Called progress the entity to the next tick. Updates
-		and moves the entity to it's new state and position.
+			Called progress the entity to the next tick. Updates
+			and moves the entity to it's new state and position.
 	*/
 	virtual void tick() {}
 
 	/*
 		Function: tick_defered
-		Called after all entities tick() function has been called.
+			Called after all entities tick() function has been called.
 	*/
 	virtual void tick_defered() {}
 	
 	/*
 		Function: snap
-		Called when a new snapshot is being generated for a specific
-		client.
+			Called when a new snapshot is being generated for a specific
+			client.
 		
 		Arguments:
 			snapping_client - ID of the client which snapshot is
@@ -110,16 +110,34 @@ public:
 				recording.
 	*/
 	virtual void snap(int snapping_client) {}
+	
+	/*
+		Function: networkclipped(int snapping_client)
+			Performs a series of test to see if a client can see the
+			entity.
+
+		Arguments:
+			snapping_client - ID of the client which snapshot is
+				being generated. Could be -1 to create a complete
+				snapshot of everything in the game for demo
+				recording.
+			
+		Returns:
+			Non-zero if the entity doesn't have to be in the snapshot.
+	*/
+	int networkclipped(int snapping_client);
+	int networkclipped(int snapping_client, vec2 check_pos);
+		
 
 	/*
 		Variable: proximity_radius
-		Contains the physical size of the entity.
+			Contains the physical size of the entity.
 	*/
 	float proximity_radius;
 	
 	/*
 		Variable: pos
-		Contains the current posititon of the entity.
+			Contains the current posititon of the entity.
 	*/
 	vec2 pos;
 };

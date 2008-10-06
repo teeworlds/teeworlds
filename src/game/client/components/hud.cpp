@@ -305,7 +305,8 @@ void HUD::on_render()
 
 	render_goals();
 	render_fps();
-	render_connectionwarning();
+	if(client_state() != CLIENTSTATE_DEMOPLAYBACK)
+		render_connectionwarning();
 	render_tunewarning();
 	render_teambalancewarning();
 	render_voting();

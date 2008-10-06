@@ -457,8 +457,19 @@ void GAMECONTROLLER::snap(int snapping_client)
 	gameobj->round_num = (strlen(config.sv_maprotation) || config.sv_rounds_per_map > 1) ? config.sv_rounds_per_map : 0;
 	gameobj->round_current = round_count+1;
 	
-	gameobj->teamscore_red = is_teamplay() ? teamscore[0] : game.players[snapping_client]->score;
-	gameobj->teamscore_blue = teamscore[1];
+	
+	if(snapping_client == -1)
+	{
+		// we are recording a demo, just set the scores
+		gameobj->teamscore_red = teamscore[0];
+		gameobj->teamscore_blue = teamscore[1];
+	}
+	else
+	{
+		// TODO: this little hack should be removed
+		gameobj->teamscore_red = is_teamplay() ? teamscore[0] : game.players[snapping_client]->score;
+		gameobj->teamscore_blue = teamscore[1];
+	}
 }
 
 int GAMECONTROLLER::get_auto_team(int notthisid)
