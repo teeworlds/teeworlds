@@ -137,11 +137,16 @@ DATAFILE *datafile_load(const char *filename)
 	}
 
 #if defined(CONF_ARCH_ENDIAN_BIG)
-	swap_endian(df->data, sizeof(int), header.swaplen);
+	swap_endian(df->data, sizeof(int), header.swaplen / sizeof(int));
 #endif
-	
+
 	if(DEBUG)
+	{
+		dbg_msg("datafile", "allocsize=%d", allocsize);
+		dbg_msg("datafile", "readsize=%d", readsize);
+		dbg_msg("datafile", "swaplen=%d", header.swaplen);
 		dbg_msg("datafile", "item_size=%d", df->header.item_size);
+	}
 	
 	df->info.item_types = (DATAFILE_ITEM_TYPE *)df->data;
 	df->info.item_offsets = (int *)&df->info.item_types[df->header.num_item_types];
@@ -224,17 +229,17 @@ void *datafile_get_data(DATAFILE *df, int index)
 			unsigned long uncompressed_size = df->info.data_sizes[index];
 			unsigned long s;
 
-			dbg_msg("datafile", "loading data index=%d size=%d", index, datasize);
+			dbg_msg("datafile", "loading data index=%d size=%d uncompressed=%d", index, datasize, uncompressed_size);
 			df->data_ptrs[index] = (char *)mem_alloc(uncompressed_size, 1);
 			
 			/* read the compressed data */
 			io_seek(df->file, df->data_start_offset+df->info.data_offsets[index], IOSEEK_START);
 			io_read(df->file, temp, datasize);
-			
+
 			/* decompress the data, TODO: check for errors */
 			s = uncompressed_size;
 			uncompress((Bytef*)df->data_ptrs[index], &s, (Bytef*)temp, datasize);
-			
+
 			/* clean up the temporary buffers */
 			mem_free(temp);
 		}
@@ -261,7 +266,7 @@ void *datafile_get_data_swapped(DATAFILE *df, int index)
 		return ptr;
 
 #if defined(CONF_ARCH_ENDIAN_BIG)
-	swap_endian(ptr, sizeof(int), size);
+	swap_endian(ptr, sizeof(int), size / sizeof(int));
 #endif
 
 	return ptr;

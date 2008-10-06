@@ -161,6 +161,13 @@ void mem_zero(void *block, unsigned size);
 */
 int mem_comp(const void *a, const void *b, int size);
 
+/*
+	Function: mem_check
+		Validates the heap
+		Will trigger a assert if memory has failed.
+*/
+void mem_check();
+
 /* Group: File IO */
 enum {
 	IOFLAG_READ = 1,

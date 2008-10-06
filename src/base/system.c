@@ -156,6 +156,7 @@ typedef struct MEMTAIL
 } MEMTAIL;
 
 static struct MEMHEADER *first = 0;
+static const int MEM_GUARD_VAL = 0xbaadc0de;
 
 void *mem_alloc_debug(const char *filename, int line, unsigned size, unsigned alignment)
 {
@@ -171,7 +172,7 @@ void *mem_alloc_debug(const char *filename, int line, unsigned size, unsigned al
 	memory_stats.total_allocations++;
 	memory_stats.active_allocations++;
 	
-	tail->guard = 0xbaadc0de;
+	tail->guard = MEM_GUARD_VAL;
 
 	header->prev = (MEMHEADER *)0;
 	header->next = first;
@@ -190,7 +191,7 @@ void mem_free(void *p)
 		MEMHEADER *header = (MEMHEADER *)p - 1;
 		MEMTAIL *tail = (MEMTAIL *)(((char*)(header+1))+header->size);
 		
-		if(tail->guard != 0xbaadc0de)
+		if(tail->guard != MEM_GUARD_VAL)
 			dbg_msg("mem", "!! %p", p);
 		/* dbg_msg("mem", "-- %p", p); */
 		memory_stats.allocated -= header->size;
@@ -237,6 +238,21 @@ void mem_move(void *dest, const void *source, unsigned size)
 void mem_zero(void *block,unsigned size)
 {
 	memset(block, 0, size);
+}
+
+void mem_check()
+{
+	MEMHEADER *header = first;
+	while(header)
+	{
+		MEMTAIL *tail = (MEMTAIL *)(((char*)(header+1))+header->size);
+		if(tail->guard != MEM_GUARD_VAL)
+		{
+			dbg_msg("mem", "Memory check failed at %s(%d): %d", header->filename, header->line, header->size);
+			dbg_assert(0, "Memory check failed");
+		}
+		header = header->next;
+	}
 }
 
 IOHANDLE io_open(const char *filename, int flags)
@@ -876,7 +892,9 @@ int fs_storage_path(const char *appname, char *path, int max)
 	return 0;
 #else
 	char *home = getenv("HOME");
+#if !defined(CONF_PLATFORM_MACOSX)
 	int i;
+#endif
 	if(!home)
 		return -1;
 
