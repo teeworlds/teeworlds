@@ -214,13 +214,14 @@ int datafile_get_datasize(DATAFILE *df, int index)
 	return  df->info.data_offsets[index+1]-df->info.data_offsets[index];
 }
 
-void *datafile_get_data(DATAFILE *df, int index)
+static void *datafile_get_data_impl(DATAFILE *df, int index, int swap)
 {
 	/* load it if needed */
 	if(!df->data_ptrs[index])
 	{
 		/* fetch the data size */
 		int datasize = datafile_get_datasize(df, index);
+		int swapsize = datasize;
 		
 		if(df->header.version == 4)
 		{
@@ -239,6 +240,7 @@ void *datafile_get_data(DATAFILE *df, int index)
 			/* decompress the data, TODO: check for errors */
 			s = uncompressed_size;
 			uncompress((Bytef*)df->data_ptrs[index], &s, (Bytef*)temp, datasize);
+			swapsize = s;
 
 			/* clean up the temporary buffers */
 			mem_free(temp);
@@ -251,27 +253,25 @@ void *datafile_get_data(DATAFILE *df, int index)
 			io_seek(df->file, df->data_start_offset+df->info.data_offsets[index], IOSEEK_START);
 			io_read(df->file, df->data_ptrs[index], datasize);
 		}
+
+#if defined(CONF_ARCH_ENDIAN_BIG)
+		if(swap && swapsize)
+			swap_endian(df->data_ptrs[index], sizeof(int), swapsize/sizeof(int));
+#endif
 	}
 	
 	return df->data_ptrs[index];
 }
 
-void *datafile_get_data_swapped(DATAFILE *df, int index)
+void *datafile_get_data(DATAFILE *df, int index)
 {
-	void *ptr = datafile_get_data(df, index);
-	int size = datafile_get_datasize(df, index);
-	(void)size; /* not used on LE machines */
-	
-	if(!ptr)
-		return ptr;
-
-#if defined(CONF_ARCH_ENDIAN_BIG)
-	swap_endian(ptr, sizeof(int), size / sizeof(int));
-#endif
-
-	return ptr;
+	return datafile_get_data_impl(df, index, 0);
 }
 
+void *datafile_get_data_swapped(DATAFILE *df, int index)
+{
+	return datafile_get_data_impl(df, index, 1);
+}
 
 void datafile_unload_data(DATAFILE *df, int index)
 {
