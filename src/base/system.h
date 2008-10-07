@@ -166,7 +166,8 @@ int mem_comp(const void *a, const void *b, int size);
 		Validates the heap
 		Will trigger a assert if memory has failed.
 */
-void mem_check();
+int mem_check_imp();
+#define mem_check() dbg_assert_imp(__FILE__, __LINE__, mem_check_imp(),  "Memory check failed")
 
 /* Group: File IO */
 enum {

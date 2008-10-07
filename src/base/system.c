@@ -240,7 +240,7 @@ void mem_zero(void *block,unsigned size)
 	memset(block, 0, size);
 }
 
-void mem_check()
+int mem_check_imp()
 {
 	MEMHEADER *header = first;
 	while(header)
@@ -249,10 +249,12 @@ void mem_check()
 		if(tail->guard != MEM_GUARD_VAL)
 		{
 			dbg_msg("mem", "Memory check failed at %s(%d): %d", header->filename, header->line, header->size);
-			dbg_assert(0, "Memory check failed");
+			return 0;
 		}
 		header = header->next;
 	}
+
+	return 1;
 }
 
 IOHANDLE io_open(const char *filename, int flags)
