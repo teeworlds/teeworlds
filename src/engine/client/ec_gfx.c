@@ -77,6 +77,164 @@ static TEXTURE textures[MAX_TEXTURES];
 static int first_free_texture;
 static int memory_usage = 0;
 
+
+#if 0
+typedef struct { unsigned char r, g, b, a; } PIXEL;
+
+static PIXEL *pixeltest_data = 0;
+static PIXEL *pixeltest_tex = 0;
+static int pixeltest_w = 64;
+static int pixeltest_h = 64;
+
+static int pixeltest_analysedata(int fault)
+{
+	int x,y,c;
+	PIXEL *pp = pixeltest_data;
+	for(y = 0; y < pixeltest_h; y++)
+		for(x = 0; x < pixeltest_w; x++, pp++, c++)
+		{
+			PIXEL p = *pp;
+			if(p.r > fault)
+				return p.r;
+		}
+	return 0;
+}
+
+static void pixeltest_filltile(int id)
+{
+	int x, y;
+	for(y = 0; y < 1024; y++)
+		for(x = 0; x < 1024; x++)
+		{
+			int this_id = (x/64) + (y/64)*16;
+			if(this_id == id)
+			{
+				if(x%64 == 0 || x%64 == 63 || y%64 == 0 || y%64 == 63)
+				{
+					pixeltest_tex[y*1024+x].r = 0;
+					pixeltest_tex[y*1024+x].g = 0;
+					pixeltest_tex[y*1024+x].b = 255;
+					pixeltest_tex[y*1024+x].a = 255;
+				}
+				else
+				{
+					pixeltest_tex[y*1024+x].r = 0;
+					pixeltest_tex[y*1024+x].g = 255;
+					pixeltest_tex[y*1024+x].b = 0;
+					pixeltest_tex[y*1024+x].a = 255;
+				}
+			}
+			else
+			{
+				pixeltest_tex[y*1024+x].r = 255;
+				pixeltest_tex[y*1024+x].g = 0;
+				pixeltest_tex[y*1024+x].b = 0;
+				pixeltest_tex[y*1024+x].a = 255;
+			}
+		}
+	
+}
+
+static void pixeltest_dotesting()
+{
+	int result, texture_id;
+	float start_tx=0;
+	float start_ty=0;
+	float end_tx=1;
+	float end_ty=1;
+	int tile_id = 8*16+3;
+	int t;
+	float frac = 0;
+	pixeltest_data = (PIXEL *)mem_alloc(pixeltest_w*(pixeltest_h)*4, 1);
+	pixeltest_tex = (PIXEL *)mem_alloc(1024*(1024)*4, 1);
+	
+	/*pixeltest_filltile(0);*/
+	/*pixeltest_filltile(0xff);*/
+	
+	dbg_msg("", "%f", 1.0f/1024.0f);
+
+	gfx_mapscreen(0,0,screen_width, screen_height);
+	
+	/*
+		start = 0.5f/1024.0f;
+		end = 1.0f-(0.5f/1024.0f)
+	*/
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	
+	for(t = 0; t < 256; t++)
+	{
+		/*t = 41;*/
+		
+		pixeltest_filltile(tile_id);
+		texture_id = gfx_load_texture_raw(1024,1024,IMG_RGBA,pixeltest_tex,IMG_RGBA,TEXLOAD_NORESAMPLE);
+
+		glClearColor(0,0,0,0);
+		glClear(GL_COLOR_BUFFER_BIT);
+		
+		gfx_texture_set(texture_id);
+		gfx_quads_begin();
+		/*
+			gfx_quads_setsubset(start_tx,start_ty,0.001f,0.001f);
+			gfx_quads_drawTL(pixeltest_w/2, pixeltest_h/2, pixeltest_w, pixeltest_h);
+		*/ /*0.000977*/
+		/*
+			gfx_quads_setsubset(0.999f,0.999f,end_tx,end_ty);
+			gfx_quads_drawTL(0,0,pixeltest_w/2, pixeltest_h/2);
+		*/
+		
+		{
+			float tile_pixelsize = 1024/32.0f;
+			float scale = pixeltest_w*((t+1)/250.0f);
+			float final_tilesize = scale/(screen_width) * gfx_screenwidth();
+			float final_tilesize_scale = final_tilesize/tile_pixelsize;
+			/*float frac = (1.0f/texsize);// * (1/final_tilesize_scale);*/
+			
+			float tx0 = 0.5f/1024.0f + (tile_id%16)*64.0f / (1024.0f) + frac;
+			float ty0 = 0.5f/1024.0f + (tile_id/16)*64.0f / (1024.0f) + frac;
+			float tx1 = 0.5f/1024.0f + (((tile_id%16) + 1)*64.0f-1) / (1024.0f) - frac;
+			float ty1 = 0.5f/1024.0f + (((tile_id/16) + 1)*64.0f-1) / (1024.0f) - frac;
+			dbg_msg("", "scale: %f %f", scale, final_tilesize_scale);
+			gfx_quads_setsubset(tx0,ty0,tx1,ty1);
+			/*gfx_quads_setsubset(0,0,1,1);*/
+			gfx_quads_drawTL(pixeltest_w/4+(t+1)/250.0f,pixeltest_h/4,pixeltest_w/2,pixeltest_w/2);
+		}
+		
+		gfx_quads_end();
+
+		glReadPixels(0,screen_height-pixeltest_h, pixeltest_w, pixeltest_h, GL_RGBA, GL_UNSIGNED_BYTE, pixeltest_data);
+		
+		result = pixeltest_analysedata(2);
+		if(result)
+		{
+			frac += 0.000001f;
+			dbg_msg("", "fail on %d with %d newfrac = %f", t, result, frac);
+			t--;
+			
+			/*start_tx += 0.000001f; start_ty += 0.000001f;
+			dbg_msg("", "found stuff %f %f %d %f %f", start_tx, start_ty, result, 0.5f/1024, 0.5f/1024);
+
+			end_tx -= 0.000001f; end_ty -= 0.000001f;
+			dbg_msg("", "found stuff %f %d %f", end_tx, result, 1.0f-0.5f/1024);*/
+		}
+		/*else
+			dbg_msg("", "pass on %d", t);*/
+
+		glfwSwapBuffers();
+		glfwPollEvents();
+
+		if(glfwGetKey(KEY_ESC))
+			exit(1);
+		
+		gfx_unload_texture(texture_id);
+	}
+
+	dbg_msg("", "frac=%f  %f of a pixel", frac, frac/(1.0f/1024.0f));
+	exit(1);
+}
+#endif
+
 static const unsigned char null_texture_data[] = {
 	0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff, 
 	0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff, 
@@ -227,7 +385,6 @@ int gfx_init()
 	
 	gfx_mask_op(MASK_NONE, 0);
 	/*glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);*/
-
 	
 	/* Set all z to -5.0f */
 	for (i = 0; i < vertex_buffer_size; i++)
@@ -247,6 +404,9 @@ int gfx_init()
 	
 	/* create null texture, will get id=0 */
 	gfx_load_texture_raw(4,4,IMG_RGBA,null_texture_data,IMG_RGBA,TEXLOAD_NORESAMPLE);
+
+	/* perform some tests */
+	/* pixeltest_dotesting(); */
 
 	/* set vsync as needed */
 	gfx_set_vsync(config.gfx_vsync);
