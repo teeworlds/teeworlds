@@ -566,7 +566,6 @@ static void reset_client(int cid)
 	clients[cid].last_acked_snapshot = -1;
 	clients[cid].snap_rate = SRVCLIENT_SNAPRATE_INIT;
 	clients[cid].score = 0;
-	clients[cid].authed = 0;
 }
 
 static int new_client_callback(int cid, void *user)
@@ -574,6 +573,7 @@ static int new_client_callback(int cid, void *user)
 	clients[cid].state = SRVCLIENT_STATE_CONNECTING;
 	clients[cid].name[0] = 0;
 	clients[cid].clan[0] = 0;
+	clients[cid].authed = 0;
 	reset_client(cid);
 	return 0;
 }
