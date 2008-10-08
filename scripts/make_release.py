@@ -37,7 +37,7 @@ if platform == 'win32':
 if 'osx_' in platform:
 	use_zip = 1
 	use_gz = 0
-	use_bundle = 0
+	use_bundle = 1
 
 def copydir(src, dst, excl=[]):
 	for root, dirs, files in os.walk(src, topdown=True):
@@ -90,7 +90,7 @@ if use_bundle:
 	shutil.copy("other/icons/Teeworlds.icns", bundle_resource_dir)
 	shutil.copy(name+exe_ext, bundle_bin_dir)
 	shutil.copy(name+"_srv"+exe_ext, bundle_bin_dir)
-	shutil.copy("TeeLaunch"+exe_ext, bundle_bin_dir)
+	shutil.copy("osxlaunch"+exe_ext, bundle_bin_dir)
 	file(os.path.join(bundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -99,7 +99,7 @@ if use_bundle:
         <key>CFBundleDevelopmentRegion</key>
         <string>English</string>
         <key>CFBundleExecutable</key>
-        <string>teeworlds</string>
+        <string>osxlaunch</string>
         <key>CFBundleIconFile</key>
         <string>Teeworlds</string>
         <key>CFBundleInfoDictionaryVersion</key>

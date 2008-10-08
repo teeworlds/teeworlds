@@ -96,11 +96,12 @@ void _glfwChangeToResourcesDirectory( void )
     }
 
     CFRelease( resourcesURL );
-
+/*
     if( chdir( resourcesPath ) != 0 )
     {
         UNBUNDLED;
     }
+	*/
 }
 
 int _glfwPlatformInit( void )

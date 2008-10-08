@@ -315,6 +315,8 @@ function build(settings)
 
 	-- build tools (TODO: fix this so we don't get double _d_d stuff)
 	tools_src = Collect("src/tools/*.cpp", "src/tools/*.c")
+
+	osxlaunch_src = Collect("src/osxlaunch/*.m")
 	
 	objs = Compile(settings, tools_src)
 	tools = {}
@@ -337,9 +339,9 @@ function build(settings)
 	masterserver_exe = Link(server_settings, "mastersrv", masterserver,
 		engine, zlib)
 
-	--if platform == "macosx" then
-	--	osxlaunch_exe = Link(client_settings, "TeeLaunch", osxlaunch)
-	--end
+	if platform == "macosx" then
+		osxlaunch_exe = Link(client_settings, "osxlaunch", osxlaunch_src)
+	end
 
 	-- make targets
 	c = PseudoTarget("client".."_"..settings.config_name, client_exe)
@@ -355,7 +357,7 @@ function build(settings)
 	Target(t)
 	
 	if platform == "macosx" then
-		o = PseudoTarget("TeeLaunch".."_"..settings.config_name, osxlaunch_exe)
+		o = PseudoTarget("osxlaunch".."_"..settings.config_name, osxlaunch_exe)
 		all = PseudoTarget(settings.config_name, c, s, v, m, t, o)
 	else
 		all = PseudoTarget(settings.config_name, c, s, v, m, t)
