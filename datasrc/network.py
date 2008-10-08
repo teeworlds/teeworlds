@@ -144,6 +144,21 @@ Objects = [
 		NetIntAny("latency"),
 		NetIntAny("latency_flux"),
 	]),
+
+	NetObject("Client_Info", [
+		# 4*6 = 24 charachters
+		NetIntAny("name0"), NetIntAny("name1"), NetIntAny("name2"),
+		NetIntAny("name3"), NetIntAny("name4"), NetIntAny("name5"),
+
+		# 4*6 = 24 charachters
+		NetIntAny("skin0"), NetIntAny("skin1"), NetIntAny("skin2"),
+		NetIntAny("skin3"), NetIntAny("skin4"), NetIntAny("skin5"),
+
+		NetIntRange("use_custom_color", 0, 1),
+		
+		NetIntAny("color_body"),
+		NetIntAny("color_feet"),
+	]),
 	
 	## Events
 	
@@ -192,15 +207,6 @@ Messages = [
 		NetString("message"),
 	]),
 	
-	NetMessage("sv_setinfo", [
-		NetIntRange("cid", 0, 'MAX_CLIENTS-1'),
-		NetString("name"),
-		NetString("skin"),
-		NetBool("use_custom_color"),
-		NetIntAny("color_body"),
-		NetIntAny("color_feet"),
-	]),
-		
 	NetMessage("sv_killmsg", [
 		NetIntRange("killer", 0, 'MAX_CLIENTS-1'),
 		NetIntRange("victim", 0, 'MAX_CLIENTS-1'),

@@ -77,7 +77,6 @@ public:
 	void send_emoticon(int cid, int emoticon);
 	void send_weapon_pickup(int cid, int weapon);
 	void send_broadcast(const char *text, int cid);
-	void send_info(int who, int to_who, bool recordonly = false);
 
 };
 

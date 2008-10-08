@@ -53,6 +53,41 @@ inline float get_angle(vec2 dir)
 	return a;
 }
 
+inline void str_to_ints(int *ints, int num, const char *str)
+{
+	int index = 0;
+	while(num)
+	{
+		char buf[4] = {0,0,0,0};
+		for(int c = 0; c < 4 && str[index]; c++, index++)
+			buf[c] = str[index];
+		*ints = (buf[0]<<24)|(buf[1]<<16)|(buf[2]<<8)|buf[3];
+		ints++;
+		num--;
+	}
+	
+	// null terminate
+	ints[-1] &= 0xffffff00;
+}
+
+inline void ints_to_str(const int *ints, int num, char *str)
+{
+	while(num)
+	{
+		str[0] = ((*ints)>>24)&0xff;
+		str[1] = ((*ints)>>16)&0xff;
+		str[2] = ((*ints)>>8)&0xff;
+		str[3] = (*ints)&0xff;
+		str += 4;
+		ints++;
+		num--;
+	}
+	
+	// null terminate
+	str[-1] = 0;
+}
+
+
 
 inline vec2 calc_pos(vec2 p, vec2 v, float curvature, float speed, float t)
 {

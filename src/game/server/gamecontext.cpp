@@ -170,29 +170,6 @@ void GAMECONTEXT::send_chat(int chatter_cid, int team, const char *text)
 	}
 }
 
-
-void GAMECONTEXT::send_info(int who, int to_who, bool recordonly)
-{
-	NETMSG_SV_SETINFO msg;
-	msg.cid = who;
-	msg.name = server_clientname(who);
-	msg.skin = players[who]->skin_name;
-	msg.use_custom_color = players[who]->use_custom_color;
-	msg.color_body = players[who]->color_body;
-	msg.color_feet = players[who]->color_feet;
-	
-	if(recordonly)
-	{
-		msg.pack(MSGFLAG_NOSEND);
-		server_send_msg(to_who);
-	}
-	else
-	{
-		msg.pack(MSGFLAG_VITAL);
-		server_send_msg(to_who);
-	}
-}
-
 void GAMECONTEXT::send_emoticon(int cid, int emoticon)
 {
 	NETMSG_SV_EMOTICON msg;
@@ -218,8 +195,6 @@ void GAMECONTEXT::send_broadcast(const char *text, int cid)
 	msg.pack(MSGFLAG_VITAL);
 	server_send_msg(cid);
 }
-
-
 
 // 
 void GAMECONTEXT::start_vote(const char *desc, const char *command)
@@ -341,18 +316,6 @@ void GAMECONTEXT::tick()
 
 void GAMECONTEXT::snap(int client_id)
 {
-	// check if we are recording a demo
-	if(client_id == -1)
-	{
-		// we are recording, make sure that we set
-		// the info for all players all the time
-		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
-			if(game.players[i])
-				send_info(i, -1, true);
-		}
-	}
-	
 	world.snap(client_id);
 	controller->snap(client_id);
 	events.snap(client_id);

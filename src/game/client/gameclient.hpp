@@ -119,7 +119,6 @@ public:
 	void on_snapshot();
 	void on_predict();
 	int on_snapinput(int *data);
-	void on_recordkeyframe();
 
 	// actions
 	// TODO: move these

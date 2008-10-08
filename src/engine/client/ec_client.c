@@ -1142,14 +1142,6 @@ static void client_process_packet(NETCHUNK *packet)
 							swap_endian(&marker, sizeof(int), sizeof(marker)/sizeof(int));
 							demorec_record_write("TICK", sizeof(marker), &marker);
 							
-							/* build snap and possibly add some messages */
-							modc_recordkeyframe();
-							
-							/*
-							snapbuild_init(&builder);
-							mods_snap(-1);
-							snapshot_size = snapbuild_finish(&builder, data);*/
-							
 							/* write snapshot */
 							demorec_record_write("SNAP", snapsize, tmpbuffer3);							
 						}

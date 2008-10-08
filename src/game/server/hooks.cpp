@@ -281,15 +281,6 @@ void mods_message(int msgtype, int client_id)
 		
 		if(msgtype == NETMSGTYPE_CL_STARTINFO)
 		{
-			// a client that connected!
-			
-			// send all info to this client
-			for(int i = 0; i < MAX_CLIENTS; i++)
-			{
-				if(game.players[i])
-					game.send_info(i, client_id);
-			}
-
 			// send tuning parameters to client
 			send_tuning_params(client_id);
 			
@@ -306,8 +297,6 @@ void mods_message(int msgtype, int client_id)
 			m.pack(MSGFLAG_VITAL|MSGFLAG_FLUSH);
 			server_send_msg(client_id);
 		}
-		
-		game.send_info(client_id, -1);
 	}
 	else if (msgtype == NETMSGTYPE_CL_EMOTICON)
 	{

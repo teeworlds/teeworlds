@@ -62,6 +62,13 @@ void PLAYER::tick()
 
 void PLAYER::snap(int snaping_client)
 {
+	NETOBJ_CLIENT_INFO *client_info = (NETOBJ_CLIENT_INFO *)snap_new_item(NETOBJTYPE_CLIENT_INFO, client_id, sizeof(NETOBJ_CLIENT_INFO));
+	str_to_ints(&client_info->name0, 6, server_clientname(client_id));
+	str_to_ints(&client_info->skin0, 6, skin_name);
+	client_info->use_custom_color = use_custom_color;
+	client_info->color_body = color_body;
+	client_info->color_feet = color_feet;
+
 	NETOBJ_PLAYER_INFO *info = (NETOBJ_PLAYER_INFO *)snap_new_item(NETOBJTYPE_PLAYER_INFO, client_id, sizeof(NETOBJ_PLAYER_INFO));
 
 	info->latency = latency.min;
@@ -151,13 +158,6 @@ void PLAYER::set_team(int new_team)
 	dbg_msg("game", "team_join player='%d:%s' team=%d", client_id, server_clientname(client_id), team);
 	
 	game.controller->on_player_info_change(game.players[client_id]);
-
-	// send all info to this client
-	for(int i = 0; i < MAX_CLIENTS; i++)
-	{
-		if(game.players[i])
-			game.send_info(i, -1);
-	}
 }
 
 void PLAYER::try_respawn()

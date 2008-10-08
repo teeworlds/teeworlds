@@ -424,44 +424,7 @@ void GAMECLIENT::on_message(int msgtype)
 	for(int i = 0; i < all.num; i++)
 		all.components[i]->on_message(msgtype, rawmsg);
 	
-	// handle core messages
-	if(msgtype == NETMSGTYPE_SV_SETINFO)
-	{
-		NETMSG_SV_SETINFO *msg = (NETMSG_SV_SETINFO *)rawmsg;
-		
-		str_copy(clients[msg->cid].name, msg->name, 64);
-		str_copy(clients[msg->cid].skin_name, msg->skin, 64);
-		
-		// make sure that we don't set a special skin on the client
-		if(clients[msg->cid].skin_name[0] == 'x' || clients[msg->cid].skin_name[1] == '_')
-			str_copy(clients[msg->cid].skin_name, "default", 64);
-		
-		clients[msg->cid].color_body = msg->color_body;
-		clients[msg->cid].color_feet = msg->color_feet;
-		
-		clients[msg->cid].skin_info.color_body = skins->get_color(msg->color_body);
-		clients[msg->cid].skin_info.color_feet = skins->get_color(msg->color_feet);
-		clients[msg->cid].skin_info.size = 64;
-		
-		// find new skin
-		clients[msg->cid].skin_id = gameclient.skins->find(clients[msg->cid].skin_name);
-		if(clients[msg->cid].skin_id < 0)
-			clients[msg->cid].skin_id = 0;
-		
-		clients[msg->cid].use_custom_color = msg->use_custom_color;
-		
-		if(msg->use_custom_color)
-			clients[msg->cid].skin_info.texture = gameclient.skins->get(clients[msg->cid].skin_id)->color_texture;
-		else
-		{
-			clients[msg->cid].skin_info.texture = gameclient.skins->get(clients[msg->cid].skin_id)->org_texture;
-			clients[msg->cid].skin_info.color_body = vec4(1,1,1,1);
-			clients[msg->cid].skin_info.color_feet = vec4(1,1,1,1);
-		}
-
-		clients[msg->cid].update_render_info();
-	}
-	else if(msgtype == NETMSGTYPE_SV_READYTOENTER)
+	if(msgtype == NETMSGTYPE_SV_READYTOENTER)
 	{
 		client_entergame();
 	}
@@ -579,7 +542,43 @@ void GAMECLIENT::on_snapshot()
 			SNAP_ITEM item;
 			const void *data = snap_get_item(SNAP_CURRENT, i, &item);
 
-			if(item.type == NETOBJTYPE_PLAYER_INFO)
+			if(item.type == NETOBJTYPE_CLIENT_INFO)
+			{
+				const NETOBJ_CLIENT_INFO *info = (const NETOBJ_CLIENT_INFO *)data;
+				int cid = item.id;
+				ints_to_str(&info->name0, 6, clients[cid].name);
+				ints_to_str(&info->skin0, 6, clients[cid].skin_name);
+				
+				clients[cid].use_custom_color = info->use_custom_color;
+				clients[cid].color_body = info->color_body;
+				clients[cid].color_feet = info->color_feet;
+				
+				// prepare the info
+				if(clients[cid].skin_name[0] == 'x' || clients[cid].skin_name[1] == '_')
+					str_copy(clients[cid].skin_name, "default", 64);
+					
+				clients[cid].skin_info.color_body = skins->get_color(clients[cid].color_body);
+				clients[cid].skin_info.color_feet = skins->get_color(clients[cid].color_feet);
+				clients[cid].skin_info.size = 64;
+				
+				// find new skin
+				clients[cid].skin_id = gameclient.skins->find(clients[cid].skin_name);
+				if(clients[cid].skin_id < 0)
+					clients[cid].skin_id = 0;
+				
+				if(clients[cid].use_custom_color)
+					clients[cid].skin_info.texture = gameclient.skins->get(clients[cid].skin_id)->color_texture;
+				else
+				{
+					clients[cid].skin_info.texture = gameclient.skins->get(clients[cid].skin_id)->org_texture;
+					clients[cid].skin_info.color_body = vec4(1,1,1,1);
+					clients[cid].skin_info.color_feet = vec4(1,1,1,1);
+				}
+
+				clients[cid].update_render_info();					
+				
+			}
+			else if(item.type == NETOBJTYPE_PLAYER_INFO)
 			{
 				const NETOBJ_PLAYER_INFO *info = (const NETOBJ_PLAYER_INFO *)data;
 				
@@ -806,25 +805,6 @@ void GAMECLIENT::send_kill(int client_id)
 	NETMSG_CL_KILL msg;
 	msg.pack(MSGFLAG_VITAL);
 	client_send_msg();
-}
-
-void GAMECLIENT::on_recordkeyframe()
-{
-	for(int i = 0; i < MAX_CLIENTS; i++)
-	{
-		if(!snap.player_infos[i])
-			continue;
-			
-		NETMSG_SV_SETINFO msg;
-		msg.cid = i;
-		msg.name = clients[i].name;
-		msg.skin = clients[i].skin_name;
-		msg.use_custom_color = clients[i].use_custom_color;
-		msg.color_body = clients[i].color_body;
-		msg.color_feet = clients[i].color_feet;
-		msg.pack(MSGFLAG_NOSEND|MSGFLAG_RECORD);
-		client_send_msg();
-	}
 }
 
 void GAMECLIENT::con_team(void *result, void *user_data)
