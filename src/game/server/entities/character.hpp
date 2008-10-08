@@ -69,7 +69,6 @@ public:
 	{
 		vec2 activationdir;
 		int activationtick;
-		int currentcooldown;
 		int currentmovetime;
 	} ninja;
 

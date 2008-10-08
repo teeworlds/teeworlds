@@ -115,6 +115,9 @@ bool CHARACTER::is_grounded()
 
 int CHARACTER::handle_ninja()
 {
+	if(active_weapon != WEAPON_NINJA)
+		return 0;
+	
 	vec2 direction = normalize(vec2(latest_input.target_x, latest_input.target_y));
 
 	if ((server_tick() - ninja.activationtick) > (data->weapons.ninja.duration * server_tickspeed() / 1000))
@@ -130,25 +133,6 @@ int CHARACTER::handle_ninja()
 	
 	// force ninja weapon
 	set_weapon(WEAPON_NINJA);
-
-	// Check if it should activate
-	if (count_input(latest_previnput.fire, latest_input.fire).presses && (server_tick() > ninja.currentcooldown))
-	{
-		// ok then, activate ninja
-		attack_tick = server_tick();
-		ninja.activationdir = direction;
-		ninja.currentmovetime = data->weapons.ninja.movetime * server_tickspeed() / 1000;
-		ninja.currentcooldown = data->weapons.ninja.base->firedelay * server_tickspeed() / 1000 + server_tick();
-		
-		// reset hit objects
-		numobjectshit = 0;
-
-		game.create_sound(pos, SOUND_NINJA_FIRE);
-
-		// release all hooks when ninja is activated
-		//release_hooked();
-		//release_hooks();
-	}
 
 	ninja.currentmovetime--;
 
@@ -273,7 +257,7 @@ void CHARACTER::handle_weaponswitch()
 
 void CHARACTER::fire_weapon()
 {
-	if(reload_timer != 0 || active_weapon == WEAPON_NINJA)
+	if(reload_timer != 0)
 		return;
 		
 	do_weaponswitch();
@@ -425,6 +409,21 @@ void CHARACTER::fire_weapon()
 			game.create_sound(pos, SOUND_RIFLE_FIRE);
 		} break;
 		
+		case WEAPON_NINJA:
+		{
+			attack_tick = server_tick();
+			ninja.activationdir = direction;
+			ninja.currentmovetime = data->weapons.ninja.movetime * server_tickspeed() / 1000;
+
+			//reload_timer = data->weapons.ninja.base->firedelay * server_tickspeed() / 1000 + server_tick();
+			
+			// reset hit objects
+			numobjectshit = 0;
+
+			game.create_sound(pos, SOUND_NINJA_FIRE);
+			
+		} break;
+		
 	}
 
 	if(weapons[active_weapon].ammo > 0) // -1 == unlimited
@@ -450,6 +449,10 @@ int CHARACTER::handle_weapons()
 			reload_timer--;
 	} */
 
+	//if(active_weapon == WEAPON_NINJA)
+	handle_ninja();
+
+
 	// check reload timer
 	if(reload_timer)
 	{
@@ -457,11 +460,12 @@ int CHARACTER::handle_weapons()
 		return 0;
 	}
 	
+	/*
 	if (active_weapon == WEAPON_NINJA)
 	{
 		// don't update other weapons while ninja is active
 		return handle_ninja();
-	}
+	}*/
 
 	// fire weapon, if wanted
 	fire_weapon();

@@ -25,6 +25,8 @@ void PICKUP::reset()
 		spawntick = server_tick() + server_tickspeed() * data->pickups[type].spawndelay;
 	else
 		spawntick = -1;
+		
+	spawntick = -1;
 }
 
 void PICKUP::tick()
@@ -93,6 +95,7 @@ void PICKUP::tick()
 				// activate ninja on target player
 				chr->ninja.activationtick = server_tick();
 				chr->weapons[WEAPON_NINJA].got = true;
+				chr->weapons[WEAPON_NINJA].ammo = -1;
 				chr->last_weapon = chr->active_weapon;
 				chr->active_weapon = WEAPON_NINJA;
 				respawntime = data->pickups[type].respawntime;
