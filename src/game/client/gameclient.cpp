@@ -206,6 +206,9 @@ void GAMECLIENT::on_init()
 		thread_create(load_sounds_thread, 0);
 	else
 		load_sounds_thread((void*)1);
+
+	for(int i = 0; i < all.num; i++)
+		all.components[i]->on_reset();
 	
 	int64 end = time_get();
 	dbg_msg("", "%f.2ms", ((end-start)*1000)/(float)time_freq());
@@ -264,7 +267,10 @@ void GAMECLIENT::on_connected()
 	render_tilemap_generate_skip();
 
 	for(int i = 0; i < all.num; i++)
+	{
 		all.components[i]->on_mapload();
+		all.components[i]->on_reset();
+	}
 	
 	// send the inital info
 	send_info(true);
