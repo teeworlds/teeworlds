@@ -167,7 +167,7 @@ void CHAT::on_render()
 		// get the y offset
 		TEXT_CURSOR cursor;
 		gfx_text_set_cursor(&cursor, begin, 0, fontsize, 0);
-		cursor.line_width = 300.0f;
+		cursor.line_width = 200.0f;
 		gfx_text_ex(&cursor, lines[r].name, -1);
 		gfx_text_ex(&cursor, lines[r].text, -1);
 		y -= cursor.y + cursor.font_size;
