@@ -145,8 +145,6 @@ static void demorec_record_write(int type, const void *data, int size)
 
 void demorec_record_snapshot(int tick, const void *data, int size)
 {
-	record_emptydeltatick = -1;
-	
 	if(record_lastkeyframe == -1 || (tick-record_lastkeyframe) > SERVER_TICK_SPEED*5)
 	{
 		/* write full tickmarker */
