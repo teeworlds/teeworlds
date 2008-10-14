@@ -342,7 +342,7 @@ int server_send_msg(int client_id)
 	
 	/* write message to demo recorder */
 	if(!(info->flags&MSGFLAG_NORECORD))
-		demorec_record_write("MESG", info->size, info->data);
+		demorec_record_message(info->data, info->size);
 
 	if(!(info->flags&MSGFLAG_NOSEND))
 	{
@@ -379,20 +379,14 @@ static void server_do_snap()
 	{
 		char data[MAX_SNAPSHOT_SIZE];
 		int snapshot_size;
-		DEMOREC_TICKMARKER marker;
 
-		/* write tick marker */
-		marker.tick = server_tick();
-		swap_endian(&marker, sizeof(int), sizeof(marker)/sizeof(int));
-		demorec_record_write("TICK", sizeof(marker), &marker);
-		
 		/* build snap and possibly add some messages */
 		snapbuild_init(&builder);
 		mods_snap(-1);
 		snapshot_size = snapbuild_finish(&builder, data);
 		
 		/* write snapshot */
-		demorec_record_write("SNAP", snapshot_size, data);
+		demorec_record_snapshot(server_tick(), data, snapshot_size);
 	}
 
 	/* create snapshots for all clients */

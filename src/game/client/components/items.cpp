@@ -14,8 +14,6 @@
 
 void ITEMS::render_projectile(const NETOBJ_PROJECTILE *current, int itemid)
 {
-	gfx_texture_set(data->images[IMAGE_GAME].id);
-	gfx_quads_begin();
 
 	// get positions
 	float curvature = 0;
@@ -36,12 +34,19 @@ void ITEMS::render_projectile(const NETOBJ_PROJECTILE *current, int itemid)
 		speed = gameclient.tuning.gun_speed;
 	}
 
-	float ct = (client_tick()-current->start_tick)/(float)SERVER_TICK_SPEED + client_ticktime()*1/(float)SERVER_TICK_SPEED;
+	float ct = (client_prevtick()-current->start_tick)/(float)SERVER_TICK_SPEED + client_ticktime();
+	if(ct < 0)
+		return; // projectile havn't been shot yet
+		
 	vec2 startpos(current->x, current->y);
 	vec2 startvel(current->vx/100.0f, current->vy/100.0f);
 	vec2 pos = calc_pos(startpos, startvel, curvature, speed, ct);
 	vec2 prevpos = calc_pos(startpos, startvel, curvature, speed, ct-0.001f);
 
+
+	gfx_texture_set(data->images[IMAGE_GAME].id);
+	gfx_quads_begin();
+	
 	select_sprite(data->weapons.id[clamp(current->type, 0, NUM_WEAPONS-1)].sprite_proj);
 	vec2 vel = pos-prevpos;
 	//vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());

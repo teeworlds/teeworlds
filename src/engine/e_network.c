@@ -96,6 +96,16 @@ void send_packet_connless(NETSOCKET socket, NETADDR *addr, const void *data, int
 	net_udp_send(socket, addr, buffer, 6+data_size);
 }
 
+int netcommon_compress(const void *data, int data_size, void *output, int output_size)
+{
+	return huffman_compress(&huffmanstate, data, data_size, output, output_size);
+}
+
+int netcommon_decompress(const void *data, int data_size, void *output, int output_size)
+{
+	return huffman_decompress(&huffmanstate, data, data_size, output, output_size);
+}
+
 void send_packet(NETSOCKET socket, NETADDR *addr, NETPACKETCONSTRUCT *packet)
 {
 	unsigned char buffer[NET_MAX_PACKETSIZE];
@@ -206,7 +216,6 @@ void netcommon_openlog(const char *filename)
 {
 	datalog = io_open(filename, IOFLAG_WRITE);
 }
-
 
 static const unsigned freq_table[256+1] = {
 	1<<30,4545,2657,431,1950,919,444,482,2244,617,838,542,715,1814,304,240,754,212,647,186,

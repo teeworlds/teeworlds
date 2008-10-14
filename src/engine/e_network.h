@@ -57,6 +57,8 @@ typedef int (*NETFUNC_NEWCLIENT)(int cid, void *user);
 /* both */
 void netcommon_openlog(const char *filename);
 void netcommon_init();
+int netcommon_compress(const void *data, int data_size, void *output, int output_size);
+int netcommon_decompress(const void *data, int data_size, void *output, int output_size);
 
 /* server side */
 NETSERVER *netserver_open(NETADDR bindaddr, int max_clients, int flags);

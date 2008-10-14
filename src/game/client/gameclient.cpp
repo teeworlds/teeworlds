@@ -303,7 +303,7 @@ void GAMECLIENT::on_reset()
 
 void GAMECLIENT::update_local_character_pos()
 {
-	if(config.cl_predict)
+	if(config.cl_predict && client_state() != CLIENTSTATE_DEMOPLAYBACK)
 	{
 		if(!snap.local_character || (snap.local_character->health < 0) || (snap.gameobj && snap.gameobj->game_over))
 		{
@@ -328,7 +328,7 @@ static void evolve(NETOBJ_CHARACTER *character, int tick)
 	mem_zero(&tempcore, sizeof(tempcore));
 	tempcore.world = &tempworld;
 	tempcore.read(character);
-	//tempcore.input.direction = character->wanted_direction;
+	
 	while(character->tick < tick)
 	{
 		character->tick++;
@@ -343,21 +343,6 @@ static void evolve(NETOBJ_CHARACTER *character, int tick)
 
 void GAMECLIENT::on_render()
 {
-	// perform dead reckoning
-	// TODO: move this to a betterlocation
-	/*
-	for(int i = 0; i < MAX_CLIENTS; i++)
-	{
-		if(!snap.characters[i].active)
-			continue;
-					
-		// perform dead reckoning
-		if(snap.characters[i].prev.tick)
-			evolve(&snap.characters[i].prev, client_prevtick());
-		if(snap.characters[i].cur.tick)
-			evolve(&snap.characters[i].cur, client_tick());
-	}*/
-	
 	// update the local character position
 	update_local_character_pos();
 	
@@ -620,9 +605,6 @@ void GAMECLIENT::on_snapshot()
 				snap.flags[item.id%2] = (const NETOBJ_FLAG *)data;
 		}
 	}
-	
-	if(client_state() == CLIENTSTATE_DEMOPLAYBACK)
-		gameclient.snap.spectate = true;
 	
 	// setup local pointers
 	if(snap.local_cid >= 0)

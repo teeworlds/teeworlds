@@ -11,7 +11,6 @@ static short item_sizes[64] = {0};
 
 void snap_set_staticsize(int itemtype, int size)
 {
-	dbg_msg("","%d = %d", itemtype, size);
 	item_sizes[itemtype] = size;
 }
 
@@ -397,12 +396,12 @@ int snapshot_unpack_delta(SNAPSHOT *from, SNAPSHOT *to, void *srcdata, int data_
 		else
 		{
 			if(data+1 > end)
-				return -1;
+				return -2;
 			itemsize = (*data++) * 4;
 		}
 		snapshot_current = type;
 		
-		if(range_check(end, data, itemsize) || itemsize < 0) return -1;
+		if(range_check(end, data, itemsize) || itemsize < 0) return -3;
 		
 		key = (type<<16)|id;
 		
@@ -411,7 +410,7 @@ int snapshot_unpack_delta(SNAPSHOT *from, SNAPSHOT *to, void *srcdata, int data_
 		if(!newdata)
 			newdata = (int *)snapbuild_new_item(&builder, key>>16, key&0xffff, itemsize);
 
-		if(range_check(end, newdata, itemsize)) return -1;
+		/*if(range_check(end, newdata, itemsize)) return -4;*/
 			
 		fromindex = snapshot_get_item_index(from, key);
 		if(fromindex != -1)

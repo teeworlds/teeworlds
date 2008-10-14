@@ -19,7 +19,8 @@ void CAMERA::on_render()
 {
 	//vec2 center;
 	zoom = 1.0f;
-	
+
+	// update camera center		
 	if(gameclient.snap.spectate)
 		center = gameclient.controls->mouse_pos;
 	else
@@ -37,4 +38,3 @@ void CAMERA::on_render()
 		center = gameclient.local_character_pos + camera_offset;
 	}
 }
-

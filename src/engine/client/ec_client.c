@@ -323,7 +323,7 @@ int client_send_msg()
 	if(info->flags&MSGFLAG_RECORD)
 	{
 		if(demorec_isrecording())
-			demorec_record_write("MESG", packet.data_size, packet.data);
+			demorec_record_message(packet.data, packet.data_size);
 	}
 
 	if(!(info->flags&MSGFLAG_NOSEND))
@@ -1135,15 +1135,18 @@ static void client_process_packet(NETCHUNK *packet)
 						/* add snapshot to demo */
 						if(demorec_isrecording())
 						{
-							DEMOREC_TICKMARKER marker;
 
 							/* write tick marker */
+							/*
+							DEMOREC_TICKMARKER marker;
 							marker.tick = game_tick;
 							swap_endian(&marker, sizeof(int), sizeof(marker)/sizeof(int));
 							demorec_record_write("TICK", sizeof(marker), &marker);
+							demorec_record_write("SNAP", snapsize, tmpbuffer3);
+							*/
 							
 							/* write snapshot */
-							demorec_record_write("SNAP", snapsize, tmpbuffer3);							
+							demorec_record_snapshot(game_tick, tmpbuffer3, snapsize);
 						}
 						
 						/* apply snapshot, cycle pointers */
@@ -1187,7 +1190,8 @@ static void client_process_packet(NETCHUNK *packet)
 		{
 			/* game message */
 			if(demorec_isrecording())
-				demorec_record_write("MESG", packet->data_size, packet->data);
+				demorec_record_message(packet->data, packet->data_size);
+				/* demorec_record_write("MESG", packet->data_size, ); */
 
 			modc_message(msg);
 		}
@@ -1227,37 +1231,34 @@ static void client_pump_network()
 		client_process_packet(&packet);
 }
 
-static void client_democallback(DEMOREC_CHUNK chunk, void *data)
+static void client_democallback_snapshot(void *data, int size)
 {
-	/* dbg_msg("client/playback", "got %c%c%c%c", chunk.type[0], chunk.type[1], chunk.type[2], chunk.type[3]); */
-
 	/* update ticks, they could have changed */
 	const DEMOREC_PLAYBACKINFO *info = demorec_playback_info();			
+	SNAPSTORAGE_HOLDER *temp;
 	current_tick = info->current_tick;
 	prev_tick = info->previous_tick;
 	
-	if(mem_comp(chunk.type, "SNAP", 4) == 0)
-	{
-		/* handle snapshots */
-		SNAPSTORAGE_HOLDER *temp = snapshots[SNAP_PREV];
-		snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
-		snapshots[SNAP_CURRENT] = temp;
-		
-		mem_copy(snapshots[SNAP_CURRENT]->snap, data, chunk.size);
-		mem_copy(snapshots[SNAP_CURRENT]->alt_snap, data, chunk.size);
-		
-		modc_newsnapshot();
-		modc_predict();
-	}
-	else if(mem_comp(chunk.type, "MESG", 4) == 0)
-	{
-		/* handle messages */
-		int sys = 0;
-		int msg = msg_unpack_start(data, chunk.size, &sys);
-		if(!sys)
-			modc_message(msg);
-	}
+	/* handle snapshots */
+	temp = snapshots[SNAP_PREV];
+	snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
+	snapshots[SNAP_CURRENT] = temp;
+	
+	mem_copy(snapshots[SNAP_CURRENT]->snap, data, size);
+	mem_copy(snapshots[SNAP_CURRENT]->alt_snap, data, size);
+	
+	modc_newsnapshot();
+	/*modc_predict();*/
 }
+
+static void client_democallback_message(void *data, int size)
+{
+	int sys = 0;
+	int msg = msg_unpack_start(data, size, &sys);
+	if(!sys)
+		modc_message(msg);
+}
+
 
 const DEMOPLAYBACK_INFO *client_demoplayer_getinfo()
 {
@@ -1358,8 +1359,8 @@ static void client_update()
 			int new_pred_tick = prev_pred_tick+1;
 			static float last_predintra = 0;
 
-			intratick = (now - curtick_start) / (float)(curtick_start-prevtick_start);
-			ticktime = (now - curtick_start) / (freq/(float)SERVER_TICK_SPEED);
+			intratick = (now - prevtick_start) / (float)(curtick_start-prevtick_start);
+			ticktime = (now - prevtick_start) / (float)freq; /*(float)SERVER_TICK_SPEED);*/
 
 			graph_add(&intra_graph, intratick*0.25f);
 
@@ -1714,7 +1715,7 @@ void client_demoplayer_play(const char *filename)
 	client_disconnect();
 	
 	/* try to start playback */
-	demorec_playback_registercallback(client_democallback);
+	demorec_playback_registercallbacks(client_democallback_snapshot, client_democallback_message);
 	
 	if(demorec_playback_load(filename))
 		return;
@@ -1802,6 +1803,7 @@ int main(int argc, char **argv)
 	/* init the engine */
 	dbg_msg("client", "starting...");
 	engine_init("Teeworlds");
+	
 	
 	/* register all console commands */
 	client_register_commands();

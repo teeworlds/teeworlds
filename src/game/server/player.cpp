@@ -130,7 +130,7 @@ void PLAYER::kill_character()
 	//CHARACTER *chr = get_character();
 	if(character)
 	{
-		character->die(-1, -1);
+		character->die(client_id, -1);
 		delete character;
 		character = 0;
 	}

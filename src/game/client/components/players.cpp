@@ -145,11 +145,9 @@ void PLAYERS::render_player(
 			intratick = client_predintratick();
 		}
 	}
-
+	
 	vec2 position = mix(vec2(prev.x, prev.y), vec2(player.x, player.y), intratick);
 	vec2 vel = mix(vec2(prev.vx/256.0f, prev.vy/256.0f), vec2(player.vx/256.0f, player.vy/256.0f), intratick);
-	
-	//dbg_msg("", "%d %d %d %d %f", prev.x, prev.y, player.x, player.y, intratick);
 	
 	gameclient.flow->add(position, vel*100.0f, 10.0f);
 	

@@ -10,8 +10,8 @@ typedef struct DEMOREC_HEADER
 
 typedef struct DEMOREC_CHUNK
 {
-	char type[4];
-	int size;
+	char type[2];
+	unsigned short size;
 } DEMOREC_CHUNK;
 
 typedef struct DEMOREC_TICKMARKER
@@ -44,13 +44,15 @@ typedef struct DEMOREC_PLAYBACKINFO
 
 int demorec_record_start(const char *filename, const char *netversion, const char *map, int map_crc, const char *type);
 int demorec_isrecording();
-void demorec_record_write(const char *type, int size, const void *data);
+void demorec_record_snapshot(int tick, const void *data, int size);
+void demorec_record_message(const void *data, int size);
 int demorec_record_stop();
 
-typedef void (*DEMOREC_PLAYCALLBACK)(DEMOREC_CHUNK chunk, void *data);
+typedef void (*DEMOREC_PLAYCALLBACK)(void *data, int size);
 
-int demorec_playback_registercallback(DEMOREC_PLAYCALLBACK cb);
+int demorec_playback_registercallbacks(DEMOREC_PLAYCALLBACK snapshot_cb, DEMOREC_PLAYCALLBACK message_cb);
 int demorec_playback_load(const char *filename);
+int demorec_playback_nextframe();
 int demorec_playback_play();
 void demorec_playback_pause();
 void demorec_playback_unpause();
