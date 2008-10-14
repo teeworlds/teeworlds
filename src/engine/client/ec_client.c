@@ -892,7 +892,7 @@ static void client_process_packet(NETCHUNK *packet)
 						mapdownload_totalsize = -1;
 						mapdownload_amount = 0;
 						
-						msg_pack_start_system(NETMSG_REQUEST_MAP_DATA, 0);
+						msg_pack_start_system(NETMSG_REQUEST_MAP_DATA, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 						msg_pack_int(mapdownload_chunk);
 						msg_pack_end();
 						client_send_msg();
@@ -943,7 +943,7 @@ static void client_process_packet(NETCHUNK *packet)
 				{
 					/* request new chunk */
 					mapdownload_chunk++;
-					msg_pack_start_system(NETMSG_REQUEST_MAP_DATA, 0);
+					msg_pack_start_system(NETMSG_REQUEST_MAP_DATA, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 					msg_pack_int(mapdownload_chunk);
 					msg_pack_end();
 					client_send_msg();
