@@ -811,8 +811,11 @@ bool CHARACTER::take_damage(vec2 force, int dmg, int from, int weapon)
 		if (from >= 0 && from != player->client_id)
 		{
 			CHARACTER *chr = game.players[from]->get_character();
-			chr->emote_type = EMOTE_HAPPY;
-			chr->emote_stop = server_tick() + server_tickspeed();
+			if (chr)
+			{
+				chr->emote_type = EMOTE_HAPPY;
+				chr->emote_stop = server_tick() + server_tickspeed();
+			}
 		}
 	
 		return false;
