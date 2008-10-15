@@ -1542,14 +1542,20 @@ static void client_run()
 			perf_end();
 		}
 		
-		/* refocus */
+		/* release focus */
 		if(!gfx_window_active())
 		{
 			if(window_must_refocus == 0)
 				inp_mouse_mode_absolute();
 			window_must_refocus = 1;
 		}
+		else if (config.dbg_focus && inp_key_pressed(KEY_ESC))
+		{
+			inp_mouse_mode_absolute();
+			window_must_refocus = 1;
+		}
 
+		/* refocus */
 		if(window_must_refocus && gfx_window_active())
 		{
 			if(window_must_refocus < 3)

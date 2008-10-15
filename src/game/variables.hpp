@@ -37,6 +37,7 @@ MACRO_CONFIG_INT(dbg_dummies, 0, 0, 11)
 MACRO_CONFIG_INT(dbg_firedelay, 0, 0, 1)
 MACRO_CONFIG_INT(dbg_flow, 0, 0, 1)
 MACRO_CONFIG_INT(dbg_tuning, 0, 0, 1)
+MACRO_CONFIG_INT(dbg_focus, 0, 0, 1)
 
 MACRO_CONFIG_INT(ui_page, 5, 0, 9)
 MACRO_CONFIG_STR(ui_server_address, 128, "localhost:8303")
