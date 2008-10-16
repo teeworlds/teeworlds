@@ -978,9 +978,6 @@ int _glfwPlatformOpenWindow( int width, int height, int redbits,
         return GL_FALSE;
     }
 
-    // Set window & icon name
-    _glfwPlatformSetWindowTitle( "Teeworlds" );
-
     // Get the delete window WM protocol atom
     _glfwWin.WMDeleteWindow = XInternAtom( _glfwLibrary.Dpy,
                                            "WM_DELETE_WINDOW",
@@ -1074,6 +1071,10 @@ int _glfwPlatformOpenWindow( int width, int height, int redbits,
         XWarpPointer( _glfwLibrary.Dpy, None, _glfwWin.Win, 0,0,0,0,
                       _glfwWin.Width/2, _glfwWin.Height/2 );
     }
+
+    // Set window & icon name
+    // teeworlds: set our own title early, workaround for some window-managers
+    _glfwPlatformSetWindowTitle( "Teeworlds" );
 
     // Connect the context to the window
     glXMakeCurrent( _glfwLibrary.Dpy, _glfwWin.Win, _glfwWin.CX );
@@ -1521,6 +1522,8 @@ void _glfwPlatformPollEvents( void )
     // or without XSync, but when the GL window is rendered over a slow
     // network I have noticed bad event syncronisation problems when XSync
     // is not used, so I decided to use it.
+    //
+    // teeworlds: don't synchronise
     //XSync( _glfwLibrary.Dpy, False );
 
     // Empty the window event queue

@@ -31,16 +31,6 @@
 #include "internal.h"
 
 
-//========================================================================
-// We use the WGL_EXT_extensions_string if it is available, or
-// WGL_ARB_extensions_string if it is available.
-//========================================================================
-
-typedef const char *(APIENTRY * WGLGETEXTENSIONSSTRINGEXT_T)( void );
-typedef const char *(APIENTRY * WGLGETEXTENSIONSSTRINGARB_T)( HDC hdc );
-
-
-
 //************************************************************************
 //****               Platform implementation functions                ****
 //************************************************************************
@@ -53,15 +43,11 @@ typedef const char *(APIENTRY * WGLGETEXTENSIONSSTRINGARB_T)( HDC hdc );
 int _glfwPlatformExtensionSupported( const char *extension )
 {
     const GLubyte *extensions;
-    WGLGETEXTENSIONSSTRINGEXT_T _wglGetExtensionsStringEXT;
-    WGLGETEXTENSIONSSTRINGARB_T _wglGetExtensionsStringARB;
 
     // Try wglGetExtensionsStringEXT
-    _wglGetExtensionsStringEXT = (WGLGETEXTENSIONSSTRINGEXT_T)
-        wglGetProcAddress( "wglGetExtensionsStringEXT" );
-    if( _wglGetExtensionsStringEXT != NULL )
+    if( _glfwWin.GetExtensionsStringEXT != NULL )
     {
-        extensions = (GLubyte *) _wglGetExtensionsStringEXT();
+        extensions = (GLubyte *) _glfwWin.GetExtensionsStringEXT();
         if( extensions != NULL )
         {
             if( _glfwStringInExtensionString( extension, extensions ) )
@@ -72,11 +58,9 @@ int _glfwPlatformExtensionSupported( const char *extension )
     }
 
     // Try wglGetExtensionsStringARB
-    _wglGetExtensionsStringARB = (WGLGETEXTENSIONSSTRINGARB_T)
-        wglGetProcAddress( "wglGetExtensionsStringARB" );
-    if( _wglGetExtensionsStringARB != NULL )
+    if( _glfwWin.GetExtensionsStringARB != NULL )
     {
-        extensions = (GLubyte *) _wglGetExtensionsStringARB(_glfwWin.DC);
+        extensions = (GLubyte *) _glfwWin.GetExtensionsStringARB( _glfwWin.DC );
         if( extensions != NULL )
         {
             if( _glfwStringInExtensionString( extension, extensions ) )

@@ -130,11 +130,15 @@ typedef struct tagKBDLLHOOKSTRUCT {
 #endif
 
 // wglSwapIntervalEXT typedef (Win32 buffer-swap interval control)
-typedef int (APIENTRY * WGLSWAPINTERVALEXT_T) (int interval);
+typedef int (APIENTRY * WGLSWAPINTERVALEXT_T) (int);
 // wglChoosePixelFormatARB typedef
-typedef BOOL (WINAPI * WGLCHOOSEPIXELFORMATARB_T) (HDC hdc, const int *piAttribIList, const FLOAT *pfAttribFList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
+typedef BOOL (WINAPI * WGLCHOOSEPIXELFORMATARB_T) (HDC, const int *, const FLOAT *, UINT, int *, UINT *);
 // wglGetPixelFormatAttribivARB typedef
-typedef BOOL (WINAPI * WGLGETPIXELFORMATATTRIBIVARB_T) (HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, const int *piAttributes, int *piValues);
+typedef BOOL (WINAPI * WGLGETPIXELFORMATATTRIBIVARB_T) (HDC, int, int, UINT, const int *, int *);
+// wglGetExtensionStringEXT typedef
+typedef const char *(APIENTRY * WGLGETEXTENSIONSSTRINGEXT_T)( void );
+// wglGetExtensionStringARB typedef
+typedef const char *(APIENTRY * WGLGETEXTENSIONSSTRINGARB_T)( HDC );
 
 #define WGL_DRAW_TO_WINDOW_ARB    0x2001
 #define WGL_SUPPORT_OPENGL_ARB    0x2010
@@ -280,9 +284,11 @@ struct _GLFWwin_struct {
     DWORD     dwExStyle;       // --"--
 
     // Platform specific extensions (context specific)
-    WGLSWAPINTERVALEXT_T SwapInterval;
-    WGLCHOOSEPIXELFORMATARB_T ChoosePixelFormat;
+    WGLSWAPINTERVALEXT_T           SwapInterval;
+    WGLCHOOSEPIXELFORMATARB_T      ChoosePixelFormat;
     WGLGETPIXELFORMATATTRIBIVARB_T GetPixelFormatAttribiv;
+    WGLGETEXTENSIONSSTRINGEXT_T    GetExtensionsStringEXT;
+    WGLGETEXTENSIONSSTRINGARB_T    GetExtensionsStringARB;
 
     // Various platform specific internal variables
     int       OldMouseLock;    // Old mouse-lock flag (used for remembering

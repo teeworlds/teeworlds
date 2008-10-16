@@ -230,12 +230,12 @@ static int _glfwSetPixelFormatAttrib( int redbits, int greenbits, int bluebits,
     int PixelFormat, dummy, count = 0;
     int attribs[128];
     PIXELFORMATDESCRIPTOR pfd;
-
+    
     int accumredbits = hints->AccumRedBits;
     int accumgreenbits = hints->AccumGreenBits;
     int accumbluebits = hints->AccumBlueBits;
     int accumalphabits = hints->AccumAlphaBits;
-    
+
     _glfwSetWGLAttribute( WGL_DRAW_TO_WINDOW_ARB, GL_TRUE );
     _glfwSetWGLAttribute( WGL_ACCELERATION_ARB,   WGL_FULL_ACCELERATION_ARB );
     _glfwSetWGLAttribute( WGL_SUPPORT_OPENGL_ARB, GL_TRUE );
@@ -248,7 +248,7 @@ static int _glfwSetPixelFormatAttrib( int redbits, int greenbits, int bluebits,
     _glfwSetWGLAttribute( WGL_DEPTH_BITS_ARB,     depthbits );
     _glfwSetWGLAttribute( WGL_STENCIL_BITS_ARB,   stencilbits );
     _glfwSetWGLAttribute( WGL_AUX_BUFFERS_ARB,    hints->AuxBuffers );
-
+    
     if( accumredbits || accumgreenbits || accumbluebits || accumalphabits )
     {
         _glfwSetWGLAttribute( WGL_ACCUM_BITS_ARB, accumredbits +
@@ -884,6 +884,19 @@ static void _glfwInitWGLExtensions( void )
     GLubyte *extensions;
     int     has_swap_control, has_pixel_format;
 
+    _glfwWin.GetExtensionsStringEXT = (WGLGETEXTENSIONSSTRINGEXT_T)
+        wglGetProcAddress( "wglGetExtensionsStringEXT" );
+    if( !_glfwWin.GetExtensionsStringEXT )
+    {
+	// Try wglGetExtensionsStringARB
+	_glfwWin.GetExtensionsStringARB = (WGLGETEXTENSIONSSTRINGARB_T)
+	    wglGetProcAddress( "wglGetExtensionsStringARB" );
+	if( !_glfwWin.GetExtensionsStringARB )
+	{
+	    return;
+	}
+    }
+
     // Initialize OpenGL extension: WGL_EXT_swap_control
     has_swap_control = GL_FALSE;
     has_pixel_format = GL_FALSE;
@@ -950,6 +963,7 @@ static int _glfwCreateWindow( int redbits, int greenbits, int bluebits,
 {
     int    full_width, full_height;
     RECT   wa;
+    POINT  pos;
 
     _glfwWin.DC  = NULL;
     _glfwWin.RC  = NULL;
@@ -1029,6 +1043,12 @@ static int _glfwCreateWindow( int redbits, int greenbits, int bluebits,
 
     // Initialize WGL-specific OpenGL extensions
     _glfwInitWGLExtensions();
+
+    // Initialize mouse position
+    GetCursorPos( &pos );
+    ScreenToClient( _glfwWin.Wnd, &pos );
+    _glfwInput.OldMouseX = _glfwInput.MousePosX = pos.x;
+    _glfwInput.OldMouseY = _glfwInput.MousePosY = pos.y;
 
     return GL_TRUE;
 }
@@ -1150,20 +1170,15 @@ int _glfwPlatformOpenWindow( int width, int height,
 
         // Here's a trick for helping us getting window focus
         // (SetForegroundWindow doesn't work properly under
-        // Win98/ME/2K/XP/.NET/+)
-		
-		/*
-        if( _glfwLibrary.Sys.WinVer == _GLFW_WIN_95 ||
-            _glfwLibrary.Sys.WinVer == _GLFW_WIN_NT4 || 
-            _glfwLibrary.Sys.WinVer == _GLFW_WIN_XP )
-        {
-            dwStyle |= WS_VISIBLE;
-        }
-        else
+        // Win98/ME/2K/.NET/+)
+	/*
+        if( _glfwLibrary.Sys.WinVer != _GLFW_WIN_95 &&
+            _glfwLibrary.Sys.WinVer != _GLFW_WIN_NT4 && 
+            _glfwLibrary.Sys.WinVer != _GLFW_WIN_XP )
         {
             dwStyle |= WS_MINIMIZE;
         }
-		*/
+	*/
     }
     else
     {
@@ -1189,6 +1204,9 @@ int _glfwPlatformOpenWindow( int width, int height,
 
     if( _glfwWin.ChoosePixelFormat && hints->Samples > 0 )
     {
+	// Iteratively try to create a context with a decreasing number of
+	// FSAA samples (requires window recreation).
+
         for (;;)
         {
             _glfwDestroyWindow();
@@ -1252,7 +1270,6 @@ void _glfwPlatformCloseWindow( void )
         // Switch back to desktop resolution
         ChangeDisplaySettings( NULL, CDS_FULLSCREEN );
     }
-
 }
 
 

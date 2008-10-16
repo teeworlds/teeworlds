@@ -96,12 +96,13 @@ void _glfwChangeToResourcesDirectory( void )
     }
 
     CFRelease( resourcesURL );
-/*
+
+    /* teeworlds: don't change into resources-dir
     if( chdir( resourcesPath ) != 0 )
     {
         UNBUNDLED;
     }
-	*/
+    */
 }
 
 int _glfwPlatformInit( void )
