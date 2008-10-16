@@ -234,7 +234,7 @@ enum
 SNAPSTORAGE snapshot_storage;
 static SNAPSTORAGE_HOLDER *snapshots[NUM_SNAPSHOT_TYPES];
 
-static int recived_snapshots;
+static int recived_snapshots = 0;
 static char snapshot_incomming_data[MAX_SNAPSHOT_SIZE];
 
 static SNAPSTORAGE_HOLDER demorec_snapshotholders[NUM_SNAPSHOT_TYPES];
@@ -561,6 +561,11 @@ void client_disconnect_with_reason(const char *reason)
 
 	/* clear the current server info */
 	mem_zero(&current_server_info, sizeof(current_server_info));
+	
+	/* clear snapshots */
+	snapshots[SNAP_CURRENT] = 0;
+	snapshots[SNAP_PREV] = 0;
+	recived_snapshots = 0;
 }
 
 void client_disconnect()
@@ -988,6 +993,10 @@ static void client_process_packet(NETCHUNK *packet)
 				int crc = 0;
 				int complete_size = 0;
 				const char *data = 0;
+				
+				/* we are not allowed to process snapshot yet */
+				if(client_state() < CLIENTSTATE_LOADING)
+					return;
 				
 				if(msg == NETMSG_SNAP)
 				{
