@@ -170,6 +170,7 @@ Objects = [
 
 	NetEvent("Explosion:Common", []),
 	NetEvent("Spawn:Common", []),
+	NetEvent("HammerHit:Common", []),
 	
 	NetEvent("Death:Common", [
 		NetIntRange("cid", 0, 'MAX_CLIENTS-1'),

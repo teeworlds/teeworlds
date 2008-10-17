@@ -13,6 +13,7 @@ public:
 	void smoketrail(vec2 pos, vec2 vel);
 	void skidtrail(vec2 pos, vec2 vel);
 	void explosion(vec2 pos);
+	void hammerhit(vec2 pos);
 	void air_jump(vec2 pos);
 	void damage_indicator(vec2 pos, vec2 dir);
 	void playerspawn(vec2 pos);

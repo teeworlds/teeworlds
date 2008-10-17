@@ -45,6 +45,18 @@ void GAMECONTEXT::create_damageind(vec2 p, float angle, int amount)
 	}
 }
 
+void GAMECONTEXT::create_hammerhit(vec2 p)
+{
+	// create the event
+	NETEVENT_HAMMERHIT *ev = (NETEVENT_HAMMERHIT *)events.create(NETEVENTTYPE_HAMMERHIT, sizeof(NETEVENT_HAMMERHIT));
+	if(ev)
+	{
+		ev->x = (int)p.x;
+		ev->y = (int)p.y;
+	}
+}
+
+
 void GAMECONTEXT::create_explosion(vec2 p, int owner, int weapon, bool bnodamage)
 {
 	// create the event

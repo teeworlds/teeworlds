@@ -432,7 +432,12 @@ void GAMECLIENT::on_statechange(int new_state, int old_state)
 {
 	// clear out the invalid pointers
 	mem_zero(&gameclient.snap, sizeof(gameclient.snap));
-		
+	
+	// first issue a reset to all
+	for(int i = 0; i < all.num; i++)
+		all.components[i]->on_reset();
+	
+	// then change the state
 	for(int i = 0; i < all.num; i++)
 		all.components[i]->on_statechange(new_state, old_state);
 }
@@ -462,6 +467,11 @@ void GAMECLIENT::process_events()
 		{
 			NETEVENT_EXPLOSION *ev = (NETEVENT_EXPLOSION *)data;
 			gameclient.effects->explosion(vec2(ev->x, ev->y));
+		}
+		else if(item.type == NETEVENTTYPE_HAMMERHIT)
+		{
+			NETEVENT_HAMMERHIT *ev = (NETEVENT_HAMMERHIT *)data;
+			gameclient.effects->hammerhit(vec2(ev->x, ev->y));
 		}
 		else if(item.type == NETEVENTTYPE_SPAWN)
 		{

@@ -306,7 +306,7 @@ void CHARACTER::fire_weapon()
 				vec2 fdir = normalize(ents[i]->pos - pos);
 
 				// set his velocity to fast upward (for now)
-				game.create_sound(pos, SOUND_HAMMER_HIT);
+				game.create_hammerhit(pos);
 				ents[i]->take_damage(vec2(0,-1.0f), data->weapons.hammer.base->damage, player->client_id, active_weapon);
 				vec2 dir;
 				if (length(target->pos - pos) > 0.0f)

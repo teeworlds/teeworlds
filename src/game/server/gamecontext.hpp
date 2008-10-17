@@ -58,6 +58,7 @@ public:
 	void create_damageind(vec2 p, float angle_mod, int amount);
 	void create_explosion(vec2 p, int owner, int weapon, bool bnodamage);
 	void create_smoke(vec2 p);
+	void create_hammerhit(vec2 p);
 	void create_playerspawn(vec2 p);
 	void create_death(vec2 p, int who);
 	void create_sound(vec2 pos, int sound, int mask=-1);

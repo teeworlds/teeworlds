@@ -6,6 +6,7 @@
 #include <game/client/components/skins.hpp>
 #include <game/client/components/flow.hpp>
 #include <game/client/components/damageind.hpp>
+#include <game/client/components/sounds.hpp>
 #include <game/client/gameclient.hpp>
 
 #include "effects.hpp"
@@ -213,6 +214,22 @@ void EFFECTS::explosion(vec2 pos)
 		p.color = mix(vec4(0.75f,0.75f,0.75f,1.0f), vec4(0.5f,0.5f,0.5f,1.0f), frandom());
 		gameclient.particles->add(PARTICLES::GROUP_GENERAL, &p);
 	}
+}
+
+
+void EFFECTS::hammerhit(vec2 pos)
+{
+	// add the explosion
+	PARTICLE p;
+	p.set_default();
+	p.spr = SPRITE_PART_EXPL01;
+	p.pos = pos;
+	p.life_span = 0.4f;
+	p.start_size = 150.0f;
+	p.end_size = 0;
+	p.rot = frandom()*pi*2;
+	gameclient.particles->add(PARTICLES::GROUP_EXPLOSIONS, &p);	
+	gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_HAMMER_HIT, 1.0f, pos);
 }
 
 void EFFECTS::on_render()
