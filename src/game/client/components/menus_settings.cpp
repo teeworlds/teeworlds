@@ -508,7 +508,7 @@ void MENUS::render_settings_graphics(RECT main_view)
 		RECT text;
 		ui_hsplit_t(&main_view, 19.0f, &button, &main_view);
 		ui_vmargin(&button, 15.0f, &button);
-		ui_vsplit_l(&button, 30.0f, &text, &button);
+		ui_vsplit_l(&button, 50.0f, &text, &button);
 		ui_vsplit_r(&button, 5.0f, &button, 0);
 		ui_hsplit_t(&button, 4.0f, 0, &button);
 		
