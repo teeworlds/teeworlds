@@ -92,7 +92,14 @@ int netserver_close(NETSERVER *s)
 int netserver_drop(NETSERVER *s, int client_id, const char *reason)
 {
 	/* TODO: insert lots of checks here */
-	dbg_msg("net_server", "client dropped. cid=%d reason=\"%s\"", client_id, reason);
+	NETADDR addr;
+	netserver_client_addr(s, client_id, &addr);
+	
+	dbg_msg("net_server", "client dropped. cid=%d ip=%d.%d.%d.%d reason=\"%s\"",
+		client_id,
+		addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3],
+		reason
+		);
 	conn_disconnect(&s->slots[client_id].conn, reason);
 
 	if(s->del_client)

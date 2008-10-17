@@ -623,6 +623,8 @@ static void server_send_rcon_line_authed(const char *line, void *user_data)
 static void server_process_client_packet(NETCHUNK *packet)
 {
 	int cid = packet->client_id;
+	NETADDR addr;
+	
 	int sys;
 	int msg = msg_unpack_start(packet->data, packet->data_size, &sys);
 	
@@ -686,7 +688,12 @@ static void server_process_client_packet(NETCHUNK *packet)
 		{
 			if(clients[cid].state == SRVCLIENT_STATE_CONNECTING)
 			{
-				dbg_msg("server", "player is ready. cid=%x", cid);
+				netserver_client_addr(net, cid, &addr);
+				
+				dbg_msg("server", "player is ready. cid=%x ip=%d.%d.%d.%d",
+					cid,
+					addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3]
+					);
 				clients[cid].state = SRVCLIENT_STATE_READY;
 				mods_connected(cid);
 			}
@@ -695,7 +702,12 @@ static void server_process_client_packet(NETCHUNK *packet)
 		{
 			if(clients[cid].state == SRVCLIENT_STATE_READY)
 			{
-				dbg_msg("server", "player as entered the game. cid=%x", cid);
+				netserver_client_addr(net, cid, &addr);
+				
+				dbg_msg("server", "player has entered the game. cid=%x ip=%d.%d.%d.%d",
+					cid,
+					addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3]
+					);
 				clients[cid].state = SRVCLIENT_STATE_INGAME;
 				mods_client_enter(cid);
 			}
