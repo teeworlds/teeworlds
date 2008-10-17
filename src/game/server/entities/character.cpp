@@ -743,6 +743,7 @@ void CHARACTER::die(int killer, int weapon)
 	*/
 	alive = false;
 	game.world.remove_entity(this);
+	game.world.core.characters[player->client_id] = 0;
 	game.create_death(pos, player->client_id);
 }
 
