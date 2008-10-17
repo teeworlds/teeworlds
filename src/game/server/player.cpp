@@ -9,6 +9,7 @@ MACRO_ALLOC_POOL_ID_IMPL(PLAYER, MAX_CLIENTS)
 
 PLAYER::PLAYER(int client_id)
 {
+	respawn_tick = server_tick();
 	character = 0;
 	this->client_id = client_id;
 }
@@ -56,7 +57,7 @@ void PLAYER::tick()
 			character = 0;
 		}
 	}
-	else if(spawning)
+	else if(spawning && respawn_tick <= server_tick())
 		try_respawn();
 }
 
