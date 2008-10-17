@@ -561,5 +561,6 @@ void client_demoplayer_setpos(float percent);
 void client_demoplayer_setpause(int paused);
 void client_demoplayer_setspeed(float speed);
 const char *client_user_directory();
-
+void client_serverinfo(SERVER_INFO *serverinfo);
+void client_serverbrowse_request(NETADDR *addr);
 #endif

@@ -87,6 +87,7 @@ static int mapdownload_totalsize = -1;
 
 /* */
 static SERVER_INFO current_server_info = {0};
+static int64 current_server_info_requesttime = -1; /* >= 0 should request, == -1 got info */
 
 /* current time */
 static int current_tick = 0;
@@ -510,6 +511,7 @@ void client_connect(const char *server_address_str)
 	dbg_msg("client", "connecting to '%s'", server_address_str);
 
 	mem_zero(&current_server_info, sizeof(current_server_info));
+	current_server_info_requesttime = 0;
 	str_copy(buf, server_address_str, sizeof(buf));
 
 	for(k = 0; buf[k]; k++)
@@ -571,6 +573,12 @@ void client_disconnect_with_reason(const char *reason)
 void client_disconnect()
 {
 	client_disconnect_with_reason(0);
+}
+
+
+void client_serverinfo(SERVER_INFO *serverinfo)
+{
+	mem_copy(serverinfo, &current_server_info, sizeof(current_server_info));
 }
 
 static int client_load_data()
@@ -838,6 +846,13 @@ static void client_process_packet(NETCHUNK *packet)
 				{
 					/* sort players */
 					qsort(info.players, info.num_players, sizeof(*info.players), player_score_comp);
+					
+					if(net_addr_comp(&server_address, &packet->address) == 0)
+					{
+						mem_copy(&current_server_info, &info, sizeof(current_server_info));
+						current_server_info_requesttime = -1;
+					}
+					
 					if(packet_type == 2)
 						client_serverbrowse_set(&packet->address, BROWSESET_TOKEN, token, &info);
 					else
@@ -1401,6 +1416,15 @@ static void client_update()
 		{
 			if(current_predtick > current_tick && current_predtick < current_tick+50)
 				modc_predict();
+		}
+		
+		/* fetch server info if we don't have it */
+		if(client_state() >= CLIENTSTATE_LOADING &&
+			current_server_info_requesttime >= 0 &&
+			time_get() > current_server_info_requesttime)
+		{
+			client_serverbrowse_request(&server_address);
+			current_server_info_requesttime = time_get()+time_freq()*2;
 		}
 	}
 

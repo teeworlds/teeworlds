@@ -833,9 +833,9 @@ bool CHARACTER::take_damage(vec2 force, int dmg, int from, int weapon)
 	return true;
 }
 
-void CHARACTER::snap(int snaping_client)
+void CHARACTER::snap(int snapping_client)
 {
-	if(networkclipped(snaping_client))
+	if(networkclipped(snapping_client))
 		return;
 	
 	NETOBJ_CHARACTER *character = (NETOBJ_CHARACTER *)snap_new_item(NETOBJTYPE_CHARACTER, player->client_id, sizeof(NETOBJ_CHARACTER));
@@ -862,7 +862,7 @@ void CHARACTER::snap(int snaping_client)
 
 	character->direction = input.direction;
 
-	if(player->client_id == snaping_client)
+	if(player->client_id == snapping_client)
 	{
 		character->health = health;
 		character->armor = armor;

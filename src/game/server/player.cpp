@@ -61,7 +61,7 @@ void PLAYER::tick()
 		try_respawn();
 }
 
-void PLAYER::snap(int snaping_client)
+void PLAYER::snap(int snapping_client)
 {
 	NETOBJ_CLIENT_INFO *client_info = (NETOBJ_CLIENT_INFO *)snap_new_item(NETOBJTYPE_CLIENT_INFO, client_id, sizeof(NETOBJ_CLIENT_INFO));
 	str_to_ints(&client_info->name0, 6, server_clientname(client_id));
@@ -79,7 +79,7 @@ void PLAYER::snap(int snaping_client)
 	info->score = score;
 	info->team = team;
 
-	if(client_id == snaping_client)
+	if(client_id == snapping_client)
 		info->local = 1;	
 }
 

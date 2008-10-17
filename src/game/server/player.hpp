@@ -64,7 +64,7 @@ public:
 	void set_team(int team);
 	
 	void tick();
-	void snap(int snaping_client);
+	void snap(int snapping_client);
 
 	void on_direct_input(NETOBJ_PLAYER_INPUT *new_input);
 	void on_predicted_input(NETOBJ_PLAYER_INPUT *new_input);

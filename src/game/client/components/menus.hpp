@@ -132,7 +132,6 @@ class MENUS : public COMPONENT
 	void render_servercontrol_map(RECT main_view);
 	
 	// found in menus_browser.cpp
-	SERVER_INFO current_server_info; // should this be here?
 	int selected_index;
 	void render_serverbrowser_serverlist(RECT view);
 	void render_serverbrowser_serverdetail(RECT view);

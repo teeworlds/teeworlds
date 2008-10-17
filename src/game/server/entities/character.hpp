@@ -118,7 +118,7 @@ public:
 
 	virtual void tick();
 	virtual void tick_defered();
-	virtual void snap(int snaping_client);
+	virtual void snap(int snapping_client);
 	
 	bool increase_health(int amount);
 	bool increase_armor(int amount);

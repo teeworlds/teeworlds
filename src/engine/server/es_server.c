@@ -852,11 +852,19 @@ static void server_send_serverinfo(NETADDR *addr, int token)
 	}
 	
 	packer_reset(&p);
-	packer_add_raw(&p, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
 
-	/* token */
-	str_format(buf, sizeof(buf), "%d", token);
-	packer_add_string(&p, buf, 6);
+	if(token >= 0)
+	{
+		/* new token based format */
+		packer_add_raw(&p, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
+		str_format(buf, sizeof(buf), "%d", token);
+		packer_add_string(&p, buf, 6);
+	}
+	else
+	{
+		/* old format */
+		packer_add_raw(&p, SERVERBROWSE_OLD_INFO, sizeof(SERVERBROWSE_OLD_INFO));
+	}
 	
 	packer_add_string(&p, mods_version(), 32);
 	packer_add_string(&p, config.sv_name, 64);
@@ -920,6 +928,13 @@ static void server_pump_network()
 					memcmp(packet.data, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
 				{
 					server_send_serverinfo(&packet.address, ((unsigned char *)packet.data)[sizeof(SERVERBROWSE_GETINFO)]);
+				}
+				
+				
+				if(packet.data_size == sizeof(SERVERBROWSE_OLD_GETINFO) &&
+					memcmp(packet.data, SERVERBROWSE_OLD_GETINFO, sizeof(SERVERBROWSE_OLD_GETINFO)) == 0)
+				{
+					server_send_serverinfo(&packet.address, -1);
 				}
 			}
 		}

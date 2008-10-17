@@ -144,6 +144,10 @@ void MENUS::render_game(RECT main_view)
 
 void MENUS::render_serverinfo(RECT main_view)
 {
+	// fetch server info
+	SERVER_INFO current_server_info;
+	client_serverinfo(&current_server_info);
+	
 	// count players for server info-box
 	int num_players = 0;
 	for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)

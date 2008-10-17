@@ -512,7 +512,7 @@ void client_serverbrowse_refresh(int type)
 	}
 }
 
-static void client_serverbrowse_request(NETADDR *addr, SERVERENTRY *entry)
+static void client_serverbrowse_request_impl(NETADDR *addr, SERVERENTRY *entry)
 {
 	/*unsigned char buffer[sizeof(SERVERBROWSE_GETINFO)+1];*/
 	NETCHUNK p;
@@ -542,6 +542,12 @@ static void client_serverbrowse_request(NETADDR *addr, SERVERENTRY *entry)
 	if(entry)
 		entry->request_time = time_get();
 }
+
+void client_serverbrowse_request(NETADDR *addr)
+{
+	client_serverbrowse_request_impl(addr, 0);
+}
+
 
 void client_serverbrowse_update()
 {
@@ -611,7 +617,7 @@ void client_serverbrowse_update()
 			break;
 			
 		if(entry->request_time == 0)
-			client_serverbrowse_request(&entry->addr, entry);
+			client_serverbrowse_request_impl(&entry->addr, entry);
 		
 		count++;
 		entry = entry->next_req;
