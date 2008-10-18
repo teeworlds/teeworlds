@@ -430,12 +430,8 @@ void GAMECLIENT::on_message(int msgtype)
 
 void GAMECLIENT::on_statechange(int new_state, int old_state)
 {
-	// clear out the invalid pointers
-	mem_zero(&gameclient.snap, sizeof(gameclient.snap));
-	
-	// first issue a reset to all
-	for(int i = 0; i < all.num; i++)
-		all.components[i]->on_reset();
+	// reset everything
+	on_reset();
 	
 	// then change the state
 	for(int i = 0; i < all.num; i++)
