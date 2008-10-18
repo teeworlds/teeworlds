@@ -601,10 +601,10 @@ static void do_toolbar(RECT toolbar)
 		editor.zoom_level -= 50;
 		
 	if(inp_key_presses(KEY_MOUSE_WHEEL_UP))
-		editor.zoom_level -= 20.0f;
+		editor.zoom_level -= 20;
 		
 	if(inp_key_presses(KEY_MOUSE_WHEEL_DOWN))
-		editor.zoom_level += 20.0f;
+		editor.zoom_level += 20;
 	
 	if(editor.zoom_level < 50)
 		editor.zoom_level = 50;
