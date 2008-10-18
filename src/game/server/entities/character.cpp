@@ -601,6 +601,7 @@ void CHARACTER::tick()
 	core.input = input;
 	core.tick(true);
 	
+	// handle death-tiles
 	if(col_get((int)pos.x, (int)pos.y)&COLFLAG_DEATH)
 		die(player->client_id, -1);
 

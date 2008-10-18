@@ -73,6 +73,13 @@ void GAMECONTROLLER_CTF::tick()
 		if(!f)
 			continue;
 		
+		// flag hits death-tile, reset it
+		if(col_get((int)f->pos.x, (int)f->pos.y)&COLFLAG_DEATH)
+		{
+			f->reset();
+			continue;
+		}
+		
 		//
 		if(f->carrying_character)
 		{
