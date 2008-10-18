@@ -599,6 +599,12 @@ static void do_toolbar(RECT toolbar)
 	static int zoom_in_button = 0;
 	if(do_editor_button(&zoom_in_button, "ZI", 0, &button, draw_editor_button_r, 0, "[NumPad+] Zoom in") || inp_key_down(KEY_KP_ADD))
 		editor.zoom_level -= 50;
+		
+	if(inp_key_presses(KEY_MOUSE_WHEEL_UP))
+		editor.zoom_level -= 20.0f;
+		
+	if(inp_key_presses(KEY_MOUSE_WHEEL_DOWN))
+		editor.zoom_level += 20.0f;
 	
 	if(editor.zoom_level < 50)
 		editor.zoom_level = 50;
