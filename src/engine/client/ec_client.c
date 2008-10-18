@@ -709,7 +709,7 @@ static const char *client_load_map(const char *name, const char *filename, int w
 	
 	/* get the crc of the map */
 	crc = datafile_crc(filename);
-	if(0 && crc != wanted_crc) /* TODO: FIX ME!!! */
+	if(crc != wanted_crc)
 	{
 		datafile_unload(df);
 		str_format(errormsg, sizeof(errormsg), "map differs from the server. %08x != %08x", crc, wanted_crc);
