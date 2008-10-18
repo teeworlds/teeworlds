@@ -139,7 +139,8 @@ void PLAYER::kill_character()
 
 void PLAYER::respawn()
 {
-	spawning = true;
+	if(team > -1)
+		spawning = true;
 }
 
 void PLAYER::set_team(int new_team)
