@@ -66,7 +66,6 @@ public:
 	void tick();
 	void snap(int snapping_client);
 
-	void on_character_death();
 	void on_direct_input(NETOBJ_PLAYER_INPUT *new_input);
 	void on_predicted_input(NETOBJ_PLAYER_INPUT *new_input);
 	void on_disconnect();
