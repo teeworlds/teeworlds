@@ -11,7 +11,7 @@ Powerups = ["HEALTH", "ARMOR", "WEAPON", "NINJA"]
 RawHeader = '''
 enum
 {
-	INPUT_STATE_MASK=0x2f,
+	INPUT_STATE_MASK=0x3f,
 };
 '''
 
