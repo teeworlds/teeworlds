@@ -87,6 +87,9 @@ MENUS::MENUS()
 	
 	need_restart = false;
 	menu_active = true;
+	
+	escape_pressed = false;
+	enter_pressed = false;
 	num_inputevents = 0;
 	
 	demos = 0;
@@ -806,11 +809,11 @@ int MENUS::render()
 			ui_vmargin(&no, 20.0f, &no);
 
 			static int button_abort = 0;
-			if(ui_do_button(&button_abort, "No", 0, &no, ui_draw_menu_button, 0) || inp_key_down(KEY_ESC))
+			if(ui_do_button(&button_abort, "No", 0, &no, ui_draw_menu_button, 0) || escape_pressed)
 				popup = POPUP_NONE;
 
 			static int button_tryagain = 0;
-			if(ui_do_button(&button_tryagain, "Yes", 0, &yes, ui_draw_menu_button, 0) || inp_key_down(KEY_ENTER))
+			if(ui_do_button(&button_tryagain, "Yes", 0, &yes, ui_draw_menu_button, 0) || enter_pressed)
 				client_quit();
 		}
 		else if(popup == POPUP_PASSWORD)
@@ -827,11 +830,11 @@ int MENUS::render()
 			ui_vmargin(&abort, 20.0f, &abort);
 			
 			static int button_abort = 0;
-			if(ui_do_button(&button_abort, "Abort", 0, &abort, ui_draw_menu_button, 0) || inp_key_down(KEY_ESC))
+			if(ui_do_button(&button_abort, "Abort", 0, &abort, ui_draw_menu_button, 0) || escape_pressed)
 				popup = POPUP_NONE;
 
 			static int button_tryagain = 0;
-			if(ui_do_button(&button_tryagain, "Try again", 0, &tryagain, ui_draw_menu_button, 0) || inp_key_down(KEY_ENTER))
+			if(ui_do_button(&button_tryagain, "Try again", 0, &tryagain, ui_draw_menu_button, 0) || enter_pressed)
 			{
 				client_connect(config.ui_server_address);
 			}
@@ -855,7 +858,7 @@ int MENUS::render()
 			ui_vmargin(&part, 80.0f, &part);
 			
 			static int enter_button = 0;
-			if(ui_do_button(&enter_button, "Enter", 0, &part, ui_draw_menu_button, 0) || inp_key_down(KEY_ENTER))
+			if(ui_do_button(&enter_button, "Enter", 0, &part, ui_draw_menu_button, 0) || enter_pressed)
 				popup = POPUP_NONE;
 			
 			ui_hsplit_b(&box, 40.f, &box, &part);
@@ -875,7 +878,7 @@ int MENUS::render()
 			ui_vmargin(&part, 120.0f, &part);
 
 			static int button = 0;
-			if(ui_do_button(&button, button_text, 0, &part, ui_draw_menu_button, 0) || inp_key_down(KEY_ESC) || inp_key_down(KEY_ENTER))
+			if(ui_do_button(&button, button_text, 0, &part, ui_draw_menu_button, 0) || escape_pressed || enter_pressed)
 			{
 				if(popup == POPUP_CONNECTING)
 					client_disconnect();
@@ -912,10 +915,20 @@ bool MENUS::on_input(INPUT_EVENT e)
 {
 	last_input = time_get();
 	
-	if(e.flags&INPFLAG_PRESS && e.key == KEY_ESC)
+	// special handle esc and enter for popup purposes
+	if(e.flags&INPFLAG_PRESS)
 	{
-		menu_active	= !menu_active;
-		return true;
+		if(e.key == KEY_ESC)
+		{
+			escape_pressed = true;
+			menu_active	= !menu_active;
+			return true;
+		}
+		else if(e.key == KEY_ENTER)
+		{
+			enter_pressed = true;
+			return true;
+		}
 	}
 	
 	if(menu_active)
@@ -967,7 +980,12 @@ void MENUS::on_render()
 	}
 	
 	if(!menu_active)
+	{
+		escape_pressed = false;
+		enter_pressed = false;
+		num_inputevents = 0;
 		return;
+	}
 		
 	// update colors
 	vec3 rgb = hsl_to_rgb(vec3(config.ui_color_hue/255.0f, config.ui_color_sat/255.0f, config.ui_color_lht/255.0f));
@@ -1054,6 +1072,8 @@ void MENUS::on_render()
 		
 	}
 
+	escape_pressed = false;
+	enter_pressed = false;
 	num_inputevents = 0;
 }
 

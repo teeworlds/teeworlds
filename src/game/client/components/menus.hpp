@@ -95,6 +95,10 @@ class MENUS : public COMPONENT
 	// for graphic settings
 	bool need_restart;
 	
+	//
+	bool escape_pressed;
+	bool enter_pressed;
+	
 	// for call vote
 	int callvote_selectedplayer;
 	int callvote_selectedmap;
