@@ -802,7 +802,7 @@ bool CHARACTER::take_damage(vec2 force, int dmg, int from, int weapon)
 	damage_taken_tick = server_tick();
 
 	// do damage hit sound
-	if(from >= 0 && from != player->client_id)
+	if(from >= 0 && from != player->client_id && game.players[from])
 		game.create_sound(game.players[from]->view_pos, SOUND_HIT, cmask_one(from));
 
 	// check for death
@@ -811,7 +811,7 @@ bool CHARACTER::take_damage(vec2 force, int dmg, int from, int weapon)
 		die(from, weapon);
 		
 		// set attacker's face to happy (taunt!)
-		if (from >= 0 && from != player->client_id)
+		if (from >= 0 && from != player->client_id && game.players[from])
 		{
 			CHARACTER *chr = game.players[from]->get_character();
 			if (chr)
