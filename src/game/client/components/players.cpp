@@ -12,6 +12,7 @@
 #include <game/client/components/skins.hpp>
 #include <game/client/components/effects.hpp>
 #include <game/client/components/sounds.hpp>
+#include <game/client/components/controls.hpp>
 
 #include "players.hpp"
 
@@ -60,18 +61,19 @@ void PLAYERS::render_hand(TEE_RENDER_INFO *info, vec2 center_pos, vec2 dir, floa
 
 inline float normalize_angular(float f)
 {
-	return fmod(f, pi*2);
+	return fmod(f+pi*2, pi*2);
 }
 
-inline float mix_angular(float src, float dst, float amount)
+inline float angular_mix_direction(float src, float dst) { return sinf(dst-src) >0?1:-1; }
+inline float angular_distance(float src, float dst) { return asinf(sinf(dst-src)); }
+
+inline float angular_approach(float src, float dst, float amount)
 {
-	src = normalize_angular(src);
-	dst = normalize_angular(dst);
-	float d0 = dst-src;
-	float d1 = dst-(src+pi*2);
-	if(fabs(d0) < fabs(d1))
-		return src+d0*amount;
-	return src+d1*amount;
+	float d = angular_mix_direction(src, dst);
+	float n = src + amount*d;
+	if(angular_mix_direction(n, dst) != d)
+		return dst;
+	return n;
 }
 
 void PLAYERS::render_player(
@@ -123,15 +125,36 @@ void PLAYERS::render_player(
 
 	//float angle = mix((float)prev.angle, (float)player.angle, intratick)/256.0f;
 	
-	// TODO: fix this good!
-	float mixspeed = 0.05f;
-	if(player.attacktick != prev.attacktick)
-		mixspeed = 0.1f;
+	float angle = 0;
 	
-	float angle = mix_angular(gameclient.clients[info.cid].angle, player.angle/256.0f, mixspeed);
-	gameclient.clients[info.cid].angle = angle;
-	vec2 direction = get_direction((int)(angle*256.0f));
+	if(info.local && client_state() != CLIENTSTATE_DEMOPLAYBACK)
+	{
+		// just use the direct input if it's local player we are rendering
+		angle = get_angle(gameclient.controls->mouse_pos);
+	}
+	else
+	{
+		float mixspeed = client_frametime()*2.5f;
+		if(player.attacktick != prev.attacktick) // shooting boosts the mixing speed
+			mixspeed *= 15.0f;
+		
+		// move the delta on a constant speed on a x^2 curve
+		float current = gameclient.clients[info.cid].angle;
+		float target = player.angle/256.0f;
+		float delta = angular_distance(current, target);
+		float sign = delta < 0 ? -1 : 1;
+		float new_delta = delta - 2*mixspeed*sqrt(delta*sign)*sign + mixspeed*mixspeed;
+		
+		// make sure that it doesn't vibrate when it's still
+		if(fabs(delta) < 2/256.0f)
+			angle = target;
+		else
+			angle = angular_approach(current, target, fabs(delta-new_delta));
+
+		gameclient.clients[info.cid].angle = angle;
+	}
 	
+	// use preditect players if needed
 	if(info.local && config.cl_predict && client_state() != CLIENTSTATE_DEMOPLAYBACK)
 	{
 		if(!gameclient.snap.local_character || (gameclient.snap.local_character->health < 0) || (gameclient.snap.gameobj && gameclient.snap.gameobj->game_over))
@@ -146,6 +169,7 @@ void PLAYERS::render_player(
 		}
 	}
 	
+	vec2 direction = get_direction((int)(angle*256.0f));
 	vec2 position = mix(vec2(prev.x, prev.y), vec2(player.x, player.y), intratick);
 	vec2 vel = mix(vec2(prev.vx/256.0f, prev.vy/256.0f), vec2(player.vx/256.0f, player.vy/256.0f), intratick);
 	
