@@ -198,8 +198,8 @@ void PLAYERS::render_player(
 
 	if (player.weapon == WEAPON_HAMMER)
 	{
-		float a = clamp((client_tick()-player.attacktick+ticktime)/10.0f, 0.0f, 1.0f);
-		state.add(&data->animations[ANIM_HAMMER_SWING], a, 1.0f);
+		float ct = (client_prevtick()-player.attacktick)/(float)SERVER_TICK_SPEED + client_ticktime();
+		state.add(&data->animations[ANIM_HAMMER_SWING], clamp(ct*5.0f,0.0f,1.0f), 1.0f);
 	}
 	if (player.weapon == WEAPON_NINJA)
 	{
