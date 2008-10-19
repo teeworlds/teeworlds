@@ -377,37 +377,41 @@ void GAMECONTROLLER::tick()
 			}
 		}
 		
-		int m = (t[0] > t[1]) ? 0 : 1;
-		int num_balance = abs(t[0]-t[1]) / 2;
-		
-		do
+		// are teams unbalanced?
+		if(abs(t[0]-t[1]) >= 2)
 		{
-			PLAYER *p = 0;
-			int pd = tscore[m];
-			for(int i = 0; i < MAX_CLIENTS; i++)
+			int m = (t[0] > t[1]) ? 0 : 1;
+			int num_balance = abs(t[0]-t[1]) / 2;
+			
+			do
 			{
-				if(!game.players[i])
-					continue;
-				
-				// remember the player who would cause lowest score-difference
-				if(game.players[i]->team == m && (!p || abs((tscore[m^1]+game.players[i]->score) - (tscore[m]-game.players[i]->score)) < pd))
+				PLAYER *p = 0;
+				int pd = tscore[m];
+				for(int i = 0; i < MAX_CLIENTS; i++)
 				{
-					p = game.players[i];
-					pd = abs((tscore[m^1]+p->score) - (tscore[m]-p->score));
+					if(!game.players[i])
+						continue;
+					
+					// remember the player who would cause lowest score-difference
+					if(game.players[i]->team == m && (!p || abs((tscore[m^1]+game.players[i]->score) - (tscore[m]-game.players[i]->score)) < pd))
+					{
+						p = game.players[i];
+						pd = abs((tscore[m^1]+p->score) - (tscore[m]-p->score));
+					}
 				}
-			}
+				
+				// move the player to other team without losing his score
+				// TODO: change in player::set_team needed: player won't lose score on team-change
+				int score_before = p->score;
+				p->set_team(m^1);
+				p->score = score_before;
+				
+				p->respawn();
+				p->force_balanced = true;
+			} while (--num_balance);
 			
-			// move the player to other team without losing his score
-			// TODO: change in player::set_team needed: player won't lose score on team-change
-			int score_before = p->score;
-			p->set_team(m^1);
-			p->score = score_before;
-			
-			p->respawn();
-			p->force_balanced = true;
-		} while (--num_balance);
-		
-		force_balanced = true;
+			force_balanced = true;
+		}
 		unbalanced_tick = -1;
 	}
 	

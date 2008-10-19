@@ -105,9 +105,10 @@ void mods_connected(int client_id)
 void mods_client_drop(int client_id)
 {
 	game.players[client_id]->on_disconnect();
-	(void) game.controller->check_team_balance();
 	delete game.players[client_id];
 	game.players[client_id] = 0;
+	
+	(void) game.controller->check_team_balance();
 }
 
 void mods_message(int msgtype, int client_id)
@@ -382,6 +383,7 @@ static void con_set_team(void *result, void *user_data)
 		return;
 	
 	game.players[client_id]->set_team(team);
+	(void) game.controller->check_team_balance();
 }
 
 void mods_console_init()
