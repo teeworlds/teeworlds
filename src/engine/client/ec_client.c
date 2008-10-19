@@ -900,7 +900,7 @@ static void client_process_packet(NETCHUNK *packet)
 					else
 					{
 						char buf[512];
-						str_format(buf, sizeof(buf), "maps/%s_%8x.map", map, map_crc);
+						str_format(buf, sizeof(buf), "maps/%s_%08x.map", map, map_crc);
 						engine_savepath(buf, mapdownload_filename, sizeof(mapdownload_filename));
 
 						dbg_msg("client/network", "starting to download map to '%s'", mapdownload_filename);
