@@ -361,6 +361,7 @@ void GAMECONTROLLER::tick()
 		}
 	}
 	
+	// do team-balancing
 	if (is_teamplay() && unbalanced_tick != -1 && server_tick() > unbalanced_tick+config.sv_teambalance_time*server_tickspeed()*60)
 	{
 		dbg_msg("game", "Balancing teams");
@@ -381,7 +382,6 @@ void GAMECONTROLLER::tick()
 		
 		do
 		{
-			// move player who is closest to team-scorediff
 			PLAYER *p = 0;
 			int pd = tscore[m];
 			for(int i = 0; i < MAX_CLIENTS; i++)
@@ -389,6 +389,7 @@ void GAMECONTROLLER::tick()
 				if(!game.players[i])
 					continue;
 				
+				// remember the player who would cause lowest score-difference
 				if(game.players[i]->team == m && (!p || abs((tscore[m^1]+game.players[i]->score) - (tscore[m]-game.players[i]->score)) < pd))
 				{
 					p = game.players[i];
@@ -396,7 +397,8 @@ void GAMECONTROLLER::tick()
 				}
 			}
 			
-			// change in player::set_team needed: player won't lose score on team-change
+			// move the player to other team without losing his score
+			// TODO: change in player::set_team needed: player won't lose score on team-change
 			int score_before = p->score;
 			p->set_team(m^1);
 			p->score = score_before;
