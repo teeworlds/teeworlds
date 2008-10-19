@@ -115,11 +115,11 @@ if config.compiler.value == "cl" then
 	client_link_other = {ResCompile("other/icons/teeworlds.rc")}
 end
 
-function intermediate_output_func(dir, input, extension)
+function intermediate_output_func(dir, input, settings)
 	if not (dir == "") then
-		return Path(dir .. "/" .. PathBase(PathFilename(input)) .. extension)
+		return Path(dir .. "/" .. PathBase(PathFilename(input)) .. settings.config_name)
 	end
-	return PathBase(input) .. extension
+	return PathBase(input) .. settings.config_name
 end
 
 function build(settings)
