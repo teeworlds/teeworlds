@@ -166,12 +166,12 @@ def EmitDefinition(root, name):
 class Object:
 	pass
 
-class Enum():
+class Enum:
 	def __init__(self, name, values):
 		self.name = name
 		self.values = values
 
-class Flags():
+class Flags:
 	def __init__(self, name, values):
 		self.name = name
 		self.values = values
