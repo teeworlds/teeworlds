@@ -366,30 +366,33 @@ void GAMECONTROLLER::tick()
 		dbg_msg("game", "Balancing teams");
 		
 		int t[2] = {0,0};
+		int tscore[2] = {0,0};
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
 			if(game.players[i] && game.players[i]->team != -1)
+			{
 				t[game.players[i]->team]++;
+				tscore[game.players[i]->team]+=game.players[i]->score;
+			}
 		}
 		
 		int m = (t[0] > t[1]) ? 0 : 1;
 		int num_balance = abs(t[0]-t[1]) / 2;
-		int scorediff = abs(teamscore[0]-teamscore[1]);
 		
 		do
 		{
 			// move player who is closest to team-scorediff
 			PLAYER *p = 0;
-			int pd = teamscore[m];
+			int pd = tscore[m];
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
 				if(!game.players[i])
 					continue;
 				
-				if(game.players[i]->team == m && (!p || abs(scorediff - game.players[i]->score) < pd))
+				if(game.players[i]->team == m && (!p || abs((tscore[m^1]+game.players[i]->score) - (tscore[m]-game.players[i]->score)) < pd))
 				{
 					p = game.players[i];
-					pd = abs(scorediff - game.players[i]->score);
+					pd = abs((tscore[m^1]+p->score) - (tscore[m]-p->score));
 				}
 			}
 			
