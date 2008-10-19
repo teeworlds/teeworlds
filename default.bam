@@ -117,9 +117,9 @@ end
 
 function intermediate_output_func(dir, input, settings)
 	if not (dir == "") then
-		return Path(dir .. "/" .. PathBase(PathFilename(input)) .. settings.config_name)
+		return Path(dir .. "/" .. PathBase(PathFilename(input)) .. settings.config_ext)
 	end
-	return PathBase(input) .. settings.config_name
+	return PathBase(input) .. settings.config_ext
 end
 
 function build(settings)
