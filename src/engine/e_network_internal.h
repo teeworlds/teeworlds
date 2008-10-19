@@ -18,6 +18,8 @@ CURRENT:
 		unsigned char flags_size; // 2bit flags, 6 bit size
 		unsigned char size_seq; // 4bit size, 4bit seq
 		(unsigned char seq;) // 8bit seq, if vital flag is set
+
+
 */
 
 enum
@@ -35,7 +37,7 @@ enum
 
 	NET_CONNSTATE_OFFLINE=0,
 	NET_CONNSTATE_CONNECT=1,
-	NET_CONNSTATE_CONNECTACCEPTED=2,
+	NET_CONNSTATE_PENDING=2,
 	NET_CONNSTATE_ONLINE=3,
 	NET_CONNSTATE_ERROR=4,
 
@@ -84,6 +86,7 @@ typedef struct
 	unsigned char *data;
 
 	int sequence;
+	int64 last_send_time;
 	int64 first_send_time;
 } NETCHUNKDATA;
 

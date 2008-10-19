@@ -317,9 +317,9 @@ int client_send_msg()
 	packet.data_size = info->size;
 
 	if(info->flags&MSGFLAG_VITAL)
-		packet.flags = NETSENDFLAG_VITAL;
+		packet.flags |= NETSENDFLAG_VITAL;
 	if(info->flags&MSGFLAG_FLUSH)
-		packet.flags = NETSENDFLAG_FLUSH;
+		packet.flags |= NETSENDFLAG_FLUSH;
 		
 	if(info->flags&MSGFLAG_RECORD)
 	{
@@ -398,8 +398,6 @@ void client_direct_input(int *input, int size)
 		
 	msg_pack_end();
 	client_send_msg();
-	
-	dbg_msg("client", "sent direct input");
 }
 
 
@@ -1675,7 +1673,7 @@ static void client_run()
 		
 		if(reporttime < time_get())
 		{
-			if(config.debug)
+			if(0 && config.debug)
 			{
 				dbg_msg("client/report", "fps=%.02f (%.02f %.02f) netstate=%d",
 					frames/(float)(reportinterval/time_freq()),
@@ -1842,7 +1840,6 @@ int main(int argc, char **argv)
 	/* init the engine */
 	dbg_msg("client", "starting...");
 	engine_init("Teeworlds");
-	
 	
 	/* register all console commands */
 	client_register_commands();

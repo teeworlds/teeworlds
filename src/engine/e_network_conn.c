@@ -72,9 +72,12 @@ int conn_flush(NETCONNECTION *conn)
 	int num_chunks = conn->construct.num_chunks;
 	if(!num_chunks && !conn->construct.flags)
 		return 0;
-	
+
+	/* send of the packets */	
 	conn->construct.ack = conn->ack;
 	send_packet(conn->socket, &conn->peeraddr, &conn->construct);
+	
+	/* update send times */
 	conn->last_send_time = time_get();
 	
 	/* clear construct so we can start building a new package */
@@ -85,6 +88,7 @@ int conn_flush(NETCONNECTION *conn)
 void conn_queue_chunk(NETCONNECTION *conn, int flags, int data_size, const void *data)
 {
 	unsigned char *chunk_data;
+	
 	/* check if we have space for it, if not, flush the connection */
 	if(conn->construct.data_size + data_size + NET_MAX_CHUNKHEADERSIZE > sizeof(conn->construct.chunk_data))
 		conn_flush(conn);
@@ -115,6 +119,7 @@ void conn_queue_chunk(NETCONNECTION *conn, int flags, int data_size, const void 
 			resend->data_size = data_size;
 			resend->data = (unsigned char *)(resend+1);
 			resend->first_send_time = time_get();
+			resend->last_send_time = resend->first_send_time;
 			mem_copy(resend->data, data, data_size);
 		}
 		else
@@ -134,10 +139,16 @@ static void conn_send_control(NETCONNECTION *conn, int controlmsg, const void *e
 	construct.data_size = 1+extra_size;
 	construct.chunk_data[0] = controlmsg;
 	mem_copy(&construct.chunk_data[1], extra, extra_size);
-
+	
 	/* send the control message */
 	send_packet(conn->socket, &conn->peeraddr, &construct);
 	conn->last_send_time = time_get();
+}
+
+static void conn_resend_chunk(NETCONNECTION *conn, NETCHUNKDATA *resend)
+{
+	conn_queue_chunk(conn, resend->flags|NET_CHUNKFLAG_RESEND, resend->data_size, resend->data);
+	resend->last_send_time = time_get();
 }
 
 static void conn_resend(NETCONNECTION *conn)
@@ -148,7 +159,7 @@ static void conn_resend(NETCONNECTION *conn)
 	while(item)
 	{
 		NETCHUNKDATA *resend = item;
-		conn_queue_chunk(conn, resend->flags|NET_CHUNKFLAG_RESEND, resend->data_size, resend->data);
+		conn_resend_chunk(conn, resend);
 		item = ringbuf_next(conn->buffer, item);
 		max--;
 		resend_count++;
@@ -156,7 +167,8 @@ static void conn_resend(NETCONNECTION *conn)
 			break;
 	}
 	
-	dbg_msg("conn", "resent %d packets", resend_count);
+	if(config.debug)
+		dbg_msg("conn", "resent %d packets", resend_count);
 }
 
 int conn_connect(NETCONNECTION *conn, NETADDR *addr)
@@ -240,7 +252,7 @@ int conn_feed(NETCONNECTION *conn, NETPACKETCONSTRUCT *packet, NETADDR *addr)
 				{
 					/* send response and init connection */
 					conn_reset(conn);
-					conn->state = NET_CONNSTATE_ONLINE;
+					conn->state = NET_CONNSTATE_PENDING;
 					conn->peeraddr = *addr;
 					conn->last_send_time = now;
 					conn->last_recv_time = now;
@@ -272,9 +284,19 @@ int conn_feed(NETCONNECTION *conn, NETPACKETCONSTRUCT *packet, NETADDR *addr)
 			}
 		}
 	}
+	else
+	{
+		if(conn->state == NET_CONNSTATE_PENDING)
+		{
+			conn->state = NET_CONNSTATE_ONLINE;
+			if(config.debug)
+				dbg_msg("connection", "connecting online");
+		}
+	}
 	
 	if(conn->state == NET_CONNSTATE_ONLINE)
 	{
+		
 		conn_ack(conn, packet->ack);
 	}
 	
@@ -287,31 +309,6 @@ int conn_update(NETCONNECTION *conn)
 
 	if(conn->state == NET_CONNSTATE_OFFLINE || conn->state == NET_CONNSTATE_ERROR)
 		return 0;
-
-	/* watch out for major hitches */
-	{
-		/* TODO: fix this */
-		/*
-		int64 delta = now-conn->last_update_time;
-		if(conn->last_update_time && delta > time_freq()/2)
-		{
-			RINGBUFFER_ITEM *item = conn->buffer.first;
-	
-			dbg_msg("conn", "hitch %d", (int)((delta*1000)/time_freq()));
-			conn->last_recv_time += delta;
-	
-			while(item)
-			{
-				NETPACKETDATA *resend = (NETPACKETDATA *)rb_item_data(item);
-				resend->first_send_time += delta;
-				item = item->next;
-			}
-		}
-
-		conn->last_update_time = now;
-		*/
-	}
-		
 	
 	/* check for timeout */
 	if(conn->state != NET_CONNSTATE_OFFLINE &&
@@ -322,21 +319,29 @@ int conn_update(NETCONNECTION *conn)
 		conn_set_error(conn, "timeout");
 	}
 
+	/* fix resends */
 	if(ringbuf_first(conn->buffer))
 	{
-		/* TODO: fix this */
 		NETCHUNKDATA *resend = (NETCHUNKDATA *)ringbuf_first(conn->buffer);
+
+		/* check if we have some really old stuff laying around and abort if not acked */
 		if(now-resend->first_send_time > time_freq()*10)
 		{
 			conn->state = NET_CONNSTATE_ERROR;
 			conn_set_error(conn, "too weak connection (not acked for 10 seconds)");
 		}
+		else
+		{
+			/* resend packet if we havn't got it acked in 1 second */
+			if(now-resend->last_send_time > time_freq())
+				conn_resend_chunk(conn, resend);
+		}
 	}
 	
-	/* send keep alives if nothing has happend for 1000ms */
+	/* send keep alives if nothing has happend for 250ms */
 	if(conn->state == NET_CONNSTATE_ONLINE)
 	{
-		if(time_get()-conn->last_send_time > time_freq()/2) /* flush connection after 250ms if needed */
+		if(time_get()-conn->last_send_time > time_freq()/2) /* flush connection after 500ms if needed */
 		{
 			int num_flushed_chunks = conn_flush(conn);
 			if(num_flushed_chunks && config.debug)
@@ -350,14 +355,11 @@ int conn_update(NETCONNECTION *conn)
 	{
 		if(time_get()-conn->last_send_time > time_freq()/2) /* send a new connect every 500ms */
 			conn_send_control(conn, NET_CTRLMSG_CONNECT, 0, 0);
-			/*conn_send(conn, NETWORK_PACKETFLAG_CONNECT, 0, 0);*/
 	}
-	else if(conn->state == NET_CONNSTATE_CONNECTACCEPTED)
+	else if(conn->state == NET_CONNSTATE_PENDING)
 	{
-
 		if(time_get()-conn->last_send_time > time_freq()/2) /* send a new connect/accept every 500ms */
 			conn_send_control(conn, NET_CTRLMSG_CONNECTACCEPT, 0, 0);
-			/*conn_send(conn, NETWORK_PACKETFLAG_CONNECT|NETWORK_PACKETFLAG_ACCEPT, 0, 0);*/
 	}
 	
 	return 0;

@@ -3,10 +3,10 @@
 
 #include <cstdlib>
 
-struct packet
+struct PACKET
 {
-	packet *prev;
-	packet *next;
+	PACKET *prev;
+	PACKET *next;
 	
 	NETADDR send_to;
 	int64 timestamp;
@@ -15,8 +15,8 @@ struct packet
 	char data[1];
 };
 
-static packet *first = (packet *)0;
-static packet *last = (packet *)0;
+static PACKET *first = (PACKET *)0;
+static PACKET *last = (PACKET *)0;
 static int current_latency = 0;
 static int debug = 0;
 
@@ -40,11 +40,11 @@ int run(int port, NETADDR dest)
 			if(bytes <= 0)
 				break;
 				
-			//if((rand()%10) == 0) // drop the packet
-			//	continue;
+			if((rand()%2) == 0) // drop the packet
+				continue;
 
 			// create new packet				
-			packet *p = (packet *)mem_alloc(sizeof(packet)+bytes, 1);
+			PACKET *p = (PACKET *)mem_alloc(sizeof(PACKET)+bytes, 1);
 
 			if(net_addr_comp(&from, &dest) == 0)
 			{
@@ -95,7 +95,7 @@ int run(int port, NETADDR dest)
 			//dbg_msg("crapnet", "%p", first);
 			if(first && (time_get()-first->timestamp) > current_latency)
 			{
-				packet *p = first;
+				PACKET *p = first;
 				first = first->next;
 				if(first)
 					first->prev = 0;
@@ -117,8 +117,8 @@ int run(int port, NETADDR dest)
 				// update lag
 				double flux = rand()/(double)RAND_MAX;
 				int ms_spike = 0;
-				int ms_flux = 20;
-				int ms_ping = 50;
+				int ms_flux = 100;
+				int ms_ping = 100;
 				current_latency = ((time_freq()*ms_ping)/1000) + (int64)(((time_freq()*ms_flux)/1000)*flux); // 50ms
 				
 				if(ms_spike && (p->id%100) == 0)

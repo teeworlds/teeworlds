@@ -773,7 +773,7 @@ void GAMECLIENT::send_info(bool start)
 		msg.use_custom_color = config.player_use_custom_color;
 		msg.color_body = config.player_color_body;
 		msg.color_feet = config.player_color_feet;
-		msg.pack(MSGFLAG_VITAL|MSGFLAG_FLUSH);
+		msg.pack(MSGFLAG_VITAL);
 	}
 	else
 	{
