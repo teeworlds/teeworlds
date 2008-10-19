@@ -23,6 +23,11 @@ static void con_dbg_dumpmem(void *result, void *user_data)
 	mem_debug_dump();
 }
 
+static void con_dbg_lognetwork(void *result, void *user_data)
+{
+	netcommon_openlog("network_sent.dat", "network_recv.dat");
+}
+
 
 static char application_save_path[512] = {0};
 static char *datadir_override = 0;
@@ -76,6 +81,7 @@ void engine_init(const char *appname)
 	jobs_initpool(&hostlookuppool, 1);
 
 	MACRO_REGISTER_COMMAND("dbg_dumpmem", "", con_dbg_dumpmem, 0x0);
+	MACRO_REGISTER_COMMAND("dbg_lognetwork", "", con_dbg_lognetwork, 0x0);
 	
 	/* reset the config */
 	config_reset();

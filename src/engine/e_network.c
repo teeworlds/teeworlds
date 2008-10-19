@@ -77,7 +77,8 @@ int recvinfo_fetch_chunk(NETRECVINFO *info, NETCHUNK *chunk)
 }
 
 
-static IOHANDLE datalog = 0;
+static IOHANDLE datalog_sent = 0;
+static IOHANDLE datalog_recv = 0;
 static HUFFMAN_STATE huffmanstate;
 
 #define COMPRESSION 1
@@ -111,12 +112,15 @@ void send_packet(NETSOCKET socket, NETADDR *addr, NETPACKETCONSTRUCT *packet)
 	unsigned char buffer[NET_MAX_PACKETSIZE];
 	int compressed_size = -1;
 	int final_size = -1;
-	
+
 	/* log the data */
-	if(datalog)
+	if(datalog_sent)
 	{
-		io_write(datalog, &packet->data_size, sizeof(packet->data_size));
-		io_write(datalog, &packet->chunk_data, packet->data_size);
+		int type = 1;
+		io_write(datalog_sent, &type, sizeof(type));
+		io_write(datalog_sent, &packet->data_size, sizeof(packet->data_size));
+		io_write(datalog_sent, &packet->chunk_data, packet->data_size);
+		io_flush(datalog_sent);
 	}
 	
 	/* compress if its enabled */
@@ -140,10 +144,21 @@ void send_packet(NETSOCKET socket, NETADDR *addr, NETPACKETCONSTRUCT *packet)
 	/* set header and send the packet if all things are good */
 	if(final_size >= 0)
 	{
+		final_size += NET_PACKETHEADERSIZE;
 		buffer[0] = ((packet->flags<<4)&0xf0)|((packet->ack>>8)&0xf);
 		buffer[1] = packet->ack&0xff;
 		buffer[2] = packet->num_chunks;
-		net_udp_send(socket, addr, buffer, NET_PACKETHEADERSIZE+final_size);
+		net_udp_send(socket, addr, buffer, final_size);
+
+		/* log raw socket data */
+		if(datalog_sent)
+		{
+			int type = 0;
+			io_write(datalog_sent, &type, sizeof(type));
+			io_write(datalog_sent, &final_size, sizeof(final_size));
+			io_write(datalog_sent, buffer, final_size);
+			io_flush(datalog_sent);
+		}
 	}
 }
 
@@ -155,6 +170,16 @@ int unpack_packet(unsigned char *buffer, int size, NETPACKETCONSTRUCT *packet)
 	{
 		dbg_msg("", "packet too small, %d", size);
 		return -1;
+	}
+
+	/* log the data */
+	if(datalog_recv)
+	{
+		int type = 0;
+		io_write(datalog_recv, &type, sizeof(type));
+		io_write(datalog_recv, &size, sizeof(size));
+		io_write(datalog_recv, buffer, size);
+		io_flush(datalog_recv);
 	}
 	
 	/* read the packet */
@@ -174,11 +199,29 @@ int unpack_packet(unsigned char *buffer, int size, NETPACKETCONSTRUCT *packet)
 	else
 	{
 		if(packet->flags&NET_PACKETFLAG_COMPRESSION)
-			huffman_decompress(&huffmanstate, &buffer[3], packet->data_size, packet->chunk_data, sizeof(packet->chunk_data));
+			packet->data_size = huffman_decompress(&huffmanstate, &buffer[3], packet->data_size, packet->chunk_data, sizeof(packet->chunk_data));
 		else
 			mem_copy(packet->chunk_data, &buffer[3], packet->data_size);
 	}
-	
+
+	/* check for errors */	
+	if(packet->data_size < 0)
+	{
+		if(config.debug)
+			dbg_msg("network", "error during packet decoding");
+		return -1;
+	}
+
+	/* log the data */
+	if(datalog_recv)
+	{
+		int type = 1;
+		io_write(datalog_recv, &type, sizeof(type));
+		io_write(datalog_recv, &packet->data_size, sizeof(packet->data_size));
+		io_write(datalog_recv, packet->chunk_data, packet->data_size);
+		io_flush(datalog_recv);
+	}
+		
 	/* return success */
 	return 0;
 }
@@ -212,9 +255,25 @@ unsigned char *unpack_chunk_header(unsigned char *data, NETCHUNKHEADER *header)
 }
 
 
-void netcommon_openlog(const char *filename)
+void netcommon_openlog(const char *sentlog, const char *recvlog)
 {
-	datalog = io_open(filename, IOFLAG_WRITE);
+	if(sentlog)
+	{
+		datalog_sent = io_open(sentlog, IOFLAG_WRITE);
+		if(datalog_sent)
+			dbg_msg("network", "logging sent packages to '%s'", sentlog);
+		else
+			dbg_msg("network", "failed to open for logging '%s'", sentlog);
+	}
+	
+	if(recvlog)
+	{
+		datalog_recv = io_open(recvlog, IOFLAG_WRITE);
+		if(recvlog)
+			dbg_msg("network", "logging recv packages to '%s'", recvlog);
+		else
+			dbg_msg("network", "failed to open for logging '%s'", recvlog);
+	}
 }
 
 static const unsigned freq_table[256+1] = {

@@ -55,7 +55,7 @@ typedef int (*NETFUNC_DELCLIENT)(int cid, void *user);
 typedef int (*NETFUNC_NEWCLIENT)(int cid, void *user);
 
 /* both */
-void netcommon_openlog(const char *filename);
+void netcommon_openlog(const char *sentlog, const char *recvlog);
 void netcommon_init();
 int netcommon_compress(const void *data, int data_size, void *output, int output_size);
 int netcommon_decompress(const void *data, int data_size, void *output, int output_size);

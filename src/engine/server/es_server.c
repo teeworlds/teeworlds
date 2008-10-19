@@ -1248,8 +1248,6 @@ int main(int argc, char **argv)
 	dbg_msg("server", "starting...");
 	engine_init("Teeworlds");
 	
-	netcommon_openlog("output.dat");
-	
 	/* register all console commands */
 	server_register_commands();
 	mods_console_init();
