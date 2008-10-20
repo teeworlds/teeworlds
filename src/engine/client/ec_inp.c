@@ -1,14 +1,25 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <string.h>
-#include <GL/glfw.h>
+#ifdef CONFIG_NO_SDL
+	#include <GL/glfw.h>
+#else
+	#include <SDL/SDL.h>
+#endif
 
 #include <base/system.h>
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
 
-static int keyboard_state[2][1024]; /* TODO: fix this!! */
+#ifdef CONFIG_NO_SDL
+static int keyboard_state[2][1024] = {{0}}; /* TODO: fix this!! */
+#else
+static unsigned char keyboard_state[2][1024] = {{0}}; /* TODO: fix this!! */
+#endif
 static int keyboard_current = 0;
+
+#ifdef CONFIG_NO_SDL
 static int keyboard_first = 1;
+#endif
 
 
 static struct
@@ -20,14 +31,16 @@ static struct
 static unsigned char input_state[2][1024] = {{0}, {0}};
 
 static int input_current = 0;
+#ifdef CONFIG_NO_SDL
 static unsigned int last_release = 0;
+#endif
 static unsigned int release_delta = -1;
 
 void inp_mouse_relative(int *x, int *y)
 {
 	static int last_x = 0, last_y = 0;
 	static int last_sens = 100.0f;
-	int nx, ny;
+	int nx = 0, ny = 0;
 	float sens = config.inp_mousesens/100.0f;
 	
 	if(last_sens != config.inp_mousesens)
@@ -37,8 +50,9 @@ void inp_mouse_relative(int *x, int *y)
 		last_sens = config.inp_mousesens;
 	}
 	
-	
+#ifdef CONFIG_NO_SDL
 	glfwGetMousePos(&nx, &ny);
+
 	nx *= sens;
 	ny *= sens;
 	
@@ -46,6 +60,12 @@ void inp_mouse_relative(int *x, int *y)
 	*y = ny-last_y;
 	last_x = nx;
 	last_y = ny;
+#else
+	SDL_GetRelativeMouseState(&nx, &ny);
+
+	*x = nx*sens;
+	*y = ny*sens;
+#endif
 }
 
 enum
@@ -88,6 +108,7 @@ INPUT_EVENT inp_get_event(int index)
 	return input_events[index];
 }
 
+#ifdef CONFIG_NO_SDL
 static void char_callback(int character, int action)
 {
 	if(action == GLFW_PRESS && character < 256)
@@ -177,6 +198,25 @@ void inp_mouse_mode_relative()
 	/*if (!config.gfx_debug_resizable)*/
 	glfwDisable(GLFW_MOUSE_CURSOR);
 }
+#else
+
+void inp_init()
+{
+	SDL_EnableUNICODE(1);
+}
+
+void inp_mouse_mode_absolute()
+{
+	SDL_ShowCursor(1);
+	SDL_WM_GrabInput(SDL_GRAB_OFF);
+}
+
+void inp_mouse_mode_relative()
+{
+	SDL_ShowCursor(0);
+	SDL_WM_GrabInput(SDL_GRAB_ON);
+}
+#endif
 
 int inp_mouse_doubleclick()
 {
@@ -211,8 +251,9 @@ int inp_button_pressed(int button) { return keyboard_state[keyboard_current][but
 
 void inp_update()
 {
+#ifdef CONFIG_NO_SDL
     int i, v;
-    
+
 	/* clear and begin count on the other one */
 	mem_zero(&input_count[input_current], sizeof(input_count[input_current]));
 	mem_copy(input_state[input_current], input_state[input_current^1], sizeof(input_state[input_current]));
@@ -234,6 +275,75 @@ void inp_update()
 			v = glfwGetKey(i) == GLFW_PRESS ? 1 : 0;
         keyboard_state[keyboard_current][i] = v;
     }
+#else
+	int i;
+	
+	/* clear and begin count on the other one */
+	mem_zero(&input_count[input_current], sizeof(input_count[input_current]));
+	mem_copy(input_state[input_current], input_state[input_current^1], sizeof(input_state[input_current]));
+	input_current^=1;
+	
+	{
+		Uint8 *state = SDL_GetKeyState(&i);
+		if(i >= KEY_LAST)
+			i = KEY_LAST-1;
+		mem_copy(keyboard_state[keyboard_current], state, i);
+	}
+	
+	keyboard_state[keyboard_current][KEY_MOUSE_1] = 0;
+	keyboard_state[keyboard_current][KEY_MOUSE_2] = 0;
+	keyboard_state[keyboard_current][KEY_MOUSE_3] = 0;
+	i = SDL_GetMouseState(NULL, NULL);
+	if(i&SDL_BUTTON(1)) keyboard_state[keyboard_current][KEY_MOUSE_1] = 1;
+	if(i&SDL_BUTTON(2)) keyboard_state[keyboard_current][KEY_MOUSE_2] = 1;
+	if(i&SDL_BUTTON(3)) keyboard_state[keyboard_current][KEY_MOUSE_3] = 1;
+	
+	{
+		SDL_Event event;
+	
+		while(SDL_PollEvent(&event))
+		{
+			int key = -1;
+			int action = INPFLAG_PRESS;
+			switch (event.type)
+			{
+				/* handle keys */
+				case SDL_KEYDOWN:
+					if(event.key.keysym.unicode < 255)
+						add_event(event.key.keysym.unicode, 0, 0);
+					key = event.key.keysym.sym;
+					break;
+				case SDL_KEYUP:
+					action = INPFLAG_RELEASE;
+					key = event.key.keysym.sym;
+					break;
+				
+				/* handle mouse buttons */
+				case SDL_MOUSEBUTTONUP:
+					action = INPFLAG_RELEASE;
+				case SDL_MOUSEBUTTONDOWN:
+					key = KEY_MOUSE_1+event.button.button-1;
+					break;
+					
+				/* other messages */
+				case SDL_QUIT:
+					exit(0);
+			}
+			
+			/* */
+			if(key != -1)
+			{
+				input_count[input_current^1][key].presses++;
+				input_state[input_current^1][key] = 1;
+				add_event(0, key, action);
+			}
+
+		}
+	}
+#endif
+
+	if(inp_key_pressed('q'))
+		exit(1);
 
 	/* handle mouse wheel */
 	/*

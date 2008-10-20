@@ -295,7 +295,7 @@ bool CONSOLE::on_input(INPUT_EVENT e)
 {
 	if(console_state == CONSOLE_CLOSED)
 		return false;
-	if(e.key >= KEY_F1 && e.key <= KEY_F25)
+	if(e.key >= KEY_F1 && e.key <= KEY_F15)
 		return false;
 
 	if(e.key == KEY_ESC && (e.flags&INPFLAG_PRESS))

@@ -5,6 +5,7 @@ config:add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-p
 config:add(OptFindLibrary("zlib", "zlib.h", false))
 config:add(OptFindLibrary("glfw", "glfw.h", false))
 config:add(OptFindLibrary("portaudio", "portaudio.h_FAIL", false))
+config:add(OptFindLibrary("sdl", "SDL/SDL.h", false))
 
 config:add(OptFindLibrary("coreaudio", "AudioUnit/AudioUnit.h", false))
 config:add(OptFindLibrary("alsa", "alsa/asoundlib.h", false))
@@ -125,7 +126,10 @@ end
 function build(settings)
 	settings.objdir = Path("objs")
 	settings.cc.output = intermediate_output_func
-
+	
+	use_sdl = 1
+	if config.sdl.value == 0 then use_sdl = nil end
+	
 	if config.compiler.value == "cl" then
 		settings.cc.flags = "/wd4244"
 		settings.linker.flags = ""
@@ -164,75 +168,83 @@ function build(settings)
 		settings.linker.libs:add("shell32")
 	end
 	
-	-- build glfw if needed (not tested)
-	if config.glfw.value == 1 then
-		settings.linker.libs:add("glfw")
-		if config.glfw.include_path then
-			settings.cc.includes:add(config.glfw.include_path)
-		end
+	if use_sdl then
 		glfw = {}
-	else
-		glfw_settings = settings:copy()
-		glfw_settings.cc.includes:add("src/external/glfw/include")
-		glfw_settings.cc.includes:add("src/engine/external/glfw/lib")
-		glfw_settings.cc.includes:add("src/engine/external/glfw/lib/" .. glfw_platform)
-
-		glfw = Compile(glfw_settings, Collect(
-			"src/engine/external/glfw/lib/*.c",
-			"src/engine/external/glfw/lib/" .. glfw_platform .. "/*.c"))
-		
-		settings.cc.includes:add("src/engine/external/glfw/include")
-	end
-		
-	-- build portaudio
-	if config.portaudio.value == 1 then
-		settings.linker.libs:add("portaudio")
-		if config.portaudio.include_path then
-			settings.cc.includes:add(config.portaudio.include_path)
-		end
 		portaudio = {}
 	else
-		pa_settings = settings:copy()
-
-		pa_hostapis = {}		
-		if config.alsa.value == 1 then pa_hostapis["alsa"] = 1 end
-		if config.dsound.value == 1 then
-			pa_hostapis["dsound"] = 1
+		settings.cc.defines:add("CONFIG_NO_SDL")
+		
+		-- build glfw if needed (not tested)
+		if config.glfw.value == 1 then
+			settings.linker.libs:add("glfw")
+			if config.glfw.include_path then
+				settings.cc.includes:add(config.glfw.include_path)
+			end
+			glfw = {}
 		else
-			pa_settings.cc.defines:add("PA_NO_DS")
+			glfw_settings = settings:copy()
+			glfw_settings.cc.includes:add("src/external/glfw/include")
+			glfw_settings.cc.includes:add("src/engine/external/glfw/lib")
+			glfw_settings.cc.includes:add("src/engine/external/glfw/lib/" .. glfw_platform)
+
+			glfw = Compile(glfw_settings, Collect(
+				"src/engine/external/glfw/lib/*.c",
+				"src/engine/external/glfw/lib/" .. glfw_platform .. "/*.c"))
+			
+			settings.cc.includes:add("src/engine/external/glfw/include")
 		end
-		if config.coreaudio.value == 1 then pa_hostapis["coreaudio"] = 1 end
-		
-		if config.oss_sys.value == 1 then
-			pa_hostapis["oss"] = 1
-			pa_settings.cc.defines:add("HAVE_SYS_SOUNDCARD_H")
-		elseif config.oss_linux.value == 1 then
-			pa_hostapis["oss"] = 1
-			pa_settings.cc.defines:add("HAVE_LINUX_SOUNDCARD_H")
-		elseif config.oss_machine.value == 1 then
-			pa_hostapis["oss"] = 1
-			pa_settings.cc.defines:add("HAVE_MACHINE_SOUNDCARD_H")
-		end
-		
-		pa_settings.cc.defines:add("PA_NO_WMME")
-		pa_settings.cc.defines:add("PA_NO_ASIO")
-		pa_settings.cc.includes:add("src/engine/external/portaudio/include")
-		pa_settings.cc.includes:add("src/engine/external/portaudio/src/common")
-		pa_settings.cc.includes:add("src/engine/external/portaudio/src/os/" .. pa_platform)
-		
-		pa_api_files = {}
-		for api,v in pa_hostapis do
-			pa_settings.cc.defines:add("PA_USE_"..string.upper(api))
-			pa_api_files[api] = Collect("src/engine/external/portaudio/src/hostapi/" .. api .. "/*.c")
-		end
-		
-		portaudio = Compile(pa_settings,
-			Collect("src/engine/external/portaudio/src/common/*.c"),
-			Collect("src/engine/external/portaudio/src/os/" .. pa_platform .. "/*.c"),
-			pa_api_files)
-		
-		settings.cc.includes:add("src/engine/external/portaudio/include")
+
+		-- build portaudio
+		if config.portaudio.value == 1 then
+			settings.linker.libs:add("portaudio")
+			if config.portaudio.include_path then
+				settings.cc.includes:add(config.portaudio.include_path)
+			end
+			portaudio = {}
+		else
+			pa_settings = settings:copy()
+
+			pa_hostapis = {}		
+			if config.alsa.value == 1 then pa_hostapis["alsa"] = 1 end
+			if config.dsound.value == 1 then
+				pa_hostapis["dsound"] = 1
+			else
+				pa_settings.cc.defines:add("PA_NO_DS")
+			end
+			if config.coreaudio.value == 1 then pa_hostapis["coreaudio"] = 1 end
+			
+			if config.oss_sys.value == 1 then
+				pa_hostapis["oss"] = 1
+				pa_settings.cc.defines:add("HAVE_SYS_SOUNDCARD_H")
+			elseif config.oss_linux.value == 1 then
+				pa_hostapis["oss"] = 1
+				pa_settings.cc.defines:add("HAVE_LINUX_SOUNDCARD_H")
+			elseif config.oss_machine.value == 1 then
+				pa_hostapis["oss"] = 1
+				pa_settings.cc.defines:add("HAVE_MACHINE_SOUNDCARD_H")
+			end
+			
+			pa_settings.cc.defines:add("PA_NO_WMME")
+			pa_settings.cc.defines:add("PA_NO_ASIO")
+			pa_settings.cc.includes:add("src/engine/external/portaudio/include")
+			pa_settings.cc.includes:add("src/engine/external/portaudio/src/common")
+			pa_settings.cc.includes:add("src/engine/external/portaudio/src/os/" .. pa_platform)
+			
+			pa_api_files = {}
+			for api,v in pa_hostapis do
+				pa_settings.cc.defines:add("PA_USE_"..string.upper(api))
+				pa_api_files[api] = Collect("src/engine/external/portaudio/src/hostapi/" .. api .. "/*.c")
+			end
+			
+			portaudio = Compile(pa_settings,
+				Collect("src/engine/external/portaudio/src/common/*.c"),
+				Collect("src/engine/external/portaudio/src/os/" .. pa_platform .. "/*.c"),
+				pa_api_files)
+			
+			settings.cc.includes:add("src/engine/external/portaudio/include")
+		end		
 	end
+	
 	
 	-- compile zlib if needed
 	if config.zlib.value == 1 then
@@ -291,6 +303,7 @@ function build(settings)
 			client_settings.linker.libs:add("X11")
 			client_settings.linker.libs:add("GL")
 			client_settings.linker.libs:add("GLU")
+			if use_sdl then client_settings.linker.libs:add("SDL") end
 		end
 	elseif family == "windows" then
 		client_settings.linker.libs:add("opengl32")

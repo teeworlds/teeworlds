@@ -6,7 +6,7 @@
 bool BINDS::BINDS_SPECIAL::on_input(INPUT_EVENT e)
 {
 	// don't handle invalid events and keys that arn't set to anything
-	if(e.key >= KEY_F1 && e.key <= KEY_F25 && binds->keybindings[e.key][0] != 0)
+	if(e.key >= KEY_F1 && e.key <= KEY_F15 && binds->keybindings[e.key][0] != 0)
 	{
 		int stroke = 0;
 		if(e.flags&INPFLAG_PRESS)
@@ -86,9 +86,14 @@ void BINDS::set_defaults()
 	bind(KEY_F2, "toggle_remote_console");
 	bind(KEY_TAB, "+scoreboard");
 	bind(KEY_F10, "screenshot");
-	
+
+#ifdef CONFIG_NO_SDL
 	bind('A', "+left");
 	bind('D', "+right");
+#else
+	bind('a', "+left");
+	bind('d', "+right");
+#endif
 	bind(KEY_SPACE, "+jump");
 	bind(KEY_MOUSE_1, "+fire");
 	bind(KEY_MOUSE_2, "+hook");
@@ -103,8 +108,13 @@ void BINDS::set_defaults()
 	bind(KEY_MOUSE_WHEEL_UP, "+prevweapon");
 	bind(KEY_MOUSE_WHEEL_DOWN, "+nextweapon");
 	
+#ifdef CONFIG_NO_SDL
 	bind('T', "chat all");
 	bind('Y', "chat team");	
+#else
+	bind('t', "chat all");
+	bind('y', "chat team");	
+#endif
 
 	bind(KEY_F3, "vote yes");
 	bind(KEY_F4, "vote no");	

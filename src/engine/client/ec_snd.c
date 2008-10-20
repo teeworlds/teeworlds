@@ -3,8 +3,14 @@
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
 
+#ifdef CONFIG_NO_SDL
+	#include <portaudio.h>
+#else
+	#include <SDL/SDL.h>
+#endif
+
+
 #include <engine/external/wavpack/wavpack.h>
-#include <portaudio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -232,16 +238,24 @@ static void mix(short *final_out, unsigned frames)
 	}
 }
 
+#ifdef CONFIG_NO_SDL
+static PaStream *stream;
 static int pacallback(const void *in, void *out, unsigned long frames, const PaStreamCallbackTimeInfo* time, PaStreamCallbackFlags status, void *user)
 {
 	mix(out, frames);
 	return 0;
 }
+#else
+static void sdlcallback(void *unused, Uint8 *stream, int len)
+{
+	mix((short *)stream, len/2/2);
+}
+#endif
 
-static PaStream *stream;
 
 int snd_init()
 {
+#ifdef CONFIG_NO_SDL
 	PaStreamParameters params;
 	PaError err = Pa_Initialize();
 	
@@ -293,7 +307,36 @@ int snd_init()
 			pacallback,             /* specify our custom callback */
 			0x0); /* pass our data through to callback */
 	err = Pa_StartStream(stream);
+#else
+    SDL_AudioSpec format;
+	
+	sound_lock = lock_create();
+	
+	if(!config.snd_enable)
+		return 0;
+	
+	mixing_rate = config.snd_rate;
 
+    /* Set 16-bit stereo audio at 22Khz */
+    format.freq = config.snd_rate;
+    format.format = AUDIO_S16;
+    format.channels = 2;
+    format.samples = 512;        /* A good value for games */
+    format.callback = sdlcallback;
+    format.userdata = NULL;
+
+    /* Open the audio device and start playing sound! */
+    if(SDL_OpenAudio(&format, NULL) < 0)
+	{
+        dbg_msg("client/sound", "unable to open audio: %s", SDL_GetError());
+		return -1;
+    }
+	else
+        dbg_msg("client/sound", "sound init successful");
+
+	SDL_PauseAudio(0);
+	
+#endif
 	sound_enabled = 1;
 	snd_update(); /* update the volume */
 	return 0;
@@ -319,9 +362,12 @@ int snd_update()
 
 int snd_shutdown()
 {
+#ifdef CONFIG_NO_SDL	
 	Pa_StopStream(stream);
 	Pa_Terminate();
-
+#else
+	SDL_CloseAudio();
+#endif
 	lock_destroy(sound_lock);
 
 	return 0;
