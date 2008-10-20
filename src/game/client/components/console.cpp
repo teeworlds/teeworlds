@@ -327,9 +327,15 @@ void CONSOLE::toggle(int type)
 		}
 
 		if (console_state == CONSOLE_CLOSED || console_state == CONSOLE_CLOSING)
+		{
+			inp_mouse_mode_absolute();
 			console_state = CONSOLE_OPENING;
+		}
 		else
+		{
+			inp_mouse_mode_relative();
 			console_state = CONSOLE_CLOSING;
+		}
 	}
 
 	console_type = type;
