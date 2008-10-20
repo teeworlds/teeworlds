@@ -60,6 +60,16 @@ void mods_client_predicted_input(int client_id, void *input)
 void mods_tick()
 {
 	game.tick();
+
+	if(config.dbg_dummies)
+	{
+		for(int i = 0; i < config.dbg_dummies ; i++)
+		{
+			NETOBJ_PLAYER_INPUT input = {0};
+			input.direction = (i&1)?-1:1;
+			game.players[MAX_CLIENTS-i-1]->on_predicted_input(&input);
+		}
+	}
 }
 
 void mods_snap(int client_id)
