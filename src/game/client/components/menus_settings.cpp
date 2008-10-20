@@ -265,12 +265,15 @@ void MENUS::ui_do_getbuttons(int start, int stop, RECT view)
 void MENUS::render_settings_controls(RECT main_view)
 {
 	// this is kinda slow, but whatever
+	for(int i = 0; i < key_count; i++)
+		keys[i].keyid = 0;
+	
 	for(int keyid = 0; keyid < KEY_LAST; keyid++)
 	{
 		const char *bind = gameclient.binds->get(keyid);
 		if(!bind[0])
 			continue;
-			
+		
 		for(int i = 0; i < key_count; i++)
 			if(strcmp(bind, keys[i].command) == 0)
 			{
