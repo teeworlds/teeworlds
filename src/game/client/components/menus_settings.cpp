@@ -18,6 +18,30 @@
 #include "menus.hpp"
 #include "skins.hpp"
 
+MENUS_KEYBINDER MENUS::binder;
+
+MENUS_KEYBINDER::MENUS_KEYBINDER()
+{
+	take_key = false;
+	got_key = false;
+}
+
+bool MENUS_KEYBINDER::on_input(INPUT_EVENT e)
+{
+	if(take_key)
+	{
+		if(e.flags&INPFLAG_PRESS && e.key != KEY_ESC)
+		{
+			key = e;
+			got_key = true;
+			take_key = false;
+		}
+		return true;
+	}
+	
+	return false;
+}
+
 void MENUS::render_settings_player(RECT main_view)
 {
 	RECT button;

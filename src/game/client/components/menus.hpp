@@ -3,6 +3,18 @@
 #include <game/client/component.hpp>
 #include <game/client/ui.hpp>
 
+
+// compnent to fetch keypresses, override all other input
+class MENUS_KEYBINDER : public COMPONENT
+{
+public:
+	bool take_key;
+	bool got_key;
+	INPUT_EVENT key;
+	MENUS_KEYBINDER();
+	virtual bool on_input(INPUT_EVENT e);
+};
+
 class MENUS : public COMPONENT
 {	
 	static vec4 gui_color;
@@ -150,6 +162,8 @@ class MENUS : public COMPONENT
 	void render_settings(RECT main_view);
 	
 public:
+	static MENUS_KEYBINDER binder;
+	
 	MENUS();
 
 	void render_loading(float percent);

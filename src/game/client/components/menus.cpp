@@ -444,23 +444,22 @@ int MENUS::ui_do_key_reader(void *id, const RECT *rect, int key)
 
 	if(ui_active_item() == id)
 	{
-		for(int i = 0; i < num_inputevents; i++)
+		if(binder.got_key)
 		{
-			INPUT_EVENT e = inputevents[i];
-			if(e.flags&INPFLAG_PRESS && e.key && e.key != KEY_ESC)
-			{
-				new_key = e.key;
-				ui_set_active_item(0);
-				mouse_released = false;
-				num_inputevents = 0;
-				break;
-			}
+			new_key = binder.key.key;
+			binder.got_key = false;
+			ui_set_active_item(0);
+			mouse_released = false;
 		}
 	}
 	else if(ui_hot_item() == id)
 	{
 		if(ui_mouse_button(0) && mouse_released)
+		{
+			binder.take_key = true;
+			binder.got_key = false;
 			ui_set_active_item(id);
+		}
 	}
 	
 	if(inside)

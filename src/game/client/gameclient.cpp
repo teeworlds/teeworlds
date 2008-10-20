@@ -146,6 +146,7 @@ void GAMECLIENT::on_console_init()
 	all.add(console);
 	
 	// build the input stack
+	input.add(&menus->binder); // this will take over all input when we want to bind a key
 	input.add(&binds->special_binds);
 	input.add(console);
 	input.add(chat); // chat has higher prio due to tha you can quit it by pressing esc
