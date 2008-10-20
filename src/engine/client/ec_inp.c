@@ -213,8 +213,10 @@ void inp_mouse_mode_absolute()
 
 void inp_mouse_mode_relative()
 {
+	/*
 	SDL_ShowCursor(0);
 	SDL_WM_GrabInput(SDL_GRAB_ON);
+	*/
 }
 #endif
 
@@ -341,18 +343,4 @@ void inp_update()
 		}
 	}
 #endif
-
-	if(inp_key_pressed('q'))
-		exit(1);
-
-	/* handle mouse wheel */
-	/*
-	i = glfwGetMouseWheel();
-    keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_UP] = 0;
-    keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_DOWN] = 0;
-    if(w > 0)
-    	keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_UP] = 1;
-    if(w < 0)
-    	keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_DOWN] = 1;
-    glfwSetMouseWheel(0);*/
 }
