@@ -86,6 +86,7 @@ MENUS::MENUS()
 	game_page = PAGE_GAME;
 	
 	need_restart = false;
+	need_sendinfo = false;
 	menu_active = true;
 	
 	escape_pressed = false;
@@ -245,6 +246,7 @@ int MENUS::ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, f
 					memmove(str + at_index + 1, str + at_index, len - at_index + 1);
 					str[at_index] = c;
 					at_index++;
+					r = 1;
 				}
 			}
 			
@@ -254,9 +256,13 @@ int MENUS::ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, f
 				{
 					memmove(str + at_index - 1, str + at_index, len - at_index + 1);
 					at_index--;
+					r = 1;
 				}
 				else if (k == KEY_DEL && at_index < len)
+				{
 					memmove(str + at_index, str + at_index + 1, len - at_index);
+					r = 1;
+				}
 				else if (k == KEY_ENTER)
 					ui_clear_last_active_item();
 				else if (k == KEY_LEFT && at_index > 0)
@@ -269,8 +275,6 @@ int MENUS::ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, f
 					at_index = len;
 			}
 		}
-		
-		r = 1;
 	}
 
 	bool just_got_active = false;
@@ -889,6 +893,17 @@ int MENUS::render()
 	return 0;
 }
 
+
+void MENUS::set_active(bool active)
+{
+	menu_active = active;
+	if(!menu_active && need_sendinfo)
+	{
+		gameclient.send_info(false);
+		need_sendinfo = false;
+	}
+}
+
 void MENUS::on_reset()
 {
 }
@@ -920,7 +935,7 @@ bool MENUS::on_input(INPUT_EVENT e)
 		if(e.key == KEY_ESC)
 		{
 			escape_pressed = true;
-			menu_active	= !menu_active;
+			set_active(!is_active());
 			return true;
 		}
 		else if(e.key == KEY_ENTER)
@@ -930,7 +945,7 @@ bool MENUS::on_input(INPUT_EVENT e)
 		}
 	}
 	
-	if(menu_active)
+	if(is_active())
 	{
 		if(num_inputevents < MAX_INPUTEVENTS)
 			inputevents[num_inputevents++] = e;
@@ -962,14 +977,14 @@ void MENUS::on_statechange(int new_state, int old_state)
 	else if (new_state == CLIENTSTATE_ONLINE || new_state == CLIENTSTATE_DEMOPLAYBACK)
 	{
 		popup = POPUP_NONE;
-		menu_active = false;
+		set_active(false);
 	}
 }
 
 void MENUS::on_render()
 {
 	if(client_state() != CLIENTSTATE_ONLINE && client_state() != CLIENTSTATE_DEMOPLAYBACK)
-		menu_active = true;
+		set_active(true);
 
 	if(client_state() == CLIENTSTATE_DEMOPLAYBACK)
 	{
@@ -978,7 +993,7 @@ void MENUS::on_render()
 		render_demoplayer(screen);
 	}
 	
-	if(!menu_active)
+	if(!is_active())
 	{
 		escape_pressed = false;
 		enter_pressed = false;

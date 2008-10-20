@@ -57,7 +57,8 @@ void MENUS::render_settings_player(RECT main_view)
 		ui_do_label(&button, "Name:", 14.0, -1);
 		ui_vsplit_l(&button, 80.0f, 0, &button);
 		ui_vsplit_l(&button, 180.0f, &button, 0);
-		ui_do_edit_box(config.player_name, &button, config.player_name, sizeof(config.player_name), 14.0f);
+		if(ui_do_edit_box(config.player_name, &button, config.player_name, sizeof(config.player_name), 14.0f))
+			need_sendinfo = true;
 
 		static int dynamic_camera_button = 0;
 		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
@@ -98,7 +99,10 @@ void MENUS::render_settings_player(RECT main_view)
 		
 		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
 		if (ui_do_button(&config.player_color_body, "Custom colors", config.player_use_custom_color, &button, ui_draw_checkbox, 0))
+		{
 			config.player_use_custom_color = config.player_use_custom_color?0:1;
+			need_sendinfo = true;
+		}
 		
 		if(config.player_use_custom_color)
 		{
@@ -136,7 +140,10 @@ void MENUS::render_settings_player(RECT main_view)
 					ui_do_label(&text, labels[s], 15.0f, -1);
 					 
 				}
-				
+		
+				if(*colors[i] != color)
+					need_sendinfo = true;
+					
 				*colors[i] = color;
 				ui_hsplit_t(&main_view, 5.0f, 0, &main_view);
 			}
@@ -208,8 +215,11 @@ void MENUS::render_settings_player(RECT main_view)
 		ui_vsplit_l(&button, 50.0f, &icon, &text);
 		
 		if(ui_do_button(s, "", selected, &button, ui_draw_list_row, 0))
+		{
 			config_set_player_skin(&config, s->name);
-		
+			need_sendinfo = true;
+		}
+
 		ui_hsplit_t(&text, 12.0f, 0, &text); // some margin from the top
 		ui_do_label(&text, buf, 18.0f, 0);
 		

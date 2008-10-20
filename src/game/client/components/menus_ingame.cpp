@@ -44,7 +44,7 @@ void MENUS::render_game(RECT main_view)
 			if(ui_do_button(&spectate_button, "Spectate", 0, &button, ui_draw_menu_button, 0))
 			{
 				gameclient.send_switch_team(-1);
-				menu_active = false;
+				set_active(false);
 			}
 		}
 		
@@ -58,7 +58,7 @@ void MENUS::render_game(RECT main_view)
 				if(ui_do_button(&spectate_button, "Join Red", 0, &button, ui_draw_menu_button, 0))
 				{
 					gameclient.send_switch_team(0);
-					menu_active = false;
+					set_active(false);
 				}
 			}
 
@@ -70,7 +70,7 @@ void MENUS::render_game(RECT main_view)
 				if(ui_do_button(&spectate_button, "Join Blue", 0, &button, ui_draw_menu_button, 0))
 				{
 					gameclient.send_switch_team(1);
-					menu_active = false;
+					set_active(false);
 				}
 			}
 		}
@@ -84,7 +84,7 @@ void MENUS::render_game(RECT main_view)
 				if(ui_do_button(&spectate_button, "Join Game", 0, &button, ui_draw_menu_button, 0))
 				{
 					gameclient.send_switch_team(0);
-					menu_active = false;
+					set_active(false);
 				}
 			}
 		}
@@ -390,7 +390,7 @@ void MENUS::render_servercontrol(RECT main_view)
 					gameclient.snap.player_infos[callvote_selectedplayer])
 				{
 					gameclient.voting->callvote_kick(callvote_selectedplayer);
-					menu_active = false;
+					set_active(false);
 				}
 			}
 		}

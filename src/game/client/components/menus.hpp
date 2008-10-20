@@ -106,6 +106,7 @@ class MENUS : public COMPONENT
 	
 	// for graphic settings
 	bool need_restart;
+	bool need_sendinfo;
 	
 	//
 	bool escape_pressed;
@@ -161,6 +162,7 @@ class MENUS : public COMPONENT
 	void render_settings_sound(RECT main_view);
 	void render_settings(RECT main_view);
 	
+	void set_active(bool active);
 public:
 	static MENUS_KEYBINDER binder;
 	
