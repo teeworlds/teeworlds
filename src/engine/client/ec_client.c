@@ -59,7 +59,6 @@ static float frametime_high = 0.0f;
 static int frames = 0;
 static NETADDR server_address;
 static int window_must_refocus = 0;
-static int snaploss = 0;
 static int snapcrcerrors = 0;
 
 static int ack_game_tick = -1;
@@ -619,9 +618,8 @@ static void client_debug_render()
 		total = 42
 	*/
 	frametime_avg = frametime_avg*0.9f + frametime*0.1f;
-	str_format(buffer, sizeof(buffer), "ticks: %8d %8d snaploss: %d  mem %dk %d  gfxmem: %dk  fps: %3d",
+	str_format(buffer, sizeof(buffer), "ticks: %8d %8d mem %dk %d  gfxmem: %dk  fps: %3d",
 		current_tick, current_predtick,
-		snaploss,
 		mem_stats()->allocated/1024,
 		mem_stats()->total_allocations,
 		gfx_memory_usage()/1024,
@@ -1181,8 +1179,6 @@ static void client_process_packet(NETCHUNK *packet)
 						/* apply snapshot, cycle pointers */
 						recived_snapshots++;
 
-						if(current_recv_tick > 0)
-							snaploss += game_tick-current_recv_tick-2;
 						current_recv_tick = game_tick;
 						
 						/* we got two snapshots until we see us self as connected */
