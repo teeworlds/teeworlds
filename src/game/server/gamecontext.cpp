@@ -26,6 +26,13 @@ void GAMECONTEXT::clear()
 }
 
 
+class CHARACTER *GAMECONTEXT::get_player_char(int client_id)
+{
+	if(client_id < 0 || client_id >= MAX_CLIENTS || !players[client_id])
+		return 0;
+	return players[client_id]->get_character();
+}
+
 void GAMECONTEXT::create_damageind(vec2 p, float angle, int amount)
 {
 	float a = 3 * 3.14159f / 2 + angle;

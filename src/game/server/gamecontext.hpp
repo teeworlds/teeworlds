@@ -44,6 +44,9 @@ public:
 	void tick();
 	void snap(int client_id);
 	
+	// helper functions
+	class CHARACTER *get_player_char(int client_id);
+	
 	// voting
 	void start_vote(const char *desc, const char *command);
 	void end_vote();

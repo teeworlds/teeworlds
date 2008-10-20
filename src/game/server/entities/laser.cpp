@@ -7,7 +7,7 @@
 //////////////////////////////////////////////////
 // laser
 //////////////////////////////////////////////////
-LASER::LASER(vec2 pos, vec2 direction, float start_energy, CHARACTER *owner)
+LASER::LASER(vec2 pos, vec2 direction, float start_energy, int owner)
 : ENTITY(NETOBJTYPE_LASER)
 {
 	this->pos = pos;
@@ -24,14 +24,15 @@ LASER::LASER(vec2 pos, vec2 direction, float start_energy, CHARACTER *owner)
 bool LASER::hit_character(vec2 from, vec2 to)
 {
 	vec2 at;
-	CHARACTER *hit = game.world.intersect_character(pos, to, 0.0f, at, owner);
+	CHARACTER *owner_char = game.get_player_char(owner);
+	CHARACTER *hit = game.world.intersect_character(pos, to, 0.0f, at, owner_char);
 	if(!hit)
 		return false;
 
 	this->from = from;
 	pos = at;
 	energy = -1;		
-	hit->take_damage(vec2(0,0), tuning.laser_damage, owner->player->client_id, WEAPON_RIFLE);
+	hit->take_damage(vec2(0,0), tuning.laser_damage, owner, WEAPON_RIFLE);
 	return true;
 }
 

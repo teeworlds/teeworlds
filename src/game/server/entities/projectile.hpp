@@ -12,7 +12,6 @@ public:
 	};
 	
 	vec2 direction;
-	ENTITY *powner; // this is nasty, could be removed when client quits
 	int lifespan;
 	int owner;
 	int type;
@@ -24,7 +23,7 @@ public:
 	float force;
 	int start_tick;
 	
-	PROJECTILE(int type, int owner, vec2 pos, vec2 vel, int span, ENTITY* powner,
+	PROJECTILE(int type, int owner, vec2 pos, vec2 vel, int span,
 		int damage, int flags, float force, int sound_impact, int weapon);
 
 	vec2 get_pos(float time);

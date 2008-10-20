@@ -7,7 +7,7 @@
 //////////////////////////////////////////////////
 // projectile
 //////////////////////////////////////////////////
-PROJECTILE::PROJECTILE(int type, int owner, vec2 pos, vec2 dir, int span, ENTITY* powner,
+PROJECTILE::PROJECTILE(int type, int owner, vec2 pos, vec2 dir, int span,
 	int damage, int flags, float force, int sound_impact, int weapon)
 : ENTITY(NETOBJTYPE_PROJECTILE)
 {
@@ -16,7 +16,6 @@ PROJECTILE::PROJECTILE(int type, int owner, vec2 pos, vec2 dir, int span, ENTITY
 	this->direction = dir;
 	this->lifespan = span;
 	this->owner = owner;
-	this->powner = powner;
 	this->flags = flags;
 	this->force = force;
 	this->damage = damage;
@@ -68,8 +67,8 @@ void PROJECTILE::tick()
 	
 	int collide = col_intersect_line(prevpos, curpos, &curpos);
 	//int collide = col_check_point((int)curpos.x, (int)curpos.y);
-	
-	CHARACTER *targetchr = game.world.intersect_character(prevpos, curpos, 6.0f, curpos, powner);
+	CHARACTER *ownerchar = game.get_player_char(owner);
+	CHARACTER *targetchr = game.world.intersect_character(prevpos, curpos, 6.0f, curpos, ownerchar);
 	if(targetchr || collide || lifespan < 0)
 	{
 		if(lifespan >= 0 || weapon == WEAPON_GRENADE)

@@ -322,7 +322,6 @@ void CHARACTER::fire_weapon()
 				projectile_startpos,
 				direction,
 				(int)(server_tickspeed()*tuning.gun_lifetime),
-				this,
 				1, 0, 0, -1, WEAPON_GUN);
 				
 			// pack the projectile and send it to the client directly
@@ -358,7 +357,6 @@ void CHARACTER::fire_weapon()
 					projectile_startpos,
 					vec2(cosf(a), sinf(a))*speed,
 					(int)(server_tickspeed()*tuning.shotgun_lifetime),
-					this,
 					1, 0, 0, -1, WEAPON_SHOTGUN);
 					
 				// pack the projectile and send it to the client directly
@@ -382,7 +380,6 @@ void CHARACTER::fire_weapon()
 				projectile_startpos,
 				direction,
 				(int)(server_tickspeed()*tuning.grenade_lifetime),
-				this,
 				1, PROJECTILE::PROJECTILE_FLAGS_EXPLODE, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
 
 			// pack the projectile and send it to the client directly
@@ -401,7 +398,7 @@ void CHARACTER::fire_weapon()
 		
 		case WEAPON_RIFLE:
 		{
-			new LASER(pos, direction, tuning.laser_reach, this);
+			new LASER(pos, direction, tuning.laser_reach, player->client_id);
 			game.create_sound(pos, SOUND_RIFLE_FIRE);
 		} break;
 		

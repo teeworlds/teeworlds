@@ -14,14 +14,14 @@ class LASER : public ENTITY
 	float energy;
 	int bounces;
 	int eval_tick;
-	CHARACTER *owner;
+	int owner;
 	
 	bool hit_character(vec2 from, vec2 to);
 	void do_bounce();
 	
 public:
 	
-	LASER(vec2 pos, vec2 direction, float start_energy, CHARACTER *owner);
+	LASER(vec2 pos, vec2 direction, float start_energy, int owner);
 	
 	virtual void reset();
 	virtual void tick();
