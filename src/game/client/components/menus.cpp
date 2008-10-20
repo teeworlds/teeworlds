@@ -212,7 +212,7 @@ int MENUS::ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, f
 	if(ui_last_active_item() == id)
 	{
 		int len = strlen(str);
-
+			
 		if (inside && ui_mouse_button(0))
 		{
 			int mx_rel = (int)(ui_mouse_x() - rect->x);
@@ -232,6 +232,7 @@ int MENUS::ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, f
 
 		for(int i = 0; i < num_inputevents; i++)
 		{
+			len = strlen(str);
 			INPUT_EVENT e = inputevents[i];
 			char c = e.ch;
 			int k = e.key;
