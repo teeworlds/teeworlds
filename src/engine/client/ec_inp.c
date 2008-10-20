@@ -213,8 +213,10 @@ void inp_mouse_mode_absolute()
 
 void inp_mouse_mode_relative()
 {
+	/*
 	SDL_ShowCursor(0);
 	SDL_WM_GrabInput(SDL_GRAB_ON);
+	*/
 }
 #endif
 
