@@ -148,6 +148,9 @@ void MENUS::render_serverinfo(RECT main_view)
 	SERVER_INFO current_server_info;
 	client_serverinfo(&current_server_info);
 	
+	if(!gameclient.snap.local_info)
+		return;
+	
 	// count players for server info-box
 	int num_players = 0;
 	for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
@@ -202,6 +205,7 @@ void MENUS::render_serverinfo(RECT main_view)
 		current_server_info.version,
 		current_server_info.flags&1 ? "Yes" : "No"
 	);
+	
 	gfx_text(0, serverinfo.x+x, serverinfo.y+y, 20, buf, 250);
 	
 	{

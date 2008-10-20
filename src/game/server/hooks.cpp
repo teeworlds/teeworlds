@@ -121,6 +121,26 @@ void mods_client_drop(int client_id)
 	(void) game.controller->check_team_balance();
 }
 
+static bool is_separator(char c) { return c == ';' || c == ' ' || c == ',' || c == '\t'; }
+
+static const char *liststr_find(const char *str, const char *needle)
+{
+	int needle_len = strlen(needle);
+	while(*str)
+	{
+		int wordlen = 0;
+		while(str[wordlen] && !is_separator(str[wordlen]))
+			wordlen++;
+		
+		if(wordlen == needle_len && strncmp(str, needle, needle_len) == 0)
+			return str;
+		
+		str += wordlen+1;
+	}
+	
+	return 0;
+}
+
 void mods_message(int msgtype, int client_id)
 {
 	void *rawmsg = netmsg_secure_unpack(msgtype);
@@ -175,6 +195,12 @@ void mods_message(int msgtype, int client_id)
 			if(!config.sv_vote_map)
 			{
 				game.send_chat(-1, client_id, "Server does not allow voting on map");
+				return;
+			}
+			
+			if(!liststr_find(config.sv_maplist, msg->value))
+			{
+				game.send_chat(-1, client_id, "Map is not in the map list");
 				return;
 			}
 			
