@@ -128,12 +128,16 @@ function build(settings)
 
 	if config.compiler.value == "cl" then
 		settings.cc.flags = "/wd4244"
+		settings.linker.flags = ""
 	else
 		settings.cc.flags = "-Wall -fno-exceptions "
-		if config.stackprotector.value == 1 then
-			settings.cc.flags = settings.cc.flags .. "-fstack-protector -fstack-protector-all"
-		end
 		settings.linker.flags = ""
+		if platform == "macosx" then
+			settings.cc.flags = settings.cc.flags .. " -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk"
+			settings.linker.flags = settings.linker.flags .. " -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk"
+		elseif config.stackprotector.value == 1 then
+			settings.cc.flags = settings.cc.flags .. " -fstack-protector -fstack-protector-all"
+		end
 	end
 
 	-- set some platform specific settings
@@ -253,11 +257,12 @@ function build(settings)
 		engine_settings.cc.flags = "/wd4244"
 	else
    		if platform == "macosx"  or family == "windows" then
-			engine_settings.cc.flags = "-Wall"
+			engine_settings.cc.flags = "-Wall -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk"
+			engine_settings.linker.flags = "-mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk"
 		else
 			engine_settings.cc.flags = "-Wall -pedantic-errors"
+			engine_settings.linker.flags = ""
 		end
-		engine_settings.linker.flags = ""
 	end
 
 	-- server
