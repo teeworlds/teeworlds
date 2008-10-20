@@ -2,7 +2,7 @@
 
 #include "ed_editor.hpp"
 #include <game/generated/gc_data.hpp>
-#include <game/client/gc_render.hpp>
+#include <game/client/render.hpp>
 
 LAYER_QUADS::LAYER_QUADS()
 {

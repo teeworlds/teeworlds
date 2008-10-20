@@ -1,7 +1,7 @@
 #include <engine/e_client_interface.h>
 #include <game/generated/g_protocol.hpp>
 #include <base/vmath.hpp>
-#include <game/client/gc_render.hpp>
+#include <game/client/render.hpp>
 //#include <game/client/gameclient.hpp>
 #include "voting.hpp"
 

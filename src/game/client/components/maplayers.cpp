@@ -1,7 +1,7 @@
 #include <game/layers.hpp>
 #include <game/client/gameclient.hpp>
 #include <game/client/component.hpp>
-#include <game/client/gc_render.hpp>
+#include <game/client/render.hpp>
 
 #include <game/client/components/camera.hpp>
 #include <game/client/components/mapimages.hpp>

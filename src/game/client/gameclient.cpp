@@ -4,7 +4,7 @@
 #include <game/generated/gc_data.hpp>
 
 #include <game/layers.hpp>
-#include "gc_render.hpp"
+#include "render.hpp"
 
 #include "gameclient.hpp"
 

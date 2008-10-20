@@ -1,7 +1,7 @@
 
 #include <base/vmath.hpp>
 #include <game/gamecore.hpp>
-#include "gc_render.hpp"
+#include "render.hpp"
 
 class GAMECLIENT
 {

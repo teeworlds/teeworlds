@@ -12,7 +12,7 @@ extern "C" {
 
 #include <game/client/gameclient.hpp>
 #include <game/client/animstate.hpp>
-#include <game/client/gc_render.hpp>
+#include <game/client/render.hpp>
 
 //#include "controls.hpp"
 //#include "camera.hpp"

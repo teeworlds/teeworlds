@@ -14,7 +14,7 @@ extern "C" {
 
 #include <game/client/ui.hpp>
 #include <game/gamecore.hpp>
-#include <game/client/gc_render.hpp>
+#include <game/client/render.hpp>
 
 #include "ed_editor.hpp"
 

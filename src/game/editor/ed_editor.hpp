@@ -7,7 +7,7 @@
 #include <math.h>
 #include "array.hpp"
 #include "../mapitems.hpp"
-#include "../client/gc_render.hpp"
+#include "../client/render.hpp"
 
 extern "C" {
 	#include <engine/e_client_interface.h>

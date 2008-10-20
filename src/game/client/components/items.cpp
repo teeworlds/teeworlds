@@ -5,7 +5,7 @@
 #include <game/gamecore.hpp> // get_angle
 #include <game/client/gameclient.hpp>
 #include <game/client/ui.hpp>
-#include <game/client/gc_render.hpp>
+#include <game/client/render.hpp>
 
 #include <game/client/components/flow.hpp>
 #include <game/client/components/effects.hpp>

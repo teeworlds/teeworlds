@@ -10,7 +10,7 @@
 #include <game/generated/gc_data.hpp>
 
 #include <game/client/ui.hpp>
-#include <game/client/gc_render.hpp>
+#include <game/client/render.hpp>
 #include <game/client/gameclient.hpp>
 #include <game/client/animstate.hpp>
 

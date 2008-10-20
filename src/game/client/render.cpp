@@ -9,7 +9,7 @@
 #include <game/generated/g_protocol.hpp>
 #include <game/layers.hpp>
 #include "animstate.hpp"
-#include "gc_render.hpp"
+#include "render.hpp"
 
 static float sprite_w_scale;
 static float sprite_h_scale;
