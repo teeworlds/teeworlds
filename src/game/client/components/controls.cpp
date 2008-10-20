@@ -95,8 +95,10 @@ int CONTROLS::snapinput(int *data)
 		last_data.direction = 0;
 		last_data.hook = 0;
 		last_data.jump = 0;
-		
 		input_data = last_data;
+		
+		input_direction_left = 0;
+		input_direction_right = 0;
 			
 		mem_copy(data, &input_data, sizeof(input_data));
 		return sizeof(input_data);
