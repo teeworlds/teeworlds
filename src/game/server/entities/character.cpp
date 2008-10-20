@@ -44,16 +44,11 @@ CHARACTER::CHARACTER()
 
 void CHARACTER::reset()
 {
-	
+	destroy();
 }
 
 bool CHARACTER::spawn(PLAYER *player, vec2 pos, int team)
 {
-	/*
-	~CHARACTER();
-	mem_zero(this, sizeof(CHARACTER));
-	new(this) CHARACTER();*/
-	
 	player_state = PLAYERSTATE_UNKNOWN;
 	emote_stop = -1;
 	last_action = -1;
