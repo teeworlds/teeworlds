@@ -49,7 +49,7 @@ NETCLIENT *net;
 extern void client_serverbrowse_set(NETADDR *addr, int request, int token, SERVER_INFO *info);
 extern void client_serverbrowse_save();
 
-static int snapshot_part;
+static unsigned snapshot_parts;
 static int64 local_start_time;
 
 static int debug_font;
@@ -484,6 +484,7 @@ static void client_on_enter_game()
 	snapshots[SNAP_PREV] = 0;
 	snapstorage_purge_all(&snapshot_storage);
 	recived_snapshots = 0;
+	snapshot_parts = 0;
 	current_predtick = 0;
 	current_recv_tick = 0;
 }
@@ -1050,13 +1051,19 @@ static void client_process_packet(NETCHUNK *packet)
 					}
 				}
 				
-				if(snapshot_part == part && game_tick > current_recv_tick)
+				if(game_tick >= current_recv_tick)
 				{
+					if(game_tick != current_recv_tick)
+					{
+						snapshot_parts = 0;
+						current_recv_tick = game_tick;
+					}
+						
 					/* TODO: clean this up abit */
 					mem_copy((char*)snapshot_incomming_data + part*MAX_SNAPSHOT_PACKSIZE, data, part_size);
-					snapshot_part++;
+					snapshot_parts |= 1<<part;
 				
-					if(snapshot_part == num_parts)
+					if(snapshot_parts == (1<<num_parts)-1)
 					{
 						static SNAPSHOT emptysnap;
 						SNAPSHOT *deltashot = &emptysnap;
@@ -1070,7 +1077,7 @@ static void client_process_packet(NETCHUNK *packet)
 						complete_size = (num_parts-1) * MAX_SNAPSHOT_PACKSIZE + part_size;
 
 						/* reset snapshoting */
-						snapshot_part = 0;
+						snapshot_parts = 0;
 						
 						/* find snapshot that we should use as delta */
 						emptysnap.data_size = 0;
@@ -1200,11 +1207,6 @@ static void client_process_packet(NETCHUNK *packet)
 						/* ack snapshot */
 						ack_game_tick = game_tick;
 					}
-				}
-				else
-				{
-					dbg_msg("client", "snapsht reset!");
-					snapshot_part = 0;
 				}
 			}
 		}
@@ -1507,7 +1509,7 @@ static void client_run()
 	perf_start(&rootscope);
 
 	local_start_time = time_get();
-	snapshot_part = 0;
+	snapshot_parts = 0;
 	
 	/* init graphics and sound */
 	if(!gfx_init())
