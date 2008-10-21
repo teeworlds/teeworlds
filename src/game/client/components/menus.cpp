@@ -930,23 +930,22 @@ bool MENUS::on_input(INPUT_EVENT e)
 {
 	last_input = time_get();
 	
+	// special handle esc and enter for popup purposes
+	if(e.flags&INPFLAG_PRESS)
+	{
+		if(e.key == KEY_ESC)
+		{
+			escape_pressed = true;
+			set_active(!is_active());
+			return true;
+		}
+	}
+		
 	if(is_active())
 	{
-		// special handle esc and enter for popup purposes
-		if(e.flags&INPFLAG_PRESS)
-		{
-			if(e.key == KEY_ESC)
-			{
-				escape_pressed = true;
-				set_active(!is_active());
-				return true;
-			}
-			else if(e.key == KEY_ENTER)
-			{
-				enter_pressed = true;
-				return true;
-			}
-		}
+		// special for popups
+		if(e.flags&INPFLAG_PRESS || e.key == KEY_ENTER)
+			enter_pressed = true;
 		
 		if(num_inputevents < MAX_INPUTEVENTS)
 			inputevents[num_inputevents++] = e;
