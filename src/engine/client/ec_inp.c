@@ -33,6 +33,9 @@ static unsigned char input_state[2][1024] = {{0}, {0}};
 static int input_current = 0;
 #ifdef CONFIG_NO_SDL
 static unsigned int last_release = 0;
+#else
+static int input_grabbed = 0;
+static int input_use_grab = 1;
 #endif
 static unsigned int release_delta = -1;
 
@@ -61,7 +64,17 @@ void inp_mouse_relative(int *x, int *y)
 	last_x = nx;
 	last_y = ny;
 #else
-	SDL_GetRelativeMouseState(&nx, &ny);
+	if(input_use_grab)
+		SDL_GetRelativeMouseState(&nx, &ny);
+	else
+	{
+		if(input_grabbed)
+		{
+			SDL_GetMouseState(&nx,&ny);
+			SDL_WarpMouse(gfx_screenwidth()/2,gfx_screenheight()/2);
+			nx -= gfx_screenwidth()/2; ny -= gfx_screenheight()/2;
+		}
+	}
 
 	*x = nx*sens;
 	*y = ny*sens;
@@ -203,18 +216,23 @@ void inp_mouse_mode_relative()
 void inp_init()
 {
 	SDL_EnableUNICODE(1);
+	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL); 
 }
 
 void inp_mouse_mode_absolute()
 {
 	SDL_ShowCursor(1);
-	SDL_WM_GrabInput(SDL_GRAB_OFF);
+	input_grabbed = 0;
+	if(input_use_grab)
+		SDL_WM_GrabInput(SDL_GRAB_OFF);
 }
 
 void inp_mouse_mode_relative()
 {
 	SDL_ShowCursor(0);
-	SDL_WM_GrabInput(SDL_GRAB_ON);
+	input_grabbed = 1;
+	if(input_use_grab)
+		SDL_WM_GrabInput(SDL_GRAB_ON);
 }
 #endif
 
