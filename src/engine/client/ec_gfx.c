@@ -6,20 +6,25 @@
 	#include <GL/glfw.h>
 #else
 	#include "SDL.h"
+	
+	#ifdef CONF_FAMILY_WINDOWS
+		#define WIN32_LEAN_AND_MEAN
+		#include <windows.h>
+	#endif
+	
+	#ifdef CONF_PLATFORM_MACOSX
+		#include <OpenGL/gl.h>
+		#include <OpenGL/glu.h>
+	#else
+		#include <GL/gl.h>
+		#include <GL/glu.h>
+	#endif
 
-#ifdef CONF_PLATFORM_MACOSX
-	#include <OpenGL/gl.h>
-	#include <OpenGL/glu.h>
-#else
-	#include <GL/gl.h>
-	#include <GL/glu.h>
 #endif
-
-#endif
-
-#include <engine/external/pnglite/pnglite.h>
 
 #include <base/system.h>
+#include <engine/external/pnglite/pnglite.h>
+
 #include <engine/e_client_interface.h>
 #include <engine/e_engine.h>
 #include <engine/e_config.h>
