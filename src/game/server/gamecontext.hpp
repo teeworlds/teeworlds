@@ -52,6 +52,7 @@ public:
 	void end_vote();
 	void send_vote_set(int cid);
 	void send_vote_status(int cid);
+	void abort_vote_kick_on_disconnect(int client_id);
 	int vote_creator;
 	int64 vote_closetime;
 	char vote_description[512];

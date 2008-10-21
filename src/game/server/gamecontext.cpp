@@ -1,3 +1,4 @@
+#include <string.h>
 #include <new>
 #include <engine/e_server_interface.h>
 #include "gamecontext.hpp"
@@ -285,6 +286,12 @@ void GAMECONTEXT::send_vote_status(int cid)
 	
 }
 
+void GAMECONTEXT::abort_vote_kick_on_disconnect(int client_id)
+{
+	if(vote_closetime && !strncmp(vote_command, "kick ", 5) && atoi(&vote_command[5]) == client_id)
+		vote_closetime = -1;
+}
+
 void GAMECONTEXT::tick()
 {
 	world.core.tuning = tuning;
@@ -302,33 +309,42 @@ void GAMECONTEXT::tick()
 	// update voting
 	if(vote_closetime)
 	{
-		// count votes
-		int total = 0, yes = 0, no = 0;
-		for(int i = 0; i < MAX_CLIENTS; i++)
+		// abort the kick-vote on player-leave
+		if(vote_closetime == -1)
 		{
-			if(players[i])
+			send_chat(-1, GAMECONTEXT::CHAT_ALL, "Vote aborted");
+			end_vote();
+		}
+		else
+		{
+			// count votes
+			int total = 0, yes = 0, no = 0;
+			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
-				total++;
-				if(players[i]->vote > 0)
-					yes++;
-				else if(players[i]->vote < 0)
-					no++;
+				if(players[i])
+				{
+					total++;
+					if(players[i]->vote > 0)
+						yes++;
+					else if(players[i]->vote < 0)
+						no++;
+				}
 			}
-		}
 		
-		if(yes >= total/2+1)
-		{
-			console_execute_line(vote_command);
-			end_vote();
-			send_chat(-1, GAMECONTEXT::CHAT_ALL, "Vote passed");
+			if(yes >= total/2+1)
+			{
+				console_execute_line(vote_command);
+				end_vote();
+				send_chat(-1, GAMECONTEXT::CHAT_ALL, "Vote passed");
 			
-			if(players[vote_creator])
-				players[vote_creator]->last_votecall = 0;
-		}
-		else if(time_get() > vote_closetime || no >= total/2+1 || yes+no == total)
-		{
-			end_vote();
-			send_chat(-1, GAMECONTEXT::CHAT_ALL, "Vote failed");
+				if(players[vote_creator])
+					players[vote_creator]->last_votecall = 0;
+			}
+			else if(time_get() > vote_closetime || no >= total/2+1 || yes+no == total)
+			{
+				end_vote();
+				send_chat(-1, GAMECONTEXT::CHAT_ALL, "Vote failed");
+			}
 		}
 	}
 }

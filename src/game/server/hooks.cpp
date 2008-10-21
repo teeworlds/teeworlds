@@ -112,6 +112,7 @@ void mods_connected(int client_id)
 
 void mods_client_drop(int client_id)
 {
+	game.abort_vote_kick_on_disconnect(client_id);
 	game.players[client_id]->on_disconnect();
 	delete game.players[client_id];
 	game.players[client_id] = 0;
