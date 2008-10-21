@@ -3,7 +3,7 @@
 #ifdef CONFIG_NO_SDL
 	#include <GL/glfw.h>
 #else
-	#include <SDL/SDL.h>
+	#include "SDL.h"
 #endif
 
 #include <base/system.h>

@@ -7,7 +7,6 @@ config:add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-p
 config:add(OptFindLibrary("zlib", "zlib.h", false))
 config:add(OptFindLibrary("glfw", "glfw.h", false))
 config:add(OptFindLibrary("portaudio", "portaudio.h_FAIL", false))
-config:add(OptFindLibrary("sdl", "SDL/SDL.h", false))
 
 config:add(OptFindLibrary("coreaudio", "AudioUnit/AudioUnit.h", false))
 config:add(OptFindLibrary("alsa", "alsa/asoundlib.h", false))
@@ -15,6 +14,63 @@ config:add(OptFindLibrary("oss_sys", "sys/soundcard.h", false))
 config:add(OptFindLibrary("oss_linux", "linux/soundcard.h", false))
 config:add(OptFindLibrary("oss_machine", "machine/soundcard.h", false))
 config:add(OptFindLibrary("dsound", "dsound.h", true))
+
+function OptFindSDL(name, required)
+	local check = function(option)
+		option.value = nil
+		option.use_sdlconfig = nil
+		option.cflags = nil
+		option.libflags = nil
+		option.include_path = nil
+		option.lib_path = nil
+		
+		if ExecuteSilent("sdl-config") > 0 and ExecuteSilent("sdl-config --cflags") == 0 then
+			option.value = 1
+			option.use_sdlconfig = 1
+		end
+		
+	end
+	
+	local apply = function(option, settings)
+		if option.use_sdlconfig then
+			settings.cc.flags = settings.cc.flags .. " -I/usr/include/SDL "
+			settings.linker.flags = settings.linker.flags .. " `sdl-config --libs` "
+		else
+			-- do something else here
+		end
+	end
+	
+	local save = function(option, output)
+		output:option(option, "value")
+		output:option(option, "use_sdlconfig")
+	end
+	
+	local display = function(option)
+		if option.value then
+			if option.use_sdlconfig then
+				return "using sdl-config"
+			else
+				return "some other way"
+			end
+		else
+			if option.required then
+				return "not found (required)"
+			else
+				return "not found (optional)"
+			end
+		end
+	end
+	
+	local o = MakeOption(name, 0, check, save, display)
+	o.apply = apply
+	o.include_path = nil
+	o.lib_path = nil
+	o.required = required
+	return o
+end
+
+config:add(OptFindSDL("sdl", false))
+
 
 --- Auto detect ------
 if not config:load("config.bam") then
@@ -269,11 +325,11 @@ function build(settings)
 	if config.compiler.value == "cl" then
 		engine_settings.cc.flags = "/wd4244"
 	else
-   		if platform == "macosx"  or family == "windows" then
+   		if platform == "macosx" then
 			engine_settings.cc.flags = "-Wall -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk"
 			engine_settings.linker.flags = "-mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk"
 		else
-			engine_settings.cc.flags = "-Wall -pedantic-errors"
+			engine_settings.cc.flags = "-Wall"
 			engine_settings.linker.flags = ""
 		end
 	end
@@ -304,7 +360,9 @@ function build(settings)
 			client_settings.linker.libs:add("X11")
 			client_settings.linker.libs:add("GL")
 			client_settings.linker.libs:add("GLU")
-			if use_sdl then client_settings.linker.libs:add("SDL") end
+
+			-- apply sdl settings
+			if use_sdl then config.sdl:apply(client_settings) end
 		end
 	elseif family == "windows" then
 		client_settings.linker.libs:add("opengl32")
@@ -315,7 +373,7 @@ function build(settings)
 			client_settings.linker.libs:add("dsound")
 		end
 	end
-
+	
 	engine = Compile(engine_settings, Collect("src/engine/*.c", "src/base/*.c"))
 	client = Compile(client_settings, Collect("src/engine/client/*.c"))
 	server = Compile(server_settings, Collect("src/engine/server/*.c"))

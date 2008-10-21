@@ -6,7 +6,7 @@
 #ifdef CONFIG_NO_SDL
 	#include <portaudio.h>
 #else
-	#include <SDL/SDL.h>
+	#include "SDL.h"
 #endif
 
 
