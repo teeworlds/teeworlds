@@ -1601,11 +1601,19 @@ static void client_run()
 		}
 
 		/* panic quit button */
+		#ifdef CONFIG_NO_SDL
 		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_pressed('Q'))
 			break;
 
 		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_down('E'))
 			config.cl_editor = config.cl_editor^1;
+		#else
+		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_pressed('q'))
+			break;
+
+		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_down('e'))
+			config.cl_editor = config.cl_editor^1;
+		#endif
 		
 		if(!gfx_window_open())
 			break;
