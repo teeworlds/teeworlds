@@ -1,11 +1,20 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 
+#include <base/detect.h>
+
 #ifdef CONFIG_NO_SDL
 	#include <GL/glfw.h>
 #else
 	#include "SDL.h"
+
+#ifdef CONF_PLATFORM_MACOSX
+	#include <OpenGL/gl.h>
+	#include <OpenGL/glu.h>
+#else
 	#include <GL/gl.h>
 	#include <GL/glu.h>
+#endif
+
 #endif
 
 #include <engine/external/pnglite/pnglite.h>

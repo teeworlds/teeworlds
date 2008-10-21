@@ -352,6 +352,12 @@ function build(settings)
 				client_settings.linker.frameworks:add("AudioToolbox")
 				client_settings.linker.frameworks:add("AudioUnit")
 			end
+
+			if use_sdl then
+				client_settings.linker.frameworks:add("SDL")
+				client_settings.cc.includes:add("SDL.framework/Headers")
+				client_settings.linker.frameworkpath:add(".")
+			end
 		else
 			if config.alsa.value == 1 then
             	client_settings.linker.libs:add("asound")
@@ -393,7 +399,10 @@ function build(settings)
 	-- build tools (TODO: fix this so we don't get double _d_d stuff)
 	tools_src = Collect("src/tools/*.cpp", "src/tools/*.c")
 
-	osxlaunch_src = Collect("src/osxlaunch/*.m")
+	osxlaunch = {}
+	if platform == "macosx" and use_sdl then
+		osxlaunch = Compile(client_settings, Collect("src/osxlaunch/*.m"))
+	end
 	
 	objs = Compile(settings, tools_src)
 	tools = {}
@@ -405,7 +414,7 @@ function build(settings)
 	-- build client, server, version server and master server
 	client_exe = Link(client_settings, "teeworlds", game_shared, game_client,
 		engine, client, game_editor, glfw, portaudio, zlib, pnglite, wavpack,
-		client_link_other)
+		client_link_other, osxlaunch)
 
 	server_exe = Link(server_settings, "teeworlds_srv", engine, server,
 		game_shared, game_server, zlib)
@@ -415,10 +424,6 @@ function build(settings)
 
 	masterserver_exe = Link(server_settings, "mastersrv", masterserver,
 		engine, zlib)
-
-	if platform == "macosx" then
-		osxlaunch_exe = Link(client_settings, "osxlaunch", osxlaunch_src)
-	end
 
 	-- make targets
 	c = PseudoTarget("client".."_"..settings.config_name, client_exe)
@@ -433,12 +438,7 @@ function build(settings)
 	Target(m)
 	Target(t)
 	
-	if platform == "macosx" then
-		o = PseudoTarget("osxlaunch".."_"..settings.config_name, osxlaunch_exe)
-		all = PseudoTarget(settings.config_name, c, s, v, m, t, o)
-	else
-		all = PseudoTarget(settings.config_name, c, s, v, m, t)
-	end
+	all = PseudoTarget(settings.config_name, c, s, v, m, t)
 
 	Target(all)
 	return all

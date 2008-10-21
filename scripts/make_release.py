@@ -81,16 +81,18 @@ if use_bundle:
 	bundle_content_dir = os.path.join(package_dir, "Teeworlds.app/Contents")
 	bundle_bin_dir = os.path.join(bundle_content_dir, "MacOS")
 	bundle_resource_dir = os.path.join(bundle_content_dir, "Resources")
+	bundle_framework_dir = os.path.join(bundle_content_dir, "Frameworks")
 	os.mkdir(os.path.join(package_dir, "Teeworlds.app"))
 	os.mkdir(bundle_content_dir)
 	os.mkdir(bundle_bin_dir)
 	os.mkdir(bundle_resource_dir)
+	os.mkdir(bundle_framework_dir)
 	os.mkdir(os.path.join(bundle_resource_dir, "data"))
 	copydir("data", bundle_resource_dir)
 	shutil.copy("other/icons/Teeworlds.icns", bundle_resource_dir)
 	shutil.copy(name+exe_ext, bundle_bin_dir)
 	shutil.copy(name+"_srv"+exe_ext, bundle_bin_dir)
-	shutil.copy("osxlaunch"+exe_ext, bundle_bin_dir)
+	#copydir("SDL.framework", bundle_framework_dir)
 	file(os.path.join(bundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -99,7 +101,7 @@ if use_bundle:
         <key>CFBundleDevelopmentRegion</key>
         <string>English</string>
         <key>CFBundleExecutable</key>
-        <string>osxlaunch</string>
+        <string>teeworlds</string>
         <key>CFBundleIconFile</key>
         <string>Teeworlds</string>
         <key>CFBundleInfoDictionaryVersion</key>

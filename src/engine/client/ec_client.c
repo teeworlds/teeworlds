@@ -1841,7 +1841,11 @@ const char *client_user_directory()
 	return path;
 }
 
+#if defined(CONF_PLATFORM_MACOSX)
+int SDL_main(int argc, char **argv)
+#else
 int main(int argc, char **argv)
+#endif
 {
 	/* init the engine */
 	dbg_msg("client", "starting...");
