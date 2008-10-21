@@ -317,10 +317,14 @@ void inp_update()
 	keyboard_state[keyboard_current][KEY_MOUSE_1] = 0;
 	keyboard_state[keyboard_current][KEY_MOUSE_2] = 0;
 	keyboard_state[keyboard_current][KEY_MOUSE_3] = 0;
+	keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_UP] = 0;
+	keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_DOWN] = 0;
 	i = SDL_GetMouseState(NULL, NULL);
-	if(i&SDL_BUTTON(1)) keyboard_state[keyboard_current][KEY_MOUSE_1] = 1;
-	if(i&SDL_BUTTON(2)) keyboard_state[keyboard_current][KEY_MOUSE_2] = 1;
-	if(i&SDL_BUTTON(3)) keyboard_state[keyboard_current][KEY_MOUSE_3] = 1;
+	if(i&SDL_BUTTON(1)) keyboard_state[keyboard_current][KEY_MOUSE_1] = 1; /* 1 is left */
+	if(i&SDL_BUTTON(3)) keyboard_state[keyboard_current][KEY_MOUSE_2] = 1; /* 3 is right */
+	if(i&SDL_BUTTON(2)) keyboard_state[keyboard_current][KEY_MOUSE_3] = 1; /* 2 is middle */
+	if(i&SDL_BUTTON(4)) keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_UP] = 1;
+	if(i&SDL_BUTTON(5)) keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_DOWN] = 1;
 	
 	{
 		SDL_Event event;
@@ -346,7 +350,11 @@ void inp_update()
 				case SDL_MOUSEBUTTONUP:
 					action = INPFLAG_RELEASE;
 				case SDL_MOUSEBUTTONDOWN:
-					key = KEY_MOUSE_1+event.button.button-1;
+					if(event.button.button == 1) key = KEY_MOUSE_1;
+					if(event.button.button == 3) key = KEY_MOUSE_2;
+					if(event.button.button == 2) key = KEY_MOUSE_3;
+					if(event.button.button == 4) key = KEY_MOUSE_WHEEL_UP;
+					if(event.button.button == 5) key = KEY_MOUSE_WHEEL_DOWN;
 					break;
 					
 				/* other messages */
