@@ -7,6 +7,12 @@
 #include <base/math.hpp>
 
 #include <engine/e_client_interface.h>
+
+extern "C"
+{
+	#include <engine/e_engine.h>
+}
+
 #include "skins.hpp"
 
 SKINS::SKINS()
@@ -119,7 +125,7 @@ void SKINS::init()
 {
 	// load skins
 	num_skins = 0;
-	fs_listdir("skins", skinscan, this);
+	engine_listdir("skins", skinscan, this);
 }
 
 int SKINS::num()

@@ -799,8 +799,8 @@ void str_hex(char *dst, int dst_size, const void *data, int data_size);
 	Returns:
 		Always returns 0.
 */
-typedef void (*fs_listdir_callback)(const char *name, int is_dir, void *user);
-int fs_listdir(const char *dir, fs_listdir_callback cb, void *user);
+typedef void (*FS_LISTDIR_CALLBACK)(const char *name, int is_dir, void *user);
+int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, void *user);
 
 /*
 	Function: fs_makedir

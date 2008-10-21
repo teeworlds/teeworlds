@@ -4,6 +4,7 @@
 #include <string.h>
 #include <base/system.h>
 #include <engine/e_client_interface.h>
+#include <engine/e_engine.h>
 #include "ec_font.h"
 
 typedef struct
@@ -32,7 +33,7 @@ int font_load(FONT *font, const char *filename)
     FONT_DATA font_data;
 	IOHANDLE file;
 
-	file = io_open(filename, IOFLAG_READ);
+	file = engine_openfile(filename, IOFLAG_READ);
 	
 	if(file)
 	{

@@ -2,6 +2,7 @@
 #include "e_if_other.h"
 #include "e_console.h"
 #include "e_config.h"
+#include "e_engine.h"
 #include "e_linereader.h"
 #include <stdio.h>
 #include <string.h>
@@ -299,7 +300,7 @@ void console_execute_line(const char *str)
 static void console_execute_file_real(const char *filename)
 {
 	IOHANDLE file;
-	file = io_open(filename, IOFLAG_READ);
+	file = engine_openfile(filename, IOFLAG_READ);
 	
 	if(file)
 	{
@@ -406,8 +407,8 @@ void console_init()
 	MACRO_REGISTER_COMMAND("echo", "r", con_echo, 0x0);
 	MACRO_REGISTER_COMMAND("exec", "r", con_exec, 0x0);
 
-	#define MACRO_CONFIG_INT(name,def,min,max) { static INT_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?i", int_variable_command, &data) }
-	#define MACRO_CONFIG_STR(name,len,def) { static STR_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?r", str_variable_command, &data) }
+	#define MACRO_CONFIG_INT(name,def,min,max,flags,desc) { static INT_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?i", int_variable_command, &data) }
+	#define MACRO_CONFIG_STR(name,len,def,flags,desc) { static STR_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?r", str_variable_command, &data) }
 
 	#include "e_config_variables.h" 
 

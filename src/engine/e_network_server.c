@@ -162,8 +162,11 @@ int netserver_ban_add(NETSERVER *s, NETADDR addr, int type, int seconds)
 	s->banpool_firstfree->prev = 0;
 	ban->next = 0;
 	ban->prev = 0;
-	ban->info.expires = stamp;
+	ban->info.expires = 0;
+	if(seconds)
+		ban->info.expires = stamp;
 	ban->info.type = type;
+	ban->info.addr = addr;
 	
 	/* add it to the ban hash */
 	if(s->bans[iphash])
@@ -174,7 +177,7 @@ int netserver_ban_add(NETSERVER *s, NETADDR addr, int type, int seconds)
 	
 	/* insert it into the used list */
 	insert_after = s->banpool_firstused;
-	while(1)
+	while(insert_after)
 	{
 		if(!insert_after->next)
 			break;
@@ -186,7 +189,6 @@ int netserver_ban_add(NETSERVER *s, NETADDR addr, int type, int seconds)
 	if(!insert_after || insert_after->info.expires > stamp)
 	{
 		/* insert first */
-		insert_after->prev = ban;
 		s->banpool_firstused = ban;
 		ban->next = insert_after;
 		ban->prev = 0;
@@ -200,6 +202,27 @@ int netserver_ban_add(NETSERVER *s, NETADDR addr, int type, int seconds)
 			ban->next->prev = ban;
 		insert_after->next = ban;
 	}
+
+	/* drop banned clients */	
+	{
+		char buf[128];
+		int i;
+		NETADDR banaddr;
+		
+		if(seconds)
+			str_format(buf, sizeof(buf), "you have been banned for %d seconds", seconds);
+		else
+			str_format(buf, sizeof(buf), "you have been banned");
+		
+		for(i = 0; i < s->max_clients; i++)
+		{
+			banaddr = s->slots[i].conn.peeraddr;
+			banaddr.port = 0;
+			
+			if(net_addr_comp(&addr, &banaddr) == 0)
+				netserver_drop(s, i, buf);
+		}
+	}	
 	
 	return 0;
 }
@@ -242,18 +265,20 @@ int netserver_recv(NETSERVER *s, NETCHUNK *chunk)
 		if(unpack_packet(s->recv.buffer, bytes, &s->recv.data) == 0)
 		{
 			NETBAN *ban = 0;
+			NETADDR banaddr = addr;
 			int iphash = (addr.ip[0]+addr.ip[1]+addr.ip[2]+addr.ip[3])&0xff;
 			found = 0;
+			banaddr.port = 0;
 			
 			/* search a ban */
 			for(ban = s->bans[iphash]; ban; ban = ban->hashnext)
 			{
-				if(net_addr_comp(&ban->info.addr, &addr) == 0)
+				if(net_addr_comp(&ban->info.addr, &banaddr) == 0)
 					break;
 			}
 			
 			/* check if we just should drop the packet */
-			if(ban && ban->info.type == NETBANTYPE_DROP && ban->info.expires > now)
+			if(ban && ban->info.type == NETBANTYPE_DROP && (!ban->info.expires || ban->info.expires > now))
 				continue;
 			
 			if(s->recv.data.flags&NET_PACKETFLAG_CONNLESS)

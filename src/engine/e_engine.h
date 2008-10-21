@@ -10,7 +10,10 @@ int engine_config_write_start();
 void engine_config_write_line(const char *line);
 void engine_config_write_stop();
 
-int engine_chdir_datadir(char *argv0);
+
+void engine_listdir(const char *path, FS_LISTDIR_CALLBACK cb, void *user);
+IOHANDLE engine_openfile(const char *filename, int flags);
+void engine_getpath(char *buffer, int buffer_size, const char *filename, int flags);
 
 int engine_stress(float probability);
 

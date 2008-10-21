@@ -964,7 +964,7 @@ static int server_load_map(const char *mapname)
 	
 	/* load compelate map into memory for download */
 	{
-		IOHANDLE file = io_open(buf, IOFLAG_READ);
+		IOHANDLE file = engine_openfile(buf, IOFLAG_READ);
 		current_map_size = (int)io_length(file);
 		if(current_map_data)
 			mem_free(current_map_data);
@@ -1185,7 +1185,23 @@ static void con_ban(void *result, void *user_data)
 	const char *str = console_arg_string(result, 0);
 	
 	if(net_addr_from_str(&addr, str) == 0)
-		server_ban_add(addr, 1, 60);
+		server_ban_add(addr, 2, 60);
+}
+
+
+static void con_bans(void *result, void *user_data)
+{
+	int i;
+	NETBANINFO info;
+	NETADDR addr;
+	int num = netserver_ban_num(net);
+	for(i = 0; i < num; i++)
+	{
+		netserver_ban_get(net, i, &info);
+		addr = info.addr;
+		
+		dbg_msg("server", "#%d %d.%d.%d.%d", i, addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3]);
+	}
 }
 
 static void con_status(void *result, void *user_data)
@@ -1223,6 +1239,7 @@ static void server_register_commands()
 {
 	MACRO_REGISTER_COMMAND("kick", "i", con_kick, 0);
 	MACRO_REGISTER_COMMAND("ban", "r", con_ban, 0);
+	MACRO_REGISTER_COMMAND("bans", "", con_bans, 0);
 	MACRO_REGISTER_COMMAND("status", "", con_status, 0);
 	MACRO_REGISTER_COMMAND("shutdown", "", con_shutdown, 0);
 
@@ -1254,13 +1271,6 @@ int main(int argc, char **argv)
 	
 	/* parse the command line arguments */
 	engine_parse_arguments(argc, argv);
-	
-	/* change into data-dir */
-	if (!engine_chdir_datadir(argv[0]))
-	{
-		dbg_msg("server", "fatal error: data-dir cannot be found");
-		return -1;
-	}
 	
 	/* run the server */
 	server_run();

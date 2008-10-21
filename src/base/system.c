@@ -845,7 +845,7 @@ int net_init()
 	return 0;
 }
 
-int fs_listdir(const char *dir, fs_listdir_callback cb, void *user)
+int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, void *user)
 {
 #if defined(CONF_FAMILY_WINDOWS)
 	WIN32_FIND_DATA finddata;

@@ -796,21 +796,24 @@ int gfx_load_texture(const char *filename, int store_format, int flags)
 
 int gfx_load_png(IMAGE_INFO *img, const char *filename)
 {
+	char completefilename[512];
 	unsigned char *buffer;
 	png_t png;
 	
 	/* open file for reading */
 	png_init(0,0);
 
-	if(png_open_file(&png, filename) != PNG_NO_ERROR)
+	engine_getpath(completefilename, sizeof(completefilename), filename, IOFLAG_READ);
+	
+	if(png_open_file(&png, completefilename) != PNG_NO_ERROR)
 	{
-		dbg_msg("game/png", "failed to open file. filename='%s'", filename);
+		dbg_msg("game/png", "failed to open file. filename='%s'", completefilename);
 		return 0;
 	}
 	
 	if(png.depth != 8 || (png.color_type != PNG_TRUECOLOR && png.color_type != PNG_TRUECOLOR_ALPHA))
 	{
-		dbg_msg("game/png", "invalid format. filename='%s'", filename);
+		dbg_msg("game/png", "invalid format. filename='%s'", completefilename);
 		png_close_file(&png);
         return 0;
 	}
@@ -865,22 +868,24 @@ void gfx_swap()
 			IOHANDLE io;
 			char filename[128];
 			char header[18] = {0};
-			sprintf(filename, "capture/frame%04d.tga", record);
+			str_format(filename, sizeof(filename), "capture/frame%04d.tga", record);
 			record++;
 			
-			io = io_open(filename, IOFLAG_WRITE);
-
-			header[2] = 2; /* rgb */
-			header[12] = w&255; /* width */
-			header[13] = w>>8; 
-			header[14] = h&255; /* height */
-			header[15] = h>>8; 
-			header[16] = 24;
-			
-			io_write(io, header, sizeof(header));
-			io_write(io, pixel_data, w*h*3);
-			
-			io_close(io);
+			io = engine_openfile(filename, IOFLAG_WRITE);
+			if(io)
+			{
+				header[2] = 2; /* rgb */
+				header[12] = w&255; /* width */
+				header[13] = w>>8; 
+				header[14] = h&255; /* height */
+				header[15] = h>>8; 
+				header[16] = 24;
+				
+				io_write(io, header, sizeof(header));
+				io_write(io, pixel_data, w*h*3);
+				
+				io_close(io);
+			}
 		}
 		
 
@@ -899,17 +904,14 @@ void gfx_swap()
 	if(do_screenshot)
 	{
 		/* find filename */
-		char wholepath[1024];
 		char filename[128];
 		static int index = 1;
 
 		for(; index < 1000; index++)
 		{
 			IOHANDLE io;
-			sprintf(filename, "screenshots/screenshot%04d.png", index);
-			engine_savepath(filename, wholepath, sizeof(wholepath));
-			
-			io = io_open(wholepath, IOFLAG_READ);
+			str_format(filename, sizeof(filename), "screenshots/screenshot%04d.png", index);
+			io = engine_openfile(filename, IOFLAG_READ);
 			if(io)
 				io_close(io);
 			else

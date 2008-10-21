@@ -1,6 +1,7 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <base/system.h>
 #include "e_datafile.h"
+#include "e_engine.h"
 #include <zlib.h>
 
 static const int DEBUG=0;
@@ -82,7 +83,7 @@ DATAFILE *datafile_load(const char *filename)
 	
 	dbg_msg("datafile", "datafile loading. filename='%s'", filename);
 
-	file = io_open(filename, IOFLAG_READ);
+	file = engine_openfile(filename, IOFLAG_READ);
 	if(!file)
 		return 0;
 	
@@ -393,7 +394,7 @@ DATAFILE_OUT *datafile_create(const char *filename)
 {
 	int i;
 	DATAFILE_OUT *df = (DATAFILE_OUT*)mem_alloc(sizeof(DATAFILE_OUT), 1);
-	df->file = io_open(filename, IOFLAG_WRITE);
+	df->file = engine_openfile(filename, IOFLAG_WRITE);
 	if(!df->file)
 	{
 		mem_free(df);
@@ -658,7 +659,7 @@ int datafile_crc(const char *filename)
 	int crc = 0;
 	unsigned bytes = 0;
 	
-	file = io_open(filename, IOFLAG_READ);
+	file = engine_openfile(filename, IOFLAG_READ);
 	if(!file)
 		return 0;
 		

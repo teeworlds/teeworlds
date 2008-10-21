@@ -4,6 +4,7 @@
 #include <string.h> /* strlen */
 
 #include "e_config.h"
+#include "e_engine.h"
 #include "e_network.h"
 #include "e_network_internal.h"
 #include "e_huffman.h"
@@ -259,7 +260,7 @@ void netcommon_openlog(const char *sentlog, const char *recvlog)
 {
 	if(sentlog)
 	{
-		datalog_sent = io_open(sentlog, IOFLAG_WRITE);
+		datalog_sent = engine_openfile(sentlog, IOFLAG_WRITE);
 		if(datalog_sent)
 			dbg_msg("network", "logging sent packages to '%s'", sentlog);
 		else
@@ -268,7 +269,7 @@ void netcommon_openlog(const char *sentlog, const char *recvlog)
 	
 	if(recvlog)
 	{
-		datalog_recv = io_open(recvlog, IOFLAG_WRITE);
+		datalog_recv = engine_openfile(recvlog, IOFLAG_WRITE);
 		if(recvlog)
 			dbg_msg("network", "logging recv packages to '%s'", recvlog);
 		else

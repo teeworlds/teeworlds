@@ -6,7 +6,6 @@
 #include <base/system.h>
 
 #include <engine/e_server_interface.h>
-/*#include <engine/e_client_interface.h>*/
 #include <engine/e_config.h>
 #include <engine/e_console.h>
 #include <engine/e_engine.h>
@@ -17,6 +16,7 @@
 #define DATA_DIR "data"
 
 static JOBPOOL hostlookuppool;
+static int engine_find_datadir(char *argv0);
 
 static void con_dbg_dumpmem(void *result, void *user_data)
 {
@@ -30,7 +30,7 @@ static void con_dbg_lognetwork(void *result, void *user_data)
 
 
 static char application_save_path[512] = {0};
-static char *datadir_override = 0;
+static char datadir[512] = {0};
 
 const char *engine_savepath(const char *filename, char *buffer, int max)
 {
@@ -87,33 +87,130 @@ void engine_init(const char *appname)
 	config_reset();
 }
 
+
+void engine_listdir(const char *path, FS_LISTDIR_CALLBACK cb, void *user)
+{
+	char buffer[1024];
+	
+	/* list current directory */
+	fs_listdir(path, cb, user);
+	
+	/* list users directory */
+	engine_savepath(path, buffer, sizeof(buffer));
+	fs_listdir(buffer, cb, user);
+	
+	/* list datadir directory */
+	str_format(buffer, sizeof(buffer), "%s/%s", datadir, path);
+	fs_listdir(buffer, cb, user);
+}
+
+void engine_getpath(char *buffer, int buffer_size, const char *filename, int flags)
+{
+	if(flags&IOFLAG_WRITE)
+		engine_savepath(filename, buffer, buffer_size);
+	else
+	{
+		IOHANDLE handle = 0;
+		
+		/* check current directory */
+		handle = io_open(filename, flags);
+		if(handle)
+		{
+			str_copy(buffer, filename, buffer_size);
+			io_close(handle);
+			return;
+		}
+			
+		/* check user directory */
+		engine_savepath(filename, buffer, buffer_size);
+		handle = io_open(buffer, flags);
+		if(handle)
+		{
+			io_close(handle);
+			return;
+		}
+			
+		/* check normal data directory */
+		str_format(buffer, buffer_size, "%s/%s", datadir, filename);
+		handle = io_open(buffer, flags);
+		if(handle)
+		{
+			io_close(handle);
+			return;
+		}
+	}
+	
+	buffer[0] = 0;
+}
+
+IOHANDLE engine_openfile(const char *filename, int flags)
+{
+	char buffer[1024];
+	
+	if(flags&IOFLAG_WRITE)
+	{
+		engine_savepath(filename, buffer, sizeof(buffer));
+		return io_open(buffer, flags);
+	}
+	else
+	{
+		IOHANDLE handle = 0;
+		
+		/* check current directory */
+		handle = io_open(filename, flags);
+		if(handle)
+			return handle;
+			
+		/* check user directory */
+		engine_savepath(filename, buffer, sizeof(buffer));
+		handle = io_open(buffer, flags);
+		if(handle)
+			return handle;
+			
+		/* check normal data directory */
+		str_format(buffer, sizeof(buffer), "%s/%s", datadir, filename);
+		handle = io_open(buffer, flags);
+		if(handle)
+			return handle;
+	}
+	return 0;		
+}
+
 void engine_parse_arguments(int argc, char **argv)
 {
 	/* load the configuration */
 	int i;
-	int abs = 0;
-	const char *config_filename = "settings.cfg";
-	char buf[1024];
+	
+	/* check for datadir override */
+	for(i = 1; i < argc; i++)
+	{
+		if(argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2] == 0 && argc - i > 1)
+		{
+			str_copy(datadir, argv[i+1], sizeof(datadir));
+			i++;
+		}
+	}
+	
+	/* search for data directory */
+	engine_find_datadir(argv[0]);
+	
+	dbg_msg("engine/datadir", "paths used:");
+	dbg_msg("engine/datadir", "\t.");
+	dbg_msg("engine/datadir", "\t%s", application_save_path);
+	dbg_msg("engine/datadir", "\t%s", datadir);
+	dbg_msg("engine/datadir", "saving files to: %s", application_save_path);
+
+
+	/* check for scripts to execute */
 	for(i = 1; i < argc; i++)
 	{
 		if(argv[i][0] == '-' && argv[i][1] == 'f' && argv[i][2] == 0 && argc - i > 1)
 		{
-			config_filename = argv[i+1];
-			abs = 1;
-			i++;
-		}
-		else if(argv[i][0] == '-' && argv[i][1] == 'd' && argv[i][2] == 0 && argc - i > 1)
-		{
-			datadir_override = argv[i+1];
+			console_execute_file(argv[i+1]);
 			i++;
 		}
 	}
 
-	if(abs)
-		console_execute_file(config_filename);
-	else
-		console_execute_file(engine_savepath(config_filename, buf, sizeof(buf)));
-	
 	/* search arguments for overrides */
 	{
 		int i;
@@ -121,7 +218,7 @@ void engine_parse_arguments(int argc, char **argv)
 			console_execute_line(argv[i]);
 	}
 
-	console_execute_file(engine_savepath("autoexec.cfg", buf, sizeof(buf)));
+	console_execute_file("autoexec.cfg");
 
 	/* open logfile if needed */
 	if(config.logfile[0])
@@ -137,10 +234,8 @@ static IOHANDLE config_file = 0;
 
 int engine_config_write_start()
 {
-	char filename[1024];
-	config_save(engine_savepath("settings.cfg", filename, sizeof(filename)));
-	
-	config_file = io_open(filename, IOFLAG_WRITE);
+	config_save("settings.cfg");
+	config_file = engine_openfile("settings.cfg", IOFLAG_WRITE);
 	if(config_file == 0)
 		return -1;
 	return 0;
@@ -340,12 +435,9 @@ int mastersrv_load()
 	LINEREADER lr;
 	IOHANDLE file;
 	int count = 0;
-	char filename[1024];
-	
-	engine_savepath("masters.cfg", filename, sizeof(filename));
 	
 	/* try to open file */
-	file = io_open(filename, IOFLAG_READ);
+	file = engine_openfile("masters.cfg", IOFLAG_READ);
 	if(!file)
 		return -1;
 	
@@ -386,12 +478,9 @@ int mastersrv_save()
 {
 	IOHANDLE file;
 	int i;
-	char filename[1024];
 
-	engine_savepath("masters.cfg", filename, sizeof(filename));
-	
 	/* try to open file */
-	file = io_open(filename, IOFLAG_WRITE);
+	file = engine_openfile("masters.cfg", IOFLAG_WRITE);
 	if(!file)
 		return -1;
 
@@ -423,64 +512,52 @@ void engine_hostlookup(HOSTLOOKUP *lookup, const char *hostname)
 	jobs_add(&hostlookuppool, &lookup->job, hostlookup_thread, lookup);
 }
 
-int engine_chdir_datadir(char *argv0)
+static int engine_find_datadir(char *argv0)
 {
-	int found = 0;
-	char data_dir[1024*2];
-	
 	/* 1) use provided data-dir override */
-	if (datadir_override)
+	if(datadir[0])
 	{
-		if (fs_is_dir(datadir_override))
-		{
-			str_copy(data_dir, datadir_override, sizeof(data_dir));
-			dbg_msg("engine/datadir", "using override '%s'", data_dir);
-			found = 1;
-		}
+		if(fs_is_dir(datadir))
+			return 0;
 		else
 		{
-			dbg_msg("engine/datadir",
-				"specified data-dir '%s' does not exist",
-				datadir_override);
-			return 0;
+			dbg_msg("engine/datadir", "specified data-dir '%s' does not exist", datadir);
+			return -1;
 		}
 	}
 	
 	/* 2) use data-dir in PWD if present */
-	if (!found && fs_is_dir("data"))
+	if(fs_is_dir("data"))
 	{
-		strcpy(data_dir, "data");
-		found = 1;
+		strcpy(datadir, "data");
+		return 0;
 	}
 	
 	/* 3) use compiled-in data-dir if present */
-	if (!found && fs_is_dir(DATA_DIR))
+	if (fs_is_dir(DATA_DIR))
 	{
-		strcpy(data_dir, DATA_DIR);
-		found = 1;
+		strcpy(datadir, DATA_DIR);
+		return 0;
 	}
 	
 	/* 4) check for usable path in argv[0] */
-	if (!found)
 	{
 		unsigned int pos = strrchr(argv0, '/') - argv0;
 		
-		if (pos < sizeof(data_dir))
+		if (pos < sizeof(datadir))
 		{
-			char basedir[sizeof(data_dir)];
+			char basedir[sizeof(datadir)];
 			strncpy(basedir, argv0, pos);
 			basedir[pos] = '\0';
-			str_format(data_dir, sizeof(data_dir),
-				"%s/data", basedir);
+			str_format(datadir, sizeof(datadir), "%s/data", basedir);
 			
-			if (fs_is_dir(data_dir))
-				found = 1;
+			if (fs_is_dir(datadir))
+				return 0;
 		}
 	}
 	
 #if defined(CONF_FAMILY_UNIX)
 	/* 5) check for all default locations */
-	if (!found)
 	{
 		const char *sdirs[] = {
 			"/usr/share/teeworlds",
@@ -493,22 +570,14 @@ int engine_chdir_datadir(char *argv0)
 		{
 			if (fs_is_dir(sdirs[i]))
 			{
-				strcpy(data_dir, sdirs[i]);
-				found = 1;
-				break;
+				strcpy(datadir, sdirs[i]);
+				return 0;
 			}
 		}
 	}
 #endif
 	
-	/* data-dir exists */
-	if (found)
-	{
-		dbg_msg("engine/datadir", "using '%s'", data_dir);
-		
-		/* change working directory to data-dir */
-		fs_chdir(data_dir);
-	}
-	
-	return found;
+	/* no data-dir found */
+	dbg_msg("engine/datadir", "warning no data directory found");
+	return -1;
 }

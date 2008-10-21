@@ -5,6 +5,7 @@
 #include "e_snapshot.h"
 #include "e_compression.h"
 #include "e_network.h"
+#include "e_engine.h"
 #include "e_if_other.h"
 
 static IOHANDLE record_file = 0;
@@ -23,7 +24,7 @@ int demorec_record_start(const char *filename, const char *netversion, const cha
 	if(record_file)
 		return -1;
 
-	record_file = io_open(filename, IOFLAG_WRITE);
+	record_file = engine_openfile(filename, IOFLAG_WRITE);
 	
 	if(!record_file)
 	{
@@ -466,7 +467,7 @@ void demorec_playback_unpause()
 
 int demorec_playback_load(const char *filename)
 {
-	play_file = io_open(filename, IOFLAG_READ);
+	play_file = engine_openfile(filename, IOFLAG_READ);
 	if(!play_file)
 	{
 		dbg_msg("demorec/playback", "could not open '%s'", filename);

@@ -727,7 +727,6 @@ static const char *client_load_map_search(const char *mapname, int wanted_crc)
 {
 	const char *error = 0;
 	char buf[512];
-	char buf2[512];
 	dbg_msg("client", "loading map, map=%s wanted crc=%08x", mapname, wanted_crc);
 	client_set_state(CLIENTSTATE_LOADING);
 	
@@ -738,8 +737,7 @@ static const char *client_load_map_search(const char *mapname, int wanted_crc)
 		return error;
 
 	/* try the downloaded maps */
-	str_format(buf2, sizeof(buf2), "maps/%s_%8x.map", mapname, wanted_crc);
-	engine_savepath(buf2, buf, sizeof(buf));
+	str_format(buf, sizeof(buf), "maps/%s_%8x.map", mapname, wanted_crc);
 	error = client_load_map(mapname, buf, wanted_crc);
 	return error;
 }
@@ -896,15 +894,13 @@ static void client_process_packet(NETCHUNK *packet)
 					}
 					else
 					{
-						char buf[512];
-						str_format(buf, sizeof(buf), "maps/%s_%08x.map", map, map_crc);
-						engine_savepath(buf, mapdownload_filename, sizeof(mapdownload_filename));
+						str_format(mapdownload_filename, sizeof(mapdownload_filename), "maps/%s_%08x.map", map, map_crc);
 
 						dbg_msg("client/network", "starting to download map to '%s'", mapdownload_filename);
 						
 						mapdownload_chunk = 0;
 						str_copy(mapdownload_name, map, sizeof(mapdownload_name));
-						mapdownload_file = io_open(mapdownload_filename, IOFLAG_WRITE);
+						mapdownload_file = engine_openfile(mapdownload_filename, IOFLAG_WRITE);
 						mapdownload_crc = map_crc;
 						mapdownload_totalsize = -1;
 						mapdownload_amount = 0;
@@ -1857,14 +1853,9 @@ int main(int argc, char **argv)
 	
 	/* parse the command line arguments */
 	engine_parse_arguments(argc, argv);
-	
-	/* change into data-dir */
-	if (!engine_chdir_datadir(argv[0]))
-	{
-		dbg_msg("client", "fatal error: data-dir cannot be found");
-		gui_messagebox("Error", "The data-dir cannot be found.");
-		return -1;
-	}
+
+	/* execute config file */
+	console_execute_file("settings.cfg");
 	
 	/* run the client*/
 	client_run();
