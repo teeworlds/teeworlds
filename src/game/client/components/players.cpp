@@ -118,7 +118,6 @@ void PLAYERS::render_player(
 	render_info.size = 64.0f;
 
 	float intratick = client_intratick();
-	float ticktime = client_ticktime();
 	
 	if(player.health < 0) // dont render dead players
 		return;
@@ -203,8 +202,8 @@ void PLAYERS::render_player(
 	}
 	if (player.weapon == WEAPON_NINJA)
 	{
-		float a = clamp((client_tick()-player.attacktick+ticktime)/40.0f, 0.0f, 1.0f);
-		state.add(&data->animations[ANIM_NINJA_SWING], a, 1.0f);
+		float ct = (client_prevtick()-player.attacktick)/(float)SERVER_TICK_SPEED + client_ticktime();
+		state.add(&data->animations[ANIM_NINJA_SWING], clamp(ct*2.0f,0.0f,1.0f), 1.0f);
 	}
 	
 	// do skidding
