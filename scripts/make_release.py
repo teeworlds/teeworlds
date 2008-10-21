@@ -92,7 +92,8 @@ if use_bundle:
 	shutil.copy("other/icons/Teeworlds.icns", bundle_resource_dir)
 	shutil.copy(name+exe_ext, bundle_bin_dir)
 	shutil.copy(name+"_srv"+exe_ext, bundle_bin_dir)
-	#copydir("SDL.framework", bundle_framework_dir)
+	print(bundle_framework_dir)
+	os.system("cp -R /Library/Frameworks/SDL.framework " + bundle_framework_dir)
 	file(os.path.join(bundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

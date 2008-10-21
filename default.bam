@@ -29,6 +29,9 @@ function OptFindSDL(name, required)
 			option.use_sdlconfig = 1
 		end
 		
+		if platform == "macosx" then
+			option.value = 1
+		end
 	end
 	
 	local apply = function(option, settings)
@@ -36,7 +39,12 @@ function OptFindSDL(name, required)
 			settings.cc.flags = settings.cc.flags .. " -I/usr/include/SDL "
 			settings.linker.flags = settings.linker.flags .. " `sdl-config --libs` "
 		else
-			-- do something else here
+			if platform == "macosx" then
+				client_settings.linker.frameworks:add("SDL")
+				client_settings.cc.includes:add("/Library/Frameworks/SDL.framework/Headers")
+			else
+				-- do something else
+			end
 		end
 	end
 	
@@ -355,8 +363,7 @@ function build(settings)
 
 			if use_sdl then
 				client_settings.linker.frameworks:add("SDL")
-				client_settings.cc.includes:add("SDL.framework/Headers")
-				client_settings.linker.frameworkpath:add(".")
+				client_settings.cc.includes:add("/Library/Frameworks/SDL.framework/Headers")
 			end
 		else
 			if config.alsa.value == 1 then
