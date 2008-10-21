@@ -208,6 +208,8 @@ int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float fo
 
 		for(int i = 0; i < inp_num_events(); i++)
 		{
+			len = strlen(str);
+			
 			INPUT_EVENT e = inp_get_event(i);
 			char c = e.ch;
 			int k = e.key;
