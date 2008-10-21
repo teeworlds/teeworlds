@@ -10,18 +10,6 @@
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
 
-#ifdef CONFIG_NO_SDL
-static int keyboard_state[2][1024] = {{0}}; /* TODO: fix this!! */
-#else
-static unsigned char keyboard_state[2][1024] = {{0}}; /* TODO: fix this!! */
-#endif
-static int keyboard_current = 0;
-
-#ifdef CONFIG_NO_SDL
-static int keyboard_first = 1;
-#endif
-
-
 static struct
 {
 	unsigned char presses;
@@ -243,7 +231,7 @@ int inp_mouse_doubleclick()
 
 void inp_clear_key_states()
 {
-	mem_zero(keyboard_state, sizeof(keyboard_state));
+	mem_zero(input_state, sizeof(input_state));
 	mem_zero(input_count, sizeof(input_count));
 }
 
@@ -262,10 +250,10 @@ int inp_key_state(int key)
 	return input_state[input_current][key];
 }
 
-int inp_key_pressed(int key) { return keyboard_state[keyboard_current][key]; }
-int inp_key_was_pressed(int key) { return keyboard_state[keyboard_current^1][key]; }
+int inp_key_pressed(int key) { return input_state[input_current][key]; }
+int inp_key_was_pressed(int key) { return input_state[input_current^1][key]; }
 int inp_key_down(int key) { return inp_key_pressed(key)&&!inp_key_was_pressed(key); }
-int inp_button_pressed(int button) { return keyboard_state[keyboard_current][button]; }
+int inp_button_pressed(int button) { return input_state[input_current][button]; }
 
 void inp_update()
 {
@@ -304,27 +292,26 @@ void inp_update()
 	
 	/* clear and begin count on the other one */
 	mem_zero(&input_count[input_current], sizeof(input_count[input_current]));
-	mem_copy(input_state[input_current], input_state[input_current^1], sizeof(input_state[input_current]));
 	input_current^=1;
 	
 	{
 		Uint8 *state = SDL_GetKeyState(&i);
 		if(i >= KEY_LAST)
 			i = KEY_LAST-1;
-		mem_copy(keyboard_state[keyboard_current], state, i);
+		mem_copy(input_state[input_current], state, i);
 	}
 	
-	keyboard_state[keyboard_current][KEY_MOUSE_1] = 0;
-	keyboard_state[keyboard_current][KEY_MOUSE_2] = 0;
-	keyboard_state[keyboard_current][KEY_MOUSE_3] = 0;
-	keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_UP] = 0;
-	keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_DOWN] = 0;
+	input_state[input_current][KEY_MOUSE_1] = 0;
+	input_state[input_current][KEY_MOUSE_2] = 0;
+	input_state[input_current][KEY_MOUSE_3] = 0;
+	input_state[input_current][KEY_MOUSE_WHEEL_UP] = 0;
+	input_state[input_current][KEY_MOUSE_WHEEL_DOWN] = 0;
 	i = SDL_GetMouseState(NULL, NULL);
-	if(i&SDL_BUTTON(1)) keyboard_state[keyboard_current][KEY_MOUSE_1] = 1; /* 1 is left */
-	if(i&SDL_BUTTON(3)) keyboard_state[keyboard_current][KEY_MOUSE_2] = 1; /* 3 is right */
-	if(i&SDL_BUTTON(2)) keyboard_state[keyboard_current][KEY_MOUSE_3] = 1; /* 2 is middle */
-	if(i&SDL_BUTTON(4)) keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_UP] = 1;
-	if(i&SDL_BUTTON(5)) keyboard_state[keyboard_current][KEY_MOUSE_WHEEL_DOWN] = 1;
+	if(i&SDL_BUTTON(1)) input_state[input_current][KEY_MOUSE_1] = 1; /* 1 is left */
+	if(i&SDL_BUTTON(3)) input_state[input_current][KEY_MOUSE_2] = 1; /* 3 is right */
+	if(i&SDL_BUTTON(2)) input_state[input_current][KEY_MOUSE_3] = 1; /* 2 is middle */
+	if(i&SDL_BUTTON(4)) input_state[input_current][KEY_MOUSE_WHEEL_UP] = 1;
+	if(i&SDL_BUTTON(5)) input_state[input_current][KEY_MOUSE_WHEEL_DOWN] = 1;
 	
 	{
 		SDL_Event event;
