@@ -19,14 +19,17 @@ function OptFindSDL(name, required)
 	local check = function(option)
 		option.value = nil
 		option.use_sdlconfig = nil
-		option.cflags = nil
-		option.libflags = nil
-		option.include_path = nil
+		option.use_win32sdl = nil
 		option.lib_path = nil
 		
 		if ExecuteSilent("sdl-config") > 0 and ExecuteSilent("sdl-config --cflags") == 0 then
 			option.value = 1
 			option.use_sdlconfig = 1
+		end
+		
+		if platform == "win32" then
+			option.value = 1
+			option.use_win32sdl = 1
 		end
 		
 		if platform == "macosx" then
@@ -42,23 +45,30 @@ function OptFindSDL(name, required)
 			if platform == "macosx" then
 				client_settings.linker.frameworks:add("SDL")
 				client_settings.cc.includes:add("/Library/Frameworks/SDL.framework/Headers")
-			else
-				-- do something else
 			end
+		end
+
+		if option.use_win32sdl then
+			settings.cc.includes:add("other/sdl_include")
+			settings.linker.libpath:add("other/vc2005_sdllibs")
+			settings.linker.libs:add("SDL")
+			settings.linker.libs:add("SDLmain")
 		end
 	end
 	
 	local save = function(option, output)
 		output:option(option, "value")
 		output:option(option, "use_sdlconfig")
+		output:option(option, "use_win32sdl")
 	end
 	
 	local display = function(option)
 		if option.value then
 			if option.use_sdlconfig then
 				return "using sdl-config"
-			else
-				return "some other way"
+			end
+			if option.use_win32sdl then
+				return "using supplied win32 libraries"
 			end
 		else
 			if option.required then
@@ -194,6 +204,7 @@ function build(settings)
 	settings.cc.output = intermediate_output_func
 	
 	use_sdl = config.sdl.value
+	if use_sdl == 0 then use_sdl = nil end
 	
 	if config.compiler.value == "cl" then
 		settings.cc.flags = "/wd4244"
@@ -373,9 +384,6 @@ function build(settings)
 			client_settings.linker.libs:add("X11")
 			client_settings.linker.libs:add("GL")
 			client_settings.linker.libs:add("GLU")
-
-			-- apply sdl settings
-			if use_sdl then config.sdl:apply(client_settings) end
 		end
 	elseif family == "windows" then
 		client_settings.linker.libs:add("opengl32")
@@ -386,6 +394,9 @@ function build(settings)
 			client_settings.linker.libs:add("dsound")
 		end
 	end
+
+	-- apply sdl settings
+	if use_sdl then config.sdl:apply(client_settings) end
 	
 	engine = Compile(engine_settings, Collect("src/engine/*.c", "src/base/*.c"))
 	client = Compile(client_settings, Collect("src/engine/client/*.c"))
