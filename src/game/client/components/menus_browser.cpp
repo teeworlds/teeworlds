@@ -354,7 +354,7 @@ void MENUS::render_serverbrowser_filters(RECT view)
 		config.b_filter_compatversion ^= 1;
 
 	ui_hsplit_t(&view, 20.0f, &button, &view);
-	if (ui_do_button((char *)&config.b_filter_tuned, "No tuned", config.b_filter_tuned, &button, ui_draw_checkbox, 0))
+	if (ui_do_button((char *)&config.b_filter_tuned, "Not tuned", config.b_filter_tuned, &button, ui_draw_checkbox, 0))
 		config.b_filter_tuned ^= 1;
 
 	ui_hsplit_t(&view, 20.0f, &button, &view);
