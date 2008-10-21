@@ -2,6 +2,7 @@
 #include <base/system.h>
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
+#include <engine/e_engine.h>
 
 #ifdef CONFIG_NO_SDL
 	#include <portaudio.h>
@@ -426,11 +427,11 @@ static void rate_convert(int sid)
 }
 
 
-static FILE *file = NULL;
+static IOHANDLE file = NULL;
 
 static int read_data(void *buffer, int size)
 {
-	return fread(buffer, 1, size, file);	
+	return io_read(file, buffer, size);
 }
 
 int snd_load_wv(const char *filename)
@@ -448,7 +449,7 @@ int snd_load_wv(const char *filename)
 	if(!sound_enabled)
 		return 1;
 
-	file = fopen(filename, "rb"); /* TODO: use system.h stuff for this */
+	file = engine_openfile(filename, IOFLAG_READ); /* TODO: use system.h stuff for this */
 	if(!file)
 	{
 		dbg_msg("sound/wv", "failed to open %s", filename);
@@ -515,7 +516,7 @@ int snd_load_wv(const char *filename)
 		dbg_msg("sound/wv", "failed to open %s: %s", filename, error);
 	}
 
-	fclose(file);
+	io_close(file);
 	file = NULL;
 
 	if(config.debug)
