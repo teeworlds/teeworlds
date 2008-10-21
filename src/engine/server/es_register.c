@@ -257,7 +257,7 @@ int register_process_packet(NETCHUNK *packet)
 		memcmp(packet->data, SERVERBROWSE_FWERROR, sizeof(SERVERBROWSE_FWERROR)) == 0)
 	{
 		dbg_msg("register", "ERROR: the master server reports that clients can not connect to this server.");
-		dbg_msg("register", "ERROR: configure your firewall/nat to let trough udp on port %d.", config.sv_port);
+		dbg_msg("register", "ERROR: configure your firewall/nat to let through udp on port %d.", config.sv_port);
 		register_new_state(REGISTERSTATE_ERROR);
 		return 1;
 	}
