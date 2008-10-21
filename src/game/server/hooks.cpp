@@ -23,14 +23,12 @@ TUNING_PARAMS tuning;
 
 void send_tuning_params(int cid)
 {
-	/*
-	msg_pack_start(NETMSGTYPE_SV_TUNE_PARAMS, MSGFLAG_VITAL);
+	msg_pack_start(NETMSGTYPE_SV_TUNEPARAMS, MSGFLAG_VITAL);
 	int *params = (int *)&tuning;
-	for(unsigned i = 0; i < sizeof(tuning_params)/sizeof(int); i++)
+	for(unsigned i = 0; i < sizeof(tuning)/sizeof(int); i++)
 		msg_pack_int(params[i]);
 	msg_pack_end();
 	server_send_msg(cid);
-	*/
 }
 
 int mods_is_tuned()
