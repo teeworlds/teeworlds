@@ -290,16 +290,9 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 			}			
 			else if(id == COL_GAMETYPE)
 			{
-				// all these are just for nice compability
-				if(item->gametype[0] == '0' && item->gametype[1] == 0)
-					ui_do_label(&button, "DM", 12.0f, 0);
-				else if(item->gametype[0] == '1' && item->gametype[1] == 0)
-					ui_do_label(&button, "TDM", 12.0f, 0);
-				else if(item->gametype[0] == '2' && item->gametype[1] == 0)
-					ui_do_label(&button, "CTF", 12.0f, 0);
-				else
-					ui_do_label(&button, item->gametype, 12.0f, 0);
+				ui_do_label(&button, item->gametype, 12.0f, 0);
 			}
+
 		}
 	}
 

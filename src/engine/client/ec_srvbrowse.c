@@ -170,45 +170,49 @@ static void client_serverbrowse_filter()
 			filtered = 1;
 		else if(config.b_filter_compatversion && strncmp(serverlist[i]->info.version, modc_net_version(), 3) != 0)
 			filtered = 1;
-		else if(config.b_filter_string[0] != 0)
+		else 
 		{
-			int matchfound = 0;
-			
-			serverlist[i]->info.quicksearch_hit = 0;
-
-			/* match against server name */
-			if(str_find_nocase(serverlist[i]->info.name, config.b_filter_string))
+			if(config.b_filter_string[0] != 0)
 			{
-				matchfound = 1;
-				serverlist[i]->info.quicksearch_hit |= BROWSEQUICK_SERVERNAME;
-			}
+				int matchfound = 0;
+				
+				serverlist[i]->info.quicksearch_hit = 0;
 
-			/* match against players */				
-			for(p = 0; p < serverlist[i]->info.num_players; p++)
-			{
-				if(str_find_nocase(serverlist[i]->info.players[p].name, config.b_filter_string))
+				/* match against server name */
+				if(str_find_nocase(serverlist[i]->info.name, config.b_filter_string))
 				{
 					matchfound = 1;
-					serverlist[i]->info.quicksearch_hit |= BROWSEQUICK_PLAYERNAME;
-					break;
+					serverlist[i]->info.quicksearch_hit |= BROWSEQUICK_SERVERNAME;
 				}
+
+				/* match against players */				
+				for(p = 0; p < serverlist[i]->info.num_players; p++)
+				{
+					if(str_find_nocase(serverlist[i]->info.players[p].name, config.b_filter_string))
+					{
+						matchfound = 1;
+						serverlist[i]->info.quicksearch_hit |= BROWSEQUICK_PLAYERNAME;
+						break;
+					}
+				}
+				
+				/* match against map */
+				if(str_find_nocase(serverlist[i]->info.map, config.b_filter_string))
+				{
+					matchfound = 1;
+					serverlist[i]->info.quicksearch_hit |= BROWSEQUICK_MAPNAME;
+				}
+				
+				if(!matchfound)
+					filtered = 1;
 			}
 			
-			/* match against map */
-			if(str_find_nocase(serverlist[i]->info.map, config.b_filter_string))
+			if(!filtered && config.b_filter_gametype[0] != 0)
 			{
-				matchfound = 1;
-				serverlist[i]->info.quicksearch_hit |= BROWSEQUICK_MAPNAME;
+				/* match against game type */
+				if(!str_find_nocase(serverlist[i]->info.gametype, config.b_filter_gametype))
+					filtered = 1;
 			}
-			
-			if(!matchfound)
-				filtered = 1;
-		}
-		else if(config.b_filter_gametype[0] != 0)
-		{
-			/* match against game type */
-			if(!str_find_nocase(serverlist[i]->info.gametype, config.b_filter_gametype))
-				filtered = 1;
 		}
 
 		if(filtered == 0)
@@ -321,6 +325,14 @@ void client_serverbrowse_setinfo(SERVERENTRY *entry, SERVER_INFO *info)
 	entry->info = *info;
 	entry->info.favorite = fav;
 	entry->info.netaddr = entry->addr;
+	
+	// all these are just for nice compability
+	if(entry->info.gametype[0] == '0' && entry->info.gametype[1] == 0)
+		str_copy(entry->info.gametype, "DM", sizeof(entry->info.gametype));
+	else if(entry->info.gametype[0] == '1' && entry->info.gametype[1] == 0)
+		str_copy(entry->info.gametype, "TDM", sizeof(entry->info.gametype));
+	else if(entry->info.gametype[0] == '2' && entry->info.gametype[1] == 0)
+		str_copy(entry->info.gametype, "CTF", sizeof(entry->info.gametype));
 
 	/*if(!request)
 	{
