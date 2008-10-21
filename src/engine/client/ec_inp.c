@@ -20,11 +20,12 @@ static unsigned char input_state[2][1024] = {{0}, {0}};
 
 static int input_current = 0;
 #ifdef CONFIG_NO_SDL
-static unsigned int last_release = 0;
 #else
 static int input_grabbed = 0;
 static int input_use_grab = 0;
 #endif
+
+static unsigned int last_release = 0;
 static unsigned int release_delta = -1;
 
 void inp_mouse_relative(int *x, int *y)
@@ -336,6 +337,13 @@ void inp_update()
 				/* handle mouse buttons */
 				case SDL_MOUSEBUTTONUP:
 					action = INPFLAG_RELEASE;
+					
+					if(event.button.button == 1) key = KEY_MOUSE_1;
+					{
+						release_delta = time_get() - last_release;
+						last_release = time_get();
+					}
+					
 				case SDL_MOUSEBUTTONDOWN:
 					if(event.button.button == 1) key = KEY_MOUSE_1;
 					if(event.button.button == 3) key = KEY_MOUSE_2;
