@@ -204,9 +204,9 @@ container.sounds.Add(SoundSet("hook_noattach", FileList("audio/hook_noattach-%02
 container.sounds.Add(SoundSet("pickup_health", FileList("audio/sfx_pickup_hrt-%02d.wv", 2)))
 container.sounds.Add(SoundSet("pickup_armor", FileList("audio/sfx_pickup_arm-%02d.wv", 4)))
 
-container.sounds.Add(SoundSet("pickup_grenade", FileList("audio/sfx_pickup_arm-%02d.wv", 1)))
-container.sounds.Add(SoundSet("pickup_shotgun", FileList("audio/sfx_pickup_arm-%02d.wv", 1)))
-container.sounds.Add(SoundSet("pickup_ninja", FileList("audio/sfx_pickup_arm-%02d.wv", 1)))
+container.sounds.Add(SoundSet("pickup_grenade", ["audio/sfx_pickup_launcher.wv"]))
+container.sounds.Add(SoundSet("pickup_shotgun", ["audio/sfx_pickup_sg.wv"]))
+container.sounds.Add(SoundSet("pickup_ninja", ["audio/sfx_pickup_ninja.wv"]))
 container.sounds.Add(SoundSet("weapon_spawn", FileList("audio/sfx_spawn_wpn-%02d.wv", 3)))
 container.sounds.Add(SoundSet("weapon_noammo", FileList("audio/wp_noammo-%02d.wv", 5)))
 
