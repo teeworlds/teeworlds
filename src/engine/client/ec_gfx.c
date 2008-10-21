@@ -538,7 +538,7 @@ int gfx_window_active()
 #ifdef CONFIG_NO_SDL
 	return glfwGetWindowParam(GLFW_ACTIVE) == GL_TRUE ? 1 : 0;
 #else
-	return 1; /* TODO: SDL*/
+	return SDL_GetAppState()&SDL_APPINPUTFOCUS; /* TODO: SDL*/
 #endif
 }
 
@@ -547,7 +547,7 @@ int gfx_window_open()
 #ifdef CONFIG_NO_SDL
 	return glfwGetWindowParam(GLFW_OPENED) == GL_TRUE ? 1 : 0;
 #else
-	return 1; /* TODO: SDL*/
+	return SDL_GetAppState()&SDL_APPACTIVE; /* TODO: SDL*/
 #endif
 }
 

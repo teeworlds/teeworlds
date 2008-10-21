@@ -35,7 +35,7 @@ static int input_current = 0;
 static unsigned int last_release = 0;
 #else
 static int input_grabbed = 0;
-static int input_use_grab = 1;
+static int input_use_grab = 0;
 #endif
 static unsigned int release_delta = -1;
 
@@ -295,6 +295,12 @@ void inp_update()
     }
 #else
 	int i;
+	
+	if(input_grabbed && !gfx_window_active())
+		inp_mouse_mode_absolute();
+
+	/*if(!input_grabbed && gfx_window_active())
+		inp_mouse_mode_relative();*/
 	
 	/* clear and begin count on the other one */
 	mem_zero(&input_count[input_current], sizeof(input_count[input_current]));
