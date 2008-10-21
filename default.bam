@@ -1,3 +1,5 @@
+CheckVersion("0.1")
+
 --- Setup Config --------
 config = NewConfig()
 config:add(OptFindCompiler())
@@ -127,8 +129,7 @@ function build(settings)
 	settings.objdir = Path("objs")
 	settings.cc.output = intermediate_output_func
 	
-	use_sdl = 1
-	if config.sdl.value == 0 then use_sdl = nil end
+	use_sdl = config.sdl.value
 	
 	if config.compiler.value == "cl" then
 		settings.cc.flags = "/wd4244"
