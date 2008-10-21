@@ -11,7 +11,15 @@ void engine_config_write_line(const char *line);
 void engine_config_write_stop();
 
 
-void engine_listdir(const char *path, FS_LISTDIR_CALLBACK cb, void *user);
+enum
+{
+	LISTDIRTYPE_SAVE=1,
+	LISTDIRTYPE_CURRENT=2,
+	LISTDIRTYPE_DATA=4,
+	LISTDIRTYPE_ALL = ~0
+};
+
+void engine_listdir(int types, const char *path, FS_LISTDIR_CALLBACK cb, void *user);
 IOHANDLE engine_openfile(const char *filename, int flags);
 void engine_getpath(char *buffer, int buffer_size, const char *filename, int flags);
 

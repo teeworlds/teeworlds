@@ -88,20 +88,29 @@ void engine_init(const char *appname)
 }
 
 
-void engine_listdir(const char *path, FS_LISTDIR_CALLBACK cb, void *user)
+void engine_listdir(int types, const char *path, FS_LISTDIR_CALLBACK cb, void *user)
 {
 	char buffer[1024];
 	
 	/* list current directory */
-	fs_listdir(path, cb, user);
+	if(types&LISTDIRTYPE_CURRENT)
+	{
+		fs_listdir(path, cb, user);
+	}
 	
 	/* list users directory */
-	engine_savepath(path, buffer, sizeof(buffer));
-	fs_listdir(buffer, cb, user);
+	if(types&LISTDIRTYPE_SAVE)
+	{
+		engine_savepath(path, buffer, sizeof(buffer));
+		fs_listdir(buffer, cb, user);
+	}
 	
 	/* list datadir directory */
-	str_format(buffer, sizeof(buffer), "%s/%s", datadir, path);
-	fs_listdir(buffer, cb, user);
+	if(types&LISTDIRTYPE_DATA)
+	{
+		str_format(buffer, sizeof(buffer), "%s/%s", datadir, path);
+		fs_listdir(buffer, cb, user);
+	}
 }
 
 void engine_getpath(char *buffer, int buffer_size, const char *filename, int flags)

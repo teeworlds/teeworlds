@@ -367,7 +367,7 @@ public:
 		show_envelope_editor = 0;
 	}
 	
-	void invoke_file_dialog(const char *title, const char *button_text,
+	void invoke_file_dialog(int listdir_type, const char *title, const char *button_text,
 		const char *basepath, const char *default_name,
 		void (*func)(const char *filename));
 	

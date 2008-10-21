@@ -125,7 +125,7 @@ void SKINS::init()
 {
 	// load skins
 	num_skins = 0;
-	engine_listdir("skins", skinscan, this);
+	engine_listdir(LISTDIRTYPE_ALL, "skins", skinscan, this);
 }
 
 int SKINS::num()

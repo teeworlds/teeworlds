@@ -10,6 +10,7 @@ extern "C" {
 	#include <engine/e_common_interface.h>
 	#include <engine/e_datafile.h>
 	#include <engine/e_config.h>
+	#include <engine/e_engine.h>
 }
 
 #include <game/client/ui.hpp>
@@ -541,11 +542,11 @@ static void do_toolbar(RECT toolbar)
 	
 	// ctrl+o to open
 	if(inp_key_down('O') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL)))
-		editor.invoke_file_dialog("Open Map", "Open", "maps/", "", callback_open_map);
+		editor.invoke_file_dialog(LISTDIRTYPE_ALL, "Open Map", "Open", "maps/", "", callback_open_map);
 	
 	// ctrl+s to save
 	if(inp_key_down('S') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL)))
-		editor.invoke_file_dialog("Save Map", "Save", "maps/", "", callback_save_map);
+		editor.invoke_file_dialog(LISTDIRTYPE_SAVE, "Save Map", "Save", "maps/", "", callback_save_map);
 
 	// animate button
 	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
@@ -1676,7 +1677,7 @@ static int popup_image(RECT view)
 	ui_hsplit_t(&view, 12.0f, &slot, &view);
 	if(do_editor_button(&replace_button, "Replace", 0, &slot, draw_editor_button_menuitem, 0, "Replaces the image with a new one"))
 	{
-		editor.invoke_file_dialog("Replace Image", "Replace", "mapres/", "", replace_image);
+		editor.invoke_file_dialog(LISTDIRTYPE_ALL, "Replace Image", "Replace", "mapres/", "", replace_image);
 		return 1;
 	}
 
@@ -1757,10 +1758,11 @@ static void render_images(RECT toolbox, RECT toolbar, RECT view)
 	ui_hsplit_t(&toolbox, 10.0f, &slot, &toolbox);
 	ui_hsplit_t(&toolbox, 12.0f, &slot, &toolbox);
 	if(do_editor_button(&new_image_button, "Add", 0, &slot, draw_editor_button, 0, "Load a new image to use in the map"))
-		editor.invoke_file_dialog("Add Image", "Add", "mapres/", "", add_image);
+		editor.invoke_file_dialog(LISTDIRTYPE_ALL, "Add Image", "Add", "mapres/", "", add_image);
 }
 
 
+static int file_dialog_dirtypes = 0;
 static const char *file_dialog_title = 0;
 static const char *file_dialog_button_text = 0;
 static void (*file_dialog_func)(const char *filename);
@@ -1832,7 +1834,7 @@ static void render_file_dialog()
 	strcat(file_dialog_complete_filename, file_dialog_filename);
 	
 	// the list
-	fs_listdir(file_dialog_path, editor_listdir_callback, &view);
+	engine_listdir(file_dialog_dirtypes, file_dialog_path, editor_listdir_callback, &view);
 	
 	// the buttons
 	static int ok_button = 0;	
@@ -1853,10 +1855,11 @@ static void render_file_dialog()
 		editor.dialog = DIALOG_NONE;
 }
 
-void EDITOR::invoke_file_dialog(const char *title, const char *button_text,
+void EDITOR::invoke_file_dialog(int listdirtypes, const char *title, const char *button_text,
 	const char *basepath, const char *default_name,
 	void (*func)(const char *filename))
 {
+	file_dialog_dirtypes = listdirtypes;
 	file_dialog_title = title;
 	file_dialog_button_text = button_text;
 	file_dialog_func = func;
@@ -2294,7 +2297,7 @@ static int popup_menu_file(RECT view)
 	ui_hsplit_t(&view, 12.0f, &slot, &view);
 	if(do_editor_button(&open_button, "Open", 0, &slot, draw_editor_button_menuitem, 0, "Opens a map for editing"))
 	{
-		editor.invoke_file_dialog("Open Map", "Open", "maps/", "", callback_open_map);
+		editor.invoke_file_dialog(LISTDIRTYPE_ALL, "Open Map", "Open", "maps/", "", callback_open_map);
 		return 1;
 	}
 
@@ -2302,7 +2305,7 @@ static int popup_menu_file(RECT view)
 	ui_hsplit_t(&view, 12.0f, &slot, &view);
 	if(do_editor_button(&append_button, "Append", 0, &slot, draw_editor_button_menuitem, 0, "Opens a map and adds everything from that map to the current one"))
 	{
-		editor.invoke_file_dialog("Append Map", "Append", "maps/", "", callback_append_map);
+		editor.invoke_file_dialog(LISTDIRTYPE_ALL, "Append Map", "Append", "maps/", "", callback_append_map);
 		return 1;
 	}
 
@@ -2317,7 +2320,7 @@ static int popup_menu_file(RECT view)
 	ui_hsplit_t(&view, 12.0f, &slot, &view);
 	if(do_editor_button(&save_as_button, "Save As", 0, &slot, draw_editor_button_menuitem, 0, "Saves the current map under a new name"))
 	{
-		editor.invoke_file_dialog("Save Map", "Save", "maps/", "", callback_save_map);
+		editor.invoke_file_dialog(LISTDIRTYPE_SAVE, "Save Map", "Save", "maps/", "", callback_save_map);
 		return 1;
 	}
 		
