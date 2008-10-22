@@ -34,6 +34,8 @@ protected:
 
 	void cyclemap();
 	void resetgame();
+	
+	char map_wish[128];
 
 	const char *gametype;
 	
@@ -63,6 +65,7 @@ public:
 	
 	void startround();
 	void endround();
+	void change_map(const char *to_map);
 	
 	bool is_friendly_fire(int cid1, int cid2);
 	

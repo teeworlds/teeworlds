@@ -205,7 +205,7 @@ void mods_message(int msgtype, int client_id)
 			
 			str_format(chatmsg, sizeof(chatmsg), "Vote called to change map to '%s'", msg->value);
 			str_format(desc, sizeof(desc), "Change map to '%s'", msg->value);
-			str_format(cmd, sizeof(cmd), "sv_map %s", msg->value);
+			str_format(cmd, sizeof(cmd), "change_map %s", msg->value);
 		}
 		else if(str_comp_nocase(msg->type, "kick") == 0)
 		{
@@ -389,6 +389,11 @@ static void con_tune_dump(void *result, void *user_data)
 }
 
 
+static void con_change_map(void *result, void *user_data)
+{
+	game.controller->change_map(console_arg_string(result, 0));
+}
+
 static void con_restart(void *result, void *user_data)
 {
 	if(console_arg_num(result))
@@ -427,6 +432,7 @@ void mods_console_init()
 	MACRO_REGISTER_COMMAND("tune_reset", "", con_tune_reset, 0);
 	MACRO_REGISTER_COMMAND("tune_dump", "", con_tune_dump, 0);
 
+	MACRO_REGISTER_COMMAND("change_map", "r", con_change_map, 0);
 	MACRO_REGISTER_COMMAND("restart", "?i", con_restart, 0);
 	MACRO_REGISTER_COMMAND("broadcast", "r", con_broadcast, 0);
 	MACRO_REGISTER_COMMAND("say", "r", con_say, 0);

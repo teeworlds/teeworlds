@@ -25,6 +25,7 @@ GAMECONTROLLER::GAMECONTROLLER()
 	game_flags = 0;
 	teamscore[0] = 0;
 	teamscore[1] = 0;
+	map_wish[0] = 0;
 	
 	unbalanced_tick = -1;
 	force_balanced = false;
@@ -200,8 +201,21 @@ void GAMECONTROLLER::startround()
 	round_count++;
 }
 
+void GAMECONTROLLER::change_map(const char *to_map)
+{
+	str_copy(map_wish, to_map, sizeof(map_wish));
+	endround();
+}
+
 void GAMECONTROLLER::cyclemap()
 {
+	if(map_wish[0] != 0)
+	{
+		dbg_msg("game", "rotating map to %s", map_wish);
+		str_copy(config.sv_map, map_wish, sizeof(config.sv_map));
+		map_wish[0] = 0;
+		return;
+	}
 	if(!strlen(config.sv_maprotation))
 		return;
 
