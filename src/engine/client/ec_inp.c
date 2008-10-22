@@ -20,6 +20,7 @@ static unsigned char input_state[2][1024] = {{0}, {0}};
 
 static int input_current = 0;
 #ifdef CONFIG_NO_SDL
+static int keyboard_first = 1;
 #else
 static int input_grabbed = 0;
 static int input_use_grab = 0;
@@ -273,14 +274,14 @@ void inp_update()
         inp_update();
     }
     
-    keyboard_current = keyboard_current^1;
+    /*keyboard_current = keyboard_current^1;*/
     for(i = 0; i < KEY_LAST; i++)
     {
 	    if (i >= KEY_MOUSE_FIRST)
 			v = glfwGetMouseButton(i-KEY_MOUSE_FIRST) == GLFW_PRESS ? 1 : 0;
 		else
 			v = glfwGetKey(i) == GLFW_PRESS ? 1 : 0;
-        keyboard_state[keyboard_current][i] = v;
+        input_state[input_current][i] = v;
     }
 #else
 	int i;
