@@ -944,7 +944,7 @@ bool MENUS::on_input(INPUT_EVENT e)
 	if(is_active())
 	{
 		// special for popups
-		if(e.flags&INPFLAG_PRESS || e.key == KEY_RETURN)
+		if(e.flags&INPFLAG_PRESS && e.key == KEY_RETURN)
 			enter_pressed = true;
 		
 		if(num_inputevents < MAX_INPUTEVENTS)
