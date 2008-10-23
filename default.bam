@@ -11,6 +11,7 @@ function OptFindSDL(name, required)
 		option.value = nil
 		option.use_sdlconfig = nil
 		option.use_win32sdl = nil
+		option.use_osxframework = nil
 		option.lib_path = nil
 		
 		if ExecuteSilent("sdl-config") > 0 and ExecuteSilent("sdl-config --cflags") == 0 then
@@ -25,6 +26,7 @@ function OptFindSDL(name, required)
 		
 		if platform == "macosx" then
 			option.value = 1
+			option.use_osxframework = 1
 		end
 	end
 	
@@ -32,11 +34,11 @@ function OptFindSDL(name, required)
 		if option.use_sdlconfig then
 			settings.cc.flags = settings.cc.flags .. " -I/usr/include/SDL "
 			settings.linker.flags = settings.linker.flags .. " `sdl-config --libs` "
-		else
-			if platform == "macosx" then
-				client_settings.linker.frameworks:add("SDL")
-				client_settings.cc.includes:add("/Library/Frameworks/SDL.framework/Headers")
-			end
+		end
+
+		if option.use_osxframework then
+			client_settings.linker.frameworks:add("SDL")
+			client_settings.cc.includes:add("/Library/Frameworks/SDL.framework/Headers")
 		end
 
 		if option.use_win32sdl then
@@ -51,16 +53,15 @@ function OptFindSDL(name, required)
 		output:option(option, "value")
 		output:option(option, "use_sdlconfig")
 		output:option(option, "use_win32sdl")
+		output:option(option, "use_osxframework")
 	end
 	
 	local display = function(option)
 		if option.value then
-			if option.use_sdlconfig then
-				return "using sdl-config"
-			end
-			if option.use_win32sdl then
-				return "using supplied win32 libraries"
-			end
+			if option.use_sdlconfig then return "using sdl-config" end
+			if option.use_win32sdl then return "using supplied win32 libraries" end
+			if option.use_osxframework then return "using osx framework" end
+			return "using unknown method"
 		else
 			if option.required then
 				return "not found (required)"
