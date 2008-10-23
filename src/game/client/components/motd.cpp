@@ -77,7 +77,7 @@ void MOTD::on_message(int msgtype, void *rawmsg)
 
 bool MOTD::on_input(INPUT_EVENT e)
 {
-	if(is_active() && e.flags&INPFLAG_PRESS && e.key == KEY_ESC)
+	if(is_active() && e.flags&INPFLAG_PRESS && e.key == KEY_ESCAPE)
 	{
 		clear();
 		return true;

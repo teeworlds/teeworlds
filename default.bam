@@ -5,15 +5,6 @@ config = NewConfig()
 config:add(OptFindCompiler())
 config:add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-protector -fstack-protector-all"))
 config:add(OptFindLibrary("zlib", "zlib.h", false))
-config:add(OptFindLibrary("glfw", "glfw.h", false))
-config:add(OptFindLibrary("portaudio", "portaudio.h_FAIL", false))
-
-config:add(OptFindLibrary("coreaudio", "AudioUnit/AudioUnit.h", false))
-config:add(OptFindLibrary("alsa", "alsa/asoundlib.h", false))
-config:add(OptFindLibrary("oss_sys", "sys/soundcard.h", false))
-config:add(OptFindLibrary("oss_linux", "linux/soundcard.h", false))
-config:add(OptFindLibrary("oss_machine", "machine/soundcard.h", false))
-config:add(OptFindLibrary("dsound", "dsound.h", true))
 
 function OptFindSDL(name, required)
 	local check = function(option)
@@ -87,8 +78,7 @@ function OptFindSDL(name, required)
 	return o
 end
 
-config:add(OptFindSDL("sdl", false))
-
+config:add(OptFindSDL("sdl", true))
 
 --- Auto detect ------
 if not config:load("config.bam") then
@@ -203,9 +193,6 @@ function build(settings)
 	settings.objdir = Path("objs")
 	settings.cc.output = intermediate_output_func
 	
-	use_sdl = config.sdl.value
-	if use_sdl == 0 then use_sdl = nil end
-	
 	if config.compiler.value == "cl" then
 		settings.cc.flags = "/wd4244"
 		settings.linker.flags = ""
@@ -243,84 +230,6 @@ function build(settings)
 		settings.linker.libs:add("ole32")
 		settings.linker.libs:add("shell32")
 	end
-	
-	if use_sdl then
-		glfw = {}
-		portaudio = {}
-	else
-		settings.cc.defines:add("CONFIG_NO_SDL")
-		
-		-- build glfw if needed (not tested)
-		if config.glfw.value == 1 then
-			settings.linker.libs:add("glfw")
-			if config.glfw.include_path then
-				settings.cc.includes:add(config.glfw.include_path)
-			end
-			glfw = {}
-		else
-			glfw_settings = settings:copy()
-			glfw_settings.cc.includes:add("src/external/glfw/include")
-			glfw_settings.cc.includes:add("src/engine/external/glfw/lib")
-			glfw_settings.cc.includes:add("src/engine/external/glfw/lib/" .. glfw_platform)
-
-			glfw = Compile(glfw_settings, Collect(
-				"src/engine/external/glfw/lib/*.c",
-				"src/engine/external/glfw/lib/" .. glfw_platform .. "/*.c"))
-			
-			settings.cc.includes:add("src/engine/external/glfw/include")
-		end
-
-		-- build portaudio
-		if config.portaudio.value == 1 then
-			settings.linker.libs:add("portaudio")
-			if config.portaudio.include_path then
-				settings.cc.includes:add(config.portaudio.include_path)
-			end
-			portaudio = {}
-		else
-			pa_settings = settings:copy()
-
-			pa_hostapis = {}		
-			if config.alsa.value == 1 then pa_hostapis["alsa"] = 1 end
-			if config.dsound.value == 1 then
-				pa_hostapis["dsound"] = 1
-			else
-				pa_settings.cc.defines:add("PA_NO_DS")
-			end
-			if config.coreaudio.value == 1 then pa_hostapis["coreaudio"] = 1 end
-			
-			if config.oss_sys.value == 1 then
-				pa_hostapis["oss"] = 1
-				pa_settings.cc.defines:add("HAVE_SYS_SOUNDCARD_H")
-			elseif config.oss_linux.value == 1 then
-				pa_hostapis["oss"] = 1
-				pa_settings.cc.defines:add("HAVE_LINUX_SOUNDCARD_H")
-			elseif config.oss_machine.value == 1 then
-				pa_hostapis["oss"] = 1
-				pa_settings.cc.defines:add("HAVE_MACHINE_SOUNDCARD_H")
-			end
-			
-			pa_settings.cc.defines:add("PA_NO_WMME")
-			pa_settings.cc.defines:add("PA_NO_ASIO")
-			pa_settings.cc.includes:add("src/engine/external/portaudio/include")
-			pa_settings.cc.includes:add("src/engine/external/portaudio/src/common")
-			pa_settings.cc.includes:add("src/engine/external/portaudio/src/os/" .. pa_platform)
-			
-			pa_api_files = {}
-			for api,v in pa_hostapis do
-				pa_settings.cc.defines:add("PA_USE_"..string.upper(api))
-				pa_api_files[api] = Collect("src/engine/external/portaudio/src/hostapi/" .. api .. "/*.c")
-			end
-			
-			portaudio = Compile(pa_settings,
-				Collect("src/engine/external/portaudio/src/common/*.c"),
-				Collect("src/engine/external/portaudio/src/os/" .. pa_platform .. "/*.c"),
-				pa_api_files)
-			
-			settings.cc.includes:add("src/engine/external/portaudio/include")
-		end		
-	end
-	
 	
 	-- compile zlib if needed
 	if config.zlib.value == 1 then
@@ -371,16 +280,7 @@ function build(settings)
 				client_settings.linker.frameworks:add("AudioToolbox")
 				client_settings.linker.frameworks:add("AudioUnit")
 			end
-
-			if use_sdl then
-				client_settings.linker.frameworks:add("SDL")
-				client_settings.cc.includes:add("/Library/Frameworks/SDL.framework/Headers")
-			end
 		else
-			if config.alsa.value == 1 then
-            	client_settings.linker.libs:add("asound")
-            end
-            
 			client_settings.linker.libs:add("X11")
 			client_settings.linker.libs:add("GL")
 			client_settings.linker.libs:add("GLU")
@@ -389,14 +289,10 @@ function build(settings)
 		client_settings.linker.libs:add("opengl32")
 		client_settings.linker.libs:add("glu32")
 		client_settings.linker.libs:add("winmm")
-
-		if config.dsound.value == 1 then
-			client_settings.linker.libs:add("dsound")
-		end
 	end
 
 	-- apply sdl settings
-	if use_sdl then config.sdl:apply(client_settings) end
+	config.sdl:apply(client_settings)
 	
 	engine = Compile(engine_settings, Collect("src/engine/*.c", "src/base/*.c"))
 	client = Compile(client_settings, Collect("src/engine/client/*.c"))
@@ -418,7 +314,7 @@ function build(settings)
 	tools_src = Collect("src/tools/*.cpp", "src/tools/*.c")
 
 	osxlaunch = {}
-	if platform == "macosx" and use_sdl then
+	if platform == "macosx" then
 		osxlaunch = Compile(client_settings, Collect("src/osxlaunch/*.m"))
 	end
 	
@@ -431,7 +327,7 @@ function build(settings)
 	
 	-- build client, server, version server and master server
 	client_exe = Link(client_settings, "teeworlds", game_shared, game_client,
-		engine, client, game_editor, glfw, portaudio, zlib, pnglite, wavpack,
+		engine, client, game_editor, zlib, pnglite, wavpack,
 		client_link_other, osxlaunch)
 
 	server_exe = Link(server_settings, "teeworlds_srv", engine, server,

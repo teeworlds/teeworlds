@@ -61,7 +61,7 @@ void CONSOLE::INSTANCE::on_input(INPUT_EVENT e)
 	
 	if(e.flags&INPFLAG_PRESS)
 	{
-		if(e.key == KEY_ENTER || e.key == KEY_KP_ENTER)
+		if(e.key == KEY_RETURN || e.key == KEY_KP_ENTER)
 		{
 			if(input.get_string()[0])
 			{
@@ -298,7 +298,7 @@ bool CONSOLE::on_input(INPUT_EVENT e)
 	if(e.key >= KEY_F1 && e.key <= KEY_F15)
 		return false;
 
-	if(e.key == KEY_ESC && (e.flags&INPFLAG_PRESS))
+	if(e.key == KEY_ESCAPE && (e.flags&INPFLAG_PRESS))
 		toggle(console_type);
 	else
 		current_console()->on_input(e);

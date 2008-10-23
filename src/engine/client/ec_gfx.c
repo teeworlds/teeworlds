@@ -2,24 +2,19 @@
 
 #include <base/detect.h>
 
-#ifdef CONFIG_NO_SDL
-	#include <GL/glfw.h>
-#else
-	#include "SDL.h"
-	
-	#ifdef CONF_FAMILY_WINDOWS
-		#define WIN32_LEAN_AND_MEAN
-		#include <windows.h>
-	#endif
-	
-	#ifdef CONF_PLATFORM_MACOSX
-		#include <OpenGL/gl.h>
-		#include <OpenGL/glu.h>
-	#else
-		#include <GL/gl.h>
-		#include <GL/glu.h>
-	#endif
+#include "SDL.h"
 
+#ifdef CONF_FAMILY_WINDOWS
+	#define WIN32_LEAN_AND_MEAN
+	#include <windows.h>
+#endif
+
+#ifdef CONF_PLATFORM_MACOSX
+	#include <OpenGL/gl.h>
+	#include <OpenGL/glu.h>
+#else
+	#include <GL/gl.h>
+	#include <GL/glu.h>
 #endif
 
 #include <base/system.h>
@@ -99,10 +94,7 @@ static TEXTURE textures[MAX_TEXTURES];
 static int first_free_texture;
 static int memory_usage = 0;
 
-#ifdef CONFIG_NO_SDL
-#else
-	SDL_Surface *screen_surface;
-#endif
+static SDL_Surface *screen_surface;
 
 
 #if 0
@@ -316,15 +308,6 @@ static void draw_quad()
 		flush();
 }
 
-#ifdef CONFIG_NO_SDL
-static void screen_resize(int width, int height)
-{
-	screen_width = width;
-	screen_height = height;
-	glViewport(0, 0, screen_width, screen_height);
-}
-#endif
-
 int gfx_init()
 {
 	int i;
@@ -339,57 +322,6 @@ int gfx_init()
 		screen_height = 240;
 	}
 
-
-#ifdef CONFIG_NO_SDL
-	glfwInit();
-
-	/* set antialiasing	*/
-	if(config.gfx_fsaa_samples)
-		glfwOpenWindowHint(GLFW_FSAA_SAMPLES, config.gfx_fsaa_samples);
-	
-	/* set refresh rate */
-	if(config.gfx_refresh_rate)
-		glfwOpenWindowHint(GLFW_REFRESH_RATE, config.gfx_refresh_rate);
-	
-	/* no resizing allowed */
-	if (!config.gfx_debug_resizable)
-		glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, 1);
-		
-	/* open window */	
-	if(config.gfx_fullscreen)
-	{
-		int result = glfwOpenWindow(screen_width, screen_height, 8, 8, 8, config.gfx_alphabits, 24, 0, GLFW_FULLSCREEN);
-		if(result != GL_TRUE)
-		{
-			dbg_msg("game", "failed to create gl context");
-			return 0;
-		}
-	}
-	else
-	{
-		int result = glfwOpenWindow(screen_width, screen_height, 0, 0, 0, config.gfx_alphabits, 24, 0, GLFW_WINDOW);
-		if(result != GL_TRUE)
-		{
-			dbg_msg("game", "failed to create gl context");
-			return 0;
-		}
-	}
-	
-	glfwSetWindowSizeCallback(screen_resize);
-	
-	glGetIntegerv(GL_ALPHA_BITS, &i);
-	dbg_msg("gfx", "alphabits = %d", i);
-	glGetIntegerv(GL_DEPTH_BITS, &i);
-	dbg_msg("gfx", "depthbits = %d", i);
-	glGetIntegerv(GL_STENCIL_BITS, &i);
-	dbg_msg("gfx", "stencilbits = %d", i);
-	
-	glfwSetWindowTitle("Teeworlds");
-	
-	/* We don't want to see the window when we run the stress testing */
-	if(config.dbg_stress)
-		glfwIconifyWindow();
-#else
 	if(SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO) < 0)
 	{
         dbg_msg("gfx", "Unable to init SDL: %s\n", SDL_GetError());
@@ -443,8 +375,6 @@ int gfx_init()
 	}
 	
 	SDL_ShowCursor(0);
-
-#endif
 	
 	/* Init vertices */
 	if (vertices)
@@ -535,20 +465,12 @@ void gfx_mask_op(int mask, int write)
 
 int gfx_window_active()
 {
-#ifdef CONFIG_NO_SDL
-	return glfwGetWindowParam(GLFW_ACTIVE) == GL_TRUE ? 1 : 0;
-#else
-	return SDL_GetAppState()&SDL_APPINPUTFOCUS; /* TODO: SDL*/
-#endif
+	return SDL_GetAppState()&SDL_APPINPUTFOCUS;
 }
 
 int gfx_window_open()
 {
-#ifdef CONFIG_NO_SDL
-	return glfwGetWindowParam(GLFW_OPENED) == GL_TRUE ? 1 : 0;
-#else
-	return SDL_GetAppState()&SDL_APPACTIVE; /* TODO: SDL*/
-#endif
+	return SDL_GetAppState()&SDL_APPACTIVE;
 }
 
 VIDEO_MODE fakemodes[] = {
@@ -577,6 +499,9 @@ VIDEO_MODE fakemodes[] = {
 
 int gfx_get_video_modes(VIDEO_MODE *list, int maxcount)
 {
+	int num_modes = 0;
+	SDL_Rect **modes;
+
 	if(config.gfx_display_all_modes)
 	{
 		int count = sizeof(fakemodes)/sizeof(VIDEO_MODE);
@@ -586,52 +511,39 @@ int gfx_get_video_modes(VIDEO_MODE *list, int maxcount)
 		return count;
 	}
 	
-#ifdef CONFIG_NO_SDL
-	return glfwGetVideoModes((GLFWvidmode *)list, maxcount);
-#else
+	/* TODO: fix this code on osx or windows */
+		
+	modes = SDL_ListModes(NULL, SDL_OPENGL|SDL_GL_DOUBLEBUFFER|SDL_FULLSCREEN);
+	if(modes == NULL)
 	{
-		/* TODO: fix this code on osx or windows */
-		int num_modes = 0;
-		SDL_Rect **modes;
-			
-		modes = SDL_ListModes(NULL, SDL_OPENGL|SDL_GL_DOUBLEBUFFER|SDL_FULLSCREEN);
-		if(modes == NULL)
+		/* no modes */
+	}
+	else if(modes == (SDL_Rect**)-1)
+	{
+		/* all modes */
+	}
+	else
+	{
+		int i;
+		for(i = 0; modes[i]; ++i)
 		{
-			/* no modes */
-		}
-		else if(modes == (SDL_Rect**)-1)
-		{
-			/* all modes */
-		}
-		else
-		{
-			int i;
-			for(i = 0; modes[i]; ++i)
-			{
-				if(num_modes == maxcount)
-					break;
-				list[num_modes].width = modes[i]->w;
-				list[num_modes].height = modes[i]->h;
-				list[num_modes].red = 8;
-				list[num_modes].green = 8;
-				list[num_modes].blue = 8;
-				num_modes++;
-			}
+			if(num_modes == maxcount)
+				break;
+			list[num_modes].width = modes[i]->w;
+			list[num_modes].height = modes[i]->h;
+			list[num_modes].red = 8;
+			list[num_modes].green = 8;
+			list[num_modes].blue = 8;
+			num_modes++;
 		}
 	}
 	
-
 	return 1; /* TODO: SDL*/
-#endif	
 }
 
 void gfx_set_vsync(int val)
 {
-#ifdef CONFIG_NO_SDL
-	glfwSwapInterval(val);
-#else
 	/* TODO: SDL*/
-#endif	
 }
 
 int gfx_unload_texture(int index)
@@ -836,13 +748,9 @@ void gfx_shutdown()
 {
 	if (vertices)
 		mem_free(vertices);
-#ifdef CONFIG_NO_SDL
-	glfwCloseWindow();
-	glfwTerminate();
-#else
+
 	/* TODO: SDL, is this correct? */
 	SDL_Quit();
-#endif	
 }
 
 void gfx_screenshot()
@@ -926,26 +834,12 @@ void gfx_swap()
 	{
 		static PERFORMACE_INFO pscope = {"glfwSwapBuffers", 0};
 		perf_start(&pscope);
-#ifdef CONFIG_NO_SDL
-		glfwSwapBuffers();
-#else
 		SDL_GL_SwapBuffers();
-#endif
 		perf_end();
 	}
 	
 	if(render_enable && config.gfx_finish)
 		glFinish();
-
-#ifdef CONFIG_NO_SDL
-	{
-		static PERFORMACE_INFO pscope = {"glfwPollEvents", 0};
-		perf_start(&pscope);
-		glfwPollEvents();
-		perf_end();
-	}
-#else
-#endif
 }
 
 void gfx_screenshot_direct(const char *filename)
@@ -1500,16 +1394,10 @@ void gfx_clip_disable()
 
 void gfx_minimize()
 {
-#ifdef CONFIG_NO_SDL
-	glfwIconifyWindow();
-#else
-#endif
+	/* TODO: SDL */
 }
 
 void gfx_maximize()
 {
-#ifdef CONFIG_NO_SDL
-	glfwRestoreWindow();
-#else
-#endif
+	/* TODO: SDL */
 }

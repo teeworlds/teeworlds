@@ -259,12 +259,12 @@ int MENUS::ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, f
 					at_index--;
 					r = 1;
 				}
-				else if (k == KEY_DEL && at_index < len)
+				else if (k == KEY_DELETE && at_index < len)
 				{
 					memmove(str + at_index, str + at_index + 1, len - at_index);
 					r = 1;
 				}
-				else if (k == KEY_ENTER)
+				else if (k == KEY_RETURN)
 					ui_clear_last_active_item();
 				else if (k == KEY_LEFT && at_index > 0)
 					at_index--;
@@ -933,7 +933,7 @@ bool MENUS::on_input(INPUT_EVENT e)
 	// special handle esc and enter for popup purposes
 	if(e.flags&INPFLAG_PRESS)
 	{
-		if(e.key == KEY_ESC)
+		if(e.key == KEY_ESCAPE)
 		{
 			escape_pressed = true;
 			set_active(!is_active());
@@ -944,7 +944,7 @@ bool MENUS::on_input(INPUT_EVENT e)
 	if(is_active())
 	{
 		// special for popups
-		if(e.flags&INPFLAG_PRESS || e.key == KEY_ENTER)
+		if(e.flags&INPFLAG_PRESS || e.key == KEY_RETURN)
 			enter_pressed = true;
 		
 		if(num_inputevents < MAX_INPUTEVENTS)

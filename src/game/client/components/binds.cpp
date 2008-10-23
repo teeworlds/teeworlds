@@ -87,13 +87,9 @@ void BINDS::set_defaults()
 	bind(KEY_TAB, "+scoreboard");
 	bind(KEY_F10, "screenshot");
 
-#ifdef CONFIG_NO_SDL
-	bind('A', "+left");
-	bind('D', "+right");
-#else
 	bind('a', "+left");
 	bind('d', "+right");
-#endif
+
 	bind(KEY_SPACE, "+jump");
 	bind(KEY_MOUSE_1, "+fire");
 	bind(KEY_MOUSE_2, "+hook");
@@ -108,13 +104,8 @@ void BINDS::set_defaults()
 	bind(KEY_MOUSE_WHEEL_UP, "+prevweapon");
 	bind(KEY_MOUSE_WHEEL_DOWN, "+nextweapon");
 	
-#ifdef CONFIG_NO_SDL
-	bind('T', "chat all");
-	bind('Y', "chat team");	
-#else
 	bind('t', "chat all");
 	bind('y', "chat team");	
-#endif
 
 	bind(KEY_F3, "vote yes");
 	bind(KEY_F4, "vote no");	

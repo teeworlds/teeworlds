@@ -1574,7 +1574,7 @@ static void client_run()
 				inp_mouse_mode_absolute();
 			window_must_refocus = 1;
 		}
-		else if (config.dbg_focus && inp_key_pressed(KEY_ESC))
+		else if (config.dbg_focus && inp_key_pressed(KEY_ESCAPE))
 		{
 			inp_mouse_mode_absolute();
 			window_must_refocus = 1;
@@ -1597,19 +1597,11 @@ static void client_run()
 		}
 
 		/* panic quit button */
-		#ifdef CONFIG_NO_SDL
-		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_pressed('Q'))
-			break;
-
-		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_down('E'))
-			config.cl_editor = config.cl_editor^1;
-		#else
 		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_pressed('q'))
 			break;
 
 		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_down('e'))
 			config.cl_editor = config.cl_editor^1;
-		#endif
 		
 		if(!gfx_window_open())
 			break;

@@ -63,7 +63,7 @@ void ui_do_popup_menu()
 		if(ui_popups[i].func(r))
 			ui_num_popups--;
 			
-		if(inp_key_down(KEY_ESC))
+		if(inp_key_down(KEY_ESCAPE))
 			ui_num_popups--;
 	}
 }

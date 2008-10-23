@@ -48,7 +48,7 @@ void LINEINPUT::process_input(INPUT_EVENT e)
 			cursor_pos--;
 			len--;
 		}
-		else if (k == KEY_DEL && cursor_pos < len)
+		else if (k == KEY_DELETE && cursor_pos < len)
 		{
 			memmove(str + cursor_pos, str + cursor_pos + 1, len - cursor_pos);
 			len--;

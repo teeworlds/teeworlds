@@ -30,7 +30,7 @@ bool MENUS_KEYBINDER::on_input(INPUT_EVENT e)
 {
 	if(take_key)
 	{
-		if(e.flags&INPFLAG_PRESS && e.key != KEY_ESC)
+		if(e.flags&INPFLAG_PRESS && e.key != KEY_ESCAPE)
 		{
 			key = e;
 			got_key = true;

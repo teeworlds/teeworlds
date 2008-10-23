@@ -4,12 +4,7 @@
 #include <engine/e_config.h>
 #include <engine/e_engine.h>
 
-#ifdef CONFIG_NO_SDL
-	#include <portaudio.h>
-#else
-	#include "SDL.h"
-#endif
-
+#include "SDL.h"
 
 #include <engine/external/wavpack/wavpack.h>
 #include <stdio.h>
@@ -239,76 +234,13 @@ static void mix(short *final_out, unsigned frames)
 	}
 }
 
-#ifdef CONFIG_NO_SDL
-static PaStream *stream;
-static int pacallback(const void *in, void *out, unsigned long frames, const PaStreamCallbackTimeInfo* time, PaStreamCallbackFlags status, void *user)
-{
-	mix(out, frames);
-	return 0;
-}
-#else
 static void sdlcallback(void *unused, Uint8 *stream, int len)
 {
 	mix((short *)stream, len/2/2);
 }
-#endif
-
 
 int snd_init()
 {
-#ifdef CONFIG_NO_SDL
-	PaStreamParameters params;
-	PaError err = Pa_Initialize();
-	
-	sound_lock = lock_create();
-	
-	if(!config.snd_enable)
-		return 0;
-	
-	mixing_rate = config.snd_rate;
-
-	{
-		int num = Pa_GetDeviceCount();
-		int i;
-		const PaDeviceInfo *info;
-		
-		for(i = 0; i < num; i++)
-		{
-			info = Pa_GetDeviceInfo(i);
-			dbg_msg("snd", "device #%d name='%s'", i, info->name);
-		}
-	}
-
-	params.device = config.snd_device;
-	if(params.device == -1)
-	{
-		params.device = Pa_GetDefaultOutputDevice();
-		if(params.device < 0)
-		{
-			dbg_msg("snd", "no default device (%d)", params.device);
-			return 1;
-		}
-	}
-
-	if(params.device < 0)
-		return 1;
-	dbg_msg("snd", "device = %d", params.device);
-	params.channelCount = 2;
-	params.sampleFormat = paInt16;
-	params.suggestedLatency = Pa_GetDeviceInfo(params.device)->defaultLowOutputLatency;
-	params.hostApiSpecificStreamInfo = 0x0;
-
-	err = Pa_OpenStream(
-			&stream,        /* passes back stream pointer */
-			0,              /* no input channels */
-			&params,                /* pointer to parameters */
-			mixing_rate,          /* sample rate */
-			128,            /* frames per buffer */
-			paClipOff,              /* no clamping */
-			pacallback,             /* specify our custom callback */
-			0x0); /* pass our data through to callback */
-	err = Pa_StartStream(stream);
-#else
     SDL_AudioSpec format;
 	
 	sound_lock = lock_create();
@@ -337,7 +269,6 @@ int snd_init()
 
 	SDL_PauseAudio(0);
 	
-#endif
 	sound_enabled = 1;
 	snd_update(); /* update the volume */
 	return 0;
@@ -363,14 +294,8 @@ int snd_update()
 
 int snd_shutdown()
 {
-#ifdef CONFIG_NO_SDL	
-	Pa_StopStream(stream);
-	Pa_Terminate();
-#else
 	SDL_CloseAudio();
-#endif
 	lock_destroy(sound_lock);
-
 	return 0;
 }
 

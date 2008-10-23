@@ -234,9 +234,9 @@ int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float fo
 					memmove(str + at_index - 1, str + at_index, len - at_index + 1);
 					at_index--;
 				}
-				else if (k == KEY_DEL && at_index < len)
+				else if (k == KEY_DELETE && at_index < len)
 					memmove(str + at_index, str + at_index + 1, len - at_index);
-				else if (k == KEY_ENTER)
+				else if (k == KEY_RETURN)
 					ui_clear_last_active_item();
 				else if (k == KEY_LEFT && at_index > 0)
 					at_index--;
@@ -543,18 +543,18 @@ static void do_toolbar(RECT toolbar)
 	RECT button;
 	
 	// ctrl+o to open
-	if(inp_key_down('O') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL)))
+	if(inp_key_down('o') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL)))
 		editor.invoke_file_dialog(LISTDIRTYPE_ALL, "Open Map", "Open", "maps/", "", callback_open_map);
 	
 	// ctrl+s to save
-	if(inp_key_down('S') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL)))
+	if(inp_key_down('s') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL)))
 		editor.invoke_file_dialog(LISTDIRTYPE_SAVE, "Save Map", "Save", "maps/", "", callback_save_map);
 
 	// animate button
 	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
 	static int hq_button = 0;
 	if(do_editor_button(&hq_button, "Detail", editor.show_detail, &button, draw_editor_button, 0, "[ctrl+h] Toggle High Detail") ||
-		(inp_key_down('H') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))))
+		(inp_key_down('h') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))))
 	{
 		editor.show_detail = !editor.show_detail;
 	}
@@ -564,7 +564,7 @@ static void do_toolbar(RECT toolbar)
 	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
 	static int animate_button = 0;
 	if(do_editor_button(&animate_button, "Anim", editor.animate, &button, draw_editor_button, 0, "[ctrl+m] Toggle animation") ||
-		(inp_key_down('M') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))))
+		(inp_key_down('m') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))))
 	{
 		editor.animate_start = time_get();
 		editor.animate = !editor.animate;
@@ -576,7 +576,7 @@ static void do_toolbar(RECT toolbar)
 	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
 	static int proof_button = 0;
 	if(do_editor_button(&proof_button, "Proof", editor.proof_borders, &button, draw_editor_button, 0, "[ctrl-p] Toggles proof borders. These borders represent what a player maximum can see.") ||
-		(inp_key_down('P') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))))
+		(inp_key_down('p') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))))
 	{
 		editor.proof_borders = !editor.proof_borders;
 	}
@@ -586,7 +586,7 @@ static void do_toolbar(RECT toolbar)
 	// zoom group
 	ui_vsplit_l(&toolbar, 16.0f, &button, &toolbar);
 	static int zoom_out_button = 0;
-	if(do_editor_button(&zoom_out_button, "ZO", 0, &button, draw_editor_button_l, 0, "[NumPad-] Zoom out") || inp_key_down(KEY_KP_SUBTRACT))
+	if(do_editor_button(&zoom_out_button, "ZO", 0, &button, draw_editor_button_l, 0, "[NumPad-] Zoom out") || inp_key_down(KEY_KP_MINUS))
 		editor.zoom_level += 50;
 		
 	ui_vsplit_l(&toolbar, 16.0f, &button, &toolbar);
@@ -600,7 +600,7 @@ static void do_toolbar(RECT toolbar)
 		
 	ui_vsplit_l(&toolbar, 16.0f, &button, &toolbar);
 	static int zoom_in_button = 0;
-	if(do_editor_button(&zoom_in_button, "ZI", 0, &button, draw_editor_button_r, 0, "[NumPad+] Zoom in") || inp_key_down(KEY_KP_ADD))
+	if(do_editor_button(&zoom_in_button, "ZI", 0, &button, draw_editor_button_r, 0, "[NumPad+] Zoom in") || inp_key_down(KEY_KP_PLUS))
 		editor.zoom_level -= 50;
 		
 	if(inp_key_presses(KEY_MOUSE_WHEEL_UP))
@@ -623,7 +623,7 @@ static void do_toolbar(RECT toolbar)
 		// flip buttons
 		ui_vsplit_l(&toolbar, 20.0f, &button, &toolbar);
 		static int flipx_button = 0;
-		if(do_editor_button(&flipx_button, "^X", enabled, &button, draw_editor_button_l, 0, "[N] Flip brush horizontal") || inp_key_down('N'))
+		if(do_editor_button(&flipx_button, "^X", enabled, &button, draw_editor_button_l, 0, "[N] Flip brush horizontal") || inp_key_down('n'))
 		{
 			for(int i = 0; i < brush.layers.len(); i++)
 				brush.layers[i]->brush_flip_x();
@@ -631,7 +631,7 @@ static void do_toolbar(RECT toolbar)
 			
 		ui_vsplit_l(&toolbar, 20.0f, &button, &toolbar);
 		static int flipy_button = 0;
-		if(do_editor_button(&flipy_button, "^Y", enabled, &button, draw_editor_button_r, 0, "[M] Flip brush vertical") || inp_key_down('M'))
+		if(do_editor_button(&flipy_button, "^Y", enabled, &button, draw_editor_button_r, 0, "[M] Flip brush vertical") || inp_key_down('m'))
 		{
 			for(int i = 0; i < brush.layers.len(); i++)
 				brush.layers[i]->brush_flip_y();
@@ -647,7 +647,7 @@ static void do_toolbar(RECT toolbar)
 		ui_vsplit_l(&toolbar, 5.0f, &button, &toolbar);
 		ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
 		static int ccw_button = 0;
-		if(do_editor_button(&ccw_button, "CCW", enabled, &button, draw_editor_button_l, 0, "[R] Rotates the brush counter clockwise") || inp_key_down('R'))
+		if(do_editor_button(&ccw_button, "CCW", enabled, &button, draw_editor_button_l, 0, "[R] Rotates the brush counter clockwise") || inp_key_down('r'))
 		{
 			for(int i = 0; i < brush.layers.len(); i++)
 				brush.layers[i]->brush_rotate(-rotation_amount/360.0f*pi*2);
@@ -655,7 +655,7 @@ static void do_toolbar(RECT toolbar)
 			
 		ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
 		static int cw_button = 0;
-		if(do_editor_button(&cw_button, "CW", enabled, &button, draw_editor_button_r, 0, "[T] Rotates the brush clockwise") || inp_key_down('T'))
+		if(do_editor_button(&cw_button, "CW", enabled, &button, draw_editor_button_r, 0, "[T] Rotates the brush clockwise") || inp_key_down('t'))
 		{
 			for(int i = 0; i < brush.layers.len(); i++)
 				brush.layers[i]->brush_rotate(rotation_amount/360.0f*pi*2);
@@ -1853,7 +1853,7 @@ static void render_file_dialog()
 
 	ui_vsplit_r(&buttonbar, 40.0f, &buttonbar, &button);
 	ui_vsplit_r(&buttonbar, 50.0f, &buttonbar, &button);
-	if(do_editor_button(&cancel_button, "Cancel", 0, &button, draw_editor_button, 0, 0) || inp_key_pressed(KEY_ESC))
+	if(do_editor_button(&cancel_button, "Cancel", 0, &button, draw_editor_button, 0, 0) || inp_key_pressed(KEY_ESCAPE))
 		editor.dialog = DIALOG_NONE;
 }
 
