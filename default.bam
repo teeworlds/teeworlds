@@ -275,12 +275,6 @@ function build(settings)
             client_settings.linker.frameworks:add("AGL")
             client_settings.linker.frameworks:add("Carbon")
             client_settings.linker.frameworks:add("Cocoa")
-
-			if config.coreaudio.value == 1 then
-				client_settings.linker.frameworks:add("CoreAudio")
-				client_settings.linker.frameworks:add("AudioToolbox")
-				client_settings.linker.frameworks:add("AudioUnit")
-			end
 		else
 			client_settings.linker.libs:add("X11")
 			client_settings.linker.libs:add("GL")

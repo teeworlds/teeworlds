@@ -439,7 +439,7 @@ float gfx_screenaspect()
 void gfx_clear_mask(int fill)
 {
 	int i;
-	glGetIntegerv(GL_DEPTH_WRITEMASK, &i);
+	glGetIntegerv(GL_DEPTH_WRITEMASK, (GLint*)&i);
 	glDepthMask(GL_TRUE);
 	glClearDepth(0.0f);
 	glClear(GL_DEPTH_BUFFER_BIT);
