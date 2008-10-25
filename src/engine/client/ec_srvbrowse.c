@@ -491,6 +491,7 @@ void client_serverbrowse_refresh(int type)
 	{
 		unsigned char buffer[sizeof(SERVERBROWSE_GETINFO)+1];
 		NETCHUNK packet;
+		int i;
 		
 		mem_copy(buffer, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
 		buffer[sizeof(SERVERBROWSE_GETINFO)] = current_token;
@@ -501,12 +502,16 @@ void client_serverbrowse_refresh(int type)
 		packet.address.ip[1] = 255;
 		packet.address.ip[2] = 255;
 		packet.address.ip[3] = 255;
-		packet.address.port = 8303;
 		packet.flags = NETSENDFLAG_CONNLESS;
 		packet.data_size = sizeof(buffer);
 		packet.data = buffer;
 		broadcast_time = time_get();
-		netclient_send(net, &packet);
+
+		for(i = 8303; i <= 8310; i++)
+		{
+			packet.address.port = i;
+			netclient_send(net, &packet);
+		}
 
 		if(config.debug)
 			dbg_msg("client", "broadcasting for servers");
