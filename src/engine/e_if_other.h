@@ -80,8 +80,6 @@ int gfx_window_active();
 int gfx_window_open();
 
 void gfx_set_vsync(int val);
-void gfx_mask_op(int mask, int write);
-void gfx_clear_mask(int fill);
 
 int snd_init();
 int snd_shutdown();

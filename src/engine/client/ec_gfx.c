@@ -84,7 +84,6 @@ typedef struct
 	int next;
 } TEXTURE;
 
-
 enum
 {
 	MAX_TEXTURES = 1024*4
@@ -95,164 +94,6 @@ static int first_free_texture;
 static int memory_usage = 0;
 
 static SDL_Surface *screen_surface;
-
-
-#if 0
-typedef struct { unsigned char r, g, b, a; } PIXEL;
-
-static PIXEL *pixeltest_data = 0;
-static PIXEL *pixeltest_tex = 0;
-static int pixeltest_w = 64;
-static int pixeltest_h = 64;
-
-static int pixeltest_analysedata(int fault)
-{
-	int x,y,c;
-	PIXEL *pp = pixeltest_data;
-	for(y = 0; y < pixeltest_h; y++)
-		for(x = 0; x < pixeltest_w; x++, pp++, c++)
-		{
-			PIXEL p = *pp;
-			if(p.r > fault)
-				return p.r;
-		}
-	return 0;
-}
-
-static void pixeltest_filltile(int id)
-{
-	int x, y;
-	for(y = 0; y < 1024; y++)
-		for(x = 0; x < 1024; x++)
-		{
-			int this_id = (x/64) + (y/64)*16;
-			if(this_id == id)
-			{
-				if(x%64 == 0 || x%64 == 63 || y%64 == 0 || y%64 == 63)
-				{
-					pixeltest_tex[y*1024+x].r = 0;
-					pixeltest_tex[y*1024+x].g = 0;
-					pixeltest_tex[y*1024+x].b = 255;
-					pixeltest_tex[y*1024+x].a = 255;
-				}
-				else
-				{
-					pixeltest_tex[y*1024+x].r = 0;
-					pixeltest_tex[y*1024+x].g = 255;
-					pixeltest_tex[y*1024+x].b = 0;
-					pixeltest_tex[y*1024+x].a = 255;
-				}
-			}
-			else
-			{
-				pixeltest_tex[y*1024+x].r = 255;
-				pixeltest_tex[y*1024+x].g = 0;
-				pixeltest_tex[y*1024+x].b = 0;
-				pixeltest_tex[y*1024+x].a = 255;
-			}
-		}
-	
-}
-
-static void pixeltest_dotesting()
-{
-	int result, texture_id;
-	float start_tx=0;
-	float start_ty=0;
-	float end_tx=1;
-	float end_ty=1;
-	int tile_id = 8*16+3;
-	int t;
-	float frac = 0;
-	pixeltest_data = (PIXEL *)mem_alloc(pixeltest_w*(pixeltest_h)*4, 1);
-	pixeltest_tex = (PIXEL *)mem_alloc(1024*(1024)*4, 1);
-	
-	/*pixeltest_filltile(0);*/
-	/*pixeltest_filltile(0xff);*/
-	
-	dbg_msg("", "%f", 1.0f/1024.0f);
-
-	gfx_mapscreen(0,0,screen_width, screen_height);
-	
-	/*
-		start = 0.5f/1024.0f;
-		end = 1.0f-(0.5f/1024.0f)
-	*/
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	
-	for(t = 0; t < 256; t++)
-	{
-		/*t = 41;*/
-		
-		pixeltest_filltile(tile_id);
-		texture_id = gfx_load_texture_raw(1024,1024,IMG_RGBA,pixeltest_tex,IMG_RGBA,TEXLOAD_NORESAMPLE);
-
-		glClearColor(0,0,0,0);
-		glClear(GL_COLOR_BUFFER_BIT);
-		
-		gfx_texture_set(texture_id);
-		gfx_quads_begin();
-		/*
-			gfx_quads_setsubset(start_tx,start_ty,0.001f,0.001f);
-			gfx_quads_drawTL(pixeltest_w/2, pixeltest_h/2, pixeltest_w, pixeltest_h);
-		*/ /*0.000977*/
-		/*
-			gfx_quads_setsubset(0.999f,0.999f,end_tx,end_ty);
-			gfx_quads_drawTL(0,0,pixeltest_w/2, pixeltest_h/2);
-		*/
-		
-		{
-			float tile_pixelsize = 1024/32.0f;
-			float scale = pixeltest_w*((t+1)/250.0f);
-			float final_tilesize = scale/(screen_width) * gfx_screenwidth();
-			float final_tilesize_scale = final_tilesize/tile_pixelsize;
-			/*float frac = (1.0f/texsize);// * (1/final_tilesize_scale);*/
-			
-			float tx0 = 0.5f/1024.0f + (tile_id%16)*64.0f / (1024.0f) + frac;
-			float ty0 = 0.5f/1024.0f + (tile_id/16)*64.0f / (1024.0f) + frac;
-			float tx1 = 0.5f/1024.0f + (((tile_id%16) + 1)*64.0f-1) / (1024.0f) - frac;
-			float ty1 = 0.5f/1024.0f + (((tile_id/16) + 1)*64.0f-1) / (1024.0f) - frac;
-			dbg_msg("", "scale: %f %f", scale, final_tilesize_scale);
-			gfx_quads_setsubset(tx0,ty0,tx1,ty1);
-			/*gfx_quads_setsubset(0,0,1,1);*/
-			gfx_quads_drawTL(pixeltest_w/4+(t+1)/250.0f,pixeltest_h/4,pixeltest_w/2,pixeltest_w/2);
-		}
-		
-		gfx_quads_end();
-
-		glReadPixels(0,screen_height-pixeltest_h, pixeltest_w, pixeltest_h, GL_RGBA, GL_UNSIGNED_BYTE, pixeltest_data);
-		
-		result = pixeltest_analysedata(2);
-		if(result)
-		{
-			frac += 0.000001f;
-			dbg_msg("", "fail on %d with %d newfrac = %f", t, result, frac);
-			t--;
-			
-			/*start_tx += 0.000001f; start_ty += 0.000001f;
-			dbg_msg("", "found stuff %f %f %d %f %f", start_tx, start_ty, result, 0.5f/1024, 0.5f/1024);
-
-			end_tx -= 0.000001f; end_ty -= 0.000001f;
-			dbg_msg("", "found stuff %f %d %f", end_tx, result, 1.0f-0.5f/1024);*/
-		}
-		/*else
-			dbg_msg("", "pass on %d", t);*/
-
-		glfwSwapBuffers();
-		glfwPollEvents();
-
-		if(glfwGetKey(KEY_ESC))
-			exit(1);
-		
-		gfx_unload_texture(texture_id);
-	}
-
-	dbg_msg("", "frac=%f  %f of a pixel", frac, frac/(1.0f/1024.0f));
-	exit(1);
-}
-#endif
 
 static const unsigned char null_texture_data[] = {
 	0xff,0x00,0x00,0xff, 0xff,0x00,0x00,0xff, 0x00,0xff,0x00,0xff, 0x00,0xff,0x00,0xff, 
@@ -294,17 +135,10 @@ static void flush()
 	num_vertices = 0;	
 }
 
-static void draw_line()
+static void add_vertices(int count)
 {
-	num_vertices += 2;
-	if((num_vertices + 2) >= vertex_buffer_size)
-		flush();
-}
-
-static void draw_quad()
-{
-	num_vertices += 4;
-	if((num_vertices + 4) >= vertex_buffer_size)
+	num_vertices += count;
+	if((num_vertices + count) >= vertex_buffer_size)
 		flush();
 }
 
@@ -401,9 +235,6 @@ int gfx_init()
 	glEnable(GL_ALPHA_TEST);
 	glDepthMask(0);
 	
-	gfx_mask_op(MASK_NONE, 0);
-	/*glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);*/
-	
 	/* Set all z to -5.0f */
 	for (i = 0; i < vertex_buffer_size; i++)
 		vertices[i].pos.z = -5.0f;
@@ -434,33 +265,6 @@ int gfx_init()
 float gfx_screenaspect()
 {
     return gfx_screenwidth()/(float)gfx_screenheight();
-}
-
-void gfx_clear_mask(int fill)
-{
-	int i;
-	glGetIntegerv(GL_DEPTH_WRITEMASK, (GLint*)&i);
-	glDepthMask(GL_TRUE);
-	glClearDepth(0.0f);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	glDepthMask(i);
-}
-
-void gfx_mask_op(int mask, int write)
-{
-	glEnable(GL_DEPTH_TEST);
-	
-	if(write)
-		glDepthMask(GL_TRUE);
-	else
-		glDepthMask(GL_FALSE);
-	
-	if(mask == MASK_NONE)
-		glDepthFunc(GL_ALWAYS);
-	else if(mask == MASK_SET)
-		glDepthFunc(GL_LEQUAL);
-	else if(mask == MASK_ZERO)
-		glDepthFunc(GL_NOTEQUAL);
 }
 
 int gfx_window_active()
@@ -561,7 +365,6 @@ void gfx_blend_none()
 {
 	glDisable(GL_BLEND);
 }
-
 
 void gfx_blend_normal()
 {
@@ -758,57 +561,8 @@ void gfx_screenshot()
 	do_screenshot = 1;
 }
 
-static int64 next_frame = 0;
-static int record = 0;
-
 void gfx_swap()
 {
-	if(record)
-	{
-		int w = screen_width;
-		int h = screen_height;
-		unsigned char *pixel_data = (unsigned char *)mem_alloc(w*(h+1)*3, 1);
-		/*unsigned char *temp_row = pixel_data+w*h*3;*/
-		glReadPixels(0,0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pixel_data);
-
-
-		{
-			IOHANDLE io;
-			char filename[128];
-			char header[18] = {0};
-			str_format(filename, sizeof(filename), "capture/frame%04d.tga", record);
-			record++;
-			
-			io = engine_openfile(filename, IOFLAG_WRITE);
-			if(io)
-			{
-				header[2] = 2; /* rgb */
-				header[12] = w&255; /* width */
-				header[13] = w>>8; 
-				header[14] = h&255; /* height */
-				header[15] = h>>8; 
-				header[16] = 24;
-				
-				io_write(io, header, sizeof(header));
-				io_write(io, pixel_data, w*h*3);
-				
-				io_close(io);
-			}
-		}
-		
-
-		/* clean up */
-		mem_free(pixel_data);
-
-		if(next_frame)
-			next_frame += time_freq()/30;
-		else
-			next_frame = time_get() + time_freq()/30;
-
-		while(time_get() < next_frame)
-			(void)0;
-	}
-	
 	if(do_screenshot)
 	{
 		/* find filename */
@@ -925,14 +679,6 @@ void gfx_getscreen(float *tl_x, float *tl_y, float *br_x, float *br_y)
 	*br_y = screen_y1;
 }
 
-void gfx_setoffset(float x, float y)
-{
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	glTranslatef(x, y, 0);
-}
-
-
 void gfx_quads_begin()
 {
 	dbg_assert(drawing == 0, "called quads_begin twice");
@@ -979,36 +725,21 @@ void gfx_quads_setsubset(float tl_u, float tl_v, float br_u, float br_v)
 {
 	dbg_assert(drawing == DRAWING_QUADS, "called gfx_quads_setsubset without begin");
 
-	texture[0].u = tl_u;
-	texture[0].v = tl_v;
+	texture[0].u = tl_u;	texture[1].u = br_u;
+	texture[0].v = tl_v;	texture[1].v = tl_v;
 
-	texture[1].u = br_u;
-	texture[1].v = tl_v;
-
-	texture[2].u = br_u;
-	texture[2].v = br_v;
-
-	texture[3].u = tl_u;
-	texture[3].v = br_v;
+	texture[3].u = tl_u;	texture[2].u = br_u;
+	texture[3].v = br_v;	texture[2].v = br_v;
 }
 
 void gfx_quads_setsubset_free(
-	float x0, float y0,
-	float x1, float y1,
-	float x2, float y2,
-	float x3, float y3)
+	float x0, float y0, float x1, float y1,
+	float x2, float y2, float x3, float y3)
 {
-	texture[0].u = x0;
-	texture[0].v = y0;
-
-	texture[1].u = x1;
-	texture[1].v = y1;
-
-	texture[2].u = x2;
-	texture[2].v = y2;
-
-	texture[3].u = x3;
-	texture[3].v = y3;
+	texture[0].u = x0; texture[0].v = y0;
+	texture[1].u = x1; texture[1].v = y1;
+	texture[2].u = x2; texture[2].v = y2;
+	texture[3].u = x3; texture[3].v = y3;
 }
 
 
@@ -1059,14 +790,12 @@ void gfx_quads_drawTL(float x, float y, float width, float height)
 	vertices[num_vertices + 3].color = color[3];
 	rotate(&center, &vertices[num_vertices + 3].pos);
 	
-	draw_quad();
+	add_vertices(4);
 }
 
 void gfx_quads_draw_freeform(
-	float x0, float y0,
-	float x1, float y1,
-	float x2, float y2,
-	float x3, float y3)
+	float x0, float y0, float x1, float y1,
+	float x2, float y2, float x3, float y3)
 {
 	dbg_assert(drawing == DRAWING_QUADS, "called quads_draw_freeform without begin");
 	
@@ -1090,7 +819,7 @@ void gfx_quads_draw_freeform(
 	vertices[num_vertices + 3].tex = texture[2];
 	vertices[num_vertices + 3].color = color[2];
 	
-	draw_quad();
+	add_vertices(4);
 }
 
 void gfx_quads_text(float x, float y, float size, const char *text)
@@ -1125,231 +854,6 @@ void gfx_quads_text(float x, float y, float size, const char *text)
 	gfx_quads_end();
 }
 
-static int word_length(const char *text)
-{
-	int s = 1;
-	while(1)
-	{
-		if(*text == 0)
-			return s-1;
-		if(*text == '\n' || *text == '\t' || *text == ' ')
-			return s;
-		text++;
-		s++;
-	}
-}
-
-static float text_r=1;
-static float text_g=1;
-static float text_b=1;
-static float text_a=1;
-
-static FONT_SET *default_font_set = 0;
-void gfx_text_set_default_font(void *font)
-{
-	default_font_set = (FONT_SET *)font;
-}
-
-
-void gfx_text_set_cursor(TEXT_CURSOR *cursor, float x, float y, float font_size, int flags)
-{
-	mem_zero(cursor, sizeof(*cursor));
-	cursor->font_size = font_size;
-	cursor->start_x = x;
-	cursor->start_y = y;
-	cursor->x = x;
-	cursor->y = y;
-	cursor->line_count = 1;
-	cursor->line_width = -1;
-	cursor->flags = flags;
-	cursor->charcount = 0;
-}
-
-void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
-{
-	FONT_SET *font_set = cursor->font_set;
-	float fake_to_screen_x = (screen_width/(screen_x1-screen_x0));
-	float fake_to_screen_y = (screen_height/(screen_y1-screen_y0));
-
-	FONT *font;
-	int actual_size;
-	int i;
-	float draw_x, draw_y;
-	const char *end;
-
-	float size = cursor->font_size;
-
-	/* to correct coords, convert to screen coords, round, and convert back */
-	int actual_x = cursor->x * fake_to_screen_x;
-	int actual_y = cursor->y * fake_to_screen_y;
-	cursor->x = actual_x / fake_to_screen_x;
-	cursor->y = actual_y / fake_to_screen_y;
-
-	/* same with size */
-	actual_size = size * fake_to_screen_y;
-	size = actual_size / fake_to_screen_y;
-
-	if(!font_set)
-		font_set = default_font_set;
-
-	font = font_set_pick(font_set, actual_size);
-
-	if (length < 0)
-		length = strlen(text);
-		
-	end = text + length;
-
-	/* if we don't want to render, we can just skip the first outline pass */
-	i = 1;
-	if(cursor->flags&TEXTFLAG_RENDER)
-		i = 0;
-
-	for(;i < 2; i++)
-	{
-		const unsigned char *current = (unsigned char *)text;
-		int to_render = length;
-		draw_x = cursor->x;
-		draw_y = cursor->y;
-
-		if(cursor->flags&TEXTFLAG_RENDER)
-		{
-			if (i == 0)
-				gfx_texture_set(font->outline_texture);
-			else
-				gfx_texture_set(font->text_texture);
-
-			gfx_quads_begin();
-			if (i == 0)
-				gfx_setcolor(0.0f, 0.0f, 0.0f, 0.3f*text_a);
-			else
-				gfx_setcolor(text_r, text_g, text_b, text_a);
-		}
-
-		while(to_render > 0)
-		{
-			int new_line = 0;
-			int this_batch = to_render;
-			if(cursor->line_width > 0 && !(cursor->flags&TEXTFLAG_STOP_AT_END))
-			{
-				int wlen = word_length((char *)current);
-				TEXT_CURSOR compare = *cursor;
-				compare.x = draw_x;
-				compare.y = draw_y;
-				compare.flags &= ~TEXTFLAG_RENDER;
-				compare.line_width = -1;
-				gfx_text_ex(&compare, text, wlen);
-				
-				if(compare.x-draw_x > cursor->line_width)
-				{
-					/* word can't be fitted in one line, cut it */
-					TEXT_CURSOR cutter = *cursor;
-					cutter.charcount = 0;
-					cutter.x = draw_x;
-					cutter.y = draw_y;
-					cutter.flags &= ~TEXTFLAG_RENDER;
-					cutter.flags |= TEXTFLAG_STOP_AT_END;
-					
-					gfx_text_ex(&cutter, (const char *)current, wlen);
-					wlen = cutter.charcount;
-					new_line = 1;
-					
-					if(wlen <= 3) /* if we can't place 3 chars of the word on this line, take the next */
-						wlen = 0;
-				}
-				else if(compare.x-cursor->start_x > cursor->line_width)
-				{
-					new_line = 1;
-					wlen = 0;
-				}
-				
-				this_batch = wlen;
-			}
-			
-			if((const char *)current+this_batch > end)
-				this_batch = (const char *)end-(const char *)current;
-			
-			to_render -= this_batch;
-
-			while(this_batch-- > 0)
-			{
-				float tex_x0, tex_y0, tex_x1, tex_y1;
-				float width, height;
-				float x_offset, y_offset, x_advance;
-				float advance;
-
-				if(*current == '\n')
-				{
-					draw_x = cursor->start_x;
-					draw_y += size;
-					draw_x = (int)(draw_x * fake_to_screen_x) / fake_to_screen_x; /* realign */
-					draw_y = (int)(draw_y * fake_to_screen_y) / fake_to_screen_y;
-					current++;
-					continue;
-				}
-
-				font_character_info(font, *current, &tex_x0, &tex_y0, &tex_x1, &tex_y1, &width, &height, &x_offset, &y_offset, &x_advance);
-
-				if(cursor->flags&TEXTFLAG_RENDER)
-				{
-					gfx_quads_setsubset(tex_x0, tex_y0, tex_x1, tex_y1);
-					gfx_quads_drawTL(draw_x+x_offset*size, draw_y+y_offset*size, width*size, height*size);
-				}
-
-				advance = x_advance + font_kerning(font, *current, *(current+1));
-								
-				if(cursor->flags&TEXTFLAG_STOP_AT_END && draw_x+advance*size-cursor->start_x > cursor->line_width)
-				{
-					/* we hit the end of the line, no more to render or count */
-					to_render = 0;
-					break;
-				}
-
-				draw_x += advance*size;
-				cursor->charcount++;
-				current++;
-			}
-			
-			if(new_line)
-			{
-				draw_x = cursor->start_x;
-				draw_y += size;
-				draw_x = (int)(draw_x * fake_to_screen_x) / fake_to_screen_x; /* realign */
-				draw_y = (int)(draw_y * fake_to_screen_y) / fake_to_screen_y;				
-			}
-		}
-
-		if(cursor->flags&TEXTFLAG_RENDER)
-			gfx_quads_end();
-	}
-
-	cursor->x = draw_x;
-	cursor->y = draw_y;
-}
-
-void gfx_text(void *font_set_v, float x, float y, float size, const char *text, int max_width)
-{
-	TEXT_CURSOR cursor;
-	gfx_text_set_cursor(&cursor, x, y, size, TEXTFLAG_RENDER);
-	cursor.line_width = max_width;
-	gfx_text_ex(&cursor, text, -1);
-}
-
-float gfx_text_width(void *font_set_v, float size, const char *text, int length)
-{
-	TEXT_CURSOR cursor;
-	gfx_text_set_cursor(&cursor, 0, 0, size, 0);
-	gfx_text_ex(&cursor, text, length);
-	return cursor.x;
-}
-
-void gfx_text_color(float r, float g, float b, float a)
-{
-	text_r = r;
-	text_g = g;
-	text_b = b;
-	text_a = a;
-}
-
 void gfx_lines_begin()
 {
 	dbg_assert(drawing == 0, "called begin twice");
@@ -1378,7 +882,7 @@ void gfx_lines_draw(float x0, float y0, float x1, float y1)
 	vertices[num_vertices + 1].tex = texture[1];
 	vertices[num_vertices + 1].color = color[1];
 	
-	draw_line();
+	add_vertices(2);
 }
 
 void gfx_clip_enable(int x, int y, int w, int h)
