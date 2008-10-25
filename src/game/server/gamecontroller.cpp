@@ -277,7 +277,10 @@ void GAMECONTROLLER::post_reset()
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(game.players[i])
+		{
 			game.players[i]->respawn();
+			game.players[i]->score = 0;
+		}
 	}
 }
 	
