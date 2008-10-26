@@ -594,7 +594,10 @@ void CHARACTER::tick()
 	core.tick(true);
 	
 	// handle death-tiles
-	if(col_get((int)pos.x, (int)pos.y)&COLFLAG_DEATH)
+	if(col_get((int)pos.x+6, (int)pos.y-6)&COLFLAG_DEATH ||
+			col_get((int)pos.x+6, (int)pos.y+6)&COLFLAG_DEATH ||
+			col_get((int)pos.x-6, (int)pos.y-6)&COLFLAG_DEATH ||
+			col_get((int)pos.x-6, (int)pos.y+6)&COLFLAG_DEATH)
 		die(player->client_id, -1);
 
 	// handle weapons
