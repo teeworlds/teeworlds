@@ -272,6 +272,10 @@ void *snap_find_item(int snapid, int type, int id)
 {
 	/* TODO: linear search. should be fixed. */
 	int i;
+	
+	if(!snapshots[snapid])
+		return 0x0;
+	
 	for(i = 0; i < snapshots[snapid]->snap->num_items; i++)
 	{
 		SNAPSHOT_ITEM *itm = snapshot_get_item(snapshots[snapid]->alt_snap, i);

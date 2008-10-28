@@ -27,11 +27,13 @@ void recvinfo_start(NETRECVINFO *info, NETADDR *addr, NETCONNECTION *conn, int c
 int recvinfo_fetch_chunk(NETRECVINFO *info, NETCHUNK *chunk)
 {
 	NETCHUNKHEADER header;
-	unsigned char *data = info->data.chunk_data;
+	unsigned char *end = info->data.chunk_data + info->data.data_size;
 	int i;
 	
 	while(1)
 	{
+		unsigned char *data = info->data.chunk_data;
+		
 		/* check for old data to unpack */
 		if(!info->valid || info->current_chunk >= info->data.num_chunks)
 		{
@@ -49,6 +51,12 @@ int recvinfo_fetch_chunk(NETRECVINFO *info, NETCHUNK *chunk)
 		/* unpack the header */	
 		data = unpack_chunk_header(data, &header);
 		info->current_chunk++;
+		
+		if(data+header.size > end)
+		{
+			recvinfo_clear(info);
+			return 0;
+		}
 		
 		/* handle sequence stuff */
 		if(info->conn && (header.flags&NET_CHUNKFLAG_VITAL))
@@ -188,7 +196,7 @@ int unpack_packet(unsigned char *buffer, int size, NETPACKETCONSTRUCT *packet)
 	packet->ack = ((buffer[0]&0xf)<<8) | buffer[1];
 	packet->num_chunks = buffer[2];
 	packet->data_size = size - NET_PACKETHEADERSIZE;
-	
+
 	if(packet->flags&NET_PACKETFLAG_CONNLESS)
 	{
 		packet->flags = NET_PACKETFLAG_CONNLESS;
