@@ -301,6 +301,69 @@ int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float fo
 	return r;
 }
 
+vec4 button_color_mul(const void *id)
+{
+	if(ui_active_item() == id)
+		return vec4(1,1,1,0.5f);
+	else if(ui_hot_item() == id)
+		return vec4(1,1,1,1.5f);
+	return vec4(1,1,1,1);
+}
+
+float ui_do_scrollbar_v(const void *id, const RECT *rect, float current)
+{
+	RECT handle;
+	static float offset_y;
+	ui_hsplit_t(rect, 33, &handle, 0);
+
+	handle.y += (rect->h-handle.h)*current;
+
+	/* logic */
+    float ret = current;
+    int inside = ui_mouse_inside(&handle);
+
+	if(ui_active_item() == id)
+	{
+		if(!ui_mouse_button(0))
+			ui_set_active_item(0);
+		
+		float min = rect->y;
+		float max = rect->h-handle.h;
+		float cur = ui_mouse_y()-offset_y;
+		ret = (cur-min)/max;
+		if(ret < 0.0f) ret = 0.0f;
+		if(ret > 1.0f) ret = 1.0f;
+	}
+	else if(ui_hot_item() == id)
+	{
+		if(ui_mouse_button(0))
+		{
+			ui_set_active_item(id);
+			offset_y = ui_mouse_y()-handle.y;
+		}
+	}
+	
+	if(inside)
+		ui_set_hot_item(id);
+
+	// render
+	RECT rail;
+	ui_vmargin(rect, 5.0f, &rail);
+	ui_draw_rect(&rail, vec4(1,1,1,0.25f), 0, 0.0f);
+
+	RECT slider = handle;
+	slider.w = rail.x-slider.x;
+	ui_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_L, 2.5f);
+	slider.x = rail.x+rail.w;
+	ui_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_R, 2.5f);
+
+	slider = handle;
+	ui_margin(&slider, 5.0f, &slider);
+	ui_draw_rect(&slider, vec4(1,1,1,0.25f)*button_color_mul(id), CORNER_ALL, 2.5f);
+	
+    return ret;
+}
+
 static vec4 get_button_color(const void *id, int checked)
 {
 	if(checked < 0)
@@ -1771,10 +1834,20 @@ static void (*file_dialog_func)(const char *filename);
 static char file_dialog_filename[512] = {0};
 static char file_dialog_path[512] = {0};
 static char file_dialog_complete_filename[512] = {0};
+static int files_num = 0;
+int files_startat = 0;
+int files_cur = 0;
 
 static void editor_listdir_callback(const char *name, int is_dir, void *user)
 {
 	if(name[0] == '.' || is_dir) // skip this shit!
+		return;
+	
+	if(files_cur > files_num)
+		files_num = files_cur;
+	
+	files_cur++;
+	if(files_cur-1 < files_startat)
 		return;
 	
 	RECT *view = (RECT *)user;
@@ -1812,13 +1885,14 @@ static void render_file_dialog()
 	ui_draw_rect(&view, vec4(0,0,0,0.75f), CORNER_ALL, 5.0f);
 	ui_margin(&view, 10.0f, &view);
 
-	RECT title, filebox, filebox_label, buttonbar;
+	RECT title, filebox, filebox_label, buttonbar, scroll;
 	ui_hsplit_t(&view, 18.0f, &title, &view);
 	ui_hsplit_t(&view, 5.0f, 0, &view); // some spacing
 	ui_hsplit_b(&view, 14.0f, &view, &buttonbar);
 	ui_hsplit_b(&view, 10.0f, &view, 0); // some spacing
 	ui_hsplit_b(&view, 14.0f, &view, &filebox);
 	ui_vsplit_l(&filebox, 50.0f, &filebox_label, &filebox);
+	ui_vsplit_r(&view, 15.0f, &view, &scroll);
 	
 	// title
 	ui_draw_rect(&title, vec4(1,1,1,0.25f), CORNER_ALL, 5.0f);
@@ -1835,8 +1909,26 @@ static void render_file_dialog()
 	strcat(file_dialog_complete_filename, file_dialog_path);
 	strcat(file_dialog_complete_filename, file_dialog_filename);
 	
+	int num = (int)(view.h/15.0);
+	static float scrollvalue = 0;
+	static int scrollbar = 0;
+	ui_hmargin(&scroll, 5.0f, &scroll);
+	scrollvalue = ui_do_scrollbar_v(&scrollbar, &scroll, scrollvalue);
+	
+	files_startat = (int)((files_num-num)*scrollvalue);
+	if(files_startat < 0)
+		files_startat = 0;
+	
+	files_cur = 0;
+	
+	// set clipping
+	ui_clip_enable(&view);
+	
 	// the list
 	engine_listdir(file_dialog_dirtypes, file_dialog_path, editor_listdir_callback, &view);
+	
+	// disable clipping again
+	ui_clip_disable();
 	
 	// the buttons
 	static int ok_button = 0;	
