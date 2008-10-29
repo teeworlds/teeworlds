@@ -57,7 +57,7 @@ MACRO_CONFIG_STR(sv_gametype, 32, "dm", CFGFLAG_SERVER, "Game type (dm, tdm, ctf
 MACRO_CONFIG_INT(sv_tournament_mode, 0, 0, 1, CFGFLAG_SERVER, "Tournament mode. When enabled, players joins the server as spectator")
 MACRO_CONFIG_INT(sv_spamprotection, 1, 0, 1, CFGFLAG_SERVER, "Spam protection")
 
-MACRO_CONFIG_INT(sv_spectator_slots, 0, 0, 12, CFGFLAG_SERVER, "Number of slots to reserve for spectators")
+MACRO_CONFIG_INT(sv_spectator_slots, 0, 0, MAX_CLIENTS, CFGFLAG_SERVER, "Number of slots to reserve for spectators")
 MACRO_CONFIG_INT(sv_teambalance_time, 1, 0, 1000, CFGFLAG_SERVER, "How many minutes to wait before autobalancing teams")
 
 MACRO_CONFIG_INT(sv_vote_map, 1, 0, 1, CFGFLAG_SERVER, "Allow voting to change map. (see sv_maplist)")
