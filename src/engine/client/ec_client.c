@@ -1614,6 +1614,7 @@ static void client_run()
 		if(config.cl_editor)
 		{
 			client_update();
+			inp_mouse_mode_relative();
 			editor_update_and_render();
 			gfx_swap();
 		}

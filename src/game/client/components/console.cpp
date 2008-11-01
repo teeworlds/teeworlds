@@ -178,8 +178,11 @@ void CONSOLE::on_render()
 		progress = 1.0f;
 	}
 	
-	if (console_state == CONSOLE_CLOSED)
+	if (console_state == CONSOLE_CLOSED || config.cl_editor)
 		return;
+		
+	if (console_state == CONSOLE_OPEN)
+		inp_mouse_mode_absolute();
 
 	float console_height_scale;
 
