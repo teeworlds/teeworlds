@@ -1837,6 +1837,7 @@ static char file_dialog_complete_filename[512] = {0};
 static int files_num = 0;
 int files_startat = 0;
 int files_cur = 0;
+int files_stopat = 999;
 
 static void editor_listdir_callback(const char *name, int is_dir, void *user)
 {
@@ -1847,7 +1848,7 @@ static void editor_listdir_callback(const char *name, int is_dir, void *user)
 		files_num = files_cur;
 	
 	files_cur++;
-	if(files_cur-1 < files_startat)
+	if(files_cur-1 < files_startat || files_cur > files_stopat)
 		return;
 	
 	RECT *view = (RECT *)user;
@@ -1909,7 +1910,7 @@ static void render_file_dialog()
 	strcat(file_dialog_complete_filename, file_dialog_path);
 	strcat(file_dialog_complete_filename, file_dialog_filename);
 	
-	int num = (int)(view.h/15.0);
+	int num = (int)(view.h/17.0);
 	static float scrollvalue = 0;
 	static int scrollbar = 0;
 	ui_hmargin(&scroll, 5.0f, &scroll);
@@ -1918,6 +1919,8 @@ static void render_file_dialog()
 	files_startat = (int)((files_num-num)*scrollvalue);
 	if(files_startat < 0)
 		files_startat = 0;
+		
+	files_stopat = files_startat+num;
 	
 	files_cur = 0;
 	
