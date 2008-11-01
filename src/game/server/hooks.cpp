@@ -289,14 +289,13 @@ void mods_message(int msgtype, int client_id)
 		p->color_feet = msg->color_feet;
 
 		// check for invalid chars
-		/*
-		unsigned char *p = (unsigned char *)name;
-		while (*p)
+		unsigned char *name = (unsigned char *)msg->name;
+		while (*name)
 		{
-			if(*p < 32)
-				*p = ' ';
-			p++;
-		}*/
+			if(*name < 32)
+				*name = ' ';
+			name++;
+		}
 
 		// copy old name
 		char oldname[MAX_NAME_LENGTH];
