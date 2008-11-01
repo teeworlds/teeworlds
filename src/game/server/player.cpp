@@ -178,5 +178,6 @@ void PLAYER::try_respawn()
 		spawning = false;
 		character = new(client_id) CHARACTER();
 		character->spawn(this, spawnpos, team);
+		game.create_playerspawn(spawnpos);
 	}
 }
