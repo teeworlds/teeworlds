@@ -593,11 +593,12 @@ void CHARACTER::tick()
 	core.input = input;
 	core.tick(true);
 	
+	float phys_size = 28.0f;
 	// handle death-tiles
-	if(col_get((int)pos.x+6, (int)pos.y-6)&COLFLAG_DEATH ||
-			col_get((int)pos.x+6, (int)pos.y+6)&COLFLAG_DEATH ||
-			col_get((int)pos.x-6, (int)pos.y-6)&COLFLAG_DEATH ||
-			col_get((int)pos.x-6, (int)pos.y+6)&COLFLAG_DEATH)
+	if(col_get((int)(pos.x+phys_size/2), (int)(pos.y-phys_size/2))&COLFLAG_DEATH ||
+			col_get((int)(pos.x+phys_size/2), (int)(pos.y+phys_size/2))&COLFLAG_DEATH ||
+			col_get((int)(pos.x-phys_size/2), (int)(pos.y-phys_size/2))&COLFLAG_DEATH ||
+			col_get((int)(pos.x-phys_size/2), (int)(pos.y+phys_size/2))&COLFLAG_DEATH)
 		die(player->client_id, -1);
 
 	// handle weapons
