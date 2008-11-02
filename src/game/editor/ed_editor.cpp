@@ -1153,7 +1153,7 @@ static void do_map_editor(RECT view, RECT toolbar)
 			start_mx = mx;
 			start_my = my;
 					
-			if(inp_key_pressed(KEY_LALT))
+			if(inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))
 			{
 				if(inp_key_pressed(KEY_LSHIFT))
 					operation = OP_PAN_EDITOR;
