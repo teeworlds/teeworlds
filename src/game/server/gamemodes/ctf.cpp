@@ -208,6 +208,6 @@ void FLAG::snap(int snapping_client)
 	
 	if(at_stand)
 		flag->carried_by = -2;
-	else if(carrying_character)
+	else if(carrying_character && carrying_character->player)
 		flag->carried_by = carrying_character->player->client_id;
 }
