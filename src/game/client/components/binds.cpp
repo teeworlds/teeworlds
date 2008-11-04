@@ -26,7 +26,7 @@ BINDS::BINDS()
 
 void BINDS::bind(int keyid, const char *str)
 {
-	if(keyid < 0 && keyid >= KEY_LAST)
+	if(keyid < 0 || keyid >= KEY_LAST)
 		return;
 		
 	str_copy(keybindings[keyid], str, sizeof(keybindings[keyid]));
