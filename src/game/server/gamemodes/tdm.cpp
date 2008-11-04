@@ -17,7 +17,7 @@ int GAMECONTROLLER_TDM::on_character_death(class CHARACTER *victim, class PLAYER
 	if(weapon >= 0)
 	{
 		// do team scoring
-		if(killer == victim->player)
+		if(killer == victim->player || killer->team == victim->player->team)
 			teamscore[killer->team&1]--; // klant arschel
 		else
 			teamscore[killer->team&1]++; // good shit
