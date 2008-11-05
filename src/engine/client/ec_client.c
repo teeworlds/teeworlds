@@ -1605,7 +1605,10 @@ static void client_run()
 			break;
 
 		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_down('e'))
+		{
 			config.cl_editor = config.cl_editor^1;
+			inp_mouse_mode_relative();
+		}
 		
 		if(!gfx_window_open())
 			break;
@@ -1614,7 +1617,6 @@ static void client_run()
 		if(config.cl_editor)
 		{
 			client_update();
-			inp_mouse_mode_relative();
 			editor_update_and_render();
 			gfx_swap();
 		}
