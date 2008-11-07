@@ -217,6 +217,7 @@ void inp_update()
 					
 				/* other messages */
 				case SDL_QUIT:
+					/* TODO: cleaner exit */
 					exit(0);
 			}
 			

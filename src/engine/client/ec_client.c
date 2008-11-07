@@ -1610,8 +1610,10 @@ static void client_run()
 			inp_mouse_mode_relative();
 		}
 		
+		/*
 		if(!gfx_window_open())
 			break;
+		*/
 			
 		/* render */
 		if(config.cl_editor)
