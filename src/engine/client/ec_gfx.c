@@ -60,6 +60,8 @@ const int vertex_buffer_size = 32*1024;
 static VERTEX *vertices = 0;
 static int num_vertices = 0;
 
+static int no_gfx = 0;
+
 static COLOR color[4];
 static TEXCOORD texture[4];
 
@@ -107,6 +109,13 @@ static void flush()
 	if(num_vertices == 0)
 		return;
 		
+	if(no_gfx)
+	{
+		num_vertices = 0;
+		return;
+	}
+	
+		
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -132,7 +141,7 @@ static void flush()
 	}
 	
 	/* Reset pointer */
-	num_vertices = 0;	
+	num_vertices = 0;
 }
 
 static void add_vertices(int count)
@@ -154,6 +163,7 @@ int gfx_init()
 	{
 		screen_width = 320;
 		screen_height = 240;
+		no_gfx = 1;
 	}
 
 	if(SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO) < 0)
@@ -164,6 +174,7 @@ int gfx_init()
 	
     atexit(SDL_Quit);
 
+	if(!no_gfx)
 	{
 		const SDL_VideoInfo *info;
 		int flags = SDL_OPENGL;
@@ -208,8 +219,6 @@ int gfx_init()
 		}
 	}
 	
-	SDL_ShowCursor(0);
-	
 	/* Init vertices */
 	if (vertices)
 		mem_free(vertices);
@@ -222,18 +231,6 @@ int gfx_init()
 											  context.version_minor(),
 											  context.version_rev());*/
 
-	gfx_mapscreen(0,0,config.gfx_screen_width, config.gfx_screen_height);
-
-	/* set some default settings */	
-	glEnable(GL_BLEND);
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	
-	glAlphaFunc(GL_GREATER, 0);
-	glEnable(GL_ALPHA_TEST);
-	glDepthMask(0);
 	
 	/* Set all z to -5.0f */
 	for (i = 0; i < vertex_buffer_size; i++)
@@ -245,8 +242,26 @@ int gfx_init()
 		textures[i].next = i+1;
 	textures[MAX_TEXTURES-1].next = -1;
 	
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	if(!no_gfx)
+	{
+		SDL_ShowCursor(0);
+		gfx_mapscreen(0,0,config.gfx_screen_width, config.gfx_screen_height);
+
+		/* set some default settings */	
+		glEnable(GL_BLEND);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		
+		glAlphaFunc(GL_GREATER, 0);
+		glEnable(GL_ALPHA_TEST);
+		glDepthMask(0);
+
+		
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	}
 
 	/* init input */
 	inp_init();
@@ -256,6 +271,9 @@ int gfx_init()
 
 	/* perform some tests */
 	/* pixeltest_dotesting(); */
+	
+	/*if(config.dbg_stress)
+		gfx_minimize();*/
 
 	/* set vsync as needed */
 	gfx_set_vsync(config.gfx_vsync);
@@ -363,17 +381,20 @@ int gfx_unload_texture(int index)
 
 void gfx_blend_none()
 {
+	if(no_gfx) return;
 	glDisable(GL_BLEND);
 }
 
 void gfx_blend_normal()
 {
+	if(no_gfx) return;
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void gfx_blend_additive()
 {
+	if(no_gfx) return;
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 }
@@ -398,7 +419,7 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 	int tex = 0;
 	
 	/* don't waste memory on texture if we are stress testing */
-	if(config.dbg_stress)
+	if(config.dbg_stress || no_gfx)
 		return -1;
 	
 	/* grab texture */
@@ -645,6 +666,7 @@ int gfx_screenheight()
 void gfx_texture_set(int slot)
 {
 	dbg_assert(drawing == 0, "called gfx_texture_set within begin");
+	if(no_gfx) return;
 	if(slot == -1)
 		glDisable(GL_TEXTURE_2D);
 	else
@@ -656,6 +678,7 @@ void gfx_texture_set(int slot)
 
 void gfx_clear(float r, float g, float b)
 {
+	if(no_gfx) return;
 	glClearColor(r,g,b,0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
@@ -666,6 +689,7 @@ void gfx_mapscreen(float tl_x, float tl_y, float br_x, float br_y)
 	screen_y0 = tl_y;
 	screen_x1 = br_x;
 	screen_y1 = br_y;
+	if(no_gfx) return;
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(tl_x, br_x, br_y, tl_y, 1.0f, 10.f);
@@ -887,18 +911,20 @@ void gfx_lines_draw(float x0, float y0, float x1, float y1)
 
 void gfx_clip_enable(int x, int y, int w, int h)
 {
+	if(no_gfx) return;
 	glScissor(x, gfx_screenheight()-(y+h), w, h);
 	glEnable(GL_SCISSOR_TEST);
 }
 
 void gfx_clip_disable()
 {
+	if(no_gfx) return;
 	glDisable(GL_SCISSOR_TEST);
 }
 
 void gfx_minimize()
 {
-	/* TODO: SDL */
+	SDL_WM_IconifyWindow();
 }
 
 void gfx_maximize()
