@@ -151,24 +151,71 @@ static void add_vertices(int count)
 		flush();
 }
 
+static int try_init()
+{
+	const SDL_VideoInfo *info;
+	int flags = SDL_OPENGL;
+	
+	screen_width = config.gfx_screen_width;
+	screen_height = config.gfx_screen_height;
+
+	info = SDL_GetVideoInfo();
+
+	/* set flags */
+	flags  = SDL_OPENGL;
+	flags |= SDL_GL_DOUBLEBUFFER;
+	flags |= SDL_HWPALETTE;
+	flags |= SDL_RESIZABLE;
+
+	if(info->hw_available)
+		flags |= SDL_HWSURFACE;
+	else
+		flags |= SDL_SWSURFACE;
+
+	if(info->blit_hw)
+		flags |= SDL_HWACCEL;
+
+	if(config.gfx_fullscreen)
+		flags |= SDL_FULLSCREEN;
+
+	/* set gl attributes */
+	if(config.gfx_fsaa_samples)
+	{
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, config.gfx_fsaa_samples);
+	}
+	else
+	{
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+	}
+
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+	/* set caption */
+	SDL_WM_SetCaption("Teeworlds", "Teeworlds");
+	
+	/* create window */
+	screen_surface = SDL_SetVideoMode(screen_width, screen_height, 0, flags);
+	if(screen_surface == NULL)
+	{
+		dbg_msg("gfx", "unable to set video mode: %s", SDL_GetError());
+		return -1;
+	}
+	
+	return 0;
+}
+
 int gfx_init()
 {
 	int i;
 
-	screen_width = config.gfx_screen_width;
-	screen_height = config.gfx_screen_height;
-
-
 	if(config.dbg_stress)
-	{
-		screen_width = 320;
-		screen_height = 240;
 		no_gfx = 1;
-	}
 
 	if(SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO) < 0)
 	{
-        dbg_msg("gfx", "Unable to init SDL: %s\n", SDL_GetError());
+        dbg_msg("gfx", "unable to init SDL: %s", SDL_GetError());
         return -1;
     }
 	
@@ -176,47 +223,36 @@ int gfx_init()
 
 	if(!no_gfx)
 	{
-		const SDL_VideoInfo *info;
-		int flags = SDL_OPENGL;
-		
-		info = SDL_GetVideoInfo();
-
-		/* set flags */
-		flags  = SDL_OPENGL;
-		flags |= SDL_GL_DOUBLEBUFFER;
-		flags |= SDL_HWPALETTE;
-		flags |= SDL_RESIZABLE;
-
-		if(info->hw_available)
-			flags |= SDL_HWSURFACE;
-		else
-			flags |= SDL_SWSURFACE;
-
-		if(info->blit_hw)
-			flags |= SDL_HWACCEL;
-
-		if(config.gfx_fullscreen)
-			flags |= SDL_FULLSCREEN;
-
-		/* set gl attributes */
-		if(config.gfx_fsaa_samples)
+		do
 		{
-			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, config.gfx_fsaa_samples);
-		}
+			if(try_init() == 0)
+				break;
+			
+			/* try disabling fsaa */
+			if(config.gfx_fsaa_samples)
+			{
+				dbg_msg("gfx", "disabling FSAA and trying again");
+				config.gfx_fsaa_samples = 0;
 
-		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+				if(try_init() == 0)
+					break;
+			}
 
-		/* set caption */
-		SDL_WM_SetCaption("Teeworlds", "Teeworlds");
-		
-		/* create window */
-		screen_surface = SDL_SetVideoMode(screen_width, screen_height, 0, flags);
-		if(screen_surface == NULL)
-		{
-	        dbg_msg("gfx", "Unable to set video mode: %s\n", SDL_GetError());
-    	    return -1;
-		}
+			/* try lowering the resolution */
+			if(config.gfx_screen_width != 640 || config.gfx_screen_height != 480)
+			{
+				dbg_msg("gfx", "setting resolution to 640x480 and trying again");
+				config.gfx_screen_width = 640;
+				config.gfx_screen_height = 480;
+
+				if(try_init() == 0)
+					break;
+			}
+
+			dbg_msg("gfx", "out of ideas. failed to init graphics");
+							
+			return -1;			
+		} while(0);
 	}
 	
 	/* Init vertices */
