@@ -18,12 +18,13 @@ struct PACKET
 static PACKET *first = (PACKET *)0;
 static PACKET *last = (PACKET *)0;
 static int current_latency = 0;
-static int debug = 1;
 
-static int config_ping = 100;
-static int config_pingflux = 100;
+static int config_log = 0;
+static int config_ping = 50;
+static int config_pingflux = 15;
 static int config_pingspike = 0;
-static int config_packetloss = 0; // in percent
+static int config_packetloss = 1; // in percent
+static int config_reorder = 1;
 
 int run(int port, NETADDR dest)
 {
@@ -47,7 +48,8 @@ int run(int port, NETADDR dest)
 				
 			if((rand()%100) < config_packetloss) // drop the packet
 			{
-				dbg_msg("crapnet", "dropped packet");
+				if(config_log)
+					dbg_msg("crapnet", "dropped packet");
 				continue;
 			}
 
@@ -91,7 +93,7 @@ int run(int port, NETADDR dest)
 				}
 			}
 
-			if(debug)
+			if(config_log)
 				dbg_msg("crapnet", "<< %08d %d.%d.%d.%d:%5d (%d)", p->id, from.ip[0], from.ip[1], from.ip[2], from.ip[3], from.port, p->data_size);
 		}
 		
@@ -103,7 +105,7 @@ int run(int port, NETADDR dest)
 				PACKET *p = first;
 				char flags[] = "  ";
 
-				if((rand()%2) == 0 && first->next)
+				if(config_reorder && (rand()%2) == 0 && first->next)
 				{
 					flags[0] = 'R';
 					p = first->next;
@@ -143,7 +145,7 @@ int run(int port, NETADDR dest)
 					flags[1] = 'S';
 				}
 
-				if(debug)
+				if(config_log)
 				{
 					dbg_msg("crapnet", ">> %08d %d.%d.%d.%d:%5d (%d) %s", p->id,
 						p->send_to.ip[0], p->send_to.ip[1],
