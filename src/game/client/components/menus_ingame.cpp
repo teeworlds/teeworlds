@@ -209,15 +209,15 @@ void MENUS::render_serverinfo(RECT main_view)
 	
 	{
 		RECT button;
+		int is_favorite = client_serverbrowse_isfavorite(current_server_info.netaddr);
 		ui_hsplit_b(&serverinfo, 20.0f, &serverinfo, &button);
 		static int add_fav_button = 0;
-		if (ui_do_button(&add_fav_button, "Favorite", current_server_info.favorite, &button, ui_draw_checkbox, 0))
+		if (ui_do_button(&add_fav_button, "Favorite", is_favorite, &button, ui_draw_checkbox, 0))
 		{
-			if(current_server_info.favorite)
+			if(is_favorite)
 				client_serverbrowse_removefavorite(current_server_info.netaddr);
 			else
 				client_serverbrowse_addfavorite(current_server_info.netaddr);
-			current_server_info.favorite = !current_server_info.favorite;
 		}
 	}
 	

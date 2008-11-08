@@ -307,6 +307,18 @@ void client_serverbrowse_update();
 int client_serverbrowse_lan();
 
 /*
+	Function: client_serverbrowse_isfavorite
+		Asks the server browser is a netaddr is in the favorite list
+	
+	Arguments:
+		addr - Address of the server to ask about.
+		
+	Returns:
+		Returns zero if it's not in the list, non-zero if it is.
+*/
+int client_serverbrowse_isfavorite(NETADDR addr);
+
+/*
 	Function: client_serverbrowse_addfavorite
 		Adds a server to the favorite list
 	

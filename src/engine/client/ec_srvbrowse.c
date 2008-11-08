@@ -647,6 +647,18 @@ void client_serverbrowse_update()
 }
 
 
+int client_serverbrowse_isfavorite(NETADDR addr)
+{
+	/* search for the address */
+	int i;
+	for(i = 0; i < num_favorite_servers; i++)
+	{
+		if(net_addr_comp(&addr, &favorite_servers[i]) == 0)
+			return 1;
+	}
+	return 0;
+}
+
 void client_serverbrowse_addfavorite(NETADDR addr)
 {
 	int i;

@@ -849,6 +849,7 @@ static void client_process_packet(NETCHUNK *packet)
 					if(net_addr_comp(&server_address, &packet->address) == 0)
 					{
 						mem_copy(&current_server_info, &info, sizeof(current_server_info));
+						current_server_info.netaddr = server_address;
 						current_server_info_requesttime = -1;
 					}
 					
