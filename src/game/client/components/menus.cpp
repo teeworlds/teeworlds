@@ -440,11 +440,12 @@ float MENUS::ui_do_scrollbar_h(const void *id, const RECT *rect, float current)
 int MENUS::ui_do_key_reader(void *id, const RECT *rect, int key)
 {
 	// process
+	static void *grabbed_id = 0;
 	static bool mouse_released = true;
 	int inside = ui_mouse_inside(rect);
 	int new_key = key;
 	
-	if(!ui_mouse_button(0))
+	if(!ui_mouse_button(0) && grabbed_id == id)
 		mouse_released = true;
 
 	if(ui_active_item() == id)
@@ -455,6 +456,7 @@ int MENUS::ui_do_key_reader(void *id, const RECT *rect, int key)
 			binder.got_key = false;
 			ui_set_active_item(0);
 			mouse_released = false;
+			grabbed_id = id;
 		}
 	}
 	else if(ui_hot_item() == id)
