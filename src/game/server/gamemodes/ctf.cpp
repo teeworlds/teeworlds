@@ -115,11 +115,10 @@ void GAMECONTROLLER_CTF::tick()
 			int num = game.world.find_entities(f->pos, 32.0f, (ENTITY**)close_characters, MAX_CLIENTS, NETOBJTYPE_CHARACTER);
 			for(int i = 0; i < num; i++)
 			{
-				if(!close_characters[i]->alive || close_characters[i]->player->team == -1)
+				if(!close_characters[i]->alive || close_characters[i]->player->team == -1 || col_intersect_line(f->pos, close_characters[i]->pos, NULL))
 					continue;
 				
-				int collision = col_intersect_line(f->pos, close_characters[i]->pos, NULL);
-				if(!collision && close_characters[i]->team == f->team)
+				if(close_characters[i]->team == f->team)
 				{
 					// return the flag
 					if(!f->at_stand)
@@ -135,7 +134,7 @@ void GAMECONTROLLER_CTF::tick()
 						f->reset();
 					}
 				}
-				else if(!collision)
+				else
 				{
 					// take the flag
 					if(f->at_stand)
