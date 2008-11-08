@@ -357,7 +357,7 @@ VIDEO_MODE fakemodes[] = {
 
 int gfx_get_video_modes(VIDEO_MODE *list, int maxcount)
 {
-	int num_modes = 0;
+	int num_modes = sizeof(fakemodes)/sizeof(VIDEO_MODE);
 	SDL_Rect **modes;
 
 	if(config.gfx_display_all_modes)
@@ -375,6 +375,7 @@ int gfx_get_video_modes(VIDEO_MODE *list, int maxcount)
 	if(modes == NULL)
 	{
 		/* no modes */
+		num_modes = 0;
 	}
 	else if(modes == (SDL_Rect**)-1)
 	{
@@ -383,6 +384,7 @@ int gfx_get_video_modes(VIDEO_MODE *list, int maxcount)
 	else
 	{
 		int i;
+		num_modes = 0;
 		for(i = 0; modes[i]; ++i)
 		{
 			if(num_modes == maxcount)
@@ -396,7 +398,7 @@ int gfx_get_video_modes(VIDEO_MODE *list, int maxcount)
 		}
 	}
 	
-	return 1; /* TODO: SDL*/
+	return num_modes;
 }
 
 void gfx_set_vsync(int val)
