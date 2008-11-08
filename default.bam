@@ -104,14 +104,13 @@ cmd5_tool = Script("scripts/cmd5.py")
 content_compiler = Script("datasrc/compile.py")
 
 function CHash(output, ...)
-	local inputs = {}
-	local ih = collect_input(arg)
+	local inputs = collect_input(arg)
 	
 	output = Path(output)
 	
 	-- compile all the files
 	local cmd = cmd5_tool .. " "
-	for index, inname in ih do
+	for index, inname in inputs do
 		cmd = cmd .. Path(inname) .. " " 
 	end
 	
