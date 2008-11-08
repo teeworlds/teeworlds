@@ -1037,6 +1037,11 @@ void str_copy(char *dst, const char *src, int dst_size)
 	dst[dst_size-1] = 0; /* assure null termination */
 }
 
+int str_length(const char *str)
+{
+	return (int)strlen(str);
+}
+
 void str_format(char *buffer, int buffer_size, const char *format, ...)
 {
 #if defined(CONF_FAMILY_WINDOWS)
@@ -1179,6 +1184,7 @@ void gui_messagebox(const char *title, const char *message)
 #endif
 }
 
+int str_isspace(char c) { return c == ' ' || c == '\n' || c == '\t'; }
 
 
 #if defined(__cplusplus)

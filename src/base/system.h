@@ -691,6 +691,18 @@ void str_append(char *dst, const char *src, int dst_size);
 void str_copy(char *dst, const char *src, int dst_size);
 
 /*
+	Function: str_length
+		Returns the length of a zero terminated string.
+		
+	Parameters:
+		str - Pointer to the string.
+		
+	Returns:
+		Length of string in bytes excluding the zero termination.
+*/
+int str_length(const char *str);
+
+/*
 	Function: str_format
 		Performs printf formating into a buffer.
 		
@@ -921,6 +933,9 @@ typedef struct
 
 
 void net_stats(NETSTATS *stats);
+
+int str_isspace(char c);
+
 
 /*
 	Function: gui_messagebox
