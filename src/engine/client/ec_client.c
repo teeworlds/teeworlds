@@ -741,7 +741,7 @@ static const char *client_load_map_search(const char *mapname, int wanted_crc)
 		return error;
 
 	/* try the downloaded maps */
-	str_format(buf, sizeof(buf), "maps/%s_%8x.map", mapname, wanted_crc);
+	str_format(buf, sizeof(buf), "downloadedmaps/%s_%8x.map", mapname, wanted_crc);
 	error = client_load_map(mapname, buf, wanted_crc);
 	return error;
 }
@@ -898,7 +898,7 @@ static void client_process_packet(NETCHUNK *packet)
 					}
 					else
 					{
-						str_format(mapdownload_filename, sizeof(mapdownload_filename), "maps/%s_%08x.map", map, map_crc);
+						str_format(mapdownload_filename, sizeof(mapdownload_filename), "downloadedmaps/%s_%08x.map", map, map_crc);
 
 						dbg_msg("client/network", "starting to download map to '%s'", mapdownload_filename);
 						
