@@ -27,6 +27,7 @@ public:
 	int team;
 	int at_stand;
 	int drop_tick;
+	int grab_tick;
 	
 	FLAG(int _team);
 

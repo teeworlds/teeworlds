@@ -99,9 +99,16 @@ void GAMECONTROLLER_CTF::tick()
 						server_clientname(f->carrying_character->player->client_id));
 
 					char buf[512];
-					str_format(buf, sizeof(buf), "%s team has captured the flag!", fi^1 ? "Blue" : "Red");
-					game.send_broadcast(buf, -1);
-						
+					float capture_time = (server_tick() - f->grab_tick)/(float)server_tickspeed();
+					if(capture_time <= 60)
+					{
+						str_format(buf, sizeof(buf), "the %s flag was captured by %s (%d.%s%d seconds)", fi ? "blue" : "red", server_clientname(f->carrying_character->player->client_id), (int)capture_time%60, ((int)(capture_time*100)%100)<10?"0":"", (int)(capture_time*100)%100);
+					}
+					else
+					{
+						str_format(buf, sizeof(buf), "the %s flag was captured by %s", fi ? "blue" : "red", server_clientname(f->carrying_character->player->client_id));
+					}
+					game.send_chat(-1, -2, buf);
 					for(int i = 0; i < 2; i++)
 						flags[i]->reset();
 					
@@ -138,7 +145,10 @@ void GAMECONTROLLER_CTF::tick()
 				{
 					// take the flag
 					if(f->at_stand)
+					{
 						teamscore[fi^1]++;
+						f->grab_tick = server_tick();
+					}
 					f->at_stand = 0;
 					f->carrying_character = close_characters[i];
 					f->carrying_character->player->score += 1;
@@ -185,6 +195,7 @@ FLAG::FLAG(int _team)
 	team = _team;
 	proximity_radius = phys_size;
 	carrying_character = 0x0;
+	grab_tick = 0;
 	
 	reset();
 	
@@ -198,6 +209,7 @@ void FLAG::reset()
 	at_stand = 1;
 	pos = stand_pos;
 	vel = vec2(0,0);
+	grab_tick = 0;
 }
 
 void FLAG::snap(int snapping_client)
