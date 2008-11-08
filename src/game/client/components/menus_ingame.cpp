@@ -16,7 +16,6 @@
 #include "menus.hpp"
 #include "motd.hpp"
 #include "voting.hpp"
-#include "maplist.hpp"
 
 void MENUS::render_game(RECT main_view)
 {
@@ -265,32 +264,39 @@ void MENUS::render_serverinfo(RECT main_view)
 	gfx_text(0, motd.x+x, motd.y+y, 16, gameclient.motd->server_motd, (int)motd.w);
 }
 
-void MENUS::render_servercontrol_map(RECT main_view)
+static const char *format_command(const char *cmd)
+{
+	return cmd;
+}
+
+void MENUS::render_servercontrol_server(RECT main_view)
 {
 	// draw header
 	RECT header, footer;
 	ui_hsplit_t(&main_view, 20, &header, &main_view);
 	ui_draw_rect(&header, vec4(1,1,1,0.25f), CORNER_T, 5.0f); 
-	ui_do_label(&header, "Maps", 18.0f, 0);
+	ui_do_label(&header, "Options", 18.0f, 0);
 
 	// draw footers
 	ui_hsplit_b(&main_view, 20, &main_view, &footer);
 	ui_draw_rect(&footer, vec4(1,1,1,0.25f), CORNER_B, 5.0f); 
 	ui_vsplit_l(&footer, 10.0f, 0, &footer);
 
-	// maps
+	// options
 	ui_draw_rect(&main_view, vec4(0,0,0,0.15f), 0, 0);
 	RECT list = main_view;
-	for(int i = 0; i < gameclient.maplist->num(); i++)
+	int i = 0;
+	for(VOTING::VOTEOPTION *option = gameclient.voting->first; option; option = option->next)
 	{
 		RECT button;
 		ui_hsplit_t(&list, button_height, &button, &list);
 		
-		if(ui_do_button((char *)&gameclient.snap+i, "", callvote_selectedmap == i, &button, ui_draw_list_row, 0))
-			callvote_selectedmap = i;
+		if(ui_do_button(option, "", callvote_selectedoption == i, &button, ui_draw_list_row, 0))
+			callvote_selectedoption = i;
 
 		ui_vmargin(&button, 5.0f, &button);
-		ui_do_label(&button, gameclient.maplist->name(i), 18.0f, -1);
+		ui_do_label(&button, format_command(option->command), 18.0f, -1);
+		i++;
 	}
 }
 
@@ -345,7 +351,7 @@ void MENUS::render_servercontrol(RECT main_view)
 	
 	RECT button;
 	
-	const char *tabs[] = {"Map", "Kick"};
+	const char *tabs[] = {"Options", "Kick"};
 	int num_tabs = (int)(sizeof(tabs)/sizeof(*tabs));
 
 	for(int i = 0; i < num_tabs; i++)
@@ -356,7 +362,7 @@ void MENUS::render_servercontrol(RECT main_view)
 		{
 			control_page = i;
 			callvote_selectedplayer = -1;
-			callvote_selectedmap = -1;
+			callvote_selectedoption = -1;
 		}
 	}
 		
@@ -367,7 +373,7 @@ void MENUS::render_servercontrol(RECT main_view)
 	
 	// render page		
 	if(control_page == 0)
-		render_servercontrol_map(main_view);
+		render_servercontrol_server(main_view);
 	else if(control_page == 1)
 		render_servercontrol_kick(main_view);
 		
@@ -381,8 +387,11 @@ void MENUS::render_servercontrol(RECT main_view)
 		{
 			if(control_page == 0)
 			{
+				//
+				gameclient.voting->callvote_option(callvote_selectedoption);
+				/*
 				if(callvote_selectedmap >= 0 && callvote_selectedmap < gameclient.maplist->num())
-					gameclient.voting->callvote_map(gameclient.maplist->name(callvote_selectedmap));
+					gameclient.voting->callvote_map(gameclient.maplist->name(callvote_selectedmap));*/
 			}
 			else if(control_page == 1)
 			{

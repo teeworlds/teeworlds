@@ -7,6 +7,10 @@
 
 #include <engine/e_config.h>
 #include <engine/e_server_interface.h>
+extern "C"
+{
+	#include <engine/e_memheap.h>
+}
 #include <game/version.hpp>
 #include <game/collision.hpp>
 #include <game/layers.hpp>
@@ -20,6 +24,16 @@
 
 TUNING_PARAMS tuning;
 
+struct VOTEOPTION
+{
+	VOTEOPTION *next;
+	VOTEOPTION *prev;
+	char command[1];
+};
+
+static HEAP *voteoption_heap = 0;
+static VOTEOPTION *voteoption_first = 0;
+static VOTEOPTION *voteoption_last = 0;
 
 void send_tuning_params(int cid)
 {
@@ -120,7 +134,7 @@ void mods_client_drop(int client_id)
 	(void) game.controller->check_team_balance();
 }
 
-static bool is_separator(char c) { return c == ';' || c == ' ' || c == ',' || c == '\t'; }
+/*static bool is_separator(char c) { return c == ';' || c == ' ' || c == ',' || c == '\t'; }
 
 static const char *liststr_find(const char *str, const char *needle)
 {
@@ -138,7 +152,7 @@ static const char *liststr_find(const char *str, const char *needle)
 	}
 	
 	return 0;
-}
+}*/
 
 void mods_message(int msgtype, int client_id)
 {
@@ -189,23 +203,28 @@ void mods_message(int msgtype, int client_id)
 		char desc[512] = {0};
 		char cmd[512] = {0};
 		NETMSG_CL_CALLVOTE *msg = (NETMSG_CL_CALLVOTE *)rawmsg;
-		if(str_comp_nocase(msg->type, "map") == 0)
+		if(str_comp_nocase(msg->type, "option") == 0)
 		{
-			if(!config.sv_vote_map)
+			VOTEOPTION *option = voteoption_first;
+			while(option)
 			{
-				game.send_chat(-1, client_id, "Server does not allow voting on map");
-				return;
+				if(str_comp_nocase(msg->value, option->command) == 0)
+				{
+					str_format(chatmsg, sizeof(chatmsg), "Vote called to change server option '%s'", option->command);
+					str_format(desc, sizeof(desc), "%s", option->command);
+					str_format(cmd, sizeof(cmd), "%s", option->command);
+					break;
+				}
+
+				option = option->next;
 			}
 			
-			if(!liststr_find(config.sv_maplist, msg->value))
+			if(!option)
 			{
-				game.send_chat(-1, client_id, "Map is not in the map list");
+				str_format(chatmsg, sizeof(chatmsg), "'%s' isn't an option on this server", msg->value);
+				game.send_chat(-1, client_id, chatmsg);
 				return;
 			}
-			
-			str_format(chatmsg, sizeof(chatmsg), "Vote called to change map to '%s'", msg->value);
-			str_format(desc, sizeof(desc), "Change map to '%s'", msg->value);
-			str_format(cmd, sizeof(cmd), "change_map %s", msg->value);
 		}
 		else if(str_comp_nocase(msg->type, "kick") == 0)
 		{
@@ -316,17 +335,23 @@ void mods_message(int msgtype, int client_id)
 		
 		if(msgtype == NETMSGTYPE_CL_STARTINFO)
 		{
-			// send tuning parameters to client
-			send_tuning_params(client_id);
-			
-			// send maps to the client
+			// send vote options
+			NETMSG_SV_VOTE_CLEAROPTIONS clearmsg;
+			clearmsg.pack(MSGFLAG_VITAL);
+			server_send_msg(client_id);
+			VOTEOPTION *current = voteoption_first;
+			while(current)
 			{
-				NETMSG_SV_MAPLIST m;
-				m.names = config.sv_maplist;
-				m.pack(MSGFLAG_VITAL);
+				NETMSG_SV_VOTE_OPTION optionmsg;
+				optionmsg.command = current->command;
+				optionmsg.pack(MSGFLAG_VITAL);
 				server_send_msg(client_id);
+				current = current->next;
 			}
 			
+			// send tuning parameters to client
+			send_tuning_params(client_id);
+
 			//
 			NETMSG_SV_READYTOENTER m;
 			m.pack(MSGFLAG_VITAL|MSGFLAG_FLUSH);
@@ -425,6 +450,26 @@ static void con_set_team(void *result, void *user_data)
 	(void) game.controller->check_team_balance();
 }
 
+static void con_addvote(void *result, void *user_data)
+{
+	int len = strlen(console_arg_string(result, 0));
+	
+	if(!voteoption_heap)
+		voteoption_heap = memheap_create();
+	
+	VOTEOPTION *option = (VOTEOPTION *)memheap_allocate(voteoption_heap, sizeof(VOTEOPTION) + len);
+	option->next = 0;
+	option->prev = voteoption_last;
+	if(option->prev)
+		option->prev->next = option;
+	voteoption_last = option;
+	if(!voteoption_first)
+		voteoption_first = option;
+	
+	mem_copy(option->command, console_arg_string(result, 0), len+1);
+	dbg_msg("server", "added option '%s'", option->command);
+}
+
 void mods_console_init()
 {
 	MACRO_REGISTER_COMMAND("tune", "si", con_tune_param, 0);
@@ -436,6 +481,8 @@ void mods_console_init()
 	MACRO_REGISTER_COMMAND("broadcast", "r", con_broadcast, 0);
 	MACRO_REGISTER_COMMAND("say", "r", con_say, 0);
 	MACRO_REGISTER_COMMAND("set_team", "ii", con_set_team, 0);
+
+	MACRO_REGISTER_COMMAND("addvote", "r", con_addvote, 0);
 }
 
 void mods_init()

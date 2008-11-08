@@ -36,9 +36,20 @@ void VOTING::callvote_kick(int client_id)
 	callvote("kick", buf);
 }
 
-void VOTING::callvote_map(const char *map)
+void VOTING::callvote_option(int option_id)
 {
-	callvote("map", map);
+	VOTEOPTION *option = this->first;
+	while(option && option_id >= 0)
+	{
+		if(option_id == 0)
+		{
+			callvote("option", option->command);
+			break;
+		}
+		
+		option_id--;
+		option = option->next;
+	}
 }
 
 void VOTING::vote(int v)
@@ -50,7 +61,20 @@ void VOTING::vote(int v)
 
 VOTING::VOTING()
 {
+	heap = 0;
+	clearoptions();
 	on_reset();
+}
+
+
+void VOTING::clearoptions()
+{
+	if(heap)
+		memheap_destroy(heap);
+	heap = memheap_create();
+	
+	first = 0;
+	last = 0;
 }
 
 void VOTING::on_reset()
@@ -91,6 +115,27 @@ void VOTING::on_message(int msgtype, void *rawmsg)
 		pass = msg->pass;
 		total = msg->total;
 	}	
+	else if(msgtype == NETMSGTYPE_SV_VOTE_CLEAROPTIONS)
+	{
+		clearoptions();
+	}
+	else if(msgtype == NETMSGTYPE_SV_VOTE_OPTION)
+	{
+		NETMSG_SV_VOTE_OPTION *msg = (NETMSG_SV_VOTE_OPTION *)rawmsg;
+		int len = str_length(msg->command);
+	
+		VOTEOPTION *option = (VOTEOPTION *)memheap_allocate(heap, sizeof(VOTEOPTION) + len);
+		option->next = 0;
+		option->prev = last;
+		if(option->prev)
+			option->prev->next = option;
+		last = option;
+		if(!first)
+			first = option;
+		
+		mem_copy(option->command, msg->command, len+1);
+
+	}
 }
 
 void VOTING::on_render()

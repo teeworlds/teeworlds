@@ -113,8 +113,8 @@ class MENUS : public COMPONENT
 	bool enter_pressed;
 	
 	// for call vote
+	int callvote_selectedoption;
 	int callvote_selectedplayer;
-	int callvote_selectedmap;
 	
 	// demo
 	struct DEMOITEM
@@ -146,7 +146,7 @@ class MENUS : public COMPONENT
 	void render_serverinfo(RECT main_view);
 	void render_servercontrol(RECT main_view);
 	void render_servercontrol_kick(RECT main_view);
-	void render_servercontrol_map(RECT main_view);
+	void render_servercontrol_server(RECT main_view);
 	
 	// found in menus_browser.cpp
 	int selected_index;

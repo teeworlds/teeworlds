@@ -1,17 +1,14 @@
 #include <game/client/component.hpp>
 #include <game/client/ui.hpp>
 
+extern "C"
+{
+	#include <engine/e_memheap.h>
+}
+
 class VOTING : public COMPONENT
 {
-	/*
-	void render_goals(float x, float y, float w);
-	void render_spectators(float x, float y, float w);
-	void render_scoreboard(float x, float y, float w, int team, const char *title);
-
-	static void con_key_scoreboard(void *result, void *user_data);
-	
-	bool active;
-	*/
+	HEAP *heap;
 
 	static void con_callvote(void *result, void *user_data);
 	static void con_vote(void *result, void *user_data);
@@ -21,9 +18,20 @@ class VOTING : public COMPONENT
 	char command[512];
 	int voted;
 	
+	void clearoptions();
 	void callvote(const char *type, const char *value);
 	
 public:
+
+	struct VOTEOPTION
+	{
+		VOTEOPTION *next;
+		VOTEOPTION *prev;
+		char command[1];
+	};
+	VOTEOPTION *first;
+	VOTEOPTION *last;
+
 	VOTING();
 	virtual void on_reset();
 	virtual void on_console_init();
@@ -33,7 +41,7 @@ public:
 	void render_bars(RECT bars, bool text);
 	
 	void callvote_kick(int client_id);
-	void callvote_map(const char *map);
+	void callvote_option(int option);
 	
 	void vote(int v); // -1 = no, 1 = yes
 	

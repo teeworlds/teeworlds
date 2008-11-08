@@ -24,7 +24,6 @@
 #include "components/killmessages.hpp"
 #include "components/mapimages.hpp"
 #include "components/maplayers.hpp"
-#include "components/maplist.hpp"
 #include "components/menus.hpp"
 #include "components/motd.hpp"
 #include "components/particles.hpp"
@@ -63,7 +62,6 @@ static PLAYERS players;
 static NAMEPLATES nameplates;
 static ITEMS items;
 static MAPIMAGES mapimages;
-static MAPLIST maplist;
 
 static MAPLAYERS maplayers_background(MAPLAYERS::TYPE_BACKGROUND);
 static MAPLAYERS maplayers_foreground(MAPLAYERS::TYPE_FOREGROUND);
@@ -110,7 +108,6 @@ void GAMECLIENT::on_console_init()
 	damageind = &::damageind;
 	mapimages = &::mapimages;
 	voting = &::voting;
-	maplist = &::maplist;
 	
 	// make a list of all the systems, make sure to add them in the corrent render order
 	all.add(skins);
@@ -122,7 +119,6 @@ void GAMECLIENT::on_console_init()
 	all.add(camera);
 	all.add(sounds);
 	all.add(voting);
-	all.add(maplist);
 	all.add(particles); // doesn't render anything, just updates all the particles
 	
 	all.add(&maplayers_background); // first to render

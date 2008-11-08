@@ -232,6 +232,13 @@ Messages = [
 		NetIntRange("emoticon", 0, 'NUM_EMOTICONS-1'),
 	]),
 
+	NetMessage("sv_vote_clearoptions", [
+	]),
+	
+	NetMessage("sv_vote_option", [
+		NetString("command"),
+	]),
+
 	NetMessage("sv_vote_set", [
 		NetIntRange("timeout", 0, 60),
 		NetString("description"),
@@ -243,10 +250,6 @@ Messages = [
 		NetIntRange("no", 0, 'MAX_CLIENTS'),
 		NetIntRange("pass", 0, 'MAX_CLIENTS'),
 		NetIntRange("total", 0, 'MAX_CLIENTS'),
-	]),
-
-	NetMessage("sv_maplist", [
-		NetString("names"),
 	]),
 		
 	### Client messages
