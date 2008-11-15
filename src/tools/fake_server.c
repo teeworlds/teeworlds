@@ -91,8 +91,8 @@ static void writeint(int i)
 static void build_infomessage()
 {
 	int i;
-	infomsg_size = sizeof(SERVERBROWSE_INFO);
-	memcpy(infomsg, SERVERBROWSE_INFO, infomsg_size);
+	infomsg_size = sizeof(SERVERBROWSE_OLD_INFO);
+	memcpy(infomsg, SERVERBROWSE_OLD_INFO, infomsg_size);
 	
 	writestr(version);
 	writestr(server_name);
@@ -147,8 +147,8 @@ static int run()
 		{
 			if(p.client_id == -1)
 			{
-				if(p.data_size == sizeof(SERVERBROWSE_GETINFO) &&
-					memcmp(p.data, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
+				if(p.data_size == sizeof(SERVERBROWSE_OLD_GETINFO) &&
+					memcmp(p.data, SERVERBROWSE_OLD_GETINFO, sizeof(SERVERBROWSE_OLD_GETINFO)) == 0)
 				{
 					send_serverinfo(&p.address);
 				}
@@ -163,11 +163,11 @@ static int run()
 		/* send heartbeats if needed */
 		if(next_heartbeat < time_get())
 		{
-			next_heartbeat = time_get()+time_freq()*30;
+			next_heartbeat = time_get()+time_freq()*(15+(rand()%15));
 			send_heartbeats();
 		}
 		
-		thread_sleep(10);
+		thread_sleep(100);
 	}
 }
 

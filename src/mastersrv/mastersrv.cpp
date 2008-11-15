@@ -10,6 +10,9 @@ extern "C" {
 
 enum {
 	MTU = 1400,
+	MAX_SERVERS_PER_PACKET=128,
+	MAX_PACKETS=16,
+	MAX_SERVERS=MAX_SERVERS_PER_PACKET*MAX_PACKETS,
 	EXPIRE_TIME = 90
 };
 
@@ -22,11 +25,29 @@ static struct CHECK_SERVER
 } check_servers[MAX_SERVERS];
 static int num_checkservers = 0;
 
+
+typedef struct NETADDR_IPv4
+{
+	unsigned char ip[4];
+	unsigned short port;
+} NETADDR_IPv4;
+
+static struct SERVER_ENTRY
+{
+	NETADDR address;
+	int64 expire;
+} servers[MAX_SERVERS];
+static int num_servers = 0;
+
 static struct PACKET_DATA
 {
-	unsigned char header[sizeof(SERVERBROWSE_LIST)];
-	NETADDR servers[MAX_SERVERS];
-} data;
+	int size;
+	struct {
+		unsigned char header[sizeof(SERVERBROWSE_LIST)];
+		NETADDR_IPv4 servers[MAX_SERVERS_PER_PACKET];
+	} data;
+} packets[MAX_PACKETS];
+static int num_packets = 0;
 
 static struct COUNT_PACKET_DATA
 {
@@ -35,11 +56,44 @@ static struct COUNT_PACKET_DATA
 	unsigned char low;
 } count_data;
 
-static int64 server_expire[MAX_SERVERS];
-static int num_servers = 0;
+//static int64 server_expire[MAX_SERVERS];
 
 static net_client net_checker; // NAT/FW checker
 static net_client net_op; // main
+
+void build_packets()
+{
+	SERVER_ENTRY *current = &servers[0];
+	int servers_left = num_servers;
+	int i;
+	num_packets = 0;
+	while(servers_left && num_packets < MAX_PACKETS)
+	{
+		int chunk = servers_left;
+		if(chunk > MAX_SERVERS_PER_PACKET)
+			chunk = MAX_SERVERS_PER_PACKET;
+		servers_left -= chunk;
+		
+		// copy header	
+		mem_copy(packets[num_packets].data.header, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
+		
+		// copy server addresses
+		for(i = 0; i < chunk; i++)
+		{
+			// TODO: ipv6 support
+			packets[num_packets].data.servers[i].ip[0] = current->address.ip[0];
+			packets[num_packets].data.servers[i].ip[1] = current->address.ip[1];
+			packets[num_packets].data.servers[i].ip[2] = current->address.ip[2];
+			packets[num_packets].data.servers[i].ip[3] = current->address.ip[3];
+			packets[num_packets].data.servers[i].port = current->address.port;
+			current++;
+		}
+		
+		packets[num_packets].size = sizeof(SERVERBROWSE_LIST) + sizeof(NETADDR_IPv4)*chunk;
+		
+		num_packets++;
+	}
+}
 
 void send_ok(NETADDR *addr)
 {
@@ -102,11 +156,11 @@ void add_server(NETADDR *info)
 	int i;
 	for(i = 0; i < num_servers; i++)
 	{
-		if(net_addr_comp(&data.servers[i], info) == 0)
+		if(net_addr_comp(&servers[i].address, info) == 0)
 		{
 			dbg_msg("mastersrv", "updated: %d.%d.%d.%d:%d",
 				info->ip[0], info->ip[1], info->ip[2], info->ip[3], info->port);
-			server_expire[i] = time_get()+time_freq()*EXPIRE_TIME;
+			servers[i].expire = time_get()+time_freq()*EXPIRE_TIME;
 			return;
 		}
 	}
@@ -120,8 +174,8 @@ void add_server(NETADDR *info)
 	
 	dbg_msg("mastersrv", "added: %d.%d.%d.%d:%d",
 		info->ip[0], info->ip[1], info->ip[2], info->ip[3], info->port);
-	data.servers[num_servers] = *info;
-	server_expire[num_servers] = time_get()+time_freq()*EXPIRE_TIME;
+	servers[num_servers].address = *info;
+	servers[num_servers].expire = time_get()+time_freq()*EXPIRE_TIME;
 	num_servers++;
 }
 
@@ -166,14 +220,13 @@ void purge_servers()
 	int i = 0;
 	while(i < num_servers)
 	{
-		if(server_expire[i] < now)
+		if(servers[i].expire < now)
 		{
 			// remove server
 			dbg_msg("mastersrv", "expired: %d.%d.%d.%d:%d",
-				data.servers[i].ip[0], data.servers[i].ip[1],
-				data.servers[i].ip[2], data.servers[i].ip[3], data.servers[i].port);
-			data.servers[i] = data.servers[num_servers-1];
-			server_expire[i] = server_expire[num_servers-1];
+				servers[i].address.ip[0], servers[i].address.ip[1],
+				servers[i].address.ip[2], servers[i].address.ip[3], servers[i].address.port);
+			servers[i] = servers[num_servers-1];
 			num_servers--;
 		}
 		else
@@ -183,6 +236,7 @@ void purge_servers()
 
 int main(int argc, char **argv)
 {
+	int64 last_build = 0;
 	NETADDR bindaddr;
 
 	dbg_logger_stdout();
@@ -198,7 +252,7 @@ int main(int argc, char **argv)
 	net_checker.open(bindaddr, 0);
 	// TODO: check socket for errors
 	
-	mem_copy(data.header, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
+	//mem_copy(data.header, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
 	mem_copy(count_data.header, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT));
 	
 	dbg_msg("mastersrv", "started");
@@ -249,9 +303,13 @@ int main(int argc, char **argv)
 				p.client_id = -1;
 				p.address = packet.address;
 				p.flags = NETSENDFLAG_CONNLESS;
-				p.data_size = num_servers*sizeof(NETADDR)+sizeof(SERVERBROWSE_LIST);
-				p.data = &data;
-				net_op.send(&p);
+				
+				for(int i = 0; i < num_packets; i++)
+				{
+					p.data_size = packets[i].size;
+					p.data = &packets[i].data;
+					net_op.send(&p);
+				}
 			}
 		}
 
@@ -278,9 +336,14 @@ int main(int argc, char **argv)
 			}
 		}
 		
-		// TODO: shouldn't be done every fuckin frame
-		purge_servers();
-		update_servers();
+		if(time_get()-last_build > time_freq()*5)
+		{
+			last_build = time_get();
+			
+			purge_servers();
+			update_servers();
+			build_packets();
+		}
 		
 		// be nice to the CPU
 		thread_sleep(1);

@@ -23,10 +23,10 @@ inick = 0
 
 def get_nick():
 	global inick, nicks
-	inick += 1
+	inick = (inick+1)%len(nicks)
 	return nicks[inick].replace("`", "\`")
 	
-for s in xrange(0, 150):
+for s in xrange(0, 350):
 	cmd = "./fake_server_d_d "
 	cmd += '-n "%s" ' % (random.choice(servernames) % get_nick())
 	for m in masterservers:

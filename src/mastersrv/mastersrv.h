@@ -1,10 +1,6 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 static const int MASTERSERVER_PORT = 8300;
 
-enum {
-	MAX_SERVERS = 200
-};
-
 typedef struct MASTERSRV_ADDR
 {
 	unsigned char ip[4];

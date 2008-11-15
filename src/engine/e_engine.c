@@ -574,6 +574,7 @@ static int engine_find_datadir(char *argv0)
 		const char *sdirs[] = {
 			"/usr/share/teeworlds",
 			"/usr/local/share/teeworlds"
+			"/opt/teeworlds"
 		};
 		const int sdirs_count = sizeof(sdirs) / sizeof(sdirs[0]);
 		
