@@ -717,9 +717,11 @@ void GAMECLIENT::on_predict()
 	
 	if(config.debug && config.cl_predict && predicted_tick == client_predtick())
 	{
-		NETOBJ_CHARACTER_CORE before = {0}, now = {0};
+		NETOBJ_CHARACTER_CORE before = {0}, now = {0}, before_prev = {0}, now_prev = {0};
 		before_char.write(&before);
+		before_prev_char.write(&before_prev);
 		predicted_char.write(&now);
+		predicted_prev_char.write(&now_prev);
 
 		if(mem_comp(&before, &now, sizeof(NETOBJ_CHARACTER_CORE)) != 0)
 		{
@@ -727,7 +729,7 @@ void GAMECLIENT::on_predict()
 			for(unsigned i = 0; i < sizeof(NETOBJ_CHARACTER_CORE)/sizeof(int); i++)
 				if(((int *)&before)[i] != ((int *)&now)[i])
 				{
-					dbg_msg("", "\t%d %d %d", i, ((int *)&before)[i], ((int *)&now)[i]);
+					dbg_msg("", "\t%d %d %d  (%d %d)", i, ((int *)&before)[i], ((int *)&now)[i], ((int *)&before_prev)[i], ((int *)&now_prev)[i]);
 				}
 		}
 	}
