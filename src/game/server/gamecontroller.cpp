@@ -199,6 +199,7 @@ void GAMECONTROLLER::startround()
 	unbalanced_tick = -1;
 	force_balanced = false;
 	round_count++;
+	dbg_msg("game","start round type='%s' teamplay='%d'", gametype, game_flags&GAMEFLAG_TEAMS);
 }
 
 void GAMECONTROLLER::change_map(const char *to_map)
