@@ -333,7 +333,7 @@ static void evolve(NETOBJ_CHARACTER *character, int tick)
 		tempcore.move();
 		tempcore.quantize();
 	}
-	
+
 	tempcore.write(character);
 }
 
@@ -637,6 +637,16 @@ void GAMECLIENT::on_predict()
 	// we can't predict without our own id or own character
 	if(snap.local_cid == -1 || !snap.characters[snap.local_cid].active)
 		return;
+	
+	// don't predict anything if we are paused
+	if(snap.gameobj && snap.gameobj->paused)
+	{
+		if(snap.local_character)
+			predicted_char.read(snap.local_character);
+		if(snap.local_prev_character)
+			predicted_prev_char.read(snap.local_prev_character);
+		return;
+	}
 
 	// repredict character
 	WORLD_CORE world;

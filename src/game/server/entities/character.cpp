@@ -683,7 +683,7 @@ void CHARACTER::tick_defered()
 		mem_zero(&current, sizeof(current));
 		reckoningcore.write(&predicted);
 		core.write(&current);
-		
+
 		// only allow dead reackoning for a top of 3 seconds
 		if(reckoning_tick+server_tickspeed()*3 < server_tick() || mem_comp(&predicted, &current, sizeof(NETOBJ_CHARACTER)) != 0)
 		{
@@ -846,8 +846,18 @@ void CHARACTER::snap(int snapping_client)
 	NETOBJ_CHARACTER *character = (NETOBJ_CHARACTER *)snap_new_item(NETOBJTYPE_CHARACTER, player->client_id, sizeof(NETOBJ_CHARACTER));
 	
 	// write down the core
-	character->tick = reckoning_tick;
-	sendcore.write(character);
+	if(game.world.paused)
+	{
+		// no dead reckoning when paused because the client doesn't know
+		// how far to perform the reckoning
+		character->tick = 0;
+		core.write(character);
+	}
+	else
+	{
+		character->tick = reckoning_tick;
+		sendcore.write(character);
+	}
 	
 	// set emote
 	if (emote_stop < server_tick())
