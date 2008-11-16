@@ -224,6 +224,10 @@ int gfx_init()
 
 	if(!no_gfx)
 	{
+		#ifdef CONF_FAMILY_WINDOWS
+			if(!getenv("SDL_VIDEO_WINDOW_POS") && !getenv("SDL_VIDEO_CENTERED"))
+				putenv("SDL_VIDEO_WINDOW_POS=8,27");
+		#endif
 		do
 		{
 			if(try_init() == 0)
