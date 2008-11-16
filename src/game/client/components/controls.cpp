@@ -158,11 +158,14 @@ int CONTROLS::snapinput(int *data)
 void CONTROLS::on_render()
 {
 	// update target pos
-	target_pos = gameclient.local_character_pos + mouse_pos;
+	if(!(gameclient.snap.gameobj && gameclient.snap.gameobj->paused))
+		target_pos = gameclient.local_character_pos + mouse_pos;
 }
 
 bool CONTROLS::on_mousemove(float x, float y)
 {
+	if(gameclient.snap.gameobj && gameclient.snap.gameobj->paused)
+		return false;
 	mouse_pos += vec2(x, y); // TODO: ugly
 
 	//
