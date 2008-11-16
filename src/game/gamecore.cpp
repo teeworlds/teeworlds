@@ -186,9 +186,9 @@ void CHARACTER_CORE::tick(bool use_input)
 	
 	// get ground state
 	bool grounded = false;
-	if(col_check_point((int)(pos.x+phys_size/2), (int)(pos.y+phys_size/2+5)))
+	if(col_check_point(pos.x+phys_size/2, pos.y+phys_size/2+5))
 		grounded = true;
-	if(col_check_point((int)(pos.x-phys_size/2), (int)(pos.y+phys_size/2+5)))
+	if(col_check_point(pos.x-phys_size/2, pos.y+phys_size/2+5))
 		grounded = true;
 	
 	vec2 target_direction = normalize(vec2(input.target_x, input.target_y));
@@ -466,16 +466,17 @@ void CHARACTER_CORE::move()
 
 void CHARACTER_CORE::write(NETOBJ_CHARACTER_CORE *obj_core)
 {
-	obj_core->x = (int)pos.x;
-	obj_core->y = (int)pos.y;
-	obj_core->vx = (int)(vel.x*256.0f);
-	obj_core->vy = (int)(vel.y*256.0f);
+	obj_core->x = round(pos.x);
+	obj_core->y = round(pos.y);
+	
+	obj_core->vx = round(vel.x*256.0f);
+	obj_core->vy = round(vel.y*256.0f);
 	obj_core->hook_state = hook_state;
 	obj_core->hook_tick = hook_tick;
-	obj_core->hook_x = (int)hook_pos.x;
-	obj_core->hook_y = (int)hook_pos.y;
-	obj_core->hook_dx = (int)(hook_dir.x*256.0f);
-	obj_core->hook_dy = (int)(hook_dir.y*256.0f);
+	obj_core->hook_x = round(hook_pos.x);
+	obj_core->hook_y = round(hook_pos.y);
+	obj_core->hook_dx = round(hook_dir.x*256.0f);
+	obj_core->hook_dy = round(hook_dir.y*256.0f);
 	obj_core->hooked_player = hooked_player;
 	obj_core->jumped = jumped;
 	obj_core->direction = direction;
