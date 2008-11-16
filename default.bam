@@ -204,6 +204,7 @@ function build(settings)
 			settings.linker.flags = settings.linker.flags .. " -mmacosx-version-min=10.4 -isysroot /Developer/SDKs/MacOSX10.4u.sdk"
 		elseif config.stackprotector.value == 1 then
 			settings.cc.flags = settings.cc.flags .. " -fstack-protector -fstack-protector-all"
+			settings.linker.flags = settings.linker.flags .. " -fstack-protector -fstack-protector-all"
 		end
 	end
 
@@ -259,6 +260,12 @@ function build(settings)
 		else
 			engine_settings.cc.flags = "-Wall"
 			engine_settings.linker.flags = ""
+			
+			if config.stackprotector.value == 1 then
+				engine_settings.cc.flags = settings.cc.flags .. " -fstack-protector -fstack-protector-all"
+				engine_settings.linker.flags = settings.linker.flags .. " -fstack-protector -fstack-protector-all"
+			end
+
 		end
 	end
 
