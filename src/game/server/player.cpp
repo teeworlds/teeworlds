@@ -44,6 +44,9 @@ void PLAYER::tick()
 			latency.accum_max = 0;
 		}
 	}
+	
+	if(!character && die_tick+server_tickspeed()*3 <= server_tick())
+		spawning = true;
 
 	if(character)
 	{

@@ -737,12 +737,18 @@ void CHARACTER::die(int killer, int weapon)
 	/*
 	die_pos = pos;
 	dead = true;
-	die_tick = server_tick();
 	*/
+	
+	// this is for auto respawn after 3 secs
+	player->die_tick = server_tick();
+	
 	alive = false;
 	game.world.remove_entity(this);
 	game.world.core.characters[player->client_id] = 0;
 	game.create_death(pos, player->client_id);
+	
+	// we got to wait 0.5 secs before respawning
+	player->respawn_tick = server_tick()+server_tickspeed()/2;
 }
 
 bool CHARACTER::take_damage(vec2 force, int dmg, int from, int weapon)

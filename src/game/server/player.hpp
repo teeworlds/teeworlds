@@ -21,6 +21,7 @@ public:
 	int color_feet;
 	
 	int respawn_tick;
+	int die_tick;
 	//
 	bool spawning;
 	int client_id;
