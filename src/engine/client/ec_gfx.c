@@ -165,7 +165,8 @@ static int try_init()
 	flags  = SDL_OPENGL;
 	flags |= SDL_GL_DOUBLEBUFFER;
 	flags |= SDL_HWPALETTE;
-	flags |= SDL_RESIZABLE;
+	if(config.dbg_resizable)
+		flags |= SDL_RESIZABLE;
 
 	if(info->hw_available)
 		flags |= SDL_HWSURFACE;

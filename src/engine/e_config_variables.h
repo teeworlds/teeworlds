@@ -46,7 +46,6 @@ MACRO_CONFIG_INT(gfx_high_detail, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "High de
 MACRO_CONFIG_INT(gfx_texture_quality, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "")
 MACRO_CONFIG_INT(gfx_fsaa_samples, 0, 0, 16, CFGFLAG_SAVE|CFGFLAG_CLIENT, "FSAA Samples")
 MACRO_CONFIG_INT(gfx_refresh_rate, 0, 0, 0, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Screen refresh rate")
-MACRO_CONFIG_INT(gfx_debug_resizable, 0, 0, 0, CFGFLAG_SAVE|CFGFLAG_CLIENT, "")
 MACRO_CONFIG_INT(gfx_finish, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "")
 
 MACRO_CONFIG_INT(inp_mousesens, 100, 5, 100000, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Mouse sensitivity")
@@ -68,5 +67,6 @@ MACRO_CONFIG_INT(dbg_pref, 0, 0, 1, CFGFLAG_SERVER, "Performance outputs")
 MACRO_CONFIG_INT(dbg_graphs, 0, 0, 1, CFGFLAG_CLIENT, "Performance graphs")
 MACRO_CONFIG_INT(dbg_hitch, 0, 0, 0, CFGFLAG_SERVER, "Hitch warnings")
 MACRO_CONFIG_STR(dbg_stress_server, 32, "localhost", CFGFLAG_CLIENT, "Server to stress")
+MACRO_CONFIG_INT(dbg_resizable, 0, 0, 0, CFGFLAG_CLIENT, "Enables window resizing")
 
 MACRO_CONFIG_INT(sv_map_reload, 0, 0, 1, CFGFLAG_SERVER, "Reload the current map")
