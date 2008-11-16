@@ -301,7 +301,7 @@ static void scan_file()
 		
 		if(read_chunk_header(&chunk_type, &chunk_size, &chunk_tick))
 			break;
-		
+			
 		/* read the chunk */
 		if(chunk_type&CHUNKTYPEFLAG_TICKMARKER)
 		{
@@ -512,9 +512,9 @@ int demorec_playback_nextframe()
 int demorec_playback_play()
 {
 	/* fill in previous and next tick */
-	while(playbackinfo.previous_tick == -1)
+	while(playbackinfo.previous_tick == -1 && demorec_isplaying())
 		do_tick();
-
+		
 	/* set start info */
 	/*playbackinfo.start_tick = playbackinfo.previous_tick;
 	playbackinfo.start_time = time_get();*/
@@ -552,6 +552,9 @@ int demorec_playback_update()
 	int64 now = time_get();
 	int64 deltatime = now-playbackinfo.last_update;
 	playbackinfo.last_update = now;
+	
+	if(!demorec_isplaying())
+		return 0;
 	
 	if(playbackinfo.paused)
 	{

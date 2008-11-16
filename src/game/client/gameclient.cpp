@@ -620,6 +620,8 @@ void GAMECLIENT::on_snapshot()
 			local_character_pos = vec2(snap.local_character->x, snap.local_character->y);
 		}
 	}
+	else
+		snap.spectate = true;
 
 	// update render info
 	for(int i = 0; i < MAX_CLIENTS; i++)

@@ -1296,7 +1296,7 @@ const DEMOPLAYBACK_INFO *client_demoplayer_getinfo()
 void client_demoplayer_setpos(float percent)
 {
 	const DEMOREC_PLAYBACKINFO *info = demorec_playback_info();
-	int point = (int)((info->seekable_points-1)*percent);
+	int point = (int)(info->seekable_points*percent);
 	demorec_playback_set(point);
 }
 

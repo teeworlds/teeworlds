@@ -39,8 +39,6 @@ static int browseinfo_progression = -1;
 static int64 lastheartbeat;
 /*static NETADDR4 master_server;*/
 
-static IOHANDLE demorec_file = 0;
-
 static char current_map[64];
 static int current_map_crc;
 static unsigned char *current_map_data = 0;
@@ -375,7 +373,7 @@ static void server_do_snap()
 	}
 	
 	/* create snapshot for demo recording */
-	if(demorec_file)
+	if(demorec_isrecording())
 	{
 		char data[MAX_SNAPSHOT_SIZE];
 		int snapshot_size;
