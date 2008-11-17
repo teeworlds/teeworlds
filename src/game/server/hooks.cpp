@@ -268,7 +268,7 @@ void mods_message(int msgtype, int client_id)
 			game.send_vote_status(-1);
 		}
 	}
-	else if (msgtype == NETMSGTYPE_CL_SETTEAM)
+	else if (msgtype == NETMSGTYPE_CL_SETTEAM && !game.world.paused)
 	{
 		NETMSG_CL_SETTEAM *msg = (NETMSG_CL_SETTEAM *)rawmsg;
 		
@@ -358,7 +358,7 @@ void mods_message(int msgtype, int client_id)
 			server_send_msg(client_id);
 		}
 	}
-	else if (msgtype == NETMSGTYPE_CL_EMOTICON)
+	else if (msgtype == NETMSGTYPE_CL_EMOTICON && !game.world.paused)
 	{
 		NETMSG_CL_EMOTICON *msg = (NETMSG_CL_EMOTICON *)rawmsg;
 		
@@ -369,7 +369,7 @@ void mods_message(int msgtype, int client_id)
 		
 		game.send_emoticon(client_id, msg->emoticon);
 	}
-	else if (msgtype == NETMSGTYPE_CL_KILL)
+	else if (msgtype == NETMSGTYPE_CL_KILL && !game.world.paused)
 	{
 		if(p->last_kill+time_freq()*3 > time_get())
 			return;
