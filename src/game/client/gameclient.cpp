@@ -1,4 +1,5 @@
 #include <engine/e_client_interface.h>
+#include <engine/e_demorec.h>
 
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
@@ -427,6 +428,9 @@ void GAMECLIENT::on_message(int msgtype)
 
 void GAMECLIENT::on_statechange(int new_state, int old_state)
 {
+	if(demorec_isrecording())
+		demorec_record_stop();
+
 	// reset everything
 	on_reset();
 	
