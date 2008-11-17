@@ -1799,9 +1799,14 @@ static void con_play(void *result, void *user_data)
 
 static void con_record(void *result, void *user_data)
 {
-	char filename[512];
-	str_format(filename, sizeof(filename), "demos/%s.demo", console_arg_string(result, 0));
-	demorec_record_start(filename, modc_net_version(), current_map, current_map_crc, "client");
+	if(state != CLIENTSTATE_ONLINE)
+		dbg_msg("demorec/record", "client is not online");
+	else
+	{
+		char filename[512];
+		str_format(filename, sizeof(filename), "demos/%s.demo", console_arg_string(result, 0));
+		demorec_record_start(filename, modc_net_version(), current_map, current_map_crc, "client");
+	}
 }
 
 static void con_stoprecord(void *result, void *user_data)
