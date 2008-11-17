@@ -543,7 +543,7 @@ int MENUS::render_menubar(RECT r)
 		static int demos_button=0;
 		if (ui_do_button(&demos_button, "Demos", active_page==PAGE_DEMOS, &button, ui_draw_menu_tab_button, 0))
 		{
-			//client_serverbrowse_refresh(BROWSETYPE_FAVORITES);
+			demolist_populate();
 			new_page  = PAGE_DEMOS;
 		}		
 	}

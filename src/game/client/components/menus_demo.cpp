@@ -378,13 +378,23 @@ void MENUS::render_demolist(RECT main_view)
 	}
 	selected_item = ui_do_listbox_end();
 	
-	RECT button;
-	ui_vsplit_r(&buttonbar, 120.0f, &buttonbar, &button);
+	RECT refresh_rect, play_rect;
+	ui_vsplit_r(&buttonbar, 250.0f, &buttonbar, &refresh_rect);
+	ui_vsplit_r(&refresh_rect, 130.0f, &refresh_rect, &play_rect);
+	ui_vsplit_r(&play_rect, 120.0f, 0x0, &play_rect);
+	
+	static int refresh_button = 0;
+	if(ui_do_button(&refresh_button, "Refresh", 0, &refresh_rect, ui_draw_menu_button, 0))
+	{
+		demolist_populate();
+	}	
+	
 	static int play_button = 0;
-	if(ui_do_button(&play_button, "Play", 0, &button, ui_draw_menu_button, 0))
+	if(ui_do_button(&play_button, "Play", 0, &play_rect, ui_draw_menu_button, 0))
 	{
 		if(selected_item >= 0 && selected_item < num_demos)
 			client_demoplayer_play(demos[selected_item].filename);
 	}
+	
 }
 
