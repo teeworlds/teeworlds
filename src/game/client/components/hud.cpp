@@ -198,7 +198,7 @@ void HUD::render_teambalancewarning()
 				gfx_text_color(1,1,0.5f,1);
 			else
 				gfx_text_color(0.7f,0.7f,0.2f,1.0f);
-			gfx_text(0x0, 5, 40, 6, text, -1);
+			gfx_text(0x0, 5, 50, 6, text, -1);
 			gfx_text_color(1,1,1,1);
 		}
 	}
@@ -211,9 +211,9 @@ void HUD::render_voting()
 		return;
 	
 	gfx_text_color(1,1,1,1);
-	gfx_text(0x0, 5, 50, 6, gameclient.voting->vote_description(), -1);
+	gfx_text(0x0, 5, 60, 6, gameclient.voting->vote_description(), -1);
 
-	RECT base = {5, 60, 119, 3};
+	RECT base = {5, 70, 119, 3};
 	gameclient.voting->render_bars(base, false);
 	
 	char buf[512];
