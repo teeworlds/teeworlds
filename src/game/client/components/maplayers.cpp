@@ -63,7 +63,7 @@ void MAPLAYERS::on_render()
 	{
 		MAPITEM_GROUP *group = layers_get_group(g);
 		
-		if(group->version >= 2 && group->use_clipping)
+		if(!config.gfx_noclip && group->version >= 2 && group->use_clipping)
 		{
 			// set clipping
 			float points[4];
@@ -147,10 +147,11 @@ void MAPLAYERS::on_render()
 				//layershot_end();	
 			}
 		}
-		
-		gfx_clip_disable();
+		if(!config.gfx_noclip)
+			gfx_clip_disable();
 	}
 	
-	gfx_clip_disable();
+	if(!config.gfx_noclip)
+		gfx_clip_disable();
 }
 
