@@ -699,12 +699,13 @@ int MENUS::render()
 		ui_vmargin(&tab_bar, 20.0f, &tab_bar);
 		render_menubar(tab_bar);
 		
-		if(config.ui_page < PAGE_NEWS || config.ui_page > PAGE_SETTINGS)
+		// news is not implemented yet
+		if(config.ui_page <= PAGE_NEWS || config.ui_page > PAGE_SETTINGS || (client_state() == CLIENTSTATE_OFFLINE && config.ui_page >= PAGE_GAME && config.ui_page <= PAGE_CALLVOTE))
 		{
 			client_serverbrowse_refresh(BROWSETYPE_INTERNET);
 			config.ui_page = PAGE_INTERNET;
 		}
-			
+		
 		// render current page
 		if(client_state() != CLIENTSTATE_OFFLINE)
 		{
