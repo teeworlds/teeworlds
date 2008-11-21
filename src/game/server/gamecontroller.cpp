@@ -80,6 +80,10 @@ bool GAMECONTROLLER::can_spawn(PLAYER *player, vec2 *out_pos)
 {
 	SPAWNEVAL eval;
 	
+	// spectators can't spawn
+	if(player->team == -1)
+		return false;
+	
 	if(is_teamplay())
 	{
 		eval.friendly_team = player->team;
