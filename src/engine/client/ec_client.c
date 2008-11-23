@@ -1743,6 +1743,11 @@ static void con_rcon(void *result, void *user_data)
 	client_rcon(console_arg_string(result, 0));
 }
 
+static void con_rcon_auth(void *result, void *user_data)
+{
+	client_rcon_auth("", console_arg_string(result, 0));
+}
+
 static void con_addfavorite(void *result, void *user_data)
 {
 	NETADDR addr;
@@ -1822,6 +1827,7 @@ static void client_register_commands()
 	MACRO_REGISTER_COMMAND("ping", "", con_ping, 0x0);
 	MACRO_REGISTER_COMMAND("screenshot", "", con_screenshot, 0x0);
 	MACRO_REGISTER_COMMAND("rcon", "r", con_rcon, 0x0);
+	MACRO_REGISTER_COMMAND("rcon_auth", "s", con_rcon_auth, 0x0);
 
 	MACRO_REGISTER_COMMAND("play", "r", con_play, 0x0);
 	MACRO_REGISTER_COMMAND("record", "s", con_record, 0);
