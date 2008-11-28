@@ -61,7 +61,7 @@ inline void str_to_ints(int *ints, int num, const char *str)
 		char buf[4] = {0,0,0,0};
 		for(int c = 0; c < 4 && str[index]; c++, index++)
 			buf[c] = str[index];
-		*ints = (buf[0]<<24)|(buf[1]<<16)|(buf[2]<<8)|buf[3];
+		*ints = ((buf[0]+128)<<24)|((buf[1]+128)<<16)|((buf[2]+128)<<8)|(buf[3]+128);
 		ints++;
 		num--;
 	}
@@ -74,10 +74,10 @@ inline void ints_to_str(const int *ints, int num, char *str)
 {
 	while(num)
 	{
-		str[0] = ((*ints)>>24)&0xff;
-		str[1] = ((*ints)>>16)&0xff;
-		str[2] = ((*ints)>>8)&0xff;
-		str[3] = (*ints)&0xff;
+		str[0] = (((*ints)>>24)&0xff)-128;
+		str[1] = (((*ints)>>16)&0xff)-128;
+		str[2] = (((*ints)>>8)&0xff)-128;
+		str[3] = ((*ints)&0xff)-128;
 		str += 4;
 		ints++;
 		num--;
