@@ -1,0 +1,76 @@
+SDL = {
+	basepath = PathPath(_REQUIREDNAME),
+
+	OptFind = function (name, required)
+		local check = function(option)
+			option.value = nil
+			option.use_sdlconfig = nil
+			option.use_win32sdl = nil
+			option.use_osxframework = nil
+			option.lib_path = nil
+			
+			if ExecuteSilent("sdl-config") > 0 and ExecuteSilent("sdl-config --cflags") == 0 then
+				option.value = 1
+				option.use_sdlconfig = 1
+			end
+			
+			if platform == "win32" then
+				option.value = 1
+				option.use_win32sdl = 1
+			end
+			
+			if platform == "macosx" then
+				option.value = 1
+				option.use_osxframework = 1
+			end
+		end
+		
+		local apply = function(option, settings)
+			if option.use_sdlconfig then
+				settings.cc.flags = settings.cc.flags .. " -I/usr/include/SDL "
+				settings.linker.flags = settings.linker.flags .. " `sdl-config --libs` "
+			end
+
+			if option.use_osxframework then
+				client_settings.linker.frameworks:add("SDL")
+				client_settings.cc.includes:add("/Library/Frameworks/SDL.framework/Headers")
+			end
+
+			if option.use_win32sdl then
+				settings.cc.includes:add(SDL.basepath .. "/include")
+				settings.linker.libpath:add(SDL.basepath .. "/vc2005libs")
+				settings.linker.libs:add("SDL")
+				settings.linker.libs:add("SDLmain")
+			end
+		end
+		
+		local save = function(option, output)
+			output:option(option, "value")
+			output:option(option, "use_sdlconfig")
+			output:option(option, "use_win32sdl")
+			output:option(option, "use_osxframework")
+		end
+		
+		local display = function(option)
+			if option.value then
+				if option.use_sdlconfig then return "using sdl-config" end
+				if option.use_win32sdl then return "using supplied win32 libraries" end
+				if option.use_osxframework then return "using osx framework" end
+				return "using unknown method"
+			else
+				if option.required then
+					return "not found (required)"
+				else
+					return "not found (optional)"
+				end
+			end
+		end
+		
+		local o = MakeOption(name, 0, check, save, display)
+		o.apply = apply
+		o.include_path = nil
+		o.lib_path = nil
+		o.required = required
+		return o
+	end
+}
