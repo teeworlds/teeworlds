@@ -470,10 +470,6 @@ static void con_addvote(void *result, void *user_data)
 	dbg_msg("server", "added option '%s'", option->command);
 }
 
-
-static void con_pause(void *result, void *user_data) { game.world.paused = true; }
-static void con_unpause(void *result, void *user_data) { game.world.paused = false; }
-	
 void mods_console_init()
 {
 	MACRO_REGISTER_COMMAND("tune", "si", con_tune_param, 0);
@@ -485,9 +481,6 @@ void mods_console_init()
 	MACRO_REGISTER_COMMAND("broadcast", "r", con_broadcast, 0);
 	MACRO_REGISTER_COMMAND("say", "r", con_say, 0);
 	MACRO_REGISTER_COMMAND("set_team", "ii", con_set_team, 0);
-
-	MACRO_REGISTER_COMMAND("pause", "", con_pause, 0);
-	MACRO_REGISTER_COMMAND("unpause", "", con_unpause, 0);
 
 	MACRO_REGISTER_COMMAND("addvote", "r", con_addvote, 0);
 }
