@@ -1759,6 +1759,7 @@ void client_demoplayer_play(const char *filename)
 {
 	int crc;
 	client_disconnect();
+	netclient_error_string_reset(net);
 	
 	/* try to start playback */
 	demorec_playback_registercallbacks(client_democallback_snapshot, client_democallback_message);

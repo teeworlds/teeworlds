@@ -48,6 +48,12 @@ int netclient_connect(NETCLIENT *c, NETADDR *addr)
 	return 0;
 }
 
+int netclient_error_string_reset(NETCLIENT *c)
+{
+	mem_zero(c->conn.error_string, sizeof(c->conn.error_string));
+	return 0;
+}
+
 int netclient_recv(NETCLIENT *c, NETCHUNK *chunk)
 {
 	while(1)
