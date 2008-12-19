@@ -345,6 +345,9 @@ bool GAMECONTROLLER::is_friendly_fire(int cid1, int cid2)
 	
 	if(is_teamplay())
 	{
+		if(!game.players[cid1] || !game.players[cid2])
+			return false;
+			
 		if(game.players[cid1]->team == game.players[cid2]->team)
 			return true;
 	}
@@ -505,6 +508,10 @@ void GAMECONTROLLER::snap(int snapping_client)
 
 int GAMECONTROLLER::get_auto_team(int notthisid)
 {
+	// this will force the auto balancer to work overtime aswell
+	if(config.dbg_stress)
+		return 0;
+	
 	int numplayers[2] = {0,0};
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
