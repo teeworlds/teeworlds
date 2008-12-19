@@ -1295,9 +1295,7 @@ const DEMOPLAYBACK_INFO *client_demoplayer_getinfo()
 
 void client_demoplayer_setpos(float percent)
 {
-	const DEMOREC_PLAYBACKINFO *info = demorec_playback_info();
-	int point = (int)(info->seekable_points*percent);
-	demorec_playback_set(point);
+	demorec_playback_set(percent);
 }
 
 void client_demoplayer_setspeed(float speed)
@@ -1441,12 +1439,12 @@ static void client_update()
 		}
 		else
 		{
-			if(now > action_taken+time_freq()*(10+config.dbg_stress))
+			/*if(now > action_taken+time_freq()*(10+config.dbg_stress))
 			{
 				dbg_msg("stress", "disconnecting!");
 				client_disconnect();
 				action_taken = now;
-			}
+			}*/
 		}
 	}
 	
@@ -1666,7 +1664,9 @@ static void client_run()
 			break;
 
 		/* be nice */
-		if(config.cl_cpu_throttle || !gfx_window_active())
+		if(config.dbg_stress)
+			thread_sleep(5);
+		else if(config.cl_cpu_throttle || !gfx_window_active())
 			thread_sleep(1);
 			
 		if(config.dbg_hitch)
