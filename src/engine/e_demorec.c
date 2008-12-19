@@ -113,9 +113,15 @@ static void demorec_record_write(int type, const void *data, int size)
 	
 	if(!record_file)
 		return;
-		
-	size = intpack_compress(data, size, buffer);
-	size = netcommon_compress(buffer, size, buffer2, sizeof(buffer2));
+
+	
+	/* pad the data with 0 so we get an alignment of 4,
+	else the compression won't work and miss some bytes */
+	mem_copy(buffer2, data, size);
+	while(size&3)
+		buffer2[size++] = 0;
+	size = intpack_compress(buffer2, size, buffer); /* buffer2 -> buffer */
+	size = netcommon_compress(buffer, size, buffer2, sizeof(buffer2)); /* buffer -> buffer2 */
 	
 	
 	chunk[0] = ((type&0x3)<<5);
