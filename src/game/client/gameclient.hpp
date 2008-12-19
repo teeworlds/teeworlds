@@ -23,6 +23,7 @@ class GAMECLIENT
 	STACK all;
 	STACK input;
 	
+	
 	void dispatch_input();
 	void process_events();
 	void update_local_character_pos();
@@ -34,6 +35,7 @@ class GAMECLIENT
 	static void con_kill(void *result, void *user_data);
 	
 public:
+	bool suppress_events;
 
 	// TODO: move this
 	TUNING_PARAMS tuning;

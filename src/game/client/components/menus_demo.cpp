@@ -91,7 +91,9 @@ void MENUS::render_demoplayer(RECT main_view)
 				if(amount > 0 && amount < 1.0f)
 				{
 					gameclient.on_reset();
+					gameclient.suppress_events = true;
 					client_demoplayer_setpos(amount);
+					gameclient.suppress_events = false;
 				}
 			}
 		}

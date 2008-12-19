@@ -160,6 +160,9 @@ void GAMECLIENT::on_console_init()
 	// let all the other components register their console commands
 	for(int i = 0; i < all.num; i++)
 		all.components[i]->on_console_init();
+		
+	//
+	suppress_events = false;
 }
 
 void GAMECLIENT::on_init()
@@ -443,6 +446,9 @@ void GAMECLIENT::on_statechange(int new_state, int old_state)
 
 void GAMECLIENT::process_events()
 {
+	if(suppress_events)
+		return;
+	
 	int snaptype = SNAP_CURRENT;
 	int num = snap_num_items(snaptype);
 	for(int index = 0; index < num; index++)
@@ -514,11 +520,17 @@ void GAMECLIENT::on_snapshot()
 
 	if(config.dbg_stress)
 	{
-		if((client_tick()%250) == 0)
+		if((client_tick()%100) == 0)
 		{
+			char message[64];
+			int msglen = rand()%(sizeof(message)-1);
+			for(int i = 0; i < msglen; i++)
+				message[i] = 'a'+(rand()%('z'-'a'));
+			message[msglen] = 0;
+				
 			NETMSG_CL_SAY msg;
-			msg.team = -1;
-			msg.message = "galenskap!!!!";
+			msg.team = rand()&1;
+			msg.message = message;
 			msg.pack(MSGFLAG_VITAL);
 			client_send_msg();
 		}
