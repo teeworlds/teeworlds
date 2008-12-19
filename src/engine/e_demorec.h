@@ -64,7 +64,7 @@ int demorec_playback_play();
 void demorec_playback_pause();
 void demorec_playback_unpause();
 void demorec_playback_setspeed(float speed);
-int demorec_playback_set(int keyframe);
+int demorec_playback_set(float precent);
 int demorec_playback_update();
 const DEMOREC_PLAYBACKINFO *demorec_playback_info();
 int demorec_isplaying();

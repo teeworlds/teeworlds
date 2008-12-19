@@ -368,7 +368,7 @@ static void do_tick()
 		{
 			/* stop on error or eof */
 			dbg_msg("demorec", "end of file");
-			demorec_playback_stop();
+			demorec_playback_pause();
 			break;
 		}
 		
@@ -529,19 +529,40 @@ int demorec_playback_play()
 	return 0;
 }
 
-int demorec_playback_set(int keyframe)
+int demorec_playback_set(float percent)
 {
+	int keyframe;
+	int wanted_tick;
 	if(!play_file)
 		return -1;
+	
+	/* -5 because we have to have a current tick and previous tick when we do the playback */
+	wanted_tick = playbackinfo.first_tick + (int)((playbackinfo.last_tick-playbackinfo.first_tick)*percent) - 5;
+	
+	keyframe = (int)(playbackinfo.seekable_points*percent);
+
 	if(keyframe < 0 || keyframe >= playbackinfo.seekable_points)
 		return -1;
 	
+	/* get correct key frame */
+	if(keyframes[keyframe].tick < wanted_tick)
+		while(keyframe < playbackinfo.seekable_points-1 && keyframes[keyframe].tick < wanted_tick)
+			keyframe++;
+
+	while(keyframe && keyframes[keyframe].tick > wanted_tick)
+		keyframe--;
+	
+	/* seek to the correct keyframe */
 	io_seek(play_file, keyframes[keyframe].filepos, IOSEEK_START);
 
 	/*playbackinfo.start_tick = -1;*/
 	playbackinfo.next_tick = -1;
 	playbackinfo.current_tick = -1;
 	playbackinfo.previous_tick = -1;
+
+	/* playback everything until we hit our tick */
+	while(playbackinfo.previous_tick < wanted_tick)
+		do_tick();
 	
 	demorec_playback_play();
 	
@@ -581,6 +602,9 @@ int demorec_playback_update()
 			
 			/* do one more tick */
 			do_tick();
+			
+			if(playbackinfo.paused)
+				return 0;
 		}
 
 		/* update intratick */

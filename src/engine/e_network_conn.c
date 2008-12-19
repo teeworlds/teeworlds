@@ -15,7 +15,6 @@ static void conn_reset(NETCONNECTION *conn)
 	conn->remote_closed = 0;
 	
 	conn->state = NET_CONNSTATE_OFFLINE;
-	conn->state = NET_CONNSTATE_OFFLINE;
 	conn->last_send_time = 0;
 	conn->last_recv_time = 0;
 	conn->last_update_time = 0;
