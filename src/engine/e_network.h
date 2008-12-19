@@ -91,6 +91,7 @@ int netclient_state(NETCLIENT *c);
 int netclient_flush(NETCLIENT *c);
 int netclient_gotproblems(NETCLIENT *c);
 /*void netclient_stats(NETCLIENT *c, NETSTATS *stats);*/
+int netclient_error_string_reset(NETCLIENT *c);
 const char *netclient_error_string(NETCLIENT *c);
 
 #ifdef __cplusplus
