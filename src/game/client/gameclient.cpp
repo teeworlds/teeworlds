@@ -154,7 +154,7 @@ void GAMECLIENT::on_console_init()
 	input.add(binds);
 		
 	// add the some console commands
-	MACRO_REGISTER_COMMAND("team", "", con_team, this);
+	MACRO_REGISTER_COMMAND("team", "i", con_team, this);
 	MACRO_REGISTER_COMMAND("kill", "", con_kill, this);
 	
 	// let all the other components register their console commands
