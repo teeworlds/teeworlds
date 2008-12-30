@@ -29,7 +29,8 @@ void LINEINPUT::process_input(INPUT_EVENT e)
 	char c = e.ch;
 	int k = e.key;
 	
-	if (!(c >= 0 && c < 32))
+	// 127 is produced on Mac OS X and corresponds to the delete key
+	if (!(c >= 0 && c < 32) && c != 127)
 	{
 		if (len < sizeof(str) - 1 && cursor_pos < sizeof(str) - 1)
 		{
