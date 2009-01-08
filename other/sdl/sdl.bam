@@ -1,8 +1,8 @@
 SDL = {
-	basepath = PathPath(_REQUIREDNAME),
+	basepath = PathPath(ModuleFilename()),
 
 	OptFind = function (name, required)
-		local check = function(option)
+		local check = function(option, settings)
 			option.value = nil
 			option.use_sdlconfig = nil
 			option.use_win32sdl = nil
@@ -27,20 +27,20 @@ SDL = {
 		
 		local apply = function(option, settings)
 			if option.use_sdlconfig then
-				settings.cc.flags = settings.cc.flags .. " -I/usr/include/SDL "
-				settings.linker.flags = settings.linker.flags .. " `sdl-config --libs` "
+				settings.cc.flags:Add("`sdl-config --cflags`")
+				settings.link.flags:Add("`sdl-config --libs`")
 			end
 
 			if option.use_osxframework then
-				client_settings.linker.frameworks:add("SDL")
-				client_settings.cc.includes:add("/Library/Frameworks/SDL.framework/Headers")
+				client_settings.link.frameworks:Add("SDL")
+				client_settings.cc.includes:Add("/Library/Frameworks/SDL.framework/Headers")
 			end
 
 			if option.use_win32sdl then
-				settings.cc.includes:add(SDL.basepath .. "/include")
-				settings.linker.libpath:add(SDL.basepath .. "/vc2005libs")
-				settings.linker.libs:add("SDL")
-				settings.linker.libs:add("SDLmain")
+				settings.cc.includes:Add(SDL.basepath .. "/include")
+				settings.link.libpath:Add(SDL.basepath .. "/vc2005libs")
+				settings.link.libs:Add("SDL")
+				settings.link.libs:Add("SDLmain")
 			end
 		end
 		
@@ -67,7 +67,7 @@ SDL = {
 		end
 		
 		local o = MakeOption(name, 0, check, save, display)
-		o.apply = apply
+		o.Apply = apply
 		o.include_path = nil
 		o.lib_path = nil
 		o.required = required
