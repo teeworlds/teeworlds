@@ -314,6 +314,7 @@ void CHARACTER_CORE::tick(bool use_input)
 		// Check against other players first
 		if(world)
 		{
+			float dist = 0.0f;
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
 				CHARACTER_CORE *p = world->characters[i];
@@ -323,10 +324,13 @@ void CHARACTER_CORE::tick(bool use_input)
 				vec2 closest_point = closest_point_on_line(hook_pos, new_pos, p->pos);
 				if(distance(p->pos, closest_point) < phys_size+2.0f)
 				{
-					triggered_events |= COREEVENT_HOOK_ATTACH_PLAYER;
-					hook_state = HOOK_GRABBED;
-					hooked_player = i;
-					break;
+					if (hooked_player == -1 || distance (hook_pos, p->pos) < dist)
+					{
+						triggered_events |= COREEVENT_HOOK_ATTACH_PLAYER;
+						hook_state = HOOK_GRABBED;
+						hooked_player = i;
+						dist = distance (hook_pos, p->pos);
+					}
 				}
 			}
 		}
