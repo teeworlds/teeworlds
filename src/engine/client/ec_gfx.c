@@ -78,6 +78,8 @@ static float screen_y0 = 0;
 static float screen_x1 = 0;
 static float screen_y1 = 0;
 
+static int invalid_texture = 0;
+
 typedef struct
 {
 	GLuint tex;
@@ -221,7 +223,7 @@ int gfx_init()
     }
 	
     atexit(SDL_Quit);
-
+	
 	if(!no_gfx)
 	{
 		#ifdef CONF_FAMILY_WINDOWS
@@ -308,7 +310,7 @@ int gfx_init()
 	inp_init();
 	
 	/* create null texture, will get id=0 */
-	gfx_load_texture_raw(4,4,IMG_RGBA,null_texture_data,IMG_RGBA,TEXLOAD_NORESAMPLE);
+	invalid_texture = gfx_load_texture_raw(4,4,IMG_RGBA,null_texture_data,IMG_RGBA,TEXLOAD_NORESAMPLE);
 
 	/* perform some tests */
 	/* pixeltest_dotesting(); */
@@ -413,8 +415,12 @@ void gfx_set_vsync(int val)
 
 int gfx_unload_texture(int index)
 {
+	if(index == invalid_texture)
+		return 0;
+		
 	if(index < 0)
 		return 0;
+		
 	glDeleteTextures(1, &textures[index].tex);
 	textures[index].next = first_free_texture;
 	memory_usage -= textures[index].memsize;
@@ -463,7 +469,7 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 	
 	/* don't waste memory on texture if we are stress testing */
 	if(config.dbg_stress || no_gfx)
-		return -1;
+		return 	invalid_texture;
 	
 	/* grab texture */
 	tex = first_free_texture;
@@ -559,7 +565,7 @@ int gfx_load_texture(const char *filename, int store_format, int flags)
 	IMAGE_INFO img;
 	
 	if(l < 3)
-		return 0;
+		return -1;
 	if(gfx_load_png(&img, filename))
 	{
 		if (store_format == IMG_AUTO)
@@ -570,7 +576,7 @@ int gfx_load_texture(const char *filename, int store_format, int flags)
 		return id;
 	}
 	
-	return 0;
+	return invalid_texture;
 }
 
 int gfx_load_png(IMAGE_INFO *img, const char *filename)
@@ -711,7 +717,9 @@ void gfx_texture_set(int slot)
 	dbg_assert(drawing == 0, "called gfx_texture_set within begin");
 	if(no_gfx) return;
 	if(slot == -1)
+	{
 		glDisable(GL_TEXTURE_2D);
+	}
 	else
 	{
 		glEnable(GL_TEXTURE_2D);
