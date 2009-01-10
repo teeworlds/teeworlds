@@ -48,13 +48,14 @@ void conn_init(NETCONNECTION *conn, NETSOCKET socket)
 
 static void conn_ack(NETCONNECTION *conn, int ack)
 {
+	
 	while(1)
 	{
 		NETCHUNKDATA *resend = (NETCHUNKDATA *)ringbuf_first(conn->buffer);
 		if(!resend)
 			break;
-			
-		if(resend->sequence <= ack || (ack < NET_MAX_SEQUENCE/3 && resend->sequence > NET_MAX_SEQUENCE/2))
+		
+		if(seq_in_backroom(resend->sequence, ack))
 			ringbuf_popfirst(conn->buffer);
 		else
 			break;
@@ -84,7 +85,7 @@ int conn_flush(NETCONNECTION *conn)
 	return num_chunks;
 }
 
-void conn_queue_chunk(NETCONNECTION *conn, int flags, int data_size, const void *data)
+static void conn_queue_chunk_ex(NETCONNECTION *conn, int flags, int data_size, const void *data, int sequence)
 {
 	unsigned char *chunk_data;
 	
@@ -92,12 +93,9 @@ void conn_queue_chunk(NETCONNECTION *conn, int flags, int data_size, const void 
 	if(conn->construct.data_size + data_size + NET_MAX_CHUNKHEADERSIZE > sizeof(conn->construct.chunk_data))
 		conn_flush(conn);
 
-	if(flags&NET_CHUNKFLAG_VITAL && !(flags&NET_CHUNKFLAG_RESEND))
-		conn->seq = (conn->seq+1)%NET_MAX_SEQUENCE;
-
 	/* pack all the data */
 	chunk_data = &conn->construct.chunk_data[conn->construct.data_size];
-	chunk_data = pack_chunk_header(chunk_data, flags, data_size, conn->seq);
+	chunk_data = pack_chunk_header(chunk_data, flags, data_size, sequence);
 	mem_copy(chunk_data, data, data_size);
 	chunk_data += data_size;
 
@@ -113,7 +111,7 @@ void conn_queue_chunk(NETCONNECTION *conn, int flags, int data_size, const void 
 		NETCHUNKDATA *resend = (NETCHUNKDATA *)ringbuf_allocate(conn->buffer, sizeof(NETCHUNKDATA)+data_size);
 		if(resend)
 		{
-			resend->sequence = conn->seq;
+			resend->sequence = sequence;
 			resend->flags = flags;
 			resend->data_size = data_size;
 			resend->data = (unsigned char *)(resend+1);
@@ -129,6 +127,13 @@ void conn_queue_chunk(NETCONNECTION *conn, int flags, int data_size, const void 
 	}
 }
 
+void conn_queue_chunk(NETCONNECTION *conn, int flags, int data_size, const void *data)
+{
+	if(flags&NET_CHUNKFLAG_VITAL)
+		conn->seq = (conn->seq+1)%NET_MAX_SEQUENCE;
+	conn_queue_chunk_ex(conn, flags, data_size, data, conn->seq);
+}
+
 
 static void conn_send_control(NETCONNECTION *conn, int controlmsg, const void *extra, int extra_size)
 {
@@ -138,28 +143,31 @@ static void conn_send_control(NETCONNECTION *conn, int controlmsg, const void *e
 
 static void conn_resend_chunk(NETCONNECTION *conn, NETCHUNKDATA *resend)
 {
-	conn_queue_chunk(conn, resend->flags|NET_CHUNKFLAG_RESEND, resend->data_size, resend->data);
+	conn_queue_chunk_ex(conn, resend->flags|NET_CHUNKFLAG_RESEND, resend->data_size, resend->data, resend->sequence);
 	resend->last_send_time = time_get();
 }
 
 static void conn_resend(NETCONNECTION *conn)
 {
 	int resend_count = 0;
-	int max = 10;
+	int first = 0, last = 0;
 	void *item = ringbuf_first(conn->buffer);
+	
 	while(item)
 	{
 		NETCHUNKDATA *resend = item;
+		
+		if(resend_count == 0)
+			first = resend->sequence;
+		last = resend->sequence;
+			
 		conn_resend_chunk(conn, resend);
 		item = ringbuf_next(conn->buffer, item);
-		max--;
 		resend_count++;
-		if(!max)
-			break;
 	}
 	
 	if(config.debug)
-		dbg_msg("conn", "resent %d packets", resend_count);
+		dbg_msg("conn", "resent %d packets (%d to %d)", resend_count, first, last);
 }
 
 int conn_connect(NETCONNECTION *conn, NETADDR *addr)

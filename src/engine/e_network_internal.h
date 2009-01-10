@@ -146,6 +146,8 @@ void recvinfo_start(NETRECVINFO *info, NETADDR *addr, NETCONNECTION *conn, int c
 int recvinfo_fetch_chunk(NETRECVINFO *info, NETCHUNK *chunk);
 
 /* misc helper functions */
+/* The backroom is ack-NET_MAX_SEQUENCE/2. Used for knowing if we acked a packet or not */
+int seq_in_backroom(int seq, int ack);
 void send_controlmsg(NETSOCKET socket, NETADDR *addr, int ack, int controlmsg, const void *extra, int extra_size);
 void send_packet_connless(NETSOCKET socket, NETADDR *addr, const void *data, int data_size);
 void send_packet(NETSOCKET socket, NETADDR *addr, NETPACKETCONSTRUCT *packet);

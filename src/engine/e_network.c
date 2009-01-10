@@ -23,6 +23,26 @@ void recvinfo_start(NETRECVINFO *info, NETADDR *addr, NETCONNECTION *conn, int c
 	info->valid = 1;
 }
 
+
+int seq_in_backroom(int seq, int ack)
+{
+	int bottom = (ack-NET_MAX_SEQUENCE/2);
+	if(bottom < 0)
+	{
+		if(seq <= ack)
+			return 1;
+		if(seq >= (bottom + NET_MAX_SEQUENCE))
+			return 1;
+	}
+	else
+	{
+		if(seq <= ack && seq >= bottom)
+			return 1;
+	}
+	
+	return 0;
+}
+
 /* TODO: rename this function */
 int recvinfo_fetch_chunk(NETRECVINFO *info, NETCHUNK *chunk)
 {
@@ -68,6 +88,10 @@ int recvinfo_fetch_chunk(NETRECVINFO *info, NETCHUNK *chunk)
 			}
 			else
 			{
+				/* old packet that we already got */
+				if(seq_in_backroom(header.sequence, info->conn->ack))
+					continue;
+
 				/* out of sequence, request resend */
 				dbg_msg("conn", "asking for resend %d %d", header.sequence, (info->conn->ack+1)%NET_MAX_SEQUENCE);
 				conn_want_resend(info->conn);
