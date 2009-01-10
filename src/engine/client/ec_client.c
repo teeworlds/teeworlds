@@ -97,6 +97,7 @@ static int prev_tick = 0;
 /* predicted time */
 static int current_predtick = 0;
 static float predintratick = 0;
+static int last_input_timeleft = 0;
 
 static struct /* TODO: handle input better */
 {
@@ -646,6 +647,7 @@ static void client_debug_render()
 			recv_packets, recv_bytes, recv_packets*42, recv_total, (recv_total*8)/1024, recv_bytes/recv_packets);
 		gfx_quads_text(2, 14, 16, buffer);
 	}
+	
 	/* render rates */
 	{
 		int y = 0;
@@ -661,6 +663,9 @@ static void client_debug_render()
 			}
 		}
 	}
+
+	str_format(buffer, sizeof(buffer), "input time left: %d", last_input_timeleft);
+	gfx_quads_text(2, 70, 16, buffer);
 	
 	/* render graphs */
 	if(config.dbg_graphs)
@@ -993,6 +998,31 @@ static void client_process_packet(NETCHUNK *packet)
 			}
 			else if(msg == NETMSG_PING_REPLY)
 				dbg_msg("client/network", "latency %.2f", (time_get() - ping_start_time)*1000 / (float)time_freq());
+			else if(msg == NETMSG_INPUTTIMING)
+			{
+				int input_predtick = msg_unpack_int();
+				int time_left = msg_unpack_int();
+				
+				/* adjust our prediction time */
+				int k;
+				
+				graph_add(&input_late_graph, time_left/100.0f+0.5f);
+				
+				if(time_left < 0)
+					dbg_msg("client", "input was late with %d ms", time_left);
+				last_input_timeleft = time_left;
+				
+				for(k = 0; k < 200; k++) /* TODO: do this better */
+				{
+					if(inputs[k].tick == input_predtick)
+					{
+						/*-1000/50 prediction_margin */
+						int64 target = inputs[k].game_time + (time_get() - inputs[k].time);
+						st_update(&predicted_time, target - (int64)(((time_left-prediction_margin)/1000.0f)*time_freq()));
+						break;
+					}
+				}
+			}
 			else if(msg == NETMSG_SNAP || msg == NETMSG_SNAPSINGLE || msg == NETMSG_SNAPEMPTY)
 			{
 				/*dbg_msg("client/network", "got snapshot"); */
@@ -1000,8 +1030,6 @@ static void client_process_packet(NETCHUNK *packet)
 				int part = 0;
 				int game_tick = msg_unpack_int();
 				int delta_tick = game_tick-msg_unpack_int();
-				int input_predtick = msg_unpack_int();
-				int time_left = msg_unpack_int();
 				int part_size = 0;
 				int crc = 0;
 				int complete_size = 0;
@@ -1027,29 +1055,7 @@ static void client_process_packet(NETCHUNK *packet)
 				
 				if(msg_unpack_error())
 					return;
-				
-				/* TODO: adjust our prediction time */
-				if(time_left)
-				{
-					int k;
 					
-					graph_add(&input_late_graph, time_left/100.0f+0.5f);
-					
-					if(time_left < 0)
-						dbg_msg("client", "input was late with %d ms", time_left);
-					
-					for(k = 0; k < 200; k++) /* TODO: do this better */
-					{
-						if(inputs[k].tick == input_predtick)
-						{
-							/*-1000/50 prediction_margin */
-							int64 target = inputs[k].game_time + (time_get() - inputs[k].time);
-							st_update(&predicted_time, target - (int64)(((time_left-prediction_margin)/1000.0f)*time_freq()));
-							break;
-						}
-					}
-				}
-				
 				if(game_tick >= current_recv_tick)
 				{
 					if(game_tick != current_recv_tick)

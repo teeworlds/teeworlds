@@ -39,6 +39,7 @@ enum
 	NETMSG_SNAPEMPTY,		/* empty snapshot */
 	NETMSG_SNAPSINGLE,		/* ? */
 	NETMSG_SNAPSMALL,		/* */
+	NETMSG_INPUTTIMING,		/* reports how off the input was */
 	NETMSG_RCON_AUTH_STATUS,/* result of the authentication */
 	NETMSG_RCON_LINE,		/* line that should be printed to the remote console */
 

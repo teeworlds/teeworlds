@@ -82,9 +82,7 @@ enum
 typedef struct 
 {
 	int data[MAX_INPUT_SIZE];
-	int pred_tick; /* tick that the client predicted for the input */
 	int game_tick; /* the tick that was chosen for the input */
-	int64 timeleft; /* how much time in ms there were left before this should be applied */
 } CLIENT_INPUT;
 	
 /* */
@@ -363,7 +361,7 @@ int server_send_msg(int client_id)
 
 static void server_do_snap()
 {
-	int i, k;
+	int i;
 	
 	{
 		static PERFORMACE_INFO scope = {"presnap", 0};
@@ -412,8 +410,6 @@ static void server_do_snap()
 			SNAPSHOT *deltashot = &emptysnap;
 			int deltashot_size;
 			int delta_tick = -1;
-			int input_predtick = -1;
-			int64 timeleft = 0;
 			int deltasize;
 			static PERFORMACE_INFO scope = {"build", 0};
 			perf_start(&scope);
@@ -454,16 +450,6 @@ static void server_do_snap()
 				}
 			}
 			
-			for(k = 0; k < 200; k++) /* TODO: do this better */
-			{
-				if(clients[i].inputs[k].game_tick == current_tick)
-				{
-					timeleft = clients[i].inputs[k].timeleft;
-					input_predtick = clients[i].inputs[k].pred_tick;
-					break;
-				}
-			}
-	
 			/* create delta */
 			{
 				static PERFORMACE_INFO scope = {"delta", 0};
@@ -507,8 +493,6 @@ static void server_do_snap()
 						
 					msg_pack_int(current_tick);
 					msg_pack_int(current_tick-delta_tick); /* compressed with */
-					msg_pack_int(input_predtick);
-					msg_pack_int((timeleft*1000)/time_freq());
 					
 					if(numpackets != 1)
 					{
@@ -528,8 +512,6 @@ static void server_do_snap()
 				msg_pack_start_system(NETMSG_SNAPEMPTY, MSGFLAG_FLUSH);
 				msg_pack_int(current_tick);
 				msg_pack_int(current_tick-delta_tick); /* compressed with */
-				msg_pack_int(input_predtick);
-				msg_pack_int((timeleft*1000)/time_freq());
 				msg_pack_end();
 				server_send_msg(i);
 			}
@@ -547,10 +529,7 @@ static void reset_client(int cid)
 	/* reset input */
 	int i;
 	for(i = 0; i < 200; i++)
-	{
 		clients[cid].inputs[i].game_tick = -1;
-		clients[cid].inputs[i].pred_tick = -1;
-	}
 	clients[cid].current_input = 0;
 	mem_zero(&clients[cid].latestinput, sizeof(clients[cid].latestinput));
 
@@ -730,9 +709,14 @@ static void server_process_client_packet(NETCHUNK *packet)
 			if(snapstorage_get(&clients[cid].snapshots, clients[cid].last_acked_snapshot, &tagtime, 0, 0) >= 0)
 				clients[cid].latency = (int)(((time_get()-tagtime)*1000)/time_freq());
 
+			/* add message to report the input timing */
+			msg_pack_start_system(NETMSG_INPUTTIMING, MSGFLAG_VITAL);
+			msg_pack_int(tick);
+			msg_pack_int(((server_tick_start_time(tick)-time_get())*1000) / time_freq());
+			msg_pack_end();
+			server_send_msg(cid);
+
 			input = &clients[cid].inputs[clients[cid].current_input];
-			input->timeleft = server_tick_start_time(tick)-time_get();
-			input->pred_tick = tick;
 			
 			if(tick <= server_tick())
 				tick = server_tick()+1;
