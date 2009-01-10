@@ -142,7 +142,7 @@ int CONTROLS::snapinput(int *data)
 	else if(input_data.next_weapon != last_data.next_weapon) send = true;
 	else if(input_data.prev_weapon != last_data.prev_weapon) send = true;
 
-	if(time_get() > last_send_time + time_freq()/5)
+	if(time_get() > last_send_time + time_freq()/10)
 		send = true;
 
 	last_data = input_data;
