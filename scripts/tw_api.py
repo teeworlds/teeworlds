@@ -59,9 +59,9 @@ def get_servers(address):
  
 	try:
 		sock = socket(AF_INET, SOCK_DGRAM) 
-		sock.settimeout(1.5) 
+		sock.settimeout(1.5)
 		sock.sendto("\x20\x00\x00\x00\x00\x00\xff\xff\xff\xffreqt", (address, master_port)) 
-		
+	
 		while 1:
 			data, addr = sock.recvfrom(1024)
 			
@@ -72,17 +72,10 @@ def get_servers(address):
 				ip = ".".join(map(str, map(ord, data[n*6:n*6+4]))) 
 				port = ord(data[n*6+5]) * 256 + ord(data[n*6+4]) 
 				servers += [[ip, port]]
-			
-			# and we are done
-			if num_servers < 128:
-				break
-			
+
+	except: # timeout
 		sock.close()
-
 		return servers
-	except:
-		return None		
-
 
 def get_all_servers():
 	servers = []
