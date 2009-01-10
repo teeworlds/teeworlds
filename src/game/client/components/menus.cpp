@@ -1037,56 +1037,28 @@ void MENUS::on_render()
 		
 	ui_update(mx,my,mx*3.0f,my*3.0f,buttons);
     
-    // render
-    if(time_get()-last_input > time_freq()*30 && client_state() == CLIENTSTATE_OFFLINE)
-    {
-    	// screen saver :)
-		render_background();
-		
-		if(data->images[IMAGE_BANNER].id != 0)
-		{
-			float sw = 300*gfx_screenaspect();
-			float sh = 300;
-			gfx_mapscreen(0, 0, sw, sh);
-	
-			gfx_texture_set(data->images[IMAGE_BANNER].id);
-			gfx_quads_begin();
-			gfx_setcolor(0,0,0,1.0f);
-			gfx_quads_draw(sw/2, 50, 300, 300/4);
-			gfx_setcolor(1,1,1,1.0f);
-			gfx_quads_draw(sw/2-2, 50-2, 300, 300/4);
-			gfx_quads_end();
-			
-			//if((time_get()/(time_freq()/3))&1)
-			//	gfx_text(NULL, sw-150, sh-50, 10.0f, "INSERT COIN", -1);
+	// render
+	if(client_state() != CLIENTSTATE_DEMOPLAYBACK)
+		render();
 
-		}		
-	}
-	else
+	// render cursor
+	gfx_texture_set(data->images[IMAGE_CURSOR].id);
+	gfx_quads_begin();
+	gfx_setcolor(1,1,1,1);
+	gfx_quads_drawTL(mx,my,24,24);
+	gfx_quads_end();
+
+	// render debug information
+	if(config.debug)
 	{
-		if(client_state() != CLIENTSTATE_DEMOPLAYBACK)
-			render();
+		RECT screen = *ui_screen();
+		gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
 
-		// render cursor
-		gfx_texture_set(data->images[IMAGE_CURSOR].id);
-		gfx_quads_begin();
-		gfx_setcolor(1,1,1,1);
-		gfx_quads_drawTL(mx,my,24,24);
-		gfx_quads_end();
-
-		// render debug information
-		if(config.debug)
-		{
-			RECT screen = *ui_screen();
-			gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
-
-			char buf[512];
-			str_format(buf, sizeof(buf), "%p %p %p", ui_hot_item(), ui_active_item(), ui_last_active_item());
-			TEXT_CURSOR cursor;
-			gfx_text_set_cursor(&cursor, 10, 10, 10, TEXTFLAG_RENDER);
-			gfx_text_ex(&cursor, buf, -1);
-		}
-		
+		char buf[512];
+		str_format(buf, sizeof(buf), "%p %p %p", ui_hot_item(), ui_active_item(), ui_last_active_item());
+		TEXT_CURSOR cursor;
+		gfx_text_set_cursor(&cursor, 10, 10, 10, TEXTFLAG_RENDER);
+		gfx_text_ex(&cursor, buf, -1);
 	}
 
 	escape_pressed = false;
