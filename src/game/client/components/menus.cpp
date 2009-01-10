@@ -34,7 +34,7 @@ vec4 MENUS::color_tabbar_active_ingame;
 
 
 float MENUS::button_height = 25.0f;
-float MENUS::listheader_height = 16.0f;
+float MENUS::listheader_height = 17.0f;
 float MENUS::fontmod_height = 0.8f;
 
 INPUT_EVENT MENUS::inputevents[MAX_INPUTEVENTS];
