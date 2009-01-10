@@ -79,6 +79,7 @@ int CONTROLS::snapinput(int *data)
 {
 	static NETOBJ_PLAYER_INPUT last_data = {0};
 	static int64 last_send_time = 0;
+	bool send = false;
 	
 	// update player state
 	if(gameclient.chat->is_active())
@@ -87,6 +88,10 @@ int CONTROLS::snapinput(int *data)
 		input_data.player_state = PLAYERSTATE_IN_MENU;
 	else
 		input_data.player_state = PLAYERSTATE_PLAYING;
+	
+	if(last_data.player_state != input_data.player_state)
+		send = true;
+		
 	last_data.player_state = input_data.player_state;
 	
 	// we freeze the input if chat or menu is activated
@@ -101,55 +106,62 @@ int CONTROLS::snapinput(int *data)
 		input_direction_right = 0;
 			
 		mem_copy(data, &input_data, sizeof(input_data));
-		return sizeof(input_data);
+
+		// send once a second just to be sure
+		if(time_get() > last_send_time + time_freq())
+			send = true;
+	}
+	else
+	{
+		
+		input_data.target_x = (int)mouse_pos.x;
+		input_data.target_y = (int)mouse_pos.y;
+		if(!input_data.target_x && !input_data.target_y)
+			input_data.target_y = 1;
+			
+		// set direction
+		input_data.direction = 0;
+		if(input_direction_left && !input_direction_right)
+			input_data.direction = -1;
+		if(!input_direction_left && input_direction_right)
+			input_data.direction = 1;
+
+		// stress testing
+		if(config.dbg_stress)
+		{
+			float t = client_localtime();
+			mem_zero(&input_data, sizeof(input_data));
+
+			input_data.direction = ((int)t/2)&1;
+			input_data.jump = ((int)t);
+			input_data.fire = ((int)(t*10));
+			input_data.hook = ((int)(t*2))&1;
+			input_data.wanted_weapon = ((int)t)%NUM_WEAPONS;
+			input_data.target_x = (int)(sinf(t*3)*100.0f);
+			input_data.target_y = (int)(cosf(t*3)*100.0f);
+		}
+
+		// check if we need to send input
+		if(input_data.direction != last_data.direction) send = true;
+		else if(input_data.jump != last_data.jump) send = true;
+		else if(input_data.fire != last_data.fire) send = true;
+		else if(input_data.hook != last_data.hook) send = true;
+		else if(input_data.player_state != last_data.player_state) send = true;
+		else if(input_data.wanted_weapon != last_data.wanted_weapon) send = true;
+		else if(input_data.next_weapon != last_data.next_weapon) send = true;
+		else if(input_data.prev_weapon != last_data.prev_weapon) send = true;
+
+		// send at at least 10hz
+		if(time_get() > last_send_time + time_freq()/10)
+			send = true;
 	}
 	
-	input_data.target_x = (int)mouse_pos.x;
-	input_data.target_y = (int)mouse_pos.y;
-	if(!input_data.target_x && !input_data.target_y)
-		input_data.target_y = 1;
-		
-	// set direction
-	input_data.direction = 0;
-	if(input_direction_left && !input_direction_right)
-		input_data.direction = -1;
-	if(!input_direction_left && input_direction_right)
-		input_data.direction = 1;
-
-	// stress testing
-	if(config.dbg_stress)
-	{
-		float t = client_localtime();
-		mem_zero(&input_data, sizeof(input_data));
-
-		input_data.direction = ((int)t/2)&1;
-		input_data.jump = ((int)t);
-		input_data.fire = ((int)(t*10));
-		input_data.hook = ((int)(t*2))&1;
-		input_data.wanted_weapon = ((int)t)%NUM_WEAPONS;
-		input_data.target_x = (int)(sinf(t*3)*100.0f);
-		input_data.target_y = (int)(cosf(t*3)*100.0f);
-	}
-
-	// check if we need to send input
-	bool send = false;
-	if(input_data.direction != last_data.direction) send = true;
-	else if(input_data.jump != last_data.jump) send = true;
-	else if(input_data.fire != last_data.fire) send = true;
-	else if(input_data.hook != last_data.hook) send = true;
-	else if(input_data.player_state != last_data.player_state) send = true;
-	else if(input_data.wanted_weapon != last_data.wanted_weapon) send = true;
-	else if(input_data.next_weapon != last_data.next_weapon) send = true;
-	else if(input_data.prev_weapon != last_data.prev_weapon) send = true;
-
-	if(time_get() > last_send_time + time_freq()/10)
-		send = true;
-
+	// copy and return size	
 	last_data = input_data;
+	
 	if(!send)
 		return 0;
 		
-	// copy and return size	
 	last_send_time = time_get();
 	mem_copy(data, &input_data, sizeof(input_data));
 	return sizeof(input_data);	
