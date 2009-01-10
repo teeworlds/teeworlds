@@ -264,6 +264,20 @@ unsigned char *unpack_chunk_header(unsigned char *data, NETCHUNKHEADER *header)
 }
 
 
+void send_controlmsg(NETSOCKET socket, NETADDR *addr, int ack, int controlmsg, const void *extra, int extra_size)
+{
+	NETPACKETCONSTRUCT construct;
+	construct.flags = NET_PACKETFLAG_CONTROL;
+	construct.ack = ack;
+	construct.num_chunks = 0;
+	construct.data_size = 1+extra_size;
+	construct.chunk_data[0] = controlmsg;
+	mem_copy(&construct.chunk_data[1], extra, extra_size);
+	
+	/* send the control message */
+	send_packet(socket, addr, &construct);
+}
+
 void netcommon_openlog(const char *sentlog, const char *recvlog)
 {
 	if(sentlog)

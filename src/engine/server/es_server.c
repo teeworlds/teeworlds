@@ -824,9 +824,9 @@ static void server_process_client_packet(NETCHUNK *packet)
 }
 
 
-int server_ban_add(NETADDR addr, int type, int seconds)
+int server_ban_add(NETADDR addr, int seconds)
 {
-	return netserver_ban_add(net, addr, type, seconds);	
+	return netserver_ban_add(net, addr, seconds);	
 }
 
 int server_ban_remove(NETADDR addr)
@@ -1177,29 +1177,78 @@ static void con_kick(void *result, void *user_data)
 	server_kick(console_arg_int(result, 0), "kicked by console");
 }
 
+static int str_allnum(const char *str)
+{
+	while(*str)
+	{
+		if(!(*str >= '0' && *str <= '9'))
+			return 0;
+		str++;
+	}
+	return 1;
+}
+
 static void con_ban(void *result, void *user_data)
+{
+	NETADDR addr;
+	char addrstr[128];
+	const char *str = console_arg_string(result, 0);
+	int minutes = console_arg_int(result, 1);
+	
+	if(minutes == 0)
+		minutes = 30;
+	
+	if(net_addr_from_str(&addr, str) == 0)
+		server_ban_add(addr, minutes*60);
+	else if(str_allnum(str))
+	{
+		NETADDR addr;
+		int cid = atoi(str);
+
+		if(cid < 0 || cid > MAX_CLIENTS || clients[cid].state == SRVCLIENT_STATE_EMPTY)
+		{
+			dbg_msg("server", "invalid client id");
+			return;
+		}
+
+		netserver_client_addr(net, cid, &addr);
+		server_ban_add(addr, minutes*60);
+	}
+	
+	addr.port = 0;
+	net_addr_str(&addr, addrstr, sizeof(addrstr));
+		
+	dbg_msg("server", "banned %s for %d minutes", addrstr, minutes);
+}
+
+static void con_unban(void *result, void *user_data)
 {
 	NETADDR addr;
 	const char *str = console_arg_string(result, 0);
 	
 	if(net_addr_from_str(&addr, str) == 0)
-		server_ban_add(addr, 2, 60);
+		server_ban_remove(addr);
+	else
+		dbg_msg("server", "invalid network address");
 }
-
 
 static void con_bans(void *result, void *user_data)
 {
 	int i;
+	unsigned now = time_timestamp();
 	NETBANINFO info;
 	NETADDR addr;
 	int num = netserver_ban_num(net);
 	for(i = 0; i < num; i++)
 	{
+		unsigned t;
 		netserver_ban_get(net, i, &info);
 		addr = info.addr;
 		
-		dbg_msg("server", "#%d %d.%d.%d.%d", i, addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3]);
+		t = info.expires - now;
+		dbg_msg("server", "#%d %d.%d.%d.%d for %d minutes and %d seconds", i, addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3], t/60, t%60);
 	}
+	dbg_msg("server", "%d ban(s)", num);
 }
 
 static void con_status(void *result, void *user_data)
@@ -1238,7 +1287,8 @@ static void con_stoprecord(void *result, void *user_data)
 static void server_register_commands()
 {
 	MACRO_REGISTER_COMMAND("kick", "i", con_kick, 0);
-	MACRO_REGISTER_COMMAND("ban", "r", con_ban, 0);
+	MACRO_REGISTER_COMMAND("ban", "s?i", con_ban, 0);
+	MACRO_REGISTER_COMMAND("unban", "s", con_unban, 0);
 	MACRO_REGISTER_COMMAND("bans", "", con_bans, 0);
 	MACRO_REGISTER_COMMAND("status", "", con_status, 0);
 	MACRO_REGISTER_COMMAND("shutdown", "", con_shutdown, 0);

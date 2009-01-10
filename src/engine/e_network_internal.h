@@ -127,6 +127,7 @@ typedef struct NETRECVINFO
 	unsigned char buffer[NET_MAX_PACKETSIZE];
 } NETRECVINFO;
 
+/* */
 
 /* connection functions */
 void conn_init(NETCONNECTION *conn, NETSOCKET socket);
@@ -145,6 +146,7 @@ void recvinfo_start(NETRECVINFO *info, NETADDR *addr, NETCONNECTION *conn, int c
 int recvinfo_fetch_chunk(NETRECVINFO *info, NETCHUNK *chunk);
 
 /* misc helper functions */
+void send_controlmsg(NETSOCKET socket, NETADDR *addr, int ack, int controlmsg, const void *extra, int extra_size);
 void send_packet_connless(NETSOCKET socket, NETADDR *addr, const void *data, int data_size);
 void send_packet(NETSOCKET socket, NETADDR *addr, NETPACKETCONSTRUCT *packet);
 int unpack_packet(unsigned char *buffer, int size, NETPACKETCONSTRUCT *packet);

@@ -135,6 +135,6 @@ int server_tick();
 */
 int server_tickspeed();
 
-int server_ban_add(NETADDR addr, int type, int seconds);
+int server_ban_add(NETADDR addr, int seconds);
 int server_ban_remove(NETADDR addr);
 #endif

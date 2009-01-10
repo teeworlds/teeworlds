@@ -129,19 +129,11 @@ void conn_queue_chunk(NETCONNECTION *conn, int flags, int data_size, const void 
 	}
 }
 
+
 static void conn_send_control(NETCONNECTION *conn, int controlmsg, const void *extra, int extra_size)
 {
-	NETPACKETCONSTRUCT construct;
-	construct.flags = NET_PACKETFLAG_CONTROL;
-	construct.ack = conn->ack;
-	construct.num_chunks = 0;
-	construct.data_size = 1+extra_size;
-	construct.chunk_data[0] = controlmsg;
-	mem_copy(&construct.chunk_data[1], extra, extra_size);
-	
 	/* send the control message */
-	send_packet(conn->socket, &conn->peeraddr, &construct);
-	conn->last_send_time = time_get();
+	send_controlmsg(conn->socket, &conn->peeraddr, conn->ack, controlmsg, extra, extra_size);
 }
 
 static void conn_resend_chunk(NETCONNECTION *conn, NETCHUNKDATA *resend)

@@ -11,12 +11,37 @@ typedef struct NETBAN
 {
 	NETBANINFO info;
 	
+	/* hash list */
 	struct NETBAN *hashnext;
 	struct NETBAN *hashprev;
 	
+	/* used or free list */
 	struct NETBAN *next;
 	struct NETBAN *prev;
 } NETBAN;
+
+#define MACRO_LIST_LINK_FIRST(object, first, prev, next) \
+	{ if(first) first->prev = object; \
+	object->prev = (void*)0; \
+	object->next = first; \
+	first = object; }
+	
+#define MACRO_LIST_LINK_AFTER(object, after, prev, next) \
+	{ object->prev = after; \
+	object->next = after->next; \
+	after->next = object; \
+	if(object->next) \
+		object->next->prev = object; \
+	}
+
+#define MACRO_LIST_UNLINK(object, first, prev, next) \
+	{ if(object->next) object->next->prev = object->prev; \
+	if(object->prev) object->prev->next = object->next; \
+	else first = object->next; \
+	object->next = 0; object->prev = 0; }
+	
+#define MACRO_LIST_FIND(start, next, expression) \
+	{ while(start && !(expression)) start = start->next; }
 
 struct NETSERVER
 {
@@ -129,78 +154,98 @@ int netserver_ban_num(NETSERVER *s)
 	return count;
 }
 
-int netserver_ban_remove(NETSERVER *s, NETADDR addr)
+static void netserver_ban_remove_by_object(NETSERVER *s, NETBAN *ban)
 {
-	return 0;
+	int iphash = (ban->info.addr.ip[0]+ban->info.addr.ip[1]+ban->info.addr.ip[2]+ban->info.addr.ip[3])&0xff;
+	dbg_msg("netserver", "removing ban on %d.%d.%d.%d",
+		ban->info.addr.ip[0], ban->info.addr.ip[1], ban->info.addr.ip[2], ban->info.addr.ip[3]);
+	MACRO_LIST_UNLINK(ban, s->banpool_firstused, prev, next);
+	MACRO_LIST_UNLINK(ban, s->bans[iphash], hashprev, hashnext);
+	MACRO_LIST_LINK_FIRST(ban, s->banpool_firstfree, prev, next);
 }
 
-int netserver_ban_add(NETSERVER *s, NETADDR addr, int type, int seconds)
+int netserver_ban_remove(NETSERVER *s, NETADDR addr)
 {
 	int iphash = (addr.ip[0]+addr.ip[1]+addr.ip[2]+addr.ip[3])&0xff;
-	unsigned stamp = time_timestamp() + seconds;
-	NETBAN *ban;
-	NETBAN *insert_after;
+	NETBAN *ban = s->bans[iphash];
 	
-	/* search to see if it already exists */
-	for(ban = s->bans[iphash]; ban; ban = ban->hashnext)
+	MACRO_LIST_FIND(ban, hashnext, net_addr_comp(&ban->info.addr, &addr) == 0);
+	
+	if(ban)
 	{
-		if(net_addr_comp(&ban->info.addr, &addr) == 0)
-		{
-			if(ban->info.expires < stamp)
-			{
-				/* decide what to do here */
-			}
-			return -1;
-		}
+		netserver_ban_remove_by_object(s, ban);
+		return 0;
+	}
+	
+	return -1;
+}
+
+int netserver_ban_add(NETSERVER *s, NETADDR addr, int seconds)
+{
+	int iphash = (addr.ip[0]+addr.ip[1]+addr.ip[2]+addr.ip[3])&0xff;
+	unsigned stamp = 0xffffffff;
+	NETBAN *ban;
+	
+	/* remove the port */
+	addr.port = 0;
+	
+	if(seconds)
+		stamp = time_timestamp() + seconds;
+		
+	/* search to see if it already exists */
+	ban = s->bans[iphash];
+	MACRO_LIST_FIND(ban, hashnext, net_addr_comp(&ban->info.addr, &addr) == 0);
+	if(ban)
+	{
+		/* adjust the ban */
+		ban->info.expires = stamp;
+		return 0;
 	}
 	
 	if(!s->banpool_firstfree)
 		return -1;
 
-	/* fetch and clear the new ban */	
+	/* fetch and clear the new ban */
 	ban = s->banpool_firstfree;
-	s->banpool_firstfree->prev = 0;
-	ban->next = 0;
-	ban->prev = 0;
-	ban->info.expires = 0;
-	if(seconds)
-		ban->info.expires = stamp;
-	ban->info.type = type;
+	MACRO_LIST_UNLINK(ban, s->banpool_firstfree, prev, next);
+	
+	/* setup the ban info */
+	ban->info.expires = stamp;
 	ban->info.addr = addr;
 	
 	/* add it to the ban hash */
-	if(s->bans[iphash])
-		s->bans[iphash]->hashprev = ban;
-	ban->hashnext = s->bans[iphash];
-	ban->hashprev = 0;
-	s->bans[iphash] = ban;
+	MACRO_LIST_LINK_FIRST(ban, s->bans[iphash], hashprev, hashnext);
 	
 	/* insert it into the used list */
-	insert_after = s->banpool_firstused;
-	while(insert_after)
 	{
-		if(!insert_after->next)
-			break;
-		if(insert_after->next->info.expires < stamp)
-			break;
-		insert_after = insert_after->next;
-	}
-	
-	if(!insert_after || insert_after->info.expires > stamp)
-	{
-		/* insert first */
-		s->banpool_firstused = ban;
-		ban->next = insert_after;
-		ban->prev = 0;
-	}
-	else
-	{
-		/* insert after */
-		ban->next = insert_after->next;
-		ban->prev = insert_after;
-		if(ban->next)
-			ban->next->prev = ban;
-		insert_after->next = ban;
+		if(s->banpool_firstused)
+		{
+			NETBAN *insert_after = s->banpool_firstused;
+			MACRO_LIST_FIND(insert_after, next, stamp < insert_after->info.expires);
+			
+			if(insert_after)
+				insert_after = insert_after->prev;
+			else
+			{
+				/* add to last */
+				insert_after = s->banpool_firstused;
+				while(insert_after->next)
+					insert_after = insert_after->next;
+			}
+			
+			if(insert_after)
+			{
+				MACRO_LIST_LINK_AFTER(ban, insert_after, prev, next);
+			}
+			else
+			{
+				MACRO_LIST_LINK_FIRST(ban, s->banpool_firstused, prev, next);
+			}
+		}
+		else
+		{
+			MACRO_LIST_LINK_FIRST(ban, s->banpool_firstused, prev, next);
+		}
 	}
 
 	/* drop banned clients */	
@@ -210,9 +255,9 @@ int netserver_ban_add(NETSERVER *s, NETADDR addr, int type, int seconds)
 		NETADDR banaddr;
 		
 		if(seconds)
-			str_format(buf, sizeof(buf), "you have been banned for %d seconds", seconds);
+			str_format(buf, sizeof(buf), "you have been banned for %d minutes", seconds/60);
 		else
-			str_format(buf, sizeof(buf), "you have been banned");
+			str_format(buf, sizeof(buf), "you have been banned for life");
 		
 		for(i = 0; i < s->max_clients; i++)
 		{
@@ -222,13 +267,14 @@ int netserver_ban_add(NETSERVER *s, NETADDR addr, int type, int seconds)
 			if(net_addr_comp(&addr, &banaddr) == 0)
 				netserver_drop(s, i, buf);
 		}
-	}	
-	
+	}
 	return 0;
 }
 
 int netserver_update(NETSERVER *s)
 {
+	unsigned now = time_timestamp();
+	
 	int i;
 	for(i = 0; i < s->max_clients; i++)
 	{
@@ -236,6 +282,16 @@ int netserver_update(NETSERVER *s)
 		if(s->slots[i].conn.state == NET_CONNSTATE_ERROR)
 			netserver_drop(s, i, conn_error(&s->slots[i].conn));
 	}
+	
+	/* remove expired bans */
+	while(s->banpool_firstused && s->banpool_firstused->info.expires < now)
+	{
+		NETBAN *ban = s->banpool_firstused;
+		netserver_ban_remove_by_object(s, ban);
+	}
+	
+	(void)now;
+	
 	return 0;
 }
 
@@ -278,8 +334,23 @@ int netserver_recv(NETSERVER *s, NETCHUNK *chunk)
 			}
 			
 			/* check if we just should drop the packet */
-			if(ban && ban->info.type == NETBANTYPE_DROP && (!ban->info.expires || ban->info.expires > now))
+			if(ban)
+			{
+				// banned, reply with a message
+				char banstr[128];
+				if(ban->info.expires)
+				{
+					int mins = ((ban->info.expires - now)+59)/60;
+					if(mins == 1)
+						str_format(banstr, sizeof(banstr), "banned for %d minute", mins);
+					else
+						str_format(banstr, sizeof(banstr), "banned for %d minutes", mins);
+				}
+				else
+					str_format(banstr, sizeof(banstr), "banned for life");
+				send_controlmsg(s->socket, &addr, 0, NET_CTRLMSG_CLOSE, banstr, str_length(banstr)+1);
 				continue;
+			}
 			
 			if(s->recv.data.flags&NET_PACKETFLAG_CONNLESS)
 			{
@@ -296,43 +367,37 @@ int netserver_recv(NETSERVER *s, NETCHUNK *chunk)
 				if(s->recv.data.flags&NET_PACKETFLAG_CONTROL && s->recv.data.chunk_data[0] == NET_CTRLMSG_CONNECT)
 				{
 					found = 0;
-					
-					if(ban && ban->info.expires > now)
+				
+					/* check if we already got this client */
+					for(i = 0; i < s->max_clients; i++)
 					{
-						/* TODO: soft ban, reply with a message */
+						if(s->slots[i].conn.state != NET_CONNSTATE_OFFLINE &&
+							net_addr_comp(&s->slots[i].conn.peeraddr, &addr) == 0)
+						{
+							found = 1; /* silent ignore.. we got this client already */
+							break;
+						}
 					}
-					else
+					
+					/* client that wants to connect */
+					if(!found)
 					{
-						/* check if we already got this client */
 						for(i = 0; i < s->max_clients; i++)
 						{
-							if(s->slots[i].conn.state != NET_CONNSTATE_OFFLINE &&
-								net_addr_comp(&s->slots[i].conn.peeraddr, &addr) == 0)
+							if(s->slots[i].conn.state == NET_CONNSTATE_OFFLINE)
 							{
-								found = 1; /* silent ignore.. we got this client already */
+								found = 1;
+								conn_feed(&s->slots[i].conn, &s->recv.data, &addr);
+								if(s->new_client)
+									s->new_client(i, s->user_ptr);
 								break;
 							}
 						}
 						
-						/* client that wants to connect */
 						if(!found)
 						{
-							for(i = 0; i < s->max_clients; i++)
-							{
-								if(s->slots[i].conn.state == NET_CONNSTATE_OFFLINE)
-								{
-									found = 1;
-									conn_feed(&s->slots[i].conn, &s->recv.data, &addr);
-									if(s->new_client)
-										s->new_client(i, s->user_ptr);
-									break;
-								}
-							}
-							
-							if(!found)
-							{
-								/* TODO: send server full message */
-							}
+							const char fullmsg[] = "server is full";
+							send_controlmsg(s->socket, &addr, 0, NET_CTRLMSG_CLOSE, fullmsg, sizeof(fullmsg));
 						}
 					}
 				}
