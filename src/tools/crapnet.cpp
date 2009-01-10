@@ -20,10 +20,10 @@ static PACKET *last = (PACKET *)0;
 static int current_latency = 0;
 
 static int config_log = 0;
-static int config_ping = 50;
-static int config_pingflux = 15;
+static int config_ping = 150;
+static int config_pingflux = 50;
 static int config_pingspike = 0;
-static int config_packetloss = 1; // in percent
+static int config_packetloss = 10; // in percent
 static int config_reorder = 1;
 
 int run(int port, NETADDR dest)

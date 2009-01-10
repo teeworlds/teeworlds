@@ -93,7 +93,8 @@ int recvinfo_fetch_chunk(NETRECVINFO *info, NETCHUNK *chunk)
 					continue;
 
 				/* out of sequence, request resend */
-				dbg_msg("conn", "asking for resend %d %d", header.sequence, (info->conn->ack+1)%NET_MAX_SEQUENCE);
+				if(config.debug)
+					dbg_msg("conn", "asking for resend %d %d", header.sequence, (info->conn->ack+1)%NET_MAX_SEQUENCE);
 				conn_want_resend(info->conn);
 				continue; /* take the next chunk in the packet */
 			}

@@ -1008,7 +1008,7 @@ static void client_process_packet(NETCHUNK *packet)
 				
 				graph_add(&input_late_graph, time_left/100.0f+0.5f);
 				
-				if(time_left < 0)
+				if(time_left < 0 && config.debug)
 					dbg_msg("client", "input was late with %d ms", time_left);
 				last_input_timeleft = time_left;
 				
