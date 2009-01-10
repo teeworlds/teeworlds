@@ -666,10 +666,10 @@ static void do_toolbar(RECT toolbar)
 	if(do_editor_button(&zoom_in_button, "ZI", 0, &button, draw_editor_button_r, 0, "[NumPad+] Zoom in") || inp_key_down(KEY_KP_PLUS))
 		editor.zoom_level -= 50;
 		
-	if(inp_key_presses(KEY_MOUSE_WHEEL_UP))
+	if(inp_key_presses(KEY_MOUSE_WHEEL_UP) && editor.dialog == DIALOG_NONE)
 		editor.zoom_level -= 20;
 		
-	if(inp_key_presses(KEY_MOUSE_WHEEL_DOWN))
+	if(inp_key_presses(KEY_MOUSE_WHEEL_DOWN) && editor.dialog == DIALOG_NONE)
 		editor.zoom_level += 20;
 	
 	if(editor.zoom_level < 50)
@@ -1916,7 +1916,21 @@ static void render_file_dialog()
 	ui_hmargin(&scroll, 5.0f, &scroll);
 	scrollvalue = ui_do_scrollbar_v(&scrollbar, &scroll, scrollvalue);
 	
-	files_startat = (int)((files_num-num)*scrollvalue);
+	int scrollnum = files_num-num+10;
+	if(scrollnum > 0)
+	{
+		if(inp_key_presses(KEY_MOUSE_WHEEL_UP))
+			scrollvalue -= 3.0f/scrollnum;
+		if(inp_key_presses(KEY_MOUSE_WHEEL_DOWN))
+			scrollvalue += 3.0f/scrollnum;
+			
+		if(scrollvalue < 0) scrollvalue = 0;
+		if(scrollvalue > 1) scrollvalue = 1;
+	}
+	else
+		scrollnum = 0;
+	
+	files_startat = (int)(scrollnum*scrollvalue);
 	if(files_startat < 0)
 		files_startat = 0;
 		
