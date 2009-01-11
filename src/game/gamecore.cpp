@@ -312,7 +312,7 @@ void CHARACTER_CORE::tick(bool use_input)
 		}
 
 		// Check against other players first
-		if(world)
+		if(world && world->tuning.player_hooking)
 		{
 			float dist = 0.0f;
 			for(int i = 0; i < MAX_CLIENTS; i++)
@@ -407,7 +407,7 @@ void CHARACTER_CORE::tick(bool use_input)
 		}
 	}
 	
-	if(world)
+	if(world && world->tuning.player_collision)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{

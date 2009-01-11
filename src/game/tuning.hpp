@@ -36,3 +36,6 @@ MACRO_TUNING_PARAM(laser_bounce_delay, 150)
 MACRO_TUNING_PARAM(laser_bounce_num, 1)
 MACRO_TUNING_PARAM(laser_bounce_cost, 0)
 MACRO_TUNING_PARAM(laser_damage, 5)
+
+MACRO_TUNING_PARAM(player_collision, 1)
+MACRO_TUNING_PARAM(player_hooking, 1)
