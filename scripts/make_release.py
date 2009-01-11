@@ -13,6 +13,7 @@ platform = sys.argv[2]
 exe_ext = ""
 use_zip = 0
 use_gz = 1
+use_dmg = 0
 use_bundle = 0
 include_data = True
 include_exe = True
@@ -34,8 +35,8 @@ if platform == 'win32':
 	exe_ext = ".exe"
 	use_zip = 1
 	use_gz = 0
-if 'osx_' in platform:
-	use_zip = 1
+if  platform == 'osx':
+	use_dmg = 1
 	use_gz = 0
 	use_bundle = 1
 
@@ -78,6 +79,8 @@ if include_src:
 	shutil.copy("default.bam", package_dir)
 
 if use_bundle:
+	os.system("lipo -create -output teeworlds_srv teeworlds_srv_ppc teeworlds_srv_x86")
+	os.system("lipo -create -output teeworlds teeworlds_ppc teeworlds_x86")
 	bundle_content_dir = os.path.join(package_dir, "Teeworlds.app/Contents")
 	bundle_bin_dir = os.path.join(bundle_content_dir, "MacOS")
 	bundle_resource_dir = os.path.join(bundle_content_dir, "Resources")
@@ -92,7 +95,6 @@ if use_bundle:
 	shutil.copy("other/icons/Teeworlds.icns", bundle_resource_dir)
 	shutil.copy(name+exe_ext, bundle_bin_dir)
 	shutil.copy(name+"_srv"+exe_ext, bundle_bin_dir)
-	print(bundle_framework_dir)
 	os.system("cp -R /Library/Frameworks/SDL.framework " + bundle_framework_dir)
 	file(os.path.join(bundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
@@ -132,5 +134,12 @@ if use_zip:
 if use_gz:
 	print "making tar.gz archive"
 	os.system("tar czf %s.tar.gz %s" % (package, package_dir))
+
+if use_dmg:
+	print "making disk image"
+	os.system("rm -f %s.dmg %s_temp.dmg" % (package, package))
+	os.system("hdiutil create -srcfolder %s -volname Teeworlds -quiet %s_temp" % (package_dir, package))
+	os.system("hdiutil convert %s_temp.dmg -format UDBZ -o %s.dmg -quiet" % (package, package))
+	os.system("rm -f %s_temp.dmg" % package)
 	
 print "done"

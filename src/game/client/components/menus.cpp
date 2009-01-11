@@ -240,7 +240,7 @@ int MENUS::ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, f
 			if (at_index > len)
 				at_index = len;
 			
-			if (!(c >= 0 && c < 32))
+			if (!(c >= 0 && c < 32) && c != 127)
 			{
 				if (len < str_size - 1 && at_index < str_size - 1)
 				{

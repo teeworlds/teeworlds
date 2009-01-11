@@ -36,7 +36,7 @@ typedef struct
 	int pan;
 } CHANNEL;
 
-typedef struct VOICE_t
+typedef struct
 {
 	SAMPLE *snd;
 	CHANNEL *channel;
@@ -59,6 +59,8 @@ static int center_y = 0;
 static int mixing_rate = 48000;
 static volatile int sound_volume = 100;
 
+static int next_voice = 0;
+
 void snd_set_channel(int cid, float vol, float pan)
 {
 	channels[cid].vol = (int)(vol*255.0f);
@@ -73,12 +75,13 @@ static int play(int cid, int sid, int flags, float x, float y)
 	lock_wait(sound_lock);
 	
 	/* search for voice */
-	/* TODO: fix this linear search */
 	for(i = 0; i < NUM_VOICES; i++)
 	{
-		if(!voices[i].snd)
+		int id = (next_voice + i) % NUM_VOICES;
+		if(!voices[id].snd)
 		{
-			vid = i;
+			vid = id;
+			next_voice = id+1;
 			break;
 		}
 	}
