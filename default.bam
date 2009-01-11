@@ -88,6 +88,12 @@ AddDependency(server_content_source, server_content_header)
 nethash = CHash("src/game/generated/nethash.c", "src/engine/e_protocol.h", "src/game/generated/g_protocol.hpp", "src/game/tuning.hpp", "src/game/gamecore.cpp", network_header)
 
 client_link_other = {}
+client_depends = {}
+
+if family == "windows" then
+	table.insert(client_depends, Copy(".", "other\\sdl\\vc2005libs\\SDL.dll"))
+end
+	
 
 if config.compiler.value == "cl" then
 	client_link_other = {ResCompile("other/icons/teeworlds.rc")}
@@ -219,7 +225,7 @@ function build(settings)
 		engine, zlib)
 
 	-- make targets
-	c = PseudoTarget("client".."_"..settings.config_name, client_exe)
+	c = PseudoTarget("client".."_"..settings.config_name, client_exe, client_depends)
 	s = PseudoTarget("server".."_"..settings.config_name, server_exe)
 	g = PseudoTarget("game".."_"..settings.config_name, client_exe, server_exe)
 
