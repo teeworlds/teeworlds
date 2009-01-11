@@ -859,8 +859,6 @@ static void server_send_serverinfo(NETADDR *addr, int token)
 	i = 0;
 	if(config.password[0])   /* password set */
 		i |= SRVFLAG_PASSWORD;
-	if (mods_is_tuned())     /* is tuned */
-		i |= SRVFLAG_TUNED;
 	str_format(buf, sizeof(buf), "%d", i);
 	packer_add_string(&p, buf, 2);
 

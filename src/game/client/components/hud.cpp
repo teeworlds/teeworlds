@@ -167,24 +167,6 @@ void HUD::render_connectionwarning()
 	}
 }
 
-void HUD::render_tunewarning()
-{
-	TUNING_PARAMS standard_tuning;
-
-	// render warning about non standard tuning
-	bool flash = time_get()/(time_freq()/2)%2 == 0;
-	if(config.cl_warning_tuning && memcmp(&standard_tuning, &gameclient.tuning, sizeof(TUNING_PARAMS)) != 0)
-	{
-		const char *text = "Warning! Server is running non-standard tuning.";
-		if(flash)
-			gfx_text_color(1,0.4f,0.4f,1.0f);
-		else
-			gfx_text_color(0.75f,0.2f,0.2f,1.0f);
-		gfx_text(0x0, 5, 40, 6, text, -1);
-		gfx_text_color(1,1,1,1);
-	}
-}		
-
 void HUD::render_teambalancewarning()
 {
 	// render prompt about team-balance
@@ -307,7 +289,6 @@ void HUD::on_render()
 	render_fps();
 	if(client_state() != CLIENTSTATE_DEMOPLAYBACK)
 		render_connectionwarning();
-	render_tunewarning();
 	render_teambalancewarning();
 	render_voting();
 	render_cursor();

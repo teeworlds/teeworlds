@@ -39,6 +39,14 @@ public:
 
 	// TODO: move this
 	TUNING_PARAMS tuning;
+	
+	enum
+	{
+		SERVERMODE_PURE=0,
+		SERVERMODE_MOD,
+		SERVERMODE_PUREMOD,
+	};
+	int servermode;
 
 	vec2 local_character_pos;
 	vec2 local_target_pos;

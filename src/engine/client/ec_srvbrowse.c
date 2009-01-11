@@ -164,7 +164,7 @@ static void client_serverbrowse_filter()
 			filtered = 1;
 		else if(config.b_filter_pw && serverlist[i]->info.flags&SRVFLAG_PASSWORD)
 			filtered = 1;
-		else if(config.b_filter_tuned && serverlist[i]->info.flags&SRVFLAG_TUNED)
+		else if(config.b_filter_pure && (strcmp(serverlist[i]->info.gametype, "DM") != 0 && strcmp(serverlist[i]->info.gametype, "TDM") != 0 && strcmp(serverlist[i]->info.gametype, "CTF") != 0))
 			filtered = 1;
 		else if(config.b_filter_ping < serverlist[i]->info.latency)
 			filtered = 1;
@@ -228,7 +228,7 @@ static int client_serverbrowse_sorthash()
 	i |= config.b_filter_pw<<6;
 	i |= config.b_sort_order<<7;
 	i |= config.b_filter_compatversion<<8;
-	i |= config.b_filter_tuned<<9;
+	i |= config.b_filter_pure<<9;
 	i |= config.b_filter_ping<<16;
 	return i;
 }

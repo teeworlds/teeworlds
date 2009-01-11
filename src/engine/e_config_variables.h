@@ -19,7 +19,7 @@ MACRO_CONFIG_INT(b_filter_empty, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Filter o
 MACRO_CONFIG_INT(b_filter_pw, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Filter out password protected servers in browser")
 MACRO_CONFIG_INT(b_filter_ping, 999, 0, 999, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Ping to filter by in the server browser")
 MACRO_CONFIG_STR(b_filter_gametype, 128, "", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Game types to filter")
-MACRO_CONFIG_INT(b_filter_tuned, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Filter out tuned servers in browser")
+MACRO_CONFIG_INT(b_filter_pure, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Filter out non-pure servers in browser")
 MACRO_CONFIG_INT(b_filter_compatversion, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Filter out non-compatible servers in browser")
 
 MACRO_CONFIG_INT(b_sort, 0, 0, 256, CFGFLAG_SAVE|CFGFLAG_CLIENT, "")

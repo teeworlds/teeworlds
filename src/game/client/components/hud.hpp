@@ -8,7 +8,6 @@ class HUD : public COMPONENT
 	
 	void render_fps();
 	void render_connectionwarning();
-	void render_tunewarning();
 	void render_teambalancewarning();
 	void render_voting();
 	void render_healthandammo();

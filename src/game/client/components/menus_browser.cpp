@@ -46,7 +46,7 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 		SPACER=2,
 		
 		COL_FLAG_LOCK=0,
-		COL_FLAG_TUNED,
+		COL_FLAG_PURE,
 		COL_FLAG_FAV,
 		COL_NAME,
 		COL_GAMETYPE,
@@ -60,7 +60,7 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 	static column cols[] = {
 		{-1,			-1,						" ",		-1, 2.0f, 0, {0}, {0}},
 		{COL_FLAG_LOCK,	-1,						" ",		-1, 14.0f, 0, {0}, {0}},
-		{COL_FLAG_TUNED,	-1,						" ",		-1, 14.0f, 0, {0}, {0}},
+		{COL_FLAG_PURE,	-1,						" ",		-1, 14.0f, 0, {0}, {0}},
 		{COL_FLAG_FAV,	-1,						" ",		-1, 14.0f, 0, {0}, {0}},
 		{COL_NAME,		BROWSESORT_NAME,		"Name",		0, 300.0f, 0, {0}, {0}},
 		{COL_GAMETYPE,	BROWSESORT_GAMETYPE,	"Type",		1, 50.0f, 0, {0}, {0}},
@@ -161,16 +161,17 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 
 	selected_index = -1;
 
-	for (int i = 0; i < num_servers; i++)
+	/*for (int i = 0; i < num_servers; i++)
 	{
 		SERVER_INFO *item = client_serverbrowse_sorted_get(i);
 		num_players += item->num_players;
-	}
+	}*/
 	
 	for (int i = 0; i < num_servers; i++)
 	{
 		int item_index = i;
 		SERVER_INFO *item = client_serverbrowse_sorted_get(item_index);
+		num_players += item->num_players;
 		RECT row;
         RECT select_hit_box;
 			
@@ -226,10 +227,10 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 				if(item->flags & SRVFLAG_PASSWORD)
 					ui_draw_browse_icon(SPRITE_BROWSE_LOCK, &button);
 			}
-			else if(id == COL_FLAG_TUNED)
+			else if(id == COL_FLAG_PURE)
 			{
-				if(item->flags & SRVFLAG_TUNED)
-					ui_draw_browse_icon(SPRITE_BROWSE_TUNED, &button);
+				if(strncmp(item->gametype, "DM", 2) == 0 || strncmp(item->gametype, "TDM", 3) == 0 || strncmp(item->gametype, "CTF", 3) == 0)
+					ui_draw_browse_icon(SPRITE_BROWSE_PURE, &button);
 			}
 			else if(id == COL_FLAG_FAV)
 			{
@@ -345,10 +346,10 @@ void MENUS::render_serverbrowser_filters(RECT view)
 	ui_hsplit_t(&view, 20.0f, &button, &view);
 	if (ui_do_button((char *)&config.b_filter_compatversion, "Compatible Version", config.b_filter_compatversion, &button, ui_draw_checkbox, 0))
 		config.b_filter_compatversion ^= 1;
-
+	
 	ui_hsplit_t(&view, 20.0f, &button, &view);
-	if (ui_do_button((char *)&config.b_filter_tuned, "Not tuned", config.b_filter_tuned, &button, ui_draw_checkbox, 0))
-		config.b_filter_tuned ^= 1;
+	if (ui_do_button((char *)&config.b_filter_pure, "Only pure", config.b_filter_pure, &button, ui_draw_checkbox, 0))
+		config.b_filter_pure ^= 1;
 
 	ui_hsplit_t(&view, 20.0f, &button, &view);
 	ui_do_label(&button, "Game types: ", 14.0f, -1);
@@ -387,7 +388,6 @@ void MENUS::render_serverbrowser_filters(RECT view)
 		config.b_filter_ping = 999;
 		config.b_filter_gametype[0] = 0;
 		config.b_filter_compatversion = 1;
-		config.b_filter_tuned = 1;
 		config.b_filter_string[0] = 0;
 	}
 }
@@ -420,7 +420,7 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 	if (selected_server)
 	{
 		RECT row;
-		static const char *labels[] = { "Version:", "Game Type:", "Tuning:", "Progression:", "Ping:" };
+		static const char *labels[] = { "Version:", "Game Type:", "Progression:", "Ping:" };
 
 		RECT left_column;
 		RECT right_column;
@@ -456,12 +456,6 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 		ui_do_label(&row, selected_server->gametype, font_size, -1);
 
 		char temp[16];
-
-		str_format(temp, sizeof(temp), "%s", selected_server->flags & SRVFLAG_TUNED ? "non-standard" : "standard");
-
-		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
-		ui_do_label(&row, temp, font_size, -1);
-
 
 		if(selected_server->progression < 0)
 			str_format(temp, sizeof(temp), "N/A");

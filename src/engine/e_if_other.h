@@ -31,8 +31,6 @@ enum
 enum
 {
 	SRVFLAG_PASSWORD = 0x1,
-	SRVFLAG_TUNED = 0x2,
-	SRVFLAG_MOD = 0x4
 };
 
 /*

@@ -1,3 +1,4 @@
+#include <string.h>
 #include <engine/e_client_interface.h>
 #include <engine/e_demorec.h>
 
@@ -214,6 +215,7 @@ void GAMECLIENT::on_init()
 	int64 end = time_get();
 	dbg_msg("", "%f.2ms", ((end-start)*1000)/(float)time_freq());
 	
+	servermode = SERVERMODE_PURE;
 }
 
 void GAMECLIENT::on_save()
@@ -272,6 +274,11 @@ void GAMECLIENT::on_connected()
 		all.components[i]->on_mapload();
 		all.components[i]->on_reset();
 	}
+	
+	SERVER_INFO current_server_info;
+	client_serverinfo(&current_server_info);
+	
+	servermode = SERVERMODE_PURE;
 	
 	// send the inital info
 	send_info(true);
@@ -393,6 +400,8 @@ void GAMECLIENT::on_message(int msgtype)
 		// check for unpacking errors
 		if(msg_unpack_error())
 			return;
+		
+		servermode = SERVERMODE_PURE;
 			
 		// apply new tuning
 		tuning = new_tuning;
@@ -638,6 +647,20 @@ void GAMECLIENT::on_snapshot()
 	}
 	else
 		snap.spectate = true;
+	
+	TUNING_PARAMS standard_tuning;
+	SERVER_INFO current_server_info;
+	client_serverinfo(&current_server_info);
+	if(current_server_info.gametype[0] != '0')
+	{
+		if(strcmp(current_server_info.gametype, "DM") != 0 && strcmp(current_server_info.gametype, "TDM") != 0 && strcmp(current_server_info.gametype, "CTF") != 0)
+			servermode = SERVERMODE_MOD;
+		else if(memcmp(&standard_tuning, &tuning, sizeof(TUNING_PARAMS)) == 0)
+			servermode = SERVERMODE_PURE;
+		else
+			servermode = SERVERMODE_PUREMOD;
+	}
+	
 
 	// update render info
 	for(int i = 0; i < MAX_CLIENTS; i++)

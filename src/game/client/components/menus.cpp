@@ -761,6 +761,13 @@ int MENUS::render()
 			button_text = "Ok";
 			extra_align = -1;
 		}
+		else if(popup == POPUP_PURE)
+		{
+			title = "Disconnected";
+			extra_text = "The server is running a non-standard tuning on a pure game mode.";
+			button_text = "Ok";
+			extra_align = -1;
+		}
 		else if(popup == POPUP_PASSWORD)
 		{
 			title = "Password Error";
@@ -996,6 +1003,13 @@ void MENUS::on_render()
 		render_demoplayer(screen);
 	}
 	
+	if(client_state() == CLIENTSTATE_ONLINE && gameclient.servermode == gameclient.SERVERMODE_PUREMOD)
+	{
+		client_disconnect();
+		set_active(true);
+		popup = POPUP_PURE;
+	}
+	
 	if(!is_active())
 	{
 		escape_pressed = false;
@@ -1003,7 +1017,7 @@ void MENUS::on_render()
 		num_inputevents = 0;
 		return;
 	}
-		
+	
 	// update colors
 	vec3 rgb = hsl_to_rgb(vec3(config.ui_color_hue/255.0f, config.ui_color_sat/255.0f, config.ui_color_lht/255.0f));
 	gui_color = vec4(rgb.r, rgb.g, rgb.b, config.ui_color_alpha/255.0f);

@@ -46,16 +46,6 @@ void send_tuning_params(int cid)
 	server_send_msg(cid);
 }
 
-int mods_is_tuned()
-{
-	TUNING_PARAMS standard_tuning;
-	
-	if (memcmp(&standard_tuning, &tuning, sizeof(TUNING_PARAMS)) != 0)
-		return 1;
-	else
-		return 0;
-}
-
 // Server hooks
 void mods_client_direct_input(int client_id, void *input)
 {
