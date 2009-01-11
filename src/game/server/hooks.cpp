@@ -353,7 +353,7 @@ void mods_message(int msgtype, int client_id)
 	{
 		NETMSG_CL_EMOTICON *msg = (NETMSG_CL_EMOTICON *)rawmsg;
 		
-		if(config.sv_spamprotection && p->last_emote+time_freq()*5 > time_get())
+		if(config.sv_spamprotection && p->last_emote+time_freq()*3 > time_get())
 			return;
 			
 		p->last_emote = time_get();

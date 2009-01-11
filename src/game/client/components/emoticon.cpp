@@ -83,7 +83,7 @@ void EMOTICON::on_render()
 {
 	if(!active)
 	{
-		if(was_active && selected_emote)
+		if(was_active && selected_emote != -1)
 			emote(selected_emote);
 		was_active = false;
 		return;
