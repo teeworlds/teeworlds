@@ -275,6 +275,8 @@ void CHARACTER::fire_weapon()
 	// check for ammo
 	if(!weapons[active_weapon].ammo)
 	{
+		// 125ms is a magical limit of how fast a human can click
+		reload_timer = 125 * server_tickspeed() / 1000;;
 		game.create_sound(pos, SOUND_WEAPON_NOAMMO);
 		return;
 	}
