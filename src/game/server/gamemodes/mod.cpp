@@ -3,7 +3,10 @@
 
 GAMECONTROLLER_MOD::GAMECONTROLLER_MOD()
 {
+	// Exchange this to a string that identifies your game mode.
+	// DM, TDM and CTF are reserved for teeworlds original modes.
 	gametype = "MOD";
+	
 	//game_flags = GAMEFLAG_TEAMS; // GAMEFLAG_TEAMS makes it a two-team gamemode
 }
 
