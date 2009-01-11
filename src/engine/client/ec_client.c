@@ -566,6 +566,7 @@ void client_disconnect_with_reason(const char *reason)
 
 	/* clear the current server info */
 	mem_zero(&current_server_info, sizeof(current_server_info));
+	mem_zero(&server_address, sizeof(server_address));
 	
 	/* clear snapshots */
 	snapshots[SNAP_CURRENT] = 0;
@@ -857,11 +858,13 @@ static void client_process_packet(NETCHUNK *packet)
 						current_server_info.netaddr = server_address;
 						current_server_info_requesttime = -1;
 					}
-					
-					if(packet_type == 2)
-						client_serverbrowse_set(&packet->address, BROWSESET_TOKEN, token, &info);
 					else
-						client_serverbrowse_set(&packet->address, BROWSESET_OLD_INTERNET, -1, &info);
+					{
+						if(packet_type == 2)
+							client_serverbrowse_set(&packet->address, BROWSESET_TOKEN, token, &info);
+						else
+							client_serverbrowse_set(&packet->address, BROWSESET_OLD_INTERNET, -1, &info);
+					}
 				}
 			}
 		}
