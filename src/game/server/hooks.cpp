@@ -492,7 +492,9 @@ void mods_init()
 	//players = new PLAYER[MAX_CLIENTS];
 
 	// select gametype
-	if(strcmp(config.sv_gametype, "ctf") == 0)
+	if(strcmp(config.sv_gametype, "mod") == 0)
+		game.controller = new GAMECONTROLLER_MOD;
+	else if(strcmp(config.sv_gametype, "ctf") == 0)
 		game.controller = new GAMECONTROLLER_CTF;
 	else if(strcmp(config.sv_gametype, "tdm") == 0)
 		game.controller = new GAMECONTROLLER_TDM;
