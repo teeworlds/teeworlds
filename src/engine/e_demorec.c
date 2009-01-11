@@ -331,7 +331,6 @@ static void scan_file()
 			if(playbackinfo.first_tick == -1)
 				playbackinfo.first_tick = chunk_tick;
 			playbackinfo.last_tick = chunk_tick;
-			dbg_msg("", "%x %d", chunk_type, chunk_tick);
 		}
 		else if(chunk_size)
 			io_skip(play_file, chunk_size);
