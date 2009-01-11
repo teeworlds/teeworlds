@@ -1953,7 +1953,7 @@ static void render_file_dialog()
 
 	RECT button;
 	ui_vsplit_r(&buttonbar, 50.0f, &buttonbar, &button);
-	if(do_editor_button(&ok_button, file_dialog_button_text, 0, &button, draw_editor_button, 0, 0))
+	if(do_editor_button(&ok_button, file_dialog_button_text, 0, &button, draw_editor_button, 0, 0) || inp_key_pressed(KEY_RETURN))
 	{
 		if(file_dialog_func)
 			file_dialog_func(file_dialog_complete_filename);
