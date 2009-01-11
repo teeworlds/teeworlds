@@ -560,7 +560,7 @@ void MENUS::render_serverbrowser(RECT main_view)
 	{
 		RECT tab_bar;
 		RECT tabbutton0, tabbutton1;
-		ui_hsplit_t(&toolbox, 30, &tab_bar, &toolbox);
+		ui_hsplit_t(&toolbox, 22.0f, &tab_bar, &toolbox);
 	
 		ui_vsplit_mid(&tab_bar, &tabbutton0, &tabbutton1);
 		ui_vsplit_r(&tabbutton0, 5.0f, &tabbutton0, 0);
