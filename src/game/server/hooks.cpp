@@ -21,6 +21,7 @@ extern "C"
 #include "gamemodes/dm.hpp"
 #include "gamemodes/tdm.hpp"
 #include "gamemodes/ctf.hpp"
+#include "gamemodes/mod.hpp"
 
 TUNING_PARAMS tuning;
 
