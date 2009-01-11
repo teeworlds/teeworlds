@@ -37,7 +37,6 @@ protected:
 	
 	char map_wish[128];
 
-	const char *gametype;
 	
 	int round_start_tick;
 	int game_over_tick;
@@ -53,6 +52,8 @@ protected:
 	bool force_balanced;
 	
 public:
+	const char *gametype;
+
 	bool is_teamplay() const;
 	
 	GAMECONTROLLER();

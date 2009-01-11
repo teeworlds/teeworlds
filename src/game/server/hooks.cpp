@@ -25,6 +25,21 @@ extern "C"
 
 TUNING_PARAMS tuning;
 
+static void check_pure_tuning()
+{
+	if(	strcmp(game.controller->gametype, "DM")==0 ||
+		strcmp(game.controller->gametype, "TDM")==0 ||
+		strcmp(game.controller->gametype, "CTF")==0)
+	{
+		TUNING_PARAMS p;
+		if(memcmp(&p, &tuning, sizeof(TUNING_PARAMS)) != 0)
+		{
+			dbg_msg("server", "resetting tuning due to pure server");
+			tuning = p;
+		}
+	}	
+}
+
 struct VOTEOPTION
 {
 	VOTEOPTION *next;
@@ -38,6 +53,8 @@ static VOTEOPTION *voteoption_last = 0;
 
 void send_tuning_params(int cid)
 {
+	check_pure_tuning();
+	
 	msg_pack_start(NETMSGTYPE_SV_TUNEPARAMS, MSGFLAG_VITAL);
 	int *params = (int *)&tuning;
 	for(unsigned i = 0; i < sizeof(tuning)/sizeof(int); i++)
@@ -62,6 +79,8 @@ void mods_client_predicted_input(int client_id, void *input)
 // Server hooks
 void mods_tick()
 {
+	check_pure_tuning();
+	
 	game.tick();
 
 	if(config.dbg_dummies)
