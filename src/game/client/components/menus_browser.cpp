@@ -602,7 +602,7 @@ void MENUS::render_serverbrowser(RECT main_view)
 		
 		char buf[512];
 		if(strcmp(client_latestversion(), "0") != 0)
-			str_format(buf, sizeof(buf), "Teeworlds %s is out! Download it at www.teeworlds.com! Current version: %s", client_latestversion(), GAME_VERSION);
+			str_format(buf, sizeof(buf), "Teeworlds %s is out! Download it at www.teeworlds.com!\nCurrent version: %s", client_latestversion(), GAME_VERSION);
 		else
 			str_format(buf, sizeof(buf), "Current version: %s", GAME_VERSION);
 		ui_do_label(&status_toolbar, buf, 14.0f, -1);
