@@ -60,22 +60,28 @@ int col_is_solid(int x, int y)
 
 
 // TODO: rewrite this smarter!
-int col_intersect_line(vec2 pos0, vec2 pos1, vec2 *out)
+int col_intersect_line(vec2 pos0, vec2 pos1, vec2 *out_collision, vec2 *out_before_collision)
 {
 	float d = distance(pos0, pos1);
+	vec2 last = pos0;
 	
 	for(float f = 0; f < d; f++)
 	{
 		float a = f/d;
 		vec2 pos = mix(pos0, pos1, a);
-		if(col_is_solid((int)pos.x, (int)pos.y))
+		if(col_is_solid(round(pos.x), round(pos.y)))
 		{
-			if(out)
-				*out = pos;
-			return col_get((int)pos.x, (int)pos.y);
+			if(out_collision)
+				*out_collision = pos;
+			if(out_before_collision)
+				*out_before_collision = last;
+			return col_get(round(pos.x), round(pos.y));
 		}
+		last = pos;
 	}
-	if(out)
-		*out = pos1;
+	if(out_collision)
+		*out_collision = pos1;
+	if(out_before_collision)
+		*out_before_collision = pos1;
 	return 0;
 }

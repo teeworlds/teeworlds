@@ -16,6 +16,6 @@ int col_is_solid(int x, int y);
 int col_get(int x, int y);
 int col_width();
 int col_height();
-int col_intersect_line(vec2 pos0, vec2 pos1, vec2 *out);
+int col_intersect_line(vec2 pos0, vec2 pos1, vec2 *out_collision, vec2 *out_before_collision);
 
 #endif

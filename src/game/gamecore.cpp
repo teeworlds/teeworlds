@@ -302,7 +302,7 @@ void CHARACTER_CORE::tick(bool use_input)
 		// make sure that the hook doesn't go though the ground
 		bool going_to_hit_ground = false;
 		bool going_to_retract = false;
-		int hit = col_intersect_line(hook_pos, new_pos, &new_pos);
+		int hit = col_intersect_line(hook_pos, new_pos, &new_pos, 0);
 		if(hit)
 		{
 			if(hit&COLFLAG_NOHOOK)

@@ -65,7 +65,7 @@ void PROJECTILE::tick()
 
 	lifespan--;
 	
-	int collide = col_intersect_line(prevpos, curpos, &curpos);
+	int collide = col_intersect_line(prevpos, curpos, &curpos, 0);
 	//int collide = col_check_point((int)curpos.x, (int)curpos.y);
 	CHARACTER *ownerchar = game.get_player_char(owner);
 	CHARACTER *targetchr = game.world.intersect_character(prevpos, curpos, 6.0f, curpos, ownerchar);

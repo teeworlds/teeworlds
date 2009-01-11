@@ -48,14 +48,16 @@ void LASER::do_bounce()
 	}
 	
 	vec2 to = pos + dir*energy;
+	vec2 org_to = to;
 	
-	if(col_intersect_line(pos, to, &to))
+	if(col_intersect_line(pos, to, 0x0, &to))
 	{
 		if(!hit_character(pos, to))
 		{
 			// intersected
 			from = pos;
-			pos = to - dir*2;
+			pos = to;
+
 			vec2 temp_pos = pos;
 			vec2 temp_dir = dir*4.0f;
 			
