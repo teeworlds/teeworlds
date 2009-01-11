@@ -4,7 +4,7 @@ name = "teeworlds"
 domain = "www.%s.com" % name
 version = sys.argv[1]
 
-
+bam_version = "bam-0.2.0"
 
 flag_download = True
 flag_clean = True
@@ -60,9 +60,13 @@ def unzip(filename, where):
 	for name in z.namelist():
 		try: os.makedirs(where+"/"+os.path.dirname(name))
 		except: pass
-		f = file(where+"/"+name, "wb")
-		f.write(z.read(name))
-		f.close()
+		
+		try:
+			f = file(where+"/"+name, "wb")
+			f.write(z.read(name))
+			f.close()
+		except: pass
+		
 	z.close()
 
 
@@ -92,8 +96,7 @@ os.chdir(root_dir)
 # download
 if flag_download:
 	print "*** downloading bam source package ***"
-	if not fetch_file(domain, "/files/bam.zip", "bam.zip"):
-		if not fetch_file(domain, "/files/beta/bam.zip", "bam.zip"):
+	if not fetch_file(domain, "trac/bam/browser/releases/"+bam_version+".zip?format=raw", "bam.zip"):
 			bail("couldn't find source package and couldn't download it")
 		
 	print "*** downloading %s source package ***" % name
@@ -110,7 +113,7 @@ src_dir = name+"/"+ os.listdir(name+"/")[0]
 # build bam
 if 1:
 	print "*** building bam ***"
-	os.chdir("bam")
+	os.chdir(bam_version)
 	output = "bam"
 	bam_cmd = "./bam"
 	if os.name == "nt":
@@ -122,7 +125,7 @@ if 1:
 		if os.system("sh make_unix.sh") != 0:
 			bail("failed to build bam")
 	os.chdir(root_dir)
-	shutil.copy("bam/src/"+output, src_dir+"/"+output)
+	shutil.copy(bam_version+"/src/"+output, src_dir+"/"+output)
 
 # build the game
 if 1:

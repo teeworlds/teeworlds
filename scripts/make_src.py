@@ -23,13 +23,13 @@ root_dir = os.getcwd() + "/srcwork"
 os.chdir(root_dir)
 
 # fix bam
-if 1:
-	os.system("svn export http://stalverk80.se/svn/bam bam")
-	z = zipfile.ZipFile("../bam.zip", "w")
-	for root, dirs, files in os.walk("bam"):
-		for f in files:
-			z.write(root+"/"+ f)
-	z.close()
+#if 1:
+#	os.system("svn export http://stalverk80.se/svn/bam bam")
+#	z = zipfile.ZipFile("../bam.zip", "w")
+#	for root, dirs, files in os.walk("bam"):
+#		for f in files:
+#			z.write(root+"/"+ f)
+#	z.close()
 
 if 1:
 	os.system("svn export svn://svn.teeworlds.com/teeworlds/%s teeworlds" % svn_tree)
