@@ -502,12 +502,7 @@ void MENUS::render_settings_graphics(RECT main_view)
 	ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
 	if (ui_do_button(&config.gfx_fsaa_samples, "FSAA samples", config.gfx_fsaa_samples, &button, ui_draw_checkbox_number, 0))
 	{
-		if(config.gfx_fsaa_samples < 2) config.gfx_fsaa_samples = 2;
-		else if(config.gfx_fsaa_samples < 4) config.gfx_fsaa_samples = 4;
-		else if(config.gfx_fsaa_samples < 6) config.gfx_fsaa_samples = 6;
-		else if(config.gfx_fsaa_samples < 8) config.gfx_fsaa_samples = 8;
-		else if(config.gfx_fsaa_samples < 16) config.gfx_fsaa_samples = 16;
-		else if(config.gfx_fsaa_samples >= 16) config.gfx_fsaa_samples = 0;
+		config.gfx_fsaa_samples = (config.gfx_fsaa_samples+1)%17;
 		need_restart = true;
 	}
 		

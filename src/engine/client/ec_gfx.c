@@ -209,6 +209,41 @@ static int try_init()
 	return 0;
 }
 
+static int gfx_init_window()
+{
+	if(try_init() == 0)
+		return 0;
+	
+	/* try disabling fsaa */
+	while(config.gfx_fsaa_samples)
+	{
+		config.gfx_fsaa_samples--;
+		
+		if(config.gfx_fsaa_samples)
+			dbg_msg("gfx", "lowering FSAA to %d and trying again", config.gfx_fsaa_samples);
+		else
+			dbg_msg("gfx", "disabling FSAA and trying again");
+
+		if(try_init() == 0)
+			return 0;
+	}
+
+	/* try lowering the resolution */
+	if(config.gfx_screen_width != 640 || config.gfx_screen_height != 480)
+	{
+		dbg_msg("gfx", "setting resolution to 640x480 and trying again");
+		config.gfx_screen_width = 640;
+		config.gfx_screen_height = 480;
+
+		if(try_init() == 0)
+			return 0;
+	}
+
+	dbg_msg("gfx", "out of ideas. failed to init graphics");
+					
+	return -1;		
+}
+
 int gfx_init()
 {
 	int i;
@@ -230,36 +265,9 @@ int gfx_init()
 			if(!getenv("SDL_VIDEO_WINDOW_POS") && !getenv("SDL_VIDEO_CENTERED"))
 				putenv("SDL_VIDEO_WINDOW_POS=8,27");
 		#endif
-		do
-		{
-			if(try_init() == 0)
-				break;
-			
-			/* try disabling fsaa */
-			if(config.gfx_fsaa_samples)
-			{
-				dbg_msg("gfx", "disabling FSAA and trying again");
-				config.gfx_fsaa_samples = 0;
-
-				if(try_init() == 0)
-					break;
-			}
-
-			/* try lowering the resolution */
-			if(config.gfx_screen_width != 640 || config.gfx_screen_height != 480)
-			{
-				dbg_msg("gfx", "setting resolution to 640x480 and trying again");
-				config.gfx_screen_width = 640;
-				config.gfx_screen_height = 480;
-
-				if(try_init() == 0)
-					break;
-			}
-
-			dbg_msg("gfx", "out of ideas. failed to init graphics");
-							
-			return -1;			
-		} while(0);
+		
+		if(gfx_init_window() != 0)
+			return -1;
 	}
 	
 	/* Init vertices */
