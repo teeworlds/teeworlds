@@ -117,7 +117,7 @@ if 1:
 	output = "bam"
 	bam_cmd = "./bam"
 	if os.name == "nt":
-		if os.system("make_win32_msvc2005.bat") != 0:
+		if os.system("make_win32_msvc.bat") != 0:
 			bail("failed to build bam")
 		output += ".exe"
 		bam_cmd = "bam"
