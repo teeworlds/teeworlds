@@ -229,7 +229,14 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 			else if(id == COL_FLAG_PURE)
 			{
 				if(strncmp(item->gametype, "DM", 2) == 0 || strncmp(item->gametype, "TDM", 3) == 0 || strncmp(item->gametype, "CTF", 3) == 0)
-					ui_draw_browse_icon(SPRITE_BROWSE_PURE, &button);
+				{
+					// pure server
+				}
+				else
+				{
+					// unpure
+					ui_draw_browse_icon(SPRITE_BROWSE_UNPURE, &button);
+				}
 			}
 			else if(id == COL_FLAG_FAV)
 			{
