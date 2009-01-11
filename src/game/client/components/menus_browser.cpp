@@ -161,17 +161,16 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 
 	selected_index = -1;
 
-	/*for (int i = 0; i < num_servers; i++)
+	for (int i = 0; i < num_servers; i++)
 	{
 		SERVER_INFO *item = client_serverbrowse_sorted_get(i);
 		num_players += item->num_players;
-	}*/
+	}
 	
 	for (int i = 0; i < num_servers; i++)
 	{
 		int item_index = i;
 		SERVER_INFO *item = client_serverbrowse_sorted_get(item_index);
-		num_players += item->num_players;
 		RECT row;
         RECT select_hit_box;
 			
