@@ -14,14 +14,12 @@ int GAMECONTROLLER_TDM::on_character_death(class CHARACTER *victim, class PLAYER
 {
 	GAMECONTROLLER::on_character_death(victim, killer, weapon);
 	
-	if(weapon >= 0)
-	{
-		// do team scoring
-		if(killer == victim->player || killer->team == victim->player->team)
-			teamscore[killer->team&1]--; // klant arschel
-		else
-			teamscore[killer->team&1]++; // good shit
-	}
+	// do team scoring
+	if(killer == victim->player || killer->team == victim->player->team)
+		teamscore[killer->team&1]--; // klant arschel
+	else
+		teamscore[killer->team&1]++; // good shit
+		
 	return 0;
 }
 
