@@ -290,6 +290,7 @@ void CHARACTER::fire_weapon()
 			game.create_sound(pos, SOUND_HAMMER_FIRE);
 			
 			CHARACTER *ents[64];
+			int hits = 0;
 			int num = game.world.find_entities(pos+direction*phys_size*0.75f, phys_size*0.5f, (ENTITY**)ents, 64, NETOBJTYPE_CHARACTER);
 
 			for (int i = 0; i < num; i++)
@@ -311,7 +312,12 @@ void CHARACTER::fire_weapon()
 					dir = vec2(0,-1);
 					
 				target->core.vel += normalize(dir + vec2(0,-1.1f)) * 10.0f;
+				hits++;
 			}
+			
+			// if we hit anything, we have to wait for the reload
+			if(hits)
+				reload_timer = server_tickspeed()/3;
 			
 		} break;
 
@@ -422,7 +428,8 @@ void CHARACTER::fire_weapon()
 	if(weapons[active_weapon].ammo > 0) // -1 == unlimited
 		weapons[active_weapon].ammo--;
 	attack_tick = server_tick();
-	reload_timer = data->weapons.id[active_weapon].firedelay * server_tickspeed() / 1000;
+	if(!reload_timer)
+		reload_timer = data->weapons.id[active_weapon].firedelay * server_tickspeed() / 1000;
 }
 
 int CHARACTER::handle_weapons()
@@ -520,64 +527,6 @@ void CHARACTER::on_direct_input(NETOBJ_PLAYER_INPUT *new_input)
 
 void CHARACTER::tick()
 {
-	//input = latest_input;
-	
-	// grab latest input
-	/*
-	{
-		int size = 0;
-		int *input = server_latestinput(client_id, &size);
-		if(input)
-		{
-			mem_copy(&latest_previnput, &latest_input, sizeof(latest_input));
-			mem_copy(&latest_input, input, sizeof(latest_input));
-		}
-	}*/
-	
-	// check if we have enough input
-	// this is to prevent initial weird clicks
-	/*
-	if(num_inputs < 2)
-	{
-		latest_previnput = latest_input;
-		previnput = input;
-	}*/
-	
-	//game.world.core.players[player->client_id] = &core;
-
-	// enable / disable physics
-	/*
-	if(team == -1 || dead)
-	{
-		game.world.core.players[client_id] = 0;
-		//game.world.remove_entity(this);
-	}
-	else
-	{
-		game.world.core.players[client_id] = &core;
-		//game.world._entity(this);
-	}
-
-	// spectator
-	if(team == -1)
-		return;
-
-	if(spawning)
-		try_respawn();
-
-	// TODO: rework the input to be more robust
-	if(dead)
-	{
-		if(server_tick()-die_tick >= server_tickspeed()/2 && count_input(latest_previnput.fire, latest_input.fire).presses)
-			die_tick = -1;
-		if(server_tick()-die_tick >= server_tickspeed()*5) // auto respawn after 3 sec
-			respawn();
-		//if((input.fire&1) && server_tick()-die_tick >= server_tickspeed()/2) // auto respawn after 0.5 sec
-			//respawn();
-		return;
-	}
-	* */
-	
 	if(player->force_balanced)
 	{
 		char buf[128];

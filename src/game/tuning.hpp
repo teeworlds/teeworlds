@@ -23,9 +23,9 @@ MACRO_TUNING_PARAM(gun_speed, 2200.0f)
 MACRO_TUNING_PARAM(gun_lifetime, 2.0f)
 
 MACRO_TUNING_PARAM(shotgun_curvature, 1.25f)
-MACRO_TUNING_PARAM(shotgun_speed, 2200.0f)
+MACRO_TUNING_PARAM(shotgun_speed, 2750.0f)
 MACRO_TUNING_PARAM(shotgun_speeddiff, 0.8f)
-MACRO_TUNING_PARAM(shotgun_lifetime, 0.25f)
+MACRO_TUNING_PARAM(shotgun_lifetime, 0.20f)
 
 MACRO_TUNING_PARAM(grenade_curvature, 7.0f)
 MACRO_TUNING_PARAM(grenade_speed, 1000.0f)

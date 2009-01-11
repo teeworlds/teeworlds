@@ -397,9 +397,9 @@ void CHARACTER_CORE::tick(bool use_input)
 				
 		}
 
-		// release hook		
+		// release hook (max hook time is 1.25
 		hook_tick++;
-		if(hooked_player != -1 && (hook_tick > SERVER_TICK_SPEED*2 || !world->characters[hooked_player]))
+		if(hooked_player != -1 && (hook_tick > SERVER_TICK_SPEED+SERVER_TICK_SPEED/5 || !world->characters[hooked_player]))
 		{
 			hooked_player = -1;
 			hook_state = HOOK_RETRACTED;

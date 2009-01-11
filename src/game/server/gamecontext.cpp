@@ -79,8 +79,8 @@ void GAMECONTEXT::create_explosion(vec2 p, int owner, int weapon, bool bnodamage
 	{
 		// deal damage
 		CHARACTER *ents[64];
-		float radius = 128.0f;
-		float innerradius = 42.0f;
+		float radius = 135.0f;
+		float innerradius = 48.0f;
 		int num = game.world.find_entities(p, radius, (ENTITY**)ents, 64, NETOBJTYPE_CHARACTER);
 		for(int i = 0; i < num; i++)
 		{
