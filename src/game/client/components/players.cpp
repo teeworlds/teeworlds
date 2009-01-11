@@ -459,26 +459,35 @@ void PLAYERS::render_player(
 
 void PLAYERS::on_render()
 {
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	// render other players in two passes, first pass we render the other, second pass we render our self
+	for(int p = 0; p < 2; p++)
 	{
-		// only render active characters
-		if(!gameclient.snap.characters[i].active)
-			continue;
-
-		const void *prev_info = snap_find_item(SNAP_PREV, NETOBJTYPE_PLAYER_INFO, i);
-		const void *info = snap_find_item(SNAP_CURRENT, NETOBJTYPE_PLAYER_INFO, i);
-
-		if(prev_info && info)
+		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			NETOBJ_CHARACTER prev_char = gameclient.snap.characters[i].prev;
-			NETOBJ_CHARACTER cur_char = gameclient.snap.characters[i].cur;
+			// only render active characters
+			if(!gameclient.snap.characters[i].active)
+				continue;
 
-			render_player(
-					&prev_char,
-					&cur_char,
-					(const NETOBJ_PLAYER_INFO *)prev_info,
-					(const NETOBJ_PLAYER_INFO *)info
-				);
-		}		
+			const void *prev_info = snap_find_item(SNAP_PREV, NETOBJTYPE_PLAYER_INFO, i);
+			const void *info = snap_find_item(SNAP_CURRENT, NETOBJTYPE_PLAYER_INFO, i);
+
+			if(prev_info && info)
+			{
+				//
+				bool local = ((const NETOBJ_PLAYER_INFO *)info)->local !=0;
+				if(p == 0 && local) continue;
+				if(p == 1 && !local) continue;
+				
+				NETOBJ_CHARACTER prev_char = gameclient.snap.characters[i].prev;
+				NETOBJ_CHARACTER cur_char = gameclient.snap.characters[i].cur;
+
+				render_player(
+						&prev_char,
+						&cur_char,
+						(const NETOBJ_PLAYER_INFO *)prev_info,
+						(const NETOBJ_PLAYER_INFO *)info
+					);
+			}		
+		}
 	}
 }
