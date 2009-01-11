@@ -51,7 +51,6 @@ public:
 	int servermode;
 
 	vec2 local_character_pos;
-	vec2 local_target_pos;
 
 	// predicted players
 	CHARACTER_CORE predicted_prev_char;

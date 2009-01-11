@@ -5,6 +5,7 @@
 #include <game/client/gameclient.hpp>
 #include <game/client/animstate.hpp>
 #include "nameplates.hpp"
+#include "controls.hpp"
 
 void NAMEPLATES::render_nameplate(
 	const NETOBJ_CHARACTER *prev_char,
@@ -22,7 +23,7 @@ void NAMEPLATES::render_nameplate(
 		//gfx_text_color
 		float a = 1;
 		if(config.cl_nameplates_always == 0)
-			a = clamp(1-powf(distance(gameclient.local_target_pos, position)/200.0f,16.0f), 0.0f, 1.0f);
+			a = clamp(1-powf(distance(gameclient.controls->target_pos, position)/200.0f,16.0f), 0.0f, 1.0f);
 			
 		const char *name = gameclient.clients[player_info->cid].name;
 		float tw = gfx_text_width(0, 28.0f, name, -1);
