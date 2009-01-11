@@ -177,7 +177,7 @@ void mods_message(int msgtype, int client_id)
 		int64 now = time_get();
 		if(game.vote_closetime)
 		{
-			game.send_chat(-1, client_id, "Wait for current vote to end before calling a new one.");
+			game.send_chat_target(client_id, "Wait for current vote to end before calling a new one.");
 			return;
 		}
 		
@@ -186,7 +186,7 @@ void mods_message(int msgtype, int client_id)
 		{
 			char chatmsg[512] = {0};
 			str_format(chatmsg, sizeof(chatmsg), "You must wait %d seconds before making another vote", (timeleft/time_freq())+1);
-			game.send_chat(-1, client_id, chatmsg);
+			game.send_chat_target(client_id, chatmsg);
 			return;
 		}
 		
@@ -213,7 +213,7 @@ void mods_message(int msgtype, int client_id)
 			if(!option)
 			{
 				str_format(chatmsg, sizeof(chatmsg), "'%s' isn't an option on this server", msg->value);
-				game.send_chat(-1, client_id, chatmsg);
+				game.send_chat_target(client_id, chatmsg);
 				return;
 			}
 		}
@@ -221,14 +221,14 @@ void mods_message(int msgtype, int client_id)
 		{
 			if(!config.sv_vote_kick)
 			{
-				game.send_chat(-1, client_id, "Server does not allow voting to kick players");
+				game.send_chat_target(client_id, "Server does not allow voting to kick players");
 				return;
 			}
 			
 			int kick_id = atoi(msg->value);
 			if(kick_id < 0 || kick_id >= MAX_CLIENTS || !game.players[kick_id])
 			{
-				game.send_chat(-1, client_id, "Invalid client id to kick");
+				game.send_chat_target(client_id, "Invalid client id to kick");
 				return;
 			}
 			

@@ -158,6 +158,18 @@ void GAMECONTEXT::create_sound_global(int sound, int target)
 	server_send_msg(target);
 }
 
+
+void GAMECONTEXT::send_chat_target(int to, const char *text)
+{
+	NETMSG_SV_CHAT msg;
+	msg.team = 0;
+	msg.cid = -1;
+	msg.message = text;
+	msg.pack(MSGFLAG_VITAL);
+	server_send_msg(to);
+}
+
+
 void GAMECONTEXT::send_chat(int chatter_cid, int team, const char *text)
 {
 	if(chatter_cid >= 0 && chatter_cid < MAX_CLIENTS)

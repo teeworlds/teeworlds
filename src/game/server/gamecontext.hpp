@@ -78,6 +78,7 @@ public:
 	};
 
 	// network
+	void send_chat_target(int to, const char *text);
 	void send_chat(int cid, int team, const char *text);
 	void send_emoticon(int cid, int emoticon);
 	void send_weapon_pickup(int cid, int weapon);
