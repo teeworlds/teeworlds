@@ -360,6 +360,10 @@ void GAMECLIENT::on_render()
 	// render all systems
 	for(int i = 0; i < all.num; i++)
 		all.components[i]->on_render();
+		
+	// clear new tick flags
+	new_tick = false;
+	new_predicted_tick = false;
 }
 
 void GAMECLIENT::on_message(int msgtype)
@@ -433,6 +437,9 @@ void GAMECLIENT::on_message(int msgtype)
 	}
 	else if(msgtype == NETMSGTYPE_SV_SOUNDGLOBAL)
 	{
+		if(suppress_events)
+			return;
+			
 		NETMSG_SV_SOUNDGLOBAL *msg = (NETMSG_SV_SOUNDGLOBAL *)rawmsg;
 		gameclient.sounds->play(SOUNDS::CHN_GLOBAL, msg->soundid, 1.0f, vec2(0,0));
 	}		
@@ -470,11 +477,6 @@ void GAMECLIENT::process_events()
 			NETEVENT_DAMAGEIND *ev = (NETEVENT_DAMAGEIND *)data;
 			gameclient.effects->damage_indicator(vec2(ev->x, ev->y), get_direction(ev->angle));
 		}
-		else if(item.type == NETEVENTTYPE_AIRJUMP)
-		{
-			NETEVENT_COMMON *ev = (NETEVENT_COMMON *)data;
-			gameclient.effects->air_jump(vec2(ev->x, ev->y));
-		}
 		else if(item.type == NETEVENTTYPE_EXPLOSION)
 		{
 			NETEVENT_EXPLOSION *ev = (NETEVENT_EXPLOSION *)data;
@@ -505,6 +507,8 @@ void GAMECLIENT::process_events()
 
 void GAMECLIENT::on_snapshot()
 {
+	new_tick = true;
+	
 	// clear out the invalid pointers
 	mem_zero(&gameclient.snap, sizeof(gameclient.snap));
 	snap.local_cid = -1;
@@ -621,7 +625,7 @@ void GAMECLIENT::on_snapshot()
 					snap.characters[item.id].active = true;
 					snap.characters[item.id].prev = *((const NETOBJ_CHARACTER *)old);
 					snap.characters[item.id].cur = *((const NETOBJ_CHARACTER *)data);
-					
+
 					if(snap.characters[item.id].prev.tick)
 						evolve(&snap.characters[item.id].prev, client_prevtick());
 					if(snap.characters[item.id].cur.tick)
@@ -744,21 +748,24 @@ void GAMECLIENT::on_predict()
 		if(tick > last_new_predicted_tick)
 		{
 			last_new_predicted_tick = tick;
+			new_predicted_tick = true;
 			
 			if(snap.local_cid != -1 && world.characters[snap.local_cid])
 			{
 				vec2 pos = world.characters[snap.local_cid]->pos;
 				int events = world.characters[snap.local_cid]->triggered_events;
-				if(events&COREEVENT_GROUND_JUMP) gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
-				if(events&COREEVENT_AIR_JUMP)
+				if(events&COREEVENT_GROUND_JUMP) gameclient.sounds->play_and_record(SOUNDS::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
+				
+				/*if(events&COREEVENT_AIR_JUMP)
 				{
 					gameclient.effects->air_jump(pos);
-					gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, pos);
-				}
+					gameclient.sounds->play_and_record(SOUNDS::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, pos);
+				}*/
+				
 				//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
 				//if(events&COREEVENT_HOOK_ATTACH_PLAYER) snd_play_random(CHN_WORLD, SOUND_HOOK_ATTACH_PLAYER, 1.0f, pos);
-				if(events&COREEVENT_HOOK_ATTACH_GROUND) gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, pos);
-				if(events&COREEVENT_HOOK_HIT_NOHOOK) gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_HOOK_NOATTACH, 1.0f, pos);
+				if(events&COREEVENT_HOOK_ATTACH_GROUND) gameclient.sounds->play_and_record(SOUNDS::CHN_WORLD, SOUND_HOOK_ATTACH_GROUND, 1.0f, pos);
+				if(events&COREEVENT_HOOK_HIT_NOHOOK) gameclient.sounds->play_and_record(SOUNDS::CHN_WORLD, SOUND_HOOK_NOATTACH, 1.0f, pos);
 				//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
 			}
 		}

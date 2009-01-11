@@ -93,6 +93,7 @@ void PLAYERS::render_player(
 
 	// check for teamplay modes
 	bool is_teamplay = false;
+	bool new_tick = gameclient.new_tick;
 	if(gameclient.snap.gameobj)
 		is_teamplay = gameclient.snap.gameobj->flags&GAMEFLAG_TEAMS != 0;
 
@@ -165,6 +166,7 @@ void PLAYERS::render_player(
 			gameclient.predicted_char.write(&player);
 			gameclient.predicted_prev_char.write(&prev);
 			intratick = client_predintratick();
+			new_tick = gameclient.new_predicted_tick;
 		}
 	}
 	
@@ -175,6 +177,15 @@ void PLAYERS::render_player(
 	gameclient.flow->add(position, vel*100.0f, 10.0f);
 	
 	render_info.got_airjump = player.jumped&2?0:1;
+	
+	
+	// detect events
+	if(new_tick)
+	{
+		// detect air jump
+		if(!render_info.got_airjump && !(prev.jumped&2))
+			gameclient.effects->air_jump(position);
+	}
 
 	if(prev.health < 0) // Don't flicker from previous position
 		position = vec2(player.x, player.y);

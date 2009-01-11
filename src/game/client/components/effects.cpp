@@ -38,6 +38,8 @@ void EFFECTS::air_jump(vec2 pos)
 
 	p.pos = pos + vec2(6.0f, 16.0f);
 	gameclient.particles->add(PARTICLES::GROUP_GENERAL, &p);
+	
+	gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, pos);
 }
 
 void EFFECTS::damage_indicator(vec2 pos, vec2 dir)

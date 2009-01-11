@@ -16,6 +16,7 @@ public:
 	virtual void on_render();
 	
 	void play(int chn, int setid, float vol, vec2 pos);
+	void play_and_record(int chn, int setid, float vol, vec2 pos);
 };
 
 

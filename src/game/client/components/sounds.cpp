@@ -21,6 +21,16 @@ void SOUNDS::on_render()
 	snd_set_listener_pos(gameclient.camera->center.x, gameclient.camera->center.y);
 }
 
+void SOUNDS::play_and_record(int chn, int setid, float vol, vec2 pos)
+{
+	NETMSG_SV_SOUNDGLOBAL msg;
+	msg.soundid = setid;
+	msg.pack(MSGFLAG_NOSEND|MSGFLAG_RECORD);
+	client_send_msg();
+	
+	play(chn, setid, vol, pos);
+}
+
 void SOUNDS::play(int chn, int setid, float vol, vec2 pos)
 {
 	SOUNDSET *set = &data->sounds[setid];

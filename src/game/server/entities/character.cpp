@@ -602,16 +602,6 @@ void CHARACTER::tick_defered()
 		int mask = cmask_all_except_one(player->client_id);
 		
 		if(events&COREEVENT_GROUND_JUMP) game.create_sound(pos, SOUND_PLAYER_JUMP, mask);
-		if(events&COREEVENT_AIR_JUMP)
-		{
-			game.create_sound(pos, SOUND_PLAYER_AIRJUMP, mask);
-			NETEVENT_COMMON *c = (NETEVENT_COMMON *)game.events.create(NETEVENTTYPE_AIRJUMP, sizeof(NETEVENT_COMMON), mask);
-			if(c)
-			{
-				c->x = (int)pos.x;
-				c->y = (int)pos.y;
-			}
-		}
 		
 		//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
 		if(events&COREEVENT_HOOK_ATTACH_PLAYER) game.create_sound(pos, SOUND_HOOK_ATTACH_PLAYER, cmask_all());

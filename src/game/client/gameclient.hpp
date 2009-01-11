@@ -36,6 +36,8 @@ class GAMECLIENT
 	
 public:
 	bool suppress_events;
+	bool new_tick;
+	bool new_predicted_tick;
 
 	// TODO: move this
 	TUNING_PARAMS tuning;

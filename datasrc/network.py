@@ -176,8 +176,6 @@ Objects = [
 		NetIntRange("cid", 0, 'MAX_CLIENTS-1'),
 	]),
 	
-	NetEvent("AirJump:Common", []),
-
 	NetEvent("SoundGlobal:Common", [
 		NetIntRange("soundid", 0, 'NUM_SOUNDS-1'),
 	]),
