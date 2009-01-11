@@ -248,7 +248,7 @@ void MENUS::render_serverinfo(RECT main_view)
 		current_server_info.map,
 		gameclient.snap.gameobj->score_limit,
 		gameclient.snap.gameobj->time_limit,
-		gameclient.snap.team_size[0]+gameclient.snap.team_size[1],
+		gameclient.snap.num_players,
 		current_server_info.max_players
 	);
 	gfx_text(0, gameinfo.x+x, gameinfo.y+y, 20, buf, 250);

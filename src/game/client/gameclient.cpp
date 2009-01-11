@@ -588,7 +588,8 @@ void GAMECLIENT::on_snapshot()
 					clients[cid].skin_info.color_feet = vec4(1,1,1,1);
 				}
 
-				clients[cid].update_render_info();					
+				clients[cid].update_render_info();
+				gameclient.snap.num_players++;
 				
 			}
 			else if(item.type == NETOBJTYPE_PLAYER_INFO)
