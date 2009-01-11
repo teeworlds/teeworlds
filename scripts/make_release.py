@@ -13,6 +13,7 @@ platform = sys.argv[2]
 exe_ext = ""
 use_zip = 0
 use_gz = 1
+use_sdldll = 0
 use_dmg = 0
 use_bundle = 0
 include_data = True
@@ -35,6 +36,7 @@ if platform == 'win32':
 	exe_ext = ".exe"
 	use_zip = 1
 	use_gz = 0
+	use_sdldll = 1
 if  platform == 'osx':
 	use_dmg = 1
 	use_gz = 0
@@ -61,6 +63,9 @@ os.mkdir(package_dir)
 print "adding files"
 shutil.copy("readme.txt", package_dir)
 shutil.copy("license.txt", package_dir)
+
+if use_sdldll:
+	shutil.copy("other/sdl/vc2005libs/SDL.dll", package_dir)
 
 if include_data and not use_bundle:
 	os.mkdir(os.path.join(package_dir, "data"))
