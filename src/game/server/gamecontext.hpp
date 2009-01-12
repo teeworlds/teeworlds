@@ -57,6 +57,13 @@ public:
 	int64 vote_closetime;
 	char vote_description[512];
 	char vote_command[512];
+	int vote_enforce;
+	enum
+	{
+		VOTE_ENFORCE_UNKNOWN=0,
+		VOTE_ENFORCE_NO,
+		VOTE_ENFORCE_YES,
+	};
 
 	// helper functions
 	void create_damageind(vec2 p, float angle_mod, int amount);

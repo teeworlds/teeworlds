@@ -254,6 +254,10 @@ void mods_message(int msgtype, int client_id)
 			str_format(chatmsg, sizeof(chatmsg), "Vote called to kick '%s'", server_clientname(kick_id));
 			str_format(desc, sizeof(desc), "Kick '%s'", server_clientname(kick_id));
 			str_format(cmd, sizeof(cmd), "kick %d", kick_id);
+			if (!config.sv_vote_kick_bantime)
+				str_format(cmd, sizeof(cmd), "kick %d", kick_id);
+			else
+				str_format(cmd, sizeof(cmd), "ban %d %d", kick_id, config.sv_vote_kick_bantime);
 		}
 		
 		if(cmd[0])
@@ -480,6 +484,15 @@ static void con_addvote(void *result, void *user_data)
 	dbg_msg("server", "added option '%s'", option->command);
 }
 
+static void con_vote(void *result, void *user_data)
+{
+	if(str_comp_nocase(console_arg_string(result, 0), "yes") == 0)
+		game.vote_enforce = GAMECONTEXT::VOTE_ENFORCE_YES;
+	else if(str_comp_nocase(console_arg_string(result, 0), "no") == 0)
+		game.vote_enforce = GAMECONTEXT::VOTE_ENFORCE_NO;
+	dbg_msg("server", "forcing vote %s", console_arg_string(result, 0));
+}
+
 void mods_console_init()
 {
 	MACRO_REGISTER_COMMAND("tune", "si", con_tune_param, 0);
@@ -493,6 +506,7 @@ void mods_console_init()
 	MACRO_REGISTER_COMMAND("set_team", "ii", con_set_team, 0);
 
 	MACRO_REGISTER_COMMAND("addvote", "r", con_addvote, 0);
+	MACRO_REGISTER_COMMAND("vote", "r", con_vote, 0);
 }
 
 void mods_init()

@@ -236,6 +236,7 @@ void GAMECONTEXT::start_vote(const char *desc, const char *command)
 		return;
 
 	// reset votes
+	vote_enforce = VOTE_ENFORCE_UNKNOWN;
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(players[i])
@@ -343,7 +344,7 @@ void GAMECONTEXT::tick()
 				}
 			}
 		
-			if(yes >= total/2+1)
+			if(vote_enforce == VOTE_ENFORCE_YES || yes >= total/2+1)
 			{
 				console_execute_line(vote_command);
 				end_vote();
@@ -352,7 +353,7 @@ void GAMECONTEXT::tick()
 				if(players[vote_creator])
 					players[vote_creator]->last_votecall = 0;
 			}
-			else if(time_get() > vote_closetime || no >= total/2+1 || yes+no == total)
+			else if(vote_enforce == VOTE_ENFORCE_NO || time_get() > vote_closetime || no >= total/2+1 || yes+no == total)
 			{
 				end_vote();
 				send_chat(-1, GAMECONTEXT::CHAT_ALL, "Vote failed");
