@@ -9,6 +9,13 @@
 
 #include <game/gamecore.hpp>
 
+enum
+{
+	WEAPON_GAME = -3, // team switching etc
+	WEAPON_SELF = -2, // console kill command
+	WEAPON_WORLD = -1, // death tiles etc
+};
+
 class CHARACTER : public ENTITY
 {
 	MACRO_ALLOC_POOL_ID()

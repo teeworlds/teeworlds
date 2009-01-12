@@ -58,7 +58,7 @@ public:
 	
 	CHARACTER *get_character();
 	
-	void kill_character();
+	void kill_character(int weapon);
 
 	void try_respawn();
 	void respawn();

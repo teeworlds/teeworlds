@@ -389,7 +389,7 @@ void mods_message(int msgtype, int client_id)
 			return;
 		
 		p->last_kill = time_get();
-		p->kill_character(); //(client_id, -1);
+		p->kill_character(WEAPON_SELF);
 		p->respawn_tick = server_tick()+server_tickspeed()*3;
 	}
 }

@@ -550,7 +550,9 @@ void CHARACTER::tick()
 			col_get((int)(pos.x+phys_size/2), (int)(pos.y+phys_size/2))&COLFLAG_DEATH ||
 			col_get((int)(pos.x-phys_size/2), (int)(pos.y-phys_size/2))&COLFLAG_DEATH ||
 			col_get((int)(pos.x-phys_size/2), (int)(pos.y+phys_size/2))&COLFLAG_DEATH)
-		die(player->client_id, -1);
+	{
+		die(player->client_id, WEAPON_WORLD);
+	}
 
 	// handle weapons
 	handle_weapons();

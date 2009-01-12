@@ -88,7 +88,7 @@ void PLAYER::snap(int snapping_client)
 
 void PLAYER::on_disconnect()
 {
-	kill_character();
+	kill_character(WEAPON_GAME);
 	
 	//game.controller->on_player_death(&game.players[client_id], 0, -1);
 		
@@ -126,12 +126,12 @@ CHARACTER *PLAYER::get_character()
 	return 0;
 }
 
-void PLAYER::kill_character()
+void PLAYER::kill_character(int weapon)
 {
 	//CHARACTER *chr = get_character();
 	if(character)
 	{
-		character->die(client_id, -1);
+		character->die(client_id, weapon);
 		delete character;
 		character = 0;
 	}
@@ -154,7 +154,7 @@ void PLAYER::set_team(int new_team)
 	str_format(buf, sizeof(buf), "%s joined the %s", server_clientname(client_id), game.controller->get_team_name(new_team));
 	game.send_chat(-1, GAMECONTEXT::CHAT_ALL, buf); 
 	
-	kill_character();
+	kill_character(WEAPON_GAME);
 	team = new_team;
 	score = 0;
 	dbg_msg("game", "team_join player='%d:%s' team=%d", client_id, server_clientname(client_id), team);
