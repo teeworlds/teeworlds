@@ -981,7 +981,10 @@ void MENUS::on_statechange(int new_state, int old_state)
 				popup = POPUP_DISCONNECTED;
 		}	}
 	else if(new_state == CLIENTSTATE_LOADING)
+	{
 		popup = POPUP_CONNECTING;
+		client_serverinfo_request();
+	}
 	else if(new_state == CLIENTSTATE_CONNECTING)
 		popup = POPUP_CONNECTING;
 	else if (new_state == CLIENTSTATE_ONLINE || new_state == CLIENTSTATE_DEMOPLAYBACK)

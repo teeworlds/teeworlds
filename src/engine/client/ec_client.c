@@ -513,8 +513,7 @@ void client_connect(const char *server_address_str)
 
 	dbg_msg("client", "connecting to '%s'", server_address_str);
 
-	mem_zero(&current_server_info, sizeof(current_server_info));
-	current_server_info_requesttime = 0;
+	//client_serverinfo_request();
 	str_copy(buf, server_address_str, sizeof(buf));
 
 	for(k = 0; buf[k]; k++)
@@ -583,6 +582,12 @@ void client_disconnect()
 void client_serverinfo(SERVER_INFO *serverinfo)
 {
 	mem_copy(serverinfo, &current_server_info, sizeof(current_server_info));
+}
+
+void client_serverinfo_request()
+{
+	mem_zero(&current_server_info, sizeof(current_server_info));
+	current_server_info_requesttime = 0;
 }
 
 static int client_load_data()
