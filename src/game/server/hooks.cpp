@@ -27,6 +27,10 @@ TUNING_PARAMS tuning;
 
 static void check_pure_tuning()
 {
+	// might not be created yet during start up
+	if(!game.controller)
+		return;
+	
 	if(	strcmp(game.controller->gametype, "DM")==0 ||
 		strcmp(game.controller->gametype, "TDM")==0 ||
 		strcmp(game.controller->gametype, "CTF")==0)

@@ -9,7 +9,8 @@ GAMECONTEXT::GAMECONTEXT()
 {
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		players[i] = 0;
-		
+	
+	controller = 0;
 	vote_closetime = 0;
 }
 
