@@ -53,6 +53,9 @@ void MAPLAYERS::on_render()
 	if(client_state() != CLIENTSTATE_ONLINE && client_state() != CLIENTSTATE_DEMOPLAYBACK)
 		return;
 	
+	RECT screen;
+	gfx_getscreen(&screen.x, &screen.y, &screen.w, &screen.h);
+	
 	vec2 center = gameclient.camera->center;
 	//float center_x = gameclient.camera->center.x;
 	//float center_y = gameclient.camera->center.y;
@@ -153,5 +156,8 @@ void MAPLAYERS::on_render()
 	
 	if(!config.gfx_noclip)
 		gfx_clip_disable();
+	
+	// reset the screen like it was before
+	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
 }
 
