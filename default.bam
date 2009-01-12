@@ -199,9 +199,11 @@ function build(settings)
 	-- build tools (TODO: fix this so we don't get double _d_d stuff)
 	tools_src = Collect("src/tools/*.cpp", "src/tools/*.c")
 
-	osxlaunch = {}
+	client_osxlaunch = {}
+	server_osxlaunch = {}
 	if platform == "macosx" then
-		osxlaunch = Compile(client_settings, Collect("src/osxlaunch/*.m"))
+		client_osxlaunch = Compile(client_settings, "src/osxlaunch/client.m")
+		server_osxlaunch = Compile(client_settings, "src/osxlaunch/server.m")
 	end
 	
 	tools = {}
@@ -213,10 +215,15 @@ function build(settings)
 	-- build client, server, version server and master server
 	client_exe = Link(client_settings, "teeworlds", game_shared, game_client,
 		engine, client, game_editor, zlib, pnglite, wavpack,
-		client_link_other, osxlaunch)
+		client_link_other, client_osxlaunch)
 
 	server_exe = Link(server_settings, "teeworlds_srv", engine, server,
 		game_shared, game_server, zlib)
+
+	serverlaunch = {}
+	if platform == "macosx" then
+		serverlaunch = Link(client_settings, "serverlaunch", server_osxlaunch)
+	end
 		
 	versionserver_exe = Link(server_settings, "versionsrv", versionserver,
 		engine, zlib)
@@ -226,7 +233,7 @@ function build(settings)
 
 	-- make targets
 	c = PseudoTarget("client".."_"..settings.config_name, client_exe, client_depends)
-	s = PseudoTarget("server".."_"..settings.config_name, server_exe)
+	s = PseudoTarget("server".."_"..settings.config_name, server_exe, serverlaunch)
 	g = PseudoTarget("game".."_"..settings.config_name, client_exe, server_exe)
 
 	v = PseudoTarget("versionserver".."_"..settings.config_name, versionserver_exe)
