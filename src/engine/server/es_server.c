@@ -710,7 +710,7 @@ static void server_process_client_packet(NETCHUNK *packet)
 				clients[cid].latency = (int)(((time_get()-tagtime)*1000)/time_freq());
 
 			/* add message to report the input timing */
-			msg_pack_start_system(NETMSG_INPUTTIMING, MSGFLAG_VITAL);
+			msg_pack_start_system(NETMSG_INPUTTIMING, 0);
 			msg_pack_int(tick);
 			msg_pack_int(((server_tick_start_time(tick)-time_get())*1000) / time_freq());
 			msg_pack_end();
@@ -1175,10 +1175,10 @@ static void con_ban(void *result, void *user_data)
 	NETADDR addr;
 	char addrstr[128];
 	const char *str = console_arg_string(result, 0);
-	int minutes = console_arg_int(result, 1);
+	int minutes = 30;
 	
-	if(minutes == 0)
-		minutes = 30;
+	if(console_arg_num(result) > 1)
+		minutes = console_arg_int(result, 1);
 	
 	if(net_addr_from_str(&addr, str) == 0)
 		server_ban_add(addr, minutes*60);
@@ -1199,8 +1199,11 @@ static void con_ban(void *result, void *user_data)
 	
 	addr.port = 0;
 	net_addr_str(&addr, addrstr, sizeof(addrstr));
-		
-	dbg_msg("server", "banned %s for %d minutes", addrstr, minutes);
+	
+	if(minutes)
+		dbg_msg("server", "banned %s for %d minutes", addrstr, minutes);
+	else
+		dbg_msg("server", "banned %s for life", addrstr);
 }
 
 static void con_unban(void *result, void *user_data)
@@ -1227,8 +1230,15 @@ static void con_bans(void *result, void *user_data)
 		netserver_ban_get(net, i, &info);
 		addr = info.addr;
 		
-		t = info.expires - now;
-		dbg_msg("server", "#%d %d.%d.%d.%d for %d minutes and %d seconds", i, addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3], t/60, t%60);
+		if(info.expires == 0xffffffff)
+		{
+			dbg_msg("server", "#%d %d.%d.%d.%d for life", i, addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3]);
+		}
+		else
+		{
+			t = info.expires - now;
+			dbg_msg("server", "#%d %d.%d.%d.%d for %d minutes and %d seconds", i, addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3], t/60, t%60);
+		}
 	}
 	dbg_msg("server", "%d ban(s)", num);
 }
