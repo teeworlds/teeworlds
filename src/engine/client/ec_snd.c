@@ -235,6 +235,10 @@ static void mix(short *final_out, unsigned frames)
 			final_out[j+1] = int2short(vr);
 		}
 	}
+
+#if defined(CONF_ARCH_ENDIAN_BIG)
+	swap_endian(final_out, sizeof(short), frames * 2);
+#endif
 }
 
 static void sdlcallback(void *unused, Uint8 *stream, int len)
