@@ -164,6 +164,7 @@ function build(settings)
 	engine_settings = settings:Copy()
 	server_settings = engine_settings:Copy()
 	client_settings = engine_settings:Copy()
+	launcher_settings = engine_settings:Copy()
 
 	if family == "unix" then
    		if platform == "macosx" then
@@ -171,6 +172,7 @@ function build(settings)
             client_settings.link.frameworks:Add("AGL")
             client_settings.link.frameworks:Add("Carbon")
             client_settings.link.frameworks:Add("Cocoa")
+            launcher_settings.link.frameworks:Add("Cocoa")
 		else
 			client_settings.link.libs:Add("X11")
 			client_settings.link.libs:Add("GL")
@@ -203,7 +205,7 @@ function build(settings)
 	server_osxlaunch = {}
 	if platform == "macosx" then
 		client_osxlaunch = Compile(client_settings, "src/osxlaunch/client.m")
-		server_osxlaunch = Compile(client_settings, "src/osxlaunch/server.m")
+		server_osxlaunch = Compile(launcher_settings, "src/osxlaunch/server.m")
 	end
 	
 	tools = {}
@@ -222,7 +224,7 @@ function build(settings)
 
 	serverlaunch = {}
 	if platform == "macosx" then
-		serverlaunch = Link(client_settings, "serverlaunch", server_osxlaunch)
+		serverlaunch = Link(launcher_settings, "serverlaunch", server_osxlaunch)
 	end
 		
 	versionserver_exe = Link(server_settings, "versionsrv", versionserver,
