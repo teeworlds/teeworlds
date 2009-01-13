@@ -28,12 +28,10 @@
 	NSString *string = [[NSString alloc] initWithData: data encoding: NSASCIIStringEncoding];
 	NSAttributedString *attrstr = [[NSAttributedString alloc] initWithString: string];
 
-	[[self textStorage] beginEditing];
 	[[self textStorage] appendAttributedString: attrstr];
 	int length = [[self textStorage] length];
     NSRange range = NSMakeRange(length, 0);
     [self scrollRangeToVisible: range];
-	[[self textStorage] endEditing];
 
 	[attrstr release];
 	[string release];
