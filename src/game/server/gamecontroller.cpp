@@ -273,6 +273,10 @@ void GAMECONTROLLER::cyclemap()
 	while(is_separator(buf[i]))
 		i++;
 	
+	// we rotate to the same map, reset the round count!
+	if(str_comp_nocase(current_map, buf) == 0)
+		round_count = -1;
+	
 	dbg_msg("game", "rotating map to %s", &buf[i]);
 	str_copy(config.sv_map, &buf[i], sizeof(config.sv_map));
 }
@@ -488,7 +492,7 @@ void GAMECONTROLLER::snap(int snapping_client)
 	
 	gameobj->warmup = warmup;
 	
-	gameobj->round_num = (strlen(config.sv_maprotation) || config.sv_rounds_per_map > 1) ? config.sv_rounds_per_map : 0;
+	gameobj->round_num = (strlen(config.sv_maprotation) && config.sv_rounds_per_map) ? config.sv_rounds_per_map : 0;
 	gameobj->round_current = round_count+1;
 	
 	
