@@ -89,15 +89,15 @@ void MAPLAYERS::on_render()
 			bool render = false;
 			bool is_game_layer = false;
 			
-			// skip rendering if detail layers if not wanted
-			if(layer->flags&LAYERFLAG_DETAIL && !config.gfx_high_detail)
-				continue;
-			
 			if(layer == (MAPITEM_LAYER*)layers_game_layer())
 			{
 				is_game_layer = true;
 				passed_gamelayer = 1;
 			}
+			
+			// skip rendering if detail layers if not wanted
+			if(layer->flags&LAYERFLAG_DETAIL && !config.gfx_high_detail && !is_game_layer)
+				continue;
 				
 			if(type == -1)
 				render = true;
