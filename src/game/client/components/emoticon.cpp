@@ -26,7 +26,7 @@ void EMOTICON::con_emote(void *result, void *user_data)
 void EMOTICON::on_console_init()
 {
 	MACRO_REGISTER_COMMAND("+emote", "", con_key_emoticon, this);
-	MACRO_REGISTER_COMMAND("emote", "", con_emote, this);
+	MACRO_REGISTER_COMMAND("emote", "i", con_emote, this);
 }
 
 void EMOTICON::on_reset()
