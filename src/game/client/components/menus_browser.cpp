@@ -362,12 +362,6 @@ void MENUS::render_serverbrowser_filters(RECT view)
 	ui_vsplit_l(&button, 95.0f, 0, &button);
 	ui_margin(&button, 1.0f, &button);
 	ui_do_edit_box(&config.b_filter_gametype, &button, config.b_filter_gametype, sizeof(config.b_filter_gametype), 14.0f);
-	
-	ui_hsplit_t(&view, 20.0f, &button, &view);
-	ui_do_label(&button, "Quick search: ", 14.0f, -1);
-	ui_vsplit_l(&button, 95.0f, 0, &button);
-	ui_margin(&button, 1.0f, &button);
-	ui_do_edit_box(&config.b_filter_string, &button, config.b_filter_string, sizeof(config.b_filter_string), 14.0f);
 
 	{
 		ui_hsplit_t(&view, 20.0f, &button, &view);
@@ -383,7 +377,13 @@ void MENUS::render_serverbrowser_filters(RECT view)
 		ui_do_label(&button, "Maximum ping", 14.0f, -1);
 	}
 	
-	//ui_vsplit_r(&buttons, 30.0f, &buttons, &button);
+	ui_hsplit_b(&view, 30.0f, &button, &view);
+	ui_hsplit_b(&button, 20.0f, 0x0, &button);
+	ui_do_label(&button, "Quick search: ", 14.0f, -1);
+	ui_vsplit_l(&button, 95.0f, 0, &button);
+	ui_margin(&button, 1.0f, &button);
+	ui_do_edit_box(&config.b_filter_string, &button, config.b_filter_string, sizeof(config.b_filter_string), 14.0f);
+	
 	ui_hsplit_b(&view, button_height, &view, &button);
 	static int clear_button = 0;
 	if(ui_do_button(&clear_button, "Reset Filter", 0, &button, ui_draw_menu_button, 0))
@@ -395,6 +395,7 @@ void MENUS::render_serverbrowser_filters(RECT view)
 		config.b_filter_gametype[0] = 0;
 		config.b_filter_compatversion = 1;
 		config.b_filter_string[0] = 0;
+		config.b_filter_pure = 1;
 	}
 }
 
