@@ -170,7 +170,7 @@ int CONTROLS::snapinput(int *data)
 void CONTROLS::on_render()
 {
 	// update target pos
-	if(!(gameclient.snap.gameobj && gameclient.snap.gameobj->paused))
+	if(!(gameclient.snap.gameobj && gameclient.snap.gameobj->paused || gameclient.snap.spectate))
 		target_pos = gameclient.local_character_pos + mouse_pos;
 }
 
