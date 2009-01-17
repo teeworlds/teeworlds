@@ -215,8 +215,11 @@ void FLAG::reset()
 void FLAG::snap(int snapping_client)
 {
 	NETOBJ_FLAG *flag = (NETOBJ_FLAG *)snap_new_item(NETOBJTYPE_FLAG, team, sizeof(NETOBJ_FLAG));
-	flag->x = (int)pos.x;
-	flag->y = (int)pos.y;
+	if(!networkclipped(snapping_client, pos))
+	{
+		flag->x = (int)pos.x;
+		flag->y = (int)pos.y;
+	}
 	flag->team = team;
 	flag->carried_by = -1;
 	
