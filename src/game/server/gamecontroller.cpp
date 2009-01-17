@@ -202,7 +202,6 @@ void GAMECONTROLLER::startround()
 	teamscore[1] = 0;
 	unbalanced_tick = -1;
 	force_balanced = false;
-	round_count++;
 	dbg_msg("game","start round type='%s' teamplay='%d'", gametype, game_flags&GAMEFLAG_TEAMS);
 }
 
@@ -219,6 +218,7 @@ void GAMECONTROLLER::cyclemap()
 		dbg_msg("game", "rotating map to %s", map_wish);
 		str_copy(config.sv_map, map_wish, sizeof(config.sv_map));
 		map_wish[0] = 0;
+		round_count = 0;
 		return;
 	}
 	if(!strlen(config.sv_maprotation))
@@ -273,9 +273,7 @@ void GAMECONTROLLER::cyclemap()
 	while(is_separator(buf[i]))
 		i++;
 	
-	// we rotate to the same map, reset the round count!
-	if(str_comp_nocase(current_map, buf) == 0)
-		round_count = -1;
+	round_count = 0;
 	
 	dbg_msg("game", "rotating map to %s", &buf[i]);
 	str_copy(config.sv_map, &buf[i], sizeof(config.sv_map));
@@ -387,6 +385,7 @@ void GAMECONTROLLER::tick()
 		{
 			cyclemap();
 			startround();
+			round_count++;
 		}
 	}
 	
