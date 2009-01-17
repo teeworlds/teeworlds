@@ -245,7 +245,7 @@ void GAMECONTEXT::start_vote(const char *desc, const char *command)
 	}
 	
 	// start vote
-	vote_closetime = time_get() + time_freq()*10;
+	vote_closetime = time_get() + time_freq()*25;
 	str_copy(vote_description, desc, sizeof(vote_description));
 	str_copy(vote_command, command, sizeof(vote_description));
 	send_vote_set(-1);
