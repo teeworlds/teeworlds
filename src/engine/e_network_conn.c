@@ -138,6 +138,7 @@ void conn_queue_chunk(NETCONNECTION *conn, int flags, int data_size, const void 
 static void conn_send_control(NETCONNECTION *conn, int controlmsg, const void *extra, int extra_size)
 {
 	/* send the control message */
+	conn->last_send_time = time_get();
 	send_controlmsg(conn->socket, &conn->peeraddr, conn->ack, controlmsg, extra, extra_size);
 }
 
