@@ -125,18 +125,12 @@ function build(settings)
 
 	if family == "unix" then
    		if platform == "macosx" then
-			glfw_platform = "macosx"
-			pa_platform = "mac_osx"
 			settings.link.frameworks:Add("Carbon")
 			settings.link.frameworks:Add("AppKit")
 		else
-			glfw_platform = "x11"
-			pa_platform = "unix"
 			settings.link.libs:Add("pthread")
 		end
 	elseif family == "windows" then
-		glfw_platform = "win32"
-		pa_platform = "win"
 		settings.link.libs:Add("gdi32")
 		settings.link.libs:Add("user32")
 		settings.link.libs:Add("ws2_32")
