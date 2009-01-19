@@ -228,7 +228,7 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 			}
 			else if(id == COL_FLAG_PURE)
 			{
-				if(strncmp(item->gametype, "DM", 2) == 0 || strncmp(item->gametype, "TDM", 3) == 0 || strncmp(item->gametype, "CTF", 3) == 0)
+				if(strcmp(item->gametype, "DM") == 0 || strcmp(item->gametype, "TDM") == 0 || strcmp(item->gametype, "CTF") == 0)
 				{
 					// pure server
 				}
