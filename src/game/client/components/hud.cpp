@@ -153,7 +153,7 @@ void HUD::render_fps()
 	{
 		char buf[512];
 		str_format(buf, sizeof(buf), "%d", (int)(1.0f/client_frametime()));
-		gfx_text(0, width-10-gfx_text_width(0,12,buf,-1), 10, 12, buf, -1);
+		gfx_text(0, width-10-gfx_text_width(0,12,buf,-1), 5, 12, buf, -1);
 	}
 }
 
