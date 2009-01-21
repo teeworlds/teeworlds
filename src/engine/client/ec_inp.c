@@ -166,6 +166,17 @@ void inp_update()
 		mem_copy(input_state[input_current], state, i);
 	}
 	
+	/* these states must always be updated manually because they are not in the GetKeyState from SDL */
+	i = SDL_GetMouseState(NULL, NULL);
+	if(i&SDL_BUTTON(1)) input_state[input_current][KEY_MOUSE_1] = 1; /* 1 is left */ 
+	if(i&SDL_BUTTON(3)) input_state[input_current][KEY_MOUSE_2] = 1; /* 3 is right */ 
+	if(i&SDL_BUTTON(2)) input_state[input_current][KEY_MOUSE_3] = 1; /* 2 is middle */ 
+	if(i&SDL_BUTTON(4)) input_state[input_current][KEY_MOUSE_4] = 1; 
+	if(i&SDL_BUTTON(5)) input_state[input_current][KEY_MOUSE_5] = 1; 
+	if(i&SDL_BUTTON(6)) input_state[input_current][KEY_MOUSE_6] = 1; 
+	if(i&SDL_BUTTON(7)) input_state[input_current][KEY_MOUSE_7] = 1; 
+	if(i&SDL_BUTTON(8)) input_state[input_current][KEY_MOUSE_8] = 1; 	
+	
 	{
 		SDL_Event event;
 	
