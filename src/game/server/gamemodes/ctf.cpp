@@ -76,6 +76,7 @@ void GAMECONTROLLER_CTF::tick()
 		// flag hits death-tile, reset it
 		if(col_get((int)f->pos.x, (int)f->pos.y)&COLFLAG_DEATH)
 		{
+			game.create_sound_global(SOUND_CTF_RETURN);
 			f->reset();
 			continue;
 		}
