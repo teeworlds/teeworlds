@@ -271,33 +271,23 @@ static const char *format_command(const char *cmd)
 
 void MENUS::render_servercontrol_server(RECT main_view)
 {
-	// draw header
-	RECT header, footer;
-	ui_hsplit_t(&main_view, 20, &header, &main_view);
-	ui_draw_rect(&header, vec4(1,1,1,0.25f), CORNER_T, 5.0f); 
-	ui_do_label(&header, "Options", 18.0f, 0);
+	int num_options = 0;
+	for(VOTING::VOTEOPTION *option = gameclient.voting->first; option; option = option->next)
+		num_options++;
 
-	// draw footers
-	ui_hsplit_b(&main_view, 20, &main_view, &footer);
-	ui_draw_rect(&footer, vec4(1,1,1,0.25f), CORNER_B, 5.0f); 
-	ui_vsplit_l(&footer, 10.0f, 0, &footer);
-
-	// options
-	ui_draw_rect(&main_view, vec4(0,0,0,0.15f), 0, 0);
+	static int votelist = 0;
 	RECT list = main_view;
-	int i = 0;
+	ui_do_listbox_start(&votelist, &list, 24.0f, "Options", num_options, callvote_selectedoption);
+	
 	for(VOTING::VOTEOPTION *option = gameclient.voting->first; option; option = option->next)
 	{
-		RECT button;
-		ui_hsplit_t(&list, button_height, &button, &list);
+		LISTBOXITEM item = ui_do_listbox_nextitem(option);
 		
-		if(ui_do_button(option, "", callvote_selectedoption == i, &button, ui_draw_list_row, 0))
-			callvote_selectedoption = i;
-
-		ui_vmargin(&button, 5.0f, &button);
-		ui_do_label(&button, format_command(option->command), 18.0f, -1);
-		i++;
+		if(item.visible)
+			ui_do_label(&item.rect, format_command(option->command), 16.0f, -1);
 	}
+	
+	callvote_selectedoption = ui_do_listbox_end();
 }
 
 void MENUS::render_servercontrol_kick(RECT main_view)
@@ -353,7 +343,7 @@ void MENUS::render_servercontrol(RECT main_view)
 	
 	const char *tabs[] = {"Options", "Kick"};
 	int num_tabs = (int)(sizeof(tabs)/sizeof(*tabs));
-
+	
 	for(int i = 0; i < num_tabs; i++)
 	{
 		ui_hsplit_t(&tabbar, 10, &button, &tabbar);
