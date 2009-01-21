@@ -581,7 +581,11 @@ void GAMECLIENT::on_snapshot()
 				// find new skin
 				clients[cid].skin_id = gameclient.skins->find(clients[cid].skin_name);
 				if(clients[cid].skin_id < 0)
-					clients[cid].skin_id = 0;
+				{
+					clients[cid].skin_id = gameclient.skins->find("default");
+					if(clients[cid].skin_id < 0)
+						clients[cid].skin_id = 0;
+				}
 				
 				if(clients[cid].use_custom_color)
 					clients[cid].skin_info.texture = gameclient.skins->get(clients[cid].skin_id)->color_texture;
