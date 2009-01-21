@@ -261,7 +261,7 @@ int snd_init()
     format.freq = config.snd_rate;
     format.format = AUDIO_S16;
     format.channels = 2;
-    format.samples = 512;        /* A good value for games */
+    format.samples = config.snd_buffer_size;
     format.callback = sdlcallback;
     format.userdata = NULL;
 
