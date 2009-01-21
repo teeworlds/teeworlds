@@ -192,13 +192,25 @@ void HUD::render_voting()
 	if(!gameclient.voting->is_voting())
 		return;
 	
+	gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_setcolor(0,0,0,0.40f);
+	draw_round_rect(-10, 60-2, 100+10+4+5, 28, 5.0f);
+	gfx_quads_end();
+
 	gfx_text_color(1,1,1,1);
+
+	char buf[512];
 	gfx_text(0x0, 5, 60, 6, gameclient.voting->vote_description(), -1);
 
-	RECT base = {5, 70, 119, 3};
+	str_format(buf, sizeof(buf), "%ds left", gameclient.voting->seconds_left());
+	float tw = gfx_text_width(0x0, 6, buf, -1);
+	gfx_text(0x0, 5+100-tw, 60, 6, buf, -1);
+	
+
+	RECT base = {5, 70, 100, 4};
 	gameclient.voting->render_bars(base, false);
 	
-	char buf[512];
 	const char *yes_key = gameclient.binds->get_key("vote yes");
 	const char *no_key = gameclient.binds->get_key("vote no");
 	str_format(buf, sizeof(buf), "%s - Vote Yes", yes_key);

@@ -224,7 +224,7 @@ void mods_message(int msgtype, int client_id)
 			{
 				if(str_comp_nocase(msg->value, option->command) == 0)
 				{
-					str_format(chatmsg, sizeof(chatmsg), "Vote called to change server option '%s'", option->command);
+					str_format(chatmsg, sizeof(chatmsg), "%s called vote to change server option '%s'", server_clientname(client_id), option->command);
 					str_format(desc, sizeof(desc), "%s", option->command);
 					str_format(cmd, sizeof(cmd), "%s", option->command);
 					break;
