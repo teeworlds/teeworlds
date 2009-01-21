@@ -194,6 +194,7 @@ static int try_init()
 	}
 
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, config.gfx_vsync);
 
 	/* set caption */
 	SDL_WM_SetCaption("Teeworlds", "Teeworlds");
@@ -258,7 +259,7 @@ int gfx_init()
     }
 	
     atexit(SDL_Quit);
-	
+
 	if(!no_gfx)
 	{
 		#ifdef CONF_FAMILY_WINDOWS
@@ -326,8 +327,6 @@ int gfx_init()
 	/*if(config.dbg_stress)
 		gfx_minimize();*/
 
-	/* set vsync as needed */
-	gfx_set_vsync(config.gfx_vsync);
 	return 0;
 }
 
@@ -414,11 +413,6 @@ int gfx_get_video_modes(VIDEO_MODE *list, int maxcount)
 	}
 	
 	return num_modes;
-}
-
-void gfx_set_vsync(int val)
-{
-	/* TODO: SDL*/
 }
 
 int gfx_unload_texture(int index)

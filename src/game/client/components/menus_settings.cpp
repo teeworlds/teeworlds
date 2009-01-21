@@ -497,7 +497,10 @@ void MENUS::render_settings_graphics(RECT main_view)
 
 	ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
 	if (ui_do_button(&config.gfx_vsync, "V-Sync", config.gfx_vsync, &button, ui_draw_checkbox, 0))
+	{
 		config.gfx_vsync ^= 1;
+		need_restart = true;
+	}
 
 	ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
 	if (ui_do_button(&config.gfx_fsaa_samples, "FSAA samples", config.gfx_fsaa_samples, &button, ui_draw_checkbox_number, 0))
