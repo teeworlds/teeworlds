@@ -124,6 +124,20 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 	ui_vsplit_r(&view, 15, &view, &scroll);
 	
 	int num_servers = client_serverbrowse_sorted_num();
+	
+	// display important messages in the middle of the screen so no
+	// users misses it
+	{
+		RECT msgbox = view;
+		msgbox.y += view.h/3;
+		
+		if(client_serverbrowse_refreshingmasters())
+			ui_do_label(&msgbox, "Refreshing master servers", 16.0f, 0);
+		else if(!client_serverbrowse_num())
+			ui_do_label(&msgbox, "No servers found", 16.0f, 0);
+		else if(client_serverbrowse_num() && !num_servers)
+			ui_do_label(&msgbox, "No servers match your filter criteria", 16.0f, 0);
+	}
 
 	int num = (int)(view.h/cols[0].rect.h);
 	static int scrollbar = 0;
