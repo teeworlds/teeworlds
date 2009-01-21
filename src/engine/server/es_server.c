@@ -428,8 +428,8 @@ static void server_do_snap()
 			crc = snapshot_crc((SNAPSHOT*)data);
 
 			/* remove old snapshos */
-			/* keep 1 seconds worth of snapshots */
-			snapstorage_purge_until(&clients[i].snapshots, current_tick-SERVER_TICK_SPEED);
+			/* keep 3 seconds worth of snapshots */
+			snapstorage_purge_until(&clients[i].snapshots, current_tick-SERVER_TICK_SPEED*3);
 			
 			/* save it the snapshot */
 			snapstorage_add(&clients[i].snapshots, current_tick, time_get(), snapshot_size, data, 0);
