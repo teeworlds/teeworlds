@@ -248,34 +248,41 @@ function build(settings)
 	return all
 end
 
+
+debug_settings = NewSettings()
+debug_settings.config_name = "debug"
+debug_settings.config_ext = "_d"
+debug_settings.debug = 1
+debug_settings.cc.optimize = 0
+debug_settings.cc.defines:Add("CONF_DEBUG")
+
+release_settings = NewSettings()
+release_settings.config_name = "release"
+release_settings.config_ext = ""
+release_settings.debug = 0
+release_settings.cc.optimize = 1
+release_settings.cc.defines:Add("CONF_RELEASE")
+
 if platform == "macosx"  and arch == "ia32" then
-	debug_settings_ppc = NewSettings()
+	debug_settings_ppc = debug_settings:Copy()
 	debug_settings_ppc.config_name = "debug_ppc"
 	debug_settings_ppc.config_ext = "_ppc_d"
-	debug_settings_ppc.debug = 1
-	debug_settings_ppc.cc.optimize = 0
 	debug_settings_ppc.cc.flags:Add("-arch ppc")
 	debug_settings_ppc.link.flags:Add("-arch ppc")
 
-	release_settings_ppc = NewSettings()
+	release_settings_ppc = release_settings:Copy()
 	release_settings_ppc.config_name = "release_ppc"
 	release_settings_ppc.config_ext = "_ppc"
-	release_settings_ppc.debug = 0
-	release_settings_ppc.cc.optimize = 1
 	release_settings_ppc.cc.flags:Add("-arch ppc")
 	release_settings_ppc.link.flags:Add("-arch ppc")
 
-	debug_settings_x86 = NewSettings()
+	debug_settings_x86 = debug_settings:Copy()
 	debug_settings_x86.config_name = "debug_x86"
 	debug_settings_x86.config_ext = "_x86_d"
-	debug_settings_x86.debug = 1
-	debug_settings_x86.cc.optimize = 0
 
-	release_settings_x86 = NewSettings()
+	release_settings_x86 = release_settings:Copy()
 	release_settings_x86.config_name = "release_x86"
 	release_settings_x86.config_ext = "_x86"
-	release_settings_x86.debug = 0
-	release_settings_x86.cc.optimize = 1
 
 	ppc_d = build(debug_settings_ppc)
 	x86_d = build(debug_settings_x86)
@@ -290,18 +297,6 @@ if platform == "macosx"  and arch == "ia32" then
 	PseudoTarget("client_release", "client_release_x86", "client_release_ppc")
 	PseudoTarget("client_debug", "client_debug_x86", "client_debug_ppc")
 else
-	debug_settings = NewSettings()
-	debug_settings.config_name = "debug"
-	debug_settings.config_ext = "_d"
-	debug_settings.debug = 1
-	debug_settings.cc.optimize = 0
-
-	release_settings = NewSettings()
-	release_settings.config_name = "release"
-	release_settings.config_ext = ""
-	release_settings.debug = 0
-	release_settings.cc.optimize = 1
-
 	build(debug_settings)
 	build(release_settings)
 	DefaultTarget("game_debug")

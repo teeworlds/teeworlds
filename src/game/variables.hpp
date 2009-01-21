@@ -65,8 +65,9 @@ MACRO_CONFIG_INT(sv_vote_scorelimit, 0, 0, 1, CFGFLAG_SERVER, "Allow voting to c
 MACRO_CONFIG_INT(sv_vote_timelimit, 0, 0, 1, CFGFLAG_SERVER, "Allow voting to change time limit")
 
 /* debug */
-MACRO_CONFIG_INT(dbg_dummies, 0, 0, 15, CFGFLAG_SERVER, "")
-MACRO_CONFIG_INT(dbg_firedelay, 0, 0, 1, CFGFLAG_CLIENT, "")
-MACRO_CONFIG_INT(dbg_flow, 0, 0, 1, CFGFLAG_CLIENT, "")
-MACRO_CONFIG_INT(dbg_tuning, 0, 0, 1, CFGFLAG_CLIENT, "")
+#ifdef CONF_DEBUG /* this one can crash the server if not used correctly */
+	MACRO_CONFIG_INT(dbg_dummies, 0, 0, 15, CFGFLAG_SERVER, "")
+#endif
+
 MACRO_CONFIG_INT(dbg_focus, 0, 0, 1, CFGFLAG_CLIENT, "")
+MACRO_CONFIG_INT(dbg_tuning, 0, 0, 1, CFGFLAG_CLIENT, "")
