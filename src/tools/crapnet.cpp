@@ -19,11 +19,24 @@ static PACKET *first = (PACKET *)0;
 static PACKET *last = (PACKET *)0;
 static int current_latency = 0;
 
+struct PINGCONFIG
+{
+	int base;
+	int flux;
+	int spike;
+	int loss;
+};
+
+static PINGCONFIG config_pings[] = {
+//		base	flux	spike	loss
+		{0,		0,		0,		0},
+		{40,	20,		0,		0},
+		{140,	40,		0,		0},
+};
+
+static int config_numpingconfs = sizeof(config_pings)/sizeof(PINGCONFIG);
+static int config_interval = 10; /* seconds between different pingconfigs */
 static int config_log = 0;
-static int config_ping = 40;
-static int config_pingflux = 20;
-static int config_pingspike = 0;
-static int config_packetloss = 1; // in percent
 static int config_reorder = 0;
 
 int run(int port, NETADDR dest)
@@ -36,6 +49,14 @@ int run(int port, NETADDR dest)
 	
 	while(1)
 	{
+		static int lastcfg = 0;
+		int n = ((time_get()/time_freq())/config_interval) % config_numpingconfs;
+		PINGCONFIG ping = config_pings[n];
+		
+		if(n != lastcfg)
+			dbg_msg("crapnet", "cfg = %d", n);
+		lastcfg = n;
+		
 		// handle incomming packets
 		while(1)
 		{
@@ -46,7 +67,7 @@ int run(int port, NETADDR dest)
 			if(bytes <= 0)
 				break;
 				
-			if((rand()%100) < config_packetloss) // drop the packet
+			if((rand()%100) < ping.loss) // drop the packet
 			{
 				if(config_log)
 					dbg_msg("crapnet", "dropped packet");
@@ -134,9 +155,9 @@ int run(int port, NETADDR dest)
 				
 				// update lag
 				double flux = rand()/(double)RAND_MAX;
-				int ms_spike = config_pingspike;
-				int ms_flux = config_pingflux;
-				int ms_ping = config_ping;
+				int ms_spike = ping.spike;
+				int ms_flux = ping.flux;
+				int ms_ping = ping.base;
 				current_latency = ((time_freq()*ms_ping)/1000) + (int64)(((time_freq()*ms_flux)/1000)*flux); // 50ms
 				
 				if(ms_spike && (p->id%100) == 0)

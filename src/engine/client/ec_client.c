@@ -270,7 +270,8 @@ static SMOOTHTIME game_time;
 static SMOOTHTIME predicted_time;
 
 /* graphs */
-static GRAPH input_late_graph;
+static GRAPH inputtime_margin_graph;
+static GRAPH gametime_margin_graph;
 static GRAPH fps_graph;
 
 /* -- snapshot handling --- */
@@ -586,7 +587,8 @@ void client_connect(const char *server_address_str)
 	netclient_connect(net, &server_address);
 	client_set_state(CLIENTSTATE_CONNECTING);
 	
-	graph_init(&input_late_graph, 0.0f, 1.0f);
+	graph_init(&inputtime_margin_graph, -150.0f, 150.0f);
+	graph_init(&gametime_margin_graph, -150.0f, 150.0f);
 }
 
 void client_disconnect_with_reason(const char *reason)
@@ -734,7 +736,8 @@ static void client_debug_render()
 		graph_scale_max(&fps_graph);
 		graph_scale_min(&fps_graph);
 		graph_render(&fps_graph, x, sp*5, w, h, "FPS");
-		graph_render(&input_late_graph, x, sp*5+h+sp, w, h, "Input Margin");
+		graph_render(&inputtime_margin_graph, x, sp*5+h+sp, w, h, "Prediction Margin");
+		graph_render(&gametime_margin_graph, x, sp*5+h+sp+h+sp, w, h, "Gametime Margin");
 	}
 }
 
@@ -1069,17 +1072,13 @@ static void client_process_packet(NETCHUNK *packet)
 				
 				if(time_left < 0)
 				{
-					graph_add(&input_late_graph, time_left/100.0f+0.5f, 1,0,0);
-					
-					if(config.debug)
-						dbg_msg("client", "input was late with %d ms", time_left);
-						
+					graph_add(&inputtime_margin_graph, time_left, 1,0,0);
 					if(predicted_time.up_adjustspeed < 30.0f)
 						predicted_time.up_adjustspeed *= 2.0f;
 				}
 				else
 				{
-					graph_add(&input_late_graph, time_left/100.0f+0.5f, 0,1,0);
+					graph_add(&inputtime_margin_graph, time_left, 0,1,0);
 					
 					predicted_time.up_adjustspeed *= 0.95f;
 					if(predicted_time.up_adjustspeed < 1.0f)
@@ -1240,6 +1239,31 @@ static void client_process_packet(NETCHUNK *packet)
 						
 						/* add new */
 						snapstorage_add(&snapshot_storage, game_tick, time_get(), snapsize, (SNAPSHOT*)tmpbuffer3, 1);
+
+						/* adjust gametime timer */
+						{
+							int64 now = st_get(&game_time, time_get());
+							int64 tickstart = game_tick*time_freq()/50;
+							int64 time_left = (tickstart-now)*1000 / time_freq();
+
+							if(time_left < 0)
+							{
+								graph_add(&gametime_margin_graph, time_left, 1,0,0);
+								if(game_time.down_adjustspeed < 30.0f)
+								{
+									game_time.down_adjustspeed *= 2.0f;
+									dbg_msg("", "%f", game_time.down_adjustspeed);
+								}
+							}
+							else
+							{
+								graph_add(&gametime_margin_graph, time_left, 0,1,0);
+								
+								game_time.down_adjustspeed *= 0.95f;
+								if(game_time.down_adjustspeed < 1.0f)
+									game_time.down_adjustspeed = 1.0f;
+							}
+						}
 						
 						/* add snapshot to demo */
 						if(demorec_isrecording())
@@ -1462,8 +1486,6 @@ static void client_update()
 
 			intratick = (now - prevtick_start) / (float)(curtick_start-prevtick_start);
 			ticktime = (now - prevtick_start) / (float)freq; /*(float)SERVER_TICK_SPEED);*/
-
-			/*graph_add(&intra_graph, intratick*0.25f);*/
 
 			curtick_start = new_pred_tick*time_freq()/50;
 			prevtick_start = prev_pred_tick*time_freq()/50;
