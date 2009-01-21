@@ -784,6 +784,9 @@ static const char *client_load_map(const char *name, const char *filename, int w
 		return errormsg;
 	}
 	
+	// stop demo recording if we loaded a new map
+	demorec_record_stop();
+	
 	dbg_msg("client", "loaded map '%s'", filename);
 	recived_snapshots = 0;
 	map_set(df);
