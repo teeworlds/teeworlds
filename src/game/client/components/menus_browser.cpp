@@ -22,7 +22,7 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 	RECT status;
 	
 	ui_hsplit_t(&view, listheader_height, &headers, &view);
-	ui_hsplit_b(&view, 20.0f, &view, &status);
+	ui_hsplit_b(&view, 28.0f, &view, &status);
 	
 	// split of the scrollbar
 	ui_draw_rect(&headers, vec4(1,1,1,0.25f), CORNER_T, 5.0f);
@@ -313,16 +313,24 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 		if(inp_mouse_doubleclick())
 			client_connect(config.ui_server_address);
 	}
-	
 
-	// render status
 	ui_draw_rect(&status, vec4(1,1,1,0.25f), CORNER_B, 5.0f);
-	ui_vmargin(&status, 50.0f, &status);
+	ui_margin(&status, 5.0f, &status);
+	
+	// render quick search
+	RECT quicksearch;
+	ui_vsplit_l(&status, 250.0f, &quicksearch, &status);
+	ui_do_label(&quicksearch, "Quick search: ", 14.0f, -1);
+	ui_vsplit_l(&quicksearch, gfx_text_width(0, 14.0f, "Quick search: ", -1), 0, &quicksearch);
+	ui_do_edit_box(&config.b_filter_string, &quicksearch, config.b_filter_string, sizeof(config.b_filter_string), 14.0f);
+	
+	// render status
 	char buf[128];
 	if(client_serverbrowse_refreshingmasters())
 		str_format(buf, sizeof(buf), "Refreshing master servers...");
 	else
 		str_format(buf, sizeof(buf), "%d of %d servers, %d players", client_serverbrowse_sorted_num(), client_serverbrowse_num(), num_players);
+	ui_vsplit_r(&status, gfx_text_width(0, 14.0f, buf, -1), 0, &status);
 	ui_do_label(&status, buf, 14.0f, -1);
 }
 
@@ -376,13 +384,6 @@ void MENUS::render_serverbrowser_filters(RECT view)
 		
 		ui_do_label(&button, "Maximum ping", 14.0f, -1);
 	}
-	
-	ui_hsplit_b(&view, 30.0f, &button, &view);
-	ui_hsplit_b(&button, 20.0f, 0x0, &button);
-	ui_do_label(&button, "Quick search: ", 14.0f, -1);
-	ui_vsplit_l(&button, 95.0f, 0, &button);
-	ui_margin(&button, 1.0f, &button);
-	ui_do_edit_box(&config.b_filter_string, &button, config.b_filter_string, sizeof(config.b_filter_string), 14.0f);
 	
 	ui_hsplit_b(&view, button_height, &view, &button);
 	static int clear_button = 0;
