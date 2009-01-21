@@ -142,6 +142,7 @@ void EFFECTS::playerspawn(vec2 pos)
 		gameclient.particles->add(PARTICLES::GROUP_GENERAL, &p);
 		
 	}
+	gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_PLAYER_SPAWN, 1.0f, pos);
 }
 
 void EFFECTS::playerdeath(vec2 pos, int cid)
