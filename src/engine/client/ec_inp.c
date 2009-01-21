@@ -155,8 +155,9 @@ void inp_update()
 		inp_mouse_mode_relative();*/
 	
 	/* clear and begin count on the other one */
-	mem_zero(&input_count[input_current], sizeof(input_count[input_current]));
 	input_current^=1;
+	mem_zero(&input_count[input_current], sizeof(input_count[input_current]));
+	mem_zero(&input_state[input_current], sizeof(input_state[input_current]));
 	
 	{
 		Uint8 *state = SDL_GetKeyState(&i);
@@ -164,21 +165,6 @@ void inp_update()
 			i = KEY_LAST-1;
 		mem_copy(input_state[input_current], state, i);
 	}
-	
-	input_state[input_current][KEY_MOUSE_1] = 0;
-	input_state[input_current][KEY_MOUSE_2] = 0;
-	input_state[input_current][KEY_MOUSE_3] = 0;
-	input_state[input_current][KEY_MOUSE_WHEEL_UP] = 0;
-	input_state[input_current][KEY_MOUSE_WHEEL_DOWN] = 0;
-	i = SDL_GetMouseState(NULL, NULL);
-	if(i&SDL_BUTTON(1)) input_state[input_current][KEY_MOUSE_1] = 1; /* 1 is left */
-	if(i&SDL_BUTTON(3)) input_state[input_current][KEY_MOUSE_2] = 1; /* 3 is right */
-	if(i&SDL_BUTTON(2)) input_state[input_current][KEY_MOUSE_3] = 1; /* 2 is middle */
-	if(i&SDL_BUTTON(4)) input_state[input_current][KEY_MOUSE_4] = 1;
-	if(i&SDL_BUTTON(5)) input_state[input_current][KEY_MOUSE_5] = 1;
-	if(i&SDL_BUTTON(6)) input_state[input_current][KEY_MOUSE_6] = 1;
-	if(i&SDL_BUTTON(7)) input_state[input_current][KEY_MOUSE_7] = 1;
-	if(i&SDL_BUTTON(8)) input_state[input_current][KEY_MOUSE_8] = 1;
 	
 	{
 		SDL_Event event;
@@ -204,18 +190,19 @@ void inp_update()
 				case SDL_MOUSEBUTTONUP:
 					action = INPFLAG_RELEASE;
 					
-					if(event.button.button == 1) key = KEY_MOUSE_1;
+					if(event.button.button == 1)
 					{
 						release_delta = time_get() - last_release;
 						last_release = time_get();
 					}
 					
+					/* fall through */
 				case SDL_MOUSEBUTTONDOWN:
-					if(event.button.button == 1) key = KEY_MOUSE_1;
-					if(event.button.button == 3) key = KEY_MOUSE_2;
-					if(event.button.button == 2) key = KEY_MOUSE_3;
-					if(event.button.button == 4) key = KEY_MOUSE_4;
-					if(event.button.button == 5) key = KEY_MOUSE_5;
+					if(event.button.button == SDL_BUTTON_LEFT) key = KEY_MOUSE_1;
+					if(event.button.button == SDL_BUTTON_RIGHT) key = KEY_MOUSE_2;
+					if(event.button.button == SDL_BUTTON_MIDDLE) key = KEY_MOUSE_3;
+					if(event.button.button == SDL_BUTTON_WHEELUP) key = KEY_MOUSE_WHEEL_UP;
+					if(event.button.button == SDL_BUTTON_WHEELDOWN) key = KEY_MOUSE_WHEEL_DOWN;
 					if(event.button.button == 6) key = KEY_MOUSE_6;
 					if(event.button.button == 7) key = KEY_MOUSE_7;
 					if(event.button.button == 8) key = KEY_MOUSE_8;
@@ -225,13 +212,15 @@ void inp_update()
 				case SDL_QUIT:
 					/* TODO: cleaner exit */
 					exit(0);
+					break;
 			}
 			
 			/* */
 			if(key != -1)
 			{
-				input_count[input_current^1][key].presses++;
-				input_state[input_current^1][key] = 1;
+				input_count[input_current][key].presses++;
+				if(action == INPFLAG_PRESS)
+					input_state[input_current][key] = 1;
 				add_event(0, key, action);
 			}
 
