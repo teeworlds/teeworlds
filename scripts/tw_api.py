@@ -18,7 +18,7 @@ def get_server_info(address, port):
 		server_info["version"] = slots[0]
 		server_info["name"] = slots[1]
 		server_info["map"] = slots[2]
-		server_info["gametype_id"] = int(slots[3])
+		server_info["gametype"] = slots[3]
 		server_info["flags"] = int(slots[4])
 		server_info["progression"] = int(slots[5])
 		server_info["num_players"] = int(slots[6])
@@ -83,17 +83,49 @@ def get_all_servers():
 		addr = "master%d.teeworlds.com"%i
 		list = get_servers(addr)
 		if list:
-			print addr, "had", len(list), "servers"
+			#print addr, "had", len(list), "servers"
 			servers += list
 	return servers
 
 servers = get_all_servers()
 total_players = 0
+players_per_versions = {}
+versions = {}
+gametypes = {}
 if 1:
 	for server in servers:
-		print "checking server", server[0], server[1]
+		#print "checking server", server[0], server[1]
 		info = get_server_info(server[0], server[1])
 		if info:
 			total_players += len(info["players"])
+			if info["version"] in versions:
+				versions[info["version"]] += 1
+			else:
+				versions[info["version"]] = 1
 
-print total_players, "on", len(servers), 'servers'
+			if info["version"] in players_per_versions:
+				players_per_versions[info["version"]] += len(info["players"])
+			else:
+				players_per_versions[info["version"]] = len(info["players"])
+
+			if info["gametype"] in gametypes:
+				gametypes[info["gametype"]] += 1
+			else:
+				gametypes[info["gametype"]] = 1
+
+print total_players
+				
+if 0:
+	print total_players, "on", len(servers), 'servers'
+	print "versions:"
+	for v in versions:
+		print "\t",v, versions[v]
+
+	print "players per version:"
+	for v in players_per_versions:
+		print "\t",v, players_per_versions[v]
+
+	print "gametypes:"
+	for v in gametypes:
+		print "\t",v, gametypes[v]
+

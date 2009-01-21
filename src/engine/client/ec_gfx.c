@@ -328,7 +328,7 @@ int gfx_init()
 
 	/* set vsync as needed */
 	gfx_set_vsync(config.gfx_vsync);
-	return 1;
+	return 0;
 }
 
 float gfx_screenaspect()
@@ -905,11 +905,12 @@ void gfx_quads_draw_freeform(
 	add_vertices(4);
 }
 
-void gfx_quads_text(float x, float y, float size, const char *text)
+void gfx_quads_text(float x, float y, float size, float r, float g, float b, float a, const char *text)
 {
 	float startx = x;
 
 	gfx_quads_begin();
+	gfx_setcolor(r,g,b,a);
 
 	while(*text)
 	{

@@ -152,7 +152,7 @@ int CONTROLS::snapinput(int *data)
 		else if(input_data.prev_weapon != last_data.prev_weapon) send = true;
 
 		// send at at least 10hz
-		if(time_get() > last_send_time + time_freq()/10)
+		if(time_get() > last_send_time + time_freq()/25)
 			send = true;
 	}
 	

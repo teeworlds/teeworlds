@@ -186,7 +186,7 @@ void gfx_quads_draw_freeform(
 	See Also:
 		<other_func>
 */
-void gfx_quads_text(float x, float y, float size, const char *text);
+void gfx_quads_text(float x, float y, float size, float r, float g, float b, float a, const char *text);
 
 /*
 	Group: Lines

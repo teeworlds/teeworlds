@@ -123,9 +123,9 @@ void PLAYERS::render_player(
 	if(player.health < 0) // dont render dead players
 		return;
 
-	//float angle = mix((float)prev.angle, (float)player.angle, intratick)/256.0f;
+	float angle = mix((float)prev.angle, (float)player.angle, intratick)/256.0f;
 	
-	float angle = 0;
+	//float angle = 0;
 	
 	if(info.local && client_state() != CLIENTSTATE_DEMOPLAYBACK)
 	{
@@ -134,6 +134,7 @@ void PLAYERS::render_player(
 	}
 	else
 	{
+		/*
 		float mixspeed = client_frametime()*2.5f;
 		if(player.attacktick != prev.attacktick) // shooting boosts the mixing speed
 			mixspeed *= 15.0f;
@@ -151,7 +152,7 @@ void PLAYERS::render_player(
 		else
 			angle = angular_approach(current, target, fabs(delta-new_delta));
 
-		gameclient.clients[info.cid].angle = angle;
+		gameclient.clients[info.cid].angle = angle;*/
 	}
 	
 	// use preditect players if needed

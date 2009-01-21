@@ -28,7 +28,7 @@
 #include <mastersrv/mastersrv.h>
 #include <versionsrv/versionsrv.h>
 
-const int prediction_margin = 7; /* magic network prediction value */
+const int prediction_margin = 1000/50; /* magic network prediction value */
 
 /*
 	Server Time
@@ -103,7 +103,7 @@ static struct /* TODO: handle input better */
 {
 	int data[MAX_INPUT_SIZE]; /* the input data */
 	int tick; /* the tick that the input is for */
-	int64 game_time; /* prediction latency when we sent this input */
+	int64 predicted_time; /* prediction latency when we sent this input */
 	int64 time;
 } inputs[200];
 static int current_input = 0;
@@ -117,6 +117,7 @@ typedef struct
 {
 	float min, max;
 	float values[GRAPH_MAX];
+	float colors[GRAPH_MAX][3];
 	int index;
 } GRAPH;
 
@@ -127,26 +128,56 @@ static void graph_init(GRAPH *g, float min, float max)
 	g->index = 0;
 }
 
-static void graph_add(GRAPH *g, float v)
+static void graph_scale_max(GRAPH *g)
 {
-	g->index = (g->index+1)&(GRAPH_MAX-1);
-	g->values[g->index] = v;
+	int i = 0;
+	g->max = 0;
+	for(i = 0; i < GRAPH_MAX; i++)
+	{
+		if(g->values[i] > g->max)
+			g->max = g->values[i];
+	}
 }
 
-static void graph_render(GRAPH *g, float x, float y, float w, float h)
+static void graph_scale_min(GRAPH *g)
 {
+	int i = 0;
+	g->min = g->max;
+	for(i = 0; i < GRAPH_MAX; i++)
+	{
+		if(g->values[i] < g->min)
+			g->min = g->values[i];
+	}
+}
+
+static void graph_add(GRAPH *graph, float v, float r, float g, float b)
+{
+	graph->index = (graph->index+1)&(GRAPH_MAX-1);
+	graph->values[graph->index] = v;
+	graph->colors[graph->index][0] = r;
+	graph->colors[graph->index][1] = g;
+	graph->colors[graph->index][2] = b;
+}
+
+static void graph_render(GRAPH *g, float x, float y, float w, float h, const char *description)
+{
+	char buf[32];
 	int i;
+
+	gfx_blend_normal();
+
+	
 	gfx_texture_set(-1);
 	
 	gfx_quads_begin();
-	gfx_setcolor(0, 0, 0, 1);
+	gfx_setcolor(0, 0, 0, 0.75f);
 	gfx_quads_drawTL(x, y, w, h);
 	gfx_quads_end();
 		
 	gfx_lines_begin();
-	gfx_setcolor(0.95f, 0.95f, 0.95f, 1);
+	gfx_setcolor(0.95f, 0.95f, 0.95f, 1.00f);
 	gfx_lines_draw(x, y+h/2, x+w, y+h/2);
-	gfx_setcolor(0.5f, 0.5f, 0.5f, 1);
+	gfx_setcolor(0.5f, 0.5f, 0.5f, 0.75f);
 	gfx_lines_draw(x, y+(h*3)/4, x+w, y+(h*3)/4);
 	gfx_lines_draw(x, y+h/4, x+w, y+h/4);
 	for(i = 1; i < GRAPH_MAX; i++)
@@ -156,13 +187,26 @@ static void graph_render(GRAPH *g, float x, float y, float w, float h)
 		int i0 = (g->index+i-1)&(GRAPH_MAX-1);
 		int i1 = (g->index+i)&(GRAPH_MAX-1);
 		
-		float v0 = g->values[i0];
-		float v1 = g->values[i1];
+		float v0 = (g->values[i0]-g->min) / (g->max-g->min);
+		float v1 = (g->values[i1]-g->min) / (g->max-g->min);
 		
-		gfx_setcolor(0, 1, 0, 1);
+		gfx_setcolorvertex(0, g->colors[i0][0], g->colors[i0][1], g->colors[i0][2], 0.75f);
+		gfx_setcolorvertex(1, g->colors[i1][0], g->colors[i1][1], g->colors[i1][2], 0.75f);
 		gfx_lines_draw(x+a0*w, y+h-v0*h, x+a1*w, y+h-v1*h);
+
 	}
 	gfx_lines_end();
+	
+
+	gfx_texture_set(debug_font);	
+	gfx_quads_text(x+2, y+h-16, 16, 1,1,1,1, description);
+
+	str_format(buf, sizeof(buf), "%.2f", g->max);
+	gfx_quads_text(x+w-8*strlen(buf)-8, y+2, 16, 1,1,1,1, buf);
+	
+	str_format(buf, sizeof(buf), "%.2f", g->min);
+	gfx_quads_text(x+w-8*strlen(buf)-8, y+h-16, 16, 1,1,1,1, buf);
+	
 }
 
 typedef struct
@@ -174,6 +218,9 @@ typedef struct
 	int64 rlast;
 	int64 tlast;
 	GRAPH graph;
+	
+	float up_adjustspeed;
+	float down_adjustspeed;
 } SMOOTHTIME;
 
 static void st_init(SMOOTHTIME *st, int64 target)
@@ -181,7 +228,9 @@ static void st_init(SMOOTHTIME *st, int64 target)
 	st->snap = time_get();
 	st->current = target;
 	st->target = target;
-	graph_init(&st->graph, 0.0f, 1.0f);
+	st->up_adjustspeed = 1.0f;
+	st->down_adjustspeed = 0.2f;
+	graph_init(&st->graph, 0.0f, 0.5f);
 }
 
 static int64 st_get(SMOOTHTIME *st, int64 now)
@@ -193,9 +242,10 @@ static int64 st_get(SMOOTHTIME *st, int64 now)
 	
 	/* it's faster to adjust upward instead of downward */
 	/* we might need to adjust these abit */
-	adjust_speed = 0.2f; /*0.99f;*/
+
+	adjust_speed = st->down_adjustspeed;
 	if(t > c)
-		adjust_speed = 350.0f;
+		adjust_speed = st->up_adjustspeed;
 	
 	a = ((now-st->snap)/(float)time_freq()) * adjust_speed;
 	if(a > 1.0f)
@@ -203,7 +253,7 @@ static int64 st_get(SMOOTHTIME *st, int64 now)
 		
 	r = c + (int64)((t-c)*a);
 	
-	graph_add(&st->graph, a+0.5f);
+	graph_add(&st->graph, a+0.5f,1,1,1);
 	
 	return r;
 }
@@ -216,14 +266,12 @@ static void st_update(SMOOTHTIME *st, int64 target)
 	st->target = target;
 }
 
-SMOOTHTIME game_time;
-SMOOTHTIME predicted_time;
+static SMOOTHTIME game_time;
+static SMOOTHTIME predicted_time;
 
-GRAPH intra_graph;
-GRAPH predict_graph;
-
-/* --- input snapping --- */
+/* graphs */
 static GRAPH input_late_graph;
+static GRAPH fps_graph;
 
 /* -- snapshot handling --- */
 enum
@@ -426,7 +474,7 @@ static void client_send_input()
 	msg_pack_int(size);
 
 	inputs[current_input].tick = current_predtick;
-	inputs[current_input].game_time = st_get(&predicted_time, now);
+	inputs[current_input].predicted_time = st_get(&predicted_time, now);
 	inputs[current_input].time = now;
 
 	/* pack it */	
@@ -538,9 +586,7 @@ void client_connect(const char *server_address_str)
 	netclient_connect(net, &server_address);
 	client_set_state(CLIENTSTATE_CONNECTING);
 	
-	graph_init(&intra_graph, 0.0f, 1.0f);
 	graph_init(&input_late_graph, 0.0f, 1.0f);
-	graph_init(&predict_graph, 0.0f, 200.0f);
 }
 
 void client_disconnect_with_reason(const char *reason)
@@ -606,6 +652,7 @@ static void client_debug_render()
 	static NETSTATS prev, current;
 	static int64 last_snap = 0;
 	static float frametime_avg = 0;
+	int64 now = time_get();
 	char buffer[512];
 	
 	if(!config.debug)
@@ -635,7 +682,7 @@ static void client_debug_render()
 		mem_stats()->total_allocations,
 		gfx_memory_usage()/1024,
 		(int)(1.0f/frametime_avg));
-	gfx_quads_text(2, 2, 16, buffer);
+	gfx_quads_text(2, 2, 16, 1,1,1,1, buffer);
 
 	
 	{
@@ -651,7 +698,7 @@ static void client_debug_render()
 		str_format(buffer, sizeof(buffer), "send: %3d %5d+%4d=%5d (%3d kbps) avg: %5d\nrecv: %3d %5d+%4d=%5d (%3d kbps) avg: %5d",
 			send_packets, send_bytes, send_packets*42, send_total, (send_total*8)/1024, send_bytes/send_packets,
 			recv_packets, recv_bytes, recv_packets*42, recv_total, (recv_total*8)/1024, recv_bytes/recv_packets);
-		gfx_quads_text(2, 14, 16, buffer);
+		gfx_quads_text(2, 14, 16, 1,1,1,1, buffer);
 	}
 	
 	/* render rates */
@@ -664,24 +711,30 @@ static void client_debug_render()
 			{
 				str_format(buffer, sizeof(buffer), "%4d %20s: %8d %8d %8d", i, modc_getitemname(i), snapshot_data_rate[i]/8, snapshot_data_updates[i],
 					(snapshot_data_rate[i]/snapshot_data_updates[i])/8);
-				gfx_quads_text(2, 100+y*12, 16, buffer);
+				gfx_quads_text(2, 100+y*12, 16, 1,1,1,1, buffer);
 				y++;
 			}
 		}
 	}
 
-	str_format(buffer, sizeof(buffer), "input time left: %d", last_input_timeleft);
-	gfx_quads_text(2, 70, 16, buffer);
+	str_format(buffer, sizeof(buffer), "pred: %d ms  %3.2f", 
+		(int)((st_get(&predicted_time, now)-st_get(&game_time, now))*1000/(float)time_freq()),
+		predicted_time.up_adjustspeed);
+	gfx_quads_text(2, 70, 16, 1,1,1,1, buffer);
 	
 	/* render graphs */
 	if(config.dbg_graphs)
 	{
-		gfx_mapscreen(0,0,400.0f,300.0f);
-		graph_render(&predict_graph, 300, 10, 90, 50);
-		graph_render(&predicted_time.graph, 300, 10+50+10, 90, 50);
-		
-		graph_render(&intra_graph, 300, 10+50+10+50+10, 90, 50);
-		graph_render(&input_late_graph, 300, 10+50+10+50+10+50+10, 90, 50);
+		//gfx_mapscreen(0,0,400.0f,300.0f);
+		float w = gfx_screenwidth()/4.0f;
+		float h = gfx_screenheight()/6.0f;
+		float sp = gfx_screenwidth()/100.0f;
+		float x = gfx_screenwidth()-w-sp;
+
+		graph_scale_max(&fps_graph);
+		graph_scale_min(&fps_graph);
+		graph_render(&fps_graph, x, sp*5, w, h, "FPS");
+		graph_render(&input_late_graph, x, sp*5+h+sp, w, h, "Input Margin");
 	}
 }
 
@@ -1014,10 +1067,24 @@ static void client_process_packet(NETCHUNK *packet)
 				/* adjust our prediction time */
 				int k;
 				
-				graph_add(&input_late_graph, time_left/100.0f+0.5f);
-				
-				if(time_left < 0 && config.debug)
-					dbg_msg("client", "input was late with %d ms", time_left);
+				if(time_left < 0)
+				{
+					graph_add(&input_late_graph, time_left/100.0f+0.5f, 1,0,0);
+					
+					if(config.debug)
+						dbg_msg("client", "input was late with %d ms", time_left);
+						
+					if(predicted_time.up_adjustspeed < 30.0f)
+						predicted_time.up_adjustspeed *= 2.0f;
+				}
+				else
+				{
+					graph_add(&input_late_graph, time_left/100.0f+0.5f, 0,1,0);
+					
+					predicted_time.up_adjustspeed *= 0.95f;
+					if(predicted_time.up_adjustspeed < 1.0f)
+						predicted_time.up_adjustspeed = 1.0f;
+				}
 				last_input_timeleft = time_left;
 				
 				for(k = 0; k < 200; k++) /* TODO: do this better */
@@ -1025,7 +1092,7 @@ static void client_process_packet(NETCHUNK *packet)
 					if(inputs[k].tick == input_predtick)
 					{
 						/*-1000/50 prediction_margin */
-						int64 target = inputs[k].game_time + (time_get() - inputs[k].time);
+						int64 target = inputs[k].predicted_time + (time_get() - inputs[k].time);
 						st_update(&predicted_time, target - (int64)(((time_left-prediction_margin)/1000.0f)*time_freq()));
 						break;
 					}
@@ -1201,6 +1268,7 @@ static void client_process_packet(NETCHUNK *packet)
 						{
 							/* start at 200ms and work from there */
 							st_init(&predicted_time, game_tick*time_freq()/50);
+							predicted_time.up_adjustspeed = 1000.0f;
 							st_init(&game_time, (game_tick-1)*time_freq()/50);
 							snapshots[SNAP_PREV] = snapshot_storage.first;
 							snapshots[SNAP_CURRENT] = snapshot_storage.last;
@@ -1208,10 +1276,10 @@ static void client_process_packet(NETCHUNK *packet)
 							client_set_state(CLIENTSTATE_ONLINE);
 						}
 						
-						{
+						/*{
 							int64 now = time_get();
 							graph_add(&predict_graph, (st_get(&predicted_time, now)-st_get(&game_time, now))/(float)time_freq());
-						}
+						}*/
 						
 						st_update(&game_time, (game_tick-1)*time_freq()/50);
 						
@@ -1395,7 +1463,7 @@ static void client_update()
 			intratick = (now - prevtick_start) / (float)(curtick_start-prevtick_start);
 			ticktime = (now - prevtick_start) / (float)freq; /*(float)SERVER_TICK_SPEED);*/
 
-			graph_add(&intra_graph, intratick*0.25f);
+			/*graph_add(&intra_graph, intratick*0.25f);*/
 
 			curtick_start = new_pred_tick*time_freq()/50;
 			prevtick_start = prev_pred_tick*time_freq()/50;
@@ -1521,7 +1589,7 @@ static void client_run()
 	snapshot_parts = 0;
 	
 	/* init graphics and sound */
-	if(!gfx_init())
+	if(gfx_init() != 0)
 		return;
 
 	/* start refreshing addresses while we load */
@@ -1551,6 +1619,9 @@ static void client_run()
 		client_connect(config.cl_connect);
 	config.cl_connect[0] = 0;
 	*/
+
+	/* */
+	graph_init(&fps_graph, 0.0f, 200.0f);
 	
 	/* never start with the editor */
 	config.cl_editor = 0;
@@ -1616,6 +1687,12 @@ static void client_run()
 		/* panic quit button */
 		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_pressed('q'))
 			break;
+
+		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_down('d'))
+			config.debug ^= 1;
+
+		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_down('g'))
+			config.dbg_graphs ^= 1;
 
 		if(inp_key_pressed(KEY_LCTRL) && inp_key_pressed(KEY_LSHIFT) && inp_key_down('e'))
 		{
@@ -1715,6 +1792,8 @@ static void client_run()
 			frametime_low = frametime;
 		if(frametime > frametime_high)
 			frametime_high = frametime;
+		
+		graph_add(&fps_graph, 1.0f/frametime, 1,1,1);
 	}
 	
 	modc_shutdown();
