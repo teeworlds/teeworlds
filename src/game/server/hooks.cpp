@@ -87,6 +87,7 @@ void mods_tick()
 	
 	game.tick();
 
+#ifdef CONF_DEBUG
 	if(config.dbg_dummies)
 	{
 		for(int i = 0; i < config.dbg_dummies ; i++)
@@ -96,6 +97,7 @@ void mods_tick()
 			game.players[MAX_CLIENTS-i-1]->on_predicted_input(&input);
 		}
 	}
+#endif
 }
 
 void mods_snap(int client_id)
@@ -568,6 +570,7 @@ void mods_init()
 
 	//game.world.insert_entity(game.controller);
 
+#ifdef CONF_DEBUG
 	if(config.dbg_dummies)
 	{
 		for(int i = 0; i < config.dbg_dummies ; i++)
@@ -578,6 +581,7 @@ void mods_init()
 				game.players[MAX_CLIENTS-i-1]->team = i&1;
 		}
 	}
+#endif
 }
 
 void mods_shutdown()
