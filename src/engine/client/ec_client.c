@@ -1253,10 +1253,7 @@ static void client_process_packet(NETCHUNK *packet)
 							{
 								graph_add(&gametime_margin_graph, time_left, 1,0,0);
 								if(game_time.down_adjustspeed < 30.0f)
-								{
 									game_time.down_adjustspeed *= 2.0f;
-									dbg_msg("", "%f", game_time.down_adjustspeed);
-								}
 							}
 							else
 							{
