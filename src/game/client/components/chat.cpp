@@ -14,7 +14,7 @@ void CHAT::on_reset()
 {
 	mode = MODE_NONE;
 	for(int i = 0; i < MAX_LINES; i++)
-		lines[i].tick = -1000000;
+		lines[i].time = -1000000;
 	current_line = 0;
 }
 
@@ -97,7 +97,7 @@ void CHAT::on_message(int msgtype, void *rawmsg)
 void CHAT::add_line(int client_id, int team, const char *line)
 {
 	current_line = (current_line+1)%MAX_LINES;
-	lines[current_line].tick = client_tick();
+	lines[current_line].time = time_get();
 	lines[current_line].client_id = client_id;
 	lines[current_line].team = team;
 	lines[current_line].name_color = -2;
@@ -158,7 +158,7 @@ void CHAT::on_render()
 	for(i = 0; i < MAX_LINES; i++)
 	{
 		int r = ((current_line-i)+MAX_LINES)%MAX_LINES;
-		if(client_tick() > lines[r].tick+50*15)
+		if(time_get() > lines[r].time+15*time_freq())
 			break;
 
 		float begin = x;

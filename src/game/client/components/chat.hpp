@@ -12,7 +12,7 @@ class CHAT : public COMPONENT
 
 	struct LINE
 	{
-		int tick;
+		int64 time;
 		int client_id;
 		int team;
 		int name_color;
