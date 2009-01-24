@@ -613,7 +613,7 @@ static void do_toolbar(RECT toolbar)
 	if(inp_key_down('s') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL)))
 		editor.invoke_file_dialog(LISTDIRTYPE_SAVE, "Save Map", "Save", "maps/", "", callback_save_map);
 
-	// animate button
+	// detail button
 	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
 	static int hq_button = 0;
 	if(do_editor_button(&hq_button, "Detail", editor.show_detail, &button, draw_editor_button, 0, "[ctrl+h] Toggle High Detail") ||
@@ -624,6 +624,7 @@ static void do_toolbar(RECT toolbar)
 
 	ui_vsplit_l(&toolbar, 5.0f, 0, &toolbar);
 	
+	// animation button
 	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
 	static int animate_button = 0;
 	if(do_editor_button(&animate_button, "Anim", editor.animate, &button, draw_editor_button, 0, "[ctrl+m] Toggle animation") ||
@@ -665,7 +666,28 @@ static void do_toolbar(RECT toolbar)
 	static int zoom_in_button = 0;
 	if(do_editor_button(&zoom_in_button, "ZI", 0, &button, draw_editor_button_r, 0, "[NumPad+] Zoom in") || inp_key_down(KEY_KP_PLUS))
 		editor.zoom_level -= 50;
-		
+	
+	ui_vsplit_l(&toolbar, 15.0f, 0, &toolbar);
+	
+	// animation speed
+	ui_vsplit_l(&toolbar, 16.0f, &button, &toolbar);
+	static int anim_faster_button = 0;
+	if(do_editor_button(&anim_faster_button, "A+", 0, &button, draw_editor_button_l, 0, "Increase animation speed"))
+		editor.animate_speed += 0.5f;
+	
+	ui_vsplit_l(&toolbar, 16.0f, &button, &toolbar);
+	static int anim_normal_button = 0;
+	if(do_editor_button(&anim_normal_button, "1", 0, &button, draw_editor_button_m, 0, "Normal animation speed"))
+		editor.animate_speed = 1.0f;
+	
+	ui_vsplit_l(&toolbar, 16.0f, &button, &toolbar);
+	static int anim_slower_button = 0;
+	if(do_editor_button(&anim_slower_button, "A-", 0, &button, draw_editor_button_r, 0, "Decrease animation speed"))
+	{
+		if(editor.animate_speed > 0.5f)
+			editor.animate_speed -= 0.5f;
+	}
+	
 	if(inp_key_presses(KEY_MOUSE_WHEEL_UP) && editor.dialog == DIALOG_NONE)
 		editor.zoom_level -= 20;
 		

@@ -363,6 +363,7 @@ public:
 		animate = false;
 		animate_start = 0;
 		animate_time = 0;
+		animate_speed = 1;
 		
 		show_envelope_editor = 0;
 	}
@@ -407,6 +408,7 @@ public:
 	bool animate;
 	int64 animate_start;
 	float animate_time;
+	float animate_speed;
 	
 	int show_envelope_editor;
 	

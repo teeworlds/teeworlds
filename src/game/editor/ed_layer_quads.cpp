@@ -28,6 +28,7 @@ static void envelope_eval(float time_offset, int env, float *channels)
 		
 	ENVELOPE *e = editor.map.envelopes[env];
 	float t = editor.animate_time+time_offset;
+	t *= editor.animate_speed;
 	e->eval(t, channels);
 }
 
