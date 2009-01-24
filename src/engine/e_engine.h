@@ -36,7 +36,7 @@ void engine_hostlookup(HOSTLOOKUP *lookup, const char *hostname);
 
 enum
 {
-	MAX_MASTERSERVERS=16
+	MAX_MASTERSERVERS=4
 };
 
 void mastersrv_default();
