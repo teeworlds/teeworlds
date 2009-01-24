@@ -369,9 +369,7 @@ void CONSOLE::on_render()
 		gfx_text(0, screen.w-version_width-5, y, font_size, buf, -1);
 
 		// render possible commands
-		if(console->input.get_string()[0] == 0)
-			gfx_text_ex(&info.cursor, "No matching possible", -1);
-		else
+		if(console->input.get_string()[0] != 0)
 			console_possible_commands(console->completion_buffer, console->completion_flagmask, possible_commands_render_callback, &info);
 		gfx_text_color(1,1,1,1);
 
