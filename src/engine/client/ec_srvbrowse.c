@@ -517,10 +517,7 @@ void client_serverbrowse_refresh(int type)
 			dbg_msg("client", "broadcasting for servers");
 	}
 	else if(type == BROWSETYPE_INTERNET)
-	{
 		need_refresh = 1;
-		mastersrv_refresh_addresses();
-	}
 	else if(type == BROWSETYPE_FAVORITES)
 	{
 		int i;

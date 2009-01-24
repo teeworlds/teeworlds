@@ -1618,7 +1618,7 @@ static void client_run()
 		return;
 
 	/* start refreshing addresses while we load */
-	/* mastersrv_refresh_addresses(); */
+	mastersrv_refresh_addresses();
 	
 	/* init the editor */
 	editor_init();
