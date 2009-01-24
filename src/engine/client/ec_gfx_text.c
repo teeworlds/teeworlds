@@ -52,7 +52,9 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 	FONT *font;
 	int actual_size;
 	int i;
+	int got_new_line = 0;
 	float draw_x, draw_y;
+	float cursor_x, cursor_y;
 	const char *end;
 
 	float size = cursor->font_size;
@@ -65,8 +67,8 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 	actual_x = cursor->x * fake_to_screen_x;
 	actual_y = cursor->y * fake_to_screen_y;
 
-	cursor->x = actual_x / fake_to_screen_x;
-	cursor->y = actual_y / fake_to_screen_y;
+	cursor_x = actual_x / fake_to_screen_x;
+	cursor_y = actual_y / fake_to_screen_y;
 
 	/* same with size */
 	actual_size = size * fake_to_screen_y;
@@ -91,8 +93,8 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 	{
 		const unsigned char *current = (unsigned char *)text;
 		int to_render = length;
-		draw_x = cursor->x;
-		draw_y = cursor->y;
+		draw_x = cursor_x;
+		draw_y = cursor_y;
 
 		if(cursor->flags&TEXTFLAG_RENDER)
 		{
@@ -196,6 +198,7 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 			{
 				draw_x = cursor->start_x;
 				draw_y += size;
+				got_new_line = 1;
 				draw_x = (int)(draw_x * fake_to_screen_x) / fake_to_screen_x; /* realign */
 				draw_y = (int)(draw_y * fake_to_screen_y) / fake_to_screen_y;				
 			}
@@ -206,7 +209,9 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 	}
 
 	cursor->x = draw_x;
-	cursor->y = draw_y;
+	
+	if(got_new_line)
+		cursor->y = draw_y;
 }
 
 void gfx_text(void *font_set_v, float x, float y, float size, const char *text, int max_width)
