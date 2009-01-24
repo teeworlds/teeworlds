@@ -20,6 +20,7 @@ extern "C" {
 #include <game/version.hpp>
 
 #include <game/client/lineinput.hpp>
+#include <game/client/render.hpp>
 
 #include "console.hpp"
 
@@ -40,6 +41,14 @@ CONSOLE::INSTANCE::INSTANCE(int t)
 	history_entry = 0x0;
 	
 	type = t;
+	
+	if(t == 0)
+		completion_flagmask = CFGFLAG_CLIENT;
+	else
+		completion_flagmask = CFGFLAG_SERVER;
+
+	completion_buffer[0] = 0;
+	completion_chosen = -1;
 }
 
 void CONSOLE::INSTANCE::execute_line(const char *line)
@@ -53,6 +62,14 @@ void CONSOLE::INSTANCE::execute_line(const char *line)
 		else
 			client_rcon_auth("", line);
 	}
+}
+
+void CONSOLE::INSTANCE::possible_commands_complete_callback(const char *str, void *user)
+{
+	CONSOLE::INSTANCE *instance = (CONSOLE::INSTANCE *)user;
+	if(instance->completion_chosen == instance->completion_enumeration_count)
+		instance->input.set(str);
+	instance->completion_enumeration_count++;
 }
 
 void CONSOLE::INSTANCE::on_input(INPUT_EVENT e)
@@ -110,6 +127,26 @@ void CONSOLE::INSTANCE::on_input(INPUT_EVENT e)
 				input.clear();
 			handled = true;
 		}
+		else if(e.key == KEY_TAB)
+		{
+			completion_chosen++;
+			completion_enumeration_count = 0;
+			console_possible_commands(completion_buffer, completion_flagmask, possible_commands_complete_callback, this);
+
+			// handle wrapping
+			if(completion_chosen >= completion_enumeration_count)
+			{
+				completion_chosen %= completion_enumeration_count;
+				completion_enumeration_count = 0;
+				console_possible_commands(completion_buffer, completion_flagmask, possible_commands_complete_callback, this);
+			}
+		}
+		
+		if(e.key != KEY_TAB)
+		{
+			completion_chosen = -1;
+			str_copy(completion_buffer, input.get_string(), sizeof(completion_buffer));
+		}
 	}
 	
 	if(!handled)
@@ -158,6 +195,54 @@ static float console_scale_func(float t)
 {
 	//return t;
 	return sinf(acosf(1.0f-t));
+}
+
+struct RENDERINFO
+{
+	TEXT_CURSOR cursor;
+	const char *current_cmd;
+	int wanted_completion;
+	int enum_count;
+};
+
+void CONSOLE::possible_commands_render_callback(const char *str, void *user)
+{
+	RENDERINFO *info = (RENDERINFO *)user;
+	
+	if(info->enum_count == info->wanted_completion)
+	{
+		float tw = gfx_text_width(info->cursor.font_set, info->cursor.font_size, str, -1);
+		gfx_texture_set(-1);
+		gfx_quads_begin();
+			gfx_setcolor(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f);
+			draw_round_rect(info->cursor.x-3, info->cursor.y, tw+5, info->cursor.font_size+4, info->cursor.font_size/3);
+		gfx_quads_end();
+		
+		gfx_text_color(0.05f, 0.05f, 0.05f,1);
+		gfx_text_ex(&info->cursor, str, -1);
+	}
+	else
+	{
+		const char *match_start = str_find_nocase(str, info->current_cmd);
+		
+		if(match_start)
+		{
+			gfx_text_color(0.5f,0.5f,0.5f,1);
+			gfx_text_ex(&info->cursor, str, match_start-str);
+			gfx_text_color(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,1);
+			gfx_text_ex(&info->cursor, match_start, strlen(info->current_cmd));
+			gfx_text_color(0.5f,0.5f,0.5f,1);
+			gfx_text_ex(&info->cursor, match_start+strlen(info->current_cmd), -1);
+		}
+		else
+		{
+			gfx_text_color(0.75f,0.75f,0.75f,1);
+			gfx_text_ex(&info->cursor, str, -1);
+		}
+	}
+	
+	info->enum_count++;
+	info->cursor.x += 7.0f;
 }
 
 void CONSOLE::on_render()
@@ -235,7 +320,7 @@ void CONSOLE::on_render()
     gfx_quads_drawTL(0,console_height-10.0f,screen.w,10.0f);
     gfx_quads_end();
     
-    console_height -= 10.0f;
+    console_height -= 20.0f;
     
     INSTANCE *console = current_console();
 
@@ -248,6 +333,12 @@ void CONSOLE::on_render()
 		// render prompt		
 		TEXT_CURSOR cursor;
 		gfx_text_set_cursor(&cursor, x, y, font_size, TEXTFLAG_RENDER);
+
+		RENDERINFO info;
+		info.wanted_completion = console->completion_chosen;
+		info.enum_count = 0;
+		info.current_cmd = console->completion_buffer;
+		gfx_text_set_cursor(&info.cursor, x, y+10.0f, font_size, TEXTFLAG_RENDER);
 
 		const char *prompt = "> ";
 		if(console_type)
@@ -276,6 +367,13 @@ void CONSOLE::on_render()
 		str_format(buf, sizeof(buf), "v%s", GAME_VERSION);
 		float version_width = gfx_text_width(0, font_size, buf, -1);
 		gfx_text(0, screen.w-version_width-5, y, font_size, buf, -1);
+
+		// render possible commands
+		if(console->input.get_string()[0] == 0)
+			gfx_text_ex(&info.cursor, "No matching possible", -1);
+		else
+			console_possible_commands(console->completion_buffer, console->completion_flagmask, possible_commands_render_callback, &info);
+		gfx_text_color(1,1,1,1);
 
 		// render log
 		y -= row_height;
@@ -372,8 +470,8 @@ void CONSOLE::on_console_init()
 	//
 	console_register_print_callback(client_console_print_callback, this);
 	
-	MACRO_REGISTER_COMMAND("toggle_local_console", "", con_toggle_local_console, this);
-	MACRO_REGISTER_COMMAND("toggle_remote_console", "", con_toggle_remote_console, this);
+	MACRO_REGISTER_COMMAND("toggle_local_console", "", CFGFLAG_CLIENT, con_toggle_local_console, this);
+	MACRO_REGISTER_COMMAND("toggle_remote_console", "", CFGFLAG_CLIENT, con_toggle_remote_console, this);
 }
 
 /*

@@ -1945,21 +1945,36 @@ static void con_stoprecord(void *result, void *user_data)
 	demorec_record_stop();
 }
 
+static void con_serverdummy(void *result, void *user_data)
+{
+	dbg_msg("client", "this command is not available on the client");
+}
+
 static void client_register_commands()
 {
-	MACRO_REGISTER_COMMAND("quit", "", con_quit, 0x0);
-	MACRO_REGISTER_COMMAND("connect", "s", con_connect, 0x0);
-	MACRO_REGISTER_COMMAND("disconnect", "", con_disconnect, 0x0);
-	MACRO_REGISTER_COMMAND("ping", "", con_ping, 0x0);
-	MACRO_REGISTER_COMMAND("screenshot", "", con_screenshot, 0x0);
-	MACRO_REGISTER_COMMAND("rcon", "r", con_rcon, 0x0);
-	MACRO_REGISTER_COMMAND("rcon_auth", "s", con_rcon_auth, 0x0);
+	MACRO_REGISTER_COMMAND("quit", "", CFGFLAG_CLIENT, con_quit, 0x0);
+	MACRO_REGISTER_COMMAND("connect", "s", CFGFLAG_CLIENT, con_connect, 0x0);
+	MACRO_REGISTER_COMMAND("disconnect", "", CFGFLAG_CLIENT, con_disconnect, 0x0);
+	MACRO_REGISTER_COMMAND("ping", "", CFGFLAG_CLIENT, con_ping, 0x0);
+	MACRO_REGISTER_COMMAND("screenshot", "", CFGFLAG_CLIENT, con_screenshot, 0x0);
+	MACRO_REGISTER_COMMAND("rcon", "r", CFGFLAG_CLIENT, con_rcon, 0x0);
+	MACRO_REGISTER_COMMAND("rcon_auth", "s", CFGFLAG_CLIENT, con_rcon_auth, 0x0);
 
-	MACRO_REGISTER_COMMAND("play", "r", con_play, 0x0);
-	MACRO_REGISTER_COMMAND("record", "s", con_record, 0);
-	MACRO_REGISTER_COMMAND("stoprecord", "", con_stoprecord, 0);
+	MACRO_REGISTER_COMMAND("play", "r", CFGFLAG_CLIENT, con_play, 0x0);
+	MACRO_REGISTER_COMMAND("record", "s", CFGFLAG_CLIENT, con_record, 0);
+	MACRO_REGISTER_COMMAND("stoprecord", "", CFGFLAG_CLIENT, con_stoprecord, 0);
 
-	MACRO_REGISTER_COMMAND("add_favorite", "s", con_addfavorite, 0x0);
+	MACRO_REGISTER_COMMAND("add_favorite", "s", CFGFLAG_CLIENT, con_addfavorite, 0x0);
+	
+	/* register server dummy commands for tab completion */
+	MACRO_REGISTER_COMMAND("kick", "", CFGFLAG_SERVER, con_serverdummy, 0);
+	MACRO_REGISTER_COMMAND("ban", "", CFGFLAG_SERVER, con_serverdummy, 0);
+	MACRO_REGISTER_COMMAND("unban", "", CFGFLAG_SERVER, con_serverdummy, 0);
+	MACRO_REGISTER_COMMAND("bans", "", CFGFLAG_SERVER, con_serverdummy, 0);
+	MACRO_REGISTER_COMMAND("status", "", CFGFLAG_SERVER, con_serverdummy, 0);
+	MACRO_REGISTER_COMMAND("shutdown", "", CFGFLAG_SERVER, con_serverdummy, 0);
+	/*MACRO_REGISTER_COMMAND("record", "", CFGFLAG_SERVER, con_serverdummy, 0);
+	MACRO_REGISTER_COMMAND("stoprecord", "", CFGFLAG_SERVER, con_serverdummy, 0);*/
 }
 
 void client_save_line(const char *line)

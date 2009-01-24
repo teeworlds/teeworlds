@@ -26,7 +26,7 @@ void SCOREBOARD::on_reset()
 
 void SCOREBOARD::on_console_init()
 {
-	MACRO_REGISTER_COMMAND("+scoreboard", "", con_key_scoreboard, this);
+	MACRO_REGISTER_COMMAND("+scoreboard", "", CFGFLAG_CLIENT, con_key_scoreboard, this);
 }
 
 void SCOREBOARD::render_goals(float x, float y, float w)

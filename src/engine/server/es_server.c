@@ -94,6 +94,7 @@ typedef struct
 	int snap_rate;
 	
 	int last_acked_snapshot;
+	int last_input_tick;
 	SNAPSTORAGE snapshots;
 	
 	CLIENT_INPUT latestinput;
@@ -535,8 +536,10 @@ static void reset_client(int cid)
 
 	snapstorage_purge_all(&clients[cid].snapshots);
 	clients[cid].last_acked_snapshot = -1;
+	clients[cid].last_input_tick = -1;
 	clients[cid].snap_rate = SRVCLIENT_SNAPRATE_INIT;
 	clients[cid].score = 0;
+
 }
 
 static int new_client_callback(int cid, void *user)
@@ -710,11 +713,18 @@ static void server_process_client_packet(NETCHUNK *packet)
 				clients[cid].latency = (int)(((time_get()-tagtime)*1000)/time_freq());
 
 			/* add message to report the input timing */
-			msg_pack_start_system(NETMSG_INPUTTIMING, 0);
-			msg_pack_int(tick);
-			msg_pack_int(((server_tick_start_time(tick)-time_get())*1000) / time_freq());
-			msg_pack_end();
-			server_send_msg(cid);
+			/* skip packets that are old */
+			if(tick > clients[cid].last_input_tick)
+			{
+				int time_left = ((server_tick_start_time(tick)-time_get())*1000) / time_freq();
+				msg_pack_start_system(NETMSG_INPUTTIMING, 0);
+				msg_pack_int(tick);
+				msg_pack_int(time_left);
+				msg_pack_end();
+				server_send_msg(cid);
+			}
+
+			clients[cid].last_input_tick = tick;
 
 			input = &clients[cid].inputs[clients[cid].current_input];
 			
@@ -1278,15 +1288,15 @@ static void con_stoprecord(void *result, void *user_data)
 
 static void server_register_commands()
 {
-	MACRO_REGISTER_COMMAND("kick", "i", con_kick, 0);
-	MACRO_REGISTER_COMMAND("ban", "s?i", con_ban, 0);
-	MACRO_REGISTER_COMMAND("unban", "s", con_unban, 0);
-	MACRO_REGISTER_COMMAND("bans", "", con_bans, 0);
-	MACRO_REGISTER_COMMAND("status", "", con_status, 0);
-	MACRO_REGISTER_COMMAND("shutdown", "", con_shutdown, 0);
+	MACRO_REGISTER_COMMAND("kick", "i", CFGFLAG_SERVER, con_kick, 0);
+	MACRO_REGISTER_COMMAND("ban", "s?i", CFGFLAG_SERVER, con_ban, 0);
+	MACRO_REGISTER_COMMAND("unban", "s", CFGFLAG_SERVER, con_unban, 0);
+	MACRO_REGISTER_COMMAND("bans", "", CFGFLAG_SERVER, con_bans, 0);
+	MACRO_REGISTER_COMMAND("status", "", CFGFLAG_SERVER, con_status, 0);
+	MACRO_REGISTER_COMMAND("shutdown", "", CFGFLAG_SERVER, con_shutdown, 0);
 
-	MACRO_REGISTER_COMMAND("record", "s", con_record, 0);
-	MACRO_REGISTER_COMMAND("stoprecord", "", con_stoprecord, 0);
+	MACRO_REGISTER_COMMAND("record", "s", CFGFLAG_SERVER, con_record, 0);
+	MACRO_REGISTER_COMMAND("stoprecord", "", CFGFLAG_SERVER, con_stoprecord, 0);
 }
 
 int main(int argc, char **argv)

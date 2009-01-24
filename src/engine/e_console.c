@@ -292,6 +292,19 @@ void console_execute_line_stroked(int stroke, const char *str)
 	}
 }
 
+void console_possible_commands(const char *str, int flagmask, void (*callback)(const char *cmd, void *user), void *user)
+{
+	COMMAND *cmd;
+	for (cmd = first_command; cmd; cmd = cmd->next)
+	{
+		if(cmd->flags&flagmask)
+		{
+			if(str_find_nocase(cmd->name, str))
+				callback(cmd->name, user);
+		}
+	}	
+}
+
 void console_execute_line(const char *str)
 {
 	console_execute_line_stroked(1, str);
@@ -319,18 +332,18 @@ static void console_execute_file_real(const char *filename)
 		dbg_msg("console", "failed to open '%s'", filename);
 }
 
-struct exec_file
+struct EXECFILE
 {
 	const char *filename;
-	struct exec_file *next;
+	struct EXECFILE *next;
 };
 
 void console_execute_file(const char *filename)
 {
-	static struct exec_file *first = 0;
-	struct exec_file this;
-	struct exec_file *cur;
-	struct exec_file *prev;
+	static struct EXECFILE *first = 0;
+	struct EXECFILE this;
+	struct EXECFILE *cur;
+	struct EXECFILE *prev;
 
 	/* make sure that this isn't being executed already */	
 	for(cur = first; cur; cur = cur->next)
@@ -404,11 +417,11 @@ static void str_variable_command(void *result, void *user_data)
 
 void console_init()
 {
-	MACRO_REGISTER_COMMAND("echo", "r", con_echo, 0x0);
-	MACRO_REGISTER_COMMAND("exec", "r", con_exec, 0x0);
+	MACRO_REGISTER_COMMAND("echo", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_echo, 0x0);
+	MACRO_REGISTER_COMMAND("exec", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_exec, 0x0);
 
-	#define MACRO_CONFIG_INT(name,def,min,max,flags,desc) { static INT_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?i", int_variable_command, &data) }
-	#define MACRO_CONFIG_STR(name,len,def,flags,desc) { static STR_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?r", str_variable_command, &data) }
+	#define MACRO_CONFIG_INT(name,def,min,max,flags,desc) { static INT_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?i", flags, int_variable_command, &data) }
+	#define MACRO_CONFIG_STR(name,len,def,flags,desc) { static STR_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?r", flags, str_variable_command, &data) }
 
 	#include "e_config_variables.h" 
 

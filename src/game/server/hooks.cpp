@@ -501,18 +501,18 @@ static void con_vote(void *result, void *user_data)
 
 void mods_console_init()
 {
-	MACRO_REGISTER_COMMAND("tune", "si", con_tune_param, 0);
-	MACRO_REGISTER_COMMAND("tune_reset", "", con_tune_reset, 0);
-	MACRO_REGISTER_COMMAND("tune_dump", "", con_tune_dump, 0);
+	MACRO_REGISTER_COMMAND("tune", "si", CFGFLAG_SERVER, con_tune_param, 0);
+	MACRO_REGISTER_COMMAND("tune_reset", "", CFGFLAG_SERVER, con_tune_reset, 0);
+	MACRO_REGISTER_COMMAND("tune_dump", "", CFGFLAG_SERVER, con_tune_dump, 0);
 
-	MACRO_REGISTER_COMMAND("change_map", "r", con_change_map, 0);
-	MACRO_REGISTER_COMMAND("restart", "?i", con_restart, 0);
-	MACRO_REGISTER_COMMAND("broadcast", "r", con_broadcast, 0);
-	MACRO_REGISTER_COMMAND("say", "r", con_say, 0);
-	MACRO_REGISTER_COMMAND("set_team", "ii", con_set_team, 0);
+	MACRO_REGISTER_COMMAND("change_map", "r", CFGFLAG_SERVER, con_change_map, 0);
+	MACRO_REGISTER_COMMAND("restart", "?i", CFGFLAG_SERVER, con_restart, 0);
+	MACRO_REGISTER_COMMAND("broadcast", "r", CFGFLAG_SERVER, con_broadcast, 0);
+	MACRO_REGISTER_COMMAND("say", "r", CFGFLAG_SERVER, con_say, 0);
+	MACRO_REGISTER_COMMAND("set_team", "ii", CFGFLAG_SERVER, con_set_team, 0);
 
-	MACRO_REGISTER_COMMAND("addvote", "r", con_addvote, 0);
-	MACRO_REGISTER_COMMAND("vote", "r", con_vote, 0);
+	MACRO_REGISTER_COMMAND("addvote", "r", CFGFLAG_SERVER, con_addvote, 0);
+	MACRO_REGISTER_COMMAND("vote", "r", CFGFLAG_SERVER, con_vote, 0);
 }
 
 void mods_init()

@@ -17,14 +17,23 @@ class CONSOLE : public COMPONENT
 		LINEINPUT input;
 		
 		int type;
+		int completion_enumeration_count;
 		
 	public:
+		char completion_buffer[128];
+		int completion_chosen;
+		int completion_flagmask;
+
 		INSTANCE(int t);
 
 		void execute_line(const char *line);
 		
 		void on_input(INPUT_EVENT e);
 		void print_line(const char *line);
+		
+		const char *get_string() const { return input.get_string(); }
+
+		static void possible_commands_complete_callback(const char *str, void *user);
 	};
 	
 	INSTANCE local_console;
@@ -41,6 +50,7 @@ class CONSOLE : public COMPONENT
 
 	void toggle(int type);
 
+	static void possible_commands_render_callback(const char *str, void *user);
 	static void client_console_print_callback(const char *str, void *user_data);
 	static void con_toggle_local_console(void *result, void *user_data);
 	static void con_toggle_remote_console(void *result, void *user_data);
