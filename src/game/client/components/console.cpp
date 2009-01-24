@@ -391,8 +391,13 @@ void CONSOLE::on_render()
 			{
 				if(console->command)
 				{
-					gfx_text_ex(&info.cursor, "Help: ", -1);
-					gfx_text_ex(&info.cursor, console->command->help, -1);
+					
+					char buf[512];
+					str_format(buf, sizeof(buf), "Help: %s ", console->command->help);
+					gfx_text_ex(&info.cursor, buf, -1);
+					gfx_text_color(0.75f, 0.75f, 0.75f, 1);
+					str_format(buf, sizeof(buf), "Syntax: %s %s", console->command->name, console->command->params);
+					gfx_text_ex(&info.cursor, buf, -1);
 				}
 			}
 		}
@@ -493,8 +498,8 @@ void CONSOLE::on_console_init()
 	//
 	console_register_print_callback(client_console_print_callback, this);
 	
-	MACRO_REGISTER_COMMAND("toggle_local_console", "", CFGFLAG_CLIENT, con_toggle_local_console, this, "");
-	MACRO_REGISTER_COMMAND("toggle_remote_console", "", CFGFLAG_CLIENT, con_toggle_remote_console, this, "");
+	MACRO_REGISTER_COMMAND("toggle_local_console", "", CFGFLAG_CLIENT, con_toggle_local_console, this, "Toggle local console");
+	MACRO_REGISTER_COMMAND("toggle_remote_console", "", CFGFLAG_CLIENT, con_toggle_remote_console, this, "Toggle remote console");
 }
 
 /*

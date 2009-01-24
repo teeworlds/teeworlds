@@ -1965,27 +1965,27 @@ static void con_serverdummy(void *result, void *user_data)
 
 static void client_register_commands()
 {
-	MACRO_REGISTER_COMMAND("quit", "", CFGFLAG_CLIENT, con_quit, 0x0, "");
-	MACRO_REGISTER_COMMAND("connect", "s", CFGFLAG_CLIENT, con_connect, 0x0, "");
-	MACRO_REGISTER_COMMAND("disconnect", "", CFGFLAG_CLIENT, con_disconnect, 0x0, "");
-	MACRO_REGISTER_COMMAND("ping", "", CFGFLAG_CLIENT, con_ping, 0x0, "");
-	MACRO_REGISTER_COMMAND("screenshot", "", CFGFLAG_CLIENT, con_screenshot, 0x0, "");
-	MACRO_REGISTER_COMMAND("rcon", "r", CFGFLAG_CLIENT, con_rcon, 0x0, "");
-	MACRO_REGISTER_COMMAND("rcon_auth", "s", CFGFLAG_CLIENT, con_rcon_auth, 0x0, "");
+	MACRO_REGISTER_COMMAND("quit", "", CFGFLAG_CLIENT, con_quit, 0x0, "Quit Teeworlds");
+	MACRO_REGISTER_COMMAND("connect", "s", CFGFLAG_CLIENT, con_connect, 0x0, "Connect to the specified host/ip");
+	MACRO_REGISTER_COMMAND("disconnect", "", CFGFLAG_CLIENT, con_disconnect, 0x0, "Disconnect from the server");
+	MACRO_REGISTER_COMMAND("ping", "", CFGFLAG_CLIENT, con_ping, 0x0, "Ping the current server");
+	MACRO_REGISTER_COMMAND("screenshot", "", CFGFLAG_CLIENT, con_screenshot, 0x0, "Take a screenshot");
+	MACRO_REGISTER_COMMAND("rcon", "r", CFGFLAG_CLIENT, con_rcon, 0x0, "Send specified command to rcon");
+	MACRO_REGISTER_COMMAND("rcon_auth", "s", CFGFLAG_CLIENT, con_rcon_auth, 0x0, "Authenticate to rcon");
 
-	MACRO_REGISTER_COMMAND("play", "r", CFGFLAG_CLIENT, con_play, 0x0, "");
-	MACRO_REGISTER_COMMAND("record", "s", CFGFLAG_CLIENT, con_record, 0, "");
-	MACRO_REGISTER_COMMAND("stoprecord", "", CFGFLAG_CLIENT, con_stoprecord, 0, "");
+	MACRO_REGISTER_COMMAND("play", "r", CFGFLAG_CLIENT, con_play, 0x0, "Play the file specified");
+	MACRO_REGISTER_COMMAND("record", "s", CFGFLAG_CLIENT, con_record, 0, "Record to the file");
+	MACRO_REGISTER_COMMAND("stoprecord", "", CFGFLAG_CLIENT, con_stoprecord, 0, "Stop recording");
 
-	MACRO_REGISTER_COMMAND("add_favorite", "s", CFGFLAG_CLIENT, con_addfavorite, 0x0, "");
+	MACRO_REGISTER_COMMAND("add_favorite", "s", CFGFLAG_CLIENT, con_addfavorite, 0x0, "Add a server as a favorite");
 	
 	/* register server dummy commands for tab completion */
-	MACRO_REGISTER_COMMAND("kick", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
-	MACRO_REGISTER_COMMAND("ban", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
-	MACRO_REGISTER_COMMAND("unban", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
-	MACRO_REGISTER_COMMAND("bans", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
-	MACRO_REGISTER_COMMAND("status", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
-	MACRO_REGISTER_COMMAND("shutdown", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
+	MACRO_REGISTER_COMMAND("kick", "i", CFGFLAG_SERVER, con_serverdummy, 0, "Kick player with specified id");
+	MACRO_REGISTER_COMMAND("ban", "s?i", CFGFLAG_SERVER, con_serverdummy, 0, "Ban player with ip/id for x minutes");
+	MACRO_REGISTER_COMMAND("unban", "s", CFGFLAG_SERVER, con_serverdummy, 0, "Unban ip");
+	MACRO_REGISTER_COMMAND("bans", "", CFGFLAG_SERVER, con_serverdummy, 0, "Show banlist");
+	MACRO_REGISTER_COMMAND("status", "", CFGFLAG_SERVER, con_serverdummy, 0, "List players");
+	MACRO_REGISTER_COMMAND("shutdown", "", CFGFLAG_SERVER, con_serverdummy, 0, "Shut down");
 	/*MACRO_REGISTER_COMMAND("record", "", CFGFLAG_SERVER, con_serverdummy, 0);
 	MACRO_REGISTER_COMMAND("stoprecord", "", CFGFLAG_SERVER, con_serverdummy, 0);*/
 }

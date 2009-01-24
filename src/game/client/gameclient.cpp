@@ -160,19 +160,19 @@ void GAMECLIENT::on_console_init()
 	input.add(binds);
 		
 	// add the some console commands
-	MACRO_REGISTER_COMMAND("team", "i", CFGFLAG_CLIENT, con_team, this, "");
-	MACRO_REGISTER_COMMAND("kill", "", CFGFLAG_CLIENT, con_kill, this, "");
+	MACRO_REGISTER_COMMAND("team", "i", CFGFLAG_CLIENT, con_team, this, "Switch team");
+	MACRO_REGISTER_COMMAND("kill", "", CFGFLAG_CLIENT, con_kill, this, "Kill yourself");
 	
 	// register server dummy commands for tab completion
-	MACRO_REGISTER_COMMAND("tune", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
-	MACRO_REGISTER_COMMAND("tune_reset", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
-	MACRO_REGISTER_COMMAND("tune_dump", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
-	MACRO_REGISTER_COMMAND("change_map", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
-	MACRO_REGISTER_COMMAND("restart", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
-	MACRO_REGISTER_COMMAND("broadcast", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
+	MACRO_REGISTER_COMMAND("tune", "si", CFGFLAG_SERVER, con_serverdummy, 0, "Tune variable to value");
+	MACRO_REGISTER_COMMAND("tune_reset", "", CFGFLAG_SERVER, con_serverdummy, 0, "Reset tuning");
+	MACRO_REGISTER_COMMAND("tune_dump", "", CFGFLAG_SERVER, con_serverdummy, 0, "Dump tuning");
+	MACRO_REGISTER_COMMAND("change_map", "r", CFGFLAG_SERVER, con_serverdummy, 0, "Change map");
+	MACRO_REGISTER_COMMAND("restart", "?i", CFGFLAG_SERVER, con_serverdummy, 0, "Restart in x seconds");
+	MACRO_REGISTER_COMMAND("broadcast", "r", CFGFLAG_SERVER, con_serverdummy, 0, "Broadcast message");
 	/*MACRO_REGISTER_COMMAND("say", "r", CFGFLAG_SERVER, con_serverdummy, 0);*/
-	MACRO_REGISTER_COMMAND("set_team", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
-	MACRO_REGISTER_COMMAND("addvote", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
+	MACRO_REGISTER_COMMAND("set_team", "ii", CFGFLAG_SERVER, con_serverdummy, 0, "Set team of player to team");
+	MACRO_REGISTER_COMMAND("addvote", "r", CFGFLAG_SERVER, con_serverdummy, 0, "Add a voting option");
 	/*MACRO_REGISTER_COMMAND("vote", "", CFGFLAG_SERVER, con_serverdummy, 0);*/
 	
 	// let all the other components register their console commands

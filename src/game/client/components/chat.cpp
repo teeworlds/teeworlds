@@ -41,9 +41,9 @@ void CHAT::con_chat(void *result, void *user_data)
 
 void CHAT::on_console_init()
 {
-	MACRO_REGISTER_COMMAND("say", "r", CFGFLAG_CLIENT, con_say, this, "");
-	MACRO_REGISTER_COMMAND("say_team", "r", CFGFLAG_CLIENT, con_sayteam, this, "");
-	MACRO_REGISTER_COMMAND("chat", "s", CFGFLAG_CLIENT, con_chat, this, "");
+	MACRO_REGISTER_COMMAND("say", "r", CFGFLAG_CLIENT, con_say, this, "Say in chat");
+	MACRO_REGISTER_COMMAND("say_team", "r", CFGFLAG_CLIENT, con_sayteam, this, "Say in team chat");
+	MACRO_REGISTER_COMMAND("chat", "s", CFGFLAG_CLIENT, con_chat, this, "Enable chat with all/team mode");
 }
 
 bool CHAT::on_input(INPUT_EVENT e)

@@ -49,20 +49,20 @@ static void con_key_input_nextprev_weapon(void *result, void *user_data)
 void CONTROLS::on_console_init()
 {
 	// game commands
-	MACRO_REGISTER_COMMAND("+left", "", CFGFLAG_CLIENT, con_key_input_state, &input_direction_left, "");
-	MACRO_REGISTER_COMMAND("+right", "", CFGFLAG_CLIENT, con_key_input_state, &input_direction_right, "");
-	MACRO_REGISTER_COMMAND("+jump", "", CFGFLAG_CLIENT, con_key_input_state, &input_data.jump, "");
-	MACRO_REGISTER_COMMAND("+hook", "", CFGFLAG_CLIENT, con_key_input_state, &input_data.hook, "");
-	MACRO_REGISTER_COMMAND("+fire", "", CFGFLAG_CLIENT, con_key_input_counter, &input_data.fire, "");
+	MACRO_REGISTER_COMMAND("+left", "", CFGFLAG_CLIENT, con_key_input_state, &input_direction_left, "Move left");
+	MACRO_REGISTER_COMMAND("+right", "", CFGFLAG_CLIENT, con_key_input_state, &input_direction_right, "Move right");
+	MACRO_REGISTER_COMMAND("+jump", "", CFGFLAG_CLIENT, con_key_input_state, &input_data.jump, "Jump");
+	MACRO_REGISTER_COMMAND("+hook", "", CFGFLAG_CLIENT, con_key_input_state, &input_data.hook, "Hook");
+	MACRO_REGISTER_COMMAND("+fire", "", CFGFLAG_CLIENT, con_key_input_counter, &input_data.fire, "Fire");
 
-	{ static INPUTSET set = {this, &input_data.wanted_weapon, 1};  MACRO_REGISTER_COMMAND("+weapon1", "", CFGFLAG_CLIENT, con_key_input_set, (void *)&set, ""); }
-	{ static INPUTSET set = {this, &input_data.wanted_weapon, 2};  MACRO_REGISTER_COMMAND("+weapon2", "", CFGFLAG_CLIENT, con_key_input_set, (void *)&set, ""); }
-	{ static INPUTSET set = {this, &input_data.wanted_weapon, 3};  MACRO_REGISTER_COMMAND("+weapon3", "", CFGFLAG_CLIENT, con_key_input_set, (void *)&set, ""); }
-	{ static INPUTSET set = {this, &input_data.wanted_weapon, 4};  MACRO_REGISTER_COMMAND("+weapon4", "", CFGFLAG_CLIENT, con_key_input_set, (void *)&set, ""); }
-	{ static INPUTSET set = {this, &input_data.wanted_weapon, 5};  MACRO_REGISTER_COMMAND("+weapon5", "", CFGFLAG_CLIENT, con_key_input_set, (void *)&set, ""); }
+	{ static INPUTSET set = {this, &input_data.wanted_weapon, 1};  MACRO_REGISTER_COMMAND("+weapon1", "", CFGFLAG_CLIENT, con_key_input_set, (void *)&set, "Switch to hammer"); }
+	{ static INPUTSET set = {this, &input_data.wanted_weapon, 2};  MACRO_REGISTER_COMMAND("+weapon2", "", CFGFLAG_CLIENT, con_key_input_set, (void *)&set, "Switch to gun"); }
+	{ static INPUTSET set = {this, &input_data.wanted_weapon, 3};  MACRO_REGISTER_COMMAND("+weapon3", "", CFGFLAG_CLIENT, con_key_input_set, (void *)&set, "Switch to shotgun"); }
+	{ static INPUTSET set = {this, &input_data.wanted_weapon, 4};  MACRO_REGISTER_COMMAND("+weapon4", "", CFGFLAG_CLIENT, con_key_input_set, (void *)&set, "Switch to grenade"); }
+	{ static INPUTSET set = {this, &input_data.wanted_weapon, 5};  MACRO_REGISTER_COMMAND("+weapon5", "", CFGFLAG_CLIENT, con_key_input_set, (void *)&set, "Switch to rifle"); }
 
-	{ static INPUTSET set = {this, &input_data.next_weapon, 0};  MACRO_REGISTER_COMMAND("+nextweapon", "", CFGFLAG_CLIENT, con_key_input_nextprev_weapon, (void *)&set, ""); }
-	{ static INPUTSET set = {this, &input_data.prev_weapon, 0};  MACRO_REGISTER_COMMAND("+prevweapon", "", CFGFLAG_CLIENT, con_key_input_nextprev_weapon, (void *)&set, ""); }
+	{ static INPUTSET set = {this, &input_data.next_weapon, 0};  MACRO_REGISTER_COMMAND("+nextweapon", "", CFGFLAG_CLIENT, con_key_input_nextprev_weapon, (void *)&set, "Switch to next weapon"); }
+	{ static INPUTSET set = {this, &input_data.prev_weapon, 0};  MACRO_REGISTER_COMMAND("+prevweapon", "", CFGFLAG_CLIENT, con_key_input_nextprev_weapon, (void *)&set, "Switch to previous weapon"); }
 }
 
 void CONTROLS::on_message(int msg, void *rawmsg)

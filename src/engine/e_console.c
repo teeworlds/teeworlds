@@ -430,8 +430,8 @@ static void str_variable_command(void *result, void *user_data)
 
 void console_init()
 {
-	MACRO_REGISTER_COMMAND("echo", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_echo, 0x0, "");
-	MACRO_REGISTER_COMMAND("exec", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_exec, 0x0, "");
+	MACRO_REGISTER_COMMAND("echo", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_echo, 0x0, "Echo the text");
+	MACRO_REGISTER_COMMAND("exec", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_exec, 0x0, "Execute the specified file");
 
 	#define MACRO_CONFIG_INT(name,def,min,max,flags,desc) { static INT_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?i", flags, int_variable_command, &data, desc) }
 	#define MACRO_CONFIG_STR(name,len,def,flags,desc) { static STR_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?r", flags, str_variable_command, &data, desc) }

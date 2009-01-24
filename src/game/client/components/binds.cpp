@@ -114,10 +114,10 @@ void BINDS::set_defaults()
 void BINDS::on_console_init()
 {
 	// bindings
-	MACRO_REGISTER_COMMAND("bind", "sr", CFGFLAG_CLIENT, con_bind, this, "");
-	MACRO_REGISTER_COMMAND("unbind", "s", CFGFLAG_CLIENT, con_unbind, this, "");
-	MACRO_REGISTER_COMMAND("unbindall", "", CFGFLAG_CLIENT, con_unbindall, this, "");
-	MACRO_REGISTER_COMMAND("dump_binds", "", CFGFLAG_CLIENT, con_dump_binds, this, "");
+	MACRO_REGISTER_COMMAND("bind", "sr", CFGFLAG_CLIENT, con_bind, this, "Bind key to execute the command");
+	MACRO_REGISTER_COMMAND("unbind", "s", CFGFLAG_CLIENT, con_unbind, this, "Unbind key");
+	MACRO_REGISTER_COMMAND("unbindall", "", CFGFLAG_CLIENT, con_unbindall, this, "Unbind all keys");
+	MACRO_REGISTER_COMMAND("dump_binds", "", CFGFLAG_CLIENT, con_dump_binds, this, "Dump binds");
 	
 	// default bindings
 	set_defaults();

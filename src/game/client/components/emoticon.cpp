@@ -25,8 +25,8 @@ void EMOTICON::con_emote(void *result, void *user_data)
 
 void EMOTICON::on_console_init()
 {
-	MACRO_REGISTER_COMMAND("+emote", "", CFGFLAG_CLIENT, con_key_emoticon, this, "");
-	MACRO_REGISTER_COMMAND("emote", "i", CFGFLAG_CLIENT, con_emote, this, "");
+	MACRO_REGISTER_COMMAND("+emote", "", CFGFLAG_CLIENT, con_key_emoticon, this, "Open emote selector");
+	MACRO_REGISTER_COMMAND("emote", "i", CFGFLAG_CLIENT, con_emote, this, "Use emote");
 }
 
 void EMOTICON::on_reset()
