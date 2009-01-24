@@ -25,13 +25,15 @@ struct PINGCONFIG
 	int flux;
 	int spike;
 	int loss;
+	int delay;
+	int delay_freq;
 };
 
 static PINGCONFIG config_pings[] = {
-//		base	flux	spike	loss
-		{0,		0,		0,		0},
-		{40,	20,		0,		0},
-		{140,	40,		0,		0},
+//		base	flux	spike	loss	delay	delayfreq
+		{0,		0,		0,		0,		0,		0},
+		{40,	20,		100,		0,		0,		0},
+		{140,	40,		200,		0,		0,		0},
 };
 
 static int config_numpingconfs = sizeof(config_pings)/sizeof(PINGCONFIG);
@@ -46,6 +48,7 @@ int run(int port, NETADDR dest)
 	
 	char buffer[1024*2];
 	int id = 0;
+	int delaycounter = 0;
 	
 	while(1)
 	{
@@ -97,7 +100,7 @@ int run(int port, NETADDR dest)
 			}
 			last = p;
 
-			// set data in packet			
+			// set data in packet
 			p->timestamp = time_get();
 			p->data_size = bytes;
 			p->id = id++;
@@ -113,27 +116,43 @@ int run(int port, NETADDR dest)
 						p->data_size = 6;
 				}
 			}
-
+			
+			if(delaycounter <= 0)
+			{
+				if(ping.delay)
+					p->timestamp += (time_freq()*1000)/ping.delay;
+				delaycounter = ping.delay_freq;
+			}
+			delaycounter--;
+	
 			if(config_log)
 				dbg_msg("crapnet", "<< %08d %d.%d.%d.%d:%5d (%d)", p->id, from.ip[0], from.ip[1], from.ip[2], from.ip[3], from.port, p->data_size);
 		}
 		
 		//
+		/*while(1)
+		{*/
+		PACKET *p = 0;
+		PACKET *next = first;
 		while(1)
 		{
-			if(first && (time_get()-first->timestamp) > current_latency)
+			p = next;
+			if(!p)
+				break;
+			next = p->next;
+				
+			if((time_get()-p->timestamp) > current_latency)
 			{
-				PACKET *p = first;
 				char flags[] = "  ";
 
-				if(config_reorder && (rand()%2) == 0 && first->next)
+				if(config_reorder && (rand()%2) == 0 && p->next)
 				{
 					flags[0] = 'R';
 					p = first->next;
 				}
 				
 				if(p->next)
-					p->next->prev = 0;
+					p->next->prev = p->prev;
 				else
 					last = p->prev;
 					
@@ -142,12 +161,12 @@ int run(int port, NETADDR dest)
 				else
 					first = p->next;
 					
-				PACKET *cur = first;
+				/*PACKET *cur = first;
 				while(cur)
 				{
 					dbg_assert(cur != p, "p still in list");
 					cur = cur->next;
-				}
+				}*/
 					
 				// send and remove packet
 				//if((rand()%20) != 0) // heavy packetloss
@@ -177,10 +196,8 @@ int run(int port, NETADDR dest)
 
 				mem_free(p);
 			}
-			else
-				break;
 		}
-		
+			
 		thread_sleep(1);
 	}
 }

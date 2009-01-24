@@ -28,7 +28,7 @@
 #include <mastersrv/mastersrv.h>
 #include <versionsrv/versionsrv.h>
 
-const int prediction_margin = 1000/50; /* magic network prediction value */
+const int prediction_margin = 1000/50/2; /* magic network prediction value */
 
 /*
 	Server Time
@@ -236,8 +236,8 @@ static void st_init(SMOOTHTIME *st, int64 target)
 	st->snap = time_get();
 	st->current = target;
 	st->target = target;
-	st->adjustspeed[0] = 0.2f;
-	st->adjustspeed[1] = 0.2f;
+	st->adjustspeed[0] = 0.3f;
+	st->adjustspeed[1] = 0.3f;
 	graph_init(&st->graph, 0.0f, 0.5f);
 }
 
@@ -280,22 +280,28 @@ static void st_update(SMOOTHTIME *st, GRAPH *graph, int64 target, int time_left,
 	
 	if(time_left < 0)
 	{
+		int is_spike = 0;
 		if(time_left < -50)
-			st->spikecounter += 5;
-
-		if(st->spikecounter > 15)
 		{
-			graph_add(graph, time_left, 1,0,0);
-			if(st->adjustspeed[adjust_direction] < 30.0f)
-				st->adjustspeed[adjust_direction] *= 2.0f;
+			is_spike = 1;
+			
+			st->spikecounter += 5;
+			if(st->spikecounter > 50)
+				st->spikecounter = 50;
 		}
-		else
+		
+		if(is_spike && st->spikecounter < 15)
 		{
 			/* ignore this ping spike */
 			update_timer = 0;
 			graph_add(graph, time_left, 1,1,0);
 		}
-		
+		else
+		{
+			graph_add(graph, time_left, 1,0,0);
+			if(st->adjustspeed[adjust_direction] < 30.0f)
+				st->adjustspeed[adjust_direction] *= 2.0f;
+		}
 	}
 	else
 	{
@@ -305,8 +311,8 @@ static void st_update(SMOOTHTIME *st, GRAPH *graph, int64 target, int time_left,
 		graph_add(graph, time_left, 0,1,0);
 		
 		st->adjustspeed[adjust_direction] *= 0.95f;
-		if(st->adjustspeed[adjust_direction] < 1.0f)
-			st->adjustspeed[adjust_direction] = 1.0f;
+		if(st->adjustspeed[adjust_direction] < 2.0f)
+			st->adjustspeed[adjust_direction] = 2.0f;
 	}
 	
 	last_input_timeleft = time_left;
