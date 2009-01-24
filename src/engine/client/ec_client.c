@@ -97,6 +97,10 @@ static float intratick = 0;
 static float ticktime = 0;
 static int prev_tick = 0;
 
+/* */
+/*static int predictiontime_pingspikecounter = 0;
+static int gametime_pingspikecounter = 0;*/
+
 /* predicted time */
 static int current_predtick = 0;
 static float predintratick = 0;
@@ -222,8 +226,9 @@ typedef struct
 	int64 tlast;
 	GRAPH graph;
 	
-	float up_adjustspeed;
-	float down_adjustspeed;
+	int spikecounter;
+	
+	float adjustspeed[2]; /* 0 = down, 1 = up */
 } SMOOTHTIME;
 
 static void st_init(SMOOTHTIME *st, int64 target)
@@ -231,8 +236,8 @@ static void st_init(SMOOTHTIME *st, int64 target)
 	st->snap = time_get();
 	st->current = target;
 	st->target = target;
-	st->up_adjustspeed = 1.0f;
-	st->down_adjustspeed = 0.2f;
+	st->adjustspeed[0] = 0.2f;
+	st->adjustspeed[1] = 0.2f;
 	graph_init(&st->graph, 0.0f, 0.5f);
 }
 
@@ -246,9 +251,9 @@ static int64 st_get(SMOOTHTIME *st, int64 now)
 	/* it's faster to adjust upward instead of downward */
 	/* we might need to adjust these abit */
 
-	adjust_speed = st->down_adjustspeed;
+	adjust_speed = st->adjustspeed[0];
 	if(t > c)
-		adjust_speed = st->up_adjustspeed;
+		adjust_speed = st->adjustspeed[1];
 	
 	a = ((now-st->snap)/(float)time_freq()) * adjust_speed;
 	if(a > 1.0f)
@@ -261,12 +266,53 @@ static int64 st_get(SMOOTHTIME *st, int64 now)
 	return r;
 }
 
-static void st_update(SMOOTHTIME *st, int64 target)
+static void st_update_int(SMOOTHTIME *st, int64 target)
 {
 	int64 now = time_get();
 	st->current = st_get(st, now);
 	st->snap = now;
 	st->target = target;
+}
+
+static void st_update(SMOOTHTIME *st, GRAPH *graph, int64 target, int time_left, int adjust_direction)
+{
+	int update_timer = 1;
+	
+	if(time_left < 0)
+	{
+		if(time_left < -50)
+			st->spikecounter += 5;
+
+		if(st->spikecounter > 15)
+		{
+			graph_add(graph, time_left, 1,0,0);
+			if(st->adjustspeed[adjust_direction] < 30.0f)
+				st->adjustspeed[adjust_direction] *= 2.0f;
+		}
+		else
+		{
+			/* ignore this ping spike */
+			update_timer = 0;
+			graph_add(graph, time_left, 1,1,0);
+		}
+		
+	}
+	else
+	{
+		if(st->spikecounter)
+			st->spikecounter--;
+			
+		graph_add(graph, time_left, 0,1,0);
+		
+		st->adjustspeed[adjust_direction] *= 0.95f;
+		if(st->adjustspeed[adjust_direction] < 1.0f)
+			st->adjustspeed[adjust_direction] = 1.0f;
+	}
+	
+	last_input_timeleft = time_left;
+	
+	if(update_timer)
+		st_update_int(st, target);
 }
 
 static SMOOTHTIME game_time;
@@ -724,7 +770,7 @@ static void client_debug_render()
 
 	str_format(buffer, sizeof(buffer), "pred: %d ms  %3.2f", 
 		(int)((st_get(&predicted_time, now)-st_get(&game_time, now))*1000/(float)time_freq()),
-		predicted_time.up_adjustspeed);
+		predicted_time.adjustspeed[1]);
 	gfx_quads_text(2, 70, 16, 1,1,1,1, buffer);
 	
 	/* render graphs */
@@ -1075,33 +1121,20 @@ static void client_process_packet(NETCHUNK *packet)
 				
 				/* adjust our prediction time */
 				int k;
-				
-				if(time_left < 0)
-				{
-					graph_add(&inputtime_margin_graph, time_left, 1,0,0);
-					if(predicted_time.up_adjustspeed < 30.0f)
-						predicted_time.up_adjustspeed *= 2.0f;
-				}
-				else
-				{
-					graph_add(&inputtime_margin_graph, time_left, 0,1,0);
-					
-					predicted_time.up_adjustspeed *= 0.95f;
-					if(predicted_time.up_adjustspeed < 1.0f)
-						predicted_time.up_adjustspeed = 1.0f;
-				}
-				last_input_timeleft = time_left;
-				
-				for(k = 0; k < 200; k++) /* TODO: do this better */
+				int64 target = 0;
+				for(k = 0; k < 200; k++)
 				{
 					if(inputs[k].tick == input_predtick)
 					{
-						/*-1000/50 prediction_margin */
-						int64 target = inputs[k].predicted_time + (time_get() - inputs[k].time);
-						st_update(&predicted_time, target - (int64)(((time_left-prediction_margin)/1000.0f)*time_freq()));
+						target = inputs[k].predicted_time + (time_get() - inputs[k].time);
+						target = target - (int64)(((time_left-prediction_margin)/1000.0f)*time_freq());
+						//st_update(&predicted_time, );
 						break;
 					}
 				}
+				
+				if(target)
+					st_update(&predicted_time, &inputtime_margin_graph, target, time_left, 1);
 			}
 			else if(msg == NETMSG_SNAP || msg == NETMSG_SNAPSINGLE || msg == NETMSG_SNAPEMPTY)
 			{
@@ -1246,28 +1279,6 @@ static void client_process_packet(NETCHUNK *packet)
 						/* add new */
 						snapstorage_add(&snapshot_storage, game_tick, time_get(), snapsize, (SNAPSHOT*)tmpbuffer3, 1);
 
-						/* adjust gametime timer */
-						{
-							int64 now = st_get(&game_time, time_get());
-							int64 tickstart = game_tick*time_freq()/50;
-							int64 time_left = (tickstart-now)*1000 / time_freq();
-
-							if(time_left < 0)
-							{
-								graph_add(&gametime_margin_graph, time_left, 1,0,0);
-								if(game_time.down_adjustspeed < 30.0f)
-									game_time.down_adjustspeed *= 2.0f;
-							}
-							else
-							{
-								graph_add(&gametime_margin_graph, time_left, 0,1,0);
-								
-								game_time.down_adjustspeed *= 0.95f;
-								if(game_time.down_adjustspeed < 1.0f)
-									game_time.down_adjustspeed = 1.0f;
-							}
-						}
-						
 						/* add snapshot to demo */
 						if(demorec_isrecording())
 						{
@@ -1295,20 +1306,22 @@ static void client_process_packet(NETCHUNK *packet)
 						{
 							/* start at 200ms and work from there */
 							st_init(&predicted_time, game_tick*time_freq()/50);
-							predicted_time.up_adjustspeed = 1000.0f;
+							predicted_time.adjustspeed[1] = 1000.0f;
 							st_init(&game_time, (game_tick-1)*time_freq()/50);
 							snapshots[SNAP_PREV] = snapshot_storage.first;
 							snapshots[SNAP_CURRENT] = snapshot_storage.last;
 							local_start_time = time_get();
 							client_set_state(CLIENTSTATE_ONLINE);
 						}
-						
-						/*{
-							int64 now = time_get();
-							graph_add(&predict_graph, (st_get(&predicted_time, now)-st_get(&game_time, now))/(float)time_freq());
-						}*/
-						
-						st_update(&game_time, (game_tick-1)*time_freq()/50);
+
+						/* adjust game time */
+						{
+							int64 now = st_get(&game_time, time_get());
+							int64 tickstart = game_tick*time_freq()/50;
+							int64 time_left = (tickstart-now)*1000 / time_freq();
+							/*st_update(&game_time, (game_tick-1)*time_freq()/50);*/
+							st_update(&game_time, &gametime_margin_graph, (game_tick-1)*time_freq()/50, time_left, 0);
+						}
 						
 						/* ack snapshot */
 						ack_game_tick = game_tick;
@@ -1494,7 +1507,7 @@ static void client_update()
 			prevtick_start = prev_pred_tick*time_freq()/50;
 			predintratick = (pred_now - prevtick_start) / (float)(curtick_start-prevtick_start);
 			
-			if(new_pred_tick < snapshots[SNAP_PREV]->tick-SERVER_TICK_SPEED/10 || new_pred_tick > snapshots[SNAP_PREV]->tick+SERVER_TICK_SPEED)
+			if(new_pred_tick < snapshots[SNAP_PREV]->tick-SERVER_TICK_SPEED || new_pred_tick > snapshots[SNAP_PREV]->tick+SERVER_TICK_SPEED)
 			{
 				dbg_msg("client", "prediction time reset!");
 				st_init(&predicted_time, snapshots[SNAP_CURRENT]->tick*time_freq()/50);
