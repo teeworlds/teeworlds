@@ -41,7 +41,7 @@ class Sprite(Struct):
 		self.h = Int(h)
 
 class Pickup(Struct):
-	def __init__(self, name="", respawntime=20, spawndelay=0):
+	def __init__(self, name="", respawntime=15, spawndelay=0):
 		Struct.__init__(self, "PICKUPSPEC")
 		self.name = String(name)
 		self.respawntime = Int(respawntime)
