@@ -136,7 +136,7 @@ void CONSOLE::INSTANCE::on_input(INPUT_EVENT e)
 			console_possible_commands(completion_buffer, completion_flagmask, possible_commands_complete_callback, this);
 
 			// handle wrapping
-			if(completion_chosen >= completion_enumeration_count)
+			if(completion_enumeration_count && completion_chosen >= completion_enumeration_count)
 			{
 				completion_chosen %= completion_enumeration_count;
 				completion_enumeration_count = 0;
