@@ -49,6 +49,8 @@ CONSOLE::INSTANCE::INSTANCE(int t)
 
 	completion_buffer[0] = 0;
 	completion_chosen = -1;
+	
+	command = 0x0;
 }
 
 void CONSOLE::INSTANCE::execute_line(const char *line)
@@ -146,6 +148,18 @@ void CONSOLE::INSTANCE::on_input(INPUT_EVENT e)
 		{
 			completion_chosen = -1;
 			str_copy(completion_buffer, input.get_string(), sizeof(completion_buffer));
+		}
+
+		// find the current command
+		{
+			char buf[64] = {0};
+			const char *src = get_string();
+			int i = 0;
+			for(; i < (int)sizeof(buf) && *src && *src != ' '  && *src != ' '; i++, src++)
+				buf[i] = *src;
+			buf[i] = 0;
+			
+			command = console_get_command(buf);
 		}
 	}
 	
@@ -320,7 +334,7 @@ void CONSOLE::on_render()
     gfx_quads_drawTL(0,console_height-10.0f,screen.w,10.0f);
     gfx_quads_end();
     
-    console_height -= 20.0f;
+    console_height -= 22.0f;
     
     INSTANCE *console = current_console();
 
@@ -338,7 +352,7 @@ void CONSOLE::on_render()
 		info.wanted_completion = console->completion_chosen;
 		info.enum_count = 0;
 		info.current_cmd = console->completion_buffer;
-		gfx_text_set_cursor(&info.cursor, x, y+10.0f, font_size, TEXTFLAG_RENDER);
+		gfx_text_set_cursor(&info.cursor, x, y+12.0f, font_size, TEXTFLAG_RENDER);
 
 		const char *prompt = "> ";
 		if(console_type)
@@ -370,7 +384,18 @@ void CONSOLE::on_render()
 
 		// render possible commands
 		if(console->input.get_string()[0] != 0)
+		{
 			console_possible_commands(console->completion_buffer, console->completion_flagmask, possible_commands_render_callback, &info);
+			
+			if(info.enum_count <= 0)
+			{
+				if(console->command)
+				{
+					gfx_text_ex(&info.cursor, "Help: ", -1);
+					gfx_text_ex(&info.cursor, console->command->help, -1);
+				}
+			}
+		}
 		gfx_text_color(1,1,1,1);
 
 		// render log
@@ -468,8 +493,8 @@ void CONSOLE::on_console_init()
 	//
 	console_register_print_callback(client_console_print_callback, this);
 	
-	MACRO_REGISTER_COMMAND("toggle_local_console", "", CFGFLAG_CLIENT, con_toggle_local_console, this);
-	MACRO_REGISTER_COMMAND("toggle_remote_console", "", CFGFLAG_CLIENT, con_toggle_remote_console, this);
+	MACRO_REGISTER_COMMAND("toggle_local_console", "", CFGFLAG_CLIENT, con_toggle_local_console, this, "");
+	MACRO_REGISTER_COMMAND("toggle_remote_console", "", CFGFLAG_CLIENT, con_toggle_remote_console, this, "");
 }
 
 /*

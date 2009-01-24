@@ -1288,15 +1288,15 @@ static void con_stoprecord(void *result, void *user_data)
 
 static void server_register_commands()
 {
-	MACRO_REGISTER_COMMAND("kick", "i", CFGFLAG_SERVER, con_kick, 0);
-	MACRO_REGISTER_COMMAND("ban", "s?i", CFGFLAG_SERVER, con_ban, 0);
-	MACRO_REGISTER_COMMAND("unban", "s", CFGFLAG_SERVER, con_unban, 0);
-	MACRO_REGISTER_COMMAND("bans", "", CFGFLAG_SERVER, con_bans, 0);
-	MACRO_REGISTER_COMMAND("status", "", CFGFLAG_SERVER, con_status, 0);
-	MACRO_REGISTER_COMMAND("shutdown", "", CFGFLAG_SERVER, con_shutdown, 0);
+	MACRO_REGISTER_COMMAND("kick", "i", CFGFLAG_SERVER, con_kick, 0, "");
+	MACRO_REGISTER_COMMAND("ban", "s?i", CFGFLAG_SERVER, con_ban, 0, "");
+	MACRO_REGISTER_COMMAND("unban", "s", CFGFLAG_SERVER, con_unban, 0, "");
+	MACRO_REGISTER_COMMAND("bans", "", CFGFLAG_SERVER, con_bans, 0, "");
+	MACRO_REGISTER_COMMAND("status", "", CFGFLAG_SERVER, con_status, 0, "");
+	MACRO_REGISTER_COMMAND("shutdown", "", CFGFLAG_SERVER, con_shutdown, 0, "");
 
-	MACRO_REGISTER_COMMAND("record", "s", CFGFLAG_SERVER, con_record, 0);
-	MACRO_REGISTER_COMMAND("stoprecord", "", CFGFLAG_SERVER, con_stoprecord, 0);
+	MACRO_REGISTER_COMMAND("record", "s", CFGFLAG_SERVER, con_record, 0, "");
+	MACRO_REGISTER_COMMAND("stoprecord", "", CFGFLAG_SERVER, con_stoprecord, 0, "");
 }
 
 int main(int argc, char **argv)

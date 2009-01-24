@@ -305,6 +305,19 @@ void console_possible_commands(const char *str, int flagmask, void (*callback)(c
 	}	
 }
 
+
+COMMAND *console_get_command(const char *str)
+{
+	COMMAND *cmd;
+	for (cmd = first_command; cmd; cmd = cmd->next)
+	{
+		if(str_comp_nocase(cmd->name, str) == 0)
+			return cmd;
+	}	
+	
+	return 0x0;
+}
+
 void console_execute_line(const char *str)
 {
 	console_execute_line_stroked(1, str);
@@ -417,11 +430,11 @@ static void str_variable_command(void *result, void *user_data)
 
 void console_init()
 {
-	MACRO_REGISTER_COMMAND("echo", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_echo, 0x0);
-	MACRO_REGISTER_COMMAND("exec", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_exec, 0x0);
+	MACRO_REGISTER_COMMAND("echo", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_echo, 0x0, "");
+	MACRO_REGISTER_COMMAND("exec", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_exec, 0x0, "");
 
-	#define MACRO_CONFIG_INT(name,def,min,max,flags,desc) { static INT_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?i", flags, int_variable_command, &data) }
-	#define MACRO_CONFIG_STR(name,len,def,flags,desc) { static STR_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?r", flags, str_variable_command, &data) }
+	#define MACRO_CONFIG_INT(name,def,min,max,flags,desc) { static INT_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?i", flags, int_variable_command, &data, desc) }
+	#define MACRO_CONFIG_STR(name,len,def,flags,desc) { static STR_VARIABLE_DATA data = { &config_get_ ## name, &config_set_ ## name }; MACRO_REGISTER_COMMAND(#name, "?r", flags, str_variable_command, &data, desc) }
 
 	#include "e_config_variables.h" 
 

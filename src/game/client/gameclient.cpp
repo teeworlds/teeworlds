@@ -160,19 +160,19 @@ void GAMECLIENT::on_console_init()
 	input.add(binds);
 		
 	// add the some console commands
-	MACRO_REGISTER_COMMAND("team", "i", CFGFLAG_CLIENT, con_team, this);
-	MACRO_REGISTER_COMMAND("kill", "", CFGFLAG_CLIENT, con_kill, this);
+	MACRO_REGISTER_COMMAND("team", "i", CFGFLAG_CLIENT, con_team, this, "");
+	MACRO_REGISTER_COMMAND("kill", "", CFGFLAG_CLIENT, con_kill, this, "");
 	
 	// register server dummy commands for tab completion
-	MACRO_REGISTER_COMMAND("tune", "", CFGFLAG_SERVER, con_serverdummy, 0);
-	MACRO_REGISTER_COMMAND("tune_reset", "", CFGFLAG_SERVER, con_serverdummy, 0);
-	MACRO_REGISTER_COMMAND("tune_dump", "", CFGFLAG_SERVER, con_serverdummy, 0);
-	MACRO_REGISTER_COMMAND("change_map", "", CFGFLAG_SERVER, con_serverdummy, 0);
-	MACRO_REGISTER_COMMAND("restart", "", CFGFLAG_SERVER, con_serverdummy, 0);
-	MACRO_REGISTER_COMMAND("broadcast", "", CFGFLAG_SERVER, con_serverdummy, 0);
+	MACRO_REGISTER_COMMAND("tune", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
+	MACRO_REGISTER_COMMAND("tune_reset", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
+	MACRO_REGISTER_COMMAND("tune_dump", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
+	MACRO_REGISTER_COMMAND("change_map", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
+	MACRO_REGISTER_COMMAND("restart", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
+	MACRO_REGISTER_COMMAND("broadcast", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
 	/*MACRO_REGISTER_COMMAND("say", "r", CFGFLAG_SERVER, con_serverdummy, 0);*/
-	MACRO_REGISTER_COMMAND("set_team", "", CFGFLAG_SERVER, con_serverdummy, 0);
-	MACRO_REGISTER_COMMAND("addvote", "", CFGFLAG_SERVER, con_serverdummy, 0);
+	MACRO_REGISTER_COMMAND("set_team", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
+	MACRO_REGISTER_COMMAND("addvote", "", CFGFLAG_SERVER, con_serverdummy, 0, "");
 	/*MACRO_REGISTER_COMMAND("vote", "", CFGFLAG_SERVER, con_serverdummy, 0);*/
 	
 	// let all the other components register their console commands

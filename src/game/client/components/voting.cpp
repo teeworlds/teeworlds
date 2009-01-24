@@ -88,8 +88,8 @@ void VOTING::on_reset()
 
 void VOTING::on_console_init()
 {
-	MACRO_REGISTER_COMMAND("callvote", "sr", CFGFLAG_CLIENT, con_callvote, this);
-	MACRO_REGISTER_COMMAND("vote", "r", CFGFLAG_CLIENT, con_vote, this);
+	MACRO_REGISTER_COMMAND("callvote", "sr", CFGFLAG_CLIENT, con_callvote, this, "");
+	MACRO_REGISTER_COMMAND("vote", "r", CFGFLAG_CLIENT, con_vote, this, "");
 }
 
 void VOTING::on_message(int msgtype, void *rawmsg)

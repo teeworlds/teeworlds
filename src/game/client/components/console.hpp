@@ -23,6 +23,8 @@ class CONSOLE : public COMPONENT
 		char completion_buffer[128];
 		int completion_chosen;
 		int completion_flagmask;
+		
+		COMMAND *command;
 
 		INSTANCE(int t);
 

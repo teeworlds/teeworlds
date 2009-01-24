@@ -83,8 +83,8 @@ void engine_init(const char *appname)
 	
 	jobs_initpool(&hostlookuppool, 1);
 
-	MACRO_REGISTER_COMMAND("dbg_dumpmem", "", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_dbg_dumpmem, 0x0);
-	MACRO_REGISTER_COMMAND("dbg_lognetwork", "", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_dbg_lognetwork, 0x0);
+	MACRO_REGISTER_COMMAND("dbg_dumpmem", "", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_dbg_dumpmem, 0x0, "");
+	MACRO_REGISTER_COMMAND("dbg_lognetwork", "", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_dbg_lognetwork, 0x0, "");
 	
 	/* reset the config */
 	config_reset();
