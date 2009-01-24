@@ -187,12 +187,12 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 		SERVER_INFO *item = client_serverbrowse_sorted_get(item_index);
 		RECT row;
         RECT select_hit_box;
-			
+		
 		int selected = strcmp(item->address, config.ui_server_address) == 0; //selected_index==item_index;
-				
+		
 		ui_hsplit_t(&view, 17.0f, &row, &view);
 		select_hit_box = row;
-	
+		
 		if(selected)
 		{
 			selected_index = i;
@@ -340,10 +340,7 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 	
 	// render status
 	char buf[128];
-	if(client_serverbrowse_refreshingmasters())
-		str_format(buf, sizeof(buf), "Refreshing master servers...");
-	else
-		str_format(buf, sizeof(buf), "%d of %d servers, %d players", client_serverbrowse_sorted_num(), client_serverbrowse_num(), num_players);
+	str_format(buf, sizeof(buf), "%d of %d servers, %d players", client_serverbrowse_sorted_num(), client_serverbrowse_num(), num_players);
 	ui_vsplit_r(&status, gfx_text_width(0, 14.0f, buf, -1), 0, &status);
 	ui_do_label(&status, buf, 14.0f, -1);
 }
@@ -618,9 +615,11 @@ void MENUS::render_serverbrowser(RECT main_view)
 		if(ui_do_button(&refresh_button, "Refresh", 0, &button, ui_draw_menu_button, 0))
 		{
 			if(config.ui_page == PAGE_INTERNET)
-				client_serverbrowse_refresh(0);
+				client_serverbrowse_refresh(BROWSETYPE_INTERNET);
 			else if(config.ui_page == PAGE_LAN)
-				client_serverbrowse_refresh(1);
+				client_serverbrowse_refresh(BROWSETYPE_LAN);
+			else if(config.ui_page == PAGE_FAVORITES)
+				client_serverbrowse_refresh(BROWSETYPE_FAVORITES);
 		}
 		
 		char buf[512];
