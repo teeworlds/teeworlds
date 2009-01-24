@@ -131,7 +131,7 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 		RECT msgbox = view;
 		msgbox.y += view.h/3;
 		
-		if(client_serverbrowse_refreshingmasters())
+		if(active_page == PAGE_INTERNET && client_serverbrowse_refreshingmasters())
 			ui_do_label(&msgbox, "Refreshing master servers", 16.0f, 0);
 		else if(!client_serverbrowse_num())
 			ui_do_label(&msgbox, "No servers found", 16.0f, 0);
