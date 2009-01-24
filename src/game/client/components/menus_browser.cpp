@@ -567,7 +567,7 @@ void MENUS::render_serverbrowser(RECT main_view)
 
 	// split off a piece for filters, details and scoreboard
 	ui_vsplit_r(&view, 200.0f, &view, &toolbox);
-	ui_hsplit_b(&toolbox, 120.0f, &toolbox, &button_box);
+	ui_hsplit_b(&toolbox, 80.0f, &toolbox, &button_box);
 	ui_hsplit_b(&view, button_height+5.0f, &view, &status_toolbar);
 
 	render_serverbrowser_serverlist(view);
