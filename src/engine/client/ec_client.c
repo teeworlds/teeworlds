@@ -75,6 +75,9 @@ static int64 ping_start_time = 0;
 static char current_map[256] = {0};
 static int current_map_crc = 0;
 
+/* */
+static char cmd_connect[256] = {0};
+
 /* map download */
 static char mapdownload_filename[256] = {0};
 static char mapdownload_name[256] = {0};
@@ -1661,6 +1664,13 @@ static void client_run()
 		/* */
 		client_versionupdate();
 		
+		/* handle pending connects */
+		if(cmd_connect[0])
+		{
+			client_connect(cmd_connect);
+			cmd_connect[0] = 0;
+		}
+		
 		/* update input */
 		{
 			static PERFORMACE_INFO scope = {"inp_update", 0};
@@ -1827,7 +1837,7 @@ static void client_run()
 
 static void con_connect(void *result, void *user_data)
 {
-	client_connect(console_arg_string(result, 0));
+	str_copy(cmd_connect, console_arg_string(result, 0), sizeof(cmd_connect));
 }
 
 static void con_disconnect(void *result, void *user_data)
