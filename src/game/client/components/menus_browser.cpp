@@ -373,9 +373,14 @@ void MENUS::render_serverbrowser_filters(RECT view)
 		config.b_filter_compatversion ^= 1;
 	
 	ui_hsplit_t(&view, 20.0f, &button, &view);
-	if (ui_do_button((char *)&config.b_filter_pure, "Only pure", config.b_filter_pure, &button, ui_draw_checkbox, 0))
+	if (ui_do_button((char *)&config.b_filter_pure, "Standard gametype", config.b_filter_pure, &button, ui_draw_checkbox, 0))
 		config.b_filter_pure ^= 1;
 
+	ui_hsplit_t(&view, 20.0f, &button, &view);
+	/*ui_vsplit_l(&button, 20.0f, 0, &button);*/
+	if (ui_do_button((char *)&config.b_filter_pure_map, "Standard map", config.b_filter_pure_map, &button, ui_draw_checkbox, 0))
+		config.b_filter_pure_map ^= 1;
+		
 	ui_hsplit_t(&view, 20.0f, &button, &view);
 	ui_do_label(&button, "Game types: ", 14.0f, -1);
 	ui_vsplit_l(&button, 95.0f, 0, &button);

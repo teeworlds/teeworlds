@@ -1362,6 +1362,7 @@ static void client_pump_network()
 		if(client_state() != CLIENTSTATE_OFFLINE && netclient_state(net) == NETSTATE_OFFLINE)
 		{
 			client_set_state(CLIENTSTATE_OFFLINE);
+			client_disconnect();
 			dbg_msg("client", "offline error='%s'", netclient_error_string(net));
 		}
 
@@ -1972,6 +1973,7 @@ static void con_serverdummy(void *result, void *user_data)
 static void client_register_commands()
 {
 	MACRO_REGISTER_COMMAND("quit", "", CFGFLAG_CLIENT, con_quit, 0x0, "Quit Teeworlds");
+	MACRO_REGISTER_COMMAND("exit", "", CFGFLAG_CLIENT, con_quit, 0x0, "Quit Teeworlds");
 	MACRO_REGISTER_COMMAND("connect", "s", CFGFLAG_CLIENT, con_connect, 0x0, "Connect to the specified host/ip");
 	MACRO_REGISTER_COMMAND("disconnect", "", CFGFLAG_CLIENT, con_disconnect, 0x0, "Disconnect from the server");
 	MACRO_REGISTER_COMMAND("ping", "", CFGFLAG_CLIENT, con_ping, 0x0, "Ping the current server");

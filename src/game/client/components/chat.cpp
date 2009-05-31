@@ -10,12 +10,15 @@
 
 #include "chat.hpp"
 
-void CHAT::on_reset()
+void CHAT::on_statechange(int new_state, int old_state)
 {
-	mode = MODE_NONE;
-	for(int i = 0; i < MAX_LINES; i++)
-		lines[i].time = -1000000;
-	current_line = 0;
+	if(old_state <= CLIENTSTATE_CONNECTING)
+	{
+		mode = MODE_NONE;
+		for(int i = 0; i < MAX_LINES; i++)
+			lines[i].time = 0;
+		current_line = 0;
+	}
 }
 
 void CHAT::con_say(void *result, void *user_data)

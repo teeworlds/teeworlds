@@ -113,7 +113,7 @@ void SCOREBOARD::render_scoreboard(float x, float y, float w, int team, const ch
 	gfx_texture_set(-1);
 	gfx_quads_begin();
 	gfx_setcolor(0,0,0,0.5f);
-	draw_round_rect(x-10.f, y-10.f, w, h, 40.0f);
+	draw_round_rect(x-10.f, y-10.f, w, h, 17.0f);
 	gfx_quads_end();
 
 	// render title
@@ -157,8 +157,12 @@ void SCOREBOARD::render_scoreboard(float x, float y, float w, int team, const ch
 
 		if(item.type == NETOBJTYPE_PLAYER_INFO)
 		{
-			players[num_players] = (const NETOBJ_PLAYER_INFO *)data;
-			num_players++;
+			const NETOBJ_PLAYER_INFO *info = (const NETOBJ_PLAYER_INFO *)data;
+			if(info->team == team)
+			{
+				players[num_players] = info;
+				num_players++;
+			}
 		}
 	}
 
@@ -182,24 +186,34 @@ void SCOREBOARD::render_scoreboard(float x, float y, float w, int team, const ch
 	gfx_text(0, x+w-70, y, 24.0f, "Ping", -1);
 	y += 29.0f;
 
+	float font_size = 35.0f;
+	float line_height = 50.0f;
+	float tee_sizemod = 1.0f;
+	float tee_offset = 0.0f;
+	
+	if(num_players > 13)
+	{
+		font_size = 30.0f;
+		line_height = 40.0f;
+		tee_sizemod = 0.8f;
+		tee_offset = -5.0f;
+	}
+	
 	// render player scores
 	for(int i = 0; i < num_players; i++)
 	{
 		const NETOBJ_PLAYER_INFO *info = players[i];
 
 		// make sure that we render the correct team
-		if(team == -1 || info->team != team)
-			continue;
 
 		char buf[128];
-		float font_size = 35.0f;
 		if(info->local)
 		{
 			// background so it's easy to find the local player
 			gfx_texture_set(-1);
 			gfx_quads_begin();
 			gfx_setcolor(1,1,1,0.25f);
-			draw_round_rect(x, y, w-20, 48, 20.0f);
+			draw_round_rect(x, y, w-20, line_height*0.95f, 17.0f);
 			gfx_quads_end();
 		}
 
@@ -228,10 +242,12 @@ void SCOREBOARD::render_scoreboard(float x, float y, float w, int team, const ch
 			gfx_quads_end();
 		}
 		
-		render_tee(ANIMSTATE::get_idle(), &gameclient.clients[info->cid].render_info, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28));
+		TEE_RENDER_INFO teeinfo = gameclient.clients[info->cid].render_info;
+		teeinfo.size *= tee_sizemod;
+		render_tee(ANIMSTATE::get_idle(), &teeinfo, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28+tee_offset));
 
 		
-		y += 50.0f;
+		y += line_height;
 	}
 }
 

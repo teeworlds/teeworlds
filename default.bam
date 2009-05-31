@@ -269,20 +269,24 @@ if platform == "macosx"  and arch == "ia32" then
 	debug_settings_ppc.config_ext = "_ppc_d"
 	debug_settings_ppc.cc.flags:Add("-arch ppc")
 	debug_settings_ppc.link.flags:Add("-arch ppc")
+	debug_settings_ppc.cc.defines:Add("CONF_DEBUG")
 
 	release_settings_ppc = release_settings:Copy()
 	release_settings_ppc.config_name = "release_ppc"
 	release_settings_ppc.config_ext = "_ppc"
 	release_settings_ppc.cc.flags:Add("-arch ppc")
 	release_settings_ppc.link.flags:Add("-arch ppc")
+	release_settings_ppc.cc.defines:Add("CONF_RELEASE")
 
 	debug_settings_x86 = debug_settings:Copy()
 	debug_settings_x86.config_name = "debug_x86"
 	debug_settings_x86.config_ext = "_x86_d"
+	debug_settings_x86.cc.defines:Add("CONF_DEBUG")
 
 	release_settings_x86 = release_settings:Copy()
 	release_settings_x86.config_name = "release_x86"
 	release_settings_x86.config_ext = "_x86"
+	release_settings_x86.cc.defines:Add("CONF_RELEASE")
 
 	ppc_d = build(debug_settings_ppc)
 	x86_d = build(debug_settings_x86)

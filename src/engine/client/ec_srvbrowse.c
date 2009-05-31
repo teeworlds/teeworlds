@@ -166,6 +166,22 @@ static void client_serverbrowse_filter()
 			filtered = 1;
 		else if(config.b_filter_pure && (strcmp(serverlist[i]->info.gametype, "DM") != 0 && strcmp(serverlist[i]->info.gametype, "TDM") != 0 && strcmp(serverlist[i]->info.gametype, "CTF") != 0))
 			filtered = 1;
+		else if(config.b_filter_pure_map &&
+			!(strcmp(serverlist[i]->info.map, "dm1") == 0 ||
+			strcmp(serverlist[i]->info.map, "dm2") == 0 ||
+			strcmp(serverlist[i]->info.map, "dm6") == 0 ||
+			strcmp(serverlist[i]->info.map, "dm7") == 0 ||
+			strcmp(serverlist[i]->info.map, "dm8") == 0 ||
+			strcmp(serverlist[i]->info.map, "dm9") == 0 ||
+			strcmp(serverlist[i]->info.map, "ctf1") == 0 ||
+			strcmp(serverlist[i]->info.map, "ctf2") == 0 ||
+			strcmp(serverlist[i]->info.map, "ctf3") == 0 ||
+			strcmp(serverlist[i]->info.map, "ctf4") == 0 ||
+			strcmp(serverlist[i]->info.map, "ctf5") == 0)
+		)
+		{
+			filtered = 1;
+		}
 		else if(config.b_filter_ping < serverlist[i]->info.latency)
 			filtered = 1;
 		else if(config.b_filter_compatversion && strncmp(serverlist[i]->info.version, modc_net_version(), 3) != 0)
@@ -229,6 +245,7 @@ static int client_serverbrowse_sorthash()
 	i |= config.b_sort_order<<7;
 	i |= config.b_filter_compatversion<<8;
 	i |= config.b_filter_pure<<9;
+	i |= config.b_filter_pure_map<<10;
 	i |= config.b_filter_ping<<16;
 	return i;
 }

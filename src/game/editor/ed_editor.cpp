@@ -1168,14 +1168,14 @@ static void do_map_editor(RECT view, RECT toolbar)
 		ui_set_hot_item(editor_id);
 				
 		// do global operations like pan and zoom
-		if(ui_active_item() == 0 && ui_mouse_button(0))
+		if(ui_active_item() == 0 && (ui_mouse_button(0) || ui_mouse_button(2)))
 		{
 			start_wx = wx;
 			start_wy = wy;
 			start_mx = mx;
 			start_my = my;
 					
-			if(inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))
+			if(inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL) || ui_mouse_button(2))
 			{
 				if(inp_key_pressed(KEY_LSHIFT))
 					operation = OP_PAN_EDITOR;
@@ -2411,11 +2411,12 @@ static void render_envelopeeditor(RECT view)
 
 static int popup_menu_file(RECT view)
 {
-	static int new_map_button = 0;	
-	static int save_button = 0;	
-	static int save_as_button = 0;	
-	static int open_button = 0;	
-	static int append_button = 0;	
+	static int new_map_button = 0;
+	static int save_button = 0;
+	static int save_as_button = 0;
+	static int open_button = 0;
+	static int append_button = 0;
+	static int exit_button = 0;
 
 	RECT slot;
 	ui_hsplit_t(&view, 2.0f, &slot, &view);
@@ -2456,6 +2457,14 @@ static int popup_menu_file(RECT view)
 		editor.invoke_file_dialog(LISTDIRTYPE_SAVE, "Save Map", "Save", "maps/", "", callback_save_map);
 		return 1;
 	}
+	
+	ui_hsplit_t(&view, 10.0f, &slot, &view);
+	ui_hsplit_t(&view, 12.0f, &slot, &view);
+	if(do_editor_button(&exit_button, "Exit", 0, &slot, draw_editor_button_menuitem, 0, "Exits from the editor"))
+	{
+		config.cl_editor = 0;
+		return 1;
+	}	
 		
 	return 0;
 }
@@ -2680,7 +2689,7 @@ extern "C" void editor_update_and_render()
 {
 	static int mouse_x = 0;
 	static int mouse_y = 0;
-
+	
 	if(editor.animate)
 		editor.animate_time = (time_get()-editor.animate_start)/(float)time_freq();
 	else

@@ -12,6 +12,10 @@ MACRO_CONFIG_STR(logfile, 128, "", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Filename to log
 MACRO_CONFIG_INT(cl_cpu_throttle, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "")
 MACRO_CONFIG_INT(cl_editor, 0, 0, 1, CFGFLAG_CLIENT, "")
 
+MACRO_CONFIG_INT(cl_eventthread, 0, 0, 1, CFGFLAG_CLIENT, "Enables the usage of a thread to pump the events")
+
+MACRO_CONFIG_INT(inp_grab, 0, 0, 1, CFGFLAG_CLIENT, "Use forceful input grabbing method")
+
 MACRO_CONFIG_STR(b_filter_string, 64, "", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Server browser filtering string")
 
 MACRO_CONFIG_INT(b_filter_full, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Filter out full server in browser")
@@ -19,7 +23,8 @@ MACRO_CONFIG_INT(b_filter_empty, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Filter o
 MACRO_CONFIG_INT(b_filter_pw, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Filter out password protected servers in browser")
 MACRO_CONFIG_INT(b_filter_ping, 999, 0, 999, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Ping to filter by in the server browser")
 MACRO_CONFIG_STR(b_filter_gametype, 128, "", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Game types to filter")
-MACRO_CONFIG_INT(b_filter_pure, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Filter out non-pure servers in browser")
+MACRO_CONFIG_INT(b_filter_pure, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Filter out non-standard servers in browser")
+MACRO_CONFIG_INT(b_filter_pure_map, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Filter out non-standard maps in browser")
 MACRO_CONFIG_INT(b_filter_compatversion, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Filter out non-compatible servers in browser")
 
 MACRO_CONFIG_INT(b_sort, 0, 0, 256, CFGFLAG_SAVE|CFGFLAG_CLIENT, "")
@@ -60,6 +65,7 @@ MACRO_CONFIG_INT(sv_max_clients, 8, 1, MAX_CLIENTS, CFGFLAG_SERVER, "Maximum num
 MACRO_CONFIG_INT(sv_high_bandwidth, 0, 0, 1, CFGFLAG_SERVER, "Use high bandwidth mode. Doubles the bandwidth required for the server. LAN use only")
 MACRO_CONFIG_INT(sv_register, 1, 0, 1, CFGFLAG_SERVER, "Register server with master server for public listing")
 MACRO_CONFIG_STR(sv_rcon_password, 32, "", CFGFLAG_SERVER, "Remote console password")
+MACRO_CONFIG_INT(sv_map_reload, 0, 0, 1, CFGFLAG_SERVER, "Reload the current map")
 
 MACRO_CONFIG_INT(debug, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Debug mode")
 MACRO_CONFIG_INT(dbg_stress, 0, 0, 0, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Stress systems")
@@ -69,5 +75,3 @@ MACRO_CONFIG_INT(dbg_graphs, 0, 0, 1, CFGFLAG_CLIENT, "Performance graphs")
 MACRO_CONFIG_INT(dbg_hitch, 0, 0, 0, CFGFLAG_SERVER, "Hitch warnings")
 MACRO_CONFIG_STR(dbg_stress_server, 32, "localhost", CFGFLAG_CLIENT, "Server to stress")
 MACRO_CONFIG_INT(dbg_resizable, 0, 0, 0, CFGFLAG_CLIENT, "Enables window resizing")
-
-MACRO_CONFIG_INT(sv_map_reload, 0, 0, 1, CFGFLAG_SERVER, "Reload the current map")

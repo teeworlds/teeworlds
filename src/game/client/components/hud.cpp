@@ -171,7 +171,7 @@ void HUD::render_teambalancewarning()
 {
 	// render prompt about team-balance
 	bool flash = time_get()/(time_freq()/2)%2 == 0;
-	if (gameclient.snap.gameobj && gameclient.snap.gameobj->flags&GAMEFLAG_TEAMS != 0)
+	if (gameclient.snap.gameobj && (gameclient.snap.gameobj->flags&GAMEFLAG_TEAMS) != 0)
 	{	
 		if (config.cl_warning_teambalance && abs(gameclient.snap.team_size[0]-gameclient.snap.team_size[1]) >= 2)
 		{

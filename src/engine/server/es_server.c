@@ -70,6 +70,7 @@ static int snap_id_inited = 0;
 enum
 {
 	SRVCLIENT_STATE_EMPTY = 0,
+	SRVCLIENT_STATE_AUTH,
 	SRVCLIENT_STATE_CONNECTING,
 	SRVCLIENT_STATE_READY,
 	SRVCLIENT_STATE_INGAME,
@@ -211,9 +212,42 @@ const char *server_clientname(int client_id)
 	return clients[client_id].name;
 }
 
+static const char *str_ltrim(const char *str)
+{
+	while(*str && *str <= 32)
+		str++;
+	return str;
+}
+
+static void str_rtrim(char *str)
+{
+	int i = str_length(str);
+	while(i >= 0)
+	{
+		if(str[i] > 32)
+			break;
+		str[i] = 0;
+		i--;
+	}
+}
+
 static int server_try_setclientname(int client_id, const char *name)
 {
 	int i;
+	char trimmed_name[64];
+
+	/* trim the name */
+	str_copy(trimmed_name, str_ltrim(name), sizeof(trimmed_name));
+	str_rtrim(trimmed_name);
+	dbg_msg("", "'%s' -> '%s'", name, trimmed_name);
+	name = trimmed_name;
+	
+	
+	/* check for empty names */
+	if(!name[0])
+		return -1;
+	
+	/* make sure that two clients doesn't have the same name */
 	for(i = 0; i < MAX_CLIENTS; i++)
 		if(i != client_id && clients[i].state >= SRVCLIENT_STATE_READY)
 		{
@@ -221,6 +255,7 @@ static int server_try_setclientname(int client_id, const char *name)
 				return -1;
 		}
 
+	/* set the client name */
 	str_copy(clients[client_id].name, name, MAX_NAME_LENGTH);
 	return 0;
 }
@@ -544,7 +579,7 @@ static void reset_client(int cid)
 
 static int new_client_callback(int cid, void *user)
 {
-	clients[cid].state = SRVCLIENT_STATE_CONNECTING;
+	clients[cid].state = SRVCLIENT_STATE_AUTH;
 	clients[cid].name[0] = 0;
 	clients[cid].clan[0] = 0;
 	clients[cid].authed = 0;
@@ -608,10 +643,9 @@ static void server_process_client_packet(NETCHUNK *packet)
 	int sys;
 	int msg = msg_unpack_start(packet->data, packet->data_size, &sys);
 	
-	if(sys)
+	if(clients[cid].state == SRVCLIENT_STATE_AUTH)
 	{
-		/* system message */
-		if(msg == NETMSG_INFO)
+		if(sys && msg == NETMSG_INFO)
 		{
 			char version[64];
 			const char *password;
@@ -636,184 +670,196 @@ static void server_process_client_packet(NETCHUNK *packet)
 				return;
 			}
 			
+			clients[cid].state = SRVCLIENT_STATE_CONNECTING;
 			server_send_map(cid);
-		}
-		else if(msg == NETMSG_REQUEST_MAP_DATA)
-		{
-			int chunk = msg_unpack_int();
-			int chunk_size = 1024-128;
-			int offset = chunk * chunk_size;
-			int last = 0;
-			
-			if(offset+chunk_size >= current_map_size)
-			{
-				chunk_size = current_map_size-offset;
-				if(chunk_size < 0)
-					chunk_size = 0;
-				last = 1;
-			}
-			
-			msg_pack_start_system(NETMSG_MAP_DATA, MSGFLAG_VITAL|MSGFLAG_FLUSH);
-			msg_pack_int(last);
-			msg_pack_int(current_map_size);
-			msg_pack_int(chunk_size);
-			msg_pack_raw(&current_map_data[offset], chunk_size);
-			msg_pack_end();
-			server_send_msg(cid);
-			
-			if(config.debug)
-				dbg_msg("server", "sending chunk %d with size %d", chunk, chunk_size);
-		}
-		else if(msg == NETMSG_READY)
-		{
-			if(clients[cid].state == SRVCLIENT_STATE_CONNECTING)
-			{
-				netserver_client_addr(net, cid, &addr);
-				
-				dbg_msg("server", "player is ready. cid=%x ip=%d.%d.%d.%d",
-					cid,
-					addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3]
-					);
-				clients[cid].state = SRVCLIENT_STATE_READY;
-				mods_connected(cid);
-			}
-		}
-		else if(msg == NETMSG_ENTERGAME)
-		{
-			if(clients[cid].state == SRVCLIENT_STATE_READY)
-			{
-				netserver_client_addr(net, cid, &addr);
-				
-				dbg_msg("server", "player has entered the game. cid=%x ip=%d.%d.%d.%d",
-					cid,
-					addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3]
-					);
-				clients[cid].state = SRVCLIENT_STATE_INGAME;
-				mods_client_enter(cid);
-			}
-		}
-		else if(msg == NETMSG_INPUT)
-		{
-			int tick, size, i;
-			CLIENT_INPUT *input;
-			int64 tagtime;
-			
-			clients[cid].last_acked_snapshot = msg_unpack_int();
-			tick = msg_unpack_int();
-			size = msg_unpack_int();
-			
-			/* check for errors */
-			if(msg_unpack_error() || size/4 > MAX_INPUT_SIZE)
-				return;
-
-			if(clients[cid].last_acked_snapshot > 0)
-				clients[cid].snap_rate = SRVCLIENT_SNAPRATE_FULL;
-				
-			if(snapstorage_get(&clients[cid].snapshots, clients[cid].last_acked_snapshot, &tagtime, 0, 0) >= 0)
-				clients[cid].latency = (int)(((time_get()-tagtime)*1000)/time_freq());
-
-			/* add message to report the input timing */
-			/* skip packets that are old */
-			if(tick > clients[cid].last_input_tick)
-			{
-				int time_left = ((server_tick_start_time(tick)-time_get())*1000) / time_freq();
-				msg_pack_start_system(NETMSG_INPUTTIMING, 0);
-				msg_pack_int(tick);
-				msg_pack_int(time_left);
-				msg_pack_end();
-				server_send_msg(cid);
-			}
-
-			clients[cid].last_input_tick = tick;
-
-			input = &clients[cid].inputs[clients[cid].current_input];
-			
-			if(tick <= server_tick())
-				tick = server_tick()+1;
-
-			input->game_tick = tick;
-			
-			for(i = 0; i < size/4; i++)
-				input->data[i] = msg_unpack_int();
-			
-			mem_copy(clients[cid].latestinput.data, input->data, MAX_INPUT_SIZE*sizeof(int));
-			
-			clients[cid].current_input++;
-			clients[cid].current_input %= 200;
-		
-			/* call the mod with the fresh input data */
-			if(clients[cid].state == SRVCLIENT_STATE_INGAME)
-				mods_client_direct_input(cid, clients[cid].latestinput.data);
-		}
-		else if(msg == NETMSG_RCON_CMD)
-		{
-			const char *cmd = msg_unpack_string();
-			
-			if(msg_unpack_error() == 0 && clients[cid].authed)
-			{
-				dbg_msg("server", "cid=%d rcon='%s'", cid, cmd);
-				console_execute_line(cmd);
-			}
-		}
-		else if(msg == NETMSG_RCON_AUTH)
-		{
-			const char *pw;
-			msg_unpack_string(); /* login name, not used */
-			pw = msg_unpack_string();
-			
-			if(msg_unpack_error() == 0)
-			{
-				if(config.sv_rcon_password[0] == 0)
-				{
-					server_send_rcon_line(cid, "No rcon password set on server. Set sv_rcon_password to enable the remote console.");
-				}
-				else if(strcmp(pw, config.sv_rcon_password) == 0)
-				{
-					msg_pack_start_system(NETMSG_RCON_AUTH_STATUS, MSGFLAG_VITAL);
-					msg_pack_int(1);
-					msg_pack_end();
-					server_send_msg(cid);
-					
-					clients[cid].authed = 1;
-					server_send_rcon_line(cid, "Authentication successful. Remote console access granted.");
-					dbg_msg("server", "cid=%d authed", cid);
-				}
-				else
-				{
-					server_send_rcon_line(cid, "Wrong password.");
-				}
-			}
-		}
-		else if(msg == NETMSG_PING)
-		{
-			msg_pack_start_system(NETMSG_PING_REPLY, 0);
-			msg_pack_end();
-			server_send_msg(cid);
-		}
-		else
-		{
-			char hex[] = "0123456789ABCDEF";
-			char buf[512];
-			int b;
-
-			for(b = 0; b < packet->data_size && b < 32; b++)
-			{
-				buf[b*3] = hex[((const unsigned char *)packet->data)[b]>>4];
-				buf[b*3+1] = hex[((const unsigned char *)packet->data)[b]&0xf];
-				buf[b*3+2] = ' ';
-				buf[b*3+3] = 0;
-			}
-
-			dbg_msg("server", "strange message cid=%d msg=%d data_size=%d", cid, msg, packet->data_size);
-			dbg_msg("server", "%s", buf);
-			
 		}
 	}
 	else
 	{
-		/* game message */
-		if(clients[cid].state >= SRVCLIENT_STATE_READY)
-			mods_message(msg, cid);
+		if(sys)
+		{
+			/* system message */
+			if(msg == NETMSG_REQUEST_MAP_DATA)
+			{
+				int chunk = msg_unpack_int();
+				int chunk_size = 1024-128;
+				int offset = chunk * chunk_size;
+				int last = 0;
+				
+				/* drop faulty map data requests */
+				if(chunk < 0 || offset > current_map_size)
+					return;
+				
+				if(offset+chunk_size >= current_map_size)
+				{
+					chunk_size = current_map_size-offset;
+					if(chunk_size < 0)
+						chunk_size = 0;
+					last = 1;
+				}
+				
+				msg_pack_start_system(NETMSG_MAP_DATA, MSGFLAG_VITAL|MSGFLAG_FLUSH);
+				msg_pack_int(last);
+				msg_pack_int(current_map_size);
+				msg_pack_int(chunk_size);
+				msg_pack_raw(&current_map_data[offset], chunk_size);
+				msg_pack_end();
+				server_send_msg(cid);
+				
+				if(config.debug)
+					dbg_msg("server", "sending chunk %d with size %d", chunk, chunk_size);
+			}
+			else if(msg == NETMSG_READY)
+			{
+				if(clients[cid].state == SRVCLIENT_STATE_CONNECTING)
+				{
+					netserver_client_addr(net, cid, &addr);
+					
+					dbg_msg("server", "player is ready. cid=%x ip=%d.%d.%d.%d",
+						cid,
+						addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3]
+						);
+					clients[cid].state = SRVCLIENT_STATE_READY;
+					mods_connected(cid);
+				}
+			}
+			else if(msg == NETMSG_ENTERGAME)
+			{
+				if(clients[cid].state == SRVCLIENT_STATE_READY)
+				{
+					netserver_client_addr(net, cid, &addr);
+					
+					dbg_msg("server", "player has entered the game. cid=%x ip=%d.%d.%d.%d",
+						cid,
+						addr.ip[0], addr.ip[1], addr.ip[2], addr.ip[3]
+						);
+					clients[cid].state = SRVCLIENT_STATE_INGAME;
+					mods_client_enter(cid);
+				}
+			}
+			else if(msg == NETMSG_INPUT)
+			{
+				int tick, size, i;
+				CLIENT_INPUT *input;
+				int64 tagtime;
+				
+				clients[cid].last_acked_snapshot = msg_unpack_int();
+				tick = msg_unpack_int();
+				size = msg_unpack_int();
+				
+				/* check for errors */
+				if(msg_unpack_error() || size/4 > MAX_INPUT_SIZE)
+					return;
+
+				if(clients[cid].last_acked_snapshot > 0)
+					clients[cid].snap_rate = SRVCLIENT_SNAPRATE_FULL;
+					
+				if(snapstorage_get(&clients[cid].snapshots, clients[cid].last_acked_snapshot, &tagtime, 0, 0) >= 0)
+					clients[cid].latency = (int)(((time_get()-tagtime)*1000)/time_freq());
+
+				/* add message to report the input timing */
+				/* skip packets that are old */
+				if(tick > clients[cid].last_input_tick)
+				{
+					int time_left = ((server_tick_start_time(tick)-time_get())*1000) / time_freq();
+					msg_pack_start_system(NETMSG_INPUTTIMING, 0);
+					msg_pack_int(tick);
+					msg_pack_int(time_left);
+					msg_pack_end();
+					server_send_msg(cid);
+				}
+
+				clients[cid].last_input_tick = tick;
+
+				input = &clients[cid].inputs[clients[cid].current_input];
+				
+				if(tick <= server_tick())
+					tick = server_tick()+1;
+
+				input->game_tick = tick;
+				
+				for(i = 0; i < size/4; i++)
+					input->data[i] = msg_unpack_int();
+				
+				mem_copy(clients[cid].latestinput.data, input->data, MAX_INPUT_SIZE*sizeof(int));
+				
+				clients[cid].current_input++;
+				clients[cid].current_input %= 200;
+			
+				/* call the mod with the fresh input data */
+				if(clients[cid].state == SRVCLIENT_STATE_INGAME)
+					mods_client_direct_input(cid, clients[cid].latestinput.data);
+			}
+			else if(msg == NETMSG_RCON_CMD)
+			{
+				const char *cmd = msg_unpack_string();
+				
+				if(msg_unpack_error() == 0 && clients[cid].authed)
+				{
+					dbg_msg("server", "cid=%d rcon='%s'", cid, cmd);
+					console_execute_line(cmd);
+				}
+			}
+			else if(msg == NETMSG_RCON_AUTH)
+			{
+				const char *pw;
+				msg_unpack_string(); /* login name, not used */
+				pw = msg_unpack_string();
+				
+				if(msg_unpack_error() == 0)
+				{
+					if(config.sv_rcon_password[0] == 0)
+					{
+						server_send_rcon_line(cid, "No rcon password set on server. Set sv_rcon_password to enable the remote console.");
+					}
+					else if(strcmp(pw, config.sv_rcon_password) == 0)
+					{
+						msg_pack_start_system(NETMSG_RCON_AUTH_STATUS, MSGFLAG_VITAL);
+						msg_pack_int(1);
+						msg_pack_end();
+						server_send_msg(cid);
+						
+						clients[cid].authed = 1;
+						server_send_rcon_line(cid, "Authentication successful. Remote console access granted.");
+						dbg_msg("server", "cid=%d authed", cid);
+					}
+					else
+					{
+						server_send_rcon_line(cid, "Wrong password.");
+					}
+				}
+			}
+			else if(msg == NETMSG_PING)
+			{
+				msg_pack_start_system(NETMSG_PING_REPLY, 0);
+				msg_pack_end();
+				server_send_msg(cid);
+			}
+			else
+			{
+				char hex[] = "0123456789ABCDEF";
+				char buf[512];
+				int b;
+
+				for(b = 0; b < packet->data_size && b < 32; b++)
+				{
+					buf[b*3] = hex[((const unsigned char *)packet->data)[b]>>4];
+					buf[b*3+1] = hex[((const unsigned char *)packet->data)[b]&0xf];
+					buf[b*3+2] = ' ';
+					buf[b*3+3] = 0;
+				}
+
+				dbg_msg("server", "strange message cid=%d msg=%d data_size=%d", cid, msg, packet->data_size);
+				dbg_msg("server", "%s", buf);
+				
+			}
+		}
+		else
+		{
+			/* game message */
+			if(clients[cid].state >= SRVCLIENT_STATE_READY)
+				mods_message(msg, cid);
+		}
 	}
 }
 

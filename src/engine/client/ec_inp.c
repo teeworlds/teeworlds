@@ -16,26 +16,16 @@ static unsigned char input_state[2][1024] = {{0}, {0}};
 
 static int input_current = 0;
 static int input_grabbed = 0;
-static int input_use_grab = 0;
 
 static unsigned int last_release = 0;
 static unsigned int release_delta = -1;
 
 void inp_mouse_relative(int *x, int *y)
 {
-	static int last_x = 0, last_y = 0;
-	static int last_sens = 100.0f;
 	int nx = 0, ny = 0;
 	float sens = config.inp_mousesens/100.0f;
 	
-	if(last_sens != config.inp_mousesens)
-	{
-		last_x = (last_x/(float)last_sens)*(float)config.inp_mousesens;
-		last_y = (last_y/(float)last_sens)*(float)config.inp_mousesens;
-		last_sens = config.inp_mousesens;
-	}
-	
-	if(input_use_grab)
+	if(config.inp_grab)
 		SDL_GetRelativeMouseState(&nx, &ny);
 	else
 	{
@@ -101,7 +91,7 @@ void inp_mouse_mode_absolute()
 {
 	SDL_ShowCursor(1);
 	input_grabbed = 0;
-	if(input_use_grab)
+	if(config.inp_grab)
 		SDL_WM_GrabInput(SDL_GRAB_OFF);
 }
 
@@ -109,7 +99,7 @@ void inp_mouse_mode_relative()
 {
 	SDL_ShowCursor(0);
 	input_grabbed = 1;
-	if(input_use_grab)
+	if(config.inp_grab)
 		SDL_WM_GrabInput(SDL_GRAB_ON);
 }
 

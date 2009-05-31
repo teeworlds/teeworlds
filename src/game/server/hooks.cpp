@@ -257,7 +257,7 @@ void mods_message(int msgtype, int client_id)
 				return;
 			}
 			
-			str_format(chatmsg, sizeof(chatmsg), "Vote called to kick '%s'", server_clientname(kick_id));
+			str_format(chatmsg, sizeof(chatmsg), "%s called for vote to kick '%s'", server_clientname(client_id), server_clientname(kick_id));
 			str_format(desc, sizeof(desc), "Kick '%s'", server_clientname(kick_id));
 			str_format(cmd, sizeof(cmd), "kick %d", kick_id);
 			if (!config.sv_vote_kick_bantime)

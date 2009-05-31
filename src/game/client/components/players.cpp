@@ -95,7 +95,7 @@ void PLAYERS::render_player(
 	bool is_teamplay = false;
 	bool new_tick = gameclient.new_tick;
 	if(gameclient.snap.gameobj)
-		is_teamplay = gameclient.snap.gameobj->flags&GAMEFLAG_TEAMS != 0;
+		is_teamplay = (gameclient.snap.gameobj->flags&GAMEFLAG_TEAMS) != 0;
 
 	// check for ninja	
 	if (player.weapon == WEAPON_NINJA)

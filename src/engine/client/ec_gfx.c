@@ -252,11 +252,24 @@ int gfx_init()
 	if(config.dbg_stress)
 		no_gfx = 1;
 
-	if(SDL_Init(SDL_INIT_AUDIO|SDL_INIT_VIDEO) < 0)
 	{
-        dbg_msg("gfx", "unable to init SDL: %s", SDL_GetError());
-        return -1;
-    }
+		int systems = 0;
+		
+		if(!no_gfx)
+			systems |= SDL_INIT_VIDEO;
+			
+		if(config.snd_enable)
+			systems |= SDL_INIT_AUDIO;
+
+		if(config.cl_eventthread)
+			systems |= SDL_INIT_EVENTTHREAD;
+		
+		if(SDL_Init(systems) < 0)
+		{
+			dbg_msg("gfx", "unable to init SDL: %s", SDL_GetError());
+			return -1;
+		}
+	}
 	
     atexit(SDL_Quit);
 
