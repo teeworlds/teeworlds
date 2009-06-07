@@ -1003,6 +1003,23 @@ extern "C" void font_debug_render();
 
 void MENUS::on_render()
 {
+	/*
+	// text rendering test stuff
+	render_background();
+
+	TEXT_CURSOR cursor;
+	gfx_text_set_cursor(&cursor, 10, 10, 20, TEXTFLAG_RENDER);
+	gfx_text_ex(&cursor, "ようこそ - ガイド", -1);
+
+	gfx_text_set_cursor(&cursor, 10, 30, 15, TEXTFLAG_RENDER);
+	gfx_text_ex(&cursor, "ようこそ - ガイド", -1);
+	
+	//gfx_texture_set(-1);
+	gfx_quads_begin();
+	gfx_quads_drawTL(60, 60, 5000, 5000);
+	gfx_quads_end();
+	return;*/
+	
 	if(client_state() != CLIENTSTATE_ONLINE && client_state() != CLIENTSTATE_DEMOPLAYBACK)
 		set_active(true);
 

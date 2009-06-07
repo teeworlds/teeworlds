@@ -296,7 +296,7 @@ static int font_render_glyph(FONT *font, FONTSIZEDATA *sizedata, int chr)
 	int px, py;
 
 	FT_Set_Pixel_Sizes(font->ft_face, 0, sizedata->font_size);
-	
+
 	if(FT_Load_Char(font->ft_face, chr, FT_LOAD_RENDER))
 	{
 		dbg_msg("font", "error loading glyph %d", chr);
@@ -319,9 +319,21 @@ static int font_render_glyph(FONT *font, FONTSIZEDATA *sizedata, int chr)
 	/* prepare glyph data */
 	mem_zero(glyphdata, slot_size);
 
-	for(py = 0; py < bitmap->rows; py++) 
-		for(px = 0; px < bitmap->width; px++) 
-			glyphdata[(py+y)*slot_w+px+x] = bitmap->buffer[py*bitmap->pitch+px];
+	if(bitmap->pixel_mode == FT_PIXEL_MODE_GRAY)
+	{
+		for(py = 0; py < bitmap->rows; py++) 
+			for(px = 0; px < bitmap->width; px++) 
+				glyphdata[(py+y)*slot_w+px+x] = bitmap->buffer[py*bitmap->pitch+px];
+	}
+	else if(bitmap->pixel_mode == FT_PIXEL_MODE_MONO)
+	{
+		for(py = 0; py < bitmap->rows; py++) 
+			for(px = 0; px < bitmap->width; px++)
+			{
+				if(bitmap->buffer[py*bitmap->pitch+px/8]&(1<<(7-(px%8))))
+					glyphdata[(py+y)*slot_w+px+x] = 255;
+			}
+	}
 
 	if(0) for(py = 0; py < slot_w; py++) 
 		for(px = 0; px < slot_h; px++) 
@@ -412,6 +424,52 @@ static float font_kerning(FONT *font, int left, int right)
 	return (kerning.x>>6);
 }
 
+static int utf8_decode(const unsigned char **ptr)
+{
+	const unsigned char *buf = *ptr;
+	int ch = 0;
+	
+	do
+	{
+		if((*buf&0x80) == 0x0)  /* 0xxxxxxx */
+		{
+			ch = *buf;
+			buf++;
+		}
+		else if((*buf&0xE0) == 0xC0) /* 110xxxxx */
+		{
+			ch  = (*buf++ & 0x3F) << 6; if(!(*buf)) break;
+			ch += (*buf++ & 0x3F);
+			if(ch == 0) ch = -1;
+		}
+		else  if((*buf & 0xF0) == 0xE0)	/* 1110xxxx */
+		{
+			ch  = (*buf++ & 0x1F) << 12; if(!(*buf)) break;
+			ch += (*buf++ & 0x3F) <<  6; if(!(*buf)) break;
+			ch += (*buf++ & 0x3F);
+			if(ch == 0) ch = -1;
+		}
+		else if((*buf & 0xF8) == 0xF0)	/* 11110xxx */
+		{
+			ch  = (*buf++ & 0x0F) << 18; if(!(*buf)) break;
+			ch += (*buf++ & 0x3F) << 12; if(!(*buf)) break;
+			ch += (*buf++ & 0x3F) <<  6; if(!(*buf)) break;
+			ch += (*buf++ & 0x3F);
+			if(ch == 0) ch = -1;
+		}
+		else
+			break;
+		
+		/* valid */
+		*ptr = buf;
+		return ch;
+	} while(0);
+
+	/* invalid */
+	*ptr = buf;
+	return -1;
+	
+}
 
 void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 {
@@ -457,7 +515,7 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 	font_setsize(font, actual_size);
 	
 	/* set length */
-	if (length < 0)
+	if(length < 0)
 		length = strlen(text);
 		
 	end = text + length;
@@ -470,7 +528,8 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 	for(;i < 2; i++)
 	{
 		const unsigned char *current = (unsigned char *)text;
-		int to_render = length;
+		const unsigned char *end = current+length;
+		//int to_render = length;
 		draw_x = cursor_x;
 		draw_y = cursor_y;
 
@@ -490,10 +549,11 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 				gfx_setcolor(text_r, text_g, text_b, text_a);
 		}
 
-		while(to_render > 0)
+		while(current < end)
 		{
 			int new_line = 0;
-			int this_batch = to_render;
+			//int this_batch = (int)(end-current);
+			const unsigned char *batch_end = end;
 			if(cursor->line_width > 0 && !(cursor->flags&TEXTFLAG_STOP_AT_END))
 			{
 				int wlen = word_length((char *)current);
@@ -527,31 +587,35 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 					wlen = 0;
 				}
 				
-				this_batch = wlen;
+				batch_end = current + wlen;
+				//this_batch = wlen;
 			}
 			
-			if((const char *)current+this_batch > end)
+			/*if((const char *)current+this_batch > end)
 				this_batch = (const char *)end-(const char *)current;
 			
-			to_render -= this_batch;
+			end = */
+			/*to_render -= this_batch;*/
 
-			while(this_batch-- > 0)
+			while(current < batch_end)
 			{
 				float advance = 0;
+				int character = 0;
 				FONTCHAR *chr;
 
 				// TODO: UTF-8 decode
-				if(*current == '\n')
+				character = utf8_decode(&current);
+				if(character == '\n')
 				{
 					draw_x = cursor->start_x;
 					draw_y += size;
 					draw_x = (int)(draw_x * fake_to_screen_x) / fake_to_screen_x; /* realign */
 					draw_y = (int)(draw_y * fake_to_screen_y) / fake_to_screen_y;
-					current++;
+					/* current++; */
 					continue;
 				}
 
-				chr = font_get_char(font, sizedata, *current);
+				chr = font_get_char(font, sizedata, character);
 
 				if(chr)
 				{
@@ -561,19 +625,19 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 						gfx_quads_drawTL(draw_x+chr->offset_x*size, draw_y+chr->offset_y*size, chr->width*size, chr->height*size);
 					}
 
-					advance = chr->advance_x + font_kerning(font, *current, *(current+1));
+					advance = chr->advance_x; /* + font_kerning(font, character, *(current+1));*/
 				}
 								
 				if(cursor->flags&TEXTFLAG_STOP_AT_END && draw_x+advance*size-cursor->start_x > cursor->line_width)
 				{
 					/* we hit the end of the line, no more to render or count */
-					to_render = 0;
+					current = end;
 					break;
 				}
 
 				draw_x += advance*size;
 				cursor->charcount++;
-				current++;
+				/* current++; */
 			}
 			
 			if(new_line)
