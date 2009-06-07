@@ -11,6 +11,11 @@
 */
 
 /*
+	Structure: FONT
+*/
+struct FONT;
+
+/*
 	Structure: IMAGE_INFO
 */
 typedef struct
@@ -321,7 +326,7 @@ void gfx_text_color(float r, float g, float b, float a);
 	See Also:
 		<other_func>
 */
-void gfx_text_set_default_font(void *font);
+void gfx_text_set_default_font(struct FONT *font);
 
 /*
 	Group: Other
@@ -654,7 +659,8 @@ typedef struct
 	float start_y;
 	float line_width;
 	float x, y;
-	void *font_set;
+	
+	struct FONT *font;
 	float font_size;
 } TEXT_CURSOR;
 
@@ -662,6 +668,8 @@ void gfx_text_set_cursor(TEXT_CURSOR *cursor, float x, float y, float font_size,
 void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length);
 
 
+struct FONT *gfx_font_load(const char *filename);
+void gfx_font_destroy(struct FONT *font);
 
 
 #endif

@@ -1,1 +1,0 @@
-g++ main.cpp -Lfreetype-2.3.5/objs/.libs -lfreetype -I freetype-2.3.5/include

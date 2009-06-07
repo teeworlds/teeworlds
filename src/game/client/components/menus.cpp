@@ -13,10 +13,6 @@
 
 #include <engine/e_client_interface.h>
 
-extern "C" {
-	#include <engine/client/ec_font.h>
-}
-
 #include <game/version.hpp>
 #include <game/generated/g_protocol.hpp>
 
@@ -603,6 +599,15 @@ int MENUS::render_menubar(RECT r)
 
 void MENUS::render_loading(float percent)
 {
+	static int64 last_load_render = 0;
+
+	// make sure that we don't render for each little thing we load
+	// because that will slow down loading if we have vsync
+	if(time_get()-last_load_render < time_freq()/60)
+		return;
+		
+	last_load_render = time_get();
+	
 	// need up date this here to get correct
 	vec3 rgb = hsl_to_rgb(vec3(config.ui_color_hue/255.0f, config.ui_color_sat/255.0f, config.ui_color_lht/255.0f));
 	gui_color = vec4(rgb.r, rgb.g, rgb.b, config.ui_color_alpha/255.0f);
@@ -993,6 +998,8 @@ void MENUS::on_statechange(int new_state, int old_state)
 		set_active(false);
 	}
 }
+
+extern "C" void font_debug_render();
 
 void MENUS::on_render()
 {

@@ -172,6 +172,9 @@ function build(settings)
 			client_settings.link.libs:Add("GL")
 			client_settings.link.libs:Add("GLU")
 		end
+		
+		client_settings.cc.flags:Add("`freetype-config --cflags`")
+		client_settings.link.flags:Add("`freetype-config --libs`")
 	elseif family == "windows" then
 		client_settings.link.libs:Add("opengl32")
 		client_settings.link.libs:Add("glu32")

@@ -3,11 +3,6 @@
 #include <stdlib.h> // atoi
 
 #include <engine/e_client_interface.h>
-
-extern "C" {
-	#include <engine/client/ec_font.h>
-}
-
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
 

@@ -9,7 +9,6 @@
 
 extern "C" {
 	#include <engine/e_ringbuffer.h>
-	#include <engine/client/ec_font.h>
 }
 
 #include <cstring>
@@ -225,7 +224,7 @@ void CONSOLE::possible_commands_render_callback(const char *str, void *user)
 	
 	if(info->enum_count == info->wanted_completion)
 	{
-		float tw = gfx_text_width(info->cursor.font_set, info->cursor.font_size, str, -1);
+		float tw = gfx_text_width(info->cursor.font, info->cursor.font_size, str, -1);
 		gfx_texture_set(-1);
 		gfx_quads_begin();
 			gfx_setcolor(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f);

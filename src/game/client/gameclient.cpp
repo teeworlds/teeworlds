@@ -193,15 +193,12 @@ void GAMECLIENT::on_init()
 	for(int i = 0; i < NUM_NETOBJTYPES; i++)
 		snap_set_staticsize(i, netobj_get_size(i));
 	
-	// load default font	
-	static FONT_SET default_font;
 	int64 start = time_get();
 	
-	int before = gfx_memory_usage();
-	font_set_load(&default_font, "fonts/default_font%d.tfnt", "fonts/default_font%d.png", "fonts/default_font%d_b.png", 14, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 36);
-	dbg_msg("font", "gfx memory used for font textures: %d", gfx_memory_usage()-before);
-	
-	gfx_text_set_default_font(&default_font);
+	// load default font	
+	static FONT *default_font;
+	default_font = gfx_font_load("data/fonts/vera.ttf");
+	gfx_text_set_default_font(default_font);
 
 	config.cl_threadsoundloading = 0;
 

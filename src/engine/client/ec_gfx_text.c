@@ -2,6 +2,15 @@
 #include <string.h>
 #include <engine/e_client_interface.h>
 
+
+#ifdef CONF_PLATFORM_MACOSX
+	#include <OpenGL/gl.h>
+	#include <OpenGL/glu.h>
+#else
+	#include <GL/gl.h>
+	#include <GL/glu.h>
+#endif
+
 static int word_length(const char *text)
 {
 	int s = 1;
@@ -21,10 +30,10 @@ static float text_g=1;
 static float text_b=1;
 static float text_a=1;
 
-static FONT_SET *default_font_set = 0;
-void gfx_text_set_default_font(void *font)
+static struct FONT *default_font = 0;
+void gfx_text_set_default_font(struct FONT *font)
 {
-	default_font_set = (FONT_SET *)font;
+	default_font = font;
 }
 
 
@@ -42,14 +51,377 @@ void gfx_text_set_cursor(TEXT_CURSOR *cursor, float x, float y, float font_size,
 	cursor->charcount = 0;
 }
 
+
+void gfx_text(void *font_set_v, float x, float y, float size, const char *text, int max_width)
+{
+	TEXT_CURSOR cursor;
+	gfx_text_set_cursor(&cursor, x, y, size, TEXTFLAG_RENDER);
+	cursor.line_width = max_width;
+	gfx_text_ex(&cursor, text, -1);
+}
+
+float gfx_text_width(void *font_set_v, float size, const char *text, int length)
+{
+	TEXT_CURSOR cursor;
+	gfx_text_set_cursor(&cursor, 0, 0, size, 0);
+	gfx_text_ex(&cursor, text, length);
+	return cursor.x;
+}
+
+void gfx_text_color(float r, float g, float b, float a)
+{
+	text_r = r;
+	text_g = g;
+	text_b = b;
+	text_a = a;
+}
+
+/* ft2 texture */
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+static FT_Library ft_library;
+
+#define MAX_CHARACTERS 64
+
+
+/* GL_LUMINANCE can be good for debugging*/
+static int font_texture_format = GL_ALPHA;
+
+
+static int font_sizes[] = {8,9,10,11,12,13,14,15,16,17,18,19,20,36};
+#define NUM_FONT_SIZES (sizeof(font_sizes)/sizeof(int))
+
+
+typedef struct FONTCHAR
+{
+	int id;
+	
+	/* these values are scaled to the font size */
+	/* width * font_size == real_size */
+	float width;
+	float height;
+	float offset_x;
+	float offset_y;
+	float advance_x;
+	
+	float uvs[4];
+	int64 touch_time;
+} FONTCHAR;
+
+typedef struct FONTSIZEDATA
+{
+	int font_size;
+	FT_Face *face;
+
+	unsigned textures[2];
+	int texture_width;
+	int texture_height;
+	
+	int num_x_chars;
+	int num_y_chars;
+	
+	FONTCHAR characters[MAX_CHARACTERS*MAX_CHARACTERS];
+	
+	int current_character;	
+} FONTSIZEDATA;
+
+typedef struct FONT
+{
+	char filename[128];
+	FT_Face ft_face;
+	FONTSIZEDATA sizes[NUM_FONT_SIZES];
+} FONT;
+
+static int font_get_index(int pixelsize)
+{
+	int i;
+	for(i = 0; i < NUM_FONT_SIZES; i++)
+	{
+		if(font_sizes[i] >= pixelsize)
+			return i;
+	}
+	
+	return NUM_FONT_SIZES-1;
+}
+
+FONT *gfx_font_load(const char *filename)
+{
+	int i;
+	FONT *font = mem_alloc(sizeof(FONT), 1);
+	
+	mem_zero(font, sizeof(*font));
+	str_copy(font->filename, filename, sizeof(font->filename));
+	
+	if(FT_New_Face(ft_library, font->filename, 0, &font->ft_face))
+	{
+		mem_free(font);
+		return NULL;
+	}
+
+	for(i = 0; i < NUM_FONT_SIZES; i++)
+		font->sizes[i].font_size = -1;
+		
+	return font;
+};
+
+void gfx_font_destroy(FONT *font)
+{
+	mem_free(font);
+}
+
+void gfx_font_init()
+{
+	FT_Init_FreeType(&ft_library);
+}
+
+static void grow(unsigned char *in, unsigned char *out, int w, int h)
+{
+	int y, x;
+	for(y = 0; y < h; y++) 
+		for(x = 0; x < w; x++) 
+		{ 
+			int c = in[y*w+x]; 
+			int s_y, s_x;
+
+			for(s_y = -1; s_y <= 1; s_y++)
+				for(s_x = -1; s_x <= 1; s_x++)
+				{
+					int get_x = x+s_x;
+					int get_y = y+s_y;
+					if (get_x >= 0 && get_y >= 0 && get_x < w && get_y < h)
+					{
+						int index = get_y*w+get_x;
+						if(in[index] > c)
+							c = in[index]; 
+					}
+				}
+
+			out[y*w+x] = c;
+		} 
+}
+
+static void font_init_texture(FONTSIZEDATA *font, int width, int height)
+{
+	int i;
+	void *mem = mem_alloc(width*height, 1);
+	mem_zero(mem, width*height);
+	
+	font->texture_width = width;
+	font->texture_height = height;
+	font->num_x_chars = 32;
+	font->num_y_chars = 32;
+	font->current_character = 0;
+	glGenTextures(2, font->textures);
+	
+	for(i = 0; i < 2; i++)
+	{
+		glBindTexture(GL_TEXTURE_2D, font->textures[i]);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, font_texture_format, width, height, 0, font_texture_format, GL_UNSIGNED_BYTE, mem);
+	}
+	
+	mem_free(mem);
+}
+
+static void font_init_index(FONT *font, int index)
+{
+	font->sizes[index].font_size = font_sizes[index];
+	//FT_New_Face(ft_library, "data/fonts/vera.ttf", 0, &font->ft_face);
+	font_init_texture(&font->sizes[index], 1024*2, 1024*2);
+}
+
+static FONTSIZEDATA *font_get_size(FONT *font, int pixelsize)
+{
+	int index = font_get_index(pixelsize);
+	if(font->sizes[index].font_size != font_sizes[index])
+		font_init_index(font, index);
+	return &font->sizes[index];
+}
+
+
+static void font_upload_glyph(FONTSIZEDATA *sizedata, int texnum, int slot_id, int chr, const void *data)
+{
+	int x = (slot_id%sizedata->num_x_chars) * (sizedata->texture_width/sizedata->num_x_chars);
+	int y = (slot_id/sizedata->num_x_chars) * (sizedata->texture_height/sizedata->num_y_chars);
+	
+	glBindTexture(GL_TEXTURE_2D, sizedata->textures[texnum]);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, x, y,
+		sizedata->texture_width/sizedata->num_x_chars,
+		sizedata->texture_height/sizedata->num_y_chars,
+		font_texture_format, GL_UNSIGNED_BYTE, data);
+	
+	//dbg_msg("font", "uploaded %d at %d (%d %d)", chr, slot_id, x, y);
+}
+
+/* 8k of data used for rendering glyphs */
+static unsigned char glyphdata[(4096/64) * (4096/64)];
+static unsigned char glyphdata_outlined[(4096/64) * (4096/64)];
+
+static int font_get_slot(FONTSIZEDATA *sizedata)
+{
+	int char_count = sizedata->num_x_chars*sizedata->num_y_chars;
+	if(sizedata->current_character < char_count)
+	{
+		int i = sizedata->current_character;
+		sizedata->current_character++;
+		return i;
+	}
+
+	/* kick out the oldest */
+	/* TODO: remove this linear search */
+	{
+		int oldest = 0;
+		int i;
+		for(i = 1; i < char_count; i++)
+		{
+			if(sizedata->characters[i].touch_time < sizedata->characters[oldest].touch_time)
+				oldest = i;
+		}
+		return oldest;
+	}
+}
+
+static int font_render_glyph(FONT *font, FONTSIZEDATA *sizedata, int chr)
+{
+	FT_Bitmap *bitmap;
+	int slot_id = sizedata->current_character;
+	int slot_w = sizedata->texture_width / sizedata->num_x_chars;
+	int slot_h = sizedata->texture_height / sizedata->num_y_chars;
+	int slot_size = slot_w*slot_h;
+	int outline_thickness = 1;
+	int x = 1;
+	int y = 1;
+	int px, py;
+
+	FT_Set_Pixel_Sizes(font->ft_face, 0, sizedata->font_size);
+	
+	if(FT_Load_Char(font->ft_face, chr, FT_LOAD_RENDER))
+	{
+		dbg_msg("font", "error loading glyph %d", chr);
+		return -1;
+	}
+
+	bitmap = &font->ft_face->glyph->bitmap; 
+	
+	/* fetch slot */
+	slot_id = font_get_slot(sizedata);
+	if(slot_id < 0)
+		return -1;
+	
+	/* adjust spacing */
+	if(sizedata->font_size >= 18)
+		outline_thickness = 2;
+	x += outline_thickness;
+	y += outline_thickness;
+
+	/* prepare glyph data */
+	mem_zero(glyphdata, slot_size);
+
+	for(py = 0; py < bitmap->rows; py++) 
+		for(px = 0; px < bitmap->width; px++) 
+			glyphdata[(py+y)*slot_w+px+x] = bitmap->buffer[py*bitmap->pitch+px];
+
+	if(0) for(py = 0; py < slot_w; py++) 
+		for(px = 0; px < slot_h; px++) 
+			glyphdata[py*slot_w+px] = 255;
+	
+	/* upload the glyph */
+	font_upload_glyph(sizedata, 0, slot_id, chr, glyphdata);
+	
+	if(outline_thickness == 1)
+	{
+		grow(glyphdata, glyphdata_outlined, slot_w, slot_h);
+		font_upload_glyph(sizedata, 1, slot_id, chr, glyphdata_outlined);
+	}
+	else
+	{
+		grow(glyphdata, glyphdata_outlined, slot_w, slot_h);
+		grow(glyphdata_outlined, glyphdata, slot_w, slot_h);
+		font_upload_glyph(sizedata, 1, slot_id, chr, glyphdata);
+	}
+	
+	/* set char info */
+	{
+		FONTCHAR *fontchr = &sizedata->characters[slot_id];
+		float scale = 1.0f/sizedata->font_size;
+		float uscale = 1.0f/sizedata->texture_width;
+		float vscale = 1.0f/sizedata->texture_height;
+		int height = bitmap->rows + outline_thickness*2 + 2;
+		int width = bitmap->width + outline_thickness*2 + 2;
+		
+		fontchr->id = chr;
+		fontchr->height = height * scale;
+		fontchr->width = width * scale;
+		fontchr->offset_x = (font->ft_face->glyph->bitmap_left-1) * scale;
+		fontchr->offset_y = (sizedata->font_size - font->ft_face->glyph->bitmap_top) * scale;
+		fontchr->advance_x = (font->ft_face->glyph->advance.x>>6) * scale;
+		
+		fontchr->uvs[0] = (slot_id%sizedata->num_x_chars) / (float)(sizedata->num_x_chars);
+		fontchr->uvs[1] = (slot_id/sizedata->num_x_chars) / (float)(sizedata->num_y_chars);
+		fontchr->uvs[2] = fontchr->uvs[0] + width*uscale;
+		fontchr->uvs[3] = fontchr->uvs[1] + height*vscale;
+	}
+	
+	return slot_id;
+}
+
+static FONTCHAR *font_get_char(FONT *font, FONTSIZEDATA *sizedata, int chr)
+{
+	FONTCHAR *fontchr = NULL;
+	
+	/* search for the character */
+	/* TODO: remove this linear search */
+	int i;
+	for(i = 0; i < sizedata->current_character; i++)
+	{
+		if(sizedata->characters[i].id == chr)
+		{
+			fontchr = &sizedata->characters[i];
+			break;
+		}
+	}
+	
+	/* check if we need to render the character */
+	if(!fontchr)
+	{
+		int index = font_render_glyph(font, sizedata, chr);
+		if(index >= 0)
+			fontchr = &sizedata->characters[index];
+	}
+	
+	/* touch the character */
+	/* TODO: don't call time_get here */
+	if(fontchr)
+		fontchr->touch_time = time_get();
+		
+	return fontchr;
+}
+
+/* must only be called from the rendering function as the font must be set to the correct size */
+static void font_setsize(FONT *font, int size)
+{
+	FT_Set_Pixel_Sizes(font->ft_face, 0, size);
+}
+
+static float font_kerning(FONT *font, int left, int right)
+{
+	FT_Vector kerning = {0,0};
+	FT_Get_Kerning(font->ft_face, left, right, FT_KERNING_DEFAULT, &kerning );
+	return (kerning.x>>6);
+}
+
+
 void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 {
-	FONT_SET *font_set = cursor->font_set;
+	FONT *font = cursor->font;
+	FONTSIZEDATA *sizedata = NULL;
+
 	float screen_x0, screen_y0, screen_x1, screen_y1;
 	float fake_to_screen_x, fake_to_screen_y;
 	int actual_x, actual_y;
 
-	FONT *font;
 	int actual_size;
 	int i;
 	int got_new_line = 0;
@@ -74,11 +446,17 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 	actual_size = size * fake_to_screen_y;
 	size = actual_size / fake_to_screen_y;
 
-	if(!font_set)
-		font_set = default_font_set;
+	/* fetch font data */
+	if(!font)
+		font = default_font;
+	
+	if(!font)
+		return;
 
-	font = font_set_pick(font_set, actual_size);
-
+	sizedata = font_get_size(font, actual_size);
+	font_setsize(font, actual_size);
+	
+	/* set length */
 	if (length < 0)
 		length = strlen(text);
 		
@@ -98,10 +476,12 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 
 		if(cursor->flags&TEXTFLAG_RENDER)
 		{
+			// TODO: Make this better
+			glEnable(GL_TEXTURE_2D);
 			if (i == 0)
-				gfx_texture_set(font->outline_texture);
+				glBindTexture(GL_TEXTURE_2D, sizedata->textures[1]);
 			else
-				gfx_texture_set(font->text_texture);
+				glBindTexture(GL_TEXTURE_2D, sizedata->textures[0]);
 
 			gfx_quads_begin();
 			if (i == 0)
@@ -157,11 +537,10 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 
 			while(this_batch-- > 0)
 			{
-				float tex_x0, tex_y0, tex_x1, tex_y1;
-				float width, height;
-				float x_offset, y_offset, x_advance;
-				float advance;
+				float advance = 0;
+				FONTCHAR *chr;
 
+				// TODO: UTF-8 decode
 				if(*current == '\n')
 				{
 					draw_x = cursor->start_x;
@@ -172,15 +551,18 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 					continue;
 				}
 
-				font_character_info(font, *current, &tex_x0, &tex_y0, &tex_x1, &tex_y1, &width, &height, &x_offset, &y_offset, &x_advance);
+				chr = font_get_char(font, sizedata, *current);
 
-				if(cursor->flags&TEXTFLAG_RENDER)
+				if(chr)
 				{
-					gfx_quads_setsubset(tex_x0, tex_y0, tex_x1, tex_y1);
-					gfx_quads_drawTL(draw_x+x_offset*size, draw_y+y_offset*size, width*size, height*size);
-				}
+					if(cursor->flags&TEXTFLAG_RENDER)
+					{
+						gfx_quads_setsubset(chr->uvs[0], chr->uvs[1], chr->uvs[2], chr->uvs[3]);
+						gfx_quads_drawTL(draw_x+chr->offset_x*size, draw_y+chr->offset_y*size, chr->width*size, chr->height*size);
+					}
 
-				advance = x_advance + font_kerning(font, *current, *(current+1));
+					advance = chr->advance_x + font_kerning(font, *current, *(current+1));
+				}
 								
 				if(cursor->flags&TEXTFLAG_STOP_AT_END && draw_x+advance*size-cursor->start_x > cursor->line_width)
 				{
@@ -212,28 +594,4 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 	
 	if(got_new_line)
 		cursor->y = draw_y;
-}
-
-void gfx_text(void *font_set_v, float x, float y, float size, const char *text, int max_width)
-{
-	TEXT_CURSOR cursor;
-	gfx_text_set_cursor(&cursor, x, y, size, TEXTFLAG_RENDER);
-	cursor.line_width = max_width;
-	gfx_text_ex(&cursor, text, -1);
-}
-
-float gfx_text_width(void *font_set_v, float size, const char *text, int length)
-{
-	TEXT_CURSOR cursor;
-	gfx_text_set_cursor(&cursor, 0, 0, size, 0);
-	gfx_text_ex(&cursor, text, length);
-	return cursor.x;
-}
-
-void gfx_text_color(float r, float g, float b, float a)
-{
-	text_r = r;
-	text_g = g;
-	text_b = b;
-	text_a = a;
 }

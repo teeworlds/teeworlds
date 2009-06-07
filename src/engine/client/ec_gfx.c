@@ -29,8 +29,6 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "ec_font.h"
-
 /* compressed textures */
 #define GL_COMPRESSED_RGB_ARB 0x84ED
 #define GL_COMPRESSED_RGBA_ARB 0x84EE
@@ -118,8 +116,8 @@ static void flush()
 	}
 	
 		
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	glVertexPointer(3, GL_FLOAT,
 			sizeof(VERTEX),
@@ -209,6 +207,8 @@ static int try_init()
 	
 	return 0;
 }
+
+void gfx_font_init();
 
 static int gfx_init_window()
 {
@@ -324,8 +324,8 @@ int gfx_init()
 		glDepthMask(0);
 
 		
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
 
 	/* init input */
@@ -333,7 +333,11 @@ int gfx_init()
 	
 	/* create null texture, will get id=0 */
 	invalid_texture = gfx_load_texture_raw(4,4,IMG_RGBA,null_texture_data,IMG_RGBA,TEXLOAD_NORESAMPLE);
+	dbg_msg("", "invalid texture id: %d %d", invalid_texture, textures[invalid_texture].tex);
 
+
+	/* font init */
+	gfx_font_init();
 	/* perform some tests */
 	/* pixeltest_dotesting(); */
 	
@@ -544,7 +548,7 @@ int gfx_load_texture_raw(int w, int h, int format, const void *data, int store_f
 	glGenTextures(1, &textures[tex].tex);
 	glBindTexture(GL_TEXTURE_2D, textures[tex].tex);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 	gluBuild2DMipmaps(GL_TEXTURE_2D, store_oglformat, w, h, oglformat, GL_UNSIGNED_BYTE, texdata);
 	
 	/* calculate memory usage */
@@ -646,8 +650,24 @@ void gfx_screenshot()
 	do_screenshot = 1;
 }
 
+
+extern int text_render_codepaths_usage[5];
+
 void gfx_swap()
 {
+	/*dbg_msg("", "%d %d %d %d %d",
+		text_render_codepaths_usage[0],
+		text_render_codepaths_usage[1],
+		text_render_codepaths_usage[2],
+		text_render_codepaths_usage[3],
+		text_render_codepaths_usage[4]);
+
+	text_render_codepaths_usage[0] = 0;
+	text_render_codepaths_usage[1] = 0;
+	text_render_codepaths_usage[2] = 0;
+	text_render_codepaths_usage[3] = 0;
+	text_render_codepaths_usage[4] = 0;*/
+
 	if(do_screenshot)
 	{
 		/* find filename */
