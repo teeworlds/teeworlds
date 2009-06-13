@@ -183,39 +183,8 @@ void GAMECLIENT::on_console_init()
 	suppress_events = false;
 }
 
-/*
-unsigned char utf8lut[] = {}
-
-static int utf8_decode(unsigned char **ptr)
-{
-	unsigned char first = **ptr;
-	if(first&0x80 == 0)
-	{
-		*ptr += 1;
-		return first;
-	}
-	
-	if(first&(0x80|0x40|0x20) == (0x80|0x40))
-	{
-		// two bytes
-	}
-
-	if(first&(0x80|0x40|0x20|0x10) == (0x80|0x40|0x20))
-	{
-		// three bytes
-	}
-}*/
-
-#include <stdio.h>
-
 void GAMECLIENT::on_init()
 {
-	/*const char *p = "Hello World åäö ようこそ - ガイド ";
-	for(; *p; )
-	{
-		dbg_msg("", "%d", utf8_decode(&p));
-	}*/
-	
 	// init all components
 	for(int i = 0; i < all.num; i++)
 		all.components[i]->on_init();

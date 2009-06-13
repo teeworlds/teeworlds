@@ -306,8 +306,6 @@ static void font_upload_glyph(FONTSIZEDATA *sizedata, int texnum, int slot_id, i
 		sizedata->texture_width/sizedata->num_x_chars,
 		sizedata->texture_height/sizedata->num_y_chars,
 		font_texture_format, GL_UNSIGNED_BYTE, data);
-	
-	//dbg_msg("font", "uploaded %d at %d (%d %d)", chr, slot_id, x, y);
 }
 
 /* 8k of data used for rendering glyphs */
@@ -544,7 +542,6 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 	{
 		const char *current = (char *)text;
 		const char *end = current+length;
-		//int to_render = length;
 		draw_x = cursor_x;
 		draw_y = cursor_y;
 
@@ -567,7 +564,6 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 		while(current < end)
 		{
 			int new_line = 0;
-			//int this_batch = (int)(end-current);
 			const char *batch_end = end;
 			if(cursor->line_width > 0 && !(cursor->flags&TEXTFLAG_STOP_AT_END))
 			{
@@ -603,15 +599,8 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 				}
 				
 				batch_end = current + wlen;
-				//this_batch = wlen;
 			}
 			
-			/*if((const char *)current+this_batch > end)
-				this_batch = (const char *)end-(const char *)current;
-			
-			end = */
-			/*to_render -= this_batch;*/
-
 			while(current < batch_end)
 			{
 				const char *tmp;
@@ -656,7 +645,6 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 
 				draw_x += advance*size;
 				cursor->charcount++;
-				/* current++; */
 			}
 			
 			if(new_line)
