@@ -9,6 +9,7 @@
 #include <game/client/ui.hpp>
 #include <game/client/render.hpp>
 #include "menus.hpp"
+#include <game/localization.hpp>
 #include <game/version.hpp>
 
 void MENUS::render_serverbrowser_serverlist(RECT view)
@@ -27,7 +28,7 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 	{
 		int id;
 		int sort;
-		const char *caption;
+		LOC_CONSTSTRING caption;
 		int direction;
 		float width;
 		int flags;

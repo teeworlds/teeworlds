@@ -13,6 +13,7 @@
 #include <game/client/render.hpp>
 #include <game/client/gameclient.hpp>
 #include <game/client/animstate.hpp>
+#include <game/localization.hpp>
 
 #include "binds.hpp"
 #include "menus.hpp"
@@ -248,35 +249,35 @@ typedef void (*assign_func_callback)(CONFIGURATION *config, int value);
 
 typedef struct 
 {
-	const char *name;
+	LOC_CONSTSTRING name;
 	const char *command;
 	int keyid;
 } KEYINFO;
 
-// TODO: localize
 KEYINFO keys[] = 
 {
-	{ "Move Left:", "+left", 0},
-	{ "Move Right:", "+right", 0 },
-	{ "Jump:", "+jump", 0 },
-	{ "Fire:", "+fire", 0 },
-	{ "Hook:", "+hook", 0 },
-	{ "Hammer:", "+weapon1", 0 },
-	{ "Pistol:", "+weapon2", 0 },
-	{ "Shotgun:", "+weapon3", 0 },
-	{ "Grenade:", "+weapon4", 0 },
-	{ "Rifle:", "+weapon5", 0 },
-	{ "Next Weapon:", "+nextweapon", 0 },
-	{ "Prev. Weapon:", "+prevweapon", 0 },
-	{ "Vote Yes:", "vote yes", 0 },
-	{ "Vote No:", "vote no", 0 },
-	{ "Chat:", "chat all", 0 },
-	{ "Team Chat:", "chat team", 0 },
-	{ "Emoticon:", "+emote", 0 },
-	{ "Console:", "toggle_local_console", 0 },
-	{ "Remote Console:", "toggle_remote_console", 0 },
-	{ "Screenshot:", "screenshot", 0 },
-	{ "Scoreboard:", "+scoreboard", 0 },
+	// we need to do localize so the scripts can pickup the string
+	{ localize("Move Left:"), "+left", 0},
+	{ localize("Move Right:"), "+right", 0 },
+	{ localize("Jump:"), "+jump", 0 },
+	{ localize("Fire:"), "+fire", 0 },
+	{ localize("Hook:"), "+hook", 0 },
+	{ localize("Hammer:"), "+weapon1", 0 },
+	{ localize("Pistol:"), "+weapon2", 0 },
+	{ localize("Shotgun:"), "+weapon3", 0 },
+	{ localize("Grenade:"), "+weapon4", 0 },
+	{ localize("Rifle:"), "+weapon5", 0 },
+	{ localize("Next Weapon:"), "+nextweapon", 0 },
+	{ localize("Prev. Weapon:"), "+prevweapon", 0 },
+	{ localize("Vote Yes:"), "vote yes", 0 },
+	{ localize("Vote No:"), "vote no", 0 },
+	{ localize("Chat:"), "chat all", 0 },
+	{ localize("Team Chat:"), "chat team", 0 },
+	{ localize("Emoticon:"), "+emote", 0 },
+	{ localize("Console:"), "toggle_local_console", 0 },
+	{ localize("Remote Console:"), "toggle_remote_console", 0 },
+	{ localize("Screenshot:"), "screenshot", 0 },
+	{ localize("Scoreboard:"), "+scoreboard", 0 },
 };
 
 const int key_count = sizeof(keys) / sizeof(KEYINFO);
@@ -292,7 +293,7 @@ void MENUS::ui_do_getbuttons(int start, int stop, RECT view)
 	
 		ui_do_label(&label, key.name, 14.0f, -1);
 		int oldid = key.keyid;
-		int newid = ui_do_key_reader((void *)keys[i].name, &button, oldid);
+		int newid = ui_do_key_reader((void *)&keys[i].name, &button, oldid);
 		if(newid != oldid)
 		{
 			gameclient.binds->bind(oldid, "");

@@ -18,6 +18,8 @@ class LOCALIZATIONDATABASE
 public:
 	LOCALIZATIONDATABASE();
 
+	bool load(const char *filename);
+
 	int version() { return current_version; }
 	
 	void add_string(const char *org_str, const char *new_str);

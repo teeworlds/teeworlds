@@ -6,6 +6,7 @@
 #include <game/generated/gc_data.hpp>
 
 #include <game/layers.hpp>
+#include <game/localization.hpp>
 #include "render.hpp"
 
 #include "gameclient.hpp"
@@ -158,7 +159,10 @@ void GAMECLIENT::on_console_init()
 	input.add(&emoticon);
 	input.add(controls);
 	input.add(binds);
-		
+	
+	//	
+	MACRO_REGISTER_COMMAND("language", "s", CFGFLAG_CLIENT, con_language, this, "Sets the language");
+	
 	// add the some console commands
 	MACRO_REGISTER_COMMAND("team", "i", CFGFLAG_CLIENT, con_team, this, "Switch team");
 	MACRO_REGISTER_COMMAND("kill", "", CFGFLAG_CLIENT, con_kill, this, "Kill yourself");
@@ -880,4 +884,11 @@ void GAMECLIENT::con_team(void *result, void *user_data)
 void GAMECLIENT::con_kill(void *result, void *user_data)
 {
 	((GAMECLIENT*)user_data)->send_kill(-1);
+}
+
+void GAMECLIENT::con_language(void *result, void *user_data)
+{
+	char buf[128];
+	str_format(buf, sizeof(buf), "data/languages/%s.txt", console_arg_string(result, 0));
+	localization.load(buf);
 }

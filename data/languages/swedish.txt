@@ -4,80 +4,20 @@
 Fullscreen
 == Fullskärm
 
-Are you sure that you want to quit?
-== Är du säker på att du vill avsluta?
-
 Loading
 == Laddar
 
-Mouse sens.
-== Muskänslighet
-
-Reset to defaults
-== Återställ till standard
-
-Mute when not active
-== 
-
-Controls
-== Kontroller
-
-Current
-== Nuvarande
-
-Sound volume
-== Ljud volym
-
-Dynamic Camera
-== Dynamisk kamera
-
-Enter
-== Fortsätt
+Next Weapon:
+== Nästa vapen:
 
 Internet
 == Internet
 
-Quit
-== Avsluta
-
 Use sounds
 == Använd ljudeffekter
 
-Nickname:
-== Smeknamn:
-
-Movement
-== Förflyttning
-
 Body
 == Kropp
-
-Hue
-== Nyans
-
-UI Color
-== Gränssnittfärg
-
-Demos
-== Demon
-
-Texture Compression
-== Texturkompression
-
-Show only supported
-== Visa endast upplösningar som stöds
-
-No
-== Nej
-
-Connecting to
-== Ansluter till
-
-Miscellaneous
-== Övrigt
-
-Switch weapon on pickup
-== Byt vapen vid upplock
 
 Show name plates
 == Visa namnskyltar
@@ -85,8 +25,197 @@ Show name plates
 Quality Textures
 == Kvalitets texturer
 
+News
+== Nyheter
+
+Sound
+== Ljud
+
+Ok
+== Ok
+
+Call Vote
+== Starta omröstning
+
+LAN
+== LAN
+
+FSAA samples
+== FSAA samplingar
+
+Hammer:
+== Hammare:
+
+Welcome to Teeworlds
+== Välkommen till Teeworlds
+
+Voting
+== Röstning
+
+Sat.
+== Mättnad
+
+Try again
+== Försök igen
+
+Prev. Weapon:
+== Föregående vapen:
+
+Skins
+== Utseende
+
+Quit
+== Avsluta
+
+Controls
+== Kontroller
+
+Dynamic Camera
+== Dynamisk kamera
+
+Show only supported
+== Visa endast upplösningar som stöds
+
+Miscellaneous
+== Övrigt
+
+Nickname:
+== Smeknamn:
+
 Game
 == Spel
+
+Screenshot:
+== Skärmdump
+
+Grenade:
+== Granater:
+
+Team Chat:
+== Lagchatt:
+
+Settings
+== Inställningar
+
+Custom colors
+== Egna färger
+
+Emoticon:
+== Känsloikon
+
+Shotgun:
+== Hagelgevär:
+
+UI Color
+== Gränssnittfärg
+
+Sample rate
+== Samplingsfrekvens
+
+Move Left:
+== Gå vänster:
+
+V-Sync
+== V-Sync
+
+Chat
+== Chatt
+
+Yes
+== Ja
+
+Console:
+== Konsol:
+
+High Detail
+== Extra detaljer
+
+No
+== Nej
+
+Mute when not active
+== Stäng av ljudet när spelet inte är aktivt
+
+Password Incorrect
+== Felaktigt lösenord
+
+Sound volume
+== Ljud volym
+
+Vote No:
+== Rösta nej:
+
+Movement
+== Förflyttning
+
+Hue
+== Nyans
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Detta är första gången du startar spelet, var vänligen skriv in ditt smeknamn här nedanför. Det är rekommenderat att du kollar inställningarna och justerar dom till din preferens innan du börjar spela.
+
+Rifle:
+== Gevär:
+
+Switch weapon on pickup
+== Byt vapen vid upplock
+
+Fire:
+== Skjuta:
+
+Weapon
+== Vapen
+
+Display Modes
+== Skärmlägen
+
+Move Right:
+== Gå höger
+
+Lht.
+== Ljusstyrka
+
+Chat:
+== Chatt:
+
+Remote Console:
+== Serverkonsol:
+
+Feet
+== Fötter
+
+Demos
+== Demon
+
+Abort
+== Avbryt
+
+Always show name plates
+== Visa alltid namnskyltar
+
+Are you sure that you want to quit?
+== Är du säker på att du vill avsluta?
+
+Scoreboard:
+== Poänglista
+
+Mouse sens.
+== Muskänslighet
+
+Reset to defaults
+== Återställ till standard
+
+Current
+== Nuvarande
+
+Hook:
+== Haken:
+
+Texture Compression
+== Texturkompression
+
+Connecting to
+== Ansluter till
 
 Favorites
 == Favoriter
@@ -95,117 +224,45 @@ Graphics
 == Grafik
 
 Alpha
-== Genomskinlighet
+== Alpha
 
 Name:
 == Namn:
 
-Weapon
-== Vapen
-
-Sound
-== Ljud
-
-The server is running a non-standard tuning on a pure game mode.
-== 
-
-Ok
-== Ok
-
-Call Vote
-== 
-
-Settings
-== Inställningar
+Disconnected
+== Frånkopplad
 
 You must restart the game for all settings to take effect.
 == Du måste starta om spelet för att ändringarna skall gälla.
 
-Custom colors
-== Egna färger
-
-Try again
-== Försök igen
-
-Disconnected
-== 
-
-Display Modes
-== 
-
-FSAA samples
-== 
-
 Downloading map
 == Laddar ner karta
 
-Welcome to Teeworlds
-== Välkommen till Teeworlds
+Enter
+== Fortsätt
 
-News
-== Nyheter
-
-Lht.
-== Ljusstyrka
-
-Voting
-== Röstning
-
-Sat.
-== Mättnad
-
-Password Incorrect
-== Felaktigt lösenord
-
-LAN
-== LAN
-
-Sample rate
-== 
+Jump:
+== Hoppa:
 
 Password:
 == Lösenord:
 
-As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Detta är första gången du startar spelet, var vänligen skriv in ditt smeknamn här nedanför. Det är rekommenderat att du kollar inställningarna och justerar dom till din preferens innan du börjar spela.
-
-V-Sync
-== V-Sync
-
-Skins
-== Utseende
-
-Feet
-== Fötter
-
 Player
 == Spelare
 
-Abort
-== Avbryt
-
-Always show name plates
-== Visa alltid namnskyltar
-
-Chat
-== Chat
+Vote Yes:
+== Rösta ja:
 
 Server Info
 == Server info.
 
-Yes
-== Ja
-
-High Detail
-== Extra detaljer
+Pistol:
+== Pistol:
 
 ##### needs translation ####
 
+The server is running a non-standard tuning on a pure game mode.
+== 
+
 ##### old translations ####
-
-Try Again
-== Försök igen
-
-sasdf
-== asdfsa
 

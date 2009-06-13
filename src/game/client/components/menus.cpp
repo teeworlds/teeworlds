@@ -12,9 +12,7 @@
 #include "skins.hpp"
 
 #include <engine/e_client_interface.h>
-extern "C" {
-#include <engine/e_linereader.h>
-}
+
 #include <game/version.hpp>
 #include <game/generated/g_protocol.hpp>
 
@@ -622,32 +620,7 @@ void MENUS::render_news(RECT main_view)
 
 void MENUS::on_init()
 {
-	LINEREADER lr;
-	IOHANDLE io = io_open("swedish.txt", IOFLAG_READ);
-	linereader_init(&lr, io);
-	char *line;
-	while((line = linereader_get(&lr)))
-	{
-		if(!str_length(line))
-			continue;
-			
-		char *replacement = linereader_get(&lr);
-		if(!replacement)
-		{
-			dbg_msg("", "unexpected end of file");
-			break;
-		}
-		
-		if(replacement[0] != '=' || replacement[1] != '=' || replacement[2] != ' ')
-		{
-			dbg_msg("", "malform replacement line for '%s'", line);
-			continue;
-		}
 
-		replacement += 3;
-		localization.add_string(line, replacement);
-	}
-	
 	/*
 	array<string> my_strings;
 	array<string>::range r2;

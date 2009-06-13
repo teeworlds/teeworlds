@@ -48,7 +48,7 @@ def generate_languagefile(outputfilename, srctable, loctable):
 	print >>f, "##### translated strings #####"
 	print >>f, ""
 	for k in srctable:
-		if k in loctable:
+		if k in loctable and len(loctable[k]):
 			print >>f, k
 			print >>f, "==", loctable[k]
 			print >>f, ""
@@ -58,7 +58,7 @@ def generate_languagefile(outputfilename, srctable, loctable):
 	print >>f, "##### needs translation ####"
 	print >>f,  ""
 	for k in srctable:
-		if not k in loctable:
+		if not k in loctable or len(loctable[k]) == 0:
 			print >>f, k
 			print >>f, "==", srctable[k]
 			print >>f, ""
