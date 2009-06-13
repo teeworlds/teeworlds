@@ -12,13 +12,16 @@
 #include "skins.hpp"
 
 #include <engine/e_client_interface.h>
-
+extern "C" {
+#include <engine/e_linereader.h>
+}
 #include <game/version.hpp>
 #include <game/generated/g_protocol.hpp>
 
 #include <game/generated/gc_data.hpp>
 #include <game/client/gameclient.hpp>
 #include <game/client/lineinput.hpp>
+#include <game/localization.hpp>
 #include <mastersrv/mastersrv.h>
 
 vec4 MENUS::gui_color;
@@ -460,7 +463,7 @@ int MENUS::render_menubar(RECT r)
 		{
 			ui_vsplit_l(&box, 90.0f, &button, &box);
 			static int news_button=0;
-			if (ui_do_button(&news_button, "News", active_page==PAGE_NEWS, &button, ui_draw_menu_tab_button, 0))
+			if (ui_do_button(&news_button, localize("News"), active_page==PAGE_NEWS, &button, ui_draw_menu_tab_button, 0))
 				new_page = PAGE_NEWS;
 			ui_vsplit_l(&box, 30.0f, 0, &box); 
 		}
@@ -468,7 +471,7 @@ int MENUS::render_menubar(RECT r)
 		ui_vsplit_l(&box, 100.0f, &button, &box);
 		static int internet_button=0;
 		int corners = CORNER_TL;
-		if (ui_do_button(&internet_button, "Internet", active_page==PAGE_INTERNET, &button, ui_draw_menu_tab_button, &corners))
+		if (ui_do_button(&internet_button, localize("Internet"), active_page==PAGE_INTERNET, &button, ui_draw_menu_tab_button, &corners))
 		{
 			client_serverbrowse_refresh(BROWSETYPE_INTERNET);
 			new_page = PAGE_INTERNET;
@@ -478,7 +481,7 @@ int MENUS::render_menubar(RECT r)
 		ui_vsplit_l(&box, 80.0f, &button, &box);
 		static int lan_button=0;
 		corners = 0;
-		if (ui_do_button(&lan_button, "LAN", active_page==PAGE_LAN, &button, ui_draw_menu_tab_button, &corners))
+		if (ui_do_button(&lan_button, localize("LAN"), active_page==PAGE_LAN, &button, ui_draw_menu_tab_button, &corners))
 		{
 			client_serverbrowse_refresh(BROWSETYPE_LAN);
 			new_page = PAGE_LAN;
@@ -488,7 +491,7 @@ int MENUS::render_menubar(RECT r)
 		ui_vsplit_l(&box, 110.0f, &button, &box);
 		static int favorites_button=0;
 		corners = CORNER_TR;
-		if (ui_do_button(&favorites_button, "Favorites", active_page==PAGE_FAVORITES, &button, ui_draw_menu_tab_button, &corners))
+		if (ui_do_button(&favorites_button, localize("Favorites"), active_page==PAGE_FAVORITES, &button, ui_draw_menu_tab_button, &corners))
 		{
 			client_serverbrowse_refresh(BROWSETYPE_FAVORITES);
 			new_page  = PAGE_FAVORITES;
@@ -497,7 +500,7 @@ int MENUS::render_menubar(RECT r)
 		ui_vsplit_l(&box, 4.0f*5, 0, &box);
 		ui_vsplit_l(&box, 100.0f, &button, &box);
 		static int demos_button=0;
-		if (ui_do_button(&demos_button, "Demos", active_page==PAGE_DEMOS, &button, ui_draw_menu_tab_button, 0))
+		if (ui_do_button(&demos_button, localize("Demos"), active_page==PAGE_DEMOS, &button, ui_draw_menu_tab_button, 0))
 		{
 			demolist_populate();
 			new_page  = PAGE_DEMOS;
@@ -508,19 +511,19 @@ int MENUS::render_menubar(RECT r)
 		/* online menus */
 		ui_vsplit_l(&box, 90.0f, &button, &box);
 		static int game_button=0;
-		if (ui_do_button(&game_button, "Game", active_page==PAGE_GAME, &button, ui_draw_menu_tab_button, 0))
+		if (ui_do_button(&game_button, localize("Game"), active_page==PAGE_GAME, &button, ui_draw_menu_tab_button, 0))
 			new_page = PAGE_GAME;
 
 		ui_vsplit_l(&box, 4.0f, 0, &box);
 		ui_vsplit_l(&box, 140.0f, &button, &box);
 		static int server_info_button=0;
-		if (ui_do_button(&server_info_button, "Server Info", active_page==PAGE_SERVER_INFO, &button, ui_draw_menu_tab_button, 0))
+		if (ui_do_button(&server_info_button, localize("Server Info"), active_page==PAGE_SERVER_INFO, &button, ui_draw_menu_tab_button, 0))
 			new_page = PAGE_SERVER_INFO;
 
 		ui_vsplit_l(&box, 4.0f, 0, &box);
 		ui_vsplit_l(&box, 140.0f, &button, &box);
 		static int callvote_button=0;
-		if (ui_do_button(&callvote_button, "Call Vote", active_page==PAGE_CALLVOTE, &button, ui_draw_menu_tab_button, 0))
+		if (ui_do_button(&callvote_button, localize("Call Vote"), active_page==PAGE_CALLVOTE, &button, ui_draw_menu_tab_button, 0))
 			new_page = PAGE_CALLVOTE;
 			
 		ui_vsplit_l(&box, 30.0f, 0, &box);
@@ -537,13 +540,13 @@ int MENUS::render_menubar(RECT r)
 	
 	ui_vsplit_r(&box, 90.0f, &box, &button);
 	static int quit_button=0;
-	if (ui_do_button(&quit_button, "Quit", 0, &button, ui_draw_menu_tab_button, 0))
+	if (ui_do_button(&quit_button, localize("Quit"), 0, &button, ui_draw_menu_tab_button, 0))
 		popup = POPUP_QUIT;
 
 	ui_vsplit_r(&box, 10.0f, &box, &button);
 	ui_vsplit_r(&box, 120.0f, &box, &button);
 	static int settings_button=0;
-	if (ui_do_button(&settings_button, "Settings", active_page==PAGE_SETTINGS, &button, ui_draw_menu_tab_button, 0))
+	if (ui_do_button(&settings_button, localize("Settings"), active_page==PAGE_SETTINGS, &button, ui_draw_menu_tab_button, 0))
 		new_page = PAGE_SETTINGS;
 	
 	if(new_page != -1)
@@ -593,7 +596,7 @@ void MENUS::render_loading(float percent)
 	gfx_quads_end();
 
 
-	const char *caption = "Loading";
+	const char *caption = localize("Loading");
 
 	tw = gfx_text_width(0, 48.0f, caption, -1);
 	RECT r;
@@ -617,8 +620,77 @@ void MENUS::render_news(RECT main_view)
 	ui_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
 }
 
-void MENUS::init()
+void MENUS::on_init()
 {
+	LINEREADER lr;
+	IOHANDLE io = io_open("swedish.txt", IOFLAG_READ);
+	linereader_init(&lr, io);
+	char *line;
+	while((line = linereader_get(&lr)))
+	{
+		if(!str_length(line))
+			continue;
+			
+		char *replacement = linereader_get(&lr);
+		if(!replacement)
+		{
+			dbg_msg("", "unexpected end of file");
+			break;
+		}
+		
+		if(replacement[0] != '=' || replacement[1] != '=' || replacement[2] != ' ')
+		{
+			dbg_msg("", "malform replacement line for '%s'", line);
+			continue;
+		}
+
+		replacement += 3;
+		localization.add_string(line, replacement);
+	}
+	
+	/*
+	array<string> my_strings;
+	array<string>::range r2;
+	my_strings.add("4");
+	my_strings.add("6");
+	my_strings.add("1");
+	my_strings.add("3");
+	my_strings.add("7");
+	my_strings.add("5");
+	my_strings.add("2");
+
+	for(array<string>::range r = my_strings.all(); !r.empty(); r.pop_front())
+		dbg_msg("", "%s", r.front().cstr());
+		
+	sort(my_strings.all());
+	
+	dbg_msg("", "after:");
+	for(array<string>::range r = my_strings.all(); !r.empty(); r.pop_front())
+		dbg_msg("", "%s", r.front().cstr());
+		
+	
+	array<int> myarray;
+	myarray.add(4);
+	myarray.add(6);
+	myarray.add(1);
+	myarray.add(3);
+	myarray.add(7);
+	myarray.add(5);
+	myarray.add(2);
+
+	for(array<int>::range r = myarray.all(); !r.empty(); r.pop_front())
+		dbg_msg("", "%d", r.front());
+		
+	sort(myarray.all());
+	sort_verify(myarray.all());
+	
+	dbg_msg("", "after:");
+	for(array<int>::range r = myarray.all(); !r.empty(); r.pop_front())
+		dbg_msg("", "%d", r.front());
+	
+	exit(-1);
+	// */
+	
 	if(config.cl_show_welcome)
 		popup = POPUP_FIRST_LAUNCH;
 	config.cl_show_welcome = 0;
@@ -709,49 +781,46 @@ int MENUS::render()
 		
 		if(popup == POPUP_CONNECTING)
 		{
-			title = "Connecting to";
+			title = localize("Connecting to");
 			extra_text = config.ui_server_address;  // TODO: query the client about the address
-			button_text = "Abort";
+			button_text = localize("Abort");
 			if(client_mapdownload_totalsize() > 0)
 			{
-				title = "Downloading map";
+				title = localize("Downloading map");
 				str_format(buf, sizeof(buf), "%d/%d KiB", client_mapdownload_amount()/1024, client_mapdownload_totalsize()/1024);
 				extra_text = buf;
 			}
 		}
 		else if(popup == POPUP_DISCONNECTED)
 		{
-			title = "Disconnected";
+			title = localize("Disconnected");
 			extra_text = client_error_string();
-			button_text = "Ok";
+			button_text = localize("Ok");
 			extra_align = -1;
 		}
 		else if(popup == POPUP_PURE)
 		{
-			title = "Disconnected";
-			extra_text = "The server is running a non-standard tuning on a pure game mode.";
-			button_text = "Ok";
+			title = localize("Disconnected");
+			extra_text = localize("The server is running a non-standard tuning on a pure game mode.");
+			button_text = localize("Ok");
 			extra_align = -1;
 		}
 		else if(popup == POPUP_PASSWORD)
 		{
-			title = "Password Error";
+			title = localize("Password Incorrect");
 			extra_text = client_error_string();
-			button_text = "Try Again";
+			button_text = localize("Try again");
 		}
 		else if(popup == POPUP_QUIT)
 		{
-			title = "Quit";
-			extra_text = "Are you sure that you want to quit?";
+			title = localize("Quit");
+			extra_text = localize("Are you sure that you want to quit?");
 		}
 		else if(popup == POPUP_FIRST_LAUNCH)
 		{
-			title = "Welcome to Teeworlds";
-			extra_text =
-			"As this is the first time you launch the game, please enter your nick name below. "
-			"It's recommended that you check the settings to adjust them to your liking "
-			"before joining a server.";
-			button_text = "Ok";
+			title = localize("Welcome to Teeworlds");
+			extra_text = localize("As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.");
+			button_text = localize("Ok");
 			extra_align = -1;
 		}
 		
@@ -788,11 +857,11 @@ int MENUS::render()
 			ui_vmargin(&no, 20.0f, &no);
 
 			static int button_abort = 0;
-			if(ui_do_button(&button_abort, "No", 0, &no, ui_draw_menu_button, 0) || escape_pressed)
+			if(ui_do_button(&button_abort, localize("No"), 0, &no, ui_draw_menu_button, 0) || escape_pressed)
 				popup = POPUP_NONE;
 
 			static int button_tryagain = 0;
-			if(ui_do_button(&button_tryagain, "Yes", 0, &yes, ui_draw_menu_button, 0) || enter_pressed)
+			if(ui_do_button(&button_tryagain, localize("Yes"), 0, &yes, ui_draw_menu_button, 0) || enter_pressed)
 				client_quit();
 		}
 		else if(popup == POPUP_PASSWORD)
@@ -809,11 +878,11 @@ int MENUS::render()
 			ui_vmargin(&abort, 20.0f, &abort);
 			
 			static int button_abort = 0;
-			if(ui_do_button(&button_abort, "Abort", 0, &abort, ui_draw_menu_button, 0) || escape_pressed)
+			if(ui_do_button(&button_abort, localize("Abort"), 0, &abort, ui_draw_menu_button, 0) || escape_pressed)
 				popup = POPUP_NONE;
 
 			static int button_tryagain = 0;
-			if(ui_do_button(&button_tryagain, "Try again", 0, &tryagain, ui_draw_menu_button, 0) || enter_pressed)
+			if(ui_do_button(&button_tryagain, localize("Try again"), 0, &tryagain, ui_draw_menu_button, 0) || enter_pressed)
 			{
 				client_connect(config.ui_server_address);
 			}
@@ -825,7 +894,7 @@ int MENUS::render()
 			ui_vsplit_l(&label, 100.0f, 0, &textbox);
 			ui_vsplit_l(&textbox, 20.0f, 0, &textbox);
 			ui_vsplit_r(&textbox, 60.0f, &textbox, 0);
-			ui_do_label(&label, "Password:", 20, -1);
+			ui_do_label(&label, localize("Password:"), 20, -1);
 			ui_do_edit_box(&config.password, &textbox, config.password, sizeof(config.password), 14.0f, true);
 		}
 		else if(popup == POPUP_FIRST_LAUNCH)
@@ -837,7 +906,7 @@ int MENUS::render()
 			ui_vmargin(&part, 80.0f, &part);
 			
 			static int enter_button = 0;
-			if(ui_do_button(&enter_button, "Enter", 0, &part, ui_draw_menu_button, 0) || enter_pressed)
+			if(ui_do_button(&enter_button, localize("Enter"), 0, &part, ui_draw_menu_button, 0) || enter_pressed)
 				popup = POPUP_NONE;
 			
 			ui_hsplit_b(&box, 40.f, &box, &part);
@@ -847,7 +916,7 @@ int MENUS::render()
 			ui_vsplit_l(&label, 100.0f, 0, &textbox);
 			ui_vsplit_l(&textbox, 20.0f, 0, &textbox);
 			ui_vsplit_r(&textbox, 60.0f, &textbox, 0);
-			ui_do_label(&label, "Nickname:", 20, -1);
+			ui_do_label(&label, localize("Nickname:"), 20, -1);
 			ui_do_edit_box(&config.player_name, &textbox, config.player_name, sizeof(config.player_name), 14.0f);
 		}
 		else

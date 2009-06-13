@@ -763,6 +763,25 @@ void str_sanitize(char *str);
 */
 int str_comp_nocase(const char *a, const char *b);
 
+
+/*
+	Function: str_comp_nocase
+		Compares to strings case sensitive.
+	
+	Parameters:
+		a - String to compare.
+		b - String to compare.
+	
+	Returns:	
+		<0 - String a is lesser then string b
+		0 - String a is equal to string b
+		>0 - String a is greater then string b
+
+	Remarks:
+		- The strings are treated as zero-termineted strings.
+*/
+int str_comp(const char *a, const char *b);
+
 /*
 	Function: str_find_nocase
 		Finds a string inside another string case insensitive.
@@ -781,6 +800,22 @@ int str_comp_nocase(const char *a, const char *b);
 */
 const char *str_find_nocase(const char *haystack, const char *needle);
 
+/*
+	Function: str_find
+		Finds a string inside another string case sensitive.
+
+	Parameters:
+		haystack - String to search in
+		needle - String to search for
+		
+	Returns:
+		A pointer into haystack where the needle was found.
+		Returns NULL of needle could not be found.
+
+	Remarks:
+		- The strings are treated as zero-termineted strings.
+*/
+const char *str_find(const char *haystack, const char *needle);
 
 /*
 	Function: str_hex

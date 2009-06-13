@@ -157,3 +157,4 @@ public:
 
 extern GAMECLIENT gameclient;
 
+extern const char *localize(const char *str);

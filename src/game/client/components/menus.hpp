@@ -173,7 +173,7 @@ public:
 
 	bool is_active() const { return menu_active; }
 
-	void init();
+	virtual void on_init();
 
 	virtual void on_statechange(int new_state, int old_state);
 	virtual void on_reset();

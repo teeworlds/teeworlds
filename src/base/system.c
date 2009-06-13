@@ -1097,6 +1097,12 @@ int str_comp_nocase(const char *a, const char *b)
 #endif
 }
 
+int str_comp(const char *a, const char *b)
+{
+	return strcmp(a, b);
+}
+
+
 const char *str_find_nocase(const char *haystack, const char *needle)
 {
 	while(*haystack) /* native implementation */
@@ -1104,6 +1110,26 @@ const char *str_find_nocase(const char *haystack, const char *needle)
 		const char *a = haystack;
 		const char *b = needle;
 		while(*a && *b && tolower(*a) == tolower(*b))
+		{
+			a++;
+			b++;
+		}
+		if(!(*b))
+			return haystack;
+		haystack++;
+	}
+	
+	return 0;
+}
+
+
+const char *str_find(const char *haystack, const char *needle)
+{
+	while(*haystack) /* native implementation */
+	{
+		const char *a = haystack;
+		const char *b = needle;
+		while(*a && *b && *a == *b)
 		{
 			a++;
 			b++;
