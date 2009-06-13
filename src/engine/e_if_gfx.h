@@ -671,5 +671,4 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length);
 struct FONT *gfx_font_load(const char *filename);
 void gfx_font_destroy(struct FONT *font);
 
-
 #endif

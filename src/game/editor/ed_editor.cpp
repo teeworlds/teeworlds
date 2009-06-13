@@ -18,6 +18,7 @@ extern "C" {
 #include <game/client/render.hpp>
 
 #include "ed_editor.hpp"
+#include <game/client/lineinput.hpp>
 
 static int checker_texture = 0;
 static int background_texture = 0;
@@ -209,44 +210,7 @@ int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float fo
 		for(int i = 0; i < inp_num_events(); i++)
 		{
 			len = strlen(str);
-			
-			INPUT_EVENT e = inp_get_event(i);
-			char c = e.ch;
-			int k = e.key;
-
-			if (at_index > len)
-				at_index = len;
-			
-			if (!(c >= 0 && c < 32) && c != 127)
-			{
-				if (len < str_size - 1 && at_index < str_size - 1)
-				{
-					memmove(str + at_index + 1, str + at_index, len - at_index + 1);
-					str[at_index] = c;
-					at_index++;
-				}
-			}
-			
-			if(e.flags&INPFLAG_PRESS)
-			{
-				if (k == KEY_BACKSPACE && at_index > 0)
-				{
-					memmove(str + at_index - 1, str + at_index, len - at_index + 1);
-					at_index--;
-				}
-				else if (k == KEY_DELETE && at_index < len)
-					memmove(str + at_index, str + at_index + 1, len - at_index);
-				else if (k == KEY_RETURN)
-					ui_clear_last_active_item();
-				else if (k == KEY_LEFT && at_index > 0)
-					at_index--;
-				else if (k == KEY_RIGHT && at_index < len)
-					at_index++;
-				else if (k == KEY_HOME)
-					at_index = 0;
-				else if (k == KEY_END)
-					at_index = len;
-			}
+			LINEINPUT::manipulate(inp_get_event(i), str, str_size, &len, &at_index);
 		}
 		
 		r = 1;

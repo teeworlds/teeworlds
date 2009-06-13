@@ -49,11 +49,11 @@ enum
 static INPUT_EVENT input_events[INPUT_BUFFER_SIZE];
 static int num_events = 0;
 
-static void add_event(char c, int key, int flags)
+static void add_event(int unicode, int key, int flags)
 {
 	if(num_events != INPUT_BUFFER_SIZE)
 	{
-		input_events[num_events].ch = c;
+		input_events[num_events].unicode = unicode;
 		input_events[num_events].key = key;
 		input_events[num_events].flags = flags;
 		num_events++;
@@ -178,8 +178,8 @@ void inp_update()
 			{
 				/* handle keys */
 				case SDL_KEYDOWN:
-					if(event.key.keysym.unicode < 255)
-						add_event(event.key.keysym.unicode, 0, 0);
+					/*if(event.key.keysym.unicode < 255) */
+					add_event(event.key.keysym.unicode, 0, 0);
 					key = event.key.keysym.sym;
 					break;
 				case SDL_KEYUP:

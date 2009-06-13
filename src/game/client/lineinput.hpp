@@ -5,9 +5,11 @@
 class LINEINPUT
 {
 	char str[256];
-	unsigned len;
-	unsigned cursor_pos;
+	int len;
+	int cursor_pos;
 public:
+	static void manipulate(INPUT_EVENT e, char *str, int str_max_size, int *str_len, int *cursor_pos);
+
 	class CALLBACK
 	{
 	public:

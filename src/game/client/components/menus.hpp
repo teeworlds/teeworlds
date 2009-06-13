@@ -40,7 +40,7 @@ class MENUS : public COMPONENT
 	static void ui_draw_checkbox_common(const void *id, const char *text, const char *boxtext, const RECT *r);
 	static void ui_draw_checkbox(const void *id, const char *text, int checked, const RECT *r, const void *extra);
 	static void ui_draw_checkbox_number(const void *id, const char *text, int checked, const RECT *r, const void *extra);
-	static int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float font_size, bool hidden=false);
+	static int ui_do_edit_box(void *id, const RECT *rect, char *str, unsigned str_size, float font_size, bool hidden=false);
 
 	static float ui_do_scrollbar_v(const void *id, const RECT *rect, float current);
 	static float ui_do_scrollbar_h(const void *id, const RECT *rect, float current);
