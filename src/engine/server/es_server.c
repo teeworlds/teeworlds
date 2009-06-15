@@ -988,6 +988,9 @@ static int server_load_map(const char *mapname)
 	if(!df)
 		return 0;
 	
+	/* stop recording when we change map */
+	demorec_record_stop();
+	
 	/* reinit snapshot ids */
 	snap_timeout_ids();
 	
