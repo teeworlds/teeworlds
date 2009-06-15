@@ -392,7 +392,7 @@ Texture Compression
 == Texturkompression
 
 The server is running a non-standard tuning on a pure game type.
-== Denna server kör icke-standard inställningar fast standard spel typ.
+== Denna server kör inte standardinställningar på standard spel typ.
 
 Time limit
 == Tidsbegränsning

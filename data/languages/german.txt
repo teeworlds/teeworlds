@@ -1,0 +1,445 @@
+
+##### translated strings #####
+
+%d of %d servers, %d players
+== %d von %d Servern, %d Spieler
+
+Abort
+== Abbrechen
+
+Address
+== Adresse
+
+All
+== Alle
+
+Alpha
+== Alpha
+
+Always show name plates
+== Zeige die Spielernamen immer an
+
+Are you sure that you want to quit?
+== Bist du dir sicher, dass du beenden willst?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Da es das erste Mal ist, dass du Teeworlds gestartet hast, gib bitte unten deinen Nicknamen ein. Es ist Empfehlenswert die Einstellungen zu überprüfen und nach ihren Vorlieben anzupassen, bevor du einem Spiel beitrittst.
+
+Blue team
+== Blaues Team
+
+Blue team wins!
+== Blaues Team hat gewonnen!
+
+Body
+== Körper
+
+Call vote
+== Abstimmung
+
+Chat
+== Chat
+
+Chat:
+== Chat:
+
+Close
+== Schließen
+
+Compatible version
+== Kompatible Version
+
+Connect
+== Verbinden
+
+Connecting to
+== Verbinde mit
+
+Console
+== Konsole
+
+Controls
+== Steuerung
+
+Current
+== Aktuell
+
+Current version: %s
+== Aktuelle Version: %s
+
+Custom colors
+== Eigene Farben
+
+Demos
+== Demos
+
+Disconnect
+== Verlassen
+
+Disconnected
+== Verbindung getrennt
+
+Display Modes
+== Auflösungen
+
+Downloading map
+== Lade die Karte herunter
+
+Draw!
+== Unentschieden
+
+Dynamic Camera
+== Dynamische Kamera
+
+Emoticon
+== Emoticon
+
+Enter
+== Starten
+
+FSAA samples
+== Vollbild Anti-Aliasing
+
+Favorite
+== Favorit
+
+Favorites
+== Favoriten
+
+Feet
+== Füße
+
+Filter
+== Filter
+
+Fire
+== Feuern
+
+Fullscreen
+== Vollbild
+
+Game
+== Spiel
+
+Game info
+== Spiel Info
+
+Game over
+== Spiel vorbei
+
+Game type
+== Spiel-Typ
+
+Game types
+== Spiel-Typen
+
+General
+== Allgemein
+
+Graphics
+== Grafik
+
+Grenade
+== Granate
+
+Hammer
+== Hammer
+
+Has people playing
+== Server ist nicht leer
+
+High Detail
+== Hohe Details
+
+Hook
+== Enterhaken
+
+Host address
+== Server Adresse
+
+Hue
+== Farbt.
+
+Info
+== Info
+
+Internet
+== Internet
+
+Join blue
+== Blau beitreten
+
+Join game
+== Spiel beitreten
+
+Join red
+== Rot beitreten
+
+Jump
+== Springen
+
+Kick
+== Kick
+
+LAN
+== LAN
+
+Language
+== Sprache
+
+Lht.
+== Helligk.
+
+Loading
+== Laden
+
+MOTD
+== Nachricht des Tages
+
+Map
+== Karte
+
+Maximum ping
+== Höchster Ping
+
+Miscellaneous
+== Verschiedenes
+
+Mouse sens.
+== Maus-Empfindl.
+
+Move left
+== Nach Links
+
+Move right
+== Nach Rechts
+
+Movement
+== Bewebungen
+
+Mute when not active
+== Stumm schalten, wenn nicht aktiv
+
+N/A
+== N/A
+
+Name
+== Name
+
+News
+== News
+
+Next weapon
+== Nächste Waffe
+
+Nickname:
+== Nickname:
+
+No
+== Nein
+
+No password
+== Kein Passwort
+
+No servers found
+== Keine Server gefunden
+
+No servers match your filter criteria
+== Kein Server entspricht den Kriterien
+
+Ok
+== Ok
+
+Password
+== Passwort
+
+Password Incorrect
+== Falsches Passwort
+
+Password:
+== Passwort:
+
+Ping
+== Ping
+
+Pistol
+== Pistole
+
+Play
+== Spielen
+
+Player
+== Spieler
+
+Players
+== Spieler
+
+Prev. weapon
+== Vorherige Waffe
+
+Progression
+== Fortschritt
+
+Quality Textures
+== Qualitäts-Texturen
+
+Quick search:
+== Schnelle Suche:
+
+Quit
+== Beenden
+
+Red team
+== Rotes Team
+
+Red team wins!
+== Rotes Team hat gewonnen!
+
+Refresh
+== Neu Laden
+
+Refreshing master servers
+== Aktualisieren der Master-Server
+
+Remote console
+== Entfernte Konsole
+
+Reset filter
+== Zurücksetzen
+
+Reset to defaults
+== Standardeinstellung
+
+Rifle
+== Laser
+
+Round
+== Runde
+
+Sample rate
+== Qualität
+
+Sat.
+== Sättig.
+
+Score
+== Punkte
+
+Score board
+== Punkte Tafel
+
+Score limit
+== Punktelimit
+
+Scoreboard
+== Punktetafel
+
+Screenshot
+== Screenshot
+
+Server details
+== Server details
+
+Server info
+== Server Info
+
+Server not full
+== Server ist nicht voll
+
+Settings
+== Optionen
+
+Shotgun
+== Schrotflinte
+
+Show name plates
+== Zeige Namen
+
+Show only supported
+== Zeige nur verfügbare
+
+Skins
+== Skin
+
+Sound
+== Sound
+
+Sound volume
+== Lautstärke
+
+Spectate
+== Zuschauen
+
+Spectators
+== Zuschauer
+
+Standard gametype
+== Standard Spieltyp
+
+Standard map
+== Standard-Karte
+
+Switch weapon on pickup
+== Wechsel zur aufgenommenen Waffe
+
+Team
+== Team
+
+Team chat
+== Team-Chat
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworlds %s wurde veröffentlicht! Lade es dir auf www.teeworlds.com herunter!
+
+Texture Compression
+== Texturkompression
+
+Time limit
+== Zeitlimit
+
+Try again
+== Nochmal versuchen
+
+Type
+== Typ
+
+UI Color
+== Farbe der Oberfläche
+
+Use sounds
+== Sound aktivieren
+
+V-Sync
+== V-Sync
+
+Version
+== Version
+
+Vote no
+== Stimme nicht zu
+
+Vote yes
+== Stimme zu
+
+Voting
+== Abstimmung
+
+Weapon
+== Waffe
+
+Welcome to Teeworlds
+== Willkommen in Teeworlds
+
+Yes
+== Ja
+
+You must restart the game for all settings to take effect.
+== Du musst das Spiel neustarten, damit alle Einstellungen übernommen wurden.
+
+##### needs translation ####
+
+The server is running a non-standard tuning on a pure game type.
+== 
+
+##### old translations ####
+
