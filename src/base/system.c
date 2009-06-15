@@ -1354,6 +1354,16 @@ int str_utf8_decode(const char **ptr)
 	
 }
 
+
+unsigned str_quickhash(const char *str)
+{
+	unsigned hash = 5381;
+	for(; *str; str++)
+		hash = ((hash << 5) + hash) + (*str); /* hash * 33 + c */
+	return hash;
+}
+
+
 #if defined(__cplusplus)
 }
 #endif

@@ -971,7 +971,7 @@ void net_stats(NETSTATS *stats);
 
 int str_isspace(char c);
 char str_uppercase(char c);
-
+unsigned str_quickhash(const char *str);
 
 /*
 	Function: gui_messagebox

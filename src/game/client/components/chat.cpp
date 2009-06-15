@@ -89,11 +89,6 @@ void CHAT::on_message(int msgtype, void *rawmsg)
 	{
 		NETMSG_SV_CHAT *msg = (NETMSG_SV_CHAT *)rawmsg;
 		add_line(msg->cid, msg->team, msg->message);
-
-		if(msg->cid >= 0)
-			gameclient.sounds->play(SOUNDS::CHN_GUI, SOUND_CHAT_CLIENT, 0, vec2(0,0));
-		else
-			gameclient.sounds->play(SOUNDS::CHN_GUI, SOUND_CHAT_SERVER, 0, vec2(0,0));
 	}
 }
 
@@ -126,6 +121,12 @@ void CHAT::add_line(int client_id, int team, const char *line)
 		str_copy(lines[current_line].name, gameclient.clients[client_id].name, sizeof(lines[current_line].name));
 		str_format(lines[current_line].text, sizeof(lines[current_line].text), ": %s", line);
 	}
+	
+	// play sound
+	if(client_id >= 0)
+		gameclient.sounds->play(SOUNDS::CHN_GUI, SOUND_CHAT_CLIENT, 0, vec2(0,0));
+	else
+		gameclient.sounds->play(SOUNDS::CHN_GUI, SOUND_CHAT_SERVER, 0, vec2(0,0));
 	
 	dbg_msg("chat", "%s%s", lines[current_line].name, lines[current_line].text);
 }

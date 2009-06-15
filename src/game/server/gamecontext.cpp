@@ -193,8 +193,13 @@ void GAMECONTEXT::send_chat(int chatter_cid, int team, const char *text)
 		msg.team = 1;
 		msg.cid = chatter_cid;
 		msg.message = text;
-		msg.pack(MSGFLAG_VITAL);
+		
+		// pack one for the recording only
+		msg.pack(MSGFLAG_VITAL|MSGFLAG_NOSEND);
+		server_send_msg(-1);
 
+		// send to the clients
+		msg.pack(MSGFLAG_VITAL|MSGFLAG_NORECORD);
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
 			if(game.players[i] && game.players[i]->team == team)
