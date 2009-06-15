@@ -2,7 +2,7 @@
 ##### translated strings #####
 
 %d of %d servers, %d players
-== %d von %d servers, %d Spieler
+== %d von %d Servern, %d Spieler
 
 Abort
 == Abbrechen
