@@ -774,7 +774,7 @@ int MENUS::render()
 		else if(popup == POPUP_PURE)
 		{
 			title = localize("Disconnected");
-			extra_text = localize("The server is running a non-standard tuning on a pure game mode.");
+			extra_text = localize("The server is running a non-standard tuning on a pure game type.");
 			button_text = localize("Ok");
 			extra_align = -1;
 		}

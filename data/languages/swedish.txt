@@ -134,7 +134,7 @@ Game types
 == Speltyper
 
 General
-== Generallt
+== Generellt
 
 Graphics
 == Grafik
@@ -219,6 +219,9 @@ Movement
 
 Mute when not active
 == Stäng av ljudet när spelet inte är aktivt
+
+N/A
+== -
 
 Name
 == Namn
@@ -388,6 +391,9 @@ Teeworlds %s is out! Download it at www.teeworlds.com!
 Texture Compression
 == Texturkompression
 
+The server is running a non-standard tuning on a pure game type.
+== Denna server kör icke-standard inställningar fast standard spel typ.
+
 Time limit
 == Tidsbegränsning
 
@@ -432,13 +438,7 @@ You must restart the game for all settings to take effect.
 
 ##### needs translation ####
 
-N/A
-== 
-
 Progression
-== 
-
-The server is running a non-standard tuning on a pure game mode.
 == 
 
 ##### old translations ####
