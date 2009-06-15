@@ -428,6 +428,27 @@ static void str_variable_command(void *result, void *user_data)
 	}
 }
 
+static void console_chain(void *result, void *user_data)
+{
+	COMMANDCHAIN *info = (COMMANDCHAIN *)user_data;
+	info->chain_callback(result, info->user_data, info->callback, info->callback_user_data);
+}
+
+void console_chain_command(const char *cmd, COMMANDCHAIN *chaininfo, CONSOLE_CHAIN_CALLBACK cb, void *user)
+{
+	COMMAND *command = console_get_command(cmd);
+
+	/* store info */
+	chaininfo->chain_callback = cb;
+	chaininfo->callback = command->callback;
+	chaininfo->callback_user_data = command->user_data;
+	chaininfo->user_data = user;
+	
+	/* chain */
+	command->callback = console_chain;
+	command->user_data = chaininfo;
+}
+
 void console_init()
 {
 	MACRO_REGISTER_COMMAND("echo", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, con_echo, 0x0, "Echo the text");

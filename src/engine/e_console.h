@@ -6,6 +6,7 @@ extern "C"{
 #endif
 
 typedef void (*CONSOLE_CALLBACK)(void *result, void *user_data);
+typedef void (*CONSOLE_CHAIN_CALLBACK)(void *result, void *user_data, CONSOLE_CALLBACK cb, void *cbuser);
 
 typedef struct COMMAND_t
 {
@@ -18,6 +19,14 @@ typedef struct COMMAND_t
 	struct COMMAND_t *next;
 } COMMAND;
 
+typedef struct COMMANDCHAIN_t
+{
+	CONSOLE_CHAIN_CALLBACK chain_callback;
+	CONSOLE_CALLBACK callback;
+	void *callback_user_data;
+	void *user_data;
+} COMMANDCHAIN;
+
 void console_init();
 void console_register(COMMAND *cmd);
 void console_execute_line(const char *str);
@@ -25,6 +34,7 @@ void console_execute_line_stroked(int stroke, const char *str);
 void console_execute_file(const char *filename);
 void console_possible_commands(const char *str, int flagmask, void (*callback)(const char *cmd, void *user), void *user);
 COMMAND *console_get_command(const char *cmd);
+void console_chain_command(const char *cmd, COMMANDCHAIN *chaininfo, CONSOLE_CHAIN_CALLBACK cb, void *user);
 void console_print(const char *str);
 void console_register_print_callback(void (*callback)(const char *, void *user_data), void *user_data);
 

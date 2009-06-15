@@ -1,5 +1,6 @@
 
 #include <base/vmath.hpp>
+#include <engine/e_console.h>
 #include <game/gamecore.hpp>
 #include "render.hpp"
 
@@ -33,6 +34,8 @@ class GAMECLIENT
 
 	static void con_team(void *result, void *user_data);
 	static void con_kill(void *result, void *user_data);
+	
+	static void conchain_special_infoupdate(void *result, void *user_data, CONSOLE_CALLBACK cb, void *cbuser);
 	
 public:
 	bool suppress_events;

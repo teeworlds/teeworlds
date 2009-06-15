@@ -417,6 +417,10 @@ int client_send_msg()
 	
 	if(!info)
 		return -1;
+
+	if(client_state() == CLIENTSTATE_OFFLINE)
+		return 0;
+	
 		
 	mem_zero(&packet, sizeof(NETCHUNK));
 	

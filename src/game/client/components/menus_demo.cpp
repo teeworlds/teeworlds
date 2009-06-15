@@ -178,6 +178,8 @@ static float listbox_rowheight;
 static int listbox_itemindex;
 static int listbox_selected_index;
 static int listbox_new_selected;
+static int listbox_doneevents;
+static int listbox_numitems;
 
 void MENUS::ui_do_listbox_start(void *id, const RECT *rect, float row_height, const char *title, int num_items, int selected_index)
 {
@@ -207,6 +209,8 @@ void MENUS::ui_do_listbox_start(void *id, const RECT *rect, float row_height, co
 	listbox_new_selected = selected_index;
 	listbox_itemindex = 0;
 	listbox_rowheight = row_height;
+	listbox_numitems = num_items;
+	listbox_doneevents = 0;
 	//int num_servers = client_serverbrowse_sorted_num();
 
 
@@ -270,6 +274,25 @@ MENUS::LISTBOXITEM MENUS::ui_do_listbox_nextitem(void *id)
 
 	if(listbox_selected_index==listbox_itemindex)
 	{
+		if(!listbox_doneevents)
+		{
+			listbox_doneevents = 1;
+			
+			for(int i = 0; i < num_inputevents; i++)
+			{
+				if(inputevents[i].flags&INPFLAG_PRESS)
+				{
+					if(inputevents[i].key == KEY_DOWN) listbox_new_selected++;
+					if(inputevents[i].key == KEY_UP) listbox_new_selected--;
+				}
+			}
+
+			if(listbox_new_selected >= listbox_numitems)
+				listbox_new_selected = listbox_numitems-1;
+			if(listbox_new_selected < 0)
+				listbox_new_selected = 0;
+		}
+		
 		//selected_index = i;
 		RECT r = row;
 		ui_margin(&r, 1.5f, &r);
@@ -289,28 +312,6 @@ int MENUS::ui_do_listbox_end()
 	return listbox_new_selected;
 }
 
-/*
-void MENUS::demolist_listdir_callback(const char *name, int is_dir, void *user)
-{
-
-	(*count)++;
-	LISTBOXITEM item = ui_do_listbox_nextitem((void*)(10+*count));
-	if(item.visible)
-		ui_do_label(&item.rect, name, item.rect.h*fontmod_height, -1);
-}
-
-
-	DEMOITEM *demos;
-	int num_demos;
-	*/
-	
-/*void MENUS::demolist_count_callback(const char *name, int is_dir, void *user)
-{
-	if(is_dir || name[0] == '.')
-		return;
-	(*(int *)user)++;
-}*/
-
 struct FETCH_CALLBACKINFO
 {
 	MENUS *self;
@@ -329,32 +330,14 @@ void MENUS::demolist_fetch_callback(const char *name, int is_dir, void *user)
 	str_format(item.filename, sizeof(item.filename), "%s/%s", info->prefix, name);
 	str_copy(item.name, name, sizeof(item.name));
 	info->self->demos.add(item);
-	
-	/*
-	if(info->count == info->self->num_demos)
-		return;
-	
-	info->count++;
-	*/
 }
-
 
 void MENUS::demolist_populate()
 {
 	demos.clear();
 	
-	/*if(demos)
-		mem_free(demos);
-	demos = 0;
-	num_demos = 0;*/
-	
 	char buf[512];
 	str_format(buf, sizeof(buf), "%s/demos", client_user_directory());
-	//fs_listdir(buf, demolist_count_callback, &num_demos);
-	//fs_listdir("demos", demolist_count_callback, &num_demos);
-	
-	//demos = (DEMOITEM *)mem_alloc(sizeof(DEMOITEM)*num_demos, 1);
-	//mem_zero(demos, sizeof(DEMOITEM)*num_demos);
 
 	FETCH_CALLBACKINFO info = {this, buf, 0};
 	fs_listdir(buf, demolist_fetch_callback, &info);

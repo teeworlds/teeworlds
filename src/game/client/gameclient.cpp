@@ -248,7 +248,18 @@ void GAMECLIENT::on_console_init()
 	// let all the other components register their console commands
 	for(int i = 0; i < all.num; i++)
 		all.components[i]->on_console_init();
-		
+	
+	
+	//
+	{ static COMMANDCHAIN chain; console_chain_command("player_name", &chain, conchain_special_infoupdate, this); }
+	{ static COMMANDCHAIN chain; console_chain_command("player_use_custom_color", &chain, conchain_special_infoupdate, this); }
+	{ static COMMANDCHAIN chain; console_chain_command("player_color_body", &chain, conchain_special_infoupdate, this); }
+	{ static COMMANDCHAIN chain; console_chain_command("player_color_feet", &chain, conchain_special_infoupdate, this); }
+	{ static COMMANDCHAIN chain; console_chain_command("player_skin", &chain, conchain_special_infoupdate, this); }
+	
+	
+	
+	
 	//
 	suppress_events = false;
 }
@@ -953,4 +964,11 @@ void GAMECLIENT::con_team(void *result, void *user_data)
 void GAMECLIENT::con_kill(void *result, void *user_data)
 {
 	((GAMECLIENT*)user_data)->send_kill(-1);
+}
+
+void GAMECLIENT::conchain_special_infoupdate(void *result, void *user_data, CONSOLE_CALLBACK cb, void *cbuser)
+{
+	cb(result, cbuser);
+	if(console_arg_num(result))
+		((GAMECLIENT*)user_data)->send_info(false);
 }
