@@ -1,7 +1,7 @@
 #ifndef TL_FILE_SORTED_ARRAY_HPP
 #define TL_FILE_SORTED_ARRAY_HPP
 
-#include "algorithms.hpp"
+#include "algorithm.hpp"
 #include "array.hpp"
 
 template <class T, class ALLOCATOR = allocator_default<T> >

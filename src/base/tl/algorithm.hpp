@@ -1,5 +1,5 @@
-#ifndef TL_FILE_ALGORITHMS_HPP
-#define TL_FILE_ALGORITHMS_HPP
+#ifndef TL_FILE_ALGORITHM_HPP
+#define TL_FILE_ALGORITHM_HPP
 
 #include "range.hpp"
 
