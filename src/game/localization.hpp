@@ -1,4 +1,5 @@
-#include <base/tl/array.hpp>
+#include <base/tl/string.hpp>
+#include <base/tl/sorted_array.hpp>
 
 class LOCALIZATIONDATABASE
 {
@@ -6,13 +7,16 @@ class LOCALIZATIONDATABASE
 	{
 	public:
 		unsigned hash;
+		
+		// TODO: do this as an const char * and put everything on a incremental heap
 		string replacement;
-		
-		bool operator ==(unsigned h) const { return hash == h; }
-		
+
+		bool operator <(const STRING &other) const { return hash < other.hash; }
+		bool operator <=(const STRING &other) const { return hash <= other.hash; }
+		bool operator ==(const STRING &other) const { return hash == other.hash; }
 	};
 
-	array<STRING> strings;
+	sorted_array<STRING> strings;
 	int current_version;
 	
 public:
@@ -26,8 +30,7 @@ public:
 	const char *find_string(unsigned hash);
 };
 
-static LOCALIZATIONDATABASE localization;
-
+extern LOCALIZATIONDATABASE localization;
 
 class LOC_CONSTSTRING
 {
@@ -46,3 +49,6 @@ public:
 		return current_str;
 	}
 };
+
+
+extern const char *localize(const char *str);

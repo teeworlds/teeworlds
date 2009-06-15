@@ -254,7 +254,7 @@ typedef struct
 	int keyid;
 } KEYINFO;
 
-KEYINFO keys[] = 
+static KEYINFO keys[] = 
 {
 	// we need to do localize so the scripts can pickup the string
 	{ localize("Move Left:"), "+left", 0},
@@ -286,7 +286,7 @@ void MENUS::ui_do_getbuttons(int start, int stop, RECT view)
 {
 	for (int i = start; i < stop; i++)
 	{
-		KEYINFO key = keys[i];
+		KEYINFO &key = keys[i];
 		RECT button, label;
 		ui_hsplit_t(&view, 20.0f, &button, &view);
 		ui_vsplit_l(&button, 130.0f, &label, &button);

@@ -98,8 +98,77 @@ static void con_serverdummy(void *result, void *user_data)
 	dbg_msg("client", "this command is not available on the client");
 }
 
+#include <base/tl/sorted_array.hpp>
+
 void GAMECLIENT::on_console_init()
 {
+	if(0)
+	{
+		int ints[4] = {0,1,2,3};
+		for(int s = 1; s < 4; s++)
+		{
+			//s = 2;
+			plain_range_sorted<int> test_sorted_range(ints, ints+s);
+			plain_range_sorted<int> res1, res2;
+			
+			//res2 = partition_binary(test_sorted_range, 1);
+		
+			//for(int i = 0; i < 4; i++)
+			//	dbg_assert(partition_linear(test_sorted_range, i).front() == i, "partition linear failed");
+				
+				
+			dbg_msg("", "size %d", s);
+
+			for(int i = -1; i < 5; i++)
+			{
+				res1 = partition_linear(test_sorted_range, i);
+				dbg_msg("", "\tlin %d == %d", i, res1.empty()?-1:res1.front());
+
+				res2 = partition_binary(test_sorted_range, i);
+				dbg_msg("", "\tbin %d == %d", i, res2.empty()?-1:res2.front());
+				//dbg_assert(partition_binary(plain_range_sorted<int>(ints, ints+6), i).front() == i+1, "partition binary failed");
+			}
+		} //*/
+
+		sorted_array<int> test;
+		test.add(4);
+		test.add(1);
+		
+		for(int i = 0; i < 100; i++)
+		{
+			int this_add = rand();
+			test.add(this_add);
+			if(!sort_verify(test.all()))
+			{
+				dbg_msg("", "error inserting %d", this_add);
+				for(sorted_array<int>::range r = test.all(); !r.empty(); r.pop_front())
+					dbg_msg("", "%d", r.front());
+				exit(-1);
+			}
+		}/*
+			
+		
+		test.add(1);
+		test.add(4);
+		test.add(3);
+		test.add(4);
+		test.add(3);
+		test.add(2);
+		//test.insert(1, 1);
+		for(sorted_array<int>::range r = test.all(); !r.empty(); r.pop_front())
+			dbg_msg("", "%d", r.front());
+			*/
+			
+		sort_verify(test.all());
+		/*
+		for(int i = 0; i < 15; i++)
+		{
+			dbg_msg("", "found %d == %d", i, !find_binary(test.all(), i).empty());
+		}*/
+		
+		exit(-1);
+	}
+	
 	// setup pointers
 	binds = &::binds;
 	console = &::console;

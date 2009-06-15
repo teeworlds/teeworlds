@@ -7,6 +7,9 @@ Fullscreen
 Loading
 == Laddar
 
+Ping
+== Ping
+
 Next Weapon:
 == Nästa vapen:
 
@@ -18,6 +21,9 @@ Use sounds
 
 Body
 == Kropp
+
+Ping:
+== Ping:
 
 Show name plates
 == Visa namnskyltar
@@ -37,14 +43,20 @@ Ok
 Call Vote
 == Starta omröstning
 
-LAN
-== LAN
+Favorite
+== Favorit
+
+Try again
+== Försök igen
+
+Refresh
+== Uppdatera
 
 FSAA samples
 == FSAA samplingar
 
-Hammer:
-== Hammare:
+No servers match your filter criteria
+== Inga servrar matchar dina filter kriterer
 
 Welcome to Teeworlds
 == Välkommen till Teeworlds
@@ -55,11 +67,14 @@ Voting
 Sat.
 == Mättnad
 
-Try again
-== Försök igen
+LAN
+== LAN
 
 Prev. Weapon:
 == Föregående vapen:
+
+Standard gametype
+== Standard speltyp
 
 Skins
 == Utseende
@@ -67,11 +82,26 @@ Skins
 Quit
 == Avsluta
 
-Controls
-== Kontroller
+Has people playing
+== Har folk som spelar
+
+Version:
+== Version:
 
 Dynamic Camera
 == Dynamisk kamera
+
+Remote Console:
+== Serverkonsol:
+
+Type
+== Typ
+
+Disconnected
+== Frånkopplad
+
+Feet
+== Fötter
 
 Show only supported
 == Visa endast upplösningar som stöds
@@ -88,11 +118,26 @@ Game
 Screenshot:
 == Skärmdump
 
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworld %s är släppt! Ladda ner det på www.teeworlds.com!
+
 Grenade:
 == Granater:
 
+Connect
+== Anslut
+
+Info
+== Info
+
+No password
+== Inget lösenord
+
 Team Chat:
 == Lagchatt:
+
+Refreshing master servers
+== Uppdaterar huvudservrar
 
 Settings
 == Inställningar
@@ -102,6 +147,9 @@ Custom colors
 
 Emoticon:
 == Känsloikon
+
+Server details:
+== Server detaljer:
 
 Shotgun:
 == Hagelgevär:
@@ -133,6 +181,9 @@ High Detail
 No
 == Nej
 
+Reset filter
+== Återställ filter
+
 Mute when not active
 == Stäng av ljudet när spelet inte är aktivt
 
@@ -160,8 +211,17 @@ Rifle:
 Switch weapon on pickup
 == Byt vapen vid upplock
 
+Compatible version
+== Kompatibel version
+
+Standard map
+== Standard karta
+
 Fire:
 == Skjuta:
+
+Host address:
+== Serveraddress
 
 Weapon
 == Vapen
@@ -169,20 +229,29 @@ Weapon
 Display Modes
 == Skärmlägen
 
+Filter
+== Filter
+
 Move Right:
 == Gå höger
+
+Controls
+== Kontroller
 
 Lht.
 == Ljusstyrka
 
+Server not full
+== Inte full server
+
 Chat:
 == Chatt:
 
-Remote Console:
-== Serverkonsol:
+Quick search:
+== Snabbsök:
 
-Feet
-== Fötter
+%d of %d servers, %d players
+== %d av %d servrar, %d spelare
 
 Demos
 == Demon
@@ -211,6 +280,9 @@ Current
 Hook:
 == Haken:
 
+Map
+== Karta
+
 Texture Compression
 == Texturkompression
 
@@ -229,11 +301,20 @@ Alpha
 Name:
 == Namn:
 
-Disconnected
-== Frånkopplad
+Game types:
+== Speltyper:
+
+Name
+== Namn
 
 You must restart the game for all settings to take effect.
 == Du måste starta om spelet för att ändringarna skall gälla.
+
+Maximum ping
+== Högsta ping
+
+Players
+== Spelare
 
 Downloading map
 == Laddar ner karta
@@ -244,11 +325,17 @@ Enter
 Jump:
 == Hoppa:
 
+Game Type:
+== Speltyp:
+
 Password:
 == Lösenord:
 
 Player
 == Spelare
+
+Hammer:
+== Hammare:
 
 Vote Yes:
 == Rösta ja:
@@ -261,7 +348,19 @@ Pistol:
 
 ##### needs translation ####
 
+Progression:
+== 
+
 The server is running a non-standard tuning on a pure game mode.
+== 
+
+N/A
+== 
+
+Current version: %s
+== 
+
+No servers found
 == 
 
 ##### old translations ####

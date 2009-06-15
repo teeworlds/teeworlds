@@ -1,5 +1,6 @@
 
 #include "localization.hpp"
+#include <base/tl/algorithms.hpp>
 
 extern "C" {
 #include <engine/e_linereader.h>
@@ -16,7 +17,6 @@ static unsigned str_hash(const char *str)
 const char *localize(const char *str)
 {
 	const char *new_str = localization.find_string(str_hash(str));
-	//dbg_msg("", "no localization for '%s'", str);
 	return new_str ? new_str : str;
 }
 
@@ -86,15 +86,19 @@ bool LOCALIZATIONDATABASE::load(const char *filename)
 		replacement += 3;
 		localization.add_string(line, replacement);
 	}
-		
+	
 	current_version++;
 	return true;
 }
 
 const char *LOCALIZATIONDATABASE::find_string(unsigned hash)
 {
-	array<STRING>::range r = ::find(strings.all(), hash);
+	STRING s;
+	s.hash = hash;
+	sorted_array<STRING>::range r = ::find_binary(strings.all(), s);
 	if(r.empty())
 		return 0;
 	return r.front().replacement;
 }
+
+LOCALIZATIONDATABASE localization;

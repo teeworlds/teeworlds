@@ -58,12 +58,12 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 		{COL_FLAG_LOCK,	-1,						" ",		-1, 14.0f, 0, {0}, {0}},
 		{COL_FLAG_PURE,	-1,						" ",		-1, 14.0f, 0, {0}, {0}},
 		{COL_FLAG_FAV,	-1,						" ",		-1, 14.0f, 0, {0}, {0}},
-		{COL_NAME,		BROWSESORT_NAME,		"Name",		0, 300.0f, 0, {0}, {0}},
-		{COL_GAMETYPE,	BROWSESORT_GAMETYPE,	"Type",		1, 50.0f, 0, {0}, {0}},
-		{COL_MAP,		BROWSESORT_MAP,			"Map", 		1, 100.0f, 0, {0}, {0}},
-		{COL_PLAYERS,	BROWSESORT_NUMPLAYERS,	"Players",	1, 60.0f, 0, {0}, {0}},
+		{COL_NAME,		BROWSESORT_NAME,		localize("Name"),		0, 300.0f, 0, {0}, {0}},
+		{COL_GAMETYPE,	BROWSESORT_GAMETYPE,	localize("Type"),		1, 50.0f, 0, {0}, {0}},
+		{COL_MAP,		BROWSESORT_MAP,			localize("Map"), 		1, 100.0f, 0, {0}, {0}},
+		{COL_PLAYERS,	BROWSESORT_NUMPLAYERS,	localize("Players"),	1, 60.0f, 0, {0}, {0}},
 		{-1,			-1,						" ",		1, 10.0f, 0, {0}, {0}},
-		{COL_PING,		BROWSESORT_PING,		"Ping",		1, 40.0f, FIXED, {0}, {0}},
+		{COL_PING,		BROWSESORT_PING,		localize("Ping"),		1, 40.0f, FIXED, {0}, {0}},
 	};
 	
 	int num_cols = sizeof(cols)/sizeof(column);
@@ -128,11 +128,11 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 		msgbox.y += view.h/3;
 		
 		if(active_page == PAGE_INTERNET && client_serverbrowse_refreshingmasters())
-			ui_do_label(&msgbox, "Refreshing master servers", 16.0f, 0);
+			ui_do_label(&msgbox, localize("Refreshing master servers"), 16.0f, 0);
 		else if(!client_serverbrowse_num())
-			ui_do_label(&msgbox, "No servers found", 16.0f, 0);
+			ui_do_label(&msgbox, localize("No servers found"), 16.0f, 0);
 		else if(client_serverbrowse_num() && !num_servers)
-			ui_do_label(&msgbox, "No servers match your filter criteria", 16.0f, 0);
+			ui_do_label(&msgbox, localize("No servers match your filter criteria"), 16.0f, 0);
 	}
 
 	int num = (int)(view.h/cols[0].rect.h);
@@ -330,13 +330,13 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 	// render quick search
 	RECT quicksearch;
 	ui_vsplit_l(&status, 250.0f, &quicksearch, &status);
-	ui_do_label(&quicksearch, "Quick search: ", 14.0f, -1);
-	ui_vsplit_l(&quicksearch, gfx_text_width(0, 14.0f, "Quick search: ", -1), 0, &quicksearch);
+	ui_do_label(&quicksearch, localize("Quick search:"), 14.0f, -1);
+	ui_vsplit_l(&quicksearch, gfx_text_width(0, 14.0f, localize("Quick search:"), -1), 0, &quicksearch);
 	ui_do_edit_box(&config.b_filter_string, &quicksearch, config.b_filter_string, sizeof(config.b_filter_string), 14.0f);
 	
 	// render status
 	char buf[128];
-	str_format(buf, sizeof(buf), "%d of %d servers, %d players", client_serverbrowse_sorted_num(), client_serverbrowse_num(), num_players);
+	str_format(buf, sizeof(buf), localize("%d of %d servers, %d players"), client_serverbrowse_sorted_num(), client_serverbrowse_num(), num_players);
 	ui_vsplit_r(&status, gfx_text_width(0, 14.0f, buf, -1), 0, &status);
 	ui_do_label(&status, buf, 14.0f, -1);
 }
@@ -353,32 +353,32 @@ void MENUS::render_serverbrowser_filters(RECT view)
 
 	// render filters
 	ui_hsplit_t(&view, 20.0f, &button, &view);
-	if (ui_do_button(&config.b_filter_empty, "Has people playing", config.b_filter_empty, &button, ui_draw_checkbox, 0))
+	if (ui_do_button(&config.b_filter_empty, localize("Has people playing"), config.b_filter_empty, &button, ui_draw_checkbox, 0))
 		config.b_filter_empty ^= 1;
 
 	ui_hsplit_t(&view, 20.0f, &button, &view);
-	if (ui_do_button(&config.b_filter_full, "Server not full", config.b_filter_full, &button, ui_draw_checkbox, 0))
+	if (ui_do_button(&config.b_filter_full, localize("Server not full"), config.b_filter_full, &button, ui_draw_checkbox, 0))
 		config.b_filter_full ^= 1;
 
 	ui_hsplit_t(&view, 20.0f, &button, &view);
-	if (ui_do_button(&config.b_filter_pw, "No password", config.b_filter_pw, &button, ui_draw_checkbox, 0))
+	if (ui_do_button(&config.b_filter_pw, localize("No password"), config.b_filter_pw, &button, ui_draw_checkbox, 0))
 		config.b_filter_pw ^= 1;
 
 	ui_hsplit_t(&view, 20.0f, &button, &view);
-	if (ui_do_button((char *)&config.b_filter_compatversion, "Compatible Version", config.b_filter_compatversion, &button, ui_draw_checkbox, 0))
+	if (ui_do_button((char *)&config.b_filter_compatversion, localize("Compatible version"), config.b_filter_compatversion, &button, ui_draw_checkbox, 0))
 		config.b_filter_compatversion ^= 1;
 	
 	ui_hsplit_t(&view, 20.0f, &button, &view);
-	if (ui_do_button((char *)&config.b_filter_pure, "Standard gametype", config.b_filter_pure, &button, ui_draw_checkbox, 0))
+	if (ui_do_button((char *)&config.b_filter_pure, localize("Standard gametype"), config.b_filter_pure, &button, ui_draw_checkbox, 0))
 		config.b_filter_pure ^= 1;
 
 	ui_hsplit_t(&view, 20.0f, &button, &view);
 	/*ui_vsplit_l(&button, 20.0f, 0, &button);*/
-	if (ui_do_button((char *)&config.b_filter_pure_map, "Standard map", config.b_filter_pure_map, &button, ui_draw_checkbox, 0))
+	if (ui_do_button((char *)&config.b_filter_pure_map, localize("Standard map"), config.b_filter_pure_map, &button, ui_draw_checkbox, 0))
 		config.b_filter_pure_map ^= 1;
 		
 	ui_hsplit_t(&view, 20.0f, &button, &view);
-	ui_do_label(&button, "Game types: ", 14.0f, -1);
+	ui_do_label(&button, localize("Game types:"), 14.0f, -1);
 	ui_vsplit_l(&button, 95.0f, 0, &button);
 	ui_margin(&button, 1.0f, &button);
 	ui_do_edit_box(&config.b_filter_gametype, &button, config.b_filter_gametype, sizeof(config.b_filter_gametype), 14.0f);
@@ -394,12 +394,12 @@ void MENUS::render_serverbrowser_filters(RECT view)
 		ui_do_edit_box(&config.b_filter_ping, &editbox, buf, sizeof(buf), 14.0f);
 		config.b_filter_ping = atoi(buf);
 		
-		ui_do_label(&button, "Maximum ping", 14.0f, -1);
+		ui_do_label(&button, localize("Maximum ping"), 14.0f, -1);
 	}
 	
 	ui_hsplit_b(&view, button_height, &view, &button);
 	static int clear_button = 0;
-	if(ui_do_button(&clear_button, "Reset Filter", 0, &button, ui_draw_menu_button, 0))
+	if(ui_do_button(&clear_button, localize("Reset filter"), 0, &button, ui_draw_menu_button, 0))
 	{
 		config.b_filter_full = 0;
 		config.b_filter_empty = 0;
@@ -431,7 +431,7 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 	ui_draw_rect(&server_header, vec4(1,1,1,0.25f), CORNER_T, 4.0f);
 	ui_draw_rect(&server_details, vec4(0,0,0,0.15f), CORNER_B, 4.0f);
 	ui_vsplit_l(&server_header, 8.0f, 0x0, &server_header);
-	ui_do_label(&server_header, "Server Details: ", font_size+2.0f, -1);
+	ui_do_label(&server_header, localize("Server details:"), font_size+2.0f, -1);
 
 	ui_vsplit_l(&server_details, 5.0f, 0x0, &server_details);
 
@@ -440,7 +440,11 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 	if (selected_server)
 	{
 		RECT row;
-		static const char *labels[] = { "Version:", "Game Type:", "Progression:", "Ping:" };
+		static LOC_CONSTSTRING labels[] = {
+			localize("Version:"),
+			localize("Game Type:"),
+			localize("Progression:"),
+			localize("Ping:")};
 
 		RECT left_column;
 		RECT right_column;
@@ -450,7 +454,7 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 			RECT button;
 			ui_hsplit_b(&server_details, 20.0f, &server_details, &button);
 			static int add_fav_button = 0;
-			if (ui_do_button(&add_fav_button, "Favorite", selected_server->favorite, &button, ui_draw_checkbox, 0))
+			if (ui_do_button(&add_fav_button, localize("Favorite"), selected_server->favorite, &button, ui_draw_checkbox, 0))
 			{
 				if(selected_server->favorite)
 					client_serverbrowse_removefavorite(selected_server->netaddr);
@@ -478,7 +482,7 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 		char temp[16];
 
 		if(selected_server->progression < 0)
-			str_format(temp, sizeof(temp), "N/A");
+			str_format(temp, sizeof(temp), localize("N/A"));
 		else
 			str_format(temp, sizeof(temp), "%d%%", selected_server->progression);
 		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
@@ -497,7 +501,7 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 	ui_draw_rect(&server_header, vec4(1,1,1,0.25f), CORNER_T, 4.0f);
 	ui_draw_rect(&server_scoreboard, vec4(0,0,0,0.15f), CORNER_B, 4.0f);
 	ui_vsplit_l(&server_header, 8.0f, 0x0, &server_header);
-	ui_do_label(&server_header, "Scoreboard: ", font_size+2.0f, -1);
+	ui_do_label(&server_header, localize("Scoreboard:"), font_size+2.0f, -1);
 
 	ui_vsplit_l(&server_scoreboard, 5.0f, 0x0, &server_scoreboard);
 
@@ -588,11 +592,11 @@ void MENUS::render_serverbrowser(RECT main_view)
 		ui_vsplit_l(&tabbutton1, 5.0f, 0, &tabbutton1);
 		
 		static int filters_tab = 0;
-		if (ui_do_button(&filters_tab, "Filter", toolbox_page==0, &tabbutton0, ui_draw_menu_tab_button, 0))
+		if (ui_do_button(&filters_tab, localize("Filter"), toolbox_page==0, &tabbutton0, ui_draw_menu_tab_button, 0))
 			toolbox_page = 0;
 			
 		static int info_tab = 0;
-		if (ui_do_button(&info_tab, "Info", toolbox_page==1, &tabbutton1, ui_draw_menu_tab_button, 0))
+		if (ui_do_button(&info_tab, localize("Info"), toolbox_page==1, &tabbutton1, ui_draw_menu_tab_button, 0))
 			toolbox_page = 1;
 	}
 
@@ -613,7 +617,7 @@ void MENUS::render_serverbrowser(RECT main_view)
 		ui_vsplit_r(&status_toolbar, 100.0f, &status_toolbar, &button);
 		ui_vmargin(&button, 2.0f, &button);
 		static int refresh_button = 0;
-		if(ui_do_button(&refresh_button, "Refresh", 0, &button, ui_draw_menu_button, 0))
+		if(ui_do_button(&refresh_button, localize("Refresh"), 0, &button, ui_draw_menu_button, 0))
 		{
 			if(config.ui_page == PAGE_INTERNET)
 				client_serverbrowse_refresh(BROWSETYPE_INTERNET);
@@ -625,9 +629,9 @@ void MENUS::render_serverbrowser(RECT main_view)
 		
 		char buf[512];
 		if(strcmp(client_latestversion(), "0") != 0)
-			str_format(buf, sizeof(buf), "Teeworlds %s is out! Download it at www.teeworlds.com!\nCurrent version: %s", client_latestversion(), GAME_VERSION);
+			str_format(buf, sizeof(buf), localize("Teeworlds %s is out! Download it at www.teeworlds.com!"), client_latestversion());
 		else
-			str_format(buf, sizeof(buf), "Current version: %s", GAME_VERSION);
+			str_format(buf, sizeof(buf), localize("Current version: %s"), GAME_VERSION);
 		ui_do_label(&status_toolbar, buf, 14.0f, -1);
 	}
 	
@@ -643,7 +647,7 @@ void MENUS::render_serverbrowser(RECT main_view)
 		ui_vmargin(&button, 2.0f, &button);
 		//ui_vmargin(&button, 2.0f, &button);
 		static int join_button = 0;
-		if(ui_do_button(&join_button, "Connect", 0, &button, ui_draw_menu_button, 0) || enter_pressed)
+		if(ui_do_button(&join_button, localize("Connect"), 0, &button, ui_draw_menu_button, 0) || enter_pressed)
 		{
 			client_connect(config.ui_server_address);
 			enter_pressed = false;
@@ -653,6 +657,6 @@ void MENUS::render_serverbrowser(RECT main_view)
 		ui_hsplit_b(&button_box, 20.0f, &button_box, &button);
 		ui_do_edit_box(&config.ui_server_address, &button, config.ui_server_address, sizeof(config.ui_server_address), 14.0f);
 		ui_hsplit_b(&button_box, 20.0f, &button_box, &button);
-		ui_do_label(&button, "Host address:", 14.0f, -1);
+		ui_do_label(&button, localize("Host address:"), 14.0f, -1);
 	}
 }
