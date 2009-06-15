@@ -184,7 +184,7 @@ void MENUS::ui_draw_checkbox_common(const void *id, const char *text, const char
 	ui_margin(&c, 2.0f, &c);
 	ui_draw_rect(&c, vec4(1,1,1,0.25f)*button_color_mul(id), CORNER_ALL, 3.0f);
 	c.y += 2;
-	ui_do_label(&c, boxtext, r->h*fontmod_height*0.75f, 0);
+	ui_do_label(&c, boxtext, r->h*fontmod_height*0.6f, 0);
 	ui_do_label(&t, text, r->h*fontmod_height*0.8f, -1);
 }
 
