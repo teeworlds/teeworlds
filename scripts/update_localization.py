@@ -79,13 +79,14 @@ def generate_languagefile(outputfilename, srctable, loctable):
 			num_items += 1
 			old_items += 1
 
-	print "%-40s %8s %8s %8s" % ("filename", "total", "new", "old")
 	print "%-40s %8d %8d %8d" % (outputfilename, num_items, new_items, old_items)
 	f.close()
 	
 	os.rename(tmpfilename, outputfilename)
 
 srctable = parse_source()
+
+print "%-40s %8s %8s %8s" % ("filename", "total", "new", "old")
 
 for filename in os.listdir("data/languages"):
 	if not ".txt" in filename:

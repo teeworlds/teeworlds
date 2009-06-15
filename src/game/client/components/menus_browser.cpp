@@ -49,7 +49,6 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 		COL_MAP,
 		COL_PLAYERS,
 		COL_PING,
-		COL_PROGRESS,
 		COL_VERSION,
 	};
 	
@@ -292,12 +291,6 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 				str_format(temp, sizeof(temp), "%i", item->latency);
 				ui_do_label(&button, temp, 12.0f, 1);
 			}
-			else if(id == COL_PROGRESS)
-			{
-				if(item->progression > 100)
-					item->progression = 100;
-				ui_draw_browse_icon(item->progression, &button);
-			}
 			else if(id == COL_VERSION)
 			{
 				const char *version = item->version;
@@ -330,8 +323,10 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 	// render quick search
 	RECT quicksearch;
 	ui_vsplit_l(&status, 250.0f, &quicksearch, &status);
-	ui_do_label(&quicksearch, localize("Quick search:"), 14.0f, -1);
-	ui_vsplit_l(&quicksearch, gfx_text_width(0, 14.0f, localize("Quick search:"), -1), 0, &quicksearch);
+	const char *label = localize("Quick search");
+	ui_do_label(&quicksearch, label, 14.0f, -1);
+	ui_vsplit_l(&quicksearch, gfx_text_width(0, 14.0f, label, -1), 0, &quicksearch);
+	ui_vsplit_l(&quicksearch, 5, 0, &quicksearch);
 	ui_do_edit_box(&config.b_filter_string, &quicksearch, config.b_filter_string, sizeof(config.b_filter_string), 14.0f);
 	
 	// render status
@@ -443,7 +438,6 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 		static LOC_CONSTSTRING labels[] = {
 			localize("Version"),
 			localize("Game type"),
-			localize("Progression"),
 			localize("Ping")};
 
 		RECT left_column;
@@ -480,14 +474,6 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 		ui_do_label(&row, selected_server->gametype, font_size, -1);
 
 		char temp[16];
-
-		if(selected_server->progression < 0)
-			str_format(temp, sizeof(temp), localize("N/A"));
-		else
-			str_format(temp, sizeof(temp), "%d%%", selected_server->progression);
-		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
-		ui_do_label(&row, temp, font_size, -1);
-
 		str_format(temp, sizeof(temp), "%d", selected_server->latency);
 		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
 		ui_do_label(&row, temp, font_size, -1);

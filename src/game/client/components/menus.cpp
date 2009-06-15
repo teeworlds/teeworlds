@@ -867,7 +867,7 @@ int MENUS::render()
 			ui_vsplit_l(&label, 100.0f, 0, &textbox);
 			ui_vsplit_l(&textbox, 20.0f, 0, &textbox);
 			ui_vsplit_r(&textbox, 60.0f, &textbox, 0);
-			ui_do_label(&label, localize("Password:"), 20, -1);
+			ui_do_label(&label, localize("Password"), 20, -1);
 			ui_do_edit_box(&config.password, &textbox, config.password, sizeof(config.password), 14.0f, true);
 		}
 		else if(popup == POPUP_FIRST_LAUNCH)
@@ -889,7 +889,7 @@ int MENUS::render()
 			ui_vsplit_l(&label, 100.0f, 0, &textbox);
 			ui_vsplit_l(&textbox, 20.0f, 0, &textbox);
 			ui_vsplit_r(&textbox, 60.0f, &textbox, 0);
-			ui_do_label(&label, localize("Nickname:"), 20, -1);
+			ui_do_label(&label, localize("Nickname"), 20, -1);
 			ui_do_edit_box(&config.player_name, &textbox, config.player_name, sizeof(config.player_name), 14.0f);
 		}
 		else

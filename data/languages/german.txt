@@ -40,9 +40,6 @@ Call vote
 Chat
 == Chat
 
-Chat:
-== Chat:
-
 Close
 == Schließen
 
@@ -220,9 +217,6 @@ Movement
 Mute when not active
 == Stumm schalten, wenn nicht aktiv
 
-N/A
-== N/A
-
 Name
 == Name
 
@@ -232,8 +226,8 @@ News
 Next weapon
 == Nächste Waffe
 
-Nickname:
-== Nickname:
+Nickname
+== Nickname
 
 No
 == Nein
@@ -256,9 +250,6 @@ Password
 Password Incorrect
 == Falsches Passwort
 
-Password:
-== Passwort:
-
 Ping
 == Ping
 
@@ -277,14 +268,11 @@ Players
 Prev. weapon
 == Vorherige Waffe
 
-Progression
-== Fortschritt
-
 Quality Textures
 == Qualitäts-Texturen
 
-Quick search:
-== Schnelle Suche:
+Quick search
+== Schnelle Suche
 
 Quit
 == Beenden

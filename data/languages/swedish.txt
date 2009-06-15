@@ -29,19 +29,16 @@ Blue team
 == Blå laget
 
 Blue team wins!
-== Röda laget vann!
+== Blå laget vann!
 
 Body
 == Kropp
 
 Call vote
-== Omröstning
+== Röstning
 
 Chat
 == Chatt
-
-Chat:
-== Chatt:
 
 Close
 == Stäng
@@ -122,7 +119,7 @@ Game
 == Spel
 
 Game info
-== Spelinfo.
+== Spelinfo
 
 Game over
 == Slutspelat
@@ -220,9 +217,6 @@ Movement
 Mute when not active
 == Stäng av ljudet när spelet inte är aktivt
 
-N/A
-== -
-
 Name
 == Namn
 
@@ -232,8 +226,8 @@ News
 Next weapon
 == Nästa vapen
 
-Nickname:
-== Smeknamn:
+Nickname
+== Smeknamn
 
 No
 == Nej
@@ -256,9 +250,6 @@ Password
 Password Incorrect
 == Felaktigt lösenord
 
-Password:
-== Lösenord:
-
 Ping
 == Ping
 
@@ -280,8 +271,8 @@ Prev. weapon
 Quality Textures
 == Kvalitetstexturer
 
-Quick search:
-== Snabbsök:
+Quick search
+== Snabbsök
 
 Quit
 == Avsluta
@@ -338,7 +329,7 @@ Server details
 == Serverdetaljer
 
 Server info
-== Serverinfo.
+== Serverinfo
 
 Server not full
 == Inte full server
@@ -392,7 +383,7 @@ Texture Compression
 == Texturkompression
 
 The server is running a non-standard tuning on a pure game type.
-== Denna server kör inte standardinställningar på standard spel typ.
+== Denna server kör inte standardinställningar på standard speltyp.
 
 Time limit
 == Tidsbegränsning
@@ -437,9 +428,6 @@ You must restart the game for all settings to take effect.
 == Du måste starta om spelet för att ändringarna skall gälla.
 
 ##### needs translation ####
-
-Progression
-== 
 
 ##### old translations ####
 

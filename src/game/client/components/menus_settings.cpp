@@ -277,7 +277,7 @@ static KEYINFO keys[] =
 	{ localize("Prev. weapon"), "+prevweapon", 0 },
 	{ localize("Vote yes"), "vote yes", 0 },
 	{ localize("Vote no"), "vote no", 0 },
-	{ localize("Chat:"), "chat all", 0 },
+	{ localize("Chat"), "chat all", 0 },
 	{ localize("Team chat"), "chat team", 0 },
 	{ localize("Emoticon"), "+emote", 0 },
 	{ localize("Console"), "toggle_local_console", 0 },

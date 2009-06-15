@@ -6,11 +6,6 @@
 #include <game/client/gameclient.hpp>
 
 #include "motd.hpp"
-	
-void MOTD::on_reset()
-{
-	clear();
-}
 
 void MOTD::clear()
 {
@@ -20,6 +15,12 @@ void MOTD::clear()
 bool MOTD::is_active()
 {
 	return time_get() < server_motd_time;	
+}
+
+void MOTD::on_statechange(int new_state, int old_state)
+{
+	if(old_state == CLIENTSTATE_ONLINE || old_state == CLIENTSTATE_OFFLINE)
+		clear();
 }
 
 void MOTD::on_render()
