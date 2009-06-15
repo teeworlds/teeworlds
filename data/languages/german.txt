@@ -2,13 +2,13 @@
 ##### translated strings #####
 
 %d of %d servers, %d players
-== %d von %d Servern, %d Spieler
+== %d von %d servers, %d Spieler
 
 Abort
 == Abbrechen
 
 Address
-== Adresse
+== Addresse
 
 All
 == Alle
@@ -17,19 +17,19 @@ Alpha
 == Alpha
 
 Always show name plates
-== Zeige die Spielernamen immer an
+== Spielernamen immer anzeigen
 
 Are you sure that you want to quit?
-== Bist du dir sicher, dass du beenden willst?
+== Bist du sicher, dass du beenden möchtest?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Da es das erste Mal ist, dass du Teeworlds gestartet hast, gib bitte unten deinen Nicknamen ein. Es ist Empfehlenswert die Einstellungen zu überprüfen und nach ihren Vorlieben anzupassen, bevor du einem Spiel beitrittst.
+== Da das dies der erste Start des Spiels ist, gib bitte unten deinen Namen ein. Es ist empfohlen die Einstellungen zu überprüfen um sie deinen Vorstellungen anzupassen, bevor du einem Server beitrittst.
 
 Blue team
 == Blaues Team
 
 Blue team wins!
-== Blaues Team hat gewonnen!
+== Blaues Team gewinnt!
 
 Body
 == Körper
@@ -50,7 +50,7 @@ Connect
 == Verbinden
 
 Connecting to
-== Verbinde mit
+== Verbinden mit
 
 Console
 == Konsole
@@ -71,7 +71,7 @@ Demos
 == Demos
 
 Disconnect
-== Verlassen
+== Trennen
 
 Disconnected
 == Verbindung getrennt
@@ -80,10 +80,10 @@ Display Modes
 == Auflösungen
 
 Downloading map
-== Lade die Karte herunter
+== Map herunterladen
 
 Draw!
-== Unentschieden
+== Unentschieden!
 
 Dynamic Camera
 == Dynamische Kamera
@@ -119,16 +119,16 @@ Game
 == Spiel
 
 Game info
-== Spiel Info
+== Spielinfo
 
 Game over
 == Spiel vorbei
 
 Game type
-== Spiel-Typ
+== Spieltyp
 
 Game types
-== Spiel-Typen
+== Spieltypen
 
 General
 == Allgemein
@@ -143,19 +143,19 @@ Hammer
 == Hammer
 
 Has people playing
-== Server ist nicht leer
+== Server nicht leer
 
 High Detail
 == Hohe Details
 
 Hook
-== Enterhaken
+== Hook
 
 Host address
-== Server Adresse
+== Serveraddresse
 
 Hue
-== Farbt.
+== Farb.
 
 Info
 == Info
@@ -164,19 +164,19 @@ Internet
 == Internet
 
 Join blue
-== Blau beitreten
+== zu Blau
 
 Join game
-== Spiel beitreten
+== Beitreten
 
 Join red
-== Rot beitreten
+== zu Rot
 
 Jump
 == Springen
 
 Kick
-== Kick
+== Kicken
 
 LAN
 == LAN
@@ -185,19 +185,19 @@ Language
 == Sprache
 
 Lht.
-== Helligk.
+== Hell.
 
 Loading
 == Laden
 
 MOTD
-== Nachricht des Tages
+== MOTD
 
 Map
 == Karte
 
 Maximum ping
-== Höchster Ping
+== Maximaler Ping
 
 Miscellaneous
 == Verschiedenes
@@ -206,16 +206,16 @@ Mouse sens.
 == Maus-Empfindl.
 
 Move left
-== Nach Links
+== Nach links
 
 Move right
-== Nach Rechts
+== Nach rechts
 
 Movement
-== Bewebungen
+== Bewegungen
 
 Mute when not active
-== Stumm schalten, wenn nicht aktiv
+== Stumm, wenn inaktiv
 
 Name
 == Name
@@ -254,7 +254,7 @@ Ping
 == Ping
 
 Pistol
-== Pistole
+== Pistol
 
 Play
 == Spielen
@@ -269,7 +269,7 @@ Prev. weapon
 == Vorherige Waffe
 
 Quality Textures
-== Qualitäts-Texturen
+== Hochauflösende Texturen
 
 Quick search
 == Schnelle Suche
@@ -278,22 +278,22 @@ Quit
 == Beenden
 
 Red team
-== Rotes Team
+== Rotes team
 
 Red team wins!
-== Rotes Team hat gewonnen!
+== Rotes Team gewinnt!
 
 Refresh
-== Neu Laden
+== Erneuern
 
 Refreshing master servers
-== Aktualisieren der Master-Server
+== Aktualisiere Masterserver
 
 Remote console
-== Entfernte Konsole
+== Remotekonsole
 
 Reset filter
-== Zurücksetzen
+== Standardfilter
 
 Reset to defaults
 == Standardeinstellung
@@ -305,19 +305,19 @@ Round
 == Runde
 
 Sample rate
-== Qualität
+== Sample rate
 
 Sat.
-== Sättig.
+== Sätt.
 
 Score
-== Punkte
+== Score
 
 Score board
-== Punkte Tafel
+== Punktetafel
 
 Score limit
-== Punktelimit
+== Punkte Limit
 
 Scoreboard
 == Punktetafel
@@ -326,13 +326,13 @@ Screenshot
 == Screenshot
 
 Server details
-== Server details
+== Serverdetails
 
 Server info
-== Server Info
+== Serverinfo
 
 Server not full
-== Server ist nicht voll
+== Server nicht voll
 
 Settings
 == Optionen
@@ -344,10 +344,10 @@ Show name plates
 == Zeige Namen
 
 Show only supported
-== Zeige nur verfügbare
+== Zeige nur unterstützte
 
 Skins
-== Skin
+== Skins
 
 Sound
 == Sound
@@ -365,25 +365,25 @@ Standard gametype
 == Standard Spieltyp
 
 Standard map
-== Standard-Karte
+== Standard Map
 
 Switch weapon on pickup
-== Wechsel zur aufgenommenen Waffe
+== Wechsle Waffen beim Aufnehmen
 
 Team
 == Team
 
 Team chat
-== Team-Chat
+== Teamchat
 
 Teeworlds %s is out! Download it at www.teeworlds.com!
-== Teeworlds %s wurde veröffentlicht! Lade es dir auf www.teeworlds.com herunter!
+== Teeworld %s ist da! Lade es unter www.teeworlds.com runter!
 
 Texture Compression
 == Texturkompression
 
 The server is running a non-standard tuning on a pure game type.
-== Dieser Server wurde verändert und läuft unter einem Standard-Spieltyp.
+== Der Server läuft nicht mit Standardeinstellungen.
 
 Time limit
 == Zeitlimit
@@ -395,10 +395,10 @@ Type
 == Typ
 
 UI Color
-== Farbe der Oberfläche
+== Menufarbe
 
 Use sounds
-== Sound aktivieren
+== Nutze Sounds
 
 V-Sync
 == V-Sync
@@ -407,10 +407,10 @@ Version
 == Version
 
 Vote no
-== Stimme nicht zu
+== Nein
 
 Vote yes
-== Stimme zu
+== Ja
 
 Voting
 == Abstimmung
@@ -419,13 +419,13 @@ Weapon
 == Waffe
 
 Welcome to Teeworlds
-== Willkommen in Teeworlds
+== Willkommen bei Teeworlds
 
 Yes
 == Ja
 
 You must restart the game for all settings to take effect.
-== Du musst das Spiel neustarten, damit alle Einstellungen übernommen wurden.
+== Du musst das Spiel neustarten um die Änderungen zu Übernehmen.
 
 ##### needs translation ####
 
