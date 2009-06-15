@@ -1902,9 +1902,10 @@ static void con_addfavorite(void *result, void *user_data)
 		client_serverbrowse_addfavorite(addr);
 }
 
-void client_demoplayer_play(const char *filename)
+const char *client_demoplayer_play(const char *filename)
 {
 	int crc;
+	const char *error;
 	client_disconnect();
 	netclient_error_string_reset(net);
 	
@@ -1912,14 +1913,20 @@ void client_demoplayer_play(const char *filename)
 	demorec_playback_registercallbacks(client_democallback_snapshot, client_democallback_message);
 	
 	if(demorec_playback_load(filename))
-		return;
+		return "error loading demo";
 	
 	/* load map */
 	crc = (demorec_playback_info()->header.crc[0]<<24)|
 		(demorec_playback_info()->header.crc[1]<<16)|
 		(demorec_playback_info()->header.crc[2]<<8)|
 		(demorec_playback_info()->header.crc[3]);
-	client_load_map_search(demorec_playback_info()->header.map, crc);
+	error = client_load_map_search(demorec_playback_info()->header.map, crc);
+	if(error)
+	{
+		client_disconnect_with_reason(error);	
+		return error;
+	}
+	
 	modc_connected();
 	
 	/* setup buffers */	
@@ -1943,6 +1950,8 @@ void client_demoplayer_play(const char *filename)
 	
 	demorec_playback_play();
 	modc_entergame();
+	
+	return 0;
 }
 
 static void con_play(void *result, void *user_data)

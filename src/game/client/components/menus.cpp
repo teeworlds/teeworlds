@@ -666,6 +666,15 @@ void MENUS::on_init()
 	config.cl_show_welcome = 0;
 }
 
+void MENUS::popup_message(const char *topic, const char *body, const char *button)
+{
+	str_copy(message_topic, topic, sizeof(message_topic));
+	str_copy(message_body, body, sizeof(message_body));
+	str_copy(message_button, button, sizeof(message_button));
+	popup = POPUP_MESSAGE;
+}
+
+
 int MENUS::render()
 {
     RECT screen = *ui_screen();
@@ -749,7 +758,13 @@ int MENUS::render()
 		const char *button_text = "";
 		int extra_align = 0;
 		
-		if(popup == POPUP_CONNECTING)
+		if(popup == POPUP_MESSAGE)
+		{
+			title = message_topic;
+			extra_text = message_body;
+			button_text = message_button;
+		}
+		else if(popup == POPUP_CONNECTING)
 		{
 			title = localize("Connecting to");
 			extra_text = config.ui_server_address;  // TODO: query the client about the address

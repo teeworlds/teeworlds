@@ -406,7 +406,11 @@ void MENUS::render_demolist(RECT main_view)
 	if(ui_do_button(&play_button, localize("Play"), 0, &play_rect, ui_draw_menu_button, 0))
 	{
 		if(selected_item >= 0 && selected_item < demos.size())
-			client_demoplayer_play(demos[selected_item].filename);
+		{
+			const char *error = client_demoplayer_play(demos[selected_item].filename);
+			if(error)
+				popup_message(localize("Error"), error, localize("Ok"));
+		}
 	}
 	
 }

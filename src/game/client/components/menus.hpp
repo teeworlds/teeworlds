@@ -68,6 +68,7 @@ class MENUS : public COMPONENT
 		POPUP_NONE=0,
 		POPUP_FIRST_LAUNCH,
 		POPUP_CONNECTING,
+		POPUP_MESSAGE,
 		POPUP_DISCONNECTED,
 		POPUP_PURE,
 		POPUP_PASSWORD,
@@ -95,6 +96,13 @@ class MENUS : public COMPONENT
 	vec2 mouse_pos;
 	
 	int64 last_input;
+	
+	//
+	char message_topic[512];
+	char message_body[512];
+	char message_button[512];
+	
+	void popup_message(const char *topic, const char *body, const char *button);
 
 	// TODO: this is a bit ugly but.. well.. yeah	
 	enum { MAX_INPUTEVENTS = 32 };

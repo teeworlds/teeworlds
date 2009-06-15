@@ -567,7 +567,7 @@ typedef struct DEMOPLAYBACK_INFO
 	float speed;
 } DEMOPLAYBACK_INFO;
 
-void client_demoplayer_play(const char *filename);
+const char *client_demoplayer_play(const char *filename);
 const DEMOPLAYBACK_INFO *client_demoplayer_getinfo();
 void client_demoplayer_setpos(float percent);
 void client_demoplayer_setpause(int paused);
