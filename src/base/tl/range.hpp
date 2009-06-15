@@ -1,5 +1,7 @@
-#ifndef __RANGE_H
-#define __RANGE_H
+#ifndef TL_FILE_RANGE_HPP
+#define TL_FILE_RANGE_HPP
+
+#include "base.hpp"
 
 /*
 	Group: Range concepts
@@ -227,4 +229,4 @@ template<class R> R reverse(reverse_range<R> range) {
    return range.range;
 }
 
-#endif
+#endif // TL_FILE_RANGE_HPP

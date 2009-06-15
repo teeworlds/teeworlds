@@ -1,3 +1,5 @@
+#ifndef TL_FILE_BASE_HPP
+#define TL_FILE_BASE_HPP
 
 #include <base/system.h>
 
@@ -13,3 +15,5 @@ inline void swap(T &a, T &b)
 	b = a;
 	a = c;
 }
+
+#endif

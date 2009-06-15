@@ -91,9 +91,6 @@ MENUS::MENUS()
 	enter_pressed = false;
 	num_inputevents = 0;
 	
-	demos = 0;
-	num_demos = 0;
-	
 	last_input = time_get();
 }
 

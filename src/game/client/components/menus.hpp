@@ -1,4 +1,5 @@
 #include <base/vmath.hpp>
+#include <base/tl/sorted_array.hpp>
 
 #include <game/client/component.hpp>
 #include <game/client/ui.hpp>
@@ -122,10 +123,11 @@ class MENUS : public COMPONENT
 	{
 		char filename[512];
 		char name[256];
+		
+		bool operator<(const DEMOITEM &other) { return str_comp(name, other.name) < 0; } 
 	};
 	
-	DEMOITEM *demos;
-	int num_demos;
+	sorted_array<DEMOITEM> demos;
 		
 	void demolist_populate();
 	static void demolist_count_callback(const char *name, int is_dir, void *user);

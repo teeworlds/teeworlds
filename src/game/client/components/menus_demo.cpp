@@ -212,8 +212,12 @@ void MENUS::ui_do_listbox_start(void *id, const RECT *rect, float row_height, co
 
 	// do the scrollbar
 	ui_hsplit_t(&view, listbox_rowheight, &row, 0);
-
-	int num = (int)(listbox_originalview.h/row.h);
+	
+	int num_viewable = (int)(listbox_originalview.h/row.h) + 1;
+	int num = num_items-num_viewable+1;
+	if(num < 0)
+		num = 0;
+		
 	static float scrollvalue = 0;
 	ui_hmargin(&scroll, 5.0f, &scroll);
 	scrollvalue = ui_do_scrollbar_v(id, &scroll, scrollvalue);
@@ -233,8 +237,8 @@ MENUS::LISTBOXITEM MENUS::ui_do_listbox_nextitem(void *id)
 {
 	RECT row;
 	LISTBOXITEM item = {0};
-	ui_hsplit_t(&listbox_view, listbox_rowheight-2.0f, &row, &listbox_view);
-	ui_hsplit_t(&listbox_view, 2.0f, 0, &listbox_view);
+	ui_hsplit_t(&listbox_view, listbox_rowheight /*-2.0f*/, &row, &listbox_view);
+	//ui_hsplit_t(&listbox_view, 2.0f, 0, &listbox_view);
 
 	RECT select_hit_box = row;
 
@@ -300,12 +304,12 @@ void MENUS::demolist_listdir_callback(const char *name, int is_dir, void *user)
 	int num_demos;
 	*/
 	
-void MENUS::demolist_count_callback(const char *name, int is_dir, void *user)
+/*void MENUS::demolist_count_callback(const char *name, int is_dir, void *user)
 {
 	if(is_dir || name[0] == '.')
 		return;
 	(*(int *)user)++;
-}
+}*/
 
 struct FETCH_CALLBACKINFO
 {
@@ -321,29 +325,36 @@ void MENUS::demolist_fetch_callback(const char *name, int is_dir, void *user)
 			
 	FETCH_CALLBACKINFO *info = (FETCH_CALLBACKINFO *)user;
 	
+	DEMOITEM item;
+	str_format(item.filename, sizeof(item.filename), "%s/%s", info->prefix, name);
+	str_copy(item.name, name, sizeof(item.name));
+	info->self->demos.add(item);
+	
+	/*
 	if(info->count == info->self->num_demos)
 		return;
 	
-	str_format(info->self->demos[info->count].filename, sizeof(info->self->demos[info->count].filename), "%s/%s", info->prefix, name);
-	str_copy(info->self->demos[info->count].name, name, sizeof(info->self->demos[info->count].name));
 	info->count++;
+	*/
 }
 
 
 void MENUS::demolist_populate()
 {
-	if(demos)
+	demos.clear();
+	
+	/*if(demos)
 		mem_free(demos);
 	demos = 0;
-	num_demos = 0;
+	num_demos = 0;*/
 	
 	char buf[512];
 	str_format(buf, sizeof(buf), "%s/demos", client_user_directory());
-	fs_listdir(buf, demolist_count_callback, &num_demos);
-	fs_listdir("demos", demolist_count_callback, &num_demos);
+	//fs_listdir(buf, demolist_count_callback, &num_demos);
+	//fs_listdir("demos", demolist_count_callback, &num_demos);
 	
-	demos = (DEMOITEM *)mem_alloc(sizeof(DEMOITEM)*num_demos, 1);
-	mem_zero(demos, sizeof(DEMOITEM)*num_demos);
+	//demos = (DEMOITEM *)mem_alloc(sizeof(DEMOITEM)*num_demos, 1);
+	//mem_zero(demos, sizeof(DEMOITEM)*num_demos);
 
 	FETCH_CALLBACKINFO info = {this, buf, 0};
 	fs_listdir(buf, demolist_fetch_callback, &info);
@@ -368,15 +379,15 @@ void MENUS::render_demolist(RECT main_view)
 	ui_hsplit_t(&buttonbar, 5.0f, 0, &buttonbar);
 	
 	static int selected_item = -1;
-	static int num_items = 0;
 	static int demolist_id = 0;
 	
-	ui_do_listbox_start(&demolist_id, &main_view, 17.0f, localize("Demos"), num_items, selected_item);
-	for(int i = 0; i < num_demos; i++)
+	ui_do_listbox_start(&demolist_id, &main_view, 17.0f, localize("Demos"), demos.size(), selected_item);
+	//for(int i = 0; i < num_demos; i++)
+	for(sorted_array<DEMOITEM>::range r = demos.all(); !r.empty(); r.pop_front())
 	{
-		LISTBOXITEM item = ui_do_listbox_nextitem((void*)(10+i));
+		LISTBOXITEM item = ui_do_listbox_nextitem((void*)(&r.front()));
 		if(item.visible)
-			ui_do_label(&item.rect, demos[i].name, item.rect.h*fontmod_height, -1);
+			ui_do_label(&item.rect, r.front().name, item.rect.h*fontmod_height, -1);
 	}
 	selected_item = ui_do_listbox_end();
 	
@@ -394,7 +405,7 @@ void MENUS::render_demolist(RECT main_view)
 	static int play_button = 0;
 	if(ui_do_button(&play_button, localize("Play"), 0, &play_rect, ui_draw_menu_button, 0))
 	{
-		if(selected_item >= 0 && selected_item < num_demos)
+		if(selected_item >= 0 && selected_item < demos.size())
 			client_demoplayer_play(demos[selected_item].filename);
 	}
 	
