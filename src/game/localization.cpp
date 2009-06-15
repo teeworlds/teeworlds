@@ -51,11 +51,17 @@ void LOCALIZATIONDATABASE::add_string(const char *org_str, const char *new_str)
 
 bool LOCALIZATIONDATABASE::load(const char *filename)
 {
+	// empty string means unload
+	if(filename[0] == 0)
+	{
+		strings.clear();
+		return true;
+	}
+	
 	LINEREADER lr;
 	IOHANDLE io = io_open(filename, IOFLAG_READ);
 	if(!io)
 		return false;
-	
 	
 	dbg_msg("localization", "loaded '%s'", filename);
 	strings.clear();

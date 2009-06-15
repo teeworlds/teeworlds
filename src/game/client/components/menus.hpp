@@ -157,6 +157,7 @@ class MENUS : public COMPONENT
 	void render_serverbrowser(RECT main_view);
 	
 	// found in menus_settings.cpp
+	void render_settings_general(RECT main_view);
 	void render_settings_player(RECT main_view);
 	void render_settings_controls(RECT main_view);
 	void render_settings_graphics(RECT main_view);

@@ -1213,6 +1213,13 @@ void gui_messagebox(const char *title, const char *message)
 
 int str_isspace(char c) { return c == ' ' || c == '\n' || c == '\t'; }
 
+char str_uppercase(char c)
+{
+	if(c >= 'a' && c <= 'z')
+		return 'A' + (c-'a');
+	return c;
+}
+
 
 
 static int str_utf8_isstart(char c)

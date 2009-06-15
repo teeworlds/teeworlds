@@ -124,11 +124,17 @@ Game
 Game info
 == Spel info.
 
+Game over
+== Slutspelat
+
 Game type
 == Speltyp
 
 Game types
 == Speltyper
+
+General
+== Generallt
 
 Graphics
 == Grafik
@@ -177,6 +183,9 @@ Kick
 
 LAN
 == LAN
+
+Language
+== Språk
 
 Lht.
 == Ljusstyrka
@@ -422,9 +431,6 @@ You must restart the game for all settings to take effect.
 == Du måste starta om spelet för att ändringarna skall gälla.
 
 ##### needs translation ####
-
-Game over
-== 
 
 N/A
 == 

@@ -970,6 +970,7 @@ typedef struct
 void net_stats(NETSTATS *stats);
 
 int str_isspace(char c);
+char str_uppercase(char c);
 
 
 /*

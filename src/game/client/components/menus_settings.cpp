@@ -64,6 +64,9 @@ void MENUS::render_settings_player(RECT main_view)
 		if(ui_do_edit_box(config.player_name, &button, config.player_name, sizeof(config.player_name), 14.0f))
 			need_sendinfo = true;
 
+		// extra spacing
+		ui_hsplit_t(&main_view, 10.0f, 0, &main_view);
+
 		static int dynamic_camera_button = 0;
 		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
 		if(ui_do_button(&dynamic_camera_button, localize("Dynamic Camera"), config.cl_mouse_deadzone != 0, &button, ui_draw_checkbox, 0))
@@ -622,21 +625,80 @@ void MENUS::render_settings_sound(RECT main_view)
 	}
 }
 
-
-	/*
-static void menu2_render_settings_network(RECT main_view)
+struct LANGUAGE
 {
-	RECT button;
-	ui_vsplit_l(&main_view, 300.0f, &main_view, 0);
+	LANGUAGE() {}
+	LANGUAGE(const char *n, const char *f) : name(n), filename(f) {}
 	
+	string name;
+	string filename;
+	
+	bool operator<(const LANGUAGE &other) { return name < other.name; }
+};
+
+
+int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, void *user);
+
+void gather_languages(const char *name, int is_dir, void *user)
+{
+	if(is_dir || name[0] == '.')
+		return;
+		
+	sorted_array<LANGUAGE> &languages = *((sorted_array<LANGUAGE> *)user);
+	char filename[128];
+	str_format(filename, sizeof(filename), "data/languages/%s", name);
+
+	char nicename[128];
+	str_format(nicename, sizeof(nicename), "%s", name);
+	nicename[0] = str_uppercase(nicename[0]);
+	
+	
+	for(char *p = nicename; *p; p++)
+		if(*p == '.')
+			*p = 0;
+	
+	languages.add(LANGUAGE(nicename, filename));
+}
+
+void MENUS::render_settings_general(RECT main_view)
+{
+	static int lanuagelist = 0;
+	static int selected_language = 0;
+	static sorted_array<LANGUAGE> languages;
+	
+	if(languages.size() == 0)
 	{
-		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		ui_do_label(&button, "Rcon Password", 14.0, -1);
-		ui_vsplit_l(&button, 110.0f, 0, &button);
-		ui_vsplit_l(&button, 180.0f, &button, 0);
-		ui_do_edit_box(&config.rcon_password, &button, config.rcon_password, sizeof(config.rcon_password), true);
+		languages.add(LANGUAGE("English", ""));
+		fs_listdir("data/languages", gather_languages, &languages);
+		for(int i = 0; i < languages.size(); i++)
+			if(str_comp(languages[i].filename, config.cl_languagefile) == 0)
+			{
+				selected_language = i;
+				break;
+			}
 	}
-}*/
+	
+	int old_selected = selected_language;
+	
+	RECT list = main_view;
+	ui_do_listbox_start(&lanuagelist, &list, 24.0f, localize("Language"), languages.size(), selected_language);
+	
+	for(sorted_array<LANGUAGE>::range r = languages.all(); !r.empty(); r.pop_front())
+	{
+		LISTBOXITEM item = ui_do_listbox_nextitem(&r.front());
+		
+		if(item.visible)
+			ui_do_label(&item.rect, r.front().name, 16.0f, -1);
+	}
+	
+	selected_language = ui_do_listbox_end();
+	
+	if(old_selected != selected_language)
+	{
+		str_copy(config.cl_languagefile, languages[selected_language].filename, sizeof(config.cl_languagefile));
+		localization.load(languages[selected_language].filename);
+	}
+}
 
 void MENUS::render_settings(RECT main_view)
 {
@@ -654,6 +716,7 @@ void MENUS::render_settings(RECT main_view)
 	RECT button;
 	
 	const char *tabs[] = {
+		localize("General"),
 		localize("Player"),
 		localize("Controls"),
 		localize("Graphics"),
@@ -671,12 +734,14 @@ void MENUS::render_settings(RECT main_view)
 	ui_margin(&main_view, 10.0f, &main_view);
 	
 	if(settings_page == 0)
-		render_settings_player(main_view);
+		render_settings_general(main_view);
 	else if(settings_page == 1)
-		render_settings_controls(main_view);
+		render_settings_player(main_view);
 	else if(settings_page == 2)
-		render_settings_graphics(main_view);
+		render_settings_controls(main_view);
 	else if(settings_page == 3)
+		render_settings_graphics(main_view);
+	else if(settings_page == 4)
 		render_settings_sound(main_view);
 
 	if(need_restart)
