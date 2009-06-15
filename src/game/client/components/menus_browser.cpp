@@ -378,7 +378,7 @@ void MENUS::render_serverbrowser_filters(RECT view)
 		config.b_filter_pure_map ^= 1;
 		
 	ui_hsplit_t(&view, 20.0f, &button, &view);
-	ui_do_label(&button, localize("Game types:"), 14.0f, -1);
+	ui_do_label(&button, localize("Game types"), 14.0f, -1);
 	ui_vsplit_l(&button, 95.0f, 0, &button);
 	ui_margin(&button, 1.0f, &button);
 	ui_do_edit_box(&config.b_filter_gametype, &button, config.b_filter_gametype, sizeof(config.b_filter_gametype), 14.0f);
@@ -431,7 +431,7 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 	ui_draw_rect(&server_header, vec4(1,1,1,0.25f), CORNER_T, 4.0f);
 	ui_draw_rect(&server_details, vec4(0,0,0,0.15f), CORNER_B, 4.0f);
 	ui_vsplit_l(&server_header, 8.0f, 0x0, &server_header);
-	ui_do_label(&server_header, localize("Server details:"), font_size+2.0f, -1);
+	ui_do_label(&server_header, localize("Server details"), font_size+2.0f, -1);
 
 	ui_vsplit_l(&server_details, 5.0f, 0x0, &server_details);
 
@@ -441,10 +441,10 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 	{
 		RECT row;
 		static LOC_CONSTSTRING labels[] = {
-			localize("Version:"),
-			localize("Game Type:"),
-			localize("Progression:"),
-			localize("Ping:")};
+			localize("Version"),
+			localize("Game type"),
+			localize("Progression"),
+			localize("Ping")};
 
 		RECT left_column;
 		RECT right_column;
@@ -501,7 +501,7 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 	ui_draw_rect(&server_header, vec4(1,1,1,0.25f), CORNER_T, 4.0f);
 	ui_draw_rect(&server_scoreboard, vec4(0,0,0,0.15f), CORNER_B, 4.0f);
 	ui_vsplit_l(&server_header, 8.0f, 0x0, &server_header);
-	ui_do_label(&server_header, localize("Scoreboard:"), font_size+2.0f, -1);
+	ui_do_label(&server_header, localize("Scoreboard"), font_size+2.0f, -1);
 
 	ui_vsplit_l(&server_scoreboard, 5.0f, 0x0, &server_scoreboard);
 
@@ -614,7 +614,7 @@ void MENUS::render_serverbrowser(RECT main_view)
 		
 		RECT button;
 		//ui_vsplit_r(&buttons, 20.0f, &buttons, &button);
-		ui_vsplit_r(&status_toolbar, 100.0f, &status_toolbar, &button);
+		ui_vsplit_r(&status_toolbar, 110.0f, &status_toolbar, &button);
 		ui_vmargin(&button, 2.0f, &button);
 		static int refresh_button = 0;
 		if(ui_do_button(&refresh_button, localize("Refresh"), 0, &button, ui_draw_menu_button, 0))
@@ -657,6 +657,6 @@ void MENUS::render_serverbrowser(RECT main_view)
 		ui_hsplit_b(&button_box, 20.0f, &button_box, &button);
 		ui_do_edit_box(&config.ui_server_address, &button, config.ui_server_address, sizeof(config.ui_server_address), 14.0f);
 		ui_hsplit_b(&button_box, 20.0f, &button_box, &button);
-		ui_do_label(&button, localize("Host address:"), 14.0f, -1);
+		ui_do_label(&button, localize("Host address"), 14.0f, -1);
 	}
 }

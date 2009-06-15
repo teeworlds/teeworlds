@@ -46,21 +46,21 @@ void SCOREBOARD::render_goals(float x, float y, float w)
 	if(gameclient.snap.gameobj && gameclient.snap.gameobj->score_limit)
 	{
 		char buf[64];
-		str_format(buf, sizeof(buf), "Score Limit: %d", gameclient.snap.gameobj->score_limit);
+		str_format(buf, sizeof(buf), "%s: %d", localize("Score limit"), gameclient.snap.gameobj->score_limit);
 		gfx_text(0, x+20.0f, y, 22.0f, buf, -1);
 		tw += gfx_text_width(0, 22.0f, buf, -1);
 	}
 	if(gameclient.snap.gameobj && gameclient.snap.gameobj->time_limit)
 	{
 		char buf[64];
-		str_format(buf, sizeof(buf), "Time Limit: %d min", gameclient.snap.gameobj->time_limit);
+		str_format(buf, sizeof(buf), "%s: %d min", localize("Time limit"), gameclient.snap.gameobj->time_limit);
 		gfx_text(0, x+220.0f, y, 22.0f, buf, -1);
 		tw += gfx_text_width(0, 22.0f, buf, -1);
 	}
 	if(gameclient.snap.gameobj && gameclient.snap.gameobj->round_num && gameclient.snap.gameobj->round_current)
 	{
 		char buf[64];
-		str_format(buf, sizeof(buf), "Round %d/%d", gameclient.snap.gameobj->round_current, gameclient.snap.gameobj->round_num);
+		str_format(buf, sizeof(buf), "%s %d/%d", localize("Round"), gameclient.snap.gameobj->round_current, gameclient.snap.gameobj->round_num);
 		gfx_text(0, x+450.0f, y, 22.0f, buf, -1);
 		
 	/*[48c3fd4c][game/scoreboard]: timelimit x:219.428558
@@ -74,7 +74,7 @@ void SCOREBOARD::render_spectators(float x, float y, float w)
 	int count = 0;
 	float h = 120.0f;
 	
-	str_copy(buffer, "Spectators: ", sizeof(buffer));
+	str_format(buffer, sizeof(buffer), "%s: ", localize("Spectators"));
 
 	gfx_blend_normal();
 	gfx_texture_set(-1);
@@ -120,9 +120,9 @@ void SCOREBOARD::render_scoreboard(float x, float y, float w, int team, const ch
 	if(!title)
 	{
 		if(gameclient.snap.gameobj->game_over)
-			title = "Game Over";
+			title = localize("Game over");
 		else
-			title = "Score Board";
+			title = localize("Score board");
 	}
 
 	float tw = gfx_text_width(0, 48, title, -1);
@@ -181,9 +181,9 @@ void SCOREBOARD::render_scoreboard(float x, float y, float w, int team, const ch
 	}
 
 	// render headlines
-	gfx_text(0, x+10, y, 24.0f, "Score", -1);
-	gfx_text(0, x+125, y, 24.0f, "Name", -1);
-	gfx_text(0, x+w-70, y, 24.0f, "Ping", -1);
+	gfx_text(0, x+10, y, 24.0f, localize("Score"), -1);
+	gfx_text(0, x+125, y, 24.0f, localize("Name"), -1);
+	gfx_text(0, x+w-70, y, 24.0f, localize("Ping"), -1);
 	y += 29.0f;
 
 	float font_size = 35.0f;
@@ -295,18 +295,18 @@ void SCOREBOARD::on_render()
 			
 		if(gameclient.snap.gameobj && gameclient.snap.gameobj->game_over)
 		{
-			const char *text = "DRAW!";
+			const char *text = localize("Draw!");
 			if(gameclient.snap.gameobj->teamscore_red > gameclient.snap.gameobj->teamscore_blue)
-				text = "Red Team Wins!";
+				text = localize("Red team wins!");
 			else if(gameclient.snap.gameobj->teamscore_blue > gameclient.snap.gameobj->teamscore_red)
-				text = "Blue Team Wins!";
+				text = localize("Blue team wins!");
 				
 			float w = gfx_text_width(0, 92.0f, text, -1);
 			gfx_text(0, width/2-w/2, 45, 92.0f, text, -1);
 		}
 		
-		render_scoreboard(width/2-w-20, 150.0f, w, 0, "Red Team");
-		render_scoreboard(width/2 + 20, 150.0f, w, 1, "Blue Team");
+		render_scoreboard(width/2-w-20, 150.0f, w, 0, localize("Red team"));
+		render_scoreboard(width/2 + 20, 150.0f, w, 1, localize("Blue team"));
 	}
 
 	render_goals(width/2-w/2, 150+750+25, w);

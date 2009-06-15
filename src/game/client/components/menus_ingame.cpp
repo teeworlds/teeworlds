@@ -30,7 +30,7 @@ void MENUS::render_game(RECT main_view)
 	
 	ui_vsplit_r(&main_view, 120.0f, &main_view, &button);
 	static int disconnect_button = 0;
-	if(ui_do_button(&disconnect_button, "Disconnect", 0, &button, ui_draw_menu_button, 0))
+	if(ui_do_button(&disconnect_button, localize("Disconnect"), 0, &button, ui_draw_menu_button, 0))
 		client_disconnect();
 
 	if(gameclient.snap.local_info && gameclient.snap.gameobj)
@@ -40,7 +40,7 @@ void MENUS::render_game(RECT main_view)
 			ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
 			ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
 			static int spectate_button = 0;
-			if(ui_do_button(&spectate_button, "Spectate", 0, &button, ui_draw_menu_button, 0))
+			if(ui_do_button(&spectate_button, localize("Spectate"), 0, &button, ui_draw_menu_button, 0))
 			{
 				gameclient.send_switch_team(-1);
 				set_active(false);
@@ -54,7 +54,7 @@ void MENUS::render_game(RECT main_view)
 				ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
 				ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
 				static int spectate_button = 0;
-				if(ui_do_button(&spectate_button, "Join Red", 0, &button, ui_draw_menu_button, 0))
+				if(ui_do_button(&spectate_button, localize("Join red"), 0, &button, ui_draw_menu_button, 0))
 				{
 					gameclient.send_switch_team(0);
 					set_active(false);
@@ -66,7 +66,7 @@ void MENUS::render_game(RECT main_view)
 				ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
 				ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
 				static int spectate_button = 0;
-				if(ui_do_button(&spectate_button, "Join Blue", 0, &button, ui_draw_menu_button, 0))
+				if(ui_do_button(&spectate_button, localize("Join blue"), 0, &button, ui_draw_menu_button, 0))
 				{
 					gameclient.send_switch_team(1);
 					set_active(false);
@@ -80,7 +80,7 @@ void MENUS::render_game(RECT main_view)
 				ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
 				ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
 				static int spectate_button = 0;
-				if(ui_do_button(&spectate_button, "Join Game", 0, &button, ui_draw_menu_button, 0))
+				if(ui_do_button(&spectate_button, localize("Join game"), 0, &button, ui_draw_menu_button, 0))
 				{
 					gameclient.send_switch_team(0);
 					set_active(false);
@@ -186,7 +186,7 @@ void MENUS::render_serverinfo(RECT main_view)
 	x = 5.0f;
 	y = 0.0f;
 	
-	gfx_text(0, serverinfo.x+x, serverinfo.y+y, 32, "Server info", 250);
+	gfx_text(0, serverinfo.x+x, serverinfo.y+y, 32, localize("Server info"), 250);
 	y += 32.0f+5.0f;
 	
 	mem_zero(buf, sizeof(buf));
@@ -194,15 +194,15 @@ void MENUS::render_serverinfo(RECT main_view)
 		buf,
 		sizeof(buf),
 		"%s\n\n"
-		"Address: %s\n"
-		"Ping: %d\n"
-		"Version: %s\n"
-		"Password: %s\n",
+		"%s: %s\n"
+		"%s: %d\n"
+		"%s: %s\n"
+		"%s: %s\n",
 		current_server_info.name,
-		config.ui_server_address,
-		gameclient.snap.local_info->latency,
-		current_server_info.version,
-		current_server_info.flags&1 ? "Yes" : "No"
+		localize("Address"), config.ui_server_address,
+		localize("Ping"), gameclient.snap.local_info->latency,
+		localize("Version"), current_server_info.version,
+		localize("Password"), current_server_info.flags&1 ? localize("Yes") : localize("No")
 	);
 	
 	gfx_text(0, serverinfo.x+x, serverinfo.y+y, 20, buf, 250);
@@ -212,7 +212,7 @@ void MENUS::render_serverinfo(RECT main_view)
 		int is_favorite = client_serverbrowse_isfavorite(current_server_info.netaddr);
 		ui_hsplit_b(&serverinfo, 20.0f, &serverinfo, &button);
 		static int add_fav_button = 0;
-		if (ui_do_button(&add_fav_button, "Favorite", is_favorite, &button, ui_draw_checkbox, 0))
+		if (ui_do_button(&add_fav_button, localize("Favorite"), is_favorite, &button, ui_draw_checkbox, 0))
 		{
 			if(is_favorite)
 				client_serverbrowse_removefavorite(current_server_info.netaddr);
@@ -230,7 +230,7 @@ void MENUS::render_serverinfo(RECT main_view)
 	x = 5.0f;
 	y = 0.0f;
 	
-	gfx_text(0, gameinfo.x+x, gameinfo.y+y, 32, "Game info", 250);
+	gfx_text(0, gameinfo.x+x, gameinfo.y+y, 32, localize("Game info"), 250);
 	y += 32.0f+5.0f;
 	
 	mem_zero(buf, sizeof(buf));
@@ -238,18 +238,17 @@ void MENUS::render_serverinfo(RECT main_view)
 		buf,
 		sizeof(buf),
 		"\n\n"
-		"Gametype: %s\n"
-		"Map: %s\n"
-		"Score limit: %d\n"
-		"Time limit: %d\n"
+		"%s: %s\n"
+		"%s: %s\n"
+		"%s: %d\n"
+		"%s: %d\n"
 		"\n"
-		"Players: %d/%d\n",
-		current_server_info.gametype,
-		current_server_info.map,
-		gameclient.snap.gameobj->score_limit,
-		gameclient.snap.gameobj->time_limit,
-		gameclient.snap.num_players,
-		current_server_info.max_players
+		"%s: %d/%d\n",
+		localize("Game type"), current_server_info.gametype,
+		localize("Map"), current_server_info.map,
+		localize("Score limit"), gameclient.snap.gameobj->score_limit,
+		localize("Time limit"), gameclient.snap.gameobj->time_limit,
+		localize("Players"), gameclient.snap.num_players, current_server_info.max_players
 	);
 	gfx_text(0, gameinfo.x+x, gameinfo.y+y, 20, buf, 250);
 	
@@ -259,7 +258,7 @@ void MENUS::render_serverinfo(RECT main_view)
 	ui_margin(&motd, 5.0f, &motd);
 	y = 0.0f;
 	x = 5.0f;
-	gfx_text(0, motd.x+x, motd.y+y, 32, "MOTD", -1);
+	gfx_text(0, motd.x+x, motd.y+y, 32, localize("MOTD"), -1);
 	y += 32.0f+5.0f;
 	gfx_text(0, motd.x+x, motd.y+y, 16, gameclient.motd->server_motd, (int)motd.w);
 }
@@ -277,7 +276,7 @@ void MENUS::render_servercontrol_server(RECT main_view)
 
 	static int votelist = 0;
 	RECT list = main_view;
-	ui_do_listbox_start(&votelist, &list, 24.0f, "Options", num_options, callvote_selectedoption);
+	ui_do_listbox_start(&votelist, &list, 24.0f, localize("Settings"), num_options, callvote_selectedoption);
 	
 	for(VOTING::VOTEOPTION *option = gameclient.voting->first; option; option = option->next)
 	{
@@ -296,7 +295,7 @@ void MENUS::render_servercontrol_kick(RECT main_view)
 	RECT header, footer;
 	ui_hsplit_t(&main_view, 20, &header, &main_view);
 	ui_draw_rect(&header, vec4(1,1,1,0.25f), CORNER_T, 5.0f); 
-	ui_do_label(&header, "Players", 18.0f, 0);
+	ui_do_label(&header, localize("Players"), 18.0f, 0);
 
 	// draw footers	
 	ui_hsplit_b(&main_view, 20, &main_view, &footer);
@@ -341,7 +340,9 @@ void MENUS::render_servercontrol(RECT main_view)
 	
 	RECT button;
 	
-	const char *tabs[] = {"Options", "Kick"};
+	const char *tabs[] = {
+		localize("Settings"),
+		localize("Kick")};
 	int num_tabs = (int)(sizeof(tabs)/sizeof(*tabs));
 	
 	for(int i = 0; i < num_tabs; i++)
@@ -373,7 +374,7 @@ void MENUS::render_servercontrol(RECT main_view)
 		ui_vsplit_r(&bottom, 120.0f, &bottom, &button);
 		
 		static int callvote_button = 0;
-		if(ui_do_button(&callvote_button, "Call vote", 0, &button, ui_draw_menu_button, 0))
+		if(ui_do_button(&callvote_button, localize("Call vote"), 0, &button, ui_draw_menu_button, 0))
 		{
 			if(control_page == 0)
 			{

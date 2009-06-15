@@ -143,11 +143,13 @@ void CHAT::on_render()
 		cursor.line_width = 200.0f;
 		
 		if(mode == MODE_ALL)
-			gfx_text_ex(&cursor, "All: ", -1);
+			gfx_text_ex(&cursor, localize("All"), -1);
 		else if(mode == MODE_TEAM)
-			gfx_text_ex(&cursor, "Team: ", -1);
+			gfx_text_ex(&cursor, localize("Team"), -1);
 		else
-			gfx_text_ex(&cursor, "Chat: ", -1);
+			gfx_text_ex(&cursor, localize("Chat"), -1);
+
+		gfx_text_ex(&cursor, ": ", -1);
 			
 		gfx_text_ex(&cursor, input.get_string(), input.cursor_offset());
 		TEXT_CURSOR marker = cursor;

@@ -515,13 +515,13 @@ int MENUS::render_menubar(RECT r)
 		ui_vsplit_l(&box, 4.0f, 0, &box);
 		ui_vsplit_l(&box, 140.0f, &button, &box);
 		static int server_info_button=0;
-		if (ui_do_button(&server_info_button, localize("Server Info"), active_page==PAGE_SERVER_INFO, &button, ui_draw_menu_tab_button, 0))
+		if (ui_do_button(&server_info_button, localize("Server info"), active_page==PAGE_SERVER_INFO, &button, ui_draw_menu_tab_button, 0))
 			new_page = PAGE_SERVER_INFO;
 
 		ui_vsplit_l(&box, 4.0f, 0, &box);
 		ui_vsplit_l(&box, 140.0f, &button, &box);
 		static int callvote_button=0;
-		if (ui_do_button(&callvote_button, localize("Call Vote"), active_page==PAGE_CALLVOTE, &button, ui_draw_menu_tab_button, 0))
+		if (ui_do_button(&callvote_button, localize("Call vote"), active_page==PAGE_CALLVOTE, &button, ui_draw_menu_tab_button, 0))
 			new_page = PAGE_CALLVOTE;
 			
 		ui_vsplit_l(&box, 30.0f, 0, &box);
@@ -542,7 +542,7 @@ int MENUS::render_menubar(RECT r)
 		popup = POPUP_QUIT;
 
 	ui_vsplit_r(&box, 10.0f, &box, &button);
-	ui_vsplit_r(&box, 120.0f, &box, &button);
+	ui_vsplit_r(&box, 130.0f, &box, &button);
 	static int settings_button=0;
 	if (ui_do_button(&settings_button, localize("Settings"), active_page==PAGE_SETTINGS, &button, ui_draw_menu_tab_button, 0))
 		new_page = PAGE_SETTINGS;

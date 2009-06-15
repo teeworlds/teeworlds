@@ -54,8 +54,11 @@ void MENUS::render_settings_player(RECT main_view)
 
 	// render settings
 	{	
+		char buf[128];
+		
 		ui_hsplit_t(&main_view, 20.0f, &button, &main_view);
-		ui_do_label(&button, localize("Name:"), 14.0, -1);
+		str_format(buf, sizeof(buf), "%s:", localize("Name"));
+		ui_do_label(&button, buf, 14.0, -1);
 		ui_vsplit_l(&button, 80.0f, 0, &button);
 		ui_vsplit_l(&button, 180.0f, &button, 0);
 		if(ui_do_edit_box(config.player_name, &button, config.player_name, sizeof(config.player_name), 14.0f))
@@ -257,27 +260,27 @@ typedef struct
 static KEYINFO keys[] = 
 {
 	// we need to do localize so the scripts can pickup the string
-	{ localize("Move Left:"), "+left", 0},
-	{ localize("Move Right:"), "+right", 0 },
-	{ localize("Jump:"), "+jump", 0 },
-	{ localize("Fire:"), "+fire", 0 },
-	{ localize("Hook:"), "+hook", 0 },
-	{ localize("Hammer:"), "+weapon1", 0 },
-	{ localize("Pistol:"), "+weapon2", 0 },
-	{ localize("Shotgun:"), "+weapon3", 0 },
-	{ localize("Grenade:"), "+weapon4", 0 },
-	{ localize("Rifle:"), "+weapon5", 0 },
-	{ localize("Next Weapon:"), "+nextweapon", 0 },
-	{ localize("Prev. Weapon:"), "+prevweapon", 0 },
-	{ localize("Vote Yes:"), "vote yes", 0 },
-	{ localize("Vote No:"), "vote no", 0 },
+	{ localize("Move left"), "+left", 0},
+	{ localize("Move right"), "+right", 0 },
+	{ localize("Jump"), "+jump", 0 },
+	{ localize("Fire"), "+fire", 0 },
+	{ localize("Hook"), "+hook", 0 },
+	{ localize("Hammer"), "+weapon1", 0 },
+	{ localize("Pistol"), "+weapon2", 0 },
+	{ localize("Shotgun"), "+weapon3", 0 },
+	{ localize("Grenade"), "+weapon4", 0 },
+	{ localize("Rifle"), "+weapon5", 0 },
+	{ localize("Next weapon"), "+nextweapon", 0 },
+	{ localize("Prev. weapon"), "+prevweapon", 0 },
+	{ localize("Vote yes"), "vote yes", 0 },
+	{ localize("Vote no"), "vote no", 0 },
 	{ localize("Chat:"), "chat all", 0 },
-	{ localize("Team Chat:"), "chat team", 0 },
-	{ localize("Emoticon:"), "+emote", 0 },
-	{ localize("Console:"), "toggle_local_console", 0 },
-	{ localize("Remote Console:"), "toggle_remote_console", 0 },
-	{ localize("Screenshot:"), "screenshot", 0 },
-	{ localize("Scoreboard:"), "+scoreboard", 0 },
+	{ localize("Team chat"), "chat team", 0 },
+	{ localize("Emoticon"), "+emote", 0 },
+	{ localize("Console"), "toggle_local_console", 0 },
+	{ localize("Remote console"), "toggle_remote_console", 0 },
+	{ localize("Screenshot"), "screenshot", 0 },
+	{ localize("Scoreboard"), "+scoreboard", 0 },
 };
 
 const int key_count = sizeof(keys) / sizeof(KEYINFO);
@@ -291,6 +294,9 @@ void MENUS::ui_do_getbuttons(int start, int stop, RECT view)
 		ui_hsplit_t(&view, 20.0f, &button, &view);
 		ui_vsplit_l(&button, 130.0f, &label, &button);
 	
+		char buf[64];
+		str_format(buf, sizeof(buf), "%s:", (const char *)key.name);
+		
 		ui_do_label(&label, key.name, 14.0f, -1);
 		int oldid = key.keyid;
 		int newid = ui_do_key_reader((void *)&keys[i].name, &button, oldid);

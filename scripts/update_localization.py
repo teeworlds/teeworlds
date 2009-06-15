@@ -38,16 +38,20 @@ def load_languagefile(filename):
 
 
 def generate_languagefile(outputfilename, srctable, loctable):
-	f = file(outputfilename, "w")
+	tmpfilename = outputfilename[:-1]+"_"
+	f = file(tmpfilename, "w")
 
 	num_items = 0
 	new_items = 0
 	old_items = 0
 
+	srctable_keys = srctable.keys()
+	srctable_keys.sort()
+
 	print >>f, ""
 	print >>f, "##### translated strings #####"
 	print >>f, ""
-	for k in srctable:
+	for k in srctable_keys:
 		if k in loctable and len(loctable[k]):
 			print >>f, k
 			print >>f, "==", loctable[k]
@@ -57,7 +61,7 @@ def generate_languagefile(outputfilename, srctable, loctable):
 
 	print >>f, "##### needs translation ####"
 	print >>f,  ""
-	for k in srctable:
+	for k in srctable_keys:
 		if not k in loctable or len(loctable[k]) == 0:
 			print >>f, k
 			print >>f, "==", srctable[k]
@@ -78,6 +82,8 @@ def generate_languagefile(outputfilename, srctable, loctable):
 	print "%-40s %8s %8s %8s" % ("filename", "total", "new", "old")
 	print "%-40s %8d %8d %8d" % (outputfilename, num_items, new_items, old_items)
 	f.close()
+	
+	os.rename(tmpfilename, outputfilename)
 
 srctable = parse_source()
 

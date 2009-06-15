@@ -1,263 +1,20 @@
 
 ##### translated strings #####
 
-Fullscreen
-== Fullskärm
-
-Loading
-== Laddar
-
-Ping
-== Ping
-
-Next Weapon:
-== Nästa vapen:
-
-Internet
-== Internet
-
-Use sounds
-== Använd ljudeffekter
-
-Body
-== Kropp
-
-Ping:
-== Ping:
-
-Show name plates
-== Visa namnskyltar
-
-Quality Textures
-== Kvalitets texturer
-
-News
-== Nyheter
-
-Sound
-== Ljud
-
-Ok
-== Ok
-
-Call Vote
-== Starta omröstning
-
-Favorite
-== Favorit
-
-Try again
-== Försök igen
-
-Refresh
-== Uppdatera
-
-FSAA samples
-== FSAA samplingar
-
-No servers match your filter criteria
-== Inga servrar matchar dina filter kriterer
-
-Welcome to Teeworlds
-== Välkommen till Teeworlds
-
-Voting
-== Röstning
-
-Sat.
-== Mättnad
-
-LAN
-== LAN
-
-Prev. Weapon:
-== Föregående vapen:
-
-Standard gametype
-== Standard speltyp
-
-Skins
-== Utseende
-
-Quit
-== Avsluta
-
-Has people playing
-== Har folk som spelar
-
-Version:
-== Version:
-
-Dynamic Camera
-== Dynamisk kamera
-
-Remote Console:
-== Serverkonsol:
-
-Type
-== Typ
-
-Disconnected
-== Frånkopplad
-
-Feet
-== Fötter
-
-Show only supported
-== Visa endast upplösningar som stöds
-
-Miscellaneous
-== Övrigt
-
-Nickname:
-== Smeknamn:
-
-Game
-== Spel
-
-Screenshot:
-== Skärmdump
-
-Teeworlds %s is out! Download it at www.teeworlds.com!
-== Teeworld %s är släppt! Ladda ner det på www.teeworlds.com!
-
-Grenade:
-== Granater:
-
-Connect
-== Anslut
-
-Info
-== Info
-
-No password
-== Inget lösenord
-
-Team Chat:
-== Lagchatt:
-
-Refreshing master servers
-== Uppdaterar huvudservrar
-
-Settings
-== Inställningar
-
-Custom colors
-== Egna färger
-
-Emoticon:
-== Känsloikon
-
-Server details:
-== Server detaljer:
-
-Shotgun:
-== Hagelgevär:
-
-UI Color
-== Gränssnittfärg
-
-Sample rate
-== Samplingsfrekvens
-
-Move Left:
-== Gå vänster:
-
-V-Sync
-== V-Sync
-
-Chat
-== Chatt
-
-Yes
-== Ja
-
-Console:
-== Konsol:
-
-High Detail
-== Extra detaljer
-
-No
-== Nej
-
-Reset filter
-== Återställ filter
-
-Mute when not active
-== Stäng av ljudet när spelet inte är aktivt
-
-Password Incorrect
-== Felaktigt lösenord
-
-Sound volume
-== Ljud volym
-
-Vote No:
-== Rösta nej:
-
-Movement
-== Förflyttning
-
-Hue
-== Nyans
-
-As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Detta är första gången du startar spelet, var vänligen skriv in ditt smeknamn här nedanför. Det är rekommenderat att du kollar inställningarna och justerar dom till din preferens innan du börjar spela.
-
-Rifle:
-== Gevär:
-
-Switch weapon on pickup
-== Byt vapen vid upplock
-
-Compatible version
-== Kompatibel version
-
-Standard map
-== Standard karta
-
-Fire:
-== Skjuta:
-
-Host address:
-== Serveraddress
-
-Weapon
-== Vapen
-
-Display Modes
-== Skärmlägen
-
-Filter
-== Filter
-
-Move Right:
-== Gå höger
-
-Controls
-== Kontroller
-
-Lht.
-== Ljusstyrka
-
-Server not full
-== Inte full server
-
-Chat:
-== Chatt:
-
-Quick search:
-== Snabbsök:
-
 %d of %d servers, %d players
 == %d av %d servrar, %d spelare
 
-Demos
-== Demon
-
 Abort
 == Avbryt
+
+Address
+== Address
+
+All
+== Alla
+
+Alpha
+== Alpha
 
 Always show name plates
 == Visa alltid namnskyltar
@@ -265,102 +22,417 @@ Always show name plates
 Are you sure that you want to quit?
 == Är du säker på att du vill avsluta?
 
-Scoreboard:
-== Poänglista
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Detta är första gången du startar spelet, var vänligen skriv in ditt smeknamn här nedanför. Det är rekommenderat att du kollar inställningarna och justerar dom till din preferens innan du börjar spela.
 
-Mouse sens.
-== Muskänslighet
+Blue team
+== Blåa laget
 
-Reset to defaults
-== Återställ till standard
+Blue team wins!
+== Röda laget vann!
 
-Current
-== Nuvarande
+Body
+== Kropp
 
-Hook:
-== Haken:
+Call vote
+== Omröstning
 
-Map
-== Karta
+Chat
+== Chatt
 
-Texture Compression
-== Texturkompression
+Chat:
+== Chatt:
+
+Close
+== Stäng
+
+Compatible version
+== Kompatibel version
+
+Connect
+== Anslut
 
 Connecting to
 == Ansluter till
 
-Favorites
-== Favoriter
+Console
+== Konsol
 
-Graphics
-== Grafik
+Controls
+== Kontroller
 
-Alpha
-== Alpha
+Current
+== Nuvarande
 
-Name:
-== Namn:
+Current version: %s
+== Nuvarande version: %s
 
-Game types:
-== Speltyper:
+Custom colors
+== Egna färger
 
-Name
-== Namn
+Demos
+== Demon
 
-You must restart the game for all settings to take effect.
-== Du måste starta om spelet för att ändringarna skall gälla.
+Disconnect
+== Avsluta
 
-Maximum ping
-== Högsta ping
+Disconnected
+== Frånkopplad
 
-Players
-== Spelare
+Display Modes
+== Skärmlägen
 
 Downloading map
 == Laddar ner karta
 
+Draw!
+== Oavgjort!
+
+Dynamic Camera
+== Dynamisk kamera
+
+Emoticon
+== Känsloikon
+
 Enter
 == Fortsätt
 
-Jump:
-== Hoppa:
+FSAA samples
+== FSAA samplingar
 
-Game Type:
-== Speltyp:
+Favorite
+== Favorit
+
+Favorites
+== Favoriter
+
+Feet
+== Fötter
+
+Filter
+== Filter
+
+Fire
+== Skjuta
+
+Fullscreen
+== Fullskärm
+
+Game
+== Spel
+
+Game info
+== Spel info.
+
+Game type
+== Speltyp
+
+Game types
+== Speltyper
+
+Graphics
+== Grafik
+
+Grenade
+== Granater
+
+Hammer
+== Hammare
+
+Has people playing
+== Har folk som spelar
+
+High Detail
+== Extra detaljer
+
+Hook
+== Haken
+
+Host address
+== Serveraddress
+
+Hue
+== Nyans
+
+Info
+== Info
+
+Internet
+== Internet
+
+Join blue
+== Spela i blått
+
+Join game
+== Spela
+
+Join red
+== Spela i rött
+
+Jump
+== Hoppa
+
+Kick
+== Sparka
+
+LAN
+== LAN
+
+Lht.
+== Ljusstyrka
+
+Loading
+== Laddar
+
+MOTD
+== Meddelande
+
+Map
+== Karta
+
+Maximum ping
+== Högsta ping
+
+Miscellaneous
+== Övrigt
+
+Mouse sens.
+== Muskänslighet
+
+Move left
+== Gå vänster
+
+Move right
+== Gå höger
+
+Movement
+== Förflyttning
+
+Mute when not active
+== Stäng av ljudet när spelet inte är aktivt
+
+Name
+== Namn
+
+News
+== Nyheter
+
+Next weapon
+== Nästa vapen
+
+Nickname:
+== Smeknamn:
+
+No
+== Nej
+
+No password
+== Inget lösenord
+
+No servers found
+== Inga servrar hittade
+
+No servers match your filter criteria
+== Inga servrar matchar dina filter kriterer
+
+Ok
+== Ok
+
+Password
+== Lösenord
+
+Password Incorrect
+== Felaktigt lösenord
 
 Password:
 == Lösenord:
 
+Ping
+== Ping
+
+Pistol
+== Pistol
+
+Play
+== Spela
+
 Player
 == Spelare
 
-Hammer:
-== Hammare:
+Players
+== Spelare
 
-Vote Yes:
-== Rösta ja:
+Prev. weapon
+== Föregående vapen
 
-Server Info
+Quality Textures
+== Kvalitets texturer
+
+Quick search:
+== Snabbsök:
+
+Quit
+== Avsluta
+
+Red team
+== Röda laget
+
+Red team wins!
+== Röda laget vann!
+
+Refresh
+== Uppdatera
+
+Refreshing master servers
+== Uppdaterar huvudservrar
+
+Remote console
+== Serverkonsol
+
+Reset filter
+== Återställ filter
+
+Reset to defaults
+== Återställ till standard
+
+Rifle
+== Gevär
+
+Round
+== Runda
+
+Sample rate
+== Samplingsfrekvens
+
+Sat.
+== Mättnad
+
+Score
+== Poäng
+
+Score board
+== Poängtavla
+
+Score limit
+== Poängmål
+
+Scoreboard
+== Poänglista
+
+Screenshot
+== Skärmdump
+
+Server details
+== Serverdetaljer
+
+Server info
 == Server info.
 
-Pistol:
-== Pistol:
+Server not full
+== Inte full server
+
+Settings
+== Inställningar
+
+Shotgun
+== Hagelgevär
+
+Show name plates
+== Visa namnskyltar
+
+Show only supported
+== Visa endast upplösningar som stöds
+
+Skins
+== Utseende
+
+Sound
+== Ljud
+
+Sound volume
+== Ljud volym
+
+Spectate
+== Åskåda
+
+Spectators
+== Åskådare
+
+Standard gametype
+== Standard speltyp
+
+Standard map
+== Standard karta
+
+Switch weapon on pickup
+== Byt vapen vid anskaffning
+
+Team
+== Lag
+
+Team chat
+== Lagchatt
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworld %s är släppt! Ladda ner det på www.teeworlds.com!
+
+Texture Compression
+== Texturkompression
+
+Time limit
+== Tidsbegränsning
+
+Try again
+== Försök igen
+
+Type
+== Typ
+
+UI Color
+== Gränssnittfärg
+
+Use sounds
+== Använd ljudeffekter
+
+V-Sync
+== V-Sync
+
+Version
+== Version
+
+Vote no
+== Rösta nej
+
+Vote yes
+== Rösta ja
+
+Voting
+== Röstning
+
+Weapon
+== Vapen
+
+Welcome to Teeworlds
+== Välkommen till Teeworlds
+
+Yes
+== Ja
+
+You must restart the game for all settings to take effect.
+== Du måste starta om spelet för att ändringarna skall gälla.
 
 ##### needs translation ####
 
-Progression:
-== 
-
-The server is running a non-standard tuning on a pure game mode.
+Game over
 == 
 
 N/A
 == 
 
-Current version: %s
+Progression
 == 
 
-No servers found
+The server is running a non-standard tuning on a pure game mode.
 == 
 
 ##### old translations ####
