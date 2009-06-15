@@ -8,7 +8,7 @@ Abort
 == Avbryt
 
 Address
-== Address
+== Adress
 
 All
 == Alla
@@ -23,10 +23,10 @@ Are you sure that you want to quit?
 == Är du säker på att du vill avsluta?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Detta är första gången du startar spelet, var vänligen skriv in ditt smeknamn här nedanför. Det är rekommenderat att du kollar inställningarna och justerar dom till din preferens innan du börjar spela.
+== Detta är första gången du startar spelet, var vänligen skriv in ditt smeknamn här nedanför. Det är rekommenderat att du kontrollera inställningarna och justerar dom till din preferens innan du börjar spela.
 
 Blue team
-== Blåa laget
+== Blå laget
 
 Blue team wins!
 == Röda laget vann!
@@ -122,7 +122,7 @@ Game
 == Spel
 
 Game info
-== Spel info.
+== Spelinfo.
 
 Game over
 == Slutspelat
@@ -245,7 +245,7 @@ No servers found
 == Inga servrar hittade
 
 No servers match your filter criteria
-== Inga servrar matchar dina filter kriterer
+== Inga servrar matchar dina filterkriterer
 
 Ok
 == Ok
@@ -278,7 +278,7 @@ Prev. weapon
 == Föregående vapen
 
 Quality Textures
-== Kvalitets texturer
+== Kvalitetstexturer
 
 Quick search:
 == Snabbsök:
@@ -338,7 +338,7 @@ Server details
 == Serverdetaljer
 
 Server info
-== Server info.
+== Serverinfo.
 
 Server not full
 == Inte full server
@@ -374,7 +374,7 @@ Standard gametype
 == Standard speltyp
 
 Standard map
-== Standard karta
+== Standardkarta
 
 Switch weapon on pickup
 == Byt vapen vid anskaffning
