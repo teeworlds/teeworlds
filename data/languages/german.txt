@@ -8,7 +8,7 @@ Abort
 == Abbrechen
 
 Address
-== Addresse
+== Adresse
 
 All
 == Alle
@@ -23,7 +23,7 @@ Are you sure that you want to quit?
 == Bist du sicher, dass du beenden möchtest?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Da das dies der erste Start des Spiels ist, gib bitte unten deinen Namen ein. Es ist empfohlen die Einstellungen zu überprüfen um sie deinen Vorstellungen anzupassen, bevor du einem Server beitrittst.
+== Da dies der erste Start des Spiels ist, gib bitte unten deinen Namen ein. Es wird empfohlen die Einstellungen zu überprüfen, um sie deinen Vorstellungen anzupassen, bevor du einem Server beitrittst.
 
 Blue team
 == Blaues Team
@@ -152,7 +152,7 @@ Hook
 == Hook
 
 Host address
-== Serveraddresse
+== Serveradresse
 
 Hue
 == Farb.
