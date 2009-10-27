@@ -165,7 +165,7 @@ public:
 	int add(const T& item)
 	{
 		incsize();
-		set_size(size()+1);
+		num_elements = size()+1;
 		list[num_elements-1] = item;
 		return num_elements-1;
 	}
@@ -189,7 +189,7 @@ public:
 			
 		int index = (int)(&r.front()-list);
 		incsize();
-		set_size(size()+1);
+		num_elements = size()+1;
 		
 		for(int i = num_elements-1; i > index; i--)
 			list[i] = list[i-1];
@@ -283,7 +283,7 @@ public:
 	*/
 	int memusage()
 	{
-		return sizeof(array) + sizeof(T)*size;
+		return sizeof(*this) + sizeof(T)*list_size;
 	}
 
 	/*

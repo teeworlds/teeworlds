@@ -7,6 +7,7 @@
 #include "../mapitems.hpp"
 #include "ui.hpp"
 
+
 struct TEE_RENDER_INFO
 {
 	TEE_RENDER_INFO()
@@ -37,32 +38,44 @@ enum
 	TILERENDERFLAG_EXTEND=4,
 };
 
-//typedef struct SPRITE;
 
-void select_sprite(struct SPRITE *spr, int flags=0, int sx=0, int sy=0);
-void select_sprite(int id, int flags=0, int sx=0, int sy=0);
+class CRenderTools
+{
+public:
+	class IGraphics *m_pGraphics;
+	class CUI *m_pUI;
+	
+	class IGraphics *Graphics() const { return m_pGraphics; }
+	class CUI *UI() const { return m_pUI; }
 
-void draw_sprite(float x, float y, float size);
+	//typedef struct SPRITE;
 
-// rects
-void draw_round_rect(float x, float y, float w, float h, float r);
-void draw_round_rect_ext(float x, float y, float w, float h, float r, int corners);
-void ui_draw_rect(const RECT *r, vec4 color, int corners, float rounding);
+	void select_sprite(struct SPRITE *spr, int flags=0, int sx=0, int sy=0);
+	void select_sprite(int id, int flags=0, int sx=0, int sy=0);
 
-// larger rendering methods
-void render_tilemap_generate_skip();
+	void draw_sprite(float x, float y, float size);
 
-// object render methods (gc_render_obj.cpp)
-void render_tee(class ANIMSTATE *anim, TEE_RENDER_INFO *info, int emote, vec2 dir, vec2 pos);
+	// rects
+	void draw_round_rect(float x, float y, float w, float h, float r);
+	void draw_round_rect_ext(float x, float y, float w, float h, float r, int corners);
+	
+	void DrawUIRect(const CUIRect *r, vec4 color, int corners, float rounding);
 
-// map render methods (gc_render_map.cpp)
-void render_eval_envelope(ENVPOINT *points, int num_points, int channels, float time, float *result);
-void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, int env, float *channels), int flags);
-void render_tilemap(TILE *tiles, int w, int h, float scale, vec4 color, int flags);
+	// larger rendering methods
+	void render_tilemap_generate_skip();
 
-// helpers
-void mapscreen_to_world(float center_x, float center_y, float parallax_x, float parallax_y,
-	float offset_x, float offset_y, float aspect, float zoom, float *points);
+	// object render methods (gc_render_obj.cpp)
+	void RenderTee(class ANIMSTATE *anim, TEE_RENDER_INFO *info, int emote, vec2 dir, vec2 pos);
 
+	// map render methods (gc_render_map.cpp)
+	static void render_eval_envelope(ENVPOINT *points, int num_points, int channels, float time, float *result);
+	void render_quads(QUAD *quads, int num_quads, int flags, void (*eval)(float time_offset, int env, float *channels, void *user), void *user);
+	void render_tilemap(TILE *tiles, int w, int h, float scale, vec4 color, int flags);
+
+	// helpers
+	void mapscreen_to_world(float center_x, float center_y, float parallax_x, float parallax_y,
+		float offset_x, float offset_y, float aspect, float zoom, float *points);	
+	
+};
 
 #endif

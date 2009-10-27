@@ -25,7 +25,7 @@ static void con_dbg_dumpmem(void *result, void *user_data)
 
 static void con_dbg_lognetwork(void *result, void *user_data)
 {
-	netcommon_openlog("network_sent.dat", "network_recv.dat");
+	CNetBase::OpenLog("network_sent.dat", "network_recv.dat");
 }
 
 
@@ -55,7 +55,7 @@ void engine_init(const char *appname)
 
 	/* init the network */
 	net_init();
-	netcommon_init();
+	CNetBase::Init();
 	
 	/* create storage location */
 	{
@@ -246,7 +246,7 @@ static IOHANDLE config_file = 0;
 
 int engine_config_write_start()
 {
-	config_save("settings.cfg");
+	config_save();
 	config_file = engine_openfile("settings.cfg", IOFLAG_WRITE);
 	if(config_file == 0)
 		return -1;

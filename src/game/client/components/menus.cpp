@@ -12,6 +12,7 @@
 #include "skins.hpp"
 
 #include <engine/e_client_interface.h>
+#include <engine/client/graphics.h>
 
 #include <game/version.hpp>
 #include <game/generated/g_protocol.hpp>
@@ -94,356 +95,366 @@ MENUS::MENUS()
 	last_input = time_get();
 }
 
-vec4 MENUS::button_color_mul(const void *id)
+vec4 MENUS::button_color_mul(const void *pID)
 {
-	if(ui_active_item() == id)
+	if(UI()->ActiveItem() == pID)
 		return vec4(1,1,1,0.5f);
-	else if(ui_hot_item() == id)
+	else if(UI()->HotItem() == pID)
 		return vec4(1,1,1,1.5f);
 	return vec4(1,1,1,1);
 }
 
-void MENUS::ui_draw_browse_icon(int what, const RECT *r)
+int MENUS::DoButton_BrowseIcon(int What, const CUIRect *pRect)
 {
-	gfx_texture_set(data->images[IMAGE_BROWSEICONS].id);
-	gfx_quads_begin();
-	select_sprite(what);
-	gfx_quads_drawTL(r->x,r->y,r->w,r->h);
-	gfx_quads_end();
-}
-
-
-void MENUS::ui_draw_menu_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
-{
-	ui_draw_rect(r, vec4(1,1,1,0.5f)*button_color_mul(id), CORNER_ALL, 5.0f);
-	ui_do_label(r, text, r->h*fontmod_height, 0);
-}
-
-void MENUS::ui_draw_keyselect_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
-{
-	ui_draw_rect(r, vec4(1,1,1,0.5f)*button_color_mul(id), CORNER_ALL, 5.0f);
-	ui_do_label(r, text, r->h*fontmod_height, 0);
-}
-
-void MENUS::ui_draw_menu_tab_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
-{
-	int corners = CORNER_T;
-	vec4 colormod(1,1,1,1);
-	if(extra)
-		corners = *(int *)extra;
+	Graphics()->TextureSet(data->images[IMAGE_BROWSEICONS].id);
 	
-	if(checked)
-		ui_draw_rect(r, color_tabbar_active, corners, 10.0f);
+	Graphics()->QuadsBegin();
+	RenderTools()->select_sprite(What);
+	Graphics()->QuadsDrawTL(pRect->x, pRect->y, pRect->w, pRect->h);
+	Graphics()->QuadsEnd();
+	
+	return 0;
+}
+
+
+int MENUS::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
+{
+	RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f)*button_color_mul(pID), CUI::CORNER_ALL, 5.0f);
+	UI()->DoLabel(pRect, pText, pRect->h*fontmod_height, 0);
+	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
+}
+
+int MENUS::DoButton_KeySelect(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
+{
+	RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f)*button_color_mul(pID), CUI::CORNER_ALL, 5.0f);
+	UI()->DoLabel(pRect, pText, pRect->h*fontmod_height, 0);
+	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
+}
+
+int MENUS::DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners)
+{
+	vec4 ColorMod(1,1,1,1);
+	
+	if(Checked)
+		RenderTools()->DrawUIRect(pRect, color_tabbar_active, Corners, 10.0f);
 	else
-		ui_draw_rect(r, color_tabbar_inactive, corners, 10.0f);
-	ui_do_label(r, text, r->h*fontmod_height, 0);
+		RenderTools()->DrawUIRect(pRect, color_tabbar_inactive, Corners, 10.0f);
+	UI()->DoLabel(pRect, pText, pRect->h*fontmod_height, 0);
+	
+	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
 
-void MENUS::ui_draw_settings_tab_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
+int MENUS::DoButton_SettingsTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
 {
-	if(checked)
-		ui_draw_rect(r, color_tabbar_active, CORNER_R, 10.0f);
+	if(Checked)
+		RenderTools()->DrawUIRect(pRect, color_tabbar_active, CUI::CORNER_R, 10.0f);
 	else
-		ui_draw_rect(r, color_tabbar_inactive, CORNER_R, 10.0f);
-	ui_do_label(r, text, r->h*fontmod_height, 0);
+		RenderTools()->DrawUIRect(pRect, color_tabbar_inactive, CUI::CORNER_R, 10.0f);
+	UI()->DoLabel(pRect, pText, pRect->h*fontmod_height, 0);
+	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
-void MENUS::ui_draw_grid_header(const void *id, const char *text, int checked, const RECT *r, const void *extra)
+int MENUS::DoButton_GridHeader(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
+//void MENUS::ui_draw_grid_header(const void *id, const char *text, int checked, const CUIRect *r, const void *extra)
 {
-	if(checked)
-		ui_draw_rect(r, vec4(1,1,1,0.5f), CORNER_T, 5.0f);
-	RECT t;
-	ui_vsplit_l(r, 5.0f, 0, &t);
-	ui_do_label(&t, text, r->h*fontmod_height, -1);
+	if(Checked)
+		RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f), CUI::CORNER_T, 5.0f);
+	CUIRect t;
+	pRect->VSplitLeft(5.0f, 0, &t);
+	UI()->DoLabel(&t, pText, pRect->h*fontmod_height, -1);
+	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
-void MENUS::ui_draw_list_row(const void *id, const char *text, int checked, const RECT *r, const void *extra)
+int MENUS::DoButton_ListRow(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
 {
-	if(checked)
+	if(Checked)
 	{
-		RECT sr = *r;
-		ui_margin(&sr, 1.5f, &sr);
-		ui_draw_rect(&sr, vec4(1,1,1,0.5f), CORNER_ALL, 4.0f);
+		CUIRect sr = *pRect;
+		sr.Margin(1.5f, &sr);
+		RenderTools()->DrawUIRect(&sr, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 4.0f);
 	}
-	ui_do_label(r, text, r->h*fontmod_height, -1);
+	UI()->DoLabel(pRect, pText, pRect->h*fontmod_height, -1);
+	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
-void MENUS::ui_draw_checkbox_common(const void *id, const char *text, const char *boxtext, const RECT *r)
+int MENUS::DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect)
+//void MENUS::ui_draw_checkbox_common(const void *id, const char *text, const char *boxtext, const CUIRect *r, const void *extra)
 {
-	RECT c = *r;
-	RECT t = *r;
+	CUIRect c = *pRect;
+	CUIRect t = *pRect;
 	c.w = c.h;
 	t.x += c.w;
 	t.w -= c.w;
-	ui_vsplit_l(&t, 5.0f, 0, &t);
+	t.VSplitLeft(5.0f, 0, &t);
 	
-	ui_margin(&c, 2.0f, &c);
-	ui_draw_rect(&c, vec4(1,1,1,0.25f)*button_color_mul(id), CORNER_ALL, 3.0f);
+	c.Margin(2.0f, &c);
+	RenderTools()->DrawUIRect(&c, vec4(1,1,1,0.25f)*button_color_mul(pID), CUI::CORNER_ALL, 3.0f);
 	c.y += 2;
-	ui_do_label(&c, boxtext, r->h*fontmod_height*0.6f, 0);
-	ui_do_label(&t, text, r->h*fontmod_height*0.8f, -1);
+	UI()->DoLabel(&c, pBoxText, pRect->h*fontmod_height*0.6f, 0);
+	UI()->DoLabel(&t, pText, pRect->h*fontmod_height*0.8f, -1);
+	return UI()->DoButtonLogic(pID, pText, 0, pRect);
 }
 
-void MENUS::ui_draw_checkbox(const void *id, const char *text, int checked, const RECT *r, const void *extra)
+int MENUS::DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
 {
-	ui_draw_checkbox_common(id, text, checked?"X":"", r);
+	return DoButton_CheckBox_Common(pID, pText, Checked?"X":"", pRect);
 }
 
 
-void MENUS::ui_draw_checkbox_number(const void *id, const char *text, int checked, const RECT *r, const void *extra)
+int MENUS::DoButton_CheckBox_Number(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
 {
 	char buf[16];
-	str_format(buf, sizeof(buf), "%d", checked);
-	ui_draw_checkbox_common(id, text, buf, r);
+	str_format(buf, sizeof(buf), "%d", Checked);
+	return DoButton_CheckBox_Common(pID, pText, buf, pRect);
 }
 
-int MENUS::ui_do_edit_box(void *id, const RECT *rect, char *str, unsigned str_size, float font_size, bool hidden)
+int MENUS::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, bool Hidden)
 {
-    int inside = ui_mouse_inside(rect);
-	int r = 0;
-	static int at_index = 0;
+    int Inside = UI()->MouseInside(pRect);
+	int ReturnValue = 0;
+	static int AtIndex = 0;
 
-	if(ui_last_active_item() == id)
+	if(UI()->LastActiveItem() == pID)
 	{
-		int len = strlen(str);
+		int Len = strlen(pStr);
 			
-		if (inside && ui_mouse_button(0))
+		if(Inside && UI()->MouseButton(0))
 		{
-			int mx_rel = (int)(ui_mouse_x() - rect->x);
+			int mx_rel = (int)(UI()->MouseX() - pRect->x);
 
-			for (int i = 1; i <= len; i++)
+			for (int i = 1; i <= Len; i++)
 			{
-				if (gfx_text_width(0, font_size, str, i) + 10 > mx_rel)
+				if (gfx_text_width(0, FontSize, pStr, i) + 10 > mx_rel)
 				{
-					at_index = i - 1;
+					AtIndex = i - 1;
 					break;
 				}
 
-				if (i == len)
-					at_index = len;
+				if (i == Len)
+					AtIndex = Len;
 			}
 		}
 
 		for(int i = 0; i < num_inputevents; i++)
 		{
-			len = strlen(str);
-			LINEINPUT::manipulate(inputevents[i], str, str_size, &len, &at_index);
+			Len = strlen(pStr);
+			LINEINPUT::manipulate(inputevents[i], pStr, StrSize, &Len, &AtIndex);
 		}
 	}
 
-	bool just_got_active = false;
+	bool JustGotActive = false;
 	
-	if(ui_active_item() == id)
+	if(UI()->ActiveItem() == pID)
 	{
-		if(!ui_mouse_button(0))
-			ui_set_active_item(0);
+		if(!UI()->MouseButton(0))
+			UI()->SetActiveItem(0);
 	}
-	else if(ui_hot_item() == id)
+	else if(UI()->HotItem() == pID)
 	{
-		if(ui_mouse_button(0))
+		if(UI()->MouseButton(0))
 		{
-			if (ui_last_active_item() != id)
-				just_got_active = true;
-			ui_set_active_item(id);
+			if (UI()->LastActiveItem() != pID)
+				JustGotActive = true;
+			UI()->SetActiveItem(pID);
 		}
 	}
 	
-	if(inside)
-		ui_set_hot_item(id);
+	if(Inside)
+		UI()->SetHotItem(pID);
 
-	RECT textbox = *rect;
-	ui_draw_rect(&textbox, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
-	ui_vmargin(&textbox, 5.0f, &textbox);
+	CUIRect Textbox = *pRect;
+	RenderTools()->DrawUIRect(&Textbox, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 5.0f);
+	Textbox.VMargin(5.0f, &Textbox);
 	
-	const char *display_str = str;
-	char stars[128];
+	const char *pDisplayStr = pStr;
+	char aStars[128];
 	
-	if(hidden)
+	if(Hidden)
 	{
-		unsigned s = strlen(str);
-		if(s >= sizeof(stars))
-			s = sizeof(stars)-1;
-		memset(stars, '*', s);
-		stars[s] = 0;
-		display_str = stars;
+		unsigned s = strlen(pStr);
+		if(s >= sizeof(aStars))
+			s = sizeof(aStars)-1;
+		memset(aStars, '*', s);
+		aStars[s] = 0;
+		pDisplayStr = aStars;
 	}
 
-	ui_do_label(&textbox, display_str, font_size, -1);
+	UI()->DoLabel(&Textbox, pDisplayStr, FontSize, -1);
 	
-	if (ui_last_active_item() == id && !just_got_active)
+	if (UI()->LastActiveItem() == pID && !JustGotActive)
 	{
-		float w = gfx_text_width(0, font_size, display_str, at_index);
-		textbox.x += w*ui_scale();
-		ui_do_label(&textbox, "_", font_size, -1);
+		float w = gfx_text_width(0, FontSize, pDisplayStr, AtIndex);
+		Textbox.x += w*UI()->Scale();
+		UI()->DoLabel(&Textbox, "_", FontSize, -1);
 	}
 
-	return r;
+	return ReturnValue;
 }
 
-float MENUS::ui_do_scrollbar_v(const void *id, const RECT *rect, float current)
+float MENUS::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 {
-	RECT handle;
-	static float offset_y;
-	ui_hsplit_t(rect, 33, &handle, 0);
+	CUIRect Handle;
+	static float OffsetY;
+	pRect->HSplitTop(33, &Handle, 0);
 
-	handle.y += (rect->h-handle.h)*current;
+	Handle.y += (pRect->h-Handle.h)*Current;
 
 	/* logic */
-    float ret = current;
-    int inside = ui_mouse_inside(&handle);
+    float ReturnValue = Current;
+    int Inside = UI()->MouseInside(&Handle);
 
-	if(ui_active_item() == id)
+	if(UI()->ActiveItem() == pID)
 	{
-		if(!ui_mouse_button(0))
-			ui_set_active_item(0);
+		if(!UI()->MouseButton(0))
+			UI()->SetActiveItem(0);
 		
-		float min = rect->y;
-		float max = rect->h-handle.h;
-		float cur = ui_mouse_y()-offset_y;
-		ret = (cur-min)/max;
-		if(ret < 0.0f) ret = 0.0f;
-		if(ret > 1.0f) ret = 1.0f;
+		float min = pRect->y;
+		float max = pRect->h-Handle.h;
+		float cur = UI()->MouseY()-OffsetY;
+		ReturnValue = (cur-min)/max;
+		if(ReturnValue < 0.0f) ReturnValue = 0.0f;
+		if(ReturnValue > 1.0f) ReturnValue = 1.0f;
 	}
-	else if(ui_hot_item() == id)
+	else if(UI()->HotItem() == pID)
 	{
-		if(ui_mouse_button(0))
+		if(UI()->MouseButton(0))
 		{
-			ui_set_active_item(id);
-			offset_y = ui_mouse_y()-handle.y;
+			UI()->SetActiveItem(pID);
+			OffsetY = UI()->MouseY()-Handle.y;
 		}
 	}
 	
-	if(inside)
-		ui_set_hot_item(id);
+	if(Inside)
+		UI()->SetHotItem(pID);
 
 	// render
-	RECT rail;
-	ui_vmargin(rect, 5.0f, &rail);
-	ui_draw_rect(&rail, vec4(1,1,1,0.25f), 0, 0.0f);
+	CUIRect Rail;
+	pRect->VMargin(5.0f, &Rail);
+	RenderTools()->DrawUIRect(&Rail, vec4(1,1,1,0.25f), 0, 0.0f);
 
-	RECT slider = handle;
-	slider.w = rail.x-slider.x;
-	ui_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_L, 2.5f);
-	slider.x = rail.x+rail.w;
-	ui_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_R, 2.5f);
+	CUIRect Slider = Handle;
+	Slider.w = Rail.x-Slider.x;
+	RenderTools()->DrawUIRect(&Slider, vec4(1,1,1,0.25f), CUI::CORNER_L, 2.5f);
+	Slider.x = Rail.x+Rail.w;
+	RenderTools()->DrawUIRect(&Slider, vec4(1,1,1,0.25f), CUI::CORNER_R, 2.5f);
 
-	slider = handle;
-	ui_margin(&slider, 5.0f, &slider);
-	ui_draw_rect(&slider, vec4(1,1,1,0.25f)*button_color_mul(id), CORNER_ALL, 2.5f);
+	Slider = Handle;
+	Slider.Margin(5.0f, &Slider);
+	RenderTools()->DrawUIRect(&Slider, vec4(1,1,1,0.25f)*button_color_mul(pID), CUI::CORNER_ALL, 2.5f);
 	
-    return ret;
+    return ReturnValue;
 }
 
 
 
-float MENUS::ui_do_scrollbar_h(const void *id, const RECT *rect, float current)
+float MENUS::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 {
-	RECT handle;
-	static float offset_x;
-	ui_vsplit_l(rect, 33, &handle, 0);
+	CUIRect Handle;
+	static float OffsetX;
+	pRect->VSplitLeft(33, &Handle, 0);
 
-	handle.x += (rect->w-handle.w)*current;
+	Handle.x += (pRect->w-Handle.w)*Current;
 
 	/* logic */
-    float ret = current;
-    int inside = ui_mouse_inside(&handle);
+    float ReturnValue = Current;
+    int Inside = UI()->MouseInside(&Handle);
 
-	if(ui_active_item() == id)
+	if(UI()->ActiveItem() == pID)
 	{
-		if(!ui_mouse_button(0))
-			ui_set_active_item(0);
+		if(!UI()->MouseButton(0))
+			UI()->SetActiveItem(0);
 		
-		float min = rect->x;
-		float max = rect->w-handle.w;
-		float cur = ui_mouse_x()-offset_x;
-		ret = (cur-min)/max;
-		if(ret < 0.0f) ret = 0.0f;
-		if(ret > 1.0f) ret = 1.0f;
+		float min = pRect->x;
+		float max = pRect->w-Handle.w;
+		float cur = UI()->MouseX()-OffsetX;
+		ReturnValue = (cur-min)/max;
+		if(ReturnValue < 0.0f) ReturnValue = 0.0f;
+		if(ReturnValue > 1.0f) ReturnValue = 1.0f;
 	}
-	else if(ui_hot_item() == id)
+	else if(UI()->HotItem() == pID)
 	{
-		if(ui_mouse_button(0))
+		if(UI()->MouseButton(0))
 		{
-			ui_set_active_item(id);
-			offset_x = ui_mouse_x()-handle.x;
+			UI()->SetActiveItem(pID);
+			OffsetX = UI()->MouseX()-Handle.x;
 		}
 	}
 	
-	if(inside)
-		ui_set_hot_item(id);
+	if(Inside)
+		UI()->SetHotItem(pID);
 
 	// render
-	RECT rail;
-	ui_hmargin(rect, 5.0f, &rail);
-	ui_draw_rect(&rail, vec4(1,1,1,0.25f), 0, 0.0f);
+	CUIRect Rail;
+	pRect->HMargin(5.0f, &Rail);
+	RenderTools()->DrawUIRect(&Rail, vec4(1,1,1,0.25f), 0, 0.0f);
 
-	RECT slider = handle;
-	slider.h = rail.y-slider.y;
-	ui_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_T, 2.5f);
-	slider.y = rail.y+rail.h;
-	ui_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_B, 2.5f);
+	CUIRect Slider = Handle;
+	Slider.h = Rail.y-Slider.y;
+	RenderTools()->DrawUIRect(&Slider, vec4(1,1,1,0.25f), CUI::CORNER_T, 2.5f);
+	Slider.y = Rail.y+Rail.h;
+	RenderTools()->DrawUIRect(&Slider, vec4(1,1,1,0.25f), CUI::CORNER_B, 2.5f);
 
-	slider = handle;
-	ui_margin(&slider, 5.0f, &slider);
-	ui_draw_rect(&slider, vec4(1,1,1,0.25f)*button_color_mul(id), CORNER_ALL, 2.5f);
+	Slider = Handle;
+	Slider.Margin(5.0f, &Slider);
+	RenderTools()->DrawUIRect(&Slider, vec4(1,1,1,0.25f)*button_color_mul(pID), CUI::CORNER_ALL, 2.5f);
 	
-    return ret;
+    return ReturnValue;
 }
 
-int MENUS::ui_do_key_reader(void *id, const RECT *rect, int key)
+int MENUS::DoKeyReader(void *pID, const CUIRect *pRect, int Key)
 {
 	// process
-	static void *grabbed_id = 0;
-	static bool mouse_released = true;
-	int inside = ui_mouse_inside(rect);
-	int new_key = key;
+	static void *pGrabbedID = 0;
+	static bool MouseReleased = true;
+	int Inside = UI()->MouseInside(pRect);
+	int NewKey = Key;
 	
-	if(!ui_mouse_button(0) && grabbed_id == id)
-		mouse_released = true;
+	if(!UI()->MouseButton(0) && pGrabbedID == pID)
+		MouseReleased = true;
 
-	if(ui_active_item() == id)
+	if(UI()->ActiveItem() == pID)
 	{
 		if(binder.got_key)
 		{
-			new_key = binder.key.key;
+			NewKey = binder.key.key;
 			binder.got_key = false;
-			ui_set_active_item(0);
-			mouse_released = false;
-			grabbed_id = id;
+			UI()->SetActiveItem(0);
+			MouseReleased = false;
+			pGrabbedID = pID;
 		}
 	}
-	else if(ui_hot_item() == id)
+	else if(UI()->HotItem() == pID)
 	{
-		if(ui_mouse_button(0) && mouse_released)
+		if(UI()->MouseButton(0) && MouseReleased)
 		{
 			binder.take_key = true;
 			binder.got_key = false;
-			ui_set_active_item(id);
+			UI()->SetActiveItem(pID);
 		}
 	}
 	
-	if(inside)
-		ui_set_hot_item(id);
+	if(Inside)
+		UI()->SetHotItem(pID);
 
 	// draw
-	if (ui_active_item() == id)
-		ui_draw_keyselect_button(id, "???", 0, rect, 0);
+	if (UI()->ActiveItem() == pID)
+		DoButton_KeySelect(pID, "???", 0, pRect);
 	else
 	{
-		if(key == 0)
-			ui_draw_keyselect_button(id, "", 0, rect, 0);
+		if(Key == 0)
+			DoButton_KeySelect(pID, "", 0, pRect);
 		else
-			ui_draw_keyselect_button(id, inp_key_name(key), 0, rect, 0);
+			DoButton_KeySelect(pID, inp_key_name(Key), 0, pRect);
 	}
-	return new_key;
+	return NewKey;
 }
 
 
-int MENUS::render_menubar(RECT r)
+int MENUS::render_menubar(CUIRect r)
 {
-	RECT box = r;
-	RECT button;
+	CUIRect box = r;
+	CUIRect button;
 	
 	int active_page = config.ui_page;
 	int new_page = -1;
@@ -456,46 +467,43 @@ int MENUS::render_menubar(RECT r)
 		/* offline menus */
 		if(0) // this is not done yet
 		{
-			ui_vsplit_l(&box, 90.0f, &button, &box);
+			box.VSplitLeft(90.0f, &button, &box);
 			static int news_button=0;
-			if (ui_do_button(&news_button, localize("News"), active_page==PAGE_NEWS, &button, ui_draw_menu_tab_button, 0))
+			if (DoButton_MenuTab(&news_button, localize("News"), active_page==PAGE_NEWS, &button, 0))
 				new_page = PAGE_NEWS;
-			ui_vsplit_l(&box, 30.0f, 0, &box); 
+			box.VSplitLeft(30.0f, 0, &box); 
 		}
 
-		ui_vsplit_l(&box, 100.0f, &button, &box);
+		box.VSplitLeft(100.0f, &button, &box);
 		static int internet_button=0;
-		int corners = CORNER_TL;
-		if (ui_do_button(&internet_button, localize("Internet"), active_page==PAGE_INTERNET, &button, ui_draw_menu_tab_button, &corners))
+		if(DoButton_MenuTab(&internet_button, localize("Internet"), active_page==PAGE_INTERNET, &button, CUI::CORNER_TL))
 		{
 			client_serverbrowse_refresh(BROWSETYPE_INTERNET);
 			new_page = PAGE_INTERNET;
 		}
 
-		//ui_vsplit_l(&box, 4.0f, 0, &box);
-		ui_vsplit_l(&box, 80.0f, &button, &box);
+		//box.VSplitLeft(4.0f, 0, &box);
+		box.VSplitLeft(80.0f, &button, &box);
 		static int lan_button=0;
-		corners = 0;
-		if (ui_do_button(&lan_button, localize("LAN"), active_page==PAGE_LAN, &button, ui_draw_menu_tab_button, &corners))
+		if(DoButton_MenuTab(&lan_button, localize("LAN"), active_page==PAGE_LAN, &button, 0))
 		{
 			client_serverbrowse_refresh(BROWSETYPE_LAN);
 			new_page = PAGE_LAN;
 		}
 
-		//ui_vsplit_l(&box, 4.0f, 0, &box);
-		ui_vsplit_l(&box, 110.0f, &button, &box);
+		//box.VSplitLeft(4.0f, 0, &box);
+		box.VSplitLeft(110.0f, &button, &box);
 		static int favorites_button=0;
-		corners = CORNER_TR;
-		if (ui_do_button(&favorites_button, localize("Favorites"), active_page==PAGE_FAVORITES, &button, ui_draw_menu_tab_button, &corners))
+		if(DoButton_MenuTab(&favorites_button, localize("Favorites"), active_page==PAGE_FAVORITES, &button, CUI::CORNER_TR))
 		{
 			client_serverbrowse_refresh(BROWSETYPE_FAVORITES);
 			new_page  = PAGE_FAVORITES;
 		}
 		
-		ui_vsplit_l(&box, 4.0f*5, 0, &box);
-		ui_vsplit_l(&box, 100.0f, &button, &box);
+		box.VSplitLeft(4.0f*5, 0, &box);
+		box.VSplitLeft(100.0f, &button, &box);
 		static int demos_button=0;
-		if (ui_do_button(&demos_button, localize("Demos"), active_page==PAGE_DEMOS, &button, ui_draw_menu_tab_button, 0))
+		if(DoButton_MenuTab(&demos_button, localize("Demos"), active_page==PAGE_DEMOS, &button, 0))
 		{
 			demolist_populate();
 			new_page  = PAGE_DEMOS;
@@ -504,44 +512,44 @@ int MENUS::render_menubar(RECT r)
 	else
 	{
 		/* online menus */
-		ui_vsplit_l(&box, 90.0f, &button, &box);
+		box.VSplitLeft(90.0f, &button, &box);
 		static int game_button=0;
-		if (ui_do_button(&game_button, localize("Game"), active_page==PAGE_GAME, &button, ui_draw_menu_tab_button, 0))
+		if(DoButton_MenuTab(&game_button, localize("Game"), active_page==PAGE_GAME, &button, 0))
 			new_page = PAGE_GAME;
 
-		ui_vsplit_l(&box, 4.0f, 0, &box);
-		ui_vsplit_l(&box, 140.0f, &button, &box);
+		box.VSplitLeft(4.0f, 0, &box);
+		box.VSplitLeft(140.0f, &button, &box);
 		static int server_info_button=0;
-		if (ui_do_button(&server_info_button, localize("Server info"), active_page==PAGE_SERVER_INFO, &button, ui_draw_menu_tab_button, 0))
+		if(DoButton_MenuTab(&server_info_button, localize("Server info"), active_page==PAGE_SERVER_INFO, &button, 0))
 			new_page = PAGE_SERVER_INFO;
 
-		ui_vsplit_l(&box, 4.0f, 0, &box);
-		ui_vsplit_l(&box, 140.0f, &button, &box);
+		box.VSplitLeft(4.0f, 0, &box);
+		box.VSplitLeft(140.0f, &button, &box);
 		static int callvote_button=0;
-		if (ui_do_button(&callvote_button, localize("Call vote"), active_page==PAGE_CALLVOTE, &button, ui_draw_menu_tab_button, 0))
+		if(DoButton_MenuTab(&callvote_button, localize("Call vote"), active_page==PAGE_CALLVOTE, &button, 0))
 			new_page = PAGE_CALLVOTE;
 			
-		ui_vsplit_l(&box, 30.0f, 0, &box);
+		box.VSplitLeft(30.0f, 0, &box);
 	}
 		
 	/*
-	ui_vsplit_r(&box, 110.0f, &box, &button);
+	box.VSplitRight(110.0f, &box, &button);
 	static int system_button=0;
-	if (ui_do_button(&system_button, "System", config.ui_page==PAGE_SYSTEM, &button, ui_draw_menu_tab_button, 0))
+	if (UI()->DoButton(&system_button, "System", config.ui_page==PAGE_SYSTEM, &button))
 		config.ui_page = PAGE_SYSTEM;
 		
-	ui_vsplit_r(&box, 30.0f, &box, 0);
+	box.VSplitRight(30.0f, &box, 0);
 	*/
 	
-	ui_vsplit_r(&box, 90.0f, &box, &button);
+	box.VSplitRight(90.0f, &box, &button);
 	static int quit_button=0;
-	if (ui_do_button(&quit_button, localize("Quit"), 0, &button, ui_draw_menu_tab_button, 0))
+	if(DoButton_MenuTab(&quit_button, localize("Quit"), 0, &button, 0))
 		popup = POPUP_QUIT;
 
-	ui_vsplit_r(&box, 10.0f, &box, &button);
-	ui_vsplit_r(&box, 130.0f, &box, &button);
+	box.VSplitRight(10.0f, &box, &button);
+	box.VSplitRight(130.0f, &box, &button);
 	static int settings_button=0;
-	if (ui_do_button(&settings_button, localize("Settings"), active_page==PAGE_SETTINGS, &button, ui_draw_menu_tab_button, 0))
+	if(DoButton_MenuTab(&settings_button, localize("Settings"), active_page==PAGE_SETTINGS, &button, 0))
 		new_page = PAGE_SETTINGS;
 	
 	if(new_page != -1)
@@ -570,8 +578,8 @@ void MENUS::render_loading(float percent)
 	vec3 rgb = hsl_to_rgb(vec3(config.ui_color_hue/255.0f, config.ui_color_sat/255.0f, config.ui_color_lht/255.0f));
 	gui_color = vec4(rgb.r, rgb.g, rgb.b, config.ui_color_alpha/255.0f);
 	
-    RECT screen = *ui_screen();
-	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
+    CUIRect screen = *UI()->Screen();
+	Graphics()->MapScreen(screen.x, screen.y, screen.w, screen.h);
 	
 	render_background();
 
@@ -582,37 +590,37 @@ void MENUS::render_loading(float percent)
 	float x = screen.w/2-w/2;
 	float y = screen.h/2-h/2;
 
-	gfx_blend_normal();
+	Graphics()->BlendNormal();
 
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_setcolor(0,0,0,0.50f);
-	draw_round_rect(x, y, w, h, 40.0f);
-	gfx_quads_end();
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(0,0,0,0.50f);
+	RenderTools()->draw_round_rect(x, y, w, h, 40.0f);
+	Graphics()->QuadsEnd();
 
 
 	const char *caption = localize("Loading");
 
 	tw = gfx_text_width(0, 48.0f, caption, -1);
-	RECT r;
+	CUIRect r;
 	r.x = x;
 	r.y = y+20;
 	r.w = w;
 	r.h = h;
-	ui_do_label(&r, caption, 48.0f, 0, -1);
+	UI()->DoLabel(&r, caption, 48.0f, 0, -1);
 
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_setcolor(1,1,1,0.75f);
-	draw_round_rect(x+40, y+h-75, (w-80)*percent, 25, 5.0f);
-	gfx_quads_end();
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1,1,1,0.75f);
+	RenderTools()->draw_round_rect(x+40, y+h-75, (w-80)*percent, 25, 5.0f);
+	Graphics()->QuadsEnd();
 
 	gfx_swap();
 }
 
-void MENUS::render_news(RECT main_view)
+void MENUS::render_news(CUIRect main_view)
 {
-	ui_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&main_view, color_tabbar_active, CUI::CORNER_ALL, 10.0f);
 }
 
 void MENUS::on_init()
@@ -677,8 +685,8 @@ void MENUS::popup_message(const char *topic, const char *body, const char *butto
 
 int MENUS::render()
 {
-    RECT screen = *ui_screen();
-	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
+    CUIRect screen = *UI()->Screen();
+	Graphics()->MapScreen(screen.x, screen.y, screen.w, screen.h);
 
 	static bool first = true;
 	if(first)
@@ -702,17 +710,17 @@ int MENUS::render()
 		color_tabbar_active = color_tabbar_active_outgame;
 	}
 	
-	RECT tab_bar;
-	RECT main_view;
+	CUIRect tab_bar;
+	CUIRect main_view;
 
 	// some margin around the screen
-	ui_margin(&screen, 10.0f, &screen);
+	screen.Margin(10.0f, &screen);
 	
 	if(popup == POPUP_NONE)
 	{
 		// do tab bar
-		ui_hsplit_t(&screen, 24.0f, &tab_bar, &main_view);
-		ui_vmargin(&tab_bar, 20.0f, &tab_bar);
+		screen.HSplitTop(24.0f, &tab_bar, &main_view);
+		tab_bar.VMargin(20.0f, &tab_bar);
 		render_menubar(tab_bar);
 		
 		// news is not implemented yet
@@ -750,8 +758,8 @@ int MENUS::render()
 	else
 	{
 		// make sure that other windows doesn't do anything funnay!
-		//ui_set_hot_item(0);
-		//ui_set_active_item(0);
+		//UI()->SetHotItem(0);
+		//UI()->SetActiveItem(0);
 		char buf[128];
 		const char *title = "";
 		const char *extra_text = "";
@@ -809,109 +817,109 @@ int MENUS::render()
 			extra_align = -1;
 		}
 		
-		RECT box, part;
+		CUIRect box, part;
 		box = screen;
-		ui_vmargin(&box, 150.0f, &box);
-		ui_hmargin(&box, 150.0f, &box);
+		box.VMargin(150.0f, &box);
+		box.HMargin(150.0f, &box);
 		
 		// render the box
-		ui_draw_rect(&box, vec4(0,0,0,0.5f), CORNER_ALL, 15.0f);
+		RenderTools()->DrawUIRect(&box, vec4(0,0,0,0.5f), CUI::CORNER_ALL, 15.0f);
 		 
-		ui_hsplit_t(&box, 20.f, &part, &box);
-		ui_hsplit_t(&box, 24.f, &part, &box);
-		ui_do_label(&part, title, 24.f, 0);
-		ui_hsplit_t(&box, 20.f, &part, &box);
-		ui_hsplit_t(&box, 24.f, &part, &box);
-		ui_vmargin(&part, 20.f, &part);
+		box.HSplitTop(20.f, &part, &box);
+		box.HSplitTop(24.f, &part, &box);
+		UI()->DoLabel(&part, title, 24.f, 0);
+		box.HSplitTop(20.f, &part, &box);
+		box.HSplitTop(24.f, &part, &box);
+		part.VMargin(20.f, &part);
 		
 		if(extra_align == -1)
-			ui_do_label(&part, extra_text, 20.f, -1, (int)part.w);
+			UI()->DoLabel(&part, extra_text, 20.f, -1, (int)part.w);
 		else
-			ui_do_label(&part, extra_text, 20.f, 0, -1);
+			UI()->DoLabel(&part, extra_text, 20.f, 0, -1);
 
 		if(popup == POPUP_QUIT)
 		{
-			RECT yes, no;
-			ui_hsplit_b(&box, 20.f, &box, &part);
-			ui_hsplit_b(&box, 24.f, &box, &part);
-			ui_vmargin(&part, 80.0f, &part);
+			CUIRect yes, no;
+			box.HSplitBottom(20.f, &box, &part);
+			box.HSplitBottom(24.f, &box, &part);
+			part.VMargin(80.0f, &part);
 			
-			ui_vsplit_mid(&part, &no, &yes);
+			part.VSplitMid(&no, &yes);
 			
-			ui_vmargin(&yes, 20.0f, &yes);
-			ui_vmargin(&no, 20.0f, &no);
+			yes.VMargin(20.0f, &yes);
+			no.VMargin(20.0f, &no);
 
 			static int button_abort = 0;
-			if(ui_do_button(&button_abort, localize("No"), 0, &no, ui_draw_menu_button, 0) || escape_pressed)
+			if(DoButton_Menu(&button_abort, localize("No"), 0, &no) || escape_pressed)
 				popup = POPUP_NONE;
 
 			static int button_tryagain = 0;
-			if(ui_do_button(&button_tryagain, localize("Yes"), 0, &yes, ui_draw_menu_button, 0) || enter_pressed)
+			if(DoButton_Menu(&button_tryagain, localize("Yes"), 0, &yes) || enter_pressed)
 				client_quit();
 		}
 		else if(popup == POPUP_PASSWORD)
 		{
-			RECT label, textbox, tryagain, abort;
+			CUIRect label, textbox, tryagain, abort;
 			
-			ui_hsplit_b(&box, 20.f, &box, &part);
-			ui_hsplit_b(&box, 24.f, &box, &part);
-			ui_vmargin(&part, 80.0f, &part);
+			box.HSplitBottom(20.f, &box, &part);
+			box.HSplitBottom(24.f, &box, &part);
+			part.VMargin(80.0f, &part);
 			
-			ui_vsplit_mid(&part, &abort, &tryagain);
+			part.VSplitMid(&abort, &tryagain);
 			
-			ui_vmargin(&tryagain, 20.0f, &tryagain);
-			ui_vmargin(&abort, 20.0f, &abort);
+			tryagain.VMargin(20.0f, &tryagain);
+			abort.VMargin(20.0f, &abort);
 			
 			static int button_abort = 0;
-			if(ui_do_button(&button_abort, localize("Abort"), 0, &abort, ui_draw_menu_button, 0) || escape_pressed)
+			if(DoButton_Menu(&button_abort, localize("Abort"), 0, &abort) || escape_pressed)
 				popup = POPUP_NONE;
 
 			static int button_tryagain = 0;
-			if(ui_do_button(&button_tryagain, localize("Try again"), 0, &tryagain, ui_draw_menu_button, 0) || enter_pressed)
+			if(DoButton_Menu(&button_tryagain, localize("Try again"), 0, &tryagain) || enter_pressed)
 			{
 				client_connect(config.ui_server_address);
 			}
 			
-			ui_hsplit_b(&box, 60.f, &box, &part);
-			ui_hsplit_b(&box, 24.f, &box, &part);
+			box.HSplitBottom(60.f, &box, &part);
+			box.HSplitBottom(24.f, &box, &part);
 			
-			ui_vsplit_l(&part, 60.0f, 0, &label);
-			ui_vsplit_l(&label, 100.0f, 0, &textbox);
-			ui_vsplit_l(&textbox, 20.0f, 0, &textbox);
-			ui_vsplit_r(&textbox, 60.0f, &textbox, 0);
-			ui_do_label(&label, localize("Password"), 20, -1);
-			ui_do_edit_box(&config.password, &textbox, config.password, sizeof(config.password), 14.0f, true);
+			part.VSplitLeft(60.0f, 0, &label);
+			label.VSplitLeft(100.0f, 0, &textbox);
+			textbox.VSplitLeft(20.0f, 0, &textbox);
+			textbox.VSplitRight(60.0f, &textbox, 0);
+			UI()->DoLabel(&label, localize("Password"), 20, -1);
+			DoEditBox(&config.password, &textbox, config.password, sizeof(config.password), 14.0f, true);
 		}
 		else if(popup == POPUP_FIRST_LAUNCH)
 		{
-			RECT label, textbox;
+			CUIRect label, textbox;
 			
-			ui_hsplit_b(&box, 20.f, &box, &part);
-			ui_hsplit_b(&box, 24.f, &box, &part);
-			ui_vmargin(&part, 80.0f, &part);
+			box.HSplitBottom(20.f, &box, &part);
+			box.HSplitBottom(24.f, &box, &part);
+			part.VMargin(80.0f, &part);
 			
 			static int enter_button = 0;
-			if(ui_do_button(&enter_button, localize("Enter"), 0, &part, ui_draw_menu_button, 0) || enter_pressed)
+			if(DoButton_Menu(&enter_button, localize("Enter"), 0, &part) || enter_pressed)
 				popup = POPUP_NONE;
 			
-			ui_hsplit_b(&box, 40.f, &box, &part);
-			ui_hsplit_b(&box, 24.f, &box, &part);
+			box.HSplitBottom(40.f, &box, &part);
+			box.HSplitBottom(24.f, &box, &part);
 			
-			ui_vsplit_l(&part, 60.0f, 0, &label);
-			ui_vsplit_l(&label, 100.0f, 0, &textbox);
-			ui_vsplit_l(&textbox, 20.0f, 0, &textbox);
-			ui_vsplit_r(&textbox, 60.0f, &textbox, 0);
-			ui_do_label(&label, localize("Nickname"), 20, -1);
-			ui_do_edit_box(&config.player_name, &textbox, config.player_name, sizeof(config.player_name), 14.0f);
+			part.VSplitLeft(60.0f, 0, &label);
+			label.VSplitLeft(100.0f, 0, &textbox);
+			textbox.VSplitLeft(20.0f, 0, &textbox);
+			textbox.VSplitRight(60.0f, &textbox, 0);
+			UI()->DoLabel(&label, localize("Nickname"), 20, -1);
+			DoEditBox(&config.player_name, &textbox, config.player_name, sizeof(config.player_name), 14.0f);
 		}
 		else
 		{
-			ui_hsplit_b(&box, 20.f, &box, &part);
-			ui_hsplit_b(&box, 24.f, &box, &part);
-			ui_vmargin(&part, 120.0f, &part);
+			box.HSplitBottom(20.f, &box, &part);
+			box.HSplitBottom(24.f, &box, &part);
+			part.VMargin(120.0f, &part);
 
 			static int button = 0;
-			if(ui_do_button(&button, button_text, 0, &part, ui_draw_menu_button, 0) || escape_pressed || enter_pressed)
+			if(DoButton_Menu(&button, button_text, 0, &part) || escape_pressed || enter_pressed)
 			{
 				if(popup == POPUP_CONNECTING)
 					client_disconnect();
@@ -949,8 +957,8 @@ bool MENUS::on_mousemove(float x, float y)
 	mouse_pos.y += y;
 	if(mouse_pos.x < 0) mouse_pos.x = 0;
 	if(mouse_pos.y < 0) mouse_pos.y = 0;
-	if(mouse_pos.x > gfx_screenwidth()) mouse_pos.x = gfx_screenwidth();
-	if(mouse_pos.y > gfx_screenheight()) mouse_pos.y = gfx_screenheight();
+	if(mouse_pos.x > Graphics()->ScreenWidth()) mouse_pos.x = Graphics()->ScreenWidth();
+	if(mouse_pos.y > Graphics()->ScreenHeight()) mouse_pos.y = Graphics()->ScreenHeight();
 	
 	return true;
 }
@@ -993,8 +1001,8 @@ void MENUS::on_statechange(int new_state, int old_state)
 			if(strstr(client_error_string(), "password"))
 			{
 				popup = POPUP_PASSWORD;
-				ui_set_hot_item(&config.password);
-				ui_set_active_item(&config.password);
+				UI()->SetHotItem(&config.password);
+				UI()->SetActiveItem(&config.password);
 			}
 			else
 				popup = POPUP_DISCONNECTED;
@@ -1028,10 +1036,10 @@ void MENUS::on_render()
 	gfx_text_set_cursor(&cursor, 10, 30, 15, TEXTFLAG_RENDER);
 	gfx_text_ex(&cursor, "ようこそ - ガイド", -1);
 	
-	//gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_quads_drawTL(60, 60, 5000, 5000);
-	gfx_quads_end();
+	//Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
+	Graphics()->QuadsDrawTL(60, 60, 5000, 5000);
+	Graphics()->QuadsEnd();
 	return;*/
 	
 	if(client_state() != CLIENTSTATE_ONLINE && client_state() != CLIENTSTATE_DEMOPLAYBACK)
@@ -1039,8 +1047,8 @@ void MENUS::on_render()
 
 	if(client_state() == CLIENTSTATE_DEMOPLAYBACK)
 	{
-		RECT screen = *ui_screen();
-		gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
+		CUIRect screen = *UI()->Screen();
+		Graphics()->MapScreen(screen.x, screen.y, screen.w, screen.h);
 		render_demoplayer(screen);
 	}
 	
@@ -1081,36 +1089,36 @@ void MENUS::on_render()
 		gui_color.a);
     
 	// update the ui
-	RECT *screen = ui_screen();
-	float mx = (mouse_pos.x/(float)gfx_screenwidth())*screen->w;
-	float my = (mouse_pos.y/(float)gfx_screenheight())*screen->h;
+	CUIRect *screen = UI()->Screen();
+	float mx = (mouse_pos.x/(float)Graphics()->ScreenWidth())*screen->w;
+	float my = (mouse_pos.y/(float)Graphics()->ScreenHeight())*screen->h;
 		
 	int buttons = 0;
 	if(inp_key_pressed(KEY_MOUSE_1)) buttons |= 1;
 	if(inp_key_pressed(KEY_MOUSE_2)) buttons |= 2;
 	if(inp_key_pressed(KEY_MOUSE_3)) buttons |= 4;
 		
-	ui_update(mx,my,mx*3.0f,my*3.0f,buttons);
+	UI()->Update(mx,my,mx*3.0f,my*3.0f,buttons);
     
 	// render
 	if(client_state() != CLIENTSTATE_DEMOPLAYBACK)
 		render();
 
 	// render cursor
-	gfx_texture_set(data->images[IMAGE_CURSOR].id);
-	gfx_quads_begin();
-	gfx_setcolor(1,1,1,1);
-	gfx_quads_drawTL(mx,my,24,24);
-	gfx_quads_end();
+	Graphics()->TextureSet(data->images[IMAGE_CURSOR].id);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1,1,1,1);
+	Graphics()->QuadsDrawTL(mx,my,24,24);
+	Graphics()->QuadsEnd();
 
 	// render debug information
 	if(config.debug)
 	{
-		RECT screen = *ui_screen();
-		gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
+		CUIRect screen = *UI()->Screen();
+		Graphics()->MapScreen(screen.x, screen.y, screen.w, screen.h);
 
 		char buf[512];
-		str_format(buf, sizeof(buf), "%p %p %p", ui_hot_item(), ui_active_item(), ui_last_active_item());
+		str_format(buf, sizeof(buf), "%p %p %p", UI()->HotItem(), UI()->ActiveItem(), UI()->LastActiveItem());
 		TEXT_CURSOR cursor;
 		gfx_text_set_cursor(&cursor, 10, 10, 10, TEXTFLAG_RENDER);
 		gfx_text_ex(&cursor, buf, -1);
@@ -1125,53 +1133,53 @@ static int texture_blob = -1;
 
 void MENUS::render_background()
 {
-	//gfx_clear(1,1,1);
+	//Graphics()->Clear(1,1,1);
 	//render_sunrays(0,0);
 	if(texture_blob == -1)
-		texture_blob = gfx_load_texture("blob.png", IMG_AUTO, 0);
+		texture_blob = Graphics()->LoadTexture("blob.png", IMG_AUTO, 0);
 
 
-	float sw = 300*gfx_screenaspect();
+	float sw = 300*Graphics()->ScreenAspect();
 	float sh = 300;
-	gfx_mapscreen(0, 0, sw, sh);
+	Graphics()->MapScreen(0, 0, sw, sh);
 
-	RECT s = *ui_screen();
+	CUIRect s = *UI()->Screen();
 
 	// render background color
-	gfx_texture_set(-1);
-	gfx_quads_begin();
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
 		//vec4 bottom(gui_color.r*0.3f, gui_color.g*0.3f, gui_color.b*0.3f, 1.0f);
 		//vec4 bottom(0, 0, 0, 1.0f);
 		vec4 bottom(gui_color.r, gui_color.g, gui_color.b, 1.0f);
 		vec4 top(gui_color.r, gui_color.g, gui_color.b, 1.0f);
-		gfx_setcolorvertex(0, top.r, top.g, top.b, top.a);
-		gfx_setcolorvertex(1, top.r, top.g, top.b, top.a);
-		gfx_setcolorvertex(2, bottom.r, bottom.g, bottom.b, bottom.a);
-		gfx_setcolorvertex(3, bottom.r, bottom.g, bottom.b, bottom.a);
-		gfx_quads_drawTL(0, 0, sw, sh);
-	gfx_quads_end();
+		Graphics()->SetColorVertex(0, top.r, top.g, top.b, top.a);
+		Graphics()->SetColorVertex(1, top.r, top.g, top.b, top.a);
+		Graphics()->SetColorVertex(2, bottom.r, bottom.g, bottom.b, bottom.a);
+		Graphics()->SetColorVertex(3, bottom.r, bottom.g, bottom.b, bottom.a);
+		Graphics()->QuadsDrawTL(0, 0, sw, sh);
+	Graphics()->QuadsEnd();
 	
 	// render the tiles
-	gfx_texture_set(-1);
-	gfx_quads_begin();
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
 		float size = 15.0f;
 		float offset_time = fmod(client_localtime()*0.15f, 2.0f);
 		for(int y = -2; y < (int)(sw/size); y++)
 			for(int x = -2; x < (int)(sh/size); x++)
 			{
-				gfx_setcolor(0,0,0,0.045f);
-				gfx_quads_drawTL((x-offset_time)*size*2+(y&1)*size, (y+offset_time)*size, size, size);
+				Graphics()->SetColor(0,0,0,0.045f);
+				Graphics()->QuadsDrawTL((x-offset_time)*size*2+(y&1)*size, (y+offset_time)*size, size, size);
 			}
-	gfx_quads_end();
+	Graphics()->QuadsEnd();
 
 	// render border fade
-	gfx_texture_set(texture_blob);
-	gfx_quads_begin();
-		gfx_setcolor(0,0,0,0.5f);
-		gfx_quads_drawTL(-100, -100, sw+200, sh+200);
-	gfx_quads_end();
+	Graphics()->TextureSet(texture_blob);
+	Graphics()->QuadsBegin();
+		Graphics()->SetColor(0,0,0,0.5f);
+		Graphics()->QuadsDrawTL(-100, -100, sw+200, sh+200);
+	Graphics()->QuadsEnd();
 
 	// restore screen	
-    {RECT screen = *ui_screen();
-	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);}	
+    {CUIRect screen = *UI()->Screen();
+	Graphics()->MapScreen(screen.x, screen.y, screen.w, screen.h);}	
 }

@@ -1,4 +1,5 @@
 #include <engine/e_client_interface.h>
+#include <engine/client/graphics.h>
 #include <engine/e_config.h>
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
@@ -28,22 +29,22 @@ void MOTD::on_render()
 	if(!is_active())
 		return;
 		
-	float width = 400*3.0f*gfx_screenaspect();
+	float width = 400*3.0f*Graphics()->ScreenAspect();
 	float height = 400*3.0f;
 
-	gfx_mapscreen(0, 0, width, height);
+	Graphics()->MapScreen(0, 0, width, height);
 	
 	float h = 800.0f;
 	float w = 650.0f;
 	float x = width/2 - w/2;
 	float y = 150.0f;
 
-	gfx_blend_normal();
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_setcolor(0,0,0,0.5f);
-	draw_round_rect(x, y, w, h, 40.0f);
-	gfx_quads_end();
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(0,0,0,0.5f);
+	RenderTools()->draw_round_rect(x, y, w, h, 40.0f);
+	Graphics()->QuadsEnd();
 
 	gfx_text(0, x+40.0f, y+40.0f, 32.0f, server_motd, (int)(w-80.0f));
 }

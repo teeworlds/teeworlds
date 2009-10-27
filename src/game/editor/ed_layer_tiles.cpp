@@ -1,5 +1,7 @@
 #include <base/math.hpp>
 
+#include <engine/client/graphics.h>
+
 #include <game/generated/gc_data.hpp>
 #include <game/client/render.hpp>
 #include "ed_editor.hpp"
@@ -33,7 +35,7 @@ void LAYER_TILES::prepare_for_save()
 	{
 		for(int y = 0; y < height; y++)
 			for(int x = 0; x < width; x++)
-				tiles[y*width+x].flags |= editor.map.images[image]->tileflags[tiles[y*width+x].index];
+				tiles[y*width+x].flags |= editor->map.images[image]->tileflags[tiles[y*width+x].index];
 	}
 }
 
@@ -46,16 +48,16 @@ void LAYER_TILES::make_palette()
 
 void LAYER_TILES::render()
 {
-	if(image >= 0 && image < editor.map.images.len())
-		tex_id = editor.map.images[image]->tex_id;
-	gfx_texture_set(tex_id);
-	render_tilemap(tiles, width, height, 32.0f, vec4(1,1,1,1), LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT);
+	if(image >= 0 && image < editor->map.images.len())
+		tex_id = editor->map.images[image]->tex_id;
+	Graphics()->TextureSet(tex_id);
+	editor->RenderTools()->render_tilemap(tiles, width, height, 32.0f, vec4(1,1,1,1), LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT);
 }
 
 int LAYER_TILES::convert_x(float x) const { return (int)(x/32.0f); }
 int LAYER_TILES::convert_y(float y) const { return (int)(y/32.0f); }
 
-void LAYER_TILES::convert(RECT rect, RECTi *out)
+void LAYER_TILES::convert(CUIRect rect, RECTi *out)
 {
 	out->x = convert_x(rect.x);
 	out->y = convert_y(rect.y);
@@ -63,7 +65,7 @@ void LAYER_TILES::convert(RECT rect, RECTi *out)
 	out->h = convert_y(rect.y+rect.h+31) - out->y;
 }
 
-void LAYER_TILES::snap(RECT *rect)
+void LAYER_TILES::snap(CUIRect *rect)
 {
 	RECTi out;
 	convert(*rect, &out);
@@ -99,20 +101,20 @@ void LAYER_TILES::clamp(RECTi *rect)
 		rect->w = 0;
 }
 
-void LAYER_TILES::brush_selecting(RECT rect)
+void LAYER_TILES::brush_selecting(CUIRect rect)
 {
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_setcolor(1,1,1,0.4f);
+	Graphics()->TextureSet(-1);
+	editor->Graphics()->QuadsBegin();
+	editor->Graphics()->SetColor(1,1,1,0.4f);
 	snap(&rect);
-	gfx_quads_drawTL(rect.x, rect.y, rect.w, rect.h);
-	gfx_quads_end();
+	editor->Graphics()->QuadsDrawTL(rect.x, rect.y, rect.w, rect.h);
+	editor->Graphics()->QuadsEnd();
 	char buf[16];
 	str_format(buf, sizeof(buf), "%d,%d", convert_x(rect.w), convert_y(rect.h));
-	gfx_text(0, rect.x+3.0f, rect.y+3.0f, 15.0f*editor.world_zoom, buf, -1);
+	gfx_text(0, rect.x+3.0f, rect.y+3.0f, 15.0f*editor->world_zoom, buf, -1);
 }
 
-int LAYER_TILES::brush_grab(LAYERGROUP *brush, RECT rect)
+int LAYER_TILES::brush_grab(LAYERGROUP *brush, CUIRect rect)
 {
 	RECTi r;
 	convert(rect, &r);
@@ -204,17 +206,17 @@ void LAYER_TILES::resize(int new_w, int new_h)
 }
 
 
-int LAYER_TILES::render_properties(RECT *toolbox)
+int LAYER_TILES::render_properties(CUIRect *toolbox)
 {
-	RECT button;
-	ui_hsplit_b(toolbox, 12.0f, toolbox, &button);
-	bool in_gamegroup = editor.map.game_group->layers.find(this) != -1;
-	if(editor.map.game_layer == this)
+	CUIRect button;
+	toolbox->HSplitBottom(12.0f, toolbox, &button);
+	bool in_gamegroup = editor->map.game_group->layers.find(this) != -1;
+	if(editor->map.game_layer == this)
 		in_gamegroup = false;
 	static int colcl_button = 0;
-	if(do_editor_button(&colcl_button, "Clear Collision", in_gamegroup?0:-1, &button, draw_editor_button, 0, "Removes collision from this layer"))
+	if(editor->DoButton_Editor(&colcl_button, "Clear Collision", in_gamegroup?0:-1, &button, 0, "Removes collision from this layer"))
 	{
-		LAYER_TILES *gl = editor.map.game_layer;
+		LAYER_TILES *gl = editor->map.game_layer;
 		int w = min(gl->width, width);
 		int h = min(gl->height, height);
 		for(int y = 0; y < h; y++)
@@ -228,11 +230,11 @@ int LAYER_TILES::render_properties(RECT *toolbox)
 		return 1;
 	}
 	static int col_button = 0;
-	ui_hsplit_b(toolbox, 5.0f, toolbox, &button);
-	ui_hsplit_b(toolbox, 12.0f, toolbox, &button);
-	if(do_editor_button(&col_button, "Make Collision", in_gamegroup?0:-1, &button, draw_editor_button, 0, "Constructs collision from this layer"))
+	toolbox->HSplitBottom(5.0f, toolbox, &button);
+	toolbox->HSplitBottom(12.0f, toolbox, &button);
+	if(editor->DoButton_Editor(&col_button, "Make Collision", in_gamegroup?0:-1, &button, 0, "Constructs collision from this layer"))
 	{
-		LAYER_TILES *gl = editor.map.game_layer;
+		LAYER_TILES *gl = editor->map.game_layer;
 		int w = min(gl->width, width);
 		int h = min(gl->height, height);
 		for(int y = 0; y < h; y++)
@@ -260,12 +262,12 @@ int LAYER_TILES::render_properties(RECT *toolbox)
 		{0},
 	};
 	
-	if(editor.map.game_layer == this) // remove the image from the selection if this is the game layer
+	if(editor->map.game_layer == this) // remove the image from the selection if this is the game layer
 		props[2].name = 0;
 	
 	static int ids[NUM_PROPS] = {0};
 	int new_val = 0;
-	int prop = editor.do_properties(toolbox, props, ids, &new_val);		
+	int prop = editor->do_properties(toolbox, props, ids, &new_val);		
 	
 	if(prop == PROP_WIDTH && new_val > 1)
 		resize(new_val, height);
@@ -279,7 +281,7 @@ int LAYER_TILES::render_properties(RECT *toolbox)
 			image = -1;
 		}
 		else
-			image = new_val%editor.map.images.len();
+			image = new_val%editor->map.images.len();
 	}
 	
 	return 0;

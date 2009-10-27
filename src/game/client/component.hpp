@@ -2,13 +2,21 @@
 #define GAME_CLIENT_GAMESYSTEM_H
 
 #include <engine/e_client_interface.h>
+#include "gameclient.hpp"
 
 class GAMECLIENT;
 
 class COMPONENT
 {
 protected:
+	friend class GAMECLIENT;
+
 	GAMECLIENT *client;
+	
+	// perhaps propagte pointers for these as well
+	class IGraphics *Graphics() const { return client->Graphics(); }
+	class CUI *UI() const { return client->UI(); }
+	class CRenderTools *RenderTools() const { return client->RenderTools(); }
 public:
 	virtual ~COMPONENT() {}
 	

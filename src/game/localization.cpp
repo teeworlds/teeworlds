@@ -2,9 +2,7 @@
 #include "localization.hpp"
 #include <base/tl/algorithm.hpp>
 
-extern "C" {
 #include <engine/e_linereader.h>
-}
 
 const char *localize(const char *str)
 {

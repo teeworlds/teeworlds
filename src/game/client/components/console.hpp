@@ -1,4 +1,5 @@
 #include <engine/e_client_interface.h>
+#include <engine/e_ringbuffer.h>
 #include <game/client/component.hpp>
 #include <game/client/lineinput.hpp>
 
@@ -7,12 +8,9 @@ class CONSOLE : public COMPONENT
 	class INSTANCE
 	{
 	public:
-		char history_data[65536];
-		struct RINGBUFFER *history;
+		TStaticRingBuffer<char, 64*1024, CRingBufferBase::FLAG_RECYCLE> backlog;
+		TStaticRingBuffer<char, 64*1024, CRingBufferBase::FLAG_RECYCLE> history;
 		char *history_entry;
-		
-		char backlog_data[65536];
-		struct RINGBUFFER *backlog;
 
 		LINEINPUT input;
 		

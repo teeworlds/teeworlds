@@ -28,6 +28,28 @@
 #include <mastersrv/mastersrv.h>
 #include <versionsrv/versionsrv.h>
 
+#include "editor.h"
+#include "graphics.h"
+#include "client.h"
+
+static IEditor *m_pEditor = 0;
+static IEngineGraphics *m_pGraphics = 0;
+IEngineGraphics *Graphics() { return m_pGraphics; }
+
+static IGameClient *m_pGameClient = 0;
+
+
+class CClient : public IEngine
+{
+public:
+	virtual class IGraphics *Graphics()
+	{
+		return m_pGraphics;
+	}
+};
+
+static CClient m_Client;
+
 const int prediction_margin = 1000/50/2; /* magic network prediction value */
 
 /*
@@ -43,7 +65,7 @@ const int prediction_margin = 1000/50/2; /* magic network prediction value */
 */
 
 /* network client, must be accessible from other parts like the server browser */
-NETCLIENT *net;
+CNetClient m_NetClient;
 
 /* TODO: ugly, fix me */
 extern void client_serverbrowse_set(NETADDR *addr, int request, int token, SERVER_INFO *info);
@@ -171,22 +193,22 @@ static void graph_render(GRAPH *g, float x, float y, float w, float h, const cha
 	char buf[32];
 	int i;
 
-	gfx_blend_normal();
+	//m_pGraphics->BlendNormal();
 
 	
-	gfx_texture_set(-1);
+	Graphics()->TextureSet(-1);
 	
-	gfx_quads_begin();
-	gfx_setcolor(0, 0, 0, 0.75f);
-	gfx_quads_drawTL(x, y, w, h);
-	gfx_quads_end();
+	m_pGraphics->QuadsBegin();
+	Graphics()->SetColor(0, 0, 0, 0.75f);
+	Graphics()->QuadsDrawTL(x, y, w, h);
+	m_pGraphics->QuadsEnd();
 		
-	gfx_lines_begin();
-	gfx_setcolor(0.95f, 0.95f, 0.95f, 1.00f);
-	gfx_lines_draw(x, y+h/2, x+w, y+h/2);
-	gfx_setcolor(0.5f, 0.5f, 0.5f, 0.75f);
-	gfx_lines_draw(x, y+(h*3)/4, x+w, y+(h*3)/4);
-	gfx_lines_draw(x, y+h/4, x+w, y+h/4);
+	Graphics()->LinesBegin();
+	Graphics()->SetColor(0.95f, 0.95f, 0.95f, 1.00f);
+	Graphics()->LinesDraw(x, y+h/2, x+w, y+h/2);
+	Graphics()->SetColor(0.5f, 0.5f, 0.5f, 0.75f);
+	Graphics()->LinesDraw(x, y+(h*3)/4, x+w, y+(h*3)/4);
+	Graphics()->LinesDraw(x, y+h/4, x+w, y+h/4);
 	for(i = 1; i < GRAPH_MAX; i++)
 	{
 		float a0 = (i-1)/(float)GRAPH_MAX;
@@ -197,22 +219,22 @@ static void graph_render(GRAPH *g, float x, float y, float w, float h, const cha
 		float v0 = (g->values[i0]-g->min) / (g->max-g->min);
 		float v1 = (g->values[i1]-g->min) / (g->max-g->min);
 		
-		gfx_setcolorvertex(0, g->colors[i0][0], g->colors[i0][1], g->colors[i0][2], 0.75f);
-		gfx_setcolorvertex(1, g->colors[i1][0], g->colors[i1][1], g->colors[i1][2], 0.75f);
-		gfx_lines_draw(x+a0*w, y+h-v0*h, x+a1*w, y+h-v1*h);
+		Graphics()->SetColorVertex(0, g->colors[i0][0], g->colors[i0][1], g->colors[i0][2], 0.75f);
+		Graphics()->SetColorVertex(1, g->colors[i1][0], g->colors[i1][1], g->colors[i1][2], 0.75f);
+		Graphics()->LinesDraw(x+a0*w, y+h-v0*h, x+a1*w, y+h-v1*h);
 
 	}
-	gfx_lines_end();
+	Graphics()->LinesEnd();
 	
 
-	gfx_texture_set(debug_font);	
-	gfx_quads_text(x+2, y+h-16, 16, 1,1,1,1, description);
+	Graphics()->TextureSet(debug_font);	
+	Graphics()->QuadsText(x+2, y+h-16, 16, 1,1,1,1, description);
 
 	str_format(buf, sizeof(buf), "%.2f", g->max);
-	gfx_quads_text(x+w-8*strlen(buf)-8, y+2, 16, 1,1,1,1, buf);
+	Graphics()->QuadsText(x+w-8*strlen(buf)-8, y+2, 16, 1,1,1,1, buf);
 	
 	str_format(buf, sizeof(buf), "%.2f", g->min);
-	gfx_quads_text(x+w-8*strlen(buf)-8, y+h-16, 16, 1,1,1,1, buf);
+	Graphics()->QuadsText(x+w-8*strlen(buf)-8, y+h-16, 16, 1,1,1,1, buf);
 	
 }
 
@@ -336,40 +358,40 @@ enum
 };
 
 /* the game snapshots are modifiable by the game */
-SNAPSTORAGE snapshot_storage;
-static SNAPSTORAGE_HOLDER *snapshots[NUM_SNAPSHOT_TYPES] = {0, 0};
+CSnapshotStorage snapshot_storage;
+static CSnapshotStorage::CHolder *snapshots[NUM_SNAPSHOT_TYPES] = {0, 0};
 
 static int recived_snapshots = 0;
-static char snapshot_incomming_data[MAX_SNAPSHOT_SIZE];
+static char snapshot_incomming_data[CSnapshot::MAX_SIZE];
 
-static SNAPSTORAGE_HOLDER demorec_snapshotholders[NUM_SNAPSHOT_TYPES];
-static char *demorec_snapshotdata[NUM_SNAPSHOT_TYPES][2][MAX_SNAPSHOT_SIZE];
+static CSnapshotStorage::CHolder demorec_snapshotholders[NUM_SNAPSHOT_TYPES];
+static char *demorec_snapshotdata[NUM_SNAPSHOT_TYPES][2][CSnapshot::MAX_SIZE];
 
 /* --- */
 
 void *snap_get_item(int snapid, int index, SNAP_ITEM *item)
 {
-	SNAPSHOT_ITEM *i;
+	CSnapshotItem *i;
 	dbg_assert(snapid >= 0 && snapid < NUM_SNAPSHOT_TYPES, "invalid snapid");
-	i = snapshot_get_item(snapshots[snapid]->alt_snap, index);
-	item->datasize = snapshot_get_item_datasize(snapshots[snapid]->alt_snap, index);
-	item->type = snapitem_type(i);
-	item->id = snapitem_id(i);
-	return (void *)snapitem_data(i);
+	i = snapshots[snapid]->m_pAltSnap->GetItem(index);
+	item->datasize = snapshots[snapid]->m_pAltSnap->GetItemSize(index);
+	item->type = i->Type();
+	item->id = i->ID();
+	return (void *)i->Data();
 }
 
 void snap_invalidate_item(int snapid, int index)
 {
-	SNAPSHOT_ITEM *i;
+	CSnapshotItem *i;
 	dbg_assert(snapid >= 0 && snapid < NUM_SNAPSHOT_TYPES, "invalid snapid");
-	i = snapshot_get_item(snapshots[snapid]->alt_snap, index);
+	i = snapshots[snapid]->m_pAltSnap->GetItem(index);
 	if(i)
 	{
-		if((char *)i < (char *)snapshots[snapid]->alt_snap || (char *)i > (char *)snapshots[snapid]->alt_snap + snapshots[snapid]->snap_size)
+		if((char *)i < (char *)snapshots[snapid]->m_pAltSnap || (char *)i > (char *)snapshots[snapid]->m_pAltSnap + snapshots[snapid]->m_SnapSize)
 			dbg_msg("ASDFASDFASdf", "ASDFASDFASDF");
-		if((char *)i >= (char *)snapshots[snapid]->snap && (char *)i < (char *)snapshots[snapid]->snap + snapshots[snapid]->snap_size)
+		if((char *)i >= (char *)snapshots[snapid]->m_pSnap && (char *)i < (char *)snapshots[snapid]->m_pSnap + snapshots[snapid]->m_SnapSize)
 			dbg_msg("ASDFASDFASdf", "ASDFASDFASDF");
-		i->type_and_id = -1;
+		i->m_TypeAndID = -1;
 	}
 }
 
@@ -381,11 +403,11 @@ void *snap_find_item(int snapid, int type, int id)
 	if(!snapshots[snapid])
 		return 0x0;
 	
-	for(i = 0; i < snapshots[snapid]->snap->num_items; i++)
+	for(i = 0; i < snapshots[snapid]->m_pSnap->m_NumItems; i++)
 	{
-		SNAPSHOT_ITEM *itm = snapshot_get_item(snapshots[snapid]->alt_snap, i);
-		if(snapitem_type(itm) == type && snapitem_id(itm) == id)
-			return (void *)snapitem_data(itm);
+		CSnapshotItem *itm = snapshots[snapid]->m_pAltSnap->GetItem(i);
+		if(itm->Type() == type && itm->ID() == id)
+			return (void *)itm->Data();
 	}
 	return 0x0;
 }
@@ -395,7 +417,7 @@ int snap_num_items(int snapid)
 	dbg_assert(snapid >= 0 && snapid < NUM_SNAPSHOT_TYPES, "invalid snapid");
 	if(!snapshots[snapid])
 		return 0;
-	return snapshots[snapid]->snap->num_items;
+	return snapshots[snapid]->m_pSnap->m_NumItems;
 }
 
 /* ------ time functions ------ */
@@ -412,35 +434,34 @@ float client_localtime() { return (time_get()-local_start_time)/(float)(time_fre
 /* ----- send functions ----- */
 int client_send_msg()
 {
-	const MSG_INFO *info = msg_get_info();
-	NETCHUNK packet;
+	const MSG_INFO *pInfo = msg_get_info();
+	CNetChunk Packet;
 	
-	if(!info)
+	if(!pInfo)
 		return -1;
 
 	if(client_state() == CLIENTSTATE_OFFLINE)
 		return 0;
 	
-		
-	mem_zero(&packet, sizeof(NETCHUNK));
+	mem_zero(&Packet, sizeof(CNetChunk));
 	
-	packet.client_id = 0;
-	packet.data = info->data;
-	packet.data_size = info->size;
+	Packet.m_ClientID = 0;
+	Packet.m_pData = pInfo->data;
+	Packet.m_DataSize = pInfo->size;
 
-	if(info->flags&MSGFLAG_VITAL)
-		packet.flags |= NETSENDFLAG_VITAL;
-	if(info->flags&MSGFLAG_FLUSH)
-		packet.flags |= NETSENDFLAG_FLUSH;
+	if(pInfo->flags&MSGFLAG_VITAL)
+		Packet.m_Flags |= NETSENDFLAG_VITAL;
+	if(pInfo->flags&MSGFLAG_FLUSH)
+		Packet.m_Flags |= NETSENDFLAG_FLUSH;
 		
-	if(info->flags&MSGFLAG_RECORD)
+	if(pInfo->flags&MSGFLAG_RECORD)
 	{
 		if(demorec_isrecording())
-			demorec_record_message(packet.data, packet.data_size);
+			demorec_record_message(Packet.m_pData, Packet.m_DataSize);
 	}
 
-	if(!(info->flags&MSGFLAG_NOSEND))
-		netclient_send(net, &packet);
+	if(!(pInfo->flags&MSGFLAG_NOSEND))
+		m_NetClient.Send(&Packet);
 	return 0;
 }
 
@@ -494,7 +515,7 @@ void client_rcon(const char *cmd)
 
 int client_connection_problems()
 {
-	return netclient_gotproblems(net);
+	return m_NetClient.GotProblems();
 }
 
 void client_direct_input(int *input, int size)
@@ -594,7 +615,7 @@ static void client_on_enter_game()
 	/* reset snapshots */
 	snapshots[SNAP_CURRENT] = 0;
 	snapshots[SNAP_PREV] = 0;
-	snapstorage_purge_all(&snapshot_storage);
+	snapshot_storage.PurgeAll();
 	recived_snapshots = 0;
 	snapshot_parts = 0;
 	current_predtick = 0;
@@ -645,7 +666,7 @@ void client_connect(const char *server_address_str)
 	
 	rcon_authed = 0;
 	server_address.port = port;
-	netclient_connect(net, &server_address);
+	m_NetClient.Connect(&server_address);
 	client_set_state(CLIENTSTATE_CONNECTING);
 	
 	graph_init(&inputtime_margin_graph, -150.0f, 150.0f);
@@ -659,7 +680,7 @@ void client_disconnect_with_reason(const char *reason)
 	
 	/* */
 	rcon_authed = 0;
-	netclient_disconnect(net, reason);
+	m_NetClient.Disconnect(reason);
 	client_set_state(CLIENTSTATE_OFFLINE);
 	map_unload();
 	
@@ -701,7 +722,7 @@ void client_serverinfo_request()
 
 static int client_load_data()
 {
-	debug_font = gfx_load_texture("debug_font.png", IMG_AUTO, TEXLOAD_NORESAMPLE);
+	debug_font = Graphics()->LoadTexture("debug_font.png", IMG_AUTO, TEXLOAD_NORESAMPLE);
 	return 1;
 }
 
@@ -721,9 +742,9 @@ static void client_debug_render()
 	if(!config.debug)
 		return;
 	
-	gfx_blend_normal();
-	gfx_texture_set(debug_font);
-	gfx_mapscreen(0,0,gfx_screenwidth(),gfx_screenheight());
+	//m_pGraphics->BlendNormal();
+	Graphics()->TextureSet(debug_font);
+	Graphics()->MapScreen(0,0,Graphics()->ScreenWidth(),Graphics()->ScreenHeight());
 	
 	if(time_get()-last_snap > time_freq())
 	{
@@ -739,13 +760,13 @@ static void client_debug_render()
 		total = 42
 	*/
 	frametime_avg = frametime_avg*0.9f + frametime*0.1f;
-	str_format(buffer, sizeof(buffer), "ticks: %8d %8d mem %dk %d  gfxmem: %dk  fps: %3d",
+	str_format(buffer, sizeof(buffer), "ticks: %8d %8d mem %dk %d  gfxmem: N/A  fps: %3d",
 		current_tick, current_predtick,
 		mem_stats()->allocated/1024,
 		mem_stats()->total_allocations,
-		gfx_memory_usage()/1024,
+		/*gfx_memory_usage()/1024, */ // TODO: Refactor: Reenable this
 		(int)(1.0f/frametime_avg));
-	gfx_quads_text(2, 2, 16, 1,1,1,1, buffer);
+	Graphics()->QuadsText(2, 2, 16, 1,1,1,1, buffer);
 
 	
 	{
@@ -761,7 +782,7 @@ static void client_debug_render()
 		str_format(buffer, sizeof(buffer), "send: %3d %5d+%4d=%5d (%3d kbps) avg: %5d\nrecv: %3d %5d+%4d=%5d (%3d kbps) avg: %5d",
 			send_packets, send_bytes, send_packets*42, send_total, (send_total*8)/1024, send_bytes/send_packets,
 			recv_packets, recv_bytes, recv_packets*42, recv_total, (recv_total*8)/1024, recv_bytes/recv_packets);
-		gfx_quads_text(2, 14, 16, 1,1,1,1, buffer);
+		Graphics()->QuadsText(2, 14, 16, 1,1,1,1, buffer);
 	}
 	
 	/* render rates */
@@ -774,7 +795,7 @@ static void client_debug_render()
 			{
 				str_format(buffer, sizeof(buffer), "%4d %20s: %8d %8d %8d", i, modc_getitemname(i), snapshot_data_rate[i]/8, snapshot_data_updates[i],
 					(snapshot_data_rate[i]/snapshot_data_updates[i])/8);
-				gfx_quads_text(2, 100+y*12, 16, 1,1,1,1, buffer);
+				Graphics()->QuadsText(2, 100+y*12, 16, 1,1,1,1, buffer);
 				y++;
 			}
 		}
@@ -783,16 +804,16 @@ static void client_debug_render()
 	str_format(buffer, sizeof(buffer), "pred: %d ms  %3.2f", 
 		(int)((st_get(&predicted_time, now)-st_get(&game_time, now))*1000/(float)time_freq()),
 		predicted_time.adjustspeed[1]);
-	gfx_quads_text(2, 70, 16, 1,1,1,1, buffer);
+	Graphics()->QuadsText(2, 70, 16, 1,1,1,1, buffer);
 	
 	/* render graphs */
 	if(config.dbg_graphs)
 	{
-		//gfx_mapscreen(0,0,400.0f,300.0f);
-		float w = gfx_screenwidth()/4.0f;
-		float h = gfx_screenheight()/6.0f;
-		float sp = gfx_screenwidth()/100.0f;
-		float x = gfx_screenwidth()-w-sp;
+		//Graphics()->MapScreen(0,0,400.0f,300.0f);
+		float w = Graphics()->ScreenWidth()/4.0f;
+		float h = Graphics()->ScreenHeight()/6.0f;
+		float sp = Graphics()->ScreenWidth()/100.0f;
+		float x = Graphics()->ScreenWidth()-w-sp;
 
 		graph_scale_max(&fps_graph);
 		graph_scale_min(&fps_graph);
@@ -809,13 +830,13 @@ void client_quit()
 
 const char *client_error_string()
 {
-	return netclient_error_string(net);
+	return m_NetClient.ErrorString();
 }
 
 static void client_render()
 {
 	if(config.gfx_clear)	
-		gfx_clear(1,1,0);
+		Graphics()->Clear(1,1,0);
 
 	modc_render();
 	client_debug_render();
@@ -888,15 +909,15 @@ static int player_score_comp(const void *a, const void *b)
 	return -1;
 }
 
-static void client_process_packet(NETCHUNK *packet)
+static void client_process_packet(CNetChunk *pPacket)
 {
-	if(packet->client_id == -1)
+	if(pPacket->m_ClientID == -1)
 	{
 		/* connectionlesss */
-		if(packet->data_size == (int)(sizeof(VERSIONSRV_VERSION) + sizeof(VERSION_DATA)) &&
-			memcmp(packet->data, VERSIONSRV_VERSION, sizeof(VERSIONSRV_VERSION)) == 0)
+		if(pPacket->m_DataSize == (int)(sizeof(VERSIONSRV_VERSION) + sizeof(VERSION_DATA)) &&
+			memcmp(pPacket->m_pData, VERSIONSRV_VERSION, sizeof(VERSIONSRV_VERSION)) == 0)
 		{
-			unsigned char *versiondata = (unsigned char*) packet->data + sizeof(VERSIONSRV_VERSION);
+			unsigned char *versiondata = (unsigned char*)pPacket->m_pData + sizeof(VERSIONSRV_VERSION);
 			int version_match = !memcmp(versiondata, VERSION_DATA, sizeof(VERSION_DATA));
 			
 			dbg_msg("client/version", "version does %s (%d.%d.%d)",
@@ -910,12 +931,12 @@ static void client_process_packet(NETCHUNK *packet)
 			}
 		}
 		
-		if(packet->data_size >= (int)sizeof(SERVERBROWSE_LIST) &&
-			memcmp(packet->data, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST)) == 0)
+		if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_LIST) &&
+			memcmp(pPacket->m_pData, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST)) == 0)
 		{
-			int size = packet->data_size-sizeof(SERVERBROWSE_LIST);
+			int size = pPacket->m_DataSize-sizeof(SERVERBROWSE_LIST);
 			int num = size/sizeof(MASTERSRV_ADDR);
-			MASTERSRV_ADDR *addrs = (MASTERSRV_ADDR *)((char*)packet->data+sizeof(SERVERBROWSE_LIST));
+			MASTERSRV_ADDR *addrs = (MASTERSRV_ADDR *)((char*)pPacket->m_pData+sizeof(SERVERBROWSE_LIST));
 			int i;
 
 			for(i = 0; i < num; i++)
@@ -937,47 +958,47 @@ static void client_process_packet(NETCHUNK *packet)
 
 		{
 			int packet_type = 0;
-			if(packet->data_size >= (int)sizeof(SERVERBROWSE_INFO) && memcmp(packet->data, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
+			if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_INFO) && memcmp(pPacket->m_pData, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
 				packet_type = 2;
 
-			if(packet->data_size >= (int)sizeof(SERVERBROWSE_OLD_INFO) && memcmp(packet->data, SERVERBROWSE_OLD_INFO, sizeof(SERVERBROWSE_OLD_INFO)) == 0)
+			if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_OLD_INFO) && memcmp(pPacket->m_pData, SERVERBROWSE_OLD_INFO, sizeof(SERVERBROWSE_OLD_INFO)) == 0)
 				packet_type = 1;
 			
 			if(packet_type)
 			{
 				/* we got ze info */
-				UNPACKER up;
+				CUnpacker up;
 				SERVER_INFO info = {0};
 				int i;
 				int token = -1;
 				
-				unpacker_reset(&up, (unsigned char*)packet->data+sizeof(SERVERBROWSE_INFO), packet->data_size-sizeof(SERVERBROWSE_INFO));
+				up.Reset((unsigned char*)pPacket->m_pData+sizeof(SERVERBROWSE_INFO), pPacket->m_DataSize-sizeof(SERVERBROWSE_INFO));
 				if(packet_type >= 2)
-					token = atol(unpacker_get_string(&up));
-				str_copy(info.version, unpacker_get_string(&up), sizeof(info.version));
-				str_copy(info.name, unpacker_get_string(&up), sizeof(info.name));
-				str_copy(info.map, unpacker_get_string(&up), sizeof(info.map));
-				str_copy(info.gametype, unpacker_get_string(&up), sizeof(info.gametype));
-				info.flags = atol(unpacker_get_string(&up));
-				info.progression = atol(unpacker_get_string(&up));
-				info.num_players = atol(unpacker_get_string(&up));
-				info.max_players = atol(unpacker_get_string(&up));
+					token = atol(up.GetString());
+				str_copy(info.version, up.GetString(), sizeof(info.version));
+				str_copy(info.name, up.GetString(), sizeof(info.name));
+				str_copy(info.map, up.GetString(), sizeof(info.map));
+				str_copy(info.gametype, up.GetString(), sizeof(info.gametype));
+				info.flags = atol(up.GetString());
+				info.progression = atol(up.GetString());
+				info.num_players = atol(up.GetString());
+				info.max_players = atol(up.GetString());
 				str_format(info.address, sizeof(info.address), "%d.%d.%d.%d:%d",
-					packet->address.ip[0], packet->address.ip[1], packet->address.ip[2],
-					packet->address.ip[3], packet->address.port);
+					pPacket->m_Address.ip[0], pPacket->m_Address.ip[1], pPacket->m_Address.ip[2],
+					pPacket->m_Address.ip[3], pPacket->m_Address.port);
 				
 				for(i = 0; i < info.num_players; i++)
 				{
-					str_copy(info.players[i].name, unpacker_get_string(&up), sizeof(info.players[i].name));
-					info.players[i].score = atol(unpacker_get_string(&up));
+					str_copy(info.players[i].name, up.GetString(), sizeof(info.players[i].name));
+					info.players[i].score = atol(up.GetString());
 				}
 				
-				if(!up.error)
+				if(!up.Error())
 				{
 					/* sort players */
 					qsort(info.players, info.num_players, sizeof(*info.players), player_score_comp);
 					
-					if(net_addr_comp(&server_address, &packet->address) == 0)
+					if(net_addr_comp(&server_address, &pPacket->m_Address) == 0)
 					{
 						mem_copy(&current_server_info, &info, sizeof(current_server_info));
 						current_server_info.netaddr = server_address;
@@ -986,9 +1007,9 @@ static void client_process_packet(NETCHUNK *packet)
 					else
 					{
 						if(packet_type == 2)
-							client_serverbrowse_set(&packet->address, BROWSESET_TOKEN, token, &info);
+							client_serverbrowse_set(&pPacket->m_Address, BROWSESET_TOKEN, token, &info);
 						else
-							client_serverbrowse_set(&packet->address, BROWSESET_OLD_INTERNET, -1, &info);
+							client_serverbrowse_set(&pPacket->m_Address, BROWSESET_OLD_INTERNET, -1, &info);
 					}
 				}
 			}
@@ -997,7 +1018,7 @@ static void client_process_packet(NETCHUNK *packet)
 	else
 	{
 		int sys;
-		int msg = msg_unpack_start(packet->data, packet->data_size, &sys);
+		int msg = msg_unpack_start(pPacket->m_pData, pPacket->m_DataSize, &sys);
 		
 		if(sys)
 		{
@@ -1193,15 +1214,15 @@ static void client_process_packet(NETCHUNK *packet)
 					mem_copy((char*)snapshot_incomming_data + part*MAX_SNAPSHOT_PACKSIZE, data, part_size);
 					snapshot_parts |= 1<<part;
 				
-					if(snapshot_parts == (1<<num_parts)-1)
+					if(snapshot_parts == (unsigned)((1<<num_parts)-1))
 					{
-						static SNAPSHOT emptysnap;
-						SNAPSHOT *deltashot = &emptysnap;
+						static CSnapshot emptysnap;
+						CSnapshot *deltashot = &emptysnap;
 						int purgetick;
 						void *deltadata;
 						int deltasize;
-						unsigned char tmpbuffer2[MAX_SNAPSHOT_SIZE];
-						unsigned char tmpbuffer3[MAX_SNAPSHOT_SIZE];
+						unsigned char tmpbuffer2[CSnapshot::MAX_SIZE];
+						unsigned char tmpbuffer3[CSnapshot::MAX_SIZE];
 						int snapsize;
 						
 						complete_size = (num_parts-1) * MAX_SNAPSHOT_PACKSIZE + part_size;
@@ -1210,13 +1231,13 @@ static void client_process_packet(NETCHUNK *packet)
 						snapshot_parts = 0;
 						
 						/* find snapshot that we should use as delta */
-						emptysnap.data_size = 0;
-						emptysnap.num_items = 0;
+						emptysnap.m_DataSize = 0;
+						emptysnap.m_NumItems = 0;
 						
 						/* find delta */
 						if(delta_tick >= 0)
 						{
-							int deltashot_size = snapstorage_get(&snapshot_storage, delta_tick, 0, &deltashot, 0);
+							int deltashot_size = snapshot_storage.Get(delta_tick, 0, &deltashot, 0);
 							
 							if(deltashot_size < 0)
 							{
@@ -1233,7 +1254,7 @@ static void client_process_packet(NETCHUNK *packet)
 						}
 
 						/* decompress snapshot */
-						deltadata = snapshot_empty_delta();
+						deltadata = CSnapshot::EmptyDelta();
 						deltasize = sizeof(int)*3;
 
 						if(complete_size)
@@ -1249,19 +1270,19 @@ static void client_process_packet(NETCHUNK *packet)
 						
 						/* unpack delta */
 						purgetick = delta_tick;
-						snapsize = snapshot_unpack_delta(deltashot, (SNAPSHOT*)tmpbuffer3, deltadata, deltasize);
+						snapsize = CSnapshot::UnpackDelta(deltashot, (CSnapshot*)tmpbuffer3, deltadata, deltasize);
 						if(snapsize < 0)
 						{
 							dbg_msg("client", "delta unpack failed!");
 							return;
 						}
 						
-						if(msg != NETMSG_SNAPEMPTY && snapshot_crc((SNAPSHOT*)tmpbuffer3) != crc)
+						if(msg != NETMSG_SNAPEMPTY && ((CSnapshot*)tmpbuffer3)->Crc() != crc)
 						{
 							if(config.debug)
 							{
 								dbg_msg("client", "snapshot crc error #%d - tick=%d wantedcrc=%d gotcrc=%d compressed_size=%d delta_tick=%d",
-									snapcrcerrors, game_tick, crc, snapshot_crc((SNAPSHOT*)tmpbuffer3), complete_size, delta_tick);
+									snapcrcerrors, game_tick, crc, ((CSnapshot*)tmpbuffer3)->Crc(), complete_size, delta_tick);
 							}
 								
 							snapcrcerrors++;
@@ -1282,14 +1303,14 @@ static void client_process_packet(NETCHUNK *packet)
 
 						/* purge old snapshots */
 						purgetick = delta_tick;
-						if(snapshots[SNAP_PREV] && snapshots[SNAP_PREV]->tick < purgetick)
-							purgetick = snapshots[SNAP_PREV]->tick;
-						if(snapshots[SNAP_CURRENT] && snapshots[SNAP_CURRENT]->tick < purgetick)
-							purgetick = snapshots[SNAP_PREV]->tick;
-						snapstorage_purge_until(&snapshot_storage, purgetick);
+						if(snapshots[SNAP_PREV] && snapshots[SNAP_PREV]->m_Tick < purgetick)
+							purgetick = snapshots[SNAP_PREV]->m_Tick;
+						if(snapshots[SNAP_CURRENT] && snapshots[SNAP_CURRENT]->m_Tick < purgetick)
+							purgetick = snapshots[SNAP_PREV]->m_Tick;
+						snapshot_storage.PurgeUntil(purgetick);
 						
 						/* add new */
-						snapstorage_add(&snapshot_storage, game_tick, time_get(), snapsize, (SNAPSHOT*)tmpbuffer3, 1);
+						snapshot_storage.Add(game_tick, time_get(), snapsize, (CSnapshot*)tmpbuffer3, 1);
 
 						/* add snapshot to demo */
 						if(demorec_isrecording())
@@ -1320,8 +1341,8 @@ static void client_process_packet(NETCHUNK *packet)
 							st_init(&predicted_time, game_tick*time_freq()/50);
 							predicted_time.adjustspeed[1] = 1000.0f;
 							st_init(&game_time, (game_tick-1)*time_freq()/50);
-							snapshots[SNAP_PREV] = snapshot_storage.first;
-							snapshots[SNAP_CURRENT] = snapshot_storage.last;
+							snapshots[SNAP_PREV] = snapshot_storage.m_pFirst;
+							snapshots[SNAP_CURRENT] = snapshot_storage.m_pLast;
 							local_start_time = time_get();
 							client_set_state(CLIENTSTATE_ONLINE);
 						}
@@ -1345,8 +1366,8 @@ static void client_process_packet(NETCHUNK *packet)
 		{
 			/* game message */
 			if(demorec_isrecording())
-				demorec_record_message(packet->data, packet->data_size);
-				/* demorec_record_write("MESG", packet->data_size, ); */
+				demorec_record_message(pPacket->m_pData, pPacket->m_DataSize);
+				/* demorec_record_write("MESG", pPacket->data_size, ); */
 
 			modc_message(msg);
 		}
@@ -1358,22 +1379,21 @@ int client_mapdownload_totalsize() { return mapdownload_totalsize; }
 
 static void client_pump_network()
 {
-	NETCHUNK packet;
 
-	netclient_update(net);
+	m_NetClient.Update();
 
 	if(client_state() != CLIENTSTATE_DEMOPLAYBACK)
 	{
 		/* check for errors */
-		if(client_state() != CLIENTSTATE_OFFLINE && netclient_state(net) == NETSTATE_OFFLINE)
+		if(client_state() != CLIENTSTATE_OFFLINE && m_NetClient.State() == NETSTATE_OFFLINE)
 		{
 			client_set_state(CLIENTSTATE_OFFLINE);
 			client_disconnect();
-			dbg_msg("client", "offline error='%s'", netclient_error_string(net));
+			dbg_msg("client", "offline error='%s'", m_NetClient.ErrorString());
 		}
 
 		/* */
-		if(client_state() == CLIENTSTATE_CONNECTING && netclient_state(net) == NETSTATE_ONLINE)
+		if(client_state() == CLIENTSTATE_CONNECTING && m_NetClient.State() == NETSTATE_ONLINE)
 		{
 			/* we switched to online */
 			dbg_msg("client", "connected, sending info");
@@ -1383,15 +1403,16 @@ static void client_pump_network()
 	}
 	
 	/* process packets */
-	while(netclient_recv(net, &packet))
-		client_process_packet(&packet);
+	CNetChunk Packet;
+	while(m_NetClient.Recv(&Packet))
+		client_process_packet(&Packet);
 }
 
-static void client_democallback_snapshot(void *data, int size)
+static void client_democallback_snapshot(void *pData, int Size)
 {
 	/* update ticks, they could have changed */
 	const DEMOREC_PLAYBACKINFO *info = demorec_playback_info();			
-	SNAPSTORAGE_HOLDER *temp;
+	CSnapshotStorage::CHolder *temp;
 	current_tick = info->current_tick;
 	prev_tick = info->previous_tick;
 	
@@ -1400,8 +1421,8 @@ static void client_democallback_snapshot(void *data, int size)
 	snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
 	snapshots[SNAP_CURRENT] = temp;
 	
-	mem_copy(snapshots[SNAP_CURRENT]->snap, data, size);
-	mem_copy(snapshots[SNAP_CURRENT]->alt_snap, data, size);
+	mem_copy(snapshots[SNAP_CURRENT]->m_pSnap, pData, Size);
+	mem_copy(snapshots[SNAP_CURRENT]->m_pAltSnap, pData, Size);
 	
 	modc_newsnapshot();
 	/*modc_predict();*/
@@ -1476,20 +1497,20 @@ static void client_update()
 
 		while(1)
 		{
-			SNAPSTORAGE_HOLDER *cur = snapshots[SNAP_CURRENT];
-			int64 tickstart = (cur->tick)*time_freq()/50;
+			CSnapshotStorage::CHolder *cur = snapshots[SNAP_CURRENT];
+			int64 tickstart = (cur->m_Tick)*time_freq()/50;
 
 			if(tickstart < now)
 			{
-				SNAPSTORAGE_HOLDER *next = snapshots[SNAP_CURRENT]->next;
+				CSnapshotStorage::CHolder *next = snapshots[SNAP_CURRENT]->m_pNext;
 				if(next)
 				{
 					snapshots[SNAP_PREV] = snapshots[SNAP_CURRENT];
 					snapshots[SNAP_CURRENT] = next;
 					
 					/* set ticks */
-					current_tick = snapshots[SNAP_CURRENT]->tick;
-					prev_tick = snapshots[SNAP_PREV]->tick;
+					current_tick = snapshots[SNAP_CURRENT]->m_Tick;
+					prev_tick = snapshots[SNAP_PREV]->m_Tick;
 					
 					if(snapshots[SNAP_CURRENT] && snapshots[SNAP_PREV])
 					{
@@ -1506,8 +1527,8 @@ static void client_update()
 
 		if(snapshots[SNAP_CURRENT] && snapshots[SNAP_PREV])
 		{
-			int64 curtick_start = (snapshots[SNAP_CURRENT]->tick)*time_freq()/50;
-			int64 prevtick_start = (snapshots[SNAP_PREV]->tick)*time_freq()/50;
+			int64 curtick_start = (snapshots[SNAP_CURRENT]->m_Tick)*time_freq()/50;
+			int64 prevtick_start = (snapshots[SNAP_PREV]->m_Tick)*time_freq()/50;
 			/*tg_add(&predicted_time_graph, pred_now, 0); */
 			int prev_pred_tick = (int)(pred_now*50/time_freq());
 			int new_pred_tick = prev_pred_tick+1;
@@ -1520,10 +1541,10 @@ static void client_update()
 			prevtick_start = prev_pred_tick*time_freq()/50;
 			predintratick = (pred_now - prevtick_start) / (float)(curtick_start-prevtick_start);
 			
-			if(new_pred_tick < snapshots[SNAP_PREV]->tick-SERVER_TICK_SPEED || new_pred_tick > snapshots[SNAP_PREV]->tick+SERVER_TICK_SPEED)
+			if(new_pred_tick < snapshots[SNAP_PREV]->m_Tick-SERVER_TICK_SPEED || new_pred_tick > snapshots[SNAP_PREV]->m_Tick+SERVER_TICK_SPEED)
 			{
 				dbg_msg("client", "prediction time reset!");
-				st_init(&predicted_time, snapshots[SNAP_CURRENT]->tick*time_freq()/50);
+				st_init(&predicted_time, snapshots[SNAP_CURRENT]->m_Tick*time_freq()/50);
 			}
 			
 			if(new_pred_tick > current_predtick)
@@ -1606,26 +1627,23 @@ static void client_versionupdate()
 	{
 		if(jobs_status(&version_serveraddr.job) == JOBSTATUS_DONE)
 		{
-			NETCHUNK packet;
+			CNetChunk Packet;
 			
-			mem_zero(&packet, sizeof(NETCHUNK));
+			mem_zero(&Packet, sizeof(Packet));
 			
 			version_serveraddr.addr.port = VERSIONSRV_PORT;
 			
-			packet.client_id = -1;
-			packet.address = version_serveraddr.addr;
-			packet.data = VERSIONSRV_GETVERSION;
-			packet.data_size = sizeof(VERSIONSRV_GETVERSION);
-			packet.flags = NETSENDFLAG_CONNLESS;
+			Packet.m_ClientID = -1;
+			Packet.m_Address = version_serveraddr.addr;
+			Packet.m_pData = VERSIONSRV_GETVERSION;
+			Packet.m_DataSize = sizeof(VERSIONSRV_GETVERSION);
+			Packet.m_Flags = NETSENDFLAG_CONNLESS;
 			
-			netclient_send(net, &packet);
+			m_NetClient.Send(&Packet);
 			state++;
 		}
 	}
 }
-
-extern int editor_update_and_render();
-extern void editor_init();
 
 static void client_run()
 {
@@ -1640,14 +1658,16 @@ static void client_run()
 	snapshot_parts = 0;
 	
 	/* init graphics and sound */
-	if(gfx_init() != 0)
+	m_pGraphics = CreateEngineGraphics();
+	if(m_pGraphics->Init() != 0)
 		return;
 
 	/* start refreshing addresses while we load */
 	mastersrv_refresh_addresses();
 	
 	/* init the editor */
-	editor_init();
+	m_pEditor = CreateEditor();
+	m_pEditor->Init(m_pGraphics);
 
 	/* sound is allowed to fail */
 	snd_init();
@@ -1657,12 +1677,13 @@ static void client_run()
 		return;
 
 	/* init the mod */
+	m_pGameClient = CreateGameClient(&m_Client);
 	modc_init();
 	dbg_msg("client", "version %s", modc_net_version());
 	
 	/* open socket */
 	mem_zero(&bindaddr, sizeof(bindaddr));
-	net = netclient_open(bindaddr, 0);
+	m_NetClient.Open(bindaddr, 0);
 	
 	/* connect to the server if wanted */
 	/*
@@ -1714,7 +1735,7 @@ static void client_run()
 		}
 		
 		/* release focus */
-		if(!gfx_window_active())
+		if(!Graphics()->WindowActive())
 		{
 			if(window_must_refocus == 0)
 				inp_mouse_mode_absolute();
@@ -1727,7 +1748,7 @@ static void client_run()
 		}
 
 		/* refocus */
-		if(window_must_refocus && gfx_window_active())
+		if(window_must_refocus && Graphics()->WindowActive())
 		{
 			if(window_must_refocus < 3)
 			{
@@ -1767,8 +1788,8 @@ static void client_run()
 		if(config.cl_editor)
 		{
 			client_update();
-			editor_update_and_render();
-			gfx_swap();
+			m_pEditor->UpdateAndRender();
+			m_pGraphics->Swap();
 		}
 		else
 		{
@@ -1784,7 +1805,7 @@ static void client_run()
 				if((frames%10) == 0)
 				{
 					client_render();
-					gfx_swap();
+					m_pGraphics->Swap();
 				}
 			}
 			else
@@ -1799,7 +1820,7 @@ static void client_run()
 				{
 					static PERFORMACE_INFO scope = {"gfx_swap", 0};
 					perf_start(&scope);
-					gfx_swap();
+					m_pGraphics->Swap();
 					perf_end();
 				}
 			}
@@ -1815,7 +1836,7 @@ static void client_run()
 		/* be nice */
 		if(config.dbg_stress)
 			thread_sleep(5);
-		else if(config.cl_cpu_throttle || !gfx_window_active())
+		else if(config.cl_cpu_throttle || !Graphics()->WindowActive())
 			thread_sleep(1);
 			
 		if(config.dbg_hitch)
@@ -1832,7 +1853,7 @@ static void client_run()
 					frames/(float)(reportinterval/time_freq()),
 					1.0f/frametime_high,
 					1.0f/frametime_low,
-					netclient_state(net));
+					m_NetClient.State());
 			}
 			frametime_low = 1;
 			frametime_high = 0;
@@ -1857,8 +1878,13 @@ static void client_run()
 	modc_shutdown();
 	client_disconnect();
 
-	gfx_shutdown();
+	m_pGraphics->Shutdown();
 	snd_shutdown();
+}
+
+void gfx_swap()
+{
+	m_pGraphics->Swap();
 }
 
 static void con_connect(void *result, void *user_data)
@@ -1886,7 +1912,7 @@ static void con_ping(void *result, void *user_data)
 
 static void con_screenshot(void *result, void *user_data)
 {
-	gfx_screenshot();
+	Graphics()->TakeScreenshot();
 }
 
 static void con_rcon(void *result, void *user_data)
@@ -1911,7 +1937,7 @@ const char *client_demoplayer_play(const char *filename)
 	int crc;
 	const char *error;
 	client_disconnect();
-	netclient_error_string_reset(net);
+	m_NetClient.ResetErrorString();
 	
 	/* try to start playback */
 	demorec_playback_registercallbacks(client_democallback_snapshot, client_democallback_message);
@@ -1939,15 +1965,15 @@ const char *client_demoplayer_play(const char *filename)
 	snapshots[SNAP_CURRENT] = &demorec_snapshotholders[SNAP_CURRENT];
 	snapshots[SNAP_PREV] = &demorec_snapshotholders[SNAP_PREV];
 	
-	snapshots[SNAP_CURRENT]->snap = (SNAPSHOT *)demorec_snapshotdata[SNAP_CURRENT][0];
-	snapshots[SNAP_CURRENT]->alt_snap = (SNAPSHOT *)demorec_snapshotdata[SNAP_CURRENT][1];
-	snapshots[SNAP_CURRENT]->snap_size = 0;
-	snapshots[SNAP_CURRENT]->tick = -1;
+	snapshots[SNAP_CURRENT]->m_pSnap = (CSnapshot *)demorec_snapshotdata[SNAP_CURRENT][0];
+	snapshots[SNAP_CURRENT]->m_pAltSnap = (CSnapshot *)demorec_snapshotdata[SNAP_CURRENT][1];
+	snapshots[SNAP_CURRENT]->m_SnapSize = 0;
+	snapshots[SNAP_CURRENT]->m_Tick = -1;
 	
-	snapshots[SNAP_PREV]->snap = (SNAPSHOT *)demorec_snapshotdata[SNAP_PREV][0];
-	snapshots[SNAP_PREV]->alt_snap = (SNAPSHOT *)demorec_snapshotdata[SNAP_PREV][1];
-	snapshots[SNAP_PREV]->snap_size = 0;
-	snapshots[SNAP_PREV]->tick = -1;
+	snapshots[SNAP_PREV]->m_pSnap = (CSnapshot *)demorec_snapshotdata[SNAP_PREV][0];
+	snapshots[SNAP_PREV]->m_pAltSnap = (CSnapshot *)demorec_snapshotdata[SNAP_PREV][1];
+	snapshots[SNAP_PREV]->m_SnapSize = 0;
+	snapshots[SNAP_PREV]->m_Tick = -1;
 
 	/* enter demo playback state */
 	client_set_state(CLIENTSTATE_DEMOPLAYBACK);

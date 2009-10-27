@@ -3,21 +3,64 @@
 
 typedef struct RINGBUFFER RINGBUFFER;
 
-enum
+class CRingBufferBase
 {
-	/* Will start to destroy items to try to fit the next one */
-	RINGBUF_FLAG_RECYCLE=1
+	class CItem
+	{
+	public:
+		CItem *m_pPrev;
+		CItem *m_pNext;
+		int m_Free;
+		int m_Size;
+	};
+	
+	CItem *m_pProduce;
+	CItem *m_pConsume;
+	
+	CItem *m_pFirst;
+	CItem *m_pLast;
+	
+	void *m_pMemory;
+	int m_Size;
+	int m_Flags;
+	
+	CItem *NextBlock(CItem *pItem);
+	CItem *PrevBlock(CItem *pItem);
+	CItem *MergeBack(CItem *pItem);
+protected:
+	void *Allocate(int Size);
+	
+	void *Prev(void *pCurrent);
+	void *Next(void *pCurrent);
+	void *First();
+	void *Last();
+	
+	void Init(void *pMemory, int Size, int Flags);
+	int PopFirst();
+public:
+	enum
+	{
+		/* Will start to destroy items to try to fit the next one */
+		FLAG_RECYCLE=1
+	};
 };
- 
-RINGBUFFER *ringbuf_init(void *memory, int size, int flags);
-void ringbuf_clear(RINGBUFFER *rb);
-void *ringbuf_allocate(RINGBUFFER *rb, int size);
 
-void *ringbuf_prev(RINGBUFFER *rb, void *current);
-void *ringbuf_next(RINGBUFFER *rb, void *current);
-void *ringbuf_first(RINGBUFFER *rb);
-void *ringbuf_last(RINGBUFFER *rb);
+template<typename T, int TSIZE, int TFLAGS=0>
+class TStaticRingBuffer : public CRingBufferBase
+{
+	unsigned char m_aBuffer[TSIZE];
+public:
+	TStaticRingBuffer() { Init(); }
+	
+	void Init() { CRingBufferBase::Init(m_aBuffer, TSIZE, TFLAGS); }
+	
+	T *Allocate(int Size) { return (T*)CRingBufferBase::Allocate(Size); }
+	int PopFirst() { return CRingBufferBase::PopFirst(); }
 
-int ringbuf_popfirst(RINGBUFFER *rb);
+	T *Prev(T *pCurrent) { return (T*)CRingBufferBase::Prev(pCurrent); }
+	T *Next(T *pCurrent) { return (T*)CRingBufferBase::Next(pCurrent); }
+	T *First() { return (T*)CRingBufferBase::First(); }
+	T *Last() { return (T*)CRingBufferBase::Last(); }
+};
 
 #endif

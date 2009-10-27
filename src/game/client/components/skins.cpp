@@ -6,12 +6,10 @@
 #include <base/system.h>
 #include <base/math.hpp>
 
+#include <engine/client/graphics.h>
 #include <engine/e_client_interface.h>
 
-extern "C"
-{
-	#include <engine/e_engine.h>
-}
+#include <engine/e_engine.h>
 
 #include "skins.hpp"
 
@@ -32,13 +30,13 @@ void SKINS::skinscan(const char *name, int is_dir, void *user)
 	char buf[512];
 	str_format(buf, sizeof(buf), "skins/%s", name);
 	IMAGE_INFO info;
-	if(!gfx_load_png(&info, buf))
+	if(!self->Graphics()->LoadPNG(&info, buf))
 	{
 		dbg_msg("game", "failed to load skin from %s", name);
 		return;
 	}
 	
-	self->skins[self->num_skins].org_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data, info.format, 0);
+	self->skins[self->num_skins].org_texture = self->Graphics()->LoadTextureRaw(info.width, info.height, info.format, info.data, info.format, 0);
 	
 	int body_size = 96; // body size
 	unsigned char *d = (unsigned char *)info.data;
@@ -111,7 +109,7 @@ void SKINS::skinscan(const char *name, int is_dir, void *user)
 			}
 	}
 	
-	self->skins[self->num_skins].color_texture = gfx_load_texture_raw(info.width, info.height, info.format, info.data, info.format, 0);
+	self->skins[self->num_skins].color_texture = self->Graphics()->LoadTextureRaw(info.width, info.height, info.format, info.data, info.format, 0);
 	mem_free(info.data);
 
 	// set skin data	

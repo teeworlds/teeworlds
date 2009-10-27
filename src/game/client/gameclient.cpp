@@ -1,5 +1,6 @@
 #include <string.h>
 #include <engine/e_client_interface.h>
+#include <engine/client/graphics.h>
 #include <engine/e_demorec.h>
 
 #include <game/generated/g_protocol.hpp>
@@ -269,6 +270,13 @@ void GAMECLIENT::on_init()
 	// set the language
 	localization.load(config.cl_languagefile);
 	
+	// propagate pointers
+	m_UI.SetGraphics(Graphics());
+	m_RenderTools.m_pGraphics = Graphics();
+	m_RenderTools.m_pUI = UI();
+	for(int i = 0; i < all.num; i++)
+		all.components[i]->client = this;
+	
 	// init all components
 	for(int i = 0; i < all.num; i++)
 		all.components[i]->on_init();
@@ -297,7 +305,7 @@ void GAMECLIENT::on_init()
 	for(int i = 0; i < data->num_images; i++)
 	{
 		gameclient.menus->render_loading(load_current/load_total);
-		data->images[i].id = gfx_load_texture(data->images[i].filename, IMG_AUTO, 0);
+		data->images[i].id = Graphics()->LoadTexture(data->images[i].filename, IMG_AUTO, 0);
 		load_current++;
 	}
 
@@ -366,7 +374,7 @@ void GAMECLIENT::on_connected()
 {
 	layers_init();
 	col_init();
-	render_tilemap_generate_skip();
+	RenderTools()->render_tilemap_generate_skip();
 
 	for(int i = 0; i < all.num; i++)
 	{
@@ -450,6 +458,21 @@ static void evolve(NETOBJ_CHARACTER *character, int tick)
 
 void GAMECLIENT::on_render()
 {
+	/*Graphics()->Clear(1,0,0);
+	
+	menus->render_background();
+	return;*/
+	/*
+	Graphics()->Clear(1,0,0);
+	Graphics()->MapScreen(0,0,100,100);
+	
+	Graphics()->QuadsBegin();
+		Graphics()->SetColor(1,1,1,1);
+		Graphics()->QuadsDraw(50, 50, 30, 30);
+	Graphics()->QuadsEnd();
+	
+	return;*/
+	
 	// update the local character position
 	update_local_character_pos();
 	
@@ -971,4 +994,18 @@ void GAMECLIENT::conchain_special_infoupdate(void *result, void *user_data, CONS
 	cb(result, cbuser);
 	if(console_arg_num(result))
 		((GAMECLIENT*)user_data)->send_info(false);
+}
+
+void GAMECLIENT::SetEngine(class IEngine *pEngine)
+{
+	m_pEngine = pEngine;
+	
+	// digg out some pointers
+	m_pGraphics = m_pEngine->Graphics();
+}
+
+IGameClient *CreateGameClient(IEngine *pEngine)
+{
+	gameclient.SetEngine(pEngine);
+	return &gameclient;
 }

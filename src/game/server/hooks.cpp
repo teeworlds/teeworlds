@@ -7,10 +7,8 @@
 
 #include <engine/e_config.h>
 #include <engine/e_server_interface.h>
-extern "C"
-{
-	#include <engine/e_memheap.h>
-}
+#include <engine/e_memheap.h>
+
 #include <game/version.hpp>
 #include <game/collision.hpp>
 #include <game/layers.hpp>
@@ -597,5 +595,5 @@ void mods_postsnap()
 	game.events.clear();
 }
 
-extern "C" const char *mods_net_version() { return GAME_NETVERSION; }
-extern "C" const char *mods_version() { return GAME_VERSION; }
+const char *mods_net_version() { return GAME_NETVERSION; }
+const char *mods_version() { return GAME_VERSION; }

@@ -1,3 +1,4 @@
+#include <engine/client/graphics.h>
 #include <game/mapitems.hpp>
 #include <game/layers.hpp>
 #include "flow.hpp"
@@ -15,17 +16,17 @@ void FLOW::dbg_render()
 	if(!cells)
 		return;
 
-	gfx_texture_set(-1);
-	gfx_lines_begin();
+	Graphics()->TextureSet(-1);
+	Graphics()->LinesBegin();
 	for(int y = 0; y < height; y++)
 		for(int x = 0; x < width; x++)
 		{
 			vec2 pos(x*spacing, y*spacing);
 			vec2 vel = cells[y*width+x].vel * 0.01f;
-			gfx_lines_draw(pos.x, pos.y, pos.x+vel.x, pos.y+vel.y);
+			Graphics()->LinesDraw(pos.x, pos.y, pos.x+vel.x, pos.y+vel.y);
 		}
 		
-	gfx_lines_end();
+	Graphics()->LinesEnd();
 }
 
 void FLOW::init()

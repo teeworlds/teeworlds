@@ -11,7 +11,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-extern NETCLIENT *net;
+extern CNetClient m_NetClient;
 
 
 /* ------ server browse ---- */
@@ -150,7 +150,7 @@ static void client_serverbrowse_filter()
 		if(sorted_serverlist)
 			mem_free(sorted_serverlist);
 		num_sorted_servers_capacity = num_servers;
-		sorted_serverlist = mem_alloc(num_sorted_servers_capacity*sizeof(int), 1);
+		sorted_serverlist = (int *)mem_alloc(num_sorted_servers_capacity*sizeof(int), 1);
 	}
 	
 	/* filter the servers */
@@ -401,7 +401,7 @@ SERVERENTRY *client_serverbrowse_add(NETADDR *addr)
 	{
 		SERVERENTRY **newlist;
 		num_server_capacity += 100;
-		newlist = mem_alloc(num_server_capacity*sizeof(SERVERENTRY*), 1);
+		newlist = (SERVERENTRY **)mem_alloc(num_server_capacity*sizeof(SERVERENTRY*), 1);
 		mem_copy(newlist, serverlist, num_servers*sizeof(SERVERENTRY*));
 		mem_free(serverlist);
 		serverlist = newlist;
@@ -506,28 +506,28 @@ void client_serverbrowse_refresh(int type)
 
 	if(type == BROWSETYPE_LAN)
 	{
-		unsigned char buffer[sizeof(SERVERBROWSE_GETINFO)+1];
-		NETCHUNK packet;
+		unsigned char Buffer[sizeof(SERVERBROWSE_GETINFO)+1];
+		CNetChunk Packet;
 		int i;
 		
-		mem_copy(buffer, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
-		buffer[sizeof(SERVERBROWSE_GETINFO)] = current_token;
+		mem_copy(Buffer, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
+		Buffer[sizeof(SERVERBROWSE_GETINFO)] = current_token;
 			
-		packet.client_id = -1;
-		mem_zero(&packet, sizeof(packet));
-		packet.address.ip[0] = 255;
-		packet.address.ip[1] = 255;
-		packet.address.ip[2] = 255;
-		packet.address.ip[3] = 255;
-		packet.flags = NETSENDFLAG_CONNLESS;
-		packet.data_size = sizeof(buffer);
-		packet.data = buffer;
+		Packet.m_ClientID = -1;
+		mem_zero(&Packet, sizeof(Packet));
+		Packet.m_Address.ip[0] = 255;
+		Packet.m_Address.ip[1] = 255;
+		Packet.m_Address.ip[2] = 255;
+		Packet.m_Address.ip[3] = 255;
+		Packet.m_Flags = NETSENDFLAG_CONNLESS;
+		Packet.m_DataSize = sizeof(Buffer);
+		Packet.m_pData = Buffer;
 		broadcast_time = time_get();
 
 		for(i = 8303; i <= 8310; i++)
 		{
-			packet.address.port = i;
-			netclient_send(net, &packet);
+			Packet.m_Address.port = i;
+			m_NetClient.Send(&Packet);
 		}
 
 		if(config.debug)
@@ -537,8 +537,7 @@ void client_serverbrowse_refresh(int type)
 		need_refresh = 1;
 	else if(type == BROWSETYPE_FAVORITES)
 	{
-		int i;
-		for(i = 0; i < num_favorite_servers; i++)
+		for(int i = 0; i < num_favorite_servers; i++)
 			client_serverbrowse_set(&favorite_servers[i], BROWSESET_FAV_ADD, -1, 0);
 	}
 }
@@ -546,7 +545,7 @@ void client_serverbrowse_refresh(int type)
 static void client_serverbrowse_request_impl(NETADDR *addr, SERVERENTRY *entry)
 {
 	/*unsigned char buffer[sizeof(SERVERBROWSE_GETINFO)+1];*/
-	NETCHUNK p;
+	CNetChunk Packet;
 
 	if(config.debug)
 	{
@@ -558,17 +557,17 @@ static void client_serverbrowse_request_impl(NETADDR *addr, SERVERENTRY *entry)
 	/*mem_copy(buffer, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
 	buffer[sizeof(SERVERBROWSE_GETINFO)] = current_token;*/
 	
-	p.client_id = -1;
-	p.address = *addr;
-	p.flags = NETSENDFLAG_CONNLESS;
+	Packet.m_ClientID = -1;
+	Packet.m_Address = *addr;
+	Packet.m_Flags = NETSENDFLAG_CONNLESS;
 	/*p.data_size = sizeof(buffer);
 	p.data = buffer;
 	netclient_send(net, &p);*/
 
 	/* send old requtest style aswell */	
-	p.data_size = sizeof(SERVERBROWSE_OLD_GETINFO);
-	p.data = SERVERBROWSE_OLD_GETINFO;
-	netclient_send(net, &p);
+	Packet.m_DataSize = sizeof(SERVERBROWSE_OLD_GETINFO);
+	Packet.m_pData = SERVERBROWSE_OLD_GETINFO;
+	m_NetClient.Send(&Packet);
 	
 	if(entry)
 		entry->request_time = time_get();
@@ -591,16 +590,16 @@ void client_serverbrowse_update()
 	if(need_refresh && !mastersrv_refreshing())
 	{
 		NETADDR addr;
-		NETCHUNK p;
+		CNetChunk Packet;
 		int i;
 		
 		need_refresh = 0;
 		
-		mem_zero(&p, sizeof(p));
-		p.client_id = -1;
-		p.flags = NETSENDFLAG_CONNLESS;
-		p.data_size = sizeof(SERVERBROWSE_GETLIST);
-		p.data = SERVERBROWSE_GETLIST;
+		mem_zero(&Packet, sizeof(Packet));
+		Packet.m_ClientID = -1;
+		Packet.m_Flags = NETSENDFLAG_CONNLESS;
+		Packet.m_DataSize = sizeof(SERVERBROWSE_GETLIST);
+		Packet.m_pData = SERVERBROWSE_GETLIST;
 		
 		for(i = 0; i < MAX_MASTERSERVERS; i++)
 		{
@@ -608,8 +607,8 @@ void client_serverbrowse_update()
 			if(!addr.ip[0] && !addr.ip[1] && !addr.ip[2] && !addr.ip[3])
 				continue;
 			
-			p.address = addr;
-			netclient_send(net, &p);
+			Packet.m_Address = addr;
+			m_NetClient.Send(&Packet);
 		}
 
 		if(config.debug)

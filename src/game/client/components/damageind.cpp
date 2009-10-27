@@ -1,4 +1,5 @@
 #include <engine/e_client_interface.h>
+#include <engine/client/graphics.h>
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
 
@@ -44,8 +45,8 @@ void DAMAGEIND::create(vec2 pos, vec2 dir)
 
 void DAMAGEIND::on_render()
 {
-	gfx_texture_set(data->images[IMAGE_GAME].id);
-	gfx_quads_begin();
+	Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+	Graphics()->QuadsBegin();
 	for(int i = 0; i < num_items;)
 	{
 		vec2 pos = mix(items[i].pos+items[i].dir*75.0f, items[i].pos, clamp((items[i].life-0.60f)/0.15f, 0.0f, 1.0f));
@@ -55,12 +56,12 @@ void DAMAGEIND::on_render()
 			destroy_i(&items[i]);
 		else
 		{
-			gfx_setcolor(1.0f,1.0f,1.0f, items[i].life/0.1f);
-			gfx_quads_setrotation(items[i].startangle + items[i].life * 2.0f);
-			select_sprite(SPRITE_STAR1);
-			draw_sprite(pos.x, pos.y, 48.0f);
+			Graphics()->SetColor(1.0f,1.0f,1.0f, items[i].life/0.1f);
+			Graphics()->QuadsSetRotation(items[i].startangle + items[i].life * 2.0f);
+			RenderTools()->select_sprite(SPRITE_STAR1);
+			RenderTools()->draw_sprite(pos.x, pos.y, 48.0f);
 			i++;
 		}
 	}
-	gfx_quads_end();
+	Graphics()->QuadsEnd();
 }

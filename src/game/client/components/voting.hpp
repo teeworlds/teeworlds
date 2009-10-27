@@ -1,10 +1,6 @@
 #include <game/client/component.hpp>
 #include <game/client/ui.hpp>
-
-extern "C"
-{
-	#include <engine/e_memheap.h>
-}
+#include <engine/e_memheap.h>
 
 class VOTING : public COMPONENT
 {
@@ -38,7 +34,7 @@ public:
 	virtual void on_message(int msgtype, void *rawmsg);
 	virtual void on_render();
 	
-	void render_bars(RECT bars, bool text);
+	void render_bars(CUIRect bars, bool text);
 	
 	void callvote_kick(int client_id);
 	void callvote_option(int option);

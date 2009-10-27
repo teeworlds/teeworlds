@@ -1,18 +1,18 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <base/system.h>
 
-typedef struct CHUNK_t
+struct CHUNK
 {
 	char *memory;
 	char *current;
 	char *end;
-	struct CHUNK_t *next;
-} CHUNK;
+	CHUNK *next;
+};
 
-typedef struct 
+struct HEAP
 {
 	CHUNK *current;
-} HEAP;
+};
 
 /* how large each chunk should be */
 static const int chunksize = 1024*64;

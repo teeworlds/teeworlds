@@ -1,7 +1,9 @@
 #include <base/system.h>
 #include <string.h>
 #include <engine/e_client_interface.h>
+#include <engine/client/graphics.h>
 
+extern IEngineGraphics *Graphics();
 
 #ifdef CONF_PLATFORM_MACOSX
 	#include <OpenGL/gl.h>
@@ -138,8 +140,7 @@ typedef struct FONT
 
 static int font_get_index(int pixelsize)
 {
-	int i;
-	for(i = 0; i < NUM_FONT_SIZES; i++)
+	for(unsigned i = 0; i < NUM_FONT_SIZES; i++)
 	{
 		if(font_sizes[i] >= pixelsize)
 			return i;
@@ -150,8 +151,7 @@ static int font_get_index(int pixelsize)
 
 FONT *gfx_font_load(const char *filename)
 {
-	int i;
-	FONT *font = mem_alloc(sizeof(FONT), 1);
+	FONT *font = (FONT *)mem_alloc(sizeof(FONT), 1);
 	
 	mem_zero(font, sizeof(*font));
 	str_copy(font->filename, filename, sizeof(font->filename));
@@ -162,7 +162,7 @@ FONT *gfx_font_load(const char *filename)
 		return NULL;
 	}
 
-	for(i = 0; i < NUM_FONT_SIZES; i++)
+	for(unsigned i = 0; i < NUM_FONT_SIZES; i++)
 		font->sizes[i].font_size = -1;
 		
 	return font;
@@ -484,6 +484,7 @@ static float font_kerning(FONT *font, int left, int right)
 	return (kerning.x>>6);
 }
 
+
 void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 {
 	FONT *font = cursor->font;
@@ -503,10 +504,10 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 	float size = cursor->font_size;
 
 	/* to correct coords, convert to screen coords, round, and convert back */
-	gfx_getscreen(&screen_x0, &screen_y0, &screen_x1, &screen_y1);
+	Graphics()->GetScreen(&screen_x0, &screen_y0, &screen_x1, &screen_y1);
 	
-	fake_to_screen_x = (gfx_screenwidth()/(screen_x1-screen_x0));
-	fake_to_screen_y = (gfx_screenheight()/(screen_y1-screen_y0));
+	fake_to_screen_x = (Graphics()->ScreenWidth()/(screen_x1-screen_x0));
+	fake_to_screen_y = (Graphics()->ScreenHeight()/(screen_y1-screen_y0));
 	actual_x = cursor->x * fake_to_screen_x;
 	actual_y = cursor->y * fake_to_screen_y;
 
@@ -554,11 +555,11 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 			else
 				glBindTexture(GL_TEXTURE_2D, sizedata->textures[0]);
 
-			gfx_quads_begin();
+			Graphics()->QuadsBegin();
 			if (i == 0)
-				gfx_setcolor(0.0f, 0.0f, 0.0f, 0.3f*text_a);
+				Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.3f*text_a);
 			else
-				gfx_setcolor(text_r, text_g, text_b, text_a);
+				Graphics()->SetColor(text_r, text_g, text_b, text_a);
 		}
 
 		while(current < end)
@@ -629,8 +630,8 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 				{
 					if(cursor->flags&TEXTFLAG_RENDER)
 					{
-						gfx_quads_setsubset(chr->uvs[0], chr->uvs[1], chr->uvs[2], chr->uvs[3]);
-						gfx_quads_drawTL(draw_x+chr->offset_x*size, draw_y+chr->offset_y*size, chr->width*size, chr->height*size);
+						Graphics()->QuadsSetSubset(chr->uvs[0], chr->uvs[1], chr->uvs[2], chr->uvs[3]);
+						Graphics()->QuadsDrawTL(draw_x+chr->offset_x*size, draw_y+chr->offset_y*size, chr->width*size, chr->height*size);
 					}
 
 					advance = chr->advance_x + font_kerning(font, character, nextcharacter)/size;
@@ -658,7 +659,7 @@ void gfx_text_ex(TEXT_CURSOR *cursor, const char *text, int length)
 		}
 
 		if(cursor->flags&TEXTFLAG_RENDER)
-			gfx_quads_end();
+			Graphics()->QuadsEnd();
 	}
 
 	cursor->x = draw_x;

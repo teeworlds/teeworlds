@@ -1,20 +1,21 @@
 #include <stdio.h>
+#include <engine/client/graphics.h>
 #include "ed_editor.hpp"
 
 
 // popup menu handling
 static struct
 {
-	RECT rect;
+	CUIRect rect;
 	void *id;
-	int (*func)(RECT rect);
+	int (*func)(EDITOR *pEditor, CUIRect rect);
 	int is_menu;
 	void *extra;
 } ui_popups[8];
 
 static int ui_num_popups = 0;
 
-void ui_invoke_popup_menu(void *id, int flags, float x, float y, float w, float h, int (*func)(RECT rect), void *extra)
+void EDITOR::ui_invoke_popup_menu(void *id, int flags, float x, float y, float w, float h, int (*func)(EDITOR *pEditor, CUIRect rect), void *extra)
 {
 	dbg_msg("", "invoked");
 	ui_popups[ui_num_popups].id = id;
@@ -28,39 +29,39 @@ void ui_invoke_popup_menu(void *id, int flags, float x, float y, float w, float 
 	ui_num_popups++;
 }
 
-void ui_do_popup_menu()
+void EDITOR::ui_do_popup_menu()
 {
 	for(int i = 0; i < ui_num_popups; i++)
 	{
-		bool inside = ui_mouse_inside(&ui_popups[i].rect);
-		ui_set_hot_item(&ui_popups[i].id);
+		bool inside = UI()->MouseInside(&ui_popups[i].rect);
+		UI()->SetHotItem(&ui_popups[i].id);
 		
-		if(ui_active_item() == &ui_popups[i].id)
+		if(UI()->ActiveItem() == &ui_popups[i].id)
 		{
-			if(!ui_mouse_button(0))
+			if(!UI()->MouseButton(0))
 			{
 				if(!inside)
 					ui_num_popups--;
-				ui_set_active_item(0);
+				UI()->SetActiveItem(0);
 			}
 		}
-		else if(ui_hot_item() == &ui_popups[i].id)
+		else if(UI()->HotItem() == &ui_popups[i].id)
 		{
-			if(ui_mouse_button(0))
-				ui_set_active_item(&ui_popups[i].id);
+			if(UI()->MouseButton(0))
+				UI()->SetActiveItem(&ui_popups[i].id);
 		}
 		
-		int corners = CORNER_ALL;
+		int corners = CUI::CORNER_ALL;
 		if(ui_popups[i].is_menu)
-			corners = CORNER_R|CORNER_B;
+			corners = CUI::CORNER_R|CUI::CORNER_B;
 		
-		RECT r = ui_popups[i].rect;
-		ui_draw_rect(&r, vec4(0.5f,0.5f,0.5f,0.75f), corners, 3.0f);
-		ui_margin(&r, 1.0f, &r);
-		ui_draw_rect(&r, vec4(0,0,0,0.75f), corners, 3.0f);
-		ui_margin(&r, 4.0f, &r);
+		CUIRect r = ui_popups[i].rect;
+		RenderTools()->DrawUIRect(&r, vec4(0.5f,0.5f,0.5f,0.75f), corners, 3.0f);
+		r.Margin(1.0f, &r);
+		RenderTools()->DrawUIRect(&r, vec4(0,0,0,0.75f), corners, 3.0f);
+		r.Margin(4.0f, &r);
 		
-		if(ui_popups[i].func(r))
+		if(ui_popups[i].func(this, r))
 			ui_num_popups--;
 			
 		if(inp_key_down(KEY_ESCAPE))
@@ -69,42 +70,42 @@ void ui_do_popup_menu()
 }
 
 
-int popup_group(RECT view)
+int EDITOR::popup_group(EDITOR *pEditor, CUIRect view)
 {
 	// remove group button
-	RECT button;
-	ui_hsplit_b(&view, 12.0f, &view, &button);
+	CUIRect button;
+	view.HSplitBottom(12.0f, &view, &button);
 	static int delete_button = 0;
 	
 	// don't allow deletion of game group
-	if(editor.map.game_group != editor.get_selected_group() &&
-		do_editor_button(&delete_button, "Delete Group", 0, &button, draw_editor_button, 0, "Delete group"))
+	if(pEditor->map.game_group != pEditor->get_selected_group() &&
+		pEditor->DoButton_Editor(&delete_button, "Delete Group", 0, &button, 0, "Delete group"))
 	{
-		editor.map.delete_group(editor.selected_group);
+		pEditor->map.delete_group(pEditor->selected_group);
 		return 1;
 	}
 
 	// new tile layer
-	ui_hsplit_b(&view, 10.0f, &view, &button);
-	ui_hsplit_b(&view, 12.0f, &view, &button);
+	view.HSplitBottom(10.0f, &view, &button);
+	view.HSplitBottom(12.0f, &view, &button);
 	static int new_quad_layer_button = 0;
-	if(do_editor_button(&new_quad_layer_button, "Add Quads Layer", 0, &button, draw_editor_button, 0, "Creates a new quad layer"))
+	if(pEditor->DoButton_Editor(&new_quad_layer_button, "Add Quads Layer", 0, &button, 0, "Creates a new quad layer"))
 	{
 		LAYER *l = new LAYER_QUADS;
-		editor.map.groups[editor.selected_group]->add_layer(l);
-		editor.selected_layer = editor.map.groups[editor.selected_group]->layers.len()-1;
+		pEditor->map.groups[pEditor->selected_group]->add_layer(l);
+		pEditor->selected_layer = pEditor->map.groups[pEditor->selected_group]->layers.len()-1;
 		return 1;
 	}
 
 	// new quad layer
-	ui_hsplit_b(&view, 5.0f, &view, &button);
-	ui_hsplit_b(&view, 12.0f, &view, &button);
+	view.HSplitBottom(5.0f, &view, &button);
+	view.HSplitBottom(12.0f, &view, &button);
 	static int new_tile_layer_button = 0;
-	if(do_editor_button(&new_tile_layer_button, "Add Tile Layer", 0, &button, draw_editor_button, 0, "Creates a new tile layer"))
+	if(pEditor->DoButton_Editor(&new_tile_layer_button, "Add Tile Layer", 0, &button, 0, "Creates a new tile layer"))
 	{
 		LAYER *l = new LAYER_TILES(50, 50);
-		editor.map.groups[editor.selected_group]->add_layer(l);
-		editor.selected_layer = editor.map.groups[editor.selected_group]->layers.len()-1;
+		pEditor->map.groups[pEditor->selected_group]->add_layer(l);
+		pEditor->selected_layer = pEditor->map.groups[pEditor->selected_group]->layers.len()-1;
 		return 1;
 	}
 	
@@ -124,17 +125,17 @@ int popup_group(RECT view)
 	};
 	
 	PROPERTY props[] = {
-		{"Order", editor.selected_group, PROPTYPE_INT_STEP, 0, editor.map.groups.len()-1},
-		{"Pos X", -editor.map.groups[editor.selected_group]->offset_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Pos Y", -editor.map.groups[editor.selected_group]->offset_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Para X", editor.map.groups[editor.selected_group]->parallax_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Para Y", editor.map.groups[editor.selected_group]->parallax_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Order", pEditor->selected_group, PROPTYPE_INT_STEP, 0, pEditor->map.groups.len()-1},
+		{"Pos X", -pEditor->map.groups[pEditor->selected_group]->offset_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Pos Y", -pEditor->map.groups[pEditor->selected_group]->offset_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Para X", pEditor->map.groups[pEditor->selected_group]->parallax_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Para Y", pEditor->map.groups[pEditor->selected_group]->parallax_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 
-		{"Use Clipping", editor.map.groups[editor.selected_group]->use_clipping, PROPTYPE_BOOL, 0, 1},
-		{"Clip X", editor.map.groups[editor.selected_group]->clip_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Clip Y", editor.map.groups[editor.selected_group]->clip_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Clip W", editor.map.groups[editor.selected_group]->clip_w, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Clip H", editor.map.groups[editor.selected_group]->clip_h, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Use Clipping", pEditor->map.groups[pEditor->selected_group]->use_clipping, PROPTYPE_BOOL, 0, 1},
+		{"Clip X", pEditor->map.groups[pEditor->selected_group]->clip_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Clip Y", pEditor->map.groups[pEditor->selected_group]->clip_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Clip W", pEditor->map.groups[pEditor->selected_group]->clip_w, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Clip H", pEditor->map.groups[pEditor->selected_group]->clip_h, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		{0},
 	};
 	
@@ -142,49 +143,49 @@ int popup_group(RECT view)
 	int new_val = 0;
 	
 	// cut the properties that isn't needed
-	if(editor.get_selected_group()->game_group)
+	if(pEditor->get_selected_group()->game_group)
 		props[PROP_POS_X].name = 0;
 		
-	int prop = editor.do_properties(&view, props, ids, &new_val);
+	int prop = pEditor->do_properties(&view, props, ids, &new_val);
 	if(prop == PROP_ORDER)
-		editor.selected_group = editor.map.swap_groups(editor.selected_group, new_val);
+		pEditor->selected_group = pEditor->map.swap_groups(pEditor->selected_group, new_val);
 		
 	// these can not be changed on the game group
-	if(!editor.get_selected_group()->game_group)
+	if(!pEditor->get_selected_group()->game_group)
 	{
-		if(prop == PROP_PARA_X) editor.map.groups[editor.selected_group]->parallax_x = new_val;
-		else if(prop == PROP_PARA_Y) editor.map.groups[editor.selected_group]->parallax_y = new_val;
-		else if(prop == PROP_POS_X) editor.map.groups[editor.selected_group]->offset_x = -new_val;
-		else if(prop == PROP_POS_Y) editor.map.groups[editor.selected_group]->offset_y = -new_val;
-		else if(prop == PROP_USE_CLIPPING) editor.map.groups[editor.selected_group]->use_clipping = new_val;
-		else if(prop == PROP_CLIP_X) editor.map.groups[editor.selected_group]->clip_x = new_val;
-		else if(prop == PROP_CLIP_Y) editor.map.groups[editor.selected_group]->clip_y = new_val;
-		else if(prop == PROP_CLIP_W) editor.map.groups[editor.selected_group]->clip_w = new_val;
-		else if(prop == PROP_CLIP_H) editor.map.groups[editor.selected_group]->clip_h = new_val;
+		if(prop == PROP_PARA_X) pEditor->map.groups[pEditor->selected_group]->parallax_x = new_val;
+		else if(prop == PROP_PARA_Y) pEditor->map.groups[pEditor->selected_group]->parallax_y = new_val;
+		else if(prop == PROP_POS_X) pEditor->map.groups[pEditor->selected_group]->offset_x = -new_val;
+		else if(prop == PROP_POS_Y) pEditor->map.groups[pEditor->selected_group]->offset_y = -new_val;
+		else if(prop == PROP_USE_CLIPPING) pEditor->map.groups[pEditor->selected_group]->use_clipping = new_val;
+		else if(prop == PROP_CLIP_X) pEditor->map.groups[pEditor->selected_group]->clip_x = new_val;
+		else if(prop == PROP_CLIP_Y) pEditor->map.groups[pEditor->selected_group]->clip_y = new_val;
+		else if(prop == PROP_CLIP_W) pEditor->map.groups[pEditor->selected_group]->clip_w = new_val;
+		else if(prop == PROP_CLIP_H) pEditor->map.groups[pEditor->selected_group]->clip_h = new_val;
 	}
 	
 	return 0;
 }
 
-int popup_layer(RECT view)
+int EDITOR::popup_layer(EDITOR *pEditor, CUIRect view)
 {
 	// remove layer button
-	RECT button;
-	ui_hsplit_b(&view, 12.0f, &view, &button);
+	CUIRect button;
+	view.HSplitBottom(12.0f, &view, &button);
 	static int delete_button = 0;
 	
 	// don't allow deletion of game layer
-	if(editor.map.game_layer != editor.get_selected_layer(0) &&
-		do_editor_button(&delete_button, "Delete Layer", 0, &button, draw_editor_button, 0, "Deletes the layer"))
+	if(pEditor->map.game_layer != pEditor->get_selected_layer(0) &&
+		pEditor->DoButton_Editor(&delete_button, "Delete Layer", 0, &button, 0, "Deletes the layer"))
 	{
-		editor.map.groups[editor.selected_group]->delete_layer(editor.selected_layer);
+		pEditor->map.groups[pEditor->selected_group]->delete_layer(pEditor->selected_layer);
 		return 1;
 	}
 
-	ui_hsplit_b(&view, 10.0f, &view, 0);
+	view.HSplitBottom(10.0f, &view, 0);
 	
-	LAYERGROUP *current_group = editor.map.groups[editor.selected_group];
-	LAYER *current_layer = editor.get_selected_layer(0);
+	LAYERGROUP *current_group = pEditor->map.groups[pEditor->selected_group];
+	LAYER *current_layer = pEditor->get_selected_layer(0);
 	
 	enum
 	{
@@ -195,26 +196,26 @@ int popup_layer(RECT view)
 	};
 	
 	PROPERTY props[] = {
-		{"Group", editor.selected_group, PROPTYPE_INT_STEP, 0, editor.map.groups.len()-1},
-		{"Order", editor.selected_layer, PROPTYPE_INT_STEP, 0, current_group->layers.len()},
+		{"Group", pEditor->selected_group, PROPTYPE_INT_STEP, 0, pEditor->map.groups.len()-1},
+		{"Order", pEditor->selected_layer, PROPTYPE_INT_STEP, 0, current_group->layers.len()},
 		{"Detail", current_layer->flags&LAYERFLAG_DETAIL, PROPTYPE_BOOL, 0, 1},
 		{0},
 	};
 	
 	static int ids[NUM_PROPS] = {0};
 	int new_val = 0;
-	int prop = editor.do_properties(&view, props, ids, &new_val);		
+	int prop = pEditor->do_properties(&view, props, ids, &new_val);		
 	
 	if(prop == PROP_ORDER)
-		editor.selected_layer = current_group->swap_layers(editor.selected_layer, new_val);
+		pEditor->selected_layer = current_group->swap_layers(pEditor->selected_layer, new_val);
 	else if(prop == PROP_GROUP && current_layer->type != LAYERTYPE_GAME)
 	{
-		if(new_val >= 0 && new_val < editor.map.groups.len())
+		if(new_val >= 0 && new_val < pEditor->map.groups.len())
 		{
 			current_group->layers.remove(current_layer);
-			editor.map.groups[new_val]->layers.add(current_layer);
-			editor.selected_group = new_val;
-			editor.selected_layer = editor.map.groups[new_val]->layers.len()-1;
+			pEditor->map.groups[new_val]->layers.add(current_layer);
+			pEditor->selected_group = new_val;
+			pEditor->selected_layer = pEditor->map.groups[new_val]->layers.len()-1;
 		}
 	}
 	else if(prop == PROP_HQ)
@@ -227,31 +228,31 @@ int popup_layer(RECT view)
 	return current_layer->render_properties(&view);
 }
 
-int popup_quad(RECT view)
+int EDITOR::popup_quad(EDITOR *pEditor, CUIRect view)
 {
-	QUAD *quad = editor.get_selected_quad();
+	QUAD *quad = pEditor->get_selected_quad();
 
-	RECT button;
+	CUIRect button;
 	
 	// delete button
-	ui_hsplit_b(&view, 12.0f, &view, &button);
+	view.HSplitBottom(12.0f, &view, &button);
 	static int delete_button = 0;
-	if(do_editor_button(&delete_button, "Delete", 0, &button, draw_editor_button, 0, "Deletes the current quad"))
+	if(pEditor->DoButton_Editor(&delete_button, "Delete", 0, &button, 0, "Deletes the current quad"))
 	{
-		LAYER_QUADS *layer = (LAYER_QUADS *)editor.get_selected_layer_type(0, LAYERTYPE_QUADS);
+		LAYER_QUADS *layer = (LAYER_QUADS *)pEditor->get_selected_layer_type(0, LAYERTYPE_QUADS);
 		if(layer)
 		{
-			layer->quads.removebyindex(editor.selected_quad);
-			editor.selected_quad--;
+			layer->quads.removebyindex(pEditor->selected_quad);
+			pEditor->selected_quad--;
 		}
 		return 1;
 	}
 
 	// square button
-	ui_hsplit_b(&view, 10.0f, &view, &button);
-	ui_hsplit_b(&view, 12.0f, &view, &button);
+	view.HSplitBottom(10.0f, &view, &button);
+	view.HSplitBottom(12.0f, &view, &button);
 	static int sq_button = 0;
-	if(do_editor_button(&sq_button, "Square", 0, &button, draw_editor_button, 0, "Squares the current quad"))
+	if(pEditor->DoButton_Editor(&sq_button, "Square", 0, &button, 0, "Squares the current quad"))
 	{
 		int top = quad->points[0].y;
 		int left = quad->points[0].x;
@@ -284,9 +285,9 @@ int popup_quad(RECT view)
 	};
 	
 	PROPERTY props[] = {
-		{"Pos. Env", quad->pos_env, PROPTYPE_INT_STEP, -1, editor.map.envelopes.len()},
+		{"Pos. Env", quad->pos_env, PROPTYPE_INT_STEP, -1, pEditor->map.envelopes.len()},
 		{"Pos. TO", quad->pos_env_offset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Color Env", quad->color_env, PROPTYPE_INT_STEP, -1, editor.map.envelopes.len()},
+		{"Color Env", quad->color_env, PROPTYPE_INT_STEP, -1, pEditor->map.envelopes.len()},
 		{"Color TO", quad->color_env_offset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		
 		{0},
@@ -294,19 +295,19 @@ int popup_quad(RECT view)
 	
 	static int ids[NUM_PROPS] = {0};
 	int new_val = 0;
-	int prop = editor.do_properties(&view, props, ids, &new_val);		
+	int prop = pEditor->do_properties(&view, props, ids, &new_val);		
 	
-	if(prop == PROP_POS_ENV) quad->pos_env = clamp(new_val, -1, editor.map.envelopes.len()-1);
+	if(prop == PROP_POS_ENV) quad->pos_env = clamp(new_val, -1, pEditor->map.envelopes.len()-1);
 	if(prop == PROP_POS_ENV_OFFSET) quad->pos_env_offset = new_val;
-	if(prop == PROP_COLOR_ENV) quad->color_env = clamp(new_val, -1, editor.map.envelopes.len()-1);
+	if(prop == PROP_COLOR_ENV) quad->color_env = clamp(new_val, -1, pEditor->map.envelopes.len()-1);
 	if(prop == PROP_COLOR_ENV_OFFSET) quad->color_env_offset = new_val;
 	
 	return 0;
 }
 
-int popup_point(RECT view)
+int EDITOR::popup_point(EDITOR *pEditor, CUIRect view)
 {
-	QUAD *quad = editor.get_selected_quad();
+	QUAD *quad = pEditor->get_selected_quad();
 	
 	enum
 	{
@@ -318,7 +319,7 @@ int popup_point(RECT view)
 
 	for(int v = 0; v < 4; v++)
 	{
-		if(editor.selected_points&(1<<v))
+		if(pEditor->selected_points&(1<<v))
 		{
 			color = 0;
 			color |= quad->colors[v].r<<24;
@@ -330,18 +331,18 @@ int popup_point(RECT view)
 	
 	
 	PROPERTY props[] = {
-		{"Color", color, PROPTYPE_COLOR, -1, editor.map.envelopes.len()},
+		{"Color", color, PROPTYPE_COLOR, -1, pEditor->map.envelopes.len()},
 		{0},
 	};
 	
 	static int ids[NUM_PROPS] = {0};
 	int new_val = 0;
-	int prop = editor.do_properties(&view, props, ids, &new_val);		
+	int prop = pEditor->do_properties(&view, props, ids, &new_val);		
 	if(prop == PROP_COLOR)
 	{
 		for(int v = 0; v < 4; v++)
 		{
-			if(editor.selected_points&(1<<v))
+			if(pEditor->selected_points&(1<<v))
 			{
 				color = 0;
 				quad->colors[v].r = (new_val>>24)&0xff;
@@ -360,47 +361,47 @@ int popup_point(RECT view)
 static int select_image_selected = -100;
 static int select_image_current = -100;
 
-int popup_select_image(RECT view)
+int EDITOR::popup_select_image(EDITOR *pEditor, CUIRect view)
 {
-	RECT buttonbar, imageview;
-	ui_vsplit_l(&view, 80.0f, &buttonbar, &view);
-	ui_margin(&view, 10.0f, &imageview);
+	CUIRect buttonbar, imageview;
+	view.VSplitLeft(80.0f, &buttonbar, &view);
+	view.Margin(10.0f, &imageview);
 	
 	int show_image = select_image_current;
 	
-	for(int i = -1; i < editor.map.images.len(); i++)
+	for(int i = -1; i < pEditor->map.images.len(); i++)
 	{
-		RECT button;
-		ui_hsplit_t(&buttonbar, 12.0f, &button, &buttonbar);
-		ui_hsplit_t(&buttonbar, 2.0f, 0, &buttonbar);
+		CUIRect button;
+		buttonbar.HSplitTop(12.0f, &button, &buttonbar);
+		buttonbar.HSplitTop(2.0f, 0, &buttonbar);
 		
-		if(ui_mouse_inside(&button))
+		if(pEditor->UI()->MouseInside(&button))
 			show_image = i;
 			
 		if(i == -1)
 		{
-			if(do_editor_button(&editor.map.images[i], "None", i==select_image_current, &button, draw_editor_button_menuitem, 0, 0))
+			if(pEditor->DoButton_MenuItem(&pEditor->map.images[i], "None", i==select_image_current, &button))
 				select_image_selected = -1;
 		}
 		else
 		{
-			if(do_editor_button(&editor.map.images[i], editor.map.images[i]->name, i==select_image_current, &button, draw_editor_button_menuitem, 0, 0))
+			if(pEditor->DoButton_MenuItem(&pEditor->map.images[i], pEditor->map.images[i]->name, i==select_image_current, &button))
 				select_image_selected = i;
 		}
 	}
 	
-	if(show_image >= 0 && show_image < editor.map.images.len())
-		gfx_texture_set(editor.map.images[show_image]->tex_id);
+	if(show_image >= 0 && show_image < pEditor->map.images.len())
+		pEditor->Graphics()->TextureSet(pEditor->map.images[show_image]->tex_id);
 	else
-		gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_quads_drawTL(imageview.x, imageview.y, imageview.w, imageview.h);
-	gfx_quads_end();
+		pEditor->Graphics()->TextureSet(-1);
+	pEditor->Graphics()->QuadsBegin();
+	pEditor->Graphics()->QuadsDrawTL(imageview.x, imageview.y, imageview.w, imageview.h);
+	pEditor->Graphics()->QuadsEnd();
 
 	return 0;
 }
 
-void popup_select_image_invoke(int current, float x, float y)
+void EDITOR::popup_select_image_invoke(int current, float x, float y)
 {
 	static int select_image_popup_id = 0;
 	select_image_selected = -100;
@@ -408,7 +409,7 @@ void popup_select_image_invoke(int current, float x, float y)
 	ui_invoke_popup_menu(&select_image_popup_id, 0, x, y, 400, 300, popup_select_image);
 }
 
-int popup_select_image_result()
+int EDITOR::popup_select_image_result()
 {
 	if(select_image_selected == -100)
 		return -100;

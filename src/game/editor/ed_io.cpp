@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdio.h>
+#include <engine/client/graphics.h>
 #include "ed_editor.hpp"
 
 template<typename T>
@@ -7,6 +8,7 @@ static int make_version(int i, const T &v)
 { return (i<<16)+sizeof(T); }
 
 // backwards compatiblity
+/*
 void editor_load_old(DATAFILE *df, MAP *map)
 {
 	class mapres_image
@@ -98,7 +100,7 @@ void editor_load_old(DATAFILE *df, MAP *map)
 				// move game layer to correct position
 				for(int i = 0; i < map->groups[0]->layers.len()-1; i++)
 				{
-					if(map->groups[0]->layers[i] == editor.map.game_layer)
+					if(map->groups[0]->layers[i] == pEditor->map.game_layer)
 						map->groups[0]->swap_layers(i, i+1);
 				}
 				
@@ -141,7 +143,7 @@ void editor_load_old(DATAFILE *df, MAP *map)
 			// copy image data
 			img->data = mem_alloc(img->width*img->height*4, 1);
 			mem_copy(img->data, data, img->width*img->height*4);
-			img->tex_id = gfx_load_texture_raw(img->width, img->height, img->format, img->data, IMG_AUTO, 0);
+			img->tex_id = Graphics()->LoadTextureRaw(img->width, img->height, img->format, img->data, IMG_AUTO, 0);
 			map->images.add(img);
 			
 			// unload image
@@ -186,7 +188,7 @@ void editor_load_old(DATAFILE *df, MAP *map)
 			}
 		}
 	}
-}
+}*/
 
 int EDITOR::save(const char *filename)
 {
@@ -374,9 +376,10 @@ int MAP::load(const char *filename)
 	if(!item)
 	{
 		// import old map
-		MAP old_mapstuff;
-		editor.reset();
+		/*MAP old_mapstuff;
+		editor->reset();
 		editor_load_old(df, this);
+		*/
 	}
 	else if(item->version == 1)
 	{
@@ -392,7 +395,7 @@ int MAP::load(const char *filename)
 				char *name = (char *)datafile_get_data(df, item->image_name);
 
 				// copy base info				
-				EDITOR_IMAGE *img = new EDITOR_IMAGE;
+				EDITOR_IMAGE *img = new EDITOR_IMAGE(editor);
 				img->external = item->external;
 
 				if(item->external)
@@ -401,11 +404,11 @@ int MAP::load(const char *filename)
 					sprintf(buf, "mapres/%s.png", name);
 					
 					// load external
-					EDITOR_IMAGE imginfo;
-					if(gfx_load_png(&imginfo, buf))
+					EDITOR_IMAGE imginfo(editor);
+					if(editor->Graphics()->LoadPNG(&imginfo, buf))
 					{
 						*img = imginfo;
-						img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO, 0);
+						img->tex_id = editor->Graphics()->LoadTextureRaw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO, 0);
 						img->external = 1;
 					}
 				}
@@ -419,7 +422,7 @@ int MAP::load(const char *filename)
 					void *data = datafile_get_data(df, item->image_data);
 					img->data = mem_alloc(img->width*img->height*4, 1);
 					mem_copy(img->data, data, img->width*img->height*4);
-					img->tex_id = gfx_load_texture_raw(img->width, img->height, img->format, img->data, IMG_AUTO, 0);
+					img->tex_id = editor->Graphics()->LoadTextureRaw(img->width, img->height, img->format, img->data, IMG_AUTO, 0);
 				}
 
 				// copy image name

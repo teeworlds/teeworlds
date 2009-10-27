@@ -26,39 +26,58 @@ class MENUS : public COMPONENT
 	static vec4 color_tabbar_inactive;
 	static vec4 color_tabbar_active;
 	
-	static vec4 button_color_mul(const void *id);
+	vec4 button_color_mul(const void *pID);
 
 
-	static void ui_draw_demoplayer_button(const void *id, const char *text, int checked, const RECT *r, const void *extra);
+	int DoButton_DemoPlayer(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	int DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners);
+	int DoButton_SettingsTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 
-	static void ui_draw_browse_icon(int what, const RECT *r);
-	static void ui_draw_menu_button(const void *id, const char *text, int checked, const RECT *r, const void *extra);
-	static void ui_draw_keyselect_button(const void *id, const char *text, int checked, const RECT *r, const void *extra);
-	static void ui_draw_menu_tab_button(const void *id, const char *text, int checked, const RECT *r, const void *extra);
-	static void ui_draw_settings_tab_button(const void *id, const char *text, int checked, const RECT *r, const void *extra);
-	static void ui_draw_grid_header(const void *id, const char *text, int checked, const RECT *r, const void *extra);
-	static void ui_draw_list_row(const void *id, const char *text, int checked, const RECT *r, const void *extra);
-	static void ui_draw_checkbox_common(const void *id, const char *text, const char *boxtext, const RECT *r);
-	static void ui_draw_checkbox(const void *id, const char *text, int checked, const RECT *r, const void *extra);
-	static void ui_draw_checkbox_number(const void *id, const char *text, int checked, const RECT *r, const void *extra);
-	static int ui_do_edit_box(void *id, const RECT *rect, char *str, unsigned str_size, float font_size, bool hidden=false);
+	int DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect);
+	int DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	int DoButton_CheckBox_Number(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 
-	static float ui_do_scrollbar_v(const void *id, const RECT *rect, float current);
-	static float ui_do_scrollbar_h(const void *id, const RECT *rect, float current);
+	/*static void ui_draw_menu_button(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
+	static void ui_draw_keyselect_button(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
+	static void ui_draw_menu_tab_button(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
+	static void ui_draw_settings_tab_button(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
+	*/
 
-	static int ui_do_key_reader(void *id, const RECT *rect, int key);
-	static void ui_do_getbuttons(int start, int stop, RECT view);
+	int DoButton_BrowseIcon(int Checked, const CUIRect *pRect);
+	int DoButton_GridHeader(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	int DoButton_ListRow(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+
+	//static void ui_draw_browse_icon(int what, const CUIRect *r);
+	//static void ui_draw_grid_header(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
+	
+	/*static void ui_draw_checkbox_common(const void *id, const char *text, const char *boxtext, const CUIRect *r, const void *extra);
+	static void ui_draw_checkbox(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
+	static void ui_draw_checkbox_number(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
+	*/
+	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, bool Hidden=false);
+	//static int ui_do_edit_box(void *id, const CUIRect *rect, char *str, unsigned str_size, float font_size, bool hidden=false);
+
+	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
+	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current);
+	int DoButton_KeySelect(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	int DoKeyReader(void *pID, const CUIRect *pRect, int Key);
+
+	//static int ui_do_key_reader(void *id, const CUIRect *rect, int key);
+	void ui_do_getbuttons(int start, int stop, CUIRect view);
 
 	struct LISTBOXITEM
 	{
 		int visible;
 		int selected;
-		RECT rect;
+		CUIRect rect;
+		CUIRect hitrect;
 	};
 	
-	static void ui_do_listbox_start(void *id, const RECT *rect, float row_height, const char *title, int num_items, int selected_index);
-	static LISTBOXITEM ui_do_listbox_nextitem(void *id);
-	static int ui_do_listbox_end();
+	void ui_do_listbox_start(void *id, const CUIRect *rect, float row_height, const char *title, int num_items, int selected_index);
+	LISTBOXITEM ui_do_listbox_nextitem(void *id);
+	static LISTBOXITEM ui_do_listbox_nextrow();
+	int ui_do_listbox_end();
 	
 	//static void demolist_listdir_callback(const char *name, int is_dir, void *user);
 	//static void demolist_list_callback(const RECT *rect, int index, void *user);
@@ -143,39 +162,42 @@ class MENUS : public COMPONENT
 
 	// found in menus.cpp
 	int render();
-	void render_background();
+	//void render_background();
 	//void render_loading(float percent);
-	int render_menubar(RECT r);
-	void render_news(RECT main_view);
+	int render_menubar(CUIRect r);
+	void render_news(CUIRect main_view);
 	
 	// found in menus_demo.cpp
-	void render_demoplayer(RECT main_view);
-	void render_demolist(RECT main_view);
+	void render_demoplayer(CUIRect main_view);
+	void render_demolist(CUIRect main_view);
 	
 	// found in menus_ingame.cpp
-	void render_game(RECT main_view);
-	void render_serverinfo(RECT main_view);
-	void render_servercontrol(RECT main_view);
-	void render_servercontrol_kick(RECT main_view);
-	void render_servercontrol_server(RECT main_view);
+	void render_game(CUIRect main_view);
+	void render_serverinfo(CUIRect main_view);
+	void render_servercontrol(CUIRect main_view);
+	void render_servercontrol_kick(CUIRect main_view);
+	void render_servercontrol_server(CUIRect main_view);
 	
 	// found in menus_browser.cpp
 	int selected_index;
-	void render_serverbrowser_serverlist(RECT view);
-	void render_serverbrowser_serverdetail(RECT view);
-	void render_serverbrowser_filters(RECT view);
-	void render_serverbrowser(RECT main_view);
+	void render_serverbrowser_serverlist(CUIRect view);
+	void render_serverbrowser_serverdetail(CUIRect view);
+	void render_serverbrowser_filters(CUIRect view);
+	void render_serverbrowser(CUIRect main_view);
 	
 	// found in menus_settings.cpp
-	void render_settings_general(RECT main_view);
-	void render_settings_player(RECT main_view);
-	void render_settings_controls(RECT main_view);
-	void render_settings_graphics(RECT main_view);
-	void render_settings_sound(RECT main_view);
-	void render_settings(RECT main_view);
+	void render_settings_general(CUIRect main_view);
+	void render_settings_player(CUIRect main_view);
+	void render_settings_controls(CUIRect main_view);
+	void render_settings_graphics(CUIRect main_view);
+	void render_settings_sound(CUIRect main_view);
+	void render_settings(CUIRect main_view);
 	
 	void set_active(bool active);
 public:
+	void render_background();
+
+
 	static MENUS_KEYBINDER binder;
 	
 	MENUS();

@@ -151,7 +151,7 @@ static int console_parse_args(PARSE_RESULT *result, const char *format)
 	return error;
 }
 
-const char *console_arg_string(void *res, int index)
+const char *console_arg_string(void *res, unsigned index)
 {
 	PARSE_RESULT *result = (PARSE_RESULT *)res;
 	if (index < 0 || index >= result->num_args)
@@ -159,7 +159,7 @@ const char *console_arg_string(void *res, int index)
 	return result->args[index];
 }
 
-int console_arg_int(void *res, int index)
+int console_arg_int(void *res, unsigned index)
 {
 	PARSE_RESULT *result = (PARSE_RESULT *)res;
 	if (index < 0 || index >= result->num_args)
@@ -167,7 +167,7 @@ int console_arg_int(void *res, int index)
 	return atoi(result->args[index]);
 }
 
-float console_arg_float(void *res, int index)
+float console_arg_float(void *res, unsigned index)
 {
 	PARSE_RESULT *result = (PARSE_RESULT *)res;
 	if (index < 0 || index >= result->num_args)
@@ -354,7 +354,7 @@ struct EXECFILE
 void console_execute_file(const char *filename)
 {
 	static struct EXECFILE *first = 0;
-	struct EXECFILE this;
+	struct EXECFILE this_file;
 	struct EXECFILE *cur;
 	struct EXECFILE *prev;
 
@@ -365,9 +365,9 @@ void console_execute_file(const char *filename)
 	
 	/* push this one to the stack */
 	prev = first;
-	this.filename = filename;
-	this.next = first;
-	first = &this;
+	this_file.filename = filename;
+	this_file.next = first;
+	first = &this_file;
 	
 	/* execute file */
 	console_execute_file_real(filename);

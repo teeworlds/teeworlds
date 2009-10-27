@@ -17,30 +17,30 @@
 #include "motd.hpp"
 #include "voting.hpp"
 
-void MENUS::render_game(RECT main_view)
+void MENUS::render_game(CUIRect main_view)
 {
-	RECT button;
-	//RECT votearea;
-	ui_hsplit_t(&main_view, 45.0f, &main_view, 0);
-	ui_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
+	CUIRect button;
+	//CUIRect votearea;
+	main_view.HSplitTop(45.0f, &main_view, 0);
+	RenderTools()->DrawUIRect(&main_view, color_tabbar_active, CUI::CORNER_ALL, 10.0f);
 
-	ui_hsplit_t(&main_view, 10.0f, 0, &main_view);
-	ui_hsplit_t(&main_view, 25.0f, &main_view, 0);
-	ui_vmargin(&main_view, 10.0f, &main_view);
+	main_view.HSplitTop(10.0f, 0, &main_view);
+	main_view.HSplitTop(25.0f, &main_view, 0);
+	main_view.VMargin(10.0f, &main_view);
 	
-	ui_vsplit_r(&main_view, 120.0f, &main_view, &button);
+	main_view.VSplitRight(120.0f, &main_view, &button);
 	static int disconnect_button = 0;
-	if(ui_do_button(&disconnect_button, localize("Disconnect"), 0, &button, ui_draw_menu_button, 0))
+	if(DoButton_Menu(&disconnect_button, localize("Disconnect"), 0, &button))
 		client_disconnect();
 
 	if(gameclient.snap.local_info && gameclient.snap.gameobj)
 	{
 		if(gameclient.snap.local_info->team != -1)
 		{
-			ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
-			ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
+			main_view.VSplitLeft(10.0f, &button, &main_view);
+			main_view.VSplitLeft(120.0f, &button, &main_view);
 			static int spectate_button = 0;
-			if(ui_do_button(&spectate_button, localize("Spectate"), 0, &button, ui_draw_menu_button, 0))
+			if(DoButton_Menu(&spectate_button, localize("Spectate"), 0, &button))
 			{
 				gameclient.send_switch_team(-1);
 				set_active(false);
@@ -51,10 +51,10 @@ void MENUS::render_game(RECT main_view)
 		{
 			if(gameclient.snap.local_info->team != 0)
 			{
-				ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
-				ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
+				main_view.VSplitLeft(10.0f, &button, &main_view);
+				main_view.VSplitLeft(120.0f, &button, &main_view);
 				static int spectate_button = 0;
-				if(ui_do_button(&spectate_button, localize("Join red"), 0, &button, ui_draw_menu_button, 0))
+				if(DoButton_Menu(&spectate_button, localize("Join red"), 0, &button))
 				{
 					gameclient.send_switch_team(0);
 					set_active(false);
@@ -63,10 +63,10 @@ void MENUS::render_game(RECT main_view)
 
 			if(gameclient.snap.local_info->team != 1)
 			{
-				ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
-				ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
+				main_view.VSplitLeft(10.0f, &button, &main_view);
+				main_view.VSplitLeft(120.0f, &button, &main_view);
 				static int spectate_button = 0;
-				if(ui_do_button(&spectate_button, localize("Join blue"), 0, &button, ui_draw_menu_button, 0))
+				if(DoButton_Menu(&spectate_button, localize("Join blue"), 0, &button))
 				{
 					gameclient.send_switch_team(1);
 					set_active(false);
@@ -77,10 +77,10 @@ void MENUS::render_game(RECT main_view)
 		{
 			if(gameclient.snap.local_info->team != 0)
 			{
-				ui_vsplit_l(&main_view, 10.0f, &button, &main_view);
-				ui_vsplit_l(&main_view, 120.0f, &button, &main_view);
+				main_view.VSplitLeft(10.0f, &button, &main_view);
+				main_view.VSplitLeft(120.0f, &button, &main_view);
 				static int spectate_button = 0;
-				if(ui_do_button(&spectate_button, localize("Join game"), 0, &button, ui_draw_menu_button, 0))
+				if(DoButton_Menu(&spectate_button, localize("Join game"), 0, &button))
 				{
 					gameclient.send_switch_team(0);
 					set_active(false);
@@ -90,58 +90,58 @@ void MENUS::render_game(RECT main_view)
 	}
 	
 	/*
-	RECT bars;
-	ui_hsplit_t(&votearea, 10.0f, 0, &votearea);
-	ui_hsplit_t(&votearea, 25.0f + 10.0f*3 + 25.0f, &votearea, &bars);
+	CUIRect bars;
+	votearea.HSplitTop(10.0f, 0, &votearea);
+	votearea.HSplitTop(25.0f + 10.0f*3 + 25.0f, &votearea, &bars);
 
-	ui_draw_rect(&votearea, color_tabbar_active, CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&votearea, color_tabbar_active, CUI::CORNER_ALL, 10.0f);
 
-	ui_vmargin(&votearea, 20.0f, &votearea);
-	ui_hmargin(&votearea, 10.0f, &votearea);
+	votearea.VMargin(20.0f, &votearea);
+	votearea.HMargin(10.0f, &votearea);
 
-	ui_hsplit_b(&votearea, 35.0f, &votearea, &bars);
+	votearea.HSplitBottom(35.0f, &votearea, &bars);
 
 	if(gameclient.voting->is_voting())
 	{
 		// do yes button
-		ui_vsplit_l(&votearea, 50.0f, &button, &votearea);
+		votearea.VSplitLeft(50.0f, &button, &votearea);
 		static int yes_button = 0;
-		if(ui_do_button(&yes_button, "Yes", 0, &button, ui_draw_menu_button, 0))
+		if(UI()->DoButton(&yes_button, "Yes", 0, &button, ui_draw_menu_button, 0))
 			gameclient.voting->vote(1);
 
 		// do no button
-		ui_vsplit_l(&votearea, 5.0f, 0, &votearea);
-		ui_vsplit_l(&votearea, 50.0f, &button, &votearea);
+		votearea.VSplitLeft(5.0f, 0, &votearea);
+		votearea.VSplitLeft(50.0f, &button, &votearea);
 		static int no_button = 0;
-		if(ui_do_button(&no_button, "No", 0, &button, ui_draw_menu_button, 0))
+		if(UI()->DoButton(&no_button, "No", 0, &button, ui_draw_menu_button, 0))
 			gameclient.voting->vote(-1);
 		
 		// do time left
-		ui_vsplit_r(&votearea, 50.0f, &votearea, &button);
+		votearea.VSplitRight(50.0f, &votearea, &button);
 		char buf[256];
 		str_format(buf, sizeof(buf), "%d", gameclient.voting->seconds_left());
-		ui_do_label(&button, buf, 24.0f, 0);
+		UI()->DoLabel(&button, buf, 24.0f, 0);
 
 		// do description and command
-		ui_vsplit_l(&votearea, 5.0f, 0, &votearea);
-		ui_do_label(&votearea, gameclient.voting->vote_description(), 14.0f, -1);
-		ui_hsplit_t(&votearea, 16.0f, 0, &votearea);
-		ui_do_label(&votearea, gameclient.voting->vote_command(), 10.0f, -1);
+		votearea.VSplitLeft(5.0f, 0, &votearea);
+		UI()->DoLabel(&votearea, gameclient.voting->vote_description(), 14.0f, -1);
+		votearea.HSplitTop(16.0f, 0, &votearea);
+		UI()->DoLabel(&votearea, gameclient.voting->vote_command(), 10.0f, -1);
 
 		// do bars
-		ui_hsplit_t(&bars, 10.0f, 0, &bars);
-		ui_hmargin(&bars, 5.0f, &bars);
+		bars.HSplitTop(10.0f, 0, &bars);
+		bars.HMargin(5.0f, &bars);
 		
 		gameclient.voting->render_bars(bars, true);
 
 	}		
 	else
 	{
-		ui_do_label(&votearea, "No vote in progress", 18.0f, -1);
+		UI()->DoLabel(&votearea, "No vote in progress", 18.0f, -1);
 	}*/
 }
 
-void MENUS::render_serverinfo(RECT main_view)
+void MENUS::render_serverinfo(CUIRect main_view)
 {
 	// fetch server info
 	SERVER_INFO current_server_info;
@@ -164,9 +164,9 @@ void MENUS::render_serverinfo(RECT main_view)
 	}
 
 	// render background
-	ui_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&main_view, color_tabbar_active, CUI::CORNER_ALL, 10.0f);
 	
-	RECT view, serverinfo, gameinfo, motd;
+	CUIRect view, serverinfo, gameinfo, motd;
 	
 	float x = 0.0f;
 	float y = 0.0f;
@@ -174,14 +174,14 @@ void MENUS::render_serverinfo(RECT main_view)
 	char buf[1024];
 	
 	// set view to use for all sub-modules
-	ui_margin(&main_view, 10.0f, &view);
+	main_view.Margin(10.0f, &view);
 	
 	/* serverinfo */
-	ui_hsplit_t(&view, view.h/2-5.0f, &serverinfo, &motd);
-	ui_vsplit_l(&serverinfo, view.w/2-5.0f, &serverinfo, &gameinfo);
-	ui_draw_rect(&serverinfo, vec4(1,1,1,0.25f), CORNER_ALL, 10.0f);
+	view.HSplitTop(view.h/2-5.0f, &serverinfo, &motd);
+	serverinfo.VSplitLeft(view.w/2-5.0f, &serverinfo, &gameinfo);
+	RenderTools()->DrawUIRect(&serverinfo, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 	
-	ui_margin(&serverinfo, 5.0f, &serverinfo);
+	serverinfo.Margin(5.0f, &serverinfo);
 	
 	x = 5.0f;
 	y = 0.0f;
@@ -208,11 +208,11 @@ void MENUS::render_serverinfo(RECT main_view)
 	gfx_text(0, serverinfo.x+x, serverinfo.y+y, 20, buf, 250);
 	
 	{
-		RECT button;
+		CUIRect button;
 		int is_favorite = client_serverbrowse_isfavorite(current_server_info.netaddr);
-		ui_hsplit_b(&serverinfo, 20.0f, &serverinfo, &button);
+		serverinfo.HSplitBottom(20.0f, &serverinfo, &button);
 		static int add_fav_button = 0;
-		if (ui_do_button(&add_fav_button, localize("Favorite"), is_favorite, &button, ui_draw_checkbox, 0))
+		if(DoButton_CheckBox(&add_fav_button, localize("Favorite"), is_favorite, &button))
 		{
 			if(is_favorite)
 				client_serverbrowse_removefavorite(current_server_info.netaddr);
@@ -222,10 +222,10 @@ void MENUS::render_serverinfo(RECT main_view)
 	}
 	
 	/* gameinfo */
-	ui_vsplit_l(&gameinfo, 10.0f, 0x0, &gameinfo);
-	ui_draw_rect(&gameinfo, vec4(1,1,1,0.25f), CORNER_ALL, 10.0f);
+	gameinfo.VSplitLeft(10.0f, 0x0, &gameinfo);
+	RenderTools()->DrawUIRect(&gameinfo, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 	
-	ui_margin(&gameinfo, 5.0f, &gameinfo);
+	gameinfo.Margin(5.0f, &gameinfo);
 	
 	x = 5.0f;
 	y = 0.0f;
@@ -253,9 +253,9 @@ void MENUS::render_serverinfo(RECT main_view)
 	gfx_text(0, gameinfo.x+x, gameinfo.y+y, 20, buf, 250);
 	
 	/* motd */
-	ui_hsplit_t(&motd, 10.0f, 0, &motd);
-	ui_draw_rect(&motd, vec4(1,1,1,0.25f), CORNER_ALL, 10.0f);
-	ui_margin(&motd, 5.0f, &motd);
+	motd.HSplitTop(10.0f, 0, &motd);
+	RenderTools()->DrawUIRect(&motd, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
+	motd.Margin(5.0f, &motd);
 	y = 0.0f;
 	x = 5.0f;
 	gfx_text(0, motd.x+x, motd.y+y, 32, localize("MOTD"), -1);
@@ -268,14 +268,14 @@ static const char *format_command(const char *cmd)
 	return cmd;
 }
 
-void MENUS::render_servercontrol_server(RECT main_view)
+void MENUS::render_servercontrol_server(CUIRect main_view)
 {
 	int num_options = 0;
 	for(VOTING::VOTEOPTION *option = gameclient.voting->first; option; option = option->next)
 		num_options++;
 
 	static int votelist = 0;
-	RECT list = main_view;
+	CUIRect list = main_view;
 	ui_do_listbox_start(&votelist, &list, 24.0f, localize("Settings"), num_options, callvote_selectedoption);
 	
 	for(VOTING::VOTEOPTION *option = gameclient.voting->first; option; option = option->next)
@@ -283,62 +283,62 @@ void MENUS::render_servercontrol_server(RECT main_view)
 		LISTBOXITEM item = ui_do_listbox_nextitem(option);
 		
 		if(item.visible)
-			ui_do_label(&item.rect, format_command(option->command), 16.0f, -1);
+			UI()->DoLabel(&item.rect, format_command(option->command), 16.0f, -1);
 	}
 	
 	callvote_selectedoption = ui_do_listbox_end();
 }
 
-void MENUS::render_servercontrol_kick(RECT main_view)
+void MENUS::render_servercontrol_kick(CUIRect main_view)
 {
 	// draw header
-	RECT header, footer;
-	ui_hsplit_t(&main_view, 20, &header, &main_view);
-	ui_draw_rect(&header, vec4(1,1,1,0.25f), CORNER_T, 5.0f); 
-	ui_do_label(&header, localize("Players"), 18.0f, 0);
+	CUIRect header, footer;
+	main_view.HSplitTop(20, &header, &main_view);
+	RenderTools()->DrawUIRect(&header, vec4(1,1,1,0.25f), CUI::CORNER_T, 5.0f); 
+	UI()->DoLabel(&header, localize("Players"), 18.0f, 0);
 
 	// draw footers	
-	ui_hsplit_b(&main_view, 20, &main_view, &footer);
-	ui_draw_rect(&footer, vec4(1,1,1,0.25f), CORNER_B, 5.0f); 
-	ui_vsplit_l(&footer, 10.0f, 0, &footer);
+	main_view.HSplitBottom(20, &main_view, &footer);
+	RenderTools()->DrawUIRect(&footer, vec4(1,1,1,0.25f), CUI::CORNER_B, 5.0f); 
+	footer.VSplitLeft(10.0f, 0, &footer);
 
 	// players
-	ui_draw_rect(&main_view, vec4(0,0,0,0.15f), 0, 0);
-	RECT list = main_view;
+	RenderTools()->DrawUIRect(&main_view, vec4(0,0,0,0.15f), 0, 0);
+	CUIRect list = main_view;
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(!gameclient.snap.player_infos[i])
 			continue;
 
-		RECT button;
-		ui_hsplit_t(&list, button_height, &button, &list);
+		CUIRect button;
+		list.HSplitTop(button_height, &button, &list);
 		
-		if(ui_do_button((char *)&gameclient.snap+i, "", callvote_selectedplayer == i, &button, ui_draw_list_row, 0))
+		if(DoButton_ListRow((char *)&gameclient.snap+i, "", callvote_selectedplayer == i, &button))
 			callvote_selectedplayer = i;
 
 		TEE_RENDER_INFO info = gameclient.clients[i].render_info;
 		info.size = button.h;
-		render_tee(ANIMSTATE::get_idle(), &info, EMOTE_NORMAL, vec2(1,0), vec2(button.x+button.h/2, button.y+button.h/2));
+		RenderTools()->RenderTee(ANIMSTATE::get_idle(), &info, EMOTE_NORMAL, vec2(1,0), vec2(button.x+button.h/2, button.y+button.h/2));
 
 		button.x += button.h;
-		ui_do_label(&button, gameclient.clients[i].name, 18.0f, -1);
+		UI()->DoLabel(&button, gameclient.clients[i].name, 18.0f, -1);
 	}
 }
 
-void MENUS::render_servercontrol(RECT main_view)
+void MENUS::render_servercontrol(CUIRect main_view)
 {
 	static int control_page = 0;
 	
 	// render background
-	RECT temp, tabbar;
-	ui_vsplit_r(&main_view, 120.0f, &main_view, &tabbar);
-	ui_draw_rect(&main_view, color_tabbar_active, CORNER_B|CORNER_TL, 10.0f);
-	ui_hsplit_t(&tabbar, 50.0f, &temp, &tabbar);
-	ui_draw_rect(&temp, color_tabbar_active, CORNER_R, 10.0f);
+	CUIRect temp, tabbar;
+	main_view.VSplitRight(120.0f, &main_view, &tabbar);
+	RenderTools()->DrawUIRect(&main_view, color_tabbar_active, CUI::CORNER_B|CUI::CORNER_TL, 10.0f);
+	tabbar.HSplitTop(50.0f, &temp, &tabbar);
+	RenderTools()->DrawUIRect(&temp, color_tabbar_active, CUI::CORNER_R, 10.0f);
 	
-	ui_hsplit_t(&main_view, 10.0f, 0, &main_view);
+	main_view.HSplitTop(10.0f, 0, &main_view);
 	
-	RECT button;
+	CUIRect button;
 	
 	const char *tabs[] = {
 		localize("Settings"),
@@ -347,9 +347,9 @@ void MENUS::render_servercontrol(RECT main_view)
 	
 	for(int i = 0; i < num_tabs; i++)
 	{
-		ui_hsplit_t(&tabbar, 10, &button, &tabbar);
-		ui_hsplit_t(&tabbar, 26, &button, &tabbar);
-		if(ui_do_button(tabs[i], tabs[i], control_page == i, &button, ui_draw_settings_tab_button, 0))
+		tabbar.HSplitTop(10, &button, &tabbar);
+		tabbar.HSplitTop(26, &button, &tabbar);
+		if(DoButton_SettingsTab(tabs[i], tabs[i], control_page == i, &button))
 		{
 			control_page = i;
 			callvote_selectedplayer = -1;
@@ -357,10 +357,10 @@ void MENUS::render_servercontrol(RECT main_view)
 		}
 	}
 		
-	ui_margin(&main_view, 10.0f, &main_view);
-	RECT bottom;
-	ui_hsplit_b(&main_view, button_height + 5*2, &main_view, &bottom);
-	ui_hmargin(&bottom, 5.0f, &bottom);
+	main_view.Margin(10.0f, &main_view);
+	CUIRect bottom;
+	main_view.HSplitBottom(button_height + 5*2, &main_view, &bottom);
+	bottom.HMargin(5.0f, &bottom);
 	
 	// render page		
 	if(control_page == 0)
@@ -370,11 +370,11 @@ void MENUS::render_servercontrol(RECT main_view)
 		
 
 	{
-		RECT button;
-		ui_vsplit_r(&bottom, 120.0f, &bottom, &button);
+		CUIRect button;
+		bottom.VSplitRight(120.0f, &bottom, &button);
 		
 		static int callvote_button = 0;
-		if(ui_do_button(&callvote_button, localize("Call vote"), 0, &button, ui_draw_menu_button, 0))
+		if(DoButton_Menu(&callvote_button, localize("Call vote"), 0, &button))
 		{
 			if(control_page == 0)
 			{

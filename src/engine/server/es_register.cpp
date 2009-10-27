@@ -6,7 +6,7 @@
 
 #include <mastersrv/mastersrv.h>
 
-extern NETSERVER *net;
+extern CNetServer *m_pNetServer;
 
 enum
 {
@@ -29,48 +29,48 @@ static void register_new_state(int state)
 	register_state_start = time_get();
 }
 
-static void register_send_fwcheckresponse(NETADDR *addr)
+static void register_send_fwcheckresponse(NETADDR *pAddr)
 {
-	NETCHUNK packet;
-	packet.client_id = -1;
-	packet.address = *addr;
-	packet.flags = NETSENDFLAG_CONNLESS;
-	packet.data_size = sizeof(SERVERBROWSE_FWRESPONSE);
-	packet.data = SERVERBROWSE_FWRESPONSE;
-	netserver_send(net, &packet);
+	CNetChunk Packet;
+	Packet.m_ClientID = -1;
+	Packet.m_Address = *pAddr;
+	Packet.m_Flags = NETSENDFLAG_CONNLESS;
+	Packet.m_DataSize = sizeof(SERVERBROWSE_FWRESPONSE);
+	Packet.m_pData = SERVERBROWSE_FWRESPONSE;
+	m_pNetServer->Send(&Packet);
 }
 	
 static void register_send_heartbeat(NETADDR addr)
 {
 	static unsigned char data[sizeof(SERVERBROWSE_HEARTBEAT) + 2];
 	unsigned short port = config.sv_port;
-	NETCHUNK packet;
+	CNetChunk Packet;
 	
 	mem_copy(data, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT));
 	
-	packet.client_id = -1;
-	packet.address = addr;
-	packet.flags = NETSENDFLAG_CONNLESS;
-	packet.data_size = sizeof(SERVERBROWSE_HEARTBEAT) + 2;
-	packet.data = &data;
+	Packet.m_ClientID = -1;
+	Packet.m_Address = addr;
+	Packet.m_Flags = NETSENDFLAG_CONNLESS;
+	Packet.m_DataSize = sizeof(SERVERBROWSE_HEARTBEAT) + 2;
+	Packet.m_pData = &data;
 
 	/* supply the set port that the master can use if it has problems */	
 	if(config.sv_external_port)
 		port = config.sv_external_port;
 	data[sizeof(SERVERBROWSE_HEARTBEAT)] = port >> 8;
 	data[sizeof(SERVERBROWSE_HEARTBEAT)+1] = port&0xff;
-	netserver_send(net, &packet);
+	m_pNetServer->Send(&Packet);
 }
 
-static void register_send_count_request(NETADDR addr)
+static void register_send_count_request(NETADDR Addr)
 {
-	NETCHUNK packet;
-	packet.client_id = -1;
-	packet.address = addr;
-	packet.flags = NETSENDFLAG_CONNLESS;
-	packet.data_size = sizeof(SERVERBROWSE_GETCOUNT);
-	packet.data = SERVERBROWSE_GETCOUNT;
-	netserver_send(net, &packet);
+	CNetChunk Packet;
+	Packet.m_ClientID = -1;
+	Packet.m_Address = Addr;
+	Packet.m_Flags = NETSENDFLAG_CONNLESS;
+	Packet.m_DataSize = sizeof(SERVERBROWSE_GETCOUNT);
+	Packet.m_pData = SERVERBROWSE_GETCOUNT;
+	m_pNetServer->Send(&Packet);
 }
 
 typedef struct
@@ -221,50 +221,49 @@ void register_update()
 	}
 }
 
-static void register_got_count(NETCHUNK *p)
+static void register_got_count(CNetChunk *pChunk)
 {
-	unsigned char *data = (unsigned char *)p->data;
-	int count = (data[sizeof(SERVERBROWSE_COUNT)]<<8) | data[sizeof(SERVERBROWSE_COUNT)+1];
-	int i;
+	unsigned char *pData = (unsigned char *)pChunk->m_pData;
+	int Count = (pData[sizeof(SERVERBROWSE_COUNT)]<<8) | pData[sizeof(SERVERBROWSE_COUNT)+1];
 
-	for(i = 0; i < MAX_MASTERSERVERS; i++)
+	for(int i = 0; i < MAX_MASTERSERVERS; i++)
 	{
-		if(net_addr_comp(&masterserver_info[i].addr, &p->address) == 0)
+		if(net_addr_comp(&masterserver_info[i].addr, &pChunk->m_Address) == 0)
 		{
-			masterserver_info[i].count = count;
+			masterserver_info[i].count = Count;
 			break;
 		}
 	}
 }
 
-int register_process_packet(NETCHUNK *packet)
+int register_process_packet(CNetChunk *pPacket)
 {
-	if(packet->data_size == sizeof(SERVERBROWSE_FWCHECK) &&
-		memcmp(packet->data, SERVERBROWSE_FWCHECK, sizeof(SERVERBROWSE_FWCHECK)) == 0)
+	if(pPacket->m_DataSize == sizeof(SERVERBROWSE_FWCHECK) &&
+		memcmp(pPacket->m_pData, SERVERBROWSE_FWCHECK, sizeof(SERVERBROWSE_FWCHECK)) == 0)
 	{
-		register_send_fwcheckresponse(&packet->address);
+		register_send_fwcheckresponse(&pPacket->m_Address);
 		return 1;
 	}
-	else if(packet->data_size == sizeof(SERVERBROWSE_FWOK) &&
-		memcmp(packet->data, SERVERBROWSE_FWOK, sizeof(SERVERBROWSE_FWOK)) == 0)
+	else if(pPacket->m_DataSize == sizeof(SERVERBROWSE_FWOK) &&
+		memcmp(pPacket->m_pData, SERVERBROWSE_FWOK, sizeof(SERVERBROWSE_FWOK)) == 0)
 	{
 		if(register_first)
 			dbg_msg("register", "no firewall/nat problems detected");
 		register_new_state(REGISTERSTATE_REGISTERED);
 		return 1;
 	}
-	else if(packet->data_size == sizeof(SERVERBROWSE_FWERROR) &&
-		memcmp(packet->data, SERVERBROWSE_FWERROR, sizeof(SERVERBROWSE_FWERROR)) == 0)
+	else if(pPacket->m_DataSize == sizeof(SERVERBROWSE_FWERROR) &&
+		memcmp(pPacket->m_pData, SERVERBROWSE_FWERROR, sizeof(SERVERBROWSE_FWERROR)) == 0)
 	{
 		dbg_msg("register", "ERROR: the master server reports that clients can not connect to this server.");
 		dbg_msg("register", "ERROR: configure your firewall/nat to let through udp on port %d.", config.sv_port);
 		register_new_state(REGISTERSTATE_ERROR);
 		return 1;
 	}
-	else if(packet->data_size == sizeof(SERVERBROWSE_COUNT)+2 &&
-		memcmp(packet->data, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT)) == 0)
+	else if(pPacket->m_DataSize == sizeof(SERVERBROWSE_COUNT)+2 &&
+		memcmp(pPacket->m_pData, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT)) == 0)
 	{
-		register_got_count(packet);
+		register_got_count(pPacket);
 		return 1;
 	}
 

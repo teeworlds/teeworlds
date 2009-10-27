@@ -5,6 +5,7 @@
 #include <base/system.h>
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
+#include <engine/client/graphics.h>
 
 static struct
 {
@@ -20,6 +21,9 @@ static int input_grabbed = 0;
 static unsigned int last_release = 0;
 static unsigned int release_delta = -1;
 
+// TODO: Refactor: Remove this
+extern IEngineGraphics *Graphics();
+
 void inp_mouse_relative(int *x, int *y)
 {
 	int nx = 0, ny = 0;
@@ -32,8 +36,8 @@ void inp_mouse_relative(int *x, int *y)
 		if(input_grabbed)
 		{
 			SDL_GetMouseState(&nx,&ny);
-			SDL_WarpMouse(gfx_screenwidth()/2,gfx_screenheight()/2);
-			nx -= gfx_screenwidth()/2; ny -= gfx_screenheight()/2;
+			SDL_WarpMouse(Graphics()->ScreenWidth()/2,Graphics()->ScreenHeight()/2);
+			nx -= Graphics()->ScreenWidth()/2; ny -= Graphics()->ScreenHeight()/2;
 		}
 	}
 
@@ -138,10 +142,10 @@ void inp_update()
 {
 	int i;
 	
-	if(input_grabbed && !gfx_window_active())
+	if(input_grabbed && !Graphics()->WindowActive())
 		inp_mouse_mode_absolute();
 
-	/*if(!input_grabbed && gfx_window_active())
+	/*if(!input_grabbed && Graphics()->WindowActive())
 		inp_mouse_mode_relative();*/
 	
 	/* clear and begin count on the other one */

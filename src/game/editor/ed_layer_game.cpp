@@ -12,7 +12,7 @@ LAYER_GAME::~LAYER_GAME()
 {
 }
 
-int LAYER_GAME::render_properties(RECT *toolbox)
+int LAYER_GAME::render_properties(CUIRect *toolbox)
 {
 	int r = LAYER_TILES::render_properties(toolbox);
 	image = -1;

@@ -4,89 +4,115 @@
 
 #include <base/system.h>
 
-/* SNAPSHOT */
+/* CSnapshot */
 
-enum
+
+
+class CSnapshotItem
 {
-	MAX_SNAPSHOT_SIZE=64*1024
+public:
+	int m_TypeAndID;
+	
+	int *Data() { return (int *)(this+1); }
+	int Type() { return m_TypeAndID>>16; }
+	int ID() { return m_TypeAndID&0xffff; }
+	int Key() { return m_TypeAndID; }
 };
 
-typedef struct
+class CSnapshotDelta
 {
-	int type_and_id;
-} SNAPSHOT_ITEM;
-
-typedef struct 
-{
-	int data_size;
-	int num_items;
-} SNAPSHOT;
-
-int *snapitem_data(SNAPSHOT_ITEM *item);
-int snapitem_type(SNAPSHOT_ITEM *item);
-int snapitem_id(SNAPSHOT_ITEM *item);
-int snapitem_key(SNAPSHOT_ITEM *item);
-
-int *snapshot_offsets(SNAPSHOT *snap);
-char *snapshot_datastart(SNAPSHOT *snap);
-
-SNAPSHOT_ITEM *snapshot_get_item(SNAPSHOT *snap, int index);
-int snapshot_get_item_datasize(SNAPSHOT *snap, int index);
-int snapshot_get_item_index(SNAPSHOT *snap, int key);
-
-void *snapshot_empty_delta();
-int snapshot_crc(SNAPSHOT *snap);
-void snapshot_debug_dump(SNAPSHOT *snap);
-int snapshot_create_delta(SNAPSHOT *from, SNAPSHOT *to, void *data);
-int snapshot_unpack_delta(SNAPSHOT *from, SNAPSHOT *to, void *data, int data_size);
-
-/* SNAPSTORAGE */
-
-typedef struct SNAPSTORAGE_HOLDER_t
-{
-	struct SNAPSTORAGE_HOLDER_t *prev;
-	struct SNAPSTORAGE_HOLDER_t *next;
-	
-	int64 tagtime;
-	int tick;
-	
-	int snap_size;
-	SNAPSHOT *snap;
-	SNAPSHOT *alt_snap;
-} SNAPSTORAGE_HOLDER;
- 
-typedef struct SNAPSTORAGE_t
-{
-	SNAPSTORAGE_HOLDER *first;
-	SNAPSTORAGE_HOLDER *last;
-} SNAPSTORAGE;
-
-void snapstorage_init(SNAPSTORAGE *ss);
-void snapstorage_purge_all(SNAPSTORAGE *ss);
-void snapstorage_purge_until(SNAPSTORAGE *ss, int tick);
-void snapstorage_add(SNAPSTORAGE *ss, int tick, int64 tagtime, int data_size, void *data, int create_alt);
-int snapstorage_get(SNAPSTORAGE *ss, int tick, int64 *tagtime, SNAPSHOT **data, SNAPSHOT **alt_data);
-
-/* SNAPBUILD */
-
-enum
-{
-	SNAPBUILD_MAX_ITEMS = 1024*2
+public:
+	int m_NumDeletedItems;
+	int m_NumUpdateItems;
+	int m_NumTempItems; /* needed? */
+	int m_pData[1];
 };
 
-typedef struct SNAPBUILD
+// TODO: hide a lot of these members
+class CSnapshot
 {
-	char data[MAX_SNAPSHOT_SIZE];
-	int data_size;
+public:
+	enum
+	{
+		MAX_SIZE=64*1024
+	};
 
-	int offsets[SNAPBUILD_MAX_ITEMS];
-	int num_items;
-} SNAPBUILD;
+	int m_DataSize;
+	int m_NumItems;
+	
+	int *Offsets() const { return (int *)(this+1); }
+	char *DataStart() const { return (char*)(Offsets()+m_NumItems); }
+	CSnapshotItem *GetItem(int Index);
+	int GetItemSize(int Index);
+	int GetItemIndex(int Key);
 
-void snapbuild_init(SNAPBUILD *sb);
-SNAPSHOT_ITEM *snapbuild_get_item(SNAPBUILD *sb, int index);
-int *snapbuild_get_item_data(SNAPBUILD *sb, int key);
-int snapbuild_finish(SNAPBUILD *sb, void *snapdata);
-void *snapbuild_new_item(SNAPBUILD *sb, int type, int id, int size);
+	int Crc();
+	void DebugDump();
+
+	// TODO: move these
+	int GetItemIndexHashed(int Key);
+	int GenerateHash();
+	
+	//
+	static CSnapshotDelta *EmptyDelta();
+	static int CreateDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pData);
+	static int UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pData, int DataSize);
+};
+
+/* CSnapshotStorage */
+
+
+class CSnapshotStorage
+{
+public:
+	class CHolder
+	{
+	public:
+		CHolder *m_pPrev;
+		CHolder *m_pNext;
+		
+		int64 m_Tagtime;
+		int m_Tick;
+		
+		int m_SnapSize;
+		CSnapshot *m_pSnap;
+		CSnapshot *m_pAltSnap;
+	};
+	 
+
+	CHolder *m_pFirst;
+	CHolder *m_pLast;
+
+	void Init();
+	void PurgeAll();
+	void PurgeUntil(int Tick);
+	void Add(int Tick, int64 Tagtime, int DataSize, void *pData, int CreateAlt);
+	int Get(int Tick, int64 *Tagtime, CSnapshot **pData, CSnapshot **ppAltData);
+};
+
+class CSnapshotBuilder
+{
+	enum
+	{
+		MAX_ITEMS = 1024*2
+	};
+
+	char m_aData[CSnapshot::MAX_SIZE];
+	int m_DataSize;
+
+	int m_aOffsets[MAX_ITEMS];
+	int m_NumItems;
+
+public:
+	void Init();
+	
+	void *NewItem(int Type, int ID, int Size);
+	
+	CSnapshotItem *GetItem(int Index);
+	int *GetItemData(int Key);
+	
+	int Finish(void *Snapdata);
+};
+
 
 #endif /* ENGINE_SNAPSHOT_H */

@@ -1,6 +1,7 @@
 #include <memory.h> // memcmp
 
 #include <engine/e_client_interface.h>
+#include <engine/client/graphics.h>
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
 
@@ -35,11 +36,11 @@ void HUD::render_goals()
 	
 	int gameflags = gameclient.snap.gameobj->flags;
 	
-	float whole = 300*gfx_screenaspect();
+	float whole = 300*Graphics()->ScreenAspect();
 	float half = whole/2.0f;
 
 
-	gfx_mapscreen(0,0,300*gfx_screenaspect(),300);
+	Graphics()->MapScreen(0,0,300*Graphics()->ScreenAspect(),300);
 	if(!gameclient.snap.gameobj->sudden_death)
 	{
 		char buf[32];
@@ -71,15 +72,15 @@ void HUD::render_goals()
 	{
 		for(int t = 0; t < 2; t++)
 		{
-			gfx_blend_normal();
-			gfx_texture_set(-1);
-			gfx_quads_begin();
+			Graphics()->BlendNormal();
+			Graphics()->TextureSet(-1);
+			Graphics()->QuadsBegin();
 			if(t == 0)
-				gfx_setcolor(1,0,0,0.25f);
+				Graphics()->SetColor(1,0,0,0.25f);
 			else
-				gfx_setcolor(0,0,1,0.25f);
-			draw_round_rect(whole-40, 300-40-15+t*20, 50, 18, 5.0f);
-			gfx_quads_end();
+				Graphics()->SetColor(0,0,1,0.25f);
+			RenderTools()->draw_round_rect(whole-40, 300-40-15+t*20, 50, 18, 5.0f);
+			Graphics()->QuadsEnd();
 
 			char buf[32];
 			str_format(buf, sizeof(buf), "%d", t?gameclient.snap.gameobj->teamscore_blue:gameclient.snap.gameobj->teamscore_red);
@@ -92,16 +93,16 @@ void HUD::render_goals()
 				{
 					if(gameclient.snap.flags[t]->carried_by == -2 || (gameclient.snap.flags[t]->carried_by == -1 && ((client_tick()/10)&1)))
 					{
-						gfx_blend_normal();
-						gfx_texture_set(data->images[IMAGE_GAME].id);
-						gfx_quads_begin();
+						Graphics()->BlendNormal();
+						Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+						Graphics()->QuadsBegin();
 
-						if(t == 0) select_sprite(SPRITE_FLAG_RED);
-						else select_sprite(SPRITE_FLAG_BLUE);
+						if(t == 0) RenderTools()->select_sprite(SPRITE_FLAG_RED);
+						else RenderTools()->select_sprite(SPRITE_FLAG_BLUE);
 						
 						float size = 16;					
-						gfx_quads_drawTL(whole-40+5, 300-40-15+t*20+1, size/2, size);
-						gfx_quads_end();
+						Graphics()->QuadsDrawTL(whole-40+5, 300-40-15+t*20+1, size/2, size);
+						Graphics()->QuadsEnd();
 					}
 					else if(gameclient.snap.flags[t]->carried_by >= 0)
 					{
@@ -112,7 +113,7 @@ void HUD::render_goals()
 						TEE_RENDER_INFO info = gameclient.clients[id].render_info;
 						info.size = 18.0f;
 						
-						render_tee(ANIMSTATE::get_idle(), &info, EMOTE_NORMAL, vec2(1,0),
+						RenderTools()->RenderTee(ANIMSTATE::get_idle(), &info, EMOTE_NORMAL, vec2(1,0),
 							vec2(whole-40+10, 300-40-15+9+t*20+1));
 					}
 				}
@@ -127,7 +128,7 @@ void HUD::render_goals()
 	{
 		char buf[256];
 		float w = gfx_text_width(0, 24, "Warmup", -1);
-		gfx_text(0, 150*gfx_screenaspect()+-w/2, 50, 24, "Warmup", -1);
+		gfx_text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, 24, "Warmup", -1);
 
 		int seconds = gameclient.snap.gameobj->warmup/SERVER_TICK_SPEED;
 		if(seconds < 5)
@@ -135,16 +136,16 @@ void HUD::render_goals()
 		else
 			str_format(buf, sizeof(buf), "%d", seconds);
 		w = gfx_text_width(0, 24, buf, -1);
-		gfx_text(0, 150*gfx_screenaspect()+-w/2, 75, 24, buf, -1);
+		gfx_text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, 24, buf, -1);
 	}	
 }
 
-static void mapscreen_to_group(float center_x, float center_y, MAPITEM_GROUP *group)
+void HUD::mapscreen_to_group(float center_x, float center_y, MAPITEM_GROUP *group)
 {
 	float points[4];
-	mapscreen_to_world(center_x, center_y, group->parallax_x/100.0f, group->parallax_y/100.0f,
-		group->offset_x, group->offset_y, gfx_screenaspect(), 1.0f, points);
-	gfx_mapscreen(points[0], points[1], points[2], points[3]);
+	RenderTools()->mapscreen_to_world(center_x, center_y, group->parallax_x/100.0f, group->parallax_y/100.0f,
+		group->offset_x, group->offset_y, Graphics()->ScreenAspect(), 1.0f, points);
+	Graphics()->MapScreen(points[0], points[1], points[2], points[3]);
 }
 
 void HUD::render_fps()
@@ -163,7 +164,7 @@ void HUD::render_connectionwarning()
 	{
 		const char *text = "Connection Problems...";
 		float w = gfx_text_width(0, 24, text, -1);
-		gfx_text(0, 150*gfx_screenaspect()-w/2, 50, 24, text, -1);
+		gfx_text(0, 150*Graphics()->ScreenAspect()-w/2, 50, 24, text, -1);
 	}
 }
 
@@ -192,11 +193,11 @@ void HUD::render_voting()
 	if(!gameclient.voting->is_voting())
 		return;
 	
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_setcolor(0,0,0,0.40f);
-	draw_round_rect(-10, 60-2, 100+10+4+5, 28, 5.0f);
-	gfx_quads_end();
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(0,0,0,0.40f);
+	RenderTools()->draw_round_rect(-10, 60-2, 100+10+4+5, 28, 5.0f);
+	Graphics()->QuadsEnd();
 
 	gfx_text_color(1,1,1,1);
 
@@ -208,17 +209,17 @@ void HUD::render_voting()
 	gfx_text(0x0, 5+100-tw, 60, 6, buf, -1);
 	
 
-	RECT base = {5, 70, 100, 4};
+	CUIRect base = {5, 70, 100, 4};
 	gameclient.voting->render_bars(base, false);
 	
 	const char *yes_key = gameclient.binds->get_key("vote yes");
 	const char *no_key = gameclient.binds->get_key("vote no");
 	str_format(buf, sizeof(buf), "%s - Vote Yes", yes_key);
 	base.y += base.h+1;
-	ui_do_label(&base, buf, 6.0f, -1);
+	UI()->DoLabel(&base, buf, 6.0f, -1);
 
 	str_format(buf, sizeof(buf), "Vote No - %s", no_key);
-	ui_do_label(&base, buf, 6.0f, 1);
+	UI()->DoLabel(&base, buf, 6.0f, 1);
 }
 
 void HUD::render_cursor()
@@ -227,14 +228,14 @@ void HUD::render_cursor()
 		return;
 		
 	mapscreen_to_group(gameclient.camera->center.x, gameclient.camera->center.y, layers_game_group());
-	gfx_texture_set(data->images[IMAGE_GAME].id);
-	gfx_quads_begin();
+	Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+	Graphics()->QuadsBegin();
 
 	// render cursor
-	select_sprite(data->weapons.id[gameclient.snap.local_character->weapon%NUM_WEAPONS].sprite_cursor);
+	RenderTools()->select_sprite(data->weapons.id[gameclient.snap.local_character->weapon%NUM_WEAPONS].sprite_cursor);
 	float cursorsize = 64;
-	draw_sprite(gameclient.controls->target_pos.x, gameclient.controls->target_pos.y, cursorsize);
-	gfx_quads_end();
+	RenderTools()->draw_sprite(gameclient.controls->target_pos.x, gameclient.controls->target_pos.y, cursorsize);
+	Graphics()->QuadsEnd();
 }
 
 void HUD::render_healthandammo()
@@ -247,40 +248,40 @@ void HUD::render_healthandammo()
 	// render ammo count
 	// render gui stuff
 
-	gfx_texture_set(data->images[IMAGE_GAME].id);
-	gfx_mapscreen(0,0,width,300);
+	Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+	Graphics()->MapScreen(0,0,width,300);
 	
-	gfx_quads_begin();
+	Graphics()->QuadsBegin();
 	
 	// if weaponstage is active, put a "glow" around the stage ammo
-	select_sprite(data->weapons.id[gameclient.snap.local_character->weapon%NUM_WEAPONS].sprite_proj);
+	RenderTools()->select_sprite(data->weapons.id[gameclient.snap.local_character->weapon%NUM_WEAPONS].sprite_proj);
 	for (int i = 0; i < min(gameclient.snap.local_character->ammocount, 10); i++)
-		gfx_quads_drawTL(x+i*12,y+24,10,10);
+		Graphics()->QuadsDrawTL(x+i*12,y+24,10,10);
 
-	gfx_quads_end();
+	Graphics()->QuadsEnd();
 
-	gfx_quads_begin();
+	Graphics()->QuadsBegin();
 	int h = 0;
 
 	// render health
-	select_sprite(SPRITE_HEALTH_FULL);
+	RenderTools()->select_sprite(SPRITE_HEALTH_FULL);
 	for(; h < gameclient.snap.local_character->health; h++)
-		gfx_quads_drawTL(x+h*12,y,10,10);
+		Graphics()->QuadsDrawTL(x+h*12,y,10,10);
 
-	select_sprite(SPRITE_HEALTH_EMPTY);
+	RenderTools()->select_sprite(SPRITE_HEALTH_EMPTY);
 	for(; h < 10; h++)
-		gfx_quads_drawTL(x+h*12,y,10,10);
+		Graphics()->QuadsDrawTL(x+h*12,y,10,10);
 
 	// render armor meter
 	h = 0;
-	select_sprite(SPRITE_ARMOR_FULL);
+	RenderTools()->select_sprite(SPRITE_ARMOR_FULL);
 	for(; h < gameclient.snap.local_character->armor; h++)
-		gfx_quads_drawTL(x+h*12,y+12,10,10);
+		Graphics()->QuadsDrawTL(x+h*12,y+12,10,10);
 
-	select_sprite(SPRITE_ARMOR_EMPTY);
+	RenderTools()->select_sprite(SPRITE_ARMOR_EMPTY);
 	for(; h < 10; h++)
-		gfx_quads_drawTL(x+h*12,y+12,10,10);
-	gfx_quads_end();
+		Graphics()->QuadsDrawTL(x+h*12,y+12,10,10);
+	Graphics()->QuadsEnd();
 }
 
 void HUD::on_render()
@@ -288,7 +289,7 @@ void HUD::on_render()
 	if(!gameclient.snap.gameobj)
 		return;
 		
-	width = 300*gfx_screenaspect();
+	width = 300*Graphics()->ScreenAspect();
 
 	bool spectate = false;
 	if(gameclient.snap.local_info && gameclient.snap.local_info->team == -1)

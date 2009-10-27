@@ -5,6 +5,7 @@
 
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
+#include <engine/client/graphics.h>
 #include <game/generated/gc_data.hpp>
 #include <game/generated/g_protocol.hpp>
 #include <game/layers.hpp>
@@ -13,13 +14,15 @@
 
 static float sprite_w_scale;
 static float sprite_h_scale;
+
+
 /*
 static void layershot_begin()
 {
 	if(!config.cl_layershot)
 		return;
 
-	gfx_clear(0,0,0);
+	Graphics()->Clear(0,0,0);
 }
 
 static void layershot_end()
@@ -33,7 +36,7 @@ static void layershot_end()
 	config.cl_layershot++;
 }*/
 
-void select_sprite(SPRITE *spr, int flags, int sx, int sy)
+void CRenderTools::select_sprite(SPRITE *spr, int flags, int sx, int sy)
 {
 	int x = spr->x+sx;
 	int y = spr->y+sy;
@@ -66,22 +69,22 @@ void select_sprite(SPRITE *spr, int flags, int sx, int sy)
 		x2 = temp;
 	}
 	
-	gfx_quads_setsubset(x1, y1, x2, y2);
+	Graphics()->QuadsSetSubset(x1, y1, x2, y2);
 }
 
-void select_sprite(int id, int flags, int sx, int sy)
+void CRenderTools::select_sprite(int id, int flags, int sx, int sy)
 {
 	if(id < 0 || id > data->num_sprites)
 		return;
 	select_sprite(&data->sprites[id], flags, sx, sy);
 }
 
-void draw_sprite(float x, float y, float size)
+void CRenderTools::draw_sprite(float x, float y, float size)
 {
-	gfx_quads_draw(x, y, size*sprite_w_scale, size*sprite_h_scale);
+	Graphics()->QuadsDraw(x, y, size*sprite_w_scale, size*sprite_h_scale);
 }
 
-void draw_round_rect_ext(float x, float y, float w, float h, float r, int corners)
+void CRenderTools::draw_round_rect_ext(float x, float y, float w, float h, float r, int corners)
 {
 	int num = 8;
 	for(int i = 0; i < num; i+=2)
@@ -97,69 +100,73 @@ void draw_round_rect_ext(float x, float y, float w, float h, float r, int corner
 		float sa3 = sinf(a3);
 
 		if(corners&1) // TL
-		gfx_quads_draw_freeform(
+		Graphics()->QuadsDrawFreeform(
 			x+r, y+r,
 			x+(1-ca1)*r, y+(1-sa1)*r,
 			x+(1-ca3)*r, y+(1-sa3)*r,
 			x+(1-ca2)*r, y+(1-sa2)*r);
 
 		if(corners&2) // TR
-		gfx_quads_draw_freeform(
+		Graphics()->QuadsDrawFreeform(
 			x+w-r, y+r,
 			x+w-r+ca1*r, y+(1-sa1)*r,
 			x+w-r+ca3*r, y+(1-sa3)*r,
 			x+w-r+ca2*r, y+(1-sa2)*r);
 
 		if(corners&4) // BL
-		gfx_quads_draw_freeform(
+		Graphics()->QuadsDrawFreeform(
 			x+r, y+h-r,
 			x+(1-ca1)*r, y+h-r+sa1*r,
 			x+(1-ca3)*r, y+h-r+sa3*r,
 			x+(1-ca2)*r, y+h-r+sa2*r);
 
 		if(corners&8) // BR
-		gfx_quads_draw_freeform(
+		Graphics()->QuadsDrawFreeform(
 			x+w-r, y+h-r,
 			x+w-r+ca1*r, y+h-r+sa1*r,
 			x+w-r+ca3*r, y+h-r+sa3*r,
 			x+w-r+ca2*r, y+h-r+sa2*r);
 	}
 
-	gfx_quads_drawTL(x+r, y+r, w-r*2, h-r*2); // center
-	gfx_quads_drawTL(x+r, y, w-r*2, r); // top
-	gfx_quads_drawTL(x+r, y+h-r, w-r*2, r); // bottom
-	gfx_quads_drawTL(x, y+r, r, h-r*2); // left
-	gfx_quads_drawTL(x+w-r, y+r, r, h-r*2); // right
+	Graphics()->QuadsDrawTL(x+r, y+r, w-r*2, h-r*2); // center
+	Graphics()->QuadsDrawTL(x+r, y, w-r*2, r); // top
+	Graphics()->QuadsDrawTL(x+r, y+h-r, w-r*2, r); // bottom
+	Graphics()->QuadsDrawTL(x, y+r, r, h-r*2); // left
+	Graphics()->QuadsDrawTL(x+w-r, y+r, r, h-r*2); // right
 	
-	if(!(corners&1)) gfx_quads_drawTL(x, y, r, r); // TL
-	if(!(corners&2)) gfx_quads_drawTL(x+w, y, -r, r); // TR
-	if(!(corners&4)) gfx_quads_drawTL(x, y+h, r, -r); // BL
-	if(!(corners&8)) gfx_quads_drawTL(x+w, y+h, -r, -r); // BR
+	if(!(corners&1)) Graphics()->QuadsDrawTL(x, y, r, r); // TL
+	if(!(corners&2)) Graphics()->QuadsDrawTL(x+w, y, -r, r); // TR
+	if(!(corners&4)) Graphics()->QuadsDrawTL(x, y+h, r, -r); // BL
+	if(!(corners&8)) Graphics()->QuadsDrawTL(x+w, y+h, -r, -r); // BR
 }
 
-void draw_round_rect(float x, float y, float w, float h, float r)
+void CRenderTools::draw_round_rect(float x, float y, float w, float h, float r)
 {
 	draw_round_rect_ext(x,y,w,h,r,0xf);
 }
 
-void ui_draw_rect(const RECT *r, vec4 color, int corners, float rounding)
+void CRenderTools::DrawUIRect(const CUIRect *r, vec4 color, int corners, float rounding)
 {
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_setcolor(color.r, color.g, color.b, color.a);
-	draw_round_rect_ext(r->x,r->y,r->w,r->h,rounding*ui_scale(), corners);
-	gfx_quads_end();
+	Graphics()->TextureSet(-1);
+	
+	// TODO: FIX US
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(color.r, color.g, color.b, color.a);
+	draw_round_rect_ext(r->x,r->y,r->w,r->h,rounding*UI()->Scale(), corners);
+	Graphics()->QuadsEnd();
 }
 
-void render_tee(ANIMSTATE *anim, TEE_RENDER_INFO *info, int emote, vec2 dir, vec2 pos)
+void CRenderTools::RenderTee(ANIMSTATE *anim, TEE_RENDER_INFO *info, int emote, vec2 dir, vec2 pos)
 {
 	vec2 direction = dir;
 	vec2 position = pos;
 
-	//gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
-	gfx_texture_set(info->texture);
-	gfx_quads_begin();
-	//gfx_quads_draw(pos.x, pos.y-128, 128, 128);
+	//Graphics()->TextureSet(data->images[IMAGE_CHAR_DEFAULT].id);
+	Graphics()->TextureSet(info->texture);
+	
+	// TODO: FIX ME
+	Graphics()->QuadsBegin();
+	//Graphics()->QuadsDraw(pos.x, pos.y-128, 128, 128);
 
 	// first pass we draw the outline
 	// second pass we draw the filling
@@ -173,13 +180,13 @@ void render_tee(ANIMSTATE *anim, TEE_RENDER_INFO *info, int emote, vec2 dir, vec
 			float basesize = info->size;
 			if(f == 1)
 			{
-				gfx_quads_setrotation(anim->body.angle*pi*2);
+				Graphics()->QuadsSetRotation(anim->body.angle*pi*2);
 
 				// draw body
-				gfx_setcolor(info->color_body.r, info->color_body.g, info->color_body.b, 1.0f);
+				Graphics()->SetColor(info->color_body.r, info->color_body.g, info->color_body.b, 1.0f);
 				vec2 body_pos = position + vec2(anim->body.x, anim->body.y)*animscale;
 				select_sprite(outline?SPRITE_TEE_BODY_OUTLINE:SPRITE_TEE_BODY, 0, 0, 0);
-				gfx_quads_draw(body_pos.x, body_pos.y, basesize, basesize);
+				Graphics()->QuadsDraw(body_pos.x, body_pos.y, basesize, basesize);
 
 				// draw eyes
 				if(p == 1)
@@ -207,8 +214,8 @@ void render_tee(ANIMSTATE *anim, TEE_RENDER_INFO *info, int emote, vec2 dir, vec
 					float h = emote == EMOTE_BLINK ? basesize*0.15f : eyescale;
 					float eyeseparation = (0.075f - 0.010f*fabs(direction.x))*basesize;
 					vec2 offset = vec2(direction.x*0.125f, -0.05f+direction.y*0.10f)*basesize;
-					gfx_quads_draw(body_pos.x-eyeseparation+offset.x, body_pos.y+offset.y, eyescale, h);
-					gfx_quads_draw(body_pos.x+eyeseparation+offset.x, body_pos.y+offset.y, -eyescale, h);
+					Graphics()->QuadsDraw(body_pos.x-eyeseparation+offset.x, body_pos.y+offset.y, eyescale, h);
+					Graphics()->QuadsDraw(body_pos.x+eyeseparation+offset.x, body_pos.y+offset.y, -eyescale, h);
 				}
 			}
 
@@ -218,7 +225,7 @@ void render_tee(ANIMSTATE *anim, TEE_RENDER_INFO *info, int emote, vec2 dir, vec
 			float w = basesize;
 			float h = basesize/2;
 
-			gfx_quads_setrotation(foot->angle*pi*2);
+			Graphics()->QuadsSetRotation(foot->angle*pi*2);
 			
 			bool indicate = !info->got_airjump && config.cl_airjumpindicator;
 			float cs = 1.0f; // color scale
@@ -232,12 +239,12 @@ void render_tee(ANIMSTATE *anim, TEE_RENDER_INFO *info, int emote, vec2 dir, vec
 					cs = 0.5f;
 			}
 				
-			gfx_setcolor(info->color_feet.r*cs, info->color_feet.g*cs, info->color_feet.b*cs, 1.0f);
-			gfx_quads_draw(position.x+foot->x*animscale, position.y+foot->y*animscale, w, h);
+			Graphics()->SetColor(info->color_feet.r*cs, info->color_feet.g*cs, info->color_feet.b*cs, 1.0f);
+			Graphics()->QuadsDraw(position.x+foot->x*animscale, position.y+foot->y*animscale, w, h);
 		}
 	}
 
-	gfx_quads_end();
+	Graphics()->QuadsEnd();
 	
 	
 }
@@ -262,7 +269,7 @@ static void calc_screen_params(float amount, float wmax, float hmax, float aspec
 	}
 }
 
-void mapscreen_to_world(float center_x, float center_y, float parallax_x, float parallax_y,
+void CRenderTools::mapscreen_to_world(float center_x, float center_y, float parallax_x, float parallax_y,
 	float offset_x, float offset_y, float aspect, float zoom, float *points)
 {
 	float width, height;
@@ -277,7 +284,7 @@ void mapscreen_to_world(float center_x, float center_y, float parallax_x, float 
 	points[3] = offset_y+center_y+height/2;
 }
 
-void render_tilemap_generate_skip()
+void CRenderTools::render_tilemap_generate_skip()
 {
 	for(int g = 0; g < layers_num_groups(); g++)
 	{

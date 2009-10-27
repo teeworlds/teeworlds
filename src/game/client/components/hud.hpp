@@ -13,6 +13,8 @@ class HUD : public COMPONENT
 	void render_healthandammo();
 	void render_goals();
 	
+	
+	void mapscreen_to_group(float center_x, float center_y, struct MAPITEM_GROUP *group);
 public:
 	HUD();
 	

@@ -1,5 +1,6 @@
 #include <string.h>
 #include <engine/e_client_interface.h>
+#include <engine/client/graphics.h>
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
 #include <game/client/gameclient.hpp>
@@ -33,12 +34,12 @@ void SCOREBOARD::render_goals(float x, float y, float w)
 {
 	float h = 50.0f;
 
-	gfx_blend_normal();
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_setcolor(0,0,0,0.5f);
-	draw_round_rect(x-10.f, y-10.f, w, h, 10.0f);
-	gfx_quads_end();
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(0,0,0,0.5f);
+	RenderTools()->draw_round_rect(x-10.f, y-10.f, w, h, 10.0f);
+	Graphics()->QuadsEnd();
 
 	// render goals
 	//y = ystart+h-54;
@@ -76,12 +77,12 @@ void SCOREBOARD::render_spectators(float x, float y, float w)
 	
 	str_format(buffer, sizeof(buffer), "%s: ", localize("Spectators"));
 
-	gfx_blend_normal();
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_setcolor(0,0,0,0.5f);
-	draw_round_rect(x-10.f, y-10.f, w, h, 10.0f);
-	gfx_quads_end();
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(0,0,0,0.5f);
+	RenderTools()->draw_round_rect(x-10.f, y-10.f, w, h, 10.0f);
+	Graphics()->QuadsEnd();
 	
 	for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
 	{
@@ -109,12 +110,12 @@ void SCOREBOARD::render_scoreboard(float x, float y, float w, int team, const ch
 	//float ystart = y;
 	float h = 750.0f;
 
-	gfx_blend_normal();
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_setcolor(0,0,0,0.5f);
-	draw_round_rect(x-10.f, y-10.f, w, h, 17.0f);
-	gfx_quads_end();
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(0,0,0,0.5f);
+	RenderTools()->draw_round_rect(x-10.f, y-10.f, w, h, 17.0f);
+	Graphics()->QuadsEnd();
 
 	// render title
 	if(!title)
@@ -210,11 +211,11 @@ void SCOREBOARD::render_scoreboard(float x, float y, float w, int team, const ch
 		if(info->local)
 		{
 			// background so it's easy to find the local player
-			gfx_texture_set(-1);
-			gfx_quads_begin();
-			gfx_setcolor(1,1,1,0.25f);
-			draw_round_rect(x, y, w-20, line_height*0.95f, 17.0f);
-			gfx_quads_end();
+			Graphics()->TextureSet(-1);
+			Graphics()->QuadsBegin();
+			Graphics()->SetColor(1,1,1,0.25f);
+			RenderTools()->draw_round_rect(x, y, w-20, line_height*0.95f, 17.0f);
+			Graphics()->QuadsEnd();
 		}
 
 		str_format(buf, sizeof(buf), "%4d", info->score);
@@ -230,21 +231,21 @@ void SCOREBOARD::render_scoreboard(float x, float y, float w, int team, const ch
 		if((gameclient.snap.flags[0] && gameclient.snap.flags[0]->carried_by == info->cid) ||
 			(gameclient.snap.flags[1] && gameclient.snap.flags[1]->carried_by == info->cid))
 		{
-			gfx_blend_normal();
-			gfx_texture_set(data->images[IMAGE_GAME].id);
-			gfx_quads_begin();
+			Graphics()->BlendNormal();
+			Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+			Graphics()->QuadsBegin();
 
-			if(info->team == 0) select_sprite(SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
-			else select_sprite(SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
+			if(info->team == 0) RenderTools()->select_sprite(SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
+			else RenderTools()->select_sprite(SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
 			
 			float size = 64.0f;
-			gfx_quads_drawTL(x+55, y-15, size/2, size);
-			gfx_quads_end();
+			Graphics()->QuadsDrawTL(x+55, y-15, size/2, size);
+			Graphics()->QuadsEnd();
 		}
 		
 		TEE_RENDER_INFO teeinfo = gameclient.clients[info->cid].render_info;
 		teeinfo.size *= tee_sizemod;
-		render_tee(ANIMSTATE::get_idle(), &teeinfo, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28+tee_offset));
+		RenderTools()->RenderTee(ANIMSTATE::get_idle(), &teeinfo, EMOTE_NORMAL, vec2(1,0), vec2(x+90, y+28+tee_offset));
 
 		
 		y += line_height;
@@ -278,10 +279,10 @@ void SCOREBOARD::on_render()
 		gameclient.motd->clear();
 	
 
-	float width = 400*3.0f*gfx_screenaspect();
+	float width = 400*3.0f*Graphics()->ScreenAspect();
 	float height = 400*3.0f;
 	
-	gfx_mapscreen(0, 0, width, height);
+	Graphics()->MapScreen(0, 0, width, height);
 
 	float w = 650.0f;
 

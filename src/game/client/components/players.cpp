@@ -1,4 +1,5 @@
 #include <engine/e_client_interface.h>
+#include <engine/client/graphics.h>
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
 
@@ -40,23 +41,23 @@ void PLAYERS::render_hand(TEE_RENDER_INFO *info, vec2 center_pos, vec2 dir, floa
 	hand_pos += dirx * post_rot_offset.x;
 	hand_pos += diry * post_rot_offset.y;
 
-	//gfx_texture_set(data->images[IMAGE_CHAR_DEFAULT].id);
-	gfx_texture_set(info->texture);
-	gfx_quads_begin();
-	gfx_setcolor(info->color_body.r, info->color_body.g, info->color_body.b, info->color_body.a);
+	//Graphics()->TextureSet(data->images[IMAGE_CHAR_DEFAULT].id);
+	Graphics()->TextureSet(info->texture);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(info->color_body.r, info->color_body.g, info->color_body.b, info->color_body.a);
 
 	// two passes
 	for (int i = 0; i < 2; i++)
 	{
 		bool outline = i == 0;
 
-		select_sprite(outline?SPRITE_TEE_HAND_OUTLINE:SPRITE_TEE_HAND, 0, 0, 0);
-		gfx_quads_setrotation(angle);
-		gfx_quads_draw(hand_pos.x, hand_pos.y, 2*basesize, 2*basesize);
+		RenderTools()->select_sprite(outline?SPRITE_TEE_HAND_OUTLINE:SPRITE_TEE_HAND, 0, 0, 0);
+		Graphics()->QuadsSetRotation(angle);
+		Graphics()->QuadsDraw(hand_pos.x, hand_pos.y, 2*basesize, 2*basesize);
 	}
 
-	gfx_quads_setrotation(0);
-	gfx_quads_end();
+	Graphics()->QuadsSetRotation(0);
+	Graphics()->QuadsEnd();
 }
 
 inline float normalize_angular(float f)
@@ -237,9 +238,9 @@ void PLAYERS::render_player(
 	// draw hook
 	if (prev.hook_state>0 && player.hook_state>0)
 	{
-		gfx_texture_set(data->images[IMAGE_GAME].id);
-		gfx_quads_begin();
-		//gfx_quads_begin();
+		Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+		Graphics()->QuadsBegin();
+		//Graphics()->QuadsBegin();
 
 		vec2 pos = position;
 		vec2 hook_pos;
@@ -260,36 +261,36 @@ void PLAYERS::render_player(
 		float d = distance(pos, hook_pos);
 		vec2 dir = normalize(pos-hook_pos);
 
-		gfx_quads_setrotation(get_angle(dir)+pi);
+		Graphics()->QuadsSetRotation(get_angle(dir)+pi);
 
 		// render head
-		select_sprite(SPRITE_HOOK_HEAD);
-		gfx_quads_draw(hook_pos.x, hook_pos.y, 24,16);
+		RenderTools()->select_sprite(SPRITE_HOOK_HEAD);
+		Graphics()->QuadsDraw(hook_pos.x, hook_pos.y, 24,16);
 
 		// render chain
-		select_sprite(SPRITE_HOOK_CHAIN);
+		RenderTools()->select_sprite(SPRITE_HOOK_CHAIN);
 		int i = 0;
 		for(float f = 24; f < d && i < 1024; f += 24, i++)
 		{
 			vec2 p = hook_pos + dir*f;
-			gfx_quads_draw(p.x, p.y,24,16);
+			Graphics()->QuadsDraw(p.x, p.y,24,16);
 		}
 
-		gfx_quads_setrotation(0);
-		gfx_quads_end();
+		Graphics()->QuadsSetRotation(0);
+		Graphics()->QuadsEnd();
 
 		render_hand(&render_info, position, normalize(hook_pos-pos), -pi/2, vec2(20, 0));
 	}
 
 	// draw gun
 	{
-		gfx_texture_set(data->images[IMAGE_GAME].id);
-		gfx_quads_begin();
-		gfx_quads_setrotation(state.attach.angle*pi*2+angle);
+		Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+		Graphics()->QuadsBegin();
+		Graphics()->QuadsSetRotation(state.attach.angle*pi*2+angle);
 
 		// normal weapons
 		int iw = clamp(player.weapon, 0, NUM_WEAPONS-1);
-		select_sprite(data->weapons.id[iw].sprite_body, direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
+		RenderTools()->select_sprite(data->weapons.id[iw].sprite_body, direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
 
 		vec2 dir = direction;
 		float recoil = 0.0f;
@@ -302,14 +303,14 @@ void PLAYERS::render_player(
 			// if attack is under way, bash stuffs
 			if(direction.x < 0)
 			{
-				gfx_quads_setrotation(-pi/2-state.attach.angle*pi*2);
+				Graphics()->QuadsSetRotation(-pi/2-state.attach.angle*pi*2);
 				p.x -= data->weapons.id[iw].offsetx;
 			}
 			else
 			{
-				gfx_quads_setrotation(-pi/2+state.attach.angle*pi*2);
+				Graphics()->QuadsSetRotation(-pi/2+state.attach.angle*pi*2);
 			}
-			draw_sprite(p.x, p.y, data->weapons.id[iw].visual_size);
+			RenderTools()->draw_sprite(p.x, p.y, data->weapons.id[iw].visual_size);
 		}
 		else if (player.weapon == WEAPON_NINJA)
 		{
@@ -318,16 +319,16 @@ void PLAYERS::render_player(
 
 			if(direction.x < 0)
 			{
-				gfx_quads_setrotation(-pi/2-state.attach.angle*pi*2);
+				Graphics()->QuadsSetRotation(-pi/2-state.attach.angle*pi*2);
 				p.x -= data->weapons.id[iw].offsetx;
 				gameclient.effects->powerupshine(p+vec2(32,0), vec2(32,12));
 			}
 			else
 			{
-				gfx_quads_setrotation(-pi/2+state.attach.angle*pi*2);
+				Graphics()->QuadsSetRotation(-pi/2+state.attach.angle*pi*2);
 				gameclient.effects->powerupshine(p-vec2(32,0), vec2(32,12));
 			}
-			draw_sprite(p.x, p.y, data->weapons.id[iw].visual_size);
+			RenderTools()->draw_sprite(p.x, p.y, data->weapons.id[iw].visual_size);
 
 			// HADOKEN
 			if ((client_tick()-player.attacktick) <= (SERVER_TICK_SPEED / 6) && data->weapons.id[iw].num_sprite_muzzles)
@@ -339,14 +340,14 @@ void PLAYERS::render_player(
 					vec2 dir = vec2(player_char->x,player_char->y) - vec2(prev_char->x, prev_char->y);
 					dir = normalize(dir);
 					float hadokenangle = get_angle(dir);
-					gfx_quads_setrotation(hadokenangle);
+					Graphics()->QuadsSetRotation(hadokenangle);
 					//float offsety = -data->weapons[iw].muzzleoffsety;
-					select_sprite(data->weapons.id[iw].sprite_muzzles[itex], 0);
+					RenderTools()->select_sprite(data->weapons.id[iw].sprite_muzzles[itex], 0);
 					vec2 diry(-dir.y,dir.x);
 					p = position;
 					float offsetx = data->weapons.id[iw].muzzleoffsetx;
 					p -= dir * offsetx;
-					draw_sprite(p.x, p.y, 160.0f);
+					RenderTools()->draw_sprite(p.x, p.y, 160.0f);
 				}
 			}
 		}
@@ -359,7 +360,7 @@ void PLAYERS::render_player(
 				recoil = sinf(a*pi);
 			p = position + dir * data->weapons.id[iw].offsetx - dir*recoil*10.0f;
 			p.y += data->weapons.id[iw].offsety;
-			draw_sprite(p.x, p.y, data->weapons.id[iw].visual_size);
+			RenderTools()->draw_sprite(p.x, p.y, data->weapons.id[iw].visual_size);
 		}
 
 		if (player.weapon == WEAPON_GUN || player.weapon == WEAPON_SHOTGUN)
@@ -379,18 +380,18 @@ void PLAYERS::render_player(
 				if (alpha > 0.0f && data->weapons.id[iw].sprite_muzzles[itex])
 				{
 					float offsety = -data->weapons.id[iw].muzzleoffsety;
-					select_sprite(data->weapons.id[iw].sprite_muzzles[itex], direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
+					RenderTools()->select_sprite(data->weapons.id[iw].sprite_muzzles[itex], direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
 					if(direction.x < 0)
 						offsety = -offsety;
 
 					vec2 diry(-dir.y,dir.x);
 					vec2 muzzlepos = p + dir * data->weapons.id[iw].muzzleoffsetx + diry * offsety;
 
-					draw_sprite(muzzlepos.x, muzzlepos.y, data->weapons.id[iw].visual_size);
+					RenderTools()->draw_sprite(muzzlepos.x, muzzlepos.y, data->weapons.id[iw].visual_size);
 				}
 			}
 		}
-		gfx_quads_end();
+		Graphics()->QuadsEnd();
 
 		switch (player.weapon)
 		{
@@ -408,27 +409,27 @@ void PLAYERS::render_player(
 		TEE_RENDER_INFO ghost = render_info;
 		ghost.color_body.a = 0.5f;
 		ghost.color_feet.a = 0.5f;
-		render_tee(&state, &ghost, player.emote, direction, ghost_position); // render ghost
+		RenderTools()->RenderTee(&state, &ghost, player.emote, direction, ghost_position); // render ghost
 	}
 
 	render_info.size = 64.0f; // force some settings
 	render_info.color_body.a = 1.0f;
 	render_info.color_feet.a = 1.0f;
-	render_tee(&state, &render_info, player.emote, direction, position);
+	RenderTools()->RenderTee(&state, &render_info, player.emote, direction, position);
 
 	if(player.player_state == PLAYERSTATE_CHATTING)
 	{
-		gfx_texture_set(data->images[IMAGE_EMOTICONS].id);
-		gfx_quads_begin();
-		select_sprite(SPRITE_DOTDOT);
-		gfx_quads_draw(position.x + 24, position.y - 40, 64,64);
-		gfx_quads_end();
+		Graphics()->TextureSet(data->images[IMAGE_EMOTICONS].id);
+		Graphics()->QuadsBegin();
+		RenderTools()->select_sprite(SPRITE_DOTDOT);
+		Graphics()->QuadsDraw(position.x + 24, position.y - 40, 64,64);
+		Graphics()->QuadsEnd();
 	}
 
 	if (gameclient.clients[info.cid].emoticon_start != -1 && gameclient.clients[info.cid].emoticon_start + 2 * client_tickspeed() > client_tick())
 	{
-		gfx_texture_set(data->images[IMAGE_EMOTICONS].id);
-		gfx_quads_begin();
+		Graphics()->TextureSet(data->images[IMAGE_EMOTICONS].id);
+		Graphics()->QuadsBegin();
 
 		int since_start = client_tick() - gameclient.clients[info.cid].emoticon_start;
 		int from_end = gameclient.clients[info.cid].emoticon_start + 2 * client_tickspeed() - client_tick();
@@ -448,13 +449,13 @@ void PLAYERS::render_player(
 
 		float wiggle_angle = sin(5*wiggle);
 
-		gfx_quads_setrotation(pi/6*wiggle_angle);
+		Graphics()->QuadsSetRotation(pi/6*wiggle_angle);
 
-		gfx_setcolor(1.0f,1.0f,1.0f,a);
+		Graphics()->SetColor(1.0f,1.0f,1.0f,a);
 		// client_datas::emoticon is an offset from the first emoticon
-		select_sprite(SPRITE_OOP + gameclient.clients[info.cid].emoticon);
-		gfx_quads_draw(position.x, position.y - 23 - 32*h, 64, 64*h);
-		gfx_quads_end();
+		RenderTools()->select_sprite(SPRITE_OOP + gameclient.clients[info.cid].emoticon);
+		Graphics()->QuadsDraw(position.x, position.y - 23 - 32*h, 64, 64*h);
+		Graphics()->QuadsEnd();
 	}
 }
 

@@ -2,64 +2,93 @@
 #ifndef FILE_GAME_CLIENT_UI_H
 #define FILE_GAME_CLIENT_UI_H
 
-typedef struct 
+class CUIRect
 {
+	// TODO: Refactor: Redo UI scaling
+	float Scale() const { return 1.0f; }
+public:
     float x, y, w, h;
-} RECT;
+	
+	void HSplitTop(float Cut, CUIRect *pTop, CUIRect *pBottom) const;
+	void HSplitBottom(float Cut, CUIRect *pTop, CUIRect *pBottom) const;
+	void VSplitMid(CUIRect *pLeft, CUIRect *pRight) const;
+	void VSplitLeft(float Cut, CUIRect *pLeft, CUIRect *pRight) const;
+	void VSplitRight(float Cut, CUIRect *pLeft, CUIRect *pRight) const;
 
-enum
-{
-	CORNER_TL=1,
-	CORNER_TR=2,
-	CORNER_BL=4,
-	CORNER_BR=8,
+	void Margin(float Cut, CUIRect *pOtherRect) const;
+	void VMargin(float Cut, CUIRect *pOtherRect) const;
+	void HMargin(float Cut, CUIRect *pOtherRect) const;
 	
-	CORNER_T=CORNER_TL|CORNER_TR,
-	CORNER_B=CORNER_BL|CORNER_BR,
-	CORNER_R=CORNER_TR|CORNER_BR,
-	CORNER_L=CORNER_TL|CORNER_BL,
-	
-	CORNER_ALL=CORNER_T|CORNER_B
 };
 
-int ui_update(float mx, float my, float mwx, float mwy, int buttons);
+class CUI
+{
+	const void *m_pHotItem;
+	const void *m_pActiveItem;
+	const void *m_pLastActiveItem;
+	const void *m_pBecommingHotItem;
+	float m_MouseX, m_MouseY; /* in gui space */
+	float m_MouseWorldX, m_MouseWorldY; /* in world space */
+	unsigned m_MouseButtons;
+	unsigned m_LastMouseButtons;
+	
+	CUIRect m_Screen;
+	class IGraphics *m_pGraphics;
+	
+public:
+	// TODO: Refactor: Fill this in
+	void SetGraphics(class IGraphics *pGraphics) { m_pGraphics = pGraphics; }
+	class IGraphics *Graphics() { return m_pGraphics; }
 
-float ui_mouse_x();
-float ui_mouse_y();
-float ui_mouse_world_x();
-float ui_mouse_world_y();
-int ui_mouse_button(int index);
-int ui_mouse_button_clicked(int index);
+	CUI();
 
-void ui_set_hot_item(const void *id);
-void ui_set_active_item(const void *id);
-void ui_clear_last_active_item();
-const void *ui_hot_item();
-const void *ui_next_hot_item();
-const void *ui_active_item();
-const void *ui_last_active_item();
+	enum
+	{
+		CORNER_TL=1,
+		CORNER_TR=2,
+		CORNER_BL=4,
+		CORNER_BR=8,
+		
+		CORNER_T=CORNER_TL|CORNER_TR,
+		CORNER_B=CORNER_BL|CORNER_BR,
+		CORNER_R=CORNER_TR|CORNER_BR,
+		CORNER_L=CORNER_TL|CORNER_BL,
+		
+		CORNER_ALL=CORNER_T|CORNER_B
+	};
 
-int ui_mouse_inside(const RECT *r);
+	int Update(float mx, float my, float mwx, float mwy, int buttons);
 
-RECT *ui_screen();
-void ui_set_scale(float s);
-float ui_scale();
-void ui_clip_enable(const RECT *r);
-void ui_clip_disable();
+	float MouseX() const { return m_MouseX; }
+	float MouseY() const { return m_MouseY; }
+	float MouseWorldX() const { return m_MouseWorldX; }
+	float MouseWorldY() const { return m_MouseWorldY; }
+	int MouseButton(int Index) const { return (m_MouseButtons>>Index)&1; }
+	int MouseButtonClicked(int Index) { return MouseButton(Index) && !((m_LastMouseButtons>>Index)&1) ; }
 
-void ui_hsplit_t(const RECT *original, float cut, RECT *top, RECT *bottom);
-void ui_hsplit_b(const RECT *original, float cut, RECT *top, RECT *bottom);
-void ui_vsplit_mid(const RECT *original, RECT *left, RECT *right);
-void ui_vsplit_l(const RECT *original, float cut, RECT *left, RECT *right);
-void ui_vsplit_r(const RECT *original, float cut, RECT *left, RECT *right);
+	void SetHotItem(const void *pID) { m_pBecommingHotItem = pID; }
+	void SetActiveItem(const void *pID) { m_pActiveItem = pID; if (pID) m_pLastActiveItem = pID; }
+	void ClearLastActiveItem() { m_pLastActiveItem = 0; }
+	const void *HotItem() const { return m_pHotItem; }
+	const void *NextHotItem() const { return m_pBecommingHotItem; }
+	const void *ActiveItem() const { return m_pActiveItem; }
+	const void *LastActiveItem() const { return m_pLastActiveItem; }
 
-void ui_margin(const RECT *original, float cut, RECT *other_rect);
-void ui_vmargin(const RECT *original, float cut, RECT *other_rect);
-void ui_hmargin(const RECT *original, float cut, RECT *other_rect);
+	int MouseInside(const CUIRect *r);
 
-typedef void (*ui_draw_button_func)(const void *id, const char *text, int checked, const RECT *r, const void *extra);
-int ui_do_button(const void *id, const char *text, int checked, const RECT *r, ui_draw_button_func draw_func, const void *extra);
-void ui_do_label(const RECT *r, const char *text, float size, int align, int max_width = -1);
+	CUIRect *Screen();
+	void ClipEnable(const CUIRect *r);
+	void ClipDisable();
+	
+	// TODO: Refactor: Redo UI scaling
+	void SetScale(float s);
+	float Scale() const { return 1.0f; }
+
+	int DoButtonLogic(const void *pID, const char *pText /* TODO: Refactor: Remove */, int Checked, const CUIRect *pRect);
+	
+	// TODO: Refactor: Remove this?
+	void DoLabel(const CUIRect *r, const char *text, float size, int align, int max_width = -1);
+};
 
 
 #endif

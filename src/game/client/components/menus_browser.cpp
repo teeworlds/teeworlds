@@ -12,17 +12,17 @@
 #include <game/localization.hpp>
 #include <game/version.hpp>
 
-void MENUS::render_serverbrowser_serverlist(RECT view)
+void MENUS::render_serverbrowser_serverlist(CUIRect view)
 {
-	RECT headers;
-	RECT status;
+	CUIRect headers;
+	CUIRect status;
 	
-	ui_hsplit_t(&view, listheader_height, &headers, &view);
-	ui_hsplit_b(&view, 28.0f, &view, &status);
+	view.HSplitTop(listheader_height, &headers, &view);
+	view.HSplitBottom(28.0f, &view, &status);
 	
 	// split of the scrollbar
-	ui_draw_rect(&headers, vec4(1,1,1,0.25f), CORNER_T, 5.0f);
-	ui_vsplit_r(&headers, 20.0f, &headers, 0);
+	RenderTools()->DrawUIRect(&headers, vec4(1,1,1,0.25f), CUI::CORNER_T, 5.0f);
+	headers.VSplitRight(20.0f, &headers, 0);
 	
 	struct column
 	{
@@ -32,8 +32,8 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 		int direction;
 		float width;
 		int flags;
-		RECT rect;
-		RECT spacer;
+		CUIRect rect;
+		CUIRect spacer;
 	};
 	
 	enum
@@ -72,12 +72,12 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 	{
 		if(cols[i].direction == -1)
 		{
-			ui_vsplit_l(&headers, cols[i].width, &cols[i].rect, &headers);
+			headers.VSplitLeft(cols[i].width, &cols[i].rect, &headers);
 			
 			if(i+1 < num_cols)
 			{
 				//cols[i].flags |= SPACER;
-				ui_vsplit_l(&headers, 2, &cols[i].spacer, &headers);
+				headers.VSplitLeft(2, &cols[i].spacer, &headers);
 			}
 		}
 	}
@@ -86,8 +86,8 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 	{
 		if(cols[i].direction == 1)
 		{
-			ui_vsplit_r(&headers, cols[i].width, &headers, &cols[i].rect);
-			ui_vsplit_r(&headers, 2, &headers, &cols[i].spacer);
+			headers.VSplitRight(cols[i].width, &headers, &cols[i].rect);
+			headers.VSplitRight(2, &headers, &cols[i].spacer);
 		}
 	}
 	
@@ -100,7 +100,7 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 	// do headers
 	for(int i = 0; i < num_cols; i++)
 	{
-		if(ui_do_button(cols[i].caption, cols[i].caption, config.b_sort == cols[i].sort, &cols[i].rect, ui_draw_grid_header, 0))
+		if(DoButton_GridHeader(cols[i].caption, cols[i].caption, config.b_sort == cols[i].sort, &cols[i].rect))
 		{
 			if(cols[i].sort != -1)
 			{
@@ -113,33 +113,33 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 		}
 	}
 	
-	ui_draw_rect(&view, vec4(0,0,0,0.15f), 0, 0);
+	RenderTools()->DrawUIRect(&view, vec4(0,0,0,0.15f), 0, 0);
 	
-	RECT scroll;
-	ui_vsplit_r(&view, 15, &view, &scroll);
+	CUIRect scroll;
+	view.VSplitRight(15, &view, &scroll);
 	
 	int num_servers = client_serverbrowse_sorted_num();
 	
 	// display important messages in the middle of the screen so no
 	// users misses it
 	{
-		RECT msgbox = view;
+		CUIRect msgbox = view;
 		msgbox.y += view.h/3;
 		
 		if(active_page == PAGE_INTERNET && client_serverbrowse_refreshingmasters())
-			ui_do_label(&msgbox, localize("Refreshing master servers"), 16.0f, 0);
+			UI()->DoLabel(&msgbox, localize("Refreshing master servers"), 16.0f, 0);
 		else if(!client_serverbrowse_num())
-			ui_do_label(&msgbox, localize("No servers found"), 16.0f, 0);
+			UI()->DoLabel(&msgbox, localize("No servers found"), 16.0f, 0);
 		else if(client_serverbrowse_num() && !num_servers)
-			ui_do_label(&msgbox, localize("No servers match your filter criteria"), 16.0f, 0);
+			UI()->DoLabel(&msgbox, localize("No servers match your filter criteria"), 16.0f, 0);
 	}
 
 	int num = (int)(view.h/cols[0].rect.h);
 	static int scrollbar = 0;
 	static float scrollvalue = 0;
 	//static int selected_index = -1;
-	ui_hmargin(&scroll, 5.0f, &scroll);
-	scrollvalue = ui_do_scrollbar_v(&scrollbar, &scroll, scrollvalue);
+	scroll.HMargin(5.0f, &scroll);
+	scrollvalue = DoScrollbarV(&scrollbar, &scroll, scrollvalue);
 	
 	int scrollnum = num_servers-num+10;
 	if(scrollnum > 0)
@@ -156,13 +156,13 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 		scrollnum = 0;
 
 	// set clipping
-	ui_clip_enable(&view);
+	UI()->ClipEnable(&view);
 	
 	int start = (int)(scrollnum*scrollvalue);
 	if(start < 0)
 		start = 0;
 	
-	RECT original_view = view;
+	CUIRect original_view = view;
 	view.y -= scrollvalue*scrollnum*cols[0].rect.h;
 	
 	int new_selected = -1;
@@ -180,20 +180,20 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 	{
 		int item_index = i;
 		SERVER_INFO *item = client_serverbrowse_sorted_get(item_index);
-		RECT row;
-        RECT select_hit_box;
+		CUIRect row;
+        CUIRect select_hit_box;
 		
 		int selected = strcmp(item->address, config.ui_server_address) == 0; //selected_index==item_index;
 		
-		ui_hsplit_t(&view, 17.0f, &row, &view);
+		view.HSplitTop(17.0f, &row, &view);
 		select_hit_box = row;
 		
 		if(selected)
 		{
 			selected_index = i;
-			RECT r = row;
-			ui_margin(&r, 1.5f, &r);
-			ui_draw_rect(&r, vec4(1,1,1,0.5f), CORNER_ALL, 4.0f);
+			CUIRect r = row;
+			r.Margin(1.5f, &r);
+			RenderTools()->DrawUIRect(&r, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 4.0f);
 		}
 
 
@@ -206,7 +206,7 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 				select_hit_box.y = original_view.y;
 			}
 			
-			if(ui_do_button(item, "", selected, &select_hit_box, 0, 0))
+			if(UI()->DoButtonLogic(item, "", selected, &select_hit_box))
 			{
 				new_selected = item_index;
 			}
@@ -218,7 +218,7 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 
 		for(int c = 0; c < num_cols; c++)
 		{
-			RECT button;
+			CUIRect button;
 			char temp[64];
 			button.x = cols[c].rect.x;
 			button.y = row.y;
@@ -228,12 +228,12 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 			//int s = 0;
 			int id = cols[c].id;
 
-			//s = ui_do_button(item, "L", l, &button, ui_draw_browse_icon, 0);
+			//s = UI()->DoButton(item, "L", l, &button, ui_draw_browse_icon, 0);
 			
 			if(id == COL_FLAG_LOCK)
 			{
 				if(item->flags & SRVFLAG_PASSWORD)
-					ui_draw_browse_icon(SPRITE_BROWSE_LOCK, &button);
+					DoButton_BrowseIcon(SPRITE_BROWSE_LOCK, &button);
 			}
 			else if(id == COL_FLAG_PURE)
 			{
@@ -244,13 +244,13 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 				else
 				{
 					// unpure
-					ui_draw_browse_icon(SPRITE_BROWSE_UNPURE, &button);
+					DoButton_BrowseIcon(SPRITE_BROWSE_UNPURE, &button);
 				}
 			}
 			else if(id == COL_FLAG_FAV)
 			{
 				if(item->favorite)
-					ui_draw_browse_icon(SPRITE_BROWSE_HEART, &button);
+					DoButton_BrowseIcon(SPRITE_BROWSE_HEART, &button);
 			}
 			else if(id == COL_NAME)
 			{
@@ -277,36 +277,36 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 					gfx_text_ex(&cursor, item->name, -1);
 			}
 			else if(id == COL_MAP)
-				ui_do_label(&button, item->map, 12.0f, -1);
+				UI()->DoLabel(&button, item->map, 12.0f, -1);
 			else if(id == COL_PLAYERS)
 			{
 				str_format(temp, sizeof(temp), "%i/%i", item->num_players, item->max_players);
 				if(config.b_filter_string[0] && (item->quicksearch_hit&BROWSEQUICK_PLAYERNAME))
 					gfx_text_color(0.4f,0.4f,1.0f,1);
-				ui_do_label(&button, temp, 12.0f, 1);
+				UI()->DoLabel(&button, temp, 12.0f, 1);
 				gfx_text_color(1,1,1,1);
 			}
 			else if(id == COL_PING)
 			{
 				str_format(temp, sizeof(temp), "%i", item->latency);
-				ui_do_label(&button, temp, 12.0f, 1);
+				UI()->DoLabel(&button, temp, 12.0f, 1);
 			}
 			else if(id == COL_VERSION)
 			{
 				const char *version = item->version;
 				if(strcmp(version, "0.3 e2d7973c6647a13c") == 0) // TODO: remove me later on
 					version = "0.3.0";
-				ui_do_label(&button, version, 12.0f, 1);
+				UI()->DoLabel(&button, version, 12.0f, 1);
 			}			
 			else if(id == COL_GAMETYPE)
 			{
-				ui_do_label(&button, item->gametype, 12.0f, 0);
+				UI()->DoLabel(&button, item->gametype, 12.0f, 0);
 			}
 
 		}
 	}
 
-	ui_clip_disable();
+	UI()->ClipDisable();
 	
 	if(new_selected != -1)
 	{
@@ -317,84 +317,84 @@ void MENUS::render_serverbrowser_serverlist(RECT view)
 			client_connect(config.ui_server_address);
 	}
 
-	ui_draw_rect(&status, vec4(1,1,1,0.25f), CORNER_B, 5.0f);
-	ui_margin(&status, 5.0f, &status);
+	RenderTools()->DrawUIRect(&status, vec4(1,1,1,0.25f), CUI::CORNER_B, 5.0f);
+	status.Margin(5.0f, &status);
 	
 	// render quick search
-	RECT quicksearch;
-	ui_vsplit_l(&status, 250.0f, &quicksearch, &status);
+	CUIRect quicksearch;
+	status.VSplitLeft(250.0f, &quicksearch, &status);
 	const char *label = localize("Quick search");
-	ui_do_label(&quicksearch, label, 14.0f, -1);
-	ui_vsplit_l(&quicksearch, gfx_text_width(0, 14.0f, label, -1), 0, &quicksearch);
-	ui_vsplit_l(&quicksearch, 5, 0, &quicksearch);
-	ui_do_edit_box(&config.b_filter_string, &quicksearch, config.b_filter_string, sizeof(config.b_filter_string), 14.0f);
+	UI()->DoLabel(&quicksearch, label, 14.0f, -1);
+	quicksearch.VSplitLeft(gfx_text_width(0, 14.0f, label, -1), 0, &quicksearch);
+	quicksearch.VSplitLeft(5, 0, &quicksearch);
+	DoEditBox(&config.b_filter_string, &quicksearch, config.b_filter_string, sizeof(config.b_filter_string), 14.0f);
 	
 	// render status
 	char buf[128];
 	str_format(buf, sizeof(buf), localize("%d of %d servers, %d players"), client_serverbrowse_sorted_num(), client_serverbrowse_num(), num_players);
-	ui_vsplit_r(&status, gfx_text_width(0, 14.0f, buf, -1), 0, &status);
-	ui_do_label(&status, buf, 14.0f, -1);
+	status.VSplitRight(gfx_text_width(0, 14.0f, buf, -1), 0, &status);
+	UI()->DoLabel(&status, buf, 14.0f, -1);
 }
 
-void MENUS::render_serverbrowser_filters(RECT view)
+void MENUS::render_serverbrowser_filters(CUIRect view)
 {
 	// filters
-	RECT button;
+	CUIRect button;
 
-	ui_hsplit_t(&view, 5.0f, 0, &view);
-	ui_vsplit_l(&view, 5.0f, 0, &view);
-	ui_vsplit_r(&view, 5.0f, &view, 0);
-	ui_hsplit_b(&view, 5.0f, &view, 0);
+	view.HSplitTop(5.0f, 0, &view);
+	view.VSplitLeft(5.0f, 0, &view);
+	view.VSplitRight(5.0f, &view, 0);
+	view.HSplitBottom(5.0f, &view, 0);
 
 	// render filters
-	ui_hsplit_t(&view, 20.0f, &button, &view);
-	if (ui_do_button(&config.b_filter_empty, localize("Has people playing"), config.b_filter_empty, &button, ui_draw_checkbox, 0))
+	view.HSplitTop(20.0f, &button, &view);
+	if (DoButton_CheckBox(&config.b_filter_empty, localize("Has people playing"), config.b_filter_empty, &button))
 		config.b_filter_empty ^= 1;
 
-	ui_hsplit_t(&view, 20.0f, &button, &view);
-	if (ui_do_button(&config.b_filter_full, localize("Server not full"), config.b_filter_full, &button, ui_draw_checkbox, 0))
+	view.HSplitTop(20.0f, &button, &view);
+	if (DoButton_CheckBox(&config.b_filter_full, localize("Server not full"), config.b_filter_full, &button))
 		config.b_filter_full ^= 1;
 
-	ui_hsplit_t(&view, 20.0f, &button, &view);
-	if (ui_do_button(&config.b_filter_pw, localize("No password"), config.b_filter_pw, &button, ui_draw_checkbox, 0))
+	view.HSplitTop(20.0f, &button, &view);
+	if (DoButton_CheckBox(&config.b_filter_pw, localize("No password"), config.b_filter_pw, &button))
 		config.b_filter_pw ^= 1;
 
-	ui_hsplit_t(&view, 20.0f, &button, &view);
-	if (ui_do_button((char *)&config.b_filter_compatversion, localize("Compatible version"), config.b_filter_compatversion, &button, ui_draw_checkbox, 0))
+	view.HSplitTop(20.0f, &button, &view);
+	if (DoButton_CheckBox((char *)&config.b_filter_compatversion, localize("Compatible version"), config.b_filter_compatversion, &button))
 		config.b_filter_compatversion ^= 1;
 	
-	ui_hsplit_t(&view, 20.0f, &button, &view);
-	if (ui_do_button((char *)&config.b_filter_pure, localize("Standard gametype"), config.b_filter_pure, &button, ui_draw_checkbox, 0))
+	view.HSplitTop(20.0f, &button, &view);
+	if (DoButton_CheckBox((char *)&config.b_filter_pure, localize("Standard gametype"), config.b_filter_pure, &button))
 		config.b_filter_pure ^= 1;
 
-	ui_hsplit_t(&view, 20.0f, &button, &view);
-	/*ui_vsplit_l(&button, 20.0f, 0, &button);*/
-	if (ui_do_button((char *)&config.b_filter_pure_map, localize("Standard map"), config.b_filter_pure_map, &button, ui_draw_checkbox, 0))
+	view.HSplitTop(20.0f, &button, &view);
+	/*button.VSplitLeft(20.0f, 0, &button);*/
+	if (DoButton_CheckBox((char *)&config.b_filter_pure_map, localize("Standard map"), config.b_filter_pure_map, &button))
 		config.b_filter_pure_map ^= 1;
 		
-	ui_hsplit_t(&view, 20.0f, &button, &view);
-	ui_do_label(&button, localize("Game types"), 14.0f, -1);
-	ui_vsplit_l(&button, 95.0f, 0, &button);
-	ui_margin(&button, 1.0f, &button);
-	ui_do_edit_box(&config.b_filter_gametype, &button, config.b_filter_gametype, sizeof(config.b_filter_gametype), 14.0f);
+	view.HSplitTop(20.0f, &button, &view);
+	UI()->DoLabel(&button, localize("Game types"), 14.0f, -1);
+	button.VSplitLeft(95.0f, 0, &button);
+	button.Margin(1.0f, &button);
+	DoEditBox(&config.b_filter_gametype, &button, config.b_filter_gametype, sizeof(config.b_filter_gametype), 14.0f);
 
 	{
-		ui_hsplit_t(&view, 20.0f, &button, &view);
-		RECT editbox;
-		ui_vsplit_l(&button, 40.0f, &editbox, &button);
-		ui_vsplit_l(&button, 5.0f, &button, &button);
+		view.HSplitTop(20.0f, &button, &view);
+		CUIRect editbox;
+		button.VSplitLeft(40.0f, &editbox, &button);
+		button.VSplitLeft(5.0f, &button, &button);
 		
 		char buf[8];
 		str_format(buf, sizeof(buf), "%d", config.b_filter_ping);
-		ui_do_edit_box(&config.b_filter_ping, &editbox, buf, sizeof(buf), 14.0f);
+		DoEditBox(&config.b_filter_ping, &editbox, buf, sizeof(buf), 14.0f);
 		config.b_filter_ping = atoi(buf);
 		
-		ui_do_label(&button, localize("Maximum ping"), 14.0f, -1);
+		UI()->DoLabel(&button, localize("Maximum ping"), 14.0f, -1);
 	}
 	
-	ui_hsplit_b(&view, button_height, &view, &button);
+	view.HSplitBottom(button_height, &view, &button);
 	static int clear_button = 0;
-	if(ui_do_button(&clear_button, localize("Reset filter"), 0, &button, ui_draw_menu_button, 0))
+	if(DoButton_Menu(&clear_button, localize("Reset filter"), 0, &button))
 	{
 		config.b_filter_full = 0;
 		config.b_filter_empty = 0;
@@ -407,48 +407,48 @@ void MENUS::render_serverbrowser_filters(RECT view)
 	}
 }
 
-void MENUS::render_serverbrowser_serverdetail(RECT view)
+void MENUS::render_serverbrowser_serverdetail(CUIRect view)
 {
-	RECT server_details = view;
-	RECT server_scoreboard, server_header;
+	CUIRect server_details = view;
+	CUIRect server_scoreboard, server_header;
 	
 	SERVER_INFO *selected_server = client_serverbrowse_sorted_get(selected_index);
 	
-	//ui_vsplit_l(&server_details, 10.0f, 0x0, &server_details);
+	//server_details.VSplitLeft(10.0f, 0x0, &server_details);
 
 	// split off a piece to use for scoreboard
-	ui_hsplit_t(&server_details, 140.0f, &server_details, &server_scoreboard);
-	ui_hsplit_b(&server_details, 10.0f, &server_details, 0x0);
+	server_details.HSplitTop(140.0f, &server_details, &server_scoreboard);
+	server_details.HSplitBottom(10.0f, &server_details, 0x0);
 
 	// server details
 	const float font_size = 12.0f;
-	ui_hsplit_t(&server_details, 20.0f, &server_header, &server_details);
-	ui_draw_rect(&server_header, vec4(1,1,1,0.25f), CORNER_T, 4.0f);
-	ui_draw_rect(&server_details, vec4(0,0,0,0.15f), CORNER_B, 4.0f);
-	ui_vsplit_l(&server_header, 8.0f, 0x0, &server_header);
-	ui_do_label(&server_header, localize("Server details"), font_size+2.0f, -1);
+	server_details.HSplitTop(20.0f, &server_header, &server_details);
+	RenderTools()->DrawUIRect(&server_header, vec4(1,1,1,0.25f), CUI::CORNER_T, 4.0f);
+	RenderTools()->DrawUIRect(&server_details, vec4(0,0,0,0.15f), CUI::CORNER_B, 4.0f);
+	server_header.VSplitLeft(8.0f, 0x0, &server_header);
+	UI()->DoLabel(&server_header, localize("Server details"), font_size+2.0f, -1);
 
-	ui_vsplit_l(&server_details, 5.0f, 0x0, &server_details);
+	server_details.VSplitLeft(5.0f, 0x0, &server_details);
 
-	ui_margin(&server_details, 3.0f, &server_details);
+	server_details.Margin(3.0f, &server_details);
 
 	if (selected_server)
 	{
-		RECT row;
+		CUIRect row;
 		static LOC_CONSTSTRING labels[] = {
 			localize("Version"),
 			localize("Game type"),
 			localize("Ping")};
 
-		RECT left_column;
-		RECT right_column;
+		CUIRect left_column;
+		CUIRect right_column;
 
 		// 
 		{
-			RECT button;
-			ui_hsplit_b(&server_details, 20.0f, &server_details, &button);
+			CUIRect button;
+			server_details.HSplitBottom(20.0f, &server_details, &button);
 			static int add_fav_button = 0;
-			if (ui_do_button(&add_fav_button, localize("Favorite"), selected_server->favorite, &button, ui_draw_checkbox, 0))
+			if(DoButton_CheckBox(&add_fav_button, localize("Favorite"), selected_server->favorite, &button))
 			{
 				if(selected_server->favorite)
 					client_serverbrowse_removefavorite(selected_server->netaddr);
@@ -456,55 +456,55 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 					client_serverbrowse_addfavorite(selected_server->netaddr);
 			}
 		}
-		//ui_do_label(&row, temp, font_size, -1);		
+		//UI()->DoLabel(&row, temp, font_size, -1);		
 
-		ui_vsplit_l(&server_details, 5.0f, 0x0, &server_details);
-		ui_vsplit_l(&server_details, 80.0f, &left_column, &right_column);
+		server_details.VSplitLeft(5.0f, 0x0, &server_details);
+		server_details.VSplitLeft(80.0f, &left_column, &right_column);
 
 		for (unsigned int i = 0; i < sizeof(labels) / sizeof(labels[0]); i++)
 		{
-			ui_hsplit_t(&left_column, 15.0f, &row, &left_column);
-			ui_do_label(&row, labels[i], font_size, -1);
+			left_column.HSplitTop(15.0f, &row, &left_column);
+			UI()->DoLabel(&row, labels[i], font_size, -1);
 		}
 
-		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
-		ui_do_label(&row, selected_server->version, font_size, -1);
+		right_column.HSplitTop(15.0f, &row, &right_column);
+		UI()->DoLabel(&row, selected_server->version, font_size, -1);
 
-		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
-		ui_do_label(&row, selected_server->gametype, font_size, -1);
+		right_column.HSplitTop(15.0f, &row, &right_column);
+		UI()->DoLabel(&row, selected_server->gametype, font_size, -1);
 
 		char temp[16];
 		str_format(temp, sizeof(temp), "%d", selected_server->latency);
-		ui_hsplit_t(&right_column, 15.0f, &row, &right_column);
-		ui_do_label(&row, temp, font_size, -1);
+		right_column.HSplitTop(15.0f, &row, &right_column);
+		UI()->DoLabel(&row, temp, font_size, -1);
 
 	}
 	
 	// server scoreboard
 	
-	ui_hsplit_b(&server_scoreboard, 10.0f, &server_scoreboard, 0x0);
-	ui_hsplit_t(&server_scoreboard, 20.0f, &server_header, &server_scoreboard);
-	ui_draw_rect(&server_header, vec4(1,1,1,0.25f), CORNER_T, 4.0f);
-	ui_draw_rect(&server_scoreboard, vec4(0,0,0,0.15f), CORNER_B, 4.0f);
-	ui_vsplit_l(&server_header, 8.0f, 0x0, &server_header);
-	ui_do_label(&server_header, localize("Scoreboard"), font_size+2.0f, -1);
+	server_scoreboard.HSplitBottom(10.0f, &server_scoreboard, 0x0);
+	server_scoreboard.HSplitTop(20.0f, &server_header, &server_scoreboard);
+	RenderTools()->DrawUIRect(&server_header, vec4(1,1,1,0.25f), CUI::CORNER_T, 4.0f);
+	RenderTools()->DrawUIRect(&server_scoreboard, vec4(0,0,0,0.15f), CUI::CORNER_B, 4.0f);
+	server_header.VSplitLeft(8.0f, 0x0, &server_header);
+	UI()->DoLabel(&server_header, localize("Scoreboard"), font_size+2.0f, -1);
 
-	ui_vsplit_l(&server_scoreboard, 5.0f, 0x0, &server_scoreboard);
+	server_scoreboard.VSplitLeft(5.0f, 0x0, &server_scoreboard);
 
-	ui_margin(&server_scoreboard, 3.0f, &server_scoreboard);
+	server_scoreboard.Margin(3.0f, &server_scoreboard);
 
 	if (selected_server)
 	{
 		for (int i = 0; i < selected_server->num_players; i++)
 		{
-			RECT row;
+			CUIRect row;
 			char temp[16];
-			ui_hsplit_t(&server_scoreboard, 16.0f, &row, &server_scoreboard);
+			server_scoreboard.HSplitTop(16.0f, &row, &server_scoreboard);
 
 			str_format(temp, sizeof(temp), "%d", selected_server->players[i].score);
-			ui_do_label(&row, temp, font_size, -1);
+			UI()->DoLabel(&row, temp, font_size, -1);
 
-			ui_vsplit_l(&row, 25.0f, 0x0, &row);
+			row.VSplitLeft(25.0f, 0x0, &row);
 		
 			TEXT_CURSOR cursor;
 			gfx_text_set_cursor(&cursor, row.x, row.y, 12.0f, TEXTFLAG_RENDER);
@@ -532,12 +532,12 @@ void MENUS::render_serverbrowser_serverdetail(RECT view)
 	}
 }
 
-void MENUS::render_serverbrowser(RECT main_view)
+void MENUS::render_serverbrowser(CUIRect main_view)
 {
-	ui_draw_rect(&main_view, color_tabbar_active, CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&main_view, color_tabbar_active, CUI::CORNER_ALL, 10.0f);
 	
-	RECT view;
-	ui_margin(&main_view, 10.0f, &view);
+	CUIRect view;
+	main_view.Margin(10.0f, &view);
 	
 	/*
 		+-----------------+ +------+
@@ -551,44 +551,44 @@ void MENUS::render_serverbrowser(RECT main_view)
 	*/
 	
 	
-	//RECT filters;
-	RECT status_toolbar;
-	RECT toolbox;
-	RECT button_box;
+	//CUIRect filters;
+	CUIRect status_toolbar;
+	CUIRect toolbox;
+	CUIRect button_box;
 
 	// split off a piece for filters, details and scoreboard
-	ui_vsplit_r(&view, 200.0f, &view, &toolbox);
-	ui_hsplit_b(&toolbox, 80.0f, &toolbox, &button_box);
-	ui_hsplit_b(&view, button_height+5.0f, &view, &status_toolbar);
+	view.VSplitRight(200.0f, &view, &toolbox);
+	toolbox.HSplitBottom(80.0f, &toolbox, &button_box);
+	view.HSplitBottom(button_height+5.0f, &view, &status_toolbar);
 
 	render_serverbrowser_serverlist(view);
 	
 	static int toolbox_page = 0;
 	
-	ui_vsplit_l(&toolbox, 5.0f, 0, &toolbox);
+	toolbox.VSplitLeft(5.0f, 0, &toolbox);
 
 	// do tabbar
 	{
-		RECT tab_bar;
-		RECT tabbutton0, tabbutton1;
-		ui_hsplit_t(&toolbox, 22.0f, &tab_bar, &toolbox);
+		CUIRect tab_bar;
+		CUIRect tabbutton0, tabbutton1;
+		toolbox.HSplitTop(22.0f, &tab_bar, &toolbox);
 	
-		ui_vsplit_mid(&tab_bar, &tabbutton0, &tabbutton1);
-		ui_vsplit_r(&tabbutton0, 5.0f, &tabbutton0, 0);
-		ui_vsplit_l(&tabbutton1, 5.0f, 0, &tabbutton1);
+		tab_bar.VSplitMid(&tabbutton0, &tabbutton1);
+		tabbutton0.VSplitRight(5.0f, &tabbutton0, 0);
+		tabbutton1.VSplitLeft(5.0f, 0, &tabbutton1);
 		
 		static int filters_tab = 0;
-		if (ui_do_button(&filters_tab, localize("Filter"), toolbox_page==0, &tabbutton0, ui_draw_menu_tab_button, 0))
+		if (DoButton_MenuTab(&filters_tab, localize("Filter"), toolbox_page==0, &tabbutton0, 0))
 			toolbox_page = 0;
 			
 		static int info_tab = 0;
-		if (ui_do_button(&info_tab, localize("Info"), toolbox_page==1, &tabbutton1, ui_draw_menu_tab_button, 0))
+		if (DoButton_MenuTab(&info_tab, localize("Info"), toolbox_page==1, &tabbutton1, 0))
 			toolbox_page = 1;
 	}
 
-	ui_draw_rect(&toolbox, vec4(0,0,0,0.15f), 0, 0);
+	RenderTools()->DrawUIRect(&toolbox, vec4(0,0,0,0.15f), 0, 0);
 	
-	ui_hsplit_t(&toolbox, 5.0f, 0, &toolbox);
+	toolbox.HSplitTop(5.0f, 0, &toolbox);
 	
 	if(toolbox_page == 0)
 		render_serverbrowser_filters(toolbox);
@@ -596,14 +596,14 @@ void MENUS::render_serverbrowser(RECT main_view)
 		render_serverbrowser_serverdetail(toolbox);
 
 	{
-		ui_hsplit_t(&status_toolbar, 5.0f, 0, &status_toolbar);
+		status_toolbar.HSplitTop(5.0f, 0, &status_toolbar);
 		
-		RECT button;
-		//ui_vsplit_r(&buttons, 20.0f, &buttons, &button);
-		ui_vsplit_r(&status_toolbar, 110.0f, &status_toolbar, &button);
-		ui_vmargin(&button, 2.0f, &button);
+		CUIRect button;
+		//buttons.VSplitRight(20.0f, &buttons, &button);
+		status_toolbar.VSplitRight(110.0f, &status_toolbar, &button);
+		button.VMargin(2.0f, &button);
 		static int refresh_button = 0;
-		if(ui_do_button(&refresh_button, localize("Refresh"), 0, &button, ui_draw_menu_button, 0))
+		if(DoButton_Menu(&refresh_button, localize("Refresh"), 0, &button))
 		{
 			if(config.ui_page == PAGE_INTERNET)
 				client_serverbrowse_refresh(BROWSETYPE_INTERNET);
@@ -618,31 +618,31 @@ void MENUS::render_serverbrowser(RECT main_view)
 			str_format(buf, sizeof(buf), localize("Teeworlds %s is out! Download it at www.teeworlds.com!"), client_latestversion());
 		else
 			str_format(buf, sizeof(buf), localize("Current version: %s"), GAME_VERSION);
-		ui_do_label(&status_toolbar, buf, 14.0f, -1);
+		UI()->DoLabel(&status_toolbar, buf, 14.0f, -1);
 	}
 	
 	// do the button box
 	{
 		
-		ui_vsplit_l(&button_box, 5.0f, 0, &button_box);
-		ui_vsplit_r(&button_box, 5.0f, &button_box, 0);
+		button_box.VSplitLeft(5.0f, 0, &button_box);
+		button_box.VSplitRight(5.0f, &button_box, 0);
 		
-		RECT button;
-		ui_hsplit_b(&button_box, button_height, &button_box, &button);
-		ui_vsplit_r(&button, 120.0f, 0, &button);
-		ui_vmargin(&button, 2.0f, &button);
-		//ui_vmargin(&button, 2.0f, &button);
+		CUIRect button;
+		button_box.HSplitBottom(button_height, &button_box, &button);
+		button.VSplitRight(120.0f, 0, &button);
+		button.VMargin(2.0f, &button);
+		//button.VMargin(2.0f, &button);
 		static int join_button = 0;
-		if(ui_do_button(&join_button, localize("Connect"), 0, &button, ui_draw_menu_button, 0) || enter_pressed)
+		if(DoButton_Menu(&join_button, localize("Connect"), 0, &button) || enter_pressed)
 		{
 			client_connect(config.ui_server_address);
 			enter_pressed = false;
 		}
 					
-		ui_hsplit_b(&button_box, 5.0f, &button_box, &button);
-		ui_hsplit_b(&button_box, 20.0f, &button_box, &button);
-		ui_do_edit_box(&config.ui_server_address, &button, config.ui_server_address, sizeof(config.ui_server_address), 14.0f);
-		ui_hsplit_b(&button_box, 20.0f, &button_box, &button);
-		ui_do_label(&button, localize("Host address"), 14.0f, -1);
+		button_box.HSplitBottom(5.0f, &button_box, &button);
+		button_box.HSplitBottom(20.0f, &button_box, &button);
+		DoEditBox(&config.ui_server_address, &button, config.ui_server_address, sizeof(config.ui_server_address), 14.0f);
+		button_box.HSplitBottom(20.0f, &button_box, &button);
+		UI()->DoLabel(&button, localize("Host address"), 14.0f, -1);
 	}
 }

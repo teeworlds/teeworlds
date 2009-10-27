@@ -1,4 +1,3 @@
-
 #include <base/system.h>
 #include "e_demorec.h"
 #include "e_memheap.h"
@@ -14,7 +13,7 @@ static const unsigned char header_marker[8] = {'T', 'W', 'D', 'E', 'M', 'O', 0, 
 /* Record */
 static int record_lasttickmarker = -1;
 static int record_lastkeyframe;
-static unsigned char record_lastsnapshotdata[MAX_SNAPSHOT_SIZE];
+static unsigned char record_lastsnapshotdata[CSnapshot::MAX_SIZE];
 
 int demorec_isrecording() { return record_file != 0; }
 
@@ -121,7 +120,7 @@ static void demorec_record_write(int type, const void *data, int size)
 	while(size&3)
 		buffer2[size++] = 0;
 	size = intpack_compress(buffer2, size, buffer); /* buffer2 -> buffer */
-	size = netcommon_compress(buffer, size, buffer2, sizeof(buffer2)); /* buffer -> buffer2 */
+	size = CNetBase::Compress(buffer, size, buffer2, sizeof(buffer2)); /* buffer -> buffer2 */
 	
 	
 	chunk[0] = ((type&0x3)<<5);
@@ -166,13 +165,13 @@ void demorec_record_snapshot(int tick, const void *data, int size)
 	else
 	{
 		/* create delta, prepend tick */
-		char delta_data[MAX_SNAPSHOT_SIZE+sizeof(int)];
+		char delta_data[CSnapshot::MAX_SIZE+sizeof(int)];
 		int delta_size;
 
 		/* write tickmarker */
 		demorec_record_write_tickmarker(tick, 0);
 		
-		delta_size = snapshot_create_delta((SNAPSHOT*)record_lastsnapshotdata, (SNAPSHOT*)data, &delta_data);
+		delta_size = CSnapshot::CreateDelta((CSnapshot*)record_lastsnapshotdata, (CSnapshot*)data, &delta_data);
 		if(delta_size)
 		{
 			/* record delta */
@@ -217,7 +216,7 @@ static DEMOREC_PLAYCALLBACK play_callback_message = 0;
 static KEYFRAME *keyframes = 0;
 
 static DEMOREC_PLAYBACKINFO playbackinfo;
-static unsigned char playback_lastsnapshotdata[MAX_SNAPSHOT_SIZE];
+static unsigned char playback_lastsnapshotdata[CSnapshot::MAX_SIZE];
 static int playback_lastsnapshotdata_size = -1;
 
 
@@ -316,7 +315,7 @@ static void scan_file()
 				KEYFRAME_SEARCH *key;
 				
 				/* save the position */
-				key = memheap_allocate(heap, sizeof(KEYFRAME_SEARCH));
+				key = (KEYFRAME_SEARCH *)memheap_allocate(heap, sizeof(KEYFRAME_SEARCH));
 				key->frame.filepos = current_pos;
 				key->frame.tick = chunk_tick;
 				key->next = 0;
@@ -349,10 +348,10 @@ static void scan_file()
 
 static void do_tick()
 {
-	static char compresseddata[MAX_SNAPSHOT_SIZE];
-	static char decompressed[MAX_SNAPSHOT_SIZE];
-	static char data[MAX_SNAPSHOT_SIZE];
-	int chunk_size, chunk_type, chunk_tick;
+	static char compresseddata[CSnapshot::MAX_SIZE];
+	static char decompressed[CSnapshot::MAX_SIZE];
+	static char data[CSnapshot::MAX_SIZE];
+	int chunk_type, chunk_tick, chunk_size;
 	int data_size;
 	int got_snapshot = 0;
 
@@ -374,7 +373,7 @@ static void do_tick()
 		/* read the chunk */
 		if(chunk_size)
 		{
-			if(io_read(play_file, compresseddata, chunk_size) != chunk_size)
+			if(io_read(play_file, compresseddata, chunk_size) != (unsigned)chunk_size)
 			{
 				/* stop on error or eof */
 				dbg_msg("demorec", "error reading chunk");
@@ -382,7 +381,7 @@ static void do_tick()
 				break;
 			}
 			
-			data_size = netcommon_decompress(compresseddata, chunk_size, decompressed, sizeof(decompressed));
+			data_size = CNetBase::Decompress(compresseddata, chunk_size, decompressed, sizeof(decompressed));
 			if(data_size < 0)
 			{
 				/* stop on error or eof */
@@ -404,11 +403,11 @@ static void do_tick()
 		if(chunk_type == CHUNKTYPE_DELTA)
 		{
 			/* process delta snapshot */
-			static char newsnap[MAX_SNAPSHOT_SIZE];
+			static char newsnap[CSnapshot::MAX_SIZE];
 			
 			got_snapshot = 1;
 			
-			data_size = snapshot_unpack_delta((SNAPSHOT*)playback_lastsnapshotdata, (SNAPSHOT*)newsnap, data, data_size);
+			data_size = CSnapshot::UnpackDelta((CSnapshot*)playback_lastsnapshotdata, (CSnapshot*)newsnap, data, data_size);
 			
 			if(data_size >= 0)
 			{
@@ -625,7 +624,7 @@ int demorec_playback_update()
 	return 0;
 }
 
-int demorec_playback_stop(const char *filename)
+int demorec_playback_stop()
 {
 	if(!play_file)
 		return -1;
@@ -637,3 +636,5 @@ int demorec_playback_stop(const char *filename)
 	keyframes = 0;
 	return 0;
 }
+
+

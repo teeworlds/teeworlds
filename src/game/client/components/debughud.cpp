@@ -5,6 +5,7 @@ extern "C" {
 }
 
 #include <engine/e_client_interface.h>
+#include <engine/client/graphics.h>
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
 
@@ -23,7 +24,7 @@ void DEBUGHUD::render_netcorrections()
 	if(!config.debug || !gameclient.snap.local_character || !gameclient.snap.local_prev_character)
 		return;
 
-	gfx_mapscreen(0, 0, 300*gfx_screenaspect(), 300);
+	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);
 	
 	/*float speed = distance(vec2(netobjects.local_prev_character->x, netobjects.local_prev_character->y),
 		vec2(netobjects.local_character->x, netobjects.local_character->y));*/
@@ -50,7 +51,7 @@ void DEBUGHUD::render_tuning()
 		
 	TUNING_PARAMS standard_tuning;
 		
-	gfx_mapscreen(0, 0, 300*gfx_screenaspect(), 300);
+	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);
 	
 	float y = 50.0f;
 	int count = 0;
@@ -87,9 +88,9 @@ void DEBUGHUD::render_tuning()
 	
 	y = y+count*6;
 	
-	gfx_texture_set(-1);
-	gfx_blend_normal();
-	gfx_lines_begin();
+	Graphics()->TextureSet(-1);
+	Graphics()->BlendNormal();
+	Graphics()->LinesBegin();
 	float height = 50.0f;
 	float pv = 1;
 	for(int i = 0; i < 100; i++)
@@ -97,11 +98,11 @@ void DEBUGHUD::render_tuning()
 		float speed = i/100.0f * 3000;
 		float ramp = velocity_ramp(speed, gameclient.tuning.velramp_start, gameclient.tuning.velramp_range, gameclient.tuning.velramp_curvature);
 		float rampedspeed = (speed * ramp)/1000.0f;
-		gfx_lines_draw((i-1)*2, y+height-pv*height, i*2, y+height-rampedspeed*height);
-		//gfx_lines_draw((i-1)*2, 200, i*2, 200);
+		Graphics()->LinesDraw((i-1)*2, y+height-pv*height, i*2, y+height-rampedspeed*height);
+		//Graphics()->LinesDraw((i-1)*2, 200, i*2, 200);
 		pv = rampedspeed;
 	}
-	gfx_lines_end();
+	Graphics()->LinesEnd();
 	gfx_text_color(1,1,1,1);
 }
 

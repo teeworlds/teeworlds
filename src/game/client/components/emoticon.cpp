@@ -1,4 +1,5 @@
 #include <engine/e_client_interface.h>
+#include <engine/client/graphics.h>
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
 
@@ -70,7 +71,7 @@ void EMOTICON::draw_circle(float x, float y, float r, int segments)
 		float sa2 = sinf(a2);
 		float sa3 = sinf(a3);
 
-		gfx_quads_draw_freeform(
+		client->Graphics()->QuadsDrawFreeform(
 			x, y,
 			x+ca1*r, y+sa1*r,
 			x+ca3*r, y+sa3*r,
@@ -107,20 +108,20 @@ void EMOTICON::on_render()
 	if (length(selector_mouse) > 100)
 		selected_emote = (int)(selected_angle / (2*pi) * 12.0f);
 
-    RECT screen = *ui_screen();
+    CUIRect screen = *UI()->Screen();
 
-	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
+	Graphics()->MapScreen(screen.x, screen.y, screen.w, screen.h);
 
-	gfx_blend_normal();
+	Graphics()->BlendNormal();
 
-	gfx_texture_set(-1);
-	gfx_quads_begin();
-	gfx_setcolor(0,0,0,0.3f);
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(0,0,0,0.3f);
 	draw_circle(screen.w/2, screen.h/2, 160, 64);
-	gfx_quads_end();
+	Graphics()->QuadsEnd();
 
-	gfx_texture_set(data->images[IMAGE_EMOTICONS].id);
-	gfx_quads_begin();
+	Graphics()->TextureSet(data->images[IMAGE_EMOTICONS].id);
+	Graphics()->QuadsBegin();
 
 	for (int i = 0; i < 12; i++)
 	{
@@ -134,17 +135,17 @@ void EMOTICON::on_render()
 
 		float nudge_x = 120 * cos(angle);
 		float nudge_y = 120 * sin(angle);
-		select_sprite(SPRITE_OOP + i);
-		gfx_quads_draw(screen.w/2 + nudge_x, screen.h/2 + nudge_y, size, size);
+		RenderTools()->select_sprite(SPRITE_OOP + i);
+		Graphics()->QuadsDraw(screen.w/2 + nudge_x, screen.h/2 + nudge_y, size, size);
 	}
 
-	gfx_quads_end();
+	Graphics()->QuadsEnd();
 
-    gfx_texture_set(data->images[IMAGE_CURSOR].id);
-    gfx_quads_begin();
-    gfx_setcolor(1,1,1,1);
-    gfx_quads_drawTL(selector_mouse.x+screen.w/2,selector_mouse.y+screen.h/2,24,24);
-    gfx_quads_end();
+    Graphics()->TextureSet(data->images[IMAGE_CURSOR].id);
+    Graphics()->QuadsBegin();
+    Graphics()->SetColor(1,1,1,1);
+    Graphics()->QuadsDrawTL(selector_mouse.x+screen.w/2,selector_mouse.y+screen.h/2,24,24);
+    Graphics()->QuadsEnd();
 }
 
 void EMOTICON::emote(int emoticon)

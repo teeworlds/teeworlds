@@ -2,10 +2,11 @@
 #include <math.h>
 #include <base/math.hpp>
 #include <engine/e_client_interface.h>
+#include <engine/client/graphics.h>
 
 #include "render.hpp"
 
-void render_eval_envelope(ENVPOINT *points, int num_points, int channels, float time, float *result)
+void CRenderTools::render_eval_envelope(ENVPOINT *points, int num_points, int channels, float time, float *result)
 {
 	if(num_points == 0)
 	{
@@ -77,9 +78,9 @@ static void rotate(POINT *center, POINT *point, float rotation)
 	point->y = (int)(x * sinf(rotation) + y * cosf(rotation) + center->y);
 }
 
-void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, int env, float *channels), int renderflags)
+void CRenderTools::render_quads(QUAD *quads, int num_quads, int renderflags, void (*eval)(float time_offset, int env, float *channels, void *user), void *user)
 {
-	gfx_quads_begin();
+	Graphics()->QuadsBegin();
 	float conv = 1/255.0f;
 	for(int i = 0; i < num_quads; i++)
 	{
@@ -90,7 +91,7 @@ void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, in
 		if(q->color_env >= 0)
 		{
 			float channels[4];
-			eval(q->color_env_offset/1000.0f, q->color_env, channels);
+			eval(q->color_env_offset/1000.0f, q->color_env, channels, user);
 			r = channels[0];
 			g = channels[1];
 			b = channels[2];
@@ -106,7 +107,7 @@ void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, in
 		if(!opaque && !(renderflags&LAYERRENDERFLAG_TRANSPARENT))
 			continue;
 		
-		gfx_quads_setsubset_free(
+		Graphics()->QuadsSetSubsetFree(
 			fx2f(q->texcoords[0].x), fx2f(q->texcoords[0].y),
 			fx2f(q->texcoords[1].x), fx2f(q->texcoords[1].y),
 			fx2f(q->texcoords[2].x), fx2f(q->texcoords[2].y),
@@ -121,17 +122,17 @@ void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, in
 		if(q->pos_env >= 0)
 		{
 			float channels[4];
-			eval(q->pos_env_offset/1000.0f, q->pos_env, channels);
+			eval(q->pos_env_offset/1000.0f, q->pos_env, channels, user);
 			offset_x = channels[0];
 			offset_y = channels[1];
 			rot = channels[2]/360.0f*pi*2;
 		}
 		
 		
-		gfx_setcolorvertex(0, q->colors[0].r*conv*r, q->colors[0].g*conv*g, q->colors[0].b*conv*b, q->colors[0].a*conv*a);
-		gfx_setcolorvertex(1, q->colors[1].r*conv*r, q->colors[1].g*conv*g, q->colors[1].b*conv*b, q->colors[1].a*conv*a);
-		gfx_setcolorvertex(2, q->colors[2].r*conv*r, q->colors[2].g*conv*g, q->colors[2].b*conv*b, q->colors[2].a*conv*a);
-		gfx_setcolorvertex(3, q->colors[3].r*conv*r, q->colors[3].g*conv*g, q->colors[3].b*conv*b, q->colors[3].a*conv*a);
+		Graphics()->SetColorVertex(0, q->colors[0].r*conv*r, q->colors[0].g*conv*g, q->colors[0].b*conv*b, q->colors[0].a*conv*a);
+		Graphics()->SetColorVertex(1, q->colors[1].r*conv*r, q->colors[1].g*conv*g, q->colors[1].b*conv*b, q->colors[1].a*conv*a);
+		Graphics()->SetColorVertex(2, q->colors[2].r*conv*r, q->colors[2].g*conv*g, q->colors[2].b*conv*b, q->colors[2].a*conv*a);
+		Graphics()->SetColorVertex(3, q->colors[3].r*conv*r, q->colors[3].g*conv*g, q->colors[3].b*conv*b, q->colors[3].a*conv*a);
 
 		POINT *points = q->points;
 	
@@ -150,30 +151,30 @@ void render_quads(QUAD *quads, int num_quads, void (*eval)(float time_offset, in
 			rotate(&q->points[4], &rotated[3], rot);
 		}
 		
-		gfx_quads_draw_freeform(
+		Graphics()->QuadsDrawFreeform(
 			fx2f(points[0].x)+offset_x, fx2f(points[0].y)+offset_y,
 			fx2f(points[1].x)+offset_x, fx2f(points[1].y)+offset_y,
 			fx2f(points[2].x)+offset_x, fx2f(points[2].y)+offset_y,
 			fx2f(points[3].x)+offset_x, fx2f(points[3].y)+offset_y
 		);
 	}
-	gfx_quads_end();	
+	Graphics()->QuadsEnd();	
 }
 
-void render_tilemap(TILE *tiles, int w, int h, float scale, vec4 color, int renderflags)
+void CRenderTools::render_tilemap(TILE *tiles, int w, int h, float scale, vec4 color, int renderflags)
 {
-	//gfx_texture_set(img_get(tmap->image));
+	//Graphics()->TextureSet(img_get(tmap->image));
 	float screen_x0, screen_y0, screen_x1, screen_y1;
-	gfx_getscreen(&screen_x0, &screen_y0, &screen_x1, &screen_y1);
-	//gfx_mapscreen(screen_x0-50, screen_y0-50, screen_x1+50, screen_y1+50);
+	Graphics()->GetScreen(&screen_x0, &screen_y0, &screen_x1, &screen_y1);
+	//Graphics()->MapScreen(screen_x0-50, screen_y0-50, screen_x1+50, screen_y1+50);
 
 	// calculate the final pixelsize for the tiles	
 	float tile_pixelsize = 1024/32.0f;
-	float final_tilesize = scale/(screen_x1-screen_x0) * gfx_screenwidth();
+	float final_tilesize = scale/(screen_x1-screen_x0) * Graphics()->ScreenWidth();
 	float final_tilesize_scale = final_tilesize/tile_pixelsize;
 	
-	gfx_quads_begin();
-	gfx_setcolor(color.r, color.g, color.b, color.a);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(color.r, color.g, color.b, color.a);
 	
 	int starty = (int)(screen_y0/scale)-1;
 	int startx = (int)(screen_x0/scale)-1;
@@ -262,13 +263,13 @@ void render_tilemap(TILE *tiles, int w, int h, float scale, vec4 color, int rend
 						v1 = tmp;
 					}
 					
-					gfx_quads_setsubset(u0,v0,u1,v1);
-					gfx_quads_drawTL(x*scale, y*scale, scale, scale);
+					Graphics()->QuadsSetSubset(u0,v0,u1,v1);
+					Graphics()->QuadsDrawTL(x*scale, y*scale, scale, scale);
 				}
 			}
 			x += tiles[c].skip;
 		}
 	
-	gfx_quads_end();
-	gfx_mapscreen(screen_x0, screen_y0, screen_x1, screen_y1);
+	Graphics()->QuadsEnd();
+	Graphics()->MapScreen(screen_x0, screen_y0, screen_x1, screen_y1);
 }

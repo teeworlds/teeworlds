@@ -1,10 +1,13 @@
+#ifndef FILE_GAMECLIENT_HPP
+#define FILE_GAMECLIENT_HPP
 
 #include <base/vmath.hpp>
 #include <engine/e_console.h>
+#include <engine/client/client.h>
 #include <game/gamecore.hpp>
 #include "render.hpp"
 
-class GAMECLIENT
+class GAMECLIENT : public IGameClient
 {
 	class STACK
 	{
@@ -24,6 +27,9 @@ class GAMECLIENT
 	STACK all;
 	STACK input;
 	
+	class IGraphics *m_pGraphics;
+	class IEngine *m_pEngine;
+	CUI m_UI;
 	
 	void dispatch_input();
 	void process_events();
@@ -38,6 +44,12 @@ class GAMECLIENT
 	static void conchain_special_infoupdate(void *result, void *user_data, CONSOLE_CALLBACK cb, void *cbuser);
 	
 public:
+	class IGraphics *Graphics() const { return m_pGraphics; }
+	class CUI *UI() { return &m_UI; }
+	class CRenderTools *RenderTools() { return &m_RenderTools; }
+	
+	void SetEngine(class IEngine *pEngine);
+
 	bool suppress_events;
 	bool new_tick;
 	bool new_predicted_tick;
@@ -120,6 +132,8 @@ public:
 
 	CLIENT_DATA clients[MAX_CLIENTS];
 	
+	CRenderTools m_RenderTools;
+	
 	void on_reset();
 
 	// hooks
@@ -158,6 +172,10 @@ public:
 	class VOTING *voting;
 };
 
+
+// TODO: Refactor: Remove this
 extern GAMECLIENT gameclient;
 
 extern const char *localize(const char *str);
+
+#endif

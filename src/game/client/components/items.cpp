@@ -1,4 +1,5 @@
 #include <engine/e_client_interface.h>
+#include <engine/client/graphics.h>
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
 
@@ -44,10 +45,10 @@ void ITEMS::render_projectile(const NETOBJ_PROJECTILE *current, int itemid)
 	vec2 prevpos = calc_pos(startpos, startvel, curvature, speed, ct-0.001f);
 
 
-	gfx_texture_set(data->images[IMAGE_GAME].id);
-	gfx_quads_begin();
+	Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+	Graphics()->QuadsBegin();
 	
-	select_sprite(data->weapons.id[clamp(current->type, 0, NUM_WEAPONS-1)].sprite_proj);
+	RenderTools()->select_sprite(data->weapons.id[clamp(current->type, 0, NUM_WEAPONS-1)].sprite_proj);
 	vec2 vel = pos-prevpos;
 	//vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
 	
@@ -57,7 +58,7 @@ void ITEMS::render_projectile(const NETOBJ_PROJECTILE *current, int itemid)
 	{
 		gameclient.effects->smoketrail(pos, vel*-1);
 		gameclient.flow->add(pos, vel*1000*client_frametime(), 10.0f);
-		gfx_quads_setrotation(client_localtime()*pi*2*2 + itemid);
+		Graphics()->QuadsSetRotation(client_localtime()*pi*2*2 + itemid);
 	}
 	else
 	{
@@ -65,28 +66,28 @@ void ITEMS::render_projectile(const NETOBJ_PROJECTILE *current, int itemid)
 		gameclient.flow->add(pos, vel*1000*client_frametime(), 10.0f);
 
 		if(length(vel) > 0.00001f)
-			gfx_quads_setrotation(get_angle(vel));
+			Graphics()->QuadsSetRotation(get_angle(vel));
 		else
-			gfx_quads_setrotation(0);
+			Graphics()->QuadsSetRotation(0);
 
 	}
 
-	gfx_quads_draw(pos.x, pos.y, 32, 32);
-	gfx_quads_setrotation(0);
-	gfx_quads_end();
+	Graphics()->QuadsDraw(pos.x, pos.y, 32, 32);
+	Graphics()->QuadsSetRotation(0);
+	Graphics()->QuadsEnd();
 }
 
 void ITEMS::render_pickup(const NETOBJ_PICKUP *prev, const NETOBJ_PICKUP *current)
 {
-	gfx_texture_set(data->images[IMAGE_GAME].id);
-	gfx_quads_begin();
+	Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+	Graphics()->QuadsBegin();
 	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
 	float angle = 0.0f;
 	float size = 64.0f;
 	if (current->type == POWERUP_WEAPON)
 	{
 		angle = 0; //-pi/6;//-0.25f * pi * 2.0f;
-		select_sprite(data->weapons.id[clamp(current->subtype, 0, NUM_WEAPONS-1)].sprite_body);
+		RenderTools()->select_sprite(data->weapons.id[clamp(current->subtype, 0, NUM_WEAPONS-1)].sprite_body);
 		size = data->weapons.id[clamp(current->subtype, 0, NUM_WEAPONS-1)].visual_size;
 	}
 	else
@@ -97,7 +98,7 @@ void ITEMS::render_pickup(const NETOBJ_PICKUP *prev, const NETOBJ_PICKUP *curren
 			SPRITE_PICKUP_WEAPON,
 			SPRITE_PICKUP_NINJA
 			};
-		select_sprite(c[current->type]);
+		RenderTools()->select_sprite(c[current->type]);
 
 		if(c[current->type] == SPRITE_PICKUP_NINJA)
 		{
@@ -107,13 +108,13 @@ void ITEMS::render_pickup(const NETOBJ_PICKUP *prev, const NETOBJ_PICKUP *curren
 		}
 	}
 
-	gfx_quads_setrotation(angle);
+	Graphics()->QuadsSetRotation(angle);
 
 	float offset = pos.y/32.0f + pos.x/32.0f;
 	pos.x += cosf(client_localtime()*2.0f+offset)*2.5f;
 	pos.y += sinf(client_localtime()*2.0f+offset)*2.5f;
-	draw_sprite(pos.x, pos.y, size);
-	gfx_quads_end();
+	RenderTools()->draw_sprite(pos.x, pos.y, size);
+	Graphics()->QuadsEnd();
 }
 
 void ITEMS::render_flag(const NETOBJ_FLAG *prev, const NETOBJ_FLAG *current)
@@ -121,16 +122,16 @@ void ITEMS::render_flag(const NETOBJ_FLAG *prev, const NETOBJ_FLAG *current)
 	float angle = 0.0f;
 	float size = 42.0f;
 
-	gfx_blend_normal();
-	gfx_texture_set(data->images[IMAGE_GAME].id);
-	gfx_quads_begin();
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+	Graphics()->QuadsBegin();
 
 	if(current->team == 0) // red team
-		select_sprite(SPRITE_FLAG_RED);
+		RenderTools()->select_sprite(SPRITE_FLAG_RED);
 	else
-		select_sprite(SPRITE_FLAG_BLUE);
+		RenderTools()->select_sprite(SPRITE_FLAG_BLUE);
 
-	gfx_quads_setrotation(angle);
+	Graphics()->QuadsSetRotation(angle);
 
 	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
 	
@@ -142,8 +143,8 @@ void ITEMS::render_flag(const NETOBJ_FLAG *prev, const NETOBJ_FLAG *current)
 	if(gameclient.snap.local_info && current->carried_by == gameclient.snap.local_info->cid)
 		pos = gameclient.local_character_pos;
 
-	gfx_quads_draw(pos.x, pos.y-size*0.75f, size, size*2);
-	gfx_quads_end();
+	Graphics()->QuadsDraw(pos.x, pos.y-size*0.75f, size, size*2);
+	Graphics()->QuadsEnd();
 }
 
 
@@ -161,19 +162,19 @@ void ITEMS::render_laser(const struct NETOBJ_LASER *current)
 	
 	vec2 out, border;
 	
-	gfx_blend_normal();
-	gfx_texture_set(-1);
-	gfx_quads_begin();
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
 	
 	//vec4 inner_color(0.15f,0.35f,0.75f,1.0f);
 	//vec4 outer_color(0.65f,0.85f,1.0f,1.0f);
 
 	// do outline
 	vec4 outer_color(0.075f,0.075f,0.25f,1.0f);
-	gfx_setcolor(outer_color.r,outer_color.g,outer_color.b,1.0f);
+	Graphics()->SetColor(outer_color.r,outer_color.g,outer_color.b,1.0f);
 	out = vec2(dir.y, -dir.x) * (7.0f*ia);
 
-	gfx_quads_draw_freeform(
+	Graphics()->QuadsDrawFreeform(
 			from.x-out.x, from.y-out.y,
 			from.x+out.x, from.y+out.y,
 			pos.x-out.x, pos.y-out.y,
@@ -183,34 +184,34 @@ void ITEMS::render_laser(const struct NETOBJ_LASER *current)
 	// do inner	
 	vec4 inner_color(0.5f,0.5f,1.0f,1.0f);
 	out = vec2(dir.y, -dir.x) * (5.0f*ia);
-	gfx_setcolor(inner_color.r, inner_color.g, inner_color.b, 1.0f); // center
+	Graphics()->SetColor(inner_color.r, inner_color.g, inner_color.b, 1.0f); // center
 	
-	gfx_quads_draw_freeform(
+	Graphics()->QuadsDrawFreeform(
 			from.x-out.x, from.y-out.y,
 			from.x+out.x, from.y+out.y,
 			pos.x-out.x, pos.y-out.y,
 			pos.x+out.x, pos.y+out.y
 		);
 		
-	gfx_quads_end();
+	Graphics()->QuadsEnd();
 	
 	// render head
 	{
-		gfx_blend_normal();
-		gfx_texture_set(data->images[IMAGE_PARTICLES].id);
-		gfx_quads_begin();
+		Graphics()->BlendNormal();
+		Graphics()->TextureSet(data->images[IMAGE_PARTICLES].id);
+		Graphics()->QuadsBegin();
 
 		int sprites[] = {SPRITE_PART_SPLAT01, SPRITE_PART_SPLAT02, SPRITE_PART_SPLAT03};
-		select_sprite(sprites[client_tick()%3]);
-		gfx_quads_setrotation(client_tick());
-		gfx_setcolor(outer_color.r,outer_color.g,outer_color.b,1.0f);
-		gfx_quads_draw(pos.x, pos.y, 24,24);
-		gfx_setcolor(inner_color.r, inner_color.g, inner_color.b, 1.0f);
-		gfx_quads_draw(pos.x, pos.y, 20,20);
-		gfx_quads_end();
+		RenderTools()->select_sprite(sprites[client_tick()%3]);
+		Graphics()->QuadsSetRotation(client_tick());
+		Graphics()->SetColor(outer_color.r,outer_color.g,outer_color.b,1.0f);
+		Graphics()->QuadsDraw(pos.x, pos.y, 24,24);
+		Graphics()->SetColor(inner_color.r, inner_color.g, inner_color.b, 1.0f);
+		Graphics()->QuadsDraw(pos.x, pos.y, 20,20);
+		Graphics()->QuadsEnd();
 	}
 	
-	gfx_blend_normal();	
+	Graphics()->BlendNormal();	
 }
 
 void ITEMS::on_render()

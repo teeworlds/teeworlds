@@ -1,5 +1,7 @@
 #include <base/math.hpp>
 
+#include <engine/client/graphics.h>
+
 #include "ed_editor.hpp"
 #include <game/generated/gc_data.hpp>
 #include <game/client/render.hpp>
@@ -15,9 +17,10 @@ LAYER_QUADS::~LAYER_QUADS()
 {
 }
 
-static void envelope_eval(float time_offset, int env, float *channels)
+static void envelope_eval(float time_offset, int env, float *channels, void *user)
 {
-	if(env < 0 || env > editor.map.envelopes.len())
+	EDITOR *pEditor = (EDITOR *)user;
+	if(env < 0 || env > pEditor->map.envelopes.len())
 	{
 		channels[0] = 0;
 		channels[1] = 0;
@@ -26,19 +29,19 @@ static void envelope_eval(float time_offset, int env, float *channels)
 		return;
 	}
 		
-	ENVELOPE *e = editor.map.envelopes[env];
-	float t = editor.animate_time+time_offset;
-	t *= editor.animate_speed;
+	ENVELOPE *e = pEditor->map.envelopes[env];
+	float t = pEditor->animate_time+time_offset;
+	t *= pEditor->animate_speed;
 	e->eval(t, channels);
 }
 
 void LAYER_QUADS::render()
 {
-	gfx_texture_set(-1);
-	if(image >= 0 && image < editor.map.images.len())
-		gfx_texture_set(editor.map.images[image]->tex_id);
+	Graphics()->TextureSet(-1);
+	if(image >= 0 && image < editor->map.images.len())
+		Graphics()->TextureSet(editor->map.images[image]->tex_id);
 		
-	render_quads(quads.getptr(), quads.len(), envelope_eval, LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT);
+	editor->RenderTools()->render_quads(quads.getptr(), quads.len(), LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT, envelope_eval, editor);
 }
 
 QUAD *LAYER_QUADS::new_quad()
@@ -89,19 +92,19 @@ QUAD *LAYER_QUADS::new_quad()
 	return q;
 }
 
-void LAYER_QUADS::brush_selecting(RECT rect)
+void LAYER_QUADS::brush_selecting(CUIRect rect)
 {
 	// draw selection rectangle
-	gfx_texture_set(-1);
-	gfx_lines_begin();
-	gfx_lines_draw(rect.x, rect.y, rect.x+rect.w, rect.y);
-	gfx_lines_draw(rect.x+rect.w, rect.y, rect.x+rect.w, rect.y+rect.h);
-	gfx_lines_draw(rect.x+rect.w, rect.y+rect.h, rect.x, rect.y+rect.h);
-	gfx_lines_draw(rect.x, rect.y+rect.h, rect.x, rect.y);
-	gfx_lines_end();
+	Graphics()->TextureSet(-1);
+	Graphics()->LinesBegin();
+	Graphics()->LinesDraw(rect.x, rect.y, rect.x+rect.w, rect.y);
+	Graphics()->LinesDraw(rect.x+rect.w, rect.y, rect.x+rect.w, rect.y+rect.h);
+	Graphics()->LinesDraw(rect.x+rect.w, rect.y+rect.h, rect.x, rect.y+rect.h);
+	Graphics()->LinesDraw(rect.x, rect.y+rect.h, rect.x, rect.y);
+	Graphics()->LinesEnd();
 }
 
-int LAYER_QUADS::brush_grab(LAYERGROUP *brush, RECT rect)
+int LAYER_QUADS::brush_grab(LAYERGROUP *brush, CUIRect rect)
 {
 	// create new layers
 	LAYER_QUADS *grabbed = new LAYER_QUADS();
@@ -204,7 +207,7 @@ void LAYER_QUADS::get_size(float *w, float *h)
 
 extern int selected_points;
 
-int LAYER_QUADS::render_properties(RECT *toolbox)
+int LAYER_QUADS::render_properties(CUIRect *toolbox)
 {
 	// layer props
 	enum
@@ -220,12 +223,12 @@ int LAYER_QUADS::render_properties(RECT *toolbox)
 	
 	static int ids[NUM_PROPS] = {0};
 	int new_val = 0;
-	int prop = editor.do_properties(toolbox, props, ids, &new_val);		
+	int prop = editor->do_properties(toolbox, props, ids, &new_val);		
 	
 	if(prop == PROP_IMAGE)
 	{
 		if(new_val >= 0)
-			image = new_val%editor.map.images.len();
+			image = new_val%editor->map.images.len();
 		else
 			image = -1;
 	}

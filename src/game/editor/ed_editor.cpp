@@ -6,12 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern "C" {
-	#include <engine/e_common_interface.h>
-	#include <engine/e_datafile.h>
-	#include <engine/e_config.h>
-	#include <engine/e_engine.h>
-}
+#include <engine/e_common_interface.h>
+#include <engine/e_datafile.h>
+#include <engine/e_config.h>
+#include <engine/e_engine.h>
+#include <engine/client/graphics.h>
 
 #include <game/client/ui.hpp>
 #include <game/gamecore.hpp>
@@ -25,10 +24,19 @@ static int background_texture = 0;
 static int cursor_texture = 0;
 static int entities_texture = 0;
 
+enum
+{
+	BUTTON_CONTEXT=1,
+};
+
+
+
+EDITOR_IMAGE::~EDITOR_IMAGE()
+{
+	editor->Graphics()->UnloadTexture(tex_id);
+}
 
 static const void *ui_got_context = 0;
-
-EDITOR editor;
 
 LAYERGROUP::LAYERGROUP()
 {
@@ -52,7 +60,7 @@ LAYERGROUP::~LAYERGROUP()
 	clear();
 }
 
-void LAYERGROUP::convert(RECT *rect)
+void LAYERGROUP::convert(CUIRect *rect)
 {
 	rect->x += offset_x;
 	rect->y += offset_y;
@@ -60,52 +68,53 @@ void LAYERGROUP::convert(RECT *rect)
 
 void LAYERGROUP::mapping(float *points)
 {
-	mapscreen_to_world(
-		editor.world_offset_x, editor.world_offset_y,
+	m_pMap->editor->RenderTools()->mapscreen_to_world(
+		m_pMap->editor->world_offset_x, m_pMap->editor->world_offset_y,
 		parallax_x/100.0f, parallax_y/100.0f,
 		offset_x, offset_y,
-		gfx_screenaspect(), editor.world_zoom, points);
+		m_pMap->editor->Graphics()->ScreenAspect(), m_pMap->editor->world_zoom, points);
 		
-	points[0] += editor.editor_offset_x;
-	points[1] += editor.editor_offset_y;
-	points[2] += editor.editor_offset_x;
-	points[3] += editor.editor_offset_y;
+	points[0] += m_pMap->editor->editor_offset_x;
+	points[1] += m_pMap->editor->editor_offset_y;
+	points[2] += m_pMap->editor->editor_offset_x;
+	points[3] += m_pMap->editor->editor_offset_y;
 }
 
 void LAYERGROUP::mapscreen()
 {
 	float points[4];
 	mapping(points);
-	gfx_mapscreen(points[0], points[1], points[2], points[3]);
+	m_pMap->editor->Graphics()->MapScreen(points[0], points[1], points[2], points[3]);
 }
 
 void LAYERGROUP::render()
 {
 	mapscreen();
+	IGraphics *pGraphics = m_pMap->editor->Graphics();
 	
 	if(use_clipping)
 	{
 		float points[4];
-		editor.map.game_group->mapping(points);
+		m_pMap->game_group->mapping(points);
 		float x0 = (clip_x - points[0]) / (points[2]-points[0]);
 		float y0 = (clip_y - points[1]) / (points[3]-points[1]);
 		float x1 = ((clip_x+clip_w) - points[0]) / (points[2]-points[0]);
 		float y1 = ((clip_y+clip_h) - points[1]) / (points[3]-points[1]);
 		
-		gfx_clip_enable((int)(x0*gfx_screenwidth()), (int)(y0*gfx_screenheight()),
-			(int)((x1-x0)*gfx_screenwidth()), (int)((y1-y0)*gfx_screenheight()));
+		pGraphics->ClipEnable((int)(x0*pGraphics->ScreenWidth()), (int)(y0*pGraphics->ScreenHeight()),
+			(int)((x1-x0)*pGraphics->ScreenWidth()), (int)((y1-y0)*pGraphics->ScreenHeight()));
 	}
 	
 	for(int i = 0; i < layers.len(); i++)
 	{
-		if(layers[i]->visible && layers[i] != editor.map.game_layer)
+		if(layers[i]->visible && layers[i] != m_pMap->game_layer)
 		{
-			if(editor.show_detail || !(layers[i]->flags&LAYERFLAG_DETAIL))
+			if(m_pMap->editor->show_detail || !(layers[i]->flags&LAYERFLAG_DETAIL))
 				layers[i]->render();
 		}
 	}
 	
-	gfx_clip_disable();
+	pGraphics->ClipDisable();
 }
 
 bool LAYERGROUP::is_empty() const { return layers.len() == 0; }
@@ -178,21 +187,105 @@ void EDITOR_IMAGE::analyse_tileflags()
 *********************************************************/
 
 // copied from gc_menu.cpp, should be more generalized
-//extern int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float font_size, bool hidden=false);
+//extern int ui_do_edit_box(void *id, const CUIRect *rect, char *str, int str_size, float font_size, bool hidden=false);
 
-int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float font_size, bool hidden=false)
+int EDITOR::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, bool Hidden)
 {
-    int inside = ui_mouse_inside(rect);
+    int Inside = UI()->MouseInside(pRect);
+	int ReturnValue = 0;
+	static int AtIndex = 0;
+
+	if(UI()->LastActiveItem() == pID)
+	{
+		int Len = strlen(pStr);
+			
+		if(Inside && UI()->MouseButton(0))
+		{
+			int mx_rel = (int)(UI()->MouseX() - pRect->x);
+
+			for (int i = 1; i <= Len; i++)
+			{
+				if (gfx_text_width(0, FontSize, pStr, i) + 10 > mx_rel)
+				{
+					AtIndex = i - 1;
+					break;
+				}
+
+				if (i == Len)
+					AtIndex = Len;
+			}
+		}
+
+		for(int i = 0; i < inp_num_events(); i++)
+		{
+			Len = strlen(pStr);
+			LINEINPUT::manipulate(inp_get_event(i), pStr, StrSize, &Len, &AtIndex);
+		}
+	}
+
+	bool JustGotActive = false;
+	
+	if(UI()->ActiveItem() == pID)
+	{
+		if(!UI()->MouseButton(0))
+			UI()->SetActiveItem(0);
+	}
+	else if(UI()->HotItem() == pID)
+	{
+		if(UI()->MouseButton(0))
+		{
+			if (UI()->LastActiveItem() != pID)
+				JustGotActive = true;
+			UI()->SetActiveItem(pID);
+		}
+	}
+	
+	if(Inside)
+		UI()->SetHotItem(pID);
+
+	CUIRect Textbox = *pRect;
+	RenderTools()->DrawUIRect(&Textbox, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 5.0f);
+	Textbox.VMargin(5.0f, &Textbox);
+	
+	const char *pDisplayStr = pStr;
+	char aStars[128];
+	
+	if(Hidden)
+	{
+		unsigned s = strlen(pStr);
+		if(s >= sizeof(aStars))
+			s = sizeof(aStars)-1;
+		memset(aStars, '*', s);
+		aStars[s] = 0;
+		pDisplayStr = aStars;
+	}
+
+	UI()->DoLabel(&Textbox, pDisplayStr, FontSize, -1);
+	
+	if (UI()->LastActiveItem() == pID && !JustGotActive)
+	{
+		float w = gfx_text_width(0, FontSize, pDisplayStr, AtIndex);
+		Textbox.x += w*UI()->Scale();
+		UI()->DoLabel(&Textbox, "_", FontSize, -1);
+	}
+
+	return ReturnValue;
+}
+
+/*
+int ui_do_edit_box(void *id, const CUIRect *rect, char *str, int str_size, float font_size, bool hidden=false)
+{
+    int inside = UI()->MouseInside(rect);
 	int r = 0;
 	static int at_index = 0;
 
-	if(ui_last_active_item() == id)
+	if(UI()->LastActiveItem() == id)
 	{
 		int len = strlen(str);
 
-		if (inside && ui_mouse_button(0))
+		if (inside && UI()->MouseButton(0))
 		{
-			int mx_rel = (int)(ui_mouse_x() - rect->x);
+			int mx_rel = (int)(UI()->MouseX() - rect->x);
 
 			for (int i = 1; i <= len; i++)
 			{
@@ -218,27 +311,27 @@ int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float fo
 
 	bool just_got_active = false;
 	
-	if(ui_active_item() == id)
+	if(UI()->ActiveItem() == id)
 	{
-		if(!ui_mouse_button(0))
-			ui_set_active_item(0);
+		if(!UI()->MouseButton(0))
+			UI()->SetActiveItem(0);
 	}
-	else if(ui_hot_item() == id)
+	else if(UI()->HotItem() == id)
 	{
-		if(ui_mouse_button(0))
+		if(UI()->MouseButton(0))
 		{
-			if (ui_last_active_item() != id)
+			if (UI()->LastActiveItem() != id)
 				just_got_active = true;
-			ui_set_active_item(id);
+			UI()->SetActiveItem(id);
 		}
 	}
 	
 	if(inside)
-		ui_set_hot_item(id);
+		UI()->SetHotItem(id);
 
-	RECT textbox = *rect;
-	ui_draw_rect(&textbox, vec4(1,1,1,0.5f), CORNER_ALL, 5.0f);
-	ui_vmargin(&textbox, 5.0f, &textbox);
+	CUIRect textbox = *rect;
+	RenderTools()->DrawUIRect(&textbox, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 5.0f);
+	textbox.VMargin(5.0f, &textbox);
 	
 	const char *display_str = str;
 	char stars[128];
@@ -253,197 +346,251 @@ int ui_do_edit_box(void *id, const RECT *rect, char *str, int str_size, float fo
 		display_str = stars;
 	}
 
-	ui_do_label(&textbox, display_str, font_size, -1);
+	UI()->DoLabel(&textbox, display_str, font_size, -1);
 	
-	if (ui_last_active_item() == id && !just_got_active)
+	if (UI()->LastActiveItem() == id && !just_got_active)
 	{
 		float w = gfx_text_width(0, font_size, display_str, at_index);
-		textbox.x += w*ui_scale();
-		ui_do_label(&textbox, "_", font_size, -1);
+		textbox.x += w*UI()->Scale();
+		UI()->DoLabel(&textbox, "_", font_size, -1);
 	}
 
 	return r;
 }
+*/
 
-vec4 button_color_mul(const void *id)
+vec4 EDITOR::button_color_mul(const void *id)
 {
-	if(ui_active_item() == id)
+	if(UI()->ActiveItem() == id)
 		return vec4(1,1,1,0.5f);
-	else if(ui_hot_item() == id)
+	else if(UI()->HotItem() == id)
 		return vec4(1,1,1,1.5f);
 	return vec4(1,1,1,1);
 }
 
-float ui_do_scrollbar_v(const void *id, const RECT *rect, float current)
+float EDITOR::ui_do_scrollbar_v(const void *id, const CUIRect *rect, float current)
 {
-	RECT handle;
+	CUIRect handle;
 	static float offset_y;
-	ui_hsplit_t(rect, 33, &handle, 0);
+	rect->HSplitTop(33, &handle, 0);
 
 	handle.y += (rect->h-handle.h)*current;
 
 	/* logic */
     float ret = current;
-    int inside = ui_mouse_inside(&handle);
+    int inside = UI()->MouseInside(&handle);
 
-	if(ui_active_item() == id)
+	if(UI()->ActiveItem() == id)
 	{
-		if(!ui_mouse_button(0))
-			ui_set_active_item(0);
+		if(!UI()->MouseButton(0))
+			UI()->SetActiveItem(0);
 		
 		float min = rect->y;
 		float max = rect->h-handle.h;
-		float cur = ui_mouse_y()-offset_y;
+		float cur = UI()->MouseY()-offset_y;
 		ret = (cur-min)/max;
 		if(ret < 0.0f) ret = 0.0f;
 		if(ret > 1.0f) ret = 1.0f;
 	}
-	else if(ui_hot_item() == id)
+	else if(UI()->HotItem() == id)
 	{
-		if(ui_mouse_button(0))
+		if(UI()->MouseButton(0))
 		{
-			ui_set_active_item(id);
-			offset_y = ui_mouse_y()-handle.y;
+			UI()->SetActiveItem(id);
+			offset_y = UI()->MouseY()-handle.y;
 		}
 	}
 	
 	if(inside)
-		ui_set_hot_item(id);
+		UI()->SetHotItem(id);
 
 	// render
-	RECT rail;
-	ui_vmargin(rect, 5.0f, &rail);
-	ui_draw_rect(&rail, vec4(1,1,1,0.25f), 0, 0.0f);
+	CUIRect rail;
+	rect->VMargin(5.0f, &rail);
+	RenderTools()->DrawUIRect(&rail, vec4(1,1,1,0.25f), 0, 0.0f);
 
-	RECT slider = handle;
+	CUIRect slider = handle;
 	slider.w = rail.x-slider.x;
-	ui_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_L, 2.5f);
+	RenderTools()->DrawUIRect(&slider, vec4(1,1,1,0.25f), CUI::CORNER_L, 2.5f);
 	slider.x = rail.x+rail.w;
-	ui_draw_rect(&slider, vec4(1,1,1,0.25f), CORNER_R, 2.5f);
+	RenderTools()->DrawUIRect(&slider, vec4(1,1,1,0.25f), CUI::CORNER_R, 2.5f);
 
 	slider = handle;
-	ui_margin(&slider, 5.0f, &slider);
-	ui_draw_rect(&slider, vec4(1,1,1,0.25f)*button_color_mul(id), CORNER_ALL, 2.5f);
+	slider.Margin(5.0f, &slider);
+	RenderTools()->DrawUIRect(&slider, vec4(1,1,1,0.25f)*button_color_mul(id), CUI::CORNER_ALL, 2.5f);
 	
     return ret;
 }
 
-static vec4 get_button_color(const void *id, int checked)
+vec4 EDITOR::get_button_color(const void *id, int checked)
 {
 	if(checked < 0)
 		return vec4(0,0,0,0.5f);
 		
 	if(checked > 0)
 	{
-		if(ui_hot_item() == id)
+		if(UI()->HotItem() == id)
 			return vec4(1,0,0,0.75f);
 		return vec4(1,0,0,0.5f);
 	}
 	
-	if(ui_hot_item() == id)
+	if(UI()->HotItem() == id)
 		return vec4(1,1,1,0.75f);
 	return vec4(1,1,1,0.5f);
 }
 
-void draw_editor_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
+int EDITOR::DoButton_Editor_Common(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
-	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), CORNER_ALL, 3.0f);
-	ui_do_label(r, text, 10, 0, -1);
-}
-
-static void draw_editor_button_file(const void *id, const char *text, int checked, const RECT *r, const void *extra)
-{
-	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
-	if(ui_hot_item() == id)
-		ui_draw_rect(r, get_button_color(id, checked), CORNER_ALL, 3.0f);
+	if(UI()->MouseInside(pRect))
+	{
+		if(Flags&BUTTON_CONTEXT)
+			ui_got_context = pID;
+		if(tooltip)
+			tooltip = pToolTip;
+	}
 	
-	RECT t = *r;
-	ui_vmargin(&t, 5.0f, &t);
-	ui_do_label(&t, text, 10, -1, -1);
+	if(UI()->HotItem() == pID && pToolTip)
+		tooltip = (const char *)pToolTip;
+	
+	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
+
+	// Draw here
+	//return UI()->DoButton(id, text, checked, r, draw_func, 0);
 }
 
-static void draw_editor_button_menu(const void *id, const char *text, int checked, const RECT *rect, const void *extra)
+
+int EDITOR::DoButton_Editor(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
+{
+	RenderTools()->DrawUIRect(pRect, get_button_color(pID, Checked), CUI::CORNER_ALL, 3.0f);
+	UI()->DoLabel(pRect, pText, 10, 0, -1);
+	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
+}
+
+int EDITOR::DoButton_File(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
+{
+	if(UI()->HotItem() == pID)
+		RenderTools()->DrawUIRect(pRect, get_button_color(pID, Checked), CUI::CORNER_ALL, 3.0f);
+	
+	CUIRect t = *pRect;
+	t.VMargin(5.0f, &t);
+	UI()->DoLabel(&t, pText, 10, -1, -1);
+	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
+}
+
+//static void draw_editor_button_menu(const void *id, const char *text, int checked, const CUIRect *rect, const void *extra)
+int EDITOR::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
 	/*
-	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
-	if(ui_hot_item() == id)
-		ui_draw_rect(r, get_button_color(id, checked), CORNER_ALL, 3.0f);
+	if(UI()->HotItem() == id) if(extra) editor.tooltip = (const char *)extra;
+	if(UI()->HotItem() == id)
+		RenderTools()->DrawUIRect(r, get_button_color(id, checked), CUI::CORNER_ALL, 3.0f);
 	*/
 
-	RECT r = *rect;
+	CUIRect r = *pRect;
 	/*
 	if(ui_popups[id == id)
 	{
-		ui_draw_rect(&r, vec4(0.5f,0.5f,0.5f,0.75f), CORNER_T, 3.0f);
-		ui_margin(&r, 1.0f, &r);
-		ui_draw_rect(&r, vec4(0,0,0,0.75f), CORNER_T, 3.0f);
+		RenderTools()->DrawUIRect(&r, vec4(0.5f,0.5f,0.5f,0.75f), CUI::CORNER_T, 3.0f);
+		r.Margin(1.0f, &r);
+		RenderTools()->DrawUIRect(&r, vec4(0,0,0,0.75f), CUI::CORNER_T, 3.0f);
 	}
 	else*/
-		ui_draw_rect(&r, vec4(0.5f,0.5f,0.5f, 1.0f), CORNER_T, 3.0f);
+		RenderTools()->DrawUIRect(&r, vec4(0.5f,0.5f,0.5f, 1.0f), CUI::CORNER_T, 3.0f);
 	
 
-	r = *rect;
-	ui_vmargin(&r, 5.0f, &r);
-	ui_do_label(&r, text, 10, -1, -1);
+	r = *pRect;
+	r.VMargin(5.0f, &r);
+	UI()->DoLabel(&r, pText, 10, -1, -1);
 	
-	//RECT t = *r;
-}
-
-void draw_editor_button_menuitem(const void *id, const char *text, int checked, const RECT *r, const void *extra)
-{
-	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
-	if(ui_hot_item() == id || checked)
-		ui_draw_rect(r, get_button_color(id, checked), CORNER_ALL, 3.0f);
+	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 	
-	RECT t = *r;
-	ui_vmargin(&t, 5.0f, &t);
-	ui_do_label(&t, text, 10, -1, -1);
+	//CUIRect t = *r;
 }
 
-static void draw_editor_button_l(const void *id, const char *text, int checked, const RECT *r, const void *extra)
+int EDITOR::DoButton_MenuItem(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
-	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), CORNER_L, 3.0f);
-	ui_do_label(r, text, 10, 0, -1);
+	if(UI()->HotItem() == pID || Checked)
+		RenderTools()->DrawUIRect(pRect, get_button_color(pID, Checked), CUI::CORNER_ALL, 3.0f);
+	
+	CUIRect t = *pRect;
+	t.VMargin(5.0f, &t);
+	UI()->DoLabel(&t, pText, 10, -1, -1);
+	return DoButton_Editor_Common(pID, pText, Checked, pRect, 0, 0);
 }
 
-static void draw_editor_button_m(const void *id, const char *text, int checked, const RECT *r, const void *extra)
+int EDITOR::DoButton_ButtonL(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
-	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), 0, 3.0f);
-	ui_do_label(r, text, 10, 0, -1);
+	RenderTools()->DrawUIRect(pRect, get_button_color(pID, Checked), CUI::CORNER_L, 3.0f);
+	UI()->DoLabel(pRect, pText, 10, 0, -1);
+	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
-static void draw_editor_button_r(const void *id, const char *text, int checked, const RECT *r, const void *extra)
+int EDITOR::DoButton_ButtonM(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
-	if(ui_hot_item() == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), CORNER_R, 3.0f);
-	ui_do_label(r, text, 10, 0, -1);
+	RenderTools()->DrawUIRect(pRect, get_button_color(pID, Checked), 0, 3.0f);
+	UI()->DoLabel(pRect, pText, 10, 0, -1);
+	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
-static void draw_inc_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
+int EDITOR::DoButton_ButtonR(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
-	if(ui_hot_item == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), CORNER_R, 3.0f);
-	ui_do_label(r, text?text:">", 10, 0, -1);
+	RenderTools()->DrawUIRect(pRect, get_button_color(pID, Checked), CUI::CORNER_R, 3.0f);
+	UI()->DoLabel(pRect, pText, 10, 0, -1);
+	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
-static void draw_dec_button(const void *id, const char *text, int checked, const RECT *r, const void *extra)
+int EDITOR::DoButton_ButtonInc(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
-	if(ui_hot_item == id) if(extra) editor.tooltip = (const char *)extra;
-	ui_draw_rect(r, get_button_color(id, checked), CORNER_L, 3.0f);
-	ui_do_label(r, text?text:"<", 10, 0, -1);
+	RenderTools()->DrawUIRect(pRect, get_button_color(pID, Checked), CUI::CORNER_R, 3.0f);
+	UI()->DoLabel(pRect, pText?pText:">", 10, 0, -1);
+	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
-enum
+int EDITOR::DoButton_ButtonDec(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
-	BUTTON_CONTEXT=1,
-};
+	RenderTools()->DrawUIRect(pRect, get_button_color(pID, Checked), CUI::CORNER_L, 3.0f);
+	UI()->DoLabel(pRect, pText?pText:"<", 10, 0, -1);
+	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
+}
 
-int do_editor_button(const void *id, const char *text, int checked, const RECT *r, ui_draw_button_func draw_func, int flags, const char *tooltip)
+/*
+static void draw_editor_button_l(const void *id, const char *text, int checked, const CUIRect *r, const void *extra)
 {
-	if(ui_mouse_inside(r))
+	RenderTools()->DrawUIRect(r, get_button_color(id, checked), CUI::CORNER_L, 3.0f);
+	UI()->DoLabel(r, text, 10, 0, -1);
+}
+
+static void draw_editor_button_m(const void *id, const char *text, int checked, const CUIRect *r, const void *extra)
+{
+	if(UI()->HotItem() == id) if(extra) editor.tooltip = (const char *)extra;
+	RenderTools()->DrawUIRect(r, get_button_color(id, checked), 0, 3.0f);
+	UI()->DoLabel(r, text, 10, 0, -1);
+}
+
+static void draw_editor_button_r(const void *id, const char *text, int checked, const CUIRect *r, const void *extra)
+{
+	if(UI()->HotItem() == id) if(extra) editor.tooltip = (const char *)extra;
+	RenderTools()->DrawUIRect(r, get_button_color(id, checked), CUI::CORNER_R, 3.0f);
+	UI()->DoLabel(r, text, 10, 0, -1);
+}
+
+static void draw_inc_button(const void *id, const char *text, int checked, const CUIRect *r, const void *extra)
+{
+	if(UI()->HotItem == id) if(extra) editor.tooltip = (const char *)extra;
+	RenderTools()->DrawUIRect(r, get_button_color(id, checked), CUI::CORNER_R, 3.0f);
+	UI()->DoLabel(r, text?text:">", 10, 0, -1);
+}
+
+static void draw_dec_button(const void *id, const char *text, int checked, const CUIRect *r, const void *extra)
+{
+	if(UI()->HotItem == id) if(extra) editor.tooltip = (const char *)extra;
+	RenderTools()->DrawUIRect(r, get_button_color(id, checked), CUI::CORNER_L, 3.0f);
+	UI()->DoLabel(r, text?text:"<", 10, 0, -1);
+}
+
+int do_editor_button(const void *id, const char *text, int checked, const CUIRect *r, ui_draw_button_func draw_func, int flags, const char *tooltip)
+{
+	if(UI()->MouseInside(r))
 	{
 		if(flags&BUTTON_CONTEXT)
 			ui_got_context = id;
@@ -451,46 +598,46 @@ int do_editor_button(const void *id, const char *text, int checked, const RECT *
 			editor.tooltip = tooltip;
 	}
 	
-	return ui_do_button(id, text, checked, r, draw_func, 0);
-}
+	return UI()->DoButton(id, text, checked, r, draw_func, 0);
+}*/
 
 
-static void render_background(RECT view, int texture, float size, float brightness)
+void EDITOR::render_background(CUIRect view, int texture, float size, float brightness)
 {
-	gfx_texture_set(texture);
-	gfx_blend_normal();
-	gfx_quads_begin();
-	gfx_setcolor(brightness,brightness,brightness,1.0f);
-	gfx_quads_setsubset(0,0, view.w/size, view.h/size);
-	gfx_quads_drawTL(view.x, view.y, view.w, view.h);
-	gfx_quads_end();
+	Graphics()->TextureSet(texture);
+	Graphics()->BlendNormal();
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(brightness,brightness,brightness,1.0f);
+	Graphics()->QuadsSetSubset(0,0, view.w/size, view.h/size);
+	Graphics()->QuadsDrawTL(view.x, view.y, view.w, view.h);
+	Graphics()->QuadsEnd();
 }
 
 static LAYERGROUP brush;
 static LAYER_TILES tileset_picker(16, 16);
 
-static int ui_do_value_selector(void *id, RECT *r, const char *label, int current, int min, int max, float scale)
+int EDITOR::ui_do_value_selector(void *id, CUIRect *r, const char *label, int current, int min, int max, float scale)
 {
     /* logic */
     static float value;
     int ret = 0;
-    int inside = ui_mouse_inside(r);
+    int inside = UI()->MouseInside(r);
 
-	if(ui_active_item() == id)
+	if(UI()->ActiveItem() == id)
 	{
-		if(!ui_mouse_button(0))
+		if(!UI()->MouseButton(0))
 		{
 			if(inside)
 				ret = 1;
-			editor.lock_mouse = false;
-			ui_set_active_item(0);
+			lock_mouse = false;
+			UI()->SetActiveItem(0);
 		}
 		else
 		{
 			if(inp_key_pressed(KEY_LSHIFT) || inp_key_pressed(KEY_RSHIFT))
-				value += editor.mouse_delta_x*0.05f;
+				value += mouse_delta_x*0.05f;
 			else
-				value += editor.mouse_delta_x;
+				value += mouse_delta_x;
 			
 			if(fabs(value) > scale)
 			{
@@ -504,31 +651,31 @@ static int ui_do_value_selector(void *id, RECT *r, const char *label, int curren
 			}
 		}
 	}
-	else if(ui_hot_item() == id)
+	else if(UI()->HotItem() == id)
 	{
-		if(ui_mouse_button(0))
+		if(UI()->MouseButton(0))
 		{
-			editor.lock_mouse = true;
+			lock_mouse = true;
 			value = 0;
-			ui_set_active_item(id);
+			UI()->SetActiveItem(id);
 		}
 	}
 	
 	if(inside)
-		ui_set_hot_item(id);
+		UI()->SetHotItem(id);
 
 	// render
 	char buf[128];
 	sprintf(buf, "%s %d", label, current);
-	ui_draw_rect(r, get_button_color(id, 0), CORNER_ALL, 5.0f);
-	ui_do_label(r, buf, 10, 0, -1);
+	RenderTools()->DrawUIRect(r, get_button_color(id, 0), CUI::CORNER_ALL, 5.0f);
+	UI()->DoLabel(r, buf, 10, 0, -1);
 	return current;
 }
 
 LAYERGROUP *EDITOR::get_selected_group()
 {
-	if(selected_group >= 0 && selected_group < editor.map.groups.len())
-		return editor.map.groups[selected_group];
+	if(selected_group >= 0 && selected_group < map.groups.len())
+		return map.groups[selected_group];
 	return 0x0;
 }
 
@@ -538,7 +685,7 @@ LAYER *EDITOR::get_selected_layer(int index)
 	if(!group)
 		return 0x0;
 
-	if(selected_layer >= 0 && selected_layer < editor.map.groups[selected_group]->layers.len())
+	if(selected_layer >= 0 && selected_layer < map.groups[selected_group]->layers.len())
 		return group->layers[selected_layer];
 	return 0x0;
 }
@@ -561,108 +708,108 @@ QUAD *EDITOR::get_selected_quad()
 	return 0;
 }
 
-static void callback_open_map(const char *filename) { editor.load(filename); }
-static void callback_append_map(const char *filename) { editor.append(filename); }
-static void callback_save_map(const char *filename) { editor.save(filename); }
+static void callback_open_map(const char *filename, void *user) { ((EDITOR*)user)->load(filename); }
+static void callback_append_map(const char *filename, void *user) { ((EDITOR*)user)->append(filename); }
+static void callback_save_map(const char *filename, void *user) { ((EDITOR*)user)->save(filename); }
 
-static void do_toolbar(RECT toolbar)
+void EDITOR::do_toolbar(CUIRect toolbar)
 {
-	RECT button;
+	CUIRect button;
 	
 	// ctrl+o to open
 	if(inp_key_down('o') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL)))
-		editor.invoke_file_dialog(LISTDIRTYPE_ALL, "Open Map", "Open", "maps/", "", callback_open_map);
+		invoke_file_dialog(LISTDIRTYPE_ALL, "Open Map", "Open", "maps/", "", callback_open_map, this);
 	
 	// ctrl+s to save
 	if(inp_key_down('s') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL)))
-		editor.invoke_file_dialog(LISTDIRTYPE_SAVE, "Save Map", "Save", "maps/", "", callback_save_map);
+		invoke_file_dialog(LISTDIRTYPE_SAVE, "Save Map", "Save", "maps/", "", callback_save_map, this);
 
 	// detail button
-	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
+	toolbar.VSplitLeft(30.0f, &button, &toolbar);
 	static int hq_button = 0;
-	if(do_editor_button(&hq_button, "Detail", editor.show_detail, &button, draw_editor_button, 0, "[ctrl+h] Toggle High Detail") ||
+	if(DoButton_Editor(&hq_button, "Detail", show_detail, &button, 0, "[ctrl+h] Toggle High Detail") ||
 		(inp_key_down('h') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))))
 	{
-		editor.show_detail = !editor.show_detail;
+		show_detail = !show_detail;
 	}
 
-	ui_vsplit_l(&toolbar, 5.0f, 0, &toolbar);
+	toolbar.VSplitLeft(5.0f, 0, &toolbar);
 	
 	// animation button
-	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
+	toolbar.VSplitLeft(30.0f, &button, &toolbar);
 	static int animate_button = 0;
-	if(do_editor_button(&animate_button, "Anim", editor.animate, &button, draw_editor_button, 0, "[ctrl+m] Toggle animation") ||
+	if(DoButton_Editor(&animate_button, "Anim", animate, &button, 0, "[ctrl+m] Toggle animation") ||
 		(inp_key_down('m') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))))
 	{
-		editor.animate_start = time_get();
-		editor.animate = !editor.animate;
+		animate_start = time_get();
+		animate = !animate;
 	}
 
-	ui_vsplit_l(&toolbar, 5.0f, 0, &toolbar);
+	toolbar.VSplitLeft(5.0f, 0, &toolbar);
 
 	// proof button
-	ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
+	toolbar.VSplitLeft(30.0f, &button, &toolbar);
 	static int proof_button = 0;
-	if(do_editor_button(&proof_button, "Proof", editor.proof_borders, &button, draw_editor_button, 0, "[ctrl-p] Toggles proof borders. These borders represent what a player maximum can see.") ||
+	if(DoButton_Editor(&proof_button, "Proof", proof_borders, &button, 0, "[ctrl-p] Toggles proof borders. These borders represent what a player maximum can see.") ||
 		(inp_key_down('p') && (inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))))
 	{
-		editor.proof_borders = !editor.proof_borders;
+		proof_borders = !proof_borders;
 	}
 
-	ui_vsplit_l(&toolbar, 15.0f, 0, &toolbar);
+	toolbar.VSplitLeft(15.0f, 0, &toolbar);
 	
 	// zoom group
-	ui_vsplit_l(&toolbar, 16.0f, &button, &toolbar);
+	toolbar.VSplitLeft(16.0f, &button, &toolbar);
 	static int zoom_out_button = 0;
-	if(do_editor_button(&zoom_out_button, "ZO", 0, &button, draw_editor_button_l, 0, "[NumPad-] Zoom out") || inp_key_down(KEY_KP_MINUS))
-		editor.zoom_level += 50;
+	if(DoButton_ButtonL(&zoom_out_button, "ZO", 0, &button, 0, "[NumPad-] Zoom out") || inp_key_down(KEY_KP_MINUS))
+		zoom_level += 50;
 		
-	ui_vsplit_l(&toolbar, 16.0f, &button, &toolbar);
+	toolbar.VSplitLeft(16.0f, &button, &toolbar);
 	static int zoom_normal_button = 0;
-	if(do_editor_button(&zoom_normal_button, "1:1", 0, &button, draw_editor_button_m, 0, "[NumPad*] Zoom to normal and remove editor offset") || inp_key_down(KEY_KP_MULTIPLY))
+	if(DoButton_ButtonM(&zoom_normal_button, "1:1", 0, &button, 0, "[NumPad*] Zoom to normal and remove editor offset") || inp_key_down(KEY_KP_MULTIPLY))
 	{
-		editor.editor_offset_x = 0;
-		editor.editor_offset_y = 0;
-		editor.zoom_level = 100;
+		editor_offset_x = 0;
+		editor_offset_y = 0;
+		zoom_level = 100;
 	}
 		
-	ui_vsplit_l(&toolbar, 16.0f, &button, &toolbar);
+	toolbar.VSplitLeft(16.0f, &button, &toolbar);
 	static int zoom_in_button = 0;
-	if(do_editor_button(&zoom_in_button, "ZI", 0, &button, draw_editor_button_r, 0, "[NumPad+] Zoom in") || inp_key_down(KEY_KP_PLUS))
-		editor.zoom_level -= 50;
+	if(DoButton_ButtonR(&zoom_in_button, "ZI", 0, &button, 0, "[NumPad+] Zoom in") || inp_key_down(KEY_KP_PLUS))
+		zoom_level -= 50;
 	
-	ui_vsplit_l(&toolbar, 15.0f, 0, &toolbar);
+	toolbar.VSplitLeft(15.0f, 0, &toolbar);
 	
 	// animation speed
-	ui_vsplit_l(&toolbar, 16.0f, &button, &toolbar);
+	toolbar.VSplitLeft(16.0f, &button, &toolbar);
 	static int anim_faster_button = 0;
-	if(do_editor_button(&anim_faster_button, "A+", 0, &button, draw_editor_button_l, 0, "Increase animation speed"))
-		editor.animate_speed += 0.5f;
+	if(DoButton_ButtonL(&anim_faster_button, "A+", 0, &button, 0, "Increase animation speed"))
+		animate_speed += 0.5f;
 	
-	ui_vsplit_l(&toolbar, 16.0f, &button, &toolbar);
+	toolbar.VSplitLeft(16.0f, &button, &toolbar);
 	static int anim_normal_button = 0;
-	if(do_editor_button(&anim_normal_button, "1", 0, &button, draw_editor_button_m, 0, "Normal animation speed"))
-		editor.animate_speed = 1.0f;
+	if(DoButton_ButtonM(&anim_normal_button, "1", 0, &button, 0, "Normal animation speed"))
+		animate_speed = 1.0f;
 	
-	ui_vsplit_l(&toolbar, 16.0f, &button, &toolbar);
+	toolbar.VSplitLeft(16.0f, &button, &toolbar);
 	static int anim_slower_button = 0;
-	if(do_editor_button(&anim_slower_button, "A-", 0, &button, draw_editor_button_r, 0, "Decrease animation speed"))
+	if(DoButton_ButtonR(&anim_slower_button, "A-", 0, &button, 0, "Decrease animation speed"))
 	{
-		if(editor.animate_speed > 0.5f)
-			editor.animate_speed -= 0.5f;
+		if(animate_speed > 0.5f)
+			animate_speed -= 0.5f;
 	}
 	
-	if(inp_key_presses(KEY_MOUSE_WHEEL_UP) && editor.dialog == DIALOG_NONE)
-		editor.zoom_level -= 20;
+	if(inp_key_presses(KEY_MOUSE_WHEEL_UP) && dialog == DIALOG_NONE)
+		zoom_level -= 20;
 		
-	if(inp_key_presses(KEY_MOUSE_WHEEL_DOWN) && editor.dialog == DIALOG_NONE)
-		editor.zoom_level += 20;
+	if(inp_key_presses(KEY_MOUSE_WHEEL_DOWN) && dialog == DIALOG_NONE)
+		zoom_level += 20;
 	
-	if(editor.zoom_level < 50)
-		editor.zoom_level = 50;
-	editor.world_zoom = editor.zoom_level/100.0f;
+	if(zoom_level < 50)
+		zoom_level = 50;
+	world_zoom = zoom_level/100.0f;
 
-	ui_vsplit_l(&toolbar, 10.0f, &button, &toolbar);
+	toolbar.VSplitLeft(10.0f, &button, &toolbar);
 
 
 	// brush manipulation
@@ -670,41 +817,41 @@ static void do_toolbar(RECT toolbar)
 		int enabled = brush.is_empty()?-1:0;
 		
 		// flip buttons
-		ui_vsplit_l(&toolbar, 20.0f, &button, &toolbar);
+		toolbar.VSplitLeft(20.0f, &button, &toolbar);
 		static int flipx_button = 0;
-		if(do_editor_button(&flipx_button, "^X", enabled, &button, draw_editor_button_l, 0, "[N] Flip brush horizontal") || inp_key_down('n'))
+		if(DoButton_ButtonL(&flipx_button, "^X", enabled, &button, 0, "[N] Flip brush horizontal") || inp_key_down('n'))
 		{
 			for(int i = 0; i < brush.layers.len(); i++)
 				brush.layers[i]->brush_flip_x();
 		}
 			
-		ui_vsplit_l(&toolbar, 20.0f, &button, &toolbar);
+		toolbar.VSplitLeft(20.0f, &button, &toolbar);
 		static int flipy_button = 0;
-		if(do_editor_button(&flipy_button, "^Y", enabled, &button, draw_editor_button_r, 0, "[M] Flip brush vertical") || inp_key_down('m'))
+		if(DoButton_ButtonR(&flipy_button, "^Y", enabled, &button, 0, "[M] Flip brush vertical") || inp_key_down('m'))
 		{
 			for(int i = 0; i < brush.layers.len(); i++)
 				brush.layers[i]->brush_flip_y();
 		}
 
 		// rotate buttons
-		ui_vsplit_l(&toolbar, 20.0f, &button, &toolbar);
+		toolbar.VSplitLeft(20.0f, &button, &toolbar);
 		
-		ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
+		toolbar.VSplitLeft(30.0f, &button, &toolbar);
 		static int rotation_amount = 90;
 		rotation_amount = ui_do_value_selector(&rotation_amount, &button, "", rotation_amount, 1, 360, 2.0f);
 		
-		ui_vsplit_l(&toolbar, 5.0f, &button, &toolbar);
-		ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
+		toolbar.VSplitLeft(5.0f, &button, &toolbar);
+		toolbar.VSplitLeft(30.0f, &button, &toolbar);
 		static int ccw_button = 0;
-		if(do_editor_button(&ccw_button, "CCW", enabled, &button, draw_editor_button_l, 0, "[R] Rotates the brush counter clockwise") || inp_key_down('r'))
+		if(DoButton_ButtonL(&ccw_button, "CCW", enabled, &button, 0, "[R] Rotates the brush counter clockwise") || inp_key_down('r'))
 		{
 			for(int i = 0; i < brush.layers.len(); i++)
 				brush.layers[i]->brush_rotate(-rotation_amount/360.0f*pi*2);
 		}
 			
-		ui_vsplit_l(&toolbar, 30.0f, &button, &toolbar);
+		toolbar.VSplitLeft(30.0f, &button, &toolbar);
 		static int cw_button = 0;
-		if(do_editor_button(&cw_button, "CW", enabled, &button, draw_editor_button_r, 0, "[T] Rotates the brush clockwise") || inp_key_down('t'))
+		if(DoButton_ButtonR(&cw_button, "CW", enabled, &button, 0, "[T] Rotates the brush clockwise") || inp_key_down('t'))
 		{
 			for(int i = 0; i < brush.layers.len(); i++)
 				brush.layers[i]->brush_rotate(rotation_amount/360.0f*pi*2);
@@ -714,18 +861,18 @@ static void do_toolbar(RECT toolbar)
 	// quad manipulation
 	{
 		// do add button
-		ui_vsplit_l(&toolbar, 10.0f, &button, &toolbar);
-		ui_vsplit_l(&toolbar, 60.0f, &button, &toolbar);
+		toolbar.VSplitLeft(10.0f, &button, &toolbar);
+		toolbar.VSplitLeft(60.0f, &button, &toolbar);
 		static int new_button = 0;
 		
-		LAYER_QUADS *qlayer = (LAYER_QUADS *)editor.get_selected_layer_type(0, LAYERTYPE_QUADS);
-		//LAYER_TILES *tlayer = (LAYER_TILES *)editor.get_selected_layer_type(0, LAYERTYPE_TILES);
-		if(do_editor_button(&new_button, "Add Quad", qlayer?0:-1, &button, draw_editor_button, 0, "Adds a new quad"))
+		LAYER_QUADS *qlayer = (LAYER_QUADS *)get_selected_layer_type(0, LAYERTYPE_QUADS);
+		//LAYER_TILES *tlayer = (LAYER_TILES *)get_selected_layer_type(0, LAYERTYPE_TILES);
+		if(DoButton_Editor(&new_button, "Add Quad", qlayer?0:-1, &button, 0, "Adds a new quad"))
 		{
 			if(qlayer)
 			{
 				float mapping[4];
-				LAYERGROUP *g = editor.get_selected_group();
+				LAYERGROUP *g = get_selected_group();
 				g->mapping(mapping);
 				int add_x = f2fx(mapping[0] + (mapping[2]-mapping[0])/2);
 				int add_y = f2fx(mapping[1] + (mapping[3]-mapping[1])/2);
@@ -749,7 +896,7 @@ static void rotate(POINT *center, POINT *point, float rotation)
 	point->y = (int)(x * sinf(rotation) + y * cosf(rotation) + center->y);
 }
 
-static void do_quad(QUAD *q, int index)
+void EDITOR::do_quad(QUAD *q, int index)
 {
 	enum
 	{
@@ -767,8 +914,8 @@ static void do_quad(QUAD *q, int index)
 	static float last_wy;
 	static int operation = OP_NONE;
 	static float rotate_angle = 0;
-	float wx = ui_mouse_world_x();
-	float wy = ui_mouse_world_y();
+	float wx = UI()->MouseWorldX();
+	float wy = UI()->MouseWorldY();
 	
 	// get pivot
 	float center_x = fx2f(q->points[4].x);
@@ -777,16 +924,16 @@ static void do_quad(QUAD *q, int index)
 	float dx = (center_x - wx);
 	float dy = (center_y - wy);
 	if(dx*dx+dy*dy < 10*10)
-		ui_set_hot_item(id);
+		UI()->SetHotItem(id);
 
 	// draw selection background	
-	if(editor.selected_quad == index)
+	if(selected_quad == index)
 	{
-		gfx_setcolor(0,0,0,1);
-		gfx_quads_draw(center_x, center_y, 7.0f, 7.0f);
+		Graphics()->SetColor(0,0,0,1);
+		Graphics()->QuadsDraw(center_x, center_y, 7.0f, 7.0f);
 	}
 	
-	if(ui_active_item() == id)
+	if(UI()->ActiveItem() == id)
 	{
 		// check if we only should move pivot
 		if(operation == OP_MOVE_PIVOT)
@@ -812,47 +959,47 @@ static void do_quad(QUAD *q, int index)
 			}
 		}
 		
-		rotate_angle += (editor.mouse_delta_x) * 0.002f;
+		rotate_angle += (mouse_delta_x) * 0.002f;
 		last_wx = wx;
 		last_wy = wy;
 		
 		if(operation == OP_CONTEXT_MENU)
 		{
-			if(!ui_mouse_button(1))
+			if(!UI()->MouseButton(1))
 			{
 				static int quad_popup_id = 0;
-				ui_invoke_popup_menu(&quad_popup_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 150, popup_quad);
-				editor.lock_mouse = false;
+				ui_invoke_popup_menu(&quad_popup_id, 0, UI()->MouseX(), UI()->MouseY(), 120, 150, popup_quad);
+				lock_mouse = false;
 				operation = OP_NONE;
-				ui_set_active_item(0);
+				UI()->SetActiveItem(0);
 			}
 		}
 		else
 		{
-			if(!ui_mouse_button(0))
+			if(!UI()->MouseButton(0))
 			{
-				editor.lock_mouse = false;
+				lock_mouse = false;
 				operation = OP_NONE;
-				ui_set_active_item(0);
+				UI()->SetActiveItem(0);
 			}
 		}			
 
-		gfx_setcolor(1,1,1,1);
+		Graphics()->SetColor(1,1,1,1);
 	}
-	else if(ui_hot_item() == id)
+	else if(UI()->HotItem() == id)
 	{
 		ui_got_context = id;
 		
-		gfx_setcolor(1,1,1,1);
-		editor.tooltip = "Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate";
+		Graphics()->SetColor(1,1,1,1);
+		tooltip = "Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate";
 		
-		if(ui_mouse_button(0))
+		if(UI()->MouseButton(0))
 		{
 			if(inp_key_pressed(KEY_LSHIFT) || inp_key_pressed(KEY_RSHIFT))
 				operation = OP_MOVE_PIVOT;
 			else if(inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL))
 			{
-				editor.lock_mouse = true;
+				lock_mouse = true;
 				operation = OP_ROTATE;
 				rotate_angle = 0;
 				rotate_points[0] = q->points[0];
@@ -863,31 +1010,31 @@ static void do_quad(QUAD *q, int index)
 			else
 				operation = OP_MOVE_ALL;
 				
-			ui_set_active_item(id);
-			editor.selected_quad = index;
+			UI()->SetActiveItem(id);
+			selected_quad = index;
 			last_wx = wx;
 			last_wy = wy;
 		}
 		
-		if(ui_mouse_button(1))
+		if(UI()->MouseButton(1))
 		{
-			editor.selected_quad = index;
+			selected_quad = index;
 			operation = OP_CONTEXT_MENU;
-			ui_set_active_item(id);
+			UI()->SetActiveItem(id);
 		}
 	}
 	else
-		gfx_setcolor(0,1,0,1);
+		Graphics()->SetColor(0,1,0,1);
 
-	gfx_quads_draw(center_x, center_y, 5.0f, 5.0f);
+	Graphics()->QuadsDraw(center_x, center_y, 5.0f, 5.0f);
 }
 
-static void do_quad_point(QUAD *q, int quad_index, int v)
+void EDITOR::do_quad_point(QUAD *q, int quad_index, int v)
 {
 	void *id = &q->points[v];
 
-	float wx = ui_mouse_world_x();
-	float wy = ui_mouse_world_y();
+	float wx = UI()->MouseWorldX();
+	float wy = UI()->MouseWorldY();
 	
 	float px = fx2f(q->points[v].x);
 	float py = fx2f(q->points[v].y);
@@ -895,13 +1042,13 @@ static void do_quad_point(QUAD *q, int quad_index, int v)
 	float dx = (px - wx);
 	float dy = (py - wy);
 	if(dx*dx+dy*dy < 10*10)
-		ui_set_hot_item(id);
+		UI()->SetHotItem(id);
 
 	// draw selection background	
-	if(editor.selected_quad == quad_index && editor.selected_points&(1<<v))
+	if(selected_quad == quad_index && selected_points&(1<<v))
 	{
-		gfx_setcolor(0,0,0,1);
-		gfx_quads_draw(px, py, 7.0f, 7.0f);
+		Graphics()->SetColor(0,0,0,1);
+		Graphics()->QuadsDraw(px, py, 7.0f, 7.0f);
 	}
 	
 	enum
@@ -915,10 +1062,10 @@ static void do_quad_point(QUAD *q, int quad_index, int v)
 	static bool moved;
 	static int operation = OP_NONE;
 
-	if(ui_active_item() == id)
+	if(UI()->ActiveItem() == id)
 	{
-		float dx = editor.mouse_delta_wx;
-		float dy = editor.mouse_delta_wy;
+		float dx = mouse_delta_wx;
+		float dy = mouse_delta_wy;
 		if(!moved)
 		{
 			if(dx*dx+dy*dy > 0.5f)
@@ -930,7 +1077,7 @@ static void do_quad_point(QUAD *q, int quad_index, int v)
 			if(operation == OP_MOVEPOINT)
 			{
 				for(int m = 0; m < 4; m++)
-					if(editor.selected_points&(1<<m))
+					if(selected_points&(1<<m))
 					{
 						q->points[m].x += f2fx(dx);
 						q->points[m].y += f2fx(dy);
@@ -939,7 +1086,7 @@ static void do_quad_point(QUAD *q, int quad_index, int v)
 			else if(operation == OP_MOVEUV)
 			{
 				for(int m = 0; m < 4; m++)
-					if(editor.selected_points&(1<<m))
+					if(selected_points&(1<<m))
 					{
 						q->texcoords[m].x += f2fx(dx*0.001f);
 						q->texcoords[m].y += f2fx(dy*0.001f);
@@ -949,106 +1096,106 @@ static void do_quad_point(QUAD *q, int quad_index, int v)
 		
 		if(operation == OP_CONTEXT_MENU)
 		{
-			if(!ui_mouse_button(1))
+			if(!UI()->MouseButton(1))
 			{
 				static int point_popup_id = 0;
-				ui_invoke_popup_menu(&point_popup_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 150, popup_point);
-				ui_set_active_item(0);
+				ui_invoke_popup_menu(&point_popup_id, 0, UI()->MouseX(), UI()->MouseY(), 120, 150, popup_point);
+				UI()->SetActiveItem(0);
 			}
 		}
 		else
 		{
-			if(!ui_mouse_button(0))
+			if(!UI()->MouseButton(0))
 			{
 				if(!moved)
 				{
 					if(inp_key_pressed(KEY_LSHIFT) || inp_key_pressed(KEY_RSHIFT))
-						editor.selected_points ^= 1<<v;
+						selected_points ^= 1<<v;
 					else
-						editor.selected_points = 1<<v;
+						selected_points = 1<<v;
 				}
-				editor.lock_mouse = false;
-				ui_set_active_item(0);
+				lock_mouse = false;
+				UI()->SetActiveItem(0);
 			}
 		}
 
-		gfx_setcolor(1,1,1,1);
+		Graphics()->SetColor(1,1,1,1);
 	}
-	else if(ui_hot_item() == id)
+	else if(UI()->HotItem() == id)
 	{
 		ui_got_context = id;
 		
-		gfx_setcolor(1,1,1,1);
-		editor.tooltip = "Left mouse button to move. Hold shift to move the texture.";
+		Graphics()->SetColor(1,1,1,1);
+		tooltip = "Left mouse button to move. Hold shift to move the texture.";
 		
-		if(ui_mouse_button(0))
+		if(UI()->MouseButton(0))
 		{
-			ui_set_active_item(id);
+			UI()->SetActiveItem(id);
 			moved = false;
 			if(inp_key_pressed(KEY_LSHIFT) || inp_key_pressed(KEY_RSHIFT))
 			{
 				operation = OP_MOVEUV;
-				editor.lock_mouse = true;
+				lock_mouse = true;
 			}
 			else
 				operation = OP_MOVEPOINT;
 				
-			if(!(editor.selected_points&(1<<v)))
+			if(!(selected_points&(1<<v)))
 			{
 				if(inp_key_pressed(KEY_LSHIFT) || inp_key_pressed(KEY_RSHIFT))
-					editor.selected_points |= 1<<v;
+					selected_points |= 1<<v;
 				else
-					editor.selected_points = 1<<v;
+					selected_points = 1<<v;
 				moved = true;
 			}
 															
-			editor.selected_quad = quad_index;
+			selected_quad = quad_index;
 		}
-		else if(ui_mouse_button(1))
+		else if(UI()->MouseButton(1))
 		{
 			operation = OP_CONTEXT_MENU;
-			editor.selected_quad = quad_index;
-			ui_set_active_item(id);
+			selected_quad = quad_index;
+			UI()->SetActiveItem(id);
 		}
 	}
 	else
-		gfx_setcolor(1,0,0,1);
+		Graphics()->SetColor(1,0,0,1);
 	
-	gfx_quads_draw(px, py, 5.0f, 5.0f);	
+	Graphics()->QuadsDraw(px, py, 5.0f, 5.0f);	
 }
 
-static void do_map_editor(RECT view, RECT toolbar)
+void EDITOR::do_map_editor(CUIRect view, CUIRect toolbar)
 {
-	//ui_clip_enable(&view);
+	//UI()->ClipEnable(&view);
 	
-	bool show_picker = inp_key_pressed(KEY_SPACE) != 0 && editor.dialog == DIALOG_NONE;
+	bool show_picker = inp_key_pressed(KEY_SPACE) != 0 && dialog == DIALOG_NONE;
 
 	// render all good stuff
 	if(!show_picker)
 	{
-		for(int g = 0; g < editor.map.groups.len(); g++)
+		for(int g = 0; g < map.groups.len(); g++)
 		{
-			if(editor.map.groups[g]->visible)
-				editor.map.groups[g]->render();
-			//ui_clip_enable(&view);
+			if(map.groups[g]->visible)
+				map.groups[g]->render();
+			//UI()->ClipEnable(&view);
 		}
 		
 		// render the game above everything else
-		if(editor.map.game_group->visible && editor.map.game_layer->visible)
+		if(map.game_group->visible && map.game_layer->visible)
 		{
-			editor.map.game_group->mapscreen();
-			editor.map.game_layer->render();
+			map.game_group->mapscreen();
+			map.game_layer->render();
 		}
 	}
 
 	static void *editor_id = (void *)&editor_id;
-	int inside = ui_mouse_inside(&view);
+	int inside = UI()->MouseInside(&view);
 
 	// fetch mouse position
-	float wx = ui_mouse_world_x();
-	float wy = ui_mouse_world_y();
-	float mx = ui_mouse_x();
-	float my = ui_mouse_y();
+	float wx = UI()->MouseWorldX();
+	float wy = UI()->MouseWorldY();
+	float mx = UI()->MouseX();
+	float my = UI()->MouseY();
 	
 	static float start_wx = 0;
 	static float start_wy = 0;
@@ -1067,7 +1214,7 @@ static void do_map_editor(RECT view, RECT toolbar)
 	// remap the screen so it can display the whole tileset
 	if(show_picker)
 	{
-		RECT screen = *ui_screen();
+		CUIRect screen = *UI()->Screen();
 		float size = 32.0*16.0f;
 		float w = size*(screen.w/view.w);
 		float h = size*(screen.h/view.h);
@@ -1075,8 +1222,8 @@ static void do_map_editor(RECT view, RECT toolbar)
 		float y = -(view.y/screen.h)*h;
 		wx = x+w*mx/screen.w;
 		wy = y+h*my/screen.h;
-		gfx_mapscreen(x, y, x+w, y+h);
-		LAYER_TILES *t = (LAYER_TILES *)editor.get_selected_layer_type(0, LAYERTYPE_TILES);
+		Graphics()->MapScreen(x, y, x+w, y+h);
+		LAYER_TILES *t = (LAYER_TILES *)get_selected_layer_type(0, LAYERTYPE_TILES);
 		if(t)
 		{
 			tileset_picker.image = t->image;
@@ -1099,11 +1246,11 @@ static void do_map_editor(RECT view, RECT toolbar)
 	}
 	else
 	{
-		edit_layers[0] = editor.get_selected_layer(0);
+		edit_layers[0] = get_selected_layer(0);
 		if(edit_layers[0])
 			num_edit_layers++;
 
-		LAYERGROUP *g = editor.get_selected_group();
+		LAYERGROUP *g = get_selected_group();
 		if(g)
 		{
 			g->mapscreen();
@@ -1116,50 +1263,50 @@ static void do_map_editor(RECT view, RECT toolbar)
 				float w, h;
 				edit_layers[i]->get_size(&w, &h);
 
-				gfx_texture_set(-1);
-				gfx_lines_begin();
-				gfx_lines_draw(0,0, w,0);
-				gfx_lines_draw(w,0, w,h);
-				gfx_lines_draw(w,h, 0,h);
-				gfx_lines_draw(0,h, 0,0);
-				gfx_lines_end();
+				Graphics()->TextureSet(-1);
+				Graphics()->LinesBegin();
+				Graphics()->LinesDraw(0,0, w,0);
+				Graphics()->LinesDraw(w,0, w,h);
+				Graphics()->LinesDraw(w,h, 0,h);
+				Graphics()->LinesDraw(0,h, 0,0);
+				Graphics()->LinesEnd();
 			}
 		}
 	}
 		
 	if(inside)
 	{
-		ui_set_hot_item(editor_id);
+		UI()->SetHotItem(editor_id);
 				
 		// do global operations like pan and zoom
-		if(ui_active_item() == 0 && (ui_mouse_button(0) || ui_mouse_button(2)))
+		if(UI()->ActiveItem() == 0 && (UI()->MouseButton(0) || UI()->MouseButton(2)))
 		{
 			start_wx = wx;
 			start_wy = wy;
 			start_mx = mx;
 			start_my = my;
 					
-			if(inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL) || ui_mouse_button(2))
+			if(inp_key_pressed(KEY_LCTRL) || inp_key_pressed(KEY_RCTRL) || UI()->MouseButton(2))
 			{
 				if(inp_key_pressed(KEY_LSHIFT))
 					operation = OP_PAN_EDITOR;
 				else
 					operation = OP_PAN_WORLD;
-				ui_set_active_item(editor_id);
+				UI()->SetActiveItem(editor_id);
 			}
 		}
 
 		// brush editing
-		if(ui_hot_item() == editor_id)
+		if(UI()->HotItem() == editor_id)
 		{
 			if(brush.is_empty())
-				editor.tooltip = "Use left mouse button to drag and create a brush.";
+				tooltip = "Use left mouse button to drag and create a brush.";
 			else
-				editor.tooltip = "Use left mouse button to paint with the brush. Right button clears the brush.";
+				tooltip = "Use left mouse button to paint with the brush. Right button clears the brush.";
 
-			if(ui_active_item() == editor_id)
+			if(UI()->ActiveItem() == editor_id)
 			{
-				RECT r;
+				CUIRect r;
 				r.x = start_wx;
 				r.y = start_wy;
 				r.w = wx-start_wx;
@@ -1190,7 +1337,7 @@ static void do_map_editor(RECT view, RECT toolbar)
 				}
 				else if(operation == OP_BRUSH_GRAB)
 				{
-					if(!ui_mouse_button(0))
+					if(!UI()->MouseButton(0))
 					{
 						// grab brush
 						dbg_msg("editor", "grabbing %f %f %f %f", r.x, r.y, r.w, r.h);
@@ -1207,18 +1354,18 @@ static void do_map_editor(RECT view, RECT toolbar)
 						//editor.map.groups[selected_group]->mapscreen();
 						for(int k = 0; k < num_edit_layers; k++)
 							edit_layers[k]->brush_selecting(r);
-						gfx_mapscreen(ui_screen()->x, ui_screen()->y, ui_screen()->w, ui_screen()->h);
+						Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
 					}
 				}
 			}
 			else
 			{
-				if(ui_mouse_button(1))
+				if(UI()->MouseButton(1))
 					brush.clear();
 					
-				if(ui_mouse_button(0) && operation == OP_NONE)
+				if(UI()->MouseButton(0) && operation == OP_NONE)
 				{
-					ui_set_active_item(editor_id);
+					UI()->SetActiveItem(editor_id);
 					
 					if(brush.is_empty())
 						operation = OP_BRUSH_GRAB;
@@ -1248,7 +1395,7 @@ static void do_map_editor(RECT view, RECT toolbar)
 						}
 					}
 				
-					LAYERGROUP *g = editor.get_selected_group();
+					LAYERGROUP *g = get_selected_group();
 					brush.offset_x += g->offset_x;
 					brush.offset_y += g->offset_y;
 					brush.parallax_x = g->parallax_x;
@@ -1257,13 +1404,13 @@ static void do_map_editor(RECT view, RECT toolbar)
 					float w, h;
 					brush.get_size(&w, &h);
 					
-					gfx_texture_set(-1);
-					gfx_lines_begin();
-					gfx_lines_draw(0,0, w,0);
-					gfx_lines_draw(w,0, w,h);
-					gfx_lines_draw(w,h, 0,h);
-					gfx_lines_draw(0,h, 0,0);
-					gfx_lines_end();
+					Graphics()->TextureSet(-1);
+					Graphics()->LinesBegin();
+					Graphics()->LinesDraw(0,0, w,0);
+					Graphics()->LinesDraw(w,0, w,h);
+					Graphics()->LinesDraw(w,h, 0,h);
+					Graphics()->LinesDraw(0,h, 0,0);
+					Graphics()->LinesEnd();
 					
 				}
 			}
@@ -1274,7 +1421,7 @@ static void do_map_editor(RECT view, RECT toolbar)
 			if(!show_picker && brush.is_empty())
 			{
 				// fetch layers
-				LAYERGROUP *g = editor.get_selected_group();
+				LAYERGROUP *g = get_selected_group();
 				if(g)
 					g->mapscreen();
 					
@@ -1284,8 +1431,8 @@ static void do_map_editor(RECT view, RECT toolbar)
 					{
 						LAYER_QUADS *layer = (LAYER_QUADS *)edit_layers[k];
 		
-						gfx_texture_set(-1);
-						gfx_quads_begin();				
+						Graphics()->TextureSet(-1);
+						Graphics()->QuadsBegin();				
 						for(int i = 0; i < layer->quads.len(); i++)
 						{
 							for(int v = 0; v < 4; v++)
@@ -1293,68 +1440,68 @@ static void do_map_editor(RECT view, RECT toolbar)
 								
 							do_quad(&layer->quads[i], i);
 						}
-						gfx_quads_end();
+						Graphics()->QuadsEnd();
 					}
 				}
 				
-				gfx_mapscreen(ui_screen()->x, ui_screen()->y, ui_screen()->w, ui_screen()->h);
+				Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
 			}		
 			
 			// do panning
-			if(ui_active_item() == editor_id)
+			if(UI()->ActiveItem() == editor_id)
 			{
 				if(operation == OP_PAN_WORLD)
 				{
-					editor.world_offset_x -= editor.mouse_delta_x*editor.world_zoom;
-					editor.world_offset_y -= editor.mouse_delta_y*editor.world_zoom;
+					world_offset_x -= mouse_delta_x*world_zoom;
+					world_offset_y -= mouse_delta_y*world_zoom;
 				}
 				else if(operation == OP_PAN_EDITOR)
 				{
-					editor.editor_offset_x -= editor.mouse_delta_x*editor.world_zoom;
-					editor.editor_offset_y -= editor.mouse_delta_y*editor.world_zoom;
+					editor_offset_x -= mouse_delta_x*world_zoom;
+					editor_offset_y -= mouse_delta_y*world_zoom;
 				}
 
 				// release mouse
-				if(!ui_mouse_button(0))
+				if(!UI()->MouseButton(0))
 				{
 					operation = OP_NONE;
-					ui_set_active_item(0);
+					UI()->SetActiveItem(0);
 				}
 			}
 		}
 	}
 	
-	if(editor.get_selected_group() && editor.get_selected_group()->use_clipping)
+	if(get_selected_group() && get_selected_group()->use_clipping)
 	{
-		LAYERGROUP *g = editor.map.game_group;
+		LAYERGROUP *g = map.game_group;
 		g->mapscreen();
 		
-		gfx_texture_set(-1);
-		gfx_lines_begin();
+		Graphics()->TextureSet(-1);
+		Graphics()->LinesBegin();
 
-			RECT r;
-			r.x = editor.get_selected_group()->clip_x;
-			r.y = editor.get_selected_group()->clip_y;
-			r.w = editor.get_selected_group()->clip_w;
-			r.h = editor.get_selected_group()->clip_h;
+			CUIRect r;
+			r.x = get_selected_group()->clip_x;
+			r.y = get_selected_group()->clip_y;
+			r.w = get_selected_group()->clip_w;
+			r.h = get_selected_group()->clip_h;
 			
-			gfx_setcolor(1,0,0,1);
-			gfx_lines_draw(r.x, r.y, r.x+r.w, r.y);
-			gfx_lines_draw(r.x+r.w, r.y, r.x+r.w, r.y+r.h);
-			gfx_lines_draw(r.x+r.w, r.y+r.h, r.x, r.y+r.h);
-			gfx_lines_draw(r.x, r.y+r.h, r.x, r.y);
+			Graphics()->SetColor(1,0,0,1);
+			Graphics()->LinesDraw(r.x, r.y, r.x+r.w, r.y);
+			Graphics()->LinesDraw(r.x+r.w, r.y, r.x+r.w, r.y+r.h);
+			Graphics()->LinesDraw(r.x+r.w, r.y+r.h, r.x, r.y+r.h);
+			Graphics()->LinesDraw(r.x, r.y+r.h, r.x, r.y);
 			
-		gfx_lines_end();
+		Graphics()->LinesEnd();
 	}
 
 	// render screen sizes	
-	if(editor.proof_borders)
+	if(proof_borders)
 	{
-		LAYERGROUP *g = editor.map.game_group;
+		LAYERGROUP *g = map.game_group;
 		g->mapscreen();
 		
-		gfx_texture_set(-1);
-		gfx_lines_begin();
+		Graphics()->TextureSet(-1);
+		Graphics()->LinesBegin();
 		
 		float last_points[4];
 		float start = 1.0f; //9.0f/16.0f;
@@ -1365,28 +1512,28 @@ static void do_map_editor(RECT view, RECT toolbar)
 			float points[4];
 			float aspect = start + (end-start)*(i/(float)num_steps);
 			
-			mapscreen_to_world(
-				editor.world_offset_x, editor.world_offset_y,
+			RenderTools()->mapscreen_to_world(
+				world_offset_x, world_offset_y,
 				1.0f, 1.0f, 0.0f, 0.0f, aspect, 1.0f, points);
 			
 			if(i == 0)
 			{
-				gfx_lines_draw(points[0], points[1], points[2], points[1]);
-				gfx_lines_draw(points[0], points[3], points[2], points[3]);
+				Graphics()->LinesDraw(points[0], points[1], points[2], points[1]);
+				Graphics()->LinesDraw(points[0], points[3], points[2], points[3]);
 			}
 
 			if(i != 0)
 			{
-				gfx_lines_draw(points[0], points[1], last_points[0], last_points[1]);
-				gfx_lines_draw(points[2], points[1], last_points[2], last_points[1]);
-				gfx_lines_draw(points[0], points[3], last_points[0], last_points[3]);
-				gfx_lines_draw(points[2], points[3], last_points[2], last_points[3]);
+				Graphics()->LinesDraw(points[0], points[1], last_points[0], last_points[1]);
+				Graphics()->LinesDraw(points[2], points[1], last_points[2], last_points[1]);
+				Graphics()->LinesDraw(points[0], points[3], last_points[0], last_points[3]);
+				Graphics()->LinesDraw(points[2], points[3], last_points[2], last_points[3]);
 			}
 
 			if(i == num_steps)
 			{
-				gfx_lines_draw(points[0], points[1], points[0], points[3]);
-				gfx_lines_draw(points[2], points[1], points[2], points[3]);
+				Graphics()->LinesDraw(points[0], points[1], points[0], points[3]);
+				Graphics()->LinesDraw(points[2], points[1], points[2], points[3]);
 			}
 			
 			mem_copy(last_points, points, sizeof(points));
@@ -1394,64 +1541,64 @@ static void do_map_editor(RECT view, RECT toolbar)
 
 		if(1)
 		{
-			gfx_setcolor(1,0,0,1);
+			Graphics()->SetColor(1,0,0,1);
 			for(int i = 0; i < 2; i++)
 			{
 				float points[4];
 				float aspects[] = {4.0f/3.0f, 16.0f/10.0f, 5.0f/4.0f, 16.0f/9.0f};
 				float aspect = aspects[i];
 				
-				mapscreen_to_world(
-					editor.world_offset_x, editor.world_offset_y,
+				RenderTools()->mapscreen_to_world(
+					world_offset_x, world_offset_y,
 					1.0f, 1.0f, 0.0f, 0.0f, aspect, 1.0f, points);
 				
-				RECT r;
+				CUIRect r;
 				r.x = points[0];
 				r.y = points[1];
 				r.w = points[2]-points[0];
 				r.h = points[3]-points[1];
 				
-				gfx_lines_draw(r.x, r.y, r.x+r.w, r.y);
-				gfx_lines_draw(r.x+r.w, r.y, r.x+r.w, r.y+r.h);
-				gfx_lines_draw(r.x+r.w, r.y+r.h, r.x, r.y+r.h);
-				gfx_lines_draw(r.x, r.y+r.h, r.x, r.y);
-				gfx_setcolor(0,1,0,1);
+				Graphics()->LinesDraw(r.x, r.y, r.x+r.w, r.y);
+				Graphics()->LinesDraw(r.x+r.w, r.y, r.x+r.w, r.y+r.h);
+				Graphics()->LinesDraw(r.x+r.w, r.y+r.h, r.x, r.y+r.h);
+				Graphics()->LinesDraw(r.x, r.y+r.h, r.x, r.y);
+				Graphics()->SetColor(0,1,0,1);
 			}
 		}
 			
-		gfx_lines_end();
+		Graphics()->LinesEnd();
 	}
 	
-	gfx_mapscreen(ui_screen()->x, ui_screen()->y, ui_screen()->w, ui_screen()->h);
-	//ui_clip_disable();
+	Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
+	//UI()->ClipDisable();
 }
 
 
-int EDITOR::do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val)
+int EDITOR::do_properties(CUIRect *toolbox, PROPERTY *props, int *ids, int *new_val)
 {
 	int change = -1;
 
 	for(int i = 0; props[i].name; i++)
 	{
-		RECT slot;
-		ui_hsplit_t(toolbox, 13.0f, &slot, toolbox);
-		RECT label, shifter;
-		ui_vsplit_mid(&slot, &label, &shifter);
-		ui_hmargin(&shifter, 1.0f, &shifter);
-		ui_do_label(&label, props[i].name, 10.0f, -1, -1);
+		CUIRect slot;
+		toolbox->HSplitTop(13.0f, &slot, toolbox);
+		CUIRect label, shifter;
+		slot.VSplitMid(&label, &shifter);
+		shifter.HMargin(1.0f, &shifter);
+		UI()->DoLabel(&label, props[i].name, 10.0f, -1, -1);
 		
 		if(props[i].type == PROPTYPE_INT_STEP)
 		{
-			RECT inc, dec;
+			CUIRect inc, dec;
 			char buf[64];
 			
-			ui_vsplit_r(&shifter, 10.0f, &shifter, &inc);
-			ui_vsplit_l(&shifter, 10.0f, &dec, &shifter);
+			shifter.VSplitRight(10.0f, &shifter, &inc);
+			shifter.VSplitLeft(10.0f, &dec, &shifter);
 			sprintf(buf, "%d", props[i].value);
-			ui_draw_rect(&shifter, vec4(1,1,1,0.5f), 0, 0.0f);
-			ui_do_label(&shifter, buf, 10.0f, 0, -1);
+			RenderTools()->DrawUIRect(&shifter, vec4(1,1,1,0.5f), 0, 0.0f);
+			UI()->DoLabel(&shifter, buf, 10.0f, 0, -1);
 			
-			if(do_editor_button(&ids[i], 0, 0, &dec, draw_dec_button, 0, "Decrease"))
+			if(DoButton_ButtonDec(&ids[i], 0, 0, &dec, 0, "Decrease"))
 			{
 				if(inp_key_pressed(KEY_LSHIFT) || inp_key_pressed(KEY_RSHIFT))
 					*new_val = props[i].value-5;
@@ -1459,7 +1606,7 @@ int EDITOR::do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val
 					*new_val = props[i].value-1;
 				change = i;
 			}
-			if(do_editor_button(((char *)&ids[i])+1, 0, 0, &inc, draw_inc_button, 0, "Increase"))
+			if(DoButton_ButtonInc(((char *)&ids[i])+1, 0, 0, &inc, 0, "Increase"))
 			{
 				if(inp_key_pressed(KEY_LSHIFT) || inp_key_pressed(KEY_RSHIFT))
 					*new_val = props[i].value+5;
@@ -1470,14 +1617,14 @@ int EDITOR::do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val
 		}
 		else if(props[i].type == PROPTYPE_BOOL)
 		{
-			RECT no, yes;
-			ui_vsplit_mid(&shifter, &no, &yes);
-			if(do_editor_button(&ids[i], "No", !props[i].value, &no, draw_dec_button, 0, ""))
+			CUIRect no, yes;
+			shifter.VSplitMid(&no, &yes);
+			if(DoButton_ButtonDec(&ids[i], "No", !props[i].value, &no, 0, ""))
 			{
 				*new_val = 0;
 				change = i;
 			}
-			if(do_editor_button(((char *)&ids[i])+1, "Yes", props[i].value, &yes, draw_inc_button, 0, ""))
+			if(DoButton_ButtonInc(((char *)&ids[i])+1, "Yes", props[i].value, &yes, 0, ""))
 			{
 				*new_val = 1;
 				change = i;
@@ -1505,9 +1652,9 @@ int EDITOR::do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val
 
 				if(c != 3)
 				{
-					ui_hsplit_t(toolbox, 13.0f, &slot, toolbox);
-					ui_vsplit_mid(&slot, 0, &shifter);
-					ui_hmargin(&shifter, 1.0f, &shifter);
+					toolbox->HSplitTop(13.0f, &slot, toolbox);
+					slot.VSplitMid(0, &shifter);
+					shifter.HMargin(1.0f, &shifter);
 				}
 			}
 			
@@ -1523,10 +1670,10 @@ int EDITOR::do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val
 			if(props[i].value < 0)
 				strcpy(buf, "None");
 			else
-				sprintf(buf, "%s",  editor.map.images[props[i].value]->name);
+				sprintf(buf, "%s",  map.images[props[i].value]->name);
 			
-			if(do_editor_button(&ids[i], buf, 0, &shifter, draw_editor_button, 0, 0))
-				popup_select_image_invoke(props[i].value, ui_mouse_x(), ui_mouse_y());
+			if(DoButton_Editor(&ids[i], buf, 0, &shifter, 0, 0))
+				popup_select_image_invoke(props[i].value, UI()->MouseX(), UI()->MouseY());
 			
 			int r = popup_select_image_result();
 			if(r >= -1)
@@ -1540,90 +1687,90 @@ int EDITOR::do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val
 	return change;
 }
 
-static void render_layers(RECT toolbox, RECT toolbar, RECT view)
+void EDITOR::render_layers(CUIRect toolbox, CUIRect toolbar, CUIRect view)
 {
-	RECT layersbox = toolbox;
+	CUIRect layersbox = toolbox;
 
-	if(!editor.gui_active)
+	if(!gui_active)
 		return;
 			
-	RECT slot, button;
+	CUIRect slot, button;
 	char buf[64];
 
 	int valid_group = 0;
 	int valid_layer = 0;
-	if(editor.selected_group >= 0 && editor.selected_group < editor.map.groups.len())
+	if(selected_group >= 0 && selected_group < map.groups.len())
 		valid_group = 1;
 
-	if(valid_group && editor.selected_layer >= 0 && editor.selected_layer < editor.map.groups[editor.selected_group]->layers.len())
+	if(valid_group && selected_layer >= 0 && selected_layer < map.groups[selected_group]->layers.len())
 		valid_layer = 1;
 		
 	// render layers	
 	{
-		for(int g = 0; g < editor.map.groups.len(); g++)
+		for(int g = 0; g < map.groups.len(); g++)
 		{
-			RECT visible_toggle;
-			ui_hsplit_t(&layersbox, 12.0f, &slot, &layersbox);
-			ui_vsplit_l(&slot, 12, &visible_toggle, &slot);
-			if(do_editor_button(&editor.map.groups[g]->visible, editor.map.groups[g]->visible?"V":"H", 0, &visible_toggle, draw_editor_button_l, 0, "Toggle group visibility"))
-				editor.map.groups[g]->visible = !editor.map.groups[g]->visible;
+			CUIRect visible_toggle;
+			layersbox.HSplitTop(12.0f, &slot, &layersbox);
+			slot.VSplitLeft(12, &visible_toggle, &slot);
+			if(DoButton_ButtonL(&map.groups[g]->visible, map.groups[g]->visible?"V":"H", 0, &visible_toggle, 0, "Toggle group visibility"))
+				map.groups[g]->visible = !map.groups[g]->visible;
 
-			sprintf(buf, "#%d %s", g, editor.map.groups[g]->name);
-			if(int result = do_editor_button(&editor.map.groups[g], buf, g==editor.selected_group, &slot, draw_editor_button_r,
+			sprintf(buf, "#%d %s", g, map.groups[g]->name);
+			if(int result = DoButton_ButtonR(&map.groups[g], buf, g==selected_group, &slot,
 				BUTTON_CONTEXT, "Select group. Right click for properties."))
 			{
-				editor.selected_group = g;
-				editor.selected_layer = 0;
+				selected_group = g;
+				selected_layer = 0;
 				
 				static int group_popup_id = 0;
 				if(result == 2)
-					ui_invoke_popup_menu(&group_popup_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 200, popup_group);
+					ui_invoke_popup_menu(&group_popup_id, 0, UI()->MouseX(), UI()->MouseY(), 120, 200, popup_group);
 			}
 			
 			
-			ui_hsplit_t(&layersbox, 2.0f, &slot, &layersbox);
+			layersbox.HSplitTop(2.0f, &slot, &layersbox);
 			
-			for(int i = 0; i < editor.map.groups[g]->layers.len(); i++)
+			for(int i = 0; i < map.groups[g]->layers.len(); i++)
 			{
 				//visible
-				ui_hsplit_t(&layersbox, 12.0f, &slot, &layersbox);
-				ui_vsplit_l(&slot, 12.0f, 0, &button);
-				ui_vsplit_l(&button, 15, &visible_toggle, &button);
+				layersbox.HSplitTop(12.0f, &slot, &layersbox);
+				slot.VSplitLeft(12.0f, 0, &button);
+				button.VSplitLeft(15, &visible_toggle, &button);
 
-				if(do_editor_button(&editor.map.groups[g]->layers[i]->visible, editor.map.groups[g]->layers[i]->visible?"V":"H", 0, &visible_toggle, draw_editor_button_l, 0, "Toggle layer visibility"))
-					editor.map.groups[g]->layers[i]->visible = !editor.map.groups[g]->layers[i]->visible;
+				if(DoButton_ButtonL(&map.groups[g]->layers[i]->visible, map.groups[g]->layers[i]->visible?"V":"H", 0, &visible_toggle, 0, "Toggle layer visibility"))
+					map.groups[g]->layers[i]->visible = !map.groups[g]->layers[i]->visible;
 
-				sprintf(buf, "#%d %s ", i, editor.map.groups[g]->layers[i]->type_name);
-				if(int result = do_editor_button(editor.map.groups[g]->layers[i], buf, g==editor.selected_group&&i==editor.selected_layer, &button, draw_editor_button_r,
+				sprintf(buf, "#%d %s ", i, map.groups[g]->layers[i]->type_name);
+				if(int result = DoButton_ButtonR(map.groups[g]->layers[i], buf, g==selected_group&&i==selected_layer, &button,
 					BUTTON_CONTEXT, "Select layer. Right click for properties."))
 				{
-					editor.selected_layer = i;
-					editor.selected_group = g;
+					selected_layer = i;
+					selected_group = g;
 					static int layer_popup_id = 0;
 					if(result == 2)
-						ui_invoke_popup_menu(&layer_popup_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 150, popup_layer);
+						ui_invoke_popup_menu(&layer_popup_id, 0, UI()->MouseX(), UI()->MouseY(), 120, 150, popup_layer);
 				}
 				
 				
-				ui_hsplit_t(&layersbox, 2.0f, &slot, &layersbox);
+				layersbox.HSplitTop(2.0f, &slot, &layersbox);
 			}
-			ui_hsplit_t(&layersbox, 5.0f, &slot, &layersbox);
+			layersbox.HSplitTop(5.0f, &slot, &layersbox);
 		}
 	}
 	
 
 	{
-		ui_hsplit_t(&layersbox, 12.0f, &slot, &layersbox);
+		layersbox.HSplitTop(12.0f, &slot, &layersbox);
 
 		static int new_group_button = 0;
-		if(do_editor_button(&new_group_button, "Add Group", 0, &slot, draw_editor_button, 0, "Adds a new group"))
+		if(DoButton_Editor(&new_group_button, "Add Group", 0, &slot, 0, "Adds a new group"))
 		{
-			editor.map.new_group();
-			editor.selected_group = editor.map.groups.len()-1;
+			map.new_group();
+			selected_group = map.groups.len()-1;
 		}
 	}
 
-	ui_hsplit_t(&layersbox, 5.0f, &slot, &layersbox);
+	layersbox.HSplitTop(5.0f, &slot, &layersbox);
 	
 }
 
@@ -1659,31 +1806,33 @@ static void extract_name(const char *filename, char *name)
 	dbg_msg("", "%s %s %d %d", filename, name, start, end);
 }
 
-static void replace_image(const char *filename)
+void EDITOR::replace_image(const char *filename, void *user)
 {
-	EDITOR_IMAGE imginfo;
-	if(!gfx_load_png(&imginfo, filename))
+	EDITOR *editor = (EDITOR *)user;
+	EDITOR_IMAGE imginfo(editor);
+	if(!editor->Graphics()->LoadPNG(&imginfo, filename))
 		return;
 	
-	EDITOR_IMAGE *img = editor.map.images[editor.selected_image];
-	gfx_unload_texture(img->tex_id);
+	EDITOR_IMAGE *img = editor->map.images[editor->selected_image];
+	editor->Graphics()->UnloadTexture(img->tex_id);
 	*img = imginfo;
 	extract_name(filename, img->name);
-	img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO, 0);
+	img->tex_id = editor->Graphics()->LoadTextureRaw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO, 0);
 }
 
-static void add_image(const char *filename)
+void EDITOR::add_image(const char *filename, void *user)
 {
-	EDITOR_IMAGE imginfo;
-	if(!gfx_load_png(&imginfo, filename))
+	EDITOR *editor = (EDITOR *)user;
+	EDITOR_IMAGE imginfo(editor);
+	if(!editor->Graphics()->LoadPNG(&imginfo, filename))
 		return;
 
-	EDITOR_IMAGE *img = new EDITOR_IMAGE;
+	EDITOR_IMAGE *img = new EDITOR_IMAGE(editor);
 	*img = imginfo;
-	img->tex_id = gfx_load_texture_raw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO, 0);
+	img->tex_id = editor->Graphics()->LoadTextureRaw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO, 0);
 	img->external = 1; // external by default
 	extract_name(filename, img->name);
-	editor.map.images.add(img);
+	editor->map.images.add(img);
 }
 
 
@@ -1696,20 +1845,20 @@ static void modify_index_deleted(int *index)
 		*index = *index - 1;
 }
 
-static int popup_image(RECT view)
+int EDITOR::popup_image(EDITOR *pEditor, CUIRect view)
 {
 	static int replace_button = 0;	
 	static int remove_button = 0;	
 
-	RECT slot;
-	ui_hsplit_t(&view, 2.0f, &slot, &view);
-	ui_hsplit_t(&view, 12.0f, &slot, &view);
-	EDITOR_IMAGE *img = editor.map.images[editor.selected_image];
+	CUIRect slot;
+	view.HSplitTop(2.0f, &slot, &view);
+	view.HSplitTop(12.0f, &slot, &view);
+	EDITOR_IMAGE *img = pEditor->map.images[pEditor->selected_image];
 	
 	static int external_button = 0;
 	if(img->external)
 	{
-		if(do_editor_button(&external_button, "Embedd", 0, &slot, draw_editor_button_menuitem, 0, "Embedds the image into the map file."))
+		if(pEditor->DoButton_MenuItem(&external_button, "Embedd", 0, &slot, 0, "Embedds the image into the map file."))
 		{
 			img->external = 0;
 			return 1;
@@ -1717,29 +1866,29 @@ static int popup_image(RECT view)
 	}
 	else
 	{		
-		if(do_editor_button(&external_button, "Make external", 0, &slot, draw_editor_button_menuitem, 0, "Removes the image from the map file."))
+		if(pEditor->DoButton_MenuItem(&external_button, "Make external", 0, &slot, 0, "Removes the image from the map file."))
 		{
 			img->external = 1;
 			return 1;
 		}
 	}
 
-	ui_hsplit_t(&view, 10.0f, &slot, &view);
-	ui_hsplit_t(&view, 12.0f, &slot, &view);
-	if(do_editor_button(&replace_button, "Replace", 0, &slot, draw_editor_button_menuitem, 0, "Replaces the image with a new one"))
+	view.HSplitTop(10.0f, &slot, &view);
+	view.HSplitTop(12.0f, &slot, &view);
+	if(pEditor->DoButton_MenuItem(&replace_button, "Replace", 0, &slot, 0, "Replaces the image with a new one"))
 	{
-		editor.invoke_file_dialog(LISTDIRTYPE_ALL, "Replace Image", "Replace", "mapres/", "", replace_image);
+		pEditor->invoke_file_dialog(LISTDIRTYPE_ALL, "Replace Image", "Replace", "mapres/", "", replace_image, pEditor);
 		return 1;
 	}
 
-	ui_hsplit_t(&view, 10.0f, &slot, &view);
-	ui_hsplit_t(&view, 12.0f, &slot, &view);
-	if(do_editor_button(&remove_button, "Remove", 0, &slot, draw_editor_button_menuitem, 0, "Removes the image from the map"))
+	view.HSplitTop(10.0f, &slot, &view);
+	view.HSplitTop(12.0f, &slot, &view);
+	if(pEditor->DoButton_MenuItem(&remove_button, "Remove", 0, &slot, 0, "Removes the image from the map"))
 	{
 		delete img;
-		editor.map.images.removebyindex(editor.selected_image);
-		modify_index_deleted_index = editor.selected_image;
-		editor.map.modify_image_index(modify_index_deleted);
+		pEditor->map.images.removebyindex(pEditor->selected_image);
+		modify_index_deleted_index = pEditor->selected_image;
+		pEditor->map.modify_image_index(modify_index_deleted);
 		return 1;
 	}
 
@@ -1747,76 +1896,77 @@ static int popup_image(RECT view)
 }
 
 
-static void render_images(RECT toolbox, RECT toolbar, RECT view)
+void EDITOR::render_images(CUIRect toolbox, CUIRect toolbar, CUIRect view)
 {
 	for(int e = 0; e < 2; e++) // two passes, first embedded, then external
 	{
-		RECT slot;
-		ui_hsplit_t(&toolbox, 15.0f, &slot, &toolbox);
+		CUIRect slot;
+		toolbox.HSplitTop(15.0f, &slot, &toolbox);
 		if(e == 0)
-			ui_do_label(&slot, "Embedded", 12.0f, 0);
+			UI()->DoLabel(&slot, "Embedded", 12.0f, 0);
 		else
-			ui_do_label(&slot, "External", 12.0f, 0);
+			UI()->DoLabel(&slot, "External", 12.0f, 0);
 		
-		for(int i = 0; i < editor.map.images.len(); i++)
+		for(int i = 0; i < map.images.len(); i++)
 		{
-			if((e && !editor.map.images[i]->external) ||
-				(!e && editor.map.images[i]->external))
+			if((e && !map.images[i]->external) ||
+				(!e && map.images[i]->external))
 			{
 				continue;
 			}
 			
 			char buf[128];
-			sprintf(buf, "%s", editor.map.images[i]->name);
-			ui_hsplit_t(&toolbox, 12.0f, &slot, &toolbox);
+			sprintf(buf, "%s", map.images[i]->name);
+			toolbox.HSplitTop(12.0f, &slot, &toolbox);
 			
-			if(int result = do_editor_button(&editor.map.images[i], buf, editor.selected_image == i, &slot, draw_editor_button,
+			if(int result = DoButton_Editor(&map.images[i], buf, selected_image == i, &slot,
 				BUTTON_CONTEXT, "Select image"))
 			{
-				editor.selected_image = i;
+				selected_image = i;
 				
 				static int popup_image_id = 0;
 				if(result == 2)
-					ui_invoke_popup_menu(&popup_image_id, 0, ui_mouse_x(), ui_mouse_y(), 120, 80, popup_image);
+					ui_invoke_popup_menu(&popup_image_id, 0, UI()->MouseX(), UI()->MouseY(), 120, 80, popup_image);
 			}
 			
-			ui_hsplit_t(&toolbox, 2.0f, 0, &toolbox);
+			toolbox.HSplitTop(2.0f, 0, &toolbox);
 			
 			// render image
-			if(editor.selected_image == i)
+			if(selected_image == i)
 			{
-				RECT r;
-				ui_margin(&view, 10.0f, &r);
+				CUIRect r;
+				view.Margin(10.0f, &r);
 				if(r.h < r.w)
 					r.w = r.h;
 				else
 					r.h = r.w;
-				gfx_texture_set(editor.map.images[i]->tex_id);
-				gfx_blend_normal();
-				gfx_quads_begin();
-				gfx_quads_drawTL(r.x, r.y, r.w, r.h);
-				gfx_quads_end();
+				Graphics()->TextureSet(map.images[i]->tex_id);
+				Graphics()->BlendNormal();
+				Graphics()->QuadsBegin();
+				Graphics()->QuadsDrawTL(r.x, r.y, r.w, r.h);
+				Graphics()->QuadsEnd();
 				
 			}
 		}
 	}
 	
-	RECT slot;
-	ui_hsplit_t(&toolbox, 5.0f, &slot, &toolbox);
+	CUIRect slot;
+	toolbox.HSplitTop(5.0f, &slot, &toolbox);
 	
 	// new image
 	static int new_image_button = 0;
-	ui_hsplit_t(&toolbox, 10.0f, &slot, &toolbox);
-	ui_hsplit_t(&toolbox, 12.0f, &slot, &toolbox);
-	if(do_editor_button(&new_image_button, "Add", 0, &slot, draw_editor_button, 0, "Load a new image to use in the map"))
-		editor.invoke_file_dialog(LISTDIRTYPE_ALL, "Add Image", "Add", "mapres/", "", add_image);
+	toolbox.HSplitTop(10.0f, &slot, &toolbox);
+	toolbox.HSplitTop(12.0f, &slot, &toolbox);
+	if(DoButton_Editor(&new_image_button, "Add", 0, &slot, 0, "Load a new image to use in the map"))
+		invoke_file_dialog(LISTDIRTYPE_ALL, "Add Image", "Add", "mapres/", "", add_image, this);
 }
 
 
 static int file_dialog_dirtypes = 0;
 static const char *file_dialog_title = 0;
 static const char *file_dialog_button_text = 0;
-static void (*file_dialog_func)(const char *filename);
+static void (*file_dialog_func)(const char *filename, void *user);
+static void *file_dialog_user = 0;
 static char file_dialog_filename[512] = {0};
 static char file_dialog_path[512] = {0};
 static char file_dialog_complete_filename[512] = {0};
@@ -1824,6 +1974,12 @@ static int files_num = 0;
 int files_startat = 0;
 int files_cur = 0;
 int files_stopat = 999;
+
+struct LISTDIRINFO
+{
+	CUIRect *rect;
+	EDITOR *editor;
+};
 
 static void editor_listdir_callback(const char *name, int is_dir, void *user)
 {
@@ -1837,13 +1993,14 @@ static void editor_listdir_callback(const char *name, int is_dir, void *user)
 	if(files_cur-1 < files_startat || files_cur > files_stopat)
 		return;
 	
-	RECT *view = (RECT *)user;
-	RECT button;
-	ui_hsplit_t(view, 15.0f, &button, view);
-	ui_hsplit_t(view, 2.0f, 0, view);
+	LISTDIRINFO *info = (LISTDIRINFO *)user;
+	CUIRect *view = info->rect;
+	CUIRect button;
+	view->HSplitTop(15.0f, &button, view);
+	view->HSplitTop(2.0f, 0, view);
 	//char buf[512];
 	
-	if(do_editor_button((void*)(10+(int)button.y), name, 0, &button, draw_editor_button_file, 0, 0))
+	if(info->editor->DoButton_File((void*)(10+(int)button.y), name, 0, &button, 0, 0))
 	{
 		strncpy(file_dialog_filename, name, sizeof(file_dialog_filename));
 		
@@ -1854,43 +2011,43 @@ static void editor_listdir_callback(const char *name, int is_dir, void *user)
 		if(inp_mouse_doubleclick())
 		{
 			if(file_dialog_func)
-				file_dialog_func(file_dialog_complete_filename);
-			editor.dialog = DIALOG_NONE;
+				file_dialog_func(file_dialog_complete_filename, user);
+			info->editor->dialog = DIALOG_NONE;
 		}
 	}
 }
 
-static void render_file_dialog()
+void EDITOR::render_file_dialog()
 {
 	// GUI coordsys
-	gfx_mapscreen(ui_screen()->x, ui_screen()->y, ui_screen()->w, ui_screen()->h);
+	Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
 	
-	RECT view = *ui_screen();
-	ui_draw_rect(&view, vec4(0,0,0,0.25f), 0, 0);
-	ui_vmargin(&view, 150.0f, &view);
-	ui_hmargin(&view, 50.0f, &view);
-	ui_draw_rect(&view, vec4(0,0,0,0.75f), CORNER_ALL, 5.0f);
-	ui_margin(&view, 10.0f, &view);
+	CUIRect view = *UI()->Screen();
+	RenderTools()->DrawUIRect(&view, vec4(0,0,0,0.25f), 0, 0);
+	view.VMargin(150.0f, &view);
+	view.HMargin(50.0f, &view);
+	RenderTools()->DrawUIRect(&view, vec4(0,0,0,0.75f), CUI::CORNER_ALL, 5.0f);
+	view.Margin(10.0f, &view);
 
-	RECT title, filebox, filebox_label, buttonbar, scroll;
-	ui_hsplit_t(&view, 18.0f, &title, &view);
-	ui_hsplit_t(&view, 5.0f, 0, &view); // some spacing
-	ui_hsplit_b(&view, 14.0f, &view, &buttonbar);
-	ui_hsplit_b(&view, 10.0f, &view, 0); // some spacing
-	ui_hsplit_b(&view, 14.0f, &view, &filebox);
-	ui_vsplit_l(&filebox, 50.0f, &filebox_label, &filebox);
-	ui_vsplit_r(&view, 15.0f, &view, &scroll);
+	CUIRect title, filebox, filebox_label, buttonbar, scroll;
+	view.HSplitTop(18.0f, &title, &view);
+	view.HSplitTop(5.0f, 0, &view); // some spacing
+	view.HSplitBottom(14.0f, &view, &buttonbar);
+	view.HSplitBottom(10.0f, &view, 0); // some spacing
+	view.HSplitBottom(14.0f, &view, &filebox);
+	filebox.VSplitLeft(50.0f, &filebox_label, &filebox);
+	view.VSplitRight(15.0f, &view, &scroll);
 	
 	// title
-	ui_draw_rect(&title, vec4(1,1,1,0.25f), CORNER_ALL, 5.0f);
-	ui_vmargin(&title, 10.0f, &title);
-	ui_do_label(&title, file_dialog_title, 14.0f, -1, -1);
+	RenderTools()->DrawUIRect(&title, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 5.0f);
+	title.VMargin(10.0f, &title);
+	UI()->DoLabel(&title, file_dialog_title, 14.0f, -1, -1);
 	
 	// filebox
-	ui_do_label(&filebox_label, "Filename:", 10.0f, -1, -1);
+	UI()->DoLabel(&filebox_label, "Filename:", 10.0f, -1, -1);
 	
 	static int filebox_id = 0;
-	ui_do_edit_box(&filebox_id, &filebox, file_dialog_filename, sizeof(file_dialog_filename), 10.0f);
+	DoEditBox(&filebox_id, &filebox, file_dialog_filename, sizeof(file_dialog_filename), 10.0f);
 
 	file_dialog_complete_filename[0] = 0;
 	strcat(file_dialog_complete_filename, file_dialog_path);
@@ -1899,7 +2056,7 @@ static void render_file_dialog()
 	int num = (int)(view.h/17.0);
 	static float scrollvalue = 0;
 	static int scrollbar = 0;
-	ui_hmargin(&scroll, 5.0f, &scroll);
+	scroll.HMargin(5.0f, &scroll);
 	scrollvalue = ui_do_scrollbar_v(&scrollbar, &scroll, scrollvalue);
 	
 	int scrollnum = files_num-num+10;
@@ -1925,41 +2082,45 @@ static void render_file_dialog()
 	files_cur = 0;
 	
 	// set clipping
-	ui_clip_enable(&view);
+	UI()->ClipEnable(&view);
 	
 	// the list
-	engine_listdir(file_dialog_dirtypes, file_dialog_path, editor_listdir_callback, &view);
+	LISTDIRINFO info;
+	info.rect = &view;
+	info.editor = this;
+	engine_listdir(file_dialog_dirtypes, file_dialog_path, editor_listdir_callback, &info);
 	
 	// disable clipping again
-	ui_clip_disable();
+	UI()->ClipDisable();
 	
 	// the buttons
 	static int ok_button = 0;	
 	static int cancel_button = 0;	
 
-	RECT button;
-	ui_vsplit_r(&buttonbar, 50.0f, &buttonbar, &button);
-	if(do_editor_button(&ok_button, file_dialog_button_text, 0, &button, draw_editor_button, 0, 0) || inp_key_pressed(KEY_RETURN))
+	CUIRect button;
+	buttonbar.VSplitRight(50.0f, &buttonbar, &button);
+	if(DoButton_Editor(&ok_button, file_dialog_button_text, 0, &button, 0, 0) || inp_key_pressed(KEY_RETURN))
 	{
 		if(file_dialog_func)
-			file_dialog_func(file_dialog_complete_filename);
-		editor.dialog = DIALOG_NONE;
+			file_dialog_func(file_dialog_complete_filename, file_dialog_user);
+		dialog = DIALOG_NONE;
 	}
 
-	ui_vsplit_r(&buttonbar, 40.0f, &buttonbar, &button);
-	ui_vsplit_r(&buttonbar, 50.0f, &buttonbar, &button);
-	if(do_editor_button(&cancel_button, "Cancel", 0, &button, draw_editor_button, 0, 0) || inp_key_pressed(KEY_ESCAPE))
-		editor.dialog = DIALOG_NONE;
+	buttonbar.VSplitRight(40.0f, &buttonbar, &button);
+	buttonbar.VSplitRight(50.0f, &buttonbar, &button);
+	if(DoButton_Editor(&cancel_button, "Cancel", 0, &button, 0, 0) || inp_key_pressed(KEY_ESCAPE))
+		dialog = DIALOG_NONE;
 }
 
 void EDITOR::invoke_file_dialog(int listdirtypes, const char *title, const char *button_text,
 	const char *basepath, const char *default_name,
-	void (*func)(const char *filename))
+	void (*func)(const char *filename, void *user), void *user)
 {
 	file_dialog_dirtypes = listdirtypes;
 	file_dialog_title = title;
 	file_dialog_button_text = button_text;
 	file_dialog_func = func;
+	file_dialog_user = user;
 	file_dialog_filename[0] = 0;
 	file_dialog_path[0] = 0;
 	
@@ -1968,78 +2129,78 @@ void EDITOR::invoke_file_dialog(int listdirtypes, const char *title, const char 
 	if(basepath)
 		strncpy(file_dialog_path, basepath, sizeof(file_dialog_path));
 		
-	editor.dialog = DIALOG_FILE;
+	dialog = DIALOG_FILE;
 }
 
 
 
-static void render_modebar(RECT view)
+void EDITOR::render_modebar(CUIRect view)
 {
-	RECT button;
+	CUIRect button;
 
 	// mode buttons
 	{
-		ui_vsplit_l(&view, 40.0f, &button, &view);
+		view.VSplitLeft(40.0f, &button, &view);
 		static int tile_button = 0;
-		if(do_editor_button(&tile_button, "Layers", editor.mode == MODE_LAYERS, &button, draw_editor_button_m, 0, "Switch to edit layers."))
-			editor.mode = MODE_LAYERS;
+		if(DoButton_ButtonM(&tile_button, "Layers", mode == MODE_LAYERS, &button, 0, "Switch to edit layers."))
+			mode = MODE_LAYERS;
 
-		ui_vsplit_l(&view, 40.0f, &button, &view);
+		view.VSplitLeft(40.0f, &button, &view);
 		static int img_button = 0;
-		if(do_editor_button(&img_button, "Images", editor.mode == MODE_IMAGES, &button, draw_editor_button_r, 0, "Switch to manage images."))
-			editor.mode = MODE_IMAGES;
+		if(DoButton_ButtonR(&img_button, "Images", mode == MODE_IMAGES, &button, 0, "Switch to manage images."))
+			mode = MODE_IMAGES;
 	}
 
-	ui_vsplit_l(&view, 5.0f, 0, &view);
+	view.VSplitLeft(5.0f, 0, &view);
 	
 	// spacing
-	//ui_vsplit_l(&view, 10.0f, 0, &view);
+	//view.VSplitLeft(10.0f, 0, &view);
 }
 
-static void render_statusbar(RECT view)
+void EDITOR::render_statusbar(CUIRect view)
 {
-	RECT button;
-	ui_vsplit_r(&view, 60.0f, &view, &button);
+	CUIRect button;
+	view.VSplitRight(60.0f, &view, &button);
 	static int envelope_button = 0;
-	if(do_editor_button(&envelope_button, "Envelopes", editor.show_envelope_editor, &button, draw_editor_button, 0, "Toggles the envelope editor."))
-		editor.show_envelope_editor = (editor.show_envelope_editor+1)%4;
+	if(DoButton_Editor(&envelope_button, "Envelopes", show_envelope_editor, &button, 0, "Toggles the envelope editor."))
+		show_envelope_editor = (show_envelope_editor+1)%4;
 	
-	if(editor.tooltip)
+	if(tooltip)
 	{
-		if(ui_got_context && ui_got_context == ui_hot_item())
+		if(ui_got_context && ui_got_context == UI()->HotItem())
 		{
 			char buf[512];
-			sprintf(buf, "%s Right click for context menu.", editor.tooltip);
-			ui_do_label(&view, buf, 10.0f, -1, -1);
+			sprintf(buf, "%s Right click for context menu.", tooltip);
+			UI()->DoLabel(&view, buf, 10.0f, -1, -1);
 		}
 		else
-			ui_do_label(&view, editor.tooltip, 10.0f, -1, -1);
+			UI()->DoLabel(&view, tooltip, 10.0f, -1, -1);
 	}
 }
 
-static void render_envelopeeditor(RECT view)
+void EDITOR::render_envelopeeditor(CUIRect view)
 {
-	if(editor.selected_envelope < 0) editor.selected_envelope = 0;
-	if(editor.selected_envelope >= editor.map.envelopes.len()) editor.selected_envelope--;
+	if(selected_envelope < 0) selected_envelope = 0;
+	if(selected_envelope >= map.envelopes.len()) selected_envelope--;
 
 	ENVELOPE *envelope = 0;
-	if(editor.selected_envelope >= 0 && editor.selected_envelope < editor.map.envelopes.len())
-		envelope = editor.map.envelopes[editor.selected_envelope];
+	if(selected_envelope >= 0 && selected_envelope < map.envelopes.len())
+		envelope = map.envelopes[selected_envelope];
 
 	bool show_colorbar = false;
 	if(envelope && envelope->channels == 4)
 		show_colorbar = true;
 
-	RECT toolbar, curvebar, colorbar;
-	ui_hsplit_t(&view, 15.0f, &toolbar, &view);
-	ui_hsplit_t(&view, 15.0f, &curvebar, &view);
-	ui_margin(&toolbar, 2.0f, &toolbar);
-	ui_margin(&curvebar, 2.0f, &curvebar);
+	CUIRect toolbar, curvebar, colorbar;
+	view.HSplitTop(15.0f, &toolbar, &view);
+	view.HSplitTop(15.0f, &curvebar, &view);
+	toolbar.Margin(2.0f, &toolbar);
+	curvebar.Margin(2.0f, &curvebar);
 
 	if(show_colorbar)
 	{
-		ui_hsplit_t(&view, 20.0f, &colorbar, &view);
-		ui_margin(&colorbar, 2.0f, &colorbar);
+		view.HSplitTop(20.0f, &colorbar, &view);
+		colorbar.Margin(2.0f, &colorbar);
 		render_background(colorbar, checker_texture, 16.0f, 1.0f);
 	}
 
@@ -2047,19 +2208,19 @@ static void render_envelopeeditor(RECT view)
 
 	// do the toolbar
 	{
-		RECT button;
+		CUIRect button;
 		ENVELOPE *new_env = 0;
 		
-		ui_vsplit_r(&toolbar, 50.0f, &toolbar, &button);
+		toolbar.VSplitRight(50.0f, &toolbar, &button);
 		static int new_4d_button = 0;
-		if(do_editor_button(&new_4d_button, "Color+", 0, &button, draw_editor_button, 0, "Creates a new color envelope"))
-			new_env = editor.map.new_envelope(4);
+		if(DoButton_Editor(&new_4d_button, "Color+", 0, &button, 0, "Creates a new color envelope"))
+			new_env = map.new_envelope(4);
 
-		ui_vsplit_r(&toolbar, 5.0f, &toolbar, &button);
-		ui_vsplit_r(&toolbar, 50.0f, &toolbar, &button);
+		toolbar.VSplitRight(5.0f, &toolbar, &button);
+		toolbar.VSplitRight(50.0f, &toolbar, &button);
 		static int new_2d_button = 0;
-		if(do_editor_button(&new_2d_button, "Pos.+", 0, &button, draw_editor_button, 0, "Creates a new pos envelope"))
-			new_env = editor.map.new_envelope(3);
+		if(DoButton_Editor(&new_2d_button, "Pos.+", 0, &button, 0, "Creates a new pos envelope"))
+			new_env = map.new_envelope(3);
 		
 		if(new_env) // add the default points
 		{
@@ -2075,33 +2236,33 @@ static void render_envelopeeditor(RECT view)
 			}
 		}
 		
-		RECT shifter, inc, dec;
-		ui_vsplit_l(&toolbar, 60.0f, &shifter, &toolbar);
-		ui_vsplit_r(&shifter, 15.0f, &shifter, &inc);
-		ui_vsplit_l(&shifter, 15.0f, &dec, &shifter);
+		CUIRect shifter, inc, dec;
+		toolbar.VSplitLeft(60.0f, &shifter, &toolbar);
+		shifter.VSplitRight(15.0f, &shifter, &inc);
+		shifter.VSplitLeft(15.0f, &dec, &shifter);
 		char buf[512];
-		sprintf(buf, "%d/%d", editor.selected_envelope+1, editor.map.envelopes.len());
-		ui_draw_rect(&shifter, vec4(1,1,1,0.5f), 0, 0.0f);
-		ui_do_label(&shifter, buf, 10.0f, 0, -1);
+		sprintf(buf, "%d/%d", selected_envelope+1, map.envelopes.len());
+		RenderTools()->DrawUIRect(&shifter, vec4(1,1,1,0.5f), 0, 0.0f);
+		UI()->DoLabel(&shifter, buf, 10.0f, 0, -1);
 		
 		static int prev_button = 0;
-		if(do_editor_button(&prev_button, 0, 0, &dec, draw_dec_button, 0, "Previous Envelope"))
-			editor.selected_envelope--;
+		if(DoButton_ButtonDec(&prev_button, 0, 0, &dec, 0, "Previous Envelope"))
+			selected_envelope--;
 		
 		static int next_button = 0;
-		if(do_editor_button(&next_button, 0, 0, &inc, draw_inc_button, 0, "Next Envelope"))
-			editor.selected_envelope++;
+		if(DoButton_ButtonInc(&next_button, 0, 0, &inc, 0, "Next Envelope"))
+			selected_envelope++;
 			
 		if(envelope)
 		{
-			ui_vsplit_l(&toolbar, 15.0f, &button, &toolbar);
-			ui_vsplit_l(&toolbar, 35.0f, &button, &toolbar);
-			ui_do_label(&button, "Name:", 10.0f, -1, -1);
+			toolbar.VSplitLeft(15.0f, &button, &toolbar);
+			toolbar.VSplitLeft(35.0f, &button, &toolbar);
+			UI()->DoLabel(&button, "Name:", 10.0f, -1, -1);
 
-			ui_vsplit_l(&toolbar, 80.0f, &button, &toolbar);
+			toolbar.VSplitLeft(80.0f, &button, &toolbar);
 			
 			static int name_box = 0;
-			ui_do_edit_box(&name_box, &button, envelope->name, sizeof(envelope->name), 10.0f);
+			DoEditBox(&name_box, &button, envelope->name, sizeof(envelope->name), 10.0f);
 		}
 	}
 	
@@ -2113,9 +2274,9 @@ static void render_envelopeeditor(RECT view)
 		
 		if(envelope)
 		{
-			RECT button;	
+			CUIRect button;	
 			
-			ui_vsplit_l(&toolbar, 15.0f, &button, &toolbar);
+			toolbar.VSplitLeft(15.0f, &button, &toolbar);
 
 			static const char *names[4][4] = {
 				{"X", "", "", ""},
@@ -2126,17 +2287,17 @@ static void render_envelopeeditor(RECT view)
 			
 			static int channel_buttons[4] = {0};
 			int bit = 1;
-			ui_draw_button_func draw_func;
+			/*ui_draw_button_func draw_func;*/
 			
 			for(int i = 0; i < envelope->channels; i++, bit<<=1)
 			{
-				ui_vsplit_l(&toolbar, 15.0f, &button, &toolbar);
+				toolbar.VSplitLeft(15.0f, &button, &toolbar);
 				
-				if(i == 0) draw_func = draw_editor_button_l;
+				/*if(i == 0) draw_func = draw_editor_button_l;
 				else if(i == envelope->channels-1) draw_func = draw_editor_button_r;
-				else draw_func = draw_editor_button_m;
+				else draw_func = draw_editor_button_m;*/
 				
-				if(do_editor_button(&channel_buttons[i], names[envelope->channels-1][i], active_channels&bit, &button, draw_func, 0, 0))
+				if(DoButton_Editor(&channel_buttons[i], names[envelope->channels-1][i], active_channels&bit, &button, 0, 0))
 					active_channels ^= bit;
 			}
 		}		
@@ -2157,19 +2318,19 @@ static void render_envelopeeditor(RECT view)
 		float timescale = end_time/view.w;
 		float valuescale = (top-bottom)/view.h;
 		
-		if(ui_mouse_inside(&view))
-			ui_set_hot_item(&envelope_editor_id);
+		if(UI()->MouseInside(&view))
+			UI()->SetHotItem(&envelope_editor_id);
 			
-		if(ui_hot_item() == &envelope_editor_id)
+		if(UI()->HotItem() == &envelope_editor_id)
 		{
 			// do stuff
 			if(envelope)
 			{
-				if(ui_mouse_button_clicked(1))
+				if(UI()->MouseButtonClicked(1))
 				{
 					// add point
-					int time = (int)(((ui_mouse_x()-view.x)*timescale)*1000.0f);
-					//float env_y = (ui_mouse_y()-view.y)/timescale;
+					int time = (int)(((UI()->MouseX()-view.x)*timescale)*1000.0f);
+					//float env_y = (UI()->MouseY()-view.y)/timescale;
 					float channels[4];
 					envelope->eval(time, channels);
 					envelope->add_point(time,
@@ -2177,7 +2338,7 @@ static void render_envelopeeditor(RECT view)
 						f2fx(channels[2]), f2fx(channels[3]));
 				}
 				
-				editor.tooltip = "Press right mouse button to create a new point";
+				tooltip = "Press right mouse button to create a new point";
 			}
 		}
 
@@ -2185,22 +2346,22 @@ static void render_envelopeeditor(RECT view)
 
 		// render lines
 		{
-			ui_clip_enable(&view);
-			gfx_texture_set(-1);
-			gfx_lines_begin();
+			UI()->ClipEnable(&view);
+			Graphics()->TextureSet(-1);
+			Graphics()->LinesBegin();
 			for(int c = 0; c < envelope->channels; c++)
 			{
 				if(active_channels&(1<<c))
-					gfx_setcolor(colors[c].r,colors[c].g,colors[c].b,1);
+					Graphics()->SetColor(colors[c].r,colors[c].g,colors[c].b,1);
 				else
-					gfx_setcolor(colors[c].r*0.5f,colors[c].g*0.5f,colors[c].b*0.5f,1);
+					Graphics()->SetColor(colors[c].r*0.5f,colors[c].g*0.5f,colors[c].b*0.5f,1);
 				
 				float prev_x = 0;
 				float results[4];
 				envelope->eval(0.000001f, results);
 				float prev_value = results[c];
 				
-				int steps = (int)((view.w/ui_screen()->w) * gfx_screenwidth());
+				int steps = (int)((view.w/UI()->Screen()->w) * Graphics()->ScreenWidth());
 				for(int i = 1; i <= steps; i++)
 				{
 					float a = i/(float)steps;
@@ -2208,13 +2369,13 @@ static void render_envelopeeditor(RECT view)
 					float v = results[c];
 					v = (v-bottom)/(top-bottom);
 					
-					gfx_lines_draw(view.x + prev_x*view.w, view.y+view.h - prev_value*view.h, view.x + a*view.w, view.y+view.h - v*view.h);
+					Graphics()->LinesDraw(view.x + prev_x*view.w, view.y+view.h - prev_value*view.h, view.x + a*view.w, view.y+view.h - v*view.h);
 					prev_x = a;
 					prev_value = v;
 				}
 			}
-			gfx_lines_end();
-			ui_clip_disable();
+			Graphics()->LinesEnd();
+			UI()->ClipDisable();
 		}
 		
 		// render curve options
@@ -2226,7 +2387,7 @@ static void render_envelopeeditor(RECT view)
 
 				//dbg_msg("", "%f", end_time);
 				
-				RECT v;
+				CUIRect v;
 				v.x = curvebar.x + (t0+(t1-t0)*0.5f) * curvebar.w;
 				v.y = curvebar.y;
 				v.h = curvebar.h;
@@ -2237,7 +2398,7 @@ static void render_envelopeeditor(RECT view)
 					"N", "L", "S", "F", "M"
 					};
 				
-				if(do_editor_button(id, type_name[envelope->points[i].curvetype], 0, &v, draw_editor_button, 0, "Switch curve type"))
+				if(DoButton_Editor(id, type_name[envelope->points[i].curvetype], 0, &v, 0, "Switch curve type"))
 					envelope->points[i].curvetype = (envelope->points[i].curvetype+1)%NUM_CURVETYPES;
 			}
 		}
@@ -2245,8 +2406,8 @@ static void render_envelopeeditor(RECT view)
 		// render colorbar
 		if(show_colorbar)
 		{
-			gfx_texture_set(-1);
-			gfx_quads_begin();
+			Graphics()->TextureSet(-1);
+			Graphics()->QuadsBegin();
 			for(int i = 0; i < envelope->points.len()-1; i++)
 			{
 				float r0 = fx2f(envelope->points[i].values[0]);
@@ -2258,24 +2419,24 @@ static void render_envelopeeditor(RECT view)
 				float b1 = fx2f(envelope->points[i+1].values[2]);
 				float a1 = fx2f(envelope->points[i+1].values[3]);
 
-				gfx_setcolorvertex(0, r0, g0, b0, a0);
-				gfx_setcolorvertex(1, r1, g1, b1, a1);
-				gfx_setcolorvertex(2, r1, g1, b1, a1);
-				gfx_setcolorvertex(3, r0, g0, b0, a0);
+				Graphics()->SetColorVertex(0, r0, g0, b0, a0);
+				Graphics()->SetColorVertex(1, r1, g1, b1, a1);
+				Graphics()->SetColorVertex(2, r1, g1, b1, a1);
+				Graphics()->SetColorVertex(3, r0, g0, b0, a0);
 
 				float x0 = envelope->points[i].time/1000.0f/end_time;
 //				float y0 = (fx2f(envelope->points[i].values[c])-bottom)/(top-bottom);
 				float x1 = envelope->points[i+1].time/1000.0f/end_time;
 				//float y1 = (fx2f(envelope->points[i+1].values[c])-bottom)/(top-bottom);
-				RECT v;
+				CUIRect v;
 				v.x = colorbar.x + x0*colorbar.w;
 				v.y = colorbar.y;
 				v.w = (x1-x0)*colorbar.w;
 				v.h = colorbar.h;
 				
-				gfx_quads_drawTL(v.x, v.y, v.w, v.h);
+				Graphics()->QuadsDrawTL(v.x, v.y, v.w, v.h);
 			}
-			gfx_quads_end();
+			Graphics()->QuadsEnd();
 		}
 		
 		// render handles
@@ -2284,8 +2445,8 @@ static void render_envelopeeditor(RECT view)
 			
 			int current_value = 0, current_time = 0;
 			
-			gfx_texture_set(-1);
-			gfx_quads_begin();
+			Graphics()->TextureSet(-1);
+			Graphics()->QuadsBegin();
 			for(int c = 0; c < envelope->channels; c++)
 			{
 				if(!(active_channels&(1<<c)))
@@ -2295,7 +2456,7 @@ static void render_envelopeeditor(RECT view)
 				{
 					float x0 = envelope->points[i].time/1000.0f/end_time;
 					float y0 = (fx2f(envelope->points[i].values[c])-bottom)/(top-bottom);
-					RECT final;
+					CUIRect final;
 					final.x = view.x + x0*view.w;
 					final.y = view.y+view.h - y0*view.h;
 					final.x -= 2.0f;
@@ -2305,26 +2466,26 @@ static void render_envelopeeditor(RECT view)
 					
 					void *id = &envelope->points[i].values[c];
 					
-					if(ui_mouse_inside(&final))
-						ui_set_hot_item(id);
+					if(UI()->MouseInside(&final))
+						UI()->SetHotItem(id);
 						
 					float colormod = 1.0f;
 
-					if(ui_active_item() == id)
+					if(UI()->ActiveItem() == id)
 					{
-						if(!ui_mouse_button(0))
+						if(!UI()->MouseButton(0))
 						{
-							ui_set_active_item(0);
+							UI()->SetActiveItem(0);
 							move = false;
 						}
 						else
 						{
-							envelope->points[i].values[c] -= f2fx(editor.mouse_delta_y*valuescale);
+							envelope->points[i].values[c] -= f2fx(mouse_delta_y*valuescale);
 							if(inp_key_pressed(KEY_LSHIFT) || inp_key_pressed(KEY_RSHIFT))
 							{
 								if(i != 0)
 								{
-									envelope->points[i].time += (int)((editor.mouse_delta_x*timescale)*1000.0f);
+									envelope->points[i].time += (int)((mouse_delta_x*timescale)*1000.0f);
 									if(envelope->points[i].time < envelope->points[i-1].time)
 										envelope->points[i].time = envelope->points[i-1].time + 1;
 									if(i+1 != envelope->points.len() && envelope->points[i].time > envelope->points[i+1].time)
@@ -2334,46 +2495,46 @@ static void render_envelopeeditor(RECT view)
 						}
 						
 						colormod = 100.0f;
-						gfx_setcolor(1,1,1,1);
+						Graphics()->SetColor(1,1,1,1);
 					}
-					else if(ui_hot_item() == id)
+					else if(UI()->HotItem() == id)
 					{
-						if(ui_mouse_button(0))
+						if(UI()->MouseButton(0))
 						{
 							selection.clear();
 							selection.add(i);
-							ui_set_active_item(id);
+							UI()->SetActiveItem(id);
 						}
 
 						// remove point
-						if(ui_mouse_button_clicked(1))
+						if(UI()->MouseButtonClicked(1))
 							envelope->points.removebyindex(i);
 							
 						colormod = 100.0f;
-						gfx_setcolor(1,0.75f,0.75f,1);
-						editor.tooltip = "Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.";
+						Graphics()->SetColor(1,0.75f,0.75f,1);
+						tooltip = "Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.";
 					}
 
-					if(ui_active_item() == id || ui_hot_item() == id)
+					if(UI()->ActiveItem() == id || UI()->HotItem() == id)
 					{
 						current_time = envelope->points[i].time;
 						current_value = envelope->points[i].values[c];
 					}
 					
-					gfx_setcolor(colors[c].r*colormod, colors[c].g*colormod, colors[c].b*colormod, 1.0f);
-					gfx_quads_drawTL(final.x, final.y, final.w, final.h);
+					Graphics()->SetColor(colors[c].r*colormod, colors[c].g*colormod, colors[c].b*colormod, 1.0f);
+					Graphics()->QuadsDrawTL(final.x, final.y, final.w, final.h);
 				}
 			}
-			gfx_quads_end();
+			Graphics()->QuadsEnd();
 
 			char buf[512];
 			sprintf(buf, "%.3f %.3f", current_time/1000.0f, fx2f(current_value));
-			ui_do_label(&toolbar, buf, 10.0f, 0, -1);
+			UI()->DoLabel(&toolbar, buf, 10.0f, 0, -1);
 		}
 	}
 }
 
-static int popup_menu_file(RECT view)
+int EDITOR::popup_menu_file(EDITOR *pEditor, CUIRect view)
 {
 	static int new_map_button = 0;
 	static int save_button = 0;
@@ -2382,49 +2543,49 @@ static int popup_menu_file(RECT view)
 	static int append_button = 0;
 	static int exit_button = 0;
 
-	RECT slot;
-	ui_hsplit_t(&view, 2.0f, &slot, &view);
-	ui_hsplit_t(&view, 12.0f, &slot, &view);
-	if(do_editor_button(&new_map_button, "New", 0, &slot, draw_editor_button_menuitem, 0, "Creates a new map"))
+	CUIRect slot;
+	view.HSplitTop(2.0f, &slot, &view);
+	view.HSplitTop(12.0f, &slot, &view);
+	if(pEditor->DoButton_MenuItem(&new_map_button, "New", 0, &slot, 0, "Creates a new map"))
 	{
-		editor.reset();
+		pEditor->reset();
 		return 1;
 	}
 
-	ui_hsplit_t(&view, 10.0f, &slot, &view);
-	ui_hsplit_t(&view, 12.0f, &slot, &view);
-	if(do_editor_button(&open_button, "Open", 0, &slot, draw_editor_button_menuitem, 0, "Opens a map for editing"))
+	view.HSplitTop(10.0f, &slot, &view);
+	view.HSplitTop(12.0f, &slot, &view);
+	if(pEditor->DoButton_MenuItem(&open_button, "Open", 0, &slot, 0, "Opens a map for editing"))
 	{
-		editor.invoke_file_dialog(LISTDIRTYPE_ALL, "Open Map", "Open", "maps/", "", callback_open_map);
+		pEditor->invoke_file_dialog(LISTDIRTYPE_ALL, "Open Map", "Open", "maps/", "", callback_open_map, pEditor);
 		return 1;
 	}
 
-	ui_hsplit_t(&view, 10.0f, &slot, &view);
-	ui_hsplit_t(&view, 12.0f, &slot, &view);
-	if(do_editor_button(&append_button, "Append", 0, &slot, draw_editor_button_menuitem, 0, "Opens a map and adds everything from that map to the current one"))
+	view.HSplitTop(10.0f, &slot, &view);
+	view.HSplitTop(12.0f, &slot, &view);
+	if(pEditor->DoButton_MenuItem(&append_button, "Append", 0, &slot, 0, "Opens a map and adds everything from that map to the current one"))
 	{
-		editor.invoke_file_dialog(LISTDIRTYPE_ALL, "Append Map", "Append", "maps/", "", callback_append_map);
+		pEditor->invoke_file_dialog(LISTDIRTYPE_ALL, "Append Map", "Append", "maps/", "", callback_append_map, pEditor);
 		return 1;
 	}
 
-	ui_hsplit_t(&view, 10.0f, &slot, &view);
-	ui_hsplit_t(&view, 12.0f, &slot, &view);
-	if(do_editor_button(&save_button, "Save (NOT IMPL)", 0, &slot, draw_editor_button_menuitem, 0, "Saves the current map"))
+	view.HSplitTop(10.0f, &slot, &view);
+	view.HSplitTop(12.0f, &slot, &view);
+	if(pEditor->DoButton_MenuItem(&save_button, "Save (NOT IMPL)", 0, &slot, 0, "Saves the current map"))
 	{
 		return 1;
 	}
 
-	ui_hsplit_t(&view, 2.0f, &slot, &view);
-	ui_hsplit_t(&view, 12.0f, &slot, &view);
-	if(do_editor_button(&save_as_button, "Save As", 0, &slot, draw_editor_button_menuitem, 0, "Saves the current map under a new name"))
+	view.HSplitTop(2.0f, &slot, &view);
+	view.HSplitTop(12.0f, &slot, &view);
+	if(pEditor->DoButton_MenuItem(&save_as_button, "Save As", 0, &slot, 0, "Saves the current map under a new name"))
 	{
-		editor.invoke_file_dialog(LISTDIRTYPE_SAVE, "Save Map", "Save", "maps/", "", callback_save_map);
+		pEditor->invoke_file_dialog(LISTDIRTYPE_SAVE, "Save Map", "Save", "maps/", "", callback_save_map, pEditor);
 		return 1;
 	}
 	
-	ui_hsplit_t(&view, 10.0f, &slot, &view);
-	ui_hsplit_t(&view, 12.0f, &slot, &view);
-	if(do_editor_button(&exit_button, "Exit", 0, &slot, draw_editor_button_menuitem, 0, "Exits from the editor"))
+	view.HSplitTop(10.0f, &slot, &view);
+	view.HSplitTop(12.0f, &slot, &view);
+	if(pEditor->DoButton_MenuItem(&exit_button, "Exit", 0, &slot, 0, "Exits from the editor"))
 	{
 		config.cl_editor = 0;
 		return 1;
@@ -2433,22 +2594,22 @@ static int popup_menu_file(RECT view)
 	return 0;
 }
 
-static void render_menubar(RECT menubar)
+void EDITOR::render_menubar(CUIRect menubar)
 {
-	static RECT file /*, view, help*/;
+	static CUIRect file /*, view, help*/;
 
-	ui_vsplit_l(&menubar, 60.0f, &file, &menubar);
-	if(do_editor_button(&file, "File", 0, &file, draw_editor_button_menu, 0, 0))
-		ui_invoke_popup_menu(&file, 1, file.x, file.y+file.h-1.0f, 120, 150, popup_menu_file);
+	menubar.VSplitLeft(60.0f, &file, &menubar);
+	if(DoButton_Menu(&file, "File", 0, &file, 0, 0))
+		ui_invoke_popup_menu(&file, 1, file.x, file.y+file.h-1.0f, 120, 150, popup_menu_file, this);
 	
 	/*
-	ui_vsplit_l(&menubar, 5.0f, 0, &menubar);
-	ui_vsplit_l(&menubar, 60.0f, &view, &menubar);
+	menubar.VSplitLeft(5.0f, 0, &menubar);
+	menubar.VSplitLeft(60.0f, &view, &menubar);
 	if(do_editor_button(&view, "View", 0, &view, draw_editor_button_menu, 0, 0))
 		(void)0;
 
-	ui_vsplit_l(&menubar, 5.0f, 0, &menubar);
-	ui_vsplit_l(&menubar, 60.0f, &help, &menubar);
+	menubar.VSplitLeft(5.0f, 0, &menubar);
+	menubar.VSplitLeft(60.0f, &help, &menubar);
 	if(do_editor_button(&help, "Help", 0, &help, draw_editor_button_menu, 0, 0))
 		(void)0;
 		*/
@@ -2457,102 +2618,102 @@ static void render_menubar(RECT menubar)
 void EDITOR::render()
 {
 	// basic start
-	gfx_clear(1.0f,0.0f,1.0f);
-	RECT view = *ui_screen();
-	gfx_mapscreen(ui_screen()->x, ui_screen()->y, ui_screen()->w, ui_screen()->h);
+	Graphics()->Clear(1.0f,0.0f,1.0f);
+	CUIRect view = *UI()->Screen();
+	Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
 	
 	// reset tip
-	editor.tooltip = 0;
+	tooltip = 0;
 	
 	// render checker
 	render_background(view, checker_texture, 32.0f, 1.0f);
 	
-	RECT menubar, modebar, toolbar, statusbar, envelope_editor, toolbox;
+	CUIRect menubar, modebar, toolbar, statusbar, envelope_editor, toolbox;
 	
-	if(editor.gui_active)
+	if(gui_active)
 	{
 		
-		ui_hsplit_t(&view, 16.0f, &menubar, &view);
-		ui_vsplit_l(&view, 80.0f, &toolbox, &view);
-		ui_hsplit_t(&view, 16.0f, &toolbar, &view);
-		ui_hsplit_b(&view, 16.0f, &view, &statusbar);
+		view.HSplitTop(16.0f, &menubar, &view);
+		view.VSplitLeft(80.0f, &toolbox, &view);
+		view.HSplitTop(16.0f, &toolbar, &view);
+		view.HSplitBottom(16.0f, &view, &statusbar);
 
-		if(editor.show_envelope_editor)
+		if(show_envelope_editor)
 		{
 			float size = 125.0f;
-			if(editor.show_envelope_editor == 2)
+			if(show_envelope_editor == 2)
 				size *= 2.0f;
-			else if(editor.show_envelope_editor == 3)
+			else if(show_envelope_editor == 3)
 				size *= 3.0f;
-			ui_hsplit_b(&view, size, &view, &envelope_editor);
+			view.HSplitBottom(size, &view, &envelope_editor);
 		}
 	}
 	
 	//	a little hack for now
-	if(editor.mode == MODE_LAYERS)
+	if(mode == MODE_LAYERS)
 		do_map_editor(view, toolbar);
 	
-	if(editor.gui_active)
+	if(gui_active)
 	{
 		float brightness = 0.25f;
 		render_background(menubar, background_texture, 128.0f, brightness*0);
-		ui_margin(&menubar, 2.0f, &menubar);
+		menubar.Margin(2.0f, &menubar);
 
 		render_background(toolbox, background_texture, 128.0f, brightness);
-		ui_margin(&toolbox, 2.0f, &toolbox);
+		toolbox.Margin(2.0f, &toolbox);
 		
 		render_background(toolbar, background_texture, 128.0f, brightness);
-		ui_margin(&toolbar, 2.0f, &toolbar);
-		ui_vsplit_l(&toolbar, 150.0f, &modebar, &toolbar);
+		toolbar.Margin(2.0f, &toolbar);
+		toolbar.VSplitLeft(150.0f, &modebar, &toolbar);
 
 		render_background(statusbar, background_texture, 128.0f, brightness);
-		ui_margin(&statusbar, 2.0f, &statusbar);
+		statusbar.Margin(2.0f, &statusbar);
 		
 		// do the toolbar
-		if(editor.mode == MODE_LAYERS)
+		if(mode == MODE_LAYERS)
 			do_toolbar(toolbar);
 		
-		if(editor.show_envelope_editor)
+		if(show_envelope_editor)
 		{
 			render_background(envelope_editor, background_texture, 128.0f, brightness);
-			ui_margin(&envelope_editor, 2.0f, &envelope_editor);
+			envelope_editor.Margin(2.0f, &envelope_editor);
 		}
 	}
 		
 	
-	if(editor.mode == MODE_LAYERS)
+	if(mode == MODE_LAYERS)
 		render_layers(toolbox, toolbar, view);
-	else if(editor.mode == MODE_IMAGES)
+	else if(mode == MODE_IMAGES)
 		render_images(toolbox, toolbar, view);
 
-	gfx_mapscreen(ui_screen()->x, ui_screen()->y, ui_screen()->w, ui_screen()->h);
+	Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
 
-	if(editor.gui_active)
+	if(gui_active)
 	{
 		render_menubar(menubar);
 		
 		render_modebar(modebar);
-		if(editor.show_envelope_editor)
+		if(show_envelope_editor)
 			render_envelopeeditor(envelope_editor);
 	}
 
-	if(editor.dialog == DIALOG_FILE)
+	if(dialog == DIALOG_FILE)
 	{
 		static int null_ui_target = 0;
-		ui_set_hot_item(&null_ui_target);
+		UI()->SetHotItem(&null_ui_target);
 		render_file_dialog();
 	}
 	
 	
 	ui_do_popup_menu();
 
-	if(editor.gui_active)
+	if(gui_active)
 		render_statusbar(statusbar);
 
 	//
 	if(config.ed_showkeys)
 	{
-		gfx_mapscreen(ui_screen()->x, ui_screen()->y, ui_screen()->w, ui_screen()->h);
+		Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
 		TEXT_CURSOR cursor;
 		gfx_text_set_cursor(&cursor, view.x+10, view.y+view.h-24-10, 24.0f, TEXTFLAG_RENDER);
 		
@@ -2569,28 +2730,28 @@ void EDITOR::render()
 		}
 	}
 	
-	if (editor.show_mouse_pointer)
+	if(show_mouse_pointer)
 	{
 		// render butt ugly mouse cursor
-		float mx = ui_mouse_x();
-		float my = ui_mouse_y();
-		gfx_texture_set(cursor_texture);
-		gfx_quads_begin();
-		if(ui_got_context == ui_hot_item())
-			gfx_setcolor(1,0,0,1);
-		gfx_quads_drawTL(mx,my, 16.0f, 16.0f);
-		gfx_quads_end();
+		float mx = UI()->MouseX();
+		float my = UI()->MouseY();
+		Graphics()->TextureSet(cursor_texture);
+		Graphics()->QuadsBegin();
+		if(ui_got_context == UI()->HotItem())
+			Graphics()->SetColor(1,0,0,1);
+		Graphics()->QuadsDrawTL(mx,my, 16.0f, 16.0f);
+		Graphics()->QuadsEnd();
 	}
 	
 }
 
 void EDITOR::reset(bool create_default)
 {
-	editor.map.clean();
+	map.clean();
 
 	// create default layers
 	if(create_default)
-		editor.map.create_default(entities_texture);
+		map.create_default(entities_texture);
 	
 	/*
 	{
@@ -2636,28 +2797,30 @@ void MAP::create_default(int entities_texture)
 	game_group->add_layer(game_layer);
 }
 
-extern "C" void editor_init()
+void EDITOR::Init(class IGraphics *pGraphics)
 {
-	checker_texture = gfx_load_texture("editor/checker.png", IMG_AUTO, 0);
-	background_texture = gfx_load_texture("editor/background.png", IMG_AUTO, 0);
-	cursor_texture = gfx_load_texture("editor/cursor.png", IMG_AUTO, 0);
-	entities_texture = gfx_load_texture("editor/entities.png", IMG_AUTO, 0);
+	m_pGraphics = pGraphics;
+	
+	checker_texture = Graphics()->LoadTexture("editor/checker.png", IMG_AUTO, 0);
+	background_texture = Graphics()->LoadTexture("editor/background.png", IMG_AUTO, 0);
+	cursor_texture = Graphics()->LoadTexture("editor/cursor.png", IMG_AUTO, 0);
+	entities_texture = Graphics()->LoadTexture("editor/entities.png", IMG_AUTO, 0);
 	
 	tileset_picker.make_palette();
 	tileset_picker.readonly = true;
 	
-	editor.reset();
+	reset();
 }
 
-extern "C" void editor_update_and_render()
+void EDITOR::UpdateAndRender()
 {
 	static int mouse_x = 0;
 	static int mouse_y = 0;
 	
-	if(editor.animate)
-		editor.animate_time = (time_get()-editor.animate_start)/(float)time_freq();
+	if(animate)
+		animate_time = (time_get()-animate_start)/(float)time_freq();
 	else
-		editor.animate_time = 0;
+		animate_time = 0;
 	ui_got_context = 0;
 
 	// handle mouse movement
@@ -2665,10 +2828,10 @@ extern "C" void editor_update_and_render()
 	int rx, ry;
 	{
 		inp_mouse_relative(&rx, &ry);
-		editor.mouse_delta_x = rx;
-		editor.mouse_delta_y = ry;
+		mouse_delta_x = rx;
+		mouse_delta_y = ry;
 		
-		if(!editor.lock_mouse)
+		if(!lock_mouse)
 		{
 			mouse_x += rx;
 			mouse_y += ry;
@@ -2676,8 +2839,8 @@ extern "C" void editor_update_and_render()
 		
 		if(mouse_x < 0) mouse_x = 0;
 		if(mouse_y < 0) mouse_y = 0;
-		if(mouse_x > ui_screen()->w) mouse_x = (int)ui_screen()->w;
-		if(mouse_y > ui_screen()->h) mouse_y = (int)ui_screen()->h;
+		if(mouse_x > UI()->Screen()->w) mouse_x = (int)UI()->Screen()->w;
+		if(mouse_y > UI()->Screen()->h) mouse_y = (int)UI()->Screen()->h;
 
 		// update the ui
 		mx = mouse_x;
@@ -2686,7 +2849,7 @@ extern "C" void editor_update_and_render()
 		mwy = 0;
 		
 		// fix correct world x and y
-		LAYERGROUP *g = editor.get_selected_group();
+		LAYERGROUP *g = get_selected_group();
 		if(g)
 		{
 			float points[4];
@@ -2695,10 +2858,10 @@ extern "C" void editor_update_and_render()
 			float world_width = points[2]-points[0];
 			float world_height = points[3]-points[1];
 			
-			mwx = points[0] + world_width * (mouse_x/ui_screen()->w);
-			mwy = points[1] + world_height * (mouse_y/ui_screen()->h);
-			editor.mouse_delta_wx = editor.mouse_delta_x*(world_width / ui_screen()->w);
-			editor.mouse_delta_wy = editor.mouse_delta_y*(world_height / ui_screen()->h);
+			mwx = points[0] + world_width * (mouse_x/UI()->Screen()->w);
+			mwy = points[1] + world_height * (mouse_y/UI()->Screen()->h);
+			mouse_delta_wx = mouse_delta_x*(world_width / UI()->Screen()->w);
+			mouse_delta_wy = mouse_delta_y*(world_height / UI()->Screen()->h);
 		}
 		
 		int buttons = 0;
@@ -2706,33 +2869,34 @@ extern "C" void editor_update_and_render()
 		if(inp_key_pressed(KEY_MOUSE_2)) buttons |= 2;
 		if(inp_key_pressed(KEY_MOUSE_3)) buttons |= 4;
 		
-		ui_update(mx,my,mwx,mwy,buttons);
+		UI()->Update(mx,my,mwx,mwy,buttons);
 	}
 	
 	// toggle gui
 	if(inp_key_down(KEY_TAB))
-		editor.gui_active = !editor.gui_active;
+		gui_active = !gui_active;
 
 	if(inp_key_down(KEY_F5))
-		editor.save("maps/debug_test2.map");
+		save("maps/debug_test2.map");
 
 	if(inp_key_down(KEY_F6))
-		editor.load("maps/debug_test2.map");
+		load("maps/debug_test2.map");
 	
 	if(inp_key_down(KEY_F8))
-		editor.load("maps/debug_test.map");
+		load("maps/debug_test.map");
 	
 	if(inp_key_down(KEY_F10))
-		editor.show_mouse_pointer = false;
+		show_mouse_pointer = false;
 	
-	editor.render();
+	render();
 	
 	if(inp_key_down(KEY_F10))
 	{
-		gfx_screenshot();
-		editor.show_mouse_pointer = true;
+		Graphics()->TakeScreenshot();
+		show_mouse_pointer = true;
 	}
 	
 	inp_clear_events();
 }
 
+IEditor *CreateEditor() { return new EDITOR; }

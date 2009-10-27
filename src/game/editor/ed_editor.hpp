@@ -9,15 +9,16 @@
 #include "../mapitems.hpp"
 #include "../client/render.hpp"
 
-extern "C" {
-	#include <engine/e_client_interface.h>
-	#include <engine/e_datafile.h>
-	#include <engine/e_config.h>
-}
+#include <engine/e_client_interface.h>
+#include <engine/e_datafile.h>
+#include <engine/e_config.h>
+#include <engine/client/editor.h>
 
 #include <game/client/ui.hpp>
 
 typedef void (*INDEX_MODIFY_FUNC)(int *index);
+
+//CRenderTools m_RenderTools;
 
 // EDITOR SPECIFIC
 template<typename T>
@@ -96,7 +97,7 @@ public:
 	
 	int eval(float time, float *result)
 	{
-		render_eval_envelope(points.getptr(), points.len(), channels, time, result);
+		CRenderTools::render_eval_envelope(points.getptr(), points.len(), channels, time, result);
 		return channels;
 	}
 	
@@ -129,6 +130,9 @@ class MAP;
 class LAYER
 {
 public:
+	class EDITOR *editor;
+	class IGraphics *Graphics();
+
 	LAYER()
 	{
 		type = LAYERTYPE_INVALID;
@@ -136,6 +140,7 @@ public:
 		visible = true;
 		readonly = false;
 		flags = 0;
+		editor = 0;
 	}
 	
 	virtual ~LAYER()
@@ -143,8 +148,8 @@ public:
 	}
 	
 	
-	virtual void brush_selecting(RECT rect) {}
-	virtual int brush_grab(LAYERGROUP *brush, RECT rect) { return 0; }
+	virtual void brush_selecting(CUIRect rect) {}
+	virtual int brush_grab(LAYERGROUP *brush, CUIRect rect) { return 0; }
 	virtual void brush_draw(LAYER *brush, float x, float y) {}
 	virtual void brush_place(LAYER *brush, float x, float y) {}
 	virtual void brush_flip_x() {}
@@ -152,7 +157,7 @@ public:
 	virtual void brush_rotate(float amount) {}
 	
 	virtual void render() {}
-	virtual int render_properties(RECT *toolbox) { return 0; }
+	virtual int render_properties(CUIRect *toolbox) { return 0; }
 	
 	virtual void modify_image_index(INDEX_MODIFY_FUNC func) {}
 	virtual void modify_envelope_index(INDEX_MODIFY_FUNC func) {}
@@ -170,6 +175,8 @@ public:
 class LAYERGROUP
 {
 public:
+	class MAP *m_pMap;
+	
 	array<LAYER*> layers;
 	
 	int offset_x;
@@ -191,7 +198,7 @@ public:
 	LAYERGROUP();
 	~LAYERGROUP();
 	
-	void convert(RECT *rect);
+	void convert(CUIRect *rect);
 	void render();
 	void mapscreen();
 	void mapping(float *points);
@@ -221,8 +228,11 @@ public:
 class EDITOR_IMAGE : public IMAGE_INFO
 {
 public:
-	EDITOR_IMAGE()
+	EDITOR *editor;
+	
+	EDITOR_IMAGE(EDITOR *ed)
 	{
+		editor = editor;
 		tex_id = -1;
 		name[0] = 0;
 		external = 0;
@@ -232,10 +242,7 @@ public:
 		format = 0;
 	}
 	
-	~EDITOR_IMAGE()
-	{
-		gfx_unload_texture(tex_id);
-	}
+	~EDITOR_IMAGE();
 	
 	void analyse_tileflags();
 	
@@ -250,6 +257,8 @@ class MAP
 	void make_game_group(LAYERGROUP *group);
 	void make_game_layer(LAYER *layer);
 public:
+	EDITOR *editor;
+
 	MAP()
 	{
 		clean();
@@ -272,6 +281,7 @@ public:
 	LAYERGROUP *new_group()
 	{
 		LAYERGROUP *g = new LAYERGROUP;
+		g->m_pMap = this;
 		groups.add(g);
 		return g;
 	}
@@ -333,9 +343,17 @@ enum
 	PROPTYPE_ENVELOPE,
 };
 
-class EDITOR
+class EDITOR : public IEditor
 {
-public:	
+	class IGraphics *m_pGraphics;
+	CRenderTools m_RenderTools;
+	CUI m_UI;
+public:
+	
+	class IGraphics *Graphics() { return m_pGraphics; };
+	CUI *UI() { return &m_UI; }
+	CRenderTools *RenderTools() { return &m_RenderTools; }
+
 	EDITOR()
 	{
 		mode = MODE_LAYERS;
@@ -368,9 +386,12 @@ public:
 		show_envelope_editor = 0;
 	}
 	
+	virtual void Init(class IGraphics *pGraphics);
+	virtual void UpdateAndRender();
+	
 	void invoke_file_dialog(int listdir_type, const char *title, const char *button_text,
 		const char *basepath, const char *default_name,
-		void (*func)(const char *filename));
+		void (*func)(const char *filename, void *user), void *user);
 	
 	void reset(bool create_default=true);
 	int save(const char *filename);
@@ -383,7 +404,7 @@ public:
 	LAYER *get_selected_layer(int index);
 	LAYERGROUP *get_selected_group();
 	
-	int do_properties(RECT *toolbox, PROPERTY *props, int *ids, int *new_val);
+	int do_properties(CUIRect *toolbox, PROPERTY *props, int *ids, int *new_val);
 	
 	int mode;
 	int dialog;
@@ -420,9 +441,70 @@ public:
 	int selected_image;
 	
 	MAP map;
+	
+	int DoButton_Editor_Common(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
+	int DoButton_Editor(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
+
+	int DoButton_ButtonL(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
+	int DoButton_ButtonM(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
+	int DoButton_ButtonR(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
+	int DoButton_ButtonDec(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
+	int DoButton_ButtonInc(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
+
+	int DoButton_File(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
+	
+	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
+	int DoButton_MenuItem(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags=0, const char *pToolTip=0);
+	
+	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, bool Hidden=false);
+	//static void draw_editor_button(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
+	//static void draw_editor_button_menuitem(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
+
+	void render_background(CUIRect view, int texture, float size, float brightness);
+
+	void ui_invoke_popup_menu(void *id, int flags, float x, float y, float w, float h, int (*func)(EDITOR *pEditor, CUIRect rect), void *extra=0);
+	void ui_do_popup_menu();
+	
+	int ui_do_value_selector(void *id, CUIRect *r, const char *label, int current, int min, int max, float scale);
+
+	static int popup_group(EDITOR *pEditor, CUIRect view);
+	static int popup_layer(EDITOR *pEditor, CUIRect view);
+	static int popup_quad(EDITOR *pEditor, CUIRect view);
+	static int popup_point(EDITOR *pEditor, CUIRect view);
+	static int popup_select_image(EDITOR *pEditor, CUIRect view);
+	static int popup_image(EDITOR *pEditor, CUIRect view);
+	static int popup_menu_file(EDITOR *pEditor, CUIRect view);
+
+
+	void popup_select_image_invoke(int current, float x, float y);
+	int popup_select_image_result();
+	
+	vec4 button_color_mul(const void *id);
+
+	void do_quad_point(QUAD *q, int quad_index, int v);
+	void do_map_editor(CUIRect view, CUIRect toolbar);
+	void do_toolbar(CUIRect toolbar);
+	void do_quad(QUAD *q, int index);
+	float ui_do_scrollbar_v(const void *id, const CUIRect *rect, float current);
+	vec4 get_button_color(const void *id, int checked);
+	
+	static void replace_image(const char *filename, void *user);
+	static void add_image(const char *filename, void *user);
+	
+	void render_images(CUIRect toolbox, CUIRect toolbar, CUIRect view);
+	void render_layers(CUIRect toolbox, CUIRect toolbar, CUIRect view);
+	void render_modebar(CUIRect view);
+	void render_statusbar(CUIRect view);
+	void render_envelopeeditor(CUIRect view);
+	
+	void render_menubar(CUIRect menubar);
+	void render_file_dialog();
 };
 
-extern EDITOR editor;
+// make sure to inline this function
+inline class IGraphics *LAYER::Graphics() { return editor->Graphics(); }
+
+//extern EDITOR editor;
 
 typedef struct
 {
@@ -443,17 +525,17 @@ public:
 
 	int convert_x(float x) const;
 	int convert_y(float y) const;
-	void convert(RECT rect, RECTi *out);
-	void snap(RECT *rect);
+	void convert(CUIRect rect, RECTi *out);
+	void snap(CUIRect *rect);
 	void clamp(RECTi *rect);
 
-	virtual void brush_selecting(RECT rect);
-	virtual int brush_grab(LAYERGROUP *brush, RECT rect);
+	virtual void brush_selecting(CUIRect rect);
+	virtual int brush_grab(LAYERGROUP *brush, CUIRect rect);
 	virtual void brush_draw(LAYER *brush, float wx, float wy);
 	virtual void brush_flip_x();
 	virtual void brush_flip_y();
 	
-	virtual int render_properties(RECT *toolbox);
+	virtual int render_properties(CUIRect *toolbox);
 
 	virtual void modify_image_index(INDEX_MODIFY_FUNC func);
 	virtual void modify_envelope_index(INDEX_MODIFY_FUNC func);
@@ -479,14 +561,14 @@ public:
 	virtual void render();
 	QUAD *new_quad();
 
-	virtual void brush_selecting(RECT rect);
-	virtual int brush_grab(LAYERGROUP *brush, RECT rect);
+	virtual void brush_selecting(CUIRect rect);
+	virtual int brush_grab(LAYERGROUP *brush, CUIRect rect);
 	virtual void brush_place(LAYER *brush, float wx, float wy);
 	virtual void brush_flip_x();
 	virtual void brush_flip_y();
 	virtual void brush_rotate(float amount);
 	
-	virtual int render_properties(RECT *toolbox);
+	virtual int render_properties(CUIRect *toolbox);
 
 	virtual void modify_image_index(INDEX_MODIFY_FUNC func);
 	virtual void modify_envelope_index(INDEX_MODIFY_FUNC func);
@@ -503,20 +585,5 @@ public:
 	LAYER_GAME(int w, int h);
 	~LAYER_GAME();
 
-	virtual int render_properties(RECT *toolbox);
+	virtual int render_properties(CUIRect *toolbox);
 };
-
-int do_editor_button(const void *id, const char *text, int checked, const RECT *r, ui_draw_button_func draw_func, int flags, const char *tooltip);
-void draw_editor_button(const void *id, const char *text, int checked, const RECT *r, const void *extra);
-void draw_editor_button_menuitem(const void *id, const char *text, int checked, const RECT *r, const void *extra);
-
-void ui_invoke_popup_menu(void *id, int flags, float x, float y, float w, float h, int (*func)(RECT rect), void *extra=0);
-void ui_do_popup_menu();
-
-int popup_group(RECT view);
-int popup_layer(RECT view);
-int popup_quad(RECT view);
-int popup_point(RECT view);
-
-void popup_select_image_invoke(int current, float x, float y);
-int popup_select_image_result();

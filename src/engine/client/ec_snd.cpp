@@ -1,12 +1,15 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <base/system.h>
 #include <engine/e_client_interface.h>
+#include <engine/client/graphics.h>
 #include <engine/e_config.h>
 #include <engine/e_engine.h>
 
 #include "SDL.h"
 
-#include <engine/external/wavpack/wavpack.h>
+extern "C" { // wavpack
+	#include <engine/external/wavpack/wavpack.h>
+}
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -140,7 +143,6 @@ static int iabs(int i)
 static void mix(short *final_out, unsigned frames)
 {
 	int mix_buffer[MAX_FRAMES*2] = {0};
-	int i, s;
 	int master_vol;
 
 	/* aquire lock while we are mixing */
@@ -148,7 +150,7 @@ static void mix(short *final_out, unsigned frames)
 	
 	master_vol = sound_volume;
 	
-	for(i = 0; i < NUM_VOICES; i++)
+	for(unsigned i = 0; i < NUM_VOICES; i++)
 	{
 		if(voices[i].snd)
 		{
@@ -160,7 +162,7 @@ static void mix(short *final_out, unsigned frames)
 			short *in_l = &v->snd->data[v->tick*step];
 			short *in_r = &v->snd->data[v->tick*step+1];
 			
-			int end = v->snd->num_frames-v->tick;
+			unsigned end = v->snd->num_frames-v->tick;
 
 			int rvol = v->channel->vol;
 			int lvol = v->channel->vol;
@@ -202,7 +204,7 @@ static void mix(short *final_out, unsigned frames)
 			}
 
 			/* process all frames */
-			for(s = 0; s < end; s++)
+			for(unsigned s = 0; s < end; s++)
 			{
 				*out++ += (*in_l)*lvol;
 				*out++ += (*in_r)*rvol;
@@ -225,7 +227,7 @@ static void mix(short *final_out, unsigned frames)
 	{
 		/* clamp accumulated values */
 		/* TODO: this seams slow */
-		for(i = 0; i < frames; i++)
+		for(unsigned i = 0; i < frames; i++)
 		{
 			int j = i<<1;
 			int vl = ((mix_buffer[j]*master_vol)/101)>>8;
@@ -281,12 +283,16 @@ int snd_init()
 	return 0;
 }
 
+// TODO: Refactor: Remove this
+extern IEngineGraphics *Graphics();
+
+
 int snd_update()
 {
 	/* update volume */
 	int wanted_volume = config.snd_volume;
 	
-	if(!gfx_window_active() && config.snd_nonactive_mute)
+	if(!Graphics()->WindowActive() && config.snd_nonactive_mute)
 		wanted_volume = 0;
 	
 	if(wanted_volume != sound_volume)
@@ -332,7 +338,7 @@ static void rate_convert(int sid)
 
 	/* allocate new data */
 	num_frames = (int)((snd->num_frames/(float)snd->rate)*mixing_rate);
-	new_data = mem_alloc(num_frames*snd->channels*sizeof(short), 1);
+	new_data = (short *)mem_alloc(num_frames*snd->channels*sizeof(short), 1);
 	
 	for(i = 0; i < num_frames; i++)
 	{

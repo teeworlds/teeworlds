@@ -1,35 +1,37 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 
-enum
+class CPacker
 {
-	PACKER_BUFFER_SIZE=1024*2
+	enum
+	{
+		PACKER_BUFFER_SIZE=1024*2
+	};
+
+	unsigned char m_aBuffer[PACKER_BUFFER_SIZE];
+	unsigned char *m_pCurrent;
+	unsigned char *m_pEnd;
+	int m_Error;
+public:
+	void Reset();
+	void AddInt(int i);
+	void AddString(const char *pStr, int Limit);
+	void AddRaw(const unsigned char *pData, int Size);
+	
+	int Size() const { return (int)(m_pCurrent-m_aBuffer); }
+	const unsigned char *Data() const { return m_aBuffer; }
+	bool Error() const { return m_Error; }
 };
 
-typedef struct
+class CUnpacker
 {
-	
-	unsigned char buffer[PACKER_BUFFER_SIZE];
-	unsigned char *current;
-	unsigned char *end;
-	int error;
-} PACKER;
-
-typedef struct
-{
-	const unsigned char *current;
-	const unsigned char *start;
-	const unsigned char *end;
-	int error;
-} UNPACKER;
-
-void packer_reset(PACKER *p);
-void packer_add_int(PACKER *p, int i);
-void packer_add_string(PACKER *p, const char *str, int limit);
-void packer_add_raw(PACKER *p, const unsigned char *data, int size);
-int packer_size(PACKER *p);
-const unsigned char *packer_data(PACKER *p);
-
-void unpacker_reset(UNPACKER *p, const unsigned char *data, int size);
-int unpacker_get_int(UNPACKER *p);
-const char *unpacker_get_string(UNPACKER *p);
-const unsigned char *unpacker_get_raw(UNPACKER *p, int size);
+	const unsigned char *m_pStart;
+	const unsigned char *m_pCurrent;
+	const unsigned char *m_pEnd;
+	int m_Error;
+public:
+	void Reset(const unsigned char *pData, int Size);
+	int GetInt();
+	const char *GetString();
+	const unsigned char *GetRaw(int Size);
+	bool Error() const { return m_Error; }
+};

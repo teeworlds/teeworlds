@@ -1,5 +1,6 @@
 #include <engine/e_client_interface.h>
 #include <engine/e_config.h>
+#include <engine/client/graphics.h>
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
 
@@ -14,12 +15,12 @@ void BROADCAST::on_reset()
 
 void BROADCAST::on_render()
 {
-	gfx_mapscreen(0, 0, 300*gfx_screenaspect(), 300);
+	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);
 		
 	if(time_get() < broadcast_time)
 	{
 		float w = gfx_text_width(0, 14, broadcast_text, -1);
-		gfx_text(0, 150*gfx_screenaspect()-w/2, 35, 14, broadcast_text, -1);
+		gfx_text(0, 150*Graphics()->ScreenAspect()-w/2, 35, 14, broadcast_text, -1);
 	}
 }
 

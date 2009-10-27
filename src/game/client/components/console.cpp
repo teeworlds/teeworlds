@@ -6,10 +6,9 @@
 #include <base/system.h>
 
 #include <engine/e_client_interface.h>
+#include <engine/client/graphics.h>
 
-extern "C" {
-	#include <engine/e_ringbuffer.h>
-}
+#include <engine/e_ringbuffer.h>
 
 #include <cstring>
 #include <cstdio>
@@ -34,8 +33,8 @@ enum
 CONSOLE::INSTANCE::INSTANCE(int t)
 {
 	// init ringbuffers
-	history = ringbuf_init(history_data, sizeof(history_data), RINGBUF_FLAG_RECYCLE);
-	backlog = ringbuf_init(backlog_data, sizeof(backlog_data), RINGBUF_FLAG_RECYCLE);
+	//history = ringbuf_init(history_data, sizeof(history_data), RINGBUF_FLAG_RECYCLE);
+	//backlog = ringbuf_init(backlog_data, sizeof(backlog_data), RINGBUF_FLAG_RECYCLE);
 	
 	history_entry = 0x0;
 	
@@ -83,7 +82,7 @@ void CONSOLE::INSTANCE::on_input(INPUT_EVENT e)
 		{
 			if(input.get_string()[0])
 			{
-				char *entry = (char *)ringbuf_allocate(history, input.get_length()+1);
+				char *entry = history.Allocate(input.get_length()+1);
 				mem_copy(entry, input.get_string(), input.get_length()+1);
 				
 				execute_line(input.get_string());
@@ -97,13 +96,13 @@ void CONSOLE::INSTANCE::on_input(INPUT_EVENT e)
 		{
 			if (history_entry)
 			{
-				char *test = (char *)ringbuf_prev(history, history_entry);
+				char *test = history.Prev(history_entry);
 
 				if (test)
 					history_entry = test;
 			}
 			else
-				history_entry = (char *)ringbuf_last(history);
+				history_entry = history.Last();
 
 			if (history_entry)
 			{
@@ -116,7 +115,7 @@ void CONSOLE::INSTANCE::on_input(INPUT_EVENT e)
 		else if (e.key == KEY_DOWN)
 		{
 			if (history_entry)
-				history_entry = (char *)ringbuf_next(history, history_entry);
+				history_entry = history.Next(history_entry);
 
 			if (history_entry)
 			{
@@ -173,7 +172,7 @@ void CONSOLE::INSTANCE::print_line(const char *line)
 	if (len > 255)
 		len = 255;
 
-	char *entry = (char *)ringbuf_allocate(backlog, len+1);
+	char *entry = backlog.Allocate(len+1);
 	mem_copy(entry, line, len+1);
 }
 
@@ -212,6 +211,7 @@ static float console_scale_func(float t)
 
 struct RENDERINFO
 {
+	CONSOLE *self;
 	TEXT_CURSOR cursor;
 	const char *current_cmd;
 	int wanted_completion;
@@ -225,11 +225,11 @@ void CONSOLE::possible_commands_render_callback(const char *str, void *user)
 	if(info->enum_count == info->wanted_completion)
 	{
 		float tw = gfx_text_width(info->cursor.font, info->cursor.font_size, str, -1);
-		gfx_texture_set(-1);
-		gfx_quads_begin();
-			gfx_setcolor(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f);
-			draw_round_rect(info->cursor.x-3, info->cursor.y, tw+5, info->cursor.font_size+4, info->cursor.font_size/3);
-		gfx_quads_end();
+		info->self->Graphics()->TextureSet(-1);
+		info->self->Graphics()->QuadsBegin();
+			info->self->Graphics()->SetColor(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f);
+			info->self->RenderTools()->draw_round_rect(info->cursor.x-3, info->cursor.y, tw+5, info->cursor.font_size+4, info->cursor.font_size/3);
+		info->self->Graphics()->QuadsEnd();
 		
 		gfx_text_color(0.05f, 0.05f, 0.05f,1);
 		gfx_text_ex(&info->cursor, str, -1);
@@ -260,7 +260,7 @@ void CONSOLE::possible_commands_render_callback(const char *str, void *user)
 
 void CONSOLE::on_render()
 {
-    RECT screen = *ui_screen();
+    CUIRect screen = *UI()->Screen();
 	float console_max_height = screen.h*3/5.0f;
 	float console_height;
 
@@ -296,45 +296,45 @@ void CONSOLE::on_render()
 
 	console_height = console_height_scale*console_max_height;
 
-	gfx_mapscreen(screen.x, screen.y, screen.w, screen.h);
+	Graphics()->MapScreen(screen.x, screen.y, screen.w, screen.h);
 
 	// do console shadow
-	gfx_texture_set(-1);
-    gfx_quads_begin();
-    gfx_setcolorvertex(0, 0,0,0, 0.5f);
-    gfx_setcolorvertex(1, 0,0,0, 0.5f);
-    gfx_setcolorvertex(2, 0,0,0, 0.0f);
-    gfx_setcolorvertex(3, 0,0,0, 0.0f);
-    gfx_quads_drawTL(0,console_height,screen.w,10.0f);
-    gfx_quads_end();
+	Graphics()->TextureSet(-1);
+    Graphics()->QuadsBegin();
+    Graphics()->SetColorVertex(0, 0,0,0, 0.5f);
+    Graphics()->SetColorVertex(1, 0,0,0, 0.5f);
+    Graphics()->SetColorVertex(2, 0,0,0, 0.0f);
+    Graphics()->SetColorVertex(3, 0,0,0, 0.0f);
+    Graphics()->QuadsDrawTL(0,console_height,screen.w,10.0f);
+    Graphics()->QuadsEnd();
 
 	// do background
-	gfx_texture_set(data->images[IMAGE_CONSOLE_BG].id);
-    gfx_quads_begin();
-    gfx_setcolor(0.2f, 0.2f, 0.2f,0.9f);
+	Graphics()->TextureSet(data->images[IMAGE_CONSOLE_BG].id);
+    Graphics()->QuadsBegin();
+    Graphics()->SetColor(0.2f, 0.2f, 0.2f,0.9f);
     if(console_type != 0)
-	    gfx_setcolor(0.4f, 0.2f, 0.2f,0.9f);
-    gfx_quads_setsubset(0,-console_height*0.075f,screen.w*0.075f*0.5f,0);
-    gfx_quads_drawTL(0,0,screen.w,console_height);
-    gfx_quads_end();
+	    Graphics()->SetColor(0.4f, 0.2f, 0.2f,0.9f);
+    Graphics()->QuadsSetSubset(0,-console_height*0.075f,screen.w*0.075f*0.5f,0);
+    Graphics()->QuadsDrawTL(0,0,screen.w,console_height);
+    Graphics()->QuadsEnd();
 
 	// do small bar shadow
-	gfx_texture_set(-1);
-    gfx_quads_begin();
-    gfx_setcolorvertex(0, 0,0,0, 0.0f);
-    gfx_setcolorvertex(1, 0,0,0, 0.0f);
-    gfx_setcolorvertex(2, 0,0,0, 0.25f);
-    gfx_setcolorvertex(3, 0,0,0, 0.25f);
-    gfx_quads_drawTL(0,console_height-20,screen.w,10);
-    gfx_quads_end();
+	Graphics()->TextureSet(-1);
+    Graphics()->QuadsBegin();
+    Graphics()->SetColorVertex(0, 0,0,0, 0.0f);
+    Graphics()->SetColorVertex(1, 0,0,0, 0.0f);
+    Graphics()->SetColorVertex(2, 0,0,0, 0.25f);
+    Graphics()->SetColorVertex(3, 0,0,0, 0.25f);
+    Graphics()->QuadsDrawTL(0,console_height-20,screen.w,10);
+    Graphics()->QuadsEnd();
 
 	// do the lower bar
-	gfx_texture_set(data->images[IMAGE_CONSOLE_BAR].id);
-    gfx_quads_begin();
-    gfx_setcolor(1.0f, 1.0f, 1.0f, 0.9f);
-    gfx_quads_setsubset(0,0.1f,screen.w*0.015f,1-0.1f);
-    gfx_quads_drawTL(0,console_height-10.0f,screen.w,10.0f);
-    gfx_quads_end();
+	Graphics()->TextureSet(data->images[IMAGE_CONSOLE_BAR].id);
+    Graphics()->QuadsBegin();
+    Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.9f);
+    Graphics()->QuadsSetSubset(0,0.1f,screen.w*0.015f,1-0.1f);
+    Graphics()->QuadsDrawTL(0,console_height-10.0f,screen.w,10.0f);
+    Graphics()->QuadsEnd();
     
     console_height -= 22.0f;
     
@@ -351,6 +351,7 @@ void CONSOLE::on_render()
 		gfx_text_set_cursor(&cursor, x, y, font_size, TEXTFLAG_RENDER);
 
 		RENDERINFO info;
+		info.self = this;
 		info.wanted_completion = console->completion_chosen;
 		info.enum_count = 0;
 		info.current_cmd = console->completion_buffer;
@@ -407,13 +408,13 @@ void CONSOLE::on_render()
 
 		// render log
 		y -= row_height;
-		char *entry = (char *)ringbuf_last(console->backlog);
+		char *entry = console->backlog.Last();
 		while (y > 0.0f && entry)
 		{
 			gfx_text(0, x, y, font_size, entry, -1);
 			y -= row_height;
 
-			entry = (char *)ringbuf_prev(console->backlog, entry);
+			entry = console->backlog.Prev(entry);
 		}
 	}	
 }

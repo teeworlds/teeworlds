@@ -1,6 +1,7 @@
 #include <string.h> // strcmp
 
 #include <engine/e_client_interface.h>
+#include <engine/client/graphics.h>
 #include <game/generated/g_protocol.hpp>
 #include <game/generated/gc_data.hpp>
 
@@ -133,7 +134,7 @@ void CHAT::add_line(int client_id, int team, const char *line)
 
 void CHAT::on_render()
 {
-	gfx_mapscreen(0,0,300*gfx_screenaspect(),300);
+	Graphics()->MapScreen(0,0,300*Graphics()->ScreenAspect(),300);
 	float x = 10.0f;
 	float y = 300.0f-20.0f;
 	if(mode != MODE_NONE)

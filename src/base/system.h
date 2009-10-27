@@ -46,8 +46,7 @@ void dbg_break();
 
 /*
 	Function: dbg_msg
-	
-	Prints a debug message.
+		Prints a debug message.
 	
 	Parameters:
 		sys - A string that describes what system the message belongs to

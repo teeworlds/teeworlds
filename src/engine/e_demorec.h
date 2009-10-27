@@ -2,10 +2,6 @@
 #ifndef _DEMOREC_H
 #define _DEMOREC_H
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 typedef struct DEMOREC_HEADER
 {
 	char marker[8];
@@ -69,9 +65,5 @@ int demorec_playback_update();
 const DEMOREC_PLAYBACKINFO *demorec_playback_info();
 int demorec_isplaying();
 int demorec_playback_stop();
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

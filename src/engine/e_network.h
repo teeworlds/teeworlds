@@ -2,38 +2,26 @@
 #define ENGINE_NETWORK_H
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 
+#include "e_ringbuffer.h"
+#include "e_huffman.h"
 
-typedef struct
-{
-	/* -1 means that it's a stateless packet */
-	/* 0 on the client means the server */
-	int client_id;
-	NETADDR address; /* only used when client_id == -1 */
-	int flags;
-	int data_size;
-	const void *data;
-} NETCHUNK;
+/*
 
+CURRENT:
+	packet header: 3 bytes
+		unsigned char flags_ack; // 4bit flags, 4bit ack
+		unsigned char ack; // 8 bit ack
+		unsigned char num_chunks; // 8 bit chunks
+		
+		(unsigned char padding[3])	// 24 bit extra incase it's a connection less packet
+									// this is to make sure that it's compatible with the
+									// old protocol
 
-typedef struct
-{
-	NETADDR addr;
-	int expires;
-} NETBANINFO;
-
-/*typedef struct
-{
-	int send_bytes;
-	int recv_bytes;
-	int send_packets;
-	int recv_packets;
-	
-	int resend_packets;
-	int resend_bytes;
-} NETSTATS;*/
-
-typedef struct NETSERVER NETSERVER;
-typedef struct NETCLIENT NETCLIENT;
+	chunk header: 2-3 bytes
+		unsigned char flags_size; // 2bit flags, 6 bit size
+		unsigned char size_seq; // 4bit size, 4bit seq
+		(unsigned char seq;) // 8bit seq, if vital flag is set
+*/
 
 enum
 {
@@ -50,97 +38,310 @@ enum
 	NETBANTYPE_DROP=2
 };
 
+
+enum
+{
+	NET_VERSION = 2,
+
+	NET_MAX_CHUNKSIZE = 1024,
+	NET_MAX_PAYLOAD = NET_MAX_CHUNKSIZE+16,
+	NET_MAX_PACKETSIZE = NET_MAX_PAYLOAD+16,
+	NET_MAX_CHUNKHEADERSIZE = 5,
+	NET_PACKETHEADERSIZE = 3,
+	NET_MAX_CLIENTS = 16,
+	NET_MAX_SEQUENCE = 1<<10,
+	NET_SEQUENCE_MASK = NET_MAX_SEQUENCE-1,
+
+	NET_CONNSTATE_OFFLINE=0,
+	NET_CONNSTATE_CONNECT=1,
+	NET_CONNSTATE_PENDING=2,
+	NET_CONNSTATE_ONLINE=3,
+	NET_CONNSTATE_ERROR=4,
+
+	NET_PACKETFLAG_CONTROL=1,
+	NET_PACKETFLAG_CONNLESS=2,
+	NET_PACKETFLAG_RESEND=4,
+	NET_PACKETFLAG_COMPRESSION=8,
+
+	NET_CHUNKFLAG_VITAL=1,
+	NET_CHUNKFLAG_RESEND=2,
+	
+	NET_CTRLMSG_KEEPALIVE=0,
+	NET_CTRLMSG_CONNECT=1,
+	NET_CTRLMSG_CONNECTACCEPT=2,
+	NET_CTRLMSG_ACCEPT=3,
+	NET_CTRLMSG_CLOSE=4,
+	
+	NET_SERVER_MAXBANS=1024,
+	
+	NET_CONN_BUFFERSIZE=1024*16,
+	
+	NET_ENUM_TERMINATOR
+};
+
+
 typedef int (*NETFUNC_DELCLIENT)(int cid, void *user);
 typedef int (*NETFUNC_NEWCLIENT)(int cid, void *user);
 
-/* both */
-void netcommon_openlog(const char *sentlog, const char *recvlog);
-void netcommon_init();
-int netcommon_compress(const void *data, int data_size, void *output, int output_size);
-int netcommon_decompress(const void *data, int data_size, void *output, int output_size);
+struct CNetChunk
+{
+	/* -1 means that it's a stateless packet */
+	/* 0 on the client means the server */
+	int m_ClientID;
+	NETADDR m_Address; /* only used when client_id == -1 */
+	int m_Flags;
+	int m_DataSize;
+	const void *m_pData;
+};
+
+class CNetChunkHeader
+{
+public:
+	int m_Flags;
+	int m_Size;
+	int m_Sequence;
+	
+	unsigned char *Pack(unsigned char *pData);
+	unsigned char *Unpack(unsigned char *pData);
+};
+
+class CNetChunkResend
+{
+public:
+	int m_Flags;
+	int m_DataSize;
+	unsigned char *m_pData;
+
+	int m_Sequence;
+	int64 m_LastSendTime;
+	int64 m_FirstSendTime;
+};
+
+class CNetPacketConstruct
+{
+public:
+	int m_Flags;
+	int m_Ack;
+	int m_NumChunks;
+	int m_DataSize;
+	unsigned char m_aChunkData[NET_MAX_PAYLOAD];
+};
+
+
+class CNetConnection
+{
+	// TODO: is this needed because this needs to be aware of
+	// the ack sequencing number and is also responible for updating
+	// that. this should be fixed.
+	friend class CNetRecvUnpacker;
+private:
+	unsigned short m_Sequence;
+	unsigned short m_Ack;
+	unsigned m_State;
+	
+	int m_Token;
+	int m_RemoteClosed;
+	
+	TStaticRingBuffer<CNetChunkResend, NET_CONN_BUFFERSIZE> m_Buffer;
+	
+	int64 m_LastUpdateTime;
+	int64 m_LastRecvTime;
+	int64 m_LastSendTime;
+	
+	char m_ErrorString[256];
+	
+	CNetPacketConstruct m_Construct;
+	
+	NETADDR m_PeerAddr;
+	NETSOCKET m_Socket;
+	NETSTATS m_Stats;
+	
+	//
+	void Reset();
+	void ResetStats();
+	void SetError(const char *pString);
+	void AckChunks(int Ack);
+	
+	void QueueChunkEx(int Flags, int DataSize, const void *pData, int Sequence);
+	void SendControl(int ControlMsg, const void *pExtra, int ExtraSize);
+	void ResendChunk(CNetChunkResend *pResend);
+	void Resend();
+
+public:
+	void Init(NETSOCKET Socket);
+	int Connect(NETADDR *pAddr);
+	void Disconnect(const char *pReason);
+
+	int Update();
+	int Flush();	
+
+	int Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr);
+	void QueueChunk(int Flags, int DataSize, const void *pData);
+
+	const char *ErrorString();
+	void SignalResend();
+	int State() const { return m_State; }
+	NETADDR PeerAddress() const { return m_PeerAddr; }
+	
+	void ResetErrorString() { m_ErrorString[0] = 0; }
+	const char *ErrorString() const { return m_ErrorString; }
+	
+	// Needed for GotProblems in NetClient
+	int64 LastRecvTime() const { return m_LastRecvTime; }
+	
+	int AckSequence() const { return m_Ack; }
+};
+
+struct CNetRecvUnpacker
+{
+public:
+	bool m_Valid;
+	
+	NETADDR m_Addr;
+	CNetConnection *m_pConnection;
+	int m_CurrentChunk;
+	int m_ClientID;
+	CNetPacketConstruct m_Data;
+	unsigned char m_aBuffer[NET_MAX_PACKETSIZE];
+
+	CNetRecvUnpacker() { Clear(); }
+	void Clear();
+	void Start(const NETADDR *pAddr, CNetConnection *pConnection, int ClientID);
+	int FetchChunk(CNetChunk *pChunk);	
+};
 
 /* server side */
-NETSERVER *netserver_open(NETADDR bindaddr, int max_clients, int flags);
-int netserver_set_callbacks(NETSERVER *s, NETFUNC_NEWCLIENT new_client, NETFUNC_DELCLIENT del_client, void *user);
-int netserver_recv(NETSERVER *s, NETCHUNK *chunk);
-int netserver_send(NETSERVER *s, NETCHUNK *chunk);
-int netserver_close(NETSERVER *s);
-int netserver_update(NETSERVER *s);
-NETSOCKET netserver_socket(NETSERVER *s);
-int netserver_drop(NETSERVER *s, int client_id, const char *reason);
-int netserver_client_addr(NETSERVER *s, int client_id, NETADDR *addr);
-int netserver_max_clients(NETSERVER *s);
+class CNetServer
+{
+public:
+	struct CBanInfo
+	{
+		NETADDR m_Addr;
+		int m_Expires;
+	};
+	
+private:
+	class CSlot
+	{
+	public:
+		CNetConnection m_Connection;
+	};
+	
+	class CBan
+	{
+	public:
+		CBanInfo m_Info;
+		
+		/* hash list */
+		CBan *m_pHashNext;
+		CBan *m_pHashPrev;
+		
+		/* used or free list */
+		CBan *m_pNext;
+		CBan *m_pPrev;
+	};
+	
+	
+	NETSOCKET m_Socket;
+	CSlot m_aSlots[NET_MAX_CLIENTS];
+	int m_MaxClients;
 
-int netserver_ban_add(NETSERVER *s, NETADDR addr, int seconds);
-int netserver_ban_remove(NETSERVER *s, NETADDR addr);
-int netserver_ban_num(NETSERVER *s); /* caution, slow */
-int netserver_ban_get(NETSERVER *s, int index, NETBANINFO *info); /* caution, slow */
+	CBan *m_aBans[256];
+	CBan m_BanPool[NET_SERVER_MAXBANS];
+	CBan *m_BanPool_FirstFree;
+	CBan *m_BanPool_FirstUsed;
 
-/*void netserver_stats(NETSERVER *s, NETSTATS *stats);*/
+	NETFUNC_NEWCLIENT m_pfnNewClient;
+	NETFUNC_DELCLIENT m_pfnDelClient;
+	void *m_UserPtr;
+	
+	CNetRecvUnpacker m_RecvUnpacker;
+	
+	void BanRemoveByObject(CBan *ban);
+	
+public:
+	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
+
+	//
+	bool Open(NETADDR bindaddr, int MaxClients, int Flags);
+	int Close();
+	
+	//
+	int Recv(CNetChunk *pChunk);
+	int Send(CNetChunk *pChunk);
+	int Update();
+	
+	//
+	int Drop(int ClientID, const char *Reason);
+
+	// banning
+	int BanAdd(NETADDR Addr, int Seconds);
+	int BanRemove(NETADDR Addr);
+	int BanNum(); /* caution, slow */
+	int BanGet(int Index, CBanInfo *pInfo); /* caution, slow */
+
+	// status requests
+	NETADDR ClientAddr(int ClientID) const { return m_aSlots[ClientID].m_Connection.PeerAddress(); }
+	NETSOCKET Socket() const { return m_Socket; }
+	int MaxClients() const { return m_MaxClients; }
+};
+
+
 
 /* client side */
-NETCLIENT *netclient_open(NETADDR bindaddr, int flags);
-int netclient_disconnect(NETCLIENT *c, const char *reason);
-int netclient_connect(NETCLIENT *c, NETADDR *addr);
-int netclient_recv(NETCLIENT *c, NETCHUNK *chunk);
-int netclient_send(NETCLIENT *c, NETCHUNK *chunk);
-int netclient_close(NETCLIENT *c);
-int netclient_update(NETCLIENT *c);
-int netclient_state(NETCLIENT *c);
-int netclient_flush(NETCLIENT *c);
-int netclient_gotproblems(NETCLIENT *c);
-/*void netclient_stats(NETCLIENT *c, NETSTATS *stats);*/
-int netclient_error_string_reset(NETCLIENT *c);
-const char *netclient_error_string(NETCLIENT *c);
-
-#ifdef __cplusplus
-class net_server
+class CNetClient
 {
-	NETSERVER *ptr;
+	NETADDR m_ServerAddr;
+	CNetConnection m_Connection;
+	CNetRecvUnpacker m_RecvUnpacker;
+	NETSOCKET m_Socket;
 public:
-	net_server() : ptr(0) {}
-	~net_server() { close(); }
+	// openness
+	bool Open(NETADDR BindAddr, int Flags);
+	int Close();
 	
-	int open(NETADDR bindaddr, int max, int flags) { ptr = netserver_open(bindaddr, max, flags); return ptr != 0; }
-	int close() { int r = netserver_close(ptr); ptr = 0; return r; }
+	// connection state
+	int Disconnect(const char *Reason);
+	int Connect(NETADDR *Addr);
 	
-	int set_callbacks(NETFUNC_NEWCLIENT new_client, NETFUNC_DELCLIENT del_client, void *user)
-	{ return netserver_set_callbacks(ptr, new_client, del_client, user); }
+	// communication
+	int Recv(CNetChunk *Chunk);
+	int Send(CNetChunk *Chunk);
 	
-	int recv(NETCHUNK *chunk) { return netserver_recv(ptr, chunk); }
-	int send(NETCHUNK *chunk) { return netserver_send(ptr, chunk); }
-	int update() { return netserver_update(ptr); }
-	
-	int drop(int client_id, const char *reason) { return netserver_drop(ptr, client_id, reason); } 
+	// pumping
+	int Update();
+	int Flush();
 
-	int max_clients() { return netserver_max_clients(ptr); }
-	/*void stats(NETSTATS *stats) { netserver_stats(ptr, stats); }*/
+	int ResetErrorString();
+	
+	// error and state
+	int State();
+	int GotProblems();
+	const char *ErrorString();
 };
 
 
-class net_client
+
+// TODO: both, fix these. This feels like a junk class for stuff that doesn't fit anywere
+class CNetBase
 {
-	NETCLIENT *ptr;
+	static IOHANDLE ms_DataLogSent;
+	static IOHANDLE ms_DataLogRecv;
+	static HUFFMAN_STATE ms_HuffmanState;
 public:
-	net_client() : ptr(0) {}
-	~net_client() { close(); }
+	static void OpenLog(const char *pSentlog, const char *pRecvlog);
+	static void Init();
+	static int Compress(const void *pData, int DataSize, void *pOutput, int OutputSize);
+	static int Decompress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 	
-	int open(NETADDR bindaddr, int flags) { ptr = netclient_open(bindaddr, flags); return ptr != 0; }
-	int close() { int r = netclient_close(ptr); ptr = 0; return r; }
-	
-	int connect(NETADDR *addr) { return netclient_connect(ptr, addr); }
-	int disconnect(const char *reason) { return netclient_disconnect(ptr, reason); }
-	
-	int recv(NETCHUNK *chunk) { return netclient_recv(ptr, chunk); }
-	int send(NETCHUNK *chunk) { return netclient_send(ptr, chunk); }
-	int update() { return netclient_update(ptr); }
-	
-	const char *error_string() { return netclient_error_string(ptr); }
-	
-	int state() { return netclient_state(ptr); }
-	/*void stats(NETSTATS *stats) { netclient_stats(ptr, stats); }*/
+	static void SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
+	static void SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, const void *pData, int DataSize);
+	static void SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct *pPacket);
+	static int UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket);
+
+	/* The backroom is ack-NET_MAX_SEQUENCE/2. Used for knowing if we acked a packet or not */
+	static int IsSeqInBackroom(int Seq, int Ack);	
 };
-#endif
 
 
 #endif

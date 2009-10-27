@@ -1,10 +1,6 @@
 #ifndef __HUFFMAN_HEADER__
 #define __HUFFMAN_HEADER__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 enum
 {
 	HUFFMAN_EOF_SYMBOL = 256,
@@ -83,9 +79,5 @@ int huffman_compress(HUFFMAN_STATE *huff, const void *input, int input_size, voi
 		Returns the size of the uncompressed data. Negative value on failure.
 */
 int huffman_decompress(HUFFMAN_STATE *huff, const void *input, int input_size, void *output, int output_size);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __HUFFMAN_HEADER__ */

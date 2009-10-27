@@ -69,11 +69,12 @@ void perf_init();
 void perf_next();
 void perf_start(PERFORMACE_INFO *info);
 void perf_end();
-void perf_dump();
+void perf_dump(PERFORMACE_INFO *top);
 
 int gfx_init();
 void gfx_shutdown();
 void gfx_swap();
+
 int gfx_window_active();
 int gfx_window_open();
 

@@ -1,10 +1,6 @@
 #ifndef _CONSOLE_H
 #define _CONSOLE_H
 
-#ifdef __cplusplus
-extern "C"{
-#endif
-
 typedef void (*CONSOLE_CALLBACK)(void *result, void *user_data);
 typedef void (*CONSOLE_CHAIN_CALLBACK)(void *result, void *user_data, CONSOLE_CALLBACK cb, void *cbuser);
 
@@ -42,15 +38,11 @@ void console_register_print_callback(void (*callback)(const char *, void *user_d
 int console_result_int(void *result, int index, int *i);
 int console_result_float(void *result, int index, float *f);*/
 
-const char *console_arg_string(void *result, int index);
-int console_arg_int(void *result, int index);
-float console_arg_float(void *result, int index);
+const char *console_arg_string(void *result, unsigned index);
+int console_arg_int(void *result, unsigned index);
+float console_arg_float(void *result, unsigned index);
 int console_arg_num(void *result);
 
 #define MACRO_REGISTER_COMMAND(name, params, flags, func, ptr, help) { static COMMAND cmd = { name, params, flags, func, ptr, help, 0x0}; console_register(&cmd); }
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

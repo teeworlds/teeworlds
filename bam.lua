@@ -1,12 +1,12 @@
-CheckVersion("0.2")
+CheckVersion("0.3")
 
-Import("other/sdl/sdl.bam")
+Import("other/sdl/sdl.lua")
 
 --- Setup Config --------
 config = NewConfig()
-config:Add(OptFindCompiler())
+config:Add(OptCCompiler("compiler"))
 config:Add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-protector -fstack-protector-all"))
-config:Add(OptFindLibrary("zlib", "zlib.h", false))
+config:Add(OptLibrary("zlib", "zlib.h", false))
 config:Add(SDL.OptFind("sdl", true))
 config:Finalize("config.bam")
 
@@ -19,7 +19,7 @@ function Script(name)
 end
 
 function CHash(output, ...)
-	local inputs = FlatternTable({...})
+	local inputs = FlattenTable({...})
 	
 	output = Path(output)
 	
@@ -184,9 +184,9 @@ function build(settings)
 	-- apply sdl settings
 	config.sdl:Apply(client_settings)
 	
-	engine = Compile(engine_settings, Collect("src/engine/*.c", "src/base/*.c"))
-	client = Compile(client_settings, Collect("src/engine/client/*.c"))
-	server = Compile(server_settings, Collect("src/engine/server/*.c"))
+	engine = Compile(engine_settings, Collect("src/engine/*.cpp", "src/base/*.c"))
+	client = Compile(client_settings, Collect("src/engine/client/*.cpp"))
+	server = Compile(server_settings, Collect("src/engine/server/*.cpp"))
 	
 	versionserver = Compile(settings, Collect("src/versionsrv/*.cpp"))
 	masterserver = Compile(settings, Collect("src/mastersrv/*.cpp"))
@@ -239,15 +239,7 @@ function build(settings)
 	m = PseudoTarget("masterserver".."_"..settings.config_name, masterserver_exe)
 	t = PseudoTarget("tools".."_"..settings.config_name, tools)
 
-	Target(c)
-	Target(s)
-	Target(v)
-	Target(m)
-	Target(t)
-	
 	all = PseudoTarget(settings.config_name, c, s, v, m, t)
-
-	Target(all)
 	return all
 end
 

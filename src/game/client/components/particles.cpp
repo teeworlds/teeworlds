@@ -1,4 +1,6 @@
 #include <base/math.hpp>
+#include <engine/client/graphics.h>
+
 #include <game/generated/gc_data.hpp>
 #include <game/client/render.hpp>
 #include <game/gamecore.hpp>
@@ -124,31 +126,31 @@ void PARTICLES::on_render()
 
 void PARTICLES::render_group(int group)
 {
-	gfx_blend_normal();
+	Graphics()->BlendNormal();
 	//gfx_blend_additive();
-	gfx_texture_set(data->images[IMAGE_PARTICLES].id);
-	gfx_quads_begin();
+	Graphics()->TextureSet(data->images[IMAGE_PARTICLES].id);
+	Graphics()->QuadsBegin();
 
 	int i = first_part[group];
 	while(i != -1)
 	{
-		select_sprite(particles[i].spr);
+		RenderTools()->select_sprite(particles[i].spr);
 		float a = particles[i].life / particles[i].life_span;
 		vec2 p = particles[i].pos;
 		float size = mix(particles[i].start_size, particles[i].end_size, a);
 
-		gfx_quads_setrotation(particles[i].rot);
+		Graphics()->QuadsSetRotation(particles[i].rot);
 
-		gfx_setcolor(
+		Graphics()->SetColor(
 			particles[i].color.r,
 			particles[i].color.g,
 			particles[i].color.b,
 			particles[i].color.a); // pow(a, 0.75f) * 
 
-		gfx_quads_draw(p.x, p.y, size, size);
+		Graphics()->QuadsDraw(p.x, p.y, size, size);
 		
 		i = particles[i].next_part;
 	}
-	gfx_quads_end();
-	gfx_blend_normal();
+	Graphics()->QuadsEnd();
+	Graphics()->BlendNormal();
 }
