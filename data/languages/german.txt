@@ -130,8 +130,8 @@ Game over
 Game type
 == Spieltyp
 
-Game types
-== Spieltypen
+Game types:
+== Spieltypen:
 
 General
 == Allgemein
@@ -199,8 +199,8 @@ MOTD
 Map
 == Karte
 
-Maximum ping
-== Maximaler Ping
+Maximum ping:
+== Maximaler Ping:
 
 Miscellaneous
 == Verschiedenes

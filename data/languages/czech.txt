@@ -130,8 +130,8 @@ Game over
 Game type
 == Herní typ
 
-Game types
-== Herní typy
+Game types:
+== Herní typy:
 
 General
 == Hlavní
@@ -199,8 +199,8 @@ MOTD
 Map
 == Mapa
 
-Maximum ping
-== Max. odezva
+Maximum ping:
+== Max. odezva:
 
 Miscellaneous
 == Ostatní

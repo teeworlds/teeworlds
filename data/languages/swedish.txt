@@ -127,8 +127,8 @@ Game over
 Game type
 == Speltyp
 
-Game types
-== Speltyper
+Game types:
+== Speltyper:
 
 General
 == Generellt
@@ -196,8 +196,8 @@ MOTD
 Map
 == Karta
 
-Maximum ping
-== Högsta ping
+Maximum ping:
+== Högsta ping:
 
 Miscellaneous
 == Övrigt

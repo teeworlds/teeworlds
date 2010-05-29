@@ -166,13 +166,14 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			if(pInfo->m_Team == Team)
 			{
 				paPlayers[NumPlayers] = pInfo;
-				NumPlayers++;
+				if(++NumPlayers == MAX_CLIENTS)
+					break;
 			}
 		}
 	}
 
 	// sort players
-	for(int k = 0; k < NumPlayers; k++) // ffs, bubblesort
+	for(int k = 0; k < NumPlayers-1; k++) // ffs, bubblesort
 	{
 		for(int i = 0; i < NumPlayers-k-1; i++)
 		{
