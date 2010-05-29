@@ -38,6 +38,7 @@ function CHash(output, ...)
 	for index, inname in ipairs(inputs) do
 		AddDependency(output, inname)
 	end
+	AddDependency(output, "scripts/cmd5.py")
 	return output
 end
 
