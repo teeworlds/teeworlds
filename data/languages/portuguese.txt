@@ -26,10 +26,10 @@ As this is the first time you have launched the game, please enter your nickname
 == Como esta é a primeira vez que você abriu o jogo, por favor, entre com seu apelido abaixo. É recomendado que você cheque suas configurações e então ajuste elaspara suas preferências antes de entrar em um servidor.
 
 Blue team
-== Time Azul
+== Time azul
 
 Blue team wins!
-== Time Azul vence!
+== Time azul vence!
 
 Body
 == Corpo
@@ -119,7 +119,7 @@ Game
 == Jogo
 
 Game info
-== Infor. sobre o jogo
+== Info. sobre o jogo
 
 Game over
 == Fim de Jogo
@@ -278,10 +278,10 @@ Quit
 == Sair
 
 Red team
-== Time Vermelho
+== Time vermelho
 
 Red team wins!
-== Time Vermelho vence!
+== Time vermelho vence!
 
 Refresh
 == Atualizar
@@ -427,13 +427,13 @@ Yes
 You must restart the game for all settings to take effect.
 == Você deve reiniciar o jogo para que todas as alterações tenham efeito.
 
+Your skin
+== Sua skin
+
 ##### needs translation ####
 
 Force vote
 == Force vote
-
-Your skin
-== Your skin
 
 ##### old translations ####
 
