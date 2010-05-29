@@ -1046,10 +1046,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 			{
 				const char *pLine = Unpacker.GetString();
 				if(Unpacker.Error() == 0)
-				{
-					//dbg_msg("remote", "%s", line);
 					GameClient()->OnRconLine(pLine);
-				}
 			}
 			else if(Msg == NETMSG_PING_REPLY)
 				dbg_msg("client/network", "latency %.2f", (time_get() - m_PingStartTime)*1000 / (float)time_freq());
@@ -1066,7 +1063,6 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 					{
 						Target = m_aInputs[k].m_PredictedTime + (time_get() - m_aInputs[k].m_Time);
 						Target = Target - (int64)(((TimeLeft-PREDICTION_MARGIN)/1000.0f)*time_freq());
-						//st_update(&predicted_time, );
 						break;
 					}
 				}
@@ -1076,7 +1072,6 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 			}
 			else if(Msg == NETMSG_SNAP || Msg == NETMSG_SNAPSINGLE || Msg == NETMSG_SNAPEMPTY)
 			{
-				//dbg_msg("client/network", "got snapshot");
 				int NumParts = 1;
 				int Part = 0;
 				int GameTick = Unpacker.GetInt();
@@ -1219,16 +1214,6 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 						// add snapshot to demo
 						if(m_DemoRecorder.IsRecording())
 						{
-
-							// write tick marker
-							/*
-							DEMOREC_TICKMARKER marker;
-							marker.tick = game_tick;
-							swap_endian(&marker, sizeof(int), sizeof(marker)/sizeof(int));
-							demorec_record_write("TICK", sizeof(marker), &marker);
-							demorec_record_write("SNAP", snapsize, tmpbuffer3);
-							*/
-
 							// write snapshot
 							m_DemoRecorder.RecordSnapshot(GameTick, aTmpBuffer3, SnapSize);
 						}
