@@ -1,111 +1,114 @@
-#include <stdio.h>
-#include <engine/client/graphics.h>
-#include "ed_editor.hpp"
+#include <engine/graphics.h>
+#include <engine/input.h>
+#include <engine/keys.h>
+#include "ed_editor.h"
 
 
 // popup menu handling
 static struct
 {
-	CUIRect rect;
-	void *id;
-	int (*func)(EDITOR *pEditor, CUIRect rect);
-	int is_menu;
-	void *extra;
-} ui_popups[8];
+	CUIRect m_Rect;
+	void *m_pId;
+	int (*m_pfnFunc)(CEditor *pEditor, CUIRect Rect);
+	int m_IsMenu;
+	void *m_pExtra;
+} s_UiPopups[8];
 
-static int ui_num_popups = 0;
+static int g_UiNumPopups = 0;
 
-void EDITOR::ui_invoke_popup_menu(void *id, int flags, float x, float y, float w, float h, int (*func)(EDITOR *pEditor, CUIRect rect), void *extra)
+void CEditor::UiInvokePopupMenu(void *Id, int Flags, float x, float y, float w, float h, int (*pfnFunc)(CEditor *pEditor, CUIRect Rect), void *pExtra)
 {
 	dbg_msg("", "invoked");
-	ui_popups[ui_num_popups].id = id;
-	ui_popups[ui_num_popups].is_menu = flags;
-	ui_popups[ui_num_popups].rect.x = x;
-	ui_popups[ui_num_popups].rect.y = y;
-	ui_popups[ui_num_popups].rect.w = w;
-	ui_popups[ui_num_popups].rect.h = h;
-	ui_popups[ui_num_popups].func = func;
-	ui_popups[ui_num_popups].extra = extra;
-	ui_num_popups++;
+	s_UiPopups[g_UiNumPopups].m_pId = Id;
+	s_UiPopups[g_UiNumPopups].m_IsMenu = Flags;
+	s_UiPopups[g_UiNumPopups].m_Rect.x = x;
+	s_UiPopups[g_UiNumPopups].m_Rect.y = y;
+	s_UiPopups[g_UiNumPopups].m_Rect.w = w;
+	s_UiPopups[g_UiNumPopups].m_Rect.h = h;
+	s_UiPopups[g_UiNumPopups].m_pfnFunc = pfnFunc;
+	s_UiPopups[g_UiNumPopups].m_pExtra = pExtra;
+	g_UiNumPopups++;
 }
 
-void EDITOR::ui_do_popup_menu()
+void CEditor::UiDoPopupMenu()
 {
-	for(int i = 0; i < ui_num_popups; i++)
+	for(int i = 0; i < g_UiNumPopups; i++)
 	{
-		bool inside = UI()->MouseInside(&ui_popups[i].rect);
-		UI()->SetHotItem(&ui_popups[i].id);
+		bool Inside = UI()->MouseInside(&s_UiPopups[i].m_Rect);
+		UI()->SetHotItem(&s_UiPopups[i].m_pId);
 		
-		if(UI()->ActiveItem() == &ui_popups[i].id)
+		if(UI()->ActiveItem() == &s_UiPopups[i].m_pId)
 		{
 			if(!UI()->MouseButton(0))
 			{
-				if(!inside)
-					ui_num_popups--;
+				if(!Inside)
+					g_UiNumPopups--;
 				UI()->SetActiveItem(0);
 			}
 		}
-		else if(UI()->HotItem() == &ui_popups[i].id)
+		else if(UI()->HotItem() == &s_UiPopups[i].m_pId)
 		{
 			if(UI()->MouseButton(0))
-				UI()->SetActiveItem(&ui_popups[i].id);
+				UI()->SetActiveItem(&s_UiPopups[i].m_pId);
 		}
 		
-		int corners = CUI::CORNER_ALL;
-		if(ui_popups[i].is_menu)
-			corners = CUI::CORNER_R|CUI::CORNER_B;
+		int Corners = CUI::CORNER_ALL;
+		if(s_UiPopups[i].m_IsMenu)
+			Corners = CUI::CORNER_R|CUI::CORNER_B;
 		
-		CUIRect r = ui_popups[i].rect;
-		RenderTools()->DrawUIRect(&r, vec4(0.5f,0.5f,0.5f,0.75f), corners, 3.0f);
+		CUIRect r = s_UiPopups[i].m_Rect;
+		RenderTools()->DrawUIRect(&r, vec4(0.5f,0.5f,0.5f,0.75f), Corners, 3.0f);
 		r.Margin(1.0f, &r);
-		RenderTools()->DrawUIRect(&r, vec4(0,0,0,0.75f), corners, 3.0f);
+		RenderTools()->DrawUIRect(&r, vec4(0,0,0,0.75f), Corners, 3.0f);
 		r.Margin(4.0f, &r);
 		
-		if(ui_popups[i].func(this, r))
-			ui_num_popups--;
+		if(s_UiPopups[i].m_pfnFunc(this, r))
+			g_UiNumPopups--;
 			
-		if(inp_key_down(KEY_ESCAPE))
-			ui_num_popups--;
+		if(Input()->KeyDown(KEY_ESCAPE))
+			g_UiNumPopups--;
 	}
 }
 
 
-int EDITOR::popup_group(EDITOR *pEditor, CUIRect view)
+int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 {
 	// remove group button
-	CUIRect button;
-	view.HSplitBottom(12.0f, &view, &button);
-	static int delete_button = 0;
+	CUIRect Button;
+	View.HSplitBottom(12.0f, &View, &Button);
+	static int s_DeleteButton = 0;
 	
 	// don't allow deletion of game group
-	if(pEditor->map.game_group != pEditor->get_selected_group() &&
-		pEditor->DoButton_Editor(&delete_button, "Delete Group", 0, &button, 0, "Delete group"))
+	if(pEditor->m_Map.m_pGameGroup != pEditor->GetSelectedGroup() &&
+		pEditor->DoButton_Editor(&s_DeleteButton, "Delete Group", 0, &Button, 0, "Delete group"))
 	{
-		pEditor->map.delete_group(pEditor->selected_group);
+		pEditor->m_Map.DeleteGroup(pEditor->m_SelectedGroup);
 		return 1;
 	}
 
 	// new tile layer
-	view.HSplitBottom(10.0f, &view, &button);
-	view.HSplitBottom(12.0f, &view, &button);
-	static int new_quad_layer_button = 0;
-	if(pEditor->DoButton_Editor(&new_quad_layer_button, "Add Quads Layer", 0, &button, 0, "Creates a new quad layer"))
+	View.HSplitBottom(10.0f, &View, &Button);
+	View.HSplitBottom(12.0f, &View, &Button);
+	static int s_NewQuadLayerButton = 0;
+	if(pEditor->DoButton_Editor(&s_NewQuadLayerButton, "Add Quads Layer", 0, &Button, 0, "Creates a new quad layer"))
 	{
-		LAYER *l = new LAYER_QUADS;
-		pEditor->map.groups[pEditor->selected_group]->add_layer(l);
-		pEditor->selected_layer = pEditor->map.groups[pEditor->selected_group]->layers.len()-1;
+		CLayer *l = new CLayerQuads;
+		l->m_pEditor = pEditor;
+		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
+		pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
 		return 1;
 	}
 
 	// new quad layer
-	view.HSplitBottom(5.0f, &view, &button);
-	view.HSplitBottom(12.0f, &view, &button);
-	static int new_tile_layer_button = 0;
-	if(pEditor->DoButton_Editor(&new_tile_layer_button, "Add Tile Layer", 0, &button, 0, "Creates a new tile layer"))
+	View.HSplitBottom(5.0f, &View, &Button);
+	View.HSplitBottom(12.0f, &View, &Button);
+	static int s_NewTileLayerButton = 0;
+	if(pEditor->DoButton_Editor(&s_NewTileLayerButton, "Add Tile Layer", 0, &Button, 0, "Creates a new tile layer"))
 	{
-		LAYER *l = new LAYER_TILES(50, 50);
-		pEditor->map.groups[pEditor->selected_group]->add_layer(l);
-		pEditor->selected_layer = pEditor->map.groups[pEditor->selected_group]->layers.len()-1;
+		CLayer *l = new CLayerTiles(50, 50);
+		l->m_pEditor = pEditor;
+		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
+		pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
 		return 1;
 	}
 	
@@ -124,68 +127,68 @@ int EDITOR::popup_group(EDITOR *pEditor, CUIRect view)
 		NUM_PROPS,
 	};
 	
-	PROPERTY props[] = {
-		{"Order", pEditor->selected_group, PROPTYPE_INT_STEP, 0, pEditor->map.groups.len()-1},
-		{"Pos X", -pEditor->map.groups[pEditor->selected_group]->offset_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Pos Y", -pEditor->map.groups[pEditor->selected_group]->offset_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Para X", pEditor->map.groups[pEditor->selected_group]->parallax_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Para Y", pEditor->map.groups[pEditor->selected_group]->parallax_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+	CProperty aProps[] = {
+		{"Order", pEditor->m_SelectedGroup, PROPTYPE_INT_STEP, 0, pEditor->m_Map.m_lGroups.size()-1},
+		{"Pos X", -pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_OffsetX, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Pos Y", -pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_OffsetY, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Para X", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ParallaxX, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Para Y", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ParallaxY, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 
-		{"Use Clipping", pEditor->map.groups[pEditor->selected_group]->use_clipping, PROPTYPE_BOOL, 0, 1},
-		{"Clip X", pEditor->map.groups[pEditor->selected_group]->clip_x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Clip Y", pEditor->map.groups[pEditor->selected_group]->clip_y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Clip W", pEditor->map.groups[pEditor->selected_group]->clip_w, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Clip H", pEditor->map.groups[pEditor->selected_group]->clip_h, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Use Clipping", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_UseClipping, PROPTYPE_BOOL, 0, 1},
+		{"Clip X", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ClipX, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Clip Y", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ClipY, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Clip W", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ClipW, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Clip H", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ClipH, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		{0},
 	};
 	
-	static int ids[NUM_PROPS] = {0};
-	int new_val = 0;
+	static int s_aIds[NUM_PROPS] = {0};
+	int NewVal = 0;
 	
 	// cut the properties that isn't needed
-	if(pEditor->get_selected_group()->game_group)
-		props[PROP_POS_X].name = 0;
+	if(pEditor->GetSelectedGroup()->m_GameGroup)
+		aProps[PROP_POS_X].m_pName = 0;
 		
-	int prop = pEditor->do_properties(&view, props, ids, &new_val);
-	if(prop == PROP_ORDER)
-		pEditor->selected_group = pEditor->map.swap_groups(pEditor->selected_group, new_val);
+	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
+	if(Prop == PROP_ORDER)
+		pEditor->m_SelectedGroup = pEditor->m_Map.SwapGroups(pEditor->m_SelectedGroup, NewVal);
 		
 	// these can not be changed on the game group
-	if(!pEditor->get_selected_group()->game_group)
+	if(!pEditor->GetSelectedGroup()->m_GameGroup)
 	{
-		if(prop == PROP_PARA_X) pEditor->map.groups[pEditor->selected_group]->parallax_x = new_val;
-		else if(prop == PROP_PARA_Y) pEditor->map.groups[pEditor->selected_group]->parallax_y = new_val;
-		else if(prop == PROP_POS_X) pEditor->map.groups[pEditor->selected_group]->offset_x = -new_val;
-		else if(prop == PROP_POS_Y) pEditor->map.groups[pEditor->selected_group]->offset_y = -new_val;
-		else if(prop == PROP_USE_CLIPPING) pEditor->map.groups[pEditor->selected_group]->use_clipping = new_val;
-		else if(prop == PROP_CLIP_X) pEditor->map.groups[pEditor->selected_group]->clip_x = new_val;
-		else if(prop == PROP_CLIP_Y) pEditor->map.groups[pEditor->selected_group]->clip_y = new_val;
-		else if(prop == PROP_CLIP_W) pEditor->map.groups[pEditor->selected_group]->clip_w = new_val;
-		else if(prop == PROP_CLIP_H) pEditor->map.groups[pEditor->selected_group]->clip_h = new_val;
+		if(Prop == PROP_PARA_X) pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ParallaxX = NewVal;
+		else if(Prop == PROP_PARA_Y) pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ParallaxY = NewVal;
+		else if(Prop == PROP_POS_X) pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_OffsetX = -NewVal;
+		else if(Prop == PROP_POS_Y) pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_OffsetY = -NewVal;
+		else if(Prop == PROP_USE_CLIPPING) pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_UseClipping = NewVal;
+		else if(Prop == PROP_CLIP_X) pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ClipX = NewVal;
+		else if(Prop == PROP_CLIP_Y) pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ClipY = NewVal;
+		else if(Prop == PROP_CLIP_W) pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ClipW = NewVal;
+		else if(Prop == PROP_CLIP_H) pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ClipH = NewVal;
 	}
 	
 	return 0;
 }
 
-int EDITOR::popup_layer(EDITOR *pEditor, CUIRect view)
+int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 {
 	// remove layer button
-	CUIRect button;
-	view.HSplitBottom(12.0f, &view, &button);
-	static int delete_button = 0;
+	CUIRect Button;
+	View.HSplitBottom(12.0f, &View, &Button);
+	static int s_DeleteButton = 0;
 	
 	// don't allow deletion of game layer
-	if(pEditor->map.game_layer != pEditor->get_selected_layer(0) &&
-		pEditor->DoButton_Editor(&delete_button, "Delete Layer", 0, &button, 0, "Deletes the layer"))
+	if(pEditor->m_Map.m_pGameLayer != pEditor->GetSelectedLayer(0) &&
+		pEditor->DoButton_Editor(&s_DeleteButton, "Delete Layer", 0, &Button, 0, "Deletes the layer"))
 	{
-		pEditor->map.groups[pEditor->selected_group]->delete_layer(pEditor->selected_layer);
+		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->DeleteLayer(pEditor->m_SelectedLayer);
 		return 1;
 	}
 
-	view.HSplitBottom(10.0f, &view, 0);
+	View.HSplitBottom(10.0f, &View, 0);
 	
-	LAYERGROUP *current_group = pEditor->map.groups[pEditor->selected_group];
-	LAYER *current_layer = pEditor->get_selected_layer(0);
+	CLayerGroup *pCurrentGroup = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup];
+	CLayer *pCurrentLayer = pEditor->GetSelectedLayer(0);
 	
 	enum
 	{
@@ -195,82 +198,88 @@ int EDITOR::popup_layer(EDITOR *pEditor, CUIRect view)
 		NUM_PROPS,
 	};
 	
-	PROPERTY props[] = {
-		{"Group", pEditor->selected_group, PROPTYPE_INT_STEP, 0, pEditor->map.groups.len()-1},
-		{"Order", pEditor->selected_layer, PROPTYPE_INT_STEP, 0, current_group->layers.len()},
-		{"Detail", current_layer->flags&LAYERFLAG_DETAIL, PROPTYPE_BOOL, 0, 1},
+	CProperty aProps[] = {
+		{"Group", pEditor->m_SelectedGroup, PROPTYPE_INT_STEP, 0, pEditor->m_Map.m_lGroups.size()-1},
+		{"Order", pEditor->m_SelectedLayer, PROPTYPE_INT_STEP, 0, pCurrentGroup->m_lLayers.size()},
+		{"Detail", pCurrentLayer->m_Flags&LAYERFLAG_DETAIL, PROPTYPE_BOOL, 0, 1},
 		{0},
 	};
-	
-	static int ids[NUM_PROPS] = {0};
-	int new_val = 0;
-	int prop = pEditor->do_properties(&view, props, ids, &new_val);		
-	
-	if(prop == PROP_ORDER)
-		pEditor->selected_layer = current_group->swap_layers(pEditor->selected_layer, new_val);
-	else if(prop == PROP_GROUP && current_layer->type != LAYERTYPE_GAME)
+
+	if(pEditor->m_Map.m_pGameLayer == pEditor->GetSelectedLayer(0)) // dont use Group and Detail from the selection if this is the game layer
 	{
-		if(new_val >= 0 && new_val < pEditor->map.groups.len())
+		aProps[0].m_Type = PROPTYPE_NULL;
+		aProps[2].m_Type = PROPTYPE_NULL;
+	}
+	
+	static int s_aIds[NUM_PROPS] = {0};
+	int NewVal = 0;
+	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);		
+	
+	if(Prop == PROP_ORDER)
+		pEditor->m_SelectedLayer = pCurrentGroup->SwapLayers(pEditor->m_SelectedLayer, NewVal);
+	else if(Prop == PROP_GROUP && pCurrentLayer->m_Type != LAYERTYPE_GAME)
+	{
+		if(NewVal >= 0 && NewVal < pEditor->m_Map.m_lGroups.size())
 		{
-			current_group->layers.remove(current_layer);
-			pEditor->map.groups[new_val]->layers.add(current_layer);
-			pEditor->selected_group = new_val;
-			pEditor->selected_layer = pEditor->map.groups[new_val]->layers.len()-1;
+			pCurrentGroup->m_lLayers.remove(pCurrentLayer);
+			pEditor->m_Map.m_lGroups[NewVal]->m_lLayers.add(pCurrentLayer);
+			pEditor->m_SelectedGroup = NewVal;
+			pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[NewVal]->m_lLayers.size()-1;
 		}
 	}
-	else if(prop == PROP_HQ)
+	else if(Prop == PROP_HQ)
 	{
-		current_layer->flags &= ~LAYERFLAG_DETAIL;
-		if(new_val)
-			current_layer->flags |= LAYERFLAG_DETAIL;
+		pCurrentLayer->m_Flags &= ~LAYERFLAG_DETAIL;
+		if(NewVal)
+			pCurrentLayer->m_Flags |= LAYERFLAG_DETAIL;
 	}
 		
-	return current_layer->render_properties(&view);
+	return pCurrentLayer->RenderProperties(&View);
 }
 
-int EDITOR::popup_quad(EDITOR *pEditor, CUIRect view)
+int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 {
-	QUAD *quad = pEditor->get_selected_quad();
+	CQuad *pQuad = pEditor->GetSelectedQuad();
 
-	CUIRect button;
+	CUIRect Button;
 	
 	// delete button
-	view.HSplitBottom(12.0f, &view, &button);
-	static int delete_button = 0;
-	if(pEditor->DoButton_Editor(&delete_button, "Delete", 0, &button, 0, "Deletes the current quad"))
+	View.HSplitBottom(12.0f, &View, &Button);
+	static int s_DeleteButton = 0;
+	if(pEditor->DoButton_Editor(&s_DeleteButton, "Delete", 0, &Button, 0, "Deletes the current quad"))
 	{
-		LAYER_QUADS *layer = (LAYER_QUADS *)pEditor->get_selected_layer_type(0, LAYERTYPE_QUADS);
-		if(layer)
+		CLayerQuads *pLayer = (CLayerQuads *)pEditor->GetSelectedLayerType(0, LAYERTYPE_QUADS);
+		if(pLayer)
 		{
-			layer->quads.removebyindex(pEditor->selected_quad);
-			pEditor->selected_quad--;
+			pLayer->m_lQuads.remove_index(pEditor->m_SelectedQuad);
+			pEditor->m_SelectedQuad--;
 		}
 		return 1;
 	}
 
 	// square button
-	view.HSplitBottom(10.0f, &view, &button);
-	view.HSplitBottom(12.0f, &view, &button);
-	static int sq_button = 0;
-	if(pEditor->DoButton_Editor(&sq_button, "Square", 0, &button, 0, "Squares the current quad"))
+	View.HSplitBottom(10.0f, &View, &Button);
+	View.HSplitBottom(12.0f, &View, &Button);
+	static int s_Button = 0;
+	if(pEditor->DoButton_Editor(&s_Button, "Square", 0, &Button, 0, "Squares the current quad"))
 	{
-		int top = quad->points[0].y;
-		int left = quad->points[0].x;
-		int bottom = quad->points[0].y;
-		int right = quad->points[0].x;
+		int Top = pQuad->m_aPoints[0].y;
+		int Left = pQuad->m_aPoints[0].x;
+		int Bottom = pQuad->m_aPoints[0].y;
+		int Right = pQuad->m_aPoints[0].x;
 		
 		for(int k = 1; k < 4; k++)
 		{
-			if(quad->points[k].y < top) top = quad->points[k].y;
-			if(quad->points[k].x < left) left = quad->points[k].x;
-			if(quad->points[k].y > bottom) bottom = quad->points[k].y;
-			if(quad->points[k].x > right) right = quad->points[k].x;
+			if(pQuad->m_aPoints[k].y < Top) Top = pQuad->m_aPoints[k].y;
+			if(pQuad->m_aPoints[k].x < Left) Left = pQuad->m_aPoints[k].x;
+			if(pQuad->m_aPoints[k].y > Bottom) Bottom = pQuad->m_aPoints[k].y;
+			if(pQuad->m_aPoints[k].x > Right) Right = pQuad->m_aPoints[k].x;
 		}
 		
-		quad->points[0].x = left; quad->points[0].y = top;
-		quad->points[1].x = right; quad->points[1].y = top;
-		quad->points[2].x = left; quad->points[2].y = bottom;
-		quad->points[3].x = right; quad->points[3].y = bottom;
+		pQuad->m_aPoints[0].x = Left; pQuad->m_aPoints[0].y = Top;
+		pQuad->m_aPoints[1].x = Right; pQuad->m_aPoints[1].y = Top;
+		pQuad->m_aPoints[2].x = Left; pQuad->m_aPoints[2].y = Bottom;
+		pQuad->m_aPoints[3].x = Right; pQuad->m_aPoints[3].y = Bottom;
 		return 1;
 	}
 
@@ -284,30 +293,30 @@ int EDITOR::popup_quad(EDITOR *pEditor, CUIRect view)
 		NUM_PROPS,
 	};
 	
-	PROPERTY props[] = {
-		{"Pos. Env", quad->pos_env, PROPTYPE_INT_STEP, -1, pEditor->map.envelopes.len()},
-		{"Pos. TO", quad->pos_env_offset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Color Env", quad->color_env, PROPTYPE_INT_STEP, -1, pEditor->map.envelopes.len()},
-		{"Color TO", quad->color_env_offset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+	CProperty aProps[] = {
+		{"Pos. Env", pQuad->m_PosEnv, PROPTYPE_INT_STEP, -1, pEditor->m_Map.m_lEnvelopes.size()},
+		{"Pos. TO", pQuad->m_PosEnvOffset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Color Env", pQuad->m_ColorEnv, PROPTYPE_INT_STEP, -1, pEditor->m_Map.m_lEnvelopes.size()},
+		{"Color TO", pQuad->m_ColorEnvOffset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		
 		{0},
 	};
 	
-	static int ids[NUM_PROPS] = {0};
-	int new_val = 0;
-	int prop = pEditor->do_properties(&view, props, ids, &new_val);		
+	static int s_aIds[NUM_PROPS] = {0};
+	int NewVal = 0;
+	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);		
 	
-	if(prop == PROP_POS_ENV) quad->pos_env = clamp(new_val, -1, pEditor->map.envelopes.len()-1);
-	if(prop == PROP_POS_ENV_OFFSET) quad->pos_env_offset = new_val;
-	if(prop == PROP_COLOR_ENV) quad->color_env = clamp(new_val, -1, pEditor->map.envelopes.len()-1);
-	if(prop == PROP_COLOR_ENV_OFFSET) quad->color_env_offset = new_val;
+	if(Prop == PROP_POS_ENV) pQuad->m_PosEnv = clamp(NewVal, -1, pEditor->m_Map.m_lEnvelopes.size()-1);
+	if(Prop == PROP_POS_ENV_OFFSET) pQuad->m_PosEnvOffset = NewVal;
+	if(Prop == PROP_COLOR_ENV) pQuad->m_ColorEnv = clamp(NewVal, -1, pEditor->m_Map.m_lEnvelopes.size()-1);
+	if(Prop == PROP_COLOR_ENV_OFFSET) pQuad->m_ColorEnvOffset = NewVal;
 	
 	return 0;
 }
 
-int EDITOR::popup_point(EDITOR *pEditor, CUIRect view)
+int CEditor::PopupPoint(CEditor *pEditor, CUIRect View)
 {
-	QUAD *quad = pEditor->get_selected_quad();
+	CQuad *pQuad = pEditor->GetSelectedQuad();
 	
 	enum
 	{
@@ -315,40 +324,40 @@ int EDITOR::popup_point(EDITOR *pEditor, CUIRect view)
 		NUM_PROPS,
 	};
 	
-	int color = 0;
+	int Color = 0;
 
 	for(int v = 0; v < 4; v++)
 	{
-		if(pEditor->selected_points&(1<<v))
+		if(pEditor->m_SelectedPoints&(1<<v))
 		{
-			color = 0;
-			color |= quad->colors[v].r<<24;
-			color |= quad->colors[v].g<<16;
-			color |= quad->colors[v].b<<8;
-			color |= quad->colors[v].a;
+			Color = 0;
+			Color |= pQuad->m_aColors[v].r<<24;
+			Color |= pQuad->m_aColors[v].g<<16;
+			Color |= pQuad->m_aColors[v].b<<8;
+			Color |= pQuad->m_aColors[v].a;
 		}
 	}
 	
 	
-	PROPERTY props[] = {
-		{"Color", color, PROPTYPE_COLOR, -1, pEditor->map.envelopes.len()},
+	CProperty aProps[] = {
+		{"Color", Color, PROPTYPE_COLOR, -1, pEditor->m_Map.m_lEnvelopes.size()},
 		{0},
 	};
 	
-	static int ids[NUM_PROPS] = {0};
-	int new_val = 0;
-	int prop = pEditor->do_properties(&view, props, ids, &new_val);		
-	if(prop == PROP_COLOR)
+	static int s_aIds[NUM_PROPS] = {0};
+	int NewVal = 0;
+	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);		
+	if(Prop == PROP_COLOR)
 	{
 		for(int v = 0; v < 4; v++)
 		{
-			if(pEditor->selected_points&(1<<v))
+			if(pEditor->m_SelectedPoints&(1<<v))
 			{
-				color = 0;
-				quad->colors[v].r = (new_val>>24)&0xff;
-				quad->colors[v].g = (new_val>>16)&0xff;
-				quad->colors[v].b = (new_val>>8)&0xff;
-				quad->colors[v].a = new_val&0xff;
+				Color = 0;
+				pQuad->m_aColors[v].r = (NewVal>>24)&0xff;
+				pQuad->m_aColors[v].g = (NewVal>>16)&0xff;
+				pQuad->m_aColors[v].b = (NewVal>>8)&0xff;
+				pQuad->m_aColors[v].a = NewVal&0xff;
 			}
 		}
 	}
@@ -358,65 +367,66 @@ int EDITOR::popup_point(EDITOR *pEditor, CUIRect view)
 
 
 
-static int select_image_selected = -100;
-static int select_image_current = -100;
+static int g_SelectImageSelected = -100;
+static int g_SelectImageCurrent = -100;
 
-int EDITOR::popup_select_image(EDITOR *pEditor, CUIRect view)
+int CEditor::PopupSelectImage(CEditor *pEditor, CUIRect View)
 {
-	CUIRect buttonbar, imageview;
-	view.VSplitLeft(80.0f, &buttonbar, &view);
-	view.Margin(10.0f, &imageview);
+	CUIRect ButtonBar, ImageView;
+	View.VSplitLeft(80.0f, &ButtonBar, &View);
+	View.Margin(10.0f, &ImageView);
 	
-	int show_image = select_image_current;
+	int ShowImage = g_SelectImageCurrent;
 	
-	for(int i = -1; i < pEditor->map.images.len(); i++)
+	for(int i = -1; i < pEditor->m_Map.m_lImages.size(); i++)
 	{
-		CUIRect button;
-		buttonbar.HSplitTop(12.0f, &button, &buttonbar);
-		buttonbar.HSplitTop(2.0f, 0, &buttonbar);
+		CUIRect Button;
+		ButtonBar.HSplitTop(12.0f, &Button, &ButtonBar);
+		ButtonBar.HSplitTop(2.0f, 0, &ButtonBar);
 		
-		if(pEditor->UI()->MouseInside(&button))
-			show_image = i;
+		if(pEditor->UI()->MouseInside(&Button))
+			ShowImage = i;
 			
 		if(i == -1)
 		{
-			if(pEditor->DoButton_MenuItem(&pEditor->map.images[i], "None", i==select_image_current, &button))
-				select_image_selected = -1;
+			if(pEditor->DoButton_MenuItem(&pEditor->m_Map.m_lImages[i], "None", i==g_SelectImageCurrent, &Button))
+				g_SelectImageSelected = -1;
 		}
 		else
 		{
-			if(pEditor->DoButton_MenuItem(&pEditor->map.images[i], pEditor->map.images[i]->name, i==select_image_current, &button))
-				select_image_selected = i;
+			if(pEditor->DoButton_MenuItem(&pEditor->m_Map.m_lImages[i], pEditor->m_Map.m_lImages[i]->m_aName, i==g_SelectImageCurrent, &Button))
+				g_SelectImageSelected = i;
 		}
 	}
 	
-	if(show_image >= 0 && show_image < pEditor->map.images.len())
-		pEditor->Graphics()->TextureSet(pEditor->map.images[show_image]->tex_id);
+	if(ShowImage >= 0 && ShowImage < pEditor->m_Map.m_lImages.size())
+		pEditor->Graphics()->TextureSet(pEditor->m_Map.m_lImages[ShowImage]->m_TexId);
 	else
 		pEditor->Graphics()->TextureSet(-1);
 	pEditor->Graphics()->QuadsBegin();
-	pEditor->Graphics()->QuadsDrawTL(imageview.x, imageview.y, imageview.w, imageview.h);
+	IGraphics::CQuadItem QuadItem(ImageView.x, ImageView.y, ImageView.w, ImageView.h);
+	pEditor->Graphics()->QuadsDrawTL(&QuadItem, 1);
 	pEditor->Graphics()->QuadsEnd();
 
 	return 0;
 }
 
-void EDITOR::popup_select_image_invoke(int current, float x, float y)
+void CEditor::PopupSelectImageInvoke(int Current, float x, float y)
 {
-	static int select_image_popup_id = 0;
-	select_image_selected = -100;
-	select_image_current = current;
-	ui_invoke_popup_menu(&select_image_popup_id, 0, x, y, 400, 300, popup_select_image);
+	static int s_SelectImagePopupId = 0;
+	g_SelectImageSelected = -100;
+	g_SelectImageCurrent = Current;
+	UiInvokePopupMenu(&s_SelectImagePopupId, 0, x, y, 400, 300, PopupSelectImage);
 }
 
-int EDITOR::popup_select_image_result()
+int CEditor::PopupSelectImageResult()
 {
-	if(select_image_selected == -100)
+	if(g_SelectImageSelected == -100)
 		return -100;
 		
-	select_image_current = select_image_selected;
-	select_image_selected = -100;
-	return select_image_current;
+	g_SelectImageCurrent = g_SelectImageSelected;
+	g_SelectImageSelected = -100;
+	return g_SelectImageCurrent;
 }
 
 

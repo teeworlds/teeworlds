@@ -1,69 +1,143 @@
-#include "../e_if_gfx.h"
+#ifndef ENGINE_CLIENT_GRAPHICS_H
+#define ENGINE_CLIENT_GRAPHICS_H
 
-class IGraphics
+class CGraphics_OpenGL : public IEngineGraphics
 {
 protected:
-	int m_ScreenWidth;
-	int m_ScreenHeight;
+	class IStorage *m_pStorage;
+	
+	//
+	typedef struct { float x, y, z; } CPoint;
+	typedef struct { float u, v; } CTexCoord;
+	typedef struct { float r, g, b, a; } CColor;
+
+	typedef struct
+	{
+		CPoint m_Pos;
+		CTexCoord m_Tex;
+		CColor m_Color;
+	} CVertex;
+	
+	enum
+	{
+		MAX_VERTICES = 32*1024,
+		MAX_TEXTURES = 1024*4,
+		
+		DRAWING_QUADS=1,
+		DRAWING_LINES=2		
+	};
+
+	CVertex m_aVertices[MAX_VERTICES];
+	int m_NumVertices;
+
+	CColor m_aColor[4];
+	CTexCoord m_aTexture[4];
+
+	bool m_RenderEnable;
+
+	float m_Rotation;
+	int m_Drawing;
+	bool m_DoScreenshot;
+
+	float m_ScreenX0;
+	float m_ScreenY0;
+	float m_ScreenX1;
+	float m_ScreenY1;
+
+	int m_InvalidTexture;
+
+	struct CTexture
+	{
+		GLuint m_Tex;
+		int m_MemSize;
+		int m_Flags;
+		int m_Next;
+	};
+
+	CTexture m_aTextures[MAX_TEXTURES];
+	int m_FirstFreeTexture;
+	int m_TextureMemoryUsage;
+
+	void Flush();
+	void AddVertices(int Count);
+	void Rotate4(CPoint *pCenter, CVertex *pPoints);
+	
+	static unsigned char Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset);
 public:
-	virtual ~IGraphics() {}
+	CGraphics_OpenGL();
 	
-	int ScreenWidth() const { return m_ScreenWidth; }
-	int ScreenHeight() const { return m_ScreenHeight; }
-	float ScreenAspect() const { return (float)ScreenWidth()/(float)ScreenHeight(); }
+	virtual void ClipEnable(int x, int y, int w, int h);
+	virtual void ClipDisable();
+		
+	virtual void BlendNone();
+	virtual void BlendNormal();
+	virtual void BlendAdditive();
+
+	virtual int MemoryUsage() const;
+		
+	virtual void MapScreen(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY);
+	virtual void GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY);
+
+	virtual void LinesBegin();
+	virtual void LinesEnd();
+	virtual void LinesDraw(const CLineItem *pArray, int Num);
 	
-	virtual void Clear(float r, float g, float b) = 0;
+	virtual int UnloadTexture(int Index);
+	virtual int LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags);
+
+	// simple uncompressed RGBA loaders
+	virtual int LoadTexture(const char *pFilename, int StoreFormat, int Flags);
+	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename);
+
+	void ScreenshotDirect(const char *pFilename);
+
+	virtual void TextureSet(int TextureID);
+
+	virtual void Clear(float r, float g, float b);
+
+	virtual void QuadsBegin();
+	virtual void QuadsEnd();
+	virtual void QuadsSetRotation(float Angle);
+
+	virtual void SetColorVertex(const CColorVertex *pArray, int Num);
+	virtual void SetColor(float r, float g, float b, float a);
+
+	virtual void QuadsSetSubset(float TlU, float TlV, float BrU, float BrV);
+	virtual void QuadsSetSubsetFree(
+		float x0, float y0, float x1, float y1,
+		float x2, float y2, float x3, float y3);
+
+	virtual void QuadsDraw(CQuadItem *pArray, int Num);
+	virtual void QuadsDrawTL(const CQuadItem *pArray, int Num);
+	virtual void QuadsDrawFreeform(const CFreeformItem *pArray, int Num);
+	virtual void QuadsText(float x, float y, float Size, float r, float g, float b, float a, const char *pText);
 	
-	virtual void ClipEnable(int x, int y, int w, int h) = 0;
-	virtual void ClipDisable() = 0;
-	
-	virtual void MapScreen(float tl_x, float tl_y, float br_x, float br_y) = 0;
-	virtual void GetScreen(float *tl_x, float *tl_y, float *br_x, float *br_y) = 0;
-	
-	virtual void BlendNone() = 0;
-	virtual void BlendNormal() = 0;
-	virtual void BlendAdditive() = 0;
-	
-	virtual int LoadPNG(IMAGE_INFO *pImg, const char *pFilename) =0;
-	virtual int UnloadTexture(int Index) = 0;
-	virtual int LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags) = 0;
-	virtual int LoadTexture(const char *pFilename, int StoreFormat, int Flags) = 0;
-	virtual void TextureSet(int TextureID) = 0;
-	
-	virtual void LinesBegin() = 0;
-	virtual void LinesEnd() = 0;
-	virtual void LinesDraw(float x0, float y0, float x1, float y1) = 0;
-	
-	virtual void QuadsBegin() = 0;
-	virtual void QuadsEnd() = 0;
-	virtual void QuadsSetRotation(float Angle) = 0;
-	virtual void QuadsSetSubset(float tl_u, float tl_v, float br_u, float br_v) = 0;
-	virtual void QuadsSetSubsetFree(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3) = 0;
-	
-	virtual void QuadsDraw(float x, float y, float w, float h) = 0;
-	virtual void QuadsDrawTL(float x, float y, float w, float h) = 0;
-	virtual void QuadsDrawFreeform(float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3) = 0;
-	virtual void QuadsText(float x, float y, float Size, float r, float g, float b, float a, const char *pText) = 0;
-	
-	virtual void SetColorVertex(int i, float r, float g, float b, float a) = 0;
-	virtual void SetColor(float r, float g, float b, float a) = 0;
-	
-	virtual void TakeScreenshot() = 0;
+	virtual bool Init();
 };
 
-class IEngineGraphics : public IGraphics
+class CGraphics_SDL : public CGraphics_OpenGL
 {
+	SDL_Surface *m_pScreenSurface;	
+	
+	int TryInit();
+	int InitWindow();
 public:
-	virtual bool Init() = 0;
-	virtual void Shutdown() = 0;
-	virtual void Swap() = 0;
-	
-	virtual void Minimize() = 0;
-	virtual void Maximize() = 0;
-	
-	virtual int WindowActive() = 0;
-	virtual int WindowOpen() = 0;
+	CGraphics_SDL();
+
+	virtual bool Init();
+	virtual void Shutdown();
+
+	virtual void Minimize();
+	virtual void Maximize();
+
+	virtual int WindowActive();
+	virtual int WindowOpen();
+
+	virtual void TakeScreenshot();
+	virtual void Swap();
+
+	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes);
 	
 };
 
-extern IEngineGraphics *CreateEngineGraphics();
+#endif

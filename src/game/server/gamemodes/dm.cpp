@@ -1,14 +1,15 @@
-/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include "dm.hpp"
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
+#include "dm.h"
 
 
-GAMECONTROLLER_DM::GAMECONTROLLER_DM()
+CGameControllerDM::CGameControllerDM(class CGameContext *pGameServer)
+: IGameController(pGameServer)
 {
-	gametype = "DM";
+	m_pGameType = "DM";
 }
 
-void GAMECONTROLLER_DM::tick()
+void CGameControllerDM::Tick()
 {
-	do_player_score_wincheck();
-	GAMECONTROLLER::tick();
+	DoPlayerScoreWincheck();
+	IGameController::Tick();
 }

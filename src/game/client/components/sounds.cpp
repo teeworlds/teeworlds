@@ -1,54 +1,91 @@
-#include <engine/e_client_interface.h>
-#include <game/generated/gc_data.hpp>
-#include <game/client/gameclient.hpp>
-#include <game/client/components/camera.hpp>
-#include "sounds.hpp"
+#include <engine/sound.h>
+#include <game/generated/client_data.h>
+#include <game/client/gameclient.h>
+#include <game/client/components/camera.h>
+#include "sounds.h"
 
-void SOUNDS::on_init()
+void CSounds::OnInit()
 {
 	// setup sound channels
-	snd_set_channel(SOUNDS::CHN_GUI, 1.0f, 0.0f);
-	snd_set_channel(SOUNDS::CHN_MUSIC, 1.0f, 0.0f);
-	snd_set_channel(SOUNDS::CHN_WORLD, 0.9f, 1.0f);
-	snd_set_channel(SOUNDS::CHN_GLOBAL, 1.0f, 0.0f);
+	Sound()->SetChannel(CSounds::CHN_GUI, 1.0f, 0.0f);
+	Sound()->SetChannel(CSounds::CHN_MUSIC, 1.0f, 0.0f);
+	Sound()->SetChannel(CSounds::CHN_WORLD, 0.9f, 1.0f);
+	Sound()->SetChannel(CSounds::CHN_GLOBAL, 1.0f, 0.0f);
 
-	snd_set_listener_pos(0.0f, 0.0f);
+	Sound()->SetListenerPos(0.0f, 0.0f);
+
+	ClearQueue();
 }
 
-void SOUNDS::on_render()
+void CSounds::OnReset()
+{
+	Sound()->StopAll();
+	ClearQueue();
+}
+
+void CSounds::OnRender()
 {
 	// set listner pos
-	snd_set_listener_pos(gameclient.camera->center.x, gameclient.camera->center.y);
+	Sound()->SetListenerPos(m_pClient->m_pCamera->m_Center.x, m_pClient->m_pCamera->m_Center.y);
+
+	// play sound from queue
+	if(m_QueuePos > 0)
+	{
+		int64 Now =  time_get();
+		if(m_QueueWaitTime <= Now)
+		{
+			Play(CHN_GLOBAL, m_aQueue[0], 1.0f, vec2(0,0));
+			m_QueueWaitTime = Now+time_freq()*3/10; // wait 300ms before playing the next one
+			if(--m_QueuePos > 0)
+				mem_move(m_aQueue, m_aQueue+1, m_QueuePos*sizeof(int));
+		}
+	}
 }
 
-void SOUNDS::play_and_record(int chn, int setid, float vol, vec2 pos)
+void CSounds::ClearQueue()
 {
-	NETMSG_SV_SOUNDGLOBAL msg;
-	msg.soundid = setid;
-	msg.pack(MSGFLAG_NOSEND|MSGFLAG_RECORD);
-	client_send_msg();
+	mem_zero(m_aQueue, sizeof(m_aQueue));
+	m_QueuePos = 0;
+	m_QueueWaitTime = time_get();
+}
+
+void CSounds::Enqueue(int SetId)
+{
+	// add sound to the queue
+	if(m_QueuePos < QUEUE_SIZE)
+		m_aQueue[m_QueuePos++] = SetId;
+}
+
+void CSounds::PlayAndRecord(int Chn, int SetId, float Vol, vec2 Pos)
+{
+	CNetMsg_Sv_SoundGlobal Msg;
+	Msg.m_Soundid = SetId;
+	Client()->SendPackMsg(&Msg, MSGFLAG_NOSEND|MSGFLAG_RECORD);
 	
-	play(chn, setid, vol, pos);
+	Play(Chn, SetId, Vol, Pos);
 }
 
-void SOUNDS::play(int chn, int setid, float vol, vec2 pos)
+void CSounds::Play(int Chn, int SetId, float Vol, vec2 Pos)
 {
-	SOUNDSET *set = &data->sounds[setid];
-
-	if(!set->num_sounds)
+	if(SetId < 0 || SetId >= g_pData->m_NumSounds)
 		return;
 
-	if(set->num_sounds == 1)
+	SOUNDSET *pSet = &g_pData->m_aSounds[SetId];
+
+	if(!pSet->m_NumSounds)
+		return;
+
+	if(pSet->m_NumSounds == 1)
 	{
-		snd_play_at(chn, set->sounds[0].id, 0, pos.x, pos.y);
+		Sound()->PlayAt(Chn, pSet->m_aSounds[0].m_Id, 0, Pos.x, Pos.y);
 		return;
 	}
 
 	// play a random one
 	int id;
 	do {
-		id = rand() % set->num_sounds;
-	} while(id == set->last);
-	snd_play_at(chn, set->sounds[id].id, 0, pos.x, pos.y);
-	set->last = id;
+		id = rand() % pSet->m_NumSounds;
+	} while(id == pSet->m_Last);
+	Sound()->PlayAt(Chn, pSet->m_aSounds[id].m_Id, 0, Pos.x, Pos.y);
+	pSet->m_Last = id;
 }

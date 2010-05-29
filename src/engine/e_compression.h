@@ -1,7 +1,0 @@
-/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-
-/* variable int packing */
-unsigned char *vint_pack(unsigned char *dst, int i);
-const unsigned char *vint_unpack(const unsigned char *src, int *inout);
-long intpack_compress(const void *src, int size, void *dst);
-long intpack_decompress(const void *src, int size, void *dst);

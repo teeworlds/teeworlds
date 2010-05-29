@@ -1,155 +1,156 @@
-#include <base/math.hpp>
-#include <engine/client/graphics.h>
+#include <base/math.h>
+#include <engine/graphics.h>
 
-#include <game/generated/gc_data.hpp>
-#include <game/client/render.hpp>
-#include <game/gamecore.hpp>
-#include "particles.hpp"
+#include <game/generated/client_data.h>
+#include <game/client/render.h>
+#include <game/gamecore.h>
+#include "particles.h"
 
-PARTICLES::PARTICLES()
+CParticles::CParticles()
 {
-	on_reset();
-	render_trail.parts = this;
-	render_explosions.parts = this;
-	render_general.parts = this;
+	OnReset();
+	m_RenderTrail.m_pParts = this;
+	m_RenderExplosions.m_pParts = this;
+	m_RenderGeneral.m_pParts = this;
 }
 
 
-void PARTICLES::on_reset()
+void CParticles::OnReset()
 {
 	// reset particles
 	for(int i = 0; i < MAX_PARTICLES; i++)
 	{
-		particles[i].prev_part = i-1;
-		particles[i].next_part = i+1;
+		m_aParticles[i].m_PrevPart = i-1;
+		m_aParticles[i].m_NextPart = i+1;
 	}
 	
-	particles[0].prev_part = 0;
-	particles[MAX_PARTICLES-1].next_part = -1;
-	first_free = 0;
+	m_aParticles[0].m_PrevPart = 0;
+	m_aParticles[MAX_PARTICLES-1].m_NextPart = -1;
+	m_FirstFree = 0;
 
 	for(int i = 0; i < NUM_GROUPS; i++)
-		first_part[i] = -1;
+		m_aFirstPart[i] = -1;
 }
 
-void PARTICLES::add(int group, PARTICLE *part)
+void CParticles::Add(int Group, CParticle *pPart)
 {
-	if (first_free == -1)
+	if (m_FirstFree == -1)
 		return;
 		
 	// remove from the free list
-	int id = first_free;
-	first_free = particles[id].next_part;
-	particles[first_free].prev_part = -1;
+	int Id = m_FirstFree;
+	m_FirstFree = m_aParticles[Id].m_NextPart;
+	m_aParticles[m_FirstFree].m_PrevPart = -1;
 	
 	// copy data
-	particles[id] = *part;
+	m_aParticles[Id] = *pPart;
 	
 	// insert to the group list
-	particles[id].prev_part = -1;
-	particles[id].next_part = first_part[group];
-	if(first_part[group] != -1)
-		particles[first_part[group]].prev_part = id;
-	first_part[group] = id;
+	m_aParticles[Id].m_PrevPart = -1;
+	m_aParticles[Id].m_NextPart = m_aFirstPart[Group];
+	if(m_aFirstPart[Group] != -1)
+		m_aParticles[m_aFirstPart[Group]].m_PrevPart = Id;
+	m_aFirstPart[Group] = Id;
 	
 	// set some parameters
-	particles[id].life = 0;
+	m_aParticles[Id].m_Life = 0;
 }
 
-void PARTICLES::update(float time_passed)
+void CParticles::Update(float TimePassed)
 {
-	static float friction_fraction = 0;
-	friction_fraction += time_passed;
+	static float FrictionFraction = 0;
+	FrictionFraction += TimePassed;
 
-	if(friction_fraction > 2.0f) // safty messure
-		friction_fraction = 0;
+	if(FrictionFraction > 2.0f) // safty messure
+		FrictionFraction = 0;
 	
-	int friction_count = 0;
-	while(friction_fraction > 0.05f)
+	int FrictionCount = 0;
+	while(FrictionFraction > 0.05f)
 	{
-		friction_count++;
-		friction_fraction -= 0.05f;
+		FrictionCount++;
+		FrictionFraction -= 0.05f;
 	}
 	
 	for(int g = 0; g < NUM_GROUPS; g++)
 	{
-		int i = first_part[g];
+		int i = m_aFirstPart[g];
 		while(i != -1)
 		{
-			int next = particles[i].next_part;
-			//particles[i].vel += flow_get(particles[i].pos)*time_passed * particles[i].flow_affected;
-			particles[i].vel.y += particles[i].gravity*time_passed;
+			int Next = m_aParticles[i].m_NextPart;
+			//m_aParticles[i].vel += flow_get(m_aParticles[i].pos)*time_passed * m_aParticles[i].flow_affected;
+			m_aParticles[i].m_Vel.y += m_aParticles[i].m_Gravity*TimePassed;
 			
-			for(int f = 0; f < friction_count; f++) // apply friction
-				particles[i].vel *= particles[i].friction;
+			for(int f = 0; f < FrictionCount; f++) // apply friction
+				m_aParticles[i].m_Vel *= m_aParticles[i].m_Friction;
 			
 			// move the point
-			vec2 vel = particles[i].vel*time_passed;
-			move_point(&particles[i].pos, &vel, 0.1f+0.9f*frandom(), NULL);
-			particles[i].vel = vel* (1.0f/time_passed);
+			vec2 Vel = m_aParticles[i].m_Vel*TimePassed;
+			Collision()->MovePoint(&m_aParticles[i].m_Pos, &Vel, 0.1f+0.9f*frandom(), NULL);
+			m_aParticles[i].m_Vel = Vel* (1.0f/TimePassed);
 			
-			particles[i].life += time_passed;
-			particles[i].rot += time_passed * particles[i].rotspeed;
+			m_aParticles[i].m_Life += TimePassed;
+			m_aParticles[i].m_Rot += TimePassed * m_aParticles[i].m_Rotspeed;
 
 			// check particle death
-			if(particles[i].life > particles[i].life_span)
+			if(m_aParticles[i].m_Life > m_aParticles[i].m_LifeSpan)
 			{
 				// remove it from the group list
-				if(particles[i].prev_part != -1)
-					particles[particles[i].prev_part].next_part = particles[i].next_part;
+				if(m_aParticles[i].m_PrevPart != -1)
+					m_aParticles[m_aParticles[i].m_PrevPart].m_NextPart = m_aParticles[i].m_NextPart;
 				else
-					first_part[g] = particles[i].next_part;
+					m_aFirstPart[g] = m_aParticles[i].m_NextPart;
 					
-				if(particles[i].next_part != -1)
-					particles[particles[i].next_part].prev_part = particles[i].prev_part;
+				if(m_aParticles[i].m_NextPart != -1)
+					m_aParticles[m_aParticles[i].m_NextPart].m_PrevPart = m_aParticles[i].m_PrevPart;
 					
 				// insert to the free list
-				if(first_free != -1)
-					particles[first_free].prev_part = i;
-				particles[i].prev_part = -1;
-				particles[i].next_part = first_free;
-				first_free = i;
+				if(m_FirstFree != -1)
+					m_aParticles[m_FirstFree].m_PrevPart = i;
+				m_aParticles[i].m_PrevPart = -1;
+				m_aParticles[i].m_NextPart = m_FirstFree;
+				m_FirstFree = i;
 			}
 			
-			i = next;
+			i = Next;
 		}
 	}
 }
 
-void PARTICLES::on_render()
+void CParticles::OnRender()
 {
-	static int64 lasttime = 0;
+	static int64 LastTime = 0;
 	int64 t = time_get();
-	update((float)((t-lasttime)/(double)time_freq()));
-	lasttime = t;
+	Update((float)((t-LastTime)/(double)time_freq()));
+	LastTime = t;
 }
 
-void PARTICLES::render_group(int group)
+void CParticles::RenderGroup(int Group)
 {
 	Graphics()->BlendNormal();
 	//gfx_blend_additive();
-	Graphics()->TextureSet(data->images[IMAGE_PARTICLES].id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_PARTICLES].m_Id);
 	Graphics()->QuadsBegin();
 
-	int i = first_part[group];
+	int i = m_aFirstPart[Group];
 	while(i != -1)
 	{
-		RenderTools()->select_sprite(particles[i].spr);
-		float a = particles[i].life / particles[i].life_span;
-		vec2 p = particles[i].pos;
-		float size = mix(particles[i].start_size, particles[i].end_size, a);
+		RenderTools()->SelectSprite(m_aParticles[i].m_Spr);
+		float a = m_aParticles[i].m_Life / m_aParticles[i].m_LifeSpan;
+		vec2 p = m_aParticles[i].m_Pos;
+		float Size = mix(m_aParticles[i].m_StartSize, m_aParticles[i].m_EndSize, a);
 
-		Graphics()->QuadsSetRotation(particles[i].rot);
+		Graphics()->QuadsSetRotation(m_aParticles[i].m_Rot);
 
 		Graphics()->SetColor(
-			particles[i].color.r,
-			particles[i].color.g,
-			particles[i].color.b,
-			particles[i].color.a); // pow(a, 0.75f) * 
+			m_aParticles[i].m_Color.r,
+			m_aParticles[i].m_Color.g,
+			m_aParticles[i].m_Color.b,
+			m_aParticles[i].m_Color.a); // pow(a, 0.75f) * 
 
-		Graphics()->QuadsDraw(p.x, p.y, size, size);
+		IGraphics::CQuadItem QuadItem(p.x, p.y, Size, Size);
+		Graphics()->QuadsDraw(&QuadItem, 1);
 		
-		i = particles[i].next_part;
+		i = m_aParticles[i].m_NextPart;
 	}
 	Graphics()->QuadsEnd();
 	Graphics()->BlendNormal();

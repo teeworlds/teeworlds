@@ -1,57 +1,54 @@
-/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <string.h>
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include <base/system.h>
 
-extern "C" {
-	#include <engine/e_network.h>
-}
+#include <engine/shared/network.h>
 
 #include "versionsrv.h"
 
-static net_client net_op; // main
+static CNetClient g_NetOp; // main
 
-void send_ver(NETADDR *addr)
+void SendVer(NETADDR *pAddr)
 {
-	NETCHUNK p;
-	unsigned char data[sizeof(VERSIONSRV_VERSION) + sizeof(VERSION_DATA)];
+	CNetChunk p;
+	unsigned char aData[sizeof(VERSIONSRV_VERSION) + sizeof(VERSION_DATA)];
 	
-	memcpy(data, VERSIONSRV_VERSION, sizeof(VERSIONSRV_VERSION));
-	memcpy(data + sizeof(VERSIONSRV_VERSION), VERSION_DATA, sizeof(VERSION_DATA));
+	mem_copy(aData, VERSIONSRV_VERSION, sizeof(VERSIONSRV_VERSION));
+	mem_copy(aData + sizeof(VERSIONSRV_VERSION), VERSION_DATA, sizeof(VERSION_DATA));
 	
-	p.client_id = -1;
-	p.address = *addr;
-	p.flags = NETSENDFLAG_CONNLESS;
-	p.data = data;
-	p.data_size = sizeof(data);
+	p.m_ClientID = -1;
+	p.m_Address = *pAddr;
+	p.m_Flags = NETSENDFLAG_CONNLESS;
+	p.m_pData = aData;
+	p.m_DataSize = sizeof(aData);
 
-	net_op.send(&p);
+	g_NetOp.Send(&p);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char **argv) // ignore_convention
 {
-	NETADDR bindaddr;
+	NETADDR BindAddr;
 
 	dbg_logger_stdout();
 	net_init();
 
-	mem_zero(&bindaddr, sizeof(bindaddr));
-	bindaddr.port = VERSIONSRV_PORT;
-	net_op.open(bindaddr, 0);
+	mem_zero(&BindAddr, sizeof(BindAddr));
+	BindAddr.port = VERSIONSRV_PORT;
+	g_NetOp.Open(BindAddr, 0);
 	
 	dbg_msg("versionsrv", "started");
 	
 	while(1)
 	{
-		net_op.update();
+		g_NetOp.Update();
 		
 		// process packets
-		NETCHUNK packet;
-		while(net_op.recv(&packet))
+		CNetChunk Packet;
+		while(g_NetOp.Recv(&Packet))
 		{
-			if(packet.data_size == sizeof(VERSIONSRV_GETVERSION) &&
-				memcmp(packet.data, VERSIONSRV_GETVERSION, sizeof(VERSIONSRV_GETVERSION)) == 0)
+			if(Packet.m_DataSize == sizeof(VERSIONSRV_GETVERSION) &&
+				mem_comp(Packet.m_pData, VERSIONSRV_GETVERSION, sizeof(VERSIONSRV_GETVERSION)) == 0)
 			{
-				send_ver(&packet.address);
+				SendVer(&Packet.m_Address);
 			}
 		}
 		

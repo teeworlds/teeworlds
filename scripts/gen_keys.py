@@ -1,7 +1,7 @@
 import sys, os
 
 # genereate keys.h file
-f = file("src/engine/e_keys.h", "w")
+f = file("src/engine/keys.h", "w")
 
 keynames = []
 for i in range(0, 512):
@@ -42,22 +42,22 @@ print >>f, "};"
 print >>f, ""
 print >>f, "#endif"
 
-
 # generate keynames.c file
-f = file("src/engine/e_keynames.c", "w")
+f = file("src/engine/client/keynames.h", "w")
 print >>f, '/* AUTO GENERATED! DO NOT EDIT MANUALLY! */'
+print >>f, ''
+print >>f, '#ifndef KEYS_INCLUDE'
+print >>f, '#error do not include this header!'
+print >>f, '#endif'
 print >>f, ''
 print >>f, "#include <string.h>"
 print >>f, ""
-print >>f, "static const char key_strings[512][16] ="
+print >>f, "const char g_aaKeyStrings[512][16] ="
 print >>f, "{"
 for n in keynames:
 	print >>f, '\t"%s",'%n
 
 print >>f, "};"
-print >>f, ""
-print >>f, "const char *inp_key_name(int k) { if (k >= 0 && k < 512) return key_strings[k]; else return key_strings[0]; }"
-print >>f, "int inp_key_code(const char *key_name) { int i; if (!strcmp(key_name, \"-?-\")) return -1; else for (i = 0; i < 512; i++) if (!strcmp(key_strings[i], key_name)) return i; return -1; }"
 print >>f, ""
 
 f.close()

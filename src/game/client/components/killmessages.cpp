@@ -1,127 +1,129 @@
-#include <engine/e_client_interface.h>
-#include <engine/client/graphics.h>
-#include <game/generated/g_protocol.hpp>
-#include <game/generated/gc_data.hpp>
+#include <engine/graphics.h>
+#include <engine/textrender.h>
+#include <game/generated/protocol.h>
+#include <game/generated/client_data.h>
 
-#include <game/client/gameclient.hpp>
-#include <game/client/animstate.hpp>
-#include "killmessages.hpp"
+#include <game/client/gameclient.h>
+#include <game/client/animstate.h>
+#include "killmessages.h"
 
-void KILLMESSAGES::on_reset()
+void CKillMessages::OnReset()
 {
-	killmsg_current = 0;
-	for(int i = 0; i < killmsg_max; i++)
-		killmsgs[i].tick = -100000;
+	m_KillmsgCurrent = 0;
+	for(int i = 0; i < MAX_KILLMSGS; i++)
+		m_aKillmsgs[i].m_Tick = -100000;
 }
 
-void KILLMESSAGES::on_message(int msgtype, void *rawmsg)
+void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 {
-	if(msgtype == NETMSGTYPE_SV_KILLMSG)
+	if(MsgType == NETMSGTYPE_SV_KILLMSG)
 	{
-		NETMSG_SV_KILLMSG *msg = (NETMSG_SV_KILLMSG *)rawmsg;
+		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
 		
 		// unpack messages
-		KILLMSG kill;
-		kill.killer = msg->killer;
-		kill.victim = msg->victim;
-		kill.weapon = msg->weapon;
-		kill.mode_special = msg->mode_special;
-		kill.tick = client_tick();
+		CKillMsg Kill;
+		Kill.m_Killer = pMsg->m_Killer;
+		Kill.m_Victim = pMsg->m_Victim;
+		Kill.m_Weapon = pMsg->m_Weapon;
+		Kill.m_ModeSpecial = pMsg->m_ModeSpecial;
+		Kill.m_Tick = Client()->GameTick();
 
 		// add the message
-		killmsg_current = (killmsg_current+1)%killmsg_max;
-		killmsgs[killmsg_current] = kill;		
+		m_KillmsgCurrent = (m_KillmsgCurrent+1)%MAX_KILLMSGS;
+		m_aKillmsgs[m_KillmsgCurrent] = Kill;
 	}
 }
 
-void KILLMESSAGES::on_render()
+void CKillMessages::OnRender()
 {
-	float width = 400*3.0f*Graphics()->ScreenAspect();
-	float height = 400*3.0f;
+	float Width = 400*3.0f*Graphics()->ScreenAspect();
+	float Height = 400*3.0f;
 
-	Graphics()->MapScreen(0, 0, width*1.5f, height*1.5f);
-	float startx = width*1.5f-10.0f;
+	Graphics()->MapScreen(0, 0, Width*1.5f, Height*1.5f);
+	float StartX = Width*1.5f-10.0f;
 	float y = 20.0f;
 
-	for(int i = 0; i < killmsg_max; i++)
+	for(int i = 0; i < MAX_KILLMSGS; i++)
 	{
 
-		int r = (killmsg_current+i+1)%killmsg_max;
-		if(client_tick() > killmsgs[r].tick+50*10)
+		int r = (m_KillmsgCurrent+i+1)%MAX_KILLMSGS;
+		if(Client()->GameTick() > m_aKillmsgs[r].m_Tick+50*10)
 			continue;
 
-		float font_size = 36.0f;
-		float killername_w = gfx_text_width(0, font_size, gameclient.clients[killmsgs[r].killer].name, -1);
-		float victimname_w = gfx_text_width(0, font_size, gameclient.clients[killmsgs[r].victim].name, -1);
+		float FontSize = 36.0f;
+		float KillerNameW = TextRender()->TextWidth(0, FontSize, m_pClient->m_aClients[m_aKillmsgs[r].m_Killer].m_aName, -1);
+		float VictimNameW = TextRender()->TextWidth(0, FontSize, m_pClient->m_aClients[m_aKillmsgs[r].m_Victim].m_aName, -1);
 
-		float x = startx;
+		float x = StartX;
 
 		// render victim name
-		x -= victimname_w;
-		gfx_text(0, x, y, font_size, gameclient.clients[killmsgs[r].victim].name, -1);
+		x -= VictimNameW;
+		TextRender()->Text(0, x, y, FontSize, m_pClient->m_aClients[m_aKillmsgs[r].m_Victim].m_aName, -1);
 
 		// render victim tee
 		x -= 24.0f;
 		
-		if(gameclient.snap.gameobj && gameclient.snap.gameobj->flags&GAMEFLAG_FLAGS)
+		if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_FLAGS)
 		{
-			if(killmsgs[r].mode_special&1)
+			if(m_aKillmsgs[r].m_ModeSpecial&1)
 			{
 				Graphics()->BlendNormal();
-				Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+				Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 				Graphics()->QuadsBegin();
 
-				if(gameclient.clients[killmsgs[r].victim].team == 0) RenderTools()->select_sprite(SPRITE_FLAG_BLUE);
-				else RenderTools()->select_sprite(SPRITE_FLAG_RED);
+				if(m_pClient->m_aClients[m_aKillmsgs[r].m_Victim].m_Team == 0) RenderTools()->SelectSprite(SPRITE_FLAG_BLUE);
+				else RenderTools()->SelectSprite(SPRITE_FLAG_RED);
 				
-				float size = 56.0f;
-				Graphics()->QuadsDrawTL(x, y-16, size/2, size);
+				float Size = 56.0f;
+				IGraphics::CQuadItem QuadItem(x, y-16, Size/2, Size);
+				Graphics()->QuadsDrawTL(&QuadItem, 1);
 				Graphics()->QuadsEnd();					
 			}
 		}
 		
-		RenderTools()->RenderTee(ANIMSTATE::get_idle(), &gameclient.clients[killmsgs[r].victim].render_info, EMOTE_PAIN, vec2(-1,0), vec2(x, y+28));
+		RenderTools()->RenderTee(CAnimState::GetIdle(), &m_pClient->m_aClients[m_aKillmsgs[r].m_Victim].m_RenderInfo, EMOTE_PAIN, vec2(-1,0), vec2(x, y+28));
 		x -= 32.0f;
 		
 		// render weapon
 		x -= 44.0f;
-		if (killmsgs[r].weapon >= 0)
+		if (m_aKillmsgs[r].m_Weapon >= 0)
 		{
-			Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 			Graphics()->QuadsBegin();
-			RenderTools()->select_sprite(data->weapons.id[killmsgs[r].weapon].sprite_body);
-			RenderTools()->draw_sprite(x, y+28, 96);
+			RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[m_aKillmsgs[r].m_Weapon].m_pSpriteBody);
+			RenderTools()->DrawSprite(x, y+28, 96);
 			Graphics()->QuadsEnd();
 		}
 		x -= 52.0f;
 
-		if(killmsgs[r].victim != killmsgs[r].killer)
+		if(m_aKillmsgs[r].m_Victim != m_aKillmsgs[r].m_Killer)
 		{
-			if(gameclient.snap.gameobj && gameclient.snap.gameobj->flags&GAMEFLAG_FLAGS)
+			if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_FLAGS)
 			{
-				if(killmsgs[r].mode_special&2)
+				if(m_aKillmsgs[r].m_ModeSpecial&2)
 				{
 					Graphics()->BlendNormal();
-					Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+					Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 					Graphics()->QuadsBegin();
 
-					if(gameclient.clients[killmsgs[r].killer].team == 0) RenderTools()->select_sprite(SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
-					else RenderTools()->select_sprite(SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
+					if(m_pClient->m_aClients[m_aKillmsgs[r].m_Killer].m_Team == 0) RenderTools()->SelectSprite(SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
+					else RenderTools()->SelectSprite(SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
 					
-					float size = 56.0f;
-					Graphics()->QuadsDrawTL(x-56, y-16, size/2, size);
+					float Size = 56.0f;
+					IGraphics::CQuadItem QuadItem(x-56, y-16, Size/2, Size);
+					Graphics()->QuadsDrawTL(&QuadItem, 1);
 					Graphics()->QuadsEnd();				
 				}
 			}				
 			
 			// render killer tee
 			x -= 24.0f;
-			RenderTools()->RenderTee(ANIMSTATE::get_idle(), &gameclient.clients[killmsgs[r].killer].render_info, EMOTE_ANGRY, vec2(1,0), vec2(x, y+28));
+			RenderTools()->RenderTee(CAnimState::GetIdle(), &m_pClient->m_aClients[m_aKillmsgs[r].m_Killer].m_RenderInfo, EMOTE_ANGRY, vec2(1,0), vec2(x, y+28));
 			x -= 32.0f;
 
 			// render killer name
-			x -= killername_w;
-			gfx_text(0, x, y, font_size, gameclient.clients[killmsgs[r].killer].name, -1);
+			x -= KillerNameW;
+			TextRender()->Text(0, x, y, FontSize, m_pClient->m_aClients[m_aKillmsgs[r].m_Killer].m_aName, -1);
 		}
 
 		y += 44;

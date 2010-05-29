@@ -1,153 +1,150 @@
-/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <string.h>
-#include <stdio.h>
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include <math.h>
 
 #include <base/system.h>
-#include <base/math.hpp>
+#include <base/math.h>
 
-#include <engine/client/graphics.h>
-#include <engine/e_client_interface.h>
+#include <engine/graphics.h>
+#include <engine/storage.h>
+#include <engine/shared/engine.h>
 
-#include <engine/e_engine.h>
+#include "skins.h"
 
-#include "skins.hpp"
-
-SKINS::SKINS()
+CSkins::CSkins()
 {
-	num_skins = 0;
+	m_NumSkins = 0;
 }
 
-void SKINS::skinscan(const char *name, int is_dir, void *user)
+void CSkins::SkinScan(const char *pName, int IsDir, void *pUser)
 {
-	SKINS *self = (SKINS *)user;
-	int l = strlen(name);
-	if(l < 4 || is_dir || self->num_skins == MAX_SKINS)
+	CSkins *pSelf = (CSkins *)pUser;
+	int l = str_length(pName);
+	if(l < 4 || IsDir || pSelf->m_NumSkins == MAX_SKINS)
 		return;
-	if(strcmp(name+l-4, ".png") != 0)
+	if(str_comp(pName+l-4, ".png") != 0)
 		return;
 		
-	char buf[512];
-	str_format(buf, sizeof(buf), "skins/%s", name);
-	IMAGE_INFO info;
-	if(!self->Graphics()->LoadPNG(&info, buf))
+	char aBuf[512];
+	str_format(aBuf, sizeof(aBuf), "skins/%s", pName);
+	CImageInfo Info;
+	if(!pSelf->Graphics()->LoadPNG(&Info, aBuf))
 	{
-		dbg_msg("game", "failed to load skin from %s", name);
+		dbg_msg("game", "failed to load skin from %s", pName);
 		return;
 	}
 	
-	self->skins[self->num_skins].org_texture = self->Graphics()->LoadTextureRaw(info.width, info.height, info.format, info.data, info.format, 0);
+	pSelf->m_aSkins[pSelf->m_NumSkins].m_OrgTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 	
-	int body_size = 96; // body size
-	unsigned char *d = (unsigned char *)info.data;
-	int pitch = info.width*4;
+	int BodySize = 96; // body size
+	unsigned char *d = (unsigned char *)Info.m_pData;
+	int Pitch = Info.m_Width*4;
 
 	// dig out blood color
 	{
-		int colors[3] = {0};
-		for(int y = 0; y < body_size; y++)
-			for(int x = 0; x < body_size; x++)
+		int aColors[3] = {0};
+		for(int y = 0; y < BodySize; y++)
+			for(int x = 0; x < BodySize; x++)
 			{
-				if(d[y*pitch+x*4+3] > 128)
+				if(d[y*Pitch+x*4+3] > 128)
 				{
-					colors[0] += d[y*pitch+x*4+0];
-					colors[1] += d[y*pitch+x*4+1];
-					colors[2] += d[y*pitch+x*4+2];
+					aColors[0] += d[y*Pitch+x*4+0];
+					aColors[1] += d[y*Pitch+x*4+1];
+					aColors[2] += d[y*Pitch+x*4+2];
 				}
 			}
 			
-		self->skins[self->num_skins].blood_color = normalize(vec3(colors[0], colors[1], colors[2]));
+		pSelf->m_aSkins[pSelf->m_NumSkins].m_BloodColor = normalize(vec3(aColors[0], aColors[1], aColors[2]));
 	}
 	
 	// create colorless version
-	int step = info.format == IMG_RGBA ? 4 : 3;
+	int Step = Info.m_Format == CImageInfo::FORMAT_RGBA ? 4 : 3;
 
 	// make the texture gray scale
-	for(int i = 0; i < info.width*info.height; i++)
+	for(int i = 0; i < Info.m_Width*Info.m_Height; i++)
 	{
-		int v = (d[i*step]+d[i*step+1]+d[i*step+2])/3;
-		d[i*step] = v;
-		d[i*step+1] = v;
-		d[i*step+2] = v;
+		int v = (d[i*Step]+d[i*Step+1]+d[i*Step+2])/3;
+		d[i*Step] = v;
+		d[i*Step+1] = v;
+		d[i*Step+2] = v;
 	}
 
 	
 	if(1)
 	{
-		int freq[256] = {0};
-		int org_weight = 0;
-		int new_weight = 192;
+		int Freq[256] = {0};
+		int OrgWeight = 0;
+		int NewWeight = 192;
 		
 		// find most common frequence
-		for(int y = 0; y < body_size; y++)
-			for(int x = 0; x < body_size; x++)
+		for(int y = 0; y < BodySize; y++)
+			for(int x = 0; x < BodySize; x++)
 			{
-				if(d[y*pitch+x*4+3] > 128)
-					freq[d[y*pitch+x*4]]++;
+				if(d[y*Pitch+x*4+3] > 128)
+					Freq[d[y*Pitch+x*4]]++;
 			}
 		
 		for(int i = 1; i < 256; i++)
 		{
-			if(freq[org_weight] < freq[i])
-				org_weight = i;
+			if(Freq[OrgWeight] < Freq[i])
+				OrgWeight = i;
 		}
 
 		// reorder
-		int inv_org_weight = 255-org_weight;
-		int inv_new_weight = 255-new_weight;
-		for(int y = 0; y < body_size; y++)
-			for(int x = 0; x < body_size; x++)
+		int InvOrgWeight = 255-OrgWeight;
+		int InvNewWeight = 255-NewWeight;
+		for(int y = 0; y < BodySize; y++)
+			for(int x = 0; x < BodySize; x++)
 			{
-				int v = d[y*pitch+x*4];
-				if(v <= org_weight)
-					v = (int)(((v/(float)org_weight) * new_weight));
+				int v = d[y*Pitch+x*4];
+				if(v <= OrgWeight)
+					v = (int)(((v/(float)OrgWeight) * NewWeight));
 				else
-					v = (int)(((v-org_weight)/(float)inv_org_weight)*inv_new_weight + new_weight);
-				d[y*pitch+x*4] = v;
-				d[y*pitch+x*4+1] = v;
-				d[y*pitch+x*4+2] = v;
+					v = (int)(((v-OrgWeight)/(float)InvOrgWeight)*InvNewWeight + NewWeight);
+				d[y*Pitch+x*4] = v;
+				d[y*Pitch+x*4+1] = v;
+				d[y*Pitch+x*4+2] = v;
 			}
 	}
 	
-	self->skins[self->num_skins].color_texture = self->Graphics()->LoadTextureRaw(info.width, info.height, info.format, info.data, info.format, 0);
-	mem_free(info.data);
+	pSelf->m_aSkins[pSelf->m_NumSkins].m_ColorTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+	mem_free(Info.m_pData);
 
 	// set skin data	
-	strncpy(self->skins[self->num_skins].name, name, min((int)sizeof(self->skins[self->num_skins].name),l-4));
-	dbg_msg("game", "load skin %s", self->skins[self->num_skins].name);
-	self->num_skins++;
+	str_copy(pSelf->m_aSkins[pSelf->m_NumSkins].m_aName, pName, min((int)sizeof(pSelf->m_aSkins[pSelf->m_NumSkins].m_aName),l-3));
+	dbg_msg("game", "load skin %s", pSelf->m_aSkins[pSelf->m_NumSkins].m_aName);
+	pSelf->m_NumSkins++;
 }
 
 
-void SKINS::init()
+void CSkins::Init()
 {
 	// load skins
-	num_skins = 0;
-	engine_listdir(LISTDIRTYPE_ALL, "skins", skinscan, this);
+	m_NumSkins = 0;
+	Storage()->ListDirectory(IStorage::TYPE_ALL, "skins", SkinScan, this);
 }
 
-int SKINS::num()
+int CSkins::Num()
 {
-	return num_skins;	
+	return m_NumSkins;	
 }
 
-const SKINS::SKIN *SKINS::get(int index)
+const CSkins::CSkin *CSkins::Get(int Index)
 {
-	return &skins[index%num_skins];
+	return &m_aSkins[Index%m_NumSkins];
 }
 
-int SKINS::find(const char *name)
+int CSkins::Find(const char *pName)
 {
-	for(int i = 0; i < num_skins; i++)
+	for(int i = 0; i < m_NumSkins; i++)
 	{
-		if(strcmp(skins[i].name, name) == 0)
+		if(str_comp(m_aSkins[i].m_aName, pName) == 0)
 			return i;
 	}
 	return -1;
 }
 
 // these converter functions were nicked from some random internet pages
-static float hue_to_rgb(float v1, float v2, float h)
+static float HueToRgb(float v1, float v2, float h)
 {
    if(h < 0) h += 1;
    if(h > 1) h -= 1;
@@ -157,16 +154,16 @@ static float hue_to_rgb(float v1, float v2, float h)
    return v1;
 }
 
-static vec3 hsl_to_rgb(vec3 in)
+static vec3 HslToRgb(vec3 in)
 {
 	float v1, v2;
-	vec3 out;
+	vec3 Out;
 
 	if(in.s == 0)
 	{
-		out.r = in.l;
-		out.g = in.l;
-		out.b = in.l;
+		Out.r = in.l;
+		Out.g = in.l;
+		Out.b = in.l;
 	}
 	else
 	{
@@ -177,16 +174,16 @@ static vec3 hsl_to_rgb(vec3 in)
 
 		v1 = 2 * in.l - v2;
 
-		out.r = hue_to_rgb(v1, v2, in.h + (1.0f/3.0f));
-		out.g = hue_to_rgb(v1, v2, in.h);
-		out.b = hue_to_rgb(v1, v2, in.h - (1.0f/3.0f));
+		Out.r = HueToRgb(v1, v2, in.h + (1.0f/3.0f));
+		Out.g = HueToRgb(v1, v2, in.h);
+		Out.b = HueToRgb(v1, v2, in.h - (1.0f/3.0f));
 	} 
 
-	return out;
+	return Out;
 }
 
-vec4 SKINS::get_color(int v)
+vec4 CSkins::GetColor(int v)
 {
-	vec3 r = hsl_to_rgb(vec3((v>>16)/255.0f, ((v>>8)&0xff)/255.0f, 0.5f+(v&0xff)/255.0f*0.5f));
+	vec3 r = HslToRgb(vec3(((v>>16)&0xff)/255.0f, ((v>>8)&0xff)/255.0f, 0.5f+(v&0xff)/255.0f*0.5f));
 	return vec4(r.r, r.g, r.b, 1.0f);
 }

@@ -1,10 +1,10 @@
-/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include <base/system.h>
 
-#include <engine/e_client_interface.h>
-#include <engine/e_config.h>
-#include <engine/client/graphics.h>
-#include "ui.hpp"
+#include <engine/shared/config.h>
+#include <engine/graphics.h>
+#include <engine/textrender.h>
+#include "ui.h"
 
 /********************************************************
  UI                                                      
@@ -30,12 +30,12 @@ CUI::CUI()
 	m_Screen.h = 480.0f;
 }
 
-int CUI::Update(float mx, float my, float mwx, float mwy, int Buttons)
+int CUI::Update(float Mx, float My, float Mwx, float Mwy, int Buttons)
 {
-    m_MouseX = mx;
-    m_MouseY = my;
-    m_MouseWorldX = mwx;
-    m_MouseWorldY = mwy;
+    m_MouseX = Mx;
+    m_MouseY = My;
+    m_MouseWorldX = Mwx;
+    m_MouseWorldY = Mwy;
     m_LastMouseButtons = m_MouseButtons;
     m_MouseButtons = Buttons;
     m_pHotItem = m_pBecommingHotItem;
@@ -54,11 +54,11 @@ int CUI::MouseInside(const CUIRect *r)
 
 CUIRect *CUI::Screen()
 {
-    float aspect = Graphics()->ScreenAspect();
+    float Aspect = Graphics()->ScreenAspect();
     float w, h;
 
     h = 600;
-    w = aspect*h;
+    w = Aspect*h;
 
     m_Screen.w = w;
     m_Screen.h = h;
@@ -78,9 +78,9 @@ void CUI::SetScale(float s)
 
 void CUI::ClipEnable(const CUIRect *r)
 {
-	float xscale = Graphics()->ScreenWidth()/Screen()->w;
-	float yscale = Graphics()->ScreenHeight()/Screen()->h;
-	Graphics()->ClipEnable((int)(r->x*xscale), (int)(r->y*yscale), (int)(r->w*xscale), (int)(r->h*yscale));
+	float XScale = Graphics()->ScreenWidth()/Screen()->w;
+	float YScale = Graphics()->ScreenHeight()/Screen()->h;
+	Graphics()->ClipEnable((int)(r->x*XScale), (int)(r->y*YScale), (int)(r->w*XScale), (int)(r->h*YScale));
 }
 
 void CUI::ClipDisable()
@@ -88,153 +88,153 @@ void CUI::ClipDisable()
 	Graphics()->ClipDisable();
 }
 
-void CUIRect::HSplitTop(float cut, CUIRect *top, CUIRect *bottom) const
+void CUIRect::HSplitTop(float Cut, CUIRect *pTop, CUIRect *pBottom) const
 {
     CUIRect r = *this;
-    cut *= Scale();
+    Cut *= Scale();
 
-    if (top)
+    if (pTop)
     {
-        top->x = r.x;
-        top->y = r.y;
-        top->w = r.w;
-        top->h = cut;
+        pTop->x = r.x;
+        pTop->y = r.y;
+        pTop->w = r.w;
+        pTop->h = Cut;
     }
 
-    if (bottom)
+    if (pBottom)
     {
-        bottom->x = r.x;
-        bottom->y = r.y + cut;
-        bottom->w = r.w;
-        bottom->h = r.h - cut;
+        pBottom->x = r.x;
+        pBottom->y = r.y + Cut;
+        pBottom->w = r.w;
+        pBottom->h = r.h - Cut;
     }
 }
 
-void CUIRect::HSplitBottom(float cut, CUIRect *top, CUIRect *bottom) const
+void CUIRect::HSplitBottom(float Cut, CUIRect *pTop, CUIRect *pBottom) const
 {
     CUIRect r = *this;
-    cut *= Scale();
+    Cut *= Scale();
 
-    if (top)
+    if (pTop)
     {
-        top->x = r.x;
-        top->y = r.y;
-        top->w = r.w;
-        top->h = r.h - cut;
+        pTop->x = r.x;
+        pTop->y = r.y;
+        pTop->w = r.w;
+        pTop->h = r.h - Cut;
     }
 
-    if (bottom)
+    if (pBottom)
     {
-        bottom->x = r.x;
-        bottom->y = r.y + r.h - cut;
-        bottom->w = r.w;
-        bottom->h = cut;
+        pBottom->x = r.x;
+        pBottom->y = r.y + r.h - Cut;
+        pBottom->w = r.w;
+        pBottom->h = Cut;
     }
 }
 
 
-void CUIRect::VSplitMid(CUIRect *left, CUIRect *right) const
+void CUIRect::VSplitMid(CUIRect *pLeft, CUIRect *pRight) const
 {
     CUIRect r = *this;
-    float cut = r.w/2;
+    float Cut = r.w/2;
 
-    if (left)
+    if (pLeft)
     {
-        left->x = r.x;
-        left->y = r.y;
-        left->w = cut;
-        left->h = r.h;
+        pLeft->x = r.x;
+        pLeft->y = r.y;
+        pLeft->w = Cut;
+        pLeft->h = r.h;
     }
 
-    if (right)
+    if (pRight)
     {
-        right->x = r.x + cut;
-        right->y = r.y;
-        right->w = r.w - cut;
-        right->h = r.h;
-    }
-}
-
-void CUIRect::VSplitLeft(float cut, CUIRect *left, CUIRect *right) const
-{
-    CUIRect r = *this;
-    cut *= Scale();
-
-    if (left)
-    {
-        left->x = r.x;
-        left->y = r.y;
-        left->w = cut;
-        left->h = r.h;
-    }
-
-    if (right)
-    {
-        right->x = r.x + cut;
-        right->y = r.y;
-        right->w = r.w - cut;
-        right->h = r.h;
+        pRight->x = r.x + Cut;
+        pRight->y = r.y;
+        pRight->w = r.w - Cut;
+        pRight->h = r.h;
     }
 }
 
-void CUIRect::VSplitRight(float cut, CUIRect *left, CUIRect *right) const
+void CUIRect::VSplitLeft(float Cut, CUIRect *pLeft, CUIRect *pRight) const
 {
     CUIRect r = *this;
-    cut *= Scale();
+    Cut *= Scale();
 
-    if (left)
+    if (pLeft)
     {
-        left->x = r.x;
-        left->y = r.y;
-        left->w = r.w - cut;
-        left->h = r.h;
+        pLeft->x = r.x;
+        pLeft->y = r.y;
+        pLeft->w = Cut;
+        pLeft->h = r.h;
     }
 
-    if (right)
+    if (pRight)
     {
-        right->x = r.x + r.w - cut;
-        right->y = r.y;
-        right->w = cut;
-        right->h = r.h;
+        pRight->x = r.x + Cut;
+        pRight->y = r.y;
+        pRight->w = r.w - Cut;
+        pRight->h = r.h;
     }
 }
 
-void CUIRect::Margin(float cut, CUIRect *other_rect) const
+void CUIRect::VSplitRight(float Cut, CUIRect *pLeft, CUIRect *pRight) const
 {
     CUIRect r = *this;
-	cut *= Scale();
+    Cut *= Scale();
 
-    other_rect->x = r.x + cut;
-    other_rect->y = r.y + cut;
-    other_rect->w = r.w - 2*cut;
-    other_rect->h = r.h - 2*cut;
+    if (pLeft)
+    {
+        pLeft->x = r.x;
+        pLeft->y = r.y;
+        pLeft->w = r.w - Cut;
+        pLeft->h = r.h;
+    }
+
+    if (pRight)
+    {
+        pRight->x = r.x + r.w - Cut;
+        pRight->y = r.y;
+        pRight->w = Cut;
+        pRight->h = r.h;
+    }
 }
 
-void CUIRect::VMargin(float cut, CUIRect *other_rect) const
+void CUIRect::Margin(float Cut, CUIRect *pOtherRect) const
 {
     CUIRect r = *this;
-	cut *= Scale();
+	Cut *= Scale();
 
-    other_rect->x = r.x + cut;
-    other_rect->y = r.y;
-    other_rect->w = r.w - 2*cut;
-    other_rect->h = r.h;
+    pOtherRect->x = r.x + Cut;
+    pOtherRect->y = r.y + Cut;
+    pOtherRect->w = r.w - 2*Cut;
+    pOtherRect->h = r.h - 2*Cut;
 }
 
-void CUIRect::HMargin(float cut, CUIRect *other_rect) const
+void CUIRect::VMargin(float Cut, CUIRect *pOtherRect) const
 {
     CUIRect r = *this;
-	cut *= Scale();
+	Cut *= Scale();
 
-    other_rect->x = r.x;
-    other_rect->y = r.y + cut;
-    other_rect->w = r.w;
-    other_rect->h = r.h - 2*cut;
+    pOtherRect->x = r.x + Cut;
+    pOtherRect->y = r.y;
+    pOtherRect->w = r.w - 2*Cut;
+    pOtherRect->h = r.h;
+}
+
+void CUIRect::HMargin(float Cut, CUIRect *pOtherRect) const
+{
+    CUIRect r = *this;
+	Cut *= Scale();
+
+    pOtherRect->x = r.x;
+    pOtherRect->y = r.y + Cut;
+    pOtherRect->w = r.w;
+    pOtherRect->h = r.h - 2*Cut;
 }
 
 int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
 {
-    /* logic */
+    // logic
     int ReturnValue = 0;
     int Inside = MouseInside(pRect);
 	static int ButtonUsed = 0;
@@ -308,21 +308,21 @@ int CUI::DoButton(const void *id, const char *text, int checked, const CUIRect *
     return ret;
 }*/
 
-void CUI::DoLabel(const CUIRect *r, const char *text, float size, int align, int max_width)
+void CUI::DoLabel(const CUIRect *r, const char *pText, float size, int Align, int MaxWidth)
 {
 	// TODO: FIX ME!!!!
     //Graphics()->BlendNormal();
     size *= Scale();
-    if(align == 0)
+    if(Align == 0)
     {
-    	float tw = gfx_text_width(0, size, text, max_width);
-    	gfx_text(0, r->x + r->w/2-tw/2, r->y, size, text, max_width);
+    	float tw = TextRender()->TextWidth(0, size, pText, MaxWidth);
+    	TextRender()->Text(0, r->x + r->w/2-tw/2, r->y - size/10, size, pText, MaxWidth);
 	}
-	else if(align < 0)
-    	gfx_text(0, r->x, r->y, size, text, max_width);
-	else if(align > 0)
+	else if(Align < 0)
+    	TextRender()->Text(0, r->x, r->y - size/10, size, pText, MaxWidth);
+	else if(Align > 0)
 	{
-    	float tw = gfx_text_width(0, size, text, max_width);
-    	gfx_text(0, r->x + r->w-tw, r->y, size, text, max_width);
+    	float tw = TextRender()->TextWidth(0, size, pText, MaxWidth);
+    	TextRender()->Text(0, r->x + r->w-tw, r->y - size/10, size, pText, MaxWidth);
 	}
 }

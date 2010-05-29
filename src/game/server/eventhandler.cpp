@@ -1,48 +1,54 @@
-#include "eventhandler.hpp"
-#include "gamecontext.hpp"
+#include "eventhandler.h"
+#include "gamecontext.h"
 
 //////////////////////////////////////////////////
 // Event handler
 //////////////////////////////////////////////////
-EVENTHANDLER::EVENTHANDLER()
+CEventHandler::CEventHandler()
 {
-	clear();
+	m_pGameServer = 0;
+	Clear();
 }
 
-void *EVENTHANDLER::create(int type, int size, int mask)
+void CEventHandler::SetGameServer(CGameContext *pGameServer)
 {
-	if(num_events == MAX_EVENTS)
+	m_pGameServer = pGameServer;
+}
+
+void *CEventHandler::Create(int Type, int Size, int Mask)
+{
+	if(m_NumEvents == MAX_EVENTS)
 		return 0;
-	if(current_offset+size >= MAX_DATASIZE)
+	if(m_CurrentOffset+Size >= MAX_DATASIZE)
 		return 0;
 
-	void *p = &data[current_offset];
-	offsets[num_events] = current_offset;
-	types[num_events] = type;
-	sizes[num_events] = size;
-	client_masks[num_events] = mask;
-	current_offset += size;
-	num_events++;
+	void *p = &m_aData[m_CurrentOffset];
+	m_aOffsets[m_NumEvents] = m_CurrentOffset;
+	m_aTypes[m_NumEvents] = Type;
+	m_aSizes[m_NumEvents] = Size;
+	m_aClientMasks[m_NumEvents] = Mask;
+	m_CurrentOffset += Size;
+	m_NumEvents++;
 	return p;
 }
 
-void EVENTHANDLER::clear()
+void CEventHandler::Clear()
 {
-	num_events = 0;
-	current_offset = 0;
+	m_NumEvents = 0;
+	m_CurrentOffset = 0;
 }
 
-void EVENTHANDLER::snap(int snapping_client)
+void CEventHandler::Snap(int SnappingClient)
 {
-	for(int i = 0; i < num_events; i++)
+	for(int i = 0; i < m_NumEvents; i++)
 	{
-		if(snapping_client == -1 || cmask_is_set(client_masks[i], snapping_client))
+		if(SnappingClient == -1 || CmaskIsSet(m_aClientMasks[i], SnappingClient))
 		{
-			NETEVENT_COMMON *ev = (NETEVENT_COMMON *)&data[offsets[i]];
-			if(snapping_client == -1 || distance(game.players[snapping_client]->view_pos, vec2(ev->x, ev->y)) < 1500.0f)
+			NETEVENT_COMMON *ev = (NETEVENT_COMMON *)&m_aData[m_aOffsets[i]];
+			if(SnappingClient == -1 || distance(GameServer()->m_apPlayers[SnappingClient]->m_ViewPos, vec2(ev->m_X, ev->m_Y)) < 1500.0f)
 			{
-				void *d = snap_new_item(types[i], i, sizes[i]);
-				mem_copy(d, &data[offsets[i]], sizes[i]);
+				void *d = GameServer()->Server()->SnapNewItem(m_aTypes[i], i, m_aSizes[i]);
+				mem_copy(d, &m_aData[m_aOffsets[i]], m_aSizes[i]);
 			}
 		}
 	}

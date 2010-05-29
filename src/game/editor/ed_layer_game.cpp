@@ -1,20 +1,20 @@
-#include "ed_editor.hpp"
+#include "ed_editor.h"
 
 
-LAYER_GAME::LAYER_GAME(int w, int h)
-: LAYER_TILES(w, h)
+CLayerGame::CLayerGame(int w, int h)
+: CLayerTiles(w, h)
 {
-	type_name = "Game";
-	game = 1;
+	m_pTypeName = "Game";
+	m_Game = 1;
 }
 
-LAYER_GAME::~LAYER_GAME()
+CLayerGame::~CLayerGame()
 {
 }
 
-int LAYER_GAME::render_properties(CUIRect *toolbox)
+int CLayerGame::RenderProperties(CUIRect *pToolbox)
 {
-	int r = LAYER_TILES::render_properties(toolbox);
-	image = -1;
+	int r = CLayerTiles::RenderProperties(pToolbox);
+	m_Image = -1;
 	return r;
 }

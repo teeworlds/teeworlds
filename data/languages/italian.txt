@@ -1,0 +1,439 @@
+
+##### translated strings #####
+
+%d of %d servers, %d players
+== %d di %d server, %d giocatori
+
+Abort
+== Annulla
+
+Address
+== Indirizzo
+
+All
+== Tutti
+
+Alpha
+== Alpha
+
+Always show name plates
+== Mostra sempre etichette dei nomi
+
+Are you sure that you want to quit?
+== Sicuro di voler uscire?
+
+As this is the first time you have launched the game, please enter your nickname below. It is recommended that you check your settings so you adjust them to your preferences before joining a server.
+== E' la prima volta che avvii il gioco, ti preghiamo di inserire il tuo nickname. E' consigliabile che tu controlli le impostazioni per aggiustarle in base alle tue preferenze prima di entrare in un server.
+
+Blue team
+== Squadra Blu
+
+Blue team wins!
+== La squadra blu ha vinto!
+
+Body
+== Corpo
+
+Call vote
+== Inizia voto
+
+Chat
+== Chat
+
+Close
+== Chiudi
+
+Compatible version
+== Versione compatibile
+
+Connect
+== Connetti
+
+Connecting to
+== Connessione a
+
+Console
+== Console
+
+Controls
+== Controlli
+
+Current
+== attuale
+
+Current version: %s
+== Versione attuale: %s
+
+Custom colors
+== Colori personalizzati
+
+Demos
+== Demo
+
+Disconnect
+== Disconnetti
+
+Disconnected
+== Disconnesso
+
+Display Modes
+== Tipo di visualizzazione
+
+Downloading map
+== Scaricando la mappa
+
+Draw!
+== Disegna!
+
+Dynamic Camera
+== Visuale dinamica
+
+Emoticon
+== Emoticon
+
+Enter
+== Entra
+
+FSAA samples
+== Esempi FSAA
+
+Favorite
+== Preferito
+
+Favorites
+== Preferiti
+
+Feet
+== Piedi
+
+Filter
+== Filtro
+
+Fire
+== Atirar
+
+Fullscreen
+== Schermo intero
+
+Game
+== Gioco
+
+Game info
+== Informazioni sul gioco
+
+Game over
+== Game over
+
+Game type
+== Tipo di gioco
+
+Game types
+== Tipi di gioco
+
+General
+== Generale
+
+Graphics
+== Grafiche
+
+Grenade
+== Granata
+
+Hammer
+== Martello
+
+Has people playing
+== Ha gente in gioco
+
+High Detail
+== Molti dettagli
+
+Hook
+== Rampino
+
+Host address
+== Indirizzo host
+
+Hue
+== Col.
+
+Info
+== Info
+
+Internet
+== Internet
+
+Join blue
+== Entra nei blu
+
+Join game
+== Entra in gioco
+
+Join red
+== Entra nei rossi
+
+Jump
+== Salta
+
+Kick
+== Kick
+
+LAN
+== LAN
+
+Language
+== Lingua
+
+Lht.
+== Lum.
+
+Loading
+== Caricamento
+
+MOTD
+== MOTD
+
+Map
+== Mappa
+
+Maximum ping
+== Ping massimo
+
+Miscellaneous
+== Altro
+
+Mouse sens.
+== Sensibilità del mouse
+
+Move left
+== Muovi a sinistra
+
+Move right
+== Muovi a destra
+
+Movement
+== Movimento
+
+Mute when not active
+== Muto quando inattivo
+
+Name
+== Nome
+
+News
+== Notizie
+
+Next weapon
+== Prossima arma
+
+Nickname
+== Nickname
+
+No
+== No
+
+No password
+== Senza password
+
+No servers found
+== Nessun server trovato
+
+No servers match your filter criteria
+== Nessun server corrisponde ai filtri di ricerca
+
+Ok
+== Ok
+
+Password
+== Password
+
+Incorrect password
+== Password errata
+
+Ping
+== Ping
+
+Pistol
+== Pistola
+
+Play
+== Gioca
+
+Player
+== Giocatore
+
+Players
+== Giocatori
+
+Prev. weapon
+== Arma precedente
+
+Quality Textures
+== Textures di qualità
+
+Quick search
+== Ricerca rapida
+
+Quit
+== Esci
+
+Red team
+== Squadra rossa
+
+Red team wins!
+== La squadra rossa ha vinto!
+
+Refresh
+== Aggiorna
+
+Refreshing master servers
+== Aggiornando la lista server
+
+Remote console
+== Console remota
+
+Reset filter
+== Annulla filtri
+
+Reset to default
+== Reimposta
+
+Rifle
+== Laser
+
+Round
+== Turno
+
+Sample rate
+== Frequenza suono
+
+Sat.
+== Sat.
+
+Score
+== Punteggio
+
+Score board
+== Scoreboard
+
+Score limit
+== Punteggio massimo
+
+Scoreboard
+== Scoreboard
+
+Screenshot
+== Screenshot
+
+Server details
+== Dettagli del server
+
+Server info
+== Informazioni sul server
+
+Server not full
+== Server non pieno
+
+Settings
+== Impostazioni
+
+Shotgun
+== Shotgun
+
+Show name plates
+== Mostra etichetta nomi
+
+Show only supported
+== Mostra solo supportati
+
+Skins
+== Skins
+
+Sound
+== Suono
+
+Sound volume
+== Volume del suono
+
+Spectate
+== Osserva
+
+Spectators
+== Spettatori
+
+Standard gametype
+== Tipo di gioco classico
+
+Standard map
+== Mappa classica
+
+Switch weapon on pickup
+== Cambia arma alla raccolta
+
+Team
+== Squadra
+
+Team chat
+== Chat di squadra
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== E' uscito Teeworlds %s! Scaricalo da www.teeworlds.com !
+
+Texture Compression
+== Compressione Texture
+
+The server is running a non-standard tuning on a pure game type.
+== Il server sta eseguendo un tuning non-standard su un tipo di gioco classico.
+
+Time limit
+== Limite di tempo
+
+Try again
+== Ritenta
+
+Type
+== Tipo
+
+UI Color
+== Colore del menu
+
+Use sounds
+== Usa suoni
+
+V-Sync
+== V-Sync
+
+Version
+== Versione
+
+Vote no
+== Vota no
+
+Vote yes
+== Vota si
+
+Voting
+== Votazione
+
+Weapon
+== Arma
+
+Welcome to Teeworlds
+==  Benvenuto su Teeworlds!
+
+Yes
+== Si
+
+You must restart the game for all settings to take effect.
+== E' necessario riavviare il gioco per rendere effettive le modifiche.
+
+##### needs translation ####
+
+Force vote
+== Force vote
+
+Your skin
+== Your skin
+
+##### old translations ####
+

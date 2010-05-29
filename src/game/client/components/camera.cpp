@@ -1,40 +1,37 @@
-extern "C" {
-	#include <engine/e_config.h>
-	#include <engine/e_client_interface.h>
-}
+#include <engine/shared/config.h>
 
-#include <base/math.hpp>
-#include <game/collision.hpp>
-#include <game/client/gameclient.hpp>
-#include <game/client/component.hpp>
+#include <base/math.h>
+#include <game/collision.h>
+#include <game/client/gameclient.h>
+#include <game/client/component.h>
 
-#include "camera.hpp"
-#include "controls.hpp"
+#include "camera.h"
+#include "controls.h"
 
-CAMERA::CAMERA()
+CCamera::CCamera()
 {
 }
 
-void CAMERA::on_render()
+void CCamera::OnRender()
 {
 	//vec2 center;
-	zoom = 1.0f;
+	m_Zoom = 1.0f;
 
 	// update camera center		
-	if(gameclient.snap.spectate)
-		center = gameclient.controls->mouse_pos;
+	if(m_pClient->m_Snap.m_Spectate)
+		m_Center = m_pClient->m_pControls->m_MousePos;
 	else
 	{
 
-		float l = length(gameclient.controls->mouse_pos);
-		float deadzone = config.cl_mouse_deadzone;
-		float follow_factor = config.cl_mouse_followfactor/100.0f;
-		vec2 camera_offset(0, 0);
+		float l = length(m_pClient->m_pControls->m_MousePos);
+		float DeadZone = g_Config.m_ClMouseDeadzone;
+		float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
+		vec2 CameraOffset(0, 0);
 
-		float offset_amount = max(l-deadzone, 0.0f) * follow_factor;
+		float OffsetAmount = max(l-DeadZone, 0.0f) * FollowFactor;
 		if(l > 0.0001f) // make sure that this isn't 0
-			camera_offset = normalize(gameclient.controls->mouse_pos)*offset_amount;
+			CameraOffset = normalize(m_pClient->m_pControls->m_MousePos)*OffsetAmount;
 		
-		center = gameclient.local_character_pos + camera_offset;
+		m_Center = m_pClient->m_LocalCharacterPos + CameraOffset;
 	}
 }

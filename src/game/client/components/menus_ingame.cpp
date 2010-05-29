@@ -1,89 +1,90 @@
 
-#include <base/math.hpp>
+#include <base/math.h>
 
-#include <string.h> // strcmp, strlen, strncpy
-#include <stdlib.h> // atoi
 
-#include <engine/e_client_interface.h>
+#include <engine/serverbrowser.h>
+#include <engine/textrender.h>
+#include <engine/shared/config.h>
 
-#include <game/generated/g_protocol.hpp>
-#include <game/generated/gc_data.hpp>
+#include <game/generated/protocol.h>
+#include <game/generated/client_data.h>
 
-#include <game/client/ui.hpp>
-#include <game/client/gameclient.hpp>
-#include <game/client/animstate.hpp>
+#include <game/client/ui.h>
+#include <game/client/gameclient.h>
+#include <game/client/animstate.h>
+#include <game/localization.h>
 
-#include "menus.hpp"
-#include "motd.hpp"
-#include "voting.hpp"
+#include "menus.h"
+#include "motd.h"
+#include "voting.h"
 
-void MENUS::render_game(CUIRect main_view)
+void CMenus::RenderGame(CUIRect MainView)
 {
-	CUIRect button;
+	CUIRect Button;
 	//CUIRect votearea;
-	main_view.HSplitTop(45.0f, &main_view, 0);
-	RenderTools()->DrawUIRect(&main_view, color_tabbar_active, CUI::CORNER_ALL, 10.0f);
+	MainView.HSplitTop(45.0f, &MainView, 0);
+	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
 
-	main_view.HSplitTop(10.0f, 0, &main_view);
-	main_view.HSplitTop(25.0f, &main_view, 0);
-	main_view.VMargin(10.0f, &main_view);
+	MainView.HSplitTop(10.0f, 0, &MainView);
+	MainView.HSplitTop(25.0f, &MainView, 0);
+	MainView.VMargin(10.0f, &MainView);
 	
-	main_view.VSplitRight(120.0f, &main_view, &button);
-	static int disconnect_button = 0;
-	if(DoButton_Menu(&disconnect_button, localize("Disconnect"), 0, &button))
-		client_disconnect();
+	MainView.VSplitRight(120.0f, &MainView, &Button);
+	static int s_DisconnectButton = 0;
+	if(DoButton_Menu(&s_DisconnectButton, Localize("Disconnect"), 0, &Button))
+		Client()->Disconnect();
 
-	if(gameclient.snap.local_info && gameclient.snap.gameobj)
+	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pGameobj)
 	{
-		if(gameclient.snap.local_info->team != -1)
+		if(m_pClient->m_Snap.m_pLocalInfo->m_Team != -1)
 		{
-			main_view.VSplitLeft(10.0f, &button, &main_view);
-			main_view.VSplitLeft(120.0f, &button, &main_view);
-			static int spectate_button = 0;
-			if(DoButton_Menu(&spectate_button, localize("Spectate"), 0, &button))
+			MainView.VSplitLeft(10.0f, &Button, &MainView);
+			MainView.VSplitLeft(120.0f, &Button, &MainView);
+			static int s_SpectateButton = 0;
+			if(DoButton_Menu(&s_SpectateButton, Localize("Spectate"), 0, &Button))
 			{
-				gameclient.send_switch_team(-1);
-				set_active(false);
+				m_pClient->SendSwitchTeam(-1);
+				SetActive(false);
 			}
 		}
 		
-		if(gameclient.snap.gameobj->flags & GAMEFLAG_TEAMS)
+		if(m_pClient->m_Snap.m_pGameobj->m_Flags & GAMEFLAG_TEAMS)
 		{
-			if(gameclient.snap.local_info->team != 0)
+			if(m_pClient->m_Snap.m_pLocalInfo->m_Team != 0)
 			{
-				main_view.VSplitLeft(10.0f, &button, &main_view);
-				main_view.VSplitLeft(120.0f, &button, &main_view);
-				static int spectate_button = 0;
-				if(DoButton_Menu(&spectate_button, localize("Join red"), 0, &button))
+				MainView.VSplitLeft(10.0f, &Button, &MainView);
+				MainView.VSplitLeft(120.0f, &Button, &MainView);
+				static int s_SpectateButton = 0;
+				if(DoButton_Menu(&s_SpectateButton, Localize("Join red"), 0, &Button))
 				{
-					gameclient.send_switch_team(0);
-					set_active(false);
+					m_pClient->SendSwitchTeam(0);
+					SetActive(false);
 				}
 			}
 
-			if(gameclient.snap.local_info->team != 1)
+			if(m_pClient->m_Snap.m_pLocalInfo->m_Team != 1)
 			{
-				main_view.VSplitLeft(10.0f, &button, &main_view);
-				main_view.VSplitLeft(120.0f, &button, &main_view);
-				static int spectate_button = 0;
-				if(DoButton_Menu(&spectate_button, localize("Join blue"), 0, &button))
+				MainView.VSplitLeft(10.0f, &Button, &MainView);
+				MainView.VSplitLeft(120.0f, &Button, &MainView);
+				static int s_SpectateButton = 0;
+				if(DoButton_Menu(&s_SpectateButton, Localize("Join blue"), 0, &Button))
 				{
-					gameclient.send_switch_team(1);
-					set_active(false);
+					m_pClient->SendSwitchTeam(1);
+					SetActive(false);
 				}
 			}
 		}
 		else
 		{
-			if(gameclient.snap.local_info->team != 0)
+			if(m_pClient->m_Snap.m_pLocalInfo->m_Team != 0)
 			{
-				main_view.VSplitLeft(10.0f, &button, &main_view);
-				main_view.VSplitLeft(120.0f, &button, &main_view);
-				static int spectate_button = 0;
-				if(DoButton_Menu(&spectate_button, localize("Join game"), 0, &button))
+				MainView.VSplitLeft(10.0f, &Button, &MainView);
+				MainView.VSplitLeft(120.0f, &Button, &MainView);
+				static int s_SpectateButton = 0;
+				if(DoButton_Menu(&s_SpectateButton, Localize("Join game"), 0, &Button))
 				{
-					gameclient.send_switch_team(0);
-					set_active(false);
+					m_pClient->SendSwitchTeam(0);
+					SetActive(false);
 				}
 			}
 		}
@@ -141,102 +142,102 @@ void MENUS::render_game(CUIRect main_view)
 	}*/
 }
 
-void MENUS::render_serverinfo(CUIRect main_view)
+void CMenus::RenderServerInfo(CUIRect MainView)
 {
 	// fetch server info
-	SERVER_INFO current_server_info;
-	client_serverinfo(&current_server_info);
+	CServerInfo CurrentServerInfo;
+	Client()->GetServerInfo(&CurrentServerInfo);
 	
-	if(!gameclient.snap.local_info)
+	if(!m_pClient->m_Snap.m_pLocalInfo)
 		return;
 	
 	// count players for server info-box
-	int num_players = 0;
-	for(int i = 0; i < snap_num_items(SNAP_CURRENT); i++)
+	int NumPlayers = 0;
+	for(int i = 0; i < Client()->SnapNumItems(IClient::SNAP_CURRENT); i++)
 	{
-		SNAP_ITEM item;
-		snap_get_item(SNAP_CURRENT, i, &item);
+		IClient::CSnapItem Item;
+		Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
 
-		if(item.type == NETOBJTYPE_PLAYER_INFO)
+		if(Item.m_Type == NETOBJTYPE_PLAYERINFO)
 		{
-			num_players++;
+			NumPlayers++;
 		}
 	}
 
 	// render background
-	RenderTools()->DrawUIRect(&main_view, color_tabbar_active, CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
 	
-	CUIRect view, serverinfo, gameinfo, motd;
+	CUIRect View, ServerInfo, GameInfo, Motd;
 	
 	float x = 0.0f;
 	float y = 0.0f;
 	
-	char buf[1024];
+	char aBuf[1024];
 	
 	// set view to use for all sub-modules
-	main_view.Margin(10.0f, &view);
+	MainView.Margin(10.0f, &View);
 	
-	/* serverinfo */
-	view.HSplitTop(view.h/2-5.0f, &serverinfo, &motd);
-	serverinfo.VSplitLeft(view.w/2-5.0f, &serverinfo, &gameinfo);
-	RenderTools()->DrawUIRect(&serverinfo, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
+	// serverinfo
+	View.HSplitTop(View.h/2-5.0f, &ServerInfo, &Motd);
+	ServerInfo.VSplitLeft(View.w/2-5.0f, &ServerInfo, &GameInfo);
+	RenderTools()->DrawUIRect(&ServerInfo, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 	
-	serverinfo.Margin(5.0f, &serverinfo);
+	ServerInfo.Margin(5.0f, &ServerInfo);
 	
 	x = 5.0f;
 	y = 0.0f;
 	
-	gfx_text(0, serverinfo.x+x, serverinfo.y+y, 32, localize("Server info"), 250);
+	TextRender()->Text(0, ServerInfo.x+x, ServerInfo.y+y, 32, Localize("Server info"), 250);
 	y += 32.0f+5.0f;
 	
-	mem_zero(buf, sizeof(buf));
+	mem_zero(aBuf, sizeof(aBuf));
 	str_format(
-		buf,
-		sizeof(buf),
+		aBuf,
+		sizeof(aBuf),
 		"%s\n\n"
 		"%s: %s\n"
 		"%s: %d\n"
 		"%s: %s\n"
 		"%s: %s\n",
-		current_server_info.name,
-		localize("Address"), config.ui_server_address,
-		localize("Ping"), gameclient.snap.local_info->latency,
-		localize("Version"), current_server_info.version,
-		localize("Password"), current_server_info.flags&1 ? localize("Yes") : localize("No")
+		CurrentServerInfo.m_aName,
+		Localize("Address"), g_Config.m_UiServerAddress,
+		Localize("Ping"), m_pClient->m_Snap.m_pLocalInfo->m_Latency,
+		Localize("Version"), CurrentServerInfo.m_aVersion,
+		Localize("Password"), CurrentServerInfo.m_Flags &1 ? Localize("Yes") : Localize("No")
 	);
 	
-	gfx_text(0, serverinfo.x+x, serverinfo.y+y, 20, buf, 250);
+	TextRender()->Text(0, ServerInfo.x+x, ServerInfo.y+y, 20, aBuf, 250);
 	
 	{
-		CUIRect button;
-		int is_favorite = client_serverbrowse_isfavorite(current_server_info.netaddr);
-		serverinfo.HSplitBottom(20.0f, &serverinfo, &button);
-		static int add_fav_button = 0;
-		if(DoButton_CheckBox(&add_fav_button, localize("Favorite"), is_favorite, &button))
+		CUIRect Button;
+		int IsFavorite = ServerBrowser()->IsFavorite(CurrentServerInfo.m_NetAddr);
+		ServerInfo.HSplitBottom(20.0f, &ServerInfo, &Button);
+		static int s_AddFavButton = 0;
+		if(DoButton_CheckBox(&s_AddFavButton, Localize("Favorite"), IsFavorite, &Button))
 		{
-			if(is_favorite)
-				client_serverbrowse_removefavorite(current_server_info.netaddr);
+			if(IsFavorite)
+				ServerBrowser()->RemoveFavorite(CurrentServerInfo.m_NetAddr);
 			else
-				client_serverbrowse_addfavorite(current_server_info.netaddr);
+				ServerBrowser()->AddFavorite(CurrentServerInfo.m_NetAddr);
 		}
 	}
 	
-	/* gameinfo */
-	gameinfo.VSplitLeft(10.0f, 0x0, &gameinfo);
-	RenderTools()->DrawUIRect(&gameinfo, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
+	// gameinfo
+	GameInfo.VSplitLeft(10.0f, 0x0, &GameInfo);
+	RenderTools()->DrawUIRect(&GameInfo, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 	
-	gameinfo.Margin(5.0f, &gameinfo);
+	GameInfo.Margin(5.0f, &GameInfo);
 	
 	x = 5.0f;
 	y = 0.0f;
 	
-	gfx_text(0, gameinfo.x+x, gameinfo.y+y, 32, localize("Game info"), 250);
+	TextRender()->Text(0, GameInfo.x+x, GameInfo.y+y, 32, Localize("Game info"), 250);
 	y += 32.0f+5.0f;
 	
-	mem_zero(buf, sizeof(buf));
+	mem_zero(aBuf, sizeof(aBuf));
 	str_format(
-		buf,
-		sizeof(buf),
+		aBuf,
+		sizeof(aBuf),
 		"\n\n"
 		"%s: %s\n"
 		"%s: %s\n"
@@ -244,153 +245,178 @@ void MENUS::render_serverinfo(CUIRect main_view)
 		"%s: %d\n"
 		"\n"
 		"%s: %d/%d\n",
-		localize("Game type"), current_server_info.gametype,
-		localize("Map"), current_server_info.map,
-		localize("Score limit"), gameclient.snap.gameobj->score_limit,
-		localize("Time limit"), gameclient.snap.gameobj->time_limit,
-		localize("Players"), gameclient.snap.num_players, current_server_info.max_players
+		Localize("Game type"), CurrentServerInfo.m_aGameType,
+		Localize("Map"), CurrentServerInfo.m_aMap,
+		Localize("Score limit"), m_pClient->m_Snap.m_pGameobj->m_ScoreLimit,
+		Localize("Time limit"), m_pClient->m_Snap.m_pGameobj->m_TimeLimit,
+		Localize("Players"), m_pClient->m_Snap.m_NumPlayers, CurrentServerInfo.m_MaxPlayers
 	);
-	gfx_text(0, gameinfo.x+x, gameinfo.y+y, 20, buf, 250);
+	TextRender()->Text(0, GameInfo.x+x, GameInfo.y+y, 20, aBuf, 250);
 	
-	/* motd */
-	motd.HSplitTop(10.0f, 0, &motd);
-	RenderTools()->DrawUIRect(&motd, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
-	motd.Margin(5.0f, &motd);
+	// motd
+	Motd.HSplitTop(10.0f, 0, &Motd);
+	RenderTools()->DrawUIRect(&Motd, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
+	Motd.Margin(5.0f, &Motd);
 	y = 0.0f;
 	x = 5.0f;
-	gfx_text(0, motd.x+x, motd.y+y, 32, localize("MOTD"), -1);
+	TextRender()->Text(0, Motd.x+x, Motd.y+y, 32, Localize("MOTD"), -1);
 	y += 32.0f+5.0f;
-	gfx_text(0, motd.x+x, motd.y+y, 16, gameclient.motd->server_motd, (int)motd.w);
+	TextRender()->Text(0, Motd.x+x, Motd.y+y, 16, m_pClient->m_pMotd->m_aServerMotd, (int)Motd.w);
 }
 
-static const char *format_command(const char *cmd)
+static const char *FormatCommand(const char *pCmd)
 {
-	return cmd;
+	return pCmd;
 }
 
-void MENUS::render_servercontrol_server(CUIRect main_view)
+void CMenus::RenderServerControlServer(CUIRect MainView)
 {
-	int num_options = 0;
-	for(VOTING::VOTEOPTION *option = gameclient.voting->first; option; option = option->next)
-		num_options++;
+	int NumOptions = 0;
+	for(CVoting::CVoteOption *pOption = m_pClient->m_pVoting->m_pFirst; pOption; pOption = pOption->m_pNext)
+		NumOptions++;
 
-	static int votelist = 0;
-	CUIRect list = main_view;
-	ui_do_listbox_start(&votelist, &list, 24.0f, localize("Settings"), num_options, callvote_selectedoption);
+	static int s_VoteList = 0;
+	static float s_ScrollValue = 0;
+	CUIRect List = MainView;
+	UiDoListboxStart(&s_VoteList, &List, 24.0f, Localize("Settings"), "", NumOptions, 1, m_CallvoteSelectedOption, s_ScrollValue);
 	
-	for(VOTING::VOTEOPTION *option = gameclient.voting->first; option; option = option->next)
+	for(CVoting::CVoteOption *pOption = m_pClient->m_pVoting->m_pFirst; pOption; pOption = pOption->m_pNext)
 	{
-		LISTBOXITEM item = ui_do_listbox_nextitem(option);
+		CListboxItem Item = UiDoListboxNextItem(pOption);
 		
-		if(item.visible)
-			UI()->DoLabel(&item.rect, format_command(option->command), 16.0f, -1);
+		if(Item.m_Visible)
+			UI()->DoLabel(&Item.m_Rect, FormatCommand(pOption->m_aCommand), 16.0f, -1);
 	}
 	
-	callvote_selectedoption = ui_do_listbox_end();
+	m_CallvoteSelectedOption = UiDoListboxEnd(&s_ScrollValue, 0);
 }
 
-void MENUS::render_servercontrol_kick(CUIRect main_view)
+void CMenus::RenderServerControlKick(CUIRect MainView)
 {
 	// draw header
-	CUIRect header, footer;
-	main_view.HSplitTop(20, &header, &main_view);
-	RenderTools()->DrawUIRect(&header, vec4(1,1,1,0.25f), CUI::CORNER_T, 5.0f); 
-	UI()->DoLabel(&header, localize("Players"), 18.0f, 0);
+	CUIRect Header, Footer;
+	MainView.HSplitTop(20, &Header, &MainView);
+	RenderTools()->DrawUIRect(&Header, vec4(1,1,1,0.25f), CUI::CORNER_T, 5.0f); 
+	UI()->DoLabel(&Header, Localize("Players"), 18.0f, 0);
 
 	// draw footers	
-	main_view.HSplitBottom(20, &main_view, &footer);
-	RenderTools()->DrawUIRect(&footer, vec4(1,1,1,0.25f), CUI::CORNER_B, 5.0f); 
-	footer.VSplitLeft(10.0f, 0, &footer);
+	MainView.HSplitBottom(20, &MainView, &Footer);
+	RenderTools()->DrawUIRect(&Footer, vec4(1,1,1,0.25f), CUI::CORNER_B, 5.0f); 
+	Footer.VSplitLeft(10.0f, 0, &Footer);
 
 	// players
-	RenderTools()->DrawUIRect(&main_view, vec4(0,0,0,0.15f), 0, 0);
-	CUIRect list = main_view;
+	RenderTools()->DrawUIRect(&MainView, vec4(0,0,0,0.15f), 0, 0);
+	CUIRect List = MainView;
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(!gameclient.snap.player_infos[i])
+		if(!m_pClient->m_Snap.m_paPlayerInfos[i])
 			continue;
 
-		CUIRect button;
-		list.HSplitTop(button_height, &button, &list);
+		CUIRect Button;
+		List.HSplitTop(ms_ButtonHeight, &Button, &List);
 		
-		if(DoButton_ListRow((char *)&gameclient.snap+i, "", callvote_selectedplayer == i, &button))
-			callvote_selectedplayer = i;
+		if(DoButton_ListRow((char *)&m_pClient->m_Snap+i, "", m_CallvoteSelectedPlayer == i, &Button))
+			m_CallvoteSelectedPlayer = i;
 
-		TEE_RENDER_INFO info = gameclient.clients[i].render_info;
-		info.size = button.h;
-		RenderTools()->RenderTee(ANIMSTATE::get_idle(), &info, EMOTE_NORMAL, vec2(1,0), vec2(button.x+button.h/2, button.y+button.h/2));
+		CTeeRenderInfo Info = m_pClient->m_aClients[i].m_RenderInfo;
+		Info.m_Size = Button.h;
+		RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0), vec2(Button.x+Button.h/2, Button.y+Button.h/2));
 
-		button.x += button.h;
-		UI()->DoLabel(&button, gameclient.clients[i].name, 18.0f, -1);
+		Button.x += Button.h;
+		UI()->DoLabel(&Button, m_pClient->m_aClients[i].m_aName, 18.0f, -1);
 	}
 }
 
-void MENUS::render_servercontrol(CUIRect main_view)
+void CMenus::RenderServerControl(CUIRect MainView)
 {
-	static int control_page = 0;
+	static int s_ControlPage = 0;
 	
 	// render background
-	CUIRect temp, tabbar;
-	main_view.VSplitRight(120.0f, &main_view, &tabbar);
-	RenderTools()->DrawUIRect(&main_view, color_tabbar_active, CUI::CORNER_B|CUI::CORNER_TL, 10.0f);
-	tabbar.HSplitTop(50.0f, &temp, &tabbar);
-	RenderTools()->DrawUIRect(&temp, color_tabbar_active, CUI::CORNER_R, 10.0f);
+	CUIRect Temp, TabBar;
+	MainView.VSplitRight(120.0f, &MainView, &TabBar);
+	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_B|CUI::CORNER_TL, 10.0f);
+	TabBar.HSplitTop(50.0f, &Temp, &TabBar);
+	RenderTools()->DrawUIRect(&Temp, ms_ColorTabbarActive, CUI::CORNER_R, 10.0f);
 	
-	main_view.HSplitTop(10.0f, 0, &main_view);
+	MainView.HSplitTop(10.0f, 0, &MainView);
 	
-	CUIRect button;
+	CUIRect Button;
 	
-	const char *tabs[] = {
-		localize("Settings"),
-		localize("Kick")};
-	int num_tabs = (int)(sizeof(tabs)/sizeof(*tabs));
+	const char *paTabs[] = {
+		Localize("Settings"),
+		Localize("Kick")};
+	int aNumTabs = (int)(sizeof(paTabs)/sizeof(*paTabs));
 	
-	for(int i = 0; i < num_tabs; i++)
+	for(int i = 0; i < aNumTabs; i++)
 	{
-		tabbar.HSplitTop(10, &button, &tabbar);
-		tabbar.HSplitTop(26, &button, &tabbar);
-		if(DoButton_SettingsTab(tabs[i], tabs[i], control_page == i, &button))
+		TabBar.HSplitTop(10, &Button, &TabBar);
+		TabBar.HSplitTop(26, &Button, &TabBar);
+		if(DoButton_SettingsTab(paTabs[i], paTabs[i], s_ControlPage == i, &Button))
 		{
-			control_page = i;
-			callvote_selectedplayer = -1;
-			callvote_selectedoption = -1;
+			s_ControlPage = i;
+			m_CallvoteSelectedPlayer = -1;
+			m_CallvoteSelectedOption = -1;
 		}
 	}
 		
-	main_view.Margin(10.0f, &main_view);
-	CUIRect bottom;
-	main_view.HSplitBottom(button_height + 5*2, &main_view, &bottom);
-	bottom.HMargin(5.0f, &bottom);
+	MainView.Margin(10.0f, &MainView);
+	CUIRect Bottom;
+	MainView.HSplitBottom(ms_ButtonHeight + 5*2, &MainView, &Bottom);
+	Bottom.HMargin(5.0f, &Bottom);
 	
 	// render page		
-	if(control_page == 0)
-		render_servercontrol_server(main_view);
-	else if(control_page == 1)
-		render_servercontrol_kick(main_view);
+	if(s_ControlPage == 0)
+		RenderServerControlServer(MainView);
+	else if(s_ControlPage == 1)
+		RenderServerControlKick(MainView);
 		
 
 	{
-		CUIRect button;
-		bottom.VSplitRight(120.0f, &bottom, &button);
+		CUIRect Button;
+		Bottom.VSplitRight(120.0f, &Bottom, &Button);
 		
-		static int callvote_button = 0;
-		if(DoButton_Menu(&callvote_button, localize("Call vote"), 0, &button))
+		static int s_CallVoteButton = 0;
+		if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), 0, &Button))
 		{
-			if(control_page == 0)
+			if(s_ControlPage == 0)
 			{
 				//
-				gameclient.voting->callvote_option(callvote_selectedoption);
+				m_pClient->m_pVoting->CallvoteOption(m_CallvoteSelectedOption);
 				/*
 				if(callvote_selectedmap >= 0 && callvote_selectedmap < gameclient.maplist->num())
 					gameclient.voting->callvote_map(gameclient.maplist->name(callvote_selectedmap));*/
 			}
-			else if(control_page == 1)
+			else if(s_ControlPage == 1)
 			{
-				if(callvote_selectedplayer >= 0 && callvote_selectedplayer < MAX_CLIENTS &&
-					gameclient.snap.player_infos[callvote_selectedplayer])
+				if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
+					m_pClient->m_Snap.m_paPlayerInfos[m_CallvoteSelectedPlayer])
 				{
-					gameclient.voting->callvote_kick(callvote_selectedplayer);
-					set_active(false);
+					m_pClient->m_pVoting->CallvoteKick(m_CallvoteSelectedPlayer);
+					SetActive(false);
+				}
+			}
+		}
+
+		// force vote button (only available when authed in rcon)
+		if(Client()->RconAuthed())
+		{
+			Bottom.VSplitLeft(120.0f, &Button, &Bottom);
+			
+			static int s_ForceVoteButton = 0;
+			if(DoButton_Menu(&s_ForceVoteButton, Localize("Force vote"), 0, &Button))
+			{
+				if(s_ControlPage == 0)
+				{
+					m_pClient->m_pVoting->ForcevoteOption(m_CallvoteSelectedOption);
+				}
+				else if(s_ControlPage == 1)
+				{
+					if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
+						m_pClient->m_Snap.m_paPlayerInfos[m_CallvoteSelectedPlayer])
+					{
+						m_pClient->m_pVoting->ForcevoteKick(m_CallvoteSelectedPlayer);
+						SetActive(false);
+					}
 				}
 			}
 		}

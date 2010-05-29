@@ -1,0 +1,440 @@
+
+##### translated strings #####
+
+%d of %d servers, %d players
+== %d z %d serverů, %d hráčů online
+
+Abort
+== Zrušit
+
+Address
+== Adresa
+
+All
+== Vše
+
+Alpha
+== Alpha
+
+Always show name plates
+== Vždy zobrazovat jmenovky
+
+Are you sure that you want to quit?
+== Ukončit hru?
+
+As this is the first time you have launched the game, please enter your nickname below. It is recommended that you check your settings so you adjust them to your preferences before joining a server.
+== Vítejte ve hře TeeWorlds. Před tím, než se poprvé připojíte na herní server, je doporučováno nastavit si hru svým požadavkům. Vložte do políčka níže jméno pro Vašeho tee a pokračujte klepnutím na tlačítko.
+
+Blue team
+== Modrý tým
+
+Blue team wins!
+== Modrý tým vyhrává!
+
+Body
+== Tělo
+
+Call vote
+== Hlasovat
+
+Chat
+== Chat
+
+Close
+== Zavřít
+
+Compatible version
+== Kompatibilní verze
+
+Connect
+== Připojit
+
+Connecting to
+== Připojuji se k
+
+Console
+== Konzole
+
+Controls
+== Ovládání
+
+Current
+== aktuální
+
+Current version: %s
+== Verze klienta: %s
+
+Custom colors
+== Vlastní barvy
+
+Demos
+== Záznamy
+
+Disconnect
+== Odejít
+
+Disconnected
+== Spojení přerušeno
+
+Display Modes
+== Možnosti zobrazení
+
+Downloading map
+== Stahuji mapu
+
+Draw!
+== Remíza!
+
+Dynamic Camera
+== Dynamická kamera
+
+Emoticon
+== Smajlíci
+
+Enter
+== Vstup
+
+FSAA samples
+== Anti-aliasing
+
+Favorite
+== Oblíbený
+
+Favorites
+== Oblíbené
+
+Feet
+== Nohy
+
+Filter
+== Filtr
+
+Fire
+== Střelba
+
+Force vote
+== Zvolit možnost a ukončit hlasování
+
+Fullscreen
+== Celá obrazovka
+
+Game
+== Hra
+
+Game info
+== Informace o hře
+
+Game over
+== Konec hry
+
+Game type
+== Herní typ
+
+Game types
+== Herní typy
+
+General
+== Hlavní
+
+Graphics
+== Grafické
+
+Grenade
+== Granátomet
+
+Hammer
+== Palice
+
+Has people playing
+== Není prázdný
+
+High Detail
+== Detaily
+
+Hook
+== Hook/lano
+
+Host address
+== Hostitel
+
+Hue
+== Odstín
+
+Info
+== Informace
+
+Internet
+== Internet
+
+Join blue
+== K modrým
+
+Join game
+== Do hry
+
+Join red
+== K červeným
+
+Jump
+== Výskok
+
+Kick
+== Vyhodit
+
+LAN
+== LAN
+
+Language
+== Jazyk
+
+Lht.
+== Světelnost
+
+Loading
+== Nahrávám
+
+MOTD
+== MOTD
+
+Map
+== Mapa
+
+Maximum ping
+== Max. odezva
+
+Miscellaneous
+== Ostatní
+
+Mouse sens.
+== Citlivost myši
+
+Move left
+== Pohyb vlevo
+
+Move right
+== Pohyb vpravo
+
+Movement
+== Pohyb
+
+Mute when not active
+== Ztlumit při neaktivitě
+
+Name
+== Jméno
+
+News
+== Novinky
+
+Next weapon
+== Další zbraň
+
+Nickname
+== Přezdívka
+
+No
+== Ne
+
+No password
+== Bez hesla
+
+No servers found
+== Nenalezeny žádné servery
+
+No servers match your filter criteria
+== Žádný server neodpovídá zadaným kritériím
+
+Ok
+== Ok
+
+Password
+== Heslo
+
+Incorrect password
+== Nesprávné heslo
+
+Ping
+== Odezva
+
+Pistol
+== Pistol
+
+Play
+== Hrát
+
+Player
+== Hráč
+
+Players
+== Hráči
+
+Prev. weapon
+== Předchozí zbraň
+
+Quality Textures
+== Kvalitní textury
+
+Quick search
+== Rychlé hledání
+
+Quit
+== Ukončit
+
+Red team
+== Červený tým
+
+Red team wins!
+== Červený tým vyhrává!
+
+Refresh
+== Obnovit
+
+Refreshing master servers
+== Obnovuji master servery
+
+Remote console
+== Vzdálená konzole
+
+Reset filter
+== Obnovit filtr
+
+Reset to default
+== Vrátit na výchozí
+
+Rifle
+== Laser
+
+Round
+== Kolo
+
+Sample rate
+== Vzorkovací kmitočet
+
+Sat.
+== Sat.
+
+Score
+== Skóre
+
+Score board
+== Přehled skóre
+
+Score limit
+== Skórelimit
+
+Scoreboard
+== Přehled skóre
+
+Screenshot
+== Screenshot
+
+Server details
+== Detaily serveru
+
+Server info
+== Informace o serveru
+
+Server not full
+== Není plný
+
+Settings
+== Nastavení
+
+Shotgun
+== Brokovnice
+
+Show name plates
+== Zobrazovat jmenovky
+
+Show only supported
+== Zobrazit jen podporované
+
+Skins
+== Skiny
+
+Sound
+== Zvuky
+
+Sound volume
+== Hlasitost
+
+Spectate
+== Pozorovat
+
+Spectators
+== Pozorují
+
+Standard gametype
+== Standartní herní typ
+
+Standard map
+== Standartní mapa
+
+Switch weapon on pickup
+== Nastavovat zvednutou zbraň jako aktuální
+
+Team
+== Tým
+
+Team chat
+== Týmový chat
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Vyšla nová verze hry: %s! Stáhněte si ji na www.teeworlds.com nebo na české fanstránce!
+
+Texture Compression
+== Komprese textur
+
+The server is running a non-standard tuning on a pure game type.
+== Server poskytuje nestandartní tunning, ale představuje se jako standartní herní typ.
+
+Time limit
+== Časový limit
+
+Try again
+== Zkusit znovu
+
+Type
+== Typ
+
+UI Color
+== Barva prostředí
+
+Use sounds
+== Povolit zvuky
+
+V-Sync
+== V-Sync
+
+Version
+== Verze
+
+Vote no
+== Hlasuj proti
+
+Vote yes
+== Hlasuj pro
+
+Voting
+== Hlasování
+
+Weapon
+== Zbraň
+
+Welcome to Teeworlds
+== Vítejte ve hře Teeworlds!
+
+Yes
+== Ano
+
+You must restart the game for all settings to take effect.
+== Změny se projeví po dalším spuštění hry.
+
+Your skin
+== Váš skin
+
+##### needs translation ####
+
+
+##### old translations ####
+

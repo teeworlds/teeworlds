@@ -1,57 +1,61 @@
-#include <engine/e_common_interface.h>
-#include "layers.hpp"
+#include "layers.h"
 
-static MAPITEM_LAYER_TILEMAP *game_layer = 0;
-static MAPITEM_GROUP *game_group = 0;
-
-static int groups_start = 0;
-static int groups_num = 0;
-static int layers_start = 0;
-static int layers_num = 0;
-
-void layers_init()
+CLayers::CLayers()
 {
-	map_get_type(MAPITEMTYPE_GROUP, &groups_start, &groups_num);
-	map_get_type(MAPITEMTYPE_LAYER, &layers_start, &layers_num);
+	m_GroupsNum = 0;
+	m_GroupsStart = 0;
+	m_LayersNum = 0;
+	m_LayersStart = 0;
+	m_pGameGroup = 0;
+	m_pGameLayer = 0;
+	m_pMap = 0;
+}
+
+void CLayers::Init(class IKernel *pKernel)
+{
+	m_pMap = pKernel->RequestInterface<IMap>();
+	m_pMap->GetType(MAPITEMTYPE_GROUP, &m_GroupsStart, &m_GroupsNum);
+	m_pMap->GetType(MAPITEMTYPE_LAYER, &m_LayersStart, &m_LayersNum);
 	
-	for(int g = 0; g < layers_num_groups(); g++)
+	for(int g = 0; g < NumGroups(); g++)
 	{
-		MAPITEM_GROUP *group = layers_get_group(g);
-		for(int l = 0; l < group->num_layers; l++)
+		CMapItemGroup *pGroup = GetGroup(g);
+		for(int l = 0; l < pGroup->m_NumLayers; l++)
 		{
-			MAPITEM_LAYER *layer = layers_get_layer(group->start_layer+l);
+			CMapItemLayer *pLayer = GetLayer(pGroup->m_StartLayer+l);
 			
-			if(layer->type == LAYERTYPE_TILES)
+			if(pLayer->m_Type == LAYERTYPE_TILES)
 			{
-				MAPITEM_LAYER_TILEMAP *tilemap = (MAPITEM_LAYER_TILEMAP *)layer;
-				if(tilemap->flags&1)
+				CMapItemLayerTilemap *pTilemap = reinterpret_cast<CMapItemLayerTilemap *>(pLayer);
+				if(pTilemap->m_Flags&1)
 				{
-					game_layer = tilemap;
-					game_group = group;
+					m_pGameLayer = pTilemap;
+					m_pGameGroup = pGroup;
+
+					// make sure the game group has standard settings
+					m_pGameGroup->m_OffsetX = 0;
+					m_pGameGroup->m_OffsetY = 0;
+					m_pGameGroup->m_ParallaxX = 100;
+					m_pGameGroup->m_ParallaxY = 100;
+					m_pGameGroup->m_UseClipping = 0;
+					m_pGameGroup->m_ClipX = 0;
+					m_pGameGroup->m_ClipY = 0;
+					m_pGameGroup->m_ClipW = 0;
+					m_pGameGroup->m_ClipH = 0;
+
+					break;
 				}
 			}			
 		}
 	}
 }
 
-int layers_num_groups() { return groups_num; }
-MAPITEM_GROUP *layers_get_group(int index)
+CMapItemGroup *CLayers::GetGroup(int Index) const
 {
-	return (MAPITEM_GROUP *)map_get_item(groups_start+index, 0, 0);
+	return static_cast<CMapItemGroup *>(m_pMap->GetItem(m_GroupsStart+Index, 0, 0));
 }
 
-MAPITEM_LAYER *layers_get_layer(int index)
+CMapItemLayer *CLayers::GetLayer(int Index) const
 {
-	return (MAPITEM_LAYER *)map_get_item(layers_start+index, 0, 0);
+	return static_cast<CMapItemLayer *>(m_pMap->GetItem(m_LayersStart+Index, 0, 0));
 }
-
-MAPITEM_LAYER_TILEMAP *layers_game_layer()
-{
-	return game_layer;
-}
-
-MAPITEM_GROUP *layers_game_group()
-{
-	return game_group;
-}
-

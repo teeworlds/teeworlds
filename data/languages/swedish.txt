@@ -429,5 +429,11 @@ You must restart the game for all settings to take effect.
 
 ##### needs translation ####
 
+Force vote
+== Force vote
+
+Your skin
+== Your skin
+
 ##### old translations ####
 

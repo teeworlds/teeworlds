@@ -1,183 +1,181 @@
-#include <engine/e_client_interface.h>
-//#include <gc_client.hpp>
-#include <game/generated/gc_data.hpp>
+#include <game/generated/client_data.h>
 
-#include <game/client/components/particles.hpp>
-#include <game/client/components/skins.hpp>
-#include <game/client/components/flow.hpp>
-#include <game/client/components/damageind.hpp>
-#include <game/client/components/sounds.hpp>
-#include <game/client/gameclient.hpp>
+#include <game/client/components/particles.h>
+#include <game/client/components/skins.h>
+#include <game/client/components/flow.h>
+#include <game/client/components/damageind.h>
+#include <game/client/components/sounds.h>
+#include <game/client/gameclient.h>
 
-#include "effects.hpp"
+#include "effects.h"
 
-inline vec2 random_dir() { return normalize(vec2(frandom()-0.5f, frandom()-0.5f)); }
+inline vec2 RandomDir() { return normalize(vec2(frandom()-0.5f, frandom()-0.5f)); }
 
-EFFECTS::EFFECTS()
+CEffects::CEffects()
 {
-	add_50hz = false;
-	add_100hz = false;
+	m_Add50hz = false;
+	m_Add100hz = false;
 }
 
-void EFFECTS::air_jump(vec2 pos)
+void CEffects::AirJump(vec2 Pos)
 {
-	PARTICLE p;
-	p.set_default();
-	p.spr = SPRITE_PART_AIRJUMP;
-	p.pos = pos + vec2(-6.0f, 16.0f);
-	p.vel = vec2(0, -200);
-	p.life_span = 0.5f;
-	p.start_size = 48.0f;
-	p.end_size = 0;
-	p.rot = frandom()*pi*2;
-	p.rotspeed = pi*2;
-	p.gravity = 500;
-	p.friction = 0.7f;
-	p.flow_affected = 0.0f;
-	gameclient.particles->add(PARTICLES::GROUP_GENERAL, &p);
+	CParticle p;
+	p.SetDefault();
+	p.m_Spr = SPRITE_PART_AIRJUMP;
+	p.m_Pos = Pos + vec2(-6.0f, 16.0f);
+	p.m_Vel = vec2(0, -200);
+	p.m_LifeSpan = 0.5f;
+	p.m_StartSize = 48.0f;
+	p.m_EndSize = 0;
+	p.m_Rot = frandom()*pi*2;
+	p.m_Rotspeed = pi*2;
+	p.m_Gravity = 500;
+	p.m_Friction = 0.7f;
+	p.m_FlowAffected = 0.0f;
+	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 
-	p.pos = pos + vec2(6.0f, 16.0f);
-	gameclient.particles->add(PARTICLES::GROUP_GENERAL, &p);
+	p.m_Pos = Pos + vec2(6.0f, 16.0f);
+	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 	
-	gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, pos);
+	m_pClient->m_pSounds->Play(CSounds::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, Pos);
 }
 
-void EFFECTS::damage_indicator(vec2 pos, vec2 dir)
+void CEffects::DamageIndicator(vec2 Pos, vec2 Dir)
 {
-	gameclient.damageind->create(pos, dir);
+	m_pClient->m_pDamageind->Create(Pos, Dir);
 }
 
-void EFFECTS::powerupshine(vec2 pos, vec2 size)
+void CEffects::PowerupShine(vec2 Pos, vec2 size)
 {
-	if(!add_50hz)
+	if(!m_Add50hz)
 		return;
 		
-	PARTICLE p;
-	p.set_default();
-	p.spr = SPRITE_PART_SLICE;
-	p.pos = pos + vec2((frandom()-0.5f)*size.x, (frandom()-0.5f)*size.y);
-	p.vel = vec2(0, 0);
-	p.life_span = 0.5f;
-	p.start_size = 16.0f;
-	p.end_size = 0;
-	p.rot = frandom()*pi*2;
-	p.rotspeed = pi*2;
-	p.gravity = 500;
-	p.friction = 0.9f;
-	p.flow_affected = 0.0f;
-	gameclient.particles->add(PARTICLES::GROUP_GENERAL, &p);
+	CParticle p;
+	p.SetDefault();
+	p.m_Spr = SPRITE_PART_SLICE;
+	p.m_Pos = Pos + vec2((frandom()-0.5f)*size.x, (frandom()-0.5f)*size.y);
+	p.m_Vel = vec2(0, 0);
+	p.m_LifeSpan = 0.5f;
+	p.m_StartSize = 16.0f;
+	p.m_EndSize = 0;
+	p.m_Rot = frandom()*pi*2;
+	p.m_Rotspeed = pi*2;
+	p.m_Gravity = 500;
+	p.m_Friction = 0.9f;
+	p.m_FlowAffected = 0.0f;
+	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 }
 
-void EFFECTS::smoketrail(vec2 pos, vec2 vel)
+void CEffects::SmokeTrail(vec2 Pos, vec2 Vel)
 {
-	if(!add_50hz)
+	if(!m_Add50hz)
 		return;
 		
-	PARTICLE p;
-	p.set_default();
-	p.spr = SPRITE_PART_SMOKE;
-	p.pos = pos;
-	p.vel = vel + random_dir()*50.0f;
-	p.life_span = 0.5f + frandom()*0.5f;
-	p.start_size = 12.0f + frandom()*8;
-	p.end_size = 0;
-	p.friction = 0.7;
-	p.gravity = frandom()*-500.0f;
-	gameclient.particles->add(PARTICLES::GROUP_PROJECTILE_TRAIL, &p);
+	CParticle p;
+	p.SetDefault();
+	p.m_Spr = SPRITE_PART_SMOKE;
+	p.m_Pos = Pos;
+	p.m_Vel = Vel + RandomDir()*50.0f;
+	p.m_LifeSpan = 0.5f + frandom()*0.5f;
+	p.m_StartSize = 12.0f + frandom()*8;
+	p.m_EndSize = 0;
+	p.m_Friction = 0.7;
+	p.m_Gravity = frandom()*-500.0f;
+	m_pClient->m_pParticles->Add(CParticles::GROUP_PROJECTILE_TRAIL, &p);
 }
 
 
-void EFFECTS::skidtrail(vec2 pos, vec2 vel)
+void CEffects::SkidTrail(vec2 Pos, vec2 Vel)
 {
-	if(!add_100hz)
+	if(!m_Add100hz)
 		return;
 	
-	PARTICLE p;
-	p.set_default();
-	p.spr = SPRITE_PART_SMOKE;
-	p.pos = pos;
-	p.vel = vel + random_dir()*50.0f;
-	p.life_span = 0.5f + frandom()*0.5f;
-	p.start_size = 24.0f + frandom()*12;
-	p.end_size = 0;
-	p.friction = 0.7f;
-	p.gravity = frandom()*-500.0f;
-	p.color = vec4(0.75f,0.75f,0.75f,1.0f);
-	gameclient.particles->add(PARTICLES::GROUP_GENERAL, &p);	
+	CParticle p;
+	p.SetDefault();
+	p.m_Spr = SPRITE_PART_SMOKE;
+	p.m_Pos = Pos;
+	p.m_Vel = Vel + RandomDir()*50.0f;
+	p.m_LifeSpan = 0.5f + frandom()*0.5f;
+	p.m_StartSize = 24.0f + frandom()*12;
+	p.m_EndSize = 0;
+	p.m_Friction = 0.7f;
+	p.m_Gravity = frandom()*-500.0f;
+	p.m_Color = vec4(0.75f,0.75f,0.75f,1.0f);
+	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);	
 }
 
-void EFFECTS::bullettrail(vec2 pos)
+void CEffects::BulletTrail(vec2 Pos)
 {
-	if(!add_100hz)
+	if(!m_Add100hz)
 		return;
 		
-	PARTICLE p;
-	p.set_default();
-	p.spr = SPRITE_PART_BALL;
-	p.pos = pos;
-	p.life_span = 0.25f + frandom()*0.25f;
-	p.start_size = 8.0f;
-	p.end_size = 0;
-	p.friction = 0.7f;
-	gameclient.particles->add(PARTICLES::GROUP_PROJECTILE_TRAIL, &p);
+	CParticle p;
+	p.SetDefault();
+	p.m_Spr = SPRITE_PART_BALL;
+	p.m_Pos = Pos;
+	p.m_LifeSpan = 0.25f + frandom()*0.25f;
+	p.m_StartSize = 8.0f;
+	p.m_EndSize = 0;
+	p.m_Friction = 0.7f;
+	m_pClient->m_pParticles->Add(CParticles::GROUP_PROJECTILE_TRAIL, &p);
 }
 
-void EFFECTS::playerspawn(vec2 pos)
+void CEffects::PlayerSpawn(vec2 Pos)
 {
 	for(int i = 0; i < 32; i++)
 	{
-		PARTICLE p;
-		p.set_default();
-		p.spr = SPRITE_PART_SHELL;
-		p.pos = pos;
-		p.vel = random_dir() * (pow(frandom(), 3)*600.0f);
-		p.life_span = 0.3f + frandom()*0.3f;
-		p.start_size = 64.0f + frandom()*32;
-		p.end_size = 0;
-		p.rot = frandom()*pi*2;
-		p.rotspeed = frandom();
-		p.gravity = frandom()*-400.0f;
-		p.friction = 0.7f;
-		p.color = vec4(0xb5/255.0f, 0x50/255.0f, 0xcb/255.0f, 1.0f);
-		gameclient.particles->add(PARTICLES::GROUP_GENERAL, &p);
+		CParticle p;
+		p.SetDefault();
+		p.m_Spr = SPRITE_PART_SHELL;
+		p.m_Pos = Pos;
+		p.m_Vel = RandomDir() * (powf(frandom(), 3)*600.0f);
+		p.m_LifeSpan = 0.3f + frandom()*0.3f;
+		p.m_StartSize = 64.0f + frandom()*32;
+		p.m_EndSize = 0;
+		p.m_Rot = frandom()*pi*2;
+		p.m_Rotspeed = frandom();
+		p.m_Gravity = frandom()*-400.0f;
+		p.m_Friction = 0.7f;
+		p.m_Color = vec4(0xb5/255.0f, 0x50/255.0f, 0xcb/255.0f, 1.0f);
+		m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 		
 	}
-	gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_PLAYER_SPAWN, 1.0f, pos);
+	m_pClient->m_pSounds->Play(CSounds::CHN_WORLD, SOUND_PLAYER_SPAWN, 1.0f, Pos);
 }
 
-void EFFECTS::playerdeath(vec2 pos, int cid)
+void CEffects::PlayerDeath(vec2 Pos, int Cid)
 {
-	vec3 blood_color(1.0f,1.0f,1.0f);
+	vec3 BloodColor(1.0f,1.0f,1.0f);
 
-	if(cid >= 0)	
+	if(Cid >= 0)	
 	{
-		const SKINS::SKIN *s = gameclient.skins->get(gameclient.clients[cid].skin_id);
+		const CSkins::CSkin *s = m_pClient->m_pSkins->Get(m_pClient->m_aClients[Cid].m_SkinId);
 		if(s)
-			blood_color = s->blood_color;
+			BloodColor = s->m_BloodColor;
 	}
 	
 	for(int i = 0; i < 64; i++)
 	{
-		PARTICLE p;
-		p.set_default();
-		p.spr = SPRITE_PART_SPLAT01 + (rand()%3);
-		p.pos = pos;
-		p.vel = random_dir() * ((frandom()+0.1f)*900.0f);
-		p.life_span = 0.3f + frandom()*0.3f;
-		p.start_size = 24.0f + frandom()*16;
-		p.end_size = 0;
-		p.rot = frandom()*pi*2;
-		p.rotspeed = (frandom()-0.5f) * pi;
-		p.gravity = 800.0f;
-		p.friction = 0.8f;
-		vec3 c = blood_color * (0.75f + frandom()*0.25f);
-		p.color = vec4(c.r, c.g, c.b, 0.75f);
-		gameclient.particles->add(PARTICLES::GROUP_GENERAL, &p);
+		CParticle p;
+		p.SetDefault();
+		p.m_Spr = SPRITE_PART_SPLAT01 + (rand()%3);
+		p.m_Pos = Pos;
+		p.m_Vel = RandomDir() * ((frandom()+0.1f)*900.0f);
+		p.m_LifeSpan = 0.3f + frandom()*0.3f;
+		p.m_StartSize = 24.0f + frandom()*16;
+		p.m_EndSize = 0;
+		p.m_Rot = frandom()*pi*2;
+		p.m_Rotspeed = (frandom()-0.5f) * pi;
+		p.m_Gravity = 800.0f;
+		p.m_Friction = 0.8f;
+		vec3 c = BloodColor * (0.75f + frandom()*0.25f);
+		p.m_Color = vec4(c.r, c.g, c.b, 0.75f);
+		m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 	}
 }
 
 
-void EFFECTS::explosion(vec2 pos)
+void CEffects::Explosion(vec2 Pos)
 {
 	// add to flow
 	for(int y = -8; y <= 8; y++)
@@ -187,75 +185,75 @@ void EFFECTS::explosion(vec2 pos)
 				continue;
 			
 			float a = 1 - (length(vec2(x,y)) / length(vec2(8,8)));
-			gameclient.flow->add(pos+vec2(x,y)*16, normalize(vec2(x,y))*5000.0f*a, 10.0f);
+			m_pClient->m_pFlow->Add(Pos+vec2(x,y)*16, normalize(vec2(x,y))*5000.0f*a, 10.0f);
 		}
 		
 	// add the explosion
-	PARTICLE p;
-	p.set_default();
-	p.spr = SPRITE_PART_EXPL01;
-	p.pos = pos;
-	p.life_span = 0.4f;
-	p.start_size = 150.0f;
-	p.end_size = 0;
-	p.rot = frandom()*pi*2;
-	gameclient.particles->add(PARTICLES::GROUP_EXPLOSIONS, &p);
+	CParticle p;
+	p.SetDefault();
+	p.m_Spr = SPRITE_PART_EXPL01;
+	p.m_Pos = Pos;
+	p.m_LifeSpan = 0.4f;
+	p.m_StartSize = 150.0f;
+	p.m_EndSize = 0;
+	p.m_Rot = frandom()*pi*2;
+	m_pClient->m_pParticles->Add(CParticles::GROUP_EXPLOSIONS, &p);
 	
 	// add the smoke
 	for(int i = 0; i < 24; i++)
 	{
-		PARTICLE p;
-		p.set_default();
-		p.spr = SPRITE_PART_SMOKE;
-		p.pos = pos;
-		p.vel = random_dir() * ((1.0f + frandom()*0.2f) * 1000.0f);
-		p.life_span = 0.5f + frandom()*0.4f;
-		p.start_size = 32.0f + frandom()*8;
-		p.end_size = 0;
-		p.gravity = frandom()*-800.0f;
-		p.friction = 0.4f;
-		p.color = mix(vec4(0.75f,0.75f,0.75f,1.0f), vec4(0.5f,0.5f,0.5f,1.0f), frandom());
-		gameclient.particles->add(PARTICLES::GROUP_GENERAL, &p);
+		CParticle p;
+		p.SetDefault();
+		p.m_Spr = SPRITE_PART_SMOKE;
+		p.m_Pos = Pos;
+		p.m_Vel = RandomDir() * ((1.0f + frandom()*0.2f) * 1000.0f);
+		p.m_LifeSpan = 0.5f + frandom()*0.4f;
+		p.m_StartSize = 32.0f + frandom()*8;
+		p.m_EndSize = 0;
+		p.m_Gravity = frandom()*-800.0f;
+		p.m_Friction = 0.4f;
+		p.m_Color = mix(vec4(0.75f,0.75f,0.75f,1.0f), vec4(0.5f,0.5f,0.5f,1.0f), frandom());
+		m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 	}
 }
 
 
-void EFFECTS::hammerhit(vec2 pos)
+void CEffects::HammerHit(vec2 Pos)
 {
 	// add the explosion
-	PARTICLE p;
-	p.set_default();
-	p.spr = SPRITE_PART_EXPL01;
-	p.pos = pos;
-	p.life_span = 0.4f;
-	p.start_size = 150.0f;
-	p.end_size = 0;
-	p.rot = frandom()*pi*2;
-	gameclient.particles->add(PARTICLES::GROUP_EXPLOSIONS, &p);	
-	gameclient.sounds->play(SOUNDS::CHN_WORLD, SOUND_HAMMER_HIT, 1.0f, pos);
+	CParticle p;
+	p.SetDefault();
+	p.m_Spr = SPRITE_PART_EXPL01;
+	p.m_Pos = Pos;
+	p.m_LifeSpan = 0.4f;
+	p.m_StartSize = 150.0f;
+	p.m_EndSize = 0;
+	p.m_Rot = frandom()*pi*2;
+	m_pClient->m_pParticles->Add(CParticles::GROUP_EXPLOSIONS, &p);	
+	m_pClient->m_pSounds->Play(CSounds::CHN_WORLD, SOUND_HAMMER_HIT, 1.0f, Pos);
 }
 
-void EFFECTS::on_render()
+void CEffects::OnRender()
 {
-	static int64 last_update_100hz = 0;
-	static int64 last_update_50hz = 0;
+	static int64 LastUpdate100hz = 0;
+	static int64 LastUpdate50hz = 0;
 
-	if(time_get()-last_update_100hz > time_freq()/100)
+	if(time_get()-LastUpdate100hz > time_freq()/100)
 	{
-		add_100hz = true;
-		last_update_100hz = time_get();
+		m_Add100hz = true;
+		LastUpdate100hz = time_get();
 	}
 	else
-		add_100hz = false;
+		m_Add100hz = false;
 
-	if(time_get()-last_update_50hz > time_freq()/100)
+	if(time_get()-LastUpdate50hz > time_freq()/100)
 	{
-		add_50hz = true;
-		last_update_50hz = time_get();
+		m_Add50hz = true;
+		LastUpdate50hz = time_get();
 	}
 	else
-		add_50hz = false;
+		m_Add50hz = false;
 		
-	if(add_50hz)
-		gameclient.flow->update();
+	if(m_Add50hz)
+		m_pClient->m_pFlow->Update();
 }

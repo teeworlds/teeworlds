@@ -1,87 +1,91 @@
-#include <engine/e_client_interface.h>
-#include <engine/client/graphics.h>
-#include <engine/e_config.h>
-#include <game/generated/g_protocol.hpp>
-#include <game/generated/gc_data.hpp>
+#include <engine/shared/config.h>
+#include <engine/graphics.h>
+#include <engine/textrender.h>
+#include <engine/keys.h>
 
-#include <game/client/gameclient.hpp>
+#include <game/generated/protocol.h>
+#include <game/generated/client_data.h>
+#include <game/client/gameclient.h>
 
-#include "motd.hpp"
+#include "motd.h"
 
-void MOTD::clear()
+void CMotd::Clear()
 {
-	server_motd_time = 0;
+	m_ServerMotdTime = 0;
 }
 
-bool MOTD::is_active()
+bool CMotd::IsActive()
 {
-	return time_get() < server_motd_time;	
+	return time_get() < m_ServerMotdTime;	
 }
 
-void MOTD::on_statechange(int new_state, int old_state)
+void CMotd::OnStateChange(int NewState, int OldState)
 {
-	if(old_state == CLIENTSTATE_ONLINE || old_state == CLIENTSTATE_OFFLINE)
-		clear();
+	if(OldState == IClient::STATE_ONLINE || OldState == IClient::STATE_OFFLINE)
+		Clear();
 }
 
-void MOTD::on_render()
+void CMotd::OnRender()
 {
-	if(!is_active())
+	if(!IsActive())
 		return;
 		
-	float width = 400*3.0f*Graphics()->ScreenAspect();
-	float height = 400*3.0f;
+	float Width = 400*3.0f*Graphics()->ScreenAspect();
+	float Height = 400*3.0f;
 
-	Graphics()->MapScreen(0, 0, width, height);
+	Graphics()->MapScreen(0, 0, Width, Height);
 	
 	float h = 800.0f;
 	float w = 650.0f;
-	float x = width/2 - w/2;
+	float x = Width/2 - w/2;
 	float y = 150.0f;
 
 	Graphics()->BlendNormal();
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.5f);
-	RenderTools()->draw_round_rect(x, y, w, h, 40.0f);
+	RenderTools()->DrawRoundRect(x, y, w, h, 40.0f);
 	Graphics()->QuadsEnd();
 
-	gfx_text(0, x+40.0f, y+40.0f, 32.0f, server_motd, (int)(w-80.0f));
+	TextRender()->Text(0, x+40.0f, y+40.0f, 32.0f, m_aServerMotd, (int)(w-80.0f));
 }
 
-void MOTD::on_message(int msgtype, void *rawmsg)
+void CMotd::OnMessage(int MsgType, void *pRawMsg)
 {
-	if(msgtype == NETMSGTYPE_SV_MOTD)
+	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		return;
+
+	if(MsgType == NETMSGTYPE_SV_MOTD)
 	{
-		NETMSG_SV_MOTD *msg = (NETMSG_SV_MOTD *)rawmsg;
+		CNetMsg_Sv_Motd *pMsg = (CNetMsg_Sv_Motd *)pRawMsg;
 
 		// process escaping			
-		str_copy(server_motd, msg->message, sizeof(server_motd));
-		for(int i = 0; server_motd[i]; i++)
+		str_copy(m_aServerMotd, pMsg->m_pMessage, sizeof(m_aServerMotd));
+		for(int i = 0; m_aServerMotd[i]; i++)
 		{
-			if(server_motd[i] == '\\')
+			if(m_aServerMotd[i] == '\\')
 			{
-				if(server_motd[i+1] == 'n')
+				if(m_aServerMotd[i+1] == 'n')
 				{
-					server_motd[i] = ' ';
-					server_motd[i+1] = '\n';
+					m_aServerMotd[i] = ' ';
+					m_aServerMotd[i+1] = '\n';
 					i++;
 				}
 			}
 		}
 
-		if(server_motd[0] && config.cl_motd_time)
-			server_motd_time = time_get()+time_freq()*config.cl_motd_time;
+		if(m_aServerMotd[0] && g_Config.m_ClMotdTime)
+			m_ServerMotdTime = time_get()+time_freq()*g_Config.m_ClMotdTime;
 		else
-			server_motd_time = 0;
+			m_ServerMotdTime = 0;
 	}
 }
 
-bool MOTD::on_input(INPUT_EVENT e)
+bool CMotd::OnInput(IInput::CEvent Event)
 {
-	if(is_active() && e.flags&INPFLAG_PRESS && e.key == KEY_ESCAPE)
+	if(IsActive() && Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_ESCAPE)
 	{
-		clear();
+		Clear();
 		return true;
 	}
 	return false;

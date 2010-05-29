@@ -1,188 +1,205 @@
-/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <engine/e_server_interface.h>
-#include <game/mapitems.hpp>
-#include <game/server/entities/character.hpp>
-#include <game/server/player.hpp>
-#include <game/server/gamecontext.hpp>
-#include "ctf.hpp"
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
+#include <game/mapitems.h>
+#include <game/server/entities/character.h>
+#include <game/server/player.h>
+#include <game/server/gamecontext.h>
+#include "ctf.h"
 
-GAMECONTROLLER_CTF::GAMECONTROLLER_CTF()
+CGameControllerCTF::CGameControllerCTF(class CGameContext *pGameServer)
+: IGameController(pGameServer)
 {
-	flags[0] = 0;
-	flags[1] = 0;
-	gametype = "CTF";
-	game_flags = GAMEFLAG_TEAMS|GAMEFLAG_FLAGS;
+	m_apFlags[0] = 0;
+	m_apFlags[1] = 0;
+	m_pGameType = "CTF";
+	m_GameFlags = GAMEFLAG_TEAMS|GAMEFLAG_FLAGS;
 }
 
-bool GAMECONTROLLER_CTF::on_entity(int index, vec2 pos)
+bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
 {
-	if(GAMECONTROLLER::on_entity(index, pos))
+	if(IGameController::OnEntity(Index, Pos))
 		return true;
 	
-	int team = -1;
-	if(index == ENTITY_FLAGSTAND_RED) team = 0;
-	if(index == ENTITY_FLAGSTAND_BLUE) team = 1;
-	if(team == -1)
+	int Team = -1;
+	if(Index == ENTITY_FLAGSTAND_RED) Team = 0;
+	if(Index == ENTITY_FLAGSTAND_BLUE) Team = 1;
+	if(Team == -1)
 		return false;
 		
-	FLAG *f = new FLAG(team);
-	f->stand_pos = pos;
-	f->pos = pos;
-	flags[team] = f;
+	CFlag *F = new CFlag(&GameServer()->m_World, Team);
+	F->m_StandPos = Pos;
+	F->m_Pos = Pos;
+	m_apFlags[Team] = F;
+	GameServer()->m_World.InsertEntity(F);
 	return true;
 }
 
-int GAMECONTROLLER_CTF::on_character_death(class CHARACTER *victim, class PLAYER *killer, int weaponid)
+int CGameControllerCTF::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int WeaponID)
 {
-	GAMECONTROLLER::on_character_death(victim, killer, weaponid);
-	int had_flag = 0;
+	IGameController::OnCharacterDeath(pVictim, pKiller, WeaponID);
+	int HadFlag = 0;
 	
 	// drop flags
-	for(int fi = 0; fi < 2; fi++)
+	for(int i = 0; i < 2; i++)
 	{
-		FLAG *f = flags[fi];
-		if(f && killer && f->carrying_character == killer->get_character())
-			had_flag |= 2;
-		if(f && f->carrying_character == victim)
+		CFlag *F = m_apFlags[i];
+		if(F && pKiller && pKiller->GetCharacter() && F->m_pCarryingCCharacter == pKiller->GetCharacter())
+			HadFlag |= 2;
+		if(F && F->m_pCarryingCCharacter == pVictim)
 		{
-			game.create_sound_global(SOUND_CTF_DROP);
-			f->drop_tick = server_tick();
-			f->carrying_character = 0;
-			f->vel = vec2(0,0);
+			GameServer()->CreateSoundGlobal(SOUND_CTF_DROP);
+			F->m_DropTick = Server()->Tick();
+			F->m_pCarryingCCharacter = 0;
+			F->m_Vel = vec2(0,0);
 			
-			if(killer && killer->team != victim->team)
-				killer->score++;
+			if(pKiller && pKiller->GetTeam() != pVictim->GetPlayer()->GetTeam())
+				pKiller->m_Score++;
 				
-			had_flag |= 1;
+			HadFlag |= 1;
 		}
 	}
 	
-	return had_flag;
+	return HadFlag;
 }
 
-void GAMECONTROLLER_CTF::tick()
+bool CGameControllerCTF::CanBeMovedOnBalance(int Cid)
 {
-	GAMECONTROLLER::tick();
+	CCharacter* Character = GameServer()->m_apPlayers[Cid]->GetCharacter();
+	if(Character)
+	{
+		for(int fi = 0; fi < 2; fi++)
+		{
+			CFlag *F = m_apFlags[fi];
+			if(F->m_pCarryingCCharacter == Character)
+				return false;
+		}
+	}
+	return true;
+}
 
-	do_team_score_wincheck();
+void CGameControllerCTF::Tick()
+{
+	IGameController::Tick();
+
+	DoTeamScoreWincheck();
 	
 	for(int fi = 0; fi < 2; fi++)
 	{
-		FLAG *f = flags[fi];
+		CFlag *F = m_apFlags[fi];
 		
-		if(!f)
+		if(!F)
 			continue;
 		
 		// flag hits death-tile, reset it
-		if(col_get((int)f->pos.x, (int)f->pos.y)&COLFLAG_DEATH)
+		if(GameServer()->Collision()->GetCollisionAt(F->m_Pos.x, F->m_Pos.y)&CCollision::COLFLAG_DEATH)
 		{
-			game.create_sound_global(SOUND_CTF_RETURN);
-			f->reset();
+			GameServer()->CreateSoundGlobal(SOUND_CTF_RETURN);
+			F->Reset();
 			continue;
 		}
 		
 		//
-		if(f->carrying_character)
+		if(F->m_pCarryingCCharacter)
 		{
 			// update flag position
-			f->pos = f->carrying_character->pos;
+			F->m_Pos = F->m_pCarryingCCharacter->m_Pos;
 			
-			if(flags[fi^1] && flags[fi^1]->at_stand)
+			if(m_apFlags[fi^1] && m_apFlags[fi^1]->m_AtStand)
 			{
-				if(distance(f->pos, flags[fi^1]->pos) < 32)
+				if(distance(F->m_Pos, m_apFlags[fi^1]->m_Pos) < 32)
 				{
 					// CAPTURE! \o/
-					teamscore[fi^1] += 100;
-					f->carrying_character->player->score += 5;
+					m_aTeamscore[fi^1] += 100;
+					F->m_pCarryingCCharacter->GetPlayer()->m_Score += 5;
 
 					dbg_msg("game", "flag_capture player='%d:%s'",
-						f->carrying_character->player->client_id,
-						server_clientname(f->carrying_character->player->client_id));
+						F->m_pCarryingCCharacter->GetPlayer()->GetCID(),
+						Server()->ClientName(F->m_pCarryingCCharacter->GetPlayer()->GetCID()));
 
-					char buf[512];
-					float capture_time = (server_tick() - f->grab_tick)/(float)server_tickspeed();
-					if(capture_time <= 60)
+					char Buf[512];
+					float CaptureTime = (Server()->Tick() - F->m_GrabTick)/(float)Server()->TickSpeed();
+					if(CaptureTime <= 60)
 					{
-						str_format(buf, sizeof(buf), "the %s flag was captured by %s (%d.%s%d seconds)", fi ? "blue" : "red", server_clientname(f->carrying_character->player->client_id), (int)capture_time%60, ((int)(capture_time*100)%100)<10?"0":"", (int)(capture_time*100)%100);
+						str_format(Buf, sizeof(Buf), "The %s flag was captured by %s (%d.%s%d seconds)", fi ? "blue" : "red", Server()->ClientName(F->m_pCarryingCCharacter->GetPlayer()->GetCID()), (int)CaptureTime%60, ((int)(CaptureTime*100)%100)<10?"0":"", (int)(CaptureTime*100)%100);
 					}
 					else
 					{
-						str_format(buf, sizeof(buf), "the %s flag was captured by %s", fi ? "blue" : "red", server_clientname(f->carrying_character->player->client_id));
+						str_format(Buf, sizeof(Buf), "The %s flag was captured by %s", fi ? "blue" : "red", Server()->ClientName(F->m_pCarryingCCharacter->GetPlayer()->GetCID()));
 					}
-					game.send_chat(-1, -2, buf);
+					GameServer()->SendChat(-1, -2, Buf);
 					for(int i = 0; i < 2; i++)
-						flags[i]->reset();
+						m_apFlags[i]->Reset();
 					
-					game.create_sound_global(SOUND_CTF_CAPTURE);
+					GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE);
 				}
-			}			
+			}
 		}
 		else
 		{
-			CHARACTER *close_characters[MAX_CLIENTS];
-			int num = game.world.find_entities(f->pos, 32.0f, (ENTITY**)close_characters, MAX_CLIENTS, NETOBJTYPE_CHARACTER);
-			for(int i = 0; i < num; i++)
+			CCharacter *apCloseCCharacters[MAX_CLIENTS];
+			int Num = GameServer()->m_World.FindEntities(F->m_Pos, 32.0f, (CEntity**)apCloseCCharacters, MAX_CLIENTS, NETOBJTYPE_CHARACTER);
+			for(int i = 0; i < Num; i++)
 			{
-				if(!close_characters[i]->alive || close_characters[i]->player->team == -1 || col_intersect_line(f->pos, close_characters[i]->pos, NULL, NULL))
+				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == -1 || GameServer()->Collision()->IntersectLine(F->m_Pos, apCloseCCharacters[i]->m_Pos, NULL, NULL))
 					continue;
 				
-				if(close_characters[i]->team == f->team)
+				if(apCloseCCharacters[i]->GetPlayer()->GetTeam() == F->m_Team)
 				{
 					// return the flag
-					if(!f->at_stand)
+					if(!F->m_AtStand)
 					{
-						CHARACTER *chr = close_characters[i];
-						chr->player->score += 1;
+						CCharacter *pChr = apCloseCCharacters[i];
+						pChr->GetPlayer()->m_Score += 1;
 
 						dbg_msg("game", "flag_return player='%d:%s'",
-							chr->player->client_id,
-							server_clientname(chr->player->client_id));
+							pChr->GetPlayer()->GetCID(),
+							Server()->ClientName(pChr->GetPlayer()->GetCID()));
 
-						game.create_sound_global(SOUND_CTF_RETURN);
-						f->reset();
+						GameServer()->CreateSoundGlobal(SOUND_CTF_RETURN);
+						F->Reset();
 					}
 				}
 				else
 				{
 					// take the flag
-					if(f->at_stand)
+					if(F->m_AtStand)
 					{
-						teamscore[fi^1]++;
-						f->grab_tick = server_tick();
+						m_aTeamscore[fi^1]++;
+						F->m_GrabTick = Server()->Tick();
 					}
-					f->at_stand = 0;
-					f->carrying_character = close_characters[i];
-					f->carrying_character->player->score += 1;
+					
+					F->m_AtStand = 0;
+					F->m_pCarryingCCharacter = apCloseCCharacters[i];
+					F->m_pCarryingCCharacter->GetPlayer()->m_Score += 1;
 
 					dbg_msg("game", "flag_grab player='%d:%s'",
-						f->carrying_character->player->client_id,
-						server_clientname(f->carrying_character->player->client_id));
+						F->m_pCarryingCCharacter->GetPlayer()->GetCID(),
+						Server()->ClientName(F->m_pCarryingCCharacter->GetPlayer()->GetCID()));
 					
 					for(int c = 0; c < MAX_CLIENTS; c++)
 					{
-						if(!game.players[c])
+						if(!GameServer()->m_apPlayers[c])
 							continue;
 							
-						if(game.players[c]->team == fi)
-							game.create_sound_global(SOUND_CTF_GRAB_EN, game.players[c]->client_id);
+						if(GameServer()->m_apPlayers[c]->GetTeam() == fi)
+							GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_EN, GameServer()->m_apPlayers[c]->GetCID());
 						else
-							game.create_sound_global(SOUND_CTF_GRAB_PL, game.players[c]->client_id);
+							GameServer()->CreateSoundGlobal(SOUND_CTF_GRAB_PL, GameServer()->m_apPlayers[c]->GetCID());
 					}
 					break;
 				}
 			}
 			
-			if(!f->carrying_character && !f->at_stand)
+			if(!F->m_pCarryingCCharacter && !F->m_AtStand)
 			{
-				if(server_tick() > f->drop_tick + server_tickspeed()*30)
+				if(Server()->Tick() > F->m_DropTick + Server()->TickSpeed()*30)
 				{
-					game.create_sound_global(SOUND_CTF_RETURN);
-					f->reset();
+					GameServer()->CreateSoundGlobal(SOUND_CTF_RETURN);
+					F->Reset();
 				}
 				else
 				{
-					f->vel.y += game.world.core.tuning.gravity;
-					move_box(&f->pos, &f->vel, vec2(f->phys_size, f->phys_size), 0.5f);
+					F->m_Vel.y += GameServer()->m_World.m_Core.m_Tuning.m_Gravity;
+					GameServer()->Collision()->MoveBox(&F->m_Pos, &F->m_Vel, vec2(F->m_PhysSize, F->m_PhysSize), 0.5f);
 				}
 			}
 		}
@@ -190,39 +207,36 @@ void GAMECONTROLLER_CTF::tick()
 }
 
 // Flag
-FLAG::FLAG(int _team)
-: ENTITY(NETOBJTYPE_FLAG)
+CFlag::CFlag(CGameWorld *pGameWorld, int Team)
+: CEntity(pGameWorld, NETOBJTYPE_FLAG)
 {
-	team = _team;
-	proximity_radius = phys_size;
-	carrying_character = 0x0;
-	grab_tick = 0;
+	m_Team = Team;
+	m_ProximityRadius = m_PhysSize;
+	m_pCarryingCCharacter = 0x0;
+	m_GrabTick = 0;
 	
-	reset();
-	
-	// TODO: should this be done here?
-	game.world.insert_entity(this);
+	Reset();
 }
 
-void FLAG::reset()
+void CFlag::Reset()
 {
-	carrying_character = 0x0;
-	at_stand = 1;
-	pos = stand_pos;
-	vel = vec2(0,0);
-	grab_tick = 0;
+	m_pCarryingCCharacter = 0x0;
+	m_AtStand = 1;
+	m_Pos = m_StandPos;
+	m_Vel = vec2(0,0);
+	m_GrabTick = 0;
 }
 
-void FLAG::snap(int snapping_client)
+void CFlag::Snap(int SnappingClient)
 {
-	NETOBJ_FLAG *flag = (NETOBJ_FLAG *)snap_new_item(NETOBJTYPE_FLAG, team, sizeof(NETOBJ_FLAG));
-	flag->x = (int)pos.x;
-	flag->y = (int)pos.y;
-	flag->team = team;
-	flag->carried_by = -1;
+	CNetObj_Flag *pFlag = (CNetObj_Flag *)Server()->SnapNewItem(NETOBJTYPE_FLAG, m_Team, sizeof(CNetObj_Flag));
+	pFlag->m_X = (int)m_Pos.x;
+	pFlag->m_Y = (int)m_Pos.y;
+	pFlag->m_Team = m_Team;
+	pFlag->m_CarriedBy = -1;
 	
-	if(at_stand)
-		flag->carried_by = -2;
-	else if(carrying_character && carrying_character->player)
-		flag->carried_by = carrying_character->player->client_id;
+	if(m_AtStand)
+		pFlag->m_CarriedBy = -2;
+	else if(m_pCarryingCCharacter && m_pCarryingCCharacter->GetPlayer())
+		pFlag->m_CarriedBy = m_pCarryingCCharacter->GetPlayer()->GetCID();
 }

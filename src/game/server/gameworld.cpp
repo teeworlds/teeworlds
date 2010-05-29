@@ -1,217 +1,226 @@
 
-#include "gameworld.hpp"
-#include "entity.hpp"
-#include "gamecontext.hpp"
+#include "gameworld.h"
+#include "entity.h"
+#include "gamecontext.h"
 
 //////////////////////////////////////////////////
 // game world
 //////////////////////////////////////////////////
-GAMEWORLD::GAMEWORLD()
+CGameWorld::CGameWorld()
 {
-	paused = false;
-	reset_requested = false;
-	first_entity = 0x0;
+	m_pGameServer = 0x0;
+	m_pServer = 0x0;
+	
+	m_Paused = false;
+	m_ResetRequested = false;
+	m_pFirstEntity = 0x0;
 	for(int i = 0; i < NUM_ENT_TYPES; i++)
-		first_entity_types[i] = 0;
+		m_apFirstEntityTypes[i] = 0;
 }
 
-GAMEWORLD::~GAMEWORLD()
+CGameWorld::~CGameWorld()
 {
 	// delete all entities
-	while(first_entity)
-		delete first_entity;
+	while(m_pFirstEntity)
+		delete m_pFirstEntity;
 }
 
-ENTITY *GAMEWORLD::find_first(int type)
+void CGameWorld::SetGameServer(CGameContext *pGameServer)
 {
-	return first_entity_types[type];
+	m_pGameServer = pGameServer;
+	m_pServer = m_pGameServer->Server();
+}
+
+CEntity *CGameWorld::FindFirst(int Type)
+{
+	return m_apFirstEntityTypes[Type];
 }
 
 
-int GAMEWORLD::find_entities(vec2 pos, float radius, ENTITY **ents, int max, int type)
+int CGameWorld::FindEntities(vec2 Pos, float Radius, CEntity **ppEnts, int Max, int Type)
 {
-	int num = 0;
-	for(ENTITY *ent = (type<0) ? first_entity : first_entity_types[type];
-		ent; ent = (type<0) ? ent->next_entity : ent->next_type_entity)
+	int Num = 0;
+	for(CEntity *pEnt = (Type<0) ? m_pFirstEntity : m_apFirstEntityTypes[Type];
+		pEnt; pEnt = (Type<0) ? pEnt->m_pNextEntity : pEnt->m_pNextTypeEntity)
 	{
-		if(distance(ent->pos, pos) < radius+ent->proximity_radius)
+		if(distance(pEnt->m_Pos, Pos) < Radius+pEnt->m_ProximityRadius)
 		{
-			ents[num] = ent;
-			num++;
-			if(num == max)
+			ppEnts[Num] = pEnt;
+			Num++;
+			if(Num == Max)
 				break;
 		}
 	}
 
-	return num;
+	return Num;
 }
 
-void GAMEWORLD::insert_entity(ENTITY *ent)
+void CGameWorld::InsertEntity(CEntity *pEnt)
 {
-	ENTITY *cur = first_entity;
-	while(cur)
+	CEntity *pCur = m_pFirstEntity;
+	while(pCur)
 	{
-		dbg_assert(cur != ent, "err");
-		cur = cur->next_entity;
+		dbg_assert(pCur != pEnt, "err");
+		pCur = pCur->m_pNextEntity;
 	}
 
 	// insert it
-	if(first_entity)
-		first_entity->prev_entity = ent;
-	ent->next_entity = first_entity;
-	ent->prev_entity = 0x0;
-	first_entity = ent;
+	if(m_pFirstEntity)
+		m_pFirstEntity->m_pPrevEntity = pEnt;
+	pEnt->m_pNextEntity = m_pFirstEntity;
+	pEnt->m_pPrevEntity = 0x0;
+	m_pFirstEntity = pEnt;
 
 	// into typelist aswell
-	if(first_entity_types[ent->objtype])
-		first_entity_types[ent->objtype]->prev_type_entity = ent;
-	ent->next_type_entity = first_entity_types[ent->objtype];
-	ent->prev_type_entity = 0x0;
-	first_entity_types[ent->objtype] = ent;
+	if(m_apFirstEntityTypes[pEnt->m_Objtype])
+		m_apFirstEntityTypes[pEnt->m_Objtype]->m_pPrevTypeEntity = pEnt;
+	pEnt->m_pNextTypeEntity = m_apFirstEntityTypes[pEnt->m_Objtype];
+	pEnt->m_pPrevTypeEntity = 0x0;
+	m_apFirstEntityTypes[pEnt->m_Objtype] = pEnt;
 }
 
-void GAMEWORLD::destroy_entity(ENTITY *ent)
+void CGameWorld::DestroyEntity(CEntity *pEnt)
 {
-	ent->marked_for_destroy = true;
+	pEnt->m_MarkedForDestroy = true;
 }
 
-void GAMEWORLD::remove_entity(ENTITY *ent)
+void CGameWorld::RemoveEntity(CEntity *pEnt)
 {
 	// not in the list
-	if(!ent->next_entity && !ent->prev_entity && first_entity != ent)
+	if(!pEnt->m_pNextEntity && !pEnt->m_pPrevEntity && m_pFirstEntity != pEnt)
 		return;
 
 	// remove
-	if(ent->prev_entity)
-		ent->prev_entity->next_entity = ent->next_entity;
+	if(pEnt->m_pPrevEntity)
+		pEnt->m_pPrevEntity->m_pNextEntity = pEnt->m_pNextEntity;
 	else
-		first_entity = ent->next_entity;
-	if(ent->next_entity)
-		ent->next_entity->prev_entity = ent->prev_entity;
+		m_pFirstEntity = pEnt->m_pNextEntity;
+	if(pEnt->m_pNextEntity)
+		pEnt->m_pNextEntity->m_pPrevEntity = pEnt->m_pPrevEntity;
 
-	if(ent->prev_type_entity)
-		ent->prev_type_entity->next_type_entity = ent->next_type_entity;
+	if(pEnt->m_pPrevTypeEntity)
+		pEnt->m_pPrevTypeEntity->m_pNextTypeEntity = pEnt->m_pNextTypeEntity;
 	else
-		first_entity_types[ent->objtype] = ent->next_type_entity;
-	if(ent->next_type_entity)
-		ent->next_type_entity->prev_type_entity = ent->prev_type_entity;
+		m_apFirstEntityTypes[pEnt->m_Objtype] = pEnt->m_pNextTypeEntity;
+	if(pEnt->m_pNextTypeEntity)
+		pEnt->m_pNextTypeEntity->m_pPrevTypeEntity = pEnt->m_pPrevTypeEntity;
 
-	ent->next_entity = 0;
-	ent->prev_entity = 0;
-	ent->next_type_entity = 0;
-	ent->prev_type_entity = 0;
+	pEnt->m_pNextEntity = 0;
+	pEnt->m_pPrevEntity = 0;
+	pEnt->m_pNextTypeEntity = 0;
+	pEnt->m_pPrevTypeEntity = 0;
 }
 
 //
-void GAMEWORLD::snap(int snapping_client)
+void CGameWorld::Snap(int SnappingClient)
 {
-	for(ENTITY *ent = first_entity; ent; ent = ent->next_entity)
-		ent->snap(snapping_client);
+	for(CEntity *pEnt = m_pFirstEntity; pEnt; pEnt = pEnt->m_pNextEntity)
+		pEnt->Snap(SnappingClient);
 }
 
-void GAMEWORLD::reset()
+void CGameWorld::Reset()
 {
 	// reset all entities
-	for(ENTITY *ent = first_entity; ent; ent = ent->next_entity)
-		ent->reset();
-	remove_entities();
+	for(CEntity *pEnt = m_pFirstEntity; pEnt; pEnt = pEnt->m_pNextEntity)
+		pEnt->Reset();
+	RemoveEntities();
 
-	game.controller->post_reset();
-	remove_entities();
+	GameServer()->m_pController->PostReset();
+	RemoveEntities();
 
-	reset_requested = false;
+	m_ResetRequested = false;
 }
 
-void GAMEWORLD::remove_entities()
+void CGameWorld::RemoveEntities()
 {
 	// destroy objects marked for destruction
-	ENTITY *ent = first_entity;
-	while(ent)
+	CEntity *pEnt = m_pFirstEntity;
+	while(pEnt)
 	{
-		ENTITY *next = ent->next_entity;
-		if(ent->marked_for_destroy)
+		CEntity *pNext = pEnt->m_pNextEntity;
+		if(pEnt->m_MarkedForDestroy)
 		{
-			remove_entity(ent);
-			ent->destroy();
+			RemoveEntity(pEnt);
+			pEnt->Destroy();
 		}
-		ent = next;
+		pEnt = pNext;
 	}
 }
 
-void GAMEWORLD::tick()
+void CGameWorld::Tick()
 {
-	if(reset_requested)
-		reset();
+	if(m_ResetRequested)
+		Reset();
 
-	if(!paused)
+	if(!m_Paused)
 	{
-		if(game.controller->is_force_balanced())
-			game.send_chat(-1, GAMECONTEXT::CHAT_ALL, "Teams have been balanced");
+		if(GameServer()->m_pController->IsForceBalanced())
+			GameServer()->SendChat(-1, CGameContext::CHAT_ALL, "Teams have been balanced");
 		// update all objects
-		for(ENTITY *ent = first_entity; ent; ent = ent->next_entity)
-			ent->tick();
+		for(CEntity *pEnt = m_pFirstEntity; pEnt; pEnt = pEnt->m_pNextEntity)
+			pEnt->Tick();
 		
-		for(ENTITY *ent = first_entity; ent; ent = ent->next_entity)
-			ent->tick_defered();
+		for(CEntity *pEnt = m_pFirstEntity; pEnt; pEnt = pEnt->m_pNextEntity)
+			pEnt->TickDefered();
 	}
 
-	remove_entities();
+	RemoveEntities();
 }
 
 
 // TODO: should be more general
-CHARACTER *GAMEWORLD::intersect_character(vec2 pos0, vec2 pos1, float radius, vec2& new_pos, ENTITY *notthis)
+CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2& NewPos, CEntity *pNotThis)
 {
 	// Find other players
-	float closest_len = distance(pos0, pos1) * 100.0f;
-	vec2 line_dir = normalize(pos1-pos0);
-	CHARACTER *closest = 0;
+	float ClosestLen = distance(Pos0, Pos1) * 100.0f;
+	vec2 LineDir = normalize(Pos1-Pos0);
+	CCharacter *pClosest = 0;
 
-	CHARACTER *p = (CHARACTER *)game.world.find_first(NETOBJTYPE_CHARACTER);
-	for(; p; p = (CHARACTER *)p->typenext())
+	CCharacter *p = (CCharacter *)FindFirst(NETOBJTYPE_CHARACTER);
+	for(; p; p = (CCharacter *)p->TypeNext())
  	{
-		if(p == notthis)
+		if(p == pNotThis)
 			continue;
 			
-		vec2 intersect_pos = closest_point_on_line(pos0, pos1, p->pos);
-		float len = distance(p->pos, intersect_pos);
-		if(len < CHARACTER::phys_size+radius)
+		vec2 IntersectPos = closest_point_on_line(Pos0, Pos1, p->m_Pos);
+		float Len = distance(p->m_Pos, IntersectPos);
+		if(Len < p->m_ProximityRadius+Radius)
 		{
-			if(len < closest_len)
+			if(Len < ClosestLen)
 			{
-				new_pos = intersect_pos;
-				closest_len = len;
-				closest = p;
+				NewPos = IntersectPos;
+				ClosestLen = Len;
+				pClosest = p;
 			}
 		}
 	}
 	
-	return closest;
+	return pClosest;
 }
 
 
-CHARACTER *GAMEWORLD::closest_character(vec2 pos, float radius, ENTITY *notthis)
+CCharacter *CGameWorld::ClosestCharacter(vec2 Pos, float Radius, CEntity *pNotThis)
 {
 	// Find other players
-	float closest_range = radius*2;
-	CHARACTER *closest = 0;
+	float ClosestRange = Radius*2;
+	CCharacter *pClosest = 0;
 		
-	CHARACTER *p = (CHARACTER *)game.world.find_first(NETOBJTYPE_CHARACTER);
-	for(; p; p = (CHARACTER *)p->typenext())
+	CCharacter *p = (CCharacter *)GameServer()->m_World.FindFirst(NETOBJTYPE_CHARACTER);
+	for(; p; p = (CCharacter *)p->TypeNext())
  	{
-		if(p == notthis)
+		if(p == pNotThis)
 			continue;
 			
-		float len = distance(pos, p->pos);
-		if(len < CHARACTER::phys_size+radius)
+		float Len = distance(Pos, p->m_Pos);
+		if(Len < p->m_ProximityRadius+Radius)
 		{
-			if(len < closest_range)
+			if(Len < ClosestRange)
 			{
-				closest_range = len;
-				closest = p;
+				ClosestRange = Len;
+				pClosest = p;
 			}
 		}
 	}
 	
-	return closest;
+	return pClosest;
 }

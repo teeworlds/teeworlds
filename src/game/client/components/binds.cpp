@@ -1,184 +1,188 @@
-#include <stdlib.h> // atoi
-#include <string.h> // strcmp
-#include <engine/e_client_interface.h>
-#include "binds.hpp"
+#include <engine/config.h>
+#include <engine/shared/config.h>
+#include "binds.h"
 
-bool BINDS::BINDS_SPECIAL::on_input(INPUT_EVENT e)
+bool CBinds::CBindsSpecial::OnInput(IInput::CEvent Event)
 {
 	// don't handle invalid events and keys that arn't set to anything
-	if(e.key >= KEY_F1 && e.key <= KEY_F15 && binds->keybindings[e.key][0] != 0)
+	if(Event.m_Key >= KEY_F1 && Event.m_Key <= KEY_F15 && m_pBinds->m_aaKeyBindings[Event.m_Key][0] != 0)
 	{
-		int stroke = 0;
-		if(e.flags&INPFLAG_PRESS)
-			stroke = 1;
-		console_execute_line_stroked(stroke, binds->keybindings[e.key]);
+		int Stroke = 0;
+		if(Event.m_Flags&IInput::FLAG_PRESS)
+			Stroke = 1;
+			
+		m_pBinds->GetConsole()->ExecuteLineStroked(Stroke, m_pBinds->m_aaKeyBindings[Event.m_Key]);
 		return true;
 	}
 	
 	return false;
 }
 
-BINDS::BINDS()
+CBinds::CBinds()
 {
-	mem_zero(keybindings, sizeof(keybindings));
-	special_binds.binds = this;
+	mem_zero(m_aaKeyBindings, sizeof(m_aaKeyBindings));
+	m_SpecialBinds.m_pBinds = this;
 }
 
-void BINDS::bind(int keyid, const char *str)
+void CBinds::Bind(int KeyId, const char *pStr)
 {
-	if(keyid < 0 || keyid >= KEY_LAST)
+	if(KeyId < 0 || KeyId >= KEY_LAST)
 		return;
 		
-	str_copy(keybindings[keyid], str, sizeof(keybindings[keyid]));
-	if(!keybindings[keyid][0])
-		dbg_msg("binds", "unbound %s (%d)", inp_key_name(keyid), keyid);
+	str_copy(m_aaKeyBindings[KeyId], pStr, sizeof(m_aaKeyBindings[KeyId]));
+	if(!m_aaKeyBindings[KeyId][0])
+		dbg_msg("binds", "unbound %s (%d)", Input()->KeyName(KeyId), KeyId);
 	else
-		dbg_msg("binds", "bound %s (%d) = %s", inp_key_name(keyid), keyid, keybindings[keyid]);
+		dbg_msg("binds", "bound %s (%d) = %s", Input()->KeyName(KeyId), KeyId, m_aaKeyBindings[KeyId]);
 }
 
 
-bool BINDS::on_input(INPUT_EVENT e)
+bool CBinds::OnInput(IInput::CEvent e)
 {
 	// don't handle invalid events and keys that arn't set to anything
-	if(e.key <= 0 || e.key >= KEY_LAST || keybindings[e.key][0] == 0)
+	if(e.m_Key <= 0 || e.m_Key >= KEY_LAST || m_aaKeyBindings[e.m_Key][0] == 0)
 		return false;
 
-	int stroke = 0;
-	if(e.flags&INPFLAG_PRESS)
-		stroke = 1;
-	console_execute_line_stroked(stroke, keybindings[e.key]);
+	int Stroke = 0;
+	if(e.m_Flags&IInput::FLAG_PRESS)
+		Stroke = 1;
+	Console()->ExecuteLineStroked(Stroke, m_aaKeyBindings[e.m_Key]);
 	return true;
 }
 
-void BINDS::unbindall()
+void CBinds::UnbindAll()
 {
 	for(int i = 0; i < KEY_LAST; i++)
-		keybindings[i][0] = 0;
+		m_aaKeyBindings[i][0] = 0;
 }
 
-const char *BINDS::get(int keyid)
+const char *CBinds::Get(int KeyId)
 {
-	if(keyid > 0 && keyid < KEY_LAST)
-		return keybindings[keyid];
+	if(KeyId > 0 && KeyId < KEY_LAST)
+		return m_aaKeyBindings[KeyId];
 	return "";
 }
 
-const char *BINDS::get_key(const char *bindstr)
+const char *CBinds::GetKey(const char *pBindStr)
 {
-	for(int keyid = 0; keyid < KEY_LAST; keyid++)
+	for(int KeyId = 0; KeyId < KEY_LAST; KeyId++)
 	{
-		const char *bind = get(keyid);
-		if(!bind[0])
+		const char *pBind = Get(KeyId);
+		if(!pBind[0])
 			continue;
 			
-		if(strcmp(bind, bindstr) == 0)
-			return inp_key_name(keyid);
+		if(str_comp(pBind, pBindStr) == 0)
+			return Input()->KeyName(KeyId);
 	}
 	
 	return "";
 }
 
-void BINDS::set_defaults()
+void CBinds::SetDefaults()
 {
 	// set default key bindings
-	unbindall();
-	bind(KEY_F1, "toggle_local_console");
-	bind(KEY_F2, "toggle_remote_console");
-	bind(KEY_TAB, "+scoreboard");
-	bind(KEY_F10, "screenshot");
+	UnbindAll();
+	Bind(KEY_F1, "toggle_local_console");
+	Bind(KEY_F2, "toggle_remote_console");
+	Bind(KEY_TAB, "+scoreboard");
+	Bind(KEY_F10, "screenshot");
 
-	bind('a', "+left");
-	bind('d', "+right");
+	Bind('a', "+left");
+	Bind('d', "+right");
 
-	bind(KEY_SPACE, "+jump");
-	bind(KEY_MOUSE_1, "+fire");
-	bind(KEY_MOUSE_2, "+hook");
-	bind(KEY_LSHIFT, "+emote");
+	Bind(KEY_SPACE, "+jump");
+	Bind(KEY_MOUSE_1, "+fire");
+	Bind(KEY_MOUSE_2, "+hook");
+	Bind(KEY_LSHIFT, "+emote");
 
-	bind('1', "+weapon1");
-	bind('2', "+weapon2");
-	bind('3', "+weapon3");
-	bind('4', "+weapon4");
-	bind('5', "+weapon5");
+	Bind('1', "+weapon1");
+	Bind('2', "+weapon2");
+	Bind('3', "+weapon3");
+	Bind('4', "+weapon4");
+	Bind('5', "+weapon5");
 	
-	bind(KEY_MOUSE_WHEEL_UP, "+prevweapon");
-	bind(KEY_MOUSE_WHEEL_DOWN, "+nextweapon");
+	Bind(KEY_MOUSE_WHEEL_UP, "+prevweapon");
+	Bind(KEY_MOUSE_WHEEL_DOWN, "+nextweapon");
 	
-	bind('t', "chat all");
-	bind('y', "chat team");	
+	Bind('t', "chat all");
+	Bind('y', "chat team");	
 
-	bind(KEY_F3, "vote yes");
-	bind(KEY_F4, "vote no");	
+	Bind(KEY_F3, "vote yes");
+	Bind(KEY_F4, "vote no");	
 }
 
-void BINDS::on_console_init()
+void CBinds::OnConsoleInit()
 {
 	// bindings
-	MACRO_REGISTER_COMMAND("bind", "sr", CFGFLAG_CLIENT, con_bind, this, "Bind key to execute the command");
-	MACRO_REGISTER_COMMAND("unbind", "s", CFGFLAG_CLIENT, con_unbind, this, "Unbind key");
-	MACRO_REGISTER_COMMAND("unbindall", "", CFGFLAG_CLIENT, con_unbindall, this, "Unbind all keys");
-	MACRO_REGISTER_COMMAND("dump_binds", "", CFGFLAG_CLIENT, con_dump_binds, this, "Dump binds");
+	IConfig *pConfig = Kernel()->RequestInterface<IConfig>();
+	if(pConfig)
+		pConfig->RegisterCallback(ConfigSaveCallback, this);
+	
+	Console()->Register("bind", "sr", CFGFLAG_CLIENT, ConBind, this, "Bind key to execute the command");
+	Console()->Register("unbind", "s", CFGFLAG_CLIENT, ConUnbind, this, "Unbind key");
+	Console()->Register("unbindall", "", CFGFLAG_CLIENT, ConUnbindAll, this, "Unbind all keys");
+	Console()->Register("dump_binds", "", CFGFLAG_CLIENT, ConDumpBinds, this, "Dump binds");
 	
 	// default bindings
-	set_defaults();
+	SetDefaults();
 }
 
-void BINDS::con_bind(void *result, void *user_data)
+void CBinds::ConBind(IConsole::IResult *pResult, void *pUserData)
 {
-	BINDS *binds = (BINDS *)user_data;
-	const char *key_name = console_arg_string(result, 0);
-	int id = binds->get_key_id(key_name);
+	CBinds *pBinds = (CBinds *)pUserData;
+	const char *pKeyName = pResult->GetString(0);
+	int id = pBinds->GetKeyId(pKeyName);
 	
 	if(!id)
 	{
-		dbg_msg("binds", "key %s not found", key_name);
+		dbg_msg("binds", "key %s not found", pKeyName);
 		return;
 	}
 	
-	binds->bind(id, console_arg_string(result, 1));
+	pBinds->Bind(id, pResult->GetString(1));
 }
 
 
-void BINDS::con_unbind(void *result, void *user_data)
+void CBinds::ConUnbind(IConsole::IResult *pResult, void *pUserData)
 {
-	BINDS *binds = (BINDS *)user_data;
-	const char *key_name = console_arg_string(result, 0);
-	int id = binds->get_key_id(key_name);
+	CBinds *pBinds = (CBinds *)pUserData;
+	const char *pKeyName = pResult->GetString(0);
+	int id = pBinds->GetKeyId(pKeyName);
 	
 	if(!id)
 	{
-		dbg_msg("binds", "key %s not found", key_name);
+		dbg_msg("binds", "key %s not found", pKeyName);
 		return;
 	}
 	
-	binds->bind(id, "");
+	pBinds->Bind(id, "");
 }
 
 
-void BINDS::con_unbindall(void *result, void *user_data)
+void CBinds::ConUnbindAll(IConsole::IResult *pResult, void *pUserData)
 {
-	BINDS *binds = (BINDS *)user_data;
-	binds->unbindall();
+	CBinds *pBinds = (CBinds *)pUserData;
+	pBinds->UnbindAll();
 }
 
 
-void BINDS::con_dump_binds(void *result, void *user_data)
+void CBinds::ConDumpBinds(IConsole::IResult *pResult, void *pUserData)
 {
-	BINDS *binds = (BINDS *)user_data;
+	CBinds *pBinds = (CBinds *)pUserData;
 	for(int i = 0; i < KEY_LAST; i++)
 	{
-		if(binds->keybindings[i][0] == 0)
+		if(pBinds->m_aaKeyBindings[i][0] == 0)
 			continue;
-		dbg_msg("binds", "%s (%d) = %s", inp_key_name(i), i, binds->keybindings[i]);
+		dbg_msg("binds", "%s (%d) = %s", pBinds->Input()->KeyName(i), i, pBinds->m_aaKeyBindings[i]);
 	}
 }
 
-int BINDS::get_key_id(const char *key_name)
+int CBinds::GetKeyId(const char *pKeyName)
 {
 	// check for numeric
-	if(key_name[0] == '&')
+	if(pKeyName[0] == '&')
 	{
-		int i = atoi(key_name+1);
+		int i = str_toint(pKeyName+1);
 		if(i > 0 && i < KEY_LAST)
 			return i; // numeric
 	}
@@ -186,37 +190,39 @@ int BINDS::get_key_id(const char *key_name)
 	// search for key
 	for(int i = 0; i < KEY_LAST; i++)
 	{
-		if(strcmp(key_name, inp_key_name(i)) == 0)
+		if(str_comp(pKeyName, Input()->KeyName(i)) == 0)
 			return i;
 	}
 	
 	return 0;
 }
 
-void BINDS::on_save()
+void CBinds::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 {
-	char buffer[256];
-	char *end = buffer+sizeof(buffer)-8;
-	client_save_line("unbindall");
+	CBinds *pSelf = (CBinds *)pUserData;
+	
+	char aBuffer[256];
+	char *pEnd = aBuffer+sizeof(aBuffer)-8;
+	pConfig->WriteLine("unbindall");
 	for(int i = 0; i < KEY_LAST; i++)
 	{
-		if(keybindings[i][0] == 0)
+		if(pSelf->m_aaKeyBindings[i][0] == 0)
 			continue;
-		str_format(buffer, sizeof(buffer), "bind %s ", inp_key_name(i));
+		str_format(aBuffer, sizeof(aBuffer), "bind %s ", pSelf->Input()->KeyName(i));
 		
 		// process the string. we need to escape some characters
-		const char *src = keybindings[i];
-		char *dst = buffer + strlen(buffer);
-		*dst++ = '"';
-		while(*src && dst < end)
+		const char *pSrc = pSelf->m_aaKeyBindings[i];
+		char *pDst = aBuffer + str_length(aBuffer);
+		*pDst++ = '"';
+		while(*pSrc && pDst < pEnd)
 		{
-			if(*src == '"' || *src == '\\') // escape \ and "
-				*dst++ = '\\';
-			*dst++ = *src++;
+			if(*pSrc == '"' || *pSrc == '\\') // escape \ and "
+				*pDst++ = '\\';
+			*pDst++ = *pSrc++;
 		}
-		*dst++ = '"';
-		*dst++ = 0;
+		*pDst++ = '"';
+		*pDst++ = 0;
 		
-		client_save_line(buffer);
+		pConfig->WriteLine(aBuffer);
 	}
 }

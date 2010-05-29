@@ -1,8 +1,16 @@
+#ifndef ENGINE_MESSAGE_H
+#define ENGINE_MESSAGE_H
 
+#include <engine/shared/packer.h>
 
-class CMessage
+class CMsgPacker : public CPacker
 {
 public:
-	virtual bool Pack(void *pData, unsigned MaxDataSize);
-	virtual bool Unpack(const void *pData, unsigned DataSize);
+	CMsgPacker(int Type)
+	{
+		Reset();
+		AddInt(Type);
+	}
 };
+
+#endif

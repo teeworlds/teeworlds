@@ -1,10 +1,6 @@
-/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <string.h>
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include <base/system.h>
-
-extern "C" {
-	#include <engine/e_network.h>
-}
+#include <engine/shared/network.h>
 
 #include "mastersrv.h"
 
@@ -16,333 +12,338 @@ enum {
 	EXPIRE_TIME = 90
 };
 
-static struct CHECK_SERVER
+struct CCheckServer
 {
-	NETADDR address;
-	NETADDR alt_address;
-	int try_count;
-	int64 try_time;
-} check_servers[MAX_SERVERS];
-static int num_checkservers = 0;
+	NETADDR m_Address;
+	NETADDR m_AltAddress;
+	int m_TryCount;
+	int64 m_TryTime;
+};
 
+static CCheckServer m_aCheckServers[MAX_SERVERS];
+static int m_NumCheckServers = 0;
 
-typedef struct NETADDR_IPv4
+struct NETADDR_IPv4
 {
-	unsigned char ip[4];
-	unsigned short port;
-} NETADDR_IPv4;
+	unsigned char m_aIp[4];
+	unsigned short m_Port;
+};
 
-static struct SERVER_ENTRY
+struct CServerEntry
 {
-	NETADDR address;
-	int64 expire;
-} servers[MAX_SERVERS];
-static int num_servers = 0;
+	NETADDR m_Address;
+	int64 m_Expire;
+};
 
-static struct PACKET_DATA
+static CServerEntry m_aServers[MAX_SERVERS];
+static int m_NumServers = 0;
+
+struct CPacketData
 {
-	int size;
+	int m_Size;
 	struct {
-		unsigned char header[sizeof(SERVERBROWSE_LIST)];
-		NETADDR_IPv4 servers[MAX_SERVERS_PER_PACKET];
-	} data;
-} packets[MAX_PACKETS];
-static int num_packets = 0;
+		unsigned char m_aHeader[sizeof(SERVERBROWSE_LIST)];
+		NETADDR_IPv4 m_aServers[MAX_SERVERS_PER_PACKET];
+	} m_Data;
+};
 
-static struct COUNT_PACKET_DATA
+CPacketData m_aPackets[MAX_PACKETS];
+static int m_NumPackets = 0;
+
+struct CCountPacketData
 {
-	unsigned char header[sizeof(SERVERBROWSE_COUNT)];
-	unsigned char high;
-	unsigned char low;
-} count_data;
+	unsigned char m_Header[sizeof(SERVERBROWSE_COUNT)];
+	unsigned char m_High;
+	unsigned char m_Low;
+};
+
+static CCountPacketData m_CountData;
 
 //static int64 server_expire[MAX_SERVERS];
 
-static net_client net_checker; // NAT/FW checker
-static net_client net_op; // main
+static CNetClient m_NetChecker; // NAT/FW checker
+static CNetClient m_NetOp; // main
 
-void build_packets()
+void BuildPackets()
 {
-	SERVER_ENTRY *current = &servers[0];
-	int servers_left = num_servers;
-	int i;
-	num_packets = 0;
-	while(servers_left && num_packets < MAX_PACKETS)
+	CServerEntry *pCurrent = &m_aServers[0];
+	int ServersLeft = m_NumServers;
+	m_NumPackets = 0;
+	while(ServersLeft && m_NumPackets < MAX_PACKETS)
 	{
-		int chunk = servers_left;
-		if(chunk > MAX_SERVERS_PER_PACKET)
-			chunk = MAX_SERVERS_PER_PACKET;
-		servers_left -= chunk;
+		int Chunk = ServersLeft;
+		if(Chunk > MAX_SERVERS_PER_PACKET)
+			Chunk = MAX_SERVERS_PER_PACKET;
+		ServersLeft -= Chunk;
 		
 		// copy header	
-		mem_copy(packets[num_packets].data.header, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
+		mem_copy(m_aPackets[m_NumPackets].m_Data.m_aHeader, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
 		
 		// copy server addresses
-		for(i = 0; i < chunk; i++)
+		for(int i = 0; i < Chunk; i++)
 		{
 			// TODO: ipv6 support
-			packets[num_packets].data.servers[i].ip[0] = current->address.ip[0];
-			packets[num_packets].data.servers[i].ip[1] = current->address.ip[1];
-			packets[num_packets].data.servers[i].ip[2] = current->address.ip[2];
-			packets[num_packets].data.servers[i].ip[3] = current->address.ip[3];
-			packets[num_packets].data.servers[i].port = current->address.port;
-			current++;
+			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aIp[0] = pCurrent->m_Address.ip[0];
+			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aIp[1] = pCurrent->m_Address.ip[1];
+			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aIp[2] = pCurrent->m_Address.ip[2];
+			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_aIp[3] = pCurrent->m_Address.ip[3];
+			m_aPackets[m_NumPackets].m_Data.m_aServers[i].m_Port = pCurrent->m_Address.port;
+			pCurrent++;
 		}
 		
-		packets[num_packets].size = sizeof(SERVERBROWSE_LIST) + sizeof(NETADDR_IPv4)*chunk;
+		m_aPackets[m_NumPackets].m_Size = sizeof(SERVERBROWSE_LIST) + sizeof(NETADDR_IPv4)*Chunk;
 		
-		num_packets++;
+		m_NumPackets++;
 	}
 }
 
-void send_ok(NETADDR *addr)
+void SendOk(NETADDR *pAddr)
 {
-	NETCHUNK p;
-	p.client_id = -1;
-	p.address = *addr;
-	p.flags = NETSENDFLAG_CONNLESS;
-	p.data_size = sizeof(SERVERBROWSE_FWOK);
-	p.data = SERVERBROWSE_FWOK;
+	CNetChunk p;
+	p.m_ClientID = -1;
+	p.m_Address = *pAddr;
+	p.m_Flags = NETSENDFLAG_CONNLESS;
+	p.m_DataSize = sizeof(SERVERBROWSE_FWOK);
+	p.m_pData = SERVERBROWSE_FWOK;
 	
 	// send on both to be sure
-	net_checker.send(&p);
-	net_op.send(&p);
+	m_NetChecker.Send(&p);
+	m_NetOp.Send(&p);
 }
 
-void send_error(NETADDR *addr)
+void SendError(NETADDR *pAddr)
 {
-	NETCHUNK p;
-	p.client_id = -1;
-	p.address = *addr;
-	p.flags = NETSENDFLAG_CONNLESS;
-	p.data_size = sizeof(SERVERBROWSE_FWERROR);
-	p.data = SERVERBROWSE_FWERROR;
-	net_op.send(&p);
+	CNetChunk p;
+	p.m_ClientID = -1;
+	p.m_Address = *pAddr;
+	p.m_Flags = NETSENDFLAG_CONNLESS;
+	p.m_DataSize = sizeof(SERVERBROWSE_FWERROR);
+	p.m_pData = SERVERBROWSE_FWERROR;
+	m_NetOp.Send(&p);
 }
 
-void send_check(NETADDR *addr)
+void SendCheck(NETADDR *pAddr)
 {
-	NETCHUNK p;
-	p.client_id = -1;
-	p.address = *addr;
-	p.flags = NETSENDFLAG_CONNLESS;
-	p.data_size = sizeof(SERVERBROWSE_FWCHECK);
-	p.data = SERVERBROWSE_FWCHECK;
-	net_checker.send(&p);
+	CNetChunk p;
+	p.m_ClientID = -1;
+	p.m_Address = *pAddr;
+	p.m_Flags = NETSENDFLAG_CONNLESS;
+	p.m_DataSize = sizeof(SERVERBROWSE_FWCHECK);
+	p.m_pData = SERVERBROWSE_FWCHECK;
+	m_NetChecker.Send(&p);
 }
 
-void add_checkserver(NETADDR *info, NETADDR *alt)
+void AddCheckserver(NETADDR *pInfo, NETADDR *pAlt)
 {
 	// add server
-	if(num_checkservers == MAX_SERVERS)
+	if(m_NumCheckServers == MAX_SERVERS)
 	{
 		dbg_msg("mastersrv", "error: mastersrv is full");
 		return;
 	}
 	
 	dbg_msg("mastersrv", "checking: %d.%d.%d.%d:%d (%d.%d.%d.%d:%d)",
-		info->ip[0], info->ip[1], info->ip[2], info->ip[3], info->port,
-		alt->ip[0], alt->ip[1], alt->ip[2], alt->ip[3], alt->port);
-	check_servers[num_checkservers].address = *info;
-	check_servers[num_checkservers].alt_address = *alt;
-	check_servers[num_checkservers].try_count = 0;
-	check_servers[num_checkservers].try_time = 0;
-	num_checkservers++;
+		pInfo->ip[0], pInfo->ip[1], pInfo->ip[2], pInfo->ip[3], pInfo->port,
+		pAlt->ip[0], pAlt->ip[1], pAlt->ip[2], pAlt->ip[3], pAlt->port);
+	m_aCheckServers[m_NumCheckServers].m_Address = *pInfo;
+	m_aCheckServers[m_NumCheckServers].m_AltAddress = *pAlt;
+	m_aCheckServers[m_NumCheckServers].m_TryCount = 0;
+	m_aCheckServers[m_NumCheckServers].m_TryTime = 0;
+	m_NumCheckServers++;
 }
 
-void add_server(NETADDR *info)
+void AddServer(NETADDR *pInfo)
 {
 	// see if server already exists in list
 	int i;
-	for(i = 0; i < num_servers; i++)
+	for(i = 0; i < m_NumServers; i++)
 	{
-		if(net_addr_comp(&servers[i].address, info) == 0)
+		if(net_addr_comp(&m_aServers[i].m_Address, pInfo) == 0)
 		{
 			dbg_msg("mastersrv", "updated: %d.%d.%d.%d:%d",
-				info->ip[0], info->ip[1], info->ip[2], info->ip[3], info->port);
-			servers[i].expire = time_get()+time_freq()*EXPIRE_TIME;
+				pInfo->ip[0], pInfo->ip[1], pInfo->ip[2], pInfo->ip[3], pInfo->port);
+			m_aServers[i].m_Expire = time_get()+time_freq()*EXPIRE_TIME;
 			return;
 		}
 	}
 	
 	// add server
-	if(num_servers == MAX_SERVERS)
+	if(m_NumServers == MAX_SERVERS)
 	{
 		dbg_msg("mastersrv", "error: mastersrv is full");
 		return;
 	}
 	
 	dbg_msg("mastersrv", "added: %d.%d.%d.%d:%d",
-		info->ip[0], info->ip[1], info->ip[2], info->ip[3], info->port);
-	servers[num_servers].address = *info;
-	servers[num_servers].expire = time_get()+time_freq()*EXPIRE_TIME;
-	num_servers++;
+		pInfo->ip[0], pInfo->ip[1], pInfo->ip[2], pInfo->ip[3], pInfo->port);
+	m_aServers[m_NumServers].m_Address = *pInfo;
+	m_aServers[m_NumServers].m_Expire = time_get()+time_freq()*EXPIRE_TIME;
+	m_NumServers++;
 }
 
-void update_servers()
+void UpdateServers()
 {
-	int64 now = time_get();
-	int64 freq = time_freq();
-	for(int i = 0; i < num_checkservers; i++)
+	int64 Now = time_get();
+	int64 Freq = time_freq();
+	for(int i = 0; i < m_NumCheckServers; i++)
 	{
-		if(now > check_servers[i].try_time+freq)
+		if(Now > m_aCheckServers[i].m_TryTime+Freq)
 		{
-			if(check_servers[i].try_count == 10)
+			if(m_aCheckServers[i].m_TryCount == 10)
 			{
 				dbg_msg("mastersrv", "check failed: %d.%d.%d.%d:%d",
-					check_servers[i].address.ip[0], check_servers[i].address.ip[1],
-					check_servers[i].address.ip[2], check_servers[i].address.ip[3],check_servers[i].address.port,
-					check_servers[i].alt_address.ip[0], check_servers[i].alt_address.ip[1],
-					check_servers[i].alt_address.ip[2], check_servers[i].alt_address.ip[3],check_servers[i].alt_address.port);
+					m_aCheckServers[i].m_Address.ip[0], m_aCheckServers[i].m_Address.ip[1],
+					m_aCheckServers[i].m_Address.ip[2], m_aCheckServers[i].m_Address.ip[3],m_aCheckServers[i].m_Address.port,
+					m_aCheckServers[i].m_AltAddress.ip[0], m_aCheckServers[i].m_AltAddress.ip[1],
+					m_aCheckServers[i].m_AltAddress.ip[2], m_aCheckServers[i].m_AltAddress.ip[3],m_aCheckServers[i].m_AltAddress.port);
 					
 				// FAIL!!
-				send_error(&check_servers[i].address);
-				check_servers[i] = check_servers[num_checkservers-1];
-				num_checkservers--;
+				SendError(&m_aCheckServers[i].m_Address);
+				m_aCheckServers[i] = m_aCheckServers[m_NumCheckServers-1];
+				m_NumCheckServers--;
 				i--;
 			}
 			else
 			{
-				check_servers[i].try_count++;
-				check_servers[i].try_time = now;
-				if(check_servers[i].try_count&1)
-					send_check(&check_servers[i].address);
+				m_aCheckServers[i].m_TryCount++;
+				m_aCheckServers[i].m_TryTime = Now;
+				if(m_aCheckServers[i].m_TryCount&1)
+					SendCheck(&m_aCheckServers[i].m_Address);
 				else
-					send_check(&check_servers[i].alt_address);
+					SendCheck(&m_aCheckServers[i].m_AltAddress);
 			}
 		}
 	}
 }
 
-void purge_servers()
+void PurgeServers()
 {
-	int64 now = time_get();
+	int64 Now = time_get();
 	int i = 0;
-	while(i < num_servers)
+	while(i < m_NumServers)
 	{
-		if(servers[i].expire < now)
+		if(m_aServers[i].m_Expire < Now)
 		{
 			// remove server
 			dbg_msg("mastersrv", "expired: %d.%d.%d.%d:%d",
-				servers[i].address.ip[0], servers[i].address.ip[1],
-				servers[i].address.ip[2], servers[i].address.ip[3], servers[i].address.port);
-			servers[i] = servers[num_servers-1];
-			num_servers--;
+				m_aServers[i].m_Address.ip[0], m_aServers[i].m_Address.ip[1],
+				m_aServers[i].m_Address.ip[2], m_aServers[i].m_Address.ip[3], m_aServers[i].m_Address.port);
+			m_aServers[i] = m_aServers[m_NumServers-1];
+			m_NumServers--;
 		}
 		else
 			i++;
 	}
 }
 
-int main(int argc, char **argv)
+int main(int argc, char **argv) // ignore_convention
 {
-	int64 last_build = 0;
-	NETADDR bindaddr;
+	int64 LastBuild = 0;
+	NETADDR BindAddr;
 
 	dbg_logger_stdout();
 	net_init();
 
-	mem_zero(&bindaddr, sizeof(bindaddr));
-	bindaddr.port = MASTERSERVER_PORT;
-	
-	
-	net_op.open(bindaddr, 0);
+	mem_zero(&BindAddr, sizeof(BindAddr));
+	BindAddr.port = MASTERSERVER_PORT;
+		
+	m_NetOp.Open(BindAddr, 0);
 
-	bindaddr.port = MASTERSERVER_PORT+1;
-	net_checker.open(bindaddr, 0);
+	BindAddr.port = MASTERSERVER_PORT+1;
+	m_NetChecker.Open(BindAddr, 0);
 	// TODO: check socket for errors
 	
 	//mem_copy(data.header, SERVERBROWSE_LIST, sizeof(SERVERBROWSE_LIST));
-	mem_copy(count_data.header, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT));
+	mem_copy(m_CountData.m_Header, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT));
 	
 	dbg_msg("mastersrv", "started");
 	
 	while(1)
 	{
-		net_op.update();
-		net_checker.update();
+		m_NetOp.Update();
+		m_NetChecker.Update();
 		
-		// process packets
-		NETCHUNK packet;
-		while(net_op.recv(&packet))
+		// process m_aPackets
+		CNetChunk Packet;
+		while(m_NetOp.Recv(&Packet))
 		{
-			if(packet.data_size == sizeof(SERVERBROWSE_HEARTBEAT)+2 &&
-				memcmp(packet.data, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT)) == 0)
+			if(Packet.m_DataSize == sizeof(SERVERBROWSE_HEARTBEAT)+2 &&
+				mem_comp(Packet.m_pData, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT)) == 0)
 			{
-				NETADDR alt;
-				unsigned char *d = (unsigned char *)packet.data;
-				alt = packet.address;
-				alt.port =
+				NETADDR Alt;
+				unsigned char *d = (unsigned char *)Packet.m_pData;
+				Alt = Packet.m_Address;
+				Alt.port =
 					(d[sizeof(SERVERBROWSE_HEARTBEAT)]<<8) |
 					d[sizeof(SERVERBROWSE_HEARTBEAT)+1];
 				
 				// add it
-				add_checkserver(&packet.address, &alt);
+				AddCheckserver(&Packet.m_Address, &Alt);
 			}
-			else if(packet.data_size == sizeof(SERVERBROWSE_GETCOUNT) &&
-				memcmp(packet.data, SERVERBROWSE_GETCOUNT, sizeof(SERVERBROWSE_GETCOUNT)) == 0)
+			else if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETCOUNT) &&
+				mem_comp(Packet.m_pData, SERVERBROWSE_GETCOUNT, sizeof(SERVERBROWSE_GETCOUNT)) == 0)
 			{
-				dbg_msg("mastersrv", "count requested, responding with %d", num_servers);
+				dbg_msg("mastersrv", "count requested, responding with %d", m_NumServers);
 				
-				NETCHUNK p;
-				p.client_id = -1;
-				p.address = packet.address;
-				p.flags = NETSENDFLAG_CONNLESS;
-				p.data_size = sizeof(count_data);
-				p.data = &count_data;
-				count_data.high = (num_servers>>8)&0xff;
-				count_data.low = num_servers&0xff;
-				net_op.send(&p);
+				CNetChunk p;
+				p.m_ClientID = -1;
+				p.m_Address = Packet.m_Address;
+				p.m_Flags = NETSENDFLAG_CONNLESS;
+				p.m_DataSize = sizeof(m_CountData);
+				p.m_pData = &m_CountData;
+				m_CountData.m_High = (m_NumServers>>8)&0xff;
+				m_CountData.m_Low = m_NumServers&0xff;
+				m_NetOp.Send(&p);
 			}
-			else if(packet.data_size == sizeof(SERVERBROWSE_GETLIST) &&
-				memcmp(packet.data, SERVERBROWSE_GETLIST, sizeof(SERVERBROWSE_GETLIST)) == 0)
+			else if(Packet.m_DataSize == sizeof(SERVERBROWSE_GETLIST) &&
+				mem_comp(Packet.m_pData, SERVERBROWSE_GETLIST, sizeof(SERVERBROWSE_GETLIST)) == 0)
 			{
 				// someone requested the list
-				dbg_msg("mastersrv", "requested, responding with %d servers", num_servers);
-				NETCHUNK p;
-				p.client_id = -1;
-				p.address = packet.address;
-				p.flags = NETSENDFLAG_CONNLESS;
+				dbg_msg("mastersrv", "requested, responding with %d m_aServers", m_NumServers);
+				CNetChunk p;
+				p.m_ClientID = -1;
+				p.m_Address = Packet.m_Address;
+				p.m_Flags = NETSENDFLAG_CONNLESS;
 				
-				for(int i = 0; i < num_packets; i++)
+				for(int i = 0; i < m_NumPackets; i++)
 				{
-					p.data_size = packets[i].size;
-					p.data = &packets[i].data;
-					net_op.send(&p);
+					p.m_DataSize = m_aPackets[i].m_Size;
+					p.m_pData = &m_aPackets[i].m_Data;
+					m_NetOp.Send(&p);
 				}
 			}
 		}
 
-		// process packets
-		while(net_checker.recv(&packet))
+		// process m_aPackets
+		while(m_NetChecker.Recv(&Packet))
 		{
-			if(packet.data_size == sizeof(SERVERBROWSE_FWRESPONSE) &&
-				memcmp(packet.data, SERVERBROWSE_FWRESPONSE, sizeof(SERVERBROWSE_FWRESPONSE)) == 0)
+			if(Packet.m_DataSize == sizeof(SERVERBROWSE_FWRESPONSE) &&
+				mem_comp(Packet.m_pData, SERVERBROWSE_FWRESPONSE, sizeof(SERVERBROWSE_FWRESPONSE)) == 0)
 			{
 				// remove it from checking
-				for(int i = 0; i < num_checkservers; i++)
+				for(int i = 0; i < m_NumCheckServers; i++)
 				{
-					if(net_addr_comp(&check_servers[i].address, &packet.address) == 0 ||
-						net_addr_comp(&check_servers[i].alt_address, &packet.address) == 0)
+					if(net_addr_comp(&m_aCheckServers[i].m_Address, &Packet.m_Address) == 0 ||
+						net_addr_comp(&m_aCheckServers[i].m_AltAddress, &Packet.m_Address) == 0)
 					{
-						num_checkservers--;
-						check_servers[i] = check_servers[num_checkservers];
+						m_NumCheckServers--;
+						m_aCheckServers[i] = m_aCheckServers[m_NumCheckServers];
 						break;
 					}
 				}
 				
-				add_server(&packet.address);
-				send_ok(&packet.address);
+				AddServer(&Packet.m_Address);
+				SendOk(&Packet.m_Address);
 			}
 		}
 		
-		if(time_get()-last_build > time_freq()*5)
+		if(time_get()-LastBuild > time_freq()*5)
 		{
-			last_build = time_get();
+			LastBuild = time_get();
 			
-			purge_servers();
-			update_servers();
-			build_packets();
+			PurgeServers();
+			UpdateServers();
+			BuildPackets();
 		}
 		
 		// be nice to the CPU

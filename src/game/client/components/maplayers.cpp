@@ -1,167 +1,192 @@
-#include <engine/client/graphics.h>
+#include <stdio.h>
+#include <engine/graphics.h>
+#include <engine/keys.h> //temp
+#include <engine/shared/config.h>
 
-#include <game/layers.hpp>
-#include <game/client/gameclient.hpp>
-#include <game/client/component.hpp>
-#include <game/client/render.hpp>
+#include <game/layers.h>
+#include <game/client/gameclient.h>
+#include <game/client/component.h>
+#include <game/client/render.h>
 
-#include <game/client/components/camera.hpp>
-#include <game/client/components/mapimages.hpp>
+#include <game/client/components/camera.h>
+#include <game/client/components/mapimages.h>
 
 
-#include "maplayers.hpp"
+#include "maplayers.h"
 
-MAPLAYERS::MAPLAYERS(int t)
+CMapLayers::CMapLayers(int t)
 {
-	type = t;
+	m_Type = t;
+	m_pLayers = 0;
+}
+
+void CMapLayers::OnInit()
+{
+	m_pLayers = Layers();
 }
 
 
-void MAPLAYERS::mapscreen_to_group(float center_x, float center_y, MAPITEM_GROUP *group)
+void CMapLayers::MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup)
 {
-	float points[4];
-	RenderTools()->mapscreen_to_world(center_x, center_y, group->parallax_x/100.0f, group->parallax_y/100.0f,
-		group->offset_x, group->offset_y, Graphics()->ScreenAspect(), 1.0f, points);
-	Graphics()->MapScreen(points[0], points[1], points[2], points[3]);
+	float Points[4];
+	RenderTools()->MapscreenToWorld(CenterX, CenterY, pGroup->m_ParallaxX/100.0f, pGroup->m_ParallaxY/100.0f,
+		pGroup->m_OffsetX, pGroup->m_OffsetY, Graphics()->ScreenAspect(), 1.0f, Points);
+	Graphics()->MapScreen(Points[0], Points[1], Points[2], Points[3]);
 }
 
-void MAPLAYERS::envelope_eval(float time_offset, int env, float *channels, void *user)
+void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser)
 {
-	MAPLAYERS *pThis = (MAPLAYERS *)user;
-	channels[0] = 0;
-	channels[1] = 0;
-	channels[2] = 0;
-	channels[3] = 0;
+	CMapLayers *pThis = (CMapLayers *)pUser;
+	pChannels[0] = 0;
+	pChannels[1] = 0;
+	pChannels[2] = 0;
+	pChannels[3] = 0;
 
-	ENVPOINT *points;
+	CEnvPoint *pPoints;
 
 	{
-		int start, num;
-		map_get_type(MAPITEMTYPE_ENVPOINTS, &start, &num);
-		if(num)
-			points = (ENVPOINT *)map_get_item(start, 0, 0);
+		int Start, Num;
+		pThis->m_pLayers->Map()->GetType(MAPITEMTYPE_ENVPOINTS, &Start, &Num);
+		if(Num)
+			pPoints = (CEnvPoint *)pThis->m_pLayers->Map()->GetItem(Start, 0, 0);
 	}
 	
-	int start, num;
-	map_get_type(MAPITEMTYPE_ENVELOPE, &start, &num);
+	int Start, Num;
+	pThis->m_pLayers->Map()->GetType(MAPITEMTYPE_ENVELOPE, &Start, &Num);
 	
-	if(env >= num)
+	if(Env >= Num)
 		return;
 	
-	MAPITEM_ENVELOPE *item = (MAPITEM_ENVELOPE *)map_get_item(start+env, 0, 0);
-	pThis->RenderTools()->render_eval_envelope(points+item->start_point, item->num_points, 4, client_localtime()+time_offset, channels);
+	CMapItemEnvelope *pItem = (CMapItemEnvelope *)pThis->m_pLayers->Map()->GetItem(Start+Env, 0, 0);
+	pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, pThis->Client()->LocalTime()+TimeOffset, pChannels);
 }
 
-void MAPLAYERS::on_render()
+void CMapLayers::OnRender()
 {
-	if(client_state() != CLIENTSTATE_ONLINE && client_state() != CLIENTSTATE_DEMOPLAYBACK)
+	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		return;
 	
-	CUIRect screen;
-	Graphics()->GetScreen(&screen.x, &screen.y, &screen.w, &screen.h);
+	CUIRect Screen;
+	Graphics()->GetScreen(&Screen.x, &Screen.y, &Screen.w, &Screen.h);
 	
-	vec2 center = gameclient.camera->center;
+	vec2 Center = m_pClient->m_pCamera->m_Center;
 	//float center_x = gameclient.camera->center.x;
 	//float center_y = gameclient.camera->center.y;
 	
-	bool passed_gamelayer = false;
+	bool PassedGameLayer = false;
 	
-	for(int g = 0; g < layers_num_groups(); g++)
+	for(int g = 0; g < m_pLayers->NumGroups(); g++)
 	{
-		MAPITEM_GROUP *group = layers_get_group(g);
+		CMapItemGroup *pGroup = m_pLayers->GetGroup(g);
 		
-		if(!config.gfx_noclip && group->version >= 2 && group->use_clipping)
+		if(!g_Config.m_GfxNoclip && pGroup->m_Version >= 2 && pGroup->m_UseClipping)
 		{
 			// set clipping
-			float points[4];
-			mapscreen_to_group(center.x, center.y, layers_game_group());
-			Graphics()->GetScreen(&points[0], &points[1], &points[2], &points[3]);
-			float x0 = (group->clip_x - points[0]) / (points[2]-points[0]);
-			float y0 = (group->clip_y - points[1]) / (points[3]-points[1]);
-			float x1 = ((group->clip_x+group->clip_w) - points[0]) / (points[2]-points[0]);
-			float y1 = ((group->clip_y+group->clip_h) - points[1]) / (points[3]-points[1]);
+			float Points[4];
+			MapScreenToGroup(Center.x, Center.y, m_pLayers->GameGroup());
+			Graphics()->GetScreen(&Points[0], &Points[1], &Points[2], &Points[3]);
+			float x0 = (pGroup->m_ClipX - Points[0]) / (Points[2]-Points[0]);
+			float y0 = (pGroup->m_ClipY - Points[1]) / (Points[3]-Points[1]);
+			float x1 = ((pGroup->m_ClipX+pGroup->m_ClipW) - Points[0]) / (Points[2]-Points[0]);
+			float y1 = ((pGroup->m_ClipY+pGroup->m_ClipH) - Points[1]) / (Points[3]-Points[1]);
 			
 			Graphics()->ClipEnable((int)(x0*Graphics()->ScreenWidth()), (int)(y0*Graphics()->ScreenHeight()),
 				(int)((x1-x0)*Graphics()->ScreenWidth()), (int)((y1-y0)*Graphics()->ScreenHeight()));
 		}		
 		
-		mapscreen_to_group(center.x, center.y, group);
+		MapScreenToGroup(Center.x, Center.y, pGroup);
 		
-		for(int l = 0; l < group->num_layers; l++)
+		for(int l = 0; l < pGroup->m_NumLayers; l++)
 		{
-			MAPITEM_LAYER *layer = layers_get_layer(group->start_layer+l);
-			bool render = false;
-			bool is_game_layer = false;
+			CMapItemLayer *pLayer = m_pLayers->GetLayer(pGroup->m_StartLayer+l);
+			bool Render = false;
+			bool IsGameLayer = false;
 			
-			if(layer == (MAPITEM_LAYER*)layers_game_layer())
+			if(pLayer == (CMapItemLayer*)m_pLayers->GameLayer())
 			{
-				is_game_layer = true;
-				passed_gamelayer = 1;
+				IsGameLayer = true;
+				PassedGameLayer = 1;
 			}
 			
 			// skip rendering if detail layers if not wanted
-			if(layer->flags&LAYERFLAG_DETAIL && !config.gfx_high_detail && !is_game_layer)
+			if(pLayer->m_Flags&LAYERFLAG_DETAIL && !g_Config.m_GfxHighDetail && !IsGameLayer)
 				continue;
 				
-			if(type == -1)
-				render = true;
-			else if(type == 0)
+			if(m_Type == -1)
+				Render = true;
+			else if(m_Type == 0)
 			{
-				if(passed_gamelayer)
+				if(PassedGameLayer)
 					return;
-				render = true;
+				Render = true;
 			}
 			else
 			{
-				if(passed_gamelayer && !is_game_layer)
-					render = true;
+				if(PassedGameLayer && !IsGameLayer)
+					Render = true;
 			}
 			
-			if(render && !is_game_layer)
+			if(pLayer->m_Type == LAYERTYPE_TILES && Input()->KeyPressed(KEY_KP0))
+			{
+				CMapItemLayerTilemap *pTMap = (CMapItemLayerTilemap *)pLayer;
+				CTile *pTiles = (CTile *)m_pLayers->Map()->GetData(pTMap->m_Data);
+				char buf[256];
+				str_format(buf, sizeof(buf), "%d%d_%dx%d", g, l, pTMap->m_Width, pTMap->m_Height);
+				FILE *f = fopen(buf, "w");
+				for(int y = 0; y < pTMap->m_Height; y++)
+				{
+					for(int x = 0; x < pTMap->m_Width; x++)
+						fprintf(f, "%d,", pTiles[y*pTMap->m_Width + x].m_Index);
+					fprintf(f, "\n");
+				}
+				fclose(f);
+			}			
+			
+			if(Render && !IsGameLayer)
 			{
 				//layershot_begin();
 				
-				if(layer->type == LAYERTYPE_TILES)
+				if(pLayer->m_Type == LAYERTYPE_TILES)
 				{
-					MAPITEM_LAYER_TILEMAP *tmap = (MAPITEM_LAYER_TILEMAP *)layer;
-					if(tmap->image == -1)
+					CMapItemLayerTilemap *pTMap = (CMapItemLayerTilemap *)pLayer;
+					if(pTMap->m_Image == -1)
 						Graphics()->TextureSet(-1);
 					else
-						Graphics()->TextureSet(gameclient.mapimages->get(tmap->image));
+						Graphics()->TextureSet(m_pClient->m_pMapimages->Get(pTMap->m_Image));
 						
-					TILE *tiles = (TILE *)map_get_data(tmap->data);
+					CTile *pTiles = (CTile *)m_pLayers->Map()->GetData(pTMap->m_Data);
 					Graphics()->BlendNone();
-					RenderTools()->render_tilemap(tiles, tmap->width, tmap->height, 32.0f, vec4(1,1,1,1), TILERENDERFLAG_EXTEND|LAYERRENDERFLAG_OPAQUE);
+					RenderTools()->RenderTilemap(pTiles, pTMap->m_Width, pTMap->m_Height, 32.0f, vec4(1,1,1,1), TILERENDERFLAG_EXTEND|LAYERRENDERFLAG_OPAQUE);
 					Graphics()->BlendNormal();
-					RenderTools()->render_tilemap(tiles, tmap->width, tmap->height, 32.0f, vec4(1,1,1,1), TILERENDERFLAG_EXTEND|LAYERRENDERFLAG_TRANSPARENT);
+					RenderTools()->RenderTilemap(pTiles, pTMap->m_Width, pTMap->m_Height, 32.0f, vec4(1,1,1,1), TILERENDERFLAG_EXTEND|LAYERRENDERFLAG_TRANSPARENT);
 				}
-				else if(layer->type == LAYERTYPE_QUADS)
+				else if(pLayer->m_Type == LAYERTYPE_QUADS)
 				{
-					MAPITEM_LAYER_QUADS *qlayer = (MAPITEM_LAYER_QUADS *)layer;
-					if(qlayer->image == -1)
+					CMapItemLayerQuads *pQLayer = (CMapItemLayerQuads *)pLayer;
+					if(pQLayer->m_Image == -1)
 						Graphics()->TextureSet(-1);
 					else
-						Graphics()->TextureSet(gameclient.mapimages->get(qlayer->image));
+						Graphics()->TextureSet(m_pClient->m_pMapimages->Get(pQLayer->m_Image));
 
-					QUAD *quads = (QUAD *)map_get_data_swapped(qlayer->data);
+					CQuad *pQuads = (CQuad *)m_pLayers->Map()->GetDataSwapped(pQLayer->m_Data);
 					
 					Graphics()->BlendNone();
-					RenderTools()->render_quads(quads, qlayer->num_quads, LAYERRENDERFLAG_OPAQUE, envelope_eval, this);
+					RenderTools()->RenderQuads(pQuads, pQLayer->m_NumQuads, LAYERRENDERFLAG_OPAQUE, EnvelopeEval, this);
 					Graphics()->BlendNormal();
-					RenderTools()->render_quads(quads, qlayer->num_quads, LAYERRENDERFLAG_TRANSPARENT, envelope_eval, this);
+					RenderTools()->RenderQuads(pQuads, pQLayer->m_NumQuads, LAYERRENDERFLAG_TRANSPARENT, EnvelopeEval, this);
 				}
 				
 				//layershot_end();	
 			}
 		}
-		if(!config.gfx_noclip)
+		if(!g_Config.m_GfxNoclip)
 			Graphics()->ClipDisable();
 	}
 	
-	if(!config.gfx_noclip)
+	if(!g_Config.m_GfxNoclip)
 		Graphics()->ClipDisable();
 	
 	// reset the screen like it was before
-	Graphics()->MapScreen(screen.x, screen.y, screen.w, screen.h);
+	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
 }
 

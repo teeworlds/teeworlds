@@ -1,32 +1,31 @@
-#include <memory.h> // memcmp
+#include <engine/graphics.h>
+#include <engine/textrender.h>
+#include <engine/shared/config.h>
 
-#include <engine/e_client_interface.h>
-#include <engine/client/graphics.h>
-#include <game/generated/g_protocol.hpp>
-#include <game/generated/gc_data.hpp>
+#include <game/generated/protocol.h>
+#include <game/generated/client_data.h>
+#include <game/layers.h>
+#include <game/client/gameclient.h>
+#include <game/client/animstate.h>
+#include <game/client/render.h>
 
-#include <game/layers.hpp>
+#include "controls.h"
+#include "camera.h"
+#include "hud.h"
+#include "voting.h"
+#include "binds.h"
 
-#include <game/client/gameclient.hpp>
-#include <game/client/animstate.hpp>
-#include <game/client/render.hpp>
-
-#include "controls.hpp"
-#include "camera.hpp"
-#include "hud.hpp"
-#include "voting.hpp"
-#include "binds.hpp"
-
-HUD::HUD()
+CHud::CHud()
 {
-	
+	// won't work if zero
+	m_AverageFPS = 1.0f;
 }
 	
-void HUD::on_reset()
+void CHud::OnReset()
 {
 }
 
-void HUD::render_goals()
+void CHud::RenderGoals()
 {
 	// TODO: split this up into these:
 	// render_gametimer
@@ -34,41 +33,41 @@ void HUD::render_goals()
 	// render_scorehud
 	// render_warmuptimer
 	
-	int gameflags = gameclient.snap.gameobj->flags;
+	int GameFlags = m_pClient->m_Snap.m_pGameobj->m_Flags;
 	
-	float whole = 300*Graphics()->ScreenAspect();
-	float half = whole/2.0f;
+	float Whole = 300*Graphics()->ScreenAspect();
+	float Half = Whole/2.0f;
 
 
 	Graphics()->MapScreen(0,0,300*Graphics()->ScreenAspect(),300);
-	if(!gameclient.snap.gameobj->sudden_death)
+	if(!m_pClient->m_Snap.m_pGameobj->m_SuddenDeath)
 	{
-		char buf[32];
-		int time = 0;
-		if(gameclient.snap.gameobj->time_limit)
+		char Buf[32];
+		int Time = 0;
+		if(m_pClient->m_Snap.m_pGameobj->m_TimeLimit)
 		{
-			time = gameclient.snap.gameobj->time_limit*60 - ((client_tick()-gameclient.snap.gameobj->round_start_tick)/client_tickspeed());
+			Time = m_pClient->m_Snap.m_pGameobj->m_TimeLimit*60 - ((Client()->GameTick()-m_pClient->m_Snap.m_pGameobj->m_RoundStartTick)/Client()->GameTickSpeed());
 
-			if(gameclient.snap.gameobj->game_over)
-				time  = 0;
+			if(m_pClient->m_Snap.m_pGameobj->m_GameOver)
+				Time  = 0;
 		}
 		else
-			time = (client_tick()-gameclient.snap.gameobj->round_start_tick)/client_tickspeed();
+			Time = (Client()->GameTick()-m_pClient->m_Snap.m_pGameobj->m_RoundStartTick)/Client()->GameTickSpeed();
 
-		str_format(buf, sizeof(buf), "%d:%02d", time /60, time %60);
-		float w = gfx_text_width(0, 16, buf, -1);
-		gfx_text(0, half-w/2, 2, 16, buf, -1);
+		str_format(Buf, sizeof(Buf), "%d:%02d", Time /60, Time %60);
+		float w = TextRender()->TextWidth(0, 16, Buf, -1);
+		TextRender()->Text(0, Half-w/2, 2, 16, Buf, -1);
 	}
 
-	if(gameclient.snap.gameobj->sudden_death)
+	if(m_pClient->m_Snap.m_pGameobj->m_SuddenDeath)
 	{
-		const char *text = "Sudden Death";
-		float w = gfx_text_width(0, 16, text, -1);
-		gfx_text(0, half-w/2, 2, 16, text, -1);
+		const char *pText = "Sudden Death";
+		float w = TextRender()->TextWidth(0, 16, pText, -1);
+		TextRender()->Text(0, Half-w/2, 2, 16, pText, -1);
 	}
 
 	// render small score hud
-	if(!(gameclient.snap.gameobj && gameclient.snap.gameobj->game_over) && (gameflags&GAMEFLAG_TEAMS))
+	if(!(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver) && (GameFlags&GAMEFLAG_TEAMS))
 	{
 		for(int t = 0; t < 2; t++)
 		{
@@ -79,166 +78,171 @@ void HUD::render_goals()
 				Graphics()->SetColor(1,0,0,0.25f);
 			else
 				Graphics()->SetColor(0,0,1,0.25f);
-			RenderTools()->draw_round_rect(whole-40, 300-40-15+t*20, 50, 18, 5.0f);
+			RenderTools()->DrawRoundRect(Whole-45, 300-40-15+t*20, 50, 18, 5.0f);
 			Graphics()->QuadsEnd();
 
-			char buf[32];
-			str_format(buf, sizeof(buf), "%d", t?gameclient.snap.gameobj->teamscore_blue:gameclient.snap.gameobj->teamscore_red);
-			float w = gfx_text_width(0, 14, buf, -1);
+			char Buf[32];
+			str_format(Buf, sizeof(Buf), "%d", t?m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue : m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed);
+			float w = TextRender()->TextWidth(0, 14, Buf, -1);
 			
-			if(gameflags&GAMEFLAG_FLAGS)
+			if(GameFlags&GAMEFLAG_FLAGS)
 			{
-				gfx_text(0, whole-20-w/2+5, 300-40-15+t*20, 14, buf, -1);
-				if(gameclient.snap.flags[t])
+				TextRender()->Text(0, Whole-20-w/2+5, 300-40-15+t*20, 14, Buf, -1);
+				if(m_pClient->m_Snap.m_paFlags[t])
 				{
-					if(gameclient.snap.flags[t]->carried_by == -2 || (gameclient.snap.flags[t]->carried_by == -1 && ((client_tick()/10)&1)))
+					if(m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy == -2 || (m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy == -1 && ((Client()->GameTick()/10)&1)))
 					{
 						Graphics()->BlendNormal();
-						Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+						Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 						Graphics()->QuadsBegin();
 
-						if(t == 0) RenderTools()->select_sprite(SPRITE_FLAG_RED);
-						else RenderTools()->select_sprite(SPRITE_FLAG_BLUE);
+						if(t == 0) RenderTools()->SelectSprite(SPRITE_FLAG_RED);
+						else RenderTools()->SelectSprite(SPRITE_FLAG_BLUE);
 						
-						float size = 16;					
-						Graphics()->QuadsDrawTL(whole-40+5, 300-40-15+t*20+1, size/2, size);
+						float Size = 16;					
+						IGraphics::CQuadItem QuadItem(Whole-40+2, 300-40-15+t*20+1, Size/2, Size);
+						Graphics()->QuadsDrawTL(&QuadItem, 1);
 						Graphics()->QuadsEnd();
 					}
-					else if(gameclient.snap.flags[t]->carried_by >= 0)
+					else if(m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy >= 0)
 					{
-						int id = gameclient.snap.flags[t]->carried_by%MAX_CLIENTS;
-						const char *name = gameclient.clients[id].name;
-						float w = gfx_text_width(0, 10, name, -1);
-						gfx_text(0, whole-40-5-w, 300-40-15+t*20+2, 10, name, -1);
-						TEE_RENDER_INFO info = gameclient.clients[id].render_info;
-						info.size = 18.0f;
+						int Id = m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy%MAX_CLIENTS;
+						const char *pName = m_pClient->m_aClients[Id].m_aName;
+						float w = TextRender()->TextWidth(0, 10, pName, -1);
+						TextRender()->Text(0, Whole-40-7-w, 300-40-15+t*20+2, 10, pName, -1);
+						CTeeRenderInfo Info = m_pClient->m_aClients[Id].m_RenderInfo;
+						Info.m_Size = 18.0f;
 						
-						RenderTools()->RenderTee(ANIMSTATE::get_idle(), &info, EMOTE_NORMAL, vec2(1,0),
-							vec2(whole-40+10, 300-40-15+9+t*20+1));
+						RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0),
+							vec2(Whole-40+5, 300-40-15+9+t*20+1));
 					}
 				}
 			}
 			else
-				gfx_text(0, whole-20-w/2, 300-40-15+t*20, 14, buf, -1);
+				TextRender()->Text(0, Whole-20-w/2, 300-40-15+t*20, 14, Buf, -1);
 		}
 	}
 
 	// render warmup timer
-	if(gameclient.snap.gameobj->warmup)
+	if(m_pClient->m_Snap.m_pGameobj->m_Warmup)
 	{
-		char buf[256];
-		float w = gfx_text_width(0, 24, "Warmup", -1);
-		gfx_text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, 24, "Warmup", -1);
+		char Buf[256];
+		float w = TextRender()->TextWidth(0, 24, "Warmup", -1);
+		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, 24, "Warmup", -1);
 
-		int seconds = gameclient.snap.gameobj->warmup/SERVER_TICK_SPEED;
-		if(seconds < 5)
-			str_format(buf, sizeof(buf), "%d.%d", seconds, (gameclient.snap.gameobj->warmup*10/SERVER_TICK_SPEED)%10);
+		int Seconds = m_pClient->m_Snap.m_pGameobj->m_Warmup/SERVER_TICK_SPEED;
+		if(Seconds < 5)
+			str_format(Buf, sizeof(Buf), "%d.%d", Seconds, (m_pClient->m_Snap.m_pGameobj->m_Warmup*10/SERVER_TICK_SPEED)%10);
 		else
-			str_format(buf, sizeof(buf), "%d", seconds);
-		w = gfx_text_width(0, 24, buf, -1);
-		gfx_text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, 24, buf, -1);
+			str_format(Buf, sizeof(Buf), "%d", Seconds);
+		w = TextRender()->TextWidth(0, 24, Buf, -1);
+		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, 24, Buf, -1);
 	}	
 }
 
-void HUD::mapscreen_to_group(float center_x, float center_y, MAPITEM_GROUP *group)
+void CHud::MapscreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup)
 {
-	float points[4];
-	RenderTools()->mapscreen_to_world(center_x, center_y, group->parallax_x/100.0f, group->parallax_y/100.0f,
-		group->offset_x, group->offset_y, Graphics()->ScreenAspect(), 1.0f, points);
-	Graphics()->MapScreen(points[0], points[1], points[2], points[3]);
+	float Points[4];
+	RenderTools()->MapscreenToWorld(CenterX, CenterY, pGroup->m_ParallaxX/100.0f, pGroup->m_ParallaxY/100.0f,
+		pGroup->m_OffsetX, pGroup->m_OffsetY, Graphics()->ScreenAspect(), 1.0f, Points);
+	Graphics()->MapScreen(Points[0], Points[1], Points[2], Points[3]);
 }
 
-void HUD::render_fps()
+void CHud::RenderFps()
 {
-	if(config.cl_showfps)
+	if(g_Config.m_ClShowfps)
 	{
-		char buf[512];
-		str_format(buf, sizeof(buf), "%d", (int)(1.0f/client_frametime()));
-		gfx_text(0, width-10-gfx_text_width(0,12,buf,-1), 5, 12, buf, -1);
+		// calculate avg. fps
+		float FPS = 1.0f / Client()->FrameTime();
+		m_AverageFPS = (m_AverageFPS*(1.0f-(1.0f/m_AverageFPS))) + (FPS*(1.0f/m_AverageFPS));
+		char Buf[512];
+		str_format(Buf, sizeof(Buf), "%d", (int)m_AverageFPS);
+		TextRender()->Text(0, m_Width-10-TextRender()->TextWidth(0,12,Buf,-1), 5, 12, Buf, -1);
 	}
 }
 
-void HUD::render_connectionwarning()
+void CHud::RenderConnectionWarning()
 {
-	if(client_connection_problems())
+	if(Client()->ConnectionProblems())
 	{
-		const char *text = "Connection Problems...";
-		float w = gfx_text_width(0, 24, text, -1);
-		gfx_text(0, 150*Graphics()->ScreenAspect()-w/2, 50, 24, text, -1);
+		const char *pText = "Connection Problems...";
+		float w = TextRender()->TextWidth(0, 24, pText, -1);
+		TextRender()->Text(0, 150*Graphics()->ScreenAspect()-w/2, 50, 24, pText, -1);
 	}
 }
 
-void HUD::render_teambalancewarning()
+void CHud::RenderTeambalanceWarning()
 {
 	// render prompt about team-balance
-	bool flash = time_get()/(time_freq()/2)%2 == 0;
-	if (gameclient.snap.gameobj && (gameclient.snap.gameobj->flags&GAMEFLAG_TEAMS) != 0)
+	bool Flash = time_get()/(time_freq()/2)%2 == 0;
+	if (m_pClient->m_Snap.m_pGameobj && (m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS) != 0)
 	{	
-		if (config.cl_warning_teambalance && abs(gameclient.snap.team_size[0]-gameclient.snap.team_size[1]) >= 2)
+		int TeamDiff = m_pClient->m_Snap.m_aTeamSize[0]-m_pClient->m_Snap.m_aTeamSize[1];
+		if (g_Config.m_ClWarningTeambalance && (TeamDiff >= 2 || TeamDiff <= -2))
 		{
-			const char *text = "Please balance teams!";
-			if(flash)
-				gfx_text_color(1,1,0.5f,1);
+			const char *pText = "Please balance teams!";
+			if(Flash)
+				TextRender()->TextColor(1,1,0.5f,1);
 			else
-				gfx_text_color(0.7f,0.7f,0.2f,1.0f);
-			gfx_text(0x0, 5, 50, 6, text, -1);
-			gfx_text_color(1,1,1,1);
+				TextRender()->TextColor(0.7f,0.7f,0.2f,1.0f);
+			TextRender()->Text(0x0, 5, 50, 6, pText, -1);
+			TextRender()->TextColor(1,1,1,1);
 		}
 	}
 }
 
 
-void HUD::render_voting()
+void CHud::RenderVoting()
 {
-	if(!gameclient.voting->is_voting())
+	if(!m_pClient->m_pVoting->IsVoting())
 		return;
 	
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.40f);
-	RenderTools()->draw_round_rect(-10, 60-2, 100+10+4+5, 28, 5.0f);
+	RenderTools()->DrawRoundRect(-10, 60-2, 100+10+4+5, 28, 5.0f);
 	Graphics()->QuadsEnd();
 
-	gfx_text_color(1,1,1,1);
+	TextRender()->TextColor(1,1,1,1);
 
-	char buf[512];
-	gfx_text(0x0, 5, 60, 6, gameclient.voting->vote_description(), -1);
+	char Buf[512];
+	TextRender()->Text(0x0, 5, 60, 6, m_pClient->m_pVoting->VoteDescription(), -1);
 
-	str_format(buf, sizeof(buf), "%ds left", gameclient.voting->seconds_left());
-	float tw = gfx_text_width(0x0, 6, buf, -1);
-	gfx_text(0x0, 5+100-tw, 60, 6, buf, -1);
+	str_format(Buf, sizeof(Buf), "%ds left", m_pClient->m_pVoting->SecondsLeft());
+	float tw = TextRender()->TextWidth(0x0, 6, Buf, -1);
+	TextRender()->Text(0x0, 5+100-tw, 60, 6, Buf, -1);
 	
 
-	CUIRect base = {5, 70, 100, 4};
-	gameclient.voting->render_bars(base, false);
+	CUIRect Base = {5, 70, 100, 4};
+	m_pClient->m_pVoting->RenderBars(Base, false);
 	
-	const char *yes_key = gameclient.binds->get_key("vote yes");
-	const char *no_key = gameclient.binds->get_key("vote no");
-	str_format(buf, sizeof(buf), "%s - Vote Yes", yes_key);
-	base.y += base.h+1;
-	UI()->DoLabel(&base, buf, 6.0f, -1);
+	const char *pYesKey = m_pClient->m_pBinds->GetKey("vote yes");
+	const char *pNoKey = m_pClient->m_pBinds->GetKey("vote no");
+	str_format(Buf, sizeof(Buf), "%s - Vote Yes", pYesKey);
+	Base.y += Base.h+1;
+	UI()->DoLabel(&Base, Buf, 6.0f, -1);
 
-	str_format(buf, sizeof(buf), "Vote No - %s", no_key);
-	UI()->DoLabel(&base, buf, 6.0f, 1);
+	str_format(Buf, sizeof(Buf), "Vote No - %s", pNoKey);
+	UI()->DoLabel(&Base, Buf, 6.0f, 1);
 }
 
-void HUD::render_cursor()
+void CHud::RenderCursor()
 {
-	if(!gameclient.snap.local_character)
+	if(!m_pClient->m_Snap.m_pLocalCharacter)
 		return;
 		
-	mapscreen_to_group(gameclient.camera->center.x, gameclient.camera->center.y, layers_game_group());
-	Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+	MapscreenToGroup(m_pClient->m_pCamera->m_Center.x, m_pClient->m_pCamera->m_Center.y, Layers()->GameGroup());
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 
 	// render cursor
-	RenderTools()->select_sprite(data->weapons.id[gameclient.snap.local_character->weapon%NUM_WEAPONS].sprite_cursor);
-	float cursorsize = 64;
-	RenderTools()->draw_sprite(gameclient.controls->target_pos.x, gameclient.controls->target_pos.y, cursorsize);
+	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[m_pClient->m_Snap.m_pLocalCharacter->m_Weapon%NUM_WEAPONS].m_pSpriteCursor);
+	float CursorSize = 64;
+	RenderTools()->DrawSprite(m_pClient->m_pControls->m_TargetPos.x, m_pClient->m_pControls->m_TargetPos.y, CursorSize);
 	Graphics()->QuadsEnd();
 }
 
-void HUD::render_healthandammo()
+void CHud::RenderHealthAndAmmo()
 {
 	//mapscreen_to_group(gacenter_x, center_y, layers_game_group());
 
@@ -248,61 +252,69 @@ void HUD::render_healthandammo()
 	// render ammo count
 	// render gui stuff
 
-	Graphics()->TextureSet(data->images[IMAGE_GAME].id);
-	Graphics()->MapScreen(0,0,width,300);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->MapScreen(0,0,m_Width,300);
 	
 	Graphics()->QuadsBegin();
 	
 	// if weaponstage is active, put a "glow" around the stage ammo
-	RenderTools()->select_sprite(data->weapons.id[gameclient.snap.local_character->weapon%NUM_WEAPONS].sprite_proj);
-	for (int i = 0; i < min(gameclient.snap.local_character->ammocount, 10); i++)
-		Graphics()->QuadsDrawTL(x+i*12,y+24,10,10);
-
+	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[m_pClient->m_Snap.m_pLocalCharacter->m_Weapon%NUM_WEAPONS].m_pSpriteProj);
+	IGraphics::CQuadItem Array[10];
+	int i;
+	for (i = 0; i < min(m_pClient->m_Snap.m_pLocalCharacter->m_AmmoCount, 10); i++)
+		Array[i] = IGraphics::CQuadItem(x+i*12,y+24,10,10);
+	Graphics()->QuadsDrawTL(Array, i);
 	Graphics()->QuadsEnd();
 
 	Graphics()->QuadsBegin();
 	int h = 0;
 
 	// render health
-	RenderTools()->select_sprite(SPRITE_HEALTH_FULL);
-	for(; h < gameclient.snap.local_character->health; h++)
-		Graphics()->QuadsDrawTL(x+h*12,y,10,10);
+	RenderTools()->SelectSprite(SPRITE_HEALTH_FULL);
+	for(; h < min(m_pClient->m_Snap.m_pLocalCharacter->m_Health, 10); h++)
+		Array[h] = IGraphics::CQuadItem(x+h*12,y,10,10);
+	Graphics()->QuadsDrawTL(Array, h);
 
-	RenderTools()->select_sprite(SPRITE_HEALTH_EMPTY);
+	i = 0;
+	RenderTools()->SelectSprite(SPRITE_HEALTH_EMPTY);
 	for(; h < 10; h++)
-		Graphics()->QuadsDrawTL(x+h*12,y,10,10);
+		Array[i++] = IGraphics::CQuadItem(x+h*12,y,10,10);
+	Graphics()->QuadsDrawTL(Array, i);
 
 	// render armor meter
 	h = 0;
-	RenderTools()->select_sprite(SPRITE_ARMOR_FULL);
-	for(; h < gameclient.snap.local_character->armor; h++)
-		Graphics()->QuadsDrawTL(x+h*12,y+12,10,10);
+	RenderTools()->SelectSprite(SPRITE_ARMOR_FULL);
+	for(; h < min(m_pClient->m_Snap.m_pLocalCharacter->m_Armor, 10); h++)
+		Array[h] = IGraphics::CQuadItem(x+h*12,y+12,10,10);
+	Graphics()->QuadsDrawTL(Array, h);
 
-	RenderTools()->select_sprite(SPRITE_ARMOR_EMPTY);
+	i = 0;
+	RenderTools()->SelectSprite(SPRITE_ARMOR_EMPTY);
 	for(; h < 10; h++)
-		Graphics()->QuadsDrawTL(x+h*12,y+12,10,10);
+		Array[i++] = IGraphics::CQuadItem(x+h*12,y+12,10,10);
+	Graphics()->QuadsDrawTL(Array, i);
 	Graphics()->QuadsEnd();
 }
 
-void HUD::on_render()
+void CHud::OnRender()
 {
-	if(!gameclient.snap.gameobj)
+	if(!m_pClient->m_Snap.m_pGameobj)
 		return;
 		
-	width = 300*Graphics()->ScreenAspect();
+	m_Width = 300*Graphics()->ScreenAspect();
 
-	bool spectate = false;
-	if(gameclient.snap.local_info && gameclient.snap.local_info->team == -1)
-		spectate = true;
+	bool Spectate = false;
+	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team == -1)
+		Spectate = true;
 	
-	if(gameclient.snap.local_character && !spectate && !(gameclient.snap.gameobj && gameclient.snap.gameobj->game_over))
-		render_healthandammo();
+	if(m_pClient->m_Snap.m_pLocalCharacter && !Spectate && !(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
+		RenderHealthAndAmmo();
 
-	render_goals();
-	render_fps();
-	if(client_state() != CLIENTSTATE_DEMOPLAYBACK)
-		render_connectionwarning();
-	render_teambalancewarning();
-	render_voting();
-	render_cursor();
+	RenderGoals();
+	RenderFps();
+	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
+		RenderConnectionWarning();
+	RenderTeambalanceWarning();
+	RenderVoting();
+	RenderCursor();
 }

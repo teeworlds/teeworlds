@@ -112,6 +112,9 @@ Filter
 Fire
 == Feuern
 
+Force vote
+== Abstimmung erzwingen
+
 Fullscreen
 == Vollbild
 
@@ -191,7 +194,7 @@ Loading
 == Laden
 
 MOTD
-== MOTD
+== Nachricht des Tages
 
 Map
 == Karte
@@ -227,7 +230,7 @@ Next weapon
 == Nächste Waffe
 
 Nickname
-== Nickname
+== Spitzname
 
 No
 == Nein
@@ -242,7 +245,7 @@ No servers match your filter criteria
 == Kein Server entspricht den Kriterien
 
 Ok
-== Ok
+== OK
 
 Password
 == Passwort
@@ -254,7 +257,7 @@ Ping
 == Ping
 
 Pistol
-== Pistol
+== Pistole
 
 Play
 == Spielen
@@ -269,7 +272,7 @@ Prev. weapon
 == Vorherige Waffe
 
 Quality Textures
-== Hochauflösende Texturen
+== Hochaufgelöste Texturen
 
 Quick search
 == Schnelle Suche
@@ -305,7 +308,7 @@ Round
 == Runde
 
 Sample rate
-== Sample rate
+== Abtastrate
 
 Sat.
 == Sätt.
@@ -317,13 +320,13 @@ Score board
 == Punktetafel
 
 Score limit
-== Punkte Limit
+== Punktelimit
 
 Scoreboard
 == Punktetafel
 
 Screenshot
-== Screenshot
+== Bildschirmfoto
 
 Server details
 == Serverdetails
@@ -350,7 +353,7 @@ Skins
 == Skins
 
 Sound
-== Sound
+== Ton
 
 Sound volume
 == Lautstärke
@@ -362,10 +365,10 @@ Spectators
 == Zuschauer
 
 Standard gametype
-== Standard Spieltyp
+== Standard-Spieltyp
 
 Standard map
-== Standard Map
+== Standardkarte
 
 Switch weapon on pickup
 == Wechsle Waffen beim Aufnehmen
@@ -395,10 +398,10 @@ Type
 == Typ
 
 UI Color
-== Menufarbe
+== Menüfarbe
 
 Use sounds
-== Nutze Sounds
+== Aktiviere Ton
 
 V-Sync
 == V-Sync
@@ -425,9 +428,13 @@ Yes
 == Ja
 
 You must restart the game for all settings to take effect.
-== Du musst das Spiel neustarten um die Änderungen zu Übernehmen.
+== Du musst das Spiel neustarten um die Änderungen zu übernehmen.
+
+Your skin
+== Dein Skin
 
 ##### needs translation ####
+
 
 ##### old translations ####
 

@@ -1,34 +1,33 @@
-/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <engine/e_server_interface.h>
-#include <game/server/entities/character.hpp>
-#include <game/server/player.hpp>
-#include "tdm.hpp"
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
+#include <game/server/entities/character.h>
+#include <game/server/player.h>
+#include "tdm.h"
 
-GAMECONTROLLER_TDM::GAMECONTROLLER_TDM()
+CGameControllerTDM::CGameControllerTDM(class CGameContext *pGameServer) : IGameController(pGameServer)
 {
-	gametype = "TDM";
-	game_flags = GAMEFLAG_TEAMS;
+	m_pGameType = "TDM";
+	m_GameFlags = GAMEFLAG_TEAMS;
 }
 
-int GAMECONTROLLER_TDM::on_character_death(class CHARACTER *victim, class PLAYER *killer, int weapon)
+int CGameControllerTDM::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon)
 {
-	GAMECONTROLLER::on_character_death(victim, killer, weapon);
+	IGameController::OnCharacterDeath(pVictim, pKiller, Weapon);
 	
 	
-	if(weapon != WEAPON_GAME)
+	if(Weapon != WEAPON_GAME)
 	{
 		// do team scoring
-		if(killer == victim->player || killer->team == victim->player->team)
-			teamscore[killer->team&1]--; // klant arschel
+		if(pKiller == pVictim->GetPlayer() || pKiller->GetTeam() == pVictim->GetPlayer()->GetTeam())
+			m_aTeamscore[pKiller->GetTeam()&1]--; // klant arschel
 		else
-			teamscore[killer->team&1]++; // good shit
+			m_aTeamscore[pKiller->GetTeam()&1]++; // good shit
 	}
 		
 	return 0;
 }
 
-void GAMECONTROLLER_TDM::tick()
+void CGameControllerTDM::Tick()
 {
-	do_team_score_wincheck();
-	GAMECONTROLLER::tick();
+	DoTeamScoreWincheck();
+	IGameController::Tick();
 }

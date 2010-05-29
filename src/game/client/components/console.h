@@ -1,0 +1,72 @@
+#ifndef GAME_CLIENT_COMPONENTS_CONSOLE_H
+#define GAME_CLIENT_COMPONENTS_CONSOLE_H
+#include <engine/shared/ringbuffer.h>
+#include <game/client/component.h>
+#include <game/client/lineinput.h>
+
+class CGameConsole : public CComponent
+{
+	class CInstance
+	{
+	public:
+		TStaticRingBuffer<char, 64*1024, CRingBufferBase::FLAG_RECYCLE> m_Backlog;
+		TStaticRingBuffer<char, 64*1024, CRingBufferBase::FLAG_RECYCLE> m_History;
+		char *m_pHistoryEntry;
+
+		CLineInput m_Input;
+		int m_Type;
+		int m_CompletionEnumerationCount;
+		int m_BacklogActPage;
+		
+	public:
+		CGameConsole *m_pGameConsole;
+		
+		char m_aCompletionBuffer[128];
+		int m_CompletionChosen;
+		int m_CompletionFlagmask;
+		
+		IConsole::CCommandInfo *m_pCommand;
+
+		CInstance(CGameConsole *pGameConsole, int t);
+
+		void ExecuteLine(const char *pLine);
+		
+		void OnInput(IInput::CEvent Event);
+		void PrintLine(const char *pLine);
+		
+		const char *GetString() const { return m_Input.GetString(); }
+		static void PossibleCommandsCompleteCallback(const char *pStr, void *pUser);
+	};
+	
+	class IConsole *m_pConsole;
+	
+	CInstance m_LocalConsole;
+	CInstance m_RemoteConsole;
+	
+	CInstance *CurrentConsole();
+	float TimeNow();
+	
+	int m_ConsoleType;
+	int m_ConsoleState;
+	float m_StateChangeEnd;
+	float m_StateChangeDuration;
+
+	void Toggle(int Type);
+
+	static void PossibleCommandsRenderCallback(const char *pStr, void *pUser);
+	static void ClientConsolePrintCallback(const char *pStr, void *pUserData);
+	static void ConToggleLocalConsole(IConsole::IResult *pResult, void *pUserData);
+	static void ConToggleRemoteConsole(IConsole::IResult *pResult, void *pUserData);
+	
+public:
+	CGameConsole();
+
+	void PrintLine(int Type, const char *pLine);
+
+	virtual void OnConsoleInit();
+	virtual void OnReset();
+	virtual void OnRender();
+	virtual void OnMessage(int MsgType, void *pRawMsg);
+	virtual bool OnInput(IInput::CEvent Events);
+};
+#endif

@@ -1,115 +1,105 @@
-/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <engine/e_server_interface.h>
-#include <game/generated/g_protocol.hpp>
-#include <game/server/gamecontext.hpp>
-#include "laser.hpp"
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
+#include <game/generated/protocol.h>
+#include <game/server/gamecontext.h>
+#include "laser.h"
 
-//////////////////////////////////////////////////
-// laser
-//////////////////////////////////////////////////
-LASER::LASER(vec2 pos, vec2 direction, float start_energy, int owner)
-: ENTITY(NETOBJTYPE_LASER)
+CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner)
+: CEntity(pGameWorld, NETOBJTYPE_LASER)
 {
-	this->pos = pos;
-	this->owner = owner;
-	energy = start_energy;
-	dir = direction;
-	bounces = 0;
-	do_bounce();
-	
-	game.world.insert_entity(this);
+	m_Pos = Pos;
+	m_Owner = Owner;
+	m_Energy = StartEnergy;
+	m_Dir = Direction;
+	m_Bounces = 0;
+	m_EvalTick = 0;
+	GameWorld()->InsertEntity(this);
+	DoBounce();
 }
 
 
-bool LASER::hit_character(vec2 from, vec2 to)
+bool CLaser::HitCharacter(vec2 From, vec2 To)
 {
-	vec2 at;
-	CHARACTER *owner_char = game.get_player_char(owner);
-	CHARACTER *hit = game.world.intersect_character(pos, to, 0.0f, at, owner_char);
-	if(!hit)
+	vec2 At;
+	CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);
+	CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, To, 0.f, At, OwnerChar);
+	if(!Hit)
 		return false;
 
-	this->from = from;
-	pos = at;
-	energy = -1;		
-	hit->take_damage(vec2(0,0), tuning.laser_damage, owner, WEAPON_RIFLE);
+	m_From = From;
+	m_Pos = At;
+	m_Energy = -1;		
+	Hit->TakeDamage(vec2(0.f, 0.f), GameServer()->Tuning()->m_LaserDamage, m_Owner, WEAPON_RIFLE);
 	return true;
 }
 
-void LASER::do_bounce()
+void CLaser::DoBounce()
 {
-	eval_tick = server_tick();
+	m_EvalTick = Server()->Tick();
 	
-	if(energy < 0)
+	if(m_Energy < 0)
 	{
-		//dbg_msg("laser", "%d removed", server_tick());
-		game.world.destroy_entity(this);
+		GameServer()->m_World.DestroyEntity(this);
 		return;
 	}
 	
-	vec2 to = pos + dir*energy;
-	vec2 org_to = to;
+	vec2 To = m_Pos + m_Dir * m_Energy;
+	vec2 OrgTo = To;
 	
-	if(col_intersect_line(pos, to, 0x0, &to))
+	if(GameServer()->Collision()->IntersectLine(m_Pos, To, 0x0, &To))
 	{
-		if(!hit_character(pos, to))
+		if(!HitCharacter(m_Pos, To))
 		{
 			// intersected
-			from = pos;
-			pos = to;
+			m_From = m_Pos;
+			m_Pos = To;
 
-			vec2 temp_pos = pos;
-			vec2 temp_dir = dir*4.0f;
+			vec2 TempPos = m_Pos;
+			vec2 TempDir = m_Dir * 4.0f;
 			
-			move_point(&temp_pos, &temp_dir, 1.0f, 0);
-			pos = temp_pos;
-			dir = normalize(temp_dir);
+			GameServer()->Collision()->MovePoint(&TempPos, &TempDir, 1.0f, 0);
+			m_Pos = TempPos;
+			m_Dir = normalize(TempDir);
 			
-			energy -= distance(from, pos) + tuning.laser_bounce_cost;
-			bounces++;
+			m_Energy -= distance(m_From, m_Pos) + GameServer()->Tuning()->m_LaserBounceCost;
+			m_Bounces++;
 			
-			if(bounces > tuning.laser_bounce_num)
-				energy = -1;
+			if(m_Bounces > GameServer()->Tuning()->m_LaserBounceNum)
+				m_Energy = -1;
 				
-			game.create_sound(pos, SOUND_RIFLE_BOUNCE);
+			GameServer()->CreateSound(m_Pos, SOUND_RIFLE_BOUNCE);
 		}
 	}
 	else
 	{
-		if(!hit_character(pos, to))
+		if(!HitCharacter(m_Pos, To))
 		{
-			from = pos;
-			pos = to;
-			energy = -1;
+			m_From = m_Pos;
+			m_Pos = To;
+			m_Energy = -1;
 		}
 	}
-		
-	//dbg_msg("laser", "%d done %f %f %f %f", server_tick(), from.x, from.y, pos.x, pos.y);
 }
 	
-void LASER::reset()
+void CLaser::Reset()
 {
-	game.world.destroy_entity(this);
+	GameServer()->m_World.DestroyEntity(this);
 }
 
-void LASER::tick()
+void CLaser::Tick()
 {
-	if(server_tick() > eval_tick+(server_tickspeed()*tuning.laser_bounce_delay)/1000.0f)
-	{
-		do_bounce();
-	}
-
+	if(Server()->Tick() > m_EvalTick+(Server()->TickSpeed()*GameServer()->Tuning()->m_LaserBounceDelay)/1000.0f)
+		DoBounce();
 }
 
-void LASER::snap(int snapping_client)
+void CLaser::Snap(int SnappingClient)
 {
-	if(networkclipped(snapping_client))
+	if(NetworkClipped(SnappingClient))
 		return;
 
-	NETOBJ_LASER *obj = (NETOBJ_LASER *)snap_new_item(NETOBJTYPE_LASER, id, sizeof(NETOBJ_LASER));
-	obj->x = (int)pos.x;
-	obj->y = (int)pos.y;
-	obj->from_x = (int)from.x;
-	obj->from_y = (int)from.y;
-	obj->start_tick = eval_tick;
+	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_Id, sizeof(CNetObj_Laser)));
+	pObj->m_X = (int)m_Pos.x;
+	pObj->m_Y = (int)m_Pos.y;
+	pObj->m_FromX = (int)m_From.x;
+	pObj->m_FromY = (int)m_From.y;
+	pObj->m_StartTick = m_EvalTick;
 }

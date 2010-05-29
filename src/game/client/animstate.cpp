@@ -1,95 +1,94 @@
 
-#include <base/math.hpp>
-#include <engine/e_client_interface.h>
-#include <game/generated/g_protocol.hpp>
-#include <game/generated/gc_data.hpp>
+#include <base/math.h>
+#include <game/generated/protocol.h>
+#include <game/generated/client_data.h>
 
-#include "animstate.hpp"
+#include "animstate.h"
 
-static void anim_seq_eval(ANIM_SEQUENCE *seq, float time, ANIM_KEYFRAME *frame)
+static void AnimSeqEval(ANIM_SEQUENCE *pSeq, float Time, ANIM_KEYFRAME *pFrame)
 {
-	if(seq->num_frames == 0)
+	if(pSeq->m_NumFrames == 0)
 	{
-		frame->time = 0;
-		frame->x = 0;
-		frame->y = 0;
-		frame->angle = 0;
+		pFrame->m_Time = 0;
+		pFrame->m_X = 0;
+		pFrame->m_Y = 0;
+		pFrame->m_Angle = 0;
 	}
-	else if(seq->num_frames == 1)
+	else if(pSeq->m_NumFrames == 1)
 	{
-		*frame = seq->frames[0];
+		*pFrame = pSeq->m_aFrames[0];
 	}
 	else
 	{
 		//time = max(0.0f, min(1.0f, time / duration)); // TODO: use clamp
-		ANIM_KEYFRAME *frame1 = 0;
-		ANIM_KEYFRAME *frame2 = 0;
-		float blend = 0.0f;
+		ANIM_KEYFRAME *pFrame1 = 0;
+		ANIM_KEYFRAME *pFrame2 = 0;
+		float Blend = 0.0f;
 
 		// TODO: make this smarter.. binary search
-		for (int i = 1; i < seq->num_frames; i++)
+		for (int i = 1; i < pSeq->m_NumFrames; i++)
 		{
-			if (seq->frames[i-1].time <= time && seq->frames[i].time >= time)
+			if (pSeq->m_aFrames[i-1].m_Time <= Time && pSeq->m_aFrames[i].m_Time >= Time)
 			{
-				frame1 = &seq->frames[i-1];
-				frame2 = &seq->frames[i];
-				blend = (time - frame1->time) / (frame2->time - frame1->time);
+				pFrame1 = &pSeq->m_aFrames[i-1];
+				pFrame2 = &pSeq->m_aFrames[i];
+				Blend = (Time - pFrame1->m_Time) / (pFrame2->m_Time - pFrame1->m_Time);
 				break;
 			}
 		}
 
-		if (frame1 && frame2)
+		if (pFrame1 && pFrame2)
 		{
-			frame->time = time;
-			frame->x = mix(frame1->x, frame2->x, blend);
-			frame->y = mix(frame1->y, frame2->y, blend);
-			frame->angle = mix(frame1->angle, frame2->angle, blend);
+			pFrame->m_Time = Time;
+			pFrame->m_X = mix(pFrame1->m_X, pFrame2->m_X, Blend);
+			pFrame->m_Y = mix(pFrame1->m_Y, pFrame2->m_Y, Blend);
+			pFrame->m_Angle = mix(pFrame1->m_Angle, pFrame2->m_Angle, Blend);
 		}
 	}
 }
 
-static void anim_add_keyframe(ANIM_KEYFRAME *seq, ANIM_KEYFRAME *added, float amount)
+static void AnimAddKeyframe(ANIM_KEYFRAME *pSeq, ANIM_KEYFRAME *pAdded, float Amount)
 {
-	seq->x += added->x*amount;
-	seq->y += added->y*amount;
-	seq->angle += added->angle*amount;
+	pSeq->m_X += pAdded->m_X*Amount;
+	pSeq->m_Y += pAdded->m_Y*Amount;
+	pSeq->m_Angle += pAdded->m_Angle*Amount;
 }
 
-static void anim_add(ANIMSTATE *state, ANIMSTATE *added, float amount)
+static void AnimAdd(CAnimState *pState, CAnimState *pAdded, float Amount)
 {
-	anim_add_keyframe(&state->body, &added->body, amount);
-	anim_add_keyframe(&state->back_foot, &added->back_foot, amount);
-	anim_add_keyframe(&state->front_foot, &added->front_foot, amount);
-	anim_add_keyframe(&state->attach, &added->attach, amount);
+	AnimAddKeyframe(pState->GetBody(), pAdded->GetBody(), Amount);
+	AnimAddKeyframe(pState->GetBackFoot(), pAdded->GetBackFoot(), Amount);
+	AnimAddKeyframe(pState->GetFrontFoot(), pAdded->GetFrontFoot(), Amount);
+	AnimAddKeyframe(pState->GetAttach(), pAdded->GetAttach(), Amount);
 }
 
 
-void ANIMSTATE::set(ANIMATION *anim, float time)
+void CAnimState::Set(ANIMATION *pAnim, float Time)
 {
-	anim_seq_eval(&anim->body, time, &body);
-	anim_seq_eval(&anim->back_foot, time, &back_foot);
-	anim_seq_eval(&anim->front_foot, time, &front_foot);
-	anim_seq_eval(&anim->attach, time, &attach);
+	AnimSeqEval(&pAnim->m_Body, Time, &m_Body);
+	AnimSeqEval(&pAnim->m_BackFoot, Time, &m_BackFoot);
+	AnimSeqEval(&pAnim->m_FrontFoot, Time, &m_FrontFoot);
+	AnimSeqEval(&pAnim->m_Attach, Time, &m_Attach);
 }
 
-void ANIMSTATE::add(ANIMATION *anim, float time, float amount)
+void CAnimState::Add(ANIMATION *pAnim, float Time, float Amount)
 {
-	ANIMSTATE add;
-	add.set(anim, time);
-	anim_add(this, &add, amount);
+	CAnimState Add;
+	Add.Set(pAnim, Time);
+	AnimAdd(this, &Add, Amount);
 }
 
-ANIMSTATE *ANIMSTATE::get_idle()
+CAnimState *CAnimState::GetIdle()
 {
-	static ANIMSTATE state;
-	static bool init = true;
+	static CAnimState State;
+	static bool Init = true;
 	
-	if(init)
+	if(Init)
 	{
-		state.set(&data->animations[ANIM_BASE], 0);
-		state.add(&data->animations[ANIM_IDLE], 0, 1.0f);
-		init = false;
+		State.Set(&g_pData->m_aAnimations[ANIM_BASE], 0);
+		State.Add(&g_pData->m_aAnimations[ANIM_IDLE], 0, 1.0f);
+		Init = false;
 	}
 	
-	return &state;
+	return &State;
 }

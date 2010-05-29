@@ -1,6 +1,8 @@
-CheckVersion("0.3")
+CheckVersion("0.4")
 
+Import("configure.lua")
 Import("other/sdl/sdl.lua")
+Import("other/freetype/freetype.lua")
 
 --- Setup Config --------
 config = NewConfig()
@@ -8,6 +10,7 @@ config:Add(OptCCompiler("compiler"))
 config:Add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-protector -fstack-protector-all"))
 config:Add(OptLibrary("zlib", "zlib.h", false))
 config:Add(SDL.OptFind("sdl", true))
+config:Add(FreeType.OptFind("freetype", true))
 config:Finalize("config.bam")
 
 -- data compiler
@@ -19,7 +22,7 @@ function Script(name)
 end
 
 function CHash(output, ...)
-	local inputs = FlattenTable({...})
+	local inputs = TableFlatten({...})
 	
 	output = Path(output)
 	
@@ -38,6 +41,17 @@ function CHash(output, ...)
 	return output
 end
 
+--[[
+function DuplicateDirectoryStructure(orgpath, srcpath, dstpath)
+	for _,v in pairs(CollectDirs(srcpath .. "/")) do
+		MakeDirectory(dstpath .. "/" .. string.sub(v, string.len(orgpath)+2))
+		DuplicateDirectoryStructure(orgpath, v, dstpath)
+	end
+end
+
+DuplicateDirectoryStructure("src", "src", "objs")
+]]
+
 function ResCompile(scriptfile)
 	scriptfile = Path(scriptfile)
 	output = PathBase(scriptfile) .. ".res"
@@ -53,7 +67,7 @@ function Dat2c(datafile, sourcefile, arrayname)
 	AddJob(
 		sourcefile,
 		"dat2c " .. PathFilename(sourcefile) .. " = " .. PathFilename(datafile),
-		Script("scripts/dat2c.py") .. " " .. datafile .. " " .. arrayname .. " > " .. sourcefile
+		Script("scripts/safewrapper.py") .. " \"" .. Script("scripts/dat2c.py")..  "\" " .. sourcefile .. " " .. datafile .. " " .. arrayname
 	)
 	AddDependency(sourcefile, datafile)
 	return sourcefile
@@ -64,7 +78,8 @@ function ContentCompile(action, output)
 	AddJob(
 		output,
 		action .. " > " .. output,
-		Script("datasrc/compile.py") .. " " .. action .. " > " .. Path(output)
+		--Script("scripts/safewrapper.py") .. " \"" .. Script("datasrc/compile.py") .. "\" ".. Path(output) .. " " .. action
+		Script("datasrc/compile.py") .. " " .. action ..  " > " .. Path(output)
 	)
 	AddDependency(output, Path("datasrc/content.py")) -- do this more proper
 	AddDependency(output, Path("datasrc/network.py"))
@@ -74,40 +89,40 @@ function ContentCompile(action, output)
 end
 
 -- Content Compile
-network_source = ContentCompile("network_source", "src/game/generated/g_protocol.cpp")
-network_header = ContentCompile("network_header", "src/game/generated/g_protocol.hpp")
-client_content_source = ContentCompile("client_content_source", "src/game/generated/gc_data.cpp")
-client_content_header = ContentCompile("client_content_header", "src/game/generated/gc_data.hpp")
-server_content_source = ContentCompile("server_content_source", "src/game/generated/gs_data.cpp")
-server_content_header = ContentCompile("server_content_header", "src/game/generated/gs_data.hpp")
+network_source = ContentCompile("network_source", "src/game/generated/protocol.cpp")
+network_header = ContentCompile("network_header", "src/game/generated/protocol.h")
+client_content_source = ContentCompile("client_content_source", "src/game/generated/client_data.cpp")
+client_content_header = ContentCompile("client_content_header", "src/game/generated/client_data.h")
+server_content_source = ContentCompile("server_content_source", "src/game/generated/server_data.cpp")
+server_content_header = ContentCompile("server_content_header", "src/game/generated/server_data.h")
 
 AddDependency(network_source, network_header)
 AddDependency(client_content_source, client_content_header)
 AddDependency(server_content_source, server_content_header)
 
-nethash = CHash("src/game/generated/nethash.c", "src/engine/e_protocol.h", "src/game/generated/g_protocol.hpp", "src/game/tuning.hpp", "src/game/gamecore.cpp", network_header)
+nethash = CHash("src/game/generated/nethash.c", "src/engine/shared/protocol.h", "src/game/generated/protocol.h", "src/game/tuning.h", "src/game/gamecore.cpp", network_header)
 
 client_link_other = {}
 client_depends = {}
 
 if family == "windows" then
-	table.insert(client_depends, Copy(".", "other\\sdl\\vc2005libs\\SDL.dll"))
+	table.insert(client_depends, CopyToDirectory(".", "other\\sdl\\vc2005libs\\SDL.dll"))
 end
 	
 
-if config.compiler.value == "cl" then
+if config.compiler.driver == "cl" then
 	client_link_other = {ResCompile("other/icons/teeworlds.rc")}
 end
 
 function Intermediate_Output(settings, input)
-	return Path("objs/" .. PathBase(PathFilename(input)) .. settings.config_ext)
+	return "objs/" .. string.sub(PathBase(input), string.len("src/")+1) .. settings.config_ext
 end
 
 function build(settings)
 	--settings.objdir = Path("objs")
 	settings.cc.Output = Intermediate_Output
 
-	if config.compiler.value == "cl" then
+	if config.compiler.driver == "cl" then
 		settings.cc.flags:Add("/wd4244")
 	else
 		settings.cc.flags:Add("-Wall", "-fno-exceptions")
@@ -173,8 +188,6 @@ function build(settings)
 			client_settings.link.libs:Add("GLU")
 		end
 		
-		client_settings.cc.flags:Add("`freetype-config --cflags`")
-		client_settings.link.flags:Add("`freetype-config --libs`")
 	elseif family == "windows" then
 		client_settings.link.libs:Add("opengl32")
 		client_settings.link.libs:Add("glu32")
@@ -183,8 +196,10 @@ function build(settings)
 
 	-- apply sdl settings
 	config.sdl:Apply(client_settings)
+	-- apply freetype settings
+	config.freetype:Apply(client_settings)
 	
-	engine = Compile(engine_settings, Collect("src/engine/*.cpp", "src/base/*.c"))
+	engine = Compile(engine_settings, Collect("src/engine/shared/*.cpp", "src/base/*.c"))
 	client = Compile(client_settings, Collect("src/engine/client/*.cpp"))
 	server = Compile(server_settings, Collect("src/engine/server/*.cpp"))
 	
@@ -248,14 +263,14 @@ debug_settings = NewSettings()
 debug_settings.config_name = "debug"
 debug_settings.config_ext = "_d"
 debug_settings.debug = 1
-debug_settings.cc.optimize = 0
+debug_settings.optimize = 0
 debug_settings.cc.defines:Add("CONF_DEBUG")
 
 release_settings = NewSettings()
 release_settings.config_name = "release"
 release_settings.config_ext = ""
 release_settings.debug = 0
-release_settings.cc.optimize = 1
+release_settings.optimize = 1
 release_settings.cc.defines:Add("CONF_RELEASE")
 
 if platform == "macosx"  and arch == "ia32" then

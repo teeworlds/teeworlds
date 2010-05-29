@@ -1,65 +1,66 @@
-#include <engine/e_client_interface.h>
-#include <game/generated/g_protocol.hpp>
-#include <game/generated/gc_data.hpp>
+#include <engine/textrender.h>
+#include <engine/shared/config.h>
+#include <game/generated/protocol.h>
+#include <game/generated/client_data.h>
 
-#include <game/client/gameclient.hpp>
-#include <game/client/animstate.hpp>
-#include "nameplates.hpp"
-#include "controls.hpp"
+#include <game/client/gameclient.h>
+#include <game/client/animstate.h>
+#include "nameplates.h"
+#include "controls.h"
 
-void NAMEPLATES::render_nameplate(
-	const NETOBJ_CHARACTER *prev_char,
-	const NETOBJ_CHARACTER *player_char,
-	const NETOBJ_PLAYER_INFO *player_info
+void CNamePlates::RenderNameplate(
+	const CNetObj_Character *pPrevChar,
+	const CNetObj_Character *pPlayerChar,
+	const CNetObj_PlayerInfo *pPlayerInfo
 	)
 {
-	float intratick = client_intratick();
+	float IntraTick = Client()->IntraGameTick();
 	
-	vec2 position = mix(vec2(prev_char->x, prev_char->y), vec2(player_char->x, player_char->y), intratick);
+	vec2 Position = mix(vec2(pPrevChar->m_X, pPrevChar->m_Y), vec2(pPlayerChar->m_X, pPlayerChar->m_Y), IntraTick);
 	
 	// render name plate
-	if(!player_info->local)
+	if(!pPlayerInfo->m_Local)
 	{
-		//gfx_text_color
+		//TextRender()->TextColor
 		float a = 1;
-		if(config.cl_nameplates_always == 0)
-			a = clamp(1-powf(distance(gameclient.controls->target_pos, position)/200.0f,16.0f), 0.0f, 1.0f);
+		if(g_Config.m_ClNameplatesAlways == 0)
+			a = clamp(1-powf(distance(m_pClient->m_pControls->m_TargetPos, Position)/200.0f,16.0f), 0.0f, 1.0f);
 			
-		const char *name = gameclient.clients[player_info->cid].name;
-		float tw = gfx_text_width(0, 28.0f, name, -1);
-		gfx_text_color(1,1,1,a);
-		gfx_text(0, position.x-tw/2.0f, position.y-60, 28.0f, name, -1);
+		const char *pName = m_pClient->m_aClients[pPlayerInfo->m_ClientId].m_aName;
+		float tw = TextRender()->TextWidth(0, 28.0f, pName, -1);
+		TextRender()->TextColor(1,1,1,a);
+		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-60, 28.0f, pName, -1);
 		
-		if(config.debug) // render client id when in debug aswell
+		if(g_Config.m_Debug) // render client id when in debug aswell
 		{
-			char buf[128];
-			str_format(buf, sizeof(buf),"%d", player_info->cid);
-			gfx_text(0, position.x, position.y-90, 28.0f, buf, -1);
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf),"%d", pPlayerInfo->m_ClientId);
+			TextRender()->Text(0, Position.x, Position.y-90, 28.0f, aBuf, -1);
 		}
 
-		gfx_text_color(1,1,1,1);
+		TextRender()->TextColor(1,1,1,1);
 	}
 }
 
-void NAMEPLATES::on_render()
+void CNamePlates::OnRender()
 {
-	if (!config.cl_nameplates)
+	if (!g_Config.m_ClNameplates)
 		return;
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		// only render active characters
-		if(!gameclient.snap.characters[i].active)
+		if(!m_pClient->m_Snap.m_aCharacters[i].m_Active)
 			continue;
 
-		const void *info = snap_find_item(SNAP_CURRENT, NETOBJTYPE_PLAYER_INFO, i);
+		const void *pInfo = Client()->SnapFindItem(IClient::SNAP_CURRENT, NETOBJTYPE_PLAYERINFO, i);
 
-		if(info)
+		if(pInfo)
 		{
-			render_nameplate(
-				&gameclient.snap.characters[i].prev,
-				&gameclient.snap.characters[i].cur,
-				(const NETOBJ_PLAYER_INFO *)info);
+			RenderNameplate(
+				&m_pClient->m_Snap.m_aCharacters[i].m_Prev,
+				&m_pClient->m_Snap.m_aCharacters[i].m_Cur,
+				(const CNetObj_PlayerInfo *)pInfo);
 		}
 	}
 }

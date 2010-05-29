@@ -1,49 +1,50 @@
 
-#include <engine/e_server_interface.h>
-#include "entity.hpp"
-#include "gamecontext.hpp"
+#include "entity.h"
+#include "gamecontext.h"
 
 //////////////////////////////////////////////////
 // Entity
 //////////////////////////////////////////////////
-ENTITY::ENTITY(int objtype)
+CEntity::CEntity(CGameWorld *pGameWorld, int ObjType)
 {
-	this->objtype = objtype;
-	pos = vec2(0,0);
-	proximity_radius = 0;
+	m_pGameWorld = pGameWorld;
+	
+	m_Objtype = ObjType;
+	m_Pos = vec2(0,0);
+	m_ProximityRadius = 0;
 
-	marked_for_destroy = false;	
-	id = snap_new_id();
+	m_MarkedForDestroy = false;	
+	m_Id = Server()->SnapNewID();
 
-	next_entity = 0;
-	prev_entity = 0;
-	prev_type_entity = 0;
-	next_type_entity = 0;
+	m_pNextEntity = 0;
+	m_pPrevEntity = 0;
+	m_pPrevTypeEntity = 0;
+	m_pNextTypeEntity = 0;
 }
 
-ENTITY::~ENTITY()
+CEntity::~CEntity()
 {
-	game.world.remove_entity(this);
-	snap_free_id(id);
+	GameWorld()->RemoveEntity(this);
+	Server()->SnapFreeID(m_Id);
 }
 
-int ENTITY::networkclipped(int snapping_client)
+int CEntity::NetworkClipped(int SnappingClient)
 {
-	return networkclipped(snapping_client, pos);
+	return NetworkClipped(SnappingClient, m_Pos);
 }
 
-int ENTITY::networkclipped(int snapping_client, vec2 check_pos)
+int CEntity::NetworkClipped(int SnappingClient, vec2 CheckPos)
 {
-	if(snapping_client == -1)
+	if(SnappingClient == -1)
 		return 0;
 	
-	float dx = game.players[snapping_client]->view_pos.x-check_pos.x;
-	float dy = game.players[snapping_client]->view_pos.y-check_pos.y;
+	float dx = GameServer()->m_apPlayers[SnappingClient]->m_ViewPos.x-CheckPos.x;
+	float dy = GameServer()->m_apPlayers[SnappingClient]->m_ViewPos.y-CheckPos.y;
 	
-	if(fabs(dx) > 1000.0f || fabs(dy) > 800.0f)
+	if(absolute(dx) > 1000.0f || absolute(dy) > 800.0f)
 		return 1;
 	
-	if(distance(game.players[snapping_client]->view_pos, check_pos) > 1100.0f)
+	if(distance(GameServer()->m_apPlayers[SnappingClient]->m_ViewPos, CheckPos) > 1100.0f)
 		return 1;
 	return 0;
 }

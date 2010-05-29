@@ -1,10 +1,11 @@
-/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+#ifndef MASTERSRV_MASTERSRV_H
+#define MASTERSRV_MASTERSRV_H
 static const int MASTERSERVER_PORT = 8300;
 
 typedef struct MASTERSRV_ADDR
 {
-	unsigned char ip[4];
-	unsigned char port[2];
+	unsigned char m_aIp[4];
+	unsigned char m_aPort[2];
 } MASTERSRV_ADDR;
 
 static const unsigned char SERVERBROWSE_HEARTBEAT[] = {255, 255, 255, 255, 'b', 'e', 'a', 't'};
@@ -25,3 +26,4 @@ static const unsigned char SERVERBROWSE_FWCHECK[] = {255, 255, 255, 255, 'f', 'w
 static const unsigned char SERVERBROWSE_FWRESPONSE[] = {255, 255, 255, 255, 'f', 'w', '!', '!'};
 static const unsigned char SERVERBROWSE_FWOK[] = {255, 255, 255, 255, 'f', 'w', 'o', 'k'};
 static const unsigned char SERVERBROWSE_FWERROR[] = {255, 255, 255, 255, 'f', 'w', 'e', 'r'};
+#endif

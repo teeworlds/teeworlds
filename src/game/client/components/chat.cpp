@@ -1,227 +1,263 @@
-#include <string.h> // strcmp
 
-#include <engine/e_client_interface.h>
-#include <engine/client/graphics.h>
-#include <game/generated/g_protocol.hpp>
-#include <game/generated/gc_data.hpp>
+#include <engine/graphics.h>
+#include <engine/textrender.h>
+#include <engine/keys.h>
+#include <engine/shared/config.h>
 
-#include <game/client/gameclient.hpp>
+#include <game/generated/protocol.h>
+#include <game/generated/client_data.h>
 
-#include <game/client/components/sounds.hpp>
+#include <game/client/gameclient.h>
 
-#include "chat.hpp"
+#include <game/client/components/sounds.h>
+#include <game/localization.h>
 
-void CHAT::on_statechange(int new_state, int old_state)
+#include "chat.h"
+
+
+CChat::CChat()
 {
-	if(old_state <= CLIENTSTATE_CONNECTING)
+	OnReset();
+}
+
+void CChat::OnReset()
+{
+	for(int i = 0; i < MAX_LINES; i++)
 	{
-		mode = MODE_NONE;
-		for(int i = 0; i < MAX_LINES; i++)
-			lines[i].time = 0;
-		current_line = 0;
+		m_aLines[i].m_Time = 0;
+		m_aLines[i].m_aText[0] = 0;
+		m_aLines[i].m_aName[0] = 0;
 	}
 }
 
-void CHAT::con_say(void *result, void *user_data)
+void CChat::OnStateChange(int NewState, int OldState)
 {
-	((CHAT*)user_data)->say(0, console_arg_string(result, 0));
+	if(OldState <= IClient::STATE_CONNECTING)
+	{
+		m_Mode = MODE_NONE;
+		for(int i = 0; i < MAX_LINES; i++)
+			m_aLines[i].m_Time = 0;
+		m_CurrentLine = 0;
+	}
 }
 
-void CHAT::con_sayteam(void *result, void *user_data)
+void CChat::ConSay(IConsole::IResult *pResult, void *pUserData)
 {
-	((CHAT*)user_data)->say(1, console_arg_string(result, 0));
+	((CChat*)pUserData)->Say(0, pResult->GetString(0));
 }
 
-void CHAT::con_chat(void *result, void *user_data)
+void CChat::ConSayTeam(IConsole::IResult *pResult, void *pUserData)
 {
-	const char *mode = console_arg_string(result, 0);
-	if(strcmp(mode, "all") == 0)
-		((CHAT*)user_data)->enable_mode(0);
-	else if(strcmp(mode, "team") == 0)
-		((CHAT*)user_data)->enable_mode(1);
+	((CChat*)pUserData)->Say(1, pResult->GetString(0));
+}
+
+void CChat::ConChat(IConsole::IResult *pResult, void *pUserData)
+{
+	const char *pMode = pResult->GetString(0);
+	if(str_comp(pMode, "all") == 0)
+		((CChat*)pUserData)->EnableMode(0);
+	else if(str_comp(pMode, "team") == 0)
+		((CChat*)pUserData)->EnableMode(1);
 	else
 		dbg_msg("console", "expected all or team as mode");
 }
 
-void CHAT::on_console_init()
+void CChat::OnConsoleInit()
 {
-	MACRO_REGISTER_COMMAND("say", "r", CFGFLAG_CLIENT, con_say, this, "Say in chat");
-	MACRO_REGISTER_COMMAND("say_team", "r", CFGFLAG_CLIENT, con_sayteam, this, "Say in team chat");
-	MACRO_REGISTER_COMMAND("chat", "s", CFGFLAG_CLIENT, con_chat, this, "Enable chat with all/team mode");
+	Console()->Register("say", "r", CFGFLAG_CLIENT, ConSay, this, "Say in chat");
+	Console()->Register("say_team", "r", CFGFLAG_CLIENT, ConSayTeam, this, "Say in team chat");
+	Console()->Register("chat", "s", CFGFLAG_CLIENT, ConChat, this, "Enable chat with all/team mode");
 }
 
-bool CHAT::on_input(INPUT_EVENT e)
+bool CChat::OnInput(IInput::CEvent e)
 {
-	if(mode == MODE_NONE)
+	if(m_Mode == MODE_NONE)
 		return false;
 
-	if(e.flags&INPFLAG_PRESS && e.key == KEY_ESCAPE)
-		mode = MODE_NONE;
-	else if(e.flags&INPFLAG_PRESS && (e.key == KEY_RETURN || e.key == KEY_KP_ENTER))
+	if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key == KEY_ESCAPE)
+		m_Mode = MODE_NONE;
+	else if(e.m_Flags&IInput::FLAG_PRESS && (e.m_Key == KEY_RETURN || e.m_Key == KEY_KP_ENTER))
 	{
-		if(input.get_string()[0])
-			gameclient.chat->say(mode == MODE_ALL ? 0 : 1, input.get_string());
-		mode = MODE_NONE;
+		if(m_Input.GetString()[0])
+			Say(m_Mode == MODE_ALL ? 0 : 1, m_Input.GetString());
+		m_Mode = MODE_NONE;
 	}
 	else
-		input.process_input(e);
+		m_Input.ProcessInput(e);
 	
 	return true;
 }
 
 
-void CHAT::enable_mode(int team)
+void CChat::EnableMode(int Team)
 {
-	if(mode == MODE_NONE)
+	if(m_Mode == MODE_NONE)
 	{
-		if(team)
-			mode = MODE_TEAM;
+		if(Team)
+			m_Mode = MODE_TEAM;
 		else
-			mode = MODE_ALL;
+			m_Mode = MODE_ALL;
 		
-		input.clear();
-		inp_clear_events();
+		m_Input.Clear();
+		Input()->ClearEvents();
 	}
 }
 
-void CHAT::on_message(int msgtype, void *rawmsg)
+void CChat::OnMessage(int MsgType, void *pRawMsg)
 {
-	if(msgtype == NETMSGTYPE_SV_CHAT)
+	if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
-		NETMSG_SV_CHAT *msg = (NETMSG_SV_CHAT *)rawmsg;
-		add_line(msg->cid, msg->team, msg->message);
+		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
+		AddLine(pMsg->m_Cid, pMsg->m_Team, pMsg->m_pMessage);
 	}
 }
 
-void CHAT::add_line(int client_id, int team, const char *line)
+void CChat::AddLine(int ClientId, int Team, const char *pLine)
 {
-	current_line = (current_line+1)%MAX_LINES;
-	lines[current_line].time = time_get();
-	lines[current_line].client_id = client_id;
-	lines[current_line].team = team;
-	lines[current_line].name_color = -2;
-
-	if(client_id == -1) // server message
+	char *p = const_cast<char*>(pLine);
+	while(*p)
 	{
-		str_copy(lines[current_line].name, "*** ", sizeof(lines[current_line].name));
-		str_format(lines[current_line].text, sizeof(lines[current_line].text), "%s", line);
-	}
-	else
-	{
-		if(gameclient.clients[client_id].team == -1)
-			lines[current_line].name_color = -1;
-
-		if(gameclient.snap.gameobj && gameclient.snap.gameobj->flags&GAMEFLAG_TEAMS)
+		pLine = p;
+		// find line seperator and strip multiline
+		while(*p)
 		{
-			if(gameclient.clients[client_id].team == 0)
-				lines[current_line].name_color = 0;
-			else if(gameclient.clients[client_id].team == 1)
-				lines[current_line].name_color = 1;
+			if(*p++ == '\n')
+			{
+				*(p-1) = 0;
+				break;
+			}
+		}
+
+		m_CurrentLine = (m_CurrentLine+1)%MAX_LINES;
+		m_aLines[m_CurrentLine].m_Time = time_get();
+		m_aLines[m_CurrentLine].m_ClientId = ClientId;
+		m_aLines[m_CurrentLine].m_Team = Team;
+		m_aLines[m_CurrentLine].m_NameColor = -2;
+
+		if(ClientId == -1) // server message
+		{
+			str_copy(m_aLines[m_CurrentLine].m_aName, "*** ", sizeof(m_aLines[m_CurrentLine].m_aName));
+			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "%s", pLine);
+		}
+		else
+		{
+			if(m_pClient->m_aClients[ClientId].m_Team == -1)
+				m_aLines[m_CurrentLine].m_NameColor = -1;
+
+			if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS)
+			{
+				if(m_pClient->m_aClients[ClientId].m_Team == 0)
+					m_aLines[m_CurrentLine].m_NameColor = 0;
+				else if(m_pClient->m_aClients[ClientId].m_Team == 1)
+					m_aLines[m_CurrentLine].m_NameColor = 1;
+			}
+			
+			str_copy(m_aLines[m_CurrentLine].m_aName, m_pClient->m_aClients[ClientId].m_aName, sizeof(m_aLines[m_CurrentLine].m_aName));
+			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), ": %s", pLine);
 		}
 		
-		str_copy(lines[current_line].name, gameclient.clients[client_id].name, sizeof(lines[current_line].name));
-		str_format(lines[current_line].text, sizeof(lines[current_line].text), ": %s", line);
+		char aBuf[1024];
+		str_format(aBuf, sizeof(aBuf), "[chat]%s%s", m_aLines[m_CurrentLine].m_aName, m_aLines[m_CurrentLine].m_aText);
+		Console()->Print(aBuf);
 	}
-	
+
 	// play sound
-	if(client_id >= 0)
-		gameclient.sounds->play(SOUNDS::CHN_GUI, SOUND_CHAT_CLIENT, 0, vec2(0,0));
+	if(ClientId >= 0)
+		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0, vec2(0,0));
 	else
-		gameclient.sounds->play(SOUNDS::CHN_GUI, SOUND_CHAT_SERVER, 0, vec2(0,0));
-	
-	dbg_msg("chat", "%s%s", lines[current_line].name, lines[current_line].text);
+		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0, vec2(0,0));
 }
 
-void CHAT::on_render()
+void CChat::OnRender()
 {
 	Graphics()->MapScreen(0,0,300*Graphics()->ScreenAspect(),300);
 	float x = 10.0f;
 	float y = 300.0f-20.0f;
-	if(mode != MODE_NONE)
+	if(m_Mode != MODE_NONE)
 	{
 		// render chat input
-		TEXT_CURSOR cursor;
-		gfx_text_set_cursor(&cursor, x, y, 8.0f, TEXTFLAG_RENDER);
-		cursor.line_width = 200.0f;
+		CTextCursor Cursor;
+		TextRender()->SetCursor(&Cursor, x, y, 8.0f, TEXTFLAG_RENDER);
+		Cursor.m_LineWidth = 200.0f;
 		
-		if(mode == MODE_ALL)
-			gfx_text_ex(&cursor, localize("All"), -1);
-		else if(mode == MODE_TEAM)
-			gfx_text_ex(&cursor, localize("Team"), -1);
+		if(m_Mode == MODE_ALL)
+			TextRender()->TextEx(&Cursor, Localize("All"), -1);
+		else if(m_Mode == MODE_TEAM)
+			TextRender()->TextEx(&Cursor, Localize("Team"), -1);
 		else
-			gfx_text_ex(&cursor, localize("Chat"), -1);
+			TextRender()->TextEx(&Cursor, Localize("Chat"), -1);
 
-		gfx_text_ex(&cursor, ": ", -1);
+		TextRender()->TextEx(&Cursor, ": ", -1);
 			
-		gfx_text_ex(&cursor, input.get_string(), input.cursor_offset());
-		TEXT_CURSOR marker = cursor;
-		gfx_text_ex(&marker, "|", -1);
-		gfx_text_ex(&cursor, input.get_string()+input.cursor_offset(), -1);
+		TextRender()->TextEx(&Cursor, m_Input.GetString(), m_Input.GetCursorOffset());
+		CTextCursor Marker = Cursor;
+		TextRender()->TextEx(&Marker, "|", -1);
+		TextRender()->TextEx(&Cursor, m_Input.GetString()+m_Input.GetCursorOffset(), -1);
 	}
 
 	y -= 8;
 
 	int i;
+	int64 Now = time_get();
 	for(i = 0; i < MAX_LINES; i++)
 	{
-		int r = ((current_line-i)+MAX_LINES)%MAX_LINES;
-		if(time_get() > lines[r].time+15*time_freq())
+		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
+		if(Now > m_aLines[r].m_Time+15*time_freq())
 			break;
 
-		float begin = x;
-		float fontsize = 7.0f;
+		float Begin = x;
+		float FontSize = 7.0f;
 		
 		// get the y offset
-		TEXT_CURSOR cursor;
-		gfx_text_set_cursor(&cursor, begin, 0, fontsize, 0);
-		cursor.line_width = 200.0f;
-		gfx_text_ex(&cursor, lines[r].name, -1);
-		gfx_text_ex(&cursor, lines[r].text, -1);
-		y -= cursor.y + cursor.font_size;
+		CTextCursor Cursor;
+		TextRender()->SetCursor(&Cursor, Begin, 0, FontSize, 0);
+		Cursor.m_LineWidth = 200.0f;
+		TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
+		TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
+		y -= Cursor.m_Y + Cursor.m_FontSize;
 
 		// cut off if msgs waste too much space
 		if(y < 200.0f)
 			break;
 		
 		// reset the cursor
-		gfx_text_set_cursor(&cursor, begin, y, fontsize, TEXTFLAG_RENDER);
-		cursor.line_width = 200.0f;
+		TextRender()->SetCursor(&Cursor, Begin, y, FontSize, TEXTFLAG_RENDER);
+		Cursor.m_LineWidth = 200.0f;
 
 		// render name
-		gfx_text_color(0.8f,0.8f,0.8f,1);
-		if(lines[r].client_id == -1)
-			gfx_text_color(1,1,0.5f,1); // system
-		else if(lines[r].team)
-			gfx_text_color(0.45f,0.9f,0.45f,1); // team message
-		else if(lines[r].name_color == 0)
-			gfx_text_color(1.0f,0.5f,0.5f,1); // red
-		else if(lines[r].name_color == 1)
-			gfx_text_color(0.7f,0.7f,1.0f,1); // blue
-		else if(lines[r].name_color == -1)
-			gfx_text_color(0.75f,0.5f,0.75f, 1); // spectator
+		TextRender()->TextColor(0.8f,0.8f,0.8f,1);
+		if(m_aLines[r].m_ClientId == -1)
+			TextRender()->TextColor(1,1,0.5f,1); // system
+		else if(m_aLines[r].m_Team)
+			TextRender()->TextColor(0.45f,0.9f,0.45f,1); // team message
+		else if(m_aLines[r].m_NameColor == 0)
+			TextRender()->TextColor(1.0f,0.5f,0.5f,1); // red
+		else if(m_aLines[r].m_NameColor == 1)
+			TextRender()->TextColor(0.7f,0.7f,1.0f,1); // blue
+		else if(m_aLines[r].m_NameColor == -1)
+			TextRender()->TextColor(0.75f,0.5f,0.75f, 1); // spectator
 			
 		// render name
-		gfx_text_ex(&cursor, lines[r].name, -1);
+		TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
 
 		// render line
-		gfx_text_color(1,1,1,1);
-		if(lines[r].client_id == -1)
-			gfx_text_color(1,1,0.5f,1); // system
-		else if(lines[r].team)
-			gfx_text_color(0.65f,1,0.65f,1); // team message
+		TextRender()->TextColor(1,1,1,1);
+		if(m_aLines[r].m_ClientId == -1)
+			TextRender()->TextColor(1,1,0.5f,1); // system
+		else if(m_aLines[r].m_Team)
+			TextRender()->TextColor(0.65f,1,0.65f,1); // team message
 
-		gfx_text_ex(&cursor, lines[r].text, -1);
+		TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
 	}
 
-	gfx_text_color(1,1,1,1);
+	TextRender()->TextColor(1,1,1,1);
 }
 
-void CHAT::say(int team, const char *line)
+void CChat::Say(int Team, const char *pLine)
 {
 	// send chat message
-	NETMSG_CL_SAY msg;
-	msg.team = team;
-	msg.message = line;
-	msg.pack(MSGFLAG_VITAL);
-	client_send_msg();
+	CNetMsg_Cl_Say Msg;
+	Msg.m_Team = Team;
+	Msg.m_pMessage = pLine;
+	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }

@@ -1,100 +1,101 @@
 
-#include "localization.hpp"
-#include <base/tl/algorithm.hpp>
+#include "localization.h"
+#include <base/tl/algorithm.h>
 
-#include <engine/e_linereader.h>
+#include <engine/shared/linereader.h>
 
-const char *localize(const char *str)
+const char *Localize(const char *pStr)
 {
-	const char *new_str = localization.find_string(str_quickhash(str));
-	return new_str ? new_str : str;
+	const char *pNewStr = g_Localization.FindString(str_quickhash(pStr));
+	return pNewStr ? pNewStr : pStr;
 }
 
-LOC_CONSTSTRING::LOC_CONSTSTRING(const char *str)
+CLocConstString::CLocConstString(const char *pStr)
 {
-	default_str = str;
-	hash = str_quickhash(default_str);
-	version = -1;
+	m_pDefaultStr = pStr;
+	m_Hash = str_quickhash(m_pDefaultStr);
+	m_Version = -1;
 }
 
-void LOC_CONSTSTRING::reload()
+void CLocConstString::Reload()
 {
-	version = localization.version();
-	const char *new_str = localization.find_string(hash);
-	current_str = new_str;
-	if(!current_str)
-		current_str = default_str;
+	m_Version = g_Localization.Version();
+	const char *pNewStr = g_Localization.FindString(m_Hash);
+	m_pCurrentStr = pNewStr;
+	if(!m_pCurrentStr)
+		m_pCurrentStr = m_pDefaultStr;
 }
 
-LOCALIZATIONDATABASE::LOCALIZATIONDATABASE()
+CLocalizationDatabase::CLocalizationDatabase()
 {
-	current_version = 0;
+	m_CurrentVersion = 0;
 }
 
-void LOCALIZATIONDATABASE::add_string(const char *org_str, const char *new_str)
+void CLocalizationDatabase::AddString(const char *pOrgStr, const char *pNewStr)
 {
-	STRING s;
-	s.hash = str_quickhash(org_str);
-	s.replacement = new_str;
-	strings.add(s);
+	CString s;
+	s.m_Hash = str_quickhash(pOrgStr);
+	s.m_Replacement = pNewStr;
+	m_Strings.add(s);
 }
 
-bool LOCALIZATIONDATABASE::load(const char *filename)
+bool CLocalizationDatabase::Load(const char *pFilename)
 {
 	// empty string means unload
-	if(filename[0] == 0)
+	if(pFilename[0] == 0)
 	{
-		strings.clear();
+		m_Strings.clear();
+		m_CurrentVersion = 0;
 		return true;
 	}
 	
-	LINEREADER lr;
-	IOHANDLE io = io_open(filename, IOFLAG_READ);
-	if(!io)
+	IOHANDLE IoHandle = io_open(pFilename, IOFLAG_READ);
+	if(!IoHandle)
 		return false;
 	
-	dbg_msg("localization", "loaded '%s'", filename);
-	strings.clear();
+	dbg_msg("localization", "loaded '%s'", pFilename);
+	m_Strings.clear();
 	
-	linereader_init(&lr, io);
-	char *line;
-	while((line = linereader_get(&lr)))
+	CLineReader LineReader;
+	LineReader.Init(IoHandle);
+	char *pLine;
+	while((pLine = LineReader.Get()))
 	{
-		if(!str_length(line))
+		if(!str_length(pLine))
 			continue;
 			
-		if(line[0] == '#') // skip comments
+		if(pLine[0] == '#') // skip comments
 			continue;
 			
-		char *replacement = linereader_get(&lr);
-		if(!replacement)
+		char *pReplacement = LineReader.Get();
+		if(!pReplacement)
 		{
 			dbg_msg("", "unexpected end of file");
 			break;
 		}
 		
-		if(replacement[0] != '=' || replacement[1] != '=' || replacement[2] != ' ')
+		if(pReplacement[0] != '=' || pReplacement[1] != '=' || pReplacement[2] != ' ')
 		{
-			dbg_msg("", "malform replacement line for '%s'", line);
+			dbg_msg("", "malform replacement line for '%s'", pLine);
 			continue;
 		}
 
-		replacement += 3;
-		localization.add_string(line, replacement);
+		pReplacement += 3;
+		AddString(pLine, pReplacement);
 	}
 	
-	current_version++;
+	m_CurrentVersion++;
 	return true;
 }
 
-const char *LOCALIZATIONDATABASE::find_string(unsigned hash)
+const char *CLocalizationDatabase::FindString(unsigned Hash)
 {
-	STRING s;
-	s.hash = hash;
-	sorted_array<STRING>::range r = ::find_binary(strings.all(), s);
+	CString String;
+	String.m_Hash = Hash;
+	sorted_array<CString>::range r = ::find_binary(m_Strings.all(), String);
 	if(r.empty())
 		return 0;
-	return r.front().replacement;
+	return r.front().m_Replacement;
 }
 
-LOCALIZATIONDATABASE localization;
+CLocalizationDatabase g_Localization;

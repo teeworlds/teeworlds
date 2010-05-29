@@ -1,94 +1,94 @@
-#include <engine/e_client_interface.h>
-#include <engine/client/graphics.h>
-#include <game/generated/g_protocol.hpp>
-#include <game/generated/gc_data.hpp>
+#include <engine/graphics.h>
+#include <game/generated/protocol.h>
+#include <game/generated/client_data.h>
 
-#include <game/gamecore.hpp> // get_angle
-#include <game/client/gameclient.hpp>
-#include <game/client/ui.hpp>
-#include <game/client/render.hpp>
+#include <game/gamecore.h> // get_angle
+#include <game/client/gameclient.h>
+#include <game/client/ui.h>
+#include <game/client/render.h>
 
-#include <game/client/components/flow.hpp>
-#include <game/client/components/effects.hpp>
+#include <game/client/components/flow.h>
+#include <game/client/components/effects.h>
 
-#include "items.hpp"
+#include "items.h"
 
-void ITEMS::render_projectile(const NETOBJ_PROJECTILE *current, int itemid)
+void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemId)
 {
 
 	// get positions
-	float curvature = 0;
-	float speed = 0;
-	if(current->type == WEAPON_GRENADE)
+	float Curvature = 0;
+	float Speed = 0;
+	if(pCurrent->m_Type == WEAPON_GRENADE)
 	{
-		curvature = gameclient.tuning.grenade_curvature;
-		speed = gameclient.tuning.grenade_speed;
+		Curvature = m_pClient->m_Tuning.m_GrenadeCurvature;
+		Speed = m_pClient->m_Tuning.m_GrenadeSpeed;
 	}
-	else if(current->type == WEAPON_SHOTGUN)
+	else if(pCurrent->m_Type == WEAPON_SHOTGUN)
 	{
-		curvature = gameclient.tuning.shotgun_curvature;
-		speed = gameclient.tuning.shotgun_speed;
+		Curvature = m_pClient->m_Tuning.m_ShotgunCurvature;
+		Speed = m_pClient->m_Tuning.m_ShotgunSpeed;
 	}
-	else if(current->type == WEAPON_GUN)
+	else if(pCurrent->m_Type == WEAPON_GUN)
 	{
-		curvature = gameclient.tuning.gun_curvature;
-		speed = gameclient.tuning.gun_speed;
+		Curvature = m_pClient->m_Tuning.m_GunCurvature;
+		Speed = m_pClient->m_Tuning.m_GunSpeed;
 	}
 
-	float ct = (client_prevtick()-current->start_tick)/(float)SERVER_TICK_SPEED + client_ticktime();
-	if(ct < 0)
+	float Ct = (Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED + Client()->GameTickTime();
+	if(Ct < 0)
 		return; // projectile havn't been shot yet
 		
-	vec2 startpos(current->x, current->y);
-	vec2 startvel(current->vx/100.0f, current->vy/100.0f);
-	vec2 pos = calc_pos(startpos, startvel, curvature, speed, ct);
-	vec2 prevpos = calc_pos(startpos, startvel, curvature, speed, ct-0.001f);
+	vec2 StartPos(pCurrent->m_X, pCurrent->m_Y);
+	vec2 StartVel(pCurrent->m_VelX/100.0f, pCurrent->m_VelY/100.0f);
+	vec2 Pos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct);
+	vec2 PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct-0.001f);
 
 
-	Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 	
-	RenderTools()->select_sprite(data->weapons.id[clamp(current->type, 0, NUM_WEAPONS-1)].sprite_proj);
-	vec2 vel = pos-prevpos;
-	//vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
+	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[clamp(pCurrent->m_Type, 0, NUM_WEAPONS-1)].m_pSpriteProj);
+	vec2 Vel = Pos-PrevPos;
+	//vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), Client()->IntraGameTick());
 	
 
 	// add particle for this projectile
-	if(current->type == WEAPON_GRENADE)
+	if(pCurrent->m_Type == WEAPON_GRENADE)
 	{
-		gameclient.effects->smoketrail(pos, vel*-1);
-		gameclient.flow->add(pos, vel*1000*client_frametime(), 10.0f);
-		Graphics()->QuadsSetRotation(client_localtime()*pi*2*2 + itemid);
+		m_pClient->m_pEffects->SmokeTrail(Pos, Vel*-1);
+		m_pClient->m_pFlow->Add(Pos, Vel*1000*Client()->FrameTime(), 10.0f);
+		Graphics()->QuadsSetRotation(Client()->LocalTime()*pi*2*2 + ItemId);
 	}
 	else
 	{
-		gameclient.effects->bullettrail(pos);
-		gameclient.flow->add(pos, vel*1000*client_frametime(), 10.0f);
+		m_pClient->m_pEffects->BulletTrail(Pos);
+		m_pClient->m_pFlow->Add(Pos, Vel*1000*Client()->FrameTime(), 10.0f);
 
-		if(length(vel) > 0.00001f)
-			Graphics()->QuadsSetRotation(get_angle(vel));
+		if(length(Vel) > 0.00001f)
+			Graphics()->QuadsSetRotation(GetAngle(Vel));
 		else
 			Graphics()->QuadsSetRotation(0);
 
 	}
 
-	Graphics()->QuadsDraw(pos.x, pos.y, 32, 32);
+	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 32, 32);
+	Graphics()->QuadsDraw(&QuadItem, 1);
 	Graphics()->QuadsSetRotation(0);
 	Graphics()->QuadsEnd();
 }
 
-void ITEMS::render_pickup(const NETOBJ_PICKUP *prev, const NETOBJ_PICKUP *current)
+void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCurrent)
 {
-	Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
-	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
-	float angle = 0.0f;
-	float size = 64.0f;
-	if (current->type == POWERUP_WEAPON)
+	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
+	float Angle = 0.0f;
+	float Size = 64.0f;
+	if (pCurrent->m_Type == POWERUP_WEAPON)
 	{
-		angle = 0; //-pi/6;//-0.25f * pi * 2.0f;
-		RenderTools()->select_sprite(data->weapons.id[clamp(current->subtype, 0, NUM_WEAPONS-1)].sprite_body);
-		size = data->weapons.id[clamp(current->subtype, 0, NUM_WEAPONS-1)].visual_size;
+		Angle = 0; //-pi/6;//-0.25f * pi * 2.0f;
+		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[clamp(pCurrent->m_Subtype, 0, NUM_WEAPONS-1)].m_pSpriteBody);
+		Size = g_pData->m_Weapons.m_aId[clamp(pCurrent->m_Subtype, 0, NUM_WEAPONS-1)].m_VisualSize;
 	}
 	else
 	{
@@ -98,69 +98,70 @@ void ITEMS::render_pickup(const NETOBJ_PICKUP *prev, const NETOBJ_PICKUP *curren
 			SPRITE_PICKUP_WEAPON,
 			SPRITE_PICKUP_NINJA
 			};
-		RenderTools()->select_sprite(c[current->type]);
+		RenderTools()->SelectSprite(c[pCurrent->m_Type]);
 
-		if(c[current->type] == SPRITE_PICKUP_NINJA)
+		if(c[pCurrent->m_Type] == SPRITE_PICKUP_NINJA)
 		{
-			gameclient.effects->powerupshine(pos, vec2(96,18));
-			size *= 2.0f;
-			pos.x += 10.0f;
+			m_pClient->m_pEffects->PowerupShine(Pos, vec2(96,18));
+			Size *= 2.0f;
+			Pos.x += 10.0f;
 		}
 	}
 
-	Graphics()->QuadsSetRotation(angle);
+	Graphics()->QuadsSetRotation(Angle);
 
-	float offset = pos.y/32.0f + pos.x/32.0f;
-	pos.x += cosf(client_localtime()*2.0f+offset)*2.5f;
-	pos.y += sinf(client_localtime()*2.0f+offset)*2.5f;
-	RenderTools()->draw_sprite(pos.x, pos.y, size);
+	float Offset = Pos.y/32.0f + Pos.x/32.0f;
+	Pos.x += cosf(Client()->LocalTime()*2.0f+Offset)*2.5f;
+	Pos.y += sinf(Client()->LocalTime()*2.0f+Offset)*2.5f;
+	RenderTools()->DrawSprite(Pos.x, Pos.y, Size);
 	Graphics()->QuadsEnd();
 }
 
-void ITEMS::render_flag(const NETOBJ_FLAG *prev, const NETOBJ_FLAG *current)
+void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent)
 {
-	float angle = 0.0f;
-	float size = 42.0f;
+	float Angle = 0.0f;
+	float Size = 42.0f;
 
 	Graphics()->BlendNormal();
-	Graphics()->TextureSet(data->images[IMAGE_GAME].id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 
-	if(current->team == 0) // red team
-		RenderTools()->select_sprite(SPRITE_FLAG_RED);
+	if(pCurrent->m_Team == 0) // red team
+		RenderTools()->SelectSprite(SPRITE_FLAG_RED);
 	else
-		RenderTools()->select_sprite(SPRITE_FLAG_BLUE);
+		RenderTools()->SelectSprite(SPRITE_FLAG_BLUE);
 
-	Graphics()->QuadsSetRotation(angle);
+	Graphics()->QuadsSetRotation(Angle);
 
-	vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), client_intratick());
+	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
 	
 	// make sure that the flag isn't interpolated between capture and return
-	if(prev->carried_by != current->carried_by)
-		pos = vec2(current->x, current->y);
+	if(pPrev->m_CarriedBy != pCurrent->m_CarriedBy)
+		Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
 
 	// make sure to use predicted position if we are the carrier
-	if(gameclient.snap.local_info && current->carried_by == gameclient.snap.local_info->cid)
-		pos = gameclient.local_character_pos;
+	if(m_pClient->m_Snap.m_pLocalInfo && pCurrent->m_CarriedBy == m_pClient->m_Snap.m_pLocalInfo->m_ClientId)
+		Pos = m_pClient->m_LocalCharacterPos;
 
-	Graphics()->QuadsDraw(pos.x, pos.y-size*0.75f, size, size*2);
+	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y-Size*0.75f, Size, Size*2);
+	Graphics()->QuadsDraw(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 }
 
 
-void ITEMS::render_laser(const struct NETOBJ_LASER *current)
+void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 {
-	vec2 pos = vec2(current->x, current->y);
-	vec2 from = vec2(current->from_x, current->from_y);
-	vec2 dir = normalize(pos-from);
+	vec2 Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
+	vec2 From = vec2(pCurrent->m_FromX, pCurrent->m_FromY);
+	vec2 Dir = normalize(Pos-From);
 
-	float ticks = client_tick() + client_intratick() - current->start_tick;
-	float ms = (ticks/50.0f) * 1000.0f;
-	float a =  ms / gameclient.tuning.laser_bounce_delay;
+	float Ticks = Client()->GameTick() + Client()->IntraGameTick() - pCurrent->m_StartTick;
+	float Ms = (Ticks/50.0f) * 1000.0f;
+	float a =  Ms / m_pClient->m_Tuning.m_LaserBounceDelay;
 	a = clamp(a, 0.0f, 1.0f);
-	float ia = 1-a;
+	float Ia = 1-a;
 	
-	vec2 out, border;
+	vec2 Out, Border;
 	
 	Graphics()->BlendNormal();
 	Graphics()->TextureSet(-1);
@@ -170,77 +171,87 @@ void ITEMS::render_laser(const struct NETOBJ_LASER *current)
 	//vec4 outer_color(0.65f,0.85f,1.0f,1.0f);
 
 	// do outline
-	vec4 outer_color(0.075f,0.075f,0.25f,1.0f);
-	Graphics()->SetColor(outer_color.r,outer_color.g,outer_color.b,1.0f);
-	out = vec2(dir.y, -dir.x) * (7.0f*ia);
+	vec4 OuterColor(0.075f, 0.075f, 0.25f, 1.0f);
+	Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
+	Out = vec2(Dir.y, -Dir.x) * (7.0f*Ia);
 
-	Graphics()->QuadsDrawFreeform(
-			from.x-out.x, from.y-out.y,
-			from.x+out.x, from.y+out.y,
-			pos.x-out.x, pos.y-out.y,
-			pos.x+out.x, pos.y+out.y
-		);
+	IGraphics::CFreeformItem Freeform(
+			From.x-Out.x, From.y-Out.y,
+			From.x+Out.x, From.y+Out.y,
+			Pos.x-Out.x, Pos.y-Out.y,
+			Pos.x+Out.x, Pos.y+Out.y);
+	Graphics()->QuadsDrawFreeform(&Freeform, 1);
 
 	// do inner	
-	vec4 inner_color(0.5f,0.5f,1.0f,1.0f);
-	out = vec2(dir.y, -dir.x) * (5.0f*ia);
-	Graphics()->SetColor(inner_color.r, inner_color.g, inner_color.b, 1.0f); // center
+	vec4 InnerColor(0.5f, 0.5f, 1.0f, 1.0f);
+	Out = vec2(Dir.y, -Dir.x) * (5.0f*Ia);
+	Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, 1.0f); // center
 	
-	Graphics()->QuadsDrawFreeform(
-			from.x-out.x, from.y-out.y,
-			from.x+out.x, from.y+out.y,
-			pos.x-out.x, pos.y-out.y,
-			pos.x+out.x, pos.y+out.y
-		);
+	Freeform = IGraphics::CFreeformItem(
+			From.x-Out.x, From.y-Out.y,
+			From.x+Out.x, From.y+Out.y,
+			Pos.x-Out.x, Pos.y-Out.y,
+			Pos.x+Out.x, Pos.y+Out.y);
+	Graphics()->QuadsDrawFreeform(&Freeform, 1);
 		
 	Graphics()->QuadsEnd();
 	
 	// render head
 	{
 		Graphics()->BlendNormal();
-		Graphics()->TextureSet(data->images[IMAGE_PARTICLES].id);
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_PARTICLES].m_Id);
 		Graphics()->QuadsBegin();
 
-		int sprites[] = {SPRITE_PART_SPLAT01, SPRITE_PART_SPLAT02, SPRITE_PART_SPLAT03};
-		RenderTools()->select_sprite(sprites[client_tick()%3]);
-		Graphics()->QuadsSetRotation(client_tick());
-		Graphics()->SetColor(outer_color.r,outer_color.g,outer_color.b,1.0f);
-		Graphics()->QuadsDraw(pos.x, pos.y, 24,24);
-		Graphics()->SetColor(inner_color.r, inner_color.g, inner_color.b, 1.0f);
-		Graphics()->QuadsDraw(pos.x, pos.y, 20,20);
+		int Sprites[] = {SPRITE_PART_SPLAT01, SPRITE_PART_SPLAT02, SPRITE_PART_SPLAT03};
+		RenderTools()->SelectSprite(Sprites[Client()->GameTick()%3]);
+		Graphics()->QuadsSetRotation(Client()->GameTick());
+		Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
+		IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 24, 24);
+		Graphics()->QuadsDraw(&QuadItem, 1);
+		Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, 1.0f);
+		QuadItem = IGraphics::CQuadItem(Pos.x, Pos.y, 20, 20);
+		Graphics()->QuadsDraw(&QuadItem, 1);
 		Graphics()->QuadsEnd();
 	}
 	
 	Graphics()->BlendNormal();	
 }
 
-void ITEMS::on_render()
+void CItems::OnRender()
 {
-	int num = snap_num_items(SNAP_CURRENT);
-	for(int i = 0; i < num; i++)
+	int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
+	for(int i = 0; i < Num; i++)
 	{
-		SNAP_ITEM item;
-		const void *data = snap_get_item(SNAP_CURRENT, i, &item);
+		IClient::CSnapItem Item;
+		const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
 
-		if(item.type == NETOBJTYPE_PROJECTILE)
+		if(Item.m_Type == NETOBJTYPE_PROJECTILE)
 		{
-			render_projectile((const NETOBJ_PROJECTILE *)data, item.id);
+			RenderProjectile((const CNetObj_Projectile *)pData, Item.m_Id);
 		}
-		else if(item.type == NETOBJTYPE_PICKUP)
+		else if(Item.m_Type == NETOBJTYPE_PICKUP)
 		{
-			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-			if(prev)
-				render_pickup((const NETOBJ_PICKUP *)prev, (const NETOBJ_PICKUP *)data);
+			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_Id);
+			if(pPrev)
+				RenderPickup((const CNetObj_Pickup *)pPrev, (const CNetObj_Pickup *)pData);
 		}
-		else if(item.type == NETOBJTYPE_LASER)
+		else if(Item.m_Type == NETOBJTYPE_LASER)
 		{
-			render_laser((const NETOBJ_LASER *)data);
+			RenderLaser((const CNetObj_Laser *)pData);
 		}
-		else if(item.type == NETOBJTYPE_FLAG)
+	}
+
+	// render flag
+	for(int i = 0; i < Num; i++)
+	{
+		IClient::CSnapItem Item;
+		const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
+
+		if(Item.m_Type == NETOBJTYPE_FLAG)
 		{
-			const void *prev = snap_find_item(SNAP_PREV, item.type, item.id);
-			if (prev)
-				render_flag((const NETOBJ_FLAG *)prev, (const NETOBJ_FLAG *)data);
+			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_Id);
+			if (pPrev)
+				RenderFlag((const CNetObj_Flag *)pPrev, (const CNetObj_Flag *)pData);
 		}
 	}
 
@@ -248,7 +259,7 @@ void ITEMS::on_render()
 	/*
 	for(int i = 0; i < extraproj_num; i++)
 	{
-		if(extraproj_projectiles[i].start_tick < client_tick())
+		if(extraproj_projectiles[i].start_tick < Client()->GameTick())
 		{
 			extraproj_projectiles[i] = extraproj_projectiles[extraproj_num-1];
 			extraproj_num--;

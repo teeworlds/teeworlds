@@ -1,85 +1,94 @@
-#include <engine/client/graphics.h>
-#include <game/mapitems.hpp>
-#include <game/layers.hpp>
-#include "flow.hpp"
+#include <engine/graphics.h>
+#include <game/mapitems.h>
+#include <game/layers.h>
+#include "flow.h"
 
-FLOW::FLOW()
+CFlow::CFlow()
 {
-	cells = 0;
-	height = 0;
-	width = 0;
-	spacing = 16;
+	m_pCells = 0;
+	m_Height = 0;
+	m_Width = 0;
+	m_Spacing = 16;
 }
 	
-void FLOW::dbg_render()
+void CFlow::DbgRender()
 {
-	if(!cells)
+	if(!m_pCells)
 		return;
 
+	IGraphics::CLineItem Array[1024];
+	int NumItems = 0;
 	Graphics()->TextureSet(-1);
 	Graphics()->LinesBegin();
-	for(int y = 0; y < height; y++)
-		for(int x = 0; x < width; x++)
+	for(int y = 0; y < m_Height; y++)
+		for(int x = 0; x < m_Width; x++)
 		{
-			vec2 pos(x*spacing, y*spacing);
-			vec2 vel = cells[y*width+x].vel * 0.01f;
-			Graphics()->LinesDraw(pos.x, pos.y, pos.x+vel.x, pos.y+vel.y);
+			vec2 Pos(x*m_Spacing, y*m_Spacing);
+			vec2 Vel = m_pCells[y*m_Width+x].m_Vel * 0.01f;
+			Array[NumItems++] = IGraphics::CLineItem(Pos.x, Pos.y, Pos.x+Vel.x, Pos.y+Vel.y);
+			if(NumItems == 1024)
+			{
+				Graphics()->LinesDraw(Array, 1024);
+				NumItems = 0;
+			}
 		}
-		
+	
+	if(NumItems)
+		Graphics()->LinesDraw(Array, NumItems);
 	Graphics()->LinesEnd();
 }
 
-void FLOW::init()
+void CFlow::Init()
 {
-	if(cells)
+	if(m_pCells)
 	{
-		mem_free(cells);
-		cells = 0;
+		mem_free(m_pCells);
+		m_pCells = 0;
 	}
 	
-	MAPITEM_LAYER_TILEMAP *tilemap = layers_game_layer();
-	width = tilemap->width*32/spacing;
-	height = tilemap->height*32/spacing;
+	CMapItemLayerTilemap *pTilemap = Layers()->GameLayer();
+	m_Width = pTilemap->m_Width*32/m_Spacing;
+	m_Height = pTilemap->m_Height*32/m_Spacing;
 
 	// allocate and clear	
-	cells = (CELL *)mem_alloc(sizeof(CELL)*width*height, 1);
-	for(int y = 0; y < height; y++)
-		for(int x = 0; x < width; x++)
-			cells[y*width+x].vel = vec2(0.0f, 0.0f);
+	m_pCells = (CCell *)mem_alloc(sizeof(CCell)*m_Width*m_Height, 1);
+	for(int y = 0; y < m_Height; y++)
+		for(int x = 0; x < m_Width; x++)
+			m_pCells[y*m_Width+x].m_Vel = vec2(0.0f, 0.0f);
 }
 
-void FLOW::update()
+void CFlow::Update()
 {
-	if(!cells)
+	if(!m_pCells)
 		return;
 		
-	for(int y = 0; y < height; y++)
-		for(int x = 0; x < width; x++)
-			cells[y*width+x].vel *= 0.85f;
+	for(int y = 0; y < m_Height; y++)
+		for(int x = 0; x < m_Width; x++)
+			m_pCells[y*m_Width+x].m_Vel *= 0.85f;
 }
 
-vec2 FLOW::get(vec2 pos)
+vec2 CFlow::Get(vec2 Pos)
 {
-	if(!cells)
+	if(!m_pCells)
 		return vec2(0,0);
 	
-	int x = (int)(pos.x / spacing);
-	int y = (int)(pos.y / spacing);
-	if(x < 0 || y < 0 || x >= width || y >= height)
+	int x = (int)(Pos.x / m_Spacing);
+	int y = (int)(Pos.y / m_Spacing);
+	if(x < 0 || y < 0 || x >= m_Width || y >= m_Height)
 		return vec2(0,0);
 	
-	return cells[y*width+x].vel;	
+	return m_pCells[y*m_Width+x].m_Vel;	
 }
 
-void FLOW::add(vec2 pos, vec2 vel, float size)
+void CFlow::Add(vec2 Pos, vec2 Vel, float Size)
 {
-	if(!cells)
+	if(!m_pCells)
 		return;
 		
-	int x = (int)(pos.x / spacing);
-	int y = (int)(pos.y / spacing);
-	if(x < 0 || y < 0 || x >= width || y >= height)
+	int x = (int)(Pos.x / m_Spacing);
+	int y = (int)(Pos.y / m_Spacing);
+	if(x < 0 || y < 0 || x >= m_Width || y >= m_Height)
 		return;
 	
-	cells[y*width+x].vel += vel;
+	m_pCells[y*m_Width+x].m_Vel += Vel;
 }

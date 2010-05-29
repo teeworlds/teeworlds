@@ -1,0 +1,437 @@
+##### translated strings #####
+
+%d of %d servers, %d players
+== %d van %d Servers, %d spelers
+
+Abort
+== Afbreken
+
+Address
+== Adres
+
+All
+== Alle
+
+Alpha
+== Alpha
+
+Always show name plates
+== Altijd namen laten zien
+
+Are you sure that you want to quit?
+== Weet je zeker dat je wil stoppen?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Omdat dit de eerste keer is dat je het spel opstart, moet je een nicknaam kiezen. Doe dat hieronder. Het is aanbevolen dat je de instelleingen checkt en misschien aanpast naar jou keuze voordat je een server binnen gaat.
+
+Blue team
+== Blauw
+
+Blue team wins!
+== Blauw heeft gewonnen
+
+Body
+== Lichaam
+
+Call vote
+== Vraag voor stemmen.
+
+Chat
+== Chat
+
+Close
+== Sluiten
+
+Compatible version
+== Versie die werkt
+
+Connect
+== Verbinden
+
+Connecting to
+== Verbinden met
+
+Console
+== Console
+
+Controls
+== Controle
+
+Current
+== Actueel
+
+Current version: %s
+== Versie die u gebruikt: %s
+
+Custom colors
+== Eigen kleuren
+
+Demos
+== Demos
+
+Disconnect
+== Verbinding verbreken
+
+Disconnected
+== Verbinding verbroken
+
+Display Modes
+== Weergeef modes
+
+Downloading map
+== Kaart downloaden
+
+Draw!
+== Draw!
+
+Dynamic Camera
+== Dynamische Camera
+
+Emoticon
+== Emotie
+
+Enter
+== Starten
+
+FSAA samples
+== FSAA voorbeelden
+
+Favorite
+== Favoriet
+
+Favorites
+== Favorieten
+
+Feet
+== Voeten
+
+Filter
+== Filter
+
+Fire
+== Vuur
+
+Force vote
+== Forceer stemmen
+
+Fullscreen
+== Volledig Scherm
+
+Game
+== Spel
+
+Game info
+== Spelinfo
+
+Game over
+== Spel afgelopen
+
+Game type
+== Speltype
+
+Game types
+== Speltypen
+
+General
+== Algemeen
+
+Graphics
+== Grafiek
+
+Grenade
+== Granaat
+
+Hammer
+== Hamer
+
+Has people playing
+== Mensen zijn aan het spelen
+
+High Detail
+== Hoge Details
+
+Hook
+== Hook
+
+Host address
+== Server adres
+
+Hue
+== Hue
+
+Info
+== Info
+
+Internet
+== Internet
+
+Join blue
+== Ga bij Blauw
+
+Join game
+== Binnenkomen
+
+Join red
+== Ga bij Rood
+
+Jump
+== Springen
+
+Kick
+== Kicken
+
+LAN
+== LAN
+
+Language
+== Taal
+
+Lht.
+== Lht.
+
+Loading
+== Laden
+
+MOTD
+== MOTD
+
+Map
+== Kaart
+
+Maximum ping
+== Maximale Ping
+
+Miscellaneous
+== Anders
+
+Mouse sens.
+== Mouse sens.
+
+Move left
+== Naar links
+
+Move right
+== Naar rechts
+
+Movement
+== Bewegen
+
+Mute when not active
+== Mute, waneer niet actief
+
+Name
+== Naam
+
+News
+== Nieuws
+
+Next weapon
+== Volgende wapen
+
+Nickname
+== Nicknaam
+
+No
+== Tes
+
+No password
+== Geen wachtwoord
+
+No servers found
+== Geen server gevonden
+
+No servers match your filter criteria
+== Geen servers gevonden op zoekopdracht
+
+Ok
+== OK
+
+Password
+== Wachtwoord
+
+Password Incorrect
+== Wachtwoord Vekeerd
+
+Ping
+== Ping
+
+Pistol
+== Pistool
+
+Play
+== Spelen
+
+Player
+== Speler
+
+Players
+== Spelers
+
+Prev. weapon
+== Vorig Wapen
+
+Quality Textures
+== Kwalteit Textures
+
+Quick search
+== Snel Zoken
+
+Quit
+== Stoppen
+
+Red team
+== Rood
+
+Red team wins!
+== Rood heeft gewonnen!
+
+Refresh
+== Vernieuwen
+
+Refreshing master servers
+== Vernieuwd hoofdserver
+
+Remote console
+== Remote console
+
+Reset filter
+== Standaardfilter
+
+Reset to defaults
+== Standaardinstelling
+
+Rifle
+== Rifle
+
+Round
+== Ronde
+
+Sample rate
+== Makkelijke rate
+
+Sat.
+== Sat.
+
+Score
+== Score
+
+Score board
+== Score bord
+
+Score limit
+== Score limiet
+
+Scoreboard
+== Scorebord
+
+Screenshot
+== Schermfoto
+
+Server details
+== Serverdetails
+
+Server info
+== Serverinfo
+
+Server not full
+== Server niet vol
+
+Settings
+== Instellingen
+
+Shotgun
+== Schotgun
+
+Show name plates
+== Laat namen zien
+
+Show only supported
+== Laat alleen servers zien die werken
+
+Skins
+== Thema's
+
+Sound
+== Geluid
+
+Sound volume
+== Volume
+
+Spectate
+== Sta in de wacht
+
+Spectators
+== Mensen die in de wacht staan
+
+Standard gametype
+== Standaard-Speltype
+
+Standard map
+== Standaardkaart
+
+Switch weapon on pickup
+== Verander wapen bij opakken
+
+Team
+== Team
+
+Team chat
+== Team chat
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworld %s is uit! Download het op www.teeworlds.com!
+
+Texture Compression
+== Text Compression
+
+The server is running a non-standard tuning on a pure game type.
+== The server draait niet een standaard gebruik op een puur game type.
+
+Time limit
+== Tijdlimiet
+
+Try again
+== Probeer opnieuw
+
+Type
+== Type
+
+UI Color
+== UI kleur
+
+Use sounds
+== Gebruik geluid
+
+V-Sync
+== V-Sync
+
+Version
+== Versie
+
+Vote no
+== No
+
+Vote yes
+== Ja
+
+Voting
+== Stemmen
+
+Weapon
+== Wapen
+
+Welcome to Teeworlds
+== Welkom bij Teeworlds
+
+Yes
+== Ja
+
+You must restart the game for all settings to take effect.
+== U moet het spel herstarten om het effect van de instellingen toe te passen.
+
+##### needs translation ####
+
+Your skin
+== Your skin
+
+##### old translations ####

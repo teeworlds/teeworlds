@@ -8,6 +8,27 @@ def GetID():
 def GetUID():
 	return "x%d"%GetID()
 
+def FixCasing(Str):
+	NewStr = ""
+	NextUpperCase = True
+	for c in Str:
+		if NextUpperCase:
+			NextUpperCase = False
+			NewStr += c.upper()
+		else:
+			if c == "_":
+				NextUpperCase = True
+			else:
+				NewStr += c.lower()
+	return NewStr
+	
+def FormatName(type, name):
+	if "*" in type:
+		return "m_p" + FixCasing(name)
+	if "[]" in type:
+		return "m_a" + FixCasing(name)
+	return "m_" + FixCasing(name)
+
 class BaseType:
 	def __init__(self, type_name):
 		self._type_name = type_name
@@ -20,7 +41,7 @@ class BaseType:
 	def ID(self): return self._id;
 	
 	def EmitDeclaration(self, name):
-		return ["%s %s;"%(self.TypeName(), name)]
+		return ["%s %s;"%(self.TypeName(), FormatName(self.TypeName(), name))]
 	def EmitPreDefinition(self, target_name):
 		self._target_name = target_name
 		return []
@@ -83,8 +104,8 @@ class Array(BaseType):
 			error("bah")
 		self.items += [instance]
 	def EmitDeclaration(self, name):
-		return ["int num_%s;"%(name),
-			"%s *%s;"%(self.TypeName(), name)]
+		return ["int m_Num%s;"%(FixCasing(name)),
+			"%s *%s;"%(self.TypeName(), FormatName("[]", name))]
 	def EmitPreDefinition(self, target_name):
 		BaseType.EmitPreDefinition(self, target_name)
 
@@ -179,12 +200,12 @@ class Flags:
 class NetObject:
 	def __init__(self, name, variables):
 		l = name.split(":")
-		self.name = l[0].lower()
+		self.name = l[0]
 		self.base = ""
 		if len(l) > 1:
 			self.base = l[1]
-		self.base_struct_name = "NETOBJ_%s" % self.base.upper()
-		self.struct_name = "NETOBJ_%s" % self.name.upper()
+		self.base_struct_name = "CNetObj_%s" % self.base
+		self.struct_name = "CNetObj_%s" % self.name
 		self.enum_name = "NETOBJTYPE_%s" % self.name.upper()
 		self.variables = variables
 	def emit_declaration(self):
@@ -197,10 +218,10 @@ class NetObject:
 		lines += ["};"]
 		return lines
 	def emit_validate(self):
-		lines = ["static int validate_%s(void *data, int size)" % self.name]
+		lines = ["case %s:" % self.enum_name]
 		lines += ["{"]
-		lines += ["\t%s *obj = (%s *)data;"%(self.struct_name, self.struct_name)]
-		lines += ["\tif(sizeof(*obj) != size) return -1;"]
+		lines += ["\t%s *pObj = (%s *)pData;"%(self.struct_name, self.struct_name)]
+		lines += ["\tif(sizeof(*pObj) != Size) return -1;"]
 		for v in self.variables:
 			lines += ["\t"+line for line in v.emit_validate()]
 		lines += ["\treturn 0;"]
@@ -218,29 +239,31 @@ class NetEvent(NetObject):
 class NetMessage(NetObject):
 	def __init__(self, name, variables):
 		NetObject.__init__(self, name, variables)
-		self.base_struct_name = "NETMSG_%s" % self.base.upper()
-		self.struct_name = "NETMSG_%s" % self.name.upper()
+		self.base_struct_name = "CNetMsg_%s" % self.base
+		self.struct_name = "CNetMsg_%s" % self.name
 		self.enum_name = "NETMSGTYPE_%s" % self.name.upper()
 	def emit_unpack(self):
 		lines = []
-		lines += ["static void *secure_unpack_%s()" % self.name]
+		lines += ["case %s:" % self.enum_name]
 		lines += ["{"]
-		lines += ["\tstatic %s msg;" % self.struct_name]
+		lines += ["\t%s *pMsg = (%s *)m_aMsgData;" % (self.struct_name, self.struct_name)]
+		lines += ["\t(void)pMsg;"]
 		for v in self.variables:
 			lines += ["\t"+line for line in v.emit_unpack()]
 		for v in self.variables:
 			lines += ["\t"+line for line in v.emit_unpack_check()]
-		lines += ["\treturn &msg;"]
-		lines += ["}"]
+		lines += ["} break;"]
 		return lines
 	def emit_declaration(self):
 		extra = []
-		extra += ["\tvoid pack(int flags)"]
+		extra += ["\tint MsgID() const { return %s; }" % self.enum_name]
+		extra += ["\t"]
+		extra += ["\tbool Pack(CMsgPacker *pPacker)"]
 		extra += ["\t{"]
-		extra += ["\t\tmsg_pack_start(%s, flags);"%self.enum_name]
+		#extra += ["\t\tmsg_pack_start(%s, flags);"%self.enum_name]
 		for v in self.variables:
 			extra += ["\t\t"+line for line in v.emit_pack()]
-		extra += ["\t\tmsg_pack_end();"]
+		extra += ["\t\treturn pPacker->Error() != 0;"]
 		extra += ["\t}"]
 		
 		
@@ -267,17 +290,17 @@ class NetString(NetVariable):
 	def emit_declaration(self):
 		return ["const char *%s;"%self.name]
 	def emit_unpack(self):
-		return ["msg.%s = msg_unpack_string();" % self.name]
+		return ["pMsg->%s = pUnpacker->GetString();" % self.name]
 	def emit_pack(self):
-		return ["msg_pack_string(%s, -1);" % self.name]
+		return ["pPacker->AddString(%s, -1);" % self.name]
 
 class NetIntAny(NetVariable):
 	def emit_declaration(self):
 		return ["int %s;"%self.name]
 	def emit_unpack(self):
-		return ["msg.%s = msg_unpack_int();" % self.name]
+		return ["pMsg->%s = pUnpacker->GetInt();" % self.name]
 	def emit_pack(self):
-		return ["msg_pack_int(%s);" % self.name]
+		return ["pPacker->AddInt(%s);" % self.name]
 
 class NetIntRange(NetIntAny):
 	def __init__(self, name, min, max):
@@ -285,9 +308,9 @@ class NetIntRange(NetIntAny):
 		self.min = str(min)
 		self.max = str(max)
 	def emit_validate(self):
-		return ["netobj_clamp_int(\"%s\", obj->%s, %s, %s);"%(self.name,self.name, self.min, self.max)]
+		return ["ClampInt(\"%s\", pObj->%s, %s, %s);"%(self.name,self.name, self.min, self.max)]
 	def emit_unpack_check(self):
-		return ["if(msg.%s < %s || msg.%s > %s) { msg_failed_on = \"%s\"; return 0; }" % (self.name, self.min, self.name, self.max, self.name)]
+		return ["if(pMsg->%s < %s || pMsg->%s > %s) { m_pMsgFailedOn = \"%s\"; break; }" % (self.name, self.min, self.name, self.max, self.name)]
 
 class NetBool(NetIntRange):
 	def __init__(self, name):

@@ -46,14 +46,15 @@ void dbg_break();
 
 /*
 	Function: dbg_msg
-		Prints a debug message.
+	
+	Prints a debug message.
 	
 	Parameters:
 		sys - A string that describes what system the message belongs to
 		fmt - A printf styled format string.
 	
 	Remarks:
-		Does nothing in relase version of the library.
+		Does nothing in release version of the library.
 		
 	See Also:
 		<dbg_assert>
@@ -351,7 +352,7 @@ void *thread_create(void (*threadfunc)(void *), void *user);
 void thread_wait(void *thread);
 
 /*
-	Function: thread_destoy
+	Function: thread_destroy
 		Destroys a thread.
 	
 	Parameters:
@@ -782,6 +783,25 @@ int str_comp_nocase(const char *a, const char *b);
 int str_comp(const char *a, const char *b);
 
 /*
+	Function: str_comp_nocase
+		Compares up to num characters of two strings case sensitive.
+	
+	Parameters:
+		a - String to compare.
+		b - String to compare.
+		num - Maximum characters to compare
+	
+	Returns:	
+		<0 - String a is lesser then string b
+		0 - String a is equal to string b
+		>0 - String a is greater then string b
+
+	Remarks:
+		- The strings are treated as zero-termineted strings.
+*/
+int str_comp_num(const char *a, const char *b, const int num);
+
+/*
 	Function: str_find_nocase
 		Finds a string inside another string case insensitive.
 
@@ -942,8 +962,29 @@ void mem_debug_dump();
 
 void swap_endian(void *data, unsigned elem_size, unsigned num);
 
-typedef void (*DBG_LOGGER)(const char *line);
+/* Group: Debug levels */
+//by format
+enum {
+	DBG_FMT_RAW				= 1,	//raw output
+	DBG_FMT_TIME			= 2,	//show time
+	DBG_FMT_SYS				= 3,	//show sys
+	DBG_FMT_FULL			= 4		//show both
+};
+
+enum {
+	DBG_LEVEL_IMPORTANT			= 0,	//important always showed messages
+	DBG_LEVEL_ERROR				= 1,	//error messages
+	DBG_LEVEL_WARNING			= 2,	//warning messages
+	DBG_LEVEL_MSG				= 3,	//extra debug messages
+	DBG_LEVEL_INFO				= 4		//info messages
+};
+
+#define DBG_LEVEL_LOW DBG_LEVEL_IMPORTANT
+#define DBG_LEVEL_HIGH DBG_LEVEL_INFO
+
+typedef void (*DBG_LOGGER)(const char *line); 
 void dbg_logger(DBG_LOGGER logger);
+
 void dbg_logger_stdout();
 void dbg_logger_debugger();
 void dbg_logger_file(const char *filename);
@@ -968,6 +1009,8 @@ typedef struct
 
 void net_stats(NETSTATS *stats);
 
+int str_toint(const char *str);
+float str_tofloat(const char *str);
 int str_isspace(char c);
 char str_uppercase(char c);
 unsigned str_quickhash(const char *str);

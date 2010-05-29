@@ -1,838 +1,820 @@
 #include <new>
-#include <engine/e_server_interface.h>
-#include <engine/e_config.h>
-#include <game/server/gamecontext.hpp>
-#include <game/mapitems.hpp>
+#include <engine/shared/config.h>
+#include <game/server/gamecontext.h>
+#include <game/mapitems.h>
 
-#include "character.hpp"
-#include "laser.hpp"
-#include "projectile.hpp"
+#include "character.h"
+#include "laser.h"
+#include "projectile.h"
 
-struct INPUT_COUNT
+//input count
+struct CInputCount
 {
-	int presses;
-	int releases;
+	int m_Presses;
+	int m_Releases;
 };
 
-static INPUT_COUNT count_input(int prev, int cur)
+CInputCount CountInput(int Prev, int Cur)
 {
-	INPUT_COUNT c = {0,0};
-	prev &= INPUT_STATE_MASK;
-	cur &= INPUT_STATE_MASK;
-	int i = prev;
-	while(i != cur)
+	CInputCount c = {0, 0};
+	Prev &= INPUT_STATE_MASK;
+	Cur &= INPUT_STATE_MASK;
+	int i = Prev;
+	
+	while(i != Cur)
 	{
 		i = (i+1)&INPUT_STATE_MASK;
 		if(i&1)
-			c.presses++;
+			c.m_Presses++;
 		else
-			c.releases++;
+			c.m_Releases++;
 	}
 
 	return c;
 }
 
 
-MACRO_ALLOC_POOL_ID_IMPL(CHARACTER, MAX_CLIENTS)
+MACRO_ALLOC_POOL_ID_IMPL(CCharacter, MAX_CLIENTS)
 
-// player
-CHARACTER::CHARACTER()
-: ENTITY(NETOBJTYPE_CHARACTER)
+// Character, "physical" player's part
+CCharacter::CCharacter(CGameWorld *pWorld)
+: CEntity(pWorld, NETOBJTYPE_CHARACTER)
 {
-	proximity_radius = phys_size;
+	m_ProximityRadius = g_CharPhysSize;
+	m_Health = 0;
+	m_Armor = 0;
 }
 
-void CHARACTER::reset()
+void CCharacter::Reset()
 {
-	destroy();
+	Destroy();
 }
 
-bool CHARACTER::spawn(PLAYER *player, vec2 pos, int team)
+bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 {
-	player_state = PLAYERSTATE_UNKNOWN;
-	emote_stop = -1;
-	last_action = -1;
-	active_weapon = WEAPON_GUN;
-	last_weapon = WEAPON_HAMMER;
-	queued_weapon = -1;
+	m_PlayerState = PLAYERSTATE_UNKNOWN;
+	m_EmoteStop = -1;
+	m_LastAction = -1;
+	m_ActiveWeapon = WEAPON_GUN;
+	m_LastWeapon = WEAPON_HAMMER;
+	m_QueuedWeapon = -1;
 	
-	//clear();
-	this->player = player;
-	this->pos = pos;
-	this->team = team;
+	m_pPlayer = pPlayer;
+	m_Pos = Pos;
 	
-	core.reset();
-	core.world = &game.world.core;
-	core.pos = pos;
-	game.world.core.characters[player->client_id] = &core;
+	m_Core.Reset();
+	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision());
+	m_Core.m_Pos = m_Pos;
+	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = &m_Core;
 
-	reckoning_tick = 0;
-	mem_zero(&sendcore, sizeof(sendcore));
-	mem_zero(&reckoningcore, sizeof(reckoningcore));
+	m_ReckoningTick = 0;
+	mem_zero(&m_SendCore, sizeof(m_SendCore));
+	mem_zero(&m_ReckoningCore, sizeof(m_ReckoningCore));
 	
-	game.world.insert_entity(this);
-	alive = true;
-	player->force_balanced = false;
+	GameServer()->m_World.InsertEntity(this);
+	m_Alive = true;
 
-	game.controller->on_character_spawn(this);
+	GameServer()->m_pController->OnCharacterSpawn(this);
 
 	return true;
 }
 
-void CHARACTER::destroy()
+void CCharacter::Destroy()
 {
-	game.world.core.characters[player->client_id] = 0;
-	alive = false;
+	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
+	m_Alive = false;
 }
 
-void CHARACTER::set_weapon(int w)
+void CCharacter::SetWeapon(int W)
 {
-	if(w == active_weapon)
+	if(W == m_ActiveWeapon)
 		return;
 		
-	last_weapon = active_weapon;
-	queued_weapon = -1;
-	active_weapon = w;
-	if(active_weapon < 0 || active_weapon >= NUM_WEAPONS)
-		active_weapon = 0;
+	m_LastWeapon = m_ActiveWeapon;
+	m_QueuedWeapon = -1;
+	m_ActiveWeapon = W;
+	GameServer()->CreateSound(m_Pos, SOUND_WEAPON_SWITCH);
 	
-	game.create_sound(pos, SOUND_WEAPON_SWITCH);
+	if(m_ActiveWeapon < 0 || m_ActiveWeapon >= NUM_WEAPONS)
+		m_ActiveWeapon = 0;
 }
 
-bool CHARACTER::is_grounded()
+bool CCharacter::IsGrounded()
 {
-	if(col_check_point((int)(pos.x+phys_size/2), (int)(pos.y+phys_size/2+5)))
+	if(GameServer()->Collision()->CheckPoint(m_Pos.x+g_CharPhysSize/2, m_Pos.y+g_CharPhysSize/2+5))
 		return true;
-	if(col_check_point((int)(pos.x-phys_size/2), (int)(pos.y+phys_size/2+5)))
+	if(GameServer()->Collision()->CheckPoint(m_Pos.x-g_CharPhysSize/2, m_Pos.y+g_CharPhysSize/2+5))
 		return true;
 	return false;
 }
 
 
-int CHARACTER::handle_ninja()
+void CCharacter::HandleNinja()
 {
-	if(active_weapon != WEAPON_NINJA)
-		return 0;
+	if(m_ActiveWeapon != WEAPON_NINJA)
+		return;
 	
-	vec2 direction = normalize(vec2(latest_input.target_x, latest_input.target_y));
+	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
 
-	if ((server_tick() - ninja.activationtick) > (data->weapons.ninja.duration * server_tickspeed() / 1000))
+	if ((Server()->Tick() - m_Ninja.m_ActivationTick) > (g_pData->m_Weapons.m_Ninja.m_Duration * Server()->TickSpeed() / 1000))
 	{
 		// time's up, return
-		weapons[WEAPON_NINJA].got = false;
-		active_weapon = last_weapon;
-		if(active_weapon == WEAPON_NINJA)
-			active_weapon = WEAPON_GUN;
-		set_weapon(active_weapon);
-		return 0;
+		m_aWeapons[WEAPON_NINJA].m_Got = false;
+		m_ActiveWeapon = m_LastWeapon;
+		if(m_ActiveWeapon == WEAPON_NINJA)
+			m_ActiveWeapon = WEAPON_GUN;
+			
+		SetWeapon(m_ActiveWeapon);
+		return;
 	}
 	
-	// force ninja weapon
-	set_weapon(WEAPON_NINJA);
+	// force ninja Weapon
+	SetWeapon(WEAPON_NINJA);
 
-	ninja.currentmovetime--;
+	m_Ninja.m_CurrentMoveTime--;
 
-	if (ninja.currentmovetime == 0)
+	if (m_Ninja.m_CurrentMoveTime == 0)
 	{
-		// reset player velocity
-		core.vel *= 0.2f;
-		//return MODIFIER_RETURNFLAGS_OVERRIDEWEAPON;
+		// reset velocity
+		m_Core.m_Vel *= 0.2f;
 	}
 
-	if (ninja.currentmovetime > 0)
+	if (m_Ninja.m_CurrentMoveTime > 0)
 	{
-		// Set player velocity
-		core.vel = ninja.activationdir * data->weapons.ninja.velocity;
-		vec2 oldpos = pos;
-		move_box(&core.pos, &core.vel, vec2(phys_size, phys_size), 0.0f);
+		// Set velocity
+		m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity;
+		vec2 OldPos = m_Pos;
+		GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, vec2(g_CharPhysSize, g_CharPhysSize), 0.f);
+		
 		// reset velocity so the client doesn't predict stuff
-		core.vel = vec2(0.0f,0.0f);
-		if ((ninja.currentmovetime % 2) == 0)
-		{
-			//create_smoke(pos);
-		}
+		m_Core.m_Vel = vec2(0.f, 0.f);
 
-		// check if we hit anything along the way
+		// check if we Hit anything along the way
 		{
-			CHARACTER *ents[64];
-			vec2 dir = pos - oldpos;
-			float radius = phys_size * 2.0f; //length(dir * 0.5f);
-			vec2 center = oldpos + dir * 0.5f;
-			int num = game.world.find_entities(center, radius, (ENTITY**)ents, 64, NETOBJTYPE_CHARACTER);
+			CCharacter *aEnts[64];
+			vec2 Dir = m_Pos - OldPos;
+			float Radius = g_CharPhysSize * 2.0f;
+			vec2 Center = OldPos + Dir * 0.5f;
+			int Num = GameServer()->m_World.FindEntities(Center, Radius, (CEntity**)aEnts, 64, NETOBJTYPE_CHARACTER);
 
-			for (int i = 0; i < num; i++)
+			for (int i = 0; i < Num; ++i)
 			{
-				// Check if entity is a player
-				if (ents[i] == this)
+				if (aEnts[i] == this)
 					continue;
-				// make sure we haven't hit this object before
-				bool balreadyhit = false;
-				for (int j = 0; j < numobjectshit; j++)
+					
+				// make sure we haven't Hit this object before
+				bool bAlreadyHit = false;
+				for (int j = 0; j < m_NumObjectsHit; j++)
 				{
-					if (hitobjects[j] == ents[i])
-						balreadyhit = true;
+					if (m_apHitObjects[j] == aEnts[i])
+						bAlreadyHit = true;
 				}
-				if (balreadyhit)
+				if (bAlreadyHit)
 					continue;
 
 				// check so we are sufficiently close
-				if (distance(ents[i]->pos, pos) > (phys_size * 2.0f))
+				if (distance(aEnts[i]->m_Pos, m_Pos) > (g_CharPhysSize * 2.0f))
 					continue;
 
-				// hit a player, give him damage and stuffs...
-				game.create_sound(ents[i]->pos, SOUND_NINJA_HIT);
+				// Hit a player, give him damage and stuffs...
+				GameServer()->CreateSound(aEnts[i]->m_Pos, SOUND_NINJA_HIT);
 				// set his velocity to fast upward (for now)
-				if(numobjectshit < 10)
-					hitobjects[numobjectshit++] = ents[i];
+				if(m_NumObjectsHit < 10)
+					m_apHitObjects[m_NumObjectsHit++] = aEnts[i];
 					
-				ents[i]->take_damage(vec2(0,10.0f), data->weapons.ninja.base->damage, player->client_id,WEAPON_NINJA);
+				aEnts[i]->TakeDamage(vec2(0, 10.0f), g_pData->m_Weapons.m_Ninja.m_pBase->m_Damage, m_pPlayer->GetCID(), WEAPON_NINJA);
 			}
 		}
-		return 0;
-	}
-
-	return 0;
-}
-
-
-void CHARACTER::do_weaponswitch()
-{
-	if(reload_timer != 0) // make sure we have reloaded
-		return;
 		
-	if(queued_weapon == -1) // check for a queued weapon
 		return;
+	}
 
-	if(weapons[WEAPON_NINJA].got) // if we have ninja, no weapon selection is possible
-		return;
-
-	// switch weapon
-	set_weapon(queued_weapon);
+	return;
 }
 
-void CHARACTER::handle_weaponswitch()
+
+void CCharacter::DoWeaponSwitch()
 {
-	int wanted_weapon = active_weapon;
-	if(queued_weapon != -1)
-		wanted_weapon = queued_weapon;
+	// make sure we can switch
+	if(m_ReloadTimer != 0 || m_QueuedWeapon == -1 || m_aWeapons[WEAPON_NINJA].m_Got)
+		return;
+
+	// switch Weapon
+	SetWeapon(m_QueuedWeapon);
+}
+
+void CCharacter::HandleWeaponSwitch()
+{
+	int WantedWeapon = m_ActiveWeapon;
+	if(m_QueuedWeapon != -1)
+		WantedWeapon = m_QueuedWeapon;
 	
-	// select weapon
-	int next = count_input(latest_previnput.next_weapon, latest_input.next_weapon).presses;
-	int prev = count_input(latest_previnput.prev_weapon, latest_input.prev_weapon).presses;
+	// select Weapon
+	int Next = CountInput(m_LatestPrevInput.m_NextWeapon, m_LatestInput.m_NextWeapon).m_Presses;
+	int Prev = CountInput(m_LatestPrevInput.m_PrevWeapon, m_LatestInput.m_PrevWeapon).m_Presses;
 
-	if(next < 128) // make sure we only try sane stuff
+	if(Next < 128) // make sure we only try sane stuff
 	{
-		while(next) // next weapon selection
+		while(Next) // Next Weapon selection
 		{
-			wanted_weapon = (wanted_weapon+1)%NUM_WEAPONS;
-			if(weapons[wanted_weapon].got)
-				next--;
+			WantedWeapon = (WantedWeapon+1)%NUM_WEAPONS;
+			if(m_aWeapons[WantedWeapon].m_Got)
+				Next--;
 		}
 	}
 
-	if(prev < 128) // make sure we only try sane stuff
+	if(Prev < 128) // make sure we only try sane stuff
 	{
-		while(prev) // prev weapon selection
+		while(Prev) // Prev Weapon selection
 		{
-			wanted_weapon = (wanted_weapon-1)<0?NUM_WEAPONS-1:wanted_weapon-1;
-			if(weapons[wanted_weapon].got)
-				prev--;
+			WantedWeapon = (WantedWeapon-1)<0?NUM_WEAPONS-1:WantedWeapon-1;
+			if(m_aWeapons[WantedWeapon].m_Got)
+				Prev--;
 		}
 	}
 
-	// direct weapon selection
-	if(latest_input.wanted_weapon)
-		wanted_weapon = input.wanted_weapon-1;
+	// Direct Weapon selection
+	if(m_LatestInput.m_WantedWeapon)
+		WantedWeapon = m_Input.m_WantedWeapon-1;
 
 	// check for insane values
-	if(wanted_weapon >= 0 && wanted_weapon < NUM_WEAPONS && wanted_weapon != active_weapon && weapons[wanted_weapon].got)
-		queued_weapon = wanted_weapon;
+	if(WantedWeapon >= 0 && WantedWeapon < NUM_WEAPONS && WantedWeapon != m_ActiveWeapon && m_aWeapons[WantedWeapon].m_Got)
+		m_QueuedWeapon = WantedWeapon;
 	
-	do_weaponswitch();
+	DoWeaponSwitch();
 }
 
-void CHARACTER::fire_weapon()
+void CCharacter::FireWeapon()
 {
-	if(reload_timer != 0)
+	if(m_ReloadTimer != 0)
 		return;
 		
-	do_weaponswitch();
+	DoWeaponSwitch();
+	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
 	
-	vec2 direction = normalize(vec2(latest_input.target_x, latest_input.target_y));
-	
-	bool fullauto = false;
-	if(active_weapon == WEAPON_GRENADE || active_weapon == WEAPON_SHOTGUN || active_weapon == WEAPON_RIFLE)
-		fullauto = true;
+	bool FullAuto = false;
+	if(m_ActiveWeapon == WEAPON_GRENADE || m_ActiveWeapon == WEAPON_SHOTGUN || m_ActiveWeapon == WEAPON_RIFLE)
+		FullAuto = true;
 
 
 	// check if we gonna fire
-	bool will_fire = false;
-	if(count_input(latest_previnput.fire, latest_input.fire).presses) will_fire = true;
-	if(fullauto && (latest_input.fire&1) && weapons[active_weapon].ammo) will_fire = true;
-	if(!will_fire)
+	bool WillFire = false;
+	if(CountInput(m_LatestPrevInput.m_Fire, m_LatestInput.m_Fire).m_Presses)
+		WillFire = true;
+		
+	if(FullAuto && (m_LatestInput.m_Fire&1) && m_aWeapons[m_ActiveWeapon].m_Ammo)
+		WillFire = true;
+		
+	if(!WillFire)
 		return;
 		
 	// check for ammo
-	if(!weapons[active_weapon].ammo)
+	if(!m_aWeapons[m_ActiveWeapon].m_Ammo)
 	{
 		// 125ms is a magical limit of how fast a human can click
-		reload_timer = 125 * server_tickspeed() / 1000;;
-		game.create_sound(pos, SOUND_WEAPON_NOAMMO);
+		m_ReloadTimer = 125 * Server()->TickSpeed() / 1000;
+		GameServer()->CreateSound(m_Pos, SOUND_WEAPON_NOAMMO);
 		return;
 	}
 	
-	vec2 projectile_startpos = pos+direction*phys_size*0.75f;
+	vec2 ProjStartPos = m_Pos+Direction*g_CharPhysSize*0.75f;
 	
-	switch(active_weapon)
+	switch(m_ActiveWeapon)
 	{
 		case WEAPON_HAMMER:
 		{
-			// reset objects hit
-			numobjectshit = 0;
-			game.create_sound(pos, SOUND_HAMMER_FIRE);
+			// reset objects Hit
+			m_NumObjectsHit = 0;
+			GameServer()->CreateSound(m_Pos, SOUND_HAMMER_FIRE);
 			
-			CHARACTER *ents[64];
-			int hits = 0;
-			int num = game.world.find_entities(pos+direction*phys_size*0.75f, phys_size*0.5f, (ENTITY**)ents, 64, NETOBJTYPE_CHARACTER);
+			CCharacter *aEnts[64];
+			int Hits = 0;
+			int Num = GameServer()->m_World.FindEntities(ProjStartPos, g_CharPhysSize*0.5f, (CEntity**)aEnts, 
+			64, NETOBJTYPE_CHARACTER);
 
-			for (int i = 0; i < num; i++)
+			for (int i = 0; i < Num; ++i)
 			{
-				CHARACTER *target = ents[i];
-				if (target == this)
+				CCharacter *Target = aEnts[i];
+				
+				//for race mod or any other mod, which needs hammer hits through the wall remove second condition
+				if ((Target == this) || GameServer()->Collision()->IntersectLine(ProjStartPos, Target->m_Pos, NULL, NULL))
 					continue;
-					
-				// hit a player, give him damage and stuffs...
-				vec2 fdir = normalize(ents[i]->pos - pos);
 
 				// set his velocity to fast upward (for now)
-				game.create_hammerhit(pos);
-				ents[i]->take_damage(vec2(0,-1.0f), data->weapons.hammer.base->damage, player->client_id, active_weapon);
-				vec2 dir;
-				if (length(target->pos - pos) > 0.0f)
-					dir = normalize(target->pos - pos);
+				GameServer()->CreateHammerHit(m_Pos);
+				aEnts[i]->TakeDamage(vec2(0.f, -1.f), g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage, m_pPlayer->GetCID(), m_ActiveWeapon);
+				
+				vec2 Dir;
+				if (length(Target->m_Pos - m_Pos) > 0.0f)
+					Dir = normalize(Target->m_Pos - m_Pos);
 				else
-					dir = vec2(0,-1);
+					Dir = vec2(0.f, -1.f);
 					
-				target->core.vel += normalize(dir + vec2(0,-1.1f)) * 10.0f;
-				hits++;
+				Target->m_Core.m_Vel += normalize(Dir + vec2(0.f, -1.1f)) * 10.0f;
+				Hits++;
 			}
 			
-			// if we hit anything, we have to wait for the reload
-			if(hits)
-				reload_timer = server_tickspeed()/3;
+			// if we Hit anything, we have to wait for the reload
+			if(Hits)
+				m_ReloadTimer = Server()->TickSpeed()/3;
 			
 		} break;
 
 		case WEAPON_GUN:
 		{
-			PROJECTILE *proj = new PROJECTILE(WEAPON_GUN,
-				player->client_id,
-				projectile_startpos,
-				direction,
-				(int)(server_tickspeed()*tuning.gun_lifetime),
+			CProjectile *Proj = new CProjectile(GameWorld(), WEAPON_GUN,
+				m_pPlayer->GetCID(),
+				ProjStartPos,
+				Direction,
+				(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GunLifetime),
 				1, 0, 0, -1, WEAPON_GUN);
 				
-			// pack the projectile and send it to the client directly
-			NETOBJ_PROJECTILE p;
-			proj->fill_info(&p);
+			// pack the Projectile and send it to the client Directly
+			CNetObj_Projectile p;
+			Proj->FillInfo(&p);
 			
-			msg_pack_start(NETMSGTYPE_SV_EXTRAPROJECTILE, 0);
-			msg_pack_int(1);
-			for(unsigned i = 0; i < sizeof(NETOBJ_PROJECTILE)/sizeof(int); i++)
-				msg_pack_int(((int *)&p)[i]);
-			msg_pack_end();
-			server_send_msg(player->client_id);
-							
-			game.create_sound(pos, SOUND_GUN_FIRE);
+			CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
+			Msg.AddInt(1);
+			for(unsigned i = 0; i < sizeof(CNetObj_Projectile)/sizeof(int); i++)
+				Msg.AddInt(((int *)&p)[i]);
+				
+			Server()->SendMsg(&Msg, 0, m_pPlayer->GetCID());
+	
+			GameServer()->CreateSound(m_Pos, SOUND_GUN_FIRE);
 		} break;
 		
 		case WEAPON_SHOTGUN:
 		{
-			int shotspread = 2;
+			int ShotSpread = 2;
 
-			msg_pack_start(NETMSGTYPE_SV_EXTRAPROJECTILE, 0);
-			msg_pack_int(shotspread*2+1);
+			CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
+			Msg.AddInt(ShotSpread*2+1);
 			
-			for(int i = -shotspread; i <= shotspread; i++)
+			for(int i = -ShotSpread; i <= ShotSpread; ++i)
 			{
-				float spreading[] = {-0.185f, -0.070f, 0, 0.070f, 0.185f};
-				float a = get_angle(direction);
-				a += spreading[i+2];
-				float v = 1-(abs(i)/(float)shotspread);
-				float speed = mix((float)tuning.shotgun_speeddiff, 1.0f, v);
-				PROJECTILE *proj = new PROJECTILE(WEAPON_SHOTGUN,
-					player->client_id,
-					projectile_startpos,
-					vec2(cosf(a), sinf(a))*speed,
-					(int)(server_tickspeed()*tuning.shotgun_lifetime),
+				float Spreading[] = {-0.185f, -0.070f, 0, 0.070f, 0.185f};
+				float a = GetAngle(Direction);
+				a += Spreading[i+2];
+				float v = 1-(absolute(i)/(float)ShotSpread);
+				float Speed = mix((float)GameServer()->Tuning()->m_ShotgunSpeeddiff, 1.0f, v);
+				CProjectile *Proj = new CProjectile(GameWorld(), WEAPON_SHOTGUN,
+					m_pPlayer->GetCID(),
+					ProjStartPos,
+					vec2(cosf(a), sinf(a))*Speed,
+					(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_ShotgunLifetime),
 					1, 0, 0, -1, WEAPON_SHOTGUN);
 					
-				// pack the projectile and send it to the client directly
-				NETOBJ_PROJECTILE p;
-				proj->fill_info(&p);
+				// pack the Projectile and send it to the client Directly
+				CNetObj_Projectile p;
+				Proj->FillInfo(&p);
 				
-				for(unsigned i = 0; i < sizeof(NETOBJ_PROJECTILE)/sizeof(int); i++)
-					msg_pack_int(((int *)&p)[i]);
+				for(unsigned i = 0; i < sizeof(CNetObj_Projectile)/sizeof(int); i++)
+					Msg.AddInt(((int *)&p)[i]);
 			}
 
-			msg_pack_end();
-			server_send_msg(player->client_id);					
+			Server()->SendMsg(&Msg, 0,m_pPlayer->GetCID());					
 			
-			game.create_sound(pos, SOUND_SHOTGUN_FIRE);
+			GameServer()->CreateSound(m_Pos, SOUND_SHOTGUN_FIRE);
 		} break;
 
 		case WEAPON_GRENADE:
 		{
-			PROJECTILE *proj = new PROJECTILE(WEAPON_GRENADE,
-				player->client_id,
-				projectile_startpos,
-				direction,
-				(int)(server_tickspeed()*tuning.grenade_lifetime),
-				1, PROJECTILE::PROJECTILE_FLAGS_EXPLODE, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
+			CProjectile *Proj = new CProjectile(GameWorld(), WEAPON_GRENADE,
+				m_pPlayer->GetCID(),
+				ProjStartPos,
+				Direction,
+				(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GrenadeLifetime),
+				1, true, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
 
-			// pack the projectile and send it to the client directly
-			NETOBJ_PROJECTILE p;
-			proj->fill_info(&p);
+			// pack the Projectile and send it to the client Directly
+			CNetObj_Projectile p;
+			Proj->FillInfo(&p);
 			
-			msg_pack_start(NETMSGTYPE_SV_EXTRAPROJECTILE, 0);
-			msg_pack_int(1);
-			for(unsigned i = 0; i < sizeof(NETOBJ_PROJECTILE)/sizeof(int); i++)
-				msg_pack_int(((int *)&p)[i]);
-			msg_pack_end();
-			server_send_msg(player->client_id);
-
-			game.create_sound(pos, SOUND_GRENADE_FIRE);
+			CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
+			Msg.AddInt(1);
+			for(unsigned i = 0; i < sizeof(CNetObj_Projectile)/sizeof(int); i++)
+				Msg.AddInt(((int *)&p)[i]);
+			Server()->SendMsg(&Msg, 0, m_pPlayer->GetCID());
+			
+			GameServer()->CreateSound(m_Pos, SOUND_GRENADE_FIRE);
 		} break;
 		
 		case WEAPON_RIFLE:
 		{
-			new LASER(pos, direction, tuning.laser_reach, player->client_id);
-			game.create_sound(pos, SOUND_RIFLE_FIRE);
+			new CLaser(GameWorld(), m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID());
+			GameServer()->CreateSound(m_Pos, SOUND_RIFLE_FIRE);
 		} break;
 		
 		case WEAPON_NINJA:
 		{
-			attack_tick = server_tick();
-			ninja.activationdir = direction;
-			ninja.currentmovetime = data->weapons.ninja.movetime * server_tickspeed() / 1000;
-
-			//reload_timer = data->weapons.ninja.base->firedelay * server_tickspeed() / 1000 + server_tick();
+			// reset Hit objects
+			m_NumObjectsHit = 0;
 			
-			// reset hit objects
-			numobjectshit = 0;
+			m_AttackTick = Server()->Tick();
+			m_Ninja.m_ActivationDir = Direction;
+			m_Ninja.m_CurrentMoveTime = g_pData->m_Weapons.m_Ninja.m_Movetime * Server()->TickSpeed() / 1000;
 
-			game.create_sound(pos, SOUND_NINJA_FIRE);
-			
+			GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE);
 		} break;
 		
 	}
-
-	if(weapons[active_weapon].ammo > 0) // -1 == unlimited
-		weapons[active_weapon].ammo--;
-	attack_tick = server_tick();
-	if(!reload_timer)
-		reload_timer = data->weapons.id[active_weapon].firedelay * server_tickspeed() / 1000;
+	
+	m_AttackTick = Server()->Tick();
+	
+	if(m_aWeapons[m_ActiveWeapon].m_Ammo > 0) // -1 == unlimited
+		m_aWeapons[m_ActiveWeapon].m_Ammo--;
+	
+	if(!m_ReloadTimer)
+		m_ReloadTimer = g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Firedelay * Server()->TickSpeed() / 1000;
 }
 
-int CHARACTER::handle_weapons()
+void CCharacter::HandleWeapons()
 {
-	vec2 direction = normalize(vec2(latest_input.target_x, latest_input.target_y));
-
-	/*
-	if(config.dbg_stress)
-	{
-		for(int i = 0; i < NUM_WEAPONS; i++)
-		{
-			weapons[i].got = true;
-			weapons[i].ammo = 10;
-		}
-
-		if(reload_timer) // twice as fast reload
-			reload_timer--;
-	} */
-
-	//if(active_weapon == WEAPON_NINJA)
-	handle_ninja();
-
+	//ninja
+	HandleNinja();
+	
+	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
 
 	// check reload timer
-	if(reload_timer)
+	if(m_ReloadTimer)
 	{
-		reload_timer--;
-		return 0;
+		m_ReloadTimer--;
+		return;
 	}
-	
-	/*
-	if (active_weapon == WEAPON_NINJA)
-	{
-		// don't update other weapons while ninja is active
-		return handle_ninja();
-	}*/
 
-	// fire weapon, if wanted
-	fire_weapon();
+	// fire Weapon, if wanted
+	FireWeapon();
 
 	// ammo regen
-	int ammoregentime = data->weapons.id[active_weapon].ammoregentime;
-	if(ammoregentime)
+	int AmmoRegenTime = g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Ammoregentime;
+	if(AmmoRegenTime)
 	{
 		// If equipped and not active, regen ammo?
-		if (reload_timer <= 0)
+		if (m_ReloadTimer <= 0)
 		{
-			if (weapons[active_weapon].ammoregenstart < 0)
-				weapons[active_weapon].ammoregenstart = server_tick();
+			if (m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart < 0)
+				m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = Server()->Tick();
 
-			if ((server_tick() - weapons[active_weapon].ammoregenstart) >= ammoregentime * server_tickspeed() / 1000)
+			if ((Server()->Tick() - m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart) >= AmmoRegenTime * Server()->TickSpeed() / 1000)
 			{
 				// Add some ammo
-				weapons[active_weapon].ammo = min(weapons[active_weapon].ammo + 1, 10);
-				weapons[active_weapon].ammoregenstart = -1;
+				m_aWeapons[m_ActiveWeapon].m_Ammo = min(m_aWeapons[m_ActiveWeapon].m_Ammo + 1, 10);
+				m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = -1;
 			}
 		}
 		else
 		{
-			weapons[active_weapon].ammoregenstart = -1;
+			m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = -1;
 		}
 	}
 	
-	return 0;
-}
-
-void CHARACTER::on_predicted_input(NETOBJ_PLAYER_INPUT *new_input)
-{
-	// check for changes
-	if(mem_comp(&input, new_input, sizeof(NETOBJ_PLAYER_INPUT)) != 0)
-		last_action = server_tick();
-		
-	// copy new input
-	mem_copy(&input, new_input, sizeof(input));
-	num_inputs++;
-	
-	// or are not allowed to aim in the center
-	if(input.target_x == 0 && input.target_y == 0)
-		input.target_y = -1;	
-}
-
-void CHARACTER::on_direct_input(NETOBJ_PLAYER_INPUT *new_input)
-{
-	mem_copy(&latest_previnput, &latest_input, sizeof(latest_input));
-	mem_copy(&latest_input, new_input, sizeof(latest_input));
-	
-	if(num_inputs > 2 && team != -1)
-	{
-		handle_weaponswitch();
-		fire_weapon();
-	}
-	
-	mem_copy(&latest_previnput, &latest_input, sizeof(latest_input));
-}
-
-void CHARACTER::tick()
-{
-	if(player->force_balanced)
-	{
-		char buf[128];
-		str_format(buf, sizeof(buf), "You were moved to %s due to team balancing", game.controller->get_team_name(team));
-		game.send_broadcast(buf, player->client_id);
-		
-		player->force_balanced = false;
-	}
-
-	//player_core core;
-	//core.pos = pos;
-	//core.jumped = jumped;
-	core.input = input;
-	core.tick(true);
-	
-	float phys_size = 28.0f;
-	// handle death-tiles
-	if(col_get((int)(pos.x+phys_size/3), (int)(pos.y-phys_size/3))&COLFLAG_DEATH ||
-			col_get((int)(pos.x+phys_size/3), (int)(pos.y+phys_size/3))&COLFLAG_DEATH ||
-			col_get((int)(pos.x-phys_size/3), (int)(pos.y-phys_size/3))&COLFLAG_DEATH ||
-			col_get((int)(pos.x-phys_size/3), (int)(pos.y+phys_size/3))&COLFLAG_DEATH)
-	{
-		die(player->client_id, WEAPON_WORLD);
-	}
-
-	// handle weapons
-	handle_weapons();
-
-	player_state = input.player_state;
-
-	// Previnput
-	previnput = input;
 	return;
 }
 
-void CHARACTER::tick_defered()
+bool CCharacter::GiveWeapon(int Weapon, int Ammo)
+{
+	if(m_aWeapons[Weapon].m_Ammo < g_pData->m_Weapons.m_aId[Weapon].m_Maxammo || !m_aWeapons[Weapon].m_Got)
+	{	
+		m_aWeapons[Weapon].m_Got = true;
+		m_aWeapons[Weapon].m_Ammo = min(g_pData->m_Weapons.m_aId[Weapon].m_Maxammo, Ammo);
+		return true;
+	}
+	return false;
+}
+
+void CCharacter::GiveNinja()
+{
+	m_Ninja.m_ActivationTick = Server()->Tick();
+	m_aWeapons[WEAPON_NINJA].m_Got = true;
+	m_aWeapons[WEAPON_NINJA].m_Ammo = -1;
+	m_LastWeapon = m_ActiveWeapon;
+	m_ActiveWeapon = WEAPON_NINJA;
+	
+	GameServer()->CreateSound(m_Pos, SOUND_PICKUP_NINJA);
+}
+
+void CCharacter::SetEmote(int Emote, int Tick)
+{
+	m_EmoteType = Emote;
+	m_EmoteStop = Tick;
+}
+
+void CCharacter::OnPredictedInput(CNetObj_PlayerInput *pNewInput)
+{
+	// check for changes
+	if(mem_comp(&m_Input, pNewInput, sizeof(CNetObj_PlayerInput)) != 0)
+		m_LastAction = Server()->Tick();
+		
+	// copy new input
+	mem_copy(&m_Input, pNewInput, sizeof(m_Input));
+	m_NumInputs++;
+	
+	// or are not allowed to aim in the center
+	if(m_Input.m_TargetX == 0 && m_Input.m_TargetY == 0)
+		m_Input.m_TargetY = -1;	
+}
+
+void CCharacter::OnDirectInput(CNetObj_PlayerInput *pNewInput)
+{
+	mem_copy(&m_LatestPrevInput, &m_LatestInput, sizeof(m_LatestInput));
+	mem_copy(&m_LatestInput, pNewInput, sizeof(m_LatestInput));
+	
+	if(m_NumInputs > 2 && m_pPlayer->GetTeam() != -1)
+	{
+		HandleWeaponSwitch();
+		FireWeapon();
+	}
+	
+	mem_copy(&m_LatestPrevInput, &m_LatestInput, sizeof(m_LatestInput));
+}
+
+void CCharacter::Tick()
+{
+	if(m_pPlayer->m_ForceBalanced)
+	{
+		char Buf[128];
+		str_format(Buf, sizeof(Buf), "You were moved to %s due to team balancing", GameServer()->m_pController->GetTeamName(m_pPlayer->GetTeam()));
+		GameServer()->SendBroadcast(Buf, m_pPlayer->GetCID());
+		
+		m_pPlayer->m_ForceBalanced = false;
+	}
+
+	m_Core.m_Input = m_Input;
+	m_Core.Tick(true);
+	
+	// handle death-tiles
+	if(GameServer()->Collision()->GetCollisionAt(m_Pos.x+g_CharPhysSize/3.f, m_Pos.y-g_CharPhysSize/3.f)&CCollision::COLFLAG_DEATH ||
+		GameServer()->Collision()->GetCollisionAt(m_Pos.x+g_CharPhysSize/3.f, m_Pos.y+g_CharPhysSize/3.f)&CCollision::COLFLAG_DEATH ||
+		GameServer()->Collision()->GetCollisionAt(m_Pos.x-g_CharPhysSize/3.f, m_Pos.y-g_CharPhysSize/3.f)&CCollision::COLFLAG_DEATH ||
+		GameServer()->Collision()->GetCollisionAt(m_Pos.x-g_CharPhysSize/3.f, m_Pos.y+g_CharPhysSize/3.f)&CCollision::COLFLAG_DEATH)
+	{
+		Die(m_pPlayer->GetCID(), WEAPON_WORLD);
+	}
+
+	// handle Weapons
+	HandleWeapons();
+
+	m_PlayerState = m_Input.m_PlayerState;
+
+	// Previnput
+	m_PrevInput = m_Input;
+	return;
+}
+
+void CCharacter::TickDefered()
 {
 	// advance the dummy
 	{
-		WORLD_CORE tempworld;
-		reckoningcore.world = &tempworld;
-		reckoningcore.tick(false);
-		reckoningcore.move();
-		reckoningcore.quantize();
+		CWorldCore TempWorld;
+		m_ReckoningCore.Init(&TempWorld, GameServer()->Collision());
+		m_ReckoningCore.Tick(false);
+		m_ReckoningCore.Move();
+		m_ReckoningCore.Quantize();
 	}
 	
-	//lastsentcore;
-	/*if(!dead)
-	{*/
-		vec2 start_pos = core.pos;
-		vec2 start_vel = core.vel;
-		bool stuck_before = test_box(core.pos, vec2(28.0f, 28.0f));
-		
-		core.move();
-		bool stuck_after_move = test_box(core.pos, vec2(28.0f, 28.0f));
-		core.quantize();
-		bool stuck_after_quant = test_box(core.pos, vec2(28.0f, 28.0f));
-		pos = core.pos;
-		
-		if(!stuck_before && (stuck_after_move || stuck_after_quant))
-		{
-			dbg_msg("player", "STUCK!!! %d %d %d %f %f %f %f %x %x %x %x", 
-				stuck_before,
-				stuck_after_move,
-				stuck_after_quant,
-				start_pos.x, start_pos.y,
-				start_vel.x, start_vel.y,
-				*((unsigned *)&start_pos.x), *((unsigned *)&start_pos.y),
-				*((unsigned *)&start_vel.x), *((unsigned *)&start_vel.y));
-		}
+	//lastsentcore
+	vec2 StartPos = m_Core.m_Pos;
+	vec2 StartVel = m_Core.m_Vel;
+	bool StuckBefore = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
+	
+	m_Core.Move();
+	bool StuckAfterMove = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
+	m_Core.Quantize();
+	bool StuckAfterQuant = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
+	m_Pos = m_Core.m_Pos;
+	
+	if(!StuckBefore && (StuckAfterMove || StuckAfterQuant))
+	{
+		dbg_msg("char_core", "STUCK!!! %d %d %d %f %f %f %f %x %x %x %x", 
+			StuckBefore,
+			StuckAfterMove,
+			StuckAfterQuant,
+			StartPos.x, StartPos.y,
+			StartVel.x, StartVel.y,
+			*((unsigned *)&StartPos.x), *((unsigned *)&StartPos.y),
+			*((unsigned *)&StartVel.x), *((unsigned *)&StartVel.y));
+	}
 
-		int events = core.triggered_events;
-		int mask = cmask_all_except_one(player->client_id);
-		
-		if(events&COREEVENT_GROUND_JUMP) game.create_sound(pos, SOUND_PLAYER_JUMP, mask);
-		
-		//if(events&COREEVENT_HOOK_LAUNCH) snd_play_random(CHN_WORLD, SOUND_HOOK_LOOP, 1.0f, pos);
-		if(events&COREEVENT_HOOK_ATTACH_PLAYER) game.create_sound(pos, SOUND_HOOK_ATTACH_PLAYER, cmask_all());
-		if(events&COREEVENT_HOOK_ATTACH_GROUND) game.create_sound(pos, SOUND_HOOK_ATTACH_GROUND, mask);
-		if(events&COREEVENT_HOOK_HIT_NOHOOK) game.create_sound(pos, SOUND_HOOK_NOATTACH, mask);
-		//if(events&COREEVENT_HOOK_RETRACT) snd_play_random(CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, pos);
-	//}
+	int Events = m_Core.m_TriggeredEvents;
+	int Mask = CmaskAllExceptOne(m_pPlayer->GetCID());
 	
-	if(team == -1)
+	if(Events&COREEVENT_GROUND_JUMP) GameServer()->CreateSound(m_Pos, SOUND_PLAYER_JUMP, Mask);
+	
+	if(Events&COREEVENT_HOOK_ATTACH_PLAYER) GameServer()->CreateSound(m_Pos, SOUND_HOOK_ATTACH_PLAYER, CmaskAll());
+	if(Events&COREEVENT_HOOK_ATTACH_GROUND) GameServer()->CreateSound(m_Pos, SOUND_HOOK_ATTACH_GROUND, Mask);
+	if(Events&COREEVENT_HOOK_HIT_NOHOOK) GameServer()->CreateSound(m_Pos, SOUND_HOOK_NOATTACH, Mask);
+
+	
+	if(m_pPlayer->GetTeam() == -1)
 	{
-		pos.x = input.target_x;
-		pos.y = input.target_y;
+		m_Pos.x = m_Input.m_TargetX;
+		m_Pos.y = m_Input.m_TargetY;
 	}
 	
-	// update the sendcore if needed
+	// update the m_SendCore if needed
 	{
-		NETOBJ_CHARACTER predicted;
-		NETOBJ_CHARACTER current;
-		mem_zero(&predicted, sizeof(predicted));
-		mem_zero(&current, sizeof(current));
-		reckoningcore.write(&predicted);
-		core.write(&current);
+		CNetObj_Character Predicted;
+		CNetObj_Character Current;
+		mem_zero(&Predicted, sizeof(Predicted));
+		mem_zero(&Current, sizeof(Current));
+		m_ReckoningCore.Write(&Predicted);
+		m_Core.Write(&Current);
 
 		// only allow dead reackoning for a top of 3 seconds
-		if(reckoning_tick+server_tickspeed()*3 < server_tick() || mem_comp(&predicted, &current, sizeof(NETOBJ_CHARACTER)) != 0)
+		if(m_ReckoningTick+Server()->TickSpeed()*3 < Server()->Tick() || mem_comp(&Predicted, &Current, sizeof(CNetObj_Character)) != 0)
 		{
-			reckoning_tick = server_tick();
-			sendcore = core;
-			reckoningcore = core;
+			m_ReckoningTick = Server()->Tick();
+			m_SendCore = m_Core;
+			m_ReckoningCore = m_Core;
 		}
 	}
 }
 
-bool CHARACTER::increase_health(int amount)
+bool CCharacter::IncreaseHealth(int Amount)
 {
-	if(health >= 10)
+	if(m_Health >= 10)
 		return false;
-	health = clamp(health+amount, 0, 10);
+	m_Health = clamp(m_Health+Amount, 0, 10);
 	return true;
 }
 
-bool CHARACTER::increase_armor(int amount)
+bool CCharacter::IncreaseArmor(int Amount)
 {
-	if(armor >= 10)
+	if(m_Armor >= 10)
 		return false;
-	armor = clamp(armor+amount, 0, 10);
+	m_Armor = clamp(m_Armor+Amount, 0, 10);
 	return true;
 }
 
-void CHARACTER::die(int killer, int weapon)
+void CCharacter::Die(int Killer, int Weapon)
 {
-	/*if (dead || team == -1)
-		return;*/
-	int mode_special = game.controller->on_character_death(this, game.players[killer], weapon);
+	int ModeSpecial = GameServer()->m_pController->OnCharacterDeath(this, GameServer()->m_apPlayers[Killer], Weapon);
 
 	dbg_msg("game", "kill killer='%d:%s' victim='%d:%s' weapon=%d special=%d",
-		killer, server_clientname(killer),
-		player->client_id, server_clientname(player->client_id), weapon, mode_special);
+		Killer, Server()->ClientName(Killer),
+		m_pPlayer->GetCID(), Server()->ClientName(m_pPlayer->GetCID()), Weapon, ModeSpecial);
 
 	// send the kill message
-	NETMSG_SV_KILLMSG msg;
-	msg.killer = killer;
-	msg.victim = player->client_id;
-	msg.weapon = weapon;
-	msg.mode_special = mode_special;
-	msg.pack(MSGFLAG_VITAL);
-	server_send_msg(-1);
+	CNetMsg_Sv_KillMsg Msg;
+	Msg.m_Killer = Killer;
+	Msg.m_Victim = m_pPlayer->GetCID();
+	Msg.m_Weapon = Weapon;
+	Msg.m_ModeSpecial = ModeSpecial;
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 
 	// a nice sound
-	game.create_sound(pos, SOUND_PLAYER_DIE);
-
-	// set dead state
-	// TODO: do stuff here
-	/*
-	die_pos = pos;
-	dead = true;
-	*/
+	GameServer()->CreateSound(m_Pos, SOUND_PLAYER_DIE);
 	
 	// this is for auto respawn after 3 secs
-	player->die_tick = server_tick();
+	m_pPlayer->m_DieTick = Server()->Tick();
 	
-	alive = false;
-	game.world.remove_entity(this);
-	game.world.core.characters[player->client_id] = 0;
-	game.create_death(pos, player->client_id);
+	m_Alive = false;
+	GameServer()->m_World.RemoveEntity(this);
+	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
+	GameServer()->CreateDeath(m_Pos, m_pPlayer->GetCID());
 	
 	// we got to wait 0.5 secs before respawning
-	player->respawn_tick = server_tick()+server_tickspeed()/2;
+	m_pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 }
 
-bool CHARACTER::take_damage(vec2 force, int dmg, int from, int weapon)
+bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 {
-	core.vel += force;
+	m_Core.m_Vel += Force;
 	
-	if(game.controller->is_friendly_fire(player->client_id, from) && !config.sv_teamdamage)
+	if(GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From) && !g_Config.m_SvTeamdamage)
 		return false;
 
-	// player only inflicts half damage on self
-	if(from == player->client_id)
-		dmg = max(1, dmg/2);
+	// m_pPlayer only inflicts half damage on self
+	if(From == m_pPlayer->GetCID())
+		Dmg = max(1, Dmg/2);
 
-	damage_taken++;
+	m_DamageTaken++;
 
 	// create healthmod indicator
-	if(server_tick() < damage_taken_tick+25)
+	if(Server()->Tick() < m_DamageTakenTick+25)
 	{
 		// make sure that the damage indicators doesn't group together
-		game.create_damageind(pos, damage_taken*0.25f, dmg);
+		GameServer()->CreateDamageInd(m_Pos, m_DamageTaken*0.25f, Dmg);
 	}
 	else
 	{
-		damage_taken = 0;
-		game.create_damageind(pos, 0, dmg);
+		m_DamageTaken = 0;
+		GameServer()->CreateDamageInd(m_Pos, 0, Dmg);
 	}
 
-	if(dmg)
+	if(Dmg)
 	{
-		if(armor)
+		if(m_Armor)
 		{
-			if(dmg > 1)
+			if(Dmg > 1)
 			{
-				health--;
-				dmg--;
+				m_Health--;
+				Dmg--;
 			}
 			
-			if(dmg > armor)
+			if(Dmg > m_Armor)
 			{
-				dmg -= armor;
-				armor = 0;
+				Dmg -= m_Armor;
+				m_Armor = 0;
 			}
 			else
 			{
-				armor -= dmg;
-				dmg = 0;
+				m_Armor -= Dmg;
+				Dmg = 0;
 			}
 		}
 		
-		health -= dmg;
+		m_Health -= Dmg;
 	}
 
-	damage_taken_tick = server_tick();
+	m_DamageTakenTick = Server()->Tick();
 
-	// do damage hit sound
-	if(from >= 0 && from != player->client_id && game.players[from])
-		game.create_sound(game.players[from]->view_pos, SOUND_HIT, cmask_one(from));
+	// do damage Hit sound
+	if(From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
+		GameServer()->CreateSound(GameServer()->m_apPlayers[From]->m_ViewPos, SOUND_HIT, CmaskOne(From));
 
 	// check for death
-	if(health <= 0)
+	if(m_Health <= 0)
 	{
-		die(from, weapon);
+		Die(From, Weapon);
 		
 		// set attacker's face to happy (taunt!)
-		if (from >= 0 && from != player->client_id && game.players[from])
+		if (From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
 		{
-			CHARACTER *chr = game.players[from]->get_character();
-			if (chr)
+			CCharacter *pChr = GameServer()->m_apPlayers[From]->GetCharacter();
+			if (pChr)
 			{
-				chr->emote_type = EMOTE_HAPPY;
-				chr->emote_stop = server_tick() + server_tickspeed();
+				pChr->m_EmoteType = EMOTE_HAPPY;
+				pChr->m_EmoteStop = Server()->Tick() + Server()->TickSpeed();
 			}
 		}
 	
 		return false;
 	}
 
-	if (dmg > 2)
-		game.create_sound(pos, SOUND_PLAYER_PAIN_LONG);
+	if (Dmg > 2)
+		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG);
 	else
-		game.create_sound(pos, SOUND_PLAYER_PAIN_SHORT);
+		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_SHORT);
 
-	emote_type = EMOTE_PAIN;
-	emote_stop = server_tick() + 500 * server_tickspeed() / 1000;
+	m_EmoteType = EMOTE_PAIN;
+	m_EmoteStop = Server()->Tick() + 500 * Server()->TickSpeed() / 1000;
 
-	// spawn blood?
 	return true;
 }
 
-void CHARACTER::snap(int snapping_client)
+void CCharacter::Snap(int SnappingClient)
 {
-	if(networkclipped(snapping_client))
+	if(NetworkClipped(SnappingClient))
 		return;
 	
-	NETOBJ_CHARACTER *character = (NETOBJ_CHARACTER *)snap_new_item(NETOBJTYPE_CHARACTER, player->client_id, sizeof(NETOBJ_CHARACTER));
+	CNetObj_Character *Character = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
 	
-	// write down the core
-	if(game.world.paused)
+	// write down the m_Core
+	if(GameServer()->m_World.m_Paused)
 	{
 		// no dead reckoning when paused because the client doesn't know
 		// how far to perform the reckoning
-		character->tick = 0;
-		core.write(character);
+		Character->m_Tick = 0;
+		m_Core.Write(Character);
 	}
 	else
 	{
-		character->tick = reckoning_tick;
-		sendcore.write(character);
+		Character->m_Tick = m_ReckoningTick;
+		m_SendCore.Write(Character);
 	}
 	
 	// set emote
-	if (emote_stop < server_tick())
+	if (m_EmoteStop < Server()->Tick())
 	{
-		emote_type = EMOTE_NORMAL;
-		emote_stop = -1;
+		m_EmoteType = EMOTE_NORMAL;
+		m_EmoteStop = -1;
 	}
 
-	character->emote = emote_type;
+	Character->m_Emote = m_EmoteType;
 
-	character->ammocount = 0;
-	character->health = 0;
-	character->armor = 0;
+	Character->m_AmmoCount = 0;
+	Character->m_Health = 0;
+	Character->m_Armor = 0;
 	
-	character->weapon = active_weapon;
-	character->attacktick = attack_tick;
+	Character->m_Weapon = m_ActiveWeapon;
+	Character->m_AttackTick = m_AttackTick;
 
-	character->direction = input.direction;
+	Character->m_Direction = m_Input.m_Direction;
 
-	if(player->client_id == snapping_client)
+	if(m_pPlayer->GetCID() == SnappingClient)
 	{
-		character->health = health;
-		character->armor = armor;
-		if(weapons[active_weapon].ammo > 0)
-			character->ammocount = weapons[active_weapon].ammo;
+		Character->m_Health = m_Health;
+		Character->m_Armor = m_Armor;
+		if(m_aWeapons[m_ActiveWeapon].m_Ammo > 0)
+			Character->m_AmmoCount = m_aWeapons[m_ActiveWeapon].m_Ammo;
 	}
 
-	if (character->emote == EMOTE_NORMAL)
+	if (Character->m_Emote == EMOTE_NORMAL)
 	{
-		if(250 - ((server_tick() - last_action)%(250)) < 5)
-			character->emote = EMOTE_BLINK;
+		if(250 - ((Server()->Tick() - m_LastAction)%(250)) < 5)
+			Character->m_Emote = EMOTE_BLINK;
 	}
 
-	character->player_state = player_state;
+	Character->m_PlayerState = m_PlayerState;
 }

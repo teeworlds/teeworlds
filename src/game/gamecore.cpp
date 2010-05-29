@@ -1,417 +1,311 @@
-/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-#include <string.h>
-#include "gamecore.hpp"
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
+#include "gamecore.h"
 
-const char *TUNING_PARAMS::names[] =
+const char *CTuningParams::m_apNames[] =
 {
-	#define MACRO_TUNING_PARAM(name,value) #name,
-	#include "tuning.hpp"
+	#define MACRO_TUNING_PARAM(Name,ScriptName,Value) #ScriptName,
+	#include "tuning.h"
 	#undef MACRO_TUNING_PARAM
 };
 
 
-bool TUNING_PARAMS::set(int index, float value)
+bool CTuningParams::Set(int Index, float Value)
 {
-	if(index < 0 || index >= num())
+	if(Index < 0 || Index >= Num())
 		return false;
-	((tune_param *)this)[index] = value;
+	((CTuneParam *)this)[Index] = Value;
 	return true;
 }
 
-bool TUNING_PARAMS::get(int index, float *value)
+bool CTuningParams::Get(int Index, float *pValue)
 {
-	if(index < 0 || index >= num())
+	if(Index < 0 || Index >= Num())
 		return false;
-	*value = (float)((tune_param *)this)[index];
+	*pValue = (float)((CTuneParam *)this)[Index];
 	return true;
 }
 
-bool TUNING_PARAMS::set(const char *name, float value)
+bool CTuningParams::Set(const char *pName, float Value)
 {
-	for(int i = 0; i < num(); i++)
-		if(strcmp(name, names[i]) == 0)
-			return set(i, value);
+	for(int i = 0; i < Num(); i++)
+		if(str_comp_nocase(pName, m_apNames[i]) == 0)
+			return Set(i, Value);
 	return false;
 }
 
-bool TUNING_PARAMS::get(const char *name, float *value)
+bool CTuningParams::Get(const char *pName, float *pValue)
 {
-	for(int i = 0; i < num(); i++)
-		if(strcmp(name, names[i]) == 0)
-			return get(i, value);
+	for(int i = 0; i < Num(); i++)
+		if(str_comp_nocase(pName, m_apNames[i]) == 0)
+			return Get(i, pValue);
 	
 	return false;
 }
 
-// TODO: OPT: rewrite this smarter!
-void move_point(vec2 *inout_pos, vec2 *inout_vel, float elasticity, int *bounces)
-{
-	if(bounces)
-		*bounces = 0;
-	
-	vec2 pos = *inout_pos;
-	vec2 vel = *inout_vel;
-	if(col_check_point(pos + vel))
-	{
-		int affected = 0;
-		if(col_check_point(pos.x + vel.x, pos.y))
-		{
-			inout_vel->x *= -elasticity;
-			if(bounces)
-				(*bounces)++;			
-			affected++;
-		}
-
-		if(col_check_point(pos.x, pos.y + vel.y))
-		{
-			inout_vel->y *= -elasticity;
-			if(bounces)
-				(*bounces)++;			
-			affected++;
-		}
-		
-		if(affected == 0)
-		{
-			inout_vel->x *= -elasticity;
-			inout_vel->y *= -elasticity;
-		}
-	}
-	else
-	{
-		*inout_pos = pos + vel;
-	}
-}
-
-bool test_box(vec2 pos, vec2 size)
-{
-	size *= 0.5f;
-	if(col_check_point(pos.x-size.x, pos.y-size.y))
-		return true;
-	if(col_check_point(pos.x+size.x, pos.y-size.y))
-		return true;
-	if(col_check_point(pos.x-size.x, pos.y+size.y))
-		return true;
-	if(col_check_point(pos.x+size.x, pos.y+size.y))
-		return true;
-	return false;
-}
-
-void move_box(vec2 *inout_pos, vec2 *inout_vel, vec2 size, float elasticity)
-{
-	// do the move
-	vec2 pos = *inout_pos;
-	vec2 vel = *inout_vel;
-	
-	float distance = length(vel);
-	int max = (int)distance;
-	
-	if(distance > 0.00001f)
-	{
-		//vec2 old_pos = pos;
-		float fraction = 1.0f/(float)(max+1);
-		for(int i = 0; i <= max; i++)
-		{
-			//float amount = i/(float)max;
-			//if(max == 0)
-				//amount = 0;
-			
-			vec2 new_pos = pos + vel*fraction; // TODO: this row is not nice
-			
-			if(test_box(vec2(new_pos.x, new_pos.y), size))
-			{
-				int hits = 0;
-				
-				if(test_box(vec2(pos.x, new_pos.y), size))
-				{
-					new_pos.y = pos.y;
-					vel.y *= -elasticity;
-					hits++;
-				}
-				
-				if(test_box(vec2(new_pos.x, pos.y), size))
-				{
-					new_pos.x = pos.x;
-					vel.x *= -elasticity;
-					hits++;
-				}
-				
-				// neither of the tests got a collision.
-				// this is a real _corner case_!
-				if(hits == 0)
-				{
-					new_pos.y = pos.y;
-					vel.y *= -elasticity;
-					new_pos.x = pos.x;
-					vel.x *= -elasticity;
-				}
-			}
-			
-			pos = new_pos;
-		}
-	}
-	
-	*inout_pos = pos;
-	*inout_vel = vel;
-}
-
-float hermite_basis1(float v)
+float HermiteBasis1(float v)
 {
 	return 2*v*v*v - 3*v*v+1;
 }
 
-float velocity_ramp(float value, float start, float range, float curvature)
+float VelocityRamp(float Value, float Start, float Range, float Curvature)
 {
-	if(value < start)
+	if(Value < Start)
 		return 1.0f;
-	return 1.0f/pow(curvature, (value-start)/range);
+	return 1.0f/powf(Curvature, (Value-Start)/Range);
 }
 
-void CHARACTER_CORE::reset()
+void CCharacterCore::Init(CWorldCore *pWorld, CCollision *pCollision)
 {
-	pos = vec2(0,0);
-	vel = vec2(0,0);
-	hook_pos = vec2(0,0);
-	hook_dir = vec2(0,0);
-	hook_tick = 0;
-	hook_state = HOOK_IDLE;
-	hooked_player = -1;
-	jumped = 0;
-	triggered_events = 0;
+	m_pWorld = pWorld;
+	m_pCollision = pCollision;
 }
 
-void CHARACTER_CORE::tick(bool use_input)
+void CCharacterCore::Reset()
 {
-	float phys_size = 28.0f;
-	triggered_events = 0;
+	m_Pos = vec2(0,0);
+	m_Vel = vec2(0,0);
+	m_HookPos = vec2(0,0);
+	m_HookDir = vec2(0,0);
+	m_HookTick = 0;
+	m_HookState = HOOK_IDLE;
+	m_HookedPlayer = -1;
+	m_Jumped = 0;
+	m_TriggeredEvents = 0;
+}
+
+void CCharacterCore::Tick(bool UseInput)
+{
+	float PhysSize = 28.0f;
+	m_TriggeredEvents = 0;
 	
 	// get ground state
-	bool grounded = false;
-	if(col_check_point(pos.x+phys_size/2, pos.y+phys_size/2+5))
-		grounded = true;
-	if(col_check_point(pos.x-phys_size/2, pos.y+phys_size/2+5))
-		grounded = true;
+	bool Grounded = false;
+	if(m_pCollision->CheckPoint(m_Pos.x+PhysSize/2, m_Pos.y+PhysSize/2+5))
+		Grounded = true;
+	if(m_pCollision->CheckPoint(m_Pos.x-PhysSize/2, m_Pos.y+PhysSize/2+5))
+		Grounded = true;
 	
-	vec2 target_direction = normalize(vec2(input.target_x, input.target_y));
+	vec2 TargetDirection = normalize(vec2(m_Input.m_TargetX, m_Input.m_TargetY));
 
-	vel.y += world->tuning.gravity;
+	m_Vel.y += m_pWorld->m_Tuning.m_Gravity;
 	
-	float max_speed = grounded ? world->tuning.ground_control_speed : world->tuning.air_control_speed;
-	float accel = grounded ? world->tuning.ground_control_accel : world->tuning.air_control_accel;
-	float friction = grounded ? world->tuning.ground_friction : world->tuning.air_friction;
+	float MaxSpeed = Grounded ? m_pWorld->m_Tuning.m_GroundControlSpeed : m_pWorld->m_Tuning.m_AirControlSpeed;
+	float Accel = Grounded ? m_pWorld->m_Tuning.m_GroundControlAccel : m_pWorld->m_Tuning.m_AirControlAccel;
+	float Friction = Grounded ? m_pWorld->m_Tuning.m_GroundFriction : m_pWorld->m_Tuning.m_AirFriction;
 	
 	// handle input
-	if(use_input)
+	if(UseInput)
 	{
-		direction = input.direction;
+		m_Direction = m_Input.m_Direction;
 
 		// setup angle
 		float a = 0;
-		if(input.target_x == 0)
-			a = atan((float)input.target_y);
+		if(m_Input.m_TargetX == 0)
+			a = atanf((float)m_Input.m_TargetY);
 		else
-			a = atan((float)input.target_y/(float)input.target_x);
+			a = atanf((float)m_Input.m_TargetY/(float)m_Input.m_TargetX);
 			
-		if(input.target_x < 0)
+		if(m_Input.m_TargetX < 0)
 			a = a+pi;
 			
-		angle = (int)(a*256.0f);
+		m_Angle = (int)(a*256.0f);
 
 		// handle jump
-		if(input.jump)
+		if(m_Input.m_Jump)
 		{
-			if(!(jumped&1))
+			if(!(m_Jumped&1))
 			{
-				if(grounded)
+				if(Grounded)
 				{
-					triggered_events |= COREEVENT_GROUND_JUMP;
-					vel.y = -world->tuning.ground_jump_impulse;
-					jumped |= 1;
+					m_TriggeredEvents |= COREEVENT_GROUND_JUMP;
+					m_Vel.y = -m_pWorld->m_Tuning.m_GroundJumpImpulse;
+					m_Jumped |= 1;
 				}
-				else if(!(jumped&2))
+				else if(!(m_Jumped&2))
 				{
-					triggered_events |= COREEVENT_AIR_JUMP;
-					vel.y = -world->tuning.air_jump_impulse;
-					jumped |= 3;
+					m_TriggeredEvents |= COREEVENT_AIR_JUMP;
+					m_Vel.y = -m_pWorld->m_Tuning.m_AirJumpImpulse;
+					m_Jumped |= 3;
 				}
 			}
 		}
 		else
-			jumped &= ~1;
+			m_Jumped &= ~1;
 
 		// handle hook
-		if(input.hook)
+		if(m_Input.m_Hook)
 		{
-			if(hook_state == HOOK_IDLE)
+			if(m_HookState == HOOK_IDLE)
 			{
-				hook_state = HOOK_FLYING;
-				hook_pos = pos+target_direction*phys_size*1.5f;
-				hook_dir = target_direction;
-				hooked_player = -1;
-				hook_tick = 0;
-				triggered_events |= COREEVENT_HOOK_LAUNCH;
+				m_HookState = HOOK_FLYING;
+				m_HookPos = m_Pos+TargetDirection*PhysSize*1.5f;
+				m_HookDir = TargetDirection;
+				m_HookedPlayer = -1;
+				m_HookTick = 0;
+				m_TriggeredEvents |= COREEVENT_HOOK_LAUNCH;
 			}		
 		}
 		else
 		{
-			hooked_player = -1;
-			hook_state = HOOK_IDLE;
-			hook_pos = pos;			
+			m_HookedPlayer = -1;
+			m_HookState = HOOK_IDLE;
+			m_HookPos = m_Pos;			
 		}		
 	}
 	
 	// add the speed modification according to players wanted direction
-	if(direction < 0)
-		vel.x = saturated_add(-max_speed, max_speed, vel.x, -accel);
-	if(direction > 0)
-		vel.x = saturated_add(-max_speed, max_speed, vel.x, accel);
-	if(direction == 0)
-		vel.x *= friction;
+	if(m_Direction < 0)
+		m_Vel.x = SaturatedAdd(-MaxSpeed, MaxSpeed, m_Vel.x, -Accel);
+	if(m_Direction > 0)
+		m_Vel.x = SaturatedAdd(-MaxSpeed, MaxSpeed, m_Vel.x, Accel);
+	if(m_Direction == 0)
+		m_Vel.x *= Friction;
 	
 	// handle jumping
 	// 1 bit = to keep track if a jump has been made on this input
 	// 2 bit = to keep track if a air-jump has been made
-	if(grounded)
-		jumped &= ~2;
+	if(Grounded)
+		m_Jumped &= ~2;
 	
 	// do hook
-	if(hook_state == HOOK_IDLE)
+	if(m_HookState == HOOK_IDLE)
 	{
-		hooked_player = -1;
-		hook_state = HOOK_IDLE;
-		hook_pos = pos;
+		m_HookedPlayer = -1;
+		m_HookState = HOOK_IDLE;
+		m_HookPos = m_Pos;
 	}
-	else if(hook_state >= HOOK_RETRACT_START && hook_state < HOOK_RETRACT_END)
+	else if(m_HookState >= HOOK_RETRACT_START && m_HookState < HOOK_RETRACT_END)
 	{
-		hook_state++;
+		m_HookState++;
 	}
-	else if(hook_state == HOOK_RETRACT_END)
+	else if(m_HookState == HOOK_RETRACT_END)
 	{
-		hook_state = HOOK_RETRACTED;
-		triggered_events |= COREEVENT_HOOK_RETRACT;
-		hook_state = HOOK_RETRACTED;
+		m_HookState = HOOK_RETRACTED;
+		m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
+		m_HookState = HOOK_RETRACTED;
 	}
-	else if(hook_state == HOOK_FLYING)
+	else if(m_HookState == HOOK_FLYING)
 	{
-		vec2 new_pos = hook_pos+hook_dir*world->tuning.hook_fire_speed;
-		if(distance(pos, new_pos) > world->tuning.hook_length)
+		vec2 NewPos = m_HookPos+m_HookDir*m_pWorld->m_Tuning.m_HookFireSpeed;
+		if(distance(m_Pos, NewPos) > m_pWorld->m_Tuning.m_HookLength)
 		{
-			hook_state = HOOK_RETRACT_START;
-			new_pos = pos + normalize(new_pos-pos) * world->tuning.hook_length;
+			m_HookState = HOOK_RETRACT_START;
+			NewPos = m_Pos + normalize(NewPos-m_Pos) * m_pWorld->m_Tuning.m_HookLength;
 		}
 		
 		// make sure that the hook doesn't go though the ground
-		bool going_to_hit_ground = false;
-		bool going_to_retract = false;
-		int hit = col_intersect_line(hook_pos, new_pos, &new_pos, 0);
-		if(hit)
+		bool GoingToHitGround = false;
+		bool GoingToRetract = false;
+		int Hit = m_pCollision->IntersectLine(m_HookPos, NewPos, &NewPos, 0);
+		if(Hit)
 		{
-			if(hit&COLFLAG_NOHOOK)
-				going_to_retract = true;
+			if(Hit&CCollision::COLFLAG_NOHOOK)
+				GoingToRetract = true;
 			else
-				going_to_hit_ground = true;
+				GoingToHitGround = true;
 		}
 
 		// Check against other players first
-		if(world && world->tuning.player_hooking)
+		if(m_pWorld && m_pWorld->m_Tuning.m_PlayerHooking)
 		{
-			float dist = 0.0f;
+			float Dist = 0.0f;
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
-				CHARACTER_CORE *p = world->characters[i];
+				CCharacterCore *p = m_pWorld->m_apCharacters[i];
 				if(!p || p == this)
 					continue;
 
-				vec2 closest_point = closest_point_on_line(hook_pos, new_pos, p->pos);
-				if(distance(p->pos, closest_point) < phys_size+2.0f)
+				vec2 ClosestPoint = closest_point_on_line(m_HookPos, NewPos, p->m_Pos);
+				if(distance(p->m_Pos, ClosestPoint) < PhysSize+2.0f)
 				{
-					if (hooked_player == -1 || distance (hook_pos, p->pos) < dist)
+					if (m_HookedPlayer == -1 || distance(m_HookPos, p->m_Pos) < Dist)
 					{
-						triggered_events |= COREEVENT_HOOK_ATTACH_PLAYER;
-						hook_state = HOOK_GRABBED;
-						hooked_player = i;
-						dist = distance (hook_pos, p->pos);
+						m_TriggeredEvents |= COREEVENT_HOOK_ATTACH_PLAYER;
+						m_HookState = HOOK_GRABBED;
+						m_HookedPlayer = i;
+						Dist = distance(m_HookPos, p->m_Pos);
 					}
 				}
 			}
 		}
 		
-		if(hook_state == HOOK_FLYING)
+		if(m_HookState == HOOK_FLYING)
 		{
 			// check against ground
-			if(going_to_hit_ground)
+			if(GoingToHitGround)
 			{
-				triggered_events |= COREEVENT_HOOK_ATTACH_GROUND;
-				hook_state = HOOK_GRABBED;
+				m_TriggeredEvents |= COREEVENT_HOOK_ATTACH_GROUND;
+				m_HookState = HOOK_GRABBED;
 			}
-			else if(going_to_retract)
+			else if(GoingToRetract)
 			{
-				triggered_events |= COREEVENT_HOOK_HIT_NOHOOK;
-				hook_state = HOOK_RETRACT_START;
+				m_TriggeredEvents |= COREEVENT_HOOK_HIT_NOHOOK;
+				m_HookState = HOOK_RETRACT_START;
 			}
 			
-			hook_pos = new_pos;
+			m_HookPos = NewPos;
 		}
 	}
 	
-	if(hook_state == HOOK_GRABBED)
+	if(m_HookState == HOOK_GRABBED)
 	{
-		if(hooked_player != -1)
+		if(m_HookedPlayer != -1)
 		{
-			CHARACTER_CORE *p = world->characters[hooked_player];
+			CCharacterCore *p = m_pWorld->m_apCharacters[m_HookedPlayer];
 			if(p)
-				hook_pos = p->pos;
+				m_HookPos = p->m_Pos;
 			else
 			{
 				// release hook
-				hooked_player = -1;
-				hook_state = HOOK_RETRACTED;
-				hook_pos = pos;					
+				m_HookedPlayer = -1;
+				m_HookState = HOOK_RETRACTED;
+				m_HookPos = m_Pos;					
 			}
 			
 			// keep players hooked for a max of 1.5sec
-			//if(server_tick() > hook_tick+(server_tickspeed()*3)/2)
+			//if(Server()->Tick() > hook_tick+(Server()->TickSpeed()*3)/2)
 				//release_hooked();
 		}
 		
 		// don't do this hook rutine when we are hook to a player
-		if(hooked_player == -1 && distance(hook_pos, pos) > 46.0f)
+		if(m_HookedPlayer == -1 && distance(m_HookPos, m_Pos) > 46.0f)
 		{
-			vec2 hookvel = normalize(hook_pos-pos)*world->tuning.hook_drag_accel;
+			vec2 HookVel = normalize(m_HookPos-m_Pos)*m_pWorld->m_Tuning.m_HookDragAccel;
 			// the hook as more power to drag you up then down.
 			// this makes it easier to get on top of an platform
-			if(hookvel.y > 0)
-				hookvel.y *= 0.3f;
+			if(HookVel.y > 0)
+				HookVel.y *= 0.3f;
 			
 			// the hook will boost it's power if the player wants to move
 			// in that direction. otherwise it will dampen everything abit
-			if((hookvel.x < 0 && direction < 0) || (hookvel.x > 0 && direction > 0)) 
-				hookvel.x *= 0.95f;
+			if((HookVel.x < 0 && m_Direction < 0) || (HookVel.x > 0 && m_Direction > 0)) 
+				HookVel.x *= 0.95f;
 			else
-				hookvel.x *= 0.75f;
+				HookVel.x *= 0.75f;
 			
-			vec2 new_vel = vel+hookvel;
+			vec2 NewVel = m_Vel+HookVel;
 
 			// check if we are under the legal limit for the hook
-			if(length(new_vel) < world->tuning.hook_drag_speed || length(new_vel) < length(vel))
-				vel = new_vel; // no problem. apply
+			if(length(NewVel) < m_pWorld->m_Tuning.m_HookDragSpeed || length(NewVel) < length(m_Vel))
+				m_Vel = NewVel; // no problem. apply
 				
 		}
 
 		// release hook (max hook time is 1.25
-		hook_tick++;
-		if(hooked_player != -1 && (hook_tick > SERVER_TICK_SPEED+SERVER_TICK_SPEED/5 || !world->characters[hooked_player]))
+		m_HookTick++;
+		if(m_HookedPlayer != -1 && (m_HookTick > SERVER_TICK_SPEED+SERVER_TICK_SPEED/5 || !m_pWorld->m_apCharacters[m_HookedPlayer]))
 		{
-			hooked_player = -1;
-			hook_state = HOOK_RETRACTED;
-			hook_pos = pos;			
+			m_HookedPlayer = -1;
+			m_HookState = HOOK_RETRACTED;
+			m_HookPos = m_Pos;			
 		}
 	}
 	
-	if(world && world->tuning.player_collision)
+	if(m_pWorld && m_pWorld->m_Tuning.m_PlayerCollision)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			CHARACTER_CORE *p = world->characters[i];
+			CCharacterCore *p = m_pWorld->m_apCharacters[i];
 			if(!p)
 				continue;
 			
@@ -420,95 +314,95 @@ void CHARACTER_CORE::tick(bool use_input)
 				continue; // make sure that we don't nudge our self
 			
 			// handle player <-> player collision
-			float d = distance(pos, p->pos);
-			vec2 dir = normalize(pos - p->pos);
-			if(d < phys_size*1.25f && d > 1.0f)
+			float d = distance(m_Pos, p->m_Pos);
+			vec2 Dir = normalize(m_Pos - p->m_Pos);
+			if(d < PhysSize*1.25f && d > 1.0f)
 			{
-				float a = (phys_size*1.45f - d);
+				float a = (PhysSize*1.45f - d);
 				
 				// make sure that we don't add excess force by checking the
 				// direction against the current velocity
-				vec2 veldir = normalize(vel);
-				float v = 1-(dot(veldir, dir)+1)/2;
-				vel = vel + dir*a*(v*0.75f);
-				vel = vel * 0.85f;
+				vec2 VelDir = normalize(m_Vel);
+				float v = 1-(dot(VelDir, Dir)+1)/2;
+				m_Vel = m_Vel + Dir*a*(v*0.75f);
+				m_Vel = m_Vel * 0.85f;
 			}
 			
 			// handle hook influence
-			if(hooked_player == i)
+			if(m_HookedPlayer == i)
 			{
-				if(d > phys_size*1.50f) // TODO: fix tweakable variable
+				if(d > PhysSize*1.50f) // TODO: fix tweakable variable
 				{
-					float accel = world->tuning.hook_drag_accel * (d/world->tuning.hook_length);
-					float drag_speed = world->tuning.hook_drag_speed;
+					float Accel = m_pWorld->m_Tuning.m_HookDragAccel * (d/m_pWorld->m_Tuning.m_HookLength);
+					float DragSpeed = m_pWorld->m_Tuning.m_HookDragSpeed;
 					
 					// add force to the hooked player
-					p->vel.x = saturated_add(-drag_speed, drag_speed, p->vel.x, accel*dir.x*1.5f);
-					p->vel.y = saturated_add(-drag_speed, drag_speed, p->vel.y, accel*dir.y*1.5f);
+					p->m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, p->m_Vel.x, Accel*Dir.x*1.5f);
+					p->m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, p->m_Vel.y, Accel*Dir.y*1.5f);
 
 					// add a little bit force to the guy who has the grip
-					vel.x = saturated_add(-drag_speed, drag_speed, vel.x, -accel*dir.x*0.25f);
-					vel.y = saturated_add(-drag_speed, drag_speed, vel.y, -accel*dir.y*0.25f);
+					m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, -Accel*Dir.x*0.25f);
+					m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, -Accel*Dir.y*0.25f);
 				}
 			}
 		}
 	}	
 
 	// clamp the velocity to something sane
-	if(length(vel) > 6000)
-		vel = normalize(vel) * 6000;
+	if(length(m_Vel) > 6000)
+		m_Vel = normalize(m_Vel) * 6000;
 }
 
-void CHARACTER_CORE::move()
+void CCharacterCore::Move()
 {
-	float rampvalue = velocity_ramp(length(vel)*50, world->tuning.velramp_start, world->tuning.velramp_range, world->tuning.velramp_curvature);
+	float RampValue = VelocityRamp(length(m_Vel)*50, m_pWorld->m_Tuning.m_VelrampStart, m_pWorld->m_Tuning.m_VelrampRange, m_pWorld->m_Tuning.m_VelrampCurvature);
 	
-	vel.x = vel.x*rampvalue;
-	move_box(&pos, &vel, vec2(28.0f, 28.0f), 0);
-	vel.x = vel.x*(1.0f/rampvalue);
+	m_Vel.x = m_Vel.x*RampValue;
+	m_pCollision->MoveBox(&m_Pos, &m_Vel, vec2(28.0f, 28.0f), 0);
+	m_Vel.x = m_Vel.x*(1.0f/RampValue);
 }
 
-void CHARACTER_CORE::write(NETOBJ_CHARACTER_CORE *obj_core)
+void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)
 {
-	obj_core->x = round(pos.x);
-	obj_core->y = round(pos.y);
+	pObjCore->m_X = round(m_Pos.x);
+	pObjCore->m_Y = round(m_Pos.y);
 	
-	obj_core->vx = round(vel.x*256.0f);
-	obj_core->vy = round(vel.y*256.0f);
-	obj_core->hook_state = hook_state;
-	obj_core->hook_tick = hook_tick;
-	obj_core->hook_x = round(hook_pos.x);
-	obj_core->hook_y = round(hook_pos.y);
-	obj_core->hook_dx = round(hook_dir.x*256.0f);
-	obj_core->hook_dy = round(hook_dir.y*256.0f);
-	obj_core->hooked_player = hooked_player;
-	obj_core->jumped = jumped;
-	obj_core->direction = direction;
-	obj_core->angle = angle;
+	pObjCore->m_VelX = round(m_Vel.x*256.0f);
+	pObjCore->m_VelY = round(m_Vel.y*256.0f);
+	pObjCore->m_HookState = m_HookState;
+	pObjCore->m_HookTick = m_HookTick;
+	pObjCore->m_HookX = round(m_HookPos.x);
+	pObjCore->m_HookY = round(m_HookPos.y);
+	pObjCore->m_HookDx = round(m_HookDir.x*256.0f);
+	pObjCore->m_HookDy = round(m_HookDir.y*256.0f);
+	pObjCore->m_HookedPlayer = m_HookedPlayer;
+	pObjCore->m_Jumped = m_Jumped;
+	pObjCore->m_Direction = m_Direction;
+	pObjCore->m_Angle = m_Angle;
 }
 
-void CHARACTER_CORE::read(const NETOBJ_CHARACTER_CORE *obj_core)
+void CCharacterCore::Read(const CNetObj_CharacterCore *pObjCore)
 {
-	pos.x = obj_core->x;
-	pos.y = obj_core->y;
-	vel.x = obj_core->vx/256.0f;
-	vel.y = obj_core->vy/256.0f;
-	hook_state = obj_core->hook_state;
-	hook_tick = obj_core->hook_tick;
-	hook_pos.x = obj_core->hook_x;
-	hook_pos.y = obj_core->hook_y;
-	hook_dir.x = obj_core->hook_dx/256.0f;
-	hook_dir.y = obj_core->hook_dy/256.0f;
-	hooked_player = obj_core->hooked_player;
-	jumped = obj_core->jumped;
-	direction = obj_core->direction;
-	angle = obj_core->angle;
+	m_Pos.x = pObjCore->m_X;
+	m_Pos.y = pObjCore->m_Y;
+	m_Vel.x = pObjCore->m_VelX/256.0f;
+	m_Vel.y = pObjCore->m_VelY/256.0f;
+	m_HookState = pObjCore->m_HookState;
+	m_HookTick = pObjCore->m_HookTick;
+	m_HookPos.x = pObjCore->m_HookX;
+	m_HookPos.y = pObjCore->m_HookY;
+	m_HookDir.x = pObjCore->m_HookDx/256.0f;
+	m_HookDir.y = pObjCore->m_HookDy/256.0f;
+	m_HookedPlayer = pObjCore->m_HookedPlayer;
+	m_Jumped = pObjCore->m_Jumped;
+	m_Direction = pObjCore->m_Direction;
+	m_Angle = pObjCore->m_Angle;
 }
 
-void CHARACTER_CORE::quantize()
+void CCharacterCore::Quantize()
 {
-	NETOBJ_CHARACTER_CORE c;
-	write(&c);
-	read(&c);
+	CNetObj_CharacterCore Core;
+	Write(&Core);
+	Read(&Core);
 }
 

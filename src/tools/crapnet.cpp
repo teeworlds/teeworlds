@@ -1,167 +1,167 @@
-/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include <base/system.h>
 
 #include <cstdlib>
 
-struct PACKET
+struct CPacket
 {
-	PACKET *prev;
-	PACKET *next;
+	CPacket *m_pPrev;
+	CPacket *m_pNext;
 	
-	NETADDR send_to;
-	int64 timestamp;
-	int id;
-	int data_size;
-	char data[1];
+	NETADDR m_SendTo;
+	int64 m_Timestamp;
+	int m_Id;
+	int m_DataSize;
+	char m_aData[1];
 };
 
-static PACKET *first = (PACKET *)0;
-static PACKET *last = (PACKET *)0;
-static int current_latency = 0;
+static CPacket *m_pFirst = (CPacket *)0;
+static CPacket *m_pLast = (CPacket *)0;
+static int m_CurrentLatency = 0;
 
-struct PINGCONFIG
+struct CPingConfig
 {
-	int base;
-	int flux;
-	int spike;
-	int loss;
-	int delay;
-	int delay_freq;
+	int m_Base;
+	int m_Flux;
+	int m_Spike;
+	int m_Loss;
+	int m_Delay;
+	int m_DelayFreq;
 };
 
-static PINGCONFIG config_pings[] = {
+static CPingConfig m_aConfigPings[] = {
 //		base	flux	spike	loss	delay	delayfreq
 		{0,		0,		0,		0,		0,		0},
 		{40,	20,		100,		0,		0,		0},
 		{140,	40,		200,		0,		0,		0},
 };
 
-static int config_numpingconfs = sizeof(config_pings)/sizeof(PINGCONFIG);
-static int config_interval = 10; /* seconds between different pingconfigs */
-static int config_log = 0;
-static int config_reorder = 0;
+static int m_ConfigNumpingconfs = sizeof(m_aConfigPings)/sizeof(CPingConfig);
+static int m_ConfigInterval = 10; // seconds between different pingconfigs
+static int m_ConfigLog = 0;
+static int m_ConfigReorder = 0;
 
-int run(int port, NETADDR dest)
+void Run(int Port, NETADDR Dest)
 {
-	NETADDR src = {NETTYPE_IPV4, {0,0,0,0},port};
-	NETSOCKET socket = net_udp_create(src);
+	NETADDR Src = {NETTYPE_IPV4, {0,0,0,0}, Port};
+	NETSOCKET Socket = net_udp_create(Src);
 	
-	char buffer[1024*2];
-	int id = 0;
-	int delaycounter = 0;
+	char aBuffer[1024*2];
+	int Id = 0;
+	int Delaycounter = 0;
 	
 	while(1)
 	{
-		static int lastcfg = 0;
-		int n = ((time_get()/time_freq())/config_interval) % config_numpingconfs;
-		PINGCONFIG ping = config_pings[n];
+		static int Lastcfg = 0;
+		int n = ((time_get()/time_freq())/m_ConfigInterval) % m_ConfigNumpingconfs;
+		CPingConfig Ping = m_aConfigPings[n];
 		
-		if(n != lastcfg)
+		if(n != Lastcfg)
 			dbg_msg("crapnet", "cfg = %d", n);
-		lastcfg = n;
+		Lastcfg = n;
 		
 		// handle incomming packets
 		while(1)
 		{
 			// fetch data
-			int data_trash = 0;
-			NETADDR from;
-			int bytes = net_udp_recv(socket, &from, buffer, 1024*2);
-			if(bytes <= 0)
+			int DataTrash = 0;
+			NETADDR From;
+			int Bytes = net_udp_recv(Socket, &From, aBuffer, 1024*2);
+			if(Bytes <= 0)
 				break;
 				
-			if((rand()%100) < ping.loss) // drop the packet
+			if((rand()%100) < Ping.m_Loss) // drop the packet
 			{
-				if(config_log)
+				if(m_ConfigLog)
 					dbg_msg("crapnet", "dropped packet");
 				continue;
 			}
 
 			// create new packet				
-			PACKET *p = (PACKET *)mem_alloc(sizeof(PACKET)+bytes, 1);
+			CPacket *p = (CPacket *)mem_alloc(sizeof(CPacket)+Bytes, 1);
 
-			if(net_addr_comp(&from, &dest) == 0)
-				p->send_to = src; // from the server
+			if(net_addr_comp(&From, &Dest) == 0)
+				p->m_SendTo = Src; // from the server
 			else
 			{
-				src = from; // from the client
-				p->send_to = dest;
+				Src = From; // from the client
+				p->m_SendTo = Dest;
 			}
 
 			// queue packet
-			p->prev = last;
-			p->next = 0;
-			if(last)
-				last->next = p;
+			p->m_pPrev = m_pLast;
+			p->m_pNext = 0;
+			if(m_pLast)
+				m_pLast->m_pNext = p;
 			else
 			{
-				first = p;
-				last = p;
+				m_pFirst = p;
+				m_pLast = p;
 			}
-			last = p;
+			m_pLast = p;
 
 			// set data in packet
-			p->timestamp = time_get();
-			p->data_size = bytes;
-			p->id = id++;
-			mem_copy(p->data, buffer, bytes);
+			p->m_Timestamp = time_get();
+			p->m_DataSize = Bytes;
+			p->m_Id = Id++;
+			mem_copy(p->m_aData, aBuffer, Bytes);
 			
-			if(id > 20 && bytes > 6 && data_trash)
+			if(Id > 20 && Bytes > 6 && DataTrash)
 			{
-				p->data[6+(rand()%(bytes-6))] = rand()&255; // modify a byte
+				p->m_aData[6+(rand()%(Bytes-6))] = rand()&255; // modify a byte
 				if((rand()%10) == 0)
 				{
-					p->data_size -= rand()%32;
-					if(p->data_size < 6)
-						p->data_size = 6;
+					p->m_DataSize -= rand()%32;
+					if(p->m_DataSize < 6)
+						p->m_DataSize = 6;
 				}
 			}
 			
-			if(delaycounter <= 0)
+			if(Delaycounter <= 0)
 			{
-				if(ping.delay)
-					p->timestamp += (time_freq()*1000)/ping.delay;
-				delaycounter = ping.delay_freq;
+				if(Ping.m_Delay)
+					p->m_Timestamp += (time_freq()*1000)/Ping.m_Delay;
+				Delaycounter = Ping.m_DelayFreq;
 			}
-			delaycounter--;
+			Delaycounter--;
 	
-			if(config_log)
-				dbg_msg("crapnet", "<< %08d %d.%d.%d.%d:%5d (%d)", p->id, from.ip[0], from.ip[1], from.ip[2], from.ip[3], from.port, p->data_size);
+			if(m_ConfigLog)
+				dbg_msg("crapnet", "<< %08d %d.%d.%d.%d:%5d (%d)", p->m_Id, From.ip[0], From.ip[1], From.ip[2], From.ip[3], From.port, p->m_DataSize);
 		}
 		
 		//
 		/*while(1)
 		{*/
-		PACKET *p = 0;
-		PACKET *next = first;
+		CPacket *p = 0;
+		CPacket *pNext = m_pFirst;
 		while(1)
 		{
-			p = next;
+			p = pNext;
 			if(!p)
 				break;
-			next = p->next;
+			pNext = p->m_pNext;
 				
-			if((time_get()-p->timestamp) > current_latency)
+			if((time_get()-p->m_Timestamp) > m_CurrentLatency)
 			{
-				char flags[] = "  ";
+				char aFlags[] = "  ";
 
-				if(config_reorder && (rand()%2) == 0 && p->next)
+				if(m_ConfigReorder && (rand()%2) == 0 && p->m_pNext)
 				{
-					flags[0] = 'R';
-					p = first->next;
+					aFlags[0] = 'R';
+					p = m_pFirst->m_pNext;
 				}
 				
-				if(p->next)
-					p->next->prev = p->prev;
+				if(p->m_pNext)
+					p->m_pNext->m_pPrev = p->m_pPrev;
 				else
-					last = p->prev;
+					m_pLast = p->m_pPrev;
 					
-				if(p->prev)
-					p->prev->next = p->next;
+				if(p->m_pPrev)
+					p->m_pPrev->m_pNext = p->m_pNext;
 				else
-					first = p->next;
+					m_pFirst = p->m_pNext;
 					
-				/*PACKET *cur = first;
+				/*CPacket *cur = first;
 				while(cur)
 				{
 					dbg_assert(cur != p, "p still in list");
@@ -170,27 +170,27 @@ int run(int port, NETADDR dest)
 					
 				// send and remove packet
 				//if((rand()%20) != 0) // heavy packetloss
-				net_udp_send(socket, &p->send_to, p->data, p->data_size);
+				net_udp_send(Socket, &p->m_SendTo, p->m_aData, p->m_DataSize);
 				
 				// update lag
-				double flux = rand()/(double)RAND_MAX;
-				int ms_spike = ping.spike;
-				int ms_flux = ping.flux;
-				int ms_ping = ping.base;
-				current_latency = ((time_freq()*ms_ping)/1000) + (int64)(((time_freq()*ms_flux)/1000)*flux); // 50ms
+				double Flux = rand()/(double)RAND_MAX;
+				int MsSpike = Ping.m_Spike;
+				int MsFlux = Ping.m_Flux;
+				int MsPing = Ping.m_Base;
+				m_CurrentLatency = ((time_freq()*MsPing)/1000) + (int64)(((time_freq()*MsFlux)/1000)*Flux); // 50ms
 				
-				if(ms_spike && (p->id%100) == 0)
+				if(MsSpike && (p->m_Id%100) == 0)
 				{
-					current_latency += (time_freq()*ms_spike)/1000;
-					flags[1] = 'S';
+					m_CurrentLatency += (time_freq()*MsSpike)/1000;
+					aFlags[1] = 'S';
 				}
 
-				if(config_log)
+				if(m_ConfigLog)
 				{
-					dbg_msg("crapnet", ">> %08d %d.%d.%d.%d:%5d (%d) %s", p->id,
-						p->send_to.ip[0], p->send_to.ip[1],
-						p->send_to.ip[2], p->send_to.ip[3],
-						p->send_to.port, p->data_size, flags);
+					dbg_msg("crapnet", ">> %08d %d.%d.%d.%d:%5d (%d) %s", p->m_Id,
+						p->m_SendTo.ip[0], p->m_SendTo.ip[1],
+						p->m_SendTo.ip[2], p->m_SendTo.ip[3],
+						p->m_SendTo.port, p->m_DataSize, aFlags);
 				}
 				
 
@@ -202,10 +202,10 @@ int run(int port, NETADDR dest)
 	}
 }
 
-int main(int argc, char **argv)
+int main(int argc, char **argv) // ignore_convention
 {
-	NETADDR a = {NETTYPE_IPV4, {127,0,0,1},8303};
+	NETADDR Addr = {NETTYPE_IPV4, {127,0,0,1},8303};
 	dbg_logger_stdout();
-	run(8302, a);
+	Run(8302, Addr);
 	return 0;
 }

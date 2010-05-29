@@ -1,45 +1,48 @@
-#include <engine/client/graphics.h>
-#include <game/client/component.hpp>
-#include <game/mapitems.hpp>
+#include <engine/graphics.h>
+#include <engine/map.h>
+#include <game/client/component.h>
+#include <game/mapitems.h>
 
-#include "mapimages.hpp"
+#include "mapimages.h"
 
-MAPIMAGES::MAPIMAGES()
+CMapImages::CMapImages()
 {
-	count = 0;
+	m_Count = 0;
 }
 
-void MAPIMAGES::on_mapload()
+void CMapImages::OnMapLoad()
 {
+	IMap *pMap = Kernel()->RequestInterface<IMap>();
+	
 	// unload all textures
-	for(int i = 0; i < count; i++)
+	for(int i = 0; i < m_Count; i++)
 	{
-		Graphics()->UnloadTexture(textures[i]);
-		textures[i] = -1;
+		Graphics()->UnloadTexture(m_aTextures[i]);
+		m_aTextures[i] = -1;
 	}
-	count = 0;
+	m_Count = 0;
 
-	int start;
-	map_get_type(MAPITEMTYPE_IMAGE, &start, &count);
+	int Start;
+	pMap->GetType(MAPITEMTYPE_IMAGE, &Start, &m_Count);
 	
 	// load new textures
-	for(int i = 0; i < count; i++)
+	for(int i = 0; i < m_Count; i++)
 	{
-		textures[i] = 0;
+		m_aTextures[i] = 0;
 		
-		MAPITEM_IMAGE *img = (MAPITEM_IMAGE *)map_get_item(start+i, 0, 0);
-		if(img->external)
+		CMapItemImage *pImg = (CMapItemImage *)pMap->GetItem(Start+i, 0, 0);
+		if(pImg->m_External)
 		{
-			char buf[256];
-			char *name = (char *)map_get_data(img->image_name);
-			str_format(buf, sizeof(buf), "mapres/%s.png", name);
-			textures[i] = Graphics()->LoadTexture(buf, IMG_AUTO, 0);
+			char Buf[256];
+			char *pName = (char *)pMap->GetData(pImg->m_ImageName);
+			str_format(Buf, sizeof(Buf), "mapres/%s.png", pName);
+			m_aTextures[i] = Graphics()->LoadTexture(Buf, CImageInfo::FORMAT_AUTO, 0);
 		}
 		else
 		{
-			void *data = map_get_data(img->image_data);
-			textures[i] = Graphics()->LoadTextureRaw(img->width, img->height, IMG_RGBA, data, IMG_RGBA, 0);
-			map_unload_data(img->image_data);
+			void *pData = pMap->GetData(pImg->m_ImageData);
+			m_aTextures[i] = Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, CImageInfo::FORMAT_RGBA, pData, CImageInfo::FORMAT_RGBA, 0);
+			pMap->UnloadData(pImg->m_ImageData);
 		}
 	}
 }

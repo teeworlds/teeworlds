@@ -1,157 +1,161 @@
-#include <engine/e_client_interface.h>
-#include <engine/client/graphics.h>
-#include <game/generated/g_protocol.hpp>
-#include <game/generated/gc_data.hpp>
+#include <engine/graphics.h>
+#include <engine/shared/config.h>
+#include <game/generated/protocol.h>
+#include <game/generated/client_data.h>
 
-#include <game/gamecore.hpp> // get_angle
-#include <game/client/gameclient.hpp>
-#include <game/client/ui.hpp>
-#include <game/client/render.hpp>
-#include "emoticon.hpp"
+#include <game/gamecore.h> // get_angle
+#include <game/client/gameclient.h>
+#include <game/client/ui.h>
+#include <game/client/render.h>
+#include "emoticon.h"
 
-EMOTICON::EMOTICON()
+CEmoticon::CEmoticon()
 {
-	on_reset();
+	OnReset();
 }
 
-void EMOTICON::con_key_emoticon(void *result, void *user_data)
+void CEmoticon::ConKeyEmoticon(IConsole::IResult *pResult, void *pUserData)
 {
-	((EMOTICON *)user_data)->active = console_arg_int(result, 0) != 0;
+	((CEmoticon *)pUserData)->m_Active = pResult->GetInteger(0) != 0;
 }
 
-void EMOTICON::con_emote(void *result, void *user_data)
+void CEmoticon::ConEmote(IConsole::IResult *pResult, void *pUserData)
 {
-	((EMOTICON *)user_data)->emote(console_arg_int(result, 0));
+	((CEmoticon *)pUserData)->Emote(pResult->GetInteger(0));
 }
 
-void EMOTICON::on_console_init()
+void CEmoticon::OnConsoleInit()
 {
-	MACRO_REGISTER_COMMAND("+emote", "", CFGFLAG_CLIENT, con_key_emoticon, this, "Open emote selector");
-	MACRO_REGISTER_COMMAND("emote", "i", CFGFLAG_CLIENT, con_emote, this, "Use emote");
+	Console()->Register("+emote", "", CFGFLAG_CLIENT, ConKeyEmoticon, this, "Open emote selector");
+	Console()->Register("emote", "i", CFGFLAG_CLIENT, ConEmote, this, "Use emote");
 }
 
-void EMOTICON::on_reset()
+void CEmoticon::OnReset()
 {
-	was_active = false;
-	active = false;
-	selected_emote = -1;
+	m_WasActive = false;
+	m_Active = false;
+	m_SelectedEmote = -1;
 }
 
-void EMOTICON::on_message(int msgtype, void *rawmsg)
+void CEmoticon::OnMessage(int MsgType, void *pRawMsg)
 {
-	if(msgtype == NETMSGTYPE_SV_EMOTICON)
-	{
-		NETMSG_SV_EMOTICON *msg = (NETMSG_SV_EMOTICON *)rawmsg;
-		gameclient.clients[msg->cid].emoticon = msg->emoticon;
-		gameclient.clients[msg->cid].emoticon_start = client_tick();
-	}	
 }
 
-bool EMOTICON::on_mousemove(float x, float y)
+bool CEmoticon::OnMouseMove(float x, float y)
 {
-	if(!active)
+	if(!m_Active)
 		return false;
 	
-	selector_mouse += vec2(x,y);
+	m_SelectorMouse += vec2(x,y);
 	return true;
 }
 
-void EMOTICON::draw_circle(float x, float y, float r, int segments)
+void CEmoticon::DrawCircle(float x, float y, float r, int Segments)
 {
-	float f_segments = (float)segments;
-	for(int i = 0; i < segments; i+=2)
+	IGraphics::CFreeformItem Array[32];
+	int NumItems = 0;
+	float FSegments = (float)Segments;
+	for(int i = 0; i < Segments; i+=2)
 	{
-		float a1 = i/f_segments * 2*pi;
-		float a2 = (i+1)/f_segments * 2*pi;
-		float a3 = (i+2)/f_segments * 2*pi;
-		float ca1 = cosf(a1);
-		float ca2 = cosf(a2);
-		float ca3 = cosf(a3);
-		float sa1 = sinf(a1);
-		float sa2 = sinf(a2);
-		float sa3 = sinf(a3);
+		float a1 = i/FSegments * 2*pi;
+		float a2 = (i+1)/FSegments * 2*pi;
+		float a3 = (i+2)/FSegments * 2*pi;
+		float Ca1 = cosf(a1);
+		float Ca2 = cosf(a2);
+		float Ca3 = cosf(a3);
+		float Sa1 = sinf(a1);
+		float Sa2 = sinf(a2);
+		float Sa3 = sinf(a3);
 
-		client->Graphics()->QuadsDrawFreeform(
+		Array[NumItems++] = IGraphics::CFreeformItem(
 			x, y,
-			x+ca1*r, y+sa1*r,
-			x+ca3*r, y+sa3*r,
-			x+ca2*r, y+sa2*r);
+			x+Ca1*r, y+Sa1*r,
+			x+Ca3*r, y+Sa3*r,
+			x+Ca2*r, y+Sa2*r);
+		if(NumItems == 32)
+		{
+			m_pClient->Graphics()->QuadsDrawFreeform(Array, 32);
+			NumItems = 0;
+		}
 	}
+	if(NumItems)
+		m_pClient->Graphics()->QuadsDrawFreeform(Array, NumItems);
 }
 
 	
-void EMOTICON::on_render()
+void CEmoticon::OnRender()
 {
-	if(!active)
+	if(!m_Active)
 	{
-		if(was_active && selected_emote != -1)
-			emote(selected_emote);
-		was_active = false;
+		if(m_WasActive && m_SelectedEmote != -1)
+			Emote(m_SelectedEmote);
+		m_WasActive = false;
 		return;
 	}
 	
-	was_active = true;
+	m_WasActive = true;
 	
 	int x, y;
-	inp_mouse_relative(&x, &y);
+	Input()->MouseRelative(&x, &y);
 
-	selector_mouse.x += x;
-	selector_mouse.y += y;
+	m_SelectorMouse.x += x;
+	m_SelectorMouse.y += y;
 
-	if (length(selector_mouse) > 140)
-		selector_mouse = normalize(selector_mouse) * 140;
+	if (length(m_SelectorMouse) > 140)
+		m_SelectorMouse = normalize(m_SelectorMouse) * 140;
 
-	float selected_angle = get_angle(selector_mouse) + 2*pi/24;
-	if (selected_angle < 0)
-		selected_angle += 2*pi;
+	float SelectedAngle = GetAngle(m_SelectorMouse) + 2*pi/24;
+	if (SelectedAngle < 0)
+		SelectedAngle += 2*pi;
 
-	if (length(selector_mouse) > 100)
-		selected_emote = (int)(selected_angle / (2*pi) * 12.0f);
+	if (length(m_SelectorMouse) > 100)
+		m_SelectedEmote = (int)(SelectedAngle / (2*pi) * 12.0f);
 
-    CUIRect screen = *UI()->Screen();
+    CUIRect Screen = *UI()->Screen();
 
-	Graphics()->MapScreen(screen.x, screen.y, screen.w, screen.h);
+	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
 
 	Graphics()->BlendNormal();
 
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.3f);
-	draw_circle(screen.w/2, screen.h/2, 160, 64);
+	DrawCircle(Screen.w/2, Screen.h/2, 160, 64);
 	Graphics()->QuadsEnd();
 
-	Graphics()->TextureSet(data->images[IMAGE_EMOTICONS].id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
 	Graphics()->QuadsBegin();
 
 	for (int i = 0; i < 12; i++)
 	{
-		float angle = 2*pi*i/12.0;
-		if (angle > pi)
-			angle -= 2*pi;
+		float Angle = 2*pi*i/12.0;
+		if (Angle > pi)
+			Angle -= 2*pi;
 
-		bool selected = selected_emote == i;
+		bool Selected = m_SelectedEmote == i;
 
-		float size = selected ? 96 : 64;
+		float Size = Selected ? 96 : 64;
 
-		float nudge_x = 120 * cos(angle);
-		float nudge_y = 120 * sin(angle);
-		RenderTools()->select_sprite(SPRITE_OOP + i);
-		Graphics()->QuadsDraw(screen.w/2 + nudge_x, screen.h/2 + nudge_y, size, size);
+		float NudgeX = 120 * cosf(Angle);
+		float NudgeY = 120 * sinf(Angle);
+		RenderTools()->SelectSprite(SPRITE_OOP + i);
+		IGraphics::CQuadItem QuadItem(Screen.w/2 + NudgeX, Screen.h/2 + NudgeY, Size, Size);
+		Graphics()->QuadsDraw(&QuadItem, 1);
 	}
 
 	Graphics()->QuadsEnd();
 
-    Graphics()->TextureSet(data->images[IMAGE_CURSOR].id);
+    Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CURSOR].m_Id);
     Graphics()->QuadsBegin();
     Graphics()->SetColor(1,1,1,1);
-    Graphics()->QuadsDrawTL(selector_mouse.x+screen.w/2,selector_mouse.y+screen.h/2,24,24);
+	IGraphics::CQuadItem QuadItem(m_SelectorMouse.x+Screen.w/2,m_SelectorMouse.y+Screen.h/2,24,24);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
     Graphics()->QuadsEnd();
 }
 
-void EMOTICON::emote(int emoticon)
+void CEmoticon::Emote(int Emoticon)
 {
-	NETMSG_CL_EMOTICON msg;
-	msg.emoticon = emoticon;
-	msg.pack(MSGFLAG_VITAL);
-	client_send_msg();
+	CNetMsg_Cl_Emoticon Msg;
+	Msg.m_Emoticon = Emoticon;
+	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }

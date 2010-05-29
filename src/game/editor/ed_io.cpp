@@ -1,10 +1,9 @@
-#include <string.h>
-#include <stdio.h>
-#include <engine/client/graphics.h>
-#include "ed_editor.hpp"
+#include <engine/graphics.h>
+#include <engine/storage.h>
+#include "ed_editor.h"
 
 template<typename T>
-static int make_version(int i, const T &v)
+static int MakeVersion(int i, const T &v)
 { return (i<<16)+sizeof(T); }
 
 // backwards compatiblity
@@ -93,7 +92,7 @@ void editor_load_old(DATAFILE *df, MAP *map)
 		{
 			mapres_tilemap *tmap = (mapres_tilemap *)datafile_get_item(df, start+t,0,0);
 			
-			LAYER_TILES *l = new LAYER_TILES(tmap->width, tmap->height);
+			CLayerTiles *l = new CLayerTiles(tmap->width, tmap->height);
 			
 			if(tmap->main)
 			{
@@ -113,7 +112,7 @@ void editor_load_old(DATAFILE *df, MAP *map)
 
 			// process the data
 			unsigned char *src_data = (unsigned char *)datafile_get_data(df, tmap->data);
-			TILE *dst_data = l->tiles;
+			CTile *dst_data = l->tiles;
 			
 			for(int y = 0; y < tmap->height; y++)
 				for(int x = 0; x < tmap->width; x++, dst_data++, src_data+=2)
@@ -138,12 +137,12 @@ void editor_load_old(DATAFILE *df, MAP *map)
 			EDITOR_IMAGE *img = new EDITOR_IMAGE;
 			img->width = imgres->width;
 			img->height = imgres->height;
-			img->format = IMG_RGBA;
+			img->format = CImageInfo::FORMAT_RGBA;
 			
 			// copy image data
 			img->data = mem_alloc(img->width*img->height*4, 1);
 			mem_copy(img->data, data, img->width*img->height*4);
-			img->tex_id = Graphics()->LoadTextureRaw(img->width, img->height, img->format, img->data, IMG_AUTO, 0);
+			img->tex_id = Graphics()->LoadTextureRaw(img->width, img->height, img->format, img->data, CImageInfo::FORMAT_AUTO, 0);
 			map->images.add(img);
 			
 			// unload image
@@ -153,7 +152,7 @@ void editor_load_old(DATAFILE *df, MAP *map)
 	
 	// load entities
 	{
-		LAYER_GAME *g = map->game_layer;
+		CLayerGame *g = map->game_layer;
 		g->resize(game_width, game_height);
 		for(int t = MAPRES_ENTS_START; t < MAPRES_ENTS_END; t++)
 		{
@@ -190,190 +189,192 @@ void editor_load_old(DATAFILE *df, MAP *map)
 	}
 }*/
 
-int EDITOR::save(const char *filename)
+int CEditor::Save(const char *pFilename)
 {
-	return map.save(filename);
+	return m_Map.Save(Kernel()->RequestInterface<IStorage>(), pFilename);
 }
 
-int MAP::save(const char *filename)
+int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 {
-	dbg_msg("editor", "saving to '%s'...", filename);
-	DATAFILE_OUT *df = datafile_create(filename);
-	if(!df)
+	dbg_msg("editor", "saving to '%s'...", pFileName);
+	CDataFileWriter df;
+	if(!df.Open(pStorage, pFileName))
 	{
-		dbg_msg("editor", "failed to open file '%s'...", filename);
+		dbg_msg("editor", "failed to open file '%s'...", pFileName);
 		return 0;
 	}
 		
 	// save version
 	{
-		MAPITEM_VERSION item;
-		item.version = 1;
-		datafile_add_item(df, MAPITEMTYPE_VERSION, 0, sizeof(item), &item);
+		CMapItemVersion Item;
+		Item.m_Version = 1;
+		df.AddItem(MAPITEMTYPE_VERSION, 0, sizeof(Item), &Item);
 	}
 
 	// save images
-	for(int i = 0; i < images.len(); i++)
+	for(int i = 0; i < m_lImages.size(); i++)
 	{
-		EDITOR_IMAGE *img = images[i];
+		CEditorImage *pImg = m_lImages[i];
 		
 		// analyse the image for when saving (should be done when we load the image)
 		// TODO!
-		img->analyse_tileflags();
+		pImg->AnalyseTileFlags();
 		
-		MAPITEM_IMAGE item;
-		item.version = 1;
+		CMapItemImage Item;
+		Item.m_Version = 1;
 		
-		item.width = img->width;
-		item.height = img->height;
-		item.external = img->external;
-		item.image_name = datafile_add_data(df, strlen(img->name)+1, img->name);
-		if(img->external)
-			item.image_data = -1;
+		Item.m_Width = pImg->m_Width;
+		Item.m_Height = pImg->m_Height;
+		Item.m_External = pImg->m_External;
+		Item.m_ImageName = df.AddData(str_length(pImg->m_aName)+1, pImg->m_aName);
+		if(pImg->m_External)
+			Item.m_ImageData = -1;
 		else
-			item.image_data = datafile_add_data(df, item.width*item.height*4, img->data);
-		datafile_add_item(df, MAPITEMTYPE_IMAGE, i, sizeof(item), &item);
+			Item.m_ImageData = df.AddData(Item.m_Width*Item.m_Height*4, pImg->m_pData);
+		df.AddItem(MAPITEMTYPE_IMAGE, i, sizeof(Item), &Item);
 	}
 	
 	// save layers
-	int layer_count = 0;
-	for(int g = 0; g < groups.len(); g++)
+	int LayerCount = 0;
+	for(int g = 0; g < m_lGroups.size(); g++)
 	{
-		LAYERGROUP *group = groups[g];
-		MAPITEM_GROUP gitem;
-		gitem.version = MAPITEM_GROUP::CURRENT_VERSION;
+		CLayerGroup *pGroup = m_lGroups[g];
+		CMapItemGroup GItem;
+		GItem.m_Version = CMapItemGroup::CURRENT_VERSION;
 		
-		gitem.parallax_x = group->parallax_x;
-		gitem.parallax_y = group->parallax_y;
-		gitem.offset_x = group->offset_x;
-		gitem.offset_y = group->offset_y;
-		gitem.use_clipping = group->use_clipping;
-		gitem.clip_x = group->clip_x;
-		gitem.clip_y = group->clip_y;
-		gitem.clip_w = group->clip_w;
-		gitem.clip_h = group->clip_h;
-		gitem.start_layer = layer_count;
-		gitem.num_layers = 0;
+		GItem.m_ParallaxX = pGroup->m_ParallaxX;
+		GItem.m_ParallaxY = pGroup->m_ParallaxY;
+		GItem.m_OffsetX = pGroup->m_OffsetX;
+		GItem.m_OffsetY = pGroup->m_OffsetY;
+		GItem.m_UseClipping = pGroup->m_UseClipping;
+		GItem.m_ClipX = pGroup->m_ClipX;
+		GItem.m_ClipY = pGroup->m_ClipY;
+		GItem.m_ClipW = pGroup->m_ClipW;
+		GItem.m_ClipH = pGroup->m_ClipH;
+		GItem.m_StartLayer = LayerCount;
+		GItem.m_NumLayers = 0;
 		
-		for(int l = 0; l < group->layers.len(); l++)
+		for(int l = 0; l < pGroup->m_lLayers.size(); l++)
 		{
-			if(group->layers[l]->type == LAYERTYPE_TILES)
+			if(pGroup->m_lLayers[l]->m_Type == LAYERTYPE_TILES)
 			{
 				dbg_msg("editor", "saving tiles layer");
-				LAYER_TILES *layer = (LAYER_TILES *)group->layers[l];
-				layer->prepare_for_save();
+				CLayerTiles *pLayer = (CLayerTiles *)pGroup->m_lLayers[l];
+				pLayer->PrepareForSave();
 				
-				MAPITEM_LAYER_TILEMAP item;
-				item.version = 2;
+				CMapItemLayerTilemap Item;
+				Item.m_Version = 2;
 				
-				item.layer.flags = layer->flags;
-				item.layer.type = layer->type;
+				Item.m_Layer.m_Flags = pLayer->m_Flags;
+				Item.m_Layer.m_Type = pLayer->m_Type;
 				
-				item.color.r = 255; // not in use right now
-				item.color.g = 255;
-				item.color.b = 255;
-				item.color.a = 255;
-				item.color_env = -1;
-				item.color_env_offset = 0;
+				Item.m_Color.r = 255; // not in use right now
+				Item.m_Color.g = 255;
+				Item.m_Color.b = 255;
+				Item.m_Color.a = 255;
+				Item.m_ColorEnv = -1;
+				Item.m_ColorEnvOffset = 0;
 				
-				item.width = layer->width;
-				item.height = layer->height;
-				item.flags = layer->game;
-				item.image = layer->image;
-				item.data = datafile_add_data(df, layer->width*layer->height*sizeof(TILE), layer->tiles);
-				datafile_add_item(df, MAPITEMTYPE_LAYER, layer_count, sizeof(item), &item);
+				Item.m_Width = pLayer->m_Width;
+				Item.m_Height = pLayer->m_Height;
+				Item.m_Flags = pLayer->m_Game;
+				Item.m_Image = pLayer->m_Image;
+				Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), pLayer->m_pTiles);
+				df.AddItem(MAPITEMTYPE_LAYER, LayerCount, sizeof(Item), &Item);
 				
-				gitem.num_layers++;
-				layer_count++;
+				GItem.m_NumLayers++;
+				LayerCount++;
 			}
-			else if(group->layers[l]->type == LAYERTYPE_QUADS)
+			else if(pGroup->m_lLayers[l]->m_Type == LAYERTYPE_QUADS)
 			{
 				dbg_msg("editor", "saving quads layer");
-				LAYER_QUADS *layer = (LAYER_QUADS *)group->layers[l];
-				if(layer->quads.len())
+				CLayerQuads *pLayer = (CLayerQuads *)pGroup->m_lLayers[l];
+				if(pLayer->m_lQuads.size())
 				{
-					MAPITEM_LAYER_QUADS item;
-					item.version = 1;
-					item.layer.flags =  layer->flags;
-					item.layer.type = layer->type;
-					item.image = layer->image;
+					CMapItemLayerQuads Item;
+					Item.m_Version = 1;
+					Item.m_Layer.m_Flags =  pLayer->m_Flags;
+					Item.m_Layer.m_Type = pLayer->m_Type;
+					Item.m_Image = pLayer->m_Image;
 					
 					// add the data
-					item.num_quads = layer->quads.len();
-					item.data = datafile_add_data_swapped(df, layer->quads.len()*sizeof(QUAD), layer->quads.getptr());
-					datafile_add_item(df, MAPITEMTYPE_LAYER, layer_count, sizeof(item), &item);
+					Item.m_NumQuads = pLayer->m_lQuads.size();
+					Item.m_Data = df.AddDataSwapped(pLayer->m_lQuads.size()*sizeof(CQuad), pLayer->m_lQuads.base_ptr());
+					df.AddItem(MAPITEMTYPE_LAYER, LayerCount, sizeof(Item), &Item);
 					
 					// clean up
 					//mem_free(quads);
 
-					gitem.num_layers++;
-					layer_count++;
+					GItem.m_NumLayers++;
+					LayerCount++;
 				}
 			}
 		}
 		
-		datafile_add_item(df, MAPITEMTYPE_GROUP, g, sizeof(gitem), &gitem);
+		df.AddItem(MAPITEMTYPE_GROUP, g, sizeof(GItem), &GItem);
 	}
 	
 	// save envelopes
-	int point_count = 0;
-	for(int e = 0; e < envelopes.len(); e++)
+	int PointCount = 0;
+	for(int e = 0; e < m_lEnvelopes.size(); e++)
 	{
-		MAPITEM_ENVELOPE item;
-		item.version = 1;
-		item.channels = envelopes[e]->channels;
-		item.start_point = point_count;
-		item.num_points = envelopes[e]->points.len();
-		item.name = -1;
+		CMapItemEnvelope Item;
+		Item.m_Version = 1;
+		Item.m_Channels = m_lEnvelopes[e]->m_Channels;
+		Item.m_StartPoint = PointCount;
+		Item.m_NumPoints = m_lEnvelopes[e]->m_lPoints.size();
+		Item.m_Name = -1;
 		
-		datafile_add_item(df, MAPITEMTYPE_ENVELOPE, e, sizeof(item), &item);
-		point_count += item.num_points;
+		df.AddItem(MAPITEMTYPE_ENVELOPE, e, sizeof(Item), &Item);
+		PointCount += Item.m_NumPoints;
 	}
 	
 	// save points
-	int totalsize = sizeof(ENVPOINT) * point_count;
-	ENVPOINT *points = (ENVPOINT *)mem_alloc(totalsize, 1);
-	point_count = 0;
+	int TotalSize = sizeof(CEnvPoint) * PointCount;
+	CEnvPoint *pPoints = (CEnvPoint *)mem_alloc(TotalSize, 1);
+	PointCount = 0;
 	
-	for(int e = 0; e < envelopes.len(); e++)
+	for(int e = 0; e < m_lEnvelopes.size(); e++)
 	{
-		int count = envelopes[e]->points.len();
-		mem_copy(&points[point_count], envelopes[e]->points.getptr(), sizeof(ENVPOINT)*count);
-		point_count += count;
+		int Count = m_lEnvelopes[e]->m_lPoints.size();
+		mem_copy(&pPoints[PointCount], m_lEnvelopes[e]->m_lPoints.base_ptr(), sizeof(CEnvPoint)*Count);
+		PointCount += Count;
 	}
 
-	datafile_add_item(df, MAPITEMTYPE_ENVPOINTS, 0, totalsize, points);
+	df.AddItem(MAPITEMTYPE_ENVPOINTS, 0, TotalSize, pPoints);
 	
 	// finish the data file
-	datafile_finish(df);
+	df.Finish();
 	dbg_msg("editor", "done");
 	
 	// send rcon.. if we can
-	if(client_rcon_authed())
+	/*
+	if(Client()->RconAuthed())
 	{
-		client_rcon("sv_map_reload 1");
-	}
+		Client()->Rcon("sv_map_reload 1");
+	}*/
 	
 	return 1;
 }
 
-int EDITOR::load(const char *filename)
+int CEditor::Load(const char *pFileName)
 {
-	reset();
-	return map.load(filename);
+	Reset();
+	return m_Map.Load(Kernel()->RequestInterface<IStorage>(), pFileName);
 }
 
-int MAP::load(const char *filename)
+int CEditorMap::Load(class IStorage *pStorage, const char *pFileName)
 {
-	DATAFILE *df = datafile_load(filename);
-	if(!df)
+	CDataFileReader DataFile;
+	//DATAFILE *df = datafile_load(filename);
+	if(!DataFile.Open(pStorage, pFileName))
 		return 0;
 		
-	clean();
+	Clean();
 
 	// check version
-	MAPITEM_VERSION *item = (MAPITEM_VERSION *)datafile_find_item(df, MAPITEMTYPE_VERSION, 0);
-	if(!item)
+	CMapItemVersion *pItem = (CMapItemVersion *)DataFile.FindItem(MAPITEMTYPE_VERSION, 0);
+	if(!pItem)
 	{
 		// import old map
 		/*MAP old_mapstuff;
@@ -381,224 +382,231 @@ int MAP::load(const char *filename)
 		editor_load_old(df, this);
 		*/
 	}
-	else if(item->version == 1)
+	else if(pItem->m_Version == 1)
 	{
 		//editor.reset(false);
 		
 		// load images
 		{
-			int start, num;
-			datafile_get_type(df, MAPITEMTYPE_IMAGE, &start, &num);
-			for(int i = 0; i < num; i++)
+			int Start, Num;
+			DataFile.GetType( MAPITEMTYPE_IMAGE, &Start, &Num);
+			for(int i = 0; i < Num; i++)
 			{
-				MAPITEM_IMAGE *item = (MAPITEM_IMAGE *)datafile_get_item(df, start+i, 0, 0);
-				char *name = (char *)datafile_get_data(df, item->image_name);
+				CMapItemImage *pItem = (CMapItemImage *)DataFile.GetItem(Start+i, 0, 0);
+				char *pName = (char *)DataFile.GetData(pItem->m_ImageName);
 
 				// copy base info				
-				EDITOR_IMAGE *img = new EDITOR_IMAGE(editor);
-				img->external = item->external;
+				CEditorImage *pImg = new CEditorImage(m_pEditor);
+				pImg->m_External = pItem->m_External;
 
-				if(item->external)
+				if(pItem->m_External)
 				{
-					char buf[256];
-					sprintf(buf, "mapres/%s.png", name);
+					char aBuf[256];
+					str_format(aBuf, sizeof(aBuf),"mapres/%s.png", pName);
 					
 					// load external
-					EDITOR_IMAGE imginfo(editor);
-					if(editor->Graphics()->LoadPNG(&imginfo, buf))
+					CEditorImage ImgInfo(m_pEditor);
+					if(m_pEditor->Graphics()->LoadPNG(&ImgInfo, aBuf))
 					{
-						*img = imginfo;
-						img->tex_id = editor->Graphics()->LoadTextureRaw(imginfo.width, imginfo.height, imginfo.format, imginfo.data, IMG_AUTO, 0);
-						img->external = 1;
+						*pImg = ImgInfo;
+						pImg->m_TexId = m_pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
+						pImg->m_External = 1;
 					}
 				}
 				else
 				{
-					img->width = item->width;
-					img->height = item->height;
-					img->format = IMG_RGBA;
+					pImg->m_Width = pItem->m_Width;
+					pImg->m_Height = pItem->m_Height;
+					pImg->m_Format = CImageInfo::FORMAT_RGBA;
 					
 					// copy image data
-					void *data = datafile_get_data(df, item->image_data);
-					img->data = mem_alloc(img->width*img->height*4, 1);
-					mem_copy(img->data, data, img->width*img->height*4);
-					img->tex_id = editor->Graphics()->LoadTextureRaw(img->width, img->height, img->format, img->data, IMG_AUTO, 0);
+					void *pData = DataFile.GetData(pItem->m_ImageData);
+					pImg->m_pData = mem_alloc(pImg->m_Width*pImg->m_Height*4, 1);
+					mem_copy(pImg->m_pData, pData, pImg->m_Width*pImg->m_Height*4);
+					pImg->m_TexId = m_pEditor->Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, pImg->m_Format, pImg->m_pData, CImageInfo::FORMAT_AUTO, 0);
 				}
 
 				// copy image name
-				if(name)
-					strncpy(img->name, name, 128);
+				if(pName)
+					str_copy(pImg->m_aName, pName, 128);
 
-				images.add(img);
+				m_lImages.add(pImg);
 				
 				// unload image
-				datafile_unload_data(df, item->image_data);
-				datafile_unload_data(df, item->image_name);
+				DataFile.UnloadData(pItem->m_ImageData);
+				DataFile.UnloadData(pItem->m_ImageName);
 			}
 		}
 		
 		// load groups
 		{
-			int layers_start, layers_num;
-			datafile_get_type(df, MAPITEMTYPE_LAYER, &layers_start, &layers_num);
+			int LayersStart, LayersNum;
+			DataFile.GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersNum);
 			
-			int start, num;
-			datafile_get_type(df, MAPITEMTYPE_GROUP, &start, &num);
-			for(int g = 0; g < num; g++)
+			int Start, Num;
+			DataFile.GetType(MAPITEMTYPE_GROUP, &Start, &Num);
+			for(int g = 0; g < Num; g++)
 			{
-				MAPITEM_GROUP *gitem = (MAPITEM_GROUP *)datafile_get_item(df, start+g, 0, 0);
+				CMapItemGroup *pGItem = (CMapItemGroup *)DataFile.GetItem(Start+g, 0, 0);
 				
-				if(gitem->version < 1 || gitem->version > MAPITEM_GROUP::CURRENT_VERSION)
+				if(pGItem->m_Version < 1 || pGItem->m_Version > CMapItemGroup::CURRENT_VERSION)
 					continue;
 				
-				LAYERGROUP *group = new_group();
-				group->parallax_x = gitem->parallax_x;
-				group->parallax_y = gitem->parallax_y;
-				group->offset_x = gitem->offset_x;
-				group->offset_y = gitem->offset_y;
+				CLayerGroup *pGroup = NewGroup();
+				pGroup->m_ParallaxX = pGItem->m_ParallaxX;
+				pGroup->m_ParallaxY = pGItem->m_ParallaxY;
+				pGroup->m_OffsetX = pGItem->m_OffsetX;
+				pGroup->m_OffsetY = pGItem->m_OffsetY;
 				
-				if(gitem->version >= 2)
+				if(pGItem->m_Version >= 2)
 				{
-					group->use_clipping = gitem->use_clipping;
-					group->clip_x = gitem->clip_x;
-					group->clip_y = gitem->clip_y;
-					group->clip_w = gitem->clip_w;
-					group->clip_h = gitem->clip_h;
+					pGroup->m_UseClipping = pGItem->m_UseClipping;
+					pGroup->m_ClipX = pGItem->m_ClipX;
+					pGroup->m_ClipY = pGItem->m_ClipY;
+					pGroup->m_ClipW = pGItem->m_ClipW;
+					pGroup->m_ClipH = pGItem->m_ClipH;
 				}
 				
-				for(int l = 0; l < gitem->num_layers; l++)
+				for(int l = 0; l < pGItem->m_NumLayers; l++)
 				{
-					LAYER *layer = 0;
-					MAPITEM_LAYER *layer_item = (MAPITEM_LAYER *)datafile_get_item(df, layers_start+gitem->start_layer+l, 0, 0);
-					if(!layer_item)
+					CLayer *pLayer = 0;
+					CMapItemLayer *pLayerItem = (CMapItemLayer *)DataFile.GetItem(LayersStart+pGItem->m_StartLayer+l, 0, 0);
+					if(!pLayerItem)
 						continue;
 						
-					if(layer_item->type == LAYERTYPE_TILES)
+					if(pLayerItem->m_Type == LAYERTYPE_TILES)
 					{
-						MAPITEM_LAYER_TILEMAP *tilemap_item = (MAPITEM_LAYER_TILEMAP *)layer_item;
-						LAYER_TILES *tiles = 0;
+						CMapItemLayerTilemap *pTilemapItem = (CMapItemLayerTilemap *)pLayerItem;
+						CLayerTiles *pTiles = 0;
 						
-						if(tilemap_item->flags&1)
+						if(pTilemapItem->m_Flags&1)
 						{
-							tiles = new LAYER_GAME(tilemap_item->width, tilemap_item->height);
-							make_game_layer(tiles);
-							make_game_group(group);
+							pTiles = new CLayerGame(pTilemapItem->m_Width, pTilemapItem->m_Height);
+							MakeGameLayer(pTiles);
+							MakeGameGroup(pGroup);
 						}
 						else
-							tiles = new LAYER_TILES(tilemap_item->width, tilemap_item->height);
-
-						layer = tiles;
-						
-						group->add_layer(tiles);
-						void *data = datafile_get_data(df, tilemap_item->data);
-						tiles->image = tilemap_item->image;
-						tiles->game = tilemap_item->flags&1;
-						
-						mem_copy(tiles->tiles, data, tiles->width*tiles->height*sizeof(TILE));
-						
-						if(tiles->game && tilemap_item->version == make_version(1, *tilemap_item))
 						{
-							for(int i = 0; i < tiles->width*tiles->height; i++)
+							pTiles = new CLayerTiles(pTilemapItem->m_Width, pTilemapItem->m_Height);
+							pTiles->m_pEditor = m_pEditor;
+						}
+
+						pLayer = pTiles;
+						
+						pGroup->AddLayer(pTiles);
+						void *pData = DataFile.GetData(pTilemapItem->m_Data);
+						pTiles->m_Image = pTilemapItem->m_Image;
+						pTiles->m_Game = pTilemapItem->m_Flags&1;
+						
+						mem_copy(pTiles->m_pTiles, pData, pTiles->m_Width*pTiles->m_Height*sizeof(CTile));
+						
+						if(pTiles->m_Game && pTilemapItem->m_Version == MakeVersion(1, *pTilemapItem))
+						{
+							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
 							{
-								if(tiles->tiles[i].index)
-									tiles->tiles[i].index += ENTITY_OFFSET;
+								if(pTiles->m_pTiles[i].m_Index)
+									pTiles->m_pTiles[i].m_Index += ENTITY_OFFSET;
 							}
 						}
 						
-						datafile_unload_data(df, tilemap_item->data);
+						DataFile.UnloadData(pTilemapItem->m_Data);
 					}
-					else if(layer_item->type == LAYERTYPE_QUADS)
+					else if(pLayerItem->m_Type == LAYERTYPE_QUADS)
 					{
-						MAPITEM_LAYER_QUADS *quads_item = (MAPITEM_LAYER_QUADS *)layer_item;
-						LAYER_QUADS *quads = new LAYER_QUADS;
-						layer = quads;
-						quads->image = quads_item->image;
-						if(quads->image < -1 || quads->image >= images.len())
-							quads->image = -1;
-						void *data = datafile_get_data_swapped(df, quads_item->data);
-						group->add_layer(quads);
-						quads->quads.setsize(quads_item->num_quads);
-						mem_copy(quads->quads.getptr(), data, sizeof(QUAD)*quads_item->num_quads);
-						datafile_unload_data(df, quads_item->data);
+						CMapItemLayerQuads *pQuadsItem = (CMapItemLayerQuads *)pLayerItem;
+						CLayerQuads *pQuads = new CLayerQuads;
+						pQuads->m_pEditor = m_pEditor;
+						pLayer = pQuads;
+						pQuads->m_Image = pQuadsItem->m_Image;
+						if(pQuads->m_Image < -1 || pQuads->m_Image >= m_lImages.size())
+							pQuads->m_Image = -1;
+						void *pData = DataFile.GetDataSwapped(pQuadsItem->m_Data);
+						pGroup->AddLayer(pQuads);
+						pQuads->m_lQuads.set_size(pQuadsItem->m_NumQuads);
+						mem_copy(pQuads->m_lQuads.base_ptr(), pData, sizeof(CQuad)*pQuadsItem->m_NumQuads);
+						DataFile.UnloadData(pQuadsItem->m_Data);
 					}
 					
-					if(layer)
-						layer->flags = layer_item->flags;
+					if(pLayer)
+						pLayer->m_Flags = pLayerItem->m_Flags;
 				}
 			}
 		}
 		
 		// load envelopes
 		{
-			ENVPOINT *points = 0;
+			CEnvPoint *pPoints = 0;
 			
 			{
-				int start, num;
-				datafile_get_type(df, MAPITEMTYPE_ENVPOINTS, &start, &num);
-				if(num)
-					points = (ENVPOINT *)datafile_get_item(df, start, 0, 0);
+				int Start, Num;
+				DataFile.GetType(MAPITEMTYPE_ENVPOINTS, &Start, &Num);
+				if(Num)
+					pPoints = (CEnvPoint *)DataFile.GetItem(Start, 0, 0);
 			}
 			
-			int start, num;
-			datafile_get_type(df, MAPITEMTYPE_ENVELOPE, &start, &num);
-			for(int e = 0; e < num; e++)
+			int Start, Num;
+			DataFile.GetType(MAPITEMTYPE_ENVELOPE, &Start, &Num);
+			for(int e = 0; e < Num; e++)
 			{
-				MAPITEM_ENVELOPE *item = (MAPITEM_ENVELOPE *)datafile_get_item(df, start+e, 0, 0);
-				ENVELOPE *env = new ENVELOPE(item->channels);
-				env->points.setsize(item->num_points);
-				mem_copy(env->points.getptr(), &points[item->start_point], sizeof(ENVPOINT)*item->num_points);
-				envelopes.add(env);
+				CMapItemEnvelope *pItem = (CMapItemEnvelope *)DataFile.GetItem(Start+e, 0, 0);
+				CEnvelope *pEnv = new CEnvelope(pItem->m_Channels);
+				pEnv->m_lPoints.set_size(pItem->m_NumPoints);
+				mem_copy(pEnv->m_lPoints.base_ptr(), &pPoints[pItem->m_StartPoint], sizeof(CEnvPoint)*pItem->m_NumPoints);
+				m_lEnvelopes.add(pEnv);
 			}
 		}
 	}
 	
-	datafile_unload(df);
-	
-	return 0;
+	return 1;
 }
 
-static int modify_add_amount = 0;
-static void modify_add(int *index)
+static int gs_ModifyAddAmount = 0;
+static void ModifyAdd(int *pIndex)
 {
-	if(*index >= 0)
-		*index += modify_add_amount;
+	if(*pIndex >= 0)
+		*pIndex += gs_ModifyAddAmount;
 }
 
-int EDITOR::append(const char *filename)
+int CEditor::Append(const char *pFileName)
 {
-	MAP new_map;
-	int err;
-	err = new_map.load(filename);
-	if(err)
-		return err;
+	CEditorMap NewMap;
+	NewMap.m_pEditor = this;
+
+	int Err;
+	Err = NewMap.Load(Kernel()->RequestInterface<IStorage>(), pFileName);
+	if(Err)
+		return Err;
 
 	// modify indecies	
-	modify_add_amount = map.images.len();
-	new_map.modify_image_index(modify_add);
+	gs_ModifyAddAmount = m_Map.m_lImages.size();
+	NewMap.ModifyImageIndex(ModifyAdd);
 	
-	modify_add_amount = map.envelopes.len();
-	new_map.modify_envelope_index(modify_add);
+	gs_ModifyAddAmount = m_Map.m_lEnvelopes.size();
+	NewMap.ModifyEnvelopeIndex(ModifyAdd);
 	
 	// transfer images
-	for(int i = 0; i < new_map.images.len(); i++)
-		map.images.add(new_map.images[i]);
-	new_map.images.clear();
+	for(int i = 0; i < NewMap.m_lImages.size(); i++)
+		m_Map.m_lImages.add(NewMap.m_lImages[i]);
+	NewMap.m_lImages.clear();
 	
 	// transfer envelopes
-	for(int i = 0; i < new_map.envelopes.len(); i++)
-		map.envelopes.add(new_map.envelopes[i]);
-	new_map.envelopes.clear();
+	for(int i = 0; i < NewMap.m_lEnvelopes.size(); i++)
+		m_Map.m_lEnvelopes.add(NewMap.m_lEnvelopes[i]);
+	NewMap.m_lEnvelopes.clear();
 
 	// transfer groups
 	
-	for(int i = 0; i < new_map.groups.len(); i++)
+	for(int i = 0; i < NewMap.m_lGroups.size(); i++)
 	{
-		if(new_map.groups[i] == new_map.game_group)
-			delete new_map.groups[i];
+		if(NewMap.m_lGroups[i] == NewMap.m_pGameGroup)
+			delete NewMap.m_lGroups[i];
 		else
-			map.groups.add(new_map.groups[i]);
+		{
+			NewMap.m_lGroups[i]->m_pMap = &m_Map;
+			m_Map.m_lGroups.add(NewMap.m_lGroups[i]);
+		}
 	}
-	new_map.groups.clear();
+	NewMap.m_lGroups.clear();
 	
 	// all done \o/
 	return 0;

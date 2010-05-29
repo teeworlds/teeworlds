@@ -1,143 +1,129 @@
-#include <engine/e_server_interface.h>
-#include <game/generated/g_protocol.hpp>
-#include <game/server/gamecontext.hpp>
-#include "pickup.hpp"
+#include <game/generated/protocol.h>
+#include <game/server/gamecontext.h>
+#include "pickup.h"
 
-//////////////////////////////////////////////////
-// pickup
-//////////////////////////////////////////////////
-PICKUP::PICKUP(int _type, int _subtype)
-: ENTITY(NETOBJTYPE_PICKUP)
+CPickup::CPickup(CGameWorld *pGameWorld, int Type, int SubType)
+: CEntity(pGameWorld, NETOBJTYPE_PICKUP)
 {
-	type = _type;
-	subtype = _subtype;
-	proximity_radius = phys_size;
+	m_Type = Type;
+	m_Subtype = SubType;
+	m_ProximityRadius = PickupPhysSize;
 
-	reset();
-
-	// TODO: should this be done here?
-	game.world.insert_entity(this);
+	Reset();
+	
+	GameWorld()->InsertEntity(this);
 }
 
-void PICKUP::reset()
+void CPickup::Reset()
 {
-	if (data->pickups[type].spawndelay > 0)
-		spawntick = server_tick() + server_tickspeed() * data->pickups[type].spawndelay;
+	if (g_pData->m_aPickups[m_Type].m_Spawndelay > 0)
+		m_SpawnTick = Server()->Tick() + Server()->TickSpeed() * g_pData->m_aPickups[m_Type].m_Spawndelay;
 	else
-		spawntick = -1;
+		m_SpawnTick = -1;
 }
 
-void PICKUP::tick()
+void CPickup::Tick()
 {
 	// wait for respawn
-	if(spawntick > 0)
+	if(m_SpawnTick > 0)
 	{
-		if(server_tick() > spawntick)
+		if(Server()->Tick() > m_SpawnTick)
 		{
 			// respawn
-			spawntick = -1;
+			m_SpawnTick = -1;
 
-			if(type == POWERUP_WEAPON)
-				game.create_sound(pos, SOUND_WEAPON_SPAWN);
+			if(m_Type == POWERUP_WEAPON)
+				GameServer()->CreateSound(m_Pos, SOUND_WEAPON_SPAWN);
 		}
 		else
 			return;
 	}
 	// Check if a player intersected us
-	CHARACTER *chr = game.world.closest_character(pos, 20.0f, 0);
-	if(chr)
+	CCharacter *pChr = GameServer()->m_World.ClosestCharacter(m_Pos, 20.0f, 0);
+	if(pChr && pChr->IsAlive())
 	{
 		// player picked us up, is someone was hooking us, let them go
-		int respawntime = -1;
-		switch (type)
+		int RespawnTime = -1;
+		switch (m_Type)
 		{
-		case POWERUP_HEALTH:
-			if(chr->increase_health(1))
-			{
-				game.create_sound(pos, SOUND_PICKUP_HEALTH);
-				respawntime = data->pickups[type].respawntime;
-			}
-			break;
-		case POWERUP_ARMOR:
-			if(chr->increase_armor(1))
-			{
-				game.create_sound(pos, SOUND_PICKUP_ARMOR);
-				respawntime = data->pickups[type].respawntime;
-			}
-			break;
-
-		case POWERUP_WEAPON:
-			if(subtype >= 0 && subtype < NUM_WEAPONS)
-			{
-				if(chr->weapons[subtype].ammo < data->weapons.id[subtype].maxammo || !chr->weapons[subtype].got)
+			case POWERUP_HEALTH:
+				if(pChr->IncreaseHealth(1))
 				{
-					chr->weapons[subtype].got = true;
-					chr->weapons[subtype].ammo = min(data->weapons.id[subtype].maxammo, chr->weapons[subtype].ammo + 10);
-					respawntime = data->pickups[type].respawntime;
-
-					// TODO: data compiler should take care of stuff like this
-					if(subtype == WEAPON_GRENADE)
-						game.create_sound(pos, SOUND_PICKUP_GRENADE);
-					else if(subtype == WEAPON_SHOTGUN)
-						game.create_sound(pos, SOUND_PICKUP_SHOTGUN);
-					else if(subtype == WEAPON_RIFLE)
-						game.create_sound(pos, SOUND_PICKUP_SHOTGUN);
-
-					if(chr->player)
-                    	game.send_weapon_pickup(chr->player->client_id, subtype);
+					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_HEALTH);
+					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
 				}
-			}
-			break;
-		case POWERUP_NINJA:
-			{
-				// activate ninja on target player
-				chr->ninja.activationtick = server_tick();
-				chr->weapons[WEAPON_NINJA].got = true;
-				chr->weapons[WEAPON_NINJA].ammo = -1;
-				chr->last_weapon = chr->active_weapon;
-				chr->active_weapon = WEAPON_NINJA;
-				respawntime = data->pickups[type].respawntime;
-				game.create_sound(pos, SOUND_PICKUP_NINJA);
-
-				// loop through all players, setting their emotes
-				ENTITY *ents[64];
-				int num = game.world.find_entities(vec2(0, 0), 1000000, ents, 64, NETOBJTYPE_CHARACTER);
-				for (int i = 0; i < num; i++)
+				break;
+				
+			case POWERUP_ARMOR:
+				if(pChr->IncreaseArmor(1))
 				{
-					CHARACTER *c = (CHARACTER *)ents[i];
-					if (c != chr)
+					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_ARMOR);
+					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+				}
+				break;
+
+			case POWERUP_WEAPON:
+				if(m_Subtype >= 0 && m_Subtype < NUM_WEAPONS)
+				{
+					if(pChr->GiveWeapon(m_Subtype, 10))
 					{
-						c->emote_type = EMOTE_SURPRISE;
-						c->emote_stop = server_tick() + server_tickspeed();
+						RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+
+						if(m_Subtype == WEAPON_GRENADE)
+							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_GRENADE);
+						else if(m_Subtype == WEAPON_SHOTGUN)
+							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
+						else if(m_Subtype == WEAPON_RIFLE)
+							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
+
+						if(pChr->GetPlayer())
+							GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), m_Subtype);
 					}
 				}
-
-				chr->emote_type = EMOTE_ANGRY;
-				chr->emote_stop = server_tick() + 1200 * server_tickspeed() / 1000;
-				
 				break;
-			}
-		default:
-			break;
+				
+			case POWERUP_NINJA:
+				{
+					// activate ninja on target player
+					pChr->GiveNinja();
+					RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+
+					// loop through all players, setting their emotes
+					CEntity *apEnts[64];
+					int Num = GameServer()->m_World.FindEntities(vec2(0, 0), 1000000, apEnts, 64, NETOBJTYPE_CHARACTER);
+					
+					for (int i = 0; i < Num; ++i)
+					{
+						CCharacter *pC = static_cast<CCharacter *>(apEnts[i]);
+						if (pC != pChr)
+							pC->SetEmote(EMOTE_SURPRISE, Server()->Tick() + Server()->TickSpeed());
+					}
+
+					pChr->SetEmote(EMOTE_ANGRY, Server()->Tick() + 1200 * Server()->TickSpeed() / 1000);
+					break;
+				}
+				
+			default:
+				break;
 		};
 
-		if(respawntime >= 0)
+		if(RespawnTime >= 0)
 		{
 			dbg_msg("game", "pickup player='%d:%s' item=%d/%d",
-				chr->player->client_id, server_clientname(chr->player->client_id), type, subtype);
-			spawntick = server_tick() + server_tickspeed() * respawntime;
+				pChr->GetPlayer()->GetCID(), Server()->ClientName(pChr->GetPlayer()->GetCID()), m_Type, m_Subtype);
+			m_SpawnTick = Server()->Tick() + Server()->TickSpeed() * RespawnTime;
 		}
 	}
 }
 
-void PICKUP::snap(int snapping_client)
+void CPickup::Snap(int SnappingClient)
 {
-	if(spawntick != -1)
+	if(m_SpawnTick != -1 || NetworkClipped(SnappingClient))
 		return;
 
-	NETOBJ_PICKUP *up = (NETOBJ_PICKUP *)snap_new_item(NETOBJTYPE_PICKUP, id, sizeof(NETOBJ_PICKUP));
-	up->x = (int)pos.x;
-	up->y = (int)pos.y;
-	up->type = type; // TODO: two diffrent types? what gives?
-	up->subtype = subtype;
+	CNetObj_Pickup *pP = static_cast<CNetObj_Pickup *>(Server()->SnapNewItem(NETOBJTYPE_PICKUP, m_Id, sizeof(CNetObj_Pickup)));
+	pP->m_X = (int)m_Pos.x;
+	pP->m_Y = (int)m_Pos.y;
+	pP->m_Type = m_Type;
+	pP->m_Subtype = m_Subtype;
 }

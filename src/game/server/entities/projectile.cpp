@@ -1,105 +1,102 @@
-#include <engine/e_server_interface.h>
-#include <game/generated/g_protocol.hpp>
-#include <game/server/gamecontext.hpp>
-#include "projectile.hpp"
+#include <game/generated/protocol.h>
+#include <game/server/gamecontext.h>
+#include "projectile.h"
 
-
-//////////////////////////////////////////////////
-// projectile
-//////////////////////////////////////////////////
-PROJECTILE::PROJECTILE(int type, int owner, vec2 pos, vec2 dir, int span,
-	int damage, int flags, float force, int sound_impact, int weapon)
-: ENTITY(NETOBJTYPE_PROJECTILE)
+CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, vec2 Dir, int Span,
+		int Damage, bool Explosive, float Force, int SoundImpact, int Weapon)
+: CEntity(pGameWorld, NETOBJTYPE_PROJECTILE)
 {
-	this->type = type;
-	this->pos = pos;
-	this->direction = dir;
-	this->lifespan = span;
-	this->owner = owner;
-	this->flags = flags;
-	this->force = force;
-	this->damage = damage;
-	this->sound_impact = sound_impact;
-	this->weapon = weapon;
-	this->bounce = 0;
-	this->start_tick = server_tick();
-	game.world.insert_entity(this);
+	m_Type = Type;
+	m_Pos = Pos;
+	m_Direction = Dir;
+	m_LifeSpan = Span;
+	m_Owner = Owner;
+	m_Force = Force;
+	m_Damage = Damage;
+	m_SoundImpact = SoundImpact;
+	m_Weapon = Weapon;
+	m_StartTick = Server()->Tick();
+	m_Explosive = Explosive;
+
+	GameWorld()->InsertEntity(this);
 }
 
-void PROJECTILE::reset()
+void CProjectile::Reset()
 {
-	game.world.destroy_entity(this);
+	GameServer()->m_World.DestroyEntity(this);
 }
 
-vec2 PROJECTILE::get_pos(float time)
+vec2 CProjectile::GetPos(float Time)
 {
-	float curvature = 0;
-	float speed = 0;
-	if(type == WEAPON_GRENADE)
+	float Curvature = 0;
+	float Speed = 0;
+	
+	switch(m_Type)
 	{
-		curvature = tuning.grenade_curvature;
-		speed = tuning.grenade_speed;
-	}
-	else if(type == WEAPON_SHOTGUN)
-	{
-		curvature = tuning.shotgun_curvature;
-		speed = tuning.shotgun_speed;
-	}
-	else if(type == WEAPON_GUN)
-	{
-		curvature = tuning.gun_curvature;
-		speed = tuning.gun_speed;
+		case WEAPON_GRENADE:
+			Curvature = GameServer()->Tuning()->m_GrenadeCurvature;
+			Speed = GameServer()->Tuning()->m_GrenadeSpeed;
+			break;
+			
+		case WEAPON_SHOTGUN:
+			Curvature = GameServer()->Tuning()->m_ShotgunCurvature;
+			Speed = GameServer()->Tuning()->m_ShotgunSpeed;
+			break;
+			
+		case WEAPON_GUN:
+			Curvature = GameServer()->Tuning()->m_GunCurvature;
+			Speed = GameServer()->Tuning()->m_GunSpeed;
+			break;
 	}
 	
-	return calc_pos(pos, direction, curvature, speed, time);
+	return CalcPos(m_Pos, m_Direction, Curvature, Speed, Time);
 }
 
 
-void PROJECTILE::tick()
+void CProjectile::Tick()
 {
-	
-	float pt = (server_tick()-start_tick-1)/(float)server_tickspeed();
-	float ct = (server_tick()-start_tick)/(float)server_tickspeed();
-	vec2 prevpos = get_pos(pt);
-	vec2 curpos = get_pos(ct);
+	float Pt = (Server()->Tick()-m_StartTick-1)/(float)Server()->TickSpeed();
+	float Ct = (Server()->Tick()-m_StartTick)/(float)Server()->TickSpeed();
+	vec2 PrevPos = GetPos(Pt);
+	vec2 CurPos = GetPos(Ct);
+	int Collide = GameServer()->Collision()->IntersectLine(PrevPos, CurPos, &CurPos, 0);
+	CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);
+	CCharacter *TargetChr = GameServer()->m_World.IntersectCharacter(PrevPos, CurPos, 6.0f, CurPos, OwnerChar);
 
-	lifespan--;
+	m_LifeSpan--;
 	
-	int collide = col_intersect_line(prevpos, curpos, &curpos, 0);
-	//int collide = col_check_point((int)curpos.x, (int)curpos.y);
-	CHARACTER *ownerchar = game.get_player_char(owner);
-	CHARACTER *targetchr = game.world.intersect_character(prevpos, curpos, 6.0f, curpos, ownerchar);
-	if(targetchr || collide || lifespan < 0)
+	if(TargetChr || Collide || m_LifeSpan < 0)
 	{
-		if(lifespan >= 0 || weapon == WEAPON_GRENADE)
-			game.create_sound(curpos, sound_impact);
+		if(m_LifeSpan >= 0 || m_Weapon == WEAPON_GRENADE)
+			GameServer()->CreateSound(CurPos, m_SoundImpact);
 
-		if(flags & PROJECTILE_FLAGS_EXPLODE)
-			game.create_explosion(curpos, owner, weapon, false);
-		else if(targetchr)
-			targetchr->take_damage(direction * max(0.001f, force), damage, owner, weapon);
+		if(m_Explosive)
+			GameServer()->CreateExplosion(CurPos, m_Owner, m_Weapon, false);
+			
+		else if(TargetChr)
+			TargetChr->TakeDamage(m_Direction * max(0.001f, m_Force), m_Damage, m_Owner, m_Weapon);
 
-		game.world.destroy_entity(this);
+		GameServer()->m_World.DestroyEntity(this);
 	}
 }
 
-void PROJECTILE::fill_info(NETOBJ_PROJECTILE *proj)
+void CProjectile::FillInfo(CNetObj_Projectile *pProj)
 {
-	proj->x = (int)pos.x;
-	proj->y = (int)pos.y;
-	proj->vx = (int)(direction.x*100.0f);
-	proj->vy = (int)(direction.y*100.0f);
-	proj->start_tick = start_tick;
-	proj->type = type;
+	pProj->m_X = (int)m_Pos.x;
+	pProj->m_Y = (int)m_Pos.y;
+	pProj->m_VelX = (int)(m_Direction.x*100.0f);
+	pProj->m_VelY = (int)(m_Direction.y*100.0f);
+	pProj->m_StartTick = m_StartTick;
+	pProj->m_Type = m_Type;
 }
 
-void PROJECTILE::snap(int snapping_client)
+void CProjectile::Snap(int SnappingClient)
 {
-	float ct = (server_tick()-start_tick)/(float)server_tickspeed();
+	float Ct = (Server()->Tick()-m_StartTick)/(float)Server()->TickSpeed();
 	
-	if(networkclipped(snapping_client, get_pos(ct)))
+	if(NetworkClipped(SnappingClient, GetPos(Ct)))
 		return;
 
-	NETOBJ_PROJECTILE *proj = (NETOBJ_PROJECTILE *)snap_new_item(NETOBJTYPE_PROJECTILE, id, sizeof(NETOBJ_PROJECTILE));
-	fill_info(proj);
+	CNetObj_Projectile *pProj = static_cast<CNetObj_Projectile *>(Server()->SnapNewItem(NETOBJTYPE_PROJECTILE, m_Id, sizeof(CNetObj_Projectile)));
+	FillInfo(pProj);
 }

@@ -42,7 +42,9 @@
 	#include <direct.h>
 	#include <errno.h>
 
-	#define EWOULDBLOCK WSAEWOULDBLOCK
+	#ifndef EWOULDBLOCK
+		#define EWOULDBLOCK WSAEWOULDBLOCK
+	#endif
 #else
 	#error NOT IMPLEMENTED
 #endif
@@ -86,11 +88,11 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 	char str[1024*4];
 	char *msg;
 	int i, len;
-	
+
 	str_format(str, sizeof(str), "[%08x][%s]: ", (int)time(0), sys);
 	len = strlen(str);
 	msg = (char *)str + len;
-	
+
 	va_start(args, fmt);
 #if defined(CONF_FAMILY_WINDOWS)
 	_vsnprintf(msg, sizeof(str)-len, fmt, args);
@@ -98,7 +100,7 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 	vsnprintf(msg, sizeof(str)-len, fmt, args);
 #endif
 	va_end(args);
-	
+
 	for(i = 0; i < num_loggers; i++)
 		loggers[i](str);
 }
@@ -118,7 +120,7 @@ static void logger_debugger(const char *line)
 }
 
 
-IOHANDLE logfile = 0;
+static IOHANDLE logfile = 0;
 static void logger_file(const char *line)
 {
 	io_write(logfile, line, strlen(line));
@@ -137,7 +139,6 @@ void dbg_logger_file(const char *filename)
 		dbg_msg("dbg/logger", "failed to open '%s' for logging", filename);
 
 }
-
 /* */
 
 int memory_alloced = 0;
@@ -674,7 +675,7 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 	mem_zero(&sa, sizeof(sa));
 	netaddr_to_sockaddr(addr, &sa);
 	d = sendto((int)sock, (const char*)data, size, 0, &sa, sizeof(sa));
-	if(d < 0)
+	/*if(d < 0)
 	{
 		char addrstr[256];
 		net_addr_str(addr, addrstr, sizeof(addrstr));
@@ -684,7 +685,7 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 		dbg_msg("net", "\tsize = %d %x", size, size);
 		dbg_msg("net", "\taddr = %s", addrstr);
 
-	}
+	}*/
 	network_stats.sent_bytes += size;
 	network_stats.sent_packets++;
 	return d;
@@ -1102,6 +1103,10 @@ int str_comp(const char *a, const char *b)
 	return strcmp(a, b);
 }
 
+int str_comp_num(const char *a, const char *b, const int num)
+{
+	return strncmp(a, b, num);
+}
 
 const char *str_find_nocase(const char *haystack, const char *needle)
 {
@@ -1219,6 +1224,9 @@ char str_uppercase(char c)
 		return 'A' + (c-'a');
 	return c;
 }
+
+int str_toint(const char *str) { return atoi(str); }
+float str_tofloat(const char *str) { return atof(str); }
 
 
 

@@ -1,200 +1,219 @@
-#include <engine/e_client_interface.h>
-#include <game/generated/g_protocol.hpp>
-#include <base/vmath.hpp>
-#include <game/client/render.hpp>
-//#include <game/client/gameclient.hpp>
-#include "voting.hpp"
+#include <engine/shared/config.h>
 
-void VOTING::con_callvote(void *result, void *user_data)
+#include <game/generated/protocol.h>
+#include <base/vmath.h>
+#include <game/client/render.h>
+//#include <game/client/gameclient.h>
+#include "voting.h"
+
+void CVoting::ConCallvote(IConsole::IResult *pResult, void *pUserData)
 {
-	VOTING *self = (VOTING*)user_data;
-	self->callvote(console_arg_string(result, 0), console_arg_string(result, 1));
+	CVoting *pSelf = (CVoting*)pUserData;
+	pSelf->Callvote(pResult->GetString(0), pResult->GetString(1));
 }
 
-void VOTING::con_vote(void *result, void *user_data)
+void CVoting::ConVote(IConsole::IResult *pResult, void *pUserData)
 {
-	VOTING *self = (VOTING *)user_data;
-	if(str_comp_nocase(console_arg_string(result, 0), "yes") == 0)
-		self->vote(1);
-	else if(str_comp_nocase(console_arg_string(result, 0), "no") == 0)
-		self->vote(-1);
+	CVoting *pSelf = (CVoting *)pUserData;
+	if(str_comp_nocase(pResult->GetString(0), "yes") == 0)
+		pSelf->Vote(1);
+	else if(str_comp_nocase(pResult->GetString(0), "no") == 0)
+		pSelf->Vote(-1);
 }
 
-void VOTING::callvote(const char *type, const char *value)
+void CVoting::Callvote(const char *pType, const char *pValue)
 {
-	NETMSG_CL_CALLVOTE msg = {0};
-	msg.type = type;
-	msg.value = value;
-	msg.pack(MSGFLAG_VITAL);
-	client_send_msg();
+	CNetMsg_Cl_CallVote Msg = {0};
+	Msg.m_Type = pType;
+	Msg.m_Value = pValue;
+	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
 
-void VOTING::callvote_kick(int client_id)
+void CVoting::CallvoteKick(int ClientId)
 {
-	char buf[32];
-	str_format(buf, sizeof(buf), "%d", client_id);
-	callvote("kick", buf);
+	char Buf[32];
+	str_format(Buf, sizeof(Buf), "%d", ClientId);
+	Callvote("kick", Buf);
 }
 
-void VOTING::callvote_option(int option_id)
+void CVoting::CallvoteOption(int OptionId)
 {
-	VOTEOPTION *option = this->first;
-	while(option && option_id >= 0)
+	CVoteOption *pOption = m_pFirst;
+	while(pOption && OptionId >= 0)
 	{
-		if(option_id == 0)
+		if(OptionId == 0)
 		{
-			callvote("option", option->command);
+			Callvote("option", pOption->m_aCommand);
 			break;
 		}
 		
-		option_id--;
-		option = option->next;
+		OptionId--;
+		pOption = pOption->m_pNext;
 	}
 }
 
-void VOTING::vote(int v)
+void CVoting::ForcevoteKick(int ClientId)
 {
-	NETMSG_CL_VOTE msg = {v};
-	msg.pack(MSGFLAG_VITAL);
-	client_send_msg();
+	char Buf[32];
+	str_format(Buf, sizeof(Buf), "kick %d", ClientId);
+	Client()->Rcon(Buf);
 }
 
-VOTING::VOTING()
+void CVoting::ForcevoteOption(int OptionId)
 {
-	heap = 0;
-	clearoptions();
-	on_reset();
-}
-
-
-void VOTING::clearoptions()
-{
-	if(heap)
-		memheap_destroy(heap);
-	heap = memheap_create();
-	
-	first = 0;
-	last = 0;
-}
-
-void VOTING::on_reset()
-{
-	closetime = 0;
-	description[0] = 0;
-	command[0] = 0;
-	yes = no = pass = total = 0;
-	voted = 0;
-}
-
-void VOTING::on_console_init()
-{
-	MACRO_REGISTER_COMMAND("callvote", "sr", CFGFLAG_CLIENT, con_callvote, this, "Call vote");
-	MACRO_REGISTER_COMMAND("vote", "r", CFGFLAG_CLIENT, con_vote, this, "Vote yes/no");
-}
-
-void VOTING::on_message(int msgtype, void *rawmsg)
-{
-	if(msgtype == NETMSGTYPE_SV_VOTE_SET)
+	CVoteOption *pOption = m_pFirst;
+	while(pOption && OptionId >= 0)
 	{
-		NETMSG_SV_VOTE_SET *msg = (NETMSG_SV_VOTE_SET *)rawmsg;
-		if(msg->timeout)
+		if(OptionId == 0)
 		{
-			on_reset();
-			str_copy(description, msg->description, sizeof(description));
-			str_copy(command, msg->command, sizeof(description));
-			closetime = time_get() + time_freq() * msg->timeout;
+			Client()->Rcon(pOption->m_aCommand);
+			break;
+		}
+		
+		OptionId--;
+		pOption = pOption->m_pNext;
+	}
+}
+
+void CVoting::Vote(int v)
+{
+	CNetMsg_Cl_Vote Msg = {v};
+	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+}
+
+CVoting::CVoting()
+{
+	ClearOptions();
+	OnReset();
+}
+
+
+void CVoting::ClearOptions()
+{
+	m_Heap.Reset();
+	
+	m_pFirst = 0;
+	m_pLast = 0;
+}
+
+void CVoting::OnReset()
+{
+	m_Closetime = 0;
+	m_aDescription[0] = 0;
+	m_aCommand[0] = 0;
+	m_Yes = m_No = m_Pass = m_Total = 0;
+	m_Voted = 0;
+}
+
+void CVoting::OnConsoleInit()
+{
+	Console()->Register("callvote", "sr", CFGFLAG_CLIENT, ConCallvote, this, "Call vote");
+	Console()->Register("vote", "r", CFGFLAG_CLIENT, ConVote, this, "Vote yes/no");
+}
+
+void CVoting::OnMessage(int MsgType, void *pRawMsg)
+{
+	if(MsgType == NETMSGTYPE_SV_VOTESET)
+	{
+		CNetMsg_Sv_VoteSet *pMsg = (CNetMsg_Sv_VoteSet *)pRawMsg;
+		if(pMsg->m_Timeout)
+		{
+			OnReset();
+			str_copy(m_aDescription, pMsg->m_pDescription, sizeof(m_aDescription));
+			str_copy(m_aCommand, pMsg->m_pCommand, sizeof(m_aCommand));
+			m_Closetime = time_get() + time_freq() * pMsg->m_Timeout;
 		}
 		else
-			on_reset();
+			OnReset();
 	}
-	else if(msgtype == NETMSGTYPE_SV_VOTE_STATUS)
+	else if(MsgType == NETMSGTYPE_SV_VOTESTATUS)
 	{
-		NETMSG_SV_VOTE_STATUS *msg = (NETMSG_SV_VOTE_STATUS *)rawmsg;
-		yes = msg->yes;
-		no = msg->no;
-		pass = msg->pass;
-		total = msg->total;
+		CNetMsg_Sv_VoteStatus *pMsg = (CNetMsg_Sv_VoteStatus *)pRawMsg;
+		m_Yes = pMsg->m_Yes;
+		m_No = pMsg->m_No;
+		m_Pass = pMsg->m_Pass;
+		m_Total = pMsg->m_Total;
 	}	
-	else if(msgtype == NETMSGTYPE_SV_VOTE_CLEAROPTIONS)
+	else if(MsgType == NETMSGTYPE_SV_VOTECLEAROPTIONS)
 	{
-		clearoptions();
+		ClearOptions();
 	}
-	else if(msgtype == NETMSGTYPE_SV_VOTE_OPTION)
+	else if(MsgType == NETMSGTYPE_SV_VOTEOPTION)
 	{
-		NETMSG_SV_VOTE_OPTION *msg = (NETMSG_SV_VOTE_OPTION *)rawmsg;
-		int len = str_length(msg->command);
+		CNetMsg_Sv_VoteOption *pMsg = (CNetMsg_Sv_VoteOption *)pRawMsg;
+		int Len = str_length(pMsg->m_pCommand);
 	
-		VOTEOPTION *option = (VOTEOPTION *)memheap_allocate(heap, sizeof(VOTEOPTION) + len);
-		option->next = 0;
-		option->prev = last;
-		if(option->prev)
-			option->prev->next = option;
-		last = option;
-		if(!first)
-			first = option;
+		CVoteOption *pOption = (CVoteOption *)m_Heap.Allocate(sizeof(CVoteOption) + Len);
+		pOption->m_pNext = 0;
+		pOption->m_pPrev = m_pLast;
+		if(pOption->m_pPrev)
+			pOption->m_pPrev->m_pNext = pOption;
+		m_pLast = pOption;
+		if(!m_pFirst)
+			m_pFirst = pOption;
 		
-		mem_copy(option->command, msg->command, len+1);
+		mem_copy(pOption->m_aCommand, pMsg->m_pCommand, Len+1);
 
 	}
 }
 
-void VOTING::on_render()
+void CVoting::OnRender()
 {
 }
 
 
-void VOTING::render_bars(CUIRect bars, bool text)
+void CVoting::RenderBars(CUIRect Bars, bool Text)
 {
-	RenderTools()->DrawUIRect(&bars, vec4(0.8f,0.8f,0.8f,0.5f), CUI::CORNER_ALL, bars.h/3);
+	RenderTools()->DrawUIRect(&Bars, vec4(0.8f,0.8f,0.8f,0.5f), CUI::CORNER_ALL, Bars.h/3);
 	
-	CUIRect splitter = bars;
-	splitter.x = splitter.x+splitter.w/2;
-	splitter.w = splitter.h/2.0f;
-	splitter.x -= splitter.w/2;
-	RenderTools()->DrawUIRect(&splitter, vec4(0.4f,0.4f,0.4f,0.5f), CUI::CORNER_ALL, splitter.h/4);
+	CUIRect Splitter = Bars;
+	Splitter.x = Splitter.x+Splitter.w/2;
+	Splitter.w = Splitter.h/2.0f;
+	Splitter.x -= Splitter.w/2;
+	RenderTools()->DrawUIRect(&Splitter, vec4(0.4f,0.4f,0.4f,0.5f), CUI::CORNER_ALL, Splitter.h/4);
 			
-	if(total)
+	if(m_Total)
 	{
-		CUIRect pass_area = bars;
-		if(yes)
+		CUIRect PassArea = Bars;
+		if(m_Yes)
 		{
-			CUIRect yes_area = bars;
-			yes_area.w *= yes/(float)total;
-			RenderTools()->DrawUIRect(&yes_area, vec4(0.2f,0.9f,0.2f,0.85f), CUI::CORNER_ALL, bars.h/3);
+			CUIRect YesArea = Bars;
+			YesArea.w *= m_Yes/(float)m_Total;
+			RenderTools()->DrawUIRect(&YesArea, vec4(0.2f,0.9f,0.2f,0.85f), CUI::CORNER_ALL, Bars.h/3);
 			
-			if(text)
+			if(Text)
 			{
-				char buf[256];
-				str_format(buf, sizeof(buf), "%d", yes);
-				UI()->DoLabel(&yes_area, buf, bars.h*0.75f, 0);
+				char Buf[256];
+				str_format(Buf, sizeof(Buf), "%d", m_Yes);
+				UI()->DoLabel(&YesArea, Buf, Bars.h*0.75f, 0);
 			}
 			
-			pass_area.x += yes_area.w;
-			pass_area.w -= yes_area.w;
+			PassArea.x += YesArea.w;
+			PassArea.w -= YesArea.w;
 		}
 		
-		if(no)
+		if(m_No)
 		{
-			CUIRect no_area = bars;
-			no_area.w *= no/(float)total;
-			no_area.x = (bars.x + bars.w)-no_area.w;
-			RenderTools()->DrawUIRect(&no_area, vec4(0.9f,0.2f,0.2f,0.85f), CUI::CORNER_ALL, bars.h/3);
+			CUIRect NoArea = Bars;
+			NoArea.w *= m_No/(float)m_Total;
+			NoArea.x = (Bars.x + Bars.w)-NoArea.w;
+			RenderTools()->DrawUIRect(&NoArea, vec4(0.9f,0.2f,0.2f,0.85f), CUI::CORNER_ALL, Bars.h/3);
 			
-			if(text)
+			if(Text)
 			{
-				char buf[256];
-				str_format(buf, sizeof(buf), "%d", no);
-				UI()->DoLabel(&no_area, buf, bars.h*0.75f, 0);
+				char Buf[256];
+				str_format(Buf, sizeof(Buf), "%d", m_No);
+				UI()->DoLabel(&NoArea, Buf, Bars.h*0.75f, 0);
 			}
 
-			pass_area.w -= no_area.w;
+			PassArea.w -= NoArea.w;
 		}
 
-		if(text && pass)
+		if(Text && m_Pass)
 		{
-			char buf[256];
-			str_format(buf, sizeof(buf), "%d", pass);
-			UI()->DoLabel(&pass_area, buf, bars.h*0.75f, 0);
+			char Buf[256];
+			str_format(Buf, sizeof(Buf), "%d", m_Pass);
+			UI()->DoLabel(&PassArea, Buf, Bars.h*0.75f, 0);
 		}
 	}	
 }

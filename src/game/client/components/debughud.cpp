@@ -1,27 +1,23 @@
-#include <memory.h> // memcmp
+#include <engine/shared/config.h>
+#include <engine/graphics.h>
+#include <engine/textrender.h>
 
-extern "C" {
-	#include <engine/e_config.h>
-}
+#include <game/generated/protocol.h>
+#include <game/generated/client_data.h>
 
-#include <engine/e_client_interface.h>
-#include <engine/client/graphics.h>
-#include <game/generated/g_protocol.hpp>
-#include <game/generated/gc_data.hpp>
+#include <game/layers.h>
 
-#include <game/layers.hpp>
+#include <game/client/gameclient.h>
+#include <game/client/animstate.h>
+#include <game/client/render.h>
 
-#include <game/client/gameclient.hpp>
-#include <game/client/animstate.hpp>
-#include <game/client/render.hpp>
+//#include "controls.h"
+//#include "camera.h"
+#include "debughud.h"
 
-//#include "controls.hpp"
-//#include "camera.hpp"
-#include "debughud.hpp"
-
-void DEBUGHUD::render_netcorrections()
+void CDebugHud::RenderNetCorrections()
 {
-	if(!config.debug || !gameclient.snap.local_character || !gameclient.snap.local_prev_character)
+	if(!g_Config.m_Debug || !m_pClient->m_Snap.m_pLocalCharacter || !m_pClient->m_Snap.m_pLocalPrevCharacter)
 		return;
 
 	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);
@@ -29,7 +25,8 @@ void DEBUGHUD::render_netcorrections()
 	/*float speed = distance(vec2(netobjects.local_prev_character->x, netobjects.local_prev_character->y),
 		vec2(netobjects.local_character->x, netobjects.local_character->y));*/
 
-	float velspeed = length(vec2(gameclient.snap.local_character->vx/256.0f, gameclient.snap.local_character->vy/256.0f))*50;
+/*
+	float velspeed = length(vec2(gameclient.snap.local_character->m_VelX/256.0f, gameclient.snap.local_character->m_VelY/256.0f))*50;
 	
 	float ramp = velocity_ramp(velspeed, gameclient.tuning.velramp_start, gameclient.tuning.velramp_range, gameclient.tuning.velramp_curvature);
 	
@@ -37,77 +34,79 @@ void DEBUGHUD::render_netcorrections()
 	str_format(buf, sizeof(buf), "%.0f\n%.0f\n%.2f\n%d %s\n%d %d",
 		velspeed, velspeed*ramp, ramp,
 		netobj_num_corrections(), netobj_corrected_on(),
-		gameclient.snap.local_character->x,
-		gameclient.snap.local_character->y
+		gameclient.snap.local_character->m_X,
+		gameclient.snap.local_character->m_Y
 	);
-	gfx_text(0, 150, 50, 12, buf, -1);
+	TextRender()->Text(0, 150, 50, 12, buf, -1);*/
 }
 
-void DEBUGHUD::render_tuning()
+void CDebugHud::RenderTuning()
 {
 	// render tuning debugging
-	if(!config.dbg_tuning)
+	if(!g_Config.m_DbgTuning)
 		return;
 		
-	TUNING_PARAMS standard_tuning;
+	CTuningParams StandardTuning;
 		
 	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);
 	
 	float y = 50.0f;
-	int count = 0;
-	for(int i = 0; i < gameclient.tuning.num(); i++)
+	int Count = 0;
+	for(int i = 0; i < m_pClient->m_Tuning.Num(); i++)
 	{
-		char buf[128];
-		float current, standard;
-		gameclient.tuning.get(i, &current);
-		standard_tuning.get(i, &standard);
+		char aBuf[128];
+		float Current, Standard;
+		m_pClient->m_Tuning.Get(i, &Current);
+		StandardTuning.Get(i, &Standard);
 		
-		if(standard == current)
-			gfx_text_color(1,1,1,1.0f);
+		if(Standard == Current)
+			TextRender()->TextColor(1,1,1,1.0f);
 		else
-			gfx_text_color(1,0.25f,0.25f,1.0f);
+			TextRender()->TextColor(1,0.25f,0.25f,1.0f);
 
 		float w;
 		float x = 5.0f;
 		
-		str_format(buf, sizeof(buf), "%.2f", standard);
+		str_format(aBuf, sizeof(aBuf), "%.2f", Standard);
 		x += 20.0f;
-		w = gfx_text_width(0, 5, buf, -1);
-		gfx_text(0x0, x-w, y+count*6, 5, buf, -1);
+		w = TextRender()->TextWidth(0, 5, aBuf, -1);
+		TextRender()->Text(0x0, x-w, y+Count*6, 5, aBuf, -1);
 
-		str_format(buf, sizeof(buf), "%.2f", current);
+		str_format(aBuf, sizeof(aBuf), "%.2f", Current);
 		x += 20.0f;
-		w = gfx_text_width(0, 5, buf, -1);
-		gfx_text(0x0, x-w, y+count*6, 5, buf, -1);
+		w = TextRender()->TextWidth(0, 5, aBuf, -1);
+		TextRender()->Text(0x0, x-w, y+Count*6, 5, aBuf, -1);
 
 		x += 5.0f;
-		gfx_text(0x0, x, y+count*6, 5, gameclient.tuning.names[i], -1);
+		TextRender()->Text(0x0, x, y+Count*6, 5, m_pClient->m_Tuning.m_apNames[i], -1);
 		
-		count++;
+		Count++;
 	}
 	
-	y = y+count*6;
+	y = y+Count*6;
 	
 	Graphics()->TextureSet(-1);
 	Graphics()->BlendNormal();
 	Graphics()->LinesBegin();
-	float height = 50.0f;
+	float Height = 50.0f;
 	float pv = 1;
+	IGraphics::CLineItem Array[100];
 	for(int i = 0; i < 100; i++)
 	{
-		float speed = i/100.0f * 3000;
-		float ramp = velocity_ramp(speed, gameclient.tuning.velramp_start, gameclient.tuning.velramp_range, gameclient.tuning.velramp_curvature);
-		float rampedspeed = (speed * ramp)/1000.0f;
-		Graphics()->LinesDraw((i-1)*2, y+height-pv*height, i*2, y+height-rampedspeed*height);
+		float Speed = i/100.0f * 3000;
+		float Ramp = VelocityRamp(Speed, m_pClient->m_Tuning.m_VelrampStart, m_pClient->m_Tuning.m_VelrampRange, m_pClient->m_Tuning.m_VelrampCurvature);
+		float RampedSpeed = (Speed * Ramp)/1000.0f;
+		Array[i] = IGraphics::CLineItem((i-1)*2, y+Height-pv*Height, i*2, y+Height-RampedSpeed*Height);
 		//Graphics()->LinesDraw((i-1)*2, 200, i*2, 200);
-		pv = rampedspeed;
+		pv = RampedSpeed;
 	}
+	Graphics()->LinesDraw(Array, 100);
 	Graphics()->LinesEnd();
-	gfx_text_color(1,1,1,1);
+	TextRender()->TextColor(1,1,1,1);
 }
 
-void DEBUGHUD::on_render()
+void CDebugHud::OnRender()
 {
-	render_tuning();
-	render_netcorrections();
+	RenderTuning();
+	RenderNetCorrections();
 }
