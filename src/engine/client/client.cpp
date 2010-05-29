@@ -881,7 +881,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 				Info.m_MaxPlayers = str_toint(Up.GetString());
 
 				// don't add invalid info to the server browser list
-				if(Info.m_NumPlayers > MAX_CLIENTS || Info.m_MaxPlayers > MAX_CLIENTS)
+				if(Info.m_NumPlayers < 0 || Info.m_NumPlayers > MAX_CLIENTS || Info.m_MaxPlayers < 0 || Info.m_MaxPlayers > MAX_CLIENTS)
 					return;
 
 				str_format(Info.m_aAddress, sizeof(Info.m_aAddress), "%d.%d.%d.%d:%d",
