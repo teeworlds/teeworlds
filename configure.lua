@@ -75,6 +75,12 @@ function NewConfig(on_configured_callback)
 		local options_func = loadfile(filename)
 		local options_table = {}
 		
+		if not options_func then
+			print("auto configuration", options_func)
+			self:Config(filename)
+			options_func = loadfile(filename)
+		end
+		
 		if options_func then
 			-- Setup the options tables
 			for k,v in pairs(self.options) do
@@ -114,6 +120,28 @@ function NewConfig(on_configured_callback)
 			os.exit(1)			
 		end
 	end
+	
+	config.Config = function(self, filename)
+		print("")
+		print("configuration:")
+		if _bam_targets[1] == "print" then
+			self:Load(filename)
+			self:Print()
+			print("")
+			print("notes:")
+			self:OnConfigured()
+			print("")
+		else
+			self:Autodetect()
+			print("")
+			print("notes:")
+			if self:OnConfigured() then
+				self:Save(filename)
+			end
+			print("")
+		end
+	
+	end
 
 	config.Autodetect = function(self)
 		for k,v in pairs(self.options) do
@@ -138,25 +166,8 @@ function NewConfig(on_configured_callback)
 				self:PrintHelp()
 				os.exit(0)
 			end
-			
-			print("")
-			print("configuration:")
-			if _bam_targets[1] == "print" then
-				self:Load(filename)
-				self:Print()
-				print("")
-				print("notes:")
-				self:OnConfigured()
-				print("")
-			else
-				self:Autodetect()
-				print("")
-				print("notes:")
-				if self:OnConfigured() then
-					self:Save(filename)
-				end
-				print("")
-			end
+
+			self:Config(filename)
 
 			os.exit(0)
 		end

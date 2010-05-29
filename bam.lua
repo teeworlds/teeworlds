@@ -11,7 +11,7 @@ config:Add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-p
 config:Add(OptLibrary("zlib", "zlib.h", false))
 config:Add(SDL.OptFind("sdl", true))
 config:Add(FreeType.OptFind("freetype", true))
-config:Finalize("config.bam")
+config:Finalize("config.lua")
 
 -- data compiler
 function Script(name)
