@@ -1256,7 +1256,6 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 			// game message
 			if(m_DemoRecorder.IsRecording())
 				m_DemoRecorder.RecordMessage(pPacket->m_pData, pPacket->m_DataSize);
-				// demorec_record_write("MESG", pPacket->data_size, );
 
 			GameClient()->OnMessage(Msg, &Unpacker);
 		}
@@ -1422,7 +1421,6 @@ void CClient::Update()
 		{
 			int64 CurtickStart = (m_aSnapshots[SNAP_CURRENT]->m_Tick)*time_freq()/50;
 			int64 PrevtickStart = (m_aSnapshots[SNAP_PREV]->m_Tick)*time_freq()/50;
-			//tg_add(&predicted_time_graph, pred_now, 0);
 			int PrevPredTick = (int)(PredNow*50/time_freq());
 			int NewPredTick = PrevPredTick+1;
 			static float LastPredintra = 0;
@@ -1483,15 +1481,6 @@ void CClient::Update()
 				Connect(g_Config.m_DbgStressServer);
 				ActionTaken = Now;
 			}
-		}
-		else
-		{
-			/*if(now > action_taken+time_freq()*(10+config.dbg_stress))
-			{
-				dbg_msg("stress", "disconnecting!");
-				Disconnect();
-				action_taken = now;
-			}*/
 		}
 	}
 
