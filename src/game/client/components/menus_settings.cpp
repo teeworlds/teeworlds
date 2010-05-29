@@ -60,7 +60,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		UI()->DoLabel(&Button, aBuf, 14.0, -1);
 		Button.VSplitLeft(80.0f, 0, &Button);
 		Button.VSplitLeft(180.0f, &Button, 0);
-		if(DoEditBox(g_Config.m_PlayerName, &Button, g_Config.m_PlayerName, sizeof(g_Config.m_PlayerName), 14.0f))
+		static float Offset = 0.0f;
+		if(DoEditBox(g_Config.m_PlayerName, &Button, g_Config.m_PlayerName, sizeof(g_Config.m_PlayerName), 14.0f, &Offset))
 			m_NeedSendinfo = true;
 
 		// extra spacing
@@ -598,7 +599,8 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		UI()->DoLabel(&Button, Localize("Sample rate"), 14.0f, -1);
 		Button.VSplitLeft(110.0f, 0, &Button);
 		Button.VSplitLeft(180.0f, &Button, 0);
-		DoEditBox(&g_Config.m_SndRate, &Button, aBuf, sizeof(aBuf), 14.0f);
+		static float Offset = 0.0f;
+		DoEditBox(&g_Config.m_SndRate, &Button, aBuf, sizeof(aBuf), 14.0f, &Offset);
 		int Before = g_Config.m_SndRate;
 		g_Config.m_SndRate = str_toint(aBuf);
 

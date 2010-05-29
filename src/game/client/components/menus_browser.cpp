@@ -360,7 +360,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	QuickSearch.VSplitLeft(TextRender()->TextWidth(0, 12.0f, pLabel, -1), 0, &QuickSearch);
 	QuickSearch.VSplitLeft(5.0f, 0, &QuickSearch);
 	QuickSearch.VSplitLeft(155.0f, &QuickSearch, &Button);
-	DoEditBox(&g_Config.m_BrFilterString, &QuickSearch, g_Config.m_BrFilterString, sizeof(g_Config.m_BrFilterString), 12.0f, false, CUI::CORNER_L);
+	static float Offset = 0.0f;
+	DoEditBox(&g_Config.m_BrFilterString, &QuickSearch, g_Config.m_BrFilterString, sizeof(g_Config.m_BrFilterString), 12.0f, &Offset, false, CUI::CORNER_L);
 	// clear button
 	{
 		static int s_ClearButton = 0;
@@ -422,7 +423,8 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 	UI()->DoLabel(&Button, Localize("Game types:"), 12.0f, -1);
 	Button.VSplitLeft(95.0f, 0, &Button);
 	View.HSplitTop(3.0f, 0, &View);
-	DoEditBox(&g_Config.m_BrFilterGametype, &Button, g_Config.m_BrFilterGametype, sizeof(g_Config.m_BrFilterGametype), 12.0f);
+	static float Offset = 0.0f;
+	DoEditBox(&g_Config.m_BrFilterGametype, &Button, g_Config.m_BrFilterGametype, sizeof(g_Config.m_BrFilterGametype), 12.0f, &Offset);
 
 	{
 		View.HSplitTop(19.0f, &Button, &View);
@@ -434,7 +436,8 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 		
 		char aBuf[5];
 		str_format(aBuf, sizeof(aBuf), "%d", g_Config.m_BrFilterPing);
-		DoEditBox(&g_Config.m_BrFilterPing, &EditBox, aBuf, sizeof(aBuf), 12.0f);
+		static float Offset = 0.0f;
+		DoEditBox(&g_Config.m_BrFilterPing, &EditBox, aBuf, sizeof(aBuf), 12.0f, &Offset);
 		g_Config.m_BrFilterPing = str_toint(aBuf);
 	}
 
@@ -691,7 +694,8 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 
 		ButtonBox.HSplitBottom(5.0f, &ButtonBox, &Button);
 		ButtonBox.HSplitBottom(20.0f, &ButtonBox, &Button);
-		DoEditBox(&g_Config.m_UiServerAddress, &Button, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress), 14.0f);
+		static float Offset = 0.0f;
+		DoEditBox(&g_Config.m_UiServerAddress, &Button, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress), 14.0f, &Offset);
 		ButtonBox.HSplitBottom(20.0f, &ButtonBox, &Button);
 		UI()->DoLabel(&Button, Localize("Host address"), 14.0f, -1);
 	}

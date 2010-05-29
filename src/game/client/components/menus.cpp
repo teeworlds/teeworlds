@@ -210,7 +210,7 @@ int CMenus::DoButton_CheckBox_Number(const void *pID, const char *pText, int Che
 	return DoButton_CheckBox_Common(pID, pText, aBuf, pRect);
 }
 
-int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, bool Hidden, int Corners)
+int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *Offset, bool Hidden, int Corners)
 {
     int Inside = UI()->MouseInside(pRect);
 	bool ReturnValue = false;
@@ -228,7 +228,7 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 
 			for(int i = 1; i <= Len; i++)
 			{
-				if(TextRender()->TextWidth(0, FontSize, pStr, i) + 10 > MxRel)
+				if(TextRender()->TextWidth(0, FontSize, pStr, i) - *Offset + 10 > MxRel)
 				{
 					s_AtIndex = i - 1;
 					break;
@@ -284,19 +284,47 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 		pDisplayStr = aStars;
 	}
 
+	// check if the text has to be moved
+	if(UI()->LastActiveItem() == pID && !JustGotActive && m_NumInputEvents)
+	{
+		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex)*UI()->Scale();
+		if(w-*Offset > Textbox.w)
+		{
+			// move to the left
+			float wt = TextRender()->TextWidth(0, FontSize, pDisplayStr, -1)*UI()->Scale();
+			do
+			{
+				*Offset += min(wt-*Offset-Textbox.w, Textbox.w/3);
+			}
+			while(w-*Offset > Textbox.w);
+		}
+		else if(w-*Offset < 0.0f)
+		{
+			// move to the right
+			do
+			{
+				*Offset = max(0.0f, *Offset-Textbox.w/3);
+			}
+			while(w-*Offset < 0.0f);
+		}
+	}
+	UI()->ClipEnable(pRect);
+	Textbox.x -= *Offset*UI()->Scale();
+
 	UI()->DoLabel(&Textbox, pDisplayStr, FontSize, -1);
 	
-	//TODO: make it blink
+	// render the cursor
 	if(UI()->LastActiveItem() == pID && !JustGotActive)
 	{
 		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex);
 		Textbox = *pRect;
 		Textbox.VSplitLeft(2.0f, 0, &Textbox);
-		Textbox.x += w*UI()->Scale();
+		Textbox.x += (w-*Offset)*UI()->Scale();
 		Textbox.y -= FontSize/10.f;
-		
-		UI()->DoLabel(&Textbox, "|", FontSize*1.1f, -1);
+		if((2*time_get()/time_freq()) % 2)	// make it blink
+			UI()->DoLabel(&Textbox, "|", FontSize*1.1f, -1);
 	}
+	UI()->ClipDisable();
 
 	return ReturnValue;
 }
@@ -899,7 +927,8 @@ int CMenus::Render()
 			TextBox.VSplitLeft(20.0f, 0, &TextBox);
 			TextBox.VSplitRight(60.0f, &TextBox, 0);
 			UI()->DoLabel(&Label, Localize("Password"), 18.0f, -1);
-			DoEditBox(&g_Config.m_Password, &TextBox, g_Config.m_Password, sizeof(g_Config.m_Password), 12.0f, true);
+			static float Offset = 0.0f;
+			DoEditBox(&g_Config.m_Password, &TextBox, g_Config.m_Password, sizeof(g_Config.m_Password), 12.0f, &Offset, true);
 		}
 		else if(m_Popup == POPUP_FIRST_LAUNCH)
 		{
@@ -921,7 +950,8 @@ int CMenus::Render()
 			TextBox.VSplitLeft(20.0f, 0, &TextBox);
 			TextBox.VSplitRight(60.0f, &TextBox, 0);
 			UI()->DoLabel(&Label, Localize("Nickname"), 18.0f, -1);
-			DoEditBox(&g_Config.m_PlayerName, &TextBox, g_Config.m_PlayerName, sizeof(g_Config.m_PlayerName), 12.0f);
+			static float Offset = 0.0f;
+			DoEditBox(&g_Config.m_PlayerName, &TextBox, g_Config.m_PlayerName, sizeof(g_Config.m_PlayerName), 12.0f, &Offset);
 		}
 		else
 		{
