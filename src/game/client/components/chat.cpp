@@ -214,7 +214,7 @@ void CChat::OnRender()
 			break;
 
 		float Begin = x;
-		float FontSize = 5.0f;
+		float FontSize = 6.0f;
 		
 		// get the y offset
 		CTextCursor Cursor;

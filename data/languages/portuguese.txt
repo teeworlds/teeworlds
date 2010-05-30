@@ -298,7 +298,7 @@ Remote console
 Reset filter
 == Resetar filtro
 
-Reset to default
+Reset to defaults
 == Resetar para padrão
 
 Rifle

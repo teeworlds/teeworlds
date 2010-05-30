@@ -343,6 +343,9 @@ Settings
 Shotgun
 == Schrotflinte
 
+Show chat
+== Chat anzeigen
+
 Show name plates
 == Zeige Namen
 
@@ -435,8 +438,6 @@ Your skin
 
 ##### needs translation ####
 
-Show chat
-== Show chat
 
 ##### old translations ####
 
