@@ -20,13 +20,13 @@ Always show name plates
 == Toujours afficher les pseudonymes
 
 Are you sure that you want to quit?
-== Etes-vous sûr de vouloir quitter ?
+== Êtes-vous sûr de vouloir quitter ?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Comme c'est la première fois que vous lancez le jeu, veuillez entrer votre pseudonyme ci-dessous. Vous devriez vérifier les réglages et les ajuster avant de rejoindre un serveur.
 
 Blue team
-== Equipe bleue
+== Équipe bleue
 
 Blue team wins!
 == L'équipe bleue gagne !
@@ -83,19 +83,19 @@ Downloading map
 == Téléchargement de la carte 
 
 Draw!
-== Egalité !
+== Égalité !
 
 Dynamic Camera
 == Caméra dynamique
 
 Emoticon
-== Emoticônes
+== Émoticônes
 
 Enter
 == Démarrer
 
 FSAA samples
-== Echantillons FSAA
+== Échantillons FSAA
 
 Favorite
 == Favoris
@@ -281,7 +281,7 @@ Quit
 == Quitter
 
 Red team
-== Equipe rouge
+== Équipe rouge
 
 Red team wins!
 == L'équipe rouge gagne !
@@ -377,7 +377,7 @@ Switch weapon on pickup
 == Sélectionner l'arme ramassée
 
 Team
-== Equipe
+== Équipe
 
 Team chat
 == Chat équipe
