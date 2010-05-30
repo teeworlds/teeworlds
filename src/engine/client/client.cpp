@@ -1657,7 +1657,7 @@ void CClient::Run()
 				m_WindowMustRefocus++;
 			}
 
-			if(Input()->KeyPressed(KEY_MOUSE_1))
+			if(m_WindowMustRefocus >= 3 || Input()->KeyPressed(KEY_MOUSE_1))
 			{
 				Input()->MouseModeRelative();
 				m_WindowMustRefocus = 0;
