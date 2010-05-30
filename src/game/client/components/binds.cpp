@@ -169,11 +169,13 @@ void CBinds::ConUnbindAll(IConsole::IResult *pResult, void *pUserData)
 void CBinds::ConDumpBinds(IConsole::IResult *pResult, void *pUserData)
 {
 	CBinds *pBinds = (CBinds *)pUserData;
+	char aBuf[1024];
 	for(int i = 0; i < KEY_LAST; i++)
 	{
 		if(pBinds->m_aaKeyBindings[i][0] == 0)
 			continue;
-		dbg_msg("binds", "%s (%d) = %s", pBinds->Input()->KeyName(i), i, pBinds->m_aaKeyBindings[i]);
+		str_format(aBuf, sizeof(aBuf), "[binds] %s (%d) = %s", pBinds->Input()->KeyName(i), i, pBinds->m_aaKeyBindings[i]);
+		pBinds->Console()->Print(aBuf);
 	}
 }
 
