@@ -431,6 +431,9 @@ You must restart the game for all settings to take effect.
 
 ##### needs translation ####
 
+Show chat
+== Show chat
+
 Your skin
 == Your skin
 

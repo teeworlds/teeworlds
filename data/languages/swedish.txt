@@ -432,6 +432,9 @@ You must restart the game for all settings to take effect.
 Force vote
 == Force vote
 
+Show chat
+== Show chat
+
 Your skin
 == Your skin
 

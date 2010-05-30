@@ -83,7 +83,7 @@ Downloading map
 == Scaricando la mappa
 
 Draw!
-== Disegna!
+== Pareggio!
 
 Dynamic Camera
 == Visuale dinamica
@@ -110,7 +110,7 @@ Filter
 == Filtro
 
 Fire
-== Atirar
+== Fuoco
 
 Fullscreen
 == Schermo intero
@@ -119,7 +119,7 @@ Game
 == Gioco
 
 Game info
-== Informazioni sul gioco
+== Dettagli gioco
 
 Game over
 == Game over
@@ -164,13 +164,13 @@ Internet
 == Internet
 
 Join blue
-== Entra nei blu
+== Entra blu
 
 Join game
-== Entra in gioco
+== Entra
 
 Join red
-== Entra nei rossi
+== Entra rosso
 
 Jump
 == Salta
@@ -191,7 +191,7 @@ Loading
 == Caricamento
 
 MOTD
-== MOTD
+== MDG
 
 Map
 == Mappa
@@ -203,7 +203,7 @@ Miscellaneous
 == Altro
 
 Mouse sens.
-== Sensibilità del mouse
+== Sensibilità
 
 Move left
 == Muovi a sinistra
@@ -305,13 +305,13 @@ Round
 == Turno
 
 Sample rate
-== Frequenza suono
+== Frequenza
 
 Sat.
 == Sat.
 
 Score
-== Punteggio
+== Punti
 
 Score board
 == Scoreboard
@@ -329,7 +329,7 @@ Server details
 == Dettagli del server
 
 Server info
-== Informazioni sul server
+== Dettagli
 
 Server not full
 == Server non pieno
@@ -431,6 +431,9 @@ You must restart the game for all settings to take effect.
 
 Force vote
 == Force vote
+
+Show chat
+== Show chat
 
 Your skin
 == Your skin
