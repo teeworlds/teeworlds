@@ -1916,6 +1916,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("shutdown", "", CFGFLAG_SERVER, Con_ServerDummy, this, "Shut down");
 	m_pConsole->Register("record", "s", CFGFLAG_SERVER, Con_ServerDummy, this, "Record to a file");
 	m_pConsole->Register("stoprecord", "", CFGFLAG_SERVER, Con_ServerDummy, this, "Stop recording");
+	m_pConsole->Register("reload", "", CFGFLAG_SERVER, Con_ServerDummy, this, "Reload the map");
 
 	m_pConsole->Register("quit", "", CFGFLAG_CLIENT, Con_Quit, this, "Quit Teeworlds");
 	m_pConsole->Register("exit", "", CFGFLAG_CLIENT, Con_Quit, this, "Quit Teeworlds");

@@ -25,21 +25,11 @@ void CHud::OnReset()
 {
 }
 
-void CHud::RenderGoals()
+void CHud::RenderGameTimer()
 {
-	// TODO: split this up into these:
-	// render_gametimer
-	// render_suddendeath
-	// render_scorehud
-	// render_warmuptimer
+	float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
+	Graphics()->MapScreen(0, 0, 300.0f*Graphics()->ScreenAspect(), 300.0f);
 	
-	int GameFlags = m_pClient->m_Snap.m_pGameobj->m_Flags;
-	
-	float Whole = 300*Graphics()->ScreenAspect();
-	float Half = Whole/2.0f;
-
-
-	Graphics()->MapScreen(0,0,300*Graphics()->ScreenAspect(),300);
 	if(!m_pClient->m_Snap.m_pGameobj->m_SuddenDeath)
 	{
 		char Buf[32];
@@ -54,18 +44,30 @@ void CHud::RenderGoals()
 		else
 			Time = (Client()->GameTick()-m_pClient->m_Snap.m_pGameobj->m_RoundStartTick)/Client()->GameTickSpeed();
 
-		str_format(Buf, sizeof(Buf), "%d:%02d", Time /60, Time %60);
-		float w = TextRender()->TextWidth(0, 16, Buf, -1);
-		TextRender()->Text(0, Half-w/2, 2, 16, Buf, -1);
+		str_format(Buf, sizeof(Buf), "%d:%02d", Time/60, Time%60);
+		float FontSize = 10.0f;
+		float w = TextRender()->TextWidth(0, FontSize, Buf, -1);
+		TextRender()->Text(0, Half-w/2, 2, FontSize, Buf, -1);
 	}
+}
 
+void CHud::RenderSuddenDeath()
+{
 	if(m_pClient->m_Snap.m_pGameobj->m_SuddenDeath)
 	{
+		float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
 		const char *pText = "Sudden Death";
-		float w = TextRender()->TextWidth(0, 16, pText, -1);
-		TextRender()->Text(0, Half-w/2, 2, 16, pText, -1);
+		float FontSize = 12.0f;
+		float w = TextRender()->TextWidth(0, FontSize, pText, -1);
+		TextRender()->Text(0, Half-w/2, 2, FontSize, pText, -1);
 	}
+}
 
+void CHud::RenderScoreHud()
+{
+	int GameFlags = m_pClient->m_Snap.m_pGameobj->m_Flags;
+	float Whole = 300*Graphics()->ScreenAspect();
+	
 	// render small score hud
 	if(!(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver) && (GameFlags&GAMEFLAG_TEAMS))
 	{
@@ -122,21 +124,25 @@ void CHud::RenderGoals()
 				TextRender()->Text(0, Whole-20-w/2, 300-40-15+t*20, 14, Buf, -1);
 		}
 	}
+}
 
+void CHud::RenderWarmupTimer()
+{
 	// render warmup timer
 	if(m_pClient->m_Snap.m_pGameobj->m_Warmup)
 	{
 		char Buf[256];
-		float w = TextRender()->TextWidth(0, 24, "Warmup", -1);
-		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, 24, "Warmup", -1);
+		float FontSize = 20.0f;
+		float w = TextRender()->TextWidth(0, FontSize, "Warmup", -1);
+		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, FontSize, "Warmup", -1);
 
 		int Seconds = m_pClient->m_Snap.m_pGameobj->m_Warmup/SERVER_TICK_SPEED;
 		if(Seconds < 5)
 			str_format(Buf, sizeof(Buf), "%d.%d", Seconds, (m_pClient->m_Snap.m_pGameobj->m_Warmup*10/SERVER_TICK_SPEED)%10);
 		else
 			str_format(Buf, sizeof(Buf), "%d", Seconds);
-		w = TextRender()->TextWidth(0, 24, Buf, -1);
-		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, 24, Buf, -1);
+		w = TextRender()->TextWidth(0, FontSize, Buf, -1);
+		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 75, FontSize, Buf, -1);
 	}	
 }
 
@@ -310,7 +316,10 @@ void CHud::OnRender()
 	if(m_pClient->m_Snap.m_pLocalCharacter && !Spectate && !(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
 		RenderHealthAndAmmo();
 
-	RenderGoals();
+	RenderGameTimer();
+	RenderSuddenDeath();
+	RenderScoreHud();
+	RenderWarmupTimer();
 	RenderFps();
 	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		RenderConnectionWarning();

@@ -268,7 +268,8 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 
 	CUIRect Textbox = *pRect;
 	RenderTools()->DrawUIRect(&Textbox, vec4(1, 1, 1, 0.5f), Corners, 3.0f);
-	Textbox.VMargin(3.0f, &Textbox);
+	Textbox.VMargin(2.0f, &Textbox);
+	Textbox.HMargin(2.0f, &Textbox);
 	
 	const char *pDisplayStr = pStr;
 	char aStars[128];
@@ -320,9 +321,9 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 		Textbox = *pRect;
 		Textbox.VSplitLeft(2.0f, 0, &Textbox);
 		Textbox.x += (w-*Offset)*UI()->Scale();
-		Textbox.y -= FontSize/10.f;
+
 		if((2*time_get()/time_freq()) % 2)	// make it blink
-			UI()->DoLabel(&Textbox, "|", FontSize*1.1f, -1);
+			UI()->DoLabel(&Textbox, "|", FontSize, -1);
 	}
 	UI()->ClipDisable();
 

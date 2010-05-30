@@ -302,6 +302,7 @@ static CKeyInfo gs_aKeys[] =
 	{ Localize("Vote no"), "vote no", 0 },
 	{ Localize("Chat"), "chat all", 0 },
 	{ Localize("Team chat"), "chat team", 0 },
+	{ Localize("Show chat"), "+show_chat", 0 },
 	{ Localize("Emoticon"), "+emote", 0 },
 	{ Localize("Console"), "toggle_local_console", 0 },
 	{ Localize("Remote console"), "toggle_remote_console", 0 },
@@ -418,7 +419,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 		TextRender()->Text(0, ChatSettings.x, ChatSettings.y, 14, Localize("Chat"), -1);
 
 		ChatSettings.HSplitTop(14.0f+5.0f+10.0f, 0, &ChatSettings);
-		UiDoGetButtons(14, 16, ChatSettings);
+		UiDoGetButtons(14, 17, ChatSettings);
 	}
 
 	// misc settings
@@ -431,7 +432,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 		TextRender()->Text(0, MiscSettings.x, MiscSettings.y, 14, Localize("Miscellaneous"), -1);
 
 		MiscSettings.HSplitTop(14.0f+5.0f+10.0f, 0, &MiscSettings);
-		UiDoGetButtons(16, 21, MiscSettings);
+		UiDoGetButtons(17, 21, MiscSettings);
 	}
 
 	// defaults

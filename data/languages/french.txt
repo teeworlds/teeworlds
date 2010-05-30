@@ -2,7 +2,7 @@
 ##### translated strings #####
 
 %d of %d servers, %d players
-== %d parmi les %d serveurs, %d joueurs
+== %d/%d serveurs, %d joueurs
 
 Abort
 == Annuler
@@ -111,6 +111,9 @@ Filter
 
 Fire
 == Tirer
+
+Force vote
+== Forcer le vote
 
 Fullscreen
 == Plein écran
@@ -340,6 +343,9 @@ Settings
 Shotgun
 == Fusil à pompe
 
+Show chat
+== Montrer le chat
+
 Show name plates
 == Montrer les pseudonymes
 
@@ -427,13 +433,10 @@ Yes
 You must restart the game for all settings to take effect.
 == Les changements prendront effet au prochain redémarrage.
 
-##### needs translation ####
-
-Force vote
-== Force vote
-
 Your skin
-== Your skin
+== Votre skin
+
+##### needs translation ####
 
 ##### old translations ####
 

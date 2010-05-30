@@ -9,7 +9,7 @@ class CChat : public CComponent
 	
 	enum 
 	{
-		MAX_LINES = 10,
+		MAX_LINES = 25,
 	};
 
 	struct CLine
@@ -34,10 +34,12 @@ class CChat : public CComponent
 	};
 
 	int m_Mode;
+	bool m_Show;
 	
 	static void ConSay(IConsole::IResult *pResult, void *pUserData);
 	static void ConSayTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConChat(IConsole::IResult *pResult, void *pUserData);
+	static void ConShowChat(IConsole::IResult *pResult, void *pUserData);
 	
 public:
 	CChat();

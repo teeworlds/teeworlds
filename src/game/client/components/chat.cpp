@@ -28,6 +28,8 @@ void CChat::OnReset()
 		m_aLines[i].m_aText[0] = 0;
 		m_aLines[i].m_aName[0] = 0;
 	}
+	
+	m_Show = false;
 }
 
 void CChat::OnStateChange(int NewState, int OldState)
@@ -62,11 +64,17 @@ void CChat::ConChat(IConsole::IResult *pResult, void *pUserData)
 		dbg_msg("console", "expected all or team as mode");
 }
 
+void CChat::ConShowChat(IConsole::IResult *pResult, void *pUserData)
+{
+	((CChat *)pUserData)->m_Show = pResult->GetInteger(0) != 0;
+}
+
 void CChat::OnConsoleInit()
 {
 	Console()->Register("say", "r", CFGFLAG_CLIENT, ConSay, this, "Say in chat");
 	Console()->Register("say_team", "r", CFGFLAG_CLIENT, ConSayTeam, this, "Say in team chat");
 	Console()->Register("chat", "s", CFGFLAG_CLIENT, ConChat, this, "Enable chat with all/team mode");
+	Console()->Register("+show_chat", "", CFGFLAG_CLIENT, ConShowChat, this, "Show chat");
 }
 
 bool CChat::OnInput(IInput::CEvent e)
@@ -202,11 +210,11 @@ void CChat::OnRender()
 	for(i = 0; i < MAX_LINES; i++)
 	{
 		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
-		if(Now > m_aLines[r].m_Time+15*time_freq())
+		if(Now > m_aLines[r].m_Time+15*time_freq() && !m_Show)
 			break;
 
 		float Begin = x;
-		float FontSize = 7.0f;
+		float FontSize = 5.0f;
 		
 		// get the y offset
 		CTextCursor Cursor;
@@ -217,7 +225,8 @@ void CChat::OnRender()
 		y -= Cursor.m_Y + Cursor.m_FontSize;
 
 		// cut off if msgs waste too much space
-		if(y < 200.0f)
+		int HeightLimit = m_Show ? 0.0f : 200.0f;
+		if(y < HeightLimit)
 			break;
 		
 		// reset the cursor

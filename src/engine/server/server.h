@@ -25,7 +25,7 @@ class CSnapIDPool
 	int m_LastTimed;
 	int m_Usage;
 	int m_InUsage;
-
+	
 public:	
 
 	CSnapIDPool();
@@ -105,6 +105,7 @@ public:
 	int64 m_GameStartTime;
 	//int m_CurrentGameTick;
 	int m_RunServer;
+	int m_MapReload;
 
 	char m_aBrowseinfoGametype[16];
 	int m_BrowseinfoProgression;
@@ -181,6 +182,7 @@ public:
 	static void ConShutdown(IConsole::IResult *pResult, void *pUser);
 	static void ConRecord(IConsole::IResult *pResult, void *pUser);
 	static void ConStopRecord(IConsole::IResult *pResult, void *pUser);
+	static void ConMapReload(IConsole::IResult *pResult, void *pUser);
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void RegisterCommands();

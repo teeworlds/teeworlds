@@ -178,6 +178,8 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 
 	m_pCurrentMapData = 0;
 	m_CurrentMapSize = 0;
+	
+	m_MapReload = 0;
 
 	Init();
 }
@@ -1039,9 +1041,9 @@ int CServer::Run()
 			int NewTicks = 0;
 			
 			// load new map TODO: don't poll this
-			if(str_comp(g_Config.m_SvMap, m_aCurrentMap) != 0 || g_Config.m_SvMapReload)
+			if(str_comp(g_Config.m_SvMap, m_aCurrentMap) != 0 || m_MapReload)
 			{
-				g_Config.m_SvMapReload = 0;
+				m_MapReload = 0;
 				
 				// load map
 				if(LoadMap(g_Config.m_SvMap))
@@ -1270,6 +1272,11 @@ void CServer::ConStopRecord(IConsole::IResult *pResult, void *pUser)
 	((CServer *)pUser)->m_DemoRecorder.Stop();
 }
 
+void CServer::ConMapReload(IConsole::IResult *pResult, void *pUser)
+{
+	((CServer *)pUser)->m_MapReload = 1;
+}
+
 void CServer::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData);
@@ -1290,6 +1297,8 @@ void CServer::RegisterCommands()
 
 	Console()->Register("record", "s", CFGFLAG_SERVER, ConRecord, this, "");
 	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "");
+	
+	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "");
 
 	Console()->Chain("sv_name", ConchainSpecialInfoupdate, this);
 	Console()->Chain("password", ConchainSpecialInfoupdate, this);

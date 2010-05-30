@@ -14,8 +14,11 @@ class CHud : public CComponent
 	void RenderTeambalanceWarning();
 	void RenderVoting();
 	void RenderHealthAndAmmo();
-	void RenderGoals();
-	
+	void RenderGameTimer();
+	void RenderSuddenDeath();
+	void RenderScoreHud();
+	void RenderWarmupTimer();
+
 	void MapscreenToGroup(float CenterX, float CenterY, struct CMapItemGroup *PGroup);
 public:
 	CHud();
