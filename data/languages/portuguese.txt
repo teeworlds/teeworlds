@@ -17,7 +17,7 @@ Alpha
 == Alpha
 
 Always show name plates
-== Sempre mostrar placas de apelido
+== Sempre mostrar apelidos
 
 Are you sure that you want to quit?
 == Você tem certeza que deseja sair?
@@ -35,7 +35,7 @@ Body
 == Corpo
 
 Call vote
-== Chamar votação
+== Votação
 
 Chat
 == Conversa
@@ -112,6 +112,9 @@ Filter
 Fire
 == Atirar
 
+Force vote
+== Forçar votação
+
 Fullscreen
 == Tela cheia
 
@@ -146,7 +149,7 @@ Has people playing
 == Tem gente jogando
 
 High Detail
-== Altos detalhes
+== Mais detalhes (HD)
 
 Hook
 == Gancho
@@ -164,16 +167,16 @@ Internet
 == Internet
 
 Join blue
-== Entre no azul
+== Entre no az.
 
 Join game
 == Entre no jogo
 
 Join red
-== Entre no vermelho
+== Entre no verm.
 
 Jump
-== Pulo
+== Pular
 
 Kick
 == Kick
@@ -200,10 +203,10 @@ Maximum ping:
 == Ping máximo:
 
 Miscellaneous
-== Diverso
+== Diversos
 
 Mouse sens.
-== Sensibilidade do mouse
+== Sens. do mouse
 
 Move left
 == Esquerda
@@ -263,7 +266,7 @@ Player
 == Jogador
 
 Players
-== Jogadores
+== Jogador
 
 Prev. weapon
 == Arma anterior
@@ -305,7 +308,7 @@ Round
 == Rodada
 
 Sample rate
-== Taxa de amostragem de som
+== Tx. de som
 
 Sat.
 == Sat.
@@ -335,13 +338,13 @@ Server not full
 == Servidor não cheio
 
 Settings
-== Configurações
+== Config.
 
 Shotgun
 == Espingarda
 
 Show name plates
-== Mostrar placas de apelido
+== Mostrar apelidos
 
 Show only supported
 == Mostrar apenas suportados
@@ -374,7 +377,7 @@ Team
 == Time
 
 Team chat
-== Conversa de equipe
+== Conv. de equipe
 
 Teeworlds %s is out! Download it at www.teeworlds.com!
 == Teeworlds %s foi lançado! Baixe-o em www.teeworlds.com!
@@ -431,9 +434,6 @@ Your skin
 == Sua skin
 
 ##### needs translation ####
-
-Force vote
-== Force vote
 
 ##### old translations ####
 
