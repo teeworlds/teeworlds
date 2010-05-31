@@ -59,7 +59,7 @@ Controls
 == Controlli
 
 Current
-== attuale
+== Attuale
 
 Current version: %s
 == Versione attuale: %s
@@ -353,7 +353,7 @@ Sound
 == Suono
 
 Sound volume
-== Volume del suono
+== Volume
 
 Spectate
 == Osserva

@@ -294,37 +294,39 @@ void CMenus::RenderServerControlServer(CUIRect MainView)
 void CMenus::RenderServerControlKick(CUIRect MainView)
 {
 	int NumOptions = 0;
+	int Selected = -1;
+	static int aPlayerIDs[MAX_CLIENTS];
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(!m_pClient->m_Snap.m_paPlayerInfos[i])
 			continue;
-		NumOptions++;
+		if(m_CallvoteSelectedPlayer == i)
+			Selected = NumOptions;
+		aPlayerIDs[NumOptions++] = i;
 	}
 
 	static int s_VoteList = 0;
 	static float s_ScrollValue = 0;
 	CUIRect List = MainView;
-	UiDoListboxStart(&s_VoteList, &List, 24.0f, Localize("Players"), "", NumOptions, 1, m_CallvoteSelectedPlayer, s_ScrollValue);
+	UiDoListboxStart(&s_VoteList, &List, 24.0f, Localize("Players"), "", NumOptions, 1, Selected, s_ScrollValue);
 	
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	for(int i = 0; i < NumOptions; i++)
 	{
-		if(!m_pClient->m_Snap.m_paPlayerInfos[i])
-			continue;
-
-		CListboxItem Item = UiDoListboxNextItem((char *)&m_pClient->m_Snap+i);
+		CListboxItem Item = UiDoListboxNextItem(&aPlayerIDs[i]);
 		
 		if(Item.m_Visible)
 		{
-			CTeeRenderInfo Info = m_pClient->m_aClients[i].m_RenderInfo;
+			CTeeRenderInfo Info = m_pClient->m_aClients[aPlayerIDs[i]].m_RenderInfo;
 			Info.m_Size = Item.m_Rect.h;
 			Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0), vec2(Item.m_Rect.x+Item.m_Rect.h/2, Item.m_Rect.y+Item.m_Rect.h/2));
 			Item.m_Rect.x +=Info.m_Size;
-			UI()->DoLabel(&Item.m_Rect, m_pClient->m_aClients[i].m_aName, 16.0f, -1);
+			UI()->DoLabel(&Item.m_Rect, m_pClient->m_aClients[aPlayerIDs[i]].m_aName, 16.0f, -1);
 		}
 	}
 	
-	m_CallvoteSelectedPlayer = UiDoListboxEnd(&s_ScrollValue, 0);
+	Selected = UiDoListboxEnd(&s_ScrollValue, 0);
+	m_CallvoteSelectedPlayer = Selected != -1 ? aPlayerIDs[Selected] : -1;
 }
 
 void CMenus::RenderServerControl(CUIRect MainView)
