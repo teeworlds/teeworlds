@@ -12,6 +12,19 @@
 
 CControls::CControls()
 {
+	mem_zero(&m_LastData, sizeof(m_LastData));
+}
+
+void CControls::OnReset()
+{
+	m_LastData.m_Direction = 0;
+	m_LastData.m_Hook = 0;
+	m_LastData.m_Fire = 0;
+	m_LastData.m_Jump = 0;
+	m_InputData = m_LastData;
+	
+	m_InputDirectionLeft = 0;
+	m_InputDirectionRight = 0;
 }
 
 static void ConKeyInputState(IConsole::IResult *pResult, void *pUserData)
@@ -79,7 +92,6 @@ void CControls::OnMessage(int Msg, void *pRawMsg)
 
 int CControls::SnapInput(int *pData)
 {
-	static CNetObj_PlayerInput LastData = {0};
 	static int64 LastSendTime = 0;
 	bool Send = false;
 	
@@ -91,21 +103,15 @@ int CControls::SnapInput(int *pData)
 	else
 		m_InputData.m_PlayerState = PLAYERSTATE_PLAYING;
 	
-	if(LastData.m_PlayerState != m_InputData.m_PlayerState)
+	if(m_LastData.m_PlayerState != m_InputData.m_PlayerState)
 		Send = true;
 		
-	LastData.m_PlayerState = m_InputData.m_PlayerState;
+	m_LastData.m_PlayerState = m_InputData.m_PlayerState;
 	
 	// we freeze the input if chat or menu is activated
 	if(m_InputData.m_PlayerState != PLAYERSTATE_PLAYING)
 	{
-		LastData.m_Direction = 0;
-		LastData.m_Hook = 0;
-		LastData.m_Jump = 0;
-		m_InputData = LastData;
-		
-		m_InputDirectionLeft = 0;
-		m_InputDirectionRight = 0;
+		OnReset();
 			
 		mem_copy(pData, &m_InputData, sizeof(m_InputData));
 
@@ -147,14 +153,14 @@ int CControls::SnapInput(int *pData)
 		}
 
 		// check if we need to send input
-		if(m_InputData.m_Direction != LastData.m_Direction) Send = true;
-		else if(m_InputData.m_Jump != LastData.m_Jump) Send = true;
-		else if(m_InputData.m_Fire != LastData.m_Fire) Send = true;
-		else if(m_InputData.m_Hook != LastData.m_Hook) Send = true;
-		else if(m_InputData.m_PlayerState != LastData.m_PlayerState) Send = true;
-		else if(m_InputData.m_WantedWeapon != LastData.m_WantedWeapon) Send = true;
-		else if(m_InputData.m_NextWeapon != LastData.m_NextWeapon) Send = true;
-		else if(m_InputData.m_PrevWeapon != LastData.m_PrevWeapon) Send = true;
+		if(m_InputData.m_Direction != m_LastData.m_Direction) Send = true;
+		else if(m_InputData.m_Jump != m_LastData.m_Jump) Send = true;
+		else if(m_InputData.m_Fire != m_LastData.m_Fire) Send = true;
+		else if(m_InputData.m_Hook != m_LastData.m_Hook) Send = true;
+		else if(m_InputData.m_PlayerState != m_LastData.m_PlayerState) Send = true;
+		else if(m_InputData.m_WantedWeapon != m_LastData.m_WantedWeapon) Send = true;
+		else if(m_InputData.m_NextWeapon != m_LastData.m_NextWeapon) Send = true;
+		else if(m_InputData.m_PrevWeapon != m_LastData.m_PrevWeapon) Send = true;
 
 		// send at at least 10hz
 		if(time_get() > LastSendTime + time_freq()/25)
@@ -162,7 +168,7 @@ int CControls::SnapInput(int *pData)
 	}
 	
 	// copy and return size	
-	LastData = m_InputData;
+	m_LastData = m_InputData;
 	
 	if(!Send)
 		return 0;

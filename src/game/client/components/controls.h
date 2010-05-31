@@ -10,11 +10,13 @@ public:
 	vec2 m_TargetPos;
 
 	CNetObj_PlayerInput m_InputData;
+	CNetObj_PlayerInput m_LastData;
 	int m_InputDirectionLeft;
 	int m_InputDirectionRight;
 
 	CControls();
 	
+	virtual void OnReset();
 	virtual void OnRender();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual bool OnMouseMove(float x, float y);

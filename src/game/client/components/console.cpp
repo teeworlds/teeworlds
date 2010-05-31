@@ -21,6 +21,7 @@
 
 #include <game/client/lineinput.h>
 #include <game/client/render.h>
+#include <game/client/components/controls.h>
 #include <game/client/components/menus.h>
 
 #include "console.h"
@@ -533,6 +534,8 @@ void CGameConsole::Toggle(int Type)
 			Input()->MouseModeAbsolute();
 			m_pClient->m_pMenus->UseMouseButtons(false);
 			m_ConsoleState = CONSOLE_OPENING;
+			// reset controls
+			m_pClient->m_pControls->OnReset();
 		}
 		else
 		{
