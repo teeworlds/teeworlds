@@ -56,12 +56,12 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		{COL_FLAG_LOCK,	-1,						" ",		-1, 14.0f, 0, {0}, {0}},
 		{COL_FLAG_PURE,	-1,						" ",		-1, 14.0f, 0, {0}, {0}},
 		{COL_FLAG_FAV,	-1,						" ",		-1, 14.0f, 0, {0}, {0}},
-		{COL_NAME,		IServerBrowser::SORT_NAME,		Localize("Name"),		0, 300.0f, 0, {0}, {0}},
-		{COL_GAMETYPE,	IServerBrowser::SORT_GAMETYPE,	Localize("Type"),		1, 50.0f, 0, {0}, {0}},
-		{COL_MAP,		IServerBrowser::SORT_MAP,			Localize("Map"), 		1, 100.0f, 0, {0}, {0}},
-		{COL_PLAYERS,	IServerBrowser::SORT_NUMPLAYERS,	Localize("Players"),	1, 60.0f, 0, {0}, {0}},
+		{COL_NAME,		IServerBrowser::SORT_NAME,		"Name",		0, 300.0f, 0, {0}, {0}},	// Localize - these strings are localized within CLocConstString 
+		{COL_GAMETYPE,	IServerBrowser::SORT_GAMETYPE,	"Type",		1, 50.0f, 0, {0}, {0}},
+		{COL_MAP,		IServerBrowser::SORT_MAP,			"Map", 		1, 100.0f, 0, {0}, {0}},
+		{COL_PLAYERS,	IServerBrowser::SORT_NUMPLAYERS,	"Players",	1, 60.0f, 0, {0}, {0}},
 		{-1,			-1,						" ",		1, 10.0f, 0, {0}, {0}},
-		{COL_PING,		IServerBrowser::SORT_PING,		Localize("Ping"),		1, 40.0f, FIXED, {0}, {0}},
+		{COL_PING,		IServerBrowser::SORT_PING,		"Ping",		1, 40.0f, FIXED, {0}, {0}},
 	};
 
 	int NumCols = sizeof(s_aCols)/sizeof(CColumn);
@@ -486,9 +486,9 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 	{
 		CUIRect Row;
 		static CLocConstString s_aLabels[] = {
-			Localize("Version"),
-			Localize("Game type"),
-			Localize("Ping")};
+			"Version",	// Localize - these strings are localized within CLocConstString
+			"Game type",
+			"Ping"};
 
 		CUIRect LeftColumn;
 		CUIRect RightColumn;
