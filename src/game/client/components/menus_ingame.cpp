@@ -293,38 +293,38 @@ void CMenus::RenderServerControlServer(CUIRect MainView)
 
 void CMenus::RenderServerControlKick(CUIRect MainView)
 {
-	// draw header
-	CUIRect Header, Footer;
-	MainView.HSplitTop(20, &Header, &MainView);
-	RenderTools()->DrawUIRect(&Header, vec4(1,1,1,0.25f), CUI::CORNER_T, 5.0f); 
-	UI()->DoLabel(&Header, Localize("Players"), 18.0f, 0);
+	int NumOptions = 0;
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(!m_pClient->m_Snap.m_paPlayerInfos[i])
+			continue;
+		NumOptions++;
+	}
 
-	// draw footers	
-	MainView.HSplitBottom(20, &MainView, &Footer);
-	RenderTools()->DrawUIRect(&Footer, vec4(1,1,1,0.25f), CUI::CORNER_B, 5.0f); 
-	Footer.VSplitLeft(10.0f, 0, &Footer);
-
-	// players
-	RenderTools()->DrawUIRect(&MainView, vec4(0,0,0,0.15f), 0, 0);
+	static int s_VoteList = 0;
+	static float s_ScrollValue = 0;
 	CUIRect List = MainView;
+	UiDoListboxStart(&s_VoteList, &List, 24.0f, Localize("Players"), "", NumOptions, 1, m_CallvoteSelectedPlayer, s_ScrollValue);
+	
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(!m_pClient->m_Snap.m_paPlayerInfos[i])
 			continue;
 
-		CUIRect Button;
-		List.HSplitTop(ms_ButtonHeight, &Button, &List);
+		CListboxItem Item = UiDoListboxNextItem((char *)&m_pClient->m_Snap+i);
 		
-		if(DoButton_ListRow((char *)&m_pClient->m_Snap+i, "", m_CallvoteSelectedPlayer == i, &Button))
-			m_CallvoteSelectedPlayer = i;
-
-		CTeeRenderInfo Info = m_pClient->m_aClients[i].m_RenderInfo;
-		Info.m_Size = Button.h;
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0), vec2(Button.x+Button.h/2, Button.y+Button.h/2));
-
-		Button.x += Button.h;
-		UI()->DoLabel(&Button, m_pClient->m_aClients[i].m_aName, 18.0f, -1);
+		if(Item.m_Visible)
+		{
+			CTeeRenderInfo Info = m_pClient->m_aClients[i].m_RenderInfo;
+			Info.m_Size = Item.m_Rect.h;
+			Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
+			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0), vec2(Item.m_Rect.x+Item.m_Rect.h/2, Item.m_Rect.y+Item.m_Rect.h/2));
+			Item.m_Rect.x +=Info.m_Size;
+			UI()->DoLabel(&Item.m_Rect, m_pClient->m_aClients[i].m_aName, 16.0f, -1);
+		}
 	}
+	
+	m_CallvoteSelectedPlayer = UiDoListboxEnd(&s_ScrollValue, 0);
 }
 
 void CMenus::RenderServerControl(CUIRect MainView)
