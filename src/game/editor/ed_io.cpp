@@ -574,7 +574,7 @@ int CEditor::Append(const char *pFileName)
 
 	int Err;
 	Err = NewMap.Load(Kernel()->RequestInterface<IStorage>(), pFileName);
-	if(Err)
+	if(!Err)
 		return Err;
 
 	// modify indecies	
