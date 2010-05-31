@@ -419,16 +419,16 @@ void CGraphics_OpenGL::ScreenshotDirect(const char *pFilename)
 	int y;
 	int w = m_ScreenWidth;
 	int h = m_ScreenHeight;
-	unsigned char *pPixelData = (unsigned char *)mem_alloc(w*(h+1)*4, 1);
-	unsigned char *pTempRow = pPixelData+w*h*4;
-	glReadPixels(0,0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pPixelData);
+	unsigned char *pPixelData = (unsigned char *)mem_alloc(w*(h+1)*3, 1);
+	unsigned char *pTempRow = pPixelData+w*h*3;
+	glReadPixels(0,0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pPixelData);
 	
 	// flip the pixel because opengl works from bottom left corner
 	for(y = 0; y < h/2; y++)
 	{
-		mem_copy(pTempRow, pPixelData+y*w*4, w*4);
-		mem_copy(pPixelData+y*w*4, pPixelData+(h-y-1)*w*4, w*4);
-		mem_copy(pPixelData+(h-y-1)*w*4, pTempRow,w*4);
+		mem_copy(pTempRow, pPixelData+y*w*3, w*3);
+		mem_copy(pPixelData+y*w*3, pPixelData+(h-y-1)*w*3, w*3);
+		mem_copy(pPixelData+(h-y-1)*w*3, pTempRow,w*3);
 	}
 	
 	// find filename
@@ -443,7 +443,7 @@ void CGraphics_OpenGL::ScreenshotDirect(const char *pFilename)
 		// save png
 		dbg_msg("client", "saved screenshot to '%s'", aWholePath);
 		png_open_file_write(&Png, aWholePath); // ignore_convention
-		png_set_data(&Png, w, h, 8, PNG_TRUECOLOR_ALPHA, (unsigned char *)pPixelData); // ignore_convention
+		png_set_data(&Png, w, h, 8, PNG_TRUECOLOR, (unsigned char *)pPixelData); // ignore_convention
 		png_close_file(&Png); // ignore_convention
 	}
 
