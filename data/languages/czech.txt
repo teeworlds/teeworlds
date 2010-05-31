@@ -188,7 +188,7 @@ Language
 == Jazyk
 
 Lht.
-== Světelnost
+== Světel.
 
 Loading
 == Nahrávám
@@ -308,7 +308,7 @@ Round
 == Kolo
 
 Sample rate
-== Vzorkovací kmitočet
+== Sample rate
 
 Sat.
 == Sat.
