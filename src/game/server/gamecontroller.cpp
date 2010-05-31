@@ -285,6 +285,7 @@ void IGameController::PostReset()
 		{
 			GameServer()->m_apPlayers[i]->Respawn();
 			GameServer()->m_apPlayers[i]->m_Score = 0;
+			GameServer()->m_apPlayers[i]->m_ScoreStartTick = Server()->Tick();
 		}
 	}
 }
@@ -399,13 +400,16 @@ void IGameController::Tick()
 		dbg_msg("game", "Balancing teams");
 		
 		int aT[2] = {0,0};
-		int aTScore[2] = {0,0};
+		float aTScore[2] = {0,0};
+		float aPScore[MAX_CLIENTS] = {0.0f};
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
 			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != -1)
 			{
 				aT[GameServer()->m_apPlayers[i]->GetTeam()]++;
-				aTScore[GameServer()->m_apPlayers[i]->GetTeam()] += GameServer()->m_apPlayers[i]->m_Score;
+				aPScore[i] = GameServer()->m_apPlayers[i]->m_Score*Server()->TickSpeed()*60.0f/
+					(Server()->Tick()-GameServer()->m_apPlayers[i]->m_ScoreStartTick);
+				aTScore[GameServer()->m_apPlayers[i]->GetTeam()] += aPScore[i];
 			}
 		}
 		
@@ -421,23 +425,23 @@ void IGameController::Tick()
 				int PD = aTScore[M];
 				for(int i = 0; i < MAX_CLIENTS; i++)
 				{
-					if(!GameServer()->m_apPlayers[i])
-						continue;
-					if(!CanBeMovedOnBalance(i))
+					if(!GameServer()->m_apPlayers[i] || !CanBeMovedOnBalance(i))
 						continue;
 					// remember the player who would cause lowest score-difference
-					if(GameServer()->m_apPlayers[i]->GetTeam() == M && (!pP || absolute((aTScore[M^1]+GameServer()->m_apPlayers[i]->m_Score) - (aTScore[M]-GameServer()->m_apPlayers[i]->m_Score)) < PD))
+					if(GameServer()->m_apPlayers[i]->GetTeam() == M && (!pP || absolute((aTScore[M^1]+aPScore[i]) - (aTScore[M]-aPScore[i])) < PD))
 					{
 						pP = GameServer()->m_apPlayers[i];
-						PD = absolute((aTScore[M^1]+pP->m_Score) - (aTScore[M]-pP->m_Score));
+						PD = absolute((aTScore[M^1]+aPScore[i]) - (aTScore[M]-aPScore[i]));
 					}
 				}
 				
 				// move the player to other team without losing his score
 				// TODO: change in player::set_team needed: player won't lose score on team-change
 				int ScoreBefore = pP->m_Score;
+				int ScoreStartTickBefore = pP->m_ScoreStartTick;
 				pP->SetTeam(M^1);
 				pP->m_Score = ScoreBefore;
+				pP->m_ScoreStartTick = ScoreStartTickBefore;
 				
 				pP->Respawn();
 				pP->m_ForceBalanced = true;
