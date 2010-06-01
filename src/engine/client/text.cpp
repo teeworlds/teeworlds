@@ -52,7 +52,7 @@ struct CFontSizeData
 	int m_FontSize;
 	FT_Face *m_pFace;
 
-	unsigned m_aTextures[2];
+	GLuint m_aTextures[2];
 	int m_TextureWidth;
 	int m_TextureHeight;
 	
