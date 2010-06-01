@@ -606,6 +606,8 @@ public:
 	
 	void RenderMenubar(CUIRect Menubar);
 	void RenderFileDialog();
+
+	void AddFileDialogEntry(const char *pName, CUIRect *pView);
 };
 
 // make sure to inline this function
