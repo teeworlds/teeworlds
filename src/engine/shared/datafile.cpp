@@ -154,7 +154,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename)
 	}
 
 #if defined(CONF_ARCH_ENDIAN_BIG)
-	swap_endian(m_pDataFile->m_pData, sizeof(int), Header.Swaplen / sizeof(int));
+	swap_endian(m_pDataFile->m_pData, sizeof(int), Header.m_Swaplen / sizeof(int));
 #endif
 
 	//if(DEBUG)
@@ -476,7 +476,7 @@ int CDataFileWriter::AddDataSwapped(int Size, void *pData)
 	int Index;
 	mem_copy(pSwapped, pData, Size);
 	swap_endian(&pSwapped, sizeof(int), Size/sizeof(int));
-	Index = AddData(Size, Swapped);
+	Index = AddData(Size, pSwapped);
 	mem_free(pSwapped);
 	return Index;
 #else
