@@ -1,7 +1,8 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
 
 #include <base/system.h>
-
+#include <base/tl/sorted_array.h>
+#include <base/tl/string.h>
 
 #include <engine/shared/datafile.h>
 #include <engine/shared/config.h>
@@ -1885,21 +1886,21 @@ static char gs_FileDialogFileName[512] = {0};
 static char gs_aFileDialogPath[512] = {0};
 static char gs_aFileDialogCompleteFilename[512] = {0};
 static int gs_FilesNum = 0;
+static sorted_array<string> gs_FileList;
 int g_FilesStartAt = 0;
 int g_FilesCur = 0;
 int g_FilesStopAt = 999;
-
-struct CListDirInfo
-{
-	CUIRect *m_pRect;
-	CEditor *m_pEditor;
-};
 
 static void EditorListdirCallback(const char *pName, int IsDir, void *pUser)
 {
 	if(pName[0] == '.' || IsDir) // skip this shit!
 		return;
 
+	gs_FileList.add(string(pName));
+}
+
+void CEditor::AddFileDialogEntry(const char *pName, CUIRect *pView)
+{
 	if(g_FilesCur > gs_FilesNum)
 		gs_FilesNum = g_FilesCur;
 
@@ -1907,14 +1908,12 @@ static void EditorListdirCallback(const char *pName, int IsDir, void *pUser)
 	if(g_FilesCur-1 < g_FilesStartAt || g_FilesCur > g_FilesStopAt)
 		return;
 
-	CListDirInfo *pInfo = (CListDirInfo *)pUser;
-	CUIRect *pView = pInfo->m_pRect;
 	CUIRect Button;
 	pView->HSplitTop(15.0f, &Button, pView);
 	pView->HSplitTop(2.0f, 0, pView);
 	//char buf[512];
 
-	if(pInfo->m_pEditor->DoButton_File((void*)(10+(int)Button.y), pName, 0, &Button, 0, 0))
+	if(DoButton_File((void*)(10+(int)Button.y), pName, 0, &Button, 0, 0))
 	{
 		str_copy(gs_FileDialogFileName, pName, sizeof(gs_FileDialogFileName));
 
@@ -1922,11 +1921,11 @@ static void EditorListdirCallback(const char *pName, int IsDir, void *pUser)
 		str_append(gs_aFileDialogCompleteFilename, gs_aFileDialogPath, sizeof(gs_aFileDialogCompleteFilename));
 		str_append(gs_aFileDialogCompleteFilename, gs_FileDialogFileName, sizeof(gs_aFileDialogCompleteFilename));
 
-		if(pInfo->m_pEditor->Input()->MouseDoubleClick())
+		if(Input()->MouseDoubleClick())
 		{
 			if(gs_pfnFileDialogFunc)
-				gs_pfnFileDialogFunc(gs_aFileDialogCompleteFilename, pInfo->m_pEditor);
-			pInfo->m_pEditor->m_Dialog = DIALOG_NONE;
+				gs_pfnFileDialogFunc(gs_aFileDialogCompleteFilename, this);
+			m_Dialog = DIALOG_NONE;
 		}
 	}
 }
@@ -1997,13 +1996,12 @@ void CEditor::RenderFileDialog()
 	// set clipping
 	UI()->ClipEnable(&View);
 
-	// the list
-	CListDirInfo Info;
-	Info.m_pRect = &View;
-	Info.m_pEditor = this;
-
 	// TODO: lazy ass coding, should store the interface pointer somewere
-	Kernel()->RequestInterface<IStorage>()->ListDirectory(gs_FileDialogDirTypes, gs_aFileDialogPath, EditorListdirCallback, &Info);
+	Kernel()->RequestInterface<IStorage>()->ListDirectory(gs_FileDialogDirTypes, gs_aFileDialogPath, EditorListdirCallback, 0);
+
+	for(int i = 0; i < gs_FileList.size(); i++)
+		AddFileDialogEntry(gs_FileList[i].cstr(), &View);
+	gs_FileList.clear();
 
 	// disable clipping again
 	UI()->ClipDisable();
