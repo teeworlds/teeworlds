@@ -1,4 +1,4 @@
-n är Copyright (c) 2010 Magnus Auvinen
+Copyright (c) 2010 Magnus Auvinen
 
 
 This software is provided 'as-is', without any express or implied
