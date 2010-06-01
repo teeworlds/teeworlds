@@ -1949,7 +1949,7 @@ static CClient m_Client;
 */
 
 #if defined(CONF_PLATFORM_MACOSX)
-int SDL_main(int argc, const char **argv) // ignore_convention
+extern "C" int SDL_main(int argc, const char **argv) // ignore_convention
 #else
 int main(int argc, const char **argv) // ignore_convention
 #endif
