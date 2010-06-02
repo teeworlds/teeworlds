@@ -1,5 +1,7 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
 
+#include <stdlib.h>
+
 #include <base/system.h>
 #include <base/tl/sorted_array.h>
 #include <base/tl/string.h>
@@ -1809,9 +1811,17 @@ int CEditor::PopupImage(CEditor *pEditor, CUIRect View)
 	return 0;
 }
 
+static int CompareImageName(const void *Object1, const void *Object2)
+{
+	CEditorImage *Image1 = *(CEditorImage**)Object1;
+	CEditorImage *Image2 = *(CEditorImage**)Object2;
+	return str_comp(Image1->m_aName, Image2->m_aName);
+}
 
 void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 {
+	qsort(m_Map.m_lImages.base_ptr(), m_Map.m_lImages.size(), sizeof(CEditorImage*), CompareImageName);
+
 	for(int e = 0; e < 2; e++) // two passes, first embedded, then external
 	{
 		CUIRect Slot;
