@@ -271,8 +271,8 @@ Prev. weapon
 Quality Textures
 == Textures di qualità
 
-Quick search
-== Ricerca rapida
+Quick search:
+== Ricerca rapida:
 
 Quit
 == Esci
@@ -437,6 +437,9 @@ Show chat
 
 Your skin
 == Your skin
+
+Password incorrect
+== Password incorrect
 
 ##### old translations ####
 
