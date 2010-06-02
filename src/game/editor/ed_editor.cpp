@@ -2738,6 +2738,7 @@ void CEditorMap::Clean()
 	m_lGroups.delete_all();
 	m_lEnvelopes.delete_all();
 	m_lImages.delete_all();
+	m_lSortedImages.clear();
 
 	m_pGameLayer = 0x0;
 	m_pGameGroup = 0x0;
