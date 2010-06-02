@@ -1818,35 +1818,29 @@ static int CompareImageName(const void *Object1, const void *Object2)
 	return str_comp(Image1->m_aName, Image2->m_aName);
 }
 
-void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
+void CEditor::SortImages()
 {
-	array<CEditorImage*> lImages = array<CEditorImage*>(m_Map.m_lImages);
-	int aIndexes[lImages.size()];
+	//array<CEditorImage*> lImages = array<CEditorImage*>(m_Map.m_lImages);
+	//int aIndexes[lImages.size()];
+
+	if( m_Map.m_lSortedImages.size() != m_Map.m_lImages.size() )
+		m_Map.m_lSortedImages = array<CEditorImage*>(m_Map.m_lImages);
 
 	bool Sorted = true;
-	for(int i = 1; i < lImages.size(); i++)
-		if( str_comp(lImages[i]->m_aName, lImages[i-1]->m_aName) < 0 )
+	for(int i = 1; i < m_Map.m_lSortedImages.size(); i++)
+		if( str_comp(m_Map.m_lSortedImages[i]->m_aName, m_Map.m_lSortedImages[i-1]->m_aName) < 0 )
 		{
 			Sorted = false;
 			break;
 		}
 
 	if(!Sorted)
-	{
-		qsort(lImages.base_ptr(), lImages.size(), sizeof(CEditorImage*), CompareImageName);
+		qsort(m_Map.m_lSortedImages.base_ptr(), m_Map.m_lSortedImages.size(), sizeof(CEditorImage*), CompareImageName);
+}
 
-		// lImages now contains a sorted version of m_Map.m_lImages
-		// Now updating aIndex such that
-		// aIndex[SortedIndexOf_lImages] = UnsortedIndexOf_m_Map.m_lImages
-
-		for(int NewRef = 0; NewRef < lImages.size(); NewRef++)
-			for(int OldRef = 0; OldRef < m_Map.m_lImages.size(); OldRef++)
-				if( m_Map.m_lImages[OldRef] == lImages[NewRef] )
-				{
-					aIndexes[NewRef] = OldRef;
-					break;
-				}
-	}
+void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
+{
+	SortImages();
 
 	for(int e = 0; e < 2; e++) // two passes, first embedded, then external
 	{
@@ -1857,19 +1851,19 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 		else
 			UI()->DoLabel(&Slot, "External", 12.0f, 0);
 
-		for(int i = 0; i < lImages.size(); i++)
+		for(int i = 0; i < m_Map.m_lSortedImages.size(); i++)
 		{
-			if((e && !lImages[i]->m_External) ||
-				(!e && lImages[i]->m_External))
+			if((e && !m_Map.m_lSortedImages[i]->m_External) ||
+				(!e && m_Map.m_lSortedImages[i]->m_External))
 			{
 				continue;
 			}
 
 			char aBuf[128];
-			str_copy(aBuf, lImages[i]->m_aName, sizeof(aBuf));
+			str_copy(aBuf, m_Map.m_lSortedImages[i]->m_aName, sizeof(aBuf));
 			ToolBox.HSplitTop(12.0f, &Slot, &ToolBox);
 
-			if(int Result = DoButton_Editor(&m_Map.m_lImages[aIndexes[i]], aBuf, m_SelectedImage == i, &Slot,
+			if(int Result = DoButton_Editor(&m_Map.m_lSortedImages[i], aBuf, m_SelectedImage == i, &Slot,
 				BUTTON_CONTEXT, "Select image"))
 			{
 				m_SelectedImage = i;
@@ -1890,7 +1884,7 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 					r.w = r.h;
 				else
 					r.h = r.w;
-				Graphics()->TextureSet(m_Map.m_lImages[aIndexes[i]]->m_TexId);
+				Graphics()->TextureSet(m_Map.m_lSortedImages[i]->m_TexId);
 				Graphics()->BlendNormal();
 				Graphics()->QuadsBegin();
 				IGraphics::CQuadItem QuadItem(r.x, r.y, r.w, r.h);

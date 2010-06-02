@@ -261,6 +261,7 @@ public:
 
 	array<CLayerGroup*> m_lGroups;
 	array<CEditorImage*> m_lImages;
+	array<CEditorImage*> m_lSortedImages;
 	array<CEnvelope*> m_lEnvelopes;
 	
 	class CLayerGame *m_pGameLayer;
@@ -597,7 +598,8 @@ public:
 	
 	static void ReplaceImage(const char *pFilename, void *pUser);
 	static void AddImage(const char *pFilename, void *pUser);
-	
+	void SortImages();	
+
 	void RenderImages(CUIRect Toolbox, CUIRect Toolbar, CUIRect View);
 	void RenderLayers(CUIRect Toolbox, CUIRect Toolbar, CUIRect View);
 	void RenderModebar(CUIRect View);

@@ -375,10 +375,10 @@ int CEditor::PopupSelectImage(CEditor *pEditor, CUIRect View)
 	CUIRect ButtonBar, ImageView;
 	View.VSplitLeft(80.0f, &ButtonBar, &View);
 	View.Margin(10.0f, &ImageView);
-	
+
 	int ShowImage = g_SelectImageCurrent;
 	
-	for(int i = -1; i < pEditor->m_Map.m_lImages.size(); i++)
+	for(int i = -1; i < pEditor->m_Map.m_lSortedImages.size(); i++)
 	{
 		CUIRect Button;
 		ButtonBar.HSplitTop(12.0f, &Button, &ButtonBar);
@@ -389,18 +389,18 @@ int CEditor::PopupSelectImage(CEditor *pEditor, CUIRect View)
 			
 		if(i == -1)
 		{
-			if(pEditor->DoButton_MenuItem(&pEditor->m_Map.m_lImages[i], "None", i==g_SelectImageCurrent, &Button))
+			if(pEditor->DoButton_MenuItem(&pEditor->m_Map.m_lSortedImages[i], "None", i==g_SelectImageCurrent, &Button))
 				g_SelectImageSelected = -1;
 		}
 		else
 		{
-			if(pEditor->DoButton_MenuItem(&pEditor->m_Map.m_lImages[i], pEditor->m_Map.m_lImages[i]->m_aName, i==g_SelectImageCurrent, &Button))
+			if(pEditor->DoButton_MenuItem(&pEditor->m_Map.m_lSortedImages[i], pEditor->m_Map.m_lSortedImages[i]->m_aName, i==g_SelectImageCurrent, &Button))
 				g_SelectImageSelected = i;
 		}
 	}
 	
-	if(ShowImage >= 0 && ShowImage < pEditor->m_Map.m_lImages.size())
-		pEditor->Graphics()->TextureSet(pEditor->m_Map.m_lImages[ShowImage]->m_TexId);
+	if(ShowImage >= 0 && ShowImage < pEditor->m_Map.m_lSortedImages.size())
+		pEditor->Graphics()->TextureSet(pEditor->m_Map.m_lSortedImages[ShowImage]->m_TexId);
 	else
 		pEditor->Graphics()->TextureSet(-1);
 	pEditor->Graphics()->QuadsBegin();
@@ -413,6 +413,16 @@ int CEditor::PopupSelectImage(CEditor *pEditor, CUIRect View)
 
 void CEditor::PopupSelectImageInvoke(int Current, float x, float y)
 {
+	SortImages();
+
+	// Current = index of non sorted image, we want image of sorted image
+	for(int i = 0; i < m_Map.m_lSortedImages.size(); i++)
+		if( m_Map.m_lImages[Current] == m_Map.m_lSortedImages[i] )
+		{
+			Current = i;
+			break;
+		}
+
 	static int s_SelectImagePopupId = 0;
 	g_SelectImageSelected = -100;
 	g_SelectImageCurrent = Current;
@@ -423,10 +433,16 @@ int CEditor::PopupSelectImageResult()
 {
 	if(g_SelectImageSelected == -100)
 		return -100;
-		
 	g_SelectImageCurrent = g_SelectImageSelected;
 	g_SelectImageSelected = -100;
-	return g_SelectImageCurrent;
+
+	// The user selected the sorted image, but we must return the index of the non sorted image
+	for(int i = 0; i < m_Map.m_lImages.size(); i++)
+		if(m_Map.m_lImages[i] == m_Map.m_lSortedImages[g_SelectImageCurrent])
+			return i;
+	
+	// Shouldn't ever reach here
+	return -100;
 }
 
 
