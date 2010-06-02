@@ -608,6 +608,7 @@ public:
 	void RenderFileDialog();
 
 	void AddFileDialogEntry(const char *pName, CUIRect *pView);
+	void SortImages();
 };
 
 // make sure to inline this function

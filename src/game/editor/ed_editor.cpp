@@ -554,8 +554,24 @@ CQuad *CEditor::GetSelectedQuad()
 	return 0;
 }
 
-static void CallbackOpenMap(const char *pFileName, void *pUser) { if(((CEditor*)pUser)->Load(pFileName)) str_copy(((CEditor*)pUser)->m_aFileName, pFileName, 512); }
-static void CallbackAppendMap(const char *pFileName, void *pUser) { if(((CEditor*)pUser)->Append(pFileName)) ((CEditor*)pUser)->m_aFileName[0] = 0; }
+static void CallbackOpenMap(const char *pFileName, void *pUser)
+{
+	CEditor *pEditor = (CEditor*)pUser;
+	if(pEditor->Load(pFileName))
+	{
+		str_copy(pEditor->m_aFileName, pFileName, 512);
+		pEditor->SortImages();
+	}
+}
+static void CallbackAppendMap(const char *pFileName, void *pUser)
+{
+	CEditor *pEditor = (CEditor*)pUser;
+	if(pEditor->Append(pFileName))
+	{
+		pEditor->m_aFileName[0] = 0;
+		pEditor->SortImages();
+	}
+}
 static void CallbackSaveMap(const char *pFileName, void *pUser){ if(((CEditor*)pUser)->Save(pFileName)) str_copy(((CEditor*)pUser)->m_aFileName, pFileName, 512); }
 
 void CEditor::DoToolbar(CUIRect ToolBar)
@@ -1725,6 +1741,7 @@ void CEditor::ReplaceImage(const char *pFileName, void *pUser)
 	*pImg = ImgInfo;
 	ExtractName(pFileName, pImg->m_aName);
 	pImg->m_TexId = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
+	pEditor->SortImages();
 }
 
 void CEditor::AddImage(const char *pFileName, void *pUser)
@@ -1747,6 +1764,7 @@ void CEditor::AddImage(const char *pFileName, void *pUser)
 	}
 
 	pEditor->m_Map.m_lImages.add(pImg);
+	pEditor->SortImages();
 }
 
 
@@ -1809,9 +1827,55 @@ int CEditor::PopupImage(CEditor *pEditor, CUIRect View)
 	return 0;
 }
 
+static int CompareImageName(const void *pObject1, const void *pObject2)
+{
+	CEditorImage *pImage1 = *(CEditorImage**)pObject1;
+	CEditorImage *pImage2 = *(CEditorImage**)pObject2;
+
+	return str_comp(pImage1->m_aName, pImage2->m_aName);
+}
+
+static int *gs_pSortedIndex = 0;
+static void ModifySortedIndex(int *pIndex)
+{
+	if(*pIndex > -1)
+		*pIndex = gs_pSortedIndex[*pIndex];
+}
+
+void CEditor::SortImages()
+{
+	bool Sorted = true;
+	for(int i = 1; i < m_Map.m_lImages.size(); i++)
+		if( str_comp(m_Map.m_lImages[i]->m_aName, m_Map.m_lImages[i-1]->m_aName) < 0 )
+		{
+			Sorted = false;
+			break;
+		}
+
+	if(!Sorted)
+	{
+		array<CEditorImage*> lTemp = array<CEditorImage*>(m_Map.m_lImages);
+		gs_pSortedIndex = new int[lTemp.size()];
+
+		qsort(m_Map.m_lImages.base_ptr(), m_Map.m_lImages.size(), sizeof(CEditorImage*), CompareImageName);
+
+		for(int OldIndex = 0; OldIndex < lTemp.size(); OldIndex++)
+			for(int NewIndex = 0; NewIndex < m_Map.m_lImages.size(); NewIndex++)
+				if(lTemp[OldIndex] == m_Map.m_lImages[NewIndex])
+					gs_pSortedIndex[OldIndex] = NewIndex;
+
+		m_Map.ModifyImageIndex(ModifySortedIndex);
+
+		delete [] gs_pSortedIndex;
+		gs_pSortedIndex = 0;
+	}
+}
+	
 
 void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 {
+	SortImages();
+
 	for(int e = 0; e < 2; e++) // two passes, first embedded, then external
 	{
 		CUIRect Slot;
