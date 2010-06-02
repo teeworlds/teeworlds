@@ -76,7 +76,7 @@ function NewConfig(on_configured_callback)
 		local options_table = {}
 		
 		if not options_func then
-			print("auto configuration", options_func)
+			print("auto configuration")
 			self:Config(filename)
 			options_func = loadfile(filename)
 		end
