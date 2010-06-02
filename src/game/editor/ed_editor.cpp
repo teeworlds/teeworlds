@@ -1045,6 +1045,14 @@ void CEditor::DoQuadPoint(CQuad *q, int QuadIndex, int v)
 			s_Operation = OP_CONTEXT_MENU;
 			m_SelectedQuad = QuadIndex;
 			UI()->SetActiveItem(pId);
+			if(!(m_SelectedPoints&(1<<v)))
+			{
+				if(Input()->KeyPressed(KEY_LSHIFT) || Input()->KeyPressed(KEY_RSHIFT))
+					m_SelectedPoints |= 1<<v;
+				else
+					m_SelectedPoints = 1<<v;
+				s_Moved = true;
+			}
 		}
 	}
 	else
