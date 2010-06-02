@@ -293,6 +293,13 @@ int CServer::Init()
 	return 0;
 }
 
+bool CServer::IsAuthed(int ClientID)
+{
+	if(m_aClients[ClientID].m_Authed)
+		return true;
+	return false;
+}
+
 int CServer::GetClientInfo(int ClientID, CClientInfo *pInfo)
 {
 	dbg_assert(ClientID >= 0 && ClientID < MAX_CLIENTS, "client_id is not valid");

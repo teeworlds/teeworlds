@@ -138,6 +138,7 @@ public:
 
 	int Init();
 
+	bool IsAuthed(int ClientID);
 	int GetClientInfo(int ClientID, CClientInfo *pInfo);
 	void GetClientIP(int ClientID, char *pIPString, int Size);
 	const char *ClientName(int ClientId);
