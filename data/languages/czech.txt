@@ -274,8 +274,8 @@ Prev. weapon
 Quality Textures
 == Kvalitní textury
 
-Quick search
-== Rychlé hledání
+Quick search:
+== Rychlé hledání:
 
 Quit
 == Ukončit
@@ -437,6 +437,24 @@ Your skin
 
 Show chat
 == Show chat
+
+Password incorrect
+== Password incorrect
+
+Please balance teams!
+== Please balance teams!
+
+Connection Problems...
+== Connection Problems...
+
+Warmup
+== Warmup
+
+Sudden Death
+== Sudden Death
+
+%ds left
+== %ds left
 
 ##### old translations ####
 

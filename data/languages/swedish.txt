@@ -271,8 +271,8 @@ Prev. weapon
 Quality Textures
 == Kvalitetstexturer
 
-Quick search
-== Snabbsök
+Quick search:
+== Snabbsök:
 
 Quit
 == Avsluta
@@ -437,6 +437,24 @@ Show chat
 
 Your skin
 == Your skin
+
+Password incorrect
+== Password incorrect
+
+Please balance teams!
+== Please balance teams!
+
+Connection Problems...
+== Connection Problems...
+
+Warmup
+== Warmup
+
+Sudden Death
+== Sudden Death
+
+%ds left
+== %ds left
 
 ##### old translations ####
 

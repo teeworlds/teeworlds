@@ -1016,7 +1016,7 @@ int CServer::Run()
 	}
 	
 	
-	if(!m_NetServer.Open(BindAddr, g_Config.m_SvMaxClients, 0))
+	if(!m_NetServer.Open(BindAddr, g_Config.m_SvMaxClients, g_Config.m_SvMaxClientsPerIP, 0))
 	{
 		dbg_msg("server", "couldn't open socket. port might already be in use");
 		return -1;
@@ -1248,12 +1248,16 @@ void CServer::ConStatus(IConsole::IResult *pResult, void *pUser)
 
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
-		if(pServer->m_aClients[i].m_State == CClient::STATE_INGAME)
+		if(pServer->m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
 			Addr = pServer->m_NetServer.ClientAddr(i);
-			str_format(aBuf, sizeof(aBuf), "id=%d addr=%d.%d.%d.%d:%d name='%s' score=%d",
-				i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], Addr.port,
-				pServer->m_aClients[i].m_aName, pServer->m_aClients[i].m_Score);
+			if(pServer->m_aClients[i].m_State == CClient::STATE_INGAME)
+				str_format(aBuf, sizeof(aBuf), "id=%d addr=%d.%d.%d.%d:%d name='%s' score=%d",
+					i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], Addr.port,
+					pServer->m_aClients[i].m_aName, pServer->m_aClients[i].m_Score);
+			else
+				str_format(aBuf, sizeof(aBuf), "id=%d addr=%d.%d.%d.%d:%d connecting",
+					i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], Addr.port);
 			pServer->Console()->Print(aBuf);
 			dbg_msg("server", "%s", aBuf);
 		}
@@ -1289,6 +1293,13 @@ void CServer::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserD
 		((CServer *)pUserData)->UpdateServerInfo();
 }
 
+void CServer::ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments())
+		((CServer *)pUserData)->m_NetServer.SetMaxClientsPerIP(pResult->GetInteger(0));
+}
+
 void CServer::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
@@ -1307,6 +1318,8 @@ void CServer::RegisterCommands()
 
 	Console()->Chain("sv_name", ConchainSpecialInfoupdate, this);
 	Console()->Chain("password", ConchainSpecialInfoupdate, this);
+
+	Console()->Chain("sv_max_clients_per_ip", ConchainMaxclientsperipUpdate, this);
 }	
 
 

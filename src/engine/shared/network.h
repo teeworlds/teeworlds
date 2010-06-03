@@ -244,6 +244,7 @@ private:
 	NETSOCKET m_Socket;
 	CSlot m_aSlots[NET_MAX_CLIENTS];
 	int m_MaxClients;
+	int m_MaxClientsPerIP;
 
 	CBan *m_aBans[256];
 	CBan m_BanPool[NET_SERVER_MAXBANS];
@@ -262,7 +263,7 @@ public:
 	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
 
 	//
-	bool Open(NETADDR BindAddr, int MaxClients, int Flags);
+	bool Open(NETADDR BindAddr, int MaxClients, int MaxClientsPerIP, int Flags);
 	int Close();
 	
 	//
@@ -283,6 +284,9 @@ public:
 	NETADDR ClientAddr(int ClientID) const { return m_aSlots[ClientID].m_Connection.PeerAddress(); }
 	NETSOCKET Socket() const { return m_Socket; }
 	int MaxClients() const { return m_MaxClients; }
+
+	//
+	void SetMaxClientsPerIP(int Max);
 };
 
 
