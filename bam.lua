@@ -4,7 +4,7 @@ Import("configure.lua")
 Import("other/sdl/sdl.lua")
 Import("other/freetype/freetype.lua")
 
---- Setup Config --------
+--- Setup Config -------
 config = NewConfig()
 config:Add(OptCCompiler("compiler"))
 config:Add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-protector -fstack-protector-all"))
