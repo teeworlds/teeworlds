@@ -105,7 +105,7 @@ void CGameControllerCTF::Tick()
 			
 			if(m_apFlags[fi^1] && m_apFlags[fi^1]->m_AtStand)
 			{
-				if(distance(F->m_Pos, m_apFlags[fi^1]->m_Pos) < 32)
+				if(distance(F->m_Pos, m_apFlags[fi^1]->m_Pos) < CFlag::ms_PhysSize + CCharacter::ms_PhysSize)
 				{
 					// CAPTURE! \o/
 					m_aTeamscore[fi^1] += 100;
@@ -136,7 +136,7 @@ void CGameControllerCTF::Tick()
 		else
 		{
 			CCharacter *apCloseCCharacters[MAX_CLIENTS];
-			int Num = GameServer()->m_World.FindEntities(F->m_Pos, 32.0f, (CEntity**)apCloseCCharacters, MAX_CLIENTS, NETOBJTYPE_CHARACTER);
+			int Num = GameServer()->m_World.FindEntities(F->m_Pos, CFlag::ms_PhysSize, (CEntity**)apCloseCCharacters, MAX_CLIENTS, NETOBJTYPE_CHARACTER);
 			for(int i = 0; i < Num; i++)
 			{
 				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == -1 || GameServer()->Collision()->IntersectLine(F->m_Pos, apCloseCCharacters[i]->m_Pos, NULL, NULL))
@@ -199,7 +199,7 @@ void CGameControllerCTF::Tick()
 				else
 				{
 					F->m_Vel.y += GameServer()->m_World.m_Core.m_Tuning.m_Gravity;
-					GameServer()->Collision()->MoveBox(&F->m_Pos, &F->m_Vel, vec2(F->m_PhysSize, F->m_PhysSize), 0.5f);
+					GameServer()->Collision()->MoveBox(&F->m_Pos, &F->m_Vel, vec2(F->ms_PhysSize, F->ms_PhysSize), 0.5f);
 				}
 			}
 		}
@@ -211,7 +211,7 @@ CFlag::CFlag(CGameWorld *pGameWorld, int Team)
 : CEntity(pGameWorld, NETOBJTYPE_FLAG)
 {
 	m_Team = Team;
-	m_ProximityRadius = m_PhysSize;
+	m_ProximityRadius = ms_PhysSize;
 	m_pCarryingCharacter = 0x0;
 	m_GrabTick = 0;
 	

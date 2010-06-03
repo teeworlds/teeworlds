@@ -20,7 +20,7 @@ public:
 class CFlag : public CEntity
 {
 public:
-	static const int m_PhysSize = 14;
+	static const int ms_PhysSize = 14;
 	CCharacter *m_pCarryingCharacter;
 	vec2 m_Vel;
 	vec2 m_StandPos;
