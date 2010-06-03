@@ -105,7 +105,7 @@ void CGameControllerCTF::Tick()
 			
 			if(m_apFlags[fi^1] && m_apFlags[fi^1]->m_AtStand)
 			{
-				if(distance(F->m_Pos, m_apFlags[fi^1]->m_Pos) < 32)
+				if(distance(F->m_Pos, m_apFlags[fi^1]->m_Pos) < 28)
 				{
 					// CAPTURE! \o/
 					m_aTeamscore[fi^1] += 100;
@@ -136,7 +136,7 @@ void CGameControllerCTF::Tick()
 		else
 		{
 			CCharacter *apCloseCCharacters[MAX_CLIENTS];
-			int Num = GameServer()->m_World.FindEntities(F->m_Pos, 16.0f, (CEntity**)apCloseCCharacters, MAX_CLIENTS, NETOBJTYPE_CHARACTER);
+			int Num = GameServer()->m_World.FindEntities(F->m_Pos, 7.0f, (CEntity**)apCloseCCharacters, MAX_CLIENTS, NETOBJTYPE_CHARACTER);
 			for(int i = 0; i < Num; i++)
 			{
 				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == -1 || GameServer()->Collision()->IntersectLine(F->m_Pos, apCloseCCharacters[i]->m_Pos, NULL, NULL))
