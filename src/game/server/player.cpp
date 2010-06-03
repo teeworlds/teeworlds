@@ -156,9 +156,11 @@ void CPlayer::SetTeam(int Team)
 	GameServer()->SendChat(-1, CGameContext::CHAT_ALL, Buf); 
 	
 	KillCharacter();
+	if( m_Team != -1 )	// Give a point to make up for killing character, but not if they're a spectator
+		m_Score += 1;
+
 	m_Team = Team;
-	m_Score = 0;
-	m_ScoreStartTick = Server()->Tick();
+	//m_ScoreStartTick = Server()->Tick();
 	// we got to wait 0.5 secs before respawning
 	m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 	dbg_msg("game", "team_join player='%d:%s' m_Team=%d", m_ClientID, Server()->ClientName(m_ClientID), m_Team);
