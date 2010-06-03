@@ -56,7 +56,7 @@ void CHud::RenderSuddenDeath()
 	if(m_pClient->m_Snap.m_pGameobj->m_SuddenDeath)
 	{
 		float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
-		const char *pText = "Sudden Death";
+		const char *pText = Localize("Sudden Death");
 		float FontSize = 12.0f;
 		float w = TextRender()->TextWidth(0, FontSize, pText, -1);
 		TextRender()->Text(0, Half-w/2, 2, FontSize, pText, -1);
@@ -133,8 +133,8 @@ void CHud::RenderWarmupTimer()
 	{
 		char Buf[256];
 		float FontSize = 20.0f;
-		float w = TextRender()->TextWidth(0, FontSize, "Warmup", -1);
-		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, FontSize, "Warmup", -1);
+		float w = TextRender()->TextWidth(0, FontSize, Localize("Warmup"), -1);
+		TextRender()->Text(0, 150*Graphics()->ScreenAspect()+-w/2, 50, FontSize, Localize("Warmup"), -1);
 
 		int Seconds = m_pClient->m_Snap.m_pGameobj->m_Warmup/SERVER_TICK_SPEED;
 		if(Seconds < 5)
@@ -171,7 +171,7 @@ void CHud::RenderConnectionWarning()
 {
 	if(Client()->ConnectionProblems())
 	{
-		const char *pText = "Connection Problems...";
+		const char *pText = Localize("Connection Problems...");
 		float w = TextRender()->TextWidth(0, 24, pText, -1);
 		TextRender()->Text(0, 150*Graphics()->ScreenAspect()-w/2, 50, 24, pText, -1);
 	}
@@ -186,7 +186,7 @@ void CHud::RenderTeambalanceWarning()
 		int TeamDiff = m_pClient->m_Snap.m_aTeamSize[0]-m_pClient->m_Snap.m_aTeamSize[1];
 		if (g_Config.m_ClWarningTeambalance && (TeamDiff >= 2 || TeamDiff <= -2))
 		{
-			const char *pText = "Please balance teams!";
+			const char *pText = Localize("Please balance teams!");
 			if(Flash)
 				TextRender()->TextColor(1,1,0.5f,1);
 			else
@@ -214,7 +214,7 @@ void CHud::RenderVoting()
 	char Buf[512];
 	TextRender()->Text(0x0, 5, 60, 6, m_pClient->m_pVoting->VoteDescription(), -1);
 
-	str_format(Buf, sizeof(Buf), "%ds left", m_pClient->m_pVoting->SecondsLeft());
+	str_format(Buf, sizeof(Buf), Localize("%ds left"), m_pClient->m_pVoting->SecondsLeft());
 	float tw = TextRender()->TextWidth(0x0, 6, Buf, -1);
 	TextRender()->Text(0x0, 5+100-tw, 60, 6, Buf, -1);
 	
