@@ -40,7 +40,7 @@ MACRO_ALLOC_POOL_ID_IMPL(CCharacter, MAX_CLIENTS)
 CCharacter::CCharacter(CGameWorld *pWorld)
 : CEntity(pWorld, NETOBJTYPE_CHARACTER)
 {
-	m_ProximityRadius = g_CharPhysSize;
+	m_ProximityRadius = ms_PhysSize;
 	m_Health = 0;
 	m_Armor = 0;
 }
@@ -101,9 +101,9 @@ void CCharacter::SetWeapon(int W)
 
 bool CCharacter::IsGrounded()
 {
-	if(GameServer()->Collision()->CheckPoint(m_Pos.x+g_CharPhysSize/2, m_Pos.y+g_CharPhysSize/2+5))
+	if(GameServer()->Collision()->CheckPoint(m_Pos.x+m_ProximityRadius/2, m_Pos.y+m_ProximityRadius/2+5))
 		return true;
-	if(GameServer()->Collision()->CheckPoint(m_Pos.x-g_CharPhysSize/2, m_Pos.y+g_CharPhysSize/2+5))
+	if(GameServer()->Collision()->CheckPoint(m_Pos.x-m_ProximityRadius/2, m_Pos.y+m_ProximityRadius/2+5))
 		return true;
 	return false;
 }
@@ -144,7 +144,7 @@ void CCharacter::HandleNinja()
 		// Set velocity
 		m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity;
 		vec2 OldPos = m_Pos;
-		GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, vec2(g_CharPhysSize, g_CharPhysSize), 0.f);
+		GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
 		
 		// reset velocity so the client doesn't predict stuff
 		m_Core.m_Vel = vec2(0.f, 0.f);
@@ -153,7 +153,7 @@ void CCharacter::HandleNinja()
 		{
 			CCharacter *aEnts[64];
 			vec2 Dir = m_Pos - OldPos;
-			float Radius = g_CharPhysSize * 2.0f;
+			float Radius = m_ProximityRadius * 2.0f;
 			vec2 Center = OldPos + Dir * 0.5f;
 			int Num = GameServer()->m_World.FindEntities(Center, Radius, (CEntity**)aEnts, 64, NETOBJTYPE_CHARACTER);
 
@@ -173,7 +173,7 @@ void CCharacter::HandleNinja()
 					continue;
 
 				// check so we are sufficiently close
-				if (distance(aEnts[i]->m_Pos, m_Pos) > (g_CharPhysSize * 2.0f))
+				if (distance(aEnts[i]->m_Pos, m_Pos) > (m_ProximityRadius * 2.0f))
 					continue;
 
 				// Hit a player, give him damage and stuffs...
@@ -277,7 +277,7 @@ void CCharacter::FireWeapon()
 		return;
 	}
 	
-	vec2 ProjStartPos = m_Pos+Direction*g_CharPhysSize*0.75f;
+	vec2 ProjStartPos = m_Pos+Direction*m_ProximityRadius*0.75f;
 	
 	switch(m_ActiveWeapon)
 	{
@@ -289,7 +289,7 @@ void CCharacter::FireWeapon()
 			
 			CCharacter *aEnts[64];
 			int Hits = 0;
-			int Num = GameServer()->m_World.FindEntities(ProjStartPos, g_CharPhysSize*0.5f, (CEntity**)aEnts, 
+			int Num = GameServer()->m_World.FindEntities(ProjStartPos, m_ProximityRadius*0.5f, (CEntity**)aEnts, 
 			64, NETOBJTYPE_CHARACTER);
 
 			for (int i = 0; i < Num; ++i)
@@ -543,10 +543,10 @@ void CCharacter::Tick()
 	m_Core.Tick(true);
 	
 	// handle death-tiles
-	if(GameServer()->Collision()->GetCollisionAt(m_Pos.x+g_CharPhysSize/3.f, m_Pos.y-g_CharPhysSize/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->Collision()->GetCollisionAt(m_Pos.x+g_CharPhysSize/3.f, m_Pos.y+g_CharPhysSize/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->Collision()->GetCollisionAt(m_Pos.x-g_CharPhysSize/3.f, m_Pos.y-g_CharPhysSize/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->Collision()->GetCollisionAt(m_Pos.x-g_CharPhysSize/3.f, m_Pos.y+g_CharPhysSize/3.f)&CCollision::COLFLAG_DEATH)
+	if(GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+		GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+		GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+		GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH)
 	{
 		Die(m_pPlayer->GetCID(), WEAPON_WORLD);
 	}

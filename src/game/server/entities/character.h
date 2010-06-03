@@ -7,9 +7,6 @@
 
 #include <game/gamecore.h>
 
-//character's size
-const int g_CharPhysSize = 28;
-
 enum
 {
 	WEAPON_GAME = -3, // team switching etc
@@ -22,6 +19,9 @@ class CCharacter : public CEntity
 	MACRO_ALLOC_POOL_ID()
 	
 public:
+	//character's size
+	static const int ms_PhysSize = 28;
+
 	CCharacter(CGameWorld *pWorld);
 	
 	virtual void Reset();
