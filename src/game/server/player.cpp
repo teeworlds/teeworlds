@@ -156,8 +156,6 @@ void CPlayer::SetTeam(int Team)
 	GameServer()->SendChat(-1, CGameContext::CHAT_ALL, Buf); 
 	
 	KillCharacter();
-	if( m_Team != -1 )	// Give a point to make up for killing character, but not if they're a spectator
-		m_Score += 1;
 
 	m_Team = Team;
 	//m_ScoreStartTick = Server()->Tick();
