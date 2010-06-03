@@ -273,8 +273,8 @@ Prev. weapon
 Quality Textures
 == Kwalteit Textures
 
-Quick search
-== Snel Zoken
+Quick search:
+== Snel Zoken:
 
 Quit
 == Stoppen
@@ -436,5 +436,8 @@ Show chat
 
 Your skin
 == Your skin
+
+Password incorrect
+== Password incorrect
 
 ##### old translations ####

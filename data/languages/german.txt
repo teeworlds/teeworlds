@@ -274,8 +274,8 @@ Prev. weapon
 Quality Textures
 == Hochaufgelöste Texturen
 
-Quick search
-== Schnelle Suche
+Quick search:
+== Schnellsuche:
 
 Quit
 == Beenden
@@ -435,6 +435,9 @@ You must restart the game for all settings to take effect.
 
 Your skin
 == Dein Skin
+
+Password incorrect
+== Passwort falsch
 
 ##### needs translation ####
 

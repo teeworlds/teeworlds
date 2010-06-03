@@ -274,8 +274,8 @@ Prev. weapon
 Quality Textures
 == Texturas de Qualidade
 
-Quick search
-== Pesquisa Rápida
+Quick search:
+== Pesquisa Rápida:
 
 Quit
 == Sair
@@ -438,6 +438,9 @@ Your skin
 
 ##### needs translation ####
 
+
+Password incorrect
+== Password incorrect
 
 ##### old translations ####
 
