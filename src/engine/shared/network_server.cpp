@@ -24,7 +24,7 @@
 #define MACRO_LIST_FIND(Start, Next, Expression) \
 	{ while(Start && !(Expression)) Start = Start->Next; }
 
-bool CNetServer::Open(NETADDR BindAddr, int MaxClients, int Flags)
+bool CNetServer::Open(NETADDR BindAddr, int MaxClients, int MaxClientsPerIP, int Flags)
 {
 	// zero out the whole structure
 	mem_zero(this, sizeof(*this));
@@ -40,6 +40,8 @@ bool CNetServer::Open(NETADDR BindAddr, int MaxClients, int Flags)
 		m_MaxClients = NET_MAX_CLIENTS;
 	if(m_MaxClients < 1)
 		m_MaxClients = 1;
+
+	m_MaxClientsPerIP = MaxClientsPerIP;
 	
 	for(int i = 0; i < NET_MAX_CLIENTS; i++)
 		m_aSlots[i].m_Connection.Init(m_Socket);
@@ -335,6 +337,29 @@ int CNetServer::Recv(CNetChunk *pChunk)
 					// client that wants to connect
 					if(!Found)
 					{
+						// only allow a specific number of players with the same ip
+						NETADDR ThisAddr = Addr, OtherAddr;
+						int FoundAddr = 1;
+						ThisAddr.port = 0;
+						for(int i = 0; i < MaxClients(); ++i)
+						{
+							if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
+								continue;
+
+							OtherAddr = m_aSlots[i].m_Connection.PeerAddress();
+							OtherAddr.port = 0;
+							if(!net_addr_comp(&ThisAddr, &OtherAddr))
+							{
+								if(FoundAddr++ >= m_MaxClientsPerIP)
+								{
+									char aBuf[128];
+									str_format(aBuf, sizeof(aBuf), "only %i players with same ip allowed", m_MaxClientsPerIP);
+									CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, aBuf, sizeof(aBuf));
+									return 0;
+								}
+							}
+						}
+
 						for(int i = 0; i < MaxClients(); i++)
 						{
 							if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
@@ -411,3 +436,13 @@ int CNetServer::Send(CNetChunk *pChunk)
 	return 0;
 }
 
+void CNetServer::SetMaxClientsPerIP(int Max)
+{
+	// clamp
+	if(Max < 1)
+		Max = 1;
+	else if(Max > NET_MAX_CLIENTS)
+		Max = NET_MAX_CLIENTS;
+
+	m_MaxClientsPerIP = Max;
+}
