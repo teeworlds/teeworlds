@@ -455,4 +455,10 @@ Sudden Death
 %ds left
 == %ds left
 
+error loading demo
+== error loading demo
+
+Error
+== Error
+
 ##### old translations ####
