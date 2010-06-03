@@ -27,6 +27,7 @@
 #include <engine/keys.h>
 
 #include <math.h>
+#include <time.h>
 
 #include "graphics.h"
 
@@ -868,10 +869,17 @@ void CGraphics_SDL::Swap()
 		char aFilename[128];
 		static int Index = 1;
 
+		time_t Time;
+		char aDate[20];
+
+		time(&Time);
+		tm* TimeInfo = localtime(&Time);
+		strftime(aDate, sizeof(aDate), "%Y-%m-%d_%I-%M", TimeInfo);
+
 		for(; Index < 10000; Index++)
 		{
 			IOHANDLE io;
-			str_format(aFilename, sizeof(aFilename), "screenshots/screenshot%05d.png", Index);
+			str_format(aFilename, sizeof(aFilename), "screenshots/screenshot%s-%05d.png", aDate, Index);
 			io = m_pStorage->OpenFile(aFilename, IOFLAG_READ);
 			if(io)
 				io_close(io);
