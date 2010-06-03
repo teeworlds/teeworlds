@@ -439,6 +439,21 @@ Your skin
 Password incorrect
 == Passwort falsch
 
+Please balance teams!
+== Bitte Teams ausgleichen!
+
+Connection Problems...
+== Verbindungsprobleme...
+
+Warmup
+== Aufwärmen
+
+Sudden Death
+== Sudden Death
+
+%ds left
+== Noch %ds
+
 ##### needs translation ####
 
 
