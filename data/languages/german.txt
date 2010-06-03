@@ -454,8 +454,13 @@ Sudden Death
 %ds left
 == Noch %ds
 
+error loading demo
+== Fehler beim Laden der Demo, die Datei ist nicht gültig.
+
+Error
+== Fehlgeschlagen
+
 ##### needs translation ####
 
 
 ##### old translations ####
-
