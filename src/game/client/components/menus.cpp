@@ -714,6 +714,9 @@ void CMenus::OnInit()
 
 void CMenus::PopupMessage(const char *pTopic, const char *pBody, const char *pButton)
 {
+	// reset active item
+	UI()->SetActiveItem(0);
+
 	str_copy(m_aMessageTopic, pTopic, sizeof(m_aMessageTopic));
 	str_copy(m_aMessageBody, pBody, sizeof(m_aMessageBody));
 	str_copy(m_aMessageButton, pButton, sizeof(m_aMessageButton));
