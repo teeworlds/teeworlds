@@ -1,4 +1,6 @@
 ##### translated strings #####
+%ds left
+== %ds over
 
 %d of %d servers, %d players
 == %d van %d Servers, %d spelers
@@ -48,6 +50,9 @@ Compatible version
 Connect
 == Verbinden
 
+Connection Problems...
+== Verbindingsproblemen...
+
 Connecting to
 == Verbinden met
 
@@ -92,6 +97,12 @@ Emoticon
 
 Enter
 == Starten
+
+error loading demo
+== Fout bij laden demo
+
+Error
+== Fout
 
 FSAA samples
 == FSAA voorbeelden
@@ -250,7 +261,10 @@ Password
 == Wachtwoord
 
 Password Incorrect
-== Wachtwoord Verkeerd
+== Wachtwoord verkeerd
+
+Password incorrect
+== Wachtwoord verkeerd
 
 Ping
 == Ping
@@ -266,6 +280,9 @@ Player
 
 Players
 == Spelers
+
+Please balance teams!
+== Balanceer teams
 
 Prev. weapon
 == Vorig wapen
@@ -342,6 +359,9 @@ Settings
 Shotgun
 == Jachtgeweer
 
+Show chat
+== Laat chat zien
+
 Show name plates
 == Laat namen zien
 
@@ -368,6 +388,9 @@ Standard gametype
 
 Standard map
 == Standaardkaart
+
+Sudden Death
+== Sudden Death
 
 Switch weapon on pickup
 == Verander wapen bij opakken
@@ -417,6 +440,9 @@ Vote yes
 Voting
 == Stemmen
 
+Warmup
+== Opwarmen
+
 Weapon
 == Wapen
 
@@ -429,35 +455,8 @@ Yes
 You must restart the game for all settings to take effect.
 == U moet het spel herstarten voordat de veranderingen effect hebben.
 
-Show chat
-== Laat chat zien
-
 Your skin
 == Jouw skin
-
-Password incorrect
-== Verkeerd wachtwoord
-
-Please balance teams!
-== Balanceer teams
-
-Connection Problems...
-== Verbindingsproblemen...
-
-Warmup
-== Opwarmen
-
-Sudden Death
-== Sudden Death
-
-%ds left
-== %ds over
-
-error loading demo
-== Fout bij laden demo
-
-Error
-== Fout
 
 ##### needs translation ####
 
