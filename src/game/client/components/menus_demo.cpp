@@ -1,4 +1,5 @@
 
+#include <string.h>
 #include <base/math.h>
 
 
@@ -390,17 +391,32 @@ void CMenus::DemolistFetchCallback(const char *pName, int IsDir, void *pUser)
 	pInfo->m_pSelf->m_lDemos.add(Item);
 }
 
+void CMenus::IsDirCallback(const char *pName, int IsDir, void *pUser)
+{
+	*((bool *)pUser) = true;
+}
+
 void CMenus::DemolistPopulate()
 {
 	m_lDemos.clear();
 	
+	
+	if(strncmp(m_aCurrentDemoFolder, "demos", 256)) //add parent folder
+	{
+		CDemoItem Item;
+		str_copy(Item.m_aName, "..", sizeof(Item.m_aName));
+		str_copy(Item.m_aFilename, "..", sizeof(Item.m_aFilename));
+		m_lDemos.add(Item);
+	}
+	
+	
 	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "%s/demos", Client()->UserDirectory());
-
+	str_format(aBuf, sizeof(aBuf), "%s/%s", Client()->UserDirectory(), m_aCurrentDemoFolder);
+	
 	FETCH_CALLBACKINFO Info = {this, aBuf, 0};
 	fs_listdir(aBuf, DemolistFetchCallback, &Info);
-	Info.m_pPrefix = "demos";
-	fs_listdir("demos", DemolistFetchCallback, &Info);
+	Info.m_pPrefix = m_aCurrentDemoFolder;
+	fs_listdir(m_aCurrentDemoFolder, DemolistFetchCallback, &Info);
 }
 
 
@@ -439,22 +455,70 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	RefreshRect.VSplitRight(130.0f, &RefreshRect, &PlayRect);
 	PlayRect.VSplitRight(120.0f, 0x0, &PlayRect);
 	
+	
+	bool IsDir = false;
+	if(!strncmp(m_lDemos[s_SelectedItem].m_aName, "..", 256)) //parent folder
+		IsDir = true;
+	else
+		fs_listdir(m_lDemos[s_SelectedItem].m_aFilename, IsDirCallback, &IsDir);
+	
+	
 	static int s_RefreshButton = 0;
 	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &RefreshRect))
 	{
 		DemolistPopulate();
 	}
-		
+	
 	static int s_PlayButton = 0;
-	if(DoButton_Menu(&s_PlayButton, Localize("Play"), 0, &PlayRect) || Activated)
+	char aTitleButton[8];
+	if(IsDir)
+		str_copy(aTitleButton, "Open", sizeof(aTitleButton));
+	else
+		str_copy(aTitleButton, "Play", sizeof(aTitleButton));
+	// /!\ TODO: Add "Open" in Localization /!\ 
+	if(DoButton_Menu(&s_PlayButton, Localize(aTitleButton), 0, &PlayRect) || Activated)
 	{		
 		if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size())
 		{
-			const char *pError = Client()->DemoPlayer_Play(m_lDemos[s_SelectedItem].m_aFilename);
-			if(pError)
-				PopupMessage(Localize("Error"), Localize(pError), Localize("Ok"));
+			if(!strncmp(m_lDemos[s_SelectedItem].m_aName, "..", 256))
+			{
+				DemoSetParentDirectory();
+				DemolistPopulate();
+				s_SelectedItem = 0;
+			}
+			else if(IsDir)
+			{
+				str_format(m_aCurrentDemoFolder, sizeof(m_aCurrentDemoFolder), "%s/%s", m_aCurrentDemoFolder, m_lDemos[s_SelectedItem].m_aName);
+				DemolistPopulate();
+				s_SelectedItem = 0;
+			}
+			else
+			{
+				const char *pError = Client()->DemoPlayer_Play(m_lDemos[s_SelectedItem].m_aFilename);
+				if(pError)
+					PopupMessage(Localize("Error"), pError, Localize("Ok"));
+			}
 		}
 	}
 	
 }
 
+
+
+void CMenus::DemoSetParentDirectory()
+{
+	int Stop = 0;
+	int i;
+	for(i = 0; i < 256; i++)
+	{
+		if(m_aCurrentDemoFolder[i] == '/')
+			Stop = i;
+	}
+	
+	//keeps chars which are before the last '/' and remove chars which are after
+	for(i = 0; i < 256; i++)
+	{
+		if(i >= Stop)
+			m_aCurrentDemoFolder[i] = NULL;
+	}
+}
