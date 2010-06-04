@@ -24,7 +24,7 @@ Are you sure that you want to quit?
 == Weet je zeker dat je wil stoppen?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Omdat dit de eerste keer is dat je het spel opstart, moet je een nicknaam kiezen. Doe dat hieronder. Het is aanbevolen dat je de instelleingen checkt en misschien aanpast naar jou keuze voordat je een server binnen gaat.
+== Omdat dit de eerste keer is dat je het spel opstart, moet je een nicknaam kiezen. Doe dat hieronder. Het is aanbevolen om de instellingen te controleren, voordat je een spel start.
 
 Blue team
 == Blauw
@@ -87,10 +87,10 @@ Downloading map
 == Kaart downloaden
 
 Draw!
-== Gelijk!
+== Gelijkspel!
 
 Dynamic Camera
-== Dynamische Camera
+== Dynamische camera
 
 Emoticon
 == Emotie
@@ -198,7 +198,7 @@ Language
 == Taal
 
 Lht.
-== Lht.
+== Licht
 
 Loading
 == Laden
@@ -237,7 +237,7 @@ News
 == Nieuws
 
 Next weapon
-== Volgende wapen
+== Volgend wapen
 
 Nickname
 == Nicknaam
@@ -327,7 +327,7 @@ Sample rate
 == Voorbeeld rate
 
 Sat.
-== Sat.
+== Verz.
 
 Score
 == Score
@@ -366,7 +366,7 @@ Show name plates
 == Laat namen zien
 
 Show only supported
-== Laat alleen servers zien die werken
+== Laat alleen werkende servers zien
 
 Skins
 == Skins
@@ -387,7 +387,7 @@ Standard gametype
 == Standaard speltype
 
 Standard map
-== Standaardkaart
+== Standaard kaart
 
 Sudden Death
 == Sudden Death
@@ -405,7 +405,7 @@ Teeworlds %s is out! Download it at www.teeworlds.com!
 == Teeworld %s is uit! Download het op www.teeworlds.com!
 
 Texture Compression
-== Text Compression
+== Tekst verkleinen
 
 The server is running a non-standard tuning on a pure game type.
 == The server draait geen standaard spel type.
