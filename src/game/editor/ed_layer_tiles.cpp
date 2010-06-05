@@ -7,6 +7,8 @@
 #include <game/client/render.h>
 #include "ed_editor.h"
 
+#include <game/localization.h>
+
 CLayerTiles::CLayerTiles(int w, int h)
 {
 	m_Type = LAYERTYPE_TILES;
@@ -248,7 +250,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	if(m_pEditor->m_Map.m_pGameLayer == this)
 		InGameGroup = false;
 	static int s_ColclButton = 0;
-	if(m_pEditor->DoButton_Editor(&s_ColclButton, "Clear Collision", InGameGroup?0:-1, &Button, 0, "Removes collision from this layer"))
+	if(m_pEditor->DoButton_Editor(&s_ColclButton, Localize("Clear collision"), InGameGroup?0:-1, &Button, 0, Localize("Removes collision from this layer")))
 	{
 		CLayerTiles *gl = m_pEditor->m_Map.m_pGameLayer;
 		int w = min(gl->m_Width, m_Width);
@@ -266,7 +268,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	static int s_ColButton = 0;
 	pToolBox->HSplitBottom(5.0f, pToolBox, &Button);
 	pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
-	if(m_pEditor->DoButton_Editor(&s_ColButton, "Make Collision", InGameGroup?0:-1, &Button, 0, "Constructs collision from this layer"))
+	if(m_pEditor->DoButton_Editor(&s_ColButton, Localize("Make collision"), InGameGroup?0:-1, &Button, 0, Localize("Constructs collision from this layer")))
 	{
 		CLayerTiles *gl = m_pEditor->m_Map.m_pGameLayer;
 		int w = min(gl->m_Width, m_Width);
@@ -290,9 +292,9 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	};
 	
 	CProperty aProps[] = {
-		{"Width", m_Width, PROPTYPE_INT_STEP, 1, 1000000000},
-		{"Height", m_Height, PROPTYPE_INT_STEP, 1, 1000000000},
-		{"Image", m_Image, PROPTYPE_IMAGE, 0, 0},
+		{Localize("Width"), m_Width, PROPTYPE_INT_STEP, 1, 1000000000},
+		{Localize("Height"), m_Height, PROPTYPE_INT_STEP, 1, 1000000000},
+		{Localize("Image"), m_Image, PROPTYPE_IMAGE, 0, 0},
 		{0},
 	};
 	
