@@ -567,10 +567,7 @@ static void CallbackAppendMap(const char *pFileName, void *pUser)
 {
 	CEditor *pEditor = (CEditor*)pUser;
 	if(pEditor->Append(pFileName))
-	{
 		pEditor->m_aFileName[0] = 0;
-		pEditor->SortImages();
-	}
 }
 static void CallbackSaveMap(const char *pFileName, void *pUser){ if(((CEditor*)pUser)->Save(pFileName)) str_copy(((CEditor*)pUser)->m_aFileName, pFileName, 512); }
 
@@ -1637,32 +1634,88 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 	if(ValidGroup && m_SelectedLayer >= 0 && m_SelectedLayer < m_Map.m_lGroups[m_SelectedGroup]->m_lLayers.size())
 		ValidLayer = 1;
 
+	int Num = (int)(View.h/16.0f);
+	static int s_ScrollBar = 0;
+	static float s_ScrollValue = 0;
+
+	int LayerNum = 0;
+	for(int g = 0; g < m_Map.m_lGroups.size(); g++)
+		LayerNum += m_Map.m_lGroups[g]->m_lLayers.size() + 1;
+
+	int ScrollNum = LayerNum-Num+10;
+
+	if(LayerNum > Num)	// Do we even need a scrollbar?
+	{
+		CUIRect Scroll;
+		LayersBox.VSplitRight(15.0f, &LayersBox, &Scroll);
+		LayersBox.VSplitRight(3.0f, &LayersBox, 0);	// extra spacing
+		Scroll.HMargin(5.0f, &Scroll);
+		s_ScrollValue = UiDoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
+
+		if(ScrollNum > 0)
+		{
+			if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
+				s_ScrollValue -= 3.0f/ScrollNum;
+			if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+				s_ScrollValue += 3.0f/ScrollNum;
+
+			if(s_ScrollValue < 0) s_ScrollValue = 0;
+			if(s_ScrollValue > 1) s_ScrollValue = 1;
+		}
+		else
+			ScrollNum = 0;
+	}
+
+	int LayerStartAt = (int)(ScrollNum*s_ScrollValue);
+	if(LayerStartAt < 0)
+		LayerStartAt = 0;
+
+	int LayerStopAt = LayerStartAt+Num;
+	int LayerCur = 0;
+
 	// render layers
 	{
 		for(int g = 0; g < m_Map.m_lGroups.size(); g++)
 		{
-			CUIRect VisibleToggle;
-			LayersBox.HSplitTop(12.0f, &Slot, &LayersBox);
-			Slot.VSplitLeft(12, &VisibleToggle, &Slot);
-			if(DoButton_Ex(&m_Map.m_lGroups[g]->m_Visible, m_Map.m_lGroups[g]->m_Visible?"V":"H", 0, &VisibleToggle, 0, "Toggle group visibility", CUI::CORNER_L))
-				m_Map.m_lGroups[g]->m_Visible = !m_Map.m_lGroups[g]->m_Visible;
-
-			str_format(aBuf, sizeof(aBuf),"#%d %s", g, m_Map.m_lGroups[g]->m_pName);
-			if(int Result = DoButton_Ex(&m_Map.m_lGroups[g], aBuf, g==m_SelectedGroup, &Slot,
-				BUTTON_CONTEXT, "Select group. Right click for properties.", CUI::CORNER_R))
+			if(LayerCur > LayerStopAt)
+				break;
+			else if(LayerCur + m_Map.m_lGroups[g]->m_lLayers.size() + 1 < LayerStartAt)
 			{
-				m_SelectedGroup = g;
-				m_SelectedLayer = 0;
-
-				static int s_GroupPopupId = 0;
-				if(Result == 2)
-					UiInvokePopupMenu(&s_GroupPopupId, 0, UI()->MouseX(), UI()->MouseY(), 120, 200, PopupGroup);
+				LayerCur += m_Map.m_lGroups[g]->m_lLayers.size() + 1;
+				continue;
 			}
 
-			LayersBox.HSplitTop(2.0f, &Slot, &LayersBox);
+			CUIRect VisibleToggle;
+			if(LayerCur >= LayerStartAt)
+			{
+				LayersBox.HSplitTop(12.0f, &Slot, &LayersBox);
+				Slot.VSplitLeft(12, &VisibleToggle, &Slot);
+				if(DoButton_Ex(&m_Map.m_lGroups[g]->m_Visible, m_Map.m_lGroups[g]->m_Visible?"V":"H", 0, &VisibleToggle, 0, "Toggle group visibility", CUI::CORNER_L))
+					m_Map.m_lGroups[g]->m_Visible = !m_Map.m_lGroups[g]->m_Visible;
+
+				str_format(aBuf, sizeof(aBuf),"#%d %s", g, m_Map.m_lGroups[g]->m_pName);
+				if(int Result = DoButton_Ex(&m_Map.m_lGroups[g], aBuf, g==m_SelectedGroup, &Slot,
+					BUTTON_CONTEXT, "Select group. Right click for properties.", CUI::CORNER_R))
+				{
+					m_SelectedGroup = g;
+					m_SelectedLayer = 0;
+
+					static int s_GroupPopupId = 0;
+					if(Result == 2)
+						UiInvokePopupMenu(&s_GroupPopupId, 0, UI()->MouseX(), UI()->MouseY(), 120, 200, PopupGroup);
+				}
+				LayersBox.HSplitTop(2.0f, &Slot, &LayersBox);
+			}
+			LayerCur++;
 
 			for(int i = 0; i < m_Map.m_lGroups[g]->m_lLayers.size(); i++)
 			{
+				if(LayerCur < LayerStartAt || LayerCur > LayerStopAt)
+				{
+					LayerCur++;
+					continue;
+				}
+
 				//visible
 				LayersBox.HSplitTop(12.0f, &Slot, &LayersBox);
 				Slot.VSplitLeft(12.0f, 0, &Button);
@@ -1682,14 +1735,14 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 						UiInvokePopupMenu(&s_LayerPopupId, 0, UI()->MouseX(), UI()->MouseY(), 120, 150, PopupLayer);
 				}
 
-
+				LayerCur++;
 				LayersBox.HSplitTop(2.0f, &Slot, &LayersBox);
 			}
 			LayersBox.HSplitTop(5.0f, &Slot, &LayersBox);
 		}
 	}
 
-
+	if(LayerCur <= LayerStopAt)
 	{
 		LayersBox.HSplitTop(12.0f, &Slot, &LayersBox);
 
@@ -1701,7 +1754,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 		}
 	}
 
-	LayersBox.HSplitTop(5.0f, &Slot, &LayersBox);
+	//LayersBox.HSplitTop(5.0f, &Slot, &LayersBox);
 
 }
 
@@ -1882,14 +1935,58 @@ void CEditor::SortImages()
 
 void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 {
+	int Num = (int)(View.h/15.0f);
+	static int s_ScrollBar = 0;
+	static float s_ScrollValue = 0;
+
+	int ImageNum = m_Map.m_lImages.size();
+	int ScrollNum = ImageNum-Num+10;
+
+	if(ImageNum > Num)	// Do we even need a scrollbar?
+	{
+		CUIRect Scroll;
+		ToolBox.VSplitRight(15.0f, &ToolBox, &Scroll);
+		ToolBox.VSplitRight(3.0f, &ToolBox, 0);	// extra spacing
+		Scroll.HMargin(5.0f, &Scroll);
+		s_ScrollValue = UiDoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
+
+		if(ScrollNum > 0)
+		{
+			if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
+				s_ScrollValue -= 3.0f/ScrollNum;
+			if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
+				s_ScrollValue += 3.0f/ScrollNum;
+
+			if(s_ScrollValue < 0) s_ScrollValue = 0;
+			if(s_ScrollValue > 1) s_ScrollValue = 1;
+		}
+		else
+			ScrollNum = 0;
+	}
+
+	int ImageStartAt = (int)(ScrollNum*s_ScrollValue);
+	if(ImageStartAt < 0)
+		ImageStartAt = 0;
+
+	int ImageStopAt = ImageStartAt+Num;
+	int ImageCur = 0;
+
 	for(int e = 0; e < 2; e++) // two passes, first embedded, then external
 	{
 		CUIRect Slot;
-		ToolBox.HSplitTop(15.0f, &Slot, &ToolBox);
-		if(e == 0)
-			UI()->DoLabel(&Slot, "Embedded", 12.0f, 0);
-		else
-			UI()->DoLabel(&Slot, "External", 12.0f, 0);
+
+		if(ImageCur > ImageStopAt)
+			break;
+		else if(ImageCur >= ImageStartAt)
+		{
+
+			ToolBox.HSplitTop(15.0f, &Slot, &ToolBox);
+			if(e == 0)
+				UI()->DoLabel(&Slot, "Embedded", 12.0f, 0);
+			else
+				UI()->DoLabel(&Slot, "External", 12.0f, 0);
+		}
+		ImageCur++;
 
 		for(int i = 0; i < m_Map.m_lImages.size(); i++)
 		{
@@ -1898,6 +1995,15 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 			{
 				continue;
 			}
+
+			if(ImageCur > ImageStopAt)
+				break;
+			else if(ImageCur < ImageStartAt)
+			{
+				ImageCur++;
+				continue;
+			}
+			ImageCur++;
 
 			char aBuf[128];
 			str_copy(aBuf, m_Map.m_lImages[i]->m_aName, sizeof(aBuf));
@@ -2626,7 +2732,7 @@ void CEditor::Render()
 
 		View.HSplitTop(16.0f, &MenuBar, &View);
 		View.HSplitTop(53.0f, &ToolBar, &View);
-		View.VSplitLeft(80.0f, &ToolBox, &View);
+		View.VSplitLeft(100.0f, &ToolBox, &View);
 		View.HSplitBottom(16.0f, &View, &StatusBar);
 
 		if(m_ShowEnvelopeEditor)
