@@ -552,8 +552,16 @@ int CServer::DelClientCallback(int ClientId, void *pUser)
 
 void CServer::SendMap(int ClientId)
 {
+	//get the name of the map without his path
+	char * pMapShortName = &g_Config.m_SvMap[0];
+	for(int i = 0; i < 128; i++)
+	{
+		if(g_Config.m_SvMap[i] == '/' || g_Config.m_SvMap[i] == '\\' && i+1 < 128)
+			pMapShortName = &g_Config.m_SvMap[i+1];
+	}
+	
 	CMsgPacker Msg(NETMSG_MAP_CHANGE);
-	Msg.AddString(g_Config.m_SvMap, 0);
+	Msg.AddString(pMapShortName, 0);
 	Msg.AddInt(m_CurrentMapCrc);
 	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientId, true);
 }
