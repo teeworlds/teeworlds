@@ -568,6 +568,8 @@ static void CallbackAppendMap(const char *pFileName, void *pUser)
 	CEditor *pEditor = (CEditor*)pUser;
 	if(pEditor->Append(pFileName))
 		pEditor->m_aFileName[0] = 0;
+	else
+		pEditor->SortImages();
 }
 static void CallbackSaveMap(const char *pFileName, void *pUser){ if(((CEditor*)pUser)->Save(pFileName)) str_copy(((CEditor*)pUser)->m_aFileName, pFileName, 512); }
 
