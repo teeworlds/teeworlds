@@ -27,7 +27,8 @@ class CGameConsole : public CComponent
 		
 		IConsole::CCommandInfo *m_pCommand;
 
-		CInstance(CGameConsole *pGameConsole, int t);
+		CInstance(int t);
+		void Init(CGameConsole *pGameConsole);
 
 		void ExecuteLine(const char *pLine);
 		
