@@ -357,9 +357,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	Status.VSplitLeft(260.0f, &QuickSearch, &Status);
 	const char *pLabel = Localize("Quick search:");
 	UI()->DoLabel(&QuickSearch, pLabel, 12.0f, -1);
-	QuickSearch.VSplitLeft(TextRender()->TextWidth(0, 12.0f, pLabel, -1), 0, &QuickSearch);
+	float w = TextRender()->TextWidth(0, 12.0f, pLabel, -1);
+	QuickSearch.VSplitLeft(w, 0, &QuickSearch);
 	QuickSearch.VSplitLeft(5.0f, 0, &QuickSearch);
-	QuickSearch.VSplitLeft(155.0f, &QuickSearch, &Button);
+	QuickSearch.VSplitLeft(260.0f-w-22.0f, &QuickSearch, &Button);
 	static float Offset = 0.0f;
 	DoEditBox(&g_Config.m_BrFilterString, &QuickSearch, g_Config.m_BrFilterString, sizeof(g_Config.m_BrFilterString), 12.0f, &Offset, false, CUI::CORNER_L);
 	// clear button
