@@ -180,7 +180,7 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 	
 	// don't allow deletion of game layer
 	if(pEditor->m_Map.m_pGameLayer != pEditor->GetSelectedLayer(0) &&
-		pEditor->DoButton_Editor(&s_DeleteButton, Localize("Delete Layer"), 0, &Button, 0, Localize("Deletes the layer")))
+		pEditor->DoButton_Editor(&s_DeleteButton, Localize("Delete layer"), 0, &Button, 0, Localize("Deletes the layer")))
 	{
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->DeleteLayer(pEditor->m_SelectedLayer);
 		return 1;
