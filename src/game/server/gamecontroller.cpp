@@ -435,13 +435,8 @@ void IGameController::Tick()
 					}
 				}
 				
-				// move the player to other team without losing his score
-				// TODO: change in player::set_team needed: player won't lose score on team-change
-				int ScoreBefore = pP->m_Score;
-				int ScoreStartTickBefore = pP->m_ScoreStartTick;
+				// move the player to the other team
 				pP->SetTeam(M^1);
-				pP->m_Score = ScoreBefore;
-				pP->m_ScoreStartTick = ScoreStartTickBefore;
 				
 				pP->Respawn();
 				pP->m_ForceBalanced = true;

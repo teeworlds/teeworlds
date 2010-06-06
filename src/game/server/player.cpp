@@ -158,7 +158,6 @@ void CPlayer::SetTeam(int Team)
 	KillCharacter();
 
 	m_Team = Team;
-	//m_ScoreStartTick = Server()->Tick();
 	// we got to wait 0.5 secs before respawning
 	m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 	dbg_msg("game", "team_join player='%d:%s' m_Team=%d", m_ClientID, Server()->ClientName(m_ClientID), m_Team);
