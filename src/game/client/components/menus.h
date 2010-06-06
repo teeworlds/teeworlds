@@ -160,11 +160,14 @@ class CMenus : public CComponent
 	};
 	
 	sorted_array<CDemoItem> m_lDemos;
-		
+	char m_aCurrentDemoFolder[256];
+	
 	void DemolistPopulate();
 	static void DemolistCountCallback(const char *pName, int IsDir, void *pUser);
 	static void DemolistFetchCallback(const char *pName, int IsDir, void *pUser);
-
+	static void IsDirCallback(const char *pName, int IsDir, void *pUser);
+	void DemoSetParentDirectory();
+	
 	// found in menus.cpp
 	int Render();
 	//void render_background();

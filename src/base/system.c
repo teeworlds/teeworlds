@@ -863,8 +863,7 @@ int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, void *user)
 	/* add all the entries */
 	do
 	{
-		if(finddata.cFileName[0] != '.')
-			cb(finddata.cFileName, 0, user);
+		cb(finddata.cFileName, 0, user);
 	} while (FindNextFileA(handle, &finddata));
 
 	FindClose(handle);

@@ -94,6 +94,8 @@ CMenus::CMenus()
 	m_NumInputEvents = 0;
 	
 	m_LastInput = time_get();
+	
+	str_copy(m_aCurrentDemoFolder, "demos", sizeof(m_aCurrentDemoFolder));
 }
 
 vec4 CMenus::ButtonColorMul(const void *pID)
