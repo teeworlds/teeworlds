@@ -1,5 +1,7 @@
-
 ##### translated strings #####
+
+%ds left
+== faltam %ds
 
 %d of %d servers, %d players
 == %d de %d servidores, %d jogadores
@@ -52,6 +54,9 @@ Connect
 Connecting to
 == Conectando a
 
+Connection Problems...
+== Problemas de Conexão...
+
 Console
 == Console
 
@@ -93,6 +98,12 @@ Emoticon
 
 Enter
 == Entrar
+
+error loading demo
+== erro ao carregar demo
+
+Error
+== Erro
 
 FSAA samples
 == Amostras FSAA
@@ -253,6 +264,9 @@ Password
 Incorrect password
 == Senha incorreta
 
+Password incorrect
+== Senha incorreta
+
 Ping
 == Ping
 
@@ -268,6 +282,9 @@ Player
 Players
 == Jogadores
 
+Please balance teams!
+== Por favor, balanceie os times!
+
 Prev. weapon
 == Arma anterior
 
@@ -275,7 +292,7 @@ Quality Textures
 == Texturas de Qualidade
 
 Quick search:
-== Pesquisa Rápida:
+== Pesquisa rápida:
 
 Quit
 == Sair
@@ -308,7 +325,7 @@ Round
 == Rodada
 
 Sample rate
-== Tx. de som
+== Taxa de som
 
 Sat.
 == Sat.
@@ -373,6 +390,9 @@ Standard gametype
 Standard map
 == Mapa padrão
 
+Sudden Death
+== Morte Súbita
+
 Switch weapon on pickup
 == Trocar arma ao pegar
 
@@ -395,7 +415,7 @@ Time limit
 == Tempo máx.
 
 Try again
-== Tente novamente
+== Tente de novo
 
 Type
 == Tipo
@@ -421,6 +441,9 @@ Vote yes
 Voting
 == Votação
 
+Warmup
+== Aquecimento
+
 Weapon
 == Arma
 
@@ -437,29 +460,5 @@ Your skin
 == Sua skin
 
 ##### needs translation ####
-
-Password incorrect
-== Password incorrect
-
-Please balance teams!
-== Please balance teams!
-
-Connection Problems...
-== Connection Problems...
-
-Warmup
-== Warmup
-
-Sudden Death
-== Sudden Death
-
-%ds left
-== %ds left
-
-error loading demo
-== error loading demo
-
-Error
-== Error
 
 ##### old translations ####
