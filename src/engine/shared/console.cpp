@@ -273,7 +273,8 @@ CConsole::CCommand *CConsole::FindCommand(const char *pName)
 
 void CConsole::ExecuteLine(const char *pStr)
 {
-	CConsole::ExecuteLineStroked(1, pStr);
+	CConsole::ExecuteLineStroked(1, pStr); // press it
+	CConsole::ExecuteLineStroked(0, pStr); // then release it
 }
 
 
