@@ -1210,10 +1210,20 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser)
 void CServer::ConUnban(IConsole::IResult *pResult, void *pUser)
 {
 	NETADDR Addr;
+	CServer *pServer = (CServer *)pUser;
 	const char *pStr = pResult->GetString(0);
 	
 	if(net_addr_from_str(&Addr, pStr) == 0)
-		((CServer *)pUser)->BanRemove(Addr);
+		pServer->BanRemove(Addr);
+	else if(StrAllnum(pStr))
+	{
+		int BanIndex = str_toint(pStr);
+		CNetServer::CBanInfo Info;
+		if(BanIndex < 0 || !pServer->m_NetServer.BanGet(BanIndex, &Info))
+			dbg_msg("server", "invalid ban index");
+		else
+			pServer->BanRemove(Info.m_Addr);
+	}
 	else
 		dbg_msg("server", "invalid network address");
 }
