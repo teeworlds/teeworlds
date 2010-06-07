@@ -380,20 +380,15 @@ struct FETCH_CALLBACKINFO
 
 void CMenus::DemolistFetchCallback(const char *pName, int IsDir, void *pUser)
 {
-	if(IsDir || pName[0] == '.')
+	if(pName[0] == '.')
 		return;
-			
+	
 	FETCH_CALLBACKINFO *pInfo = (FETCH_CALLBACKINFO *)pUser;
 	
 	CDemoItem Item;
 	str_format(Item.m_aFilename, sizeof(Item.m_aFilename), "%s/%s", pInfo->m_pPrefix, pName);
 	str_copy(Item.m_aName, pName, sizeof(Item.m_aName));
 	pInfo->m_pSelf->m_lDemos.add(Item);
-}
-
-void CMenus::IsDirCallback(const char *pName, int IsDir, void *pUser)
-{
-	*((bool *)pUser) = true;
 }
 
 void CMenus::DemolistPopulate()
@@ -413,7 +408,7 @@ void CMenus::DemolistPopulate()
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "%s/%s", Client()->UserDirectory(), m_aCurrentDemoFolder);
 	
-	FETCH_CALLBACKINFO Info = {this, aBuf, 0};
+	FETCH_CALLBACKINFO Info = {this, aBuf, m_aCurrentDemoFolder[6]}; //skip "demos/"
 	fs_listdir(aBuf, DemolistFetchCallback, &Info);
 	Info.m_pPrefix = m_aCurrentDemoFolder;
 	fs_listdir(m_aCurrentDemoFolder, DemolistFetchCallback, &Info);
@@ -459,8 +454,8 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	bool IsDir = false;
 	if(!strncmp(m_lDemos[s_SelectedItem].m_aName, "..", 256)) //parent folder
 		IsDir = true;
-	else
-		fs_listdir(m_lDemos[s_SelectedItem].m_aFilename, IsDirCallback, &IsDir);
+	else if(fs_is_dir(m_lDemos[s_SelectedItem].m_aFilename))
+		IsDir = true;
 	
 	
 	static int s_RefreshButton = 0;
