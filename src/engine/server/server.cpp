@@ -1078,6 +1078,7 @@ int CServer::Run()
 					m_CurrentGameTick = 0;
 					Kernel()->ReregisterInterface(GameServer());
 					GameServer()->OnInit();
+					UpdateServerInfo();
 				}
 				else
 				{
