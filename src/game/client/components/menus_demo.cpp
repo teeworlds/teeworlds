@@ -519,6 +519,6 @@ void CMenus::DemoSetParentDirectory()
 	for(i = 0; i < 256; i++)
 	{
 		if(i >= Stop)
-			m_aCurrentDemoFolder[i] = NULL;
+			m_aCurrentDemoFolder[i] = 0;
 	}
 }

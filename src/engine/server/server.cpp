@@ -554,9 +554,9 @@ void CServer::SendMap(int ClientId)
 {
 	//get the name of the map without his path
 	char * pMapShortName = &g_Config.m_SvMap[0];
-	for(int i = 0; i < 128; i++)
+	for(int i = 0; i < 127; i++)
 	{
-		if(g_Config.m_SvMap[i] == '/' || g_Config.m_SvMap[i] == '\\' && i+1 < 128)
+		if(g_Config.m_SvMap[i] == '/' || g_Config.m_SvMap[i] == '\\')
 			pMapShortName = &g_Config.m_SvMap[i+1];
 	}
 	
