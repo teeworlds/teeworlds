@@ -1986,9 +1986,9 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 
 			ToolBox.HSplitTop(15.0f, &Slot, &ToolBox);
 			if(e == 0)
-				UI()->DoLabel(&Slot, Localize(""Embedded"), 12.0f, 0);
+				UI()->DoLabel(&Slot, Localize("Embedded"), 12.0f, 0);
 			else
-				UI()->DoLabel(&Slot, Localize(""External"), 12.0f, 0);
+				UI()->DoLabel(&Slot, Localize("External"), 12.0f, 0);
 		}
 		ImageCur++;
 
@@ -2700,7 +2700,7 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	static CUIRect s_File /*, view, help*/;
 
 	MenuBar.VSplitLeft(60.0f, &s_File, &MenuBar);
-	if(DoButton_Menu(&s_File, "File", 0, &s_File, 0, 0))
+	if(DoButton_Menu(&s_File, Localize("File"), 0, &s_File, 0, 0))
 		UiInvokePopupMenu(&s_File, 1, s_File.x, s_File.y+s_File.h-1.0f, 120, 150, PopupMenuFile, this);
 
 	/*

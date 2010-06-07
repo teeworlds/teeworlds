@@ -778,4 +778,13 @@ Color Env
 Color TO
 == Color TO
 
+Select layer. Right click for properties.
+== Select layer. Right click for properties.
+
+Toggle layer visibility
+== Toggle layer visibility
+
+File
+== File
+
 ##### old translations ####

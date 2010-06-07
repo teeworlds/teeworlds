@@ -521,7 +521,7 @@ Decrease animation speed
 == [M] Pinsel vertikal umdrehen
 
 CCW
-== gg. UZS
+== GUZS
 
 [R] Rotates the brush counter clockwise
 == [R] Dreht den Pinsel gegen den Uhrzeigersinn
@@ -533,7 +533,7 @@ CW
 == [T] dreht den Pinsel im Uhrzeigersinn
 
 Add Quad
-== Quad hinzufügen
+== Quad hinz.
 
 Adds a new quad
 == Fügt ein neues Quad hinzu
@@ -568,8 +568,11 @@ Toggle group visibility
 Select group. Right click for properties.
 == Gruppe auswählen. Rechtsklick für Eigenschaften.
 
+Select layer. Right click for properties.
+== Ebene auswählen. Rechtsklick für Eigenschaften.
+
 Add group
-== Gruppen hinzufügen
+== Gruppe hinz.
 
 Adds a new group
 == Fügt eine neue Gruppe hinzu
@@ -728,13 +731,13 @@ Delete group
 == Gruppe löschen
 
 Add quads layer
-== Quad-Ebene hinzufügen
+== Quad-Ebene hinzufg.
 
 Creates a new quad layer
 == Erstellt eine neue Quad-Ebene
 
 Add tile layer
-== Tile-Ebene hinzufügen
+== Tile-Ebene hinzufg.
 
 Creates a new tile layer
 == Erstellt eine neue Tile-Ebene
@@ -777,6 +780,12 @@ Color Env
 
 Color TO
 == Color TO
+
+Toggle layer visibility
+== Sichtbarkeit der Ebene umschalten
+
+File
+== Datei
 
 ##### needs translation ####
 
