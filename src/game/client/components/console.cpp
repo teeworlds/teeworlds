@@ -34,9 +34,8 @@ enum
 	CONSOLE_CLOSING,
 };
 
-CGameConsole::CInstance::CInstance(CGameConsole *pGameConsole, int Type)
+CGameConsole::CInstance::CInstance(int Type)
 {
-	m_pGameConsole = pGameConsole;
 	// init ringbuffers
 	//history = ringbuf_init(history_data, sizeof(history_data), RINGBUF_FLAG_RECYCLE);
 	//backlog = ringbuf_init(backlog_data, sizeof(backlog_data), RINGBUF_FLAG_RECYCLE);
@@ -55,6 +54,11 @@ CGameConsole::CInstance::CInstance(CGameConsole *pGameConsole, int Type)
 	
 	m_pCommand = 0x0;
 }
+
+void CGameConsole::CInstance::Init(CGameConsole *pGameConsole)
+{
+	m_pGameConsole = pGameConsole;
+};
 
 void CGameConsole::CInstance::ExecuteLine(const char *pLine)
 {
@@ -198,7 +202,7 @@ void CGameConsole::CInstance::PrintLine(const char *pLine)
 }
 
 CGameConsole::CGameConsole()
-: m_LocalConsole(this, 0), m_RemoteConsole(this, 1)
+: m_LocalConsole(0), m_RemoteConsole(1)
 {
 	m_ConsoleType = 0;
 	m_ConsoleState = CONSOLE_CLOSED;
@@ -573,6 +577,10 @@ void CGameConsole::PrintLine(int Type, const char *pLine)
 
 void CGameConsole::OnConsoleInit()
 {
+	// init console instances
+	m_LocalConsole.Init(this);
+	m_RemoteConsole.Init(this);
+
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	
 	//

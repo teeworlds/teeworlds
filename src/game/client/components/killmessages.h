@@ -9,8 +9,14 @@ public:
 	struct CKillMsg
 	{
 		int m_Weapon;
-		int m_Victim;
-		int m_Killer;
+		int m_VictimID;
+		int m_VictimTeam;
+		char m_aVictimName[64];
+		CTeeRenderInfo m_VictimRenderInfo;
+		int m_KillerID;
+		int m_KillerTeam;
+		char m_aKillerName[64];
+		CTeeRenderInfo m_KillerRenderInfo;
 		int m_ModeSpecial; // for CTF, if the guy is carrying a flag for example
 		int m_Tick;
 	};

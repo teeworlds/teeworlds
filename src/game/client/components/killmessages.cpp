@@ -22,8 +22,14 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 		
 		// unpack messages
 		CKillMsg Kill;
-		Kill.m_Killer = pMsg->m_Killer;
-		Kill.m_Victim = pMsg->m_Victim;
+		Kill.m_VictimID = pMsg->m_Victim;
+		Kill.m_VictimTeam = m_pClient->m_aClients[Kill.m_VictimID].m_Team;
+		str_copy(Kill.m_aVictimName, m_pClient->m_aClients[Kill.m_VictimID].m_aName, sizeof(Kill.m_aVictimName));
+		Kill.m_VictimRenderInfo = m_pClient->m_aClients[Kill.m_VictimID].m_RenderInfo;
+		Kill.m_KillerID = pMsg->m_Killer;
+		Kill.m_KillerTeam = m_pClient->m_aClients[Kill.m_KillerID].m_Team;
+		str_copy(Kill.m_aKillerName, m_pClient->m_aClients[Kill.m_KillerID].m_aName, sizeof(Kill.m_aKillerName));
+		Kill.m_KillerRenderInfo = m_pClient->m_aClients[Kill.m_KillerID].m_RenderInfo;
 		Kill.m_Weapon = pMsg->m_Weapon;
 		Kill.m_ModeSpecial = pMsg->m_ModeSpecial;
 		Kill.m_Tick = Client()->GameTick();
@@ -51,14 +57,14 @@ void CKillMessages::OnRender()
 			continue;
 
 		float FontSize = 36.0f;
-		float KillerNameW = TextRender()->TextWidth(0, FontSize, m_pClient->m_aClients[m_aKillmsgs[r].m_Killer].m_aName, -1);
-		float VictimNameW = TextRender()->TextWidth(0, FontSize, m_pClient->m_aClients[m_aKillmsgs[r].m_Victim].m_aName, -1);
+		float KillerNameW = TextRender()->TextWidth(0, FontSize, m_aKillmsgs[r].m_aKillerName, -1);
+		float VictimNameW = TextRender()->TextWidth(0, FontSize, m_aKillmsgs[r].m_aVictimName, -1);
 
 		float x = StartX;
 
 		// render victim name
 		x -= VictimNameW;
-		TextRender()->Text(0, x, y, FontSize, m_pClient->m_aClients[m_aKillmsgs[r].m_Victim].m_aName, -1);
+		TextRender()->Text(0, x, y, FontSize, m_aKillmsgs[r].m_aVictimName, -1);
 
 		// render victim tee
 		x -= 24.0f;
@@ -71,8 +77,10 @@ void CKillMessages::OnRender()
 				Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 				Graphics()->QuadsBegin();
 
-				if(m_pClient->m_aClients[m_aKillmsgs[r].m_Victim].m_Team == 0) RenderTools()->SelectSprite(SPRITE_FLAG_BLUE);
-				else RenderTools()->SelectSprite(SPRITE_FLAG_RED);
+				if(m_aKillmsgs[r].m_VictimTeam == 0)
+					RenderTools()->SelectSprite(SPRITE_FLAG_BLUE);
+				else
+					RenderTools()->SelectSprite(SPRITE_FLAG_RED);
 				
 				float Size = 56.0f;
 				IGraphics::CQuadItem QuadItem(x, y-16, Size/2, Size);
@@ -81,7 +89,7 @@ void CKillMessages::OnRender()
 			}
 		}
 		
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &m_pClient->m_aClients[m_aKillmsgs[r].m_Victim].m_RenderInfo, EMOTE_PAIN, vec2(-1,0), vec2(x, y+28));
+		RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aKillmsgs[r].m_VictimRenderInfo, EMOTE_PAIN, vec2(-1,0), vec2(x, y+28));
 		x -= 32.0f;
 		
 		// render weapon
@@ -96,7 +104,7 @@ void CKillMessages::OnRender()
 		}
 		x -= 52.0f;
 
-		if(m_aKillmsgs[r].m_Victim != m_aKillmsgs[r].m_Killer)
+		if(m_aKillmsgs[r].m_VictimID != m_aKillmsgs[r].m_KillerID)
 		{
 			if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_FLAGS)
 			{
@@ -106,8 +114,10 @@ void CKillMessages::OnRender()
 					Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 					Graphics()->QuadsBegin();
 
-					if(m_pClient->m_aClients[m_aKillmsgs[r].m_Killer].m_Team == 0) RenderTools()->SelectSprite(SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
-					else RenderTools()->SelectSprite(SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
+					if(m_aKillmsgs[r].m_KillerTeam == 0)
+						RenderTools()->SelectSprite(SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
+					else
+						RenderTools()->SelectSprite(SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
 					
 					float Size = 56.0f;
 					IGraphics::CQuadItem QuadItem(x-56, y-16, Size/2, Size);
@@ -118,12 +128,12 @@ void CKillMessages::OnRender()
 			
 			// render killer tee
 			x -= 24.0f;
-			RenderTools()->RenderTee(CAnimState::GetIdle(), &m_pClient->m_aClients[m_aKillmsgs[r].m_Killer].m_RenderInfo, EMOTE_ANGRY, vec2(1,0), vec2(x, y+28));
+			RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aKillmsgs[r].m_KillerRenderInfo, EMOTE_ANGRY, vec2(1,0), vec2(x, y+28));
 			x -= 32.0f;
 
 			// render killer name
 			x -= KillerNameW;
-			TextRender()->Text(0, x, y, FontSize, m_pClient->m_aClients[m_aKillmsgs[r].m_Killer].m_aName, -1);
+			TextRender()->Text(0, x, y, FontSize, m_aKillmsgs[r].m_aKillerName, -1);
 		}
 
 		y += 44;

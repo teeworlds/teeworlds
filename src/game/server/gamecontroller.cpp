@@ -308,7 +308,7 @@ void IGameController::OnPlayerInfoChange(class CPlayer *pP)
 int IGameController::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon)
 {
 	// do scoreing
-	if(!pKiller)
+	if(!pKiller || Weapon == WEAPON_GAME)
 		return 0;
 	if(pKiller == pVictim->GetPlayer())
 		pVictim->GetPlayer()->m_Score--; // suicide

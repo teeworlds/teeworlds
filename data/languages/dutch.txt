@@ -1,4 +1,6 @@
 ##### translated strings #####
+%ds left
+== %ds over
 
 %d of %d servers, %d players
 == %d van %d Servers, %d spelers
@@ -22,19 +24,19 @@ Are you sure that you want to quit?
 == Weet je zeker dat je wil stoppen?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Omdat dit de eerste keer is dat je het spel opstart, moet je een nicknaam kiezen. Doe dat hieronder. Het is aanbevolen dat je de instelleingen checkt en misschien aanpast naar jou keuze voordat je een server binnen gaat.
+== Omdat dit de eerste keer is dat je het spel opstart, moet je een nicknaam kiezen. Doe dat hieronder. Het is aanbevolen om de instellingen te controleren, voordat je een spel start.
 
 Blue team
 == Blauw
 
 Blue team wins!
-== Blauw heeft gewonnen
+== Blauw wint!
 
 Body
 == Lichaam
 
 Call vote
-== Vraag voor stemmen.
+== Stem
 
 Chat
 == Chat
@@ -43,10 +45,13 @@ Close
 == Sluiten
 
 Compatible version
-== Versie die werkt
+== Werkende versie
 
 Connect
 == Verbinden
+
+Connection Problems...
+== Verbindingsproblemen...
 
 Connecting to
 == Verbinden met
@@ -55,13 +60,13 @@ Console
 == Console
 
 Controls
-== Controle
+== Besturing
 
 Current
-== Actueel
+== Huidig
 
 Current version: %s
-== Versie die u gebruikt: %s
+== Huidige versie: %s
 
 Custom colors
 == Eigen kleuren
@@ -76,22 +81,28 @@ Disconnected
 == Verbinding verbroken
 
 Display Modes
-== Weergeef modes
+== Laat modes zien
 
 Downloading map
 == Kaart downloaden
 
 Draw!
-== Draw!
+== Gelijkspel!
 
 Dynamic Camera
-== Dynamische Camera
+== Dynamische camera
 
 Emoticon
 == Emotie
 
 Enter
 == Starten
+
+error loading demo
+== Fout bij laden demo
+
+Error
+== Fout
 
 FSAA samples
 == FSAA voorbeelden
@@ -109,10 +120,10 @@ Filter
 == Filter
 
 Fire
-== Vuur
+== Schiet
 
 Force vote
-== Forceer stemmen
+== Forceer stem
 
 Fullscreen
 == Volledig Scherm
@@ -136,7 +147,7 @@ General
 == Algemeen
 
 Graphics
-== Grafiek
+== Beeld
 
 Grenade
 == Granaat
@@ -145,19 +156,19 @@ Hammer
 == Hamer
 
 Has people playing
-== Mensen zijn aan het spelen
+== Er spelen mensen
 
 High Detail
-== Hoge Details
+== Veel details
 
 Hook
-== Hook
+== Haak
 
 Host address
 == Server adres
 
 Hue
-== Hue
+== Tint
 
 Info
 == Info
@@ -187,7 +198,7 @@ Language
 == Taal
 
 Lht.
-== Lht.
+== Licht
 
 Loading
 == Laden
@@ -202,10 +213,10 @@ Maximum ping:
 == Maximale Ping:
 
 Miscellaneous
-== Anders
+== Diverse
 
 Mouse sens.
-== Mouse sens.
+== Muis gevoeligheid
 
 Move left
 == Naar links
@@ -217,7 +228,7 @@ Movement
 == Bewegen
 
 Mute when not active
-== Mute, waneer niet actief
+== Demp, waneer niet actief
 
 Name
 == Naam
@@ -226,13 +237,13 @@ News
 == Nieuws
 
 Next weapon
-== Volgende wapen
+== Volgend wapen
 
 Nickname
 == Nicknaam
 
 No
-== Tes
+== Nee
 
 No password
 == Geen wachtwoord
@@ -244,13 +255,16 @@ No servers match your filter criteria
 == Geen servers gevonden op zoekopdracht
 
 Ok
-== OK
+== Oké
 
 Password
 == Wachtwoord
 
 Password Incorrect
-== Wachtwoord Vekeerd
+== Wachtwoord verkeerd
+
+Password incorrect
+== Wachtwoord verkeerd
 
 Ping
 == Ping
@@ -267,14 +281,17 @@ Player
 Players
 == Spelers
 
+Please balance teams!
+== Balanceer teams
+
 Prev. weapon
-== Vorig Wapen
+== Vorig wapen
 
 Quality Textures
-== Kwalteit Textures
+== Structuurkwaliteit
 
 Quick search:
-== Snel Zoken:
+== Snel zoeken:
 
 Quit
 == Stoppen
@@ -283,34 +300,34 @@ Red team
 == Rood
 
 Red team wins!
-== Rood heeft gewonnen!
+== Rood wint!
 
 Refresh
 == Vernieuwen
 
 Refreshing master servers
-== Vernieuwd hoofdserver
-
+== Hoofdserver vernieuwen
+ 
 Remote console
 == Remote console
 
 Reset filter
-== Standaardfilter
+== Herstel filter
 
 Reset to defaults
 == Standaardinstelling
 
 Rifle
-== Rifle
+== Geweer
 
 Round
 == Ronde
 
 Sample rate
-== Makkelijke rate
+== Voorbeeld rate
 
 Sat.
-== Sat.
+== Verz.
 
 Score
 == Score
@@ -325,7 +342,7 @@ Scoreboard
 == Scorebord
 
 Screenshot
-== Schermfoto
+== Screenshot
 
 Server details
 == Serverdetails
@@ -340,16 +357,19 @@ Settings
 == Instellingen
 
 Shotgun
-== Schotgun
+== Jachtgeweer
+
+Show chat
+== Laat chat zien
 
 Show name plates
 == Laat namen zien
 
 Show only supported
-== Laat alleen servers zien die werken
+== Laat alleen werkende servers zien
 
 Skins
-== Thema's
+== Skins
 
 Sound
 == Geluid
@@ -358,16 +378,19 @@ Sound volume
 == Volume
 
 Spectate
-== Sta in de wacht
+== Toeschouwer
 
 Spectators
-== Mensen die in de wacht staan
+== Toeschouwers
 
 Standard gametype
-== Standaard-Speltype
+== Standaard speltype
 
 Standard map
-== Standaardkaart
+== Standaard kaart
+
+Sudden Death
+== Sudden Death
 
 Switch weapon on pickup
 == Verander wapen bij opakken
@@ -382,10 +405,10 @@ Teeworlds %s is out! Download it at www.teeworlds.com!
 == Teeworld %s is uit! Download het op www.teeworlds.com!
 
 Texture Compression
-== Text Compression
+== Tekst verkleinen
 
 The server is running a non-standard tuning on a pure game type.
-== The server draait niet een standaard gebruik op een puur game type.
+== The server draait geen standaard spel type.
 
 Time limit
 == Tijdlimiet
@@ -417,6 +440,9 @@ Vote yes
 Voting
 == Stemmen
 
+Warmup
+== Opwarmen
+
 Weapon
 == Wapen
 
@@ -427,39 +453,12 @@ Yes
 == Ja
 
 You must restart the game for all settings to take effect.
-== U moet het spel herstarten om het effect van de instellingen toe te passen.
-
-##### needs translation ####
-
-Show chat
-== Show chat
+== U moet het spel herstarten voordat de veranderingen effect hebben.
 
 Your skin
-== Your skin
+== Jouw skin
 
-Password incorrect
-== Password incorrect
-
-Please balance teams!
-== Please balance teams!
-
-Connection Problems...
-== Connection Problems...
-
-Warmup
-== Warmup
-
-Sudden Death
-== Sudden Death
-
-%ds left
-== %ds left
-
-error loading demo
-== error loading demo
-
-Error
-== Error
+##### needs translation ####
 
 Open map
 == Open map
