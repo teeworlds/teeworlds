@@ -1655,19 +1655,6 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 		LayersBox.VSplitRight(3.0f, &LayersBox, 0);	// extra spacing
 		Scroll.HMargin(5.0f, &Scroll);
 		s_ScrollValue = UiDoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
-
-		if(ScrollNum > 0)
-		{
-			if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
-				s_ScrollValue -= 3.0f/ScrollNum;
-			if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
-				s_ScrollValue += 3.0f/ScrollNum;
-
-			if(s_ScrollValue < 0) s_ScrollValue = 0;
-			if(s_ScrollValue > 1) s_ScrollValue = 1;
-		}
-		else
-			ScrollNum = 0;
 	}
 
 	int LayerStartAt = (int)(ScrollNum*s_ScrollValue);
@@ -1953,19 +1940,6 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 		ToolBox.VSplitRight(3.0f, &ToolBox, 0);	// extra spacing
 		Scroll.HMargin(5.0f, &Scroll);
 		s_ScrollValue = UiDoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
-
-		if(ScrollNum > 0)
-		{
-			if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
-				s_ScrollValue -= 3.0f/ScrollNum;
-			if(Input()->KeyPresses(KEY_MOUSE_WHEEL_DOWN))
-				s_ScrollValue += 3.0f/ScrollNum;
-
-			if(s_ScrollValue < 0) s_ScrollValue = 0;
-			if(s_ScrollValue > 1) s_ScrollValue = 1;
-		}
-		else
-			ScrollNum = 0;
 	}
 
 	int ImageStartAt = (int)(ScrollNum*s_ScrollValue);
