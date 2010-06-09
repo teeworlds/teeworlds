@@ -75,7 +75,7 @@ Demos
 == Demos
 
 Disconnect
-== Verbinding verbreken
+== Stoppen
 
 Disconnected
 == Verbinding verbroken
@@ -282,7 +282,7 @@ Players
 == Spelers
 
 Please balance teams!
-== Balanceer teams
+== Breng teams in balans!
 
 Prev. weapon
 == Vorig wapen
@@ -405,7 +405,7 @@ Teeworlds %s is out! Download it at www.teeworlds.com!
 == Teeworld %s is uit! Download het op www.teeworlds.com!
 
 Texture Compression
-== Tekst verkleinen
+== Structuur verkleinen
 
 The server is running a non-standard tuning on a pure game type.
 == The server draait geen standaard spel type.
@@ -461,310 +461,310 @@ Your skin
 ##### needs translation ####
 
 Open map
-== Open map
+== Open kaart
 
 Open
 == Open
 
 Save map
-== Save map
+== Sla kaart op
 
 Save
-== Save
+== Opslaan
 
 HD
-== HD
+== Det.
 
 [ctrl+h] Toggle High Detail
-== [ctrl+h] Toggle High Detail
+== [ctrl+h] Activeer Details
 
 Anim
-== Anim
+== Anim.
 
 [ctrl+m] Toggle animation
-== [ctrl+m] Toggle animation
+== [ctrl+m] Activeer animaties
 
 Proof
-== Proof
+== Test
 
 [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-== [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== [ctrl+p] Test grenzen. Deze grenzen laten zien wat een speler maximaal kan zien.
 
 ZO
 == ZO
 
 [NumPad-] Zoom out
-== [NumPad-] Zoom out
+== [NumPad-] Uitzoomen
 
 [NumPad*] Zoom to normal and remove editor offset
-== [NumPad*] Zoom to normal and remove editor offset
+== [NumPad*] Zoom naar normaal en verwijder toevoegingen van de editor 
 
 ZI
 == ZI
 
 [NumPad+] Zoom in
-== [NumPad+] Zoom in
+== [NumPad+] Inzoomen
 
 Increase animation speed
-== Increase animation speed
+== Vergroot animatie snelheid
 
 Normal animation speed
-== Normal animation speed
+== Normale animatie snelheid
 
 Decrease animation speed
-== Decrease animation speed
+== Verklein animatie snelheid
 
 [N] Flip brush horizontal
-== [N] Flip brush horizontal
+== [N] Draai kwast horizontaal
 
 [M] Flip brush vertical
-== [M] Flip brush vertical
+== [M] Draai kwast verticaal
 
 CCW
 == CCW
 
 [R] Rotates the brush counter clockwise
-== [R] Rotates the brush counter clockwise
+== [R] Draai de kwast tegen de klok in
 
 CW
 == CW
 
 [T] Rotates the brush clockwise
-== [T] Rotates the brush clockwise
+== [T] Draai de kwast met de klok mee
 
 Add Quad
-== Add Quad
+== Voeg Quad toe
 
 Adds a new quad
-== Adds a new quad
+== Voegt een nieuwe Quad toe
 
 Border
-== Border
+== Grens
 
 Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== Linkermuisknop om te bewegen. Druk shift in om te roteren. Druk ctrl om te draaien.
 
 Left mouse button to move. Hold shift to move the texture.
-== Left mouse button to move. Hold shift to move the texture.
+== Linkermuisknop om te bewegen. Druk shift in om de textuur te bewegen
 
 Use left mouse button to drag and create a brush.
-== Use left mouse button to drag and create a brush.
+== Gebruik de linkermuisknop om de kwast te maken en te slepen.
 
 Use left mouse button to paint with the brush. Right button clears the brush.
-== Use left mouse button to paint with the brush. Right button clears the brush.
+== Gebruik de linkermuisknop om de kwast te gebruiken. Rechtermuisknop maakt de kwast schoon. 
 
 Decrease
-== Decrease
+== Verkleinen
 
 Increase
-== Increase
+== Vergroten
 
 None
-== None
+== Geen
 
 Toggle group visibility
-== Toggle group visibility
+== Acitveer groepszichtbaarheid
 
 Select group. Right click for properties.
-== Select group. Right click for properties.
+== Kies een groep. Rechtermuisknop voor eigenschappen.
 
 Add group
-== Add group
+== Voeg groep toe
 
 Adds a new group
-== Adds a new group
+== Voegt een nieuwe groep toe
 
 Embed
-== Embed
+== Insluiten
 
 Embeds the image into the map file.
-== Embeds the image into the map file.
+== Sluit een afbeelding in in het bestand van de kaart
 
 Make external
-== Make external
+== Maak extern
 
 Removes the image from the map file.
-== Removes the image from the map file.
+== Verwijderd de afbeelding uit de kaart.
 
 Replace
-== Replace
+== Vervang
 
 Replaces the image with a new one
-== Replaces the image with a new one
+== Vervangt de afbeelding met een nieuwe
 
 Replace Image
-== Replace Image
+== Vervang afbeelding
 
 Remove
-== Remove
+== Verwijder
 
 Removes the image from the map
-== Removes the image from the map
+== Verwijderd de afbeelding uit de kaart
 
 Embedded
-== Embedded
+== Ingesloten
 
 External
-== External
+== Extern
 
 Select image
-== Select image
+== Selecteer afbeelding
 
 Load a new image to use in the map
-== Load a new image to use in the map
+== Laad een nieuwe afbeelding om te gebruiken in de kaart
 
 Add Image
-== Add Image
+== Voeg afbeelding toe
 
 Add
-== Add
+== Voeg toe
 
 Filename:
-== Filename:
+== Bestandsnaam:
 
 Cancel
-== Cancel
+== Annuleren
 
 Layers
-== Layers
+== Lagen
 
 Images
-== Images
+== Afbeeldingen
 
 Switch between images and layers managment.
-== Switch between images and layers managment.
+== Wissel tussen afbeeldinglaag en beheerlaag.
 
 Envelopes
 == Envelopes
 
 Toggles the envelope editor.
-== Toggles the envelope editor.
+== Activeer de envelope editor.
 
 %s Right click for context menu.
-== %s Right click for context menu.
+== %s Rechtermuisknop voor context menu.
 
 Color+
-== Color+
+== Kleur+
 
 Creates a new color envelope
-== Creates a new color envelope
+== Maakt een nieuwe kleur envelope
 
 Pos.+
 == Pos.+
 
 Creates a new pos envelope
-== Creates a new pos envelope
+== Maakt een nieuwe pos envelope
 
 Previous Envelope
-== Previous Envelope
+== Vorige envelope
 
 Next Envelope
-== Next Envelope
+== Volgende envelope
 
 Name:
-== Name:
+== Naam:
 
 Press right mouse button to create a new point
-== Press right mouse button to create a new point
+== Rechtermuisknop om een nieuw punt te maken
 
 Switch curve type
-== Switch curve type
+== Wissel bocht type
 
 Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
-== Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
+== Linkermuisknop om te slepen. Druk shift in om het punt te veranderen. Rechtermuisknop om te verwijderen.
 
 New
-== New
+== Nieuw
 
 Creates a new map
-== Creates a new map
+== Maakt een nieuwe kaart.
 
 Opens a map for editing
-== Opens a map for editing
+== Opent een kaart om te bewerken
 
 Append
-== Append
+== Toevoegen
 
 Opens a map and adds everything from that map to the current one
-== Opens a map and adds everything from that map to the current one
+== Opent een kaart en voegt alles van die kaart toe aan de huidige
 
 Append map
-== Append map
+== Voeg kaart toe
 
 Saves the current map
-== Saves the current map
+== Sla huidige kaart op
 
 Save As
-== Save As
+== Opslaan als
 
 Saves the current map under a new name
-== Saves the current map under a new name
+== Sla de huidige kaart op onder een nieuwe naam
 
 Exits from the editor
-== Exits from the editor
+== Verlaat de editor
 
 Clear collision
-== Clear collision
+== Verwijder botsingen
 
 Removes collision from this layer
-== Removes collision from this layer
+== Verwijderd botsingen in deze laag
 
 Make collision
-== Make collision
+== Maak botsing
 
 Constructs collision from this layer
-== Constructs collision from this layer
+== Maakt botsing van deze laag
 
 Width
-== Width
+== Breedte
 
 Height
-== Height
+== Hoogte
 
 Image
-== Image
+== Afbeelding
 
 Delete group
-== Delete group
+== Verwijder groep
 
 Add quads layer
-== Add quads layer
+== Voeg quads laag toe
 
 Creates a new quad layer
-== Creates a new quad layer
+== Maakt een nieuwe quads laag
 
 Add tile layer
-== Add tile layer
+== Voeg tegel laag toe
 
 Creates a new tile layer
-== Creates a new tile layer
+== Maakt een nieuwe tegel laag
 
 Delete layer
-== Delete Layer
+== Verwijder laag
 
 Deletes the layer
-== Deletes the layer
+== Verwijdert de laag
 
 Group
-== Group
+== Groep
 
 Order
-== Order
+== Volgorde
 
 Detail
 == Detail
 
 Delete
-== Delete
+== Verwijder
 
 Deletes the current quad
-== Deletes the current quad
+== Verwijdert de huidige quad
 
 Square
-== Square
+== Vereffenen
 
 Squares the current quad
-== Squares the current quad
+== Vereffenen de huidige quad
 
 Pos. Env
 == Pos. Env
@@ -773,18 +773,18 @@ Pos. TO
 == Pos. TO
 
 Color Env
-== Color Env
+== Kleur Env
 
 Color TO
-== Color TO
+== Kleur TO
 
 Select layer. Right click for properties.
-== Select layer. Right click for properties.
+== Selecteer laag. Rechtermuisknop voor eigenschappen.
 
 Toggle layer visibility
-== Toggle layer visibility
+== Activeer zichtbaarheid laag
 
 File
-== File
+== Bestand
 
 ##### old translations ####
