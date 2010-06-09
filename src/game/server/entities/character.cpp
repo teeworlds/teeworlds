@@ -585,14 +585,26 @@ void CCharacter::TickDefered()
 	
 	if(!StuckBefore && (StuckAfterMove || StuckAfterQuant))
 	{
+		// Hackish solution to get rid of strict-aliasing warning
+		union
+		{
+			float f;
+			unsigned u;
+		}StartPosX, StartPosY, StartVelX, StartVelY;
+
+		StartPosX.f = StartPos.x;
+		StartPosY.f = StartPos.y;
+		StartVelX.f = StartVel.x;
+		StartVelY.f = StartVel.y;
+
 		dbg_msg("char_core", "STUCK!!! %d %d %d %f %f %f %f %x %x %x %x", 
 			StuckBefore,
 			StuckAfterMove,
 			StuckAfterQuant,
 			StartPos.x, StartPos.y,
 			StartVel.x, StartVel.y,
-			*((unsigned *)&StartPos.x), *((unsigned *)&StartPos.y),
-			*((unsigned *)&StartVel.x), *((unsigned *)&StartVel.y));
+			StartPosX.u, StartPosY.u,
+			StartVelX.u, StartVelY.u);
 	}
 
 	int Events = m_Core.m_TriggeredEvents;
