@@ -1,5 +1,5 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
-#include <game/mapitems.h>
+/*#include <game/mapitems.h>
 #include <game/server/entities/character.h>
 #include <game/server/player.h>
 #include <game/server/gamecontext.h>
@@ -239,5 +239,5 @@ void CFlag::Snap(int SnappingClient)
 		pFlag->m_CarriedBy = -2;
 	else if(m_pCarryingCharacter && m_pCarryingCharacter->GetPlayer())
 		pFlag->m_CarriedBy = m_pCarryingCharacter->GetPlayer()->GetCID();
-}
+}*/
 

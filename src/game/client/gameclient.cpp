@@ -42,6 +42,7 @@
 #include "components/skins.h"
 #include "components/sounds.h"
 #include "components/voting.h"
+#include "components/race_demo.h"
 
 CGameClient g_GameClient;
 
@@ -66,6 +67,7 @@ static CSounds gs_Sounds;
 static CEmoticon gs_Emoticon;
 static CDamageInd gsDamageInd;
 static CVoting gs_Voting;
+static CRaceDemo gs_RaceDemo;
 
 static CPlayers gs_Players;
 static CNamePlates gs_NamePlates;
@@ -138,6 +140,7 @@ void CGameClient::OnConsoleInit()
 	m_pDamageind = &::gsDamageInd;
 	m_pMapimages = &::gs_MapImages;
 	m_pVoting = &::gs_Voting;
+	m_pRaceDemo = &::gs_RaceDemo;
 	
 	// make a list of all the systems, make sure to add them in the corrent render order
 	m_All.Add(m_pSkins);
@@ -150,6 +153,7 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(m_pSounds);
 	m_All.Add(m_pVoting);
 	m_All.Add(m_pParticles); // doesn't render anything, just updates all the particles
+	m_All.Add(m_pRaceDemo);
 	
 	m_All.Add(&gs_MapLayersBackGround); // first to render
 	m_All.Add(&m_pParticles->m_RenderTrail);
@@ -295,6 +299,10 @@ void CGameClient::OnInit()
 	dbg_msg("", "%f.2ms", ((End-Start)*1000)/(float)time_freq());
 	
 	m_ServerMode = SERVERMODE_PURE;
+	
+	m_IsRace = false;
+	m_RaceMsgSent = false;
+	m_ShowOthers = -1;
 }
 
 void CGameClient::DispatchInput()
@@ -376,11 +384,17 @@ void CGameClient::OnReset()
 		m_aClients[i].m_SkinInfo.m_Texture = g_GameClient.m_pSkins->Get(0)->m_ColorTexture;
 		m_aClients[i].m_SkinInfo.m_ColorBody = vec4(1,1,1,1);
 		m_aClients[i].m_SkinInfo.m_ColorFeet = vec4(1,1,1,1);
+		m_aClients[i].m_Score = 0;
 		m_aClients[i].UpdateRenderInfo();
 	}
 	
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
+		
+	// Race
+	m_IsRace = false;
+	m_RaceMsgSent = false;
+	m_ShowOthers = -1;
 }
 
 
@@ -548,7 +562,12 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			
 		CNetMsg_Sv_SoundGlobal *pMsg = (CNetMsg_Sv_SoundGlobal *)pRawMsg;
 		g_GameClient.m_pSounds->Enqueue(pMsg->m_Soundid);
-	}		
+	}
+	else if(MsgId == NETMSGTYPE_SV_PLAYERTIME)
+	{
+		CNetMsg_Sv_PlayerTime *pMsg = (CNetMsg_Sv_PlayerTime *)pRawMsg;
+		m_aClients[pMsg->m_Cid].m_Score = (float)pMsg->m_Time/100;
+	}
 }
 
 void CGameClient::OnStateChange(int NewState, int OldState)
@@ -767,6 +786,8 @@ void CGameClient::OnNewSnapshot()
 		m_Snap.m_Spectate = true;
 	
 	CTuningParams StandardTuning;
+	StandardTuning.m_PlayerCollision = 1;
+	StandardTuning.m_PlayerHooking = 1;
 	CServerInfo CurrentServerInfo;
 	Client()->GetServerInfo(&CurrentServerInfo);
 	if(CurrentServerInfo.m_aGameType[0] != '0')
@@ -779,7 +800,39 @@ void CGameClient::OnNewSnapshot()
 			m_ServerMode = SERVERMODE_PUREMOD;
 	}
 	
-
+	// send race msg
+	if(m_Snap.m_pLocalInfo)
+	{
+		CServerInfo CurrentServerInfo;
+		Client()->GetServerInfo(&CurrentServerInfo);
+		if(str_find_nocase(CurrentServerInfo.m_aGameType, "race") || str_find_nocase(CurrentServerInfo.m_aGameType, "fastcap"))
+		{
+			if(!m_IsRace)
+				m_IsRace = true;
+				
+			if(!m_RaceMsgSent && m_Snap.m_pLocalInfo)
+			{
+				CNetMsg_Cl_IsRace Msg;
+				Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+				m_RaceMsgSent = true;
+			}
+			
+			if(m_ShowOthers == -1 || (m_ShowOthers > -1 && m_ShowOthers != g_Config.m_ClShowOthers))
+			{
+				if(m_ShowOthers == -1 && g_Config.m_ClShowOthers)
+					m_ShowOthers = 1;
+				else
+				{
+					CNetMsg_Cl_RaceShowOthers Msg;
+					Msg.m_Active = g_Config.m_ClShowOthers;
+					Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+					
+					m_ShowOthers = g_Config.m_ClShowOthers;
+				}
+			}
+		}
+	}
+	
 	// update render info
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		m_aClients[i].UpdateRenderInfo();

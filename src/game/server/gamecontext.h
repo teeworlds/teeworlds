@@ -54,6 +54,14 @@ class CGameContext : public IGameServer
 	static void ConVote(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	
+	// race
+	class IScore *m_pScore;
+	
+	static void ConKillPl(IConsole::IResult *pResult, void *pUserData);
+	static void ConTeleport(IConsole::IResult *pResult, void *pUserData);
+	static void ConTeleportTo(IConsole::IResult *pResult, void *pUserData);
+	static void ConGetPos(IConsole::IResult *pResult, void *pUserData);
+	
 	CGameContext(int Resetting);
 	void Construct(int Resetting);
 
@@ -64,6 +72,9 @@ public:
 	CCollision *Collision() { return &m_Collision; }
 	CTuningParams *Tuning() { return &m_Tuning; }
 
+	// race
+	class IScore *Score() { return m_pScore; }
+	
 	CGameContext();
 	~CGameContext();
 	
@@ -113,7 +124,7 @@ public:
 	void CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage);
 	void CreateSmoke(vec2 Pos);
 	void CreateHammerHit(vec2 Pos);
-	void CreatePlayerSpawn(vec2 Pos);
+	void CreatePlayerSpawn(vec2 Pos, int ClientID);
 	void CreateDeath(vec2 Pos, int Who);
 	void CreateSound(vec2 Pos, int Sound, int Mask=-1);
 	void CreateSoundGlobal(int Sound, int Target=-1);	

@@ -22,6 +22,13 @@ public:
 	//character's size
 	static const int ms_PhysSize = 28;
 
+	enum
+	{
+		RACE_NONE = 0,
+		RACE_STARTED,
+		RACE_FINISHED,
+	};
+
 	CCharacter(CGameWorld *pWorld);
 	
 	virtual void Reset();
@@ -59,6 +66,17 @@ public:
 	
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
+	
+	CCharacterCore *GetCore() { return &m_Core; }
+	
+	// race var
+	int m_RaceState;
+	
+	// checkpoints
+	float m_CpCurrent[25];
+	
+	// fastcap
+	class CFlag *m_pFlag;
 	
 private:
 	// player controlling this character
@@ -128,6 +146,13 @@ private:
 	CCharacterCore m_SendCore; // core that we should send
 	CCharacterCore m_ReckoningCore; // the dead reckoning core
 
+	// race var
+	int m_Starttime;
+	int m_Refreshtime;
+	
+	// checkpoints
+	int m_CpTick;
+	int m_CpActive;
 };
 
 #endif

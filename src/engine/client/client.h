@@ -282,6 +282,11 @@ public:
 	static void Con_StopRecord(IConsole::IResult *pResult, void *pUserData);
 	static void Con_ServerDummy(IConsole::IResult *pResult, void *pUserData);
 
+	// Race
+	virtual const char* GetCurrentMap();
+	virtual const char* RaceRecordStart(const char *pFilename);
+	virtual void RaceRecordStop();
+	
 	void RegisterCommands();
 
 	const char *DemoPlayer_Play(const char *pFilename);

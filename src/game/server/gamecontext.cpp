@@ -1,4 +1,6 @@
 #include <new>
+#include <string.h>
+#include <stdio.h>
 #include <base/math.h>
 #include <engine/shared/config.h>
 #include <engine/map.h>
@@ -7,10 +9,18 @@
 #include <game/version.h>
 #include <game/collision.h>
 #include <game/gamecore.h>
+
+/* no need for this
 #include "gamemodes/dm.h"
 #include "gamemodes/tdm.h"
 #include "gamemodes/ctf.h"
-#include "gamemodes/mod.h"
+#include "gamemodes/mod.h"*/
+
+#include "gamemodes/race.h"
+#include "gamemodes/fastcap.h"
+#include "score.h"
+#include "score/sql_score.h"
+#include "score/file_score.h"
 
 enum
 {
@@ -33,6 +43,8 @@ void CGameContext::Construct(int Resetting)
 
 	if(Resetting==NO_RESET)
 		m_pVoteOptionHeap = new CHeap();
+	
+	m_pScore = 0;
 }
 
 CGameContext::CGameContext(int Resetting)
@@ -113,11 +125,18 @@ void CGameContext::CreateHammerHit(vec2 p)
 void CGameContext::CreateExplosion(vec2 p, int Owner, int Weapon, bool NoDamage)
 {
 	// create the event
-	NETEVENT_EXPLOSION *ev = (NETEVENT_EXPLOSION *)m_Events.Create(NETEVENTTYPE_EXPLOSION, sizeof(NETEVENT_EXPLOSION));
-	if(ev)
+	NETEVENT_EXPLOSION *ev;
+	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		ev->m_X = (int)p.x;
-		ev->m_Y = (int)p.y;
+		if(m_apPlayers[i] && (m_apPlayers[i]->m_ShowOthers || i == Owner))
+		{
+			ev = (NETEVENT_EXPLOSION *)m_Events.Create(NETEVENTTYPE_EXPLOSION, sizeof(NETEVENT_EXPLOSION), CmaskOne(i));
+			if(ev)
+			{
+				ev->m_X = (int)p.x;
+				ev->m_Y = (int)p.y;
+			}
+		}
 	}
 
 	if (!NoDamage)
@@ -154,26 +173,40 @@ void create_smoke(vec2 p)
 	}
 }*/
 
-void CGameContext::CreatePlayerSpawn(vec2 p)
+void CGameContext::CreatePlayerSpawn(vec2 p, int ClientID)
 {
 	// create the event
-	NETEVENT_SPAWN *ev = (NETEVENT_SPAWN *)m_Events.Create(NETEVENTTYPE_SPAWN, sizeof(NETEVENT_SPAWN));
-	if(ev)
+	NETEVENT_SPAWN *ev;
+	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		ev->m_X = (int)p.x;
-		ev->m_Y = (int)p.y;
+		if(m_apPlayers[i] && (m_apPlayers[i]->m_ShowOthers || i == ClientID))
+		{
+			ev = (NETEVENT_SPAWN *)m_Events.Create(NETEVENTTYPE_SPAWN, sizeof(NETEVENT_SPAWN), CmaskOne(i));
+			if(ev)
+			{
+				ev->m_X = (int)p.x;
+				ev->m_Y = (int)p.y;
+			}
+		}
 	}
 }
 
 void CGameContext::CreateDeath(vec2 p, int ClientId)
 {
 	// create the event
-	NETEVENT_DEATH *ev = (NETEVENT_DEATH *)m_Events.Create(NETEVENTTYPE_DEATH, sizeof(NETEVENT_DEATH));
-	if(ev)
+	NETEVENT_DEATH *ev;
+	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
-		ev->m_X = (int)p.x;
-		ev->m_Y = (int)p.y;
-		ev->m_ClientId = ClientId;
+		if(m_apPlayers[i] && (m_apPlayers[i]->m_ShowOthers || i == ClientId))
+		{
+			ev = (NETEVENT_DEATH *)m_Events.Create(NETEVENTTYPE_DEATH, sizeof(NETEVENT_DEATH), CmaskOne(i));
+			if(ev)
+			{
+				ev->m_X = (int)p.x;
+				ev->m_Y = (int)p.y;
+				ev->m_ClientId = ClientId;
+			}
+		}
 	}
 }
 
@@ -498,6 +531,11 @@ void CGameContext::OnClientEnter(int ClientId)
 	m_apPlayers[ClientId]->Respawn();
 	dbg_msg("game", "join player='%d:%s'", ClientId, Server()->ClientName(ClientId));
 
+	m_apPlayers[ClientId]->m_Score = -9999;
+	
+	// init the player
+	Score()->PlayerData(ClientId)->Reset();
+	Score()->LoadScore(ClientId);
 
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "%s entered and joined the %s", Server()->ClientName(ClientId), m_pController->GetTeamName(m_apPlayers[ClientId]->GetTeam()));
@@ -539,6 +577,9 @@ void CGameContext::OnClientConnected(int ClientId)
 
 void CGameContext::OnClientDrop(int ClientId)
 {
+	// reset score data
+	Score()->PlayerData(ClientId)->Reset();
+	
 	AbortVoteKickOnDisconnect(ClientId);
 	m_apPlayers[ClientId]->OnDisconnect();
 	delete m_apPlayers[ClientId];
@@ -569,20 +610,77 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			Team = CGameContext::CHAT_ALL;
 		
 		if(g_Config.m_SvSpamprotection && p->m_Last_Chat && p->m_Last_Chat+Server()->TickSpeed() > Server()->Tick())
-			return;
-		
-		p->m_Last_Chat = Server()->Tick();
+			p->m_Last_Chat = Server()->Tick();
+		else
+ 		{
+			p->m_Last_Chat = Server()->Tick();
+			
+			if(!str_comp(pMsg->m_pMessage, "/info"))
+			{
+				char aBuf[128];
+				str_format(aBuf, sizeof(aBuf), "Race mod %s (C)Rajh v1.0-v1.6 & (C)Redix 2.0-current (%s) (say /mods).", RACE_VERSION, Server()->ClientName(ClientId));
+				SendChatTarget(-1, aBuf);
+			}
+			else if(!str_comp(pMsg->m_pMessage, "/mods"))
+			{
+				char aBuf[128];
+				str_format(aBuf, sizeof(aBuf), "Mod used: Sushi Tee SQL Support");
+				SendChatTarget(-1, aBuf);
+			}
+			else if(!str_comp_num(pMsg->m_pMessage, "/top5", 5))
+			{
+				int Num;
+				
+				if(sscanf(pMsg->m_pMessage, "/top5 %d", &Num) == 1)
+					Score()->ShowTop5(p->GetCID(), Num);
+				else
+					Score()->ShowTop5(p->GetCID());
+			}
+			else if(!str_comp_num(pMsg->m_pMessage, "/rank", 5))
+			{
+				char aName[256];
+				
+				if(sscanf(pMsg->m_pMessage, "/rank %s", aName) == 1)
+					Score()->ShowRank(p->GetCID(), aName, true);
+				else
+					Score()->ShowRank(p->GetCID(), Server()->ClientName(ClientId));
+			}
+			else if(!str_comp(pMsg->m_pMessage, "/show_others"))
+			{
+				if(p->m_IsUsingRaceClient)
+					SendChatTarget(ClientId, "Please use the settings to switch this option.");
+				else
+					p->m_ShowOthers = !p->m_ShowOthers;
+			}
+			else if(!str_comp(pMsg->m_pMessage, "/cmdlist"))
+			{
+				SendChatTarget(ClientId, "---Command List---");
+				SendChatTarget(ClientId, "\"/info\" information about the mod");
+				SendChatTarget(ClientId, "\"/mods\" shows the used mods");
+				SendChatTarget(ClientId, "\"/rank\" shows your rank");
+				SendChatTarget(ClientId, "\"/rank NAME\" shows the rank of a specific player");
+				SendChatTarget(ClientId, "\"/top5 X\" shows the top 5");
+				SendChatTarget(ClientId, "\"/show_others\" show others players?");
+			}
+			else if(!str_comp_num(pMsg->m_pMessage, "/", 1))
+			{
+				SendChatTarget(ClientId, "Wrong command.");
+				SendChatTarget(ClientId, "Say \"/cmdlist\" for list of command available.");
+			}
+			else
+			{
+				// check for invalid chars
+				unsigned char *pMessage = (unsigned char *)pMsg->m_pMessage;
+				while (*pMessage)
+				{
+					if(*pMessage < 32)
+						*pMessage = ' ';
+					pMessage++;
+				}
 
-		// check for invalid chars
-		unsigned char *pMessage = (unsigned char *)pMsg->m_pMessage;
-		while (*pMessage)
-		{
-			if(*pMessage < 32)
-				*pMessage = ' ';
-			pMessage++;
+				SendChat(ClientId, Team, pMsg->m_pMessage);
+			}
 		}
-		
-		SendChat(ClientId, Team, pMsg->m_pMessage);
 	}
 	else if(MsgId == NETMSGTYPE_CL_CALLVOTE)
 	{
@@ -801,12 +899,43 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	}
 	else if (MsgId == NETMSGTYPE_CL_KILL && !m_World.m_Paused)
 	{
-		if(p->m_Last_Kill && p->m_Last_Kill+Server()->TickSpeed()*3 > Server()->Tick())
+		if(p->m_Last_Kill && p->m_Last_Kill+Server()->TickSpeed()/2 > Server()->Tick())
 			return;
 		
 		p->m_Last_Kill = Server()->Tick();
 		p->KillCharacter(WEAPON_SELF);
-		p->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()*3;
+		p->m_RespawnTick = Server()->Tick();
+	}
+	else if (MsgId == NETMSGTYPE_CL_ISRACE)
+	{
+		p->m_IsUsingRaceClient = true;
+		
+		// send time of all players
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(m_apPlayers[i] && Score()->PlayerData(i)->m_CurrentTime > 0)
+			{
+				char aBuf[16];
+				str_format(aBuf, sizeof(aBuf), "%.0f", Score()->PlayerData(i)->m_CurrentTime*100.0f); // damn ugly but the only way i know to do it
+				int TimeToSend;
+				sscanf(aBuf, "%d", &TimeToSend);
+				CNetMsg_Sv_PlayerTime Msg;
+				Msg.m_Time = TimeToSend;
+				Msg.m_Cid = i;
+				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientId);
+			}
+		}
+	}
+	else if (MsgId == NETMSGTYPE_CL_RACESHOWOTHERS)
+	{
+		if(p->m_Last_ShowOthers && p->m_Last_ShowOthers+Server()->TickSpeed()/2 > Server()->Tick())
+			return;
+		
+		p->m_Last_ShowOthers = Server()->Tick();
+		
+		CNetMsg_Cl_RaceShowOthers *pMsg = (CNetMsg_Cl_RaceShowOthers *)pRawMsg;
+		
+		p->m_ShowOthers = (bool)pMsg->m_Active;
 	}
 }
 
@@ -933,6 +1062,63 @@ void CGameContext::ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *p
 	}
 }
 
+void CGameContext::ConKillPl(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	int CID = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if(!pSelf->m_apPlayers[CID])
+		return;
+	
+	pSelf->m_apPlayers[CID]->KillCharacter(WEAPON_GAME);
+	char aBuf[512];
+	str_format(aBuf, sizeof(aBuf), "%s Killed by admin", pSelf->Server()->ClientName(CID));
+	pSelf->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+}
+
+void CGameContext::ConTeleport(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	int CID1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	int CID2 = clamp(pResult->GetInteger(1), 0, (int)MAX_CLIENTS-1);
+	if(pSelf->m_apPlayers[CID1] && pSelf->m_apPlayers[CID2])
+	{
+		CCharacter* pChr = pSelf->GetPlayerChar(CID1);
+		if(pChr)
+		{
+			pChr->GetCore()->m_Pos = pSelf->m_apPlayers[CID2]->m_ViewPos;
+			pChr->m_RaceState = CCharacter::RACE_FINISHED;
+		}
+		else
+			pSelf->m_apPlayers[CID1]->m_ViewPos = pSelf->m_apPlayers[CID2]->m_ViewPos;
+	}
+}
+
+void CGameContext::ConTeleportTo(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	int CID = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if(pSelf->m_apPlayers[CID])
+	{
+		CCharacter* pChr = pSelf->GetPlayerChar(CID);
+		vec2 TelePos = vec2(pResult->GetInteger(1), pResult->GetInteger(2));
+		if(pChr)
+		{
+			pChr->GetCore()->m_Pos = TelePos;
+			pChr->m_RaceState = CCharacter::RACE_FINISHED;
+		}
+		else
+			pSelf->m_apPlayers[CID]->m_ViewPos = TelePos;
+	}
+}
+
+void CGameContext::ConGetPos(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	int CID = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if(pSelf->m_apPlayers[CID])
+		dbg_msg("Tele", "%s pos: %d @ %d", pSelf->Server()->ClientName(CID), (int)pSelf->m_apPlayers[CID]->m_ViewPos.x, (int)pSelf->m_apPlayers[CID]->m_ViewPos.y);
+}
+
 void CGameContext::OnConsoleInit()
 {
 	m_pServer = Kernel()->RequestInterface<IServer>();
@@ -950,8 +1136,14 @@ void CGameContext::OnConsoleInit()
 
 	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConAddVote, this, "");
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "");
-
+	
 	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);
+	
+	// race commands
+	Console()->Register("teleport", "ii", CFGFLAG_SERVER, ConTeleport, this, "");
+	Console()->Register("teleport_to", "iii", CFGFLAG_SERVER, ConTeleportTo, this, "");
+	Console()->Register("get_pos", "i", CFGFLAG_SERVER, ConGetPos, this, "");
+	Console()->Register("kill_pl", "i", CFGFLAG_SERVER, ConKillPl, this, "");
 }
 
 void CGameContext::OnInit(/*class IKernel *pKernel*/)
@@ -973,19 +1165,33 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	// reset everything here
 	//world = new GAMEWORLD;
 	//players = new CPlayer[MAX_CLIENTS];
-
-	// select gametype
-	if(str_comp(g_Config.m_SvGametype, "mod") == 0)
+		
+	// race one and only gametype
+	/*if(str_comp(g_Config.m_SvGametype, "mod") == 0)
 		m_pController = new CGameControllerMOD(this);
 	else if(str_comp(g_Config.m_SvGametype, "ctf") == 0)
 		m_pController = new CGameControllerCTF(this);
 	else if(str_comp(g_Config.m_SvGametype, "tdm") == 0)
 		m_pController = new CGameControllerTDM(this);
+	else*/
+	
+	if(str_find_nocase(g_Config.m_SvGametype, "cap"))
+		m_pController = new CGameControllerFC(this);
 	else
-		m_pController = new CGameControllerDM(this);
+		m_pController = new CGameControllerRACE(this);
 
 	Server()->SetBrowseInfo(m_pController->m_pGameType, -1);
 
+	// delete old score object
+	if(m_pScore)
+		delete m_pScore;
+		
+	// create score object
+	if(g_Config.m_SvUseSQL)
+		m_pScore = new CSqlScore(this);
+	else
+		m_pScore = new CFileScore(this);
+		
 	// setup core world
 	//for(int i = 0; i < MAX_CLIENTS; i++)
 	//	game.players[i].core.world = &game.world.core;

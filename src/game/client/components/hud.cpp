@@ -1,6 +1,10 @@
+#include <stdio.h>
+
 #include <engine/graphics.h>
 #include <engine/textrender.h>
+#include <engine/demo.h>
 #include <engine/shared/config.h>
+#include <engine/serverbrowser.h>
 
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
@@ -14,15 +18,25 @@
 #include "hud.h"
 #include "voting.h"
 #include "binds.h"
+#include "menus.h"
+#include "race_demo.h"
 
 CHud::CHud()
 {
 	// won't work if zero
 	m_AverageFPS = 1.0f;
+	
+	m_CheckpointTick = 0;
+	m_CheckpointDiff = 0;
+	m_RaceTime = 0;
+	m_Record = 0;
+	m_LocalRecord = -1.0f;
 }
 	
 void CHud::OnReset()
 {
+	m_LocalRecord = -1.0f;
+	m_Record = 0;
 }
 
 void CHud::RenderGameTimer()
@@ -69,7 +83,7 @@ void CHud::RenderScoreHud()
 	float Whole = 300*Graphics()->ScreenAspect();
 	
 	// render small score hud
-	if(!(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver) && (GameFlags&GAMEFLAG_TEAMS))
+	if(!m_pClient->m_IsRace && !(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver) && (GameFlags&GAMEFLAG_TEAMS))
 	{
 		for(int t = 0; t < 2; t++)
 		{
@@ -302,6 +316,131 @@ void CHud::RenderHealthAndAmmo()
 	Graphics()->QuadsEnd();
 }
 
+void CHud::RenderSpeedmeter()
+{
+	if(!g_Config.m_ClRenderSpeedmeter)
+		return;
+		
+	// We calculate the speed instead of getting it from character.velocity cause it's buggy when
+	// walking in front of a wall or when using the ninja sword
+	static float Speed;
+	static vec2 OldPos;
+	static const int SMOOTH_TABLE_SIZE = 16;
+	static const int ACCEL_THRESHOLD = 25;
+	static float SmoothTable[SMOOTH_TABLE_SIZE];
+	static int SmoothIndex = 0;
+
+	SmoothTable[SmoothIndex] = distance(m_pClient->m_LocalCharacterPos, OldPos)/Client()->FrameTime();
+	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+	{
+		float Mult = DemoPlayer()->BaseInfo()->m_Speed;
+		SmoothTable[SmoothIndex] /= Mult;
+	}
+	SmoothIndex = (SmoothIndex + 1) % SMOOTH_TABLE_SIZE;
+	OldPos = m_pClient->m_LocalCharacterPos;
+	Speed = 0;
+	for(int i = 0; i < SMOOTH_TABLE_SIZE; i++)
+		Speed += SmoothTable[i];
+	Speed /= SMOOTH_TABLE_SIZE;
+
+	int t = (!m_pClient->m_IsRace && (m_pClient->m_Snap.m_pGameobj->m_Flags & GAMEFLAG_TEAMS))? -1 : 1;
+	int LastIndex = SmoothIndex - 1;
+	if(LastIndex < 0)
+		LastIndex = SMOOTH_TABLE_SIZE - 1;
+
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
+	if(g_Config.m_ClSpeedmeterAccel && Speed - SmoothTable[LastIndex] > ACCEL_THRESHOLD)
+		Graphics()->SetColor(0.6f, 0.1f, 0.1f, 0.25f);
+	else if(g_Config.m_ClSpeedmeterAccel && Speed - SmoothTable[LastIndex] < -ACCEL_THRESHOLD)
+		Graphics()->SetColor(0.1f, 0.6f, 0.1f, 0.25f);
+	else
+		Graphics()->SetColor(0.1, 0.1, 0.1, 0.25);
+	RenderTools()->DrawRoundRect(m_Width-45, 245+t*20, 55, 18, 5.0f);
+ 	Graphics()->QuadsEnd();
+
+	char aBuf[16];
+	str_format(aBuf, sizeof(aBuf), "%.0f", Speed/10);
+	TextRender()->Text(0, m_Width-5-TextRender()->TextWidth(0,12,aBuf,-1), 246+t*20, 12, aBuf, -1);
+}
+
+void CHud::RenderTime()
+{
+	if(!m_pClient->m_IsRace)
+		return;
+	
+	if(m_RaceTime)
+	{
+		if(!m_FinishTime && m_pClient->m_pRaceDemo->GetRaceState() == CRaceDemo::RACE_FINISHED)
+			m_FinishTime = m_pClient->m_pRaceDemo->GetFinishTime();
+			
+		char aBuf[64];
+		if(m_FinishTime)
+		{
+			str_format(aBuf, sizeof(aBuf), "Finish time: %02d:%02.2f", (int)m_FinishTime/60, m_FinishTime-((int)m_FinishTime/60*60));
+			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,aBuf,-1)/2, 20, 12, aBuf, -1);
+		}
+		else
+		{
+			str_format(aBuf, sizeof(aBuf), "Current time: %02d:%02d.%d", m_RaceTime/60, m_RaceTime%60, m_RaceTick/10);
+			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,"Current time: 00:00.0",-1)/2, 20, 12, aBuf, -1); // use fixed value for texxt width so its not shaky
+		}
+	
+		if(g_Config.m_ClShowCheckpointDiff && m_CheckpointTick)
+		{
+			m_CheckpointTick--;
+			
+			Graphics()->BlendNormal();
+			Graphics()->TextureSet(-1);
+			Graphics()->QuadsBegin();
+			Graphics()->SetColor(0.1, 0.1, 0.1, 0.25);
+			RenderTools()->DrawRoundRect(m_Width-45, 240, 55, 18, 5.0f);
+			Graphics()->QuadsEnd();
+	
+			str_format(aBuf, sizeof(aBuf), "%+5.2f", m_CheckpointDiff);
+			if(m_CheckpointDiff > 0)
+				TextRender()->TextColor(1.0f,0.5f,0.5f,1); // red
+			else if(m_CheckpointDiff < 0)
+				TextRender()->TextColor(0.5f,1.0f,0.5f,1); // green
+			TextRender()->Text(0, m_Width-3-TextRender()->TextWidth(0,10,aBuf,-1), 242, 10, aBuf, -1);
+			
+			TextRender()->TextColor(1,1,1,1);
+		}
+	}
+	m_RaceTick+=100/Client()->GameTickSpeed();
+	
+	if(m_RaceTick >= 100)
+		m_RaceTick = 0;
+}
+
+void CHud::RenderRecord()
+{	
+	if(!m_pClient->m_IsRace)
+		return;
+		
+	if(m_Record && g_Config.m_ClShowServerRecord && g_Config.m_ClShowRecords)
+	{
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "Server best:");
+		TextRender()->Text(0, 5, 40, 6, aBuf, -1);
+		str_format(aBuf, sizeof(aBuf), "%02d:%02.2f", (int)m_Record/60, m_Record-((int)m_Record/60*60));
+		TextRender()->Text(0, 53, 40, 6, aBuf, -1);
+	}
+		
+	if(m_pClient->m_pRaceDemo->GetFinishTime() && (m_LocalRecord == -1 || m_LocalRecord > m_pClient->m_pRaceDemo->GetFinishTime()))
+		m_LocalRecord = m_pClient->m_pRaceDemo->GetFinishTime();
+	
+	if(m_LocalRecord > 0 && g_Config.m_ClShowLocalRecord && g_Config.m_ClShowRecords)
+	{				
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "Personal best:");
+		TextRender()->Text(0, 5, 47, 6, aBuf, -1);
+		str_format(aBuf, sizeof(aBuf), "%02d:%02.2f", (int)m_LocalRecord/60, m_LocalRecord-((int)m_LocalRecord/60*60));
+		TextRender()->Text(0, 53, 47, 6, aBuf, -1);
+	}
+}
+	
 void CHud::OnRender()
 {
 	if(!m_pClient->m_Snap.m_pGameobj)
@@ -314,7 +453,11 @@ void CHud::OnRender()
 		Spectate = true;
 	
 	if(m_pClient->m_Snap.m_pLocalCharacter && !Spectate && !(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
+	{
 		RenderHealthAndAmmo();
+		RenderSpeedmeter();
+		RenderTime();
+	}
 
 	RenderGameTimer();
 	RenderSuddenDeath();
@@ -325,5 +468,39 @@ void CHud::OnRender()
 		RenderConnectionWarning();
 	RenderTeambalanceWarning();
 	RenderVoting();
+	RenderRecord();
 	RenderCursor();
+}
+
+void CHud::OnMessage(int MsgType, void *pRawMsg)
+{
+	if(MsgType == NETMSGTYPE_SV_RACETIME)
+	{
+		CNetMsg_Sv_RaceTime *pMsg = (CNetMsg_Sv_RaceTime *)pRawMsg;
+		m_RaceTime = pMsg->m_Time;
+		m_RaceTick = 0;
+		
+		if(m_FinishTime)
+			m_FinishTime = 0;
+		
+		if(pMsg->m_Check)
+		{
+			m_CheckpointDiff = (float)pMsg->m_Check/100;
+			m_CheckpointTick = Client()->GameTickSpeed()*4;
+		}
+	}
+	else if(MsgType == NETMSGTYPE_SV_KILLMSG)
+	{
+		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
+		if(pMsg->m_Victim == m_pClient->m_Snap.m_LocalCid)
+		{
+			m_CheckpointTick = 0;
+			m_RaceTime = 0;
+		}
+	}
+	else if(MsgType == NETMSGTYPE_SV_RECORD)
+	{
+		CNetMsg_Sv_Record *pMsg = (CNetMsg_Sv_Record *)pRawMsg;
+		m_Record = (float)pMsg->m_Time/100;
+	}
 }

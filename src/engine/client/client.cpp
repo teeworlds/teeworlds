@@ -1822,6 +1822,31 @@ void CClient::Con_AddFavorite(IConsole::IResult *pResult, void *pUserData)
 		pSelf->m_ServerBrowser.AddFavorite(Addr);
 }
 
+// Race
+const char* CClient::GetCurrentMap()
+{
+	return m_aCurrentMap;
+}
+
+const char* CClient::RaceRecordStart(const char *pFilename)
+{
+	char aFilename[128];
+	str_format(aFilename, sizeof(aFilename), "demos/%s_%s.demo", m_aCurrentMap, pFilename);
+	
+	if(State() != STATE_ONLINE)
+		dbg_msg("demorec/record", "client is not online");
+	else
+		m_DemoRecorder.Start(Storage(), aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
+		
+	return m_aCurrentMap;
+}
+
+void CClient::RaceRecordStop()
+{
+	if(m_DemoRecorder.IsRecording())
+		m_DemoRecorder.Stop();
+}	
+	
 const char *CClient::DemoPlayer_Play(const char *pFilename)
 {
 	int Crc;
@@ -1916,7 +1941,6 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("shutdown", "", CFGFLAG_SERVER, Con_ServerDummy, this, "Shut down");
 	m_pConsole->Register("record", "s", CFGFLAG_SERVER, Con_ServerDummy, this, "Record to a file");
 	m_pConsole->Register("stoprecord", "", CFGFLAG_SERVER, Con_ServerDummy, this, "Stop recording");
-	m_pConsole->Register("reload", "", CFGFLAG_SERVER, Con_ServerDummy, this, "Reload the map");
 
 	m_pConsole->Register("quit", "", CFGFLAG_CLIENT, Con_Quit, this, "Quit Teeworlds");
 	m_pConsole->Register("exit", "", CFGFLAG_CLIENT, Con_Quit, this, "Quit Teeworlds");
@@ -1930,6 +1954,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("play", "r", CFGFLAG_CLIENT, Con_Play, this, "Play the file specified");
 	m_pConsole->Register("record", "s", CFGFLAG_CLIENT, Con_Record, this, "Record to the file");
 	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording");
+	m_pConsole->Register("reload", "", CFGFLAG_SERVER, Con_ServerDummy, this, "Reload the map");
 
 	m_pConsole->Register("add_favorite", "s", CFGFLAG_CLIENT, Con_AddFavorite, this, "Add a server as a favorite");
 }

@@ -140,7 +140,7 @@ public:
 
 	bool IsAuthed(int ClientID);
 	int GetClientInfo(int ClientID, CClientInfo *pInfo);
-	void GetClientIP(int ClientID, char *pIPString, int Size);
+	virtual void GetClientIP(int ClientID, char *pIPString, int Size);
 	const char *ClientName(int ClientId);
 	bool ClientIngame(int ClientID);
 

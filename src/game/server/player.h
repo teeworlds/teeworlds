@@ -48,6 +48,8 @@ public:
 	int m_Last_Emote;
 	int m_Last_Kill;
 	
+	int m_Last_ShowOthers;
+	
 	// TODO: clean this up
 	struct 
 	{
@@ -62,6 +64,16 @@ public:
 	int m_Score;
 	int m_ScoreStartTick;
 	bool m_ForceBalanced;
+	
+	bool m_ShowOthers;
+	
+	float m_BestTime;
+	float m_aBestCpTime[25];
+	
+	bool m_ResetPickups;
+	
+	bool m_IsUsingRaceClient;
+	float m_LastSentTime;
 	
 private:
 	CCharacter *Character;

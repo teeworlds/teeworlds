@@ -77,6 +77,11 @@ public:
 	bool m_SuppressEvents;
 	bool m_NewTick;
 	bool m_NewPredictedTick;
+	
+	// Race
+	bool m_IsRace;
+	bool m_RaceMsgSent;
+	int m_ShowOthers;
 
 	// TODO: move this
 	CTuningParams m_Tuning;
@@ -151,6 +156,9 @@ public:
 		
 		float m_Angle;
 		
+		// race
+		float m_Score;
+		
 		void UpdateRenderInfo();
 	};
 
@@ -201,6 +209,7 @@ public:
 	class CMotd *m_pMotd;
 	class CMapImages *m_pMapimages;
 	class CVoting *m_pVoting;
+	class CRaceDemo *m_pRaceDemo;
 };
 
 extern const char *Localize(const char *Str);

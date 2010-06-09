@@ -625,6 +625,67 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	}
 }
 
+void CMenus::RenderSettingsRace(CUIRect MainView)
+{
+	CUIRect Button;
+	CUIRect LeftView, RightView;
+
+	MainView.VSplitMid(&LeftView, &RightView);
+	
+	// Left
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	UI()->DoLabel(&Button, Localize("Race specific settings"), 14.0f, -1);
+	
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_ClAutoRecord, Localize("Auto record"), g_Config.m_ClAutoRecord, &Button))
+		g_Config.m_ClAutoRecord ^= 1;
+		
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_ClShowOthers, Localize("Show other players"), g_Config.m_ClShowOthers, &Button))
+		g_Config.m_ClShowOthers ^= 1;
+		
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_ClShowCheckpointDiff, Localize("Show checkpoint difference"), g_Config.m_ClShowCheckpointDiff, &Button))
+		g_Config.m_ClShowCheckpointDiff ^= 1;
+		
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_ClShowRecords, Localize("Show records"), g_Config.m_ClShowRecords, &Button))
+		g_Config.m_ClShowRecords ^= 1;
+		
+	if(g_Config.m_ClShowRecords)
+	{
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		Button.VSplitLeft(15.0f, 0, &Button);
+		if(DoButton_CheckBox(&g_Config.m_ClShowServerRecord, Localize("Show best time on server"), g_Config.m_ClShowServerRecord, &Button))
+			g_Config.m_ClShowServerRecord ^= 1;
+			
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		Button.VSplitLeft(15.0f, 0, &Button);
+		if(DoButton_CheckBox(&g_Config.m_ClShowLocalRecord, Localize("Show personal best time"), g_Config.m_ClShowLocalRecord, &Button))
+			g_Config.m_ClShowLocalRecord ^= 1;
+	}
+	else
+		LeftView.HSplitTop(40.0f, &Button, &LeftView);
+	
+	// Right
+	RightView.HSplitTop(20.0f, &Button, &RightView);
+	UI()->DoLabel(&Button, Localize("Global settings"), 14.0f, -1);
+	
+	RightView.HSplitTop(20.0f, &Button, &RightView);
+	if(DoButton_CheckBox(&g_Config.m_ClRenderSpeedmeter, Localize("Show speedmeter"), g_Config.m_ClRenderSpeedmeter, &Button))
+		g_Config.m_ClRenderSpeedmeter ^= 1;
+	
+	if(g_Config.m_ClRenderSpeedmeter)
+	{
+		RightView.HSplitTop(20.0f, &Button, &RightView);
+		Button.VSplitLeft(15.0f, 0, &Button);
+		if(DoButton_CheckBox(&g_Config.m_ClSpeedmeterAccel, Localize("Show acceleration"), g_Config.m_ClSpeedmeterAccel, &Button))
+			g_Config.m_ClSpeedmeterAccel ^= 1;
+	}
+	else
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+}
+
 struct LANGUAGE
 {
 	LANGUAGE() {}
@@ -721,7 +782,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 		Localize("Player"),
 		Localize("Controls"),
 		Localize("Graphics"),
-		Localize("Sound")};
+		Localize("Sound"),
+		Localize("Race")};
 
 	int NumTabs = (int)(sizeof(aTabs)/sizeof(*aTabs));
 
@@ -745,6 +807,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 		RenderSettingsGraphics(MainView);
 	else if(s_SettingsPage == 4)
 		RenderSettingsSound(MainView);
+	else if(s_SettingsPage == 5)
+		RenderSettingsRace(MainView);
 
 	if(m_NeedRestart)
 	{

@@ -264,6 +264,7 @@ public:
 	array<CEnvelope*> m_lEnvelopes;
 	
 	class CLayerGame *m_pGameLayer;
+	class CLayerTele *m_pTeleLayer;
 	CLayerGroup *m_pGameGroup;
 	
 	CEnvelope *NewEnvelope(int Channels)
@@ -315,6 +316,8 @@ public:
 	// io	
 	int Save(class IStorage *pStorage, const char *pFilename);
 	int Load(class IStorage *pStorage, const char *pFilename);
+	
+	void MakeTeleLayer(CLayer *pLayer);
 };
 
 
@@ -350,7 +353,7 @@ public:
 	CLayerTiles(int w, int h);
 	~CLayerTiles();
 
-	void Resize(int NewW, int NewH);
+	virtual void Resize(int NewW, int NewH);
 
 	void MakePalette();
 	virtual void Render();
@@ -379,6 +382,7 @@ public:
 	
 	int m_TexId;
 	int m_Game;
+	int m_Tele;
 	int m_Image;
 	int m_Width;
 	int m_Height;
@@ -421,6 +425,19 @@ public:
 	virtual int RenderProperties(CUIRect *pToolbox);
 };
 
+class CLayerTele : public CLayerTiles
+{
+public:
+	CLayerTele(int w, int h);
+	~CLayerTele();
+	
+	CTeleTile *m_pTeleTile;
+	
+	virtual void Resize(int NewW, int NewH);
+	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
+	virtual void FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect);
+};
+ 
 class CEditor : public IEditor
 {
 	class IInput *m_pInput;
@@ -481,6 +498,8 @@ public:
 		ms_EntitiesTexture = 0;
 		
 		ms_pUiGotContext = 0;
+		
+		m_TeleNum = 1;
 	}
 	
 	virtual void Init();
@@ -581,6 +600,7 @@ public:
 	static int PopupSelectImage(CEditor *pEditor, CUIRect View);
 	static int PopupImage(CEditor *pEditor, CUIRect View);
 	static int PopupMenuFile(CEditor *pEditor, CUIRect View);
+	static int PopupTele(CEditor *pEditor, CUIRect View);
 
 
 	void PopupSelectImageInvoke(int Current, float x, float y);
@@ -609,6 +629,8 @@ public:
 
 	void AddFileDialogEntry(const char *pName, CUIRect *pView);
 	void SortImages();
+	
+	unsigned char m_TeleNum;
 };
 
 // make sure to inline this function

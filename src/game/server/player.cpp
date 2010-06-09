@@ -1,4 +1,8 @@
 #include <new>
+#include <stdio.h>
+#include <engine/shared/config.h>
+#include "score/sql_score.h"
+#include "gamemodes/race.h"
 #include "player.h"
 
 
@@ -15,6 +19,12 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	Character = 0;
 	this->m_ClientID = CID;
 	m_Team = GameServer()->m_pController->ClampTeam(Team);
+	m_ShowOthers = true;
+	m_ResetPickups = false;
+	m_IsUsingRaceClient = false;
+	m_LastSentTime = 0;
+	
+	GameServer()->Score()->PlayerData(CID)->Reset();
 }
 
 CPlayer::~CPlayer()
@@ -65,6 +75,27 @@ void CPlayer::Tick()
 	}
 	else if(m_Spawning && m_RespawnTick <= Server()->Tick())
 		TryRespawn();
+		
+	// send best time
+	if(m_IsUsingRaceClient)
+	{
+		if(m_LastSentTime > GameServer()->m_pController->m_CurrentRecord || (!m_LastSentTime && GameServer()->m_pController->m_CurrentRecord))
+		{
+			char aBuf[16];
+			str_format(aBuf, sizeof(aBuf), "%.0f", GameServer()->m_pController->m_CurrentRecord*100.0f); // damn ugly but the only way i know to do it
+			int TimeToSend;
+			sscanf(aBuf, "%d", &TimeToSend);
+			CNetMsg_Sv_Record Msg;
+			Msg.m_Time = TimeToSend;
+			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_ClientID);
+			
+			m_LastSentTime = GameServer()->m_pController->m_CurrentRecord;
+		}
+	}
+	
+	// reset PickupReset
+	if(m_ResetPickups)
+		m_ResetPickups = false;
 }
 
 void CPlayer::Snap(int SnappingClient)
@@ -158,6 +189,9 @@ void CPlayer::SetTeam(int Team)
 	KillCharacter();
 
 	m_Team = Team;
+	
+	//m_Score = 0;
+	m_ScoreStartTick = Server()->Tick();
 	// we got to wait 0.5 secs before respawning
 	m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 	dbg_msg("game", "team_join player='%d:%s' m_Team=%d", m_ClientID, Server()->ClientName(m_ClientID), m_Team);
@@ -173,14 +207,11 @@ void CPlayer::TryRespawn()
 		return;
 
 	// check if the position is occupado
-	CEntity *apEnts[2] = {0};
-	int NumEnts = GameServer()->m_World.FindEntities(SpawnPos, 64, apEnts, 2, NETOBJTYPE_CHARACTER);
+	/*CEntity *apEnts[2] = {0};
+	int NumEnts = GameServer()->m_World.FindEntities(SpawnPos, 64, apEnts, 2, NETOBJTYPE_CHARACTER);*/
 	
-	if(NumEnts == 0)
-	{
-		m_Spawning = false;
-		Character = new(m_ClientID) CCharacter(&GameServer()->m_World);
-		Character->Spawn(this, SpawnPos);
-		GameServer()->CreatePlayerSpawn(SpawnPos);
-	}
+	m_Spawning = false;
+	Character = new(m_ClientID) CCharacter(&GameServer()->m_World);
+	Character->Spawn(this, SpawnPos);
+	GameServer()->CreatePlayerSpawn(SpawnPos, m_ClientID);
 }

@@ -6,6 +6,7 @@
 
 #include "entities/pickup.h"
 #include "gamecontroller.h"
+#include "score/sql_score.h"
 #include "gamecontext.h"
 
 
@@ -32,6 +33,8 @@ IGameController::IGameController(class CGameContext *pGameServer)
 	m_aNumSpawnPoints[0] = 0;
 	m_aNumSpawnPoints[1] = 0;
 	m_aNumSpawnPoints[2] = 0;
+	
+	m_CurrentRecord = 0;
 }
 
 IGameController::~IGameController()
@@ -49,11 +52,11 @@ float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos)
 		if(pEval->m_FriendlyTeam != -1 && pC->GetPlayer()->GetTeam() == pEval->m_FriendlyTeam)
 			Scoremod = 0.5f;
 			
-		float d = distance(Pos, pC->m_Pos);
+		/*float d = distance(Pos, pC->m_Pos);
 		if(d == 0)
 			Score += 1000000000.0f;
 		else
-			Score += 1.0f/d;
+			Score += 1.0f/d;*/
 	}
 	
 	return Score;
@@ -662,6 +665,15 @@ void IGameController::DoTeamScoreWincheck()
 			else
 				m_SuddenDeath = 1;
 		}
+	}
+}
+
+void IGameController::DoRaceTimeCheck()
+{
+	if(m_GameOverTick == -1 && !m_Warmup)
+	{
+		if((g_Config.m_SvTimelimit > 0 && (Server()->Tick()-m_RoundStartTick) >= g_Config.m_SvTimelimit*Server()->TickSpeed()*60))
+			EndRound();
 	}
 }
 

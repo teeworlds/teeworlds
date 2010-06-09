@@ -105,9 +105,12 @@ nethash = CHash("src/game/generated/nethash.c", "src/engine/shared/protocol.h", 
 
 client_link_other = {}
 client_depends = {}
+server_depends = {}
 
 if family == "windows" then
 	table.insert(client_depends, CopyToDirectory(".", "other\\sdl\\vc2005libs\\SDL.dll"))
+	table.insert(server_depends, CopyToDirectory(".", "other\\mysql\\vc2005libs\\mysqlcppconn.dll"))
+	table.insert(server_depends, CopyToDirectory(".", "other\\mysql\\vc2005libs\\libmysql.dll"))
 end
 	
 
@@ -126,7 +129,7 @@ function build(settings)
 	if config.compiler.driver == "cl" then
 		settings.cc.flags:Add("/wd4244")
 	else
-		settings.cc.flags:Add("-Wall", "-fno-exceptions")
+		settings.cc.flags:Add("-Wall")
 		if platform == "macosx" then
 			settings.cc.flags:Add("-mmacosx-version-min=10.4", "-isysroot /Developer/SDKs/MacOSX10.4u.sdk")
 			settings.link.flags:Add("-mmacosx-version-min=10.4", "-isysroot /Developer/SDKs/MacOSX10.4u.sdk")
@@ -145,13 +148,26 @@ function build(settings)
 			settings.link.frameworks:Add("AppKit")
 		else
 			settings.link.libs:Add("pthread")
+			settings.cc.includes:Add("other/mysql/include")
+			settings.cc.includes:Add("other/mysql/include/cppconn")
+			if arch == "amd64" then
+				settings.link.libpath:Add("other/mysql/lib64")
+			else
+				settings.link.libpath:Add("other/mysql/lib32")
+			end
+			settings.link.libs:Add("mysqlcppconn-static")
+			settings.link.libs:Add("mysqlclient")
 		end
 	elseif family == "windows" then
+		settings.link.flags:Add("/FORCE:MULTIPLE")
 		settings.link.libs:Add("gdi32")
 		settings.link.libs:Add("user32")
 		settings.link.libs:Add("ws2_32")
 		settings.link.libs:Add("ole32")
 		settings.link.libs:Add("shell32")
+		settings.cc.includes:Add("other/mysql/include")
+		settings.link.libpath:Add("other/mysql/vc2005libs")
+		settings.link.libs:Add("mysqlcppconn")
 	end
 	
 	-- compile zlib if needed
@@ -248,7 +264,7 @@ function build(settings)
 
 	-- make targets
 	c = PseudoTarget("client".."_"..settings.config_name, client_exe, client_depends)
-	s = PseudoTarget("server".."_"..settings.config_name, server_exe, serverlaunch)
+	s = PseudoTarget("server".."_"..settings.config_name, server_exe, serverlaunch, server_depends)
 	g = PseudoTarget("game".."_"..settings.config_name, client_exe, server_exe)
 
 	v = PseudoTarget("versionserver".."_"..settings.config_name, versionserver_exe)
@@ -316,4 +332,3 @@ else
 	build(release_settings)
 	DefaultTarget("game_debug")
 end
-

@@ -633,6 +633,33 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				return;
 			}
 			
+			// reserved slot
+			if(ClientId >= m_NetServer.MaxClients() - g_Config.m_SvReservedSlots && g_Config.m_SvReservedSlotsPass[0] != 0 && str_comp(g_Config.m_SvReservedSlotsPass, pPassword) != 0)
+			{
+				m_NetServer.Drop(ClientId, "server is full");
+				return;
+			}
+
+			if(!g_Config.m_SvMulticonnect)
+            {
+				// temp addres for multiconnect
+				NETADDR TmpAddr;
+				
+				Addr = m_NetServer.ClientAddr(ClientId);
+				for(int i = 0; i < MAX_CLIENTS; i++)
+				{
+					if(i == ClientId)
+						continue;
+						
+					TmpAddr = m_NetServer.ClientAddr(i);
+					if(!net_addr_comp(&Addr, &TmpAddr))
+					{
+						m_NetServer.Drop(ClientId, "You are already connected to this server");
+						return;
+					}
+				}
+			}
+			
 			m_aClients[ClientId].m_State = CClient::STATE_CONNECTING;
 			SendMap(ClientId);
 		}
@@ -865,7 +892,7 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 	p.AddString(aBuf, 4);
 	
 	str_format(aBuf, sizeof(aBuf), "%d", PlayerCount); p.AddString(aBuf, 3);  // num players
-	str_format(aBuf, sizeof(aBuf), "%d", m_NetServer.MaxClients()); p.AddString(aBuf, 3); // max players
+	str_format(aBuf, sizeof(aBuf), "%d", m_NetServer.MaxClients()-g_Config.m_SvReservedSlots); p.AddString(aBuf, 3); // max players
 
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{

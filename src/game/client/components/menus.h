@@ -159,10 +159,8 @@ class CMenus : public CComponent
 		bool operator<(const CDemoItem &Other) { return str_comp(m_aName, Other.m_aName) < 0; } 
 	};
 	
-	sorted_array<CDemoItem> m_lDemos;
 	char m_aCurrentDemoFolder[256];
 	
-	void DemolistPopulate();
 	static void DemolistCountCallback(const char *pName, int IsDir, void *pUser);
 	static void DemolistFetchCallback(const char *pName, int IsDir, void *pUser);
 	static void IsDirCallback(const char *pName, int IsDir, void *pUser);
@@ -199,6 +197,7 @@ class CMenus : public CComponent
 	void RenderSettingsControls(CUIRect MainView);
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
+	void RenderSettingsRace(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
 	
 	void SetActive(bool Active);
@@ -222,5 +221,8 @@ public:
 	virtual void OnRender();
 	virtual bool OnInput(IInput::CEvent Event);
 	virtual bool OnMouseMove(float x, float y);
+	
+	sorted_array<CDemoItem> m_lDemos;
+	void DemolistPopulate();
 };
 #endif

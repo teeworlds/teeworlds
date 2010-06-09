@@ -26,12 +26,21 @@ public:
 	bool CheckPoint(float x, float y) { return IsTileSolid(round(x), round(y)); }
 	bool CheckPoint(vec2 p) { return CheckPoint(p.x, p.y); }
 	int GetCollisionAt(float x, float y) { return GetTile(round(x), round(y)); }
-	int GetWidth() { return m_Width; };
-	int GetHeight() { return m_Height; };
+	int GetWidth() { return m_Width; }
+	int GetHeight() { return m_Height; }
 	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);
 	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *Bpounces);
 	void MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity);
 	bool TestBox(vec2 Pos, vec2 Size);
+	
+	// race
+	int GetIndex(int x, int y);
+	int IsTeleport(int x, int y);
+	int IsCheckpoint(int x, int y);
+	
+	class CTeleTile *m_pTele;
+	
+	class CLayers *Layers() { return m_pLayers; }
 };
 
 #endif

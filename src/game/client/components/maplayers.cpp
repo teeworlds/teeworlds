@@ -189,4 +189,3 @@ void CMapLayers::OnRender()
 	// reset the screen like it was before
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
 }
-

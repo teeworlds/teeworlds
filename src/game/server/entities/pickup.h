@@ -14,10 +14,12 @@ public:
 	virtual void Tick();
 	virtual void Snap(int SnappingClient);
 	
+	void PlayerReset(int ClientID);
+	
 private:
 	int m_Type;
 	int m_Subtype;
-	int m_SpawnTick;
+	int m_SpawnTick[MAX_CLIENTS];
 };
 
 #endif

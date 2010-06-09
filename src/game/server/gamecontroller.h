@@ -68,6 +68,7 @@ public:
 
 	void DoTeamScoreWincheck();
 	void DoPlayerScoreWincheck();
+	void DoRaceTimeCheck();
 	
 	void DoWarmup(int Seconds);
 	
@@ -79,6 +80,10 @@ public:
 	
 	bool IsForceBalanced();
 
+	
+	// race
+	float m_CurrentRecord;
+	
 	/*
 	
 	*/	
@@ -140,6 +145,9 @@ public:
 	int ClampTeam(int Team);
 
 	virtual void PostReset();
+	
+	// fast cap
+	virtual bool IsFastCap() { return false; }
 };
 
 #endif

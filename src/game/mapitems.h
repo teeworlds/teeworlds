@@ -44,6 +44,15 @@ enum
 	TILE_SOLID,
 	TILE_DEATH,
 	TILE_NOHOOK,
+	TILE_TELEIN=26,
+	TILE_TELEOUT,
+	TILE_BOOSTD,
+	TILE_BOOSTL,
+	TILE_BOOSTR,
+	TILE_BOOST,
+	TILE_JUMPER,
+	TILE_BEGIN,
+	TILE_END,
 	
 	TILEFLAG_VFLIP=1,
 	TILEFLAG_HFLIP=2,
@@ -83,6 +92,12 @@ struct CTile
 	unsigned char m_Flags;
 	unsigned char m_Skip;
 	unsigned char m_Reserved;
+};
+
+struct CTeleTile
+{
+	unsigned char m_Number;
+	unsigned char m_Type;
 };
 
 struct CMapItemImage
@@ -141,6 +156,8 @@ struct CMapItemLayerTilemap
 	
 	int m_Image;
 	int m_Data;
+	
+	int m_Tele;
 } ;
 
 struct CMapItemLayerQuads

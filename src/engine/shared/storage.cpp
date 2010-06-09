@@ -181,6 +181,12 @@ public:
 		return 0;		
 	}
 
+	virtual const char* SavePath(const char *pFilename, char *pBuffer, int Max)
+	{
+		str_format(pBuffer, Max, "%s/%s", m_aApplicationSavePath, pFilename);
+		return pBuffer;
+	}
+	
 	static IStorage *Create(const char *pApplicationName, const char *pArgv0)
 	{
 		CStorage *p = new CStorage();
