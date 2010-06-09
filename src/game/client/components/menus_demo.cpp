@@ -475,7 +475,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		str_copy(aTitleButton, "Open", sizeof(aTitleButton));
 	else
 		str_copy(aTitleButton, "Play", sizeof(aTitleButton));
-	// /!\ TODO: Add "Open" in Localization /!\ 
+	//TODO: Add "Open" in Localization
 	if(DoButton_Menu(&s_PlayButton, Localize(aTitleButton), 0, &PlayRect) || Activated)
 	{		
 		if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size())

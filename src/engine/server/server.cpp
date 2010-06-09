@@ -427,6 +427,7 @@ void CServer::DoSnapshot()
 			
 		{
 			char aData[CSnapshot::MAX_SIZE];
+			CSnapshot *pData = (CSnapshot*)aData;	// Fix compiler warning for strict-aliasing
 			char aDeltaData[CSnapshot::MAX_SIZE];
 			char aCompData[CSnapshot::MAX_SIZE];
 			int SnapshotSize;
@@ -442,15 +443,15 @@ void CServer::DoSnapshot()
 			GameServer()->OnSnap(i);
 
 			// finish snapshot
-			SnapshotSize = m_SnapshotBuilder.Finish(aData);
-			Crc = ((CSnapshot*)aData)->Crc();
+			SnapshotSize = m_SnapshotBuilder.Finish(pData);
+			Crc = pData->Crc();
 
 			// remove old snapshos
 			// keep 3 seconds worth of snapshots
 			m_aClients[i].m_Snapshots.PurgeUntil(m_CurrentGameTick-SERVER_TICK_SPEED*3);
 			
 			// save it the snapshot
-			m_aClients[i].m_Snapshots.Add(m_CurrentGameTick, time_get(), SnapshotSize, aData, 0);
+			m_aClients[i].m_Snapshots.Add(m_CurrentGameTick, time_get(), SnapshotSize, pData, 0);
 			
 			// find snapshot that we can preform delta against
 			EmptySnap.Clear();
@@ -468,7 +469,7 @@ void CServer::DoSnapshot()
 			}
 			
 			// create delta
-			DeltaSize = m_SnapshotDelta.CreateDelta(pDeltashot, (CSnapshot*)aData, aDeltaData);
+			DeltaSize = m_SnapshotDelta.CreateDelta(pDeltashot, pData, aDeltaData);
 			
 			if(DeltaSize)
 			{
@@ -554,7 +555,7 @@ void CServer::SendMap(int ClientId)
 {
 	//get the name of the map without his path
 	char * pMapShortName = &g_Config.m_SvMap[0];
-	for(int i = 0; i < 127; i++)
+	for(int i = 0; i < str_length(g_Config.m_SvMap)-1; i++)
 	{
 		if(g_Config.m_SvMap[i] == '/' || g_Config.m_SvMap[i] == '\\')
 			pMapShortName = &g_Config.m_SvMap[i+1];
