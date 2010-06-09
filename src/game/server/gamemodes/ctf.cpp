@@ -240,3 +240,4 @@ void CFlag::Snap(int SnappingClient)
 	else if(m_pCarryingCharacter && m_pCarryingCharacter->GetPlayer())
 		pFlag->m_CarriedBy = m_pCarryingCharacter->GetPlayer()->GetCID();
 }
+

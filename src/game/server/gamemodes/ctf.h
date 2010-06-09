@@ -36,3 +36,4 @@ public:
 	virtual void Snap(int SnappingClient);
 };
 #endif
+

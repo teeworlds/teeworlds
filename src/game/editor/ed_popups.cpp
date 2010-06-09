@@ -3,6 +3,7 @@
 #include <engine/keys.h>
 #include "ed_editor.h"
 
+#include <game/localization.h>
 
 // popup menu handling
 static struct
@@ -80,7 +81,7 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 	
 	// don't allow deletion of game group
 	if(pEditor->m_Map.m_pGameGroup != pEditor->GetSelectedGroup() &&
-		pEditor->DoButton_Editor(&s_DeleteButton, "Delete Group", 0, &Button, 0, "Delete group"))
+		pEditor->DoButton_Editor(&s_DeleteButton, Localize("Delete group"), 0, &Button, 0, Localize("Delete group")))
 	{
 		pEditor->m_Map.DeleteGroup(pEditor->m_SelectedGroup);
 		return 1;
@@ -90,7 +91,7 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 	View.HSplitBottom(10.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_NewQuadLayerButton = 0;
-	if(pEditor->DoButton_Editor(&s_NewQuadLayerButton, "Add Quads Layer", 0, &Button, 0, "Creates a new quad layer"))
+	if(pEditor->DoButton_Editor(&s_NewQuadLayerButton, Localize("Add quads layer"), 0, &Button, 0, Localize("Creates a new quad layer")))
 	{
 		CLayer *l = new CLayerQuads;
 		l->m_pEditor = pEditor;
@@ -103,7 +104,7 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 	View.HSplitBottom(5.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_NewTileLayerButton = 0;
-	if(pEditor->DoButton_Editor(&s_NewTileLayerButton, "Add Tile Layer", 0, &Button, 0, "Creates a new tile layer"))
+	if(pEditor->DoButton_Editor(&s_NewTileLayerButton, Localize("Add tile layer"), 0, &Button, 0, Localize("Creates a new tile layer")))
 	{
 		CLayer *l = new CLayerTiles(50, 50);
 		l->m_pEditor = pEditor;
@@ -179,7 +180,7 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 	
 	// don't allow deletion of game layer
 	if(pEditor->m_Map.m_pGameLayer != pEditor->GetSelectedLayer(0) &&
-		pEditor->DoButton_Editor(&s_DeleteButton, "Delete Layer", 0, &Button, 0, "Deletes the layer"))
+		pEditor->DoButton_Editor(&s_DeleteButton, Localize("Delete layer"), 0, &Button, 0, Localize("Deletes the layer")))
 	{
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->DeleteLayer(pEditor->m_SelectedLayer);
 		return 1;
@@ -199,9 +200,9 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 	};
 	
 	CProperty aProps[] = {
-		{"Group", pEditor->m_SelectedGroup, PROPTYPE_INT_STEP, 0, pEditor->m_Map.m_lGroups.size()-1},
-		{"Order", pEditor->m_SelectedLayer, PROPTYPE_INT_STEP, 0, pCurrentGroup->m_lLayers.size()},
-		{"Detail", pCurrentLayer->m_Flags&LAYERFLAG_DETAIL, PROPTYPE_BOOL, 0, 1},
+		{Localize("Group"), pEditor->m_SelectedGroup, PROPTYPE_INT_STEP, 0, pEditor->m_Map.m_lGroups.size()-1},
+		{Localize("Order"), pEditor->m_SelectedLayer, PROPTYPE_INT_STEP, 0, pCurrentGroup->m_lLayers.size()},
+		{Localize("Detail"), pCurrentLayer->m_Flags&LAYERFLAG_DETAIL, PROPTYPE_BOOL, 0, 1},
 		{0},
 	};
 
@@ -246,7 +247,7 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 	// delete button
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_DeleteButton = 0;
-	if(pEditor->DoButton_Editor(&s_DeleteButton, "Delete", 0, &Button, 0, "Deletes the current quad"))
+	if(pEditor->DoButton_Editor(&s_DeleteButton, Localize("Delete"), 0, &Button, 0, Localize("Deletes the current quad")))
 	{
 		CLayerQuads *pLayer = (CLayerQuads *)pEditor->GetSelectedLayerType(0, LAYERTYPE_QUADS);
 		if(pLayer)
@@ -261,7 +262,7 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 	View.HSplitBottom(10.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_Button = 0;
-	if(pEditor->DoButton_Editor(&s_Button, "Square", 0, &Button, 0, "Squares the current quad"))
+	if(pEditor->DoButton_Editor(&s_Button, Localize("Square"), 0, &Button, 0, Localize("Squares the current quad")))
 	{
 		int Top = pQuad->m_aPoints[0].y;
 		int Left = pQuad->m_aPoints[0].x;
@@ -294,10 +295,10 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 	};
 	
 	CProperty aProps[] = {
-		{"Pos. Env", pQuad->m_PosEnv, PROPTYPE_INT_STEP, -1, pEditor->m_Map.m_lEnvelopes.size()},
-		{"Pos. TO", pQuad->m_PosEnvOffset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Color Env", pQuad->m_ColorEnv, PROPTYPE_INT_STEP, -1, pEditor->m_Map.m_lEnvelopes.size()},
-		{"Color TO", pQuad->m_ColorEnvOffset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{Localize("Pos. Env"), pQuad->m_PosEnv, PROPTYPE_INT_STEP, -1, pEditor->m_Map.m_lEnvelopes.size()},
+		{Localize("Pos. TO"), pQuad->m_PosEnvOffset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{Localize("Color Env"), pQuad->m_ColorEnv, PROPTYPE_INT_STEP, -1, pEditor->m_Map.m_lEnvelopes.size()},
+		{Localize("Color TO"), pQuad->m_ColorEnvOffset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		
 		{0},
 	};
@@ -389,7 +390,7 @@ int CEditor::PopupSelectImage(CEditor *pEditor, CUIRect View)
 			
 		if(i == -1)
 		{
-			if(pEditor->DoButton_MenuItem(&pEditor->m_Map.m_lImages[i], "None", i==g_SelectImageCurrent, &Button))
+			if(pEditor->DoButton_MenuItem(&pEditor->m_Map.m_lImages[i], Localize("None"), i==g_SelectImageCurrent, &Button))
 				g_SelectImageSelected = -1;
 		}
 		else

@@ -21,6 +21,8 @@
 #include "ed_editor.h"
 #include <game/client/lineinput.h>
 
+#include <game/localization.h>
+
 int CEditor::ms_CheckerTexture;
 int CEditor::ms_BackgroundTexture;
 int CEditor::ms_CursorTexture;
@@ -585,7 +587,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 
 	// ctrl+o to open
 	if(Input()->KeyDown('o') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL)))
-		InvokeFileDialog(IStorage::TYPE_ALL, "Open Map", "Open", "maps/", "", CallbackOpenMap, this);
+		InvokeFileDialog(IStorage::TYPE_ALL, Localize("Open map"), Localize("Open"), "maps/", "", CallbackOpenMap, this);
 
 	// ctrl+s to save
 	if(Input()->KeyDown('s') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL)))
@@ -593,13 +595,13 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		if(m_aFileName[0])	
 			Save(m_aFileName);
 		else
-			InvokeFileDialog(IStorage::TYPE_SAVE, "Save Map", "Save", "maps/", "", CallbackSaveMap, this);
+			InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save map"), Localize("Save"), "maps/", "", CallbackSaveMap, this);
 	}
 
 	// detail button
 	TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 	static int s_HqButton = 0;
-	if(DoButton_Editor(&s_HqButton, "HD", m_ShowDetail, &Button, 0, "[ctrl+h] Toggle High Detail") ||
+	if(DoButton_Editor(&s_HqButton, Localize("HD"), m_ShowDetail, &Button, 0, Localize("[ctrl+h] Toggle High Detail")) ||
 		(Input()->KeyDown('h') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL))))
 	{
 		m_ShowDetail = !m_ShowDetail;
@@ -610,7 +612,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	// animation button
 	TB_Top.VSplitLeft(40.0f, &Button, &TB_Top);
 	static int s_AnimateButton = 0;
-	if(DoButton_Editor(&s_AnimateButton, "Anim", m_Animate, &Button, 0, "[ctrl+m] Toggle animation") ||
+	if(DoButton_Editor(&s_AnimateButton, Localize("Anim"), m_Animate, &Button, 0, ("[ctrl+m] Toggle animation")) ||
 		(Input()->KeyDown('m') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL))))
 	{
 		m_AnimateStart = time_get();
@@ -622,7 +624,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	// proof button
 	TB_Top.VSplitLeft(40.0f, &Button, &TB_Top);
 	static int s_ProofButton = 0;
-	if(DoButton_Editor(&s_ProofButton, "Proof", m_ProofBorders, &Button, 0, "[ctrl-p] Toggles proof borders. These borders represent what a player maximum can see.") ||
+	if(DoButton_Editor(&s_ProofButton, Localize("Proof"), m_ProofBorders, &Button, 0, Localize("[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.")) ||
 		(Input()->KeyDown('p') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL))))
 	{
 		m_ProofBorders = !m_ProofBorders;
@@ -633,12 +635,12 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	// zoom group
 	TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 	static int s_ZoomOutButton = 0;
-	if(DoButton_Ex(&s_ZoomOutButton, "ZO", 0, &Button, 0, "[NumPad-] Zoom out", CUI::CORNER_L) || Input()->KeyDown(KEY_KP_MINUS))
+	if(DoButton_Ex(&s_ZoomOutButton, Localize("ZO"), 0, &Button, 0, Localize("[NumPad-] Zoom out"), CUI::CORNER_L) || Input()->KeyDown(KEY_KP_MINUS))
 		m_ZoomLevel += 50;
 
 	TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 	static int s_ZoomNormalButton = 0;
-	if(DoButton_Ex(&s_ZoomNormalButton, "1:1", 0, &Button, 0, "[NumPad*] Zoom to normal and remove editor offset", 0) || Input()->KeyDown(KEY_KP_MULTIPLY))
+	if(DoButton_Ex(&s_ZoomNormalButton, "1:1", 0, &Button, 0, Localize("[NumPad*] Zoom to normal and remove editor offset"), 0) || Input()->KeyDown(KEY_KP_MULTIPLY))
 	{
 		m_EditorOffsetX = 0;
 		m_EditorOffsetY = 0;
@@ -647,7 +649,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 
 	TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 	static int s_ZoomInButton = 0;
-	if(DoButton_Ex(&s_ZoomInButton, "ZI", 0, &Button, 0, "[NumPad+] Zoom in", CUI::CORNER_R) || Input()->KeyDown(KEY_KP_PLUS))
+	if(DoButton_Ex(&s_ZoomInButton, Localize("ZI"), 0, &Button, 0, Localize("[NumPad+] Zoom in"), CUI::CORNER_R) || Input()->KeyDown(KEY_KP_PLUS))
 		m_ZoomLevel -= 50;
 
 	TB_Top.VSplitLeft(10.0f, 0, &TB_Top);
@@ -655,17 +657,17 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	// animation speed
 	TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 	static int s_AnimFasterButton = 0;
-	if(DoButton_Ex(&s_AnimFasterButton, "A+", 0, &Button, 0, "Increase animation speed", CUI::CORNER_L))
+	if(DoButton_Ex(&s_AnimFasterButton, "A+", 0, &Button, 0, Localize("Increase animation speed"), CUI::CORNER_L))
 		m_AnimateSpeed += 0.5f;
 
 	TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 	static int s_AnimNormalButton = 0;
-	if(DoButton_Ex(&s_AnimNormalButton, "1", 0, &Button, 0, "Normal animation speed", 0))
+	if(DoButton_Ex(&s_AnimNormalButton, "1", 0, &Button, 0, Localize("Normal animation speed"), 0))
 		m_AnimateSpeed = 1.0f;
 
 	TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 	static int s_AnimSlowerButton = 0;
-	if(DoButton_Ex(&s_AnimSlowerButton, "A-", 0, &Button, 0, "Decrease animation speed", CUI::CORNER_R))
+	if(DoButton_Ex(&s_AnimSlowerButton, "A-", 0, &Button, 0, Localize("Decrease animation speed"), CUI::CORNER_R))
 	{
 		if(m_AnimateSpeed > 0.5f)
 			m_AnimateSpeed -= 0.5f;
@@ -691,7 +693,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		// flip buttons
 		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 		static int s_FlipXButton = 0;
-		if(DoButton_Ex(&s_FlipXButton, "X/X", Enabled, &Button, 0, "[N] Flip brush horizontal", CUI::CORNER_L) || Input()->KeyDown('n'))
+		if(DoButton_Ex(&s_FlipXButton, "X/X", Enabled, &Button, 0, Localize("[N] Flip brush horizontal"), CUI::CORNER_L) || Input()->KeyDown('n'))
 		{
 			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
 				m_Brush.m_lLayers[i]->BrushFlipX();
@@ -699,7 +701,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 
 		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 		static int s_FlipyButton = 0;
-		if(DoButton_Ex(&s_FlipyButton, "Y/Y", Enabled, &Button, 0, "[M] Flip brush vertical", CUI::CORNER_R) || Input()->KeyDown('m'))
+		if(DoButton_Ex(&s_FlipyButton, "Y/Y", Enabled, &Button, 0, Localize("[M] Flip brush vertical"), CUI::CORNER_R) || Input()->KeyDown('m'))
 		{
 			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
 				m_Brush.m_lLayers[i]->BrushFlipY();
@@ -715,7 +717,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		TB_Top.VSplitLeft(5.0f, &Button, &TB_Top);
 		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 		static int s_CcwButton = 0;
-		if(DoButton_Ex(&s_CcwButton, "CCW", Enabled, &Button, 0, "[R] Rotates the brush counter clockwise", CUI::CORNER_L) || Input()->KeyDown('r'))
+		if(DoButton_Ex(&s_CcwButton, Localize("CCW"), Enabled, &Button, 0, Localize("[R] Rotates the brush counter clockwise"), CUI::CORNER_L) || Input()->KeyDown('r'))
 		{
 			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
 				m_Brush.m_lLayers[i]->BrushRotate(-s_RotationAmount/360.0f*pi*2);
@@ -723,7 +725,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 
 		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 		static int s_CwButton = 0;
-		if(DoButton_Ex(&s_CwButton, "CW", Enabled, &Button, 0, "[T] Rotates the brush clockwise", CUI::CORNER_R) || Input()->KeyDown('t'))
+		if(DoButton_Ex(&s_CwButton, Localize("CW"), Enabled, &Button, 0, Localize("[T] Rotates the brush clockwise"), CUI::CORNER_R) || Input()->KeyDown('t'))
 		{
 			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
 				m_Brush.m_lLayers[i]->BrushRotate(s_RotationAmount/360.0f*pi*2);
@@ -739,7 +741,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 
 		CLayerQuads *pQLayer = (CLayerQuads *)GetSelectedLayerType(0, LAYERTYPE_QUADS);
 		//CLayerTiles *tlayer = (CLayerTiles *)get_selected_layer_type(0, LAYERTYPE_TILES);
-		if(DoButton_Editor(&s_NewButton, "Add Quad", pQLayer?0:-1, &Button, 0, "Adds a new quad"))
+		if(DoButton_Editor(&s_NewButton, Localize("Add Quad"), pQLayer?0:-1, &Button, 0, Localize("Adds a new quad")))
 		{
 			if(pQLayer)
 			{
@@ -765,7 +767,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		static int s_BorderBut = 0;
 		CLayerTiles *pT = (CLayerTiles *)GetSelectedLayerType(0, LAYERTYPE_TILES);
 		
-		if(DoButton_Editor(&s_BorderBut, "Border", pT?0:-1, &Button, 0, "Border"))
+		if(DoButton_Editor(&s_BorderBut, Localize("Border"), pT?0:-1, &Button, 0, Localize("Border")))
 		{
 			if(pT)
                 DoMapBorder();
@@ -877,7 +879,7 @@ void CEditor::DoQuad(CQuad *q, int Index)
 		ms_pUiGotContext = pId;
 
 		Graphics()->SetColor(1,1,1,1);
-		m_pTooltip = "Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate";
+		m_pTooltip = Localize("Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.");
 
 		if(UI()->MouseButton(0))
 		{
@@ -1014,7 +1016,7 @@ void CEditor::DoQuadPoint(CQuad *q, int QuadIndex, int v)
 		ms_pUiGotContext = pId;
 
 		Graphics()->SetColor(1,1,1,1);
-		m_pTooltip = "Left mouse button to move. Hold shift to move the texture.";
+		m_pTooltip = Localize("Left mouse button to move. Hold shift to move the texture.");
 
 		if(UI()->MouseButton(0))
 		{
@@ -1200,9 +1202,9 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 		if(UI()->HotItem() == s_pEditorId)
 		{
 			if(m_Brush.IsEmpty())
-				m_pTooltip = "Use left mouse button to drag and create a brush.";
+				m_pTooltip = Localize("Use left mouse button to drag and create a brush.");
 			else
-				m_pTooltip = "Use left mouse button to paint with the brush. Right button clears the brush.";
+				m_pTooltip = Localize("Use left mouse button to paint with the brush. Right button clears the brush.");
 
 			if(UI()->ActiveItem() == s_pEditorId)
 			{
@@ -1529,7 +1531,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIds, int *
 			RenderTools()->DrawUIRect(&Shifter, vec4(1,1,1,0.5f), 0, 0.0f);
 			UI()->DoLabel(&Shifter, aBuf, 10.0f, 0, -1);
 
-			if(DoButton_ButtonDec(&pIds[i], 0, 0, &Dec, 0, "Decrease"))
+			if(DoButton_ButtonDec(&pIds[i], 0, 0, &Dec, 0, Localize("Decrease")))
 			{
 				if(Input()->KeyPressed(KEY_LSHIFT) || Input()->KeyPressed(KEY_RSHIFT))
 					*pNewVal = pProps[i].m_Value-5;
@@ -1537,7 +1539,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIds, int *
 					*pNewVal = pProps[i].m_Value-1;
 				Change = i;
 			}
-			if(DoButton_ButtonInc(((char *)&pIds[i])+1, 0, 0, &Inc, 0, "Increase"))
+			if(DoButton_ButtonInc(((char *)&pIds[i])+1, 0, 0, &Inc, 0, Localize("Increase")))
 			{
 				if(Input()->KeyPressed(KEY_LSHIFT) || Input()->KeyPressed(KEY_RSHIFT))
 					*pNewVal = pProps[i].m_Value+5;
@@ -1550,12 +1552,12 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIds, int *
 		{
 			CUIRect No, Yes;
 			Shifter.VSplitMid(&No, &Yes);
-			if(DoButton_ButtonDec(&pIds[i], "No", !pProps[i].m_Value, &No, 0, ""))
+			if(DoButton_ButtonDec(&pIds[i], Localize("No"), !pProps[i].m_Value, &No, 0, ""))
 			{
 				*pNewVal = 0;
 				Change = i;
 			}
-			if(DoButton_ButtonInc(((char *)&pIds[i])+1, "Yes", pProps[i].m_Value, &Yes, 0, ""))
+			if(DoButton_ButtonInc(((char *)&pIds[i])+1, Localize("Yes"), pProps[i].m_Value, &Yes, 0, ""))
 			{
 				*pNewVal = 1;
 				Change = i;
@@ -1599,7 +1601,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIds, int *
 		{
 			char aBuf[64];
 			if(pProps[i].m_Value < 0)
-				str_copy(aBuf, "None", sizeof(aBuf));
+				str_copy(aBuf, Localize("None"), sizeof(aBuf));
 			else
 				str_format(aBuf, sizeof(aBuf),"%s",  m_Map.m_lImages[pProps[i].m_Value]->m_aName);
 
@@ -1723,12 +1725,12 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 				Slot.VSplitLeft(12.0f, 0, &Button);
 				Button.VSplitLeft(15, &VisibleToggle, &Button);
 
-				if(DoButton_Ex(&m_Map.m_lGroups[g]->m_lLayers[i]->m_Visible, m_Map.m_lGroups[g]->m_lLayers[i]->m_Visible?"V":"H", 0, &VisibleToggle, 0, "Toggle layer visibility", CUI::CORNER_L))
+				if(DoButton_Ex(&m_Map.m_lGroups[g]->m_lLayers[i]->m_Visible, m_Map.m_lGroups[g]->m_lLayers[i]->m_Visible?"V":"H", 0, &VisibleToggle, 0, Localize("Toggle layer visibility"), CUI::CORNER_L))
 					m_Map.m_lGroups[g]->m_lLayers[i]->m_Visible = !m_Map.m_lGroups[g]->m_lLayers[i]->m_Visible;
 
 				str_format(aBuf, sizeof(aBuf),"#%d %s ", i, m_Map.m_lGroups[g]->m_lLayers[i]->m_pTypeName);
 				if(int Result = DoButton_Ex(m_Map.m_lGroups[g]->m_lLayers[i], aBuf, g==m_SelectedGroup&&i==m_SelectedLayer, &Button,
-					BUTTON_CONTEXT, "Select layer. Right click for properties.", CUI::CORNER_R))
+					BUTTON_CONTEXT, Localize("Select layer. Right click for properties."), CUI::CORNER_R))
 				{
 					m_SelectedLayer = i;
 					m_SelectedGroup = g;
@@ -1749,7 +1751,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 		LayersBox.HSplitTop(12.0f, &Slot, &LayersBox);
 
 		static int s_NewGroupButton = 0;
-		if(DoButton_Editor(&s_NewGroupButton, "Add Group", 0, &Slot, 0, "Adds a new group"))
+		if(DoButton_Editor(&s_NewGroupButton, Localize("Add group"), 0, &Slot, 0, Localize("Adds a new group")))
 		{
 			m_Map.NewGroup();
 			m_SelectedGroup = m_Map.m_lGroups.size()-1;
@@ -1853,7 +1855,7 @@ int CEditor::PopupImage(CEditor *pEditor, CUIRect View)
 	static int s_ExternalButton = 0;
 	if(pImg->m_External)
 	{
-		if(pEditor->DoButton_MenuItem(&s_ExternalButton, "Embedd", 0, &Slot, 0, "Embedds the image into the map file."))
+		if(pEditor->DoButton_MenuItem(&s_ExternalButton, Localize("Embed"), 0, &Slot, 0, Localize("Embeds the image into the map file.")))
 		{
 			pImg->m_External = 0;
 			return 1;
@@ -1861,7 +1863,7 @@ int CEditor::PopupImage(CEditor *pEditor, CUIRect View)
 	}
 	else
 	{
-		if(pEditor->DoButton_MenuItem(&s_ExternalButton, "Make external", 0, &Slot, 0, "Removes the image from the map file."))
+		if(pEditor->DoButton_MenuItem(&s_ExternalButton, Localize("Make external"), 0, &Slot, 0, Localize("Removes the image from the map file.")))
 		{
 			pImg->m_External = 1;
 			return 1;
@@ -1870,15 +1872,15 @@ int CEditor::PopupImage(CEditor *pEditor, CUIRect View)
 
 	View.HSplitTop(10.0f, &Slot, &View);
 	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_ReplaceButton, "Replace", 0, &Slot, 0, "Replaces the image with a new one"))
+	if(pEditor->DoButton_MenuItem(&s_ReplaceButton, Localize("Replace"), 0, &Slot, 0, Localize("Replaces the image with a new one")))
 	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, "Replace Image", "Replace", "mapres/", "", ReplaceImage, pEditor);
+		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, Localize("Replace Image"), Localize("Replace"), "mapres/", "", ReplaceImage, pEditor);
 		return 1;
 	}
 
 	View.HSplitTop(10.0f, &Slot, &View);
 	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_RemoveButton, "Remove", 0, &Slot, 0, "Removes the image from the map"))
+	if(pEditor->DoButton_MenuItem(&s_RemoveButton, Localize("Remove"), 0, &Slot, 0, Localize("Removes the image from the map")))
 	{
 		delete pImg;
 		pEditor->m_Map.m_lImages.remove_index(pEditor->m_SelectedImage);
@@ -1984,9 +1986,9 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 
 			ToolBox.HSplitTop(15.0f, &Slot, &ToolBox);
 			if(e == 0)
-				UI()->DoLabel(&Slot, "Embedded", 12.0f, 0);
+				UI()->DoLabel(&Slot, Localize("Embedded"), 12.0f, 0);
 			else
-				UI()->DoLabel(&Slot, "External", 12.0f, 0);
+				UI()->DoLabel(&Slot, Localize("External"), 12.0f, 0);
 		}
 		ImageCur++;
 
@@ -2012,7 +2014,7 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 			ToolBox.HSplitTop(12.0f, &Slot, &ToolBox);
 
 			if(int Result = DoButton_Editor(&m_Map.m_lImages[i], aBuf, m_SelectedImage == i, &Slot,
-				BUTTON_CONTEXT, "Select image"))
+				BUTTON_CONTEXT, Localize("Select image")))
 			{
 				m_SelectedImage = i;
 
@@ -2050,8 +2052,8 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 	static int s_NewImageButton = 0;
 	ToolBox.HSplitTop(10.0f, &Slot, &ToolBox);
 	ToolBox.HSplitTop(12.0f, &Slot, &ToolBox);
-	if(DoButton_Editor(&s_NewImageButton, "Add", 0, &Slot, 0, "Load a new image to use in the map"))
-		InvokeFileDialog(IStorage::TYPE_ALL, "Add Image", "Add", "mapres/", "", AddImage, this);
+	if(DoButton_Editor(&s_NewImageButton, "Add", 0, &Slot, 0, Localize("Load a new image to use in the map")))
+		InvokeFileDialog(IStorage::TYPE_ALL, Localize("Add Image"), Localize("Add"), "mapres/", "", AddImage, this);
 }
 
 
@@ -2136,7 +2138,7 @@ void CEditor::RenderFileDialog()
 
 	// filebox
 	static int s_FileBoxId = 0;
-	UI()->DoLabel(&FileBoxLabel, "Filename:", 10.0f, -1, -1);
+	UI()->DoLabel(&FileBoxLabel, Localize("Filename:"), 10.0f, -1, -1);
 	DoEditBox(&s_FileBoxId, &FileBox, gs_FileDialogFileName, sizeof(gs_FileDialogFileName), 10.0f);
 
 	gs_aFileDialogCompleteFilename[0] = 0;
@@ -2199,7 +2201,7 @@ void CEditor::RenderFileDialog()
 
 	ButtonBar.VSplitRight(40.0f, &ButtonBar, &Button);
 	ButtonBar.VSplitRight(50.0f, &ButtonBar, &Button);
-	if(DoButton_Editor(&s_CancelButton, "Cancel", 0, &Button, 0, 0) || Input()->KeyPressed(KEY_ESCAPE))
+	if(DoButton_Editor(&s_CancelButton, Localize("Cancel"), 0, &Button, 0, 0) || Input()->KeyPressed(KEY_ESCAPE))
 		m_Dialog = DIALOG_NONE;
 }
 
@@ -2234,8 +2236,8 @@ void CEditor::RenderModebar(CUIRect View)
 		View.VSplitLeft(65.0f, &Button, &View);
 		Button.HSplitTop(30.0f, 0, &Button);
 		static int s_Button = 0;
-		const char *pButName = m_Mode == MODE_LAYERS ? "Layers" : "Images";
-		if(DoButton_Tab(&s_Button, pButName, 0, &Button, 0, "Switch between images and layers managment."))
+		const char *pButName = m_Mode == MODE_LAYERS ? Localize("Layers") : Localize("Images");
+		if(DoButton_Tab(&s_Button, pButName, 0, &Button, 0, Localize("Switch between images and layers managment.")))
 		{
 		    if(m_Mode == MODE_LAYERS)
                 m_Mode = MODE_IMAGES;
@@ -2252,7 +2254,7 @@ void CEditor::RenderStatusbar(CUIRect View)
 	CUIRect Button;
 	View.VSplitRight(60.0f, &View, &Button);
 	static int s_EnvelopeButton = 0;
-	if(DoButton_Editor(&s_EnvelopeButton, "Envelopes", m_ShowEnvelopeEditor, &Button, 0, "Toggles the envelope editor."))
+	if(DoButton_Editor(&s_EnvelopeButton, Localize("Envelopes"), m_ShowEnvelopeEditor, &Button, 0, Localize("Toggles the envelope editor.")))
 		m_ShowEnvelopeEditor = (m_ShowEnvelopeEditor+1)%4;
 
 	if(m_pTooltip)
@@ -2260,7 +2262,7 @@ void CEditor::RenderStatusbar(CUIRect View)
 		if(ms_pUiGotContext && ms_pUiGotContext == UI()->HotItem())
 		{
 			char aBuf[512];
-			str_format(aBuf, sizeof(aBuf),"%s Right click for context menu.", m_pTooltip);
+			str_format(aBuf, sizeof(aBuf), Localize("%s Right click for context menu."), m_pTooltip);
 			UI()->DoLabel(&View, aBuf, 10.0f, -1, -1);
 		}
 		else
@@ -2303,13 +2305,13 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 		ToolBar.VSplitRight(50.0f, &ToolBar, &Button);
 		static int s_New4dButton = 0;
-		if(DoButton_Editor(&s_New4dButton, "Color+", 0, &Button, 0, "Creates a new color envelope"))
+		if(DoButton_Editor(&s_New4dButton, Localize("Color+"), 0, &Button, 0, Localize("Creates a new color envelope")))
 			pNewEnv = m_Map.NewEnvelope(4);
 
 		ToolBar.VSplitRight(5.0f, &ToolBar, &Button);
 		ToolBar.VSplitRight(50.0f, &ToolBar, &Button);
 		static int s_New2dButton = 0;
-		if(DoButton_Editor(&s_New2dButton, "Pos.+", 0, &Button, 0, "Creates a new pos envelope"))
+		if(DoButton_Editor(&s_New2dButton, Localize("Pos.+"), 0, &Button, 0, Localize("Creates a new pos envelope")))
 			pNewEnv = m_Map.NewEnvelope(3);
 
 		if(pNewEnv) // add the default points
@@ -2336,18 +2338,18 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		UI()->DoLabel(&Shifter, aBuf, 10.0f, 0, -1);
 
 		static int s_PrevButton = 0;
-		if(DoButton_ButtonDec(&s_PrevButton, 0, 0, &Dec, 0, "Previous Envelope"))
+		if(DoButton_ButtonDec(&s_PrevButton, 0, 0, &Dec, 0, Localize("Previous Envelope")))
 			m_SelectedEnvelope--;
 
 		static int s_NextButton = 0;
-		if(DoButton_ButtonInc(&s_NextButton, 0, 0, &Inc, 0, "Next Envelope"))
+		if(DoButton_ButtonInc(&s_NextButton, 0, 0, &Inc, 0, Localize("Next Envelope")))
 			m_SelectedEnvelope++;
 
 		if(pEnvelope)
 		{
 			ToolBar.VSplitLeft(15.0f, &Button, &ToolBar);
 			ToolBar.VSplitLeft(35.0f, &Button, &ToolBar);
-			UI()->DoLabel(&Button, "Name:", 10.0f, -1, -1);
+			UI()->DoLabel(&Button, Localize("Name:"), 10.0f, -1, -1);
 
 			ToolBar.VSplitLeft(80.0f, &Button, &ToolBar);
 
@@ -2428,7 +2430,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 						f2fx(aChannels[2]), f2fx(aChannels[3]));
 				}
 
-				m_pTooltip = "Press right mouse button to create a new point";
+				m_pTooltip = Localize("Press right mouse button to create a new point");
 			}
 		}
 
@@ -2489,7 +2491,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 					"N", "L", "S", "F", "M"
 					};
 
-				if(DoButton_Editor(pId, paTypeName[pEnvelope->m_lPoints[i].m_Curvetype], 0, &v, 0, "Switch curve type"))
+				if(DoButton_Editor(pId, paTypeName[pEnvelope->m_lPoints[i].m_Curvetype], 0, &v, 0, Localize("Switch curve type")))
 					pEnvelope->m_lPoints[i].m_Curvetype = (pEnvelope->m_lPoints[i].m_Curvetype+1)%NUM_CURVETYPES;
 			}
 		}
@@ -2605,7 +2607,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 						ColorMod = 100.0f;
 						Graphics()->SetColor(1,0.75f,0.75f,1);
-						m_pTooltip = "Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.";
+						m_pTooltip = Localize("Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.");
 					}
 
 					if(UI()->ActiveItem() == pId || UI()->HotItem() == pId)
@@ -2640,7 +2642,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 	CUIRect Slot;
 	View.HSplitTop(2.0f, &Slot, &View);
 	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_NewMapButton, "New", 0, &Slot, 0, "Creates a new map"))
+	if(pEditor->DoButton_MenuItem(&s_NewMapButton, Localize("New"), 0, &Slot, 0, Localize("Creates a new map")))
 	{
 		pEditor->Reset();
 		pEditor->m_aFileName[0] = 0;
@@ -2649,42 +2651,42 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 
 	View.HSplitTop(10.0f, &Slot, &View);
 	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_OpenButton, "Open", 0, &Slot, 0, "Opens a map for editing"))
+	if(pEditor->DoButton_MenuItem(&s_OpenButton, Localize("Open"), 0, &Slot, 0, Localize("Opens a map for editing")))
 	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, "Open Map", "Open", "maps/", "", CallbackOpenMap, pEditor);
+		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, Localize("Open map"), Localize("Open"), "maps/", "", CallbackOpenMap, pEditor);
 		return 1;
 	}
 
 	View.HSplitTop(10.0f, &Slot, &View);
 	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_AppendButton, "Append", 0, &Slot, 0, "Opens a map and adds everything from that map to the current one"))
+	if(pEditor->DoButton_MenuItem(&s_AppendButton, Localize("Append"), 0, &Slot, 0, Localize("Opens a map and adds everything from that map to the current one")))
 	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, "Append Map", "Append", "maps/", "", CallbackAppendMap, pEditor);
+		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, Localize("Append map"), Localize("Append"), "maps/", "", CallbackAppendMap, pEditor);
 		return 1;
 	}
 
 	View.HSplitTop(10.0f, &Slot, &View);
 	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_SaveButton, "Save", 0, &Slot, 0, "Saves the current map"))
+	if(pEditor->DoButton_MenuItem(&s_SaveButton, Localize("Save"), 0, &Slot, 0, Localize("Saves the current map")))
 	{
 		if(pEditor->m_aFileName[0])	
 			pEditor->Save(pEditor->m_aFileName);
 		else
-			pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, "Save Map", "Save", "maps/", "", CallbackSaveMap, pEditor);
+			pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save Map"), Localize("Save"), "maps/", "", CallbackSaveMap, pEditor);
 		return 1;
 	}
 
 	View.HSplitTop(2.0f, &Slot, &View);
 	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_SaveAsButton, "Save As", 0, &Slot, 0, "Saves the current map under a new name"))
+	if(pEditor->DoButton_MenuItem(&s_SaveAsButton, Localize("Save As"), 0, &Slot, 0, Localize("Saves the current map under a new name")))
 	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, "Save Map", "Save", "maps/", "", CallbackSaveMap, pEditor);
+		pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save Map"), Localize("Save"), "maps/", "", CallbackSaveMap, pEditor);
 		return 1;
 	}
 
 	View.HSplitTop(10.0f, &Slot, &View);
 	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_ExitButton, "Exit", 0, &Slot, 0, "Exits from the editor"))
+	if(pEditor->DoButton_MenuItem(&s_ExitButton, "Exit", 0, &Slot, 0, Localize("Exits from the editor")))
 	{
 		g_Config.m_ClEditor = 0;
 		return 1;
@@ -2698,7 +2700,7 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	static CUIRect s_File /*, view, help*/;
 
 	MenuBar.VSplitLeft(60.0f, &s_File, &MenuBar);
-	if(DoButton_Menu(&s_File, "File", 0, &s_File, 0, 0))
+	if(DoButton_Menu(&s_File, Localize("File"), 0, &s_File, 0, 0))
 		UiInvokePopupMenu(&s_File, 1, s_File.x, s_File.y+s_File.h-1.0f, 120, 150, PopupMenuFile, this);
 
 	/*
