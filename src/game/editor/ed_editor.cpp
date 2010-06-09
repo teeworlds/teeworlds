@@ -2839,6 +2839,19 @@ void CEditor::Reset(bool CreateDefault)
 	m_SelectedPoints = 0;
 	m_SelectedEnvelope = 0;
 	m_SelectedImage = 0;
+	
+	m_WorldOffsetX = 0;
+	m_WorldOffsetY = 0;
+	m_EditorOffsetX = 0.0f;
+	m_EditorOffsetY = 0.0f;
+	
+	m_WorldZoom = 1.0f;
+	m_ZoomLevel = 200;
+
+	m_MouseDeltaX = 0;
+	m_MouseDeltaY = 0;
+	m_MouseDeltaWx = 0;
+	m_MouseDeltaWy = 0;
 }
 
 void CEditorMap::MakeGameLayer(CLayer *pLayer)
