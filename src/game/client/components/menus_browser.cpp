@@ -309,7 +309,12 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 					TextRender()->TextEx(&Cursor, pItem->m_aName, -1);
 			}
 			else if(Id == COL_MAP)
-				UI()->DoLabel(&Button, pItem->m_aMap, 12.0f, -1);
+			{
+				CTextCursor Cursor;
+				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				Cursor.m_LineWidth = Button.w;
+				TextRender()->TextEx(&Cursor, pItem->m_aMap, -1);
+			}
 			else if(Id == COL_PLAYERS)
 			{
 				str_format(aTemp, sizeof(aTemp), "%i/%i", pItem->m_NumPlayers, pItem->m_MaxPlayers);
@@ -332,7 +337,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			}
 			else if(Id == COL_GAMETYPE)
 			{
-				UI()->DoLabel(&Button, pItem->m_aGameType, 12.0f, 0);
+				CTextCursor Cursor;
+				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				Cursor.m_LineWidth = Button.w;
+				TextRender()->TextEx(&Cursor, pItem->m_aGameType, -1);
 			}
 
 		}
