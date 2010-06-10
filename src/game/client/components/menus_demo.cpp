@@ -465,13 +465,13 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	}
 	
 	static int s_PlayButton = 0;
-	char aTitleButton[8];
+	char aTitleButton[10];
 	if(IsDir)
-		str_copy(aTitleButton, "Open", sizeof(aTitleButton));
+		str_copy(aTitleButton, Localize("Open"), sizeof(aTitleButton));
 	else
-		str_copy(aTitleButton, "Play", sizeof(aTitleButton));
-	//TODO: Add "Open" in Localization
-	if(DoButton_Menu(&s_PlayButton, Localize(aTitleButton), 0, &PlayRect) || Activated)
+		str_copy(aTitleButton, Localize("Play"), sizeof(aTitleButton));
+	
+	if(DoButton_Menu(&s_PlayButton, aTitleButton, 0, &PlayRect) || Activated)
 	{		
 		if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size())
 		{
@@ -491,7 +491,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			{
 				const char *pError = Client()->DemoPlayer_Play(m_lDemos[s_SelectedItem].m_aFilename);
 				if(pError)
-					PopupMessage(Localize("Error"), pError, Localize("Ok"));
+					PopupMessage(Localize("Error"), Localize(pError), Localize("Ok"));
 			}
 		}
 	}
