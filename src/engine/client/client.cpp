@@ -1123,6 +1123,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 						int DeltaSize;
 						unsigned char aTmpBuffer2[CSnapshot::MAX_SIZE];
 						unsigned char aTmpBuffer3[CSnapshot::MAX_SIZE];
+						CSnapshot *pTmpBuffer3 = (CSnapshot*)aTmpBuffer3;	// Fix compiler warning for strict-aliasing
 						int SnapSize;
 
 						CompleteSize = (NumParts-1) * MAX_SNAPSHOT_PACKSIZE + PartSize;
@@ -1169,19 +1170,19 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 
 						// unpack delta
 						PurgeTick = DeltaTick;
-						SnapSize = m_SnapshotDelta.UnpackDelta(pDeltaShot, (CSnapshot*)aTmpBuffer3, pDeltaData, DeltaSize);
+						SnapSize = m_SnapshotDelta.UnpackDelta(pDeltaShot, pTmpBuffer3, pDeltaData, DeltaSize);
 						if(SnapSize < 0)
 						{
 							dbg_msg("client", "delta unpack failed!");
 							return;
 						}
 
-						if(Msg != NETMSG_SNAPEMPTY && ((CSnapshot*)aTmpBuffer3)->Crc() != Crc)
+						if(Msg != NETMSG_SNAPEMPTY && pTmpBuffer3->Crc() != Crc)
 						{
 							if(g_Config.m_Debug)
 							{
 								dbg_msg("client", "snapshot crc error #%d - tick=%d wantedcrc=%d gotcrc=%d compressed_size=%d delta_tick=%d",
-									m_SnapCrcErrors, GameTick, Crc, ((CSnapshot*)aTmpBuffer3)->Crc(), CompleteSize, DeltaTick);
+									m_SnapCrcErrors, GameTick, Crc, pTmpBuffer3->Crc(), CompleteSize, DeltaTick);
 							}
 
 							m_SnapCrcErrors++;
@@ -1209,13 +1210,13 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 						m_SnapshotStorage.PurgeUntil(PurgeTick);
 
 						// add new
-						m_SnapshotStorage.Add(GameTick, time_get(), SnapSize, (CSnapshot*)aTmpBuffer3, 1);
+						m_SnapshotStorage.Add(GameTick, time_get(), SnapSize, pTmpBuffer3, 1);
 
 						// add snapshot to demo
 						if(m_DemoRecorder.IsRecording())
 						{
 							// write snapshot
-							m_DemoRecorder.RecordSnapshot(GameTick, aTmpBuffer3, SnapSize);
+							m_DemoRecorder.RecordSnapshot(GameTick, pTmpBuffer3, SnapSize);
 						}
 
 						// apply snapshot, cycle pointers

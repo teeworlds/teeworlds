@@ -98,7 +98,7 @@ void *CRingBufferBase::Allocate(int Size)
 	// okey, we have our block
 	
 	// split the block if needed
-	if(pBlock->m_Size > WantedSize+sizeof(CItem))
+	if(pBlock->m_Size > WantedSize+(int)sizeof(CItem))
 	{
 		CItem *pNewItem = (CItem *)((char *)pBlock + WantedSize);
 		pNewItem->m_pPrev = pBlock;

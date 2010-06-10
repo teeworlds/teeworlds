@@ -681,7 +681,7 @@ public:
 						Advance = pChr->m_AdvanceX + Kerning(pFont, Character, Nextcharacter)/Size;
 					}
 									
-					if(pCursor->m_Flags&TEXTFLAG_STOP_AT_END && DrawX+Advance*Size-pCursor->m_StartX > pCursor->m_LineWidth)
+					if(pCursor->m_Flags&TEXTFLAG_STOP_AT_END && DrawX+(Advance+pChr->m_Width)*Size-pCursor->m_StartX > pCursor->m_LineWidth)
 					{
 						// we hit the end of the line, no more to render or count
 						pCurrent = pEnd;
