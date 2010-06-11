@@ -551,6 +551,13 @@ void CCharacter::Tick()
 		Die(m_pPlayer->GetCID(), WEAPON_WORLD);
 	}
 
+	// kill player when leaving gamelayer
+	if((int)m_Pos.x/32 < -200 || (int)m_Pos.x/32 > GameServer()->Collision()->GetWidth()+200 ||
+		(int)m_Pos.y/32 < -200 || (int)m_Pos.y/32 > GameServer()->Collision()->GetHeight()+200)
+	{
+		Die(m_pPlayer->GetCID(), WEAPON_WORLD);
+	}
+	
 	// handle Weapons
 	HandleWeapons();
 
