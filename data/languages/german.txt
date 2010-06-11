@@ -260,7 +260,7 @@ Pistol
 == Pistole
 
 Play
-== Spielen
+== Abspielen
 
 Player
 == Spieler
@@ -455,7 +455,7 @@ Sudden Death
 == Noch %ds
 
 error loading demo
-== Fehler beim Laden der Demo, die Datei ist nicht gültig.
+== Fehler beim Laden der Demo, die Datei ist ungültig.
 
 Error
 == Fehlgeschlagen
