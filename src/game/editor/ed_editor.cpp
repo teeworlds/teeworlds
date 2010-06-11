@@ -2925,7 +2925,7 @@ void CEditor::DoMapBorder()
             pT->m_pTiles[i].m_Index = 1;
     }
     
-    for(int i = ((pT->m_Width-2)*pT->m_Height); i < pT->m_Width*pT->m_Height; ++i)
+    for(int i = (pT->m_Width*(pT->m_Height-2)); i < pT->m_Width*pT->m_Height; ++i)
         pT->m_pTiles[i].m_Index = 1;
 }
 
