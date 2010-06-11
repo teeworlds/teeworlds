@@ -1,5 +1,4 @@
 
-#include <string.h>
 #include <base/math.h>
 
 
@@ -396,7 +395,7 @@ void CMenus::DemolistPopulate()
 	m_lDemos.clear();
 	
 	
-	if(strncmp(m_aCurrentDemoFolder, "demos", 256)) //add parent folder
+	if(str_comp_num(m_aCurrentDemoFolder, "demos", 256)) //add parent folder
 	{
 		CDemoItem Item;
 		str_copy(Item.m_aName, "..", sizeof(Item.m_aName));
@@ -452,7 +451,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	
 	
 	bool IsDir = false;
-	if(!strncmp(m_lDemos[s_SelectedItem].m_aName, "..", 256)) //parent folder
+	if(!str_comp_num(m_lDemos[s_SelectedItem].m_aName, "..", 256)) //parent folder
 		IsDir = true;
 	else if(fs_is_dir(m_lDemos[s_SelectedItem].m_aFilename))
 		IsDir = true;
@@ -475,7 +474,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	{		
 		if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size())
 		{
-			if(!strncmp(m_lDemos[s_SelectedItem].m_aName, "..", 256))
+			if(!str_comp_num(m_lDemos[s_SelectedItem].m_aName, "..", 256))
 			{
 				DemoSetParentDirectory();
 				DemolistPopulate();
