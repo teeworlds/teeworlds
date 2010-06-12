@@ -4,11 +4,18 @@
 #include <base/vmath.h>
 #include <base/tl/sorted_array.h>
 
+#include <game/localization.h>
 #include <game/client/component.h>
 #include <game/client/ui.h>
 
-
 // compnent to fetch keypresses, override all other input
+typedef struct
+{
+	CLocConstString m_Name;
+	const char *m_pCommand;
+	int m_KeyId;
+} CKeyInfo;
+	
 class CMenusKeyBinder : public CComponent
 {
 public:
@@ -151,7 +158,7 @@ class CMenus : public CComponent
 	int m_CallvoteSelectedPlayer;
 	
 	// demo
-	struct CDemoItem
+	/*struct CDemoItem
 	{
 		char m_aFilename[512];
 		char m_aName[256];
@@ -162,7 +169,7 @@ class CMenus : public CComponent
 	sorted_array<CDemoItem> m_lDemos;
 	char m_aCurrentDemoFolder[256];
 	
-	void DemolistPopulate();
+	void DemolistPopulate();*/
 	static void DemolistCountCallback(const char *pName, int IsDir, void *pUser);
 	static void DemolistFetchCallback(const char *pName, int IsDir, void *pUser);
 	void DemoSetParentDirectory();
@@ -198,8 +205,21 @@ class CMenus : public CComponent
 	void RenderSettingsControls(CUIRect MainView);
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
+	void RenderSettingsHudMod(CUIRect MainView);
+	void RenderSettingsBeep(CUIRect MainView);
+	void RenderSettingsRace(CUIRect MainView);
+	void RenderSettingsLvlx(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
 	
+	// TeeComp related
+	void RenderRgbSliders(CUIRect* pMainView, CUIRect* pButton, int &r, int &g, int &b, bool Enabled);
+	void UiDoKeybinder(CKeyInfo& pKey, CUIRect* r);
+	void RenderSettingsTeecomp(CUIRect MainView);
+	void RenderSettingsTeecompSkins(CUIRect MainView);
+	void RenderSettingsTeecompStats(CUIRect MainView);
+	void RenderSettingsTeecompMisc(CUIRect MainView);
+	void RenderSettingsTeecompAbout(CUIRect MainView);
+
 	void SetActive(bool Active);
 public:
 	void RenderBackground();
@@ -210,6 +230,19 @@ public:
 	
 	CMenus();
 
+	struct CDemoItem
+	{
+		char m_aFilename[512];
+		char m_aName[256];
+		
+		bool operator<(const CDemoItem &Other) { return str_comp(m_aName, Other.m_aName) < 0; } 
+	};
+	
+	sorted_array<CDemoItem> m_lDemos;
+	char m_aCurrentDemoFolder[256];
+	
+	void DemolistPopulate();
+	
 	void RenderLoading(float Percent);
 
 	bool IsActive() const { return m_MenuActive; }

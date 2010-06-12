@@ -50,6 +50,10 @@ class CGameClient : public IGameClient
 	int m_PredictedTick;
 	int m_LastNewPredictedTick;
 
+	// Race
+	bool m_RaceMsgSent;
+	int m_ShowOthers;
+
 	int64 m_LastSendInfo;
 
 	static void ConTeam(IConsole::IResult *pResult, void *pUserData);
@@ -78,6 +82,29 @@ public:
 	bool m_NewTick;
 	bool m_NewPredictedTick;
 
+	// lvlx
+	bool m_IsLvlx;
+	bool m_IsCoop;
+	bool m_LvlxMsgSent;
+	
+	bool m_LoggedIn;
+	
+	// stats
+	int m_Level;
+	int m_Weapon;
+	int m_Str;
+	int m_Sta;
+	int m_Dex;
+	int m_Int;
+	float m_Exp; // in percent
+	float m_ExpDiff;
+	int m_ExpDiffTick;
+	int m_Points;
+	bool m_LevelUp;
+	
+	// Race
+	bool m_IsRace;
+	
 	// TODO: move this
 	CTuningParams m_Tuning;
 	
@@ -137,6 +164,11 @@ public:
 		int m_ColorBody;
 		int m_ColorFeet;
 		
+		// anti rainbow
+		int m_ColorChangeCount;
+		vec4 m_PrevColorBody;
+		vec4 m_PrevColorFeet;
+
 		char m_aName[64];
 		char m_aSkinName[64];
 		int m_SkinId;
@@ -151,11 +183,48 @@ public:
 		
 		float m_Angle;
 		
-		void UpdateRenderInfo();
+		// race
+		float m_Score;
+		
+		void UpdateRenderInfo(int Cid);
 	};
 
 	CClientData m_aClients[MAX_CLIENTS];
 	
+	// TeeComp vars
+	class CClientStats
+	{
+	public:
+		CClientStats();
+		
+		int m_JoinDate;
+		bool m_Active;
+		bool m_WasActive;
+
+		int m_aFragsWith[NUM_WEAPONS];
+		int m_aDeathsFrom[NUM_WEAPONS];
+		int m_Frags;
+		int m_Deaths;
+		int m_Suicides;
+		int m_BestSpree;
+		int m_CurrentSpree;
+
+		int m_FlagGrabs;
+		int m_FlagCaptures;
+		int m_CarriersKilled;
+		int m_KillsCarrying;
+		int m_DeathsCarrying;
+
+		void Reset();
+	};
+	
+	CClientStats m_aStats[MAX_CLIENTS];
+	
+	bool m_Freeview;
+	int m_SpectateCid;
+	int m_KillerCid;
+	vec2 m_SpectatePos;
+
 	CRenderTools m_RenderTools;
 	
 	void OnReset();
@@ -173,6 +242,16 @@ public:
 	virtual void OnShutdown();
 	virtual void OnEnterGame();
 	virtual void OnRconLine(const char *pLine);
+	
+	// TeeComp hooks
+	int m_LastGameOver;
+	bool m_LastWarmup;
+	int m_aLastFlagCarrier[2];
+	void OnGameOver();
+	void OnGameRestart();
+	void OnWarmupEnd();
+	void OnFlagGrab(int Id);
+	void FindNextSpectableCid();
 	
 	virtual const char *GetItemName(int Type);
 	virtual const char *Version();
@@ -201,6 +280,11 @@ public:
 	class CMotd *m_pMotd;
 	class CMapImages *m_pMapimages;
 	class CVoting *m_pVoting;
+	class CRaceDemo *m_pRaceDemo;
+	class CTeecompStats *m_pTeecompStats;
+	class CCoopboard *m_pCoopboard;
+	class CStatboard *m_pStatboard;
+	class CHud *m_pHud;
 };
 
 extern const char *Localize(const char *Str);

@@ -109,7 +109,14 @@ void CBinds::SetDefaults()
 	Bind('y', "chat team");	
 
 	Bind(KEY_F3, "vote yes");
-	Bind(KEY_F4, "vote no");	
+	Bind(KEY_F4, "vote no");
+	
+	// lvlx
+	Bind(KEY_F5, "coop yes");
+	Bind(KEY_F6, "coop no");
+	
+	Bind(KEY_LCTRL, "+coopboard");
+	Bind(KEY_LSHIFT, "+statboard");
 }
 
 void CBinds::OnConsoleInit()

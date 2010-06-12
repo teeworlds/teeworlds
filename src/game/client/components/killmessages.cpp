@@ -1,10 +1,13 @@
 #include <engine/graphics.h>
 #include <engine/textrender.h>
+#include <engine/shared/config.h>
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
 
 #include <game/client/gameclient.h>
 #include <game/client/animstate.h>
+#include <game/client/teecomp.h>
+#include "skins.h"
 #include "killmessages.h"
 
 void CKillMessages::OnReset()
@@ -37,11 +40,17 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 		// add the message
 		m_KillmsgCurrent = (m_KillmsgCurrent+1)%MAX_KILLMSGS;
 		m_aKillmsgs[m_KillmsgCurrent] = Kill;
+		
+		if(!m_pClient->m_Freeview && (Kill.m_VictimID == m_pClient->m_SpectateCid) && m_pClient->m_Snap.m_aCharacters[Kill.m_KillerID].m_Active)
+			m_pClient->m_KillerCid = Kill.m_KillerID;
 	}
 }
 
 void CKillMessages::OnRender()
 {
+	if(!g_Config.m_ClRenderKill || g_Config.m_ClClearAll)
+		return;
+	
 	float Width = 400*3.0f*Graphics()->ScreenAspect();
 	float Height = 400*3.0f;
 

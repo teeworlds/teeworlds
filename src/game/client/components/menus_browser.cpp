@@ -8,7 +8,6 @@
 #include <game/client/ui.h>
 #include <game/client/render.h>
 #include "menus.h"
-#include <game/localization.h>
 #include <game/version.h>
 
 void CMenus::RenderServerbrowserServerList(CUIRect View)

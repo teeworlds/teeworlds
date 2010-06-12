@@ -12,7 +12,7 @@
 #include <game/client/ui.h>
 #include <game/client/gameclient.h>
 #include <game/client/animstate.h>
-#include <game/localization.h>
+#include <game/client/teecomp.h>
 
 #include "menus.h"
 #include "motd.h"
@@ -50,12 +50,17 @@ void CMenus::RenderGame(CUIRect MainView)
 		
 		if(m_pClient->m_Snap.m_pGameobj->m_Flags & GAMEFLAG_TEAMS)
 		{
+			char aBuf[32];
 			if(m_pClient->m_Snap.m_pLocalInfo->m_Team != 0)
 			{
 				MainView.VSplitLeft(10.0f, &Button, &MainView);
 				MainView.VSplitLeft(120.0f, &Button, &MainView);
 				static int s_SpectateButton = 0;
-				if(DoButton_Menu(&s_SpectateButton, Localize("Join red"), 0, &Button))
+				if(m_pClient->m_Snap.m_pLocalInfo->m_Team == -1 || g_Config.m_TcColoredTeesMethod == 0)
+					str_format(aBuf, sizeof(aBuf), "Join %s", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam1));
+				else
+					str_format(aBuf, sizeof(aBuf), "Join %s", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
+				if(DoButton_Menu(&s_SpectateButton, aBuf, 0, &Button))
 				{
 					m_pClient->SendSwitchTeam(0);
 					SetActive(false);
@@ -67,7 +72,8 @@ void CMenus::RenderGame(CUIRect MainView)
 				MainView.VSplitLeft(10.0f, &Button, &MainView);
 				MainView.VSplitLeft(120.0f, &Button, &MainView);
 				static int s_SpectateButton = 0;
-				if(DoButton_Menu(&s_SpectateButton, Localize("Join blue"), 0, &Button))
+				str_format(aBuf, sizeof(aBuf), "Join %s", CTeecompUtils::RgbToName(g_Config.m_TcColoredTeesTeam2));
+				if(DoButton_Menu(&s_SpectateButton, aBuf, 0, &Button))
 				{
 					m_pClient->SendSwitchTeam(1);
 					SetActive(false);
@@ -86,6 +92,59 @@ void CMenus::RenderGame(CUIRect MainView)
 					m_pClient->SendSwitchTeam(0);
 					SetActive(false);
 				}
+			}
+		}
+		
+		// lvlx login stuff
+		if(m_pClient->m_LvlxMsgSent)
+		{
+			if(m_pClient->m_LoggedIn)
+			{
+				MainView.VSplitLeft(10.0f, &Button, &MainView);
+				MainView.VSplitLeft(120.0f, &Button, &MainView);
+				static int s_LogoutButton = 0;
+				if(DoButton_Menu(&s_LogoutButton, Localize("Logout"), 0, &Button))
+				{
+					CNetMsg_Cl_Logout Msg;
+					Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+					SetActive(false);
+				}
+			}
+			else
+			{
+				MainView.VSplitLeft(10.0f, &Button, &MainView);
+				MainView.VSplitLeft(120.0f, &Button, &MainView);
+				static int s_LoginButton = 0;
+				if(DoButton_Menu(&s_LoginButton, Localize("Login"), 0, &Button))
+				{
+					CNetMsg_Cl_Login Msg;
+					Msg.m_pName = g_Config.m_ClLvlxName;
+					Msg.m_pPass = g_Config.m_ClLvlxPass;
+					Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+					SetActive(false);
+				}
+				
+				char aBuf[32];
+				MainView.VSplitLeft(10.0f, &Button, &MainView);
+				MainView.VSplitLeft(120.0f, &Button, 0);
+				Button.HSplitTop(12.0f, &Button, 0);
+				str_format(aBuf, sizeof(aBuf), "%s:", Localize("Name"));
+				UI()->DoLabel(&Button, aBuf, 10.0, -1);
+				Button.VSplitLeft(50.0f, 0, &Button);
+				Button.VSplitLeft(160.0f, &Button, 0);
+				static float NameOffset = 0.0f; 
+				DoEditBox(g_Config.m_ClLvlxName, &Button, g_Config.m_ClLvlxName, sizeof(g_Config.m_ClLvlxName), 10.0f, &NameOffset);
+				
+				MainView.HSplitTop(2.0f, &Button, &MainView);
+				
+				Button.HSplitTop(14.0f, 0, &Button);
+				str_format(aBuf, sizeof(aBuf), "%s:", Localize("Password"));
+				UI()->DoLabel(&Button, aBuf, 10.0, -1);
+				Button.HSplitTop(12.0f, &Button, 0);
+				Button.VSplitLeft(50.0f, 0, &Button);
+				Button.VSplitLeft(160.0f, &Button, 0);
+				static float PassOffset = 0.0f; 
+				DoEditBox(g_Config.m_ClLvlxPass, &Button, g_Config.m_ClLvlxPass, sizeof(g_Config.m_ClLvlxPass), 10.0f, &PassOffset, true);
 			}
 		}
 	}
@@ -424,4 +483,3 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		}
 	}		
 }
-

@@ -5,6 +5,8 @@
 
 #include <game/client/gameclient.h>
 #include <game/client/animstate.h>
+#include <game/client/teecomp.h>
+
 #include "nameplates.h"
 #include "controls.h"
 
@@ -26,12 +28,34 @@ void CNamePlates::RenderNameplate(
 		if(g_Config.m_ClNameplatesAlways == 0)
 			a = clamp(1-powf(distance(m_pClient->m_pControls->m_TargetPos, Position)/200.0f,16.0f), 0.0f, 1.0f);
 			
-		const char *pName = m_pClient->m_aClients[pPlayerInfo->m_ClientId].m_aName;
-		float tw = TextRender()->TextWidth(0, 28.0f, pName, -1);
-		TextRender()->TextColor(1,1,1,a);
-		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-60, 28.0f, pName, -1);
+		char aName[256];
+		if(!g_Config.m_TcNameplateScore)
+			str_format(aName, 256, "%s", m_pClient->m_aClients[pPlayerInfo->m_ClientId].m_aName);
+		else
+			str_format(aName, 256, "%s (%d)", m_pClient->m_aClients[pPlayerInfo->m_ClientId].m_aName, pPlayerInfo->m_Score);
+		float tw = TextRender()->TextWidth(0, 28.0f, aName, -1);
+		if(g_Config.m_TcNameplateShadow)
+		{
+			TextRender()->TextColor(0,0,0,a);
+			TextRender()->Text(0, Position.x-tw/2.0f+2, Position.y-60+2, 28.0f, aName, -1);
+		}
+		bool IsTeamplay;
+		IsTeamplay = m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS;
+		if(g_Config.m_TcColoredNameplates&1 && IsTeamplay)
+		{
+			vec3 Col = CTeecompUtils::GetTeamColor(
+				m_pClient->m_aClients[pPlayerInfo->m_ClientId].m_Team,
+				m_pClient->m_Snap.m_pLocalInfo->m_Team,
+				g_Config.m_TcColoredNameplatesTeam1,
+				g_Config.m_TcColoredNameplatesTeam2,
+				g_Config.m_TcColoredNameplates&2);
+			TextRender()->TextColor(Col.r, Col.g, Col.b, a);
+		}
+		else // FFA or no colored plates
+			TextRender()->TextColor(1,1,1,a);
+		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-60, 28.0f, aName, -1);
 		
-		if(g_Config.m_Debug) // render client id when in debug aswell
+		if(g_Config.m_Debug || g_Config.m_ClNameplateClientId) // render client id when in debug aswell
 		{
 			char aBuf[128];
 			str_format(aBuf, sizeof(aBuf),"%d", pPlayerInfo->m_ClientId);
@@ -44,7 +68,7 @@ void CNamePlates::RenderNameplate(
 
 void CNamePlates::OnRender()
 {
-	if (!g_Config.m_ClNameplates)
+	if (!g_Config.m_ClNameplates || g_Config.m_ClClearAll)
 		return;
 
 	for(int i = 0; i < MAX_CLIENTS; i++)

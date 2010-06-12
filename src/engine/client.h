@@ -127,6 +127,15 @@ public:
 	virtual const char *ErrorString() = 0;
 	virtual const char *LatestVersion() = 0;
 	virtual bool ConnectionProblems() = 0;
+	
+	virtual void TeecompDemoStart() = 0;
+	virtual bool DemoIsRecording() = 0;
+	virtual bool DemoIsPlaying() = 0;
+	virtual void DemoRecord_Stop() = 0;
+	
+	// Race
+	virtual const char* GetCurrentMap() = 0;
+	virtual const char* RaceRecordStart(const char *pFilename) = 0;
 };
 
 class IGameClient : public IInterface

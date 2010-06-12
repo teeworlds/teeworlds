@@ -20,7 +20,6 @@
 #include <game/generated/client_data.h>
 #include <game/client/gameclient.h>
 #include <game/client/lineinput.h>
-#include <game/localization.h>
 #include <mastersrv/mastersrv.h>
 
 vec4 CMenus::ms_GuiColor;

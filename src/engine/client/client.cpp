@@ -3,6 +3,7 @@
 #include <stdlib.h> // qsort
 #include <stdarg.h>
 #include <math.h>
+#include <time.h>
 
 #include <base/system.h>
 #include <engine/shared/engine.h>
@@ -441,6 +442,29 @@ void CClient::SetState(int s)
 	m_State = s;
 	if(Old != s)
 		GameClient()->OnStateChange(m_State, Old);
+}
+
+void CClient::TeecompDemoStart()
+{
+	char aFilename[512];
+	time_t Rawtime;
+	struct tm *pTmp;
+
+	time(&Rawtime);
+	pTmp = localtime(&Rawtime);
+
+	str_format(aFilename, sizeof(aFilename), "demos/%d-%02d-%d_%02d-%02d-%02d_%s.demo", pTmp->tm_year + 1900, pTmp->tm_mon + 1, pTmp->tm_mday, pTmp->tm_hour, pTmp->tm_min, pTmp->tm_sec, m_aCurrentMap);
+	m_DemoRecorder.Start(Storage(), aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
+}
+
+bool CClient::DemoIsRecording()
+{
+	return m_DemoRecorder.IsRecording();
+}
+
+bool CClient::DemoIsPlaying()
+{
+	return m_DemoPlayer.IsPlaying();
 }
 
 // called when the map is loaded and we should init for a new round
@@ -923,6 +947,8 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 
 		// unpack msgid and system flag
 		int Msg = Unpacker.GetInt();
+		if(Msg < 0)
+			Msg = 63 + abs(Msg);
 		int Sys = Msg&1;
 		Msg >>= 1;
 
@@ -1823,6 +1849,44 @@ void CClient::Con_AddFavorite(IConsole::IResult *pResult, void *pUserData)
 		pSelf->m_ServerBrowser.AddFavorite(Addr);
 }
 
+const char *CClient::DemoRecord(const char *pName)
+{
+	char aFilename[512];
+	str_format(aFilename, sizeof(aFilename), "demos/%s_%s.demo", m_aCurrentMap, pName);
+	
+	if(m_State != STATE_ONLINE)
+		dbg_msg("demorec/record", "client is not online");
+	else
+		m_DemoRecorder.Start(Storage(), aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
+	
+	return m_aCurrentMap;
+}
+
+void CClient::DemoRecord_Stop()
+{
+	if(m_DemoRecorder.IsRecording())
+		m_DemoRecorder.Stop();
+}
+
+// Race
+const char* CClient::GetCurrentMap()
+{
+	return m_aCurrentMap;
+}
+
+const char* CClient::RaceRecordStart(const char *pFilename)
+{
+	char aFilename[128];
+	str_format(aFilename, sizeof(aFilename), "demos/%s_%s.demo", m_aCurrentMap, pFilename);
+	
+	if(State() != STATE_ONLINE)
+		dbg_msg("demorec/record", "client is not online");
+	else
+		m_DemoRecorder.Start(Storage(), aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
+		
+	return m_aCurrentMap;
+}
+
 const char *CClient::DemoPlayer_Play(const char *pFilename)
 {
 	int Crc;
@@ -1905,6 +1969,25 @@ void CClient::Con_ServerDummy(IConsole::IResult *pResult, void *pUserData)
 	dbg_msg("client", "this command is not available on the client");
 }
 
+void CClient::Con_Tmprec(IConsole::IResult *pResult, void *pUserData)
+{
+	CClient *pSelf = (CClient *)pUserData;
+	if(pSelf->m_State != STATE_ONLINE)
+		dbg_msg("demorec/record", "client is not online");
+	else
+	{
+		char aFilename[512];
+		time_t Rawtime;
+		struct tm *pTmp;
+
+		time(&Rawtime);
+		pTmp = localtime(&Rawtime);
+
+		str_format(aFilename, sizeof(aFilename), "demos/%d%02d%d_%d%d%d.demo", pTmp->tm_year + 1900, pTmp->tm_mon + 1, pTmp->tm_mday, pTmp->tm_hour, pTmp->tm_min, pTmp->tm_sec);
+		pSelf->m_DemoRecorder.Start(pSelf->Storage(), aFilename, pSelf->GameClient()->NetVersion(), pSelf->m_aCurrentMap, pSelf->m_CurrentMapCrc, "client");
+	}
+}
+
 void CClient::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
@@ -1933,6 +2016,8 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording");
 
 	m_pConsole->Register("add_favorite", "s", CFGFLAG_CLIENT, Con_AddFavorite, this, "Add a server as a favorite");
+	
+	m_pConsole->Register("tmprec", "", CFGFLAG_CLIENT, Con_Tmprec, this, "Temp Record");
 }
 
 static CClient m_Client;

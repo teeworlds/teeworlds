@@ -18,6 +18,9 @@ class CChat : public CComponent
 		int m_ClientId;
 		int m_Team;
 		int m_NameColor;
+		int m_ContainsName;
+		int m_Ignore;
+		int m_Spam;
 		char m_aName[64];
 		char m_aText[512];
 	};
@@ -36,6 +39,12 @@ class CChat : public CComponent
 	int m_Mode;
 	bool m_Show;
 	
+	bool m_ContainsName;
+	bool m_IgnorePlayer;
+	bool m_Spam;
+	
+	char m_aaLastMsg[MAX_CLIENTS+1][265];
+
 	static void ConSay(IConsole::IResult *pResult, void *pUserData);
 	static void ConSayTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConChat(IConsole::IResult *pResult, void *pUserData);
@@ -58,5 +67,13 @@ public:
 	virtual void OnRender();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual bool OnInput(IInput::CEvent Event);
+	
+	struct CSplit
+	{
+		char *m_aPointers[256];
+		int m_Count;
+	};
+
+	static CSplit Split(char *pIn, char Delim);
 };
 #endif

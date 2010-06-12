@@ -15,6 +15,9 @@ void CBroadcast::OnReset()
 
 void CBroadcast::OnRender()
 {
+	if(!g_Config.m_ClRenderBroadcast || g_Config.m_ClClearAll)
+		return;
+		
 	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);
 		
 	if(time_get() < m_BroadcastTime)
@@ -33,4 +36,3 @@ void CBroadcast::OnMessage(int MsgType, void *pRawMsg)
 		m_BroadcastTime = time_get()+time_freq()*10;
 	}
 }
-

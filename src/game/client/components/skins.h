@@ -25,6 +25,9 @@ public:
 	const CSkin *Get(int Index);
 	int Find(const char *pName);
 	
+	static vec3 HslToRgb(vec3 in);
+	static float HueToRgb(float v1, float v2, float h);
+	
 private:
 	enum
 	{

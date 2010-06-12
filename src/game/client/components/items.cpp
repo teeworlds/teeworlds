@@ -1,4 +1,5 @@
 #include <engine/graphics.h>
+#include <engine/shared/config.h>
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
 
@@ -6,10 +7,12 @@
 #include <game/client/gameclient.h>
 #include <game/client/ui.h>
 #include <game/client/render.h>
+#include <game/client/teecomp.h>
 
 #include <game/client/components/flow.h>
 #include <game/client/components/effects.h>
 
+#include "skins.h"
 #include "items.h"
 
 void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemId)
@@ -122,9 +125,22 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent)
 	float Angle = 0.0f;
 	float Size = 42.0f;
 
+	if(m_pClient->m_Snap.m_pLocalInfo && pCurrent->m_CarriedBy == m_pClient->m_Snap.m_pLocalInfo->m_ClientId && g_Config.m_TcHideCarrying)
+		return;
+
 	Graphics()->BlendNormal();
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	if(g_Config.m_TcColoredFlags)
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME_GRAY].m_Id);
+	else
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
+
+	if(g_Config.m_TcColoredFlags && m_pClient->m_Snap.m_pLocalInfo)
+	{
+		vec3 Col = CTeecompUtils::GetTeamColor(pCurrent->m_Team, m_pClient->m_Snap.m_pLocalInfo->m_Team,
+			g_Config.m_TcColoredTeesTeam1, g_Config.m_TcColoredTeesTeam2, g_Config.m_TcColoredTeesMethod);
+		Graphics()->SetColor(Col.r, Col.g, Col.b, 1.0f);
+	}
 
 	if(pCurrent->m_Team == 0) // red team
 		RenderTools()->SelectSprite(SPRITE_FLAG_RED);
@@ -183,10 +199,10 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 	Graphics()->QuadsDrawFreeform(&Freeform, 1);
 
 	// do inner	
-	vec4 InnerColor(0.5f, 0.5f, 1.0f, 1.0f);
 	Out = vec2(Dir.y, -Dir.x) * (5.0f*Ia);
-	Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, 1.0f); // center
-	
+	vec3 Rgb = vec3(m_pClient->m_pSkins->GetColor(g_Config.m_ClLaserColor).r, m_pClient->m_pSkins->GetColor(g_Config.m_ClLaserColor).g, m_pClient->m_pSkins->GetColor(g_Config.m_ClLaserColor).b);
+	Graphics()->SetColor(Rgb.r, Rgb.g, Rgb.b, 1.0f); // center
+
 	Freeform = IGraphics::CFreeformItem(
 			From.x-Out.x, From.y-Out.y,
 			From.x+Out.x, From.y+Out.y,
@@ -208,7 +224,7 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 		Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
 		IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 24, 24);
 		Graphics()->QuadsDraw(&QuadItem, 1);
-		Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, 1.0f);
+		Graphics()->SetColor(Rgb.r, Rgb.g, Rgb.b, 1.0f);
 		QuadItem = IGraphics::CQuadItem(Pos.x, Pos.y, 20, 20);
 		Graphics()->QuadsDraw(&QuadItem, 1);
 		Graphics()->QuadsEnd();

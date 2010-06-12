@@ -8,6 +8,8 @@
 #include <game/client/components/chat.h>
 #include <game/client/components/menus.h>
 
+#include "coopboard.h"
+#include "statboard.h"
 #include "controls.h"
 
 CControls::CControls()
@@ -35,20 +37,24 @@ static void ConKeyInputState(IConsole::IResult *pResult, void *pUserData)
 	((int *)pUserData)[0] = pResult->GetInteger(0);
 }
 
-static void ConKeyInputCounter(IConsole::IResult *pResult, void *pUserData)
-{
-	int *v = (int *)pUserData;
-	if(((*v)&1) != pResult->GetInteger(0))
-		(*v)++;
-	*v &= INPUT_STATE_MASK;
-}
-
 struct CInputSet
 {
 	CControls *m_pControls;
 	int *m_pVariable;
 	int m_Value;
 };
+
+static void ConKeyInputCounter(IConsole::IResult *pResult, void *pUserData)
+{
+	CInputSet *pSelf = (CInputSet *)pUserData;
+	if(pSelf->m_pControls->GetClient()->m_IsLvlx && (pSelf->m_pControls->GetClient()->m_pCoopboard->m_Active || (pSelf->m_pControls->GetClient()->m_pStatboard->m_Active && (pSelf->m_pControls->GetClient()->m_Points > 0 || (pSelf->m_pControls->GetClient()->m_Level >= 20 && pSelf->m_pControls->GetClient()->m_Weapon < 0)))))
+		return;
+		
+	int *v = (int *)pSelf->m_pVariable;
+	if(((*v)&1) != pResult->GetInteger(0))
+		(*v)++;
+	*v &= INPUT_STATE_MASK;
+}
 
 static void ConKeyInputSet(IConsole::IResult *pResult, void *pUserData)
 {
@@ -60,7 +66,7 @@ static void ConKeyInputSet(IConsole::IResult *pResult, void *pUserData)
 static void ConKeyInputNextPrevWeapon(IConsole::IResult *pResult, void *pUserData)
 {
 	CInputSet *pSet = (CInputSet *)pUserData;
-	ConKeyInputCounter(pResult, pSet->m_pVariable);
+	ConKeyInputCounter(pResult, pSet);
 	pSet->m_pControls->m_InputData.m_WantedWeapon = 0;
 }
 
@@ -71,7 +77,7 @@ void CControls::OnConsoleInit()
 	Console()->Register("+right", "", CFGFLAG_CLIENT, ConKeyInputState, &m_InputDirectionRight, "Move right");
 	Console()->Register("+jump", "", CFGFLAG_CLIENT, ConKeyInputState, &m_InputData.m_Jump, "Jump");
 	Console()->Register("+hook", "", CFGFLAG_CLIENT, ConKeyInputState, &m_InputData.m_Hook, "Hook");
-	Console()->Register("+fire", "", CFGFLAG_CLIENT, ConKeyInputCounter, &m_InputData.m_Fire, "Fire");
+	{ static CInputSet s_Set = {this, &m_InputData.m_Fire, 0};  Console()->Register("+fire", "", CFGFLAG_CLIENT, ConKeyInputCounter, (void *)&s_Set, "Fire"); }
 
 	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 1};  Console()->Register("+weapon1", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to hammer"); }
 	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 2};  Console()->Register("+weapon2", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to gun"); }
@@ -116,6 +122,14 @@ int CControls::SnapInput(int *pData)
 	{
 		OnReset();
 			
+		// Keep following while chatting/in console/in menu
+		if(m_pClient->m_Snap.m_Spectate && !m_pClient->m_Freeview)
+		{
+			m_InputData.m_TargetX = (int)m_MousePos.x;
+			m_InputData.m_TargetY = (int)m_MousePos.y;
+			Send = true;
+		}
+
 		mem_copy(pData, &m_InputData, sizeof(m_InputData));
 
 		// send once a second just to be sure
@@ -204,10 +218,15 @@ bool CControls::OnMouseMove(float x, float y)
 
 	if(m_pClient->m_Snap.m_Spectate)
 	{
-		if(m_MousePos.x < 200.0f) m_MousePos.x = 200.0f;
-		if(m_MousePos.y < 200.0f) m_MousePos.y = 200.0f;
-		if(m_MousePos.x > Collision()->GetWidth()*32-200.0f) m_MousePos.x = Collision()->GetWidth()*32-200.0f;
-		if(m_MousePos.y > Collision()->GetHeight()*32-200.0f) m_MousePos.y = Collision()->GetHeight()*32-200.0f;
+		if(m_pClient->m_Freeview)
+		{
+			if(m_MousePos.x < 200.0f) m_MousePos.x = 200.0f;
+			if(m_MousePos.y < 200.0f) m_MousePos.y = 200.0f;
+			if(m_MousePos.x > Collision()->GetWidth()*32-200.0f) m_MousePos.x = Collision()->GetWidth()*32-200.0f;
+			if(m_MousePos.y > Collision()->GetHeight()*32-200.0f) m_MousePos.y = Collision()->GetHeight()*32-200.0f;
+		}
+		else
+			m_MousePos = m_pClient->m_SpectatePos;
 		
 		m_TargetPos = m_MousePos;
 	}

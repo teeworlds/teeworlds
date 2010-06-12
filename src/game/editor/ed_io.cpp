@@ -277,9 +277,21 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				
 				Item.m_Width = pLayer->m_Width;
 				Item.m_Height = pLayer->m_Height;
-				Item.m_Flags = pLayer->m_Game;
+				if(pLayer->m_Tele)
+					Item.m_Flags = 2;
+				else
+					Item.m_Flags = pLayer->m_Game;
 				Item.m_Image = pLayer->m_Image;
-				Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), pLayer->m_pTiles);
+				if(pLayer->m_Tele)
+				{
+					CTile *Tiles = new CTile[pLayer->m_Width*pLayer->m_Height];
+					mem_zero(Tiles, pLayer->m_Width*pLayer->m_Height*sizeof(CTile));
+					Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), Tiles);
+					Item.m_Tele = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTeleTile), ((CLayerTele *)pLayer)->m_pTeleTile);
+					delete[] Tiles;
+				}
+				else
+					Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), pLayer->m_pTiles);
 				df.AddItem(MAPITEMTYPE_LAYER, LayerCount, sizeof(Item), &Item);
 				
 				GItem.m_NumLayers++;
@@ -485,6 +497,11 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName)
 							MakeGameLayer(pTiles);
 							MakeGameGroup(pGroup);
 						}
+						else if(pTilemapItem->m_Flags&2)
+						{
+							pTiles = new CLayerTele(pTilemapItem->m_Width, pTilemapItem->m_Height);
+							MakeTeleLayer(pTiles);
+						}
 						else
 						{
 							pTiles = new CLayerTiles(pTilemapItem->m_Width, pTilemapItem->m_Height);
@@ -510,6 +527,23 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName)
 						}
 						
 						DataFile.UnloadData(pTilemapItem->m_Data);
+						
+						if(pTiles->m_Tele)
+						{
+							void *pTeleData = DataFile.GetData(pTilemapItem->m_Tele);
+							mem_copy(((CLayerTele*)pTiles)->m_pTeleTile, pTeleData, pTiles->m_Width*pTiles->m_Height*sizeof(CTeleTile));
+							
+							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+							{
+								if(((CLayerTele*)pTiles)->m_pTeleTile[i].m_Type == TILE_TELEIN)
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_TELEIN;
+								else if(((CLayerTele*)pTiles)->m_pTeleTile[i].m_Type == TILE_TELEOUT)
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_TELEOUT;
+								else
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = 0;
+							}
+							DataFile.UnloadData(pTilemapItem->m_Tele);
+						}
 					}
 					else if(pLayerItem->m_Type == LAYERTYPE_QUADS)
 					{

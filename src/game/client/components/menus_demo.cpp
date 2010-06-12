@@ -8,7 +8,6 @@
 
 #include <game/client/render.h>
 #include <game/client/gameclient.h>
-#include <game/localization.h>
 
 #include <game/client/ui.h>
 
@@ -31,30 +30,22 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	float TotalHeight;
 	
 	if(m_MenuActive)
-		TotalHeight = SeekBarHeight+ButtonbarHeight+Margins*3;
-	else
-		TotalHeight = SeekBarHeight+Margins*2;
-	
-	MainView.HSplitBottom(TotalHeight, 0, &MainView);
-	MainView.VSplitLeft(250.0f, 0, &MainView);
-	MainView.VSplitRight(250.0f, &MainView, 0);
-	
-	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_T, 10.0f);
-		
-	MainView.Margin(5.0f, &MainView);
-	
-	CUIRect SeekBar, ButtonBar;
-	
-	if(m_MenuActive)
 	{
+		TotalHeight = SeekBarHeight+ButtonbarHeight+Margins*3;
+		
+		MainView.HSplitBottom(TotalHeight, 0, &MainView);
+		MainView.VSplitLeft(250.0f, 0, &MainView);
+		MainView.VSplitRight(250.0f, &MainView, 0);
+		
+		RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_T, 10.0f);
+			
+		MainView.Margin(5.0f, &MainView);
+		
+		CUIRect SeekBar, ButtonBar;
+
 		MainView.HSplitTop(SeekBarHeight, &SeekBar, &ButtonBar);
 		ButtonBar.HSplitTop(Margins, 0, &ButtonBar);
-	}
-	else
-		SeekBar = MainView;
 
-	// do seekbar
-	{
 		static int s_SeekBarId = 0;
 		void *id = &s_SeekBarId;
 		char aBuffer[128];
@@ -105,11 +96,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		
 		if(Inside)
 			UI()->SetHotItem(id);
-	}	
-	
 
-	if(m_MenuActive)
-	{
 		// do buttons
 		CUIRect Button;
 
@@ -162,7 +149,6 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 		// speed meter
 		ButtonBar.VSplitLeft(Margins*3, 0, &ButtonBar);
-		char aBuffer[64];
 		if(pInfo->m_Speed >= 1.0f)
 			str_format(aBuffer, sizeof(aBuffer), "x%.0f", pInfo->m_Speed);
 		else
@@ -498,8 +484,6 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	
 }
 
-
-
 void CMenus::DemoSetParentDirectory()
 {
 	int Stop = 0;
@@ -517,3 +501,4 @@ void CMenus::DemoSetParentDirectory()
 			m_aCurrentDemoFolder[i] = 0;
 	}
 }
+

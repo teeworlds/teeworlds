@@ -8,6 +8,7 @@
 #include <game/generated/client_data.h>
 
 #include <game/client/gameclient.h>
+#include <game/client/teecomp.h>
 
 #include <game/client/components/sounds.h>
 #include <game/localization.h>
@@ -116,6 +117,61 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
+		const char *pMessage = pMsg->m_pMessage;
+		
+		// save last message for each player
+		m_Spam = false;
+		
+		if(!str_comp(m_aaLastMsg[pMsg->m_Cid+1], pMessage))
+			m_Spam = true;
+		
+		str_copy(m_aaLastMsg[pMsg->m_Cid+1], pMessage, sizeof(m_aaLastMsg[pMsg->m_Cid+1]));
+			
+		// check if player is ignored
+		char aBuf[128];
+		str_copy(aBuf, g_Config.m_ClSpammerName, sizeof(aBuf));
+		
+		CSplit Sp = Split(aBuf, ' '); 
+		
+		m_IgnorePlayer = false;
+		
+		if(g_Config.m_ClBlockSpammer)
+		{
+			int i = 0;
+			while (i < Sp.m_Count)
+			{
+				if(str_find_nocase(m_pClient->m_aClients[pMsg->m_Cid].m_aName, Sp.m_aPointers[i]) != 0)
+				{
+					m_IgnorePlayer = true;
+					break;
+				}
+				else
+					i++;
+			}
+		}
+		
+		// check if message should be marked
+		str_copy(aBuf, g_Config.m_ClSearchName, sizeof(aBuf));
+
+		CSplit Sp2 = Split(aBuf, ' '); 
+		
+		m_ContainsName = false;
+		
+		if(g_Config.m_ClChangeColor || g_Config.m_ClChangeSound)
+		{
+			int i = 0;
+			while (i < Sp2.m_Count)
+			{
+				if(str_find_nocase(pMessage, Sp2.m_aPointers[i]))
+				{
+					m_ContainsName = true;
+					break;
+				}
+				else
+					i++;
+			}
+		}
+		
 		AddLine(pMsg->m_Cid, pMsg->m_Team, pMsg->m_pMessage);
 	}
 }
@@ -141,6 +197,18 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 		m_aLines[m_CurrentLine].m_ClientId = ClientId;
 		m_aLines[m_CurrentLine].m_Team = Team;
 		m_aLines[m_CurrentLine].m_NameColor = -2;
+		
+		m_aLines[m_CurrentLine].m_ContainsName = 0;
+		
+		if(g_Config.m_ClBlockSpammer && m_IgnorePlayer)
+			m_aLines[m_CurrentLine].m_Ignore = 1;
+		else
+			m_aLines[m_CurrentLine].m_Ignore = 0;
+			
+		if(g_Config.m_ClAntiSpam && m_Spam)
+			m_aLines[m_CurrentLine].m_Spam = 1;
+		else
+			m_aLines[m_CurrentLine].m_Spam = 0;
 
 		if(ClientId == -1) // server message
 		{
@@ -149,15 +217,18 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 		}
 		else
 		{
-			if(m_pClient->m_aClients[ClientId].m_Team == -1)
-				m_aLines[m_CurrentLine].m_NameColor = -1;
-
 			if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS)
 			{
-				if(m_pClient->m_aClients[ClientId].m_Team == 0)
-					m_aLines[m_CurrentLine].m_NameColor = 0;
-				else if(m_pClient->m_aClients[ClientId].m_Team == 1)
-					m_aLines[m_CurrentLine].m_NameColor = 1;
+				m_aLines[m_CurrentLine].m_ContainsName = (int)m_ContainsName;
+				m_aLines[m_CurrentLine].m_NameColor = m_pClient->m_aClients[ClientId].m_Team;
+ 			}
+			else
+			{
+				m_aLines[m_CurrentLine].m_ContainsName = (int)m_ContainsName;
+				if(m_pClient->m_aClients[ClientId].m_Team == -1)
+					m_aLines[m_CurrentLine].m_NameColor = -1;
+				else
+					m_aLines[m_CurrentLine].m_NameColor = -2;
 			}
 			
 			str_copy(m_aLines[m_CurrentLine].m_aName, m_pClient->m_aClients[ClientId].m_aName, sizeof(m_aLines[m_CurrentLine].m_aName));
@@ -170,10 +241,24 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 	}
 
 	// play sound
-	if(ClientId >= 0)
-		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0, vec2(0,0));
-	else
-		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0, vec2(0,0));
+	if(!m_Spam && !m_IgnorePlayer)
+	{
+		if((ClientId >= 0) && g_Config.m_ClChangeSound && m_ContainsName)	
+		{
+			if(g_Config.m_ClChatsound)
+				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_MARK, 0, vec2(0,0));
+		}
+		else if(ClientId >= 0)
+		{
+			if(g_Config.m_ClChatsound)
+				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0, vec2(0,0));
+		}
+		else
+		{
+			if(g_Config.m_ClServermsgsound)
+				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0, vec2(0,0));
+		}
+	}
 }
 
 void CChat::OnRender()
@@ -222,7 +307,13 @@ void CChat::OnRender()
 		Cursor.m_LineWidth = 200.0f;
 		TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
 		TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
-		y -= Cursor.m_Y + Cursor.m_FontSize;
+		if(!m_aLines[r].m_Spam && !m_aLines[r].m_Ignore)
+		{
+			if((g_Config.m_ClRenderChat && !g_Config.m_ClRenderServermsg && m_aLines[r].m_ClientId != -1)
+				|| (!g_Config.m_ClRenderChat && g_Config.m_ClRenderServermsg && m_aLines[r].m_ClientId == -1)
+				|| (g_Config.m_ClRenderChat && g_Config.m_ClRenderServermsg))
+				y -= Cursor.m_Y + Cursor.m_FontSize;
+		}
 
 		// cut off if msgs waste too much space
 		int HeightLimit = m_Show ? 0.0f : 200.0f;
@@ -233,30 +324,70 @@ void CChat::OnRender()
 		TextRender()->SetCursor(&Cursor, Begin, y, FontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = 200.0f;
 
-		// render name
-		TextRender()->TextColor(0.8f,0.8f,0.8f,1);
-		if(m_aLines[r].m_ClientId == -1)
-			TextRender()->TextColor(1,1,0.5f,1); // system
-		else if(m_aLines[r].m_Team)
-			TextRender()->TextColor(0.45f,0.9f,0.45f,1); // team message
-		else if(m_aLines[r].m_NameColor == 0)
-			TextRender()->TextColor(1.0f,0.5f,0.5f,1); // red
-		else if(m_aLines[r].m_NameColor == 1)
-			TextRender()->TextColor(0.7f,0.7f,1.0f,1); // blue
-		else if(m_aLines[r].m_NameColor == -1)
-			TextRender()->TextColor(0.75f,0.5f,0.75f, 1); // spectator
+		// render name		
+		if(!g_Config.m_ClClearAll)
+		{
+			vec3 TColor;
+			TextRender()->TextColor(0.8f,0.8f,0.8f,1);
+			if(m_aLines[r].m_ClientId == -1)
+				TextRender()->TextColor(1,1,0.5f,1); // system
+			else if(m_aLines[r].m_Team)
+				TextRender()->TextColor(0.45f,0.9f,0.45f,1); // m_Team message
+			else if(m_aLines[r].m_NameColor == 0)
+			{
+				if(!m_pClient->m_Snap.m_pLocalInfo)
+					TextRender()->TextColor(1.0f,0.5f,0.5f,1); // red
+				else
+				{
+					TColor = CTeecompUtils::GetTeamColor(0, m_pClient->m_Snap.m_pLocalInfo->m_Team, g_Config.m_TcColoredTeesTeam1,
+						g_Config.m_TcColoredTeesTeam2, g_Config.m_TcColoredTeesMethod);
+					TextRender()->TextColor(TColor.r, TColor.g, TColor.b, 1);
+				}
+			}
+			else if(m_aLines[r].m_NameColor == 1)
+			{
+				if(!m_pClient->m_Snap.m_pLocalInfo)
+					TextRender()->TextColor(0.7f,0.7f,1.0f,1); // blue
+				else
+				{
+					TColor = CTeecompUtils::GetTeamColor(1, m_pClient->m_Snap.m_pLocalInfo->m_Team, g_Config.m_TcColoredTeesTeam1,
+							g_Config.m_TcColoredTeesTeam2, g_Config.m_TcColoredTeesMethod);
+					TextRender()->TextColor(TColor.r, TColor.g, TColor.b, 1);
+				}	
+			}
+			else if(m_aLines[r].m_NameColor == -1)
+				TextRender()->TextColor(0.75f,0.5f,0.75f, 1); // spectator
+
+			// render name
+			if(!m_aLines[r].m_Spam && !m_aLines[r].m_Ignore)
+			{
+				if((g_Config.m_ClRenderChat && !g_Config.m_ClRenderServermsg && m_aLines[r].m_ClientId != -1)
+					|| (!g_Config.m_ClRenderChat && g_Config.m_ClRenderServermsg && m_aLines[r].m_ClientId == -1)
+					|| (g_Config.m_ClRenderChat && g_Config.m_ClRenderServermsg))
+					TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
+			}
+
+			// render line
+			if(m_aLines[r].m_ContainsName && g_Config.m_ClChangeColor)
+				TextRender()->TextColor(0.6f,0.6f,0.6f,1); // standard color if name
+			else
+				TextRender()->TextColor(1,1,1,1);
 			
-		// render name
-		TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
+			if(m_aLines[r].m_ClientId == -1)
+				TextRender()->TextColor(1,1,0.5f,1); // system
+			else if(m_aLines[r].m_Team && m_aLines[r].m_ContainsName && g_Config.m_ClChangeColor)
+				TextRender()->TextColor(0.3f,1,0.3f,1); // team color if name
+			else if(m_aLines[r].m_Team)
+				TextRender()->TextColor(0.65f,1,0.65f,1); // team message
 
-		// render line
-		TextRender()->TextColor(1,1,1,1);
-		if(m_aLines[r].m_ClientId == -1)
-			TextRender()->TextColor(1,1,0.5f,1); // system
-		else if(m_aLines[r].m_Team)
-			TextRender()->TextColor(0.65f,1,0.65f,1); // team message
-
-		TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
+			if(!m_aLines[r].m_Spam && !m_aLines[r].m_Ignore)
+			{
+				if((g_Config.m_ClRenderChat && !g_Config.m_ClRenderServermsg && m_aLines[r].m_ClientId != -1)
+					|| (!g_Config.m_ClRenderChat && g_Config.m_ClRenderServermsg && m_aLines[r].m_ClientId == -1)
+					|| (g_Config.m_ClRenderChat && g_Config.m_ClRenderServermsg))
+					TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
+			}
+		}
 	}
 
 	TextRender()->TextColor(1,1,1,1);
@@ -269,4 +400,21 @@ void CChat::Say(int Team, const char *pLine)
 	Msg.m_Team = Team;
 	Msg.m_pMessage = pLine;
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+}
+
+CChat::CSplit CChat::Split(char *pIn, char Delim)
+{
+	CSplit Sp;
+	Sp.m_Count = 1;
+	Sp.m_aPointers[0] = pIn;
+
+	while (*++pIn)
+	{
+		if (*pIn == Delim)
+		{
+			*pIn = 0;
+			Sp.m_aPointers[Sp.m_Count++] = pIn+1;
+		}
+	}
+	return Sp;
 }

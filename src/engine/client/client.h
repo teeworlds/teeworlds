@@ -281,9 +281,19 @@ public:
 	static void Con_Record(IConsole::IResult *pResult, void *pUserData);
 	static void Con_StopRecord(IConsole::IResult *pResult, void *pUserData);
 	static void Con_ServerDummy(IConsole::IResult *pResult, void *pUserData);
+	static void Con_Tmprec(IConsole::IResult *pResult, void *pUserData);
+
+	// Race
+	virtual const char* GetCurrentMap();
+	virtual const char* RaceRecordStart(const char *pFilename);
 
 	void RegisterCommands();
 
+	virtual void TeecompDemoStart();
+	virtual bool DemoIsRecording();
+	virtual bool DemoIsPlaying();
+	const char *DemoRecord(const char *pName);
+	virtual void DemoRecord_Stop();
 	const char *DemoPlayer_Play(const char *pFilename);
 
 	virtual class CEngine *Engine() { return &m_Engine; }

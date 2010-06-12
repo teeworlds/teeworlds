@@ -220,6 +220,17 @@ void CPlayers::RenderPlayer(
 	if(m_pClient->m_Snap.m_pGameobj)
 		IsTeamplay = (m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS) != 0;
 
+	// anti rainbow
+	if(g_Config.m_ClAntiRainbow && (m_pClient->m_aClients[pInfo.m_ClientId].m_ColorChangeCount > g_Config.m_ClAntiRainbowCount))
+	{
+		if(g_Config.m_TcForceSkinTeam1)
+			RenderInfo.m_Texture = m_pClient->m_pSkins->Get(max(0, m_pClient->m_pSkins->Find(g_Config.m_TcForcedSkin1)))->m_OrgTexture;
+		else
+			RenderInfo.m_Texture = m_pClient->m_pSkins->Get(m_pClient->m_aClients[pInfo.m_ClientId].m_SkinId)->m_OrgTexture;
+		RenderInfo.m_ColorBody = vec4(1,1,1,1);
+		RenderInfo.m_ColorFeet = vec4(1,1,1,1);
+	}
+	
 	// check for ninja	
 	if (Player.m_Weapon == WEAPON_NINJA)
 	{
@@ -478,7 +489,7 @@ void CPlayers::RenderPlayer(
 	}
 
 	// render the "shadow" tee
-	if(pInfo.m_Local && g_Config.m_Debug)
+	if(pInfo.m_Local && (g_Config.m_ClShowGhost || g_Config.m_Debug))
 	{
 		vec2 GhostPosition = mix(vec2(pPrevChar->m_X, pPrevChar->m_Y), vec2(pPlayerChar->m_X, pPlayerChar->m_Y), Client()->IntraGameTick());
 		CTeeRenderInfo Ghost = RenderInfo;
@@ -502,6 +513,9 @@ void CPlayers::RenderPlayer(
 		Graphics()->QuadsEnd();
 	}
 
+	if(!g_Config.m_ClRenderEmotes || g_Config.m_ClClearAll)
+		return;
+		
 	if (m_pClient->m_aClients[pInfo.m_ClientId].m_EmoticonStart != -1 && m_pClient->m_aClients[pInfo.m_ClientId].m_EmoticonStart + 2 * Client()->GameTickSpeed() > Client()->GameTick())
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);

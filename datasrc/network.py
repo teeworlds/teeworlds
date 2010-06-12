@@ -293,4 +293,85 @@ Messages = [
 		NetString("m_Type"),
 		NetString("m_Value"),
 	]),
+	
+	NetMessage("Cl_IsRace", []),
+	
+	NetMessage("Cl_RaceShowOthers", [
+		NetBool("m_Active"),
+	]),
+	
+	NetMessage("Sv_RaceTime", [
+		NetIntAny("m_Time"),
+		NetIntAny("m_Check"),
+	]),
+	
+	NetMessage("Sv_Record", [
+		NetIntAny("m_Time"),
+	]),
+
+	NetMessage("Sv_PlayerTime", [
+		NetIntAny("m_Time"),
+		NetIntRange("m_Cid", 0, 'MAX_CLIENTS-1'),
+	]),
+
+	NetMessage("Sv_LoggedIn", [
+		NetBool("m_LoggedIn"),
+		NetIntAny("m_Level"),
+		NetIntAny("m_Weapon"),
+		NetIntAny("m_Str"),
+		NetIntAny("m_Sta"),
+		NetIntAny("m_Dex"),
+		NetIntAny("m_Int"),
+		NetIntAny("m_Exp"),
+	]),
+	
+	NetMessage("Cl_Login", [
+		NetString("m_pName"),
+		NetString("m_pPass"),
+	]),
+	
+	NetMessage("Cl_Logout", []),
+	
+	NetMessage("Cl_CoopAnswer", [
+		NetBool("m_Answer"),
+	]),
+	
+	NetMessage("Cl_IsLvlx", [
+		NetString("m_pName"),
+		NetString("m_pPass"),
+	]),
+	
+	NetMessage("Sv_CoopResult", [
+		NetIntRange("m_Cid", -1, 'MAX_CLIENTS-1'),
+	]),
+	
+	NetMessage("Sv_CoopRequest", [
+		NetIntAny("m_Cid"),
+		NetString("m_pName"),
+		NetIntAny("m_Level"),
+		NetIntAny("m_Weapon"),
+		NetIntAny("m_Str"),
+		NetIntAny("m_Sta"),
+		NetIntAny("m_Dex"),
+		NetIntAny("m_Int"),
+	]),
+	
+	NetMessage("Cl_CoopRequest", [
+		NetIntRange("m_Cid", -1, 'MAX_CLIENTS-1'),
+	]),
+	
+	NetMessage("Sv_ExpUpdate", [
+		NetBool("m_LevelUp"),
+		NetIntAny("m_Exp"),
+	]),
+	
+	NetMessage("Cl_Stats", [
+		NetIntRange("m_Stat", 0, '8'),
+	]),
+	
+	NetMessage("Sv_Spree", [
+		NetIntAny("m_Num"),
+		NetIntRange("m_Cid", 0, 'MAX_CLIENTS-1'),
+		NetIntRange("m_EndedBy", -1, 'MAX_CLIENTS-1'),
+	]),
 ]

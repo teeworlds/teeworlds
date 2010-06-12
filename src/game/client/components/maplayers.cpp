@@ -30,7 +30,7 @@ void CMapLayers::MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *p
 {
 	float Points[4];
 	RenderTools()->MapscreenToWorld(CenterX, CenterY, pGroup->m_ParallaxX/100.0f, pGroup->m_ParallaxY/100.0f,
-		pGroup->m_OffsetX, pGroup->m_OffsetY, Graphics()->ScreenAspect(), 1.0f, Points);
+		pGroup->m_OffsetX, pGroup->m_OffsetY, Graphics()->ScreenAspect(), m_pClient->m_pCamera->m_Zoom, Points);
 	Graphics()->MapScreen(Points[0], Points[1], Points[2], Points[3]);
 }
 
@@ -189,4 +189,3 @@ void CMapLayers::OnRender()
 	// reset the screen like it was before
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
 }
-

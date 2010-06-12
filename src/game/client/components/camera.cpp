@@ -10,16 +10,53 @@
 
 CCamera::CCamera()
 {
+	m_Zoom = 1.0f;
+	m_ZoomBind = 0;
+}
+
+void CCamera::ConKeyZoomin(IConsole::IResult *pResult, void *pUserData)
+{
+	if(((CCamera *)pUserData)->m_ZoomBind)
+		((CCamera *)pUserData)->m_Zoom = clamp(((CCamera *)pUserData)->m_Zoom-0.1f, 0.2f, 1.6f);
+}
+
+void CCamera::ConKeyZoomout(IConsole::IResult *pResult, void *pUserData)
+{
+	if(((CCamera *)pUserData)->m_ZoomBind)
+		((CCamera *)pUserData)->m_Zoom = clamp(((CCamera *)pUserData)->m_Zoom+0.1f, 0.2f, 1.6f);
+}
+
+void CCamera::ConZoom(IConsole::IResult *pResult, void *pUserData)
+{
+	((CCamera *)pUserData)->m_ZoomBind ^= 1;
+}
+
+void CCamera::ConZoomReset(IConsole::IResult *pResult, void *pUserData)
+{
+	((CCamera *)pUserData)->m_Zoom = 1.0f;
+}
+
+void CCamera::OnConsoleInit()
+{
+	Console()->Register("+zoomin", "", CFGFLAG_CLIENT, ConKeyZoomin, this, "");
+	Console()->Register("+zoomout", "", CFGFLAG_CLIENT, ConKeyZoomout, this, "");
+	Console()->Register("zoom", "", CFGFLAG_CLIENT, ConZoom, this, "");
+	Console()->Register("zoomreset", "", CFGFLAG_CLIENT, ConZoomReset, this, "");
 }
 
 void CCamera::OnRender()
 {
 	//vec2 center;
-	m_Zoom = 1.0f;
+	//m_Zoom = 1.0f;
 
 	// update camera center		
 	if(m_pClient->m_Snap.m_Spectate)
-		m_Center = m_pClient->m_pControls->m_MousePos;
+	{
+		if(m_pClient->m_Freeview)
+			m_Center = m_pClient->m_pControls->m_MousePos;
+		else
+			m_Center = m_pClient->m_SpectatePos;
+	}
 	else
 	{
 
