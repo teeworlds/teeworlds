@@ -344,13 +344,13 @@ void CScoreboard::OnRender()
 			DoScoreBoard = true;
 	}
 
-	// if coopboard or statboard active dont show scoreboard
-	if(m_pClient->m_pCoopboard->m_Active || m_pClient->m_pStatboard->m_Active || m_pClient->m_pTeecompStats->IsActive())
-		DoScoreBoard = false;
-
 	// if we the game is over
 	if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver)
 		DoScoreBoard = true;
+	
+	// if coopboard or statboard active dont show scoreboard
+	if(m_pClient->m_pCoopboard->m_Active || m_pClient->m_pStatboard->m_Active || m_pClient->m_pTeecompStats->IsActive())
+		DoScoreBoard = false;
 		
 	if(!DoScoreBoard)
 		return;
