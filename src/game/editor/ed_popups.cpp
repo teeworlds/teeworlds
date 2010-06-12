@@ -228,8 +228,8 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 	if(pEditor->m_Map.m_pGameLayer == pEditor->GetSelectedLayer(0) || pEditor->m_Map.m_pTeleLayer == pEditor->GetSelectedLayer(0)) // dont use Group and Detail from the selection if this is the game layer
 	{
 		aProps[0].m_Type = PROPTYPE_NULL;
-		aProps[2].m_Type = PROPTYPE_NULL;
-	}
+ 		aProps[2].m_Type = PROPTYPE_NULL;
+ 	}
 	
 	static int s_aIds[NUM_PROPS] = {0};
 	int NewVal = 0;

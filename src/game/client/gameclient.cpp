@@ -201,7 +201,7 @@ void CGameClient::OnConsoleInit()
 	m_Input.Add(m_pBinds);
 	
 	// add the some console commands
-	Console()->Register("m_Team", "i", CFGFLAG_CLIENT, ConTeam, this, "Switch m_Team");
+	Console()->Register("team", "i", CFGFLAG_CLIENT, ConTeam, this, "Switch team");
 	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself");
 	
 	// register server dummy commands for tab completion
@@ -212,7 +212,7 @@ void CGameClient::OnConsoleInit()
 	Console()->Register("restart", "?i", CFGFLAG_SERVER, ConServerDummy, 0, "Restart in x seconds");
 	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Broadcast message");
 	//MACRO_REGISTER_COMMAND("say", "r", CFGFLAG_SERVER, con_serverdummy, 0);
-	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConServerDummy, 0, "Set m_Team of player to m_Team");
+	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConServerDummy, 0, "Set team of player to team");
 	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Add a voting option");
 	//MACRO_REGISTER_COMMAND("vote", "", CFGFLAG_SERVER, con_serverdummy, 0);
 
@@ -314,6 +314,11 @@ void CGameClient::OnInit()
 	
 	m_ServerMode = SERVERMODE_PURE;
 	
+	m_IsRace = false;
+	m_RaceMsgSent = false;
+	m_ShowOthers = -1;
+	m_FlagPos = vec2(-1, -1);
+	
 	// lvlx
 	m_IsLvlx = false;
 	m_IsCoop = false;
@@ -330,10 +335,6 @@ void CGameClient::OnInit()
 	m_ExpDiff = 0;
 	m_Points = 0;
 	m_LevelUp = false;
-
-	m_IsRace = false;
-	m_RaceMsgSent = false;
-	m_ShowOthers = -1;
 
 	// Teecomp grayscale flags
 	Graphics()->UnloadTexture(g_pData->m_aImages[IMAGE_GAME_GRAY].m_Id); // Already loaded with full color, unload
@@ -528,6 +529,12 @@ void CGameClient::OnReset()
 	
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
+		
+	// Race
+	m_IsRace = false;
+	m_RaceMsgSent = false;
+	m_ShowOthers = -1;
+	m_FlagPos = vec2(-1, -1);
 	
 	// lvlx
 	m_IsLvlx = false;
@@ -545,11 +552,6 @@ void CGameClient::OnReset()
 	m_ExpDiff = 0.0f;
 	m_Points = 0;
 	m_LevelUp = false;
-	
-	// Race
-	m_IsRace = false;
-	m_RaceMsgSent = false;
-	m_ShowOthers = -1;
 }
 
 
@@ -1122,17 +1124,37 @@ void CGameClient::OnNewSnapshot()
 			m_ServerMode = SERVERMODE_PUREMOD;
 	}
 	
+	// send race msg
 	if(m_Snap.m_pLocalInfo)
 	{
 		CServerInfo CurrentServerInfo;
 		Client()->GetServerInfo(&CurrentServerInfo);
-		
-		// send race msg
-		if(str_find_nocase(CurrentServerInfo.m_aGameType, "race"))
+		if(str_find_nocase(CurrentServerInfo.m_aGameType, "race") || str_find_nocase(CurrentServerInfo.m_aGameType, "fastcap"))
 		{
 			if(!m_IsRace)
 				m_IsRace = true;
+			
+			if(str_find_nocase(CurrentServerInfo.m_aGameType, "fastcap"))
+			{
+				m_IsFastCap = true;
 				
+				// get Flag Pos (for demo recording)
+				m_FlagPos = vec2(-1, -1);
+				int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
+				for(int i = 0; i < Num; i++)
+				{
+					IClient::CSnapItem Item;
+					const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
+
+					if(Item.m_Type == NETOBJTYPE_FLAG)
+					{
+						const CNetObj_Flag *pFlag = (const CNetObj_Flag *)pData;
+						if(pFlag->m_CarriedBy == -2 && pFlag->m_Team != m_aClients[m_Snap.m_LocalCid].m_Team)
+							m_FlagPos = vec2(pFlag->m_X, pFlag->m_Y);
+					}
+				}
+			}
+			
 			if(!m_RaceMsgSent && m_Snap.m_pLocalInfo)
 			{
 				CNetMsg_Cl_IsRace Msg;
@@ -1154,7 +1176,7 @@ void CGameClient::OnNewSnapshot()
 				}
 			}
 		}
-		
+
 		// send lvlx msg
 		if(str_find_nocase(CurrentServerInfo.m_aGameType, "Lvl|"))
 		{
@@ -1174,7 +1196,7 @@ void CGameClient::OnNewSnapshot()
 			}
 		}
 	}
-
+	
 	// update render info
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		m_aClients[i].UpdateRenderInfo(i);
@@ -1378,7 +1400,7 @@ void CGameClient::CClientData::UpdateRenderInfo(int Cid)
 {
 	m_RenderInfo = m_SkinInfo;
 
-	// force m_Team colors
+	// force team colors
 	if(g_GameClient.m_Snap.m_pGameobj && g_GameClient.m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS)
 	{
 		int LocalTeam;

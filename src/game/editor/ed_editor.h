@@ -626,11 +626,11 @@ public:
 	
 	void RenderMenubar(CUIRect Menubar);
 	void RenderFileDialog();
-	
-	unsigned char m_TeleNum;
 
 	void AddFileDialogEntry(const char *pName, CUIRect *pView);
 	void SortImages();
+	
+	unsigned char m_TeleNum;
 };
 
 // make sure to inline this function

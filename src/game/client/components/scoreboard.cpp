@@ -142,9 +142,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		else
 			pTitle = Localize("Score board");
 	}
-
-	float tw = TextRender()->TextWidth(0, 48, pTitle, -1);
-
+		
 	float Offset = 0;
 	float DataOffset = 0;
 	if(m_pClient->m_IsRace)
@@ -152,6 +150,8 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		Offset = 80.0f;
 		DataOffset = 130;
 	}
+	
+	float tw = TextRender()->TextWidth(0, 48, pTitle, -1);
 
 	if(Team == -1)
 	{
@@ -300,7 +300,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			}
 
 			float size = 64.0f;
-			IGraphics::CQuadItem QuadItem(x+55, y-15, size/2, size);
+			IGraphics::CQuadItem QuadItem(x+55+DataOffset, y-15, size/2, size);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
 		}
@@ -366,7 +366,7 @@ void CScoreboard::OnRender()
 	Graphics()->MapScreen(0, 0, Width, Height);
 
 	float w = 650.0f;
-
+	
 	// resize scoreboard for race
 	if(m_pClient->m_IsRace)
 		w = 750.0f;

@@ -222,7 +222,7 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 			// dont allow tele in and out tiles
 			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pGameLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT))
 				continue;
-
+			
 			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
 		}
 }

@@ -2875,18 +2875,18 @@ void CEditor::Reset(bool CreateDefault)
 	m_MouseDeltaWy = 0;
 }
 
-void CEditorMap::MakeTeleLayer(CLayer *pLayer)
-{
-	m_pTeleLayer = (CLayerTele *)pLayer;
-	m_pTeleLayer->m_pEditor = m_pEditor;
-	m_pTeleLayer->m_TexId = m_pEditor->ms_EntitiesTexture;
-}
-
 void CEditorMap::MakeGameLayer(CLayer *pLayer)
 {
 	m_pGameLayer = (CLayerGame *)pLayer;
 	m_pGameLayer->m_pEditor = m_pEditor;
 	m_pGameLayer->m_TexId = m_pEditor->ms_EntitiesTexture;
+}
+
+void CEditorMap::MakeTeleLayer(CLayer *pLayer)
+{
+	m_pTeleLayer = (CLayerTele *)pLayer;
+	m_pTeleLayer->m_pEditor = m_pEditor;
+	m_pTeleLayer->m_TexId = m_pEditor->ms_EntitiesTexture;
 }
 
 void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)

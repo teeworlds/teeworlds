@@ -22,7 +22,6 @@
 #include "binds.h"
 #include "menus.h"
 #include "race_demo.h"
-#include "menus.h"
 #include "skins.h"
 
 CHud::CHud()
@@ -113,7 +112,7 @@ void CHud::RenderScoreHud()
 	float Whole = 300*Graphics()->ScreenAspect();
 	
 	// render small score hud
-	if(!(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver) && (GameFlags&GAMEFLAG_TEAMS))
+	if(!m_pClient->m_IsRace && !(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver) && (GameFlags&GAMEFLAG_TEAMS))
 	{
 		for(int t = 0; t < 2; t++)
 		{
@@ -1060,14 +1059,17 @@ void CHud::OnRender()
 		RenderSpree();
 
 	RenderTeambalanceWarning();
-	if(g_Config.m_ClRenderVote && !g_Config.m_ClClearAll)
-		RenderVoting();
-	if(!g_Config.m_ClClearHud && !g_Config.m_ClClearAll)
-		RenderRecord();
-	if(g_Config.m_ClRenderCrosshair && !g_Config.m_ClClearHud && !g_Config.m_ClClearAll)
-		RenderCursor();
-	if(g_Config.m_ClRenderViewmode && !g_Config.m_ClClearHud && !g_Config.m_ClClearAll && Spectate && !(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
-		RenderSpectate();
+	if(!g_Config.m_ClClearAll)	
+	{
+		if(g_Config.m_ClRenderVote)
+			RenderVoting();
+		if(!g_Config.m_ClClearHud)
+			RenderRecord();
+		if(g_Config.m_ClRenderCrosshair && !g_Config.m_ClClearHud)
+			RenderCursor();
+		if(g_Config.m_ClRenderViewmode && !g_Config.m_ClClearHud && Spectate && !(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
+			RenderSpectate();
+	}
 }
 
 void CHud::ConCoop(IConsole::IResult *pResult, void *pUserData)

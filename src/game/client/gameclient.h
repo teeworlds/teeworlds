@@ -81,6 +81,11 @@ public:
 	bool m_SuppressEvents;
 	bool m_NewTick;
 	bool m_NewPredictedTick;
+	
+	// Race
+	bool m_IsRace;
+	bool m_IsFastCap;
+	vec2 m_FlagPos;
 
 	// lvlx
 	bool m_IsLvlx;
@@ -101,9 +106,6 @@ public:
 	int m_ExpDiffTick;
 	int m_Points;
 	bool m_LevelUp;
-	
-	// Race
-	bool m_IsRace;
 	
 	// TODO: move this
 	CTuningParams m_Tuning;
