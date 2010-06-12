@@ -80,8 +80,10 @@ public:
 	
 	// Race
 	bool m_IsRace;
+	bool m_IsFastCap;
 	bool m_RaceMsgSent;
 	int m_ShowOthers;
+	vec2 m_FlagPos;
 
 	// TODO: move this
 	CTuningParams m_Tuning;

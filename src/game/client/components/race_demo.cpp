@@ -31,7 +31,8 @@ void CRaceDemo::OnRender()
 	vec2 PlayerPos = m_pClient->m_LocalCharacterPos;
 	
 	// start the demo
-	if(!m_Active && m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalCid].m_Active && m_DemoStartTick < Client()->GameTick())
+	if(((!m_Active && !m_pClient->m_IsFastCap && m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalCid].m_Active) ||
+		(m_pClient->m_IsFastCap && m_pClient->m_FlagPos != vec2(-1, -1) && distance(PlayerPos, m_pClient->m_FlagPos) < 200)) && m_DemoStartTick < Client()->GameTick())
 	{
 		if(m_RaceState == RACE_STARTED)
 			OnReset();

@@ -303,6 +303,7 @@ void CGameClient::OnInit()
 	m_IsRace = false;
 	m_RaceMsgSent = false;
 	m_ShowOthers = -1;
+	m_FlagPos = vec2(-1, -1);
 }
 
 void CGameClient::DispatchInput()
@@ -395,6 +396,7 @@ void CGameClient::OnReset()
 	m_IsRace = false;
 	m_RaceMsgSent = false;
 	m_ShowOthers = -1;
+	m_FlagPos = vec2(-1, -1);
 }
 
 
@@ -809,7 +811,28 @@ void CGameClient::OnNewSnapshot()
 		{
 			if(!m_IsRace)
 				m_IsRace = true;
+			
+			if(str_find_nocase(CurrentServerInfo.m_aGameType, "fastcap"))
+			{
+				m_IsFastCap = true;
 				
+				// get Flag Pos (for demo recording)
+				m_FlagPos = vec2(-1, -1);
+				int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
+				for(int i = 0; i < Num; i++)
+				{
+					IClient::CSnapItem Item;
+					const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
+
+					if(Item.m_Type == NETOBJTYPE_FLAG)
+					{
+						const CNetObj_Flag *pFlag = (const CNetObj_Flag *)pData;
+						if(pFlag->m_CarriedBy == -2 && pFlag->m_Team != m_aClients[m_Snap.m_LocalCid].m_Team)
+							m_FlagPos = vec2(pFlag->m_X, pFlag->m_Y);
+					}
+				}
+			}
+			
 			if(!m_RaceMsgSent && m_Snap.m_pLocalInfo)
 			{
 				CNetMsg_Cl_IsRace Msg;
