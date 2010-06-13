@@ -1,17 +1,43 @@
 import _compatibility, os, sys, shutil, zipfile
+from optparse import OptionParser
 http_lib = _compatibility._import(("httplib","http.client"))
 exec("import %s" % http_lib)
-exec("http_lib=%s" % http_lib)
+exec("http_lib = %s" % http_lib)
 
-if len(sys.argv) != 2:
-	print("wrong number of arguments")
+# Initializing configuration file and command line parameter
+file = open("configuration.txt","rt")
+content = file.readlines()
+file.close()
+if len(content) < 5:
+	print("currupt configuration file")
 	sys.exit(-1)
+arguments = OptionParser()
+arguments.add_option("-d", "--domain", dest="domain")
+arguments.add_option("-m", "--download_path_bam", dest="download_path_bam")
+arguments.add_option("-n", "--download_path_teeworlds", dest="download_path_teeworlds")
+arguments.add_option("-b", "--version_bam", dest="version_bam")
+arguments.add_option("-t", "--version_teeworlds", dest="version_teeworlds")
+(options, arguments) = arguments.parse_args()
+if options.domain == None:
+	options.domain = content[0].partition(" ")[2].rstrip()
+if options.download_path_bam == None:
+	options.download_path_bam = content[1].partition(" ")[2].rstrip()
+if options.download_path_teeworlds == None:
+	options.download_path_teeworlds = content[2].partition(" ")[2].rstrip()
+if options.version_bam == None:
+	options.version_bam = content[3].partition(" ")[2].rstrip()
+if options.version_teeworlds == None:
+	options.version_teeworlds = content[4].partition(" ")[2].rstrip()
+bam_execution_path = ""
+if options.version_bam < "0.3.0":
+	bam_execution_path = "src"
+if os.name == "nt":
+	bam_execution_path += "\\\\"
+else:
+	bam_execution_path += "/"
 
 name = "teeworlds"
-domain = "www.%s.com" % name
-version = sys.argv[1]
-
-bam_version = "bam-0.2.0"
+options.version_bam = "bam-%s" % options.version_bam
 
 flag_download = True
 flag_clean = True
@@ -37,9 +63,9 @@ else:
 		
 	platform = osname + "_" + arch
 
-print("%s-%s-%s" % (name,version, platform))
+print("%s-%s-%s" % (name,options.version_teeworlds, platform))
 
-src_package = "%s-%s-src.zip" % (name, version)
+src_package = "%s-%s-src.zip" % (name, options.version_teeworlds)
 
 root_dir = os.getcwd() + "/work"
 src_dir = ""
@@ -76,7 +102,6 @@ def unzip(filename, where):
 		
 	z.close()
 
-
 def path_exist(d):
 	try: os.stat(d)
 	except: return False
@@ -103,13 +128,12 @@ os.chdir(root_dir)
 # download
 if flag_download:
 	print("*** downloading bam source package ***")
-	if not fetch_file(domain, "/trac/bam/browser/releases/%s.zip?format=raw" % bam_version, "bam.zip"):
+	if not fetch_file(options.domain, "/%s/%s.zip?format=raw" % (options.download_path_bam, options.version_bam), "bam.zip"):
 			bail("couldn't find source package and couldn't download it")
 		
 	print("*** downloading %s source package ***" % name)
-	if not fetch_file(domain, "/files/%s" % src_package, src_package):
-		if not fetch_file(domain, "/files/beta/%s" % src_package, src_package):
-			bail("couldn't find source package and couldn't download it")
+	if not fetch_file(options.domain, "/%s/%s" % (options.download_path_teeworlds, src_package), src_package):
+		bail("couldn't find source package and couldn't download it")
 
 # unpack
 print("*** unpacking source ***")
@@ -120,7 +144,7 @@ src_dir = name+"/"+ os.listdir(name+"/")[0]
 # build bam
 if 1:
 	print("*** building bam ***")
-	os.chdir(bam_version)
+	os.chdir(options.version_bam)
 	output = "bam"
 	bam_cmd = "./bam"
 	if os.name == "nt":
@@ -153,15 +177,15 @@ if 1:
 					except:
 						bail("failed to build %s" % name)
 			winreg_lib.CloseKey(key)
-			file=open("build.bat","wt")
-			file.write('call "%sVC\\vcvarsall.bat"\ncd %s\n..\\..\\%s\\src\\%s server_release client_release' % (vsinstalldir, src_dir, bam_version, bam_cmd))
+			file = open("build.bat","wt")
+			file.write('call "%sVC\\vcvarsall.bat"\ncd %s\n..\\..\\%s\\%s%s server_release client_release' % (vsinstalldir, src_dir, options.version_bam, bam_execution_path, bam_cmd))
 			file.close()
 			command = os.system("build.bat")
 		except:
 			bail("failed to build %s" % name)
 	else:
 		os.chdir(src_dir)
-		command = os.system("../../"+bam_version+"/src/bam server_release client_release")
+		command = os.system("../../%s/%sbam server_release client_release" % (options.version_bam, bam_execution_path))
 	if command != 0:
 		bail("failed to build %s" % name)
 	os.chdir(root_dir)
@@ -171,14 +195,14 @@ if 1:
 	print("*** making release ***")
 	os.chdir(src_dir)
 	if os.name == "nt":
-		command = os.system("..\\..\\..\\make_release.py %s %s" % (version, platform))
+		command = os.system("..\\..\\..\\make_release.py %s %s" % (options.version_teeworlds, platform))
 	else:
-		command = os.system("python ../../../make_release.py %s %s" % (version, platform))
+		command = os.system("python ../../../make_release.py %s %s" % (options.version_teeworlds, platform))
 	if command != 0:
-		bail("failed to make a relase of %s"%name)
+		bail("failed to make a relase of %s" % name)
 	final_output = "FAIL"
 	for f in os.listdir("."):
-		if version in f and platform in f and name in f and (".zip" in f or ".tar.gz" in f):
+		if options.version_teeworlds in f and platform in f and name in f and (".zip" in f or ".tar.gz" in f):
 			final_output = f
 	os.chdir(root_dir)
 	shutil.copy("%s/%s" % (src_dir, final_output), "../"+final_output)
