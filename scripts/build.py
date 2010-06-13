@@ -1,4 +1,11 @@
-import os, sys, shutil, httplib, zipfile
+import _compatibility, os, sys, shutil, zipfile
+http_lib = _compatibility._import(("httplib","http.client"))
+exec("import %s" % http_lib)
+exec("http_lib=%s" % http_lib)
+
+if len(sys.argv) != 2:
+	print("wrong number of arguments")
+	sys.exit(-1)
 
 name = "teeworlds"
 domain = "www.%s.com" % name
@@ -30,7 +37,7 @@ else:
 		
 	platform = osname + "_" + arch
 
-print "%s-%s-%s" % (name,version, platform)
+print("%s-%s-%s" % (name,version, platform))
 
 src_package = "%s-%s-src.zip" % (name, version)
 
@@ -39,14 +46,14 @@ src_dir = ""
 
 def fetch_file(server, url, local):
 	try:
-		conn = httplib.HTTPConnection(server)
-		print "trying %s%s" % (server, url)
+		conn = http_lib.HTTPConnection(server)
+		print("trying %s%s" % (server, url))
 		conn.request("GET", url)
 		response = conn.getresponse()
 		if response.status != 200:
 			return False
 		
-		f = file(local, "wb")
+		f = open(local, "wb")
 		f.write(response.read())
 		f.close()
 		conn.close()
@@ -62,7 +69,7 @@ def unzip(filename, where):
 		except: pass
 		
 		try:
-			f = file(where+"/"+name, "wb")
+			f = open(where+"/"+name, "wb")
 			f.write(z.read(name))
 			f.close()
 		except: pass
@@ -76,13 +83,13 @@ def path_exist(d):
 	return True
 
 def bail(reason):
-	print reason
+	print(reason)
 	os.chdir(root_dir)
 	sys.exit(-1)
 
 # clean
 if flag_clean:
-	print "*** cleaning ***"
+	print("*** cleaning ***")
 	try: shutil.rmtree("work")
 	except: pass
 	
@@ -95,24 +102,24 @@ os.chdir(root_dir)
 
 # download
 if flag_download:
-	print "*** downloading bam source package ***"
-	if not fetch_file(domain, "trac/bam/browser/releases/"+bam_version+".zip?format=raw", "bam.zip"):
+	print("*** downloading bam source package ***")
+	if not fetch_file(domain, "/trac/bam/browser/releases/%s.zip?format=raw" % bam_version, "bam.zip"):
 			bail("couldn't find source package and couldn't download it")
 		
-	print "*** downloading %s source package ***" % name
+	print("*** downloading %s source package ***" % name)
 	if not fetch_file(domain, "/files/%s" % src_package, src_package):
 		if not fetch_file(domain, "/files/beta/%s" % src_package, src_package):
 			bail("couldn't find source package and couldn't download it")
 
 # unpack
-print "*** unpacking source ***"
+print("*** unpacking source ***")
 unzip("bam.zip", ".")
 unzip(src_package, name)
 src_dir = name+"/"+ os.listdir(name+"/")[0]
 
 # build bam
 if 1:
-	print "*** building bam ***"
+	print("*** building bam ***")
 	os.chdir(bam_version)
 	output = "bam"
 	bam_cmd = "./bam"
@@ -125,21 +132,49 @@ if 1:
 		if os.system("sh make_unix.sh") != 0:
 			bail("failed to build bam")
 	os.chdir(root_dir)
-	shutil.copy(bam_version+"/src/"+output, src_dir+"/"+output)
 
 # build the game
 if 1:
-	print "*** building %s ***" % name
-	os.chdir(src_dir)
-	if os.system("%s server_release client_release" % bam_cmd) != 0:
+	print("*** building %s ***" % name)
+	if os.name == "nt":
+		winreg_lib = _compatibility._import(("_winreg","winreg"))
+		exec("import %s" % winreg_lib)
+		exec("winreg_lib=%s" % winreg_lib)
+		try:
+			key=winreg_lib.OpenKey(winreg_lib.HKEY_LOCAL_MACHINE,"SOFTWARE\Microsoft\VisualStudio\SxS\VS7")
+			try:
+				vsinstalldir=winreg_lib.QueryValueEx(key,"10.0")[0]
+			except:
+				try:
+					vsinstalldir=winreg_lib.QueryValueEx(key,"9.0")[0]
+				except:
+					try:
+						vsinstalldir=winreg_lib.QueryValueEx(key,"8.0")[0]
+					except:
+						bail("failed to build %s" % name)
+			winreg_lib.CloseKey(key)
+			file=open("build.bat","wt")
+			file.write('call "%sVC\\vcvarsall.bat"\ncd %s\n..\\..\\%s\\src\\%s server_release client_release' % (vsinstalldir, src_dir, bam_version, bam_cmd))
+			file.close()
+			command = os.system("build.bat")
+		except:
+			bail("failed to build %s" % name)
+	else:
+		os.chdir(src_dir)
+		command = os.system("../../"+bam_version+"/src/bam server_release client_release")
+	if command != 0:
 		bail("failed to build %s" % name)
 	os.chdir(root_dir)
 
 # make release
 if 1:
-	print "*** making release ***"
+	print("*** making release ***")
 	os.chdir(src_dir)
-	if os.system("python scripts/make_release.py %s %s" % (version, platform)) != 0:
+	if os.name == "nt":
+		command = os.system("..\\..\\..\\make_release.py %s %s" % (version, platform))
+	else:
+		command = os.system("python ../../../make_release.py %s %s" % (version, platform))
+	if command != 0:
 		bail("failed to make a relase of %s"%name)
 	final_output = "FAIL"
 	for f in os.listdir("."):
@@ -148,6 +183,4 @@ if 1:
 	os.chdir(root_dir)
 	shutil.copy("%s/%s" % (src_dir, final_output), "../"+final_output)
 
-print "*** all done ***"
-
-		
+print("*** all done ***")

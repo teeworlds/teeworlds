@@ -1,5 +1,3 @@
-
-	
 GlobalIdCounter = 0
 def GetID():
 	global GlobalIdCounter
@@ -68,7 +66,7 @@ class Struct(BaseType):
 			m.sort(sorter)
 		except:
 			for v in m:
-				print v.name, v.var
+				print(v.name, v.var)
 			sys.exit(-1)
 		return m
 		
@@ -172,15 +170,15 @@ class Pointer(BaseType):
 
 def EmitTypeDeclaration(root):
 	for l in root().EmitTypeDeclaration(""):
-		print l
+		print(l)
 
 def EmitDefinition(root, name):
 	for l in root.EmitPreDefinition(name):
-		print l
-	print "%s %s = " % (root.TypeName(), name)
+		print(l)
+	print("%s %s = " % (root.TypeName(), name))
 	for l in root.EmitDefinition(name):
-		print l
-	print ";"
+		print(l)
+	print(";")
 
 # Network stuff after this
 

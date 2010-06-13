@@ -1,4 +1,6 @@
-import copy
+import copy, imp
+imp.load_source("_compatibility","scripts/_compatibility.py")
+import _compatibility
 from datatypes import *
 
 class Sound(Struct):
@@ -169,7 +171,7 @@ class DataContainer(Struct):
 		self.weapons = Weapons()
 
 def FileList(format, num):
-	return [format%(x+1) for x in xrange(0,num)]
+	return [format%(x+1) for x in _compatibility._xrange(0,num)]
 
 container = DataContainer()
 container.sounds.Add(SoundSet("gun_fire", FileList("audio/wp_gun_fire-%02d.wv", 3)))

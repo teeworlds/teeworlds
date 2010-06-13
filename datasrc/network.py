@@ -1,10 +1,13 @@
+import imp
+imp.load_source("_compatibility","scripts/_compatibility.py")
+import _compatibility
 from datatypes import *
 
 Emotes = ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"]
 PlayerStates = ["UNKNOWN", "PLAYING", "IN_MENU", "CHATTING"]
 GameFlags = ["TEAMS", "FLAGS"]
 
-Emoticons = [str(x) for x in xrange(1,16)]
+Emoticons = [str(x) for x in _compatibility._xrange(1,16)]
 
 Powerups = ["HEALTH", "ARMOR", "WEAPON", "NINJA"]
 
