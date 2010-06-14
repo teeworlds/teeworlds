@@ -66,7 +66,7 @@ if gen_server_content_header:
 
 if gen_client_content_header or gen_server_content_header:
 	# emit the type declarations
-	contentlines = file("datasrc/content.py").readlines()
+	contentlines = open("datasrc/content.py").readlines()
 	order = []
 	for line in contentlines:
 		line = line.strip()

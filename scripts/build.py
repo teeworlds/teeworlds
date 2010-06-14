@@ -1,5 +1,7 @@
-import _compatibility, os, sys, shutil, zipfile
+import imp, os, sys, shutil, zipfile
 from optparse import OptionParser
+imp.load_source("_compatibility","../datasrc/_compatibility.py")
+import _compatibility
 http_lib = _compatibility._import(("httplib","http.client"))
 exec("import %s" % http_lib)
 exec("http_lib = %s" % http_lib)

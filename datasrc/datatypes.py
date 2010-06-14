@@ -31,7 +31,7 @@ class BaseType:
 	def __init__(self, type_name):
 		self._type_name = type_name
 		self._target_name = "INVALID"
-		self._id = GetID() # this is used to remeber what order the members have in structures etc
+		self._id = GetID() # this is used to remember what order the members have in structures etc
 	
 	def Identifyer(self): return "x"+str(self._id)
 	def TargetName(self): return self._target_name
@@ -55,15 +55,15 @@ class Struct(BaseType):
 	def __init__(self, type_name):
 		BaseType.__init__(self, type_name)
 	def Members(self):
-		def sorter(a,b):
-			return a.var.ID()-b.var.ID()
+		def sorter(a):
+			return a.var.ID()
 		m = []
 		for name in self.__dict__:
 			if name[0] == "_":
 				continue
 			m += [MemberType(name, self.__dict__[name])]
 		try:
-			m.sort(sorter)
+			m.sort(key = sorter)
 		except:
 			for v in m:
 				print(v.name, v.var)
