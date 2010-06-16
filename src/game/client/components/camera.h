@@ -1,3 +1,4 @@
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #ifndef GAME_CLIENT_COMPONENTS_CAMERA_H
 #define GAME_CLIENT_COMPONENTS_CAMERA_H
 #include <base/vmath.h>

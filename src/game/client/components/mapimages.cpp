@@ -1,3 +1,4 @@
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include <engine/graphics.h>
 #include <engine/map.h>
 #include <game/client/component.h>

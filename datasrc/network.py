@@ -5,7 +5,7 @@ elif os.path.exists("scripts/_compatibility.py"):
 	file = "scripts/_compatibility.py"
 else:
 	exit(-1)
-imp.load_source("_compatibility",file)
+imp.load_source("_compatibility", file)
 import _compatibility
 from datatypes import *
 

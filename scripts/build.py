@@ -1,6 +1,6 @@
 import imp, os, sys, shutil, zipfile
 from optparse import OptionParser
-imp.load_source("_compatibility","../datasrc/_compatibility.py")
+imp.load_source("_compatibility", "../datasrc/_compatibility.py")
 import _compatibility
 http_lib = _compatibility._import(("httplib","http.client"))
 exec("import %s" % http_lib)
@@ -13,12 +13,13 @@ file.close()
 if len(content) < 5:
 	print("currupt configuration file")
 	sys.exit(-1)
+	_compatibility._input("Press enter to exit\n")
 arguments = OptionParser()
-arguments.add_option("-d", "--domain", dest="domain")
-arguments.add_option("-m", "--download_path_bam", dest="download_path_bam")
-arguments.add_option("-n", "--download_path_teeworlds", dest="download_path_teeworlds")
-arguments.add_option("-b", "--version_bam", dest="version_bam")
-arguments.add_option("-t", "--version_teeworlds", dest="version_teeworlds")
+arguments.add_option("-d", "--domain", dest = "domain")
+arguments.add_option("-m", "--download_path_bam", dest = "download_path_bam")
+arguments.add_option("-n", "--download_path_teeworlds", dest = "download_path_teeworlds")
+arguments.add_option("-b", "--version_bam", dest = "version_bam")
+arguments.add_option("-t", "--version_teeworlds", dest = "version_teeworlds")
 (options, arguments) = arguments.parse_args()
 if options.domain == None:
 	options.domain = content[0].partition(" ")[2].rstrip()
@@ -32,11 +33,7 @@ if options.version_teeworlds == None:
 	options.version_teeworlds = content[4].partition(" ")[2].rstrip()
 bam_execution_path = ""
 if options.version_bam < "0.3.0":
-	bam_execution_path = "src"
-if os.name == "nt":
-	bam_execution_path += "\\\\"
-else:
-	bam_execution_path += "/"
+	bam_execution_path = "src%s" % os.sep
 
 name = "teeworlds"
 options.version_bam = "bam-%s" % options.version_bam
@@ -113,6 +110,7 @@ def bail(reason):
 	print(reason)
 	os.chdir(root_dir)
 	sys.exit(-1)
+	_compatibility._input("Press enter to exit\n")
 
 # clean
 if flag_clean:
@@ -147,12 +145,10 @@ src_dir = name+"/"+ os.listdir(name+"/")[0]
 if 1:
 	print("*** building bam ***")
 	os.chdir(options.version_bam)
-	output = "bam"
 	bam_cmd = "./bam"
 	if os.name == "nt":
 		if os.system("make_win32_msvc.bat") != 0:
 			bail("failed to build bam")
-		output += ".exe"
 		bam_cmd = "bam"
 	else:
 		if os.system("sh make_unix.sh") != 0:
@@ -165,22 +161,22 @@ if 1:
 	if os.name == "nt":
 		winreg_lib = _compatibility._import(("_winreg","winreg"))
 		exec("import %s" % winreg_lib)
-		exec("winreg_lib=%s" % winreg_lib)
+		exec("winreg_lib = %s" % winreg_lib)
 		try:
-			key=winreg_lib.OpenKey(winreg_lib.HKEY_LOCAL_MACHINE,"SOFTWARE\Microsoft\VisualStudio\SxS\VS7")
+			key = winreg_lib.OpenKey(winreg_lib.HKEY_LOCAL_MACHINE,"SOFTWARE\Microsoft\VisualStudio\SxS\VS7")
 			try:
-				vsinstalldir=winreg_lib.QueryValueEx(key,"10.0")[0]
+				vsinstalldir = winreg_lib.QueryValueEx(key,"10.0")[0]
 			except:
 				try:
-					vsinstalldir=winreg_lib.QueryValueEx(key,"9.0")[0]
+					vsinstalldir = winreg_lib.QueryValueEx(key,"9.0")[0]
 				except:
 					try:
-						vsinstalldir=winreg_lib.QueryValueEx(key,"8.0")[0]
+						vsinstalldir = winreg_lib.QueryValueEx(key,"8.0")[0]
 					except:
 						bail("failed to build %s" % name)
 			winreg_lib.CloseKey(key)
-			file = open("build.bat","wt")
-			file.write('call "%sVC\\vcvarsall.bat"\ncd %s\n..\\..\\%s\\%s%s server_release client_release' % (vsinstalldir, src_dir, options.version_bam, bam_execution_path, bam_cmd))
+			file = open("build.bat", "wb")
+			file.write(('call "%sVC%svcvarsall.bat"\ncd %s\n..%s..%s%s%s%s%s server_release client_release' % (vsinstalldir, os.sep, src_dir, os.sep, os.sep, options.version_bam, os.sep, bam_execution_path, bam_cmd)).encode())
 			file.close()
 			command = os.system("build.bat")
 		except:
@@ -196,11 +192,10 @@ if 1:
 if 1:
 	print("*** making release ***")
 	os.chdir(src_dir)
-	if os.name == "nt":
-		command = os.system("..\\..\\..\\make_release.py %s %s" % (options.version_teeworlds, platform))
-	else:
-		command = os.system("python ../../../make_release.py %s %s" % (options.version_teeworlds, platform))
-	if command != 0:
+	command = "..%s..%s..%smake_release.py %s %s" % (os.sep, os.sep, os.sep, options.version_teeworlds, platform)
+	if os.name != "nt":
+		command = "python %s" % command
+	if os.system(command) != 0:
 		bail("failed to make a relase of %s" % name)
 	final_output = "FAIL"
 	for f in os.listdir("."):
@@ -210,3 +205,4 @@ if 1:
 	shutil.copy("%s/%s" % (src_dir, final_output), "../"+final_output)
 
 print("*** all done ***")
+_compatibility._input("Press enter to exit\n")

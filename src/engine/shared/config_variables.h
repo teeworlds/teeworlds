@@ -1,3 +1,4 @@
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #ifndef ENGINE_SHARED_E_CONFIG_VARIABLES_H
 #define ENGINE_SHARED_E_CONFIG_VARIABLES_H
 #undef ENGINE_SHARED_E_CONFIG_VARIABLES_H // this file will be included several times

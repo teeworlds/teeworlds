@@ -1,3 +1,4 @@
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #ifndef GAME_VARIABLES_H
 #define GAME_VARIABLES_H
 #undef GAME_VARIABLES_H // this file will be included several times

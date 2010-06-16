@@ -1,3 +1,4 @@
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #ifndef GAME_LOCALIZATION_H
 #define GAME_LOCALIZATION_H
 #include <base/tl/string.h>

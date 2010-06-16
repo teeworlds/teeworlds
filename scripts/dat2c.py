@@ -1,5 +1,5 @@
 import imp, sys
-imp.load_source("_compatibility","../datasrc/_compatibility.py")
+imp.load_source("_compatibility", "../datasrc/_compatibility.py")
 import _compatibility
 
 data = open(sys.argv[1], "rb").read()

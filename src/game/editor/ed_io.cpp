@@ -1,3 +1,4 @@
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include <engine/graphics.h>
 #include <engine/storage.h>
 #include "ed_editor.h"

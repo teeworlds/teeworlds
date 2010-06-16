@@ -1,3 +1,4 @@
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #ifndef TL_FILE_SORTED_ARRAY_HPP
 #define TL_FILE_SORTED_ARRAY_HPP
 

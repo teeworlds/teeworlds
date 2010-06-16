@@ -6,6 +6,12 @@ def _import(library):
 	if sys.version_info[0] == 3:
 		return library[1]
 
+def _input(output):
+	if sys.version_info[0] == 2:
+		raw_input(output)
+	if sys.version_info[0] == 3:
+		input(output)
+
 def _ord(character):
 	if sys.version_info[0] == 2:
 		return ord(character)

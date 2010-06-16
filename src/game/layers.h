@@ -1,3 +1,4 @@
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #ifndef GAME_LAYERS_H
 #define GAME_LAYERS_H
 

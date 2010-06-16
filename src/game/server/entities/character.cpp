@@ -1,3 +1,4 @@
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include <new>
 #include <engine/shared/config.h>
 #include <game/server/gamecontext.h>

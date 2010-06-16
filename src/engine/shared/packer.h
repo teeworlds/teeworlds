@@ -1,3 +1,4 @@
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #ifndef ENGINE_SHARED_PACKER_H
 #define ENGINE_SHARED_PACKER_H
 
