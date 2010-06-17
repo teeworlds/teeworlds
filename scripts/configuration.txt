@@ -1,5 +1,2 @@
-domain www.teeworlds.com
-download_path_bam trac/bam/browser/releases
-download_path_teeworlds files
-version_bam 0.2.0
-version_teeworlds 0.5.2
+url_bam http://github.com/matricks/bam/zipball/master
+url_teeworlds http://github.com/matricks/teeworlds/zipball/master
