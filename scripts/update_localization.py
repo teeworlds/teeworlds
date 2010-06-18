@@ -5,8 +5,8 @@ source_exts = [".c", ".cpp", ".h", ".hpp"]
 def parse_source():
 	stringtable = {}
 	def process_line(line):
-		if 'localize("' in line:
-			fields = line.split('localize("', 2)[1].split('"', 2)
+		if 'Localize("' in line:
+			fields = line.split('Localize("', 1)[1].split('"', 1)
 			stringtable[fields[0]] = ""
 			process_line(fields[1])
 
@@ -20,6 +20,15 @@ def parse_source():
 			if filename[-2:] in source_exts or filename[-4:] in source_exts:
 				for line in file(filename):
 					process_line(line)
+	
+	#This part is reeally ugly, but works for now..
+	f = file("src/game/client/components/menus_settings.cpp")
+	lines = f.readlines()
+	for i in xrange(0, len(lines)-1):
+		if '{ "' in lines[i]:
+			fields = lines[i].split('{ "', 1)[1].split('", ', 2)
+			stringtable[fields[0]] = ""
+	
 	
 	return stringtable
 

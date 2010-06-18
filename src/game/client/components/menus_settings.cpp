@@ -286,7 +286,6 @@ typedef struct
 
 static CKeyInfo gs_aKeys[] =
 {
-	// we need to do localize so the scripts can pickup the string
 	{ "Move left", "+left", 0},		// Localize - these strings are localized within CLocConstString
 	{ "Move right", "+right", 0 },
 	{ "Jump", "+jump", 0 },

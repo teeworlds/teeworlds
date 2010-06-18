@@ -1243,3 +1243,4 @@ void CMenus::RenderBackground()
     {CUIRect Screen = *UI()->Screen();
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);}	
 }
+
