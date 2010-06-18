@@ -1391,7 +1391,7 @@ int main(int argc, const char **argv) // ignore_convention
 	// create the components
 	IEngineMap *pEngineMap = CreateEngineMap();
 	IGameServer *pGameServer = CreateGameServer();
-	IConsole *pConsole = CreateConsole();
+	IConsole *pConsole = CreateConsole(CFGFLAG_SERVER);
 	IEngineMasterServer *pEngineMasterServer = CreateEngineMasterServer();
 	IStorage *pStorage = CreateStorage("Teeworlds", argv[0]); // ignore_convention
 	IConfig *pConfig = CreateConfig();
