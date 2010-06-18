@@ -184,7 +184,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				aBuf[i] = *pSrc;
 			aBuf[i] = 0;
 			
-			m_pCommand = m_pGameConsole->m_pConsole->GetCommandInfo(aBuf);
+			m_pCommand = m_pGameConsole->m_pConsole->GetCommandInfo(aBuf, m_CompletionFlagmask);
 		}
 	}
 }
