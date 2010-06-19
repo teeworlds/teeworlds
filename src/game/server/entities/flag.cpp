@@ -15,6 +15,9 @@ CFlag::CFlag(CGameWorld *pGameWorld, int Team, vec2 Pos, CCharacter *pOwner)
 
 void CFlag::Reset()
 {
+	if(!m_pCarryingCCharacter)
+		return;
+		
 	GameServer()->m_World.DestroyEntity(this);
 }
 

@@ -16,8 +16,9 @@ public:
 	
 	virtual bool OnEntity(int Index, vec2 Pos);
 	virtual void OnCharacterSpawn(class CCharacter *pChr);
-	int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
+	virtual int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
 	virtual bool CanSpawn(class CPlayer *pPlayer, vec2 *pOutPos);
+	virtual void Tick();
 	
 	virtual bool IsFastCap() { return true; }
 };

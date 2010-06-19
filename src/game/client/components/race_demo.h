@@ -7,7 +7,6 @@
 
 class CRaceDemo : public CComponent
 {
-	int m_RaceState;
 	int m_RecordStopTime;
 	int m_DemoStartTick;
 	float m_Time;
@@ -16,6 +15,9 @@ class CRaceDemo : public CComponent
 	bool m_Active;
 	
 public:
+
+	int m_RaceState;
+	
 	enum
 	{
 		RACE_NONE = 0,

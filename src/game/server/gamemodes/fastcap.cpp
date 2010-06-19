@@ -110,3 +110,10 @@ bool CGameControllerFC::CanBeMovedOnBalance(int Cid)
 	}
 	return true;
 }
+
+void CGameControllerFC::Tick()
+{
+	IGameController::Tick();
+	
+	DoRaceTimeCheck();
+}
