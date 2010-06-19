@@ -61,6 +61,12 @@ void CGameConsole::CInstance::Init(CGameConsole *pGameConsole)
 	m_pGameConsole = pGameConsole;
 };
 
+void CGameConsole::CInstance::ClearBacklog()
+{
+	m_Backlog.Init();
+	m_BacklogActPage = 0;
+}
+
 void CGameConsole::CInstance::ExecuteLine(const char *pLine)
 {
 	if(m_Type == 0)
@@ -574,6 +580,16 @@ void CGameConsole::ConToggleRemoteConsole(IConsole::IResult *pResult, void *pUse
 	((CGameConsole *)pUserData)->Toggle(1);
 }
 
+void CGameConsole::ConClearLocalConsole(IConsole::IResult *pResult, void *pUserData)
+{
+	((CGameConsole *)pUserData)->m_LocalConsole.ClearBacklog();
+}
+
+void CGameConsole::ConClearRemoteConsole(IConsole::IResult *pResult, void *pUserData)
+{
+	((CGameConsole *)pUserData)->m_RemoteConsole.ClearBacklog();
+}
+
 void CGameConsole::ClientConsolePrintCallback(const char *pStr, void *pUserData)
 {
 	((CGameConsole *)pUserData)->m_LocalConsole.PrintLine(pStr);
@@ -600,6 +616,8 @@ void CGameConsole::OnConsoleInit()
 	
 	Console()->Register("toggle_local_console", "", CFGFLAG_CLIENT, ConToggleLocalConsole, this, "Toggle local console");
 	Console()->Register("toggle_remote_console", "", CFGFLAG_CLIENT, ConToggleRemoteConsole, this, "Toggle remote console");
+	Console()->Register("clear_local_console", "", CFGFLAG_CLIENT, ConClearLocalConsole, this, "Clear local console");
+	Console()->Register("clear_remote_console", "", CFGFLAG_CLIENT, ConClearRemoteConsole, this, "Clear remote console");
 }
 
 /*
