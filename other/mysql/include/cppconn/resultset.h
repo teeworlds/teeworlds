@@ -14,7 +14,7 @@
 
 #include "config.h"
 
-#if defined(CONF_FAMILY_UNIX)
+#if defined(__LINUX__) || defined(__linux__) || defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__GNU__) || defined(__gnu__) || defined(MACOSX) || defined(__APPLE__) || defined(__DARWIN__) || defined(__sun)
 #include <stdint.h>
 #endif
 
