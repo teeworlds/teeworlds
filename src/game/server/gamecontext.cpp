@@ -579,7 +579,7 @@ void CGameContext::OnClientDrop(int ClientId)
 {
 	// reset score data
 	Score()->PlayerData(ClientId)->Reset();
-	
+			
 	AbortVoteKickOnDisconnect(ClientId);
 	m_apPlayers[ClientId]->OnDisconnect();
 	delete m_apPlayers[ClientId];

@@ -20,7 +20,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	this->m_ClientID = CID;
 	m_Team = GameServer()->m_pController->ClampTeam(Team);
 	m_ShowOthers = true;
-	m_ResetPickups = false;
+	m_ResetPickups = true;
 	m_IsUsingRaceClient = false;
 	m_LastSentTime = 0;
 	

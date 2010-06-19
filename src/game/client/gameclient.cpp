@@ -644,6 +644,9 @@ void CGameClient::OnNewSnapshot()
 	mem_zero(&g_GameClient.m_Snap, sizeof(g_GameClient.m_Snap));
 	m_Snap.m_LocalCid = -1;
 
+	// mark all clients offline here
+	bool Online[MAX_CLIENTS] = { 0 };
+	
 	// secure snapshot
 	{
 		int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
@@ -729,6 +732,8 @@ void CGameClient::OnNewSnapshot()
 				m_aClients[Cid].UpdateRenderInfo();
 				g_GameClient.m_Snap.m_NumPlayers++;
 				
+				// mark Player as online
+				Online[Cid] = true;
 			}
 			else if(Item.m_Type == NETOBJTYPE_PLAYERINFO)
 			{
@@ -807,12 +812,12 @@ void CGameClient::OnNewSnapshot()
 	{
 		CServerInfo CurrentServerInfo;
 		Client()->GetServerInfo(&CurrentServerInfo);
-		if(str_find_nocase(CurrentServerInfo.m_aGameType, "race") || str_find_nocase(CurrentServerInfo.m_aGameType, "fastcap"))
+		if(str_find_nocase(CurrentServerInfo.m_aGameType, "race") || str_find_nocase(CurrentServerInfo.m_aGameType, "fcap"))
 		{
 			if(!m_IsRace)
 				m_IsRace = true;
 			
-			if(str_find_nocase(CurrentServerInfo.m_aGameType, "fastcap"))
+			if(str_find_nocase(CurrentServerInfo.m_aGameType, "fcap"))
 			{
 				m_IsFastCap = true;
 				
@@ -853,6 +858,16 @@ void CGameClient::OnNewSnapshot()
 					m_ShowOthers = g_Config.m_ClShowOthers;
 				}
 			}
+		}
+	}
+	
+	// reset all scores of offline players
+	if(m_IsRace)
+	{
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(!Online[i])
+				m_aClients[i].m_Score = 0;
 		}
 	}
 	

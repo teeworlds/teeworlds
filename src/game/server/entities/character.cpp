@@ -689,6 +689,9 @@ void CCharacter::Tick()
 			m_pFlag->Reset();
 			m_pFlag = 0;
 			
+			// reset pickups
+			m_pPlayer->m_ResetPickups = true;
+			
 			// sound \o/
 			GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE, m_pPlayer->GetCID());
 		}

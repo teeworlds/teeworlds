@@ -11,7 +11,7 @@ CGameControllerFC::CGameControllerFC(class CGameContext *pGameServer)
 {
 	m_apFlags[0] = 0;
 	m_apFlags[1] = 0;
-	m_pGameType = "FastCap";
+	m_pGameType = "FCap";
 	m_GameFlags = GAMEFLAG_TEAMS|GAMEFLAG_FLAGS;
 }
 
@@ -66,6 +66,11 @@ void CGameControllerFC::OnCharacterSpawn(class CCharacter *pChr)
 	
 	// give nades
 	pChr->GiveWeapon(WEAPON_GRENADE, 10);
+}
+
+int CGameControllerFC::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon)
+{
+	return 0;
 }
 
 bool CGameControllerFC::CanSpawn(class CPlayer *pPlayer, vec2 *pOutPos)
