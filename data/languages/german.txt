@@ -20,13 +20,13 @@ Add Image
 == Grafik hinzufügen
 
 Add Quad
-== Quad hinz.
+== Viere. hinz.
 
 Add group
 == Gruppe hinz.
 
 Add quads layer
-== Quad-Ebene hinzufg.
+== Viereck-Ebene hinzu.
 
 Add tile layer
 == Tile-Ebene hinzufg.
@@ -38,7 +38,7 @@ Adds a new group
 == Fügt eine neue Gruppe hinzu
 
 Adds a new quad
-== Fügt ein neues Quad hinzu
+== Fügt ein neues Viereck hinzu
 
 All
 == Alle
@@ -74,7 +74,7 @@ Body
 == Körper
 
 Border
-== Rahmen
+== Rand
 
 CCW
 == GUZS
@@ -83,10 +83,10 @@ CW
 == UZS
 
 Call vote
-== Abstimmung
+== Abstimmen
 
 Cancel
-== Abbrechen
+== Abbrech.
 
 Chat
 == Chat
@@ -94,17 +94,29 @@ Chat
 Clear collision
 == Kollision löschen
 
+Clip H
+== Aussch. H
+
+Clip W
+== Aussch. W
+
+Clip X
+== Aussch. X
+
+Clip Y
+== Aussch. Y
+
 Close
 == Schließen
 
 Color Env
-== Color Env
+== Farbanim.
 
 Color TO
-== Color TO
+== Farbe zu
 
 Color+
-== Color+
+== Farbe+
 
 Compatible version
 == Kompatible Version
@@ -137,7 +149,7 @@ Creates a new pos envelope
 == Erstellt eine neue Positionsanimation
 
 Creates a new quad layer
-== Erstellt eine neue Quad-Ebene
+== Erstellt eine neue Viereck-Ebene
 
 Creates a new tile layer
 == Erstellt eine neue Tile-Ebene
@@ -167,7 +179,7 @@ Delete layer
 == Ebene löschen
 
 Deletes the current quad
-== Entfernt das ausgewählte Quad
+== Entfernt das ausgewählte Viereck
 
 Deletes the layer
 == Entfernt die Ebene
@@ -212,7 +224,7 @@ Enter
 == Starten
 
 Envelopes
-== Animationen
+== Animation.
 
 Error
 == Fehlgeschlagen
@@ -239,7 +251,7 @@ File
 == Datei
 
 Filename:
-== Dateiname:
+== Dateina.:
 
 Filter
 == Filter
@@ -248,7 +260,7 @@ Fire
 == Feuern
 
 Force vote
-== Abstimmung erzwingen
+== Erzwingen
 
 Fullscreen
 == Vollbild
@@ -443,7 +455,7 @@ Open
 == Öffnen
 
 Open map
-== Map öffnen
+== Karte öffnen
 
 Opens a map and adds everything from that map to the current one
 == Öffnet eine Karte und fügt alles aus dieser in die aktuelle ein.
@@ -452,7 +464,13 @@ Opens a map for editing
 == Öffnet eine Map zum Bearbeiten
 
 Order
-== Reihenfolge
+== Reihenf.
+
+Para X
+== Para. X
+
+Para Y
+== Para. Y
 
 Password
 == Passwort
@@ -478,11 +496,17 @@ Players
 Please balance teams!
 == Bitte Teams ausgleichen!
 
+Pos X
+== Pos. X
+
+Pos Y
+== Pos. Y
+
 Pos. Env
-== Pos. Env
+== Pos. anim.
 
 Pos. TO
-== Pos. TO
+== Pos. zu
 
 Pos.+
 == Pos.+
@@ -497,7 +521,7 @@ Previous Envelope
 == Vorherige Animation
 
 Proof
-== Proof
+== Testra.
 
 Quality Textures
 == Hochaufgelöste Texturen
@@ -563,13 +587,13 @@ Sat.
 == Sätt.
 
 Save
-== Speichern
+== Speicher.
 
 Save As
 == Speichern unter
 
 Save map
-== Map speichern
+== Karte speichern
 
 Saves the current map
 == Speichert die aktuelle Karte
@@ -644,7 +668,7 @@ Square
 == Quadrat
 
 Squares the current quad
-== Macht das ausgewählte Quad zum Quadrat
+== Macht das ausgewählte Viereck rechteckig
 
 Standard gametype
 == Standard-Spieltyp
@@ -699,6 +723,9 @@ Type
 
 UI Color
 == Menüfarbe
+
+Use Clipping
+== Aussch. b.
 
 Use left mouse button to drag and create a brush.
 == Benutze die linke Maustaste, um zu ziehen und einen Pinsel zu erstellen.

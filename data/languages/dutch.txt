@@ -783,8 +783,35 @@ error loading demo
 
 ##### needs translation ####
 
+Clip H
+==
+
+Clip W
+==
+
+Clip X
+==
+
+Clip Y
+==
+
+Para X
+==
+
+Para Y
+==
+
+Pos X
+==
+
+Pos Y
+==
+
 Type
-== 
+==
+
+Use Clipping
+==
 
 ##### old translations ####
 

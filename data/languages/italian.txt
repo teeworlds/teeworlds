@@ -421,370 +421,397 @@ You must restart the game for all settings to take effect.
 ##### needs translation ####
 
 %ds left
-== 
+==
 
 %s Right click for context menu.
-== 
+==
 
 Add
-== 
+==
 
 Add Image
-== 
+==
 
 Add Quad
-== 
+==
 
 Add group
-== 
+==
 
 Add quads layer
-== 
+==
 
 Add tile layer
-== 
+==
 
 Adds a new group
-== 
+==
 
 Adds a new quad
-== 
+==
 
 Anim
-== 
+==
 
 Append
-== 
+==
 
 Append map
-== 
+==
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== 
+==
 
 Border
-== 
+==
 
 CCW
-== 
+==
 
 CW
-== 
+==
 
 Cancel
-== 
+==
 
 Chat
-== 
+==
 
 Clear collision
-== 
+==
+
+Clip H
+==
+
+Clip W
+==
+
+Clip X
+==
+
+Clip Y
+==
 
 Color Env
-== 
+==
 
 Color TO
-== 
+==
 
 Color+
-== 
+==
 
 Connection Problems...
-== 
+==
 
 Constructs collision from this layer
-== 
+==
 
 Creates a new color envelope
-== 
+==
 
 Creates a new map
-== 
+==
 
 Creates a new pos envelope
-== 
+==
 
 Creates a new quad layer
-== 
+==
 
 Creates a new tile layer
-== 
+==
 
 Decrease
-== 
+==
 
 Decrease animation speed
-== 
+==
 
 Delete
-== 
+==
 
 Delete group
-== 
+==
 
 Delete layer
-== 
+==
 
 Deletes the current quad
-== 
+==
 
 Embed
-== 
+==
 
 Embedded
-== 
+==
 
 Embeds the image into the map file.
-== 
+==
 
 Envelopes
-== 
+==
 
 Error
-== 
+==
 
 Exits from the editor
-== 
+==
 
 External
-== 
+==
 
 File
-== 
+==
 
 Image
-== 
+==
 
 Images
-== 
+==
 
 Increase
-== 
+==
 
 Increase animation speed
-== 
+==
 
 Layers
-== 
+==
 
 Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== 
+==
 
 Left mouse button to move. Hold shift to move the texture.
-== 
+==
 
 Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
-== 
+==
 
 Load a new image to use in the map
-== 
+==
 
 Make collision
-== 
+==
 
 Make external
-== 
+==
 
 Name:
-== 
+==
 
 New
-== 
+==
 
 Next Envelope
-== 
+==
 
 Nickname
-== 
+==
 
 None
-== 
+==
 
 Normal animation speed
-== 
+==
 
 Ok
-== 
+==
 
 Open
-== 
+==
 
 Open map
-== 
+==
 
 Opens a map and adds everything from that map to the current one
-== 
+==
 
 Opens a map for editing
-== 
+==
 
 Order
-== 
+==
+
+Para X
+==
+
+Para Y
+==
 
 Password
-== 
+==
 
 Password incorrect
-== 
+==
 
 Please balance teams!
-== 
+==
+
+Pos X
+==
+
+Pos Y
+==
 
 Pos. Env
-== 
+==
 
 Pos. TO
-== 
+==
 
 Pos.+
-== 
+==
 
 Press right mouse button to create a new point
-== 
+==
 
 Previous Envelope
-== 
+==
 
 Proof
-== 
+==
 
 Remove
-== 
+==
 
 Removes collision from this layer
-== 
+==
 
 Removes the image from the map
-== 
+==
 
 Removes the image from the map file.
-== 
+==
 
 Replace
-== 
+==
 
 Replace Image
-== 
+==
 
 Replaces the image with a new one
-== 
+==
 
 Sat.
-== 
+==
 
 Save
-== 
+==
 
 Save As
-== 
+==
 
 Save map
-== 
+==
 
 Saves the current map
-== 
+==
 
 Saves the current map under a new name
-== 
+==
 
 Scoreboard
-== 
+==
 
 Select group. Right click for properties.
-== 
+==
 
 Select image
-== 
+==
 
 Select layer. Right click for properties.
-== 
+==
 
 Skins
-== 
+==
 
 Square
-== 
+==
 
 Squares the current quad
-== 
+==
 
 Sudden Death
-== 
+==
 
 Switch between images and layers managment.
-== 
+==
 
 Switch curve type
-== 
+==
 
 Toggle group visibility
-== 
+==
 
 Toggle layer visibility
-== 
+==
 
 Toggles the envelope editor.
-== 
+==
 
 Type
-== 
+==
+
+Use Clipping
+==
 
 Use left mouse button to drag and create a brush.
-== 
+==
 
 Use left mouse button to paint with the brush. Right button clears the brush.
-== 
+==
 
 V-Sync
-== 
+==
 
 Warmup
-== 
+==
 
 Width
-== 
+==
 
 Your skin
-== 
+==
 
 ZI
-== 
+==
 
 ZO
-== 
+==
 
 [M] Flip brush vertical
-== 
+==
 
 [N] Flip brush horizontal
-== 
+==
 
 [NumPad*] Zoom to normal and remove editor offset
-== 
+==
 
 [NumPad+] Zoom in
-== 
+==
 
 [NumPad-] Zoom out
-== 
+==
 
 [R] Rotates the brush counter clockwise
-== 
+==
 
 [T] Rotates the brush clockwise
-== 
+==
 
 [ctrl+h] Toggle High Detail
-== 
+==
 
 [ctrl+m] Toggle animation
-== 
+==
 
 [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-== 
+==
 
 error loading demo
-== 
+==
 
 ##### old translations ####
 

@@ -2,7 +2,7 @@ import imp, os, sys, shutil, zipfile, re
 from optparse import OptionParser
 imp.load_source("_compatibility", "../datasrc/_compatibility.py")
 import _compatibility
-url_lib = _compatibility._import(("urllib","urllib.request"))
+url_lib = _compatibility._import(("urllib", "urllib.request"))
 exec("import %s" % url_lib)
 exec("url_lib = %s" % url_lib)
 
@@ -10,18 +10,22 @@ exec("url_lib = %s" % url_lib)
 file = open("configuration.txt", "rb")
 content = file.readlines()
 file.close()
-if len(content) < 2:
+if len(content) < 3:
 	print("currupt configuration file")
 	sys.exit(-1)
 	_compatibility._input("Press enter to exit\n")
 arguments = OptionParser()
 arguments.add_option("-b", "--url_bam", dest = "url_bam")
 arguments.add_option("-t", "--url_teeworlds", dest = "url_teeworlds")
+arguments.add_option("-c", "--windows_compiler", dest = "windows_compiler")
 (options, arguments) = arguments.parse_args()
 if options.url_bam == None:
 	options.url_bam = content[0].decode().partition(" ")[2].rstrip()
 if options.url_teeworlds == None:
 	options.url_teeworlds = content[1].decode().partition(" ")[2].rstrip()
+if options.windows_compiler == None:
+	options.windows_compiler = content[2].decode().partition(" ")[2].rstrip()
+	options.windows_compiler = options.windows_compiler.split(" ")
 
 bam = options.url_bam[7:].split("/")
 domain_bam = bam[0]
@@ -70,7 +74,8 @@ else:
 
 print("%s-%s-%s" % (name, version_teeworlds, platform))
 
-root_dir = os.getcwd() + "/work"
+root_dir = os.getcwd() + os.sep
+work_dir = root_dir + "work"
 src_dir = ""
 
 def fetch_file(url):
@@ -88,7 +93,13 @@ def fetch_file(url):
 
 def unzip(filename, where):
 	z = zipfile.ZipFile(filename, "r")
+	main_directory = False
 	for name in z.namelist():
+		if main_directory == False and name[-1:] != "/":
+			main_directory = name.split("/")
+			main_directory = name[:(len(main_directory[len(main_directory)-1])+1)*-1]
+			if main_directory == "":
+				main_directory = ".%s" % os.sep
 		try: os.makedirs(where+"/"+os.path.dirname(name))
 		except: pass
 		
@@ -99,6 +110,7 @@ def unzip(filename, where):
 		except: pass
 		
 	z.close()
+	return main_directory
 
 def path_exist(d):
 	try: os.stat(d)
@@ -107,22 +119,32 @@ def path_exist(d):
 
 def bail(reason):
 	print(reason)
-	os.chdir(root_dir)
+	os.chdir(work_dir)
 	sys.exit(-1)
 	_compatibility._input("Press enter to exit\n")
 
-# clean
-if flag_clean:
+def clean():
 	print("*** cleaning ***")
 	try: shutil.rmtree("work")
 	except: pass
+
+def file_exists(file):
+	try:
+		open(file).close()
+		return True
+	except:
+		return False;
+
+# clean
+if flag_clean:
+	clean()
 	
 # make dir
 try: os.mkdir("work")
 except: pass
 
 # change dir
-os.chdir(root_dir)
+os.chdir(work_dir)
 
 # download
 if flag_download:
@@ -138,12 +160,8 @@ if flag_download:
 
 # unpack
 print("*** unpacking source ***")
-unzip(src_package_bam, ".")
-unzip(src_package_teeworlds, ".")
-src_dir_bam = src_package_bam.split(".")
-src_dir_bam = src_package_bam[:(len(src_dir_bam[len(src_dir_bam)-1])+1)*-1]
-src_dir_teeworlds = src_package_teeworlds.split(".")
-src_dir_teeworlds = src_package_teeworlds[:(len(src_dir_teeworlds[len(src_dir_teeworlds)-1])+1)*-1]
+src_dir_bam = unzip(src_package_bam, ".")
+src_dir_teeworlds = unzip(src_package_teeworlds, ".")
 
 # build bam
 if 1:
@@ -151,13 +169,20 @@ if 1:
 	os.chdir(src_dir_bam)
 	bam_cmd = "./bam"
 	if os.name == "nt":
-		if os.system("make_win32_msvc.bat") != 0:
-			bail("failed to build bam")
+		bam_compiled = False
+		for compiler in options.windows_compiler:
+			os.system("make_win32_%s.bat" % compiler)
+			if file_exists("%sbam.exe" % bam_execution_path) == True:
+				bam_compiled = True
+				break
 		bam_cmd = "bam"
-	else:
-		if os.system("sh make_unix.sh") != 0:
+		if bam_compiled == False:
 			bail("failed to build bam")
-	os.chdir(root_dir)
+	else:
+		os.system("sh make_unix.sh")
+		if file_exists("%sbam" % bam_execution_path) == False:
+			bail("failed to build bam")
+	os.chdir(work_dir)
 
 # build the game
 if 1:
@@ -180,23 +205,23 @@ if 1:
 						bail("failed to build %s" % name)
 			winreg_lib.CloseKey(key)
 			file = open("build.bat", "wb")
-			file.write(('call "%sVC%svcvarsall.bat"\ncd %s\n..%s%s%s%s%s server_release client_release' % (vsinstalldir, os.sep, src_dir_teeworlds, os.sep, src_dir_bam, os.sep, bam_execution_path, bam_cmd)).encode())
+			file.write(('call "%sVC\\vcvarsall.bat"\ncd %s\n"%s\\%s\\%s%s" server_release client_release' % (vsinstalldir, src_dir_teeworlds, work_dir, src_dir_bam, bam_execution_path, bam_cmd)).encode())
 			file.close()
 			command = os.system("build.bat")
 		except:
 			bail("failed to build %s" % name)
 	else:
 		os.chdir(src_dir_teeworlds)
-		command = os.system("../%s/%sbam server_release client_release" % (src_dir_bam, bam_execution_path))
+		command = os.system("%s/%s/%sbam server_release client_release" % (work_dir, src_dir_bam, bam_execution_path))
 	if command != 0:
 		bail("failed to build %s" % name)
-	os.chdir(root_dir)
+	os.chdir(work_dir)
 
 # make release
 if 1:
 	print("*** making release ***")
 	os.chdir(src_dir_teeworlds)
-	command = "..%s..%smake_release.py %s %s" % (os.sep, os.sep, version_teeworlds, platform)
+	command = '"%smake_release.py" %s %s' % (root_dir, version_teeworlds, platform)
 	if os.name != "nt":
 		command = "python %s" % command
 	if os.system(command) != 0:
@@ -205,8 +230,10 @@ if 1:
 	for f in os.listdir("."):
 		if version_teeworlds in f and platform in f and name in f and (".zip" in f or ".tar.gz" in f):
 			final_output = f
-	os.chdir(root_dir)
+	os.chdir(work_dir)
 	shutil.copy("%s/%s" % (src_dir_teeworlds, final_output), "../"+final_output)
+	os.chdir(root_dir)
+	clean()
 
 print("*** all done ***")
 _compatibility._input("Press enter to exit\n")

@@ -1,2 +1,3 @@
 url_bam http://github.com/matricks/bam/zipball/master
 url_teeworlds http://github.com/matricks/teeworlds/zipball/master
+windows_compiler msvc mingw
