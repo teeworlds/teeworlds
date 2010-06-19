@@ -694,6 +694,9 @@ Toggles the envelope editor.
 Try again
 == Nochmal versuchen
 
+Type
+== Typ
+
 UI Color
 == Menüfarbe
 

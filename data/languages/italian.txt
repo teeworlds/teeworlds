@@ -726,6 +726,9 @@ Toggle layer visibility
 Toggles the envelope editor.
 == 
 
+Type
+== 
+
 Use left mouse button to drag and create a brush.
 == 
 

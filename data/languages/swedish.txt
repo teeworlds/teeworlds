@@ -732,6 +732,9 @@ Toggle layer visibility
 Toggles the envelope editor.
 == 
 
+Type
+== 
+
 V-Sync
 == 
 
