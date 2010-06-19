@@ -24,6 +24,7 @@ class CGameConsole : public CComponent
 		char m_aCompletionBuffer[128];
 		int m_CompletionChosen;
 		int m_CompletionFlagmask;
+		float m_CompletionRenderOffset;
 		
 		IConsole::CCommandInfo *m_pCommand;
 

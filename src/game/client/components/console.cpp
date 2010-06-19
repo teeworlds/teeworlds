@@ -51,6 +51,7 @@ CGameConsole::CInstance::CInstance(int Type)
 
 	m_aCompletionBuffer[0] = 0;
 	m_CompletionChosen = -1;
+	m_CompletionRenderOffset = 0.0f;
 	
 	m_pCommand = 0x0;
 }
@@ -241,6 +242,8 @@ struct CRenderInfo
 	const char *m_pCurrentCmd;
 	int m_WantedCompletion;
 	int m_EnumCount;
+	float m_Offset;
+	float m_Width;
 };
 
 void CGameConsole::PossibleCommandsRenderCallback(const char *pStr, void *pUser)
@@ -256,6 +259,12 @@ void CGameConsole::PossibleCommandsRenderCallback(const char *pStr, void *pUser)
 			pInfo->m_pSelf->RenderTools()->DrawRoundRect(pInfo->m_Cursor.m_X-3, pInfo->m_Cursor.m_Y, tw+5, pInfo->m_Cursor.m_FontSize+4, pInfo->m_Cursor.m_FontSize/3);
 		pInfo->m_pSelf->Graphics()->QuadsEnd();
 		
+		// scroll when out of sight
+		if(pInfo->m_Cursor.m_X < 3.0f)
+			pInfo->m_Offset = 0.0f;
+		else if(pInfo->m_Cursor.m_X+tw > pInfo->m_Width)
+			pInfo->m_Offset -= pInfo->m_Width/2;
+
 		pInfo->m_pSelf->TextRender()->TextColor(0.05f, 0.05f, 0.05f,1);
 		pInfo->m_pSelf->TextRender()->TextEx(&pInfo->m_Cursor, pStr, -1);
 	}
@@ -386,8 +395,10 @@ void CGameConsole::OnRender()
 		Info.m_pSelf = this;
 		Info.m_WantedCompletion = pConsole->m_CompletionChosen;
 		Info.m_EnumCount = 0;
+		Info.m_Offset = pConsole->m_CompletionRenderOffset;
+		Info.m_Width = Screen.w;
 		Info.m_pCurrentCmd = pConsole->m_aCompletionBuffer;
-		TextRender()->SetCursor(&Info.m_Cursor, x, y+12.0f, FontSize, TEXTFLAG_RENDER);
+		TextRender()->SetCursor(&Info.m_Cursor, x+Info.m_Offset, y+12.0f, FontSize, TEXTFLAG_RENDER);
 
 		const char *pPrompt = "> ";
 		if(m_ConsoleType)
@@ -438,6 +449,7 @@ void CGameConsole::OnRender()
 			if(pConsole->m_Input.GetString()[0] != 0)
 			{
 				m_pConsole->PossibleCommands(pConsole->m_aCompletionBuffer, pConsole->m_CompletionFlagmask, PossibleCommandsRenderCallback, &Info);
+				pConsole->m_CompletionRenderOffset = Info.m_Offset;
 				
 				if(Info.m_EnumCount <= 0)
 				{
