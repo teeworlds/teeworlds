@@ -32,6 +32,8 @@ class CGameConsole : public CComponent
 		CInstance(int t);
 		void Init(CGameConsole *pGameConsole);
 
+		void ClearBacklog();
+
 		void ExecuteLine(const char *pLine);
 		
 		void OnInput(IInput::CEvent Event);
@@ -60,6 +62,8 @@ class CGameConsole : public CComponent
 	static void ClientConsolePrintCallback(const char *pStr, void *pUserData);
 	static void ConToggleLocalConsole(IConsole::IResult *pResult, void *pUserData);
 	static void ConToggleRemoteConsole(IConsole::IResult *pResult, void *pUserData);
+	static void ConClearLocalConsole(IConsole::IResult *pResult, void *pUserData);
+	static void ConClearRemoteConsole(IConsole::IResult *pResult, void *pUserData);
 	
 public:
 	CGameConsole();
