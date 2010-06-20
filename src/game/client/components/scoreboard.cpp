@@ -189,11 +189,23 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	{
 		for(int i = 0; i < NumPlayers-k-1; i++)
 		{
-			if(paPlayers[i]->m_Score < paPlayers[i+1]->m_Score)
+			if(m_pClient->m_IsRace)
 			{
-				const CNetObj_PlayerInfo *pTmp = paPlayers[i];
-				paPlayers[i] = paPlayers[i+1];
-				paPlayers[i+1] = pTmp;
+				if(m_pClient->m_aClients[paPlayers[i]->m_ClientId].m_Score == 0 || (m_pClient->m_aClients[paPlayers[i]->m_ClientId].m_Score > m_pClient->m_aClients[paPlayers[i+1]->m_ClientId].m_Score && m_pClient->m_aClients[paPlayers[i+1]->m_ClientId].m_Score != 0))
+				{
+					const CNetObj_PlayerInfo *pTmp = paPlayers[i];
+					paPlayers[i] = paPlayers[i+1];
+					paPlayers[i+1] = pTmp;
+				}
+			}
+			else
+			{
+				if(paPlayers[i]->m_Score < paPlayers[i+1]->m_Score)
+				{
+					const CNetObj_PlayerInfo *pTmp = paPlayers[i];
+					paPlayers[i] = paPlayers[i+1];
+					paPlayers[i+1] = pTmp;
+				}
 			}
 		}
 	}
