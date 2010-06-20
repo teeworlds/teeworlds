@@ -46,6 +46,9 @@ All
 Alpha
 == Alpha
 
+Alpha value of the envelope
+== Alpha-Wert der Animation
+
 Always show name plates
 == Spielernamen immer anzeigen
 
@@ -69,6 +72,9 @@ Blue team
 
 Blue team wins!
 == Blaues Team gewinnt!
+
+Blue value of the envelope
+== Blau-Wert der Animation
 
 Body
 == Körper
@@ -108,6 +114,9 @@ Clip Y
 
 Close
 == Schließen
+
+Color
+== Farbe
 
 Color Env
 == Farbanim.
@@ -229,6 +238,9 @@ Envelopes
 Error
 == Fehlgeschlagen
 
+Exit
+== Beenden
+
 Exits from the editor
 == Schließt den Editor
 
@@ -285,6 +297,9 @@ General
 
 Graphics
 == Grafik
+
+Green value of the envelope
+== Grün-Wert der Animation
 
 Grenade
 == Granate
@@ -538,6 +553,9 @@ Red team
 Red team wins!
 == Rotes Team gewinnt!
 
+Red value of the envelope
+== Rot-Wert der Animation
+
 Refresh
 == Erneuern
 
@@ -576,6 +594,12 @@ Reset to defaults
 
 Rifle
 == Laser
+
+Rotation of the envelope
+== Rotation der Animation
+
+Rotation value in degrees of the brush
+== Rotationswert des Pinsels in Grad
 
 Round
 == Runde
@@ -762,6 +786,12 @@ Welcome to Teeworlds
 
 Width
 == Breite
+
+X-axis of the envelope
+== X-Achse der Animation
+
+Y-axis of the envelope
+== Y-Achse der Animation
 
 Yes
 == Ja

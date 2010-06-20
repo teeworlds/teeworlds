@@ -528,7 +528,13 @@ Adds a new group
 Adds a new quad
 ==
 
+Alpha value of the envelope
+==
+
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+==
+
+Blue value of the envelope
 ==
 
 Clear collision
@@ -544,6 +550,9 @@ Clip X
 ==
 
 Clip Y
+==
+
+Color
 ==
 
 Connection Problems...
@@ -603,10 +612,16 @@ Envelopes
 Error
 ==
 
+Exit
+==
+
 Exits from the editor
 ==
 
 External
+==
+
+Green value of the envelope
 ==
 
 Image
@@ -696,6 +711,9 @@ Previous Envelope
 Proof
 ==
 
+Red value of the envelope
+==
+
 Remove
 ==
 
@@ -715,6 +733,12 @@ Replace Image
 ==
 
 Replaces the image with a new one
+==
+
+Rotation of the envelope
+==
+
+Rotation value in degrees of the brush
 ==
 
 Save
@@ -772,6 +796,12 @@ Use left mouse button to paint with the brush. Right button clears the brush.
 ==
 
 Warmup
+==
+
+X-axis of the envelope
+==
+
+Y-axis of the envelope
 ==
 
 ZI

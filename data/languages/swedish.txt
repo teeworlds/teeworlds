@@ -483,6 +483,9 @@ Adds a new group
 Adds a new quad
 ==
 
+Alpha value of the envelope
+==
+
 Anim
 ==
 
@@ -490,6 +493,9 @@ Append
 ==
 
 Append map
+==
+
+Blue value of the envelope
 ==
 
 Border
@@ -514,6 +520,9 @@ Clip X
 ==
 
 Clip Y
+==
+
+Color
 ==
 
 Color Env
@@ -582,7 +591,13 @@ Envelopes
 Error
 ==
 
+Exit
+==
+
 Exits from the editor
+==
+
+Green value of the envelope
 ==
 
 Image
@@ -690,6 +705,9 @@ Previous Envelope
 Proof
 ==
 
+Red value of the envelope
+==
+
 Remove
 ==
 
@@ -709,6 +727,12 @@ Replace Image
 ==
 
 Replaces the image with a new one
+==
+
+Rotation of the envelope
+==
+
+Rotation value in degrees of the brush
 ==
 
 Save
@@ -769,6 +793,12 @@ Version
 ==
 
 Width
+==
+
+X-axis of the envelope
+==
+
+Y-axis of the envelope
 ==
 
 Your skin

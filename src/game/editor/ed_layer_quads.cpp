@@ -7,6 +7,8 @@
 #include <game/generated/client_data.h>
 #include <game/client/render.h>
 
+#include <game/localization.h>
+
 CLayerQuads::CLayerQuads()
 {
 	m_Type = LAYERTYPE_QUADS;
@@ -221,7 +223,7 @@ int CLayerQuads::RenderProperties(CUIRect *pToolBox)
 	};
 	
 	CProperty aProps[] = {
-		{"Image", m_Image, PROPTYPE_IMAGE, -1, 0},
+		{Localize("Image"), m_Image, PROPTYPE_IMAGE, -1, 0},
 		{0},
 	};
 	

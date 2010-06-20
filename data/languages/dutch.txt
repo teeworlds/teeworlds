@@ -783,6 +783,12 @@ error loading demo
 
 ##### needs translation ####
 
+Alpha value of the envelope
+==
+
+Blue value of the envelope
+==
+
 Clip H
 ==
 
@@ -793,6 +799,15 @@ Clip X
 ==
 
 Clip Y
+==
+
+Color
+==
+
+Exit
+==
+
+Green value of the envelope
 ==
 
 Para X
@@ -807,10 +822,25 @@ Pos X
 Pos Y
 ==
 
+Red value of the envelope
+==
+
+Rotation of the envelope
+==
+
+Rotation value in degrees of the brush
+==
+
 Type
 ==
 
 Use Clipping
+==
+
+X-axis of the envelope
+==
+
+Y-axis of the envelope
 ==
 
 ##### old translations ####

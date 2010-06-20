@@ -450,6 +450,9 @@ Adds a new group
 Adds a new quad
 ==
 
+Alpha value of the envelope
+==
+
 Anim
 ==
 
@@ -460,6 +463,9 @@ Append map
 ==
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+==
+
+Blue value of the envelope
 ==
 
 Border
@@ -490,6 +496,9 @@ Clip X
 ==
 
 Clip Y
+==
+
+Color
 ==
 
 Color Env
@@ -555,6 +564,9 @@ Envelopes
 Error
 ==
 
+Exit
+==
+
 Exits from the editor
 ==
 
@@ -562,6 +574,9 @@ External
 ==
 
 File
+==
+
+Green value of the envelope
 ==
 
 Image
@@ -672,6 +687,9 @@ Previous Envelope
 Proof
 ==
 
+Red value of the envelope
+==
+
 Remove
 ==
 
@@ -691,6 +709,12 @@ Replace Image
 ==
 
 Replaces the image with a new one
+==
+
+Rotation of the envelope
+==
+
+Rotation value in degrees of the brush
 ==
 
 Sat.
@@ -769,6 +793,12 @@ Warmup
 ==
 
 Width
+==
+
+X-axis of the envelope
+==
+
+Y-axis of the envelope
 ==
 
 Your skin
