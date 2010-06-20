@@ -1,5 +1,6 @@
 //#include "gc_console.h"
 #include <math.h>
+#include <time.h>
 
 #include <game/generated/client_data.h>
 
@@ -9,6 +10,7 @@
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
+#include <engine/storage.h>
 #include <engine/keys.h>
 #include <engine/console.h>
 
@@ -570,6 +572,41 @@ void CGameConsole::Toggle(int Type)
 	m_ConsoleType = Type;
 }
 
+void CGameConsole::Dump(int Type)
+{
+	CInstance *pConsole = Type == 1 ? &m_RemoteConsole : &m_LocalConsole;
+	char aFilename[128];
+	time_t Time;
+	char aDate[20];
+
+	time(&Time);
+	tm* TimeInfo = localtime(&Time);
+	strftime(aDate, sizeof(aDate), "%Y-%m-%d_%I-%M", TimeInfo);
+
+	for(int i = 0; i < 10; i++)
+	{
+		IOHANDLE io;
+		str_format(aFilename, sizeof(aFilename), "dumps/%s_dump%s-%05d.txt", Type==1?"remote_console":"local_console", aDate, i);
+		io = Storage()->OpenFile(aFilename, IOFLAG_WRITE);
+		if(io)
+		{
+			#if defined(CONF_FAMILY_WINDOWS)
+				static const char Newline[] = "\r\n";
+			#else
+				static const char Newline[] = "\n";
+			#endif
+
+			for(char *pEntry = pConsole->m_Backlog.First(); pEntry; pEntry = pConsole->m_Backlog.Next(pEntry))
+			{
+				io_write(io, pEntry, str_length(pEntry));
+				io_write(io, Newline, sizeof(Newline)-1);
+			}
+			io_close(io);
+			break;
+		}
+	}
+}
+
 void CGameConsole::ConToggleLocalConsole(IConsole::IResult *pResult, void *pUserData)
 {
 	((CGameConsole *)pUserData)->Toggle(0);
@@ -588,6 +625,16 @@ void CGameConsole::ConClearLocalConsole(IConsole::IResult *pResult, void *pUserD
 void CGameConsole::ConClearRemoteConsole(IConsole::IResult *pResult, void *pUserData)
 {
 	((CGameConsole *)pUserData)->m_RemoteConsole.ClearBacklog();
+}
+
+void CGameConsole::ConDumpLocalConsole(IConsole::IResult *pResult, void *pUserData)
+{
+	((CGameConsole *)pUserData)->Dump(0);
+}
+
+void CGameConsole::ConDumpRemoteConsole(IConsole::IResult *pResult, void *pUserData)
+{
+	((CGameConsole *)pUserData)->Dump(1);
 }
 
 void CGameConsole::ClientConsolePrintCallback(const char *pStr, void *pUserData)
@@ -618,6 +665,8 @@ void CGameConsole::OnConsoleInit()
 	Console()->Register("toggle_remote_console", "", CFGFLAG_CLIENT, ConToggleRemoteConsole, this, "Toggle remote console");
 	Console()->Register("clear_local_console", "", CFGFLAG_CLIENT, ConClearLocalConsole, this, "Clear local console");
 	Console()->Register("clear_remote_console", "", CFGFLAG_CLIENT, ConClearRemoteConsole, this, "Clear remote console");
+	Console()->Register("dump_local_console", "", CFGFLAG_CLIENT, ConDumpLocalConsole, this, "Dump local console");
+	Console()->Register("dump_remote_console", "", CFGFLAG_CLIENT, ConDumpRemoteConsole, this, "Dump remote console");
 }
 
 /*
