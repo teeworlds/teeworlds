@@ -1393,6 +1393,15 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			}
 		}
 	}
+	else if(UI()->ActiveItem() == s_pEditorId)
+	{
+		// release mouse
+		if(!UI()->MouseButton(0))
+		{
+			s_Operation = OP_NONE;
+			UI()->SetActiveItem(0);
+		}
+	}
 
 	if(GetSelectedGroup() && GetSelectedGroup()->m_UseClipping)
 	{
