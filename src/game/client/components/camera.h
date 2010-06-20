@@ -18,7 +18,7 @@ public:
 	static void ConZoom(IConsole::IResult *pResult, void *pUserData);
 	static void ConZoomReset(IConsole::IResult *pResult, void *pUserData);
 	
-	virtual void CCamera::OnConsoleInit();
+	virtual void OnConsoleInit();
 };
 
 #endif
