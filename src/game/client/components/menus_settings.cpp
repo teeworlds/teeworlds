@@ -1080,6 +1080,30 @@ void CMenus::RenderSettingsHudMod(CUIRect MainView)
 	if(DoButton_CheckBox(&g_Config.m_ClSpreesounds, Localize("Activate spree sounds"), g_Config.m_ClSpreesounds, &Button))
 		g_Config.m_ClSpreesounds ^= 1;
 	
+	RightView.HSplitTop(20.0f, 0, &RightView);
+	RightView.HSplitTop(20.0f, &Button, &RightView);
+	UI()->DoLabel(&Button, "Key bindings", 14.0f, -1);
+	RightView.HSplitTop(5.0f, &Button, &RightView);
+	CKeyInfo pKeys[] = {{ "Zoom out:", "+zoomout", 0},
+		{ "Zoom in:", "+zoomin", 0}};
+
+	for(int pKeyid=0; pKeyid < KEY_LAST; pKeyid++)
+	{
+		const char *Bind = m_pClient->m_pBinds->Get(pKeyid);
+		if(!Bind[0])
+			continue;
+
+		for(unsigned int i=0; i<sizeof(pKeys)/sizeof(CKeyInfo); i++)
+			if(str_comp(Bind, pKeys[i].m_pCommand) == 0)
+			{
+				pKeys[i].m_KeyId = pKeyid;
+				break;
+			}
+	}
+
+	for(unsigned int i=0; i<sizeof(pKeys)/sizeof(CKeyInfo); i++)
+		UiDoKeybinder(pKeys[i], &RightView);
+		
 	// default button
 	LeftView.HSplitBottom(20.0f, 0, &Button);
 	static int s_DefaultButton = 0;

@@ -457,10 +457,10 @@ void CHud::RenderTime()
 		char aBuf[64];
 		if(m_FinishTime)
 		{
-			str_format(aBuf, sizeof(aBuf), "Finish time: %02d:%02.2f", (int)m_FinishTime/60, m_FinishTime-((int)m_FinishTime/60*60));
+			str_format(aBuf, sizeof(aBuf), "Finish time: %02d:%05.2f", (int)m_FinishTime/60, m_FinishTime-((int)m_FinishTime/60*60));
 			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,aBuf,-1)/2, 20, 12, aBuf, -1);
 		}
-		else
+		else if(m_pClient->m_pRaceDemo->GetRaceState() == CRaceDemo::RACE_STARTED)
 		{
 			str_format(aBuf, sizeof(aBuf), "Current time: %02d:%02d.%d", m_RaceTime/60, m_RaceTime%60, m_RaceTick/10);
 			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,"Current time: 00:00.0",-1)/2, 20, 12, aBuf, -1); // use fixed value for texxt width so its not shaky
@@ -503,7 +503,7 @@ void CHud::RenderRecord()
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "Server best:");
 		TextRender()->Text(0, 5, 40, 6, aBuf, -1);
-		str_format(aBuf, sizeof(aBuf), "%02d:%02.2f", (int)m_Record/60, m_Record-((int)m_Record/60*60));
+		str_format(aBuf, sizeof(aBuf), "%02d:%05.2f", (int)m_Record/60, m_Record-((int)m_Record/60*60));
 		TextRender()->Text(0, 53, 40, 6, aBuf, -1);
 	}
 		
@@ -515,7 +515,7 @@ void CHud::RenderRecord()
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "Personal best:");
 		TextRender()->Text(0, 5, 47, 6, aBuf, -1);
-		str_format(aBuf, sizeof(aBuf), "%02d:%02.2f", (int)m_LocalRecord/60, m_LocalRecord-((int)m_LocalRecord/60*60));
+		str_format(aBuf, sizeof(aBuf), "%02d:%05.2f", (int)m_LocalRecord/60, m_LocalRecord-((int)m_LocalRecord/60*60));
 		TextRender()->Text(0, 53, 47, 6, aBuf, -1);
 	}
 }

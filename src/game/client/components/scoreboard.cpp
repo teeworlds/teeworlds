@@ -256,7 +256,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			float Time = m_pClient->m_aClients[pInfo->m_ClientId].m_Score;
 			if(Time > 0)
 			{	
-				str_format(aBuf, sizeof(aBuf), "%02d:%02.2f", (int)Time/60, Time-((int)Time/60*60));
+				str_format(aBuf, sizeof(aBuf), "%02d:%05.2f", (int)Time/60, Time-((int)Time/60*60));
 				TextRender()->Text(0, x+DataOffset+60-TextRender()->TextWidth(0, FontSize,aBuf,-1), y, FontSize, aBuf, -1);
 			}
 		}

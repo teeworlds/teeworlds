@@ -902,6 +902,9 @@ void CGameClient::ProcessEvents()
 		{
 			NETEVENT_SPAWN *ev = (NETEVENT_SPAWN *)pData;
 			g_GameClient.m_pEffects->PlayerSpawn(vec2(ev->m_X, ev->m_Y));
+			
+			// reset racestate
+			g_GameClient.m_pRaceDemo->m_RaceState = CRaceDemo::RACE_NONE;
 		}
 		else if(Item.m_Type == NETEVENTTYPE_DEATH)
 		{
@@ -924,6 +927,9 @@ void CGameClient::OnNewSnapshot()
 	mem_zero(&g_GameClient.m_Snap, sizeof(g_GameClient.m_Snap));
 	m_Snap.m_LocalCid = -1;
 
+	// mark all clients offline here
+	bool Online[MAX_CLIENTS] = { 0 };
+	
 	// secure snapshot
 	{
 		int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
@@ -1013,6 +1019,8 @@ void CGameClient::OnNewSnapshot()
 				m_aClients[Cid].UpdateRenderInfo(Cid);
 				g_GameClient.m_Snap.m_NumPlayers++;
 				
+				// mark Player as online
+				Online[Cid] = true;
 			}
 			else if(Item.m_Type == NETOBJTYPE_PLAYERINFO)
 			{
@@ -1129,12 +1137,12 @@ void CGameClient::OnNewSnapshot()
 	{
 		CServerInfo CurrentServerInfo;
 		Client()->GetServerInfo(&CurrentServerInfo);
-		if(str_find_nocase(CurrentServerInfo.m_aGameType, "race") || str_find_nocase(CurrentServerInfo.m_aGameType, "fastcap"))
+		if(str_find_nocase(CurrentServerInfo.m_aGameType, "race") || str_find_nocase(CurrentServerInfo.m_aGameType, "fcap"))
 		{
 			if(!m_IsRace)
 				m_IsRace = true;
 			
-			if(str_find_nocase(CurrentServerInfo.m_aGameType, "fastcap"))
+			if(str_find_nocase(CurrentServerInfo.m_aGameType, "fcap"))
 			{
 				m_IsFastCap = true;
 				
@@ -1197,6 +1205,16 @@ void CGameClient::OnNewSnapshot()
 		}
 	}
 	
+	// reset all scores of offline players
+	if(m_IsRace)
+	{
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(!Online[i])
+				m_aClients[i].m_Score = 0;
+		}
+	}
+
 	// update render info
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		m_aClients[i].UpdateRenderInfo(i);
