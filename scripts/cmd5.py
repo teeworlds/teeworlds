@@ -29,7 +29,7 @@ for filename in sys.argv[1:]:
 	f += cstrip([l.strip() for l in open(filename)])
 
 
-hash = hashlib.md5(f.encode()).hexdigest().lower()[16:]
+hash = hashlib.md5(f.encode("utf-8")).hexdigest().lower()[16:]
 # TODO: refactor hash that is equal to the 0.5 hash, remove when we 
 # TODO: remove when we don't need it any more
 if hash == "7e33344691ca8a61":

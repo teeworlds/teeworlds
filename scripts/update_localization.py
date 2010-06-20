@@ -21,7 +21,7 @@ def parse_source():
 			
 			if filename[-2:] in source_exts or filename[-4:] in source_exts:
 				for line in open(filename, "rb"):
-					process_line(line.decode())
+					process_line(line.decode("utf-8"))
 	
 	return stringtable
 
@@ -33,9 +33,9 @@ def load_languagefile(filename):
 	stringtable = {}
 
 	for i in _compatibility._xrange(0, len(lines)-1):
-		l = lines[i].decode().strip()
+		l = lines[i].decode("utf-8").strip()
 		if len(l) and not l[0] == '=' and not l[0] == '#':
-			stringtable[l] = lines[i+1][2:].decode().rstrip()
+			stringtable[l] = lines[i+1][2:].decode("utf-8").rstrip()
 	
 	return stringtable
 
@@ -72,7 +72,7 @@ def generate_languagefile(outputfilename, srctable, loctable):
 			num_items += 1
 			old_items += 1
 	
-	f.write(content.encode())
+	f.write(content.encode("utf-8"))
 	f.close()
 	print("%-40s %8d %8d %8d" % (outputfilename, num_items, new_items, old_items))
 

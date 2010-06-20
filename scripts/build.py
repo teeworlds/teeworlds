@@ -20,11 +20,11 @@ arguments.add_option("-t", "--url_teeworlds", dest = "url_teeworlds")
 arguments.add_option("-c", "--windows_compiler", dest = "windows_compiler")
 (options, arguments) = arguments.parse_args()
 if options.url_bam == None:
-	options.url_bam = content[0].decode().partition(" ")[2].rstrip()
+	options.url_bam = content[0].decode("utf-8").partition(" ")[2].rstrip()
 if options.url_teeworlds == None:
-	options.url_teeworlds = content[1].decode().partition(" ")[2].rstrip()
+	options.url_teeworlds = content[1].decode("utf-8").partition(" ")[2].rstrip()
 if options.windows_compiler == None:
-	options.windows_compiler = content[2].decode().partition(" ")[2].rstrip()
+	options.windows_compiler = content[2].decode("utf-8").partition(" ")[2].rstrip()
 	options.windows_compiler = options.windows_compiler.split(" ")
 
 bam = options.url_bam[7:].split("/")
@@ -205,7 +205,7 @@ if 1:
 						bail("failed to build %s" % name)
 			winreg_lib.CloseKey(key)
 			file = open("build.bat", "wb")
-			file.write(('call "%sVC\\vcvarsall.bat"\ncd %s\n"%s\\%s\\%s%s" server_release client_release' % (vsinstalldir, src_dir_teeworlds, work_dir, src_dir_bam, bam_execution_path, bam_cmd)).encode())
+			file.write(('call "%sVC\\vcvarsall.bat"\ncd %s\n"%s\\%s\\%s%s" server_release client_release' % (vsinstalldir, src_dir_teeworlds, work_dir, src_dir_bam, bam_execution_path, bam_cmd)).encode("utf-8"))
 			file.close()
 			command = os.system("build.bat")
 		except:

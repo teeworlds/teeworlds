@@ -12,7 +12,7 @@ def fix_copyright_notice(filename, type):
 	lines = f.readlines()
 	f.close()
 	
-	if len(lines)>0 and (lines[0].decode().lstrip()[:2]=="//" or lines[0].decode().lstrip()[:2]=="/*" and lines[0].decode().rstrip()[-2:]=="*/") and "copyright" in lines[0].decode():
+	if len(lines)>0 and (lines[0].decode("utf-8").lstrip()[:2]=="//" or lines[0].decode("utf-8").lstrip()[:2]=="/*" and lines[0].decode("utf-8").rstrip()[-2:]=="*/") and "copyright" in lines[0].decode("utf-8"):
 		if lines[0] == notice[type]:
 			return;
 		lines[0] = notice[type]
