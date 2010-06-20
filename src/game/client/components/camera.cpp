@@ -11,18 +11,18 @@
 CCamera::CCamera()
 {
 	m_Zoom = 1.0f;
-	m_ZoomBind = 0;
+	m_ZoomBind = 1;
 }
 
 void CCamera::ConKeyZoomin(IConsole::IResult *pResult, void *pUserData)
 {
-	if(((CCamera *)pUserData)->m_ZoomBind)
+	if(((CCamera *)pUserData)->m_ZoomBind && (((CCamera *)pUserData)->Client()->State() == IClient::STATE_DEMOPLAYBACK || ((CCamera *)pUserData)->m_pClient->m_Snap.m_Spectate))
 		((CCamera *)pUserData)->m_Zoom = clamp(((CCamera *)pUserData)->m_Zoom-0.1f, 0.2f, 1.6f);
 }
 
 void CCamera::ConKeyZoomout(IConsole::IResult *pResult, void *pUserData)
 {
-	if(((CCamera *)pUserData)->m_ZoomBind)
+	if(((CCamera *)pUserData)->m_ZoomBind && (((CCamera *)pUserData)->Client()->State() == IClient::STATE_DEMOPLAYBACK || ((CCamera *)pUserData)->m_pClient->m_Snap.m_Spectate))
 		((CCamera *)pUserData)->m_Zoom = clamp(((CCamera *)pUserData)->m_Zoom+0.1f, 0.2f, 1.6f);
 }
 
@@ -49,6 +49,10 @@ void CCamera::OnRender()
 	//vec2 center;
 	//m_Zoom = 1.0f;
 
+	// check zoom
+	if(!m_pClient->m_Snap.m_Spectate && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+		m_Zoom = 1.0f;
+		
 	// update camera center		
 	if(m_pClient->m_Snap.m_Spectate)
 	{
