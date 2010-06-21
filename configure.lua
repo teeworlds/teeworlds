@@ -358,13 +358,22 @@ function OptCCompiler(name, default_driver, default_c, default_cxx, desc)
 			option.auto_detected = false
 		elseif option.driver then
 			-- no need todo anything if we have a driver
-			-- TODO: test if we can find the compiler
 		else
-			if ExecuteSilent("g++ -v") == 0 then
+			if family == "windows" then
+				if compiler == "cl" or compiler == "AUTOMATIC" then
+					if ExecuteSilent("cl") == 0 then
+						option.driver = "cl"
+					end
+				end
+				if option.driver == false and (compiler == "gcc" or compiler == "AUTOMATIC") then
+					if ExecuteSilent("g++ -v") == 0 then
+						option.driver = "gcc"
+					end
+				end
+			elseif ExecuteSilent("g++ -v") == 0 then
 				option.driver = "gcc"
-			elseif ExecuteSilent("cl") == 0 then
-				option.driver = "cl"
-			else
+			end
+			if option.driver == false then
 				error("no c/c++ compiler found")
 			end
 		end
