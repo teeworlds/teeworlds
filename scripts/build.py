@@ -11,7 +11,7 @@ file = open("configuration.txt", "rb")
 content = file.readlines()
 file.close()
 if len(content) < 3:
-	print("currupt configuration file")
+	print("corrupt configuration file")
 	sys.exit(-1)
 	_compatibility._input("Press enter to exit\n")
 arguments = OptionParser()
