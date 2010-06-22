@@ -815,12 +815,12 @@ void CGameClient::OnNewSnapshot()
 	{
 		CServerInfo CurrentServerInfo;
 		Client()->GetServerInfo(&CurrentServerInfo);
-		if(str_find_nocase(CurrentServerInfo.m_aGameType, "race") || str_find_nocase(CurrentServerInfo.m_aGameType, "fcap"))
+		if(str_find_nocase(CurrentServerInfo.m_aGameType, "race") || str_find_nocase(CurrentServerInfo.m_aGameType, "fastcap"))
 		{
 			if(!m_IsRace)
 				m_IsRace = true;
 			
-			if(str_find_nocase(CurrentServerInfo.m_aGameType, "fcap"))
+			if(str_find_nocase(CurrentServerInfo.m_aGameType, "fastcap"))
 			{
 				m_IsFastCap = true;
 				
