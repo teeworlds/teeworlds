@@ -773,6 +773,17 @@ void CEditor::DoToolbar(CUIRect ToolBar)
                 DoMapBorder();
 		}
 	}
+
+	TB_Bottom.VSplitLeft(5.0f, 0, &TB_Bottom);
+
+	// refocus button
+	TB_Bottom.VSplitLeft(50.0f, &Button, &TB_Bottom);
+	static int s_RefocusButton = 0;
+	if(DoButton_Editor(&s_RefocusButton, Localize("Refocus"), m_WorldOffsetX&&m_WorldOffsetY?0:-1, &Button, 0, Localize("[HOME] Restore map focus")) || Input()->KeyDown(KEY_HOME))
+	{
+		m_WorldOffsetX = 0;
+		m_WorldOffsetY = 0;
+	}
 }
 
 static void Rotate(CPoint *pCenter, CPoint *pPoint, float Rotation)
