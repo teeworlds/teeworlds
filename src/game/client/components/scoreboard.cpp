@@ -213,7 +213,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	// render headlines
 	TextRender()->Text(0, x+10, y, 24.0f, Localize("Score"), -1);
 	TextRender()->Text(0, x+125+Offset, y, 24.0f, Localize("Name"), -1);
-	TextRender()->Text(0, x+w-70, y, 24.0f, Localize("Ping"), -1);
+	TextRender()->Text(0, x+w-75, y, 24.0f, Localize("Ping"), -1);
 	y += 29.0f;
 
 	float FontSize = 35.0f;
@@ -262,7 +262,15 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			TextRender()->Text(0, x+60-TextRender()->TextWidth(0, FontSize,aBuf,-1), y, FontSize, aBuf, -1);
 		}
 		
-		TextRender()->Text(0, x+128+DataOffset, y, FontSize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
+		if(m_pClient->m_IsRace)
+		{
+			CTextCursor Cursor;
+			TextRender()->SetCursor(&Cursor, x+128+DataOffset, y, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+			Cursor.m_LineWidth = 400;
+			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
+		}
+		else
+			TextRender()->Text(0, x+128+DataOffset, y, FontSize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
 
 		str_format(aBuf, sizeof(aBuf), "%4d", pInfo->m_Latency);
 		float tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
