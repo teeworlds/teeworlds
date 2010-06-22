@@ -866,7 +866,7 @@ void CCharacter::TickDefered()
 	}
 
 	int Events = m_Core.m_TriggeredEvents;
-	int Mask = CmaskAllExceptOne(m_pPlayer->GetCID());
+	//int Mask = CmaskAllExceptOne(m_pPlayer->GetCID());
 	
 	if(Events&COREEVENT_GROUND_JUMP)
 	{
