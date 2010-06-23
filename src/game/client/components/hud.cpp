@@ -40,6 +40,7 @@ void CHud::OnReset()
 	m_RaceTime = 0;
 	m_Record = 0;
 	m_LocalRecord = -1.0f;
+	m_LastReceivedTimeTick = -1;
 	
 	// lvlx
 	m_GotRequest = false;
@@ -449,6 +450,13 @@ void CHud::RenderTime()
 	if(!m_pClient->m_IsRace)
 		return;
 	
+	// check racestate
+	if(m_pClient->m_pRaceDemo->GetRaceState() != CRaceDemo::RACE_FINISHED && m_LastReceivedTimeTick+Client()->GameTickSpeed()*2 < Client()->GameTick())
+	{
+		m_pClient->m_pRaceDemo->m_RaceState = CRaceDemo::RACE_NONE;
+		return;
+	}
+		
 	if(m_RaceTime)
 	{
 		if(!m_FinishTime && m_pClient->m_pRaceDemo->GetRaceState() == CRaceDemo::RACE_FINISHED)
@@ -1106,9 +1114,14 @@ void CHud::OnMessage(int MsgType, void *pRawMsg)
 {
 	if(MsgType == NETMSGTYPE_SV_RACETIME)
 	{
+		// activate racestate just in case
+		m_pClient->m_pRaceDemo->m_RaceState = CRaceDemo::RACE_STARTED;
+			
 		CNetMsg_Sv_RaceTime *pMsg = (CNetMsg_Sv_RaceTime *)pRawMsg;
 		m_RaceTime = pMsg->m_Time;
 		m_RaceTick = 0;
+		
+		m_LastReceivedTimeTick = Client()->GameTick();
 		
 		if(m_FinishTime)
 			m_FinishTime = 0;
