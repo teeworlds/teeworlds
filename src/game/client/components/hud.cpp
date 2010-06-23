@@ -26,17 +26,17 @@ CHud::CHud()
 	// won't work if zero
 	m_AverageFPS = 1.0f;
 	
+	OnReset();
+}
+	
+void CHud::OnReset()
+{
 	m_CheckpointTick = 0;
 	m_CheckpointDiff = 0;
 	m_RaceTime = 0;
 	m_Record = 0;
 	m_LocalRecord = -1.0f;
-}
-	
-void CHud::OnReset()
-{
-	m_LocalRecord = -1.0f;
-	m_Record = 0;
+	m_LastReceivedTimeTick = -1;
 }
 
 void CHud::RenderGameTimer()
@@ -369,6 +369,13 @@ void CHud::RenderTime()
 {
 	if(!m_pClient->m_IsRace)
 		return;
+		
+	// check racestate
+	if(m_pClient->m_pRaceDemo->GetRaceState() != CRaceDemo::RACE_FINISHED && m_LastReceivedTimeTick+Client()->GameTickSpeed()*2 < Client()->GameTick())
+	{
+		m_pClient->m_pRaceDemo->m_RaceState = CRaceDemo::RACE_NONE;
+		return;
+	}
 	
 	if(m_RaceTime)
 	{
@@ -476,9 +483,14 @@ void CHud::OnMessage(int MsgType, void *pRawMsg)
 {
 	if(MsgType == NETMSGTYPE_SV_RACETIME)
 	{
+		// activate racestate just in case
+		m_pClient->m_pRaceDemo->m_RaceState = CRaceDemo::RACE_STARTED;
+		
 		CNetMsg_Sv_RaceTime *pMsg = (CNetMsg_Sv_RaceTime *)pRawMsg;
 		m_RaceTime = pMsg->m_Time;
 		m_RaceTick = 0;
+		
+		m_LastReceivedTimeTick = Client()->GameTick();
 		
 		if(m_FinishTime)
 			m_FinishTime = 0;

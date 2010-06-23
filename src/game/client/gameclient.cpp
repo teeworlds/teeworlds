@@ -622,9 +622,6 @@ void CGameClient::ProcessEvents()
 		{
 			NETEVENT_SPAWN *ev = (NETEVENT_SPAWN *)pData;
 			g_GameClient.m_pEffects->PlayerSpawn(vec2(ev->m_X, ev->m_Y));
-			
-			// reset racestate
-			g_GameClient.m_pRaceDemo->m_RaceState = CRaceDemo::RACE_NONE;
 		}
 		else if(Item.m_Type == NETEVENTTYPE_DEATH)
 		{

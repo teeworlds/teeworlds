@@ -10,6 +10,7 @@ class CHud : public CComponent
 	// Race
 	float m_CheckpointDiff;
 	int m_RaceTime;
+	int m_LastReceivedTimeTick;
 	int m_CheckpointTick;
 	int m_RaceTick;
 	float m_FinishTime;
