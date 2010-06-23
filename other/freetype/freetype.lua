@@ -28,7 +28,11 @@ FreeType = {
 				settings.link.flags:Add("`freetype-config --libs`")
 				
 			elseif option.use_win32lib == true then
-				settings.link.libs:Add(FreeType.basepath .. "/lib/freetype2311MT")
+				if config.compiler.driver == "cl" then
+					settings.link.libs:Add(FreeType.basepath .. "/lib/freetype2311MT")
+				elseif config.compiler.driver == "gcc" then
+					settings.link.libs:Add(FreeType.basepath .. "/lib/freetype2311MT" .. ' -L "./"')
+				end
 			end
 		end
 		

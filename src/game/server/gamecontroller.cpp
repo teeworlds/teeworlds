@@ -422,7 +422,7 @@ void IGameController::Tick()
 			do
 			{
 				CPlayer *pP = 0;
-				int PD = aTScore[M];
+				int PD = (int)aTScore[M];
 				for(int i = 0; i < MAX_CLIENTS; i++)
 				{
 					if(!GameServer()->m_apPlayers[i] || !CanBeMovedOnBalance(i))
@@ -431,7 +431,7 @@ void IGameController::Tick()
 					if(GameServer()->m_apPlayers[i]->GetTeam() == M && (!pP || absolute((aTScore[M^1]+aPScore[i]) - (aTScore[M]-aPScore[i])) < PD))
 					{
 						pP = GameServer()->m_apPlayers[i];
-						PD = absolute((aTScore[M^1]+aPScore[i]) - (aTScore[M]-aPScore[i]));
+						PD = (int)(absolute((aTScore[M^1]+aPScore[i]) - (aTScore[M]-aPScore[i])));
 					}
 				}
 				

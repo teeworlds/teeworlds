@@ -28,7 +28,7 @@ public:
 	int NumData();
 	void Unload();
 	
-	unsigned Crc();
+	int Crc();
 };
 
 // write access

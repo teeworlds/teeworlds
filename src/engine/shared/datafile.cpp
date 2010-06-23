@@ -381,7 +381,7 @@ bool CDataFileReader::Close()
 	return true;
 }
 
-unsigned CDataFileReader::Crc()
+int CDataFileReader::Crc()
 {
 	if(!m_pDataFile) return -1;
 	return m_pDataFile->m_Crc;
