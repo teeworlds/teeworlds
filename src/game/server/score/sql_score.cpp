@@ -1,4 +1,6 @@
 /* CSqlScore class by Sushi */
+#include <string.h>
+
 #include <engine/shared/config.h>
 #include "../entities/character.h"
 #include "../gamemodes/race.h"
