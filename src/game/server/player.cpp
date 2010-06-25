@@ -19,7 +19,12 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	Character = 0;
 	this->m_ClientID = CID;
 	m_Team = GameServer()->m_pController->ClampTeam(Team);
-	m_ShowOthers = true;
+	
+	if(g_Config.m_SvContestMode)
+		m_ShowOthers = false;
+	else
+		m_ShowOthers = true;
+		
 	m_ResetPickups = true;
 	m_IsUsingRaceClient = false;
 	m_LastSentTime = 0;
@@ -77,7 +82,7 @@ void CPlayer::Tick()
 		TryRespawn();
 		
 	// send best time
-	if(m_IsUsingRaceClient)
+	if(m_IsUsingRaceClient && !g_Config.m_SvContestMode)
 	{
 		if(m_LastSentTime > GameServer()->m_pController->m_CurrentRecord || (!m_LastSentTime && GameServer()->m_pController->m_CurrentRecord))
 		{
@@ -113,7 +118,13 @@ void CPlayer::Snap(int SnappingClient)
 	Info->m_LatencyFlux = m_Latency.m_Max-m_Latency.m_Min;
 	Info->m_Local = 0;
 	Info->m_ClientId = m_ClientID;
-	Info->m_Score = m_Score;
+	
+	// send 0 if its contest mode
+	if(g_Config.m_SvContestMode)
+		Info->m_Score = 0;
+	else
+		Info->m_Score = m_Score;
+		
 	Info->m_Team = m_Team;
 
 	if(m_ClientID == SnappingClient)

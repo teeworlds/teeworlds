@@ -629,6 +629,12 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			}
 			else if(!str_comp_num(pMsg->m_pMessage, "/top5", 5))
 			{
+				if(g_Config.m_SvContestMode)
+				{
+					SendChatTarget(ClientId, "This command is not allowed in contest mode.");
+					return;
+				}
+				
 				int Num;
 				
 				if(sscanf(pMsg->m_pMessage, "/top5 %d", &Num) == 1)
@@ -640,13 +646,19 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			{
 				char aName[256];
 				
-				if(sscanf(pMsg->m_pMessage, "/rank %s", aName) == 1)
+				if(!g_Config.m_SvContestMode && sscanf(pMsg->m_pMessage, "/rank %s", aName) == 1)
 					Score()->ShowRank(p->GetCID(), aName, true);
 				else
 					Score()->ShowRank(p->GetCID(), Server()->ClientName(ClientId));
 			}
 			else if(!str_comp(pMsg->m_pMessage, "/show_others"))
 			{
+				if(g_Config.m_SvContestMode)
+				{
+					SendChatTarget(ClientId, "This command is not allowed in contest mode.");
+					return;
+				}
+				
 				if(p->m_IsUsingRaceClient)
 					SendChatTarget(ClientId, "Please use the settings to switch this option.");
 				else
@@ -910,6 +922,9 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	{
 		p->m_IsUsingRaceClient = true;
 		
+		if(g_Config.m_SvContestMode)
+			return;
+			
 		// send time of all players
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
@@ -928,6 +943,9 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	}
 	else if (MsgId == NETMSGTYPE_CL_RACESHOWOTHERS)
 	{
+		if(g_Config.m_SvContestMode)
+			return;
+				
 		if(p->m_Last_ShowOthers && p->m_Last_ShowOthers+Server()->TickSpeed()/2 > Server()->Tick())
 			return;
 		

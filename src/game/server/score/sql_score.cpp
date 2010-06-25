@@ -357,7 +357,14 @@ void CSqlScore::ShowRankThread(void *pUser)
 			else
 			{
 				float Time = (float)pData->m_pSqlData->m_pResults->getDouble("Time");
-				str_format(aBuf, sizeof(aBuf), "%d. %s Time: %d minute(s) %5.2f second(s)", RowCount, pData->m_pSqlData->m_pResults->getString("Name").c_str(), (int)(Time/60), Time-((int)Time/60*60));
+				if(g_Config.m_SvContestMode)
+					str_format(aBuf, sizeof(aBuf), "Your time: %d minute(s) %5.2f second(s)", (int)(Time/60), Time-((int)Time/60*60));
+				else
+					str_format(aBuf, sizeof(aBuf), "%d. %s Time: %d minute(s) %5.2f second(s)", RowCount, pData->m_pSqlData->m_pResults->getString("Name").c_str(), (int)(Time/60), Time-((int)Time/60*60));
+				
+				if(pData->m_Search)
+					strcat(aBuf, pData->m_aRequestingPlayer);
+					
 				pData->m_pSqlData->GameServer()->SendChatTarget(-1, aBuf);
 			}
 			
@@ -388,6 +395,7 @@ void CSqlScore::ShowRank(int ClientID, const char* pName, bool Search)
 	str_copy(Tmp->m_aName, pName, sizeof(Tmp->m_aName));
 	Server()->GetClientIP(ClientID, Tmp->m_aIP, sizeof(Tmp->m_aIP));
 	Tmp->m_Search = Search;
+	str_format(Tmp->m_aRequestingPlayer, sizeof(Tmp->m_aRequestingPlayer), " (%s)", Server()->ClientName(ClientID));
 	Tmp->m_pSqlData = this;
 	
 	void *RankThread = thread_create(ShowRankThread, Tmp);

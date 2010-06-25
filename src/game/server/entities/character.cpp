@@ -695,16 +695,22 @@ void CCharacter::Tick()
 			// sound \o/
 			GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE, m_pPlayer->GetCID());
 		}
-			
+		
 		char aBuf[128];
 		str_format(aBuf, sizeof(aBuf), "%s finished in: %d minute(s) %5.2f second(s)", Server()->ClientName(m_pPlayer->GetCID()), (int)Time/60, Time-((int)Time/60*60));
-		GameServer()->SendChat(-1,CGameContext::CHAT_ALL, aBuf);
+		if(g_Config.m_SvContestMode)
+			GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
+		else
+			GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 		
 		if(Time - pData->m_BestTime < 0)
 		{
 			// new record \o/
 			str_format(aBuf, sizeof(aBuf), "New record: %5.2f second(s) better", Time - pData->m_BestTime);
-			GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+			if(g_Config.m_SvContestMode)
+				GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
+			else
+				GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 		}
 		
 		if(!pData->m_BestTime || Time < pData->m_BestTime)
@@ -736,14 +742,17 @@ void CCharacter::Tick()
 			{
 				if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->m_IsUsingRaceClient)
 				{
-					CNetMsg_Sv_PlayerTime Msg;
-					char aBuf[16];
-					str_format(aBuf, sizeof(aBuf), "%.0f", Time*100.0f); // damn ugly but the only way i know to do it
-					int TimeToSend;
-					sscanf(aBuf, "%d", &TimeToSend);
-					Msg.m_Time = TimeToSend;
-					Msg.m_Cid = m_pPlayer->GetCID();
-					Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
+					if(!g_Config.m_SvContestMode || i == m_pPlayer->GetCID())
+					{
+						CNetMsg_Sv_PlayerTime Msg;
+						char aBuf[16];
+						str_format(aBuf, sizeof(aBuf), "%.0f", Time*100.0f); // damn ugly but the only way i know to do it
+						int TimeToSend;
+						sscanf(aBuf, "%d", &TimeToSend);
+						Msg.m_Time = TimeToSend;
+						Msg.m_Cid = m_pPlayer->GetCID();
+						Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
+					}
 				}
 			}
 		}

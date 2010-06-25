@@ -66,6 +66,7 @@ struct CSqlScoreData
 	float m_aCpCurrent[NUM_TELEPORT];
 	int m_Num;
 	bool m_Search;
+	char m_aRequestingPlayer[MAX_NAME_LENGTH];
 };
 
 #endif
