@@ -573,7 +573,21 @@ static void CallbackAppendMap(const char *pFileName, void *pUser)
 	else
 		pEditor->SortImages();
 }
-static void CallbackSaveMap(const char *pFileName, void *pUser){ if(((CEditor*)pUser)->Save(pFileName)) str_copy(((CEditor*)pUser)->m_aFileName, pFileName, 512); }
+static void CallbackSaveMap(const char *pFileName, void *pUser)
+{
+	char aBuf[1024];
+	const int Length = str_length(pFileName);
+	// add map extension
+	if(Length <= 4 || pFileName[Length-4] != '.' || str_comp_nocase(pFileName+Length-3, "map"))
+	{
+		str_format(aBuf, sizeof(aBuf), "%s.map", pFileName);
+		pFileName = aBuf;
+	}
+
+	CEditor *pEditor = static_cast<CEditor*>(pUser);
+	if(pEditor->Save(pFileName))
+		str_copy(pEditor->m_aFileName, pFileName, sizeof(pEditor->m_aFileName));
+}
 
 void CEditor::DoToolbar(CUIRect ToolBar)
 {
@@ -593,7 +607,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	if(Input()->KeyDown('s') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL)))
 	{
 		if(m_aFileName[0])	
-			Save(m_aFileName);
+			CallbackSaveMap(m_aFileName, this);
 		else
 			InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save map"), Localize("Save"), "maps/", "", CallbackSaveMap, this);
 	}
@@ -2666,7 +2680,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 	if(pEditor->DoButton_MenuItem(&s_SaveButton, Localize("Save"), 0, &Slot, 0, Localize("Saves the current map")))
 	{
 		if(pEditor->m_aFileName[0])	
-			pEditor->Save(pEditor->m_aFileName);
+			CallbackSaveMap(pEditor->m_aFileName, pEditor);
 		else
 			pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save Map"), Localize("Save"), "maps/", "", CallbackSaveMap, pEditor);
 		return 1;
