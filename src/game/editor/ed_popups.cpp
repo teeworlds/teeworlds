@@ -84,6 +84,7 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 		pEditor->DoButton_Editor(&s_DeleteButton, Localize("Delete group"), 0, &Button, 0, Localize("Delete group")))
 	{
 		pEditor->m_Map.DeleteGroup(pEditor->m_SelectedGroup);
+		pEditor->m_SelectedGroup = max(0, pEditor->m_SelectedGroup-1);
 		return 1;
 	}
 

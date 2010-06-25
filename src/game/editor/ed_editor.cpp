@@ -1328,24 +1328,26 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 					}
 
 					CLayerGroup *g = GetSelectedGroup();
-					m_Brush.m_OffsetX += g->m_OffsetX;
-					m_Brush.m_OffsetY += g->m_OffsetY;
-					m_Brush.m_ParallaxX = g->m_ParallaxX;
-					m_Brush.m_ParallaxY = g->m_ParallaxY;
-					m_Brush.Render();
-					float w, h;
-					m_Brush.GetSize(&w, &h);
+					if(g)
+					{
+						m_Brush.m_OffsetX += g->m_OffsetX;
+						m_Brush.m_OffsetY += g->m_OffsetY;
+						m_Brush.m_ParallaxX = g->m_ParallaxX;
+						m_Brush.m_ParallaxY = g->m_ParallaxY;
+						m_Brush.Render();
+						float w, h;
+						m_Brush.GetSize(&w, &h);
 
-					IGraphics::CLineItem Array[4] = {
-						IGraphics::CLineItem(0, 0, w, 0),
-						IGraphics::CLineItem(w, 0, w, h),
-						IGraphics::CLineItem(w, h, 0, h),
-						IGraphics::CLineItem(0, h, 0, 0)};
-					Graphics()->TextureSet(-1);
-					Graphics()->LinesBegin();
-					Graphics()->LinesDraw(Array, 4);
-					Graphics()->LinesEnd();
-
+						IGraphics::CLineItem Array[4] = {
+							IGraphics::CLineItem(0, 0, w, 0),
+							IGraphics::CLineItem(w, 0, w, h),
+							IGraphics::CLineItem(w, h, 0, h),
+							IGraphics::CLineItem(0, h, 0, 0)};
+						Graphics()->TextureSet(-1);
+						Graphics()->LinesBegin();
+						Graphics()->LinesDraw(Array, 4);
+						Graphics()->LinesEnd();
+					}
 				}
 			}
 		}
