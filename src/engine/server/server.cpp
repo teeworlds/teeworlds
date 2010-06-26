@@ -1067,7 +1067,7 @@ int CServer::Run()
 					
 					for(int c = 0; c < MAX_CLIENTS; c++)
 					{
-						if(m_aClients[c].m_State == CClient::STATE_EMPTY)
+						if(m_aClients[c].m_State <= CClient::STATE_AUTH)
 							continue;
 						
 						SendMap(c);
