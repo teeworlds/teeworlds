@@ -629,9 +629,9 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			}
 			else if(!str_comp_num(pMsg->m_pMessage, "/top5", 5))
 			{
-				if(g_Config.m_SvContestMode)
+				if(!g_Config.m_SvShowTimes)
 				{
-					SendChatTarget(ClientId, "This command is not allowed in contest mode.");
+					SendChatTarget(ClientId, "Showing the Tpo5 is not allowed on this server.");
 					return;
 				}
 				
@@ -646,16 +646,16 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			{
 				char aName[256];
 				
-				if(!g_Config.m_SvContestMode && sscanf(pMsg->m_pMessage, "/rank %s", aName) == 1)
+				if(g_Config.m_SvShowTimes && sscanf(pMsg->m_pMessage, "/rank %s", aName) == 1)
 					Score()->ShowRank(p->GetCID(), aName, true);
 				else
 					Score()->ShowRank(p->GetCID(), Server()->ClientName(ClientId));
 			}
 			else if(!str_comp(pMsg->m_pMessage, "/show_others"))
 			{
-				if(g_Config.m_SvContestMode)
+				if(!g_Config.m_SvShowOthers)
 				{
-					SendChatTarget(ClientId, "This command is not allowed in contest mode.");
+					SendChatTarget(ClientId, "This command is not allowed on this server.");
 					return;
 				}
 				
@@ -922,7 +922,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	{
 		p->m_IsUsingRaceClient = true;
 		
-		if(g_Config.m_SvContestMode)
+		if(!g_Config.m_SvShowTimes)
 			return;
 			
 		// send time of all players
@@ -943,7 +943,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	}
 	else if (MsgId == NETMSGTYPE_CL_RACESHOWOTHERS)
 	{
-		if(g_Config.m_SvContestMode)
+		if(!g_Config.m_SvShowOthers)
 			return;
 				
 		if(p->m_Last_ShowOthers && p->m_Last_ShowOthers+Server()->TickSpeed()/2 > Server()->Tick())

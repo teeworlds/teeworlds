@@ -698,7 +698,7 @@ void CCharacter::Tick()
 		
 		char aBuf[128];
 		str_format(aBuf, sizeof(aBuf), "%s finished in: %d minute(s) %5.2f second(s)", Server()->ClientName(m_pPlayer->GetCID()), (int)Time/60, Time-((int)Time/60*60));
-		if(g_Config.m_SvContestMode)
+		if(!g_Config.m_SvShowTimes)
 			GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
 		else
 			GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
@@ -707,7 +707,7 @@ void CCharacter::Tick()
 		{
 			// new record \o/
 			str_format(aBuf, sizeof(aBuf), "New record: %5.2f second(s) better", Time - pData->m_BestTime);
-			if(g_Config.m_SvContestMode)
+			if(!g_Config.m_SvShowTimes)
 				GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
 			else
 				GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
@@ -742,7 +742,7 @@ void CCharacter::Tick()
 			{
 				if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->m_IsUsingRaceClient)
 				{
-					if(!g_Config.m_SvContestMode || i == m_pPlayer->GetCID())
+					if(g_Config.m_SvShowTimes || i == m_pPlayer->GetCID())
 					{
 						CNetMsg_Sv_PlayerTime Msg;
 						char aBuf[16];

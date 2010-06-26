@@ -255,7 +255,7 @@ void CFileScore::ShowRank(int ClientID, const char* pName, bool Search)
 		float Time = pScore->m_Score;
 		char aClientName[128];
 		str_format(aClientName, sizeof(aClientName), " (%s)", Server()->ClientName(ClientID));
-		if(g_Config.m_SvContestMode)
+		if(!g_Config.m_SvShowTimes)
 			str_format(aBuf, sizeof(aBuf), "Your time: %d minute(s) %5.2f second(s)", (int)Time/60, Time-((int)Time/60*60));
 		else
 			str_format(aBuf, sizeof(aBuf), "%d. %s Time: %d minute(s) %5.2f second(s)", Pos, pScore->m_aName, (int)Time/60, Time-((int)Time/60*60));
