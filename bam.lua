@@ -124,8 +124,14 @@ function build(settings)
 	settings.cc.Output = Intermediate_Output
 
 	if config.compiler.driver == "cl" then
+		if optimize == "1" then
+			settings.cc.flags:Add("/O2")
+		end
 		settings.cc.flags:Add("/wd4244")
 	else
+		if optimize == "1" then
+			settings.cc.flags:Add("-O3")
+		end
 		settings.cc.flags:Add("-Wall", "-fno-exceptions")
 		if platform == "macosx" then
 			settings.cc.flags:Add("-mmacosx-version-min=10.4", "-isysroot /Developer/SDKs/MacOSX10.4u.sdk")
