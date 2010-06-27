@@ -50,7 +50,7 @@ bool CLocalizationDatabase::Load(const char *pFilename)
 		return true;
 	}
 	
-	IOHANDLE IoHandle = io_open(pFilename, IOFLAG_READ);
+	FILE *IoHandle = io_open(pFilename, IOFLAG_READ);
 	if(!IoHandle)
 		return false;
 	

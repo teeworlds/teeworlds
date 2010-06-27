@@ -16,7 +16,7 @@ struct CDemoHeader
 
 class CDemoRecorder
 {
-	IOHANDLE m_File;
+	FILE *m_File;
 	int m_LastTickMarker;
 	int m_LastKeyFrame;
 	unsigned char m_aLastSnapshotData[CSnapshot::MAX_SIZE];
@@ -81,7 +81,7 @@ private:
 		CKeyFrameSearch *m_pNext;
 	};	
 
-	IOHANDLE m_File;
+	FILE *m_File;
 	CKeyFrame *m_pKeyFrames;
 
 	CPlaybackInfo m_Info;

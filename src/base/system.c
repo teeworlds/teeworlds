@@ -1,6 +1,5 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
 #include <stdlib.h>
-#include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
@@ -52,9 +51,9 @@
 extern "C" {
 #endif
 
-IOHANDLE io_stdin() { return (IOHANDLE)stdin; }
-IOHANDLE io_stdout() { return (IOHANDLE)stdout; }
-IOHANDLE io_stderr() { return (IOHANDLE)stderr; }
+FILE *io_stdin() { return stdin; }
+FILE *io_stdout() { return stdout; }
+FILE *io_stderr() { return stderr; }
 
 static DBG_LOGGER loggers[16];
 static int num_loggers = 0;
@@ -119,7 +118,7 @@ static void logger_debugger(const char *line)
 }
 
 
-static IOHANDLE logfile = 0;
+static FILE *logfile = 0;
 static void logger_file(const char *line)
 {
 	io_write(logfile, line, strlen(line));
@@ -213,7 +212,7 @@ void mem_debug_dump()
 {
 	char buf[1024];
 	MEMHEADER *header = first;
-	IOHANDLE f = io_open("memory.txt", IOFLAG_WRITE);
+	FILE *f = io_open("memory.txt", IOFLAG_WRITE);
 	
 	while(header)
 	{
@@ -258,27 +257,27 @@ int mem_check_imp()
 	return 1;
 }
 
-IOHANDLE io_open(const char *filename, int flags)
+FILE *io_open(const char *filename, int flags)
 {
 	if(flags == IOFLAG_READ)
-		return (IOHANDLE)fopen(filename, "rb");
+		return fopen(filename, "rb");
 	if(flags == IOFLAG_WRITE)
-		return (IOHANDLE)fopen(filename, "wb");
+		return fopen(filename, "wb");
 	return 0x0;
 }
 
-unsigned io_read(IOHANDLE io, void *buffer, unsigned size)
+unsigned io_read(FILE *io, void *buffer, unsigned size)
 {
-	return fread(buffer, 1, size, (FILE*)io);
+	return fread(buffer, 1, size, io);
 }
 
-unsigned io_skip(IOHANDLE io, unsigned size)
+unsigned io_skip(FILE *io, unsigned size)
 {
-	fseek((FILE*)io, size, SEEK_CUR);
+	fseek(io, size, SEEK_CUR);
 	return size;
 }
 
-int io_seek(IOHANDLE io, int offset, int origin)
+int io_seek(FILE *io, int offset, int origin)
 {
 	int real_origin;
 
@@ -294,15 +293,15 @@ int io_seek(IOHANDLE io, int offset, int origin)
 		real_origin = SEEK_END;
 	}
 
-	return fseek((FILE*)io, offset, origin);
+	return fseek(io, offset, origin);
 }
 
-long int io_tell(IOHANDLE io)
+long int io_tell(FILE *io)
 {
-	return ftell((FILE*)io);
+	return ftell(io);
 }
 
-long int io_length(IOHANDLE io)
+long int io_length(FILE *io)
 {
 	long int length;
 	io_seek(io, 0, IOSEEK_END);
@@ -311,20 +310,20 @@ long int io_length(IOHANDLE io)
 	return length;
 }
 
-unsigned io_write(IOHANDLE io, const void *buffer, unsigned size)
+unsigned io_write(FILE *io, const void *buffer, unsigned size)
 {
-	return fwrite(buffer, 1, size, (FILE*)io);
+	return fwrite(buffer, 1, size, io);
 }
 
-int io_close(IOHANDLE io)
+int io_close(FILE *io)
 {
-	fclose((FILE*)io);
+	fclose(io);
 	return 1;
 }
 
-int io_flush(IOHANDLE io)
+int io_flush(FILE *io)
 {
-	fflush((FILE*)io);
+	fflush(io);
 	return 0;
 }
 

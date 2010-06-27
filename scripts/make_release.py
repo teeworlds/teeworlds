@@ -4,7 +4,6 @@ import shutil, os, sys, zipfile
 
 if len(sys.argv) != 3:
 	print("wrong number of arguments")
-	print(sys.argv[0], "VERSION PLATFORM")
 	sys.exit(-1)
 
 name = "teeworlds"

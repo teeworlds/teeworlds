@@ -56,7 +56,7 @@ struct CDatafileInfo
 
 struct CDatafile
 {
-	IOHANDLE m_File;
+	FILE *m_File;
 	unsigned m_Crc;
 	CDatafileInfo m_Info;
 	CDatafileHeader m_Header;
@@ -69,7 +69,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename)
 {
 	dbg_msg("datafile", "loading. filename='%s'", pFilename);
 
-	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ);
+	FILE *File = pStorage->OpenFile(pFilename, IOFLAG_READ);
 	if(!File)
 	{
 		dbg_msg("datafile", "could not open '%s'", pFilename);

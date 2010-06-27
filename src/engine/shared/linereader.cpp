@@ -1,7 +1,7 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include "linereader.h"
 
-void CLineReader::Init(IOHANDLE io)
+void CLineReader::Init(FILE *io)
 {
 	m_BufferMaxSize = 4*1024;
 	m_BufferSize = 0;

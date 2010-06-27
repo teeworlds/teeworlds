@@ -329,8 +329,8 @@ public:
 // TODO: both, fix these. This feels like a junk class for stuff that doesn't fit anywere
 class CNetBase
 {
-	static IOHANDLE ms_DataLogSent;
-	static IOHANDLE ms_DataLogRecv;
+	static FILE *ms_DataLogSent;
+	static FILE *ms_DataLogRecv;
 	static CHuffman ms_Huffman;
 public:
 	static void OpenLog(const char *pSentlog, const char *pRecvlog);

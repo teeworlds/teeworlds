@@ -299,7 +299,7 @@ void CConsole::ExecuteFile(const char *pFilename)
 	m_pFirstExec = &ThisFile;
 
 	// exec the file
-	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_READ);
+	FILE *File = m_pStorage->OpenFile(pFilename, IOFLAG_READ);
 	
 	if(File)
 	{

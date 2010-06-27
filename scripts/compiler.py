@@ -1,8 +1,12 @@
 #!/usr/bin/python
 
-import sys
-import struct
-import os
+import sys, struct, os, imp
+imp.load_source("_compatibility", "../datasrc/_compatibility.py")
+import _compatibility
+
+if len(sys.argv) != 6:
+	print("wrong number of arguments")
+	sys.exit(-1)
 
 option_ptrsize = struct.calcsize("P")
 option_intsize = struct.calcsize("l")
@@ -22,14 +26,14 @@ class node:
 		return ""
 
 	def debug_print(self, level):
-		print ("  "*level) + " ".join(self.values),
+		print(("  "*level) + " ".join(self.values))
 		if len(self.children):
-			print "{"
+			print("{")
 			for c in self.children:
 				c.debug_print(level+1)
-			print ("  "*level)+"}"
+			print(("  "*level)+"}")
 		else:
-			print ""
+			print("")
 		
 	def debug_root(self):
 		for c in self.children:
@@ -42,7 +46,7 @@ class node:
 				r = {}
 				path = path + "." + node.values[0]
 				r = [node]
-				#print "found", path
+				#print("found %s" % path)
 				return r
 				
 			l = []
@@ -91,7 +95,7 @@ class node:
 			node = self.find_node(parts[0])
 		
 		if not node:
-			print "failed to get", str
+			print("failed to get %s" % str)
 			return Null
 		
 		if index == -1:
@@ -132,7 +136,7 @@ class parser:
 				this_node.children += [new_node]
 
 	def parse_file(self, filename):
-		self.lines = file(filename).readlines()
+		self.lines = open(filename).readlines()
 		n = node()
 		self.parse_node(n)
 		return n
@@ -169,31 +173,31 @@ class data_constructor:
 		
 	def get_enum_value(self, name):
 		if not name in self.enums:
-			print "ERROR: couldn't find enum '%s'" % (name)
+			print("ERROR: couldn't find enum '%s'" % name)
 		return self.enums[name]
 		
 	def add_target(self, target, index):
 		# TODO: warn about duplicates
-		#print "add_target(target='%s' index=%d)" % (target, index)
+		#print("add_target(target='%s' index=%d)" % (target, index))
 		self.targets[target] = index
 	
 	def write(self, index, size, data):
 		try:
 			self.data = self.data[:index] + data + self.data[index+size:]
 		except:
-			print "write error:"
-			print "\tself.data =", self.data
-			print "\tdata =", data
+			print("write error:")
+			print("\tself.data = %s" % self.data)
+			print("\tdata = %s" % data)
 			
 	def patch_pointers(self):
 		for p in self.pointers:
 			if p.target in self.targets:
 				i = self.targets[p.target]
-				#print "ptr @ %d -> %s -> %d" % (p.index, p.target, i)
+				#print("ptr @ %d -> %s -> %d" % (p.index, p.target, i))
 				data = struct.pack("P", i)
 				self.write(p.index, len(data), data)
 			else:
-				print "ERROR: couldn't find target '%s' for pointer at %d" % (p.target, p.index)
+				print("ERROR: couldn't find target '%s' for pointer at %d" % (p.target, p.index))
 
 class type:
 	def __init__(self):
@@ -214,28 +218,26 @@ class structure:
 		return s
 	
 	def emit_header_code(self, out):
-		print >>out, "struct", self.name
-		print >>out, "{"
+		content = "struct %s\n{\n" % self.name
 		for m in self.members:
 			for l in m.get_code():
-				print >>out, "\t" + l
-		print >>out, "};"
-		print >>out, ""
+				content += "\t%s\n" % l
+		content += "};\n\n"
+		out.write(content)
 
 	def emit_source_code(self, out):
-		print >>out, "static void patch_ptr_%s(%s *self, char *base)" % (self.name, self.name)
-		print >>out, "{"
+		content = "static void patch_ptr_%s(%s *self, char *base)\n{\n" % (self.name, self.name)
 		for m in self.members:
 			for l in m.get_patch_code("self", "base"):
-				print >>out, "\t" + l
-		print >>out, "}"
-		print >>out, ""
+				content += "\t%s\n" % l
+		content += "}\n\n"
+		out.write(content)
 
 	def emit_data(self, cons, index, src_data):
-		#print self.name+":"
+		#print("%s:" % self.name)
 		member_index = index
 		for m in self.members:
-			#print "\t" + m.name
+			#print("\t%s" % m.name)
 			m.emit_data(cons, member_index, src_data)
 			member_index += m.size()
 
@@ -264,7 +266,7 @@ class variable_int(variable):
 			value = int(self.expr)
 		except:
 			value = int(src_data.get_single(self.expr))
-		#print "int", self.name, "=", value, "@", index
+		#print("int %s = %s @ %s" %(self.name, value, index))
 		data = struct.pack("l", value)
 		cons.write(index, len(data), data)
 
@@ -278,7 +280,7 @@ class variable_float(variable):
 			value = float(self.expr)
 		except:
 			value = float(src_data.get_single(self.expr))
-		#print "int", self.name, "=", value, "@", index
+		#print("int %s = %s @ %s" %(self.name, value, index))
 		data = struct.pack("f", value)
 		cons.write(index, len(data), data)
 		
@@ -348,9 +350,9 @@ class variable_array(variable):
 		array_type = cons.get_type(self.subtype)
 		size = array_type.size()*len(array_data)
 
-		#print "packing array", self.name
-		#print "\ttype =", array_type.name
-		#print "\tsize =", array_type.size()
+		#print("packing array %s" % self.name)
+		#print("\ttype = %s" % array_type.name)
+		#print("\tsize = %s" % array_type.size())
 		array_index = cons.allocate(size)
 		data = struct.pack("lP", len(array_data), array_index) # TODO: solve this
 		cons.write(index, len(data), data)
@@ -360,7 +362,7 @@ class variable_array(variable):
 			cons.add_target(node.get_path()[1:], member_index)
 			array_type.emit_data(cons, member_index, node)
 			member_index += array_type.size()
-			#print "array", member_index
+			#print("array %s" % member_index)
 
 	def size(self):
 		return option_ptrsize+option_intsize
@@ -371,14 +373,12 @@ class const_arrayint:
 		self.values = []
 		
 	def emit_header_code(self, out):
-		print >>out, "enum"
-		print >>out, "{"
+		content = "enum\n{\n"
 		for i in xrange(0, len(self.values)):
-			print >>out, "\t%s_%s = %d," % (self.name.upper(), self.values[i].upper(), i)
+			content += "\t%s_%s = %d,\n" % (self.name.upper(), self.values[i].upper(), i)
 		
-		print >>out, "\tNUM_%sS = %d" % (self.name.upper(), len(self.values))
-		print >>out, "};"
-		print >>out, ""
+		content += "\tNUM_%sS = %d\n};\n\n" % (self.name.upper(), len(self.values))
+		out.write(content)
 		
 class translator:
 	def __init__(self):
@@ -396,7 +396,7 @@ class translator:
 
 	def parse_variable(self, node):
 		if len(node.values) != 4:
-			print node.values
+			print(node.values)
 			raise "error parsing variable"
 			
 		type = node.values[0]
@@ -448,7 +448,7 @@ class translator:
 	
 	def parse_constant(self, node):
 		if len(node.values) != 5:
-			print node.values
+			print(node.values)
 			raise "error parsing constant"
 		
 		type = node.values[1]
@@ -457,7 +457,7 @@ class translator:
 		expression = node.values[4]
 		
 		if assignment != "=":
-			print node.values
+			print(node.values)
 			raise "error parsing constant"
 			
 		ints = const_arrayint()
@@ -478,7 +478,7 @@ class translator:
 			elif statement.values[0] == "const":
 				self.parse_constant(statement)
 			else:
-				raise "unknown statement:" + statement
+				print("unknown statement:%s" % statement.values[0])
 				
 	def emit_header_code(self, out):
 		for c in self.constants:
@@ -486,14 +486,11 @@ class translator:
 		
 		for s in self.structs:
 			s.emit_header_code(out)
-		print >>out, ""
-		print >>out, "struct data_container *load_data_from_file(const char *filename);"
-		print >>out, "struct data_container *load_data_from_memory(unsigned char *filename);"
-		print >>out, ""
+		out.write("\nstruct data_container *load_data_from_file(const char *filename);\nstruct data_container *load_data_from_memory(unsigned char *filename);\n\n")
 		
 
 	def emit_source_code(self, out, header_filename):
-		print >>out, '''
+		content = '''
 
 #include "%s"
 #include <stdio.h>
@@ -507,7 +504,7 @@ static void patch_ptr(char **ptr, char *base)
 
 		for s in self.structs:
 			s.emit_source_code(out)
-		print >>out, '''
+		content += '''
 
 data_container *load_data_from_memory(unsigned char *mem)
 {
@@ -546,11 +543,12 @@ data_container *load_data_from_file(const char *filename)
 }
 
 '''
+		out.write(content)
 
 	def emit_data(self):
 		for s in self.structs:
 			if s.name == "data_container":
-				#print "found data_container"
+				#print("found data_container")
 				cons = data_constructor()
 				cons.trans = self
 				i = cons.allocate(s.size())
@@ -567,7 +565,7 @@ def create_translator(script, srcdata):
 def validate(script, validator):
 	def validate_values(values, check):
 		if not len(check) or check[0] == "*":
-			print "too many values"
+			print("too many values")
 			return
 		p = check[0].split(":")
 		type = p[0]
@@ -578,11 +576,11 @@ def validate(script, validator):
 		# recurse
 		if len(values) > 1:
 			if not len(check):
-				print "unexpected value"
+				print("unexpected value")
 			validate_values(values[1:], check[1:])
 		else:
 			if len(check) > 1 and check[1] != "*":
-				print "to few values"
+				print("to few values")
 	
 	if len(script.values):
 		validate_values(script.values, validator.values)
@@ -595,14 +593,14 @@ def validate(script, validator):
 			for vc in validator.children:
 				if "ident:" in vc.values[0]:
 					validate(child, vc)
-					print vc.values[0]
+					print(vc.values[0])
 					found = 1
 					break
 					
 			if not found:
-				print "error:", tag, "not found"
+				print("error: %s not found" % tag)
 		else:
-			print "tag:"+tag
+			print("tag:%s" % tag)
 			validate(child, n)
 
 input_filename = sys.argv[1]
@@ -630,29 +628,27 @@ script = parse_file(script_filename)
 translator = create_translator(script, srcdata)
 
 if header_filename:
-	translator.emit_header_code(file(header_filename, "w"))
+	translator.emit_header_code(open(header_filename, "w"))
 if source_filename:
-	translator.emit_source_code(file(source_filename, "w"), os.path.basename(sheader_filename))
+	translator.emit_source_code(open(source_filename, "w"), os.path.basename(sheader_filename))
 
 if output_filename:
 	rawdata = translator.emit_data()
-	file(output_filename, "wb").write(rawdata)
+	open(output_filename, "wb").write(rawdata)
 if coutput_filename:
 	i = 0
 	rawdata = translator.emit_data()
-	f = file(coutput_filename, "w")
+	f = open(coutput_filename, "w")
 
-	print >>f,"unsigned char internal_data[] = {"
-	print >>f,str(ord(rawdata[0])),
+	content = "unsigned char internal_data[] = {\n%s\n" % str(_compatibility._ord(rawdata[0]))
 	for d in rawdata[1:]:
-	    s = ","+str(ord(d))
-	    print >>f,s,
-	    i += len(s)+1
+		s = ","+str(_compatibility._ord(d))
+		content += "%s\n" % s
+		i += len(s)+1
 	
-	    if i >= 70:
-	        print >>f,""
-	        i = 0
-	print >>f,""
-	print >>f,"};"
-	print >>f,""
+		if i >= 70:
+			content += "\n"
+			i = 0
+	content += "\n};\n\n"
+	f.write(content)
 	f.close()

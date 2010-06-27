@@ -18,7 +18,7 @@ CDemoRecorder::CDemoRecorder(class CSnapshotDelta *pSnapshotDelta)
 	m_pSnapshotDelta = pSnapshotDelta;
 }
 
-//static IOHANDLE m_File = 0;
+//static FILE *m_File = 0;
 
 // Record
 int CDemoRecorder::Start(class IStorage *pStorage, const char *pFilename, const char *pNetVersion, const char *pMap, int Crc, const char *pType)

@@ -10,11 +10,14 @@ struct CHuffmanConstructNode
 
 void CHuffman::Setbits_r(CNode *pNode, int Bits, int Depth)
 {
-	if(pNode->m_aLeafs[1] != 0xffff)
-		Setbits_r(&m_aNodes[pNode->m_aLeafs[1]], Bits|(1<<Depth), Depth+1);
-	if(pNode->m_aLeafs[0] != 0xffff)
-		Setbits_r(&m_aNodes[pNode->m_aLeafs[0]], Bits, Depth+1);
-		
+	if(pNode->m_NumBits != -1)
+	{
+		if(pNode->m_aLeafs[1] != 0xffff)
+			Setbits_r(&m_aNodes[pNode->m_aLeafs[1]], Bits|(1<<Depth), Depth+1);
+		if(pNode->m_aLeafs[0] != 0xffff)
+			Setbits_r(&m_aNodes[pNode->m_aLeafs[0]], Bits, Depth+1);
+	}
+
 	if(pNode->m_NumBits)
 	{
 		pNode->m_Bits = Bits;
@@ -55,8 +58,6 @@ void CHuffman::ConstructTree(const unsigned *pFrequencies)
 	{
 		m_aNodes[i].m_NumBits = -1;
 		m_aNodes[i].m_Symbol = i;
-		m_aNodes[i].m_aLeafs[0] = -1;
-		m_aNodes[i].m_aLeafs[1] = -1;
 
 		if(i == HUFFMAN_EOF_SYMBOL)
 			aNodesLeftStorage[i].m_Frequency = 1;

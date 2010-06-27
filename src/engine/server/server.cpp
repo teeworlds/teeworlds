@@ -970,7 +970,7 @@ int CServer::LoadMap(const char *pMapName)
 	
 	// load compelate map into memory for download
 	{
-		IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_READ);
+		FILE *File = Storage()->OpenFile(aBuf, IOFLAG_READ);
 		m_CurrentMapSize = (int)io_length(File);
 		if(m_pCurrentMapData)
 			mem_free(m_pCurrentMapData);

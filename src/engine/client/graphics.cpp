@@ -383,7 +383,7 @@ int CGraphics_OpenGL::LoadPNG(CImageInfo *pImg, const char *pFilename)
 	// open file for reading
 	png_init(0,0); // ignore_convention
 
-	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, aCompleteFilename, sizeof(aCompleteFilename));
+	FILE *File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, aCompleteFilename, sizeof(aCompleteFilename));
 	if(File)
 		io_close(File);
 	
@@ -437,7 +437,7 @@ void CGraphics_OpenGL::ScreenshotDirect(const char *pFilename)
 		char aWholePath[1024];
 		png_t Png; // ignore_convention
 
-		IOHANDLE File  = m_pStorage->OpenFile(pFilename, IOFLAG_WRITE, aWholePath, sizeof(aWholePath));
+		FILE *File  = m_pStorage->OpenFile(pFilename, IOFLAG_WRITE, aWholePath, sizeof(aWholePath));
 		if(File)
 			io_close(File);
 	
@@ -878,7 +878,7 @@ void CGraphics_SDL::Swap()
 
 		for(; Index < 10000; Index++)
 		{
-			IOHANDLE io;
+			FILE *io;
 			str_format(aFilename, sizeof(aFilename), "screenshots/screenshot%s-%05d.png", aDate, Index);
 			io = m_pStorage->OpenFile(aFilename, IOFLAG_READ);
 			if(io)

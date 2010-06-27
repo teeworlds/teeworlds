@@ -1,4 +1,5 @@
 /* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
+#include <stdio.h>
 
 /*
 	Title: OS Abstraction
@@ -180,8 +181,6 @@ enum {
 	IOSEEK_END = 2
 };
 
-typedef struct IOINTERNAL *IOHANDLE;
-
 /*
 	Function: io_open
 		Opens a file.
@@ -194,7 +193,7 @@ typedef struct IOINTERNAL *IOHANDLE;
 		Returns a handle to the file on success and 0 on failure.
 
 */
-IOHANDLE io_open(const char *filename, int flags);
+FILE *io_open(const char *filename, int flags);
 
 /*
 	Function: io_read
@@ -209,7 +208,7 @@ IOHANDLE io_open(const char *filename, int flags);
 		Number of bytes read.
 
 */
-unsigned io_read(IOHANDLE io, void *buffer, unsigned size);
+unsigned io_read(FILE *io, void *buffer, unsigned size);
 
 /*
 	Function: io_skip
@@ -222,7 +221,7 @@ unsigned io_read(IOHANDLE io, void *buffer, unsigned size);
 	Returns:
 		Number of bytes skipped.
 */
-unsigned io_skip(IOHANDLE io, unsigned size);
+unsigned io_skip(FILE *io, unsigned size);
 
 /*
 	Function: io_write
@@ -236,7 +235,7 @@ unsigned io_skip(IOHANDLE io, unsigned size);
 	Returns:
 		Number of bytes written.
 */
-unsigned io_write(IOHANDLE io, const void *buffer, unsigned size);
+unsigned io_write(FILE *io, const void *buffer, unsigned size);
 
 /*
 	Function: io_seek
@@ -250,7 +249,7 @@ unsigned io_write(IOHANDLE io, const void *buffer, unsigned size);
 	Returns:
 		Returns 0 on success.
 */
-int io_seek(IOHANDLE io, int offset, int origin);
+int io_seek(FILE *io, int offset, int origin);
 
 /*
 	Function: io_tell
@@ -262,7 +261,7 @@ int io_seek(IOHANDLE io, int offset, int origin);
 	Returns:
 		Returns the current position. -1L if an error occured.
 */
-long int io_tell(IOHANDLE io);
+long int io_tell(FILE *io);
 
 /*
 	Function: io_length
@@ -274,7 +273,7 @@ long int io_tell(IOHANDLE io);
 	Returns:
 		Returns the total size. -1L if an error occured.
 */
-long int io_length(IOHANDLE io);
+long int io_length(FILE *io);
 
 /*
 	Function: io_close
@@ -286,7 +285,7 @@ long int io_length(IOHANDLE io);
 	Returns:
 		Returns 0 on success.
 */
-int io_close(IOHANDLE io);
+int io_close(FILE *io);
 
 /*
 	Function: io_flush
@@ -298,26 +297,26 @@ int io_close(IOHANDLE io);
 	Returns:
 		Returns 0 on success.
 */
-int io_flush(IOHANDLE io);
+int io_flush(FILE *io);
 
 
 /*
 	Function: io_stdin
-		Returns an <IOHANDLE> to the standard input.
+		Returns an <FILE *> to the standard input.
 */
-IOHANDLE io_stdin();
+FILE *io_stdin();
 
 /*
 	Function: io_stdout
-		Returns an <IOHANDLE> to the standard output.
+		Returns an <FILE *> to the standard output.
 */
-IOHANDLE io_stdout();
+FILE *io_stdout();
 
 /*
 	Function: io_stderr
-		Returns an <IOHANDLE> to the standard error.
+		Returns an <FILE *> to the standard error.
 */
-IOHANDLE io_stderr();
+FILE *io_stderr();
 
 
 /* Group: Threads */

@@ -1,6 +1,4 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
-#include <stdio.h>
-
 #include <base/system.h>
 #include <engine/masterserver.h>
 #include <engine/storage.h>
@@ -112,7 +110,7 @@ public:
 	virtual int Load()
 	{
 		CLineReader LineReader;
-		IOHANDLE File;
+		FILE *File;
 		int Count = 0;
 		IStorage *pStorage = Kernel()->RequestInterface<IStorage>();
 		if(!pStorage)
@@ -158,7 +156,7 @@ public:
 
 	virtual int Save()
 	{
-		IOHANDLE File;
+		FILE *File;
 
 		IStorage *pStorage = Kernel()->RequestInterface<IStorage>();
 		if(!pStorage)

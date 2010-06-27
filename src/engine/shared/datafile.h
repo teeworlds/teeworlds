@@ -58,7 +58,7 @@ class CDataFileWriter
 		int m_Last;
 	};
 	
-	IOHANDLE m_File;
+	FILE *m_File;
 	int m_NumItems;
 	int m_NumDatas;
 	int m_NumItemTypes;
