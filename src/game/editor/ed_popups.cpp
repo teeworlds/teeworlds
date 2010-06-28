@@ -20,6 +20,10 @@ static int g_UiNumPopups = 0;
 void CEditor::UiInvokePopupMenu(void *Id, int Flags, float x, float y, float w, float h, int (*pfnFunc)(CEditor *pEditor, CUIRect Rect), void *pExtra)
 {
 	dbg_msg("", "invoked");
+	if(x + w > UI()->Screen()->w)
+		x -= w;
+	if(y + h > UI()->Screen()->h)
+		y -= h;
 	s_UiPopups[g_UiNumPopups].m_pId = Id;
 	s_UiPopups[g_UiNumPopups].m_IsMenu = Flags;
 	s_UiPopups[g_UiNumPopups].m_Rect.x = x;
