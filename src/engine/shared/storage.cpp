@@ -30,6 +30,9 @@ public:
 			str_format(aPath, sizeof(aPath), "%s/maps", m_aApplicationSavePath);
 			fs_makedir(aPath);
 
+			str_format(aPath, sizeof(aPath), "%s/dumps", m_aApplicationSavePath);
+			fs_makedir(aPath);
+
 			str_format(aPath, sizeof(aPath), "%s/downloadedmaps", m_aApplicationSavePath);
 			fs_makedir(aPath);
 

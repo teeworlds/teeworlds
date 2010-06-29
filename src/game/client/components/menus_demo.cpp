@@ -1,6 +1,5 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
 
-#include <string.h>
 #include <base/math.h>
 
 
@@ -453,7 +452,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	
 	
 	bool IsDir = false;
-	if(!strncmp(m_lDemos[s_SelectedItem].m_aName, "..", 256)) //parent folder
+	if(!str_comp_num(m_lDemos[s_SelectedItem].m_aName, "..", 256)) //parent folder
 		IsDir = true;
 	else if(fs_is_dir(m_lDemos[s_SelectedItem].m_aFilename))
 		IsDir = true;
@@ -476,7 +475,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	{		
 		if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size())
 		{
-			if(!strncmp(m_lDemos[s_SelectedItem].m_aName, "..", 256))
+			if(!strncmp_comp_num(m_lDemos[s_SelectedItem].m_aName, "..", 256))
 			{
 				DemoSetParentDirectory();
 				DemolistPopulate();
