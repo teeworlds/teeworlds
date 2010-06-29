@@ -210,7 +210,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
 		if(ParseStart(&Result, pStr, (pEnd-pStr) + 1) != 0)
 			return;
 
-		CCommand *pCommand = FindCommand(Result.m_pCommand);
+		CCommand *pCommand = FindCommand(Result.m_pCommand, m_FlagMask);
 
 		if(pCommand)
 		{
@@ -234,7 +234,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
 					pCommand->m_pfnCallback(&Result, pCommand->m_pUserData);
 			}
 		}
-		else
+		else if(Stroke)
 		{
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "No such command: %s.", Result.m_pCommand);
@@ -258,14 +258,16 @@ void CConsole::PossibleCommands(const char *pStr, int FlagMask, FPossibleCallbac
 	}	
 }
 
-// TODO: this should regard the commands flag
-CConsole::CCommand *CConsole::FindCommand(const char *pName)
+CConsole::CCommand *CConsole::FindCommand(const char *pName, int FlagMask)
 {
 	CCommand *pCommand;
 	for (pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
 	{
-		if(str_comp_nocase(pCommand->m_pName, pName) == 0)
-			return pCommand;
+		if(pCommand->m_Flags&FlagMask)
+		{
+			if(str_comp_nocase(pCommand->m_pName, pName) == 0)
+				return pCommand;
+		}
 	}	
 	
 	return 0x0;
@@ -385,8 +387,9 @@ static void StrVariableCommand(IConsole::IResult *pResult, void *pUserData)
 	}
 }
 
-CConsole::CConsole()
+CConsole::CConsole(int FlagMask)
 {
+	m_FlagMask = FlagMask;
 	m_pFirstCommand = 0;
 	m_pFirstExec = 0;
 	m_pPrintCallbackUserdata = 0;
@@ -459,7 +462,7 @@ void CConsole::Con_Chain(IResult *pResult, void *pUserData)
 
 void CConsole::Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser)
 {
-	CCommand *pCommand = FindCommand(pName);
+	CCommand *pCommand = FindCommand(pName, m_FlagMask);
 	
 	if(!pCommand)
 	{
@@ -481,10 +484,10 @@ void CConsole::Chain(const char *pName, FChainCommandCallback pfnChainFunc, void
 }
 
 
-IConsole::CCommandInfo *CConsole::GetCommandInfo(const char *pName)
+IConsole::CCommandInfo *CConsole::GetCommandInfo(const char *pName, int FlagMask)
 {
-	return FindCommand(pName);
+	return FindCommand(pName, FlagMask);
 }
 
 
-extern IConsole *CreateConsole() { return new CConsole(); }
+extern IConsole *CreateConsole(int FlagMask) { return new CConsole(FlagMask); }

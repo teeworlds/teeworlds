@@ -20,6 +20,10 @@ static int g_UiNumPopups = 0;
 void CEditor::UiInvokePopupMenu(void *Id, int Flags, float x, float y, float w, float h, int (*pfnFunc)(CEditor *pEditor, CUIRect Rect), void *pExtra)
 {
 	dbg_msg("", "invoked");
+	if(x + w > UI()->Screen()->w)
+		x -= w;
+	if(y + h > UI()->Screen()->h)
+		y -= h;
 	s_UiPopups[g_UiNumPopups].m_pId = Id;
 	s_UiPopups[g_UiNumPopups].m_IsMenu = Flags;
 	s_UiPopups[g_UiNumPopups].m_Rect.x = x;
@@ -84,6 +88,7 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 		pEditor->DoButton_Editor(&s_DeleteButton, Localize("Delete group"), 0, &Button, 0, Localize("Delete group")))
 	{
 		pEditor->m_Map.DeleteGroup(pEditor->m_SelectedGroup);
+		pEditor->m_SelectedGroup = max(0, pEditor->m_SelectedGroup-1);
 		return 1;
 	}
 
