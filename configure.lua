@@ -341,9 +341,9 @@ end
 @END]]--
 function OptCCompiler(name, default_driver, default_c, default_cxx, desc)
 	local check = function(option, settings)
-		if ScriptArgs[option.name] then
+		if ScriptArgs["compiler"] == "cl" or ScriptArgs["compiler"] == "gcc" then
 			-- set compile driver
-			option.driver = ScriptArgs[option.name]
+			option.driver = ScriptArgs["compiler"]
 
 			-- set c compiler
 			if ScriptArgs[option.name..".c"] then
@@ -358,9 +358,6 @@ function OptCCompiler(name, default_driver, default_c, default_cxx, desc)
 			option.auto_detected = false
 		else
 			option.driver = settings.cc.exe_c
-			if compiler == "cl" or compiler == "gcc" then
-				option.auto_detected = false
-			end
 		end
 		--setup_compiler(option.value)
 	end
