@@ -99,7 +99,7 @@ void CPlayer::Tick()
 	}
 	
 	// reset PickupReset
-	if(m_ResetPickups)
+	if(m_ResetPickups && GetCharacter())
 		m_ResetPickups = false;
 }
 

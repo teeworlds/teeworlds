@@ -631,7 +631,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			{
 				if(!g_Config.m_SvShowTimes)
 				{
-					SendChatTarget(ClientId, "Showing the Tpo5 is not allowed on this server.");
+					SendChatTarget(ClientId, "Showing the Top5 is not allowed on this server.");
 					return;
 				}
 				

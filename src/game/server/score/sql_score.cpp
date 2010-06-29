@@ -434,7 +434,7 @@ void CSqlScore::ShowTop5Thread(void *pUser)
 				pData->m_pSqlData->GameServer()->SendChatTarget(pData->m_ClientID, aBuf);
 				Rank++;
 			}
-			pData->m_pSqlData->GameServer()->SendChatTarget(pData->m_ClientID, "-----------------------------");
+			pData->m_pSqlData->GameServer()->SendChatTarget(pData->m_ClientID, "------------------------------");
 			
 			dbg_msg("SQL", "Showing top5 done");
 			

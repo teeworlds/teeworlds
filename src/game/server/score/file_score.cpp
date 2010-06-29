@@ -236,7 +236,7 @@ void CFileScore::ShowTop5(int ClientID, int Debut)
 			i+Debut, r->m_aName, (int) r->m_Score/60, r->m_Score-((int)r->m_Score/60*60));
 		GameServer()->SendChatTarget(ClientID, aBuf);
 	}
-	GameServer()->SendChatTarget(ClientID, "-----------------------------");
+	GameServer()->SendChatTarget(ClientID, "------------------------------");
 }
 
 void CFileScore::ShowRank(int ClientID, const char* pName, bool Search)
