@@ -257,11 +257,14 @@ void CGameClient::OnInit()
 	
 	int64 Start = time_get();
 	
-	// load default font	
-	static CFont *pDefaultFont;
+	// load font	
+	static CFont *pFont;
 	//default_font = gfx_font_load("data/fonts/sazanami-gothic.ttf");
-	pDefaultFont = TextRender()->LoadFont("data/fonts/vera.ttf");
-	TextRender()->SetDefaultFont(pDefaultFont);
+	if(!str_comp_num(g_Config.m_ClFontfile, "data/fonts/", 11))
+		pFont = TextRender()->LoadFont(g_Config.m_ClFontfile);
+	else
+		pFont = TextRender()->LoadFont("data/fonts/vera.ttf");
+	TextRender()->SetFont(pFont);
 
 	g_Config.m_ClThreadsoundloading = 0;
 

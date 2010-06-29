@@ -2,6 +2,7 @@
 #include <base/math.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
+#include <engine/shared/config.h>
 
 #ifdef CONF_FAMILY_WINDOWS
 	#include <windows.h>
@@ -102,7 +103,7 @@ class CTextRender : public IEngineTextRender
 	
 	int m_FontTextureFormat;
 
-	CFont *m_pDefaultFont;
+	CFont *m_pFont;
 
 	FT_Library m_FTLibrary;
 	
@@ -433,7 +434,7 @@ public:
 		m_TextB = 1;
 		m_TextA = 1;
 
-		m_pDefaultFont = 0;
+		m_pFont = 0;
 
 		// GL_LUMINANCE can be good for debugging
 		m_FontTextureFormat = GL_ALPHA;
@@ -462,7 +463,7 @@ public:
 		for(unsigned i = 0; i < NUM_FONT_SIZES; i++)
 			pFont->m_aSizes[i].m_FontSize = -1;
 		
-		dbg_msg("textrender", "loaded pFont from '%s'", pFilename);
+		dbg_msg("textrender", "loaded Font from '%s'", pFilename);
 		return pFont;
 	};
 
@@ -471,10 +472,10 @@ public:
 		mem_free(pFont);
 	}
 
-	virtual void SetDefaultFont(CFont *pFont)
+	virtual void SetFont(CFont *pFont)
 	{
-		dbg_msg("textrender", "default pFont set %p", pFont);
-		m_pDefaultFont = pFont;
+		dbg_msg("textrender", "Font set %p", pFont);
+		m_pFont = pFont;
 	}
 		
 		
@@ -561,9 +562,9 @@ public:
 		ActualSize = Size * FakeToScreenY;
 		Size = ActualSize / FakeToScreenY;
 
-		// fetch pFont data
+		// fetch Font data
 		if(!pFont)
-			pFont = m_pDefaultFont;
+			pFont = m_pFont;
 		
 		if(!pFont)
 			return;

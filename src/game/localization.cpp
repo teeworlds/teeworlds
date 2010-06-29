@@ -76,7 +76,7 @@ bool CLocalizationDatabase::Load(const char *pFilename)
 		
 		if(pReplacement[0] != '=' || pReplacement[1] != '=' || pReplacement[2] != ' ')
 		{
-			dbg_msg("", "malform replacement line for '%s'", pLine);
+			//dbg_msg("", "malform replacement line for '%s'", pLine); // Strange Sound if Changing Font
 			continue;
 		}
 

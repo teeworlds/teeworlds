@@ -460,6 +460,9 @@ Your skin
 
 ##### needs translation ####
 
+Font
+== Font
+
 Open map
 == Open kaart
 

@@ -858,6 +858,16 @@ struct LANGUAGE
 	bool operator<(const LANGUAGE &Other) { return m_Name < Other.m_Name; }
 };
 
+struct FONT
+{
+	FONT() {}
+	FONT(const char *n, const char *f) : m_Name(n), m_FileName(f) {}
+
+	string m_Name;
+	string m_FileName;
+
+	bool operator<(const FONT &Other) { return m_Name < Other.m_Name; }
+};
 
 int fs_listdir(const char *pDir, FS_LISTDIR_CALLBACK cb, void *pUser);
 
@@ -882,12 +892,34 @@ void GatherLanguages(const char *pName, int IsDir, void *pUser)
 	Languages.add(LANGUAGE(NiceName, aFileName));
 }
 
+void GatherFonts(const char *pName, int IsDir, void *pUser)
+{
+	if(IsDir || pName[0] == '.')
+		return;
+
+	sorted_array<FONT> &Fonts = *((sorted_array<FONT> *)pUser);
+	char aFileName[128];
+	str_format(aFileName, sizeof(aFileName), "data/fonts/%s", pName);
+
+	char NiceName[128];
+	str_format(NiceName, sizeof(NiceName), "%s", pName);
+	NiceName[0] = str_uppercase(NiceName[0]);
+
+
+	for(char *p = NiceName; *p; p++)
+		if(*p == '.')
+			*p = 0;
+
+	Fonts.add(FONT(NiceName, aFileName));
+}
+
 void CMenus::RenderSettingsGeneral(CUIRect MainView)
 {
+	// Render language list
 	static int s_LanguageList  = 0;
 	static int s_SelectedLanguage = 0;
 	static sorted_array<LANGUAGE> s_Languages;
-	static float s_ScrollValue = 0;
+	static float s_LanguageScrollValue = 0;
 
 	if(s_Languages.size() == 0)
 	{
@@ -901,10 +933,11 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			}
 	}
 
-	int OldSelected = s_SelectedLanguage;
+	int OldSelectedLanguage = s_SelectedLanguage;
 
 	CUIRect List = MainView;
-	UiDoListboxStart(&s_LanguageList , &List, 24.0f, Localize("Language"), "", s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);
+	List.h = List.h/2 - 10; // Ugly, but work
+	UiDoListboxStart(&s_LanguageList , &List, 24.0f, Localize("Language"), "", s_Languages.size(), 1, s_SelectedLanguage, s_LanguageScrollValue);
 
 	for(sorted_array<LANGUAGE>::range r = s_Languages.all(); !r.empty(); r.pop_front())
 	{
@@ -914,12 +947,53 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			UI()->DoLabel(&Item.m_Rect, r.front().m_Name, 16.0f, -1);
 	}
 
-	s_SelectedLanguage = UiDoListboxEnd(&s_ScrollValue, 0);
+	s_SelectedLanguage = UiDoListboxEnd(&s_LanguageScrollValue, 0);
 
-	if(OldSelected != s_SelectedLanguage)
+	if(OldSelectedLanguage != s_SelectedLanguage)
 	{
 		str_copy(g_Config.m_ClLanguagefile, s_Languages[s_SelectedLanguage].m_FileName, sizeof(g_Config.m_ClLanguagefile));
 		g_Localization.Load(s_Languages[s_SelectedLanguage].m_FileName);
+	}
+
+	MainView.HSplitTop(MainView.h/2 + 10, 0, &MainView);
+
+	// Render font list
+	static int s_FontList  = 0;
+	static int s_SelectedFont = 0;
+	static sorted_array<FONT> s_Fonts;
+	static float s_FontScrollValue = 0;
+
+	if(s_Fonts.size() == 0)
+	{
+		fs_listdir("data/fonts", GatherFonts, &s_Fonts);
+		for(int i = 0; i < s_Fonts.size(); i++)
+			if(str_comp(s_Fonts[i].m_FileName, g_Config.m_ClFontfile) == 0)
+			{
+				s_SelectedFont = i;
+				break;
+			}
+	}
+
+	int OldSelectedFont = s_SelectedFont;
+
+	CUIRect ListFont = MainView;
+	UiDoListboxStart(&s_FontList , &ListFont, 24.0f, Localize("Font"), "", s_Fonts.size(), 1, s_SelectedFont, s_FontScrollValue);
+
+	for(sorted_array<FONT>::range r = s_Fonts.all(); !r.empty(); r.pop_front())
+	{
+		CListboxItem Item = UiDoListboxNextItem(&r.front());
+
+		if(Item.m_Visible)
+			UI()->DoLabel(&Item.m_Rect, r.front().m_Name, 16.0f, -1);
+	}
+
+	s_SelectedFont = UiDoListboxEnd(&s_FontScrollValue, 0);
+
+	if(OldSelectedFont != s_SelectedFont)
+	{
+		str_copy(g_Config.m_ClFontfile, s_Fonts[s_SelectedFont].m_FileName, sizeof(g_Config.m_ClFontfile));
+		g_Localization.Load(s_Fonts[s_SelectedFont].m_FileName);
+		m_NeedRestart = true;
 	}
 }
 

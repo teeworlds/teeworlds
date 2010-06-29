@@ -36,7 +36,7 @@ public:
 	virtual CFont *LoadFont(const char *pFilename) = 0;
 	virtual void DestroyFont(CFont *pFont) = 0;
 	
-	virtual void SetDefaultFont(CFont *pFont) = 0;
+	virtual void SetFont(CFont *pFont) = 0;
 
 	//
 	virtual void TextEx(CTextCursor *pCursor, const char *pText, int Length) = 0;

@@ -112,6 +112,9 @@ Filter
 Fire
 == Feuern
 
+Font
+== Schriftart
+
 Force vote
 == Abstimmung erzwingen
 

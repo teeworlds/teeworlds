@@ -435,6 +435,9 @@ Your skin
 
 ##### needs translation ####
 
+Font
+== Font
+
 Show chat
 == Show chat
 

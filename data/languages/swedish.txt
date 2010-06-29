@@ -429,6 +429,9 @@ You must restart the game for all settings to take effect.
 
 ##### needs translation ####
 
+Font
+== Font
+
 Force vote
 == Force vote
 
