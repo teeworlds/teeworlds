@@ -319,7 +319,7 @@ void CPlayers::RenderPlayer(
 	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
 
 	// evaluate animation
-	float WalkTime = fmod(Position.x, 100.0f)/100.0f;
+	float WalkTime = fmod(absolute(Position.x), 100.0f)/100.0f;
 	CAnimState State;
 	State.Set(&g_pData->m_aAnimations[ANIM_BASE], 0);
 

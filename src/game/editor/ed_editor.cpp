@@ -573,7 +573,21 @@ static void CallbackAppendMap(const char *pFileName, void *pUser)
 	else
 		pEditor->SortImages();
 }
-static void CallbackSaveMap(const char *pFileName, void *pUser){ if(((CEditor*)pUser)->Save(pFileName)) str_copy(((CEditor*)pUser)->m_aFileName, pFileName, 512); }
+static void CallbackSaveMap(const char *pFileName, void *pUser)
+{
+	char aBuf[1024];
+	const int Length = str_length(pFileName);
+	// add map extension
+	if(Length <= 4 || pFileName[Length-4] != '.' || str_comp_nocase(pFileName+Length-3, "map"))
+	{
+		str_format(aBuf, sizeof(aBuf), "%s.map", pFileName);
+		pFileName = aBuf;
+	}
+
+	CEditor *pEditor = static_cast<CEditor*>(pUser);
+	if(pEditor->Save(pFileName))
+		str_copy(pEditor->m_aFileName, pFileName, sizeof(pEditor->m_aFileName));
+}
 
 void CEditor::DoToolbar(CUIRect ToolBar)
 {
@@ -593,7 +607,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	if(Input()->KeyDown('s') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL)))
 	{
 		if(m_aFileName[0])	
-			Save(m_aFileName);
+			CallbackSaveMap(m_aFileName, this);
 		else
 			InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save map"), Localize("Save"), "maps/", "", CallbackSaveMap, this);
 	}
@@ -772,6 +786,17 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 			if(pT)
                 DoMapBorder();
 		}
+	}
+
+	TB_Bottom.VSplitLeft(5.0f, 0, &TB_Bottom);
+
+	// refocus button
+	TB_Bottom.VSplitLeft(50.0f, &Button, &TB_Bottom);
+	static int s_RefocusButton = 0;
+	if(DoButton_Editor(&s_RefocusButton, Localize("Refocus"), m_WorldOffsetX&&m_WorldOffsetY?0:-1, &Button, 0, Localize("[HOME] Restore map focus")) || Input()->KeyDown(KEY_HOME))
+	{
+		m_WorldOffsetX = 0;
+		m_WorldOffsetY = 0;
 	}
 }
 
@@ -1317,24 +1342,26 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 					}
 
 					CLayerGroup *g = GetSelectedGroup();
-					m_Brush.m_OffsetX += g->m_OffsetX;
-					m_Brush.m_OffsetY += g->m_OffsetY;
-					m_Brush.m_ParallaxX = g->m_ParallaxX;
-					m_Brush.m_ParallaxY = g->m_ParallaxY;
-					m_Brush.Render();
-					float w, h;
-					m_Brush.GetSize(&w, &h);
+					if(g)
+					{
+						m_Brush.m_OffsetX += g->m_OffsetX;
+						m_Brush.m_OffsetY += g->m_OffsetY;
+						m_Brush.m_ParallaxX = g->m_ParallaxX;
+						m_Brush.m_ParallaxY = g->m_ParallaxY;
+						m_Brush.Render();
+						float w, h;
+						m_Brush.GetSize(&w, &h);
 
-					IGraphics::CLineItem Array[4] = {
-						IGraphics::CLineItem(0, 0, w, 0),
-						IGraphics::CLineItem(w, 0, w, h),
-						IGraphics::CLineItem(w, h, 0, h),
-						IGraphics::CLineItem(0, h, 0, 0)};
-					Graphics()->TextureSet(-1);
-					Graphics()->LinesBegin();
-					Graphics()->LinesDraw(Array, 4);
-					Graphics()->LinesEnd();
-
+						IGraphics::CLineItem Array[4] = {
+							IGraphics::CLineItem(0, 0, w, 0),
+							IGraphics::CLineItem(w, 0, w, h),
+							IGraphics::CLineItem(w, h, 0, h),
+							IGraphics::CLineItem(0, h, 0, 0)};
+						Graphics()->TextureSet(-1);
+						Graphics()->LinesBegin();
+						Graphics()->LinesDraw(Array, 4);
+						Graphics()->LinesEnd();
+					}
 				}
 			}
 		}
@@ -1391,6 +1418,15 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 					UI()->SetActiveItem(0);
 				}
 			}
+		}
+	}
+	else if(UI()->ActiveItem() == s_pEditorId)
+	{
+		// release mouse
+		if(!UI()->MouseButton(0))
+		{
+			s_Operation = OP_NONE;
+			UI()->SetActiveItem(0);
 		}
 	}
 
@@ -2644,7 +2680,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 	if(pEditor->DoButton_MenuItem(&s_SaveButton, Localize("Save"), 0, &Slot, 0, Localize("Saves the current map")))
 	{
 		if(pEditor->m_aFileName[0])	
-			pEditor->Save(pEditor->m_aFileName);
+			CallbackSaveMap(pEditor->m_aFileName, pEditor);
 		else
 			pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save Map"), Localize("Save"), "maps/", "", CallbackSaveMap, pEditor);
 		return 1;
@@ -2882,6 +2918,28 @@ void CEditorMap::Clean()
 
 void CEditorMap::CreateDefault(int EntitiesTexture)
 {
+	// add background
+	CLayerGroup *pGroup = NewGroup();
+	pGroup->m_ParallaxX = 0;
+	pGroup->m_ParallaxY = 0;
+	CLayerQuads *pLayer = new CLayerQuads;
+	pLayer->m_pEditor = m_pEditor;
+	CQuad *pQuad = pLayer->NewQuad();
+	const int Width = 800000;
+	const int Height = 600000;
+	pQuad->m_aPoints[0].x = pQuad->m_aPoints[2].x = -Width;
+	pQuad->m_aPoints[1].x = pQuad->m_aPoints[3].x = Width;
+	pQuad->m_aPoints[0].y = pQuad->m_aPoints[1].y = -Height;
+	pQuad->m_aPoints[2].y = pQuad->m_aPoints[3].y = Height;
+	pQuad->m_aColors[0].r = pQuad->m_aColors[1].r = 94;
+	pQuad->m_aColors[0].g = pQuad->m_aColors[1].g = 132;
+	pQuad->m_aColors[0].b = pQuad->m_aColors[1].b = 174;
+	pQuad->m_aColors[2].r = pQuad->m_aColors[3].r = 204;
+	pQuad->m_aColors[2].g = pQuad->m_aColors[3].g = 232;
+	pQuad->m_aColors[2].b = pQuad->m_aColors[3].b = 255;
+	pGroup->AddLayer(pLayer);
+
+	// add game layer
 	MakeGameGroup(NewGroup());
 	MakeGameLayer(new CLayerGame(50, 50));
 	m_pGameGroup->AddLayer(m_pGameLayer);
@@ -2925,7 +2983,7 @@ void CEditor::DoMapBorder()
             pT->m_pTiles[i].m_Index = 1;
     }
     
-    for(int i = ((pT->m_Width-2)*pT->m_Height); i < pT->m_Width*pT->m_Height; ++i)
+    for(int i = (pT->m_Width*(pT->m_Height-2)); i < pT->m_Width*pT->m_Height; ++i)
         pT->m_pTiles[i].m_Index = 1;
 }
 

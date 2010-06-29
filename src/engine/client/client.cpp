@@ -1964,7 +1964,7 @@ int main(int argc, const char **argv) // ignore_convention
 	m_Client.RegisterInterfaces();
 
 	// create the components
-	IConsole *pConsole = CreateConsole();
+	IConsole *pConsole = CreateConsole(CFGFLAG_CLIENT);
 	IStorage *pStorage = CreateStorage("Teeworlds", argv[0]); // ignore_convention
 	IConfig *pConfig = CreateConfig();
 	IEngineGraphics *pEngineGraphics = CreateEngineGraphics();

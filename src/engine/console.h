@@ -37,7 +37,7 @@ public:
 	typedef void (*FCommandCallback)(IResult *pResult, void *pUserData);
 	typedef void (*FChainCommandCallback)(IResult *pResult, void *pUserData, FCommandCallback pfnCallback, void *pCallbackUserData);
 
-	virtual CCommandInfo *GetCommandInfo(const char *pName) = 0;
+	virtual CCommandInfo *GetCommandInfo(const char *pName, int FlagMask) = 0;
 	virtual void PossibleCommands(const char *pStr, int FlagMask, FPossibleCallback pfnCallback, void *pUser) = 0;
 	virtual void ParseArguments(int NumArgs, const char **ppArguments) = 0;
 
@@ -53,6 +53,6 @@ public:
 	virtual void Print(const char *pStr) = 0;
 };
 
-extern IConsole *CreateConsole();
+extern IConsole *CreateConsole(int FlagMask);
 
 #endif // FILE_ENGINE_CONSOLE_H
