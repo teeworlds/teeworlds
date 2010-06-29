@@ -104,7 +104,7 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 		{
 			m_pClient->m_pEffects->PowerupShine(Pos, vec2(96,18));
 			Size *= 2.0f;
-			Pos.x += 10.0f;
+			Pos.x -= 10.0f;
 		}
 	}
 

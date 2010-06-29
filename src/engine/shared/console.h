@@ -24,6 +24,7 @@ class CConsole : public IConsole
 		void *m_pUserData;
 	};	
 	
+	int m_FlagMask;
 	CCommand *m_pFirstCommand;
 
 	class CExecFile
@@ -74,12 +75,12 @@ class CConsole : public IConsole
 	int ParseStart(CResult *pResult, const char *pString, int Length);
 	int ParseArgs(CResult *pResult, const char *pFormat);
 
-	CCommand *FindCommand(const char *pName);
+	CCommand *FindCommand(const char *pName, int FlagMask);
 
 public:
-	CConsole();
+	CConsole(int FlagMask);
 
-	virtual CCommandInfo *GetCommandInfo(const char *pName);
+	virtual CCommandInfo *GetCommandInfo(const char *pName, int FlagMask);
 	virtual void PossibleCommands(const char *pStr, int FlagMask, FPossibleCallback pfnCallback, void *pUser) ;
 
 	virtual void ParseArguments(int NumArgs, const char **ppArguments);

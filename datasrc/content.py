@@ -305,7 +305,7 @@ container.sprites.Add(Sprite("weapon_hammer_body", set_game, 2,1,4,3))
 container.sprites.Add(Sprite("weapon_hammer_cursor", set_game, 0,0,2,2))
 container.sprites.Add(Sprite("weapon_hammer_proj", set_game, 0,0,0,0))
 
-container.sprites.Add(Sprite("weapon_ninja_body", set_game, 2,10,7,2))
+container.sprites.Add(Sprite("weapon_ninja_body", set_game, 2,10,8,2))
 container.sprites.Add(Sprite("weapon_ninja_cursor", set_game, 0,10,2,2))
 container.sprites.Add(Sprite("weapon_ninja_proj", set_game, 0,0,0,0))
 
@@ -323,7 +323,7 @@ container.sprites.Add(Sprite("weapon_ninja_muzzle3", set_game, 25,8,7,4))
 container.sprites.Add(Sprite("pickup_health", set_game, 10,2,2,2))
 container.sprites.Add(Sprite("pickup_armor", set_game, 12,2,2,2))
 container.sprites.Add(Sprite("pickup_weapon", set_game, 3,0,6,2))
-container.sprites.Add(Sprite("pickup_ninja", set_game, 3,10,7,2))
+container.sprites.Add(Sprite("pickup_ninja", set_game, 2,10,8,2))
 
 container.sprites.Add(Sprite("flag_blue", set_game, 12,8,4,8))
 container.sprites.Add(Sprite("flag_red", set_game, 16,8,4,8))

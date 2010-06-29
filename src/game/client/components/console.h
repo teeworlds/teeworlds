@@ -24,11 +24,14 @@ class CGameConsole : public CComponent
 		char m_aCompletionBuffer[128];
 		int m_CompletionChosen;
 		int m_CompletionFlagmask;
+		float m_CompletionRenderOffset;
 		
 		IConsole::CCommandInfo *m_pCommand;
 
 		CInstance(int t);
 		void Init(CGameConsole *pGameConsole);
+
+		void ClearBacklog();
 
 		void ExecuteLine(const char *pLine);
 		
@@ -53,11 +56,16 @@ class CGameConsole : public CComponent
 	float m_StateChangeDuration;
 
 	void Toggle(int Type);
+	void Dump(int Type);
 
 	static void PossibleCommandsRenderCallback(const char *pStr, void *pUser);
 	static void ClientConsolePrintCallback(const char *pStr, void *pUserData);
 	static void ConToggleLocalConsole(IConsole::IResult *pResult, void *pUserData);
 	static void ConToggleRemoteConsole(IConsole::IResult *pResult, void *pUserData);
+	static void ConClearLocalConsole(IConsole::IResult *pResult, void *pUserData);
+	static void ConClearRemoteConsole(IConsole::IResult *pResult, void *pUserData);
+	static void ConDumpLocalConsole(IConsole::IResult *pResult, void *pUserData);
+	static void ConDumpRemoteConsole(IConsole::IResult *pResult, void *pUserData);
 	
 public:
 	CGameConsole();
