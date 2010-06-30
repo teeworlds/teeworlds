@@ -1,11 +1,13 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include "ed_editor.h"
 
+#include <game/localization.h>
+
 
 CLayerGame::CLayerGame(int w, int h)
 : CLayerTiles(w, h)
 {
-	m_pTypeName = "Game";
+	m_pTypeName = Localize("Game");
 	m_Game = 1;
 }
 

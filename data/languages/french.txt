@@ -451,7 +451,7 @@ ZI
 ZO
 == ZO
 
-##### needs translation ####
+##### needs translation #####
 
 Add
 ==
@@ -705,7 +705,13 @@ Previous Envelope
 Proof
 ==
 
+Quads
+==
+
 Red value of the envelope
+==
+
+Refocus
 ==
 
 Remove
@@ -780,6 +786,9 @@ Switch between images and layers managment.
 Switch curve type
 ==
 
+Tiles
+==
+
 Toggle group visibility
 ==
 
@@ -808,6 +817,9 @@ X-axis of the envelope
 ==
 
 Y-axis of the envelope
+==
+
+[HOME] Restore map focus
 ==
 
 [M] Flip brush vertical
@@ -843,5 +855,5 @@ Y-axis of the envelope
 error loading demo
 ==
 
-##### old translations ####
+##### old translations #####
 

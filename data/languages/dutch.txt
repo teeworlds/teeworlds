@@ -781,7 +781,7 @@ ZO
 error loading demo
 == Fout bij laden demo
 
-##### needs translation ####
+##### needs translation #####
 
 Alpha value of the envelope
 ==
@@ -822,13 +822,22 @@ Pos X
 Pos Y
 ==
 
+Quads
+==
+
 Red value of the envelope
+==
+
+Refocus
 ==
 
 Rotation of the envelope
 ==
 
 Rotation value in degrees of the brush
+==
+
+Tiles
 ==
 
 Type
@@ -843,5 +852,8 @@ X-axis of the envelope
 Y-axis of the envelope
 ==
 
-##### old translations ####
+[HOME] Restore map focus
+==
+
+##### old translations #####
 

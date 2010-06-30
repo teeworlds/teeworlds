@@ -502,7 +502,7 @@ You must restart the game for all settings to take effect.
 Your skin
 == Váš skin
 
-##### needs translation ####
+##### needs translation #####
 
 Add
 ==
@@ -711,7 +711,13 @@ Previous Envelope
 Proof
 ==
 
+Quads
+==
+
 Red value of the envelope
+==
+
+Refocus
 ==
 
 Remove
@@ -774,6 +780,9 @@ Switch between images and layers managment.
 Switch curve type
 ==
 
+Tiles
+==
+
 Toggle group visibility
 ==
 
@@ -810,6 +819,9 @@ ZI
 ZO
 ==
 
+[HOME] Restore map focus
+==
+
 [M] Flip brush vertical
 ==
 
@@ -843,5 +855,5 @@ ZO
 error loading demo
 ==
 
-##### old translations ####
+##### old translations #####
 

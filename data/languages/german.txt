@@ -29,7 +29,7 @@ Add quads layer
 == Viereck-Ebene hinzu.
 
 Add tile layer
-== Tile-Ebene hinzufg.
+== Platten-Ebene hinzuf.
 
 Address
 == Adresse
@@ -53,7 +53,7 @@ Always show name plates
 == Spielernamen immer anzeigen
 
 Anim
-== Anim
+== Anima.
 
 Append
 == Anhängen
@@ -538,6 +538,9 @@ Previous Envelope
 Proof
 == Testra.
 
+Quads
+== Viere.
+
 Quality Textures
 == Hochaufgelöste Texturen
 
@@ -555,6 +558,9 @@ Red team wins!
 
 Red value of the envelope
 == Rot-Wert der Animation
+
+Refocus
+== Wiederh.
 
 Refresh
 == Erneuern
@@ -727,6 +733,9 @@ Texture Compression
 The server is running a non-standard tuning on a pure game type.
 == Der Server läuft nicht mit Standardeinstellungen.
 
+Tiles
+== Platt.
+
 Time limit
 == Zeitlimit
 
@@ -808,6 +817,9 @@ ZI
 ZO
 == ZO
 
+[HOME] Restore map focus
+== [HOME] Setzt das Blickfeld der Karte zurück
+
 [M] Flip brush vertical
 == [M] Pinsel vertikal umdrehen
 
@@ -841,7 +853,7 @@ ZO
 error loading demo
 == Fehler beim Laden der Demo, die Datei ist ungültig.
 
-##### needs translation ####
+##### needs translation #####
 
-##### old translations ####
+##### old translations #####
 

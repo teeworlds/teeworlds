@@ -448,7 +448,7 @@ Yes
 You must restart the game for all settings to take effect.
 == Du måste starta om spelet för att ändringarna skall gälla.
 
-##### needs translation ####
+##### needs translation #####
 
 %ds left
 ==
@@ -705,7 +705,13 @@ Previous Envelope
 Proof
 ==
 
+Quads
+==
+
 Red value of the envelope
+==
+
+Refocus
 ==
 
 Remove
@@ -771,6 +777,9 @@ Sudden Death
 Switch between images and layers managment.
 ==
 
+Tiles
+==
+
 Toggle group visibility
 ==
 
@@ -810,6 +819,9 @@ ZI
 ZO
 ==
 
+[HOME] Restore map focus
+==
+
 [M] Flip brush vertical
 ==
 
@@ -843,5 +855,5 @@ ZO
 error loading demo
 ==
 
-##### old translations ####
+##### old translations #####
 

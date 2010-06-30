@@ -58,14 +58,14 @@ def generate_languagefile(outputfilename, srctable, loctable):
 			num_items += 1
 
 
-	content += "##### needs translation ####\n\n"
+	content += "##### needs translation #####\n\n"
 	for k in srctable_keys:
 		if not k in loctable or len(loctable[k]) == 0:
 			content += "%s\n==\n\n" % k
 			num_items += 1
 			new_items += 1
 
-	content += "##### old translations ####\n\n"
+	content += "##### old translations #####\n\n"
 	for k in loctable:
 		if not k in srctable:
 			content += "%s\n==%s\n\n" % (k, loctable[k])
