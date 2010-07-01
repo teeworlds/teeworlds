@@ -27,6 +27,7 @@ class CSqlScore : public IScore
 	const char* m_pUser;
 	const char* m_pPass;
 	const char* m_pIp;
+	char m_aMap[64];
 	int m_Port;
 	
 	CGameContext *GameServer() { return m_pGameServer; }

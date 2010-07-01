@@ -18,6 +18,9 @@ CSqlScore::CSqlScore(CGameContext *pGameServer)
   m_pIp(g_Config.m_SvSqlIp),
   m_Port(g_Config.m_SvSqlPort)
 {
+	str_copy(m_aMap, g_Config.m_SvMap, sizeof(m_aMap));
+	ClearString(m_aMap);
+	
 	if(gs_SqlLock == 0)
 		gs_SqlLock = lock_create();
 	
@@ -83,12 +86,12 @@ void CSqlScore::Init()
 		{
 			// create tables
 			char aBuf[768];
-			str_format(aBuf, sizeof(aBuf), "CREATE TABLE IF NOT EXISTS %s_%s_race (Name VARCHAR(31) NOT NULL, Time FLOAT DEFAULT 0, IP VARCHAR(16) DEFAULT '0.0.0.0', cp1 FLOAT DEFAULT 0, cp2 FLOAT DEFAULT 0, cp3 FLOAT DEFAULT 0, cp4 FLOAT DEFAULT 0, cp5 FLOAT DEFAULT 0, cp6 FLOAT DEFAULT 0, cp7 FLOAT DEFAULT 0, cp8 FLOAT DEFAULT 0, cp9 FLOAT DEFAULT 0, cp10 FLOAT DEFAULT 0, cp11 FLOAT DEFAULT 0, cp12 FLOAT DEFAULT 0, cp13 FLOAT DEFAULT 0, cp14 FLOAT DEFAULT 0, cp15 FLOAT DEFAULT 0, cp16 FLOAT DEFAULT 0, cp17 FLOAT DEFAULT 0, cp18 FLOAT DEFAULT 0, cp19 FLOAT DEFAULT 0, cp20 FLOAT DEFAULT 0, cp21 FLOAT DEFAULT 0, cp22 FLOAT DEFAULT 0, cp23 FLOAT DEFAULT 0, cp24 FLOAT DEFAULT 0, cp25 FLOAT DEFAULT 0);", m_pPrefix, g_Config.m_SvMap);
+			str_format(aBuf, sizeof(aBuf), "CREATE TABLE IF NOT EXISTS %s_%s_race (Name VARCHAR(31) NOT NULL, Time FLOAT DEFAULT 0, IP VARCHAR(16) DEFAULT '0.0.0.0', cp1 FLOAT DEFAULT 0, cp2 FLOAT DEFAULT 0, cp3 FLOAT DEFAULT 0, cp4 FLOAT DEFAULT 0, cp5 FLOAT DEFAULT 0, cp6 FLOAT DEFAULT 0, cp7 FLOAT DEFAULT 0, cp8 FLOAT DEFAULT 0, cp9 FLOAT DEFAULT 0, cp10 FLOAT DEFAULT 0, cp11 FLOAT DEFAULT 0, cp12 FLOAT DEFAULT 0, cp13 FLOAT DEFAULT 0, cp14 FLOAT DEFAULT 0, cp15 FLOAT DEFAULT 0, cp16 FLOAT DEFAULT 0, cp17 FLOAT DEFAULT 0, cp18 FLOAT DEFAULT 0, cp19 FLOAT DEFAULT 0, cp20 FLOAT DEFAULT 0, cp21 FLOAT DEFAULT 0, cp22 FLOAT DEFAULT 0, cp23 FLOAT DEFAULT 0, cp24 FLOAT DEFAULT 0, cp25 FLOAT DEFAULT 0);", m_pPrefix, m_aMap);
 			m_pStatement->execute(aBuf);
 			dbg_msg("SQL", "Tables were created successfully");
 			
 			// get the best time
-			str_format(aBuf, sizeof(aBuf), "SELECT Time FROM %s_%s_race ORDER BY `Time` ASC LIMIT 0, 1;", m_pPrefix, g_Config.m_SvMap);
+			str_format(aBuf, sizeof(aBuf), "SELECT Time FROM %s_%s_race ORDER BY `Time` ASC LIMIT 0, 1;", m_pPrefix, m_aMap);
 			m_pResults = m_pStatement->executeQuery(aBuf);
 			
 			if(m_pResults->next())
@@ -133,7 +136,7 @@ void CSqlScore::LoadScoreThread(void *pUser)
 			// check if there is an entry with the same ip
 			if(g_Config.m_SvScoreIP)
 			{
-				str_format(aBuf, sizeof(aBuf), "SELECT * FROM %s_%s_race WHERE IP='%s';", pData->m_pSqlData->m_pPrefix, g_Config.m_SvMap, pData->m_aIP);
+				str_format(aBuf, sizeof(aBuf), "SELECT * FROM %s_%s_race WHERE IP='%s';", pData->m_pSqlData->m_pPrefix, pData->m_pSqlData->m_aMap, pData->m_aIP);
 				pData->m_pSqlData->m_pResults = pData->m_pSqlData->m_pStatement->executeQuery(aBuf);
 				
 				if(pData->m_pSqlData->m_pResults->next())
@@ -165,7 +168,7 @@ void CSqlScore::LoadScoreThread(void *pUser)
 				
 			}
 		
-			str_format(aBuf, sizeof(aBuf), "SELECT * FROM %s_%s_race WHERE Name='%s';", pData->m_pSqlData->m_pPrefix, g_Config.m_SvMap, pData->m_aName);
+			str_format(aBuf, sizeof(aBuf), "SELECT * FROM %s_%s_race WHERE Name='%s';", pData->m_pSqlData->m_pPrefix, pData->m_pSqlData->m_aMap, pData->m_aName);
 			pData->m_pSqlData->m_pResults = pData->m_pSqlData->m_pStatement->executeQuery(aBuf);
 			if(pData->m_pSqlData->m_pResults->next())
 			{
@@ -174,7 +177,7 @@ void CSqlScore::LoadScoreThread(void *pUser)
 				if(str_comp(pIP, pData->m_aIP) != 0)
 				{
 					// set the new ip
-					str_format(aBuf, sizeof(aBuf), "UPDATE %s_%s_race SET IP='%s' WHERE Name='%s';", pData->m_pSqlData->m_pPrefix, g_Config.m_SvMap, pData->m_aIP, pData->m_aName);
+					str_format(aBuf, sizeof(aBuf), "UPDATE %s_%s_race SET IP='%s' WHERE Name='%s';", pData->m_pSqlData->m_pPrefix, pData->m_pSqlData->m_aMap, pData->m_aIP, pData->m_aName);
 					pData->m_pSqlData->m_pStatement->execute(aBuf);
 				}
 				
@@ -242,7 +245,7 @@ void CSqlScore::SaveScoreThread(void *pUser)
 			char aBuf[768];
 			
 			// fisrt check for IP
-			str_format(aBuf, sizeof(aBuf), "SELECT * FROM %s_%s_race WHERE IP='%s';", pData->m_pSqlData->m_pPrefix, g_Config.m_SvMap, pData->m_aIP);
+			str_format(aBuf, sizeof(aBuf), "SELECT * FROM %s_%s_race WHERE IP='%s';", pData->m_pSqlData->m_pPrefix, pData->m_pSqlData->m_aMap, pData->m_aIP);
 			pData->m_pSqlData->m_pResults = pData->m_pSqlData->m_pStatement->executeQuery(aBuf);
 			
 			// if ip found...
@@ -250,9 +253,9 @@ void CSqlScore::SaveScoreThread(void *pUser)
 			{
 				// update time
 				if(g_Config.m_SvCheckpointSave)
-					str_format(aBuf, sizeof(aBuf), "UPDATE %s_%s_race SET Name='%s', Time='%.2f', cp1='%.2f', cp2='%.2f', cp3='%.2f', cp4='%.2f', cp5='%.2f', cp6='%.2f', cp7='%.2f', cp8='%.2f', cp9='%.2f', cp10='%.2f', cp11='%.2f', cp12='%.2f', cp13='%.2f', cp14='%.2f', cp15='%.2f', cp16='%.2f', cp17='%.2f', cp18='%.2f', cp19='%.2f', cp20='%.2f', cp21='%.2f', cp22='%.2f', cp23='%.2f', cp24='%.2f', cp25='%.2f' WHERE IP='%s';", pData->m_pSqlData->m_pPrefix, g_Config.m_SvMap, pData->m_aName, pData->m_Time, pData->m_aCpCurrent[0], pData->m_aCpCurrent[1], pData->m_aCpCurrent[2], pData->m_aCpCurrent[3], pData->m_aCpCurrent[4], pData->m_aCpCurrent[5], pData->m_aCpCurrent[6], pData->m_aCpCurrent[7], pData->m_aCpCurrent[8], pData->m_aCpCurrent[9], pData->m_aCpCurrent[10], pData->m_aCpCurrent[11], pData->m_aCpCurrent[12], pData->m_aCpCurrent[13], pData->m_aCpCurrent[14], pData->m_aCpCurrent[15], pData->m_aCpCurrent[16], pData->m_aCpCurrent[17], pData->m_aCpCurrent[18], pData->m_aCpCurrent[19], pData->m_aCpCurrent[20], pData->m_aCpCurrent[21], pData->m_aCpCurrent[22], pData->m_aCpCurrent[23], pData->m_aCpCurrent[24], pData->m_aIP);
+					str_format(aBuf, sizeof(aBuf), "UPDATE %s_%s_race SET Name='%s', Time='%.2f', cp1='%.2f', cp2='%.2f', cp3='%.2f', cp4='%.2f', cp5='%.2f', cp6='%.2f', cp7='%.2f', cp8='%.2f', cp9='%.2f', cp10='%.2f', cp11='%.2f', cp12='%.2f', cp13='%.2f', cp14='%.2f', cp15='%.2f', cp16='%.2f', cp17='%.2f', cp18='%.2f', cp19='%.2f', cp20='%.2f', cp21='%.2f', cp22='%.2f', cp23='%.2f', cp24='%.2f', cp25='%.2f' WHERE IP='%s';", pData->m_pSqlData->m_pPrefix, pData->m_pSqlData->m_aMap, pData->m_aName, pData->m_Time, pData->m_aCpCurrent[0], pData->m_aCpCurrent[1], pData->m_aCpCurrent[2], pData->m_aCpCurrent[3], pData->m_aCpCurrent[4], pData->m_aCpCurrent[5], pData->m_aCpCurrent[6], pData->m_aCpCurrent[7], pData->m_aCpCurrent[8], pData->m_aCpCurrent[9], pData->m_aCpCurrent[10], pData->m_aCpCurrent[11], pData->m_aCpCurrent[12], pData->m_aCpCurrent[13], pData->m_aCpCurrent[14], pData->m_aCpCurrent[15], pData->m_aCpCurrent[16], pData->m_aCpCurrent[17], pData->m_aCpCurrent[18], pData->m_aCpCurrent[19], pData->m_aCpCurrent[20], pData->m_aCpCurrent[21], pData->m_aCpCurrent[22], pData->m_aCpCurrent[23], pData->m_aCpCurrent[24], pData->m_aIP);
 				else
-					str_format(aBuf, sizeof(aBuf), "UPDATE %s_%s_race SET Name='%s', Time='%.2f' WHERE IP='%s';", pData->m_pSqlData->m_pPrefix, g_Config.m_SvMap, pData->m_aName, pData->m_Time, pData->m_aIP);
+					str_format(aBuf, sizeof(aBuf), "UPDATE %s_%s_race SET Name='%s', Time='%.2f' WHERE IP='%s';", pData->m_pSqlData->m_pPrefix, pData->m_pSqlData->m_aMap, pData->m_aName, pData->m_Time, pData->m_aIP);
 				pData->m_pSqlData->m_pStatement->execute(aBuf);
 				
 				dbg_msg("SQL", "Updateing time done");
@@ -272,7 +275,7 @@ void CSqlScore::SaveScoreThread(void *pUser)
 			}
 			
 			// if no entry found... create a new one
-			str_format(aBuf, sizeof(aBuf), "INSERT IGNORE INTO %s_%s_race(Name, IP, Time, cp1, cp2, cp3, cp4, cp5, cp6, cp7, cp8, cp9, cp10, cp11, cp12, cp13, cp14, cp15, cp16, cp17, cp18, cp19, cp20, cp21, cp22, cp23, cp24, cp25) VALUES ('%s', '%s', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f');", pData->m_pSqlData->m_pPrefix, g_Config.m_SvMap, pData->m_aName, pData->m_aIP, pData->m_Time, pData->m_aCpCurrent[0], pData->m_aCpCurrent[1], pData->m_aCpCurrent[2], pData->m_aCpCurrent[3], pData->m_aCpCurrent[4], pData->m_aCpCurrent[5], pData->m_aCpCurrent[6], pData->m_aCpCurrent[7], pData->m_aCpCurrent[8], pData->m_aCpCurrent[9], pData->m_aCpCurrent[10], pData->m_aCpCurrent[11], pData->m_aCpCurrent[12], pData->m_aCpCurrent[13], pData->m_aCpCurrent[14], pData->m_aCpCurrent[15], pData->m_aCpCurrent[16], pData->m_aCpCurrent[17], pData->m_aCpCurrent[18], pData->m_aCpCurrent[19], pData->m_aCpCurrent[20], pData->m_aCpCurrent[21], pData->m_aCpCurrent[22], pData->m_aCpCurrent[23], pData->m_aCpCurrent[24]);
+			str_format(aBuf, sizeof(aBuf), "INSERT IGNORE INTO %s_%s_race(Name, IP, Time, cp1, cp2, cp3, cp4, cp5, cp6, cp7, cp8, cp9, cp10, cp11, cp12, cp13, cp14, cp15, cp16, cp17, cp18, cp19, cp20, cp21, cp22, cp23, cp24, cp25) VALUES ('%s', '%s', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f', '%.2f');", pData->m_pSqlData->m_pPrefix, pData->m_pSqlData->m_aMap, pData->m_aName, pData->m_aIP, pData->m_Time, pData->m_aCpCurrent[0], pData->m_aCpCurrent[1], pData->m_aCpCurrent[2], pData->m_aCpCurrent[3], pData->m_aCpCurrent[4], pData->m_aCpCurrent[5], pData->m_aCpCurrent[6], pData->m_aCpCurrent[7], pData->m_aCpCurrent[8], pData->m_aCpCurrent[9], pData->m_aCpCurrent[10], pData->m_aCpCurrent[11], pData->m_aCpCurrent[12], pData->m_aCpCurrent[13], pData->m_aCpCurrent[14], pData->m_aCpCurrent[15], pData->m_aCpCurrent[16], pData->m_aCpCurrent[17], pData->m_aCpCurrent[18], pData->m_aCpCurrent[19], pData->m_aCpCurrent[20], pData->m_aCpCurrent[21], pData->m_aCpCurrent[22], pData->m_aCpCurrent[23], pData->m_aCpCurrent[24]);
 			pData->m_pSqlData->m_pStatement->execute(aBuf);
 			
 			dbg_msg("SQL", "Updateing time done");
@@ -328,7 +331,7 @@ void CSqlScore::ShowRankThread(void *pUser)
 			
 			// check sort methode
 			char aBuf[512];
-			str_format(aBuf, sizeof(aBuf), "SELECT Name, IP, Time FROM %s_%s_race ORDER BY `Time` ASC;", pData->m_pSqlData->m_pPrefix, g_Config.m_SvMap);
+			str_format(aBuf, sizeof(aBuf), "SELECT Name, IP, Time FROM %s_%s_race ORDER BY `Time` ASC;", pData->m_pSqlData->m_pPrefix, pData->m_pSqlData->m_aMap);
 			pData->m_pSqlData->m_pResults = pData->m_pSqlData->m_pStatement->executeQuery(aBuf);
 			int RowCount = 0;
 			bool Found = false;
@@ -419,7 +422,7 @@ void CSqlScore::ShowTop5Thread(void *pUser)
 		{
 			// check sort methode
 			char aBuf[512];
-			str_format(aBuf, sizeof(aBuf), "SELECT Name, Time FROM %s_%s_race ORDER BY `Time` ASC LIMIT %d, 5;", pData->m_pSqlData->m_pPrefix, g_Config.m_SvMap, pData->m_Num-1);
+			str_format(aBuf, sizeof(aBuf), "SELECT Name, Time FROM %s_%s_race ORDER BY `Time` ASC LIMIT %d, 5;", pData->m_pSqlData->m_pPrefix, pData->m_pSqlData->m_aMap, pData->m_Num-1);
 			pData->m_pSqlData->m_pResults = pData->m_pSqlData->m_pStatement->executeQuery(aBuf);
 			
 			// show top5
@@ -475,6 +478,10 @@ void CSqlScore::ClearString(char *pString)
 	// replace ' ' ' with ' \' ' and remove '\'
 	for(int i = 0; i < str_length(pString); i++)
 	{
+		// replace '-' with '_'
+		if(pString[i] == '-')
+			pString[i] = '_';
+		
 		if(pString[i] == '\'')
 		{
 			// count \ before the '

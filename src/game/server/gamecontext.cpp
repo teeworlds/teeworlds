@@ -91,7 +91,7 @@ class CCharacter *CGameContext::GetPlayerChar(int ClientId)
 	return m_apPlayers[ClientId]->GetCharacter();
 }
 
-void CGameContext::CreateDamageInd(vec2 p, float Angle, int Amount)
+void CGameContext::CreateDamageInd(vec2 p, float Angle, int Amount, int Owner)
 {
 	float a = 3 * 3.14159f / 2 + Angle;
 	//float a = get_angle(dir);
@@ -100,12 +100,18 @@ void CGameContext::CreateDamageInd(vec2 p, float Angle, int Amount)
 	for(int i = 0; i < Amount; i++)
 	{
 		float f = mix(s, e, float(i+1)/float(Amount+2));
-		NETEVENT_DAMAGEIND *ev = (NETEVENT_DAMAGEIND *)m_Events.Create(NETEVENTTYPE_DAMAGEIND, sizeof(NETEVENT_DAMAGEIND));
-		if(ev)
+		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			ev->m_X = (int)p.x;
-			ev->m_Y = (int)p.y;
-			ev->m_Angle = (int)(f*256.0f);
+			if(m_apPlayers[i] && (m_apPlayers[i]->m_ShowOthers || i == Owner))
+			{
+				NETEVENT_DAMAGEIND *ev = (NETEVENT_DAMAGEIND *)m_Events.Create(NETEVENTTYPE_DAMAGEIND, sizeof(NETEVENT_DAMAGEIND), CmaskOne(i));
+				if(ev)
+				{
+					ev->m_X = (int)p.x;
+					ev->m_Y = (int)p.y;
+					ev->m_Angle = (int)(f*256.0f);
+				}
+			}
 		}
 	}
 }
@@ -653,7 +659,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			}
 			else if(!str_comp(pMsg->m_pMessage, "/show_others"))
 			{
-				if(!g_Config.m_SvShowOthers)
+				if(!g_Config.m_SvShowOthers && !Server()->IsAuthed(ClientId))
 				{
 					SendChatTarget(ClientId, "This command is not allowed on this server.");
 					return;
@@ -943,7 +949,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	}
 	else if (MsgId == NETMSGTYPE_CL_RACESHOWOTHERS)
 	{
-		if(!g_Config.m_SvShowOthers)
+		if(!g_Config.m_SvShowOthers && !Server()->IsAuthed(ClientId))
 			return;
 				
 		if(p->m_Last_ShowOthers && p->m_Last_ShowOthers+Server()->TickSpeed()/2 > Server()->Tick())

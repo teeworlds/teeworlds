@@ -1010,12 +1010,12 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	if(Server()->Tick() < m_DamageTakenTick+25)
 	{
 		// make sure that the damage indicators doesn't group together
-		GameServer()->CreateDamageInd(m_Pos, m_DamageTaken*0.25f, Dmg);
+		GameServer()->CreateDamageInd(m_Pos, m_DamageTaken*0.25f, Dmg, m_pPlayer->GetCID());
 	}
 	else
 	{
 		m_DamageTaken = 0;
-		GameServer()->CreateDamageInd(m_Pos, 0, Dmg);
+		GameServer()->CreateDamageInd(m_Pos, 0, Dmg, m_pPlayer->GetCID());
 	}
 
 	if(Dmg)
