@@ -226,7 +226,10 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		str_format(aBuf, sizeof(aBuf), "%4d", pInfo->m_Score);
 		TextRender()->Text(0, x+60-TextRender()->TextWidth(0, FontSize,aBuf,-1), y, FontSize, aBuf, -1);
 		
-		TextRender()->Text(0, x+128, y, FontSize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
+		float FontSizeName = FontSize;
+		while(TextRender()->TextWidth(0, FontSizeName, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1) > w-200)
+			--FontSizeName;
+		TextRender()->Text(0, x+128, y+(FontSize-FontSizeName)/2, FontSizeName, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
 
 		str_format(aBuf, sizeof(aBuf), "%4d", pInfo->m_Latency);
 		float tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
