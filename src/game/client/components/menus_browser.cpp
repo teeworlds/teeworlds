@@ -710,3 +710,10 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 		UI()->DoLabel(&Button, Localize("Host address"), 14.0f, -1);
 	}
 }
+
+void CMenus::ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments() && g_Config.m_UiPage == PAGE_FAVORITES && ((CMenus *)pUserData)->Client()->State() == IClient::STATE_OFFLINE)
+		((CMenus *)pUserData)->ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
+}
