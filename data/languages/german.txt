@@ -398,7 +398,7 @@ Make collision
 == Kollision erstellen
 
 Make external
-== Extern machen.
+== Extern machen
 
 Map
 == Karte

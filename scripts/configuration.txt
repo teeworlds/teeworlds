@@ -1,3 +1,6 @@
 url_bam http://github.com/matricks/bam/zipball/master
 url_teeworlds http://github.com/matricks/teeworlds/zipball/master
-windows_compiler msvc mingw
+optimize_bam 2
+optimize_teeworlds 2
+windows_compiler_bam cl gcc
+windows_compiler_teeworlds cl gcc

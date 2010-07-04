@@ -271,7 +271,7 @@ release_settings = NewSettings()
 release_settings.config_name = "release"
 release_settings.config_ext = ""
 release_settings.debug = 0
-if ScriptArgs["optimize"] ~= nil then
+if ScriptArgs["optimize"] >= "0" then
 	release_settings.optimize = ScriptArgs["optimize"]
 else
 	release_settings.optimize = "1"
