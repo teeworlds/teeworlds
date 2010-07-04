@@ -31,7 +31,7 @@ FreeType = {
 				if config.compiler.driver == "cl" then
 					settings.link.libs:Add(FreeType.basepath .. "/lib/freetype2311MT")
 				elseif config.compiler.driver == "gcc" then
-					settings.link.libs:Add(FreeType.basepath .. "/lib/freetype2311MT" .. ' -L "./"')
+					settings.link.libs:Add(FreeType.basepath .. "/lib/libfreetype2311" .. ' -L "./"')
 				end
 			end
 		end
