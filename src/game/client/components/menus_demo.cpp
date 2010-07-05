@@ -1,5 +1,4 @@
 
-#include <string.h>
 #include <base/math.h>
 
 
@@ -380,9 +379,9 @@ struct FETCH_CALLBACKINFO
 
 void CMenus::DemolistFetchCallback(const char *pName, int IsDir, void *pUser)
 {
-	if(IsDir || pName[0] == '.')
+	if(pName[0] == '.')
 		return;
-			
+	
 	FETCH_CALLBACKINFO *pInfo = (FETCH_CALLBACKINFO *)pUser;
 	
 	CDemoItem Item;
@@ -391,17 +390,12 @@ void CMenus::DemolistFetchCallback(const char *pName, int IsDir, void *pUser)
 	pInfo->m_pSelf->m_lDemos.add(Item);
 }
 
-void CMenus::IsDirCallback(const char *pName, int IsDir, void *pUser)
-{
-	*((bool *)pUser) = true;
-}
-
 void CMenus::DemolistPopulate()
 {
 	m_lDemos.clear();
 	
 	
-	if(strncmp(m_aCurrentDemoFolder, "demos", 256)) //add parent folder
+	if(str_comp_num(m_aCurrentDemoFolder, "demos", 256)) //add parent folder
 	{
 		CDemoItem Item;
 		str_copy(Item.m_aName, "..", sizeof(Item.m_aName));
@@ -413,7 +407,7 @@ void CMenus::DemolistPopulate()
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "%s/%s", Client()->UserDirectory(), m_aCurrentDemoFolder);
 	
-	FETCH_CALLBACKINFO Info = {this, aBuf, 0};
+	FETCH_CALLBACKINFO Info = {this, aBuf, m_aCurrentDemoFolder[6]}; //skip "demos/"
 	fs_listdir(aBuf, DemolistFetchCallback, &Info);
 	Info.m_pPrefix = m_aCurrentDemoFolder;
 	fs_listdir(m_aCurrentDemoFolder, DemolistFetchCallback, &Info);
@@ -457,10 +451,10 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	
 	
 	bool IsDir = false;
-	if(!strncmp(m_lDemos[s_SelectedItem].m_aName, "..", 256)) //parent folder
+	if(!str_comp_num(m_lDemos[s_SelectedItem].m_aName, "..", 256)) //parent folder
 		IsDir = true;
-	else
-		fs_listdir(m_lDemos[s_SelectedItem].m_aFilename, IsDirCallback, &IsDir);
+	else if(fs_is_dir(m_lDemos[s_SelectedItem].m_aFilename))
+		IsDir = true;
 	
 	
 	static int s_RefreshButton = 0;
@@ -470,17 +464,17 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	}
 	
 	static int s_PlayButton = 0;
-	char aTitleButton[8];
+	char aTitleButton[10];
 	if(IsDir)
-		str_copy(aTitleButton, "Open", sizeof(aTitleButton));
+		str_copy(aTitleButton, Localize("Open"), sizeof(aTitleButton));
 	else
-		str_copy(aTitleButton, "Play", sizeof(aTitleButton));
-	// /!\ TODO: Add "Open" in Localization /!\ 
-	if(DoButton_Menu(&s_PlayButton, Localize(aTitleButton), 0, &PlayRect) || Activated)
+		str_copy(aTitleButton, Localize("Play"), sizeof(aTitleButton));
+	
+	if(DoButton_Menu(&s_PlayButton, aTitleButton, 0, &PlayRect) || Activated)
 	{		
 		if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size())
 		{
-			if(!strncmp(m_lDemos[s_SelectedItem].m_aName, "..", 256))
+			if(!str_comp_num(m_lDemos[s_SelectedItem].m_aName, "..", 256))
 			{
 				DemoSetParentDirectory();
 				DemolistPopulate();
@@ -496,7 +490,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			{
 				const char *pError = Client()->DemoPlayer_Play(m_lDemos[s_SelectedItem].m_aFilename);
 				if(pError)
-					PopupMessage(Localize("Error"), pError, Localize("Ok"));
+					PopupMessage(Localize("Error"), Localize(pError), Localize("Ok"));
 			}
 		}
 	}
@@ -519,6 +513,6 @@ void CMenus::DemoSetParentDirectory()
 	for(i = 0; i < 256; i++)
 	{
 		if(i >= Stop)
-			m_aCurrentDemoFolder[i] = NULL;
+			m_aCurrentDemoFolder[i] = 0;
 	}
 }

@@ -71,57 +71,58 @@ void CHud::RenderScoreHud()
 	// render small score hud
 	if(!(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver) && (GameFlags&GAMEFLAG_TEAMS))
 	{
+		char aScoreTeam[2][32];
+		str_format(aScoreTeam[0], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed);
+		str_format(aScoreTeam[1], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue);
+		float aScoreTeamWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScoreTeam[0], -1), TextRender()->TextWidth(0, 14.0f, aScoreTeam[1], -1)};
+		float ScoreWidthMax = max(max(aScoreTeamWidth[0], aScoreTeamWidth[1]), TextRender()->TextWidth(0, 14.0f, "100", -1));
+		float Split = 3.0f;
+		float ImageSize = GameFlags&GAMEFLAG_FLAGS ? 16.0f : Split;
+		
 		for(int t = 0; t < 2; t++)
 		{
+			// draw box
 			Graphics()->BlendNormal();
 			Graphics()->TextureSet(-1);
 			Graphics()->QuadsBegin();
 			if(t == 0)
-				Graphics()->SetColor(1,0,0,0.25f);
+				Graphics()->SetColor(1.0f, 0.0f, 0.0f, 0.25f);
 			else
-				Graphics()->SetColor(0,0,1,0.25f);
-			RenderTools()->DrawRoundRect(Whole-45, 300-40-15+t*20, 50, 18, 5.0f);
+				Graphics()->SetColor(0.0f, 0.0f, 1.0f, 0.25f);
+			RenderTools()->DrawRoundRectExt(Whole-ScoreWidthMax-ImageSize-2*Split, 245.0f+t*20, ScoreWidthMax+ImageSize+2*Split, 18.0f, 5.0f, CUI::CORNER_L);
 			Graphics()->QuadsEnd();
 
-			char Buf[32];
-			str_format(Buf, sizeof(Buf), "%d", t?m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue : m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed);
-			float w = TextRender()->TextWidth(0, 14, Buf, -1);
-			
-			if(GameFlags&GAMEFLAG_FLAGS)
-			{
-				TextRender()->Text(0, Whole-20-w/2+5, 300-40-15+t*20, 14, Buf, -1);
-				if(m_pClient->m_Snap.m_paFlags[t])
-				{
-					if(m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy == -2 || (m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy == -1 && ((Client()->GameTick()/10)&1)))
-					{
-						Graphics()->BlendNormal();
-						Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
-						Graphics()->QuadsBegin();
+			// draw score
+			TextRender()->Text(0, Whole-ScoreWidthMax+(ScoreWidthMax-aScoreTeamWidth[t])/2-Split, 245.0f+t*20, 14.0f, aScoreTeam[t], -1);
 
-						if(t == 0) RenderTools()->SelectSprite(SPRITE_FLAG_RED);
-						else RenderTools()->SelectSprite(SPRITE_FLAG_BLUE);
-						
-						float Size = 16;					
-						IGraphics::CQuadItem QuadItem(Whole-40+2, 300-40-15+t*20+1, Size/2, Size);
-						Graphics()->QuadsDrawTL(&QuadItem, 1);
-						Graphics()->QuadsEnd();
-					}
-					else if(m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy >= 0)
-					{
-						int Id = m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy%MAX_CLIENTS;
-						const char *pName = m_pClient->m_aClients[Id].m_aName;
-						float w = TextRender()->TextWidth(0, 10, pName, -1);
-						TextRender()->Text(0, Whole-40-7-w, 300-40-15+t*20+2, 10, pName, -1);
-						CTeeRenderInfo Info = m_pClient->m_aClients[Id].m_RenderInfo;
-						Info.m_Size = 18.0f;
-						
-						RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0),
-							vec2(Whole-40+5, 300-40-15+9+t*20+1));
-					}
+			if(GameFlags&GAMEFLAG_FLAGS && m_pClient->m_Snap.m_paFlags[t])
+			{
+				if(m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy == -2 || (m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy == -1 && ((Client()->GameTick()/10)&1)))
+				{
+					// draw flag
+					Graphics()->BlendNormal();
+					Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+					Graphics()->QuadsBegin();
+					RenderTools()->SelectSprite(t==0?SPRITE_FLAG_RED:SPRITE_FLAG_BLUE);
+					IGraphics::CQuadItem QuadItem(Whole-ScoreWidthMax-ImageSize, 246.0f+t*20, ImageSize/2, ImageSize);
+					Graphics()->QuadsDrawTL(&QuadItem, 1);
+					Graphics()->QuadsEnd();
+				}
+				else if(m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy >= 0)
+				{
+					// draw name of the flag holder
+					int Id = m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy%MAX_CLIENTS;
+					const char *pName = m_pClient->m_aClients[Id].m_aName;
+					float w = TextRender()->TextWidth(0, 10.0f, pName, -1);
+					TextRender()->Text(0, Whole-ScoreWidthMax-ImageSize-3*Split-w, 247.0f+t*20, 10.0f, pName, -1);
+
+					// draw tee of the flag holder
+					CTeeRenderInfo Info = m_pClient->m_aClients[Id].m_RenderInfo;
+					Info.m_Size = 18.0f;
+					RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0),
+						vec2(Whole-ScoreWidthMax-Info.m_Size/2-Split, 246.0f+Info.m_Size/2+t*20));
 				}
 			}
-			else
-				TextRender()->Text(0, Whole-20-w/2, 300-40-15+t*20, 14, Buf, -1);
 		}
 	}
 }

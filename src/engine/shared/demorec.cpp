@@ -335,7 +335,7 @@ void CDemoPlayer::DoTick()
 	static char aDecompressed[CSnapshot::MAX_SIZE];
 	static char aData[CSnapshot::MAX_SIZE];
 	int ChunkType, ChunkTick, ChunkSize;
-	int DataSize;
+	int DataSize = 0;
 	int GotSnapshot = 0;
 
 	// update ticks

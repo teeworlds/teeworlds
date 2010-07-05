@@ -42,7 +42,7 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 	pChannels[2] = 0;
 	pChannels[3] = 0;
 
-	CEnvPoint *pPoints;
+	CEnvPoint *pPoints = 0;
 
 	{
 		int Start, Num;
