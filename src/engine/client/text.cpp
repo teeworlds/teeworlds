@@ -68,8 +68,9 @@ struct CFontSizeData
 	int m_CurrentCharacter;	
 };
 
-struct CFont
+class CFont
 {
+public:
 	char m_aFilename[128];
 	FT_Face m_FtFace;
 	CFontSizeData m_aSizes[NUM_FONT_SIZES];
@@ -102,7 +103,7 @@ class CTextRender : public IEngineTextRender
 	
 	int m_FontTextureFormat;
 
-	struct CFont *m_pDefaultFont;
+	CFont *m_pDefaultFont;
 
 	FT_Library m_FTLibrary;
 	
@@ -471,7 +472,7 @@ public:
 		mem_free(pFont);
 	}
 
-	virtual void SetDefaultFont(struct CFont *pFont)
+	virtual void SetDefaultFont(CFont *pFont)
 	{
 		dbg_msg("textrender", "default pFont set %p", pFont);
 		m_pDefaultFont = pFont;
