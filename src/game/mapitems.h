@@ -77,7 +77,7 @@ struct CQuad
 	int m_ColorEnvOffset;
 };
 
-struct CTile
+class CTile
 {
 	unsigned char m_Index;
 	unsigned char m_Flags;

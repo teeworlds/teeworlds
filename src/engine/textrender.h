@@ -23,7 +23,7 @@ public:
 	float m_LineWidth;
 	float m_X, m_Y;
 	
-	struct CFont *m_pFont;
+	CFont *m_pFont;
 	float m_FontSize;
 };
 
@@ -36,7 +36,7 @@ public:
 	virtual CFont *LoadFont(const char *pFilename) = 0;
 	virtual void DestroyFont(CFont *pFont) = 0;
 	
-	virtual void SetDefaultFont(struct CFont *pFont) = 0;
+	virtual void SetDefaultFont(CFont *pFont) = 0;
 
 	//
 	virtual void TextEx(CTextCursor *pCursor, const char *pText, int Length) = 0;
