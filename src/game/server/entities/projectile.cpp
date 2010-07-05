@@ -66,7 +66,7 @@ void CProjectile::Tick()
 	//CCharacter *TargetChr = GameServer()->m_World.IntersectCharacter(PrevPos, CurPos, 6.0f, CurPos, OwnerChar);
 
 	// remove projectile if the player is dead to prevent cheating at start
-	if(!OwnerChar)
+	if(g_Config.m_SvDeleteGrenadesAfterDeath && !OwnerChar)
 	{
 		GameServer()->m_World.DestroyEntity(this);
 		return;
