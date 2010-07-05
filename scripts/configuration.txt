@@ -4,3 +4,4 @@ optimize_bam 2
 optimize_teeworlds 2
 windows_compiler_bam cl gcc
 windows_compiler_teeworlds cl gcc
+release_type server_release client_release

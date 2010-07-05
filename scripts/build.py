@@ -10,7 +10,7 @@ exec("url_lib = %s" % url_lib)
 file = open("configuration.txt", "rb")
 content = file.readlines()
 file.close()
-if len(content) < 6:
+if len(content) < 7:
 	print("corrupt configuration file")
 	sys.exit(-1)
 	_compatibility._input("Press enter to exit\n")
@@ -21,6 +21,7 @@ arguments.add_option("-o", "--optimize_bam", dest = "optimize_bam")
 arguments.add_option("-i", "--optimize_teeworlds", dest = "optimize_teeworlds")
 arguments.add_option("-c", "--windows_compiler_bam", dest = "windows_compiler_bam")
 arguments.add_option("-k", "--windows_compiler_teeworlds", dest = "windows_compiler_teeworlds")
+arguments.add_option("-r", "--release_type", dest = "release_type")
 (options, arguments) = arguments.parse_args()
 if options.url_bam == None:
 	options.url_bam = content[0].decode("utf-8").partition(" ")[2].rstrip()
@@ -36,6 +37,8 @@ if options.windows_compiler_bam == None:
 if options.windows_compiler_teeworlds == None:
 	options.windows_compiler_teeworlds = content[5].decode("utf-8").partition(" ")[2].rstrip()
 	options.windows_compiler_teeworlds = options.windows_compiler_teeworlds.split(" ")
+if options.release_type == None:
+	options.release_type = content[6].decode("utf-8").partition(" ")[2].rstrip()
 
 bam = options.url_bam[7:].split("/")
 domain_bam = bam[0]
@@ -225,7 +228,7 @@ if 1:
 								bail("failed to build %s" % name)
 					winreg_lib.CloseKey(key)
 					file = open("build.bat", "wb")
-					file.write(('call "%sVC\\vcvarsall.bat"\ncd %s\n"%s\\%s%sbam" config compiler=%s\n"%s\\%s%sbam" server_release client_release optimize=%s' % (vsinstalldir, src_dir_teeworlds, work_dir, src_dir_bam, bam_execution_path, compiler, work_dir, src_dir_bam, bam_execution_path, options.optimize_teeworlds)).encode("utf-8"))
+					file.write(('call "%sVC\\vcvarsall.bat"\ncd %s\n"%s\\%s%sbam" config compiler=%s\n"%s\\%s%sbam" %s optimize=%s' % (vsinstalldir, src_dir_teeworlds, work_dir, src_dir_bam, bam_execution_path, compiler, work_dir, src_dir_bam, bam_execution_path, options.release_type, options.optimize_teeworlds)).encode("utf-8"))
 					file.close()
 					command = os.system("build.bat")
 					if command == 0:
@@ -237,12 +240,12 @@ if 1:
 				command = os.system('"%s\\%s%sbam" config compiler=%s' % (work_dir, src_dir_bam, bam_execution_path, compiler))
 				if command != 0:
 					break
-				command = os.system('"%s\\%s%sbam" server_release client_release optimize=%s' % (work_dir, src_dir_bam, bam_execution_path, options.optimize_teeworlds))
+				command = os.system('"%s\\%s%sbam" %s optimize=%s' % (work_dir, src_dir_bam, bam_execution_path, options.release_type, options.optimize_teeworlds))
 				if command == 0:
 					break
 	else:
 		os.chdir(src_dir_teeworlds)
-		command = os.system("%s/%s/%sbam server_release client_release optimize=%s" % (work_dir, src_dir_bam, bam_execution_path, options.optimize_teeworlds))
+		command = os.system("%s/%s/%sbam %s optimize=%s" % (work_dir, src_dir_bam, bam_execution_path, options.release_type, options.optimize_teeworlds))
 	if command != 0:
 		bail("failed to build %s" % name)
 	os.chdir(work_dir)

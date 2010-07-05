@@ -69,8 +69,9 @@ if include_data and not use_bundle:
 		shutil.copy("SDL.dll", package_dir)
 
 if include_exe and not use_bundle:
-	shutil.copy(name+exe_ext, package_dir)
-	shutil.copy(name+"_srv"+exe_ext, package_dir)
+	for element in os.listdir(os.getcwd()):
+		if element[-4:] == exe_ext:
+			shutil.copy(element, package_dir)
 	
 if include_src:
 	for p in ["src", "scripts", "datasrc", "other", "objs"]:
