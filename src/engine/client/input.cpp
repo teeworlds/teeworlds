@@ -37,7 +37,7 @@ CInput::CInput()
 	m_InputGrabbed = 0;
 
 	m_LastRelease = 0;
-	m_ReleaseDelta = -1;
+	m_ReleaseDelta = 0;
 
 	m_NumEvents = 0;
 }
