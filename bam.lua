@@ -264,7 +264,7 @@ debug_settings = NewSettings()
 debug_settings.config_name = "debug"
 debug_settings.config_ext = "_d"
 debug_settings.debug = 1
-debug_settings.optimize = "0"
+debug_settings.optimize = 0
 debug_settings.cc.defines:Add("CONF_DEBUG")
 
 release_settings = NewSettings()
@@ -272,9 +272,9 @@ release_settings.config_name = "release"
 release_settings.config_ext = ""
 release_settings.debug = 0
 if ScriptArgs["optimize"] ~= nil and ScriptArgs["optimize"] >= "0" then
-	release_settings.optimize = ScriptArgs["optimize"]
+	release_settings.optimize = tonumber(ScriptArgs["optimize"])
 else
-	release_settings.optimize = "1"
+	release_settings.optimize = 2
 end
 release_settings.cc.defines:Add("CONF_RELEASE")
 
