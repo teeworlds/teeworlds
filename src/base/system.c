@@ -262,7 +262,7 @@ FILE *io_open(const char *filename, int flags)
 	if(flags == IOFLAG_READ)
 	{
 	#if defined(CONF_FAMILY_WINDOWS)
-		// check for filename case sensitive
+		/* check for filename case sensitive */
 		WIN32_FIND_DATA finddata;
 		HANDLE handle;
 		int length;

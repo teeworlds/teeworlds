@@ -4,7 +4,7 @@
 
 #define MACRO_LIST_LINK_FIRST(Object, First, Prev, Next) \
 	{ if(First) First->Prev = Object; \
-	Object->Prev = (struct CBan *)0; \
+	Object->Prev = (CBan *)0; \
 	Object->Next = First; \
 	First = Object; }
 	

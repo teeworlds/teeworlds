@@ -192,7 +192,7 @@ public:
 	int AckSequence() const { return m_Ack; }
 };
 
-struct CNetRecvUnpacker
+class CNetRecvUnpacker
 {
 public:
 	bool m_Valid;

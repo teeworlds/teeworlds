@@ -169,7 +169,14 @@ function build(settings)
 	-- build the small libraries
 	wavpack = Compile(settings, Collect("src/engine/external/wavpack/*.c"))
 	pnglite = Compile(settings, Collect("src/engine/external/pnglite/*.c"))
-	
+
+	-- set a strict compiler mode that don't affect external code
+	if config.compiler.driver == "cl" then
+		settings.cc.flags:Add("/W2")
+	else
+		settings.cc.flags:Add("-ansi")
+	end
+
 	-- build game components
 	engine_settings = settings:Copy()
 	server_settings = engine_settings:Copy()
