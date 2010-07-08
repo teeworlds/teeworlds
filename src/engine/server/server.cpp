@@ -295,7 +295,7 @@ int CServer::Init()
 
 bool CServer::IsAuthed(int ClientID)
 {
-	return m_aClients[ClientID].m_Authed;
+	return m_aClients[ClientID].m_Authed == 1 ? true : false;
 }
 
 int CServer::GetClientInfo(int ClientID, CClientInfo *pInfo)

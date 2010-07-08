@@ -974,7 +974,7 @@ int fs_chdir(const char *path)
 {
 	if (fs_is_dir(path))
 	{
-		chdir(path);
+		_chdir(path);
 		return 0;
 	}
 	else

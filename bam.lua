@@ -172,7 +172,7 @@ function build(settings)
 
 	-- set a strict compiler mode that don't affect external code
 	if config.compiler.driver == "cl" then
-		settings.cc.flags:Add("/W2")
+		settings.cc.flags:Add("/W3")
 	else
 		settings.cc.flags:Add("-ansi")
 	end

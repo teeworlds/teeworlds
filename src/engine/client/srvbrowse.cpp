@@ -701,7 +701,7 @@ void CServerBrowser::RemoveFavorite(const NETADDR &Addr)
 
 bool CServerBrowser::IsRefreshingMasters() const
 {
-	return m_pMasterServer->IsRefreshing();
+	return m_pMasterServer->IsRefreshing() == 1 ? true : false;
 }
 
 

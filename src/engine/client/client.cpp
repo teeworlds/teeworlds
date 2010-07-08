@@ -338,7 +338,7 @@ void CClient::SendReady()
 
 bool CClient::RconAuthed()
 {
-	return m_RconAuthed;
+	return m_RconAuthed == 1 ? true : false;
 }
 
 void CClient::RconAuth(const char *pName, const char *pPassword)
