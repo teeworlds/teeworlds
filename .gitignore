@@ -1,0 +1,8 @@
+.bam
+src/game/generated
+objs
+datasrc/*.pyc
+config.lua
+
+teeworlds_d
+teeworlds_srv_d

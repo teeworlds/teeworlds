@@ -6,10 +6,10 @@ class CPlayers : public CComponent
 {	
 	void RenderHand(class CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset, vec2 PostRotOffset);
 	void RenderPlayer(
-		const class CNetObj_Character *pPrevChar,
-		const class CNetObj_Character *pPlayerChar,
-		const class CNetObj_PlayerInfo *pPrevInfo,
-		const class CNetObj_PlayerInfo *pPlayerInfo
+		const CNetObj_Character *pPrevChar,
+		const CNetObj_Character *pPlayerChar,
+		const CNetObj_PlayerInfo *pPrevInfo,
+		const CNetObj_PlayerInfo *pPlayerInfo
 	);	
 	void RenderHook(
 		const CNetObj_Character *pPrevChar,
