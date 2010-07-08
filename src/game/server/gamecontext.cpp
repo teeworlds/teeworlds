@@ -100,18 +100,12 @@ void CGameContext::CreateDamageInd(vec2 p, float Angle, int Amount, int Owner)
 	for(int i = 0; i < Amount; i++)
 	{
 		float f = mix(s, e, float(i+1)/float(Amount+2));
-		for(int i = 0; i < MAX_CLIENTS; i++)
+		NETEVENT_DAMAGEIND *ev = (NETEVENT_DAMAGEIND *)m_Events.Create(NETEVENTTYPE_DAMAGEIND, sizeof(NETEVENT_DAMAGEIND), CmaskRace(this, Owner));
+		if(ev)
 		{
-			if(m_apPlayers[i] && (m_apPlayers[i]->m_ShowOthers || i == Owner))
-			{
-				NETEVENT_DAMAGEIND *ev = (NETEVENT_DAMAGEIND *)m_Events.Create(NETEVENTTYPE_DAMAGEIND, sizeof(NETEVENT_DAMAGEIND), CmaskOne(i));
-				if(ev)
-				{
-					ev->m_X = (int)p.x;
-					ev->m_Y = (int)p.y;
-					ev->m_Angle = (int)(f*256.0f);
-				}
-			}
+			ev->m_X = (int)p.x;
+			ev->m_Y = (int)p.y;
+			ev->m_Angle = (int)(f*256.0f);
 		}
 	}
 }
@@ -131,18 +125,11 @@ void CGameContext::CreateHammerHit(vec2 p)
 void CGameContext::CreateExplosion(vec2 p, int Owner, int Weapon, bool NoDamage)
 {
 	// create the event
-	NETEVENT_EXPLOSION *ev;
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	NETEVENT_EXPLOSION *ev = (NETEVENT_EXPLOSION *)m_Events.Create(NETEVENTTYPE_EXPLOSION, sizeof(NETEVENT_EXPLOSION), CmaskRace(this, Owner));
+	if(ev)
 	{
-		if(m_apPlayers[i] && (m_apPlayers[i]->m_ShowOthers || i == Owner))
-		{
-			ev = (NETEVENT_EXPLOSION *)m_Events.Create(NETEVENTTYPE_EXPLOSION, sizeof(NETEVENT_EXPLOSION), CmaskOne(i));
-			if(ev)
-			{
-				ev->m_X = (int)p.x;
-				ev->m_Y = (int)p.y;
-			}
-		}
+		ev->m_X = (int)p.x;
+		ev->m_Y = (int)p.y;
 	}
 
 	if (!NoDamage)
@@ -179,40 +166,26 @@ void create_smoke(vec2 p)
 	}
 }*/
 
-void CGameContext::CreatePlayerSpawn(vec2 p, int ClientID)
+void CGameContext::CreatePlayerSpawn(vec2 p, int ClientId)
 {
 	// create the event
-	NETEVENT_SPAWN *ev;
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	NETEVENT_SPAWN *ev = (NETEVENT_SPAWN *)m_Events.Create(NETEVENTTYPE_SPAWN, sizeof(NETEVENT_SPAWN), CmaskRace(this, ClientId));
+	if(ev)
 	{
-		if(m_apPlayers[i] && (m_apPlayers[i]->m_ShowOthers || i == ClientID))
-		{
-			ev = (NETEVENT_SPAWN *)m_Events.Create(NETEVENTTYPE_SPAWN, sizeof(NETEVENT_SPAWN), CmaskOne(i));
-			if(ev)
-			{
-				ev->m_X = (int)p.x;
-				ev->m_Y = (int)p.y;
-			}
-		}
+		ev->m_X = (int)p.x;
+		ev->m_Y = (int)p.y;
 	}
 }
 
 void CGameContext::CreateDeath(vec2 p, int ClientId)
 {
 	// create the event
-	NETEVENT_DEATH *ev;
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	NETEVENT_DEATH *ev = (NETEVENT_DEATH *)m_Events.Create(NETEVENTTYPE_DEATH, sizeof(NETEVENT_DEATH), CmaskRace(this, ClientId));
+	if(ev)
 	{
-		if(m_apPlayers[i] && (m_apPlayers[i]->m_ShowOthers || i == ClientId))
-		{
-			ev = (NETEVENT_DEATH *)m_Events.Create(NETEVENTTYPE_DEATH, sizeof(NETEVENT_DEATH), CmaskOne(i));
-			if(ev)
-			{
-				ev->m_X = (int)p.x;
-				ev->m_Y = (int)p.y;
-				ev->m_ClientId = ClientId;
-			}
-		}
+		ev->m_X = (int)p.x;
+		ev->m_Y = (int)p.y;
+		ev->m_ClientId = ClientId;
 	}
 }
 
@@ -1283,6 +1256,17 @@ void CGameContext::OnPreSnap() {}
 void CGameContext::OnPostSnap()
 {
 	m_Events.Clear();
+}
+
+int CmaskRace(CGameContext *pGameServer, int Owner)
+{
+	int Mask = 0;
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(pGameServer->m_apPlayers[i] && (pGameServer->m_apPlayers[i]->m_ShowOthers || i == Owner))
+			Mask = Mask|(1<<i);
+	}
+	return Mask;
 }
 
 const char *CGameContext::Version() { return GAME_VERSION; }

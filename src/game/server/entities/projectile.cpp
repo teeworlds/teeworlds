@@ -77,13 +77,7 @@ void CProjectile::Tick()
 	if(Collide || m_LifeSpan < 0)
 	{
 		if(m_LifeSpan >= 0 || m_Weapon == WEAPON_GRENADE)
-		{
-			for(int i = 0; i < MAX_CLIENTS; i++)
-			{
-				if(GameServer()->m_apPlayers[i] && (GameServer()->m_apPlayers[i]->m_ShowOthers || i == m_Owner))
-					GameServer()->CreateSound(CurPos, m_SoundImpact, CmaskOne(i));
-			}
-		}
+			GameServer()->CreateSound(CurPos, m_SoundImpact, CmaskRace(GameServer(), m_Owner));
 		
 		if(m_Explosive)
 			GameServer()->CreateExplosion(CurPos, m_Owner, m_Weapon, false);

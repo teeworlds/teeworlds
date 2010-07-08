@@ -124,7 +124,7 @@ public:
 	void CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage);
 	void CreateSmoke(vec2 Pos);
 	void CreateHammerHit(vec2 Pos);
-	void CreatePlayerSpawn(vec2 Pos, int ClientID);
+	void CreatePlayerSpawn(vec2 Pos, int ClientId);
 	void CreateDeath(vec2 Pos, int Who);
 	void CreateSound(vec2 Pos, int Sound, int Mask=-1);
 	void CreateSoundGlobal(int Sound, int Target=-1);	
@@ -175,5 +175,6 @@ public:
 inline int CmaskAll() { return -1; }
 inline int CmaskOne(int ClientId) { return 1<<ClientId; }
 inline int CmaskAllExceptOne(int ClientId) { return 0x7fffffff^CmaskOne(ClientId); }
+inline int CmaskRace(CGameContext *pGameServer, int Owner);
 inline bool CmaskIsSet(int Mask, int ClientId) { return (Mask&CmaskOne(ClientId)) != 0; }
 #endif
