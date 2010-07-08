@@ -6,8 +6,9 @@
 #include "ui.h"
 
 
-struct CTeeRenderInfo
+class CTeeRenderInfo
 {
+public:
 	CTeeRenderInfo()
 	{
 		m_Texture = -1;

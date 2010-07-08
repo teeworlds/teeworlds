@@ -283,7 +283,7 @@ public:
 	*/
 	int memusage()
 	{
-		return sizeof(array) + sizeof(T)*size;
+		return sizeof(array) + sizeof(T)*list_size;
 	}
 
 	/*
