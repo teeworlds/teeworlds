@@ -392,26 +392,28 @@ void CHud::RenderTime()
 		else if(m_pClient->m_pRaceDemo->GetRaceState() == CRaceDemo::RACE_STARTED)
 		{
 			str_format(aBuf, sizeof(aBuf), "Current time: %02d:%02d.%d", m_RaceTime/60, m_RaceTime%60, m_RaceTick/10);
-			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,"Current time: 00:00.0",-1)/2, 20, 12, aBuf, -1); // use fixed value for texxt width so its not shaky
+			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,"Current time: 00:00.0",-1)/2, 20, 12, aBuf, -1); // use fixed value for text width so its not shaky
 		}
 	
-		if(g_Config.m_ClShowCheckpointDiff && m_CheckpointTick)
+		if(g_Config.m_ClShowCheckpointDiff && m_CheckpointTick+Client()->GameTickSpeed()*6 > Client()->GameTick())
 		{
-			m_CheckpointTick--;
+			str_format(aBuf, sizeof(aBuf), "Checkpoint: %+5.2f", m_CheckpointDiff);
 			
-			Graphics()->BlendNormal();
-			Graphics()->TextureSet(-1);
-			Graphics()->QuadsBegin();
-			Graphics()->SetColor(0.1, 0.1, 0.1, 0.25);
-			RenderTools()->DrawRoundRect(m_Width-45, 240, 55, 18, 5.0f);
-			Graphics()->QuadsEnd();
-	
-			str_format(aBuf, sizeof(aBuf), "%+5.2f", m_CheckpointDiff);
+			// calculate alpha (4 sec 1 than get lower the next 2 sec)
+			float a = 1.0f;
+			if(m_CheckpointTick+Client()->GameTickSpeed()*4 < Client()->GameTick() && m_CheckpointTick+Client()->GameTickSpeed()*6 > Client()->GameTick())
+			{
+				// lower the alpha slowly to blend text out
+				a = ((float)(m_CheckpointTick+Client()->GameTickSpeed()*6) - (float)Client()->GameTick()) / (float)(Client()->GameTickSpeed()*2);
+			}
+			
 			if(m_CheckpointDiff > 0)
-				TextRender()->TextColor(1.0f,0.5f,0.5f,1); // red
+				TextRender()->TextColor(1.0f,0.5f,0.5f,a); // red
 			else if(m_CheckpointDiff < 0)
-				TextRender()->TextColor(0.5f,1.0f,0.5f,1); // green
-			TextRender()->Text(0, m_Width-3-TextRender()->TextWidth(0,10,aBuf,-1), 242, 10, aBuf, -1);
+				TextRender()->TextColor(0.5f,1.0f,0.5f,a); // green
+			else if(!m_CheckpointDiff)
+				TextRender()->TextColor(1,1,1,a); // white
+			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0, 10, aBuf, -1)/2, 33, 10, aBuf, -1);
 			
 			TextRender()->TextColor(1,1,1,1);
 		}
@@ -499,7 +501,7 @@ void CHud::OnMessage(int MsgType, void *pRawMsg)
 		if(pMsg->m_Check)
 		{
 			m_CheckpointDiff = (float)pMsg->m_Check/100;
-			m_CheckpointTick = Client()->GameTickSpeed()*4;
+			m_CheckpointTick = Client()->GameTick();
 		}
 	}
 	else if(MsgType == NETMSGTYPE_SV_KILLMSG)
