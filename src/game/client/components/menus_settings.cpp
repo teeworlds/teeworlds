@@ -847,26 +847,28 @@ void CMenus::RenderSettingsLvlx(CUIRect MainView)
 	RenderTools()->DrawUIRect(&Button, m_pClient->m_pSkins->GetColor(g_Config.m_ClExpBarColor), CUI::CORNER_ALL, 10.0f);
 }
 
-struct LANGUAGE
+class CLanguage
 {
-	LANGUAGE() {}
-	LANGUAGE(const char *n, const char *f) : m_Name(n), m_FileName(f) {}
+public:
+	CLanguage() {}
+	CLanguage(const char *n, const char *f) : m_Name(n), m_FileName(f) {}
 
 	string m_Name;
 	string m_FileName;
 
-	bool operator<(const LANGUAGE &Other) { return m_Name < Other.m_Name; }
+	bool operator<(const CLanguage &Other) { return m_Name < Other.m_Name; }
 };
 
-struct FONT
+class CFontFile
 {
-	FONT() {}
-	FONT(const char *n, const char *f) : m_Name(n), m_FileName(f) {}
+public:
+	CFontFile() {}
+	CFontFile(const char *n, const char *f) : m_Name(n), m_FileName(f) {}
 
 	string m_Name;
 	string m_FileName;
 
-	bool operator<(const FONT &Other) { return m_Name < Other.m_Name; }
+	bool operator<(const CFontFile &Other) { return m_Name < Other.m_Name; }
 };
 
 int fs_listdir(const char *pDir, FS_LISTDIR_CALLBACK cb, void *pUser);
@@ -876,7 +878,7 @@ void GatherLanguages(const char *pName, int IsDir, void *pUser)
 	if(IsDir || pName[0] == '.')
 		return;
 
-	sorted_array<LANGUAGE> &Languages = *((sorted_array<LANGUAGE> *)pUser);
+	sorted_array<CLanguage> &Languages = *((sorted_array<CLanguage> *)pUser);
 	char aFileName[128];
 	str_format(aFileName, sizeof(aFileName), "data/languages/%s", pName);
 
@@ -889,7 +891,7 @@ void GatherLanguages(const char *pName, int IsDir, void *pUser)
 		if(*p == '.')
 			*p = 0;
 
-	Languages.add(LANGUAGE(NiceName, aFileName));
+	Languages.add(CLanguage(NiceName, aFileName));
 }
 
 void GatherFonts(const char *pName, int IsDir, void *pUser)
@@ -897,7 +899,7 @@ void GatherFonts(const char *pName, int IsDir, void *pUser)
 	if(IsDir || pName[0] == '.')
 		return;
 
-	sorted_array<FONT> &Fonts = *((sorted_array<FONT> *)pUser);
+	sorted_array<CFontFile> &Fonts = *((sorted_array<CFontFile> *)pUser);
 	char aFileName[128];
 	str_format(aFileName, sizeof(aFileName), "data/fonts/%s", pName);
 
@@ -910,7 +912,7 @@ void GatherFonts(const char *pName, int IsDir, void *pUser)
 		if(*p == '.')
 			*p = 0;
 
-	Fonts.add(FONT(NiceName, aFileName));
+	Fonts.add(CFontFile(NiceName, aFileName));
 }
 
 void CMenus::RenderSettingsGeneral(CUIRect MainView)
@@ -918,12 +920,12 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	// Render language list
 	static int s_LanguageList  = 0;
 	static int s_SelectedLanguage = 0;
-	static sorted_array<LANGUAGE> s_Languages;
+	static sorted_array<CLanguage> s_Languages;
 	static float s_LanguageScrollValue = 0;
 
 	if(s_Languages.size() == 0)
 	{
-		s_Languages.add(LANGUAGE("English", ""));
+		s_Languages.add(CLanguage("English", ""));
 		fs_listdir("data/languages", GatherLanguages, &s_Languages);
 		for(int i = 0; i < s_Languages.size(); i++)
 			if(str_comp(s_Languages[i].m_FileName, g_Config.m_ClLanguagefile) == 0)
@@ -939,7 +941,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	List.HSplitTop(List.h/2 - 10, &List, 0);
 	UiDoListboxStart(&s_LanguageList , &List, 24.0f, Localize("Language"), "", s_Languages.size(), 1, s_SelectedLanguage, s_LanguageScrollValue);
 
-	for(sorted_array<LANGUAGE>::range r = s_Languages.all(); !r.empty(); r.pop_front())
+	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
 	{
 		CListboxItem Item = UiDoListboxNextItem(&r.front());
 
@@ -960,7 +962,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	// Render font list
 	static int s_FontList  = 0;
 	static int s_SelectedFont = 0;
-	static sorted_array<FONT> s_Fonts;
+	static sorted_array<CFontFile> s_Fonts;
 	static float s_FontScrollValue = 0;
 
 	if(s_Fonts.size() == 0)
@@ -979,7 +981,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	CUIRect ListFont = MainView;
 	UiDoListboxStart(&s_FontList , &ListFont, 24.0f, Localize("Font"), "", s_Fonts.size(), 1, s_SelectedFont, s_FontScrollValue);
 
-	for(sorted_array<FONT>::range r = s_Fonts.all(); !r.empty(); r.pop_front())
+	for(sorted_array<CFontFile>::range r = s_Fonts.all(); !r.empty(); r.pop_front())
 	{
 		CListboxItem Item = UiDoListboxNextItem(&r.front());
 
