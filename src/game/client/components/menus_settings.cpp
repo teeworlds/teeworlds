@@ -936,7 +936,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	int OldSelectedLanguage = s_SelectedLanguage;
 
 	CUIRect List = MainView;
-	List.h = List.h/2 - 10; // Ugly, but work
+	List.HSplitTop(List.h/2 - 10, &List, 0);
 	UiDoListboxStart(&s_LanguageList , &List, 24.0f, Localize("Language"), "", s_Languages.size(), 1, s_SelectedLanguage, s_LanguageScrollValue);
 
 	for(sorted_array<LANGUAGE>::range r = s_Languages.all(); !r.empty(); r.pop_front())
