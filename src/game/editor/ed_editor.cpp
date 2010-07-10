@@ -2924,6 +2924,15 @@ void CEditor::Reset(bool CreateDefault)
 	m_MouseDeltaWy = 0;
 }
 
+void CEditorMap::DeleteEnvelope(int Index)
+{
+	m_lEnvelopes.remove_index(Index);
+	
+	for(int i = 0; i < m_lGroups.size(); i++)
+		for(int j = 0; j < m_lGroups[i]->m_lLayers.size(); j++)
+			m_lGroups[i]->m_lLayers[j]->CheckQuads();
+}
+
 void CEditorMap::MakeGameLayer(CLayer *pLayer)
 {
 	m_pGameLayer = (CLayerGame *)pLayer;
