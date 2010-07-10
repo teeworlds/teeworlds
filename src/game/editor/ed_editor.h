@@ -130,6 +130,7 @@ public:
 	{
 	}
 	
+	virtual void CheckQuads() {}
 	
 	virtual void BrushSelecting(CUIRect Rect) {}
 	virtual int BrushGrab(CLayerGroup *pBrush, CUIRect Rect) { return 0; }
@@ -273,10 +274,7 @@ public:
 		return e;
 	}
 	
-	void DeleteEnvelope(int Index)
-	{
-		m_lEnvelopes.remove_index(Index);
-	}
+	void DeleteEnvelope(int Index);
 	
 	CLayerGroup *NewGroup()
 	{
@@ -399,6 +397,8 @@ public:
 	virtual void Render();
 	CQuad *NewQuad();
 
+	virtual void CheckQuads();
+	
 	virtual void BrushSelecting(CUIRect Rect);
 	virtual int BrushGrab(CLayerGroup *pBrush, CUIRect Rect);
 	virtual void BrushPlace(CLayer *pBrush, float wx, float wy);
