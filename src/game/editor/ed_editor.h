@@ -273,6 +273,11 @@ public:
 		return e;
 	}
 	
+	void DeleteEnvelope(int Index)
+	{
+		m_lEnvelopes.remove_index(Index);
+	}
+	
 	CLayerGroup *NewGroup()
 	{
 		CLayerGroup *g = new CLayerGroup;

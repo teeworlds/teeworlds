@@ -174,7 +174,7 @@ struct CMapItemEnvelope
 	int m_Channels;
 	int m_StartPoint;
 	int m_NumPoints;
-	int m_Name;
+	char m_aName[32];
 } ;
 
 #endif
