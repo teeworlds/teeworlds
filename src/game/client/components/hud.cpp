@@ -391,13 +391,13 @@ void CHud::RenderTime()
 		}
 		else if(m_pClient->m_pRaceDemo->GetRaceState() == CRaceDemo::RACE_STARTED)
 		{
-			str_format(aBuf, sizeof(aBuf), "Current time: %02d:%02d.%d", m_RaceTime/60, m_RaceTime%60, m_RaceTick/10);
-			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,"Current time: 00:00.0",-1)/2, 20, 12, aBuf, -1); // use fixed value for text width so its not shaky
+			str_format(aBuf, sizeof(aBuf), "%02d:%02d.%d", m_RaceTime/60, m_RaceTime%60, m_RaceTick/10);
+			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,"00:00.00",-1)/2, 20, 12, aBuf, -1); // use fixed value for text width so its not shaky
 		}
 	
 		if(g_Config.m_ClShowCheckpointDiff && m_CheckpointTick+Client()->GameTickSpeed()*6 > Client()->GameTick())
 		{
-			str_format(aBuf, sizeof(aBuf), "Checkpoint: %+5.2f", m_CheckpointDiff);
+			str_format(aBuf, sizeof(aBuf), "%+5.2f", m_CheckpointDiff);
 			
 			// calculate alpha (4 sec 1 than get lower the next 2 sec)
 			float a = 1.0f;
