@@ -60,7 +60,7 @@ bool CLocalizationDatabase::Load(const char *pFilename)
 	CLineReader LineReader;
 	LineReader.Init(IoHandle);
 	char *pLine;
-	while((pLine = LineReader.Get()))
+	while((pLine = LineReader.Get()) != 0)
 	{
 		if(!str_length(pLine))
 			continue;

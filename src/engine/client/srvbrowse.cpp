@@ -598,7 +598,7 @@ void CServerBrowser::Update()
 
 	// do timeouts
 	pEntry = m_pFirstReqServer;
-	while(1)
+	for(;;)
 	{
 		if(!pEntry) // no more entries
 			break;
@@ -618,7 +618,7 @@ void CServerBrowser::Update()
 	// do timeouts
 	pEntry = m_pFirstReqServer;
 	Count = 0;
-	while(1)
+	for(;;)
 	{
 		if(!pEntry) // no more entries
 			break;

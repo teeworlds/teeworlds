@@ -66,7 +66,7 @@ void *CRingBufferBase::Allocate(int Size)
 	if(WantedSize > m_Size)
 		return 0;
 
-	while(1)	
+	for(;;)
 	{
 		// check for space
 		if(m_pProduce->m_Free)
@@ -155,7 +155,7 @@ void *CRingBufferBase::Prev(void *pCurrent)
 {
 	CItem *pItem = ((CItem *)pCurrent) - 1;
 	
-	while(1)
+	for(;;)
 	{
 		pItem = PrevBlock(pItem);
 		if(pItem == m_pProduce)
@@ -169,7 +169,7 @@ void *CRingBufferBase::Next(void *pCurrent)
 {
 	CItem *pItem = ((CItem *)pCurrent) - 1;
 	
-	while(1)
+	for(;;)
 	{
 		pItem = NextBlock(pItem);
 		if(pItem == m_pProduce)

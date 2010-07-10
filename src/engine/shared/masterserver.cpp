@@ -122,7 +122,7 @@ public:
 			return -1;
 		
 		LineReader.Init(File);
-		while(1)
+		for(;;)
 		{
 			CMasterInfo Info = {{0}};
 			int aIp[4];

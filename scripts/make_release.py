@@ -96,7 +96,7 @@ if use_bundle:
 	os.mkdir(clientbundle_framework_dir)
 	os.mkdir(os.path.join(clientbundle_resource_dir, "data"))
 	copydir("data", clientbundle_resource_dir)
-	shutil.copy("other/icons/Teeworlds.icns", clientbundle_resource_dir)
+	shutil.copy("other/icons/teeworlds.icns", clientbundle_resource_dir)
 	shutil.copy(name+exe_ext, clientbundle_bin_dir)
 	os.system("cp -R /Library/Frameworks/SDL.framework " + clientbundle_framework_dir)
 	file(os.path.join(clientbundle_content_dir, "Info.plist"), "w").write("""
@@ -134,7 +134,7 @@ if use_bundle:
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data"))
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data/maps"))
 	copydir("data/maps", serverbundle_resource_dir)
-	shutil.copy("other/icons/Teeworlds_srv.icns", serverbundle_resource_dir)
+	shutil.copy("other/icons/teeworlds_srv.icns", serverbundle_resource_dir)
 	shutil.copy(name+"_srv"+exe_ext, serverbundle_bin_dir)
 	shutil.copy("serverlaunch"+exe_ext, serverbundle_bin_dir + "/teeworlds_server")
 	file(os.path.join(serverbundle_content_dir, "Info.plist"), "w").write("""

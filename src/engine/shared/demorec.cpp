@@ -285,7 +285,7 @@ void CDemoPlayer::ScanFile()
 	StartPos = io_tell(m_File);
 	m_Info.m_SeekablePoints = 0;
 
-	while(1)
+	for(;;)
 	{
 		long CurrentPos = io_tell(m_File);
 		
@@ -344,7 +344,7 @@ void CDemoPlayer::DoTick()
 	m_Info.m_Info.m_CurrentTick = m_Info.m_NextTick;
 	ChunkTick = m_Info.m_Info.m_CurrentTick;
 
-	while(1)
+	for(;;)
 	{
 		if(ReadChunkHeader(&ChunkType, &ChunkSize, &ChunkTick))
 		{
@@ -574,7 +574,7 @@ int CDemoPlayer::Update()
 		int64 Freq = time_freq();
 		m_Info.m_CurrentTime += (int64)(Deltatime*(double)m_Info.m_Info.m_Speed);
 		
-		while(1)
+		for(;;)
 		{
 			int64 CurtickStart = (m_Info.m_Info.m_CurrentTick)*Freq/SERVER_TICK_SPEED;
 

@@ -505,14 +505,14 @@ int CMenus::RenderMenubar(CUIRect r)
 	if(Client()->State() == IClient::STATE_OFFLINE)
 	{
 		// offline menus
-		if(0) // this is not done yet
-		{
-			Box.VSplitLeft(90.0f, &Button, &Box);
-			static int s_NewsButton=0;
-			if (DoButton_MenuTab(&s_NewsButton, Localize("News"), m_ActivePage==PAGE_NEWS, &Button, 0))
-				NewPage = PAGE_NEWS;
-			Box.VSplitLeft(30.0f, 0, &Box); 
-		}
+		// this is not done yet
+		/*
+		Box.VSplitLeft(90.0f, &Button, &Box);
+		static int s_NewsButton=0;
+		if (DoButton_MenuTab(&s_NewsButton, Localize("News"), m_ActivePage==PAGE_NEWS, &Button, 0))
+			NewPage = PAGE_NEWS;
+		Box.VSplitLeft(30.0f, 0, &Box);
+		*/
 
 		Box.VSplitLeft(100.0f, &Button, &Box);
 		static int s_InternetButton=0;

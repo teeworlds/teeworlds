@@ -37,8 +37,11 @@
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
 	#include <fcntl.h>
-	#include <direct.h>
 	#include <errno.h>
+
+	#if !defined(__CYGWIN__)
+		#include <direct.h>
+	#endif
 
 	#ifndef EWOULDBLOCK
 		#define EWOULDBLOCK WSAEWOULDBLOCK
@@ -92,7 +95,7 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 	msg = (char *)str + len;
 
 	va_start(args, fmt);
-#if defined(CONF_FAMILY_WINDOWS)
+#if defined(CONF_FAMILY_WINDOWS) && !defined(__CYGWIN__)
 	_vsnprintf(msg, sizeof(str)-len, fmt, args);
 #else
 	vsnprintf(msg, sizeof(str)-len, fmt, args);
@@ -576,7 +579,7 @@ static int parse_int(int *out, const char **str)
 	i = **str - '0';
 	(*str)++;
 
-	while(1)
+	for(;;)
 	{
 		if(**str < '0' || **str > '9')
 		{
@@ -587,8 +590,6 @@ static int parse_int(int *out, const char **str)
 		i = (i*10) + (**str - '0');
 		(*str)++;
 	}
-
-	return 0;
 }
 
 static int parse_char(char c, const char **str)
@@ -856,9 +857,9 @@ int net_init()
 	int err = WSAStartup(MAKEWORD(1, 1), &wsaData);
 	dbg_assert(err == 0, "network initialization failed.");
 	return err==0?0:1;
-#endif
-
+#else
 	return 0;
+#endif
 }
 
 int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, void *user)
@@ -905,7 +906,11 @@ int fs_storage_path(const char *appname, char *path, int max)
 	char *home = getenv("APPDATA");
 	if(!home)
 		return -1;
-	_snprintf(path, max, "%s/%s", home, appname);
+	#if defined(__CYGWIN__)
+		snprintf(path, max, "%s/%s", home, appname);
+	#else
+		_snprintf(path, max, "%s/%s", home, appname);
+	#endif
 	return 0;
 #else
 	char *home = getenv("HOME");
@@ -1016,7 +1021,7 @@ int net_socket_read_wait(NETSOCKET sock, int time)
     tv.tv_usec = 1000*time;
 
     FD_ZERO(&readfds);
-    FD_SET(sock, &readfds);
+    FD_SET((unsigned)sock, &readfds);
 
     /* don't care about writefds and exceptfds */
     select(sock+1, &readfds, NULL, NULL, &tv);
@@ -1059,7 +1064,7 @@ int str_length(const char *str)
 
 void str_format(char *buffer, int buffer_size, const char *format, ...)
 {
-#if defined(CONF_FAMILY_WINDOWS)
+#if defined(CONF_FAMILY_WINDOWS) && !defined(__CYGWIN__)
 	va_list ap;
 	va_start(ap, format);
 	_vsnprintf(buffer, buffer_size, format, ap);
@@ -1104,7 +1109,7 @@ void str_sanitize(char *str_in)
 /* case */
 int str_comp_nocase(const char *a, const char *b)
 {
-#if defined(CONF_FAMILY_WINDOWS)
+#if defined(CONF_FAMILY_WINDOWS) && !defined(__CYGWIN__)
 	return _stricmp(a,b);
 #else
 	return strcasecmp(a,b);
@@ -1329,50 +1334,65 @@ int str_utf8_decode(const char **ptr)
 {
 	const char *buf = *ptr;
 	int ch = 0;
-	
-	do
+
+	if((*buf&0x80) == 0x0)  /* 0xxxxxxx */
 	{
-		if((*buf&0x80) == 0x0)  /* 0xxxxxxx */
-		{
-			ch = *buf;
-			buf++;
-		}
-		else if((*buf&0xE0) == 0xC0) /* 110xxxxx */
-		{
-			ch  = (*buf++ & 0x3F) << 6; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
-		}
-		else  if((*buf & 0xF0) == 0xE0)	/* 1110xxxx */
-		{
-			ch  = (*buf++ & 0x1F) << 12; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) <<  6; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
-		}
-		else if((*buf & 0xF8) == 0xF0)	/* 11110xxx */
-		{
-			ch  = (*buf++ & 0x0F) << 18; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) << 12; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) <<  6; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
-		}
-		else
-		{
-			/* invalid */
-			buf++;
-			break;
-		}
-		
+		ch = *buf;
+		buf++;
 		*ptr = buf;
 		return ch;
-	} while(0);
+	}
+	else if((*buf&0xE0) == 0xC0) /* 110xxxxx */
+	{
+		ch  = (*buf++ & 0x3F) << 6;
+		if((*buf))
+		{
+			ch += (*buf++ & 0x3F);
+			if(ch == 0) ch = -1;
+		}
+	}
+	else  if((*buf & 0xF0) == 0xE0)	/* 1110xxxx */
+	{
+		ch  = (*buf++ & 0x1F) << 12;
+		if((*buf))
+		{
+			ch += (*buf++ & 0x3F) <<  6;
+			if((*buf))
+			{
+				ch += (*buf++ & 0x3F);
+				if(ch == 0) ch = -1;
+			}
+		}
+	}
+	else if((*buf & 0xF8) == 0xF0)	/* 11110xxx */
+	{
+		ch  = (*buf++ & 0x0F) << 18;
+		if((*buf))
+		{
+			ch += (*buf++ & 0x3F) << 12;
+			if((*buf))
+			{
+				ch += (*buf++ & 0x3F) <<  6;
+				if((*buf))
+				{
+					ch += (*buf++ & 0x3F);
+					if(ch == 0) ch = -1;
+				}
+			}
+		}
+	}
+	else
+	{
+		/* invalid */
+		buf++;
 
-	/* out of bounds */
+	}
 	*ptr = buf;
-	return -1;
-	
+	if((*buf))
+		return ch;
+	else
+		/* out of bounds */
+		return -1;
 }
 
 

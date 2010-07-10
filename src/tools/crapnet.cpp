@@ -50,7 +50,7 @@ void Run(int Port, NETADDR Dest)
 	int Id = 0;
 	int Delaycounter = 0;
 	
-	while(1)
+	for(;;)
 	{
 		static int Lastcfg = 0;
 		int n = ((time_get()/time_freq())/m_ConfigInterval) % m_ConfigNumpingconfs;
@@ -61,7 +61,7 @@ void Run(int Port, NETADDR Dest)
 		Lastcfg = n;
 		
 		// handle incomming packets
-		while(1)
+		for(;;)
 		{
 			// fetch data
 			int DataTrash = 0;
@@ -130,11 +130,11 @@ void Run(int Port, NETADDR Dest)
 		}
 		
 		//
-		/*while(1)
+		/*for(;;)
 		{*/
 		CPacket *p = 0;
 		CPacket *pNext = m_pFirst;
-		while(1)
+		for(;;)
 		{
 			p = pNext;
 			if(!p)

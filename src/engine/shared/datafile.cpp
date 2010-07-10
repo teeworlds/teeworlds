@@ -5,7 +5,7 @@
 #include "engine.h"
 #include <zlib.h>
 
-static const int DEBUG=0;
+static int DEBUG=0;
 
 struct CDatafileItemType
 {
@@ -87,7 +87,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename)
 		
 		unsigned char aBuffer[BUFFER_SIZE];
 		
-		while(1)
+		for(;;)
 		{
 			unsigned Bytes = io_read(File, aBuffer, BUFFER_SIZE);
 			if(Bytes <= 0)

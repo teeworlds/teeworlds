@@ -13,7 +13,7 @@ char *CLineReader::Get()
 {
 	unsigned LineStart = m_BufferPos;
 
-	while(1)
+	for(;;)
 	{
 		if(m_BufferPos >= m_BufferSize)
 		{

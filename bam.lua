@@ -55,8 +55,13 @@ DuplicateDirectoryStructure("src", "src", "objs")
 
 function ResCompile(scriptfile)
 	scriptfile = Path(scriptfile)
-	output = PathBase(scriptfile) .. ".res"
-	AddJob(output, "rc " .. scriptfile, "rc /fo " .. output .. " " .. scriptfile)
+	if config.compiler.driver == "cl" then
+		output = PathBase(scriptfile) .. ".res"
+		AddJob(output, "rc " .. scriptfile, "rc /fo " .. output .. " " .. scriptfile)
+	else
+		output = PathBase(scriptfile) .. ".coff"
+		AddJob(output, "windres " .. scriptfile, "windres -i " .. scriptfile .. " -o " .. output)
+	end
 	AddDependency(output, scriptfile)
 	return output
 end
@@ -113,6 +118,8 @@ end
 
 if config.compiler.driver == "cl" then
 	client_link_other = {ResCompile("other/icons/teeworlds.rc")}
+else
+	client_link_other = {ResCompile("other/icons/teeworlds_gcc.rc")}
 end
 
 function Intermediate_Output(settings, input)
@@ -126,7 +133,7 @@ function build(settings)
 	if config.compiler.driver == "cl" then
 		settings.cc.flags:Add("/wd4244")
 	else
-		settings.cc.flags:Add("-Wall", "-fno-exceptions")
+		settings.cc.flags:Add("-fno-exceptions")
 		if platform == "macosx" then
 			settings.cc.flags:Add("-mmacosx-version-min=10.4", "-isysroot /Developer/SDKs/MacOSX10.4u.sdk")
 			settings.link.flags:Add("-mmacosx-version-min=10.4", "-isysroot /Developer/SDKs/MacOSX10.4u.sdk")
@@ -174,7 +181,8 @@ function build(settings)
 	if config.compiler.driver == "cl" then
 		settings.cc.flags:Add("/W3")
 	else
-		settings.cc.flags:Add("-ansi")
+		--settings.cc.flags:Add("-ansi")
+		settings.cc.flags:Add("-Wall")
 	end
 
 	-- build game components

@@ -258,7 +258,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 {
 	unsigned Now = time_timestamp();
 	
-	while(1)
+	for(;;)
 	{
 		NETADDR Addr;
 			

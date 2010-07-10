@@ -1388,7 +1388,7 @@ void CClient::Update()
 		int64 Now = m_GameTime.Get(time_get());
 		int64 PredNow = m_PredictedTime.Get(time_get());
 
-		while(1)
+		for(;;)
 		{
 			CSnapshotStorage::CHolder *pCur = m_aSnapshots[SNAP_CURRENT];
 			int64 TickStart = (pCur->m_Tick)*time_freq()/50;
@@ -1614,7 +1614,7 @@ void CClient::Run()
 
 	Input()->MouseModeRelative();
 
-	while (1)
+	for(;;)
 	{
 		int64 FrameStartTime = time_get();
 		m_Frames++;
@@ -1730,7 +1730,8 @@ void CClient::Run()
 
 		if(ReportTime < time_get())
 		{
-			if(0 && g_Config.m_Debug)
+			/*
+			if(g_Config.m_Debug)
 			{
 				dbg_msg("client/report", "fps=%.02f (%.02f %.02f) netstate=%d",
 					m_Frames/(float)(ReportInterval/time_freq()),
@@ -1738,6 +1739,7 @@ void CClient::Run()
 					1.0f/m_FrameTimeLow,
 					m_NetClient.State());
 			}
+			*/
 			m_FrameTimeLow = 1;
 			m_FrameTimeHigh = 0;
 			m_Frames = 0;

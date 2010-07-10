@@ -258,7 +258,7 @@ int main(int argc, char **argv) // ignore_convention
 	
 	dbg_msg("mastersrv", "started");
 	
-	while(1)
+	for(;;)
 	{
 		m_NetOp.Update();
 		m_NetChecker.Update();
@@ -349,6 +349,4 @@ int main(int argc, char **argv) // ignore_convention
 		// be nice to the CPU
 		thread_sleep(1);
 	}
-	
-	return 0;
 }

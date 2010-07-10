@@ -14,7 +14,7 @@ void run(NETADDR dest)
 	 	sockets[i] = net_udp_create(bindaddr);
 	}
 	
-	while(1)
+	for(;;)
 	{
 		unsigned char data[1024];
 		int size = 0;

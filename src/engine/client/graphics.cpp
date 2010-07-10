@@ -6,6 +6,9 @@
 
 #ifdef CONF_FAMILY_WINDOWS
 	#define WIN32_LEAN_AND_MEAN
+	#if defined(__CYGWIN__)
+		#include <stdlib.h>
+	#endif
 	#include <windows.h>
 #endif
 
@@ -819,7 +822,11 @@ bool CGraphics_SDL::Init()
 
 	#ifdef CONF_FAMILY_WINDOWS
 		if(!getenv("SDL_VIDEO_WINDOW_POS") && !getenv("SDL_VIDEO_CENTERED")) // ignore_convention
+		#if defined(__CYGWIN__)
+			putenv((char *)"SDL_VIDEO_WINDOW_POS=8,27"); // ignore_convention
+		#else
 			_putenv("SDL_VIDEO_WINDOW_POS=8,27"); // ignore_convention
+		#endif
 	#endif
 	
 	if(InitWindow() != 0)

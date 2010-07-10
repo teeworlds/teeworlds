@@ -1,6 +1,10 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include "SDL.h"
 
+#if defined(__CYGWIN__)
+	#include <stdlib.h>
+#endif
+
 #include <base/system.h>
 #include <engine/shared/config.h>
 #include <engine/graphics.h>

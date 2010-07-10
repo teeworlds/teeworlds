@@ -1509,33 +1509,30 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			mem_copy(aLastPoints, aPoints, sizeof(aPoints));
 		}
 
-		if(1)
+		Graphics()->SetColor(1,0,0,1);
+		for(int i = 0; i < 2; i++)
 		{
-			Graphics()->SetColor(1,0,0,1);
-			for(int i = 0; i < 2; i++)
-			{
-				float aPoints[4];
-				float aAspects[] = {4.0f/3.0f, 16.0f/10.0f, 5.0f/4.0f, 16.0f/9.0f};
-				float Aspect = aAspects[i];
+			float aPoints[4];
+			float aAspects[] = {4.0f/3.0f, 16.0f/10.0f, 5.0f/4.0f, 16.0f/9.0f};
+			float Aspect = aAspects[i];
 
-				RenderTools()->MapscreenToWorld(
-					m_WorldOffsetX, m_WorldOffsetY,
-					1.0f, 1.0f, 0.0f, 0.0f, Aspect, 1.0f, aPoints);
+			RenderTools()->MapscreenToWorld(
+				m_WorldOffsetX, m_WorldOffsetY,
+				1.0f, 1.0f, 0.0f, 0.0f, Aspect, 1.0f, aPoints);
 
-				CUIRect r;
-				r.x = aPoints[0];
-				r.y = aPoints[1];
-				r.w = aPoints[2]-aPoints[0];
-				r.h = aPoints[3]-aPoints[1];
+			CUIRect r;
+			r.x = aPoints[0];
+			r.y = aPoints[1];
+			r.w = aPoints[2]-aPoints[0];
+			r.h = aPoints[3]-aPoints[1];
 
-				IGraphics::CLineItem Array[4] = {
-					IGraphics::CLineItem(r.x, r.y, r.x+r.w, r.y),
-					IGraphics::CLineItem(r.x+r.w, r.y, r.x+r.w, r.y+r.h),
-					IGraphics::CLineItem(r.x+r.w, r.y+r.h, r.x, r.y+r.h),
-					IGraphics::CLineItem(r.x, r.y+r.h, r.x, r.y)};
-				Graphics()->LinesDraw(Array, 4);
-				Graphics()->SetColor(0,1,0,1);
-			}
+			IGraphics::CLineItem Array[4] = {
+				IGraphics::CLineItem(r.x, r.y, r.x+r.w, r.y),
+				IGraphics::CLineItem(r.x+r.w, r.y, r.x+r.w, r.y+r.h),
+				IGraphics::CLineItem(r.x+r.w, r.y+r.h, r.x, r.y+r.h),
+				IGraphics::CLineItem(r.x, r.y+r.h, r.x, r.y)};
+			Graphics()->LinesDraw(Array, 4);
+			Graphics()->SetColor(0,1,0,1);
 		}
 
 		Graphics()->LinesEnd();
