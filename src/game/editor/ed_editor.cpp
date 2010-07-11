@@ -833,9 +833,9 @@ void CEditor::DoQuad(CQuad *q, int Index)
 	float CenterX = fx2f(q->m_aPoints[4].x);
 	float CenterY = fx2f(q->m_aPoints[4].y);
 
-	float dx = (CenterX - wx);
-	float dy = (CenterY - wy);
-	if(dx*dx+dy*dy < 10*10)
+	float dx = (CenterX - wx)/m_WorldZoom;
+	float dy = (CenterY - wy)/m_WorldZoom;
+	if(dx*dx+dy*dy < 50)
 		UI()->SetHotItem(pId);
 
 	// draw selection background
@@ -939,7 +939,7 @@ void CEditor::DoQuad(CQuad *q, int Index)
 	else
 		Graphics()->SetColor(0,1,0,1);
 
-	IGraphics::CQuadItem QuadItem(CenterX, CenterY, 5.0f, 5.0f);
+	IGraphics::CQuadItem QuadItem(CenterX, CenterY, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
 
@@ -953,9 +953,9 @@ void CEditor::DoQuadPoint(CQuad *q, int QuadIndex, int v)
 	float px = fx2f(q->m_aPoints[v].x);
 	float py = fx2f(q->m_aPoints[v].y);
 
-	float dx = (px - wx);
-	float dy = (py - wy);
-	if(dx*dx+dy*dy < 10*10)
+	float dx = (px - wx)/m_WorldZoom;
+	float dy = (py - wy)/m_WorldZoom;
+	if(dx*dx+dy*dy < 50)
 		UI()->SetHotItem(pId);
 
 	// draw selection background
@@ -1084,7 +1084,7 @@ void CEditor::DoQuadPoint(CQuad *q, int QuadIndex, int v)
 	else
 		Graphics()->SetColor(1,0,0,1);
 
-	IGraphics::CQuadItem QuadItem(px, py, 5.0f, 5.0f);
+	IGraphics::CQuadItem QuadItem(px, py, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
 
