@@ -3,6 +3,8 @@
 #include <base/math.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
+#include <game/generated/protocol.h>
+#include <game/generated/client_data.h>
 
 #include "render.h"
 
@@ -323,6 +325,71 @@ void CRenderTools::RenderTelemap(CTeleTile *pTele, int w, int h, float Scale, ve
 				char aBuf[16];
 				str_format(aBuf, sizeof(aBuf), "%d", Index);
 				UI()->TextRender()->Text(0, mx*Scale-2, my*Scale-4, Scale-5, aBuf, -1);
+			}
+		}
+		
+	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+}
+
+void CRenderTools::RenderSpeedupmap(CSpeedupTile *pSpeedup, int w, int h, float Scale, vec4 Color, int RenderFlags)
+{
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	
+	int StartY = (int)(ScreenY0/Scale)-1;
+	int StartX = (int)(ScreenX0/Scale)-1;
+	int EndY = (int)(ScreenY1/Scale)+1;
+	int EndX = (int)(ScreenX1/Scale)+1;
+
+	for(int y = StartY; y < EndY; y++)
+		for(int x = StartX; x < EndX; x++)
+		{
+			int mx = x;
+			int my = y;
+			
+			if(RenderFlags&TILERENDERFLAG_EXTEND)
+			{
+				if(mx<0)
+					mx = 0;
+				if(mx>=w)
+					mx = w-1;
+				if(my<0)
+					my = 0;
+				if(my>=h)
+					my = h-1;
+			}
+			else
+			{
+				if(mx<0)
+					continue; // mx = 0;
+				if(mx>=w)
+					continue; // mx = w-1;
+				if(my<0)
+					continue; // my = 0;
+				if(my>=h)
+					continue; // my = h-1;
+			}
+			
+			int c = mx + my*w;
+			
+			int Force = (int)pSpeedup[c].m_Force;
+			if(Force)
+			{	
+				// draw arrow
+				Graphics()->TextureSet(g_pData->m_aImages[IMAGE_SPEEDUP_ARROW].m_Id);
+				Graphics()->QuadsBegin();
+			
+				SelectSprite(SPRITE_SPEEDUP_ARROW);
+				Graphics()->QuadsSetRotation(pSpeedup[c].m_Angle*(3.14159265f/180.0f));
+				DrawSprite(mx*Scale+16, my*Scale+16, 35.0f);
+				
+				Graphics()->QuadsEnd();
+				
+				// draw force
+				char aBuf[16];
+				str_format(aBuf, sizeof(aBuf), "%d", Force);
+				dbg_msg("test", "%.5f", Scale);
+				UI()->TextRender()->Text(0, mx*Scale, my*Scale+16, Scale-20, aBuf, -1);
 			}
 		}
 		
