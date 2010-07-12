@@ -30,11 +30,7 @@ FreeType = {
 			elseif option.use_win32lib == true then
 				settings.cc.includes:Add(FreeType.basepath .. "/include")
 				settings.link.libpath:Add(FreeType.basepath .. "/lib")
-				if config.compiler.driver == "cl" then
-					settings.link.libs:Add(FreeType.basepath .. "/lib/freetype2312MT")
-				elseif config.compiler.driver == "gcc" or config.compiler.driver == "gcc-3" or config.compiler.driver == "gcc-4" then
-					settings.link.libs:Add(FreeType.basepath .. "/lib/freetype2312MT" .. ' -L "./"')
-				end
+				settings.link.libs:Add("freetype2312MT")
 			end
 		end
 		

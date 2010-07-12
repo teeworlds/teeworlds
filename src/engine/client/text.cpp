@@ -12,6 +12,9 @@
 	#include <OpenGL/gl.h>
 	#include <OpenGL/glu.h>
 #else
+	#if defined(__CYGWIN__)
+		#define USE_OPENGL32
+	#endif
 	#include <GL/gl.h>
 	#include <GL/glu.h>
 #endif
