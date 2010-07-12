@@ -46,12 +46,9 @@ enum
 	TILE_NOHOOK,
 	TILE_TELEIN=26,
 	TILE_TELEOUT,
-	TILE_BOOSTD,
-	TILE_BOOSTL,
-	TILE_BOOSTR,
 	TILE_BOOST,
 	TILE_JUMPER,
-	TILE_BEGIN,
+	TILE_BEGIN=33,
 	TILE_END,
 	
 	TILEFLAG_VFLIP=1,
@@ -99,6 +96,12 @@ struct CTeleTile
 {
 	unsigned char m_Number;
 	unsigned char m_Type;
+};
+
+struct CSpeedupTile
+{
+	unsigned char m_Force;
+	short m_Angle;
 };
 
 struct CMapItemImage
@@ -159,6 +162,8 @@ struct CMapItemLayerTilemap
 	int m_Data;
 	
 	int m_Tele;
+	
+	int m_Speedup;
 } ;
 
 struct CMapItemLayerQuads

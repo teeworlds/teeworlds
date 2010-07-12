@@ -18,6 +18,7 @@ CCollision::CCollision()
 	m_Height = 0;
 	m_pLayers = 0;
 	m_pTele = 0;
+	m_pSpeedup = 0;
 }
 
 void CCollision::Init(class CLayers *pLayers)
@@ -28,6 +29,8 @@ void CCollision::Init(class CLayers *pLayers)
 	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
 	if(m_pLayers->TeleLayer())
 		m_pTele = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->TeleLayer()->m_Tele));
+	if(m_pLayers->SpeedupLayer())
+		m_pSpeedup = static_cast<CSpeedupTile *>(m_pLayers->Map()->GetData(m_pLayers->SpeedupLayer()->m_Speedup));
 	
 	for(int i = 0; i < m_Width*m_Height; i++)
 	{
@@ -113,6 +116,36 @@ int CCollision::IsCheckpoint(int x, int y)
 	return -1;
 }
 
+bool CCollision::IsSpeedup(int x, int y)
+{
+	if(!m_pSpeedup)
+		return false;
+	
+	dbg_msg("test", "test");
+	int nx = clamp(x/32, 0, m_pLayers->SpeedupLayer()->m_Width-1);
+	int ny = clamp(y/32, 0, m_pLayers->SpeedupLayer()->m_Height-1);
+	
+	if(m_pSpeedup[ny*m_pLayers->SpeedupLayer()->m_Width+nx].m_Force > 0)
+		return true;
+		
+	return false;
+}
+
+void CCollision::GetSpeedup(int x, int y, vec2 *Dir, int *Force)
+{
+	int nx = clamp(x/32, 0, m_pLayers->SpeedupLayer()->m_Width-1);
+	int ny = clamp(y/32, 0, m_pLayers->SpeedupLayer()->m_Height-1);
+	
+	vec2 Direction = vec2(1, 0);
+	float Angle = m_pSpeedup[ny*m_pLayers->SpeedupLayer()->m_Width+nx].m_Angle * (3.14159265f/180.0f);
+	*Force = m_pSpeedup[ny*m_pLayers->SpeedupLayer()->m_Width+nx].m_Force;
+	
+	vec2 TmpDir;
+	TmpDir.x = (Direction.x*cos(Angle)) - (Direction.y*sin(Angle));
+	TmpDir.y = (Direction.x*sin(Angle)) + (Direction.y*cos(Angle));
+	*Dir = TmpDir;
+}
+	
 // TODO: rewrite this smarter!
 int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
 {

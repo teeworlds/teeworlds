@@ -109,6 +109,23 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 		}
 	}
 
+	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->m_Map.m_pSpeedupLayer)
+	{
+		// new speedup layer
+		View.HSplitBottom(10.0f, &View, &Button);
+		View.HSplitBottom(12.0f, &View, &Button);
+		static int s_NewSwitchLayerButton = 0;
+		if(pEditor->DoButton_Editor(&s_NewSwitchLayerButton, "Add Speedup Layer", 0, &Button, 0, "Creates a new speedup layer"))
+		{
+			CLayer *l = new CLayerSpeedup(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
+			pEditor->m_Map.MakeSpeedupLayer(l);
+			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
+			pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
+			pEditor->m_Brush.Clear();
+			return 1;
+		}
+	}
+	
 	// new tile layer
 	View.HSplitBottom(10.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
@@ -206,6 +223,8 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 	{
 		if(pEditor->GetSelectedLayer(0) == pEditor->m_Map.m_pTeleLayer)
 			pEditor->m_Map.m_pTeleLayer = 0x0;
+		if(pEditor->GetSelectedLayer(0) == pEditor->m_Map.m_pSpeedupLayer)
+			pEditor->m_Map.m_pSpeedupLayer = 0x0;
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->DeleteLayer(pEditor->m_SelectedLayer);
 		return 1;
 	}
@@ -230,7 +249,7 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 		{0},
 	};
 
-	if(pEditor->m_Map.m_pGameLayer == pEditor->GetSelectedLayer(0) || pEditor->m_Map.m_pTeleLayer == pEditor->GetSelectedLayer(0)) // dont use Group and Detail from the selection if this is the game layer
+	if(pEditor->m_Map.m_pGameLayer == pEditor->GetSelectedLayer(0) || pEditor->m_Map.m_pTeleLayer == pEditor->GetSelectedLayer(0) || pEditor->m_Map.m_pSpeedupLayer == pEditor->GetSelectedLayer(0)) // dont use Group and Detail from the selection if this is the game layer
 	{
 		aProps[0].m_Type = PROPTYPE_NULL;
  		aProps[2].m_Type = PROPTYPE_NULL;
@@ -476,6 +495,36 @@ int CEditor::PopupTele(CEditor *pEditor, CUIRect View)
 	
 	if(Prop == PROP_TELE)
 		 pEditor->m_TeleNum = clamp(NewVal, 0, 255);
+	
+	return 0;
+}
+
+int CEditor::PopupSpeedup(CEditor *pEditor, CUIRect View)
+{
+	CUIRect Button;
+	View.HSplitBottom(12.0f, &View, &Button);
+	
+	enum
+	{
+		PROP_FORCE=0,
+		PROP_ANGLE,
+		NUM_PROPS,
+	};
+	
+	CProperty aProps[] = {
+		{"Force", pEditor->m_SpeedupForce, PROPTYPE_INT_SCROLL, 0, 255},
+		{"Angle", pEditor->m_SpeedupAngle, PROPTYPE_INT_SCROLL, 0, 359},
+		{0},
+	};
+
+	static int s_aIds[NUM_PROPS] = {0};
+	int NewVal = 0;
+	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
+	
+	if(Prop == PROP_FORCE)
+		pEditor->m_SpeedupForce = clamp(NewVal, 0, 255);
+	if(Prop == PROP_ANGLE)
+		pEditor->m_SpeedupAngle = clamp(NewVal, 0, 359);
 	
 	return 0;
 }

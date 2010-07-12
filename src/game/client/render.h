@@ -71,6 +71,7 @@ public:
 	void RenderQuads(CQuad *pQuads, int NumQuads, int Flags, void (*pfnEval)(float TimeOffset, int Env, float *pChannels, void *pUser), void *pUser);
 	void RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int Flags);
 	void RenderTelemap(CTeleTile *pTele, int w, int h, float Scale, vec4 Color, int Flags);
+	void RenderSpeedupmap(CSpeedupTile *pTele, int w, int h, float Scale, vec4 Color, int Flags);
 
 	// helpers
 	void MapscreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,

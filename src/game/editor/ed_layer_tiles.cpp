@@ -21,6 +21,7 @@ CLayerTiles::CLayerTiles(int w, int h)
 	m_TexId = -1;
 	m_Game = 0;
 	m_Tele = 0;
+	m_Speedup = 0;
 	
 	m_pTiles = new CTile[m_Width*m_Height];
 	mem_zero(m_pTiles, m_Width*m_Height*sizeof(CTile));
@@ -60,6 +61,8 @@ void CLayerTiles::Render()
 	m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, vec4(1,1,1,1), LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT);
 	if(m_Tele)
 		m_pEditor->RenderTools()->RenderTelemap(((CLayerTele*)this)->m_pTeleTile, m_Width, m_Height, 32.0f, vec4(1,1,1,1), LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT);
+	if(m_Speedup)
+		m_pEditor->RenderTools()->RenderSpeedupmap(((CLayerSpeedup*)this)->m_pSpeedupTile, m_Width, m_Height, 32.0f, vec4(1,1,1,1), LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT);
 }
 
 int CLayerTiles::ConvertX(float x) const { return (int)(x/32.0f); }
@@ -153,6 +156,26 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 				for(int x = 0; x < r.w; x++)
 					pGrabbed->m_pTeleTile[y*pGrabbed->m_Width+x] = ((CLayerTele*)this)->m_pTeleTile[(r.y+y)*m_Width+(r.x+x)];
 	}
+	else if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pSpeedupLayer)
+	{
+		CLayerSpeedup *pGrabbed = new CLayerSpeedup(r.w, r.h);
+		pGrabbed->m_pEditor = m_pEditor;
+		pGrabbed->m_TexId = m_TexId;
+		pGrabbed->m_Image = m_Image;
+		
+		pBrush->AddLayer(pGrabbed);
+		
+		// copy the tiles
+		for(int y = 0; y < r.h; y++)
+			for(int x = 0; x < r.w; x++)
+				pGrabbed->m_pTiles[y*pGrabbed->m_Width+x] = m_pTiles[(r.y+y)*m_Width+(r.x+x)];
+				
+		// copy the speedup data
+		if(!m_pEditor->Input()->KeyPressed(KEY_SPACE))
+			for(int y = 0; y < r.h; y++)
+				for(int x = 0; x < r.w; x++)
+					pGrabbed->m_pSpeedupTile[y*pGrabbed->m_Width+x] = ((CLayerSpeedup*)this)->m_pSpeedupTile[(r.y+y)*m_Width+(r.x+x)];
+	}
 	else
 	{
 		CLayerTiles *pGrabbed = new CLayerTiles(r.w, r.h);
@@ -219,8 +242,8 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 			if(fx<0 || fx >= m_Width || fy < 0 || fy >= m_Height)
 				continue;
 				
-			// dont allow tele in and out tiles
-			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pGameLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT))
+			// dont allow tele in and out tiles... same with speedup tile
+			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pGameLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST))
 				continue;
 		
 			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
@@ -275,6 +298,10 @@ void CLayerTiles::Resize(int NewW, int NewH)
 	// resize tele layer if available
 	if(m_Game && m_pEditor->m_Map.m_pTeleLayer && (m_pEditor->m_Map.m_pTeleLayer->m_Width != NewW || m_pEditor->m_Map.m_pTeleLayer->m_Height != NewH))
 		m_pEditor->m_Map.m_pTeleLayer->Resize(NewW, NewH);
+		
+	// resize sppedup layer if available
+	if(m_Game && m_pEditor->m_Map.m_pSpeedupLayer && (m_pEditor->m_Map.m_pSpeedupLayer->m_Width != NewW || m_pEditor->m_Map.m_pSpeedupLayer->m_Height != NewH))
+		m_pEditor->m_Map.m_pSpeedupLayer->Resize(NewW, NewH);
 }
 
 
@@ -284,7 +311,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
 	
 	bool InGameGroup = !find_linear(m_pEditor->m_Map.m_pGameGroup->m_lLayers.all(), this).empty();
-	if(m_pEditor->m_Map.m_pGameLayer == this || m_pEditor->m_Map.m_pTeleLayer == this)
+	if(m_pEditor->m_Map.m_pGameLayer == this || m_pEditor->m_Map.m_pTeleLayer == this || m_pEditor->m_Map.m_pSpeedupLayer == this)
 		InGameGroup = false;
 	static int s_ColclButton = 0;
 	if(m_pEditor->DoButton_Editor(&s_ColclButton, Localize("Clear collision"), InGameGroup?0:-1, &Button, 0, Localize("Removes collision from this layer")))
@@ -335,7 +362,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		{0},
 	};
 	
-	if(m_pEditor->m_Map.m_pGameLayer == this || m_pEditor->m_Map.m_pTeleLayer == this) // remove the image from the selection if this is the game layer
+	if(m_pEditor->m_Map.m_pGameLayer == this || m_pEditor->m_Map.m_pTeleLayer == this || m_pEditor->m_Map.m_pSpeedupLayer == this) // remove the image from the selection if this is the game layer
 		aProps[2].m_pName = 0;
 	
 	static int s_aIds[NUM_PROPS] = {0};
@@ -484,6 +511,133 @@ void CLayerTele::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 					m_pTeleTile[fy*m_Width+fx].m_Number = m_pEditor->m_TeleNum;
 				else
 					m_pTeleTile[fy*m_Width+fx].m_Number = pLt->m_pTeleTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_Number;
+			}
+		}
+	}
+}
+
+CLayerSpeedup::CLayerSpeedup(int w, int h)
+: CLayerTiles(w, h)
+{
+	m_pTypeName = "Speedup";
+	m_Speedup = 1;
+	
+	m_pSpeedupTile = new CSpeedupTile[w*h];
+	mem_zero(m_pSpeedupTile, w*h*sizeof(CSpeedupTile));
+}
+
+CLayerSpeedup::~CLayerSpeedup()
+{
+	delete[] m_pSpeedupTile;
+}
+
+void CLayerSpeedup::Resize(int NewW, int NewH)
+{
+	// resize speedup data
+	CSpeedupTile *pNewSpeedupData = new CSpeedupTile[NewW*NewH];
+	mem_zero(pNewSpeedupData, NewW*NewH*sizeof(CSpeedupTile));
+
+	// copy old data	
+	for(int y = 0; y < min(NewH, m_Height); y++)
+		mem_copy(&pNewSpeedupData[y*NewW], &m_pSpeedupTile[y*m_Width], min(m_Width, NewW)*sizeof(CSpeedupTile));
+	
+	// replace old
+	delete [] m_pSpeedupTile;
+	m_pSpeedupTile = pNewSpeedupData;
+	
+	// resize tile data
+	CLayerTiles::Resize(NewW, NewH);
+	
+	// resize gamelayer too
+	if(m_pEditor->m_Map.m_pGameLayer->m_Width != NewW || m_pEditor->m_Map.m_pGameLayer->m_Height != NewH)
+		m_pEditor->m_Map.m_pGameLayer->Resize(NewW, NewH);
+}
+
+void CLayerSpeedup::BrushDraw(CLayer *pBrush, float wx, float wy)
+{
+	CLayerSpeedup *l = (CLayerSpeedup *)pBrush;
+	int sx = ConvertX(wx);
+	int sy = ConvertY(wy);
+	
+	for(int y = 0; y < l->m_Height; y++)
+		for(int x = 0; x < l->m_Width; x++)
+		{
+			int fx = x+sx;
+			int fy = y+sy;
+			if(fx<0 || fx >= m_Width || fy < 0 || fy >= m_Height)
+				continue;
+			
+			if(l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST)
+			{
+				if(l->m_pSpeedupTile[y*l->m_Width+x].m_Force || l->m_pSpeedupTile[y*l->m_Width+x].m_Angle)
+				{
+					m_pSpeedupTile[fy*m_Width+fx].m_Force = l->m_pSpeedupTile[y*l->m_Width+x].m_Force;
+					m_pSpeedupTile[fy*m_Width+fx].m_Angle = l->m_pSpeedupTile[y*l->m_Width+x].m_Angle;
+					m_pTiles[fy*m_Width+fx].m_Index = l->m_pTiles[y*l->m_Width+x].m_Index;
+				}
+				else if(m_pEditor->m_SpeedupForce)
+				{
+					m_pSpeedupTile[fy*m_Width+fx].m_Force = m_pEditor->m_SpeedupForce;
+					m_pSpeedupTile[fy*m_Width+fx].m_Angle = m_pEditor->m_SpeedupAngle;
+					m_pTiles[fy*m_Width+fx].m_Index = l->m_pTiles[y*l->m_Width+x].m_Index;
+				}
+				else
+				{
+					m_pSpeedupTile[fy*m_Width+fx].m_Force = 0;
+					m_pSpeedupTile[fy*m_Width+fx].m_Angle = 0;
+					m_pTiles[fy*m_Width+fx].m_Index = 0;
+				}
+			}
+			else
+			{
+				m_pSpeedupTile[fy*m_Width+fx].m_Force = 0;
+				m_pSpeedupTile[fy*m_Width+fx].m_Angle = 0;
+				m_pTiles[fy*m_Width+fx].m_Index = 0;
+			}
+		}
+}
+
+void CLayerSpeedup::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
+{
+	if(m_Readonly)
+		return;
+		
+	int sx = ConvertX(Rect.x);
+	int sy = ConvertY(Rect.y);
+	int w = ConvertX(Rect.w);
+	int h = ConvertY(Rect.h);
+	
+	CLayerSpeedup *pLt = static_cast<CLayerSpeedup*>(pBrush);
+	
+	for(int y = 0; y <= h; y++)
+	{
+		for(int x = 0; x <= w; x++)
+		{
+			int fx = x+sx;
+			int fy = y+sy;
+			
+			if(fx < 0 || fx >= m_Width || fy < 0 || fy >= m_Height)
+				continue;
+			
+			if(Empty)
+			{
+                m_pTiles[fy*m_Width+fx].m_Index = 0;
+				m_pSpeedupTile[fy*m_Width+fx].m_Force = 0;
+				m_pSpeedupTile[fy*m_Width+fx].m_Angle = 0;
+			}
+            else
+			{
+                m_pTiles[fy*m_Width+fx] = pLt->m_pTiles[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)];
+				if(!pLt->m_pSpeedupTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_Force && m_pEditor->m_SpeedupForce && m_pTiles[fy*m_Width+fx].m_Index > 0)
+				{
+					m_pSpeedupTile[fy*m_Width+fx].m_Force = m_pEditor->m_SpeedupForce;
+					m_pSpeedupTile[fy*m_Width+fx].m_Angle = m_pEditor->m_SpeedupAngle;
+				}
+				else
+				{
+					m_pSpeedupTile[fy*m_Width+fx].m_Force = pLt->m_pSpeedupTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_Force;
+					m_pSpeedupTile[fy*m_Width+fx].m_Angle = pLt->m_pSpeedupTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_Angle;
+				}
 			}
 		}
 	}

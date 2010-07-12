@@ -725,31 +725,15 @@ void CCharacter::Tick()
 		if(m_pPlayer->m_Score < TTime)
 			m_pPlayer->m_Score = TTime;
 	}
-	else if(GameServer()->Collision()->GetIndex(m_Core.m_Pos.x, m_Core.m_Pos.y) == TILE_BOOST)
+	
+	if(GameServer()->Collision()->IsSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y))
 	{
-		if(m_Core.m_Vel.x >= 0)
-			m_Core.m_Vel.x = m_Core.m_Vel.x*(((float)g_Config.m_SvSpeedupMult)/10.0)+g_Config.m_SvSpeedupAdd;
-		else 
-			m_Core.m_Vel.x = m_Core.m_Vel.x*(((float)g_Config.m_SvSpeedupMult)/10.0)-g_Config.m_SvSpeedupAdd;
+		vec2 Direction;
+		int Force;
+		GameServer()->Collision()->GetSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y, &Direction, &Force);
+		
+		m_Core.m_Vel += Direction*Force;
 	}
-	else if(GameServer()->Collision()->GetIndex(m_Core.m_Pos.x, m_Core.m_Pos.y) == TILE_BOOSTR)
-	{
-		if(m_Core.m_Vel.x >= 0)
-			m_Core.m_Vel.x = m_Core.m_Vel.x*(((float)g_Config.m_SvSpeedupMult)/10.0)+g_Config.m_SvSpeedupAdd;
-		else 
-			m_Core.m_Vel.x = g_Config.m_SvSpeedupAdd;
-	}
-	else if(GameServer()->Collision()->GetIndex(m_Core.m_Pos.x, m_Core.m_Pos.y) == TILE_BOOSTL)
-	{
-		if(m_Core.m_Vel.x <= 0)
-			m_Core.m_Vel.x = m_Core.m_Vel.x*(((float)g_Config.m_SvSpeedupMult)/10.0)-g_Config.m_SvSpeedupAdd;
-		else
-			m_Core.m_Vel.x = 0-g_Config.m_SvSpeedupAdd;
-	}
- 	else if(GameServer()->Collision()->GetIndex(m_Core.m_Pos.x, m_Core.m_Pos.y) == TILE_JUMPER)
-		m_Core.m_Vel.y -= g_Config.m_SvJumperAdd;
-	else if(GameServer()->Collision()->GetIndex(m_Core.m_Pos.x, m_Core.m_Pos.y) == TILE_BOOSTD)
-		m_Core.m_Vel.y += g_Config.m_SvJumperAdd;
 	
 	z = GameServer()->Collision()->IsTeleport(m_Pos.x, m_Pos.y);
 	if(g_Config.m_SvTeleport && z)

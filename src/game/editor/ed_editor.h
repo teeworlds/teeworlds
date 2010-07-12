@@ -266,6 +266,7 @@ public:
 	
 	class CLayerGame *m_pGameLayer;
 	class CLayerTele *m_pTeleLayer;
+	class CLayerSpeedup *m_pSpeedupLayer;
 	CLayerGroup *m_pGameGroup;
 	
 	CEnvelope *NewEnvelope(int Channels)
@@ -321,6 +322,7 @@ public:
 	int Load(class IStorage *pStorage, const char *pFilename);
 	
 	void MakeTeleLayer(CLayer *pLayer);
+	void MakeSpeedupLayer(CLayer *pLayer);
 };
 
 
@@ -386,6 +388,7 @@ public:
 	int m_TexId;
 	int m_Game;
 	int m_Tele;
+	int m_Speedup;
 	int m_Image;
 	int m_Width;
 	int m_Height;
@@ -442,7 +445,20 @@ public:
 	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
 	virtual void FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect);
 };
- 
+
+class CLayerSpeedup : public CLayerTiles
+{
+public:
+	CLayerSpeedup(int w, int h);
+	~CLayerSpeedup();
+	
+	CSpeedupTile *m_pSpeedupTile;
+	
+	virtual void Resize(int NewW, int NewH);
+	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
+	virtual void FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect);
+};
+
 class CEditor : public IEditor
 {
 	class IInput *m_pInput;
@@ -505,6 +521,9 @@ public:
 		ms_pUiGotContext = 0;
 		
 		m_TeleNum = 1;
+		
+		m_SpeedupForce = 50;
+		m_SpeedupAngle = 0;
 	}
 	
 	virtual void Init();
@@ -606,6 +625,7 @@ public:
 	static int PopupImage(CEditor *pEditor, CUIRect View);
 	static int PopupMenuFile(CEditor *pEditor, CUIRect View);
 	static int PopupTele(CEditor *pEditor, CUIRect View);
+	static int PopupSpeedup(CEditor *pEditor, CUIRect View);
 
 
 	void PopupSelectImageInvoke(int Current, float x, float y);
@@ -636,6 +656,9 @@ public:
 	void SortImages();
 	
 	unsigned char m_TeleNum;
+	
+	unsigned char m_SpeedupForce;
+	short m_SpeedupAngle;
 };
 
 // make sure to inline this function
