@@ -58,7 +58,7 @@ function ResCompile(scriptfile)
 	if config.compiler.driver == "cl" then
 		output = PathBase(scriptfile) .. ".res"
 		AddJob(output, "rc " .. scriptfile, "rc /fo " .. output .. " " .. scriptfile)
-	else
+	elseif config.compiler.driver == "gcc" or config.compiler.driver == "gcc-3" or config.compiler.driver == "gcc-4" then
 		output = PathBase(scriptfile) .. ".coff"
 		AddJob(output, "windres " .. scriptfile, "windres -i " .. scriptfile .. " -o " .. output)
 	end
@@ -113,12 +113,13 @@ client_depends = {}
 
 if family == "windows" then
 	table.insert(client_depends, CopyToDirectory(".", "other\\sdl\\vc2005libs\\SDL.dll"))
+	table.insert(client_depends, CopyToDirectory(".", "other\\freetype\\lib\\freetype2312MT.dll"))
 end
 	
 
 if config.compiler.driver == "cl" then
 	client_link_other = {ResCompile("other/icons/teeworlds.rc")}
-else
+elseif config.compiler.driver == "gcc" or config.compiler.driver == "gcc-3" or config.compiler.driver == "gcc-4" then
 	client_link_other = {ResCompile("other/icons/teeworlds_gcc.rc")}
 end
 
@@ -180,7 +181,7 @@ function build(settings)
 	-- set a strict compiler mode that don't affect external code
 	if config.compiler.driver == "cl" then
 		settings.cc.flags:Add("/W3")
-	else
+	elseif config.compiler.driver == "gcc" or config.compiler.driver == "gcc-3" or config.compiler.driver == "gcc-4" then
 		--settings.cc.flags:Add("-ansi")
 		settings.cc.flags:Add("-Wall")
 	end
