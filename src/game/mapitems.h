@@ -89,14 +89,16 @@ public:
 	unsigned char m_Reserved;
 };
 
-struct CTeleTile
+class CTeleTile
 {
+public:
 	unsigned char m_Number;
 	unsigned char m_Type;
 };
 
-struct CSpeedupTile
+class CSpeedupTile
 {
+public:
 	unsigned char m_Force;
 	short m_Angle;
 };
