@@ -388,7 +388,6 @@ void CRenderTools::RenderSpeedupmap(CSpeedupTile *pSpeedup, int w, int h, float 
 				// draw force
 				char aBuf[16];
 				str_format(aBuf, sizeof(aBuf), "%d", Force);
-				dbg_msg("test", "%.5f", Scale);
 				UI()->TextRender()->Text(0, mx*Scale, my*Scale+16, Scale-20, aBuf, -1);
 			}
 		}
