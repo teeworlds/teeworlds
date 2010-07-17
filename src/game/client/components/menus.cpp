@@ -1200,8 +1200,6 @@ void CMenus::RenderBackground()
 	float sh = 300;
 	Graphics()->MapScreen(0, 0, sw, sh);
 
-	CUIRect s = *UI()->Screen();
-
 	// render background color
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
