@@ -114,13 +114,12 @@ client_depends = {}
 if family == "windows" then
 	table.insert(client_depends, CopyToDirectory(".", "other\\sdl\\vc2005libs\\SDL.dll"))
 	table.insert(client_depends, CopyToDirectory(".", "other\\freetype\\lib\\freetype2312MT.dll"))
-end
-	
 
-if config.compiler.driver == "cl" then
-	client_link_other = {ResCompile("other/icons/teeworlds.rc")}
-elseif config.compiler.driver == "gcc" or config.compiler.driver == "gcc-3" or config.compiler.driver == "gcc-4" then
-	client_link_other = {ResCompile("other/icons/teeworlds_gcc.rc")}
+	if config.compiler.driver == "cl" then
+		client_link_other = {ResCompile("other/icons/teeworlds.rc")}
+	elseif config.compiler.driver == "gcc" or config.compiler.driver == "gcc-3" or config.compiler.driver == "gcc-4" then
+		client_link_other = {ResCompile("other/icons/teeworlds_gcc.rc")}
+	end
 end
 
 function Intermediate_Output(settings, input)

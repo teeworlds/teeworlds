@@ -979,7 +979,11 @@ int fs_chdir(const char *path)
 {
 	if (fs_is_dir(path))
 	{
+#if defined(CONF_FAMILY_WINDOWS)
 		_chdir(path);
+#else
+		chdir(path);
+#endif
 		return 0;
 	}
 	else
