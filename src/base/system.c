@@ -534,6 +534,13 @@ int net_addr_comp(const NETADDR *a, const NETADDR *b)
 	return mem_comp(a, b, sizeof(NETADDR));
 }
 
+int real_net_addr_comp(const NETADDR *a, const NETADDR *b)
+{
+	if(a->type == b->type && a->ip[0] == b->ip[0] && a->ip[1] == b->ip[1] && a->ip[2] == b->ip[2] && a->ip[3] == b->ip[3] && a->port == b->port)
+		return 1;
+	return 0;
+}
+
 void net_addr_str(const NETADDR *addr, char *string, int max_length)
 {
 	if(addr->type == NETTYPE_IPV4)

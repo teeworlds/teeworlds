@@ -213,13 +213,6 @@ public:
 // server side
 class CNetServer
 {
-public:
-	struct CBanInfo
-	{
-		NETADDR m_Addr;
-		int m_Expires;
-	};
-	
 private:
 	class CSlot
 	{
@@ -227,38 +220,16 @@ private:
 		CNetConnection m_Connection;
 	};
 	
-	class CBan
-	{
-	public:
-		CBanInfo m_Info;
-		
-		// hash list
-		CBan *m_pHashNext;
-		CBan *m_pHashPrev;
-		
-		// used or free list
-		CBan *m_pNext;
-		CBan *m_pPrev;
-	};
-	
-	
 	NETSOCKET m_Socket;
 	CSlot m_aSlots[NET_MAX_CLIENTS];
 	int m_MaxClients;
 	int m_MaxClientsPerIP;
-
-	CBan *m_aBans[256];
-	CBan m_BanPool[NET_SERVER_MAXBANS];
-	CBan *m_BanPool_FirstFree;
-	CBan *m_BanPool_FirstUsed;
 
 	NETFUNC_NEWCLIENT m_pfnNewClient;
 	NETFUNC_DELCLIENT m_pfnDelClient;
 	void *m_UserPtr;
 	
 	CNetRecvUnpacker m_RecvUnpacker;
-	
-	void BanRemoveByObject(CBan *pBan);
 	
 public:
 	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
@@ -275,11 +246,27 @@ public:
 	//
 	int Drop(int ClientID, const char *Reason);
 
+	// checking
+	int char_comp(const char *char_1, const char *char_2);
+	
+	// converting
+	static int CharhexToInt(char *hex_string);
+	static void IntToBinint(unsigned char *destination, unsigned int number);
+	static unsigned int BinintToInt(unsigned char *charbin);
+	
 	// banning
+	static int CNetServer::s_BanList_entries;
+	static unsigned int CNetServer::s_aBanList_expires[NET_SERVER_MAXBANS];
+	static unsigned char CNetServer::s_aBanList_addr[NET_SERVER_MAXBANS][4];
+	
+	void lock(char *file, char *type);
+	int mutex(const char *type, const char *id);
 	int BanAdd(NETADDR Addr, int Seconds);
-	int BanRemove(NETADDR Addr);
-	int BanNum(); // caution, slow
-	int BanGet(int Index, CBanInfo *pInfo); // caution, slow
+	void BanRemoveByAddr(NETADDR Addr);
+	void BanRemoveById(int BanIndex);
+	int BanSearch(NETADDR searchAddr);
+	void readBanFile(char forceRead = 0);
+	void writeBanFile();
 
 	// status requests
 	NETADDR ClientAddr(int ClientID) const { return m_aSlots[ClientID].m_Connection.PeerAddress(); }
