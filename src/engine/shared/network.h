@@ -245,7 +245,26 @@ public:
 	
 	//
 	int Drop(int ClientID, const char *Reason);
-
+	
+	// banning
+	static int CNetServer::s_BanList_entries;
+	static unsigned int CNetServer::s_aBanList_expires[NET_SERVER_MAXBANS];
+	static unsigned char CNetServer::s_aBanList_addr[NET_SERVER_MAXBANS][4];
+	
+	int BanAdd(NETADDR Addr, int Seconds);
+	void BanRemoveByAddr(NETADDR Addr);
+	void BanRemoveById(int BanIndex);
+	
+private:
+	void lock(char *file, char *type);
+	int mutex(const char *type, const char *id);
+	int BanSearch(NETADDR searchAddr);
+	void readBanFile(char forceRead = 0);
+	void writeBanFile();
+	
+	//
+	static unsigned int s_sync;
+	
 	// checking
 	int char_comp(const char *char_1, const char *char_2);
 	
@@ -253,21 +272,8 @@ public:
 	static int CharhexToInt(char *hex_string);
 	static void IntToBinint(unsigned char *destination, unsigned int number);
 	static unsigned int BinintToInt(unsigned char *charbin);
-	
-	// banning
-	static int CNetServer::s_BanList_entries;
-	static unsigned int CNetServer::s_aBanList_expires[NET_SERVER_MAXBANS];
-	static unsigned char CNetServer::s_aBanList_addr[NET_SERVER_MAXBANS][4];
-	
-	void lock(char *file, char *type);
-	int mutex(const char *type, const char *id);
-	int BanAdd(NETADDR Addr, int Seconds);
-	void BanRemoveByAddr(NETADDR Addr);
-	void BanRemoveById(int BanIndex);
-	int BanSearch(NETADDR searchAddr);
-	void readBanFile(char forceRead = 0);
-	void writeBanFile();
 
+public:
 	// status requests
 	NETADDR ClientAddr(int ClientID) const { return m_aSlots[ClientID].m_Connection.PeerAddress(); }
 	NETSOCKET Socket() const { return m_Socket; }

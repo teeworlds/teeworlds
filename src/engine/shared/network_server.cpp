@@ -5,9 +5,9 @@
 #include <base/system.h>
 #include "network.h"
 
-int CNetServer::s_BanList_entries = 0;
-unsigned int CNetServer::s_aBanList_expires[NET_SERVER_MAXBANS];
 unsigned char CNetServer::s_aBanList_addr[NET_SERVER_MAXBANS][4];
+int CNetServer::s_BanList_entries = 0;
+unsigned int CNetServer::s_aBanList_expires[NET_SERVER_MAXBANS], CNetServer::s_sync;
 
 int CNetServer::char_comp(const char *char_1, const char *char_2)
 {
@@ -243,10 +243,10 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds)
 	Addr.port = 0;
 	
 	if(Seconds > 0)
-		Stamp = time_timestamp() + Seconds;
+		Stamp = CNetServer::s_sync + Seconds;
 	
 	lock("bans.bin", "LOCK_WRITE");
-	mutex("create", "CNetServer::s_BanList_entries");
+	mutex("create", "s_BanList");
 	readBanFile(1);
 	
 	// search to see if it already exists
@@ -267,7 +267,7 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds)
 	
 	// Store the information in a file
 	writeBanFile();
-	mutex("release", "CNetServer::s_BanList_entries");
+	mutex("release", "s_BanList");
 	lock("bans.bin", "UNLOCK");
 
 	// drop banned clients
@@ -303,7 +303,7 @@ void CNetServer::BanRemoveByAddr(NETADDR Addr)
 void CNetServer::BanRemoveById(int BanIndex)
 {
 	lock("bans.bin", "LOCK_WRITE");
-	mutex("create", "CNetServer::s_BanList_entries");
+	mutex("create", "s_BanList");
 	readBanFile(1);
 	while(BanIndex < CNetServer::s_BanList_entries-1)
 	{
@@ -317,7 +317,7 @@ void CNetServer::BanRemoveById(int BanIndex)
 	
 	CNetServer::s_BanList_entries--;
 	writeBanFile();
-	mutex("release", "CNetServer::s_BanList_entries");
+	mutex("release", "s_BanList");
 	lock("bans.bin", "UNLOCK");
 }
 
@@ -334,7 +334,7 @@ int CNetServer::BanSearch(NETADDR searchAddr)
 		net_addr.ip[2] = CNetServer::s_aBanList_addr[i][2];
 		net_addr.ip[3] = CNetServer::s_aBanList_addr[i][3];
 		net_addr.port = 0;
-		if((CNetServer::s_aBanList_expires[i] == 0 || CNetServer::s_aBanList_expires[i] > time_timestamp()) && real_net_addr_comp(&searchAddr, &net_addr) == 1)
+		if((CNetServer::s_aBanList_expires[i] == 0 || CNetServer::s_aBanList_expires[i] > CNetServer::s_sync) && simple_net_addr_comp(&searchAddr, &net_addr) == 1)
 			return i;
 		i++;
 	}
@@ -344,7 +344,7 @@ int CNetServer::BanSearch(NETADDR searchAddr)
 
 int CNetServer::Update()
 {
-	int Now = time_timestamp();
+	CNetServer::s_sync = time_timestamp();
 	for(int i = 0; i < MaxClients(); i++)
 	{
 		m_aSlots[i].m_Connection.Update();
@@ -352,18 +352,18 @@ int CNetServer::Update()
 			Drop(i, m_aSlots[i].m_Connection.ErrorString());
 	}
 	
-	mutex("create", "CNetServer::s_BanList_entries");
+	mutex("create", "s_BanList");
 	readBanFile();
-	mutex("release", "CNetServer::s_BanList_entries");
+	mutex("release", "s_BanList");
 	
 	return 0;
 }
 
 void CNetServer::readBanFile(char forceRead)
 {
-	static unsigned int s_last_update = time_timestamp();
+	static unsigned int s_last_update = CNetServer::s_sync;
 	
-	if(time_timestamp() > s_last_update || forceRead)
+	if(CNetServer::s_sync > s_last_update || forceRead)
 	{
 		FILE *pFile;
 		
@@ -392,7 +392,7 @@ void CNetServer::readBanFile(char forceRead)
 				aCharbin[2] = pBuffer[i+2];
 				aCharbin[3] = pBuffer[i+3];
 				expires = CNetServer::BinintToInt(aCharbin);
-				if(expires == 0 || expires > time_timestamp())
+				if(expires == 0 || expires > CNetServer::s_sync)
 				{
 					CNetServer::s_aBanList_expires[j] = expires;
 					CNetServer::s_aBanList_addr[j][0] = pBuffer[i+4];
@@ -405,14 +405,14 @@ void CNetServer::readBanFile(char forceRead)
 			}
 			free(pBuffer);
 			CNetServer::s_BanList_entries = j;
-			if(j > 0)
+			if(i/8 != j)
 			{
 				lock("bans.bin", "LOCK_WRITE");
 				writeBanFile();
 				lock("bans.bin", "UNLOCK");
 			}
 		}
-		s_last_update = time_timestamp();
+		s_last_update = CNetServer::s_sync;
 	}
 };
 
@@ -449,8 +449,6 @@ void CNetServer::writeBanFile()
 */
 int CNetServer::Recv(CNetChunk *pChunk)
 {
-	unsigned Now = time_timestamp();
-	
 	for(;;)
 	{
 		NETADDR Addr;
@@ -470,6 +468,8 @@ int CNetServer::Recv(CNetChunk *pChunk)
 		{
 			int banFound, Found = 0;
 			
+			mutex("create", "s_BanList");
+			
 			// search for a ban
 			banFound = BanSearch(Addr);
 			
@@ -480,20 +480,18 @@ int CNetServer::Recv(CNetChunk *pChunk)
 				char BanStr[128];
 				if(CNetServer::s_aBanList_expires[banFound] > 0)
 				{
-					if(CNetServer::s_aBanList_expires[banFound] > Now)
-					{
-						int Mins = ((CNetServer::s_aBanList_expires[banFound] - Now)+59)/60;
-						if(Mins == 1)
-							str_format(BanStr, sizeof(BanStr), "banned for %d minute", Mins);
-						else
-							str_format(BanStr, sizeof(BanStr), "banned for %d minutes", Mins);
-					}
+					int Mins = ((CNetServer::s_aBanList_expires[banFound] - CNetServer::s_sync)+59)/60;
+					if(Mins == 1)
+						str_format(BanStr, sizeof(BanStr), "banned for %d minute", Mins);
+					else
+						str_format(BanStr, sizeof(BanStr), "banned for %d minutes", Mins);
 				}
 				else
 					str_format(BanStr, sizeof(BanStr), "banned for life");
 				CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, BanStr, str_length(BanStr)+1);
 				continue;
 			}
+			mutex("release", "s_BanList");
 			
 			if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
 			{

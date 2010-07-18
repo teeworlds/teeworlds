@@ -473,7 +473,7 @@ int net_host_lookup(const char *hostname, NETADDR *addr, int types);
 int net_addr_comp(const NETADDR *a, const NETADDR *b);
 
 /*
-	Function: real_net_addr_comp
+	Function: simple_net_addr_comp
 		Compares two network addresses.
 	
 	Parameters:
@@ -484,7 +484,7 @@ int net_addr_comp(const NETADDR *a, const NETADDR *b);
 		0 - Address a is unequal to address b
 		1 - Address a is equal to address b
 */
-int real_net_addr_comp(const NETADDR *a, const NETADDR *b);
+int simple_net_addr_comp(const NETADDR *a, const NETADDR *b);
 
 /*
 	Function: net_addr_str
