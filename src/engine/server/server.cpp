@@ -908,7 +908,7 @@ void CServer::BanRemoveByAddr(NETADDR Addr)
 	m_NetServer.BanRemoveByAddr(Addr);
 }
 
-void CServer::BanRemoveById(int BanIndex)
+void CServer::BanRemoveById(short BanIndex)
 {
 	m_NetServer.BanRemoveById(BanIndex);
 }

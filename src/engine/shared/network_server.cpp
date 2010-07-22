@@ -3,35 +3,25 @@
 #include <stdlib.h>
 
 #include <base/system.h>
+
+#if defined(CONF_FAMILY_WINDOWS)
+	#include <windows.h>
+#else
+	#include <pthread.h>
+#endif
+
 #include "network.h"
 
 unsigned char CNetServer::s_aBanList_addr[NET_SERVER_MAXBANS][4];
 int CNetServer::s_BanList_entries = 0;
 unsigned int CNetServer::s_aBanList_expires[NET_SERVER_MAXBANS], CNetServer::s_sync;
 
-int CNetServer::char_comp(const char *char_1, const char *char_2)
-{
-	unsigned char i = 0, length;
-	
-	length = str_length(char_1);
-	while(i < length)
-	{
-		if(char_1[i] != char_2[i])
-			return 0;
-		i++;
-	}
-	if(char_1[i] || char_2[i])
-		return 0;
-	
-	return 1;
-}
-
 int CNetServer::CharhexToInt(char *hex_string)
 {
 	int hex = 0, i = 0, number;
 	while(hex_string[i])
 	{
-		number = pow(16.0, (double)(str_length(hex_string)-i))/15-pow(16.0, (double)(str_length(hex_string)-i-1))/15;
+		number = (int)(pow(16.0, (double)(str_length(hex_string)-i))/15-pow(16.0, (double)(str_length(hex_string)-i-1))/15);
 		switch(hex_string[i])
 		{
 			case '0': break;
@@ -55,10 +45,11 @@ int CNetServer::CharhexToInt(char *hex_string)
 	}
 	return hex;
 }
+
 void CNetServer::IntToBinint(unsigned char *destination, unsigned int number)
 {
-	char add_zero, a_Hex[4], a_Hex_string[9], i, j, pointerHex;
-	unsigned char a_Buffer[4];
+	char add_zero, a_Hex[4], a_Hex_string[9];
+	unsigned char a_Buffer[4], i, j, pointerHex;
 	sprintf(a_Hex, "%x", number);
 	sprintf(a_Hex_string, "%s", a_Hex);
 	add_zero = 0;
@@ -101,14 +92,15 @@ void CNetServer::IntToBinint(unsigned char *destination, unsigned int number)
 		i++;
 	}
 }
+
 unsigned int CNetServer::BinintToInt(unsigned char *charbin)
 {
-	char i;
+	unsigned char i;
 	unsigned int hex = 0, number;
 	i = 0;
 	while(i < sizeof(charbin))
 	{
-		number = pow(2.0, (double)((sizeof(charbin)-i)*8))/255-pow(2.0, (double)((sizeof(charbin)-i-1)*8))/255;
+		number = (int)(pow(2.0, (double)((sizeof(charbin)-i)*8))/255-pow(2.0, (double)((sizeof(charbin)-i-1)*8))/255);
 		hex += charbin[i] * number;
 		i++;
 	}
@@ -173,69 +165,37 @@ int CNetServer::Drop(int ClientID, const char *pReason)
 	return 0;
 }
 
-void CNetServer::lock(char *file, char *type)
-{
-	// TODO: Locking the bans file to avoid problems with more than 1 server
-}
+// TODO: The mutex is on windows as an internal file locking (only external
+// applications can write at this moment in the file) and Ubuntu was
+// automatically locking the files during a file handle. This comment can
+// be removed if this is no problem, otherwise it should be fixed.
 
-int CNetServer::mutex(const char *type, const char *id)
+void CNetServer::mutex(const char *type)
 {
-	static char entries = 0, mutex_string[255][255];
-	unsigned char i = 0;
+#if defined(CONF_FAMILY_WINDOWS)
+	HANDLE mutex;
 	
-	while(i < entries)
+	mutex = CreateMutex(NULL, FALSE, "0");
+	if(str_comp(type, "create") == 0)
+		WaitForSingleObject(mutex, INFINITE);
+	else if(str_comp(type, "release") == 0)
 	{
-		if(char_comp(id, mutex_string[i]))
-			if(type == "create")
-			{
-				thread_sleep(33);
-				mutex(type, id);
-				return 0;
-			}
-			else if(type == "release")
-			{
-				unsigned char j = 0;
-				
-				while(j < entries-1)
-				{
-					unsigned char k = 0, length;
-					
-					length = str_length(mutex_string[j+1]);
-					while(k < length)
-					{
-						mutex_string[j][k] = mutex_string[j+1][k];
-						k++;
-					}
-					mutex_string[j][k] = 0;
-					j++;
-				}
-				entries--;
-				return 1;
-			}
-		i++;
+		ReleaseMutex(mutex);
+		CloseHandle(mutex);
 	}
+#else
+	static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 	
-	if(type == "create")
-	{
-		unsigned char j = 0, length;
-		
-		length = str_length(type);
-		while(j < length)
-		{
-			mutex_string[i][j] = type[j];
-			j++;
-		}
-		mutex_string[i][j] = 0;
-		entries++;
-		return 1;
-	}
-	
-	return -1;
+	if(str_comp(type, "create") == 0)
+		pthread_mutex_lock(&mutex);
+	else if(str_comp(type, "release") == 0)
+		pthread_mutex_unlock(&mutex);
+#endif
 }
 
 int CNetServer::BanAdd(NETADDR Addr, int Seconds)
 {
-	char banFound;
+	short banFound;
 	int i;
 	unsigned int Stamp = 0;
 	
@@ -245,8 +205,7 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds)
 	if(Seconds > 0)
 		Stamp = CNetServer::s_sync + Seconds;
 	
-	lock("bans.bin", "LOCK_WRITE");
-	mutex("create", "s_BanList");
+	mutex("create");
 	readBanFile(1);
 	
 	// search to see if it already exists
@@ -267,8 +226,7 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds)
 	
 	// Store the information in a file
 	writeBanFile();
-	mutex("release", "s_BanList");
-	lock("bans.bin", "UNLOCK");
+	mutex("release");
 
 	// drop banned clients
 	{
@@ -300,10 +258,9 @@ void CNetServer::BanRemoveByAddr(NETADDR Addr)
 	BanRemoveById(BanSearch(Addr));
 }
 
-void CNetServer::BanRemoveById(int BanIndex)
+void CNetServer::BanRemoveById(short BanIndex)
 {
-	lock("bans.bin", "LOCK_WRITE");
-	mutex("create", "s_BanList");
+	mutex("create");
 	readBanFile(1);
 	while(BanIndex < CNetServer::s_BanList_entries-1)
 	{
@@ -317,14 +274,13 @@ void CNetServer::BanRemoveById(int BanIndex)
 	
 	CNetServer::s_BanList_entries--;
 	writeBanFile();
-	mutex("release", "s_BanList");
-	lock("bans.bin", "UNLOCK");
+	mutex("release");
 }
 
-int CNetServer::BanSearch(NETADDR searchAddr)
+short CNetServer::BanSearch(NETADDR searchAddr)
 {
 	NETADDR net_addr;
-	int i = 0;
+	short i = 0;
 	
 	while(i < CNetServer::s_BanList_entries)
 	{
@@ -352,9 +308,9 @@ int CNetServer::Update()
 			Drop(i, m_aSlots[i].m_Connection.ErrorString());
 	}
 	
-	mutex("create", "s_BanList");
+	mutex("create");
 	readBanFile();
-	mutex("release", "s_BanList");
+	mutex("release");
 	
 	return 0;
 }
@@ -376,9 +332,9 @@ void CNetServer::readBanFile(char forceRead)
 			
 			// load the file
 			fseek(pFile, 0, SEEK_END);
-			size=ftell(pFile);
+			size = ftell(pFile);
 			fseek(pFile, 0, SEEK_SET);
-			pBuffer=(char *)malloc(size);
+			pBuffer = (char *)malloc(size);
 			fread(pBuffer, 1, size, pFile);
 			fclose(pFile);
 			
@@ -406,11 +362,7 @@ void CNetServer::readBanFile(char forceRead)
 			free(pBuffer);
 			CNetServer::s_BanList_entries = j;
 			if(i/8 != j)
-			{
-				lock("bans.bin", "LOCK_WRITE");
 				writeBanFile();
-				lock("bans.bin", "UNLOCK");
-			}
 		}
 		s_last_update = CNetServer::s_sync;
 	}
@@ -439,8 +391,6 @@ void CNetServer::writeBanFile()
 	pFile = fopen("bans.bin", "wb");
 	if(CNetServer::s_BanList_entries)
 		fwrite(a_Buffer, 1, CNetServer::s_BanList_entries*8, pFile);
-	else
-		fwrite(0, 0, 0, pFile);
 	fclose(pFile);
 }
 
@@ -466,9 +416,10 @@ int CNetServer::Recv(CNetChunk *pChunk)
 		
 		if(CNetBase::UnpackPacket(m_RecvUnpacker.m_aBuffer, Bytes, &m_RecvUnpacker.m_Data) == 0)
 		{
-			int banFound, Found = 0;
+			short banFound;
+			int Found = 0;
 			
-			mutex("create", "s_BanList");
+			mutex("create");
 			
 			// search for a ban
 			banFound = BanSearch(Addr);
@@ -491,7 +442,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 				CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, BanStr, str_length(BanStr)+1);
 				continue;
 			}
-			mutex("release", "s_BanList");
+			mutex("release");
 			
 			if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
 			{

@@ -247,26 +247,22 @@ public:
 	int Drop(int ClientID, const char *Reason);
 	
 	// banning
-	static int CNetServer::s_BanList_entries;
-	static unsigned int CNetServer::s_aBanList_expires[NET_SERVER_MAXBANS];
-	static unsigned char CNetServer::s_aBanList_addr[NET_SERVER_MAXBANS][4];
+	static int s_BanList_entries;
+	static unsigned int s_aBanList_expires[NET_SERVER_MAXBANS];
+	static unsigned char s_aBanList_addr[NET_SERVER_MAXBANS][4];
 	
 	int BanAdd(NETADDR Addr, int Seconds);
 	void BanRemoveByAddr(NETADDR Addr);
-	void BanRemoveById(int BanIndex);
+	void BanRemoveById(short BanIndex);
 	
 private:
-	void lock(char *file, char *type);
-	int mutex(const char *type, const char *id);
-	int BanSearch(NETADDR searchAddr);
+	void mutex(const char *type);
+	short BanSearch(NETADDR searchAddr);
 	void readBanFile(char forceRead = 0);
 	void writeBanFile();
 	
 	//
 	static unsigned int s_sync;
-	
-	// checking
-	int char_comp(const char *char_1, const char *char_2);
 	
 	// converting
 	static int CharhexToInt(char *hex_string);
