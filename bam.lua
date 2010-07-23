@@ -161,6 +161,14 @@ function build(settings)
 		settings.link.libs:Add("shell32")
 	end
 	
+	external_settings = settings:Copy()
+	
+	if config.compiler.driver == "cl" then
+		external_settings.cc.flags:Add("/W0")
+	else
+		external_settings.cc.flags:Add("-w")
+	end
+	
 	-- compile zlib if needed
 	if config.zlib.value == 1 then
 		settings.link.libs:Add("z")
@@ -169,13 +177,13 @@ function build(settings)
 		end
 		zlib = {}
 	else
-		zlib = Compile(settings, Collect("src/engine/external/zlib/*.c"))
+		zlib = Compile(external_settings, Collect("src/engine/external/zlib/*.c"))
 		settings.cc.includes:Add("src/engine/external/zlib")
 	end
 
 	-- build the small libraries
-	wavpack = Compile(settings, Collect("src/engine/external/wavpack/*.c"))
-	pnglite = Compile(settings, Collect("src/engine/external/pnglite/*.c"))
+	wavpack = Compile(external_settings, Collect("src/engine/external/wavpack/*.c"))
+	pnglite = Compile(external_settings, Collect("src/engine/external/pnglite/*.c"))
 
 	-- set a strict compiler mode that don't affect external code
 	if config.compiler.driver == "cl" then

@@ -34,12 +34,19 @@
 	#define WIN32_LEAN_AND_MEAN 
 	#define _WIN32_WINNT 0x0501 /* required for mingw to get getaddrinfo to work */
 	#include <windows.h>
+
+	#if defined(__CYGWIN__)
+		#define USE_SYS_TYPES_FD_SET
+	#endif
+
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
 	#include <fcntl.h>
 	#include <errno.h>
 
-	#if !defined(__CYGWIN__)
+	#if defined(__CYGWIN__)
+		#include <unistd.h>
+	#else
 		#include <direct.h>
 	#endif
 
@@ -941,7 +948,7 @@ int fs_storage_path(const char *appname, char *path, int max)
 
 int fs_makedir(const char *path)
 {
-#if defined(CONF_FAMILY_WINDOWS)
+#if defined(CONF_FAMILY_WINDOWS) && !defined(__CYGWIN__)
 	if(_mkdir(path) == 0)
 			return 0;
 	if(errno == EEXIST)
@@ -986,7 +993,7 @@ int fs_chdir(const char *path)
 {
 	if (fs_is_dir(path))
 	{
-#if defined(CONF_FAMILY_WINDOWS)
+#if defined(CONF_FAMILY_WINDOWS) && !defined(__CYGWIN__)
 		_chdir(path);
 #else
 		chdir(path);
@@ -1143,7 +1150,7 @@ const char *str_find_nocase(const char *haystack, const char *needle)
 	{
 		const char *a = haystack;
 		const char *b = needle;
-		while(*a && *b && tolower(*a) == tolower(*b))
+		while(*a && *b && tolower((const unsigned char)*a) == tolower((const unsigned char)*b))
 		{
 			a++;
 			b++;
