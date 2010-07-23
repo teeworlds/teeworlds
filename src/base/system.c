@@ -1352,7 +1352,7 @@ int str_utf8_decode(const char **ptr)
 {
 	const char *buf = *ptr;
 	int ch = 0;
-
+	
 	if((*buf&0x80) == 0x0)  /* 0xxxxxxx */
 	{
 		ch = *buf;
@@ -1367,6 +1367,8 @@ int str_utf8_decode(const char **ptr)
 		{
 			ch += (*buf++ & 0x3F);
 			if(ch == 0) ch = -1;
+			*ptr = buf;
+			return ch;
 		}
 	}
 	else  if((*buf & 0xF0) == 0xE0)	/* 1110xxxx */
@@ -1379,6 +1381,8 @@ int str_utf8_decode(const char **ptr)
 			{
 				ch += (*buf++ & 0x3F);
 				if(ch == 0) ch = -1;
+				*ptr = buf;
+				return ch;
 			}
 		}
 	}
@@ -1395,6 +1399,8 @@ int str_utf8_decode(const char **ptr)
 				{
 					ch += (*buf++ & 0x3F);
 					if(ch == 0) ch = -1;
+					*ptr = buf;
+					return ch;
 				}
 			}
 		}
@@ -1403,16 +1409,15 @@ int str_utf8_decode(const char **ptr)
 	{
 		/* invalid */
 		buf++;
-
-	}
-	*ptr = buf;
-	if((*buf))
+		*ptr = buf;
 		return ch;
-	else
-		/* out of bounds */
-		return -1;
-}
+	}
 
+	/* out of bounds */
+	*ptr = buf;
+	return -1;
+	
+}
 
 unsigned str_quickhash(const char *str)
 {
