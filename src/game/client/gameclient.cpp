@@ -545,9 +545,15 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 	{
 		if(m_SuppressEvents)
 			return;
-			
+		
+		// don't enqueue pseudo-global sounds from demos (created by PlayAndRecord)
 		CNetMsg_Sv_SoundGlobal *pMsg = (CNetMsg_Sv_SoundGlobal *)pRawMsg;
-		g_GameClient.m_pSounds->Enqueue(pMsg->m_Soundid);
+		if(pMsg->m_Soundid == SOUND_CTF_DROP || pMsg->m_Soundid == SOUND_CTF_RETURN ||
+			pMsg->m_Soundid == SOUND_CTF_CAPTURE || pMsg->m_Soundid == SOUND_CTF_GRAB_EN ||
+			pMsg->m_Soundid == SOUND_CTF_GRAB_PL)
+			g_GameClient.m_pSounds->Enqueue(pMsg->m_Soundid);
+		else
+			g_GameClient.m_pSounds->Play(CSounds::CHN_GLOBAL, pMsg->m_Soundid, 1.0f, vec2(0,0));
 	}		
 }
 

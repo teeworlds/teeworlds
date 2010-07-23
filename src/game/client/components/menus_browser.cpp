@@ -566,7 +566,8 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 			Row.VSplitLeft(25.0f, 0x0, &Row);
 
 			CTextCursor Cursor;
-			TextRender()->SetCursor(&Cursor, Row.x, Row.y, 12.0f, TEXTFLAG_RENDER);
+			TextRender()->SetCursor(&Cursor, Row.x, Row.y, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+			Cursor.m_LineWidth = Row.w;
 
 			const char *pName = pSelectedServer->m_aPlayers[i].m_aName;
 			if(g_Config.m_BrFilterString[0])
@@ -708,4 +709,11 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 		ButtonBox.HSplitBottom(20.0f, &ButtonBox, &Button);
 		UI()->DoLabel(&Button, Localize("Host address"), 14.0f, -1);
 	}
+}
+
+void CMenus::ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments() && g_Config.m_UiPage == PAGE_FAVORITES && ((CMenus *)pUserData)->Client()->State() == IClient::STATE_OFFLINE)
+		((CMenus *)pUserData)->ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
 }
