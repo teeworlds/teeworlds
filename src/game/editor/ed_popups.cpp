@@ -338,9 +338,9 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 	};
 	
 	CProperty aProps[] = {
-		{Localize("Pos. Env"), pQuad->m_PosEnv, PROPTYPE_INT_STEP, -1, pEditor->m_Map.m_lEnvelopes.size()},
+		{Localize("Pos. Env"), pQuad->m_PosEnv+1, PROPTYPE_INT_STEP, 0, pEditor->m_Map.m_lEnvelopes.size()+1},
 		{Localize("Pos. TO"), pQuad->m_PosEnvOffset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{Localize("Color Env"), pQuad->m_ColorEnv, PROPTYPE_INT_STEP, -1, pEditor->m_Map.m_lEnvelopes.size()},
+		{Localize("Color Env"), pQuad->m_ColorEnv+1, PROPTYPE_INT_STEP, 0, pEditor->m_Map.m_lEnvelopes.size()+1},
 		{Localize("Color TO"), pQuad->m_ColorEnvOffset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
 		
 		{0},
@@ -350,9 +350,9 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 	int NewVal = 0;
 	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);		
 	
-	if(Prop == PROP_POS_ENV) pQuad->m_PosEnv = clamp(NewVal, -1, pEditor->m_Map.m_lEnvelopes.size()-1);
+	if(Prop == PROP_POS_ENV) pQuad->m_PosEnv = clamp(NewVal-1, -1, pEditor->m_Map.m_lEnvelopes.size()-1);
 	if(Prop == PROP_POS_ENV_OFFSET) pQuad->m_PosEnvOffset = NewVal;
-	if(Prop == PROP_COLOR_ENV) pQuad->m_ColorEnv = clamp(NewVal, -1, pEditor->m_Map.m_lEnvelopes.size()-1);
+	if(Prop == PROP_COLOR_ENV) pQuad->m_ColorEnv = clamp(NewVal-1, -1, pEditor->m_Map.m_lEnvelopes.size()-1);
 	if(Prop == PROP_COLOR_ENV_OFFSET) pQuad->m_ColorEnvOffset = NewVal;
 	
 	return 0;
