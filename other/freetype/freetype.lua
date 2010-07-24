@@ -30,7 +30,7 @@ FreeType = {
 			elseif option.use_win32lib == true then
 				settings.cc.includes:Add(FreeType.basepath .. "/include")
 				settings.link.libpath:Add(FreeType.basepath .. "/lib")
-				settings.link.libs:Add("freetype240MT")
+				settings.link.libs:Add("freetype")
 			end
 		end
 		
