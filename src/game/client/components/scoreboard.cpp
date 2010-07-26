@@ -107,7 +107,7 @@ void CScoreboard::RenderSpectators(float x, float y, float w)
 		}
 	}
 	
-	TextRender()->Text(0, x+10, y, 32, aBuffer, (int)w-20);
+	TextRender()->Text(0, x+10, y, 32, aBuffer, w-20);
 }
 
 void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const char *pTitle)

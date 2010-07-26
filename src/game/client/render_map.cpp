@@ -30,7 +30,7 @@ void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Cha
 	{
 		if(Time >= pPoints[i].m_Time && Time <= pPoints[i+1].m_Time)
 		{
-			float Delta = pPoints[i+1].m_Time-pPoints[i].m_Time;
+			float Delta = (float)(pPoints[i+1].m_Time-pPoints[i].m_Time);
 			float a = (Time-pPoints[i].m_Time)/Delta;
 
 

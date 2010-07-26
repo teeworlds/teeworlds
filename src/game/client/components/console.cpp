@@ -433,7 +433,7 @@ void CGameConsole::OnRender()
 		TextRender()->Text(0, Screen.w-VersionWidth-5, y, FontSize, aBuf, -1);
 
 		// render console input (wrap line)
-		int Lines = TextRender()->TextLineCount(0, FontSize, pConsole->m_Input.GetString(), (int)(Screen.w - (VersionWidth + 10 + x)));
+		int Lines = TextRender()->TextLineCount(0, FontSize, pConsole->m_Input.GetString(), Screen.w - (VersionWidth + 10 + x));
 		y -= (Lines - 1) * FontSize;
 		TextRender()->SetCursor(&Cursor, x, y, FontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = Screen.w - (VersionWidth + 10 + x);
@@ -484,7 +484,7 @@ void CGameConsole::OnRender()
 			//	next page when lines reach the top
 			while(y - Lines * RowHeight > RowHeight && pEntry)
 			{
-				Lines += TextRender()->TextLineCount(0, FontSize, pEntry, (int)Screen.w-10);
+				Lines += TextRender()->TextLineCount(0, FontSize, pEntry, Screen.w-10);
 				//	just render output from actual backlog page (render bottom up)
 				if(Page == pConsole->m_BacklogActPage)
 				{

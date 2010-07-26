@@ -425,7 +425,7 @@ class CTextRender : public IEngineTextRender
 	{
 		FT_Vector Kerning = {0,0};
 		FT_Get_Kerning(pFont->m_FtFace, Left, Right, FT_KERNING_DEFAULT, &Kerning);
-		return (Kerning.x>>6);
+		return (float)(Kerning.x>>6);
 	}
 	
 	
@@ -499,7 +499,7 @@ public:
 	}
 	
 		
-	virtual void Text(void *pFontSetV, float x, float y, float Size, const char *pText, int MaxWidth)
+	virtual void Text(void *pFontSetV, float x, float y, float Size, const char *pText, float MaxWidth)
 	{
 		CTextCursor Cursor;
 		SetCursor(&Cursor, x, y, Size, TEXTFLAG_RENDER);
@@ -515,7 +515,7 @@ public:
 		return Cursor.m_X;
 	}
 	
-	virtual int TextLineCount(void *pFontSetV, float Size, const char *pText, int LineWidth)
+	virtual int TextLineCount(void *pFontSetV, float Size, const char *pText, float LineWidth)
 	{
 		CTextCursor Cursor;
 		SetCursor(&Cursor, 0, 0, Size, 0);

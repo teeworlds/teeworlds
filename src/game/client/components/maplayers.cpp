@@ -31,7 +31,7 @@ void CMapLayers::MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *p
 {
 	float Points[4];
 	RenderTools()->MapscreenToWorld(CenterX, CenterY, pGroup->m_ParallaxX/100.0f, pGroup->m_ParallaxY/100.0f,
-		pGroup->m_OffsetX, pGroup->m_OffsetY, Graphics()->ScreenAspect(), 1.0f, Points);
+		(float)pGroup->m_OffsetX, (float)pGroup->m_OffsetY, Graphics()->ScreenAspect(), 1.0f, Points);
 	Graphics()->MapScreen(Points[0], Points[1], Points[2], Points[3]);
 }
 

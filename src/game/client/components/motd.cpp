@@ -48,7 +48,7 @@ void CMotd::OnRender()
 	RenderTools()->DrawRoundRect(x, y, w, h, 40.0f);
 	Graphics()->QuadsEnd();
 
-	TextRender()->Text(0, x+40.0f, y+40.0f, 32.0f, m_aServerMotd, (int)(w-80.0f));
+	TextRender()->Text(0, x+40.0f, y+40.0f, 32.0f, m_aServerMotd, w-80.0f);
 }
 
 void CMotd::OnMessage(int MsgType, void *pRawMsg)

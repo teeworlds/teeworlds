@@ -844,7 +844,7 @@ bool CGraphics_SDL::Init()
 		
 	CGraphics_OpenGL::Init();
 	
-	MapScreen(0,0,g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
+	MapScreen(0,0,(float)g_Config.m_GfxScreenWidth, (float)g_Config.m_GfxScreenHeight);
 	return false;
 }
 

@@ -25,7 +25,7 @@ void CCamera::OnRender()
 	{
 
 		float l = length(m_pClient->m_pControls->m_MousePos);
-		float DeadZone = g_Config.m_ClMouseDeadzone;
+		float DeadZone = (float)g_Config.m_ClMouseDeadzone;
 		float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
 		vec2 CameraOffset(0, 0);
 

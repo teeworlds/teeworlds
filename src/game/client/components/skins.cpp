@@ -53,7 +53,7 @@ void CSkins::SkinScan(const char *pName, int IsDir, void *pUser)
 				}
 			}
 			
-		pSelf->m_aSkins[pSelf->m_NumSkins].m_BloodColor = normalize(vec3(aColors[0], aColors[1], aColors[2]));
+		pSelf->m_aSkins[pSelf->m_NumSkins].m_BloodColor = normalize(vec3((float)aColors[0], (float)aColors[1], (float)aColors[2]));
 	}
 	
 	// create colorless version

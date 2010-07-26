@@ -119,7 +119,7 @@ void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 		m_Spawning = true;
 	
 	if(!Character && m_Team == -1)
-		m_ViewPos = vec2(NewInput->m_TargetX, NewInput->m_TargetY);
+		m_ViewPos = vec2((float)NewInput->m_TargetX, (float)NewInput->m_TargetY);
 }
 
 CCharacter *CPlayer::GetCharacter()

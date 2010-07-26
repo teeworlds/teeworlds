@@ -177,11 +177,11 @@ void Run(int Port, NETADDR Dest)
 				int MsSpike = Ping.m_Spike;
 				int MsFlux = Ping.m_Flux;
 				int MsPing = Ping.m_Base;
-				m_CurrentLatency = ((time_freq()*MsPing)/1000) + (int64)(((time_freq()*MsFlux)/1000)*Flux); // 50ms
+				m_CurrentLatency = (int)(((time_freq()*MsPing)/1000) + (((time_freq()*MsFlux)/1000)*Flux)); // 50ms
 				
 				if(MsSpike && (p->m_Id%100) == 0)
 				{
-					m_CurrentLatency += (time_freq()*MsSpike)/1000;
+					m_CurrentLatency += (int)((time_freq()*MsSpike)/1000);
 					aFlags[1] = 'S';
 				}
 

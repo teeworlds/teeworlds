@@ -316,13 +316,13 @@ void CUI::DoLabel(const CUIRect *r, const char *pText, float size, int Align, in
     if(Align == 0)
     {
     	float tw = TextRender()->TextWidth(0, size, pText, MaxWidth);
-    	TextRender()->Text(0, r->x + r->w/2-tw/2, r->y - size/10, size, pText, MaxWidth);
+    	TextRender()->Text(0, r->x + r->w/2-tw/2, r->y - size/10, size, pText, (float)MaxWidth);
 	}
 	else if(Align < 0)
-    	TextRender()->Text(0, r->x, r->y - size/10, size, pText, MaxWidth);
+    	TextRender()->Text(0, r->x, r->y - size/10, size, pText, (float)MaxWidth);
 	else if(Align > 0)
 	{
     	float tw = TextRender()->TextWidth(0, size, pText, MaxWidth);
-    	TextRender()->Text(0, r->x + r->w-tw, r->y - size/10, size, pText, MaxWidth);
+    	TextRender()->Text(0, r->x + r->w-tw, r->y - size/10, size, pText, (float)MaxWidth);
 	}
 }

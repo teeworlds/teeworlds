@@ -172,8 +172,8 @@ void CInput::Update()
 
 					if(Event.button.button == 1) // ignore_convention
 					{
-						m_ReleaseDelta = time_get() - m_LastRelease;
-						m_LastRelease = time_get();
+						m_ReleaseDelta = (int)(time_get() - m_LastRelease);
+						m_LastRelease = (int)time_get();
 					}
 
 					// fall through

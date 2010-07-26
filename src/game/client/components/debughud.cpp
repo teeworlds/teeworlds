@@ -97,7 +97,7 @@ void CDebugHud::RenderTuning()
 		float Speed = i/100.0f * 3000;
 		float Ramp = VelocityRamp(Speed, m_pClient->m_Tuning.m_VelrampStart, m_pClient->m_Tuning.m_VelrampRange, m_pClient->m_Tuning.m_VelrampCurvature);
 		float RampedSpeed = (Speed * Ramp)/1000.0f;
-		Array[i] = IGraphics::CLineItem((i-1)*2, y+Height-pv*Height, i*2, y+Height-RampedSpeed*Height);
+		Array[i] = IGraphics::CLineItem((float)((i-1)*2), y+Height-pv*Height, (float)(i*2), y+Height-RampedSpeed*Height);
 		//Graphics()->LinesDraw((i-1)*2, 200, i*2, 200);
 		pv = RampedSpeed;
 	}

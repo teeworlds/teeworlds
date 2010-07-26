@@ -134,7 +134,7 @@ void CSnapIDPool::FreeID(int Id)
 
 	m_InUsage--;
 	m_aIDs[Id].m_State = 2;
-	m_aIDs[Id].m_Timeout = time_get()+time_freq()*5;
+	m_aIDs[Id].m_Timeout = (int)(time_get()+time_freq()*5);
 	m_aIDs[Id].m_Next = -1;
 	
 	if(m_LastTimed != -1)
@@ -719,7 +719,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				// skip packets that are old
 				if(IntendedTick > m_aClients[ClientId].m_LastInputTick)
 				{
-					int TimeLeft = ((TickStartTime(IntendedTick)-time_get())*1000) / time_freq();
+					int TimeLeft = (int)(((TickStartTime(IntendedTick)-time_get())*1000) / time_freq());
 					
 					CMsgPacker Msg(NETMSG_INPUTTIMING);
 					Msg.AddInt(IntendedTick);

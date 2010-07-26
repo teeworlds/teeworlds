@@ -24,7 +24,7 @@ void CFlow::DbgRender()
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
 		{
-			vec2 Pos(x*m_Spacing, y*m_Spacing);
+			vec2 Pos((float)(x*m_Spacing), (float)(y*m_Spacing));
 			vec2 Vel = m_pCells[y*m_Width+x].m_Vel * 0.01f;
 			Array[NumItems++] = IGraphics::CLineItem(Pos.x, Pos.y, Pos.x+Vel.x, Pos.y+Vel.y);
 			if(NumItems == 1024)

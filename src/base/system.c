@@ -1050,7 +1050,7 @@ int net_socket_read_wait(NETSOCKET sock, int time)
 
 unsigned time_timestamp()
 {
-	return time(0);
+	return (unsigned)time(0);
 }
 
 void str_append(char *dst, const char *src, int dst_size)
@@ -1262,7 +1262,7 @@ char str_uppercase(char c)
 }
 
 int str_toint(const char *str) { return atoi(str); }
-float str_tofloat(const char *str) { return atof(str); }
+float str_tofloat(const char *str) { return (float)atof(str); }
 
 
 

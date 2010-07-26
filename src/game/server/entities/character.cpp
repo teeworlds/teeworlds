@@ -115,7 +115,7 @@ void CCharacter::HandleNinja()
 	if(m_ActiveWeapon != WEAPON_NINJA)
 		return;
 	
-	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
+	vec2 Direction = normalize(vec2((float)m_LatestInput.m_TargetX, (float)m_LatestInput.m_TargetY));
 
 	if ((Server()->Tick() - m_Ninja.m_ActivationTick) > (g_pData->m_Weapons.m_Ninja.m_Duration * Server()->TickSpeed() / 1000))
 	{
@@ -143,7 +143,7 @@ void CCharacter::HandleNinja()
 	if (m_Ninja.m_CurrentMoveTime > 0)
 	{
 		// Set velocity
-		m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity;
+		m_Core.m_Vel = m_Ninja.m_ActivationDir * (const float)g_pData->m_Weapons.m_Ninja.m_Velocity;
 		vec2 OldPos = m_Pos;
 		GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, vec2(m_ProximityRadius, m_ProximityRadius), 0.f);
 		
@@ -251,7 +251,7 @@ void CCharacter::FireWeapon()
 		return;
 		
 	DoWeaponSwitch();
-	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
+	vec2 Direction = normalize(vec2((float)m_LatestInput.m_TargetX, (float)m_LatestInput.m_TargetY));
 	
 	bool FullAuto = false;
 	if(m_ActiveWeapon == WEAPON_GRENADE || m_ActiveWeapon == WEAPON_SHOTGUN || m_ActiveWeapon == WEAPON_RIFLE)
@@ -434,7 +434,7 @@ void CCharacter::HandleWeapons()
 	//ninja
 	HandleNinja();
 	
-	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
+	vec2 Direction = normalize(vec2((float)m_LatestInput.m_TargetX, (float)m_LatestInput.m_TargetY));
 
 	// check reload timer
 	if(m_ReloadTimer)
@@ -620,8 +620,8 @@ void CCharacter::TickDefered()
 	
 	if(m_pPlayer->GetTeam() == -1)
 	{
-		m_Pos.x = m_Input.m_TargetX;
-		m_Pos.y = m_Input.m_TargetY;
+		m_Pos.x = (float)m_Input.m_TargetX;
+		m_Pos.y = (float)m_Input.m_TargetY;
 	}
 	
 	// update the m_SendCore if needed

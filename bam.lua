@@ -130,9 +130,7 @@ function build(settings)
 	--settings.objdir = Path("objs")
 	settings.cc.Output = Intermediate_Output
 
-	if config.compiler.driver == "cl" then
-		settings.cc.flags:Add("/wd4244")
-	else
+	if config.compiler.driver ~= "cl" then
 		settings.cc.flags:Add("-fno-exceptions")
 		if platform == "macosx" then
 			settings.cc.flags:Add("-mmacosx-version-min=10.4", "-isysroot /Developer/SDKs/MacOSX10.4u.sdk")

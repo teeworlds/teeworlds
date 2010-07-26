@@ -39,7 +39,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemId)
 	if(Ct < 0)
 		return; // projectile havn't been shot yet
 		
-	vec2 StartPos(pCurrent->m_X, pCurrent->m_Y);
+	vec2 StartPos((float)pCurrent->m_X, (float)pCurrent->m_Y);
 	vec2 StartVel(pCurrent->m_VelX/100.0f, pCurrent->m_VelY/100.0f);
 	vec2 Pos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct);
 	vec2 PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct-0.001f);
@@ -82,9 +82,9 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 {
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
-	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
+	vec2 Pos = mix(vec2((float)pPrev->m_X, (float)pPrev->m_Y), vec2((float)pCurrent->m_X, (float)pCurrent->m_Y), Client()->IntraGameTick());
 	float Angle = 0.0f;
-	float Size = 64.0f;
+	int Size = 64;
 	if (pCurrent->m_Type == POWERUP_WEAPON)
 	{
 		Angle = 0; //-pi/6;//-0.25f * pi * 2.0f;
@@ -104,7 +104,7 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 		if(c[pCurrent->m_Type] == SPRITE_PICKUP_NINJA)
 		{
 			m_pClient->m_pEffects->PowerupShine(Pos, vec2(96,18));
-			Size *= 2.0f;
+			Size *= 2;
 			Pos.x -= 10.0f;
 		}
 	}
@@ -134,11 +134,11 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent)
 
 	Graphics()->QuadsSetRotation(Angle);
 
-	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
+	vec2 Pos = mix(vec2((float)pPrev->m_X, (float)pPrev->m_Y), vec2((float)pCurrent->m_X, (float)pCurrent->m_Y), Client()->IntraGameTick());
 	
 	// make sure that the flag isn't interpolated between capture and return
 	if(pPrev->m_CarriedBy != pCurrent->m_CarriedBy)
-		Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
+		Pos = vec2((float)pCurrent->m_X, (float)pCurrent->m_Y);
 
 	// make sure to use predicted position if we are the carrier
 	if(m_pClient->m_Snap.m_pLocalInfo && pCurrent->m_CarriedBy == m_pClient->m_Snap.m_pLocalInfo->m_ClientId)
@@ -152,8 +152,8 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent)
 
 void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 {
-	vec2 Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
-	vec2 From = vec2(pCurrent->m_FromX, pCurrent->m_FromY);
+	vec2 Pos = vec2((float)pCurrent->m_X, (float)pCurrent->m_Y);
+	vec2 From = vec2((float)pCurrent->m_FromX, (float)pCurrent->m_FromY);
 	vec2 Dir = normalize(Pos-From);
 
 	float Ticks = Client()->GameTick() + Client()->IntraGameTick() - pCurrent->m_StartTick;
@@ -205,7 +205,7 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 
 		int Sprites[] = {SPRITE_PART_SPLAT01, SPRITE_PART_SPLAT02, SPRITE_PART_SPLAT03};
 		RenderTools()->SelectSprite(Sprites[Client()->GameTick()%3]);
-		Graphics()->QuadsSetRotation(Client()->GameTick());
+		Graphics()->QuadsSetRotation((float)Client()->GameTick());
 		Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
 		IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 24, 24);
 		Graphics()->QuadsDraw(&QuadItem, 1);
