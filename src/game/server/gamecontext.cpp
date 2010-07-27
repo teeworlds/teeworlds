@@ -813,26 +813,41 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 
 void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData)
 {
-	CGameContext *pSelf = (CGameContext *)pUserData;
-	const char *pParamName = pResult->GetString(0);
-	float NewValue = pResult->GetFloat(1);
-
-	if(pSelf->Tuning()->Set(pParamName, NewValue))
+	if(str_comp(g_Config.m_SvGametype, "ctf") != 0 && str_comp(g_Config.m_SvGametype, "dm") != 0 && str_comp(g_Config.m_SvGametype, "tdm") != 0)
 	{
-		dbg_msg("tuning", "%s changed to %.2f", pParamName, NewValue);
-		pSelf->SendTuningParams(-1);
+		CGameContext *pSelf = (CGameContext *)pUserData;
+		const char *pParamName = pResult->GetString(0);
+		float NewValue = pResult->GetFloat(1);
+
+		if(pSelf->Tuning()->Set(pParamName, NewValue))
+		{
+			char message[256];
+			
+			dbg_msg("tuning", "%s changed to %.2f", pParamName, NewValue);
+			pSelf->SendTuningParams(-1);
+			sprintf(message, "%s changed to %.2f", pParamName, NewValue);
+			pSelf->SendChat(-1, CGameContext::CHAT_ALL, message);
+		}
+		else
+			dbg_msg("tuning", "No such tuning parameter");
 	}
 	else
-		dbg_msg("tuning", "No such tuning parameter");
+		dbg_msg("tuning", "A modified gametype is not active");
 }
 
 void CGameContext::ConTuneReset(IConsole::IResult *pResult, void *pUserData)
 {
-	CGameContext *pSelf = (CGameContext *)pUserData;
-	CTuningParams p;
-	*pSelf->Tuning() = p;
-	pSelf->SendTuningParams(-1);
-	dbg_msg("tuning", "Tuning reset");
+	if(str_comp(g_Config.m_SvGametype, "ctf") != 0 && str_comp(g_Config.m_SvGametype, "dm") != 0 && str_comp(g_Config.m_SvGametype, "tdm") != 0)
+	{
+		CGameContext *pSelf = (CGameContext *)pUserData;
+		CTuningParams p;
+		*pSelf->Tuning() = p;
+		pSelf->SendTuningParams(-1);
+		dbg_msg("tuning", "Tuning reset");
+		pSelf->SendChat(-1, CGameContext::CHAT_ALL, "All tunings have been recessed");
+	}
+	else
+		dbg_msg("tuning", "A modified gametype is not active");
 }
 
 void CGameContext::ConTuneDump(IConsole::IResult *pResult, void *pUserData)
