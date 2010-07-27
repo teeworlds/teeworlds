@@ -31,7 +31,7 @@ for filename in sys.argv[1:]:
 
 hash = hashlib.md5(f.encode("utf-8")).hexdigest().lower()[16:]
 # TODO: refactor hash that is equal to the 0.5 hash, remove when we 
-# TODO: remove when we don't need it any more
-if hash == "7e33344691ca8a61":
+# TODO: don't need it any more
+if hash == "eedbfc86a408600b":
 	hash = "b67d1f1a1eea234e"
 print('#define GAME_NETVERSION_HASH "%s"' % hash)
