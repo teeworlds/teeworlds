@@ -478,7 +478,6 @@ void CClient::EnterGame()
 void CClient::Connect(const char *pAddress)
 {
 	char aBuf[512];
-	const char *pPortStr = 0;
 	int Port = 8303;
 
 	Disconnect();
@@ -494,18 +493,18 @@ void CClient::Connect(const char *pAddress)
 	{
 		if(aBuf[k] == ':')
 		{
-			pPortStr = &(aBuf[k+1]);
+			Port = str_toint(aBuf+k+1);
 			aBuf[k] = 0;
 			break;
 		}
 	}
 
-	if(pPortStr)
-		Port = str_toint(pPortStr);
-
 	// TODO: IPv6 support
 	if(net_host_lookup(aBuf, &m_ServerAddress, NETTYPE_IPV4) != 0)
+	{
 		dbg_msg("client", "could not find the address of %s, connecting to localhost", aBuf);
+		net_host_lookup("localhost", &m_ServerAddress, NETTYPE_IPV4);
+	}
 
 	m_RconAuthed = 0;
 	m_ServerAddress.port = Port;

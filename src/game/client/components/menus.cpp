@@ -712,6 +712,8 @@ void CMenus::OnInit()
 	if(g_Config.m_ClShowWelcome)
 		m_Popup = POPUP_FIRST_LAUNCH;
 	g_Config.m_ClShowWelcome = 0;
+
+	Console()->Chain("add_favorite", ConchainServerbrowserUpdate, this);
 }
 
 void CMenus::PopupMessage(const char *pTopic, const char *pBody, const char *pButton)

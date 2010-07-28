@@ -596,7 +596,7 @@ void CGameConsole::Dump(int Type)
 			#else
 				static const char Newline[] = "\n";
 			#endif
-			
+
 			for(char *pEntry = pConsole->m_Backlog.First(); pEntry; pEntry = pConsole->m_Backlog.Next(pEntry))
 			{
 				io_write(io, pEntry, str_length(pEntry));
