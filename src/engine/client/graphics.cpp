@@ -831,7 +831,7 @@ bool CGraphics_SDL::Init()
 	#ifdef CONF_FAMILY_WINDOWS
 		if(!getenv("SDL_VIDEO_WINDOW_POS") && !getenv("SDL_VIDEO_CENTERED")) // ignore_convention
 		#if defined(__CYGWIN__)
-			putenv("SDL_VIDEO_WINDOW_POS=8,27"); // ignore_convention
+			putenv((char *)"SDL_VIDEO_WINDOW_POS=8,27"); // ignore_convention
 		#else
 			_putenv("SDL_VIDEO_WINDOW_POS=8,27"); // ignore_convention
 		#endif

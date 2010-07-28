@@ -490,7 +490,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			else
 			{
 				const char *pError = Client()->DemoPlayer_Play(m_lDemos[s_SelectedItem].m_aFilename);
-				if(str_comp(pError, "error loading demo") == 0)
+				if(pError != NULL && str_comp(pError, "error loading demo") == 0)
 					PopupMessage(Localize("Error"), Localize("error loading demo"), Localize("Ok"));
 				else if(pError)
 					PopupMessage(Localize("Error"), pError, Localize("Ok"));
