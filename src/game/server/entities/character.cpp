@@ -4,7 +4,7 @@
 #include <engine/server/server.h>
 #include <game/server/gamecontext.h>
 #include <game/mapitems.h>
-#include <game/server/gamemodes/race.h>
+#include <game/server/gamemodes/DDRace.h>
 #include "character.h"
 #include "laser.h"
 #include "light.h"
@@ -304,7 +304,7 @@ void CCharacter::FireWeapon()
 			{
 				CCharacter *Target = aEnts[i];
 				
-				//for race mod or any other mod, which needs hammer hits through the wall remove second condition
+				//for DDRace mod or any other mod, which needs hammer hits through the wall remove second condition
 				if ((Target == this) /*|| GameServer()->Collision()->IntersectLine(ProjStartPos, Target->m_Pos, NULL, NULL)*/)
 					continue;
 
@@ -600,7 +600,7 @@ void CCharacter::Tick()
 	if (m_Super && m_Core.m_Jumped > 1)
 		m_Core.m_Jumped = 1; 
 	
-	//race  		 
+	//DDRace  		 
 	char aBuftime[128];
 	float time = (float)(Server()->Tick() - m_StartTime) / ((float)Server()->TickSpeed());
 	if(Server()->Tick() - m_RefreshTime >= Server()->TickSpeed())  		 
@@ -634,7 +634,7 @@ void CCharacter::Tick()
 			GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 		else
 			GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
-		CPlayerScore *pPScore = ((CGameControllerRace*) GameServer()->m_pController)->m_Score.SearchName(Server()->ClientName(m_pPlayer->GetCID()));
+		CPlayerScore *pPScore = ((CGameControllerDDRace*) GameServer()->m_pController)->m_Score.SearchName(Server()->ClientName(m_pPlayer->GetCID()));
 		if(pPScore && time - pPScore->m_Score < 0)
 		{
 			str_format(aBuf, sizeof(aBuf), "New record: %5.3f second(s) better", time - pPScore->m_Score);
@@ -645,7 +645,7 @@ void CCharacter::Tick()
 		}
 		m_RaceState = RACE_NONE;
 		if(strncmp(Server()->ClientName(m_pPlayer->GetCID()), "nameless tee", 12) != 0)
-			((CGameControllerRace*)GameServer()->m_pController)->m_Score.ParsePlayer(Server()->ClientName(m_pPlayer->GetCID()), (float)time);
+			((CGameControllerDDRace*)GameServer()->m_pController)->m_Score.ParsePlayer(Server()->ClientName(m_pPlayer->GetCID()), (float)time);
 	}
 	if(GameServer()->Collision()->IsKick(m_Pos.x, m_Pos.y) && !m_Super)
 	{

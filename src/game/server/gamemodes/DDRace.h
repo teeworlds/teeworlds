@@ -5,10 +5,10 @@
 #include <game/server/gamecontroller.h>
 #include <game/server/score.h>
 
-class CGameControllerRace : public IGameController
+class CGameControllerDDRace : public IGameController
 {
 public:
-	CGameControllerRace(class CGameContext *pGameServer);
+	CGameControllerDDRace(class CGameContext *pGameServer);
 
 	CScore m_Score;
 

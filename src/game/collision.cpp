@@ -38,7 +38,7 @@ void CCollision::Init(class CLayers *pLayers)
 		m_pFTiles = 0;
 		isOneLayer = true;
 	}
-	//race
+	//DDRace
 	mem_zero(&m_Len, sizeof(m_Len));
 	mem_zero(&m_Tele, sizeof(m_Tele));
 	m_pTeleporter = new int[m_Width * m_Height];
@@ -262,7 +262,7 @@ int CCollision::IsNolaser(int x, int y)
    return (CCollision::GetTile(x,y) & COLFLAG_NOLASER);  		 
 }  		 
  		 
-//race  		 
+//DDRace  		 
 int CCollision::IsTeleport(int x, int y)  		 
 {  		 
 	int nx = x/32;  		 

@@ -5,7 +5,7 @@
 #include "player.h"
 #include "gamecontext.h"
 #include <game/gamecore.h>
-#include "gamemodes/race.h"
+#include "gamemodes/DDRace.h"
 
 MACRO_ALLOC_POOL_ID_IMPL(CPlayer, MAX_CLIENTS)
 
@@ -32,7 +32,7 @@ CPlayer::~CPlayer()
 void CPlayer::Tick()
 {
 	int pos=0;
-	CPlayerScore *pscore = ((CGameControllerRace*)GameServer()->m_pController)->m_Score.SearchName(Server()->ClientName(m_ClientID), pos);
+	CPlayerScore *pscore = ((CGameControllerDDRace*)GameServer()->m_pController)->m_Score.SearchName(Server()->ClientName(m_ClientID), pos);
 	if(pscore && pos > -1 && pscore->m_Score != -1)
 	{
 		float time = pscore->m_Score;

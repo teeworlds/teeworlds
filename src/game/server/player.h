@@ -58,7 +58,7 @@ public:
    
    bool m_ColorSet; // Set if player changed color at least once 
    
-   //race var  		 
+   //DDRace var  		 
    int m_Starttime;  		 
    int m_Refreshtime;  		 
    int m_RaceState;  		 

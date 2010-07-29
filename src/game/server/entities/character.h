@@ -157,7 +157,7 @@ public:
 	bool m_IsWater;
 	bool m_DoSplash;
 	int m_LastMove;
-	// race var
+	// DDRace var
 	int m_StartTime;
 	int m_RefreshTime;
 

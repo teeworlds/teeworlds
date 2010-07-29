@@ -194,7 +194,7 @@ int CServer::TrySetClientName(int ClientID, const char *pName)
 	// trim the name
 	str_copy(aTrimmedName, StrLtrim(pName), sizeof(aTrimmedName));
 	StrRtrim(aTrimmedName);
-	dbg_msg("", "'%s' -> '%s'", pName, aTrimmedName);
+	//dbg_msg("", "'%s' -> '%s'", pName, aTrimmedName); Removed for the rainbow mod
 	pName = aTrimmedName;
 	
 	

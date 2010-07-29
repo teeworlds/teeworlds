@@ -9,7 +9,7 @@
 #include <game/version.h>
 #include <game/collision.h>
 #include <game/gamecore.h>
-#include "gamemodes/race.h"
+#include "gamemodes/DDRace.h"
 
 enum
 {
@@ -611,8 +611,10 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			if(!str_comp_nocase(pMsg->m_pMessage, "/Credits"))
 			{
 				SendChatTarget(ClientId, "This mod was originally Created by 3DA");
-				SendChatTarget(ClientId, "But now maintained by GreYFoX@GTi among other please check the changelog on DDRace.info");
-				SendChatTarget(ClientId, "This port are maked by [blacktee] den.");
+				SendChatTarget(ClientId, "But now maintained by GreYFoX@GTi among others:");
+				SendChatTarget(ClientId, "[blacktee] den, LemonFace, noother & Fluxid");
+				SendChatTarget(ClientId, "please check the changelog on DDRace.info");
+				SendChatTarget(ClientId, "also the commit log on github.com/GreYFoXGTi/DDRace");
 			} else if(!str_comp_nocase(pMsg->m_pMessage, "/pause"))
 				{
 					if(g_Config.m_SvPauseable && g_Config.m_SvVoteKick)
@@ -629,54 +631,82 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			} else if(!str_comp_nocase(pMsg->m_pMessage, "/info"))
 				{
 					char buf[64];
-					SendChatTarget(ClientId, "DDRace mod. Version: " RACE_VERSION);
-					SendChatTarget(ClientId, "Official site: DDRace.info. But this is not official server=)");
-			} else if(!strncmp(pMsg->m_pMessage, "/top5", 5) && !g_Config.m_SvHideScore) 
-				{
-					const char *pt = pMsg->m_pMessage;
-					int number = 0;
-					pt += 6;
-					while(*pt && *pt >= '0' && *pt <= '9')
-					{
-						number = number*10+(*pt-'0');
-						pt++;
-					}
-					if(number)
-						((CGameControllerRace*)m_pController)->m_Score.Top5Draw(ClientId, number);
-					else
-						((CGameControllerRace*)m_pController)->m_Score.Top5Draw(ClientId, 0);
-				}
-				else if(!str_comp_nocase(pMsg->m_pMessage, "/rank"))
-				{
-					char buf[512];
-					const char *name = pMsg->m_pMessage;
-					name += 6;
-					int pos=0;
-					CPlayerScore *pscore;
-					
-					pscore = ((CGameControllerRace*)m_pController)->m_Score.SearchName(Server()->ClientName(ClientId), pos);
-
-					if(pscore && pos > -1 && pscore->m_Score != -1)
-					{
-						float time = pscore->m_Score;
-
-						str_format(buf, sizeof(buf), "%d. %s",!g_Config.m_SvHideScore? pos: 0, pscore->name);
-						if (!g_Config.m_SvHideScore)
-							SendChat(-1, CGameContext::CHAT_ALL, buf);
-						else
-							SendChatTarget(ClientId, buf);
-
-						if ((int)time/60 >= 1)
-							str_format(buf, sizeof(buf), "Time: %d minute%s %f seconds", (int)time/60, (int)time/60 != 1 ? "s" : "" , time-((int)time/60)*60);
-						else
-							str_format(buf, sizeof(buf), "Time: %f seconds", time-((int)time/60)*60);
-					}
-					else
-						str_format(buf, sizeof(buf), "%s is not ranked", Server()->ClientName(ClientId));
-
+					SendChatTarget(ClientId, "DDRace Mod. Version: " DDRACE_VERSION);
+					SendChatTarget(ClientId, "Official site: DDRace.info");
+					SendChatTarget(ClientId, "For more Info /CMDList");
+					SendChatTarget(ClientId, "Or visit DDRace.info");
+			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/flags"))
+			{
+				char buf[64];
+				float temp1;
+				float temp2;
+				m_Tuning.Get("player_collision",&temp1);
+				m_Tuning.Get("player_hooking",&temp2);
+				str_format(buf, sizeof(buf), "Flags: Cheats[%s]%s%s Player Collision[%s] PLayer Hook[%s]",
+							g_Config.m_SvCheats?"Y":"N",
+							(g_Config.m_SvCheats)?" w/Time":"",
+							(g_Config.m_SvCheats)?(g_Config.m_SvCheatTime)?"[Y]":"[N]":"",
+							temp1?"Y":"N",
+							temp2?"Y":"N"
+							);
 					SendChatTarget(ClientId, buf);
+					str_format(buf, sizeof(buf), "Endless Hook[%s] Weapons Effect Others[%s]",g_Config.m_SvEndlessDrag?"Y":"N",g_Config.m_SvHit?"Y":"N");
+					SendChatTarget(ClientId, buf);
+			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/CMDList"))
+			{
+				char buf[64];
+				str_format(buf, sizeof(buf), "/Info /Credits %s",g_Config.m_SvPauseable?"/pause":"");
+				SendChatTarget(ClientId, buf);
+				SendChatTarget(ClientId, "/rank /top5 /top5 5 or any number");
+			}
+			else if(!strncmp(pMsg->m_pMessage, "/top5", 5) && !g_Config.m_SvHideScore)
+			{
+				const char *pt = pMsg->m_pMessage;
+				int number = 0;
+				pt += 6;
+				while(*pt && *pt >= '0' && *pt <= '9')
+				{
+					number = number*10+(*pt-'0');
+					pt++;
+				}
+				if(number)
+					((CGameControllerDDRace*)m_pController)->m_Score.Top5Draw(ClientId, number);
+				else
+					((CGameControllerDDRace*)m_pController)->m_Score.Top5Draw(ClientId, 0);
+			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/rank"))
+			{
+				char buf[512];
+				const char *name = pMsg->m_pMessage;
+				name += 6;
+				int pos=0;
+				CPlayerScore *pscore;
+
+				pscore = ((CGameControllerDDRace*)m_pController)->m_Score.SearchName(Server()->ClientName(ClientId), pos);
+
+				if(pscore && pos > -1 && pscore->m_Score != -1)
+				{
+					float time = pscore->m_Score;
+
+					str_format(buf, sizeof(buf), "%d. %s",!g_Config.m_SvHideScore? pos: 0, pscore->name);
+					if (!g_Config.m_SvHideScore)
+						SendChat(-1, CGameContext::CHAT_ALL, buf);
+					else
+						SendChatTarget(ClientId, buf);
+
+					if ((int)time/60 >= 1)
+						str_format(buf, sizeof(buf), "Time: %d minute%s %f seconds", (int)time/60, (int)time/60 != 1 ? "s" : "" , time-((int)time/60)*60);
+					else
+						str_format(buf, sizeof(buf), "Time: %f seconds", time-((int)time/60)*60);
 				}
 				else
+					str_format(buf, sizeof(buf), "%s is not ranked", Server()->ClientName(ClientId));
+
+				SendChatTarget(ClientId, buf);
+			}
+			else
 					SendChatTarget(ClientId, "No such command!");
 				
 		} else {
@@ -1054,7 +1084,7 @@ void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int ci
 	if(chr)
 	{
 		chr->m_Core.m_Pos.x -= 32;
-		if(!g_Config.m_SvCheattime)
+		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
 }
@@ -1066,7 +1096,7 @@ void  CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int 
 	if(chr)
 	{
 		chr->m_Core.m_Pos.x += 32;
-		if(!g_Config.m_SvCheattime)
+		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
 }
@@ -1078,7 +1108,7 @@ void  CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int cid
 	if(chr)
 	{
 		chr->m_Core.m_Pos.y -= 32;
-		if(!g_Config.m_SvCheattime)
+		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
 }
@@ -1090,7 +1120,7 @@ void  CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int c
 	if(chr)
 	{
 		chr->m_Core.m_Pos.y += 32;
-		if(!g_Config.m_SvCheattime)
+		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
 }
@@ -1147,7 +1177,7 @@ void CGameContext::ConNinjaMe(IConsole::IResult *pResult, void *pUserData, int c
 	CCharacter* chr = pSelf->m_apPlayers[cid]->GetCharacter();
 	if(chr) {
 		chr->GiveNinja();
-		if(!g_Config.m_SvCheattime)
+		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
 }
@@ -1159,7 +1189,7 @@ void CGameContext::ConNinja(IConsole::IResult *pResult, void *pUserData, int cid
 	CCharacter* chr = pSelf->m_apPlayers[cid1]->GetCharacter();
 	if(chr) {
 		chr->GiveNinja();
-		if(!g_Config.m_SvCheattime)
+		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
 }
@@ -1184,7 +1214,7 @@ void CGameContext::ConHammer(IConsole::IResult *pResult, void *pUserData, int ci
 	else
 	{
 		chr->m_HammerType = type;
-		if(!g_Config.m_SvCheattime)
+		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 		str_format(buf, sizeof(buf), "Hammer of cid=%d setted to %d",cid1,type);
 		serv->SendRconLine(cid1, buf);
@@ -1208,7 +1238,7 @@ void CGameContext::ConHammerMe(IConsole::IResult *pResult, void *pUserData, int 
 	else
 	{
 		chr->m_HammerType = type;
-		if(!g_Config.m_SvCheattime)
+		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 		str_format(buf, sizeof(buf), "Hammer setted to %d",type);
 		serv->SendRconLine(cid, buf);
@@ -1227,7 +1257,7 @@ void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int cid
 		if(chr)
 		{
 			chr->m_Super = true;
-			if(!g_Config.m_SvCheattime)
+			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
 		}
 	}
@@ -1258,7 +1288,7 @@ void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int c
 		if(chr)
 		{
 			chr->m_Super = true;
-			if(!g_Config.m_SvCheattime)
+			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
 		}
 	}
@@ -1289,7 +1319,7 @@ void CGameContext::ConWeapons(IConsole::IResult *pResult, void *pUserData, int c
 		if(chr)
 		{
 			chr->GiveAllWeapons();
-			if(!g_Config.m_SvCheattime)
+			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
 		}
 	}
@@ -1305,7 +1335,7 @@ void CGameContext::ConWeaponsMe(IConsole::IResult *pResult, void *pUserData, int
 		if(chr)
 		{
 			chr->GiveAllWeapons();
-			if(!g_Config.m_SvCheattime)
+			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
 		}
 	}
@@ -1326,7 +1356,7 @@ void CGameContext::ConTeleport(IConsole::IResult *pResult, void *pUserData, int 
 			if(chr)
 			{
 				chr->m_Core.m_Pos = pSelf->m_apPlayers[cid2]->m_ViewPos;
-				if(!g_Config.m_SvCheattime)
+				if(!g_Config.m_SvCheatTime)
 					chr->m_RaceState = RACE_CHEAT;
 			}
 		}
@@ -1464,7 +1494,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 //   dbg_msg("Note","in a folder i nthe same dir as teeworlds_srv");  		 
 //   dbg_msg("Note","data/maps/%s.cfg", config.sv_map);  
 	// select gametype
-	m_pController = new CGameControllerRace(this);
+	m_pController = new CGameControllerDDRace(this);
 	//float temp;
 	//m_Tuning.Get("player_hooking",&temp);
 	//g_Config.m_SvPhook = temp;

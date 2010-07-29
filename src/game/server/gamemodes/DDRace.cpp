@@ -1,12 +1,12 @@
-/* copyright (c) 2007 rajh, race mod stuff */
+/*Based on rajh's, Race mod stuff */
 #include <engine/server.h>
 #include <game/mapitems.h>
 #include <game/server/entities/character.h>
 #include <game/server/player.h>
 #include <game/server/gamecontext.h>
-#include "race.h"
+#include "DDRace.h"
 
-CGameControllerRace::CGameControllerRace(class CGameContext *pGameServer)
+CGameControllerDDRace::CGameControllerDDRace(class CGameContext *pGameServer)
 : IGameController(pGameServer), m_Score(pGameServer)
 {
 
@@ -14,7 +14,7 @@ CGameControllerRace::CGameControllerRace(class CGameContext *pGameServer)
 }
 
 
-void CGameControllerRace::Tick()
+void CGameControllerDDRace::Tick()
 {
 	IGameController::Tick();
 }

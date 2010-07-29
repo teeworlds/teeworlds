@@ -49,7 +49,7 @@ public:
 	int IntersectNolaser(vec2 pos0, vec2 pos1, vec2 *out_collision, vec2 *out_before_collision);
 	int IntersectNolaser2(vec2 pos0, vec2 pos1, vec2 *out_collision, vec2 *out_before_collision);
 	int IntersectAir(vec2 pos0, vec2 pos1, vec2 *out_collision, vec2 *out_before_collision);
-	//race
+	//DDRace
 	int IsSolid(int x, int y);
 	int IsTeleport(int x, int y);
 	int IsBegin(int x, int y);
