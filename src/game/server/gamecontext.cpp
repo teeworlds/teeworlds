@@ -440,7 +440,7 @@ void CGameContext::OnTick()
 
 				if(Yes >= Total/2+1)
 					m_VoteEnforce = VOTE_ENFORCE_YES;
-				else if(No >= Total/2+1 || Yes+No == Total)
+				else if(No >= Total/2)
 					m_VoteEnforce = VOTE_ENFORCE_NO;
 			}
 			
