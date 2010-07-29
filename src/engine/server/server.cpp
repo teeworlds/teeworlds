@@ -616,7 +616,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 	NETADDR Addr;
 	CUnpacker Unpacker;
 	Unpacker.Reset(pPacket->m_pData, pPacket->m_DataSize);
-	
 	// unpack msgid and system flag
 	int Msg = Unpacker.GetInt();
 	int Sys = Msg&1;
@@ -658,11 +657,12 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
                 m_NetServer.Drop(ClientId, "Dropped due reserved slot");  		 
                 return;  		 
             }
-			int i/*, ipcnt = 0*/; // ip count  		 
-           //Start of 2cpip LemonFace  		 
-           /*m_NetServer.ClientAddr(ClientId, &Addr);  		 
+				 
+           //Start of 2cpip LemonFace
+			int i/*, ipcnt = 0*/; // ip count
+			Addr=m_NetServer.ClientAddr(ClientId);
            m_aClients[ClientId].m_Addr = Addr; // store the address info  		 
-           for(i=0; i<MAX_CLIENTS; i++)  		 
+           /*for(i=0; i<MAX_CLIENTS; i++)
            {  		 
                if(m_aClients[i].m_State != CClient::STATE_EMPTY) // if not an empty slot  		 
                {  		 
@@ -672,7 +672,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
                        m_aClients[i].m_Addr.ip[3] == Addr.ip[3])  		 
                    {  		 
  		 
-                       if(clients[i].authed > 0) // authed players can have clones  		 
+                       if(m_aClients[i].m_Authed > 0) // authed players can have clones
                        {  		 
                            ipcnt = 0;  		 
                            break;  		 
@@ -683,16 +683,21 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
                }  		 
            }  		 
  		 
-           if(ipcnt > config.sv_max_connections) // if already n connections exist, drop him  		 
+           if(ipcnt > g_Config.m_SvMaxConnections) // if already n connections exist, drop him
            {  		 
-               dbg_msg("server", "player dropped, too many connections. cid=%x ip=%d.%d.%d.%d",  		 
-                   cid,  		 
-                   clients[i].addr.ip[0], clients[i].addr.ip[1], clients[i].addr.ip[2], clients[i].addr.ip[3]  		 
-                   );  		 
-               netserver_drop(net, cid, "Connections Per IP limit Exceeded");  		 
+               dbg_msg("server", "Player dropped, too many connections. cid=%x ip=%d.%d.%d.%d",
+            		   ClientId,
+            		   Addr.ip[0],
+            		   Addr.ip[1],
+            		   Addr.ip[2],
+            		   Addr.ip[3]
+            		   );
+               char buf[100];
+               str_format(buf,sizeof(buf),"Connection count(%d) per IP Limit Exceeded, The Limit is %d", ipcnt, g_Config.m_SvMaxClientsPerIP);
+               m_NetServer.Drop(ClientId,buf);
                return;  		 
-           }  
-			*/
+           }  */
+			
 			m_aClients[ClientId].m_State = CClient::STATE_CONNECTING;
 			SendMap(ClientId);
 		}
@@ -897,7 +902,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					}
 					else
 					{
-						dbg_msg("server", "client tried to authenticate with empty password. cid=%x ip=%d.%d.%d.%d",
+						dbg_msg("server", "Client tried to authenticate with empty password. cid=%x ip=%d.%d.%d.%d",
 							ClientId,
 							m_aClients[ClientId].m_Addr.ip[0], m_aClients[ClientId].m_Addr.ip[1], m_aClients[ClientId].m_Addr.ip[2], m_aClients[ClientId].m_Addr.ip[3]
 							);

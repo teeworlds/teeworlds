@@ -352,7 +352,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 								if(FoundAddr++ >= m_MaxClientsPerIP)
 								{
 									char aBuf[128];
-									str_format(aBuf, sizeof(aBuf), "only %i players with same ip allowed", m_MaxClientsPerIP);
+									str_format(aBuf, sizeof(aBuf), "Only %i players with the same ip is/are allowed.", m_MaxClientsPerIP);
 									CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, aBuf, sizeof(aBuf));
 									return 0;
 								}
