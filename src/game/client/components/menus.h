@@ -191,6 +191,7 @@ class CMenus : public CComponent
 	void RenderServerbrowserServerDetail(CUIRect View);
 	void RenderServerbrowserFilters(CUIRect View);
 	void RenderServerbrowser(CUIRect MainView);
+	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	
 	// found in menus_settings.cpp
 	void RenderSettingsGeneral(CUIRect MainView);

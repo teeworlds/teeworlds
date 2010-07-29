@@ -833,9 +833,9 @@ void CEditor::DoQuad(CQuad *q, int Index)
 	float CenterX = fx2f(q->m_aPoints[4].x);
 	float CenterY = fx2f(q->m_aPoints[4].y);
 
-	float dx = (CenterX - wx);
-	float dy = (CenterY - wy);
-	if(dx*dx+dy*dy < 10*10)
+	float dx = (CenterX - wx)/m_WorldZoom;
+	float dy = (CenterY - wy)/m_WorldZoom;
+	if(dx*dx+dy*dy < 50)
 		UI()->SetHotItem(pId);
 
 	// draw selection background
@@ -939,7 +939,7 @@ void CEditor::DoQuad(CQuad *q, int Index)
 	else
 		Graphics()->SetColor(0,1,0,1);
 
-	IGraphics::CQuadItem QuadItem(CenterX, CenterY, 5.0f, 5.0f);
+	IGraphics::CQuadItem QuadItem(CenterX, CenterY, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
 
@@ -953,9 +953,9 @@ void CEditor::DoQuadPoint(CQuad *q, int QuadIndex, int v)
 	float px = fx2f(q->m_aPoints[v].x);
 	float py = fx2f(q->m_aPoints[v].y);
 
-	float dx = (px - wx);
-	float dy = (py - wy);
-	if(dx*dx+dy*dy < 10*10)
+	float dx = (px - wx)/m_WorldZoom;
+	float dy = (py - wy)/m_WorldZoom;
+	if(dx*dx+dy*dy < 50)
 		UI()->SetHotItem(pId);
 
 	// draw selection background
@@ -1084,7 +1084,7 @@ void CEditor::DoQuadPoint(CQuad *q, int QuadIndex, int v)
 	else
 		Graphics()->SetColor(1,0,0,1);
 
-	IGraphics::CQuadItem QuadItem(px, py, 5.0f, 5.0f);
+	IGraphics::CQuadItem QuadItem(px, py, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
 
@@ -1674,17 +1674,18 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 	if(ValidGroup && m_SelectedLayer >= 0 && m_SelectedLayer < m_Map.m_lGroups[m_SelectedGroup]->m_lLayers.size())
 		ValidLayer = 1;
 
-	int Num = (int)(View.h/16.0f);
+	float LayersHeight = 12.0f;	 // Height of AddGroup button
 	static int s_ScrollBar = 0;
 	static float s_ScrollValue = 0;
 
-	int LayerNum = 0;
 	for(int g = 0; g < m_Map.m_lGroups.size(); g++)
-		LayerNum += m_Map.m_lGroups[g]->m_lLayers.size() + 1;
+		// Each group is 19.0f
+		// Each layer is 14.0f
+		LayersHeight += 19.0f + m_Map.m_lGroups[g]->m_lLayers.size() * 14.0f;
 
-	int ScrollNum = LayerNum-Num+10;
+	float ScrollDifference = LayersHeight - LayersBox.h;
 
-	if(LayerNum > Num)	// Do we even need a scrollbar?
+	if(LayersHeight > LayersBox.h)	// Do we even need a scrollbar?
 	{
 		CUIRect Scroll;
 		LayersBox.VSplitRight(15.0f, &LayersBox, &Scroll);
@@ -1693,12 +1694,12 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 		s_ScrollValue = UiDoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
 	}
 
-	int LayerStartAt = (int)(ScrollNum*s_ScrollValue);
-	if(LayerStartAt < 0)
-		LayerStartAt = 0;
+	float LayerStartAt = ScrollDifference * s_ScrollValue;
+	if(LayerStartAt < 0.0f)
+		LayerStartAt = 0.0f;
 
-	int LayerStopAt = LayerStartAt+Num;
-	int LayerCur = 0;
+	float LayerStopAt = LayersHeight - ScrollDifference * (1 - s_ScrollValue);
+	float LayerCur = 0;
 
 	// render layers
 	{
@@ -1706,9 +1707,9 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 		{
 			if(LayerCur > LayerStopAt)
 				break;
-			else if(LayerCur + m_Map.m_lGroups[g]->m_lLayers.size() + 1 < LayerStartAt)
+			else if(LayerCur + m_Map.m_lGroups[g]->m_lLayers.size() * 14.0f + 19.0f < LayerStartAt)
 			{
-				LayerCur += m_Map.m_lGroups[g]->m_lLayers.size() + 1;
+				LayerCur += m_Map.m_lGroups[g]->m_lLayers.size() * 14.0f + 19.0f;
 				continue;
 			}
 
@@ -1733,13 +1734,15 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 				}
 				LayersBox.HSplitTop(2.0f, &Slot, &LayersBox);
 			}
-			LayerCur++;
+			LayerCur += 14.0f;
 
 			for(int i = 0; i < m_Map.m_lGroups[g]->m_lLayers.size(); i++)
 			{
-				if(LayerCur < LayerStartAt || LayerCur > LayerStopAt)
+				if(LayerCur > LayerStopAt)
+					break;
+				else if(LayerCur < LayerStartAt)
 				{
-					LayerCur++;
+					LayerCur += 14.0f;
 					continue;
 				}
 
@@ -1762,10 +1765,12 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 						UiInvokePopupMenu(&s_LayerPopupId, 0, UI()->MouseX(), UI()->MouseY(), 120, 150, PopupLayer);
 				}
 
-				LayerCur++;
+				LayerCur += 14.0f;
 				LayersBox.HSplitTop(2.0f, &Slot, &LayersBox);
 			}
-			LayersBox.HSplitTop(5.0f, &Slot, &LayersBox);
+			if(LayerCur > LayerStartAt && LayerCur < LayerStopAt)
+				LayersBox.HSplitTop(5.0f, &Slot, &LayersBox);
+			LayerCur += 5.0f;
 		}
 	}
 
@@ -1780,9 +1785,6 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 			m_SelectedGroup = m_Map.m_lGroups.size()-1;
 		}
 	}
-
-	//LayersBox.HSplitTop(5.0f, &Slot, &LayersBox);
-
 }
 
 static void ExtractName(const char *pFileName, char *pName)
@@ -1962,14 +1964,12 @@ void CEditor::SortImages()
 
 void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 {
-	int Num = (int)(View.h/15.0f);
 	static int s_ScrollBar = 0;
 	static float s_ScrollValue = 0;
+	float ImagesHeight = 30.0f + 14.0f * m_Map.m_lImages.size() + 27.0f;
+	float ScrollDifference = ImagesHeight - ToolBox.h;
 
-	int ImageNum = m_Map.m_lImages.size();
-	int ScrollNum = ImageNum-Num+10;
-
-	if(ImageNum > Num)	// Do we even need a scrollbar?
+	if(ImagesHeight > ToolBox.h)	// Do we even need a scrollbar?
 	{
 		CUIRect Scroll;
 		ToolBox.VSplitRight(15.0f, &ToolBox, &Scroll);
@@ -1978,12 +1978,12 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 		s_ScrollValue = UiDoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
 	}
 
-	int ImageStartAt = (int)(ScrollNum*s_ScrollValue);
-	if(ImageStartAt < 0)
-		ImageStartAt = 0;
+	float ImageStartAt = ScrollDifference * s_ScrollValue;
+	if(ImageStartAt < 0.0f)
+		ImageStartAt = 0.0f;
 
-	int ImageStopAt = ImageStartAt+Num;
-	int ImageCur = 0;
+	float ImageStopAt = ImagesHeight - ScrollDifference * (1 - s_ScrollValue);
+	float ImageCur = 0.0f;
 
 	for(int e = 0; e < 2; e++) // two passes, first embedded, then external
 	{
@@ -2000,7 +2000,7 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 			else
 				UI()->DoLabel(&Slot, Localize("External"), 12.0f, 0);
 		}
-		ImageCur++;
+		ImageCur += 15.0f;
 
 		for(int i = 0; i < m_Map.m_lImages.size(); i++)
 		{
@@ -2014,10 +2014,10 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 				break;
 			else if(ImageCur < ImageStartAt)
 			{
-				ImageCur++;
+				ImageCur += 14.0f;
 				continue;
 			}
-			ImageCur++;
+			ImageCur += 14.0f;
 
 			char aBuf[128];
 			str_copy(aBuf, m_Map.m_lImages[i]->m_aName, sizeof(aBuf));
@@ -2054,6 +2054,9 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 			}
 		}
 	}
+
+	if(ImageCur + 27.0f > ImageStopAt)
+		return;
 
 	CUIRect Slot;
 	ToolBox.HSplitTop(5.0f, &Slot, &ToolBox);
@@ -2585,12 +2588,19 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 						}
 						else
 						{
-							pEnvelope->m_lPoints[i].m_aValues[c] -= f2fx(m_MouseDeltaY*ValueScale);
+							if((Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL)))
+								pEnvelope->m_lPoints[i].m_aValues[c] -= f2fx(m_MouseDeltaY*0.001f);
+							else
+								pEnvelope->m_lPoints[i].m_aValues[c] -= f2fx(m_MouseDeltaY*ValueScale);
+							
 							if(Input()->KeyPressed(KEY_LSHIFT) || Input()->KeyPressed(KEY_RSHIFT))
 							{
 								if(i != 0)
 								{
-									pEnvelope->m_lPoints[i].m_Time += (int)((m_MouseDeltaX*TimeScale)*1000.0f);
+									if((Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL)))
+										pEnvelope->m_lPoints[i].m_Time += (int)((m_MouseDeltaX));
+									else
+										pEnvelope->m_lPoints[i].m_Time += (int)((m_MouseDeltaX*TimeScale)*1000.0f);
 									if(pEnvelope->m_lPoints[i].m_Time < pEnvelope->m_lPoints[i-1].m_Time)
 										pEnvelope->m_lPoints[i].m_Time = pEnvelope->m_lPoints[i-1].m_Time + 1;
 									if(i+1 != pEnvelope->m_lPoints.size() && pEnvelope->m_lPoints[i].m_Time > pEnvelope->m_lPoints[i+1].m_Time)
@@ -2617,7 +2627,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 						ColorMod = 100.0f;
 						Graphics()->SetColor(1,0.75f,0.75f,1);
-						m_pTooltip = Localize("Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.");
+						m_pTooltip = Localize("Left mouse to drag. Hold ctfl to be more precise. Hold shift to alter time point aswell. Right click to delete.");
 					}
 
 					if(UI()->ActiveItem() == pId || UI()->HotItem() == pId)
