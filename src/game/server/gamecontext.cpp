@@ -451,10 +451,23 @@ void CGameContext::OnTick()
 			
 			if(m_VoteEnforce == VOTE_ENFORCE_YES)
 			{
-				Console()->ExecuteLine(m_aVoteCommand, 4, -1);
-				EndVote();
-				SendChat(-1, CGameContext::CHAT_ALL, "Vote passed");
-			
+				//Console()->ExecuteLine(m_aVoteCommand, 4, -1);
+				//EndVote();
+				//SendChat(-1, CGameContext::CHAT_ALL, "Vote passed");
+				if(vote_enforce == VOTE_ENFORCE_YES)
+				{
+					Console()->ExecuteLine(m_aVoteCommand, 3,-1);
+					SendChat(-1, CGameContext::CHAT_ALL, "Vote passed (enforced by Admin)");
+					dbg_msg("Vote","Due to vote enforcing, vote level has been set to 3");
+					EndVote();
+				}
+				else
+				{
+					Console()->ExecuteLine(m_aVoteCommand, 4,-1);
+					dbg_msg("Vote","vote level is set to 4");
+					EndVote();
+					SendChat(-1, CGameContext::CHAT_ALL, "Vote passed");
+				}
 				if(m_apPlayers[m_VoteCreator])
 					m_apPlayers[m_VoteCreator]->m_Last_VoteCall = 0;
 			}
@@ -523,7 +536,19 @@ bool compare_players(CPlayer *pl1, CPlayer *pl2)
 } 
 
 void CGameContext::OnSetAuthed(int client_id, void* status)  		 
-{  		 
+{
+	if(m_apPlayers[client_id])
+	{
+		m_apPlayers[client_id]->m_Authed = (int)status;
+		char buf[11];
+		str_format(buf, sizeof(buf), "ban %d %d", client_id, g_Config.m_SvVoteKickBanTime);
+		//dbg_msg("hooks","%d", m_aVoteCommand == buf);//???
+		if ( !strcmp(m_aVoteCommand,buf))
+		{
+			m_VoteEnforce = CGameContext::VOTE_ENFORCE_NO;
+			dbg_msg("hooks","Aborting vote");
+		}
+	}
    if(m_apPlayers[client_id])  		 
        m_apPlayers[client_id]->m_Authed = (int)status;  		 
 }  		 
@@ -747,13 +772,23 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		if(str_comp_nocase(pMsg->m_Type, "option") == 0)
 		{
 			CVoteOption *pOption = m_pVoteOptionFirst;
+			static int64 last_mapvote = 0; //floff
 			while(pOption)
 			{
 				if(str_comp_nocase(pMsg->m_Value, pOption->m_aCommand) == 0)
 				{
+					if(m_apPlayers[ClientId]->m_Authed == 0 && strncmp(pOption->m_aCommand, "sv_map ", 7) == 0 && time_get() < last_mapvote + (time_freq() * g_Config.m_SvVoteMapDelay))
+						{	
+							char chatmsg[512] = {0};
+							str_format(chatmsg, sizeof(chatmsg), "There's a %d second delay between map-votes,Please wait %d Second(s)", g_Config.m_SvVoteMapDelay,((last_mapvote+(g_Config.m_SvVoteMapDelay * time_freq()))/time_freq())-(time_get()/time_freq()));
+							SendChatTarget(ClientId, chatmsg);
+							
+							return;
+						}
 					str_format(aChatmsg, sizeof(aChatmsg), "%s called vote to change server option '%s'", Server()->ClientName(ClientId), pOption->m_aCommand);
 					str_format(aDesc, sizeof(aDesc), "%s", pOption->m_aCommand);
 					str_format(aCmd, sizeof(aCmd), "%s", pOption->m_aCommand);
+					last_mapvote = time_get();
 					break;
 				}
 
@@ -766,10 +801,24 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				SendChatTarget(ClientId, aChatmsg);
 				return;
 			}
+			last_mapvote = time_get();
 		}
 		else if(str_comp_nocase(pMsg->m_Type, "kick") == 0)
 		{
-			if(!g_Config.m_SvVoteKick)
+			if(m_apPlayers[ClientId]->m_Authed == 0 && time_get() < m_apPlayers[ClientId]->m_LastKickVote + (time_freq() * 5)) 
+			return;
+			else if(m_apPlayers[ClientId]->m_Authed == 0 && time_get() < m_apPlayers[ClientId]->m_LastKickVote + (time_freq() * g_Config.m_SvVoteKickDelay)) 
+			{
+				char chatmsg[512] = {0};
+				str_format(chatmsg, sizeof(chatmsg), "There's a %d second waittime between kickvotes for each player please wait %d second(s)",
+				g_Config.m_SvVoteKickDelay,
+				((m_apPlayers[ClientId]->m_LastKickVote + (m_apPlayers[ClientId]->m_LastKickVote*time_freq()))/time_freq())-(time_get()/time_freq())
+				);
+				SendChatTarget(client_id, chatmsg);
+				m_apPlayers[ClientId]->m_LastKickVote = time_get();
+				return;
+			}
+			else if(!g_Config.m_SvVoteKick)
 			{
 				SendChatTarget(ClientId, "Server does not allow voting to kick players");
 				return;

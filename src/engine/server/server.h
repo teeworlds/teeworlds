@@ -103,6 +103,7 @@ public:
 		NETADDR m_Addr; // for storing address 
 		int m_PwTries; // a players rcon pw tries
 		int m_CmdTries; //Floff players rcon command tries, to prevent command flood server crash  
+		int64 m_CommandTriesTimer; // time
 		
 		void Reset();
 	};
@@ -178,7 +179,7 @@ public:
 	void SendServerInfo(NETADDR *pAddr, int Token);
 	void UpdateServerInfo();
 
-	int BanAdd(NETADDR Addr, int Seconds);
+	int BanAdd(NETADDR Addr, int Seconds, const char *Reason);
 	int BanRemove(NETADDR Addr);
 		
 

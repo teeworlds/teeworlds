@@ -172,7 +172,7 @@ public:
 	void Disconnect(const char *pReason);
 
 	int Update();
-	int Flush();	
+	int32_t Flush();	
 
 	int Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr);
 	int QueueChunk(int Flags, int DataSize, const void *pData);
@@ -217,6 +217,7 @@ public:
 	{
 		NETADDR m_Addr;
 		int m_Expires;
+		char m_Reason[100];
 	};
 	
 private:
@@ -275,7 +276,8 @@ public:
 	int Drop(int ClientID, const char *Reason);
 
 	// banning
-	int BanAdd(NETADDR Addr, int Seconds);
+	int BanAdd(NETADDR Addr, int Seconds, const char *Reason);
+	int BanAddNoDrop(NETADDR Addr, int Seconds, const char *Reason);
 	int BanRemove(NETADDR Addr);
 	int BanNum(); // caution, slow
 	int BanGet(int Index, CBanInfo *pInfo); // caution, slow
@@ -339,7 +341,7 @@ public:
 	
 	static void SendControlMsg(NETSOCKET Socket, NETADDR *pAddr, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
 	static void SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, const void *pData, int DataSize);
-	static void SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct *pPacket);
+	static int32_t SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct *pPacket);
 	static int UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket);
 
 	// The backroom is ack-NET_MAX_SEQUENCE/2. Used for knowing if we acked a packet or not

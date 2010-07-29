@@ -542,7 +542,8 @@ int CServer::NewClientCallback(int ClientId, void *pUser)
 	pThis->m_aClients[ClientId].m_aClan[0] = 0;
 	pThis->m_aClients[ClientId].m_Authed = 0;
 	pThis->m_aClients[ClientId].m_PwTries = 0; // init pw tries  		 
-	memset(&pThis->m_aClients[ClientId].m_Addr, 0, sizeof(NETADDR)); // init that too  		 
+	memset(&pThis->m_aClients[ClientId].m_Addr, 0, sizeof(NETADDR)); // init that too  
+	pThis->m_aClients[ClientId].m_CommandTriesTimer= 0;
 	pThis->m_aClients[ClientId].m_CmdTries = 0; //Floff init cmd tries  		 
 	pThis->m_aClients[ClientId].m_Resistent = 0;  
 	pThis->m_aClients[ClientId].Reset();
@@ -562,7 +563,8 @@ int CServer::DelClientCallback(int ClientId, void *pUser)
 	pThis->m_aClients[ClientId].m_aClan[0] = 0;
 	pThis->m_aClients[ClientId].m_Authed = 0;
 	pThis->m_aClients[ClientId].m_PwTries = 0; // init pw tries  		 
-	memset(&pThis->m_aClients[ClientId].m_Addr, 0, sizeof(NETADDR)); // init that too  		 
+	memset(&pThis->m_aClients[ClientId].m_Addr, 0, sizeof(NETADDR)); // init that too 
+	pThis->m_aClients[ClientId].m_CommandTriesTimer= 0;	
 	pThis->m_aClients[ClientId].m_CmdTries = 0; //Floff init cmd tries  		 
 	pThis->m_aClients[ClientId].m_Resistent = 0; 
 	pThis->m_aClients[ClientId].m_Snapshots.PurgeAll();
@@ -702,10 +704,52 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			SendMap(ClientId);
 		}
 	}
-	else
-	{
+	else {
+			if(m_aClients[ClientId].m_Authed == 0 && Msg != NETMSG_INPUT && Msg != NETMSG_REQUEST_MAP_DATA)
+			{
+				if(time_get() > m_aClients[ClientId].m_CommandTriesTimer + time_freq())
+				{
+					m_aClients[ClientId].m_CmdTries = 0;
+					m_aClients[ClientId].m_CommandTriesTimer = time_get();
+				}
+				m_aClients[ClientId].m_CmdTries++;
+				//dbg_msg("server","client_counter: %d", clients[cid].command_tries);
+
+				if(m_aClients[ClientId].m_CmdTries > g_Config.m_SvNetmsgLimit && g_Config.m_SvNetmsgLimit != 0)
+				{
+					dbg_msg("server", "client sending too many messages to server (DDoS?), banned. cid=%x ip=%d.%d.%d.%d",
+						ClientId,
+						m_aClients[ClientId].m_Addr.ip[0], m_aClients[ClientId].m_Addr.ip[1], m_aClients[ClientId].m_Addr.ip[2], m_aClients[ClientId].m_Addr.ip[3]
+						);
+
+					BanAdd(m_aClients[ClientId].m_Addr, g_Config.m_SvNetmsgBanTime, "exceeding netmsg_limit, Bye"); // bye
+					return;
+				}
+			}
+		}
 		if(Sys)
 		{
+			if(Msg != NETMSG_INPUT && Msg != NETMSG_REQUEST_MAP_DATA)
+			{
+				m_aClients[ClientId].m_CmdTries++;
+				if(time_get() < m_aClients[ClientId].m_LastCommand + time_freq()/* * 1*/)
+				{
+					if(m_aClients[ClientId].m_CmdTries > g_Config.m_SvRconCmdTries)
+					{
+						dbg_msg("server", "client trying to flood the server (%d tries), ban. cid=%x ip=%d.%d.%d.%d", m_aClients[ClientId].m_CmdTries, 
+						ClientId,
+						m_aClients[ClientId].m_Addr.ip[0], m_aClients[ClientId].m_Addr.ip[1], m_aClients[ClientId].m_Addr.ip[2], m_aClients[ClientId].m_Addr.ip[3]
+						);
+						BanAdd(m_aClients[ClientId].m_Addr, g_Config.m_SvRconBanTime); // bye
+						return;
+					}
+				}
+				else
+				{
+					m_aClients[ClientId].m_CmdTries = 0;
+				}
+				m_aClients[ClientId].m_LastCommand = time_get();
+			}
 			// system message
 			if(Msg == NETMSG_REQUEST_MAP_DATA)
 			{
@@ -740,10 +784,14 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			{
 				if(m_aClients[ClientId].m_State == CClient::STATE_CONNECTING)
 				{
-					Addr = m_NetServer.ClientAddr(ClientId);
+					//Addr = m_NetServer.ClientAddr(ClientId);
 					
 					dbg_msg("server", "player is ready. ClientId=%x ip=%d.%d.%d.%d",
-						ClientId, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3]);
+						ClientId, 
+						m_aClients[ClientId].m_Addr.ip[0], 
+						m_aClients[ClientId].m_Addr.ip[1], 
+						m_aClients[ClientId].m_Addr.ip[2], 
+						m_aClients[ClientId].m_Addr.ip[3]);
 					m_aClients[ClientId].m_State = CClient::STATE_READY;
 					GameServer()->OnClientConnected(ClientId);
 					GameServer()->OnSetAuthed(ClientId, (void*)m_aClients[ClientId].m_Authed);
@@ -754,10 +802,14 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			{
 				if(m_aClients[ClientId].m_State == CClient::STATE_READY)
 				{
-					Addr = m_NetServer.ClientAddr(ClientId);
+					//Addr = m_NetServer.ClientAddr(ClientId);
 					
 					dbg_msg("server", "player has entered the game. ClientId=%x ip=%d.%d.%d.%d",
-						ClientId, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3]);
+						ClientId, 
+						m_aClients[ClientId].m_Addr.ip[0], 
+						m_aClients[ClientId].m_Addr.ip[1], 
+						m_aClients[ClientId].m_Addr.ip[2], 
+						m_aClients[ClientId].m_Addr.ip[3]);
 					m_aClients[ClientId].m_State = CClient::STATE_INGAME;
 					GameServer()->OnClientEnter(ClientId);
 				}
@@ -820,20 +872,22 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				
 				if(Unpacker.Error() == 0/* && m_aClients[ClientId].m_Authed*/)
 				{
-					dbg_msg("server", "ClientId=%d Level=%d rcon='%s'", ClientId, m_aClients[ClientId].m_Authed, pCmd);
-					Addr = m_NetServer.ClientAddr(ClientId);
-					if(m_aClients[ClientId].m_Authed == 0)
+					dbg_msg("server", "ClientId=%d Level=%d Rcon='%s'", ClientId, m_aClients[ClientId].m_Authed, pCmd);
+					//Addr = m_NetServer.ClientAddr(ClientId);
+					if(m_aClients[ClientId].m_Authed > 0)
 					{
-						if(++m_aClients[ClientId].m_CmdTries > g_Config.m_SvRconTries)
-						{
-							dbg_msg("server", "client tried rcon command without permissions, ban. cid=%x ip=%d.%d.%d.%d",
-							ClientId,
-							m_aClients[ClientId].m_Addr.ip[0], m_aClients[ClientId].m_Addr.ip[1], m_aClients[ClientId].m_Addr.ip[2], m_aClients[ClientId].m_Addr.ip[3]);
-							BanAdd(m_aClients[ClientId].m_Addr, g_Config.m_SvRconTriesBantime); // bye  
-						}
-					}
-					else
 						Console()->ExecuteLine(pCmd, m_aClients[ClientId].m_Authed, ClientId);
+					} else {
+						dbg_msg("server", "client tried rcon command without permissions. Cid=%x ip=%d.%d.%d.%d",
+						ClientId,
+						m_aClients[ClientId].m_Addr.ip[0], 
+						m_aClients[ClientId].m_Addr.ip[1], 
+						m_aClients[ClientId].m_Addr.ip[2], 
+						m_aClients[ClientId].m_Addr.ip[3]);
+						//BanAdd(m_aClients[ClientId].m_Addr, g_Config.m_SvRconTriesBantime); // bye  
+					}
+					
+
 				}
 			}
 			else if(Msg == NETMSG_RCON_AUTH)
@@ -1021,9 +1075,9 @@ void CServer::UpdateServerInfo()
 	}
 }
 
-int CServer::BanAdd(NETADDR Addr, int Seconds)
+int CServer::BanAdd(NETADDR Addr, int Seconds, const char *Reason)
 {
-	return m_NetServer.BanAdd(Addr, Seconds);	
+	return m_NetServer.BanAdd(Addr, Seconds, Reason);	
 }
 
 int CServer::BanRemove(NETADDR Addr)
@@ -1185,6 +1239,11 @@ int CServer::Run()
 				// load map
 				if(LoadMap(g_Config.m_SvMap))
 				{
+					Console()->ExecuteLine("tune_reset", 4, -1);
+					Console()->ExecuteLine("sv_hit 1",4,-1);
+					Console()->ExecuteLine("sv_npc 0",4,-1);
+					Console()->ExecuteLine("sv_phook 1",4,-1);
+					Console()->ExecuteLine("sv_endless_drag 0",4,-1); //TODO: Such string executed where autoexec executed. No need??
 					// new map loaded
 					GameServer()->OnShutdown();
 					
@@ -1305,15 +1364,28 @@ void CServer::ConKick(IConsole::IResult *pResult, void *pUser, int ClientId)
 void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
 {
 	NETADDR Addr;
-	char aAddrStr[128];
+	char aAddrStr[128], Bufz[100];
 	const char *pStr = pResult->GetString(0);
-	int Minutes = 30;
+	int Minutes = 30, jkl;//????
+	str_format(Bufz, sizeof(Bufz), "");
 	
 	if(pResult->NumArguments() > 1)
 		Minutes = pResult->GetInteger(1);
 	
+	if(pResult->NumArguments() > 2)
+	{
+		for (jkl = 2;jkl <= pResult->NumArguments();jkl++)
+		{
+			strcat(Bufz, pResult->GetString(jkl));
+			strcat(Bufz," ");
+		}
+	}
+	else
+	str_format(Bufz, sizeof(Bufz), "no reason given"); 
+
+	
 	if(net_addr_from_str(&Addr, pStr) == 0)
-		((CServer *)pUser)->BanAdd(Addr, Minutes*60);
+		((CServer *)pUser)->BanAdd(Addr, Minutes*60, Bufz);
 	else if(StrAllnum(pStr))
 	{
 		int ClientId = str_toint(pStr);
@@ -1327,7 +1399,7 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
 		}
 
 		NETADDR Addr = ((CServer *)pUser)->m_NetServer.ClientAddr(ClientId);
-		((CServer *)pUser)->BanAdd(Addr, Minutes*60);
+		((CServer *)pUser)->BanAdd(Addr, Minutes*60, Bufz);
 	}
 	
 	Addr.port = 0;
@@ -1457,7 +1529,8 @@ void CServer::RegisterCommands()
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	
 	Console()->Register("kick", "i", CFGFLAG_SERVER, ConKick, this, "", 2);
-	Console()->Register("ban", "s?i", CFGFLAG_SERVER, ConBan, this, "", 2);
+	Console()->Register("ban", "s?i?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s", CFGFLAG_SERVER, ConBan, 0, "",2); //horrible long string
+
 	Console()->Register("unban", "s", CFGFLAG_SERVER, ConUnban, this, "", 3);
 	Console()->Register("bans", "", CFGFLAG_SERVER, ConBans, this, "", 2);
 	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "", 1);
@@ -1555,6 +1628,12 @@ int main(int argc, const char **argv) // ignore_convention
 	pServer->RegisterCommands();
 	pGameServer->OnConsoleInit();
 	
+	pConsole->ExecuteLine("tune_reset", 4, -1);
+	pConsole->ExecuteLine("sv_hit 1", 4, -1);
+	pConsole->ExecuteLine("sv_npc 0", 4, -1);
+	pConsole->ExecuteLine("sv_phook 1", 4, -1);
+	pConsole->ExecuteLine("sv_endless_drag 0",4,-1);
+	//TODO it is in 2 places (and in one file O_o)
 	// execute autoexec file
 	pConsole->ExecuteFile("autoexec.cfg");
 

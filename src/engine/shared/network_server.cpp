@@ -1,4 +1,5 @@
 #include <base/system.h>
+#include "config.h"
 #include "network.h"
 
 #define MACRO_LIST_LINK_FIRST(Object, First, Prev, Next) \
@@ -78,7 +79,8 @@ int CNetServer::Drop(int ClientID, const char *pReason)
 {
 	// TODO: insert lots of checks here
 	NETADDR Addr = ClientAddr(ClientID);
-
+	char Bufz[100];
+	str_format( Bufz, sizeof(Bufz),"trying to connect so soon");
 	dbg_msg("net_server", "client dropped. cid=%d ip=%d.%d.%d.%d reason=\"%s\"",
 		ClientID,
 		Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3],
@@ -89,6 +91,7 @@ int CNetServer::Drop(int ClientID, const char *pReason)
 	if(m_pfnDelClient)
 		m_pfnDelClient(ClientID, m_UserPtr);
 	m_aSlots[ClientID].m_Connection.Disconnect(pReason);
+	BanAddNoDrop(Addr, g_Config.m_SvReconnectTime, Bufz);
 	return 0;
 }
 
@@ -139,7 +142,7 @@ int CNetServer::BanRemove(NETADDR Addr)
 	return -1;
 }
 
-int CNetServer::BanAdd(NETADDR Addr, int Seconds)
+int CNetServer::BanAdd(NETADDR Addr, int Seconds, const char * Reason)
 {
 	int IpHash = (Addr.ip[0]+Addr.ip[1]+Addr.ip[2]+Addr.ip[3])&0xff;
 	int Stamp = -1;
@@ -157,7 +160,11 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds)
 	if(pBan)
 	{
 		// adjust the ban
+		if (pBan->m_Info.m_Expires > Seconds)
+			return 0;
+		
 		pBan->m_Info.m_Expires = Stamp;
+		strcpy(pBan->m_Info.m_Reason, m_Reason);
 		return 0;
 	}
 	
@@ -212,10 +219,13 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds)
 		char Buf[128];
 		NETADDR BanAddr;
 		
-		if(Seconds)
+		if(Seconds) {
 			str_format(Buf, sizeof(Buf), "you have been banned for %d minutes", Seconds/60);
-		else
+			strcat(Buf, Reason);
+		} else {
 			str_format(Buf, sizeof(Buf), "you have been banned for life");
+			strcat(Buf, Reason);
+		}
 		
 		for(int i = 0; i < MaxClients(); i++)
 		{
@@ -228,6 +238,83 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds)
 	}
 	return 0;
 }
+
+
+
+int CNetServer::BanAddNoDrop(NETADDR Addr, int Seconds, const char *Reason)
+{
+	int IpHash = (Addr.ip[0]+Addr.ip[1]+Addr.ip[2]+Addr.ip[3])&0xff;
+	int Stamp = -1;
+	CBan *pBan;
+	
+	// remove the port
+	Addr.port = 0;
+	
+	if(Seconds)
+		Stamp = time_timestamp() + Seconds;
+		
+	// search to see if it already exists
+	pBan = m_aBans[IpHash];
+	MACRO_LIST_FIND(pBan, m_pHashNext, net_addr_comp(&pBan->m_Info.m_Addr, &Addr) == 0);
+	if(pBan)
+	{
+		// adjust the ban
+		if (pBan->m_Info.m_Expires > Seconds)
+			return 0;
+		
+		pBan->m_Info.m_Expires = Stamp;
+		strcpy(pBan->m_Info.m_Reason, m_Reason);
+		return 0;
+	}
+	
+	if(!m_BanPool_FirstFree)
+		return -1;
+
+	// fetch and clear the new ban
+	pBan = m_BanPool_FirstFree;
+	MACRO_LIST_UNLINK(pBan, m_BanPool_FirstFree, m_pPrev, m_pNext);
+	
+	// setup the ban info
+	pBan->m_Info.m_Expires = Stamp;
+	pBan->m_Info.m_Addr = Addr;
+	strcpy(pBan->m_Info.m_Reason, m_Reason);
+	// add it to the ban hash
+	MACRO_LIST_LINK_FIRST(pBan, m_aBans[IpHash], m_pHashPrev, m_pHashNext);
+	
+	// insert it into the used list
+	{
+		if(m_BanPool_FirstUsed)
+		{
+			CBan *pInsertAfter = m_BanPool_FirstUsed;
+			MACRO_LIST_FIND(pInsertAfter, m_pNext, Stamp < pInsertAfter->m_Info.m_Expires);
+			
+			if(pInsertAfter)
+				pInsertAfter = pInsertAfter->m_pPrev;
+			else
+			{
+				// add to last
+				pInsertAfter = m_BanPool_FirstUsed;
+				while(pInsertAfter->m_pNext)
+					pInsertAfter = pInsertAfter->m_pNext;
+			}
+			
+			if(pInsertAfter)
+			{
+				MACRO_LIST_LINK_AFTER(pBan, pInsertAfter, m_pPrev, m_pNext);
+			}
+			else
+			{
+				MACRO_LIST_LINK_FIRST(pBan, m_BanPool_FirstUsed, m_pPrev, m_pNext);
+			}
+		}
+		else
+		{
+			MACRO_LIST_LINK_FIRST(pBan, m_BanPool_FirstUsed, m_pPrev, m_pNext);
+		}
+	}
+	return 0;
+}
+
 
 int CNetServer::Update()
 {
@@ -293,14 +380,14 @@ int CNetServer::Recv(CNetChunk *pChunk)
 				char BanStr[128];
 				if(pBan->m_Info.m_Expires)
 				{
-					int Mins = ((pBan->m_Info.m_Expires - Now)+59)/60;
-					if(Mins == 1)
-						str_format(BanStr, sizeof(BanStr), "banned for %d minute", Mins);
+					int Mins = ((pBan->m_Info.m_Expires - Now))/60;
+					if(Mins > 1)
+						str_format(BanStr, sizeof(BanStr), "Banned for %d minute(s) for %s", Mins, pBan->m_Info.m_Reason);
 					else
-						str_format(BanStr, sizeof(BanStr), "banned for %d minutes", Mins);
+						str_format(BanStr, sizeof(BanStr), "Banned for %d minute(s) for %s", (pBan->m_Info.m_Expires - Now), pBan->m_Info.m_Reason);
 				}
 				else
-					str_format(BanStr, sizeof(BanStr), "banned for life");
+					str_format(BanStr, sizeof(BanStr), "banned for life. %s", pBan->m_Info.m_Reason);
 				CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, BanStr, str_length(BanStr)+1);
 				continue;
 			}

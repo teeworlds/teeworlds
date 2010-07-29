@@ -101,11 +101,11 @@ void CNetBase::SendPacketConnless(NETSOCKET Socket, NETADDR *pAddr, const void *
 	net_udp_send(Socket, pAddr, aBuffer, 6+DataSize);
 }
 
-void CNetBase::SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct *pPacket)
+int32_t CNetBase::SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct *pPacket)
 {
 	unsigned char aBuffer[NET_MAX_PACKETSIZE];
-	int CompressedSize = -1;
-	int FinalSize = -1;
+	int32_t CompressedSize = -1;
+	int32_t FinalSize = -1;
 
 	// log the data
 	if(ms_DataLogSent)
@@ -141,7 +141,8 @@ void CNetBase::SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct 
 		aBuffer[0] = ((pPacket->m_Flags<<4)&0xf0)|((pPacket->m_Ack>>8)&0xf);
 		aBuffer[1] = pPacket->m_Ack&0xff;
 		aBuffer[2] = pPacket->m_NumChunks;
-		net_udp_send(Socket, pAddr, aBuffer, FinalSize);
+		int32_t ResultVal;
+		ResultVal = net_udp_send(Socket, pAddr, aBuffer, FinalSize);
 
 		// log raw socket data
 		if(ms_DataLogSent)
@@ -152,7 +153,9 @@ void CNetBase::SendPacket(NETSOCKET Socket, NETADDR *pAddr, CNetPacketConstruct 
 			io_write(ms_DataLogSent, aBuffer, FinalSize);
 			io_flush(ms_DataLogSent);
 		}
+		return ResultVal;
 	}
+	return 0;
 }
 
 // TODO: rename this function

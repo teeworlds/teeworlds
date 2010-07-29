@@ -21,6 +21,12 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	m_Muted = 0;
 	this->m_ClientID = CID;
 	m_Team = GameServer()->m_pController->ClampTeam(Team);
+	
+	m_LastPlaytime = time_get();
+	m_LastTarget_x = 0;
+	m_LastTarget_y = 0;
+	m_SentAfkWarning = 0; // afk timer's 1st warning after 50% of sv_max_afk_time
+	m_SentAfkWarning2 = 0;
 }
 
 CPlayer::~CPlayer()
@@ -142,6 +148,7 @@ void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 	
 	if(!Character && m_Team == -1)
 		m_ViewPos = vec2(NewInput->m_TargetX, NewInput->m_TargetY);
+	AfkTimer(NewInput->m_TargetX, NewInput->m_TargetY);
 }
 
 CCharacter *CPlayer::GetCharacter()
@@ -205,5 +212,58 @@ void CPlayer::TryRespawn()
 		Character = new(m_ClientID) CCharacter(&GameServer()->m_World);
 		Character->Spawn(this, SpawnPos);
 		GameServer()->CreatePlayerSpawn(SpawnPos);
+	}
+}
+
+
+void CPlayer::AfkTimer(int new_target_x, int new_target_y)
+{
+	/*
+		afk timer (x, y = mouse coordinates)
+		Since a player has to move the mouse to play, this is a better method than checking
+		the player's position in the game world, because it can easily be bypassed by just locking a key.
+		Frozen players could be kicked as well, because they can't move.
+		It also works for spectators.
+	*/
+	
+	if(m_Authed) return; // don't kick admins
+	if(g_Config.m_SvMaxAfkTime == 0) return; // 0 = disabled
+	
+	if(new_target_x != last_target_x || new_target_y != last_target_y)
+	{
+		m_LastPlaytime = time_get();
+		m_LastTarget_x = new_target_x;
+		m_LastTarget_y = new_target_y;
+		m_SentAfkWarning = 0; // afk timer's 1st warning after 50% of sv_max_afk_time
+		m_SentAfkWarning2 = 0;
+		
+	}
+	else
+	{
+		// not playing, check how long
+		if(m_SentAfkWarning == 0 && m_LastPlaytime < time_get()-time_freq()*(int)(g_Config.m_SvMaxAfkTime*0.5))
+		{
+			sprintf(
+				m_pAfkMsg,
+				"You have been afk for %d seconds now. Please note that you get kicked after not playing for %d seconds.",
+				(int)(g_Config.m_SvMaxAfkTime*0.5),
+				g_Config.m_SvMaxAfkTime
+			);
+			m_pGameServer->SendChatTarget(client_id, m_pAfkMsg);
+			m_SentAfkWarning = 1;
+		} else if(m_SentAfkWarning2 == 0 && m_LastPlaytime < time_get()-time_freq()*(int)(g_Config.m_SvMaxAfkTime*0.9))
+		{
+			sprintf(
+				m_pAfkMsg,
+				"You have been afk for %d seconds now. Please note that you get kicked after not playing for %d seconds.",
+				(int)(g_Config.m_SvMaxAfkTime*0.9),
+				g_Config.m_SvMaxAfkTime
+			);
+			m_pGameServer->SendChatTarget(client_id, m_pAfkMsg);
+			m_SentAfkWarning = 1;
+		} else if(last_playtime < time_get()-time_freq()*g_Config.m_SvMaxAfkTime)
+		{
+			m_pGameServer->Server()->Kick(client_id,"Away from keyboard");
+		}
 	}
 }

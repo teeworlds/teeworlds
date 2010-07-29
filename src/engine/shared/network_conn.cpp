@@ -64,15 +64,18 @@ void CNetConnection::SignalResend()
 	m_Construct.m_Flags |= NET_PACKETFLAG_RESEND;
 }
 
-int CNetConnection::Flush()
+int32_t CNetConnection::Flush()
 {
-	int NumChunks = m_Construct.m_NumChunks;
+	int32_t NumChunks = m_Construct.m_NumChunks;
 	if(!NumChunks && !m_Construct.m_Flags)
 		return 0;
 
 	// send of the packets
 	m_Construct.m_Ack = m_Ack;
-	CNetBase::SendPacket(m_Socket, &m_PeerAddr, &m_Construct);
+	if(CNetBase::SendPacket(m_Socket, &m_PeerAddr, &m_Construct) < 0) {
+		m_State = NET_CONNSTATE_ERROR;
+		SetError("send error" );
+	}
 	
 	// update send times
 	m_LastSendTime = time_get();

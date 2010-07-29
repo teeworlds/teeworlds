@@ -40,13 +40,15 @@ public:
 	int m_Vote;
 	int m_VotePos;
 	//
-	int m_Last_VoteCall;
-	int m_Last_VoteTry;
-	int m_Last_Chat;
-	int m_Last_SetTeam;
-	int m_Last_ChangeInfo;
-	int m_Last_Emote;
-	int m_Last_Kill;
+	int64 m_Last_KickVote;
+	
+	int64 m_Last_VoteCall;
+	int64 m_Last_VoteTry;
+	int64 m_Last_Chat;
+	int64 m_Last_SetTeam;
+	int64 m_Last_ChangeInfo;
+	int64 m_Last_Emote;
+	int64 m_Last_Kill;
 	
 	//DDRace  		 
    int m_Muted;  		 
@@ -81,12 +83,23 @@ public:
 	int m_ScoreStartTick;
 	bool m_ForceBalanced;
 	
+	// afk timer
+	void AfkTimer(int new_target_x, int new_target_y);
+	int64 m_LastPlaytime;
+	int m_LastTarget_x;
+	int m_LastTarget_y;
+	int m_SentAfkWarning; // afk timer's 1st warning after 50% of sv_max_afk_time
+	int m_SentAfkWarning2; // afk timer's 2nd warning after 90% of sv_max_afk_time
+	char m_pAfkMsg[160];
+	
 private:
 	CCharacter *Character;
 	CGameContext *m_pGameServer;
 	
 	CGameContext *GameServer() const { return m_pGameServer; }
 	IServer *Server() const;
+	
+	
 	
 	//
 	bool m_Spawning;
