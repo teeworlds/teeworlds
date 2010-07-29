@@ -868,11 +868,13 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		if(g_Config.m_SvSpamprotection && p->m_Last_ChangeInfo && p->m_Last_ChangeInfo+Server()->TickSpeed()*5 > Server()->Tick())
 			return;
 			
-		p->m_Last_ChangeInfo = Server()->Tick();
-		
-		p->m_TeeInfos.m_UseCustomColor = pMsg->m_UseCustomColor;
-		p->m_TeeInfos.m_ColorBody = pMsg->m_ColorBody;
-		p->m_TeeInfos.m_ColorFeet = pMsg->m_ColorFeet;
+		p->m_Last_ChangeInfo = time_get();
+		if (p->m_ColorSet|| g_Config.m_SvAllowColorChange)
+		{
+			p->m_TeeInfos.m_UseCustomColor = pMsg->m_UseCustomColor;
+			p->m_TeeInfos.m_ColorBody = pMsg->m_ColorBody;
+			p->m_TeeInfos.m_ColorFeet = pMsg->m_ColorFeet;
+		}
 
 		// check for invalid chars
 		unsigned char *pName = (unsigned char *)pMsg->m_pName;
