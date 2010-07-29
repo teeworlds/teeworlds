@@ -30,11 +30,12 @@ public:
 		const char *m_pName;
 		const char *m_pHelp;
 		const char *m_pParams;
+		int m_Level;
 	};
 
 	typedef void (*FPrintCallback)(const char *pStr, void *pUser);
 	typedef void (*FPossibleCallback)(const char *pCmd, void *pUser);
-	typedef void (*FCommandCallback)(IResult *pResult, void *pUserData);
+	typedef void (*FCommandCallback)(IResult *pResult, void *pUserData, int ClientId);
 	typedef void (*FChainCommandCallback)(IResult *pResult, void *pUserData, FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	virtual CCommandInfo *GetCommandInfo(const char *pName, int FlagMask) = 0;
@@ -42,11 +43,11 @@ public:
 	virtual void ParseArguments(int NumArgs, const char **ppArguments) = 0;
 
 	virtual void Register(const char *pName, const char *pParams, 
-		int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp) = 0;
+		int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp, const int Level) = 0;
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser) = 0;
 	
-	virtual void ExecuteLine(const char *Sptr) = 0;
-	virtual void ExecuteLineStroked(int Stroke, const char *pStr) = 0;
+	virtual void ExecuteLine(const char *Sptr, const int ClientLevel, const int ClientId) = 0;
+	virtual void ExecuteLineStroked(int Stroke, const char *pStr, const int ClientLevel, const int ClientId) = 0;
 	virtual void ExecuteFile(const char *pFilename) = 0;
 	
 	virtual void RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUserData) = 0;

@@ -37,12 +37,12 @@ class CConsole : public IConsole
 	CExecFile *m_pFirstExec;
 	class IStorage *m_pStorage;
 
-	static void Con_Chain(IResult *pResult, void *pUserData);
-	static void Con_Echo(IResult *pResult, void *pUserData);
-	static void Con_Exec(IResult *pResult, void *pUserData);
+	static void Con_Chain(IResult *pResult, void *pUserData, int ClientId);
+	static void Con_Echo(IResult *pResult, void *pUserData, int ClientId);
+	static void Con_Exec(IResult *pResult, void *pUserData, int ClientId);
 
 	void ExecuteFileRecurse(const char *pFilename);
-	void ExecuteLineStroked(int Stroke, const char *pStr);
+	void ExecuteLineStroked(int Stroke, const char *pStr, const int ClientLevel, const int ClientId);
 	
 	FPrintCallback m_pfnPrintCallback;
 	void *m_pPrintCallbackUserdata;
@@ -84,10 +84,10 @@ public:
 	virtual void PossibleCommands(const char *pStr, int FlagMask, FPossibleCallback pfnCallback, void *pUser) ;
 
 	virtual void ParseArguments(int NumArgs, const char **ppArguments);
-	virtual void Register(const char *pName, const char *pParams, int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp);
+	virtual void Register(const char *pName, const char *pParams, int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp, const int Level);
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser);
 	
-	virtual void ExecuteLine(const char *pStr);
+	virtual void ExecuteLine(const char *pStr, const int ClientLevel, const int ClientId);
 	virtual void ExecuteFile(const char *pFilename);
 
 	virtual void RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUserData);

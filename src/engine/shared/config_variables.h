@@ -5,6 +5,23 @@
 // TODO: remove this
 #include "././game/variables.h"
 
+//===============================  		  
+MACRO_CONFIG_INT(SvPauseable, sv_pauseable, 0, 0, 1, CFGFLAG_SERVER, "players can pause their char or not")  		  
+MACRO_CONFIG_INT(SvCheattime, sv_cheattime, 0, 0, 1, CFGFLAG_SERVER, "players can cheat with time or not")  		 
+MACRO_CONFIG_INT(SvHit, sv_hit, 1, 0, 1, CFGFLAG_SERVER, "players can hammer/grenade/laser one another")  		 
+MACRO_CONFIG_INT(SvTunes, sv_tunes, 1, 0, 1, CFGFLAG_SERVER, "Turns Tuning On/Off")  		 
+//MACRO_CONFIG_INT(SvPhook, sv_phook, 1, 0, 1, CFGFLAG_SERVER, "Turns Player On/Off")  		 
+//MACRO_CONFIG_INT(SvNpc, sv_npc, 0, 0, 1, CFGFLAG_SERVER, "Turns NPC (No Player Collision) On/Off")  		 
+MACRO_CONFIG_INT(SvEndlessDrag, sv_endless_drag, 0, 0, 1, CFGFLAG_SERVER, "Turns Endless hooking On/Off")  		 
+MACRO_CONFIG_INT(SvCheats, sv_cheats, 0, 0, 1, CFGFLAG_SERVER, "Turns Cheats On/Off")  		 
+MACRO_CONFIG_INT(SvAllowColorChange, sv_allow_color_change, 1, 0, 1, CFGFLAG_SERVER, "Allow color change (can block rainbowmod)")  		 
+MACRO_CONFIG_INT(SvRconTries, sv_rcon_tries, 5, 0, 100, CFGFLAG_SERVER, "How Many Password Tries Before ban")  		 
+MACRO_CONFIG_INT(SvRconTriesBantime, sv_rcon_tries_bantime, 300, 0, 9999, CFGFLAG_SERVER, "How Much time will the brute rcon password attacker will be banned")  		 
+ 		 
+MACRO_CONFIG_STR(SvRconPasswordAdmin, sv_rcon_password_admin, 32, "", CFGFLAG_SERVER, "Remote console admin password")  		 
+MACRO_CONFIG_STR(SvRconPasswordModer, sv_rcon_password_moder, 32, "", CFGFLAG_SERVER, "Remote console moderator password")  		 
+MACRO_CONFIG_STR(SvRconPasswordHelper, sv_rcon_password_helper, 32, "", CFGFLAG_SERVER, "Remote console helper password")  		 
+//=============================== */  
 
 MACRO_CONFIG_STR(PlayerName, player_name, 24, "nameless tee", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Name of the player")
 MACRO_CONFIG_STR(ClanName, clan_name, 32, "", CFGFLAG_SAVE|CFGFLAG_CLIENT, "(not used)")
@@ -67,7 +84,6 @@ MACRO_CONFIG_INT(SvMaxClients, sv_max_clients, 8, 1, MAX_CLIENTS, CFGFLAG_SERVER
 MACRO_CONFIG_INT(SvMaxClientsPerIP, sv_max_clients_per_ip, 8, 1, MAX_CLIENTS, CFGFLAG_SERVER, "Maximum number of clients with the same IP that can connect to the server")
 MACRO_CONFIG_INT(SvHighBandwidth, sv_high_bandwidth, 0, 0, 1, CFGFLAG_SERVER, "Use high bandwidth mode. Doubles the bandwidth required for the server. LAN use only")
 MACRO_CONFIG_INT(SvRegister, sv_register, 1, 0, 1, CFGFLAG_SERVER, "Register server with master server for public listing")
-MACRO_CONFIG_STR(SvRconPassword, sv_rcon_password, 32, "", CFGFLAG_SERVER, "Remote console password")
 
 MACRO_CONFIG_INT(Debug, debug, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Debug mode")
 MACRO_CONFIG_INT(DbgStress, dbg_stress, 0, 0, 0, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Stress systems")

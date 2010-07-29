@@ -170,7 +170,7 @@ void CConsole::Print(const char *pStr)
 		m_pfnPrintCallback(pStr, m_pPrintCallbackUserdata);
 }
 
-void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
+void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int ClientLevel, const int ClientId)
 {
 	CResult Result;
 	
@@ -230,8 +230,18 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
 					str_format(aBuf, sizeof(aBuf), "Invalid arguments... Usage: %s %s", pCommand->m_pName, pCommand->m_pParams);
 					Print(aBuf);
 				}
-				else
-					pCommand->m_pfnCallback(&Result, pCommand->m_pUserData);
+				if (pCommand->m_Level <= ClientLevel) {
+					pCommand->m_pfnCallback(&Result, pCommand->m_pUserData, ClientId);
+				} else {
+					char aBuf[256];
+					if (pCommand->m_Level == 100 && ClientLevel < 100)
+					{
+						str_format(aBuf, sizeof(aBuf), "You can't use this command: %s", pCommand->m_pName);
+					} else {
+						str_format(aBuf, sizeof(aBuf), "You have low level to use command: %s. Your level: %d. Need level: %d", pCommand->m_pName, ClientLevel, pCommand->m_Level);
+					}
+					Print(aBuf);
+				}
 			}
 		}
 		else if(Stroke)
@@ -273,10 +283,10 @@ CConsole::CCommand *CConsole::FindCommand(const char *pName, int FlagMask)
 	return 0x0;
 }
 
-void CConsole::ExecuteLine(const char *pStr)
+void CConsole::ExecuteLine(const char *pStr, const int ClientLevel, const int ClientId)
 {
-	CConsole::ExecuteLineStroked(1, pStr); // press it
-	CConsole::ExecuteLineStroked(0, pStr); // then release it
+	CConsole::ExecuteLineStroked(1, pStr, ClientLevel, ClientId); // press it
+	CConsole::ExecuteLineStroked(0, pStr, ClientLevel, ClientId); // then release it
 }
 
 
@@ -311,7 +321,7 @@ void CConsole::ExecuteFile(const char *pFilename)
 		lr.Init(File);
 
 		while((pLine = lr.Get()))
-			ExecuteLine(pLine);
+			ExecuteLine(pLine, 4, -1);
 
 		io_close(File);
 	}
@@ -321,12 +331,12 @@ void CConsole::ExecuteFile(const char *pFilename)
 	m_pFirstExec = pPrev;
 }
 
-void CConsole::Con_Echo(IResult *pResult, void *pUserData)
+void CConsole::Con_Echo(IResult *pResult, void *pUserData, int ClientId)
 {
 	((CConsole*)pUserData)->Print(pResult->GetString(0));
 }
 
-void CConsole::Con_Exec(IResult *pResult, void *pUserData)
+void CConsole::Con_Exec(IResult *pResult, void *pUserData, int ClientId)
 {
 	((CConsole*)pUserData)->ExecuteFile(pResult->GetString(0));
 }
@@ -346,7 +356,7 @@ struct CStrVariableData
 	int m_MaxSize;
 };
 
-static void IntVariableCommand(IConsole::IResult *pResult, void *pUserData)
+static void IntVariableCommand(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CIntVariableData *pData = (CIntVariableData *)pUserData;
 
@@ -373,7 +383,7 @@ static void IntVariableCommand(IConsole::IResult *pResult, void *pUserData)
 	}
 }
 
-static void StrVariableCommand(IConsole::IResult *pResult, void *pUserData)
+static void StrVariableCommand(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CStrVariableData *pData = (CStrVariableData *)pUserData;
 
@@ -398,20 +408,20 @@ CConsole::CConsole(int FlagMask)
 	m_pStorage = 0;
 	
 	// register some basic commands
-	Register("echo", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Echo, this, "Echo the text");
-	Register("exec", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Exec, this, "Execute the specified file");
+	Register("echo", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Echo, this, "Echo the text", 3);
+	Register("exec", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Exec, this, "Execute the specified file", 3);
 	
 	// TODO: this should disappear
 	#define MACRO_CONFIG_INT(Name,ScriptName,Def,Min,Max,Flags,Desc) \
 	{ \
 		static CIntVariableData Data = { this, &g_Config.m_##Name, Min, Max }; \
-		Register(#ScriptName, "?i", Flags, IntVariableCommand, &Data, Desc); \
+		Register(#ScriptName, "?i", Flags, IntVariableCommand, &Data, Desc, 3); \
 	}
 	
 	#define MACRO_CONFIG_STR(Name,ScriptName,Len,Def,Flags,Desc) \
 	{ \
 		static CStrVariableData Data = { this, g_Config.m_##Name, Len }; \
-		Register(#ScriptName, "?r", Flags, StrVariableCommand, &Data, Desc); \
+		Register(#ScriptName, "?r", Flags, StrVariableCommand, &Data, Desc, 3); \
 	}
 
 	#include "config_variables.h" 
@@ -433,13 +443,13 @@ void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
 		else
 		{
 			// search arguments for overrides
-			ExecuteLine(ppArguments[i]);
+			ExecuteLine(ppArguments[i], 100, -1);
 		}
 	}
 }
 
 void CConsole::Register(const char *pName, const char *pParams, 
-	int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp)
+	int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp, const int Level)
 {
 	CCommand *pCommand = (CCommand *)mem_alloc(sizeof(CCommand), sizeof(void*));
 	pCommand->m_pfnCallback = pfnFunc;
@@ -448,13 +458,13 @@ void CConsole::Register(const char *pName, const char *pParams,
 	pCommand->m_pName = pName;
 	pCommand->m_pParams = pParams;
 	pCommand->m_Flags = Flags;
-	
+	pCommand->m_Level = Level;
 	
 	pCommand->m_pNext = m_pFirstCommand;
 	m_pFirstCommand = pCommand;
 }
 
-void CConsole::Con_Chain(IResult *pResult, void *pUserData)
+void CConsole::Con_Chain(IResult *pResult, void *pUserData, int ClientId)
 {
 	CChain *pInfo = (CChain *)pUserData;
 	pInfo->m_pfnChainCallback(pResult, pInfo->m_pUserData, pInfo->m_pfnCallback, pInfo->m_pCallbackUserData);

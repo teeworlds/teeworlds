@@ -14,6 +14,14 @@ enum
 	WEAPON_WORLD = -1, // death tiles etc
 };
 
+enum 
+{
+	RACE_NONE = 0,
+	RACE_STARTED,
+	RACE_CHEAT, // no time and won't start again unless oredered by a mod or death
+	RACE_PAUSE//No time nor movement
+};
+
 class CCharacter : public CEntity
 {
 	MACRO_ALLOC_POOL_ID()
@@ -55,21 +63,20 @@ public:
 	bool GiveWeapon(int Weapon, int Ammo);
 	void GiveNinja();
 	
+	void ResetPos();
+	
+	bool Freeze(int Time);
+	bool Freeze();
+	bool UnFreeze();
+	
+	void GiveAllWeapons();  
+	
 	void SetEmote(int Emote, int Tick);
 	
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
-	
-private:
-	// player controlling this character
-	class CPlayer *m_pPlayer;
-	
-	bool m_Alive;
-
-	// weapon info
-	CEntity *m_apHitObjects[10];
-	int m_NumObjectsHit;
-	
+		// the player core for the physics	
+	CCharacterCore m_Core;
 	struct WeaponStat
 	{
 		int m_AmmoRegenStart;
@@ -78,9 +85,42 @@ private:
 		bool m_Got;
 		
 	} m_aWeapons[NUM_WEAPONS];
-	
 	int m_ActiveWeapon;
 	int m_LastWeapon;
+	// player controlling this character
+	class CPlayer *m_pPlayer;
+
+	int m_RaceState;
+	
+		struct
+	{
+		vec2 m_ActivationDir;
+		int m_ActivationTick;
+		int m_CurrentMoveTime;
+		
+	} m_Ninja;
+	
+	int m_HammerType;
+	bool m_Super;
+
+	//DDRace
+	int m_FreezeTime;
+	int m_FreezeTick;
+	
+	bool m_Doored;
+
+	vec2 m_OldPos;
+	vec2 m_OlderPos;
+	
+	bool m_Alive;
+
+	// weapon info
+	CEntity *m_apHitObjects[10];
+	int m_NumObjectsHit;
+	
+	
+	
+
 	int m_QueuedWeapon;
 	
 	int m_ReloadTimer;
@@ -110,18 +150,23 @@ private:
 	int m_Armor;
 
 	// ninja
-	struct
-	{
-		vec2 m_ActivationDir;
-		int m_ActivationTick;
-		int m_CurrentMoveTime;
-		
-	} m_Ninja;
+
 
 	int m_PlayerState;// if the client is chatting, accessing a menu or so
+	
+	bool m_IsWater;
+	bool m_DoSplash;
+	int m_LastMove;
+	// race var
+	int m_StartTime;
+	int m_RefreshTime;
 
-	// the player core for the physics	
-	CCharacterCore m_Core;
+	// checkpoints
+	int m_CpTick;
+	int m_CpActive;
+	float m_CpCurrent[149];  
+
+
 	
 	// info for dead reckoning
 	int m_ReckoningTick; // tick that we are performing dead reckoning From

@@ -1,5 +1,6 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include "gamecore.h"
+#include "server/entities/character.h"
 
 const char *CTuningParams::m_apNames[] =
 {
@@ -251,8 +252,9 @@ void CCharacterCore::Tick(bool UseInput)
 	{
 		if(m_HookedPlayer != -1)
 		{
-			CCharacterCore *p = m_pWorld->m_apCharacters[m_HookedPlayer];
-			if(p)
+			CCharacterCore *p = m_pWorld->m_apCharacters[m_HookedPlayer];//TODO: Это пиздец
+			//CCharacter* pl = GameServer()->m_apPlayers[m_HookedPlayer]->GetCharacter();
+			if(p/*&&pl->m_RaceState != RACE_PAUSE*/)
 				m_HookPos = p->m_Pos;
 			else
 			{
@@ -301,7 +303,7 @@ void CCharacterCore::Tick(bool UseInput)
 		}
 	}
 	
-	if(m_pWorld && m_pWorld->m_Tuning.m_PlayerCollision)
+	if(m_pWorld/* && m_pWorld->m_Tuning.m_PlayerCollision*/)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
@@ -312,22 +314,23 @@ void CCharacterCore::Tick(bool UseInput)
 			//player *p = (player*)ent;
 			if(p == this) // || !(p->flags&FLAG_ALIVE)
 				continue; // make sure that we don't nudge our self
-			
 			// handle player <-> player collision
 			float d = distance(m_Pos, p->m_Pos);
 			vec2 Dir = normalize(m_Pos - p->m_Pos);
-			if(d < PhysSize*1.25f && d > 1.0f)
-			{
-				float a = (PhysSize*1.45f - d);
+			if (m_pWorld->m_Tuning.m_PlayerCollision) {
 				
-				// make sure that we don't add excess force by checking the
-				// direction against the current velocity
-				vec2 VelDir = normalize(m_Vel);
-				float v = 1-(dot(VelDir, Dir)+1)/2;
-				m_Vel = m_Vel + Dir*a*(v*0.75f);
-				m_Vel = m_Vel * 0.85f;
+				if(d < PhysSize*1.25f && d > 1.0f)
+				{
+					float a = (PhysSize*1.45f - d);
+					
+					// make sure that we don't add excess force by checking the
+					// direction against the current velocity
+					vec2 VelDir = normalize(m_Vel);
+					float v = 1-(dot(VelDir, Dir)+1)/2;
+					m_Vel = m_Vel + Dir*a*(v*0.75f);
+					m_Vel = m_Vel * 0.85f;
+				}
 			}
-			
 			// handle hook influence
 			if(m_HookedPlayer == i)
 			{

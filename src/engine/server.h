@@ -43,6 +43,7 @@ public:
 	virtual void SetBrowseInfo(char const *pGameType, int Progression) = 0;
 	virtual void SetClientName(int ClientID, char const *pName) = 0;
 	virtual void SetClientScore(int ClientID, int Score) = 0;
+	virtual void SetClientAuthed(int ClientID, int Authed) = 0;
 	
 	virtual int SnapNewID() = 0;
 	virtual void SnapFreeID(int ID) = 0;
@@ -75,6 +76,9 @@ public:
 	virtual void OnClientDirectInput(int ClientID, void *pInput) = 0;
 	virtual void OnClientPredictedInput(int ClientID, void *pInput) = 0;
 	
+	virtual void OnSetAuthed(int ClientId, void *pInput) = 0;
+	virtual void OnSetResistent(int ClientId, void *pInput) = 0;
+
 	virtual const char *Version() = 0;
 	virtual const char *NetVersion() = 0;
 };

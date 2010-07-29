@@ -1,9 +1,10 @@
 #include <game/generated/protocol.h>
 #include <game/server/gamecontext.h>
+#include <engine/shared/config.h>
 #include "projectile.h"
 
 CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, vec2 Dir, int Span,
-		int Damage, bool Explosive, float Force, int SoundImpact, int Weapon)
+		bool Freeze, bool Explosive, float Force, int SoundImpact, int Weapon)
 : CEntity(pGameWorld, NETOBJTYPE_PROJECTILE)
 {
 	m_Type = Type;
@@ -12,7 +13,8 @@ CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, 
 	m_LifeSpan = Span;
 	m_Owner = Owner;
 	m_Force = Force;
-	m_Damage = Damage;
+	//m_Damage = Damage;
+	m_Freeze = Freeze;
 	m_SoundImpact = SoundImpact;
 	m_Weapon = Weapon;
 	m_StartTick = Server()->Tick();
@@ -23,7 +25,8 @@ CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, 
 
 void CProjectile::Reset()
 {
-	GameServer()->m_World.DestroyEntity(this);
+	if(m_LifeSpan > -2)
+		GameServer()->m_World.DestroyEntity(this);
 }
 
 vec2 CProjectile::GetPos(float Time)
@@ -59,23 +62,53 @@ void CProjectile::Tick()
 	float Ct = (Server()->Tick()-m_StartTick)/(float)Server()->TickSpeed();
 	vec2 PrevPos = GetPos(Pt);
 	vec2 CurPos = GetPos(Ct);
-	int Collide = GameServer()->Collision()->IntersectLine(PrevPos, CurPos, &CurPos, 0);
-	CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);
-	CCharacter *TargetChr = GameServer()->m_World.IntersectCharacter(PrevPos, CurPos, 6.0f, CurPos, OwnerChar);
-
-	m_LifeSpan--;
+	vec2 ColPos;
+	vec2 NewPos;
+	vec2 Speed = CurPos - PrevPos;
+	int Collide = GameServer()->Collision()->IntersectLine(PrevPos, CurPos, &ColPos, &NewPos);
+	CCharacter *OwnerChar;
 	
-	if(TargetChr || Collide || m_LifeSpan < 0)
+
+	
+	if(m_Owner >= 0)
+		OwnerChar = GameServer()->GetPlayerChar(m_Owner);
+	
+	CCharacter *TargetChr = GameServer()->m_World.IntersectCharacter(PrevPos, ColPos, (m_Freeze) ? 1.0f : 6.0f, ColPos, OwnerChar);//TODO кажется тут баг с движением во фризе
+
+	if(m_LifeSpan > -1)
+		m_LifeSpan--;
+	
+	
+	if( (TargetChr && (g_Config.m_SvHit || TargetChr == OwnerChar)) || Collide)
 	{
-		if(m_LifeSpan >= 0 || m_Weapon == WEAPON_GRENADE)
-			GameServer()->CreateSound(CurPos, m_SoundImpact);
-
-		if(m_Explosive)
-			GameServer()->CreateExplosion(CurPos, m_Owner, m_Weapon, false);
-			
-		else if(TargetChr)
-			TargetChr->TakeDamage(m_Direction * max(0.001f, m_Force), m_Damage, m_Owner, m_Weapon);
-
+		if(m_Explosive/*??*/ && (!TargetChr || (TargetChr && !m_Freeze)))
+		{
+			GameServer()->CreateExplosion(ColPos, m_Owner, m_Weapon, false);
+			GameServer()->CreateSound(ColPos, m_SoundImpact);
+		}
+		else if(TargetChr && m_Freeze)
+			TargetChr->Freeze(Server()->TickSpeed()*3);
+		if (Collide && m_Bouncing != 0)
+		{
+			m_StartTick = Server()->Tick();
+			m_Pos = NewPos;
+			if (m_Bouncing == 1)
+				m_Direction.x = -m_Direction.x;
+			else if (m_Bouncing == 2)
+				m_Direction.y =- m_Direction.y;
+			m_Pos += m_Direction;
+		}
+		else if (m_Weapon == WEAPON_GUN)
+		{
+			GameServer()->CreateDamageInd(CurPos, -atan2(m_Direction.x, m_Direction.y), 10);
+			GameServer()->m_World.DestroyEntity(this);
+		}
+		else
+			if (!m_Freeze)
+				GameServer()->m_World.DestroyEntity(this);
+	}
+	 if (m_LifeSpan == -1)  		 
+	{
 		GameServer()->m_World.DestroyEntity(this);
 	}
 }

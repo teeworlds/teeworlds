@@ -2,6 +2,14 @@
 #define ENGINE_SERVER_SERVER_H
 
 #include <engine/server.h>
+#include <engine/map.h>
+#include <engine/shared/demorec.h>
+#include <engine/shared/protocol.h>
+#include <engine/shared/snapshot.h>
+#include <engine/shared/network.h>
+#include <engine/shared/engine.h>
+#include <engine/server/register.h>
+#include <engine/shared/console.h>
 
 class CSnapIDPool
 {
@@ -90,6 +98,12 @@ public:
 		int m_Score;
 		int m_Authed;
 		
+		int m_Resistent;
+		
+		NETADDR m_Addr; // for storing address 
+		int m_PwTries; // a players rcon pw tries
+		int m_CmdTries; //Floff players rcon command tries, to prevent command flood server crash  
+		
 		void Reset();
 	};
 	
@@ -129,6 +143,7 @@ public:
 	virtual void SetClientName(int ClientID, const char *pName);
 	virtual void SetClientScore(int ClientID, int Score);
 	virtual void SetBrowseInfo(const char *pGameType, int Progression);
+	virtual void SetClientAuthed(int ClientID, int Authed);
 
 	void Kick(int ClientID, const char *pReason);
 
@@ -175,15 +190,15 @@ public:
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer);
 	int Run();
 
-	static void ConKick(IConsole::IResult *pResult, void *pUser);
-	static void ConBan(IConsole::IResult *pResult, void *pUser);
-	static void ConUnban(IConsole::IResult *pResult, void *pUser);
-	static void ConBans(IConsole::IResult *pResult, void *pUser);
- 	static void ConStatus(IConsole::IResult *pResult, void *pUser);
-	static void ConShutdown(IConsole::IResult *pResult, void *pUser);
-	static void ConRecord(IConsole::IResult *pResult, void *pUser);
-	static void ConStopRecord(IConsole::IResult *pResult, void *pUser);
-	static void ConMapReload(IConsole::IResult *pResult, void *pUser);
+	static void ConKick(IConsole::IResult *pResult, void *pUser, int ClientId);
+	static void ConBan(IConsole::IResult *pResult, void *pUser, int ClientId);
+	static void ConUnban(IConsole::IResult *pResult, void *pUser, int ClientId);
+	static void ConBans(IConsole::IResult *pResult, void *pUser, int ClientId);
+ 	static void ConStatus(IConsole::IResult *pResult, void *pUser, int ClientId);
+	static void ConShutdown(IConsole::IResult *pResult, void *pUser, int ClientId);
+	static void ConRecord(IConsole::IResult *pResult, void *pUser, int ClientId);
+	static void ConStopRecord(IConsole::IResult *pResult, void *pUser, int ClientId);
+	static void ConMapReload(IConsole::IResult *pResult, void *pUser, int ClientId);
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 

@@ -38,12 +38,80 @@ enum
 	ENTITY_WEAPON_GRENADE,
 	ENTITY_POWERUP_NINJA,
 	ENTITY_WEAPON_RIFLE,
+			 
+   //DDRace  		 
+   ENTITY_LASER_FAST_CW,    //M&F  		 
+   ENTITY_LASER_NORMAL_CW,    //M&F  		 
+   ENTITY_LASER_SLOW_CW,    //M&F  		 
+   ENTITY_LASER_STOP,    //M&F  		 
+   ENTITY_LASER_SLOW_CCW,    //M&F  		 
+   ENTITY_LASER_NORMAL_CCW,//M&F  		 
+   ENTITY_LASER_FAST_CCW,    //M&F  		 
+ 		 
+   ENTITY_LASER_SHORT,    //M&F  		 
+   ENTITY_LASER_MIDDLE,    //M&F  		 
+   ENTITY_LASER_LONG,    //M&F  		 
+ 		 
+   ENTITY_LASER_C_SLOW,    //M&F  		 
+   ENTITY_LASER_C_NORMAL,    //M&F  		 
+   ENTITY_LASER_C_FAST,    //M&F  		 
+ 		 
+   ENTITY_LASER_O_SLOW,    //M&F  		 
+   ENTITY_LASER_O_NORMAL,    //M&F  		 
+   ENTITY_LASER_O_FAST,    //M&F  		 
+ 		 
+   ENTITY_DRAGER_WEAK,    //M&F  		 
+   ENTITY_DRAGER_NORMAL,    //M&F  		 
+   ENTITY_DRAGER_STRONG,    //M&F  		 
+ 		 
+   ENTITY_PLASMA,        //M&F  		 
+   ENTITY_NOTHING1,  		 
+   ENTITY_NOTHING2,  		 
+   ENTITY_NOTHING3,  		 
+   ENTITY_NOTHING4,  		 
+   ENTITY_NOTHING5,  		 
+   ENTITY_NOTHING6,  		 
+   ENTITY_NOTHING7,  		 
+   ENTITY_NOTHING8,  		 
+   ENTITY_NOTHING9,  		 
+   ENTITY_NOTHING10,  		 
+   ENTITY_NOTHING11,  		 
+   ENTITY_NOTHING12,  		 
+ 		 
+   ENTITY_DRAGER_WEAK_NW,    //M&F  		 
+   ENTITY_DRAGER_NORMAL_NW,    //M&F  		 
+   ENTITY_DRAGER_STRONG_NW,    //M&F  
 	NUM_ENTITIES,
 	
 	TILE_AIR=0,
 	TILE_SOLID,
 	TILE_DEATH,
 	TILE_NOHOOK,
+	
+	TILE_NOLASER,    //M  		 
+   TILE_BOOST_L,    //M  		 
+   TILE_BOOST_R,    //M  		 
+   TILE_BOOST_D,    //M  		 
+   TILE_BOOST_U,    //M  		 
+   TILE_FREEZE,    //M&F  		 
+   TILE_KICK,        //M&F  		 
+   TILE_UNFREEZE,    //M&F  		 
+   TILE_BOOST_L2,    //M  		 
+   TILE_BOOST_R2,    //M  		 
+   TILE_BOOST_D2,    //M  		 
+   TILE_BOOST_U2,    //M  		 
+   TILE_NOTHING,    //M&F  		 
+   TILE_CP_D,        //M     //no collision 		 
+   TILE_CP_U,        //M     //endless hook 		 
+   TILE_CP_R,        //M  		 
+   TILE_CP_L,        //M  		 
+   TILE_CP_D_F,    //M  		 
+   TILE_CP_U_F,    //M  		 
+   TILE_CP_R_F,    //M  		 
+   TILE_CP_L_F,    //M  		 
+ 		 
+   TILE_BEGIN=33,    //M  		 
+   TILE_END,        //M  
 	
 	TILEFLAG_VFLIP=1,
 	TILEFLAG_HFLIP=2,

@@ -39,7 +39,7 @@ protected:
 	void EvaluateSpawnType(CSpawnEval *pEval, int Type);
 	bool EvaluateSpawn(class CPlayer *pP, vec2 *pPos);
 
-	void CycleMap();
+	//void CycleMap();
 	void ResetGame();
 	
 	char m_aMapWish[128];
@@ -49,7 +49,7 @@ protected:
 	int m_GameOverTick;
 	int m_SuddenDeath;
 	
-	int m_aTeamscore[2];
+	//int m_aTeamscore[2];
 	
 	int m_Warmup;
 	int m_RoundCount;
@@ -61,14 +61,14 @@ protected:
 public:
 	const char *m_pGameType;
 
-	bool IsTeamplay() const;
+	//bool IsTeamplay() const;
 	
 	IGameController(class CGameContext *pGameServer);
 	virtual ~IGameController();
 
-	void DoTeamScoreWincheck();
-	void DoPlayerScoreWincheck();
-	
+	//void DoTeamScoreWincheck();
+	//void DoPlayerScoreWincheck();
+	bool MapConfig(int index); 
 	void DoWarmup(int Seconds);
 	
 	void StartRound();
@@ -101,6 +101,7 @@ public:
 			bool?
 	*/
 	virtual bool OnEntity(int Index, vec2 Pos);
+	virtual bool OnEntity(int Index, int x, int y, bool flayer);
 	
 	/*
 		Function: on_CCharacter_spawn
@@ -124,7 +125,7 @@ public:
 	virtual int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
 
 
-	virtual void OnPlayerInfoChange(class CPlayer *pP);
+	//virtual void OnPlayerInfoChange(class CPlayer *pP);
 
 	//
 	virtual bool CanSpawn(class CPlayer *pP, vec2 *pPos);
@@ -135,8 +136,8 @@ public:
 	virtual const char *GetTeamName(int Team);
 	virtual int GetAutoTeam(int NotThisId);
 	virtual bool CanJoinTeam(int Team, int NotThisId);
-	bool CheckTeamBalance();
-	bool CanChangeTeam(CPlayer *pPplayer, int JoinTeam);
+	//bool CheckTeamBalance();
+	//bool CanChangeTeam(CPlayer *pPplayer, int JoinTeam);
 	int ClampTeam(int Team);
 
 	virtual void PostReset();

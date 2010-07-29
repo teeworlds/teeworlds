@@ -6,7 +6,7 @@
 class CLaser : public CEntity
 {
 public:
-	CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner);
+	CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner, int type);
 	
 	virtual void Reset();
 	virtual void Tick();
@@ -17,12 +17,14 @@ protected:
 	void DoBounce();
 	
 private:
+	vec2 m_PrevPos;
 	vec2 m_From;
 	vec2 m_Dir;
 	float m_Energy;
 	int m_Bounces;
 	int m_EvalTick;
 	int m_Owner;
+	int m_Type;
 };
 
 #endif

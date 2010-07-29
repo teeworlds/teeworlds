@@ -60,7 +60,7 @@ bool CNetServer::Open(NETADDR BindAddr, int MaxClients, int MaxClientsPerIP, int
 	return true;
 }
 
-int CNetServer::SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser)
+int CNetServer::SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser, const char* pReason)
 {
 	m_pfnNewClient = pfnNewClient;
 	m_pfnDelClient = pfnDelClient;
@@ -85,11 +85,10 @@ int CNetServer::Drop(int ClientID, const char *pReason)
 		pReason
 		);
 		
-	m_aSlots[ClientID].m_Connection.Disconnect(pReason);
 
 	if(m_pfnDelClient)
 		m_pfnDelClient(ClientID, m_UserPtr);
-		
+	m_aSlots[ClientID].m_Connection.Disconnect(pReason);
 	return 0;
 }
 

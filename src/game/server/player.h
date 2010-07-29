@@ -48,6 +48,24 @@ public:
 	int m_Last_Emote;
 	int m_Last_Kill;
 	
+	//DDRace  		 
+   int m_Muted;  		 
+   //int hammer_ type;  		 
+ 		 
+   // TODO: clean this up
+   int m_Authed;  		 
+   int m_Resistent;  
+   
+   bool m_ColorSet; // Set if player changed color at least once 
+   
+   //race var  		 
+   int m_Starttime;  		 
+   int m_Refreshtime;  		 
+   int m_RaceState;  		 
+   int m_Besttick;  		 
+   int m_Lasttick;  		 
+   float m_BestLap;  
+	
 	// TODO: clean this up
 	struct 
 	{

@@ -1,6 +1,11 @@
 #include <new>
-#include "player.h"
+#include <engine/server.h>
+#include <engine/shared/config.h>
 
+#include "player.h"
+#include "gamecontext.h"
+#include <game/gamecore.h>
+#include "gamemodes/race.h"
 
 MACRO_ALLOC_POOL_ID_IMPL(CPlayer, MAX_CLIENTS)
 
@@ -13,6 +18,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	m_DieTick = Server()->Tick();
 	m_ScoreStartTick = Server()->Tick();
 	Character = 0;
+	m_Muted = 0;
 	this->m_ClientID = CID;
 	m_Team = GameServer()->m_pController->ClampTeam(Team);
 }
@@ -25,8 +31,21 @@ CPlayer::~CPlayer()
 
 void CPlayer::Tick()
 {
+	int pos=0;
+	CPlayerScore *pscore = ((CGameControllerRace*)GameServer()->m_pController)->m_Score.SearchName(Server()->ClientName(m_ClientID), pos);
+	if(pscore && pos > -1 && pscore->m_Score != -1)
+	{
+		float time = pscore->m_Score;
+		//if (!config.sv_hide_score)
+			m_Score = time * 100;
+		//else
+		//	score=authed;
+	} else
+		m_Score = 0.0f;
+	Server()->SetClientAuthed(m_ClientID, m_Authed);
 	Server()->SetClientScore(m_ClientID, m_Score);
 
+	if(m_Muted > 0) m_Muted--;
 	// do latency stuff
 	{
 		IServer::CClientInfo Info;
@@ -98,7 +117,11 @@ void CPlayer::OnDisconnect()
 		char Buf[512];
 		str_format(Buf, sizeof(Buf),  "%s has left the game", Server()->ClientName(m_ClientID));
 		GameServer()->SendChat(-1, CGameContext::CHAT_ALL, Buf);
-
+		char Cmd[64];
+		if(m_Muted > 0) {
+			str_format(Cmd, sizeof(Cmd), "ban %d ", m_ClientID, m_Muted/Server()->TickSpeed());
+			GameServer()->Console()->ExecuteLine(Cmd, 3, -1);
+		}
 		dbg_msg("game", "leave player='%d:%s'", m_ClientID, Server()->ClientName(m_ClientID));
 	}
 }
@@ -162,7 +185,7 @@ void CPlayer::SetTeam(int Team)
 	m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 	dbg_msg("game", "team_join player='%d:%s' m_Team=%d", m_ClientID, Server()->ClientName(m_ClientID), m_Team);
 	
-	GameServer()->m_pController->OnPlayerInfoChange(GameServer()->m_apPlayers[m_ClientID]);
+	//GameServer()->m_pController->OnPlayerInfoChange(GameServer()->m_apPlayers[m_ClientID]);
 }
 
 void CPlayer::TryRespawn()

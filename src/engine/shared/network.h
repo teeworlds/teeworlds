@@ -260,7 +260,7 @@ private:
 	void BanRemoveByObject(CBan *pBan);
 	
 public:
-	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
+	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser, const char* reason);
 
 	//
 	bool Open(NETADDR BindAddr, int MaxClients, int MaxClientsPerIP, int Flags);

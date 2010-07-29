@@ -42,16 +42,49 @@ class CGameContext : public IGameServer
 	CNetObjHandler m_NetObjHandler;
 	CTuningParams m_Tuning;
 
-	static void ConTuneParam(IConsole::IResult *pResult, void *pUserData);
-	static void ConTuneReset(IConsole::IResult *pResult, void *pUserData);
-	static void ConTuneDump(IConsole::IResult *pResult, void *pUserData);
-	static void ConChangeMap(IConsole::IResult *pResult, void *pUserData);
-	static void ConRestart(IConsole::IResult *pResult, void *pUserData);
-	static void ConBroadcast(IConsole::IResult *pResult, void *pUserData);
-	static void ConSay(IConsole::IResult *pResult, void *pUserData);
-	static void ConSetTeam(IConsole::IResult *pResult, void *pUserData);
-	static void ConAddVote(IConsole::IResult *pResult, void *pUserData);
-	static void ConVote(IConsole::IResult *pResult, void *pUserData);
+	static void ConMute(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConSetlvl(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConKillPlayer(IConsole::IResult *pResult, void *pUserData, int cid);
+	
+	static void ConNinjaMe(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConNinja(IConsole::IResult *pResult, void *pUserData, int cid);
+	
+	static void ConHammerMe(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConHammer(IConsole::IResult *pResult, void *pUserData, int cid);
+	
+	static void ConUnSuperMe(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConUnSuper(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConSuper(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConSuperMe(IConsole::IResult *pResult, void *pUserData, int cid);
+	
+	static void ConWeaponsMe(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConWeapons(IConsole::IResult *pResult, void *pUserData, int cid);
+	
+	static void ConTeleport(IConsole::IResult *pResult, void *pUserData, int cid);
+	
+	static void ConTuneParam(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConTuneReset(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConTuneDump(IConsole::IResult *pResult, void *pUserData, int cid);
+
+	static void ConPhook(IConsole::IResult *pResult, void *pUserData, int cid);
+	
+	static void ConTimerReset(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConTimer(IConsole::IResult *pResult, void *pUserData, int cid);
+
+	static void ConChangeMap(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConRestart(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConBroadcast(IConsole::IResult *pResult, void *pUserData, int cid);
+	
+	static void ConSay(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConSetTeam(IConsole::IResult *pResult, void *pUserData, int cid);
+	
+	static void  ConGoLeft(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void  ConGoRight(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void  ConGoUp(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void  ConGoDown(IConsole::IResult *pResult, void *pUserData, int cid);
+	
+	static void ConAddVote(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConVote(IConsole::IResult *pResult, void *pUserData, int cid);
 	static void ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	
 	CGameContext(int Resetting);
@@ -71,6 +104,11 @@ public:
 	
 	CEventHandler m_Events;
 	CPlayer *m_apPlayers[MAX_CLIENTS];
+	
+	//bool m_Cheats;
+	//bool m_EndlessDrag;
+	//bool m_Tunes;
+	//bool m_PlayersCollision;
 
 	IGameController *m_pController;
 	CGameWorld m_World;
@@ -84,6 +122,8 @@ public:
 	void SendVoteSet(int ClientId);
 	void SendVoteStatus(int ClientId, int Total, int Yes, int No);
 	void AbortVoteKickOnDisconnect(int ClientId);
+	
+	bool CheatsAvailable(int cid);
 	
 	int m_VoteCreator;
 	int64 m_VoteCloseTime;
@@ -156,6 +196,9 @@ public:
 	virtual void OnClientDrop(int ClientId);
 	virtual void OnClientDirectInput(int ClientId, void *pInput);
 	virtual void OnClientPredictedInput(int ClientId, void *pInput);
+	
+	virtual void OnSetAuthed(int ClientId, void *pInput);
+	virtual void OnSetResistent(int ClientId, void *pInput);
 
 	virtual const char *Version();
 	virtual const char *NetVersion();

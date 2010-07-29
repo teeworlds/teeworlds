@@ -8,6 +8,14 @@
 #include "gamecontroller.h"
 #include "gamecontext.h"
 
+#include "entities/light.h"  		 
+#include "entities/drager.h"  		 
+#include "entities/gun.h"  		 
+#include "entities/projectile.h"  		 
+#include "entities/plasma.h"  		 
+
+#include <game/layers.h>
+
 
 IGameController::IGameController(class CGameContext *pGameServer)
 {
@@ -22,8 +30,8 @@ IGameController::IGameController(class CGameContext *pGameServer)
 	m_RoundStartTick = Server()->Tick();
 	m_RoundCount = 0;
 	m_GameFlags = 0;
-	m_aTeamscore[0] = 0;
-	m_aTeamscore[1] = 0;
+	//m_aTeamscore[0] = 0;
+	//m_aTeamscore[1] = 0;
 	m_aMapWish[0] = 0;
 	
 	m_UnbalancedTick = -1;
@@ -83,7 +91,7 @@ bool IGameController::CanSpawn(CPlayer *pPlayer, vec2 *pOutPos)
 	if(pPlayer->GetTeam() == -1)
 		return false;
 	
-	if(IsTeamplay())
+	/*if(IsTeamplay())
 	{
 		Eval.m_FriendlyTeam = pPlayer->GetTeam();
 		
@@ -97,16 +105,30 @@ bool IGameController::CanSpawn(CPlayer *pPlayer, vec2 *pOutPos)
 		}
 	}
 	else
-	{
+	{*/
 		EvaluateSpawnType(&Eval, 0);
 		EvaluateSpawnType(&Eval, 1);
 		EvaluateSpawnType(&Eval, 2);
-	}
+	//}
 	
 	*pOutPos = Eval.m_Pos;
 	return Eval.m_Got;
 }
 
+bool IGameController::MapConfig(int index)  		 
+{  		 
+   if (index == TILE_CP_D)
+   {
+       //g_Config.m_SvNpc = true;
+       return true;
+   }
+   else if (index == TILE_CP_U)
+   {
+       g_Config.m_SvEndlessDrag = true;
+       return true;
+   }
+   return false;
+}
 
 bool IGameController::OnEntity(int Index, vec2 Pos)
 {
@@ -138,12 +160,145 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 		Type = POWERUP_WEAPON;
 		SubType = WEAPON_RIFLE;
 	}
-	else if(Index == ENTITY_POWERUP_NINJA && g_Config.m_SvPowerups)
+	else if(Index == ENTITY_POWERUP_NINJA)
 	{
 		Type = POWERUP_NINJA;
 		SubType = WEAPON_NINJA;
 	}
 	
+	if(Type != -1)
+	{
+		CPickup *pPickup = new CPickup(&GameServer()->m_World, Type, SubType);
+		pPickup->m_Pos = Pos;
+		return true;
+	}
+
+	return false;
+}
+
+
+
+bool IGameController::OnEntity(int Index, int x, int y, bool flayer)
+{
+	int Type = -1;
+	int SubType = 0;
+	
+	vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);  		 
+ 		 
+   int sides[8];  		 
+   sides[0]=GameServer()->Collision()->GetIndex(x,y+1,flayer);  		 
+   sides[1]=GameServer()->Collision()->GetIndex(x+1,y+1,flayer);  		 
+   sides[2]=GameServer()->Collision()->GetIndex(x+1,y,flayer);  		 
+   sides[3]=GameServer()->Collision()->GetIndex(x+1,y-1,flayer);  		 
+   sides[4]=GameServer()->Collision()->GetIndex(x,y-1,flayer);  		 
+   sides[5]=GameServer()->Collision()->GetIndex(x-1,y-1,flayer);  		 
+   sides[6]=GameServer()->Collision()->GetIndex(x-1,y,flayer);  		 
+   sides[7]=GameServer()->Collision()->GetIndex(x-1,y+1,flayer);  		 
+ 		 
+   if (!flayer)  		 
+   {  
+		if(Index == ENTITY_SPAWN)
+			m_aaSpawnPoints[0][m_aNumSpawnPoints[0]++] = Pos;
+		else if(Index == ENTITY_SPAWN_RED)
+			m_aaSpawnPoints[1][m_aNumSpawnPoints[1]++] = Pos;
+		else if(Index == ENTITY_SPAWN_BLUE)
+			m_aaSpawnPoints[2][m_aNumSpawnPoints[2]++] = Pos;
+	}
+	if(Index == ENTITY_ARMOR_1)
+		Type = POWERUP_ARMOR;
+	else if(Index == ENTITY_HEALTH_1)
+		Type = POWERUP_HEALTH;
+	else if(Index == ENTITY_WEAPON_SHOTGUN)
+	{
+		Type = POWERUP_WEAPON;
+		SubType = WEAPON_SHOTGUN;
+	}
+	else if(Index == ENTITY_WEAPON_GRENADE)
+	{
+		Type = POWERUP_WEAPON;
+		SubType = WEAPON_GRENADE;
+	}
+	else if(Index == ENTITY_WEAPON_RIFLE)
+	{
+		Type = POWERUP_WEAPON;
+		SubType = WEAPON_RIFLE;
+	}
+	else if(Index == ENTITY_POWERUP_NINJA)
+	{
+		Type = POWERUP_NINJA;
+		SubType = WEAPON_NINJA;
+	}
+	else if(Index >= ENTITY_LASER_FAST_CW && Index <= ENTITY_LASER_FAST_CCW)  		 
+   {  		 
+       int sides2[8];  		 
+       sides2[0]=GameServer()->Collision()->GetIndex(x,y+2,flayer);  		 
+       sides2[1]=GameServer()->Collision()->GetIndex(x+2,y+2,flayer);  		 
+       sides2[2]=GameServer()->Collision()->GetIndex(x+2,y,flayer);  		 
+       sides2[3]=GameServer()->Collision()->GetIndex(x+2,y-2,flayer);  		 
+       sides2[4]=GameServer()->Collision()->GetIndex(x,y-2,flayer);  		 
+       sides2[5]=GameServer()->Collision()->GetIndex(x-2,y-2,flayer);  		 
+       sides2[6]=GameServer()->Collision()->GetIndex(x-2,y,flayer);  		 
+       sides2[7]=GameServer()->Collision()->GetIndex(x-2,y+2,flayer);  		 
+ 		 
+       float ang_speed;  		 
+       int ind=Index-ENTITY_LASER_STOP;  		 
+       int m;  		 
+       if (ind<0)  		 
+       {  		 
+           ind=-ind;  		 
+           m=1;  		 
+       }  		 
+       else if(ind==0)  		 
+           m=0;  		 
+       else  		 
+           m=-1;  		 
+ 		 
+ 		 
+       if (ind==0)  		 
+           ang_speed=0.0f;  		 
+       else if (ind==1)  		 
+           ang_speed=pi/360;  		 
+       else if (ind==2)  		 
+           ang_speed=pi/180;  		 
+       else if (ind==3)  		 
+           ang_speed=pi/90;  		 
+       ang_speed*=m;  		 
+ 		 
+       for(int i=0; i<8;i++)  		 
+       {  		 
+           if (sides[i] >= ENTITY_LASER_SHORT && sides[i] <= ENTITY_LASER_LONG)  		 
+           {  		 
+               CLight *lgt = new CLight(&GameServer()->m_World, Pos, pi/4*i,32*3 + 32*(sides[i] - ENTITY_LASER_SHORT)*3);  		 
+               lgt->ang_speed=ang_speed;  		 
+               if (sides2[i]>=ENTITY_LASER_C_SLOW && sides2[i]<=ENTITY_LASER_C_FAST)  		 
+               {  		 
+                   lgt->speed=1+(sides2[i]-ENTITY_LASER_C_SLOW)*2;  		 
+                   lgt->cur_length=lgt->length;  		 
+               }  		 
+               else if(sides2[i]>=ENTITY_LASER_O_SLOW && sides2[i]<=ENTITY_LASER_O_FAST)  		 
+               {  		 
+                   lgt->speed=1+(sides2[i]-ENTITY_LASER_O_SLOW)*2;  		 
+                   lgt->cur_length=0;  		 
+               }  		 
+               else  		 
+                   lgt->cur_length=lgt->length;  		 
+           }  		 
+       }  		 
+ 		 
+ 		     
+   }  		 
+   else if(Index>=ENTITY_DRAGER_WEAK && Index <=ENTITY_DRAGER_STRONG)  		 
+   {  		 
+       new CDrager(&GameServer()->m_World,Pos,Index-ENTITY_DRAGER_WEAK+1);  		 
+   }  		 
+   else if(Index>=ENTITY_DRAGER_WEAK_NW && Index <=ENTITY_DRAGER_STRONG_NW)  		 
+   {  		 
+       new CDrager(&GameServer()->m_World, Pos,Index-ENTITY_DRAGER_WEAK_NW+1,true);  		 
+   }  		 
+   else if(Index==ENTITY_PLASMA)  		 
+   {  		 
+       new CGun(&GameServer()->m_World, Pos);  		 
+   }  
 	if(Type != -1)
 	{
 		CPickup *pPickup = new CPickup(&GameServer()->m_World, Type, SubType);
@@ -171,23 +326,58 @@ void IGameController::ResetGame()
 
 const char *IGameController::GetTeamName(int Team)
 {
-	if(IsTeamplay())
-	{
-		if(Team == 0)
-			return "red team";
-		else if(Team == 1)
-			return "blue team";
-	}
-	else
-	{
 		if(Team == 0)
 			return "game";
-	}
-	
 	return "spectators";
 }
 
-static bool IsSeparator(char c) { return c == ';' || c == ' ' || c == ',' || c == '\t'; }
+void get_side_pos(int side, int &x, int &y) {
+   if (side==0)  		 
+   {  		 
+       x=0;  		 
+       y=1;  		 
+   }  		 
+   else if(side==1)  		 
+   {  		 
+       x=1;  		 
+       y=1;  		 
+   }  		 
+   else if(side==2)  		 
+   {
+	   x=1;
+	   y=0;
+	}
+   else if(side==3) 
+	   {
+       x=1;
+       y=-1;
+   }
+   else if(side==4)
+
+   {
+       x=0;
+       y=-1;
+   } 
+   else if(side==5)
+   {
+       x=-1; 
+       y=-1; 
+ 
+   }
+   else if(side==6) 
+
+   {
+       x=-1;
+       y=0; 
+   } 
+   else if(side==7) 
+   {
+       x=-1; 
+       y=+1; 
+   }
+}
+
+bool IsSeparator(char c) { return c == ';' || c == ' ' || c == ',' || c == '\t'; }
 
 void IGameController::StartRound()
 {
@@ -197,8 +387,6 @@ void IGameController::StartRound()
 	m_SuddenDeath = 0;
 	m_GameOverTick = -1;
 	GameServer()->m_World.m_Paused = false;
-	m_aTeamscore[0] = 0;
-	m_aTeamscore[1] = 0;
 	m_ForceBalanced = false;
 	dbg_msg("game","start round type='%s' teamplay='%d'", m_pGameType, m_GameFlags&GAMEFLAG_TEAMS);
 }
@@ -208,7 +396,7 @@ void IGameController::ChangeMap(const char *pToMap)
 	str_copy(m_aMapWish, pToMap, sizeof(m_aMapWish));
 	EndRound();
 }
-
+/*
 void IGameController::CycleMap()
 {
 	if(m_aMapWish[0] != 0)
@@ -276,7 +464,7 @@ void IGameController::CycleMap()
 	dbg_msg("game", "rotating map to %s", &Buf[i]);
 	str_copy(g_Config.m_SvMap, &Buf[i], sizeof(g_Config.m_SvMap));
 }
-
+*/
 void IGameController::PostReset()
 {
 	for(int i = 0; i < MAX_CLIENTS; i++)
@@ -284,13 +472,13 @@ void IGameController::PostReset()
 		if(GameServer()->m_apPlayers[i])
 		{
 			GameServer()->m_apPlayers[i]->Respawn();
-			GameServer()->m_apPlayers[i]->m_Score = 0;
-			GameServer()->m_apPlayers[i]->m_ScoreStartTick = Server()->Tick();
-			GameServer()->m_apPlayers[i]->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
+			//GameServer()->m_apPlayers[i]->m_Score = 0;
+			//GameServer()->m_apPlayers[i]->m_ScoreStartTick = Server()->Tick();
+			//GameServer()->m_apPlayers[i]->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 		}
 	}
 }
-	
+/*	
 void IGameController::OnPlayerInfoChange(class CPlayer *pP)
 {
 	const int aTeamColors[2] = {65387, 10223467};
@@ -304,10 +492,11 @@ void IGameController::OnPlayerInfoChange(class CPlayer *pP)
 		}
 	}
 }
-
+*/
 
 int IGameController::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon)
 {
+	/*
 	// do scoreing
 	if(!pKiller || Weapon == WEAPON_GAME)
 		return 0;
@@ -319,7 +508,7 @@ int IGameController::OnCharacterDeath(class CCharacter *pVictim, class CPlayer *
 			pKiller->m_Score--; // teamkill
 		else
 			pKiller->m_Score++; // normal kill
-	}
+	}*/
 	return 0;
 }
 
@@ -329,8 +518,9 @@ void IGameController::OnCharacterSpawn(class CCharacter *pChr)
 	pChr->IncreaseHealth(10);
 	
 	// give default weapons
+	//pChr->GiveAllWeapons();
 	pChr->GiveWeapon(WEAPON_HAMMER, -1);
-	pChr->GiveWeapon(WEAPON_GUN, 10);
+	pChr->GiveWeapon(WEAPON_GUN, -1);
 }
 
 void IGameController::DoWarmup(int Seconds)
@@ -340,7 +530,7 @@ void IGameController::DoWarmup(int Seconds)
 	else
 		m_Warmup = Seconds*Server()->TickSpeed();
 }
-
+/*
 bool IGameController::IsFriendlyFire(int Cid1, int Cid2)
 {
 	if(Cid1 == Cid2)
@@ -357,7 +547,7 @@ bool IGameController::IsFriendlyFire(int Cid1, int Cid2)
 	
 	return false;
 }
-
+*/
 bool IGameController::IsForceBalanced()
 {
 	if(m_ForceBalanced)
@@ -389,12 +579,12 @@ void IGameController::Tick()
 		// game over.. wait for restart
 		if(Server()->Tick() > m_GameOverTick+Server()->TickSpeed()*10)
 		{
-			CycleMap();
+			//CycleMap();
 			StartRound();
 			m_RoundCount++;
 		}
 	}
-	
+	/*
 	// do team-balancing
 	if (IsTeamplay() && m_UnbalancedTick != -1 && Server()->Tick() > m_UnbalancedTick+g_Config.m_SvTeambalanceTime*Server()->TickSpeed()*60)
 	{
@@ -447,9 +637,10 @@ void IGameController::Tick()
 		}
 		m_UnbalancedTick = -1;
 	}
-	
+	*/
 	// update browse info
 	int Prog = -1;
+	/*
 	if(g_Config.m_SvTimelimit > 0)
 		Prog = max(Prog, (Server()->Tick()-m_RoundStartTick) * 100 / (g_Config.m_SvTimelimit*Server()->TickSpeed()*60));
 
@@ -472,16 +663,16 @@ void IGameController::Tick()
 
 	if(m_Warmup)
 		Prog = -1;
-		
+		*/
 	Server()->SetBrowseInfo(m_pGameType, Prog);
 }
 
-
+/*
 bool IGameController::IsTeamplay() const
 {
 	return m_GameFlags&GAMEFLAG_TEAMS;
 }
-
+*/
 void IGameController::Snap(int SnappingClient)
 {
 	CNetObj_Game *pGameObj = (CNetObj_Game *)Server()->SnapNewItem(NETOBJTYPE_GAME, 0, sizeof(CNetObj_Game));
@@ -489,28 +680,28 @@ void IGameController::Snap(int SnappingClient)
 	pGameObj->m_GameOver = m_GameOverTick==-1?0:1;
 	pGameObj->m_SuddenDeath = m_SuddenDeath;
 	
-	pGameObj->m_ScoreLimit = g_Config.m_SvScorelimit;
-	pGameObj->m_TimeLimit = g_Config.m_SvTimelimit;
+	//pGameObj->m_ScoreLimit = g_Config.m_SvScorelimit;
+	//pGameObj->m_TimeLimit = g_Config.m_SvTimelimit;
 	pGameObj->m_RoundStartTick = m_RoundStartTick;
 	pGameObj->m_Flags = m_GameFlags;
 	
 	pGameObj->m_Warmup = m_Warmup;
 	
-	pGameObj->m_RoundNum = (str_length(g_Config.m_SvMaprotation) && g_Config.m_SvRoundsPerMap) ? g_Config.m_SvRoundsPerMap : 0;
+	pGameObj->m_RoundNum = /*(str_length(g_Config.m_SvMaprotation) && g_Config.m_SvRoundsPerMap) ? g_Config.m_SvRoundsPerMap :*/ 0;
 	pGameObj->m_RoundCurrent = m_RoundCount+1;
 	
 	
 	if(SnappingClient == -1)
 	{
 		// we are recording a demo, just set the scores
-		pGameObj->m_TeamscoreRed = m_aTeamscore[0];
-		pGameObj->m_TeamscoreBlue = m_aTeamscore[1];
+		pGameObj->m_TeamscoreRed = 0;//m_aTeamscore[0];
+		pGameObj->m_TeamscoreBlue = 0;//m_aTeamscore[1];
 	}
 	else
 	{
 		// TODO: this little hack should be removed
-		pGameObj->m_TeamscoreRed = IsTeamplay() ? m_aTeamscore[0] : GameServer()->m_apPlayers[SnappingClient]->m_Score;
-		pGameObj->m_TeamscoreBlue = m_aTeamscore[1];
+		pGameObj->m_TeamscoreRed = /*IsTeamplay() ? m_aTeamscore[0] : */GameServer()->m_apPlayers[SnappingClient]->m_Score;
+		pGameObj->m_TeamscoreBlue = 0;//m_aTeamscore[1];
 	}
 }
 
@@ -531,8 +722,8 @@ int IGameController::GetAutoTeam(int Notthisid)
 	}
 
 	int Team = 0;
-	if(IsTeamplay())
-		Team = aNumplayers[0] > aNumplayers[1] ? 1 : 0;
+	//if(IsTeamplay())
+	//	Team = aNumplayers[0] > aNumplayers[1] ? 1 : 0;
 		
 	if(CanJoinTeam(Team, Notthisid))
 		return Team;
@@ -556,7 +747,7 @@ bool IGameController::CanJoinTeam(int Team, int Notthisid)
 	
 	return (aNumplayers[0] + aNumplayers[1]) < g_Config.m_SvMaxClients-g_Config.m_SvSpectatorSlots;
 }
-
+/*
 bool IGameController::CheckTeamBalance()
 {
 	if(!IsTeamplay() || !g_Config.m_SvTeambalanceTime)
@@ -584,7 +775,7 @@ bool IGameController::CheckTeamBalance()
 		return true;
 	}
 }
-
+*//*
 bool IGameController::CanChangeTeam(CPlayer *pPlayer, int JoinTeam)
 {
 	int aT[2] = {0, 0};
@@ -616,7 +807,7 @@ bool IGameController::CanChangeTeam(CPlayer *pPlayer, int JoinTeam)
 	else
 		return true;
 }
-
+*//*
 void IGameController::DoPlayerScoreWincheck()
 {
 	if(m_GameOverTick == -1  && !m_Warmup)
@@ -665,12 +856,15 @@ void IGameController::DoTeamScoreWincheck()
 		}
 	}
 }
+*/
+
+
 
 int IGameController::ClampTeam(int Team)
 {
 	if(Team < 0) // spectator
 		return -1;
-	if(IsTeamplay())
-		return Team&1;
+	//if(IsTeamplay())
+	//	return Team&1;
 	return  0;
 }

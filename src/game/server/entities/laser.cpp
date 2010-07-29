@@ -1,9 +1,10 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include <game/generated/protocol.h>
 #include <game/server/gamecontext.h>
+#include <engine/shared/config.h>
 #include "laser.h"
 
-CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner)
+CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner, int type)
 : CEntity(pGameWorld, NETOBJTYPE_LASER)
 {
 	m_Pos = Pos;
@@ -12,6 +13,7 @@ CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEner
 	m_Dir = Direction;
 	m_Bounces = 0;
 	m_EvalTick = 0;
+	m_Type = type;
 	GameWorld()->InsertEntity(this);
 	DoBounce();
 }
@@ -27,13 +29,20 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 
 	m_From = From;
 	m_Pos = At;
-	m_Energy = -1;		
-	Hit->TakeDamage(vec2(0.f, 0.f), GameServer()->Tuning()->m_LaserDamage, m_Owner, WEAPON_RIFLE);
+	m_Energy = -1;
+	if ((m_Type == 1 && g_Config.m_SvHit))
+	{
+		Hit->m_Core.m_Vel += normalize(m_PrevPos - Hit->m_Core.m_Pos) * 10;
+	} else if (m_Type == 0)
+	{
+		Hit->UnFreeze();
+	}
 	return true;
 }
 
 void CLaser::DoBounce()
 {
+	CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);
 	m_EvalTick = Server()->Tick();
 	
 	if(m_Energy < 0)
@@ -41,11 +50,15 @@ void CLaser::DoBounce()
 		GameServer()->m_World.DestroyEntity(this);
 		return;
 	}
-	
+	m_PrevPos = m_Pos;
 	vec2 To = m_Pos + m_Dir * m_Energy;
 	vec2 OrgTo = To;
+	vec2 Coltile;
 	
-	if(GameServer()->Collision()->IntersectLine(m_Pos, To, 0x0, &To))
+	int res;
+	res = GameServer()->Collision()->IntersectLine(m_Pos, To, &Coltile, &To);
+	
+	if(res)
 	{
 		if(!HitCharacter(m_Pos, To))
 		{
@@ -56,7 +69,15 @@ void CLaser::DoBounce()
 			vec2 TempPos = m_Pos;
 			vec2 TempDir = m_Dir * 4.0f;
 			
+			int f;
+			if(res == -1) {
+				f = GameServer()->Collision()->GetTile(round(Coltile.x), round(Coltile.y)); 
+				GameServer()->Collision()->Set(round(Coltile.x), round(Coltile.y), CCollision::COLFLAG_SOLID); 
+			}
 			GameServer()->Collision()->MovePoint(&TempPos, &TempDir, 1.0f, 0);
+			if(res == -1) {
+				GameServer()->Collision()->Set(round(Coltile.x), round(Coltile.y), f); 
+			}
 			m_Pos = TempPos;
 			m_Dir = normalize(TempDir);
 			
@@ -78,6 +99,7 @@ void CLaser::DoBounce()
 			m_Energy = -1;
 		}
 	}
+	m_Owner = -1;
 }
 	
 void CLaser::Reset()
