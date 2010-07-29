@@ -232,7 +232,7 @@ function build(settings)
 		engine, client, game_editor, zlib, pnglite, wavpack,
 		client_link_other, client_osxlaunch)
 
-	server_exe = Link(server_settings, "teeworlds_srv", engine, server,
+	server_exe = Link(server_settings, "DDRace_Trunk", engine, server,
 		game_shared, game_server, zlib)
 
 	serverlaunch = {}

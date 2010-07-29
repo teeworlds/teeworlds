@@ -1,4 +1,4 @@
-#ifndef GAME_SERVER_GAMEMODES_TDM_H
+/* #ifndef GAME_SERVER_GAMEMODES_TDM_H
 #define GAME_SERVER_GAMEMODES_TDM_H
 #include <game/server/gamecontroller.h>
 
@@ -11,3 +11,4 @@ public:
 	virtual void Tick();
 };
 #endif
+ */

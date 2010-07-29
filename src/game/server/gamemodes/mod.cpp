@@ -1,4 +1,4 @@
-// copyright (c) 2007 magnus auvinen, see licence.txt for more info
+/* // copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include "mod.h"
 
 CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
@@ -19,3 +19,4 @@ void CGameControllerMOD::Tick()
 	
 	IGameController::Tick();
 }
+ */
