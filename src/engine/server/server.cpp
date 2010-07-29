@@ -839,50 +839,68 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				
 				if(Unpacker.Error() == 0)
 				{
-					if(g_Config.m_SvRconPasswordHelper[0] == 0 && 
-						g_Config.m_SvRconPasswordModer[0] == 0 &&
-						g_Config.m_SvRconPasswordAdmin[0] == 0)
+					if(pPw[0] != 0)
 					{
-						SendRconLine(ClientId, "No rcon password set on server. Set sv_rcon_password to enable the remote console.");
-					} else {
-						/*else if(str_comp(pPw, g_Config.m_SvRconPassword) == 0)
+						if(g_Config.m_SvRconPasswordHelper[0] == 0 && 
+							g_Config.m_SvRconPasswordModer[0] == 0 &&
+							g_Config.m_SvRconPasswordAdmin[0] == 0)
 						{
-							CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
-							Msg.AddInt(1);
-							SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
-							
-							m_aClients[ClientId].m_Authed = 1;
-							SendRconLine(ClientId, "Authentication successful. Remote console access granted.");
-							dbg_msg("server", "ClientId=%d authed", ClientId);
-						}*/
-						int level = -1;
-						if(str_comp(pPw, g_Config.m_SvRconPasswordHelper) == 0) {
-							level = 1;
-						} else if(str_comp(pPw, g_Config.m_SvRconPasswordModer) == 0) {
-							level = 2;
-						} else if(str_comp(pPw, g_Config.m_SvRconPasswordAdmin) == 0) {
-							level = 3;
-						}
-						if(level != -1) {
-							CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
-							Msg.AddInt(1);
-							SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
-							
-							m_aClients[ClientId].m_Authed = level;
-							GameServer()->OnSetAuthed(ClientId, (void*)m_aClients[ClientId].m_Authed);  
-							SendRconLine(ClientId, "Authentication successful. Remote console access granted.");
-							dbg_msg("server", "ClientId=%d authed with Level=%d", ClientId, level);
-							m_aClients[ClientId].m_PwTries = 0;
-						}
-						else
+							SendRconLine(ClientId, "No rcon password set on server. Set sv_rcon_password_admin/sv_rcon_password_moder/sv_rcon_password_helper to enable the remote console.");
+						} 
+						else 
 						{
-							SendRconLine(ClientId, "Wrong password.");
-							if(++m_aClients[ClientId].m_PwTries > g_Config.m_SvRconTries)
-							{ // rcon Kottizen LemonFace
-								BanAdd(m_NetServer.ClientAddr(ClientId), g_Config.m_SvRconTriesBantime); // bye
-								dbg_msg("server", "cid=%d banned, wrong rcon pw", ClientId);
-							}  
+							/*else if(str_comp(pPw, g_Config.m_SvRconPassword) == 0)
+							{
+								CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
+								Msg.AddInt(1);
+								SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
+								
+								m_aClients[ClientId].m_Authed = 1;
+								SendRconLine(ClientId, "Authentication successful. Remote console access granted.");
+								dbg_msg("server", "ClientId=%d authed", ClientId);
+							}*/
+							int level = -1;
+							if(str_comp(pPw, g_Config.m_SvRconPasswordHelper) == 0)
+							{
+								level = 1;
+							}
+							else if(str_comp(pPw, g_Config.m_SvRconPasswordModer) == 0)
+							{
+								level = 2;
+							} 
+							else if(str_comp(pPw, g_Config.m_SvRconPasswordAdmin) == 0)
+							{
+								level = 3;
+							}
+							if(level != -1)
+							{
+								CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
+								Msg.AddInt(1);
+								SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
+								
+								m_aClients[ClientId].m_Authed = level;
+								GameServer()->OnSetAuthed(ClientId, (void*)m_aClients[ClientId].m_Authed);  
+								SendRconLine(ClientId, "Authentication successful. Remote console access granted.");
+								dbg_msg("server", "ClientId=%d authed with Level=%d", ClientId, level);
+								m_aClients[ClientId].m_PwTries = 0;
+							}
+							else
+							{
+								SendRconLine(ClientId, "Wrong password.");
+								if(++m_aClients[ClientId].m_PwTries > g_Config.m_SvRconTries)
+								{ // rcon Kottizen LemonFace
+									BanAdd(m_NetServer.ClientAddr(ClientId), g_Config.m_SvRconTriesBantime); // bye
+									dbg_msg("server", "cid=%d banned, wrong rcon pw", ClientId);
+								}  
+							}
 						}
+					}
+					else
+					{
+						dbg_msg("server", "client tried to authenticate with empty password. cid=%x ip=%d.%d.%d.%d",
+							ClientId,
+							m_aClients[ClientId].m_Addr.ip[0], m_aClients[ClientId].m_Addr.ip[1], m_aClients[ClientId].m_Addr.ip[2], m_aClients[ClientId].m_Addr.ip[3]
+							);
 					}
 				}
 			}
