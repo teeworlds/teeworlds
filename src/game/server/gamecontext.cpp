@@ -926,7 +926,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			return;
 			
 		p->m_Last_ChangeInfo = time_get();
-		if (p->m_ColorSet|| g_Config.m_SvAllowColorChange)
+		if (!p->m_ColorSet|| g_Config.m_SvAllowColorChange)
 		{
 			p->m_TeeInfos.m_UseCustomColor = pMsg->m_UseCustomColor;
 			p->m_TeeInfos.m_ColorBody = pMsg->m_ColorBody;

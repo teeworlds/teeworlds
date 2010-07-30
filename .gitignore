@@ -4,8 +4,9 @@ objs
 datasrc/*.pyc
 config.lua
 
-teeworlds_d
-teeworlds_srv_d
-bam.exe
+teeworlds_d*
+teeworlds_srv_d*
+bam*
 build server.bat
 buildlog.txt
+autoexec.cfg
