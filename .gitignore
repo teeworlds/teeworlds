@@ -6,3 +6,6 @@ config.lua
 
 teeworlds_d
 teeworlds_srv_d
+bam.exe
+build server.bat
+buildlog.txt

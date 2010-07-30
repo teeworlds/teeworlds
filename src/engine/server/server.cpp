@@ -297,7 +297,7 @@ int CServer::Init()
 
 bool CServer::IsAuthed(int ClientID)
 {
-	return m_aClients[ClientID].m_Authed;
+	return m_aClients[ClientID].m_Authed; //TODO: return int
 }
 
 int CServer::GetClientInfo(int ClientID, CClientInfo *pInfo)
@@ -543,7 +543,7 @@ int CServer::NewClientCallback(int ClientId, void *pUser)
 	pThis->m_aClients[ClientId].m_Authed = 0;
 	pThis->m_aClients[ClientId].m_PwTries = 0; // init pw tries  		 
 	memset(&pThis->m_aClients[ClientId].m_Addr, 0, sizeof(NETADDR)); // init that too  
-	pThis->m_aClients[ClientId].m_CommandTriesTimer= 0;
+	pThis->m_aClients[ClientId].m_CmdTriesTimer= 0;
 	pThis->m_aClients[ClientId].m_CmdTries = 0; //Floff init cmd tries  		 
 	pThis->m_aClients[ClientId].m_Resistent = 0;  
 	pThis->m_aClients[ClientId].Reset();
@@ -564,7 +564,7 @@ int CServer::DelClientCallback(int ClientId, void *pUser)
 	pThis->m_aClients[ClientId].m_Authed = 0;
 	pThis->m_aClients[ClientId].m_PwTries = 0; // init pw tries  		 
 	memset(&pThis->m_aClients[ClientId].m_Addr, 0, sizeof(NETADDR)); // init that too 
-	pThis->m_aClients[ClientId].m_CommandTriesTimer= 0;	
+	pThis->m_aClients[ClientId].m_CmdTriesTimer= 0;	
 	pThis->m_aClients[ClientId].m_CmdTries = 0; //Floff init cmd tries  		 
 	pThis->m_aClients[ClientId].m_Resistent = 0; 
 	pThis->m_aClients[ClientId].m_Snapshots.PurgeAll();
@@ -707,10 +707,10 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 	else {
 			if(m_aClients[ClientId].m_Authed == 0 && Msg != NETMSG_INPUT && Msg != NETMSG_REQUEST_MAP_DATA)
 			{
-				if(time_get() > m_aClients[ClientId].m_CommandTriesTimer + time_freq())
+				if(time_get() > m_aClients[ClientId].m_CmdTriesTimer + time_freq())
 				{
 					m_aClients[ClientId].m_CmdTries = 0;
-					m_aClients[ClientId].m_CommandTriesTimer = time_get();
+					m_aClients[ClientId].m_CmdTriesTimer = time_get();
 				}
 				m_aClients[ClientId].m_CmdTries++;
 				//dbg_msg("server","client_counter: %d", clients[cid].command_tries);
@@ -732,15 +732,15 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			if(Msg != NETMSG_INPUT && Msg != NETMSG_REQUEST_MAP_DATA)
 			{
 				m_aClients[ClientId].m_CmdTries++;
-				if(time_get() < m_aClients[ClientId].m_LastCommand + time_freq()/* * 1*/)
+				if(time_get() < m_aClients[ClientId].m_CmdTriesTimer + time_freq()/* * 1*/)
 				{
-					if(m_aClients[ClientId].m_CmdTries > g_Config.m_SvRconCmdTries)
+					if(m_aClients[ClientId].m_CmdTries > g_Config.m_SvNetmsgLimit && g_Config.m_SvNetmsgLimit != 0)
 					{
 						dbg_msg("server", "client trying to flood the server (%d tries), ban. cid=%x ip=%d.%d.%d.%d", m_aClients[ClientId].m_CmdTries, 
 						ClientId,
 						m_aClients[ClientId].m_Addr.ip[0], m_aClients[ClientId].m_Addr.ip[1], m_aClients[ClientId].m_Addr.ip[2], m_aClients[ClientId].m_Addr.ip[3]
 						);
-						BanAdd(m_aClients[ClientId].m_Addr, g_Config.m_SvRconBanTime); // bye
+						BanAdd(m_aClients[ClientId].m_Addr, g_Config.m_SvNetmsgBanTime, "exceeding netmsg_limit, Bye"); // bye
 						return;
 					}
 				}
@@ -748,7 +748,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				{
 					m_aClients[ClientId].m_CmdTries = 0;
 				}
-				m_aClients[ClientId].m_LastCommand = time_get();
+				m_aClients[ClientId].m_CmdTriesTimer = time_get();
 			}
 			// system message
 			if(Msg == NETMSG_REQUEST_MAP_DATA)
@@ -948,7 +948,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 								SendRconLine(ClientId, "Wrong password.");
 								if(++m_aClients[ClientId].m_PwTries > g_Config.m_SvRconTries)
 								{ // rcon Kottizen LemonFace
-									BanAdd(m_NetServer.ClientAddr(ClientId), g_Config.m_SvRconTriesBantime); // bye
+									BanAdd(m_NetServer.ClientAddr(ClientId), g_Config.m_SvRconTriesBantime, "exceeding rcon password tries, Bye"); // bye
 									dbg_msg("server", "cid=%d banned, wrong rcon pw", ClientId);
 								}  
 							}
@@ -992,8 +992,8 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			if(m_aClients[ClientId].m_State >= CClient::STATE_READY)
 				GameServer()->OnMessage(Msg, &Unpacker, ClientId);
 		}
-	}
 }
+
 	
 void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 {

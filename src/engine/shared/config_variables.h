@@ -8,6 +8,7 @@
 //===============================  	
 MACRO_CONFIG_INT(SvReconnectTime,sv_reconnect_time,5,0,9999,CFGFLAG_SERVER,"how much time between leaves and joins")
 MACRO_CONFIG_INT(SvVoteKickTimeDelay,sv_vote_kick_delay,0,0,9999,CFGFLAG_SERVER,"how much time between kick votes")
+MACRO_CONFIG_INT(SvVoteKickBanTime,sv_vote_kick_bantime, 300, 0, 9999, CFGFLAG_SERVER," ")
 MACRO_CONFIG_INT(SvVoteMapTimeDelay,sv_vote_map_delay,0,0,9999,CFGFLAG_SERVER,"how much time between map votes")
 //MACRO_CONFIG_INT(SvMaxConnections,sv_max_connections, 2, 1, 16, CFGFLAG_SERVER, "Maximum count of connection from one IP server can accept") depricated
 MACRO_CONFIG_INT(SvMaxAfkTime,sv_max_afk_time, 0, 0, 9999, CFGFLAG_SERVER, "How many seconds a player is allowed to be afk, 0=disabled")	  
@@ -26,7 +27,10 @@ MACRO_CONFIG_INT(SvRconTriesBantime, sv_rcon_tries_bantime, 300, 0, 9999, CFGFLA
 MACRO_CONFIG_STR(SvRconPasswordAdmin, sv_rcon_password_admin, 32, "", CFGFLAG_SERVER, "Remote console administrator password")
 MACRO_CONFIG_STR(SvRconPasswordModer, sv_rcon_password_moder, 32, "", CFGFLAG_SERVER, "Remote console moderator password")  		 
 MACRO_CONFIG_STR(SvRconPasswordHelper, sv_rcon_password_helper, 32, "", CFGFLAG_SERVER, "Remote console helper password")  
-		 
+
+MACRO_CONFIG_INT(SvNetmsgLimit, sv_netmsg_limit, 0, 0, 100, CFGFLAG_SERVER, "How Many unauthed Command Tries Before ban")
+MACRO_CONFIG_INT(SvNetmsgBanTime, sv_netmsg_bantime, 300, 0, 9999, CFGFLAG_SERVER, "How Much time will the unauthed rcon command spammer will be banned")
+
 //=============================== */  
 
 MACRO_CONFIG_STR(PlayerName, player_name, 24, "nameless tee", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Name of the player")

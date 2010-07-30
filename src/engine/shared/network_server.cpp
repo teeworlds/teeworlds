@@ -1,6 +1,7 @@
 #include <base/system.h>
 #include "config.h"
 #include "network.h"
+#include <string.h>
 
 #define MACRO_LIST_LINK_FIRST(Object, First, Prev, Next) \
 	{ if(First) First->Prev = Object; \
@@ -164,7 +165,7 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds, const char * Reason)
 			return 0;
 		
 		pBan->m_Info.m_Expires = Stamp;
-		strcpy(pBan->m_Info.m_Reason, m_Reason);
+		strcpy(pBan->m_Info.m_Reason, Reason);
 		return 0;
 	}
 	
@@ -263,7 +264,7 @@ int CNetServer::BanAddNoDrop(NETADDR Addr, int Seconds, const char *Reason)
 			return 0;
 		
 		pBan->m_Info.m_Expires = Stamp;
-		strcpy(pBan->m_Info.m_Reason, m_Reason);
+		strcpy(pBan->m_Info.m_Reason, Reason);
 		return 0;
 	}
 	
@@ -277,7 +278,7 @@ int CNetServer::BanAddNoDrop(NETADDR Addr, int Seconds, const char *Reason)
 	// setup the ban info
 	pBan->m_Info.m_Expires = Stamp;
 	pBan->m_Info.m_Addr = Addr;
-	strcpy(pBan->m_Info.m_Reason, m_Reason);
+	strcpy(pBan->m_Info.m_Reason, Reason);
 	// add it to the ban hash
 	MACRO_LIST_LINK_FIRST(pBan, m_aBans[IpHash], m_pHashPrev, m_pHashNext);
 	

@@ -563,7 +563,8 @@ void CCharacter::Tick()
 		m_Input.m_Direction = 0;
 		m_Input.m_Jump = 0;
 		m_Input.m_Hook = 0;
-		m_Input.m_Fire = 0; 
+		m_Input.m_Fire = 0;
+		m_Core.m_Jumped = 0;
 		ResetPos();
 	}
 	

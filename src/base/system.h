@@ -9,6 +9,26 @@
 
 #include "detect.h"
 
+#if defined(CONF_FAMILY_WINDOWS)
+	#include "stdint.h"
+#endif
+#if defined(CONF_FAMILY_UNIX)
+	#include <stdint.h>
+#endif
+#if defined(CONF_PLATFORM_MACOSX)
+#include <MacTypes.h>
+
+typedef SInt8	int8_t;
+typedef UInt8	uint8_t;
+typedef SInt16	int16_t;
+typedef UInt16	uint16_t;
+typedef SInt32	int32_t;
+typedef UInt32	uint32_t;
+typedef SInt64	int64_t;
+typedef UInt64	uint64_t;
+typedef unsigned long	uintptr_t;
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -530,7 +550,7 @@ NETSOCKET net_udp_create(NETADDR bindaddr);
 		On success it returns the number of bytes sent. Returns -1
 		on error.
 */
-int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size);
+int32_t net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size);
 
 /*
 	Function: net_udp_recv

@@ -72,8 +72,8 @@ void CCollision::Init(class CLayers *pLayers)
 		int FIndex = 0; 
 		if(!isOneLayer)
 			FIndex = m_pFTiles[i].m_Index;
-		if (FIndex!=0)
-			dbg_msg ("flayer", "tile found at (%d, %d)",(i - (i/ m_Width) * m_Width) ,(i / m_Width));
+		//if (FIndex!=0)
+		//	dbg_msg ("flayer", "tile found at (%d, %d)",(i - (i/ m_Width) * m_Width) ,(i / m_Width));
 		if(Index > 190)
 			continue;
 		

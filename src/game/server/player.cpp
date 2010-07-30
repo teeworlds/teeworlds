@@ -1,5 +1,7 @@
 #include <new>
+#include <stdio.h>
 #include <engine/server.h>
+#include <engine/server/server.h>
 #include <engine/shared/config.h>
 
 #include "player.h"
@@ -229,7 +231,7 @@ void CPlayer::AfkTimer(int new_target_x, int new_target_y)
 	if(m_Authed) return; // don't kick admins
 	if(g_Config.m_SvMaxAfkTime == 0) return; // 0 = disabled
 	
-	if(new_target_x != last_target_x || new_target_y != last_target_y)
+	if(new_target_x != m_LastTarget_x || new_target_y != m_LastTarget_y)
 	{
 		m_LastPlaytime = time_get();
 		m_LastTarget_x = new_target_x;
@@ -249,7 +251,7 @@ void CPlayer::AfkTimer(int new_target_x, int new_target_y)
 				(int)(g_Config.m_SvMaxAfkTime*0.5),
 				g_Config.m_SvMaxAfkTime
 			);
-			m_pGameServer->SendChatTarget(client_id, m_pAfkMsg);
+			m_pGameServer->SendChatTarget(m_ClientID, m_pAfkMsg);
 			m_SentAfkWarning = 1;
 		} else if(m_SentAfkWarning2 == 0 && m_LastPlaytime < time_get()-time_freq()*(int)(g_Config.m_SvMaxAfkTime*0.9))
 		{
@@ -259,11 +261,12 @@ void CPlayer::AfkTimer(int new_target_x, int new_target_y)
 				(int)(g_Config.m_SvMaxAfkTime*0.9),
 				g_Config.m_SvMaxAfkTime
 			);
-			m_pGameServer->SendChatTarget(client_id, m_pAfkMsg);
+			m_pGameServer->SendChatTarget(m_ClientID, m_pAfkMsg);
 			m_SentAfkWarning = 1;
-		} else if(last_playtime < time_get()-time_freq()*g_Config.m_SvMaxAfkTime)
+		} else if(m_LastPlaytime < time_get()-time_freq()*g_Config.m_SvMaxAfkTime)
 		{
-			m_pGameServer->Server()->Kick(client_id,"Away from keyboard");
+			CServer* serv =	(CServer*)m_pGameServer->Server();
+			serv->Kick(m_ClientID,"Away from keyboard");
 		}
 	}
 }

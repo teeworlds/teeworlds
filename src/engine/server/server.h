@@ -103,7 +103,7 @@ public:
 		NETADDR m_Addr; // for storing address 
 		int m_PwTries; // a players rcon pw tries
 		int m_CmdTries; //Floff players rcon command tries, to prevent command flood server crash  
-		int64 m_CommandTriesTimer; // time
+		int64 m_CmdTriesTimer; // time
 		
 		void Reset();
 	};
