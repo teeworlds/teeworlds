@@ -8,6 +8,8 @@
 #include <list>
 #include <engine/config.h>
 #include <engine/shared/config.h>
+#include <engine/shared/storage.h>
+#include <engine/server/server.h>
 #include <engine/server.h>
 
 CPlayerScore::CPlayerScore(const char *name, float score)
@@ -33,14 +35,24 @@ std::string SaveFile()
 
 void CScore::Save()
 {
-	std::fstream f;
-	f.open(SaveFile().c_str(), std::ios::out);
-	if(!f.fail()) {
-		for(std::list<CPlayerScore>::iterator i=top.begin(); i!=top.end(); i++)
-		{
-			f << i->name << std::endl << i->m_Score << std::endl;
+	
+		std::fstream f;
+		if(!g_Config.m_SvExternalRecords) {
+			f.open(SaveFile().c_str(), std::ios::out);
+		} else {
+			char buf[512];
+			CServer* server = static_cast<CServer*>(m_pGameServer->Server());
+			CStorage* storage = static_cast<CStorage*>(server->Storage());
+			str_format(buf, sizeof(buf), "%s/records/%s", storage->m_aApplicationSavePath ,SaveFile().c_str());
+			f.open(buf, std::ios::out);
 		}
-	}
+		
+		if(!f.fail()) {
+			for(std::list<CPlayerScore>::iterator i=top.begin(); i!=top.end(); i++)
+			{
+				f << i->name << std::endl << i->m_Score << std::endl;
+			}
+		}
 	f.close();
 }
 

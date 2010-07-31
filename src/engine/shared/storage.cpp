@@ -1,24 +1,7 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
-#include <base/system.h>
-#include <engine/storage.h>
-#include "engine.h"
+#include "storage.h"
 
-// compiled-in data-dir path
-#define DATA_DIR "data"
-
-class CStorage : public IStorage
-{
-public:
-	char m_aApplicationSavePath[512];
-	char m_aDatadir[512];
-	
-	CStorage()
-	{
-		m_aApplicationSavePath[0] = 0;
-		m_aDatadir[0] = 0;
-	}
-	
-	int Init(const char *pApplicationName, const char *pArgv0)
+	int CStorage::Init(const char *pApplicationName, const char *pArgv0)
 	{
 		char aPath[1024] = {0};
 		fs_storage_path(pApplicationName, m_aApplicationSavePath, sizeof(m_aApplicationSavePath));
@@ -38,12 +21,17 @@ public:
 
 			str_format(aPath, sizeof(aPath), "%s/demos", m_aApplicationSavePath);
 			fs_makedir(aPath);
+			
+			if(g_Config.m_SvExternalRecords) {
+				str_format(aPath, sizeof(aPath), "%s/records", m_aApplicationSavePath);
+				fs_makedir(aPath);
+			}
 		}
 		
 		return FindDatadir(pArgv0);
 	}
 		
-	int FindDatadir(const char *pArgv0)
+	int CStorage::FindDatadir(const char *pArgv0)
 	{
 		// 1) use provided data-dir override
 		if(m_aDatadir[0])
@@ -119,7 +107,7 @@ public:
 		return -1;
 	}
 
-	virtual void ListDirectory(int Types, const char *pPath, FS_LISTDIR_CALLBACK pfnCallback, void *pUser)
+	void CStorage::ListDirectory(int Types, const char *pPath, FS_LISTDIR_CALLBACK pfnCallback, void *pUser)
 	{
 		char aBuffer[1024];
 		
@@ -144,7 +132,7 @@ public:
 		}		
 	}
 	
-	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, char *pBuffer = 0, int BufferSize = 0)
+	IOHANDLE CStorage::OpenFile(const char *pFilename, int Flags, char *pBuffer, int BufferSize)
 	{
 		char aBuffer[1024];
 		if(!pBuffer)
@@ -184,16 +172,7 @@ public:
 		return 0;		
 	}
 
-	static IStorage *Create(const char *pApplicationName, const char *pArgv0)
-	{
-		CStorage *p = new CStorage();
-		if(p->Init(pApplicationName, pArgv0))
-		{
-			delete p;
-			p = 0;
-		}
-		return p;
-	}
-};
+	
 
-IStorage *CreateStorage(const char *pApplicationName, const char *pArgv0) { return CStorage::Create(pApplicationName, pArgv0); }
+
+
