@@ -168,8 +168,9 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
 	//Graphics()->MapScreen(screen_x0-50, screen_y0-50, screen_x1+50, screen_y1+50);
 
-	// calculate the final pixelsize for the tiles	
-	float TilePixelSize = 1024/32.0f;
+	// calculate the final pixelsize for the tiles
+	int TexSize = 1024;
+	float TilePixelSize = TexSize/32.0f;
 	float FinalTileSize = Scale/(ScreenX1-ScreenX0) * Graphics()->ScreenWidth();
 	float FinalTilesetScale = FinalTileSize/TilePixelSize;
 	
@@ -182,7 +183,6 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 	int EndX = (int)(ScreenX1/Scale)+1;
 	
 	// adjust the texture shift according to mipmap level
-	float TexSize = 1024.0f;
 	float Frac = (1.25f/TexSize) * (1/FinalTilesetScale);
 	float Nudge = (0.5f/TexSize) * (1/FinalTilesetScale);
 
@@ -239,15 +239,15 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 					
 					int tx = Index%16;
 					int ty = Index/16;
-					int Px0 = tx*(1024/16);
-					int Py0 = ty*(1024/16);
-					int Px1 = (tx+1)*(1024/16)-1;
-					int Py1 = (ty+1)*(1024/16)-1;
+					int Px0 = tx*(TexSize/16);
+					int Py0 = ty*(TexSize/16);
+					int Px1 = Px0+63;
+					int Py1 = Py0+63;
 					
-					float u0 = Nudge + Px0/TexSize+Frac;
-					float v0 = Nudge + Py0/TexSize+Frac;
-					float u1 = Nudge + Px1/TexSize-Frac;
-					float v1 = Nudge + Py1/TexSize-Frac;
+					float u0 = Nudge + Px0/(float)TexSize+Frac;
+					float v0 = Nudge + Py0/(float)TexSize+Frac;
+					float u1 = Nudge + Px1/(float)TexSize-Frac;
+					float v1 = Nudge + Py1/(float)TexSize-Frac;
 					
 					if(Flags&TILEFLAG_VFLIP)
 					{

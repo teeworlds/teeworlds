@@ -574,10 +574,6 @@ void CGraphics_OpenGL::QuadsDrawTL(const CQuadItem *pArray, int Num)
 
 	for(int i = 0; i < Num; ++i)
 	{
-		Center.x = pArray[i].m_X + pArray[i].m_Width/2;
-		Center.y = pArray[i].m_Y + pArray[i].m_Height/2;
-		Center.z = 0;
-		
 		m_aVertices[m_NumVertices + 4*i].m_Pos.x = pArray[i].m_X;
 		m_aVertices[m_NumVertices + 4*i].m_Pos.y = pArray[i].m_Y;
 		m_aVertices[m_NumVertices + 4*i].m_Tex = m_aTexture[0];
@@ -599,7 +595,13 @@ void CGraphics_OpenGL::QuadsDrawTL(const CQuadItem *pArray, int Num)
 		m_aVertices[m_NumVertices + 4*i + 3].m_Color = m_aColor[3];
 
 		if(m_Rotation != 0)
+		{
+			Center.x = pArray[i].m_X + pArray[i].m_Width/2;
+			Center.y = pArray[i].m_Y + pArray[i].m_Height/2;
+			Center.z = 0;
+
 			Rotate4(&Center, &m_aVertices[m_NumVertices + 4*i]);
+		}
 	}
 
 	AddVertices(4*Num);
