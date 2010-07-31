@@ -31,7 +31,7 @@ MACRO_CONFIG_STR(SvRconPasswordHelper, sv_rcon_password_helper, 32, "", CFGFLAG_
 MACRO_CONFIG_INT(SvNetmsgLimit, sv_netmsg_limit, 0, 0, 100, CFGFLAG_SERVER, "How Many unauthed Command Tries Before ban")
 MACRO_CONFIG_INT(SvNetmsgBanTime, sv_netmsg_bantime, 300, 0, 9999, CFGFLAG_SERVER, "How Much time will the unauthed rcon command spammer will be banned")
 
-MACRO_CONFIG_INT(SvExternalRecords, sv_exteranal_records, 0, 0, 1, CFGFLAG_SERVER, "All records will be holded in the same dir as maps")  		 
+MACRO_CONFIG_INT(SvExternalRecords, sv_external_records, 0, 0, 1, CFGFLAG_SERVER, "All records will be holded in the same dir as maps")  		 
 
 //=============================== */  
 

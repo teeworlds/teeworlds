@@ -22,10 +22,7 @@
 			str_format(aPath, sizeof(aPath), "%s/demos", m_aApplicationSavePath);
 			fs_makedir(aPath);
 			
-			if(g_Config.m_SvExternalRecords) {
-				str_format(aPath, sizeof(aPath), "%s/records", m_aApplicationSavePath);
-				fs_makedir(aPath);
-			}
+			
 		}
 		
 		return FindDatadir(pArgv0);
@@ -172,7 +169,7 @@
 		return 0;		
 	}
 
-	
+IStorage *CreateStorage(const char *pApplicationName, const char *pArgv0) { return CStorage::Create(pApplicationName, pArgv0); }
 
 
 

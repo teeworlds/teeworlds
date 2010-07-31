@@ -59,7 +59,15 @@ void CScore::Save()
 void CScore::Load()
 {
 	std::fstream f;
-	f.open(SaveFile().c_str(), std::ios::in);
+	if(!g_Config.m_SvExternalRecords) {
+			f.open(SaveFile().c_str(), std::ios::out);
+	} else {
+		char buf[512];
+		CServer* server = static_cast<CServer*>(m_pGameServer->Server());
+		CStorage* storage = static_cast<CStorage*>(server->Storage());
+		str_format(buf, sizeof(buf), "%s/records/%s", storage->m_aApplicationSavePath ,SaveFile().c_str());
+		f.open(buf, std::ios::out);
+	}
 	top.clear();
 	while (!f.eof() && !f.fail())
 	{

@@ -43,6 +43,6 @@ public:
 	}
 };
 
-IStorage *CreateStorage(const char *pApplicationName, const char *pArgv0) { return CStorage::Create(pApplicationName, pArgv0); }
+IStorage *CreateStorage(const char *pApplicationName, const char *pArgv0);
 
 #endif
