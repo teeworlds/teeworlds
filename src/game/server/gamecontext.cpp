@@ -521,7 +521,12 @@ void CGameContext::OnClientEnter(int ClientId)
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "%s entered and joined the %s", Server()->ClientName(ClientId), m_pController->GetTeamName(m_apPlayers[ClientId]->GetTeam()));
 	SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
-
+	SendChatTarget(ClientId, "DDRace Mod. Version: " DDRACE_VERSION);
+	SendChatTarget(ClientId, "Official site: DDRace.info");
+	SendChatTarget(ClientId, "For more Info /CMDList");
+	SendChatTarget(ClientId, "Or visit DDRace.info");
+	SendChatTarget(ClientId, "To see this again say /info");
+	if (g_Config.m_SvWelcome[0]!=0) SendChatTarget(ClientId,g_Config.m_SvWelcome);
 	dbg_msg("game", "team_join player='%d:%s' team=%d", ClientId, Server()->ClientName(ClientId), m_apPlayers[ClientId]->GetTeam());
 
 	m_VoteUpdate = true;
@@ -658,8 +663,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 						}
 					}
 			} else if(!str_comp_nocase(pMsg->m_pMessage, "/info"))
-				{
-					char buf[64];
+			{
 					SendChatTarget(ClientId, "DDRace Mod. Version: " DDRACE_VERSION);
 					SendChatTarget(ClientId, "Official site: DDRace.info");
 					SendChatTarget(ClientId, "For more Info /CMDList");

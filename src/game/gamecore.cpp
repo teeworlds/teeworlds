@@ -252,10 +252,14 @@ void CCharacterCore::Tick(bool UseInput)
 	{
 		if(m_HookedPlayer != -1)
 		{
-			CCharacterCore *p = m_pWorld->m_apCharacters[m_HookedPlayer];//TODO: Это пиздец
-			//CCharacter* pl = GameServer()->m_apPlayers[m_HookedPlayer]->GetCharacter();
-			if(p/*&&pl->m_RaceState != RACE_PAUSE*/)
-				m_HookPos = p->m_Pos;
+			CCharacterCore *p = m_pWorld->m_apCharacters[m_HookedPlayer];
+			//
+			if(p/*&&*/)
+			{
+				//CCharacter* pl = GameServer()->m_apPlayers[m_HookedPlayer]->GetCharacter();
+				//if (pl->m_RaceState != RACE_PAUSE)
+					m_HookPos = p->m_Pos;
+			}
 			else
 			{
 				// release hook

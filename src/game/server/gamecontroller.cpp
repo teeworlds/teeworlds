@@ -550,12 +550,12 @@ bool IGameController::IsFriendlyFire(int Cid1, int Cid2)
 */
 bool IGameController::IsForceBalanced()
 {
-	if(m_ForceBalanced)
+	/*if(m_ForceBalanced)
 	{
 		m_ForceBalanced = false;
 		return true;
 	}
-	else
+	else*/
 		return false;
 }
 
