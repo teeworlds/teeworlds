@@ -356,8 +356,8 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	};
 	
 	CProperty aProps[] = {
-		{Localize("Width"), m_Width, PROPTYPE_INT_STEP, 1, 1000000000},
-		{Localize("Height"), m_Height, PROPTYPE_INT_STEP, 1, 1000000000},
+		{Localize("Width"), m_Width, PROPTYPE_INT_SCROLL, 1, 1000000000},
+		{Localize("Height"), m_Height, PROPTYPE_INT_SCROLL, 1, 1000000000},
 		{Localize("Image"), m_Image, PROPTYPE_IMAGE, 0, 0},
 		{0},
 	};
