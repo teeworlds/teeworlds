@@ -46,6 +46,9 @@ public:
 	virtual bool RegisterInterfaceImpl(const char *pName, IInterface *pInterface)
 	{
 		// TODO: More error checks here
+		if(pInterface == NULL)
+			return false;
+		
 		if(m_NumInterfaces == MAX_INTERFACES)
 		{
 			dbg_msg("kernel", "ERROR: couldn't register interface '%s'. maximum of interfaces reached", pName);
