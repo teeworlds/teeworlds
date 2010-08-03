@@ -10,7 +10,7 @@ CGameControllerCTF::CGameControllerCTF(class CGameContext *pGameServer)
 {
 	m_apFlags[0] = 0;
 	m_apFlags[1] = 0;
-	m_pGameType = "CTF";
+	m_pGameType = "CTF ";
 	m_GameFlags = GAMEFLAG_TEAMS|GAMEFLAG_FLAGS;
 }
 
