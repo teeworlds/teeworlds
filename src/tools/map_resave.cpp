@@ -12,7 +12,7 @@ int main(int argc, const char **argv)
 	CDataFileReader DataFile;
 	CDataFileWriter df;
 
-	if(argc != 3)
+	if(!pStorage || argc != 3)
 		return -1;
 
 	str_format(aFileName, sizeof(aFileName), "maps/%s", argv[2]);

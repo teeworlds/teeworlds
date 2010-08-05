@@ -197,7 +197,7 @@ public:
 	static IStorage *Create(const char *pApplicationName, int NumArgs, const char **ppArguments)
 	{
 		CStorage *p = new CStorage();
-		if(p->Init(pApplicationName, NumArgs, ppArguments))
+		if(p && p->Init(pApplicationName, NumArgs, ppArguments))
 		{
 			delete p;
 			p = 0;
