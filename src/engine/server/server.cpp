@@ -1393,7 +1393,7 @@ int main(int argc, const char **argv) // ignore_convention
 	IGameServer *pGameServer = CreateGameServer();
 	IConsole *pConsole = CreateConsole(CFGFLAG_SERVER);
 	IEngineMasterServer *pEngineMasterServer = CreateEngineMasterServer();
-	IStorage *pStorage = CreateStorage("Teeworlds", argv[0]); // ignore_convention
+	IStorage *pStorage = CreateStorage("Teeworlds", argc, argv); // ignore_convention
 	IConfig *pConfig = CreateConfig();
 	
 	pServer->InitRegister(&pServer->m_NetServer, pEngineMasterServer);
