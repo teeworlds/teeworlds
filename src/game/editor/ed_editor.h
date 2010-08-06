@@ -272,6 +272,8 @@ public:
 		m_lEnvelopes.add(e);
 		return e;
 	}
+
+	void DeleteEnvelope(int Index);
 	
 	CLayerGroup *NewGroup()
 	{
