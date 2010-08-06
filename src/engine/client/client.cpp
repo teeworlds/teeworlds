@@ -2027,6 +2027,8 @@ int main(int argc, const char **argv) // ignore_convention
 	// execute config file
 	pConsole->ExecuteFile("settings.cfg");
 
+	m_Client.Engine()->InitLogfile();
+
 	// run the client
 	m_Client.Run();
 

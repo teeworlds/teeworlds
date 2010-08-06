@@ -1430,6 +1430,8 @@ int main(int argc, const char **argv) // ignore_convention
 	if(argc > 1) // ignore_convention
 		pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
 	
+	pServer->Engine()->InitLogfile();
+
 	// run the server
 	pServer->Run();
 	
