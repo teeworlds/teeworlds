@@ -2017,15 +2017,15 @@ int main(int argc, const char **argv) // ignore_convention
 	// init client's interfaces
 	m_Client.InitInterfaces();
 
+	// execute config file
+	pConsole->ExecuteFile("settings.cfg");
+
 	// execute autoexec file
 	pConsole->ExecuteFile("autoexec.cfg");
 
 	// parse the command line arguments
 	if(argc > 1) // ignore_convention
 		pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
-
-	// execute config file
-	pConsole->ExecuteFile("settings.cfg");
 
 	m_Client.Engine()->InitLogfile();
 
