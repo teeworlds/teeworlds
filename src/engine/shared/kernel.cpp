@@ -45,6 +45,12 @@ public:
 	virtual bool RegisterInterfaceImpl(const char *pName, IInterface *pInterface)
 	{
 		// TODO: More error checks here
+		if(!pInterface)
+		{
+			dbg_msg("kernel", "ERROR: couldn't register interface %s. null pointer given", pName);
+			return false;
+		}
+
 		if(m_NumInterfaces == MAX_INTERFACES)
 		{
 			dbg_msg("kernel", "ERROR: couldn't register interface '%s'. maximum of interfaces reached", pName);
@@ -53,7 +59,7 @@ public:
 			
 		if(FindInterfaceInfo(pName) != 0)
 		{
-			dbg_msg("kernel", "ERROR: couldn't register interface '%s'. interface already exists");
+			dbg_msg("kernel", "ERROR: couldn't register interface '%s'. interface already exists", pName);
 			return false;
 		}
 		

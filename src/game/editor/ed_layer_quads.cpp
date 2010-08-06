@@ -44,17 +44,6 @@ void CLayerQuads::Render()
 	m_pEditor->RenderTools()->RenderQuads(m_lQuads.base_ptr(), m_lQuads.size(), LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT, EnvelopeEval, m_pEditor);
 }
 
-void CLayerQuads::CheckQuads()
-{
-	for(int i = 0; i < m_lQuads.size(); i++)
-	{
-		if(m_lQuads[i].m_PosEnv >= m_pEditor->m_Map.m_lEnvelopes.size())
-			m_lQuads[i].m_PosEnv= -1;
-		if(m_lQuads[i].m_ColorEnv >= m_pEditor->m_Map.m_lEnvelopes.size())
-			m_lQuads[i].m_ColorEnv = -1;
-	}
-}
-
 CQuad *CLayerQuads::NewQuad()
 {
 	CQuad *q = &m_lQuads[m_lQuads.add(CQuad())];

@@ -2318,30 +2318,17 @@ void CEditor::RenderStatusbar(CUIRect View)
 void CEditor::RenderEnvelopeEditor(CUIRect View)
 {
 	if(m_SelectedEnvelope < 0) m_SelectedEnvelope = 0;
-	if(m_SelectedEnvelope >= m_Map.m_lEnvelopes.size()) m_SelectedEnvelope--;
+	if(m_SelectedEnvelope >= m_Map.m_lEnvelopes.size()) m_SelectedEnvelope = m_Map.m_lEnvelopes.size()-1;
 
 	CEnvelope *pEnvelope = 0;
 	if(m_SelectedEnvelope >= 0 && m_SelectedEnvelope < m_Map.m_lEnvelopes.size())
 		pEnvelope = m_Map.m_lEnvelopes[m_SelectedEnvelope];
-
-	bool ShowColorBar = false;
-	if(pEnvelope && pEnvelope->m_Channels == 4)
-		ShowColorBar = true;
 
 	CUIRect ToolBar, CurveBar, ColorBar;
 	View.HSplitTop(15.0f, &ToolBar, &View);
 	View.HSplitTop(15.0f, &CurveBar, &View);
 	ToolBar.Margin(2.0f, &ToolBar);
 	CurveBar.Margin(2.0f, &CurveBar);
-
-	if(ShowColorBar)
-	{
-		View.HSplitTop(20.0f, &ColorBar, &View);
-		ColorBar.Margin(2.0f, &ColorBar);
-		RenderBackground(ColorBar, ms_CheckerTexture, 16.0f, 1.0f);
-	}
-
-	RenderBackground(View, ms_CheckerTexture, 32.0f, 0.1f);
 
 	// do the toolbar
 	{
@@ -2372,6 +2359,21 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		if(DoButton_Editor(&s_New2dButton, Localize("Pos.+"), 0, &Button, 0, Localize("Creates a new pos envelope")))
 			pNewEnv = m_Map.NewEnvelope(3);
 			
+		// Delete button
+		if(m_SelectedEnvelope >= 0)
+		{
+			ToolBar.VSplitRight(10.0f, &ToolBar, &Button);
+			ToolBar.VSplitRight(50.0f, &ToolBar, &Button);
+			static int s_DelButton = 0;
+			if(DoButton_Editor(&s_DelButton, Localize("Delete"), 0, &Button, 0, Localize("Delete this envelope")))
+			{
+				m_Map.DeleteEnvelope(m_SelectedEnvelope);
+				if(m_SelectedEnvelope >= m_Map.m_lEnvelopes.size())
+					m_SelectedEnvelope = m_Map.m_lEnvelopes.size()-1;
+				pEnvelope = m_SelectedEnvelope >= 0 ? m_Map.m_lEnvelopes[m_SelectedEnvelope] : 0;
+			}
+		}
+
 		if(pNewEnv) // add the default points
 		{
 			if(pNewEnv->m_Channels == 4)
@@ -2415,6 +2417,17 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 			DoEditBox(&s_NameBox, &Button, pEnvelope->m_aName, sizeof(pEnvelope->m_aName), 10.0f);
 		}
 	}
+
+	bool ShowColorBar = false;
+	if(pEnvelope && pEnvelope->m_Channels == 4)
+	{
+		ShowColorBar = true;
+		View.HSplitTop(20.0f, &ColorBar, &View);
+		ColorBar.Margin(2.0f, &ColorBar);
+		RenderBackground(ColorBar, ms_CheckerTexture, 16.0f, 1.0f);
+	}
+
+	RenderBackground(View, ms_CheckerTexture, 32.0f, 0.1f);
 
 	if(pEnvelope)
 	{
@@ -2947,11 +2960,29 @@ void CEditor::Reset(bool CreateDefault)
 
 void CEditorMap::DeleteEnvelope(int Index)
 {
+	if(Index < 0 || Index >= m_lEnvelopes.size())
+		return;
+
+	// fix links between envelopes and quads
+	for(int i = 0; i < m_lGroups.size(); ++i)
+		for(int j = 0; j < m_lGroups[i]->m_lLayers.size(); ++j)
+			if(m_lGroups[i]->m_lLayers[j]->m_Type == LAYERTYPE_QUADS)
+			{
+				CLayerQuads *Layer = static_cast<CLayerQuads *>(m_lGroups[i]->m_lLayers[j]);
+				for(int k = 0; k < Layer->m_lQuads.size(); ++k)
+				{
+					if(Layer->m_lQuads[k].m_PosEnv == Index)
+						Layer->m_lQuads[k].m_PosEnv = -1;
+					else if(Layer->m_lQuads[k].m_PosEnv > Index)
+						Layer->m_lQuads[k].m_PosEnv--;
+					if(Layer->m_lQuads[k].m_ColorEnv == Index)
+						Layer->m_lQuads[k].m_ColorEnv = -1;
+					else if(Layer->m_lQuads[k].m_ColorEnv > Index)
+						Layer->m_lQuads[k].m_ColorEnv--;
+				}
+			}
+
 	m_lEnvelopes.remove_index(Index);
-	
-	for(int i = 0; i < m_lGroups.size(); i++)
-		for(int j = 0; j < m_lGroups[i]->m_lLayers.size(); j++)
-			m_lGroups[i]->m_lLayers[j]->CheckQuads();
 }
 
 void CEditorMap::MakeGameLayer(CLayer *pLayer)

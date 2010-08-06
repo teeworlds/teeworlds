@@ -5,14 +5,14 @@
 
 int main(int argc, const char **argv)
 {
-	IStorage *pStorage = CreateStorage("Teeworlds", argv[0]);
+	IStorage *pStorage = CreateStorage("Teeworlds", argc, argv);
 	int Index, Id = 0, Type = 0, Size;
 	void *pPtr;
 	char aFileName[1024];
 	CDataFileReader DataFile;
 	CDataFileWriter df;
 
-	if(argc != 3)
+	if(!pStorage || argc != 3)
 		return -1;
 
 	str_format(aFileName, sizeof(aFileName), "maps/%s", argv[2]);

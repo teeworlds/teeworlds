@@ -1,5 +1,6 @@
 #include <engine/graphics.h>
 #include <engine/storage.h>
+#include <game/gamecore.h>
 #include "ed_editor.h"
 
 template<typename T>
@@ -345,7 +346,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 		Item.m_Channels = m_lEnvelopes[e]->m_Channels;
 		Item.m_StartPoint = PointCount;
 		Item.m_NumPoints = m_lEnvelopes[e]->m_lPoints.size();
-		str_copy(Item.m_aName, m_lEnvelopes[e]->m_aName, sizeof(Item.m_aName));
+		StrToInts(Item.m_aName, sizeof(Item.m_aName)/sizeof(int), m_lEnvelopes[e]->m_aName);
 		
 		df.AddItem(MAPITEMTYPE_ENVELOPE, e, sizeof(Item), &Item);
 		PointCount += Item.m_NumPoints;
@@ -617,7 +618,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName)
 				pEnv->m_lPoints.set_size(pItem->m_NumPoints);
 				mem_copy(pEnv->m_lPoints.base_ptr(), &pPoints[pItem->m_StartPoint], sizeof(CEnvPoint)*pItem->m_NumPoints);
 				if(pItem->m_aName[0] != -1)	// compatibility with old maps
-					str_copy(pEnv->m_aName, pItem->m_aName, sizeof(pEnv->m_aName));
+					IntsToStr(pItem->m_aName, sizeof(pItem->m_aName)/sizeof(int), pEnv->m_aName);
 				m_lEnvelopes.add(pEnv);
 			}
 		}

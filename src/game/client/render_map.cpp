@@ -244,8 +244,8 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 					int ty = Index/16;
 					int Px0 = tx*(1024/16);
 					int Py0 = ty*(1024/16);
-					int Px1 = (tx+1)*(1024/16)-1;
-					int Py1 = (ty+1)*(1024/16)-1;
+					int Px1 = Px0+(1024/16)-1;
+					int Py1 = Py0+(1024/16)-1;
 					
 					float u0 = Nudge + Px0/TexSize+Frac;
 					float v0 = Nudge + Py0/TexSize+Frac;
