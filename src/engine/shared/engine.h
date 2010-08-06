@@ -17,6 +17,7 @@ class CEngine
 
 public:
 	void Init(const char *pAppname);
+	void InitLogfile();
 	void HostLookup(CHostLookup *pLookup, const char *pHostname);
 };
 

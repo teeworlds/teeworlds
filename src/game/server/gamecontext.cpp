@@ -591,6 +591,12 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 
 		int64 Now = Server()->Tick();
 		p->m_Last_VoteTry = Now;
+		if(p->GetTeam() == -1)
+		{
+			SendChatTarget(ClientId, "Spectators aren't allowed to start a vote.");
+			return;
+		}
+
 		if(m_VoteCloseTime)
 		{
 			SendChatTarget(ClientId, "Wait for current vote to end before calling a new one.");

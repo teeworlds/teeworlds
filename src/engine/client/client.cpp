@@ -1963,11 +1963,6 @@ void CClient::Con_StopRecord(IConsole::IResult *pResult, void *pUserData)
 	pSelf->m_DemoRecorder.Stop();
 }
 
-void CClient::Con_ServerDummy(IConsole::IResult *pResult, void *pUserData)
-{
-	dbg_msg("client", "this command is not available on the client");
-}
-
 void CClient::Con_Tmprec(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
@@ -1991,15 +1986,15 @@ void CClient::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	// register server dummy commands for tab completion
-	m_pConsole->Register("kick", "i", CFGFLAG_SERVER, Con_ServerDummy, this, "Kick player with specified id");
-	m_pConsole->Register("ban", "s?i", CFGFLAG_SERVER, Con_ServerDummy, this, "Ban player with ip/id for x minutes");
-	m_pConsole->Register("unban", "s", CFGFLAG_SERVER, Con_ServerDummy, this, "Unban ip");
-	m_pConsole->Register("bans", "", CFGFLAG_SERVER, Con_ServerDummy, this, "Show banlist");
-	m_pConsole->Register("status", "", CFGFLAG_SERVER, Con_ServerDummy, this, "List players");
-	m_pConsole->Register("shutdown", "", CFGFLAG_SERVER, Con_ServerDummy, this, "Shut down");
-	m_pConsole->Register("record", "s", CFGFLAG_SERVER, Con_ServerDummy, this, "Record to a file");
-	m_pConsole->Register("stoprecord", "", CFGFLAG_SERVER, Con_ServerDummy, this, "Stop recording");
-	m_pConsole->Register("reload", "", CFGFLAG_SERVER, Con_ServerDummy, this, "Reload the map");
+	m_pConsole->Register("kick", "i", CFGFLAG_SERVER, 0, 0, "Kick player with specified id");
+	m_pConsole->Register("ban", "s?i", CFGFLAG_SERVER, 0, 0, "Ban player with ip/id for x minutes");
+	m_pConsole->Register("unban", "s", CFGFLAG_SERVER, 0, 0, "Unban ip");
+	m_pConsole->Register("bans", "", CFGFLAG_SERVER, 0, 0, "Show banlist");
+	m_pConsole->Register("status", "", CFGFLAG_SERVER, 0, 0, "List players");
+	m_pConsole->Register("shutdown", "", CFGFLAG_SERVER, 0, 0, "Shut down");
+	m_pConsole->Register("record", "s", CFGFLAG_SERVER, 0, 0, "Record to a file");
+	m_pConsole->Register("stoprecord", "", CFGFLAG_SERVER, 0, 0, "Stop recording");
+	m_pConsole->Register("reload", "", CFGFLAG_SERVER, 0, 0, "Reload the map");
 
 	m_pConsole->Register("quit", "", CFGFLAG_CLIENT, Con_Quit, this, "Quit Teeworlds");
 	m_pConsole->Register("exit", "", CFGFLAG_CLIENT, Con_Quit, this, "Quit Teeworlds");
@@ -2102,6 +2097,9 @@ int main(int argc, const char **argv) // ignore_convention
 	// init client's interfaces
 	m_Client.InitInterfaces();
 
+	// execute config file
+	pConsole->ExecuteFile("settings.cfg");
+
 	// execute autoexec file
 	pConsole->ExecuteFile("autoexec.cfg");
 
@@ -2109,8 +2107,7 @@ int main(int argc, const char **argv) // ignore_convention
 	if(argc > 1) // ignore_convention
 		pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
 
-	// execute config file
-	pConsole->ExecuteFile("settings.cfg");
+	m_Client.Engine()->InitLogfile();
 
 	// run the client
 	m_Client.Run();
