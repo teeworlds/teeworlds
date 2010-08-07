@@ -161,7 +161,7 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds, const char * Reason)
 	if(pBan)
 	{
 		// adjust the ban
-		if (pBan->m_Info.m_Expires > Seconds)
+		if (pBan->m_Info.m_Expires > Seconds || pBan->m_Info.m_Expires == 0xffffffff)
 			return 0;
 		
 		pBan->m_Info.m_Expires = Stamp;
@@ -260,7 +260,7 @@ int CNetServer::BanAddNoDrop(NETADDR Addr, int Seconds, const char *Reason)
 	if(pBan)
 	{
 		// adjust the ban
-		if (pBan->m_Info.m_Expires > Seconds)
+		if (pBan->m_Info.m_Expires > Seconds || pBan->m_Info.m_Expires == 0xffffffff)
 			return 0;
 		
 		pBan->m_Info.m_Expires = Stamp;
@@ -379,7 +379,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 			{
 				// banned, reply with a message
 				char BanStr[128];
-				if(pBan->m_Info.m_Expires)
+				if(pBan->m_Info.m_Expires && (pBan->m_Info.m_Expires!=0xffffffff))
 				{
 					int Mins = ((pBan->m_Info.m_Expires - Now))/60;
 					if(Mins > 1)
@@ -388,7 +388,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 						str_format(BanStr, sizeof(BanStr), "Banned for %d minute(s) for %s", (pBan->m_Info.m_Expires - Now), pBan->m_Info.m_Reason);
 				}
 				else
-					str_format(BanStr, sizeof(BanStr), "banned for life. %s", pBan->m_Info.m_Reason);
+					str_format(BanStr, sizeof(BanStr), "Banned for life for %s", pBan->m_Info.m_Reason);
 				CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, BanStr, str_length(BanStr)+1);
 				continue;
 			}
