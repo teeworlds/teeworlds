@@ -17,6 +17,7 @@ public:
 	
 	virtual void ListDirectory(int Types, const char *pPath, FS_LISTDIR_CALLBACK pfnCallback, void *pUser) = 0;
 	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, char *pBuffer = 0, int BufferSize = 0) = 0;
+	virtual const char* ApplicationSavePath() = 0;
 };
 
 extern IStorage *CreateStorage(const char *pApplicationName, const char *pArgv0);

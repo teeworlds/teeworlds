@@ -4,6 +4,7 @@
 #define SCORE_H_RACE
 #include <engine/server.h>
 #include <engine/shared/protocol.h>
+#include <string>
 
 class CPlayerScore
 {
@@ -20,6 +21,7 @@ public:
 class CScore
 {
 	class CGameContext *m_pGameServer;
+	std::string SaveFile();
 public:
 	CScore(class CGameContext *pGameServer);
 	

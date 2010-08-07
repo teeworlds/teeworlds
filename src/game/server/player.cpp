@@ -127,11 +127,11 @@ void CPlayer::OnDisconnect()
 		str_format(Buf, sizeof(Buf),  "%s has left the game", Name);
 		GameServer()->SendChat(-1, CGameContext::CHAT_ALL, Buf);
 		char Cmd[64];
+		dbg_msg("game", "leave player='%d:%s'", m_ClientID, Name);
 		if(m_Muted > 0) {
-			str_format(Cmd, sizeof(Cmd), "ban %d ", m_ClientID, m_Muted/Server()->TickSpeed());
+			str_format(Cmd, sizeof(Cmd), "ban %d %d '%s'", m_ClientID, m_Muted/Server()->TickSpeed(), "ppc");
 			GameServer()->Console()->ExecuteLine(Cmd, 3, -1);
 		}
-		dbg_msg("game", "leave player='%d:%s'", m_ClientID, Name);
 	}
 }
 

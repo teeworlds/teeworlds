@@ -8,7 +8,7 @@
 #include <list>
 #include <engine/config.h>
 #include <engine/shared/config.h>
-#include <engine/shared/storage.h>
+#include <engine/storage.h>
 #include <engine/server/server.h>
 #include <engine/server.h>
 
@@ -26,10 +26,16 @@ CScore::CScore(class CGameContext *pGameServer)
 	Load();
 }
 
-std::string SaveFile()
+std::string CScore::SaveFile()
 {
 	std::ostringstream oss;
-	oss << g_Config.m_SvMap << "_record.dtb";
+	if(!g_Config.m_SvExternalRecords) {
+		oss << g_Config.m_SvMap << "_record.dtb";
+	} else {
+		char buf[512];
+		CServer* server = static_cast<CServer*>(m_pGameServer->Server());
+		oss << server->Storage()->ApplicationSavePath() << "/records/" << g_Config.m_SvMap << "_record.dtb";
+	}
 	return oss.str();
 }
 
@@ -37,16 +43,7 @@ void CScore::Save()
 {
 	
 		std::fstream f;
-		if(!g_Config.m_SvExternalRecords) {
-			f.open(SaveFile().c_str(), std::ios::out);
-		} else {
-			char buf[512];
-			CServer* server = static_cast<CServer*>(m_pGameServer->Server());
-			CStorage* storage = static_cast<CStorage*>(server->Storage());
-			str_format(buf, sizeof(buf), "%s/records/%s", storage->m_aApplicationSavePath ,SaveFile().c_str());
-			f.open(buf, std::ios::out);
-		}
-		
+		f.open(SaveFile().c_str(), std::ios::out);
 		if(!f.fail()) {
 			for(std::list<CPlayerScore>::iterator i=top.begin(); i!=top.end(); i++)
 			{
@@ -59,15 +56,7 @@ void CScore::Save()
 void CScore::Load()
 {
 	std::fstream f;
-	if(!g_Config.m_SvExternalRecords) {
-			f.open(SaveFile().c_str(), std::ios::out);
-	} else {
-		char buf[512];
-		CServer* server = static_cast<CServer*>(m_pGameServer->Server());
-		CStorage* storage = static_cast<CStorage*>(server->Storage());
-		str_format(buf, sizeof(buf), "%s/records/%s", storage->m_aApplicationSavePath ,SaveFile().c_str());
-		f.open(buf, std::ios::out);
-	}
+	f.open(SaveFile().c_str(), std::ios::in);
 	top.clear();
 	while (!f.eof() && !f.fail())
 	{

@@ -15,7 +15,6 @@
 #include <engine/shared/packer.h>
 #include <engine/shared/datafile.h>
 #include <engine/shared/demorec.h>
-#include <engine/shared/storage.h>
 
 #include <engine/server.h>
 #include <engine/map.h>
@@ -1645,11 +1644,9 @@ int main(int argc, const char **argv) // ignore_convention
 	if(argc > 1) // ignore_convention
 		pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
 	
-	CStorage * storage = static_cast<CStorage*>(pStorage);
-	
 	if(g_Config.m_SvExternalRecords == 1) {
 		char pathBuf[512];
-		str_format(pathBuf, sizeof(pathBuf), "%s/records", storage->m_aApplicationSavePath);
+		str_format(pathBuf, sizeof(pathBuf), "%s/records", pStorage->ApplicationSavePath());
 		fs_makedir(pathBuf);
 	}
 	
