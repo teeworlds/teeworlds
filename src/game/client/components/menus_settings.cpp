@@ -139,7 +139,10 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
             Button.VSplitLeft(100.0f, 0, &Button);
 
             str_format(aBuf, sizeof(aBuf), "%s", g_Config.m_PlayerSkin);
-            UI()->DoLabel(&Button, aBuf, 14.0, -1);
+			CTextCursor Cursor;
+			TextRender()->SetCursor(&Cursor, Button.x, Button.y, 14.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+			Cursor.m_LineWidth = SkinRect.w-(Button.x-SkinRect.x)-5.0f;
+			TextRender()->TextEx(&Cursor, aBuf, -1);
         }
 
 		RightView.HSplitTop(20.0f, &Button, &RightView);
