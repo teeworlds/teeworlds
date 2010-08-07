@@ -1613,6 +1613,9 @@ void CClient::Run()
 
 	Input()->MouseModeRelative();
 
+	// process pending commands
+	m_pConsole->StoreCommands(false);
+
 	while (1)
 	{
 		int64 FrameStartTime = time_get();
@@ -1915,7 +1918,7 @@ void CClient::RegisterCommands()
 
 	m_pConsole->Register("quit", "", CFGFLAG_CLIENT, Con_Quit, this, "Quit Teeworlds");
 	m_pConsole->Register("exit", "", CFGFLAG_CLIENT, Con_Quit, this, "Quit Teeworlds");
-	m_pConsole->Register("minimize", "", CFGFLAG_CLIENT, Con_Minimize, this, "Minimize Teeworlds");
+	m_pConsole->Register("minimize", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Minimize, this, "Minimize Teeworlds");
 	m_pConsole->Register("connect", "s", CFGFLAG_CLIENT, Con_Connect, this, "Connect to the specified host/ip");
 	m_pConsole->Register("disconnect", "", CFGFLAG_CLIENT, Con_Disconnect, this, "Disconnect from the server");
 	m_pConsole->Register("ping", "", CFGFLAG_CLIENT, Con_Ping, this, "Ping the current server");

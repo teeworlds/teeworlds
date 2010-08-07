@@ -1038,6 +1038,9 @@ int CServer::Run()
 	GameServer()->OnInit();
 	dbg_msg("server", "version %s", GameServer()->NetVersion());
 
+	// process pending commands
+	m_pConsole->StoreCommands(false);
+
 	// start game
 	{
 		int64 ReportTime = time_get();
@@ -1325,13 +1328,13 @@ void CServer::RegisterCommands()
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	
 	Console()->Register("kick", "i", CFGFLAG_SERVER, ConKick, this, "");
-	Console()->Register("ban", "s?i", CFGFLAG_SERVER, ConBan, this, "");
-	Console()->Register("unban", "s", CFGFLAG_SERVER, ConUnban, this, "");
-	Console()->Register("bans", "", CFGFLAG_SERVER, ConBans, this, "");
+	Console()->Register("ban", "s?i", CFGFLAG_SERVER|CFGFLAG_STORE, ConBan, this, "");
+	Console()->Register("unban", "s", CFGFLAG_SERVER|CFGFLAG_STORE, ConUnban, this, "");
+	Console()->Register("bans", "", CFGFLAG_SERVER|CFGFLAG_STORE, ConBans, this, "");
 	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "");
 	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "");
 
-	Console()->Register("record", "s", CFGFLAG_SERVER, ConRecord, this, "");
+	Console()->Register("record", "s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "");
 	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "");
 	
 	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "");
