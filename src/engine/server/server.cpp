@@ -1198,7 +1198,7 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser)
 			return;
 		}
 
-		NETADDR Addr = ((CServer *)pUser)->m_NetServer.ClientAddr(ClientId);
+		Addr = ((CServer *)pUser)->m_NetServer.ClientAddr(ClientId);
 		((CServer *)pUser)->BanAdd(Addr, Minutes*60);
 	}
 	
