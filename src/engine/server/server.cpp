@@ -794,8 +794,8 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 						m_aClients[ClientId].m_Addr.ip[3]);
 					m_aClients[ClientId].m_State = CClient::STATE_READY;
 					GameServer()->OnClientConnected(ClientId);
-					GameServer()->OnSetAuthed(ClientId, (void*)m_aClients[ClientId].m_Authed);
-					GameServer()->OnSetResistent(ClientId, (void*)m_aClients[ClientId].m_Resistent);  
+					GameServer()->OnSetAuthed(ClientId, m_aClients[ClientId].m_Authed);
+					GameServer()->OnSetResistent(ClientId, m_aClients[ClientId].m_Resistent);  
 				}
 			}
 			else if(Msg == NETMSG_ENTERGAME)
@@ -938,7 +938,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 								SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
 								
 								m_aClients[ClientId].m_Authed = level;
-								GameServer()->OnSetAuthed(ClientId, (void*)m_aClients[ClientId].m_Authed);  
+								GameServer()->OnSetAuthed(ClientId, m_aClients[ClientId].m_Authed);  
 								SendRconLine(ClientId, "Authentication successful. Remote console access granted.");
 								dbg_msg("server", "ClientId=%d authed with Level=%d", ClientId, level);
 								m_aClients[ClientId].m_PwTries = 0;

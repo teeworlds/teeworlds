@@ -540,11 +540,11 @@ bool compare_players(CPlayer *pl1, CPlayer *pl2)
        return false;  		 
 } 
 
-void CGameContext::OnSetAuthed(int client_id, void* status)  		 
+void CGameContext::OnSetAuthed(int client_id, int Level)  		 
 {
 	if(m_apPlayers[client_id])
 	{
-		m_apPlayers[client_id]->m_Authed = (int)status;
+		m_apPlayers[client_id]->m_Authed = Level;
 		char buf[11];
 		str_format(buf, sizeof(buf), "ban %d %d", client_id, g_Config.m_SvVoteKickBanTime);
 		//dbg_msg("hooks","%d", m_aVoteCommand == buf);//???
@@ -554,14 +554,12 @@ void CGameContext::OnSetAuthed(int client_id, void* status)
 			dbg_msg("hooks","Aborting vote");
 		}
 	}
-   if(m_apPlayers[client_id])  		 
-       m_apPlayers[client_id]->m_Authed = (int)status;  		 
 }  		 
  		 
-void CGameContext::OnSetResistent(int client_id, void* status)  		 
+void CGameContext::OnSetResistent(int client_id, int Resistent)  		 
 {  		 
    if(m_apPlayers[client_id])  		 
-       m_apPlayers[client_id]->m_Resistent = (int)status;  		 
+       m_apPlayers[client_id]->m_Resistent = Resistent;  		 
 }
 
 void CGameContext::OnClientConnected(int ClientId)

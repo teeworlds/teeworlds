@@ -76,8 +76,8 @@ public:
 	virtual void OnClientDirectInput(int ClientID, void *pInput) = 0;
 	virtual void OnClientPredictedInput(int ClientID, void *pInput) = 0;
 	
-	virtual void OnSetAuthed(int ClientId, void *pInput) = 0;
-	virtual void OnSetResistent(int ClientId, void *pInput) = 0;
+	virtual void OnSetAuthed(int ClientId,int Level) = 0;
+	virtual void OnSetResistent(int ClientId, int Resistent) = 0;
 
 	virtual const char *Version() = 0;
 	virtual const char *NetVersion() = 0;
