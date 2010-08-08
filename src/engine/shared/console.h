@@ -2,6 +2,7 @@
 #define ENGINE_SHARED_CONSOLE_H
 
 #include <engine/console.h>
+#include "memheap.h"
 
 class CConsole : public IConsole
 {
@@ -25,6 +26,8 @@ class CConsole : public IConsole
 	};	
 	
 	int m_FlagMask;
+	bool m_StoreCommands;
+	const char *m_paStrokeStr[2];
 	CCommand *m_pFirstCommand;
 
 	class CExecFile
@@ -75,6 +78,34 @@ class CConsole : public IConsole
 	int ParseStart(CResult *pResult, const char *pString, int Length);
 	int ParseArgs(CResult *pResult, const char *pFormat);
 
+	class CExecutionQueue
+	{
+		CHeap m_Queue;
+
+	public:
+		struct CQueueEntry
+		{
+			CQueueEntry *m_pNext;
+			FCommandCallback m_pfnCommandCallback;
+			void *m_pCommandUserData;
+			CResult m_Result;
+		} *m_pFirst, *m_pLast;
+
+		void AddEntry()
+		{
+			CQueueEntry *pEntry = static_cast<CQueueEntry *>(m_Queue.Allocate(sizeof(CQueueEntry)));
+			pEntry->m_pNext = 0;
+			m_pLast->m_pNext = pEntry;
+			m_pLast = pEntry;
+		}
+		void Reset()
+		{
+			m_Queue.Reset();
+			m_pFirst = m_pLast = static_cast<CQueueEntry *>(m_Queue.Allocate(sizeof(CQueueEntry)));
+			m_pLast->m_pNext = 0;
+		}
+	} m_ExecutionQueue;
+
 	CCommand *FindCommand(const char *pName, int FlagMask);
 
 public:
@@ -86,6 +117,7 @@ public:
 	virtual void ParseArguments(int NumArgs, const char **ppArguments);
 	virtual void Register(const char *pName, const char *pParams, int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp);
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser);
+	virtual void StoreCommands(bool Store);
 	
 	virtual void ExecuteLine(const char *pStr);
 	virtual void ExecuteFile(const char *pFilename);

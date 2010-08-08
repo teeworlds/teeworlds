@@ -948,8 +948,8 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConTuneReset, this, "");
 	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConTuneDump, this, "");
 
-	Console()->Register("change_map", "r", CFGFLAG_SERVER, ConChangeMap, this, "");
-	Console()->Register("restart", "?i", CFGFLAG_SERVER, ConRestart, this, "");
+	Console()->Register("change_map", "r", CFGFLAG_SERVER|CFGFLAG_STORE, ConChangeMap, this, "");
+	Console()->Register("restart", "?i", CFGFLAG_SERVER|CFGFLAG_STORE, ConRestart, this, "");
 	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConBroadcast, this, "");
 	Console()->Register("say", "r", CFGFLAG_SERVER, ConSay, this, "");
 	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConSetTeam, this, "");
