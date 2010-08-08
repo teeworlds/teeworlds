@@ -288,7 +288,6 @@ typedef struct
 
 static CKeyInfo gs_aKeys[] =
 {
-	// we need to do localize so the scripts can pickup the string
 	{ "Move left", "+left", 0},		// Localize - these strings are localized within CLocConstString
 	{ "Move right", "+right", 0 },
 	{ "Jump", "+jump", 0 },
@@ -312,6 +311,12 @@ static CKeyInfo gs_aKeys[] =
 	{ "Screenshot", "screenshot", 0 },
 	{ "Scoreboard", "+scoreboard", 0 },
 };
+/*	This is for scripts/update_localization.py to work, don't remove!
+	Localize("Move left");Localize("Move right");Localize("Jump");Localize("Fire");Localize("Hook");Localize("Hammer");
+	Localize("Pistol");Localize("Shotgun");Localize("Grenade");Localize("Rifle");Localize("Next weapon");Localize("Prev. weapon");
+	Localize("Vote yes");Localize("Vote no");Localize("Chat");Localize("Team chat");Localize("Show chat");Localize("Emoticon");
+	Localize("Console");Localize("Remote console");Localize("Screenshot");Localize("Scoreboard");
+*/
 
 const int g_KeyCount = sizeof(gs_aKeys) / sizeof(CKeyInfo);
 

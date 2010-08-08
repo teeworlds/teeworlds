@@ -63,6 +63,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		{-1,			-1,						" ",		1, 10.0f, 0, {0}, {0}},
 		{COL_PING,		IServerBrowser::SORT_PING,		"Ping",		1, 40.0f, FIXED, {0}, {0}},
 	};
+	// This is just for scripts/update_localization.py to work correctly (all other strings are already Localize()'d somewhere else). Don't remove!
+	// Localize("Type");
 
 	int NumCols = sizeof(s_aCols)/sizeof(CColumn);
 
