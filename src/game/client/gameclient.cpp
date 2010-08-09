@@ -99,11 +99,6 @@ static int gs_LoadTotal;
 	}
 }*/
 
-static void ConServerDummy(IConsole::IResult *pResult, void *pUserData)
-{
-	dbg_msg("client", "this command is not available on the client");
-}
-
 #include <base/tl/sorted_array.h>
 
 const char *CGameClient::Version() { return GAME_VERSION; }
@@ -187,16 +182,16 @@ void CGameClient::OnConsoleInit()
 	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself");
 	
 	// register server dummy commands for tab completion
-	Console()->Register("tune", "si", CFGFLAG_SERVER, ConServerDummy, 0, "Tune variable to value");
-	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConServerDummy, 0, "Reset tuning");
-	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConServerDummy, 0, "Dump tuning");
-	Console()->Register("change_map", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Change map");
-	Console()->Register("restart", "?i", CFGFLAG_SERVER, ConServerDummy, 0, "Restart in x seconds");
-	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Broadcast message");
-	//MACRO_REGISTER_COMMAND("say", "r", CFGFLAG_SERVER, con_serverdummy, 0);
-	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConServerDummy, 0, "Set team of player to team");
-	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Add a voting option");
-	//MACRO_REGISTER_COMMAND("vote", "", CFGFLAG_SERVER, con_serverdummy, 0);
+	Console()->Register("tune", "si", CFGFLAG_SERVER, 0, 0, "Tune variable to value");
+	Console()->Register("tune_reset", "", CFGFLAG_SERVER, 0, 0, "Reset tuning");
+	Console()->Register("tune_dump", "", CFGFLAG_SERVER, 0, 0, "Dump tuning");
+	Console()->Register("change_map", "r", CFGFLAG_SERVER, 0, 0, "Change map");
+	Console()->Register("restart", "?i", CFGFLAG_SERVER, 0, 0, "Restart in x seconds");
+	Console()->Register("broadcast", "r", CFGFLAG_SERVER, 0, 0, "Broadcast message");
+	Console()->Register("say", "r", CFGFLAG_SERVER, 0, 0, "Say in chat");
+	Console()->Register("set_team", "ii", CFGFLAG_SERVER, 0, 0, "Set team of player to team");
+	Console()->Register("addvote", "r", CFGFLAG_SERVER, 0, 0, "Add a voting option");
+	Console()->Register("vote", "r", CFGFLAG_SERVER, 0, 0, "Force a vote to yes/no");
 
 
 	// propagate pointers

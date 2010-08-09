@@ -45,6 +45,7 @@ public:
 	virtual void Register(const char *pName, const char *pParams, 
 		int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp, const int Level) = 0;
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser) = 0;
+	virtual void StoreCommands(bool Store, int ClientId) = 0;
 	
 	virtual void ExecuteLine(const char *Sptr, const int ClientLevel, const int ClientId) = 0;
 	virtual void ExecuteLineStroked(int Stroke, const char *pStr, const int ClientLevel, const int ClientId) = 0;

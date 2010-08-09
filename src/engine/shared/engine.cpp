@@ -61,6 +61,12 @@ void CEngine::Init(const char *pAppname)
 	//config_reset();
 }
 
+void CEngine::InitLogfile()
+{
+	// open logfile if needed
+	if(g_Config.m_Logfile[0])
+		dbg_logger_file(g_Config.m_Logfile);
+}
 
 static int HostLookupThread(void *pUser)
 {

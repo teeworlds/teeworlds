@@ -18,7 +18,7 @@ public:
 		m_aDatadir[0] = 0;
 	}
 
-	int Init(const char *pApplicationName, const char *pArgv0)
+	int Init(const char *pApplicationName, int NumArgs, const char **ppArguments)
 	{
 		char aPath[1024] = {0};
 		fs_storage_path(pApplicationName, m_aApplicationSavePath, sizeof(m_aApplicationSavePath));
@@ -39,8 +39,7 @@ public:
 			str_format(aPath, sizeof(aPath), "%s/demos", m_aApplicationSavePath);
 			fs_makedir(aPath);
 		}
-
-		return FindDatadir(pArgv0);
+		return FindDatadir(ppArguments[0]);
 	}
 
 	int FindDatadir(const char *pArgv0)
@@ -184,10 +183,10 @@ public:
 		return 0;		
 	}
 
-	static IStorage *Create(const char *pApplicationName, const char *pArgv0)
+	static IStorage *Create(const char *pApplicationName, int NumArgs, const char **ppArguments)
 	{
 		CStorage *p = new CStorage();
-		if(p->Init(pApplicationName, pArgv0))
+		if(p && p->Init(pApplicationName, NumArgs, ppArguments))
 		{
 			delete p;
 			p = 0;
@@ -200,4 +199,4 @@ public:
 	}
 };
 
-IStorage *CreateStorage(const char *pApplicationName, const char *pArgv0) { return CStorage::Create(pApplicationName, pArgv0); }
+IStorage *CreateStorage(const char *pApplicationName, int NumArgs, const char **ppArguments) { return CStorage::Create(pApplicationName, NumArgs, ppArguments); }

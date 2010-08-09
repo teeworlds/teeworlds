@@ -292,8 +292,8 @@ void CRenderTools::MapscreenToWorld(float CenterX, float CenterY, float Parallax
 	Height *= Zoom;
 	pPoints[0] = OffsetX+CenterX-Width/2;
 	pPoints[1] = OffsetY+CenterY-Height/2;
-	pPoints[2] = OffsetX+CenterX+Width/2;
-	pPoints[3] = OffsetY+CenterY+Height/2;
+	pPoints[2] = pPoints[0]+Width;
+	pPoints[3] = pPoints[1]+Height;
 }
 
 void CRenderTools::RenderTilemapGenerateSkip(class CLayers *pLayers)

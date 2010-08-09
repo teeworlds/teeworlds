@@ -60,7 +60,7 @@ protected:
 
 	void Flush();
 	void AddVertices(int Count);
-	void Rotate4(CPoint *pCenter, CVertex *pPoints);
+	void Rotate4(const CPoint &rCenter, CVertex *pPoints);
 	
 	static unsigned char Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset);
 public:

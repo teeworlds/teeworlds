@@ -1215,6 +1215,9 @@ int CServer::Run()
 	GameServer()->OnInit();
 	dbg_msg("server", "version %s", GameServer()->NetVersion());
 
+	// process pending commands
+	m_pConsole->StoreCommands(false,-1);
+
 	// start game
 	{
 		int64 ReportTime = time_get();
@@ -1398,7 +1401,7 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
 			return;
 		}
 
-		NETADDR Addr = ((CServer *)pUser)->m_NetServer.ClientAddr(ClientId);
+		Addr = ((CServer *)pUser)->m_NetServer.ClientAddr(ClientId);
 		((CServer *)pUser)->BanAdd(Addr, Minutes*60, Bufz);
 	}
 	
@@ -1530,15 +1533,12 @@ void CServer::RegisterCommands()
 	
 	Console()->Register("kick", "i", CFGFLAG_SERVER, ConKick, this, "", 2);
 	Console()->Register("ban", "s?i?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s", CFGFLAG_SERVER, ConBan, this, "Ban player",2); //horrible long string
-
 	Console()->Register("unban", "s", CFGFLAG_SERVER, ConUnban, this, "", 3);
 	Console()->Register("bans", "", CFGFLAG_SERVER, ConBans, this, "", 2);
 	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "", 1);
 	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "", 3);
-
 	Console()->Register("record", "s", CFGFLAG_SERVER, ConRecord, this, "", 3);
 	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "", 3);
-	
 	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "", 3);
 
 	Console()->Chain("sv_name", ConchainSpecialInfoupdate, this);
@@ -1598,7 +1598,7 @@ int main(int argc, const char **argv) // ignore_convention
 	IGameServer *pGameServer = CreateGameServer();
 	IConsole *pConsole = CreateConsole(CFGFLAG_SERVER);
 	IEngineMasterServer *pEngineMasterServer = CreateEngineMasterServer();
-	IStorage *pStorage = CreateStorage("Teeworlds", argv[0]); // ignore_convention
+	IStorage *pStorage = CreateStorage("Teeworlds", argc, argv); // ignore_convention
 	IConfig *pConfig = CreateConfig();
 	
 	pServer->InitRegister(&pServer->m_NetServer, pEngineMasterServer);
@@ -1644,6 +1644,7 @@ int main(int argc, const char **argv) // ignore_convention
 	if(argc > 1) // ignore_convention
 		pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
 	
+	pServer->Engine()->InitLogfile();
 	if(g_Config.m_SvExternalRecords == 1) {
 		char pathBuf[512];
 		str_format(pathBuf, sizeof(pathBuf), "%s/records", pStorage->ApplicationSavePath());

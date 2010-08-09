@@ -103,7 +103,7 @@ void CGraphics_OpenGL::AddVertices(int Count)
 		Flush();
 }
 
-void CGraphics_OpenGL::Rotate4(CPoint *pCenter, CVertex *pPoints)
+void CGraphics_OpenGL::Rotate4(const CPoint &rCenter, CVertex *pPoints)
 {
 	float c = cosf(m_Rotation);
 	float s = sinf(m_Rotation);
@@ -112,10 +112,10 @@ void CGraphics_OpenGL::Rotate4(CPoint *pCenter, CVertex *pPoints)
 
 	for(i = 0; i < 4; i++)
 	{
-		x = pPoints[i].m_Pos.x - pCenter->x;
-		y = pPoints[i].m_Pos.y - pCenter->y;
-		pPoints[i].m_Pos.x = x * c - y * s + pCenter->x;
-		pPoints[i].m_Pos.y = x * s + y * c + pCenter->y;
+		x = pPoints[i].m_Pos.x - rCenter.x;
+		y = pPoints[i].m_Pos.y - rCenter.y;
+		pPoints[i].m_Pos.x = x * c - y * s + rCenter.x;
+		pPoints[i].m_Pos.y = x * s + y * c + rCenter.y;
 	}
 }
 
@@ -558,15 +558,12 @@ void CGraphics_OpenGL::QuadsDraw(CQuadItem *pArray, int Num)
 void CGraphics_OpenGL::QuadsDrawTL(const CQuadItem *pArray, int Num)
 {
 	CPoint Center;
+	Center.z = 0;
 
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called quads_draw without begin");
 
 	for(int i = 0; i < Num; ++i)
 	{
-		Center.x = pArray[i].m_X + pArray[i].m_Width/2;
-		Center.y = pArray[i].m_Y + pArray[i].m_Height/2;
-		Center.z = 0;
-		
 		m_aVertices[m_NumVertices + 4*i].m_Pos.x = pArray[i].m_X;
 		m_aVertices[m_NumVertices + 4*i].m_Pos.y = pArray[i].m_Y;
 		m_aVertices[m_NumVertices + 4*i].m_Tex = m_aTexture[0];
@@ -588,7 +585,12 @@ void CGraphics_OpenGL::QuadsDrawTL(const CQuadItem *pArray, int Num)
 		m_aVertices[m_NumVertices + 4*i + 3].m_Color = m_aColor[3];
 
 		if(m_Rotation != 0)
-			Rotate4(&Center, &m_aVertices[m_NumVertices + 4*i]);
+		{
+			Center.x = pArray[i].m_X + pArray[i].m_Width/2;
+			Center.y = pArray[i].m_Y + pArray[i].m_Height/2;
+
+			Rotate4(Center, &m_aVertices[m_NumVertices + 4*i]);
+		}
 	}
 
 	AddVertices(4*Num);

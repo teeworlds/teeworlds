@@ -20,7 +20,7 @@ public:
 	virtual const char* ApplicationSavePath() = 0;
 };
 
-extern IStorage *CreateStorage(const char *pApplicationName, const char *pArgv0);
+extern IStorage *CreateStorage(const char *pApplicationName, int NumArgs, const char **ppArguments);
 
 
 #endif

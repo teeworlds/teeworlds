@@ -1,3 +1,4 @@
+#include <new>
 #include <base/system.h>
 #include <engine/shared/protocol.h>
 #include <engine/storage.h>
@@ -172,12 +173,8 @@ void CConsole::Print(const char *pStr)
 
 void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int ClientLevel, const int ClientId)
 {
-	CResult Result;
+	CResult *pResult = new(&m_ExecutionQueue.m_pLast->m_Result) CResult;
 	
-	char aStrokeStr[2] = {'0', 0};
-	if(Stroke)
-		aStrokeStr[0] = '1';
-
 	while(pStr && *pStr)
 	{
 		const char *pEnd = pStr;
@@ -207,31 +204,31 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 			pEnd++;
 		}
 		
-		if(ParseStart(&Result, pStr, (pEnd-pStr) + 1) != 0)
+		if(ParseStart(pResult, pStr, (pEnd-pStr) + 1) != 0)
 			return;
 
-		CCommand *pCommand = FindCommand(Result.m_pCommand, m_FlagMask);
+		CCommand *pCommand = FindCommand(pResult->m_pCommand, m_FlagMask);
 
 		if(pCommand)
 		{
 			int IsStrokeCommand = 0;
-			if(Result.m_pCommand[0] == '+')
+			if(pResult->m_pCommand[0] == '+')
 			{
 				// insert the stroke direction token
-				Result.AddArgument(aStrokeStr);
+				pResult->AddArgument(m_paStrokeStr[Stroke]);
 				IsStrokeCommand = 1;
 			}
 			
 			if(Stroke || IsStrokeCommand)
 			{
-				if(ParseArgs(&Result, pCommand->m_pParams))
+				if(ParseArgs(pResult, pCommand->m_pParams))
 				{
 					char aBuf[256];
 					str_format(aBuf, sizeof(aBuf), "Invalid arguments... Usage: %s %s", pCommand->m_pName, pCommand->m_pParams);
 					Print(aBuf);
 				}
 				if (pCommand->m_Level <= ClientLevel) {
-					pCommand->m_pfnCallback(&Result, pCommand->m_pUserData, ClientId);
+					pCommand->m_pfnCallback(pResult, pCommand->m_pUserData, ClientId);
 				} else {
 					char aBuf[256];
 					if (pCommand->m_Level == 100 && ClientLevel < 100)
@@ -247,7 +244,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 		else if(Stroke)
 		{
 			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "No such command: %s.", Result.m_pCommand);
+			str_format(aBuf, sizeof(aBuf), "No such command: %s.", pResult->m_pCommand);
 			Print(aBuf);
 		}
 		
@@ -400,6 +397,10 @@ static void StrVariableCommand(IConsole::IResult *pResult, void *pUserData, int 
 CConsole::CConsole(int FlagMask)
 {
 	m_FlagMask = FlagMask;
+	m_StoreCommands = true;
+	m_paStrokeStr[0] = "0";
+	m_paStrokeStr[1] = "1";
+	m_ExecutionQueue.Reset();
 	m_pFirstCommand = 0;
 	m_pFirstExec = 0;
 	m_pPrintCallbackUserdata = 0;
@@ -491,6 +492,17 @@ void CConsole::Chain(const char *pName, FChainCommandCallback pfnChainFunc, void
 	// chain
 	pCommand->m_pfnCallback = Con_Chain;
 	pCommand->m_pUserData = pChainInfo;
+}
+
+void CConsole::StoreCommands(bool Store, int ClientId)
+{
+	if(!Store)
+	{
+		for(CExecutionQueue::CQueueEntry *pEntry = m_ExecutionQueue.m_pFirst; pEntry != m_ExecutionQueue.m_pLast; pEntry = pEntry->m_pNext)
+			pEntry->m_pfnCommandCallback(&pEntry->m_Result, pEntry->m_pCommandUserData, ClientId);
+		m_ExecutionQueue.Reset();
+	}
+	m_StoreCommands = Store;
 }
 
 

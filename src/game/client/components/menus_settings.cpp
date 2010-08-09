@@ -139,7 +139,10 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
             Button.VSplitLeft(100.0f, 0, &Button);
 
             str_format(aBuf, sizeof(aBuf), "%s", g_Config.m_PlayerSkin);
-            UI()->DoLabel(&Button, aBuf, 14.0, -1);
+			CTextCursor Cursor;
+			TextRender()->SetCursor(&Cursor, Button.x, Button.y, 14.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+			Cursor.m_LineWidth = SkinRect.w-(Button.x-SkinRect.x)-5.0f;
+			TextRender()->TextEx(&Cursor, aBuf, -1);
         }
 
 		RightView.HSplitTop(20.0f, &Button, &RightView);
@@ -285,7 +288,6 @@ typedef struct
 
 static CKeyInfo gs_aKeys[] =
 {
-	// we need to do localize so the scripts can pickup the string
 	{ "Move left", "+left", 0},		// Localize - these strings are localized within CLocConstString
 	{ "Move right", "+right", 0 },
 	{ "Jump", "+jump", 0 },
@@ -309,6 +311,12 @@ static CKeyInfo gs_aKeys[] =
 	{ "Screenshot", "screenshot", 0 },
 	{ "Scoreboard", "+scoreboard", 0 },
 };
+/*	This is for scripts/update_localization.py to work, don't remove!
+	Localize("Move left");Localize("Move right");Localize("Jump");Localize("Fire");Localize("Hook");Localize("Hammer");
+	Localize("Pistol");Localize("Shotgun");Localize("Grenade");Localize("Rifle");Localize("Next weapon");Localize("Prev. weapon");
+	Localize("Vote yes");Localize("Vote no");Localize("Chat");Localize("Team chat");Localize("Show chat");Localize("Emoticon");
+	Localize("Console");Localize("Remote console");Localize("Screenshot");Localize("Scoreboard");
+*/
 
 const int g_KeyCount = sizeof(gs_aKeys) / sizeof(CKeyInfo);
 
@@ -625,15 +633,16 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	}
 }
 
-struct LANGUAGE
+class CLanguage
 {
-	LANGUAGE() {}
-	LANGUAGE(const char *n, const char *f) : m_Name(n), m_FileName(f) {}
+public:
+	CLanguage() {}
+	CLanguage(const char *n, const char *f) : m_Name(n), m_FileName(f) {}
 
 	string m_Name;
 	string m_FileName;
 
-	bool operator<(const LANGUAGE &Other) { return m_Name < Other.m_Name; }
+	bool operator<(const CLanguage &Other) { return m_Name < Other.m_Name; }
 };
 
 
@@ -644,7 +653,7 @@ void GatherLanguages(const char *pName, int IsDir, void *pUser)
 	if(IsDir || pName[0] == '.')
 		return;
 
-	sorted_array<LANGUAGE> &Languages = *((sorted_array<LANGUAGE> *)pUser);
+	sorted_array<CLanguage> &Languages = *((sorted_array<CLanguage> *)pUser);
 	char aFileName[128];
 	str_format(aFileName, sizeof(aFileName), "data/languages/%s", pName);
 
@@ -657,19 +666,19 @@ void GatherLanguages(const char *pName, int IsDir, void *pUser)
 		if(*p == '.')
 			*p = 0;
 
-	Languages.add(LANGUAGE(NiceName, aFileName));
+	Languages.add(CLanguage(NiceName, aFileName));
 }
 
 void CMenus::RenderSettingsGeneral(CUIRect MainView)
 {
 	static int s_LanguageList  = 0;
 	static int s_SelectedLanguage = 0;
-	static sorted_array<LANGUAGE> s_Languages;
+	static sorted_array<CLanguage> s_Languages;
 	static float s_ScrollValue = 0;
 
 	if(s_Languages.size() == 0)
 	{
-		s_Languages.add(LANGUAGE("English", ""));
+		s_Languages.add(CLanguage("English", ""));
 		fs_listdir("data/languages", GatherLanguages, &s_Languages);
 		for(int i = 0; i < s_Languages.size(); i++)
 			if(str_comp(s_Languages[i].m_FileName, g_Config.m_ClLanguagefile) == 0)
@@ -684,7 +693,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	CUIRect List = MainView;
 	UiDoListboxStart(&s_LanguageList , &List, 24.0f, Localize("Language"), "", s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);
 
-	for(sorted_array<LANGUAGE>::range r = s_Languages.all(); !r.empty(); r.pop_front())
+	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
 	{
 		CListboxItem Item = UiDoListboxNextItem(&r.front());
 

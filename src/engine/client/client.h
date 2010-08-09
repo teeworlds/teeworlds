@@ -280,7 +280,6 @@ public:
 	static void Con_Play(IConsole::IResult *pResult, void *pUserData);
 	static void Con_Record(IConsole::IResult *pResult, void *pUserData);
 	static void Con_StopRecord(IConsole::IResult *pResult, void *pUserData);
-	static void Con_ServerDummy(IConsole::IResult *pResult, void *pUserData);
 
 	void RegisterCommands();
 
