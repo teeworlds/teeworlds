@@ -1537,6 +1537,7 @@ void CClient::InitEngine(const char *pAppname)
 
 void CClient::RegisterInterfaces()
 {
+	Kernel()->RegisterInterface(static_cast<IDemoRecorder*>(&m_DemoRecorder));
 	Kernel()->RegisterInterface(static_cast<IDemoPlayer*>(&m_DemoPlayer));
 	Kernel()->RegisterInterface(static_cast<IServerBrowser*>(&m_ServerBrowser));
 }
@@ -1883,17 +1884,22 @@ void CClient::Con_Play(IConsole::IResult *pResult, void *pUserData)
 	pSelf->DemoPlayer_Play(pResult->GetString(0));
 }
 
-void CClient::Con_Record(IConsole::IResult *pResult, void *pUserData)
+void CClient::DemoRecorder_Start(const char *pFilename)
 {
-	CClient *pSelf = (CClient *)pUserData;
-	if(pSelf->State() != IClient::STATE_ONLINE)
+	if(State() != IClient::STATE_ONLINE)
 		dbg_msg("demorec/record", "client is not online");
 	else
 	{
 		char aFilename[512];
-		str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pResult->GetString(0));
-		pSelf->m_DemoRecorder.Start(pSelf->Storage(), aFilename, pSelf->GameClient()->NetVersion(), pSelf->m_aCurrentMap, pSelf->m_CurrentMapCrc, "client");
+		str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pFilename);
+		m_DemoRecorder.Start(Storage(), aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
 	}
+}
+
+void CClient::Con_Record(IConsole::IResult *pResult, void *pUserData)
+{
+	CClient *pSelf = (CClient *)pUserData;
+	pSelf->DemoRecorder_Start(pResult->GetString(0));
 }
 
 void CClient::Con_StopRecord(IConsole::IResult *pResult, void *pUserData)

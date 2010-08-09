@@ -13,7 +13,7 @@ struct CDemoHeader
 	char m_aType[8];
 };
 
-class CDemoRecorder
+class CDemoRecorder : public IDemoRecorder
 {
 	IOHANDLE m_File;
 	int m_LastTickMarker;
