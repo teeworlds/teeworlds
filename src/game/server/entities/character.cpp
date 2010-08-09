@@ -790,7 +790,7 @@ void CCharacter::Snap(int SnappingClient)
 	CNetObj_Character *Character = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
 	
 	// write down the m_Core
-	if(GameServer()->m_World.m_Paused)
+	if(!m_ReckoningTick || GameServer()->m_World.m_Paused)
 	{
 		// no dead reckoning when paused because the client doesn't know
 		// how far to perform the reckoning

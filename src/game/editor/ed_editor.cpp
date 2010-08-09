@@ -626,7 +626,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	// animation button
 	TB_Top.VSplitLeft(40.0f, &Button, &TB_Top);
 	static int s_AnimateButton = 0;
-	if(DoButton_Editor(&s_AnimateButton, Localize("Anim"), m_Animate, &Button, 0, ("[ctrl+m] Toggle animation")) ||
+	if(DoButton_Editor(&s_AnimateButton, Localize("Anim"), m_Animate, &Button, 0, Localize("[ctrl+m] Toggle animation")) ||
 		(Input()->KeyDown('m') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL))))
 	{
 		m_AnimateStart = time_get();
@@ -1748,12 +1748,12 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 			{
 				LayersBox.HSplitTop(12.0f, &Slot, &LayersBox);
 				Slot.VSplitLeft(12, &VisibleToggle, &Slot);
-				if(DoButton_Ex(&m_Map.m_lGroups[g]->m_Visible, m_Map.m_lGroups[g]->m_Visible?"V":"H", 0, &VisibleToggle, 0, "Toggle group visibility", CUI::CORNER_L))
+				if(DoButton_Ex(&m_Map.m_lGroups[g]->m_Visible, m_Map.m_lGroups[g]->m_Visible?"V":"H", 0, &VisibleToggle, 0, Localize("Toggle group visibility"), CUI::CORNER_L))
 					m_Map.m_lGroups[g]->m_Visible = !m_Map.m_lGroups[g]->m_Visible;
 
 				str_format(aBuf, sizeof(aBuf),"#%d %s", g, m_Map.m_lGroups[g]->m_pName);
 				if(int Result = DoButton_Ex(&m_Map.m_lGroups[g], aBuf, g==m_SelectedGroup, &Slot,
-					BUTTON_CONTEXT, "Select group. Right click for properties.", CUI::CORNER_R))
+					BUTTON_CONTEXT, Localize("Select group. Right click for properties."), CUI::CORNER_R))
 				{
 					m_SelectedGroup = g;
 					m_SelectedLayer = 0;
@@ -2750,7 +2750,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 		if(pEditor->m_aFileName[0])	
 			CallbackSaveMap(pEditor->m_aFileName, pEditor);
 		else
-			pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save Map"), Localize("Save"), "maps/", "", CallbackSaveMap, pEditor);
+			pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save map"), Localize("Save"), "maps/", "", CallbackSaveMap, pEditor);
 		return 1;
 	}
 
@@ -2758,7 +2758,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_SaveAsButton, Localize("Save As"), 0, &Slot, 0, Localize("Saves the current map under a new name")))
 	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save Map"), Localize("Save"), "maps/", "", CallbackSaveMap, pEditor);
+		pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save map"), Localize("Save"), "maps/", "", CallbackSaveMap, pEditor);
 		return 1;
 	}
 
