@@ -2031,6 +2031,9 @@ int main(int argc, const char **argv) // ignore_convention
 	if(argc > 1) // ignore_convention
 		pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
 
+	// restore empty config strings to their defaults
+	pConfig->RestoreStrings();
+
 	m_Client.Engine()->InitLogfile();
 
 	// run the client
