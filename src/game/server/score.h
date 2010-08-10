@@ -24,7 +24,7 @@ class CScore
 	std::string SaveFile();
 public:
 	CScore(class CGameContext *pGameServer);
-	
+	CScore();
 	void Save();
 	void Load();
 	CPlayerScore *SearchName(const char *name, int &pos);

@@ -35,9 +35,7 @@ void CDrager::move()
 		target = ents[i];
 		int res=0;
 		if (!nw)
-			res = GameServer()->Collision()->IntersectNolaser(m_Pos, target->m_Pos, 0, 0);
-		else
-			res = GameServer()->Collision()->IntersectNolaser2(m_Pos, target->m_Pos, 0, 0);
+			res = GameServer()->Collision()->IntersectNoLaser(m_Pos, target->m_Pos, 0, 0);
 
 		if (res==0)
 		{
@@ -66,9 +64,7 @@ void CDrager::drag()
 
 		int res = 0;
 		if (!nw)
-			res = GameServer()->Collision()->IntersectNolaser(m_Pos, target->m_Pos, 0, 0);
-		else
-			res = GameServer()->Collision()->IntersectNolaser2(m_Pos, target->m_Pos, 0, 0);
+			res = GameServer()->Collision()->IntersectNoLaser(m_Pos, target->m_Pos, 0, 0);
 
 		if (res || length(m_Pos-target->m_Pos)>700)
 		{

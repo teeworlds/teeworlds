@@ -26,6 +26,11 @@ CScore::CScore(class CGameContext *pGameServer)
 	Load();
 }
 
+CScore::CScore()
+{
+Load();
+}
+
 std::string CScore::SaveFile()
 {
 	std::ostringstream oss;

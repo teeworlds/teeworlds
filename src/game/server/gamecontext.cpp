@@ -1583,8 +1583,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	// create all entities from the game layer
 	CMapItemLayerTilemap *pTileMap = m_Layers.GameLayer();
 	CTile *pTiles = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Data);
-	
-	if (!m_Layers.FGameLayer()) dbg_msg("fglayer","Everything is Alright");  		 
+		 
 	//windows usually crshes here
 	for(int y = 0; y < pTileMap->m_Height; y++)
 	{
@@ -1594,36 +1593,11 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 			
 			if(Index >= ENTITY_OFFSET)
 			{
-				//vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
-				m_pController->OnEntity(Index-ENTITY_OFFSET, x, y, false);
+				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
+				m_pController->OnEntity(Index-ENTITY_OFFSET, Pos);
 			}
 		}
 	}
-	
-	//****************FRONT GAME LAYER********************  		 
- 		 
-   pTileMap = m_Layers.FGameLayer();  		 
-   if (pTileMap!=0)  		 
-   {  		 
-       pTiles = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Data);
-		for(int y = 0; y < pTileMap->m_Height; y++)
-			{
-				for(int x = 0; x < pTileMap->m_Width; x++)
-				{
-					int Index = pTiles[y*pTileMap->m_Width+x].m_Index;
-					
-					if(Index >= ENTITY_OFFSET)
-					{
-						//vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
-						m_pController->OnEntity(Index-ENTITY_OFFSET, x, y, true);
-					} else {
-						m_pController->MapConfig(Index); 
-					}
-				}
-			}
-	}
-
-
 
 #ifdef CONF_DEBUG
 	if(g_Config.m_DbgDummies)

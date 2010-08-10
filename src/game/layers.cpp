@@ -1,5 +1,4 @@
 #include "layers.h"
-#include <string.h>
 
 CLayers::CLayers()
 {
@@ -9,7 +8,9 @@ CLayers::CLayers()
 	m_LayersStart = 0;
 	m_pGameGroup = 0;
 	m_pGameLayer = 0;
-	m_pFGameLayer = 0;
+	m_pTeleLayer = 0;
+	m_pSpeedupLayer = 0;
+	m_pFrontLayer = 0;
 	m_pMap = 0;
 }
 
@@ -46,10 +47,13 @@ void CLayers::Init(class IKernel *pKernel)
 					m_pGameGroup->m_ClipH = 0;
 
 					//break;
-				} else if(g == 0 && l == 0) {
-					m_pFGameLayer = new CMapItemLayerTilemap;
-					memcpy(m_pFGameLayer, pTilemap, sizeof(CMapItemLayerTilemap));
 				}
+				if(pTilemap->m_Flags&2)
+					m_pTeleLayer = pTilemap;
+				if(pTilemap->m_Flags&4)
+					m_pSpeedupLayer = pTilemap;
+				if(pTilemap->m_Flags&8)
+					m_pFrontLayer = pTilemap;
 			}			
 		}
 	}

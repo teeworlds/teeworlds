@@ -55,7 +55,7 @@ void CPlasma::Tick()
 	hit_character();
 
 	int res=0;
-	res = GameServer()->Collision()->IntersectNolaser(m_Pos, m_Pos+core,0, 0);
+	res = GameServer()->Collision()->IntersectNoLaser(m_Pos, m_Pos+core,0, 0);
 	if(res)
 	{
 		GameServer()->CreateExplosion(m_Pos, -1, WEAPON_GRENADE, false);

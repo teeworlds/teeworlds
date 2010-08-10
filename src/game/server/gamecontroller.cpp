@@ -115,95 +115,30 @@ bool IGameController::CanSpawn(CPlayer *pPlayer, vec2 *pOutPos)
 	return Eval.m_Got;
 }
 
-bool IGameController::MapConfig(int index)  		 
-{  		 
-   if (index == TILE_CP_D)
-   {
-       //g_Config.m_SvNpc = true;
-       return true;
-   }
-   else if (index == TILE_CP_U)
-   {
-       g_Config.m_SvEndlessDrag = true;
-       return true;
-   }
-   return false;
-}
-
 bool IGameController::OnEntity(int Index, vec2 Pos)
 {
 	int Type = -1;
 	int SubType = 0;
 	
+	//vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);  		 
+ 		
+   int sides[8];  		 
+   sides[0]=GameServer()->Collision()->GetIndex(vec2(Pos.x,Pos.y+1),vec2(Pos.x,Pos.y+1));  		 
+   sides[1]=GameServer()->Collision()->GetIndex(vec2(Pos.x+1,Pos.y+1),vec2(Pos.x+1,Pos.y+1));  		 
+   sides[2]=GameServer()->Collision()->GetIndex(vec2(Pos.x+1,Pos.y),vec2(Pos.x+1,Pos.y));  		 
+   sides[3]=GameServer()->Collision()->GetIndex(vec2(Pos.x+1,Pos.y-1),vec2(Pos.x+1,Pos.y-1));  		 
+   sides[4]=GameServer()->Collision()->GetIndex(vec2(Pos.x,Pos.y-1),vec2(Pos.x,Pos.y-1));  		 
+   sides[5]=GameServer()->Collision()->GetIndex(vec2(Pos.x-1,Pos.y-1),vec2(Pos.x-1,Pos.y-1));  		 
+   sides[6]=GameServer()->Collision()->GetIndex(vec2(Pos.x-1,Pos.y),vec2(Pos.x-1,Pos.y));  		 
+   sides[7]=GameServer()->Collision()->GetIndex(vec2(Pos.x-1,Pos.y+1),vec2(Pos.x-1,Pos.y+1));  		 
+ 		 
+ 
 	if(Index == ENTITY_SPAWN)
 		m_aaSpawnPoints[0][m_aNumSpawnPoints[0]++] = Pos;
 	else if(Index == ENTITY_SPAWN_RED)
 		m_aaSpawnPoints[1][m_aNumSpawnPoints[1]++] = Pos;
 	else if(Index == ENTITY_SPAWN_BLUE)
 		m_aaSpawnPoints[2][m_aNumSpawnPoints[2]++] = Pos;
-	else if(Index == ENTITY_ARMOR_1)
-		Type = POWERUP_ARMOR;
-	else if(Index == ENTITY_HEALTH_1)
-		Type = POWERUP_HEALTH;
-	else if(Index == ENTITY_WEAPON_SHOTGUN)
-	{
-		Type = POWERUP_WEAPON;
-		SubType = WEAPON_SHOTGUN;
-	}
-	else if(Index == ENTITY_WEAPON_GRENADE)
-	{
-		Type = POWERUP_WEAPON;
-		SubType = WEAPON_GRENADE;
-	}
-	else if(Index == ENTITY_WEAPON_RIFLE)
-	{
-		Type = POWERUP_WEAPON;
-		SubType = WEAPON_RIFLE;
-	}
-	else if(Index == ENTITY_POWERUP_NINJA)
-	{
-		Type = POWERUP_NINJA;
-		SubType = WEAPON_NINJA;
-	}
-	
-	if(Type != -1)
-	{
-		CPickup *pPickup = new CPickup(&GameServer()->m_World, Type, SubType);
-		pPickup->m_Pos = Pos;
-		return true;
-	}
-
-	return false;
-}
-
-
-
-bool IGameController::OnEntity(int Index, int x, int y, bool flayer)
-{
-	int Type = -1;
-	int SubType = 0;
-	
-	vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);  		 
- 		 
-   int sides[8];  		 
-   sides[0]=GameServer()->Collision()->GetIndex(x,y+1,flayer);  		 
-   sides[1]=GameServer()->Collision()->GetIndex(x+1,y+1,flayer);  		 
-   sides[2]=GameServer()->Collision()->GetIndex(x+1,y,flayer);  		 
-   sides[3]=GameServer()->Collision()->GetIndex(x+1,y-1,flayer);  		 
-   sides[4]=GameServer()->Collision()->GetIndex(x,y-1,flayer);  		 
-   sides[5]=GameServer()->Collision()->GetIndex(x-1,y-1,flayer);  		 
-   sides[6]=GameServer()->Collision()->GetIndex(x-1,y,flayer);  		 
-   sides[7]=GameServer()->Collision()->GetIndex(x-1,y+1,flayer);  		 
- 		 
-   if (!flayer)  		 
-   {  
-		if(Index == ENTITY_SPAWN)
-			m_aaSpawnPoints[0][m_aNumSpawnPoints[0]++] = Pos;
-		else if(Index == ENTITY_SPAWN_RED)
-			m_aaSpawnPoints[1][m_aNumSpawnPoints[1]++] = Pos;
-		else if(Index == ENTITY_SPAWN_BLUE)
-			m_aaSpawnPoints[2][m_aNumSpawnPoints[2]++] = Pos;
-	}
 	if(Index == ENTITY_ARMOR_1)
 		Type = POWERUP_ARMOR;
 	else if(Index == ENTITY_HEALTH_1)
@@ -231,14 +166,14 @@ bool IGameController::OnEntity(int Index, int x, int y, bool flayer)
 	else if(Index >= ENTITY_LASER_FAST_CW && Index <= ENTITY_LASER_FAST_CCW)  		 
    {  		 
        int sides2[8];  		 
-       sides2[0]=GameServer()->Collision()->GetIndex(x,y+2,flayer);  		 
-       sides2[1]=GameServer()->Collision()->GetIndex(x+2,y+2,flayer);  		 
-       sides2[2]=GameServer()->Collision()->GetIndex(x+2,y,flayer);  		 
-       sides2[3]=GameServer()->Collision()->GetIndex(x+2,y-2,flayer);  		 
-       sides2[4]=GameServer()->Collision()->GetIndex(x,y-2,flayer);  		 
-       sides2[5]=GameServer()->Collision()->GetIndex(x-2,y-2,flayer);  		 
-       sides2[6]=GameServer()->Collision()->GetIndex(x-2,y,flayer);  		 
-       sides2[7]=GameServer()->Collision()->GetIndex(x-2,y+2,flayer);  		 
+	sides2[0]=GameServer()->Collision()->GetIndex(vec2(Pos.x,Pos.y+2),vec2(Pos.x,Pos.y+2));  		 
+	sides2[1]=GameServer()->Collision()->GetIndex(vec2(Pos.x+2,Pos.y+2),vec2(Pos.x+2,Pos.y+2));  		 
+	sides2[2]=GameServer()->Collision()->GetIndex(vec2(Pos.x+2,Pos.y),vec2(Pos.x+2,Pos.y));  		 
+	sides2[3]=GameServer()->Collision()->GetIndex(vec2(Pos.x+2,Pos.y-2),vec2(Pos.x+2,Pos.y-2));  		 
+	sides2[4]=GameServer()->Collision()->GetIndex(vec2(Pos.x,Pos.y-2),vec2(Pos.x,Pos.y-2));  		 
+	sides2[5]=GameServer()->Collision()->GetIndex(vec2(Pos.x-2,Pos.y-2),vec2(Pos.x-2,Pos.y-2));  		 
+	sides2[6]=GameServer()->Collision()->GetIndex(vec2(Pos.x-2,Pos.y),vec2(Pos.x-2,Pos.y));  		 
+	sides2[7]=GameServer()->Collision()->GetIndex(vec2(Pos.x-2,Pos.y+2),vec2(Pos.x-2,Pos.y+2));  		 		 
  		 
        float ang_speed;  		 
        int ind=Index-ENTITY_LASER_STOP;  		 
@@ -287,13 +222,13 @@ bool IGameController::OnEntity(int Index, int x, int y, bool flayer)
  		 
  		     
    }  		 
-   else if(Index>=ENTITY_DRAGER_WEAK && Index <=ENTITY_DRAGER_STRONG)  		 
+   else if(Index>=ENTITY_DRAGGER_WEAK && Index <=ENTITY_DRAGGER_STRONG)  		 
    {  		 
-       new CDrager(&GameServer()->m_World,Pos,Index-ENTITY_DRAGER_WEAK+1);  		 
+       new CDrager(&GameServer()->m_World,Pos,Index-ENTITY_DRAGGER_WEAK+1);  		 
    }  		 
-   else if(Index>=ENTITY_DRAGER_WEAK_NW && Index <=ENTITY_DRAGER_STRONG_NW)  		 
+   else if(Index>=ENTITY_DRAGGER_WEAK_NW && Index <=ENTITY_DRAGGER_STRONG_NW)  		 
    {  		 
-       new CDrager(&GameServer()->m_World, Pos,Index-ENTITY_DRAGER_WEAK_NW+1,true);  		 
+       new CDrager(&GameServer()->m_World, Pos,Index-ENTITY_DRAGGER_WEAK_NW+1,true);  		 
    }  		 
    else if(Index==ENTITY_PLASMA)  		 
    {  		 

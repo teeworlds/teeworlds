@@ -68,7 +68,7 @@ void CLight::step()
 	move();
 	vec2 dir(sin(rotation), cos(rotation));
 	vec2 to2 = m_Pos + normalize(dir)*cur_length;
-	GameServer()->Collision()->IntersectNolaser(m_Pos, to2, &to,0 );
+	GameServer()->Collision()->IntersectNoLaser(m_Pos, to2, &to,0 );
 }
 	
 void CLight::Reset()

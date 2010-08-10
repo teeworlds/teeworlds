@@ -160,6 +160,9 @@ public:
 	// DDRace var
 	int m_StartTime;
 	int m_RefreshTime;
+	
+	int m_LastSpeedup;
+	vec2 m_PrevPos;
 
 	// checkpoints
 	int m_CpTick;

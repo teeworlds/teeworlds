@@ -38,81 +38,109 @@ enum
 	ENTITY_WEAPON_GRENADE,
 	ENTITY_POWERUP_NINJA,
 	ENTITY_WEAPON_RIFLE,
-			 
-   //DDRace  		 
-   ENTITY_LASER_FAST_CW,    //M&F  		 
-   ENTITY_LASER_NORMAL_CW,    //M&F  		 
-   ENTITY_LASER_SLOW_CW,    //M&F  		 
-   ENTITY_LASER_STOP,    //M&F  		 
-   ENTITY_LASER_SLOW_CCW,    //M&F  		 
-   ENTITY_LASER_NORMAL_CCW,//M&F  		 
-   ENTITY_LASER_FAST_CCW,    //M&F  		 
- 		 
-   ENTITY_LASER_SHORT,    //M&F  		 
-   ENTITY_LASER_MIDDLE,    //M&F  		 
-   ENTITY_LASER_LONG,    //M&F  		 
- 		 
-   ENTITY_LASER_C_SLOW,    //M&F  		 
-   ENTITY_LASER_C_NORMAL,    //M&F  		 
-   ENTITY_LASER_C_FAST,    //M&F  		 
- 		 
-   ENTITY_LASER_O_SLOW,    //M&F  		 
-   ENTITY_LASER_O_NORMAL,    //M&F  		 
-   ENTITY_LASER_O_FAST,    //M&F  		 
- 		 
-   ENTITY_DRAGER_WEAK,    //M&F  		 
-   ENTITY_DRAGER_NORMAL,    //M&F  		 
-   ENTITY_DRAGER_STRONG,    //M&F  		 
- 		 
-   ENTITY_PLASMA,        //M&F  		 
-   ENTITY_NOTHING1,  		 
-   ENTITY_NOTHING2,  		 
-   ENTITY_NOTHING3,  		 
-   ENTITY_NOTHING4,  		 
-   ENTITY_NOTHING5,  		 
-   ENTITY_NOTHING6,  		 
-   ENTITY_NOTHING7,  		 
-   ENTITY_NOTHING8,  		 
-   ENTITY_NOTHING9,  		 
-   ENTITY_NOTHING10,  		 
-   ENTITY_NOTHING11,  		 
-   ENTITY_NOTHING12,  		 
- 		 
-   ENTITY_DRAGER_WEAK_NW,    //M&F  		 
-   ENTITY_DRAGER_NORMAL_NW,    //M&F  		 
-   ENTITY_DRAGER_STRONG_NW,    //M&F  
+	//DDRace - Main Lasers
+	ENTITY_LASER_FAST_CW,
+	ENTITY_LASER_NORMAL_CW,
+	ENTITY_LASER_SLOW_CW,
+	ENTITY_LASER_STOP,
+	ENTITY_LASER_SLOW_CCW,
+	ENTITY_LASER_NORMAL_CCW,
+	ENTITY_LASER_FAST_CCW,
+	//DDRace - Laser Modifiers
+	ENTITY_LASER_SHORT,
+	ENTITY_LASER_MIDDLE,
+	ENTITY_LASER_LONG,
+	ENTITY_LASER_C_SLOW,
+	ENTITY_LASER_C_NORMAL,
+	ENTITY_LASER_C_FAST,
+	ENTITY_LASER_O_SLOW,
+	ENTITY_LASER_O_NORMAL,
+	ENTITY_LASER_O_FAST,
+	//DDRace - Shotgun
+	ENTITY_CRAZY_SHOTGUN_U_EX,
+	ENTITY_CRAZY_SHOTGUN_R_EX,
+	ENTITY_CRAZY_SHOTGUN_D_EX,
+	ENTITY_CRAZY_SHOTGUN_L_EX,
+	ENTITY_CRAZY_SHOTGUN_U,
+	ENTITY_CRAZY_SHOTGUN_R,
+	ENTITY_CRAZY_SHOTGUN_D,
+	ENTITY_CRAZY_SHOTGUN_L,
+	//DDrace - Doors
+	ENTITY_DOOR,
+	ENTITY_CONNECTOR_D,
+	ENTITY_CONNECTOR_DR,
+	ENTITY_CONNECTOR_R,
+	ENTITY_CONNECTOR_RU,
+	ENTITY_CONNECTOR_U,
+	ENTITY_CONNECTOR_UL,
+	ENTITY_CONNECTOR_L,
+	ENTITY_CONNECTOR_LD,
+	ENTITY_TRIGGER,
+	//DDRace - Draggers
+	ENTITY_DRAGGER_WEAK,
+	ENTITY_DRAGGER_NORMAL,
+	ENTITY_DRAGGER_STRONG,
+	//Draggers Behind Walls
+	ENTITY_DRAGGER_WEAK_NW,
+	ENTITY_DRAGGER_NORMAL_NW,
+	ENTITY_DRAGGER_STRONG_NW,
+	//DDRace - Plasma
+	ENTITY_PLASMA,
+	ENTITY_PLASMAF,
+	//End Of Lower Tiles
 	NUM_ENTITIES,
-	
+	//Start From Top Left
+	//Tile Controllers
 	TILE_AIR=0,
 	TILE_SOLID,
 	TILE_DEATH,
 	TILE_NOHOOK,
-	
-	TILE_NOLASER,    //M  		 
-   TILE_BOOST_L,    //M  		 
-   TILE_BOOST_R,    //M  		 
-   TILE_BOOST_D,    //M  		 
-   TILE_BOOST_U,    //M  		 
-   TILE_FREEZE,    //M&F  		 
-   TILE_KICK,        //M&F  		 
-   TILE_UNFREEZE,    //M&F  		 
-   TILE_BOOST_L2,    //M  		 
-   TILE_BOOST_R2,    //M  		 
-   TILE_BOOST_D2,    //M  		 
-   TILE_BOOST_U2,    //M  		 
-   TILE_NOTHING,    //M&F  		 
-   TILE_CP_D,        //M     //no collision 		 
-   TILE_CP_U,        //M     //endless hook 		 
-   TILE_CP_R,        //M  		 
-   TILE_CP_L,        //M  		 
-   TILE_CP_D_F,    //M  		 
-   TILE_CP_U_F,    //M  		 
-   TILE_CP_R_F,    //M  		 
-   TILE_CP_L_F,    //M  		 
- 		 
-   TILE_BEGIN=33,    //M  		 
-   TILE_END,        //M  
-	
+	TILE_NOLASER,
+	TILE_AIRNOHOOK,
+	TILE_THROUGH,
+	TILE_THROUGHS,
+	TILE_FREEZE=9,
+	TILE_UNFREEZE=11,
+	TILE_BOOSTH,
+	TILE_BOOSTV,
+	TILE_BOOSTA,
+	TILE_BOOSTH2,
+	TILE_BOOSTV2,
+	TILE_BOOSTA2,
+	TILE_BOOST_L,
+	TILE_BOOST_R,
+	TILE_BOOST_D,
+	TILE_BOOST_U,
+	TILE_BOOST_L2,
+	TILE_BOOST_R2,
+	TILE_BOOST_D2,
+	TILE_BOOST_U2,
+	TILE_TELEIN,
+	TILE_TELEOUT,
+	TILE_BOOST,
+	TILE_STOPL,
+	TILE_STOPR,
+	TILE_STOPB,
+	TILE_STOPT,
+	TILE_BEGIN,
+	TILE_END,
+	TILE_STOPH=60,
+	TILE_STOPV,
+	TILE_STOPA,
+	TILE_CP_D=64,
+	TILE_CP_U,
+	TILE_CP_R,
+	TILE_CP_L,
+	TILE_CP_D_F,
+	TILE_CP_U_F,
+	TILE_CP_R_F,
+	TILE_CP_L_F,
+	TILE_NPC,
+	TILE_EHOOK,
+	TILE_NOHIT,
+	TILE_NPH,
+	//End of higher tiles
+	//Untouchable Elements
 	TILEFLAG_VFLIP=1,
 	TILEFLAG_HFLIP=2,
 	TILEFLAG_OPAQUE=4,
@@ -152,6 +180,20 @@ public:
 	unsigned char m_Flags;
 	unsigned char m_Skip;
 	unsigned char m_Reserved;
+};
+
+class CTeleTile
+{
+public:
+	unsigned char m_Number;
+	unsigned char m_Type;
+};
+
+class CSpeedupTile
+{
+public:
+	unsigned char m_Force;
+	short m_Angle;
 };
 
 struct CMapItemImage
@@ -210,6 +252,10 @@ struct CMapItemLayerTilemap
 	
 	int m_Image;
 	int m_Data;
+	
+	int m_Tele;
+	int m_Speedup;
+	int m_Front;
 } ;
 
 struct CMapItemLayerQuads
@@ -242,7 +288,7 @@ struct CMapItemEnvelope
 	int m_Channels;
 	int m_StartPoint;
 	int m_NumPoints;
-	int m_aName[8];
+	char m_aName[32];
 } ;
 
 #endif

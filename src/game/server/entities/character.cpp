@@ -557,7 +557,7 @@ void CCharacter::OnDirectInput(CNetObj_PlayerInput *pNewInput)
 
 void CCharacter::Tick()
 {
-
+	int TileIndex = GameServer()->Collision()->GetIndex(m_PrevPos, m_Pos);
 
 	if(m_RaceState == RACE_PAUSE) {
 		m_Input.m_Direction = 0;
@@ -600,7 +600,7 @@ void CCharacter::Tick()
 		m_Core.m_HookTick = 0;
 	if (m_Super && m_Core.m_Jumped > 1)
 		m_Core.m_Jumped = 1; 
-	
+	dbg_msg("character","TileIndex%d",TileIndex); //REMOVE
 	//DDRace  		 
 	char aBuftime[128];
 	float time = (float)(Server()->Tick() - m_StartTime) / ((float)Server()->TickSpeed());
@@ -618,13 +618,13 @@ void CCharacter::Tick()
 		}
 		m_RefreshTime = Server()->Tick();
 	}
-	if(GameServer()->Collision()->IsBegin(m_Pos.x,m_Pos.y) && m_RaceState == RACE_NONE)  		 
+	if(GameServer()->Collision()->IsBegin(GameServer()->Collision()->GetCollisionDDRace(TileIndex)) && m_RaceState == RACE_NONE)  		 
 	{
 		m_StartTime = Server()->Tick();
 		m_RefreshTime = Server()->Tick();
 		m_RaceState = RACE_STARTED;
 	}
-	if(GameServer()->Collision()->IsEnd(m_Pos.x, m_Pos.y) && m_RaceState == RACE_STARTED)
+	if(GameServer()->Collision()->IsEnd(GameServer()->Collision()->GetCollisionDDRace(TileIndex)) && m_RaceState == RACE_STARTED)
 	{
 		char aBuf[128];
 		if ((int)time / 60 != 0)
@@ -648,31 +648,34 @@ void CCharacter::Tick()
 		if(strncmp(Server()->ClientName(m_pPlayer->GetCID()), "nameless tee", 12) != 0)
 			((CGameControllerDDRace*)GameServer()->m_pController)->m_Score.ParsePlayer(Server()->ClientName(m_pPlayer->GetCID()), (float)time);
 	}
-	if(GameServer()->Collision()->IsKick(m_Pos.x, m_Pos.y) && !m_Super)
-	{
-		if (m_pPlayer->m_Authed > 0)
-			Die(-1, WEAPON_WORLD);
-		else
-			((CServer*)GameServer()->Server())->Kick(m_pPlayer->GetCID(), "You was kicked by kick zone");
-	}
-	if(GameServer()->Collision()->IsFreeze(m_Pos.x, m_Pos.y) && !m_Super)
+	if(GameServer()->Collision()->IsFreeze(GameServer()->Collision()->GetCollisionDDRace(TileIndex)) && !m_Super)
 	{
 		Freeze(Server()->TickSpeed()*3);
 	}
-	if(GameServer()->Collision()->IsUnfreeze(m_Pos.x, m_Pos.y) && !m_Super)
+	if(GameServer()->Collision()->IsUnfreeze(GameServer()->Collision()->GetCollisionDDRace(TileIndex)) && !m_Super)
 	{
 		UnFreeze();
 	}
-	int booster = GameServer()->Collision()->IsBoost(m_Pos.x, m_Pos.y);
-	m_Core.m_Vel += GameServer()->Collision()->BoostAccel(booster);
-	int z = GameServer()->Collision()->IsTeleport(m_Pos.x, m_Pos.y);  		 
+	int booster = GameServer()->Collision()->IsBoost(GameServer()->Collision()->GetCollisionDDRace(TileIndex));
+	m_Core.m_Vel += GameServer()->Collision()->BoostAccelerator(booster);
+	//
+	if(GameServer()->Collision()->IsSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y))
+	{
+		vec2 Direction;
+		int Force;
+		GameServer()->Collision()->GetSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y, &Direction, &Force);
+		
+		m_Core.m_Vel += Direction*Force;
+	}
+	int z = GameServer()->Collision()->IsTeleport(m_Pos.x, m_Pos.y); 
 	if(z)
 	{
-		m_Core.m_HookedPlayer = -1;  		 
-		m_Core.m_HookState = HOOK_RETRACTED;  		 
-		m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;  		 
-		m_Core.m_HookPos = m_Core.m_Pos;  		 
- 		m_Core.m_Pos = GameServer()->Collision()->Teleport(z);
+		m_Core.m_HookedPlayer = -1;
+		m_Core.m_HookState = HOOK_RETRACTED;
+		m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
+		m_Core.m_HookState = HOOK_RETRACTED;
+		m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_pTeleporter[z-1];
+		m_Core.m_HookPos = m_Core.m_Pos;
 	}
 	
 	// handle death-tiles
@@ -703,6 +706,7 @@ void CCharacter::Tick()
 		m_OlderPos = m_OldPos;
 		m_OldPos = m_Core.m_Pos;  		 
 	} 
+	m_PrevPos = m_Core.m_Pos;
 	return;
 }
 

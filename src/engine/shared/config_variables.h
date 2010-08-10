@@ -7,6 +7,7 @@
 
 //===============================  	
 /* DDRace */
+//MACRO_CONFIG_STR(SvEntities, sv_entities, 64, "Latest", CFGFLAG_SERVER, "The type of entities used") still need to think of a way
 MACRO_CONFIG_INT(SvReconnectTime,sv_reconnect_time,5,0,9999,CFGFLAG_SERVER,"how much time between leaves and joins")
 MACRO_CONFIG_INT(SvVoteKickTimeDelay,sv_vote_kick_delay,0,0,9999,CFGFLAG_SERVER,"how much time between kick votes")
 MACRO_CONFIG_INT(SvVoteKickBanTime,sv_vote_kick_bantime, 300, 0, 9999, CFGFLAG_SERVER," ")

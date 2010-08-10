@@ -14,11 +14,12 @@
 CCollision::CCollision()
 {
 	m_pTiles = 0;
-	m_pFTiles = 0;
 	m_Width = 0;
 	m_Height = 0;
 	m_pLayers = 0;
-	isOneLayer = false;
+	m_pTele = 0;
+	m_pSpeedup = 0;
+	m_pFront = 0;
 }
 int CCollision::IsSolid(int x, int y)
 {
@@ -31,50 +32,18 @@ void CCollision::Init(class CLayers *pLayers)
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
 	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
-	if(m_pLayers->FGameLayer() != 0) {
-		m_pFTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->FGameLayer()->m_Data));
-		isOneLayer = false;
-	} else {
-		m_pFTiles = 0;
-		isOneLayer = true;
-	}
-	//DDRace
-	mem_zero(&m_Len, sizeof(m_Len));
-	mem_zero(&m_Tele, sizeof(m_Tele));
-	m_pTeleporter = new int[m_Width * m_Height];
-	m_pFTeleporter = new int[m_Width * m_Height];
-	
-	
-	for(int i = m_Width * m_Height - 1; i >= 0; i--)
-	{
-		if(m_pTiles[i].m_Index > 34 && m_pTiles[i].m_Index < 190)
-		{
-			if(m_pTiles[i].m_Index & 1)
-				m_Len[m_pTiles[i].m_Index >> 1]++;
-			else if(!(m_pTiles[i].m_Index & 1))
-				m_Tele[(m_pTiles[i].m_Index - 1) >> 1]++;
-		}
-	}
-	for(int i = 0; i < 95; i++)
-	{
-		m_pDest[i] = new int[m_Len[i]];
-		m_Len[i] = 0;
-	}
-	for(int i = m_Width * m_Height - 1; i >= 0; i--)
-	{
-		if(m_pTiles[i].m_Index & 1 && m_pTiles[i].m_Index > 34 && m_pTiles[i].m_Index < 190)
-			m_pDest[m_pTiles[i].m_Index >> 1][m_Len[m_pTiles[i].m_Index >> 1]++] = i;
-	}  
-	
+	if(m_pLayers->TeleLayer())
+		m_pTele = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->TeleLayer()->m_Tele));
+	if(m_pLayers->SpeedupLayer())
+		m_pSpeedup = static_cast<CSpeedupTile *>(m_pLayers->Map()->GetData(m_pLayers->SpeedupLayer()->m_Speedup));
+	if(m_pLayers->FrontLayer())
+		m_pFront = static_cast<CFrontTile *>(m_pLayers->Map()->GetData(m_pLayers->FrontLayer()->m_Front));
+		
 	for(int i = 0; i < m_Width*m_Height; i++)
 	{
 		int Index = m_pTiles[i].m_Index;
-		int FIndex = 0; 
-		if(!isOneLayer)
-			FIndex = m_pFTiles[i].m_Index;
-		//if (FIndex!=0)
-		//	dbg_msg ("flayer", "tile found at (%d, %d)",(i - (i/ m_Width) * m_Width) ,(i / m_Width));
-		if(Index > 190)
+		
+		if(Index > 191)
 			continue;
 		
 		switch(Index)
@@ -93,31 +62,93 @@ void CCollision::Init(class CLayers *pLayers)
 			break;
 		default:
 			m_pTiles[i].m_Index = 0;
-			m_pTeleporter[i] = Index;
 		}
-		m_pFTeleporter[i] = FIndex;
+		
+		// DDRace tiles
+		if(Index >= 5 && Index <= 59 || Index>=64 && Index<=191)
+			m_pTiles[i].m_Index = Index;
 	}
 }
 
-int CCollision::GetIndex(int x, int y, bool flayer) {
-   CTile *tiles = (flayer) ? m_pFTiles: m_pTiles;  		 
-   int index = tiles[y*m_Width+x].m_Index;  		 
-   return index-ENTITY_OFFSET;  		 
-} 
+int CCollision::GetIndex(vec2 PrevPos, vec2 Pos)
+{
+	int Index = 0;
+	float d = distance(PrevPos, Pos);
 
+	if(!d)
+	{
+		int nx = clamp((int)Pos.x/32, 0, m_Width-1);
+		int ny = clamp((int)Pos.y/32, 0, m_Height-1);
+		if (m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN)) dbg_msg("m_pTele && TELEIN","ny*m_Width+nx %d",ny*m_Width+nx);//REMOVE
+		else if (m_pTele && m_pTele[ny*m_Width+nx].m_Type==TILE_TELEOUT) dbg_msg("TELEOUT","ny*m_Width+nx %d",ny*m_Width+nx);//REMOVE
+		else dbg_msg("GetIndex","ny*m_Width+nx %d",ny*m_Width+nx);//REMOVE
+		
+		if((m_pTiles[ny*m_Width+nx].m_Index >= TILE_BOOSTV && m_pTiles[ny*m_Width+nx].m_Index <= TILE_STOPT) ||
+				((m_pTiles[ny*m_Width+nx].m_Index >=TILE_STOPV)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
+			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
+			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0))
+		{
+			return ny*m_Width+nx;
+		}
+	}
+	
+	float a = 0.0f;
+	vec2 Tmp = vec2(0, 0);
+	int nx = 0;
+	int ny = 0;
+	
+	for(float f = 0; f < d; f++)
+	{
+		a = f/d;
+		Tmp = mix(PrevPos, Pos, a);
+		nx = clamp((int)Tmp.x/32, 0, m_Width-1);
+		ny = clamp((int)Tmp.y/32, 0, m_Height-1);
+		if((m_pTiles[ny*m_Width+nx].m_Index >= TILE_BOOSTV && m_pTiles[ny*m_Width+nx].m_Index <= TILE_STOPT) ||
+				((m_pTiles[ny*m_Width+nx].m_Index >=TILE_STOPV)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
+			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
+			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0))
+		{
+			return ny*m_Width+nx;
+		}
+	}
+	
+	return -1;
+}
+
+vec2 CCollision::GetPos(int Index)
+{
+	int x = Index%m_Width;
+	int y = Index/m_Width;
+	
+	return vec2(x, y);
+}
+
+int CCollision::GetCollisionDDRace(int Index)
+{
+	if(Index < 0)
+		return 0;
+		//dbg_msg("GetCollisionDDRace","m_pTiles[%d].m_Index = %d",Index,m_pTiles[Index].m_Index);//Remove
+	return m_pTiles[Index].m_Index;
+}
 
 int CCollision::GetTile(int x, int y)
 {
 	int nx = clamp(x/32, 0, m_Width-1);
 	int ny = clamp(y/32, 0, m_Height-1);
-	
-	return m_pTiles[ny*m_Width+nx].m_Index > 128 ? 0 : m_pTiles[ny*m_Width+nx].m_Index;
+	//dbg_msg("GetTile","m_Index %d",m_pTiles[ny*m_Width+nx].m_Index);
+	if(m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_SOLID || m_pTiles[ny*m_Width+nx].m_Index == (COLFLAG_SOLID|COLFLAG_NOHOOK) || m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_DEATH)
+		return m_pTiles[ny*m_Width+nx].m_Index;
+	else
+		return 0;
 }
 
-bool CCollision::IsTileSolid(int x, int y)
-{
-	return (GetTile(x,y)&COLFLAG_SOLID);
-}
+void CCollision::SetCollisionAt(float x, float y, int flag)
+{  		 
+   int nx = clamp(round(x)/32, 0, m_Width-1);  		 
+   int ny = clamp(round(y)/32, 0, m_Height-1);  		 
+ 		 
+   m_pTiles[ny * m_Width + nx].m_Index = flag;  		 
+} 
 
 // TODO: rewrite this smarter!
 int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
@@ -136,6 +167,61 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 			if(pOutBeforeCollision)
 				*pOutBeforeCollision = Last;
 			return GetCollisionAt(Pos.x, Pos.y);
+		}
+		Last = Pos;
+	}
+	if(pOutCollision)
+		*pOutCollision = Pos1;
+	if(pOutBeforeCollision)
+		*pOutBeforeCollision = Pos1;
+	return 0;
+}
+ 		 
+int CCollision::IntersectNoLaser(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
+{
+	float d = distance(Pos0, Pos1);
+	vec2 Last = Pos0;
+	
+	for(float f = 0; f < d; f++)
+	{
+		float a = f/d;
+		vec2 Pos = mix(Pos0, Pos1, a);
+		if(IsSolid(round(Pos.x), round(Pos.y)) || IsNoLaser(round(Pos.x), round(Pos.y)))
+		{
+			if(pOutCollision)
+				*pOutCollision = Pos;
+			if(pOutBeforeCollision)
+				*pOutBeforeCollision = Last;
+			return GetCollisionAt(Pos.x, Pos.y);
+		}
+		Last = Pos;
+	}
+	if(pOutCollision)
+		*pOutCollision = Pos1;
+	if(pOutBeforeCollision)
+		*pOutBeforeCollision = Pos1;
+	return 0;
+}
+
+int CCollision::IntersectAir(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
+{
+	float d = distance(Pos0, Pos1);
+	vec2 Last = Pos0;
+	
+	for(float f = 0; f < d; f++)
+	{
+		float a = f/d;
+		vec2 Pos = mix(Pos0, Pos1, a);
+		if(IsSolid(round(Pos.x), round(Pos.y)) || !GetTile(round(Pos.x), round(Pos.y)))
+		{
+			if(pOutCollision)
+				*pOutCollision = Pos;
+			if(pOutBeforeCollision)
+				*pOutBeforeCollision = Last;
+			if(!GetTile(round(Pos.x), round(Pos.y)))
+				return -1;
+			else
+				return GetTile(round(Pos.x), round(Pos.y));
 		}
 		Last = Pos;
 	}
@@ -183,20 +269,6 @@ void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, i
 	{
 		*pInoutPos = Pos + Vel;
 	}
-}
-
-bool CCollision::TestBox(vec2 Pos, vec2 Size)
-{
-	Size *= 0.5f;
-	if(CheckPoint(Pos.x-Size.x, Pos.y-Size.y))
-		return true;
-	if(CheckPoint(Pos.x+Size.x, Pos.y-Size.y))
-		return true;
-	if(CheckPoint(Pos.x-Size.x, Pos.y+Size.y))
-		return true;
-	if(CheckPoint(Pos.x+Size.x, Pos.y+Size.y))
-		return true;
-	return false;
 }
 
 void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity)
@@ -257,101 +329,122 @@ void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elas
 	*pInoutVel = Vel;
 }
 
-int CCollision::IsNolaser(int x, int y)  		 
+bool CCollision::TestBox(vec2 Pos, vec2 Size)
+{
+	Size *= 0.5f;
+	if(CheckPoint(Pos.x-Size.x, Pos.y-Size.y))
+		return true;
+	if(CheckPoint(Pos.x+Size.x, Pos.y-Size.y))
+		return true;
+	if(CheckPoint(Pos.x-Size.x, Pos.y+Size.y))
+		return true;
+	if(CheckPoint(Pos.x+Size.x, Pos.y+Size.y))
+		return true;
+	return false;
+}
+
+int CCollision::IsNoLaser(int x, int y)  		 
 {  		 
    return (CCollision::GetTile(x,y) & COLFLAG_NOLASER);  		 
 }  		 
  		 
 //DDRace  		 
-int CCollision::IsTeleport(int x, int y)  		 
-{  		 
-	int nx = x/32;  		 
-	int ny = y/32;  		 
-	if(y < 0 || nx < 0 || nx >= m_Width || ny >= m_Height)  		 
-		return 0;  		 
-	int z = m_pTeleporter[ny * m_Width + nx]-1;
-	if(z > 34 && z < 190 && z & 1)
-		return z >> 1;
-	return 0;  		 
-}  		 
- 		 
-int CCollision::IsBegin(int x, int y)  		 
-{  		 
-   int nx = x/32;  		 
-   int ny = y/32;  		 
-   if(y < 0 || nx < 0 || nx >= m_Width || ny >= m_Height)  		 
-       return 0;  		 
- 		 
-   return m_pTeleporter[ny*m_Width+nx] == TILE_BEGIN;  		 
+int CCollision::IsTeleport(int x, int y)
+{
+	if(!m_pTele)
+		return 0;
+	
+	int nx = clamp(x/32, 0, m_pLayers->TeleLayer()->m_Width-1);
+	int ny = clamp(y/32, 0, m_pLayers->TeleLayer()->m_Height-1);
+	
+	/*int z = m_pTiles[ny*m_Width+nx].m_Index-1;
+	if(z > 34 && z <= 34 + 50 && z&1)
+		return z;
+	return 0;*/
+	
+	int Tele = 0;
+	if(m_pTele[ny*m_pLayers->TeleLayer()->m_Width+nx].m_Type == TILE_TELEIN)
+		Tele = m_pTele[ny*m_pLayers->TeleLayer()->m_Width+nx].m_Number;
+		
+	return Tele;
 }
 
-int CCollision::IsEnd(int x, int y)  		 
+bool CCollision::IsSpeedup(int x, int y)
+{
+	if(!m_pSpeedup)
+		return false;
+	
+	dbg_msg("test", "test");
+	int nx = clamp(x/32, 0, m_pLayers->SpeedupLayer()->m_Width-1);
+	int ny = clamp(y/32, 0, m_pLayers->SpeedupLayer()->m_Height-1);
+	
+	if(m_pSpeedup[ny*m_pLayers->SpeedupLayer()->m_Width+nx].m_Force > 0)
+		return true;
+		
+	return false;
+}
+
+void CCollision::GetSpeedup(int x, int y, vec2 *Dir, int *Force)
+{
+	int nx = clamp(x/32, 0, m_pLayers->SpeedupLayer()->m_Width-1);
+	int ny = clamp(y/32, 0, m_pLayers->SpeedupLayer()->m_Height-1);
+	
+	vec2 Direction = vec2(1, 0);
+	float Angle = m_pSpeedup[ny*m_pLayers->SpeedupLayer()->m_Width+nx].m_Angle * (3.14159265f/180.0f);
+	*Force = m_pSpeedup[ny*m_pLayers->SpeedupLayer()->m_Width+nx].m_Force;
+	
+	vec2 TmpDir;
+	TmpDir.x = (Direction.x*cos(Angle)) - (Direction.y*sin(Angle));
+	TmpDir.y = (Direction.x*sin(Angle)) + (Direction.y*cos(Angle));
+	*Dir = TmpDir;
+}
+	
+
+int CCollision::IsBegin(int Index)  		 
 {  		 
-	int nx = x/32;
-	int ny = y/32;
-	if(y < 0 || nx < 0 || nx >= m_Width || ny >= m_Height)
-		return 0;
-	return m_pTeleporter[ny * m_Width + nx] == TILE_END;  		 
+   return Index == TILE_BEGIN;  		 
+}
+
+int CCollision::IsEnd(int Index)  		 
+{  		 
+	return Index == TILE_END;  		 
 }  		 
  		 
-int CCollision::IsFreeze(int x, int y)  		 
+int CCollision::IsFreeze(int Index)  		 
 {  		 
-	int nx = x/32;
-	int ny = y/32;
-	if(y < 0 || nx < 0 || nx >= m_Width || ny >= m_Height)
-		return 0;
-   return (m_pTeleporter[ny * m_Width + nx] == TILE_FREEZE) || (m_pFTeleporter[ny * m_Width + nx] == TILE_FREEZE);
+   return Index == TILE_FREEZE;
 }  		 
  		 
-int CCollision::IsUnfreeze(int x, int y)  		 
-{  		 
-	int nx = x/32;
-	int ny = y/32;
-	if(y < 0 || nx < 0 || nx >= m_Width || ny >= m_Height)
-		return 0;
-   return (m_pTeleporter[ny * m_Width + nx] == TILE_UNFREEZE) || (m_pFTeleporter[ny * m_Width + nx] == TILE_UNFREEZE);
+int CCollision::IsUnfreeze(int Index)  		 
+{
+   return Index == TILE_UNFREEZE;
 }   		 
  		 
-int CCollision::IsKick(int x, int y)  		 
-{  		 
-	int nx = x/32;
-	int ny = y/32;
-	if(y < 0 || nx < 0 || nx >= m_Width || ny >= m_Height)
-		return 0;
-   return (m_pTeleporter[ny * m_Width + nx] == TILE_KICK) || (m_pFTeleporter[ny * m_Width + nx] == TILE_KICK);
-} 		 
- 		 
 int CCollision::IsCp(int x, int y)  		 
-{  		 
-	int nx = x/32;
-	int ny = y/32;
-	if(y < 0 || nx < 0 || nx >= m_Width || ny >= m_Height)
+{
+	int nx = clamp(x/32, 0, m_Width-1);
+	int ny = clamp(y/32, 0, m_Height-1);
+	int Index = m_pTiles[ny*m_Width+nx].m_Index;
+	if (Index >= TILE_CP_D && Index <= TILE_CP_L_F)
+		return Index;
+	else
 		return 0;
-	int ind = m_pTeleporter[ny * m_Width + nx];
-	if (ind >= TILE_CP_D && ind <= TILE_CP_L_F)
-		return ind;
-	return 0;
 }
 
-int CCollision::IsBoost(int x, int y)  		 
+int CCollision::IsBoost(int Index)  		 
 {  		 
-	int nx = x/32;
-	int ny = y/32;
-	if(y < 0 || nx < 0 || nx >= m_Width || ny >= m_Height)
-		return 0;
-   if ((m_pTeleporter[ny * m_Width + nx] >= TILE_BOOST_L && m_pTeleporter[ny * m_Width + nx] <= TILE_BOOST_U) || (m_pTeleporter[ny * m_Width + nx] >= TILE_BOOST_L2 && m_pTeleporter[ny * m_Width + nx] <= TILE_BOOST_U2))  		 
-       return m_pTeleporter[ny * m_Width + nx];  		 
-   else if ((m_pFTeleporter[ny * m_Width + nx] >= TILE_BOOST_L && m_pFTeleporter[ny * m_Width + nx]<= TILE_BOOST_U) || (m_pFTeleporter[ny * m_Width + nx] >= TILE_BOOST_L2 && m_pFTeleporter[ny * m_Width + nx] <= TILE_BOOST_U2))  		 
-       return m_pFTeleporter[ny * m_Width + nx];  		 
-   return 0;  		 
+	if ((Index >= TILE_BOOST_L && Index <= TILE_BOOST_U) || (Index >= TILE_BOOST_L2 && Index <= TILE_BOOST_U2))  		 
+		return Index;  		 
+	else
+		return 0;  		 
 }  		 
  		 
-vec2 CCollision::CpSpeed(int index)  		 
+vec2 CCollision::CpSpeed(int Index)  		 
 {  		 
  		 
    vec2 target;  		 
  		 
-   switch(index)  		 
+   switch(Index)  		 
    {  		 
    case TILE_CP_U:  		 
    case TILE_CP_U_F:  		 
@@ -377,136 +470,31 @@ vec2 CCollision::CpSpeed(int index)
        target=vec2(0,0);  		 
        break;  		 
    }  		 
-   if (index>=TILE_CP_D_F && index<=TILE_CP_L_F)  		 
+   if (Index>=TILE_CP_D_F && Index<=TILE_CP_L_F)  		 
        target*=4;  		 
    return target;  		 
  		 
 }  		 
  		 
  		 
-vec2 CCollision::BoostAccel(int index)  		 
+vec2 CCollision::BoostAccelerator(int Index)  		 
 {  		 
-   if (index==TILE_BOOST_L)  		 
+   if (Index==TILE_BOOST_L)  		 
        return vec2(-3,0);  		 
-   else if(index==TILE_BOOST_R)  		 
+   else if(Index==TILE_BOOST_R)  		 
        return vec2(3,0);  		 
-   else if(index==TILE_BOOST_D)  		 
+   else if(Index==TILE_BOOST_D)  		 
        return vec2(0,2);  		 
-   else if(index==TILE_BOOST_U)  		 
+   else if(Index==TILE_BOOST_U)  		 
        return vec2(0,-2);  		 
-   else if(index==TILE_BOOST_L2)  		 
+   else if(Index==TILE_BOOST_L2)  		 
        return vec2(-15,0);  		 
-   else if(index==TILE_BOOST_R2)  		 
+   else if(Index==TILE_BOOST_R2)  		 
        return vec2(15,0);  		 
-   else if(index==TILE_BOOST_D2)  		 
+   else if(Index==TILE_BOOST_D2)  		 
        return vec2(0,15);  		 
-   else if(index==TILE_BOOST_U2)  		 
+   else if(Index==TILE_BOOST_U2)  		 
        return vec2(0,-15);  		 
  		 
    return vec2(0,0);  		 
-}  		 
- 		 
- 		 
-vec2 CCollision::Teleport(int a)  		 
-{  		 
-   if(m_Len[a] > 0)  		 
-   {  		 
-       int r = rand()%m_Len[a];  		 
-       int x = (m_pDest[a][r] % m_Width)<<5;  		 
-       int y = (m_pDest[a][r] / m_Width)<<5;  		 
-       return vec2((float)x+16.0, (float)y+16.0);  		 
-   }  		 
-   else  		 
-       return vec2(0, 0);  		 
 }
- 		 
-void CCollision::Set(int x, int y, int flag)  		 
-{  		 
-   int nx = clamp(x/32, 0, m_Width-1);  		 
-   int ny = clamp(y/32, 0, m_Height-1);  		 
- 		 
-   m_pTiles[ny * m_Width + nx].m_Index = flag;  		 
-} 
-
- 		 
-int CCollision::IntersectNolaser2(vec2 pos0, vec2 pos1, vec2 *out_collision, vec2 *out_before_collision)  		 
-{  		 
-   float d = distance(pos0, pos1);  		 
-   vec2 last = pos0;  		 
- 		 
-   for(float f = 0; f < d; f++)  		 
-   {  		 
-       float a = f/d;  		 
-       vec2 pos = mix(pos0, pos1, a);  		 
-       if(CCollision::IsNolaser(round(pos.x), round(pos.y)))  		 
-       {  		 
-           if(out_collision)  		 
-               *out_collision = pos;  		 
-           if(out_before_collision)  		 
-               *out_before_collision = last;  		 
-           return GetTile(round(pos.x), round(pos.y));  		 
-       }  		 
-       last = pos;  		 
-   }  		 
-   if(out_collision)  		 
-       *out_collision = pos1;  		 
-   if(out_before_collision)  		 
-       *out_before_collision = pos1;  		 
-   return 0;  		 
-}  		 
- 		 
-int CCollision::IntersectNolaser(vec2 pos0, vec2 pos1, vec2 *out_collision, vec2 *out_before_collision)  		 
-{  		 
-   float d = distance(pos0, pos1);  		 
-   vec2 last = pos0;  		 
- 		 
-   for(float f = 0; f < d; f++)  		 
-   {  		 
-       float a = f/d;  		 
-       vec2 pos = mix(pos0, pos1, a);  		 
-       if(IsNolaser(round(pos.x), round(pos.y)) || IsSolid(round(pos.x), round(pos.y)))  		 
-       {  		 
-           if(out_collision)  		 
-               *out_collision = pos;  		 
-           if(out_before_collision)  		 
-               *out_before_collision = last;  		 
-           return GetTile(round(pos.x), round(pos.y));  		 
-       }  		 
-       last = pos;  		 
-   }  		 
-   if(out_collision)  		 
-       *out_collision = pos1;  		 
-   if(out_before_collision)  		 
-       *out_before_collision = pos1;  		 
-   return 0;  		 
-}  		 
- 		 
-int CCollision::IntersectAir(vec2 pos0, vec2 pos1, vec2 *out_collision, vec2 *out_before_collision)  		 
-{  		 
-   float d = distance(pos0, pos1);  		 
-   vec2 last = pos0;  		 
- 		 
-   for(float f = 0; f < d; f++)  		 
-   {  		 
-       float a = f/d;  		 
-       vec2 pos = mix(pos0, pos1, a);  		 
-       if(IsSolid(round(pos.x), round(pos.y)) || !GetTile(round(pos.x), round(pos.y)))  		 
-       {  		 
-           if(out_collision)  		 
-               *out_collision = pos;  		 
-           if(out_before_collision)  		 
-               *out_before_collision = last;  		 
-           if(!GetTile(round(pos.x), round(pos.y)))  		 
-               return -1;  		 
-           else  		 
-               return GetTile(round(pos.x), round(pos.y));  		 
-       }  		 
-       last = pos;  		 
-   }  		 
-   if(out_collision)  		 
-       *out_collision = pos1;  		 
-   if(out_before_collision)  		 
-       *out_before_collision = pos1;  		 
-   return 0;  		 
-}  		 
- 

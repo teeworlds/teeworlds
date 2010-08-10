@@ -68,7 +68,6 @@ public:
 
 	//void DoTeamScoreWincheck();
 	//void DoPlayerScoreWincheck();
-	bool MapConfig(int index); 
 	void DoWarmup(int Seconds);
 	
 	void StartRound();
@@ -101,7 +100,6 @@ public:
 			bool?
 	*/
 	virtual bool OnEntity(int Index, vec2 Pos);
-	virtual bool OnEntity(int Index, int x, int y, bool flayer);
 	
 	/*
 		Function: on_CCharacter_spawn
