@@ -4,16 +4,16 @@
 
 #include "door.h"
 
-CDoor::CDoor(GameWorld *pGameWorld, vec2 Pos, float Rotation, int Length, bool Opened)
+CDoor::CDoor(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length, bool Opened)
 : CEntity(pGameWorld, NETOBJTYPE_LASER)
 {
 	m_Pos = Pos;
 	m_Opened = Opened;
 
-	vec2 Dir = vec2(sin(rotation), cos(rotation));
+	vec2 Dir = vec2(sin(Rotation), cos(Rotation));
 	vec2 To = Pos + normalize(Dir)*Length;
 	
-	GameServer()->Collision()->IntersectCharacter(Pos, To, &this->m_To, 0);
+	GameServer()->Collision()->IntersectNoLaser(Pos, To, &this->m_To, 0);
 	GameWorld()->InsertEntity(this);
 }
 

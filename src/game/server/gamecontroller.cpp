@@ -13,6 +13,8 @@
 #include "entities/gun.h"  		 
 #include "entities/projectile.h"  		 
 #include "entities/plasma.h"  		 
+#include "entities/trigger.h"  		 
+#include "entities/door.h"  		 
 
 #include <game/layers.h>
 
@@ -259,23 +261,36 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 	return false;
 }
 
-void Connector(vec2 Pos, CDoor* Door) {
-	int Sides[8];  		 
-	Sides[0]=GameServer()->Collision()->GetIndex(vec2(Pos.x,Pos.y+1),vec2(Pos.x,Pos.y+1));  		 
-	Sides[1]=GameServer()->Collision()->GetIndex(vec2(Pos.x+1,Pos.y+1),vec2(Pos.x+1,Pos.y+1));  		 
-	Sides[2]=GameServer()->Collision()->GetIndex(vec2(Pos.x+1,Pos.y),vec2(Pos.x+1,Pos.y));  		 
-	Sides[3]=GameServer()->Collision()->GetIndex(vec2(Pos.x+1,Pos.y-1),vec2(Pos.x+1,Pos.y-1));  		 
-	Sides[4]=GameServer()->Collision()->GetIndex(vec2(Pos.x,Pos.y-1),vec2(Pos.x,Pos.y-1));  		 
-	Sides[5]=GameServer()->Collision()->GetIndex(vec2(Pos.x-1,Pos.y-1),vec2(Pos.x-1,Pos.y-1));  		 
-	Sides[6]=GameServer()->Collision()->GetIndex(vec2(Pos.x-1,Pos.y),vec2(Pos.x-1,Pos.y));  		 
-	Sides[7]=GameServer()->Collision()->GetIndex(vec2(Pos.x-1,Pos.y+1),vec2(Pos.x-1,Pos.y+1));
-	for (int i = 0;i < 8;i++)
+
+vec2 GetSidePos(int side) {
+	switch(side)
 	{
-		if (Sides[i] == ENTITY_CONNECTOR_D + (i + 4) % 8) {
-			Connector(Pos + GetSidePos(i), Door);
-		} else if(Sides[i] == ENTITY_TRIGGER)
-		{
-			new CTrigger(Pos, Target);
+	case 0: return vec2(0, 1);
+	case 1: return vec2(1, 1);
+	case 2: return vec2(1, 0);
+	case 3: return vec2(1, -1);
+	case 4: return vec2(0, -1);
+	case 5: return vec2(-1, -1);
+	case 6: return vec2(-1, 0);
+	case 7: return vec2(-1, 1);
+	}
+	return vec2(0, 0);
+}
+
+void IGameController::Connector(vec2 Pos, CDoor* Door) {
+	int i = 0;
+	for(int x = -1; x <= 1; ++x) {
+		for(int y = -1; y <= 1; ++y) {
+			if(x != 0 && y != 0) {
+				int side = GameServer()->Collision()->GetIndex(vec2(Pos.x + x,Pos.y + y),vec2(Pos.x + x,Pos.y + y));
+				if (side == ENTITY_CONNECTOR_D + (i + 4) % 8) {
+					Connector(Pos + vec2(x, y), Door);
+				} else if(side == ENTITY_TRIGGER)
+				{
+					new CTrigger(&GameServer()->m_World, Pos, Door);
+				}
+				++i;
+			}
 		}
 	}
 }
@@ -302,22 +317,6 @@ const char *IGameController::GetTeamName(int Team)
 	return "spectators";
 }
 
-vec2 GetSidePos(int side) {
-	switch(side)
-	{
-	case 0: return vec2(0, 1);
-	case 1: return vec2(1, 1);
-	case 2: return vec2(1, 0);
-	case 3: return vec2(1, -1);
-	case 4: return vec2(0, -1);
-	case 5: return vec2(-1, -1);
-	case 6: return vec2(-1, 0);
-	case 7: return vec2(-1, 1);
-	default:
-		vec2(0, 0);
-	}
-
-}
 
 bool IsSeparator(char c) { return c == ';' || c == ' ' || c == ',' || c == '\t'; }
 

@@ -16,7 +16,7 @@ public:
 
 	void Open(int Tick);
 	void Close();
-	CDoor(GameWorld *pGameWorld, vec2 Pos, float Rotation, int Length, bool Opened);
+	CDoor(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length, bool Opened);
 	
 	virtual void Reset();
 	virtual void Tick();

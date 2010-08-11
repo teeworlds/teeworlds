@@ -1,9 +1,7 @@
-/* copyright (c) 2007 magnus auvinen, see licence.txt for more info */
-
 #ifndef GAME_SERVER_ENTITY_TRIGGER_H
 #define GAME_SERVER_ENTITY_TRIGGER_H
 
-#include <game/server/entity.hpp>
+#include <game/server/entity.h>
 
 //class DOOR;
 
