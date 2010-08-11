@@ -101,6 +101,8 @@ public:
 	*/
 	virtual bool OnEntity(int Index, vec2 Pos);
 	
+	virtual void Connector(vec2 Pos, CDoor* Door);
+	
 	/*
 		Function: on_CCharacter_spawn
 			Called when a CCharacter spawns into the game world.

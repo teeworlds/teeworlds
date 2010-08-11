@@ -139,6 +139,21 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 		m_aaSpawnPoints[1][m_aNumSpawnPoints[1]++] = Pos;
 	else if(Index == ENTITY_SPAWN_BLUE)
 		m_aaSpawnPoints[2][m_aNumSpawnPoints[2]++] = Pos;
+	
+	if(Index == ENTITY_DOOR)
+	{
+		for(int i=0; i<8;i++)
+		{
+			if (sides[i] >= ENTITY_LASER_SHORT && sides[i] <= ENTITY_LASER_LONG)
+			{
+				CDoor * door = new CDoor(&GameServer()->m_World, Pos, pi/4*i, 32*3 + 32*(sides[i] - ENTITY_LASER_SHORT)*3, false);
+				for (int j = 0; j < 8; j++)
+					if (j != i)
+						Connector(Pos, door);
+			}
+		}
+	}
+	
 	if(Index == ENTITY_ARMOR_1)
 		Type = POWERUP_ARMOR;
 	else if(Index == ENTITY_HEALTH_1)
@@ -165,7 +180,7 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 	}
 	else if(Index >= ENTITY_LASER_FAST_CW && Index <= ENTITY_LASER_FAST_CCW)  		 
    {  		 
-       int sides2[8];  		 
+       int sides2[8];  		 //TODO it seem that every time GetIndex take the same arguments
 	sides2[0]=GameServer()->Collision()->GetIndex(vec2(Pos.x,Pos.y+2),vec2(Pos.x,Pos.y+2));  		 
 	sides2[1]=GameServer()->Collision()->GetIndex(vec2(Pos.x+2,Pos.y+2),vec2(Pos.x+2,Pos.y+2));  		 
 	sides2[2]=GameServer()->Collision()->GetIndex(vec2(Pos.x+2,Pos.y),vec2(Pos.x+2,Pos.y));  		 
@@ -244,6 +259,27 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 	return false;
 }
 
+void Connector(vec2 Pos, CDoor* Door) {
+	int Sides[8];  		 
+	Sides[0]=GameServer()->Collision()->GetIndex(vec2(Pos.x,Pos.y+1),vec2(Pos.x,Pos.y+1));  		 
+	Sides[1]=GameServer()->Collision()->GetIndex(vec2(Pos.x+1,Pos.y+1),vec2(Pos.x+1,Pos.y+1));  		 
+	Sides[2]=GameServer()->Collision()->GetIndex(vec2(Pos.x+1,Pos.y),vec2(Pos.x+1,Pos.y));  		 
+	Sides[3]=GameServer()->Collision()->GetIndex(vec2(Pos.x+1,Pos.y-1),vec2(Pos.x+1,Pos.y-1));  		 
+	Sides[4]=GameServer()->Collision()->GetIndex(vec2(Pos.x,Pos.y-1),vec2(Pos.x,Pos.y-1));  		 
+	Sides[5]=GameServer()->Collision()->GetIndex(vec2(Pos.x-1,Pos.y-1),vec2(Pos.x-1,Pos.y-1));  		 
+	Sides[6]=GameServer()->Collision()->GetIndex(vec2(Pos.x-1,Pos.y),vec2(Pos.x-1,Pos.y));  		 
+	Sides[7]=GameServer()->Collision()->GetIndex(vec2(Pos.x-1,Pos.y+1),vec2(Pos.x-1,Pos.y+1));
+	for (int i = 0;i < 8;i++)
+	{
+		if (Sides[i] == ENTITY_CONNECTOR_D + (i + 4) % 8) {
+			Connector(Pos + GetSidePos(i), Door);
+		} else if(Sides[i] == ENTITY_TRIGGER)
+		{
+			new CTrigger(Pos, Target);
+		}
+	}
+}
+
 void IGameController::EndRound()
 {
 	if(m_Warmup) // game can't end when we are running warmup
@@ -266,50 +302,21 @@ const char *IGameController::GetTeamName(int Team)
 	return "spectators";
 }
 
-void get_side_pos(int side, int &x, int &y) {
-   if (side==0)  		 
-   {  		 
-       x=0;  		 
-       y=1;  		 
-   }  		 
-   else if(side==1)  		 
-   {  		 
-       x=1;  		 
-       y=1;  		 
-   }  		 
-   else if(side==2)  		 
-   {
-	   x=1;
-	   y=0;
+vec2 GetSidePos(int side) {
+	switch(side)
+	{
+	case 0: return vec2(0, 1);
+	case 1: return vec2(1, 1);
+	case 2: return vec2(1, 0);
+	case 3: return vec2(1, -1);
+	case 4: return vec2(0, -1);
+	case 5: return vec2(-1, -1);
+	case 6: return vec2(-1, 0);
+	case 7: return vec2(-1, 1);
+	default:
+		vec2(0, 0);
 	}
-   else if(side==3) 
-	   {
-       x=1;
-       y=-1;
-   }
-   else if(side==4)
 
-   {
-       x=0;
-       y=-1;
-   } 
-   else if(side==5)
-   {
-       x=-1; 
-       y=-1; 
- 
-   }
-   else if(side==6) 
-
-   {
-       x=-1;
-       y=0; 
-   } 
-   else if(side==7) 
-   {
-       x=-1; 
-       y=+1; 
-   }
 }
 
 bool IsSeparator(char c) { return c == ';' || c == ' ' || c == ',' || c == '\t'; }
