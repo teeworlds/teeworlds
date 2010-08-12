@@ -613,7 +613,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		{
 			char aVersion[64];
 			const char *pPassword;
-			str_copy(aVersion, Unpacker.GetString(), 64);
+			str_copy(aVersion, Unpacker.GetString(CUnpacker::SANITIZE_CC), 64);
 			if(str_comp(aVersion, GameServer()->NetVersion()) != 0)
 			{
 				// OH FUCK! wrong version, drop him
@@ -623,9 +623,9 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				return;
 			}
 			
-			str_copy(m_aClients[ClientId].m_aName, Unpacker.GetString(), MAX_NAME_LENGTH);
-			str_copy(m_aClients[ClientId].m_aClan, Unpacker.GetString(), MAX_CLANNAME_LENGTH);
-			pPassword = Unpacker.GetString();
+			str_copy(m_aClients[ClientId].m_aName, Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), MAX_NAME_LENGTH);
+			str_copy(m_aClients[ClientId].m_aClan, Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), MAX_CLANNAME_LENGTH);
+			pPassword = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 			
 			if(g_Config.m_Password[0] != 0 && str_comp(g_Config.m_Password, pPassword) != 0)
 			{
@@ -762,7 +762,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			{
 				const char *pPw;
 				Unpacker.GetString(); // login name, not used
-				pPw = Unpacker.GetString();
+				pPw = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 				
 				if(Unpacker.Error() == 0)
 				{

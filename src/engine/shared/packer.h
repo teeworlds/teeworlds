@@ -32,9 +32,16 @@ class CUnpacker
 	const unsigned char *m_pEnd;
 	int m_Error;
 public:
+	enum
+	{
+		SANITIZE=1,
+		SANITIZE_CC=2,
+		SKIP_START_WHITESPACES=4
+	};
+
 	void Reset(const void *pData, int Size);
 	int GetInt();
-	const char *GetString();
+	const char *GetString(int SanitizeType = SANITIZE);
 	const unsigned char *GetRaw(int Size);
 	bool Error() const { return m_Error; }
 };

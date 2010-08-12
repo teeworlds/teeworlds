@@ -870,10 +870,10 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 				Up.Reset((unsigned char*)pPacket->m_pData+sizeof(SERVERBROWSE_INFO), pPacket->m_DataSize-sizeof(SERVERBROWSE_INFO));
 				if(PacketType >= 2)
 					Token = str_toint(Up.GetString());
-				str_copy(Info.m_aVersion, Up.GetString(), sizeof(Info.m_aVersion));
-				str_copy(Info.m_aName, Up.GetString(), sizeof(Info.m_aName));
-				str_copy(Info.m_aMap, Up.GetString(), sizeof(Info.m_aMap));
-				str_copy(Info.m_aGameType, Up.GetString(), sizeof(Info.m_aGameType));
+				str_copy(Info.m_aVersion, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aVersion));
+				str_copy(Info.m_aName, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aName));
+				str_copy(Info.m_aMap, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aMap));
+				str_copy(Info.m_aGameType, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aGameType));
 				Info.m_Flags = str_toint(Up.GetString());
 				Info.m_Progression = str_toint(Up.GetString());
 				Info.m_NumPlayers = str_toint(Up.GetString());
@@ -889,7 +889,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 
 				for(int i = 0; i < Info.m_NumPlayers; i++)
 				{
-					str_copy(Info.m_aPlayers[i].m_aName, Up.GetString(), sizeof(Info.m_aPlayers[i].m_aName));
+					str_copy(Info.m_aPlayers[i].m_aName, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aPlayers[i].m_aName));
 					Info.m_aPlayers[i].m_Score = str_toint(Up.GetString());
 				}
 
@@ -933,7 +933,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 			// system message
 			if(Msg == NETMSG_MAP_CHANGE)
 			{
-				const char *pMap = Unpacker.GetString();
+				const char *pMap = Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES);
 				int MapCrc = Unpacker.GetInt();
 				const char *pError = 0;
 

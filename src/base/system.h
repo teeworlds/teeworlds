@@ -732,9 +732,21 @@ void str_format(char *buffer, int buffer_size, const char *format, ...);
 void str_sanitize_strong(char *str);
 
 /*
+	Function: str_sanitize_cc
+		Replaces all characters below 32 with whitespace.
+	
+	Parameters:
+		str - String to sanitize.
+
+	Remarks:
+		- The strings are treated as zero-termineted strings.
+*/
+void str_sanitize_cc(char *str);
+
+/*
 	Function: str_sanitize
-		Replaces all characters below 32 and above 127 with whitespace with
-		exception to \r, \n and \r.
+		Replaces all characters below 32 with whitespace with
+		exception to \t, \n and \r.
 	
 	Parameters:
 		str - String to sanitize.
@@ -743,6 +755,22 @@ void str_sanitize_strong(char *str);
 		- The strings are treated as zero-termineted strings.
 */
 void str_sanitize(char *str);
+
+/*
+	Function: str_skip_whitespaces
+		Skips leading whitespace characters(' ', '\t', '\n', '\r').
+	
+	Parameters:
+		str - Pointer to the string.
+
+	Returns:
+		Pointer to the first non-whitespace character found
+		within the string.
+
+	Remarks:
+		- The strings are treated as zero-termineted strings.
+*/
+char *str_skip_whitespaces(char *str);
 
 /*
 	Function: str_comp_nocase
