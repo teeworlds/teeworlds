@@ -79,12 +79,12 @@ int CCollision::GetIndex(vec2 PrevPos, vec2 Pos)
 	{
 		int nx = clamp((int)Pos.x/32, 0, m_Width-1);
 		int ny = clamp((int)Pos.y/32, 0, m_Height-1);
-		/* if (m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN)) dbg_msg("m_pTele && TELEIN","ny*m_Width+nx %d",ny*m_Width+nx);//REMOVE
-		else if (m_pTele && m_pTele[ny*m_Width+nx].m_Type==TILE_TELEOUT) dbg_msg("TELEOUT","ny*m_Width+nx %d",ny*m_Width+nx);//REMOVE
+		/*if (m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN)) dbg_msg("m_pTele && TELEIN","ny*m_Width+nx %d",ny*m_Width+nx);
+		else if (m_pTele && m_pTele[ny*m_Width+nx].m_Type==TILE_TELEOUT) dbg_msg("TELEOUT","ny*m_Width+nx %d",ny*m_Width+nx);
 		else dbg_msg("GetIndex","ny*m_Width+nx %d",ny*m_Width+nx);//REMOVE */
 		
-		if((m_pTiles[ny*m_Width+nx].m_Index >= TILE_BOOSTV && m_pTiles[ny*m_Width+nx].m_Index <= TILE_STOPT) ||
-				((m_pTiles[ny*m_Width+nx].m_Index >=TILE_STOPV)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
+		if((m_pTiles[ny*m_Width+nx].m_Index >= TILE_THROUGH && m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
+				((m_pTiles[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
 			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
 			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0))
 		{
@@ -103,10 +103,10 @@ int CCollision::GetIndex(vec2 PrevPos, vec2 Pos)
 		Tmp = mix(PrevPos, Pos, a);
 		nx = clamp((int)Tmp.x/32, 0, m_Width-1);
 		ny = clamp((int)Tmp.y/32, 0, m_Height-1);
-		if((m_pTiles[ny*m_Width+nx].m_Index >= TILE_BOOSTV && m_pTiles[ny*m_Width+nx].m_Index <= TILE_STOPT) ||
-				((m_pTiles[ny*m_Width+nx].m_Index >=TILE_STOPV)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
-			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
-			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0))
+		if((m_pTiles[ny*m_Width+nx].m_Index >= TILE_THROUGH && m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
+						((m_pTiles[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
+					(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
+					(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0))
 		{
 			return ny*m_Width+nx;
 		}
@@ -125,9 +125,9 @@ vec2 CCollision::GetPos(int Index)
 
 int CCollision::GetCollisionDDRace(int Index)
 {
+	dbg_msg("GetCollisionDDRace","m_pTiles[%d].m_Index = %d",Index,m_pTiles[Index].m_Index);//Remove*/
 	if(Index < 0)
 		return 0;
-		//dbg_msg("GetCollisionDDRace","m_pTiles[%d].m_Index = %d",Index,m_pTiles[Index].m_Index);//Remove
 	return m_pTiles[Index].m_Index;
 }
 
@@ -135,7 +135,7 @@ int CCollision::GetTile(int x, int y)
 {
 	int nx = clamp(x/32, 0, m_Width-1);
 	int ny = clamp(y/32, 0, m_Height-1);
-	//dbg_msg("GetTile","m_Index %d",m_pTiles[ny*m_Width+nx].m_Index);
+	/*dbg_msg("GetTile","m_Index %d",m_pTiles[ny*m_Width+nx].m_Index);//Remove */
 	if(m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_SOLID || m_pTiles[ny*m_Width+nx].m_Index == (COLFLAG_SOLID|COLFLAG_NOHOOK) || m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_DEATH)
 		return m_pTiles[ny*m_Width+nx].m_Index;
 	else
