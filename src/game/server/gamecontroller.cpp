@@ -124,7 +124,7 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 	int x,y;
 	x=(Pos.x-16.0f)/32.0f;
 	y=(Pos.y-16.0f)/32.0f;  		
-	//dbg_msg("OnEntity","Pos(%d,%d)",x,y);
+	dbg_msg("OnEntity","Pos(%d,%d)",x,y);
 	int sides[8];
 	sides[0]=GameServer()->Collision()->Entitiy(x,y+1);  		 
 	sides[1]=GameServer()->Collision()->Entitiy(x+1,y+1);  		 
@@ -150,9 +150,9 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 			if (sides[i] >= ENTITY_LASER_SHORT && sides[i] <= ENTITY_LASER_LONG)
 			{
 				CDoor * door = new CDoor(&GameServer()->m_World, Pos, pi/4*i, 32*3 + 32*(sides[i] - ENTITY_LASER_SHORT)*3, false);
-				for (int j = 0; j < 8; j++)
-					if (j != i)
-						Connector(Pos, door);
+				//for (int j = 0; j < 8; j++)
+				//	if (j != i)
+						Connector(vec2(x, y), door);
 			}
 		}
 	}
@@ -278,19 +278,24 @@ vec2 GetSidePos(int side) {
 }
 
 void IGameController::Connector(vec2 Pos, CDoor* Door) {
-	int i = 0;
-	for(int x = -1; x <= 1; ++x) {
-		for(int y = -1; y <= 1; ++y) {
-			if(x != 0 && y != 0) {
-				int side = GameServer()->Collision()->Entitiy(x + x,y + y);
-				if (side == ENTITY_CONNECTOR_D + (i + 4) % 8) {
-					Connector(Pos + vec2(x, y), Door);
-				} else if(side == ENTITY_TRIGGER)
-				{
-					new CTrigger(&GameServer()->m_World, Pos, Door);
-				}
-				++i;
-			}
+	int sides[8];
+	sides[0] = GameServer()->Collision()->Entitiy(Pos.x, Pos.y + 1);
+	sides[1] = GameServer()->Collision()->Entitiy(Pos.x + 1, Pos.y + 1);
+	sides[2] = GameServer()->Collision()->Entitiy(Pos.x + 1, Pos.y);
+	sides[3] = GameServer()->Collision()->Entitiy(Pos.x + 1, Pos.y - 1);
+	sides[4] = GameServer()->Collision()->Entitiy(Pos.x, Pos.y - 1);
+	sides[5] = GameServer()->Collision()->Entitiy(Pos.x - 1, Pos.y - 1);
+	sides[6] = GameServer()->Collision()->Entitiy(Pos.x - 1, Pos.y);
+	sides[7] = GameServer()->Collision()->Entitiy(Pos.x - 1, Pos.y + 1);
+	for (int i=0;i<8;i++)
+	{
+		vec2 shift = GetSidePos(i);
+		if (sides[i]==ENTITY_CONNECTOR_D+(i+4) % 8)
+			Connector(Pos + shift, Door);
+		else if(sides[i]==ENTITY_TRIGGER)
+		{
+			vec2 pos((Pos.x + shift.x)*32.0f + 16.0f, (Pos.y + shift.y)*32.0f + 16.0f);
+			new CTrigger(&GameServer()->m_World,pos, Door);
 		}
 	}
 }
