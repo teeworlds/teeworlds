@@ -600,7 +600,7 @@ void CCharacter::Tick()
 		m_Core.m_HookTick = 0;
 	if (m_Super && m_Core.m_Jumped > 1)
 		m_Core.m_Jumped = 1; 
-	dbg_msg("character","TileIndex%d",TileIndex); //REMOVE
+	/*dbg_msg("character","TileIndex%d",TileIndex); //REMOVE*/
 	//DDRace  		 
 	char aBuftime[128];
 	float time = (float)(Server()->Tick() - m_StartTime) / ((float)Server()->TickSpeed());

@@ -121,20 +121,21 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 {
 	int Type = -1;
 	int SubType = 0;
+	int x,y;
+	x=(Pos.x-16.0f)/32.0f;
+	y=(Pos.y-16.0f)/32.0f;  		
+	//dbg_msg("OnEntity","Pos(%d,%d)",x,y);
+	int sides[8];
+	sides[0]=GameServer()->Collision()->Entitiy(x,y+1);  		 
+	sides[1]=GameServer()->Collision()->Entitiy(x+1,y+1);  		 
+	sides[2]=GameServer()->Collision()->Entitiy(x+1,y);  		 
+	sides[3]=GameServer()->Collision()->Entitiy(x+1,y-1);  		 
+	sides[4]=GameServer()->Collision()->Entitiy(x,y-1);  		 
+	sides[5]=GameServer()->Collision()->Entitiy(x-1,y-1);  		 
+	sides[6]=GameServer()->Collision()->Entitiy(x-1,y);  		 
+	sides[7]=GameServer()->Collision()->Entitiy(x-1,y+1);  		 
+ 	
 	
-	//vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);  		 
- 		
-   int sides[8];  		 
-   sides[0]=GameServer()->Collision()->GetIndex(vec2(Pos.x,Pos.y+1),vec2(Pos.x,Pos.y+1));  		 
-   sides[1]=GameServer()->Collision()->GetIndex(vec2(Pos.x+1,Pos.y+1),vec2(Pos.x+1,Pos.y+1));  		 
-   sides[2]=GameServer()->Collision()->GetIndex(vec2(Pos.x+1,Pos.y),vec2(Pos.x+1,Pos.y));  		 
-   sides[3]=GameServer()->Collision()->GetIndex(vec2(Pos.x+1,Pos.y-1),vec2(Pos.x+1,Pos.y-1));  		 
-   sides[4]=GameServer()->Collision()->GetIndex(vec2(Pos.x,Pos.y-1),vec2(Pos.x,Pos.y-1));  		 
-   sides[5]=GameServer()->Collision()->GetIndex(vec2(Pos.x-1,Pos.y-1),vec2(Pos.x-1,Pos.y-1));  		 
-   sides[6]=GameServer()->Collision()->GetIndex(vec2(Pos.x-1,Pos.y),vec2(Pos.x-1,Pos.y));  		 
-   sides[7]=GameServer()->Collision()->GetIndex(vec2(Pos.x-1,Pos.y+1),vec2(Pos.x-1,Pos.y+1));  		 
- 		 
- 
 	if(Index == ENTITY_SPAWN)
 		m_aaSpawnPoints[0][m_aNumSpawnPoints[0]++] = Pos;
 	else if(Index == ENTITY_SPAWN_RED)
@@ -182,63 +183,62 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 	}
 	else if(Index >= ENTITY_LASER_FAST_CW && Index <= ENTITY_LASER_FAST_CCW)  		 
    {  		 
-       int sides2[8];  		 //TODO it seem that every time GetIndex take the same arguments
-	sides2[0]=GameServer()->Collision()->GetIndex(vec2(Pos.x,Pos.y+2),vec2(Pos.x,Pos.y+2));  		 
-	sides2[1]=GameServer()->Collision()->GetIndex(vec2(Pos.x+2,Pos.y+2),vec2(Pos.x+2,Pos.y+2));  		 
-	sides2[2]=GameServer()->Collision()->GetIndex(vec2(Pos.x+2,Pos.y),vec2(Pos.x+2,Pos.y));  		 
-	sides2[3]=GameServer()->Collision()->GetIndex(vec2(Pos.x+2,Pos.y-2),vec2(Pos.x+2,Pos.y-2));  		 
-	sides2[4]=GameServer()->Collision()->GetIndex(vec2(Pos.x,Pos.y-2),vec2(Pos.x,Pos.y-2));  		 
-	sides2[5]=GameServer()->Collision()->GetIndex(vec2(Pos.x-2,Pos.y-2),vec2(Pos.x-2,Pos.y-2));  		 
-	sides2[6]=GameServer()->Collision()->GetIndex(vec2(Pos.x-2,Pos.y),vec2(Pos.x-2,Pos.y));  		 
-	sides2[7]=GameServer()->Collision()->GetIndex(vec2(Pos.x-2,Pos.y+2),vec2(Pos.x-2,Pos.y+2));  		 		 
- 		 
-       float ang_speed;  		 
-       int ind=Index-ENTITY_LASER_STOP;  		 
-       int m;  		 
-       if (ind<0)  		 
-       {  		 
-           ind=-ind;  		 
-           m=1;  		 
-       }  		 
-       else if(ind==0)  		 
-           m=0;  		 
-       else  		 
-           m=-1;  		 
- 		 
- 		 
-       if (ind==0)  		 
-           ang_speed=0.0f;  		 
-       else if (ind==1)  		 
-           ang_speed=pi/360;  		 
-       else if (ind==2)  		 
-           ang_speed=pi/180;  		 
-       else if (ind==3)  		 
-           ang_speed=pi/90;  		 
-       ang_speed*=m;  		 
- 		 
-       for(int i=0; i<8;i++)  		 
-       {  		 
-           if (sides[i] >= ENTITY_LASER_SHORT && sides[i] <= ENTITY_LASER_LONG)  		 
-           {  		 
-               CLight *lgt = new CLight(&GameServer()->m_World, Pos, pi/4*i,32*3 + 32*(sides[i] - ENTITY_LASER_SHORT)*3);  		 
-               lgt->ang_speed=ang_speed;  		 
-               if (sides2[i]>=ENTITY_LASER_C_SLOW && sides2[i]<=ENTITY_LASER_C_FAST)  		 
-               {  		 
-                   lgt->speed=1+(sides2[i]-ENTITY_LASER_C_SLOW)*2;  		 
-                   lgt->cur_length=lgt->length;  		 
-               }  		 
-               else if(sides2[i]>=ENTITY_LASER_O_SLOW && sides2[i]<=ENTITY_LASER_O_FAST)  		 
-               {  		 
-                   lgt->speed=1+(sides2[i]-ENTITY_LASER_O_SLOW)*2;  		 
-                   lgt->cur_length=0;  		 
-               }  		 
-               else  		 
-                   lgt->cur_length=lgt->length;  		 
-           }  		 
-       }  		 
- 		 
- 		     
-   }  		 
+		int sides2[8];
+		sides2[0]=GameServer()->Collision()->Entitiy(x,y+2);  		 
+		sides2[1]=GameServer()->Collision()->Entitiy(x+2,y+2);  		 
+		sides2[2]=GameServer()->Collision()->Entitiy(x+2,y);  		 
+		sides2[3]=GameServer()->Collision()->Entitiy(x+2,y-2);  		 
+		sides2[4]=GameServer()->Collision()->Entitiy(x,y-2);  		 
+		sides2[5]=GameServer()->Collision()->Entitiy(x-2,y-2);  		 
+		sides2[6]=GameServer()->Collision()->Entitiy(x-2,y);  		 
+		sides2[7]=GameServer()->Collision()->Entitiy(x-2,y+2);  		 		 
+
+		float ang_speed;  		 
+		int ind=Index-ENTITY_LASER_STOP;  		 
+		int m;  		 
+		if (ind<0)  		 
+		{  		 
+		   ind=-ind;  		 
+		   m=1;  		 
+		}  		 
+		else if(ind==0)  		 
+		   m=0;  		 
+		else  		 
+		   m=-1;  		 
+		 
+		 
+		if (ind==0)  		 
+		   ang_speed=0.0f;  		 
+		else if (ind==1)  		 
+		   ang_speed=pi/360;  		 
+		else if (ind==2)  		 
+		   ang_speed=pi/180;  		 
+		else if (ind==3)  		 
+		   ang_speed=pi/90;  		 
+		ang_speed*=m;  		 
+		 
+		for(int i=0; i<8;i++)  		 
+		{  		 
+		   if (sides[i] >= ENTITY_LASER_SHORT && sides[i] <= ENTITY_LASER_LONG)  		 
+		   {  		 
+			   CLight *lgt = new CLight(&GameServer()->m_World, Pos, pi/4*i,32*3 + 32*(sides[i] - ENTITY_LASER_SHORT)*3);  		 
+			   lgt->ang_speed=ang_speed;  		 
+			   if (sides2[i]>=ENTITY_LASER_C_SLOW && sides2[i]<=ENTITY_LASER_C_FAST)  		 
+			   {  		 
+				   lgt->speed=1+(sides2[i]-ENTITY_LASER_C_SLOW)*2;  		 
+				   lgt->cur_length=lgt->length;  		 
+			   }  		 
+			   else if(sides2[i]>=ENTITY_LASER_O_SLOW && sides2[i]<=ENTITY_LASER_O_FAST)  		 
+			   {  		 
+				   lgt->speed=1+(sides2[i]-ENTITY_LASER_O_SLOW)*2;  		 
+				   lgt->cur_length=0;  		 
+			   }  		 
+			   else  		 
+				   lgt->cur_length=lgt->length;  		 
+		   }  		 
+		}  		 
+
+	}  		 
    else if(Index>=ENTITY_DRAGGER_WEAK && Index <=ENTITY_DRAGGER_STRONG)  		 
    {  		 
        new CDrager(&GameServer()->m_World,Pos,Index-ENTITY_DRAGGER_WEAK+1);  		 
@@ -282,7 +282,7 @@ void IGameController::Connector(vec2 Pos, CDoor* Door) {
 	for(int x = -1; x <= 1; ++x) {
 		for(int y = -1; y <= 1; ++y) {
 			if(x != 0 && y != 0) {
-				int side = GameServer()->Collision()->GetIndex(vec2(Pos.x + x,Pos.y + y),vec2(Pos.x + x,Pos.y + y));
+				int side = GameServer()->Collision()->Entitiy(x + x,y + y);
 				if (side == ENTITY_CONNECTOR_D + (i + 4) % 8) {
 					Connector(Pos + vec2(x, y), Door);
 				} else if(side == ENTITY_TRIGGER)

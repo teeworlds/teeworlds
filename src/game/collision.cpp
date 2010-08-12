@@ -79,9 +79,9 @@ int CCollision::GetIndex(vec2 PrevPos, vec2 Pos)
 	{
 		int nx = clamp((int)Pos.x/32, 0, m_Width-1);
 		int ny = clamp((int)Pos.y/32, 0, m_Height-1);
-		if (m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN)) dbg_msg("m_pTele && TELEIN","ny*m_Width+nx %d",ny*m_Width+nx);//REMOVE
+		/* if (m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN)) dbg_msg("m_pTele && TELEIN","ny*m_Width+nx %d",ny*m_Width+nx);//REMOVE
 		else if (m_pTele && m_pTele[ny*m_Width+nx].m_Type==TILE_TELEOUT) dbg_msg("TELEOUT","ny*m_Width+nx %d",ny*m_Width+nx);//REMOVE
-		else dbg_msg("GetIndex","ny*m_Width+nx %d",ny*m_Width+nx);//REMOVE
+		else dbg_msg("GetIndex","ny*m_Width+nx %d",ny*m_Width+nx);//REMOVE */
 		
 		if((m_pTiles[ny*m_Width+nx].m_Index >= TILE_BOOSTV && m_pTiles[ny*m_Width+nx].m_Index <= TILE_STOPT) ||
 				((m_pTiles[ny*m_Width+nx].m_Index >=TILE_STOPV)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
@@ -141,7 +141,11 @@ int CCollision::GetTile(int x, int y)
 	else
 		return 0;
 }
-
+int CCollision::Entitiy(int x, int y)
+{ 
+	int Index = m_pTiles[y*m_Width+x].m_Index;  		 
+	return Index-ENTITY_OFFSET;  
+}
 void CCollision::SetCollisionAt(float x, float y, int flag)
 {  		 
    int nx = clamp(round(x)/32, 0, m_Width-1);  		 
@@ -374,7 +378,7 @@ bool CCollision::IsSpeedup(int x, int y)
 	if(!m_pSpeedup)
 		return false;
 	
-	dbg_msg("test", "test");
+	/*dbg_msg("test", "test");//REMOVE*/
 	int nx = clamp(x/32, 0, m_pLayers->SpeedupLayer()->m_Width-1);
 	int ny = clamp(y/32, 0, m_pLayers->SpeedupLayer()->m_Height-1);
 	

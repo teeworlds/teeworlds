@@ -34,6 +34,7 @@ public:
 	void MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity);
 	bool TestBox(vec2 Pos, vec2 Size);
 	int GetTile(int x, int y);
+	int Entitiy(int x, int y);
 	//DDRace
 	int GetIndex(vec2 PrevPos, vec2 Pos);
 	vec2 GetPos(int Index);
