@@ -10,3 +10,15 @@ bam*
 build server.bat
 buildlog.txt
 autoexec.cfg
+teeworlds
+bam.exe
+*.bat
+teeworlds_d
+teeworlds_srv_d
+DDRace_Trunk*
+DDRace_Trunk_d*
+.cproject
+.project
+*.dtb
+*.log
+*.exe
