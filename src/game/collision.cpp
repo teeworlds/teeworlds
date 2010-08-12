@@ -125,7 +125,7 @@ vec2 CCollision::GetPos(int Index)
 
 int CCollision::GetCollisionDDRace(int Index)
 {
-	dbg_msg("GetCollisionDDRace","m_pTiles[%d].m_Index = %d",Index,m_pTiles[Index].m_Index);//Remove*/
+	/*dbg_msg("GetCollisionDDRace","m_pTiles[%d].m_Index = %d",Index,m_pTiles[Index].m_Index);//Remove*/
 	if(Index < 0)
 		return 0;
 	return m_pTiles[Index].m_Index;
@@ -402,28 +402,7 @@ void CCollision::GetSpeedup(int x, int y, vec2 *Dir, int *Force)
 	TmpDir.y = (Direction.x*sin(Angle)) + (Direction.y*cos(Angle));
 	*Dir = TmpDir;
 }
-	
-
-int CCollision::IsBegin(int Index)  		 
-{  		 
-   return Index == TILE_BEGIN;  		 
-}
-
-int CCollision::IsEnd(int Index)  		 
-{  		 
-	return Index == TILE_END;  		 
-}  		 
- 		 
-int CCollision::IsFreeze(int Index)  		 
-{  		 
-   return Index == TILE_FREEZE;
-}  		 
- 		 
-int CCollision::IsUnfreeze(int Index)  		 
-{
-   return Index == TILE_UNFREEZE;
-}   		 
- 		 
+		 
 int CCollision::IsCp(int x, int y)  		 
 {
 	int nx = clamp(x/32, 0, m_Width-1);
@@ -435,14 +414,6 @@ int CCollision::IsCp(int x, int y)
 		return 0;
 }
 
-int CCollision::IsBoost(int Index)  		 
-{  		 
-	if ((Index >= TILE_BOOST_L && Index <= TILE_BOOST_U) || (Index >= TILE_BOOST_L2 && Index <= TILE_BOOST_U2))  		 
-		return Index;  		 
-	else
-		return 0;  		 
-}  		 
- 		 
 vec2 CCollision::CpSpeed(int Index)  		 
 {  		 
  		 
