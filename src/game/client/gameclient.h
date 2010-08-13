@@ -75,6 +75,8 @@ public:
 	class CLayers *Layers() { return &m_Layers; };
 	class CCollision *Collision() { return &m_Collision; };
 	
+	int NetobjNumCorrections() { return m_NetObjHandler.NumObjCorrections(); }
+	const char *NetobjCorrectedOn() { return m_NetObjHandler.CorrectedObjOn(); }
 
 	bool m_SuppressEvents;
 	bool m_NewTick;
