@@ -20,15 +20,16 @@ allowed_words = []
 
 allowed_words += ["qsort"] # stdio / stdlib
 allowed_words += ["size_t", "cosf", "sinf", "asinf", "acosf", "atanf", "powf", "fabs", "rand", "powf", "fmod", "sqrtf"] # math.h
+allowed_words += ["time_t", "time", "strftime", "localtime"] # time.h
 allowed_words += [ # system.h
 	"int64",
-	"dbg_assert", "dbg_msg", "dbg_break", "dbg_logger_stdout", "dbg_logger_debugger",
+	"dbg_assert", "dbg_msg", "dbg_break", "dbg_logger_stdout", "dbg_logger_debugger", "dbg_logger_file",
 	"mem_alloc", "mem_zero", "mem_free", "mem_copy", "mem_move", "mem_comp", "mem_stats", "total_allocations", "allocated",
 	"thread_create", "thread_sleep", "lock_wait", "lock_create", "lock_release", "lock_destroy", "swap_endian",
 	"io_open", "io_read", "io_read", "io_write", "io_flush", "io_close", "io_seek", "io_skip", "io_tell", "io_length",
 	"str_comp", "str_length", "str_quickhash", "str_format", "str_copy", "str_comp_nocase", "str_sanitize", "str_append",
 	"str_comp_num", "str_find_nocase", "str_sanitize_strong", "str_uppercase", "str_toint", "str_tofloat",
-	"str_utf8_encode", "str_utf8_rewind", "str_utf8_forward", "str_utf8_decode",
+	"str_utf8_encode", "str_utf8_rewind", "str_utf8_forward", "str_utf8_decode", "str_sanitize_cc", "str_skip_whitespaces",
 	"fs_makedir", "fs_listdir", "fs_storage_path", "fs_is_dir",
 	"net_init", "net_addr_comp", "net_host_lookup", "net_addr_str", "type", "port", "net_addr_from_str", 
 	"net_udp_create", "net_udp_send", "net_udp_recv", "net_udp_close", "net_socket_read_wait",
@@ -40,7 +41,7 @@ allowed_words += ["vec2", "vec3", "vec4", "round", "clamp", "length", "dot", "no
 allowed_words += [  # tl
 	"array", "sorted_array", "string",
 	"all", "sort", "add", "remove_index", "remove", "delete_all", "set_size",
-	"base_ptr", "size", "swap", "empty", "front", "pop_front", "find_binary", "find_linear", "clear", "range", "end"
+	"base_ptr", "size", "swap", "empty", "front", "pop_front", "find_binary", "find_linear", "clear", "range", "end", "cstr",
 	"partition_linear", "partition_binary"]
 allowed_words += ["fx2f", "f2fx"] # fixed point math
 

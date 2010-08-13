@@ -237,13 +237,13 @@ Messages = [
 	]),
 	
 	NetMessage("Sv_VoteOption", [
-		NetString("m_pCommand"),
+		NetStringStrict("m_pCommand"),
 	]),
 
 	NetMessage("Sv_VoteSet", [
 		NetIntRange("m_Timeout", 0, 60),
-		NetString("m_pDescription"),
-		NetString("m_pCommand"),
+		NetStringStrict("m_pDescription"),
+		NetStringStrict("m_pCommand"),
 	]),
 
 	NetMessage("Sv_VoteStatus", [
@@ -264,16 +264,16 @@ Messages = [
 	]),
 	
 	NetMessage("Cl_StartInfo", [
-		NetString("m_pName"),
-		NetString("m_pSkin"),
+		NetStringStrict("m_pName"),
+		NetStringStrict("m_pSkin"),
 		NetBool("m_UseCustomColor"),
 		NetIntAny("m_ColorBody"),
 		NetIntAny("m_ColorFeet"),
 	]),	
 
 	NetMessage("Cl_ChangeInfo", [
-		NetString("m_pName"),
-		NetString("m_pSkin"),
+		NetStringStrict("m_pName"),
+		NetStringStrict("m_pSkin"),
 		NetBool("m_UseCustomColor"),
 		NetIntAny("m_ColorBody"),
 		NetIntAny("m_ColorFeet"),
@@ -290,8 +290,8 @@ Messages = [
 	]),
 	
 	NetMessage("Cl_CallVote", [
-		NetString("m_Type"),
-		NetString("m_Value"),
+		NetStringStrict("m_Type"),
+		NetStringStrict("m_Value"),
 	]),
 	
 	NetMessage("Cl_IsRace", []),

@@ -1092,6 +1092,18 @@ void str_sanitize_strong(char *str_in)
 	}
 }
 
+/* makes sure that the string only contains the characters between 32 and 255 */
+void str_sanitize_cc(char *str_in)
+{
+	unsigned char *str = (unsigned char *)str_in;
+	while(*str)
+	{
+		if(*str < 32)
+			*str = ' ';
+		str++;
+	}
+}
+
 /* makes sure that the string only contains the characters between 32 and 255 + \r\n\t */
 void str_sanitize(char *str_in)
 {
@@ -1102,6 +1114,13 @@ void str_sanitize(char *str_in)
 			*str = ' ';
 		str++;
 	}
+}
+
+char *str_skip_whitespaces(char *str)
+{
+	while(*str && (*str == ' ' || *str == '\t' || *str == '\n' || *str == '\r'))
+		str++;
+	return str;
 }
 
 /* case */

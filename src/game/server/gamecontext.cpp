@@ -746,15 +746,6 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		p->m_TeeInfos.m_ColorBody = pMsg->m_ColorBody;
 		p->m_TeeInfos.m_ColorFeet = pMsg->m_ColorFeet;
 
-		// check for invalid chars
-		unsigned char *pName = (unsigned char *)pMsg->m_pName;
-		while (*pName)
-		{
-			if(*pName < 32)
-				*pName = ' ';
-			pName++;
-		}
-
 		// copy old name
 		char aOldName[MAX_NAME_LENGTH];
 		str_copy(aOldName, Server()->ClientName(ClientId), MAX_NAME_LENGTH);

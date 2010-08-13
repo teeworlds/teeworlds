@@ -124,6 +124,7 @@ void CGameClient::OnConsoleInit()
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pDemoPlayer = Kernel()->RequestInterface<IDemoPlayer>();
+	m_pDemoRecorder = Kernel()->RequestInterface<IDemoRecorder>();
 	m_pServerBrowser = Kernel()->RequestInterface<IServerBrowser>();
 	
 	// setup pointers
@@ -1115,6 +1116,11 @@ void CGameClient::OnNewSnapshot()
 			m_Snap.m_pLocalCharacter = &c->m_Cur;
 			m_Snap.m_pLocalPrevCharacter = &c->m_Prev;
 			m_LocalCharacterPos = vec2(m_Snap.m_pLocalCharacter->m_X, m_Snap.m_pLocalCharacter->m_Y);
+		}
+		else if(Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_CHARACTER, m_Snap.m_LocalCid))
+		{
+			// player died
+			m_pControls->OnPlayerDeath();
 		}
 	}
 	else

@@ -58,6 +58,17 @@ public:
 		#undef MACRO_CONFIG_INT 
 		#undef MACRO_CONFIG_STR 		
 	}
+
+	virtual void RestoreStrings()
+	{
+		#define MACRO_CONFIG_INT(Name,ScriptName,def,min,max,flags,desc)	// nop
+		#define MACRO_CONFIG_STR(Name,ScriptName,len,def,flags,desc) if(!g_Config.m_##Name[0] && def[0]) str_copy(g_Config.m_##Name, def, len);
+
+		#include "config_variables.h"
+
+		#undef MACRO_CONFIG_INT
+		#undef MACRO_CONFIG_STR
+	}
 	
 	virtual void Save()
 	{

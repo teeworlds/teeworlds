@@ -36,7 +36,7 @@
 
 static const char *StrLtrim(const char *pStr)
 {
-	while(*pStr && *pStr <= 32)
+	while(*pStr && *pStr >= 0 && *pStr <= 32)
 		pStr++;
 	return pStr;
 }
@@ -46,7 +46,7 @@ static void StrRtrim(char *pStr)
 	int i = str_length(pStr);
 	while(i >= 0)
 	{
-		if(pStr[i] > 32)
+		if(pStr[i] < 0 || pStr[i] > 32)
 			break;
 		pStr[i] = 0;
 		i--;
@@ -613,7 +613,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		{
 			char aVersion[64];
 			const char *pPassword;
-			str_copy(aVersion, Unpacker.GetString(), 64);
+			str_copy(aVersion, Unpacker.GetString(CUnpacker::SANITIZE_CC), 64);
 			if(str_comp(aVersion, GameServer()->NetVersion()) != 0)
 			{
 				// OH FUCK! wrong version, drop him
@@ -623,9 +623,9 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				return;
 			}
 			
-			str_copy(m_aClients[ClientId].m_aName, Unpacker.GetString(), MAX_NAME_LENGTH);
-			str_copy(m_aClients[ClientId].m_aClan, Unpacker.GetString(), MAX_CLANNAME_LENGTH);
-			pPassword = Unpacker.GetString();
+			str_copy(m_aClients[ClientId].m_aName, Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), MAX_NAME_LENGTH);
+			str_copy(m_aClients[ClientId].m_aClan, Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), MAX_CLANNAME_LENGTH);
+			pPassword = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 			
 			if(g_Config.m_Password[0] != 0 && str_comp(g_Config.m_Password, pPassword) != 0)
 			{
@@ -762,7 +762,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			{
 				const char *pPw;
 				Unpacker.GetString(); // login name, not used
-				pPw = Unpacker.GetString();
+				pPw = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 				
 				if(Unpacker.Error() == 0)
 				{
@@ -1432,6 +1432,9 @@ int main(int argc, const char **argv) // ignore_convention
 	// parse the command line arguments
 	if(argc > 1) // ignore_convention
 		pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
+
+	// restore empty config strings to their defaults
+	pConfig->RestoreStrings();
 	
 	pServer->Engine()->InitLogfile();
 

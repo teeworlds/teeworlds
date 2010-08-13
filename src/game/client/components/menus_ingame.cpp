@@ -1,7 +1,8 @@
+#include <time.h>
 
 #include <base/math.h>
 
-
+#include <engine/demo.h>
 #include <engine/serverbrowser.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
@@ -147,6 +148,26 @@ void CMenus::RenderGame(CUIRect MainView)
 				DoEditBox(g_Config.m_ClLvlxPass, &Button, g_Config.m_ClLvlxPass, sizeof(g_Config.m_ClLvlxPass), 10.0f, &PassOffset, true);
 			}
 		}
+	}
+
+	MainView.VSplitLeft(100.0f, &Button, &MainView);
+	MainView.VSplitLeft(150.0f, &Button, &MainView);
+
+	static int s_DemoButton = 0;
+	bool Recording = DemoRecorder()->IsRecording();
+	if(DoButton_Menu(&s_DemoButton, Localize(Recording ? "Stop record" : "Record demo"), 0, &Button))	// Localize("Stop record");Localize("Record demo");
+	{
+		if(!Recording)
+		{
+			char aFilename[128];
+			time_t Time;
+			time(&Time);
+			tm* TimeInfo = localtime(&Time);
+			strftime(aFilename, sizeof(aFilename), "demo-%Y-%m-%d_%H-%M-%S", TimeInfo);
+			Client()->DemoRecorder_Start(aFilename);
+		}
+		else
+			DemoRecorder()->Stop();
 	}
 	
 	/*
