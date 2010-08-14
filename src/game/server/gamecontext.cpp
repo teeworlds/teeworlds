@@ -1437,33 +1437,32 @@ void CGameContext::ConTimer(IConsole::IResult *pResult, void *pUserData, int cid
 	CServer* serv = (CServer*)pSelf->Server();
 	if(!g_Config.m_SvTimer) {
 			
-		if(pResult->NumArguments() != 2) {
-			serv->SendRconLine(cid, "Need 2 arguments for this command");
-			return;
-		}
 		int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 		int type = pResult->GetInteger(1);
 		
-		CCharacter* chr = pSelf->m_apPlayers[cid1]->GetCharacter();
-		if (!chr)
-			return;
-		if (type>1 || type<0)
-		{
-			serv->SendRconLine(cid, "Select 0 for no time & 1 for with time");
-		}
-		else
-		{	
-			if(type)
+		CPlayer* pl = pSelf->m_apPlayers[cid1];
+		if(pl != 0) {
+			CCharacter* chr = pl->GetCharacter();
+			if (!chr)
+				return;
+			if (type>1 || type<0)
 			{
-				chr->m_RaceState = RACE_STARTED;
-				str_format(buf, sizeof(buf), "Cid=%d Has time now",cid1);
+				serv->SendRconLine(cid, "Select 0 for no time & 1 for with time");
 			}
-			else if(!type)
-			{
-				chr->m_RaceState=RACE_CHEAT;
-				str_format(buf, sizeof(buf), "Cid=%d Hasn't time now",cid1);
+			else
+			{	
+				if(type)
+				{
+					chr->m_RaceState = RACE_STARTED;
+					str_format(buf, sizeof(buf), "Cid=%d Has time now",cid1);
+				}
+				else if(!type)
+				{
+					chr->m_RaceState=RACE_CHEAT;
+					str_format(buf, sizeof(buf), "Cid=%d Hasn't time now",cid1);
+				}
+				serv->SendRconLine(cid1, buf);
 			}
-			serv->SendRconLine(cid1, buf);
 		}
 	} else {
 		
