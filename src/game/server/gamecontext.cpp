@@ -1434,16 +1434,19 @@ void CGameContext::ConTimer(IConsole::IResult *pResult, void *pUserData, int cid
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	char buf[128];
+	CServer* serv = (CServer*)pSelf->Server();
 	if(!g_Config.m_SvTimer) {
 			
-		
+		if(pResult->NumArguments() != 2) {
+			serv->SendRconLine(cid, "Need 2 arguments for this command");
+			return;
+		}
 		int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 		int type = pResult->GetInteger(1);
 		
 		CCharacter* chr = pSelf->m_apPlayers[cid1]->GetCharacter();
 		if (!chr)
 			return;
-		CServer* serv = (CServer*)pSelf->Server();
 		if (type>1 || type<0)
 		{
 			serv->SendRconLine(cid, "Select 0 for no time & 1 for with time");
@@ -1463,8 +1466,8 @@ void CGameContext::ConTimer(IConsole::IResult *pResult, void *pUserData, int cid
 			serv->SendRconLine(cid1, buf);
 		}
 	} else {
-		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(cid, "Commant timer does't allowd");
+		
+		serv->SendRconLine(cid, "Command timer does't allowed");
 	}
 }
 
