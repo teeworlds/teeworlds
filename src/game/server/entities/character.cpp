@@ -67,7 +67,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_OlderPos = Pos;
 	m_OldPos = Pos;
 	m_RaceState = RACE_NONE;
-	
+	m_PrevPos = Pos;
 	m_Core.Reset();
 	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision());
 	m_Core.m_Pos = m_Pos;
@@ -557,8 +557,8 @@ void CCharacter::OnDirectInput(CNetObj_PlayerInput *pNewInput)
 
 void CCharacter::Tick()
 {
-	int TileIndex = GameServer()->Collision()->GetIndex(m_PrevPos, m_Pos);
-
+	int MapIndex = GameServer()->Collision()->GetIndex(m_PrevPos, m_Pos);
+	int TileIndex = GameServer()->Collision()->GetCollisionDDRace(MapIndex);
 	if(m_RaceState == RACE_PAUSE) {
 		m_Input.m_Direction = 0;
 		m_Input.m_Jump = 0;
@@ -600,10 +600,11 @@ void CCharacter::Tick()
 		m_Core.m_HookTick = 0;
 	if (m_Super && m_Core.m_Jumped > 1)
 		m_Core.m_Jumped = 1; 
-	dbg_msg("character","TileIndex%d",TileIndex); //REMOVE*/
+	/*dbg_msg("character","TileIndex%d",TileIndex); //REMOVE*/
 	//DDRace  		 
 	char aBuftime[128];
 	float time = (float)(Server()->Tick() - m_StartTime) / ((float)Server()->TickSpeed());
+	int z = GameServer()->Collision()->IsTeleport(m_Pos.x, m_Pos.y);
 	if(Server()->Tick() - m_RefreshTime >= Server()->TickSpeed())  		 
 	{
 		//GameServer()->SendBroadcast("FIRST_IF", m_pPlayer->GetCID());
@@ -618,13 +619,13 @@ void CCharacter::Tick()
 		}
 		m_RefreshTime = Server()->Tick();
 	}
-	if(GameServer()->Collision()->IsBegin(GameServer()->Collision()->GetCollisionDDRace(TileIndex)) && m_RaceState == RACE_NONE)  		 
+	else if((TileIndex == TILE_BEGIN) && (m_RaceState == RACE_NONE || m_RaceState == RACE_STARTED))
 	{
 		m_StartTime = Server()->Tick();
 		m_RefreshTime = Server()->Tick();
 		m_RaceState = RACE_STARTED;
 	}
-	if(GameServer()->Collision()->IsEnd(GameServer()->Collision()->GetCollisionDDRace(TileIndex)) && m_RaceState == RACE_STARTED)
+	else if((TileIndex == TILE_END) && m_RaceState == RACE_STARTED)
 	{
 		char aBuf[128];
 		if ((int)time / 60 != 0)
@@ -648,18 +649,58 @@ void CCharacter::Tick()
 		if(strncmp(Server()->ClientName(m_pPlayer->GetCID()), "nameless tee", 12) != 0)
 			((CGameControllerDDRace*)GameServer()->m_pController)->m_Score.ParsePlayer(Server()->ClientName(m_pPlayer->GetCID()), (float)time);
 	}
-	if(GameServer()->Collision()->IsFreeze(GameServer()->Collision()->GetCollisionDDRace(TileIndex)) && !m_Super)
+	else if((TileIndex == TILE_FREEZE) && !m_Super)
 	{
 		Freeze(Server()->TickSpeed()*3);
 	}
-	if(GameServer()->Collision()->IsUnfreeze(GameServer()->Collision()->GetCollisionDDRace(TileIndex)) && !m_Super)
+	else if(TileIndex == TILE_UNFREEZE)
 	{
 		UnFreeze();
 	}
-	int booster = GameServer()->Collision()->IsBoost(GameServer()->Collision()->GetCollisionDDRace(TileIndex));
-	m_Core.m_Vel += GameServer()->Collision()->BoostAccelerator(booster);
-	//
-	if(GameServer()->Collision()->IsSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y))
+	else if ((TileIndex >= TILE_BOOST_L && TileIndex <= TILE_BOOST_U) || (TileIndex >= TILE_BOOST_L2 && TileIndex <= TILE_BOOST_U2))
+	{
+		int booster = TileIndex;
+		m_Core.m_Vel += GameServer()->Collision()->BoostAccelerator(booster);
+	}	
+	else if(GameServer()->Collision()->GetCollisionDDRace(TileIndex) == TILE_STOPL)
+	{
+		if(m_Core.m_Vel.x > 0)
+		{
+			if((int)GameServer()->Collision()->GetPos(TileIndex).x < (int)m_Core.m_Pos.x)
+				m_Core.m_Pos.x = m_PrevPos.x;
+			m_Core.m_Vel.x = 0;
+		}
+	}
+	else if(GameServer()->Collision()->GetCollisionDDRace(TileIndex) == TILE_STOPR)
+	{
+		if(m_Core.m_Vel.x < 0)
+		{
+			if((int)GameServer()->Collision()->GetPos(TileIndex).x > (int)m_Core.m_Pos.x)
+				m_Core.m_Pos.x = m_PrevPos.x;
+			m_Core.m_Vel.x = 0;
+		}
+	}
+	else if(GameServer()->Collision()->GetCollisionDDRace(TileIndex) == TILE_STOPB)
+	{
+		if(m_Core.m_Vel.y < 0)
+		{
+			if((int)GameServer()->Collision()->GetPos(TileIndex).y > (int)m_Core.m_Pos.y)
+				m_Core.m_Pos.y = m_PrevPos.y;
+			m_Core.m_Vel.y = 0;
+		}
+	}
+	else if(GameServer()->Collision()->GetCollisionDDRace(TileIndex) == TILE_STOPT)
+	{
+		if(m_Core.m_Vel.y > 0)
+		{
+			if((int)GameServer()->Collision()->GetPos(TileIndex).y < (int)m_Core.m_Pos.y)
+				m_Core.m_Pos.y = m_PrevPos.y;
+			if(m_Jumped&3 && m_Core.m_Jumped != m_Jumped) // check double jump
+				m_Core.m_Jumped = m_Jumped;
+			m_Core.m_Vel.y = 0;
+		}
+	}
+	else if(GameServer()->Collision()->IsSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y))
 	{
 		vec2 Direction;
 		int Force;
@@ -667,8 +708,7 @@ void CCharacter::Tick()
 		
 		m_Core.m_Vel += Direction*Force;
 	}
-	int z = GameServer()->Collision()->IsTeleport(m_Pos.x, m_Pos.y); 
-	if(z)
+	else if(z)
 	{
 		m_Core.m_HookedPlayer = -1;
 		m_Core.m_HookState = HOOK_RETRACTED;

@@ -45,12 +45,7 @@ public:
 	void GetSpeedup(int x, int y, vec2 *Dir, int *Force);
 	
 	int IsSolid(int x, int y);
-	int IsBegin(int Index);
 	int IsNoLaser(int x, int y);
-	int IsEnd(int Index);
-	int IsBoost(int Index);
-	int IsFreeze(int Index);
-	int IsUnfreeze(int Index);
 	int IsCp(int x, int y);
 
 	vec2 BoostAccelerator(int Index);
