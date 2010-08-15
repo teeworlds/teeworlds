@@ -165,7 +165,10 @@ int CCollision::GetTile(int x, int y)
 	int nx = clamp(x/32, 0, m_Width-1);
 	int ny = clamp(y/32, 0, m_Height-1);
 	/*dbg_msg("GetTile","m_Index %d",m_pTiles[ny*m_Width+nx].m_Index);//Remove */
-	if(m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_SOLID || m_pTiles[ny*m_Width+nx].m_Index == (COLFLAG_SOLID|COLFLAG_NOHOOK) || m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_DEATH)
+	if(m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_SOLID 
+		|| m_pTiles[ny*m_Width+nx].m_Index == (COLFLAG_SOLID|COLFLAG_NOHOOK) 
+		|| m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_DEATH 
+		|| m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_NOLASER)
 		return m_pTiles[ny*m_Width+nx].m_Index;
 	else
 		return 0;

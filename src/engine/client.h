@@ -74,6 +74,7 @@ public:
 	virtual void Disconnect() = 0;
 	virtual void Quit() = 0;
 	virtual const char *DemoPlayer_Play(const char *pFilename) = 0;
+	virtual void DemoRecorder_Start(const char *pFilename) = 0;
 
 	// networking
 	virtual void EnterGame() = 0;

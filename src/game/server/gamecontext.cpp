@@ -941,15 +941,6 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			p->m_TeeInfos.m_ColorFeet = pMsg->m_ColorFeet;
 		}
 
-		// check for invalid chars
-		unsigned char *pName = (unsigned char *)pMsg->m_pName;
-		while (*pName)
-		{
-			if(*pName < 32)
-				*pName = ' ';
-			pName++;
-		}
-
 		// copy old name
 		char aOldName[MAX_NAME_LENGTH];
 		str_copy(aOldName, Server()->ClientName(ClientId), MAX_NAME_LENGTH);
@@ -1434,37 +1425,39 @@ void CGameContext::ConTimer(IConsole::IResult *pResult, void *pUserData, int cid
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	char buf[128];
+	CServer* serv = (CServer*)pSelf->Server();
 	if(!g_Config.m_SvTimer) {
 			
-		
 		int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 		int type = pResult->GetInteger(1);
 		
-		CCharacter* chr = pSelf->m_apPlayers[cid1]->GetCharacter();
-		if (!chr)
-			return;
-		CServer* serv = (CServer*)pSelf->Server();
-		if (type>1 || type<0)
-		{
-			serv->SendRconLine(cid, "Select 0 for no time & 1 for with time");
-		}
-		else
-		{	
-			if(type)
+		CPlayer* pl = pSelf->m_apPlayers[cid1];
+		if(pl != 0) {
+			CCharacter* chr = pl->GetCharacter();
+			if (!chr)
+				return;
+			if (type>1 || type<0)
 			{
-				chr->m_RaceState = RACE_STARTED;
-				str_format(buf, sizeof(buf), "Cid=%d Has time now",cid1);
+				serv->SendRconLine(cid, "Select 0 for no time & 1 for with time");
 			}
-			else if(!type)
-			{
-				chr->m_RaceState=RACE_CHEAT;
-				str_format(buf, sizeof(buf), "Cid=%d Hasn't time now",cid1);
+			else
+			{	
+				if(type)
+				{
+					chr->m_RaceState = RACE_STARTED;
+					str_format(buf, sizeof(buf), "Cid=%d Has time now",cid1);
+				}
+				else if(!type)
+				{
+					chr->m_RaceState=RACE_CHEAT;
+					str_format(buf, sizeof(buf), "Cid=%d Hasn't time now",cid1);
+				}
+				serv->SendRconLine(cid1, buf);
 			}
-			serv->SendRconLine(cid1, buf);
 		}
 	} else {
-		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(cid, "Commant timer does't allowd");
+		
+		serv->SendRconLine(cid, "Command timer does't allowed");
 	}
 }
 

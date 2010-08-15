@@ -79,7 +79,9 @@ bool CServerBrowser::SortCompareName(int Index1, int Index2) const
 {
 	CServerEntry *a = m_ppServerlist[Index1];
 	CServerEntry *b = m_ppServerlist[Index2];
-	return str_comp(a->m_Info.m_aName, b->m_Info.m_aName) < 0;
+	//	make sure empty entries are listed last
+	return (a->m_GotInfo && b->m_GotInfo) || (!a->m_GotInfo && !b->m_GotInfo) ?  str_comp(a->m_Info.m_aName, b->m_Info.m_aName) < 0 :
+			a->m_GotInfo ? true : false;
 }
 
 bool CServerBrowser::SortCompareMap(int Index1, int Index2) const
@@ -362,7 +364,7 @@ CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR &Addr)
 	str_format(pEntry->m_Info.m_aAddress, sizeof(pEntry->m_Info.m_aAddress), "%d.%d.%d.%d:%d",
 		Addr.ip[0], Addr.ip[1], Addr.ip[2],
 		Addr.ip[3], Addr.port);
-	str_format(pEntry->m_Info.m_aName, sizeof(pEntry->m_Info.m_aName), "\255%d.%d.%d.%d:%d", // the \255 is to make sure that it's sorted last
+	str_format(pEntry->m_Info.m_aName, sizeof(pEntry->m_Info.m_aName), "%d.%d.%d.%d:%d",
 		Addr.ip[0], Addr.ip[1], Addr.ip[2],
 		Addr.ip[3], Addr.port);
 

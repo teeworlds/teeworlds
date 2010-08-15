@@ -114,7 +114,7 @@ int CUnpacker::GetInt()
 	return i;
 }
 
-const char *CUnpacker::GetString()
+const char *CUnpacker::GetString(int SanitizeType)
 {
 	if(m_Error || m_pCurrent >= m_pEnd)
 		return "";
@@ -132,8 +132,11 @@ const char *CUnpacker::GetString()
 	m_pCurrent++;
 	
 	// sanitize all strings
-	str_sanitize(pPtr);
-	return pPtr;
+	if(SanitizeType&SANITIZE)
+		str_sanitize(pPtr);
+	else if(SanitizeType&SANITIZE_CC)
+		str_sanitize_cc(pPtr);
+	return SanitizeType&SKIP_START_WHITESPACES ? str_skip_whitespaces(pPtr) : pPtr;
 }
 
 const unsigned char *CUnpacker::GetRaw(int Size)

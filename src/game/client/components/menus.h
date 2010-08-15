@@ -33,6 +33,7 @@ class CMenus : public CComponent
 
 
 	int DoButton_DemoPlayer(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	int DoButton_DemoPlayer_Sprite(const void *pID, int spriteId, int Checked, const CUIRect *pRect);
 	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 	int DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners);
 	int DoButton_SettingsTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect);

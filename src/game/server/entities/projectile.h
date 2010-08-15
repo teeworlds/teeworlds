@@ -9,6 +9,7 @@ public:
 
 	vec2 GetPos(float Time);
 	void FillInfo(CNetObj_Projectile *pProj);
+	void SetBouncing(int Value);
 
 	virtual void Reset();
 	virtual void Tick();

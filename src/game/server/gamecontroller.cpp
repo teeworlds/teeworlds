@@ -156,6 +156,51 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 			}
 		}
 	}
+	else if(Index >= ENTITY_CRAZY_SHOTGUN_U_EX && Index <= ENTITY_CRAZY_SHOTGUN_L_EX)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			if (Index - ENTITY_CRAZY_SHOTGUN_U_EX == i)
+			{
+				float Deg = i*(pi/2);
+				CProjectile *bullet = new CProjectile(&GameServer()->m_World, 
+					WEAPON_SHOTGUN, //Type
+					-1, //Owner
+					Pos, //Pos
+					vec2(sin(Deg),cos(Deg)), //Dir
+					-2, //Span
+					true, //Freeze
+					true, //Explosive
+					0, 
+					SOUND_GRENADE_EXPLODE, 
+					WEAPON_SHOTGUN);
+				bullet->SetBouncing(2 - (i % 2));
+
+			}
+		}
+	}
+	else if(Index >= ENTITY_CRAZY_SHOTGUN_U && Index <= ENTITY_CRAZY_SHOTGUN_L)
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			if (Index - ENTITY_CRAZY_SHOTGUN_U == i)
+			{
+				float Deg = i*(pi/2);
+				CProjectile *bullet = new CProjectile(&GameServer()->m_World, 
+					WEAPON_SHOTGUN, //Type
+					-1, //Owner
+					Pos, //Pos
+					vec2(sin(Deg),cos(Deg)), //Dir
+					-2, //Span
+					true, //Freeze
+					false, //Explosive
+					0, 
+					SOUND_GRENADE_EXPLODE, 
+					WEAPON_SHOTGUN);
+				bullet->SetBouncing(2 - (i % 2));
+			}
+		}
+	}
 	
 	if(Index == ENTITY_ARMOR_1)
 		Type = POWERUP_ARMOR;

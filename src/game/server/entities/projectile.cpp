@@ -55,6 +55,9 @@ vec2 CProjectile::GetPos(float Time)
 	return CalcPos(m_Pos, m_Direction, Curvature, Speed, Time);
 }
 
+void CProjectile::SetBouncing(int Value) {
+	m_Bouncing = Value;
+}
 
 void CProjectile::Tick()
 {
@@ -73,7 +76,7 @@ void CProjectile::Tick()
 	if(m_Owner >= 0)
 		OwnerChar = GameServer()->GetPlayerChar(m_Owner);
 	
-	CCharacter *TargetChr = GameServer()->m_World.IntersectCharacter(PrevPos, ColPos, (m_Freeze) ? 1.0f : 6.0f, ColPos, OwnerChar);//TODO кажется тут баг с движением во фризе
+	CCharacter *TargetChr = GameServer()->m_World.IntersectCharacter(PrevPos, ColPos, (m_Freeze) ? 1.0f : 6.0f, ColPos, OwnerChar);
 
 	if(m_LifeSpan > -1)
 		m_LifeSpan--;

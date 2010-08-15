@@ -496,6 +496,7 @@ int CEditor::UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, int Cu
 					Current = Max;
 			}
 		}
+		m_pTooltip = Localize("Use left mouse button to drag and the change the value. Hold shift to be more precise.");
 	}
 	else if(UI()->HotItem() == pId)
 	{
@@ -505,6 +506,7 @@ int CEditor::UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, int Cu
 			s_Value = 0;
 			UI()->SetActiveItem(pId);
 		}
+		m_pTooltip = Localize("Use left mouse button to drag and the change the value. Hold shift to be more precise.");
 	}
 
 	if(Inside)
