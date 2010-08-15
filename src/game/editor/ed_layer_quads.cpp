@@ -5,6 +5,7 @@
 #include "ed_editor.h"
 #include <game/generated/client_data.h>
 #include <game/client/render.h>
+#include <game/localization.h>
 
 CLayerQuads::CLayerQuads()
 {
@@ -220,7 +221,7 @@ int CLayerQuads::RenderProperties(CUIRect *pToolBox)
 	};
 	
 	CProperty aProps[] = {
-		{"Image", m_Image, PROPTYPE_IMAGE, -1, 0},
+		{Localize("Image"), m_Image, PROPTYPE_IMAGE, -1, 0},
 		{0},
 	};
 	
