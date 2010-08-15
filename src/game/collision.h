@@ -36,13 +36,14 @@ public:
 	int GetTile(int x, int y);
 	int Entitiy(int x, int y);
 	//DDRace
-	int GetIndex(vec2 PrevPos, vec2 Pos);
+	int GetMapIndex(vec2 PrevPos, vec2 Pos);
 	vec2 GetPos(int Index);
 	int GetCollisionDDRace(int Index);
 	int IsTeleport(int x, int y);
 	int IsCheckpoint(int Index);
 	bool IsSpeedup(int x, int y);
 	void GetSpeedup(int x, int y, vec2 *Dir, int *Force);
+	bool IsFront(int x, int y);
 	
 	int IsSolid(int x, int y);
 	int IsNoLaser(int x, int y);
@@ -53,7 +54,7 @@ public:
 	
 	class CTeleTile *m_pTele;
 	class CSpeedupTile *m_pSpeedup;
-	class CFrontTile *m_pFront;
+	class CTile *m_pFront;
 	class CLayers *Layers() { return m_pLayers; }
 };
 

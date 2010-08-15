@@ -557,7 +557,7 @@ void CCharacter::OnDirectInput(CNetObj_PlayerInput *pNewInput)
 
 void CCharacter::Tick()
 {
-	int MapIndex = GameServer()->Collision()->GetIndex(m_PrevPos, m_Pos);
+	int MapIndex = GameServer()->Collision()->GetMapIndex(m_PrevPos, m_Pos);
 	int TileIndex = GameServer()->Collision()->GetCollisionDDRace(MapIndex);
 	if(m_RaceState == RACE_PAUSE) {
 		m_Input.m_Direction = 0;
@@ -700,6 +700,8 @@ void CCharacter::Tick()
 			m_Core.m_Vel.y = 0;
 		}
 	}
+	else if(GameServer()->Collision()->IsFront((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y))
+		;
 	else if(GameServer()->Collision()->IsSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y))
 	{
 		vec2 Direction;
