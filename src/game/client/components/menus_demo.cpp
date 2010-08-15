@@ -1,15 +1,17 @@
 
 #include <base/math.h>
 
-
 #include <engine/demo.h>
 #include <engine/keys.h>
+#include <engine/graphics.h>
 
 #include <game/client/render.h>
 #include <game/client/gameclient.h>
 #include <game/localization.h>
 
 #include <game/client/ui.h>
+
+#include <game/generated/client_data.h>
 
 #include "menus.h"
 
@@ -18,6 +20,19 @@ int CMenus::DoButton_DemoPlayer(const void *pID, const char *pText, int Checked,
 	RenderTools()->DrawUIRect(pRect, vec4(1,1,1, Checked ? 0.10f : 0.5f)*ButtonColorMul(pID), CUI::CORNER_ALL, 5.0f);
 	UI()->DoLabel(pRect, pText, 14.0f, 0);
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
+}
+
+int CMenus::DoButton_DemoPlayer_Sprite(const void *pID, int spriteId, int Checked, const CUIRect *pRect)
+{
+	RenderTools()->DrawUIRect(pRect, vec4(1,1,1, Checked ? 0.10f : 0.5f)*ButtonColorMul(pID), CUI::CORNER_ALL, 5.0f);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_DEMOBUTTONS].m_Id);
+	Graphics()->QuadsBegin();
+	RenderTools()->SelectSprite(spriteId);
+	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+	
+	return UI()->DoButtonLogic(pID, "", Checked, pRect);
 }
 
 void CMenus::RenderDemoPlayer(CUIRect MainView)
@@ -111,33 +126,34 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	{
 		// do buttons
 		CUIRect Button;
-
-		// pause button
+		
+		// combined play and pause button
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
-		static int s_PauseButton = 0;
-		if(DoButton_DemoPlayer(&s_PauseButton, "| |", pInfo->m_Paused, &Button))
+		static int s_PlayPauseButton = 0;
+		if(!pInfo->m_Paused)
 		{
-			if(pInfo->m_Paused)
-				DemoPlayer()->Unpause();
-			else
+			if(DoButton_DemoPlayer_Sprite(&s_PlayPauseButton, SPRITE_DEMOBUTTON_PAUSE, pInfo->m_Paused, &Button))
 				DemoPlayer()->Pause();
 		}
+		else
+		{
+			if(DoButton_DemoPlayer_Sprite(&s_PlayPauseButton, SPRITE_DEMOBUTTON_PLAY, !pInfo->m_Paused, &Button))
+			DemoPlayer()->Unpause();
+		}
 		
-		// play button
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
-		static int s_PlayButton = 0;
-		if(DoButton_DemoPlayer(&s_PlayButton, ">", !pInfo->m_Paused, &Button))
+		static int s_ResetButton = 0;
+		if(DoButton_DemoPlayer_Sprite(&s_ResetButton, SPRITE_DEMOBUTTON_RESET, false, &Button))
 		{
-			DemoPlayer()->Unpause();
-			DemoPlayer()->SetSpeed(1.0f);
+			DemoPlayer()->SetPos(0);
 		}
 
 		// slowdown
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_SlowDownButton = 0;
-		if(DoButton_DemoPlayer(&s_SlowDownButton, "<<", 0, &Button))
+		if(DoButton_DemoPlayer_Sprite(&s_SlowDownButton, SPRITE_DEMOBUTTON_SLOWER, 0, &Button))
 		{
 			if(pInfo->m_Speed > 4.0f) DemoPlayer()->SetSpeed(4.0f);
 			else if(pInfo->m_Speed > 2.0f) DemoPlayer()->SetSpeed(2.0f);
@@ -150,7 +166,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_FastForwardButton = 0;
-		if(DoButton_DemoPlayer(&s_FastForwardButton, ">>", 0, &Button))
+		if(DoButton_DemoPlayer_Sprite(&s_FastForwardButton, SPRITE_DEMOBUTTON_FASTER, 0, &Button))
 		{
 			if(pInfo->m_Speed < 0.5f) DemoPlayer()->SetSpeed(0.5f);
 			else if(pInfo->m_Speed < 1.0f) DemoPlayer()->SetSpeed(1.0f);

@@ -870,10 +870,10 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 				Up.Reset((unsigned char*)pPacket->m_pData+sizeof(SERVERBROWSE_INFO), pPacket->m_DataSize-sizeof(SERVERBROWSE_INFO));
 				if(PacketType >= 2)
 					Token = str_toint(Up.GetString());
-				str_copy(Info.m_aVersion, Up.GetString(), sizeof(Info.m_aVersion));
-				str_copy(Info.m_aName, Up.GetString(), sizeof(Info.m_aName));
-				str_copy(Info.m_aMap, Up.GetString(), sizeof(Info.m_aMap));
-				str_copy(Info.m_aGameType, Up.GetString(), sizeof(Info.m_aGameType));
+				str_copy(Info.m_aVersion, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aVersion));
+				str_copy(Info.m_aName, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aName));
+				str_copy(Info.m_aMap, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aMap));
+				str_copy(Info.m_aGameType, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aGameType));
 				Info.m_Flags = str_toint(Up.GetString());
 				Info.m_Progression = str_toint(Up.GetString());
 				Info.m_NumPlayers = str_toint(Up.GetString());
@@ -889,7 +889,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 
 				for(int i = 0; i < Info.m_NumPlayers; i++)
 				{
-					str_copy(Info.m_aPlayers[i].m_aName, Up.GetString(), sizeof(Info.m_aPlayers[i].m_aName));
+					str_copy(Info.m_aPlayers[i].m_aName, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aPlayers[i].m_aName));
 					Info.m_aPlayers[i].m_Score = str_toint(Up.GetString());
 				}
 
@@ -933,7 +933,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 			// system message
 			if(Msg == NETMSG_MAP_CHANGE)
 			{
-				const char *pMap = Unpacker.GetString();
+				const char *pMap = Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES);
 				int MapCrc = Unpacker.GetInt();
 				const char *pError = 0;
 
@@ -1537,6 +1537,7 @@ void CClient::InitEngine(const char *pAppname)
 
 void CClient::RegisterInterfaces()
 {
+	Kernel()->RegisterInterface(static_cast<IDemoRecorder*>(&m_DemoRecorder));
 	Kernel()->RegisterInterface(static_cast<IDemoPlayer*>(&m_DemoPlayer));
 	Kernel()->RegisterInterface(static_cast<IServerBrowser*>(&m_ServerBrowser));
 }
@@ -1883,17 +1884,22 @@ void CClient::Con_Play(IConsole::IResult *pResult, void *pUserData)
 	pSelf->DemoPlayer_Play(pResult->GetString(0));
 }
 
-void CClient::Con_Record(IConsole::IResult *pResult, void *pUserData)
+void CClient::DemoRecorder_Start(const char *pFilename)
 {
-	CClient *pSelf = (CClient *)pUserData;
-	if(pSelf->State() != IClient::STATE_ONLINE)
+	if(State() != IClient::STATE_ONLINE)
 		dbg_msg("demorec/record", "client is not online");
 	else
 	{
 		char aFilename[512];
-		str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pResult->GetString(0));
-		pSelf->m_DemoRecorder.Start(pSelf->Storage(), aFilename, pSelf->GameClient()->NetVersion(), pSelf->m_aCurrentMap, pSelf->m_CurrentMapCrc, "client");
+		str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pFilename);
+		m_DemoRecorder.Start(Storage(), aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
 	}
+}
+
+void CClient::Con_Record(IConsole::IResult *pResult, void *pUserData)
+{
+	CClient *pSelf = (CClient *)pUserData;
+	pSelf->DemoRecorder_Start(pResult->GetString(0));
 }
 
 void CClient::Con_StopRecord(IConsole::IResult *pResult, void *pUserData)
@@ -2024,6 +2030,9 @@ int main(int argc, const char **argv) // ignore_convention
 	// parse the command line arguments
 	if(argc > 1) // ignore_convention
 		pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
+
+	// restore empty config strings to their defaults
+	pConfig->RestoreStrings();
 
 	m_Client.Engine()->InitLogfile();
 

@@ -30,6 +30,11 @@ void CControls::OnReset()
 	m_InputDirectionRight = 0;
 }
 
+void CControls::OnPlayerDeath()
+{
+	m_LastData.m_WantedWeapon = m_InputData.m_WantedWeapon = 0;
+}
+
 static void ConKeyInputState(IConsole::IResult *pResult, void *pUserData)
 {
 	((int *)pUserData)[0] = pResult->GetInteger(0);
