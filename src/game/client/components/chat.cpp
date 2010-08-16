@@ -227,6 +227,7 @@ void CChat::OnRender()
 		y -= Cursor.m_Y + Cursor.m_FontSize;
 
 		// cut off if msgs waste too much space
+		float HeightLimit = m_Show ? 0.0f : 200.0f;
 		if(y < HeightLimit)
 			break;
 		
