@@ -22,12 +22,12 @@ int CMenus::DoButton_DemoPlayer(const void *pID, const char *pText, int Checked,
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
-int CMenus::DoButton_DemoPlayer_Sprite(const void *pID, int spriteId, int Checked, const CUIRect *pRect)
+int CMenus::DoButton_DemoPlayer_Sprite(const void *pID, int SpriteId, int Checked, const CUIRect *pRect)
 {
 	RenderTools()->DrawUIRect(pRect, vec4(1,1,1, Checked ? 0.10f : 0.5f)*ButtonColorMul(pID), CUI::CORNER_ALL, 5.0f);
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_DEMOBUTTONS].m_Id);
 	Graphics()->QuadsBegin();
-	RenderTools()->SelectSprite(spriteId);
+	RenderTools()->SelectSprite(SpriteId);
 	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
@@ -138,7 +138,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		else
 		{
 			if(DoButton_DemoPlayer_Sprite(&s_PlayPauseButton, SPRITE_DEMOBUTTON_PLAY, !pInfo->m_Paused, &Button))
-			DemoPlayer()->Unpause();
+				DemoPlayer()->Unpause();
 		}
 		
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
