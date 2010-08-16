@@ -509,7 +509,7 @@ public:
 		return Cursor.m_X;
 	}
 	
-	virtual float TextLineCount(void *pFontSetV, float Size, const char *pText, int LineWidth)
+	virtual int TextLineCount(void *pFontSetV, float Size, const char *pText, float LineWidth)
 	{
 		CTextCursor Cursor;
 		SetCursor(&Cursor, 0, 0, Size, 0);
@@ -551,14 +551,14 @@ public:
 		
 		FakeToScreenX = (Graphics()->ScreenWidth()/(ScreenX1-ScreenX0));
 		FakeToScreenY = (Graphics()->ScreenHeight()/(ScreenY1-ScreenY0));
-		ActualX = pCursor->m_X * FakeToScreenX;
-		ActualY = pCursor->m_Y * FakeToScreenY;
+		ActualX = (int)(pCursor->m_X * FakeToScreenX);
+		ActualY = (int)(pCursor->m_Y * FakeToScreenY);
 
 		CursorX = ActualX / FakeToScreenX;
 		CursorY = ActualY / FakeToScreenY;
 
 		// same with size
-		ActualSize = Size * FakeToScreenY;
+		ActualSize = (int)(Size * FakeToScreenY);
 		Size = ActualSize / FakeToScreenY;
 
 		// fetch pFont data

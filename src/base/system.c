@@ -654,7 +654,7 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 {
 	/* TODO: IPv6 support */
 	struct sockaddr addr;
-	unsigned int mode = 1;
+	unsigned long mode = 1;
 	int broadcast = 1;
 
 	/* create socket */
@@ -672,9 +672,9 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 	
 	/* set non-blocking */
 #if defined(CONF_FAMILY_WINDOWS)
-	ioctlsocket(sock, FIONBIO, (unsigned long *)&mode);
+	ioctlsocket(sock, FIONBIO, &mode);
 #else
-	ioctl(sock, FIONBIO, (unsigned long *)&mode);
+	ioctl(sock, FIONBIO, &mode);
 #endif
 
 	/* set boardcast */
@@ -755,21 +755,21 @@ NETSOCKET net_tcp_create(const NETADDR *a)
 
 int net_tcp_set_non_blocking(NETSOCKET sock)
 {
-	unsigned int mode = 1;
+	unsigned long mode = 1;
 #if defined(CONF_FAMILY_WINDOWS)
-	return ioctlsocket(sock, FIONBIO, (unsigned long *)&mode);
+	return ioctlsocket(sock, FIONBIO, &mode);
 #else
-	return ioctl(sock, FIONBIO, (unsigned long *)&mode);
+	return ioctl(sock, FIONBIO, &mode);
 #endif
 }
 
 int net_tcp_set_blocking(NETSOCKET sock)
 {
-	unsigned int mode = 0;
+	unsigned long mode = 0;
 #if defined(CONF_FAMILY_WINDOWS)
-	return ioctlsocket(sock, FIONBIO, (unsigned long *)&mode);
+	return ioctlsocket(sock, FIONBIO, &mode);
 #else
-	return ioctl(sock, FIONBIO, (unsigned long *)&mode);
+	return ioctl(sock, FIONBIO, &mode);
 #endif
 }
 

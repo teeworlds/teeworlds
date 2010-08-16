@@ -121,7 +121,7 @@ static void Mix(short *pFinalOut, unsigned Frames)
 				const int Range = 1500; // magic value, remove
 				int dx = v->m_X - m_CenterX;
 				int dy = v->m_Y - m_CenterY;
-				int Dist = sqrtf((float)dx*dx+dy*dy); // float here. nasty
+				int Dist = (int)sqrtf((float)dx*dx+dy*dy); // float here. nasty
 				int p = IntAbs(dx);
 				if(Dist < Range)
 				{
