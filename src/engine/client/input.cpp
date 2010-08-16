@@ -65,8 +65,8 @@ void CInput::MouseRelative(int *x, int *y)
 		}
 	}
 
-	*x = nx*Sens;
-	*y = ny*Sens;
+	*x = (int)(nx*Sens);
+	*y = (int)(ny*Sens);
 }
 
 void CInput::MouseModeAbsolute()

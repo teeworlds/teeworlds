@@ -383,7 +383,7 @@ bool CDataFileReader::Close()
 
 unsigned CDataFileReader::Crc()
 {
-	if(!m_pDataFile) return -1;
+	if(!m_pDataFile) return 0xFFFFFFFF;
 	return m_pDataFile->m_Crc;
 }
 

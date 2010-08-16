@@ -288,7 +288,7 @@ void CChat::OnRender()
 		TextRender()->TextEx(&Cursor, m_Input.GetString()+m_Input.GetCursorOffset(), -1);
 	}
 
-	y -= 8;
+	y -= 8.0f;
 
 	int i;
 	int64 Now = time_get();
@@ -316,7 +316,7 @@ void CChat::OnRender()
 		}
 
 		// cut off if msgs waste too much space
-		int HeightLimit = m_Show ? 0.0f : 200.0f;
+		float HeightLimit = m_Show ? 0.0f : 200.0f;
 		if(y < HeightLimit)
 			break;
 		

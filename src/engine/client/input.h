@@ -8,7 +8,7 @@ class CInput : public IEngineInput
 	int m_InputGrabbed;
 
 	unsigned int m_LastRelease;
-	unsigned int m_ReleaseDelta;
+	int m_ReleaseDelta;
 
 	void AddEvent(int Unicode, int Key, int Flags);
 

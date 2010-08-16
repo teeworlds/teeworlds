@@ -423,7 +423,7 @@ void IGameController::Tick()
 			do
 			{
 				CPlayer *pP = 0;
-				int PD = aTScore[M];
+				float PD = aTScore[M];
 				for(int i = 0; i < MAX_CLIENTS; i++)
 				{
 					if(!GameServer()->m_apPlayers[i] || !CanBeMovedOnBalance(i))
