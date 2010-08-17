@@ -459,6 +459,7 @@ class CEditor : public IEditor
 {
 	class IInput *m_pInput;
 	class IClient *m_pClient;
+	class IConsole *m_pConsole;
 	class IGraphics *m_pGraphics;
 	class ITextRender *m_pTextRender;
 	CRenderTools m_RenderTools;
@@ -466,6 +467,7 @@ class CEditor : public IEditor
 public:
 	class IInput *Input() { return m_pInput; };
 	class IClient *Client() { return m_pClient; };
+	class IConsole *Console() { return m_pConsole; };
 	class IGraphics *Graphics() { return m_pGraphics; };
 	class ITextRender *TextRender() { return m_pTextRender; };
 	CUI *UI() { return &m_UI; }

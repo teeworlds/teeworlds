@@ -1,5 +1,6 @@
 #include <base/math.h>
 
+#include <engine/console.h>
 #include <engine/graphics.h>
 
 #include "ed_editor.h"
@@ -124,7 +125,7 @@ int CLayerQuads::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 		
 		if(px > Rect.x && px < Rect.x+Rect.w && py > Rect.y && py < Rect.y+Rect.h)
 		{
-			dbg_msg("", "grabbed one");
+			m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", "grabbed one");
 			CQuad n;
 			n = *q;
 			

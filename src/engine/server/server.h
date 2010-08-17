@@ -152,7 +152,7 @@ public:
 	void DoSnapshot();
 
 	static int NewClientCallback(int ClientId, void *pUser);
-	static int DelClientCallback(int ClientId, void *pUser);
+	static int DelClientCallback(int ClientId, const char *pReason, void *pUser);
 
 	void SendMap(int ClientId);
 	void SendRconLine(int ClientId, const char *pLine);
@@ -172,7 +172,7 @@ public:
 	int LoadMap(const char *pMapName);
 
 	void InitEngine(const char *pAppname);
-	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer);
+	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);
 	int Run();
 
 	static void ConKick(IConsole::IResult *pResult, void *pUser);

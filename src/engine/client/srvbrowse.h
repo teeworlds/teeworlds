@@ -50,6 +50,7 @@ public:
 private:
 	CNetClient *m_pNetClient;
 	IMasterServer *m_pMasterServer;
+	class IConsole *m_pConsole;
 	char m_aNetVersion[128];
 
 	CHeap m_ServerlistHeap;

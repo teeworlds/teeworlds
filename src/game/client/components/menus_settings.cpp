@@ -962,7 +962,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	if(OldSelectedLanguage != s_SelectedLanguage)
 	{
 		str_copy(g_Config.m_ClLanguagefile, s_Languages[s_SelectedLanguage].m_FileName, sizeof(g_Config.m_ClLanguagefile));
-		g_Localization.Load(s_Languages[s_SelectedLanguage].m_FileName);
+		g_Localization.Load(s_Languages[s_SelectedLanguage].m_FileName, Console());
 	}
 
 	MainView.HSplitTop(MainView.h/2 + 10, 0, &MainView);

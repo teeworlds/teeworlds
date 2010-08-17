@@ -23,6 +23,7 @@ class CRegister
 
 	class CNetServer *m_pNetServer;
 	class IEngineMasterServer *m_pMasterServer;
+	class IConsole *m_pConsole;
 
 	int m_RegisterState;
 	int64 m_RegisterStateStart;
@@ -40,7 +41,7 @@ class CRegister
 
 public:
 	CRegister();
-	void Init(class CNetServer *pNetServer, class IEngineMasterServer *pMasterServer);
+	void Init(class CNetServer *pNetServer, class IEngineMasterServer *pMasterServer, class IConsole *pConsole);
 	void RegisterUpdate();
 	int RegisterProcessPacket(class CNetChunk *pPacket);
 };
