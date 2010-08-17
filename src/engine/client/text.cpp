@@ -570,6 +570,8 @@ public:
 
 		pSizeData = GetSize(pFont, ActualSize);
 		RenderSetup(pFont, ActualSize);
+
+		float Scale = 1/pSizeData->m_FontSize;
 		
 		// set length
 		if(Length < 0)
@@ -679,7 +681,7 @@ public:
 							Graphics()->QuadsDrawTL(&QuadItem, 1);
 						}
 
-						Advance = pChr->m_AdvanceX + Kerning(pFont, Character, Nextcharacter)/Size;
+						Advance = pChr->m_AdvanceX + Kerning(pFont, Character, Nextcharacter)*Scale;
 					}
 									
 					if(pCursor->m_Flags&TEXTFLAG_STOP_AT_END && DrawX+(Advance+pChr->m_Width)*Size-pCursor->m_StartX > pCursor->m_LineWidth)
