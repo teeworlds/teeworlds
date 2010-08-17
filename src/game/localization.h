@@ -24,7 +24,7 @@ class CLocalizationDatabase
 public:
 	CLocalizationDatabase();
 
-	bool Load(const char *pFilename);
+	bool Load(const char *pFilename, class IConsole *pConsole);
 
 	int Version() { return m_CurrentVersion; }
 	

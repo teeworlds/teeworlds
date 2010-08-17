@@ -111,21 +111,22 @@ void CGameControllerCTF::Tick()
 					m_aTeamscore[fi^1] += 100;
 					F->m_pCarryingCharacter->GetPlayer()->m_Score += 5;
 
-					dbg_msg("game", "flag_capture player='%d:%s'",
+					char aBuf[512];
+					str_format(aBuf, sizeof(aBuf), "flag_capture player='%d:%s'",
 						F->m_pCarryingCharacter->GetPlayer()->GetCID(),
 						Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()));
+					GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
-					char Buf[512];
 					float CaptureTime = (Server()->Tick() - F->m_GrabTick)/(float)Server()->TickSpeed();
 					if(CaptureTime <= 60)
 					{
-						str_format(Buf, sizeof(Buf), "The %s flag was captured by %s (%d.%s%d seconds)", fi ? "blue" : "red", Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()), (int)CaptureTime%60, ((int)(CaptureTime*100)%100)<10?"0":"", (int)(CaptureTime*100)%100);
+						str_format(aBuf, sizeof(aBuf), "The %s flag was captured by %s (%d.%s%d seconds)", fi ? "blue" : "red", Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()), (int)CaptureTime%60, ((int)(CaptureTime*100)%100)<10?"0":"", (int)(CaptureTime*100)%100);
 					}
 					else
 					{
-						str_format(Buf, sizeof(Buf), "The %s flag was captured by %s", fi ? "blue" : "red", Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()));
+						str_format(aBuf, sizeof(aBuf), "The %s flag was captured by %s", fi ? "blue" : "red", Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()));
 					}
-					GameServer()->SendChat(-1, -2, Buf);
+					GameServer()->SendChat(-1, -2, aBuf);
 					for(int i = 0; i < 2; i++)
 						m_apFlags[i]->Reset();
 					
@@ -150,9 +151,11 @@ void CGameControllerCTF::Tick()
 						CCharacter *pChr = apCloseCCharacters[i];
 						pChr->GetPlayer()->m_Score += 1;
 
-						dbg_msg("game", "flag_return player='%d:%s'",
+						char aBuf[256];
+						str_format(aBuf, sizeof(aBuf), "flag_return player='%d:%s'",
 							pChr->GetPlayer()->GetCID(),
 							Server()->ClientName(pChr->GetPlayer()->GetCID()));
+						GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
 						GameServer()->CreateSoundGlobal(SOUND_CTF_RETURN);
 						F->Reset();
@@ -171,9 +174,11 @@ void CGameControllerCTF::Tick()
 					F->m_pCarryingCharacter = apCloseCCharacters[i];
 					F->m_pCarryingCharacter->GetPlayer()->m_Score += 1;
 
-					dbg_msg("game", "flag_grab player='%d:%s'",
+					char aBuf[256];
+					str_format(aBuf, sizeof(aBuf), "flag_grab player='%d:%s'",
 						F->m_pCarryingCharacter->GetPlayer()->GetCID(),
 						Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()));
+					GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 					
 					for(int c = 0; c < MAX_CLIENTS; c++)
 					{

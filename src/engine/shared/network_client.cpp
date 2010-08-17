@@ -21,7 +21,7 @@ int CNetClient::Close()
 
 int CNetClient::Disconnect(const char *pReason)
 {
-	dbg_msg("netclient", "disconnected. reason=\"%s\"", pReason);
+	//dbg_msg("netclient", "disconnected. reason=\"%s\"", pReason);
 	m_Connection.Disconnect(pReason);
 	return 0;
 }

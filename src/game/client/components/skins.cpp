@@ -29,7 +29,8 @@ void CSkins::SkinScan(const char *pName, int IsDir, void *pUser)
 	CImageInfo Info;
 	if(!pSelf->Graphics()->LoadPNG(&Info, aBuf))
 	{
-		dbg_msg("game", "failed to load skin from %s", pName);
+		str_format(aBuf, sizeof(aBuf), "failed to load skin from %s", pName);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
 		return;
 	}
 	
@@ -111,7 +112,8 @@ void CSkins::SkinScan(const char *pName, int IsDir, void *pUser)
 
 	// set skin data	
 	str_copy(pSelf->m_aSkins[pSelf->m_NumSkins].m_aName, pName, min((int)sizeof(pSelf->m_aSkins[pSelf->m_NumSkins].m_aName),l-3));
-	dbg_msg("game", "load skin %s", pSelf->m_aSkins[pSelf->m_NumSkins].m_aName);
+	str_format(aBuf, sizeof(aBuf), "load skin %s", pSelf->m_aSkins[pSelf->m_NumSkins].m_aName);
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
 	pSelf->m_NumSkins++;
 }
 

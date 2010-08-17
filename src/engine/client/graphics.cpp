@@ -25,6 +25,7 @@
 #include <engine/graphics.h>
 #include <engine/storage.h>
 #include <engine/keys.h>
+#include <engine/console.h>
 
 #include <math.h>
 #include <time.h>
@@ -446,7 +447,9 @@ void CGraphics_OpenGL::ScreenshotDirect(const char *pFilename)
 			io_close(File);
 	
 		// save png
-		dbg_msg("client", "saved screenshot to '%s'", aWholePath);
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "saved screenshot to '%s'", aWholePath);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
 		png_open_file_write(&Png, aWholePath); // ignore_convention
 		png_set_data(&Png, w, h, 8, PNG_TRUECOLOR, (unsigned char *)pPixelData); // ignore_convention
 		png_close_file(&Png); // ignore_convention
@@ -663,6 +666,7 @@ void CGraphics_OpenGL::QuadsText(float x, float y, float Size, float r, float g,
 bool CGraphics_OpenGL::Init()
 {
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
+	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	
 	// Set all z to -5.0f
 	for(int i = 0; i < MAX_VERTICES; i++)
