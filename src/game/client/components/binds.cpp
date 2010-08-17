@@ -30,10 +30,12 @@ void CBinds::Bind(int KeyId, const char *pStr)
 		return;
 		
 	str_copy(m_aaKeyBindings[KeyId], pStr, sizeof(m_aaKeyBindings[KeyId]));
+	char aBuf[256];
 	if(!m_aaKeyBindings[KeyId][0])
-		dbg_msg("binds", "unbound %s (%d)", Input()->KeyName(KeyId), KeyId);
+		str_format(aBuf, sizeof(aBuf), "unbound %s (%d)", Input()->KeyName(KeyId), KeyId);
 	else
-		dbg_msg("binds", "bound %s (%d) = %s", Input()->KeyName(KeyId), KeyId, m_aaKeyBindings[KeyId]);
+		str_format(aBuf, sizeof(aBuf), "bound %s (%d) = %s", Input()->KeyName(KeyId), KeyId, m_aaKeyBindings[KeyId]);
+	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "binds", aBuf);
 }
 
 
@@ -136,7 +138,9 @@ void CBinds::ConBind(IConsole::IResult *pResult, void *pUserData)
 	
 	if(!id)
 	{
-		dbg_msg("binds", "key %s not found", pKeyName);
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "key %s not found", pKeyName);
+		pBinds->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "binds", aBuf);
 		return;
 	}
 	
@@ -152,7 +156,9 @@ void CBinds::ConUnbind(IConsole::IResult *pResult, void *pUserData)
 	
 	if(!id)
 	{
-		dbg_msg("binds", "key %s not found", pKeyName);
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "key %s not found", pKeyName);
+		pBinds->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "binds", aBuf);
 		return;
 	}
 	
@@ -175,8 +181,8 @@ void CBinds::ConDumpBinds(IConsole::IResult *pResult, void *pUserData)
 	{
 		if(pBinds->m_aaKeyBindings[i][0] == 0)
 			continue;
-		str_format(aBuf, sizeof(aBuf), "[binds] %s (%d) = %s", pBinds->Input()->KeyName(i), i, pBinds->m_aaKeyBindings[i]);
-		pBinds->Console()->Print(aBuf);
+		str_format(aBuf, sizeof(aBuf), "%s (%d) = %s", pBinds->Input()->KeyName(i), i, pBinds->m_aaKeyBindings[i]);
+		pBinds->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "binds", aBuf);
 	}
 }
 

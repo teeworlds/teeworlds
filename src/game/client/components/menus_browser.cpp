@@ -699,7 +699,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 		static int s_JoinButton = 0;
 		if(DoButton_Menu(&s_JoinButton, Localize("Connect"), 0, &Button) || m_EnterPressed)
 		{
-			dbg_msg("", "%s", g_Config.m_UiServerAddress);
+			//dbg_msg("", "%s", g_Config.m_UiServerAddress);
 			Client()->Connect(g_Config.m_UiServerAddress);
 			m_EnterPressed = false;
 		}

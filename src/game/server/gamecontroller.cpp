@@ -200,7 +200,9 @@ void IGameController::StartRound()
 	m_aTeamscore[0] = 0;
 	m_aTeamscore[1] = 0;
 	m_ForceBalanced = false;
-	dbg_msg("game","start round type='%s' teamplay='%d'", m_pGameType, m_GameFlags&GAMEFLAG_TEAMS);
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "start round type='%s' teamplay='%d'", m_pGameType, m_GameFlags&GAMEFLAG_TEAMS);
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 }
 
 void IGameController::ChangeMap(const char *pToMap)
@@ -213,7 +215,9 @@ void IGameController::CycleMap()
 {
 	if(m_aMapWish[0] != 0)
 	{
-		dbg_msg("game", "rotating map to %s", m_aMapWish);
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "rotating map to %s", m_aMapWish);
+		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 		str_copy(g_Config.m_SvMap, m_aMapWish, sizeof(g_Config.m_SvMap));
 		m_aMapWish[0] = 0;
 		m_RoundCount = 0;
@@ -255,26 +259,28 @@ void IGameController::CycleMap()
 		pNextMap = pMapRotation;
 
 	// cut out the next map	
-	char Buf[512];
+	char aBuf[512];
 	for(int i = 0; i < 512; i++)
 	{
-		Buf[i] = pNextMap[i];
+		aBuf[i] = pNextMap[i];
 		if(IsSeparator(pNextMap[i]) || pNextMap[i] == 0)
 		{
-			Buf[i] = 0;
+			aBuf[i] = 0;
 			break;
 		}
 	}
 	
 	// skip spaces
 	int i = 0;
-	while(IsSeparator(Buf[i]))
+	while(IsSeparator(aBuf[i]))
 		i++;
 	
 	m_RoundCount = 0;
 	
-	dbg_msg("game", "rotating map to %s", &Buf[i]);
-	str_copy(g_Config.m_SvMap, &Buf[i], sizeof(g_Config.m_SvMap));
+	char aBufMsg[256];
+	str_format(aBufMsg, sizeof(aBufMsg), "rotating map to %s", &aBuf[i]);
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+	str_copy(g_Config.m_SvMap, &aBuf[i], sizeof(g_Config.m_SvMap));
 }
 
 void IGameController::PostReset()
@@ -398,7 +404,7 @@ void IGameController::Tick()
 	// do team-balancing
 	if (IsTeamplay() && m_UnbalancedTick != -1 && Server()->Tick() > m_UnbalancedTick+g_Config.m_SvTeambalanceTime*Server()->TickSpeed()*60)
 	{
-		dbg_msg("game", "Balancing teams");
+		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "Balancing teams");
 		
 		int aT[2] = {0,0};
 		float aTScore[2] = {0,0};
@@ -570,16 +576,19 @@ bool IGameController::CheckTeamBalance()
 			aT[pP->GetTeam()]++;
 	}
 	
+	char aBuf[256];
 	if(absolute(aT[0]-aT[1]) >= 2)
 	{
-		dbg_msg("game", "Team is NOT balanced (red=%d blue=%d)", aT[0], aT[1]);
+		str_format(aBuf, sizeof(aBuf), "Team is NOT balanced (red=%d blue=%d)", aT[0], aT[1]);
+		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 		if(GameServer()->m_pController->m_UnbalancedTick == -1)
 			GameServer()->m_pController->m_UnbalancedTick = Server()->Tick();
 		return false;
 	}
 	else
 	{
-		dbg_msg("game", "Team is balanced (red=%d blue=%d)", aT[0], aT[1]);
+		str_format(aBuf, sizeof(aBuf), "Team is balanced (red=%d blue=%d)", aT[0], aT[1]);
+		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 		GameServer()->m_pController->m_UnbalancedTick = -1;
 		return true;
 	}

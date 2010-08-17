@@ -8,6 +8,7 @@
 #include <engine/shared/config.h>
 #include <engine/shared/engine.h>
 #include <engine/client.h>
+#include <engine/console.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/input.h>
@@ -1271,7 +1272,9 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 					if(!UI()->MouseButton(0))
 					{
 						// grab brush
-						dbg_msg("editor", "grabbing %f %f %f %f", r.x, r.y, r.w, r.h);
+						char aBuf[256];
+						str_format(aBuf, sizeof(aBuf),"grabbing %f %f %f %f", r.x, r.y, r.w, r.h);
+						Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);
 
 						// TODO: do all layers
 						int Grabs = 0;
@@ -1820,7 +1823,7 @@ static void ExtractName(const char *pFileName, char *pName)
 	int FinalLen = End-Start;
 	mem_copy(pName, &pFileName[Start], FinalLen);
 	pName[FinalLen] = 0;
-	dbg_msg("", "%s %s %d %d", pFileName, pName, Start, End);
+	//dbg_msg("", "%s %s %d %d", pFileName, pName, Start, End);
 }
 
 void CEditor::ReplaceImage(const char *pFileName, void *pUser)
@@ -3006,6 +3009,7 @@ void CEditor::Init()
 {
 	m_pInput = Kernel()->RequestInterface<IInput>();
 	m_pClient = Kernel()->RequestInterface<IClient>();
+	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
 	m_pTextRender = Kernel()->RequestInterface<ITextRender>();
 	m_RenderTools.m_pGraphics = m_pGraphics;

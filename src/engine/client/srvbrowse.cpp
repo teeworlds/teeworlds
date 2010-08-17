@@ -9,6 +9,7 @@
 #include <engine/shared/engine.h>
 
 #include <engine/masterserver.h>
+#include <engine/console.h>
 #include <engine/config.h>
 
 #include <mastersrv/mastersrv.h>
@@ -62,6 +63,7 @@ void CServerBrowser::SetBaseInfo(class CNetClient *pClient, const char *pNetVers
 	m_pNetClient = pClient;
 	str_copy(m_aNetVersion, pNetVersion, sizeof(m_aNetVersion));
 	m_pMasterServer = Kernel()->RequestInterface<IMasterServer>();
+	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	IConfig *pConfig = Kernel()->RequestInterface<IConfig>();
 	if(pConfig)
 		pConfig->RegisterCallback(ConfigSaveCallback, this);
@@ -514,7 +516,7 @@ void CServerBrowser::Refresh(int Type)
 		}
 
 		if(g_Config.m_Debug)
-			dbg_msg("client", "broadcasting for servers");
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", "broadcasting for servers");
 	}
 	else if(Type == IServerBrowser::TYPE_INTERNET)
 		m_NeedRefresh = 1;
@@ -532,9 +534,11 @@ void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry) cons
 
 	if(g_Config.m_Debug)
 	{
-		dbg_msg("client", "requesting server info from %d.%d.%d.%d:%d",
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf),"requesting server info from %d.%d.%d.%d:%d",
 			Addr.ip[0], Addr.ip[1], Addr.ip[2],
 			Addr.ip[3], Addr.port);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", aBuf);
 	}
 
 	/*mem_copy(buffer, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
@@ -595,7 +599,7 @@ void CServerBrowser::Update()
 		}
 
 		if(g_Config.m_Debug)
-			dbg_msg("client", "requesting server list");
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", "requesting server list");
 	}
 
 	// do timeouts
@@ -676,7 +680,11 @@ void CServerBrowser::AddFavorite(const NETADDR &Addr)
 		pEntry->m_Info.m_Favorite = 1;
 
     if(g_Config.m_Debug)
-        dbg_msg("", "added fav, %d.%d.%d.%d:%d", Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], Addr.port);
+	{
+		char aBuf[256];
+        str_format(aBuf, sizeof(aBuf), "added fav, %d.%d.%d.%d:%d", Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], Addr.port);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", aBuf);
+	}
 }
 
 void CServerBrowser::RemoveFavorite(const NETADDR &Addr)

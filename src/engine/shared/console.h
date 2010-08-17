@@ -123,7 +123,7 @@ public:
 	virtual void ExecuteFile(const char *pFilename);
 
 	virtual void RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUserData);
-	virtual void Print(const char *pStr);
+	virtual void Print(int Level, const char *pFrom, const char *pStr);
 };
 
 #endif

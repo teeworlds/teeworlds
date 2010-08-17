@@ -5,6 +5,7 @@ class CGraphics_OpenGL : public IEngineGraphics
 {
 protected:
 	class IStorage *m_pStorage;
+	class IConsole *m_pConsole;
 	
 	//
 	typedef struct { float x, y, z; } CPoint;

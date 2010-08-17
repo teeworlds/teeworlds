@@ -223,7 +223,7 @@ void CGameClient::OnInit()
 	//m_pServerBrowser = Kernel()->RequestInterface<IServerBrowser>();
 	
 	// set the language
-	g_Localization.Load(g_Config.m_ClLanguagefile);
+	g_Localization.Load(g_Config.m_ClLanguagefile, Console());
 	
 	// init all components
 	for(int i = 0; i < m_All.m_Num; i++)
@@ -288,7 +288,9 @@ void CGameClient::OnInit()
 		m_All.m_paComponents[i]->OnReset();
 	
 	int64 End = time_get();
-	dbg_msg("", "%f.2ms", ((End-Start)*1000)/(float)time_freq());
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "initialisation finished after %f.2ms", ((End-Start)*1000)/(float)time_freq());
+	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "gameclient", aBuf);
 	
 	m_ServerMode = SERVERMODE_PURE;
 }
@@ -517,7 +519,9 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 	void *pRawMsg = m_NetObjHandler.SecureUnpackMsg(MsgId, pUnpacker);
 	if(!pRawMsg)
 	{
-		dbg_msg("client", "dropped weird message '%s' (%d), failed on '%s'", m_NetObjHandler.GetMsgName(MsgId), MsgId, m_NetObjHandler.FailedMsgOn());
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "dropped weird message '%s' (%d), failed on '%s'", m_NetObjHandler.GetMsgName(MsgId), MsgId, m_NetObjHandler.FailedMsgOn());
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 		return;
 	}
 
@@ -635,7 +639,11 @@ void CGameClient::OnNewSnapshot()
 			if(m_NetObjHandler.ValidateObj(Item.m_Type, pData, Item.m_DataSize) != 0)
 			{
 				if(g_Config.m_Debug)
-					dbg_msg("game", "invalidated index=%d type=%d (%s) size=%d id=%d", Index, Item.m_Type, m_NetObjHandler.GetObjName(Item.m_Type), Item.m_DataSize, Item.m_Id);
+				{
+					char aBuf[256];
+					str_format(aBuf, sizeof(aBuf), "invalidated index=%d type=%d (%s) size=%d id=%d", Index, Item.m_Type, m_NetObjHandler.GetObjName(Item.m_Type), Item.m_DataSize, Item.m_Id);
+					Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+				}
 				Client()->SnapInvalidateItem(IClient::SNAP_CURRENT, Index);
 			}
 		}
@@ -904,11 +912,13 @@ void CGameClient::OnPredict()
 
 		if(mem_comp(&Before, &Now, sizeof(CNetObj_CharacterCore)) != 0)
 		{
-			dbg_msg("client", "prediction error");
+			Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", "prediction error");
 			for(unsigned i = 0; i < sizeof(CNetObj_CharacterCore)/sizeof(int); i++)
 				if(((int *)&Before)[i] != ((int *)&Now)[i])
 				{
-					dbg_msg("", "\t%d %d %d  (%d %d)", i, ((int *)&Before)[i], ((int *)&Now)[i], ((int *)&BeforePrev)[i], ((int *)&NowPrev)[i]);
+					char aBuf[256];
+					str_format(aBuf, sizeof(aBuf), "    %d %d %d  (%d %d)", i, ((int *)&Before)[i], ((int *)&Now)[i], ((int *)&BeforePrev)[i], ((int *)&NowPrev)[i]);
+					Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", aBuf);
 				}
 		}
 	}

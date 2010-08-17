@@ -61,7 +61,7 @@ void CChat::ConChat(IConsole::IResult *pResult, void *pUserData)
 	else if(str_comp(pMode, "team") == 0)
 		((CChat*)pUserData)->EnableMode(1);
 	else
-		dbg_msg("console", "expected all or team as mode");
+		((CChat*)pUserData)->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", "expected all or team as mode");
 }
 
 void CChat::ConShowChat(IConsole::IResult *pResult, void *pUserData)
@@ -165,8 +165,8 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 		}
 		
 		char aBuf[1024];
-		str_format(aBuf, sizeof(aBuf), "[chat]%s%s", m_aLines[m_CurrentLine].m_aName, m_aLines[m_CurrentLine].m_aText);
-		Console()->Print(aBuf);
+		str_format(aBuf, sizeof(aBuf), "%s%s", m_aLines[m_CurrentLine].m_aName, m_aLines[m_CurrentLine].m_aText);
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chat", aBuf);
 	}
 
 	// play sound

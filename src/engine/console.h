@@ -8,6 +8,13 @@ class IConsole : public IInterface
 	MACRO_INTERFACE("console", 0)
 public:
 
+	enum
+	{
+		OUTPUT_LEVEL_STANDARD=0,
+		OUTPUT_LEVEL_ADDINFO,
+		OUTPUT_LEVEL_DEBUG
+	};
+
 	// TODO: rework this interface to reduce the amount of virtual calls
 	class IResult
 	{
@@ -51,7 +58,7 @@ public:
 	virtual void ExecuteFile(const char *pFilename) = 0;
 	
 	virtual void RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUserData) = 0;
-	virtual void Print(const char *pStr) = 0;
+	virtual void Print(int Level, const char *pFrom, const char *pStr) = 0;
 };
 
 extern IConsole *CreateConsole(int FlagMask);
