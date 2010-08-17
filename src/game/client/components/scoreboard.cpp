@@ -391,7 +391,7 @@ void CScoreboard::OnRender()
 		return;
 		
 	// if the score board is active, then we should clear the motd message aswell
-	if(m_Active)
+	if(m_pClient->m_pMotd->IsActive())
 		m_pClient->m_pMotd->Clear();
 	
 
