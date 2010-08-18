@@ -322,3 +322,8 @@ void CScoreboard::OnRender()
 	RenderGoals(Width/2-w/2, 150+750+25, w);
 	RenderSpectators(Width/2-w/2, 150+750+25+50+25, w);
 }
+
+bool CScoreboard::Active()
+{
+	return m_Active | (m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver);
+}

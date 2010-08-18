@@ -205,6 +205,7 @@ public:
 	class CMotd *m_pMotd;
 	class CMapImages *m_pMapimages;
 	class CVoting *m_pVoting;
+	class CScoreboard *m_pScoreboard;
 };
 
 extern const char *Localize(const char *Str);
