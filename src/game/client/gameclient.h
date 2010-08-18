@@ -291,6 +291,7 @@ public:
 	class CCoopboard *m_pCoopboard;
 	class CStatboard *m_pStatboard;
 	class CHud *m_pHud;
+	class CScoreboard *m_pScoreboard;
 };
 
 extern const char *Localize(const char *Str);

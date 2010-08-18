@@ -148,6 +148,7 @@ void CGameClient::OnConsoleInit()
 	m_pHud = &::gs_Hud;
 	m_pRaceDemo = &::gs_RaceDemo;
 	m_pTeecompStats = &::gs_TeecompStats;
+	m_pScoreboard = &::gs_Scoreboard;
 	
 	// make a list of all the systems, make sure to add them in the corrent render order
 	m_All.Add(m_pSkins);
