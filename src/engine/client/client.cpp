@@ -458,7 +458,7 @@ void CClient::TeecompDemoStart()
 	pTmp = localtime(&Rawtime);
 
 	str_format(aFilename, sizeof(aFilename), "demos/%d-%02d-%d_%02d-%02d-%02d_%s.demo", pTmp->tm_year + 1900, pTmp->tm_mon + 1, pTmp->tm_mday, pTmp->tm_hour, pTmp->tm_min, pTmp->tm_sec, m_aCurrentMap);
-	m_DemoRecorder.Start(Storage(), aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
+	m_DemoRecorder.Start(Storage(), m_pConsole, aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
 }
 
 bool CClient::DemoIsRecording()
@@ -1899,7 +1899,7 @@ const char *CClient::DemoRecord(const char *pName)
 	if(m_State != STATE_ONLINE)
 		dbg_msg("demorec/record", "client is not online");
 	else
-		m_DemoRecorder.Start(Storage(), aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
+		m_DemoRecorder.Start(Storage(), m_pConsole, aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
 	
 	return m_aCurrentMap;
 }
@@ -1924,7 +1924,7 @@ const char* CClient::RaceRecordStart(const char *pFilename)
 	if(State() != STATE_ONLINE)
 		dbg_msg("demorec/record", "client is not online");
 	else
-		m_DemoRecorder.Start(Storage(), aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
+		m_DemoRecorder.Start(Storage(), m_pConsole, aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
 		
 	return m_aCurrentMap;
 }
@@ -2026,7 +2026,7 @@ void CClient::Con_Tmprec(IConsole::IResult *pResult, void *pUserData)
 		pTmp = localtime(&Rawtime);
 
 		str_format(aFilename, sizeof(aFilename), "demos/%d%02d%d_%d%d%d.demo", pTmp->tm_year + 1900, pTmp->tm_mon + 1, pTmp->tm_mday, pTmp->tm_hour, pTmp->tm_min, pTmp->tm_sec);
-		pSelf->m_DemoRecorder.Start(pSelf->Storage(), aFilename, pSelf->GameClient()->NetVersion(), pSelf->m_aCurrentMap, pSelf->m_CurrentMapCrc, "client");
+		pSelf->m_DemoRecorder.Start(pSelf->Storage(), pSelf->m_pConsole, aFilename, pSelf->GameClient()->NetVersion(), pSelf->m_aCurrentMap, pSelf->m_CurrentMapCrc, "client");
 	}
 }
 

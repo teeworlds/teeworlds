@@ -1002,7 +1002,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	if(OldSelectedFont != s_SelectedFont)
 	{
 		str_copy(g_Config.m_ClFontfile, s_Fonts[s_SelectedFont].m_FileName, sizeof(g_Config.m_ClFontfile));
-		g_Localization.Load(s_Fonts[s_SelectedFont].m_FileName);
+		g_Localization.Load(s_Fonts[s_SelectedFont].m_FileName, Console());
 		m_NeedRestart = true;
 	}
 }
