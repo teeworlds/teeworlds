@@ -124,12 +124,13 @@ void CScore::ParsePlayer(const char *name, float score)
 	}
 }
 
-void CScore::Top5Draw(int id, int debut)
+std::list<std::string> CScore::Top5Draw(int id, int debut) //Thanks nevi
 {
+	std::list<std::string> res;
 	int pos = 1;
 	//char buf[512];
-	
-	m_pGameServer->SendChatTarget(id, "----------- Top 5 -----------");
+
+	res.push_back("----------- Top 5 -----------");
 	for (std::list<CPlayerScore>::iterator i = top.begin(); i != top.end() && pos <= 5+debut; i++)
 	{
 		if(i->m_Score < 0)
@@ -141,13 +142,14 @@ void CScore::Top5Draw(int id, int debut)
 			oss << pos << ". " << i->name << "   Time: ";
 
 			if ((int)(i->m_Score)/60 != 0)
-				oss << (int)(i->m_Score)/60 << " minute(s) ";
+				oss << (int)(i->m_Score)/60 << ":";
 			if (i->m_Score-((int)i->m_Score/60)*60 != 0)
-				oss << i->m_Score-((int)i->m_Score/60)*60 <<" second(s)";
+				oss << i->m_Score-((int)i->m_Score/60)*60 <<" ";
 
-			m_pGameServer->SendChatTarget(id, oss.str().c_str());
+			res.push_back(oss.str().c_str());
 		}
 		pos++;
 	}
-	m_pGameServer->SendChatTarget(id, "-----------------------------");
+	res.push_back("-----------------------------");
+	return res;
 }

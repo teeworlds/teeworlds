@@ -695,6 +695,9 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			else if(!strncmp(pMsg->m_pMessage, "/top5", 5) && !g_Config.m_SvHideScore)
 			{
 				const char *pt = pMsg->m_pMessage;
+				std::list<std::string> s;
+				std::list<std::string>::iterator i;
+				char buf[64];
 				int number = 0;
 				pt += 6;
 				while(*pt && *pt >= '0' && *pt <= '9')
@@ -703,9 +706,14 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					pt++;
 				}
 				if(number)
-					((CGameControllerDDRace*)m_pController)->m_Score.Top5Draw(ClientId, number);
+					s=((CGameControllerDDRace*)m_pController)->m_Score.Top5Draw(ClientId, number);
 				else
-					((CGameControllerDDRace*)m_pController)->m_Score.Top5Draw(ClientId, 0);
+					s=((CGameControllerDDRace*)m_pController)->m_Score.Top5Draw(ClientId, 0);
+				for(i=s.begin(); i != s.end(); ++i)
+					{
+						str_format(buf, sizeof(buf), "%s",*i);
+						SendChatTarget(ClientId, buf);
+					}
 			}
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/rank"))
 			{
