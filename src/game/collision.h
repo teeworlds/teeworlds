@@ -34,11 +34,12 @@ public:
 	void MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity);
 	bool TestBox(vec2 Pos, vec2 Size);
 	int GetTile(int x, int y);
-	int Entitiy(int x, int y);
+	int Entity(int x, int y, bool Front);
 	//DDRace
 	int GetMapIndex(vec2 PrevPos, vec2 Pos);
 	vec2 GetPos(int Index);
 	int GetCollisionDDRace(int Index);
+	int GetCollisionDDRace2(int Index);
 	int IsTeleport(int x, int y);
 	int IsCheckpoint(int Index);
 	bool IsSpeedup(int x, int y);

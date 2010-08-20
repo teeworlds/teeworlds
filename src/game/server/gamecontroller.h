@@ -101,9 +101,9 @@ public:
 		Returns:
 			bool?
 	*/
-	virtual bool OnEntity(int Index, vec2 Pos);
+	virtual bool OnEntity(int Index, vec2 Pos, bool Front);
 	
-	virtual void Connector(vec2 Pos, CDoor* Door);
+	virtual void Connector(vec2 Pos, CDoor* Door, bool Front);
 	
 	/*
 		Function: on_CCharacter_spawn
