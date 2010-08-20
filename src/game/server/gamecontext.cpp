@@ -1284,7 +1284,7 @@ void CGameContext::ConHammerMe(IConsole::IResult *pResult, void *pUserData, int 
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(!pSelf->CheatsAvailable(cid)) return;
 	char buf[128];
-	int type = pResult->GetInteger(1);
+	int type = pResult->GetInteger(0);
 	CCharacter* chr = pSelf->m_apPlayers[cid]->GetCharacter();
 	if (!chr)
 		return;
