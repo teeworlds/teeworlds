@@ -146,7 +146,7 @@ std::list<std::string> CScore::Top5Draw(int id, int debut) //Thanks nevi
 			if (i->m_Score-((int)i->m_Score/60)*60 != 0)
 				oss << i->m_Score-((int)i->m_Score/60)*60 <<" ";
 
-			res.push_back(oss.str().c_str());
+			res.push_back(oss.str());
 		}
 		pos++;
 	}

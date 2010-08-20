@@ -704,10 +704,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					number = number*10+(*pt-'0');
 					pt++;
 				}
-				if(number)
-					s=((CGameControllerDDRace*)m_pController)->m_Score.Top5Draw(ClientId, number);
-				else
-					s=((CGameControllerDDRace*)m_pController)->m_Score.Top5Draw(ClientId, 0);
+				s=((CGameControllerDDRace*)m_pController)->m_Score.Top5Draw(ClientId, number ? number : 0);
 				for(i=s.begin(); i != s.end(); ++i)
 					SendChatTarget(ClientId, i->c_str());
 			}
@@ -1236,7 +1233,7 @@ void CGameContext::ConNinjaMe(IConsole::IResult *pResult, void *pUserData, int c
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(!pSelf->CheatsAvailable(cid)) return;
 	
-	CCharacter* chr = pSelf->m_apPlayers[cid]->GetCharacter();
+	CCharacter* chr = pSelf->GetPlayerChar(cid);
 	if(chr) {
 		chr->GiveNinja();
 		if(!g_Config.m_SvCheatTime)
@@ -1248,7 +1245,7 @@ void CGameContext::ConNinja(IConsole::IResult *pResult, void *pUserData, int cid
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(!pSelf->CheatsAvailable(cid)) return;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	CCharacter* chr = pSelf->m_apPlayers[cid1]->GetCharacter();
+	CCharacter* chr = pSelf->GetPlayerChar(cid1);
 	if(chr) {
 		chr->GiveNinja();
 		if(!g_Config.m_SvCheatTime)
@@ -1265,7 +1262,7 @@ void CGameContext::ConHammer(IConsole::IResult *pResult, void *pUserData, int ci
 	
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	int type = pResult->GetInteger(1);
-	CCharacter* chr = pSelf->m_apPlayers[cid1]->GetCharacter();
+	CCharacter* chr = pSelf->GetPlayerChar(cid1);
 	if (!chr)
 		return;
 	CServer* serv = (CServer*)pSelf->Server();
@@ -1289,7 +1286,7 @@ void CGameContext::ConHammerMe(IConsole::IResult *pResult, void *pUserData, int 
 	if(!pSelf->CheatsAvailable(cid)) return;
 	char buf[128];
 	int type = pResult->GetInteger(0);
-	CCharacter* chr = pSelf->m_apPlayers[cid]->GetCharacter();
+	CCharacter* chr = pSelf->GetPlayerChar(cid);
 	if (!chr)
 		return;
 	CServer* serv = (CServer*)pSelf->Server();
@@ -1315,7 +1312,7 @@ void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int cid
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
 	{
-		CCharacter* chr = pSelf->m_apPlayers[cid1]->GetCharacter();
+		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if(chr)
 		{
 			chr->m_Super = true;
@@ -1332,7 +1329,7 @@ void CGameContext::ConUnSuper(IConsole::IResult *pResult, void *pUserData, int c
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
 	{
-		CCharacter* chr = pSelf->m_apPlayers[cid1]->GetCharacter();
+		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if(chr)
 		{
 			chr->m_Super = false;
@@ -1346,7 +1343,7 @@ void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int c
 	if(!pSelf->CheatsAvailable(cid)) return;
 	if (pSelf->m_apPlayers[cid])
 	{
-		CCharacter* chr = pSelf->m_apPlayers[cid]->GetCharacter();
+		CCharacter* chr = pSelf->GetPlayerChar(cid);
 		if(chr)
 		{
 			chr->m_Super = true;
@@ -1362,7 +1359,7 @@ void CGameContext::ConUnSuperMe(IConsole::IResult *pResult, void *pUserData, int
 	if(!pSelf->CheatsAvailable(cid)) return;
 	if (pSelf->m_apPlayers[cid])
 	{
-		CCharacter* chr = pSelf->m_apPlayers[cid]->GetCharacter();
+		CCharacter* chr = pSelf->GetPlayerChar(cid);
 		if(chr)
 		{
 			chr->m_Super = false;
@@ -1377,7 +1374,7 @@ void CGameContext::ConWeapons(IConsole::IResult *pResult, void *pUserData, int c
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
 	{
-		CCharacter* chr = pSelf->m_apPlayers[cid1]->GetCharacter();
+		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if(chr)
 		{
 			chr->GiveAllWeapons();
@@ -1391,15 +1388,12 @@ void CGameContext::ConWeaponsMe(IConsole::IResult *pResult, void *pUserData, int
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(!pSelf->CheatsAvailable(cid)) return;
-	if (pSelf->m_apPlayers[cid])
+	CCharacter* chr = pSelf->GetPlayerChar(cid);
+	if(chr)
 	{
-		CCharacter* chr = pSelf->m_apPlayers[cid]->GetCharacter();
-		if(chr)
-		{
-			chr->GiveAllWeapons();
-			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
-		}
+		chr->GiveAllWeapons();
+		if(!g_Config.m_SvCheatTime)
+			chr->m_RaceState = RACE_CHEAT;
 	}
 }
 
@@ -1414,7 +1408,7 @@ void CGameContext::ConTeleport(IConsole::IResult *pResult, void *pUserData, int 
 			|| (compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]) &&  compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid2]))
 			|| (compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]) && cid2==cid))
 		{
-			CCharacter* chr = pSelf->m_apPlayers[cid1]->GetCharacter();
+			CCharacter* chr = pSelf->GetPlayerChar(cid1);
 			if(chr)
 			{
 				chr->m_Core.m_Pos = pSelf->m_apPlayers[cid2]->m_ViewPos;
@@ -1435,29 +1429,26 @@ void CGameContext::ConTimer(IConsole::IResult *pResult, void *pUserData, int cid
 		int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 		int type = pResult->GetInteger(1);
 		
-		CPlayer* pl = pSelf->m_apPlayers[cid1];
-		if(pl != 0) {
-			CCharacter* chr = pl->GetCharacter();
-			if (!chr)
-				return;
-			if (type>1 || type<0)
+		CCharacter* chr = pSelf->GetPlayerChar(cid1);
+		if (!chr)
+			return;
+		if (type>1 || type<0)
+		{
+			serv->SendRconLine(cid, "Select 0 for no time & 1 for with time");
+		}
+		else
+		{	
+			if(type)
 			{
-				serv->SendRconLine(cid, "Select 0 for no time & 1 for with time");
+				chr->m_RaceState = RACE_STARTED;
+				str_format(buf, sizeof(buf), "Cid=%d Has time now",cid1);
 			}
-			else
-			{	
-				if(type)
-				{
-					chr->m_RaceState = RACE_STARTED;
-					str_format(buf, sizeof(buf), "Cid=%d Has time now",cid1);
-				}
-				else if(!type)
-				{
-					chr->m_RaceState=RACE_CHEAT;
-					str_format(buf, sizeof(buf), "Cid=%d Hasn't time now",cid1);
-				}
-				serv->SendRconLine(cid1, buf);
+			else if(!type)
+			{
+				chr->m_RaceState=RACE_CHEAT;
+				str_format(buf, sizeof(buf), "Cid=%d Hasn't time now",cid1);
 			}
+			serv->SendRconLine(cid1, buf);
 		}
 	} else {
 		
@@ -1473,7 +1464,7 @@ void CGameContext::ConTimerReset(IConsole::IResult *pResult, void *pUserData, in
 	
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	
-	CCharacter* chr = pSelf->m_apPlayers[cid1]->GetCharacter();
+	CCharacter* chr = pSelf->GetPlayerChar(cid1);
 	if (!chr)
 		return;
 	chr->m_StartTime = pSelf->Server()->Tick();
