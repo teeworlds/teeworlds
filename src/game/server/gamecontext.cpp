@@ -705,10 +705,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					number = number*10+(*pt-'0');
 					pt++;
 				}
-				if(number)
-					s=((CGameControllerDDRace*)m_pController)->m_Score.Top5Draw(ClientId, number);
-				else
-					s=((CGameControllerDDRace*)m_pController)->m_Score.Top5Draw(ClientId, 0);
+				s=((CGameControllerDDRace*)m_pController)->m_Score.Top5Draw(ClientId, number ? number : 0);
 				for(i=s.begin(); i != s.end(); ++i)
 					{
 						str_format(buf, sizeof(buf), "%s",*i);
