@@ -32,7 +32,7 @@ public:
 	CPlayerScore *SearchName(const char *name, int &pos);
 	CPlayerScore *SearchName(const char *name);
 	void ParsePlayer(const char *name, float score);
-	std::list<std::string> CScore::Top5Draw(int id, int debut);
+	std::list<std::string> Top5Draw(int id, int debut);
 };
 
 #endif
