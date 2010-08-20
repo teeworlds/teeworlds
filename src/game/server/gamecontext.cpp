@@ -697,7 +697,6 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				const char *pt = pMsg->m_pMessage;
 				std::list<std::string> s;
 				std::list<std::string>::iterator i;
-				char buf[64];
 				int number = 0;
 				pt += 6;
 				while(*pt && *pt >= '0' && *pt <= '9')
@@ -707,10 +706,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				}
 				s=((CGameControllerDDRace*)m_pController)->m_Score.Top5Draw(ClientId, number ? number : 0);
 				for(i=s.begin(); i != s.end(); ++i)
-					{
-						str_format(buf, sizeof(buf), "%s",*i);
-						SendChatTarget(ClientId, buf);
-					}
+					SendChatTarget(ClientId, i->c_str());
 			}
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/rank"))
 			{
