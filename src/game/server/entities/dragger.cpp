@@ -67,7 +67,8 @@ void CDragger::drag()
 		int res = 0;
 		if (!nw)
 			res = GameServer()->Collision()->IntersectNoLaser(m_Pos, target->m_Pos, 0, 0);
-
+		else
+			res = GameServer()->Collision()->IntersectNoLaserNW(m_Pos, target->m_Pos, 0, 0);
 		if (res || length(m_Pos-target->m_Pos)>700)
 		{
 			target=0;
