@@ -119,9 +119,9 @@ bool IGameController::CanSpawn(CPlayer *pPlayer, vec2 *pOutPos)
 
 bool IGameController::OnEntity(int Index, vec2 Pos, bool Front)
 {
-	//if (Index<0)
-		//return false;
-	dbg_msg("OnEntity","Index=%d, Pos=(%d,%d), Front=%d",Index,Pos.x,Pos.y,Front);//Remove*/
+	if (Index<0)
+		return false;
+	dbg_msg("OnEntity","Index=%d  Front=%d",Index,Front);//Remove*/
 	int Type = -1;
 	int SubType = 0;
 	int x,y;
