@@ -9,7 +9,7 @@
 #include "gamecontext.h"
 
 #include "entities/light.h"
-#include "entities/drager.h"
+#include "entities/dragger.h"
 #include "entities/gun.h"
 #include "entities/projectile.h"
 #include "entities/plasma.h"
@@ -293,11 +293,11 @@ bool IGameController::OnEntity(int Index, vec2 Pos, bool Front)
 	}
    else if(Index>=ENTITY_DRAGGER_WEAK && Index <=ENTITY_DRAGGER_STRONG)
    {
-       new CDrager(&GameServer()->m_World,Pos,Index-ENTITY_DRAGGER_WEAK+1);
+       new CDragger(&GameServer()->m_World,Pos,Index-ENTITY_DRAGGER_WEAK+1);
    }
    else if(Index>=ENTITY_DRAGGER_WEAK_NW && Index <=ENTITY_DRAGGER_STRONG_NW)
    {
-       new CDrager(&GameServer()->m_World, Pos,Index-ENTITY_DRAGGER_WEAK_NW+1,true);
+       new CDragger(&GameServer()->m_World, Pos,Index-ENTITY_DRAGGER_WEAK_NW+1,true);
    }
    else if(Index==ENTITY_PLASMA)
    {

@@ -293,6 +293,32 @@ int CCollision::IntersectNoLaser(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2
 	return 0;
 }
 
+int CCollision::IntersectNoLaser(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
+{
+	float d = distance(Pos0, Pos1);
+	vec2 Last = Pos0;
+
+	for(float f = 0; f < d; f++)
+	{
+		float a = f/d;
+		vec2 Pos = mix(Pos0, Pos1, a);
+		if(IsNoLaser(round(Pos.x), round(Pos.y)))
+		{
+			if(pOutCollision)
+				*pOutCollision = Pos;
+			if(pOutBeforeCollision)
+				*pOutBeforeCollision = Last;
+			return GetCollisionAt(Pos.x, Pos.y);
+		}
+		Last = Pos;
+	}
+	if(pOutCollision)
+		*pOutCollision = Pos1;
+	if(pOutBeforeCollision)
+		*pOutBeforeCollision = Pos1;
+	return 0;
+}
+
 int CCollision::IntersectAir(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
 {
 	float d = distance(Pos0, Pos1);

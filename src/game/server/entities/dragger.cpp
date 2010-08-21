@@ -3,15 +3,15 @@
 #include <engine/server.h>
 #include <game/generated/protocol.h>
 #include <game/server/gamecontext.h>
-#include "drager.h"
+#include "dragger.h"
 
 //////////////////////////////////////////////////
-// CDrager
+// CDragger
 //////////////////////////////////////////////////
 
 const int LENGTH=700;
 
-CDrager::CDrager(CGameWorld *pGameWorld, vec2 pos, float strength, bool nw)
+CDragger::CDragger(CGameWorld *pGameWorld, vec2 pos, float strength, bool nw)
 : CEntity(pGameWorld, NETOBJTYPE_LASER)
 {
 	this->m_Pos = pos;
@@ -21,7 +21,7 @@ CDrager::CDrager(CGameWorld *pGameWorld, vec2 pos, float strength, bool nw)
 	GameWorld()->InsertEntity(this);
 }
 
-void CDrager::move()
+void CDragger::move()
 {
 	if (target)
 		return;
@@ -35,6 +35,8 @@ void CDrager::move()
 		target = ents[i];
 		int res=0;
 		if (!nw)
+			res = GameServer()->Collision()->IntersectNoLaserNW(m_Pos, target->m_Pos, 0, 0);
+		else
 			res = GameServer()->Collision()->IntersectNoLaser(m_Pos, target->m_Pos, 0, 0);
 
 		if (res==0)
@@ -57,7 +59,7 @@ void CDrager::move()
 	}
 }
 
-void CDrager::drag()
+void CDragger::drag()
 {
 	if (target)
 	{
@@ -78,12 +80,12 @@ void CDrager::drag()
 	}
 }
 
-void CDrager::Reset()
+void CDragger::Reset()
 {
 	GameServer()->m_World.DestroyEntity(this);
 }
 
-void CDrager::Tick()
+void CDragger::Tick()
 {
 	if (Server()->Tick()%int(Server()->TickSpeed()*0.15f)==0)
 	{
@@ -102,7 +104,7 @@ void CDrager::Tick()
 
 }
 
-void CDrager::Snap(int snapping_client)
+void CDragger::Snap(int snapping_client)
 {
 	if (target)
 	{
