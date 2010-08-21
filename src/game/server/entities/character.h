@@ -163,7 +163,6 @@ public:
 	
 	int m_LastSpeedup;
 	vec2 m_PrevPos;
-	vec2 m_PrevPrevPos;
 
 	// checkpoints
 	int m_CpTick;

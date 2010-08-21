@@ -60,7 +60,7 @@ void CCollision::Init(class CLayers *pLayers)
 				}
 
 				// DDRace tiles
-				if(Index >= 5 && Index <= 59 || Index>=TILE_STOPH && Index<=191)
+				if(Index >= 5 && Index<=191)
 					m_pFront[i].m_Index = Index;
 			}
 	}
@@ -90,7 +90,7 @@ void CCollision::Init(class CLayers *pLayers)
 		}
 
 		// DDRace tiles
-		if(Index >= 5 && Index <= 59 || Index>=TILE_STOPH && Index<=191)
+		if(Index >= 5 && Index<=191)
 			m_pTiles[i].m_Index = Index;
 	}
 }

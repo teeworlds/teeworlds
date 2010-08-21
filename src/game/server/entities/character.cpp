@@ -734,128 +734,6 @@ void CCharacter::Tick()
 			m_Core.m_Vel.y = 0;
 		}
 	}
-	/*if(TileIndex1 == TILE_STOPH)// Itries and failed
-	{
-		if(m_Core.m_Vel.x > 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex1).x < (int)m_Core.m_Pos.x)
-				m_Core.m_Pos.x = m_PrevPrevPos.x;
-			m_Core.m_Vel.x = 0;
-		}
-		if(m_Core.m_Vel.x < 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex1).x > (int)m_Core.m_Pos.x)
-				m_Core.m_Pos.x = m_PrevPrevPos.x;
-			m_Core.m_Vel.x = 0;
-		}
-	}
-	if(TileIndex2 == TILE_STOPH)
-	{
-		if(m_Core.m_Vel.x > 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex2).x < (int)m_Core.m_Pos.x)
-				m_Core.m_Pos.x = m_PrevPrevPos.x;
-			m_Core.m_Vel.x = 0;
-		}
-		if(m_Core.m_Vel.x < 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex2).x > (int)m_Core.m_Pos.x)
-				m_Core.m_Pos.x = m_PrevPrevPos.x;
-			m_Core.m_Vel.x = 0;
-		}
-	}
-	if(TileIndex1 == TILE_STOPV)
-	{
-		if(m_Core.m_Vel.y < 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex1).y > (int)m_Core.m_Pos.y)
-				m_Core.m_Pos.y = m_PrevPrevPos.y;
-			m_Core.m_Vel.y = 0;
-		}
-		if(m_Core.m_Vel.y > 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex1).y < (int)m_Core.m_Pos.y)
-				m_Core.m_Pos.y = m_PrevPrevPos.y;
-			if(m_Jumped&3 && m_Core.m_Jumped != m_Jumped) // check double jump
-				m_Core.m_Jumped = m_Jumped;
-			m_Core.m_Vel.y = 0;
-		}
-	}
-	if(TileIndex2 == TILE_STOPV)
-	{
-		if(m_Core.m_Vel.y < 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex2).y > (int)m_Core.m_Pos.y)
-				m_Core.m_Pos.y = m_PrevPrevPos.y;
-			m_Core.m_Vel.y = 0;
-		}
-		if(m_Core.m_Vel.y > 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex2).y < (int)m_Core.m_Pos.y)
-				m_Core.m_Pos.y = m_PrevPrevPos.y;
-			if(m_Jumped&3 && m_Core.m_Jumped != m_Jumped) // check double jump
-				m_Core.m_Jumped = m_Jumped;
-			m_Core.m_Vel.y = 0;
-		}
-	}
-	if(TileIndex1 == TILE_STOPA)
-	{
-		if(m_Core.m_Vel.x > 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex1).x < (int)m_Core.m_Pos.x)
-				m_Core.m_Pos.x = m_PrevPrevPos.x;
-			m_Core.m_Vel.x = 0;
-		}
-		if(m_Core.m_Vel.x < 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex1).x > (int)m_Core.m_Pos.x)
-				m_Core.m_Pos.x = m_PrevPrevPos.x;
-			m_Core.m_Vel.x = 0;
-		}
-		if(m_Core.m_Vel.y < 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex1).y > (int)m_Core.m_Pos.y)
-				m_Core.m_Pos.y = m_PrevPrevPos.y;
-			m_Core.m_Vel.y = 0;
-		}
-		if(m_Core.m_Vel.y > 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex1).y < (int)m_Core.m_Pos.y)
-				m_Core.m_Pos.y = m_PrevPrevPos.y;
-			if(m_Jumped&3 && m_Core.m_Jumped != m_Jumped) // check double jump
-				m_Core.m_Jumped = m_Jumped;
-			m_Core.m_Vel.y = 0;
-		}
-	}
-	if(TileIndex2 == TILE_STOPA)
-	{
-		if(m_Core.m_Vel.x > 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex2).x < (int)m_Core.m_Pos.x)
-				m_Core.m_Pos.x = m_PrevPrevPos.x;
-			m_Core.m_Vel.x = 0;
-		}
-		if(m_Core.m_Vel.x < 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex2).x > (int)m_Core.m_Pos.x)
-				m_Core.m_Pos.x = m_PrevPrevPos.x;
-			m_Core.m_Vel.x = 0;
-		}
-		if(m_Core.m_Vel.y < 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex2).y > (int)m_Core.m_Pos.y)
-				m_Core.m_Pos.y = m_PrevPrevPos.y;
-			m_Core.m_Vel.y = 0;
-		}
-		if(m_Core.m_Vel.y > 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex2).y < (int)m_Core.m_Pos.y)
-				m_Core.m_Pos.y = m_PrevPrevPos.y;
-			if(m_Jumped&3 && m_Core.m_Jumped != m_Jumped) // check double jump
-				m_Core.m_Jumped = m_Jumped;
-			m_Core.m_Vel.y = 0;
-		}
-	}*/
 	if (TileIndex1 == TILE_BOOST_L || TileIndex2 == TILE_BOOST_L)
 	{
 		if(m_PrevPos.x-m_Pos.x<0)
@@ -884,19 +762,6 @@ void CCharacter::Tick()
 		else
 			m_Core.m_Vel.y += m_Core.m_Vel.y*0.5;
 	}
-	if(TileIndex1 == TILE_BOOSTH || TileIndex2 == TILE_BOOSTH)
-	{
-		m_Core.m_Vel.x += m_Core.m_Vel.x *-0.5;
-	}
-	if(TileIndex1 == TILE_BOOSTV || TileIndex2 == TILE_BOOSTV)
-	{
-		m_Core.m_Vel.y += m_Core.m_Vel.y *-0.5;
-	}
-	if(TileIndex1 == TILE_BOOSTA || TileIndex2 == TILE_BOOSTA)
-	{
-		m_Core.m_Vel.y += m_Core.m_Vel.y *-0.5;
-		m_Core.m_Vel.x += m_Core.m_Vel.x *-0.5;
-	}
 	if (TileIndex1 == TILE_BOOST_L2 || TileIndex2 == TILE_BOOST_L2)
 	{
 		if(m_PrevPos.x-m_Pos.x<0)
@@ -924,35 +789,6 @@ void CCharacter::Tick()
 			m_Core.m_Vel.y = m_Core.m_Vel.y *-1.1;
 		else
 			m_Core.m_Vel.y += m_Core.m_Vel.y*1.1;
-	}
-	if(TileIndex1 == TILE_BOOSTH2 || TileIndex2 == TILE_BOOSTH2)
-	{
-		if(m_PrevPos.x-m_Pos.x>0)
-			m_Core.m_Pos.x = m_PrevPrevPos.x;
-		else if(m_PrevPos.x-m_Pos.x<0)
-			m_Core.m_Pos.x = m_PrevPrevPos.x;
-		m_Core.m_Vel.x = m_Core.m_Vel.x *-1.1;
-	}
-	if(TileIndex1 == TILE_BOOSTV2 || TileIndex2 == TILE_BOOSTV2)
-	{
-		if(m_PrevPos.y-m_Pos.y>0)
-			m_Core.m_Pos.y = m_PrevPrevPos.y;
-		else if(m_PrevPos.y-m_Pos.y<0)
-			m_Core.m_Pos.y = m_PrevPrevPos.y;
-		m_Core.m_Vel.y = m_Core.m_Vel.y *-1.1;
-	}
-	if(TileIndex1 == TILE_BOOSTA2 || TileIndex2 == TILE_BOOSTA2)
-	{
-		if(m_PrevPos.y-m_Pos.y>0)
-			m_Core.m_Pos.y = m_PrevPrevPos.y;
-		else if(m_PrevPos.y-m_Pos.y<0)
-			m_Core.m_Pos.y = m_PrevPos.y;
-		if(m_PrevPos.x-m_Pos.x>0)
-			m_Core.m_Pos.x = m_PrevPrevPos.x;
-		else if(m_PrevPos.x-m_Pos.x<0)
-			m_Core.m_Pos.x = m_PrevPrevPos.x;
-		m_Core.m_Vel.y = m_Core.m_Vel.y *-1.1;
-		m_Core.m_Vel.x = m_Core.m_Vel.x *-1.1;
 	}
 	if(GameServer()->Collision()->IsSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y))
 	{
@@ -1005,7 +841,6 @@ void CCharacter::Tick()
 		m_OlderPos = m_OldPos;
 		m_OldPos = m_Core.m_Pos;  		 
 	} 
-	m_PrevPrevPos = m_PrevPos;
 	m_PrevPos = m_Core.m_Pos;
 	return;
 }
