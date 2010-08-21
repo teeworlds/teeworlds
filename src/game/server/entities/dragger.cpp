@@ -35,9 +35,9 @@ void CDragger::move()
 		target = ents[i];
 		int res=0;
 		if (!nw)
-			res = GameServer()->Collision()->IntersectNoLaserNW(m_Pos, target->m_Pos, 0, 0);
-		else
 			res = GameServer()->Collision()->IntersectNoLaser(m_Pos, target->m_Pos, 0, 0);
+		else
+			res = GameServer()->Collision()->IntersectNoLaserNW(m_Pos, target->m_Pos, 0, 0);
 
 		if (res==0)
 		{
