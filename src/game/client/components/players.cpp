@@ -315,7 +315,7 @@ void CPlayers::RenderPlayer(
 		Position = vec2(Player.m_X, Player.m_Y);
 
 	bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
-	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16);
+	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16) || !Collision()->FCheckPoint(Player.m_X, Player.m_Y+16);
 	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
 
 	// evaluate animation

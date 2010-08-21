@@ -23,8 +23,11 @@ public:
 	void Init(class CLayers *pLayers);
 	bool CheckPoint(float x, float y) { return IsSolid(round(x), round(y)); }
 	bool CheckPoint(vec2 p) { return CheckPoint(p.x, p.y); }
+	bool FCheckPoint(float x, float y) { return IsFSolid(round(x), round(y)); }
+	bool FCheckPoint(vec2 p) { return FCheckPoint(p.x, p.y); }
 	void SetCollisionAt(float x, float y, int flag);
 	int GetCollisionAt(float x, float y) { return GetTile(round(x), round(y)); }
+	int GetFCollisionAt(float x, float y) { return GetFTile(round(x), round(y)); }
 	int GetWidth() { return m_Width; };
 	int GetHeight() { return m_Height; };
 	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, bool AllowThrough);
@@ -35,21 +38,23 @@ public:
 	void MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity);
 	bool TestBox(vec2 Pos, vec2 Size);
 	int GetTile(int x, int y);
+	int GetFTile(int x, int y);
 	int Entity(int x, int y, bool Front);
 	//DDRace
 	int GetMapIndex(vec2 PrevPos, vec2 Pos);
 	vec2 GetPos(int Index);
 	int GetCollisionDDRace(int Index);
-	int GetCollisionDDRace2(int Index);
+	int GetFCollisionDDRace(int Index);
 	int IsTeleport(int x, int y);
-	int IsCheckpoint(int Index);
+	//int IsCheckpoint(int Index);
 	bool IsSpeedup(int x, int y);
 	void GetSpeedup(int x, int y, vec2 *Dir, int *Force);
-	bool IsFront(int x, int y);
 	
 	int IsSolid(int x, int y);
+	int IsFSolid(int x, int y);
 	int IsThrough(int x, int y);
 	int IsNoLaser(int x, int y);
+	int IsFNoLaser(int x, int y);
 	int IsCp(int x, int y);
 
 	vec2 BoostAccelerator(int Index);
