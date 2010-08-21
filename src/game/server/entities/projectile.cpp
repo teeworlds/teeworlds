@@ -68,7 +68,7 @@ void CProjectile::Tick()
 	vec2 ColPos;
 	vec2 NewPos;
 	vec2 Speed = CurPos - PrevPos;
-	int Collide = GameServer()->Collision()->IntersectLine(PrevPos, CurPos, &ColPos, &NewPos);
+	int Collide = GameServer()->Collision()->IntersectLine(PrevPos, CurPos, &ColPos, &NewPos,false);
 	CCharacter *OwnerChar;
 	
 

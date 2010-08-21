@@ -27,7 +27,7 @@ public:
 	int GetCollisionAt(float x, float y) { return GetTile(round(x), round(y)); }
 	int GetWidth() { return m_Width; };
 	int GetHeight() { return m_Height; };
-	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);
+	int IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, bool AllowThrough);
 	int IntersectNoLaser(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);
 	int IntersectAir(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision);
 	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *Bpounces);
@@ -47,6 +47,7 @@ public:
 	bool IsFront(int x, int y);
 	
 	int IsSolid(int x, int y);
+	int IsThrough(int x, int y);
 	int IsNoLaser(int x, int y);
 	int IsCp(int x, int y);
 

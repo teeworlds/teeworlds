@@ -162,7 +162,8 @@ int CCollision::GetCollisionDDRace(int Index)
 int CCollision::GetCollisionDDRace2(int Index)
 {
 	/*dbg_msg("GetCollisionDDRace2","m_pFront[%d].m_Index = %d",Index,m_pFront[Index].m_Index);//Remove*/
-	if(Index < 0)
+
+	if(Index < 0 || !m_pFront)
 		return 0;
 	return m_pFront[Index].m_Index;
 }
@@ -194,22 +195,61 @@ void CCollision::SetCollisionAt(float x, float y, int flag)
 } 
 
 // TODO: rewrite this smarter!
-int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
+void ThroughOffset(vec2 Pos0, vec2 Pos1, int *Ox, int *Oy)
+{
+	float x = Pos0.x - Pos1.x;
+	float y = Pos0.y - Pos1.y;
+	if (fabs(x) > fabs(y))
+	{
+		if (x < 0)
+		{
+			*Ox = -32;
+			*Oy = 0;
+		}
+		else
+		{
+			*Ox = 32;
+			*Oy = 0;
+		}
+	}
+	else
+	{
+		if (y < 0)
+		{
+			*Ox = 0;
+			*Oy = -32;
+		}
+		else
+		{
+			*Ox = 0;
+			*Oy = 32;
+		}
+	}
+}
+
+int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, bool AllowThrough)
 {
 	float d = distance(Pos0, Pos1);
 	vec2 Last = Pos0;
-	
+	int ix, iy; // Temporary position for checking collision
+	int dx, dy; // Offset for checking the "through" tile
+	if (AllowThrough)
+		{
+		ThroughOffset(Pos0, Pos1, &dx, &dy);
+		}
 	for(float f = 0; f < d; f++)
 	{
 		float a = f/d;
 		vec2 Pos = mix(Pos0, Pos1, a);
-		if(CheckPoint(Pos.x, Pos.y))
+		ix = round(Pos.x);
+		iy = round(Pos.y);
+		if(CheckPoint(ix, iy) && !(AllowThrough && IsThrough(ix + dx, iy + dy)))
 		{
 			if(pOutCollision)
 				*pOutCollision = Pos;
 			if(pOutBeforeCollision)
 				*pOutBeforeCollision = Last;
-			return GetCollisionAt(Pos.x, Pos.y);
+			return GetCollisionAt(ix, iy);
 		}
 		Last = Pos;
 	}
@@ -389,6 +429,22 @@ bool CCollision::TestBox(vec2 Pos, vec2 Size)
 int CCollision::IsSolid(int x, int y)
 {
 	return (GetTile(x,y)&COLFLAG_SOLID);
+}
+
+int CCollision::IsThrough(int x, int y)
+{
+	int nx = clamp(x/32, 0, m_Width-1);
+	int ny = clamp(y/32, 0, m_Height-1);
+	int Index = m_pTiles[ny*m_Width+nx].m_Index;
+	int Findex;
+	if (m_pFront)
+		Findex = m_pFront[ny*m_Width+nx].m_Index;
+	if (Index == TILE_THROUGH)
+		return Index;
+	else if (Findex == TILE_THROUGH)
+		return Findex;
+	else
+		return 0;
 }
 
 int CCollision::IsNoLaser(int x, int y)  		 

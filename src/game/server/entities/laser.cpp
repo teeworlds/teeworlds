@@ -56,7 +56,7 @@ void CLaser::DoBounce()
 	vec2 Coltile;
 	
 	int res;
-	res = GameServer()->Collision()->IntersectLine(m_Pos, To, &Coltile, &To);
+	res = GameServer()->Collision()->IntersectLine(m_Pos, To, &Coltile, &To,false);
 	
 	if(res)
 	{

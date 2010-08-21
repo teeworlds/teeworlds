@@ -192,18 +192,20 @@ void CCharacterCore::Tick(bool UseInput)
 		{
 			m_HookState = HOOK_RETRACT_START;
 			NewPos = m_Pos + normalize(NewPos-m_Pos) * m_pWorld->m_Tuning.m_HookLength;
+			m_pReset = true;
 		}
 		
 		// make sure that the hook doesn't go though the ground
 		bool GoingToHitGround = false;
 		bool GoingToRetract = false;
-		int Hit = m_pCollision->IntersectLine(m_HookPos, NewPos, &NewPos, 0);
+		int Hit = m_pCollision->IntersectLine(m_HookPos, NewPos, &NewPos, 0,true);
 		if(Hit)
 		{
 			if(Hit&CCollision::COLFLAG_NOHOOK)
 				GoingToRetract = true;
 			else
 				GoingToHitGround = true;
+			m_pReset = true;
 		}
 
 		// Check against other players first
