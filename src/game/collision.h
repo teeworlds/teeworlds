@@ -57,7 +57,6 @@ public:
 	int IsFNoLaser(int x, int y);
 	int IsCp(int x, int y);
 
-	vec2 BoostAccelerator(int Index);
 	vec2 CpSpeed(int index);
 	
 	class CTeleTile *m_pTele;

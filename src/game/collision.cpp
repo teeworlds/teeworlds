@@ -60,7 +60,7 @@ void CCollision::Init(class CLayers *pLayers)
 				}
 
 				// DDRace tiles
-				if(Index >= 5 && Index <= 59 || Index>=64 && Index<=191)
+				if(Index >= 5 && Index <= 59 || Index>=TILE_STOPH && Index<=191)
 					m_pFront[i].m_Index = Index;
 			}
 	}
@@ -90,7 +90,7 @@ void CCollision::Init(class CLayers *pLayers)
 		}
 
 		// DDRace tiles
-		if(Index >= 5 && Index <= 59 || Index>=64 && Index<=191)
+		if(Index >= 5 && Index <= 59 || Index>=TILE_STOPH && Index<=191)
 			m_pTiles[i].m_Index = Index;
 	}
 }
@@ -609,27 +609,4 @@ vec2 CCollision::CpSpeed(int Index)
        target*=4;
    return target;
 
-}
-
-
-vec2 CCollision::BoostAccelerator(int Index)
-{
-   if (Index==TILE_BOOST_L)
-       return vec2(-3,0);
-   else if(Index==TILE_BOOST_R)
-       return vec2(3,0);
-   else if(Index==TILE_BOOST_D)
-       return vec2(0,2);
-   else if(Index==TILE_BOOST_U)
-       return vec2(0,-2);
-   else if(Index==TILE_BOOST_L2)
-       return vec2(-15,0);
-   else if(Index==TILE_BOOST_R2)
-       return vec2(15,0);
-   else if(Index==TILE_BOOST_D2)
-       return vec2(0,15);
-   else if(Index==TILE_BOOST_U2)
-       return vec2(0,-15);
-
-   return vec2(0,0);
 }
