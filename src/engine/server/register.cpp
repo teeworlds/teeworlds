@@ -3,6 +3,7 @@
 #include <engine/shared/network.h>
 #include <engine/shared/config.h>
 #include <engine/shared/engine.h>
+#include <engine/console.h>
 #include <engine/masterserver.h>
 
 #include <mastersrv/mastersrv.h>
@@ -13,6 +14,7 @@ CRegister::CRegister()
 {
 	m_pNetServer = 0;
 	m_pMasterServer = 0;
+	m_pConsole = 0;
 
 	m_RegisterState = REGISTERSTATE_START;
 	m_RegisterStateStart = 0;
@@ -88,10 +90,11 @@ void CRegister::RegisterGotCount(CNetChunk *pChunk)
 	}
 }
 
-void CRegister::Init(CNetServer *pNetServer, IEngineMasterServer *pMasterServer)
+void CRegister::Init(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole)
 {
 	m_pNetServer = pNetServer;
 	m_pMasterServer = pMasterServer;
+	m_pConsole = pConsole;
 }
 
 void CRegister::RegisterUpdate()
@@ -110,7 +113,7 @@ void CRegister::RegisterUpdate()
 		m_RegisterFirst = 1;
 		RegisterNewState(REGISTERSTATE_UPDATE_ADDRS);
 		m_pMasterServer->RefreshAddresses();
-		dbg_msg("register", "refreshing ip addresses");
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "refreshing ip addresses");
 	}
 	else if(m_RegisterState == REGISTERSTATE_UPDATE_ADDRS)
 	{
@@ -121,11 +124,11 @@ void CRegister::RegisterUpdate()
 			int i;
 			for(i = 0; i < IMasterServer::MAX_MASTERSERVERS; i++)
 			{
-				NETADDR addr = m_pMasterServer->GetAddr(i);
-				m_aMasterserverInfo[i].m_Addr = addr;
+				NETADDR Addr = m_pMasterServer->GetAddr(i);
+				m_aMasterserverInfo[i].m_Addr = Addr;
 				m_aMasterserverInfo[i].m_Count = 0;
 			
-				if(!addr.ip[0] && !addr.ip[1] && !addr.ip[2] && !addr.ip[3])
+				if(!Addr.ip[0] && !Addr.ip[1] && !Addr.ip[2] && !Addr.ip[3])
 					m_aMasterserverInfo[i].m_Valid = 0;
 				else
 				{
@@ -135,7 +138,7 @@ void CRegister::RegisterUpdate()
 				}
 			}
 			
-			dbg_msg("register", "fetching server counts");
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "fetching server counts");
 			RegisterNewState(REGISTERSTATE_QUERY_COUNT);
 		}
 	}
@@ -177,12 +180,14 @@ void CRegister::RegisterUpdate()
 			m_RegisterRegisteredServer = Best;
 			if(m_RegisterRegisteredServer == -1)
 			{
-				dbg_msg("register", "WARNING: No master servers. Retrying in 60 seconds");
+				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "WARNING: No master servers. Retrying in 60 seconds");
 				RegisterNewState(REGISTERSTATE_ERROR);
 			}
 			else
 			{			
-				dbg_msg("register", "choosen '%s' as master, sending heartbeats", m_pMasterServer->GetName(m_RegisterRegisteredServer));
+				char aBuf[256];
+				str_format(aBuf, sizeof(aBuf), "choosen '%s' as master, sending heartbeats", m_pMasterServer->GetName(m_RegisterRegisteredServer));
+				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", aBuf);
 				m_aMasterserverInfo[m_RegisterRegisteredServer].m_LastSend = 0;
 				RegisterNewState(REGISTERSTATE_HEARTBEAT);
 			}
@@ -199,14 +204,14 @@ void CRegister::RegisterUpdate()
 		
 		if(Now > m_RegisterStateStart+Freq*60)
 		{
-			dbg_msg("register", "WARNING: Master server is not responding, switching master");
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "WARNING: Master server is not responding, switching master");
 			RegisterNewState(REGISTERSTATE_START);
 		}
 	}
 	else if(m_RegisterState == REGISTERSTATE_REGISTERED)
 	{
 		if(m_RegisterFirst)
-			dbg_msg("register", "server registered");
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "server registered");
 			
 		m_RegisterFirst = 0;
 		
@@ -259,15 +264,17 @@ int CRegister::RegisterProcessPacket(CNetChunk *pPacket)
 		mem_comp(pPacket->m_pData, SERVERBROWSE_FWOK, sizeof(SERVERBROWSE_FWOK)) == 0)
 	{
 		if(m_RegisterFirst)
-			dbg_msg("register", "no firewall/nat problems detected");
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "no firewall/nat problems detected");
 		RegisterNewState(REGISTERSTATE_REGISTERED);
 		return 1;
 	}
 	else if(pPacket->m_DataSize == sizeof(SERVERBROWSE_FWERROR) &&
 		mem_comp(pPacket->m_pData, SERVERBROWSE_FWERROR, sizeof(SERVERBROWSE_FWERROR)) == 0)
 	{
-		dbg_msg("register", "ERROR: the master server reports that clients can not connect to this server.");
-		dbg_msg("register", "ERROR: configure your firewall/nat to let through udp on port %d.", g_Config.m_SvPort);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "ERROR: the master server reports that clients can not connect to this server.");
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "ERROR: configure your firewall/nat to let through udp on port %d.", g_Config.m_SvPort);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", aBuf);
 		RegisterNewState(REGISTERSTATE_ERROR);
 		return 1;
 	}

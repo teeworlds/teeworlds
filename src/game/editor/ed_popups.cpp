@@ -1,4 +1,5 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
+#include <engine/console.h>
 #include <engine/graphics.h>
 #include <engine/input.h>
 #include <engine/keys.h>
@@ -20,7 +21,7 @@ static int g_UiNumPopups = 0;
 
 void CEditor::UiInvokePopupMenu(void *Id, int Flags, float x, float y, float w, float h, int (*pfnFunc)(CEditor *pEditor, CUIRect Rect), void *pExtra)
 {
-	dbg_msg("", "invoked");
+	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", "invoked");
 	if(x + w > UI()->Screen()->w)
 		x -= w;
 	if(y + h > UI()->Screen()->h)

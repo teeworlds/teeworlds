@@ -8,6 +8,7 @@
 #include <engine/shared/config.h>
 #include <engine/shared/engine.h>
 #include <engine/client.h>
+#include <engine/console.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/input.h>
@@ -462,7 +463,7 @@ void CEditor::RenderBackground(CUIRect View, int Texture, float Size, float Brig
 	Graphics()->QuadsEnd();
 }
 
-int CEditor::UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, const char *pToolTip, int Current, int Min, int Max, float Scale)
+int CEditor::UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, int Current, int Min, int Max, float Scale, const char *pToolTip)
 {
     // logic
     static float s_Value;
@@ -496,6 +497,8 @@ int CEditor::UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, const 
 					Current = Max;
 			}
 		}
+		if(pToolTip)
+			m_pTooltip = pToolTip;
 	}
 	else if(UI()->HotItem() == pId)
 	{
@@ -505,6 +508,8 @@ int CEditor::UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, const 
 			s_Value = 0;
 			UI()->SetActiveItem(pId);
 		}
+		if(pToolTip)
+			m_pTooltip = pToolTip;
 	}
 
 	if(Inside)
@@ -729,7 +734,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 
 		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 		static int s_RotationAmount = 90;
-		s_RotationAmount = UiDoValueSelector(&s_RotationAmount, &Button, "", Localize("Rotation value in degrees of the brush"), s_RotationAmount, 1, 360, 2.0f);
+		s_RotationAmount = UiDoValueSelector(&s_RotationAmount, &Button, "", s_RotationAmount, 1, 360, 2.0f, Localize("Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise."));
 
 		TB_Top.VSplitLeft(5.0f, &Button, &TB_Top);
 		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
@@ -1270,7 +1275,9 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 					if(!UI()->MouseButton(0))
 					{
 						// grab brush
-						dbg_msg("editor", "grabbing %f %f %f %f", r.x, r.y, r.w, r.h);
+						char aBuf[256];
+						str_format(aBuf, sizeof(aBuf),"grabbing %f %f %f %f", r.x, r.y, r.w, r.h);
+						Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);
 
 						// TODO: do all layers
 						int Grabs = 0;
@@ -1601,7 +1608,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIds, int *
 		}
 		else if(pProps[i].m_Type == PROPTYPE_INT_SCROLL)
 		{
-			int NewValue = UiDoValueSelector(&pIds[i], &Shifter, "", "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, 1.0f);
+			int NewValue = UiDoValueSelector(&pIds[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, 1.0f, Localize("Use left mouse button to drag and change the value. Hold shift to be more precise."));
 			if(NewValue != pProps[i].m_Value)
 			{
 				*pNewVal = NewValue;
@@ -1617,7 +1624,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIds, int *
 			for(int c = 0; c < 4; c++)
 			{
 				int v = (pProps[i].m_Value >> s_aShift[c])&0xff;
-				NewColor |= UiDoValueSelector(((char *)&pIds[i])+c, &Shifter, s_paTexts[c], "", v, 0, 255, 1.0f)<<s_aShift[c];
+				NewColor |= UiDoValueSelector(((char *)&pIds[i])+c, &Shifter, s_paTexts[c], v, 0, 255, 1.0f, Localize("Use left mouse button to drag and change the color value. Hold shift to be more precise."))<<s_aShift[c];
 
 				if(c != 3)
 				{
@@ -1816,7 +1823,7 @@ static void ExtractName(const char *pFileName, char *pName)
 	int FinalLen = End-Start;
 	mem_copy(pName, &pFileName[Start], FinalLen);
 	pName[FinalLen] = 0;
-	dbg_msg("", "%s %s %d %d", pFileName, pName, Start, End);
+	//dbg_msg("", "%s %s %d %d", pFileName, pName, Start, End);
 }
 
 void CEditor::ReplaceImage(const char *pFileName, void *pUser)
@@ -2286,30 +2293,17 @@ void CEditor::RenderStatusbar(CUIRect View)
 void CEditor::RenderEnvelopeEditor(CUIRect View)
 {
 	if(m_SelectedEnvelope < 0) m_SelectedEnvelope = 0;
-	if(m_SelectedEnvelope >= m_Map.m_lEnvelopes.size()) m_SelectedEnvelope--;
+	if(m_SelectedEnvelope >= m_Map.m_lEnvelopes.size()) m_SelectedEnvelope = m_Map.m_lEnvelopes.size()-1;
 
 	CEnvelope *pEnvelope = 0;
 	if(m_SelectedEnvelope >= 0 && m_SelectedEnvelope < m_Map.m_lEnvelopes.size())
 		pEnvelope = m_Map.m_lEnvelopes[m_SelectedEnvelope];
-
-	bool ShowColorBar = false;
-	if(pEnvelope && pEnvelope->m_Channels == 4)
-		ShowColorBar = true;
 
 	CUIRect ToolBar, CurveBar, ColorBar;
 	View.HSplitTop(15.0f, &ToolBar, &View);
 	View.HSplitTop(15.0f, &CurveBar, &View);
 	ToolBar.Margin(2.0f, &ToolBar);
 	CurveBar.Margin(2.0f, &CurveBar);
-
-	if(ShowColorBar)
-	{
-		View.HSplitTop(20.0f, &ColorBar, &View);
-		ColorBar.Margin(2.0f, &ColorBar);
-		RenderBackground(ColorBar, ms_CheckerTexture, 16.0f, 1.0f);
-	}
-
-	RenderBackground(View, ms_CheckerTexture, 32.0f, 0.1f);
 
 	// do the toolbar
 	{
@@ -2326,6 +2320,21 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		static int s_New2dButton = 0;
 		if(DoButton_Editor(&s_New2dButton, Localize("Pos.+"), 0, &Button, 0, Localize("Creates a new pos envelope")))
 			pNewEnv = m_Map.NewEnvelope(3);
+
+		// Delete button
+		if(m_SelectedEnvelope >= 0)
+		{
+			ToolBar.VSplitRight(10.0f, &ToolBar, &Button);
+			ToolBar.VSplitRight(50.0f, &ToolBar, &Button);
+			static int s_DelButton = 0;
+			if(DoButton_Editor(&s_DelButton, Localize("Delete"), 0, &Button, 0, Localize("Delete this envelope")))
+			{
+				m_Map.DeleteEnvelope(m_SelectedEnvelope);
+				if(m_SelectedEnvelope >= m_Map.m_lEnvelopes.size())
+					m_SelectedEnvelope = m_Map.m_lEnvelopes.size()-1;
+				pEnvelope = m_SelectedEnvelope >= 0 ? m_Map.m_lEnvelopes[m_SelectedEnvelope] : 0;
+			}
+		}
 
 		if(pNewEnv) // add the default points
 		{
@@ -2371,6 +2380,17 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		}
 	}
 
+	bool ShowColorBar = false;
+	if(pEnvelope && pEnvelope->m_Channels == 4)
+	{
+		ShowColorBar = true;
+		View.HSplitTop(20.0f, &ColorBar, &View);
+		ColorBar.Margin(2.0f, &ColorBar);
+		RenderBackground(ColorBar, ms_CheckerTexture, 16.0f, 1.0f);
+	}
+
+	RenderBackground(View, ms_CheckerTexture, 32.0f, 0.1f);
+
 	if(pEnvelope)
 	{
 		static array<int> Selection;
@@ -2384,12 +2404,17 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 			ToolBar.VSplitLeft(15.0f, &Button, &ToolBar);
 
 			static const char *s_paNames[2][4] = {
-				{"X", "Y", "R"},
+				{"X", "Y", "R", ""},
 				{"R", "G", "B", "A"},
 			};
 			
 			static const char *s_paDescriptions[2][4] = {
 				{Localize("X-axis of the envelope"), Localize("Y-axis of the envelope"), Localize("Rotation of the envelope")},
+				{Localize("Red value of the envelope"), Localize("Green value of the envelope"), Localize("Blue value of the envelope"), Localize("Alpha value of the envelope")},
+			};
+
+			const char *paDescriptions[2][4] = {
+				{Localize("X-axis of the envelope"), Localize("Y-axis of the envelope"), Localize("Rotation of the envelope"), ""},
 				{Localize("Red value of the envelope"), Localize("Green value of the envelope"), Localize("Blue value of the envelope"), Localize("Alpha value of the envelope")},
 			};
 
@@ -2405,7 +2430,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 				else if(i == envelope->channels-1) draw_func = draw_editor_button_r;
 				else draw_func = draw_editor_button_m;*/
 
-				if(DoButton_Editor(&s_aChannelButtons[i], s_paNames[pEnvelope->m_Channels-3][i], s_ActiveChannels&Bit, &Button, 0, s_paDescriptions[pEnvelope->m_Channels-3][i]))
+				if(DoButton_Editor(&s_aChannelButtons[i], s_paNames[pEnvelope->m_Channels-3][i], s_ActiveChannels&Bit, &Button, 0, paDescriptions[pEnvelope->m_Channels-3][i]))
 					s_ActiveChannels ^= Bit;
 			}
 		}
@@ -2903,6 +2928,33 @@ void CEditor::Reset(bool CreateDefault)
 	m_MouseDeltaWy = 0;
 }
 
+void CEditorMap::DeleteEnvelope(int Index)
+{
+	if(Index < 0 || Index >= m_lEnvelopes.size())
+		return;
+
+	// fix links between envelopes and quads
+	for(int i = 0; i < m_lGroups.size(); ++i)
+		for(int j = 0; j < m_lGroups[i]->m_lLayers.size(); ++j)
+			if(m_lGroups[i]->m_lLayers[j]->m_Type == LAYERTYPE_QUADS)
+			{
+				CLayerQuads *Layer = static_cast<CLayerQuads *>(m_lGroups[i]->m_lLayers[j]);
+				for(int k = 0; k < Layer->m_lQuads.size(); ++k)
+				{
+					if(Layer->m_lQuads[k].m_PosEnv == Index)
+						Layer->m_lQuads[k].m_PosEnv = -1;
+					else if(Layer->m_lQuads[k].m_PosEnv > Index)
+						Layer->m_lQuads[k].m_PosEnv--;
+					if(Layer->m_lQuads[k].m_ColorEnv == Index)
+						Layer->m_lQuads[k].m_ColorEnv = -1;
+					else if(Layer->m_lQuads[k].m_ColorEnv > Index)
+						Layer->m_lQuads[k].m_ColorEnv--;
+				}
+			}
+
+	m_lEnvelopes.remove_index(Index);
+}
+
 void CEditorMap::MakeGameLayer(CLayer *pLayer)
 {
 	m_pGameLayer = (CLayerGame *)pLayer;
@@ -2962,6 +3014,7 @@ void CEditor::Init()
 {
 	m_pInput = Kernel()->RequestInterface<IInput>();
 	m_pClient = Kernel()->RequestInterface<IClient>();
+	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
 	m_pTextRender = Kernel()->RequestInterface<ITextRender>();
 	m_RenderTools.m_pGraphics = m_pGraphics;

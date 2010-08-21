@@ -36,6 +36,7 @@
 #include <engine/graphics.h>
 #include <engine/storage.h>
 #include <engine/keys.h>
+#include <engine/console.h>
 
 #include <math.h>
 #include <time.h>
@@ -114,7 +115,7 @@ void CGraphics_OpenGL::AddVertices(int Count)
 		Flush();
 }
 
-void CGraphics_OpenGL::Rotate4(CPoint *pCenter, CVertex *pPoints)
+void CGraphics_OpenGL::Rotate4(const CPoint &rCenter, CVertex *pPoints)
 {
 	float c = cosf(m_Rotation);
 	float s = sinf(m_Rotation);
@@ -123,10 +124,10 @@ void CGraphics_OpenGL::Rotate4(CPoint *pCenter, CVertex *pPoints)
 
 	for(i = 0; i < 4; i++)
 	{
-		x = pPoints[i].m_Pos.x - pCenter->x;
-		y = pPoints[i].m_Pos.y - pCenter->y;
-		pPoints[i].m_Pos.x = x * c - y * s + pCenter->x;
-		pPoints[i].m_Pos.y = x * s + y * c + pCenter->y;
+		x = pPoints[i].m_Pos.x - rCenter.x;
+		y = pPoints[i].m_Pos.y - rCenter.y;
+		pPoints[i].m_Pos.x = x * c - y * s + rCenter.x;
+		pPoints[i].m_Pos.y = x * s + y * c + rCenter.y;
 	}
 }
 
@@ -457,7 +458,9 @@ void CGraphics_OpenGL::ScreenshotDirect(const char *pFilename)
 			io_close(File);
 	
 		// save png
-		dbg_msg("client", "saved screenshot to '%s'", aWholePath);
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "saved screenshot to '%s'", aWholePath);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
 		png_open_file_write(&Png, aWholePath); // ignore_convention
 		png_set_data(&Png, w, h, 8, PNG_TRUECOLOR, (unsigned char *)pPixelData); // ignore_convention
 		png_close_file(&Png); // ignore_convention
@@ -569,6 +572,7 @@ void CGraphics_OpenGL::QuadsDraw(CQuadItem *pArray, int Num)
 void CGraphics_OpenGL::QuadsDrawTL(const CQuadItem *pArray, int Num)
 {
 	CPoint Center;
+	Center.z = 0;
 
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called quads_draw without begin");
 
@@ -598,9 +602,8 @@ void CGraphics_OpenGL::QuadsDrawTL(const CQuadItem *pArray, int Num)
 		{
 			Center.x = pArray[i].m_X + pArray[i].m_Width/2;
 			Center.y = pArray[i].m_Y + pArray[i].m_Height/2;
-			Center.z = 0;
 
-			Rotate4(&Center, &m_aVertices[m_NumVertices + 4*i]);
+			Rotate4(Center, &m_aVertices[m_NumVertices + 4*i]);
 		}
 	}
 
@@ -674,6 +677,7 @@ void CGraphics_OpenGL::QuadsText(float x, float y, float Size, float r, float g,
 bool CGraphics_OpenGL::Init()
 {
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
+	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	
 	// Set all z to -5.0f
 	for(int i = 0; i < MAX_VERTICES; i++)

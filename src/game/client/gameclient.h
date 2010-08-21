@@ -38,6 +38,7 @@ class CGameClient : public IGameClient
 	class IConsole *m_pConsole;
 	class IStorage *m_pStorage;
 	class IDemoPlayer *m_pDemoPlayer;
+	class IDemoRecorder *m_pDemoRecorder;
 	class IServerBrowser *m_pServerBrowser;
 	
 	CLayers m_Layers;
@@ -69,11 +70,14 @@ public:
 	class IConsole *Console() { return m_pConsole; }
 	class ITextRender *TextRender() const { return m_pTextRender; }
 	class IDemoPlayer *DemoPlayer() const { return m_pDemoPlayer; }
+	class IDemoRecorder *DemoRecorder() const { return m_pDemoRecorder; }
 	class IServerBrowser *ServerBrowser() const { return m_pServerBrowser; }
 	class CRenderTools *RenderTools() { return &m_RenderTools; }
 	class CLayers *Layers() { return &m_Layers; };
 	class CCollision *Collision() { return &m_Collision; };
 	
+	int NetobjNumCorrections() { return m_NetObjHandler.NumObjCorrections(); }
+	const char *NetobjCorrectedOn() { return m_NetObjHandler.CorrectedObjOn(); }
 
 	bool m_SuppressEvents;
 	bool m_NewTick;
@@ -202,6 +206,7 @@ public:
 	class CMotd *m_pMotd;
 	class CMapImages *m_pMapimages;
 	class CVoting *m_pVoting;
+	class CScoreboard *m_pScoreboard;
 };
 
 extern const char *Localize(const char *Str);

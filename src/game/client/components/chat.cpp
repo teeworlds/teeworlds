@@ -10,6 +10,7 @@
 
 #include <game/client/gameclient.h>
 
+#include <game/client/components/scoreboard.h>
 #include <game/client/components/sounds.h>
 #include <game/localization.h>
 
@@ -62,7 +63,7 @@ void CChat::ConChat(IConsole::IResult *pResult, void *pUserData)
 	else if(str_comp(pMode, "team") == 0)
 		((CChat*)pUserData)->EnableMode(1);
 	else
-		dbg_msg("console", "expected all or team as mode");
+		((CChat*)pUserData)->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", "expected all or team as mode");
 }
 
 void CChat::ConShowChat(IConsole::IResult *pResult, void *pUserData)
@@ -166,8 +167,8 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 		}
 		
 		char aBuf[1024];
-		str_format(aBuf, sizeof(aBuf), "[chat]%s%s", m_aLines[m_CurrentLine].m_aName, m_aLines[m_CurrentLine].m_aText);
-		Console()->Print(aBuf);
+		str_format(aBuf, sizeof(aBuf), "%s%s", m_aLines[m_CurrentLine].m_aName, m_aLines[m_CurrentLine].m_aText);
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "chat", aBuf);
 	}
 
 	// play sound
@@ -204,11 +205,12 @@ void CChat::OnRender()
 		TextRender()->TextEx(&Cursor, m_Input.GetString()+m_Input.GetCursorOffset(), -1);
 	}
 
-	y -= 8;
+	y -= 8.0f;
 
-	int i;
 	int64 Now = time_get();
-	for(i = 0; i < MAX_LINES; i++)
+	float LineWidth = m_pClient->m_pScoreboard->Active() ? 95.0f : 200.0f;
+	float HeightLimit = m_pClient->m_pScoreboard->Active() ? 220.0f : m_Show ? 50.0f : 200.0f;
+	for(int i = 0; i < MAX_LINES; i++)
 	{
 		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
 		if(Now > m_aLines[r].m_Time+15*time_freq() && !m_Show)
@@ -220,19 +222,18 @@ void CChat::OnRender()
 		// get the y offset
 		CTextCursor Cursor;
 		TextRender()->SetCursor(&Cursor, Begin, 0, FontSize, 0);
-		Cursor.m_LineWidth = 200.0f;
+		Cursor.m_LineWidth = LineWidth;
 		TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
 		TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
 		y -= Cursor.m_Y + Cursor.m_FontSize;
 
 		// cut off if msgs waste too much space
-		float HeightLimit = m_Show ? 0.0f : 200.0f;
 		if(y < HeightLimit)
 			break;
 		
 		// reset the cursor
 		TextRender()->SetCursor(&Cursor, Begin, y, FontSize, TEXTFLAG_RENDER);
-		Cursor.m_LineWidth = 200.0f;
+		Cursor.m_LineWidth = LineWidth;
 
 		// render name
 		TextRender()->TextColor(0.8f,0.8f,0.8f,1);

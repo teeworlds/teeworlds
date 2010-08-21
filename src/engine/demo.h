@@ -27,4 +27,13 @@ public:
 	virtual const CInfo *BaseInfo() const = 0;
 };
 
+class IDemoRecorder : public IInterface
+{
+	MACRO_INTERFACE("demorecorder", 0)
+public:
+	~IDemoRecorder() {}
+	virtual bool IsRecording() const = 0;
+	virtual int Stop() = 0;
+};
+
 #endif

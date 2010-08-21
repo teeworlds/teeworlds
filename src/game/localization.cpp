@@ -4,6 +4,7 @@
 #include <base/tl/algorithm.h>
 
 #include <engine/shared/linereader.h>
+#include <engine/console.h>
 
 const char *Localize(const char *pStr)
 {
@@ -40,7 +41,7 @@ void CLocalizationDatabase::AddString(const char *pOrgStr, const char *pNewStr)
 	m_Strings.add(s);
 }
 
-bool CLocalizationDatabase::Load(const char *pFilename)
+bool CLocalizationDatabase::Load(const char *pFilename, IConsole *pConsole)
 {
 	// empty string means unload
 	if(pFilename[0] == 0)
@@ -54,7 +55,9 @@ bool CLocalizationDatabase::Load(const char *pFilename)
 	if(!IoHandle)
 		return false;
 	
-	dbg_msg("localization", "loaded '%s'", pFilename);
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "loaded '%s'", pFilename);
+	pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
 	m_Strings.clear();
 	
 	CLineReader LineReader;
@@ -71,13 +74,14 @@ bool CLocalizationDatabase::Load(const char *pFilename)
 		char *pReplacement = LineReader.Get();
 		if(!pReplacement)
 		{
-			dbg_msg("", "unexpected end of file");
+			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "unexpected end of file");
 			break;
 		}
 		
 		if(pReplacement[0] != '=' || pReplacement[1] != '=' || pReplacement[2] != ' ')
 		{
-			dbg_msg("", "malform replacement line for '%s'", pLine);
+			str_format(aBuf, sizeof(aBuf), "malform replacement line for '%s'", pLine);
+			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
 			continue;
 		}
 

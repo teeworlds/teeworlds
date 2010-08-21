@@ -605,7 +605,8 @@ void CCharacter::TickDefered()
 		StartVelX.f = StartVel.x;
 		StartVelY.f = StartVel.y;
 
-		dbg_msg("char_core", "STUCK!!! %d %d %d %f %f %f %f %x %x %x %x", 
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "STUCK!!! %d %d %d %f %f %f %f %x %x %x %x", 
 			StuckBefore,
 			StuckAfterMove,
 			StuckAfterQuant,
@@ -613,6 +614,7 @@ void CCharacter::TickDefered()
 			StartVel.x, StartVel.y,
 			StartPosX.u, StartPosY.u,
 			StartVelX.u, StartVelY.u);
+		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 	}
 
 	int Events = m_Core.m_TriggeredEvents;
@@ -670,9 +672,11 @@ void CCharacter::Die(int Killer, int Weapon)
 {
 	int ModeSpecial = GameServer()->m_pController->OnCharacterDeath(this, GameServer()->m_apPlayers[Killer], Weapon);
 
-	dbg_msg("game", "kill killer='%d:%s' victim='%d:%s' weapon=%d special=%d",
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "kill killer='%d:%s' victim='%d:%s' weapon=%d special=%d",
 		Killer, Server()->ClientName(Killer),
 		m_pPlayer->GetCID(), Server()->ClientName(m_pPlayer->GetCID()), Weapon, ModeSpecial);
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
 	// send the kill message
 	CNetMsg_Sv_KillMsg Msg;
@@ -791,7 +795,7 @@ void CCharacter::Snap(int SnappingClient)
 	CNetObj_Character *Character = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
 	
 	// write down the m_Core
-	if(GameServer()->m_World.m_Paused)
+	if(!m_ReckoningTick || GameServer()->m_World.m_Paused)
 	{
 		// no dead reckoning when paused because the client doesn't know
 		// how far to perform the reckoning

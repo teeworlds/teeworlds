@@ -8,7 +8,7 @@ struct CHuffmanConstructNode
  	int m_Frequency;
 };
 
-void CHuffman::Setbits_r(CNode *pNode, int Bits, int Depth)
+void CHuffman::Setbits_r(CNode *pNode, int Bits, unsigned Depth)
 {
 	if(pNode->m_NumBits != -1)
 	{
@@ -56,7 +56,7 @@ void CHuffman::ConstructTree(const unsigned *pFrequencies)
 	// add the symbols
 	for(int i = 0; i < HUFFMAN_MAX_SYMBOLS; i++)
 	{
-		m_aNodes[i].m_NumBits = -1;
+		m_aNodes[i].m_NumBits = 0xFFFFFFFF;
 		m_aNodes[i].m_Symbol = i;
 
 		if(i == HUFFMAN_EOF_SYMBOL)

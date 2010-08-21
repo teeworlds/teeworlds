@@ -64,10 +64,9 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		{-1,			-1,						" ",		1, 10.0f, 0, {0}, {0}},
 		{COL_PING,		IServerBrowser::SORT_PING,		"Ping",		1, 40.0f, FIXED, {0}, {0}},
 	};
-	
-	//This is just for scripts/update_localization.py to work correctly (all other strings are already Localize()'d somewhere else). Please don't remove!
-	//Localize("Type");
-	
+	// This is just for scripts/update_localization.py to work correctly (all other strings are already Localize()'d somewhere else). Don't remove!
+	// Localize("Type");
+
 	int NumCols = sizeof(s_aCols)/sizeof(CColumn);
 
 	// do layout
@@ -701,7 +700,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 		static int s_JoinButton = 0;
 		if(DoButton_Menu(&s_JoinButton, Localize("Connect"), 0, &Button) || m_EnterPressed)
 		{
-			dbg_msg("", "%s", g_Config.m_UiServerAddress);
+			//dbg_msg("", "%s", g_Config.m_UiServerAddress);
 			Client()->Connect(g_Config.m_UiServerAddress);
 			m_EnterPressed = false;
 		}

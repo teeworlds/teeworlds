@@ -100,11 +100,6 @@ static int gs_LoadTotal;
 	}
 }*/
 
-static void ConServerDummy(IConsole::IResult *pResult, void *pUserData)
-{
-	dbg_msg("client", "this command is not available on the client");
-}
-
 #include <base/tl/sorted_array.h>
 
 const char *CGameClient::Version() { return GAME_VERSION; }
@@ -121,6 +116,7 @@ void CGameClient::OnConsoleInit()
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pDemoPlayer = Kernel()->RequestInterface<IDemoPlayer>();
+	m_pDemoRecorder = Kernel()->RequestInterface<IDemoRecorder>();
 	m_pServerBrowser = Kernel()->RequestInterface<IServerBrowser>();
 	
 	// setup pointers
@@ -139,6 +135,7 @@ void CGameClient::OnConsoleInit()
 	m_pDamageind = &::gsDamageInd;
 	m_pMapimages = &::gs_MapImages;
 	m_pVoting = &::gs_Voting;
+	m_pScoreboard = &::gs_Scoreboard;
 	
 	// make a list of all the systems, make sure to add them in the corrent render order
 	m_All.Add(m_pSkins);
@@ -188,16 +185,16 @@ void CGameClient::OnConsoleInit()
 	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself");
 	
 	// register server dummy commands for tab completion
-	Console()->Register("tune", "si", CFGFLAG_SERVER, ConServerDummy, 0, "Tune variable to value");
-	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConServerDummy, 0, "Reset tuning");
-	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConServerDummy, 0, "Dump tuning");
-	Console()->Register("change_map", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Change map");
-	Console()->Register("restart", "?i", CFGFLAG_SERVER, ConServerDummy, 0, "Restart in x seconds");
-	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Broadcast message");
-	//MACRO_REGISTER_COMMAND("say", "r", CFGFLAG_SERVER, con_serverdummy, 0);
-	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConServerDummy, 0, "Set team of player to team");
-	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Add a voting option");
-	//MACRO_REGISTER_COMMAND("vote", "", CFGFLAG_SERVER, con_serverdummy, 0);
+	Console()->Register("tune", "si", CFGFLAG_SERVER, 0, 0, "Tune variable to value");
+	Console()->Register("tune_reset", "", CFGFLAG_SERVER, 0, 0, "Reset tuning");
+	Console()->Register("tune_dump", "", CFGFLAG_SERVER, 0, 0, "Dump tuning");
+	Console()->Register("change_map", "r", CFGFLAG_SERVER, 0, 0, "Change map");
+	Console()->Register("restart", "?i", CFGFLAG_SERVER, 0, 0, "Restart in x seconds");
+	Console()->Register("broadcast", "r", CFGFLAG_SERVER, 0, 0, "Broadcast message");
+	Console()->Register("say", "r", CFGFLAG_SERVER, 0, 0, "Say in chat");
+	Console()->Register("set_team", "ii", CFGFLAG_SERVER, 0, 0, "Set team of player to team");
+	Console()->Register("addvote", "r", CFGFLAG_SERVER, 0, 0, "Add a voting option");
+	Console()->Register("vote", "r", CFGFLAG_SERVER, 0, 0, "Force a vote to yes/no");
 
 
 	// propagate pointers
@@ -228,7 +225,7 @@ void CGameClient::OnInit()
 	//m_pServerBrowser = Kernel()->RequestInterface<IServerBrowser>();
 	
 	// set the language
-	g_Localization.Load(g_Config.m_ClLanguagefile);
+	g_Localization.Load(g_Config.m_ClLanguagefile, Console());
 	
 	// init all components
 	for(int i = 0; i < m_All.m_Num; i++)
@@ -293,7 +290,9 @@ void CGameClient::OnInit()
 		m_All.m_paComponents[i]->OnReset();
 	
 	int64 End = time_get();
-	dbg_msg("", "%f.2ms", ((End-Start)*1000)/(float)time_freq());
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "initialisation finished after %f.2ms", ((End-Start)*1000)/(float)time_freq());
+	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "gameclient", aBuf);
 	
 	m_ServerMode = SERVERMODE_PURE;
 }
@@ -522,7 +521,9 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 	void *pRawMsg = m_NetObjHandler.SecureUnpackMsg(MsgId, pUnpacker);
 	if(!pRawMsg)
 	{
-		dbg_msg("client", "dropped weird message '%s' (%d), failed on '%s'", m_NetObjHandler.GetMsgName(MsgId), MsgId, m_NetObjHandler.FailedMsgOn());
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "dropped weird message '%s' (%d), failed on '%s'", m_NetObjHandler.GetMsgName(MsgId), MsgId, m_NetObjHandler.FailedMsgOn());
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 		return;
 	}
 
@@ -640,7 +641,11 @@ void CGameClient::OnNewSnapshot()
 			if(m_NetObjHandler.ValidateObj(Item.m_Type, pData, Item.m_DataSize) != 0)
 			{
 				if(g_Config.m_Debug)
-					dbg_msg("game", "invalidated index=%d type=%d (%s) size=%d id=%d", Index, Item.m_Type, m_NetObjHandler.GetObjName(Item.m_Type), Item.m_DataSize, Item.m_Id);
+				{
+					char aBuf[256];
+					str_format(aBuf, sizeof(aBuf), "invalidated index=%d type=%d (%s) size=%d id=%d", Index, Item.m_Type, m_NetObjHandler.GetObjName(Item.m_Type), Item.m_DataSize, Item.m_Id);
+					Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+				}
 				Client()->SnapInvalidateItem(IClient::SNAP_CURRENT, Index);
 			}
 		}
@@ -768,6 +773,11 @@ void CGameClient::OnNewSnapshot()
 			m_Snap.m_pLocalCharacter = &c->m_Cur;
 			m_Snap.m_pLocalPrevCharacter = &c->m_Prev;
 			m_LocalCharacterPos = vec2((float)m_Snap.m_pLocalCharacter->m_X, (float)m_Snap.m_pLocalCharacter->m_Y);
+		}
+		else if(Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_CHARACTER, m_Snap.m_LocalCid))
+		{
+			// player died
+			m_pControls->OnPlayerDeath();
 		}
 	}
 	else
@@ -904,11 +914,13 @@ void CGameClient::OnPredict()
 
 		if(mem_comp(&Before, &Now, sizeof(CNetObj_CharacterCore)) != 0)
 		{
-			dbg_msg("client", "prediction error");
+			Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", "prediction error");
 			for(unsigned i = 0; i < sizeof(CNetObj_CharacterCore)/sizeof(int); i++)
 				if(((int *)&Before)[i] != ((int *)&Now)[i])
 				{
-					dbg_msg("", "\t%d %d %d  (%d %d)", i, ((int *)&Before)[i], ((int *)&Now)[i], ((int *)&BeforePrev)[i], ((int *)&NowPrev)[i]);
+					char aBuf[256];
+					str_format(aBuf, sizeof(aBuf), "    %d %d %d  (%d %d)", i, ((int *)&Before)[i], ((int *)&Now)[i], ((int *)&BeforePrev)[i], ((int *)&NowPrev)[i]);
+					Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", aBuf);
 				}
 		}
 	}

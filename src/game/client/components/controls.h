@@ -22,6 +22,7 @@ public:
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual bool OnMouseMove(float x, float y);
 	virtual void OnConsoleInit();
+	virtual void OnPlayerDeath();
 	
 	int SnapInput(int *pData);
 };

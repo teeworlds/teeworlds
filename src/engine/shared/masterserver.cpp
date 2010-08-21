@@ -1,4 +1,6 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
+#include <stdio.h>	// sscanf
+
 #include <base/system.h>
 #include <engine/masterserver.h>
 #include <engine/storage.h>

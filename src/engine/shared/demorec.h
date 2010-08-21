@@ -14,9 +14,10 @@ struct CDemoHeader
 	char m_aType[8];
 };
 
-class CDemoRecorder
+class CDemoRecorder : public IDemoRecorder
 {
 	FILE *m_File;
+	class IConsole *m_pConsole;
 	int m_LastTickMarker;
 	int m_LastKeyFrame;
 	unsigned char m_aLastSnapshotData[CSnapshot::MAX_SIZE];
@@ -27,7 +28,7 @@ class CDemoRecorder
 public:
 	CDemoRecorder(class CSnapshotDelta *pSnapshotDelta);
 	
-	int Start(class IStorage *pStorage, const char *pFilename, const char *pNetversion, const char *pMap, int MapCrc, const char *pType);
+	int Start(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pNetversion, const char *pMap, int MapCrc, const char *pType);
 	int Stop();
 
 	void RecordSnapshot(int Tick, const void *pData, int Size);
@@ -82,6 +83,7 @@ private:
 	};	
 
 	FILE *m_File;
+	class IConsole *m_pConsole;
 	CKeyFrame *m_pKeyFrames;
 
 	CPlaybackInfo m_Info;
@@ -100,7 +102,7 @@ public:
 	
 	void SetListner(IListner *pListner);
 		
-	int Load(class IStorage *pStorage, const char *pFilename);
+	int Load(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename);
 	int Play();
 	void Pause();
 	void Unpause();

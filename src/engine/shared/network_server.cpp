@@ -151,16 +151,15 @@ int CNetServer::Drop(int ClientID, const char *pReason)
 	// TODO: insert lots of checks here
 	NETADDR Addr = ClientAddr(ClientID);
 
-	dbg_msg("net_server", "client dropped. cid=%d ip=%d.%d.%d.%d reason=\"%s\"",
+	/*dbg_msg("net_server", "client dropped. cid=%d ip=%d.%d.%d.%d reason=\"%s\"",
 		ClientID,
 		Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3],
 		pReason
-		);
+		);*/
+	if(m_pfnDelClient)
+		m_pfnDelClient(ClientID, pReason, m_UserPtr);
 		
 	m_aSlots[ClientID].m_Connection.Disconnect(pReason);
-
-	if(m_pfnDelClient)
-		m_pfnDelClient(ClientID, m_UserPtr);
 		
 	return 0;
 }
@@ -253,15 +252,23 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds)
 	return 0;
 }
 
-void CNetServer::BanRemoveByAddr(NETADDR Addr)
+int CNetServer::BanRemoveByAddr(NETADDR Addr)
 {
-	BanRemoveById(BanSearch(Addr));
+	int id = BanSearch(Addr);
+	if(id >= 0)
+		return BanRemoveById(id);
+	else
+		return 0;
 }
 
-void CNetServer::BanRemoveById(short BanIndex)
+int CNetServer::BanRemoveById(short BanIndex)
 {
 	mutex("create");
 	readBanFile(1);
+	
+	if(BanIndex > CNetServer::s_BanList_entries-1)
+		return 0;
+	
 	while(BanIndex < CNetServer::s_BanList_entries-1)
 	{
 		CNetServer::s_aBanList_expires[BanIndex] = CNetServer::s_aBanList_expires[BanIndex + 1];
@@ -275,6 +282,8 @@ void CNetServer::BanRemoveById(short BanIndex)
 	CNetServer::s_BanList_entries--;
 	writeBanFile();
 	mutex("release");
+	
+	return 1;
 }
 
 short CNetServer::BanSearch(NETADDR searchAddr)

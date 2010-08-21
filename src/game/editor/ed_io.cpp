@@ -1,6 +1,8 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
+#include <engine/console.h>
 #include <engine/graphics.h>
 #include <engine/storage.h>
+#include <game/gamecore.h>
 #include "ed_editor.h"
 
 template<typename T>
@@ -197,11 +199,14 @@ int CEditor::Save(const char *pFilename)
 
 int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 {
-	dbg_msg("editor", "saving to '%s'...", pFileName);
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "saving to '%s'...", pFileName);
+	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", aBuf);
 	CDataFileWriter df;
 	if(!df.Open(pStorage, pFileName))
 	{
-		dbg_msg("editor", "failed to open file '%s'...", pFileName);
+		str_format(aBuf, sizeof(aBuf), "failed to open file '%s'...", pFileName);
+		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", aBuf);
 		return 0;
 	}
 		
@@ -259,7 +264,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 		{
 			if(pGroup->m_lLayers[l]->m_Type == LAYERTYPE_TILES)
 			{
-				dbg_msg("editor", "saving tiles layer");
+				m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving tiles layer");
 				CLayerTiles *pLayer = (CLayerTiles *)pGroup->m_lLayers[l];
 				pLayer->PrepareForSave();
 				
@@ -288,7 +293,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 			}
 			else if(pGroup->m_lLayers[l]->m_Type == LAYERTYPE_QUADS)
 			{
-				dbg_msg("editor", "saving quads layer");
+				m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving quads layer");
 				CLayerQuads *pLayer = (CLayerQuads *)pGroup->m_lLayers[l];
 				if(pLayer->m_lQuads.size())
 				{
@@ -324,7 +329,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 		Item.m_Channels = m_lEnvelopes[e]->m_Channels;
 		Item.m_StartPoint = PointCount;
 		Item.m_NumPoints = m_lEnvelopes[e]->m_lPoints.size();
-		Item.m_Name = -1;
+		StrToInts(Item.m_aName, sizeof(Item.m_aName)/sizeof(int), m_lEnvelopes[e]->m_aName);
 		
 		df.AddItem(MAPITEMTYPE_ENVELOPE, e, sizeof(Item), &Item);
 		PointCount += Item.m_NumPoints;
@@ -346,7 +351,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 	
 	// finish the data file
 	df.Finish();
-	dbg_msg("editor", "done");
+	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving done");
 	
 	// send rcon.. if we can
 	/*
@@ -553,6 +558,8 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName)
 				CEnvelope *pEnv = new CEnvelope(pItem->m_Channels);
 				pEnv->m_lPoints.set_size(pItem->m_NumPoints);
 				mem_copy(pEnv->m_lPoints.base_ptr(), &pPoints[pItem->m_StartPoint], sizeof(CEnvPoint)*pItem->m_NumPoints);
+				if(pItem->m_aName[0] != -1)	// compatibility with old maps
+					IntsToStr(pItem->m_aName, sizeof(pItem->m_aName)/sizeof(int), pEnv->m_aName);
 				m_lEnvelopes.add(pEnv);
 			}
 		}

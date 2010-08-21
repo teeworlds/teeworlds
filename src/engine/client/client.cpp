@@ -437,7 +437,11 @@ void CClient::SetState(int s)
 {
 	int Old = m_State;
 	if(g_Config.m_Debug)
-		dbg_msg("client", "state change. last=%d current=%d", m_State, s);
+	{
+		char aBuf[128];
+		str_format(aBuf, sizeof(aBuf), "state change. last=%d current=%d", m_State, s);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", aBuf);
+	}
 	m_State = s;
 	if(Old != s)
 		GameClient()->OnStateChange(m_State, Old);
@@ -484,7 +488,8 @@ void CClient::Connect(const char *pAddress)
 
 	str_copy(m_aServerAddressStr, pAddress, sizeof(m_aServerAddressStr));
 
-	dbg_msg("client", "connecting to '%s'", m_aServerAddressStr);
+	str_format(aBuf, sizeof(aBuf), "connecting to '%s'", m_aServerAddressStr);
+	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
 
 	ServerInfoRequest();
 	str_copy(aBuf, m_aServerAddressStr, sizeof(aBuf));
@@ -502,7 +507,9 @@ void CClient::Connect(const char *pAddress)
 	// TODO: IPv6 support
 	if(net_host_lookup(aBuf, &m_ServerAddress, NETTYPE_IPV4) != 0)
 	{
-		dbg_msg("client", "could not find the address of %s, connecting to localhost", aBuf);
+		char aBufMsg[256];
+		str_format(aBufMsg, sizeof(aBufMsg), "could not find the address of %s, connecting to localhost", aBuf);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBufMsg);
 		net_host_lookup("localhost", &m_ServerAddress, NETTYPE_IPV4);
 	}
 
@@ -520,6 +527,10 @@ void CClient::Connect(const char *pAddress)
 
 void CClient::DisconnectWithReason(const char *pReason)
 {
+	char aBuf[512];
+	str_format(aBuf, sizeof(aBuf), "disconnecting. reason='%s'", pReason?pReason:"unknown");
+	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
+
 	// stop demo playback and recorder
 	m_DemoPlayer.Stop();
 	m_DemoRecorder.Stop();
@@ -593,9 +604,9 @@ void CClient::SnapInvalidateItem(int SnapId, int Index)
 	if(i)
 	{
 		if((char *)i < (char *)m_aSnapshots[SnapId]->m_pAltSnap || (char *)i > (char *)m_aSnapshots[SnapId]->m_pAltSnap + m_aSnapshots[SnapId]->m_SnapSize)
-			dbg_msg("ASDFASDFASdf", "ASDFASDFASDF");
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", "snap invalidate problem");
 		if((char *)i >= (char *)m_aSnapshots[SnapId]->m_pSnap && (char *)i < (char *)m_aSnapshots[SnapId]->m_pSnap + m_aSnapshots[SnapId]->m_SnapSize)
-			dbg_msg("ASDFASDFASdf", "ASDFASDFASDF");
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", "snap invalidate problem");
 		i->m_TypeAndID = -1;
 	}
 }
@@ -764,7 +775,9 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, unsigned 
 	// stop demo recording if we loaded a new map
 	m_DemoRecorder.Stop();
 
-	dbg_msg("client", "loaded map '%s'", pFilename);
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "loaded map '%s'", pFilename);
+	m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 	m_RecivedSnapshots = 0;
 
 	str_copy(m_aCurrentMap, pName, sizeof(m_aCurrentMap));
@@ -779,7 +792,8 @@ const char *CClient::LoadMapSearch(const char *pMapName, int WantedCrc)
 {
 	const char *pError = 0;
 	char aBuf[512];
-	dbg_msg("client", "loading map, map=%s wanted crc=%08x", pMapName, WantedCrc);
+	str_format(aBuf, sizeof(aBuf), "loading map, map=%s wanted crc=%08x", pMapName, WantedCrc);
+	m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 	SetState(IClient::STATE_LOADING);
 
 	// try the normal maps folder
@@ -816,9 +830,11 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 			unsigned char *pVersionData = (unsigned char*)pPacket->m_pData + sizeof(VERSIONSRV_VERSION);
 			int VersionMatch = !mem_comp(pVersionData, VERSION_DATA, sizeof(VERSION_DATA));
 
-			dbg_msg("client/version", "version does %s (%d.%d.%d)",
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "version does %s (%d.%d.%d)",
 				VersionMatch ? "match" : "NOT match",
 				pVersionData[1], pVersionData[2], pVersionData[3]);
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/version", aBuf);
 
 			// assume version is out of date when version-data doesn't match
 			if (!VersionMatch)
@@ -870,10 +886,10 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 				Up.Reset((unsigned char*)pPacket->m_pData+sizeof(SERVERBROWSE_INFO), pPacket->m_DataSize-sizeof(SERVERBROWSE_INFO));
 				if(PacketType >= 2)
 					Token = str_toint(Up.GetString());
-				str_copy(Info.m_aVersion, Up.GetString(), sizeof(Info.m_aVersion));
-				str_copy(Info.m_aName, Up.GetString(), sizeof(Info.m_aName));
-				str_copy(Info.m_aMap, Up.GetString(), sizeof(Info.m_aMap));
-				str_copy(Info.m_aGameType, Up.GetString(), sizeof(Info.m_aGameType));
+				str_copy(Info.m_aVersion, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aVersion));
+				str_copy(Info.m_aName, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aName));
+				str_copy(Info.m_aMap, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aMap));
+				str_copy(Info.m_aGameType, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aGameType));
 				Info.m_Flags = str_toint(Up.GetString());
 				Info.m_Progression = str_toint(Up.GetString());
 				Info.m_NumPlayers = str_toint(Up.GetString());
@@ -889,7 +905,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 
 				for(int i = 0; i < Info.m_NumPlayers; i++)
 				{
-					str_copy(Info.m_aPlayers[i].m_aName, Up.GetString(), sizeof(Info.m_aPlayers[i].m_aName));
+					str_copy(Info.m_aPlayers[i].m_aName, Up.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(Info.m_aPlayers[i].m_aName));
 					Info.m_aPlayers[i].m_Score = str_toint(Up.GetString());
 				}
 
@@ -933,7 +949,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 			// system message
 			if(Msg == NETMSG_MAP_CHANGE)
 			{
-				const char *pMap = Unpacker.GetString();
+				const char *pMap = Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES);
 				int MapCrc = Unpacker.GetInt();
 				const char *pError = 0;
 
@@ -954,7 +970,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 
 					if(!pError)
 					{
-						dbg_msg("client/network", "loading done");
+						m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
 						SendReady();
 						GameClient()->OnConnected();
 					}
@@ -962,7 +978,9 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 					{
 						str_format(m_aMapdownloadFilename, sizeof(m_aMapdownloadFilename), "downloadedmaps/%s_%08x.map", pMap, MapCrc);
 
-						dbg_msg("client/network", "starting to download map to '%s'", m_aMapdownloadFilename);
+						char aBuf[256];
+						str_format(aBuf, sizeof(aBuf), "starting to download map to '%s'", m_aMapdownloadFilename);
+						m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", aBuf);
 
 						m_MapdownloadChunk = 0;
 						str_copy(m_aMapdownloadName, pMap, sizeof(m_aMapdownloadName));
@@ -976,7 +994,10 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 						SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 
 						if(g_Config.m_Debug)
-							dbg_msg("client/network", "requested chunk %d", m_MapdownloadChunk);
+						{
+							str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_MapdownloadChunk);
+							m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
+						}
 					}
 				}
 			}
@@ -999,7 +1020,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 				if(Last)
 				{
 					const char *pError;
-					dbg_msg("client/network", "download complete, loading map");
+					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "download complete, loading map");
 
 					io_close(m_MapdownloadFile);
 					m_MapdownloadFile = 0;
@@ -1010,7 +1031,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 					pError = LoadMap(m_aMapdownloadName, m_aMapdownloadFilename, m_MapdownloadCrc);
 					if(!pError)
 					{
-						dbg_msg("client/network", "loading done");
+						m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "loading done");
 						SendReady();
 						GameClient()->OnConnected();
 					}
@@ -1027,7 +1048,11 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 					SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 
 					if(g_Config.m_Debug)
-						dbg_msg("client/network", "requested chunk %d", m_MapdownloadChunk);
+					{
+						char aBuf[256];
+						str_format(aBuf, sizeof(aBuf), "requested chunk %d", m_MapdownloadChunk);
+						m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client/network", aBuf);
+					}
 				}
 			}
 			else if(Msg == NETMSG_PING)
@@ -1048,7 +1073,11 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 					GameClient()->OnRconLine(pLine);
 			}
 			else if(Msg == NETMSG_PING_REPLY)
-				dbg_msg("client/network", "latency %.2f", (time_get() - m_PingStartTime)*1000 / (float)time_freq());
+			{
+				char aBuf[256];
+				str_format(aBuf, sizeof(aBuf), "latency %.2f", (time_get() - m_PingStartTime)*1000 / (float)time_freq());
+				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client/network", aBuf);
+			}
 			else if(Msg == NETMSG_INPUTTIMING)
 			{
 				int InputPredTick = Unpacker.GetInt();
@@ -1143,7 +1172,11 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 								// couldn't find the delta snapshots that the server used
 								// to compress this snapshot. force the server to resync
 								if(g_Config.m_Debug)
-									dbg_msg("client", "error, couldn't find the delta snapshot");
+								{
+									char aBuf[256];
+									str_format(aBuf, sizeof(aBuf), "error, couldn't find the delta snapshot");
+									m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", aBuf);
+								}
 
 								// ack snapshot
 								// TODO: combine this with the input message
@@ -1172,7 +1205,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 						SnapSize = m_SnapshotDelta.UnpackDelta(pDeltaShot, pTmpBuffer3, pDeltaData, DeltaSize);
 						if(SnapSize < 0)
 						{
-							dbg_msg("client", "delta unpack failed!");
+							m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", "delta unpack failed!");
 							return;
 						}
 
@@ -1180,8 +1213,10 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 						{
 							if(g_Config.m_Debug)
 							{
-								dbg_msg("client", "snapshot crc error #%d - tick=%d wantedcrc=%d gotcrc=%d compressed_size=%d delta_tick=%d",
+								char aBuf[256];
+								str_format(aBuf, sizeof(aBuf), "snapshot crc error #%d - tick=%d wantedcrc=%d gotcrc=%d compressed_size=%d delta_tick=%d",
 									m_SnapCrcErrors, GameTick, Crc, pTmpBuffer3->Crc(), CompleteSize, DeltaTick);
+								m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", aBuf);
 							}
 
 							m_SnapCrcErrors++;
@@ -1269,18 +1304,20 @@ void CClient::PumpNetwork()
 	if(State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		// check for errors
-		if(State() != IClient::STATE_OFFLINE && m_NetClient.State() == NETSTATE_OFFLINE)
+		if(State() != IClient::STATE_OFFLINE && State() != IClient::STATE_QUITING && m_NetClient.State() == NETSTATE_OFFLINE)
 		{
 			SetState(IClient::STATE_OFFLINE);
 			Disconnect();
-			dbg_msg("client", "offline error='%s'", m_NetClient.ErrorString());
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "offline error='%s'", m_NetClient.ErrorString());
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
 		}
 
 		//
 		if(State() == IClient::STATE_CONNECTING && m_NetClient.State() == NETSTATE_ONLINE)
 		{
 			// we switched to online
-			dbg_msg("client", "connected, sending info");
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", "connected, sending info");
 			SetState(IClient::STATE_LOADING);
 			SendInfo();
 		}
@@ -1434,7 +1471,7 @@ void CClient::Update()
 
 			if(NewPredTick < m_aSnapshots[SNAP_PREV]->m_Tick-SERVER_TICK_SPEED || NewPredTick > m_aSnapshots[SNAP_PREV]->m_Tick+SERVER_TICK_SPEED)
 			{
-				dbg_msg("client", "prediction time reset!");
+				m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", "prediction time reset!");
 				m_PredictedTime.Init(m_aSnapshots[SNAP_CURRENT]->m_Tick*time_freq()/50);
 			}
 
@@ -1477,7 +1514,7 @@ void CClient::Update()
 		{
 			if(Now > ActionTaken+time_freq()*2)
 			{
-				dbg_msg("stress", "reconnecting!");
+				m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "stress", "reconnecting!");
 				Connect(g_Config.m_DbgStressServer);
 				ActionTaken = Now;
 			}
@@ -1537,6 +1574,7 @@ void CClient::InitEngine(const char *pAppname)
 
 void CClient::RegisterInterfaces()
 {
+	Kernel()->RegisterInterface(static_cast<IDemoRecorder*>(&m_DemoRecorder));
 	Kernel()->RegisterInterface(static_cast<IDemoPlayer*>(&m_DemoPlayer));
 	Kernel()->RegisterInterface(static_cast<IServerBrowser*>(&m_ServerBrowser));
 }
@@ -1589,7 +1627,9 @@ void CClient::Run()
 		return;
 
 	GameClient()->OnInit();
-	dbg_msg("client", "version %s", GameClient()->NetVersion());
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "version %s", GameClient()->NetVersion());
+	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
 
 	// open socket
 	{
@@ -1612,6 +1652,9 @@ void CClient::Run()
 	g_Config.m_ClEditor = 0;
 
 	Input()->MouseModeRelative();
+
+	// process pending commands
+	m_pConsole->StoreCommands(false);
 
 	for(;;)
 	{
@@ -1834,7 +1877,7 @@ const char *CClient::DemoPlayer_Play(const char *pFilename)
 	// try to start playback
 	m_DemoPlayer.SetListner(this);
 
-	if(m_DemoPlayer.Load(Storage(), pFilename))
+	if(m_DemoPlayer.Load(Storage(), m_pConsole, pFilename))
 		return "error loading demo";
 
 	// load map
@@ -1882,17 +1925,22 @@ void CClient::Con_Play(IConsole::IResult *pResult, void *pUserData)
 	pSelf->DemoPlayer_Play(pResult->GetString(0));
 }
 
-void CClient::Con_Record(IConsole::IResult *pResult, void *pUserData)
+void CClient::DemoRecorder_Start(const char *pFilename)
 {
-	CClient *pSelf = (CClient *)pUserData;
-	if(pSelf->State() != IClient::STATE_ONLINE)
-		dbg_msg("demorec/record", "client is not online");
+	if(State() != IClient::STATE_ONLINE)
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/record", "client is not online");
 	else
 	{
 		char aFilename[512];
-		str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pResult->GetString(0));
-		pSelf->m_DemoRecorder.Start(pSelf->Storage(), aFilename, pSelf->GameClient()->NetVersion(), pSelf->m_aCurrentMap, pSelf->m_CurrentMapCrc, "client");
+		str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pFilename);
+		m_DemoRecorder.Start(Storage(), m_pConsole, aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
 	}
+}
+
+void CClient::Con_Record(IConsole::IResult *pResult, void *pUserData)
+{
+	CClient *pSelf = (CClient *)pUserData;
+	pSelf->DemoRecorder_Start(pResult->GetString(0));
 }
 
 void CClient::Con_StopRecord(IConsole::IResult *pResult, void *pUserData)
@@ -1901,28 +1949,23 @@ void CClient::Con_StopRecord(IConsole::IResult *pResult, void *pUserData)
 	pSelf->m_DemoRecorder.Stop();
 }
 
-void CClient::Con_ServerDummy(IConsole::IResult *pResult, void *pUserData)
-{
-	dbg_msg("client", "this command is not available on the client");
-}
-
 void CClient::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	// register server dummy commands for tab completion
-	m_pConsole->Register("kick", "i", CFGFLAG_SERVER, Con_ServerDummy, this, "Kick player with specified id");
-	m_pConsole->Register("ban", "s?i", CFGFLAG_SERVER, Con_ServerDummy, this, "Ban player with ip/id for x minutes");
-	m_pConsole->Register("unban", "s", CFGFLAG_SERVER, Con_ServerDummy, this, "Unban ip");
-	m_pConsole->Register("bans", "", CFGFLAG_SERVER, Con_ServerDummy, this, "Show banlist");
-	m_pConsole->Register("status", "", CFGFLAG_SERVER, Con_ServerDummy, this, "List players");
-	m_pConsole->Register("shutdown", "", CFGFLAG_SERVER, Con_ServerDummy, this, "Shut down");
-	m_pConsole->Register("record", "s", CFGFLAG_SERVER, Con_ServerDummy, this, "Record to a file");
-	m_pConsole->Register("stoprecord", "", CFGFLAG_SERVER, Con_ServerDummy, this, "Stop recording");
-	m_pConsole->Register("reload", "", CFGFLAG_SERVER, Con_ServerDummy, this, "Reload the map");
+	m_pConsole->Register("kick", "i", CFGFLAG_SERVER, 0, 0, "Kick player with specified id");
+	m_pConsole->Register("ban", "s?i", CFGFLAG_SERVER, 0, 0, "Ban player with ip/id for x minutes");
+	m_pConsole->Register("unban", "s", CFGFLAG_SERVER, 0, 0, "Unban ip");
+	m_pConsole->Register("bans", "", CFGFLAG_SERVER, 0, 0, "Show banlist");
+	m_pConsole->Register("status", "", CFGFLAG_SERVER, 0, 0, "List players");
+	m_pConsole->Register("shutdown", "", CFGFLAG_SERVER, 0, 0, "Shut down");
+	m_pConsole->Register("record", "s", CFGFLAG_SERVER, 0, 0, "Record to a file");
+	m_pConsole->Register("stoprecord", "", CFGFLAG_SERVER, 0, 0, "Stop recording");
+	m_pConsole->Register("reload", "", CFGFLAG_SERVER, 0, 0, "Reload the map");
 
-	m_pConsole->Register("quit", "", CFGFLAG_CLIENT, Con_Quit, this, "Quit Teeworlds");
-	m_pConsole->Register("exit", "", CFGFLAG_CLIENT, Con_Quit, this, "Quit Teeworlds");
-	m_pConsole->Register("minimize", "", CFGFLAG_CLIENT, Con_Minimize, this, "Minimize Teeworlds");
+	m_pConsole->Register("quit", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Quit, this, "Quit Teeworlds");
+	m_pConsole->Register("exit", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Quit, this, "Quit Teeworlds");
+	m_pConsole->Register("minimize", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Minimize, this, "Minimize Teeworlds");
 	m_pConsole->Register("connect", "s", CFGFLAG_CLIENT, Con_Connect, this, "Connect to the specified host/ip");
 	m_pConsole->Register("disconnect", "", CFGFLAG_CLIENT, Con_Disconnect, this, "Disconnect from the server");
 	m_pConsole->Register("ping", "", CFGFLAG_CLIENT, Con_Ping, this, "Ping the current server");
@@ -1966,7 +2009,7 @@ int main(int argc, const char **argv) // ignore_convention
 
 	// create the components
 	IConsole *pConsole = CreateConsole(CFGFLAG_CLIENT);
-	IStorage *pStorage = CreateStorage("Teeworlds", argv[0]); // ignore_convention
+	IStorage *pStorage = CreateStorage("Teeworlds", argc, argv); // ignore_convention
 	IConfig *pConfig = CreateConfig();
 	IEngineGraphics *pEngineGraphics = CreateEngineGraphics();
 	IEngineSound *pEngineSound = CreateEngineSound();
@@ -2019,6 +2062,9 @@ int main(int argc, const char **argv) // ignore_convention
 	// init client's interfaces
 	m_Client.InitInterfaces();
 
+	// execute config file
+	pConsole->ExecuteFile("settings.cfg");
+
 	// execute autoexec file
 	pConsole->ExecuteFile("autoexec.cfg");
 
@@ -2026,8 +2072,10 @@ int main(int argc, const char **argv) // ignore_convention
 	if(argc > 1) // ignore_convention
 		pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
 
-	// execute config file
-	pConsole->ExecuteFile("settings.cfg");
+	// restore empty config strings to their defaults
+	pConfig->RestoreStrings();
+
+	m_Client.Engine()->InitLogfile();
 
 	// run the client
 	m_Client.Run();

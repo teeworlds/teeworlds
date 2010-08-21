@@ -80,7 +80,7 @@ enum
 };
 
 
-typedef int (*NETFUNC_DELCLIENT)(int ClientID, void *pUser);
+typedef int (*NETFUNC_DELCLIENT)(int ClientID, const char* pReason, void *pUser);
 typedef int (*NETFUNC_NEWCLIENT)(int ClientID, void *pUser);
 
 struct CNetChunk
@@ -252,8 +252,8 @@ public:
 	static unsigned char s_aBanList_addr[NET_SERVER_MAXBANS][4];
 	
 	int BanAdd(NETADDR Addr, int Seconds);
-	void BanRemoveByAddr(NETADDR Addr);
-	void BanRemoveById(short BanIndex);
+	int BanRemoveByAddr(NETADDR Addr);
+	int BanRemoveById(short BanIndex);
 	
 private:
 	void mutex(const char *type);

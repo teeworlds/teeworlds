@@ -281,11 +281,11 @@ public:
 	static void Con_Play(IConsole::IResult *pResult, void *pUserData);
 	static void Con_Record(IConsole::IResult *pResult, void *pUserData);
 	static void Con_StopRecord(IConsole::IResult *pResult, void *pUserData);
-	static void Con_ServerDummy(IConsole::IResult *pResult, void *pUserData);
 
 	void RegisterCommands();
 
 	const char *DemoPlayer_Play(const char *pFilename);
+	void DemoRecorder_Start(const char *pFilename);
 
 	virtual class CEngine *Engine() { return &m_Engine; }
 };
