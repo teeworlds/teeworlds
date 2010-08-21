@@ -547,7 +547,6 @@ void CGameContext::OnSetAuthed(int client_id, int Level)
 		m_apPlayers[client_id]->m_Authed = Level;
 		char buf[11];
 		str_format(buf, sizeof(buf), "ban %d %d", client_id, g_Config.m_SvVoteKickBanTime);
-		//dbg_msg("hooks","%d", m_aVoteCommand == buf);//???
 		if ( !strcmp(m_aVoteCommand,buf))
 		{
 			m_VoteEnforce = CGameContext::VOTE_ENFORCE_NO;
@@ -1419,44 +1418,53 @@ void CGameContext::ConTeleport(IConsole::IResult *pResult, void *pUserData, int 
 	}
 }
 
-void CGameContext::ConTimer(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConTimerStop(IConsole::IResult *pResult, void *pUserData, int cid)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	char buf[128];
 	CServer* serv = (CServer*)pSelf->Server();
-	if(!g_Config.m_SvTimer) {
+	if(!g_Config.m_SvTimer)
+	{
 
 		int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-		int type = pResult->GetInteger(1);
-
 		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if (!chr)
 			return;
-		if (type>1 || type<0)
-		{
-			serv->SendRconLine(cid, "Select 0 for no time & 1 for with time");
-		}
-		else
-		{
-			if(type)
-			{
-				chr->m_RaceState = RACE_STARTED;
-				str_format(buf, sizeof(buf), "Cid=%d Has time now",cid1);
-			}
-			else if(!type)
-			{
-				chr->m_RaceState=RACE_CHEAT;
-				str_format(buf, sizeof(buf), "Cid=%d Hasn't time now",cid1);
-			}
-			serv->SendRconLine(cid1, buf);
-		}
-	} else {
+		chr->m_RaceState=RACE_CHEAT;
+		str_format(buf, sizeof(buf), "Cid=%d Hasn't time now (Timer Stopped)",cid1);
+		serv->SendRconLine(cid1, buf);
+	}
+	else
+	{
 
 		serv->SendRconLine(cid, "Command timer does't allowed");
 	}
 }
 
-void CGameContext::ConTimerReset(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConTimerStart(IConsole::IResult *pResult, void *pUserData, int cid)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	char buf[128];
+	CServer* serv = (CServer*)pSelf->Server();
+	if(!g_Config.m_SvTimer)
+	{
+
+		int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+		CCharacter* chr = pSelf->GetPlayerChar(cid1);
+		if (!chr)
+			return;
+		chr->m_RaceState = RACE_STARTED;
+		str_format(buf, sizeof(buf), "Cid=%d Has time now (Timer Started)",cid1);
+		serv->SendRconLine(cid1, buf);
+	}
+	else
+	{
+
+		serv->SendRconLine(cid, "Command timer does't allowed");
+	}
+}
+
+void CGameContext::ConTimerZero(IConsole::IResult *pResult, void *pUserData, int cid)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(!pSelf->CheatsAvailable(cid)) return;
@@ -1469,7 +1477,28 @@ void CGameContext::ConTimerReset(IConsole::IResult *pResult, void *pUserData, in
 		return;
 	chr->m_StartTime = pSelf->Server()->Tick();
 	chr->m_RefreshTime = pSelf->Server()->Tick();
-	str_format(buf, sizeof(buf), "Cid=%d time resetted.",cid1);
+	chr->m_RaceState=RACE_CHEAT;
+	str_format(buf, sizeof(buf), "Cid=%d time has been reset & stopped.",cid1);
+	CServer* serv = (CServer*)pSelf->Server();
+	serv->SendRconLine(cid1, buf);
+
+}
+
+void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, int cid)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!pSelf->CheatsAvailable(cid)) return;
+	char buf[128];
+
+	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+
+	CCharacter* chr = pSelf->GetPlayerChar(cid1);
+	if (!chr)
+		return;
+	chr->m_StartTime = pSelf->Server()->Tick();
+	chr->m_RefreshTime = pSelf->Server()->Tick();
+	chr->m_RaceState=RACE_STARTED;
+	str_format(buf, sizeof(buf), "Cid=%d time has been reset & stopped.",cid1);
 	CServer* serv = (CServer*)pSelf->Server();
 	serv->SendRconLine(cid1, buf);
 
@@ -1480,29 +1509,31 @@ void CGameContext::OnConsoleInit()
 	m_pServer = Kernel()->RequestInterface<IServer>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 
-	Console()->Register("timer", "ii", CFGFLAG_SERVER, ConTimer, this, "Sets the timer of player i1 to i2 0/1 on/off",2);
-	Console()->Register("timerreset", "i", CFGFLAG_SERVER, ConTimerReset, this, "resets the timer of player i (to start count again timer cid 1)",1);
+	Console()->Register("timerstop", "i", CFGFLAG_SERVER, ConTimerStop, this, "Stops The Timer of Player i",2);
+	Console()->Register("timerstart", "i", CFGFLAG_SERVER, ConTimerStart, this, "Starts The Timer of Player i",2);
+	Console()->Register("timerrestart", "i", CFGFLAG_SERVER, ConTimerReStart, this, "Starts The Timer of Player i with the time of 00:00:00",2);
+	Console()->Register("timerzero", "i", CFGFLAG_SERVER, ConTimerZero, this, "00:00:00 the timer of Player i and Stops it",1);
 
-	Console()->Register("tele", "ii", CFGFLAG_SERVER, ConTeleport, this, "",2);
+	Console()->Register("tele", "ii", CFGFLAG_SERVER, ConTeleport, this, "Teleports Player i1 to i2",2);
 
-	Console()->Register("weapons", "i", CFGFLAG_SERVER, ConWeapons, this, "",2);
-	Console()->Register("weapons_me", "", CFGFLAG_SERVER, ConWeaponsMe, this, "",1);
+	Console()->Register("weapons", "i", CFGFLAG_SERVER, ConWeapons, this, "Give all weapons to player i",2);
+	Console()->Register("weapons_me", "", CFGFLAG_SERVER, ConWeaponsMe, this, "Give all weapons to self",1);
 
-	Console()->Register("super", "i", CFGFLAG_SERVER, ConSuper, this, "",2);
-	Console()->Register("unsuper", "i", CFGFLAG_SERVER, ConUnSuper, this, "",2);
-	Console()->Register("super_me", "", CFGFLAG_SERVER, ConSuperMe, this, "",1);
-	Console()->Register("unsuper_me", "", CFGFLAG_SERVER, ConUnSuperMe, this, "",1);// Mo
+	Console()->Register("super", "i", CFGFLAG_SERVER, ConSuper, this, "Make player i super",2);
+	Console()->Register("unsuper", "i", CFGFLAG_SERVER, ConUnSuper, this, "Remove super from player i",2);
+	Console()->Register("super_me", "", CFGFLAG_SERVER, ConSuperMe, this, "Make player self super",1);
+	Console()->Register("unsuper_me", "", CFGFLAG_SERVER, ConUnSuperMe, this, "Remove super from self",1);// Mo
 
-	Console()->Register("hammer_me", "i", CFGFLAG_SERVER, ConHammerMe, this, "",1);
-	Console()->Register("hammer", "ii", CFGFLAG_SERVER, ConHammer, this, "",2);
+	Console()->Register("hammer_me", "i", CFGFLAG_SERVER, ConHammerMe, this, "Sets the hammer of self to the power of i",1);
+	Console()->Register("hammer", "ii", CFGFLAG_SERVER, ConHammer, this, "Sets the hammer of player i1 to the power of i2",2);
 
-	Console()->Register("ninja", "i", CFGFLAG_SERVER, ConNinja, this, "",2);
-	Console()->Register("ninja_me", "", CFGFLAG_SERVER, ConNinjaMe, this, "",1);
+	Console()->Register("ninja", "i", CFGFLAG_SERVER, ConNinja, this, "Makes Player i have ninja power-up",2);
+	Console()->Register("ninja_me", "", CFGFLAG_SERVER, ConNinjaMe, this, "Makes self have ninja power-up",1);
 
 
-	Console()->Register("kill_pl", "i", CFGFLAG_SERVER, ConKillPlayer, this, "",2);
-	Console()->Register("auth", "ii", CFGFLAG_SERVER, ConSetlvl, this, "",3);
-	Console()->Register("mute", "ii", CFGFLAG_SERVER, ConMute, this, "", 2);
+	Console()->Register("kill_pl", "i", CFGFLAG_SERVER, ConKillPlayer, this, "Kills player with id i and announces the kill",2);
+	Console()->Register("auth", "ii", CFGFLAG_SERVER, ConSetlvl, this, "Authenticates player i1 to the level of i2 ( warining he can use sv_rcon_password_XXXX and get the passwords ) level 0 = logout",3);
+	Console()->Register("mute", "ii", CFGFLAG_SERVER, ConMute, this, "mutes player i1 for i2 seconds", 2);
 
 	Console()->Register("tune", "si", CFGFLAG_SERVER, ConTuneParam, this, "", 4);
 	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConTuneReset, this, "", 4);
