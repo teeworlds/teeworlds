@@ -183,8 +183,8 @@ int CCollision::GetTile(int x, int y)
 }
 int CCollision::Entity(int x, int y, bool Front)
 {
-	if(0 < x || x >= m_Width) return 0;
-	if(0 < y || y >= m_Height) return 0;
+	//if(0 < x || x >= m_Width) return 0;
+	//if(0 < y || y >= m_Height) return 0;
 	int Index = Front?m_pFront[y*m_Width+x].m_Index:m_pTiles[y*m_Width+x].m_Index;
 	return Index-ENTITY_OFFSET;  
 }
