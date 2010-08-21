@@ -121,12 +121,16 @@ bool IGameController::OnEntity(int Index, vec2 Pos, bool Front)
 {
 	if (Index<0)
 		return false;
+		int temp1=Pos.x;
+		int	temp2=Pos.y;
+	
 	dbg_msg("OnEntity","Index=%d  Front=%d",Index,Front);//Remove*/
 	int Type = -1;
 	int SubType = 0;
 	int x,y;
 	x=(Pos.x-16.0f)/32.0f;
 	y=(Pos.y-16.0f)/32.0f;
+	dbg_msg("OnEntity","Pos %d %d, x%d  y%d",temp1,temp2,x,y);//Remove*/
 	/*dbg_msg("OnEntity","Pos(%d,%d)",x,y);//Remove*/
 	int sides[8];
 	sides[0]=GameServer()->Collision()->Entity(x,y+1, Front);

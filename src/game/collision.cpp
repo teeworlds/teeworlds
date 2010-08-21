@@ -173,18 +173,23 @@ int CCollision::GetTile(int x, int y)
 	int nx = clamp(x/32, 0, m_Width-1);
 	int ny = clamp(y/32, 0, m_Height-1);
 	/*dbg_msg("GetTile","m_Index %d",m_pTiles[ny*m_Width+nx].m_Index);//Remove */
-	if(m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_SOLID 
-		|| m_pTiles[ny*m_Width+nx].m_Index == (COLFLAG_SOLID|COLFLAG_NOHOOK) 
-		|| m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_DEATH 
-		|| m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_NOLASER)
+	if(m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_SOLID ||
+			m_pTiles[ny*m_Width+nx].m_Index == (COLFLAG_SOLID|COLFLAG_NOHOOK) ||
+			m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_DEATH ||
+			m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_NOLASER ||
+			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index == COLFLAG_SOLID)) ||
+			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index == (COLFLAG_SOLID|COLFLAG_NOHOOK))) ||
+			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index == COLFLAG_DEATH)) ||
+			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index == COLFLAG_NOLASER)))
+
 		return m_pTiles[ny*m_Width+nx].m_Index;
 	else
 		return 0;
 }
 int CCollision::Entity(int x, int y, bool Front)
 {
-	//if(0 < x || x >= m_Width) return 0;
-	//if(0 < y || y >= m_Height) return 0;
+	if(0 < x || x >= m_Width) return 0;
+	if(0 < y || y >= m_Height) return 0;
 	int Index = Front?m_pFront[y*m_Width+x].m_Index:m_pTiles[y*m_Width+x].m_Index;
 	return Index-ENTITY_OFFSET;  
 }
@@ -271,7 +276,7 @@ int CCollision::IntersectNoLaser(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2
 	{
 		float a = f/d;
 		vec2 Pos = mix(Pos0, Pos1, a);
-		if(IsSolid(round(Pos.x), round(Pos.y)) || IsNoLaser(round(Pos.x), round(Pos.y)))
+		if(CheckPoint(Pos.x, Pos.y) || IsNoLaser(round(Pos.x), round(Pos.y)))
 		{
 			if(pOutCollision)
 				*pOutCollision = Pos;
