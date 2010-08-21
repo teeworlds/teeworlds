@@ -558,7 +558,8 @@ void CCharacter::OnDirectInput(CNetObj_PlayerInput *pNewInput)
 void CCharacter::Tick()
 {
 	int MapIndex = GameServer()->Collision()->GetMapIndex(m_PrevPos, m_Pos);
-	int TileIndex = GameServer()->Collision()->GetCollisionDDRace(MapIndex);
+	int TileIndex1 = GameServer()->Collision()->GetCollisionDDRace(MapIndex);
+	int TileIndex2 = GameServer()->Collision()->GetCollisionDDRace2(MapIndex);
 	if(m_RaceState == RACE_PAUSE) {
 		m_Input.m_Direction = 0;
 		m_Input.m_Jump = 0;
@@ -600,7 +601,7 @@ void CCharacter::Tick()
 		m_Core.m_HookTick = 0;
 	if (m_Super && m_Core.m_Jumped > 1)
 		m_Core.m_Jumped = 1; 
-	/*dbg_msg("character","TileIndex%d",TileIndex); //REMOVE*/
+	/*dbg_msg("character","TileIndex1=%d , TileIndex2=%d",TileIndex1,TileIndex2); //REMOVE*/
 	//DDRace  		 
 	char aBuftime[128];
 	float time = (float)(Server()->Tick() - m_StartTime) / ((float)Server()->TickSpeed());
@@ -619,13 +620,13 @@ void CCharacter::Tick()
 		}
 		m_RefreshTime = Server()->Tick();
 	}
-	else if((TileIndex == TILE_BEGIN) && (m_RaceState == RACE_NONE || m_RaceState == RACE_STARTED))
+	if(((TileIndex1 == TILE_BEGIN) || (TileIndex2 == TILE_BEGIN)) && (m_RaceState == RACE_NONE || m_RaceState == RACE_STARTED))
 	{
 		m_StartTime = Server()->Tick();
 		m_RefreshTime = Server()->Tick();
 		m_RaceState = RACE_STARTED;
 	}
-	else if((TileIndex == TILE_END) && m_RaceState == RACE_STARTED)
+	if(((TileIndex1 == TILE_END) || (TileIndex2 == TILE_END)) && m_RaceState == RACE_STARTED)
 	{
 		char aBuf[128];
 		if ((int)time / 60 != 0)
@@ -649,60 +650,103 @@ void CCharacter::Tick()
 		if(strncmp(Server()->ClientName(m_pPlayer->GetCID()), "nameless tee", 12) != 0)
 			((CGameControllerDDRace*)GameServer()->m_pController)->m_Score.ParsePlayer(Server()->ClientName(m_pPlayer->GetCID()), (float)time);
 	}
-	else if((TileIndex == TILE_FREEZE) && !m_Super)
+	if(((TileIndex1 == TILE_FREEZE) || (TileIndex2 == TILE_FREEZE)) && !m_Super)
 	{
 		Freeze(Server()->TickSpeed()*3);
 	}
-	else if(TileIndex == TILE_UNFREEZE)
+	else if((TileIndex1 == TILE_UNFREEZE) || (TileIndex2 == TILE_UNFREEZE))
 	{
 		UnFreeze();
 	}
-	else if ((TileIndex >= TILE_BOOST_L && TileIndex <= TILE_BOOST_U) || (TileIndex >= TILE_BOOST_L2 && TileIndex <= TILE_BOOST_U2))
+	if (((TileIndex1 >= TILE_BOOST_L && TileIndex1 <= TILE_BOOST_U) || (TileIndex1 >= TILE_BOOST_L2 && TileIndex1 <= TILE_BOOST_U2)))
 	{
-		int booster = TileIndex;
+		int booster = TileIndex1;
+		m_Core.m_Vel += GameServer()->Collision()->BoostAccelerator(booster);
+	}
+	if ((TileIndex2 >= TILE_BOOST_L && TileIndex2 <= TILE_BOOST_U) || (TileIndex2 >= TILE_BOOST_L2 && TileIndex2 <= TILE_BOOST_U2))
+	{
+		int booster = TileIndex2;
 		m_Core.m_Vel += GameServer()->Collision()->BoostAccelerator(booster);
 	}	
-	else if(GameServer()->Collision()->GetCollisionDDRace(TileIndex) == TILE_STOPL)
+	if(TileIndex1 == TILE_STOPL)
 	{
 		if(m_Core.m_Vel.x > 0)
 		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex).x < (int)m_Core.m_Pos.x)
+			if((int)GameServer()->Collision()->GetPos(TileIndex1).x < (int)m_Core.m_Pos.x)
 				m_Core.m_Pos.x = m_PrevPos.x;
 			m_Core.m_Vel.x = 0;
 		}
 	}
-	else if(GameServer()->Collision()->GetCollisionDDRace(TileIndex) == TILE_STOPR)
+	if(TileIndex2 == TILE_STOPL)
+	{
+		if(m_Core.m_Vel.x > 0)
+		{
+			if((int)GameServer()->Collision()->GetPos(TileIndex2).x < (int)m_Core.m_Pos.x)
+				m_Core.m_Pos.x = m_PrevPos.x;
+			m_Core.m_Vel.x = 0;
+		}
+	}
+	if(TileIndex1 == TILE_STOPR)
 	{
 		if(m_Core.m_Vel.x < 0)
 		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex).x > (int)m_Core.m_Pos.x)
+			if((int)GameServer()->Collision()->GetPos(TileIndex1).x > (int)m_Core.m_Pos.x)
 				m_Core.m_Pos.x = m_PrevPos.x;
 			m_Core.m_Vel.x = 0;
 		}
 	}
-	else if(GameServer()->Collision()->GetCollisionDDRace(TileIndex) == TILE_STOPB)
+	if(TileIndex1 == TILE_STOPB)
 	{
 		if(m_Core.m_Vel.y < 0)
 		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex).y > (int)m_Core.m_Pos.y)
+			if((int)GameServer()->Collision()->GetPos(TileIndex1).y > (int)m_Core.m_Pos.y)
 				m_Core.m_Pos.y = m_PrevPos.y;
 			m_Core.m_Vel.y = 0;
 		}
 	}
-	else if(GameServer()->Collision()->GetCollisionDDRace(TileIndex) == TILE_STOPT)
+	if(TileIndex1 == TILE_STOPT)
 	{
 		if(m_Core.m_Vel.y > 0)
 		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex).y < (int)m_Core.m_Pos.y)
+			if((int)GameServer()->Collision()->GetPos(TileIndex1).y < (int)m_Core.m_Pos.y)
 				m_Core.m_Pos.y = m_PrevPos.y;
 			if(m_Jumped&3 && m_Core.m_Jumped != m_Jumped) // check double jump
 				m_Core.m_Jumped = m_Jumped;
 			m_Core.m_Vel.y = 0;
 		}
 	}
-	else if(GameServer()->Collision()->IsFront((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y))
+	if(TileIndex2 == TILE_STOPR)
+	{
+		if(m_Core.m_Vel.x < 0)
+		{
+			if((int)GameServer()->Collision()->GetPos(TileIndex2).x > (int)m_Core.m_Pos.x)
+				m_Core.m_Pos.x = m_PrevPos.x;
+			m_Core.m_Vel.x = 0;
+		}
+	}
+	if(TileIndex2 == TILE_STOPB)
+	{
+		if(m_Core.m_Vel.y < 0)
+		{
+			if((int)GameServer()->Collision()->GetPos(TileIndex2).y > (int)m_Core.m_Pos.y)
+				m_Core.m_Pos.y = m_PrevPos.y;
+			m_Core.m_Vel.y = 0;
+		}
+	}
+	if(TileIndex2 == TILE_STOPT)
+	{
+		if(m_Core.m_Vel.y > 0)
+		{
+			if((int)GameServer()->Collision()->GetPos(TileIndex2).y < (int)m_Core.m_Pos.y)
+				m_Core.m_Pos.y = m_PrevPos.y;
+			if(m_Jumped&3 && m_Core.m_Jumped != m_Jumped) // check double jump
+				m_Core.m_Jumped = m_Jumped;
+			m_Core.m_Vel.y = 0;
+		}
+	}
+	if(GameServer()->Collision()->IsFront((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y))
 		;
-	else if(GameServer()->Collision()->IsSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y))
+	if(GameServer()->Collision()->IsSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y))
 	{
 		vec2 Direction;
 		int Force;
@@ -710,7 +754,7 @@ void CCharacter::Tick()
 		
 		m_Core.m_Vel += Direction*Force;
 	}
-	else if(z)
+	if(z)
 	{
 		m_Core.m_HookedPlayer = -1;
 		m_Core.m_HookState = HOOK_RETRACTED;
@@ -854,11 +898,12 @@ void CCharacter::TickDefered()
 		m_Core.Write(&Current);
 
 		// only allow dead reackoning for a top of 3 seconds
-		if(m_ReckoningTick+Server()->TickSpeed()*3 < Server()->Tick() || mem_comp(&Predicted, &Current, sizeof(CNetObj_Character)) != 0)
+		if(m_Core.m_pReset || m_ReckoningTick+Server()->TickSpeed()*3 < Server()->Tick() || mem_comp(&Predicted, &Current, sizeof(CNetObj_Character)) != 0)
 		{
 			m_ReckoningTick = Server()->Tick();
 			m_SendCore = m_Core;
 			m_ReckoningCore = m_Core;
+			m_Core.m_pReset = false;
 		}
 	}
 }

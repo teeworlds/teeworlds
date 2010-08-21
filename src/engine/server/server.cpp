@@ -933,13 +933,15 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 							}
 							if(level != -1)
 							{
+								char buf[128]="Authentication successful. Remote console access granted, with level=%d";
 								CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
 								Msg.AddInt(1);
 								SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
 								
 								m_aClients[ClientId].m_Authed = level;
 								GameServer()->OnSetAuthed(ClientId, m_aClients[ClientId].m_Authed);  
-								SendRconLine(ClientId, "Authentication successful. Remote console access granted.");
+								str_format(buf,sizeof(buf),buf,level);
+								SendRconLine(ClientId, buf);
 								dbg_msg("server", "ClientId=%d authed with Level=%d", ClientId, level);
 								m_aClients[ClientId].m_PwTries = 0;
 							}

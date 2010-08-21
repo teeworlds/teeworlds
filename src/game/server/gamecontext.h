@@ -68,9 +68,10 @@ class CGameContext : public IGameServer
 
 	static void ConPhook(IConsole::IResult *pResult, void *pUserData, int cid);
 	
-	static void ConTimerReset(IConsole::IResult *pResult, void *pUserData, int cid);
-	static void ConTimer(IConsole::IResult *pResult, void *pUserData, int cid);
-
+	static void ConTimerStop(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConTimerStart(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConTimerReStart(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConTimerZero(IConsole::IResult *pResult, void *pUserData, int cid);
 	static void ConChangeMap(IConsole::IResult *pResult, void *pUserData, int cid);
 	static void ConRestart(IConsole::IResult *pResult, void *pUserData, int cid);
 	static void ConBroadcast(IConsole::IResult *pResult, void *pUserData, int cid);

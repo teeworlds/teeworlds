@@ -190,6 +190,7 @@ public:
 	int m_Angle;
 	CNetObj_PlayerInput m_Input;
 	
+	bool m_pReset;
 	int m_TriggeredEvents;
 	
 	void Init(CWorldCore *pWorld, CCollision *pCollision);

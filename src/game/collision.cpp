@@ -21,10 +21,6 @@ CCollision::CCollision()
 	m_pSpeedup = 0;
 	m_pFront = 0;
 }
-int CCollision::IsSolid(int x, int y)
-{
-	return (GetTile(x,y)&COLFLAG_SOLID);
-} 
 
 void CCollision::Init(class CLayers *pLayers)
 {
@@ -113,7 +109,9 @@ int CCollision::GetMapIndex(vec2 PrevPos, vec2 Pos)
 		else dbg_msg("GetMapIndex(","ny*m_Width+nx %d",ny*m_Width+nx);//REMOVE */
 		
 		if((m_pTiles[ny*m_Width+nx].m_Index >= TILE_THROUGH && m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
-				((m_pTiles[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
+			((m_pTiles[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
+			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_THROUGH && m_pFront[ny*m_Width+nx].m_Index < TILE_TELEIN)) ||
+			(m_pFront && ((m_pFront[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pFront[ny*m_Width+nx].m_Index <= TILE_NPH))) ||
 			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
 			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0))
 		{
@@ -133,9 +131,11 @@ int CCollision::GetMapIndex(vec2 PrevPos, vec2 Pos)
 		nx = clamp((int)Tmp.x/32, 0, m_Width-1);
 		ny = clamp((int)Tmp.y/32, 0, m_Height-1);
 		if((m_pTiles[ny*m_Width+nx].m_Index >= TILE_THROUGH && m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
-						((m_pTiles[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
-					(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
-					(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0))
+			((m_pTiles[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
+			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_THROUGH && m_pFront[ny*m_Width+nx].m_Index < TILE_TELEIN)) ||
+			(m_pFront && ((m_pFront[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pFront[ny*m_Width+nx].m_Index <= TILE_NPH))) ||
+			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
+			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0))
 		{
 			return ny*m_Width+nx;
 		}
@@ -159,6 +159,14 @@ int CCollision::GetCollisionDDRace(int Index)
 		return 0;
 	return m_pTiles[Index].m_Index;
 }
+int CCollision::GetCollisionDDRace2(int Index)
+{
+	/*dbg_msg("GetCollisionDDRace2","m_pFront[%d].m_Index = %d",Index,m_pFront[Index].m_Index);//Remove*/
+
+	if(Index < 0 || !m_pFront)
+		return 0;
+	return m_pFront[Index].m_Index;
+}
 
 int CCollision::GetTile(int x, int y)
 {
@@ -173,9 +181,9 @@ int CCollision::GetTile(int x, int y)
 	else
 		return 0;
 }
-int CCollision::Entitiy(int x, int y)
+int CCollision::Entity(int x, int y, bool Front)
 { 
-	int Index = m_pTiles[y*m_Width+x].m_Index;  		 
+	int Index = Front?m_pFront[y*m_Width+x].m_Index:m_pTiles[y*m_Width+x].m_Index;
 	return Index-ENTITY_OFFSET;  
 }
 void CCollision::SetCollisionAt(float x, float y, int flag)
@@ -187,22 +195,61 @@ void CCollision::SetCollisionAt(float x, float y, int flag)
 } 
 
 // TODO: rewrite this smarter!
-int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision)
+void ThroughOffset(vec2 Pos0, vec2 Pos1, int *Ox, int *Oy)
+{
+	float x = Pos0.x - Pos1.x;
+	float y = Pos0.y - Pos1.y;
+	if (fabs(x) > fabs(y))
+	{
+		if (x < 0)
+		{
+			*Ox = -32;
+			*Oy = 0;
+		}
+		else
+		{
+			*Ox = 32;
+			*Oy = 0;
+		}
+	}
+	else
+	{
+		if (y < 0)
+		{
+			*Ox = 0;
+			*Oy = -32;
+		}
+		else
+		{
+			*Ox = 0;
+			*Oy = 32;
+		}
+	}
+}
+
+int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, bool AllowThrough)
 {
 	float d = distance(Pos0, Pos1);
 	vec2 Last = Pos0;
-	
+	int ix, iy; // Temporary position for checking collision
+	int dx, dy; // Offset for checking the "through" tile
+	if (AllowThrough)
+		{
+		ThroughOffset(Pos0, Pos1, &dx, &dy);
+		}
 	for(float f = 0; f < d; f++)
 	{
 		float a = f/d;
 		vec2 Pos = mix(Pos0, Pos1, a);
-		if(CheckPoint(Pos.x, Pos.y))
+		ix = round(Pos.x);
+		iy = round(Pos.y);
+		if(CheckPoint(ix, iy) && !(AllowThrough && IsThrough(ix + dx, iy + dy)))
 		{
 			if(pOutCollision)
 				*pOutCollision = Pos;
 			if(pOutBeforeCollision)
 				*pOutBeforeCollision = Last;
-			return GetCollisionAt(Pos.x, Pos.y);
+			return GetCollisionAt(ix, iy);
 		}
 		Last = Pos;
 	}
@@ -379,6 +426,27 @@ bool CCollision::TestBox(vec2 Pos, vec2 Size)
 	return false;
 }
 
+int CCollision::IsSolid(int x, int y)
+{
+	return (GetTile(x,y)&COLFLAG_SOLID);
+}
+
+int CCollision::IsThrough(int x, int y)
+{
+	int nx = clamp(x/32, 0, m_Width-1);
+	int ny = clamp(y/32, 0, m_Height-1);
+	int Index = m_pTiles[ny*m_Width+nx].m_Index;
+	int Findex;
+	if (m_pFront)
+		Findex = m_pFront[ny*m_Width+nx].m_Index;
+	if (Index == TILE_THROUGH)
+		return Index;
+	else if (Findex == TILE_THROUGH)
+		return Findex;
+	else
+		return 0;
+}
+
 int CCollision::IsNoLaser(int x, int y)  		 
 {  		 
    return (CCollision::GetTile(x,y) & COLFLAG_NOLASER);  		 
@@ -444,10 +512,11 @@ bool  CCollision::IsFront(int x, int y)
 	
 	if(m_pFront[ny*m_pLayers->FrontLayer()->m_Width+nx].m_Index > 0)
 	{
-		dbg_msg("IsFront","True m_Index=%d",m_pFront[ny*m_pLayers->FrontLayer()->m_Width+nx].m_Index);//Remove*/
+		/*dbg_msg("IsFront","True m_Index=%d",m_pFront[ny*m_pLayers->FrontLayer()->m_Width+nx].m_Index);//Remove*/
 		return true;
 	}
-	else dbg_msg("IsFront","Welcome to the front layer m_Index=%d",m_pFront[ny*m_pLayers->FrontLayer()->m_Width+nx].m_Index);//Remove*/
+	/*else dbg_msg("IsFront","Welcome to the front layer m_Index=%d",m_pFront[ny*m_pLayers->FrontLayer()->m_Width+nx].m_Index);//Remove*/
+	return false;
 }
 
 int CCollision::IsCp(int x, int y)  		 
