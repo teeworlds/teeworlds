@@ -1163,8 +1163,6 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	m_EmoteStop = Server()->Tick() + 500 * Server()->TickSpeed() / 1000;
 
 	return true;
-	}
-	else return true;
 }
 
 void CCharacter::Snap(int SnappingClient)
