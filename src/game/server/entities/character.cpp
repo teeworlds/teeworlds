@@ -1147,7 +1147,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_SHORT);
 */
 	// set attacker's face to happy (taunt!)
-	if(g_Config.m_SvEmotionalTees)
+	/*if(g_Config.m_SvEmotionalTees)
 	{
 	if (From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
 	{
@@ -1157,7 +1157,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 			pChr->m_EmoteType = EMOTE_HAPPY;
 			pChr->m_EmoteStop = Server()->Tick() + Server()->TickSpeed();
 		}
-	}
+	}*///Removed you can set your emote via /emoteEMOTENAME
 	//set the attacked face to pain
 	m_EmoteType = EMOTE_PAIN;
 	m_EmoteStop = Server()->Tick() + 500 * Server()->TickSpeed() / 1000;

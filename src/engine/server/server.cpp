@@ -884,7 +884,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 						m_aClients[ClientId].m_Addr.ip[1],
 						m_aClients[ClientId].m_Addr.ip[2],
 						m_aClients[ClientId].m_Addr.ip[3]);
-						BanAdd(m_aClients[ClientId].m_Addr, g_Config.m_SvRconTriesBantime,"Trying Rcon commands withou permission"); // bye
+						//BanAdd(m_aClients[ClientId].m_Addr, g_Config.m_SvRconTriesBantime,"Trying Rcon commands withou permission"); // bye
 					}
 
 
