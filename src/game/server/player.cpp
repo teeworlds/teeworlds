@@ -209,7 +209,7 @@ void CPlayer::TryRespawn()
 	CEntity *apEnts[2] = {0};
 	int NumEnts = GameServer()->m_World.FindEntities(SpawnPos, 64, apEnts, 2, NETOBJTYPE_CHARACTER);
 	
-	if(NumEnts == 0)
+	if(NumEnts < 3)
 	{
 		m_Spawning = false;
 		Character = new(m_ClientID) CCharacter(&GameServer()->m_World);
