@@ -32,6 +32,18 @@ public:
 	void KillCharacter(int Weapon = WEAPON_GAME);
 	CCharacter *GetCharacter();
 	
+	CCharacter* m_CharacterCopy;
+	struct PauseInfo {
+		CCharacterCore m_Core;
+		int m_StartTime;
+		int m_RaceState;
+		//int m_RefreshTime;
+		bool m_Respawn;
+		bool m_aHasWeapon[NUM_WEAPONS];
+	} m_PauseInfo;
+	void LoadCharacter();
+	void SaveCharacter();
+	
 	//---------------------------------------------------------
 	// this is used for snapping so we know how we can clip the view for the player
 	vec2 m_ViewPos;

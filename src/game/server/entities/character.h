@@ -39,9 +39,8 @@ public:
 	virtual void Snap(int SnappingClient);
 		
 	bool IsGrounded();
-	bool m_Paused;
-	void LoadPauseData();
-	void SavePauseData();
+	//bool m_Paused;
+
 	void SetWeapon(int W);
 	void HandleWeaponSwitch();
 	void DoWeaponSwitch();
@@ -177,10 +176,6 @@ public:
 	int m_ReckoningTick; // tick that we are performing dead reckoning From
 	CCharacterCore m_SendCore; // core that we should send
 	CCharacterCore m_ReckoningCore; // the dead reckoning core
-	struct Pause
-	{
-		int example;//TODO:Fill This struct with useful chardata for pause FreezeTime Pos...etc
-	} m_Pause;
 };
 
 #endif
