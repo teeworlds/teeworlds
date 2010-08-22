@@ -30,7 +30,7 @@
 #include "register.h"
 #include "server.h"
 
-#if defined(CONF_FAMILY_WINDOWS) 
+#if defined(CONF_FAMILY_WINDOWS)
 	#define _WIN32_WINNT 0x0500
 	#define NOGDI
 	#include <windows.h>
@@ -79,7 +79,7 @@ void CSnapIDPool::Reset()
 		m_aIDs[i].m_Next = i+1;
 		m_aIDs[i].m_State = 0;
 	}
-		
+
 	m_aIDs[MAX_IDS-1].m_Next = -1;
 	m_FirstFree = 0;
 	m_FirstTimed = -1;
@@ -92,17 +92,17 @@ void CSnapIDPool::Reset()
 void CSnapIDPool::RemoveFirstTimeout()
 {
 	int NextTimed = m_aIDs[m_FirstTimed].m_Next;
-	
+
 	// add it to the free list
 	m_aIDs[m_FirstTimed].m_Next = m_FirstFree;
 	m_aIDs[m_FirstTimed].m_State = 0;
 	m_FirstFree = m_FirstTimed;
-	
+
 	// remove it from the timed list
 	m_FirstTimed = NextTimed;
 	if(m_FirstTimed == -1)
 		m_LastTimed = -1;
-		
+
 	m_Usage--;
 }
 
@@ -113,7 +113,7 @@ int CSnapIDPool::NewID()
 	// process timed ids
 	while(m_FirstTimed != -1 && m_aIDs[m_FirstTimed].m_Timeout < Now)
 		RemoveFirstTimeout();
-	
+
 	int Id = m_FirstFree;
 	dbg_assert(Id != -1, "id error");
 	m_FirstFree = m_aIDs[m_FirstFree].m_Next;
@@ -138,7 +138,7 @@ void CSnapIDPool::FreeID(int Id)
 	m_aIDs[Id].m_State = 2;
 	m_aIDs[Id].m_Timeout = time_get()+time_freq()*5;
 	m_aIDs[Id].m_Next = -1;
-	
+
 	if(m_LastTimed != -1)
 	{
 		m_aIDs[m_LastTimed].m_Next = Id;
@@ -150,7 +150,7 @@ void CSnapIDPool::FreeID(int Id)
 		m_LastTimed = Id;
 	}
 }
-	
+
 void CServer::CClient::Reset()
 {
 	// reset input
@@ -169,9 +169,9 @@ void CServer::CClient::Reset()
 CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 {
 	m_TickSpeed = SERVER_TICK_SPEED;
-	
+
 	m_pGameServer = 0;
-	
+
 	m_CurrentGameTick = 0;
 	m_RunServer = 1;
 
@@ -180,7 +180,7 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 
 	m_pCurrentMapData = 0;
 	m_CurrentMapSize = 0;
-	
+
 	m_MapReload = 0;
 
 	Init();
@@ -196,12 +196,12 @@ int CServer::TrySetClientName(int ClientID, const char *pName)
 	StrRtrim(aTrimmedName);
 	//dbg_msg("", "'%s' -> '%s'", pName, aTrimmedName); Removed for the rainbow mod
 	pName = aTrimmedName;
-	
-	
+
+
 	// check for empty names
 	if(!pName[0])
 		return -1;
-	
+
 	// make sure that two clients doesn't have the same name
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		if(i != ClientID && m_aClients[i].m_State >= CClient::STATE_READY)
@@ -221,10 +221,10 @@ void CServer::SetClientName(int ClientID, const char *pName)
 {
 	if(ClientID < 0 || ClientID >= MAX_CLIENTS || m_aClients[ClientID].m_State < CClient::STATE_READY)
 		return;
-		
+
 	if(!pName)
 		return;
-		
+
 	char aNameTry[MAX_NAME_LENGTH];
 	str_copy(aNameTry, pName, MAX_NAME_LENGTH);
 	if(TrySetClientName(ClientID, aNameTry))
@@ -260,7 +260,7 @@ void CServer::Kick(int ClientID, const char *pReason)
 {
 	if(ClientID < 0 || ClientID >= MAX_CLIENTS)
 		return;
-		
+
 	if(m_aClients[ClientID].m_State != CClient::STATE_EMPTY)
 		m_NetServer.Drop(ClientID, pReason);
 }
@@ -330,7 +330,7 @@ void CServer::SetClientAuthed(int ClientID, int Level) {
 	}
 	m_aClients[ClientID].m_Authed = Level;
 }
-	
+
 
 int *CServer::LatestInput(int ClientId, int *size)
 {
@@ -344,7 +344,7 @@ const char *CServer::ClientName(int ClientId)
 	if(ClientId < 0 || ClientId >= MAX_CLIENTS || m_aClients[ClientId].m_State < CServer::CClient::STATE_READY)
 		return "(invalid client)";
 	return m_aClients[ClientId].m_aName;
-}	
+}
 
 bool CServer::ClientIngame(int ClientID)
 {
@@ -361,13 +361,13 @@ int CServer::SendMsgEx(CMsgPacker *pMsg, int Flags, int ClientID, bool System)
 	CNetChunk Packet;
 	if(!pMsg)
 		return -1;
-		
+
 	mem_zero(&Packet, sizeof(CNetChunk));
-	
+
 	Packet.m_ClientID = ClientID;
 	Packet.m_pData = pMsg->Data();
 	Packet.m_DataSize = pMsg->Size();
-	
+
 	// HACK: modify the message id in the packet and store the system flag
 	*((unsigned char*)Packet.m_pData) <<= 1;
 	if(System)
@@ -377,7 +377,7 @@ int CServer::SendMsgEx(CMsgPacker *pMsg, int Flags, int ClientID, bool System)
 		Packet.m_Flags |= NETSENDFLAG_VITAL;
 	if(Flags&MSGFLAG_FLUSH)
 		Packet.m_Flags |= NETSENDFLAG_FLUSH;
-	
+
 	// write message to demo recorder
 	if(!(Flags&MSGFLAG_NORECORD))
 		m_DemoRecorder.RecordMessage(pMsg->Data(), pMsg->Size());
@@ -404,7 +404,7 @@ int CServer::SendMsgEx(CMsgPacker *pMsg, int Flags, int ClientID, bool System)
 void CServer::DoSnapshot()
 {
 	GameServer()->OnPreSnap();
-	
+
 	// create snapshot for demo recording
 	if(m_DemoRecorder.IsRecording())
 	{
@@ -415,7 +415,7 @@ void CServer::DoSnapshot()
 		m_SnapshotBuilder.Init();
 		GameServer()->OnSnap(-1);
 		SnapshotSize = m_SnapshotBuilder.Finish(aData);
-		
+
 		// write snapshot
 		m_DemoRecorder.RecordSnapshot(Tick(), aData, SnapshotSize);
 	}
@@ -426,15 +426,15 @@ void CServer::DoSnapshot()
 		// client must be ingame to recive snapshots
 		if(m_aClients[i].m_State != CClient::STATE_INGAME)
 			continue;
-			
+
 		// this client is trying to recover, don't spam snapshots
 		if(m_aClients[i].m_SnapRate == CClient::SNAPRATE_RECOVER && (Tick()%50) != 0)
 			continue;
-			
+
 		// this client is trying to recover, don't spam snapshots
 		if(m_aClients[i].m_SnapRate == CClient::SNAPRATE_INIT && (Tick()%10) != 0)
 			continue;
-			
+
 		{
 			char aData[CSnapshot::MAX_SIZE];
 			CSnapshot *pData = (CSnapshot*)aData;	// Fix compiler warning for strict-aliasing
@@ -459,13 +459,13 @@ void CServer::DoSnapshot()
 			// remove old snapshos
 			// keep 3 seconds worth of snapshots
 			m_aClients[i].m_Snapshots.PurgeUntil(m_CurrentGameTick-SERVER_TICK_SPEED*3);
-			
+
 			// save it the snapshot
 			m_aClients[i].m_Snapshots.Add(m_CurrentGameTick, time_get(), SnapshotSize, pData, 0);
-			
+
 			// find snapshot that we can preform delta against
 			EmptySnap.Clear();
-			
+
 			{
 				DeltashotSize = m_aClients[i].m_Snapshots.Get(m_aClients[i].m_LastAckedSnapshot, 0, &pDeltashot, 0);
 				if(DeltashotSize >= 0)
@@ -477,10 +477,10 @@ void CServer::DoSnapshot()
 						m_aClients[i].m_SnapRate = CClient::SNAPRATE_RECOVER;
 				}
 			}
-			
+
 			// create delta
 			DeltaSize = m_SnapshotDelta.CreateDelta(pDeltashot, pData, aDeltaData);
-			
+
 			if(DeltaSize)
 			{
 				// compress it
@@ -490,7 +490,7 @@ void CServer::DoSnapshot()
 
 				SnapshotSize = CVariableInt::Compress(aDeltaData, DeltaSize, aCompData);
 				NumPackets = (SnapshotSize+MaxSize-1)/MaxSize;
-				
+
 				for(int n = 0, Left = SnapshotSize; Left; n++)
 				{
 					int Chunk = Left < MaxSize ? Left : MaxSize;
@@ -512,7 +512,7 @@ void CServer::DoSnapshot()
 						Msg.AddInt(m_CurrentGameTick);
 						Msg.AddInt(m_CurrentGameTick-DeltaTick);
 						Msg.AddInt(NumPackets);
-						Msg.AddInt(n);							
+						Msg.AddInt(n);
 						Msg.AddInt(Crc);
 						Msg.AddInt(Chunk);
 						Msg.AddRaw(&aCompData[n*MaxSize], Chunk);
@@ -541,11 +541,11 @@ int CServer::NewClientCallback(int ClientId, void *pUser)
 	pThis->m_aClients[ClientId].m_aName[0] = 0;
 	pThis->m_aClients[ClientId].m_aClan[0] = 0;
 	pThis->m_aClients[ClientId].m_Authed = 0;
-	pThis->m_aClients[ClientId].m_PwTries = 0; // init pw tries  		 
-	memset(&pThis->m_aClients[ClientId].m_Addr, 0, sizeof(NETADDR)); // init that too  
+	pThis->m_aClients[ClientId].m_PwTries = 0; // init pw tries
+	memset(&pThis->m_aClients[ClientId].m_Addr, 0, sizeof(NETADDR)); // init that too
 	pThis->m_aClients[ClientId].m_CmdTriesTimer= 0;
-	pThis->m_aClients[ClientId].m_CmdTries = 0; //Floff init cmd tries  		 
-	pThis->m_aClients[ClientId].m_Resistent = 0;  
+	pThis->m_aClients[ClientId].m_CmdTries = 0; //Floff init cmd tries
+	pThis->m_aClients[ClientId].m_Resistent = 0;
 	pThis->m_aClients[ClientId].Reset();
 	return 0;
 }
@@ -553,20 +553,20 @@ int CServer::NewClientCallback(int ClientId, void *pUser)
 int CServer::DelClientCallback(int ClientId, void *pUser)
 {
 	CServer *pThis = (CServer *)pUser;
-	
+
 	// notify the mod about the drop
 	if(pThis->m_aClients[ClientId].m_State >= CClient::STATE_READY)
 		pThis->GameServer()->OnClientDrop(ClientId);
-	
+
 	pThis->m_aClients[ClientId].m_State = CClient::STATE_EMPTY;
 	pThis->m_aClients[ClientId].m_aName[0] = 0;
 	pThis->m_aClients[ClientId].m_aClan[0] = 0;
 	pThis->m_aClients[ClientId].m_Authed = 0;
-	pThis->m_aClients[ClientId].m_PwTries = 0; // init pw tries  		 
-	memset(&pThis->m_aClients[ClientId].m_Addr, 0, sizeof(NETADDR)); // init that too 
-	pThis->m_aClients[ClientId].m_CmdTriesTimer= 0;	
-	pThis->m_aClients[ClientId].m_CmdTries = 0; //Floff init cmd tries  		 
-	pThis->m_aClients[ClientId].m_Resistent = 0; 
+	pThis->m_aClients[ClientId].m_PwTries = 0; // init pw tries
+	memset(&pThis->m_aClients[ClientId].m_Addr, 0, sizeof(NETADDR)); // init that too
+	pThis->m_aClients[ClientId].m_CmdTriesTimer= 0;
+	pThis->m_aClients[ClientId].m_CmdTries = 0; //Floff init cmd tries
+	pThis->m_aClients[ClientId].m_Resistent = 0;
 	pThis->m_aClients[ClientId].m_Snapshots.PurgeAll();
 	return 0;
 }
@@ -580,7 +580,7 @@ void CServer::SendMap(int ClientId)
 		if(g_Config.m_SvMap[i] == '/' || g_Config.m_SvMap[i] == '\\')
 			pMapShortName = &g_Config.m_SvMap[i+1];
 	}
-	
+
 	CMsgPacker Msg(NETMSG_MAP_CHANGE);
 	Msg.AddString(pMapShortName, 0);
 	Msg.AddInt(m_CurrentMapCrc);
@@ -599,16 +599,16 @@ void CServer::SendRconLineAuthed(const char *pLine, void *pUser)
 	CServer *pThis = (CServer *)pUser;
 	static volatile int ReentryGuard = 0;
 	int i;
-	
+
 	if(ReentryGuard) return;
 	ReentryGuard++;
-	
+
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(pThis->m_aClients[i].m_State != CClient::STATE_EMPTY && pThis->m_aClients[i].m_Authed)
 			pThis->SendRconLine(i, pLine);
 	}
-	
+
 	ReentryGuard--;
 }
 
@@ -622,10 +622,10 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 	int Msg = Unpacker.GetInt();
 	int Sys = Msg&1;
 	Msg >>= 1;
-	
+
 	if(Unpacker.Error())
 		return;
-	
+
 	if(m_aClients[ClientId].m_State == CClient::STATE_AUTH)
 	{
 		if(Sys && Msg == NETMSG_INFO)
@@ -641,52 +641,52 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				m_NetServer.Drop(ClientId, aReason);
 				return;
 			}
-			
+
 			str_copy(m_aClients[ClientId].m_aName, Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), MAX_NAME_LENGTH);
 			str_copy(m_aClients[ClientId].m_aClan, Unpacker.GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), MAX_CLANNAME_LENGTH);
 			pPassword = Unpacker.GetString(CUnpacker::SANITIZE_CC);
-			
+
 			if(g_Config.m_Password[0] != 0 && str_comp(g_Config.m_Password, pPassword) != 0)
 			{
 				// wrong password
 				m_NetServer.Drop(ClientId, "wrong password");
 				return;
 			}
-			
+
 			// reserved slot
-			if(ClientId >= (g_Config.m_SvMaxClients-g_Config.m_SvReservedSlots) && g_Config.m_SvReservedSlotsPass[0] != 0 && strcmp(g_Config.m_SvReservedSlotsPass, pPassword) != 0)  		 
-            {  		 
-                m_NetServer.Drop(ClientId, "Dropped due reserved slot");  		 
-                return;  		 
+			if(ClientId >= (g_Config.m_SvMaxClients-g_Config.m_SvReservedSlots) && g_Config.m_SvReservedSlotsPass[0] != 0 && strcmp(g_Config.m_SvReservedSlotsPass, pPassword) != 0)
+            {
+                m_NetServer.Drop(ClientId, "Dropped due reserved slot");
+                return;
             }
-				 
+
            //Start of 2cpip LemonFace
 			int i/*, ipcnt = 0*/; // ip count
 			Addr=m_NetServer.ClientAddr(ClientId);
-           m_aClients[ClientId].m_Addr = Addr; // store the address info  		 
+           m_aClients[ClientId].m_Addr = Addr; // store the address info
            /*for(i=0; i<MAX_CLIENTS; i++)
-           {  		 
-               if(m_aClients[i].m_State != CClient::STATE_EMPTY) // if not an empty slot  		 
-               {  		 
-                   if (m_aClients[i].m_Addr.ip[0] == Addr.ip[0] && // check each ip byte  		 
-                       m_aClients[i].m_Addr.ip[1] == Addr.ip[1] &&  		 
-                       m_aClients[i].m_Addr.ip[2] == Addr.ip[2] &&  		 
-                       m_aClients[i].m_Addr.ip[3] == Addr.ip[3])  		 
-                   {  		 
- 		 
+           {
+               if(m_aClients[i].m_State != CClient::STATE_EMPTY) // if not an empty slot
+               {
+                   if (m_aClients[i].m_Addr.ip[0] == Addr.ip[0] && // check each ip byte
+                       m_aClients[i].m_Addr.ip[1] == Addr.ip[1] &&
+                       m_aClients[i].m_Addr.ip[2] == Addr.ip[2] &&
+                       m_aClients[i].m_Addr.ip[3] == Addr.ip[3])
+                   {
+
                        if(m_aClients[i].m_Authed > 0) // authed players can have clones
-                       {  		 
-                           ipcnt = 0;  		 
-                           break;  		 
-                       }  		 
- 		 
-                       ipcnt++; // ++  		 
-                   }  		 
-               }  		 
-           }  		 
- 		 
+                       {
+                           ipcnt = 0;
+                           break;
+                       }
+
+                       ipcnt++; // ++
+                   }
+               }
+           }
+
            if(ipcnt > g_Config.m_SvMaxConnections) // if already n connections exist, drop him
-           {  		 
+           {
                dbg_msg("server", "Player dropped, too many connections. cid=%x ip=%d.%d.%d.%d",
             		   ClientId,
             		   Addr.ip[0],
@@ -697,9 +697,9 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
                char buf[100];
                str_format(buf,sizeof(buf),"Connection count(%d) per IP Limit Exceeded, The Limit is %d", ipcnt, g_Config.m_SvMaxClientsPerIP);
                m_NetServer.Drop(ClientId,buf);
-               return;  		 
+               return;
            }  */
-			
+
 			m_aClients[ClientId].m_State = CClient::STATE_CONNECTING;
 			SendMap(ClientId);
 		}
@@ -736,7 +736,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				{
 					if(m_aClients[ClientId].m_CmdTries > g_Config.m_SvNetmsgLimit && g_Config.m_SvNetmsgLimit != 0)
 					{
-						dbg_msg("server", "client trying to flood the server (%d tries), ban. cid=%x ip=%d.%d.%d.%d", m_aClients[ClientId].m_CmdTries, 
+						dbg_msg("server", "client trying to flood the server (%d tries), ban. cid=%x ip=%d.%d.%d.%d", m_aClients[ClientId].m_CmdTries,
 						ClientId,
 						m_aClients[ClientId].m_Addr.ip[0], m_aClients[ClientId].m_Addr.ip[1], m_aClients[ClientId].m_Addr.ip[2], m_aClients[ClientId].m_Addr.ip[3]
 						);
@@ -757,11 +757,11 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				int ChunkSize = 1024-128;
 				int Offset = Chunk * ChunkSize;
 				int Last = 0;
-				
+
 				// drop faulty map data requests
 				if(Chunk < 0 || Offset > m_CurrentMapSize)
 					return;
-				
+
 				if(Offset+ChunkSize >= m_CurrentMapSize)
 				{
 					ChunkSize = m_CurrentMapSize-Offset;
@@ -769,14 +769,14 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 						ChunkSize = 0;
 					Last = 1;
 				}
-				
+
 				CMsgPacker Msg(NETMSG_MAP_DATA);
 				Msg.AddInt(Last);
 				Msg.AddInt(m_CurrentMapSize);
 				Msg.AddInt(ChunkSize);
 				Msg.AddRaw(&m_pCurrentMapData[Offset], ChunkSize);
 				SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientId, true);
-				
+
 				if(g_Config.m_Debug)
 					dbg_msg("server", "sending chunk %d with size %d", Chunk, ChunkSize);
 			}
@@ -785,17 +785,17 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				if(m_aClients[ClientId].m_State == CClient::STATE_CONNECTING)
 				{
 					//Addr = m_NetServer.ClientAddr(ClientId);
-					
+
 					dbg_msg("server", "player is ready. ClientId=%x ip=%d.%d.%d.%d",
-						ClientId, 
-						m_aClients[ClientId].m_Addr.ip[0], 
-						m_aClients[ClientId].m_Addr.ip[1], 
-						m_aClients[ClientId].m_Addr.ip[2], 
+						ClientId,
+						m_aClients[ClientId].m_Addr.ip[0],
+						m_aClients[ClientId].m_Addr.ip[1],
+						m_aClients[ClientId].m_Addr.ip[2],
 						m_aClients[ClientId].m_Addr.ip[3]);
 					m_aClients[ClientId].m_State = CClient::STATE_READY;
 					GameServer()->OnClientConnected(ClientId);
 					GameServer()->OnSetAuthed(ClientId, m_aClients[ClientId].m_Authed);
-					GameServer()->OnSetResistent(ClientId, m_aClients[ClientId].m_Resistent);  
+					GameServer()->OnSetResistent(ClientId, m_aClients[ClientId].m_Resistent);
 				}
 			}
 			else if(Msg == NETMSG_ENTERGAME)
@@ -803,12 +803,12 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				if(m_aClients[ClientId].m_State == CClient::STATE_READY)
 				{
 					//Addr = m_NetServer.ClientAddr(ClientId);
-					
+
 					dbg_msg("server", "player has entered the game. ClientId=%x ip=%d.%d.%d.%d",
-						ClientId, 
-						m_aClients[ClientId].m_Addr.ip[0], 
-						m_aClients[ClientId].m_Addr.ip[1], 
-						m_aClients[ClientId].m_Addr.ip[2], 
+						ClientId,
+						m_aClients[ClientId].m_Addr.ip[0],
+						m_aClients[ClientId].m_Addr.ip[1],
+						m_aClients[ClientId].m_Addr.ip[2],
 						m_aClients[ClientId].m_Addr.ip[3]);
 					m_aClients[ClientId].m_State = CClient::STATE_INGAME;
 					GameServer()->OnClientEnter(ClientId);
@@ -818,18 +818,18 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			{
 				CClient::CInput *pInput;
 				int64 TagTime;
-				
+
 				m_aClients[ClientId].m_LastAckedSnapshot = Unpacker.GetInt();
 				int IntendedTick = Unpacker.GetInt();
 				int Size = Unpacker.GetInt();
-				
+
 				// check for errors
 				if(Unpacker.Error() || Size/4 > MAX_INPUT_SIZE)
 					return;
 
 				if(m_aClients[ClientId].m_LastAckedSnapshot > 0)
 					m_aClients[ClientId].m_SnapRate = CClient::SNAPRATE_FULL;
-					
+
 				if(m_aClients[ClientId].m_Snapshots.Get(m_aClients[ClientId].m_LastAckedSnapshot, &TagTime, 0, 0) >= 0)
 					m_aClients[ClientId].m_Latency = (int)(((time_get()-TagTime)*1000)/time_freq());
 
@@ -838,7 +838,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				if(IntendedTick > m_aClients[ClientId].m_LastInputTick)
 				{
 					int TimeLeft = ((TickStartTime(IntendedTick)-time_get())*1000) / time_freq();
-					
+
 					CMsgPacker Msg(NETMSG_INPUTTIMING);
 					Msg.AddInt(IntendedTick);
 					Msg.AddInt(TimeLeft);
@@ -848,20 +848,20 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				m_aClients[ClientId].m_LastInputTick = IntendedTick;
 
 				pInput = &m_aClients[ClientId].m_aInputs[m_aClients[ClientId].m_CurrentInput];
-				
+
 				if(IntendedTick <= Tick())
 					IntendedTick = Tick()+1;
 
 				pInput->m_GameTick = IntendedTick;
-				
+
 				for(int i = 0; i < Size/4; i++)
 					pInput->m_aData[i] = Unpacker.GetInt();
-				
+
 				mem_copy(m_aClients[ClientId].m_LatestInput.m_aData, pInput->m_aData, MAX_INPUT_SIZE*sizeof(int));
-				
+
 				m_aClients[ClientId].m_CurrentInput++;
 				m_aClients[ClientId].m_CurrentInput %= 200;
-			
+
 				// call the mod with the fresh input data
 				if(m_aClients[ClientId].m_State == CClient::STATE_INGAME)
 					GameServer()->OnClientDirectInput(ClientId, m_aClients[ClientId].m_LatestInput.m_aData);
@@ -869,7 +869,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			else if(Msg == NETMSG_RCON_CMD)
 			{
 				const char *pCmd = Unpacker.GetString();
-				
+
 				if(Unpacker.Error() == 0/* && m_aClients[ClientId].m_Authed*/)
 				{
 					dbg_msg("server", "ClientId=%d Level=%d Rcon='%s'", ClientId, m_aClients[ClientId].m_Authed, pCmd);
@@ -880,13 +880,13 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					} else {
 						dbg_msg("server", "client tried rcon command without permissions. Cid=%x ip=%d.%d.%d.%d",
 						ClientId,
-						m_aClients[ClientId].m_Addr.ip[0], 
-						m_aClients[ClientId].m_Addr.ip[1], 
-						m_aClients[ClientId].m_Addr.ip[2], 
+						m_aClients[ClientId].m_Addr.ip[0],
+						m_aClients[ClientId].m_Addr.ip[1],
+						m_aClients[ClientId].m_Addr.ip[2],
 						m_aClients[ClientId].m_Addr.ip[3]);
-						//BanAdd(m_aClients[ClientId].m_Addr, g_Config.m_SvRconTriesBantime); // bye  
+						BanAdd(m_aClients[ClientId].m_Addr, g_Config.m_SvRconTriesBantime,"Trying Rcon commands withou permission"); // bye
 					}
-					
+
 
 				}
 			}
@@ -895,25 +895,25 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				const char *pPw;
 				Unpacker.GetString(); // login name, not used
 				pPw = Unpacker.GetString(CUnpacker::SANITIZE_CC);
-				
+
 				if(Unpacker.Error() == 0)
 				{
 					if(pPw[0] != 0)
 					{
-						if(g_Config.m_SvRconPasswordHelper[0] == 0 && 
+						if(g_Config.m_SvRconPasswordHelper[0] == 0 &&
 							g_Config.m_SvRconPasswordModer[0] == 0 &&
 							g_Config.m_SvRconPasswordAdmin[0] == 0)
 						{
 							SendRconLine(ClientId, "No rcon password set on server. Set sv_rcon_password_admin/sv_rcon_password_moder/sv_rcon_password_helper to enable the remote console.");
-						} 
-						else 
+						}
+						else
 						{
 							/*else if(str_comp(pPw, g_Config.m_SvRconPassword) == 0)
 							{
 								CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
 								Msg.AddInt(1);
 								SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
-								
+
 								m_aClients[ClientId].m_Authed = 1;
 								SendRconLine(ClientId, "Authentication successful. Remote console access granted.");
 								dbg_msg("server", "ClientId=%d authed", ClientId);
@@ -926,7 +926,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 							else if(str_comp(pPw, g_Config.m_SvRconPasswordModer) == 0)
 							{
 								level = 2;
-							} 
+							}
 							else if(str_comp(pPw, g_Config.m_SvRconPasswordAdmin) == 0)
 							{
 								level = 3;
@@ -937,9 +937,9 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 								CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
 								Msg.AddInt(1);
 								SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
-								
+
 								m_aClients[ClientId].m_Authed = level;
-								GameServer()->OnSetAuthed(ClientId, m_aClients[ClientId].m_Authed);  
+								GameServer()->OnSetAuthed(ClientId, m_aClients[ClientId].m_Authed);
 								str_format(buf,sizeof(buf),buf,level);
 								SendRconLine(ClientId, buf);
 								dbg_msg("server", "ClientId=%d authed with Level=%d", ClientId, level);
@@ -952,7 +952,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 								{ // rcon Kottizen LemonFace
 									BanAdd(m_NetServer.ClientAddr(ClientId), g_Config.m_SvRconTriesBantime, "exceeding rcon password tries, Bye"); // bye
 									dbg_msg("server", "cid=%d banned, wrong rcon pw", ClientId);
-								}  
+								}
 							}
 						}
 					}
@@ -985,7 +985,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 
 				dbg_msg("server", "strange message ClientId=%d msg=%d data_size=%d", ClientId, Msg, pPacket->m_DataSize);
 				dbg_msg("server", "%s", aBuf);
-				
+
 			}
 		}
 		else
@@ -996,7 +996,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 }
 
-	
+
 void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 {
 	CNetChunk Packet;
@@ -1010,7 +1010,7 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 			PlayerCount++;
 	}
-	
+
 	p.Reset();
 
 	if(Token >= 0)
@@ -1025,7 +1025,7 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 		// old format
 		p.AddRaw(SERVERBROWSE_OLD_INFO, sizeof(SERVERBROWSE_OLD_INFO));
 	}
-	
+
 	p.AddString(GameServer()->Version(), 32);
 	p.AddString(g_Config.m_SvName, 64);
 	p.AddString(g_Config.m_SvMap, 32);
@@ -1043,7 +1043,7 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 	// progression
 	str_format(aBuf, sizeof(aBuf), "%d", m_BrowseinfoProgression);
 	p.AddString(aBuf, 4);
-	
+
 	str_format(aBuf, sizeof(aBuf), "%d", PlayerCount); p.AddString(aBuf, 3);  // num players
 	str_format(aBuf, sizeof(aBuf), "%d", m_NetServer.MaxClients()); p.AddString(aBuf, 3); // max players
 
@@ -1055,8 +1055,8 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 			str_format(aBuf, sizeof(aBuf), "%d", m_aClients[i].m_Score); p.AddString(aBuf, 6);  // player score
 		}
 	}
-	
-	
+
+
 	Packet.m_ClientID = -1;
 	Packet.m_Address = *pAddr;
 	Packet.m_Flags = NETSENDFLAG_CONNLESS;
@@ -1079,21 +1079,21 @@ void CServer::UpdateServerInfo()
 
 int CServer::BanAdd(NETADDR Addr, int Seconds, const char *Reason)
 {
-	return m_NetServer.BanAdd(Addr, Seconds, Reason);	
+	return m_NetServer.BanAdd(Addr, Seconds, Reason);
 }
 
 int CServer::BanRemove(NETADDR Addr)
 {
 	return m_NetServer.BanRemove(Addr);
 }
-	
+
 
 void CServer::PumpNetwork()
 {
 	CNetChunk Packet;
 
 	m_NetServer.Update();
-	
+
 	// process packets
 	while(m_NetServer.Recv(&Packet))
 	{
@@ -1107,8 +1107,8 @@ void CServer::PumpNetwork()
 				{
 					SendServerInfo(&Packet.m_Address, ((unsigned char *)Packet.m_pData)[sizeof(SERVERBROWSE_GETINFO)]);
 				}
-				
-				
+
+
 				if(Packet.m_DataSize == sizeof(SERVERBROWSE_OLD_GETINFO) &&
 					mem_comp(Packet.m_pData, SERVERBROWSE_OLD_GETINFO, sizeof(SERVERBROWSE_OLD_GETINFO)) == 0)
 				{
@@ -1126,27 +1126,27 @@ int CServer::LoadMap(const char *pMapName)
 	//DATAFILE *df;
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "maps/%s.map", pMapName);
-	
+
 	/*df = datafile_load(buf);
 	if(!df)
 		return 0;*/
-		
+
 	if(!m_pMap->Load(aBuf))
 		return 0;
-	
+
 	// stop recording when we change map
 	m_DemoRecorder.Stop();
-	
+
 	// reinit snapshot ids
 	m_IDPool.TimeoutIDs();
-	
+
 	// get the crc of the map
 	m_CurrentMapCrc = m_pMap->Crc();
 	dbg_msg("server", "%s crc is %08x", aBuf, m_CurrentMapCrc);
-		
+
 	str_copy(m_aCurrentMap, pMapName, sizeof(m_aCurrentMap));
 	//map_set(df);
-	
+
 	// load compelate map into memory for download
 	{
 		IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_READ);
@@ -1178,7 +1178,7 @@ int CServer::Run()
 
 	//snap_init_id();
 	net_init();
-	
+
 	//
 	Console()->RegisterPrintCallback(SendRconLineAuthed, this);
 
@@ -1188,7 +1188,7 @@ int CServer::Run()
 		dbg_msg("server", "failed to load map. mapname='%s'", g_Config.m_SvMap);
 		return -1;
 	}
-	
+
 	// start server
 	// TODO: IPv6 support
 	NETADDR BindAddr;
@@ -1202,8 +1202,8 @@ int CServer::Run()
 		mem_zero(&BindAddr, sizeof(BindAddr));
 		BindAddr.port = g_Config.m_SvPort;
 	}
-	
-	
+
+
 	if(!m_NetServer.Open(BindAddr, g_Config.m_SvMaxClients, g_Config.m_SvMaxClientsPerIP, 0))
 	{
 		dbg_msg("server", "couldn't open socket. port might already be in use");
@@ -1211,9 +1211,9 @@ int CServer::Run()
 	}
 
 	m_NetServer.SetCallbacks(NewClientCallback, DelClientCallback, this, 0);
-	
+
 	dbg_msg("server", "server name is '%s'", g_Config.m_SvName);
-	
+
 	GameServer()->OnInit();
 	dbg_msg("server", "version %s", GameServer()->NetVersion());
 
@@ -1224,10 +1224,10 @@ int CServer::Run()
 	{
 		int64 ReportTime = time_get();
 		int ReportInterval = 3;
-	
+
 		m_Lastheartbeat = 0;
 		m_GameStartTime = time_get();
-	
+
 		if(g_Config.m_Debug)
 			dbg_msg("server", "baseline memory usage %dk", mem_stats()->allocated/1024);
 
@@ -1235,12 +1235,12 @@ int CServer::Run()
 		{
 			int64 t = time_get();
 			int NewTicks = 0;
-			
+
 			// load new map TODO: don't poll this
 			if(str_comp(g_Config.m_SvMap, m_aCurrentMap) != 0 || m_MapReload)
 			{
 				m_MapReload = 0;
-				
+
 				// load map
 				if(LoadMap(g_Config.m_SvMap))
 				{
@@ -1251,17 +1251,17 @@ int CServer::Run()
 					Console()->ExecuteLine("sv_endless_drag 0",4,-1); //TODO: Such string executed where autoexec executed. No need??
 					// new map loaded
 					GameServer()->OnShutdown();
-					
+
 					for(int c = 0; c < MAX_CLIENTS; c++)
 					{
 						if(m_aClients[c].m_State <= CClient::STATE_AUTH)
 							continue;
-						
+
 						SendMap(c);
 						m_aClients[c].Reset();
 						m_aClients[c].m_State = CClient::STATE_CONNECTING;
 					}
-					
+
 					m_GameStartTime = time_get();
 					m_CurrentGameTick = 0;
 					Kernel()->ReregisterInterface(GameServer());
@@ -1274,12 +1274,12 @@ int CServer::Run()
 					str_copy(g_Config.m_SvMap, m_aCurrentMap, sizeof(g_Config.m_SvMap));
 				}
 			}
-			
+
 			while(t > TickStartTime(m_CurrentGameTick+1))
 			{
 				m_CurrentGameTick++;
 				NewTicks++;
-				
+
 				// apply new input
 				for(int c = 0; c < MAX_CLIENTS; c++)
 				{
@@ -1298,19 +1298,19 @@ int CServer::Run()
 
 				GameServer()->OnTick();
 			}
-			
+
 			// snap game
 			if(NewTicks)
 			{
 				if(g_Config.m_SvHighBandwidth || (m_CurrentGameTick%2) == 0)
 					DoSnapshot();
 			}
-			
+
 			// master server stuff
 			m_Register.RegisterUpdate();
-	
+
 			PumpNetwork();
-	
+
 			if(ReportTime < time_get())
 			{
 				if(g_Config.m_Debug)
@@ -1319,23 +1319,23 @@ int CServer::Run()
 					static NETSTATS prev_stats;
 					NETSTATS stats;
 					netserver_stats(net, &stats);
-					
+
 					perf_next();
-					
+
 					if(config.dbg_pref)
 						perf_dump(&rootscope);
 
 					dbg_msg("server", "send=%8d recv=%8d",
 						(stats.send_bytes - prev_stats.send_bytes)/reportinterval,
 						(stats.recv_bytes - prev_stats.recv_bytes)/reportinterval);
-						
+
 					prev_stats = stats;
 					*/
 				}
-	
+
 				ReportTime += time_freq()*ReportInterval;
 			}
-			
+
 			// wait for incomming data
 			net_socket_read_wait(m_NetServer.Socket(), 5);
 		}
@@ -1358,12 +1358,12 @@ int CServer::Run()
 void CServer::ConKick(IConsole::IResult *pResult, void *pUser, int ClientId)
 {
 	int ClientId1 = pResult->GetInteger(0);
-	if (ClientId == -1 || ((CServer *)pUser)->m_aClients[ClientId].m_Authed > ((CServer *)pUser)->m_aClients[ClientId1].m_Authed) 
+	if (ClientId == -1 || ((CServer *)pUser)->m_aClients[ClientId].m_Authed > ((CServer *)pUser)->m_aClients[ClientId1].m_Authed)
 	{
 		char buf[128];
-		str_format(buf, sizeof(buf),"Kicked by %s", ((CServer *)pUser)->ClientName(ClientId)); 
-		((CServer *)pUser)->Kick(ClientId1, buf); 
-	}  
+		str_format(buf, sizeof(buf),"Kicked by %s", ((CServer *)pUser)->ClientName(ClientId));
+		((CServer *)pUser)->Kick(ClientId1, buf);
+	}
 }
 
 void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
@@ -1371,12 +1371,12 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
 	NETADDR Addr;
 	char aAddrStr[128], Bufz[100];
 	const char *pStr = pResult->GetString(0);
-	int Minutes = 30, jkl;//????
+	int Seconds = 30, jkl;//????
 	str_format(Bufz, sizeof(Bufz), "");
-	
+
 	if(pResult->NumArguments() > 1)
-		Minutes = pResult->GetInteger(1);
-	
+		Seconds = pResult->GetInteger(1);
+
 	if(pResult->NumArguments() > 2)
 	{
 		for (jkl = 2;jkl <= pResult->NumArguments();jkl++)
@@ -1386,16 +1386,16 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
 		}
 	}
 	else
-	str_format(Bufz, sizeof(Bufz), "no reason given"); 
+	str_format(Bufz, sizeof(Bufz), "no reason given");
 
-	
+
 	if(net_addr_from_str(&Addr, pStr) == 0)
-		((CServer *)pUser)->BanAdd(Addr, Minutes*60, Bufz);
+		((CServer *)pUser)->BanAdd(Addr, Seconds, Bufz);
 	else if(StrAllnum(pStr))
 	{
 		int ClientId = str_toint(pStr);
 		if (ClientId1 != -1 && ((CServer *)pUser)->m_aClients[ClientId1].m_Authed <= ((CServer *)pUser)->m_aClients[ClientId].m_Authed)
-			return; 
+			return;
 
 		if(ClientId < 0 || ClientId >= MAX_CLIENTS || ((CServer *)pUser)->m_aClients[ClientId].m_State == CClient::STATE_EMPTY)
 		{
@@ -1404,14 +1404,14 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
 		}
 
 		Addr = ((CServer *)pUser)->m_NetServer.ClientAddr(ClientId);
-		((CServer *)pUser)->BanAdd(Addr, Minutes*60, Bufz);
+		((CServer *)pUser)->BanAdd(Addr, Seconds, Bufz);
 	}
-	
+
 	Addr.port = 0;
 	net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
-	
-	if(Minutes)
-		dbg_msg("server", "banned %s for %d Minutes", aAddrStr, Minutes);
+
+	if(Seconds)
+		dbg_msg("server", "banned %s for %d Second(s)", aAddrStr, Seconds);
 	else
 		dbg_msg("server", "banned %s for life", aAddrStr);
 }
@@ -1421,7 +1421,7 @@ void CServer::ConUnban(IConsole::IResult *pResult, void *pUser, int ClientId)
 	NETADDR Addr;
 	CServer *pServer = (CServer *)pUser;
 	const char *pStr = pResult->GetString(0);
-	
+
 	if(net_addr_from_str(&Addr, pStr) == 0)
 		pServer->BanRemove(Addr);
 	else if(StrAllnum(pStr))
@@ -1442,15 +1442,15 @@ void CServer::ConBans(IConsole::IResult *pResult, void *pUser, int ClientId)
 	unsigned Now = time_timestamp();
 	char aBuf[1024];
 	CServer* pServer = (CServer *)pUser;
-	
+
 	int Num = pServer->m_NetServer.BanNum();
-	
+
 	for(int i = 0; i < Num; i++)
 	{
 		CNetServer::CBanInfo Info;
 		pServer->m_NetServer.BanGet(i, &Info);
 		NETADDR Addr = Info.m_Addr;
-		
+
 		if(Info.m_Expires == -1)
 		{
 			str_format(aBuf, sizeof(aBuf), "#%d %d.%d.%d.%d for life", i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3]);
@@ -1532,9 +1532,9 @@ void CServer::ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pU
 void CServer::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
-	
+
 	Console()->Register("kick", "i", CFGFLAG_SERVER, ConKick, this, "", 2);
-	Console()->Register("ban", "s?i?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s?s", CFGFLAG_SERVER, ConBan, this, "Ban player",2); //horrible long string
+	Console()->Register("ban", "s?i?r", CFGFLAG_SERVER, ConBan, this, "Ban player",2); //horrible long string
 	Console()->Register("unban", "s", CFGFLAG_SERVER, ConUnban, this, "", 3);
 	Console()->Register("bans", "", CFGFLAG_SERVER, ConBans, this, "", 2);
 	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "", 1);
@@ -1547,7 +1547,7 @@ void CServer::RegisterCommands()
 	Console()->Chain("password", ConchainSpecialInfoupdate, this);
 
 	Console()->Chain("sv_max_clients_per_ip", ConchainMaxclientsperipUpdate, this);
-}	
+}
 
 
 int CServer::SnapNewID()
@@ -1565,7 +1565,7 @@ void *CServer::SnapNewItem(int Type, int Id, int Size)
 {
 	dbg_assert(Type >= 0 && Type <=0xffff, "incorrect type");
 	dbg_assert(Id >= 0 && Id <=0xffff, "incorrect id");
-	return m_SnapshotBuilder.NewItem(Type, Id, Size);		
+	return m_SnapshotBuilder.NewItem(Type, Id, Size);
 }
 
 void CServer::SnapSetStaticsize(int ItemType, int Size)
@@ -1592,7 +1592,7 @@ int main(int argc, const char **argv) // ignore_convention
 	dbg_msg("server", "starting...");
 	CServer *pServer = CreateServer();
 	pServer->InitEngine("Teeworlds");
-	
+
 	IKernel *pKernel = IKernel::Create();
 
 	// create the components
@@ -1602,7 +1602,7 @@ int main(int argc, const char **argv) // ignore_convention
 	IEngineMasterServer *pEngineMasterServer = CreateEngineMasterServer();
 	IStorage *pStorage = CreateStorage("Teeworlds", argc, argv); // ignore_convention
 	IConfig *pConfig = CreateConfig();
-	
+
 	pServer->InitRegister(&pServer->m_NetServer, pEngineMasterServer);
 
 	{
@@ -1617,48 +1617,48 @@ int main(int argc, const char **argv) // ignore_convention
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConfig);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMasterServer*>(pEngineMasterServer)); // register as both
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMasterServer*>(pEngineMasterServer));
-		
+
 		if(RegisterFail)
 			return -1;
 	}
-	
+
 	pConfig->Init();
 	pEngineMasterServer->Init(pServer->Engine());
 	pEngineMasterServer->Load();
-		
+
 	// register all console commands
 	pServer->RegisterCommands();
 	pGameServer->OnConsoleInit();
-	
+
 	pConsole->ExecuteLine("tune_reset", 4, -1);
 	pConsole->ExecuteLine("sv_hit 1", 4, -1);
 	pConsole->ExecuteLine("sv_npc 0", 4, -1);
 	pConsole->ExecuteLine("sv_phook 1", 4, -1);
 	pConsole->ExecuteLine("sv_endless_drag 0",4,-1);
-	
+
 
 	//TODO it is in 2 places (and in one file O_o)
 	// execute autoexec file
 	pConsole->ExecuteFile("autoexec.cfg");
 
-	
+
 	// parse the command line arguments
 	if(argc > 1) // ignore_convention
 		pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
 
 	// restore empty config strings to their defaults
 	pConfig->RestoreStrings();
-	
+
 	pServer->Engine()->InitLogfile();
 	if(g_Config.m_SvExternalRecords == 1) {
 		char pathBuf[512];
 		str_format(pathBuf, sizeof(pathBuf), "%s/records", pStorage->ApplicationSavePath());
 		fs_makedir(pathBuf);
 	}
-	
+
 	// run the server
 	pServer->Run();
-	
+
 	// free
 	delete pServer;
 	delete pKernel;

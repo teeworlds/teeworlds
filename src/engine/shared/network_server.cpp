@@ -8,7 +8,7 @@
 	Object->Prev = (struct CBan *)0; \
 	Object->Next = First; \
 	First = Object; }
-	
+
 #define MACRO_LIST_LINK_AFTER(Object, After, Prev, Next) \
 	{ Object->Prev = After; \
 	Object->Next = After->Next; \
@@ -22,7 +22,7 @@
 	if(Object->Prev) Object->Prev->Next = Object->Next; \
 	else First = Object->Next; \
 	Object->Next = 0; Object->Prev = 0; }
-	
+
 #define MACRO_LIST_FIND(Start, Next, Expression) \
 	{ while(Start && !(Expression)) Start = Start->Next; }
 
@@ -30,12 +30,12 @@ bool CNetServer::Open(NETADDR BindAddr, int MaxClients, int MaxClientsPerIP, int
 {
 	// zero out the whole structure
 	mem_zero(this, sizeof(*this));
-	
+
 	// open socket
 	m_Socket = net_udp_create(BindAddr);
 	if(m_Socket == NETSOCKET_INVALID)
 		return false;
-	
+
 	// clamp clients
 	m_MaxClients = MaxClients;
 	if(m_MaxClients > NET_MAX_CLIENTS)
@@ -44,17 +44,17 @@ bool CNetServer::Open(NETADDR BindAddr, int MaxClients, int MaxClientsPerIP, int
 		m_MaxClients = 1;
 
 	m_MaxClientsPerIP = MaxClientsPerIP;
-	
+
 	for(int i = 0; i < NET_MAX_CLIENTS; i++)
 		m_aSlots[i].m_Connection.Init(m_Socket);
-	
+
 	// setup all pointers for bans
 	for(int i = 1; i < NET_SERVER_MAXBANS-1; i++)
 	{
 		m_BanPool[i].m_pNext = &m_BanPool[i+1];
 		m_BanPool[i].m_pPrev = &m_BanPool[i-1];
 	}
-	
+
 	m_BanPool[0].m_pNext = &m_BanPool[1];
 	m_BanPool[NET_SERVER_MAXBANS-1].m_pPrev = &m_BanPool[NET_SERVER_MAXBANS-2];
 	m_BanPool_FirstFree = &m_BanPool[0];
@@ -80,19 +80,17 @@ int CNetServer::Drop(int ClientID, const char *pReason)
 {
 	// TODO: insert lots of checks here
 	NETADDR Addr = ClientAddr(ClientID);
-	char Bufz[100];
-	str_format( Bufz, sizeof(Bufz),"trying to connect so soon");
 	dbg_msg("net_server", "client dropped. cid=%d ip=%d.%d.%d.%d reason=\"%s\"",
 		ClientID,
 		Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3],
 		pReason
 		);
-		
+
 
 	if(m_pfnDelClient)
 		m_pfnDelClient(ClientID, m_UserPtr);
 	m_aSlots[ClientID].m_Connection.Disconnect(pReason);
-	BanAddNoDrop(Addr, g_Config.m_SvReconnectTime, Bufz);
+	BanAddNoDrop(Addr, g_Config.m_SvReconnectTime);
 	return 0;
 }
 
@@ -101,7 +99,7 @@ int CNetServer::BanGet(int Index, CBanInfo *pInfo)
 	CBan *pBan;
 	for(pBan = m_BanPool_FirstUsed; pBan && Index; pBan = pBan->m_pNext, Index--)
 		{}
-		
+
 	if(!pBan)
 		return 0;
 	*pInfo = pBan->m_Info;
@@ -131,65 +129,66 @@ int CNetServer::BanRemove(NETADDR Addr)
 {
 	int IpHash = (Addr.ip[0]+Addr.ip[1]+Addr.ip[2]+Addr.ip[3])&0xff;
 	CBan *pBan = m_aBans[IpHash];
-	
+
 	MACRO_LIST_FIND(pBan, m_pHashNext, net_addr_comp(&pBan->m_Info.m_Addr, &Addr) == 0);
-	
+
 	if(pBan)
 	{
 		BanRemoveByObject(pBan);
 		return 0;
 	}
-	
+
 	return -1;
 }
 
-int CNetServer::BanAdd(NETADDR Addr, int Seconds, const char * Reason)
+int CNetServer::BanAdd(NETADDR Addr, int Seconds, const char* Reason)
 {
 	int IpHash = (Addr.ip[0]+Addr.ip[1]+Addr.ip[2]+Addr.ip[3])&0xff;
 	int Stamp = -1;
 	CBan *pBan;
-	
+
 	// remove the port
 	Addr.port = 0;
-	
 	if(Seconds)
 		Stamp = time_timestamp() + Seconds;
-		
+
 	// search to see if it already exists
 	pBan = m_aBans[IpHash];
 	MACRO_LIST_FIND(pBan, m_pHashNext, net_addr_comp(&pBan->m_Info.m_Addr, &Addr) == 0);
 	if(pBan)
 	{
-		// adjust the ban
-		if (pBan->m_Info.m_Expires > Seconds || pBan->m_Info.m_Expires == 0xffffffff)
+		if(pBan->m_Info.m_Expires==-1 || pBan->m_Info.m_Expires>Stamp)
 			return 0;
-		
+		// adjust the ban
 		pBan->m_Info.m_Expires = Stamp;
+		pBan->m_Info.m_Soon	= false;
 		strcpy(pBan->m_Info.m_Reason, Reason);
 		return 0;
 	}
-	
+
 	if(!m_BanPool_FirstFree)
 		return -1;
 
 	// fetch and clear the new ban
 	pBan = m_BanPool_FirstFree;
 	MACRO_LIST_UNLINK(pBan, m_BanPool_FirstFree, m_pPrev, m_pNext);
-	
+
 	// setup the ban info
 	pBan->m_Info.m_Expires = Stamp;
 	pBan->m_Info.m_Addr = Addr;
-	
+	pBan->m_Info.m_Soon	= false;
+	strcpy(pBan->m_Info.m_Reason, Reason);
+
 	// add it to the ban hash
 	MACRO_LIST_LINK_FIRST(pBan, m_aBans[IpHash], m_pHashPrev, m_pHashNext);
-	
+
 	// insert it into the used list
 	{
 		if(m_BanPool_FirstUsed)
 		{
 			CBan *pInsertAfter = m_BanPool_FirstUsed;
 			MACRO_LIST_FIND(pInsertAfter, m_pNext, Stamp < pInsertAfter->m_Info.m_Expires);
-			
+
 			if(pInsertAfter)
 				pInsertAfter = pInsertAfter->m_pPrev;
 			else
@@ -199,7 +198,7 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds, const char * Reason)
 				while(pInsertAfter->m_pNext)
 					pInsertAfter = pInsertAfter->m_pNext;
 			}
-			
+
 			if(pInsertAfter)
 			{
 				MACRO_LIST_LINK_AFTER(pBan, pInsertAfter, m_pPrev, m_pNext);
@@ -214,25 +213,20 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds, const char * Reason)
 			MACRO_LIST_LINK_FIRST(pBan, m_BanPool_FirstUsed, m_pPrev, m_pNext);
 		}
 	}
-
 	// drop banned clients
 	{
 		char Buf[128];
 		NETADDR BanAddr;
-		
-		if(Seconds) {
-			str_format(Buf, sizeof(Buf), "you have been banned for %d minutes", Seconds/60);
-			strcat(Buf, Reason);
-		} else {
-			str_format(Buf, sizeof(Buf), "you have been banned for life");
-			strcat(Buf, Reason);
-		}
-		
+
+		if(Seconds)
+			str_format(Buf, sizeof(Buf), "You have been banned for %d second(s) for %s", Seconds,Reason);
+		else
+			str_format(Buf, sizeof(Buf), "You have been banned for life for %s",Reason);
 		for(int i = 0; i < MaxClients(); i++)
 		{
 			BanAddr = m_aSlots[i].m_Connection.PeerAddress();
 			BanAddr.port = 0;
-			
+
 			if(net_addr_comp(&Addr, &BanAddr) == 0)
 				Drop(i, Buf);
 		}
@@ -240,55 +234,51 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds, const char * Reason)
 	return 0;
 }
 
-
-
-int CNetServer::BanAddNoDrop(NETADDR Addr, int Seconds, const char *Reason)
+int CNetServer::BanAddNoDrop(NETADDR Addr, int Seconds)
 {
 	int IpHash = (Addr.ip[0]+Addr.ip[1]+Addr.ip[2]+Addr.ip[3])&0xff;
 	int Stamp = -1;
 	CBan *pBan;
-	
+
 	// remove the port
 	Addr.port = 0;
-	
 	if(Seconds)
 		Stamp = time_timestamp() + Seconds;
-		
+
 	// search to see if it already exists
 	pBan = m_aBans[IpHash];
 	MACRO_LIST_FIND(pBan, m_pHashNext, net_addr_comp(&pBan->m_Info.m_Addr, &Addr) == 0);
 	if(pBan)
 	{
-		// adjust the ban
-		if (pBan->m_Info.m_Expires > Seconds || pBan->m_Info.m_Expires == 0xffffffff)
+		if(pBan->m_Info.m_Expires==-1 || pBan->m_Info.m_Expires>Stamp)
 			return 0;
-		
+		// adjust the ban
 		pBan->m_Info.m_Expires = Stamp;
-		strcpy(pBan->m_Info.m_Reason, Reason);
+		pBan->m_Info.m_Soon	= true;
 		return 0;
 	}
-	
+
 	if(!m_BanPool_FirstFree)
 		return -1;
 
 	// fetch and clear the new ban
 	pBan = m_BanPool_FirstFree;
 	MACRO_LIST_UNLINK(pBan, m_BanPool_FirstFree, m_pPrev, m_pNext);
-	
+
 	// setup the ban info
 	pBan->m_Info.m_Expires = Stamp;
 	pBan->m_Info.m_Addr = Addr;
-	strcpy(pBan->m_Info.m_Reason, Reason);
+	pBan->m_Info.m_Soon	= true;
 	// add it to the ban hash
 	MACRO_LIST_LINK_FIRST(pBan, m_aBans[IpHash], m_pHashPrev, m_pHashNext);
-	
+
 	// insert it into the used list
 	{
 		if(m_BanPool_FirstUsed)
 		{
 			CBan *pInsertAfter = m_BanPool_FirstUsed;
 			MACRO_LIST_FIND(pInsertAfter, m_pNext, Stamp < pInsertAfter->m_Info.m_Expires);
-			
+
 			if(pInsertAfter)
 				pInsertAfter = pInsertAfter->m_pPrev;
 			else
@@ -298,7 +288,7 @@ int CNetServer::BanAddNoDrop(NETADDR Addr, int Seconds, const char *Reason)
 				while(pInsertAfter->m_pNext)
 					pInsertAfter = pInsertAfter->m_pNext;
 			}
-			
+
 			if(pInsertAfter)
 			{
 				MACRO_LIST_LINK_AFTER(pBan, pInsertAfter, m_pPrev, m_pNext);
@@ -315,7 +305,6 @@ int CNetServer::BanAddNoDrop(NETADDR Addr, int Seconds, const char *Reason)
 	}
 	return 0;
 }
-
 
 int CNetServer::Update()
 {
@@ -326,14 +315,14 @@ int CNetServer::Update()
 		if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_ERROR)
 			Drop(i, m_aSlots[i].m_Connection.ErrorString());
 	}
-	
+
 	// remove expired bans
-	while(m_BanPool_FirstUsed && m_BanPool_FirstUsed->m_Info.m_Expires < Now)
+	while(m_BanPool_FirstUsed && m_BanPool_FirstUsed->m_Info.m_Expires < Now && m_BanPool_FirstUsed->m_Info.m_Expires != -1)
 	{
 		CBan *pBan = m_BanPool_FirstUsed;
 		BanRemoveByObject(pBan);
 	}
-	
+
 	return 0;
 }
 
@@ -343,22 +332,22 @@ int CNetServer::Update()
 int CNetServer::Recv(CNetChunk *pChunk)
 {
 	unsigned Now = time_timestamp();
-	
+
 	while(1)
 	{
 		NETADDR Addr;
-			
+
 		// check for a chunk
 		if(m_RecvUnpacker.FetchChunk(pChunk))
 			return 1;
-		
+
 		// TODO: empty the recvinfo
 		int Bytes = net_udp_recv(m_Socket, &Addr, m_RecvUnpacker.m_aBuffer, NET_MAX_PACKETSIZE);
 
 		// no more packets for now
 		if(Bytes <= 0)
 			break;
-		
+
 		if(CNetBase::UnpackPacket(m_RecvUnpacker.m_aBuffer, Bytes, &m_RecvUnpacker.m_Data) == 0)
 		{
 			CBan *pBan = 0;
@@ -366,33 +355,34 @@ int CNetServer::Recv(CNetChunk *pChunk)
 			int IpHash = (BanAddr.ip[0]+BanAddr.ip[1]+BanAddr.ip[2]+BanAddr.ip[3])&0xff;
 			int Found = 0;
 			BanAddr.port = 0;
-			
+
 			// search a ban
 			for(pBan = m_aBans[IpHash]; pBan; pBan = pBan->m_pHashNext)
 			{
 				if(net_addr_comp(&pBan->m_Info.m_Addr, &BanAddr) == 0)
 					break;
 			}
-			
+
 			// check if we just should drop the packet
 			if(pBan)
 			{
 				// banned, reply with a message
 				char BanStr[128];
-				if(pBan->m_Info.m_Expires && (pBan->m_Info.m_Expires!=0xffffffff))
+				if(pBan->m_Info.m_Expires && (pBan->m_Info.m_Expires!=-1))
 				{
 					int Mins = ((pBan->m_Info.m_Expires - Now))/60;
 					if(Mins > 1)
 						str_format(BanStr, sizeof(BanStr), "Banned for %d minute(s) for %s", Mins, pBan->m_Info.m_Reason);
 					else
-						str_format(BanStr, sizeof(BanStr), "Banned for %d minute(s) for %s", (pBan->m_Info.m_Expires - Now), pBan->m_Info.m_Reason);
+						str_format(BanStr, sizeof(BanStr), "Banned for %d second(s) for %s", (pBan->m_Info.m_Expires - Now), pBan->m_Info.m_Reason);
 				}
 				else
 					str_format(BanStr, sizeof(BanStr), "Banned for life for %s", pBan->m_Info.m_Reason);
-				CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, BanStr, str_length(BanStr)+1);
+				if(!pBan->m_Info.m_Soon)
+					CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, BanStr, str_length(BanStr)+1);
 				continue;
 			}
-			
+
 			if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS)
 			{
 				pChunk->m_Flags = NETSENDFLAG_CONNLESS;
@@ -403,12 +393,12 @@ int CNetServer::Recv(CNetChunk *pChunk)
 				return 1;
 			}
 			else
-			{			
+			{
 				// TODO: check size here
 				if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL && m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_CONNECT)
 				{
 					Found = 0;
-				
+
 					// check if we already got this client
 					for(int i = 0; i < MaxClients(); i++)
 					{
@@ -420,7 +410,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 							break;
 						}
 					}
-					
+
 					// client that wants to connect
 					if(!Found)
 					{
@@ -458,7 +448,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 								break;
 							}
 						}
-						
+
 						if(!Found)
 						{
 							const char FullMsg[] = "server is full";
@@ -495,7 +485,7 @@ int CNetServer::Send(CNetChunk *pChunk)
 		dbg_msg("netserver", "packet payload too big. %d. dropping packet", pChunk->m_DataSize);
 		return -1;
 	}
-	
+
 	if(pChunk->m_Flags&NETSENDFLAG_CONNLESS)
 	{
 		// send connectionless packet
@@ -506,10 +496,10 @@ int CNetServer::Send(CNetChunk *pChunk)
 		int Flags = 0;
 		dbg_assert(pChunk->m_ClientID >= 0, "errornous client id");
 		dbg_assert(pChunk->m_ClientID < MaxClients(), "errornous client id");
-		
+
 		if(pChunk->m_Flags&NETSENDFLAG_VITAL)
 			Flags = NET_CHUNKFLAG_VITAL;
-		
+
 		if(m_aSlots[pChunk->m_ClientID].m_Connection.QueueChunk(Flags, pChunk->m_DataSize, pChunk->m_pData) == 0)
 		{
 			if(pChunk->m_Flags&NETSENDFLAG_FLUSH)
