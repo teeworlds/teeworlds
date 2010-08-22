@@ -651,8 +651,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					if(g_Config.m_SvPauseable)
 					{
 						CCharacter* chr = p->GetCharacter();
-						
-							if(!p->GetTeam())
+
+							if(!p->GetTeam() && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime))
 							{
 								p->SaveCharacter();
 								p->SetTeam(-1);
@@ -663,6 +663,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 								p->SetTeam(0);
 								//p->LoadCharacter();//TODO:Check if this system Works
 							}
+							else
+								SendChatTarget(ClientId, "You are not allowed to pause with ninja");
 
 							//if(chr->m_RaceState==RACE_STARTED)
 							//	chr->m_RaceState = RACE_PAUSE;

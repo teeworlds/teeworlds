@@ -510,13 +510,13 @@ bool CCharacter::GiveWeapon(int Weapon, int Ammo)
 
 void CCharacter::GiveNinja()
 {
+	if(!m_aWeapons[WEAPON_NINJA].m_Got)
+		GameServer()->CreateSound(m_Pos, SOUND_PICKUP_NINJA);
 	m_Ninja.m_ActivationTick = Server()->Tick();
 	m_aWeapons[WEAPON_NINJA].m_Got = true;
 	m_aWeapons[WEAPON_NINJA].m_Ammo = -1;
 	m_LastWeapon = m_ActiveWeapon;
 	m_ActiveWeapon = WEAPON_NINJA;
-	
-	GameServer()->CreateSound(m_Pos, SOUND_PICKUP_NINJA);
 }
 
 void CCharacter::SetEmote(int Emote, int Tick)
@@ -1012,7 +1012,13 @@ bool CCharacter::UnFreeze()
 		m_Ninja.m_ActivationDir=vec2(0,0);
 		m_Ninja.m_ActivationTick=0;
 		m_Ninja.m_CurrentMoveTime=0;
-
+		for(int i=0;i<WEAPON_NINJA;i++)
+		{
+			if (m_aWeapons[i].m_Got)
+			{
+				m_aWeapons[i].m_Ammo = -1;
+			}
+		}
 		return true;
 	}
 	return false;  		 
