@@ -232,9 +232,11 @@ void CPlayer::LoadCharacter() {
 	Character->m_RaceState = m_PauseInfo.m_RaceState;
 	Character->m_RefreshTime = Server()->Tick();
 	for(int i = 0; i < NUM_WEAPONS; ++i) {
-		if(m_PauseInfo.m_aHasWeapon[i]) {
+		if(m_PauseInfo.m_aHasWeapon[i])
+		 if(!m_PauseInfo.m_FreezeTime)
 			Character->GiveWeapon(i, -1);
-		}
+		 else
+			 Character->GiveWeapon(i, 0);
 	}
 	Character->m_FreezeTime = m_PauseInfo.m_FreezeTime;
 	Character->m_Doored = m_PauseInfo.m_Doored;

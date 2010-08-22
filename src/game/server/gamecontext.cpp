@@ -652,7 +652,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					{
 						CCharacter* chr = p->GetCharacter();
 
-							if(!p->GetTeam() && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime))
+							if(!p->GetTeam() && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos)
 							{
 								p->SaveCharacter();
 								p->SetTeam(-1);
@@ -664,7 +664,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 								//p->LoadCharacter();//TODO:Check if this system Works
 							}
 							else
-								SendChatTarget(ClientId, "You are not allowed to pause with ninja");
+								SendChatTarget(ClientId, (chr->m_aWeapons[WEAPON_NINJA].m_Got)?"You can't use /pause while you are a ninja":(!chr->IsGrounded())?"You can't use /pause while you are a in air":"You can't use /pause while you are moving");
 
 							//if(chr->m_RaceState==RACE_STARTED)
 							//	chr->m_RaceState = RACE_PAUSE;
