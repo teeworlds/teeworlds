@@ -648,15 +648,26 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				SendChatTarget(ClientId, "also the commit log on github.com/GreYFoXGTi/DDRace");
 			} else if(!str_comp_nocase(pMsg->m_pMessage, "/pause"))
 				{
-					if(g_Config.m_SvPauseable && g_Config.m_SvVoteKick)
+					if(g_Config.m_SvPauseable)
 					{
-						CCharacter* chr = m_apPlayers[ClientId]->GetCharacter();
+						CCharacter* chr = p->GetCharacter();
 						if(chr)
 						{
-							if(chr->m_RaceState==RACE_STARTED)
+							//if(!p->GetTeam() && !chr->m_Paused)
+							//{
+								//chr->SavePauseData();
+								//p->SetTeam(-1);
+							//}
+							//else if (p->GetTeam()==-1 && chr->m_Paused)
+							//{
+								//p->SetTeam(0);
+								//chr->LoadPauseData();//TODO:Check if this system Works
+							//}
+
+							/*if(chr->m_RaceState==RACE_STARTED)
 							chr->m_RaceState = RACE_PAUSE;
 							else if(chr->m_RaceState==RACE_PAUSE)
-							chr->m_RaceState = RACE_STARTED;
+							chr->m_RaceState = RACE_STARTED;*/
 						}
 					}
 			} else if(!str_comp_nocase(pMsg->m_pMessage, "/info"))
@@ -1000,10 +1011,15 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		{
 			//if(m_pController->CanChangeTeam(p, pMsg->m_Team))
 			//{
+			//CCharacter* pChr=GetPlayerChar(ClientId);
 				p->m_Last_SetTeam = Server()->Tick();
 				if(p->GetTeam() == -1 || pMsg->m_Team == -1)
 					m_VoteUpdate = true;
 				p->SetTeam(pMsg->m_Team);
+				//if(pChr && pMsg->m_Team!=-1 && pChr->m_Paused)
+					//pChr->LoadPauseData();
+				//TODO:Check if this system Works
+
 				//(void)m_pController->CheckTeamBalance();
 			//}
 			//else

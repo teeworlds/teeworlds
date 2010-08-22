@@ -577,7 +577,6 @@ void CCharacter::Tick()
 		m_pPlayer->m_ForceBalanced = false;
 	}
 	m_Armor=10-(m_FreezeTime/15);
-	dbg_msg("Freeze","Tick(%d) TickSpeed(%d) FreezeTime=%d",Server()->Tick(),Server()->TickSpeed(),m_FreezeTime);
 	if(m_Input.m_Direction != 0 || m_Input.m_Jump != 0)
 		m_LastMove = Server()->Tick();
 
@@ -1161,6 +1160,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 
 	return true;
 	}
+	else return true;
 }
 
 void CCharacter::Snap(int SnappingClient)
@@ -1226,4 +1226,16 @@ void CCharacter::Snap(int SnappingClient)
 	}
 
 	Character->m_PlayerState = m_PlayerState;
+}
+
+void CCharacter::LoadPauseData()
+{
+	//TODO:Load The Data For a Paused Char
+	m_Paused = false;
+}
+
+void CCharacter::SavePauseData()
+{
+	//TODO:Save The Data For a Paused Char
+	m_Paused = true;
 }
