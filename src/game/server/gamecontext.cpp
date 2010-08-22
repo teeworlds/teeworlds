@@ -671,7 +671,10 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 							//else if(chr->m_RaceState==RACE_PAUSE)
 							//	chr->m_RaceState = RACE_STARTED;*/
 					}
-			} else if(!str_comp_nocase(pMsg->m_pMessage, "/info"))
+					else
+						SendChatTarget(ClientId, "The admin didn't activate /pause");
+			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/info"))
 			{
 					SendChatTarget(ClientId, "DDRace Mod. Version: " DDRACE_VERSION);
 					SendChatTarget(ClientId, "Official site: DDRace.info");

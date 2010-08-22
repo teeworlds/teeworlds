@@ -18,8 +18,7 @@ enum
 {
 	RACE_NONE = 0,
 	RACE_STARTED,
-	RACE_CHEAT, // no time and won't start again unless oredered by a mod or death
-	RACE_PAUSE//No time nor movement
+	RACE_CHEAT // no time and won't start again unless ordered by a mod or death
 };
 
 class CCharacter : public CEntity

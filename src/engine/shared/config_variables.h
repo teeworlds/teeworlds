@@ -8,6 +8,7 @@
 //===============================  	
 /* DDRace */
 //MACRO_CONFIG_STR(SvEntities, sv_entities, 64, "Latest", CFGFLAG_SERVER, "The type of entities used") still need to think of a way
+MACRO_CONFIG_INT(SvEndlessSuperHook, sv_endless_super_hook, 0, 0, 1, CFGFLAG_SERVER, "Endless hook for super players on/off")
 MACRO_CONFIG_INT(SvEmotionalTees, sv_emotional_tees, 1, 0, 1, CFGFLAG_SERVER, "Emotional Tees on/off")
 MACRO_CONFIG_INT(SvOldShotgun, sv_old_shotgun, 0, 0, 1, CFGFLAG_SERVER, "Makes Shotgun laser pull towards the shooter, rather than the last bounce origin")
 MACRO_CONFIG_INT(SvReconnectTime,sv_reconnect_time,5,0,9999,CFGFLAG_SERVER,"how much time between leaves and joins")
