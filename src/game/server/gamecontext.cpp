@@ -1113,6 +1113,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					pChr->m_EmoteType = EMOTE_HAPPY;
 					break;
 				case EMOTICON_1:
+				case EMOTICON_4:
 				case EMOTICON_9:
 				case EMOTICON_15:
 					pChr->m_EmoteType = EMOTE_PAIN;
