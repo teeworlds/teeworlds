@@ -1009,6 +1009,10 @@ bool CCharacter::UnFreeze()
 		if(m_ActiveWeapon == WEAPON_NINJA)
 			m_ActiveWeapon = WEAPON_GUN;
 		SetWeapon(m_ActiveWeapon);
+		m_Ninja.m_ActivationDir=vec2(0,0);
+		m_Ninja.m_ActivationTick=0;
+		m_Ninja.m_CurrentMoveTime=0;
+
 		return true;
 	}
 	return false;  		 

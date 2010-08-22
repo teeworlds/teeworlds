@@ -819,7 +819,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					pChr->m_EmoteStop = Server()->Tick() + 3600 * Server()->TickSpeed();
 				}
 			}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodblinker")&&g_Config.m_SvEmotionalTees)
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodsad")&&g_Config.m_SvEmotionalTees)
 			{
 				CCharacter* pChr = p->GetCharacter();
 				if (pChr)
@@ -1101,20 +1101,20 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			switch(pMsg->m_Emoticon)
 			{
 				case EMOTICON_2:
+				case EMOTICON_8:
 					pChr->m_EmoteType = EMOTE_SURPRISE;
 					break;
-				case EMOTICON_1:
-				case EMOTICON_4:
 				case EMOTICON_13:
+				case EMOTICON_7:
 					pChr->m_EmoteType = EMOTE_BLINK;
 					break;
 				case EMOTICON_3:
 				case EMOTICON_6:
-				case EMOTICON_7:
 					pChr->m_EmoteType = EMOTE_HAPPY;
 					break;
+				case EMOTICON_1:
 				case EMOTICON_9:
-				case EMOTICON_14:
+				case EMOTICON_15:
 					pChr->m_EmoteType = EMOTE_PAIN;
 					break;
 				case EMOTICON_10:
