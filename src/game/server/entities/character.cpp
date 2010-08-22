@@ -252,7 +252,7 @@ void CCharacter::HandleWeaponSwitch()
 
 void CCharacter::FireWeapon()
 {
-	if(m_ReloadTimer != 0 || m_FreezeTime > 0)
+	if(m_ReloadTimer != 0 /*|| m_FreezeTime > 0*/)
 		return;
 		
 	DoWeaponSwitch();
@@ -278,13 +278,12 @@ void CCharacter::FireWeapon()
 	if(!m_aWeapons[m_ActiveWeapon].m_Ammo)
 	{
 		// 125ms is a magical limit of how fast a human can click
-		m_ReloadTimer = 125 * Server()->TickSpeed() / 1000;
-		GameServer()->CreateSound(m_Pos, SOUND_WEAPON_NOAMMO);
+		m_ReloadTimer = 1 * Server()->TickSpeed();
+		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG);
 		return;
 	}
 	
 	vec2 ProjStartPos = m_Pos+Direction*m_ProximityRadius*0.75f;
-	
 	switch(m_ActiveWeapon)
 	{
 		case WEAPON_HAMMER:
@@ -568,7 +567,7 @@ void CCharacter::Tick()
 		m_Core.m_Jumped = 0;
 		ResetPos();
 	}
-	
+
 	if(m_pPlayer->m_ForceBalanced)
 	{
 		char Buf[128];
@@ -577,18 +576,21 @@ void CCharacter::Tick()
 		
 		m_pPlayer->m_ForceBalanced = false;
 	}
-
+	m_Armor=10-(m_FreezeTime/15);
+	dbg_msg("Freeze","Tick(%d) TickSpeed(%d) FreezeTime=%d",Server()->Tick(),Server()->TickSpeed(),m_FreezeTime);
 	if(m_Input.m_Direction != 0 || m_Input.m_Jump != 0)
 		m_LastMove = Server()->Tick();
+
 	if(m_FreezeTime > 0) {
-		if (m_FreezeTime % Server()->TickSpeed() == 0) {
+		if (m_FreezeTime % Server()->TickSpeed() == 0)
+		{
 			GameServer()->CreateDamageInd(m_Pos, 0, m_FreezeTime / Server()->TickSpeed());
 		}
 		m_FreezeTime--;
 		m_Input.m_Direction = 0;
 		m_Input.m_Jump = 0;
 		m_Input.m_Hook = 0;
-		m_Input.m_Fire = 0; 
+		//m_Input.m_Fire = 0;
 		if (m_FreezeTime == 1) {
 			UnFreeze();
 		}
@@ -957,41 +959,59 @@ void CCharacter::TickDefered()
 	}
 }
 
-bool CCharacter::Freeze(int time)
+bool CCharacter::Freeze(int Time)
 {  		 
-	if (time <= 1 || m_Super)  		 
+	if (Time <= 1 || m_Super)
 		 return false;  		 
 	if (m_FreezeTick < Server()->Tick() - Server()->TickSpeed())  		 
 	{
-		 m_FreezeTick = Server()->Tick();  		 
-		 m_FreezeTime = time;  		 
-		 return true;  		 
+		m_Armor=0;
+		m_Ninja.m_ActivationTick = Server()->Tick();
+		m_aWeapons[WEAPON_NINJA].m_Got = true;
+		m_aWeapons[WEAPON_NINJA].m_Ammo = 0;
+		m_LastWeapon = m_ActiveWeapon;
+		m_ActiveWeapon = WEAPON_NINJA;
+		m_FreezeTick=Server()->Tick();
+		m_FreezeTime=Time;
+		return true;
 	}  		 
 	return false;  		 
 }  		 
  		 
 bool CCharacter::Freeze()  		 
 {  		 
-	int time = Server()->TickSpeed()*3;  		 
-	if (time <= 1 || m_Super)  		 
+	int Time = Server()->TickSpeed()*3;
+	if (Time <= 1 || m_Super)
 		 return false;  		 
-	if (m_FreezeTick < Server()->Tick()- Server()->TickSpeed())  		 
-	{  		 
-		 m_FreezeTick = Server()->Tick();  		 
-		 m_FreezeTime = time;  		 
-		 return true;  		 
+	if (m_FreezeTick < Server()->Tick() - Server()->TickSpeed())
+	{
+		m_Armor=0;
+		m_Ninja.m_ActivationTick = Server()->Tick();
+		m_aWeapons[WEAPON_NINJA].m_Got = true;
+		m_aWeapons[WEAPON_NINJA].m_Ammo = 0;
+		m_LastWeapon = m_ActiveWeapon;
+		m_ActiveWeapon = WEAPON_NINJA;
+		m_FreezeTick=Server()->Tick();
+		m_FreezeTime=Time;
+		return true;
 	}  		 
 	return false;  		 
 }  		 
  		 
 bool CCharacter::UnFreeze()  		 
 {  		 
-	if (m_FreezeTime > 0)  		 
-	{  		 
-		 m_FreezeTick = 0;  		 
-		 m_FreezeTime = 0;  		 
-		 return true;  		 
-	}  		 
+	if (m_FreezeTime>0)
+	{
+		m_Armor=10;
+		m_FreezeTick=0;
+		m_FreezeTime=0;
+		m_aWeapons[WEAPON_NINJA].m_Got = false;
+		m_ActiveWeapon = m_LastWeapon;
+		if(m_ActiveWeapon == WEAPON_NINJA)
+			m_ActiveWeapon = WEAPON_GUN;
+		SetWeapon(m_ActiveWeapon);
+		return true;
+	}
 	return false;  		 
 }  		 
  		 
@@ -1113,16 +1133,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	{
 		Die(From, Weapon);
 		
-		// set attacker's face to happy (taunt!)
-		if (From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
-		{
-			CCharacter *pChr = GameServer()->m_apPlayers[From]->GetCharacter();
-			if (pChr)
-			{
-				pChr->m_EmoteType = EMOTE_HAPPY;
-				pChr->m_EmoteStop = Server()->Tick() + Server()->TickSpeed();
-			}
-		}
+
 	
 		return false;
 	}
@@ -1131,11 +1142,25 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG);
 	else
 		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_SHORT);
-
+*/
+	// set attacker's face to happy (taunt!)
+	if(g_Config.m_SvEmotionalTees)
+	{
+	if (From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
+	{
+		CCharacter *pChr = GameServer()->m_apPlayers[From]->GetCharacter();
+		if (pChr)
+		{
+			pChr->m_EmoteType = EMOTE_HAPPY;
+			pChr->m_EmoteStop = Server()->Tick() + Server()->TickSpeed();
+		}
+	}
+	//set the attacked face to pain
 	m_EmoteType = EMOTE_PAIN;
 	m_EmoteStop = Server()->Tick() + 500 * Server()->TickSpeed() / 1000;
-*/
+
 	return true;
+	}
 }
 
 void CCharacter::Snap(int SnappingClient)

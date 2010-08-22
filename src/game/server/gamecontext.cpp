@@ -737,6 +737,96 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 
 				SendChatTarget(ClientId, buf);
 			}
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/emotepain")&&g_Config.m_SvEmotionalTees)
+				{
+					CCharacter* pChr = p->GetCharacter();
+					if (pChr)
+					{
+						pChr->m_EmoteType = EMOTE_PAIN;
+						pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+					}
+				}
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/emotehappy")&&g_Config.m_SvEmotionalTees)
+				{
+					CCharacter* pChr = p->GetCharacter();
+					if (pChr)
+					{
+						pChr->m_EmoteType = EMOTE_HAPPY;
+						pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+					}
+				}
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/emoteangry")&&g_Config.m_SvEmotionalTees)
+				{
+					CCharacter* pChr = p->GetCharacter();
+					if (pChr)
+					{
+						pChr->m_EmoteType = EMOTE_ANGRY;
+						pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+					}
+				}
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/emoteblink")&&g_Config.m_SvEmotionalTees)
+				{
+					CCharacter* pChr = p->GetCharacter();
+					if (pChr)
+					{
+						pChr->m_EmoteType = EMOTE_BLINK;
+						pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+					}
+				}
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/emotesurprise")&&g_Config.m_SvEmotionalTees)
+			{
+				CCharacter* pChr = p->GetCharacter();
+				if (pChr)
+				{
+					pChr->m_EmoteType = EMOTE_SURPRISE;
+					pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+				}
+			}
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodinpain")&&g_Config.m_SvEmotionalTees)
+			{
+				CCharacter* pChr = p->GetCharacter();
+				if (pChr)
+				{
+					pChr->m_EmoteType = EMOTE_PAIN;
+					pChr->m_EmoteStop = Server()->Tick() + 3600 * Server()->TickSpeed();
+				}
+			}
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodhappy")&&g_Config.m_SvEmotionalTees)
+			{
+				CCharacter* pChr = p->GetCharacter();
+				if (pChr)
+				{
+					pChr->m_EmoteType = EMOTE_HAPPY;
+					pChr->m_EmoteStop = Server()->Tick() + 3600 * Server()->TickSpeed();
+				}
+			}
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodangry")&&g_Config.m_SvEmotionalTees)
+			{
+				CCharacter* pChr = p->GetCharacter();
+				if (pChr)
+				{
+					pChr->m_EmoteType = EMOTE_ANGRY;
+					pChr->m_EmoteStop = Server()->Tick() + 3600 * Server()->TickSpeed();
+				}
+			}
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodblinker")&&g_Config.m_SvEmotionalTees)
+			{
+				CCharacter* pChr = p->GetCharacter();
+				if (pChr)
+				{
+					pChr->m_EmoteType = EMOTE_BLINK;
+					pChr->m_EmoteStop = Server()->Tick() + 3600 * Server()->TickSpeed();
+				}
+			}
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodsurprised")&&g_Config.m_SvEmotionalTees)
+			{
+				CCharacter* pChr = p->GetCharacter();
+				if (pChr)
+				{
+					pChr->m_EmoteType = EMOTE_SURPRISE;
+					pChr->m_EmoteStop = Server()->Tick() + 3600 * Server()->TickSpeed();
+				}
+			}
 			else
 					SendChatTarget(ClientId, "No such command!");
 
@@ -990,6 +1080,38 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		p->m_Last_Emote = Server()->Tick();
 
 		SendEmoticon(ClientId, pMsg->m_Emoticon);
+		CCharacter* pChr = p->GetCharacter();
+		if (pChr && g_Config.m_SvEmotionalTees)
+		{
+			switch(pMsg->m_Emoticon)
+			{
+				case EMOTICON_2:
+					pChr->m_EmoteType = EMOTE_SURPRISE;
+					break;
+				case EMOTICON_1:
+				case EMOTICON_4:
+				case EMOTICON_13:
+					pChr->m_EmoteType = EMOTE_BLINK;
+					break;
+				case EMOTICON_3:
+				case EMOTICON_6:
+				case EMOTICON_7:
+					pChr->m_EmoteType = EMOTE_HAPPY;
+					break;
+				case EMOTICON_9:
+				case EMOTICON_14:
+					pChr->m_EmoteType = EMOTE_PAIN;
+					break;
+				case EMOTICON_10:
+				case EMOTICON_11:
+				case EMOTICON_12:
+					pChr->m_EmoteType = EMOTE_ANGRY;
+					break;
+				default:
+					break;
+			}
+			pChr->m_EmoteStop = Server()->Tick() + 2 * Server()->TickSpeed();
+		}
 	}
 	else if (MsgId == NETMSGTYPE_CL_KILL && !m_World.m_Paused)
 	{

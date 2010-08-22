@@ -32,7 +32,10 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 	m_Energy = -1;
 	if ((m_Type == 1 && g_Config.m_SvHit))
 	{
-		Hit->m_Core.m_Vel += normalize(m_PrevPos - Hit->m_Core.m_Pos) * 10;
+		if(g_Config.m_SvOldShotgun)
+			Hit->m_Core.m_Vel+=normalize(OwnerChar->m_Core.m_Pos-Hit->m_Core.m_Pos)*10;
+		else
+			Hit->m_Core.m_Vel+=normalize(m_PrevPos - Hit->m_Core.m_Pos) * 10;
 	} else if (m_Type == 0)
 	{
 		Hit->UnFreeze();
