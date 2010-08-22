@@ -653,21 +653,21 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 						CCharacter* chr = p->GetCharacter();
 						if(chr)
 						{
-							//if(!p->GetTeam() && !chr->m_Paused)
-							//{
-								//chr->SavePauseData();
-								//p->SetTeam(-1);
-							//}
-							//else if (p->GetTeam()==-1 && chr->m_Paused)
-							//{
-								//p->SetTeam(0);
-								//chr->LoadPauseData();//TODO:Check if this system Works
-							//}
+							if(!p->GetTeam() && !chr->m_Paused)
+							{
+								chr->SavePauseData();
+								p->SetTeam(-1);
+							}
+							else if (p->GetTeam()==-1 && chr->m_Paused)
+							{
+								p->SetTeam(0);
+								chr->LoadPauseData();//TODO:Check if this system Works
+							}
 
-							/*if(chr->m_RaceState==RACE_STARTED)
-							chr->m_RaceState = RACE_PAUSE;
+							if(chr->m_RaceState==RACE_STARTED)
+								chr->m_RaceState = RACE_PAUSE;
 							else if(chr->m_RaceState==RACE_PAUSE)
-							chr->m_RaceState = RACE_STARTED;*/
+								chr->m_RaceState = RACE_STARTED;
 						}
 					}
 			} else if(!str_comp_nocase(pMsg->m_pMessage, "/info"))
