@@ -16,7 +16,7 @@ config:Finalize("config.lua")
 -- data compiler
 function Script(name)
 	if family == "windows" then
-		return str_replace(name, "/", "\\")
+		return "C:\\Python27\\python.exe " .. str_replace(name, "/", "\\") 
 	end
 	return "python " .. name
 end
