@@ -20,6 +20,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	m_DieTick = Server()->Tick();
 	m_ScoreStartTick = Server()->Tick();
 	Character = 0;
+	m_CharacterCopy = 0;
 	m_Muted = 0;
 	this->m_ClientID = CID;
 	m_Team = GameServer()->m_pController->ClampTeam(Team);
@@ -29,6 +30,8 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	m_LastTarget_y = 0;
 	m_SentAfkWarning = 0; // afk timer's 1st warning after 50% of sv_max_afk_time
 	m_SentAfkWarning2 = 0;
+	
+	m_PauseInfo.m_Respawn = false;
 }
 
 CPlayer::~CPlayer()
@@ -200,24 +203,51 @@ void CPlayer::SetTeam(int Team)
 
 void CPlayer::TryRespawn()
 {
-	vec2 SpawnPos = vec2(100.0f, -60.0f);
-	
-	if(!GameServer()->m_pController->CanSpawn(this, &SpawnPos))
-		return;
-
-	// check if the position is occupado
-	CEntity *apEnts[2] = {0};
-	int NumEnts = GameServer()->m_World.FindEntities(SpawnPos, 64, apEnts, 2, NETOBJTYPE_CHARACTER);
-	
-	if(NumEnts < 3)
-	{
-		m_Spawning = false;
+	if(m_PauseInfo.m_Respawn) {
 		Character = new(m_ClientID) CCharacter(&GameServer()->m_World);
-		Character->Spawn(this, SpawnPos);
-		GameServer()->CreatePlayerSpawn(SpawnPos);
+		Character->Spawn(this, m_PauseInfo.m_Core.m_Pos);
+		GameServer()->CreatePlayerSpawn(m_PauseInfo.m_Core.m_Pos);
+		LoadCharacter();
+	} else {
+		vec2 SpawnPos = vec2(100.0f, -60.0f);
+		if(!GameServer()->m_pController->CanSpawn(this, &SpawnPos))
+			return;
+
+		// check if the position is occupado
+		CEntity *apEnts[2] = {0};
+		int NumEnts = GameServer()->m_World.FindEntities(SpawnPos, 64, apEnts, 2, NETOBJTYPE_CHARACTER);
+		if(NumEnts < 3)
+		{
+			m_Spawning = false;
+			Character = new(m_ClientID) CCharacter(&GameServer()->m_World);
+			Character->Spawn(this, SpawnPos);
+			GameServer()->CreatePlayerSpawn(SpawnPos);
+		} 
 	}
 }
 
+void CPlayer::LoadCharacter() {
+	Character->m_Core = m_PauseInfo.m_Core;
+	Character->m_StartTime = m_PauseInfo.m_StartTime;
+	Character->m_RaceState = m_PauseInfo.m_RaceState;
+	Character->m_RefreshTime = Server()->Tick();
+	for(int i = 0; i < NUM_WEAPONS; ++i) {
+		if(m_PauseInfo.m_aHasWeapon[i]) {
+			Character->GiveWeapon(i, -1);
+		}
+	}
+	m_PauseInfo.m_Respawn = false;
+}
+
+void CPlayer::SaveCharacter() {
+	m_PauseInfo.m_Core = Character->m_Core;
+	m_PauseInfo.m_StartTime = Character->m_StartTime;
+	m_PauseInfo.m_RaceState = Character->m_RaceState;
+	for(int i = 0; i < NUM_WEAPONS; ++i) {
+		m_PauseInfo.m_aHasWeapon[i] = Character->m_aWeapons[i].m_Got;
+	}
+	//m_PauseInfo.m_RefreshTime = Character->m_RefreshTime;
+}
 
 void CPlayer::AfkTimer(int new_target_x, int new_target_y)
 {

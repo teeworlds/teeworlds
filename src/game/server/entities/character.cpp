@@ -1231,15 +1231,3 @@ void CCharacter::Snap(int SnappingClient)
 
 	Character->m_PlayerState = m_PlayerState;
 }
-
-void CCharacter::LoadPauseData()
-{
-	//TODO:Load The Data For a Paused Char
-	m_Paused = false;
-}
-
-void CCharacter::SavePauseData()
-{
-	//TODO:Save The Data For a Paused Char
-	m_Paused = true;
-}
