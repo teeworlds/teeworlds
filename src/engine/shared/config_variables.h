@@ -17,7 +17,7 @@ MACRO_CONFIG_INT(SvVoteKickBanTime,sv_vote_kick_bantime, 300, 0, 9999, CFGFLAG_S
 MACRO_CONFIG_INT(SvVoteMapTimeDelay,sv_vote_map_delay,0,0,9999,CFGFLAG_SERVER,"how much time between map votes")
 //MACRO_CONFIG_INT(SvMaxConnections,sv_max_connections, 2, 1, 16, CFGFLAG_SERVER, "Maximum count of connection from one IP server can accept") not needed
 MACRO_CONFIG_INT(SvMaxAfkTime,sv_max_afk_time, 0, 0, 9999, CFGFLAG_SERVER, "How many seconds a player is allowed to be afk, 0=disabled")	  
-MACRO_CONFIG_INT(SvPauseable, sv_pauseable, 0, 0, 1, CFGFLAG_SERVER, "players can pause their char or not")  		  
+MACRO_CONFIG_INT(SvPauseable, sv_pauseable, 1, 0, 1, CFGFLAG_SERVER, "players can pause their char or not")
 MACRO_CONFIG_INT(SvCheatTime, sv_cheattime, 0, 0, 1, CFGFLAG_SERVER, "players can cheat with time or not")
 MACRO_CONFIG_INT(SvHit, sv_hit, 1, 0, 1, CFGFLAG_SERVER, "players can hammer/grenade/laser one another")  		 
 MACRO_CONFIG_INT(SvTunes, sv_tunes, 1, 0, 1, CFGFLAG_SERVER, "Turns Tuning On/Off")  		 

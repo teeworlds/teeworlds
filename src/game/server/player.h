@@ -56,6 +56,7 @@ public:
 		bool m_aHasWeapon[NUM_WEAPONS];
 		int m_HammerType;
 		bool m_Super;
+		int m_PauseTime;
 	} m_PauseInfo;
 	void LoadCharacter();
 	void SaveCharacter();
