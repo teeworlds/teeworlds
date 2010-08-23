@@ -704,8 +704,8 @@ void CCharacter::Tick()
 		{
 			if((int)GameServer()->Collision()->GetPos(TileIndex1).y < (int)m_Core.m_Pos.y)
 				m_Core.m_Pos.y = m_PrevPos.y;
-			if(m_Jumped&3 && m_Core.m_Jumped != m_Jumped) // check double jump
-				m_Core.m_Jumped = m_Jumped;
+			m_Core.m_Jumped = 0;
+			//m_Jumped = 1;
 			m_Core.m_Vel.y = 0;
 		}
 	}
@@ -715,8 +715,7 @@ void CCharacter::Tick()
 		{
 			if((int)GameServer()->Collision()->GetPos(TileIndex2).y < (int)m_Core.m_Pos.y)
 				m_Core.m_Pos.y = m_PrevPos.y;
-			if(m_Jumped&3 && m_Core.m_Jumped != m_Jumped) // check double jump
-				m_Core.m_Jumped = m_Jumped;
+			m_Core.m_Jumped = 0;
 			m_Core.m_Vel.y = 0;
 		}
 	}
