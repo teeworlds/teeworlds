@@ -113,25 +113,60 @@ void CProjectile::Tick()
 			m_Pos = NewPos;
 			if (m_Bouncing == 1)
 			{
-				m_Direction.x = -m_Direction.x;
-				m_LastBounce = m_Pos;
+				m_PrevLastBounce.x = m_LastBounce.x;
+				m_LastBounce.x = m_Pos.x;
 				if(!m_BouncePos.x)
-					m_BouncePos=m_Pos;
+					m_BouncePos.x=m_Pos.x;
 				else if (!m_ReBouncePos.x)
-					m_ReBouncePos=m_Pos;
+					m_ReBouncePos.x=m_Pos.x;
 				else if(!m_AvgPos.x)
 					m_AvgPos = vec2((m_BouncePos.x+m_ReBouncePos.x)/2,(m_BouncePos.y+m_ReBouncePos.y)/2);
+				if (m_AvgPos.x)
+				if(!((m_PrevLastBounce.x+1 == m_BouncePos.x || m_PrevLastBounce.x-1 == m_BouncePos.x || m_PrevLastBounce.x == m_BouncePos.x) && (m_LastBounce.x == m_ReBouncePos.x || m_LastBounce.x+1 == m_ReBouncePos.x || m_LastBounce.x-1 == m_ReBouncePos.x)) && !((m_LastBounce.x == m_BouncePos.x || m_LastBounce.x+1 == m_BouncePos.x || m_LastBounce.x-1 == m_BouncePos.x) && (m_PrevLastBounce.x+1 == m_ReBouncePos.x || m_PrevLastBounce.x-1 == m_ReBouncePos.x || m_PrevLastBounce.x == m_ReBouncePos.x)))
+				{
+					/*int bx=(int)m_BouncePos.x;
+					int rbx=(int)m_ReBouncePos.x;
+					int lbx=(int)m_LastBounce.x;
+					int plbx=(int)m_PrevLastBounce.x;
+					dbg_msg("m_BouncePos","%d",bx);
+					dbg_msg("m_ReBouncePos","%d",rbx);
+					dbg_msg("m_LastBounce","%d",lbx);
+					dbg_msg("m_PrevLastBounce","%d",plbx);
+					m_Pos.x=m_AvgPos.x;*/
+					dbg_msg("CrazyShotgun","Warning Horizontal Crazy Shotgun Out of bounds");
+					/*int x=(int)m_Pos.x;
+					dbg_msg("RePos","%d",x);*/
+				}
+				m_Direction.x =- m_Direction.x;
 			}
 			else if (m_Bouncing == 2)
 			{
-				m_LastBounce = m_Pos;
-				m_Direction.y =- m_Direction.y;
+				m_PrevLastBounce.y = m_LastBounce.y;
+				m_LastBounce.y = m_Pos.y;
 				if(!m_BouncePos.y)
-					m_BouncePos=m_Pos;
+					m_BouncePos.y=m_Pos.y;
 				else if (!m_ReBouncePos.y)
-					m_ReBouncePos=m_Pos;
+					m_ReBouncePos.y=m_Pos.y;
 				else if(!m_AvgPos.y)
 					m_AvgPos = vec2((m_BouncePos.x+m_ReBouncePos.x)/2,(m_BouncePos.y+m_ReBouncePos.y)/2);
+				m_Direction.y =- m_Direction.y;
+				if (m_AvgPos.y)
+					if(!((m_PrevLastBounce.y+1 == m_BouncePos.y || m_PrevLastBounce.y-1 == m_BouncePos.y || m_PrevLastBounce.y == m_BouncePos.y) && (m_LastBounce.y == m_ReBouncePos.y || m_LastBounce.y+1 == m_ReBouncePos.y || m_LastBounce.y-1 == m_ReBouncePos.y)) && !((m_LastBounce.y == m_BouncePos.y || m_LastBounce.y+1 == m_BouncePos.y || m_LastBounce.y-1 == m_BouncePos.y) && (m_PrevLastBounce.y+1 == m_ReBouncePos.y || m_PrevLastBounce.y-1 == m_ReBouncePos.y || m_PrevLastBounce.y == m_ReBouncePos.y)))
+				{
+					/*int by=(int)m_BouncePos.y;
+					int rby=(int)m_ReBouncePos.y;
+					int lby=(int)m_LastBounce.y;
+					int plby=(int)m_PrevLastBounce.y;
+					dbg_msg("m_BouncePos","%d",by);
+					dbg_msg("m_ReBouncePos","%d",rby);
+					dbg_msg("m_LastBounce","%d",lby);
+					dbg_msg("m_PrevLastBounce","%d",plby);*/
+					m_Pos=m_AvgPos;
+					dbg_msg("CrazyShotgun","Warning Vertical Crazy Shotgun Out of bounds");
+					/*int y=(int)m_Pos.y;
+					dbg_msg("RePos","%d",y);*/
+
+				}
 			}
 			m_Pos += m_Direction;
 		}
@@ -149,9 +184,8 @@ void CProjectile::Tick()
 		GameServer()->m_World.DestroyEntity(this);
 	}
 
-	 if((!(m_PrevLastBounce == m_BouncePos && m_LastBounce == m_ReBouncePos) && !(m_LastBounce == m_BouncePos && m_PrevLastBounce == m_ReBouncePos))&&m_AvgPos.x)
-		 m_Pos=m_AvgPos;
-		m_PrevLastBounce=m_LastBounce;
+
+
 }
 
 void CProjectile::FillInfo(CNetObj_Projectile *pProj)
