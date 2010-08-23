@@ -1,38 +1,53 @@
-/* copyright (c) 2008 rajh and gregwar. Score stuff */
+#ifndef GAME_SERVER_INTERFACE_SCORE_H
+#define GAME_SERVER_INTERFACE_SCORE_H
 
-#ifndef SCORE_H_RACE
-#define SCORE_H_RACE
-#include <engine/server.h>
-#include <engine/shared/protocol.h>
-#include <string>
-#include <list>
+#include "entities/character.h"
+#include "gamecontext.h"
 
+#define NUM_TELEPORT 25
 
-class CPlayerScore
+class CPlayerData
 {
 public:
-	char name[MAX_NAME_LENGTH];
-	float m_Score;
-
-	CPlayerScore(const char *name, float score);
-
-	bool operator==(const CPlayerScore& other) { return (this->m_Score == other.m_Score); }
-	bool operator<(const CPlayerScore& other) { return (this->m_Score < other.m_Score); }
+	CPlayerData()
+	{
+		Reset();
+	}
+	
+	void Reset()
+	{
+		m_BestTime = 0;
+		m_CurrentTime = 0;
+		for(int i = 0; i < NUM_TELEPORT; i++)
+			m_aBestCpTime[i] = 0;
+	}
+	
+	void Set(float Time, float CpTime[NUM_TELEPORT])
+	{
+		m_BestTime = Time;
+		for(int i = 0; i < NUM_TELEPORT; i++)
+			m_aBestCpTime[i] = CpTime[i];
+	}
+	
+	float m_BestTime;
+	float m_CurrentTime;
+	float m_aBestCpTime[NUM_TELEPORT];
 };
 
-class CScore
+class IScore
 {
-	class CGameContext *m_pGameServer;
-	std::string SaveFile();
+	CPlayerData m_aPlayerData[MAX_CLIENTS];
+	
 public:
-	CScore(class CGameContext *pGameServer);
-	CScore();
-	void Save();
-	void Load();
-	CPlayerScore *SearchName(const char *name, int &pos);
-	CPlayerScore *SearchName(const char *name);
-	void ParsePlayer(const char *name, float score);
-	std::list<std::string> Top5Draw(int id, int debut);
+	virtual ~IScore() {}
+	
+	CPlayerData *PlayerData(int ID) { return &m_aPlayerData[ID]; }
+	
+	virtual void LoadScore(int ClientID) = 0;
+	virtual void SaveScore(int ClientID, float Time, CCharacter *pChar) = 0;
+	
+	virtual void ShowTop5(int ClientID, int Debut=1) = 0;
+	virtual void ShowRank(int ClientID, const char* pName, bool Search=false) = 0;
 };
 
 #endif

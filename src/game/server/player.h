@@ -32,7 +32,6 @@ public:
 	void KillCharacter(int Weapon = WEAPON_GAME);
 	CCharacter *GetCharacter();
 	
-	CCharacter* m_CharacterCopy;
 	struct PauseInfo {
 		CCharacterCore m_Core;
 		int m_StartTime;
@@ -111,6 +110,14 @@ public:
 	int m_Score;
 	int m_ScoreStartTick;
 	bool m_ForceBalanced;
+	
+	float m_BestTime;
+	float m_aBestCpTime[25];
+	
+	bool m_ResetPickups;
+	
+	bool m_IsUsingRaceClient;
+	float m_LastSentTime;
 	
 	// afk timer
 	void AfkTimer(int new_target_x, int new_target_y);

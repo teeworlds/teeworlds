@@ -15,7 +15,6 @@ public:
 	vec2 *m_pTeleporter;
 	
 	void InitTeleporter();
-	CScore m_Score;
 
 	virtual void Tick();
 };
