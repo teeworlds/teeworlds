@@ -228,24 +228,61 @@ void CPlayer::TryRespawn()
 
 void CPlayer::LoadCharacter() {
 	Character->m_Core = m_PauseInfo.m_Core;
-	Character->m_StartTime = m_PauseInfo.m_StartTime;
+	Character->m_StartTime = Server()->Tick() - (m_PauseInfo.m_PauseTime - m_PauseInfo.m_StartTime);
 	Character->m_RaceState = m_PauseInfo.m_RaceState;
 	Character->m_RefreshTime = Server()->Tick();
 	for(int i = 0; i < NUM_WEAPONS; ++i) {
-		if(m_PauseInfo.m_aHasWeapon[i]) {
+		if(m_PauseInfo.m_aHasWeapon[i])
+		 if(!m_PauseInfo.m_FreezeTime)
 			Character->GiveWeapon(i, -1);
-		}
+		 else
+			 Character->GiveWeapon(i, 0);
 	}
+	Character->m_FreezeTime = m_PauseInfo.m_FreezeTime;
+	Character->m_Doored = m_PauseInfo.m_Doored;
+	Character->m_OldPos = m_PauseInfo.m_OldPos;
+	Character->m_OlderPos = m_PauseInfo.m_OlderPos;
+	Character->m_LastAction = m_PauseInfo.m_LastAction;
+	Character->m_Jumped = m_PauseInfo.m_Jumped;
+	Character->m_Health = m_PauseInfo.m_Health;
+	Character->m_Armor = m_PauseInfo.m_Armor;
+	Character->m_PlayerState = m_PauseInfo.m_PlayerState;
+	Character->m_LastMove = m_PauseInfo.m_LastMove;
+	Character->m_LastSpeedup = m_PauseInfo.m_LastSpeedup;
+	Character->m_PrevPos = m_PauseInfo.m_PrevPos;
+	Character->m_ActiveWeapon = m_PauseInfo.m_ActiveWeapon;
+	Character->m_LastWeapon = m_PauseInfo.m_LastWeapon;
+	Character->m_HammerType = m_PauseInfo.m_HammerType;
+	Character->m_Super = m_PauseInfo.m_Super;
 	m_PauseInfo.m_Respawn = false;
 }
 
-void CPlayer::SaveCharacter() {
+void CPlayer::SaveCharacter()
+{
 	m_PauseInfo.m_Core = Character->m_Core;
 	m_PauseInfo.m_StartTime = Character->m_StartTime;
 	m_PauseInfo.m_RaceState = Character->m_RaceState;
-	for(int i = 0; i < NUM_WEAPONS; ++i) {
+	for(int i = 0; i < WEAPON_NINJA; ++i)
+	{
 		m_PauseInfo.m_aHasWeapon[i] = Character->m_aWeapons[i].m_Got;
 	}
+	m_PauseInfo.m_FreezeTime=Character->m_FreezeTime;
+	m_PauseInfo.m_Doored = Character->m_Doored;
+	m_PauseInfo.m_OldPos = Character->m_OldPos;
+	m_PauseInfo.m_OlderPos = Character->m_OlderPos;
+	m_PauseInfo.m_LastAction = Character->m_LastAction;
+	m_PauseInfo.m_Jumped = Character->m_Jumped;
+	m_PauseInfo.m_Health = Character->m_Health;
+	m_PauseInfo.m_Armor = Character->m_Armor;
+	m_PauseInfo.m_PlayerState = Character->m_PlayerState;
+	m_PauseInfo.m_LastMove = Character->m_LastMove;
+	m_PauseInfo.m_LastSpeedup = Character->m_LastSpeedup;
+	m_PauseInfo.m_PrevPos = Character->m_PrevPos;
+	m_PauseInfo.m_ActiveWeapon = Character->m_ActiveWeapon;
+	m_PauseInfo.m_LastWeapon = Character->m_LastWeapon;
+	m_PauseInfo.m_HammerType = Character->m_HammerType;
+	m_PauseInfo.m_Super = Character->m_Super;
+	m_PauseInfo.m_PauseTime = Server()->Tick();
 	//m_PauseInfo.m_RefreshTime = Character->m_RefreshTime;
 }
 

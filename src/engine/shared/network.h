@@ -218,6 +218,7 @@ public:
 		NETADDR m_Addr;
 		int m_Expires;
 		char m_Reason[100];
+		bool m_Soon;
 	};
 	
 private:
@@ -277,7 +278,7 @@ public:
 
 	// banning
 	int BanAdd(NETADDR Addr, int Seconds, const char *Reason);
-	int BanAddNoDrop(NETADDR Addr, int Seconds, const char *Reason);
+	int BanAddNoDrop(NETADDR Addr, int Seconds);
 	int BanRemove(NETADDR Addr);
 	int BanNum(); // caution, slow
 	int BanGet(int Index, CBanInfo *pInfo); // caution, slow

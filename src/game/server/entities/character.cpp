@@ -292,7 +292,7 @@ void CCharacter::FireWeapon()
 			m_NumObjectsHit = 0;
 			GameServer()->CreateSound(m_Pos, SOUND_HAMMER_FIRE);
 			
-			if (!g_Config.m_SvHit || m_RaceState == RACE_PAUSE) break;
+			if (!g_Config.m_SvHit) break;
 			
 			CCharacter *aEnts[64];
 			int Hits = 0;
@@ -357,10 +357,8 @@ void CCharacter::FireWeapon()
 		
 		case WEAPON_SHOTGUN:
 		{
-			if(m_RaceState != RACE_PAUSE) {
 				new CLaser(&GameServer()->m_World, m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID(), 1);
 				GameServer()->CreateSound(m_Pos, SOUND_SHOTGUN_FIRE);
-			}
 			/*int ShotSpread = 2;
 
 			CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
@@ -395,8 +393,6 @@ void CCharacter::FireWeapon()
 
 		case WEAPON_GRENADE:
 		{
-			if (m_RaceState != RACE_PAUSE) {
-				
 				CProjectile *Proj = new CProjectile(GameWorld(), WEAPON_GRENADE,
 					m_pPlayer->GetCID(),
 					ProjStartPos,
@@ -418,20 +414,16 @@ void CCharacter::FireWeapon()
 				Server()->SendMsg(&Msg, 0, m_pPlayer->GetCID());
 				
 				GameServer()->CreateSound(m_Pos, SOUND_GRENADE_FIRE);
-			}
 		} break;
 		
 		case WEAPON_RIFLE:
 		{
-			if (m_RaceState != RACE_PAUSE) {
 				new CLaser(GameWorld(), m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID(), 0);
 				//GameServer()->CreateSound(m_Pos, SOUND_RIFLE_FIRE);
-			}
 		} break;
 		
 		case WEAPON_NINJA:
 		{
-			if (m_RaceState != RACE_PAUSE) {
 				// reset Hit objects
 				m_NumObjectsHit = 0;
 				
@@ -440,7 +432,6 @@ void CCharacter::FireWeapon()
 				//m_Ninja.m_CurrentMoveTime = g_pData->m_Weapons.m_Ninja.m_Movetime * Server()->TickSpeed() / 1000;
 				m_Ninja.m_CurrentMoveTime = 10;
 				//GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE);
-			}
 		} break;
 		
 	}
@@ -510,13 +501,13 @@ bool CCharacter::GiveWeapon(int Weapon, int Ammo)
 
 void CCharacter::GiveNinja()
 {
+	if(!m_aWeapons[WEAPON_NINJA].m_Got)
+		GameServer()->CreateSound(m_Pos, SOUND_PICKUP_NINJA);
 	m_Ninja.m_ActivationTick = Server()->Tick();
 	m_aWeapons[WEAPON_NINJA].m_Got = true;
 	m_aWeapons[WEAPON_NINJA].m_Ammo = -1;
 	m_LastWeapon = m_ActiveWeapon;
 	m_ActiveWeapon = WEAPON_NINJA;
-	
-	GameServer()->CreateSound(m_Pos, SOUND_PICKUP_NINJA);
 }
 
 void CCharacter::SetEmote(int Emote, int Tick)
@@ -559,14 +550,6 @@ void CCharacter::Tick()
 	int MapIndex = GameServer()->Collision()->GetMapIndex(m_PrevPos, m_Pos);
 	int TileIndex1 = GameServer()->Collision()->GetCollisionDDRace(MapIndex);
 	int TileIndex2 = GameServer()->Collision()->GetFCollisionDDRace(MapIndex);
-	if(m_RaceState == RACE_PAUSE) {
-		m_Input.m_Direction = 0;
-		m_Input.m_Jump = 0;
-		m_Input.m_Hook = 0;
-		m_Input.m_Fire = 0;
-		m_Core.m_Jumped = 0;
-		ResetPos();
-	}
 
 	if(m_pPlayer->m_ForceBalanced)
 	{
@@ -602,6 +585,8 @@ void CCharacter::Tick()
 		m_Core.m_HookTick = 0;
 	if (m_Super && m_Core.m_Jumped > 1)
 		m_Core.m_Jumped = 1; 
+	if (m_Super && g_Config.m_SvEndlessSuperHook)
+		m_Core.m_HookTick = 0;
 	/*dbg_msg("character","TileIndex1=%d , TileIndex2=%d",TileIndex1,TileIndex2); //REMOVE*/
 	//DDRace  		 
 	char aBuftime[128];
@@ -719,8 +704,8 @@ void CCharacter::Tick()
 		{
 			if((int)GameServer()->Collision()->GetPos(TileIndex1).y < (int)m_Core.m_Pos.y)
 				m_Core.m_Pos.y = m_PrevPos.y;
-			if(m_Jumped&3 && m_Core.m_Jumped != m_Jumped) // check double jump
-				m_Core.m_Jumped = m_Jumped;
+			m_Core.m_Jumped = 0;
+			//m_Jumped = 1;
 			m_Core.m_Vel.y = 0;
 		}
 	}
@@ -730,8 +715,7 @@ void CCharacter::Tick()
 		{
 			if((int)GameServer()->Collision()->GetPos(TileIndex2).y < (int)m_Core.m_Pos.y)
 				m_Core.m_Pos.y = m_PrevPos.y;
-			if(m_Jumped&3 && m_Core.m_Jumped != m_Jumped) // check double jump
-				m_Core.m_Jumped = m_Jumped;
+			m_Core.m_Jumped = 0;
 			m_Core.m_Vel.y = 0;
 		}
 	}
@@ -1012,7 +996,13 @@ bool CCharacter::UnFreeze()
 		m_Ninja.m_ActivationDir=vec2(0,0);
 		m_Ninja.m_ActivationTick=0;
 		m_Ninja.m_CurrentMoveTime=0;
-
+		for(int i=0;i<WEAPON_NINJA;i++)
+		{
+			if (m_aWeapons[i].m_Got)
+			{
+				m_aWeapons[i].m_Ammo = -1;
+			}
+		}
 		return true;
 	}
 	return false;  		 
@@ -1147,7 +1137,7 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_SHORT);
 */
 	// set attacker's face to happy (taunt!)
-	if(g_Config.m_SvEmotionalTees)
+	/*if(g_Config.m_SvEmotionalTees)
 	{
 	if (From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
 	{
@@ -1157,14 +1147,12 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 			pChr->m_EmoteType = EMOTE_HAPPY;
 			pChr->m_EmoteStop = Server()->Tick() + Server()->TickSpeed();
 		}
-	}
+	}*///Removed you can set your emote via /emoteEMOTENAME
 	//set the attacked face to pain
 	m_EmoteType = EMOTE_PAIN;
 	m_EmoteStop = Server()->Tick() + 500 * Server()->TickSpeed() / 1000;
 
 	return true;
-	}
-	else return true;
 }
 
 void CCharacter::Snap(int SnappingClient)

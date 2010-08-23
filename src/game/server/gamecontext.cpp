@@ -651,8 +651,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					if(g_Config.m_SvPauseable)
 					{
 						CCharacter* chr = p->GetCharacter();
-						
-							if(!p->GetTeam())
+
+							if(!p->GetTeam() && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos)
 							{
 								p->SaveCharacter();
 								p->SetTeam(-1);
@@ -663,13 +663,18 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 								p->SetTeam(0);
 								//p->LoadCharacter();//TODO:Check if this system Works
 							}
+							else
+								SendChatTarget(ClientId, (chr->m_aWeapons[WEAPON_NINJA].m_Got)?"You can't use /pause while you are a ninja":(!chr->IsGrounded())?"You can't use /pause while you are a in air":"You can't use /pause while you are moving");
 
 							//if(chr->m_RaceState==RACE_STARTED)
 							//	chr->m_RaceState = RACE_PAUSE;
 							//else if(chr->m_RaceState==RACE_PAUSE)
 							//	chr->m_RaceState = RACE_STARTED;*/
 					}
-			} else if(!str_comp_nocase(pMsg->m_pMessage, "/info"))
+					else
+						SendChatTarget(ClientId, "The admin didn't activate /pause");
+			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/info"))
 			{
 					SendChatTarget(ClientId, "DDRace Mod. Version: " DDRACE_VERSION);
 					SendChatTarget(ClientId, "Official site: DDRace.info");
@@ -1113,6 +1118,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					pChr->m_EmoteType = EMOTE_HAPPY;
 					break;
 				case EMOTICON_1:
+				case EMOTICON_4:
 				case EMOTICON_9:
 				case EMOTICON_15:
 					pChr->m_EmoteType = EMOTE_PAIN;
