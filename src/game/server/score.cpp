@@ -106,6 +106,7 @@ CPlayerScore *CScore::SearchName(const char *name)
 
 void CScore::ParsePlayer(const char *name, float score)
 {
+	Load();
 	CPlayerScore *player = SearchName(name);
 	if (player)
 	{
@@ -131,7 +132,7 @@ std::list<std::string> CScore::Top5Draw(int id, int debut) //Thanks nevi
 	//char buf[512];
 
 	res.push_back("----------- Top 5 -----------");
-	for (std::list<CPlayerScore>::iterator i = top.begin(); i != top.end() && pos <= 5+debut; i++)
+	for (std::list<CPlayerScore>::iterator i = top.begin(); i != top.end() && pos <= ((debut)?4:5)+debut; i++)
 	{
 		if(i->m_Score < 0)
 			continue;

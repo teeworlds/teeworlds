@@ -120,7 +120,7 @@ public:
 	int m_SentAfkWarning; // afk timer's 1st warning after 50% of sv_max_afk_time
 	int m_SentAfkWarning2; // afk timer's 2nd warning after 90% of sv_max_afk_time
 	char m_pAfkMsg[160];
-	
+	bool m_RconFreeze;
 private:
 	CCharacter *Character;
 	CGameContext *m_pGameServer;

@@ -29,6 +29,11 @@ private:
 	int m_Bouncing;
 	bool m_Freeze;
 	bool m_Collised; 
+	vec2 m_AvgPos;
+	vec2 m_BouncePos;
+	vec2 m_ReBouncePos;
+	vec2 m_LastBounce;
+	vec2 m_PrevLastBounce;
 };
 
 #endif

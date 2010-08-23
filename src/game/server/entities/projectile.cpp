@@ -3,8 +3,18 @@
 #include <engine/shared/config.h>
 #include "projectile.h"
 
-CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, vec2 Dir, int Span,
-		bool Freeze, bool Explosive, float Force, int SoundImpact, int Weapon)
+CProjectile::CProjectile(
+		CGameWorld *pGameWorld,
+		int Type,
+		int Owner,
+		vec2 Pos,
+		vec2 Dir,
+		int Span,
+		bool Freeze,
+		bool Explosive,
+		float Force,
+		int SoundImpact,
+		int Weapon)
 : CEntity(pGameWorld, NETOBJTYPE_PROJECTILE)
 {
 	m_Type = Type;
@@ -19,6 +29,11 @@ CProjectile::CProjectile(CGameWorld *pGameWorld, int Type, int Owner, vec2 Pos, 
 	m_Weapon = Weapon;
 	m_StartTick = Server()->Tick();
 	m_Explosive = Explosive;
+	m_BouncePos=vec2(0,0);
+	m_ReBouncePos=vec2(0,0);
+	m_AvgPos=vec2(0,0);
+	m_LastBounce=vec2(0,0);
+	m_PrevLastBounce=vec2(0,0);
 
 	GameWorld()->InsertEntity(this);
 }
@@ -55,7 +70,8 @@ vec2 CProjectile::GetPos(float Time)
 	return CalcPos(m_Pos, m_Direction, Curvature, Speed, Time);
 }
 
-void CProjectile::SetBouncing(int Value) {
+void CProjectile::SetBouncing(int Value)
+{
 	m_Bouncing = Value;
 }
 
@@ -96,9 +112,27 @@ void CProjectile::Tick()
 			m_StartTick = Server()->Tick();
 			m_Pos = NewPos;
 			if (m_Bouncing == 1)
+			{
 				m_Direction.x = -m_Direction.x;
+				m_LastBounce = m_Pos;
+				if(!m_BouncePos.x)
+					m_BouncePos=m_Pos;
+				else if (!m_ReBouncePos.x)
+					m_ReBouncePos=m_Pos;
+				else if(!m_AvgPos.x)
+					m_AvgPos = vec2((m_BouncePos.x+m_ReBouncePos.x)/2,(m_BouncePos.y+m_ReBouncePos.y)/2);
+			}
 			else if (m_Bouncing == 2)
+			{
+				m_LastBounce = m_Pos;
 				m_Direction.y =- m_Direction.y;
+				if(!m_BouncePos.y)
+					m_BouncePos=m_Pos;
+				else if (!m_ReBouncePos.y)
+					m_ReBouncePos=m_Pos;
+				else if(!m_AvgPos.y)
+					m_AvgPos = vec2((m_BouncePos.x+m_ReBouncePos.x)/2,(m_BouncePos.y+m_ReBouncePos.y)/2);
+			}
 			m_Pos += m_Direction;
 		}
 		else if (m_Weapon == WEAPON_GUN)
@@ -114,6 +148,10 @@ void CProjectile::Tick()
 	{
 		GameServer()->m_World.DestroyEntity(this);
 	}
+
+	 if((!(m_PrevLastBounce == m_BouncePos && m_LastBounce == m_ReBouncePos) && !(m_LastBounce == m_BouncePos && m_PrevLastBounce == m_ReBouncePos))&&m_AvgPos.x)
+		 m_Pos=m_AvgPos;
+		m_PrevLastBounce=m_LastBounce;
 }
 
 void CProjectile::FillInfo(CNetObj_Projectile *pProj)

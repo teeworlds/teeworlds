@@ -61,7 +61,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_ActiveWeapon = WEAPON_GUN;
 	m_LastWeapon = WEAPON_HAMMER;
 	m_QueuedWeapon = -1;
-	
+
 	m_pPlayer = pPlayer;
 	m_Pos = Pos;
 	m_OlderPos = Pos;
@@ -79,7 +79,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	
 	GameServer()->m_World.InsertEntity(this);
 	m_Alive = true;
-
+	dbg_msg("m_RconFreeze","%d",m_pPlayer->m_RconFreeze);
+	if(m_pPlayer->m_RconFreeze) Freeze(-1);
 	GameServer()->m_pController->OnCharacterSpawn(this);
 
 	return true;
@@ -559,19 +560,24 @@ void CCharacter::Tick()
 		
 		m_pPlayer->m_ForceBalanced = false;
 	}
-	m_Armor=10-(m_FreezeTime/15);
+	m_Armor=(m_FreezeTime != -1)?10-(m_FreezeTime/15):0;
 	if(m_Input.m_Direction != 0 || m_Input.m_Jump != 0)
 		m_LastMove = Server()->Tick();
 
-	if(m_FreezeTime > 0) {
-		if (m_FreezeTime % Server()->TickSpeed() == 0)
+	if(m_FreezeTime > 0 || m_FreezeTime == -1)
+	{
+		if (m_FreezeTime % Server()->TickSpeed() == 0 || m_FreezeTime == -1)
 		{
 			GameServer()->CreateDamageInd(m_Pos, 0, m_FreezeTime / Server()->TickSpeed());
 		}
-		m_FreezeTime--;
+		(m_FreezeTime != -1)?m_FreezeTime--:0;
 		m_Input.m_Direction = 0;
 		m_Input.m_Jump = 0;
 		m_Input.m_Hook = 0;
+		m_Ninja.m_ActivationTick = Server()->Tick();
+		m_aWeapons[WEAPON_NINJA].m_Got=true;
+		m_aWeapons[WEAPON_NINJA].m_Ammo =0;
+		m_ActiveWeapon=WEAPON_NINJA;
 		//m_Input.m_Fire = 0;
 		if (m_FreezeTime == 1) {
 			UnFreeze();
@@ -944,7 +950,7 @@ void CCharacter::TickDefered()
 
 bool CCharacter::Freeze(int Time)
 {  		 
-	if (Time <= 1 || m_Super)
+	if ((Time <= 1 || m_Super || m_FreezeTime == -1) && Time != -1)
 		 return false;  		 
 	if (m_FreezeTick < Server()->Tick() - Server()->TickSpeed())  		 
 	{
@@ -964,7 +970,7 @@ bool CCharacter::Freeze(int Time)
 bool CCharacter::Freeze()  		 
 {  		 
 	int Time = Server()->TickSpeed()*3;
-	if (Time <= 1 || m_Super)
+	if (Time <= 1 || m_Super || m_FreezeTime == -1)
 		 return false;  		 
 	if (m_FreezeTick < Server()->Tick() - Server()->TickSpeed())
 	{

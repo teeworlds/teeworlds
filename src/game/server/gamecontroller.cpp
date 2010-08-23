@@ -179,7 +179,7 @@ bool IGameController::OnEntity(int Index, vec2 Pos, bool Front)
 					true, //Freeze
 					true, //Explosive
 					0,
-					SOUND_GRENADE_EXPLODE,
+					(g_Config.m_SvShotgunBulletSound)?SOUND_GRENADE_EXPLODE:-1,
 					WEAPON_SHOTGUN);
 				bullet->SetBouncing(2 - (i % 2));
 

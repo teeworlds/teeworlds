@@ -72,9 +72,12 @@ void CPickup::Tick()
 				{
 					if (pChr->m_aWeapons[i].m_Got)
 					{
-						pChr->m_aWeapons[i].m_Got = false;
-						pChr->m_aWeapons[i].m_Ammo = 0;
-						sound = true;
+						if(!(pChr->m_FreezeTime && i == WEAPON_NINJA))
+						{
+							pChr->m_aWeapons[i].m_Got = false;
+							pChr->m_aWeapons[i].m_Ammo = 0;
+							sound = true;
+						}
 					}
 					if(pChr->m_FreezeTime)
 					{
@@ -90,7 +93,7 @@ void CPickup::Tick()
 					pChr->m_LastWeapon = WEAPON_GUN;  
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_ARMOR);
 				}
-				pChr->m_ActiveWeapon = WEAPON_HAMMER;
+				if(!pChr->m_FreezeTime) pChr->m_ActiveWeapon = WEAPON_HAMMER;
 				break;
 
 			case POWERUP_WEAPON:
@@ -117,7 +120,7 @@ void CPickup::Tick()
 			case POWERUP_NINJA:
 				{
 					// activate ninja on target player
-					pChr->GiveNinja();
+					if(!pChr->m_FreezeTime) pChr->GiveNinja();
 					//RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
 					
 					break;
