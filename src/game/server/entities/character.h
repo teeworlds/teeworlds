@@ -168,7 +168,7 @@ public:
 	// checkpoints
 	int m_CpTick;
 	int m_CpActive;
-	float m_CpCurrent[149];  
+	float m_CpCurrent[25];  
 
 
 	

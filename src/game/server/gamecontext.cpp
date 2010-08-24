@@ -1,4 +1,5 @@
 #include <new>
+#include <stdio.h>
 #include <string.h>
 #include <base/math.h>
 #include <engine/shared/config.h>
@@ -10,6 +11,9 @@
 #include <game/collision.h>
 #include <game/gamecore.h>
 #include "gamemodes/DDRace.h"
+
+#include "score.h"
+#include "score/file_score.h"
 
 enum
 {
@@ -32,7 +36,7 @@ void CGameContext::Construct(int Resetting)
 
 	if(Resetting==NO_RESET)
 		m_pVoteOptionHeap = new CHeap();
-	//m_Cheats = g_Config.m_SvCheats;
+	m_pScore = 0;
 }
 
 CGameContext::CGameContext(int Resetting)
@@ -705,7 +709,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				str_format(buf, sizeof(buf), "/Info /Credits %s",g_Config.m_SvPauseable?"/pause":"");
 				SendChatTarget(ClientId, buf);
 				SendChatTarget(ClientId, "/rank /top5 /top5 5 or any number");
-			}
+			}/*
 			else if(!strncmp(pMsg->m_pMessage, "/top5", 5) && !g_Config.m_SvHideScore)
 			{
 				const char *pt = pMsg->m_pMessage;
@@ -751,7 +755,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					str_format(buf, sizeof(buf), "%s is not ranked", Server()->ClientName(ClientId));
 
 				SendChatTarget(ClientId, buf);
-			}
+			} finish this later */
 			else if (!str_comp_nocase(pMsg->m_pMessage, "/emotepain")&&g_Config.m_SvEmotionalTees)
 				{
 					CCharacter* pChr = p->GetCharacter();
@@ -853,6 +857,25 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		}
 
 
+	}
+	else if(MsgId == NETMSGTYPE_CL_ISRACE)
+	{
+		p->m_IsUsingRaceClient = true;
+		// send time of all players
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(m_apPlayers[i] && Score()->PlayerData(i)->m_CurrentTime > 0)
+			{
+				char aBuf[16];
+				str_format(aBuf, sizeof(aBuf), "%.0f", Score()->PlayerData(i)->m_CurrentTime*100.0f); // damn ugly but the only way i know to do it
+				int TimeToSend;
+				sscanf(aBuf, "%d", &TimeToSend);
+				CNetMsg_Sv_PlayerTime Msg;
+				Msg.m_Time = TimeToSend;
+				Msg.m_Cid = i;
+				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientId);
+			}
+		}
 	}
 	else if(MsgId == NETMSGTYPE_CL_CALLVOTE)
 	{
@@ -1134,6 +1157,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			pChr->m_EmoteStop = Server()->Tick() + 2 * Server()->TickSpeed();
 		}
 	}
+	
 	else if (MsgId == NETMSGTYPE_CL_KILL && !m_World.m_Paused)
 	{
 		if(p->m_Last_Kill && p->m_Last_Kill+Server()->TickSpeed()*3 > Server()->Tick())
@@ -1800,6 +1824,16 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 
 	Server()->SetBrowseInfo(m_pController->m_pGameType, -1);
 
+
+	// delete old score object
+	if(m_pScore)
+		delete m_pScore;
+		
+	// create score object (add sql later)
+	//if(g_Config.m_SvUseSQL)
+	//	m_pScore = new CSqlScore(this);
+	//else
+		m_pScore = new CFileScore(this);
 	// setup core world
 	//for(int i = 0; i < MAX_CLIENTS; i++)
 	//	game.players[i].core.world = &game.world.core;

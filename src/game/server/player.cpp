@@ -20,7 +20,6 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	m_DieTick = Server()->Tick();
 	m_ScoreStartTick = Server()->Tick();
 	Character = 0;
-	m_CharacterCopy = 0;
 	m_Muted = 0;
 	this->m_ClientID = CID;
 	m_Team = GameServer()->m_pController->ClampTeam(Team);
@@ -32,6 +31,11 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	m_SentAfkWarning2 = 0;
 	
 	m_PauseInfo.m_Respawn = false;
+	
+	m_IsUsingRaceClient = false;
+	m_LastSentTime = 0;
+	
+	GameServer()->Score()->PlayerData(CID)->Reset();
 }
 
 CPlayer::~CPlayer()
@@ -42,17 +46,6 @@ CPlayer::~CPlayer()
 
 void CPlayer::Tick()
 {
-	int pos=0;
-	CPlayerScore *pscore = ((CGameControllerDDRace*)GameServer()->m_pController)->m_Score.SearchName(Server()->ClientName(m_ClientID), pos);
-	if(pscore && pos > -1 && pscore->m_Score != -1)
-	{
-		float time = pscore->m_Score;
-		//if (!config.sv_hide_score)
-			m_Score = time * 100;
-		//else
-		//	score=authed;
-	} else
-		m_Score = 0.0f;
 	Server()->SetClientAuthed(m_ClientID, m_Authed);
 	Server()->SetClientScore(m_ClientID, m_Score);
 
@@ -95,6 +88,23 @@ void CPlayer::Tick()
 	}
 	else if(m_Spawning && m_RespawnTick <= Server()->Tick())
 		TryRespawn();
+	
+	// send best time
+	if(m_IsUsingRaceClient)
+	{
+		if(m_LastSentTime > GameServer()->m_pController->m_CurrentRecord || (!m_LastSentTime && GameServer()->m_pController->m_CurrentRecord))
+		{
+			char aBuf[16];
+			str_format(aBuf, sizeof(aBuf), "%.0f", GameServer()->m_pController->m_CurrentRecord*100.0f); // damn ugly but the only way i know to do it
+			int TimeToSend;
+			sscanf(aBuf, "%d", &TimeToSend);
+			CNetMsg_Sv_Record Msg;
+			Msg.m_Time = TimeToSend;
+			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_ClientID);
+			
+			m_LastSentTime = GameServer()->m_pController->m_CurrentRecord;
+		}
+	}
 }
 
 void CPlayer::Snap(int SnappingClient)
@@ -112,11 +122,18 @@ void CPlayer::Snap(int SnappingClient)
 	Info->m_LatencyFlux = m_Latency.m_Max-m_Latency.m_Min;
 	Info->m_Local = 0;
 	Info->m_ClientId = m_ClientID;
-	Info->m_Score = m_Score;
-	Info->m_Team = m_Team;
+
 
 	if(m_ClientID == SnappingClient)
 		Info->m_Local = 1;	
+	
+	// send 0 if times of otheres are not shown
+	if(SnappingClient != m_ClientID)
+		Info->m_Score = 0;
+	else
+		Info->m_Score = m_Score;
+		
+	Info->m_Team = m_Team;
 }
 
 void CPlayer::OnDisconnect()

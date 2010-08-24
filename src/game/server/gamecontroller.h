@@ -46,6 +46,7 @@ protected:
 	
 	char m_aMapWish[128];
 
+
 	
 	int m_RoundStartTick;
 	int m_GameOverTick;
@@ -62,6 +63,8 @@ protected:
 	
 public:
 	const char *m_pGameType;
+
+	float m_CurrentRecord;
 
 	//bool IsTeamplay() const;
 	

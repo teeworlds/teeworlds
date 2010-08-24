@@ -1,10 +1,14 @@
 #include <new>
+#include <stdio.h>
 #include <string.h>
 #include <engine/shared/config.h>
 #include <engine/server/server.h>
 #include <game/server/gamecontext.h>
 #include <game/mapitems.h>
 #include <game/server/gamemodes/DDRace.h>
+
+#include <game/server/score.h>
+
 #include "character.h"
 #include "laser.h"
 #include "light.h"
@@ -596,20 +600,68 @@ void CCharacter::Tick()
 	//DDRace  		 
 	char aBuftime[128];
 	float time = (float)(Server()->Tick() - m_StartTime) / ((float)Server()->TickSpeed());
-	int z = GameServer()->Collision()->IsTeleport(m_Pos.x, m_Pos.y);
+	CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
+
 	if(Server()->Tick() - m_RefreshTime >= Server()->TickSpeed())  		 
 	{
-		//GameServer()->SendBroadcast("FIRST_IF", m_pPlayer->GetCID());
 		if (m_RaceState == RACE_STARTED) {
-			//GameServer()->SendBroadcast("SECOND_IF", m_pPlayer->GetCID());
-			int int_time = (int)time;
-			str_format(aBuftime, sizeof(aBuftime), "%d m %d s\n%s", int_time/60,(int_time%60), ( g_Config.m_SvBroadcast[0] == 0) ? "" : g_Config.m_SvBroadcast);
-			GameServer()->SendBroadcast(aBuftime, m_pPlayer->GetCID());
+			int IntTime = (int)time;
+			if(m_pPlayer->m_IsUsingRaceClient)
+			{
+				CNetMsg_Sv_RaceTime Msg;
+				Msg.m_Time = IntTime;
+				Msg.m_Check = 0;
+				
+				if(m_CpActive != -1 && m_CpTick > Server()->Tick())
+				{
+					if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
+					{
+						float Diff = (m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive])*100;
+						Msg.m_Check = (int)Diff;
+					}
+				}
+				
+				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
+			} else {
+				str_format(aBuftime, sizeof(aBuftime), "Current Time: %d min %d sec", IntTime/60, IntTime%60);
+			
+				if(m_CpActive != -1 && m_CpTick > Server()->Tick())
+				{
+					if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
+					{
+						char aTmp[128];
+						float Diff = m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive];
+						str_format(aTmp, sizeof(aTmp), "\nCheckpoint | Diff : %+5.2f", Diff);
+						strcat(aBuftime, aTmp);
+					}
+				}
+				
+				if( g_Config.m_SvBroadcast[0] != 0) {
+					char aTmp[128];
+					str_format(aTmp, sizeof(aTmp), "\n%s\n", g_Config.m_SvBroadcast);
+					strcat(aBuftime, aTmp);
+				}
+				GameServer()->SendBroadcast(aBuftime, m_pPlayer->GetCID());
+			}
 		} else {
-			if (g_Config.m_SvBroadcast[0] != 0)
+			if( g_Config.m_SvBroadcast[0] != 0) {
+				char aTmp[128];
+				str_format(aTmp, sizeof(aTmp), "%s\n", g_Config.m_SvBroadcast);
+				strcat(aBuftime, aTmp);
 				GameServer()->SendBroadcast(g_Config.m_SvBroadcast, m_pPlayer->GetCID());
+			}
+				
 		}
 		m_RefreshTime = Server()->Tick();
+	}
+	
+	
+	int cp = GameServer()->Collision()->IsCheckpoint(MapIndex);
+	if(cp != -1 && m_RaceState == RACE_STARTED)
+	{
+		m_CpActive = cp;
+		m_CpCurrent[cp] = time;
+		m_CpTick = Server()->Tick() + Server()->TickSpeed()*2;
 	}
 	if(((TileIndex1 == TILE_BEGIN) || (TileIndex2 == TILE_BEGIN)) && (m_RaceState == RACE_NONE || m_RaceState == RACE_STARTED))
 	{
@@ -617,29 +669,73 @@ void CCharacter::Tick()
 		m_RefreshTime = Server()->Tick();
 		m_RaceState = RACE_STARTED;
 	}
+	int z = GameServer()->Collision()->IsTeleport(m_Pos.x, m_Pos.y);
 	if(((TileIndex1 == TILE_END) || (TileIndex2 == TILE_END)) && m_RaceState == RACE_STARTED)
 	{
 		char aBuf[128];
-		if ((int)time / 60 != 0)
-			str_format(aBuf, sizeof(aBuf), "%s finished in: %d minute(s) %5.3f second(s)", (!g_Config.m_SvHideScore)?Server()->ClientName(m_pPlayer->GetCID()):"You", (int)time/60, time - ((int)time/60*60)); 
-		else
-			str_format(aBuf, sizeof(aBuf), "%s finished in: %5.3f second(s)", (!g_Config.m_SvHideScore) ? Server()->ClientName(m_pPlayer->GetCID()):"You", time - ((int)time/60*60));
-		if (!g_Config.m_SvHideScore)
-			GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
-		else
+		str_format(aBuf, sizeof(aBuf), "%s finished in: %d minute(s) %5.2f second(s)", Server()->ClientName(m_pPlayer->GetCID()), (int)time/60, time-((int)time/60*60));
+		if(!g_Config.m_SvHideScore)
 			GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
-		CPlayerScore *pPScore = ((CGameControllerDDRace*) GameServer()->m_pController)->m_Score.SearchName(Server()->ClientName(m_pPlayer->GetCID()));
-		if(pPScore && time - pPScore->m_Score < 0)
+		else
+			GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+		
+		if(time - pData->m_BestTime < 0)
 		{
-			str_format(aBuf, sizeof(aBuf), "New record: %5.3f second(s) better", time - pPScore->m_Score);
-			if (!g_Config.m_SvHideScore)
-				GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
-			else
+			// new record \o/
+			str_format(aBuf, sizeof(aBuf), "New record: %5.2f second(s) better", time - pData->m_BestTime);
+			if(!g_Config.m_SvHideScore)
 				GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
+			else
+				GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 		}
+		
+		if(!pData->m_BestTime || time < pData->m_BestTime)
+		{
+			// update the score
+			pData->Set(time, m_CpCurrent);
+			
+			if(str_comp_num(Server()->ClientName(m_pPlayer->GetCID()), "nameless tee", 12) != 0)
+				GameServer()->Score()->SaveScore(m_pPlayer->GetCID(), time, this);
+		}
+		
+		// update server best time
+		if(!GameServer()->m_pController->m_CurrentRecord || time < GameServer()->m_pController->m_CurrentRecord)
+		{
+			// check for nameless
+			if(str_comp_num(Server()->ClientName(m_pPlayer->GetCID()), "nameless tee", 12) != 0)
+				GameServer()->m_pController->m_CurrentRecord = time;
+		}
+		
 		m_RaceState = RACE_NONE;
-		if(strncmp(Server()->ClientName(m_pPlayer->GetCID()), "nameless tee", 12) != 0)
-			((CGameControllerDDRace*)GameServer()->m_pController)->m_Score.ParsePlayer(Server()->ClientName(m_pPlayer->GetCID()), (float)time);
+		// set player score
+		if(!GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime || GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime > time)
+		{
+			GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime = time;
+			
+			// send it to all players
+			for(int i = 0; i < MAX_CLIENTS; i++)
+			{
+				if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->m_IsUsingRaceClient)
+				{
+					if(g_Config.m_SvHideScore || i == m_pPlayer->GetCID())
+					{
+						CNetMsg_Sv_PlayerTime Msg;
+						char aBuf[16];
+						str_format(aBuf, sizeof(aBuf), "%.0f", time*100.0f); // damn ugly but the only way i know to do it
+						int TimeToSend;
+						sscanf(aBuf, "%d", &TimeToSend);
+						Msg.m_Time = TimeToSend;
+						Msg.m_Cid = m_pPlayer->GetCID();
+						Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
+					}
+				}
+			}
+		}
+		
+		int TTime = 0-(int)time;
+		if(m_pPlayer->m_Score < TTime)
+			m_pPlayer->m_Score = TTime;
+		
 	}
 	if(((TileIndex1 == TILE_FREEZE) || (TileIndex2 == TILE_FREEZE)) && !m_Super)
 	{

@@ -574,6 +574,17 @@ int CCollision::IsCp(int x, int y)
 		return 0;
 }
 
+int CCollision::IsCheckpoint(int Index)
+{
+	if(Index < 0)
+		return -1;
+		
+	int z = m_pTiles[Index].m_Index;
+	if(z >= 35 && z <= 59)
+		return z-35;
+	return -1;
+}
+
 vec2 CCollision::CpSpeed(int Index)
 {
 

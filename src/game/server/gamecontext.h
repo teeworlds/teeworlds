@@ -11,6 +11,7 @@
 #include "gamecontroller.h"
 #include "gameworld.h"
 #include "player.h"
+#include "score.h"
 
 /*
 	Tick
@@ -41,6 +42,7 @@ class CGameContext : public IGameServer
 	CCollision m_Collision;
 	CNetObjHandler m_NetObjHandler;
 	CTuningParams m_Tuning;
+	class IScore *m_pScore;
 
 	static void ConMute(IConsole::IResult *pResult, void *pUserData, int cid);
 	static void ConSetlvl(IConsole::IResult *pResult, void *pUserData, int cid);
@@ -99,6 +101,8 @@ public:
 	class IConsole *Console() { return m_pConsole; }
 	CCollision *Collision() { return &m_Collision; }
 	CTuningParams *Tuning() { return &m_Tuning; }
+	
+	class IScore *Score() { return m_pScore; }
 
 	CGameContext();
 	~CGameContext();
