@@ -709,53 +709,31 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				str_format(buf, sizeof(buf), "/Info /Credits %s",g_Config.m_SvPauseable?"/pause":"");
 				SendChatTarget(ClientId, buf);
 				SendChatTarget(ClientId, "/rank /top5 /top5 5 or any number");
-			}/*
-			else if(!strncmp(pMsg->m_pMessage, "/top5", 5) && !g_Config.m_SvHideScore)
-			{
-				const char *pt = pMsg->m_pMessage;
-				std::list<std::string> s;
-				std::list<std::string>::iterator i;
-				int number = 0;
-				pt += 6;
-				while(*pt && *pt >= '0' && *pt <= '9')
-				{
-					number = number*10+(*pt-'0');
-					pt++;
-				}
-				s=((CGameControllerDDRace*)m_pController)->m_Score.Top5Draw(ClientId, number ? number : 0);
-				for(i=s.begin(); i != s.end(); ++i)
-					SendChatTarget(ClientId, i->c_str());
 			}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/rank"))
+			else if(!str_comp_num(pMsg->m_pMessage, "/top5", 5))
 			{
-				char buf[512];
-				const char *name = pMsg->m_pMessage;
-				name += 6;
-				int pos=0;
-				CPlayerScore *pscore;
-
-				pscore = ((CGameControllerDDRace*)m_pController)->m_Score.SearchName(Server()->ClientName(ClientId), pos);
-
-				if(pscore && pos > -1 && pscore->m_Score != -1)
+				if(g_Config.m_SvHideScore)
 				{
-					float time = pscore->m_Score;
-
-					str_format(buf, sizeof(buf), "%d. %s",!g_Config.m_SvHideScore? pos: 0, pscore->name);
-					if (!g_Config.m_SvHideScore)
-						SendChat(-1, CGameContext::CHAT_ALL, buf);
-					else
-						SendChatTarget(ClientId, buf);
-
-					if ((int)time/60 >= 1)
-						str_format(buf, sizeof(buf), "Time: %d minute%s %f seconds", (int)time/60, (int)time/60 != 1 ? "s" : "" , time-((int)time/60)*60);
-					else
-						str_format(buf, sizeof(buf), "Time: %f seconds", time-((int)time/60)*60);
+					SendChatTarget(ClientId, "Showing the Top5 is not allowed on this server.");
+					return;
 				}
+				
+				int Num;
+				
+				if(sscanf(pMsg->m_pMessage, "/top5 %d", &Num) == 1)
+					Score()->ShowTop5(p->GetCID(), Num);
 				else
-					str_format(buf, sizeof(buf), "%s is not ranked", Server()->ClientName(ClientId));
-
-				SendChatTarget(ClientId, buf);
-			} finish this later */
+					Score()->ShowTop5(p->GetCID());
+			}
+			else if(!str_comp_num(pMsg->m_pMessage, "/rank", 5))
+			{
+				char aName[256];
+				
+				if(g_Config.m_SvHideScore && sscanf(pMsg->m_pMessage, "/rank %s", aName) == 1)
+					Score()->ShowRank(p->GetCID(), aName, true);
+				else
+					Score()->ShowRank(p->GetCID(), Server()->ClientName(ClientId));
+			}
 			else if (!str_comp_nocase(pMsg->m_pMessage, "/emotepain")&&g_Config.m_SvEmotionalTees)
 				{
 					CCharacter* pChr = p->GetCharacter();
