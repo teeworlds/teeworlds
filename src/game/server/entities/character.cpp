@@ -79,7 +79,6 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	
 	GameServer()->m_World.InsertEntity(this);
 	m_Alive = true;
-	dbg_msg("m_RconFreeze","%d",m_pPlayer->m_RconFreeze);
 	if(m_pPlayer->m_RconFreeze) Freeze(-1);
 	GameServer()->m_pController->OnCharacterSpawn(this);
 
@@ -729,58 +728,61 @@ void CCharacter::Tick()
 	{
 		if(m_PrevPos.x-m_Pos.x<0)
 			m_Core.m_Vel.x += m_Core.m_Vel.x *-0.5;
-		else
+		else if(m_LastBooster != TileIndex1 || m_LastFBooster != TileIndex2)
 			m_Core.m_Vel.x += m_Core.m_Vel.x*0.5;
 	}
 	if (TileIndex1 == TILE_BOOST_R || TileIndex2 == TILE_BOOST_R)
 	{
 		if(m_PrevPos.x-m_Pos.x>0)
 			m_Core.m_Vel.x += m_Core.m_Vel.x *-0.5;
-		else
+		else if(m_LastBooster != TileIndex1 || m_LastFBooster != TileIndex2)
 			m_Core.m_Vel.x += m_Core.m_Vel.x*0.5;
 	}
 	if (TileIndex1 == TILE_BOOST_D || TileIndex2 == TILE_BOOST_D)
 	{
 		if(m_PrevPos.y-m_Pos.y>0)
 			m_Core.m_Vel.y += m_Core.m_Vel.y *-0.5;
-		else
+		else if(m_LastBooster != TileIndex1 || m_LastFBooster != TileIndex2)
 			m_Core.m_Vel.y += m_Core.m_Vel.y*0.5;
 	}
 	if (TileIndex1 == TILE_BOOST_U || TileIndex2 == TILE_BOOST_U)
 	{
 		if(m_PrevPos.y-m_Pos.y<0)
 			m_Core.m_Vel.y += m_Core.m_Vel.y *-0.5;
-		else
+		else if(m_LastBooster != TileIndex1 || m_LastFBooster != TileIndex2)
 			m_Core.m_Vel.y += m_Core.m_Vel.y*0.5;
 	}
-	if (TileIndex1 == TILE_BOOST_L2 || TileIndex2 == TILE_BOOST_L2)
+	if ((TileIndex1 == TILE_BOOST_L2 || TileIndex2 == TILE_BOOST_L2) && (m_LastBooster != TileIndex1 || m_LastFBooster != TileIndex2))
 	{
 		if(m_PrevPos.x-m_Pos.x<0)
 			m_Core.m_Vel.x = m_Core.m_Vel.x *-1.1;
 		else
 			m_Core.m_Vel.x += m_Core.m_Vel.x*1.1;
 	}
-	if (TileIndex1 == TILE_BOOST_R2|| TileIndex2 == TILE_BOOST_R2)
+	if ((TileIndex1 == TILE_BOOST_R2|| TileIndex2 == TILE_BOOST_R2) && (m_LastBooster != TileIndex1 || m_LastFBooster != TileIndex2))
 	{
 		if(m_PrevPos.x-m_Pos.x>0)
 			m_Core.m_Vel.x = m_Core.m_Vel.x *-1.1;
 		else
 			m_Core.m_Vel.x += m_Core.m_Vel.x*1.1;
 	}
-	if (TileIndex1 == TILE_BOOST_D2 || TileIndex2 == TILE_BOOST_D2)
+	if ((TileIndex1 == TILE_BOOST_D2 || TileIndex2 == TILE_BOOST_D2) && (m_LastBooster != TileIndex1 || m_LastFBooster != TileIndex2))
 	{
 		if(m_PrevPos.y-m_Pos.y>0)
 			m_Core.m_Vel.y = m_Core.m_Vel.y *-1.1;
 		else
 			m_Core.m_Vel.y += m_Core.m_Vel.y*1.1;
 	}
-	if (TileIndex1 == TILE_BOOST_U2 || TileIndex2 == TILE_BOOST_U2)
+	if ((TileIndex1 == TILE_BOOST_U2 || TileIndex2 == TILE_BOOST_U2) && (m_LastBooster != TileIndex1 || m_LastFBooster != TileIndex2))
 	{
 		if(m_PrevPos.y-m_Pos.y<0)
 			m_Core.m_Vel.y = m_Core.m_Vel.y *-1.1;
 		else
 			m_Core.m_Vel.y += m_Core.m_Vel.y*1.1;
 	}
+	m_LastBooster = TileIndex1;
+	m_LastFBooster = TileIndex2;
+	// handle speedup tiles
 	if(GameServer()->Collision()->IsSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y))
 	{
 		vec2 Direction;

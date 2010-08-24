@@ -48,7 +48,6 @@ public:
 		int m_Armor;
 		int m_PlayerState;
 		int m_LastMove;
-		int m_LastSpeedup;
 		vec2 m_PrevPos;
 		int m_ActiveWeapon;
 		int m_LastWeapon;
