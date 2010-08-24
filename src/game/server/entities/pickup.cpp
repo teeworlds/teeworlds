@@ -79,14 +79,6 @@ void CPickup::Tick()
 							sound = true;
 						}
 					}
-					if(pChr->m_FreezeTime)
-					{
-						pChr->m_aWeapons[WEAPON_GUN].m_Ammo = 0;
-						pChr->m_aWeapons[WEAPON_HAMMER].m_Ammo =0;
-					}
-					pChr->m_Ninja.m_ActivationDir=vec2(0,0);
-					pChr->m_Ninja.m_ActivationTick=0;
-					pChr->m_Ninja.m_CurrentMoveTime=0;
 				}
 				if (sound)
 				{
