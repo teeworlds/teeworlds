@@ -1096,6 +1096,7 @@ bool CCharacter::UnFreeze()
 			 {
 				 m_aWeapons[i].m_Ammo = -1;
 			 }
+		if(!m_aWeapons[m_ActiveWeapon].m_Got) m_ActiveWeapon=WEAPON_GUN;
 		m_FreezeTime=0;
 		 return true;
 	}

@@ -80,6 +80,9 @@ void CPickup::Tick()
 						}
 					}
 				}
+				pChr->m_Ninja.m_ActivationDir=vec2(0,0);
+				pChr->m_Ninja.m_ActivationTick=-500;
+				pChr->m_Ninja.m_CurrentMoveTime=0;
 				if (sound)
 				{
 					pChr->m_LastWeapon = WEAPON_GUN;  
@@ -90,7 +93,7 @@ void CPickup::Tick()
 
 			case POWERUP_WEAPON:
 				
-				if(m_Subtype >= 0 && m_Subtype < NUM_WEAPONS && (!pChr->m_aWeapons[m_Subtype].m_Got || pChr->m_aWeapons[m_Subtype].m_Ammo != -1))
+				if(m_Subtype >= 0 && m_Subtype < NUM_WEAPONS && (!pChr->m_aWeapons[m_Subtype].m_Got || (pChr->m_aWeapons[m_Subtype].m_Ammo != -1 && !pChr->m_FreezeTime)))
 				{
 					if(pChr->GiveWeapon(m_Subtype, -1))
 					{
