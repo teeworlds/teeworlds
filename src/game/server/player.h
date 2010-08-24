@@ -47,7 +47,6 @@ public:
 		int m_Armor;
 		int m_PlayerState;
 		int m_LastMove;
-		int m_LastSpeedup;
 		vec2 m_PrevPos;
 		int m_ActiveWeapon;
 		int m_LastWeapon;
@@ -127,7 +126,7 @@ public:
 	int m_SentAfkWarning; // afk timer's 1st warning after 50% of sv_max_afk_time
 	int m_SentAfkWarning2; // afk timer's 2nd warning after 90% of sv_max_afk_time
 	char m_pAfkMsg[160];
-	
+	bool m_RconFreeze;
 private:
 	CCharacter *Character;
 	CGameContext *m_pGameServer;

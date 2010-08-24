@@ -265,7 +265,6 @@ void CPlayer::LoadCharacter() {
 	Character->m_Armor = m_PauseInfo.m_Armor;
 	Character->m_PlayerState = m_PauseInfo.m_PlayerState;
 	Character->m_LastMove = m_PauseInfo.m_LastMove;
-	Character->m_LastSpeedup = m_PauseInfo.m_LastSpeedup;
 	Character->m_PrevPos = m_PauseInfo.m_PrevPos;
 	Character->m_ActiveWeapon = m_PauseInfo.m_ActiveWeapon;
 	Character->m_LastWeapon = m_PauseInfo.m_LastWeapon;
@@ -293,7 +292,6 @@ void CPlayer::SaveCharacter()
 	m_PauseInfo.m_Armor = Character->m_Armor;
 	m_PauseInfo.m_PlayerState = Character->m_PlayerState;
 	m_PauseInfo.m_LastMove = Character->m_LastMove;
-	m_PauseInfo.m_LastSpeedup = Character->m_LastSpeedup;
 	m_PauseInfo.m_PrevPos = Character->m_PrevPos;
 	m_PauseInfo.m_ActiveWeapon = Character->m_ActiveWeapon;
 	m_PauseInfo.m_LastWeapon = Character->m_LastWeapon;

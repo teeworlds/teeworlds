@@ -72,30 +72,28 @@ void CPickup::Tick()
 				{
 					if (pChr->m_aWeapons[i].m_Got)
 					{
-						pChr->m_aWeapons[i].m_Got = false;
-						pChr->m_aWeapons[i].m_Ammo = 0;
-						sound = true;
+						if(!(pChr->m_FreezeTime && i == WEAPON_NINJA))
+						{
+							pChr->m_aWeapons[i].m_Got = false;
+							pChr->m_aWeapons[i].m_Ammo = 0;
+							sound = true;
+						}
 					}
-					if(pChr->m_FreezeTime)
-					{
-						pChr->m_aWeapons[WEAPON_GUN].m_Ammo = 0;
-						pChr->m_aWeapons[WEAPON_HAMMER].m_Ammo =0;
-					}
-					pChr->m_Ninja.m_ActivationDir=vec2(0,0);
-					pChr->m_Ninja.m_ActivationTick=0;
-					pChr->m_Ninja.m_CurrentMoveTime=0;
 				}
+				pChr->m_Ninja.m_ActivationDir=vec2(0,0);
+				pChr->m_Ninja.m_ActivationTick=-500;
+				pChr->m_Ninja.m_CurrentMoveTime=0;
 				if (sound)
 				{
 					pChr->m_LastWeapon = WEAPON_GUN;  
 					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_ARMOR);
 				}
-				pChr->m_ActiveWeapon = WEAPON_HAMMER;
+				if(!pChr->m_FreezeTime) pChr->m_ActiveWeapon = WEAPON_HAMMER;
 				break;
 
 			case POWERUP_WEAPON:
 				
-				if(m_Subtype >= 0 && m_Subtype < NUM_WEAPONS && (!pChr->m_aWeapons[m_Subtype].m_Got || pChr->m_aWeapons[m_Subtype].m_Ammo != -1))
+				if(m_Subtype >= 0 && m_Subtype < NUM_WEAPONS && (!pChr->m_aWeapons[m_Subtype].m_Got || (pChr->m_aWeapons[m_Subtype].m_Ammo != -1 && !pChr->m_FreezeTime)))
 				{
 					if(pChr->GiveWeapon(m_Subtype, -1))
 					{
@@ -117,7 +115,7 @@ void CPickup::Tick()
 			case POWERUP_NINJA:
 				{
 					// activate ninja on target player
-					pChr->GiveNinja();
+					if(!pChr->m_FreezeTime) pChr->GiveNinja();
 					//RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
 					
 					break;

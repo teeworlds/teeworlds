@@ -70,6 +70,8 @@ class CGameContext : public IGameServer
 
 	static void ConPhook(IConsole::IResult *pResult, void *pUserData, int cid);
 	
+	static void ConFreeze(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConUnFreeze(IConsole::IResult *pResult, void *pUserData, int cid);
 	static void ConTimerStop(IConsole::IResult *pResult, void *pUserData, int cid);
 	static void ConTimerStart(IConsole::IResult *pResult, void *pUserData, int cid);
 	static void ConTimerReStart(IConsole::IResult *pResult, void *pUserData, int cid);

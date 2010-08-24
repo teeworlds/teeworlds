@@ -252,7 +252,7 @@ Messages = [
 		NetIntRange("m_Pass", 0, 'MAX_CLIENTS'),
 		NetIntRange("m_Total", 0, 'MAX_CLIENTS'),
 	]),
-		
+
 	### Client messages
 	NetMessage("Cl_Say", [
 		NetBool("m_Team"),

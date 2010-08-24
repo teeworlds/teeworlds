@@ -1374,7 +1374,7 @@ void  CGameContext::ConSetlvl(IConsole::IResult *pResult, void *pUserData, int c
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	int level = clamp(pResult->GetInteger(1), 0, 3);
 
-	if (pSelf->m_apPlayers[cid1] && (pSelf->m_apPlayers[cid1]->m_Authed > level) && (compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1])))
+	if (pSelf->m_apPlayers[cid1] && (pSelf->m_apPlayers[cid1]->m_Authed > level) && (compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]) || cid == cid1))
 	{
 		pSelf->m_apPlayers[cid1]->m_Authed = level;
 	}
@@ -1412,10 +1412,14 @@ void CGameContext::ConNinja(IConsole::IResult *pResult, void *pUserData, int cid
 	if(!pSelf->CheatsAvailable(cid)) return;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	CCharacter* chr = pSelf->GetPlayerChar(cid1);
-	if(chr) {
-		chr->GiveNinja();
-		if(!g_Config.m_SvCheatTime)
-			chr->m_RaceState = RACE_CHEAT;
+	if(chr)
+	{
+		if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+		{
+			chr->GiveNinja();
+			if(!g_Config.m_SvCheatTime)
+				chr->m_RaceState = RACE_CHEAT;
+		}
 	}
 }
 
@@ -1438,11 +1442,14 @@ void CGameContext::ConHammer(IConsole::IResult *pResult, void *pUserData, int ci
 	}
 	else
 	{
-		chr->m_HammerType = type;
-		if(!g_Config.m_SvCheatTime)
-			chr->m_RaceState = RACE_CHEAT;
-		str_format(buf, sizeof(buf), "Hammer of cid=%d setted to %d",cid1,type);
-		serv->SendRconLine(cid1, buf);
+		if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+		{
+			chr->m_HammerType = type;
+			if(!g_Config.m_SvCheatTime)
+				chr->m_RaceState = RACE_CHEAT;
+			str_format(buf, sizeof(buf), "Hammer of cid=%d setted to %d",cid1,type);
+			serv->SendRconLine(cid1, buf);
+		}
 	}
 }
 
@@ -1482,6 +1489,7 @@ void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int cid
 		if(chr)
 		{
 			chr->m_Super = true;
+			chr->UnFreeze();
 			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
 		}
@@ -1513,6 +1521,7 @@ void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int c
 		if(chr)
 		{
 			chr->m_Super = true;
+			chr->UnFreeze();
 			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
 		}
@@ -1597,9 +1606,12 @@ void CGameContext::ConTimerStop(IConsole::IResult *pResult, void *pUserData, int
 		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if (!chr)
 			return;
-		chr->m_RaceState=RACE_CHEAT;
-		str_format(buf, sizeof(buf), "Cid=%d Hasn't time now (Timer Stopped)",cid1);
-		serv->SendRconLine(cid1, buf);
+		if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+		{
+			chr->m_RaceState=RACE_CHEAT;
+			str_format(buf, sizeof(buf), "Cid=%d Hasn't time now (Timer Stopped)",cid1);
+			serv->SendRconLine(cid1, buf);
+		}
 	}
 	else
 	{
@@ -1620,9 +1632,12 @@ void CGameContext::ConTimerStart(IConsole::IResult *pResult, void *pUserData, in
 		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if (!chr)
 			return;
-		chr->m_RaceState = RACE_STARTED;
-		str_format(buf, sizeof(buf), "Cid=%d Has time now (Timer Started)",cid1);
-		serv->SendRconLine(cid1, buf);
+		if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+		{
+			chr->m_RaceState = RACE_STARTED;
+			str_format(buf, sizeof(buf), "Cid=%d Has time now (Timer Started)",cid1);
+			serv->SendRconLine(cid1, buf);
+		}
 	}
 	else
 	{
@@ -1642,12 +1657,15 @@ void CGameContext::ConTimerZero(IConsole::IResult *pResult, void *pUserData, int
 	CCharacter* chr = pSelf->GetPlayerChar(cid1);
 	if (!chr)
 		return;
-	chr->m_StartTime = pSelf->Server()->Tick();
-	chr->m_RefreshTime = pSelf->Server()->Tick();
-	chr->m_RaceState=RACE_CHEAT;
-	str_format(buf, sizeof(buf), "Cid=%d time has been reset & stopped.",cid1);
-	CServer* serv = (CServer*)pSelf->Server();
-	serv->SendRconLine(cid1, buf);
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	{
+		chr->m_StartTime = pSelf->Server()->Tick();
+		chr->m_RefreshTime = pSelf->Server()->Tick();
+		chr->m_RaceState=RACE_CHEAT;
+		str_format(buf, sizeof(buf), "Cid=%d time has been reset & stopped.",cid1);
+		CServer* serv = (CServer*)pSelf->Server();
+		serv->SendRconLine(cid1, buf);
+	}
 
 }
 
@@ -1662,10 +1680,53 @@ void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, 
 	CCharacter* chr = pSelf->GetPlayerChar(cid1);
 	if (!chr)
 		return;
-	chr->m_StartTime = pSelf->Server()->Tick();
-	chr->m_RefreshTime = pSelf->Server()->Tick();
-	chr->m_RaceState=RACE_STARTED;
-	str_format(buf, sizeof(buf), "Cid=%d time has been reset & stopped.",cid1);
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	{
+		chr->m_StartTime = pSelf->Server()->Tick();
+		chr->m_RefreshTime = pSelf->Server()->Tick();
+		chr->m_RaceState=RACE_STARTED;
+		str_format(buf, sizeof(buf), "Cid=%d time has been reset & stopped.",cid1);
+		CServer* serv = (CServer*)pSelf->Server();
+		serv->SendRconLine(cid1, buf);
+	}
+
+}
+
+void CGameContext::ConFreeze(IConsole::IResult *pResult, void *pUserData, int cid)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	//if(!pSelf->CheatsAvailable(cid)) return;
+	char buf[128];
+	int time=-1;
+	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if(pResult->NumArguments()>1)
+		time = clamp(pResult->GetInteger(1), -1, 29999);
+	CCharacter* chr = pSelf->GetPlayerChar(cid1);
+	if (!chr)
+		return;
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	{
+		chr->Freeze(((time!=0&&time!=-1)?(pSelf->Server()->TickSpeed()*time):(-1)));
+		chr->m_pPlayer->m_RconFreeze = true;
+		str_format(buf, sizeof(buf), "Cid=%d has been Frozen.",cid1);
+		CServer* serv = (CServer*)pSelf->Server();
+		serv->SendRconLine(cid1, buf);
+	}
+
+}
+
+void CGameContext::ConUnFreeze(IConsole::IResult *pResult, void *pUserData, int cid)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	//if(!pSelf->CheatsAvailable(cid)) return;
+	char buf[128];
+	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	CCharacter* chr = pSelf->GetPlayerChar(cid1);
+	if (!chr)
+		return;
+	chr->m_FreezeTime=2;
+	chr->m_pPlayer->m_RconFreeze = false;
+	str_format(buf, sizeof(buf), "Cid=%d has been UnFreezed.",cid1);
 	CServer* serv = (CServer*)pSelf->Server();
 	serv->SendRconLine(cid1, buf);
 
@@ -1675,7 +1736,8 @@ void CGameContext::OnConsoleInit()
 {
 	m_pServer = Kernel()->RequestInterface<IServer>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
-
+	Console()->Register("freeze", "i?i", CFGFLAG_SERVER, ConFreeze, this, "Freezes Player i1 for i2 seconds Default Infinity",2);
+	Console()->Register("unfreeze", "i", CFGFLAG_SERVER, ConUnFreeze, this, "UnFreezes Player i",2);
 	Console()->Register("timerstop", "i", CFGFLAG_SERVER, ConTimerStop, this, "Stops The Timer of Player i",2);
 	Console()->Register("timerstart", "i", CFGFLAG_SERVER, ConTimerStart, this, "Starts The Timer of Player i",2);
 	Console()->Register("timerrestart", "i", CFGFLAG_SERVER, ConTimerReStart, this, "Starts The Timer of Player i with the time of 00:00:00",2);
