@@ -1702,11 +1702,6 @@ int main(int argc, const char **argv) // ignore_convention
 	pConfig->RestoreStrings();
 
 	pServer->Engine()->InitLogfile();
-	if(g_Config.m_SvExternalRecords == 1) {
-		char pathBuf[512];
-		str_format(pathBuf, sizeof(pathBuf), "%s/records", pStorage->ApplicationSavePath());
-		fs_makedir(pathBuf);
-	}
 
 	// run the server
 	pServer->Run();
