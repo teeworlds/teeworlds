@@ -3,15 +3,15 @@
 #include <game/client/component.h>
 #include <game/client/lineinput.h>
 
-class CChat : public CComponent
-{
-	CLineInput m_Input;
-	
-	enum 
+enum 
 	{
 		MAX_LINES = 25,
 	};
 
+class CChat : public CComponent
+{
+	CLineInput m_Input;
+	
 	struct CLine
 	{
 		int64 m_Time;
@@ -25,6 +25,8 @@ class CChat : public CComponent
 	CLine m_aLines[MAX_LINES];
 	int m_CurrentLine;
 
+	bool m_ChatMoving;
+	
 	// chat
 	enum
 	{
@@ -40,8 +42,13 @@ class CChat : public CComponent
 	static void ConSayTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConChat(IConsole::IResult *pResult, void *pUserData);
 	static void ConShowChat(IConsole::IResult *pResult, void *pUserData);
+	static void ConUpChat(IConsole::IResult *pResult, void *pUserData);
+	static void ConDownChat(IConsole::IResult *pResult, void *pUserData);
 	
 public:
+	
+	int m_RenderLine;
+
 	CChat();
 
 	bool IsActive() const { return m_Mode != MODE_NONE; }

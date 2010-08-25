@@ -633,6 +633,147 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	}
 }
 
+
+void CMenus::RenderSettingsDownloadExtension(CUIRect MainView)
+{
+	CUIRect button, text, reset_button;
+	MainView.HSplitTop(10.0f, &text, &MainView);
+	UI()->DoLabel(&text, "Download Extension", 40.0f, -1);
+	MainView.HSplitTop(40.0f, 0, &MainView);
+	MainView.HSplitTop(10.0f, &text, &MainView);
+	UI()->DoLabel(&text, "Version: 1.3", 15.0f, -1);
+	MainView.HSplitTop(10.0f, 0, &MainView);
+	MainView.HSplitTop(10.0f, &text, &MainView);
+	UI()->DoLabel(&text, "Mod by KillaBilla", 15.0f, -1);
+	MainView.HSplitTop(20.0f, 0, &MainView);
+	MainView.HSplitTop(10.0f, &text, &MainView);
+	MainView.HSplitTop(20.0f, &button, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_ClDownloadExtensionStatusPercent, "Show status in percent", g_Config.m_ClDownloadExtensionStatusPercent, &button))
+		g_Config.m_ClDownloadExtensionStatusPercent ^= 1;
+	MainView.HSplitTop(20.0f, &button, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_ClDownloadExtensionSize, "Show map size", g_Config.m_ClDownloadExtensionSize, &button))
+		g_Config.m_ClDownloadExtensionSize ^= 1;
+	MainView.HSplitTop(20.0f, &button, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_ClDownloadExtensionSpeed, "Show download speed", g_Config.m_ClDownloadExtensionSpeed, &button))
+		g_Config.m_ClDownloadExtensionSpeed ^= 1;
+	MainView.HSplitTop(20.0f, &button, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_ClDownloadExtensionTimeElapsed, "Show time elapsed", g_Config.m_ClDownloadExtensionTimeElapsed, &button))
+		g_Config.m_ClDownloadExtensionTimeElapsed ^= 1;
+	MainView.HSplitTop(20.0f, &button, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_ClDownloadExtensionTimeRemaining, "Show time remaiming", g_Config.m_ClDownloadExtensionTimeRemaining, &button))
+		g_Config.m_ClDownloadExtensionTimeRemaining ^= 1;
+	MainView.HSplitTop(20.0f, &button, &MainView);
+	if(DoButton_CheckBox(&g_Config.m_ClDownloadExtensionStatusBar, "Show progress bar", g_Config.m_ClDownloadExtensionStatusBar, &button))
+		g_Config.m_ClDownloadExtensionStatusBar ^= 1;
+	MainView.HSplitTop(20.0f, &button, &MainView);
+	MainView.HSplitTop(30.0f, &text, &MainView);
+	UI()->DoLabel(&text, "Progress bar color:", 25.0f, -1);
+	MainView.HSplitTop(20.0f, 0, &MainView);
+	const char *labels[] = {"Red", "Green", "Blue", "Alpha"};
+	int *color_slider[4] = {&g_Config.m_ClDownloadExtensionStatusBar_r, &g_Config.m_ClDownloadExtensionStatusBar_g, &g_Config.m_ClDownloadExtensionStatusBar_b, &g_Config.m_ClDownloadExtensionStatusBar_a};
+	for(int s = 0; s < 4; s++)
+	{
+		CUIRect text;
+		MainView.HSplitTop(19.0f, &button, &MainView);
+		button.VMargin(15.0f, &button);
+		button.VSplitLeft(50.0f, &text, &button);
+		button.VSplitRight(5.0f, &button, 0);
+		button.HSplitTop(4.0f, 0, &button);
+		
+		float k = (*color_slider[s]) / 255.0f;
+		k = DoScrollbarH(color_slider[s], &button, k);
+		*color_slider[s] = (int)(k*255.0f);
+		UI()->DoLabel(&text, labels[s], 15.0f, -1);
+	}
+	MainView.HSplitTop(30.0f, &button, &MainView);
+	button.HSplitBottom(20.0f, 0, &button);
+	RenderTools()->DrawUIRect(&button, vec4(g_Config.m_ClDownloadExtensionStatusBar_r/255.0, g_Config.m_ClDownloadExtensionStatusBar_g/255.0, g_Config.m_ClDownloadExtensionStatusBar_b/255.0, g_Config.m_ClDownloadExtensionStatusBar_a/255.0), 0, 5.0f);
+
+	// Defaults
+	CUIRect ResetButton;
+	MainView.HSplitTop(40.0f, 0, &MainView);
+	MainView.HSplitTop(40.0f, &ResetButton, &MainView);
+	//MainView.VSplitRight(40.0f, &ResetButton, &MainView);
+	static int DefaultButton = 0;
+	
+	if (DoButton_Menu((void*)&DefaultButton, "Reset to defaults", 0, &ResetButton))
+	{
+		g_Config.m_ClDownloadExtensionStatusPercent = 1;
+		g_Config.m_ClDownloadExtensionSize = 1;
+		g_Config.m_ClDownloadExtensionSpeed = 1;
+		g_Config.m_ClDownloadExtensionTimeElapsed = 1;
+		g_Config.m_ClDownloadExtensionTimeRemaining = 1;
+		g_Config.m_ClDownloadExtensionStatusBar = 1;
+		g_Config.m_ClDownloadExtensionStatusBar_r = 255;
+		g_Config.m_ClDownloadExtensionStatusBar_g = 255;
+		g_Config.m_ClDownloadExtensionStatusBar_b = 255;
+		g_Config.m_ClDownloadExtensionStatusBar_a = 191;
+	}
+	
+}
+
+
+void CMenus::RenderSettingsRace(CUIRect MainView)
+{
+	CUIRect Button;
+	CUIRect LeftView, RightView;
+
+	MainView.VSplitMid(&LeftView, &RightView);
+	
+	// Left
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	UI()->DoLabel(&Button, Localize("Race specific settings"), 14.0f, -1);
+	
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_ClAutoRecord, Localize("Auto record"), g_Config.m_ClAutoRecord, &Button))
+		g_Config.m_ClAutoRecord ^= 1;
+		
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_ClShowOthers, Localize("Show other players"), g_Config.m_ClShowOthers, &Button))
+		g_Config.m_ClShowOthers ^= 1;
+		
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_ClShowCheckpointDiff, Localize("Show checkpoint difference"), g_Config.m_ClShowCheckpointDiff, &Button))
+		g_Config.m_ClShowCheckpointDiff ^= 1;
+		
+	LeftView.HSplitTop(20.0f, &Button, &LeftView);
+	if(DoButton_CheckBox(&g_Config.m_ClShowRecords, Localize("Show records"), g_Config.m_ClShowRecords, &Button))
+		g_Config.m_ClShowRecords ^= 1;
+		
+	if(g_Config.m_ClShowRecords)
+	{
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		Button.VSplitLeft(15.0f, 0, &Button);
+		if(DoButton_CheckBox(&g_Config.m_ClShowServerRecord, Localize("Show best time on server"), g_Config.m_ClShowServerRecord, &Button))
+			g_Config.m_ClShowServerRecord ^= 1;
+			
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		Button.VSplitLeft(15.0f, 0, &Button);
+		if(DoButton_CheckBox(&g_Config.m_ClShowLocalRecord, Localize("Show personal best time"), g_Config.m_ClShowLocalRecord, &Button))
+			g_Config.m_ClShowLocalRecord ^= 1;
+	}
+	else
+		LeftView.HSplitTop(40.0f, &Button, &LeftView);
+	
+	// Right
+	RightView.HSplitTop(20.0f, &Button, &RightView);
+	UI()->DoLabel(&Button, Localize("Global settings"), 14.0f, -1);
+	
+	RightView.HSplitTop(20.0f, &Button, &RightView);
+	if(DoButton_CheckBox(&g_Config.m_ClRenderSpeedmeter, Localize("Show speedmeter"), g_Config.m_ClRenderSpeedmeter, &Button))
+		g_Config.m_ClRenderSpeedmeter ^= 1;
+	
+	if(g_Config.m_ClRenderSpeedmeter)
+	{
+		RightView.HSplitTop(20.0f, &Button, &RightView);
+		Button.VSplitLeft(15.0f, 0, &Button);
+		if(DoButton_CheckBox(&g_Config.m_ClSpeedmeterAccel, Localize("Show acceleration"), g_Config.m_ClSpeedmeterAccel, &Button))
+			g_Config.m_ClSpeedmeterAccel ^= 1;
+	}
+	else
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+}
+
 class CLanguage
 {
 public:
@@ -730,7 +871,9 @@ void CMenus::RenderSettings(CUIRect MainView)
 		Localize("Player"),
 		Localize("Controls"),
 		Localize("Graphics"),
-		Localize("Sound")};
+		Localize("Sound"),
+		Localize("Dl.Ext"),
+		Localize("Race")};
 
 	int NumTabs = (int)(sizeof(aTabs)/sizeof(*aTabs));
 
@@ -754,6 +897,10 @@ void CMenus::RenderSettings(CUIRect MainView)
 		RenderSettingsGraphics(MainView);
 	else if(s_SettingsPage == 4)
 		RenderSettingsSound(MainView);
+	else if(s_SettingsPage == 5)
+		RenderSettingsDownloadExtension(MainView);
+	else if(s_SettingsPage == 6)
+		RenderSettingsRace(MainView);
 
 	if(m_NeedRestart)
 	{

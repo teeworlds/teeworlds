@@ -79,7 +79,7 @@ enum
 	//DDrace - Doors
 	ENTITY_DOOR=49,
 	ENTITY_TRIGGER,
-	ENTITY_CONNECTOR_D=52,
+	ENTITY_CONNECTOR_D=52,//TODO: in ddrace stable used this one no need others rename ENTITY_CONNECTOR
 	ENTITY_CONNECTOR_DR,
 	ENTITY_CONNECTOR_R,
 	ENTITY_CONNECTOR_RU,
@@ -277,7 +277,7 @@ struct CMapItemEnvelope
 	int m_Channels;
 	int m_StartPoint;
 	int m_NumPoints;
-	char m_aName[32];
+	int m_aName[8];
 } ;
 
 #endif

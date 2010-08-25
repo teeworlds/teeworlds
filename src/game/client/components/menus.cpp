@@ -8,6 +8,8 @@
 #include "menus.h"
 #include "skins.h"
 
+#include <string>
+#include <string.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/serverbrowser.h>
@@ -95,7 +97,21 @@ CMenus::CMenus()
 	
 	m_LastInput = time_get();
 	
+	m_Download.m_ElapsedTick = 50;
+	m_Download.m_ElapsedSec = 0;
+	m_Download.m_Speed = 0;
+	m_Download.m_TimeNeeded = 0;
+	m_Download.m_TimeRemaining = 0;
+	
 	str_copy(m_aCurrentDemoFolder, "demos", sizeof(m_aCurrentDemoFolder));
+}
+
+void CMenus::ResetDownloadVars() {
+	m_Download.m_ElapsedTick = 50;
+	m_Download.m_ElapsedSec = 0;
+	m_Download.m_Speed = 0;
+	m_Download.m_TimeNeeded = 0;
+	m_Download.m_TimeRemaining = 0;
 }
 
 vec4 CMenus::ButtonColorMul(const void *pID)
@@ -568,8 +584,17 @@ int CMenus::RenderMenubar(CUIRect r)
 		static int s_CallVoteButton=0;
 		if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, CUI::CORNER_T))
 			NewPage = PAGE_CALLVOTE;
-			
-		Box.VSplitLeft(30.0f, 0, &Box);
+		
+		if(Client()->RconAuthed()) {
+			Box.VSplitLeft(4.0f, 0, &Box);
+			Box.VSplitLeft(100.0f, &Button, &Box);
+			static int s_RCONButton=0;
+			if(DoButton_MenuTab(&s_RCONButton, Localize("RCON"), m_ActivePage==PAGE_RCON, &Button, CUI::CORNER_T))
+				NewPage = PAGE_RCON;
+				
+			Box.VSplitLeft(30.0f, 0, &Box);
+		}
+
 	}
 		
 	/*
@@ -788,6 +813,9 @@ int CMenus::Render()
 				RenderServerControl(MainView);
 			else if(m_GamePage == PAGE_SETTINGS)
 				RenderSettings(MainView);
+			else if(m_GamePage == PAGE_RCON)
+				RenderRCON(MainView);
+			
 		}
 		else if(g_Config.m_UiPage == PAGE_NEWS)
 			RenderNews(MainView);
@@ -801,18 +829,23 @@ int CMenus::Render()
 			RenderServerbrowser(MainView);
 		else if(g_Config.m_UiPage == PAGE_SETTINGS)
 			RenderSettings(MainView);
+		ResetDownloadVars();
 	}
 	else
 	{
 		// make sure that other windows doesn't do anything funnay!
 		//UI()->SetHotItem(0);
 		//UI()->SetActiveItem(0);
-		char aBuf[128];
+		char aBuf[512];
+		char aBuf2[256];
+		char aBuf3[128];
+		std::string BufString;
 		const char *pTitle = "";
 		const char *pExtraText = "";
 		const char *pButtonText = "";
+		const char *pFooterText = "";
 		int ExtraAlign = 0;
-		
+		bool FooterTextUse = false;
 		if(m_Popup == POPUP_MESSAGE)
 		{
 			pTitle = m_aMessageTopic;
@@ -826,9 +859,124 @@ int CMenus::Render()
 			pButtonText = Localize("Abort");
 			if(Client()->MapDownloadTotalsize() > 0)
 			{
+				/*
 				pTitle = Localize("Downloading map");
 				str_format(aBuf, sizeof(aBuf), "%d/%d KiB", Client()->MapDownloadAmount()/1024, Client()->MapDownloadTotalsize()/1024);
 				pExtraText = aBuf;
+				*/
+				// Ticks
+				if(m_Download.m_ElapsedTick <= 0)
+				{
+					m_Download.m_ElapsedSec++;	
+					m_Download.m_ElapsedTick = 50;
+					// Calc Speed
+					m_Download.m_Speed = Client()->MapDownloadAmount()/1024 - m_Download.m_LastSize;
+					/* download.speed = (float)client_mapdownload_amount()/1024/download.timeneeded; */ // OLD CALC SYS
+
+					m_Download.m_LastSize = Client()->MapDownloadAmount()/1024;
+				}
+				else if(m_Download.m_ElapsedTick > 0)
+					m_Download.m_ElapsedTick--;
+				
+				// Time elapsed
+				m_Download.m_TimeNeeded = (float)m_Download.m_ElapsedSec + (50-m_Download.m_ElapsedTick)/50.0;
+
+				// Calc Time remaining
+				if(m_Download.m_Speed != 0.0)
+					m_Download.m_TimeRemaining = ((float)Client()->MapDownloadTotalsize()/1024-Client()->MapDownloadAmount()/1024)/m_Download.m_Speed;
+				else
+					m_Download.m_TimeRemaining = 0;
+
+				// Check for negativ values, set them to 0
+				if(m_Download.m_Speed < 0.0)
+					m_Download.m_Speed = 0;
+				if(m_Download.m_TimeNeeded < 0.0)
+					m_Download.m_TimeNeeded = 0;
+				if(m_Download.m_TimeRemaining < 0.0)
+					m_Download.m_TimeRemaining = 0;
+
+				// Set the texts
+				str_format(aBuf2, sizeof(aBuf2),"Downloading map '%s'", Client()->MapDownloadName());
+				char aBufForParam[50];
+				char aBufForNum[20];
+				const int end = 32;
+				if(g_Config.m_ClDownloadExtensionStatusPercent)
+				{
+					str_format(aBufForParam, sizeof(aBufForParam), "Status....................");
+					str_format(aBufForNum, sizeof(aBufForNum), ": %3.2f%%\n", ((float)Client()->MapDownloadAmount()/1024.0*100.0)/((float)Client()->MapDownloadTotalsize()/1024.0));
+					int lenOfParam = strlen(aBufForNum);
+					for(int i = end, j = lenOfParam; j >= 0; --j, --i) {
+						aBufForParam[i] = aBufForNum[j];
+					}
+					BufString += aBufForParam;
+				}
+				if(g_Config.m_ClDownloadExtensionSize)
+				{
+					str_format(aBufForParam, sizeof(aBufForParam), "Size......................");
+					str_format(aBufForNum, sizeof(aBufForNum), ": %d/%d KiB\n", Client()->MapDownloadAmount()/1024, Client()->MapDownloadTotalsize()/1024);
+					int lenOfParam = strlen(aBufForNum);
+					for(int i = end, j = lenOfParam; j >= 0; --j, --i) {
+						aBufForParam[i] = aBufForNum[j];
+					}
+					BufString += aBufForParam;
+				}
+				if(g_Config.m_ClDownloadExtensionSpeed)
+				{
+					str_format(aBufForParam, sizeof(aBufForParam), "Download speed............");
+					str_format(aBufForNum, sizeof(aBufForNum), ": %3.1f KiB/s\n", m_Download.m_Speed);
+					int lenOfParam = strlen(aBufForNum);
+					for(int i = end, j = lenOfParam; j >= 0; --j, --i) {
+						aBufForParam[i] = aBufForNum[j];
+					}
+					BufString += aBufForParam;
+				}
+				if(g_Config.m_ClDownloadExtensionTimeElapsed)
+				{
+					str_format(aBufForParam, sizeof(aBufForParam), "Time elapsed..............");
+					str_format(aBufForNum, sizeof(aBufForNum), ": %3.1f sec\n", m_Download.m_TimeNeeded);
+					int lenOfParam = strlen(aBufForNum);
+					for(int i = end, j = lenOfParam; j >= 0; --j, --i) {
+						aBufForParam[i] = aBufForNum[j];
+					}
+					BufString += aBufForParam;
+				}
+				if(g_Config.m_ClDownloadExtensionTimeRemaining)
+				{
+					str_format(aBufForParam, sizeof(aBufForParam), "Time remaining............");
+					str_format(aBufForNum, sizeof(aBufForNum), ": %3.1f sec", m_Download.m_TimeRemaining);
+					int lenOfParam = strlen(aBufForNum);
+					for(int i = end, j = lenOfParam + 1; j >= 0; --j, --i) {
+						aBufForParam[i] = aBufForNum[j];
+					}
+					BufString += aBufForParam;
+				}
+
+				pTitle = aBuf2;
+				pExtraText = BufString.c_str();
+				ExtraAlign = 0;
+				// START - Render Status Bar
+				if(g_Config.m_ClDownloadExtensionStatusBar)
+				{
+					CUIRect Screen = *UI()->Screen();
+					
+					Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
+
+					float w = 700;
+					float h = 200;
+					float x = Screen.w/2-w/2;
+					float y = Screen.h/2-h/2;
+
+					Graphics()->TextureSet(-1);
+					Graphics()->QuadsBegin();
+					Graphics()->SetColor(g_Config.m_ClDownloadExtensionStatusBar_r/255.0f, g_Config.m_ClDownloadExtensionStatusBar_g/255.0f, g_Config.m_ClDownloadExtensionStatusBar_b/255.0f, g_Config.m_ClDownloadExtensionStatusBar_a/255.0f);
+					RenderTools()->DrawRoundRect(x+40, y+h-75+20, (w-80)*(Client()->MapDownloadAmount()/1024*100)/(Client()->MapDownloadTotalsize()/1024)/100, 25, 5.0f);
+					Graphics()->QuadsEnd();
+				}
+				// END - Render Staus Bar
+
+				// Mod By KillaBilla
+				//footer_text = "DownloadExtension Mod\nVersion: 1.3\nMod by KillaBilla";
+				//footer_text_use = true;
 			}
 		}
 		else if(m_Popup == POPUP_DISCONNECTED)
@@ -864,7 +1012,7 @@ int CMenus::Render()
 			ExtraAlign = -1;
 		}
 		
-		CUIRect Box, Part;
+		CUIRect Box, Part, Text;
 		Box = Screen;
 		Box.VMargin(150.0f, &Box);
 		Box.HMargin(150.0f, &Box);
@@ -975,6 +1123,7 @@ int CMenus::Render()
 				m_Popup = POPUP_NONE;
 			}
 		}
+		
 	}
 	
 	return 0;

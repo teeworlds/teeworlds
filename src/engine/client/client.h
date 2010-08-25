@@ -251,6 +251,7 @@ public:
 
 	virtual int MapDownloadAmount() { return m_MapdownloadAmount; }
 	virtual int MapDownloadTotalsize() { return m_MapdownloadTotalsize; }
+	virtual const char* MapDownloadName() { return m_aMapdownloadName; }
 
 	void PumpNetwork();
 
@@ -281,6 +282,11 @@ public:
 	static void Con_Record(IConsole::IResult *pResult, void *pUserData);
 	static void Con_StopRecord(IConsole::IResult *pResult, void *pUserData);
 
+	// DDRace
+	virtual const char* GetCurrentMap();
+	virtual const char* RaceRecordStart(const char *pFilename);
+	virtual void RaceRecordStop();
+	
 	void RegisterCommands();
 
 	const char *DemoPlayer_Play(const char *pFilename);

@@ -1,3 +1,5 @@
+#include <string.h>
+#include <stdio.h>
 
 #include <engine/graphics.h>
 #include <engine/textrender.h>
@@ -11,6 +13,7 @@
 
 #include <game/client/components/scoreboard.h>
 #include <game/client/components/sounds.h>
+#include <game/client/components/camera.h>
 #include <game/localization.h>
 
 #include "chat.h"
@@ -41,11 +44,13 @@ void CChat::OnStateChange(int NewState, int OldState)
 		for(int i = 0; i < MAX_LINES; i++)
 			m_aLines[i].m_Time = 0;
 		m_CurrentLine = 0;
+		m_ChatMoving = false;
 	}
 }
 
 void CChat::ConSay(IConsole::IResult *pResult, void *pUserData)
 {
+	
 	((CChat*)pUserData)->Say(0, pResult->GetString(0));
 }
 
@@ -69,12 +74,22 @@ void CChat::ConShowChat(IConsole::IResult *pResult, void *pUserData)
 {
 	((CChat *)pUserData)->m_Show = pResult->GetInteger(0) != 0;
 }
+void CChat::ConUpChat(IConsole::IResult *pResult, void *pUserData) {
+	((CChat*)pUserData)->m_ChatMoving = true;
+	((CChat*)pUserData)->m_RenderLine = (((CChat*)pUserData)->m_RenderLine - 1)%MAX_LINES;
+}
 
+void CChat::ConDownChat(IConsole::IResult *pResult, void *pUserData) {
+	((CChat*)pUserData)->m_ChatMoving = true;
+	((CChat*)pUserData)->m_RenderLine = (((CChat*)pUserData)->m_RenderLine + 1)%MAX_LINES;
+}
 void CChat::OnConsoleInit()
 {
 	Console()->Register("say", "r", CFGFLAG_CLIENT, ConSay, this, "Say in chat");
 	Console()->Register("say_team", "r", CFGFLAG_CLIENT, ConSayTeam, this, "Say in team chat");
 	Console()->Register("chat", "s", CFGFLAG_CLIENT, ConChat, this, "Enable chat with all/team mode");
+	Console()->Register("chat_up", "", CFGFLAG_CLIENT, ConUpChat, this, "Show early message");
+	Console()->Register("chat_down", "", CFGFLAG_CLIENT, ConDownChat, this, "Show last message");
 	Console()->Register("+show_chat", "", CFGFLAG_CLIENT, ConShowChat, this, "Show chat");
 }
 
@@ -144,8 +159,15 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 		m_aLines[m_CurrentLine].m_NameColor = -2;
 
 		if(ClientId == -1) // server message
-		{
-			str_copy(m_aLines[m_CurrentLine].m_aName, "*** ", sizeof(m_aLines[m_CurrentLine].m_aName));
+		{		
+			// Arrows		
+			if(g_Config.m_ClArrows && (strstr(pLine, " entered and joined the ") 
+					|| strstr(pLine, " has left the game") || strstr(pLine, " joined the ")))
+			{
+				str_copy(m_aLines[m_CurrentLine].m_aName, "    ", sizeof(m_aLines[m_CurrentLine].m_aName));
+			}
+			else
+				str_copy(m_aLines[m_CurrentLine].m_aName, "*** ", sizeof(m_aLines[m_CurrentLine].m_aName));
 			str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "%s", pLine);
 		}
 		else
@@ -175,6 +197,10 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0, vec2(0,0));
 	else
 		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0, vec2(0,0));
+	if (!m_ChatMoving) {
+		m_RenderLine = m_CurrentLine;
+	}
+	m_ChatMoving = false;
 }
 
 void CChat::OnRender()
@@ -211,12 +237,15 @@ void CChat::OnRender()
 	float HeightLimit = m_pClient->m_pScoreboard->Active() ? 220.0f : m_Show ? 50.0f : 200.0f;
 	for(int i = 0; i < MAX_LINES; i++)
 	{
-		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
-		if(Now > m_aLines[r].m_Time+15*time_freq() && !m_Show)
-			break;
+		int r = ((m_RenderLine-i)+MAX_LINES)%MAX_LINES;
+		if(!m_Show && !m_ChatMoving) {
+			if(Now > m_aLines[r].m_Time+15*time_freq())
+				break;
+		}
+	
 
 		float Begin = x;
-		float FontSize = 6.0f;
+		float FontSize = (float)g_Config.m_ClTextSize * 0.01f * 6.0f; // Text size factor
 		
 		// get the y offset
 		CTextCursor Cursor;
@@ -227,7 +256,6 @@ void CChat::OnRender()
 		y -= Cursor.m_Y + Cursor.m_FontSize;
 
 		// cut off if msgs waste too much space
-		float HeightLimit = m_Show ? 0.0f : 200.0f;
 		if(y < HeightLimit)
 			break;
 		
@@ -236,7 +264,12 @@ void CChat::OnRender()
 		Cursor.m_LineWidth = LineWidth;
 
 		// render name
-		TextRender()->TextColor(0.8f,0.8f,0.8f,1);
+		CGameClient::CClientData currentData = m_pClient->m_aClients[m_aLines[r].m_ClientId];
+			TextRender()->TextColor(
+				(float)(m_PredefinedColors[m_aLines[r].m_ClientId].r)/255.0f,
+				(float)(m_PredefinedColors[m_aLines[r].m_ClientId].g)/255.0f,
+				(float)(m_PredefinedColors[m_aLines[r].m_ClientId].b)/255.0f,1);
+		//TextRender()->TextColor(0.8f,0.8f,0.8f,1);//TODO: add colors at this strigng;
 		if(m_aLines[r].m_ClientId == -1)
 			TextRender()->TextColor(1,1,0.5f,1); // system
 		else if(m_aLines[r].m_Team)
@@ -257,8 +290,116 @@ void CChat::OnRender()
 			TextRender()->TextColor(1,1,0.5f,1); // system
 		else if(m_aLines[r].m_Team)
 			TextRender()->TextColor(0.65f,1,0.65f,1); // team message
+			
+		const int txtsize = 12.0f*g_Config.m_ClTextSize/100;
 
-		TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
+		// Arrows
+		if(g_Config.m_ClArrows && m_aLines[r].m_ClientId == -1)
+		{		
+			if(strstr(m_aLines[r].m_aText, " entered and joined the ")) // Asrrows for entering the game
+			{			
+				if(strstr(m_aLines[r].m_aText, "blue team"))
+					TextRender()->TextColor(0.7f,0.7f,1.0f,1); // blue
+					
+				else if(strstr(m_aLines[r].m_aText, "red team"))
+					TextRender()->TextColor(1.0f,0.5f,0.5f,1); // red
+					
+				else if(strstr(m_aLines[r].m_aText, "spectators"))
+					TextRender()->TextColor(0.80f,0.43f,0.80f, 1); // purple
+					
+				else if(strstr(m_aLines[r].m_aText, "the game"))
+					TextRender()->TextColor(0.8f,0.8f,0.4f,1);
+				
+				
+				Graphics()->TextureSet(g_pData->m_aImages[IMAGE_ARROWS].m_Id);
+				Graphics()->QuadsBegin();
+				
+				RenderTools()->SelectSprite(SPRITE_ARROW_GREEN);
+				
+				IGraphics::CQuadItem QuadItem(x+1, y-2+txtsize/2, 10, 10);
+				Graphics()->QuadsDraw(&QuadItem, 1);
+
+				Graphics()->QuadsEnd();
+				
+				char str[256];
+				strcpy(str, m_aLines[r].m_aText);
+				strcpy(strstr(str , " entered and joined the "), " ");
+				TextRender()->TextEx(&Cursor, str, -1);
+			}
+			else if(strstr(m_aLines[r].m_aText, " has left the game")) // Dunedune arrows for quitting the game
+			{
+				Graphics()->TextureSet(g_pData->m_aImages[IMAGE_ARROWS].m_Id);
+				TextRender()->TextColor(1.0f,0.57f,0.18f,1);
+				
+				Graphics()->QuadsBegin();
+				RenderTools()->SelectSprite(SPRITE_ARROW_RED);
+				
+				IGraphics::CQuadItem QuadItem(x+1, y-2+txtsize/2, 10, 10);
+				Graphics()->QuadsDraw(&QuadItem, 1);
+				Graphics()->QuadsEnd();
+				
+				char str[256];
+				strcpy(str, m_aLines[r].m_aText);
+				strcpy(strstr(str , " has left the game"), " ");
+				TextRender()->TextEx(&Cursor, str, -1);
+			}
+			else if(strstr(m_aLines[r].m_aText, " joined the ")) // Dunedune arrows for switching team
+			{
+				int team = -1;
+				if(strstr(m_aLines[r].m_aText, "blue team"))
+				{
+					TextRender()->TextColor(0.7f,0.7f,1.0f,1);
+					team = 1;
+				}
+				else if(strstr(m_aLines[r].m_aText, "red team"))
+				{
+					TextRender()->TextColor(1.0f,0.5f,0.5f, 1);
+					team = 0;
+				}
+				else if(strstr(m_aLines[r].m_aText, "spectators"))
+				{
+					TextRender()->TextColor(0.80f,0.43f,0.80f, 1);
+					team = -1;
+				}
+				else if(strstr(m_aLines[r].m_aText, "the game"))
+				{
+					TextRender()->TextColor(0.8f,0.8f,0.4f,1);
+					team = 2;
+				}
+				
+				Graphics()->TextureSet(g_pData->m_aImages[IMAGE_ARROWS].m_Id);
+				
+				Graphics()->QuadsBegin();
+				
+				if(team == -1)
+					RenderTools()->SelectSprite(SPRITE_ARROW_SPEC);
+				else
+				{
+					if(team == 1)
+						RenderTools()->SelectSprite(SPRITE_ARROW_RIGHT);
+					else if (team == 2)
+						RenderTools()->SelectSprite(SPRITE_ARROW_JOIN);
+					else if(!team)
+						RenderTools()->SelectSprite(SPRITE_ARROW_LEFT);
+					else
+						RenderTools()->SelectSprite(SPRITE_ARROW_SPEC);
+				}
+				
+				IGraphics::CQuadItem QuadItem(x+1, (team == 0 || team == 1) ? y-1+txtsize : y-2+txtsize/2, 10, 10);
+				Graphics()->QuadsDraw(&QuadItem, 1);
+					
+				Graphics()->QuadsEnd();
+				
+				char str[256];
+				strcpy(str, m_aLines[r].m_aText);
+				strcpy(strstr(str , " joined the "), " ");
+				TextRender()->TextEx(&Cursor, str, -1);
+			}
+			else
+				TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
+		}
+		else
+			TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
 	}
 
 	TextRender()->TextColor(1,1,1,1);
@@ -266,9 +407,17 @@ void CChat::OnRender()
 
 void CChat::Say(int Team, const char *pLine)
 {
-	// send chat message
-	CNetMsg_Cl_Say Msg;
-	Msg.m_Team = Team;
-	Msg.m_pMessage = pLine;
-	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+	if(!str_comp_num(pLine, "/follow", 7) ) {
+		int Num;
+		if(sscanf(pLine, "/follow %d", &Num) == 1) {
+			m_pClient->m_pCamera->SetFollow(Num);
+		}
+	} else {
+		// send chat message
+		CNetMsg_Cl_Say Msg;
+		Msg.m_Team = Team;
+		Msg.m_pMessage = pLine;
+		Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+	}
 }
+

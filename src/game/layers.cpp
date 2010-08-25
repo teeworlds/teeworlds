@@ -54,7 +54,7 @@ void CLayers::Init(class IKernel *pKernel)
 					m_pSpeedupLayer = pTilemap;
 				if(pTilemap->m_Flags&8)
 					m_pFrontLayer = pTilemap;
-			}			
+			}
 		}
 	}
 }

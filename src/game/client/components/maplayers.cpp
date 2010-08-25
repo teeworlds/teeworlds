@@ -26,11 +26,11 @@ void CMapLayers::OnInit()
 }
 
 
-void CMapLayers::MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup)
+void CMapLayers::MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup, float Zoom)
 {
 	float Points[4];
 	RenderTools()->MapscreenToWorld(CenterX, CenterY, pGroup->m_ParallaxX/100.0f, pGroup->m_ParallaxY/100.0f,
-		pGroup->m_OffsetX, pGroup->m_OffsetY, Graphics()->ScreenAspect(), 1.0f, Points);
+		pGroup->m_OffsetX, pGroup->m_OffsetY, Graphics()->ScreenAspect(), Zoom, Points);
 	Graphics()->MapScreen(Points[0], Points[1], Points[2], Points[3]);
 }
 
@@ -83,7 +83,7 @@ void CMapLayers::OnRender()
 		{
 			// set clipping
 			float Points[4];
-			MapScreenToGroup(Center.x, Center.y, m_pLayers->GameGroup());
+			MapScreenToGroup(Center.x, Center.y, m_pLayers->GameGroup(), m_pClient->m_pCamera->m_Zoom);
 			Graphics()->GetScreen(&Points[0], &Points[1], &Points[2], &Points[3]);
 			float x0 = (pGroup->m_ClipX - Points[0]) / (Points[2]-Points[0]);
 			float y0 = (pGroup->m_ClipY - Points[1]) / (Points[3]-Points[1]);
@@ -94,7 +94,7 @@ void CMapLayers::OnRender()
 				(int)((x1-x0)*Graphics()->ScreenWidth()), (int)((y1-y0)*Graphics()->ScreenHeight()));
 		}		
 		
-		MapScreenToGroup(Center.x, Center.y, pGroup);
+		MapScreenToGroup(Center.x, Center.y, pGroup, m_pClient->m_pCamera->m_Zoom);
 		
 		for(int l = 0; l < pGroup->m_NumLayers; l++)
 		{
@@ -142,7 +142,7 @@ void CMapLayers::OnRender()
 				fclose(f);
 			}			
 			
-			if(Render && !IsGameLayer)
+			if(Render && !IsGameLayer && !g_Config.m_GfxClearFull || (g_Config.m_GfxClearFull && IsGameLayer))
 			{
 				//layershot_begin();
 				
@@ -150,7 +150,12 @@ void CMapLayers::OnRender()
 				{
 					CMapItemLayerTilemap *pTMap = (CMapItemLayerTilemap *)pLayer;
 					if(pTMap->m_Image == -1)
+					{
+						if(!g_Config.m_GfxClearFull)
 						Graphics()->TextureSet(-1);
+					else
+							Graphics()->TextureSet(m_pClient->m_pMapimages->GetEntities());
+					}
 					else
 						Graphics()->TextureSet(m_pClient->m_pMapimages->Get(pTMap->m_Image));
 						
@@ -189,4 +194,3 @@ void CMapLayers::OnRender()
 	// reset the screen like it was before
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
 }
-

@@ -27,15 +27,20 @@ void CNamePlates::RenderNameplate(
 			a = clamp(1-powf(distance(m_pClient->m_pControls->m_TargetPos, Position)/200.0f,16.0f), 0.0f, 1.0f);
 			
 		const char *pName = m_pClient->m_aClients[pPlayerInfo->m_ClientId].m_aName;
-		float tw = TextRender()->TextWidth(0, 28.0f, pName, -1);
-		TextRender()->TextColor(1,1,1,a);
-		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-60, 28.0f, pName, -1);
+		float FontSize = 28.0f;
+		float tw = TextRender()->TextWidth(0, FontSize, pName, -1);
+		CGameClient::CClientData currentData = m_pClient->m_aClients[pPlayerInfo->m_ClientId];
+			TextRender()->TextColor(
+				(float)(m_PredefinedColors[pPlayerInfo->m_ClientId].r)/255.0f,
+				(float)(m_PredefinedColors[pPlayerInfo->m_ClientId].g)/255.0f,
+				(float)(m_PredefinedColors[pPlayerInfo->m_ClientId].b)/255.0f,a);
+		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-60, FontSize, pName, -1);
 		
 		if(g_Config.m_Debug) // render client id when in debug aswell
 		{
 			char aBuf[128];
 			str_format(aBuf, sizeof(aBuf),"%d", pPlayerInfo->m_ClientId);
-			TextRender()->Text(0, Position.x, Position.y-90, 28.0f, aBuf, -1);
+			TextRender()->Text(0, Position.x, Position.y-90, FontSize, aBuf, -1);
 		}
 
 		TextRender()->TextColor(1,1,1,1);
