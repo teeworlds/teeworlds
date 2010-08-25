@@ -9,19 +9,19 @@
 #include "controls.h"
 
 const float ZoomStep = 0.75f;
-void CCamera::ConZoomPlus(IConsole::IResult *pResult, void *pUserData) {
+void CCamera::ConZoomPlus(IConsole::IResult *pResult, void *pUserData, int ClientID) {
 	if(g_Config.m_ClRaceCheats == 1 || ((CCamera *)pUserData)->m_pClient->m_IsRace)
 		((CCamera *)pUserData)->m_Zoom *= 1/ZoomStep;
 }
-void CCamera::ConZoomMinus(IConsole::IResult *pResult, void *pUserData) {
+void CCamera::ConZoomMinus(IConsole::IResult *pResult, void *pUserData, int ClientID) {
 	if(g_Config.m_ClRaceCheats == 1 || ((CCamera *)pUserData)->m_pClient->m_IsRace)
 		((CCamera *)pUserData)->m_Zoom *= ZoomStep;
 }
-void CCamera::ConZoomReset(IConsole::IResult *pResult, void *pUserData) {
+void CCamera::ConZoomReset(IConsole::IResult *pResult, void *pUserData, int ClientID) {
 	if(g_Config.m_ClRaceCheats == 1 || ((CCamera *)pUserData)->m_pClient->m_IsRace)
 		((CCamera *)pUserData)->m_Zoom = 1.0f;
 }
-void CCamera::ConCameraFree(IConsole::IResult *pResult, void *pUserData) {
+void CCamera::ConCameraFree(IConsole::IResult *pResult, void *pUserData, int ClientID) {
 	if(!((CCamera *)pUserData)->m_pClient->m_Snap.m_Spectate && (g_Config.m_ClRaceCheats == 1 || ((CCamera *)pUserData)->m_pClient->m_IsRace))
 		((CCamera *)pUserData)->m_Free = ((CCamera *)pUserData)->m_Free ? false : true;
 }
@@ -77,10 +77,10 @@ void CCamera::OnRender()
 
 void CCamera::OnConsoleInit()
 {
-	Console()->Register("zoom+", "", CFGFLAG_CLIENT, ConZoomPlus, this, "Zoom increse");
-	Console()->Register("zoom-", "", CFGFLAG_CLIENT, ConZoomMinus, this, "Zoom decrese");
-	Console()->Register("zoom", "", CFGFLAG_CLIENT, ConZoomReset, this, "Zoom reset");
-	Console()->Register("camera_free", "", CFGFLAG_CLIENT, ConCameraFree, this, "Free camera On/Off");
+	Console()->Register("zoom+", "", CFGFLAG_CLIENT, ConZoomPlus, this, "Zoom increse", 0);
+	Console()->Register("zoom-", "", CFGFLAG_CLIENT, ConZoomMinus, this, "Zoom decrese", 0);
+	Console()->Register("zoom", "", CFGFLAG_CLIENT, ConZoomReset, this, "Zoom reset", 0);
+	Console()->Register("camera_free", "", CFGFLAG_CLIENT, ConCameraFree, this, "Free camera On/Off", 0);
 }
 
 CGameClient::CSnapState::CCharacterInfo* CCamera::getCharacter(int Id) {

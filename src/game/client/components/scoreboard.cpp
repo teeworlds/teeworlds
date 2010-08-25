@@ -17,7 +17,7 @@ CScoreboard::CScoreboard()
 	OnReset();
 }
 
-void CScoreboard::ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData)
+void CScoreboard::ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	((CScoreboard *)pUserData)->m_Active = pResult->GetInteger(0) != 0;
 }
@@ -29,7 +29,7 @@ void CScoreboard::OnReset()
 
 void CScoreboard::OnConsoleInit()
 {
-	Console()->Register("+scoreboard", "", CFGFLAG_CLIENT, ConKeyScoreboard, this, "Show scoreboard");
+	Console()->Register("+scoreboard", "", CFGFLAG_CLIENT, ConKeyScoreboard, this, "Show scoreboard", 0);
 }
 
 void CScoreboard::RenderGoals(float x, float y, float w)

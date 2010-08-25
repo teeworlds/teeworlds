@@ -103,7 +103,7 @@ static int gs_LoadTotal;
 
 
 
-static void ConServerDummy(IConsole::IResult *pResult, void *pUserData)
+static void ConServerDummy(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	dbg_msg("client", "this command is not available on the client");
 }
@@ -192,33 +192,33 @@ void CGameClient::OnConsoleInit()
 	m_Input.Add(m_pBinds);
 	
 	// add the some console commands
-	Console()->Register("team", "i", CFGFLAG_CLIENT, ConTeam, this, "Switch team");
-	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself");
+	Console()->Register("team", "i", CFGFLAG_CLIENT, ConTeam, this, "Switch team", 0);
+	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself", 0);
 	
 	// register server dummy commands for tab completion
 
-	Console()->Register("tune", "si", CFGFLAG_SERVER, ConServerDummy, 0, "Tune variable to value");
-	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConServerDummy, 0, "Reset tuning");
-	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConServerDummy, 0, "Dump tuning");
-	Console()->Register("change_map", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Change map");
-	Console()->Register("restart", "?i", CFGFLAG_SERVER, ConServerDummy, 0, "Restart in x seconds");
-	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Broadcast message");
+	Console()->Register("tune", "si", CFGFLAG_SERVER, ConServerDummy, 0, "Tune variable to value", 0);
+	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConServerDummy, 0, "Reset tuning", 0);
+	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConServerDummy, 0, "Dump tuning", 0);
+	Console()->Register("change_map", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Change map", 0);
+	Console()->Register("restart", "?i", CFGFLAG_SERVER, ConServerDummy, 0, "Restart in x seconds", 0);
+	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Broadcast message", 0);
 	//MACRO_REGISTER_COMMAND("say", "r", CFGFLAG_SERVER, con_serverdummy, 0);
-	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConServerDummy, 0, "Set team of player to team");
-	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Add a voting option");
+	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConServerDummy, 0, "Set team of player to team", 0);
+	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Add a voting option", 0);
 	//MACRO_REGISTER_COMMAND("vote", "", CFGFLAG_SERVER, con_serverdummy, 0);
-	Console()->Register("map_hack", "", CFGFLAG_CLIENT, ConMapHack, 0, "Tune variable to value");
+	Console()->Register("map_hack", "", CFGFLAG_CLIENT, ConMapHack, 0, "Tune variable to value", 0);
 
-	Console()->Register("tune", "si", CFGFLAG_SERVER, 0, 0, "Tune variable to value");
-	Console()->Register("tune_reset", "", CFGFLAG_SERVER, 0, 0, "Reset tuning");
-	Console()->Register("tune_dump", "", CFGFLAG_SERVER, 0, 0, "Dump tuning");
-	Console()->Register("change_map", "r", CFGFLAG_SERVER, 0, 0, "Change map");
-	Console()->Register("restart", "?i", CFGFLAG_SERVER, 0, 0, "Restart in x seconds");
-	Console()->Register("broadcast", "r", CFGFLAG_SERVER, 0, 0, "Broadcast message");
-	Console()->Register("say", "r", CFGFLAG_SERVER, 0, 0, "Say in chat");
-	Console()->Register("set_team", "ii", CFGFLAG_SERVER, 0, 0, "Set team of player to team");
-	Console()->Register("addvote", "r", CFGFLAG_SERVER, 0, 0, "Add a voting option");
-	Console()->Register("vote", "r", CFGFLAG_SERVER, 0, 0, "Force a vote to yes/no");
+	Console()->Register("tune", "si", CFGFLAG_SERVER, 0, 0, "Tune variable to value", 0);
+	Console()->Register("tune_reset", "", CFGFLAG_SERVER, 0, 0, "Reset tuning", 0);
+	Console()->Register("tune_dump", "", CFGFLAG_SERVER, 0, 0, "Dump tuning", 0);
+	Console()->Register("change_map", "r", CFGFLAG_SERVER, 0, 0, "Change map", 0);
+	Console()->Register("restart", "?i", CFGFLAG_SERVER, 0, 0, "Restart in x seconds", 0);
+	Console()->Register("broadcast", "r", CFGFLAG_SERVER, 0, 0, "Broadcast message", 0);
+	Console()->Register("say", "r", CFGFLAG_SERVER, 0, 0, "Say in chat", 0);
+	Console()->Register("set_team", "ii", CFGFLAG_SERVER, 0, 0, "Set team of player to team", 0);
+	Console()->Register("addvote", "r", CFGFLAG_SERVER, 0, 0, "Add a voting option", 0);
+	Console()->Register("vote", "r", CFGFLAG_SERVER, 0, 0, "Force a vote to yes/no", 0);
 
 
 
@@ -1097,23 +1097,23 @@ void CGameClient::SendKill(int ClientId)
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);	
 }
 
-void CGameClient::ConTeam(IConsole::IResult *pResult, void *pUserData)
+void CGameClient::ConTeam(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	((CGameClient*)pUserData)->SendSwitchTeam(pResult->GetInteger(0));
 }
 
-void CGameClient::ConKill(IConsole::IResult *pResult, void *pUserData)
+void CGameClient::ConKill(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	((CGameClient*)pUserData)->SendKill(-1);
 }
 
-void CGameClient::ConMapHack(IConsole::IResult *pResult, void *pUserData) {
+void CGameClient::ConMapHack(IConsole::IResult *pResult, void *pUserData, int ClientID) {
 	g_Config.m_GfxClearFull ^= 1;
 }
 
 void CGameClient::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
-	pfnCallback(pResult, pCallbackUserData);
+	pfnCallback(pResult, pCallbackUserData, -1);
 	if(pResult->NumArguments())
 		((CGameClient*)pUserData)->SendInfo(false);
 }

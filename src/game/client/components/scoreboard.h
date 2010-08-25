@@ -8,7 +8,7 @@ class CScoreboard : public CComponent
 	void RenderSpectators(float x, float y, float w);
 	void RenderScoreboard(float x, float y, float w, int Team, const char *pTitle);
 
-	static void ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData);
+	static void ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData, int ClientID);
 	
 	bool m_Active;
 	
