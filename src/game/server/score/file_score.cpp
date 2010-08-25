@@ -39,9 +39,9 @@ CFileScore::~CFileScore()
 std::string SaveFile()
 {
 	std::ostringstream oss;
-	//if(g_Config.m_SvScoreFolder[0])
-	//	oss << g_Config.m_SvScoreFolder << "/" << g_Config.m_SvMap << "_record.dtb";
-	//else
+	if(g_Config.m_SvScoreFolder[0])
+		oss << g_Config.m_SvScoreFolder << "/" << g_Config.m_SvMap << "_record.dtb";
+	else
 		oss << g_Config.m_SvMap << "_record.dtb";
 	return oss.str();
 }
@@ -58,12 +58,12 @@ void CFileScore::SaveScoreThread(void *pUser)
 		for(sorted_array<CPlayerScore>::range r = pSelf->m_Top.all(); !r.empty(); r.pop_front())
 		{
 			f << r.front().m_aName << std::endl << r.front().m_Score << std::endl  << r.front().m_aIP << std::endl;
-			//if(g_Config.m_SvCheckpointSave)
-			//{
+			if(g_Config.m_SvCheckpointSave)
+			{
 				for(int c = 0; c < NUM_TELEPORT; c++)
 					f << r.front().m_aCpTime[c] << " ";
 				f << std::endl;
-			//}
+			}
 			t++;
 			if(t%50 == 0)
 				thread_sleep(1);
@@ -86,8 +86,8 @@ void CFileScore::Init()
 	lock_wait(gs_ScoreLock);
 	
 	// create folder if not exist
-	//if(g_Config.m_SvScoreFolder[0])
-	//	fs_makedir(g_Config.m_SvScoreFolder);
+	if(g_Config.m_SvScoreFolder[0])
+		fs_makedir(g_Config.m_SvScoreFolder);
 	
 	std::fstream f;
 	f.open(SaveFile().c_str(), std::ios::in);
@@ -101,8 +101,8 @@ void CFileScore::Init()
 			std::getline(f, TmpScore);
 			std::getline(f, TmpIP);
 			float aTmpCpTime[NUM_TELEPORT] = {0};
-			//if(g_Config.m_SvCheckpointSave)
-			//{
+			if(g_Config.m_SvCheckpointSave)
+			{
 				std::getline(f, TmpCpLine);
 				char *pTime = strtok((char*)TmpCpLine.c_str(), " ");
 				int i = 0;
@@ -112,7 +112,7 @@ void CFileScore::Init()
 					pTime = strtok(NULL, " ");
 					i++;
 				}
-			//}
+			}
 			m_Top.add(*new CPlayerScore(TmpName.c_str(), atof(TmpScore.c_str()), TmpIP.c_str(), aTmpCpTime));
 		}
 	}
@@ -132,7 +132,7 @@ CFileScore::CPlayerScore *CFileScore::SearchScore(int ID, bool ScoreIP, int *pPo
 	int Pos = 1;
 	for(sorted_array<CPlayerScore>::range r = m_Top.all(); !r.empty(); r.pop_front())
 	{
-		if(!strcmp(r.front().m_aIP, aIP) /*&& g_Config.m_SvScoreIP*/ && ScoreIP)
+		if(!strcmp(r.front().m_aIP, aIP) && g_Config.m_SvScoreIP && ScoreIP)
 		{
 			if(pPosition)
 				*pPosition = Pos;
