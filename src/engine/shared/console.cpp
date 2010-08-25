@@ -234,7 +234,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 					} else {
 						str_format(aBuf, sizeof(aBuf), "You have low level to use command: %s. Your level: %d. Need level: %d", pCommand->m_pName, ClientLevel, pCommand->m_Level);
 					}
-					Print(aBuf);
+					Print(OUTPUT_LEVEL_STANDARD, "Console",aBuf);
 				}
 			}
 		}
