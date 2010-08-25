@@ -89,8 +89,8 @@ int CNetServer::Drop(int ClientID, const char *pReason)
 		m_pfnDelClient(ClientID, pReason, m_UserPtr);
 
 
-	if(m_pfnDelClient)
-		m_pfnDelClient(ClientID, m_UserPtr);
+/*	if(m_pfnDelClient)
+		m_pfnDelClient(ClientID, m_UserPtr);*/
 	m_aSlots[ClientID].m_Connection.Disconnect(pReason);
 	BanAddNoDrop(Addr, g_Config.m_SvReconnectTime);
 	return 0;

@@ -894,7 +894,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					char aBuf[256];
 					str_format(aBuf, sizeof(aBuf), "ClientId=%d Level=%d Rcon='%s'", ClientId, m_aClients[ClientId].m_Authed, pCmd);
 					Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
-					Console()->ExecuteLine(pCmd);
+					Console()->ExecuteLine(pCmd, m_aClients[ClientId].m_Authed, ClientId);
 					//Addr = m_NetServer.ClientAddr(ClientId);
 					if(m_aClients[ClientId].m_Authed > 0)
 					{
@@ -977,7 +977,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 							}
 						}
 					}
-					else if(str_comp(pPw, g_Config.m_SvRconPassword) == 0)
+					/*else if(str_comp(pPw, g_Config.m_SvRconPassword) == 0)
 					{
 						CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
 						Msg.AddInt(1);
@@ -988,7 +988,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 						char aBuf[256];
 						str_format(aBuf, sizeof(aBuf), "ClientId=%d authed", ClientId);
 						Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
-					}
+					}*/
 					else
 					{
 						SendRconLine(ClientId, "Wrong password.");
