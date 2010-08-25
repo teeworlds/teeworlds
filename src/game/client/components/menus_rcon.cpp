@@ -97,7 +97,7 @@ void CMenus::RenderRCON(CUIRect MainView)
 				
 			
 				str_format(buf, sizeof(buf), "rcon kick %d", m_RCONSelectedPlayer);
-				m_pClient->Console()->ExecuteLine(buf);
+				m_pClient->Console()->ExecuteLine(buf, 4, -1);
 			}
 	}
 	static int s_KillButton = 0;
@@ -107,7 +107,7 @@ void CMenus::RenderRCON(CUIRect MainView)
 				
 			
 				str_format(buf, sizeof(buf), "rcon kill_pl  %d", m_RCONSelectedPlayer);
-				m_pClient->Console()->ExecuteLine(buf);
+				m_pClient->Console()->ExecuteLine(buf, 4, -1);
 			}
 	}
 	static int s_MuteButton = 0;
@@ -117,7 +117,7 @@ void CMenus::RenderRCON(CUIRect MainView)
 				
 			
 				str_format(buf, sizeof(buf), "rcon mute %d 100", m_RCONSelectedPlayer);
-				m_pClient->Console()->ExecuteLine(buf);
+				m_pClient->Console()->ExecuteLine(buf, 4, -1);
 			}
 	}
 	static int s_BanButton = 0;
@@ -127,7 +127,7 @@ void CMenus::RenderRCON(CUIRect MainView)
 				
 			
 				str_format(buf, sizeof(buf), "rcon ban %d 300", m_RCONSelectedPlayer);
-				m_pClient->Console()->ExecuteLine(buf);
+				m_pClient->Console()->ExecuteLine(buf, 4, -1);
 			}
 	}
 }

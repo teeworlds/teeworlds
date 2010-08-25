@@ -72,7 +72,7 @@ void CGameConsole::CInstance::ClearBacklog()
 void CGameConsole::CInstance::ExecuteLine(const char *pLine)
 {
 	if(m_Type == 0)
-		m_pGameConsole->m_pConsole->ExecuteLine(pLine);
+		m_pGameConsole->m_pConsole->ExecuteLine(pLine, 4, -1);
 	else
 	{
 		if(m_pGameConsole->Client()->RconAuthed())
@@ -607,32 +607,32 @@ void CGameConsole::Dump(int Type)
 	}
 }
 
-void CGameConsole::ConToggleLocalConsole(IConsole::IResult *pResult, void *pUserData)
+void CGameConsole::ConToggleLocalConsole(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	((CGameConsole *)pUserData)->Toggle(0);
 }
 
-void CGameConsole::ConToggleRemoteConsole(IConsole::IResult *pResult, void *pUserData)
+void CGameConsole::ConToggleRemoteConsole(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	((CGameConsole *)pUserData)->Toggle(1);
 }
 
-void CGameConsole::ConClearLocalConsole(IConsole::IResult *pResult, void *pUserData)
+void CGameConsole::ConClearLocalConsole(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	((CGameConsole *)pUserData)->m_LocalConsole.ClearBacklog();
 }
 
-void CGameConsole::ConClearRemoteConsole(IConsole::IResult *pResult, void *pUserData)
+void CGameConsole::ConClearRemoteConsole(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	((CGameConsole *)pUserData)->m_RemoteConsole.ClearBacklog();
 }
 
-void CGameConsole::ConDumpLocalConsole(IConsole::IResult *pResult, void *pUserData)
+void CGameConsole::ConDumpLocalConsole(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	((CGameConsole *)pUserData)->Dump(0);
 }
 
-void CGameConsole::ConDumpRemoteConsole(IConsole::IResult *pResult, void *pUserData)
+void CGameConsole::ConDumpRemoteConsole(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	((CGameConsole *)pUserData)->Dump(1);
 }
@@ -661,12 +661,12 @@ void CGameConsole::OnConsoleInit()
 	//
 	Console()->RegisterPrintCallback(ClientConsolePrintCallback, this);
 	
-	Console()->Register("toggle_local_console", "", CFGFLAG_CLIENT, ConToggleLocalConsole, this, "Toggle local console");
-	Console()->Register("toggle_remote_console", "", CFGFLAG_CLIENT, ConToggleRemoteConsole, this, "Toggle remote console");
-	Console()->Register("clear_local_console", "", CFGFLAG_CLIENT, ConClearLocalConsole, this, "Clear local console");
-	Console()->Register("clear_remote_console", "", CFGFLAG_CLIENT, ConClearRemoteConsole, this, "Clear remote console");
-	Console()->Register("dump_local_console", "", CFGFLAG_CLIENT, ConDumpLocalConsole, this, "Dump local console");
-	Console()->Register("dump_remote_console", "", CFGFLAG_CLIENT, ConDumpRemoteConsole, this, "Dump remote console");
+	Console()->Register("toggle_local_console", "", CFGFLAG_CLIENT, ConToggleLocalConsole, this, "Toggle local console", 0);
+	Console()->Register("toggle_remote_console", "", CFGFLAG_CLIENT, ConToggleRemoteConsole, this, "Toggle remote console", 0);
+	Console()->Register("clear_local_console", "", CFGFLAG_CLIENT, ConClearLocalConsole, this, "Clear local console", 0);
+	Console()->Register("clear_remote_console", "", CFGFLAG_CLIENT, ConClearRemoteConsole, this, "Clear remote console", 0);
+	Console()->Register("dump_local_console", "", CFGFLAG_CLIENT, ConDumpLocalConsole, this, "Dump local console", 0);
+	Console()->Register("dump_remote_console", "", CFGFLAG_CLIENT, ConDumpRemoteConsole, this, "Dump remote console", 0);
 }
 
 /*

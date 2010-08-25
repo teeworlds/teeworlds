@@ -7,10 +7,10 @@
 class CCamera : public CComponent
 {	
 
-	static void ConZoomPlus(IConsole::IResult *pResult, void *pUserData);
-	static void ConZoomMinus(IConsole::IResult *pResult, void *pUserData);
-	static void ConZoomReset(IConsole::IResult *pResult, void *pUserData);
-	static void ConCameraFree(IConsole::IResult *pResult, void *pUserData);
+	static void ConZoomPlus(IConsole::IResult *pResult, void *pUserData, int ClientID);
+	static void ConZoomMinus(IConsole::IResult *pResult, void *pUserData, int ClientID);
+	static void ConZoomReset(IConsole::IResult *pResult, void *pUserData, int ClientID);
+	static void ConCameraFree(IConsole::IResult *pResult, void *pUserData, int ClientID);
 	
 	CGameClient::CSnapState::CCharacterInfo* getCharacter(int Id);
 	

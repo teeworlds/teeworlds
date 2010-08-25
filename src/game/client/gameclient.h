@@ -72,9 +72,9 @@ class CGameClient : public IGameClient
 
 	int64 m_LastSendInfo;
 
-	static void ConTeam(IConsole::IResult *pResult, void *pUserData);
-	static void ConKill(IConsole::IResult *pResult, void *pUserData);
-	static void ConMapHack(IConsole::IResult *pResult, void *pUserData);
+	static void ConTeam(IConsole::IResult *pResult, void *pUserData, int ClientID);
+	static void ConKill(IConsole::IResult *pResult, void *pUserData, int ClientID);
+	static void ConMapHack(IConsole::IResult *pResult, void *pUserData, int ClientID);
 	
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	

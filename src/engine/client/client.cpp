@@ -1656,7 +1656,7 @@ void CClient::Run()
 	Input()->MouseModeRelative();
 
 	// process pending commands
-	m_pConsole->StoreCommands(false);
+	m_pConsole->StoreCommands(false, -1);
 
 	while (1)
 	{
@@ -1808,31 +1808,31 @@ void CClient::Run()
 }
 
 
-void CClient::Con_Connect(IConsole::IResult *pResult, void *pUserData)
+void CClient::Con_Connect(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CClient *pSelf = (CClient *)pUserData;
 	str_copy(pSelf->m_aCmdConnect, pResult->GetString(0), sizeof(pSelf->m_aCmdConnect));
 }
 
-void CClient::Con_Disconnect(IConsole::IResult *pResult, void *pUserData)
+void CClient::Con_Disconnect(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CClient *pSelf = (CClient *)pUserData;
 	pSelf->Disconnect();
 }
 
-void CClient::Con_Quit(IConsole::IResult *pResult, void *pUserData)
+void CClient::Con_Quit(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CClient *pSelf = (CClient *)pUserData;
 	pSelf->Quit();
 }
 
-void CClient::Con_Minimize(IConsole::IResult *pResult, void *pUserData)
+void CClient::Con_Minimize(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CClient *pSelf = (CClient *)pUserData;
 	pSelf->Graphics()->Minimize();
 }
 
-void CClient::Con_Ping(IConsole::IResult *pResult, void *pUserData)
+void CClient::Con_Ping(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CClient *pSelf = (CClient *)pUserData;
 
@@ -1841,25 +1841,25 @@ void CClient::Con_Ping(IConsole::IResult *pResult, void *pUserData)
 	pSelf->m_PingStartTime = time_get();
 }
 
-void CClient::Con_Screenshot(IConsole::IResult *pResult, void *pUserData)
+void CClient::Con_Screenshot(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CClient *pSelf = (CClient *)pUserData;
 	pSelf->Graphics()->TakeScreenshot();
 }
 
-void CClient::Con_Rcon(IConsole::IResult *pResult, void *pUserData)
+void CClient::Con_Rcon(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CClient *pSelf = (CClient *)pUserData;
 	pSelf->Rcon(pResult->GetString(0));
 }
 
-void CClient::Con_RconAuth(IConsole::IResult *pResult, void *pUserData)
+void CClient::Con_RconAuth(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CClient *pSelf = (CClient *)pUserData;
 	pSelf->RconAuth("", pResult->GetString(0));
 }
 
-void CClient::Con_AddFavorite(IConsole::IResult *pResult, void *pUserData)
+void CClient::Con_AddFavorite(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CClient *pSelf = (CClient *)pUserData;
 	NETADDR Addr;
@@ -1944,7 +1944,7 @@ const char *CClient::DemoPlayer_Play(const char *pFilename)
 	return 0;
 }
 
-void CClient::Con_Play(IConsole::IResult *pResult, void *pUserData)
+void CClient::Con_Play(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CClient *pSelf = (CClient *)pUserData;
 	pSelf->DemoPlayer_Play(pResult->GetString(0));
@@ -1962,13 +1962,13 @@ void CClient::DemoRecorder_Start(const char *pFilename)
 	}
 }
 
-void CClient::Con_Record(IConsole::IResult *pResult, void *pUserData)
+void CClient::Con_Record(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CClient *pSelf = (CClient *)pUserData;
 	pSelf->DemoRecorder_Start(pResult->GetString(0));
 }
 
-void CClient::Con_StopRecord(IConsole::IResult *pResult, void *pUserData)
+void CClient::Con_StopRecord(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CClient *pSelf = (CClient *)pUserData;
 	pSelf->m_DemoRecorder.Stop();
@@ -1978,30 +1978,30 @@ void CClient::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	// register server dummy commands for tab completion
-	m_pConsole->Register("kick", "i", CFGFLAG_SERVER, 0, 0, "Kick player with specified id");
-	m_pConsole->Register("ban", "s?i", CFGFLAG_SERVER, 0, 0, "Ban player with ip/id for x minutes");
-	m_pConsole->Register("unban", "s", CFGFLAG_SERVER, 0, 0, "Unban ip");
-	m_pConsole->Register("bans", "", CFGFLAG_SERVER, 0, 0, "Show banlist");
-	m_pConsole->Register("status", "", CFGFLAG_SERVER, 0, 0, "List players");
-	m_pConsole->Register("shutdown", "", CFGFLAG_SERVER, 0, 0, "Shut down");
-	m_pConsole->Register("record", "s", CFGFLAG_SERVER, 0, 0, "Record to a file");
-	m_pConsole->Register("stoprecord", "", CFGFLAG_SERVER, 0, 0, "Stop recording");
-	m_pConsole->Register("reload", "", CFGFLAG_SERVER, 0, 0, "Reload the map");
+	m_pConsole->Register("kick", "i", CFGFLAG_SERVER, 0, 0, "Kick player with specified id", 0);
+	m_pConsole->Register("ban", "s?i", CFGFLAG_SERVER, 0, 0, "Ban player with ip/id for x minutes", 0);
+	m_pConsole->Register("unban", "s", CFGFLAG_SERVER, 0, 0, "Unban ip", 0);
+	m_pConsole->Register("bans", "", CFGFLAG_SERVER, 0, 0, "Show banlist", 0);
+	m_pConsole->Register("status", "", CFGFLAG_SERVER, 0, 0, "List players", 0);
+	m_pConsole->Register("shutdown", "", CFGFLAG_SERVER, 0, 0, "Shut down", 0);
+	m_pConsole->Register("record", "s", CFGFLAG_SERVER, 0, 0, "Record to a file", 0);
+	m_pConsole->Register("stoprecord", "", CFGFLAG_SERVER, 0, 0, "Stop recording", 0);
+	m_pConsole->Register("reload", "", CFGFLAG_SERVER, 0, 0, "Reload the map", 0);
 
-	m_pConsole->Register("quit", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Quit, this, "Quit Teeworlds");
-	m_pConsole->Register("exit", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Quit, this, "Quit Teeworlds");
-	m_pConsole->Register("minimize", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Minimize, this, "Minimize Teeworlds");
-	m_pConsole->Register("connect", "s", CFGFLAG_CLIENT, Con_Connect, this, "Connect to the specified host/ip");
-	m_pConsole->Register("disconnect", "", CFGFLAG_CLIENT, Con_Disconnect, this, "Disconnect from the server");
-	m_pConsole->Register("ping", "", CFGFLAG_CLIENT, Con_Ping, this, "Ping the current server");
-	m_pConsole->Register("screenshot", "", CFGFLAG_CLIENT, Con_Screenshot, this, "Take a screenshot");
-	m_pConsole->Register("rcon", "r", CFGFLAG_CLIENT, Con_Rcon, this, "Send specified command to rcon");
-	m_pConsole->Register("rcon_auth", "s", CFGFLAG_CLIENT, Con_RconAuth, this, "Authenticate to rcon");
-	m_pConsole->Register("play", "r", CFGFLAG_CLIENT, Con_Play, this, "Play the file specified");
-	m_pConsole->Register("record", "s", CFGFLAG_CLIENT, Con_Record, this, "Record to the file");
-	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording");
+	m_pConsole->Register("quit", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Quit, this, "Quit Teeworlds", 0);
+	m_pConsole->Register("exit", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Quit, this, "Quit Teeworlds", 0);
+	m_pConsole->Register("minimize", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Minimize, this, "Minimize Teeworlds", 0);
+	m_pConsole->Register("connect", "s", CFGFLAG_CLIENT, Con_Connect, this, "Connect to the specified host/ip", 0);
+	m_pConsole->Register("disconnect", "", CFGFLAG_CLIENT, Con_Disconnect, this, "Disconnect from the server", 0);
+	m_pConsole->Register("ping", "", CFGFLAG_CLIENT, Con_Ping, this, "Ping the current server", 0);
+	m_pConsole->Register("screenshot", "", CFGFLAG_CLIENT, Con_Screenshot, this, "Take a screenshot", 0);
+	m_pConsole->Register("rcon", "r", CFGFLAG_CLIENT, Con_Rcon, this, "Send specified command to rcon", 0);
+	m_pConsole->Register("rcon_auth", "s", CFGFLAG_CLIENT, Con_RconAuth, this, "Authenticate to rcon", 0);
+	m_pConsole->Register("play", "r", CFGFLAG_CLIENT, Con_Play, this, "Play the file specified", 0);
+	m_pConsole->Register("record", "s", CFGFLAG_CLIENT, Con_Record, this, "Record to the file", 0);
+	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording", 0);
 
-	m_pConsole->Register("add_favorite", "s", CFGFLAG_CLIENT, Con_AddFavorite, this, "Add a server as a favorite");
+	m_pConsole->Register("add_favorite", "s", CFGFLAG_CLIENT, Con_AddFavorite, this, "Add a server as a favorite", 0);
 }
 
 static CClient m_Client;

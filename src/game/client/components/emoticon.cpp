@@ -14,20 +14,20 @@ CEmoticon::CEmoticon()
 	OnReset();
 }
 
-void CEmoticon::ConKeyEmoticon(IConsole::IResult *pResult, void *pUserData)
+void CEmoticon::ConKeyEmoticon(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	((CEmoticon *)pUserData)->m_Active = pResult->GetInteger(0) != 0;
 }
 
-void CEmoticon::ConEmote(IConsole::IResult *pResult, void *pUserData)
+void CEmoticon::ConEmote(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	((CEmoticon *)pUserData)->Emote(pResult->GetInteger(0));
 }
 
 void CEmoticon::OnConsoleInit()
 {
-	Console()->Register("+emote", "", CFGFLAG_CLIENT, ConKeyEmoticon, this, "Open emote selector");
-	Console()->Register("emote", "i", CFGFLAG_CLIENT, ConEmote, this, "Use emote");
+	Console()->Register("+emote", "", CFGFLAG_CLIENT, ConKeyEmoticon, this, "Open emote selector", 0);
+	Console()->Register("emote", "i", CFGFLAG_CLIENT, ConEmote, this, "Use emote", 0);
 }
 
 void CEmoticon::OnReset()

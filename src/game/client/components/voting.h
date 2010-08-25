@@ -8,8 +8,8 @@ class CVoting : public CComponent
 {
 	CHeap m_Heap;
 
-	static void ConCallvote(IConsole::IResult *pResult, void *pUserData);
-	static void ConVote(IConsole::IResult *pResult, void *pUserData);
+	static void ConCallvote(IConsole::IResult *pResult, void *pUserData, int ClientID);
+	static void ConVote(IConsole::IResult *pResult, void *pUserData, int ClientID);
 	
 	int64 m_Closetime;
 	char m_aDescription[512];

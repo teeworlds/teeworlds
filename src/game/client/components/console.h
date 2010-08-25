@@ -60,12 +60,12 @@ class CGameConsole : public CComponent
 
 	static void PossibleCommandsRenderCallback(const char *pStr, void *pUser);
 	static void ClientConsolePrintCallback(const char *pStr, void *pUserData);
-	static void ConToggleLocalConsole(IConsole::IResult *pResult, void *pUserData);
-	static void ConToggleRemoteConsole(IConsole::IResult *pResult, void *pUserData);
-	static void ConClearLocalConsole(IConsole::IResult *pResult, void *pUserData);
-	static void ConClearRemoteConsole(IConsole::IResult *pResult, void *pUserData);
-	static void ConDumpLocalConsole(IConsole::IResult *pResult, void *pUserData);
-	static void ConDumpRemoteConsole(IConsole::IResult *pResult, void *pUserData);
+	static void ConToggleLocalConsole(IConsole::IResult *pResult, void *pUserData, int ClientID);
+	static void ConToggleRemoteConsole(IConsole::IResult *pResult, void *pUserData, int ClientID);
+	static void ConClearLocalConsole(IConsole::IResult *pResult, void *pUserData, int ClientID);
+	static void ConClearRemoteConsole(IConsole::IResult *pResult, void *pUserData, int ClientID);
+	static void ConDumpLocalConsole(IConsole::IResult *pResult, void *pUserData, int ClientID);
+	static void ConDumpRemoteConsole(IConsole::IResult *pResult, void *pUserData, int ClientID);
 	
 public:
 	CGameConsole();

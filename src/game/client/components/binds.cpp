@@ -11,7 +11,7 @@ bool CBinds::CBindsSpecial::OnInput(IInput::CEvent Event)
 		if(Event.m_Flags&IInput::FLAG_PRESS)
 			Stroke = 1;
 			
-		m_pBinds->GetConsole()->ExecuteLineStroked(Stroke, m_pBinds->m_aaKeyBindings[Event.m_Key]);
+		m_pBinds->GetConsole()->ExecuteLineStroked(Stroke, m_pBinds->m_aaKeyBindings[Event.m_Key], 4, -1);
 		return true;
 	}
 	
@@ -48,7 +48,7 @@ bool CBinds::OnInput(IInput::CEvent e)
 	int Stroke = 0;
 	if(e.m_Flags&IInput::FLAG_PRESS)
 		Stroke = 1;
-	Console()->ExecuteLineStroked(Stroke, m_aaKeyBindings[e.m_Key]);
+	Console()->ExecuteLineStroked(Stroke, m_aaKeyBindings[e.m_Key], 4, -1);
 	return true;
 }
 
@@ -121,16 +121,16 @@ void CBinds::OnConsoleInit()
 	if(pConfig)
 		pConfig->RegisterCallback(ConfigSaveCallback, this);
 	
-	Console()->Register("bind", "sr", CFGFLAG_CLIENT, ConBind, this, "Bind key to execute the command");
-	Console()->Register("unbind", "s", CFGFLAG_CLIENT, ConUnbind, this, "Unbind key");
-	Console()->Register("unbindall", "", CFGFLAG_CLIENT, ConUnbindAll, this, "Unbind all keys");
-	Console()->Register("dump_binds", "", CFGFLAG_CLIENT, ConDumpBinds, this, "Dump binds");
+	Console()->Register("bind", "sr", CFGFLAG_CLIENT, ConBind, this, "Bind key to execute the command", 0);
+	Console()->Register("unbind", "s", CFGFLAG_CLIENT, ConUnbind, this, "Unbind key", 0);
+	Console()->Register("unbindall", "", CFGFLAG_CLIENT, ConUnbindAll, this, "Unbind all keys", 0);
+	Console()->Register("dump_binds", "", CFGFLAG_CLIENT, ConDumpBinds, this, "Dump binds", 0);
 	
 	// default bindings
 	SetDefaults();
 }
 
-void CBinds::ConBind(IConsole::IResult *pResult, void *pUserData)
+void CBinds::ConBind(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CBinds *pBinds = (CBinds *)pUserData;
 	const char *pKeyName = pResult->GetString(0);
@@ -148,7 +148,7 @@ void CBinds::ConBind(IConsole::IResult *pResult, void *pUserData)
 }
 
 
-void CBinds::ConUnbind(IConsole::IResult *pResult, void *pUserData)
+void CBinds::ConUnbind(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CBinds *pBinds = (CBinds *)pUserData;
 	const char *pKeyName = pResult->GetString(0);
@@ -166,14 +166,14 @@ void CBinds::ConUnbind(IConsole::IResult *pResult, void *pUserData)
 }
 
 
-void CBinds::ConUnbindAll(IConsole::IResult *pResult, void *pUserData)
+void CBinds::ConUnbindAll(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CBinds *pBinds = (CBinds *)pUserData;
 	pBinds->UnbindAll();
 }
 
 
-void CBinds::ConDumpBinds(IConsole::IResult *pResult, void *pUserData)
+void CBinds::ConDumpBinds(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CBinds *pBinds = (CBinds *)pUserData;
 	char aBuf[1024];

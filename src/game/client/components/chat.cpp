@@ -48,18 +48,18 @@ void CChat::OnStateChange(int NewState, int OldState)
 	}
 }
 
-void CChat::ConSay(IConsole::IResult *pResult, void *pUserData)
+void CChat::ConSay(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	
 	((CChat*)pUserData)->Say(0, pResult->GetString(0));
 }
 
-void CChat::ConSayTeam(IConsole::IResult *pResult, void *pUserData)
+void CChat::ConSayTeam(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	((CChat*)pUserData)->Say(1, pResult->GetString(0));
 }
 
-void CChat::ConChat(IConsole::IResult *pResult, void *pUserData)
+void CChat::ConChat(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	const char *pMode = pResult->GetString(0);
 	if(str_comp(pMode, "all") == 0)
@@ -70,27 +70,27 @@ void CChat::ConChat(IConsole::IResult *pResult, void *pUserData)
 		((CChat*)pUserData)->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", "expected all or team as mode");
 }
 
-void CChat::ConShowChat(IConsole::IResult *pResult, void *pUserData)
+void CChat::ConShowChat(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	((CChat *)pUserData)->m_Show = pResult->GetInteger(0) != 0;
 }
-void CChat::ConUpChat(IConsole::IResult *pResult, void *pUserData) {
+void CChat::ConUpChat(IConsole::IResult *pResult, void *pUserData, int ClientID) {
 	((CChat*)pUserData)->m_ChatMoving = true;
 	((CChat*)pUserData)->m_RenderLine = (((CChat*)pUserData)->m_RenderLine - 1)%MAX_LINES;
 }
 
-void CChat::ConDownChat(IConsole::IResult *pResult, void *pUserData) {
+void CChat::ConDownChat(IConsole::IResult *pResult, void *pUserData, int ClientID) {
 	((CChat*)pUserData)->m_ChatMoving = true;
 	((CChat*)pUserData)->m_RenderLine = (((CChat*)pUserData)->m_RenderLine + 1)%MAX_LINES;
 }
 void CChat::OnConsoleInit()
 {
-	Console()->Register("say", "r", CFGFLAG_CLIENT, ConSay, this, "Say in chat");
-	Console()->Register("say_team", "r", CFGFLAG_CLIENT, ConSayTeam, this, "Say in team chat");
-	Console()->Register("chat", "s", CFGFLAG_CLIENT, ConChat, this, "Enable chat with all/team mode");
-	Console()->Register("chat_up", "", CFGFLAG_CLIENT, ConUpChat, this, "Show early message");
-	Console()->Register("chat_down", "", CFGFLAG_CLIENT, ConDownChat, this, "Show last message");
-	Console()->Register("+show_chat", "", CFGFLAG_CLIENT, ConShowChat, this, "Show chat");
+	Console()->Register("say", "r", CFGFLAG_CLIENT, ConSay, this, "Say in chat", 0);
+	Console()->Register("say_team", "r", CFGFLAG_CLIENT, ConSayTeam, this, "Say in team chat", 0);
+	Console()->Register("chat", "s", CFGFLAG_CLIENT, ConChat, this, "Enable chat with all/team mode", 0);
+	Console()->Register("chat_up", "", CFGFLAG_CLIENT, ConUpChat, this, "Show early message", 0);
+	Console()->Register("chat_down", "", CFGFLAG_CLIENT, ConDownChat, this, "Show last message", 0);
+	Console()->Register("+show_chat", "", CFGFLAG_CLIENT, ConShowChat, this, "Show chat", 0);
 }
 
 bool CChat::OnInput(IInput::CEvent e)
