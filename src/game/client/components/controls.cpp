@@ -34,7 +34,8 @@ void CControls::OnReset()
 
 void CControls::OnPlayerDeath()
 {
-	m_LastData.m_WantedWeapon = m_InputData.m_WantedWeapon = 0;
+	if(!m_pClient->m_IsRace)
+		m_LastData.m_WantedWeapon = m_InputData.m_WantedWeapon = 0;
 }
 
 static void ConKeyInputState(IConsole::IResult *pResult, void *pUserData)
