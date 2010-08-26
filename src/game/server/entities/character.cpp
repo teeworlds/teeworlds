@@ -669,7 +669,7 @@ void CCharacter::Tick()
 		m_RefreshTime = Server()->Tick();
 		m_RaceState = RACE_STARTED;
 	}
-	int z = GameServer()->Collision()->IsTeleport(m_Pos.x, m_Pos.y);
+	
 	if(((TileIndex1 == TILE_END) || (TileIndex2 == TILE_END)) && m_RaceState == RACE_STARTED)
 	{
 		char aBuf[128];
@@ -697,13 +697,17 @@ void CCharacter::Tick()
 			if(str_comp_num(Server()->ClientName(m_pPlayer->GetCID()), "nameless tee", 12) != 0)
 				GameServer()->Score()->SaveScore(m_pPlayer->GetCID(), time, this);
 		}
-
+		
 		// update server best time
-		if(!GameServer()->m_pController->m_CurrentRecord || time < GameServer()->m_pController->m_CurrentRecord)
+		if(GameServer()->m_pController->m_CurrentRecord == 0 || time < GameServer()->m_pController->m_CurrentRecord)
 		{
 			// check for nameless
-			if(str_comp_num(Server()->ClientName(m_pPlayer->GetCID()), "nameless tee", 12) != 0)
+			if(str_comp_num(Server()->ClientName(m_pPlayer->GetCID()), "nameless tee", 12) != 0) {
 				GameServer()->m_pController->m_CurrentRecord = time;
+				//dbg_msg("character", "Finish");
+//				GetPlayer()->SendServerRecord();
+			}
+				
 		}
 
 		m_RaceState = RACE_NONE;
@@ -720,11 +724,11 @@ void CCharacter::Tick()
 					if(g_Config.m_SvHideScore || i == m_pPlayer->GetCID())
 					{
 						CNetMsg_Sv_PlayerTime Msg;
-						char aBuf[16];
-						str_format(aBuf, sizeof(aBuf), "%.0f", time*100.0f); // damn ugly but the only way i know to do it
-						int TimeToSend;
-						sscanf(aBuf, "%d", &TimeToSend);
-						Msg.m_Time = TimeToSend;
+						//char aBuf[16];
+						//str_format(aBuf, sizeof(aBuf), "%.0f", time*100.0f); // damn ugly but the only way i know to do it
+						//int TimeToSend;
+						//sscanf(aBuf, "%d", &TimeToSend);
+						Msg.m_Time = static_cast<int>(time*100.0f);
 						Msg.m_Cid = m_pPlayer->GetCID();
 						Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
 					}
@@ -887,8 +891,11 @@ void CCharacter::Tick()
 
 		m_Core.m_Vel += Direction*Force;
 	}
+	int z = GameServer()->Collision()->IsTeleport(m_Pos.x, m_Pos.y);
+	
 	if(z)
 	{
+		dbg_msg("Collision", "This is teleport");
 		m_Core.m_HookedPlayer = -1;
 		m_Core.m_HookState = HOOK_RETRACTED;
 		m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
