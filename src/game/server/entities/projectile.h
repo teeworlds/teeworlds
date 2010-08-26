@@ -34,6 +34,9 @@ private:
 	vec2 m_ReBouncePos;
 	vec2 m_LastBounce;
 	vec2 m_PrevLastBounce;
+	vec2 m_StartPos;
+	vec2 m_StartDir;
+	int m_LastRestart;
 };
 
 #endif
