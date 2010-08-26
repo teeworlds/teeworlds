@@ -4,10 +4,8 @@
 
 // TODO: remove this
 #include "././game/variables.h"
-
-//===============================  	
-/* DDRace */
-//MACRO_CONFIG_STR(SvEntities, sv_entities, 64, "Latest", CFGFLAG_SERVER, "The type of entities used") still need to think of a way
+/* DDRace Server*/
+//===============================
 MACRO_CONFIG_INT(SvShotgunBulletSound, sv_shotgun_bullet_sound, 0, 0, 1, CFGFLAG_SERVER, "Annoying Shotgun sound on/off")
 MACRO_CONFIG_INT(SvEndlessSuperHook, sv_endless_super_hook, 0, 0, 1, CFGFLAG_SERVER, "Endless hook for super players on/off")
 MACRO_CONFIG_INT(SvEmotionalTees, sv_emotional_tees, 1, 0, 1, CFGFLAG_SERVER, "Emotional Tees on/off")
@@ -16,34 +14,28 @@ MACRO_CONFIG_INT(SvReconnectTime,sv_reconnect_time,5,0,9999,CFGFLAG_SERVER,"how 
 MACRO_CONFIG_INT(SvVoteKickTimeDelay,sv_vote_kick_delay,0,0,9999,CFGFLAG_SERVER,"how much time between kick votes")
 MACRO_CONFIG_INT(SvVoteKickBanTime,sv_vote_kick_bantime, 300, 0, 9999, CFGFLAG_SERVER," ")
 MACRO_CONFIG_INT(SvVoteMapTimeDelay,sv_vote_map_delay,0,0,9999,CFGFLAG_SERVER,"how much time between map votes")
-//MACRO_CONFIG_INT(SvMaxConnections,sv_max_connections, 2, 1, 16, CFGFLAG_SERVER, "Maximum count of connection from one IP server can accept") not needed
-MACRO_CONFIG_INT(SvMaxAfkTime,sv_max_afk_time, 0, 0, 9999, CFGFLAG_SERVER, "How many seconds a player is allowed to be afk, 0=disabled")	  
+MACRO_CONFIG_INT(SvMaxAfkTime,sv_max_afk_time, 0, 0, 9999, CFGFLAG_SERVER, "How many seconds a player is allowed to be afk, 0=disabled")
 MACRO_CONFIG_INT(SvPauseable, sv_pauseable, 1, 0, 1, CFGFLAG_SERVER, "players can pause their char or not")
 MACRO_CONFIG_INT(SvCheatTime, sv_cheattime, 0, 0, 1, CFGFLAG_SERVER, "players can cheat with time or not")
-MACRO_CONFIG_INT(SvHit, sv_hit, 1, 0, 1, CFGFLAG_SERVER, "players can hammer/grenade/laser one another")  		 
-MACRO_CONFIG_INT(SvTunes, sv_tunes, 1, 0, 1, CFGFLAG_SERVER, "Turns Tuning On/Off")  		 
-MACRO_CONFIG_INT(SvPhook, sv_phook, 1, 0, 1, CFGFLAG_SERVER, "Turns Player On/Off")  		 
-MACRO_CONFIG_INT(SvNpc, sv_npc, 0, 0, 1, CFGFLAG_SERVER, "Turns NPC (No Player Collision) On/Off")  		 
-MACRO_CONFIG_INT(SvEndlessDrag, sv_endless_drag, 0, 0, 1, CFGFLAG_SERVER, "Turns Endless hooking On/Off")  		 
-MACRO_CONFIG_INT(SvCheats, sv_cheats, 0, 0, 1, CFGFLAG_SERVER, "Turns Cheats On/Off")  		 
-MACRO_CONFIG_INT(SvAllowColorChange, sv_allow_color_change, 1, 0, 1, CFGFLAG_SERVER, "Allow color change (can block rainbowmod)")  		 
-MACRO_CONFIG_INT(SvRconTries, sv_rcon_tries, 5, 0, 100, CFGFLAG_SERVER, "How Many Password Tries Before ban")  		 
-MACRO_CONFIG_INT(SvRconTriesBantime, sv_rcon_tries_bantime, 300, 0, 9999, CFGFLAG_SERVER, "How Much time will the brute rcon password attacker will be banned")  		 
-
+MACRO_CONFIG_INT(SvHit, sv_hit, 1, 0, 1, CFGFLAG_SERVER, "players can hammer/grenade/laser one another")
+MACRO_CONFIG_INT(SvTunes, sv_tunes, 1, 0, 1, CFGFLAG_SERVER, "Turns Tuning On/Off")
+MACRO_CONFIG_INT(SvPhook, sv_phook, 1, 0, 1, CFGFLAG_SERVER, "Turns Player On/Off")
+MACRO_CONFIG_INT(SvNpc, sv_npc, 0, 0, 1, CFGFLAG_SERVER, "Turns NPC (No Player Collision) On/Off")
+MACRO_CONFIG_INT(SvEndlessDrag, sv_endless_drag, 0, 0, 1, CFGFLAG_SERVER, "Turns Endless hooking On/Off")
+MACRO_CONFIG_INT(SvCheats, sv_cheats, 0, 0, 1, CFGFLAG_SERVER, "Turns Cheats On/Off")
+MACRO_CONFIG_INT(SvAllowColorChange, sv_allow_color_change, 1, 0, 1, CFGFLAG_SERVER, "Allow color change (can block rainbowmod)")
+MACRO_CONFIG_INT(SvRconTries, sv_rcon_tries, 5, 0, 100, CFGFLAG_SERVER, "How Many Password Tries Before ban")
+MACRO_CONFIG_INT(SvRconTriesBantime, sv_rcon_tries_bantime, 300, 0, 9999, CFGFLAG_SERVER, "How Much time will the brute rcon password attacker will be banned")
 MACRO_CONFIG_STR(SvBroadcast, sv_broadcast, 64, "DDRace.info", CFGFLAG_SERVER, "broadcasting message")
 MACRO_CONFIG_STR(SvWelcome, sv_welcome, 64, "", CFGFLAG_SERVER, "message which players see when joining server")
 MACRO_CONFIG_INT(SvVotes, sv_votes, 1, 0, 1, CFGFLAG_SERVER, "")
 MACRO_CONFIG_INT(SvHideScore, sv_hide_score, 0, 0, 1, CFGFLAG_SERVER, "")
 MACRO_CONFIG_STR(SvRconPasswordAdmin, sv_rcon_password_admin, 32, "", CFGFLAG_SERVER, "Remote console administrator password")
-MACRO_CONFIG_STR(SvRconPasswordModer, sv_rcon_password_moder, 32, "", CFGFLAG_SERVER, "Remote console moderator password")  		 
-MACRO_CONFIG_STR(SvRconPasswordHelper, sv_rcon_password_helper, 32, "", CFGFLAG_SERVER, "Remote console helper password")  
-
-
+MACRO_CONFIG_STR(SvRconPasswordModer, sv_rcon_password_moder, 32, "", CFGFLAG_SERVER, "Remote console moderator password")
+MACRO_CONFIG_STR(SvRconPasswordHelper, sv_rcon_password_helper, 32, "", CFGFLAG_SERVER, "Remote console helper password")
 MACRO_CONFIG_INT(SvNetmsgLimit, sv_netmsg_limit, 0, 0, 100, CFGFLAG_SERVER, "How Many unauthed Command Tries Before ban")
 MACRO_CONFIG_INT(SvNetmsgBanTime, sv_netmsg_bantime, 300, 0, 9999, CFGFLAG_SERVER, "How Much time will the unauthed rcon command spammer will be banned")
-		 
 MACRO_CONFIG_INT(SvTimer, sv_timer, 0, 0, 1, CFGFLAG_SERVER, "Turns command timer On/Off")
-
 MACRO_CONFIG_INT(SvWarmup, sv_warmup, 0, 0, 30, CFGFLAG_SERVER, "Number of seconds to do warpup before round starts")
 MACRO_CONFIG_STR(SvMotd, sv_motd, 900, "", CFGFLAG_SERVER, "Message of the day to display for the clients")
 MACRO_CONFIG_INT(SvTournamentMode, sv_tournament_mode, 0, 0, 1, CFGFLAG_SERVER, "Tournament mode. When enabled, players joins the server as spectator")
@@ -62,14 +54,10 @@ MACRO_CONFIG_INT(SvMaxClients, sv_max_clients, 16, 1, MAX_CLIENTS, CFGFLAG_SERVE
 MACRO_CONFIG_INT(SvMaxClientsPerIP, sv_max_clients_per_ip, 2, 1, MAX_CLIENTS, CFGFLAG_SERVER, "Maximum number of clients with the same IP that can connect to the server")
 MACRO_CONFIG_INT(SvHighBandwidth, sv_high_bandwidth, 0, 0, 1, CFGFLAG_SERVER, "Use high bandwidth mode. Doubles the bandwidth required for the server. LAN use only")
 MACRO_CONFIG_INT(SvRegister, sv_register, 1, 0, 1, CFGFLAG_SERVER, "Register server with master server for public listing")
-
-
 MACRO_CONFIG_INT(SvScoreIP, sv_score_ip, 1, 0, 1, CFGFLAG_SERVER, "Check score for ip, too")
 MACRO_CONFIG_INT(SvCheckpointSave, sv_checkpoint_save, 1, 0, 1, CFGFLAG_SERVER, "Save checkpoint times to score file")
-
 MACRO_CONFIG_STR(SvScoreFolder, sv_score_folder, 32, "records", CFGFLAG_SERVER, "Folder to save score files to")
 MACRO_CONFIG_INT(SvUseSQL, sv_use_sql, 0, 0, 1, CFGFLAG_SERVER, "Enables SQL DB instead of record file")
-
 /* SQL */
 MACRO_CONFIG_STR(SvSqlUser, sv_sql_user, 32, "nameless", CFGFLAG_SERVER, "SQL User")
 MACRO_CONFIG_STR(SvSqlPw, sv_sql_pw, 32, "tee", CFGFLAG_SERVER, "SQL Password")
@@ -77,8 +65,7 @@ MACRO_CONFIG_STR(SvSqlIp, sv_sql_ip, 32, "127.0.0.1", CFGFLAG_SERVER, "SQL Datab
 MACRO_CONFIG_INT(SvSqlPort, sv_sql_port, 3306, 0, 65535, CFGFLAG_SERVER, "SQL Database port")
 MACRO_CONFIG_STR(SvSqlDatabase, sv_sql_database, 16, "teeworlds", CFGFLAG_SERVER, "SQL Database name")
 MACRO_CONFIG_STR(SvSqlPrefix, sv_sql_prefix, 16, "record", CFGFLAG_SERVER, "SQL Database table prefix")
-
-//=============================== */  
+//===============================
 
 MACRO_CONFIG_STR(PlayerName, player_name, 24, "nameless tee", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Name of the player")
 MACRO_CONFIG_STR(ClanName, clan_name, 32, "", CFGFLAG_SAVE|CFGFLAG_CLIENT, "(not used)")

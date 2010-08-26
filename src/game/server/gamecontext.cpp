@@ -14,6 +14,7 @@
 
 #include "score.h"
 #include "score/file_score.h"
+#include "score/sql_score.h"
 
 enum
 {
@@ -1820,9 +1821,9 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 		delete m_pScore;
 		
 	// create score object (add sql later)
-	//if(g_Config.m_SvUseSQL)
-	//	m_pScore = new CSqlScore(this);
-	//else
+	if(g_Config.m_SvUseSQL)
+		m_pScore = new CSqlScore(this);
+	else
 		m_pScore = new CFileScore(this);
 	// setup core world
 	//for(int i = 0; i < MAX_CLIENTS; i++)
