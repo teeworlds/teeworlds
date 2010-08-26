@@ -22,6 +22,7 @@ public:
 	int GetTeam() const { return m_Team; };
 	int GetCID() const { return m_ClientID; };
 	
+	
 	void Tick();
 	void Snap(int SnappingClient);
 
