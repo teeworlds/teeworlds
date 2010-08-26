@@ -228,7 +228,7 @@ function build(settings)
 	end
 	
 	-- build client, server, version server and master server
-	client_exe = Link(client_settings, "teeworlds", game_shared, game_client,
+	client_exe = Link(client_settings, "DDRace_Trunk-Client", game_shared, game_client,
 		engine, client, game_editor, zlib, pnglite, wavpack,
 		client_link_other, client_osxlaunch)
 
