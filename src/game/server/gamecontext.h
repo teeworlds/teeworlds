@@ -63,8 +63,8 @@ class CGameContext : public IGameServer
 	static void ConShotgunMe(IConsole::IResult *pResult, void *pUserData, int cid);
 	static void ConGrenade(IConsole::IResult *pResult, void *pUserData, int cid);
 	static void ConGrenadeMe(IConsole::IResult *pResult, void *pUserData, int cid);
-	static void ConRifle(IConsole::IResult *pResult, void *pUserData, int cid);
-	static void ConRifleMe(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConLaser(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConLaserMe(IConsole::IResult *pResult, void *pUserData, int cid);
 	static void ConWeapons(IConsole::IResult *pResult, void *pUserData, int cid);
 	static void ConWeaponsMe(IConsole::IResult *pResult, void *pUserData, int cid);
 	
