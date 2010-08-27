@@ -23,6 +23,7 @@ CLayerTiles::CLayerTiles(int w, int h)
 	m_Tele = 0;
 	m_Speedup = 0;
 	m_Front = 0;
+	m_Switch = 0;
 	
 	m_pTiles = new CTile[m_Width*m_Height];
 	mem_zero(m_pTiles, m_Width*m_Height*sizeof(CTile));
@@ -64,6 +65,8 @@ void CLayerTiles::Render()
 		m_pEditor->RenderTools()->RenderTelemap(((CLayerTele*)this)->m_pTeleTile, m_Width, m_Height, 32.0f);
 	if(m_Speedup)
 		m_pEditor->RenderTools()->RenderSpeedupmap(((CLayerSpeedup*)this)->m_pSpeedupTile, m_Width, m_Height, 32.0f);
+	if(m_Switch)
+		m_pEditor->RenderTools()->RenderSwitchmap(((CLayerSwitch*)this)->m_pSwitchTile, m_Width, m_Height, 32.0f);
 }
 
 int CLayerTiles::ConvertX(float x) const { return (int)(x/32.0f); }
@@ -177,6 +180,26 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 				for(int x = 0; x < r.w; x++)
 					pGrabbed->m_pSpeedupTile[y*pGrabbed->m_Width+x] = ((CLayerSpeedup*)this)->m_pSpeedupTile[(r.y+y)*m_Width+(r.x+x)];
 	}
+	else if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pSwitchLayer)
+	{
+		CLayerSwitch *pGrabbed = new CLayerSwitch(r.w, r.h);
+		pGrabbed->m_pEditor = m_pEditor;
+		pGrabbed->m_TexId = m_TexId;
+		pGrabbed->m_Image = m_Image;
+
+		pBrush->AddLayer(pGrabbed);
+
+		// copy the tiles
+		for(int y = 0; y < r.h; y++)
+			for(int x = 0; x < r.w; x++)
+				pGrabbed->m_pTiles[y*pGrabbed->m_Width+x] = m_pTiles[(r.y+y)*m_Width+(r.x+x)];
+
+		// copy the switch data
+		if(!m_pEditor->Input()->KeyPressed(KEY_SPACE))
+			for(int y = 0; y < r.h; y++)
+				for(int x = 0; x < r.w; x++)
+					pGrabbed->m_pSwitchTile[y*pGrabbed->m_Width+x] = ((CLayerSwitch*)this)->m_pSwitchTile[(r.y+y)*m_Width+(r.x+x)];
+	}
 	else
 	{
 		CLayerTiles *pGrabbed = new CLayerTiles(r.w, r.h);
@@ -244,7 +267,7 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 				continue;
 				
 			// dont allow tele in and out tiles... same with speedup tile in game layer
-			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pGameLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST))
+			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pGameLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_TRIGGER + ENTITY_OFFSET)|| l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_DOOR + ENTITY_OFFSET)))
 				continue;
 		
 			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
@@ -307,6 +330,11 @@ void CLayerTiles::Resize(int NewW, int NewH)
 	// resize front layer
 	if(m_Game && m_pEditor->m_Map.m_pFrontLayer && (m_pEditor->m_Map.m_pFrontLayer->m_Width != NewW || m_pEditor->m_Map.m_pFrontLayer->m_Height != NewH))
 		m_pEditor->m_Map.m_pFrontLayer->Resize(NewW, NewH);
+
+	// resize switch layer if available
+	if(m_Game && m_pEditor->m_Map.m_pSwitchLayer && (m_pEditor->m_Map.m_pSwitchLayer->m_Width != NewW || m_pEditor->m_Map.m_pSwitchLayer->m_Height != NewH))
+		m_pEditor->m_Map.m_pSwitchLayer->Resize(NewW, NewH);
+
 }
 
 
@@ -316,7 +344,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
 	
 	bool InGameGroup = !find_linear(m_pEditor->m_Map.m_pGameGroup->m_lLayers.all(), this).empty();
-	if(m_pEditor->m_Map.m_pGameLayer == this || m_pEditor->m_Map.m_pTeleLayer == this || m_pEditor->m_Map.m_pSpeedupLayer == this || m_pEditor->m_Map.m_pFrontLayer == this)
+	if(m_pEditor->m_Map.m_pGameLayer == this || m_pEditor->m_Map.m_pTeleLayer == this || m_pEditor->m_Map.m_pSpeedupLayer == this || m_pEditor->m_Map.m_pFrontLayer == this || m_pEditor->m_Map.m_pSwitchLayer == this)
 		InGameGroup = false;
 	static int s_ColclButton = 0;
 	if(m_pEditor->DoButton_Editor(&s_ColclButton, Localize("Clear collision"), InGameGroup?0:-1, &Button, 0, Localize("Removes collision from this layer")))
@@ -367,7 +395,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		{0},
 	};
 	
-	if(m_pEditor->m_Map.m_pGameLayer == this || m_pEditor->m_Map.m_pTeleLayer == this || m_pEditor->m_Map.m_pSpeedupLayer == this || m_pEditor->m_Map.m_pFrontLayer == this) // remove the image from the selection if this is the game/tele/speedup/front layer
+	if(m_pEditor->m_Map.m_pGameLayer == this || m_pEditor->m_Map.m_pTeleLayer == this || m_pEditor->m_Map.m_pSpeedupLayer == this || m_pEditor->m_Map.m_pFrontLayer == this || m_pEditor->m_Map.m_pSwitchLayer == this) // remove the image from the selection if this is the game/tele/speedup/front/switch layer
 		aProps[2].m_pName = 0;
 	
 	static int s_aIds[NUM_PROPS] = {0};
@@ -684,8 +712,127 @@ void CLayerFront::BrushDraw(CLayer *pBrush, float wx, float wy)
 				continue;
 
 			// dont allow tele in and out tiles... same with speedup tile in front
-			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pFrontLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST))
+			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pFrontLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_TRIGGER + ENTITY_OFFSET)|| l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_DOOR + ENTITY_OFFSET)))
 				continue;
 			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
 		}
+}
+
+CLayerSwitch::CLayerSwitch(int w, int h)
+: CLayerTiles(w, h)
+{
+	m_pTypeName = "Switch";
+	m_Switch = 1;
+
+	m_pSwitchTile = new CTeleTile[w*h];
+	mem_zero(m_pSwitchTile, w*h*sizeof(CTeleTile));
+}
+
+CLayerSwitch::~CLayerSwitch()
+{
+	delete[] m_pSwitchTile;
+}
+
+void CLayerSwitch::Resize(int NewW, int NewH)
+{
+	// resize switch data
+	CTeleTile *pNewSwitchData = new CTeleTile[NewW*NewH];
+	mem_zero(pNewSwitchData, NewW*NewH*sizeof(CTeleTile));
+
+	// copy old data
+	for(int y = 0; y < min(NewH, m_Height); y++)
+		mem_copy(&pNewSwitchData[y*NewW], &m_pSwitchTile[y*m_Width], min(m_Width, NewW)*sizeof(CTeleTile));
+
+	// replace old
+	delete [] m_pSwitchTile;
+	m_pSwitchTile = pNewSwitchData;
+
+	// resize tile data
+	CLayerTiles::Resize(NewW, NewH);
+
+	// resize gamelayer too
+	if(m_pEditor->m_Map.m_pGameLayer->m_Width != NewW || m_pEditor->m_Map.m_pGameLayer->m_Height != NewH)
+		m_pEditor->m_Map.m_pGameLayer->Resize(NewW, NewH);
+}
+
+void CLayerSwitch::BrushDraw(CLayer *pBrush, float wx, float wy)
+{
+	CLayerSwitch *l = (CLayerSwitch *)pBrush;
+	int sx = ConvertX(wx);
+	int sy = ConvertY(wy);
+
+	for(int y = 0; y < l->m_Height; y++)
+		for(int x = 0; x < l->m_Width; x++)
+		{
+			int fx = x+sx;
+			int fy = y+sy;
+			if(fx<0 || fx >= m_Width || fy < 0 || fy >= m_Height)
+				continue;
+
+			if(l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_DOOR + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_TRIGGER + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_LASER_LONG + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_LASER_MIDDLE + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_LASER_SHORT + ENTITY_OFFSET))
+			{
+				if(l->m_pSwitchTile[y*l->m_Width+x].m_Number)
+					m_pSwitchTile[fy*m_Width+fx].m_Number = l->m_pSwitchTile[y*l->m_Width+x].m_Number;
+				else
+				{
+					if(!m_pEditor->m_SwitchNum)
+					{
+						m_pSwitchTile[fy*m_Width+fx].m_Number = 0;
+						m_pSwitchTile[fy*m_Width+fx].m_Type = 0;
+						m_pTiles[fy*m_Width+fx].m_Index = 0;
+						continue;
+					}
+					else
+						m_pSwitchTile[fy*m_Width+fx].m_Number = m_pEditor->m_SwitchNum;
+				}
+
+				m_pSwitchTile[fy*m_Width+fx].m_Type = l->m_pTiles[y*l->m_Width+x].m_Index;
+				m_pTiles[fy*m_Width+fx].m_Index = l->m_pTiles[y*l->m_Width+x].m_Index;
+			}
+			else
+			{
+				m_pSwitchTile[fy*m_Width+fx].m_Number = 0;
+				m_pSwitchTile[fy*m_Width+fx].m_Type = 0;
+				m_pTiles[fy*m_Width+fx].m_Index = 0;
+			}
+		}
+}
+
+void CLayerSwitch::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
+{
+	if(m_Readonly)
+		return;
+
+	int sx = ConvertX(Rect.x);
+	int sy = ConvertY(Rect.y);
+	int w = ConvertX(Rect.w);
+	int h = ConvertY(Rect.h);
+
+	CLayerSwitch *pLt = static_cast<CLayerSwitch*>(pBrush);
+
+	for(int y = 0; y <= h; y++)
+	{
+		for(int x = 0; x <= w; x++)
+		{
+			int fx = x+sx;
+			int fy = y+sy;
+
+			if(fx < 0 || fx >= m_Width || fy < 0 || fy >= m_Height)
+				continue;
+
+			if(Empty)
+			{
+                m_pTiles[fy*m_Width+fx].m_Index = 0;
+				m_pSwitchTile[fy*m_Width+fx].m_Number = 0;
+			}
+            else
+			{
+                m_pTiles[fy*m_Width+fx] = pLt->m_pTiles[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)];
+				if(!pLt->m_pSwitchTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_Number && m_pEditor->m_SwitchNum && m_pTiles[fy*m_Width+fx].m_Index > 0)
+					m_pSwitchTile[fy*m_Width+fx].m_Number = m_pEditor->m_SwitchNum;
+				else
+					m_pSwitchTile[fy*m_Width+fx].m_Number = pLt->m_pSwitchTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_Number;
+			}
+		}
+	}
 }

@@ -32,6 +32,8 @@ void CCollision::Init(class CLayers *pLayers)
 		m_pTele = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->TeleLayer()->m_Tele));
 	if(m_pLayers->SpeedupLayer())
 		m_pSpeedup = static_cast<CSpeedupTile *>(m_pLayers->Map()->GetData(m_pLayers->SpeedupLayer()->m_Speedup));
+	if(m_pLayers->SwitchLayer())
+		m_pSwitch = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->SwitchLayer()->m_Switch));
 	if(m_pLayers->FrontLayer())
 	{
 		m_pFront = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->FrontLayer()->m_Front));

@@ -370,3 +370,43 @@ void CRenderTools::RenderSpeedupmap(CSpeedupTile *pSpeedup, int w, int h, float 
 		
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
+
+void CRenderTools::RenderSwitchmap(CTeleTile *pSwitch, int w, int h, float Scale)
+{
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+
+	int StartY = (int)(ScreenY0/Scale)-1;
+	int StartX = (int)(ScreenX0/Scale)-1;
+	int EndY = (int)(ScreenY1/Scale)+1;
+	int EndX = (int)(ScreenX1/Scale)+1;
+
+	for(int y = StartY; y < EndY; y++)
+		for(int x = StartX; x < EndX; x++)
+		{
+			int mx = x;
+			int my = y;
+
+
+			if(mx<0)
+				continue; // mx = 0;
+			if(mx>=w)
+				continue; // mx = w-1;
+			if(my<0)
+				continue; // my = 0;
+			if(my>=h)
+				continue; // my = h-1;
+
+			int c = mx + my*w;
+
+			unsigned char Index = pSwitch[c].m_Number;
+			if(Index)
+			{
+				char aBuf[16];
+				str_format(aBuf, sizeof(aBuf), "%d", Index);
+				UI()->TextRender()->Text(0, mx*Scale-2, my*Scale-4, Scale-5, aBuf, -1);
+			}
+		}
+
+	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+}
