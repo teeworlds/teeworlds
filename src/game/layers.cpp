@@ -11,6 +11,7 @@ CLayers::CLayers()
 	m_pTeleLayer = 0;
 	m_pSpeedupLayer = 0;
 	m_pFrontLayer = 0;
+	m_pSwitchLayer = 0;
 	m_pMap = 0;
 }
 
@@ -54,6 +55,8 @@ void CLayers::Init(class IKernel *pKernel)
 					m_pSpeedupLayer = pTilemap;
 				if(pTilemap->m_Flags&8)
 					m_pFrontLayer = pTilemap;
+				if(pTilemap->m_Flags&16)
+					m_pSwitchLayer = pTilemap;
 			}
 		}
 	}

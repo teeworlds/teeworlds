@@ -15,6 +15,7 @@ class CLayers
 	CMapItemLayerTilemap *m_pTeleLayer;
 	CMapItemLayerTilemap *m_pSpeedupLayer;
 	CMapItemLayerTilemap *m_pFrontLayer;
+	CMapItemLayerTilemap *m_pSwitchLayer;
 	class IMap *m_pMap;
 
 public:
@@ -27,6 +28,7 @@ public:
 	CMapItemLayerTilemap *TeleLayer() const { return m_pTeleLayer; }
 	CMapItemLayerTilemap *SpeedupLayer() const { return m_pSpeedupLayer; }
 	CMapItemLayerTilemap *FrontLayer() const { return m_pFrontLayer; }
+	CMapItemLayerTilemap *SwitchLayer() const { return m_pSwitchLayer; }
 	CMapItemGroup *GetGroup(int Index) const;
 	CMapItemLayer *GetLayer(int Index) const;	
 };

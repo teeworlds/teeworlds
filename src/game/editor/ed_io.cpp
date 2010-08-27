@@ -288,6 +288,8 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 					Item.m_Flags = 4;
 				else if(pLayer->m_Front)
 					Item.m_Flags = 8;
+				if(pLayer->m_Switch)
+					Item.m_Flags = 16;
 				else
 					Item.m_Flags = pLayer->m_Game;
 				Item.m_Image = pLayer->m_Image;
@@ -313,6 +315,14 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 					mem_zero(Tiles, pLayer->m_Width*pLayer->m_Height*sizeof(CTile));
 					Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), Tiles);
 					Item.m_Front = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), pLayer->m_pTiles);//Thanks Sushi Tee
+					delete[] Tiles;
+				}
+				else if(pLayer->m_Switch)
+				{
+					CTile *Tiles = new CTile[pLayer->m_Width*pLayer->m_Height];
+					mem_zero(Tiles, pLayer->m_Width*pLayer->m_Height*sizeof(CTile));
+					Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), Tiles);
+					Item.m_Switch = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTeleTile), ((CLayerSwitch *)pLayer)->m_pSwitchTile);
 					delete[] Tiles;
 				}
 				else
@@ -537,6 +547,11 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName)
 							pTiles = new CLayerFront(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							MakeFrontLayer(pTiles);
 						}
+						else if(pTilemapItem->m_Flags&16)
+						{
+							pTiles = new CLayerSwitch(pTilemapItem->m_Width, pTilemapItem->m_Height);
+							MakeSwitchLayer(pTiles);
+						}
 						else
 						{
 							pTiles = new CLayerTiles(pTilemapItem->m_Width, pTilemapItem->m_Height);
@@ -600,6 +615,28 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName)
 							mem_copy(((CLayerFront*)pTiles)->m_pTiles, pFrontData, pTiles->m_Width*pTiles->m_Height*sizeof(CTile));
 
 							DataFile.UnloadData(pTilemapItem->m_Front);
+						}
+						else if(pTiles->m_Switch)
+						{
+							void *pSwitchData = DataFile.GetData(pTilemapItem->m_Switch);
+							mem_copy(((CLayerSwitch*)pTiles)->m_pSwitchTile, pSwitchData, pTiles->m_Width*pTiles->m_Height*sizeof(CTeleTile));
+
+							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
+							{
+								if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == ENTITY_TRIGGER + ENTITY_OFFSET )
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = ENTITY_TRIGGER + ENTITY_OFFSET ;
+								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == ENTITY_DOOR + ENTITY_OFFSET )
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = ENTITY_DOOR + ENTITY_OFFSET ;
+								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == ENTITY_DOOR + ENTITY_OFFSET )
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = ENTITY_LASER_SHORT + ENTITY_OFFSET ;
+								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == ENTITY_DOOR + ENTITY_OFFSET )
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = ENTITY_LASER_MIDDLE + ENTITY_OFFSET ;
+								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == ENTITY_DOOR + ENTITY_OFFSET )
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = ENTITY_LASER_LONG + ENTITY_OFFSET ;
+								else
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = 0;
+							}
+							DataFile.UnloadData(pTilemapItem->m_Switch);
 						}
 					}
 					else if(pLayerItem->m_Type == LAYERTYPE_QUADS)

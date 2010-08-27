@@ -73,6 +73,7 @@ public:
 	void RenderTelemap(CTeleTile *pTele, int w, int h, float Scale);
 	void RenderSpeedupmap(CSpeedupTile *pTele, int w, int h, float Scale);
 	void RenderFrontmap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int Flags);
+	void RenderSwitchmap(CTeleTile *pSwitch, int w, int h, float Scale);
 
 	// helpers
 	void MapscreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,
