@@ -737,6 +737,28 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				else
 					Score()->ShowRank(p->GetCID(), Server()->ClientName(ClientId));
 			}
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/time")&&g_Config.m_SvEmotionalTees)
+				{
+					CCharacter* pChr = p->GetCharacter();
+					if (pChr)
+					{
+						if(pChr->m_BroadTime)
+							pChr->m_BroadTime=false;
+						else
+							pChr->m_BroadTime=true;
+					}
+				}
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/broadcast")&&g_Config.m_SvEmotionalTees)
+				{
+					CCharacter* pChr = p->GetCharacter();
+					if (pChr)
+					{
+						if(pChr->m_BroadCast)
+							pChr->m_BroadCast=false;
+						else
+							pChr->m_BroadCast=true;
+					}
+				}
 			else if (!str_comp_nocase(pMsg->m_pMessage, "/emotepain")&&g_Config.m_SvEmotionalTees)
 				{
 					CCharacter* pChr = p->GetCharacter();
@@ -1113,16 +1135,16 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				case EMOTICON_8:
 					pChr->m_EmoteType = EMOTE_SURPRISE;
 					break;
-				case EMOTICON_13:
+				case EMOTICON_1:
+				case EMOTICON_4:
 				case EMOTICON_7:
+				case EMOTICON_13:
 					pChr->m_EmoteType = EMOTE_BLINK;
 					break;
 				case EMOTICON_3:
 				case EMOTICON_6:
 					pChr->m_EmoteType = EMOTE_HAPPY;
 					break;
-				case EMOTICON_1:
-				case EMOTICON_4:
 				case EMOTICON_9:
 				case EMOTICON_15:
 					pChr->m_EmoteType = EMOTE_PAIN;
@@ -1533,6 +1555,96 @@ void CGameContext::ConUnSuperMe(IConsole::IResult *pResult, void *pUserData, int
 	}
 }
 
+void CGameContext::ConShotgun(IConsole::IResult *pResult, void *pUserData, int cid)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!pSelf->CheatsAvailable(cid)) return;
+	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	{
+		CCharacter* chr = pSelf->GetPlayerChar(cid1);
+		if(chr)
+		{
+			chr->GiveWeapon(WEAPON_SHOTGUN,-1);
+			if(!g_Config.m_SvCheatTime)
+				chr->m_RaceState = RACE_CHEAT;
+		}
+	}
+}
+
+void CGameContext::ConShotgunMe(IConsole::IResult *pResult, void *pUserData, int cid)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!pSelf->CheatsAvailable(cid)) return;
+	CCharacter* chr = pSelf->GetPlayerChar(cid);
+	if(chr)
+	{
+		chr->GiveWeapon(WEAPON_SHOTGUN,-1);
+		if(!g_Config.m_SvCheatTime)
+			chr->m_RaceState = RACE_CHEAT;
+	}
+}
+
+void CGameContext::ConGrenade(IConsole::IResult *pResult, void *pUserData, int cid)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!pSelf->CheatsAvailable(cid)) return;
+	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	{
+		CCharacter* chr = pSelf->GetPlayerChar(cid1);
+		if(chr)
+		{
+			chr->GiveWeapon(WEAPON_GRENADE,-1);
+			if(!g_Config.m_SvCheatTime)
+				chr->m_RaceState = RACE_CHEAT;
+		}
+	}
+}
+
+void CGameContext::ConGrenadeMe(IConsole::IResult *pResult, void *pUserData, int cid)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!pSelf->CheatsAvailable(cid)) return;
+	CCharacter* chr = pSelf->GetPlayerChar(cid);
+	if(chr)
+	{
+		chr->GiveWeapon(WEAPON_GRENADE,-1);
+		if(!g_Config.m_SvCheatTime)
+			chr->m_RaceState = RACE_CHEAT;
+	}
+}
+
+void CGameContext::ConLaser(IConsole::IResult *pResult, void *pUserData, int cid)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!pSelf->CheatsAvailable(cid)) return;
+	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	{
+		CCharacter* chr = pSelf->GetPlayerChar(cid1);
+		if(chr)
+		{
+			chr->GiveWeapon(WEAPON_RIFLE,-1);
+			if(!g_Config.m_SvCheatTime)
+				chr->m_RaceState = RACE_CHEAT;
+		}
+	}
+}
+
+void CGameContext::ConLaserMe(IConsole::IResult *pResult, void *pUserData, int cid)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!pSelf->CheatsAvailable(cid)) return;
+	CCharacter* chr = pSelf->GetPlayerChar(cid);
+	if(chr)
+	{
+		chr->GiveWeapon(WEAPON_RIFLE,-1);
+		if(!g_Config.m_SvCheatTime)
+			chr->m_RaceState = RACE_CHEAT;
+	}
+}
+
 void CGameContext::ConWeapons(IConsole::IResult *pResult, void *pUserData, int cid)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
@@ -1736,6 +1848,12 @@ void CGameContext::OnConsoleInit()
 
 	Console()->Register("tele", "ii", CFGFLAG_SERVER, ConTeleport, this, "Teleports Player i1 to i2",2);
 
+	Console()->Register("shotgun", "i", CFGFLAG_SERVER, ConShotgun, this, "Give shotgun weapon to player i",2);
+	Console()->Register("shotgun_me", "", CFGFLAG_SERVER, ConShotgunMe, this, "Give shotgun weapon to self",1);
+	Console()->Register("grenade", "i", CFGFLAG_SERVER, ConGrenade, this, "Give grenade weapon to player i",2);
+	Console()->Register("grenade_me", "", CFGFLAG_SERVER, ConGrenadeMe, this, "Give grenade weapon to self",1);
+	Console()->Register("laser", "i", CFGFLAG_SERVER, ConLaser, this, "Give rifle weapon to player i",2);
+	Console()->Register("laser_me", "", CFGFLAG_SERVER, ConLaserMe, this, "Give rifle weapon to self",1);
 	Console()->Register("weapons", "i", CFGFLAG_SERVER, ConWeapons, this, "Give all weapons to player i",2);
 	Console()->Register("weapons_me", "", CFGFLAG_SERVER, ConWeaponsMe, this, "Give all weapons to self",1);
 

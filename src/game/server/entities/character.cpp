@@ -73,6 +73,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_RaceState = RACE_NONE;
 	m_PrevPos = Pos;
 	m_Core.Reset();
+	m_BroadTime = true;
+	m_BroadCast = true;
 	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision());
 	m_Core.m_Pos = m_Pos;
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = &m_Core;
@@ -622,8 +624,13 @@ void CCharacter::Tick()
 				}
 
 				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
-			} else {
-				str_format(aBuftime, sizeof(aBuftime), "Current Time: %d min %d sec", IntTime/60, IntTime%60);
+			}
+			else
+			{
+				if(m_BroadTime)
+					str_format(aBuftime, sizeof(aBuftime), "%dm %ds", IntTime/60, IntTime%60);
+				else
+					str_format(aBuftime, sizeof(aBuftime), "");
 
 				if(m_CpActive != -1 && m_CpTick > Server()->Tick())
 				{
@@ -636,14 +643,17 @@ void CCharacter::Tick()
 					}
 				}
 
-				if( g_Config.m_SvBroadcast[0] != 0) {
+				if( g_Config.m_SvBroadcast[0] != 0 && m_BroadCast)
+				{
 					char aTmp[128];
 					str_format(aTmp, sizeof(aTmp), "\n%s\n", g_Config.m_SvBroadcast);
 					strcat(aBuftime, aTmp);
 				}
 				GameServer()->SendBroadcast(aBuftime, m_pPlayer->GetCID());
 			}
-		} else {
+		}
+		else
+		{
 			if( g_Config.m_SvBroadcast[0] != 0) {
 				char aTmp[128];
 				str_format(aTmp, sizeof(aTmp), "%s\n", g_Config.m_SvBroadcast);
