@@ -623,16 +623,16 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName)
 
 							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
 							{
-								if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == ENTITY_TRIGGER + ENTITY_OFFSET )
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = ENTITY_TRIGGER + ENTITY_OFFSET ;
-								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == ENTITY_DOOR + ENTITY_OFFSET )
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = ENTITY_DOOR + ENTITY_OFFSET ;
-								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == ENTITY_DOOR + ENTITY_OFFSET )
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = ENTITY_LASER_SHORT + ENTITY_OFFSET ;
-								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == ENTITY_DOOR + ENTITY_OFFSET )
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = ENTITY_LASER_MIDDLE + ENTITY_OFFSET ;
-								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == ENTITY_DOOR + ENTITY_OFFSET )
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = ENTITY_LASER_LONG + ENTITY_OFFSET ;
+								if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_TRIGGER + ENTITY_OFFSET))
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_TRIGGER + ENTITY_OFFSET);
+								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_DOOR + ENTITY_OFFSET))
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_DOOR + ENTITY_OFFSET);
+								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_LASER_SHORT + ENTITY_OFFSET))
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_LASER_SHORT + ENTITY_OFFSET);
+								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_LASER_MIDDLE + ENTITY_OFFSET))
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_LASER_MIDDLE + ENTITY_OFFSET);
+								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_LASER_LONG + ENTITY_OFFSET))
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_LASER_LONG + ENTITY_OFFSET);
 								else
 									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = 0;
 							}
