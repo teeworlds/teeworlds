@@ -286,6 +286,8 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 					Item.m_Flags = 2;
 				else if(pLayer->m_Speedup)
 					Item.m_Flags = 4;
+				else if(pLayer->m_Front)
+					Item.m_Flags = 8;
 				else
 					Item.m_Flags = pLayer->m_Game;
 				Item.m_Image = pLayer->m_Image;
@@ -303,6 +305,14 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 					mem_zero(Tiles, pLayer->m_Width*pLayer->m_Height*sizeof(CTile));
 					Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), Tiles);
 					Item.m_Speedup = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CSpeedupTile), ((CLayerSpeedup *)pLayer)->m_pSpeedupTile);
+					delete[] Tiles;
+				}
+				else if(pLayer->m_Front)
+				{
+					CTile *Tiles = new CTile[pLayer->m_Width*pLayer->m_Height];
+					mem_zero(Tiles, pLayer->m_Width*pLayer->m_Height*sizeof(CTile));
+					Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), Tiles);
+					Item.m_Front = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), pLayer->m_pTiles);//Thanks Sushi Tee
 					delete[] Tiles;
 				}
 				else
@@ -522,6 +532,11 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName)
 							pTiles = new CLayerSpeedup(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							MakeSpeedupLayer(pTiles);
 						}
+						else if(pTilemapItem->m_Flags&8)
+						{
+							pTiles = new CLayerFront(pTilemapItem->m_Width, pTilemapItem->m_Height);
+							MakeFrontLayer(pTiles);
+						}
 						else
 						{
 							pTiles = new CLayerTiles(pTilemapItem->m_Width, pTilemapItem->m_Height);
@@ -578,6 +593,13 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName)
 							}
 							
 							DataFile.UnloadData(pTilemapItem->m_Speedup);
+						}
+						else if(pTiles->m_Front)
+						{
+							void *pFrontData = DataFile.GetData(pTilemapItem->m_Front);
+							mem_copy(((CLayerFront*)pTiles)->m_pTiles, pFrontData, pTiles->m_Width*pTiles->m_Height*sizeof(CTile));
+
+							DataFile.UnloadData(pTilemapItem->m_Front);
 						}
 					}
 					else if(pLayerItem->m_Type == LAYERTYPE_QUADS)

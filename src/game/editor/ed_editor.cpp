@@ -591,7 +591,8 @@ static void CallbackSaveMap(const char *pFileName, void *pUser)
 
 	CEditor *pEditor = static_cast<CEditor*>(pUser);
 	if(pEditor->Save(pFileName))
-		str_copy(pEditor->m_aFileName, pFileName, sizeof(pEditor->m_aFileName));
+		if(pEditor->Save(pFileName))
+			str_copy(pEditor->m_aFileName, pFileName, sizeof(pEditor->m_aFileName));
 }
 
 void CEditor::DoToolbar(CUIRect ToolBar)
@@ -1134,12 +1135,14 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			//UI()->ClipEnable(&view);
 		}
 
-		// render the game, tele and speedup above everything else
+		// render the game, tele, speedup and front above everything else
 		if(m_Map.m_pGameGroup->m_Visible)
  		{
  			m_Map.m_pGameGroup->MapScreen();
 			if(m_Map.m_pGameLayer->m_Visible)
 				m_Map.m_pGameLayer->Render();
+			if(m_Map.m_pFrontLayer && m_Map.m_pFrontLayer->m_Visible)
+				m_Map.m_pFrontLayer->Render();
 			if(m_Map.m_pTeleLayer && m_Map.m_pTeleLayer->m_Visible)
 				m_Map.m_pTeleLayer->Render();
 			if(m_Map.m_pSpeedupLayer && m_Map.m_pSpeedupLayer->m_Visible)
@@ -3016,6 +3019,13 @@ void CEditorMap::MakeSpeedupLayer(CLayer *pLayer)
 	m_pSpeedupLayer->m_TexId = m_pEditor->ms_EntitiesTexture;
 }
 
+void CEditorMap::MakeFrontLayer(CLayer *pLayer)
+{
+	m_pFrontLayer = (CLayerFront *)pLayer;
+	m_pFrontLayer->m_pEditor = m_pEditor;
+	m_pFrontLayer->m_TexId = m_pEditor->ms_EntitiesTexture;
+}
+
 void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
 {
 	m_pGameGroup = pGroup;
@@ -3034,6 +3044,7 @@ void CEditorMap::Clean()
 	m_pGameLayer = 0x0;
 	m_pTeleLayer = 0x0;
 	m_pSpeedupLayer = 0x0;
+	m_pFrontLayer = 0x0;
 	m_pGameGroup = 0x0;
 }
 
@@ -3060,10 +3071,12 @@ void CEditorMap::CreateDefault(int EntitiesTexture)
 	pQuad->m_aColors[2].b = pQuad->m_aColors[3].b = 255;
 	pGroup->AddLayer(pLayer);
 
-	// add game layer
+	// add game layer and front
 	MakeGameGroup(NewGroup());
 	MakeGameLayer(new CLayerGame(50, 50));
+	MakeFrontLayer(new CLayerFront(50, 50));
 	m_pGameGroup->AddLayer(m_pGameLayer);
+	m_pGameGroup->AddLayer(m_pFrontLayer);
 	m_pTeleLayer = 0x0;
 	m_pSpeedupLayer = 0x0;
 }

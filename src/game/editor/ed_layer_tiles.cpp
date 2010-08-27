@@ -22,6 +22,7 @@ CLayerTiles::CLayerTiles(int w, int h)
 	m_Game = 0;
 	m_Tele = 0;
 	m_Speedup = 0;
+	m_Front = 0;
 	
 	m_pTiles = new CTile[m_Width*m_Height];
 	mem_zero(m_pTiles, m_Width*m_Height*sizeof(CTile));
@@ -242,7 +243,7 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 			if(fx<0 || fx >= m_Width || fy < 0 || fy >= m_Height)
 				continue;
 				
-			// dont allow tele in and out tiles... same with speedup tile
+			// dont allow tele in and out tiles... same with speedup tile in game layer
 			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pGameLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST))
 				continue;
 		
@@ -302,6 +303,10 @@ void CLayerTiles::Resize(int NewW, int NewH)
 	// resize speedup layer if available
 	if(m_Game && m_pEditor->m_Map.m_pSpeedupLayer && (m_pEditor->m_Map.m_pSpeedupLayer->m_Width != NewW || m_pEditor->m_Map.m_pSpeedupLayer->m_Height != NewH))
 		m_pEditor->m_Map.m_pSpeedupLayer->Resize(NewW, NewH);
+
+	// resize front layer
+	if(m_Game && m_pEditor->m_Map.m_pFrontLayer && (m_pEditor->m_Map.m_pFrontLayer->m_Width != NewW || m_pEditor->m_Map.m_pFrontLayer->m_Height != NewH))
+		m_pEditor->m_Map.m_pFrontLayer->Resize(NewW, NewH);
 }
 
 
@@ -311,7 +316,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	pToolBox->HSplitBottom(12.0f, pToolBox, &Button);
 	
 	bool InGameGroup = !find_linear(m_pEditor->m_Map.m_pGameGroup->m_lLayers.all(), this).empty();
-	if(m_pEditor->m_Map.m_pGameLayer == this || m_pEditor->m_Map.m_pTeleLayer == this || m_pEditor->m_Map.m_pSpeedupLayer == this)
+	if(m_pEditor->m_Map.m_pGameLayer == this || m_pEditor->m_Map.m_pTeleLayer == this || m_pEditor->m_Map.m_pSpeedupLayer == this || m_pEditor->m_Map.m_pFrontLayer == this)
 		InGameGroup = false;
 	static int s_ColclButton = 0;
 	if(m_pEditor->DoButton_Editor(&s_ColclButton, Localize("Clear collision"), InGameGroup?0:-1, &Button, 0, Localize("Removes collision from this layer")))
@@ -362,7 +367,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		{0},
 	};
 	
-	if(m_pEditor->m_Map.m_pGameLayer == this || m_pEditor->m_Map.m_pTeleLayer == this || m_pEditor->m_Map.m_pSpeedupLayer == this) // remove the image from the selection if this is the game layer
+	if(m_pEditor->m_Map.m_pGameLayer == this || m_pEditor->m_Map.m_pTeleLayer == this || m_pEditor->m_Map.m_pSpeedupLayer == this || m_pEditor->m_Map.m_pFrontLayer == this) // remove the image from the selection if this is the game/tele/speedup/front layer
 		aProps[2].m_pName = 0;
 	
 	static int s_aIds[NUM_PROPS] = {0};
@@ -641,4 +646,46 @@ void CLayerSpeedup::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 			}
 		}
 	}
+}
+
+CLayerFront::CLayerFront(int w, int h)
+: CLayerTiles(w, h)
+{
+	m_pTypeName = "Front";
+	m_Front = 1;
+}
+
+void CLayerFront::Resize(int NewW, int NewH)
+{
+	// resize tile data
+	CLayerTiles::Resize(NewW, NewH);
+
+	// resize gamelayer too
+	if(m_pEditor->m_Map.m_pGameLayer->m_Width != NewW || m_pEditor->m_Map.m_pGameLayer->m_Height != NewH)
+		m_pEditor->m_Map.m_pGameLayer->Resize(NewW, NewH);
+}
+
+void CLayerFront::BrushDraw(CLayer *pBrush, float wx, float wy)
+{
+	if(m_Readonly)
+		return;
+
+	//
+	CLayerTiles *l = (CLayerTiles *)pBrush;
+	int sx = ConvertX(wx);
+	int sy = ConvertY(wy);
+
+	for(int y = 0; y < l->m_Height; y++)
+		for(int x = 0; x < l->m_Width; x++)
+		{
+			int fx = x+sx;
+			int fy = y+sy;
+			if(fx<0 || fx >= m_Width || fy < 0 || fy >= m_Height)
+				continue;
+
+			// dont allow tele in and out tiles... same with speedup tile in front
+			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pFrontLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST))
+				continue;
+			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
+		}
 }
