@@ -10,7 +10,6 @@ CLayers::CLayers()
 	m_pGameLayer = 0;
 	m_pTeleLayer = 0;
 	m_pSpeedupLayer = 0;
-	m_pFrontLayer = 0;
 	m_pMap = 0;
 }
 
@@ -52,8 +51,6 @@ void CLayers::Init(class IKernel *pKernel)
 					m_pTeleLayer = pTilemap;
 				if(pTilemap->m_Flags&4)
 					m_pSpeedupLayer = pTilemap;
-				if(pTilemap->m_Flags&8)
-					m_pFrontLayer = pTilemap;
 			}
 		}
 	}

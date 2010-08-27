@@ -265,7 +265,6 @@ public:
 	class CLayerGame *m_pGameLayer;
 	class CLayerTele *m_pTeleLayer;
 	class CLayerSpeedup *m_pSpeedupLayer;
-	class CLayerFront *m_pFrontLayer;
 	CLayerGroup *m_pGameGroup;
 	
 	CEnvelope *NewEnvelope(int Channels)
@@ -322,7 +321,6 @@ public:
 	
 	void MakeTeleLayer(CLayer *pLayer);
 	void MakeSpeedupLayer(CLayer *pLayer);
-	void MakeFrontLayer(CLayer *pLayer);
 };
 
 
@@ -389,7 +387,6 @@ public:
 	int m_Game;
 	int m_Tele;
 	int m_Speedup;
-	int m_Front;
 	int m_Image;
 	int m_Width;
 	int m_Height;
@@ -453,19 +450,6 @@ public:
 	
 	CSpeedupTile *m_pSpeedupTile;
 	
-	virtual void Resize(int NewW, int NewH);
-	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
-	virtual void FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect);
-};
-
-class CLayerFront : public CLayerTiles
-{
-public:
-	CLayerFront(int w, int h);
-	~CLayerFront();
-
-	CTile *m_pFrontTile;
-
 	virtual void Resize(int NewW, int NewH);
 	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
 	virtual void FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect);

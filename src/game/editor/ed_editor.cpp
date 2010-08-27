@@ -786,7 +786,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		static int s_BorderBut = 0;
 		CLayerTiles *pT = (CLayerTiles *)GetSelectedLayerType(0, LAYERTYPE_TILES);
 		
-		// no border for tele layer, speedup
+		// no border for tele layer and speedup
 		if(pT && (pT->m_Tele || pT->m_Speedup))
 			pT = 0;
 			
@@ -1134,7 +1134,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			//UI()->ClipEnable(&view);
 		}
 
-		// render the game, tele, speedup and front above everything else
+		// render the game, tele and speedup above everything else
 		if(m_Map.m_pGameGroup->m_Visible)
  		{
  			m_Map.m_pGameGroup->MapScreen();
@@ -1144,8 +1144,6 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 				m_Map.m_pTeleLayer->Render();
 			if(m_Map.m_pSpeedupLayer && m_Map.m_pSpeedupLayer->m_Visible)
 				m_Map.m_pSpeedupLayer->Render();
-			if(m_Map.m_pFrontLayer && m_Map.m_pFrontLayer->m_Visible)
-				m_Map.m_pFrontLayer->Render();
  		}
 	}
 
@@ -3018,13 +3016,6 @@ void CEditorMap::MakeSpeedupLayer(CLayer *pLayer)
 	m_pSpeedupLayer->m_TexId = m_pEditor->ms_EntitiesTexture;
 }
 
-void CEditorMap::MakeFrontLayer(CLayer *pLayer)
-{
-	m_pFrontLayer = (CLayerFront *)pLayer;
-	m_pFrontLayer->m_pEditor = m_pEditor;
-	m_pFrontLayer->m_TexId = m_pEditor->ms_EntitiesTexture;
-}
-
 void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
 {
 	m_pGameGroup = pGroup;
@@ -3043,7 +3034,6 @@ void CEditorMap::Clean()
 	m_pGameLayer = 0x0;
 	m_pTeleLayer = 0x0;
 	m_pSpeedupLayer = 0x0;
-	m_pFrontLayer = 0x0;
 	m_pGameGroup = 0x0;
 }
 
@@ -3076,7 +3066,6 @@ void CEditorMap::CreateDefault(int EntitiesTexture)
 	m_pGameGroup->AddLayer(m_pGameLayer);
 	m_pTeleLayer = 0x0;
 	m_pSpeedupLayer = 0x0;
-	m_pFrontLayer = 0x0;
 }
 
 void CEditor::Init()

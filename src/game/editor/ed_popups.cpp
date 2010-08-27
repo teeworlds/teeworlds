@@ -126,23 +126,6 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 			return 1;
 		}
 	}
-
-	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->m_Map.m_pFrontLayer)
-	{
-		// new frontup layer
-		View.HSplitBottom(10.0f, &View, &Button);
-		View.HSplitBottom(12.0f, &View, &Button);
-		static int s_NewSwitchLayerButton = 0;
-		if(pEditor->DoButton_Editor(&s_NewSwitchLayerButton, "Add Front Layer", 0, &Button, 0, "Creates a new Front layer"))
-		{
-			CLayer *l = new CLayerFront(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
-			pEditor->m_Map.MakeFrontLayer(l);
-			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
-			pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
-			pEditor->m_Brush.Clear();
-			return 1;
-		}
-	}
 	
 	// new tile layer
 	View.HSplitBottom(10.0f, &View, &Button);
@@ -243,8 +226,6 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 			pEditor->m_Map.m_pTeleLayer = 0x0;
 		if(pEditor->GetSelectedLayer(0) == pEditor->m_Map.m_pSpeedupLayer)
 			pEditor->m_Map.m_pSpeedupLayer = 0x0;
-		if(pEditor->GetSelectedLayer(0) == pEditor->m_Map.m_pFrontLayer)
-			pEditor->m_Map.m_pFrontLayer = 0x0;
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->DeleteLayer(pEditor->m_SelectedLayer);
 		return 1;
 	}
@@ -269,7 +250,7 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 		{0},
 	};
 
-	if(pEditor->m_Map.m_pGameLayer == pEditor->GetSelectedLayer(0) || pEditor->m_Map.m_pTeleLayer == pEditor->GetSelectedLayer(0) || pEditor->m_Map.m_pSpeedupLayer == pEditor->GetSelectedLayer(0) || pEditor->m_Map.m_pFrontLayer == pEditor->GetSelectedLayer(0)) // dont use Group and Detail from the selection if this is the game layer
+	if(pEditor->m_Map.m_pGameLayer == pEditor->GetSelectedLayer(0) || pEditor->m_Map.m_pTeleLayer == pEditor->GetSelectedLayer(0) || pEditor->m_Map.m_pSpeedupLayer == pEditor->GetSelectedLayer(0)) // dont use Group and Detail from the selection if this is the game layer
 	{
 		aProps[0].m_Type = PROPTYPE_NULL;
  		aProps[2].m_Type = PROPTYPE_NULL;
