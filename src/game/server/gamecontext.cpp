@@ -2005,6 +2005,16 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 		for(int x = 0; x < pTileMap->m_Width; x++)
 		{
 			int Index = pTiles[y*pTileMap->m_Width+x].m_Index;
+			if(Index == TILE_NPC)
+				g_Config.m_SvNpc = 1;
+			else if (Index == TILE_EHOOK)
+				g_Config.m_SvEndlessDrag = 1;
+			else if (Index == TILE_NOHIT)
+				g_Config.m_SvHit = 0;
+			else if (Index == TILE_EHOOK)
+				g_Config.m_SvEndlessDrag = 1;
+			else if (Index == TILE_NPH)
+				g_Config.m_SvPhook = 0;
 			if(Index >= ENTITY_OFFSET)
 			{
 				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
@@ -2013,6 +2023,17 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 			if (pFront)
 			{
 				int Index = pFront[y*pTileMap->m_Width+x].m_Index;
+				if(Index == TILE_NPC)
+					g_Config.m_SvNpc = 1;
+				else if (Index == TILE_EHOOK)
+					g_Config.m_SvEndlessDrag = 1;
+				else if (Index == TILE_NOHIT)
+					g_Config.m_SvHit = 0;
+				else if (Index == TILE_EHOOK)
+					g_Config.m_SvEndlessDrag = 1;
+				else if (Index == TILE_NPH)
+					g_Config.m_SvPhook = 0;
+
 				if(Index >= ENTITY_OFFSET)
 				{
 					vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
