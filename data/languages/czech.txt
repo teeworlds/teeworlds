@@ -190,8 +190,8 @@ Language
 Lht.
 == Světel.
 
-Loading
-== Nahrávám
+Loading DDRace Client
+== Nahrávám DDRace Client
 
 MOTD
 == MOTD

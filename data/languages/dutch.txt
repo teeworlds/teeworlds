@@ -200,8 +200,8 @@ Language
 Lht.
 == Licht
 
-Loading
-== Laden
+Loading DDRace Client
+== Laden DDRace Client
 
 MOTD
 == MOTD
