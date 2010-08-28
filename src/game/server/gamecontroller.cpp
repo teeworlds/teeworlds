@@ -152,19 +152,6 @@ bool IGameController::OnEntity(int Index, vec2 Pos, bool Front)
 	else if(Index == ENTITY_SPAWN_BLUE)
 		m_aaSpawnPoints[2][m_aNumSpawnPoints[2]++] = Pos;
 
-	if(Index == ENTITY_DOOR)
-	{
-		for(int i=0; i<8;i++)
-		{
-			if (sides[i] >= ENTITY_LASER_SHORT && sides[i] <= ENTITY_LASER_LONG)
-			{
-				CDoor * door = new CDoor(&GameServer()->m_World, Pos, pi/4*i, 32*3 + 32*(sides[i] - ENTITY_LASER_SHORT)*3, false);
-				//for (int j = 0; j < 8; j++)
-				//	if (j != i)
-						Connector(vec2(x, y), door, Front);
-			}
-		}
-	}
 	else if(Index >= ENTITY_CRAZY_SHOTGUN_U_EX && Index <= ENTITY_CRAZY_SHOTGUN_L_EX)
 	{
 		for (int i = 0; i < 4; i++)
@@ -301,9 +288,17 @@ bool IGameController::OnEntity(int Index, vec2 Pos, bool Front)
    {
        new CDragger(&GameServer()->m_World, Pos,Index-ENTITY_DRAGGER_WEAK_NW+1,true);
    }
+   else if(Index==ENTITY_PLASMAE)
+   {
+       new CGun(&GameServer()->m_World, Pos, false, true);
+   }
+   else if(Index==ENTITY_PLASMAF)
+   {
+       new CGun(&GameServer()->m_World, Pos, true, false);
+   }
    else if(Index==ENTITY_PLASMA)
    {
-       new CGun(&GameServer()->m_World, Pos);
+       new CGun(&GameServer()->m_World, Pos, true, true);
    }
 	if(Type != -1)
 	{
@@ -329,29 +324,6 @@ vec2 GetSidePos(int side) {
 	case 7: return vec2(-1, 1);
 	}
 	return vec2(0, 0);
-}
-
-void IGameController::Connector(vec2 Pos, CDoor* Door, bool Front) {
-	int sides[8];
-	sides[0] = GameServer()->Collision()->Entity(Pos.x, Pos.y + 1, Front);
-	sides[1] = GameServer()->Collision()->Entity(Pos.x + 1, Pos.y + 1, Front);
-	sides[2] = GameServer()->Collision()->Entity(Pos.x + 1, Pos.y, Front);
-	sides[3] = GameServer()->Collision()->Entity(Pos.x + 1, Pos.y - 1, Front);
-	sides[4] = GameServer()->Collision()->Entity(Pos.x, Pos.y - 1, Front);
-	sides[5] = GameServer()->Collision()->Entity(Pos.x - 1, Pos.y - 1, Front);
-	sides[6] = GameServer()->Collision()->Entity(Pos.x - 1, Pos.y, Front);
-	sides[7] = GameServer()->Collision()->Entity(Pos.x - 1, Pos.y + 1, Front);
-	for (int i=0;i<8;i++)
-	{
-		vec2 shift = GetSidePos(i);
-		if (sides[i]==ENTITY_CONNECTOR_D+(i+4) % 8)
-			Connector(Pos + shift, Door, Front);
-		else if(sides[i]==ENTITY_TRIGGER)
-		{
-			vec2 pos((Pos.x + shift.x)*32.0f + 16.0f, (Pos.y + shift.y)*32.0f + 16.0f);
-			new CTrigger(&GameServer()->m_World,pos, Door);
-		}
-	}
 }
 
 void IGameController::EndRound()

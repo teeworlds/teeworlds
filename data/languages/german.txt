@@ -190,8 +190,8 @@ Language
 Lht.
 == Hell.
 
-Loading
-== Laden
+Loading DDRace Client
+== Laden DDRace Client
 
 MOTD
 == Nachricht des Tages

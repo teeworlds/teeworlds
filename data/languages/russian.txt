@@ -1,4 +1,4 @@
-
+﻿
 ##### translated strings #####
 
 %d of %d servers, %d players
@@ -190,8 +190,8 @@ Language
 Lht.
 == L
 
-Loading
-== Загрузка
+Loading DDRace Client
+== Загрузка DDRace Client
 
 MOTD
 == MOTD

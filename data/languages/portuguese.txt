@@ -201,8 +201,8 @@ Language
 Lht.
 == Luz
 
-Loading
-== Carregando
+Loading DDRace Client
+== Carregando DDRace Client
 
 MOTD
 == MOTD

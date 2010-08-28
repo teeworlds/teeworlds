@@ -9,7 +9,6 @@
 MACRO_CONFIG_INT(SvShotgunBulletSound, sv_shotgun_bullet_sound, 0, 0, 1, CFGFLAG_SERVER, "Annoying Shotgun sound on/off")
 MACRO_CONFIG_INT(SvEndlessSuperHook, sv_endless_super_hook, 0, 0, 1, CFGFLAG_SERVER, "Endless hook for super players on/off")
 MACRO_CONFIG_INT(SvEmotionalTees, sv_emotional_tees, 1, 0, 1, CFGFLAG_SERVER, "Emotional Tees on/off")
-MACRO_CONFIG_INT(SvOldShotgun, sv_old_shotgun, 0, 0, 1, CFGFLAG_SERVER, "Makes Shotgun laser pull towards the shooter, rather than the last bounce origin")
 MACRO_CONFIG_INT(SvReconnectTime,sv_reconnect_time,5,0,9999,CFGFLAG_SERVER,"how much time between leaves and joins")
 MACRO_CONFIG_INT(SvVoteKickTimeDelay,sv_vote_kick_delay,0,0,9999,CFGFLAG_SERVER,"how much time between kick votes")
 MACRO_CONFIG_INT(SvVoteKickBanTime,sv_vote_kick_bantime, 300, 0, 9999, CFGFLAG_SERVER," ")
