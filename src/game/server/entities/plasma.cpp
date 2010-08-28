@@ -11,31 +11,36 @@ const float ACCEL=1.1f;
 //////////////////////////////////////////////////
 // turret
 //////////////////////////////////////////////////
-CPlasma::CPlasma(CGameWorld *pGameWorld, vec2 pos,vec2 dir)
+CPlasma::CPlasma(CGameWorld *pGameWorld, vec2 Pos, vec2 Dir, bool Freeze, bool Explosive)
 : CEntity(pGameWorld, NETOBJTYPE_LASER)
 {
-	this->m_Pos = pos;
-	this->core = dir;
-	this->eval_tick=Server()->Tick();
-	this->lifetime=Server()->TickSpeed()*1.5;
+	m_Pos = Pos;
+	m_Core = Dir;
+	m_Freeze = Freeze;
+	m_Explosive = Explosive;
+	m_EvalTick = Server()->Tick();
+	m_LifeTime = Server()->TickSpeed() * 1.5;
 	GameWorld()->InsertEntity(this);
 }
 
-bool CPlasma::hit_character()
+bool CPlasma::HitCharacter()
 {
-	vec2 to2;
-	CCharacter *hit = GameServer()->m_World.IntersectCharacter(m_Pos, m_Pos+core, 0.0f,to2);
-	if(!hit)
+	vec2 To2;
+	CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, m_Pos+m_Core, 0.0f,To2);
+	if(!Hit)
 		return false;
-	hit->Freeze(Server()->TickSpeed()*3);
+	if(m_Freeze)
+		Hit->Freeze(Server()->TickSpeed()*3);
+	else
+		GameServer()->CreateExplosion(m_Pos, -1, WEAPON_GRENADE, false);
 	GameServer()->m_World.DestroyEntity(this);
 	return true;
 }
 
-void CPlasma::move()
+void CPlasma::Move()
 {
-	m_Pos += core;
-	core *= ACCEL;
+	m_Pos += m_Core;
+	m_Core *= ACCEL;
 }
 	
 void CPlasma::Reset()
@@ -45,20 +50,21 @@ void CPlasma::Reset()
 
 void CPlasma::Tick()
 {
-	if (lifetime==0)
+	if (m_LifeTime==0)
 	{
 		Reset();
 		return;
 	}
-	lifetime--;
-	move();
-	hit_character();
+	m_LifeTime--;
+	Move();
+	HitCharacter();
 
-	int res=0;
-	res = GameServer()->Collision()->IntersectNoLaser(m_Pos, m_Pos+core,0, 0);
-	if(res)
+	int Res=0;
+	Res = GameServer()->Collision()->IntersectNoLaser(m_Pos, m_Pos+m_Core,0, 0);
+	if(Res)
 	{
-		GameServer()->CreateExplosion(m_Pos, -1, WEAPON_GRENADE, false);
+		if(m_Explosive)
+			GameServer()->CreateExplosion(m_Pos, -1, WEAPON_GRENADE, false);
 		Reset();
 	}
 	
@@ -74,5 +80,5 @@ void CPlasma::Snap(int snapping_client)
 	pObj->m_Y = (int)m_Pos.y;
 	pObj->m_FromX = (int)m_Pos.x;
 	pObj->m_FromY = (int)m_Pos.y;
-	pObj->m_StartTick = eval_tick;
+	pObj->m_StartTick = m_EvalTick;
 }

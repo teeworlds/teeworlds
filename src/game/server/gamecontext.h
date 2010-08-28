@@ -12,6 +12,8 @@
 #include "gameworld.h"
 #include "player.h"
 #include "score.h"
+#include <game/server/entities/door.h>
+#include <game/server/entities/trigger.h>
 
 /*
 	Tick
@@ -123,15 +125,20 @@ public:
 	
 	CEventHandler m_Events;
 	CPlayer *m_apPlayers[MAX_CLIENTS];
-	
-	//bool m_Cheats;
-	//bool m_EndlessDrag;
-	//bool m_Tunes;
-	//bool m_PlayersCollision;
 
 	IGameController *m_pController;
 	CGameWorld m_World;
+	int m_Size;
 	
+	struct SDoors
+	{
+		int m_Number;
+		vec2 m_Pos;
+		CDoor * m_Address;
+	};
+
+	SDoors* m_SDoors;
+
 	// helper functions
 	class CCharacter *GetPlayerChar(int ClientId);
 	

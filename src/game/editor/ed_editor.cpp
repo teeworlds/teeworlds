@@ -788,7 +788,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		CLayerTiles *pT = (CLayerTiles *)GetSelectedLayerType(0, LAYERTYPE_TILES);
 		
 		// no border for tele layer and speedup
-		if(pT && (pT->m_Tele || pT->m_Speedup))
+		if(pT && (pT->m_Tele || pT->m_Speedup || pT->m_Switch || pT->m_Front))
 			pT = 0;
 			
 		if(DoButton_Editor(&s_BorderBut, "Border", pT?0:-1, &Button, 0, Localize("Border")))
@@ -816,6 +816,15 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		{
 			static int s_SpeedupPopupId = 0;
 			UiInvokePopupMenu(&s_SpeedupPopupId, 0, UI()->MouseX(), UI()->MouseY(), 120, 43, PopupSpeedup);
+		}
+
+		TB_Bottom.VSplitLeft(5.0f, &Button, &TB_Bottom);
+		TB_Bottom.VSplitLeft(60.0f, &Button, &TB_Bottom);
+		static int s_SwitchButton = 0;
+		if(DoButton_Ex(&s_SwitchButton, "Switcher", (pS && pS->m_Switch)?0:-1, &Button, 0, "Switcher", CUI::CORNER_ALL))
+		{
+			static int s_SwitchPopupId = 0;
+			UiInvokePopupMenu(&s_SwitchPopupId, 0, UI()->MouseX(), UI()->MouseY(), 120, 23, PopupSwitch);
 		}
 	}
 
@@ -1135,7 +1144,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			//UI()->ClipEnable(&view);
 		}
 
-		// render the game, tele, speedup and front above everything else
+		// render the game, tele, speedup, front and switch above everything else
 		if(m_Map.m_pGameGroup->m_Visible)
  		{
  			m_Map.m_pGameGroup->MapScreen();
@@ -1147,6 +1156,8 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 				m_Map.m_pTeleLayer->Render();
 			if(m_Map.m_pSpeedupLayer && m_Map.m_pSpeedupLayer->m_Visible)
 				m_Map.m_pSpeedupLayer->Render();
+			if(m_Map.m_pSwitchLayer && m_Map.m_pSwitchLayer->m_Visible)
+				m_Map.m_pSwitchLayer->Render();
  		}
 	}
 
@@ -1798,7 +1809,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 				if(int Result = DoButton_Ex(m_Map.m_lGroups[g]->m_lLayers[i], aBuf, g==m_SelectedGroup&&i==m_SelectedLayer, &Button,
 					BUTTON_CONTEXT, Localize("Select layer. Right click for properties."), CUI::CORNER_R))
 				{
-					if(m_Map.m_lGroups[g]->m_lLayers[i] == m_Map.m_pTeleLayer || m_Map.m_lGroups[g]->m_lLayers[i] == m_Map.m_pSpeedupLayer)
+					if(m_Map.m_lGroups[g]->m_lLayers[i] == m_Map.m_pTeleLayer || m_Map.m_lGroups[g]->m_lLayers[i] == m_Map.m_pSpeedupLayer || m_Map.m_lGroups[g]->m_lLayers[i] == m_Map.m_pSwitchLayer)//Clear the brush on entering tele/speedup/switch layer
 						m_Brush.Clear();
 					m_SelectedLayer = i;
 					m_SelectedGroup = g;
@@ -3026,6 +3037,13 @@ void CEditorMap::MakeFrontLayer(CLayer *pLayer)
 	m_pFrontLayer->m_TexId = m_pEditor->ms_EntitiesTexture;
 }
 
+void CEditorMap::MakeSwitchLayer(CLayer *pLayer)
+{
+	m_pSwitchLayer = (CLayerSwitch *)pLayer;
+	m_pSwitchLayer->m_pEditor = m_pEditor;
+	m_pSwitchLayer->m_TexId = m_pEditor->ms_EntitiesTexture;
+}
+
 void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
 {
 	m_pGameGroup = pGroup;
@@ -3045,6 +3063,7 @@ void CEditorMap::Clean()
 	m_pTeleLayer = 0x0;
 	m_pSpeedupLayer = 0x0;
 	m_pFrontLayer = 0x0;
+	m_pSwitchLayer = 0x0;
 	m_pGameGroup = 0x0;
 }
 
@@ -3079,6 +3098,7 @@ void CEditorMap::CreateDefault(int EntitiesTexture)
 	m_pGameGroup->AddLayer(m_pFrontLayer);
 	m_pTeleLayer = 0x0;
 	m_pSpeedupLayer = 0x0;
+	m_pSwitchLayer = 0x0;
 }
 
 void CEditor::Init()

@@ -9,6 +9,10 @@ class CCollision
 	int m_Width;
 	int m_Height;
 	class CLayers *m_pLayers;
+	class CTeleTile *m_pTele;
+	class CSpeedupTile *m_pSpeedup;
+	class CTile *m_pFront;
+	class CTeleTile *m_pSwitch;
 
 public:
 	enum
@@ -62,9 +66,10 @@ public:
 
 	vec2 CpSpeed(int index);
 	
-	class CTeleTile *m_pTele;
-	class CSpeedupTile *m_pSpeedup;
-	class CTile *m_pFront;
+	class CTeleTile *TeleLayer() { return m_pTele; }
+	//class CSpeedupTile *SpeedupLayer() { return m_pSpeedup; }
+	//class CTile *FrontLayer() { m_pFront; }
+	class CTeleTile *SwitchLayer() { return m_pSwitch; }
 	class CLayers *Layers() { return m_pLayers; }
 };
 

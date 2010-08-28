@@ -57,8 +57,9 @@ enum
 	ENTITY_LASER_O_NORMAL,
 	ENTITY_LASER_O_FAST,
 	//DDRace - Plasma
-	ENTITY_PLASMA=29,
+	ENTITY_PLASMAE=29,
 	ENTITY_PLASMAF,
+	ENTITY_PLASMA,
 	//DDRace - Shotgun
 	ENTITY_CRAZY_SHOTGUN_U_EX=33,
 	ENTITY_CRAZY_SHOTGUN_R_EX,
@@ -137,6 +138,16 @@ enum
 	LAYERFLAG_DETAIL=1,
 	
 	ENTITY_OFFSET=255-16*4,
+};
+
+enum
+{
+	LAYER_GAME,
+	LAYER_FRONT,
+	LAYER_LASER,
+	LAYER_TELE,
+	LAYER_SPEEDUP,
+	NUM_LAYERS
 };
 
 struct CPoint
@@ -245,6 +256,7 @@ struct CMapItemLayerTilemap
 	int m_Tele;
 	int m_Speedup;
 	int m_Front;
+	int m_Switch;
 } ;
 
 struct CMapItemLayerQuads

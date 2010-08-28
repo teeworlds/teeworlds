@@ -10,15 +10,17 @@ class CCharacter;
 
 class CGun : public CEntity
 {
-	int eval_tick;
+	int m_EvalTick;
 
-	vec2 core;
+	vec2 m_Core;
+	 bool m_Freeze;
+	 bool m_Explosive;
 
-	void fire();
-	int DELAY;
+	void Fire();
+	int m_Delay;
 	
 public:
-	CGun(CGameWorld *pGameWorld, vec2 pos);
+	CGun(CGameWorld *pGameWorld, vec2 Pos, bool Freeze, bool Explosive);
 
 	virtual void Reset();
 	virtual void Tick();

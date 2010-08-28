@@ -31,8 +31,8 @@ void CGameControllerDDRace::InitTeleporter()
 		for(int i = 0; i < GameServer()->Collision()->Layers()->TeleLayer()->m_Width*GameServer()->Collision()->Layers()->TeleLayer()->m_Height; i++)
 		{
 			// get the array size
-			if(GameServer()->Collision()->m_pTele[i].m_Number > ArraySize)
-				ArraySize = GameServer()->Collision()->m_pTele[i].m_Number;
+			if(GameServer()->Collision()->TeleLayer()[i].m_Number > ArraySize)
+				ArraySize = GameServer()->Collision()->TeleLayer()[i].m_Number;
 		}
 	}
 	
@@ -48,7 +48,7 @@ void CGameControllerDDRace::InitTeleporter()
 	// assign the values
 	for(int i = 0; i < GameServer()->Collision()->Layers()->TeleLayer()->m_Width*GameServer()->Collision()->Layers()->TeleLayer()->m_Height; i++)
 	{
-		if(GameServer()->Collision()->m_pTele[i].m_Number > 0 && GameServer()->Collision()->m_pTele[i].m_Type == TILE_TELEOUT)
-			m_pTeleporter[GameServer()->Collision()->m_pTele[i].m_Number-1] = vec2(i%GameServer()->Collision()->Layers()->TeleLayer()->m_Width*32+16, i/GameServer()->Collision()->Layers()->TeleLayer()->m_Width*32+16);
+		if(GameServer()->Collision()->TeleLayer()[i].m_Number > 0 && GameServer()->Collision()->TeleLayer()[i].m_Type == TILE_TELEOUT)
+			m_pTeleporter[GameServer()->Collision()->TeleLayer()[i].m_Number-1] = vec2(i%GameServer()->Collision()->Layers()->TeleLayer()->m_Width*32+16, i/GameServer()->Collision()->Layers()->TeleLayer()->m_Width*32+16);
 	}
 }

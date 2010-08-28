@@ -190,8 +190,8 @@ Language
 Lht.
 == Lum.
 
-Loading
-== Chargement
+Loading DDRace Client
+== Chargement DDRace Client
 
 MOTD
 == MOTD
