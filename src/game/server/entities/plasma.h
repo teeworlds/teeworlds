@@ -9,14 +9,15 @@ class CGun;
 
 class CPlasma : public CEntity
 {
-	vec2 core;
-	int eval_tick;
-	int lifetime;
-
-	bool hit_character();
-	void move();
+	vec2 m_Core;
+	int m_EvalTick;
+	int m_LifeTime;
+	bool m_Freeze;
+	bool m_Explosive;
+	bool HitCharacter();
+	void Move();
 public:
-	CPlasma(CGameWorld *pGameWorld, vec2 pos,vec2 dir);
+	CPlasma(CGameWorld *pGameWorld, vec2 Pos, vec2 Dir, bool Freeze, bool Explosive);
 
 	virtual void Reset();
 	virtual void Tick();
