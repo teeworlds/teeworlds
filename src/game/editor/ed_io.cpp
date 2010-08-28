@@ -288,7 +288,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 					Item.m_Flags = 4;
 				else if(pLayer->m_Front)
 					Item.m_Flags = 8;
-				if(pLayer->m_Switch)
+				else if(pLayer->m_Switch)
 					Item.m_Flags = 16;
 				else
 					Item.m_Flags = pLayer->m_Game;
