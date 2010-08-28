@@ -4,7 +4,6 @@
 #include <game/server/entity.h>
 #include <game/generated/server_data.h>
 #include <game/generated/protocol.h>
-
 #include <game/gamecore.h>
 
 enum
@@ -91,6 +90,9 @@ public:
 	class CPlayer *m_pPlayer;
 
 	int m_RaceState;
+	
+	void OnFinish();
+	int Team();
 	
 		struct
 	{

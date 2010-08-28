@@ -2,12 +2,14 @@
 #include <engine/shared/config.h>
 #include <game/mapitems.h>
 
+
 #include <game/generated/protocol.h>
 
-#include "entities/pickup.h"
+
 #include "gamecontroller.h"
 #include "gamecontext.h"
 
+#include "entities/pickup.h"
 #include "entities/light.h"
 #include "entities/dragger.h"
 #include "entities/gun.h"
@@ -44,10 +46,12 @@ IGameController::IGameController(class CGameContext *pGameServer)
 	m_aNumSpawnPoints[2] = 0;
 	
 	m_CurrentRecord = 0;
+
 }
 
 IGameController::~IGameController()
 {
+
 }
 
 float IGameController::EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos)

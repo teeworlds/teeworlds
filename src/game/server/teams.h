@@ -1,17 +1,15 @@
 #ifndef GAME_SERVER_TEAMS_H
 #define GAME_SERVER_TEAMS_H
 
-
 #include <game/server/entities/character.h>
-#include <engine/server/server.h>
 #include <game/server/gamecontext.h>
-
 
 class CTeams {
 	int m_Team[MAX_CLIENTS];
 	int m_TeamState[MAX_CLIENTS];
 	bool m_TeeFinished[MAX_CLIENTS];
-	CGameContext* m_GameServer;
+	
+	class CGameContext * m_pGameContext;
 	
 public:
 	enum {
@@ -22,12 +20,13 @@ public:
 		FINISHED
 	};
 	
-	CTeams(CGameContext* gameContext);
+	CTeams(CGameContext *pGameContext);
 	
 	//helper methods
-	CCharacter* getCharacter(int id) { return GameServer()->GetPlayerChar(id); }	
-	CGameContext* GameServer() { return m_GameServer; }
-	IServer* Server() { return m_GameServer->Server(); }
+	CCharacter* Character(int id) { return GameServer()->GetPlayerChar(id); }	
+
+	class CGameContext *GameServer() { return m_pGameContext; }
+	class IServer *Server() { return m_pGameContext->Server(); }
 	
 	void OnCharacterStart(int id);
 	void OnCharacterFinish(int id);
@@ -38,6 +37,11 @@ public:
 	
 	bool TeamFinished(int Team);
 	
+	bool SameTeam(int Cid1, int Cid2);
+	
+	int GetTeam(int Cid) {
+		return m_Team[Cid];
+	}
 };
 
 #endif

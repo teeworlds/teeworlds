@@ -748,6 +748,25 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 							pChr->m_BroadTime=true;
 					}
 				}
+			else if(!str_comp_num(pMsg->m_pMessage, "/team", 5))
+			{
+				int Num;
+				
+				if(sscanf(pMsg->m_pMessage, "/team %d", &Num) == 1) {
+					if(((CGameControllerDDRace*)m_pController)->m_Teams.SetCharacterTeam(p->GetCID(), Num)) {
+						char aBuf[512];
+						str_format(aBuf, sizeof(aBuf), "%s joined to Team %d", Server()->ClientName(p->GetCID()), Num);
+						SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+					} else {
+						SendChatTarget(ClientId, "You cannot join to this team");
+					}
+				} else {
+					char aBuf[512];
+					str_format(aBuf, sizeof(aBuf), "You are in team %d", p->GetCharacter()->Team());
+					SendChatTarget(ClientId, aBuf);
+				}
+					
+			}
 			else if (!str_comp_nocase(pMsg->m_pMessage, "/broadcast")&&g_Config.m_SvEmotionalTees)
 				{
 					CCharacter* pChr = p->GetCharacter();
@@ -1915,6 +1934,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	//world = new GAMEWORLD;
 	//players = new CPlayer[MAX_CLIENTS];
 
+	//TODO: No need any more?
 	char buf[512];
 	str_format(buf, sizeof(buf), "data/maps/%s.cfg", g_Config.m_SvMap); //
 	Console()->ExecuteFile(buf);
