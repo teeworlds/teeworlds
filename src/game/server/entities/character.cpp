@@ -675,6 +675,7 @@ void CCharacter::Tick()
 	}
 	if(((TileIndex1 == TILE_BEGIN) || (TileIndex2 == TILE_BEGIN)) && (m_RaceState == RACE_NONE || m_RaceState == RACE_STARTED))
 	{
+		//TODO: CTeams::OnCharacterStart();
 		m_StartTime = Server()->Tick();
 		m_RefreshTime = Server()->Tick();
 		m_RaceState = RACE_STARTED;
@@ -682,6 +683,8 @@ void CCharacter::Tick()
 	
 	if(((TileIndex1 == TILE_END) || (TileIndex2 == TILE_END)) && m_RaceState == RACE_STARTED)
 	{
+		//TODO: CTeams::OnCharacterFinish()
+		//TODO2: make method for finishing
 		char aBuf[128];
 		m_CpActive=-2;
 		str_format(aBuf, sizeof(aBuf), "%s finished in: %d minute(s) %5.2f second(s)", Server()->ClientName(m_pPlayer->GetCID()), (int)time/60, time-((int)time/60*60));
