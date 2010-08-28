@@ -735,11 +735,11 @@ void CCharacter::Tick()
 					if(g_Config.m_SvHideScore || i == m_pPlayer->GetCID())
 					{
 						CNetMsg_Sv_PlayerTime Msg;
-						//char aBuf[16];
-						//str_format(aBuf, sizeof(aBuf), "%.0f", time*100.0f); // damn ugly but the only way i know to do it
-						//int TimeToSend;
-						//sscanf(aBuf, "%d", &TimeToSend);
-						Msg.m_Time = static_cast<int>(time*100.0f);
+						char aBuf[16];
+						str_format(aBuf, sizeof(aBuf), "%.0f", time*100.0f); // damn ugly but the only way i know to do it
+						int TimeToSend;
+						sscanf(aBuf, "%d", &TimeToSend);
+						Msg.m_Time = TimeToSend;
 						Msg.m_Cid = m_pPlayer->GetCID();
 						Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
 					}

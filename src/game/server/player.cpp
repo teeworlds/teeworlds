@@ -95,12 +95,12 @@ void CPlayer::Tick()
 		if(m_LastSentTime > GameServer()->m_pController->m_CurrentRecord || (m_LastSentTime == 0 && GameServer()->m_pController->m_CurrentRecord > 0))
 		{
 			//dbg_msg("player", "Record message sended");
-			//char aBuf[16];
-			//str_format(aBuf, sizeof(aBuf), "%.0f", GameServer()->m_pController->m_CurrentRecord*100.0f); // damn ugly but the only way i know to do it
-			//int TimeToSend;
-			//sscanf(aBuf, "%d", &TimeToSend);
+			char aBuf[16];
+			str_format(aBuf, sizeof(aBuf), "%.0f", GameServer()->m_pController->m_CurrentRecord*100.0f); // damn ugly but the only way i know to do it
+			int TimeToSend;
+			sscanf(aBuf, "%d", &TimeToSend);
 			CNetMsg_Sv_Record Msg;
-			Msg.m_Time = static_cast<int>(GameServer()->m_pController->m_CurrentRecord*100.0f);
+			Msg.m_Time = TimeToSend;
 			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_ClientID);
 			
 			m_LastSentTime = GameServer()->m_pController->m_CurrentRecord;
