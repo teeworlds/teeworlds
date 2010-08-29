@@ -40,7 +40,7 @@ void CCollision::Init(class CLayers *pLayers)
 		for(int i = 0; i < m_Width*m_Height; i++)
 			{
 				int Index = m_pFront[i].m_Index;
-				if(Index > 191)
+				if(Index > TILE_NPH)
 					continue;
 
 				switch(Index)
@@ -49,10 +49,10 @@ void CCollision::Init(class CLayers *pLayers)
 					m_pFront[i].m_Index = COLFLAG_DEATH;
 					break;
 				case TILE_SOLID:
-					m_pFront[i].m_Index = COLFLAG_SOLID;
+					m_pFront[i].m_Index = 0;
 					break;
 				case TILE_NOHOOK:
-					m_pFront[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
+					m_pFront[i].m_Index = 0;
 					break;
 				case TILE_NOLASER:
 					m_pFront[i].m_Index = COLFLAG_NOLASER;
@@ -62,7 +62,7 @@ void CCollision::Init(class CLayers *pLayers)
 				}
 
 				// DDRace tiles
-				if(Index >= 5 && Index<=191)
+				if(Index >= 6 && Index<=TILE_NPH)
 					m_pFront[i].m_Index = Index;
 			}
 	}
@@ -70,7 +70,7 @@ void CCollision::Init(class CLayers *pLayers)
 	for(int i = 0; i < m_Width*m_Height; i++)
 	{
 		int Index = m_pTiles[i].m_Index;
-		if(Index > 191)
+		if(Index > TILE_NPH)
 			continue;
 
 		switch(Index)
@@ -92,7 +92,7 @@ void CCollision::Init(class CLayers *pLayers)
 		}
 
 		// DDRace tiles
-		if(Index >= 5 && Index<=191)
+		if(Index >= 6 && Index<=TILE_NPH)
 			m_pTiles[i].m_Index = Index;
 	}
 }
@@ -191,9 +191,7 @@ int CCollision::GetFTile(int x, int y)
 	int nx = clamp(x/32, 0, m_Width-1);
 	int ny = clamp(y/32, 0, m_Height-1);
 	/*dbg_msg("GetFTile","m_Index %d",m_pFront[ny*m_Width+nx].m_Index);//Remove */
-	if(m_pFront[ny*m_Width+nx].m_Index == COLFLAG_SOLID
-		|| m_pFront[ny*m_Width+nx].m_Index == (COLFLAG_SOLID|COLFLAG_NOHOOK)
-		|| m_pFront[ny*m_Width+nx].m_Index == COLFLAG_DEATH
+	if(m_pFront[ny*m_Width+nx].m_Index == COLFLAG_DEATH
 		|| m_pFront[ny*m_Width+nx].m_Index == COLFLAG_NOLASER)
 		return m_pFront[ny*m_Width+nx].m_Index;
 	else
@@ -265,14 +263,13 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 		vec2 Pos = mix(Pos0, Pos1, a);
 		ix = round(Pos.x);
 		iy = round(Pos.y);
-		if((CheckPoint(ix, iy) || FCheckPoint(ix, iy)) && !(AllowThrough && IsThrough(ix + dx, iy + dy)))
+		if(CheckPoint(ix, iy) && !(AllowThrough && IsThrough(ix + dx, iy + dy)))
 		{
 			if(pOutCollision)
 				*pOutCollision = Pos;
 			if(pOutBeforeCollision)
 				*pOutBeforeCollision = Last;
-			if (CheckPoint(ix, iy))	return GetCollisionAt(ix, iy);
-			else return GetFCollisionAt(ix, iy);
+			return GetCollisionAt(ix, iy);
 		}
 		Last = Pos;
 	}
@@ -292,14 +289,14 @@ int CCollision::IntersectNoLaser(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2
 	{
 		float a = f/d;
 		vec2 Pos = mix(Pos0, Pos1, a);
-		if(IsSolid(round(Pos.x), round(Pos.y)) || IsFSolid(round(Pos.x), round(Pos.y)) || (IsNoLaser(round(Pos.x), round(Pos.y)) || IsFNoLaser(round(Pos.x), round(Pos.y))))
+		if(IsSolid(round(Pos.x), round(Pos.y)) || (IsNoLaser(round(Pos.x), round(Pos.y)) || IsFNoLaser(round(Pos.x), round(Pos.y))))
 		{
 			if(pOutCollision)
 				*pOutCollision = Pos;
 			if(pOutBeforeCollision)
 				*pOutBeforeCollision = Last;
-			if (IsSolid(round(Pos.x), round(Pos.y)) || IsNoLaser(round(Pos.x), round(Pos.y)))	return GetCollisionAt(Pos.x, Pos.y);
-			else return GetFCollisionAt(Pos.x, Pos.y);
+			if (IsFNoLaser(round(Pos.x), round(Pos.y)))	return GetFCollisionAt(Pos.x, Pos.y);
+			else return GetCollisionAt(Pos.x, Pos.y);
 			
 		}
 		Last = Pos;
@@ -376,10 +373,10 @@ void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, i
 
 	vec2 Pos = *pInoutPos;
 	vec2 Vel = *pInoutVel;
-	if(CheckPoint(Pos + Vel) || FCheckPoint(Pos + Vel))
+	if(CheckPoint(Pos + Vel))
 	{
 		int Affected = 0;
-		if(CheckPoint(Pos.x + Vel.x, Pos.y) || FCheckPoint(Pos.x + Vel.x, Pos.y))
+		if(CheckPoint(Pos.x + Vel.x, Pos.y))
 		{
 			pInoutVel->x *= -Elasticity;
 			if(pBounces)
@@ -387,7 +384,7 @@ void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, i
 			Affected++;
 		}
 
-		if(CheckPoint(Pos.x, Pos.y + Vel.y) || FCheckPoint(Pos.x, Pos.y + Vel.y))
+		if(CheckPoint(Pos.x, Pos.y + Vel.y))
 		{
 			pInoutVel->y *= -Elasticity;
 			if(pBounces)
@@ -468,13 +465,13 @@ void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elas
 bool CCollision::TestBox(vec2 Pos, vec2 Size)
 {
 	Size *= 0.5f;
-	if(CheckPoint(Pos.x-Size.x, Pos.y-Size.y) || FCheckPoint(Pos.x-Size.x, Pos.y-Size.y))
+	if(CheckPoint(Pos.x-Size.x, Pos.y-Size.y))
 		return true;
-	if(CheckPoint(Pos.x+Size.x, Pos.y-Size.y) || FCheckPoint(Pos.x+Size.x, Pos.y-Size.y))
+	if(CheckPoint(Pos.x+Size.x, Pos.y-Size.y))
 		return true;
-	if(CheckPoint(Pos.x-Size.x, Pos.y+Size.y) || FCheckPoint(Pos.x-Size.x, Pos.y+Size.y))
+	if(CheckPoint(Pos.x-Size.x, Pos.y+Size.y))
 		return true;
-	if(CheckPoint(Pos.x+Size.x, Pos.y+Size.y) || FCheckPoint(Pos.x+Size.x, Pos.y+Size.y))
+	if(CheckPoint(Pos.x+Size.x, Pos.y+Size.y))
 		return true;
 	return false;
 }
@@ -482,11 +479,6 @@ bool CCollision::TestBox(vec2 Pos, vec2 Size)
 int CCollision::IsSolid(int x, int y)
 {
 	return (GetTile(x,y)&COLFLAG_SOLID);
-}
-
-int CCollision::IsFSolid(int x, int y)
-{
-	return (GetFTile(x,y)&COLFLAG_SOLID);
 }
 
 int CCollision::IsThrough(int x, int y)

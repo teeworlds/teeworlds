@@ -128,7 +128,7 @@ enum
 	TILE_NPC,
 	TILE_EHOOK,
 	TILE_NOHIT,
-	TILE_NPH,
+	TILE_NPH,//Remeber to change this in collision.cpp if you add anymore tiles
 	//End of higher tiles
 	//Untouchable Elements
 	TILEFLAG_VFLIP=1,

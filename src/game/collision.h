@@ -27,8 +27,6 @@ public:
 	void Init(class CLayers *pLayers);
 	bool CheckPoint(float x, float y) { return IsSolid(round(x), round(y)); }
 	bool CheckPoint(vec2 p) { return CheckPoint(p.x, p.y); }
-	bool FCheckPoint(float x, float y) { return IsFSolid(round(x), round(y)); }
-	bool FCheckPoint(vec2 p) { return FCheckPoint(p.x, p.y); }
 	void SetCollisionAt(float x, float y, int flag);
 	int GetCollisionAt(float x, float y) { return GetTile(round(x), round(y)); }
 	int GetFCollisionAt(float x, float y) { return GetFTile(round(x), round(y)); }
@@ -55,7 +53,6 @@ public:
 	void GetSpeedup(int x, int y, vec2 *Dir, int *Force);
 	
 	int IsSolid(int x, int y);
-	int IsFSolid(int x, int y);
 	int IsThrough(int x, int y);
 	int IsNoLaser(int x, int y);
 	int IsFNoLaser(int x, int y);
