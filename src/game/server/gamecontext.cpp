@@ -1321,7 +1321,7 @@ void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int ci
 	CCharacter* chr = pSelf->GetPlayerChar(cid);
 	if(chr)
 	{
-		chr->m_Core.m_Pos.x -= 32;
+		chr->m_Core.m_Pos.x -= 16;
 		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
@@ -1333,7 +1333,7 @@ void  CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int 
 	CCharacter* chr = pSelf->GetPlayerChar(cid);
 	if(chr)
 	{
-		chr->m_Core.m_Pos.x += 32;
+		chr->m_Core.m_Pos.x += 16;
 		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
@@ -1345,7 +1345,7 @@ void  CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int cid
 	CCharacter* chr = pSelf->GetPlayerChar(cid);
 	if(chr)
 	{
-		chr->m_Core.m_Pos.y -= 32;
+		chr->m_Core.m_Pos.y -= 16;
 		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
@@ -1357,7 +1357,7 @@ void  CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int c
 	CCharacter* chr = pSelf->GetPlayerChar(cid);
 	if(chr)
 	{
-		chr->m_Core.m_Pos.y += 32;
+		chr->m_Core.m_Pos.y += 16;
 		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
