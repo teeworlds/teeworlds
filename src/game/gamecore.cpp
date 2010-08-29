@@ -1,6 +1,5 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include "gamecore.h"
-#include "server/entities/character.h"
 
 const char *CTuningParams::m_apNames[] =
 {
@@ -209,7 +208,7 @@ void CCharacterCore::Tick(bool UseInput)
 		}
 
 		// Check against other players first
-		if(m_pWorld && m_pWorld->m_Tuning.m_PlayerHooking)//TODO:TEAM
+		if(m_pWorld && m_pWorld->m_Tuning.m_PlayerHooking)
 		{
 			float Dist = 0.0f;
 			for(int i = 0; i < MAX_CLIENTS; i++)

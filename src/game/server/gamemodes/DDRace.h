@@ -3,7 +3,7 @@
 #ifndef DDRACE_H
 #define DDRACE_H
 #include <game/server/gamecontroller.h>
-#include <game/server/teams.h>
+#include <game/teams.h>
 
 
 class CGameControllerDDRace : public IGameController

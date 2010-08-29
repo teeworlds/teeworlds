@@ -298,7 +298,7 @@ void CCharacter::FireWeapon()
 			m_NumObjectsHit = 0;
 			GameServer()->CreateSound(m_Pos, SOUND_HAMMER_FIRE);
 
-			if (!g_Config.m_SvHit) break;//TODO:TEAM
+			if (!g_Config.m_SvHit) break;
 
 			CCharacter *aEnts[64];
 			int Hits = 0;
@@ -310,7 +310,7 @@ void CCharacter::FireWeapon()
 				CCharacter *Target = aEnts[i];
 
 				//for DDRace mod or any other mod, which needs hammer hits through the wall remove second condition
-				if ((Target == this) /*|| GameServer()->Collision()->IntersectLine(ProjStartPos, Target->m_Pos, NULL, NULL)*/)
+				if ((Target == this || Target->Team() != this->Team()) /*|| GameServer()->Collision()->IntersectLine(ProjStartPos, Target->m_Pos, NULL, NULL)*/)
 					continue;
 
 				// set his velocity to fast upward (for now)
