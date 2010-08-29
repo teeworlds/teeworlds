@@ -31,7 +31,7 @@ bool CPlasma::HitCharacter()
 		return false;
 	if(m_Freeze)
 		Hit->Freeze(Server()->TickSpeed()*3);
-	else
+	if(!m_Freeze || (m_Freeze && m_Explosive))
 		GameServer()->CreateExplosion(m_Pos, -1, WEAPON_GRENADE, false);
 	GameServer()->m_World.DestroyEntity(this);
 	return true;
