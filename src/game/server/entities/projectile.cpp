@@ -99,11 +99,11 @@ void CProjectile::Tick()
 	if(m_LifeSpan > -1)
 		m_LifeSpan--;
 	
-	if( (TargetChr && (g_Config.m_SvHit || TargetChr == OwnerChar)) || Collide)//TODO:TEAM
+	if( (TargetChr && ((g_Config.m_SvHit || m_Owner == -1) || TargetChr == OwnerChar)) || Collide)//TODO:TEAM
 	{
 		if(m_Explosive/*??*/ && (!TargetChr || (TargetChr && !m_Freeze)))
 		{
-			GameServer()->CreateExplosion(ColPos, m_Owner, m_Weapon, false);
+			GameServer()->CreateExplosion(ColPos, m_Owner, m_Weapon, (m_Owner == -1)?true:false);
 			GameServer()->CreateSound(ColPos, m_SoundImpact);
 		}
 		else if(TargetChr && m_Freeze)

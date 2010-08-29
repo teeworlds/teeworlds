@@ -127,8 +127,8 @@ void CGameContext::CreateExplosion(vec2 p, int Owner, int Weapon, bool NoDamage)
 		ev->m_Y = (int)p.y;
 	}
 
-	if (!NoDamage)
-	{
+	/*if (!NoDamage)
+	{*/
 		// deal damage
 		CCharacter *apEnts[64];
 		float Radius = 135.0f;
@@ -144,13 +144,14 @@ void CGameContext::CreateExplosion(vec2 p, int Owner, int Weapon, bool NoDamage)
 			l = 1-clamp((l-InnerRadius)/(Radius-InnerRadius), 0.0f, 1.0f);
 			float Dmg = 6 * l;
 			if((int)Dmg)//TODO:TEAM
-				if(g_Config.m_SvHit || Owner == apEnts[i]->m_pPlayer->GetCID()) {
+				if((g_Config.m_SvHit||NoDamage) || Owner == apEnts[i]->m_pPlayer->GetCID())
+				{
 					apEnts[i]->TakeDamage(ForceDir*Dmg*2, (int)Dmg, Owner, Weapon);
-					if(!g_Config.m_SvHit) break;
+					if(!g_Config.m_SvHit||NoDamage) break;
 				}
 
 		}
-	}
+	//}
 }
 
 /*
@@ -1340,7 +1341,7 @@ void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int ci
 	CCharacter* chr = pSelf->GetPlayerChar(cid);
 	if(chr)
 	{
-		chr->m_Core.m_Pos.x -= 32;
+		chr->m_Core.m_Pos.x -= 16;
 		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
@@ -1352,7 +1353,7 @@ void  CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int 
 	CCharacter* chr = pSelf->GetPlayerChar(cid);
 	if(chr)
 	{
-		chr->m_Core.m_Pos.x += 32;
+		chr->m_Core.m_Pos.x += 16;
 		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
@@ -1364,7 +1365,7 @@ void  CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int cid
 	CCharacter* chr = pSelf->GetPlayerChar(cid);
 	if(chr)
 	{
-		chr->m_Core.m_Pos.y -= 32;
+		chr->m_Core.m_Pos.y -= 16;
 		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
@@ -1376,7 +1377,7 @@ void  CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int c
 	CCharacter* chr = pSelf->GetPlayerChar(cid);
 	if(chr)
 	{
-		chr->m_Core.m_Pos.y += 32;
+		chr->m_Core.m_Pos.y += 16;
 		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
@@ -1980,9 +1981,30 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	if (pSwitch)
 	{
 		if(Collision()->Layers()->SwitchLayer())
-			for(int i = 0; i < Collision()->Layers()->SwitchLayer()->m_Width * Collision()->Layers()->SwitchLayer()->m_Height; i++)
-				if(Collision()->SwitchLayer()[i].m_Type == (ENTITY_DOOR + ENTITY_OFFSET))
-					m_Size++;
+			for(int y = 0; y < pTileMap->m_Height; y++)
+				for(int x = 0; x < pTileMap->m_Width; x++)
+				{
+					int sides[8][2];
+					sides[0][0]=pSwitch[(x)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
+					sides[1][0]=pSwitch[(x+1)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
+					sides[2][0]=pSwitch[(x+1)+pTileMap->m_Width*(y)].m_Type - ENTITY_OFFSET;
+					sides[3][0]=pSwitch[(x+1)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
+					sides[4][0]=pSwitch[(x)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
+					sides[5][0]=pSwitch[(x-1)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
+					sides[6][0]=pSwitch[(x-1)+pTileMap->m_Width*(y)].m_Type - ENTITY_OFFSET;
+					sides[7][0]=pSwitch[(x-1)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
+					sides[0][1]=pSwitch[(x)+pTileMap->m_Width*(y+1)].m_Number;
+					sides[1][1]=pSwitch[(x+1)+pTileMap->m_Width*(y+1)].m_Number;
+					sides[2][1]=pSwitch[(x+1)+pTileMap->m_Width*(y)].m_Number;
+					sides[3][1]=pSwitch[(x+1)+pTileMap->m_Width*(y-1)].m_Number;
+					sides[4][1]=pSwitch[(x)+pTileMap->m_Width*(y-1)].m_Number;
+					sides[5][1]=pSwitch[(x-1)+pTileMap->m_Width*(y-1)].m_Number;
+					sides[6][1]=pSwitch[(x-1)+pTileMap->m_Width*(y)].m_Number;
+					sides[7][1]=pSwitch[(x-1)+pTileMap->m_Width*(y+1)].m_Number;
+					for(int i=0; i<8;i++)
+						if ((sides[i][0] >= ENTITY_LASER_SHORT && sides[i][0] <= ENTITY_LASER_LONG) && Collision()->SwitchLayer()[y*pTileMap->m_Width+x].m_Number == sides[i][1])
+							m_Size++;
+				}
 		if(m_Size)
 		{
 			m_SDoors = new SDoors[m_Size];

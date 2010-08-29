@@ -75,9 +75,8 @@ void CDragger::drag()
 		}
 		else
 			if (length(m_Pos-target->m_Pos)>28)
-			{
-				target->m_Core.m_Vel+=normalize(m_Pos-target->m_Pos)*strength;
-			}
+				if(!((target->m_CurrentTile >= TILE_STOPL && target->m_CurrentTile <= TILE_STOPT) || (target->m_CurrentFTile >= TILE_STOPL && target->m_CurrentFTile <= TILE_STOPT)))
+					target->m_Core.m_Vel+=normalize(m_Pos-target->m_Pos)*strength;
 	}
 }
 
