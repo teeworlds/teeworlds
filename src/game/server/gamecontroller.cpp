@@ -159,7 +159,9 @@ bool IGameController::OnEntity(int Index, vec2 Pos, bool Front)
 			if (Index - ENTITY_CRAZY_SHOTGUN_U_EX == i)
 			{
 				float Deg = i*(pi/2);
-				CProjectile *bullet = new CProjectile(&GameServer()->m_World,
+				CProjectile *bullet = new CProjectile
+					(
+					&GameServer()->m_World,
 					WEAPON_SHOTGUN, //Type
 					-1, //Owner
 					Pos, //Pos
@@ -167,9 +169,10 @@ bool IGameController::OnEntity(int Index, vec2 Pos, bool Front)
 					-2, //Span
 					true, //Freeze
 					true, //Explosive
-					0,
-					(g_Config.m_SvShotgunBulletSound)?SOUND_GRENADE_EXPLODE:-1,
-					WEAPON_SHOTGUN);
+					0,//Force
+					(g_Config.m_SvShotgunBulletSound)?SOUND_GRENADE_EXPLODE:-1,//SoundImpact
+					WEAPON_SHOTGUN//Weapon
+					);
 				bullet->SetBouncing(2 - (i % 2));
 
 			}

@@ -336,16 +336,20 @@ void CCharacter::FireWeapon()
 
 		case WEAPON_GUN:
 		{
-			CProjectile *Proj = new CProjectile(GameWorld(), WEAPON_GUN,
-				m_pPlayer->GetCID(),
-				ProjStartPos,
-				Direction,
-				(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GunLifetime),
-				0,
-				0,
-				0,
-				-1,
-				WEAPON_GUN);
+			CProjectile *Proj = new CProjectile
+				(
+				GameWorld(),
+				WEAPON_GUN,//Type
+				m_pPlayer->GetCID(),//Owner
+				ProjStartPos,//Pos
+				Direction,//Dir
+				(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GunLifetime),//Span
+				0,//Freeze
+				0,//Explosive
+				0,//Force
+				-1,//SoundImpact
+				WEAPON_GUN//Weapon
+				);
 
 			// pack the Projectile and send it to the client Directly
 			CNetObj_Projectile p;
@@ -399,15 +403,20 @@ void CCharacter::FireWeapon()
 
 		case WEAPON_GRENADE:
 		{
-				CProjectile *Proj = new CProjectile(GameWorld(), WEAPON_GRENADE,
-					m_pPlayer->GetCID(),
-					ProjStartPos,
-					Direction,
-					(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GrenadeLifetime),
-					0,
-					true,
-					0,
-					SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
+				CProjectile *Proj = new CProjectile
+					(
+					GameWorld(),
+					WEAPON_GRENADE,//Type
+					m_pPlayer->GetCID(),//Owner
+					ProjStartPos,//Pos
+					Direction,//Dir
+					(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GrenadeLifetime),//Span
+					0,//Freeze
+					true,//Explosive
+					0,//Force
+					SOUND_GRENADE_EXPLODE,//SoundImpact
+					WEAPON_GRENADE//Weapon
+					);//SoundImpact
 
 				// pack the Projectile and send it to the client Directly
 				CNetObj_Projectile p;
