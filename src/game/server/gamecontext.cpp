@@ -127,8 +127,8 @@ void CGameContext::CreateExplosion(vec2 p, int Owner, int Weapon, bool NoDamage)
 		ev->m_Y = (int)p.y;
 	}
 
-	if (!NoDamage)
-	{
+	/*if (!NoDamage)
+	{*/
 		// deal damage
 		CCharacter *apEnts[64];
 		float Radius = 135.0f;
@@ -144,13 +144,14 @@ void CGameContext::CreateExplosion(vec2 p, int Owner, int Weapon, bool NoDamage)
 			l = 1-clamp((l-InnerRadius)/(Radius-InnerRadius), 0.0f, 1.0f);
 			float Dmg = 6 * l;
 			if((int)Dmg)
-				if(g_Config.m_SvHit || Owner == apEnts[i]->m_pPlayer->GetCID()) {
+				if((g_Config.m_SvHit||NoDamage) || Owner == apEnts[i]->m_pPlayer->GetCID())
+				{
 					apEnts[i]->TakeDamage(ForceDir*Dmg*2, (int)Dmg, Owner, Weapon);
-					if(!g_Config.m_SvHit) break;
+					if(!g_Config.m_SvHit||NoDamage) break;
 				}
 
 		}
-	}
+	//}
 }
 
 /*
