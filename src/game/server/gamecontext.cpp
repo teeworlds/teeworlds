@@ -1961,9 +1961,30 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	if (pSwitch)
 	{
 		if(Collision()->Layers()->SwitchLayer())
-			for(int i = 0; i < Collision()->Layers()->SwitchLayer()->m_Width * Collision()->Layers()->SwitchLayer()->m_Height; i++)
-				if(Collision()->SwitchLayer()[i].m_Type == (ENTITY_DOOR + ENTITY_OFFSET))
-					m_Size++;
+			for(int y = 0; y < pTileMap->m_Height; y++)
+				for(int x = 0; x < pTileMap->m_Width; x++)
+				{
+					int sides[8][2];
+					sides[0][0]=pSwitch[(x)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
+					sides[1][0]=pSwitch[(x+1)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
+					sides[2][0]=pSwitch[(x+1)+pTileMap->m_Width*(y)].m_Type - ENTITY_OFFSET;
+					sides[3][0]=pSwitch[(x+1)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
+					sides[4][0]=pSwitch[(x)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
+					sides[5][0]=pSwitch[(x-1)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
+					sides[6][0]=pSwitch[(x-1)+pTileMap->m_Width*(y)].m_Type - ENTITY_OFFSET;
+					sides[7][0]=pSwitch[(x-1)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
+					sides[0][1]=pSwitch[(x)+pTileMap->m_Width*(y+1)].m_Number;
+					sides[1][1]=pSwitch[(x+1)+pTileMap->m_Width*(y+1)].m_Number;
+					sides[2][1]=pSwitch[(x+1)+pTileMap->m_Width*(y)].m_Number;
+					sides[3][1]=pSwitch[(x+1)+pTileMap->m_Width*(y-1)].m_Number;
+					sides[4][1]=pSwitch[(x)+pTileMap->m_Width*(y-1)].m_Number;
+					sides[5][1]=pSwitch[(x-1)+pTileMap->m_Width*(y-1)].m_Number;
+					sides[6][1]=pSwitch[(x-1)+pTileMap->m_Width*(y)].m_Number;
+					sides[7][1]=pSwitch[(x-1)+pTileMap->m_Width*(y+1)].m_Number;
+					for(int i=0; i<8;i++)
+						if ((sides[i][0] >= ENTITY_LASER_SHORT && sides[i][0] <= ENTITY_LASER_LONG) && Collision()->SwitchLayer()[y*pTileMap->m_Width+x].m_Number == sides[i][1])
+							m_Size++;
+				}
 		if(m_Size)
 		{
 			m_SDoors = new SDoors[m_Size];
