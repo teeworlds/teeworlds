@@ -99,7 +99,7 @@ void CProjectile::Tick()
 	if(m_LifeSpan > -1)
 		m_LifeSpan--;
 	
-	if( (TargetChr && (g_Config.m_SvHit || TargetChr == OwnerChar)) || Collide)
+	if( (TargetChr && (g_Config.m_SvHit || TargetChr == OwnerChar)) || Collide)//TODO:TEAM
 	{
 		if(m_Explosive/*??*/ && (!TargetChr || (TargetChr && !m_Freeze)))
 		{

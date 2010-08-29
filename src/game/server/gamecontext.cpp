@@ -143,7 +143,7 @@ void CGameContext::CreateExplosion(vec2 p, int Owner, int Weapon, bool NoDamage)
 				ForceDir = normalize(Diff);
 			l = 1-clamp((l-InnerRadius)/(Radius-InnerRadius), 0.0f, 1.0f);
 			float Dmg = 6 * l;
-			if((int)Dmg)
+			if((int)Dmg)//TODO:TEAM
 				if(g_Config.m_SvHit || Owner == apEnts[i]->m_pPlayer->GetCID()) {
 					apEnts[i]->TakeDamage(ForceDir*Dmg*2, (int)Dmg, Owner, Weapon);
 					if(!g_Config.m_SvHit) break;
@@ -2031,8 +2031,6 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 				g_Config.m_SvEndlessDrag = 1;
 			else if (Index == TILE_NOHIT)
 				g_Config.m_SvHit = 0;
-			else if (Index == TILE_EHOOK)
-				g_Config.m_SvEndlessDrag = 1;
 			else if (Index == TILE_NPH)
 				g_Config.m_SvPhook = 0;
 			if(Index >= ENTITY_OFFSET)
@@ -2049,8 +2047,6 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 					g_Config.m_SvEndlessDrag = 1;
 				else if (Index == TILE_NOHIT)
 					g_Config.m_SvHit = 0;
-				else if (Index == TILE_EHOOK)
-					g_Config.m_SvEndlessDrag = 1;
 				else if (Index == TILE_NPH)
 					g_Config.m_SvPhook = 0;
 

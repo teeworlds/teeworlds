@@ -209,7 +209,7 @@ void CCharacterCore::Tick(bool UseInput)
 		}
 
 		// Check against other players first
-		if(m_pWorld && m_pWorld->m_Tuning.m_PlayerHooking)
+		if(m_pWorld && m_pWorld->m_Tuning.m_PlayerHooking)//TODO:TEAM
 		{
 			float Dist = 0.0f;
 			for(int i = 0; i < MAX_CLIENTS; i++)
@@ -309,7 +309,7 @@ void CCharacterCore::Tick(bool UseInput)
 		}
 	}
 	
-	if(m_pWorld/* && m_pWorld->m_Tuning.m_PlayerCollision*/)
+	if(m_pWorld/* && m_pWorld->m_Tuning.m_PlayerCollision*/)//TODO:TEAM
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
@@ -323,7 +323,7 @@ void CCharacterCore::Tick(bool UseInput)
 			// handle player <-> player collision
 			float d = distance(m_Pos, p->m_Pos);
 			vec2 Dir = normalize(m_Pos - p->m_Pos);
-			if (m_pWorld->m_Tuning.m_PlayerCollision) {
+			if (m_pWorld->m_Tuning.m_PlayerCollision) {//TODO:TEAM
 				
 				if(d < PhysSize*1.25f && d > 1.0f)
 				{

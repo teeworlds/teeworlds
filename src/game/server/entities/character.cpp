@@ -298,7 +298,7 @@ void CCharacter::FireWeapon()
 			m_NumObjectsHit = 0;
 			GameServer()->CreateSound(m_Pos, SOUND_HAMMER_FIRE);
 
-			if (!g_Config.m_SvHit) break;
+			if (!g_Config.m_SvHit) break;//TODO:TEAM
 
 			CCharacter *aEnts[64];
 			int Hits = 0;

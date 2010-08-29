@@ -30,7 +30,7 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 	m_From = From;
 	m_Pos = At;
 	m_Energy = -1;
-	if ((m_Type == 1 && g_Config.m_SvHit))
+	if ((m_Type == 1 && g_Config.m_SvHit))//TODO:TEAM
 	{
 			Hit->m_Core.m_Vel+=normalize(m_PrevPos - Hit->m_Core.m_Pos) * 10;
 	}
