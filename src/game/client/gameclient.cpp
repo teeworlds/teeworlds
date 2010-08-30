@@ -445,8 +445,9 @@ static void Evolve(CNetObj_Character *pCharacter, int Tick)
 {
 	CWorldCore TempWorld;
 	CCharacterCore TempCore;
+	CTeamsCore TempTeams;
 	mem_zero(&TempCore, sizeof(TempCore));
-	TempCore.Init(&TempWorld, g_GameClient.Collision());
+	TempCore.Init(&TempWorld, g_GameClient.Collision(), &TempTeams);//????
 	TempCore.Read(pCharacter);
 	
 	while(pCharacter->m_Tick < Tick)
@@ -943,7 +944,7 @@ void CGameClient::OnPredict()
 		if(!m_Snap.m_aCharacters[i].m_Active)
 			continue;
 			
-		g_GameClient.m_aClients[i].m_Predicted.Init(&World, Collision());
+		g_GameClient.m_aClients[i].m_Predicted.Init(&World, Collision(), &m_Teams);
 		World.m_apCharacters[i] = &g_GameClient.m_aClients[i].m_Predicted;
 		g_GameClient.m_aClients[i].m_Predicted.Read(&m_Snap.m_aCharacters[i].m_Cur);
 	}

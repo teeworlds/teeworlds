@@ -6,6 +6,8 @@
 #include <engine/console.h>
 #include <game/layers.h>
 #include <game/gamecore.h>
+#include <game/teamscore.h>
+
 #include "render.h"
 
 	const CColor m_PredefinedColors[MAX_CLIENTS] = {
@@ -61,6 +63,7 @@ class CGameClient : public IGameClient
 	
 	CLayers m_Layers;
 	class CCollision m_Collision;
+	class CTeamsCore m_Teams;
 	CUI m_UI;
 	
 	void DispatchInput();
