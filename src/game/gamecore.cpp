@@ -226,7 +226,7 @@ void CCharacterCore::Tick(bool UseInput)
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
 				CCharacterCore *p = m_pWorld->m_apCharacters[i];
-				if(!p || p == this || !m_pTeams.SameTeam(i, ThisId))
+				if(!p || p == this || !m_pTeams->SameTeam(i, ThisId))
 					continue;
 
 				vec2 ClosestPoint = closest_point_on_line(m_HookPos, NewPos, p->m_Pos);
