@@ -101,7 +101,9 @@ void CProjectile::Tick()
 	
 	if( (TargetChr && (g_Config.m_SvHit || m_Owner == -1 || TargetChr == OwnerChar)) || Collide)//TODO:TEAM
 	{
-		if(!OwnerChar && OwnerChar->m_Alive && TargetChr->m_Alive && OwnerChar->Team() != TargetChr->Team()) return;
+		if(OwnerChar && TargetChr 
+			&& OwnerChar->m_Alive && TargetChr->m_Alive 
+			&& OwnerChar->Team() != TargetChr->Team()) return;
 		if(m_Explosive/*??*/ && (!TargetChr || (TargetChr && !m_Freeze)))
 		{
 			GameServer()->CreateExplosion(ColPos, m_Owner, m_Weapon, (m_Owner == -1)?true:false);
