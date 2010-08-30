@@ -12,63 +12,93 @@
 
 
 
-CLight::CLight(CGameWorld *pGameWorld, vec2 pos, float rotation, int length)
+CLight::CLight(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length)
 : CEntity(pGameWorld, NETOBJTYPE_LASER)
 {
-	TICK=(Server()->TickSpeed()*0.15f);
-	this->m_Pos = pos;
-	this->rotation = rotation;
-	this->length = length;
-	this->eval_tick=Server()->Tick();
+	m_Tick=(Server()->TickSpeed()*0.15f);
+	m_Pos = Pos;
+	m_Rotation = Rotation;
+	m_Length = Length;
+	m_EvalTick = Server()->Tick();
 	GameWorld()->InsertEntity(this);
-	step();
+	Step();
 }
 
 
-bool CLight::hit_character()
+bool CLight::HitCharacter()
 {
-	vec2 nothing;
-	CCharacter *hit = GameServer()->m_World.IntersectCharacter(m_Pos, to, 0.0f, nothing, 0);
-	if(!hit)
-		return false;
-	hit->Freeze(Server()->TickSpeed()*3);
+	vec2 At;
+	vec2 Points[36];
+	for(int i=1;i<37;i++)
+	{
+		Points[i-1].x = m_Pos.x * (1 - i/38.0) + m_To.x * i / 38.0;
+		Points[i-1].y = m_Pos.y * (1 - i/38.0) + m_To.y * i / 38.0;
+	}
+	CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, Points[0], 1.f, At, 0);
+	if(Hit)
+		Hit->Freeze(Server()->TickSpeed()*3);
+	Hit = 0;
+	Hit = GameServer()->m_World.IntersectCharacter(Points[0], m_Pos, 1.f, At, 0);
+	if(Hit)
+		Hit->Freeze(Server()->TickSpeed()*3);
+	Hit = 0;
+	for(int i = 0; i < 36; i++)
+	{
+		Hit = GameServer()->m_World.IntersectCharacter(Points[i], Points[i+1], 1.f, At, 0);
+		if(Hit)
+			Hit->Freeze(Server()->TickSpeed()*3);
+		Hit = 0;
+		Hit = GameServer()->m_World.IntersectCharacter(Points[i+1], Points[i], 1.f, At, 0);
+		if(Hit)
+			Hit->Freeze(Server()->TickSpeed()*3);
+		Hit = 0;
+	}
+	Hit = GameServer()->m_World.IntersectCharacter(Points[35], m_To, 1.f, At, 0);
+	if(Hit)
+		Hit->Freeze(Server()->TickSpeed()*3);
+	Hit = 0;
+	Hit = GameServer()->m_World.IntersectCharacter(m_To, Points[35], 1.f, At, 0);
+	if(Hit)
+		Hit->Freeze(Server()->TickSpeed()*3);
+	Hit = 0;
+
 	return true;
 
 }
 
-void CLight::move()
+void CLight::Move()
 {
-	if (speed != 0)
+	if (m_Speed != 0)
 	{
-		if ((cur_length>=length && speed>0) || (cur_length<=0 && speed<0))
-				speed=-speed;
-		cur_length+=speed*TICK + length_l;
-		length_l=0;
-		if (cur_length>length)
+		if ((m_CurveLength>=m_Length && m_Speed>0) || (m_CurveLength<=0 && m_Speed<0))
+				m_Speed=-m_Speed;
+		m_CurveLength+=m_Speed*m_Tick + m_LengthL;
+		m_LengthL=0;
+		if (m_CurveLength>m_Length)
 		{
-			length_l=cur_length-length;
-			cur_length=length;
+			m_LengthL=m_CurveLength-m_Length;
+			m_CurveLength=m_Length;
 		}
-		else if(cur_length<0)
+		else if(m_CurveLength<0)
 		{
-			length_l=0+cur_length;
-			cur_length=0;
+			m_LengthL=0+m_CurveLength;
+			m_CurveLength=0;
 		}
 	}
-	
-	rotation+=ang_speed*TICK;
-	if (rotation>pi*2)
-		rotation-=pi*2;
-	else if(rotation<0)
-		rotation+=pi*2;
+
+	m_Rotation+=m_AngularSpeed*m_Tick;
+	if (m_Rotation>pi*2)
+		m_Rotation-=pi*2;
+	else if(m_Rotation<0)
+		m_Rotation+=pi*2;
 }
 
-void CLight::step()
+void CLight::Step()
 {
-	move();
-	vec2 dir(sin(rotation), cos(rotation));
-	vec2 to2 = m_Pos + normalize(dir)*cur_length;
-	GameServer()->Collision()->IntersectNoLaser(m_Pos, to2, &to,0 );
+	Move();
+	vec2 dir(sin(m_Rotation), cos(m_Rotation));
+	vec2 to2 = m_Pos + normalize(dir)*m_CurveLength;
+	GameServer()->Collision()->IntersectNoLaser(m_Pos, to2, &m_To,0 );
 }
 	
 void CLight::Reset()
@@ -81,17 +111,17 @@ void CLight::Tick()
 	
 	if (Server()->Tick()%int(Server()->TickSpeed()*0.15f)==0)
 	{
-		eval_tick=Server()->Tick();
+		m_EvalTick=Server()->Tick();
 		int index = GameServer()->Collision()->IsCp(m_Pos.x,m_Pos.y);
 		if (index)
 		{
-			core=GameServer()->Collision()->CpSpeed(index);
+			m_Core=GameServer()->Collision()->CpSpeed(index);
 		}
-		m_Pos+=core;
-		step();
+		m_Pos+=m_Core;
+		Step();
 	}
 
-	hit_character();
+	HitCharacter();
 	return;
 
 
@@ -99,18 +129,18 @@ void CLight::Tick()
 
 void CLight::Snap(int snapping_client)
 {
-	if(NetworkClipped(snapping_client,m_Pos) && NetworkClipped(snapping_client,to))
+	if(NetworkClipped(snapping_client,m_Pos) && NetworkClipped(snapping_client,m_To))
 		return;
 
 	
 	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_Id, sizeof(CNetObj_Laser)));
 	pObj->m_X = (int)m_Pos.x;
 	pObj->m_Y = (int)m_Pos.y;
-	pObj->m_FromX = (int)to.x;
-	pObj->m_FromY = (int)to.y;
+	pObj->m_FromX = (int)m_To.x;
+	pObj->m_FromY = (int)m_To.y;
 
 
-	int start_tick = eval_tick;
+	int start_tick = m_EvalTick;
 	if (start_tick<Server()->Tick()-4)
 		start_tick=Server()->Tick()-4;
 	else if (start_tick>Server()->Tick())

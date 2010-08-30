@@ -237,48 +237,48 @@ bool IGameController::OnEntity(int Index, vec2 Pos, bool Front)
 		sides2[6]=GameServer()->Collision()->Entity(x-2,y, Front);
 		sides2[7]=GameServer()->Collision()->Entity(x-2,y+2, Front);
 
-		float ang_speed;
-		int ind=Index-ENTITY_LASER_STOP;
-		int m;
-		if (ind<0)
+		float AngularSpeed;
+		int Ind=Index-ENTITY_LASER_STOP;
+		int M;
+		if (Ind<0)
 		{
-		   ind=-ind;
-		   m=1;
+		   Ind=-Ind;
+		   M=1;
 		}
-		else if(ind==0)
-		   m=0;
+		else if(Ind==0)
+		   M=0;
 		else
-		   m=-1;
+		   M=-1;
 
 
-		if (ind==0)
-		   ang_speed=0.0f;
-		else if (ind==1)
-		   ang_speed=pi/360;
-		else if (ind==2)
-		   ang_speed=pi/180;
-		else if (ind==3)
-		   ang_speed=pi/90;
-		ang_speed*=m;
+		if (Ind==0)
+		   AngularSpeed=0.0f;
+		else if (Ind==1)
+		   AngularSpeed=pi/360;
+		else if (Ind==2)
+		   AngularSpeed=pi/180;
+		else if (Ind==3)
+		   AngularSpeed=pi/90;
+		AngularSpeed*=M;
 
 		for(int i=0; i<8;i++)
 		{
 		   if (sides[i] >= ENTITY_LASER_SHORT && sides[i] <= ENTITY_LASER_LONG)
 		   {
-			   CLight *lgt = new CLight(&GameServer()->m_World, Pos, pi/4*i,32*3 + 32*(sides[i] - ENTITY_LASER_SHORT)*3);
-			   lgt->ang_speed=ang_speed;
+			   CLight *Lgt = new CLight(&GameServer()->m_World, Pos, pi/4*i,32*3 + 32*(sides[i] - ENTITY_LASER_SHORT)*3);
+			   Lgt->m_AngularSpeed=AngularSpeed;
 			   if (sides2[i]>=ENTITY_LASER_C_SLOW && sides2[i]<=ENTITY_LASER_C_FAST)
 			   {
-				   lgt->speed=1+(sides2[i]-ENTITY_LASER_C_SLOW)*2;
-				   lgt->cur_length=lgt->length;
+				   Lgt->m_Speed=1+(sides2[i]-ENTITY_LASER_C_SLOW)*2;
+				   Lgt->m_CurveLength=Lgt->m_Length;
 			   }
 			   else if(sides2[i]>=ENTITY_LASER_O_SLOW && sides2[i]<=ENTITY_LASER_O_FAST)
 			   {
-				   lgt->speed=1+(sides2[i]-ENTITY_LASER_O_SLOW)*2;
-				   lgt->cur_length=0;
+				   Lgt->m_Speed=1+(sides2[i]-ENTITY_LASER_O_SLOW)*2;
+				   Lgt->m_CurveLength=0;
 			   }
 			   else
-				   lgt->cur_length=lgt->length;
+				   Lgt->m_CurveLength=Lgt->m_Length;
 		   }
 		}
 

@@ -25,8 +25,8 @@ bool CTrigger::HitCharacter()
 
 void CTrigger::OpenDoor(int Tick)
 {
-	CDoor *connectedDoor = (CDoor*) m_Target;
-	connectedDoor->Open(Tick);
+	CDoor *ConnectedDoor = (CDoor*) m_Target;
+	ConnectedDoor->Open(Tick);
 }
 
 void CTrigger::Reset()

@@ -70,9 +70,9 @@ void CPlasma::Tick()
 	
 }
 
-void CPlasma::Snap(int snapping_client)
+void CPlasma::Snap(int SnappingClient)
 {	
-	if(NetworkClipped(snapping_client))
+	if(NetworkClipped(SnappingClient))
 		return;
 
 	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_Id, sizeof(CNetObj_Laser)));

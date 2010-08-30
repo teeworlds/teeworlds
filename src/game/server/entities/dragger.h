@@ -9,17 +9,17 @@ class CCharacter;
 
 class CDragger : public CEntity
 {
-	vec2 core;
-	float strength;
-	int eval_tick;
-	void move();
-	void drag();
-	CCharacter *target;
-	bool nw;
+	vec2 m_Core;
+	float m_Strength;
+	int m_EvalTick;
+	void Move();
+	void Drag();
+	CCharacter * m_Target;
+	bool m_NW;
 public:
 
 
-	CDragger(CGameWorld *pGameWorld, vec2 pos, float strength, bool nw=false);
+	CDragger(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW=false);
 
 	virtual void Reset();
 	virtual void Tick();

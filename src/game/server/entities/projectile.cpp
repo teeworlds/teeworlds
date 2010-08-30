@@ -3,7 +3,8 @@
 #include <engine/shared/config.h>
 #include "projectile.h"
 
-CProjectile::CProjectile(
+CProjectile::CProjectile
+	(
 		CGameWorld *pGameWorld,
 		int Type,
 		int Owner,
@@ -14,7 +15,8 @@ CProjectile::CProjectile(
 		bool Explosive,
 		float Force,
 		int SoundImpact,
-		int Weapon)
+		int Weapon
+	)
 : CEntity(pGameWorld, NETOBJTYPE_PROJECTILE)
 {
 	m_Type = Type;
@@ -79,6 +81,12 @@ void CProjectile::SetBouncing(int Value)
 
 void CProjectile::Tick()
 {
+	if(g_Config.m_SvShotgunReset > m_LastRestart && m_Owner == -1)
+	{
+		m_Pos = m_StartPos;
+		m_Direction = m_StartDir;
+		m_StartTick = Server()->Tick();
+	}
 	float Pt = (Server()->Tick()-m_StartTick-1)/(float)Server()->TickSpeed();
 	float Ct = (Server()->Tick()-m_StartTick)/(float)Server()->TickSpeed();
 	vec2 PrevPos = GetPos(Pt);
@@ -112,12 +120,6 @@ void CProjectile::Tick()
 		{
 			m_StartTick = Server()->Tick();
 			m_Pos = NewPos;
-			if(g_Config.m_SvShotgunReset > m_LastRestart)
-			{
-				m_Pos = m_StartPos;
-				m_Direction = m_StartDir;
-				m_StartTick = Server()->Tick();
-			}
 			if (m_Bouncing == 1)
 			{
 				m_PrevLastBounce.x = m_LastBounce.x;

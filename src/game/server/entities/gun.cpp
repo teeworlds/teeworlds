@@ -55,8 +55,7 @@ void CGun::Fire()
 	}
 	if (Id!=-1)
 	{
-		CCharacter *Target = Ents[Id];
-		vec2 Fdir = normalize(Target->m_Pos - m_Pos);
+		vec2 Fdir = normalize(Ents[Id]->m_Pos - m_Pos);
 		new CPlasma(&GameServer()->m_World, m_Pos, Fdir, m_Freeze, m_Explosive);
 	}
 	

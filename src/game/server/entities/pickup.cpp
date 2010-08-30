@@ -56,6 +56,7 @@ void CPickup::Tick()
 	}*/
 	// Check if a player intersected us
 	CCharacter *pChr = GameServer()->m_World.ClosestCharacter(m_Pos, 20.0f, 0);
+	CCharacter *pChr2=pChr;
 	if(pChr && pChr->IsAlive())
 	{
 		bool sound = false;
@@ -133,6 +134,77 @@ void CPickup::Tick()
 			GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 			m_SpawnTick = Server()->Tick() + Server()->TickSpeed() * RespawnTime;
 		}*/
+	}
+	pChr=0;
+	pChr = GameServer()->m_World.ClosestCharacter(m_Pos, 20.0f, pChr2);
+	if(pChr && pChr->IsAlive())
+	{
+		bool sound = false;
+		// player picked us up, is someone was hooking us, let them go
+		int RespawnTime = -1;
+		switch (m_Type)
+		{
+			case POWERUP_HEALTH:
+				if(pChr->Freeze()) GameServer()->CreateSound(m_Pos, SOUND_PICKUP_HEALTH);
+				break;
+
+			case POWERUP_ARMOR:
+				for(int i=WEAPON_SHOTGUN;i<NUM_WEAPONS;i++)
+				{
+					if (pChr->m_aWeapons[i].m_Got)
+					{
+						if(!(pChr->m_FreezeTime && i == WEAPON_NINJA))
+						{
+							pChr->m_aWeapons[i].m_Got = false;
+							pChr->m_aWeapons[i].m_Ammo = 0;
+							sound = true;
+						}
+					}
+				}
+				pChr->m_Ninja.m_ActivationDir=vec2(0,0);
+				pChr->m_Ninja.m_ActivationTick=-500;
+				pChr->m_Ninja.m_CurrentMoveTime=0;
+				if (sound)
+				{
+					pChr->m_LastWeapon = WEAPON_GUN;
+					GameServer()->CreateSound(m_Pos, SOUND_PICKUP_ARMOR);
+				}
+				if(!pChr->m_FreezeTime) pChr->m_ActiveWeapon = WEAPON_HAMMER;
+				break;
+
+			case POWERUP_WEAPON:
+
+				if(m_Subtype >= 0 && m_Subtype < NUM_WEAPONS && (!pChr->m_aWeapons[m_Subtype].m_Got || (pChr->m_aWeapons[m_Subtype].m_Ammo != -1 && !pChr->m_FreezeTime)))
+				{
+					if(pChr->GiveWeapon(m_Subtype, -1))
+					{
+						//RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+
+						if(m_Subtype == WEAPON_GRENADE)
+							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_GRENADE);
+						else if(m_Subtype == WEAPON_SHOTGUN)
+							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
+						else if(m_Subtype == WEAPON_RIFLE)
+							GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
+
+						if(pChr->GetPlayer())
+							GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), m_Subtype);
+					}
+				}
+				break;
+
+			case POWERUP_NINJA:
+				{
+					// activate ninja on target player
+					if(!pChr->m_FreezeTime) pChr->GiveNinja();
+					//RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
+
+					break;
+				}
+
+			default:
+				break;
+		};
 	}
 }
 
