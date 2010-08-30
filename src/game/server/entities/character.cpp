@@ -859,6 +859,66 @@ void CCharacter::Tick()
 			m_Core.m_Vel.y = 0;
 		}
 	}
+	if(TileIndex == TILE_STOPH || TileIndexR == TILE_STOPH || TileIndexL == TILE_STOPH)
+	{
+		if(m_Core.m_Pos.x - GameServer()->Collision()->GetPos(TileIndex).x < 0)
+		{
+			if((int)GameServer()->Collision()->GetPos(TileIndex).x > (int)m_Core.m_Pos.x)
+				m_Core.m_Pos.x = m_PrevPos.x;
+			m_Core.m_Vel.x = (m_Core.m_Vel.x < 0)?m_Core.m_Vel.x:0;
+		}
+		else
+		{
+			if((int)GameServer()->Collision()->GetPos(TileIndex).x < (int)m_Core.m_Pos.x)
+							m_Core.m_Pos.x = m_PrevPos.x;
+			m_Core.m_Vel.x = (m_Core.m_Vel.x > 0)?m_Core.m_Vel.x:0;
+		}
+	}
+	if(TileFIndex == TILE_STOPH || TileFIndexR == TILE_STOPH || TileFIndexL == TILE_STOPH)
+	{
+		if(m_Core.m_Pos.x - GameServer()->Collision()->GetPos(TileFIndex).x < 0)
+		{
+			if((int)GameServer()->Collision()->GetPos(TileFIndex).x > (int)m_Core.m_Pos.x)
+				m_Core.m_Pos.x = m_PrevPos.x;
+			m_Core.m_Vel.x = (m_Core.m_Vel.x < 0)?m_Core.m_Vel.x:0;
+		}
+		else
+		{
+			if((int)GameServer()->Collision()->GetPos(TileFIndex).x < (int)m_Core.m_Pos.x)
+							m_Core.m_Pos.x = m_PrevPos.x;
+			m_Core.m_Vel.x = (m_Core.m_Vel.x > 0)?m_Core.m_Vel.x:0;
+		}
+	}
+	if(TileIndex == TILE_STOPV || TileIndexT == TILE_STOPV || TileIndexB == TILE_STOPV)
+	{
+		if(m_Core.m_Pos.y - GameServer()->Collision()->GetPos(TileIndex).y < 0)
+		{
+			if((int)GameServer()->Collision()->GetPos(TileIndex).y > (int)m_Core.m_Pos.y)
+				m_Core.m_Pos.y = m_PrevPos.y;
+			m_Core.m_Vel.y = (m_Core.m_Vel.y < 0)?m_Core.m_Vel.y:0;
+		}
+		else
+		{
+			if((int)GameServer()->Collision()->GetPos(TileIndex).x < (int)m_Core.m_Pos.x)
+							m_Core.m_Pos.y = m_PrevPos.y;
+			m_Core.m_Vel.y = (m_Core.m_Vel.y > 0)?m_Core.m_Vel.y:0;
+		}
+	}
+	if(TileFIndex == TILE_STOPV || TileFIndexT == TILE_STOPV || TileFIndexB == TILE_STOPV)
+	{
+		if(m_Core.m_Pos.y - GameServer()->Collision()->GetPos(TileFIndex).y < 0)
+		{
+			if((int)GameServer()->Collision()->GetPos(TileFIndex).y > (int)m_Core.m_Pos.y)
+				m_Core.m_Pos.y = m_PrevPos.y;
+			m_Core.m_Vel.y = (m_Core.m_Vel.y < 0)?m_Core.m_Vel.y:0;
+		}
+		else
+		{
+			if((int)GameServer()->Collision()->GetPos(TileFIndex).x < (int)m_Core.m_Pos.x)
+							m_Core.m_Pos.y = m_PrevPos.y;
+			m_Core.m_Vel.y = (m_Core.m_Vel.y > 0)?m_Core.m_Vel.y:0;
+		}
+	}
 	if (TileIndex == TILE_BOOST_L || TileFIndex == TILE_BOOST_L)
 	{
 		if(m_PrevPos.x-m_Pos.x<0)
