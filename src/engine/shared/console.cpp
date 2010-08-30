@@ -415,16 +415,16 @@ CConsole::CConsole(int FlagMask)
 	Register("exec", "r", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Exec, this, "Execute the specified file", 3);
 	
 	// TODO: this should disappear
-	#define MACRO_CONFIG_INT(Name,ScriptName,Def,Min,Max,Flags,Desc) \
+	#define MACRO_CONFIG_INT(Name,ScriptName,Def,Min,Max,Flags,Desc,Level) \
 	{ \
 		static CIntVariableData Data = { this, &g_Config.m_##Name, Min, Max }; \
-		Register(#ScriptName, "?i", Flags, IntVariableCommand, &Data, Desc, 3); \
+		Register(#ScriptName, "?i", Flags, IntVariableCommand, &Data, Desc, Level); \
 	}
 	
-	#define MACRO_CONFIG_STR(Name,ScriptName,Len,Def,Flags,Desc) \
+	#define MACRO_CONFIG_STR(Name,ScriptName,Len,Def,Flags,Desc,Level) \
 	{ \
 		static CStrVariableData Data = { this, g_Config.m_##Name, Len }; \
-		Register(#ScriptName, "?r", Flags, StrVariableCommand, &Data, Desc, 3); \
+		Register(#ScriptName, "?r", Flags, StrVariableCommand, &Data, Desc, Level); \
 	}
 
 	#include "config_variables.h" 
