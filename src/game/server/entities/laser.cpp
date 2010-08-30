@@ -24,13 +24,14 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 	vec2 At;
 	CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);
 	CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, To, 0.f, At, OwnerChar);
+	//TODO: this plaice need to fix, so laser will freeze more then one character
 	if(!Hit)
 		return false;
-
+	if(OwnerChar->Team() != Hit->Team()) return false;
 	m_From = From;
 	m_Pos = At;
 	m_Energy = -1;
-	if ((m_Type == 1 && g_Config.m_SvHit))//TODO:TEAM
+	if ((m_Type == 1 && g_Config.m_SvHit))
 	{
 			Hit->m_Core.m_Vel+=normalize(m_PrevPos - Hit->m_Core.m_Pos) * 10;
 	}
