@@ -1,11 +1,10 @@
 #ifndef GAME_SERVER_TEAMS_H
 #define GAME_SERVER_TEAMS_H
 
-#include <game/server/entities/character.h>
+#include <game/teamscore.h>
 #include <game/server/gamecontext.h>
 
-class CTeams {
-	int m_Team[MAX_CLIENTS];
+class CGameTeams {
 	int m_TeamState[MAX_CLIENTS];
 	bool m_TeeFinished[MAX_CLIENTS];
 	
@@ -20,7 +19,9 @@ public:
 		FINISHED
 	};
 	
-	CTeams(CGameContext *pGameContext);
+	CTeamsCore m_Core;
+	
+	CGameTeams(CGameContext *pGameContext);
 	
 	//helper methods
 	CCharacter* Character(int id) { return GameServer()->GetPlayerChar(id); }	
@@ -36,12 +37,6 @@ public:
 	void ChangeTeamState(int Team, int State);
 	
 	bool TeamFinished(int Team);
-	
-	bool SameTeam(int Cid1, int Cid2);
-	
-	int GetTeam(int Cid) {
-		return m_Team[Cid];
-	}
 };
 
 #endif

@@ -75,7 +75,9 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_Core.Reset();
 	m_BroadTime = true;
 	m_BroadCast = true;
-	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision());
+	
+	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
+	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision(), &Controller->m_Teams.m_Core);
 	m_Core.m_Pos = m_Pos;
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = &m_Core;
 
@@ -637,7 +639,7 @@ void CCharacter::OnFinish() {
 
 int CCharacter::Team() {
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
-	return Controller->m_Teams.GetTeam(m_pPlayer->GetCID());
+	return Controller->m_Teams.m_Core.Team(m_pPlayer->GetCID());
 }
 
 void CCharacter::Tick()
@@ -1017,7 +1019,8 @@ void CCharacter::TickDefered()
 	// advance the dummy
 	{
 		CWorldCore TempWorld;
-		m_ReckoningCore.Init(&TempWorld, GameServer()->Collision());
+		CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
+		m_ReckoningCore.Init(&TempWorld, GameServer()->Collision(), &Controller->m_Teams.m_Core);
 		m_ReckoningCore.Tick(false);
 		m_ReckoningCore.Move();
 		m_ReckoningCore.Quantize();

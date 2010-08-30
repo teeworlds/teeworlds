@@ -54,10 +54,11 @@ float VelocityRamp(float Value, float Start, float Range, float Curvature)
 	return 1.0f/powf(Curvature, (Value-Start)/Range);
 }
 
-void CCharacterCore::Init(CWorldCore *pWorld, CCollision *pCollision)
+void CCharacterCore::Init(CWorldCore *pWorld, CCollision *pCollision, CTeamsCore* pTeams)
 {
 	m_pWorld = pWorld;
 	m_pCollision = pCollision;
+	m_pTeams = pTeams;
 }
 
 void CCharacterCore::Reset()
@@ -75,6 +76,17 @@ void CCharacterCore::Reset()
 
 void CCharacterCore::Tick(bool UseInput)
 {
+	int ThisId = -1;
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		CCharacterCore *p = m_pWorld->m_apCharacters[i];
+		if(!p) continue;
+		if(p == this) {
+			ThisId = i;
+			break; 
+		}
+	}
+	
 	float PhysSize = 28.0f;
 	m_TriggeredEvents = 0;
 	
@@ -214,7 +226,7 @@ void CCharacterCore::Tick(bool UseInput)
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
 				CCharacterCore *p = m_pWorld->m_apCharacters[i];
-				if(!p || p == this)
+				if(!p || p == this || !m_pTeams.SameTeam(i, ThisId))
 					continue;
 
 				vec2 ClosestPoint = closest_point_on_line(m_HookPos, NewPos, p->m_Pos);
@@ -307,8 +319,7 @@ void CCharacterCore::Tick(bool UseInput)
 			m_HookPos = m_Pos;			
 		}
 	}
-	
-	if(m_pWorld/* && m_pWorld->m_Tuning.m_PlayerCollision*/)//TODO:TEAM
+	if(m_pWorld/* && m_pWorld->m_Tuning.m_PlayerCollision*/)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
@@ -317,12 +328,13 @@ void CCharacterCore::Tick(bool UseInput)
 				continue;
 			
 			//player *p = (player*)ent;
-			if(p == this) // || !(p->flags&FLAG_ALIVE)
+			if(p == this) { // || !(p->flags&FLAG_ALIVE)
 				continue; // make sure that we don't nudge our self
+			}
 			// handle player <-> player collision
 			float d = distance(m_Pos, p->m_Pos);
 			vec2 Dir = normalize(m_Pos - p->m_Pos);
-			if (m_pWorld->m_Tuning.m_PlayerCollision) {//TODO:TEAM
+			if (m_pWorld->m_Tuning.m_PlayerCollision && ThisId != -1 && m_pTeams->SameTeam(ThisId, i)) {
 				
 				if(d < PhysSize*1.25f && d > 1.0f)
 				{

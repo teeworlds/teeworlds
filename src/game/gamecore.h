@@ -8,7 +8,7 @@
 #include "collision.h"
 #include <engine/shared/protocol.h>
 #include <game/generated/protocol.h>
-
+#include "teamscore.h"
 
 class CTuneParam
 {
@@ -167,6 +167,7 @@ public:
 	}
 	
 	CTuningParams m_Tuning;
+	
 	class CCharacterCore *m_apCharacters[MAX_CLIENTS];
 };
 
@@ -174,7 +175,7 @@ class CCharacterCore
 {
 	CWorldCore *m_pWorld;
 	CCollision *m_pCollision;
-
+	CTeamsCore* m_pTeams;
 public:
 	vec2 m_Pos;
 	vec2 m_Vel;
@@ -194,7 +195,7 @@ public:
 	bool m_pReset;
 	int m_TriggeredEvents;
 	
-	void Init(CWorldCore *pWorld, CCollision *pCollision);
+	void Init(CWorldCore *pWorld, CCollision *pCollision, CTeamsCore* pTeams);
 	void Reset();
 	void Tick(bool UseInput);
 	void Move();

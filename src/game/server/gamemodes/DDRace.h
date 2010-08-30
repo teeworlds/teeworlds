@@ -3,7 +3,7 @@
 #ifndef DDRACE_H
 #define DDRACE_H
 #include <game/server/gamecontroller.h>
-#include <game/teams.h>
+#include <game/server/teams.h>
 
 
 class CGameControllerDDRace : public IGameController
@@ -13,7 +13,7 @@ public:
 	CGameControllerDDRace(class CGameContext *pGameServer);
 	~CGameControllerDDRace();
 	
-	CTeams m_Teams;
+	CGameTeams m_Teams;
 
 	vec2 *m_pTeleporter;
 	
