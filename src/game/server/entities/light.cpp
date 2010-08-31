@@ -31,44 +31,27 @@ bool CLight::HitCharacter()
 	CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, m_To, 1.f, At, 0);
 	if(Hit)
 	{
-		vec2 Points[36];
 		Hit->Freeze(Server()->TickSpeed()*3);
+		vec2 Points[38];
 		Hit = 0;
-		for(int i=1;i<37;i++)
+		for(int i=0;i<38;i++)
 		{
-			Points[i-1].x = m_Pos.x * (1 - i/38.0) + m_To.x * i / 38.0;
-			Points[i-1].y = m_Pos.y * (1 - i/38.0) + m_To.y * i / 38.0;
+			Points[i].x = m_Pos.x * (1 - (i/38.0)) + m_To.x * (i / 38.0);
+			Points[i].y = m_Pos.y * (1 - (i/38.0)) + m_To.y * (i / 38.0);
 		}
-		Hit = GameServer()->m_World.IntersectCharacter(m_Pos, Points[0], 1.f, At, 0);
-		if(Hit)
-			Hit->Freeze(Server()->TickSpeed()*3);
-		Hit = 0;
-		Hit = GameServer()->m_World.IntersectCharacter(Points[0], m_Pos, 1.f, At, 0);
-		if(Hit)
-			Hit->Freeze(Server()->TickSpeed()*3);
-		Hit = 0;
-		for(int i = 0; i < 36; i++)
+		for(int i = 0; i < 38; i++)
 		{
 			Hit = GameServer()->m_World.IntersectCharacter(Points[i], Points[i+1], 1.f, At, 0);
 			if(Hit)
 				Hit->Freeze(Server()->TickSpeed()*3);
 			Hit = 0;
-			Hit = GameServer()->m_World.IntersectCharacter(Points[i+1], Points[i], 1.f, At, 0);
+			Hit = GameServer()->m_World.IntersectCharacter(Points[i+1], Points[i], 1.f, At2, 0);
 			if(Hit)
 				Hit->Freeze(Server()->TickSpeed()*3);
 			Hit = 0;
 		}
-		Hit = GameServer()->m_World.IntersectCharacter(Points[35], m_To, 1.f, At, 0);
-		if(Hit)
-			Hit->Freeze(Server()->TickSpeed()*3);
-		Hit = 0;
-		Hit = GameServer()->m_World.IntersectCharacter(m_To, Points[35], 1.f, At, 0);
-		if(Hit)
-			Hit->Freeze(Server()->TickSpeed()*3);
-		Hit = 0;
 	}
 	return true;
-
 }
 
 void CLight::Move()
