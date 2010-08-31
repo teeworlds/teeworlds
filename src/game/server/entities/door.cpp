@@ -30,8 +30,7 @@ void CDoor::Close()
 
 bool CDoor::HitCharacter()
 {
-	GameServer()->m_World.IntersectCharacters(m_Pos, m_To, 1.f, 0);
-	return true;
+	return GameServer()->m_World.IntersectCharacters(m_Pos, m_To, 1.f, 0);
 }
 
 void CDoor::Reset()

@@ -71,7 +71,7 @@ public:
 			radius - How for from the line the CCharacter is allowed to be.
 			Type - cdoor=0 clight=1
 	*/
-	void IntersectCharacters(vec2 Pos0, vec2 Pos1, float Radius, int Type);
+	bool IntersectCharacters(vec2 Pos0, vec2 Pos1, float Radius, int Type);
 	/*
 		Function: InterserctCharacters
 			Finds the CCharacters that intersects the line. // made for types lasers=1 and doors=0

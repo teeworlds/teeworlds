@@ -27,8 +27,7 @@ CLight::CLight(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length)
 
 bool CLight::HitCharacter()
 {
-	GameServer()->m_World.IntersectCharacters(m_Pos, m_To, 1.f, 1);
-	return true;
+	return GameServer()->m_World.IntersectCharacters(m_Pos, m_To, 1.f, 1);
 }
 
 void CLight::Move()
