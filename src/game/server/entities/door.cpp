@@ -30,41 +30,47 @@ void CDoor::Close()
 
 bool CDoor::HitCharacter()
 {
-	vec2 Points[36];
 	vec2 At;
-	for(int i=1;i<=36;i++)
-	{
-		Points[i-1].x = m_Pos.x * (1 - i/38.0) + m_To.x * i / 38.0;
-		Points[i-1].y = m_Pos.y * (1 - i/38.0) + m_To.y * i / 38.0;
-	}
-	CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, Points[0], 1.f, At, 0);
+	CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, m_To, 1.f, At, 0);
 	if(Hit)
-		Hit->m_Doored = true;
-	Hit = 0;
-	Hit = GameServer()->m_World.IntersectCharacter(Points[0], m_Pos, 1.f, At, 0);
-	if(Hit)
-		Hit->m_Doored = true;
-	Hit = 0;
-	for(int i = 0; i < 36; i++)
 	{
-		Hit = GameServer()->m_World.IntersectCharacter(Points[i], Points[i+1], 1.f, At, 0);
+		vec2 Points[36];
+		Hit->m_Doored = true;
+		Hit = 0;
+		for(int i=1;i<=36;i++)
+		{
+			Points[i-1].x = m_Pos.x * (1 - i/38.0) + m_To.x * i / 38.0;
+			Points[i-1].y = m_Pos.y * (1 - i/38.0) + m_To.y * i / 38.0;
+		}
+		CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, Points[0], 1.f, At, 0);
 		if(Hit)
 			Hit->m_Doored = true;
 		Hit = 0;
-		Hit = GameServer()->m_World.IntersectCharacter(Points[i+1], Points[i], 1.f, At, 0);
+		Hit = GameServer()->m_World.IntersectCharacter(Points[0], m_Pos, 1.f, At, 0);
 		if(Hit)
 			Hit->m_Doored = true;
 		Hit = 0;
+		for(int i = 0; i < 36; i++)
+		{
+			Hit = GameServer()->m_World.IntersectCharacter(Points[i], Points[i+1], 1.f, At, 0);
+			if(Hit)
+				Hit->m_Doored = true;
+			Hit = 0;
+			Hit = GameServer()->m_World.IntersectCharacter(Points[i+1], Points[i], 1.f, At, 0);
+			if(Hit)
+				Hit->m_Doored = true;
+			Hit = 0;
+		}
+		Hit = GameServer()->m_World.IntersectCharacter(Points[35], m_To, 1.f, At, 0);
+		if(Hit)
+			Hit->m_Doored = true;
+		Hit = 0;
+		Hit = GameServer()->m_World.IntersectCharacter(m_To, Points[35], 1.f, At, 0);
+		if(Hit)
+			Hit->m_Doored = true;
+		Hit = 0;
+		//hit->reset_pos();
 	}
-	Hit = GameServer()->m_World.IntersectCharacter(Points[35], m_To, 1.f, At, 0);
-	if(Hit)
-		Hit->m_Doored = true;
-	Hit = 0;
-	Hit = GameServer()->m_World.IntersectCharacter(m_To, Points[35], 1.f, At, 0);
-	if(Hit)
-		Hit->m_Doored = true;
-	Hit = 0;
-	//hit->reset_pos();
 	return true;
 }
 
