@@ -224,3 +224,32 @@ CCharacter *CGameWorld::ClosestCharacter(vec2 Pos, float Radius, CEntity *pNotTh
 
 	return pClosest;
 }
+
+std::list<class CCharacter *> CGameWorld::IntersectedCharacters(vec2 Pos0, vec2 Pos1, float Radius, vec2 &NewPos, class CEntity *pNotThis)
+{
+	std::list< CCharacter * > listOfChars;
+	// Find other players
+	float ClosestLen = distance(Pos0, Pos1) * 100.0f;
+	vec2 LineDir = normalize(Pos1-Pos0);
+
+	CCharacter *p = (CCharacter *)FindFirst(NETOBJTYPE_CHARACTER);
+	for(; p; p = (CCharacter *)p->TypeNext())
+ 	{
+		if(p == pNotThis)
+			continue;
+
+		vec2 IntersectPos = closest_point_on_line(Pos0, Pos1, p->m_Pos);
+		float Len = distance(p->m_Pos, IntersectPos);
+		if(Len < p->m_ProximityRadius+Radius)
+		{
+			if(Len < ClosestLen)
+			{
+				NewPos = IntersectPos;
+				ClosestLen = Len;
+				listOfChars.push_back(p);
+			}
+		}
+	}
+
+	return listOfChars;
+}

@@ -31,11 +31,12 @@ void CDoor::Close()
 bool CDoor::HitCharacter()
 {
 	vec2 At;
-	CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, m_To, 1.f, At, 0);
-	if(!Hit)
-		return false;
-	Hit->m_Doored = true;
-	//hit->reset_pos();
+	std::list < CCharacter * > hittedCharacters = GameServer()->m_World.IntersectedCharacters(m_Pos, m_To, 1.f, At, 0);
+	if(hittedCharacters.empty()) return false;
+	for(std::list < CCharacter * >::iterator i = hittedCharacters.begin(); i != hittedCharacters.end(); i++) {
+		CCharacter * Char = *i;
+		Char->m_Doored = true;
+	}
 	return true;
 
 }

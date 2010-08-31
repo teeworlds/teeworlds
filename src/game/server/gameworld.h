@@ -2,6 +2,7 @@
 #define GAME_SERVER_GAMEWORLD_H
 
 #include <game/gamecore.h>
+#include <list>
 
 class CEntity;
 class CCharacter;
@@ -136,6 +137,22 @@ public:
 		
 	*/
 	void Tick();
+	
+	/*
+		Function: interserct_CCharacter
+			Finds all CCharacters that intersect the line.
+			
+		Arguments:
+			pos0 - Start position
+			pos2 - End position
+			radius - How for from the line the CCharacter is allowed to be.
+			new_pos - Intersection position
+			notthis - Entity to ignore intersecting with
+			
+		Returns:
+			Returns list with all Characters on line.
+	*/
+	std::list<class CCharacter *> IntersectedCharacters(vec2 Pos0, vec2 Pos1, float Radius, vec2 &NewPos, class CEntity *pNotThis = 0);
 };
 
 #endif
