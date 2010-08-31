@@ -145,7 +145,7 @@ void CGameContext::CreateExplosion(vec2 p, int Owner, int Weapon, bool NoDamage)
 			float Dmg = 6 * l;
 			if((int)Dmg)
 				if((g_Config.m_SvHit||NoDamage) || Owner == apEnts[i]->m_pPlayer->GetCID())
-				{
+				{//TODO: Change which explosion affects only on one team
 					if(Owner != -1 && apEnts[i]->m_Alive && apEnts[i]->Team() != GetPlayerChar(Owner)->Team()) continue;
 					apEnts[i]->TakeDamage(ForceDir*Dmg*2, (int)Dmg, Owner, Weapon);
 					if(!g_Config.m_SvHit||NoDamage) break;

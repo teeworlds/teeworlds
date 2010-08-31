@@ -8,6 +8,7 @@ class CTrigger;
 class CDoor : public CEntity
 {
 	vec2 m_To;
+	int m_ActivatedTeam;
 	int m_EvalTick;
 	bool m_Opened;
 	bool HitCharacter();

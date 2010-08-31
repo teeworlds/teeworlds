@@ -41,9 +41,7 @@ void CGun::Fire()
 	for (int i = 0; i < Num; i++)
 	{
 		CCharacter *Target = Ents[i];
-		int res=0;
-		vec2 coltile;
-		res = GameServer()->Collision()->IntersectLine(m_Pos, Target->m_Pos,0,0,false);
+		int res = GameServer()->Collision()->IntersectLine(m_Pos, Target->m_Pos,0,0,false);
 		if (!res)
 		{
 			int Len=length(Target->m_Pos - m_Pos);
