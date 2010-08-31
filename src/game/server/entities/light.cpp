@@ -45,7 +45,7 @@ bool CLight::HitCharacter()
 			if(Hit)
 				Hit->Freeze(Server()->TickSpeed()*3);
 			Hit = 0;
-			Hit = GameServer()->m_World.IntersectCharacter(Points[i+1], Points[i], 1.f, At2, 0);
+			Hit = GameServer()->m_World.IntersectCharacter(Points[i+1], Points[i], 1.f, At, 0);
 			if(Hit)
 				Hit->Freeze(Server()->TickSpeed()*3);
 			Hit = 0;

@@ -48,7 +48,7 @@ bool CDoor::HitCharacter()
 			if(Hit)
 				Hit->m_Doored = true;
 			Hit = 0;
-			Hit = GameServer()->m_World.IntersectCharacter(Points[i+1], Points[i], 1.f, At2, 0);
+			Hit = GameServer()->m_World.IntersectCharacter(Points[i+1], Points[i], 1.f, At, 0);
 			if(Hit)
 				Hit->m_Doored = true;
 			Hit = 0;
