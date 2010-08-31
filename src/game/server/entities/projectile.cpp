@@ -87,7 +87,7 @@ void CProjectile::Tick()
 	vec2 NewPos;
 	vec2 Speed = CurPos - PrevPos;
 	int Collide = GameServer()->Collision()->IntersectLine(PrevPos, CurPos, &ColPos, &NewPos,false);
-	CCharacter *OwnerChar;
+	CCharacter *OwnerChar = 0;
 	
 
 	
@@ -99,11 +99,14 @@ void CProjectile::Tick()
 	if(m_LifeSpan > -1)
 		m_LifeSpan--;
 	
-	if( (TargetChr && (g_Config.m_SvHit || m_Owner == -1 || TargetChr == OwnerChar)) || Collide)//TODO:TEAM
-	{
-		if(OwnerChar && TargetChr 
+	bool isWeaponCollide = false;
+	if(OwnerChar && TargetChr 
 			&& OwnerChar->m_Alive && TargetChr->m_Alive 
-			&& OwnerChar->Team() != TargetChr->Team()) return;
+			&& OwnerChar->Team() != TargetChr->Team()) isWeaponCollide = true;
+	
+	if( ((TargetChr && (g_Config.m_SvHit || m_Owner == -1 || TargetChr == OwnerChar)) || Collide) && !isWeaponCollide)//TODO:TEAM
+	{
+		
 		if(m_Explosive/*??*/ && (!TargetChr || (TargetChr && !m_Freeze)))
 		{
 			GameServer()->CreateExplosion(ColPos, m_Owner, m_Weapon, (m_Owner == -1)?true:false);
