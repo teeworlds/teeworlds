@@ -36,8 +36,9 @@ bool CLight::HitCharacter()
 		Hit = 0;
 		for(int i=0;i<38;i++)
 		{
-			Points[i].x = m_Pos.x * (1 - (i/38.0)) + m_To.x * (i / 38.0);
-			Points[i].y = m_Pos.y * (1 - (i/38.0)) + m_To.y * (i / 38.0);
+			Points[i].x = m_Pos.x * (1 - (i/37.0)) + m_To.x * (i / 37.0);
+			Points[i].y = m_Pos.y * (1 - (i/37.0)) + m_To.y * (i / 37.0);
+			//if(i == 0 || i == 37 || i == 19) dbg_msg("CLight","(%d)\nPos(%f,%f)\nTo(%f,%f)\nPoint(%f,%f)",i,m_Pos.x,m_Pos.y,m_To.x,m_To.y,Points[i].x,Points[i].y);
 		}
 		for(int i = 0; i < 38; i++)
 		{
@@ -45,10 +46,10 @@ bool CLight::HitCharacter()
 			if(Hit)
 				Hit->Freeze(Server()->TickSpeed()*3);
 			Hit = 0;
-			Hit = GameServer()->m_World.IntersectCharacter(Points[i+1], Points[i], 1.f, At, 0);
+			/*Hit = GameServer()->m_World.IntersectCharacter(Points[i+1], Points[i], 1.f, At, 0);
 			if(Hit)
 				Hit->Freeze(Server()->TickSpeed()*3);
-			Hit = 0;
+			Hit = 0;*/
 		}
 	}
 	return true;
