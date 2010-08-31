@@ -27,31 +27,7 @@ CLight::CLight(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length)
 
 bool CLight::HitCharacter()
 {
-	vec2 At;
-	CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, m_To, 1.f, At, 0);
-	if(Hit)
-	{
-		Hit->Freeze(Server()->TickSpeed()*3);
-		vec2 Points[38];
-		Hit = 0;
-		for(int i=0;i<38;i++)
-		{
-			Points[i].x = m_Pos.x * (1 - (i/37.0)) + m_To.x * (i / 37.0);
-			Points[i].y = m_Pos.y * (1 - (i/37.0)) + m_To.y * (i / 37.0);
-			//if(i == 0 || i == 37 || i == 19) dbg_msg("CLight","(%d)\nPos(%f,%f)\nTo(%f,%f)\nPoint(%f,%f)",i,m_Pos.x,m_Pos.y,m_To.x,m_To.y,Points[i].x,Points[i].y);
-		}
-		for(int i = 0; i < 38; i++)
-		{
-			Hit = GameServer()->m_World.IntersectCharacter(Points[i], Points[i+1], 1.f, At, 0);
-			if(Hit)
-				Hit->Freeze(Server()->TickSpeed()*3);
-			Hit = 0;
-			/*Hit = GameServer()->m_World.IntersectCharacter(Points[i+1], Points[i], 1.f, At, 0);
-			if(Hit)
-				Hit->Freeze(Server()->TickSpeed()*3);
-			Hit = 0;*/
-		}
-	}
+	GameServer()->m_World.IntersectCharacters(m_Pos, m_To, 1.f, 1);
 	return true;
 }
 

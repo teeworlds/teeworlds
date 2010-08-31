@@ -198,6 +198,17 @@ CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, v
 	return pClosest;
 }
 
+void CGameWorld::IntersectCharacters(vec2 Pos0, vec2 Pos1, float Radius, int Type)
+{
+	CCharacter *p = (CCharacter *)FindFirst(NETOBJTYPE_CHARACTER);
+	for(; p; p = (CCharacter *)p->TypeNext())
+ 	{
+		vec2 IntersectPos = closest_point_on_line(Pos0, Pos1, p->m_Pos);
+		float Len = distance(p->m_Pos, IntersectPos);
+		if(Len < p->m_ProximityRadius+Radius)
+			(Type)?p->Freeze(Server()->TickSpeed()*3):p->m_Doored = true;
+	}
+}
 
 CCharacter *CGameWorld::ClosestCharacter(vec2 Pos, float Radius, CEntity *pNotThis)
 {
