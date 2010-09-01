@@ -15,7 +15,7 @@ class CDoor : public CEntity
 public:
 
 	void Open(int Tick, bool ActivatedTeam[]);
-	void Close();
+	void Close(int Team);
 	CDoor(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length, bool Opened);
 	
 	virtual void Reset();
