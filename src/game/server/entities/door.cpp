@@ -22,8 +22,8 @@ CDoor::CDoor(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length, bool 
 
 void CDoor::Open(int Tick, bool ActivatedTeam[])
 {
-	m_EvalTick = Tick;
 	for (int i = 0; i < MAX_CLIENTS; ++i) {
+		m_EvalTick[i] = Tick;
 		m_Opened[i] = ActivatedTeam[i];
 	}
 }
@@ -60,11 +60,9 @@ void CDoor::Tick()
 	for (int i = 0; i < MAX_CLIENTS; ++i) {
 		if(!m_Opened[i]) {
 			HitCharacter(i);
-		}
+		} else if (m_EvalTick[i] + 10 < Server()->Tick())
+			Close();
 	}
-	if (m_EvalTick + 10 < Server()->Tick())
-		Close();
-	return;
 }
 
 void CDoor::Snap(int SnappingClient)
