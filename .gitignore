@@ -1,4 +1,5 @@
 .bam
+.settings
 src/game/generated
 objs
 datasrc/*.pyc
@@ -25,3 +26,4 @@ DDRace_Trunk_d*
 *.res
 *.dll
 *.patch
+*.prefs

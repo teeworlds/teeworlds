@@ -8,7 +8,10 @@ CDoor::CDoor(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length, bool 
 : CEntity(pGameWorld, NETOBJTYPE_LASER)
 {
 	m_Pos = Pos;
-	m_Opened = Opened;
+	for (int i = 0; i < MAX_CLIENTS; ++i) {
+		m_Opened[i] = false;
+	}//TODO: Check this
+	
 
 	vec2 Dir = vec2(sin(Rotation), cos(Rotation));
 	vec2 To = Pos + normalize(Dir)*Length;
@@ -17,40 +20,49 @@ CDoor::CDoor(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length, bool 
 	GameWorld()->InsertEntity(this);
 }
 
-void CDoor::Open(int Tick)
+void CDoor::Open(int Tick, bool ActivatedTeam[])
 {
 	m_EvalTick = Tick;
-	m_Opened = true;
+	for (int i = 0; i < MAX_CLIENTS; ++i) {
+		m_Opened[i] = ActivatedTeam[i];
+	}
 }
 
 void CDoor::Close()
 {
-	m_Opened = false;
+	for (int i = 0; i < MAX_CLIENTS; ++i) {
+		m_Opened[i] = false;
+	}
 }
 
-bool CDoor::HitCharacter()
+bool CDoor::HitCharacter(int Team)
 {
 	vec2 At;
 	std::list < CCharacter * > hittedCharacters = GameServer()->m_World.IntersectedCharacters(m_Pos, m_To, 1.f, At, 0);
 	if(hittedCharacters.empty()) return false;
 	for(std::list < CCharacter * >::iterator i = hittedCharacters.begin(); i != hittedCharacters.end(); i++) {
 		CCharacter * Char = *i;
-		Char->m_Doored = true;
+		if(Char->Team() == Team)
+			Char = false;
 	}
 	return true;
-
 }
 
 void CDoor::Reset()
 {
-	m_Opened = false;
+	for (int i = 0; i < MAX_CLIENTS; ++i) {
+		m_Opened[i] = false;
+	}
 }
 
 void CDoor::Tick()
 {
-	if (!m_Opened)
-		HitCharacter();
-	else if (m_EvalTick + 10 < Server()->Tick())
+	for (int i = 0; i < MAX_CLIENTS; ++i) {
+		if(!m_Opened[i]) {
+			HitCharacter(i);
+		}
+	}
+	if (m_EvalTick + 10 < Server()->Tick())
 		Close();
 	return;
 }
@@ -64,7 +76,7 @@ void CDoor::Snap(int SnappingClient)
 	pObj->m_X = (int)m_Pos.x;
 	pObj->m_Y = (int)m_Pos.y;
 
-	if (!m_Opened)
+	if (!m_Opened[SnappingClient])
 	{
 		pObj->m_FromX = (int)m_To.x;
 		pObj->m_FromY = (int)m_To.y;

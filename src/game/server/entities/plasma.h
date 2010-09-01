@@ -21,7 +21,7 @@ public:
 
 	virtual void Reset();
 	virtual void Tick();
-	virtual void Snap(int snapping_client);
+	virtual void Snap(int SnappingClient);
 };
 
 

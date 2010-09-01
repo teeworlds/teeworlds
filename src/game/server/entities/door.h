@@ -8,14 +8,13 @@ class CTrigger;
 class CDoor : public CEntity
 {
 	vec2 m_To;
-	int m_ActivatedTeam;
 	int m_EvalTick;
-	bool m_Opened;
-	bool HitCharacter();
+	bool m_Opened[MAX_CLIENTS];
+	bool HitCharacter(int Team);
 
 public:
 
-	void Open(int Tick);
+	void Open(int Tick, bool ActivatedTeam[]);
 	void Close();
 	CDoor(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length, bool Opened);
 	

@@ -7,26 +7,26 @@
 
 class CLight : public CEntity
 {
-	float rotation;
-	vec2 to;
-	vec2 core;
+	float m_Rotation;
+	vec2 m_To;
+	vec2 m_Core;
 
-	int eval_tick;
+	int m_EvalTick;
 	
-	int TICK;
+	int m_Tick;
 
-	bool hit_character();
-	void move();
-	void step();
+	bool HitCharacter();
+	void Move();
+	void Step();
 public:
-	int cur_length;
-	int length_l;
-	float ang_speed;
-	int speed;
-	int length;
+	int m_CurveLength;
+	int m_LengthL;
+	float m_AngularSpeed;
+	int m_Speed;
+	int m_Length;
 	
 
-	CLight(CGameWorld *pGameWorld, vec2 pos, float rotation, int length);
+	CLight(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length);
 	
 	virtual void Reset();
 	virtual void Tick();

@@ -646,12 +646,12 @@ void CCharacter::Tick()
 {
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	int MapIndex = GameServer()->Collision()->GetMapIndex(m_PrevPos, m_Pos);
-	int TileIndex = GameServer()->Collision()->GetCollisionDDRace(MapIndex);
-	int TileFIndex = GameServer()->Collision()->GetFCollisionDDRace(MapIndex);
 	int MapIndexL = GameServer()->Collision()->GetMapIndex(m_PrevPos, vec2(m_Pos.x + m_ProximityRadius/2,m_Pos.y));
 	int MapIndexR = GameServer()->Collision()->GetMapIndex(m_PrevPos, vec2(m_Pos.x - m_ProximityRadius/2,m_Pos.y));
 	int MapIndexT = GameServer()->Collision()->GetMapIndex(m_PrevPos, vec2(m_Pos.x,m_Pos.y + m_ProximityRadius/2+5));
 	int MapIndexB = GameServer()->Collision()->GetMapIndex(m_PrevPos, vec2(m_Pos.x,m_Pos.y - m_ProximityRadius/2-5));
+	int TileIndex = GameServer()->Collision()->GetCollisionDDRace(MapIndex);
+	int TileFIndex = GameServer()->Collision()->GetFCollisionDDRace(MapIndex);
 	int TileIndexL = GameServer()->Collision()->GetCollisionDDRace(MapIndexL);
 	int TileFIndexL = GameServer()->Collision()->GetFCollisionDDRace(MapIndexL);
 	int TileIndexR = GameServer()->Collision()->GetCollisionDDRace(MapIndexR);
@@ -797,79 +797,99 @@ void CCharacter::Tick()
 		UnFreeze();
 	}
 
-	if(TileIndex == TILE_STOPL || TileIndexL == TILE_STOPL)
+	if(TileIndex == TILE_STOPL || TileIndexL == TILE_STOPL || TileFIndex == TILE_STOPL || TileFIndexL == TILE_STOPL)
 	{
 		if(m_Core.m_Vel.x > 0)
 		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex).x < (int)m_Core.m_Pos.x)
-				m_Core.m_Pos.x = m_PrevPos.x;
+			m_Core.m_Pos.x = m_PrevPos.x;
 			m_Core.m_Vel.x = 0;
 		}
 	}
-	if(TileFIndex == TILE_STOPL || TileFIndexL == TILE_STOPL)
+	if(TileIndex == TILE_STOPR || TileIndexR == TILE_STOPR || TileFIndex == TILE_STOPR || TileFIndexR == TILE_STOPR)
+	{
+		if(m_Core.m_Vel.x < 0)
+		{
+			m_Core.m_Pos.x = m_PrevPos.x;
+			m_Core.m_Vel.x = 0;
+		}
+	}
+	if(TileIndex == TILE_STOPB || TileIndexB == TILE_STOPB || TileFIndex == TILE_STOPB || TileFIndexB == TILE_STOPB)
+	{
+		if(m_Core.m_Vel.y < 0)
+		{
+			m_Core.m_Pos.y = m_PrevPos.y;
+			m_Core.m_Vel.y = 0;
+		}
+	}
+	if(TileIndex == TILE_STOPT || TileIndexT == TILE_STOPT || TileFIndex == TILE_STOPT || TileFIndexT == TILE_STOPT)
+	{
+		if(m_Core.m_Vel.y > 0)
+		{
+			m_Core.m_Pos.y = m_PrevPos.y;
+			m_Core.m_Vel.y = 0;
+		}
+		m_Core.m_Jumped = 0;
+	}
+	if(TileIndex == TILE_STOPH || TileIndexR == TILE_STOPH || TileIndexL == TILE_STOPH || TileFIndex == TILE_STOPH || TileFIndexR == TILE_STOPH || TileFIndexL == TILE_STOPH)
+	{
+		if(m_Core.m_Vel.x)
+			m_Core.m_Pos.x = m_PrevPos.x;
+		m_Core.m_Vel.x = 0;
+	}
+	if(TileIndex == TILE_STOPV || TileIndexT == TILE_STOPV || TileIndexB == TILE_STOPV || TileFIndex == TILE_STOPV || TileFIndexT == TILE_STOPV || TileFIndexB == TILE_STOPV)
+	{
+		if(m_Core.m_Vel.y)
+			m_Core.m_Pos.y = m_PrevPos.y;
+		if(m_Pos.y > m_Core.m_Pos.y)
+			m_Core.m_Jumped = 0;
+		m_Core.m_Vel.y = 0;
+	}
+	if(TileIndex == TILE_STOPA || TileFIndex == TILE_STOPA)
+	{
+		if(m_Core.m_Vel.y)
+		{
+			m_Core.m_Pos.y = m_PrevPos.y;
+			m_Core.m_Vel.y = 0;
+		}
+		if(m_Pos.y > m_Core.m_Pos.y)
+			m_Core.m_Jumped = 0;
+		if(m_Core.m_Vel.x)
+		{
+			m_Core.m_Pos.x = m_PrevPos.x;
+			m_Core.m_Vel.x = 0;
+		}
+	}
+	if(TileIndexT == TILE_STOPA || TileFIndexT == TILE_STOPA)
+	{
+		if(m_Core.m_Vel.y > 0)
+		{
+			m_Core.m_Pos.y = m_PrevPos.y;
+			m_Core.m_Vel.y = 0;
+		}
+		m_Core.m_Jumped = 0;
+	}
+	if(TileIndexB == TILE_STOPA || TileFIndexB == TILE_STOPA)
+	{
+		if(m_Core.m_Vel.y < 0)
+		{
+			m_Core.m_Pos.y = m_PrevPos.y;
+			m_Core.m_Vel.y = 0;
+		}
+	}
+	if(TileIndexR == TILE_STOPA || TileFIndexR == TILE_STOPA)
+	{
+		if(m_Core.m_Vel.x < 0)
+		{
+			m_Core.m_Pos.x = m_PrevPos.x;
+			m_Core.m_Vel.x = 0;
+		}
+	}
+	if(TileIndexL == TILE_STOPA || TileFIndexL == TILE_STOPA)
 	{
 		if(m_Core.m_Vel.x > 0)
 		{
-			if((int)GameServer()->Collision()->GetPos(TileFIndex).x < (int)m_Core.m_Pos.x)
-				m_Core.m_Pos.x = m_PrevPos.x;
+			m_Core.m_Pos.x = m_PrevPos.x;
 			m_Core.m_Vel.x = 0;
-		}
-	}
-	if(TileIndex == TILE_STOPR || TileIndexR == TILE_STOPR)
-	{
-		if(m_Core.m_Vel.x < 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex).x > (int)m_Core.m_Pos.x)
-				m_Core.m_Pos.x = m_PrevPos.x;
-			m_Core.m_Vel.x = 0;
-		}
-	}
-	if(TileFIndex == TILE_STOPR || TileFIndexR == TILE_STOPR)
-	{
-		if(m_Core.m_Vel.x < 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileFIndex).x > (int)m_Core.m_Pos.x)
-				m_Core.m_Pos.x = m_PrevPos.x;
-			m_Core.m_Vel.x = 0;
-		}
-	}
-	if(TileIndex == TILE_STOPB || TileIndexB == TILE_STOPB)
-	{
-		if(m_Core.m_Vel.y < 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex).y > (int)m_Core.m_Pos.y)
-				m_Core.m_Pos.y = m_PrevPos.y;
-			m_Core.m_Vel.y = 0;
-		}
-	}
-	if(TileFIndex == TILE_STOPB || TileFIndexB == TILE_STOPB)
-	{
-		if(m_Core.m_Vel.y < 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileFIndex).y > (int)m_Core.m_Pos.y)
-				m_Core.m_Pos.y = m_PrevPos.y;
-			m_Core.m_Vel.y = 0;
-		}
-	}
-	if(TileIndex == TILE_STOPT || TileIndexT == TILE_STOPT)
-	{
-		if(m_Core.m_Vel.y > 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileIndex).y < (int)m_Core.m_Pos.y)
-				m_Core.m_Pos.y = m_PrevPos.y;
-			m_Core.m_Jumped = 0;
-			//m_Jumped = 1;
-			m_Core.m_Vel.y = 0;
-		}
-	}
-	if(TileFIndex == TILE_STOPT || TileFIndexT == TILE_STOPT)
-	{
-		if(m_Core.m_Vel.y > 0)
-		{
-			if((int)GameServer()->Collision()->GetPos(TileFIndex).y < (int)m_Core.m_Pos.y)
-				m_Core.m_Pos.y = m_PrevPos.y;
-			m_Core.m_Jumped = 0;
-			m_Core.m_Vel.y = 0;
 		}
 	}
 	if (TileIndex == TILE_BOOST_L || TileFIndex == TILE_BOOST_L)

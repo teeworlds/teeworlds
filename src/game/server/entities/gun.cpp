@@ -36,7 +36,7 @@ void CGun::Fire()
 	}
 	
 	int Num = -1;
-	Num =  GameServer()->m_World.FindEntities(m_Pos,RANGE, (CEntity**)Ents, 16, NETOBJTYPE_CHARACTER);
+	Num =  GameServer()->m_World.FindEntities(m_Pos, RANGE, (CEntity**)Ents, 16, NETOBJTYPE_CHARACTER);
 
 	for (int i = 0; i < Num; i++)
 	{
@@ -57,12 +57,6 @@ void CGun::Fire()
 			}
 		}
 	}
-	//if (Id!=-1)
-	//{
-	//	CCharacter *Target = Ents[Id];
-	//	vec2 Fdir = normalize(Target->m_Pos - m_Pos);
-	//	new CPlasma(&GameServer()->m_World, m_Pos, Fdir, m_Freeze, m_Explosive);
-	//}
 	for (int i = 0; i < 16; i++) {
 		if(IdInTeam[i] != -1) {
 			CCharacter *Target = Ents[IdInTeam[i]];

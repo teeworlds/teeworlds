@@ -61,18 +61,18 @@ public:
 			Number of entities found and added to the ents array.
 	*/
 	int FindEntities(vec2 Pos, float Radius, CEntity **ppEnts, int Max, int Type = -1);
-	
+
 	/*
-		Function: interserct_CCharacter
-			Finds the closest CCharacter that intersects the line.
-			
+		Function: InterserctCharacters
+			Finds the CCharacters that intersects the line. // made for types lasers=1 and doors=0
+
 		Arguments:
 			pos0 - Start position
 			pos2 - End position
 			radius - How for from the line the CCharacter is allowed to be.
 			new_pos - Intersection position
 			notthis - Entity to ignore intersecting with
-			
+
 		Returns:
 			Returns a pointer to the closest hit or NULL of there is no intersection.
 	*/

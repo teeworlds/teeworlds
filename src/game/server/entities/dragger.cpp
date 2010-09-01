@@ -11,72 +11,73 @@
 
 const int LENGTH=700;
 
-CDragger::CDragger(CGameWorld *pGameWorld, vec2 pos, float strength, bool nw)
+CDragger::CDragger(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW)
 : CEntity(pGameWorld, NETOBJTYPE_LASER)
 {
-	this->m_Pos = pos;
-	this->strength = strength;
-	this->eval_tick=Server()->Tick();
-	this->nw=nw;
+	m_Pos = Pos;
+	m_Strength = Strength;
+	m_EvalTick = Server()->Tick();
+	m_NW = NW;
+
 	GameWorld()->InsertEntity(this);
 }
 
-void CDragger::move()
+void CDragger::Move()
 {
-	if (target)
+	if (m_Target)
 		return;
-	CCharacter *ents[16];
-	int num = -1;
-	num =  GameServer()->m_World.FindEntities(m_Pos,LENGTH, (CEntity**)ents, 16, NETOBJTYPE_CHARACTER);
-	int id=-1;
-	int minlen=0;
-	for (int i = 0; i < num; i++)
+	CCharacter *Ents[16];
+	int Num = -1;
+	Num =  GameServer()->m_World.FindEntities(m_Pos,LENGTH, (CEntity**)Ents, 16, NETOBJTYPE_CHARACTER);
+	int Id=-1;
+	int MinLen=0;
+	for (int i = 0; i < Num; i++)
 	{
-		target = ents[i];
-		int res=0;
-		if (!nw)
-			res = GameServer()->Collision()->IntersectNoLaser(m_Pos, target->m_Pos, 0, 0);
+		m_Target = Ents[i];
+		int Res=0;
+		if (!m_NW)
+			Res = GameServer()->Collision()->IntersectNoLaser(m_Pos, m_Target->m_Pos, 0, 0);
 		else
-			res = GameServer()->Collision()->IntersectNoLaserNW(m_Pos, target->m_Pos, 0, 0);
+			Res = GameServer()->Collision()->IntersectNoLaserNW(m_Pos, m_Target->m_Pos, 0, 0);
 
-		if (res==0)
+		if (Res==0)
 		{
-			int len=length(ents[i]->m_Pos - m_Pos);
-			if (minlen==0 || minlen>len)
+			int Len=length(Ents[i]->m_Pos - m_Pos);
+			if (MinLen==0 || MinLen>Len)
 			{
-				minlen=len;
-				id=i;
+				MinLen=Len;
+				Id=i;
 			}
 		}
 	}
-	if (id!=-1)
+	if (Id!=-1)
 	{
-		target = ents[id];
+		m_Target = Ents[Id];
 	}
 	else
 	{
-		target=0;
+		m_Target=0;
 	}
 }
 
-void CDragger::drag()
+void CDragger::Drag()
 {
-	if (target)
+	if (m_Target)
 	{
 
-		int res = 0;
-		if (!nw)
-			res = GameServer()->Collision()->IntersectNoLaser(m_Pos, target->m_Pos, 0, 0);
+		int Res = 0;
+		if (!m_NW)
+			Res = GameServer()->Collision()->IntersectNoLaser(m_Pos, m_Target->m_Pos, 0, 0);
 		else
-			res = GameServer()->Collision()->IntersectNoLaserNW(m_Pos, target->m_Pos, 0, 0);
-		if (res || length(m_Pos-target->m_Pos)>700)
+			Res = GameServer()->Collision()->IntersectNoLaserNW(m_Pos, m_Target->m_Pos, 0, 0);
+		if (Res || length(m_Pos-m_Target->m_Pos)>700)
 		{
-			target=0;
+			m_Target=0;
 		}
 		else
-			if (length(m_Pos-target->m_Pos)>28)
-				if(!((target->m_CurrentTile >= TILE_STOPL && target->m_CurrentTile <= TILE_STOPT) || (target->m_CurrentFTile >= TILE_STOPL && target->m_CurrentFTile <= TILE_STOPT)))
-					target->m_Core.m_Vel+=normalize(m_Pos-target->m_Pos)*strength;
+			if (length(m_Pos-m_Target->m_Pos)>28)
+				if(!((m_Target->m_CurrentTile >= TILE_STOPL && m_Target->m_CurrentTile <= TILE_STOPT) || (m_Target->m_CurrentFTile >= TILE_STOPL && m_Target->m_CurrentFTile <= TILE_STOPT)))
+					m_Target->m_Core.m_Vel+=normalize(m_Pos-m_Target->m_Pos)*m_Strength;
 	}
 }
 
@@ -89,40 +90,40 @@ void CDragger::Tick()
 {
 	if (Server()->Tick()%int(Server()->TickSpeed()*0.15f)==0)
 	{
-		eval_tick=Server()->Tick();
-		int index = GameServer()->Collision()->IsCp(m_Pos.x, m_Pos.y);
-		if (index)
+		m_EvalTick=Server()->Tick();
+		int Index = GameServer()->Collision()->IsCp(m_Pos.x, m_Pos.y);
+		if (Index)
 		{
-			core=GameServer()->Collision()->CpSpeed(index);
+			m_Core=GameServer()->Collision()->CpSpeed(Index);
 		}
-		m_Pos+=core;
-		move();
+		m_Pos+=m_Core;
+		Move();
 	}
-	drag();
+	Drag();
 	return;
 
 
 }
 
-void CDragger::Snap(int snapping_client)
+void CDragger::Snap(int SnappingClient)
 {
-	if (target)
+	if (m_Target)
 	{
-		if(NetworkClipped(snapping_client, m_Pos) && NetworkClipped(snapping_client,target->m_Pos))
+		if(NetworkClipped(SnappingClient, m_Pos) && NetworkClipped(SnappingClient,m_Target->m_Pos))
 			return;
 	}
 	else
-		if(NetworkClipped(snapping_client,m_Pos))
+		if(NetworkClipped(SnappingClient,m_Pos))
 			return;
 
 	CNetObj_Laser *obj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_Id, sizeof(CNetObj_Laser)));
 
 	obj->m_X = (int)m_Pos.x;
 	obj->m_Y = (int)m_Pos.y;
-	if (target)
+	if (m_Target)
 	{
-		obj->m_FromX = (int)target->m_Pos.x;
-		obj->m_FromY = (int)target->m_Pos.y;
+		obj->m_FromX = (int)m_Target->m_Pos.x;
+		obj->m_FromY = (int)m_Target->m_Pos.y;
 	}
 	else
 	{
@@ -131,12 +132,12 @@ void CDragger::Snap(int snapping_client)
 	}
 
 
-	int start_tick = eval_tick;
-	if (start_tick<Server()->Tick()-4)
-		start_tick=Server()->Tick()-4;
-	else if (start_tick>Server()->Tick())
-		start_tick=Server()->Tick();
-	obj->m_StartTick = start_tick;
+	int StartTick = m_EvalTick;
+	if (StartTick < Server()->Tick() - 4)
+		StartTick = Server()->Tick() - 4;
+	else if (StartTick>Server()->Tick())
+		StartTick = Server()->Tick();
+	obj->m_StartTick = StartTick;
 }
 //я тут был
 //я тоже
