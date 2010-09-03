@@ -1002,7 +1002,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	if(OldSelectedFont != s_SelectedFont)
 	{
 		str_copy(g_Config.m_ClFontfile, s_Fonts[s_SelectedFont].m_FileName, sizeof(g_Config.m_ClFontfile));
-		m_NeedRestart = true;
+		TextRender()->SetFont(TextRender()->LoadFont(g_Config.m_ClFontfile));
 	}
 }
 
