@@ -90,6 +90,7 @@ CMenus::CMenus()
 	
 	m_EscapePressed = false;
 	m_EnterPressed = false;
+	m_DeletePressed = false;
 	m_NumInputEvents = 0;
 	
 	m_LastInput = time_get();
@@ -1028,9 +1029,14 @@ bool CMenus::OnInput(IInput::CEvent e)
 		
 	if(IsActive())
 	{
-		// special for popups
-		if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key == KEY_RETURN)
-			m_EnterPressed = true;
+		if(e.m_Flags&IInput::FLAG_PRESS)
+		{
+			// special for popups
+			if(e.m_Key == KEY_RETURN)
+				m_EnterPressed = true;
+			else if(e.m_Key == KEY_DELETE)
+				m_DeletePressed = true;
+		}
 		
 		if(m_NumInputEvents < MAX_INPUTEVENTS)
 			m_aInputEvents[m_NumInputEvents++] = e;
@@ -1115,6 +1121,7 @@ void CMenus::OnRender()
 	{
 		m_EscapePressed = false;
 		m_EnterPressed = false;
+		m_DeletePressed = false;
 		m_NumInputEvents = 0;
 		return;
 	}
@@ -1182,6 +1189,7 @@ void CMenus::OnRender()
 
 	m_EscapePressed = false;
 	m_EnterPressed = false;
+	m_DeletePressed = false;
 	m_NumInputEvents = 0;
 }
 

@@ -1,4 +1,5 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
+#include <stdio.h> //remove()
 #include <base/system.h>
 #include <engine/storage.h>
 #include "engine.h"
@@ -192,6 +193,18 @@ public:
 		
 		pBuffer[0] = 0;
 		return 0;		
+	}
+ 	
+	virtual bool RemoveFile(const char *pFilename)
+	{
+		char aBuffer[1024];
+		str_format(aBuffer, sizeof(aBuffer), "%s/%s", m_aApplicationSavePath, pFilename);
+		bool Fail = remove(aBuffer);
+		
+		if(Fail)
+			Fail = remove(pFilename);
+		
+		return !Fail;
 	}
 
 	virtual const char* SavePath(const char *pFilename, char *pBuffer, int Max)
