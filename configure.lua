@@ -341,9 +341,9 @@ end
 @END]]--
 function OptCCompiler(name, default_driver, default_c, default_cxx, desc)
 	local check = function(option, settings)
-		if ScriptArgs["compiler"] == "cl" or ScriptArgs["compiler"] == "gcc" or ScriptArgs["compiler"] == "gcc-3" or ScriptArgs["compiler"] == "gcc-4" then
+		if ScriptArgs[option.name] then
 			-- set compile driver
-			option.driver = ScriptArgs["compiler"]
+			option.driver = ScriptArgs[option.name]
 
 			-- set c compiler
 			if ScriptArgs[option.name..".c"] then
@@ -356,8 +356,17 @@ function OptCCompiler(name, default_driver, default_c, default_cxx, desc)
 			end
 			
 			option.auto_detected = false
+		elseif option.driver then
+			-- no need todo anything if we have a driver
+			-- TODO: test if we can find the compiler
 		else
-			option.driver = settings.cc.exe_c
+			if ExecuteSilent("cl") == 0 then
+				option.driver = "cl"
+			elseif ExecuteSilent("g++ -v") == 0 then
+				option.driver = "gcc"
+			else
+				error("no c/c++ compiler found")
+			end
 		end
 		--setup_compiler(option.value)
 	end
@@ -365,7 +374,7 @@ function OptCCompiler(name, default_driver, default_c, default_cxx, desc)
 	local apply = function(option, settings)
 		if option.driver == "cl" then
 			SetDriversCL(settings)
-		elseif option.driver == "gcc" or option.driver == "gcc-3" or option.driver == "gcc-4" then
+		elseif option.driver == "gcc" then
 			SetDriversGCC(settings)
 		else
 			error(option.driver.." is not a known c/c++ compile driver")

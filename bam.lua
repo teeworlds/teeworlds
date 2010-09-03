@@ -292,11 +292,7 @@ release_settings = NewSettings()
 release_settings.config_name = "release"
 release_settings.config_ext = ""
 release_settings.debug = 0
-if ScriptArgs["optimize"] ~= nil and ScriptArgs["optimize"] >= "0" then
-	release_settings.optimize = tonumber(ScriptArgs["optimize"])
-else
-	release_settings.optimize = 2
-end
+release_settings.optimize = 1
 release_settings.cc.defines:Add("CONF_RELEASE")
 
 if platform == "macosx"  and arch == "ia32" then
