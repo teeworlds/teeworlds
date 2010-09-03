@@ -10,6 +10,8 @@
 #include "engine.h"
 
 static const unsigned char gs_aHeaderMarker[8] = {'T', 'W', 'D', 'E', 'M', 'O', 0, 1};
+static const unsigned char gs_aMapMarker[5] = {'M', 'A', 'P', 0, 1};
+
 
 CDemoRecorder::CDemoRecorder(class CSnapshotDelta *pSnapshotDelta)
 {
@@ -49,6 +51,38 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	Header.m_aCrc[2] = (Crc>>8)&0xff;
 	Header.m_aCrc[3] = (Crc)&0xff;
 	io_write(m_File, &Header, sizeof(Header));
+	
+	
+	// write map
+	char aMapFilename[128];
+	str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", pMap, Crc);
+	IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ);
+	if(MapFile)
+	{
+		// write map marker
+		io_write(m_File, &gs_aMapMarker, sizeof(gs_aMapMarker));
+		
+		// write map size
+		int MapSize = io_length(MapFile);
+		unsigned char aBufMapSize[4];
+		aBufMapSize[0] = (MapSize>>24)&0xff;
+		aBufMapSize[1] = (MapSize>>16)&0xff;
+		aBufMapSize[2] = (MapSize>>8)&0xff;
+		aBufMapSize[3] = (MapSize)&0xff;
+		io_write(m_File, &aBufMapSize, sizeof(aBufMapSize));
+		
+		// write map data
+		while(1)
+		{
+			unsigned char aChunk[1024*64];
+			int Bytes = io_read(MapFile, &aChunk, sizeof(aChunk));
+			if(Bytes <= 0)
+				break;
+			io_write(m_File, &aChunk, Bytes);
+		}
+		io_close(MapFile);
+	}
+	
 	
 	m_LastKeyFrame = -1;
 	m_LastTickMarker = -1;
@@ -497,6 +531,50 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 		m_File = 0;
 		return -1;
 	}
+	
+	
+	// check if the demo includes a map
+	unsigned char aMapMarker[5];
+	io_read(m_File, &aMapMarker, sizeof(aMapMarker));
+	
+	if(mem_comp(aMapMarker, gs_aMapMarker, sizeof(gs_aMapMarker)) == 0)
+	{
+		// get map size
+		unsigned char aBufMapSize[4];
+		io_read(m_File, &aBufMapSize, sizeof(aBufMapSize));
+		int MapSize = (aBufMapSize[0]<<24) | (aBufMapSize[1]<<16) | (aBufMapSize[2]<<8) | (aBufMapSize[3]);
+		
+		// check if we already have the map
+		int Crc = (m_Info.m_Header.m_aCrc[0]<<24) | (m_Info.m_Header.m_aCrc[1]<<16) | (m_Info.m_Header.m_aCrc[2]<<8) | (m_Info.m_Header.m_aCrc[3]);
+		char aMapFilename[128];
+		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", m_Info.m_Header.m_aMap, Crc);
+		IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ);
+		
+		if(MapFile)
+		{
+			io_skip(m_File, MapSize);
+			io_close(MapFile);
+		}
+		else if(MapSize != 0)
+		{
+			// get map data
+			unsigned char *pMapData = (unsigned char *)mem_alloc(MapSize, 1);
+			io_read(m_File, pMapData, MapSize);
+			
+			// save map
+			MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_WRITE);
+			io_write(MapFile, pMapData, MapSize);
+			io_close(MapFile);
+			
+			// free data
+			mem_free(pMapData);
+		}
+	}
+	else // no map in the demo
+	{
+		io_skip(m_File, -sizeof(aMapMarker));
+	}
+	
 	
 	// scan the file for interessting points
 	ScanFile();
