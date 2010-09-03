@@ -438,7 +438,7 @@ void IGameController::Tick()
 					if(GameServer()->m_apPlayers[i]->GetTeam() == M && (!pP || absolute((aTScore[M^1]+aPScore[i]) - (aTScore[M]-aPScore[i])) < PD))
 					{
 						pP = GameServer()->m_apPlayers[i];
-						PD = (int)(absolute((aTScore[M^1]+aPScore[i]) - (aTScore[M]-aPScore[i])));
+						PD = absolute((aTScore[M^1]+aPScore[i]) - (aTScore[M]-aPScore[i]));
 					}
 				}
 				
