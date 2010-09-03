@@ -103,6 +103,8 @@ class CTextRender : public IEngineTextRender
 	
 	int m_FontTextureFormat;
 
+	int m_FontMemoryUsage;
+	
 	CFont *m_pFont;
 
 	FT_Library m_FTLibrary;
@@ -146,7 +148,6 @@ class CTextRender : public IEngineTextRender
 
 	void InitTexture(CFontSizeData *pSizeData, int CharWidth, int CharHeight, int Xchars, int Ychars)
 	{
-		static int FontMemoryUsage = 0;
 		int Width = CharWidth*Xchars;
 		int Height = CharHeight*Ychars;
 		void *pMem = mem_alloc(Width*Height, 1);
@@ -155,7 +156,7 @@ class CTextRender : public IEngineTextRender
 		if(pSizeData->m_aTextures[0] == 0)
 			glGenTextures(2, pSizeData->m_aTextures);
 		else
-			FontMemoryUsage -= pSizeData->m_TextureWidth*pSizeData->m_TextureHeight*2;
+			m_FontMemoryUsage -= pSizeData->m_TextureWidth*pSizeData->m_TextureHeight*2;
 		
 		pSizeData->m_NumXChars = Xchars;
 		pSizeData->m_NumYChars = Ychars;
@@ -169,10 +170,10 @@ class CTextRender : public IEngineTextRender
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexImage2D(GL_TEXTURE_2D, 0, m_FontTextureFormat, Width, Height, 0, m_FontTextureFormat, GL_UNSIGNED_BYTE, pMem);
-			FontMemoryUsage += Width*Height;
+			m_FontMemoryUsage += Width*Height;
 		}
 		
-		dbg_msg("", "pFont memory usage: %d", FontMemoryUsage);
+		dbg_msg("", "Font memory usage: %d", m_FontMemoryUsage);
 		
 		mem_free(pMem);
 	}
@@ -222,7 +223,7 @@ class CTextRender : public IEngineTextRender
 			for(pSizeData->m_CharMaxHeight = 1; pSizeData->m_CharMaxHeight < MaxH; pSizeData->m_CharMaxHeight <<= 1);
 		}
 		
-		//dbg_msg("pFont", "init size %d, texture size %d %d", pFont->sizes[index].font_size, w, h);
+		//dbg_msg("Font", "init size %d, texture size %d %d", pFont->sizes[index].font_size, w, h);
 		//FT_New_Face(m_FTLibrary, "data/fonts/vera.ttf", 0, &pFont->ft_face);
 		InitTexture(pSizeData, pSizeData->m_CharMaxWidth, pSizeData->m_CharMaxHeight, 8, 8);
 	}
@@ -298,7 +299,7 @@ class CTextRender : public IEngineTextRender
 
 		if(FT_Load_Char(pFont->m_FtFace, Chr, FT_LOAD_RENDER|FT_LOAD_NO_BITMAP))
 		{
-			dbg_msg("pFont", "error loading glyph %d", Chr);
+			dbg_msg("Font", "error loading glyph %d", Chr);
 			return -1;
 		}
 
@@ -438,6 +439,8 @@ public:
 
 		// GL_LUMINANCE can be good for debugging
 		m_FontTextureFormat = GL_ALPHA;
+		
+		m_FontMemoryUsage = 0;
 	}
 		
 	virtual void Init()
@@ -469,12 +472,15 @@ public:
 
 	virtual void DestroyFont(CFont *pFont)
 	{
+		m_FontMemoryUsage = 0;
 		mem_free(pFont);
 	}
 
 	virtual void SetFont(CFont *pFont)
 	{
 		dbg_msg("textrender", "Font set %p", pFont);
+		if(m_pFont)
+			DestroyFont(m_pFont);
 		m_pFont = pFont;
 	}
 		
