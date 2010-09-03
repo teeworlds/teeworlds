@@ -146,6 +146,7 @@ class CMenus : public CComponent
 	//
 	bool m_EscapePressed;
 	bool m_EnterPressed;
+	bool m_DeletePressed;
 	
 	// for call vote
 	int m_CallvoteSelectedOption;

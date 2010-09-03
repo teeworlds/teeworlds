@@ -4,6 +4,7 @@
 #include <engine/demo.h>
 #include <engine/keys.h>
 #include <engine/graphics.h>
+#include <engine/storage.h>
 
 #include <game/client/render.h>
 #include <game/client/gameclient.h>
@@ -472,10 +473,11 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	bool Activated = false;
 	s_SelectedItem = UiDoListboxEnd(&s_ScrollValue, &Activated);
 	
-	CUIRect RefreshRect, PlayRect;
-	ButtonBar.VSplitRight(250.0f, &ButtonBar, &RefreshRect);
-	RefreshRect.VSplitRight(130.0f, &RefreshRect, &PlayRect);
-	PlayRect.VSplitRight(120.0f, 0x0, &PlayRect);
+	CUIRect RefreshRect, PlayRect, DeleteRect;
+	ButtonBar.VSplitRight(130.0f, &ButtonBar, &PlayRect);
+	ButtonBar.VSplitLeft(130.0f, &RefreshRect, &ButtonBar);
+	ButtonBar.VSplitLeft(10.0f, &DeleteRect, &ButtonBar);
+	ButtonBar.VSplitLeft(120.0f, &DeleteRect, &ButtonBar);
 	
 	bool IsDir = false;
 	if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size())
@@ -524,6 +526,15 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		}
 	}
 	
+	static int s_DeleteButton = 0;
+	if(DoButton_Menu(&s_DeleteButton, Localize("Delete"), 0, &DeleteRect) || m_DeletePressed)
+	{
+		if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size() && !IsDir)
+		{
+			Storage()->RemoveFile(m_lDemos[s_SelectedItem].m_aFilename);
+			DemolistPopulate();
+		}
+	}
 }
 
 void CMenus::DemoSetParentDirectory()
