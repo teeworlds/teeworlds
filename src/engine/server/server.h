@@ -169,6 +169,7 @@ public:
 
 	void PumpNetwork();
 
+	char *GetMapName();
 	int LoadMap(const char *pMapName);
 
 	void InitEngine(const char *pAppname);

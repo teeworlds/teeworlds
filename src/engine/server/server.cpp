@@ -564,16 +564,8 @@ int CServer::DelClientCallback(int ClientId, const char *pReason, void *pUser)
 
 void CServer::SendMap(int ClientId)
 {
-	//get the name of the map without his path
-	char * pMapShortName = &g_Config.m_SvMap[0];
-	for(int i = 0; i < str_length(g_Config.m_SvMap)-1; i++)
-	{
-		if(g_Config.m_SvMap[i] == '/' || g_Config.m_SvMap[i] == '\\')
-			pMapShortName = &g_Config.m_SvMap[i+1];
-	}
-	
 	CMsgPacker Msg(NETMSG_MAP_CHANGE);
-	Msg.AddString(pMapShortName, 0);
+	Msg.AddString(GetMapName(), 0);
 	Msg.AddInt(m_CurrentMapCrc);
 	SendMsgEx(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientId, true);
 }
@@ -874,7 +866,7 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 	
 	p.AddString(GameServer()->Version(), 32);
 	p.AddString(g_Config.m_SvName, 64);
-	p.AddString(g_Config.m_SvMap, 32);
+	p.AddString(GetMapName(), 32);
 
 	// gametype
 	p.AddString(m_aBrowseinfoGametype, 16);
@@ -965,6 +957,18 @@ void CServer::PumpNetwork()
 		else
 			ProcessClientPacket(&Packet);
 	}
+}
+
+char *CServer::GetMapName()
+{
+	// get the name of the map without his path
+	char *pMapShortName = &g_Config.m_SvMap[0];
+	for(int i = 0; i < str_length(g_Config.m_SvMap)-1; i++)
+	{
+		if(g_Config.m_SvMap[i] == '/' || g_Config.m_SvMap[i] == '\\')
+			pMapShortName = &g_Config.m_SvMap[i+1];
+	}
+	return pMapShortName;
 }
 
 int CServer::LoadMap(const char *pMapName)
