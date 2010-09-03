@@ -342,6 +342,7 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(void *pId, bool Selected)
 			if(m_EnterPressed || (Input()->MouseDoubleClick() && UI()->ActiveItem() == pId))
 			{
 				gs_ListBoxItemActivated = true;
+				UI()->SetActiveItem(0);
 			}
 			else
 			{			

@@ -87,7 +87,13 @@ void CInput::MouseModeRelative()
 
 int CInput::MouseDoubleClick()
 {
-	return m_ReleaseDelta < (time_freq() >> 2);
+	if(m_ReleaseDelta >= 0 && m_ReleaseDelta < (time_freq() >> 2))
+	{
+		m_LastRelease = 0;
+		m_ReleaseDelta = -1;
+		return 1;
+	}
+	return 0;
 }
 
 void CInput::ClearKeyStates()
