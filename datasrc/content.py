@@ -368,7 +368,7 @@ container.sprites.Add(Sprite("browse_unpure", set_browseicons, 3,0,1,1))
 
 container.sprites.Add(Sprite("demobutton_play", set_demobuttons, 0,0,1,1))
 container.sprites.Add(Sprite("demobutton_pause", set_demobuttons, 1,0,1,1))
-container.sprites.Add(Sprite("demobutton_reset", set_demobuttons, 2,0,1,1))
+container.sprites.Add(Sprite("demobutton_stop", set_demobuttons, 2,0,1,1))
 container.sprites.Add(Sprite("demobutton_slower", set_demobuttons, 3,0,1,1))
 container.sprites.Add(Sprite("demobutton_faster", set_demobuttons, 4,0,1,1))
 

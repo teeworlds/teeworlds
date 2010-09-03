@@ -59,6 +59,9 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	
 	CUIRect SeekBar, ButtonBar;
 	
+	int CurrentTick = pInfo->m_CurrentTick - pInfo->m_FirstTick;
+	int TotalTicks = pInfo->m_LastTick - pInfo->m_FirstTick;
+	
 	if(m_MenuActive)
 	{
 		MainView.HSplitTop(SeekBarHeight, &SeekBar, &ButtonBar);
@@ -74,9 +77,6 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		char aBuffer[128];
 		
 		RenderTools()->DrawUIRect(&SeekBar, vec4(0,0,0,0.5f), CUI::CORNER_ALL, 5.0f);
-		
-		int CurrentTick = pInfo->m_CurrentTick - pInfo->m_FirstTick;
-		int TotalTicks = pInfo->m_LastTick - pInfo->m_FirstTick;
 		
 		float Amount = CurrentTick/(float)TotalTicks;
 		
@@ -120,7 +120,12 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		if(Inside)
 			UI()->SetHotItem(id);
 	}	
-	
+
+	if(CurrentTick == TotalTicks)
+	{
+	DemoPlayer()->Pause();
+	DemoPlayer()->SetPos(0);
+	}
 
 	if(m_MenuActive)
 	{
@@ -141,11 +146,14 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 				DemoPlayer()->Unpause();
 		}
 		
+		// stop button
+		
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static int s_ResetButton = 0;
-		if(DoButton_DemoPlayer_Sprite(&s_ResetButton, SPRITE_DEMOBUTTON_RESET, false, &Button))
+		if(DoButton_DemoPlayer_Sprite(&s_ResetButton, SPRITE_DEMOBUTTON_STOP, false, &Button))
 		{
+			DemoPlayer()->Pause(); 
 			DemoPlayer()->SetPos(0);
 		}
 
