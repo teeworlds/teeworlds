@@ -38,6 +38,15 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 {
 	const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
 	
+	int CurrentTick = pInfo->m_CurrentTick - pInfo->m_FirstTick;
+	int TotalTicks = pInfo->m_LastTick - pInfo->m_FirstTick;
+	
+	if(CurrentTick == TotalTicks)
+	{
+		DemoPlayer()->Pause();
+		DemoPlayer()->SetPos(0);
+	}
+	
 	const float SeekBarHeight = 15.0f;
 	const float ButtonbarHeight = 20.0f;
 	const float Margins = 5.0f;
@@ -57,11 +66,6 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		
 		CUIRect SeekBar, ButtonBar;
 	
-	int CurrentTick = pInfo->m_CurrentTick - pInfo->m_FirstTick;
-	int TotalTicks = pInfo->m_LastTick - pInfo->m_FirstTick;
-	
-	if(m_MenuActive)
-	{
 		MainView.HSplitTop(SeekBarHeight, &SeekBar, &ButtonBar);
 		ButtonBar.HSplitTop(Margins, 0, &ButtonBar);
 
@@ -113,14 +117,6 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		if(Inside)
 			UI()->SetHotItem(id);
 
-	if(CurrentTick == TotalTicks)
-	{
-		DemoPlayer()->Pause();
-		DemoPlayer()->SetPos(0);
-	}
-
-	if(m_MenuActive)
-	{
 		// do buttons
 		CUIRect Button;
 		
