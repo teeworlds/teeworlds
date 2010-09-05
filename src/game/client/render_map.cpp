@@ -247,26 +247,46 @@ void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 
 					int Px1 = Px0+(1024/16)-1;
 					int Py1 = Py0+(1024/16)-1;
 					
-					float u0 = Nudge + Px0/TexSize+Frac;
-					float v0 = Nudge + Py0/TexSize+Frac;
-					float u1 = Nudge + Px1/TexSize-Frac;
-					float v1 = Nudge + Py1/TexSize-Frac;
+					float x0 = Nudge + Px0/TexSize+Frac;
+					float y0 = Nudge + Py0/TexSize+Frac;
+					float x1 = Nudge + Px1/TexSize-Frac;
+					float y1 = Nudge + Py0/TexSize+Frac;
+					float x2 = Nudge + Px1/TexSize-Frac;
+					float y2 = Nudge + Py1/TexSize-Frac;
+					float x3 = Nudge + Px0/TexSize+Frac;
+					float y3 = Nudge + Py1/TexSize-Frac;
 					
 					if(Flags&TILEFLAG_VFLIP)
 					{
-						float Tmp = u0;
-						u0 = u1;
-						u1 = Tmp;
+						x0 = x2;
+						x1 = x3;
+						x2 = x3;
+						x3 = x0;
 					}
 
 					if(Flags&TILEFLAG_HFLIP)
 					{
-						float Tmp = v0;
-						v0 = v1;
-						v1 = Tmp;
+						y0 = y3;
+						y2 = y1;
+						y3 = y1;
+						y1 = y0;
 					}
 					
-					Graphics()->QuadsSetSubset(u0,v0,u1,v1);
+					if(Flags&TILEFLAG_ROTATE)
+					{
+						float Tmp = x0;
+						x0 = x3;
+						x3 = x2;
+						x2 = x1;
+						x1 = Tmp;		
+						Tmp = y0;
+						y0 = y3;
+						y3 = y2;
+						y2 = y1;
+						y1 = Tmp;
+ 					}
+
+					Graphics()->QuadsSetSubsetFree(x0, y0, x1, y1, x2, y2, x3, y3);
 					IGraphics::CQuadItem QuadItem(x*Scale, y*Scale, Scale, Scale);
 					Graphics()->QuadsDrawTL(&QuadItem, 1);
 				}

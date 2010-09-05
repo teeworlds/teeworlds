@@ -36,7 +36,7 @@ void CLayerTiles::PrepareForSave()
 {
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
-			m_pTiles[y*m_Width+x].m_Flags &= TILEFLAG_VFLIP|TILEFLAG_HFLIP;
+			m_pTiles[y*m_Width+x].m_Flags &= TILEFLAG_VFLIP|TILEFLAG_HFLIP|TILEFLAG_ROTATE;
 
 	if(m_Image != -1)
 	{
@@ -262,7 +262,7 @@ void CLayerTiles::BrushFlipX()
 
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
-			m_pTiles[y*m_Width+x].m_Flags ^= TILEFLAG_VFLIP;
+			m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_HFLIP : TILEFLAG_VFLIP;
 }
 
 void CLayerTiles::BrushFlipY()
@@ -277,7 +277,41 @@ void CLayerTiles::BrushFlipY()
 
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
-			m_pTiles[y*m_Width+x].m_Flags ^= TILEFLAG_HFLIP;
+			m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_VFLIP : TILEFLAG_HFLIP;
+}
+
+void CLayerTiles::BrushRotate(float Amount)
+{
+	int Rotation = (round(360.0f*Amount/(pi*2))/90)%4;	// 0=0°, 1=90°, 2=180°, 3=270°
+	if(Rotation < 0)
+		Rotation +=4;
+
+	if(Rotation == 1 || Rotation == 3)
+	{
+		// 90° rotation
+		CTile *pTempData = new CTile[m_Width*m_Height];
+		mem_copy(pTempData, m_pTiles, m_Width*m_Height*sizeof(CTile));
+		CTile *pDst = m_pTiles;
+		for(int x = 0; x < m_Width; ++x)
+			for(int y = m_Height-1; y >= 0; --y, ++pDst)
+			{
+				*pDst = pTempData[y*m_Width+x];
+				if(pDst->m_Flags&TILEFLAG_ROTATE)
+					pDst->m_Flags ^= (TILEFLAG_HFLIP|TILEFLAG_VFLIP);
+				pDst->m_Flags ^= TILEFLAG_ROTATE;
+			}
+
+		int Temp = m_Width;
+		m_Width = m_Height;
+		m_Height = Temp;
+		delete[] pTempData;
+	}
+
+	if(Rotation == 2 || Rotation == 3)
+	{
+		BrushFlipX();
+		BrushFlipY();
+	}
 }
 
 void CLayerTiles::Resize(int NewW, int NewH)

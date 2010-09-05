@@ -373,6 +373,7 @@ public:
 	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
 	virtual void BrushFlipX();
 	virtual void BrushFlipY();
+	virtual void BrushRotate(float Amount);
 	
 	virtual int RenderProperties(CUIRect *pToolbox);
 
@@ -613,7 +614,7 @@ public:
 	void UiInvokePopupMenu(void *pId, int Flags, float x, float y, float w, float h, int (*pfnFunc)(CEditor *pEditor, CUIRect Rect), void *pExtra=0);
 	void UiDoPopupMenu();
 	
-	int UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, int Current, int Min, int Max, float Scale, const char *pToolTip);
+	int UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, int Current, int Min, int Max, int Step, float Scale, const char *pToolTip);
 
 	static int PopupGroup(CEditor *pEditor, CUIRect View);
 	static int PopupLayer(CEditor *pEditor, CUIRect View);

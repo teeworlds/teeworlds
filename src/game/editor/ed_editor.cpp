@@ -463,7 +463,7 @@ void CEditor::RenderBackground(CUIRect View, int Texture, float Size, float Brig
 	Graphics()->QuadsEnd();
 }
 
-int CEditor::UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, int Current, int Min, int Max, float Scale, const char *pToolTip)
+int CEditor::UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, int Current, int Min, int Max, int Step, float Scale, const char *pToolTip)
 {
     // logic
     static float s_Value;
@@ -490,7 +490,7 @@ int CEditor::UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, int Cu
 			{
 				int Count = (int)(s_Value/Scale);
 				s_Value = fmod(s_Value, Scale);
-				Current += Count;
+				Current += Step*Count;
 				if(Current < Min)
 					Current = Min;
 				if(Current > Max)
@@ -731,7 +731,16 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 
 		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 		static int s_RotationAmount = 90;
-		s_RotationAmount = UiDoValueSelector(&s_RotationAmount, &Button, "", s_RotationAmount, 1, 360, 2.0f, Localize("Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise."));
+		bool TileLayer = false;
+		// check for tile layers in brush selection
+		for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
+			if(m_Brush.m_lLayers[i]->m_Type == LAYERTYPE_TILES)
+			{
+				TileLayer = true;
+				s_RotationAmount = max(90, (s_RotationAmount/90)*90);
+				break;
+			}
+		s_RotationAmount = UiDoValueSelector(&s_RotationAmount, &Button, "", s_RotationAmount, TileLayer?90:1, 360, TileLayer?90:1, TileLayer?10.0f:2.0f, Localize("Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise."));
 
 		TB_Top.VSplitLeft(5.0f, &Button, &TB_Top);
 		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
@@ -1638,7 +1647,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIds, int *
 		}
 		else if(pProps[i].m_Type == PROPTYPE_INT_SCROLL)
 		{
-			int NewValue = UiDoValueSelector(&pIds[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, 1.0f, Localize("Use left mouse button to drag and change the value. Hold shift to be more precise."));
+			int NewValue = UiDoValueSelector(&pIds[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, 1, 1.0f, Localize("Use left mouse button to drag and change the value. Hold shift to be more precise."));
 			if(NewValue != pProps[i].m_Value)
 			{
 				*pNewVal = NewValue;
@@ -1654,7 +1663,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIds, int *
 			for(int c = 0; c < 4; c++)
 			{
 				int v = (pProps[i].m_Value >> s_aShift[c])&0xff;
-				NewColor |= UiDoValueSelector(((char *)&pIds[i])+c, &Shifter, s_paTexts[c], v, 0, 255, 1.0f, Localize("Use left mouse button to drag and change the color value. Hold shift to be more precise."))<<s_aShift[c];
+				NewColor |= UiDoValueSelector(((char *)&pIds[i])+c, &Shifter, s_paTexts[c], v, 0, 255, 1, 1.0f, Localize("Use left mouse button to drag and change the color value. Hold shift to be more precise."))<<s_aShift[c];
 
 				if(c != 3)
 				{
