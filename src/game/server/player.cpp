@@ -153,7 +153,7 @@ void CPlayer::SetTeam(int Team)
 		return;
 		
 	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "%s joined the %s", Server()->ClientName(m_ClientID), GameServer()->m_pController->GetTeamName(Team));
+	str_format(aBuf, sizeof(aBuf), "\"%s\" joined the %s", Server()->ClientName(m_ClientID), GameServer()->m_pController->GetTeamName(Team));
 	GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
 	
 	KillCharacter();
