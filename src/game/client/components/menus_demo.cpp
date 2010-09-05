@@ -440,10 +440,15 @@ void CMenus::DemolistPopulate()
 
 void CMenus::RenderDemoList(CUIRect MainView)
 {
+	static int s_SelectedItem = -1;
 	static int s_Inited = 0;
 	if(!s_Inited)
+	{
 		DemolistPopulate();
-	s_Inited = 1;
+		s_Inited = 1;
+		if(m_lDemos.size() > 0)
+			s_SelectedItem = 0;
+	}
 	
 	// render background
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
@@ -453,7 +458,6 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	MainView.HSplitBottom(ms_ButtonHeight+5.0f, &MainView, &ButtonBar);
 	ButtonBar.HSplitTop(5.0f, 0, &ButtonBar);
 	
-	static int s_SelectedItem = -1;
 	static int s_DemoListId = 0;
 	static float s_ScrollValue = 0;
 	
@@ -501,7 +505,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			{
 				DemoSetParentDirectory();
 				DemolistPopulate();
-				s_SelectedItem = -1;
+				s_SelectedItem = m_lDemos.size() > 0 ? 0 : -1;
 			}
 			else if(IsDir) //folder
 			{
@@ -509,7 +513,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 				str_copy(aTemp, m_aCurrentDemoFolder, sizeof(aTemp));
 				str_format(m_aCurrentDemoFolder, sizeof(m_aCurrentDemoFolder), "%s/%s", aTemp, m_lDemos[s_SelectedItem].m_aName);
 				DemolistPopulate();
-				s_SelectedItem = 0;
+				s_SelectedItem = m_lDemos.size() > 0 ? 0 : -1;
 			}
 			else //file
 			{
