@@ -393,10 +393,12 @@ int CGraphics_OpenGL::LoadPNG(CImageInfo *pImg, const char *pFilename)
 		return 0;
 	}
 	
-	if(png_open_file(&Png, aCompleteFilename) != PNG_NO_ERROR) // ignore_convention
+	int Error = png_open_file(&Png, aCompleteFilename); // ignore_convention
+	if(Error != PNG_NO_ERROR)
 	{
 		dbg_msg("game/png", "failed to open file. filename='%s'", aCompleteFilename);
-		png_close_file(&Png); // ignore_convention
+		if(Error != PNG_FILE_ERROR)
+			png_close_file(&Png); // ignore_convention
 		return 0;
 	}
 	
