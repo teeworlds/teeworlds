@@ -499,7 +499,7 @@ void CGameContext::OnClientEnter(int ClientId)
 	//world.insert_entity(&players[client_id]);
 	m_apPlayers[ClientId]->Respawn();
 	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "%s entered and joined the %s", Server()->ClientName(ClientId), m_pController->GetTeamName(m_apPlayers[ClientId]->GetTeam()));
+	str_format(aBuf, sizeof(aBuf), "\"%s\" entered and joined the %s", Server()->ClientName(ClientId), m_pController->GetTeamName(m_apPlayers[ClientId]->GetTeam()));
 	SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
 
 	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' team=%d", ClientId, Server()->ClientName(ClientId), m_apPlayers[ClientId]->GetTeam());
