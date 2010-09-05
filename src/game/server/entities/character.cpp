@@ -563,10 +563,10 @@ void CCharacter::OnDirectInput(CNetObj_PlayerInput *pNewInput)
 void CCharacter::Tick()
 {
 	int MapIndex = GameServer()->Collision()->GetMapIndex(m_PrevPos, m_Pos);
-	int MapIndexL = GameServer()->Collision()->GetMapIndex(m_PrevPos, vec2(m_Pos.x + m_ProximityRadius/2+1,m_Pos.y));
-	int MapIndexR = GameServer()->Collision()->GetMapIndex(m_PrevPos, vec2(m_Pos.x - m_ProximityRadius/2+1,m_Pos.y));
-	int MapIndexT = GameServer()->Collision()->GetMapIndex(m_PrevPos, vec2(m_Pos.x,m_Pos.y + m_ProximityRadius/2+6));
-	int MapIndexB = GameServer()->Collision()->GetMapIndex(m_PrevPos, vec2(m_Pos.x,m_Pos.y - m_ProximityRadius/2-4));
+	int MapIndexL = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x + m_ProximityRadius/2+1,m_Pos.y), vec2(m_Pos.x + m_ProximityRadius/2+1,m_Pos.y));
+	int MapIndexR = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x - m_ProximityRadius/2+1,m_Pos.y), vec2(m_Pos.x - m_ProximityRadius/2+1,m_Pos.y));
+	int MapIndexT = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x,m_Pos.y + m_ProximityRadius/2+6), vec2(m_Pos.x,m_Pos.y + m_ProximityRadius/2+6));
+	int MapIndexB = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x,m_Pos.y - m_ProximityRadius/2-4), vec2(m_Pos.x,m_Pos.y - m_ProximityRadius/2-4));
 	int TileIndex = GameServer()->Collision()->GetCollisionDDRace(MapIndex);
 	int TileFIndex = GameServer()->Collision()->GetFCollisionDDRace(MapIndex);
 	int TileIndexL = GameServer()->Collision()->GetCollisionDDRace(MapIndexL);
