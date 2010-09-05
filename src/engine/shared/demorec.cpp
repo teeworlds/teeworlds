@@ -9,8 +9,9 @@
 #include "network.h"
 #include "engine.h"
 
-static const unsigned char gs_aHeaderMarker[8] = {'T', 'W', 'D', 'E', 'M', 'O', 0, 1};
-static const unsigned char gs_aMapMarker[5] = {'M', 'A', 'P', 0, 1};
+static const unsigned char gs_aHeaderMarker[8] = {'T', 'W', 'D', 'E', 'M', 'O', '1', 0};
+static const unsigned char gs_aHeaderMarkerOld[8] = {'T', 'W', 'D', 'E', 'M', 'O', 0, 1}; // TODO: remove this later on
+static const unsigned char gs_aMapMarker[8] = {'M', 'A', 'P', 'D', 'A', 'T', 'A', 0,};
 
 
 CDemoRecorder::CDemoRecorder(class CSnapshotDelta *pSnapshotDelta)
@@ -55,8 +56,15 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	
 	// write map
 	char aMapFilename[128];
-	str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", pMap, Crc);
+	// try the normal maps folder
+	str_format(aMapFilename, sizeof(aMapFilename), "maps/%s.map", pMap);
 	IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ);
+	if(!MapFile)
+	{
+		// try the downloaded maps
+		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", pMap, Crc);
+		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ);
+	}
 	if(MapFile)
 	{
 		// write map marker
@@ -522,7 +530,8 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 
 	// read the header
 	io_read(m_File, &m_Info.m_Header, sizeof(m_Info.m_Header));
-	if(mem_comp(m_Info.m_Header.m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) != 0)
+	if(mem_comp(m_Info.m_Header.m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) != 0 &&
+		mem_comp(m_Info.m_Header.m_aMarker, gs_aHeaderMarkerOld, sizeof(gs_aHeaderMarkerOld)) != 0)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "'%s' is not a demo file", pFilename);
@@ -534,7 +543,7 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 	
 	
 	// check if the demo includes a map
-	unsigned char aMapMarker[5];
+	unsigned char aMapMarker[8];
 	io_read(m_File, &aMapMarker, sizeof(aMapMarker));
 	
 	if(mem_comp(aMapMarker, gs_aMapMarker, sizeof(gs_aMapMarker)) == 0)
@@ -545,6 +554,7 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 		int MapSize = (aBufMapSize[0]<<24) | (aBufMapSize[1]<<16) | (aBufMapSize[2]<<8) | (aBufMapSize[3]);
 		
 		// check if we already have the map
+		// TODO: improve map checking
 		int Crc = (m_Info.m_Header.m_aCrc[0]<<24) | (m_Info.m_Header.m_aCrc[1]<<16) | (m_Info.m_Header.m_aCrc[2]<<8) | (m_Info.m_Header.m_aCrc[3]);
 		char aMapFilename[128];
 		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", m_Info.m_Header.m_aMap, Crc);
@@ -555,7 +565,7 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 			io_skip(m_File, MapSize);
 			io_close(MapFile);
 		}
-		else if(MapSize != 0)
+		else if(MapSize > 0)
 		{
 			// get map data
 			unsigned char *pMapData = (unsigned char *)mem_alloc(MapSize, 1);
