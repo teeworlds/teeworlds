@@ -95,6 +95,7 @@ class CMenus : public CComponent
 		POPUP_MESSAGE,
 		POPUP_DISCONNECTED,
 		POPUP_PURE,
+		POPUP_DELETE_DEMO,
 		POPUP_PASSWORD,
 		POPUP_QUIT, 
 	};
@@ -163,6 +164,7 @@ class CMenus : public CComponent
 	
 	sorted_array<CDemoItem> m_lDemos;
 	char m_aCurrentDemoFolder[256];
+	bool m_DemolistDelEntry;
 	
 	void DemolistPopulate();
 	static void DemolistCountCallback(const char *pName, int IsDir, void *pUser);

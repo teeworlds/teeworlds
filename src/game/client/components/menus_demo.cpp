@@ -450,6 +450,25 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		if(m_lDemos.size() > 0)
 			s_SelectedItem = 0;
 	}
+
+	bool IsDir = false;
+	if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size())
+	{
+		if(str_comp(m_lDemos[s_SelectedItem].m_aName, "..") == 0 || fs_is_dir(m_lDemos[s_SelectedItem].m_aFilename))
+			IsDir = true;
+	}
+
+	// delete demo
+	if(m_DemolistDelEntry)
+	{
+		if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size() && !IsDir)
+		{
+			Storage()->RemoveFile(m_lDemos[s_SelectedItem].m_aFilename);
+			DemolistPopulate();
+			s_SelectedItem = s_SelectedItem-1 < 0 ? m_lDemos.size() > 0 ? 0 : -1 : s_SelectedItem-1;
+		}
+		m_DemolistDelEntry = false;
+	}
 	
 	// render background
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
@@ -478,13 +497,6 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	ButtonBar.VSplitLeft(130.0f, &RefreshRect, &ButtonBar);
 	ButtonBar.VSplitLeft(10.0f, &DeleteRect, &ButtonBar);
 	ButtonBar.VSplitLeft(120.0f, &DeleteRect, &ButtonBar);
-	
-	bool IsDir = false;
-	if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size())
-	{
-		if(str_comp(m_lDemos[s_SelectedItem].m_aName, "..") == 0 || fs_is_dir(m_lDemos[s_SelectedItem].m_aFilename))
-			IsDir = true;
-	}
 	
 	static int s_RefreshButton = 0;
 	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &RefreshRect))
@@ -526,13 +538,13 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		}
 	}
 	
-	static int s_DeleteButton = 0;
-	if(DoButton_Menu(&s_DeleteButton, Localize("Delete"), 0, &DeleteRect) || m_DeletePressed)
+	if(!IsDir)
 	{
-		if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size() && !IsDir)
+		static int s_DeleteButton = 0;
+		if(DoButton_Menu(&s_DeleteButton, Localize("Delete"), 0, &DeleteRect) || m_DeletePressed)
 		{
-			Storage()->RemoveFile(m_lDemos[s_SelectedItem].m_aFilename);
-			DemolistPopulate();
+			if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size())
+				m_Popup = POPUP_DELETE_DEMO;
 		}
 	}
 }
