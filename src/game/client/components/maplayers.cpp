@@ -126,7 +126,7 @@ void CMapLayers::OnRender()
 					Render = true;
 			}
 			
-			if(pLayer->m_Type == LAYERTYPE_TILES && Input()->KeyPressed(KEY_KP0))
+			if(pLayer->m_Type == LAYERTYPE_TILES && Input()->KeyPressed(KEY_KP0) && g_Config.m_DbgLayers)//This is what caused the client to lag when kp0 is pressed ingame also caused crashes on linux
 			{
 				CMapItemLayerTilemap *pTMap = (CMapItemLayerTilemap *)pLayer;
 				CTile *pTiles = (CTile *)m_pLayers->Map()->GetData(pTMap->m_Data);
