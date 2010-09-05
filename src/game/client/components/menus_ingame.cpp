@@ -99,12 +99,15 @@ void CMenus::RenderGame(CUIRect MainView)
 		// lvlx login stuff
 		if(m_pClient->m_LvlxMsgSent)
 		{
+			CUIRect LoginView = MainView;
+			CUIRect LoginButton = Button;
+			
 			if(m_pClient->m_LoggedIn)
 			{
-				MainView.VSplitLeft(10.0f, &Button, &MainView);
-				MainView.VSplitLeft(120.0f, &Button, &MainView);
-				static int s_LogoutButton = 0;
-				if(DoButton_Menu(&s_LogoutButton, Localize("Logout"), 0, &Button))
+				LoginView.VSplitLeft(10.0f, &LoginButton, &LoginView);
+				LoginView.VSplitLeft(120.0f, &LoginButton, &LoginView);
+				static int s_LogoutLoginButton = 0;
+				if(DoButton_Menu(&s_LogoutLoginButton, Localize("Logout"), 0, &LoginButton))
 				{
 					CNetMsg_Cl_Logout Msg;
 					Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
@@ -113,10 +116,10 @@ void CMenus::RenderGame(CUIRect MainView)
 			}
 			else
 			{
-				MainView.VSplitLeft(10.0f, &Button, &MainView);
-				MainView.VSplitLeft(120.0f, &Button, &MainView);
-				static int s_LoginButton = 0;
-				if(DoButton_Menu(&s_LoginButton, Localize("Login"), 0, &Button))
+				LoginView.VSplitLeft(10.0f, &LoginButton, &LoginView);
+				LoginView.VSplitLeft(120.0f, &LoginButton, &LoginView);
+				static int s_LoginLoginButton = 0;
+				if(DoButton_Menu(&s_LoginLoginButton, Localize("Login"), 0, &LoginButton))
 				{
 					CNetMsg_Cl_Login Msg;
 					Msg.m_pName = g_Config.m_ClLvlxName;
@@ -126,32 +129,40 @@ void CMenus::RenderGame(CUIRect MainView)
 				}
 				
 				char aBuf[32];
-				MainView.VSplitLeft(10.0f, &Button, &MainView);
-				MainView.VSplitLeft(120.0f, &Button, 0);
-				Button.HSplitTop(12.0f, &Button, 0);
+				LoginView.VSplitLeft(10.0f, &LoginButton, &LoginView);
+				LoginView.VSplitLeft(120.0f, &LoginButton, 0);
+				LoginButton.HSplitTop(12.0f, &LoginButton, 0);
 				str_format(aBuf, sizeof(aBuf), "%s:", Localize("Name"));
-				UI()->DoLabel(&Button, aBuf, 10.0, -1);
-				Button.VSplitLeft(50.0f, 0, &Button);
-				Button.VSplitLeft(160.0f, &Button, 0);
-				static float NameOffset = 0.0f; 
-				DoEditBox(g_Config.m_ClLvlxName, &Button, g_Config.m_ClLvlxName, sizeof(g_Config.m_ClLvlxName), 10.0f, &NameOffset);
+				UI()->DoLabel(&LoginButton, aBuf, 10.0, -1);
+				LoginButton.VSplitLeft(50.0f, 0, &LoginButton);
+				LoginButton.VSplitLeft(160.0f, &LoginButton, 0);
+				static float NameOffset = 0.0f;
+				DoEditBox(g_Config.m_ClLvlxName, &LoginButton, g_Config.m_ClLvlxName, sizeof(g_Config.m_ClLvlxName), 10.0f, &NameOffset);
 				
-				MainView.HSplitTop(2.0f, &Button, &MainView);
+				LoginView.HSplitTop(2.0f, &LoginButton, &LoginView);
 				
-				Button.HSplitTop(14.0f, 0, &Button);
+				LoginButton.HSplitTop(14.0f, 0, &LoginButton);
 				str_format(aBuf, sizeof(aBuf), "%s:", Localize("Password"));
-				UI()->DoLabel(&Button, aBuf, 10.0, -1);
-				Button.HSplitTop(12.0f, &Button, 0);
-				Button.VSplitLeft(50.0f, 0, &Button);
-				Button.VSplitLeft(160.0f, &Button, 0);
-				static float PassOffset = 0.0f; 
-				DoEditBox(g_Config.m_ClLvlxPass, &Button, g_Config.m_ClLvlxPass, sizeof(g_Config.m_ClLvlxPass), 10.0f, &PassOffset, true);
+				UI()->DoLabel(&LoginButton, aBuf, 10.0, -1);
+				LoginButton.HSplitTop(12.0f, &LoginButton, 0);
+				LoginButton.VSplitLeft(50.0f, 0, &LoginButton);
+				LoginButton.VSplitLeft(160.0f, &LoginButton, 0);
+				static float PassOffset = 0.0f;
+				DoEditBox(g_Config.m_ClLvlxPass, &LoginButton, g_Config.m_ClLvlxPass, sizeof(g_Config.m_ClLvlxPass), 10.0f, &PassOffset, true);
 			}
 		}
 	}
-
-	MainView.VSplitLeft(100.0f, &Button, &MainView);
-	MainView.VSplitLeft(150.0f, &Button, &MainView);
+	
+	if(m_pClient->m_LvlxMsgSent)
+	{
+		MainView.VSplitLeft(360.0f, &Button, &MainView);
+		MainView.VSplitLeft(140.0f, &Button, &MainView);
+	}
+	else
+	{
+		MainView.VSplitLeft(100.0f, &Button, &MainView);
+		MainView.VSplitLeft(150.0f, &Button, &MainView);
+	}
 
 	static int s_DemoButton = 0;
 	bool Recording = DemoRecorder()->IsRecording();
