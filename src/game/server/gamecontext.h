@@ -114,6 +114,7 @@ public:
 	IServer *Server() const { return m_pServer; }
 	class IConsole *Console() { return m_pConsole; }
 	CCollision *Collision() { return &m_Collision; }
+	CLayers *Layers() { return &m_Layers; }
 	CTuningParams *Tuning() { return &m_Tuning; }
 	
 	class IScore *Score() { return m_pScore; }
@@ -128,17 +129,7 @@ public:
 
 	IGameController *m_pController;
 	CGameWorld m_World;
-	int m_Size;
-	
-	struct SDoors
-	{
-		int m_Number;
-		vec2 m_Pos;
-		CDoor * m_Address;
-	};
-
-	SDoors* m_SDoors;
-
+	CTeleTile *m_pSwitch;
 	// helper functions
 	class CCharacter *GetPlayerChar(int ClientId);
 	

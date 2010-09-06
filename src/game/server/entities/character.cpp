@@ -876,7 +876,6 @@ void CCharacter::Tick()
 	
 	if(z)
 	{
-		dbg_msg("Collision", "This is teleport");
 		m_Core.m_HookedPlayer = -1;
 		m_Core.m_HookState = HOOK_RETRACTED;
 		m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;

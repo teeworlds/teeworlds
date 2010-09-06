@@ -9,7 +9,7 @@
 CGameControllerDDRace::CGameControllerDDRace(class CGameContext *pGameServer) : IGameController(pGameServer)
 {
 	m_pGameType = "DDRace";
-	
+
 	InitTeleporter();
 }
 
@@ -51,4 +51,74 @@ void CGameControllerDDRace::InitTeleporter()
 		if(GameServer()->Collision()->TeleLayer()[i].m_Number > 0 && GameServer()->Collision()->TeleLayer()[i].m_Type == TILE_TELEOUT)
 			m_pTeleporter[GameServer()->Collision()->TeleLayer()[i].m_Number-1] = vec2(i%GameServer()->Collision()->Layers()->TeleLayer()->m_Width*32+16, i/GameServer()->Collision()->Layers()->TeleLayer()->m_Width*32+16);
 	}
+}
+
+void CGameControllerDDRace::InitSwitcher()
+{
+	m_Size = 0;
+	CMapItemLayerTilemap *pTileMap = GameServer()->Layers()->GameLayer();
+	if (GameServer()->m_pSwitch)
+	{
+		for(int y = 0; y < pTileMap->m_Height; y++)
+			for(int x = 0; x < pTileMap->m_Width; x++)
+			{
+				int sides[8][2];
+				sides[0][0]=GameServer()->m_pSwitch[(x)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
+				sides[1][0]=GameServer()->m_pSwitch[(x+1)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
+				sides[2][0]=GameServer()->m_pSwitch[(x+1)+pTileMap->m_Width*(y)].m_Type - ENTITY_OFFSET;
+				sides[3][0]=GameServer()->m_pSwitch[(x+1)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
+				sides[4][0]=GameServer()->m_pSwitch[(x)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
+				sides[5][0]=GameServer()->m_pSwitch[(x-1)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
+				sides[6][0]=GameServer()->m_pSwitch[(x-1)+pTileMap->m_Width*(y)].m_Type - ENTITY_OFFSET;
+				sides[7][0]=GameServer()->m_pSwitch[(x-1)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
+				sides[0][1]=GameServer()->m_pSwitch[(x)+pTileMap->m_Width*(y+1)].m_Number;
+				sides[1][1]=GameServer()->m_pSwitch[(x+1)+pTileMap->m_Width*(y+1)].m_Number;
+				sides[2][1]=GameServer()->m_pSwitch[(x+1)+pTileMap->m_Width*(y)].m_Number;
+				sides[3][1]=GameServer()->m_pSwitch[(x+1)+pTileMap->m_Width*(y-1)].m_Number;
+				sides[4][1]=GameServer()->m_pSwitch[(x)+pTileMap->m_Width*(y-1)].m_Number;
+				sides[5][1]=GameServer()->m_pSwitch[(x-1)+pTileMap->m_Width*(y-1)].m_Number;
+				sides[6][1]=GameServer()->m_pSwitch[(x-1)+pTileMap->m_Width*(y)].m_Number;
+				sides[7][1]=GameServer()->m_pSwitch[(x-1)+pTileMap->m_Width*(y+1)].m_Number;
+				for(int i=0; i<8;i++)
+					if ((sides[i][0] >= ENTITY_LASER_SHORT && sides[i][0] <= ENTITY_LASER_LONG) && GameServer()->Collision()->SwitchLayer()[y*pTileMap->m_Width+x].m_Number == sides[i][1])
+						m_Size++;
+			}
+		if(m_Size)
+		{
+			m_SDoors = new SDoors[m_Size];
+			mem_zero(m_SDoors, m_Size*sizeof(SDoors));
+			int num=0;
+			for(int y = 0; y < pTileMap->m_Height; y++)
+				for(int x = 0; x < pTileMap->m_Width; x++)
+					if(GameServer()->Collision()->SwitchLayer()[y*pTileMap->m_Width+x].m_Type == (ENTITY_DOOR + ENTITY_OFFSET))
+					{
+						int sides[8][2];
+						sides[0][0]=GameServer()->m_pSwitch[(x)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
+						sides[1][0]=GameServer()->m_pSwitch[(x+1)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
+						sides[2][0]=GameServer()->m_pSwitch[(x+1)+pTileMap->m_Width*(y)].m_Type - ENTITY_OFFSET;
+						sides[3][0]=GameServer()->m_pSwitch[(x+1)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
+						sides[4][0]=GameServer()->m_pSwitch[(x)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
+						sides[5][0]=GameServer()->m_pSwitch[(x-1)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
+						sides[6][0]=GameServer()->m_pSwitch[(x-1)+pTileMap->m_Width*(y)].m_Type - ENTITY_OFFSET;
+						sides[7][0]=GameServer()->m_pSwitch[(x-1)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
+						sides[0][1]=GameServer()->m_pSwitch[(x)+pTileMap->m_Width*(y+1)].m_Number;
+						sides[1][1]=GameServer()->m_pSwitch[(x+1)+pTileMap->m_Width*(y+1)].m_Number;
+						sides[2][1]=GameServer()->m_pSwitch[(x+1)+pTileMap->m_Width*(y)].m_Number;
+						sides[3][1]=GameServer()->m_pSwitch[(x+1)+pTileMap->m_Width*(y-1)].m_Number;
+						sides[4][1]=GameServer()->m_pSwitch[(x)+pTileMap->m_Width*(y-1)].m_Number;
+						sides[5][1]=GameServer()->m_pSwitch[(x-1)+pTileMap->m_Width*(y-1)].m_Number;
+						sides[6][1]=GameServer()->m_pSwitch[(x-1)+pTileMap->m_Width*(y)].m_Number;
+						sides[7][1]=GameServer()->m_pSwitch[(x-1)+pTileMap->m_Width*(y+1)].m_Number;
+						for(int i=0; i<8;i++)
+							if ((sides[i][0] >= ENTITY_LASER_SHORT && sides[i][0] <= ENTITY_LASER_LONG) && GameServer()->Collision()->SwitchLayer()[y*pTileMap->m_Width+x].m_Number == sides[i][1])
+							{
+								vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
+								m_SDoors[num].m_Address = new CDoor(&GameServer()->m_World, Pos, pi/4*i, (32*3 + 32*(sides[i][0] - ENTITY_LASER_SHORT)*3), false);
+								m_SDoors[num].m_Pos = Pos;
+								m_SDoors[num++].m_Number = GameServer()->Collision()->SwitchLayer()[y*pTileMap->m_Width+x].m_Number;
+							}
+					}
+		}
+	}
+
 }

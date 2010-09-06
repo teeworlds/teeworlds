@@ -1919,7 +1919,6 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_World.SetGameServer(this);
 	m_Events.SetGameServer(this);
-	m_Size = 0;
 	//if(!data) // only load once
 		//data = load_data_from_memory(internal_data);
 
@@ -1941,6 +1940,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 //   dbg_msg("Note","For map cfgs in windows and linux u need the files");
 //   dbg_msg("Note","in a folder i nthe same dir as teeworlds_srv");
 //   dbg_msg("Note","data/maps/%s.cfg", config.sv_map);
+
 	// select gametype
 	m_pController = new CGameControllerDDRace(this);
 
@@ -1959,7 +1959,6 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	// setup core world
 	//for(int i = 0; i < MAX_CLIENTS; i++)
 	//	game.players[i].core.world = &game.world.core;
-
 	// create all entities from the game layer
 	CMapItemLayerTilemap *pTileMap = m_Layers.GameLayer();
 	CTile *pTiles = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Data);
@@ -1967,72 +1966,10 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	CTile *pFront=0;
 	if (m_Layers.FrontLayer())
 	pFront = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Front);
-	CTeleTile *pSwitch=0;
+	m_pSwitch=0;
 	if (m_Layers.SwitchLayer())
-	pSwitch = (CTeleTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Switch);
-	if (pSwitch)
-	{
-		if(Collision()->Layers()->SwitchLayer())
-			for(int y = 0; y < pTileMap->m_Height; y++)
-				for(int x = 0; x < pTileMap->m_Width; x++)
-				{
-					int sides[8][2];
-					sides[0][0]=pSwitch[(x)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
-					sides[1][0]=pSwitch[(x+1)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
-					sides[2][0]=pSwitch[(x+1)+pTileMap->m_Width*(y)].m_Type - ENTITY_OFFSET;
-					sides[3][0]=pSwitch[(x+1)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
-					sides[4][0]=pSwitch[(x)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
-					sides[5][0]=pSwitch[(x-1)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
-					sides[6][0]=pSwitch[(x-1)+pTileMap->m_Width*(y)].m_Type - ENTITY_OFFSET;
-					sides[7][0]=pSwitch[(x-1)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
-					sides[0][1]=pSwitch[(x)+pTileMap->m_Width*(y+1)].m_Number;
-					sides[1][1]=pSwitch[(x+1)+pTileMap->m_Width*(y+1)].m_Number;
-					sides[2][1]=pSwitch[(x+1)+pTileMap->m_Width*(y)].m_Number;
-					sides[3][1]=pSwitch[(x+1)+pTileMap->m_Width*(y-1)].m_Number;
-					sides[4][1]=pSwitch[(x)+pTileMap->m_Width*(y-1)].m_Number;
-					sides[5][1]=pSwitch[(x-1)+pTileMap->m_Width*(y-1)].m_Number;
-					sides[6][1]=pSwitch[(x-1)+pTileMap->m_Width*(y)].m_Number;
-					sides[7][1]=pSwitch[(x-1)+pTileMap->m_Width*(y+1)].m_Number;
-					for(int i=0; i<8;i++)
-						if ((sides[i][0] >= ENTITY_LASER_SHORT && sides[i][0] <= ENTITY_LASER_LONG) && Collision()->SwitchLayer()[y*pTileMap->m_Width+x].m_Number == sides[i][1])
-							m_Size++;
-				}
-		if(m_Size)
-		{
-			m_SDoors = new SDoors[m_Size];
-			int num=0;
-			for(int y = 0; y < pTileMap->m_Height; y++)
-				for(int x = 0; x < pTileMap->m_Width; x++)
-					if(Collision()->SwitchLayer()[y*pTileMap->m_Width+x].m_Type == (ENTITY_DOOR + ENTITY_OFFSET))
-					{
-						int sides[8][2];
-						sides[0][0]=pSwitch[(x)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
-						sides[1][0]=pSwitch[(x+1)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
-						sides[2][0]=pSwitch[(x+1)+pTileMap->m_Width*(y)].m_Type - ENTITY_OFFSET;
-						sides[3][0]=pSwitch[(x+1)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
-						sides[4][0]=pSwitch[(x)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
-						sides[5][0]=pSwitch[(x-1)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
-						sides[6][0]=pSwitch[(x-1)+pTileMap->m_Width*(y)].m_Type - ENTITY_OFFSET;
-						sides[7][0]=pSwitch[(x-1)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
-						sides[0][1]=pSwitch[(x)+pTileMap->m_Width*(y+1)].m_Number;
-						sides[1][1]=pSwitch[(x+1)+pTileMap->m_Width*(y+1)].m_Number;
-						sides[2][1]=pSwitch[(x+1)+pTileMap->m_Width*(y)].m_Number;
-						sides[3][1]=pSwitch[(x+1)+pTileMap->m_Width*(y-1)].m_Number;
-						sides[4][1]=pSwitch[(x)+pTileMap->m_Width*(y-1)].m_Number;
-						sides[5][1]=pSwitch[(x-1)+pTileMap->m_Width*(y-1)].m_Number;
-						sides[6][1]=pSwitch[(x-1)+pTileMap->m_Width*(y)].m_Number;
-						sides[7][1]=pSwitch[(x-1)+pTileMap->m_Width*(y+1)].m_Number;
-						for(int i=0; i<8;i++)
-							if ((sides[i][0] >= ENTITY_LASER_SHORT && sides[i][0] <= ENTITY_LASER_LONG) && Collision()->SwitchLayer()[y*pTileMap->m_Width+x].m_Number == sides[i][1])
-							{
-								vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
-								m_SDoors[num].m_Address = new CDoor(&m_World, Pos, pi/4*i, (32*3 + 32*(sides[i][0] - ENTITY_LASER_SHORT)*3), false);
-								m_SDoors[num].m_Pos = Pos;
-								m_SDoors[num++].m_Number = Collision()->SwitchLayer()[y*pTileMap->m_Width+x].m_Number;
-							}
-					}
-		}
-	}
+	m_pSwitch = (CTeleTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Switch);
+	((CGameControllerDDRace *)m_pController)->InitSwitcher();
 
 	for(int y = 0; y < pTileMap->m_Height; y++)
 	{
@@ -2073,14 +2010,14 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 					m_pController->OnEntity(Index-ENTITY_OFFSET, Pos,true);
 				}
 			}
-			if (pSwitch)
+			if (m_pSwitch)
 			{
-				int Index = pSwitch[y*pTileMap->m_Width+x].m_Type - ENTITY_OFFSET;
+				int Index = m_pSwitch[y*pTileMap->m_Width+x].m_Type - ENTITY_OFFSET;
 				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
 				if(Index == ENTITY_TRIGGER)
-					for(int i=0;i<m_Size;i++)
-						if(m_SDoors[i].m_Number == pSwitch[y*pTileMap->m_Width+x].m_Number)
-							new CTrigger(&m_World,Pos, m_SDoors[i].m_Address);
+					for(int i=0;i<((CGameControllerDDRace *)m_pController)->m_Size;i++)
+						if(((CGameControllerDDRace *)m_pController)->m_SDoors[i].m_Number == m_pSwitch[y*pTileMap->m_Width+x].m_Number)
+							new CTrigger(&m_World,Pos, ((CGameControllerDDRace *)m_pController)->m_SDoors[i].m_Address);
 			}
 		}
 	}
