@@ -4,6 +4,7 @@
 #include <engine/demo.h>
 #include <engine/keys.h>
 #include <engine/graphics.h>
+#include <engine/textrender.h>
 #include <engine/storage.h>
 
 #include <game/client/render.h>
@@ -42,11 +43,12 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	
 	const float SeekBarHeight = 15.0f;
 	const float ButtonbarHeight = 20.0f;
+	const float NameBarHeight = 20.0f;
 	const float Margins = 5.0f;
 	float TotalHeight;
 	
 	if(m_MenuActive)
-		TotalHeight = SeekBarHeight+ButtonbarHeight+Margins*3;
+		TotalHeight = SeekBarHeight+ButtonbarHeight+NameBarHeight+Margins*3;
 	else
 		TotalHeight = SeekBarHeight+Margins*2;
 	
@@ -58,7 +60,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		
 	MainView.Margin(5.0f, &MainView);
 	
-	CUIRect SeekBar, ButtonBar;
+	CUIRect SeekBar, ButtonBar, NameBar;
 	
 	int CurrentTick = pInfo->m_CurrentTick - pInfo->m_FirstTick;
 	int TotalTicks = pInfo->m_LastTick - pInfo->m_FirstTick;
@@ -67,6 +69,8 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	{
 		MainView.HSplitTop(SeekBarHeight, &SeekBar, &ButtonBar);
 		ButtonBar.HSplitTop(Margins, 0, &ButtonBar);
+		ButtonBar.HSplitBottom(NameBarHeight, &ButtonBar, &NameBar);
+		NameBar.HSplitTop(3.5f, 0, &NameBar);
 	}
 	else
 		SeekBar = MainView;
@@ -198,6 +202,14 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		static int s_ExitButton = 0;
 		if(DoButton_DemoPlayer(&s_ExitButton, Localize("Close"), 0, &Button))
 			Client()->Disconnect();
+
+		// demo name
+		char aBuf[128];
+		str_format(aBuf, sizeof(aBuf), "Demofile: %s", DemoPlayer()->GetDemoName());
+		CTextCursor Cursor;
+		TextRender()->SetCursor(&Cursor, NameBar.x, NameBar.y, Button.h*0.7f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+		Cursor.m_LineWidth = 450.0f;
+		TextRender()->TextEx(&Cursor, aBuf, -1);
 	}
 }
 
