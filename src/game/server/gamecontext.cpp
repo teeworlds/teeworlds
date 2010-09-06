@@ -777,31 +777,61 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 							pChr->m_BroadCast=true;
 					}
 				}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/emotepain")&&g_Config.m_SvEmotionalTees)
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/emote")&&g_Config.m_SvEmotionalTees)
 				{
+					SendChatTarget(ClientId, "Emote Commands Are: /emotesurprise /emoteblink /emoteclose /emoteangry /emotehappy /emotepain");
+					SendChatTarget(ClientId, "Example: /emotesurprise 10 for 10 seconds or /emotesurprise (default 1 second)");
+				}
+			else if(!str_comp_num(pMsg->m_pMessage, "/emotepain", 10))
+			{
+				int Num = -1;
 					CCharacter* pChr = p->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_PAIN;
-						pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+						if(sscanf(pMsg->m_pMessage, "/emotepain %d", &Num) > 0)
+							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
+						else
+							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
 					}
 				}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/emotehappy")&&g_Config.m_SvEmotionalTees)
-				{
+			else if(!str_comp_num(pMsg->m_pMessage, "/emotehappy", 11))
+			{
+				int Num = -1;
 					CCharacter* pChr = p->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_HAPPY;
-						pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+						if(sscanf(pMsg->m_pMessage, "/emotehappy %d", &Num) > 0)
+							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
+						else
+							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
 					}
 				}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/emoteangry")&&g_Config.m_SvEmotionalTees)
-				{
+			else if(!str_comp_num(pMsg->m_pMessage, "/emoteangry", 11))
+			{
+				int Num = -1;
 					CCharacter* pChr = p->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_ANGRY;
-						pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+						if(sscanf(pMsg->m_pMessage, "/emoteangry %d", &Num) > 0)
+							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
+						else
+							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+					}
+				}
+			else if(!str_comp_num(pMsg->m_pMessage, "/emoteclose", 11))
+			{
+				int Num = -1;
+					CCharacter* pChr = p->GetCharacter();
+					if (pChr)
+					{
+						pChr->m_EmoteType = EMOTE_BLINK;
+						if(sscanf(pMsg->m_pMessage, "/emoteclose %d", &Num) > 0)
+							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
+						else
+							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
 					}
 				}
 			else if (!str_comp_nocase(pMsg->m_pMessage, "/emoteblink")&&g_Config.m_SvEmotionalTees)
@@ -810,62 +840,21 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_BLINK;
-						pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+						pChr->m_EmoteStop = Server()->Tick() + 0.5 * Server()->TickSpeed();
 					}
 				}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/emotesurprise")&&g_Config.m_SvEmotionalTees)
+			else if(!str_comp_num(pMsg->m_pMessage, "/emotesurprise", 14))
 			{
-				CCharacter* pChr = p->GetCharacter();
-				if (pChr)
-				{
-					pChr->m_EmoteType = EMOTE_SURPRISE;
-					pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
-				}
-			}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodinpain")&&g_Config.m_SvEmotionalTees)
-			{
-				CCharacter* pChr = p->GetCharacter();
-				if (pChr)
-				{
-					pChr->m_EmoteType = EMOTE_PAIN;
-					pChr->m_EmoteStop = Server()->Tick() + 3600 * Server()->TickSpeed();
-				}
-			}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodhappy")&&g_Config.m_SvEmotionalTees)
-			{
-				CCharacter* pChr = p->GetCharacter();
-				if (pChr)
-				{
-					pChr->m_EmoteType = EMOTE_HAPPY;
-					pChr->m_EmoteStop = Server()->Tick() + 3600 * Server()->TickSpeed();
-				}
-			}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodangry")&&g_Config.m_SvEmotionalTees)
-			{
-				CCharacter* pChr = p->GetCharacter();
-				if (pChr)
-				{
-					pChr->m_EmoteType = EMOTE_ANGRY;
-					pChr->m_EmoteStop = Server()->Tick() + 3600 * Server()->TickSpeed();
-				}
-			}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodsad")&&g_Config.m_SvEmotionalTees)
-			{
-				CCharacter* pChr = p->GetCharacter();
-				if (pChr)
-				{
-					pChr->m_EmoteType = EMOTE_BLINK;
-					pChr->m_EmoteStop = Server()->Tick() + 3600 * Server()->TickSpeed();
-				}
-			}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodsurprised")&&g_Config.m_SvEmotionalTees)
-			{
-				CCharacter* pChr = p->GetCharacter();
-				if (pChr)
-				{
-					pChr->m_EmoteType = EMOTE_SURPRISE;
-					pChr->m_EmoteStop = Server()->Tick() + 3600 * Server()->TickSpeed();
-				}
+				int Num = -1;
+					CCharacter* pChr = p->GetCharacter();
+					if (pChr)
+					{
+						pChr->m_EmoteType = EMOTE_SURPRISE;
+						if(sscanf(pMsg->m_pMessage, "/emotesurprise %d", &Num) > 0)
+							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
+						else
+							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+					}
 			}
 			else
 					SendChatTarget(ClientId, "No such command!");
