@@ -16,24 +16,5 @@ public:
 	virtual int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
 };
 
-// TODO: move to seperate file
-class CFlag : public CEntity
-{
-public:
-	static const int ms_PhysSize = 14;
-	CCharacter *m_pCarryingCharacter;
-	vec2 m_Vel;
-	vec2 m_StandPos;
-	
-	int m_Team;
-	int m_AtStand;
-	int m_DropTick;
-	int m_GrabTick;
-	
-	CFlag(CGameWorld *pGameWorld, int Team);
-
-	virtual void Reset();
-	virtual void Snap(int SnappingClient);
-};
 #endif
 
