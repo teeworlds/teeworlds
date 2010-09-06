@@ -25,6 +25,12 @@
 
 #include "client.h"
 
+#if defined(CONF_FAMILY_WINDOWS)
+	#define _WIN32_WINNT 0x0500
+	#define NOGDI
+	#include <windows.h>
+#endif
+
 
 void CGraph::Init(float Min, float Max)
 {
@@ -1997,6 +2003,17 @@ extern "C" int SDL_main(int argc, const char **argv) // ignore_convention
 int main(int argc, const char **argv) // ignore_convention
 #endif
 {
+#if defined(CONF_FAMILY_WINDOWS)
+	for(int i = 1; i < argc; i++) // ignore_convention
+	{
+		if(str_comp("-s", argv[i]) == 0 || str_comp("--silent", argv[i]) == 0) // ignore_convention
+		{
+			ShowWindow(GetConsoleWindow(), SW_HIDE);
+			break;
+		}
+	}
+#endif
+
 	// init the engine
 	dbg_msg("client", "starting...");
 	m_Client.InitEngine("Teeworlds");
