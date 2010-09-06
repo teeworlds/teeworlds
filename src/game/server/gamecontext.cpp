@@ -683,6 +683,15 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					else
 						SendChatTarget(ClientId, "The admin didn't activate /pause");
 			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "kill"))
+			{
+					SendChatTarget(ClientId, "/kill not kill to kill your self" DDRACE_VERSION);
+			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/kill"))
+			{
+				p->KillCharacter(0);
+				SendChatTarget(ClientId, "You are dead.");
+			}
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/info"))
 			{
 					SendChatTarget(ClientId, "DDRace Mod. Version: " DDRACE_VERSION);
