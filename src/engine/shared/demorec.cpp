@@ -516,6 +516,9 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 		return -1;
 	}
 	
+	// store the filename
+	str_copy(m_aFilename, pFilename, sizeof(m_aFilename));
+
 	// clear the playback info
 	mem_zero(&m_Info, sizeof(m_Info));
 	m_Info.m_Info.m_FirstTick = -1;
@@ -722,7 +725,19 @@ int CDemoPlayer::Stop()
 	m_File = 0;
 	mem_free(m_pKeyFrames);
 	m_pKeyFrames = 0;
+	str_copy(m_aFilename, "", sizeof(m_aFilename));
 	return 0;
 }
 
+char *CDemoPlayer::GetDemoName()
+{
+	// get the name of the demo without its path
+	char *pDemoShortName = &m_aFilename[0];
+	for(int i = 0; i < str_length(m_aFilename)-1; i++)
+	{
+		if(m_aFilename[i] == '/' || m_aFilename[i] == '\\')
+			pDemoShortName = &m_aFilename[i+1];
+	}
+	return pDemoShortName;
+}
 

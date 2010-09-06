@@ -83,6 +83,7 @@ private:
 
 	class IConsole *m_pConsole;
 	IOHANDLE m_File;
+	char m_aFilename[256];
 	CKeyFrame *m_pKeyFrames;
 
 	CPlaybackInfo m_Info;
@@ -109,6 +110,7 @@ public:
 	void SetSpeed(float Speed);
 	int SetPos(float Precent);
 	const CInfo *BaseInfo() const { return &m_Info.m_Info; }
+	char *GetDemoName();
 	
 	int Update();
 	
