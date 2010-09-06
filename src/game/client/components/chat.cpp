@@ -126,6 +126,9 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 
 void CChat::AddLine(int ClientId, int Team, const char *pLine)
 {
+	if(ClientId != -1 && m_pClient->m_aClients[ClientId].m_aName[0] == '\0') // unknown client
+		return;
+	
 	char *p = const_cast<char*>(pLine);
 	while(*p)
 	{
