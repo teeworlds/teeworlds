@@ -224,9 +224,18 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 					str_format(aBuf, sizeof(aBuf), "Invalid arguments... Usage: %s %s", pCommand->m_pName, pCommand->m_pParams);
 					Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
 				}
-				if (pCommand->m_Level <= ClientLevel) {
+				else if(m_StoreCommands && pCommand->m_Flags&CFGFLAG_STORE)
+				{
+					m_ExecutionQueue.m_pLast->m_pfnCommandCallback = pCommand->m_pfnCallback;
+					m_ExecutionQueue.m_pLast->m_pCommandUserData = pCommand->m_pUserData;
+					m_ExecutionQueue.AddEntry();
+				}
+				else if(pCommand->m_Level <= ClientLevel)
+				{
 					pCommand->m_pfnCallback(pResult, pCommand->m_pUserData, ClientId);
-				} else {
+				}
+				else
+				{
 					char aBuf[256];
 					if (pCommand->m_Level == 100 && ClientLevel < 100)
 					{
