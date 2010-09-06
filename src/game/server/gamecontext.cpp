@@ -722,7 +722,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				char buf[64];
 				str_format(buf, sizeof(buf), "/Info /Credits %s",g_Config.m_SvPauseable?"/pause":"");
 				SendChatTarget(ClientId, buf);
-				SendChatTarget(ClientId, "/rank /top5 /top5 5 or any number");
+				SendChatTarget(ClientId, "/rank /emote /top5 /top5 i /team i /broadcast /time /flags /kill");
 			}
 			else if(!str_comp_num(pMsg->m_pMessage, "/top5", 5))
 			{
