@@ -654,7 +654,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				SendChatTarget(ClientId, "[blacktee] den, LemonFace, noother & Fluxid");
 				SendChatTarget(ClientId, "please check the changelog on DDRace.info");
 				SendChatTarget(ClientId, "also the commit log on github.com/GreYFoXGTi/DDRace");
-			} else if(!str_comp_nocase(pMsg->m_pMessage, "/pause"))
+			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/pause"))
 				{
 					if(g_Config.m_SvPauseable)
 					{
@@ -1926,11 +1927,6 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 //   dbg_msg("Note","data/maps/%s.cfg", config.sv_map);
 	// select gametype
 	m_pController = new CGameControllerDDRace(this);
-	//float temp;
-	//m_Tuning.Get("player_hooking",&temp);
-	//g_Config.m_SvPhook = temp;
-	//m_Tuning.Get("player_collision",&temp);
-	//g_Config.m_SvNpc=(!temp);
 
 	Server()->SetBrowseInfo(m_pController->m_pGameType, -1);
 
@@ -2028,7 +2024,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 		{
 			int Index = pTiles[y*pTileMap->m_Width+x].m_Index;
 			if(Index == TILE_NPC)
-				g_Config.m_SvNpc = 1;
+				m_Tuning.Set("player_collision",0);
 			else if (Index == TILE_EHOOK)
 				g_Config.m_SvEndlessDrag = 1;
 			else if (Index == TILE_NOHIT)
@@ -2036,7 +2032,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 			else if (Index == TILE_EHOOK)
 				g_Config.m_SvEndlessDrag = 1;
 			else if (Index == TILE_NPH)
-				g_Config.m_SvPhook = 0;
+				m_Tuning.Set("player_hooking",0);
 			if(Index >= ENTITY_OFFSET)
 			{
 				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
@@ -2046,7 +2042,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 			{
 				int Index = pFront[y*pTileMap->m_Width+x].m_Index;
 				if(Index == TILE_NPC)
-					g_Config.m_SvNpc = 1;
+					m_Tuning.Set("player_collision",0);
 				else if (Index == TILE_EHOOK)
 					g_Config.m_SvEndlessDrag = 1;
 				else if (Index == TILE_NOHIT)
@@ -2054,8 +2050,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 				else if (Index == TILE_EHOOK)
 					g_Config.m_SvEndlessDrag = 1;
 				else if (Index == TILE_NPH)
-					g_Config.m_SvPhook = 0;
-
+					m_Tuning.Set("player_hooking",0);
 				if(Index >= ENTITY_OFFSET)
 				{
 					vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);

@@ -20,8 +20,6 @@ MACRO_CONFIG_INT(SvPauseTime, sv_pause_time, 0, 0, 1, CFGFLAG_SERVER, "pause the
 MACRO_CONFIG_INT(SvCheatTime, sv_cheattime, 0, 0, 1, CFGFLAG_SERVER, "players can cheat with time or not",3)
 MACRO_CONFIG_INT(SvHit, sv_hit, 1, 0, 1, CFGFLAG_SERVER, "players can hammer/grenade/laser one another",3)
 MACRO_CONFIG_INT(SvTunes, sv_tunes, 1, 0, 1, CFGFLAG_SERVER, "Turns Tuning On/Off",3)
-MACRO_CONFIG_INT(SvPhook, sv_phook, 1, 0, 1, CFGFLAG_SERVER, "Turns Player On/Off",3)
-MACRO_CONFIG_INT(SvNpc, sv_npc, 0, 0, 1, CFGFLAG_SERVER, "Turns NPC (No Player Collision) On/Off",3)
 MACRO_CONFIG_INT(SvEndlessDrag, sv_endless_drag, 0, 0, 1, CFGFLAG_SERVER, "Turns Endless hooking On/Off",3)
 MACRO_CONFIG_INT(SvCheats, sv_cheats, 0, 0, 1, CFGFLAG_SERVER, "Turns Cheats On/Off",4)
 MACRO_CONFIG_INT(SvAllowColorChange, sv_allow_color_change, 1, 0, 1, CFGFLAG_SERVER, "Allow color change (can block rainbowmod)",3)
