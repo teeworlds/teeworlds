@@ -24,6 +24,7 @@ public:
 	virtual void Pause() = 0;
 	virtual void Unpause() = 0;
 	virtual const CInfo *BaseInfo() const = 0;
+	virtual char *GetDemoName() = 0;
 };
 
 class IDemoRecorder : public IInterface
