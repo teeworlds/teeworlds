@@ -1,4 +1,5 @@
 #include <engine/graphics.h>
+#include <engine/demo.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
 
@@ -14,6 +15,7 @@
 #include "hud.h"
 #include "voting.h"
 #include "binds.h"
+#include "scoreboard.h"
 
 CHud::CHud()
 {
@@ -303,6 +305,29 @@ void CHud::RenderHealthAndAmmo()
 	Graphics()->QuadsEnd();
 }
 
+void CHud::RenderRecordingNotification()
+{
+	if(!(m_pClient->DemoRecorder()->IsRecording() && m_pClient->m_pScoreboard->Active()))
+		return;
+
+	//draw the box
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.4f);
+	RenderTools()->DrawRoundRectExt(0.0f, 90, 40, 14.0f, 5.0f, CUI::CORNER_R);
+	Graphics()->QuadsEnd();
+
+	//draw the red dot
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1.0f, 0.0f, 0.0f, 1.0f);
+	RenderTools()->DrawRoundRect(4, 94, 6, 6, 3.0f);
+	Graphics()->QuadsEnd();
+
+	//draw the text
+	TextRender()->Text(0, 14, 90, 10, "REC", -1);
+}
+
 void CHud::OnRender()
 {
 	if(!m_pClient->m_Snap.m_pGameobj)
@@ -322,6 +347,7 @@ void CHud::OnRender()
 	RenderScoreHud();
 	RenderWarmupTimer();
 	RenderFps();
+	RenderRecordingNotification();
 	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		RenderConnectionWarning();
 	RenderTeambalanceWarning();
