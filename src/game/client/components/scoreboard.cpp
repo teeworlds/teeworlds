@@ -1,3 +1,4 @@
+#include <engine/demo.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
@@ -261,6 +262,29 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	}
 }
 
+void CScoreboard::RenderRecordingNotification(float x)
+{
+	if(!m_pClient->DemoRecorder()->IsRecording())
+		return;
+
+	//draw the box
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(-1);
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.4f);
+	RenderTools()->DrawRoundRectExt(x, 0.0f, 120.0f, 50.0f, 15.0f, CUI::CORNER_B);
+	Graphics()->QuadsEnd();
+
+	//draw the red dot
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1.0f, 0.0f, 0.0f, 1.0f);
+	RenderTools()->DrawRoundRect(x+20, 15.0f, 20.0f, 20.0f, 10.0f);
+	Graphics()->QuadsEnd();
+
+	//draw the text
+	TextRender()->Text(0, x+50.0f, 8.0f, 24.0f, "REC", -1);
+}
+
 void CScoreboard::OnRender()
 {
 	bool DoScoreBoard = false;
@@ -321,6 +345,7 @@ void CScoreboard::OnRender()
 
 	RenderGoals(Width/2-w/2, 150+750+25, w);
 	RenderSpectators(Width/2-w/2, 150+750+25+50+25, w);
+	RenderRecordingNotification((Width/7)*4);
 }
 
 bool CScoreboard::Active()
