@@ -9,7 +9,7 @@ CDoor::CDoor(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length, bool 
 {
 	m_Pos = Pos;
 	m_Opened = Opened;
-	m_QueueForClose = false;
+
 	vec2 Dir = vec2(sin(Rotation), cos(Rotation));
 	vec2 To = Pos + normalize(Dir)*Length;
 	
@@ -25,15 +25,12 @@ void CDoor::Open(int Tick)
 
 void CDoor::Close()
 {
-	if (!GameServer()->m_World.IntersectCharacters(m_Pos, m_To, 1.f, 0))
-		m_Opened = false;
-	else
-		m_QueueForClose = true;
+	m_Opened = false;
 }
 
 bool CDoor::HitCharacter()
 {
-	return GameServer()->m_World.IntersectCharacters(m_Pos, m_To, 1.f, 2);
+	return GameServer()->m_World.IntersectCharacters(m_Pos, m_To, 1.f, 0);
 }
 
 void CDoor::Reset()
@@ -43,11 +40,6 @@ void CDoor::Reset()
 
 void CDoor::Tick()
 {
-	if (m_QueueForClose && !GameServer()->m_World.IntersectCharacters(m_Pos, m_To, 1.f, 0))
-	{
-		m_QueueForClose = false;
-		m_Opened = false;
-	}
 	if (!m_Opened)
 		HitCharacter();
 	else if (m_EvalTick + 10 < Server()->Tick())

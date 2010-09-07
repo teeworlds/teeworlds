@@ -11,7 +11,6 @@ class CDoor : public CEntity
 	int m_EvalTick;
 	bool m_Opened;
 	bool HitCharacter();
-	bool m_QueueForClose;
 
 public:
 
