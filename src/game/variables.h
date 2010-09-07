@@ -93,6 +93,7 @@ MACRO_CONFIG_STR(SvGametype, sv_gametype, 32, "dm", CFGFLAG_SERVER, "Game type (
 	MACRO_CONFIG_INT(DbgDummies, dbg_dummies, 0, 0, 15, CFGFLAG_SERVER, "",0)
 #endif
 
+MACRO_CONFIG_INT(DbgLayers, dbg_layers, 0, 0, 1, CFGFLAG_CLIENT, "",0)
 MACRO_CONFIG_INT(DbgFocus, dbg_focus, 0, 0, 1, CFGFLAG_CLIENT, "",0)
 MACRO_CONFIG_INT(DbgTuning, dbg_tuning, 0, 0, 1, CFGFLAG_CLIENT, "",0)
 #endif
