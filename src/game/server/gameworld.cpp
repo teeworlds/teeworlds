@@ -207,8 +207,20 @@ bool CGameWorld::IntersectCharacters(vec2 Pos0, vec2 Pos1, float Radius, int Typ
 		vec2 IntersectPos = closest_point_on_line(Pos0, Pos1, p->m_Pos);
 		float Len = distance(p->m_Pos, IntersectPos);
 		if(Len < p->m_ProximityRadius+Radius)
-			(Type)?p->Freeze(Server()->TickSpeed()*3):p->m_Doored = true;
-		Return = true;
+		{
+			switch (Type)
+			{
+				case 1:
+					p->Freeze(Server()->TickSpeed()*3);
+					break;
+				case 2:
+					p->m_Doored = true;
+					break;
+				default:
+					break;
+			}
+			Return = true;
+		}
 	}
 	return Return;
 }
