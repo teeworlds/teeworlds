@@ -65,7 +65,6 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_ActiveWeapon = WEAPON_GUN;
 	m_LastWeapon = WEAPON_HAMMER;
 	m_QueuedWeapon = -1;
-	m_CpActive = -2;
 	m_pPlayer = pPlayer;
 	m_Pos = Pos;
 	m_OlderPos = Pos;
@@ -702,12 +701,12 @@ void CCharacter::Tick()
 		m_StartTime = Server()->Tick();
 		m_RefreshTime = Server()->Tick();
 		m_RaceState = RACE_STARTED;
+		m_CpActive = -2;
 	}
 
 	if(((TileIndex == TILE_END) || (TileFIndex == TILE_END)) && m_RaceState == RACE_STARTED)
 	{
 		char aBuf[128];
-		m_CpActive=-2;
 		str_format(aBuf, sizeof(aBuf), "%s finished in: %d minute(s) %5.2f second(s)", Server()->ClientName(m_pPlayer->GetCID()), (int)time/60, time-((int)time/60*60));
 		if(!g_Config.m_SvHideScore)
 			GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
