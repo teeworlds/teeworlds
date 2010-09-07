@@ -75,6 +75,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_Core.Reset();
 	m_BroadTime = true;
 	m_BroadCast = true;
+	m_EyeEmote = true;
 	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision());
 	m_Core.m_Pos = m_Pos;
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = &m_Core;

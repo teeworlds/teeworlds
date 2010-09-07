@@ -759,6 +759,13 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 							pChr->m_BroadTime=true;
 					}
 				}
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/eyeemote")&&g_Config.m_SvEmotionalTees)
+				{
+					CCharacter* pChr = p->GetCharacter();
+					if (pChr)
+						pChr->m_EyeEmote=!pChr->m_EyeEmote;
+					SendChatTarget(ClientId, (pChr->m_EyeEmote)?"You can now use the preset Eye Emotes.":"You don't have any Eye Emotes, remember to bind some.(until you die)");
+				}
 			else if (!str_comp_nocase(pMsg->m_pMessage, "/broadcast")&&g_Config.m_SvEmotionalTees)
 				{
 					CCharacter* pChr = p->GetCharacter();
@@ -1138,7 +1145,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 
 		SendEmoticon(ClientId, pMsg->m_Emoticon);
 		CCharacter* pChr = p->GetCharacter();
-		if (pChr && g_Config.m_SvEmotionalTees)
+		if (pChr && g_Config.m_SvEmotionalTees && pChr->m_EyeEmote)
 		{
 			switch(pMsg->m_Emoticon)
 			{

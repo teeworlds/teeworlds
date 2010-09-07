@@ -29,7 +29,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	m_LastTarget_y = 0;
 	m_SentAfkWarning = 0; // afk timer's 1st warning after 50% of sv_max_afk_time
 	m_SentAfkWarning2 = 0;
-	
+
 	m_PauseInfo.m_Respawn = false;
 	
 	m_IsUsingRaceClient = false;

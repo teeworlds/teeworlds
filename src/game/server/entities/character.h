@@ -176,7 +176,7 @@ public:
 	int m_CurrentTile;
 	int m_CurrentFTile;
 
-	
+	bool m_EyeEmote;
 	// info for dead reckoning
 	int m_ReckoningTick; // tick that we are performing dead reckoning From
 	CCharacterCore m_SendCore; // core that we should send
