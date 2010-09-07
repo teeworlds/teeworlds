@@ -16,7 +16,9 @@ CEmoticon::CEmoticon()
 
 void CEmoticon::ConKeyEmoticon(IConsole::IResult *pResult, void *pUserData)
 {
-	((CEmoticon *)pUserData)->m_Active = pResult->GetInteger(0) != 0;
+	CEmoticon *pSelf = (CEmoticon *)pUserData;
+	if(pSelf->Client()->State() != IClient::STATE_DEMOPLAYBACK)
+		((CEmoticon *)pUserData)->m_Active = pResult->GetInteger(0) != 0;
 }
 
 void CEmoticon::ConEmote(IConsole::IResult *pResult, void *pUserData)

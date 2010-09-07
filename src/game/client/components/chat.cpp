@@ -100,6 +100,9 @@ bool CChat::OnInput(IInput::CEvent e)
 
 void CChat::EnableMode(int Team)
 {
+	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		return;
+
 	if(m_Mode == MODE_NONE)
 	{
 		if(Team)
