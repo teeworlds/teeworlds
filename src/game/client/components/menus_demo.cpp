@@ -72,7 +72,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		MainView.HSplitTop(SeekBarHeight, &SeekBar, &ButtonBar);
 		ButtonBar.HSplitTop(Margins, 0, &ButtonBar);
 		ButtonBar.HSplitBottom(NameBarHeight, &ButtonBar, &NameBar);
-		NameBar.HSplitTop(3.5f, 0, &NameBar);
+		NameBar.HSplitTop(4.0f, 0, &NameBar);
 
 		static int s_SeekBarId = 0;
 		void *id = &s_SeekBarId;
@@ -194,8 +194,8 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		char aBuf[128];
 		str_format(aBuf, sizeof(aBuf), "Demofile: %s", DemoPlayer()->GetDemoName());
 		CTextCursor Cursor;
-		TextRender()->SetCursor(&Cursor, NameBar.x, NameBar.y, Button.h*0.7f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-		Cursor.m_LineWidth = 450.0f;
+		TextRender()->SetCursor(&Cursor, NameBar.x, NameBar.y, Button.h*0.5f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+		Cursor.m_LineWidth = MainView.w;
 		TextRender()->TextEx(&Cursor, aBuf, -1);
 	}
 }
