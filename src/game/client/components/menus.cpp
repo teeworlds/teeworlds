@@ -1063,7 +1063,7 @@ bool CMenus::OnInput(IInput::CEvent e)
 		if(e.m_Flags&IInput::FLAG_PRESS)
 		{
 			// special for popups
-			if(e.m_Key == KEY_RETURN)
+			if(e.m_Key == KEY_RETURN || e.m_Key == KEY_KP_ENTER)
 				m_EnterPressed = true;
 			else if(e.m_Key == KEY_DELETE)
 				m_DeletePressed = true;
