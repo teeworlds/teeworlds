@@ -22,9 +22,7 @@ CProjectile::CProjectile
 {
 	m_Type = Type;
 	m_Pos = Pos;
-	m_StartPos = Pos;
 	m_Direction = Dir;
-	m_StartDir = Dir;
 	m_LifeSpan = Span;
 	m_Owner = Owner;
 	m_Force = Force;
@@ -34,11 +32,6 @@ CProjectile::CProjectile
 	m_Weapon = Weapon;
 	m_StartTick = Server()->Tick();
 	m_Explosive = Explosive;
-	m_BouncePos=vec2(0,0);
-	m_ReBouncePos=vec2(0,0);
-	m_LastBounce=vec2(0,0);
-	m_PrevLastBounce=vec2(0,0);
-	m_LastRestart = 0;
 
 	GameWorld()->InsertEntity(this);
 }
@@ -82,12 +75,6 @@ void CProjectile::SetBouncing(int Value)
 
 void CProjectile::Tick()
 {
-	if(g_Config.m_SvShotgunReset > m_LastRestart && m_Owner == -1)
-	{
-		m_Pos = m_StartPos;
-		m_Direction = m_StartDir;
-		m_StartTick = Server()->Tick();
-	}
 	float Pt = (Server()->Tick()-m_StartTick-1)/(float)Server()->TickSpeed();
 	float Ct = (Server()->Tick()-m_StartTick)/(float)Server()->TickSpeed();
 	vec2 PrevPos = GetPos(Pt);
@@ -95,7 +82,7 @@ void CProjectile::Tick()
 	vec2 ColPos;
 	vec2 NewPos;
 	vec2 Speed = CurPos - PrevPos;
-	int Collide = GameServer()->Collision()->IntersectLine(PrevPos, CurPos, &ColPos, &NewPos,false);
+	int Collide = GameServer()->Collision()->IntersectLine(PrevPos, CurPos, &ColPos, &NewPos, false);
 	CCharacter *OwnerChar = 0;
 	
 
@@ -125,62 +112,14 @@ void CProjectile::Tick()
 		}
 		else if(TargetChr && m_Freeze)
 			TargetChr->Freeze(Server()->TickSpeed()*3);
-		if (Collide && m_Bouncing != 0)
+		if(Collide && m_Bouncing != 0)
 		{
 			m_StartTick = Server()->Tick();
-			m_Pos = NewPos;
+			m_Pos = NewPos+(-m_Direction);
 			if (m_Bouncing == 1)
-			{
-				m_PrevLastBounce.x = m_LastBounce.x;
-				m_LastBounce.x = m_Pos.x;
-				if(!m_BouncePos.x)
-					m_BouncePos.x=m_Pos.x;
-				else if (!m_ReBouncePos.x)
-					m_ReBouncePos.x=m_Pos.x;
-				m_Direction.x =- m_Direction.x;
-				if(!((m_PrevLastBounce.x+1 == m_BouncePos.x || m_PrevLastBounce.x-1 == m_BouncePos.x || m_PrevLastBounce.x == m_BouncePos.x) && (m_LastBounce.x == m_ReBouncePos.x || m_LastBounce.x+1 == m_ReBouncePos.x || m_LastBounce.x-1 == m_ReBouncePos.x)) && !((m_LastBounce.x == m_BouncePos.x || m_LastBounce.x+1 == m_BouncePos.x || m_LastBounce.x-1 == m_BouncePos.x) && (m_PrevLastBounce.x+1 == m_ReBouncePos.x || m_PrevLastBounce.x-1 == m_ReBouncePos.x || m_PrevLastBounce.x == m_ReBouncePos.x)))
-				{
-					/*int bx=(int)m_BouncePos.x;
-					int rbx=(int)m_ReBouncePos.x;
-					int lbx=(int)m_LastBounce.x;
-					int plbx=(int)m_PrevLastBounce.x;
-					dbg_msg("m_BouncePos","%d",bx);
-					dbg_msg("m_ReBouncePos","%d",rbx);
-					dbg_msg("m_LastBounce","%d",lbx);
-					dbg_msg("m_PrevLastBounce","%d",plbx);
-					m_Pos.x=m_AvgPos.x;*/
-					g_Config.m_SvShotgunReset++;
-					dbg_msg("CrazyShotgun","Warning Horizontal Crazy Shotgun Out of bounds");
-					/*int x=(int)m_Pos.x;
-					dbg_msg("RePos","%d",x);*/
-				}
-			}
-			else if (m_Bouncing == 2)
-			{
-				m_PrevLastBounce.y = m_LastBounce.y;
-				m_LastBounce.y = m_Pos.y;
-				if(!m_BouncePos.y)
-					m_BouncePos.y=m_Pos.y;
-				else if (!m_ReBouncePos.y)
-					m_ReBouncePos.y=m_Pos.y;
+				m_Direction.x = -m_Direction.x;
+			else if(m_Bouncing == 2)
 				m_Direction.y =- m_Direction.y;
-				if(!((m_PrevLastBounce.y+1 == m_BouncePos.y || m_PrevLastBounce.y-1 == m_BouncePos.y || m_PrevLastBounce.y == m_BouncePos.y) && (m_LastBounce.y == m_ReBouncePos.y || m_LastBounce.y+1 == m_ReBouncePos.y || m_LastBounce.y-1 == m_ReBouncePos.y)) && !((m_LastBounce.y == m_BouncePos.y || m_LastBounce.y+1 == m_BouncePos.y || m_LastBounce.y-1 == m_BouncePos.y) && (m_PrevLastBounce.y+1 == m_ReBouncePos.y || m_PrevLastBounce.y-1 == m_ReBouncePos.y || m_PrevLastBounce.y == m_ReBouncePos.y)))
-				{
-					/*int by=(int)m_BouncePos.y;
-					int rby=(int)m_ReBouncePos.y;
-					int lby=(int)m_LastBounce.y;
-					int plby=(int)m_PrevLastBounce.y;
-					dbg_msg("m_BouncePos","%d",by);
-					dbg_msg("m_ReBouncePos","%d",rby);
-					dbg_msg("m_LastBounce","%d",lby);
-					dbg_msg("m_PrevLastBounce","%d",plby);
-					m_Pos=m_AvgPos;*/
-					g_Config.m_SvShotgunReset++;
-					dbg_msg("CrazyShotgun","Warning Vertical Crazy Shotgun Out of bounds");
-					/*int y=(int)m_Pos.y;
-					dbg_msg("RePos","%d",y);*/
-				}
-			}
 			m_Pos += m_Direction;
 		}
 		else if (m_Weapon == WEAPON_GUN)
@@ -197,9 +136,6 @@ void CProjectile::Tick()
 	{
 		GameServer()->m_World.DestroyEntity(this);
 	}
-
-
-
 }
 
 void CProjectile::FillInfo(CNetObj_Projectile *pProj)

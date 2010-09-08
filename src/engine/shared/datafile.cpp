@@ -511,7 +511,7 @@ int CDataFileWriter::Finish()
 	// calculate the complete size
 	TypesSize = m_NumItemTypes*sizeof(CDatafileItemType);
 	HeaderSize = sizeof(CDatafileHeader);
-	OffsetSize = m_NumItems*sizeof(int) + m_NumDatas*sizeof(int);
+	OffsetSize = (m_NumItems + m_NumDatas + m_NumDatas) * sizeof(int); //ItemOffsets, DataOffsets, DataSizes
 	FileSize = HeaderSize + TypesSize + OffsetSize + ItemSize + DataSize;
 	SwapSize = FileSize - DataSize;
 	

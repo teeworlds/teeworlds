@@ -49,7 +49,7 @@ MACRO_CONFIG_INT(UiColorLht, ui_color_lht, 175, 0, 255, CFGFLAG_CLIENT|CFGFLAG_S
 MACRO_CONFIG_INT(UiColorAlpha, ui_color_alpha, 228, 0, 255, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Interface alpha",0)
 
 MACRO_CONFIG_INT(GfxNoclip, gfx_noclip, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Disable clipping",0)
-MACRO_CONFIG_INT(GfxClearFull, gfx_full_clear, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Only show the game tile",0)
+MACRO_CONFIG_INT(GfxClearFull, gfx_full_clear, 0, 0, 1, CFGFLAG_CLIENT, "Only show the game tile",0)
 
 /* race - client */
 MACRO_CONFIG_INT(ClAutoRecord, cl_auto_record, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Save the best demo of each race",0)
@@ -93,6 +93,7 @@ MACRO_CONFIG_STR(SvGametype, sv_gametype, 32, "dm", CFGFLAG_SERVER, "Game type (
 	MACRO_CONFIG_INT(DbgDummies, dbg_dummies, 0, 0, 15, CFGFLAG_SERVER, "",0)
 #endif
 
+MACRO_CONFIG_INT(DbgLayers, dbg_layers, 0, 0, 1, CFGFLAG_CLIENT, "",0)
 MACRO_CONFIG_INT(DbgFocus, dbg_focus, 0, 0, 1, CFGFLAG_CLIENT, "",0)
 MACRO_CONFIG_INT(DbgTuning, dbg_tuning, 0, 0, 1, CFGFLAG_CLIENT, "",0)
 #endif

@@ -6,7 +6,6 @@
 #include "././game/variables.h"
 /* DDRace Server*/
 //===============================
-MACRO_CONFIG_INT(SvShowOthers, sv_show_others, 1, 0, 1, CFGFLAG_SERVER, "Shows the other players", 3)
 MACRO_CONFIG_INT(SvShotgunBulletSound, sv_shotgun_bullet_sound, 0, 0, 1, CFGFLAG_SERVER, "Annoying Shotgun sound on/off",3)
 MACRO_CONFIG_INT(SvEndlessSuperHook, sv_endless_super_hook, 0, 0, 1, CFGFLAG_SERVER, "Endless hook for super players on/off",3)
 MACRO_CONFIG_INT(SvEmotionalTees, sv_emotional_tees, 1, 0, 1, CFGFLAG_SERVER, "Emotional Tees on/off",3)
@@ -16,11 +15,10 @@ MACRO_CONFIG_INT(SvVoteKickBanTime,sv_vote_kick_bantime, 300, 0, 9999, CFGFLAG_S
 MACRO_CONFIG_INT(SvVoteMapTimeDelay,sv_vote_map_delay,0,0,9999,CFGFLAG_SERVER,"how much time between map votes",3)
 MACRO_CONFIG_INT(SvMaxAfkTime,sv_max_afk_time, 0, 0, 9999, CFGFLAG_SERVER, "How many seconds a player is allowed to be afk, 0=disabled",3)
 MACRO_CONFIG_INT(SvPauseable, sv_pauseable, 1, 0, 1, CFGFLAG_SERVER, "players can pause their char or not",3)
+MACRO_CONFIG_INT(SvPauseTime, sv_pause_time, 0, 0, 1, CFGFLAG_SERVER, "pause the time of players during /pause or not",3)
 MACRO_CONFIG_INT(SvCheatTime, sv_cheattime, 0, 0, 1, CFGFLAG_SERVER, "players can cheat with time or not",3)
 MACRO_CONFIG_INT(SvHit, sv_hit, 1, 0, 1, CFGFLAG_SERVER, "players can hammer/grenade/laser one another",3)
 MACRO_CONFIG_INT(SvTunes, sv_tunes, 1, 0, 1, CFGFLAG_SERVER, "Turns Tuning On/Off",3)
-MACRO_CONFIG_INT(SvPhook, sv_phook, 1, 0, 1, CFGFLAG_SERVER, "Turns Player On/Off",3)
-MACRO_CONFIG_INT(SvNpc, sv_npc, 0, 0, 1, CFGFLAG_SERVER, "Turns NPC (No Player Collision) On/Off",3)
 MACRO_CONFIG_INT(SvEndlessDrag, sv_endless_drag, 0, 0, 1, CFGFLAG_SERVER, "Turns Endless hooking On/Off",3)
 MACRO_CONFIG_INT(SvCheats, sv_cheats, 0, 0, 1, CFGFLAG_SERVER, "Turns Cheats On/Off",4)
 MACRO_CONFIG_INT(SvAllowColorChange, sv_allow_color_change, 1, 0, 1, CFGFLAG_SERVER, "Allow color change (can block rainbowmod)",3)
@@ -66,7 +64,7 @@ MACRO_CONFIG_INT(SvSqlPort, sv_sql_port, 3306, 0, 65535, CFGFLAG_SERVER, "SQL Da
 MACRO_CONFIG_STR(SvSqlDatabase, sv_sql_database, 16, "teeworlds", CFGFLAG_SERVER, "SQL Database name",3)
 MACRO_CONFIG_STR(SvSqlPrefix, sv_sql_prefix, 16, "record", CFGFLAG_SERVER, "SQL Database table prefix",3)
 //===============================
-MACRO_CONFIG_INT(SvShotgunReset, sv_shotgun_reset, 0,0,9999, CFGFLAG_SERVER, "Resets the shotgun bullets to start position",0)
+MACRO_CONFIG_INT(SvShowOthers, sv_show_others, 1, 0, 1, CFGFLAG_SERVER, "Shows the other players", 3)
 MACRO_CONFIG_STR(PlayerName, player_name, 24, "nameless tee", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Name of the player",0)
 MACRO_CONFIG_STR(ClanName, clan_name, 32, "", CFGFLAG_SAVE|CFGFLAG_CLIENT, "(not used)",0)
 MACRO_CONFIG_STR(Password, password, 32, "", CFGFLAG_CLIENT|CFGFLAG_SERVER, "Password to the server",0)

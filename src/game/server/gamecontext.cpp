@@ -657,7 +657,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				SendChatTarget(ClientId, "[blacktee] den, LemonFace, noother & Fluxid");
 				SendChatTarget(ClientId, "please check the changelog on DDRace.info");
 				SendChatTarget(ClientId, "also the commit log on github.com/GreYFoXGTi/DDRace");
-			} else if(!str_comp_nocase(pMsg->m_pMessage, "/pause"))
+			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/pause"))
 				{
 					if(g_Config.m_SvPauseable)
 					{
@@ -684,6 +685,15 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					}
 					else
 						SendChatTarget(ClientId, "The admin didn't activate /pause");
+			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "kill"))
+			{
+					SendChatTarget(ClientId, "/kill not kill to kill your self" DDRACE_VERSION);
+			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/kill"))
+			{
+				p->KillCharacter(-1);
+				SendChatTarget(ClientId, "You are dead.");
 			}
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/info"))
 			{
@@ -715,7 +725,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				char buf[64];
 				str_format(buf, sizeof(buf), "/Info /Credits %s",g_Config.m_SvPauseable?"/pause":"");
 				SendChatTarget(ClientId, buf);
-				SendChatTarget(ClientId, "/rank /top5 /top5 5 or any number");
+				SendChatTarget(ClientId, "/rank /emote /top5 /top5 i /team i /broadcast /time /flags /kill");
 			}
 			else if(!str_comp_num(pMsg->m_pMessage, "/top5", 5))
 			{
@@ -782,6 +792,13 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				}
 					
 			}
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/eyeemote")&&g_Config.m_SvEmotionalTees)
+				{
+					CCharacter* pChr = p->GetCharacter();
+					if (pChr)
+						pChr->m_EyeEmote=!pChr->m_EyeEmote;
+					SendChatTarget(ClientId, (pChr->m_EyeEmote)?"You can now use the preset Eye Emotes.":"You don't have any Eye Emotes, remember to bind some.(until you die)");
+				}
 			else if (!str_comp_nocase(pMsg->m_pMessage, "/broadcast")&&g_Config.m_SvEmotionalTees)
 				{
 					CCharacter* pChr = p->GetCharacter();
@@ -793,31 +810,61 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 							pChr->m_BroadCast=true;
 					}
 				}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/emotepain")&&g_Config.m_SvEmotionalTees)
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/emote")&&g_Config.m_SvEmotionalTees)
 				{
+					SendChatTarget(ClientId, "Emote Commands Are: /emotesurprise /emoteblink /emoteclose /emoteangry /emotehappy /emotepain");
+					SendChatTarget(ClientId, "Example: /emotesurprise 10 for 10 seconds or /emotesurprise (default 1 second)");
+				}
+			else if(!str_comp_num(pMsg->m_pMessage, "/emotepain", 10))
+			{
+				int Num = -1;
 					CCharacter* pChr = p->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_PAIN;
-						pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+						if(sscanf(pMsg->m_pMessage, "/emotepain %d", &Num) > 0)
+							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
+						else
+							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
 					}
 				}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/emotehappy")&&g_Config.m_SvEmotionalTees)
-				{
+			else if(!str_comp_num(pMsg->m_pMessage, "/emotehappy", 11))
+			{
+				int Num = -1;
 					CCharacter* pChr = p->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_HAPPY;
-						pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+						if(sscanf(pMsg->m_pMessage, "/emotehappy %d", &Num) > 0)
+							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
+						else
+							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
 					}
 				}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/emoteangry")&&g_Config.m_SvEmotionalTees)
-				{
+			else if(!str_comp_num(pMsg->m_pMessage, "/emoteangry", 11))
+			{
+				int Num = -1;
 					CCharacter* pChr = p->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_ANGRY;
-						pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+						if(sscanf(pMsg->m_pMessage, "/emoteangry %d", &Num) > 0)
+							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
+						else
+							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+					}
+				}
+			else if(!str_comp_num(pMsg->m_pMessage, "/emoteclose", 11))
+			{
+				int Num = -1;
+					CCharacter* pChr = p->GetCharacter();
+					if (pChr)
+					{
+						pChr->m_EmoteType = EMOTE_BLINK;
+						if(sscanf(pMsg->m_pMessage, "/emoteclose %d", &Num) > 0)
+							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
+						else
+							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
 					}
 				}
 			else if (!str_comp_nocase(pMsg->m_pMessage, "/emoteblink")&&g_Config.m_SvEmotionalTees)
@@ -826,62 +873,21 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_BLINK;
-						pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+						pChr->m_EmoteStop = Server()->Tick() + 0.5 * Server()->TickSpeed();
 					}
 				}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/emotesurprise")&&g_Config.m_SvEmotionalTees)
+			else if(!str_comp_num(pMsg->m_pMessage, "/emotesurprise", 14))
 			{
-				CCharacter* pChr = p->GetCharacter();
-				if (pChr)
-				{
-					pChr->m_EmoteType = EMOTE_SURPRISE;
-					pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
-				}
-			}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodinpain")&&g_Config.m_SvEmotionalTees)
-			{
-				CCharacter* pChr = p->GetCharacter();
-				if (pChr)
-				{
-					pChr->m_EmoteType = EMOTE_PAIN;
-					pChr->m_EmoteStop = Server()->Tick() + 3600 * Server()->TickSpeed();
-				}
-			}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodhappy")&&g_Config.m_SvEmotionalTees)
-			{
-				CCharacter* pChr = p->GetCharacter();
-				if (pChr)
-				{
-					pChr->m_EmoteType = EMOTE_HAPPY;
-					pChr->m_EmoteStop = Server()->Tick() + 3600 * Server()->TickSpeed();
-				}
-			}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodangry")&&g_Config.m_SvEmotionalTees)
-			{
-				CCharacter* pChr = p->GetCharacter();
-				if (pChr)
-				{
-					pChr->m_EmoteType = EMOTE_ANGRY;
-					pChr->m_EmoteStop = Server()->Tick() + 3600 * Server()->TickSpeed();
-				}
-			}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodsad")&&g_Config.m_SvEmotionalTees)
-			{
-				CCharacter* pChr = p->GetCharacter();
-				if (pChr)
-				{
-					pChr->m_EmoteType = EMOTE_BLINK;
-					pChr->m_EmoteStop = Server()->Tick() + 3600 * Server()->TickSpeed();
-				}
-			}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/moodsurprised")&&g_Config.m_SvEmotionalTees)
-			{
-				CCharacter* pChr = p->GetCharacter();
-				if (pChr)
-				{
-					pChr->m_EmoteType = EMOTE_SURPRISE;
-					pChr->m_EmoteStop = Server()->Tick() + 3600 * Server()->TickSpeed();
-				}
+				int Num = -1;
+					CCharacter* pChr = p->GetCharacter();
+					if (pChr)
+					{
+						pChr->m_EmoteType = EMOTE_SURPRISE;
+						if(sscanf(pMsg->m_pMessage, "/emotesurprise %d", &Num) > 0)
+							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
+						else
+							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+					}
 			}
 			else
 					SendChatTarget(ClientId, "No such command!");
@@ -1178,7 +1184,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 
 		SendEmoticon(ClientId, pMsg->m_Emoticon);
 		CCharacter* pChr = p->GetCharacter();
-		if (pChr && g_Config.m_SvEmotionalTees)
+		if (pChr && g_Config.m_SvEmotionalTees && pChr->m_EyeEmote)
 		{
 			switch(pMsg->m_Emoticon)
 			{
@@ -1952,7 +1958,6 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_World.SetGameServer(this);
 	m_Events.SetGameServer(this);
-	m_Size = 0;
 	//if(!data) // only load once
 		//data = load_data_from_memory(internal_data);
 
@@ -1975,13 +1980,9 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 //   dbg_msg("Note","For map cfgs in windows and linux u need the files");
 //   dbg_msg("Note","in a folder i nthe same dir as teeworlds_srv");
 //   dbg_msg("Note","data/maps/%s.cfg", config.sv_map);
+
 	// select gametype
 	m_pController = new CGameControllerDDRace(this);
-	//float temp;
-	//m_Tuning.Get("player_hooking",&temp);
-	//g_Config.m_SvPhook = temp;
-	//m_Tuning.Get("player_collision",&temp);
-	//g_Config.m_SvNpc=(!temp);
 
 	Server()->SetBrowseInfo(m_pController->m_pGameType, -1);
 
@@ -1998,7 +1999,6 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	// setup core world
 	//for(int i = 0; i < MAX_CLIENTS; i++)
 	//	game.players[i].core.world = &game.world.core;
-
 	// create all entities from the game layer
 	CMapItemLayerTilemap *pTileMap = m_Layers.GameLayer();
 	CTile *pTiles = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Data);
@@ -2006,72 +2006,10 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	CTile *pFront=0;
 	if (m_Layers.FrontLayer())
 	pFront = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Front);
-	CTeleTile *pSwitch=0;
+	m_pSwitch=0;
 	if (m_Layers.SwitchLayer())
-	pSwitch = (CTeleTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Switch);
-	if (pSwitch)
-	{
-		if(Collision()->Layers()->SwitchLayer())
-			for(int y = 0; y < pTileMap->m_Height; y++)
-				for(int x = 0; x < pTileMap->m_Width; x++)
-				{
-					int sides[8][2];
-					sides[0][0]=pSwitch[(x)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
-					sides[1][0]=pSwitch[(x+1)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
-					sides[2][0]=pSwitch[(x+1)+pTileMap->m_Width*(y)].m_Type - ENTITY_OFFSET;
-					sides[3][0]=pSwitch[(x+1)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
-					sides[4][0]=pSwitch[(x)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
-					sides[5][0]=pSwitch[(x-1)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
-					sides[6][0]=pSwitch[(x-1)+pTileMap->m_Width*(y)].m_Type - ENTITY_OFFSET;
-					sides[7][0]=pSwitch[(x-1)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
-					sides[0][1]=pSwitch[(x)+pTileMap->m_Width*(y+1)].m_Number;
-					sides[1][1]=pSwitch[(x+1)+pTileMap->m_Width*(y+1)].m_Number;
-					sides[2][1]=pSwitch[(x+1)+pTileMap->m_Width*(y)].m_Number;
-					sides[3][1]=pSwitch[(x+1)+pTileMap->m_Width*(y-1)].m_Number;
-					sides[4][1]=pSwitch[(x)+pTileMap->m_Width*(y-1)].m_Number;
-					sides[5][1]=pSwitch[(x-1)+pTileMap->m_Width*(y-1)].m_Number;
-					sides[6][1]=pSwitch[(x-1)+pTileMap->m_Width*(y)].m_Number;
-					sides[7][1]=pSwitch[(x-1)+pTileMap->m_Width*(y+1)].m_Number;
-					for(int i=0; i<8;i++)
-						if ((sides[i][0] >= ENTITY_LASER_SHORT && sides[i][0] <= ENTITY_LASER_LONG) && Collision()->SwitchLayer()[y*pTileMap->m_Width+x].m_Number == sides[i][1])
-							m_Size++;
-				}
-		if(m_Size)
-		{
-			m_SDoors = new SDoors[m_Size];
-			int num=0;
-			for(int y = 0; y < pTileMap->m_Height; y++)
-				for(int x = 0; x < pTileMap->m_Width; x++)
-					if(Collision()->SwitchLayer()[y*pTileMap->m_Width+x].m_Type == (ENTITY_DOOR + ENTITY_OFFSET))
-					{
-						int sides[8][2];
-						sides[0][0]=pSwitch[(x)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
-						sides[1][0]=pSwitch[(x+1)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
-						sides[2][0]=pSwitch[(x+1)+pTileMap->m_Width*(y)].m_Type - ENTITY_OFFSET;
-						sides[3][0]=pSwitch[(x+1)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
-						sides[4][0]=pSwitch[(x)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
-						sides[5][0]=pSwitch[(x-1)+pTileMap->m_Width*(y-1)].m_Type - ENTITY_OFFSET;
-						sides[6][0]=pSwitch[(x-1)+pTileMap->m_Width*(y)].m_Type - ENTITY_OFFSET;
-						sides[7][0]=pSwitch[(x-1)+pTileMap->m_Width*(y+1)].m_Type - ENTITY_OFFSET;
-						sides[0][1]=pSwitch[(x)+pTileMap->m_Width*(y+1)].m_Number;
-						sides[1][1]=pSwitch[(x+1)+pTileMap->m_Width*(y+1)].m_Number;
-						sides[2][1]=pSwitch[(x+1)+pTileMap->m_Width*(y)].m_Number;
-						sides[3][1]=pSwitch[(x+1)+pTileMap->m_Width*(y-1)].m_Number;
-						sides[4][1]=pSwitch[(x)+pTileMap->m_Width*(y-1)].m_Number;
-						sides[5][1]=pSwitch[(x-1)+pTileMap->m_Width*(y-1)].m_Number;
-						sides[6][1]=pSwitch[(x-1)+pTileMap->m_Width*(y)].m_Number;
-						sides[7][1]=pSwitch[(x-1)+pTileMap->m_Width*(y+1)].m_Number;
-						for(int i=0; i<8;i++)
-							if ((sides[i][0] >= ENTITY_LASER_SHORT && sides[i][0] <= ENTITY_LASER_LONG) && Collision()->SwitchLayer()[y*pTileMap->m_Width+x].m_Number == sides[i][1])
-							{
-								vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
-								m_SDoors[num].m_Address = new CDoor(&m_World, Pos, pi/4*i, (32*3 + 32*(sides[i][0] - ENTITY_LASER_SHORT)*3), false);
-								m_SDoors[num].m_Pos = Pos;
-								m_SDoors[num++].m_Number = Collision()->SwitchLayer()[y*pTileMap->m_Width+x].m_Number;
-							}
-					}
-		}
-	}
+	m_pSwitch = (CTeleTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Switch);
+	((CGameControllerDDRace *)m_pController)->InitSwitcher();
 
 	for(int y = 0; y < pTileMap->m_Height; y++)
 	{
@@ -2079,13 +2017,13 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 		{
 			int Index = pTiles[y*pTileMap->m_Width+x].m_Index;
 			if(Index == TILE_NPC)
-				g_Config.m_SvNpc = 1;
+				m_Tuning.Set("player_collision",0);
 			else if (Index == TILE_EHOOK)
 				g_Config.m_SvEndlessDrag = 1;
 			else if (Index == TILE_NOHIT)
 				g_Config.m_SvHit = 0;
 			else if (Index == TILE_NPH)
-				g_Config.m_SvPhook = 0;
+				m_Tuning.Set("player_hooking",0);
 			if(Index >= ENTITY_OFFSET)
 			{
 				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
@@ -2095,28 +2033,27 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 			{
 				int Index = pFront[y*pTileMap->m_Width+x].m_Index;
 				if(Index == TILE_NPC)
-					g_Config.m_SvNpc = 1;
+					m_Tuning.Set("player_collision",0);
 				else if (Index == TILE_EHOOK)
 					g_Config.m_SvEndlessDrag = 1;
 				else if (Index == TILE_NOHIT)
 					g_Config.m_SvHit = 0;
 				else if (Index == TILE_NPH)
-					g_Config.m_SvPhook = 0;
-
+					m_Tuning.Set("player_hooking",0);
 				if(Index >= ENTITY_OFFSET)
 				{
 					vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
 					m_pController->OnEntity(Index-ENTITY_OFFSET, Pos,true);
 				}
 			}
-			if (pSwitch)
+			if (m_pSwitch)
 			{
-				int Index = pSwitch[y*pTileMap->m_Width+x].m_Type - ENTITY_OFFSET;
+				int Index = m_pSwitch[y*pTileMap->m_Width+x].m_Type - ENTITY_OFFSET;
 				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
 				if(Index == ENTITY_TRIGGER)
-					for(int i=0;i<m_Size;i++)
-						if(m_SDoors[i].m_Number == pSwitch[y*pTileMap->m_Width+x].m_Number)
-							new CTrigger(&m_World,Pos, m_SDoors[i].m_Address);
+					for(int i=0;i<((CGameControllerDDRace *)m_pController)->m_Size;i++)
+						if(((CGameControllerDDRace *)m_pController)->m_SDoors[i].m_Number == m_pSwitch[y*pTileMap->m_Width+x].m_Number)
+							new CTrigger(&m_World,Pos, ((CGameControllerDDRace *)m_pController)->m_SDoors[i].m_Address);
 			}
 		}
 	}

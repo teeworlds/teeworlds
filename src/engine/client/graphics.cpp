@@ -387,10 +387,18 @@ int CGraphics_OpenGL::LoadPNG(CImageInfo *pImg, const char *pFilename)
 	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, aCompleteFilename, sizeof(aCompleteFilename));
 	if(File)
 		io_close(File);
-	
-	if(png_open_file(&Png, aCompleteFilename) != PNG_NO_ERROR) // ignore_convention
+	else
 	{
 		dbg_msg("game/png", "failed to open file. filename='%s'", aCompleteFilename);
+		return 0;
+	}
+	
+	int Error = png_open_file(&Png, aCompleteFilename); // ignore_convention
+	if(Error != PNG_NO_ERROR)
+	{
+		dbg_msg("game/png", "failed to open file. filename='%s'", aCompleteFilename);
+		if(Error != PNG_FILE_ERROR)
+			png_close_file(&Png); // ignore_convention
 		return 0;
 	}
 	

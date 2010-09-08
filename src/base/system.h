@@ -242,7 +242,7 @@ unsigned io_read(IOHANDLE io, void *buffer, unsigned size);
 	Returns:
 		Number of bytes skipped.
 */
-unsigned io_skip(IOHANDLE io, unsigned size);
+unsigned io_skip(IOHANDLE io, int size);
 
 /*
 	Function: io_write
