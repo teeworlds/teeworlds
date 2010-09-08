@@ -86,7 +86,7 @@ class CCharacter *CGameContext::GetPlayerChar(int ClientId)
 	return m_apPlayers[ClientId]->GetCharacter();
 }
 
-void CGameContext::CreateDamageInd(vec2 p, float Angle, int Amount)
+void CGameContext::CreateDamageInd(vec2 p, float Angle, int Amount, int Mask)
 {
 	float a = 3 * 3.14159f / 2 + Angle;
 	//float a = get_angle(dir);
@@ -95,7 +95,7 @@ void CGameContext::CreateDamageInd(vec2 p, float Angle, int Amount)
 	for(int i = 0; i < Amount; i++)
 	{
 		float f = mix(s, e, float(i+1)/float(Amount+2));
-		NETEVENT_DAMAGEIND *ev = (NETEVENT_DAMAGEIND *)m_Events.Create(NETEVENTTYPE_DAMAGEIND, sizeof(NETEVENT_DAMAGEIND));
+		NETEVENT_DAMAGEIND *ev = (NETEVENT_DAMAGEIND *)m_Events.Create(NETEVENTTYPE_DAMAGEIND, sizeof(NETEVENT_DAMAGEIND), Mask);
 		if(ev)
 		{
 			ev->m_X = (int)p.x;
@@ -105,10 +105,10 @@ void CGameContext::CreateDamageInd(vec2 p, float Angle, int Amount)
 	}
 }
 
-void CGameContext::CreateHammerHit(vec2 p)
+void CGameContext::CreateHammerHit(vec2 p, int Mask)
 {
 	// create the event
-	NETEVENT_HAMMERHIT *ev = (NETEVENT_HAMMERHIT *)m_Events.Create(NETEVENTTYPE_HAMMERHIT, sizeof(NETEVENT_HAMMERHIT));
+	NETEVENT_HAMMERHIT *ev = (NETEVENT_HAMMERHIT *)m_Events.Create(NETEVENTTYPE_HAMMERHIT, sizeof(NETEVENT_HAMMERHIT), Mask);
 	if(ev)
 	{
 		ev->m_X = (int)p.x;
@@ -117,10 +117,10 @@ void CGameContext::CreateHammerHit(vec2 p)
 }
 
 
-void CGameContext::CreateExplosion(vec2 p, int Owner, int Weapon, bool NoDamage)
+void CGameContext::CreateExplosion(vec2 p, int Owner, int Weapon, bool NoDamage, int Mask)
 {
 	// create the event
-	NETEVENT_EXPLOSION *ev = (NETEVENT_EXPLOSION *)m_Events.Create(NETEVENTTYPE_EXPLOSION, sizeof(NETEVENT_EXPLOSION));
+	NETEVENT_EXPLOSION *ev = (NETEVENT_EXPLOSION *)m_Events.Create(NETEVENTTYPE_EXPLOSION, sizeof(NETEVENT_EXPLOSION), Mask);
 	if(ev)
 	{
 		ev->m_X = (int)p.x;
@@ -145,7 +145,7 @@ void CGameContext::CreateExplosion(vec2 p, int Owner, int Weapon, bool NoDamage)
 			float Dmg = 6 * l;
 			if((int)Dmg)
 				if((g_Config.m_SvHit||NoDamage) || Owner == apEnts[i]->m_pPlayer->GetCID())
-				{//TODO: Change which explosion affects only on one team
+				{
 					if(Owner != -1 && apEnts[i]->m_Alive && apEnts[i]->Team() != GetPlayerChar(Owner)->Team()) continue;
 					apEnts[i]->TakeDamage(ForceDir*Dmg*2, (int)Dmg, Owner, Weapon);
 					if(!g_Config.m_SvHit||NoDamage) break;
@@ -167,10 +167,10 @@ void create_smoke(vec2 p)
 	}
 }*/
 
-void CGameContext::CreatePlayerSpawn(vec2 p)
+void CGameContext::CreatePlayerSpawn(vec2 p, int Mask)
 {
 	// create the event
-	NETEVENT_SPAWN *ev = (NETEVENT_SPAWN *)m_Events.Create(NETEVENTTYPE_SPAWN, sizeof(NETEVENT_SPAWN));
+	NETEVENT_SPAWN *ev = (NETEVENT_SPAWN *)m_Events.Create(NETEVENTTYPE_SPAWN, sizeof(NETEVENT_SPAWN), Mask);
 	if(ev)
 	{
 		ev->m_X = (int)p.x;
@@ -178,10 +178,10 @@ void CGameContext::CreatePlayerSpawn(vec2 p)
 	}
 }
 
-void CGameContext::CreateDeath(vec2 p, int ClientId)
+void CGameContext::CreateDeath(vec2 p, int ClientId, int Mask)
 {
 	// create the event
-	NETEVENT_DEATH *ev = (NETEVENT_DEATH *)m_Events.Create(NETEVENTTYPE_DEATH, sizeof(NETEVENT_DEATH));
+	NETEVENT_DEATH *ev = (NETEVENT_DEATH *)m_Events.Create(NETEVENTTYPE_DEATH, sizeof(NETEVENT_DEATH), Mask);
 	if(ev)
 	{
 		ev->m_X = (int)p.x;
@@ -427,7 +427,9 @@ void CGameContext::OnTick()
 				{
 					if(!m_apPlayers[i] || m_apPlayers[i]->GetTeam() == -1 || aVoteChecked[i])	// don't count in votes by spectators
 						continue;
-
+					if(m_VoteKick && 
+						GetPlayerChar(m_VoteCreator) && 
+						GetPlayerChar(m_VoteCreator)->Team() != GetPlayerChar(i)->Team()) continue;
 					int ActVote = m_apPlayers[i]->m_Vote;
 					int ActVotePos = m_apPlayers[i]->m_VotePos;
 
@@ -739,6 +741,17 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				else
 					Score()->ShowRank(p->GetCID(), Server()->ClientName(ClientId));
 			}
+			else if(!str_comp(pMsg->m_pMessage, "/show_others"))
+			{
+				if(!g_Config.m_SvShowOthers && !Server()->IsAuthed(ClientId)) {
+					SendChatTarget(ClientId, "This command is not allowed on this server.");
+					return;
+				}
+				if(p->m_IsUsingRaceClient)
+					SendChatTarget(ClientId, "Please use the settings to switch this option.");
+				else
+					p->m_ShowOthers = !p->m_ShowOthers;
+			}
 			else if (!str_comp_nocase(pMsg->m_pMessage, "/time")&&g_Config.m_SvEmotionalTees)
 				{
 					CCharacter* pChr = p->GetCharacter();
@@ -901,6 +914,16 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			}
 		}
 	}
+	else if (MsgId == NETMSGTYPE_CL_RACESHOWOTHERS)
+	{
+		if(!g_Config.m_SvShowOthers && !Server()->IsAuthed(ClientId))
+			return;
+		if(p->m_Last_ShowOthers && p->m_Last_ShowOthers+Server()->TickSpeed()/2 > Server()->Tick())
+			return;
+		p->m_Last_ShowOthers = Server()->Tick();
+		CNetMsg_Cl_RaceShowOthers *pMsg = (CNetMsg_Cl_RaceShowOthers *)pRawMsg;
+		p->m_ShowOthers = (bool)pMsg->m_Active;
+	}
 	else if(MsgId == NETMSGTYPE_CL_CALLVOTE)
 	{
 		if(g_Config.m_SvSpamprotection && p->m_Last_VoteTry && p->m_Last_VoteTry+Server()->TickSpeed()*3 > Server()->Tick())
@@ -966,6 +989,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				return;
 			}
 			last_mapvote = time_get();
+			m_VoteKick = false;
 		}
 		else if(str_comp_nocase(pMsg->m_Type, "kick") == 0)
 		{
@@ -1010,7 +1034,12 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				SendChatTarget(KickId, aBufKick);
 				return;
 			}
-
+			if(GetPlayerChar(ClientId) && GetPlayerChar(KickId) &&
+				GetPlayerChar(ClientId)->Team() != GetPlayerChar(KickId)->Team()) {
+				SendChatTarget(ClientId, "You can kick only your team member");
+				m_apPlayers[ClientId]->m_Last_KickVote = time_get();
+				return;
+			}
 			str_format(aChatmsg, sizeof(aChatmsg), "%s called for vote to kick '%s'", Server()->ClientName(ClientId), Server()->ClientName(KickId));
 			str_format(aDesc, sizeof(aDesc), "Kick '%s'", Server()->ClientName(KickId));
 			if (!g_Config.m_SvVoteKickBanTime)
@@ -1022,6 +1051,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				str_format(aCmd, sizeof(aCmd), "ban %s %d", aBuf, g_Config.m_SvVoteKickBantime);
 			}
 			m_apPlayers[ClientId]->m_Last_KickVote = time_get();
+			m_VoteKick = true;
 		}
 
 		if(aCmd[0])

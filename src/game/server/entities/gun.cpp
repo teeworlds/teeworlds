@@ -44,13 +44,8 @@ void CGun::Fire()
 		int res = GameServer()->Collision()->IntersectLine(m_Pos, Target->m_Pos,0,0,false);
 		if (!res)
 		{
-			int Len=length(Target->m_Pos - m_Pos);
-			if (LenInTeam[Target->Team()] == 0)
-			{
-				LenInTeam[Target->Team()] = Len;
-				IdInTeam[Target->Team()] = i;
-			}
-			else if(LenInTeam[Target->Team()] > Len)
+			int Len = length(Target->m_Pos - m_Pos);
+			if (LenInTeam[Target->Team()] == 0 || LenInTeam[Target->Team()] > Len)
 			{
 				LenInTeam[Target->Team()] = Len;
 				IdInTeam[Target->Team()] = i;
@@ -60,8 +55,7 @@ void CGun::Fire()
 	for (int i = 0; i < 16; i++) {
 		if(IdInTeam[i] != -1) {
 			CCharacter *Target = Ents[IdInTeam[i]];
-			vec2 Fdir = normalize(Target->m_Pos - m_Pos);
-			new CPlasma(&GameServer()->m_World, m_Pos, Fdir, m_Freeze, m_Explosive);
+			new CPlasma(&GameServer()->m_World, m_Pos, normalize(Target->m_Pos - m_Pos), m_Freeze, m_Explosive, i);
 		}
 	}
 	

@@ -59,6 +59,7 @@ void CCharacterCore::Init(CWorldCore *pWorld, CCollision *pCollision, CTeamsCore
 	m_pWorld = pWorld;
 	m_pCollision = pCollision;
 	m_pTeams = pTeams;
+	m_Id = -1;
 }
 
 void CCharacterCore::Reset()
@@ -76,17 +77,6 @@ void CCharacterCore::Reset()
 
 void CCharacterCore::Tick(bool UseInput)
 {
-	int ThisId = -1;
-	for(int i = 0; i < MAX_CLIENTS; i++)
-	{
-		CCharacterCore *p = m_pWorld->m_apCharacters[i];
-		if(!p) continue;
-		if(p == this) {
-			ThisId = i;
-			break; 
-		}
-	}
-	
 	float PhysSize = 28.0f;
 	m_TriggeredEvents = 0;
 	
@@ -228,7 +218,7 @@ void CCharacterCore::Tick(bool UseInput)
 				CCharacterCore *p = m_pWorld->m_apCharacters[i];
 				
 				
-				if(!p || p == this || !m_pTeams->SameTeam(i, ThisId))
+				if(!p || p == this || !m_pTeams->SameTeam(i, m_Id))
 					continue;
 				//char aBuf[512];
 				//str_format(aBuf, sizeof(aBuf), "ThisId = %d Id = %d TheSameTeam? = %d", ThisId, i, m_pTeams->SameTeam(i, ThisId));
@@ -332,7 +322,7 @@ void CCharacterCore::Tick(bool UseInput)
 				continue;
 			
 			//player *p = (player*)ent;
-			if(p == this || (ThisId != -1 && !m_pTeams->SameTeam(ThisId, i))) { // || !(p->flags&FLAG_ALIVE)
+			if(p == this || (m_Id != -1 && !m_pTeams->SameTeam(m_Id, i))) { // || !(p->flags&FLAG_ALIVE)
 				continue; // make sure that we don't nudge our self
 			}
 			// handle player <-> player collision

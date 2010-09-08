@@ -6,6 +6,8 @@
 #include <game/generated/protocol.h>
 #include <game/gamecore.h>
 
+class CGameTeams;
+
 enum
 {
 	WEAPON_GAME = -3, // team switching etc
@@ -38,6 +40,8 @@ public:
 		
 	bool IsGrounded();
 	//bool m_Paused;
+
+	CGameTeams* Teams();
 
 	void SetWeapon(int W);
 	void HandleWeaponSwitch();

@@ -96,3 +96,13 @@ bool CGameTeams::TeamFinished(int Team) {
 	}
 	return true;
 }
+
+int CGameTeams::TeamMask(int Team) {
+	int Mask = 0;
+	for(int i = 0; i < MAX_CLIENTS; ++i) {
+		if(m_Core.Team(i) == Team) {
+			Mask |= 1 << i;
+		}
+	}
+	return Mask;
+}

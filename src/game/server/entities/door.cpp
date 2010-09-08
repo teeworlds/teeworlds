@@ -23,7 +23,7 @@ CDoor::CDoor(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length, bool 
 void CDoor::Open(int Tick, bool ActivatedTeam[])
 {
 	for (int i = 0; i < MAX_CLIENTS; ++i) {
-		if(!m_Opened[i] && ActivatedTeam[i]) m_EvalTick[i] = Tick;
+		if(ActivatedTeam[i]) m_EvalTick[i] = Tick;
 		m_Opened[i] = ActivatedTeam[i];
 	}
 }
@@ -41,7 +41,7 @@ bool CDoor::HitCharacter(int Team)
 	for(std::list < CCharacter * >::iterator i = hittedCharacters.begin(); i != hittedCharacters.end(); i++) {
 		CCharacter * Char = *i;
 		if(Char->Team() == Team)
-			Char = false;
+			Char->m_Doored = true;
 	}
 	return true;
 }
@@ -58,8 +58,9 @@ void CDoor::Tick()
 	for (int i = 0; i < MAX_CLIENTS; ++i) {
 		if(!m_Opened[i]) {
 			HitCharacter(i);
-		} else if (m_EvalTick[i] + 10 < Server()->Tick())
+		} else if (m_EvalTick[i] + 10 < Server()->Tick()) {
 			Close(i);
+		}
 	}
 }
 
@@ -72,7 +73,10 @@ void CDoor::Snap(int SnappingClient)
 	pObj->m_X = (int)m_Pos.x;
 	pObj->m_Y = (int)m_Pos.y;
 
-	if (!m_Opened[SnappingClient])
+	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
+	if(Char == 0) return;
+
+	if (!m_Opened[Char->Team()])
 	{
 		pObj->m_FromX = (int)m_To.x;
 		pObj->m_FromY = (int)m_To.y;

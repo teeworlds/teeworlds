@@ -37,6 +37,8 @@ public:
 	void ChangeTeamState(int Team, int State);
 	
 	bool TeamFinished(int Team);
+
+	int TeamMask(int Team);
 };
 
 #endif

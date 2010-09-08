@@ -1,6 +1,7 @@
 #include <game/generated/protocol.h>
 #include <game/server/gamecontext.h>
 #include <engine/shared/config.h>
+#include <game/server/teams.h>
 #include "projectile.h"
 
 CProjectile::CProjectile
@@ -117,8 +118,10 @@ void CProjectile::Tick()
 		
 		if(m_Explosive/*??*/ && (!TargetChr || (TargetChr && !m_Freeze)))
 		{
-			GameServer()->CreateExplosion(ColPos, m_Owner, m_Weapon, (m_Owner == -1)?true:false);
-			GameServer()->CreateSound(ColPos, m_SoundImpact);
+			GameServer()->CreateExplosion(ColPos, m_Owner, m_Weapon, (m_Owner == -1)?true:false, 
+			(m_Owner != -1)? OwnerChar->Teams()->TeamMask(OwnerChar->Team()) : -1);
+			GameServer()->CreateSound(ColPos, m_SoundImpact, 
+			(m_Owner != -1)? OwnerChar->Teams()->TeamMask(OwnerChar->Team()) : -1);
 		}
 		else if(TargetChr && m_Freeze)
 			TargetChr->Freeze(Server()->TickSpeed()*3);
@@ -182,7 +185,8 @@ void CProjectile::Tick()
 		}
 		else if (m_Weapon == WEAPON_GUN)
 		{
-			GameServer()->CreateDamageInd(CurPos, -atan2(m_Direction.x, m_Direction.y), 10);
+			GameServer()->CreateDamageInd(CurPos, -atan2(m_Direction.x, m_Direction.y), 10,
+			(m_Owner != -1)? OwnerChar->Teams()->TeamMask(OwnerChar->Team()) : -1);
 			GameServer()->m_World.DestroyEntity(this);
 		}
 		else
@@ -214,7 +218,9 @@ void CProjectile::Snap(int SnappingClient)
 	
 	if(NetworkClipped(SnappingClient, GetPos(Ct)))
 		return;
-
+	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
+	if(Char && m_Owner != -1 && !Char->GetPlayer()->m_ShowOthers &&
+	Char->Team() != GameServer()->GetPlayerChar(m_Owner)->Team()) return;
 	CNetObj_Projectile *pProj = static_cast<CNetObj_Projectile *>(Server()->SnapNewItem(NETOBJTYPE_PROJECTILE, m_Id, sizeof(CNetObj_Projectile)));
 	FillInfo(pProj);
 }

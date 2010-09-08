@@ -176,7 +176,11 @@ class CCharacterCore
 	CWorldCore *m_pWorld;
 	CCollision *m_pCollision;
 	CTeamsCore* m_pTeams;
+
+	
 public:
+	int m_Id;
+
 	vec2 m_Pos;
 	vec2 m_Vel;
 	

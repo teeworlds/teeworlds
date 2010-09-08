@@ -642,6 +642,11 @@ int CCharacter::Team() {
 	return Controller->m_Teams.m_Core.Team(m_pPlayer->GetCID());
 }
 
+CGameTeams* CCharacter::Teams() {
+	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
+	return &Controller->m_Teams;
+}
+
 void CCharacter::Tick()
 {
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
@@ -696,6 +701,7 @@ void CCharacter::Tick()
 	}
 	m_Core.m_Input = m_Input;
 	m_Core.Tick(true);
+	m_Core.m_Id = GetPlayer()->GetCID();
 
 	m_DoSplash = false;
 	if (g_Config.m_SvEndlessDrag)
