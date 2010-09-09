@@ -1,6 +1,7 @@
-/* // copyright (c) 2007 magnus auvinen, see licence.txt for more info
+// copyright (c) 2007 magnus auvinen, see licence.txt for more info/*
 #include <game/mapitems.h>
 #include <game/server/entities/character.h>
+#include <game/server/entities/flag.h>
 #include <game/server/player.h>
 #include <game/server/gamecontext.h>
 #include "ctf.h"
@@ -120,11 +121,11 @@ void CGameControllerCTF::Tick()
 					float CaptureTime = (Server()->Tick() - F->m_GrabTick)/(float)Server()->TickSpeed();
 					if(CaptureTime <= 60)
 					{
-						str_format(aBuf, sizeof(aBuf), "The %s flag was captured by %s (%d.%s%d seconds)", fi ? "blue" : "red", Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()), (int)CaptureTime%60, ((int)(CaptureTime*100)%100)<10?"0":"", (int)(CaptureTime*100)%100);
+						str_format(aBuf, sizeof(aBuf), "The %s flag was captured by \"%s\" (%d.%s%d seconds)", fi ? "blue" : "red", Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()), (int)CaptureTime%60, ((int)(CaptureTime*100)%100)<10?"0":"", (int)(CaptureTime*100)%100);
 					}
 					else
 					{
-						str_format(aBuf, sizeof(aBuf), "The %s flag was captured by %s", fi ? "blue" : "red", Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()));
+						str_format(aBuf, sizeof(aBuf), "The %s flag was captured by \"%s\"", fi ? "blue" : "red", Server()->ClientName(F->m_pCarryingCharacter->GetPlayer()->GetCID()));
 					}
 					GameServer()->SendChat(-1, -2, aBuf);
 					for(int i = 0; i < 2; i++)
@@ -210,40 +211,5 @@ void CGameControllerCTF::Tick()
 		}
 	}
 }
+*/
 
-// Flag
-CFlag::CFlag(CGameWorld *pGameWorld, int Team)
-: CEntity(pGameWorld, NETOBJTYPE_FLAG)
-{
-	m_Team = Team;
-	m_ProximityRadius = ms_PhysSize;
-	m_pCarryingCharacter = 0x0;
-	m_GrabTick = 0;
-	
-	Reset();
-}
-
-void CFlag::Reset()
-{
-	m_pCarryingCharacter = 0x0;
-	m_AtStand = 1;
-	m_Pos = m_StandPos;
-	m_Vel = vec2(0,0);
-	m_GrabTick = 0;
-}
-
-void CFlag::Snap(int SnappingClient)
-{
-	CNetObj_Flag *pFlag = (CNetObj_Flag *)Server()->SnapNewItem(NETOBJTYPE_FLAG, m_Team, sizeof(CNetObj_Flag));
-	pFlag->m_X = (int)m_Pos.x;
-	pFlag->m_Y = (int)m_Pos.y;
-	pFlag->m_Team = m_Team;
-	pFlag->m_CarriedBy = -1;
-	
-	if(m_AtStand)
-		pFlag->m_CarriedBy = -2;
-	else if(m_pCarryingCharacter && m_pCarryingCharacter->GetPlayer())
-		pFlag->m_CarriedBy = m_pCarryingCharacter->GetPlayer()->GetCID();
-}
-
- */
