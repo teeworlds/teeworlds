@@ -646,51 +646,16 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				*pMessage = ' ';
 			pMessage++;
 		}
-		if(pMsg->m_pMessage[0]=='/') {
+		if(pMsg->m_pMessage[0]=='/')
+		{
 			if(!str_comp_nocase(pMsg->m_pMessage, "/Credits"))
 			{
-				SendChatTarget(ClientId, "This mod was originally Created by 3DA");
-				SendChatTarget(ClientId, "But now maintained by GreYFoX@GTi among others:");
-				SendChatTarget(ClientId, "[blacktee] den, LemonFace, noother & Fluxid");
-				SendChatTarget(ClientId, "please check the changelog on DDRace.info");
-				SendChatTarget(ClientId, "also the commit log on github.com/GreYFoXGTi/DDRace");
-			}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/pause"))
-				{
-					if(g_Config.m_SvPauseable)
-					{
-						CCharacter* chr = p->GetCharacter();
-
-							if(!p->GetTeam() && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos)
-							{
-								p->SaveCharacter();
-								p->SetTeam(-1);
-							}
-							else if (p->GetTeam()==-1)
-							{
-								p->m_PauseInfo.m_Respawn = true;
-								p->SetTeam(0);
-								//p->LoadCharacter();//TODO:Check if this system Works
-							}
-							else
-								SendChatTarget(ClientId, (chr->m_aWeapons[WEAPON_NINJA].m_Got)?"You can't use /pause while you are a ninja":(!chr->IsGrounded())?"You can't use /pause while you are a in air":"You can't use /pause while you are moving");
-
-							//if(chr->m_RaceState==RACE_STARTED)
-							//	chr->m_RaceState = RACE_PAUSE;
-							//else if(chr->m_RaceState==RACE_PAUSE)
-							//	chr->m_RaceState = RACE_STARTED;*/
-					}
-					else
-						SendChatTarget(ClientId, "The admin didn't activate /pause");
-			}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "kill"))
-			{
-					SendChatTarget(ClientId, "/kill not kill to kill your self" DDRACE_VERSION);
-			}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/kill"))
-			{
-				p->KillCharacter(0);
-				SendChatTarget(ClientId, "You are dead.");
+				SendChatTarget(ClientId, "This mod was originally created by 3DA");
+				SendChatTarget(ClientId, "Now it is maintained by GreYFoX@GTi among others:");
+				SendChatTarget(ClientId, "Code: [blacktee] den, LemonFace, noother & Fluxid");
+				SendChatTarget(ClientId, "Documentation: Zeta-Hoernchen");
+				SendChatTarget(ClientId, "Please check the changelog on DDRace.info.");
+				SendChatTarget(ClientId, "Also the commit log on github.com/GreYFoXGTi/DDRace.");
 			}
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/info"))
 			{
@@ -699,24 +664,6 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					SendChatTarget(ClientId, "For more Info /CMDList");
 					SendChatTarget(ClientId, "Or visit DDRace.info");
 			}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/flags"))
-			{
-				char buf[64];
-				float temp1;
-				float temp2;
-				m_Tuning.Get("player_collision",&temp1);
-				m_Tuning.Get("player_hooking",&temp2);
-				str_format(buf, sizeof(buf), "Flags: Cheats[%s]%s%s Player Collision[%s] PLayer Hook[%s]",
-							g_Config.m_SvCheats?"Y":"N",
-							(g_Config.m_SvCheats)?" w/Time":"",
-							(g_Config.m_SvCheats)?(g_Config.m_SvCheatTime)?"[Y]":"[N]":"",
-							temp1?"Y":"N",
-							temp2?"Y":"N"
-							);
-					SendChatTarget(ClientId, buf);
-					str_format(buf, sizeof(buf), "Endless Hook[%s] Weapons Effect Others[%s]",g_Config.m_SvEndlessDrag?"Y":"N",g_Config.m_SvHit?"Y":"N");
-					SendChatTarget(ClientId, buf);
-			}
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/CMDList"))
 			{
 				char buf[64];
@@ -724,11 +671,115 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				SendChatTarget(ClientId, buf);
 				SendChatTarget(ClientId, "/rank /emote /top5 /top5 i /team i /broadcast /time /flags /kill");
 			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help"))
+			{
+				SendChatTarget(ClientId, "/CMDlist will show a list of all chat commands");
+				SendChatTarget(ClientId, "/help + any command will show you the help for this command");
+				SendChatTarget(ClientId, "Example /help flags will display the help about ");
+			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help Credits"))
+				SendChatTarget(ClientId, "Displays the credits of DDRace.");
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help info"))
+				SendChatTarget(ClientId, "Displays information about the mod.");
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help CMDlist"))
+				SendChatTarget(ClientId, "Displays all chat commands.");
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help Help"))
+				SendChatTarget(ClientId, "This is what you are just using.");
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help Help %s"))
+				SendChatTarget(ClientId, "Well... i think i won't give you any help with this, you funny guy.");
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help flags"))
+				SendChatTarget(ClientId, "Displays information about server options");
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help rules"))
+				SendChatTarget(ClientId, "Displays the server rules.");
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help kill"))
+				SendChatTarget(ClientId, "Kills your tee so you can quickly restart the race.");
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help pause"))
+				SendChatTarget(ClientId, "Pauses your tee. You will join the spectators while your tee is paused. Use the command again to continue.");
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help top5"))
+				SendChatTarget(ClientId, "Displays the top five ranks of this race on this server. /top5 i will show 5 ranks beginningt with rank i.");
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help top5 i"))
+				SendChatTarget(ClientId, "You're a funny stacker... See /top5 for this.");
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help rank"))
+				SendChatTarget(ClientId, "Shows your rank on the server. /rank <name> will show you the rank of the player with the specified name.");
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help rank name"))
+				SendChatTarget(ClientId, "You're a funny stacker... See /rank for this.");
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help eyeemote"))
+				SendChatTarget(ClientId, "Ask Greyfox, what this means.");
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help broadcast"))
+				SendChatTarget(ClientId, "Enables/disables the broadcast");
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help emote"))
+				SendChatTarget(ClientId, "Shows information about the emote commands. Emote commands change the eyes of your tee.");
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/flags"))
+			{
+				//TODO: add sv_pausable here
+				char buf[64];
+				float temp1;
+				float temp2;
+				m_Tuning.Get("player_collision",&temp1);
+				m_Tuning.Get("player_hooking",&temp2);
+				str_format(buf, sizeof(buf), "Flags: cheats[%s]%s%s player collision[%s] player hook[%s]",
+							g_Config.m_SvCheats?"yes":"no",
+							(g_Config.m_SvCheats)?" w/Time":"",
+							(g_Config.m_SvCheats)?(g_Config.m_SvCheatTime)?"[yes]":"[no]":"",
+							temp1?"yes":"no",
+							temp2?"yes":"no"
+							);
+					SendChatTarget(ClientId, buf);
+					str_format(buf, sizeof(buf), "endless hook[%s] weapons effect others[%s]",g_Config.m_SvEndlessDrag?"yes":"no",g_Config.m_SvHit?"yes":"no");
+					SendChatTarget(ClientId, buf);
+			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/rules"))
+			{
+				//TODO
+				//if(g_Config.m_SvDefaultrules)
+				//{
+					SendChatTarget(ClientId, "No blocking.");
+					SendChatTarget(ClientId, "No insulting / spamming.");
+					SendChatTarget(ClientId, "No funvoting / vote spamming.");
+					SendChatTarget(ClientId, "No hacking.");
+					SendChatTarget(ClientId, "Breaking any of this rule will result in a warning, kick or ban.");
+				//}
+				//else
+				//{
+					//TODO
+				//}
+			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/kill"))
+			{
+				p->KillCharacter(0);
+				SendChatTarget(ClientId, "You are dead.");
+			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/pause"))
+			{
+				if(g_Config.m_SvPauseable)
+				{
+					CCharacter* chr = p->GetCharacter();
+							if(!p->GetTeam() && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos)
+						{
+							p->SaveCharacter();
+							p->SetTeam(-1);
+						}
+						else if (p->GetTeam()==-1)
+						{
+							p->m_PauseInfo.m_Respawn = true;
+							p->SetTeam(0);
+							//p->LoadCharacter();//TODO:Check if this system Works
+						}
+						else
+							SendChatTarget(ClientId, (chr->m_aWeapons[WEAPON_NINJA].m_Got)?"You can't use /pause while you are a ninja":(!chr->IsGrounded())?"You can't use /pause while you are a in air":"You can't use /pause while you are moving");
+						//if(chr->m_RaceState==RACE_STARTED)
+						//	chr->m_RaceState = RACE_PAUSE;
+						//else if(chr->m_RaceState==RACE_PAUSE)
+						//	chr->m_RaceState = RACE_STARTED;*/
+				}
+				else
+					SendChatTarget(ClientId, "The admin didn't activate /pause");
+			}
 			else if(!str_comp_num(pMsg->m_pMessage, "/top5", 5))
 			{
 				if(g_Config.m_SvHideScore)
 				{
-					SendChatTarget(ClientId, "Showing the Top5 is not allowed on this server.");
+					SendChatTarget(ClientId, "Showing the top 5 is not allowed on this server.");
 					return;
 				}
 				
@@ -748,7 +799,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				else
 					Score()->ShowRank(p->GetCID(), Server()->ClientName(ClientId));
 			}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/time")&&g_Config.m_SvEmotionalTees)
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/time") && g_Config.m_SvEmotionalTees)
 				{
 					CCharacter* pChr = p->GetCharacter();
 					if (pChr)
@@ -759,14 +810,14 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 							pChr->m_BroadTime=true;
 					}
 				}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/eyeemote")&&g_Config.m_SvEmotionalTees)
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/eyeemote") && g_Config.m_SvEmotionalTees)
 				{
 					CCharacter* pChr = p->GetCharacter();
 					if (pChr)
 						pChr->m_EyeEmote=!pChr->m_EyeEmote;
-					SendChatTarget(ClientId, (pChr->m_EyeEmote)?"You can now use the preset Eye Emotes.":"You don't have any Eye Emotes, remember to bind some.(until you die)");
+					SendChatTarget(ClientId, (pChr->m_EyeEmote)?"You can now use the preset eye emotes.":"You don't have any eye emotes, remember to bind some.(until you die)");
 				}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/broadcast")&&g_Config.m_SvEmotionalTees)
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/broadcast") && g_Config.m_SvEmotionalTees)
 				{
 					CCharacter* pChr = p->GetCharacter();
 					if (pChr)
@@ -777,64 +828,64 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 							pChr->m_BroadCast=true;
 					}
 				}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/emote")&&g_Config.m_SvEmotionalTees)
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/emote") && g_Config.m_SvEmotionalTees)
 				{
-					SendChatTarget(ClientId, "Emote Commands Are: /emotesurprise /emoteblink /emoteclose /emoteangry /emotehappy /emotepain");
-					SendChatTarget(ClientId, "Example: /emotesurprise 10 for 10 seconds or /emotesurprise (default 1 second)");
+					SendChatTarget(ClientId, "Emote commands are: /emote surprise /emote blink /emote close /emote angry /emote happy /emote pain");
+					SendChatTarget(ClientId, "Example: /emote surprise 10 for 10 seconds or /emote surprise (default 1 second)");
 				}
-			else if(!str_comp_num(pMsg->m_pMessage, "/emotepain", 10))
+			else if(!str_comp_num(pMsg->m_pMessage, "/emote pain", 11) && g_Config.m_SvEmotionalTees)
 			{
 				int Num = -1;
 					CCharacter* pChr = p->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_PAIN;
-						if(sscanf(pMsg->m_pMessage, "/emotepain %d", &Num) > 0)
+						if(sscanf(pMsg->m_pMessage, "/emote pain %d", &Num) > 0)
 							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
 						else
 							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
 					}
 				}
-			else if(!str_comp_num(pMsg->m_pMessage, "/emotehappy", 11))
+			else if(!str_comp_num(pMsg->m_pMessage, "/emote happy", 12) && g_Config.m_SvEmotionalTees)
 			{
 				int Num = -1;
 					CCharacter* pChr = p->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_HAPPY;
-						if(sscanf(pMsg->m_pMessage, "/emotehappy %d", &Num) > 0)
+						if(sscanf(pMsg->m_pMessage, "/emote happy %d", &Num) > 0)
 							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
 						else
 							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
 					}
 				}
-			else if(!str_comp_num(pMsg->m_pMessage, "/emoteangry", 11))
+			else if(!str_comp_num(pMsg->m_pMessage, "/emote angry", 12) && g_Config.m_SvEmotionalTees)
 			{
 				int Num = -1;
 					CCharacter* pChr = p->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_ANGRY;
-						if(sscanf(pMsg->m_pMessage, "/emoteangry %d", &Num) > 0)
+						if(sscanf(pMsg->m_pMessage, "/emote angry %d", &Num) > 0)
 							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
 						else
 							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
 					}
 				}
-			else if(!str_comp_num(pMsg->m_pMessage, "/emoteclose", 11))
+			else if(!str_comp_num(pMsg->m_pMessage, "/emote close", 12) && g_Config.m_SvEmotionalTees)
 			{
 				int Num = -1;
 					CCharacter* pChr = p->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_BLINK;
-						if(sscanf(pMsg->m_pMessage, "/emoteclose %d", &Num) > 0)
+						if(sscanf(pMsg->m_pMessage, "/emote close %d", &Num) > 0)
 							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
 						else
 							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
 					}
 				}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/emoteblink")&&g_Config.m_SvEmotionalTees)
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/emote blink", 12) && g_Config.m_SvEmotionalTees)
 				{
 					CCharacter* pChr = p->GetCharacter();
 					if (pChr)
@@ -843,23 +894,26 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 						pChr->m_EmoteStop = Server()->Tick() + 0.5 * Server()->TickSpeed();
 					}
 				}
-			else if(!str_comp_num(pMsg->m_pMessage, "/emotesurprise", 14))
+			else if(!str_comp_num(pMsg->m_pMessage, "/emote surprise", 15) && g_Config.m_SvEmotionalTees)
 			{
 				int Num = -1;
 					CCharacter* pChr = p->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_SURPRISE;
-						if(sscanf(pMsg->m_pMessage, "/emotesurprise %d", &Num) > 0)
+						if(sscanf(pMsg->m_pMessage, "/emote surprise %d", &Num) > 0)
 							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
 						else
 							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
 					}
 			}
 			else
-					SendChatTarget(ClientId, "No such command!");
+				SendChatTarget(ClientId, "No such command!");
 
-		} else {
+		}
+		else if(!str_comp_nocase(pMsg->m_pMessage, "kill"))
+					SendChatTarget(ClientId, "/kill not kill to kill your self" DDRACE_VERSION);	//this will never happen
+		else {
 			if (m_apPlayers[ClientId]->m_Muted == 0)
 				SendChat(ClientId, Team, pMsg->m_pMessage);
 			else
