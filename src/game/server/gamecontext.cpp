@@ -651,8 +651,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			if(!str_comp_nocase(pMsg->m_pMessage, "/Credits"))
 			{
 				SendChatTarget(ClientId, "This mod was originally created by 3DA");
-				SendChatTarget(ClientId, "Now it is maintained by GreYFoX@GTi among others:");
-				SendChatTarget(ClientId, "Code: [blacktee] den, LemonFace, noother & Fluxid");
+				SendChatTarget(ClientId, "Now it is maintained by GreYFoX@GTi and [BlackTee]den among others:");
+				SendChatTarget(ClientId, "Code: LemonFace, noother & Fluxid");
 				SendChatTarget(ClientId, "Documentation: Zeta-Hoernchen");
 				SendChatTarget(ClientId, "Please check the changelog on DDRace.info.");
 				SendChatTarget(ClientId, "Also the commit log on github.com/GreYFoXGTi/DDRace.");
@@ -667,7 +667,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/CMDList"))
 			{
 				char buf[64];
-				str_format(buf, sizeof(buf), "/Info /Credits %s",g_Config.m_SvPauseable?"/pause":"");
+				str_format(buf, sizeof(buf), "/help /Info /Credits %s",g_Config.m_SvPauseable?"/pause":"");
 				SendChatTarget(ClientId, buf);
 				SendChatTarget(ClientId, "/rank /emote /top5 /top5 i /team i /broadcast /time /flags /kill");
 			}
@@ -711,7 +711,6 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				SendChatTarget(ClientId, "Shows information about the emote commands. Emote commands change the eyes of your tee.");
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/flags"))
 			{
-				//TODO: add sv_pausable here
 				char buf[64];
 				float temp1;
 				float temp2;
@@ -727,27 +726,79 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					SendChatTarget(ClientId, buf);
 					str_format(buf, sizeof(buf), "endless hook[%s] weapons effect others[%s]",g_Config.m_SvEndlessDrag?"yes":"no",g_Config.m_SvHit?"yes":"no");
 					SendChatTarget(ClientId, buf);
+					if(g_Config.m_SvPauseable)
+					{
+						str_format(buf, sizeof(buf), "Server Allows /pause with%s",g_Config.m_SvPauseTime?" time pause.":"out time pause.");
+						SendChatTarget(ClientId, buf);
+					}
 			}
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/rules"))
 			{
-				//TODO
-				//if(g_Config.m_SvDefaultrules)
-				//{
+				bool printed=false;
+				if(g_Config.m_SvDDRaceRules)
+				{
 					SendChatTarget(ClientId, "No blocking.");
 					SendChatTarget(ClientId, "No insulting / spamming.");
-					SendChatTarget(ClientId, "No funvoting / vote spamming.");
-					SendChatTarget(ClientId, "No hacking.");
-					SendChatTarget(ClientId, "Breaking any of this rule will result in a warning, kick or ban.");
-				//}
-				//else
-				//{
-					//TODO
-				//}
+					SendChatTarget(ClientId, "No fun voting / vote spamming.");
+					SendChatTarget(ClientId, "Breaking any of these rules will result in a penalty, decided by server admins.");
+					printed=true;
+				}
+				if(g_Config.m_SvRulesLine1[0])
+				{
+					SendChatTarget(ClientId, g_Config.m_SvRulesLine1);
+					printed=true;
+				}
+				if(g_Config.m_SvRulesLine2[0])
+				{
+					SendChatTarget(ClientId, g_Config.m_SvRulesLine2);
+					printed=true;
+				}
+				if(g_Config.m_SvRulesLine3[0])
+				{
+					SendChatTarget(ClientId, g_Config.m_SvRulesLine3);
+					printed=true;
+				}
+				if(g_Config.m_SvRulesLine4[0])
+				{
+					SendChatTarget(ClientId, g_Config.m_SvRulesLine4);
+					printed=true;
+				}
+				if(g_Config.m_SvRulesLine5[0])
+				{
+					SendChatTarget(ClientId, g_Config.m_SvRulesLine5);
+					printed=true;
+				}
+				if(g_Config.m_SvRulesLine6[0])
+				{
+					SendChatTarget(ClientId, g_Config.m_SvRulesLine6);
+					printed=true;
+				}
+				if(g_Config.m_SvRulesLine7[0])
+				{
+					SendChatTarget(ClientId, g_Config.m_SvRulesLine7);
+					printed=true;
+				}
+				if(g_Config.m_SvRulesLine8[0])
+				{
+					SendChatTarget(ClientId, g_Config.m_SvRulesLine8);
+					printed=true;
+				}
+				if(g_Config.m_SvRulesLine9[0])
+				{
+					SendChatTarget(ClientId, g_Config.m_SvRulesLine9);
+					printed=true;
+				}
+				if(g_Config.m_SvRulesLine10[0])
+				{
+					SendChatTarget(ClientId, g_Config.m_SvRulesLine10);
+					printed=true;
+				}
+				if(!printed)
+					SendChatTarget(ClientId, "No Rules Defined, Kill em all!!");
 			}
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/kill"))
 			{
-				p->KillCharacter(0);
-				SendChatTarget(ClientId, "You are dead.");
+				p->KillCharacter(-1);//TODO:GFX Make This have Suicide Penalty ( Tees can't spawn unless they wait 3 seconds )
 			}
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/pause"))
 			{
@@ -767,10 +818,6 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 						}
 						else
 							SendChatTarget(ClientId, (chr->m_aWeapons[WEAPON_NINJA].m_Got)?"You can't use /pause while you are a ninja":(!chr->IsGrounded())?"You can't use /pause while you are a in air":"You can't use /pause while you are moving");
-						//if(chr->m_RaceState==RACE_STARTED)
-						//	chr->m_RaceState = RACE_PAUSE;
-						//else if(chr->m_RaceState==RACE_PAUSE)
-						//	chr->m_RaceState = RACE_STARTED;*/
 				}
 				else
 					SendChatTarget(ClientId, "The admin didn't activate /pause");
@@ -885,7 +932,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
 					}
 				}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/emote blink", 12) && g_Config.m_SvEmotionalTees)
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/emote blink") && g_Config.m_SvEmotionalTees)
 				{
 					CCharacter* pChr = p->GetCharacter();
 					if (pChr)
