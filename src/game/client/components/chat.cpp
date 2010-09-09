@@ -115,6 +115,9 @@ bool CChat::OnInput(IInput::CEvent e)
 
 void CChat::EnableMode(int Team)
 {
+	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		return;
+
 	if(m_Mode == MODE_NONE)
 	{
 		if(Team)
@@ -138,6 +141,9 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 
 void CChat::AddLine(int ClientId, int Team, const char *pLine)
 {
+	if(ClientId != -1 && m_pClient->m_aClients[ClientId].m_aName[0] == '\0') // unknown client
+		return;
+	
 	char *p = const_cast<char*>(pLine);
 	while(*p)
 	{

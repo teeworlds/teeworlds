@@ -546,6 +546,11 @@ void CMenus::RenderDemoList(CUIRect MainView)
 				const char *pError = Client()->DemoPlayer_Play(m_lDemos[s_SelectedItem].m_aFilename);
 				if(pError)
 					PopupMessage(Localize("Error"), str_comp(pError, "error loading demo") ? pError : Localize("error loading demo"), Localize("Ok"));
+				else
+				{
+					UI()->SetActiveItem(0);
+					return;
+				}
 			}
 		}
 	}
@@ -556,7 +561,10 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		if(DoButton_Menu(&s_DeleteButton, Localize("Delete"), 0, &DeleteRect) || m_DeletePressed)
 		{
 			if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size())
+			{
+				UI()->SetActiveItem(0);
 				m_Popup = POPUP_DELETE_DEMO;
+			}
 		}
 	}
 }
