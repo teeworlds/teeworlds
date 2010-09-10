@@ -14,7 +14,7 @@ class CPlasma : public CEntity
 	int m_LifeTime;
 
 	int m_ResponsibleTeam;
-	bool m_Freeze;
+	int m_Freeze;
 
 	bool m_Explosive;
 	bool HitCharacter();

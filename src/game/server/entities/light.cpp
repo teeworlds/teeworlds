@@ -27,10 +27,9 @@ CLight::CLight(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length)
 
 bool CLight::HitCharacter()
 {
-	vec2 nothing;
-	std::list < CCharacter * > hittedCharacters = GameServer()->m_World.IntersectedCharacters(m_Pos, m_To, 0.0f, nothing, 0);
-	if(hittedCharacters.empty()) return false;
-	for(std::list < CCharacter * >::iterator i = hittedCharacters.begin(); i != hittedCharacters.end(); i++) {
+	std::list < CCharacter * > HitCharacters = GameServer()->m_World.IntersectedCharacters(m_Pos, m_To, 0.0f, 0);
+	if(HitCharacters.empty()) return false;
+	for(std::list < CCharacter * >::iterator i = HitCharacters.begin(); i != HitCharacters.end(); i++) {
 		CCharacter * Char = *i;
 		Char->Freeze(Server()->TickSpeed()*3);
 	}

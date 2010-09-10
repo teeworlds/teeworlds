@@ -35,15 +35,26 @@ void CDoor::Close(int Team)
 
 bool CDoor::HitCharacter(int Team)
 {
-	vec2 At;
-	std::list < CCharacter * > hittedCharacters = GameServer()->m_World.IntersectedCharacters(m_Pos, m_To, 1.f, At, 0);
-	if(hittedCharacters.empty()) return false;
-	for(std::list < CCharacter * >::iterator i = hittedCharacters.begin(); i != hittedCharacters.end(); i++) {
+	std::list < CCharacter * > HitCharacters = GameServer()->m_World.IntersectedCharacters(m_Pos, m_To, 1.f, 0);
+	if(HitCharacters.empty()) return false;
+	for(std::list < CCharacter * >::iterator i = HitCharacters.begin(); i != HitCharacters.end(); i++)
+	{
 		CCharacter * Char = *i;
 		if(Char->Team() == Team)
+		{
+			//DoDoored(Char);
 			Char->m_Doored = true;
+		}
 	}
 	return true;
+}
+
+bool CDoor::DoDoored(CCharacter* pChar)
+{
+	vec2 Pos = closest_point_on_line(m_Pos,m_To,pChar->m_Intersection);
+
+	return true;
+
 }
 
 void CDoor::Reset()

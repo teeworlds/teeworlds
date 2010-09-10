@@ -113,7 +113,7 @@ public:
 	int m_FreezeTime;
 	int m_FreezeTick;
 	
-	bool m_Doored;
+	int m_Doored;
 
 	vec2 m_OldPos;
 	vec2 m_OlderPos;
@@ -188,7 +188,7 @@ public:
 		STOPPED_BOTTOM=4,
 		STOPPED_TOP=8
 	};
-
+	vec2 m_Intersection;
 	bool m_EyeEmote;
 	// info for dead reckoning
 	int m_ReckoningTick; // tick that we are performing dead reckoning From
