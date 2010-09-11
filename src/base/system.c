@@ -10,8 +10,6 @@
 #include "system.h"
 /*#include "e_console.h"*/
 
-#include "errno.h"
-
 #if defined(CONF_FAMILY_UNIX)
 	#include <sys/time.h>
 	#include <unistd.h>
@@ -291,7 +289,7 @@ unsigned io_read(IOHANDLE io, void *buffer, unsigned size)
 	return fread(buffer, 1, size, (FILE*)io);
 }
 
-unsigned io_skip(IOHANDLE io, int size)
+unsigned io_skip(IOHANDLE io, unsigned size)
 {
 	fseek((FILE*)io, size, SEEK_CUR);
 	return size;
@@ -689,29 +687,23 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size)
 {
 	struct sockaddr sa;
-	int32_t d;
+	int d;
 	mem_zero(&sa, sizeof(sa));
 	netaddr_to_sockaddr(addr, &sa);
-	if((d = sendto((int)sock, (const char*)data, size, 0, &sa, sizeof(sa))) < 0)
+	d = sendto((int)sock, (const char*)data, size, 0, &sa, sizeof(sa));
+	/*if(d < 0)
 	{
-		int32_t err_num = errno;
-		char    char_buffer[256];
 		char addrstr[256];
 		net_addr_str(addr, addrstr, sizeof(addrstr));
 		
 		dbg_msg("net", "sendto error %d %x", d, d);
 		dbg_msg("net", "\tsock = %d %x", sock, sock);
 		dbg_msg("net", "\tsize = %d %x", size, size);
+		dbg_msg("net", "\taddr = %s", addrstr);
 
-		net_addr_str( addr, char_buffer, sizeof( char_buffer ) );
-		dbg_msg( "net", "\taddr = %s", char_buffer );
-		
-		dbg_msg( "net", "\terr  = '%d:%s'", err_num, strerror(
-			err_num ) );
-	} else {
-		network_stats.sent_bytes += size;
-		network_stats.sent_packets++;
-	}
+	}*/
+	network_stats.sent_bytes += size;
+	network_stats.sent_packets++;
 	return d;
 }
 
