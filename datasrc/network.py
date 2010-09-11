@@ -313,4 +313,9 @@ Messages = [
 		NetIntAny("m_Time"),
 		NetIntRange("m_Cid", 0, 'MAX_CLIENTS-1'),
 	]),
+	
+	NetMessage("Sv_PlayerTeam", [
+		NetIntAny("m_Team"),
+		NetIntRange("m_Cid", 0, 'MAX_CLIENTS-1'),
+	]),
 ]
