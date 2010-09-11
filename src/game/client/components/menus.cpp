@@ -88,9 +88,11 @@ CMenus::CMenus()
 	m_NeedSendinfo = false;
 	m_MenuActive = true;
 	m_UseMouseButtons = true;
+	m_DemolistDelEntry = false;
 	
 	m_EscapePressed = false;
 	m_EnterPressed = false;
+	m_DeletePressed = false;
 	m_NumInputEvents = 0;
 	
 	m_LastInput = time_get();
@@ -838,6 +840,12 @@ int CMenus::Render()
 			pButtonText = Localize("Ok");
 			ExtraAlign = -1;
 		}
+		else if(m_Popup == POPUP_DELETE_DEMO)
+		{
+			pTitle = Localize("Delete demo");
+			pExtraText = Localize("Are you sure that you want to delete the demo?");
+			ExtraAlign = -1;
+		}
 		else if(m_Popup == POPUP_PASSWORD)
 		{
 			pTitle = Localize("Password incorrect");
@@ -931,6 +939,29 @@ int CMenus::Render()
 			static float Offset = 0.0f;
 			DoEditBox(&g_Config.m_Password, &TextBox, g_Config.m_Password, sizeof(g_Config.m_Password), 12.0f, &Offset, true);
 		}
+		else if(m_Popup == POPUP_DELETE_DEMO)
+		{
+			CUIRect Yes, No;
+			Box.HSplitBottom(20.f, &Box, &Part);
+			Box.HSplitBottom(24.f, &Box, &Part);
+			Part.VMargin(80.0f, &Part);
+			
+			Part.VSplitMid(&No, &Yes);
+			
+			Yes.VMargin(20.0f, &Yes);
+			No.VMargin(20.0f, &No);
+
+			static int s_ButtonAbort = 0;
+			if(DoButton_Menu(&s_ButtonAbort, Localize("No"), 0, &No) || m_EscapePressed)
+				m_Popup = POPUP_NONE;
+
+			static int s_ButtonTryAgain = 0;
+			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Yes"), 0, &Yes) || m_EnterPressed)
+			{
+				m_Popup = POPUP_NONE;
+				m_DemolistDelEntry = true;
+			}
+		}
 		else if(m_Popup == POPUP_FIRST_LAUNCH)
 		{
 			CUIRect Label, TextBox;
@@ -1022,9 +1053,14 @@ bool CMenus::OnInput(IInput::CEvent e)
 		
 	if(IsActive())
 	{
-		// special for popups
-		if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key == KEY_RETURN)
-			m_EnterPressed = true;
+		if(e.m_Flags&IInput::FLAG_PRESS)
+		{
+			// special for popups
+			if(e.m_Key == KEY_RETURN || e.m_Key == KEY_KP_ENTER)
+				m_EnterPressed = true;
+			else if(e.m_Key == KEY_DELETE)
+				m_DeletePressed = true;
+		}
 		
 		if(m_NumInputEvents < MAX_INPUTEVENTS)
 			m_aInputEvents[m_NumInputEvents++] = e;
@@ -1102,6 +1138,7 @@ void CMenus::OnRender()
 	{
 		m_EscapePressed = false;
 		m_EnterPressed = false;
+		m_DeletePressed = false;
 		m_NumInputEvents = 0;
 		return;
 	}
@@ -1169,6 +1206,7 @@ void CMenus::OnRender()
 
 	m_EscapePressed = false;
 	m_EnterPressed = false;
+	m_DeletePressed = false;
 	m_NumInputEvents = 0;
 }
 
