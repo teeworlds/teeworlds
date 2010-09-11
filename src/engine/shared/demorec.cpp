@@ -59,7 +59,7 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	char aMapFilename[128];
 	// try the normal maps folder
 	str_format(aMapFilename, sizeof(aMapFilename), "maps/%s.map", pMap);
-	IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ);
+	FILE *MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ);
 	if(!MapFile)
 	{
 		// try the downloaded maps
@@ -562,7 +562,7 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 		int Crc = (m_Info.m_Header.m_aCrc[0]<<24) | (m_Info.m_Header.m_aCrc[1]<<16) | (m_Info.m_Header.m_aCrc[2]<<8) | (m_Info.m_Header.m_aCrc[3]);
 		char aMapFilename[128];
 		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", m_Info.m_Header.m_aMap, Crc);
-		IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ);
+		FILE *MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ);
 		
 		if(MapFile)
 		{
@@ -586,7 +586,7 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 	}
 	else // no map in the demo
 	{
-		io_skip(m_File, -sizeof(aMapMarker));
+		io_skip(m_File, sizeof(aMapMarker));
 	}
 	
 	

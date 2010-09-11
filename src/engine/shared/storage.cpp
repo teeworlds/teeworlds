@@ -199,7 +199,7 @@ public:
 	{
 		char aBuffer[1024];
 		str_format(aBuffer, sizeof(aBuffer), "%s/%s", m_aApplicationSavePath, pFilename);
-		bool Fail = remove(aBuffer);
+		char Fail = remove(aBuffer);
 		
 		if(Fail)
 			Fail = remove(pFilename);
