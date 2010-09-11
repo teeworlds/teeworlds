@@ -24,6 +24,7 @@ public:
 	static bool GetForceDmColors(int ForTeam, int LocalTeam);
 	static void ResetConfig();
 	static const char* RgbToName(int rgb);
+	static const char* TeamColorToName(int rgb);
 };
 
 #endif
