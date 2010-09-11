@@ -238,3 +238,16 @@ CCharacter *CGameWorld::ClosestCharacter(vec2 Pos, float Radius, CEntity *pNotTh
 
 	return pClosest;
 }
+
+void CGameWorld::ReleaseHooked(int ClientId)
+{
+	CCharacter *p = (CCharacter *)CGameWorld::FindFirst(NETOBJTYPE_CHARACTER);
+		for(; p; p = (CCharacter *)p->TypeNext())
+			if(p->m_Core.m_HookedPlayer == ClientId && !p->m_Super)
+			{
+				p->m_Core.m_HookedPlayer = -1;
+				p->m_Core.m_HookState = HOOK_RETRACTED;
+				p->m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
+				p->m_Core.m_HookState = HOOK_RETRACTED;
+			}
+}

@@ -716,13 +716,12 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				float temp2;
 				m_Tuning.Get("player_collision",&temp1);
 				m_Tuning.Get("player_hooking",&temp2);
-				str_format(buf, sizeof(buf), "Flags: cheats[%s]%s%s player collision[%s] player hook[%s]",
+				str_format(buf, sizeof(buf), "Flags: cheats[%s]%s%s collision[%s] hooking[%s]",
 							g_Config.m_SvCheats?"yes":"no",
 							(g_Config.m_SvCheats)?" w/Time":"",
 							(g_Config.m_SvCheats)?(g_Config.m_SvCheatTime)?"[yes]":"[no]":"",
 							temp1?"yes":"no",
-							temp2?"yes":"no"
-							);
+							temp2?"yes":"no");
 					SendChatTarget(ClientId, buf);
 					str_format(buf, sizeof(buf), "endless hook[%s] weapons effect others[%s]",g_Config.m_SvEndlessDrag?"yes":"no",g_Config.m_SvHit?"yes":"no");
 					SendChatTarget(ClientId, buf);
@@ -1431,7 +1430,7 @@ void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int ci
 	CCharacter* chr = pSelf->GetPlayerChar(cid);
 	if(chr)
 	{
-		chr->m_Core.m_Pos.x -= 16;
+		chr->m_Core.m_Pos.x -= 32;
 		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
@@ -1443,7 +1442,7 @@ void  CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int 
 	CCharacter* chr = pSelf->GetPlayerChar(cid);
 	if(chr)
 	{
-		chr->m_Core.m_Pos.x += 16;
+		chr->m_Core.m_Pos.x += 32;
 		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
@@ -1455,7 +1454,7 @@ void  CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int cid
 	CCharacter* chr = pSelf->GetPlayerChar(cid);
 	if(chr)
 	{
-		chr->m_Core.m_Pos.y -= 16;
+		chr->m_Core.m_Pos.y -= 32;
 		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
@@ -1467,7 +1466,7 @@ void  CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int c
 	CCharacter* chr = pSelf->GetPlayerChar(cid);
 	if(chr)
 	{
-		chr->m_Core.m_Pos.y += 16;
+		chr->m_Core.m_Pos.y += 32;
 		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}

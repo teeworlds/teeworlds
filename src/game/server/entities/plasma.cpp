@@ -11,7 +11,7 @@ const float ACCEL=1.1f;
 //////////////////////////////////////////////////
 // turret
 //////////////////////////////////////////////////
-CPlasma::CPlasma(CGameWorld *pGameWorld, vec2 Pos, vec2 Dir, bool Freeze, bool Explosive)
+CPlasma::CPlasma(CGameWorld *pGameWorld, vec2 Pos, vec2 Dir, int Freeze, bool Explosive)
 : CEntity(pGameWorld, NETOBJTYPE_LASER)
 {
 	m_Pos = Pos;
@@ -29,7 +29,9 @@ bool CPlasma::HitCharacter()
 	CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, m_Pos+m_Core, 0.0f,To2);
 	if(!Hit)
 		return false;
-	if(m_Freeze)
+	if(m_Freeze== -1)
+		Hit->UnFreeze();
+	else if (m_Freeze)
 		Hit->Freeze(Server()->TickSpeed()*3);
 	if(!m_Freeze || (m_Freeze && m_Explosive))
 		GameServer()->CreateExplosion(m_Pos, -1, WEAPON_GRENADE, true);

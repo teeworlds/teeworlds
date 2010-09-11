@@ -13,14 +13,14 @@ class CGun : public CEntity
 	int m_EvalTick;
 
 	vec2 m_Core;
-	 bool m_Freeze;
+	 int m_Freeze;
 	 bool m_Explosive;
 
 	void Fire();
 	int m_Delay;
 	
 public:
-	CGun(CGameWorld *pGameWorld, vec2 Pos, bool Freeze, bool Explosive);
+	CGun(CGameWorld *pGameWorld, vec2 Pos, int Freeze, bool Explosive);
 
 	virtual void Reset();
 	virtual void Tick();

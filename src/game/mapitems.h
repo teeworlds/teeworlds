@@ -60,8 +60,9 @@ enum
 	ENTITY_PLASMAE=29,
 	ENTITY_PLASMAF,
 	ENTITY_PLASMA,
+	ENTITY_PLASMAU,
 	//DDRace - Shotgun
-	ENTITY_CRAZY_SHOTGUN_U_EX=33,
+	ENTITY_CRAZY_SHOTGUN_U_EX,
 	ENTITY_CRAZY_SHOTGUN_R_EX,
 	ENTITY_CRAZY_SHOTGUN_D_EX,
 	ENTITY_CRAZY_SHOTGUN_L_EX,
@@ -99,7 +100,9 @@ enum
 	TILE_NOLASER,
 	TILE_THROUGH=6,
 	TILE_FREEZE=9,
-	TILE_UNFREEZE=11,
+	TILE_TELEINEVIL,
+	TILE_UNFREEZE,
+	TILE_BOOSTS,
 	TILE_BOOST_L=18,
 	TILE_BOOST_R,
 	TILE_BOOST_D,
@@ -131,7 +134,7 @@ enum
 	TILE_NPC,
 	TILE_EHOOK,
 	TILE_NOHIT,
-	TILE_NPH,//Remeber to change this in collision.cpp if you add anymore tiles
+	TILE_NPH,//Remember to change this in collision.cpp if you add anymore tiles
 	//End of higher tiles
 	//Untouchable Elements
 	TILEFLAG_VFLIP=1,
@@ -197,6 +200,7 @@ class CSpeedupTile
 {
 public:
 	unsigned char m_Force;
+	unsigned char m_Type;
 	short m_Angle;
 };
 

@@ -106,7 +106,7 @@ void CProjectile::Tick()
 		if(Collide && m_Bouncing != 0)
 		{
 			m_StartTick = Server()->Tick();
-			m_Pos = NewPos+(-m_Direction);
+			m_Pos = NewPos+(-(m_Direction*2));
 			if (m_Bouncing == 1)
 				m_Direction.x = -m_Direction.x;
 			else if(m_Bouncing == 2)

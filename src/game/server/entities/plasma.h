@@ -12,12 +12,12 @@ class CPlasma : public CEntity
 	vec2 m_Core;
 	int m_EvalTick;
 	int m_LifeTime;
-	bool m_Freeze;
+	int m_Freeze;
 	bool m_Explosive;
 	bool HitCharacter();
 	void Move();
 public:
-	CPlasma(CGameWorld *pGameWorld, vec2 Pos, vec2 Dir, bool Freeze, bool Explosive);
+	CPlasma(CGameWorld *pGameWorld, vec2 Pos, vec2 Dir, int Freeze, bool Explosive);
 
 	virtual void Reset();
 	virtual void Tick();

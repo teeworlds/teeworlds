@@ -48,8 +48,9 @@ public:
 	int GetCollisionDDRace(int Index);
 	int GetFCollisionDDRace(int Index);
 	int IsTeleport(int x, int y);
+	int IsEvilTeleport(int x, int y);
 	//int IsCheckpoint(int Index);
-	bool IsSpeedup(int x, int y);
+	int IsSpeedup(int x, int y);
 	void GetSpeedup(int x, int y, vec2 *Dir, int *Force);
 	
 	int IsSolid(int x, int y);

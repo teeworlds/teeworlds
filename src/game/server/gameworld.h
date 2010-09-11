@@ -147,6 +147,7 @@ public:
 		
 	*/
 	void Tick();
+	void ReleaseHooked(int ClientId);
 };
 
 #endif

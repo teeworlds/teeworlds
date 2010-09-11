@@ -12,7 +12,7 @@ const int RANGE=700;
 //////////////////////////////////////////////////
 // CGun
 //////////////////////////////////////////////////
-CGun::CGun(CGameWorld *pGameWorld, vec2 Pos, bool Freeze, bool Explosive)
+CGun::CGun(CGameWorld *pGameWorld, vec2 Pos, int Freeze, bool Explosive)
 : CEntity(pGameWorld, NETOBJTYPE_LASER)
 {
 	m_Delay = Server()->TickSpeed()*0.3f;
