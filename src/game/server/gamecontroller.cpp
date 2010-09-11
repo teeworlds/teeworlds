@@ -297,15 +297,19 @@ bool IGameController::OnEntity(int Index, vec2 Pos, bool Front)
    }
    else if(Index==ENTITY_PLASMAE)
    {
-       new CGun(&GameServer()->m_World, Pos, false, true);
+       new CGun(&GameServer()->m_World, Pos, 0, true);
    }
    else if(Index==ENTITY_PLASMAF)
    {
-       new CGun(&GameServer()->m_World, Pos, true, false);
+       new CGun(&GameServer()->m_World, Pos, 1, false);
    }
    else if(Index==ENTITY_PLASMA)
    {
-       new CGun(&GameServer()->m_World, Pos, true, true);
+       new CGun(&GameServer()->m_World, Pos, 1, true);
+   }
+   else if(Index==ENTITY_PLASMAU)
+   {
+       new CGun(&GameServer()->m_World, Pos, -1, false);
    }
 	if(Type != -1)
 	{

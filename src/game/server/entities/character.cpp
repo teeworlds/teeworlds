@@ -828,71 +828,81 @@ void CCharacter::Tick()
 	{
 		if(m_PrevPos.x-m_Pos.x<0)
 			m_Core.m_Vel.x += m_Core.m_Vel.x *-0.5;
-		else if(m_LastBooster != TileIndex || m_LastFBooster != TileFIndex)
+		else if(m_LastBooster != MapIndex)
 			m_Core.m_Vel.x += m_Core.m_Vel.x*0.5;
 	}
 	if (TileIndex == TILE_BOOST_R || TileFIndex == TILE_BOOST_R)
 	{
 		if(m_PrevPos.x-m_Pos.x>0)
 			m_Core.m_Vel.x += m_Core.m_Vel.x *-0.5;
-		else if(m_LastBooster != TileIndex || m_LastFBooster != TileFIndex)
+		else if(m_LastBooster != MapIndex)
 			m_Core.m_Vel.x += m_Core.m_Vel.x*0.5;
 	}
 	if (TileIndex == TILE_BOOST_D || TileFIndex == TILE_BOOST_D)
 	{
 		if(m_PrevPos.y-m_Pos.y>0)
 			m_Core.m_Vel.y += m_Core.m_Vel.y *-0.5;
-		else if(m_LastBooster != TileIndex || m_LastFBooster != TileFIndex)
+		else if(m_LastBooster != MapIndex)
 			m_Core.m_Vel.y += m_Core.m_Vel.y*0.5;
 	}
 	if (TileIndex == TILE_BOOST_U || TileFIndex == TILE_BOOST_U)
 	{
 		if(m_PrevPos.y-m_Pos.y<0)
 			m_Core.m_Vel.y += m_Core.m_Vel.y *-0.5;
-		else if(m_LastBooster != TileIndex || m_LastFBooster != TileFIndex)
+		else if(m_LastBooster != TileIndex)
 			m_Core.m_Vel.y += m_Core.m_Vel.y*0.5;
 	}
-	if ((TileIndex == TILE_BOOST_L2 || TileFIndex == TILE_BOOST_L2) && (m_LastBooster != TileIndex || m_LastFBooster != TileFIndex))
+	if ((TileIndex == TILE_BOOST_L2 || TileFIndex == TILE_BOOST_L2) && (m_LastBooster != MapIndex))
 	{
 		if(m_PrevPos.x-m_Pos.x<0)
 			m_Core.m_Vel.x = m_Core.m_Vel.x *-1.1;
 		else
 			m_Core.m_Vel.x += m_Core.m_Vel.x*1.1;
 	}
-	if ((TileIndex == TILE_BOOST_R2|| TileFIndex == TILE_BOOST_R2) && (m_LastBooster != TileIndex || m_LastFBooster != TileFIndex))
+	if ((TileIndex == TILE_BOOST_R2|| TileFIndex == TILE_BOOST_R2) && (m_LastBooster != MapIndex))
 	{
 		if(m_Core.m_Vel.x < 0)
 			m_Core.m_Vel.x = m_Core.m_Vel.x *-1.1;
 		else
 			m_Core.m_Vel.x += m_Core.m_Vel.x*1.1;
 	}
-	if ((TileIndex == TILE_BOOST_D2 || TileFIndex == TILE_BOOST_D2) && (m_LastBooster != TileIndex || m_LastFBooster != TileFIndex))
+	if ((TileIndex == TILE_BOOST_D2 || TileFIndex == TILE_BOOST_D2) && (m_LastBooster != MapIndex))
 	{
 		if(m_PrevPos.y-m_Pos.y>0)
 			m_Core.m_Vel.y = m_Core.m_Vel.y *-1.1;
 		else
 			m_Core.m_Vel.y += m_Core.m_Vel.y*1.1;
 	}
-	if ((TileIndex == TILE_BOOST_U2 || TileFIndex == TILE_BOOST_U2) && (m_LastBooster != TileIndex || m_LastFBooster != TileFIndex))
+	if ((TileIndex == TILE_BOOST_U2 || TileFIndex == TILE_BOOST_U2) && (m_LastBooster != MapIndex))
 	{
 		if(m_PrevPos.y-m_Pos.y<0)
 			m_Core.m_Vel.y = m_Core.m_Vel.y *-1.1;
 		else
 			m_Core.m_Vel.y += m_Core.m_Vel.y*1.1;
 	}
-	m_LastBooster = TileIndex;
-	m_LastFBooster = TileFIndex;
 	// handle speedup tiles
-	if(GameServer()->Collision()->IsSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y))
+	if(GameServer()->Collision()->IsSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y) == TILE_BOOST)
 	{
 		vec2 Direction;
 		int Force;
 		GameServer()->Collision()->GetSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y, &Direction, &Force);
 
 		m_Core.m_Vel += Direction*Force;
+		dbg_msg("Direction","%f %f   %f %f   %f %f",Direction.x,Direction.y,(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
+
 	}
+	else if(GameServer()->Collision()->IsSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y) == TILE_BOOSTS)
+	{
+		vec2 Direction;
+		int Force;
+		GameServer()->Collision()->GetSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y, &Direction, &Force);
+		Force/=5;
+		m_Core.m_Vel = Direction*Force;
+		m_Core.m_Vel+=Direction;
+		dbg_msg("Direction","%f %f   %f %f   %f %f",Direction.x,Direction.y,(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
+	}
+	m_LastBooster = MapIndex;
 	int z = GameServer()->Collision()->IsTeleport(m_Pos.x, m_Pos.y);
-	
 	if(z)
 	{
 		m_Core.m_HookedPlayer = -1;
@@ -902,7 +912,18 @@ void CCharacter::Tick()
 		m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_pTeleporter[z-1];
 		m_Core.m_HookPos = m_Core.m_Pos;
 	}
-
+	int evilz = GameServer()->Collision()->IsEvilTeleport(m_Pos.x, m_Pos.y);
+	if(evilz && !m_Super)
+	{
+		m_Core.m_HookedPlayer = -1;
+		m_Core.m_HookState = HOOK_RETRACTED;
+		m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
+		m_Core.m_HookState = HOOK_RETRACTED;
+		GameWorld()->ReleaseHooked(GetPlayer()->GetCID());
+		m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_pTeleporter[evilz-1];
+		m_Core.m_HookPos = m_Core.m_Pos;
+		m_Core.m_Vel = vec2(0,0);
+	}
 	// handle death-tiles
 	if((GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
 		GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
@@ -1303,7 +1324,7 @@ void CCharacter::Snap(int SnappingClient)
 
 	if (m_FreezeTime > 0 || m_FreezeTime == -1)
 	{
-		Character->m_Emote = EMOTE_PAIN;
+		Character->m_Emote = EMOTE_BLINK;
 		Character->m_Weapon = WEAPON_NINJA;
 		Character->m_AmmoCount = 0;
 	}

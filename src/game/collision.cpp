@@ -136,7 +136,7 @@ int CCollision::GetMapIndex(vec2 PrevPos, vec2 Pos)
 			((m_pTiles[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
 			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_THROUGH && m_pFront[ny*m_Width+nx].m_Index < TILE_TELEIN)) ||
 			(m_pFront && ((m_pFront[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pFront[ny*m_Width+nx].m_Index <= TILE_NPH))) ||
-			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
+			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEINEVIL || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
 			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0))
 		{
 			return ny*m_Width+nx;
@@ -507,7 +507,6 @@ int CCollision::IsFNoLaser(int x, int y)
    return (CCollision::GetFTile(x,y) & COLFLAG_NOLASER);
 }
 
-//DDRace
 int CCollision::IsTeleport(int x, int y)
 {
 	if(!m_pTele)
@@ -528,7 +527,29 @@ int CCollision::IsTeleport(int x, int y)
 	return Tele;
 }
 
-bool CCollision::IsSpeedup(int x, int y)
+int CCollision::IsEvilTeleport(int x, int y)
+{
+	if(!m_pTele)
+		return 0;
+
+	int nx = clamp(x/32, 0, m_pLayers->TeleLayer()->m_Width-1);
+	int ny = clamp(y/32, 0, m_pLayers->TeleLayer()->m_Height-1);
+
+	/*int z = m_pTiles[ny*m_Width+nx].m_Index-1;
+	if(z > 34 && z <= 34 + 50 && z&1)
+		return z;
+	return 0;*/
+
+	int Tele = 0;
+	if(m_pTele[ny*m_pLayers->TeleLayer()->m_Width+nx].m_Type == TILE_TELEINEVIL)
+	{
+		Tele = m_pTele[ny*m_pLayers->TeleLayer()->m_Width+nx].m_Number;
+		dbg_msg("IsEvilTele","%d",Tele);
+	}
+	return Tele;
+}
+
+int CCollision::IsSpeedup(int x, int y)
 {
 	if(!m_pSpeedup)
 		return false;
@@ -538,9 +559,12 @@ bool CCollision::IsSpeedup(int x, int y)
 	int ny = clamp(y/32, 0, m_pLayers->SpeedupLayer()->m_Height-1);
 
 	if(m_pSpeedup[ny*m_pLayers->SpeedupLayer()->m_Width+nx].m_Force > 0)
-		return true;
+	//{
+		//dbg_msg("IsSpeedup","Index = %d",m_pSpeedup[ny*m_pLayers->SpeedupLayer()->m_Width+nx].m_Type);
+		return m_pSpeedup[ny*m_pLayers->SpeedupLayer()->m_Width+nx].m_Type;
+	//}
 
-	return false;
+	return 0;
 }
 
 void CCollision::GetSpeedup(int x, int y, vec2 *Dir, int *Force)

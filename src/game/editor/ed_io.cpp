@@ -587,6 +587,8 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName)
 							{
 								if(((CLayerTele*)pTiles)->m_pTeleTile[i].m_Type == TILE_TELEIN)
 									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_TELEIN;
+								else if(((CLayerTele*)pTiles)->m_pTeleTile[i].m_Type == TILE_TELEINEVIL)
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_TELEINEVIL;
 								else if(((CLayerTele*)pTiles)->m_pTeleTile[i].m_Type == TILE_TELEOUT)
 									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_TELEOUT;
 								else
@@ -601,8 +603,8 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName)
 							
 							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
 							{
-								if(((CLayerSpeedup*)pTiles)->m_pSpeedupTile[i].m_Force > 0)
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_BOOST;
+								if(((CLayerSpeedup*)pTiles)->m_pSpeedupTile[i].m_Force > 0 && (((CLayerSpeedup*)pTiles)->m_pSpeedupTile[i].m_Type == TILE_BOOST || ((CLayerSpeedup*)pTiles)->m_pSpeedupTile[i].m_Type == TILE_BOOSTS))
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = ((CLayerSpeedup*)pTiles)->m_pSpeedupTile[i].m_Type;
 								else
 									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = 0;
 							}
