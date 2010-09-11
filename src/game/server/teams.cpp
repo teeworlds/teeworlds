@@ -63,10 +63,11 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 	if(m_TeamState[Team] >= CLOSED) {
 		return false;
 	}
+	if(Character(id)->m_RaceState != RACE_NONE) return false;
 	if(m_Core.Team(id) != 0 && m_TeamState[m_Core.Team(id)] != EMPTY) {
 		bool NoOneInOldTeam = true;
 		for(int i = 0; i < MAX_CLIENTS; ++i) {
-			if(m_Core.SameTeam(i, id)) {
+			if(i != id && m_Core.SameTeam(i, id)) {
 				NoOneInOldTeam = false;//all good exists someone in old team
 				break;
 			} 
@@ -78,6 +79,16 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 	m_Core.Team(id, Team);
 	if(m_TeamState[Team] == EMPTY) {
 		ChangeTeamState(Team, OPEN);
+	}
+	if(Character(id)->GetPlayer()->m_IsUsingRaceClient)
+	{
+		CNetMsg_Sv_PlayerTeam Msg;
+		Msg.m_Team = Team;
+		Msg.m_Cid = id;
+		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+		char aBuf[512];
+		str_format(aBuf, sizeof(aBuf), "Id = %d Team = %d", id, Team);
+		dbg_msg("Teams", aBuf);
 	}
 	return true;
 }

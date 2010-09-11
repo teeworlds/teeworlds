@@ -34,7 +34,7 @@ bool CPlasma::HitCharacter()
 		return false;
 
 	if(Hit->Team() != m_ResponsibleTeam) return false;
-	if(m_Freeze== -1)
+	if(m_Freeze == -1) //TODO: bool m_Freeze; need to fix this is unsafe
 		Hit->UnFreeze();
 	else if (m_Freeze)
 		Hit->Freeze(Server()->TickSpeed()*3);
@@ -81,7 +81,8 @@ void CPlasma::Snap(int SnappingClient)
 {	
 	if(NetworkClipped(SnappingClient))
 		return;
-
+	CCharacter* SnapChar = GameServer()->GetPlayerChar(SnappingClient);
+	if(!SnapChar || (!SnapChar->GetPlayer()->m_ShowOthers && SnapChar->Team() != m_ResponsibleTeam)) return;
 	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_Id, sizeof(CNetObj_Laser)));
 	pObj->m_X = (int)m_Pos.x;
 	pObj->m_Y = (int)m_Pos.y;
