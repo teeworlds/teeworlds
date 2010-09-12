@@ -17,7 +17,7 @@
 
 void CDebugHud::RenderNetCorrections()
 {
-	if(!g_Config.m_Debug || !m_pClient->m_Snap.m_pLocalCharacter || !m_pClient->m_Snap.m_pLocalPrevCharacter)
+	if(!g_Config.m_Debug || g_Config.m_DbgGraphs || !m_pClient->m_Snap.m_pLocalCharacter || !m_pClient->m_Snap.m_pLocalPrevCharacter)
 		return;
 
 	float Width =  300*Graphics()->ScreenAspect();
