@@ -39,6 +39,11 @@ void CEmoticon::OnReset()
 	m_SelectedEmote = -1;
 }
 
+void CEmoticon::OnRelease()
+{
+	m_Active = false;
+}
+
 void CEmoticon::OnMessage(int MsgType, void *pRawMsg)
 {
 }

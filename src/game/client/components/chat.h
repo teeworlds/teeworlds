@@ -56,6 +56,7 @@ public:
 	virtual void OnConsoleInit();
 	virtual void OnStateChange(int NewState, int OldState);
 	virtual void OnRender();
+	virtual void OnRelease();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual bool OnInput(IInput::CEvent Event);
 };

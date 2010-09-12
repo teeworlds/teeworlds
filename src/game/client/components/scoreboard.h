@@ -18,6 +18,7 @@ public:
 	virtual void OnReset();
 	virtual void OnConsoleInit();
 	virtual void OnRender();
+	virtual void OnRelease();
 
 	bool Active();
 };

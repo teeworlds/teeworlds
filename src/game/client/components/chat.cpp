@@ -33,6 +33,11 @@ void CChat::OnReset()
 	m_Show = false;
 }
 
+void CChat::OnRelease()
+{
+	m_Show = false;
+}
+
 void CChat::OnStateChange(int NewState, int OldState)
 {
 	if(OldState <= IClient::STATE_CONNECTING)
@@ -84,12 +89,16 @@ bool CChat::OnInput(IInput::CEvent e)
 		return false;
 
 	if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key == KEY_ESCAPE)
+	{
 		m_Mode = MODE_NONE;
+		m_pClient->OnRelease();
+	}
 	else if(e.m_Flags&IInput::FLAG_PRESS && (e.m_Key == KEY_RETURN || e.m_Key == KEY_KP_ENTER))
 	{
 		if(m_Input.GetString()[0])
 			Say(m_Mode == MODE_ALL ? 0 : 1, m_Input.GetString());
 		m_Mode = MODE_NONE;
+		m_pClient->OnRelease();
 	}
 	else
 		m_Input.ProcessInput(e);

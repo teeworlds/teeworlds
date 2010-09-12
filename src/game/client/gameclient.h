@@ -167,6 +167,7 @@ public:
 	// hooks
 	virtual void OnConnected();
 	virtual void OnRender();
+	virtual void OnRelease();
 	virtual void OnInit();
 	virtual void OnConsoleInit();
 	virtual void OnStateChange(int NewState, int OldState);
