@@ -281,20 +281,18 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		}
 		else
 		{
+		const float PingWidth = 60.0f;
 			str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_Score, -9999, 9999));
 			while((Width = TextRender()->TextWidth(0, FontSizeResize, aBuf, -1)) > ScoreWidth)
 				--FontSizeResize;
 			TextRender()->Text(0, x+ScoreWidth-Width, y+(FontSize-FontSizeResize)/2, FontSizeResize, aBuf, -1);
 		}
 		
-		float FontSizeName = FontSize;
-		while(TextRender()->TextWidth(0, FontSizeName, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1) > w-200)
-			--FontSizeName;
-
-		if(g_Config.m_ClScoreboardClientId)
+		FontSizeResize = FontSize;		if(g_Config.m_ClScoreboardClientId)
 		{
 			str_format(aBuf, sizeof(aBuf), "%d | %s", pInfo->m_ClientId, m_pClient->m_aClients[pInfo->m_ClientId].m_aName);
-			
+			while(TextRender()->TextWidth(0, FontSizeResize, aBuf, -1) > w-163.0f-PingWidth)
+				--FontSizeResize;
 			if(m_pClient->m_IsRace)
 			{
 				CTextCursor Cursor;
@@ -302,11 +300,13 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 				Cursor.m_LineWidth = 400;
 				TextRender()->TextEx(&Cursor, aBuf, -1);
 			}
-			else	
-				TextRender()->Text(0, x+128+Offset, y+(FontSize-FontSizeName)/2, FontSizeName, aBuf, -1);
+			else
+				TextRender()->Text(0, x+128.0f, y+(FontSize-FontSizeResize)/2, FontSizeResize, aBuf, -1);
 		}
 		else
 		{
+			while(TextRender()->TextWidth(0, FontSizeResize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1) > w-163.0f-PingWidth)
+				--FontSizeResize;
 			if(m_pClient->m_IsRace)
 			{
 				CTextCursor Cursor;
@@ -315,7 +315,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 				TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
 			}
 			else
-				TextRender()->Text(0, x+128+Offset, y+(FontSize-FontSizeName)/2, FontSizeName, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
+				TextRender()->Text(0, x+128.0f, y+(FontSize-FontSizeResize)/2, FontSizeResize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
 		}
 
 		str_format(aBuf, sizeof(aBuf), "%4d", pInfo->m_Latency);
