@@ -9,9 +9,11 @@
 #include "network.h"
 #include "engine.h"
 
-static const unsigned char gs_aHeaderMarker[8] = {'T', 'W', 'D', 'E', 'M', 'O', '1', 0};
-static const unsigned char gs_aHeaderMarkerOld[8] = {'T', 'W', 'D', 'E', 'M', 'O', 0, 1}; // TODO: remove this later on
-static const unsigned char gs_aMapMarker[8] = {'M', 'A', 'P', 'D', 'A', 'T', 'A', 0,};
+static const unsigned char gs_aHeaderMarker[7] = {'T', 'W', 'D', 'E', 'M', 'O', 0};
+
+//Versions :
+//1 : 0.5.0
+//2 : 0.5.3/0.6.0, includes the map
 
 
 CDemoRecorder::CDemoRecorder(class CSnapshotDelta *pSnapshotDelta)
@@ -44,6 +46,7 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	// write header
 	mem_zero(&Header, sizeof(Header));
 	mem_copy(Header.m_aMarker, gs_aHeaderMarker, sizeof(Header.m_aMarker));
+	Header.m_Version = 2;
 	str_copy(Header.m_aNetversion, pNetVersion, sizeof(Header.m_aNetversion));
 	str_copy(Header.m_aMap, pMap, sizeof(Header.m_aMap));
 	str_copy(Header.m_aType, pType, sizeof(Header.m_aType));
@@ -67,9 +70,6 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	}
 	if(MapFile)
 	{
-		// write map marker
-		io_write(m_File, &gs_aMapMarker, sizeof(gs_aMapMarker));
-		
 		// write map size
 		int MapSize = io_length(MapFile);
 		unsigned char aBufMapSize[4];
@@ -533,8 +533,7 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 
 	// read the header
 	io_read(m_File, &m_Info.m_Header, sizeof(m_Info.m_Header));
-	if(mem_comp(m_Info.m_Header.m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) != 0 &&
-		mem_comp(m_Info.m_Header.m_aMarker, gs_aHeaderMarkerOld, sizeof(gs_aHeaderMarkerOld)) != 0)
+	if(mem_comp(m_Info.m_Header.m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) != 0)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "'%s' is not a demo file", pFilename);
@@ -545,11 +544,8 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 	}
 	
 	
-	// check if the demo includes a map
-	unsigned char aMapMarker[8];
-	io_read(m_File, &aMapMarker, sizeof(aMapMarker));
-	
-	if(mem_comp(aMapMarker, gs_aMapMarker, sizeof(gs_aMapMarker)) == 0)
+	// get map
+	if(m_Info.m_Header.m_Version >= 2)
 	{
 		// get map size
 		unsigned char aBufMapSize[4];
@@ -557,7 +553,7 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 		int MapSize = (aBufMapSize[0]<<24) | (aBufMapSize[1]<<16) | (aBufMapSize[2]<<8) | (aBufMapSize[3]);
 		
 		// check if we already have the map
-		// TODO: improve map checking
+		// TODO: improve map checking (maps folder)
 		int Crc = (m_Info.m_Header.m_aCrc[0]<<24) | (m_Info.m_Header.m_aCrc[1]<<16) | (m_Info.m_Header.m_aCrc[2]<<8) | (m_Info.m_Header.m_aCrc[3]);
 		char aMapFilename[128];
 		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", m_Info.m_Header.m_aMap, Crc);
@@ -582,10 +578,6 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 			// free data
 			mem_free(pMapData);
 		}
-	}
-	else // no map in the demo
-	{
-		io_skip(m_File, -sizeof(aMapMarker));
 	}
 	
 	
