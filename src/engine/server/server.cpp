@@ -181,6 +181,8 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 	
 	m_MapReload = 0;
 
+	m_RconClientId = -1;
+
 	Init();
 }
 
@@ -262,6 +264,11 @@ void CServer::Kick(int ClientID, const char *pReason)
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "invalid client id to kick");
 		return;
+	}
+	else if(m_RconClientId == ClientID)
+	{
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "you can't kick yourself");
+ 		return;
 	}
 		
 	m_NetServer.Drop(ClientID, pReason);
@@ -770,7 +777,9 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					char aBuf[256];
 					str_format(aBuf, sizeof(aBuf), "ClientId=%d rcon='%s'", ClientId, pCmd);
 					Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
+					m_RconClientId = ClientId;
 					Console()->ExecuteLine(pCmd);
+					m_RconClientId = -1;
 				}
 			}
 			else if(Msg == NETMSG_RCON_AUTH)
@@ -1228,7 +1237,19 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser)
 		Minutes = pResult->GetInteger(1);
 	
 	if(net_addr_from_str(&Addr, pStr) == 0)
+	{
+		if(pServer->m_RconClientId >= 0 && pServer->m_RconClientId < MAX_CLIENTS && pServer->m_aClients[pServer->m_RconClientId].m_State != CClient::STATE_EMPTY)
+		{
+			NETADDR AddrCheck = pServer->m_NetServer.ClientAddr(pServer->m_RconClientId);
+			Addr.port = AddrCheck.port = 0;
+			if(net_addr_comp(&Addr, &AddrCheck) == 0)
+			{
+				pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "you can't ban yourself");
+				return;
+			}
+		}
 		pServer->BanAdd(Addr, Minutes*60);
+	}
 	else if(StrAllnum(pStr))
 	{
 		int ClientId = str_toint(pStr);
@@ -1236,6 +1257,11 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser)
 		if(ClientId < 0 || ClientId >= MAX_CLIENTS || pServer->m_aClients[ClientId].m_State == CClient::STATE_EMPTY)
 		{
 			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "invalid client id");
+			return;
+		}
+		else if(pServer->m_RconClientId == ClientId)
+		{
+			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "you can't ban yourself");
 			return;
 		}
 
