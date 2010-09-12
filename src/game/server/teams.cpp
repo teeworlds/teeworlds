@@ -112,7 +112,9 @@ bool CGameTeams::TeamFinished(int Team) {
 int CGameTeams::TeamMask(int Team) {
 	int Mask = 0;
 	for(int i = 0; i < MAX_CLIENTS; ++i) {
-		if(m_Core.Team(i) == Team || Character(i)->GetPlayer()->m_ShowOthers) {
+		if(m_Core.Team(i) == Team || (Character(i) 
+				&& Character(i)->GetPlayer() 
+				&& Character(i)->GetPlayer()->m_ShowOthers)) {
 			Mask |= 1 << i;
 		}
 	}
