@@ -229,8 +229,13 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			Graphics()->QuadsEnd();
 		}
 
-		str_format(aBuf, sizeof(aBuf), "%4d", pInfo->m_Score);
-		TextRender()->Text(0, x+60-TextRender()->TextWidth(0, FontSize,aBuf,-1), y, FontSize, aBuf, -1);
+		float FontSizeResize = FontSize;
+		float Width;
+		const float ScoreWidth = 60.0f;
+		str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_Score, -9999, 9999));
+		while((Width = TextRender()->TextWidth(0, FontSizeResize, aBuf, -1)) > ScoreWidth)
+			--FontSizeResize;
+		TextRender()->Text(0, x+ScoreWidth-Width, y+(FontSize-FontSizeResize)/2, FontSizeResize, aBuf, -1);
 		
 		float FontSizeName = FontSize;
 		while(TextRender()->TextWidth(0, FontSizeName, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1) > w-200)
