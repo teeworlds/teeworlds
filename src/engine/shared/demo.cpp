@@ -10,6 +10,8 @@
 #include "engine.h"
 
 static const unsigned char gs_aHeaderMarker[7] = {'T', 'W', 'D', 'E', 'M', 'O', 0};
+static const unsigned char gs_ActVersion = 2;
+static const unsigned char gs_VersionWithMap = 2;
 
 //Versions :
 //1 : 0.5.0
@@ -33,10 +35,31 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 		return -1;
 
 	m_pConsole = pConsole;
+
+	// open mapfile
+	char aMapFilename[128];
+	// try the normal maps folder
+	str_format(aMapFilename, sizeof(aMapFilename), "maps/%s.map", pMap);
+	IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ);
+	if(!MapFile)
+	{
+		// try the downloaded maps
+		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", pMap, Crc);
+		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ);
+	}
+	if(!MapFile)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "Unable to open mapfile '%s'", pMap);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_recorder", aBuf);
+		return -1;
+	}
+
 	m_File = pStorage->OpenFile(pFilename, IOFLAG_WRITE);
-	
 	if(!m_File)
 	{
+		io_close(MapFile);
+		MapFile = 0;
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "Unable to open '%s' for recording", pFilename);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_recorder", aBuf);
@@ -46,7 +69,7 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	// write header
 	mem_zero(&Header, sizeof(Header));
 	mem_copy(Header.m_aMarker, gs_aHeaderMarker, sizeof(Header.m_aMarker));
-	Header.m_Version = 2;
+	Header.m_Version = gs_ActVersion;
 	str_copy(Header.m_aNetversion, pNetVersion, sizeof(Header.m_aNetversion));
 	str_copy(Header.m_aMap, pMap, sizeof(Header.m_aMap));
 	str_copy(Header.m_aType, pType, sizeof(Header.m_aType));
@@ -58,39 +81,25 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	
 	
 	// write map
-	char aMapFilename[128];
-	// try the normal maps folder
-	str_format(aMapFilename, sizeof(aMapFilename), "maps/%s.map", pMap);
-	IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ);
-	if(!MapFile)
-	{
-		// try the downloaded maps
-		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", pMap, Crc);
-		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ);
-	}
-	if(MapFile)
-	{
-		// write map size
-		int MapSize = io_length(MapFile);
-		unsigned char aBufMapSize[4];
-		aBufMapSize[0] = (MapSize>>24)&0xff;
-		aBufMapSize[1] = (MapSize>>16)&0xff;
-		aBufMapSize[2] = (MapSize>>8)&0xff;
-		aBufMapSize[3] = (MapSize)&0xff;
-		io_write(m_File, &aBufMapSize, sizeof(aBufMapSize));
+	// write map size
+	int MapSize = io_length(MapFile);
+	unsigned char aBufMapSize[4];
+	aBufMapSize[0] = (MapSize>>24)&0xff;
+	aBufMapSize[1] = (MapSize>>16)&0xff;
+	aBufMapSize[2] = (MapSize>>8)&0xff;
+	aBufMapSize[3] = (MapSize)&0xff;
+	io_write(m_File, &aBufMapSize, sizeof(aBufMapSize));
 		
-		// write map data
-		while(1)
-		{
-			unsigned char aChunk[1024*64];
-			int Bytes = io_read(MapFile, &aChunk, sizeof(aChunk));
-			if(Bytes <= 0)
-				break;
-			io_write(m_File, &aChunk, Bytes);
-		}
-		io_close(MapFile);
+	// write map data
+	while(1)
+	{
+		unsigned char aChunk[1024*64];
+		int Bytes = io_read(MapFile, &aChunk, sizeof(aChunk));
+		if(Bytes <= 0)
+			break;
+		io_write(m_File, &aChunk, Bytes);
 	}
-	
+	io_close(MapFile);
 	
 	m_LastKeyFrame = -1;
 	m_LastTickMarker = -1;
@@ -545,7 +554,7 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 	
 	
 	// get map
-	if(m_Info.m_Header.m_Version >= 2)
+	if(m_Info.m_Header.m_Version >= gs_VersionWithMap)
 	{
 		// get map size
 		unsigned char aBufMapSize[4];
@@ -553,7 +562,7 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 		int MapSize = (aBufMapSize[0]<<24) | (aBufMapSize[1]<<16) | (aBufMapSize[2]<<8) | (aBufMapSize[3]);
 		
 		// check if we already have the map
-		// TODO: improve map checking (maps folder)
+		// TODO: improve map checking (maps folder, check crc)
 		int Crc = (m_Info.m_Header.m_aCrc[0]<<24) | (m_Info.m_Header.m_aCrc[1]<<16) | (m_Info.m_Header.m_aCrc[2]<<8) | (m_Info.m_Header.m_aCrc[3]);
 		char aMapFilename[128];
 		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", m_Info.m_Header.m_aMap, Crc);
