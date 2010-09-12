@@ -945,6 +945,16 @@ int fs_is_dir(const char *path);
 int fs_chdir(const char *path);
 
 /*
+	Function: fs_parent_dir
+		Get the parent directory of a directory
+	
+	Parameters:
+		path - The directory
+		buffer - Buffer to set the parent folder
+*/
+void fs_parent_dir(const char *path, char *buffer);
+
+/*
 	Group: Undocumented
 */
 

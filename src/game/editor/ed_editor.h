@@ -5,6 +5,8 @@
 #include <base/math.h>
 #include <base/tl/array.h>
 #include <base/tl/algorithm.h>
+#include <base/tl/sorted_array.h>
+#include <base/tl/string.h>
 
 #include <math.h>
 #include <game/mapitems.h>
@@ -463,6 +465,7 @@ class CEditor : public IEditor
 	class IConsole *m_pConsole;
 	class IGraphics *m_pGraphics;
 	class ITextRender *m_pTextRender;
+	class IStorage *m_pStorage;
 	CRenderTools m_RenderTools;
 	CUI m_UI;
 public:
@@ -471,6 +474,7 @@ public:
 	class IConsole *Console() { return m_pConsole; };
 	class IGraphics *Graphics() { return m_pGraphics; };
 	class ITextRender *TextRender() { return m_pTextRender; };
+	class IStorage *Storage() { return m_pStorage; };
 	CUI *UI() { return &m_UI; }
 	CRenderTools *RenderTools() { return &m_RenderTools; }
 
@@ -486,6 +490,18 @@ public:
 		m_pTooltip = 0;
 
 		m_aFileName[0] = 0;
+		
+		m_FileDialogDirTypes = 0;
+		m_pFileDialogTitle = NULL;
+		m_pFileDialogButtonText = NULL;
+		m_pFileDialogUser = NULL;
+		m_aFileDialogFileName[0] = 0;
+		m_aFileDialogPath[0] = 0;
+		m_aFileDialogCompleteFilename[0] = 0;
+		m_FilesNum = 0;
+		m_FilesStartAt = 0;
+		m_FilesCur = 0;
+		m_FilesStopAt = 999;
 
 		m_WorldOffsetX = 0;
 		m_WorldOffsetY = 0;
@@ -528,6 +544,7 @@ public:
 	virtual void Init();
 	virtual void UpdateAndRender();
 	
+	void FilelistPopulate();
 	void InvokeFileDialog(int ListdirType, const char *pTitle, const char *pButtonText,
 		const char *pBasepath, const char *pDefaultName,
 		void (*pfnFunc)(const char *pFilename, void *pUser), void *pUser);
@@ -550,6 +567,20 @@ public:
 	const char *m_pTooltip;
 
 	char m_aFileName[512];
+	
+	int m_FileDialogDirTypes;
+	const char *m_pFileDialogTitle;
+	const char *m_pFileDialogButtonText;
+	void (*m_pfnFileDialogFunc)(const char *pFileName, void *pUser);
+	void *m_pFileDialogUser;
+	char m_aFileDialogFileName[512];
+	char m_aFileDialogPath[512];
+	char m_aFileDialogCompleteFilename[512];
+	int m_FilesNum;
+	sorted_array<string> m_FileList;
+	int m_FilesStartAt;
+	int m_FilesCur;
+	int m_FilesStopAt;
 
 	float m_WorldOffsetX;
 	float m_WorldOffsetY;
