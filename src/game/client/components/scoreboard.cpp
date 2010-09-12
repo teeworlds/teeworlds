@@ -33,6 +33,11 @@ void CScoreboard::OnReset()
 	m_Active = false;
 }
 
+void CScoreboard::OnRelease()
+{
+	m_Active = false;
+}
+
 void CScoreboard::OnConsoleInit()
 {
 	Console()->Register("+scoreboard", "", CFGFLAG_CLIENT, ConKeyScoreboard, this, "Show scoreboard");
