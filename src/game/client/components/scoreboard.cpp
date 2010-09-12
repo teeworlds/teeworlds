@@ -265,7 +265,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			Graphics()->QuadsEnd();
 		}
 
-		if(m_pClient->m_IsRace)
+		float FontSizeResize = FontSize;		float Width;		const float ScoreWidth = 60.0f;		if(m_pClient->m_IsRace)
 		{
 			// reset time
 			if(pInfo->m_Score == -9999)
@@ -275,13 +275,18 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			if(Time > 0)
 			{	
 				str_format(aBuf, sizeof(aBuf), "%02d:%05.2f", (int)Time/60, Time-((int)Time/60*60));
-				TextRender()->Text(0, x+DataOffset+60-TextRender()->TextWidth(0, FontSize,aBuf,-1), y, FontSize, aBuf, -1);
+				while((Width = TextRender()->TextWidth(0, FontSizeResize, aBuf, -1)) > ScoreWidth)
+					--FontSizeResize;
+				TextRender()->Text(0, x+ScoreWidth-Width, y+(FontSize-FontSizeResize)/2, FontSizeResize, aBuf, -1);
+				//TextRender()->Text(0, x+DataOffset+60-TextRender()->TextWidth(0, FontSize,aBuf,-1), y, FontSize, aBuf, -1);
 			}
 		}
 		else
 		{
-			str_format(aBuf, sizeof(aBuf), "%4d", pInfo->m_Score);
-			TextRender()->Text(0, x+60-TextRender()->TextWidth(0, FontSize,aBuf,-1), y, FontSize, aBuf, -1);
+			str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_Score, -9999, 9999));
+			while((Width = TextRender()->TextWidth(0, FontSizeResize, aBuf, -1)) > ScoreWidth)
+				--FontSizeResize;
+			TextRender()->Text(0, x+ScoreWidth-Width, y+(FontSize-FontSizeResize)/2, FontSizeResize, aBuf, -1);
 		}
 		
 		float FontSizeName = FontSize;
