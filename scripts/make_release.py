@@ -3,8 +3,7 @@ import shutil, os, sys, zipfile
 #valid_platforms = ["win32", "linux86", "linux86_64", "src"]
 
 if len(sys.argv) != 3:
-	print "wrong number of arguments"
-	print sys.argv[0], "VERSION PLATFORM"
+	print("wrong number of arguments")
 	sys.exit(-1)
 
 name = "teeworlds"
@@ -27,8 +26,8 @@ if platform == "src":
 	use_gz = 1
 
 #if not platform in valid_platforms:
-#	print "not a valid platform"
-#	print valid_platforms
+#	print("not a valid platform")
+#	print(valid_platforms)
 #	sys.exit(-1)
 
 if platform == 'win32':
@@ -54,11 +53,11 @@ def copydir(src, dst, excl=[]):
 package = "%s-%s-%s" %(name, version, platform)
 package_dir = package
 
-print "cleaning target"
+print("cleaning target")
 shutil.rmtree(package_dir, True)
 os.mkdir(package_dir)
 
-print "adding files"
+print("adding files")
 shutil.copy("readme.txt", package_dir)
 shutil.copy("license.txt", package_dir)
 
@@ -70,8 +69,9 @@ if include_data and not use_bundle:
 		shutil.copy("SDL.dll", package_dir)
 
 if include_exe and not use_bundle:
-	shutil.copy(name+exe_ext, package_dir)
-	shutil.copy(name+"_srv"+exe_ext, package_dir)
+	for element in os.listdir(os.getcwd()):
+		if element[-4:] == exe_ext:
+			shutil.copy(element, package_dir)
 	
 if include_src:
 	for p in ["src", "scripts", "datasrc", "other", "objs"]:
@@ -96,7 +96,7 @@ if use_bundle:
 	os.mkdir(clientbundle_framework_dir)
 	os.mkdir(os.path.join(clientbundle_resource_dir, "data"))
 	copydir("data", clientbundle_resource_dir)
-	shutil.copy("other/icons/Teeworlds.icns", clientbundle_resource_dir)
+	shutil.copy("other/icons/teeworlds.icns", clientbundle_resource_dir)
 	shutil.copy(name+exe_ext, clientbundle_bin_dir)
 	os.system("cp -R /Library/Frameworks/SDL.framework " + clientbundle_framework_dir)
 	file(os.path.join(clientbundle_content_dir, "Info.plist"), "w").write("""
@@ -134,7 +134,7 @@ if use_bundle:
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data"))
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data/maps"))
 	copydir("data/maps", serverbundle_resource_dir)
-	shutil.copy("other/icons/Teeworlds_srv.icns", serverbundle_resource_dir)
+	shutil.copy("other/icons/teeworlds_srv.icns", serverbundle_resource_dir)
 	shutil.copy(name+"_srv"+exe_ext, serverbundle_bin_dir)
 	shutil.copy("serverlaunch"+exe_ext, serverbundle_bin_dir + "/teeworlds_server")
 	file(os.path.join(serverbundle_content_dir, "Info.plist"), "w").write("""
@@ -162,7 +162,7 @@ if use_bundle:
 	file(os.path.join(serverbundle_content_dir, "PkgInfo"), "w").write("APPL????")
 
 if use_zip:
-	print "making zip archive"
+	print("making zip archive")
 	zf = zipfile.ZipFile("%s.zip" % package, 'w', zipfile.ZIP_DEFLATED)
 	
 	for root, dirs, files in os.walk(package_dir, topdown=True):
@@ -173,14 +173,14 @@ if use_zip:
 	zf.close()
 	
 if use_gz:
-	print "making tar.gz archive"
+	print("making tar.gz archive")
 	os.system("tar czf %s.tar.gz %s" % (package, package_dir))
 
 if use_dmg:
-	print "making disk image"
+	print("making disk image")
 	os.system("rm -f %s.dmg %s_temp.dmg" % (package, package))
 	os.system("hdiutil create -srcfolder %s -volname Teeworlds -quiet %s_temp" % (package_dir, package))
 	os.system("hdiutil convert %s_temp.dmg -format UDBZ -o %s.dmg -quiet" % (package, package))
 	os.system("rm -f %s_temp.dmg" % package)
 	
-print "done"
+print("done")

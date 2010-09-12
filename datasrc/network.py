@@ -1,10 +1,19 @@
+import imp, os
+if os.path.exists("_compatibility.py"):
+	file = "_compatibility.py"
+elif os.path.exists("datasrc/_compatibility.py"):
+	file = "datasrc/_compatibility.py"
+else:
+	exit(-1)
+imp.load_source("_compatibility", file)
+import _compatibility
 from datatypes import *
 
 Emotes = ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"]
 PlayerStates = ["UNKNOWN", "PLAYING", "IN_MENU", "CHATTING"]
 GameFlags = ["TEAMS", "FLAGS"]
 
-Emoticons = [str(x) for x in xrange(1,16)]
+Emoticons = [str(x) for x in _compatibility._xrange(1,16)]
 
 Powerups = ["HEALTH", "ARMOR", "WEAPON", "NINJA"]
 
