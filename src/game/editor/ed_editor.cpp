@@ -1,8 +1,6 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
 
 #include <base/system.h>
-#include <base/tl/sorted_array.h>
-#include <base/tl/string.h>
 
 #include <engine/shared/datafile.h>
 #include <engine/shared/config.h>
@@ -561,13 +559,46 @@ CQuad *CEditor::GetSelectedQuad()
 	return 0;
 }
 
+static void CallbackOpenDir(const char *pFileName, void *pUser)
+{
+	CEditor *pEditor = (CEditor*)pUser;
+	
+	if(str_comp(pFileName, "..") == 0)
+	{
+		if(str_comp(pEditor->m_aFileDialogPath, "maps") == 0 || str_comp(pEditor->m_aFileDialogPath, "mapres") == 0)
+			return;
+		char aParentFolder[512];
+		fs_parent_dir(pEditor->m_aFileDialogPath, aParentFolder);
+		str_copy(pEditor->m_aFileDialogPath, aParentFolder, sizeof(pEditor->m_aFileDialogPath));
+	}
+	else
+		str_copy(pEditor->m_aFileDialogPath, pFileName, sizeof(pEditor->m_aFileDialogPath));
+	
+	pEditor->FilelistPopulate();
+}
+
 static void CallbackOpenMap(const char *pFileName, void *pUser)
 {
 	CEditor *pEditor = (CEditor*)pUser;
+	
+	if(str_comp(pEditor->m_aFileDialogFileName, "..") == 0)
+	{
+		CallbackOpenDir("..", pUser);
+		return;
+	}
+	char aCompleteFilename[512];
+	str_format(aCompleteFilename, sizeof(aCompleteFilename), "%s/%s", pEditor->Client()->UserDirectory(), pFileName);
+	if(fs_is_dir(aCompleteFilename))
+	{
+		CallbackOpenDir(pFileName, pUser);
+		return;
+	}
+	
 	if(pEditor->Load(pFileName))
 	{
 		str_copy(pEditor->m_aFileName, pFileName, 512);
 		pEditor->SortImages();
+		pEditor->m_Dialog = DIALOG_NONE;
 	}
 }
 static void CallbackAppendMap(const char *pFileName, void *pUser)
@@ -577,6 +608,8 @@ static void CallbackAppendMap(const char *pFileName, void *pUser)
 		pEditor->m_aFileName[0] = 0;
 	else
 		pEditor->SortImages();
+	
+	pEditor->m_Dialog = DIALOG_NONE;
 }
 static void CallbackSaveMap(const char *pFileName, void *pUser)
 {
@@ -592,6 +625,8 @@ static void CallbackSaveMap(const char *pFileName, void *pUser)
 	CEditor *pEditor = static_cast<CEditor*>(pUser);
 	if(pEditor->Save(pFileName))
 		str_copy(pEditor->m_aFileName, pFileName, sizeof(pEditor->m_aFileName));
+	
+	pEditor->m_Dialog = DIALOG_NONE;
 }
 
 void CEditor::DoToolbar(CUIRect ToolBar)
@@ -606,7 +641,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 
 	// ctrl+o to open
 	if(Input()->KeyDown('o') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL)))
-		InvokeFileDialog(IStorage::TYPE_ALL, Localize("Open map"), Localize("Open"), "maps/", "", CallbackOpenMap, this);
+		InvokeFileDialog(IStorage::TYPE_ALL, Localize("Open map"), Localize("Open"), "maps", "", CallbackOpenMap, this);
 
 	// ctrl+s to save
 	if(Input()->KeyDown('s') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL)))
@@ -614,7 +649,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		if(m_aFileName[0])	
 			CallbackSaveMap(m_aFileName, this);
 		else
-			InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save map"), Localize("Save"), "maps/", "", CallbackSaveMap, this);
+			InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save map"), Localize("Save"), "maps", "", CallbackSaveMap, this);
 	}
 
 	// detail button
@@ -1915,7 +1950,7 @@ int CEditor::PopupImage(CEditor *pEditor, CUIRect View)
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_ReplaceButton, Localize("Replace"), 0, &Slot, 0, Localize("Replaces the image with a new one")))
 	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, Localize("Replace Image"), Localize("Replace"), "mapres/", "", ReplaceImage, pEditor);
+		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, Localize("Replace Image"), Localize("Replace"), "mapres", "", ReplaceImage, pEditor);
 		return 1;
 	}
 
@@ -2082,59 +2117,39 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 	ToolBox.HSplitTop(10.0f, &Slot, &ToolBox);
 	ToolBox.HSplitTop(12.0f, &Slot, &ToolBox);
 	if(DoButton_Editor(&s_NewImageButton, Localize("Add"), 0, &Slot, 0, Localize("Load a new image to use in the map")))
-		InvokeFileDialog(IStorage::TYPE_ALL, Localize("Add Image"), Localize("Add"), "mapres/", "", AddImage, this);
+		InvokeFileDialog(IStorage::TYPE_ALL, Localize("Add Image"), Localize("Add"), "mapres", "", AddImage, this);
 }
 
 
-static int gs_FileDialogDirTypes = 0;
-static const char *gs_pFileDialogTitle = 0;
-static const char *gs_pFileDialogButtonText = 0;
-static void (*gs_pfnFileDialogFunc)(const char *pFileName, void *pUser);
-static void *gs_pFileDialogUser = 0;
-static char gs_FileDialogFileName[512] = {0};
-static char gs_aFileDialogPath[512] = {0};
-static char gs_aFileDialogCompleteFilename[512] = {0};
-static int gs_FilesNum = 0;
-static sorted_array<string> gs_FileList;
-int g_FilesStartAt = 0;
-int g_FilesCur = 0;
-int g_FilesStopAt = 999;
-
 static void EditorListdirCallback(const char *pName, int IsDir, void *pUser)
 {
-	if(pName[0] == '.' || IsDir) // skip this shit!
-		return;
-
-	gs_FileList.add(string(pName));
+	CEditor *pEditor = (CEditor*)pUser;
+	pEditor->m_FileList.add(string(pName));
 }
 
 void CEditor::AddFileDialogEntry(const char *pName, CUIRect *pView)
 {
-	if(g_FilesCur > gs_FilesNum)
-		gs_FilesNum = g_FilesCur;
+	if(m_FilesCur > m_FilesNum)
+		m_FilesNum = m_FilesCur;
 
-	g_FilesCur++;
-	if(g_FilesCur-1 < g_FilesStartAt || g_FilesCur > g_FilesStopAt)
+	m_FilesCur++;
+	if(m_FilesCur-1 < m_FilesStartAt || m_FilesCur > m_FilesStopAt)
 		return;
 
 	CUIRect Button;
 	pView->HSplitTop(15.0f, &Button, pView);
 	pView->HSplitTop(2.0f, 0, pView);
-	//char buf[512];
 
 	if(DoButton_File((void*)(10+(int)Button.y), pName, 0, &Button, 0, 0))
 	{
-		str_copy(gs_FileDialogFileName, pName, sizeof(gs_FileDialogFileName));
-
-		gs_aFileDialogCompleteFilename[0] = 0;
-		str_append(gs_aFileDialogCompleteFilename, gs_aFileDialogPath, sizeof(gs_aFileDialogCompleteFilename));
-		str_append(gs_aFileDialogCompleteFilename, gs_FileDialogFileName, sizeof(gs_aFileDialogCompleteFilename));
+		str_copy(m_aFileDialogFileName, pName, sizeof(m_aFileDialogFileName));
+		
+		str_format(m_aFileDialogCompleteFilename, sizeof(m_aFileDialogCompleteFilename), "%s/%s", m_aFileDialogPath, m_aFileDialogFileName);
 
 		if(Input()->MouseDoubleClick())
 		{
-			if(gs_pfnFileDialogFunc)
-				gs_pfnFileDialogFunc(gs_aFileDialogCompleteFilename, this);
-			m_Dialog = DIALOG_NONE;
+			if(m_pfnFileDialogFunc)
+				m_pfnFileDialogFunc(m_aFileDialogCompleteFilename, this);
 		}
 	}
 }
@@ -2163,16 +2178,14 @@ void CEditor::RenderFileDialog()
 	// title
 	RenderTools()->DrawUIRect(&Title, vec4(1, 1, 1, 0.25f), CUI::CORNER_ALL, 4.0f);
 	Title.VMargin(10.0f, &Title);
-	UI()->DoLabel(&Title, gs_pFileDialogTitle, 12.0f, -1, -1);
+	UI()->DoLabel(&Title, m_pFileDialogTitle, 12.0f, -1, -1);
 
 	// filebox
 	static int s_FileBoxId = 0;
 	UI()->DoLabel(&FileBoxLabel, Localize("Filename:"), 10.0f, -1, -1);
-	DoEditBox(&s_FileBoxId, &FileBox, gs_FileDialogFileName, sizeof(gs_FileDialogFileName), 10.0f);
-
-	gs_aFileDialogCompleteFilename[0] = 0;
-	str_append(gs_aFileDialogCompleteFilename, gs_aFileDialogPath, sizeof(gs_aFileDialogCompleteFilename));
-	str_append(gs_aFileDialogCompleteFilename, gs_FileDialogFileName, sizeof(gs_aFileDialogCompleteFilename));
+	DoEditBox(&s_FileBoxId, &FileBox, m_aFileDialogFileName, sizeof(m_aFileDialogFileName), 10.0f);
+	
+	str_format(m_aFileDialogCompleteFilename, sizeof(m_aFileDialogCompleteFilename), "%s/%s", m_aFileDialogPath, m_aFileDialogFileName);
 
 	int Num = (int)(View.h/17.0);
 	static float s_ScrollValue = 0;
@@ -2180,7 +2193,7 @@ void CEditor::RenderFileDialog()
 	Scroll.HMargin(5.0f, &Scroll);
 	s_ScrollValue = UiDoScrollbarV(&ScrollBar, &Scroll, s_ScrollValue);
 
-	int ScrollNum = gs_FilesNum-Num+10;
+	int ScrollNum = m_FilesNum-Num+10;
 	if(ScrollNum > 0)
 	{
 		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
@@ -2194,23 +2207,19 @@ void CEditor::RenderFileDialog()
 	else
 		ScrollNum = 0;
 
-	g_FilesStartAt = (int)(ScrollNum*s_ScrollValue);
-	if(g_FilesStartAt < 0)
-		g_FilesStartAt = 0;
+	m_FilesStartAt = (int)(ScrollNum*s_ScrollValue);
+	if(m_FilesStartAt < 0)
+		m_FilesStartAt = 0;
 
-	g_FilesStopAt = g_FilesStartAt+Num;
+	m_FilesStopAt = m_FilesStartAt+Num;
 
-	g_FilesCur = 0;
+	m_FilesCur = 0;
 
 	// set clipping
 	UI()->ClipEnable(&View);
 
-	// TODO: lazy ass coding, should store the interface pointer somewere
-	Kernel()->RequestInterface<IStorage>()->ListDirectory(gs_FileDialogDirTypes, gs_aFileDialogPath, EditorListdirCallback, 0);
-
-	for(int i = 0; i < gs_FileList.size(); i++)
-		AddFileDialogEntry(gs_FileList[i].cstr(), &View);
-	gs_FileList.clear();
+	for(int i = 0; i < m_FileList.size(); i++)
+		AddFileDialogEntry(m_FileList[i].cstr(), &View);
 
 	// disable clipping again
 	UI()->ClipDisable();
@@ -2221,11 +2230,10 @@ void CEditor::RenderFileDialog()
 
 	CUIRect Button;
 	ButtonBar.VSplitRight(50.0f, &ButtonBar, &Button);
-	if(DoButton_Editor(&s_OkButton, gs_pFileDialogButtonText, 0, &Button, 0, 0) || Input()->KeyPressed(KEY_RETURN))
+	if(DoButton_Editor(&s_OkButton, m_pFileDialogButtonText, 0, &Button, 0, 0) || Input()->KeyPressed(KEY_RETURN))
 	{
-		if(gs_pfnFileDialogFunc)
-			gs_pfnFileDialogFunc(gs_aFileDialogCompleteFilename, gs_pFileDialogUser);
-		m_Dialog = DIALOG_NONE;
+		if(m_pfnFileDialogFunc)
+			m_pfnFileDialogFunc(m_aFileDialogCompleteFilename, m_pFileDialogUser);
 	}
 
 	ButtonBar.VSplitRight(40.0f, &ButtonBar, &Button);
@@ -2234,22 +2242,32 @@ void CEditor::RenderFileDialog()
 		m_Dialog = DIALOG_NONE;
 }
 
+void CEditor::FilelistPopulate()
+{
+	m_FileList.clear();
+	if(str_comp(m_aFileDialogPath, "maps") != 0 && str_comp(m_aFileDialogPath, "mapres") != 0)
+		m_FileList.add(string(".."));
+	Storage()->ListDirectory(m_FileDialogDirTypes, m_aFileDialogPath, EditorListdirCallback, this);
+}
+
 void CEditor::InvokeFileDialog(int ListDirTypes, const char *pTitle, const char *pButtonText,
 	const char *pBasePath, const char *pDefaultName,
 	void (*pfnFunc)(const char *pFileName, void *pUser), void *pUser)
 {
-	gs_FileDialogDirTypes = ListDirTypes;
-	gs_pFileDialogTitle = pTitle;
-	gs_pFileDialogButtonText = pButtonText;
-	gs_pfnFileDialogFunc = pfnFunc;
-	gs_pFileDialogUser = pUser;
-	gs_FileDialogFileName[0] = 0;
-	gs_aFileDialogPath[0] = 0;
+	m_FileDialogDirTypes = ListDirTypes;
+	m_pFileDialogTitle = pTitle;
+	m_pFileDialogButtonText = pButtonText;
+	m_pfnFileDialogFunc = pfnFunc;
+	m_pFileDialogUser = pUser;
+	m_aFileDialogFileName[0] = 0;
+	m_aFileDialogPath[0] = 0;
 
 	if(pDefaultName)
-		str_copy(gs_FileDialogFileName, pDefaultName, sizeof(gs_FileDialogFileName));
+		str_copy(m_aFileDialogFileName, pDefaultName, sizeof(m_aFileDialogFileName));
 	if(pBasePath)
-		str_copy(gs_aFileDialogPath, pBasePath, sizeof(gs_aFileDialogPath));
+		str_copy(m_aFileDialogPath, pBasePath, sizeof(m_aFileDialogPath));
+	
+	FilelistPopulate();
 
 	m_Dialog = DIALOG_FILE;
 }
@@ -2705,7 +2723,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_OpenButton, Localize("Open"), 0, &Slot, 0, Localize("Opens a map for editing")))
 	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, Localize("Open map"), Localize("Open"), "maps/", "", CallbackOpenMap, pEditor);
+		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, Localize("Open map"), Localize("Open"), "maps", "", CallbackOpenMap, pEditor);
 		return 1;
 	}
 
@@ -2713,7 +2731,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_AppendButton, Localize("Append"), 0, &Slot, 0, Localize("Opens a map and adds everything from that map to the current one")))
 	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, Localize("Append map"), Localize("Append"), "maps/", "", CallbackAppendMap, pEditor);
+		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, Localize("Append map"), Localize("Append"), "maps", "", CallbackAppendMap, pEditor);
 		return 1;
 	}
 
@@ -2724,7 +2742,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 		if(pEditor->m_aFileName[0])	
 			CallbackSaveMap(pEditor->m_aFileName, pEditor);
 		else
-			pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save map"), Localize("Save"), "maps/", "", CallbackSaveMap, pEditor);
+			pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save map"), Localize("Save"), "maps", "", CallbackSaveMap, pEditor);
 		return 1;
 	}
 
@@ -2732,7 +2750,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_SaveAsButton, Localize("Save As"), 0, &Slot, 0, Localize("Saves the current map under a new name")))
 	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save map"), Localize("Save"), "maps/", "", CallbackSaveMap, pEditor);
+		pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, Localize("Save map"), Localize("Save"), "maps", "", CallbackSaveMap, pEditor);
 		return 1;
 	}
 
@@ -3021,6 +3039,7 @@ void CEditor::Init()
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
 	m_pTextRender = Kernel()->RequestInterface<ITextRender>();
+	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_RenderTools.m_pGraphics = m_pGraphics;
 	m_RenderTools.m_pUI = &m_UI;
 	m_UI.SetGraphics(m_pGraphics, m_pTextRender);
