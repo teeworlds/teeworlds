@@ -258,11 +258,13 @@ void CServer::SetBrowseInfo(const char *pGameType, int Progression)
 
 void CServer::Kick(int ClientID, const char *pReason)
 {
-	if(ClientID < 0 || ClientID >= MAX_CLIENTS)
+	if(ClientID < 0 || ClientID >= MAX_CLIENTS || m_aClients[ClientID].m_State == CClient::STATE_EMPTY)
+	{
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "invalid client id to kick");
 		return;
+	}
 		
-	if(m_aClients[ClientID].m_State != CClient::STATE_EMPTY)
-		m_NetServer.Drop(ClientID, pReason);
+	m_NetServer.Drop(ClientID, pReason);
 }
 
 /*int CServer::Tick()
@@ -1218,6 +1220,7 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser)
 {
 	NETADDR Addr;
 	char aAddrStr[128];
+	CServer *pServer = (CServer *)pUser;
 	const char *pStr = pResult->GetString(0);
 	int Minutes = 30;
 	
@@ -1225,20 +1228,25 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser)
 		Minutes = pResult->GetInteger(1);
 	
 	if(net_addr_from_str(&Addr, pStr) == 0)
-		((CServer *)pUser)->BanAdd(Addr, Minutes*60);
+		pServer->BanAdd(Addr, Minutes*60);
 	else if(StrAllnum(pStr))
 	{
 		int ClientId = str_toint(pStr);
 
-		if(ClientId < 0 || ClientId >= MAX_CLIENTS || ((CServer *)pUser)->m_aClients[ClientId].m_State == CClient::STATE_EMPTY)
+		if(ClientId < 0 || ClientId >= MAX_CLIENTS || pServer->m_aClients[ClientId].m_State == CClient::STATE_EMPTY)
 		{
-			((CServer *)pUser)->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "invalid client id");
+			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "invalid client id");
 			return;
 		}
 
-		Addr = ((CServer *)pUser)->m_NetServer.ClientAddr(ClientId);
-		((CServer *)pUser)->BanAdd(Addr, Minutes*60);
+		Addr = pServer->m_NetServer.ClientAddr(ClientId);
+		pServer->BanAdd(Addr, Minutes*60);
 	}
+	else
+	{
+		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "invalid network address to ban");
+		return;
+ 	}
 	
 	Addr.port = 0;
 	net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
@@ -1248,7 +1256,7 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser)
 		str_format(aBuf, sizeof(aBuf), "banned %s for %d minutes", aAddrStr, Minutes);
 	else
 		str_format(aBuf, sizeof(aBuf), "banned %s for life", aAddrStr);
-	((CServer *)pUser)->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+	pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 }
 
 void CServer::ConUnban(IConsole::IResult *pResult, void *pUser)
