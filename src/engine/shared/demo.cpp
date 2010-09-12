@@ -2,7 +2,7 @@
 #include <engine/console.h>
 #include <engine/shared/protocol.h>
 #include <engine/storage.h>
-#include "demorec.h"
+#include "demo.h"
 #include "memheap.h"
 #include "snapshot.h"
 #include "compression.h"

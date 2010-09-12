@@ -18,7 +18,7 @@
 
 #include <engine/shared/engine.h>
 #include <engine/shared/protocol.h>
-#include <engine/shared/demorec.h>
+#include <engine/shared/demo.h>
 #include <engine/shared/network.h>
 
 #include "srvbrowse.h"

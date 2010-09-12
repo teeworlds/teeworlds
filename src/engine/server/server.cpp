@@ -14,7 +14,7 @@
 #include <engine/shared/config.h>
 #include <engine/shared/packer.h>
 #include <engine/shared/datafile.h>
-#include <engine/shared/demorec.h>
+#include <engine/shared/demo.h>
 
 #include <engine/server.h>
 #include <engine/map.h>

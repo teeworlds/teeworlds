@@ -5,7 +5,7 @@
 #include <engine/map.h>
 #include <engine/storage.h>
 #include <engine/serverbrowser.h>
-#include <engine/shared/demorec.h>
+#include <engine/shared/demo.h>
 #include <engine/shared/config.h>
 
 #include <game/generated/protocol.h>
