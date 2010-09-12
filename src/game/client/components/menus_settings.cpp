@@ -337,8 +337,10 @@ void CMenus::UiDoGetButtons(int Start, int Stop, CUIRect View)
 		int NewId = DoKeyReader((void *)&gs_aKeys[i].m_Name, &Button, OldId);
 		if(NewId != OldId)
 		{
-			m_pClient->m_pBinds->Bind(OldId, "");
-			m_pClient->m_pBinds->Bind(NewId, gs_aKeys[i].m_pCommand);
+			if(OldId != 0 || NewId == 0)
+				m_pClient->m_pBinds->Bind(OldId, "");
+			if(NewId != 0)
+				m_pClient->m_pBinds->Bind(NewId, gs_aKeys[i].m_pCommand);
 		}
 		View.HSplitTop(5.0f, 0, &View);
 	}
