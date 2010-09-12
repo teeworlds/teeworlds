@@ -31,7 +31,7 @@ bool CMenusKeyBinder::OnInput(IInput::CEvent Event)
 {
 	if(m_TakeKey)
 	{
-		if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key != KEY_ESCAPE)
+		if(Event.m_Flags&IInput::FLAG_PRESS)
 		{
 			m_Key = Event;
 			m_GotKey = true;

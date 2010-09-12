@@ -459,7 +459,9 @@ int CMenus::DoKeyReader(void *pID, const CUIRect *pRect, int Key)
 	{
 		if(m_Binder.m_GotKey)
 		{
-			NewKey = m_Binder.m_Key.m_Key;
+			// abort with escape key
+			if(m_Binder.m_Key.m_Key != KEY_ESCAPE)
+				NewKey = m_Binder.m_Key.m_Key;
 			m_Binder.m_GotKey = false;
 			UI()->SetActiveItem(0);
 			MouseReleased = false;
