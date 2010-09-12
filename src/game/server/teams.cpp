@@ -80,6 +80,7 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 	if(m_TeamState[Team] == EMPTY) {
 		ChangeTeamState(Team, OPEN);
 	}
+	//GameServer()->CreatePlayerSpawn(Character(id)->m_Core.m_Pos, TeamMask());
 	if(Character(id)->GetPlayer()->m_IsUsingRaceClient)
 	{
 		CNetMsg_Sv_PlayerTeam Msg;
@@ -111,7 +112,7 @@ bool CGameTeams::TeamFinished(int Team) {
 int CGameTeams::TeamMask(int Team) {
 	int Mask = 0;
 	for(int i = 0; i < MAX_CLIENTS; ++i) {
-		if(m_Core.Team(i) == Team) {
+		if(m_Core.Team(i) == Team || Character(i)->GetPlayer()->m_ShowOthers) {
 			Mask |= 1 << i;
 		}
 	}

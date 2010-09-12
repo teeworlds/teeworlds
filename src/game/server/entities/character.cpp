@@ -316,7 +316,7 @@ void CCharacter::FireWeapon()
 					continue;
 
 				// set his velocity to fast upward (for now)
-				GameServer()->CreateHammerHit(m_Pos);
+				GameServer()->CreateHammerHit(m_Pos, Teams()->TeamMask(Team()));
 				aEnts[i]->TakeDamage(vec2(0.f, -1.f), g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage, m_pPlayer->GetCID(), m_ActiveWeapon);
 
 				vec2 Dir;
