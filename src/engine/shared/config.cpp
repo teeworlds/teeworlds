@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #include <engine/config.h>
 #include <engine/storage.h>
 #include <engine/shared/config.h>

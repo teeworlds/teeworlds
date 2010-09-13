@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>

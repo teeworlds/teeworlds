@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #ifndef VERSIONSRV_VERSIONSRV_H
 #define VERSIONSRV_VERSIONSRV_H
 static const int VERSIONSRV_PORT = 8302;

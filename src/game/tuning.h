@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #ifndef GAME_TUNING_H
 #define GAME_TUNING_H
 #undef GAME_TUNING_H // this file will be included several times

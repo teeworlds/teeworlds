@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #ifndef ENGINE_MAP_H
 #define ENGINE_MAP_H
 

@@ -1,4 +1,4 @@
-// copyright (c) 2007 magnus auvinen, see licence.txt for more info
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #include "gamecore.h"
 
 const char *CTuningParams::m_apNames[] =

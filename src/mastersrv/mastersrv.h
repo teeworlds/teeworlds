@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #ifndef MASTERSRV_MASTERSRV_H
 #define MASTERSRV_MASTERSRV_H
 static const int MASTERSERVER_PORT = 8300;

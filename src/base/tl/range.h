@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #ifndef TL_FILE_RANGE_HPP
 #define TL_FILE_RANGE_HPP
 

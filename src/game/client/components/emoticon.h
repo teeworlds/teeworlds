@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #ifndef GAME_CLIENT_COMPONENTS_EMOTICON_H
 #define GAME_CLIENT_COMPONENTS_EMOTICON_H
 #include <base/vmath.h>

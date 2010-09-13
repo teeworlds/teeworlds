@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #include <game/generated/protocol.h>
 #include <game/server/gamecontext.h>
 #include "projectile.h"

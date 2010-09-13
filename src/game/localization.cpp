@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 
 #include "localization.h"
 #include <base/tl/algorithm.h>

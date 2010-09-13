@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #ifndef GAME_CLIENT_COMPONENTS_DEBUGHUD_H
 #define GAME_CLIENT_COMPONENTS_DEBUGHUD_H
 #include <game/client/component.h>

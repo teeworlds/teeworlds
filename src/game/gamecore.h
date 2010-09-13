@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #ifndef GAME_GAMECORE_H
 #define GAME_GAMECORE_H
 

@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #ifndef ENGINE_SHARED_HUFFMAN_H
 #define ENGINE_SHARED_HUFFMAN_H
 

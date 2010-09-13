@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #include <base/system.h>
 #include <engine/console.h>
 #include <engine/shared/protocol.h>

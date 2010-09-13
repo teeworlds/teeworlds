@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #include <engine/console.h>
 #include <engine/graphics.h>
 #include <engine/input.h>

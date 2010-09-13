@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #ifndef GAME_SERVER_GAMEMODES_DM_H
 #define GAME_SERVER_GAMEMODES_DM_H
 #include <game/server/gamecontroller.h>

@@ -1,3 +1,4 @@
+// copyright (c) 2010 magnus auvinen, see licence.txt for more info
 //#include "gc_console.h"
 #include <math.h>
 #include <time.h>
