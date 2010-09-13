@@ -453,7 +453,7 @@ void CGameContext::OnTick()
 
 				if(Yes >= Total/2+1)
 					m_VoteEnforce = VOTE_ENFORCE_YES;
-				else if(No >= Total/2+1 || Yes+No == Total)
+				else if(No >= (Total+1)/2)
 					m_VoteEnforce = VOTE_ENFORCE_NO;
 			}
 
@@ -524,8 +524,8 @@ void CGameContext::OnClientEnter(int ClientId)
 	//world.insert_entity(&players[client_id]);
 	m_apPlayers[ClientId]->Respawn();
 	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "%s entered and joined the %s", Server()->ClientName(ClientId), m_pController->GetTeamName(m_apPlayers[ClientId]->GetTeam()));
-	SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+	str_format(aBuf, sizeof(aBuf), "'%s' entered and joined the %s", Server()->ClientName(ClientId), m_pController->GetTeamName(m_apPlayers[ClientId]->GetTeam()));
+	SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
 	SendChatTarget(ClientId, "DDRace Mod. Version: " DDRACE_VERSION);
 	SendChatTarget(ClientId, "Official site: DDRace.info");
 	SendChatTarget(ClientId, "For more Info /CMDList");
@@ -1027,6 +1027,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			{
 				if(str_comp_nocase(pMsg->m_Value, pOption->m_aCommand) == 0)
 				{
+					//str_format(aChatmsg, sizeof(aChatmsg), "'%s' called vote to change server option '%s'", Server()->ClientName(ClientId), pOption->m_aCommand);
 					if(m_apPlayers[ClientId]->m_Authed == 0 && strncmp(pOption->m_aCommand, "sv_map ", 7) == 0 && time_get() < last_mapvote + (time_freq() * g_Config.m_SvVoteMapTimeDelay))
 						{
 							char chatmsg[512] = {0};
@@ -1035,7 +1036,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 
 							return;
 						}
-					str_format(aChatmsg, sizeof(aChatmsg), "%s called vote to change server option '%s'", Server()->ClientName(ClientId), pOption->m_aCommand);
+					str_format(aChatmsg, sizeof(aChatmsg), "'%s' called vote to change server option '%s'", Server()->ClientName(ClientId), pOption->m_aCommand);
 					str_format(aDesc, sizeof(aDesc), "%s", pOption->m_aCommand);
 					str_format(aCmd, sizeof(aCmd), "%s", pOption->m_aCommand);
 					last_mapvote = time_get();
@@ -1092,12 +1093,12 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				SendChatTarget(ClientId, "You cant kick admins");
 				m_apPlayers[ClientId]->m_Last_KickVote = time_get();
 				char aBufKick[128];
-				str_format(aBufKick, sizeof(aBufKick), "%s called for vote to kick you", Server()->ClientName(ClientId));
+				str_format(aBufKick, sizeof(aBufKick), "'%s' called for vote to kick you", Server()->ClientName(ClientId));
 				SendChatTarget(KickId, aBufKick);
 				return;
 			}
 
-			str_format(aChatmsg, sizeof(aChatmsg), "%s called for vote to kick '%s'", Server()->ClientName(ClientId), Server()->ClientName(KickId));
+			str_format(aChatmsg, sizeof(aChatmsg), "'%s' called for vote to kick '%s'", Server()->ClientName(ClientId), Server()->ClientName(KickId));
 			str_format(aDesc, sizeof(aDesc), "Kick '%s'", Server()->ClientName(KickId));
 			if (!g_Config.m_SvVoteKickBanTime)
 				str_format(aCmd, sizeof(aCmd), "kick %d", KickId);
@@ -1192,7 +1193,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		if(MsgId == NETMSGTYPE_CL_CHANGEINFO && str_comp(aOldName, Server()->ClientName(ClientId)) != 0)
 		{
 			char aChatText[256];
-			str_format(aChatText, sizeof(aChatText), "%s changed name to %s", aOldName, Server()->ClientName(ClientId));
+			str_format(aChatText, sizeof(aChatText), "'%s' changed name to '%s'", aOldName, Server()->ClientName(ClientId));
 			SendChat(-1, CGameContext::CHAT_ALL, aChatText);
 		}
 
@@ -1285,15 +1286,15 @@ void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData, int
 	const char *pParamName = pResult->GetString(0);
 	float NewValue = pResult->GetFloat(1);
 
-	char aBuf[256];
 	if(pSelf->Tuning()->Set(pParamName, NewValue))
 	{
+		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "%s changed to %.2f", pParamName, NewValue);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", aBuf);
 		pSelf->SendTuningParams(-1);
 	}
 	else
-		str_format(aBuf, sizeof(aBuf), "No such tuning parameter");
-	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", aBuf);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "No such tuning parameter");
 }
 
 void CGameContext::ConTuneReset(IConsole::IResult *pResult, void *pUserData, int cid)

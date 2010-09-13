@@ -31,7 +31,7 @@ bool CMenusKeyBinder::OnInput(IInput::CEvent Event)
 {
 	if(m_TakeKey)
 	{
-		if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key != KEY_ESCAPE)
+		if(Event.m_Flags&IInput::FLAG_PRESS)
 		{
 			m_Key = Event;
 			m_GotKey = true;
@@ -337,8 +337,10 @@ void CMenus::UiDoGetButtons(int Start, int Stop, CUIRect View)
 		int NewId = DoKeyReader((void *)&gs_aKeys[i].m_Name, &Button, OldId);
 		if(NewId != OldId)
 		{
-			m_pClient->m_pBinds->Bind(OldId, "");
-			m_pClient->m_pBinds->Bind(NewId, gs_aKeys[i].m_pCommand);
+			if(OldId != 0 || NewId == 0)
+				m_pClient->m_pBinds->Bind(OldId, "");
+			if(NewId != 0)
+				m_pClient->m_pBinds->Bind(NewId, gs_aKeys[i].m_pCommand);
 		}
 		View.HSplitTop(5.0f, 0, &View);
 	}

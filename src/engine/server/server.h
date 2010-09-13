@@ -3,7 +3,7 @@
 
 #include <engine/server.h>
 #include <engine/map.h>
-#include <engine/shared/demorec.h>
+#include <engine/shared/demo.h>
 #include <engine/shared/protocol.h>
 #include <engine/shared/snapshot.h>
 #include <engine/shared/network.h>
@@ -121,6 +121,7 @@ public:
 	//int m_CurrentGameTick;
 	int m_RunServer;
 	int m_MapReload;
+	int m_RconClientId;
 
 	char m_aBrowseinfoGametype[16];
 	int m_BrowseinfoProgression;

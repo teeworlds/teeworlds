@@ -6,7 +6,8 @@
 
 struct CDemoHeader
 {
-	char m_aMarker[8];
+	unsigned char m_aMarker[7];
+	unsigned char m_Version;
 	char m_aNetversion[64];
 	char m_aMap[64];
 	unsigned char m_aCrc[4];

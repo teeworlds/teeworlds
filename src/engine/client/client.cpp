@@ -18,7 +18,7 @@
 #include <engine/shared/ringbuffer.h>
 #include <engine/shared/protocol.h>
 
-#include <engine/shared/demorec.h>
+#include <engine/shared/demo.h>
 
 #include <mastersrv/mastersrv.h>
 #include <versionsrv/versionsrv.h>

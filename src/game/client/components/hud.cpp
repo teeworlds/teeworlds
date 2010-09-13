@@ -227,10 +227,14 @@ void CHud::RenderVoting()
 	TextRender()->TextColor(1,1,1,1);
 
 	char Buf[512];
-	TextRender()->Text(0x0, 5, 60, 6, m_pClient->m_pVoting->VoteDescription(), -1);
-
 	str_format(Buf, sizeof(Buf), Localize("%ds left"), m_pClient->m_pVoting->SecondsLeft());
 	float tw = TextRender()->TextWidth(0x0, 6, Buf, -1);
+
+	CTextCursor Cursor;
+	TextRender()->SetCursor(&Cursor, 5.0f, 60.0f, 6.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+	Cursor.m_LineWidth = 100-tw;
+	TextRender()->TextEx(&Cursor, m_pClient->m_pVoting->VoteDescription(), -1);
+
 	TextRender()->Text(0x0, 5+100-tw, 60, 6, Buf, -1);
 	
 

@@ -5,7 +5,7 @@
 #include <engine/map.h>
 #include <engine/storage.h>
 #include <engine/serverbrowser.h>
-#include <engine/shared/demorec.h>
+#include <engine/shared/demo.h>
 #include <engine/shared/config.h>
 
 #include <game/generated/protocol.h>
@@ -507,6 +507,13 @@ void CGameClient::OnRender()
 		}
 		m_LastSendInfo = 0;
 	}
+}
+
+void CGameClient::OnRelease()
+{
+	// release all systems
+	for(int i = 0; i < m_All.m_Num; i++)
+		m_All.m_paComponents[i]->OnRelease();
 }
 
 void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)

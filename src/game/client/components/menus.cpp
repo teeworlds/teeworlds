@@ -465,30 +465,50 @@ int CMenus::DoKeyReader(void *pID, const CUIRect *pRect, int Key)
 	// process
 	static void *pGrabbedID = 0;
 	static bool MouseReleased = true;
+	static int ButtonUsed = 0;
 	int Inside = UI()->MouseInside(pRect);
 	int NewKey = Key;
 	
-	if(!UI()->MouseButton(0) && pGrabbedID == pID)
+	if(!UI()->MouseButton(0) && !UI()->MouseButton(1) && pGrabbedID == pID)
 		MouseReleased = true;
 
 	if(UI()->ActiveItem() == pID)
 	{
 		if(m_Binder.m_GotKey)
 		{
-			NewKey = m_Binder.m_Key.m_Key;
+			// abort with escape key
+			if(m_Binder.m_Key.m_Key != KEY_ESCAPE)
+				NewKey = m_Binder.m_Key.m_Key;
 			m_Binder.m_GotKey = false;
 			UI()->SetActiveItem(0);
 			MouseReleased = false;
 			pGrabbedID = pID;
 		}
+
+		if(ButtonUsed == 1 && !UI()->MouseButton(1))
+		{
+			if(Inside)
+				NewKey = 0;
+			UI()->SetActiveItem(0);
+		}
 	}
 	else if(UI()->HotItem() == pID)
 	{
-		if(UI()->MouseButton(0) && MouseReleased)
+		if(MouseReleased)
 		{
-			m_Binder.m_TakeKey = true;
-			m_Binder.m_GotKey = false;
-			UI()->SetActiveItem(pID);
+			if(UI()->MouseButton(0))
+			{
+				m_Binder.m_TakeKey = true;
+				m_Binder.m_GotKey = false;
+				UI()->SetActiveItem(pID);
+				ButtonUsed = 0;
+			}
+
+			if(UI()->MouseButton(1))
+			{
+				UI()->SetActiveItem(pID);
+				ButtonUsed = 1;
+			}
 		}
 	}
 	
@@ -496,7 +516,7 @@ int CMenus::DoKeyReader(void *pID, const CUIRect *pRect, int Key)
 		UI()->SetHotItem(pID);
 
 	// draw
-	if (UI()->ActiveItem() == pID)
+	if (UI()->ActiveItem() == pID && ButtonUsed == 0)
 		DoButton_KeySelect(pID, "???", 0, pRect);
 	else
 	{
@@ -1164,10 +1184,18 @@ int CMenus::Render()
 void CMenus::SetActive(bool Active)
 {
 	m_MenuActive = Active;
-	if(!m_MenuActive && m_NeedSendinfo)
+	if(!m_MenuActive)
 	{
-		m_pClient->SendInfo(false);
-		m_NeedSendinfo = false;
+		if(m_NeedSendinfo)
+		{
+			m_pClient->SendInfo(false);
+			m_NeedSendinfo = false;
+		}
+
+		if(Client()->State() == IClient::STATE_ONLINE)
+		{
+			m_pClient->OnRelease();
+		}
 	}
 }
 
