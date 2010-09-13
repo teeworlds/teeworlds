@@ -243,10 +243,6 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		// make sure that we render the correct team
 
 		char aBuf[128];
-		float FontSizeResize = FontSize;
-		float Width;
-		const float ScoreWidth = 60.0f;
-		const float PingWidth = 60.0f;
 		if(pInfo->m_Local)
 		{
 			// background so it's easy to find the local player
@@ -256,6 +252,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			RenderTools()->DrawRoundRect(x, y, w-20, LineHeight*0.95f, 17.0f);
 			Graphics()->QuadsEnd();
 		}
+
 		if(m_pClient->m_IsRace)
 		{
 			float Time = m_pClient->m_aClients[pInfo->m_ClientId].m_Score;
@@ -267,15 +264,13 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		}
 		else
 		{
-		str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_Score, -9999, 9999));
-		while((Width = TextRender()->TextWidth(0, FontSizeResize, aBuf, -1)) > ScoreWidth)
-			--FontSizeResize;
-		TextRender()->Text(0, x+ScoreWidth-Width, y+(FontSize-FontSizeResize)/2, FontSizeResize, aBuf, -1);
+			str_format(aBuf, sizeof(aBuf), "%4d", pInfo->m_Score);
+			TextRender()->Text(0, x+60-TextRender()->TextWidth(0, FontSize,aBuf,-1), y, FontSize, aBuf, -1);
 		}
 		
-		FontSizeResize = FontSize;
-		while(TextRender()->TextWidth(0, FontSizeResize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1) > w-163.0f-PingWidth)
-			--FontSizeResize;
+		float FontSizeName = FontSize;
+		while(TextRender()->TextWidth(0, FontSizeName, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1) > w-200)
+			--FontSizeName;
 		CGameClient::CClientData currentData = m_pClient->m_aClients[pInfo->m_ClientId];
 			TextRender()->TextColor(
 				(float)(m_PredefinedColors[pInfo->m_ClientId].r)/255.0f,
@@ -284,22 +279,16 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		if(m_pClient->m_IsRace)
 		{
 			CTextCursor Cursor;
-			TextRender()->SetCursor(&Cursor, x+128+DataOffset, y+(FontSize-FontSizeResize)/2, FontSizeResize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+			TextRender()->SetCursor(&Cursor, x+128+DataOffset, y+(FontSize-FontSizeName)/2, FontSizeName, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = 400;
 			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
 		}
 		else
-			TextRender()->Text(0, x+128+DataOffset, y+(FontSize-FontSizeResize)/2, FontSizeResize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
+			TextRender()->Text(0, x+128+DataOffset, y+(FontSize-FontSizeName)/2, FontSizeName, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
 			
 		str_format(aBuf, sizeof(aBuf), "%4d", pInfo->m_Latency);
 		float tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
-		//TextRender()->Text(0, x+w-tw-35, y, FontSize, aBuf, -1);
-		TextRender()->Text(0, x+128.0f, y+(FontSize-FontSizeResize)/2, FontSizeResize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
-		FontSizeResize = FontSize;
-		str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_Latency, -9999, 9999));
-		while((Width = TextRender()->TextWidth(0, FontSizeResize, aBuf, -1)) > PingWidth)
-			--FontSizeResize;
-		TextRender()->Text(0, x+w-35.0f-Width, y+(FontSize-FontSizeResize)/2, FontSizeResize, aBuf, -1);
+		TextRender()->Text(0, x+w-tw-35, y, FontSize, aBuf, -1);
 
 		// render avatar
 		if((m_pClient->m_Snap.m_paFlags[0] && m_pClient->m_Snap.m_paFlags[0]->m_CarriedBy == pInfo->m_ClientId) ||
