@@ -428,7 +428,7 @@ void CGameContext::OnTick()
 					if(!m_apPlayers[i] || m_apPlayers[i]->GetTeam() == -1 || aVoteChecked[i])	// don't count in votes by spectators
 						continue;
 					if(m_VoteKick && 
-						GetPlayerChar(m_VoteCreator) && 
+						GetPlayerChar(m_VoteCreator) && GetPlayerChar(i) &&
 						GetPlayerChar(m_VoteCreator)->Team() != GetPlayerChar(i)->Team()) continue;
 					int ActVote = m_apPlayers[i]->m_Vote;
 					int ActVotePos = m_apPlayers[i]->m_VotePos;
