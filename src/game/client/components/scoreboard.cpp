@@ -321,9 +321,11 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			}
 		}
 
-		str_format(aBuf, sizeof(aBuf), "%4d", pInfo->m_Latency);
-		float tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
-		TextRender()->Text(0, x+w-tw-35, y, FontSize, aBuf, -1);
+		FontSizeResize = FontSize;
+		str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_Latency, -9999, 9999));
+		while((Width = TextRender()->TextWidth(0, FontSizeResize, aBuf, -1)) > PingWidth)
+			--FontSizeResize;
+		TextRender()->Text(0, x+w-35.0f-Width, y+(FontSize-FontSizeResize)/2, FontSizeResize, aBuf, -1);
 
 		// render avatar
 		if((m_pClient->m_Snap.m_paFlags[0] && m_pClient->m_Snap.m_paFlags[0]->m_CarriedBy == pInfo->m_ClientId) ||
