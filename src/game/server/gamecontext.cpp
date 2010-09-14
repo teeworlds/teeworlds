@@ -1011,6 +1011,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	else if(MsgId == NETMSGTYPE_CL_ISRACE)
 	{
 		p->m_IsUsingRaceClient = true;
+		p->m_ShowOthers = true;
+		((CGameControllerDDRace*)m_pController)->m_Teams.SendAllInfo(p->GetCID());
 		// send time of all players
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
@@ -1036,9 +1038,6 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		p->m_Last_ShowOthers = Server()->Tick();
 		CNetMsg_Cl_RaceShowOthers *pMsg = (CNetMsg_Cl_RaceShowOthers *)pRawMsg;
 		p->m_ShowOthers = (bool)pMsg->m_Active;
-		if(p->m_ShowOthers) {
-			((CGameControllerDDRace*)m_pController)->m_Teams.SendAllInfo(p->GetCID());
-		}
 	}
 	else if(MsgId == NETMSGTYPE_CL_CALLVOTE)
 	{
@@ -1672,7 +1671,7 @@ void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int cid
 		{
 			chr->m_Super = true;
 			chr->UnFreeze();
-			chr->Teams()->m_Core.Team(cid1, TEAM_SUPER);
+			chr->Teams()->SetCharacterTeam(cid1, TEAM_SUPER);
 			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
 		}
@@ -1705,7 +1704,7 @@ void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int c
 		{
 			chr->m_Super = true;
 			chr->UnFreeze();
-			chr->Teams()->m_Core.Team(cid, TEAM_SUPER);
+			chr->Teams()->SetCharacterTeam(cid, TEAM_SUPER);
 			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
 		}
