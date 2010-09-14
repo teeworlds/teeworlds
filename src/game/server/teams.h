@@ -39,6 +39,8 @@ public:
 	bool TeamFinished(int Team);
 
 	int TeamMask(int Team);
+	
+	void SendAllInfo(int Cid);
 };
 
 #endif

@@ -32,10 +32,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 
 	m_PauseInfo.m_Respawn = false;
 
-	if(!g_Config.m_SvShowOthers)
-		m_ShowOthers = false;
-	else
-		m_ShowOthers = true;
+	m_ShowOthers = false;
 	
 	m_IsUsingRaceClient = false;
 	m_LastSentTime = 0;

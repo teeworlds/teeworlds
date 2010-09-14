@@ -120,3 +120,14 @@ int CGameTeams::TeamMask(int Team) {
 	}
 	return Mask;
 }
+
+void CGameTeams::SendAllInfo(int Cid) {
+	for(int i = 0; i < MAX_CLIENTS; ++i) {
+		if(m_Core.Team(i) != 0) {
+			CNetMsg_Sv_PlayerTeam Msg;
+			Msg.m_Team = m_Core.Team(i);
+			Msg.m_Cid = i;
+			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, Cid);
+		}
+	}
+}

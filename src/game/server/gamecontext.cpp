@@ -850,6 +850,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				else
 					Score()->ShowRank(p->GetCID(), Server()->ClientName(ClientId));
 			}
+			/* disable it for vanilla clients
 			else if(!str_comp(pMsg->m_pMessage, "/show_others"))
 			{
 				if(!g_Config.m_SvShowOthers && !Server()->IsAuthed(ClientId)) {
@@ -860,7 +861,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					SendChatTarget(ClientId, "Please use the settings to switch this option.");
 				else
 					p->m_ShowOthers = !p->m_ShowOthers;
-			}
+			}*/
 			else if (!str_comp_nocase(pMsg->m_pMessage, "/time") && g_Config.m_SvEmotionalTees)
 
 				{
