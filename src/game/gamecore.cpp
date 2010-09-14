@@ -215,10 +215,11 @@ void CCharacterCore::Tick(bool UseInput)
 			float Dist = 0.0f;
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
+				if(i != m_Id && !m_pTeams->SameTeam(i, m_Id) && m_pTeams->Team(m_Id) != TEAM_SUPER) continue;
 				CCharacterCore *p = m_pWorld->m_apCharacters[i];
 				
 				
-				if(!p || p == this || !m_pTeams->SameTeam(i, m_Id))
+				if(!p || p == this)
 					continue;
 				//char aBuf[512];
 				//str_format(aBuf, sizeof(aBuf), "ThisId = %d Id = %d TheSameTeam? = %d", ThisId, i, m_pTeams->SameTeam(i, ThisId));
@@ -317,12 +318,13 @@ void CCharacterCore::Tick(bool UseInput)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
+			if(i != m_Id && !m_pTeams->SameTeam(i, m_Id) && m_pTeams->Team(m_Id) != TEAM_SUPER) continue;
 			CCharacterCore *p = m_pWorld->m_apCharacters[i];
 			if(!p)
 				continue;
 			
 			//player *p = (player*)ent;
-			if(p == this || (m_Id != -1 && !m_pTeams->SameTeam(m_Id, i))) { // || !(p->flags&FLAG_ALIVE)
+			if(p == this) { // || !(p->flags&FLAG_ALIVE)
 				continue; // make sure that we don't nudge our self
 			}
 			// handle player <-> player collision

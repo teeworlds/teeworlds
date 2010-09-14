@@ -3,6 +3,11 @@
 
 #include <engine/shared/protocol.h>
 
+enum {
+	TEAM_FLOCK = 0,
+	TEAM_SUPER = 16
+};
+
 class CTeamsCore {
 	
 	int m_Team[MAX_CLIENTS];

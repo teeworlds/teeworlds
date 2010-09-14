@@ -2,7 +2,7 @@
 
 CTeamsCore::CTeamsCore() {
 	for(int i = 0; i < MAX_CLIENTS; ++i) {
-		m_Team[i] = 0;
+		m_Team[i] = TEAM_FLOCK;
 	}
 }
 

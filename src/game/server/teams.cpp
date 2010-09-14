@@ -10,7 +10,7 @@ CGameTeams::CGameTeams(CGameContext *pGameContext) : m_pGameContext(pGameContext
 
 void CGameTeams::OnCharacterStart(int id) {
 	int Tick = Server()->Tick();
-	if(m_Core.Team(id) == 0) {
+	if(m_Core.Team(id) == TEAM_FLOCK || m_Core.Team(id) == TEAM_SUPER) {
 		CCharacter* Char = Character(id);
 		Char->m_RaceState = RACE_STARTED;
 		Char->m_StartTime = Tick;
@@ -33,7 +33,7 @@ void CGameTeams::OnCharacterStart(int id) {
 }
 
 void CGameTeams::OnCharacterFinish(int id) {
-	if(m_Core.Team(id) == 0) {
+	if(m_Core.Team(id) == TEAM_FLOCK || m_Core.Team(id) == TEAM_SUPER) {
 		Character(id)->OnFinish();
 	} else {
 		m_TeeFinished[id] = true;
@@ -57,20 +57,23 @@ void CGameTeams::OnCharacterFinish(int id) {
 
 bool CGameTeams::SetCharacterTeam(int id, int Team) {
 	//TODO: Send error message 
-	if(id < 0 || id >= MAX_CLIENTS || Team < 0 || Team >= MAX_CLIENTS) {
+	if(id < 0 || id >= MAX_CLIENTS || Team < 0 || Team >= MAX_CLIENTS + 1) {
 		return false;
 	}
-	if(m_TeamState[Team] >= CLOSED) {
+	if(Team != TEAM_SUPER && m_TeamState[Team] >= CLOSED) {
+		return false;
+	}
+	if(m_Core.Team(id) == TEAM_SUPER) {
 		return false;
 	}
 	if(Character(id)->m_RaceState != RACE_NONE) {
-		if(Team == 0 && m_Core.Team(id) != 0) {
+		if(Team == TEAM_FLOCK && m_Core.Team(id) != TEAM_FLOCK) {
 			Character(id)->GetPlayer()->KillCharacter(WEAPON_GAME);
 		} else {
 			return false;
 		}
 	}
-	if(m_Core.Team(id) != 0 && m_TeamState[m_Core.Team(id)] != EMPTY) {
+	if(m_Core.Team(id) != TEAM_FLOCK && m_Core.Team(id) != TEAM_SUPER && m_TeamState[m_Core.Team(id)] != EMPTY) {
 		bool NoOneInOldTeam = true;
 		for(int i = 0; i < MAX_CLIENTS; ++i) {
 			if(i != id && m_Core.SameTeam(i, id)) {
@@ -83,7 +86,7 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 		}
 	}
 	m_Core.Team(id, Team);
-	if(m_TeamState[Team] == EMPTY) {
+	if(Team != TEAM_SUPER && m_TeamState[Team] == EMPTY) {
 		ChangeTeamState(Team, OPEN);
 	}
 	//GameServer()->CreatePlayerSpawn(Character(id)->m_Core.m_Pos, TeamMask());
@@ -93,9 +96,9 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 		Msg.m_Team = Team;
 		Msg.m_Cid = id;
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
-		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf), "Id = %d Team = %d", id, Team);
-		dbg_msg("Teams", aBuf);
+		//char aBuf[512];
+		//str_format(aBuf, sizeof(aBuf), "Id = %d Team = %d", id, Team);
+		//dbg_msg("Teams", aBuf);
 	}
 	return true;
 }

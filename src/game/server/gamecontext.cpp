@@ -1672,6 +1672,7 @@ void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int cid
 		{
 			chr->m_Super = true;
 			chr->UnFreeze();
+			chr->Teams()->m_Core.Team(cid1, TEAM_SUPER);
 			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
 		}
@@ -1704,6 +1705,7 @@ void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int c
 		{
 			chr->m_Super = true;
 			chr->UnFreeze();
+			chr->Teams()->m_Core.Team(cid, TEAM_SUPER);
 			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
 		}
