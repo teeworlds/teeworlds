@@ -264,6 +264,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		float FontSizeResize = FontSize;
 		float Width;
 		const float ScoreWidth = 60.0f+Offset;
+		const float PingWidth = 60.0f;
 		if(m_pClient->m_IsRace)
 		{
 			// reset time
@@ -281,41 +282,43 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		}
 		else
 		{
-		const float PingWidth = 60.0f;
 			str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_Score, -9999, 9999));
 			while((Width = TextRender()->TextWidth(0, FontSizeResize, aBuf, -1)) > ScoreWidth)
 				--FontSizeResize;
 			TextRender()->Text(0, x+ScoreWidth-Width, y+(FontSize-FontSizeResize)/2, FontSizeResize, aBuf, -1);
 		}
 		
-		FontSizeResize = FontSize;		if(g_Config.m_ClScoreboardClientId)
+		FontSizeResize = FontSize;
+		if(g_Config.m_ClScoreboardClientId)
 		{
 			str_format(aBuf, sizeof(aBuf), "%d | %s", pInfo->m_ClientId, m_pClient->m_aClients[pInfo->m_ClientId].m_aName);
-			while(TextRender()->TextWidth(0, FontSizeResize, aBuf, -1) > w-163.0f-PingWidth)
-				--FontSizeResize;
 			if(m_pClient->m_IsRace)
 			{
-				CTextCursor Cursor;
-				TextRender()->SetCursor(&Cursor, x+128+Offset, y+(FontSize-FontSizeName)/2, FontSizeName, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-				Cursor.m_LineWidth = 400;
-				TextRender()->TextEx(&Cursor, aBuf, -1);
+				while(TextRender()->TextWidth(0, FontSizeResize, aBuf, -1) > w-163.0f-Offset-PingWidth)
+					--FontSizeResize;
+				TextRender()->Text(0, x+128.0f+Offset, y+(FontSize-FontSizeResize)/2, FontSizeResize, aBuf, -1);
 			}
 			else
+			{
+				while(TextRender()->TextWidth(0, FontSizeResize, aBuf, -1) > w-163.0f-PingWidth)
+					--FontSizeResize;
 				TextRender()->Text(0, x+128.0f, y+(FontSize-FontSizeResize)/2, FontSizeResize, aBuf, -1);
+			}
 		}
 		else
 		{
-			while(TextRender()->TextWidth(0, FontSizeResize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1) > w-163.0f-PingWidth)
-				--FontSizeResize;
 			if(m_pClient->m_IsRace)
 			{
-				CTextCursor Cursor;
-				TextRender()->SetCursor(&Cursor, x+128+Offset, y+(FontSize-FontSizeName)/2, FontSizeName, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-				Cursor.m_LineWidth = 400;
-				TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
+				while(TextRender()->TextWidth(0, FontSizeResize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1) > w-163.0f-Offset-PingWidth)
+					--FontSizeResize;
+				TextRender()->Text(0, x+128.0f+Offset, y+(FontSize-FontSizeResize)/2, FontSizeResize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
 			}
 			else
+			{
+				while(TextRender()->TextWidth(0, FontSizeResize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1) > w-163.0f-PingWidth)
+					--FontSizeResize;
 				TextRender()->Text(0, x+128.0f, y+(FontSize-FontSizeResize)/2, FontSizeResize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
+			}
 		}
 
 		str_format(aBuf, sizeof(aBuf), "%4d", pInfo->m_Latency);
