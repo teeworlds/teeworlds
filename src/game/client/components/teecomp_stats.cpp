@@ -171,6 +171,10 @@ void CTeecompStats::OnMessage(int MsgType, void *pRawMsg)
 
 void CTeecompStats::OnRender()
 {
+	// if we the game is over
+	if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver && m_pClient->m_AutoScreenStatsTick > -1 && m_pClient->m_AutoScreenStatsTick == Client()->GameTick())
+		m_Mode = 1;
+	
 	switch(m_Mode)
 	{
 		case 1:

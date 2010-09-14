@@ -55,8 +55,12 @@ class CGameClient : public IGameClient
 	bool m_RaceMsgSent;
 	int m_ShowOthers;
 
+	bool m_StatsScreenshotTaken;
+	
 	int64 m_LastSendInfo;
 
+	void OnAutoScreenStatsTick();
+	
 	static void ConTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConKill(IConsole::IResult *pResult, void *pUserData);
 	
@@ -230,6 +234,7 @@ public:
 	int m_SpectateCid;
 	int m_KillerCid;
 	vec2 m_SpectatePos;
+	int m_AutoScreenStatsTick;
 
 	CRenderTools m_RenderTools;
 	

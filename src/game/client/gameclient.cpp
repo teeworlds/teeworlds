@@ -337,6 +337,9 @@ void CGameClient::OnInit()
 	m_ExpDiff = 0;
 	m_Points = 0;
 	m_LevelUp = false;
+	
+	m_AutoScreenStatsTick = -1;
+	m_StatsScreenshotTaken = false;
 
 	// Teecomp grayscale flags
 	Graphics()->UnloadTexture(g_pData->m_aImages[IMAGE_GAME_GRAY].m_Id); // Already loaded with full color, unload
@@ -554,6 +557,9 @@ void CGameClient::OnReset()
 	m_ExpDiff = 0.0f;
 	m_Points = 0;
 	m_LevelUp = false;
+	
+	m_AutoScreenStatsTick = -1;
+	m_StatsScreenshotTaken = false;
 }
 
 
@@ -719,6 +725,9 @@ void CGameClient::OnRender()
 			}
 		}
 	}
+	
+	if(!m_StatsScreenshotTaken && m_AutoScreenStatsTick > -1 && Client()->GameTick() > m_AutoScreenStatsTick)
+		OnAutoScreenStatsTick();
 }
 
 void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
@@ -1364,8 +1373,20 @@ void CGameClient::OnPredict()
 
 void CGameClient::OnGameOver()
 {
-	if(g_Config.m_TcAutoscreen && !Client()->DemoIsPlaying())
+	if(!Client()->DemoIsPlaying())
+	{
+		m_AutoScreenStatsTick = Client()->GameTick()+Client()->GameTickSpeed()*5;
+		if(g_Config.m_TcAutoscreen)
+			Graphics()->TakeScreenshot();
+	}
+}
+
+void CGameClient::OnAutoScreenStatsTick()
+{
+	if(!Client()->DemoIsPlaying() && g_Config.m_TcAutoscreen)
 		Graphics()->TakeScreenshot();
+	
+	m_StatsScreenshotTaken = true;
 }
 
 void CGameClient::OnGameRestart()
@@ -1375,8 +1396,11 @@ void CGameClient::OnGameRestart()
 		Client()->DemoRecord_Stop();
 		Client()->TeecompDemoStart();
 	}
-	for(int i=0; i<MAX_CLIENTS; i++)
-		m_aStats[i].Reset();
+	
+	m_pTeecompStats->OnReset();
+	
+	m_AutoScreenStatsTick = -1;
+	m_StatsScreenshotTaken = false;
 }
 
 void CGameClient::OnWarmupEnd()
