@@ -147,22 +147,22 @@ const char* CTeecompUtils::TeamColorToName(int rgb)
 	vec3 hsl = RgbToHsl(rgb_v);
 
 	if(hsl.l < 0.2f)
-		return "black team";
+		return "black";
 	if(hsl.l > 0.9f)
-		return "white team";
+		return "white";
 	if(hsl.s < 0.1f)
-		return "gray team";
+		return "gray";
 	if(hsl.h < 20)
-		return "red team";
+		return "red";
 	if(hsl.h < 45)
-		return "orange team";
+		return "orange";
 	if(hsl.h < 70)
-		return "yellow team";
+		return "yellow";
 	if(hsl.h < 155)
-		return "green team";
+		return "green";
 	if(hsl.h < 260)
-		return "blue team";
+		return "blue";
 	if(hsl.h < 335)
-		return "purple team";
-	return "red team";
+		return "purple";
+	return "red";
 }

@@ -248,9 +248,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 				char aName[MAX_NAME_LENGTH];
 				str_copy(aName, pLine, Num);
 				
-				dbg_msg("test1", "%s", aName);
-				
-				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' entered and joined the %s", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1));
+				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' entered and joined the %s team", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1));
 			}
 			else if(str_find(pLine, "entered and joined the blue team"))
 			{
@@ -269,9 +267,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 				char aName[MAX_NAME_LENGTH];
 				str_copy(aName, pLine, Num);
 				
-				dbg_msg("test2", "%s", aName);
-				
-				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' entered and joined the %s", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2));
+				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' entered and joined the %s team", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2));
 			}
 			else if(str_find(pLine, "joined the red team"))
 			{
@@ -290,9 +286,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 				char aName[MAX_NAME_LENGTH];
 				str_copy(aName, pLine, Num);
 				
-				dbg_msg("test3", "%s", aName);
-				
-				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' joined the %s", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1));
+				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' joined the %s team", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1));
 			}
 			else if(str_find(pLine, "joined the blue team"))
 			{
@@ -311,9 +305,21 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 				char aName[MAX_NAME_LENGTH];
 				str_copy(aName, pLine, Num);
 				
-				dbg_msg("test4", "%s", aName);
+				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' joined the %s team", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2));
+			}
+			else if(g_Config.m_TcColoredFlags && str_find(pLine, "red flag was"))
+			{
+				while(str_comp_num(pLine, "flag was", 8))
+					pLine++;
 				
-				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' joined the %s", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2));
+				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "The %s %s", CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1), pLine);
+			}
+			else if(g_Config.m_TcColoredFlags && str_find(pLine, "blue flag was"))
+			{
+				while(str_comp_num(pLine, "flag was", 8))
+					pLine++;
+				
+				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "The %s %s", CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2), pLine);
 			}
 			else
 				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "%s", pLine);
