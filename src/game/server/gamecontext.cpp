@@ -1036,6 +1036,9 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		p->m_Last_ShowOthers = Server()->Tick();
 		CNetMsg_Cl_RaceShowOthers *pMsg = (CNetMsg_Cl_RaceShowOthers *)pRawMsg;
 		p->m_ShowOthers = (bool)pMsg->m_Active;
+		if(p->m_ShowOthers) {
+			((CGameControllerDDRace*)m_pController)->m_Teams.SendAllInfo(p->GetCID());
+		}
 	}
 	else if(MsgId == NETMSGTYPE_CL_CALLVOTE)
 	{

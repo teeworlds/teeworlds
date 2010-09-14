@@ -90,9 +90,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	if(m_pPlayer->m_RconFreeze) Freeze(-1);
 	GameServer()->m_pController->OnCharacterSpawn(this);
 	
-	if(GetPlayer()->m_IsUsingRaceClient) {
-		Teams()->SendAllInfo(GetPlayer()->GetCID());
-	}
+	
 
 	return true;
 }
