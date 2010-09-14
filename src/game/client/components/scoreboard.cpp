@@ -150,12 +150,8 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	}
 		
 	float Offset = 0;
-	float DataOffset = 0;
 	if(m_pClient->m_IsRace)
-	{
-		Offset = 80.0f;
-		DataOffset = 130;
-	}
+		Offset = 110.0f;
 	
 	float tw = TextRender()->TextWidth(0, 48, pTitle, -1);
 
@@ -265,7 +261,10 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			Graphics()->QuadsEnd();
 		}
 
-		float FontSizeResize = FontSize;		float Width;		const float ScoreWidth = 60.0f;		if(m_pClient->m_IsRace)
+		float FontSizeResize = FontSize;
+		float Width;
+		const float ScoreWidth = 60.0f+Offset;
+		if(m_pClient->m_IsRace)
 		{
 			// reset time
 			if(pInfo->m_Score == -9999)
@@ -278,7 +277,6 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 				while((Width = TextRender()->TextWidth(0, FontSizeResize, aBuf, -1)) > ScoreWidth)
 					--FontSizeResize;
 				TextRender()->Text(0, x+ScoreWidth-Width, y+(FontSize-FontSizeResize)/2, FontSizeResize, aBuf, -1);
-				//TextRender()->Text(0, x+DataOffset+60-TextRender()->TextWidth(0, FontSize,aBuf,-1), y, FontSize, aBuf, -1);
 			}
 		}
 		else
@@ -300,24 +298,24 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			if(m_pClient->m_IsRace)
 			{
 				CTextCursor Cursor;
-				TextRender()->SetCursor(&Cursor, x+128+DataOffset, y+(FontSize-FontSizeName)/2, FontSizeName, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				TextRender()->SetCursor(&Cursor, x+128+Offset, y+(FontSize-FontSizeName)/2, FontSizeName, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = 400;
 				TextRender()->TextEx(&Cursor, aBuf, -1);
 			}
 			else	
-				TextRender()->Text(0, x+128+DataOffset, y+(FontSize-FontSizeName)/2, FontSizeName, aBuf, -1);
+				TextRender()->Text(0, x+128+Offset, y+(FontSize-FontSizeName)/2, FontSizeName, aBuf, -1);
 		}
 		else
 		{
 			if(m_pClient->m_IsRace)
 			{
 				CTextCursor Cursor;
-				TextRender()->SetCursor(&Cursor, x+128+DataOffset, y+(FontSize-FontSizeName)/2, FontSizeName, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				TextRender()->SetCursor(&Cursor, x+128+Offset, y+(FontSize-FontSizeName)/2, FontSizeName, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = 400;
 				TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
 			}
 			else
-				TextRender()->Text(0, x+128+DataOffset, y+(FontSize-FontSizeName)/2, FontSizeName, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
+				TextRender()->Text(0, x+128+Offset, y+(FontSize-FontSizeName)/2, FontSizeName, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
 		}
 
 		str_format(aBuf, sizeof(aBuf), "%4d", pInfo->m_Latency);
@@ -346,7 +344,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			}
 
 			float size = 64.0f;
-			IGraphics::CQuadItem QuadItem(x+55+DataOffset, y-15, size/2, size);
+			IGraphics::CQuadItem QuadItem(x+55+Offset, y-15, size/2, size);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
 		}
@@ -365,7 +363,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		}
 
 		TeeInfo.m_Size *= TeeSizeMod;
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeInfo, EMOTE_NORMAL, vec2(1,0), vec2(x+90+DataOffset, y+28+TeeOffset));
+		RenderTools()->RenderTee(CAnimState::GetIdle(), &TeeInfo, EMOTE_NORMAL, vec2(1,0), vec2(x+90+Offset, y+28+TeeOffset));
 
 		
 		y += LineHeight;
