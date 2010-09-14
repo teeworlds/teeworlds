@@ -63,7 +63,13 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 	if(m_TeamState[Team] >= CLOSED) {
 		return false;
 	}
-	if(Character(id)->m_RaceState != RACE_NONE) return false;
+	if(Character(id)->m_RaceState != RACE_NONE) {
+		if(Team == 0 && m_Core.Team(id) != 0) {
+			Character(id)->GetPlayer()->KillCharacter(WEAPON_GAME);
+		} else {
+			return false;
+		}
+	}
 	if(m_Core.Team(id) != 0 && m_TeamState[m_Core.Team(id)] != EMPTY) {
 		bool NoOneInOldTeam = true;
 		for(int i = 0; i < MAX_CLIENTS; ++i) {
