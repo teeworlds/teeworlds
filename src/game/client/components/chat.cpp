@@ -250,7 +250,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 				
 				dbg_msg("test1", "%s", aName);
 				
-				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "\"%s\" entered and joined the %s", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1));
+				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' entered and joined the %s", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1));
 			}
 			else if(str_find(pLine, "entered and joined the blue team"))
 			{
@@ -271,7 +271,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 				
 				dbg_msg("test2", "%s", aName);
 				
-				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "\"%s\" entered and joined the %s", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2));
+				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' entered and joined the %s", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2));
 			}
 			else if(str_find(pLine, "joined the red team"))
 			{
@@ -292,7 +292,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 				
 				dbg_msg("test3", "%s", aName);
 				
-				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "\"%s\" joined the %s", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1));
+				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' joined the %s", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1));
 			}
 			else if(str_find(pLine, "joined the blue team"))
 			{
@@ -313,7 +313,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 				
 				dbg_msg("test4", "%s", aName);
 				
-				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "\"%s\" joined the %s", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2));
+				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' joined the %s", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2));
 			}
 			else
 				str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "%s", pLine);
