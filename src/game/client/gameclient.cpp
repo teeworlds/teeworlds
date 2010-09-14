@@ -1390,7 +1390,7 @@ void CGameClient::OnGameOver()
 
 void CGameClient::OnAutoScreenStatsTick()
 {
-	if(!Client()->DemoIsPlaying() && g_Config.m_TcAutoscreen)
+	if(!Client()->DemoIsPlaying() && g_Config.m_TcAutoStatscreen)
 		Graphics()->TakeScreenshot();
 	
 	m_StatsScreenshotTaken = true;

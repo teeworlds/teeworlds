@@ -443,6 +443,10 @@ void CMenus::RenderSettingsTeecompMisc(CUIRect MainView)
 	RightView.HSplitTop(20.0f, &Button, &RightView);
 	if(DoButton_CheckBox(&g_Config.m_TcAutoscreen, "Enable end game automatic screenshot", g_Config.m_TcAutoscreen, &Button))
 		g_Config.m_TcAutoscreen ^= 1;
+	
+	RightView.HSplitTop(20.0f, &Button, &RightView);
+	if(DoButton_CheckBox(&g_Config.m_TcAutoStatscreen, "Enable end game automatic screenshot with stats", g_Config.m_TcAutoStatscreen, &Button))
+		g_Config.m_TcAutoStatscreen ^= 1;
 }
 
 void CMenus::RenderSettingsTeecompAbout(CUIRect MainView)

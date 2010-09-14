@@ -22,6 +22,7 @@ MACRO_CONFIG_INT(TcSpeedmeterAccel, tc_speedmeter_accel, 0, 0, 1, CFGFLAG_CLIENT
 
 MACRO_CONFIG_INT(TcAutodemo, tc_autodemo, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Enable auto demo recording")
 MACRO_CONFIG_INT(TcAutoscreen, tc_autoscreen, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Enable auto screenshot")
+MACRO_CONFIG_INT(TcAutoStatscreen, tc_auto_statscreen, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Enable auto screenshot for stats")
 
 MACRO_CONFIG_INT(TcColoredFlags, tc_colored_flags, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Make flags colors match tees colors")
 MACRO_CONFIG_INT(TcHideCarrying, tc_hide_carrying, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Hide the flag if you're carrying it")
