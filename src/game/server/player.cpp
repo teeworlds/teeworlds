@@ -38,6 +38,8 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	m_LastSentTime = 0;
 	
 	GameServer()->Score()->PlayerData(CID)->Reset();
+	
+	m_Invisible = false;
 }
 
 CPlayer::~CPlayer()

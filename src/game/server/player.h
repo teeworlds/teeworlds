@@ -81,6 +81,7 @@ public:
 	int m_Last_ShowOthers;
 
 	bool m_ShowOthers;
+	bool m_Invisible;
 	
 	//DDRace  		 
    int m_Muted;  		 

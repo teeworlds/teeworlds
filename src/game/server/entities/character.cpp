@@ -1293,7 +1293,9 @@ void CCharacter::Snap(int SnappingClient)
 		return;
 
 	CCharacter* SnapChar = GameServer()->GetPlayerChar(SnappingClient);
-	if(!SnapChar || (!SnapChar->GetPlayer()->m_ShowOthers && SnapChar->Team() != Team())) return;
+	if(!SnapChar 
+		|| (!SnapChar->GetPlayer()->m_ShowOthers && SnapChar->Team() != Team()) 
+		|| (GetPlayer()->m_Invisible && GetPlayer()->GetCID() != SnappingClient)) return;
 	CNetObj_Character *Character = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
 
 	// write down the m_Core
