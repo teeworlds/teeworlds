@@ -931,9 +931,14 @@ int CServer::BanAdd(NETADDR Addr, int Seconds)
 	return m_NetServer.BanAdd(Addr, Seconds);	
 }
 
-int CServer::BanRemove(NETADDR Addr)
+int CServer::BanRemoveByAddr(NETADDR Addr)
 {
-	return m_NetServer.BanRemove(Addr);
+	return m_NetServer.BanRemoveByAddr(Addr);
+}
+
+int CServer::BanRemoveById(short BanIndex)
+{
+	return m_NetServer.BanRemoveById(BanIndex);
 }
 	
 
@@ -1291,24 +1296,31 @@ void CServer::ConUnban(IConsole::IResult *pResult, void *pUser)
 	CServer *pServer = (CServer *)pUser;
 	const char *pStr = pResult->GetString(0);
 	
-	if(net_addr_from_str(&Addr, pStr) == 0 && !pServer->BanRemove(Addr))
+	if(net_addr_from_str(&Addr, pStr) == 0)
 	{
-		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "unbanned %d.%d.%d.%d", Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3]);
-		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+		if(pServer->BanRemoveByAddr(Addr))
+		{
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "unbanned %d.%d.%d.%d", Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3]);
+			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+		}
+		else
+			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "network address don't exist");
 	}
 	else if(StrAllnum(pStr))
 	{
 		int BanIndex = str_toint(pStr);
-		CNetServer::CBanInfo Info;
-		if(BanIndex < 0 || !pServer->m_NetServer.BanGet(BanIndex, &Info))
+		
+		if(BanIndex < 0 || BanIndex > CNetServer::s_BanList_entries)
 			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "invalid ban index");
-		else if(!pServer->BanRemove(Info.m_Addr))
+		else if(pServer->BanRemoveById(BanIndex))
 		{
 			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "unbanned %d.%d.%d.%d", Info.m_Addr.ip[0], Info.m_Addr.ip[1], Info.m_Addr.ip[2], Info.m_Addr.ip[3]);
+			str_format(aBuf, sizeof(aBuf), "unbanned %d.%d.%d.%d", CNetServer::s_aBanList_addr[BanIndex][0], CNetServer::s_aBanList_addr[BanIndex][1], CNetServer::s_aBanList_addr[BanIndex][2], CNetServer::s_aBanList_addr[BanIndex][3]);
 			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 		}
+		else
+			pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "ban index don't exist anymore");
 	}
 	else
 		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "invalid network address");
@@ -1319,26 +1331,34 @@ void CServer::ConBans(IConsole::IResult *pResult, void *pUser)
 	unsigned Now = time_timestamp();
 	char aBuf[1024];
 	CServer* pServer = (CServer *)pUser;
+	int i = 0;
 	
-	int Num = pServer->m_NetServer.BanNum();
-	for(int i = 0; i < Num; i++)
+	i=0;
+	while(i < CNetServer::s_BanList_entries)
 	{
-		CNetServer::CBanInfo Info;
-		pServer->m_NetServer.BanGet(i, &Info);
-		NETADDR Addr = Info.m_Addr;
-		
-		if(Info.m_Expires == -1)
+		if(CNetServer::s_aBanList_expires[i] == 0)
+			str_format(aBuf, sizeof(aBuf), "#%d %d.%d.%d.%d for life", i, CNetServer::s_aBanList_addr[i][0], CNetServer::s_aBanList_addr[i][1], CNetServer::s_aBanList_addr[i][2], CNetServer::s_aBanList_addr[i][3]);
+		else if(CNetServer::s_aBanList_expires[i] > Now)
 		{
-			str_format(aBuf, sizeof(aBuf), "#%d %d.%d.%d.%d for life", i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3]);
-		}
-		else
-		{
-			unsigned t = Info.m_Expires - Now;
-			str_format(aBuf, sizeof(aBuf), "#%d %d.%d.%d.%d for %d minutes and %d seconds", i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], t/60, t%60);
+			unsigned t = CNetServer::s_aBanList_expires[i] - Now;
+			unsigned int Mins = t/60, Secs = t%60;
+			if(Mins != 1 && Secs != 1)
+				str_format(aBuf, sizeof(aBuf), "#%d %d.%d.%d.%d for %d minutes and %d seconds", i, CNetServer::s_aBanList_addr[i][0], CNetServer::s_aBanList_addr[i][1], CNetServer::s_aBanList_addr[i][2], CNetServer::s_aBanList_addr[i][3], Mins, Secs);
+			else if(Mins == 1 && Secs != 1)
+				str_format(aBuf, sizeof(aBuf), "#%d %d.%d.%d.%d for %d minute and %d seconds", i, CNetServer::s_aBanList_addr[i][0], CNetServer::s_aBanList_addr[i][1], CNetServer::s_aBanList_addr[i][2], CNetServer::s_aBanList_addr[i][3], Mins, Secs);
+			else if(Mins != 1 && Secs == 1)
+				str_format(aBuf, sizeof(aBuf), "#%d %d.%d.%d.%d for %d minutes and %d second", i, CNetServer::s_aBanList_addr[i][0], CNetServer::s_aBanList_addr[i][1], CNetServer::s_aBanList_addr[i][2], CNetServer::s_aBanList_addr[i][3], Mins, Secs);
+			else if(Mins == 1 && Secs == 1)
+				str_format(aBuf, sizeof(aBuf), "#%d %d.%d.%d.%d for %d minute and %d second", i, CNetServer::s_aBanList_addr[i][0], CNetServer::s_aBanList_addr[i][1], CNetServer::s_aBanList_addr[i][2], CNetServer::s_aBanList_addr[i][3], Mins, Secs);
 		}
 		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aBuf);
+		i++;
 	}
-	str_format(aBuf, sizeof(aBuf), "%d ban(s)", Num);
+	
+	if(i == 1)
+		str_format(aBuf, sizeof(aBuf), "%d ban", i);
+	else
+		str_format(aBuf, sizeof(aBuf), "%d bans", i);
 	pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aBuf);
 }
 

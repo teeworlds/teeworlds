@@ -166,7 +166,8 @@ public:
 	void UpdateServerInfo();
 
 	int BanAdd(NETADDR Addr, int Seconds);
-	int BanRemove(NETADDR Addr);
+	int BanRemoveByAddr(NETADDR Addr);
+	int BanRemoveById(short BanIndex);
 		
 
 	void PumpNetwork();

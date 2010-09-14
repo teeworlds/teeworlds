@@ -1,4 +1,5 @@
 /* copyright (c) 2010 magnus auvinen, see licence.txt for more info */
+#include <stdio.h>
 
 /*
 	Title: OS Abstraction
@@ -472,6 +473,20 @@ int net_host_lookup(const char *hostname, NETADDR *addr, int types);
 		>0 - Address a is greater then address b
 */
 int net_addr_comp(const NETADDR *a, const NETADDR *b);
+
+/*
+	Function: simple_net_addr_comp
+		Compares two network addresses.
+	
+	Parameters:
+		a - Address to compare
+		b - Address to compare to.
+	
+	Returns:
+		0 - Address a is unequal to address b
+		1 - Address a is equal to address b
+*/
+int simple_net_addr_comp(const NETADDR *a, const NETADDR *b);
 
 /*
 	Function: net_addr_str
