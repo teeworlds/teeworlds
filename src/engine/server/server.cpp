@@ -1463,6 +1463,19 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
 				return;
 			}
 		}
+		for(int i=0;i<MAX_CLIENTS;i++)
+		{
+			NETADDR Temp = pServer->m_NetServer.ClientAddr(i);
+			Addr.port = Temp.port = 0;
+			if(net_addr_comp(&Addr, &Temp) == 0)
+			{
+				if (((CServer *)pUser)->m_aClients[ClientId1].m_Authed <= ((CServer *)pUser)->m_aClients[i].m_Authed)
+				{
+					pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "you can't ban an a player wit hthe higher or same rank!");
+					return;
+				}
+			}
+		}
 		pServer->BanAdd(Addr, Seconds, Bufz);
 	}
 	else if(StrAllnum(pStr))
@@ -1496,7 +1509,7 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
 
 	char aBuf[256];
 	if(Seconds)
-		str_format(aBuf, sizeof(aBuf), "banned %s for %d minutes", aAddrStr, Seconds);
+		str_format(aBuf, sizeof(aBuf), "banned %s for %d second(s)", aAddrStr, Seconds);
 	else
 		str_format(aBuf, sizeof(aBuf), "banned %s for life", aAddrStr);
 	pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
