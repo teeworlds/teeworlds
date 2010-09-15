@@ -116,6 +116,9 @@ void CDragger::Snap(int SnappingClient)
 		if(NetworkClipped(SnappingClient,m_Pos))
 			return;
 
+	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
+	if(Char && m_Target && !Char->GetPlayer()->m_ShowOthers && Char->Team() != m_Target->Team()) return;
+
 	CNetObj_Laser *obj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_Id, sizeof(CNetObj_Laser)));
 
 	obj->m_X = (int)m_Pos.x;

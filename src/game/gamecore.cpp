@@ -1,6 +1,5 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include "gamecore.h"
-#include "server/entities/character.h"
 
 const char *CTuningParams::m_apNames[] =
 {
@@ -55,10 +54,12 @@ float VelocityRamp(float Value, float Start, float Range, float Curvature)
 	return 1.0f/powf(Curvature, (Value-Start)/Range);
 }
 
-void CCharacterCore::Init(CWorldCore *pWorld, CCollision *pCollision)
+void CCharacterCore::Init(CWorldCore *pWorld, CCollision *pCollision, CTeamsCore* pTeams)
 {
 	m_pWorld = pWorld;
 	m_pCollision = pCollision;
+	m_pTeams = pTeams;
+	m_Id = -1;
 }
 
 void CCharacterCore::Reset()
@@ -207,7 +208,7 @@ void CCharacterCore::Tick(bool UseInput)
 				GoingToHitGround = true;
 			m_pReset = true;
 		}
-
+		
 		// Check against other players first
 		if(m_pWorld && m_pWorld->m_Tuning.m_PlayerHooking)
 		{
@@ -215,9 +216,13 @@ void CCharacterCore::Tick(bool UseInput)
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
 				CCharacterCore *p = m_pWorld->m_apCharacters[i];
-				if(!p || p == this)
+				
+				
+				if(!p || p == this || !m_pTeams->SameTeam(i, m_Id))
 					continue;
-
+				//char aBuf[512];
+				//str_format(aBuf, sizeof(aBuf), "ThisId = %d Id = %d TheSameTeam? = %d", ThisId, i, m_pTeams->SameTeam(i, ThisId));
+				//dbg_msg("GameCore", aBuf);
 				vec2 ClosestPoint = closest_point_on_line(m_HookPos, NewPos, p->m_Pos);
 				if(distance(p->m_Pos, ClosestPoint) < PhysSize+2.0f)
 				{
@@ -308,7 +313,6 @@ void CCharacterCore::Tick(bool UseInput)
 			m_HookPos = m_Pos;			
 		}
 	}
-	
 	if(m_pWorld/* && m_pWorld->m_Tuning.m_PlayerCollision*/)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
@@ -318,8 +322,9 @@ void CCharacterCore::Tick(bool UseInput)
 				continue;
 			
 			//player *p = (player*)ent;
-			if(p == this) // || !(p->flags&FLAG_ALIVE)
+			if(p == this || (m_Id != -1 && !m_pTeams->SameTeam(m_Id, i))) { // || !(p->flags&FLAG_ALIVE)
 				continue; // make sure that we don't nudge our self
+			}
 			// handle player <-> player collision
 			float d = distance(m_Pos, p->m_Pos);
 			vec2 Dir = normalize(m_Pos - p->m_Pos);

@@ -198,21 +198,6 @@ CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, v
 	return pClosest;
 }
 
-bool CGameWorld::IntersectCharacters(vec2 Pos0, vec2 Pos1, float Radius, int Type)
-{
-	bool Return = false;
-	CCharacter *p = (CCharacter *)FindFirst(NETOBJTYPE_CHARACTER);
-	for(; p; p = (CCharacter *)p->TypeNext())
- 	{
-		vec2 IntersectPos = closest_point_on_line(Pos0, Pos1, p->m_Pos);
-		float Len = distance(p->m_Pos, IntersectPos);
-		if(Len < p->m_ProximityRadius+Radius)
-			(Type)?p->Freeze(Server()->TickSpeed()*3):p->m_Doored = true;
-		Return = true;
-	}
-	return Return;
-}
-
 CCharacter *CGameWorld::ClosestCharacter(vec2 Pos, float Radius, CEntity *pNotThis)
 {
 	// Find other players
@@ -239,6 +224,35 @@ CCharacter *CGameWorld::ClosestCharacter(vec2 Pos, float Radius, CEntity *pNotTh
 	return pClosest;
 }
 
+std::list<class CCharacter *> CGameWorld::IntersectedCharacters(vec2 Pos0, vec2 Pos1, float Radius, vec2 &NewPos, class CEntity *pNotThis)
+{
+	std::list< CCharacter * > listOfChars;
+	// Find other players
+	float ClosestLen = distance(Pos0, Pos1) * 100.0f;
+	vec2 LineDir = normalize(Pos1-Pos0);
+
+	CCharacter *p = (CCharacter *)FindFirst(NETOBJTYPE_CHARACTER);
+	for(; p; p = (CCharacter *)p->TypeNext())
+ 	{
+		if(p == pNotThis)
+			continue;
+
+		vec2 IntersectPos = closest_point_on_line(Pos0, Pos1, p->m_Pos);
+		float Len = distance(p->m_Pos, IntersectPos);
+		if(Len < p->m_ProximityRadius+Radius)
+		{
+			if(Len < ClosestLen)
+			{
+				NewPos = IntersectPos;
+				ClosestLen = Len;
+				listOfChars.push_back(p);
+			}
+		}
+	}
+
+	return listOfChars;
+}
+
 void CGameWorld::ReleaseHooked(int ClientId)
 {
 	CCharacter *p = (CCharacter *)CGameWorld::FindFirst(NETOBJTYPE_CHARACTER);
@@ -250,4 +264,5 @@ void CGameWorld::ReleaseHooked(int ClientId)
 				p->m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
 				p->m_Core.m_HookState = HOOK_RETRACTED;
 			}
+
 }

@@ -22,17 +22,17 @@ CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEner
 bool CLaser::HitCharacter(vec2 From, vec2 To)
 {
 	vec2 At;
-	CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);
-	CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, To, 0.f, At, OwnerChar);
+	CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);//TODO: Find all and get closest non in Team
+	CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, To, 0.f, At, m_Bounces != 0 ? 0: OwnerChar);
 	if(!Hit)
 		return false;
-
+	if(OwnerChar != 0 && OwnerChar->Team() != Hit->Team()) return false;
 	m_From = From;
 	m_Pos = At;
 	m_Energy = -1;
-	if ((m_Type == 1 && g_Config.m_SvHit))
+	if (m_Type == 1 && g_Config.m_SvHit)
 	{
-			Hit->m_Core.m_Vel+=normalize(m_PrevPos - Hit->m_Core.m_Pos) * 10;
+		Hit->m_Core.m_Vel+=normalize(m_PrevPos - Hit->m_Core.m_Pos) * 10;
 	}
 	else if (m_Type == 0)
 	{
@@ -43,7 +43,6 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 
 void CLaser::DoBounce()
 {
-	CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);
 	m_EvalTick = Server()->Tick();
 	
 	if(m_Energy < 0)
@@ -100,7 +99,7 @@ void CLaser::DoBounce()
 			m_Energy = -1;
 		}
 	}
-	m_Owner = -1;
+	//m_Owner = -1;
 }
 	
 void CLaser::Reset()
@@ -118,7 +117,9 @@ void CLaser::Snap(int SnappingClient)
 {
 	if(NetworkClipped(SnappingClient))
 		return;
-
+	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
+	if(Char && m_Owner != -1 && !Char->GetPlayer()->m_ShowOthers &&
+		Char->Team() != GameServer()->GetPlayerChar(m_Owner)->Team()) return;
 	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_Id, sizeof(CNetObj_Laser)));
 	pObj->m_X = (int)m_Pos.x;
 	pObj->m_Y = (int)m_Pos.y;

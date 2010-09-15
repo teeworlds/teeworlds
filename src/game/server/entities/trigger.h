@@ -8,6 +8,7 @@
 class CTrigger : public CEntity
 {	
 	CEntity *m_Target;
+	bool m_TeamActivated[MAX_CLIENTS];
 
 	bool HitCharacter();
 	void OpenDoor(int Tick);

@@ -6,7 +6,6 @@
 #include "././game/variables.h"
 /* DDRace Server*/
 //===============================
-MACRO_CONFIG_INT(SvTeams, sv_teams, 1, 0, 1, CFGFLAG_SERVER, "Should the sub mod Teams be enabled or not",3)
 MACRO_CONFIG_INT(SvShotgunBulletSound, sv_shotgun_bullet_sound, 0, 0, 1, CFGFLAG_SERVER, "Annoying Shotgun sound on/off",3)
 MACRO_CONFIG_INT(SvEndlessSuperHook, sv_endless_super_hook, 0, 0, 1, CFGFLAG_SERVER, "Endless hook for super players on/off",3)
 MACRO_CONFIG_INT(SvEmotionalTees, sv_emotional_tees, 1, 0, 1, CFGFLAG_SERVER, "Emotional Tees on/off",3)

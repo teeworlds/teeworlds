@@ -75,8 +75,10 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_BroadTime = true;
 	m_BroadCast = true;
 	m_EyeEmote = true;
-	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision());
+	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
+	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision(), &Controller->m_Teams.m_Core);
 	m_Core.m_Pos = m_Pos;
+	m_Core.m_Id = GetPlayer()->GetCID();
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = &m_Core;
 
 	m_ReckoningTick = 0;
@@ -87,6 +89,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_Alive = true;
 	if(m_pPlayer->m_RconFreeze) Freeze(-1);
 	GameServer()->m_pController->OnCharacterSpawn(this);
+	
+	
 
 	return true;
 }
@@ -310,11 +314,11 @@ void CCharacter::FireWeapon()
 				CCharacter *Target = aEnts[i];
 
 				//for DDRace mod or any other mod, which needs hammer hits through the wall remove second condition
-				if ((Target == this) /*|| GameServer()->Collision()->IntersectLine(ProjStartPos, Target->m_Pos, NULL, NULL)*/)
+				if ((Target == this || Target->Team() != this->Team()) /*|| GameServer()->Collision()->IntersectLine(ProjStartPos, Target->m_Pos, NULL, NULL)*/)
 					continue;
 
 				// set his velocity to fast upward (for now)
-				GameServer()->CreateHammerHit(m_Pos);
+				GameServer()->CreateHammerHit(m_Pos, Teams()->TeamMask(Team()));
 				aEnts[i]->TakeDamage(vec2(0.f, -1.f), g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage, m_pPlayer->GetCID(), m_ActiveWeapon);
 
 				vec2 Dir;
@@ -560,8 +564,94 @@ void CCharacter::OnDirectInput(CNetObj_PlayerInput *pNewInput)
 	mem_copy(&m_LatestPrevInput, &m_LatestInput, sizeof(m_LatestInput));
 }
 
+void CCharacter::OnFinish() {
+	//TODO: this ugly
+	float time = (float)(Server()->Tick() - m_StartTime) / ((float)Server()->TickSpeed());
+	CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
+	char aBuf[128];
+		m_CpActive=-2;
+		str_format(aBuf, sizeof(aBuf), "%s finished in: %d minute(s) %5.2f second(s)", Server()->ClientName(m_pPlayer->GetCID()), (int)time/60, time-((int)time/60*60));
+		if(!g_Config.m_SvHideScore)
+			GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
+		else
+			GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+
+		if(time - pData->m_BestTime < 0)
+		{
+			// new record \o/
+			str_format(aBuf, sizeof(aBuf), "New record: %5.2f second(s) better", time - pData->m_BestTime);
+			if(!g_Config.m_SvHideScore)
+				GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
+			else
+				GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+		}
+
+		if(!pData->m_BestTime || time < pData->m_BestTime)
+		{
+			// update the score
+			pData->Set(time, m_CpCurrent);
+
+			if(str_comp_num(Server()->ClientName(m_pPlayer->GetCID()), "nameless tee", 12) != 0)
+				GameServer()->Score()->SaveScore(m_pPlayer->GetCID(), time, this);
+		}
+		
+		// update server best time
+		if(GameServer()->m_pController->m_CurrentRecord == 0 || time < GameServer()->m_pController->m_CurrentRecord)
+		{
+			// check for nameless
+			if(str_comp_num(Server()->ClientName(m_pPlayer->GetCID()), "nameless tee", 12) != 0) {
+				GameServer()->m_pController->m_CurrentRecord = time;
+				//dbg_msg("character", "Finish");
+//				GetPlayer()->SendServerRecord();
+			}
+				
+		}
+
+		m_RaceState = RACE_NONE;
+		// set player score
+		if(!GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime || GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime > time)
+		{
+			GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime = time;
+
+			// send it to all players
+			for(int i = 0; i < MAX_CLIENTS; i++)
+			{
+				if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->m_IsUsingRaceClient)
+				{
+					if(g_Config.m_SvHideScore || i == m_pPlayer->GetCID())
+					{
+						CNetMsg_Sv_PlayerTime Msg;
+						char aBuf[16];
+						str_format(aBuf, sizeof(aBuf), "%.0f", time*100.0f); // damn ugly but the only way i know to do it
+						int TimeToSend;
+						sscanf(aBuf, "%d", &TimeToSend);
+						Msg.m_Time = TimeToSend;
+						Msg.m_Cid = m_pPlayer->GetCID();
+						Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
+					}
+				}
+			}
+		}
+
+		int TTime = 0-(int)time;
+		if(m_pPlayer->m_Score < TTime)
+			m_pPlayer->m_Score = TTime;
+
+}
+
+int CCharacter::Team() {
+	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
+	return Controller->m_Teams.m_Core.Team(m_pPlayer->GetCID());
+}
+
+CGameTeams* CCharacter::Teams() {
+	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
+	return &Controller->m_Teams;
+}
+
 void CCharacter::Tick()
 {
+	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	int MapIndex = GameServer()->Collision()->GetMapIndex(m_PrevPos, m_Pos);
 	int MapIndexL = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x + m_ProximityRadius/2+1,m_Pos.y), vec2(m_Pos.x + m_ProximityRadius/2+1,m_Pos.y));
 	int MapIndexR = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x - m_ProximityRadius/2+1,m_Pos.y), vec2(m_Pos.x - m_ProximityRadius/2+1,m_Pos.y));
@@ -583,7 +673,7 @@ void CCharacter::Tick()
 	if(m_pPlayer->m_ForceBalanced)
 	{
 		char Buf[128];
-		str_format(Buf, sizeof(Buf), "You were moved to %s due to team balancing", GameServer()->m_pController->GetTeamName(m_pPlayer->GetTeam()));
+		str_format(Buf, sizeof(Buf), "You were moved to %s due to team balancing", Controller->GetTeamName(m_pPlayer->GetTeam()));
 		GameServer()->SendBroadcast(Buf, m_pPlayer->GetCID());
 
 		m_pPlayer->m_ForceBalanced = false;
@@ -613,6 +703,7 @@ void CCharacter::Tick()
 	}
 	m_Core.m_Input = m_Input;
 	m_Core.Tick(true);
+	m_Core.m_Id = GetPlayer()->GetCID();
 
 	m_DoSplash = false;
 	if (g_Config.m_SvEndlessDrag)
@@ -696,84 +787,15 @@ void CCharacter::Tick()
 		m_CpCurrent[cp] = time;
 		m_CpTick = Server()->Tick() + Server()->TickSpeed()*2;
 	}
-	if(((TileIndex == TILE_BEGIN) || (TileFIndex == TILE_BEGIN)) && (m_RaceState == RACE_NONE || m_RaceState == RACE_STARTED))
+	if(((TileIndex == TILE_BEGIN) || (TileFIndex == TILE_BEGIN)) && (m_RaceState == RACE_NONE || (m_RaceState == RACE_STARTED && !Team())))
 	{
-		m_StartTime = Server()->Tick();
-		m_RefreshTime = Server()->Tick();
-		m_RaceState = RACE_STARTED;
+		Controller->m_Teams.OnCharacterStart(m_pPlayer->GetCID());
 		m_CpActive = -2;
 	}
 
 	if(((TileIndex == TILE_END) || (TileFIndex == TILE_END)) && m_RaceState == RACE_STARTED)
 	{
-		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "%s finished in: %d minute(s) %5.2f second(s)", Server()->ClientName(m_pPlayer->GetCID()), (int)time/60, time-((int)time/60*60));
-		if(!g_Config.m_SvHideScore)
-			GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
-		else
-			GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
-
-		if(time - pData->m_BestTime < 0)
-		{
-			// new record \o/
-			str_format(aBuf, sizeof(aBuf), "New record: %5.2f second(s) better", time - pData->m_BestTime);
-			if(!g_Config.m_SvHideScore)
-				GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
-			else
-				GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
-		}
-
-		if(!pData->m_BestTime || time < pData->m_BestTime)
-		{
-			// update the score
-			pData->Set(time, m_CpCurrent);
-
-			if(str_comp_num(Server()->ClientName(m_pPlayer->GetCID()), "nameless tee", 12) != 0)
-				GameServer()->Score()->SaveScore(m_pPlayer->GetCID(), time, this);
-		}
-		
-		// update server best time
-		if(GameServer()->m_pController->m_CurrentRecord == 0 || time < GameServer()->m_pController->m_CurrentRecord)
-		{
-			// check for nameless
-			if(str_comp_num(Server()->ClientName(m_pPlayer->GetCID()), "nameless tee", 12) != 0) {
-				GameServer()->m_pController->m_CurrentRecord = time;
-				//dbg_msg("character", "Finish");
-//				GetPlayer()->SendServerRecord();
-			}
-				
-		}
-
-		m_RaceState = RACE_NONE;
-		// set player score
-		if(!GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime || GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime > time)
-		{
-			GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime = time;
-
-			// send it to all players
-			for(int i = 0; i < MAX_CLIENTS; i++)
-			{
-				if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->m_IsUsingRaceClient)
-				{
-					if(g_Config.m_SvHideScore || i == m_pPlayer->GetCID())
-					{
-						CNetMsg_Sv_PlayerTime Msg;
-						char aBuf[16];
-						str_format(aBuf, sizeof(aBuf), "%.0f", time*100.0f); // damn ugly but the only way i know to do it
-						int TimeToSend;
-						sscanf(aBuf, "%d", &TimeToSend);
-						Msg.m_Time = TimeToSend;
-						Msg.m_Cid = m_pPlayer->GetCID();
-						Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
-					}
-				}
-			}
-		}
-
-		int TTime = 0-(int)time;
-		if(m_pPlayer->m_Score < TTime)
-			m_pPlayer->m_Score = TTime;
-
+		Controller->m_Teams.OnCharacterFinish(m_pPlayer->GetCID());
 	}
 	if(((TileIndex == TILE_FREEZE) || (TileFIndex == TILE_FREEZE)) && !m_Super)
 	{
@@ -971,7 +993,8 @@ void CCharacter::TickDefered()
 	// advance the dummy
 	{
 		CWorldCore TempWorld;
-		m_ReckoningCore.Init(&TempWorld, GameServer()->Collision());
+		CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
+		m_ReckoningCore.Init(&TempWorld, GameServer()->Collision(), &Controller->m_Teams.m_Core);
 		m_ReckoningCore.Tick(false);
 		m_ReckoningCore.Move();
 		m_ReckoningCore.Quantize();
@@ -1142,12 +1165,14 @@ bool CCharacter::IncreaseArmor(int Amount)
 void CCharacter::Die(int Killer, int Weapon)
 {
 	int ModeSpecial = GameServer()->m_pController->OnCharacterDeath(this, GameServer()->m_apPlayers[Killer], Weapon);
-
+	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "kill killer='%d:%s' victim='%d:%s' weapon=%d special=%d",
 		Killer, Server()->ClientName(Killer),
 		m_pPlayer->GetCID(), Server()->ClientName(m_pPlayer->GetCID()), Weapon, ModeSpecial);
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+
+	Controller->m_Teams.SetCharacterTeam(m_pPlayer->GetCID(), 0);
 
 	// send the kill message
 	CNetMsg_Sv_KillMsg Msg;
@@ -1267,6 +1292,10 @@ void CCharacter::Snap(int SnappingClient)
 	if(NetworkClipped(SnappingClient))
 		return;
 
+	CCharacter* SnapChar = GameServer()->GetPlayerChar(SnappingClient);
+	if(!SnapChar 
+		|| (!SnapChar->GetPlayer()->m_ShowOthers && SnapChar->Team() != Team()) 
+		|| (GetPlayer()->m_Invisible && GetPlayer()->GetCID() != SnappingClient)) return;
 	CNetObj_Character *Character = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
 
 	// write down the m_Core

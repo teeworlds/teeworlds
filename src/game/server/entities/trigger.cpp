@@ -13,25 +13,43 @@ CTrigger::CTrigger(CGameWorld *pGameWorld, vec2 Pos, CEntity *Target)
 {
 	m_Pos = Pos;
 	m_Target = Target;
+	for(int i = 0; i < MAX_CLIENTS; ++i) {
+		m_TeamActivated[i] = false;
+	}
+	
 
 	GameWorld()->InsertEntity(this);
 }
 
 bool CTrigger::HitCharacter()
 {
-	CCharacter *pChr = GameServer()->m_World.ClosestCharacter(m_Pos, 20.0f, 0);
-	return (!pChr) ? false : true;
+	CCharacter *Ents[16];
+	
+	Reset();
+	
+	int Num = GameServer()->m_World.FindEntities(m_Pos, 20.0f, (CEntity**)Ents, 16, NETOBJTYPE_CHARACTER);
+	if(Num <= 0) {
+		return false;
+	} else {
+		for (int i = 0; i < Num; i++)
+		{
+			m_TeamActivated[Ents[i]->Team()] = true;
+		}
+	}
+	return true;
 }
 
 void CTrigger::OpenDoor(int Tick)
 {
 	CDoor *ConnectedDoor = (CDoor*) m_Target;
-	ConnectedDoor->Open(Tick);
+	ConnectedDoor->Open(Tick, m_TeamActivated);
 }
 
 void CTrigger::Reset()
 {
-	return;
+	for(int i = 0; i < MAX_CLIENTS; ++i) {
+		m_TeamActivated[i] = false;
+	}
 }
 
 void CTrigger::Tick()

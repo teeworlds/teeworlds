@@ -31,11 +31,15 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	m_SentAfkWarning2 = 0;
 
 	m_PauseInfo.m_Respawn = false;
+
+	m_ShowOthers = false;
 	
 	m_IsUsingRaceClient = false;
 	m_LastSentTime = 0;
 	
 	GameServer()->Score()->PlayerData(CID)->Reset();
+	
+	m_Invisible = false;
 }
 
 CPlayer::~CPlayer()

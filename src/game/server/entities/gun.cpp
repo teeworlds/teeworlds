@@ -28,35 +28,35 @@ CGun::CGun(CGameWorld *pGameWorld, vec2 Pos, int Freeze, bool Explosive)
 void CGun::Fire()
 {
 	CCharacter *Ents[16];
+	int IdInTeam[16]; 
+	int LenInTeam[16];
+	for (int i = 0; i < 16; i++) {
+		IdInTeam[i] = -1;
+		LenInTeam[i] = 0;
+	}
+	
 	int Num = -1;
-	Num =  GameServer()->m_World.FindEntities(m_Pos,RANGE, (CEntity**)Ents, 16, NETOBJTYPE_CHARACTER);
-	int Id=-1;
-	int MinLen=0;
+	Num =  GameServer()->m_World.FindEntities(m_Pos, RANGE, (CEntity**)Ents, 16, NETOBJTYPE_CHARACTER);
+
 	for (int i = 0; i < Num; i++)
 	{
 		CCharacter *Target = Ents[i];
-		int res=0;
-		vec2 coltile;
-		res = GameServer()->Collision()->IntersectLine(m_Pos, Target->m_Pos,0,0,false);
+		int res = GameServer()->Collision()->IntersectLine(m_Pos, Target->m_Pos,0,0,false);
 		if (!res)
 		{
-			int Len=length(Ents[i]->m_Pos - m_Pos);
-			if (MinLen==0)
+			int Len = length(Target->m_Pos - m_Pos);
+			if (LenInTeam[Target->Team()] == 0 || LenInTeam[Target->Team()] > Len)
 			{
-				MinLen=Len;
-				Id=i;
-			}
-			else if(MinLen>Len)
-			{
-				MinLen=Len;
-				Id=i;
+				LenInTeam[Target->Team()] = Len;
+				IdInTeam[Target->Team()] = i;
 			}
 		}
 	}
-	if (Id!=-1)
-	{
-		vec2 Fdir = normalize(Ents[Id]->m_Pos - m_Pos);
-		new CPlasma(&GameServer()->m_World, m_Pos, Fdir, m_Freeze, m_Explosive);
+	for (int i = 0; i < 16; i++) {
+		if(IdInTeam[i] != -1) {
+			CCharacter *Target = Ents[IdInTeam[i]];
+			new CPlasma(&GameServer()->m_World, m_Pos, normalize(Target->m_Pos - m_Pos), m_Freeze, m_Explosive, i);
+		}
 	}
 	
 }

@@ -8,7 +8,10 @@ CDoor::CDoor(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length, bool 
 : CEntity(pGameWorld, NETOBJTYPE_LASER)
 {
 	m_Pos = Pos;
-	m_Opened = Opened;
+	for (int i = 0; i < MAX_CLIENTS; ++i) {
+		m_Opened[i] = false;
+	}//TODO: Check this
+	
 
 	vec2 Dir = vec2(sin(Rotation), cos(Rotation));
 	vec2 To = Pos + normalize(Dir)*Length;
@@ -17,34 +20,48 @@ CDoor::CDoor(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length, bool 
 	GameWorld()->InsertEntity(this);
 }
 
-void CDoor::Open(int Tick)
+void CDoor::Open(int Tick, bool ActivatedTeam[])
 {
-	m_EvalTick = Tick;
-	m_Opened = true;
+	for (int i = 0; i < MAX_CLIENTS; ++i) {
+		if(ActivatedTeam[i]) m_EvalTick[i] = Tick;
+		m_Opened[i] = ActivatedTeam[i];
+	}
 }
 
-void CDoor::Close()
+void CDoor::Close(int Team)
 {
-	m_Opened = false;
+	m_Opened[Team] = false;
 }
 
-bool CDoor::HitCharacter()
+bool CDoor::HitCharacter(int Team)
 {
-	return GameServer()->m_World.IntersectCharacters(m_Pos, m_To, 1.f, 0);
+	vec2 At;
+	std::list < CCharacter * > hittedCharacters = GameServer()->m_World.IntersectedCharacters(m_Pos, m_To, 1.f, At, 0);
+	if(hittedCharacters.empty()) return false;
+	for(std::list < CCharacter * >::iterator i = hittedCharacters.begin(); i != hittedCharacters.end(); i++) {
+		CCharacter * Char = *i;
+		if(Char->Team() == Team)
+			Char->m_Doored = true;
+	}
+	return true;
 }
 
 void CDoor::Reset()
 {
-	m_Opened = false;
+	for (int i = 0; i < MAX_CLIENTS; ++i) {
+		m_Opened[i] = false;
+	}
 }
 
 void CDoor::Tick()
 {
-	if (!m_Opened)
-		HitCharacter();
-	else if (m_EvalTick + 10 < Server()->Tick())
-		Close();
-	return;
+	for (int i = 0; i < MAX_CLIENTS; ++i) {
+		if(!m_Opened[i]) {
+			HitCharacter(i);
+		} else if (m_EvalTick[i] + 10 < Server()->Tick()) {
+			Close(i);
+		}
+	}
 }
 
 void CDoor::Snap(int SnappingClient)
@@ -56,7 +73,10 @@ void CDoor::Snap(int SnappingClient)
 	pObj->m_X = (int)m_Pos.x;
 	pObj->m_Y = (int)m_Pos.y;
 
-	if (!m_Opened)
+	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
+	if(Char == 0) return;
+
+	if (!m_Opened[Char->Team()])
 	{
 		pObj->m_FromX = (int)m_To.x;
 		pObj->m_FromY = (int)m_To.y;

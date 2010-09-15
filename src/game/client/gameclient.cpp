@@ -445,8 +445,9 @@ static void Evolve(CNetObj_Character *pCharacter, int Tick)
 {
 	CWorldCore TempWorld;
 	CCharacterCore TempCore;
+	CTeamsCore TempTeams;
 	mem_zero(&TempCore, sizeof(TempCore));
-	TempCore.Init(&TempWorld, g_GameClient.Collision());
+	TempCore.Init(&TempWorld, g_GameClient.Collision(), &TempTeams);//????
 	TempCore.Read(pCharacter);
 	
 	while(pCharacter->m_Tick < Tick)
@@ -605,6 +606,14 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 	{
 		CNetMsg_Sv_PlayerTime *pMsg = (CNetMsg_Sv_PlayerTime *)pRawMsg;
 		m_aClients[pMsg->m_Cid].m_Score = (float)pMsg->m_Time/100;
+	}
+	else if(MsgId == NETMSGTYPE_SV_PLAYERTEAM)
+	{
+		CNetMsg_Sv_PlayerTeam *pMsg = (CNetMsg_Sv_PlayerTeam *)pRawMsg;
+		m_Teams.Team(pMsg->m_Cid, pMsg->m_Team);
+		char aBuf[512];
+		str_format(aBuf, sizeof(aBuf), "Id = %d Team = %d",pMsg->m_Cid, pMsg->m_Team);
+		dbg_msg("Teams", aBuf);
 	}
 }
 
@@ -950,8 +959,9 @@ void CGameClient::OnPredict()
 		if(!m_Snap.m_aCharacters[i].m_Active)
 			continue;
 			
-		g_GameClient.m_aClients[i].m_Predicted.Init(&World, Collision());
+		g_GameClient.m_aClients[i].m_Predicted.Init(&World, Collision(), &m_Teams);
 		World.m_apCharacters[i] = &g_GameClient.m_aClients[i].m_Predicted;
+		World.m_apCharacters[i]->m_Id = m_Snap.m_LocalCid;
 		g_GameClient.m_aClients[i].m_Predicted.Read(&m_Snap.m_aCharacters[i].m_Cur);
 	}
 	

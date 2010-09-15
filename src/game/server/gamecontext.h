@@ -106,6 +106,8 @@ class CGameContext : public IGameServer
 	static void ConVote(IConsole::IResult *pResult, void *pUserData, int cid);
 	static void ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	
+	static void ConInvisMe(IConsole::IResult *pResult, void *pUserData, int cid);
+	
 	CGameContext(int Resetting);
 	void Construct(int Resetting);
 
@@ -142,6 +144,7 @@ public:
 	
 	bool CheatsAvailable(int cid);
 	
+	bool m_VoteKick;
 	int m_VoteCreator;
 	int64 m_VoteCloseTime;
 	bool m_VoteUpdate;
@@ -166,12 +169,12 @@ public:
 	CVoteOption *m_pVoteOptionLast;
 
 	// helper functions
-	void CreateDamageInd(vec2 Pos, float AngleMod, int Amount);
-	void CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage);
-	void CreateSmoke(vec2 Pos);
-	void CreateHammerHit(vec2 Pos);
-	void CreatePlayerSpawn(vec2 Pos);
-	void CreateDeath(vec2 Pos, int Who);
+	void CreateDamageInd(vec2 Pos, float AngleMod, int Amount, int Mask=-1);
+	void CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage, int Mask=-1);
+	void CreateSmoke(vec2 Pos, int Mask=-1);
+	void CreateHammerHit(vec2 Pos, int Mask=-1);
+	void CreatePlayerSpawn(vec2 Pos, int Mask=-1);
+	void CreateDeath(vec2 Pos, int Who, int Mask=-1);
 	void CreateSound(vec2 Pos, int Sound, int Mask=-1);
 	void CreateSoundGlobal(int Sound, int Target=-1);	
 

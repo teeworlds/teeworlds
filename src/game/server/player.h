@@ -77,6 +77,11 @@ public:
 	int64 m_Last_ChangeInfo;
 	int64 m_Last_Emote;
 	int64 m_Last_Kill;
+
+	int m_Last_ShowOthers;
+
+	bool m_ShowOthers;
+	bool m_Invisible;
 	
 	//DDRace  		 
    int m_Muted;  		 

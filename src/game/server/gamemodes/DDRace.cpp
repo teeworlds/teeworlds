@@ -6,7 +6,7 @@
 #include <game/server/gamecontext.h>
 #include "DDRace.h"
 
-CGameControllerDDRace::CGameControllerDDRace(class CGameContext *pGameServer) : IGameController(pGameServer)
+CGameControllerDDRace::CGameControllerDDRace(class CGameContext *pGameServer) : IGameController(pGameServer), m_Teams(pGameServer)
 {
 	m_pGameType = "DDRace";
 
