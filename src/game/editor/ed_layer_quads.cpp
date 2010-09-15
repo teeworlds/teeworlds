@@ -9,10 +9,12 @@
 #include <game/client/render.h>
 #include <game/localization.h>
 
+#include <game/localization.h>
+
 CLayerQuads::CLayerQuads()
 {
 	m_Type = LAYERTYPE_QUADS;
-	m_pTypeName = "Quads";
+	m_pTypeName = Localize("Quads");
 	m_Image = -1;
 }
 
