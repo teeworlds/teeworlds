@@ -1809,8 +1809,8 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 				if(int Result = DoButton_Ex(m_Map.m_lGroups[g]->m_lLayers[i], aBuf, g==m_SelectedGroup&&i==m_SelectedLayer, &Button,
 					BUTTON_CONTEXT, Localize("Select layer. Right click for properties."), CUI::CORNER_R))
 				{
-					if(m_Map.m_lGroups[g]->m_lLayers[i] == m_Map.m_pTeleLayer || m_Map.m_lGroups[g]->m_lLayers[i] == m_Map.m_pSpeedupLayer || m_Map.m_lGroups[g]->m_lLayers[i] == m_Map.m_pSwitchLayer)//Clear the brush on entering tele/speedup/switch layer
-						m_Brush.Clear();
+					/*if(m_Map.m_lGroups[g]->m_lLayers[i] == m_Map.m_pTeleLayer || m_Map.m_lGroups[g]->m_lLayers[i] == m_Map.m_pSpeedupLayer || m_Map.m_lGroups[g]->m_lLayers[i] == m_Map.m_pSwitchLayer)//Clear the brush on entering tele/speedup/switch layer
+						m_Brush.Clear();*/
 					m_SelectedLayer = i;
 					m_SelectedGroup = g;
 					static int s_LayerPopupId = 0;
