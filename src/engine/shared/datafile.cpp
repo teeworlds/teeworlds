@@ -5,7 +5,7 @@
 #include "engine.h"
 #include <zlib.h>
 
-static const int DEBUG=0;
+static int DEBUG=0;
 
 struct CDatafileItemType
 {
@@ -56,7 +56,7 @@ struct CDatafileInfo
 
 struct CDatafile
 {
-	IOHANDLE m_File;
+	FILE *m_File;
 	unsigned m_Crc;
 	CDatafileInfo m_Info;
 	CDatafileHeader m_Header;
@@ -69,7 +69,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename)
 {
 	dbg_msg("datafile", "loading. filename='%s'", pFilename);
 
-	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ);
+	FILE *File = pStorage->OpenFile(pFilename, IOFLAG_READ);
 	if(!File)
 	{
 		dbg_msg("datafile", "could not open '%s'", pFilename);
@@ -87,7 +87,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename)
 		
 		unsigned char aBuffer[BUFFER_SIZE];
 		
-		while(1)
+		for(;;)
 		{
 			unsigned Bytes = io_read(File, aBuffer, BUFFER_SIZE);
 			if(Bytes <= 0)
@@ -381,7 +381,7 @@ bool CDataFileReader::Close()
 	return true;
 }
 
-unsigned CDataFileReader::Crc()
+int CDataFileReader::Crc()
 {
 	if(!m_pDataFile) return 0xFFFFFFFF;
 	return m_pDataFile->m_Crc;

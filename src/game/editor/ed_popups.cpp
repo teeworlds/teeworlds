@@ -41,7 +41,7 @@ void CEditor::UiDoPopupMenu()
 {
 	for(int i = 0; i < g_UiNumPopups; i++)
 	{
-		bool Inside = UI()->MouseInside(&s_UiPopups[i].m_Rect);
+		bool Inside = UI()->MouseInside(&s_UiPopups[i].m_Rect) == 1 ? true : false;
 		UI()->SetHotItem(&s_UiPopups[i].m_pId);
 		
 		if(UI()->ActiveItem() == &s_UiPopups[i].m_pId)

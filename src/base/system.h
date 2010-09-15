@@ -181,8 +181,6 @@ enum {
 	IOSEEK_END = 2
 };
 
-typedef struct IOINTERNAL *IOHANDLE;
-
 /*
 	Function: io_open
 		Opens a file.
@@ -195,7 +193,7 @@ typedef struct IOINTERNAL *IOHANDLE;
 		Returns a handle to the file on success and 0 on failure.
 
 */
-IOHANDLE io_open(const char *filename, int flags);
+FILE *io_open(const char *filename, int flags);
 
 /*
 	Function: io_read
@@ -210,7 +208,7 @@ IOHANDLE io_open(const char *filename, int flags);
 		Number of bytes read.
 
 */
-unsigned io_read(IOHANDLE io, void *buffer, unsigned size);
+unsigned io_read(FILE *io, void *buffer, unsigned size);
 
 /*
 	Function: io_skip
@@ -223,7 +221,7 @@ unsigned io_read(IOHANDLE io, void *buffer, unsigned size);
 	Returns:
 		Number of bytes skipped.
 */
-unsigned io_skip(IOHANDLE io, int size);
+unsigned io_skip(FILE *io, unsigned size);
 
 /*
 	Function: io_write
@@ -237,7 +235,7 @@ unsigned io_skip(IOHANDLE io, int size);
 	Returns:
 		Number of bytes written.
 */
-unsigned io_write(IOHANDLE io, const void *buffer, unsigned size);
+unsigned io_write(FILE *io, const void *buffer, unsigned size);
 
 /*
 	Function: io_seek
@@ -251,7 +249,7 @@ unsigned io_write(IOHANDLE io, const void *buffer, unsigned size);
 	Returns:
 		Returns 0 on success.
 */
-int io_seek(IOHANDLE io, int offset, int origin);
+int io_seek(FILE *io, int offset, int origin);
 
 /*
 	Function: io_tell
@@ -263,7 +261,7 @@ int io_seek(IOHANDLE io, int offset, int origin);
 	Returns:
 		Returns the current position. -1L if an error occured.
 */
-long int io_tell(IOHANDLE io);
+long int io_tell(FILE *io);
 
 /*
 	Function: io_length
@@ -275,7 +273,7 @@ long int io_tell(IOHANDLE io);
 	Returns:
 		Returns the total size. -1L if an error occured.
 */
-long int io_length(IOHANDLE io);
+long int io_length(FILE *io);
 
 /*
 	Function: io_close
@@ -287,7 +285,7 @@ long int io_length(IOHANDLE io);
 	Returns:
 		Returns 0 on success.
 */
-int io_close(IOHANDLE io);
+int io_close(FILE *io);
 
 /*
 	Function: io_flush
@@ -299,26 +297,26 @@ int io_close(IOHANDLE io);
 	Returns:
 		Returns 0 on success.
 */
-int io_flush(IOHANDLE io);
+int io_flush(FILE *io);
 
 
 /*
 	Function: io_stdin
-		Returns an <IOHANDLE> to the standard input.
+		Returns an <FILE *> to the standard input.
 */
-IOHANDLE io_stdin();
+FILE *io_stdin();
 
 /*
 	Function: io_stdout
-		Returns an <IOHANDLE> to the standard output.
+		Returns an <FILE *> to the standard output.
 */
-IOHANDLE io_stdout();
+FILE *io_stdout();
 
 /*
 	Function: io_stderr
-		Returns an <IOHANDLE> to the standard error.
+		Returns an <FILE *> to the standard error.
 */
-IOHANDLE io_stderr();
+FILE *io_stderr();
 
 
 /* Group: Threads */
@@ -1005,21 +1003,20 @@ void mem_debug_dump();
 
 void swap_endian(void *data, unsigned elem_size, unsigned num);
 
-/* Group: Debug levels */
-//by format
+/* Group: Debug levels by format */
 enum {
-	DBG_FMT_RAW				= 1,	//raw output
-	DBG_FMT_TIME			= 2,	//show time
-	DBG_FMT_SYS				= 3,	//show sys
-	DBG_FMT_FULL			= 4		//show both
+	DBG_FMT_RAW				= 1,	/* raw output */
+	DBG_FMT_TIME			= 2,	/* show time */
+	DBG_FMT_SYS				= 3,	/* show sys */
+	DBG_FMT_FULL			= 4		/* show both */
 };
 
 enum {
-	DBG_LEVEL_IMPORTANT			= 0,	//important always showed messages
-	DBG_LEVEL_ERROR				= 1,	//error messages
-	DBG_LEVEL_WARNING			= 2,	//warning messages
-	DBG_LEVEL_MSG				= 3,	//extra debug messages
-	DBG_LEVEL_INFO				= 4		//info messages
+	DBG_LEVEL_IMPORTANT			= 0,	/* important always showed messages */
+	DBG_LEVEL_ERROR				= 1,	/* error messages */
+	DBG_LEVEL_WARNING			= 2,	/* warning messages */
+	DBG_LEVEL_MSG				= 3,	/* extra debug messages */
+	DBG_LEVEL_INFO				= 4		/* info messages */
 };
 
 #define DBG_LEVEL_LOW DBG_LEVEL_IMPORTANT

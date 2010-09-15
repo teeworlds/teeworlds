@@ -136,13 +136,13 @@ void CEmoticon::OnRender()
 
 	for (int i = 0; i < 12; i++)
 	{
-		float Angle = 2*pi*i/12.0;
+		float Angle = 2*pi*i/12;
 		if (Angle > pi)
 			Angle -= 2*pi;
 
 		bool Selected = m_SelectedEmote == i;
 
-		float Size = Selected ? 96 : 64;
+		float Size = Selected ? 96.0f : 64.0f;
 
 		float NudgeX = 120 * cosf(Angle);
 		float NudgeY = 120 * sinf(Angle);

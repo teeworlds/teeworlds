@@ -54,7 +54,7 @@ void CSkins::SkinScan(const char *pName, int IsDir, void *pUser)
 				}
 			}
 			
-		pSelf->m_aSkins[pSelf->m_NumSkins].m_BloodColor = normalize(vec3(aColors[0], aColors[1], aColors[2]));
+		pSelf->m_aSkins[pSelf->m_NumSkins].m_BloodColor = normalize(vec3((float)aColors[0], (float)aColors[1], (float)aColors[2]));
 	}
 	
 	// create colorless version
@@ -69,44 +69,41 @@ void CSkins::SkinScan(const char *pName, int IsDir, void *pUser)
 		d[i*Step+2] = v;
 	}
 
+
+	int Freq[256] = {0};
+	int OrgWeight = 0;
+	int NewWeight = 192;
 	
-	if(1)
-	{
-		int Freq[256] = {0};
-		int OrgWeight = 0;
-		int NewWeight = 192;
-		
-		// find most common frequence
-		for(int y = 0; y < BodySize; y++)
-			for(int x = 0; x < BodySize; x++)
-			{
-				if(d[y*Pitch+x*4+3] > 128)
-					Freq[d[y*Pitch+x*4]]++;
-			}
-		
-		for(int i = 1; i < 256; i++)
+	// find most common frequence
+	for(int y = 0; y < BodySize; y++)
+		for(int x = 0; x < BodySize; x++)
 		{
-			if(Freq[OrgWeight] < Freq[i])
-				OrgWeight = i;
+			if(d[y*Pitch+x*4+3] > 128)
+				Freq[d[y*Pitch+x*4]]++;
+		}
+	
+	for(int i = 1; i < 256; i++)
+	{
+		if(Freq[OrgWeight] < Freq[i])
+			OrgWeight = i;
+	}
+
+	// reorder
+	int InvOrgWeight = 255-OrgWeight;
+	int InvNewWeight = 255-NewWeight;
+	for(int y = 0; y < BodySize; y++)
+		for(int x = 0; x < BodySize; x++)
+		{
+			int v = d[y*Pitch+x*4];
+			if(v <= OrgWeight)
+				v = (int)(((v/(float)OrgWeight) * NewWeight));
+			else
+				v = (int)(((v-OrgWeight)/(float)InvOrgWeight)*InvNewWeight + NewWeight);
+			d[y*Pitch+x*4] = v;
+			d[y*Pitch+x*4+1] = v;
+			d[y*Pitch+x*4+2] = v;
 		}
 
-		// reorder
-		int InvOrgWeight = 255-OrgWeight;
-		int InvNewWeight = 255-NewWeight;
-		for(int y = 0; y < BodySize; y++)
-			for(int x = 0; x < BodySize; x++)
-			{
-				int v = d[y*Pitch+x*4];
-				if(v <= OrgWeight)
-					v = (int)(((v/(float)OrgWeight) * NewWeight));
-				else
-					v = (int)(((v-OrgWeight)/(float)InvOrgWeight)*InvNewWeight + NewWeight);
-				d[y*Pitch+x*4] = v;
-				d[y*Pitch+x*4+1] = v;
-				d[y*Pitch+x*4+2] = v;
-			}
-	}
-	
 	pSelf->m_aSkins[pSelf->m_NumSkins].m_ColorTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 	mem_free(Info.m_pData);
 

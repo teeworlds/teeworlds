@@ -14,7 +14,7 @@ void CJobPool::WorkerThread(void *pUser)
 {
 	CJobPool *pPool = (CJobPool *)pUser;
 	
-	while(1)
+	for(;;)
 	{
 		CJob *pJob = 0;
 		

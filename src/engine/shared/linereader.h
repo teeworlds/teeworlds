@@ -10,9 +10,9 @@ class CLineReader
 	unsigned m_BufferPos;
 	unsigned m_BufferSize;
 	unsigned m_BufferMaxSize;
-	IOHANDLE m_IO;
+	FILE *m_IO;
 public:
-	void Init(IOHANDLE IoHandle);
+	void Init(FILE *IoHandle);
 	char *Get();
 };
 #endif

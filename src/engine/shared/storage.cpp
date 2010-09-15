@@ -155,7 +155,7 @@ public:
 		}		
 	}
 	
-	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, char *pBuffer = 0, int BufferSize = 0)
+	virtual FILE *OpenFile(const char *pFilename, int Flags, char *pBuffer = 0, int BufferSize = 0)
 	{
 		char aBuffer[1024];
 		if(!pBuffer)
@@ -171,7 +171,7 @@ public:
 		}
 		else
 		{
-			IOHANDLE Handle = 0;
+			FILE *Handle = 0;
 			
 			// check current directory
 			Handle = io_open(pFilename, Flags);
@@ -199,7 +199,7 @@ public:
 	{
 		char aBuffer[1024];
 		str_format(aBuffer, sizeof(aBuffer), "%s/%s", m_aApplicationSavePath, pFilename);
-		bool Fail = remove(aBuffer);
+		char Fail = remove(aBuffer);
 		
 		if(Fail)
 			Fail = remove(pFilename);

@@ -1,6 +1,5 @@
 /* copyright (c) 2010 magnus auvinen, see licence.txt for more info */
 #include <stdlib.h>
-#include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
@@ -35,11 +34,21 @@
 	#define WIN32_LEAN_AND_MEAN 
 	#define _WIN32_WINNT 0x0501 /* required for mingw to get getaddrinfo to work */
 	#include <windows.h>
+
+	#if defined(__CYGWIN__)
+		#define USE_SYS_TYPES_FD_SET
+	#endif
+
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
 	#include <fcntl.h>
-	#include <direct.h>
 	#include <errno.h>
+
+	#if defined(__CYGWIN__)
+		#include <unistd.h>
+	#else
+		#include <direct.h>
+	#endif
 
 	#ifndef EWOULDBLOCK
 		#define EWOULDBLOCK WSAEWOULDBLOCK
@@ -52,9 +61,9 @@
 extern "C" {
 #endif
 
-IOHANDLE io_stdin() { return (IOHANDLE)stdin; }
-IOHANDLE io_stdout() { return (IOHANDLE)stdout; }
-IOHANDLE io_stderr() { return (IOHANDLE)stderr; }
+FILE *io_stdin() { return stdin; }
+FILE *io_stdout() { return stdout; }
+FILE *io_stderr() { return stderr; }
 
 static DBG_LOGGER loggers[16];
 static int num_loggers = 0;
@@ -93,7 +102,7 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 	msg = (char *)str + len;
 
 	va_start(args, fmt);
-#if defined(CONF_FAMILY_WINDOWS)
+#if defined(CONF_FAMILY_WINDOWS) && !defined(__CYGWIN__)
 	_vsnprintf(msg, sizeof(str)-len, fmt, args);
 #else
 	vsnprintf(msg, sizeof(str)-len, fmt, args);
@@ -119,7 +128,7 @@ static void logger_debugger(const char *line)
 }
 
 
-static IOHANDLE logfile = 0;
+static FILE *logfile = 0;
 static void logger_file(const char *line)
 {
 	io_write(logfile, line, strlen(line));
@@ -213,7 +222,7 @@ void mem_debug_dump()
 {
 	char buf[1024];
 	MEMHEADER *header = first;
-	IOHANDLE f = io_open("memory.txt", IOFLAG_WRITE);
+	FILE *f = io_open("memory.txt", IOFLAG_WRITE);
 	
 	while(header)
 	{
@@ -258,16 +267,16 @@ int mem_check_imp()
 	return 1;
 }
 
-IOHANDLE io_open(const char *filename, int flags)
+FILE *io_open(const char *filename, int flags)
 {
 	if(flags == IOFLAG_READ)
 	{
 	#if defined(CONF_FAMILY_WINDOWS)
-		// check for filename case sensitive
+		/* check for filename case sensitive */
 		WIN32_FIND_DATA finddata;
 		HANDLE handle;
 		int length;
-		
+
 		length = str_length(filename);
 		if(!filename || !length || filename[length-1] == '\\')
 			return 0x0;
@@ -276,25 +285,25 @@ IOHANDLE io_open(const char *filename, int flags)
 			return 0x0;
 		FindClose(handle);
 	#endif
-		return (IOHANDLE)fopen(filename, "rb");
+		return fopen(filename, "rb");
 	}
 	if(flags == IOFLAG_WRITE)
-		return (IOHANDLE)fopen(filename, "wb");
+		return fopen(filename, "wb");
 	return 0x0;
 }
 
-unsigned io_read(IOHANDLE io, void *buffer, unsigned size)
+unsigned io_read(FILE *io, void *buffer, unsigned size)
 {
-	return fread(buffer, 1, size, (FILE*)io);
+	return fread(buffer, 1, size, io);
 }
 
-unsigned io_skip(IOHANDLE io, int size)
+unsigned io_skip(FILE *io, unsigned size)
 {
-	fseek((FILE*)io, size, SEEK_CUR);
+	fseek(io, size, SEEK_CUR);
 	return size;
 }
 
-int io_seek(IOHANDLE io, int offset, int origin)
+int io_seek(FILE *io, int offset, int origin)
 {
 	int real_origin;
 
@@ -310,15 +319,15 @@ int io_seek(IOHANDLE io, int offset, int origin)
 		real_origin = SEEK_END;
 	}
 
-	return fseek((FILE*)io, offset, origin);
+	return fseek(io, offset, origin);
 }
 
-long int io_tell(IOHANDLE io)
+long int io_tell(FILE *io)
 {
-	return ftell((FILE*)io);
+	return ftell(io);
 }
 
-long int io_length(IOHANDLE io)
+long int io_length(FILE *io)
 {
 	long int length;
 	io_seek(io, 0, IOSEEK_END);
@@ -327,20 +336,20 @@ long int io_length(IOHANDLE io)
 	return length;
 }
 
-unsigned io_write(IOHANDLE io, const void *buffer, unsigned size)
+unsigned io_write(FILE *io, const void *buffer, unsigned size)
 {
-	return fwrite(buffer, 1, size, (FILE*)io);
+	return fwrite(buffer, 1, size, io);
 }
 
-int io_close(IOHANDLE io)
+int io_close(FILE *io)
 {
-	fclose((FILE*)io);
+	fclose(io);
 	return 1;
 }
 
-int io_flush(IOHANDLE io)
+int io_flush(FILE *io)
 {
-	fflush((FILE*)io);
+	fflush(io);
 	return 0;
 }
 
@@ -584,7 +593,7 @@ static int parse_int(int *out, const char **str)
 	i = **str - '0';
 	(*str)++;
 
-	while(1)
+	for(;;)
 	{
 		if(**str < '0' || **str > '9')
 		{
@@ -595,8 +604,6 @@ static int parse_int(int *out, const char **str)
 		i = (i*10) + (**str - '0');
 		(*str)++;
 	}
-
-	return 0;
 }
 
 static int parse_char(char c, const char **str)
@@ -864,9 +871,9 @@ int net_init()
 	int err = WSAStartup(MAKEWORD(1, 1), &wsaData);
 	dbg_assert(err == 0, "network initialization failed.");
 	return err==0?0:1;
-#endif
-
+#else
 	return 0;
+#endif
 }
 
 int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, void *user)
@@ -910,11 +917,14 @@ int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, void *user)
 int fs_storage_path(const char *appname, char *path, int max)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	HRESULT r;
 	char *home = getenv("APPDATA");
 	if(!home)
 		return -1;
-	_snprintf(path, max, "%s/%s", home, appname);
+	#if defined(__CYGWIN__)
+		snprintf(path, max, "%s/%s", home, appname);
+	#else
+		_snprintf(path, max, "%s/%s", home, appname);
+	#endif
 	return 0;
 #else
 	char *home = getenv("HOME");
@@ -938,7 +948,7 @@ int fs_storage_path(const char *appname, char *path, int max)
 
 int fs_makedir(const char *path)
 {
-#if defined(CONF_FAMILY_WINDOWS)
+#if defined(CONF_FAMILY_WINDOWS) && !defined(__CYGWIN__)
 	if(_mkdir(path) == 0)
 			return 0;
 	if(errno == EEXIST)
@@ -983,7 +993,11 @@ int fs_chdir(const char *path)
 {
 	if (fs_is_dir(path))
 	{
+#if defined(CONF_FAMILY_WINDOWS) && !defined(__CYGWIN__)
+		_chdir(path);
+#else
 		chdir(path);
+#endif
 		return 0;
 	}
 	else
@@ -1025,7 +1039,7 @@ int net_socket_read_wait(NETSOCKET sock, int time)
     tv.tv_usec = 1000*time;
 
     FD_ZERO(&readfds);
-    FD_SET(sock, &readfds);
+    FD_SET((unsigned)sock, &readfds);
 
     /* don't care about writefds and exceptfds */
     select(sock+1, &readfds, NULL, NULL, &tv);
@@ -1036,7 +1050,7 @@ int net_socket_read_wait(NETSOCKET sock, int time)
 
 unsigned time_timestamp()
 {
-	return time(0);
+	return (unsigned)time(0);
 }
 
 void str_append(char *dst, const char *src, int dst_size)
@@ -1068,7 +1082,7 @@ int str_length(const char *str)
 
 void str_format(char *buffer, int buffer_size, const char *format, ...)
 {
-#if defined(CONF_FAMILY_WINDOWS)
+#if defined(CONF_FAMILY_WINDOWS) && !defined(__CYGWIN__)
 	va_list ap;
 	va_start(ap, format);
 	_vsnprintf(buffer, buffer_size, format, ap);
@@ -1132,7 +1146,7 @@ char *str_skip_whitespaces(char *str)
 /* case */
 int str_comp_nocase(const char *a, const char *b)
 {
-#if defined(CONF_FAMILY_WINDOWS)
+#if defined(CONF_FAMILY_WINDOWS) && !defined(__CYGWIN__)
 	return _stricmp(a,b);
 #else
 	return strcasecmp(a,b);
@@ -1155,7 +1169,7 @@ const char *str_find_nocase(const char *haystack, const char *needle)
 	{
 		const char *a = haystack;
 		const char *b = needle;
-		while(*a && *b && tolower(*a) == tolower(*b))
+		while(*a && *b && tolower((const unsigned char)*a) == tolower((const unsigned char)*b))
 		{
 			a++;
 			b++;
@@ -1267,7 +1281,7 @@ char str_uppercase(char c)
 }
 
 int str_toint(const char *str) { return atoi(str); }
-float str_tofloat(const char *str) { return atof(str); }
+float str_tofloat(const char *str) { return (float)atof(str); }
 
 
 
@@ -1358,51 +1372,71 @@ int str_utf8_decode(const char **ptr)
 	const char *buf = *ptr;
 	int ch = 0;
 	
-	do
+	if((*buf&0x80) == 0x0)  /* 0xxxxxxx */
 	{
-		if((*buf&0x80) == 0x0)  /* 0xxxxxxx */
-		{
-			ch = *buf;
-			buf++;
-		}
-		else if((*buf&0xE0) == 0xC0) /* 110xxxxx */
-		{
-			ch  = (*buf++ & 0x3F) << 6; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
-		}
-		else  if((*buf & 0xF0) == 0xE0)	/* 1110xxxx */
-		{
-			ch  = (*buf++ & 0x1F) << 12; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) <<  6; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
-		}
-		else if((*buf & 0xF8) == 0xF0)	/* 11110xxx */
-		{
-			ch  = (*buf++ & 0x0F) << 18; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) << 12; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) <<  6; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
-		}
-		else
-		{
-			/* invalid */
-			buf++;
-			break;
-		}
-		
+		ch = *buf;
+		buf++;
 		*ptr = buf;
 		return ch;
-	} while(0);
+	}
+	else if((*buf&0xE0) == 0xC0) /* 110xxxxx */
+	{
+		ch  = (*buf++ & 0x3F) << 6;
+		if((*buf))
+		{
+			ch += (*buf++ & 0x3F);
+			if(ch == 0) ch = -1;
+			*ptr = buf;
+			return ch;
+		}
+	}
+	else  if((*buf & 0xF0) == 0xE0)	/* 1110xxxx */
+	{
+		ch  = (*buf++ & 0x1F) << 12;
+		if((*buf))
+		{
+			ch += (*buf++ & 0x3F) <<  6;
+			if((*buf))
+			{
+				ch += (*buf++ & 0x3F);
+				if(ch == 0) ch = -1;
+				*ptr = buf;
+				return ch;
+			}
+		}
+	}
+	else if((*buf & 0xF8) == 0xF0)	/* 11110xxx */
+	{
+		ch  = (*buf++ & 0x0F) << 18;
+		if((*buf))
+		{
+			ch += (*buf++ & 0x3F) << 12;
+			if((*buf))
+			{
+				ch += (*buf++ & 0x3F) <<  6;
+				if((*buf))
+				{
+					ch += (*buf++ & 0x3F);
+					if(ch == 0) ch = -1;
+					*ptr = buf;
+					return ch;
+				}
+			}
+		}
+	}
+	else
+	{
+		/* invalid */
+		buf++;
+		*ptr = buf;
+		return ch;
+	}
 
 	/* out of bounds */
 	*ptr = buf;
 	return -1;
 	
 }
-
 
 unsigned str_quickhash(const char *str)
 {

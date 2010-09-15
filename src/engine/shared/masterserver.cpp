@@ -112,7 +112,7 @@ public:
 	virtual int Load()
 	{
 		CLineReader LineReader;
-		IOHANDLE File;
+		FILE *File;
 		int Count = 0;
 		IStorage *pStorage = Kernel()->RequestInterface<IStorage>();
 		if(!pStorage)
@@ -124,7 +124,7 @@ public:
 			return -1;
 		
 		LineReader.Init(File);
-		while(1)
+		for(;;)
 		{
 			CMasterInfo Info = {{0}};
 			int aIp[4];
@@ -158,7 +158,7 @@ public:
 
 	virtual int Save()
 	{
-		IOHANDLE File;
+		FILE *File;
 
 		IStorage *pStorage = Kernel()->RequestInterface<IStorage>();
 		if(!pStorage)

@@ -36,7 +36,7 @@ typedef unsigned short uint16_t;
 typedef signed int int32_t;
 typedef unsigned int uint32_t;
 typedef unsigned int size_t;
-typedef unsigned long uintptr_t;
+typedef unsigned int uintptr_t;
 
 /* Enable the dummy audio driver (src/audio/dummy/\*.c) */
 #define SDL_AUDIO_DRIVER_DUMMY	1

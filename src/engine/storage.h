@@ -17,7 +17,7 @@ public:
 	};
 	
 	virtual void ListDirectory(int Types, const char *pPath, FS_LISTDIR_CALLBACK pfnCallback, void *pUser) = 0;
-	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, char *pBuffer = 0, int BufferSize = 0) = 0;
+	virtual FILE *OpenFile(const char *pFilename, int Flags, char *pBuffer = 0, int BufferSize = 0) = 0;
 	virtual bool RemoveFile(const char *pFilename) = 0;
 };
 

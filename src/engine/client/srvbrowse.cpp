@@ -439,9 +439,9 @@ void CServerBrowser::Set(const NETADDR &Addr, int Type, int Token, const CServer
 		{
 			SetInfo(pEntry, *pInfo);
 			if(m_ServerlistType == IServerBrowser::TYPE_LAN)
-				pEntry->m_Info.m_Latency = (time_get()-m_BroadcastTime)*1000/time_freq();
+				pEntry->m_Info.m_Latency = (int)((time_get()-m_BroadcastTime)*1000/time_freq());
 			else
-				pEntry->m_Info.m_Latency = (time_get()-pEntry->m_RequestTime)*1000/time_freq();
+				pEntry->m_Info.m_Latency = (int)((time_get()-pEntry->m_RequestTime)*1000/time_freq());
 			RemoveRequest(pEntry);
 		}
 	}
@@ -453,9 +453,9 @@ void CServerBrowser::Set(const NETADDR &Addr, int Type, int Token, const CServer
 			SetInfo(pEntry, *pInfo);
 
 			if(m_ServerlistType == IServerBrowser::TYPE_LAN)
-				pEntry->m_Info.m_Latency = (time_get()-m_BroadcastTime)*1000/time_freq();
+				pEntry->m_Info.m_Latency = (int)((time_get()-m_BroadcastTime)*1000/time_freq());
 			else
-				pEntry->m_Info.m_Latency = (time_get()-pEntry->m_RequestTime)*1000/time_freq();
+				pEntry->m_Info.m_Latency = (int)((time_get()-pEntry->m_RequestTime)*1000/time_freq());
 			RemoveRequest(pEntry);
 		}
 	}
@@ -604,7 +604,7 @@ void CServerBrowser::Update()
 
 	// do timeouts
 	pEntry = m_pFirstReqServer;
-	while(1)
+	for(;;)
 	{
 		if(!pEntry) // no more entries
 			break;
@@ -624,7 +624,7 @@ void CServerBrowser::Update()
 	// do timeouts
 	pEntry = m_pFirstReqServer;
 	Count = 0;
-	while(1)
+	for(;;)
 	{
 		if(!pEntry) // no more entries
 			break;
@@ -711,7 +711,7 @@ void CServerBrowser::RemoveFavorite(const NETADDR &Addr)
 
 bool CServerBrowser::IsRefreshingMasters() const
 {
-	return m_pMasterServer->IsRefreshing();
+	return m_pMasterServer->IsRefreshing() == 1 ? true : false;
 }
 
 

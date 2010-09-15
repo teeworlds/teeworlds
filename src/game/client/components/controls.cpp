@@ -203,7 +203,7 @@ bool CControls::OnMouseMove(float x, float y)
 	//
 	float CameraMaxDistance = 200.0f;
 	float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
-	float DeadZone = g_Config.m_ClMouseDeadzone;
+	float DeadZone = (float)g_Config.m_ClMouseDeadzone;
 	float MouseMax = min(CameraMaxDistance/FollowFactor + DeadZone, (float)g_Config.m_ClMouseMaxDistance);
 	
 	//vec2 camera_offset(0, 0);

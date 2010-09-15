@@ -3,7 +3,7 @@
 
 enum { NUM_SOCKETS = 64 };
 
-int run(NETADDR dest)
+void run(NETADDR dest)
 {
 	NETSOCKET sockets[NUM_SOCKETS];
 	int i;
@@ -14,7 +14,7 @@ int run(NETADDR dest)
 	 	sockets[i] = net_udp_create(bindaddr);
 	}
 	
-	while(1)
+	for(;;)
 	{
 		unsigned char data[1024];
 		int size = 0;

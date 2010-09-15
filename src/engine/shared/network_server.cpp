@@ -408,7 +408,7 @@ void CNetServer::writeBanFile()
 */
 int CNetServer::Recv(CNetChunk *pChunk)
 {
-	while(1)
+	for(;;)
 	{
 		NETADDR Addr;
 			

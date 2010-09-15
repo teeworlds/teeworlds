@@ -150,9 +150,9 @@ static int png_get_bpp(png_t* png)
 
 static int png_read_ihdr(png_t* png)
 {
-	unsigned length;
+	unsigned length = 0;
 #if DO_CRC_CHECKS
-	unsigned orig_crc;
+	unsigned orig_crc = 0;
 	unsigned calc_crc;
 #endif
 	unsigned char ihdr[13+4];		 /* length should be 13, make room for type (IHDR) */
@@ -522,7 +522,7 @@ static int png_read_idat(png_t* png, unsigned firstlen)
 	unsigned old_len = length;
 
 #if DO_CRC_CHECKS
-	unsigned orig_crc;
+	unsigned orig_crc = 0;
 	unsigned calc_crc;
 #endif
 
@@ -596,7 +596,7 @@ static int png_process_chunk(png_t* png)
 {
 	int result = PNG_NO_ERROR;
 	unsigned type;
-	unsigned length;
+	unsigned length = 0;
 
 	file_read_ul(png, &length);
 
@@ -818,7 +818,7 @@ int png_get_data(png_t* png, unsigned char* data)
 
 int png_set_data(png_t* png, unsigned width, unsigned height, char depth, int color, unsigned char* data)
 {
-	int i;
+	unsigned i;
 	unsigned char *filtered;
 	png->width = width;
 	png->height = height;

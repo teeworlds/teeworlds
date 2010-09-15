@@ -51,7 +51,7 @@ bool CLocalizationDatabase::Load(const char *pFilename, IConsole *pConsole)
 		return true;
 	}
 	
-	IOHANDLE IoHandle = io_open(pFilename, IOFLAG_READ);
+	FILE *IoHandle = io_open(pFilename, IOFLAG_READ);
 	if(!IoHandle)
 		return false;
 	
@@ -63,7 +63,7 @@ bool CLocalizationDatabase::Load(const char *pFilename, IConsole *pConsole)
 	CLineReader LineReader;
 	LineReader.Init(IoHandle);
 	char *pLine;
-	while((pLine = LineReader.Get()))
+	while((pLine = LineReader.Get()) != 0)
 	{
 		if(!str_length(pLine))
 			continue;

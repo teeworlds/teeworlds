@@ -1,7 +1,7 @@
 // copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #include "linereader.h"
 
-void CLineReader::Init(IOHANDLE io)
+void CLineReader::Init(FILE *io)
 {
 	m_BufferMaxSize = 4*1024;
 	m_BufferSize = 0;
@@ -13,7 +13,7 @@ char *CLineReader::Get()
 {
 	unsigned LineStart = m_BufferPos;
 
-	while(1)
+	for(;;)
 	{
 		if(m_BufferPos >= m_BufferSize)
 		{

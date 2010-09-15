@@ -59,7 +59,7 @@ void CDamageInd::OnRender()
 			Graphics()->SetColor(1.0f,1.0f,1.0f, m_aItems[i].m_Life/0.1f);
 			Graphics()->QuadsSetRotation(m_aItems[i].m_StartAngle + m_aItems[i].m_Life * 2.0f);
 			RenderTools()->SelectSprite(SPRITE_STAR1);
-			RenderTools()->DrawSprite(Pos.x, Pos.y, 48.0f);
+			RenderTools()->DrawSprite(Pos.x, Pos.y, 48);
 			i++;
 		}
 	}

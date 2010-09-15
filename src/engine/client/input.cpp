@@ -1,6 +1,10 @@
 // copyright (c) 2010 magnus auvinen, see licence.txt for more info
 #include "SDL.h"
 
+#if defined(__CYGWIN__)
+	#include <stdlib.h>
+#endif
+
 #include <base/system.h>
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
@@ -36,7 +40,7 @@ CInput::CInput()
 	m_InputGrabbed = 0;
 
 	m_LastRelease = 0;
-	m_ReleaseDelta = -1;
+	m_ReleaseDelta = 0;
 
 	m_NumEvents = 0;
 }
@@ -164,8 +168,8 @@ void CInput::Update()
 
 					if(Event.button.button == 1) // ignore_convention
 					{
-						m_ReleaseDelta = time_get() - m_LastRelease;
-						m_LastRelease = time_get();
+						m_ReleaseDelta = (int)(time_get() - m_LastRelease);
+						m_LastRelease = (int)time_get();
 					}
 
 					// fall through

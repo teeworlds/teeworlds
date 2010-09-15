@@ -67,7 +67,7 @@ inline float NormalizeAngular(float f)
 	return fmod(f+pi*2, pi*2);
 }
 
-inline float AngularMixDirection (float Src, float Dst) { return sinf(Dst-Src) >0?1:-1; }
+inline float AngularMixDirection (float Src, float Dst) { return sinf(Dst-Src) >0?1.0f:-1.0f; }
 inline float AngularDistance(float Src, float Dst) { return asinf(sinf(Dst-Src)); }
 
 inline float AngularApproach(float Src, float Dst, float Amount)
@@ -141,10 +141,10 @@ void CPlayers::RenderHook(
 		}
 	}
 
-	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
+	vec2 Position = mix(vec2((float)Prev.m_X, (float)Prev.m_Y), vec2((float)Player.m_X, (float)Player.m_Y), IntraTick);
 
 	if(Prev.m_Health < 0) // Don't flicker from previous position
-		Position = vec2(Player.m_X, Player.m_Y);
+		Position = vec2((float)Player.m_X, (float)Player.m_Y);
 
 	// draw hook
 	if (Prev.m_HookState>0 && Player.m_HookState>0)
@@ -168,17 +168,17 @@ void CPlayers::RenderHook(
 			}
 			else if(pInfo.m_Local)
 			{
-				HookPos = mix(vec2(m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Prev.m_X,
-					m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Prev.m_Y),
-					vec2(m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Cur.m_X,
-					m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Cur.m_Y),
+				HookPos = mix(vec2((float)m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Prev.m_X,
+					(float)m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Prev.m_Y),
+					vec2((float)m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Cur.m_X,
+					(float)m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Cur.m_Y),
 					Client()->IntraGameTick());
 			}
 			else
-				HookPos = mix(vec2(pPrevChar->m_HookX, pPrevChar->m_HookY), vec2(pPlayerChar->m_HookX, pPlayerChar->m_HookY), Client()->IntraGameTick());
+				HookPos = mix(vec2((float)pPrevChar->m_HookX, (float)pPrevChar->m_HookY), vec2((float)pPlayerChar->m_HookX, (float)pPlayerChar->m_HookY), Client()->IntraGameTick());
 		}
 		else
-			HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), IntraTick);
+			HookPos = mix(vec2((float)Prev.m_HookX, (float)Prev.m_HookY), vec2((float)Player.m_HookX, (float)Player.m_HookY), IntraTick);
 
 		float d = distance(Pos, HookPos);
 		vec2 Dir = normalize(Pos-HookPos);
@@ -304,7 +304,7 @@ void CPlayers::RenderPlayer(
 	}
 	
 	vec2 Direction = GetDirection((int)(Angle*256.0f));
-	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
+	vec2 Position = mix(vec2((float)Prev.m_X, (float)Prev.m_Y), vec2((float)Player.m_X, (float)Player.m_Y), IntraTick);
 	vec2 Vel = mix(vec2(Prev.m_VelX/256.0f, Prev.m_VelY/256.0f), vec2(Player.m_VelX/256.0f, Player.m_VelY/256.0f), IntraTick);
 	
 	m_pClient->m_pFlow->Add(Position, Vel*100.0f, 10.0f);
@@ -321,10 +321,10 @@ void CPlayers::RenderPlayer(
 	}
 
 	if(Prev.m_Health < 0) // Don't flicker from previous position
-		Position = vec2(Player.m_X, Player.m_Y);
+		Position = vec2((float)Player.m_X, (float)Player.m_Y);
 
 	bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
-	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16);
+	bool InAir = !Collision()->CheckPoint((float)Player.m_X, (float)(Player.m_Y+16));
 	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
 
 	// evaluate animation
@@ -361,7 +361,7 @@ void CPlayers::RenderPlayer(
 		}
 		
 		m_pClient->m_pEffects->SkidTrail(
-			Position+vec2(-Player.m_Direction*6,12),
+			Position+vec2((float)(-Player.m_Direction*6),12),
 			vec2(-Player.m_Direction*100*length(Vel),-50)
 		);
 	}
@@ -421,7 +421,7 @@ void CPlayers::RenderPlayer(
 				float Alpha = 1.0f;
 				if (Alpha > 0.0f && g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[IteX])
 				{
-					vec2 Dir = vec2(pPlayerChar->m_X,pPlayerChar->m_Y) - vec2(pPrevChar->m_X, pPrevChar->m_Y);
+					vec2 Dir = vec2((float)pPlayerChar->m_X, (float)pPlayerChar->m_Y) - vec2((float)pPrevChar->m_X, (float)pPrevChar->m_Y);
 					Dir = normalize(Dir);
 					float HadOkenAngle  = GetAngle(Dir);
 					Graphics()->QuadsSetRotation(HadOkenAngle );
@@ -431,7 +431,7 @@ void CPlayers::RenderPlayer(
 					p = Position;
 					float OffsetX = g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsetx;
 					p -= Dir * OffsetX;
-					RenderTools()->DrawSprite(p.x, p.y, 160.0f);
+					RenderTools()->DrawSprite(p.x, p.y, 160);
 				}
 			}
 		}
@@ -489,7 +489,7 @@ void CPlayers::RenderPlayer(
 	// render the "shadow" tee
 	if(pInfo.m_Local && g_Config.m_Debug)
 	{
-		vec2 GhostPosition = mix(vec2(pPrevChar->m_X, pPrevChar->m_Y), vec2(pPlayerChar->m_X, pPlayerChar->m_Y), Client()->IntraGameTick());
+		vec2 GhostPosition = mix(vec2((float)pPrevChar->m_X, (float)pPrevChar->m_Y), vec2((float)pPlayerChar->m_X, (float)pPlayerChar->m_Y), Client()->IntraGameTick());
 		CTeeRenderInfo Ghost = RenderInfo;
 		Ghost.m_ColorBody.a = 0.5f;
 		Ghost.m_ColorFeet.a = 0.5f;
@@ -522,15 +522,15 @@ void CPlayers::RenderPlayer(
 		float a = 1;
 
 		if (FromEnd < Client()->GameTickSpeed() / 5)
-			a = FromEnd / (Client()->GameTickSpeed() / 5.0);
+			a = FromEnd / (float)(Client()->GameTickSpeed() / 5.0);
 
 		float h = 1;
 		if (SinceStart < Client()->GameTickSpeed() / 10)
-			h = SinceStart / (Client()->GameTickSpeed() / 10.0);
+			h = SinceStart / (float)(Client()->GameTickSpeed() / 10.0);
 
 		float Wiggle = 0;
 		if (SinceStart < Client()->GameTickSpeed() / 5)
-			Wiggle = SinceStart / (Client()->GameTickSpeed() / 5.0);
+			Wiggle = SinceStart / (float)(Client()->GameTickSpeed() / 5.0);
 
 		float WiggleAngle = sinf(5*Wiggle);
 

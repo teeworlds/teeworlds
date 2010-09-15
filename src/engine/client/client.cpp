@@ -190,11 +190,11 @@ void CSmoothTime::Update(CGraph *pGraph, int64 Target, int TimeLeft, int AdjustD
 		{
 			// ignore this ping spike
 			UpdateTimer = 0;
-			pGraph->Add(TimeLeft, 1,1,0);
+			pGraph->Add((float)TimeLeft, 1,1,0);
 		}
 		else
 		{
-			pGraph->Add(TimeLeft, 1,0,0);
+			pGraph->Add((float)TimeLeft, 1,0,0);
 			if(m_aAdjustSpeed[AdjustDirection] < 30.0f)
 				m_aAdjustSpeed[AdjustDirection] *= 2.0f;
 		}
@@ -204,7 +204,7 @@ void CSmoothTime::Update(CGraph *pGraph, int64 Target, int TimeLeft, int AdjustD
 		if(m_SpikeCounter)
 			m_SpikeCounter--;
 
-		pGraph->Add(TimeLeft, 0,1,0);
+		pGraph->Add((float)TimeLeft, 0,1,0);
 
 		m_aAdjustSpeed[AdjustDirection] *= 0.95f;
 		if(m_aAdjustSpeed[AdjustDirection] < 2.0f)
@@ -344,7 +344,7 @@ void CClient::SendReady()
 
 bool CClient::RconAuthed()
 {
-	return m_RconAuthed;
+	return m_RconAuthed == 1 ? true : false;
 }
 
 void CClient::RconAuth(const char *pName, const char *pPassword)
@@ -661,7 +661,7 @@ void CClient::DebugRender()
 
 	//m_pGraphics->BlendNormal();
 	Graphics()->TextureSet(m_DebugFont);
-	Graphics()->MapScreen(0,0,Graphics()->ScreenWidth(),Graphics()->ScreenHeight());
+	Graphics()->MapScreen(0,0,(float)Graphics()->ScreenWidth(),(float)Graphics()->ScreenHeight());
 
 	if(time_get()-LastSnap > time_freq())
 	{
@@ -712,7 +712,7 @@ void CClient::DebugRender()
 			{
 				str_format(aBuffer, sizeof(aBuffer), "%4d %20s: %8d %8d %8d", i, GameClient()->GetItemName(i), m_SnapshotDelta.GetDataRate(i)/8, m_SnapshotDelta.GetDataUpdates(i),
 					(m_SnapshotDelta.GetDataRate(i)/m_SnapshotDelta.GetDataUpdates(i))/8);
-				Graphics()->QuadsText(2, 100+y*12, 16, 1,1,1,1, aBuffer);
+				Graphics()->QuadsText(2, (float)(100+y*12), 16, 1,1,1,1, aBuffer);
 				y++;
 			}
 		}
@@ -1281,7 +1281,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 						{
 							int64 Now = m_GameTime.Get(time_get());
 							int64 TickStart = GameTick*time_freq()/50;
-							int64 TimeLeft = (TickStart-Now)*1000 / time_freq();
+							int TimeLeft = (int)((TickStart-Now)*1000 / time_freq());
 							//st_update(&game_time, (game_tick-1)*time_freq()/50);
 							m_GameTime.Update(&m_GametimeMarginGraph, (GameTick-1)*time_freq()/50, TimeLeft, 0);
 						}
@@ -1430,7 +1430,7 @@ void CClient::Update()
 		int64 Now = m_GameTime.Get(time_get());
 		int64 PredNow = m_PredictedTime.Get(time_get());
 
-		while(1)
+		for(;;)
 		{
 			CSnapshotStorage::CHolder *pCur = m_aSnapshots[SNAP_CURRENT];
 			int64 TickStart = (pCur->m_Tick)*time_freq()/50;
@@ -1662,7 +1662,7 @@ void CClient::Run()
 	// process pending commands
 	m_pConsole->StoreCommands(false);
 
-	while (1)
+	for(;;)
 	{
 		int64 FrameStartTime = time_get();
 		m_Frames++;
@@ -1778,7 +1778,8 @@ void CClient::Run()
 
 		if(ReportTime < time_get())
 		{
-			if(0 && g_Config.m_Debug)
+			/*
+			if(g_Config.m_Debug)
 			{
 				dbg_msg("client/report", "fps=%.02f (%.02f %.02f) netstate=%d",
 					m_Frames/(float)(ReportInterval/time_freq()),
@@ -1786,6 +1787,7 @@ void CClient::Run()
 					1.0f/m_FrameTimeLow,
 					m_NetClient.State());
 			}
+			*/
 			m_FrameTimeLow = 1;
 			m_FrameTimeHigh = 0;
 			m_Frames = 0;

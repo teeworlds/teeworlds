@@ -47,7 +47,7 @@ public:
 	
 	void Vote(int v); // -1 = no, 1 = yes
 	
-	int SecondsLeft() { return (m_Closetime - time_get())/time_freq(); }
+	int SecondsLeft() { return (int)((m_Closetime - time_get())/time_freq()); }
 	bool IsVoting() { return m_Closetime != 0; }
 	int TakenChoice() const { return m_Voted; }
 	const char *VoteDescription() const { return m_aDescription; }

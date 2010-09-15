@@ -73,7 +73,7 @@ void CLayerGroup::Mapping(float *pPoints)
 	m_pMap->m_pEditor->RenderTools()->MapscreenToWorld(
 		m_pMap->m_pEditor->m_WorldOffsetX, m_pMap->m_pEditor->m_WorldOffsetY,
 		m_ParallaxX/100.0f, m_ParallaxY/100.0f,
-		m_OffsetX, m_OffsetY,
+		(float)m_OffsetX, (float)m_OffsetY,
 		m_pMap->m_pEditor->Graphics()->ScreenAspect(), m_pMap->m_pEditor->m_WorldZoom, pPoints);
 
 	pPoints[0] += m_pMap->m_pEditor->m_EditorOffsetX;
@@ -1455,10 +1455,10 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 		Graphics()->LinesBegin();
 
 			CUIRect r;
-			r.x = GetSelectedGroup()->m_ClipX;
-			r.y = GetSelectedGroup()->m_ClipY;
-			r.w = GetSelectedGroup()->m_ClipW;
-			r.h = GetSelectedGroup()->m_ClipH;
+			r.x = (float)GetSelectedGroup()->m_ClipX;
+			r.y = (float)GetSelectedGroup()->m_ClipY;
+			r.w = (float)GetSelectedGroup()->m_ClipW;
+			r.h = (float)GetSelectedGroup()->m_ClipH;
 
 			IGraphics::CLineItem Array[4] = {
 				IGraphics::CLineItem(r.x, r.y, r.x+r.w, r.y),
@@ -1522,33 +1522,30 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			mem_copy(aLastPoints, aPoints, sizeof(aPoints));
 		}
 
-		if(1)
+		Graphics()->SetColor(1,0,0,1);
+		for(int i = 0; i < 2; i++)
 		{
-			Graphics()->SetColor(1,0,0,1);
-			for(int i = 0; i < 2; i++)
-			{
-				float aPoints[4];
-				float aAspects[] = {4.0f/3.0f, 16.0f/10.0f, 5.0f/4.0f, 16.0f/9.0f};
-				float Aspect = aAspects[i];
+			float aPoints[4];
+			float aAspects[] = {4.0f/3.0f, 16.0f/10.0f, 5.0f/4.0f, 16.0f/9.0f};
+			float Aspect = aAspects[i];
 
-				RenderTools()->MapscreenToWorld(
-					m_WorldOffsetX, m_WorldOffsetY,
-					1.0f, 1.0f, 0.0f, 0.0f, Aspect, 1.0f, aPoints);
+			RenderTools()->MapscreenToWorld(
+				m_WorldOffsetX, m_WorldOffsetY,
+				1.0f, 1.0f, 0.0f, 0.0f, Aspect, 1.0f, aPoints);
 
-				CUIRect r;
-				r.x = aPoints[0];
-				r.y = aPoints[1];
-				r.w = aPoints[2]-aPoints[0];
-				r.h = aPoints[3]-aPoints[1];
+			CUIRect r;
+			r.x = aPoints[0];
+			r.y = aPoints[1];
+			r.w = aPoints[2]-aPoints[0];
+			r.h = aPoints[3]-aPoints[1];
 
-				IGraphics::CLineItem Array[4] = {
-					IGraphics::CLineItem(r.x, r.y, r.x+r.w, r.y),
-					IGraphics::CLineItem(r.x+r.w, r.y, r.x+r.w, r.y+r.h),
-					IGraphics::CLineItem(r.x+r.w, r.y+r.h, r.x, r.y+r.h),
-					IGraphics::CLineItem(r.x, r.y+r.h, r.x, r.y)};
-				Graphics()->LinesDraw(Array, 4);
-				Graphics()->SetColor(0,1,0,1);
-			}
+			IGraphics::CLineItem Array[4] = {
+				IGraphics::CLineItem(r.x, r.y, r.x+r.w, r.y),
+				IGraphics::CLineItem(r.x+r.w, r.y, r.x+r.w, r.y+r.h),
+				IGraphics::CLineItem(r.x+r.w, r.y+r.h, r.x, r.y+r.h),
+				IGraphics::CLineItem(r.x, r.y+r.h, r.x, r.y)};
+			Graphics()->LinesDraw(Array, 4);
+			Graphics()->SetColor(0,1,0,1);
 		}
 
 		Graphics()->LinesEnd();
@@ -2469,7 +2466,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 					int Time = (int)(((UI()->MouseX()-View.x)*TimeScale)*1000.0f);
 					//float env_y = (UI()->MouseY()-view.y)/TimeScale;
 					float aChannels[4];
-					pEnvelope->Eval(Time, aChannels);
+					pEnvelope->Eval((float)Time, aChannels);
 					pEnvelope->AddPoint(Time,
 						f2fx(aChannels[0]), f2fx(aChannels[1]),
 						f2fx(aChannels[2]), f2fx(aChannels[3]));
@@ -3073,8 +3070,8 @@ void CEditor::UpdateAndRender()
 	int rx, ry;
 	{
 		Input()->MouseRelative(&rx, &ry);
-		m_MouseDeltaX = rx;
-		m_MouseDeltaY = ry;
+		m_MouseDeltaX = (float)rx;
+		m_MouseDeltaY = (float)ry;
 
 		if(!m_LockMouse)
 		{
@@ -3088,8 +3085,8 @@ void CEditor::UpdateAndRender()
 		if(s_MouseY > UI()->Screen()->h) s_MouseY = (int)UI()->Screen()->h;
 
 		// update the ui
-		mx = s_MouseX;
-		my = s_MouseY;
+		mx = (float)s_MouseX;
+		my = (float)s_MouseY;
 		Mwx = 0;
 		Mwy = 0;
 

@@ -5,7 +5,7 @@
 // raw datafile access
 class CDataFileReader
 {
-	class CDatafile *m_pDataFile;
+	struct CDatafile *m_pDataFile;
 	void *GetDataImpl(int Index, int Swap);
 public:
 	CDataFileReader() : m_pDataFile(0) {}
@@ -28,7 +28,7 @@ public:
 	int NumData();
 	void Unload();
 	
-	unsigned Crc();
+	int Crc();
 };
 
 // write access
@@ -58,7 +58,7 @@ class CDataFileWriter
 		int m_Last;
 	};
 	
-	IOHANDLE m_File;
+	FILE *m_File;
 	int m_NumItems;
 	int m_NumDatas;
 	int m_NumItemTypes;

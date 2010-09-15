@@ -12,6 +12,9 @@
 	#include <OpenGL/gl.h>
 	#include <OpenGL/glu.h>
 #else
+	#if defined(__CYGWIN__)
+		#define USE_OPENGL32
+	#endif
 	#include <GL/gl.h>
 	#include <GL/glu.h>
 #endif
@@ -85,7 +88,7 @@ class CTextRender : public IEngineTextRender
 	int WordLength(const char *pText)
 	{
 		int s = 1;
-		while(1)
+		for(;;)
 		{
 			if(*pText == 0)
 				return s-1;
@@ -334,9 +337,11 @@ class CTextRender : public IEngineTextRender
 				}
 		}
 
-		if(0) for(py = 0; py < SlotW; py++) 
+		/*
+		for(py = 0; py < SlotW; py++) 
 			for(px = 0; px < SlotH; px++) 
 				ms_aGlyphData[py*SlotW+px] = 255;
+		*/
 		
 		// upload the glyph
 		UploadGlyph(pSizeData, 0, SlotId, Chr, ms_aGlyphData);
@@ -420,7 +425,7 @@ class CTextRender : public IEngineTextRender
 	{
 		FT_Vector Kerning = {0,0};
 		FT_Get_Kerning(pFont->m_FtFace, Left, Right, FT_KERNING_DEFAULT, &Kerning);
-		return (Kerning.x>>6);
+		return (float)(Kerning.x>>6);
 	}
 	
 	
@@ -494,7 +499,7 @@ public:
 	}
 	
 		
-	virtual void Text(void *pFontSetV, float x, float y, float Size, const char *pText, int MaxWidth)
+	virtual void Text(void *pFontSetV, float x, float y, float Size, const char *pText, float MaxWidth)
 	{
 		CTextCursor Cursor;
 		SetCursor(&Cursor, x, y, Size, TEXTFLAG_RENDER);
@@ -572,7 +577,7 @@ public:
 		pSizeData = GetSize(pFont, ActualSize);
 		RenderSetup(pFont, ActualSize);
 
-		float Scale = 1/pSizeData->m_FontSize;
+		float Scale = 1.0f/pSizeData->m_FontSize;
 		
 		// set length
 		if(Length < 0)

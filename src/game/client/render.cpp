@@ -45,7 +45,7 @@ void CRenderTools::SelectSprite(SPRITE *pSpr, int Flags, int sx, int sy)
 	int cx = pSpr->m_pSet->m_Gridx;
 	int cy = pSpr->m_pSet->m_Gridy;
 
-	float f = sqrtf(h*h + w*w);
+	float f = sqrtf((float)(h*h + w*w));
 	gs_SpriteWScale = w/f;
 	gs_SpriteHScale = h/f;
 	
@@ -79,7 +79,7 @@ void CRenderTools::SelectSprite(int Id, int Flags, int sx, int sy)
 	SelectSprite(&g_pData->m_aSprites[Id], Flags, sx, sy);
 }
 
-void CRenderTools::DrawSprite(float x, float y, float Size)
+void CRenderTools::DrawSprite(float x, float y, int Size)
 {
 	IGraphics::CQuadItem QuadItem(x, y, Size*gs_SpriteWScale, Size*gs_SpriteHScale);
 	Graphics()->QuadsDraw(&QuadItem, 1);

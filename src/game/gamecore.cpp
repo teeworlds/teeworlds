@@ -85,7 +85,7 @@ void CCharacterCore::Tick(bool UseInput)
 	if(m_pCollision->CheckPoint(m_Pos.x-PhysSize/2, m_Pos.y+PhysSize/2+5))
 		Grounded = true;
 	
-	vec2 TargetDirection = normalize(vec2(m_Input.m_TargetX, m_Input.m_TargetY));
+	vec2 TargetDirection = normalize(vec2((float)m_Input.m_TargetX, (float)m_Input.m_TargetY));
 
 	m_Vel.y += m_pWorld->m_Tuning.m_Gravity;
 	
@@ -383,14 +383,14 @@ void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)
 
 void CCharacterCore::Read(const CNetObj_CharacterCore *pObjCore)
 {
-	m_Pos.x = pObjCore->m_X;
-	m_Pos.y = pObjCore->m_Y;
+	m_Pos.x = (float)pObjCore->m_X;
+	m_Pos.y = (float)pObjCore->m_Y;
 	m_Vel.x = pObjCore->m_VelX/256.0f;
 	m_Vel.y = pObjCore->m_VelY/256.0f;
 	m_HookState = pObjCore->m_HookState;
 	m_HookTick = pObjCore->m_HookTick;
-	m_HookPos.x = pObjCore->m_HookX;
-	m_HookPos.y = pObjCore->m_HookY;
+	m_HookPos.x = (float)pObjCore->m_HookX;
+	m_HookPos.y = (float)pObjCore->m_HookY;
 	m_HookDir.x = pObjCore->m_HookDx/256.0f;
 	m_HookDir.y = pObjCore->m_HookDy/256.0f;
 	m_HookedPlayer = pObjCore->m_HookedPlayer;

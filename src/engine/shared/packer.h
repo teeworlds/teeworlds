@@ -23,7 +23,7 @@ public:
 	
 	int Size() const { return (int)(m_pCurrent-m_aBuffer); }
 	const unsigned char *Data() const { return m_aBuffer; }
-	bool Error() const { return m_Error; }
+	bool Error() const { return m_Error == 1 ? true : false; }
 };
 
 class CUnpacker
@@ -44,7 +44,7 @@ public:
 	int GetInt();
 	const char *GetString(int SanitizeType = SANITIZE);
 	const unsigned char *GetRaw(int Size);
-	bool Error() const { return m_Error; }
+	bool Error() const { return m_Error == 1 ? true : false; }
 };
 
 #endif

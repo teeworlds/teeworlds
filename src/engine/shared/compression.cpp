@@ -14,7 +14,7 @@ unsigned char *CVariableInt::Pack(unsigned char *pDst, int i)
 	if(i)
 	{
 		*pDst |= 0x80; // set extend bit
-		while(1)
+		for(;;)
 		{
 			pDst++;
 			*pDst = i&(0x7F); // pack 7bit
@@ -34,24 +34,29 @@ const unsigned char *CVariableInt::Unpack(const unsigned char *pSrc, int *pInOut
 	int Sign = (*pSrc>>6)&1; 
 	*pInOut = *pSrc&0x3F; 
 
-	do
-	{ 
-		if(!(*pSrc&0x80)) break;
-		pSrc++;
-		*pInOut |= (*pSrc&(0x7F))<<(6);
+		if((*pSrc&0x80))
+		{
+			pSrc++;
+			*pInOut |= (*pSrc&(0x7F))<<(6);
 
-		if(!(*pSrc&0x80)) break;
-		pSrc++;
-		*pInOut |= (*pSrc&(0x7F))<<(6+7);
+			if((*pSrc&0x80))
+			{
+				pSrc++;
+				*pInOut |= (*pSrc&(0x7F))<<(6+7);
 
-		if(!(*pSrc&0x80)) break;
-		pSrc++;
-		*pInOut |= (*pSrc&(0x7F))<<(6+7+7);
+				if((*pSrc&0x80))
+				{
+					pSrc++;
+					*pInOut |= (*pSrc&(0x7F))<<(6+7+7);
 
-		if(!(*pSrc&0x80)) break;
-		pSrc++;
-		*pInOut |= (*pSrc&(0x7F))<<(6+7+7+7);
-	} while(0);
+					if((*pSrc&0x80))
+					{
+						pSrc++;
+						*pInOut |= (*pSrc&(0x7F))<<(6+7+7+7);
+					}
+				}
+			}
+		}
 
 	pSrc++;
 	*pInOut ^= -Sign; // if(sign) *i = ~(*i)

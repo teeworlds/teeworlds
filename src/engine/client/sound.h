@@ -22,7 +22,7 @@ public:
 	static void RateConvert(int SampleId);
 
 	// TODO: Refactor: clean this mess up
-	static IOHANDLE ms_File;
+	static FILE *ms_File;
 	static int ReadData(void *pBuffer, int Size);
 
 	virtual int LoadWV(const char *pFilename);

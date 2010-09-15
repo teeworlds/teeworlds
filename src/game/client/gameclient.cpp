@@ -306,7 +306,7 @@ void CGameClient::DispatchInput()
 	{
 		for(int h = 0; h < m_Input.m_Num; h++)
 		{
-			if(m_Input.m_paComponents[h]->OnMouseMove(x, y))
+			if(m_Input.m_paComponents[h]->OnMouseMove((float)x, (float)y))
 				break;
 		}
 	}
@@ -398,8 +398,8 @@ void CGameClient::UpdateLocalCharacterPos()
 	else if(m_Snap.m_pLocalCharacter && m_Snap.m_pLocalPrevCharacter)
 	{
 		m_LocalCharacterPos = mix(
-			vec2(m_Snap.m_pLocalPrevCharacter->m_X, m_Snap.m_pLocalPrevCharacter->m_Y),
-			vec2(m_Snap.m_pLocalCharacter->m_X, m_Snap.m_pLocalCharacter->m_Y), Client()->IntraGameTick());
+			vec2((float)m_Snap.m_pLocalPrevCharacter->m_X, (float)m_Snap.m_pLocalPrevCharacter->m_Y),
+			vec2((float)m_Snap.m_pLocalCharacter->m_X, (float)m_Snap.m_pLocalCharacter->m_Y), Client()->IntraGameTick());
 	}
 }
 
@@ -600,32 +600,32 @@ void CGameClient::ProcessEvents()
 		if(Item.m_Type == NETEVENTTYPE_DAMAGEIND)
 		{
 			NETEVENT_DAMAGEIND *ev = (NETEVENT_DAMAGEIND *)pData;
-			g_GameClient.m_pEffects->DamageIndicator(vec2(ev->m_X, ev->m_Y), GetDirection(ev->m_Angle));
+			g_GameClient.m_pEffects->DamageIndicator(vec2((float)ev->m_X, (float)ev->m_Y), GetDirection(ev->m_Angle));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_EXPLOSION)
 		{
 			NETEVENT_EXPLOSION *ev = (NETEVENT_EXPLOSION *)pData;
-			g_GameClient.m_pEffects->Explosion(vec2(ev->m_X, ev->m_Y));
+			g_GameClient.m_pEffects->Explosion(vec2((float)ev->m_X, (float)ev->m_Y));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_HAMMERHIT)
 		{
 			NETEVENT_HAMMERHIT *ev = (NETEVENT_HAMMERHIT *)pData;
-			g_GameClient.m_pEffects->HammerHit(vec2(ev->m_X, ev->m_Y));
+			g_GameClient.m_pEffects->HammerHit(vec2((float)ev->m_X, (float)ev->m_Y));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_SPAWN)
 		{
 			NETEVENT_SPAWN *ev = (NETEVENT_SPAWN *)pData;
-			g_GameClient.m_pEffects->PlayerSpawn(vec2(ev->m_X, ev->m_Y));
+			g_GameClient.m_pEffects->PlayerSpawn(vec2((float)ev->m_X, (float)ev->m_Y));
 		}
 		else if(Item.m_Type == NETEVENTTYPE_DEATH)
 		{
 			NETEVENT_DEATH *ev = (NETEVENT_DEATH *)pData;
-			g_GameClient.m_pEffects->PlayerDeath(vec2(ev->m_X, ev->m_Y), ev->m_ClientId);
+			g_GameClient.m_pEffects->PlayerDeath(vec2((float)ev->m_X, (float)ev->m_Y), ev->m_ClientId);
 		}
 		else if(Item.m_Type == NETEVENTTYPE_SOUNDWORLD)
 		{
 			NETEVENT_SOUNDWORLD *ev = (NETEVENT_SOUNDWORLD *)pData;
-			g_GameClient.m_pSounds->Play(CSounds::CHN_WORLD, ev->m_SoundId, 1.0f, vec2(ev->m_X, ev->m_Y));
+			g_GameClient.m_pSounds->Play(CSounds::CHN_WORLD, ev->m_SoundId, 1.0f, vec2((float)ev->m_X, (float)ev->m_Y));
 		}
 	}
 }
@@ -779,7 +779,7 @@ void CGameClient::OnNewSnapshot()
 		{
 			m_Snap.m_pLocalCharacter = &c->m_Cur;
 			m_Snap.m_pLocalPrevCharacter = &c->m_Prev;
-			m_LocalCharacterPos = vec2(m_Snap.m_pLocalCharacter->m_X, m_Snap.m_pLocalCharacter->m_Y);
+			m_LocalCharacterPos = vec2((float)m_Snap.m_pLocalCharacter->m_X, (float)m_Snap.m_pLocalCharacter->m_Y);
 		}
 		else if(Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_CHARACTER, m_Snap.m_LocalCid))
 		{

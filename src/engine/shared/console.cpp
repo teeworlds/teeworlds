@@ -72,7 +72,7 @@ int CConsole::ParseArgs(CResult *pResult, const char *pFormat)
 	
 	pStr = pResult->m_pArgsStart;
 
-	while(1)	
+	for(;;)
 	{
 		// fetch command
 		Command = *pFormat;
@@ -102,7 +102,7 @@ int CConsole::ParseArgs(CResult *pResult, const char *pFormat)
 				pResult->AddArgument(pStr);
 				
 				pDst = pStr; // we might have to process escape data
-				while(1)
+				for(;;)
 				{
 					if(pStr[0] == '"')
 						break;
@@ -301,7 +301,7 @@ void CConsole::ExecuteFile(const char *pFilename)
 	m_pFirstExec = &ThisFile;
 
 	// exec the file
-	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_READ);
+	FILE *File = m_pStorage->OpenFile(pFilename, IOFLAG_READ);
 	
 	char aBuf[256];
 	if(File)
@@ -313,7 +313,7 @@ void CConsole::ExecuteFile(const char *pFilename)
 		Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
 		lr.Init(File);
 
-		while((pLine = lr.Get()))
+		while((pLine = lr.Get()) != 0)
 			ExecuteLine(pLine);
 
 		io_close(File);

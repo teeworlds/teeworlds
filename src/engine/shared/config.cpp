@@ -8,7 +8,7 @@ CConfiguration g_Config;
 class CConfig : public IConfig
 {
 	IStorage *m_pStorage;
-	IOHANDLE m_ConfigFile;
+	FILE *m_ConfigFile;
 	
 	struct CCallback
 	{

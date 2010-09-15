@@ -1,11 +1,19 @@
 // copyright (c) 2010 magnus auvinen, see licence.txt for more info
 
+#if defined(__STRICT_ANSI__)
+	#undef __STRICT_ANSI__
+	#warning: __STRICT_ANSI__ removed
+#endif
+
 #include <base/detect.h>
 
 #include "SDL.h"
 
 #ifdef CONF_FAMILY_WINDOWS
 	#define WIN32_LEAN_AND_MEAN
+	#if defined(__CYGWIN__)
+		#include <stdlib.h>
+	#endif
 	#include <windows.h>
 #endif
 
@@ -13,6 +21,9 @@
 	#include <OpenGL/gl.h>
 	#include <OpenGL/glu.h>
 #else
+	#if defined(__CYGWIN__)
+		#define USE_OPENGL32
+	#endif
 	#include <GL/gl.h>
 	#include <GL/glu.h>
 #endif
@@ -384,7 +395,7 @@ int CGraphics_OpenGL::LoadPNG(CImageInfo *pImg, const char *pFilename)
 	// open file for reading
 	png_init(0,0); // ignore_convention
 
-	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, aCompleteFilename, sizeof(aCompleteFilename));
+	FILE *File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, aCompleteFilename, sizeof(aCompleteFilename));
 	if(File)
 		io_close(File);
 	else
@@ -450,7 +461,7 @@ void CGraphics_OpenGL::ScreenshotDirect(const char *pFilename)
 		char aWholePath[1024];
 		png_t Png; // ignore_convention
 
-		IOHANDLE File  = m_pStorage->OpenFile(pFilename, IOFLAG_WRITE, aWholePath, sizeof(aWholePath));
+		FILE *File  = m_pStorage->OpenFile(pFilename, IOFLAG_WRITE, aWholePath, sizeof(aWholePath));
 		if(File)
 			io_close(File);
 	
@@ -833,7 +844,11 @@ bool CGraphics_SDL::Init()
 
 	#ifdef CONF_FAMILY_WINDOWS
 		if(!getenv("SDL_VIDEO_WINDOW_POS") && !getenv("SDL_VIDEO_CENTERED")) // ignore_convention
-			putenv("SDL_VIDEO_WINDOW_POS=8,27"); // ignore_convention
+		#if defined(__CYGWIN__)
+			putenv((char *)"SDL_VIDEO_WINDOW_POS=8,27"); // ignore_convention
+		#else
+			_putenv("SDL_VIDEO_WINDOW_POS=8,27"); // ignore_convention
+		#endif
 	#endif
 	
 	if(InitWindow() != 0)
@@ -843,7 +858,7 @@ bool CGraphics_SDL::Init()
 		
 	CGraphics_OpenGL::Init();
 	
-	MapScreen(0,0,g_Config.m_GfxScreenWidth, g_Config.m_GfxScreenHeight);
+	MapScreen(0,0,(float)g_Config.m_GfxScreenWidth, (float)g_Config.m_GfxScreenHeight);
 	return false;
 }
 
@@ -896,7 +911,7 @@ void CGraphics_SDL::Swap()
 
 		for(; Index < 10000; Index++)
 		{
-			IOHANDLE io;
+			FILE *io;
 			str_format(aFilename, sizeof(aFilename), "screenshots/screenshot%s-%05d.png", aDate, Index);
 			io = m_pStorage->OpenFile(aFilename, IOFLAG_READ);
 			if(io)

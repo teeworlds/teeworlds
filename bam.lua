@@ -130,10 +130,8 @@ function build(settings)
 	--settings.objdir = Path("objs")
 	settings.cc.Output = Intermediate_Output
 
-	if config.compiler.driver == "cl" then
-		settings.cc.flags:Add("/wd4244")
-	else
-		settings.cc.flags:Add("-Wall", "-fno-exceptions")
+	if config.compiler.driver ~= "cl" then
+		settings.cc.flags:Add("-fno-exceptions")
 		if platform == "macosx" then
 			settings.cc.flags:Add("-mmacosx-version-min=10.4", "-isysroot /Developer/SDKs/MacOSX10.4u.sdk")
 			settings.link.flags:Add("-mmacosx-version-min=10.4", "-isysroot /Developer/SDKs/MacOSX10.4u.sdk")
@@ -184,7 +182,14 @@ function build(settings)
 	-- build the small libraries
 	wavpack = Compile(external_settings, Collect("src/engine/external/wavpack/*.c"))
 	pnglite = Compile(external_settings, Collect("src/engine/external/pnglite/*.c"))
-	
+
+	-- set a strict compiler mode that don't affect external code
+	if config.compiler.driver == "cl" then
+		settings.cc.flags:Add("/W3")
+	elseif config.compiler.driver == "gcc" or config.compiler.driver == "gcc-3" or config.compiler.driver == "gcc-4" then
+		settings.cc.flags:Add("-Wall")
+	end
+
 	-- build game components
 	engine_settings = settings:Copy()
 	server_settings = engine_settings:Copy()

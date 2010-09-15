@@ -19,7 +19,7 @@
 */
 struct concept_empty
 {
-	template<typename T> static void check(T &t) { if(0) t.empty(); };
+	template<typename T> static void check(T &t) { /* t.empty(); */ };
 };
 
 /*

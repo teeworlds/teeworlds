@@ -27,7 +27,7 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 	CNetChunkHeader Header;
 	unsigned char *pEnd = m_Data.m_aChunkData + m_Data.m_DataSize;
 	
-	while(1)
+	for(;;)
 	{
 		unsigned char *pData = m_Data.m_aChunkData;
 		
@@ -288,8 +288,8 @@ int CNetBase::IsSeqInBackroom(int Seq, int Ack)
 	return 0;
 }
 
-IOHANDLE CNetBase::ms_DataLogSent = 0;
-IOHANDLE CNetBase::ms_DataLogRecv = 0;
+FILE *CNetBase::ms_DataLogSent = 0;
+FILE *CNetBase::ms_DataLogRecv = 0;
 CHuffman CNetBase::ms_Huffman;
 
 

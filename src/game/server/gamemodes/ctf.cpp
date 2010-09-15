@@ -138,7 +138,7 @@ void CGameControllerCTF::Tick()
 		else
 		{
 			CCharacter *apCloseCCharacters[MAX_CLIENTS];
-			int Num = GameServer()->m_World.FindEntities(F->m_Pos, CFlag::ms_PhysSize, (CEntity**)apCloseCCharacters, MAX_CLIENTS, NETOBJTYPE_CHARACTER);
+			int Num = GameServer()->m_World.FindEntities(F->m_Pos, (float)CFlag::ms_PhysSize, (CEntity**)apCloseCCharacters, MAX_CLIENTS, NETOBJTYPE_CHARACTER);
 			for(int i = 0; i < Num; i++)
 			{
 				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == -1 || GameServer()->Collision()->IntersectLine(F->m_Pos, apCloseCCharacters[i]->m_Pos, NULL, NULL))
@@ -205,7 +205,7 @@ void CGameControllerCTF::Tick()
 				else
 				{
 					F->m_Vel.y += GameServer()->m_World.m_Core.m_Tuning.m_Gravity;
-					GameServer()->Collision()->MoveBox(&F->m_Pos, &F->m_Vel, vec2(F->ms_PhysSize, F->ms_PhysSize), 0.5f);
+					GameServer()->Collision()->MoveBox(&F->m_Pos, &F->m_Vel, vec2((float)F->ms_PhysSize, (float)F->ms_PhysSize), 0.5f);
 				}
 			}
 		}

@@ -283,7 +283,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	x = 5.0f;
 	TextRender()->Text(0, Motd.x+x, Motd.y+y, 32, Localize("MOTD"), -1);
 	y += 32.0f+5.0f;
-	TextRender()->Text(0, Motd.x+x, Motd.y+y, 16, m_pClient->m_pMotd->m_aServerMotd, (int)Motd.w);
+	TextRender()->Text(0, Motd.x+x, Motd.y+y, 16, m_pClient->m_pMotd->m_aServerMotd, Motd.w);
 }
 
 static const char *FormatCommand(const char *pCmd)

@@ -527,14 +527,14 @@ int CMenus::RenderMenubar(CUIRect r)
 	if(Client()->State() == IClient::STATE_OFFLINE)
 	{
 		// offline menus
-		if(0) // this is not done yet
-		{
-			Box.VSplitLeft(90.0f, &Button, &Box);
-			static int s_NewsButton=0;
-			if (DoButton_MenuTab(&s_NewsButton, Localize("News"), m_ActivePage==PAGE_NEWS, &Button, 0))
-				NewPage = PAGE_NEWS;
-			Box.VSplitLeft(30.0f, 0, &Box); 
-		}
+		// this is not done yet
+		/*
+		Box.VSplitLeft(90.0f, &Button, &Box);
+		static int s_NewsButton=0;
+		if (DoButton_MenuTab(&s_NewsButton, Localize("News"), m_ActivePage==PAGE_NEWS, &Button, 0))
+			NewPage = PAGE_NEWS;
+		Box.VSplitLeft(30.0f, 0, &Box);
+		*/
 
 		Box.VSplitLeft(100.0f, &Button, &Box);
 		static int s_InternetButton=0;
@@ -1058,8 +1058,8 @@ bool CMenus::OnMouseMove(float x, float y)
 	m_MousePos.y += y;
 	if(m_MousePos.x < 0) m_MousePos.x = 0;
 	if(m_MousePos.y < 0) m_MousePos.y = 0;
-	if(m_MousePos.x > Graphics()->ScreenWidth()) m_MousePos.x = Graphics()->ScreenWidth();
-	if(m_MousePos.y > Graphics()->ScreenHeight()) m_MousePos.y = Graphics()->ScreenHeight();
+	if(m_MousePos.x > Graphics()->ScreenWidth()) m_MousePos.x = (float)Graphics()->ScreenWidth();
+	if(m_MousePos.y > Graphics()->ScreenHeight()) m_MousePos.y = (float)Graphics()->ScreenHeight();
 	
 	return true;
 }

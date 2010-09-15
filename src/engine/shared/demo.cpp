@@ -26,7 +26,7 @@ CDemoRecorder::CDemoRecorder(class CSnapshotDelta *pSnapshotDelta)
 	m_pSnapshotDelta = pSnapshotDelta;
 }
 
-//static IOHANDLE m_File = 0;
+//static FILE *m_File = 0;
 
 // Record
 int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pNetVersion, const char *pMap, int Crc, const char *pType)
@@ -41,7 +41,7 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	char aMapFilename[128];
 	// try the normal maps folder
 	str_format(aMapFilename, sizeof(aMapFilename), "maps/%s.map", pMap);
-	IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ);
+	FILE *MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ);
 	if(!MapFile)
 	{
 		// try the downloaded maps
@@ -342,7 +342,7 @@ void CDemoPlayer::ScanFile()
 	StartPos = io_tell(m_File);
 	m_Info.m_SeekablePoints = 0;
 
-	while(1)
+	for(;;)
 	{
 		long CurrentPos = io_tell(m_File);
 		
@@ -401,7 +401,7 @@ void CDemoPlayer::DoTick()
 	m_Info.m_Info.m_CurrentTick = m_Info.m_NextTick;
 	ChunkTick = m_Info.m_Info.m_CurrentTick;
 
-	while(1)
+	for(;;)
 	{
 		if(ReadChunkHeader(&ChunkType, &ChunkSize, &ChunkTick))
 		{
@@ -567,7 +567,7 @@ int CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const 
 		int Crc = (m_Info.m_Header.m_aCrc[0]<<24) | (m_Info.m_Header.m_aCrc[1]<<16) | (m_Info.m_Header.m_aCrc[2]<<8) | (m_Info.m_Header.m_aCrc[3]);
 		char aMapFilename[128];
 		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", m_Info.m_Header.m_aMap, Crc);
-		IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ);
+		FILE *MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ);
 		
 		if(MapFile)
 		{
@@ -681,7 +681,7 @@ int CDemoPlayer::Update()
 		int64 Freq = time_freq();
 		m_Info.m_CurrentTime += (int64)(Deltatime*(double)m_Info.m_Info.m_Speed);
 		
-		while(1)
+		for(;;)
 		{
 			int64 CurtickStart = (m_Info.m_Info.m_CurrentTick)*Freq/SERVER_TICK_SPEED;
 

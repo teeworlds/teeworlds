@@ -53,7 +53,7 @@ public:
 	void SelectSprite(struct SPRITE *pSprite, int Flags=0, int sx=0, int sy=0);
 	void SelectSprite(int id, int Flags=0, int sx=0, int sy=0);
 
-	void DrawSprite(float x, float y, float size);
+	void DrawSprite(float x, float y, int size);
 
 	// rects
 	void DrawRoundRect(float x, float y, float w, float h, float r);

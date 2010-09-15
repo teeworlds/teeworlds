@@ -479,7 +479,7 @@ void CSound::StopAll()
 	lock_release(m_SoundLock);
 }
 
-IOHANDLE CSound::ms_File = 0;
+FILE *CSound::ms_File = 0;
 
 IEngineSound *CreateEngineSound() { return new CSound; }
 

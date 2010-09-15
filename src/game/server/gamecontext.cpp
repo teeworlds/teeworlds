@@ -311,7 +311,7 @@ void CGameContext::SendVoteSet(int ClientId)
 	CNetMsg_Sv_VoteSet Msg;
 	if(m_VoteCloseTime)
 	{
-		Msg.m_Timeout = (m_VoteCloseTime-time_get())/time_freq();
+		Msg.m_Timeout = (int)((m_VoteCloseTime-time_get())/time_freq());
 		Msg.m_pDescription = m_aVoteDescription;
 		Msg.m_pCommand = "";
 	}
@@ -593,7 +593,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			return;
 
 		int64 Now = Server()->Tick();
-		p->m_Last_VoteTry = Now;
+		p->m_Last_VoteTry = (int)Now;
 		if(p->GetTeam() == -1)
 		{
 			SendChatTarget(ClientId, "Spectators aren't allowed to start a vote.");
@@ -606,7 +606,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			return;
 		}
 		
-		int Timeleft = p->m_Last_VoteCall + Server()->TickSpeed()*60 - Now;
+		int Timeleft = (int)(p->m_Last_VoteCall + Server()->TickSpeed()*60 - Now);
 		if(p->m_Last_VoteCall && Timeleft > 0)
 		{
 			char aChatmsg[512] = {0};
@@ -689,7 +689,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			p->m_Vote = 1;
 			p->m_VotePos = m_VotePos = 1;
 			m_VoteCreator = ClientId;
-			p->m_Last_VoteCall = Now;
+			p->m_Last_VoteCall = (int)Now;
 		}
 	}
 	else if(MsgId == NETMSGTYPE_CL_VOTE)
