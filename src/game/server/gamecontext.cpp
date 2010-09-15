@@ -813,27 +813,43 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	const char *pParamName = pResult->GetString(0);
-	float NewValue = pResult->GetFloat(1);
-
-	if(pSelf->Tuning()->Set(pParamName, NewValue))
+	
+	if(str_comp(g_Config.m_SvGametype, "ctf") != 0 && str_comp(g_Config.m_SvGametype, "dm") != 0 && str_comp(g_Config.m_SvGametype, "tdm") != 0)
 	{
-		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "%s changed to %.2f", pParamName, NewValue);
-		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", aBuf);
-		pSelf->SendTuningParams(-1);
+		const char *pParamName = pResult->GetString(0);
+		float NewValue = pResult->GetFloat(1);
+
+		if(pSelf->Tuning()->Set(pParamName, NewValue))
+		{
+			char aBuf[256], message[256];
+			
+			str_format(aBuf, sizeof(aBuf), "%s changed to %.2f", pParamName, NewValue);
+			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", aBuf);
+			pSelf->SendTuningParams(-1);
+			sprintf(message, "%s changed to %.2f", pParamName, NewValue);
+			pSelf->SendChat(-1, CGameContext::CHAT_ALL, message);
+		}
+		else
+			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "No such tuning parameter");
 	}
 	else
-		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "No such tuning parameter");
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "A modified gametype is not active");
 }
 
 void CGameContext::ConTuneReset(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	CTuningParams p;
-	*pSelf->Tuning() = p;
-	pSelf->SendTuningParams(-1);
-	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "Tuning reset");
+
+	if(str_comp(g_Config.m_SvGametype, "ctf") != 0 && str_comp(g_Config.m_SvGametype, "dm") != 0 && str_comp(g_Config.m_SvGametype, "tdm") != 0)
+	{
+		CTuningParams p;
+		*pSelf->Tuning() = p;
+		pSelf->SendTuningParams(-1);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "Tuning reset");
+		pSelf->SendChat(-1, CGameContext::CHAT_ALL, "All tunings have been recessed");
+	}
+	else
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "A modified gametype is not active");
 }
 
 void CGameContext::ConTuneDump(IConsole::IResult *pResult, void *pUserData)
