@@ -69,14 +69,14 @@ public:
 		}
 		
 		// 2) use data-dir in PWD if present
-		if(fs_is_dir("data/mapres"))
+		if(fs_is_dir("data/maps"))
 		{
 			str_copy(m_aDatadir, "data", sizeof(m_aDatadir));
 			return 0;
 		}
 		
 		// 3) use compiled-in data-dir if present
-		if (fs_is_dir(DATA_DIR "/mapres"))
+		if (fs_is_dir(DATA_DIR "/maps"))
 		{
 			str_copy(m_aDatadir, DATA_DIR, sizeof(m_aDatadir));
 			return 0;
@@ -126,7 +126,7 @@ public:
 	#endif
 		
 		// no data-dir found
-		dbg_msg("engine/datadir", "warning no data directory found");
+		dbg_msg("engine/datadir", "warning no valid data directory found");
 		return -1;
 	}
 

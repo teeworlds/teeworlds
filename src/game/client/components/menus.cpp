@@ -860,13 +860,6 @@ int CMenus::Render()
 			pButtonText = Localize("Ok");
 			ExtraAlign = -1;
 		}
-		else if(m_Popup == POPUP_PURE)
-		{
-			pTitle = Localize("Disconnected");
-			pExtraText = Localize("The server is running a non-standard tuning on a pure game type.");
-			pButtonText = Localize("Ok");
-			ExtraAlign = -1;
-		}
 		else if(m_Popup == POPUP_DELETE_DEMO)
 		{
 			pTitle = Localize("Delete demo");
@@ -1169,13 +1162,6 @@ void CMenus::OnRender()
 		RenderDemoPlayer(Screen);
 	}
 	
-	if(Client()->State() == IClient::STATE_ONLINE && m_pClient->m_ServerMode == m_pClient->SERVERMODE_PUREMOD)
-	{
-		Client()->Disconnect();
-		SetActive(true);
-		m_Popup = POPUP_PURE;
-	}
-	
 	if(!IsActive())
 	{
 		m_EscapePressed = false;
@@ -1309,3 +1295,4 @@ void CMenus::RenderBackground()
     {CUIRect Screen = *UI()->Screen();
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);}	
 }
+
