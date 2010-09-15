@@ -532,9 +532,9 @@ void CLayerTele::BrushDraw(CLayer *pBrush, float wx, float wy)
 			
 			if(l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEINEVIL || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT)
 			{
-				if(l->m_pTeleTile[y*l->m_Width+x].m_Number)
+				/*if(l->m_pTeleTile[y*l->m_Width+x].m_Number)
 					m_pTeleTile[fy*m_Width+fx].m_Number = l->m_pTeleTile[y*l->m_Width+x].m_Number;
-				else
+				else*/
 				{
 					if(!m_pEditor->m_TeleNum)
 					{
@@ -651,14 +651,15 @@ void CLayerSpeedup::BrushDraw(CLayer *pBrush, float wx, float wy)
 			
 			if(l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOSTS)
 			{
-				if(l->m_pSpeedupTile[y*l->m_Width+x].m_Force || l->m_pSpeedupTile[y*l->m_Width+x].m_Angle)
+				/*if(l->m_pSpeedupTile[y*l->m_Width+x].m_Force || l->m_pSpeedupTile[y*l->m_Width+x].m_Angle)
 				{
 					m_pSpeedupTile[fy*m_Width+fx].m_Force = l->m_pSpeedupTile[y*l->m_Width+x].m_Force;
 					m_pSpeedupTile[fy*m_Width+fx].m_Angle = l->m_pSpeedupTile[y*l->m_Width+x].m_Angle;
 					m_pSpeedupTile[fy*m_Width+fx].m_Type = l->m_pTiles[y*l->m_Width+x].m_Index;
 					m_pTiles[fy*m_Width+fx].m_Index = l->m_pTiles[y*l->m_Width+x].m_Index;
 				}
-				else if(m_pEditor->m_SpeedupForce)
+				else */
+				if(m_pEditor->m_SpeedupForce)
 				{
 					m_pSpeedupTile[fy*m_Width+fx].m_Force = m_pEditor->m_SpeedupForce;
 					m_pSpeedupTile[fy*m_Width+fx].m_Angle = m_pEditor->m_SpeedupAngle;
@@ -822,9 +823,9 @@ void CLayerSwitch::BrushDraw(CLayer *pBrush, float wx, float wy)
 
 			if(l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_DOOR + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_TRIGGER + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_LASER_LONG + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_LASER_MIDDLE + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_LASER_SHORT + ENTITY_OFFSET))
 			{
-				if(l->m_pSwitchTile[y*l->m_Width+x].m_Number)
+				/*if(l->m_pSwitchTile[y*l->m_Width+x].m_Number)
 					m_pSwitchTile[fy*m_Width+fx].m_Number = l->m_pSwitchTile[y*l->m_Width+x].m_Number;
-				else
+				else*/
 				{
 					if(!m_pEditor->m_SwitchNum)
 					{
