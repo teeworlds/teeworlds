@@ -634,7 +634,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 
 		if(g_Config.m_SvSpamprotection && p->m_Last_Chat && p->m_Last_Chat+Server()->TickSpeed() > Server()->Tick())
 			return;
-		if(str_length(pMsg->m_pMessage)>370) {
+		if(str_length(pMsg->m_pMessage)>370)
+		{
 			SendChatTarget(ClientId, "Your Message is too long");
 			return;
 		}
@@ -853,7 +854,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			/* disable it for vanilla clients
 			else if(!str_comp(pMsg->m_pMessage, "/show_others"))
 			{
-				if(!g_Config.m_SvShowOthers && !Server()->IsAuthed(ClientId)) {
+				if(!g_Config.m_SvShowOthers && !Server()->IsAuthed(ClientId))
+				{
 					SendChatTarget(ClientId, "This command is not allowed on this server.");
 					return;
 				}
@@ -879,15 +881,21 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			{
 				int Num;
 				
-				if(sscanf(pMsg->m_pMessage, "/team %d", &Num) == 1) {
-					if(((CGameControllerDDRace*)m_pController)->m_Teams.SetCharacterTeam(p->GetCID(), Num)) {
+				if(sscanf(pMsg->m_pMessage, "/team %d", &Num) == 1)
+				{
+					if(((CGameControllerDDRace*)m_pController)->m_Teams.SetCharacterTeam(p->GetCID(), Num))
+					{
 						char aBuf[512];
 						str_format(aBuf, sizeof(aBuf), "%s joined to Team %d", Server()->ClientName(p->GetCID()), Num);
 						SendChat(-1, CGameContext::CHAT_ALL, aBuf);
-					} else {
+					}
+					else
+					{
 						SendChatTarget(ClientId, "You cannot join to this team");
 					}
-				} else {
+				}
+				else
+				{
 					char aBuf[512];
 					str_format(aBuf, sizeof(aBuf), "You are in team %d", p->GetCharacter()->Team());
 					SendChatTarget(ClientId, aBuf);
@@ -998,8 +1006,9 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 
 		}
 		else if(!str_comp_nocase(pMsg->m_pMessage, "kill"))
-					SendChatTarget(ClientId, "/kill not kill to kill your self" DDRACE_VERSION);	//this will never happen
-		else {
+			SendChatTarget(ClientId, "/kill not kill to kill your self" DDRACE_VERSION);	//this will never happen
+		else
+		{
 			if (m_apPlayers[ClientId]->m_Muted == 0)
 				SendChat(ClientId, Team, pMsg->m_pMessage);
 			else
@@ -1036,7 +1045,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		p->m_Last_ShowOthers = Server()->Tick();
 		CNetMsg_Cl_RaceShowOthers *pMsg = (CNetMsg_Cl_RaceShowOthers *)pRawMsg;
 		p->m_ShowOthers = (bool)pMsg->m_Active;
-		if(p->m_ShowOthers) {
+		if(p->m_ShowOthers)
+		{
 			((CGameControllerDDRace*)m_pController)->m_Teams.SendAllInfo(p->GetCID());
 		}
 	}
@@ -1151,8 +1161,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				SendChatTarget(KickId, aBufKick);
 				return;
 			}
-			if(GetPlayerChar(ClientId) && GetPlayerChar(KickId) &&
-				GetPlayerChar(ClientId)->Team() != GetPlayerChar(KickId)->Team()) {
+			if(GetPlayerChar(ClientId) && GetPlayerChar(KickId) && GetPlayerChar(ClientId)->Team() != GetPlayerChar(KickId)->Team())
+			{
 				SendChatTarget(ClientId, "You can kick only your team member");
 				m_apPlayers[ClientId]->m_Last_KickVote = time_get();
 				return;
@@ -1340,7 +1350,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	}
 }
 
-void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	const char *pParamName = pResult->GetString(0);
@@ -1357,7 +1367,7 @@ void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData, int
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "No such tuning parameter");
 }
 
-void CGameContext::ConTuneReset(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConTuneReset(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	CTuningParams p;
@@ -1366,7 +1376,7 @@ void CGameContext::ConTuneReset(IConsole::IResult *pResult, void *pUserData, int
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "Tuning reset");
 }
 
-void CGameContext::ConTuneDump(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConTuneDump(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	char aBuf[256];
@@ -1379,13 +1389,13 @@ void CGameContext::ConTuneDump(IConsole::IResult *pResult, void *pUserData, int 
 	}
 }
 
-void CGameContext::ConChangeMap(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConChangeMap(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	pSelf->m_pController->ChangeMap(pResult->GetString(0));
 }
 
-void CGameContext::ConRestart(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConRestart(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(pResult->NumArguments())
@@ -1394,19 +1404,19 @@ void CGameContext::ConRestart(IConsole::IResult *pResult, void *pUserData, int c
 		pSelf->m_pController->StartRound();
 }
 
-void CGameContext::ConBroadcast(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConBroadcast(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	pSelf->SendBroadcast(pResult->GetString(0), -1);
 }
 
-void CGameContext::ConSay(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConSay(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	pSelf->SendChat(-1, CGameContext::CHAT_ALL, pResult->GetString(0));
 }
 
-void CGameContext::ConSetTeam(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConSetTeam(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	int ClientId = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
@@ -1415,7 +1425,7 @@ void CGameContext::ConSetTeam(IConsole::IResult *pResult, void *pUserData, int c
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "moved client %d to team %d", ClientId, Team);
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
-	if(!pSelf->m_apPlayers[ClientId] || !compare_players(pSelf->m_apPlayers[cid], pSelf->m_apPlayers[ClientId]))
+	if(!pSelf->m_apPlayers[ClientId] || !compare_players(pSelf->m_apPlayers[ClientId], pSelf->m_apPlayers[ClientId]))
 	if(!pSelf->m_apPlayers[ClientId])
 		return;
 
@@ -1476,25 +1486,27 @@ void CGameContext::ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *p
 }
 
 
-bool CGameContext::CheatsAvailable(int cid) {
-	if(!g_Config.m_SvCheats) {
-		((CServer*)Server())->SendRconLine(cid, "Cheats are not available on this server.");
+bool CGameContext::CheatsAvailable(int ClientId)
+{
+	if(!g_Config.m_SvCheats)
+	{
+		((CServer*)Server())->SendRconLine(ClientId, "Cheats are not available on this server.");
 	}
 	return g_Config.m_SvCheats;
 }
 
-void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	if (!pSelf->CheatsAvailable(cid))
+	if (!pSelf->CheatsAvailable(ClientId))
 		return;
 	int cid1=-1;
 	if(pResult->NumArguments())
 		cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if(cid1 ==-1 || cid1 == cid)
+	if(cid1 ==-1 || cid1 == ClientId)
 	{
-		CCharacter* chr = pSelf->GetPlayerChar(cid);
+		CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 		if(chr)
 		{
 			chr->m_Core.m_Pos.x -= 32;
@@ -1502,7 +1514,7 @@ void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int ci
 				chr->m_RaceState = RACE_CHEAT;
 		}
 	}
-	else if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	else if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if(chr)
@@ -1515,22 +1527,22 @@ void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int ci
 	else
 	{
 		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(cid,(pSelf->m_apPlayers[cid]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
+		serv->SendRconLine(ClientId,(pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
 	}
 }
 
-void  CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int cid)
+void  CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	if (!pSelf->CheatsAvailable(cid))
+	if (!pSelf->CheatsAvailable(ClientId))
 		return;
 	int cid1=-1;
 	if(pResult->NumArguments())
 		cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if(cid1 ==-1 || cid1 == cid)
+	if(cid1 ==-1 || cid1 == ClientId)
 	{
-		CCharacter* chr = pSelf->GetPlayerChar(cid);
+		CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 		if(chr)
 		{
 			chr->m_Core.m_Pos.x += 32;
@@ -1538,7 +1550,7 @@ void  CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int 
 				chr->m_RaceState = RACE_CHEAT;
 		}
 	}
-	else if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	else if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if(chr)
@@ -1551,22 +1563,22 @@ void  CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int 
 	else
 	{
 		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(cid,(pSelf->m_apPlayers[cid]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
+		serv->SendRconLine(ClientId,(pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
 	}
 }
 
-void  CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int cid)
+void  CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	if (!pSelf->CheatsAvailable(cid))
+	if (!pSelf->CheatsAvailable(ClientId))
 		return;
 	int cid1=-1;
 	if(pResult->NumArguments())
 		cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if(cid1 ==-1 || cid1 == cid)
+	if(cid1 ==-1 || cid1 == ClientId)
 	{
-		CCharacter* chr = pSelf->GetPlayerChar(cid);
+		CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 		if(chr)
 		{
 			chr->m_Core.m_Pos.y += 32;
@@ -1574,7 +1586,7 @@ void  CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int c
 				chr->m_RaceState = RACE_CHEAT;
 		}
 	}
-	else if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	else if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if(chr)
@@ -1587,22 +1599,22 @@ void  CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int c
 	else
 	{
 		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(cid,(pSelf->m_apPlayers[cid]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
+		serv->SendRconLine(ClientId,(pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
 	}
 }
 
-void  CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int cid)
+void  CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	if (!pSelf->CheatsAvailable(cid))
+	if (!pSelf->CheatsAvailable(ClientId))
 		return;
 	int cid1=-1;
 	if(pResult->NumArguments())
 		cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if(cid1 ==-1 || cid1 == cid)
+	if(cid1 ==-1 || cid1 == ClientId)
 	{
-		CCharacter* chr = pSelf->GetPlayerChar(cid);
+		CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 		if(chr)
 		{
 			chr->m_Core.m_Pos.y -= 32;
@@ -1610,7 +1622,7 @@ void  CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int cid
 				chr->m_RaceState = RACE_CHEAT;
 		}
 	}
-	else if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	else if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if(chr)
@@ -1623,11 +1635,11 @@ void  CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int cid
 	else
 	{
 		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(cid,(pSelf->m_apPlayers[cid]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
+		serv->SendRconLine(ClientId,(pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
 	}
 }
 
-void  CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int cid)
+void  CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
@@ -1635,7 +1647,7 @@ void  CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int cid
 	char buf[512];
 	if (Seconds < 10)
 		Seconds = 10;
-	if (pSelf->m_apPlayers[cid1] && (compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1])))
+	if (pSelf->m_apPlayers[cid1] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1])))
 	{
 		if (pSelf->m_apPlayers[cid1]->m_Muted < Seconds * pSelf->Server()->TickSpeed())
 		{
@@ -1643,61 +1655,62 @@ void  CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int cid
 		}
 		else
 			Seconds = pSelf->m_apPlayers[cid1]->m_Muted / pSelf->Server()->TickSpeed();
-		str_format(buf, sizeof(buf), "%s muted by %s for %d seconds", pSelf->Server()->ClientName(cid1), pSelf->Server()->ClientName(cid), Seconds);
+		str_format(buf, sizeof(buf), "%s muted by %s for %d seconds", pSelf->Server()->ClientName(cid1), pSelf->Server()->ClientName(ClientId), Seconds);
 		pSelf->SendChat(-1, CGameContext::CHAT_ALL, buf);
 	}
 }
 
-void  CGameContext::ConSetlvl(IConsole::IResult *pResult, void *pUserData, int cid)
+void  CGameContext::ConSetlvl(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	int level = clamp(pResult->GetInteger(1), 0, 3);
 
-	if (pSelf->m_apPlayers[cid1] && (pSelf->m_apPlayers[cid1]->m_Authed > level) && (compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]) || cid == cid1))
+	if (pSelf->m_apPlayers[cid1] && (pSelf->m_apPlayers[cid1]->m_Authed > level) && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]) || ClientId == cid1))
 	{
 		pSelf->m_apPlayers[cid1]->m_Authed = level;
 	}
 }
 
-void CGameContext::ConKillPlayer(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConKillPlayer(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	if(!pSelf->m_apPlayers[cid1])
 		return;
 
-	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 	{
 		pSelf->m_apPlayers[cid1]->KillCharacter(WEAPON_GAME);
 		char buf[512];
-		str_format(buf, sizeof(buf), "%s killed by %s", pSelf->Server()->ClientName(cid1), pSelf->Server()->ClientName(cid));
+		str_format(buf, sizeof(buf), "%s killed by %s", pSelf->Server()->ClientName(cid1), pSelf->Server()->ClientName(ClientId));
 		pSelf->SendChat(-1, CGameContext::CHAT_ALL, buf);
 	}
 }
 
-void CGameContext::ConNinjaMe(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConNinjaMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
+	if(!pSelf->CheatsAvailable(ClientId)) return;
 
-	CCharacter* chr = pSelf->GetPlayerChar(cid);
-	if(chr) {
+	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
+	if(chr)
+	{
 		chr->GiveNinja();
 		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 	}
 }
 
-void CGameContext::ConNinja(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConNinja(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
+	if(!pSelf->CheatsAvailable(ClientId)) return;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	CCharacter* chr = pSelf->GetPlayerChar(cid1);
 	if(chr)
 	{
-		if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+		if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 		{
 			chr->GiveNinja();
 			if(!g_Config.m_SvCheatTime)
@@ -1707,10 +1720,10 @@ void CGameContext::ConNinja(IConsole::IResult *pResult, void *pUserData, int cid
 }
 
 
-void CGameContext::ConHammer(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConHammer(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
+	if(!pSelf->CheatsAvailable(ClientId)) return;
 	char buf[128];
 
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
@@ -1721,34 +1734,34 @@ void CGameContext::ConHammer(IConsole::IResult *pResult, void *pUserData, int ci
 	CServer* serv = (CServer*)pSelf->Server();
 	if (type>3 || type<0)
 	{
-		serv->SendRconLine(cid, "Select hammer between 0 and 3");
+		serv->SendRconLine(ClientId, "Select hammer between 0 and 3");
 	}
 	else
 	{
-		if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+		if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 		{
 			chr->m_HammerType = type;
 			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
-			str_format(buf, sizeof(buf), "Hammer of cid=%d setted to %d",cid1,type);
-			serv->SendRconLine(cid, buf);
+			str_format(buf, sizeof(buf), "Hammer of ClientId=%d setted to %d",cid1,type);
+			serv->SendRconLine(ClientId, buf);
 		}
 	}
 }
 
-void CGameContext::ConHammerMe(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConHammerMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
+	if(!pSelf->CheatsAvailable(ClientId)) return;
 	char buf[128];
 	int type = pResult->GetInteger(0);
-	CCharacter* chr = pSelf->GetPlayerChar(cid);
+	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 	if (!chr)
 		return;
 	CServer* serv = (CServer*)pSelf->Server();
 	if (type>3 || type<0)
 	{
-		serv->SendRconLine(cid, "Select hammer between 0 and 3");
+		serv->SendRconLine(ClientId, "Select hammer between 0 and 3");
 	}
 	else
 	{
@@ -1756,17 +1769,17 @@ void CGameContext::ConHammerMe(IConsole::IResult *pResult, void *pUserData, int 
 		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 		str_format(buf, sizeof(buf), "Hammer setted to %d",type);
-		serv->SendRconLine(cid, buf);
+		serv->SendRconLine(ClientId, buf);
 	}
 }
 
 
-void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
+	if(!pSelf->CheatsAvailable(ClientId)) return;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if(chr)
@@ -1779,12 +1792,12 @@ void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int cid
 	}
 }
 
-void CGameContext::ConUnSuper(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConUnSuper(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
+	if(!pSelf->CheatsAvailable(ClientId)) return;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if(chr)
@@ -1794,13 +1807,13 @@ void CGameContext::ConUnSuper(IConsole::IResult *pResult, void *pUserData, int c
 	}
 }
 
-void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
-	if (pSelf->m_apPlayers[cid])
+	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if (pSelf->m_apPlayers[ClientId])
 	{
-		CCharacter* chr = pSelf->GetPlayerChar(cid);
+		CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 		if(chr)
 		{
 			chr->m_Super = true;
@@ -1811,13 +1824,13 @@ void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int c
 	}
 }
 
-void CGameContext::ConUnSuperMe(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConUnSuperMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
-	if (pSelf->m_apPlayers[cid])
+	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if (pSelf->m_apPlayers[ClientId])
 	{
-		CCharacter* chr = pSelf->GetPlayerChar(cid);
+		CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 		if(chr)
 		{
 			chr->m_Super = false;
@@ -1825,12 +1838,12 @@ void CGameContext::ConUnSuperMe(IConsole::IResult *pResult, void *pUserData, int
 	}
 }
 
-void CGameContext::ConShotgun(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConShotgun(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
+	if(!pSelf->CheatsAvailable(ClientId)) return;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if(chr)
@@ -1842,11 +1855,11 @@ void CGameContext::ConShotgun(IConsole::IResult *pResult, void *pUserData, int c
 	}
 }
 
-void CGameContext::ConShotgunMe(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConShotgunMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
-	CCharacter* chr = pSelf->GetPlayerChar(cid);
+	if(!pSelf->CheatsAvailable(ClientId)) return;
+	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 	if(chr)
 	{
 		chr->GiveWeapon(WEAPON_SHOTGUN,-1);
@@ -1855,12 +1868,12 @@ void CGameContext::ConShotgunMe(IConsole::IResult *pResult, void *pUserData, int
 	}
 }
 
-void CGameContext::ConGrenade(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConGrenade(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
+	if(!pSelf->CheatsAvailable(ClientId)) return;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if(chr)
@@ -1872,11 +1885,11 @@ void CGameContext::ConGrenade(IConsole::IResult *pResult, void *pUserData, int c
 	}
 }
 
-void CGameContext::ConGrenadeMe(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConGrenadeMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
-	CCharacter* chr = pSelf->GetPlayerChar(cid);
+	if(!pSelf->CheatsAvailable(ClientId)) return;
+	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 	if(chr)
 	{
 		chr->GiveWeapon(WEAPON_GRENADE,-1);
@@ -1885,12 +1898,12 @@ void CGameContext::ConGrenadeMe(IConsole::IResult *pResult, void *pUserData, int
 	}
 }
 
-void CGameContext::ConLaser(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConLaser(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
+	if(!pSelf->CheatsAvailable(ClientId)) return;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if(chr)
@@ -1902,11 +1915,11 @@ void CGameContext::ConLaser(IConsole::IResult *pResult, void *pUserData, int cid
 	}
 }
 
-void CGameContext::ConLaserMe(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConLaserMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
-	CCharacter* chr = pSelf->GetPlayerChar(cid);
+	if(!pSelf->CheatsAvailable(ClientId)) return;
+	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 	if(chr)
 	{
 		chr->GiveWeapon(WEAPON_RIFLE,-1);
@@ -1915,12 +1928,12 @@ void CGameContext::ConLaserMe(IConsole::IResult *pResult, void *pUserData, int c
 	}
 }
 
-void CGameContext::ConWeapons(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConWeapons(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
+	if(!pSelf->CheatsAvailable(ClientId)) return;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if(chr)
@@ -1932,11 +1945,11 @@ void CGameContext::ConWeapons(IConsole::IResult *pResult, void *pUserData, int c
 	}
 }
 
-void CGameContext::ConWeaponsMe(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConWeaponsMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
-	CCharacter* chr = pSelf->GetPlayerChar(cid);
+	if(!pSelf->CheatsAvailable(ClientId)) return;
+	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 	if(chr)
 	{
 		chr->GiveAllWeapons();
@@ -1945,16 +1958,17 @@ void CGameContext::ConWeaponsMe(IConsole::IResult *pResult, void *pUserData, int
 	}
 }
 
-void CGameContext::ConTeleport(IConsole::IResult *pResult, void *pUserData, int cid) {
+void CGameContext::ConTeleport(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
+	if(!pSelf->CheatsAvailable(ClientId)) return;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
  	int cid2 = clamp(pResult->GetInteger(1), 0, (int)MAX_CLIENTS-1);
 	if(pSelf->m_apPlayers[cid1] && pSelf->m_apPlayers[cid2])
 	{
-		if (cid==cid1
-			|| (compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]) &&  compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid2]))
-			|| (compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]) && cid2==cid))
+		if (ClientId==cid1
+			|| (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]) &&  compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid2]))
+			|| (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]) && cid2==ClientId))
 		{
 			CCharacter* chr = pSelf->GetPlayerChar(cid1);
 			if(chr)
@@ -1967,7 +1981,7 @@ void CGameContext::ConTeleport(IConsole::IResult *pResult, void *pUserData, int 
 	}
 }
 
-void CGameContext::ConTimerStop(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConTimerStop(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	char buf[128];
@@ -1979,21 +1993,21 @@ void CGameContext::ConTimerStop(IConsole::IResult *pResult, void *pUserData, int
 		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if (!chr)
 			return;
-		if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+		if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 		{
 			chr->m_RaceState=RACE_CHEAT;
 			str_format(buf, sizeof(buf), "Cid=%d Hasn't time now (Timer Stopped)",cid1);
-			serv->SendRconLine(cid, buf);
+			serv->SendRconLine(ClientId, buf);
 		}
 	}
 	else
 	{
 
-		serv->SendRconLine(cid, "Command timer does't allowed");
+		serv->SendRconLine(ClientId, "Command timer does't allowed");
 	}
 }
 
-void CGameContext::ConTimerStart(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConTimerStart(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	char buf[128];
@@ -2005,24 +2019,24 @@ void CGameContext::ConTimerStart(IConsole::IResult *pResult, void *pUserData, in
 		CCharacter* chr = pSelf->GetPlayerChar(cid1);
 		if (!chr)
 			return;
-		if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+		if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 		{
 			chr->m_RaceState = RACE_STARTED;
 			str_format(buf, sizeof(buf), "Cid=%d Has time now (Timer Started)",cid1);
-			serv->SendRconLine(cid, buf);
+			serv->SendRconLine(ClientId, buf);
 		}
 	}
 	else
 	{
 
-		serv->SendRconLine(cid, "Command timer does't allowed");
+		serv->SendRconLine(ClientId, "Command timer does't allowed");
 	}
 }
 
-void CGameContext::ConTimerZero(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConTimerZero(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
+	if(!pSelf->CheatsAvailable(ClientId)) return;
 	char buf[128];
 
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
@@ -2030,22 +2044,22 @@ void CGameContext::ConTimerZero(IConsole::IResult *pResult, void *pUserData, int
 	CCharacter* chr = pSelf->GetPlayerChar(cid1);
 	if (!chr)
 		return;
-	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 	{
 		chr->m_StartTime = pSelf->Server()->Tick();
 		chr->m_RefreshTime = pSelf->Server()->Tick();
 		chr->m_RaceState=RACE_CHEAT;
 		str_format(buf, sizeof(buf), "Cid=%d time has been reset & stopped.",cid1);
 		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(cid, buf);
+		serv->SendRconLine(ClientId, buf);
 	}
 
 }
 
-void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(cid)) return;
+	if(!pSelf->CheatsAvailable(ClientId)) return;
 	char buf[128];
 
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
@@ -2053,22 +2067,22 @@ void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, 
 	CCharacter* chr = pSelf->GetPlayerChar(cid1);
 	if (!chr)
 		return;
-	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 	{
 		chr->m_StartTime = pSelf->Server()->Tick();
 		chr->m_RefreshTime = pSelf->Server()->Tick();
 		chr->m_RaceState=RACE_STARTED;
 		str_format(buf, sizeof(buf), "Cid=%d time has been reset & stopped.",cid1);
 		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(cid, buf);
+		serv->SendRconLine(ClientId, buf);
 	}
 
 }
 
-void CGameContext::ConFreeze(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConFreeze(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	//if(!pSelf->CheatsAvailable(cid)) return;
+	//if(!pSelf->CheatsAvailable(ClientId)) return;
 	char buf[128];
 	int time=-1;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
@@ -2077,21 +2091,21 @@ void CGameContext::ConFreeze(IConsole::IResult *pResult, void *pUserData, int ci
 	CCharacter* chr = pSelf->GetPlayerChar(cid1);
 	if (!chr)
 		return;
-	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 	{
 		chr->Freeze(((time!=0&&time!=-1)?(pSelf->Server()->TickSpeed()*time):(-1)));
 		chr->m_pPlayer->m_RconFreeze = true;
 		str_format(buf, sizeof(buf), "Cid=%d has been Frozen.",cid1);
 		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(cid, buf);
+		serv->SendRconLine(ClientId, buf);
 	}
 
 }
 
-void CGameContext::ConUnFreeze(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConUnFreeze(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	//if(!pSelf->CheatsAvailable(cid)) return;
+	//if(!pSelf->CheatsAvailable(ClientId)) return;
 	char buf[128];
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	CCharacter* chr = pSelf->GetPlayerChar(cid1);
@@ -2101,57 +2115,57 @@ void CGameContext::ConUnFreeze(IConsole::IResult *pResult, void *pUserData, int 
 	chr->m_pPlayer->m_RconFreeze = false;
 	str_format(buf, sizeof(buf), "Cid=%d has been UnFreezed.",cid1);
 	CServer* serv = (CServer*)pSelf->Server();
-	serv->SendRconLine(cid, buf);
+	serv->SendRconLine(ClientId, buf);
 
 }
 
-void CGameContext::ConInvisMe(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConInvisMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	//if(!pSelf->CheatsAvailable(cid)) return;
-	if (!pSelf->m_apPlayers[cid])
+	//if(!pSelf->CheatsAvailable(ClientId)) return;
+	if (!pSelf->m_apPlayers[ClientId])
 		return;
-	pSelf->m_apPlayers[cid]->m_Invisible = true;
+	pSelf->m_apPlayers[ClientId]->m_Invisible = true;
 }
 
-void CGameContext::ConVisMe(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConVisMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	//if(!pSelf->CheatsAvailable(cid)) return;
-	if (!pSelf->m_apPlayers[cid])
+	//if(!pSelf->CheatsAvailable(ClientId)) return;
+	if (!pSelf->m_apPlayers[ClientId])
 		return;
-	pSelf->m_apPlayers[cid]->m_Invisible = false;
+	pSelf->m_apPlayers[ClientId]->m_Invisible = false;
 }
 
-void CGameContext::ConInvis(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConInvis(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if (!pSelf->m_apPlayers[cid])
+	if (!pSelf->m_apPlayers[ClientId])
 		return;
 	char buf[128];
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 	{
 		pSelf->m_apPlayers[cid1]->m_Invisible = true;
 		str_format(buf, sizeof(buf), "Cid=%d is now invisible.",cid1);
 		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(cid, buf);
+		serv->SendRconLine(ClientId, buf);
 	}
 }
 
-void CGameContext::ConVis(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConVis(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if (!pSelf->m_apPlayers[cid])
+	if (!pSelf->m_apPlayers[ClientId])
 		return;
 	char buf[128];
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid1]))
 	{
 		pSelf->m_apPlayers[cid1]->m_Invisible = false;
 		str_format(buf, sizeof(buf), "Cid=%d is visible.",cid1);
 		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(cid, buf);
+		serv->SendRconLine(ClientId, buf);
 	}
 }
 
