@@ -3,8 +3,10 @@
 
 
 #include <engine/graphics.h>
+#include <engine/storage.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
+#include <engine/shared/linereader.h>
 
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
@@ -647,28 +649,43 @@ public:
 	bool operator<(const CLanguage &Other) { return m_Name < Other.m_Name; }
 };
 
-
-int fs_listdir(const char *pDir, FS_LISTDIR_CALLBACK cb, void *pUser);
-
-void GatherLanguages(const char *pName, int IsDir, void *pUser)
+void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<CLanguage> *pLanguages)
 {
-	if(IsDir || pName[0] == '.')
+	IOHANDLE File = pStorage->OpenFile("data/languages/index.txt", IOFLAG_READ);
+	if(!File)
+	{
+		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "couldn't open index file");
 		return;
-
-	sorted_array<CLanguage> &Languages = *((sorted_array<CLanguage> *)pUser);
-	char aFileName[128];
-	str_format(aFileName, sizeof(aFileName), "data/languages/%s", pName);
-
-	char NiceName[128];
-	str_format(NiceName, sizeof(NiceName), "%s", pName);
-	NiceName[0] = str_uppercase(NiceName[0]);
-
-
-	for(char *p = NiceName; *p; p++)
-		if(*p == '.')
-			*p = 0;
-
-	Languages.add(CLanguage(NiceName, aFileName));
+	}
+	
+	CLineReader LineReader;
+	LineReader.Init(File);
+	char *pLine;
+	while((pLine = LineReader.Get()))
+	{
+		if(!str_length(pLine) || pLine[0] == '#') // skip empty lines and comments
+			continue;
+			
+		char *pReplacement = LineReader.Get();
+		if(!pReplacement)
+		{
+			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "unexpected end of index file");
+			break;
+		}
+		
+		if(pReplacement[0] != '=' || pReplacement[1] != '=' || pReplacement[2] != ' ')
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "malform replacement for index '%s'", pLine);
+			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
+			continue;
+		}
+		
+		char aFileName[128];
+		str_format(aFileName, sizeof(aFileName), "data/languages/%s.txt", pLine);
+		pLanguages->add(CLanguage(pReplacement+3, aFileName));
+	}
+	io_close(File);
 }
 
 void CMenus::RenderSettingsGeneral(CUIRect MainView)
@@ -681,7 +698,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	if(s_Languages.size() == 0)
 	{
 		s_Languages.add(CLanguage("English", ""));
-		fs_listdir("data/languages", GatherLanguages, &s_Languages);
+		LoadLanguageIndexfile(Storage(), Console(), &s_Languages);
 		for(int i = 0; i < s_Languages.size(); i++)
 			if(str_comp(s_Languages[i].m_FileName, g_Config.m_ClLanguagefile) == 0)
 			{
