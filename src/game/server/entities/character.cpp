@@ -655,9 +655,9 @@ void CCharacter::Tick()
 	int MapIndex = GameServer()->Collision()->GetMapIndex(m_PrevPos, m_Pos);
 	int MapIndexL = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x + (m_ProximityRadius/2)-5,m_Pos.y), vec2(m_Pos.x + (m_ProximityRadius/2)-5,m_Pos.y));
 	int MapIndexR = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x - (m_ProximityRadius/2)+5,m_Pos.y), vec2(m_Pos.x - (m_ProximityRadius/2)+5,m_Pos.y));
-	int MapIndexT = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x,m_Pos.y + (m_ProximityRadius/2)+5), vec2(m_Pos.x,m_Pos.y + (m_ProximityRadius/2)+5));
-	int MapIndexB = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x,m_Pos.y - (m_ProximityRadius/2)-5), vec2(m_Pos.x,m_Pos.y - (m_ProximityRadius/2)-5));
-	dbg_msg("","N%d L%d R%d B%d T%d",MapIndex,MapIndexL,MapIndexR,MapIndexB,MapIndexT);
+	int MapIndexT = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x,m_Pos.y + (m_ProximityRadius/2)+4), vec2(m_Pos.x,m_Pos.y + (m_ProximityRadius/2)+4));
+	int MapIndexB = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x,m_Pos.y - (m_ProximityRadius/2)-4), vec2(m_Pos.x,m_Pos.y - (m_ProximityRadius/2)-4));
+	//dbg_msg("","N%d L%d R%d B%d T%d",MapIndex,MapIndexL,MapIndexR,MapIndexB,MapIndexT);
 	int TileIndex = GameServer()->Collision()->GetCollisionDDRace(MapIndex);
 	int TileFIndex = GameServer()->Collision()->GetFCollisionDDRace(MapIndex);
 	int TileIndexL = GameServer()->Collision()->GetCollisionDDRace(MapIndexL);
@@ -668,8 +668,8 @@ void CCharacter::Tick()
 	int TileFIndexT = GameServer()->Collision()->GetFCollisionDDRace(MapIndexT);
 	int TileIndexB = GameServer()->Collision()->GetCollisionDDRace(MapIndexB);
 	int TileFIndexB = GameServer()->Collision()->GetFCollisionDDRace(MapIndexB);
-	dbg_msg("","N%d L%d R%d B%d T%d",TileIndex,TileIndexL,TileIndexR,TileIndexB,TileIndexT);
-	dbg_msg("","N%d L%d R%d B%d T%d",TileFIndex,TileFIndexL,TileFIndexR,TileFIndexB,TileFIndexT);
+	//dbg_msg("","N%d L%d R%d B%d T%d",TileIndex,TileIndexL,TileIndexR,TileIndexB,TileIndexT);
+	//dbg_msg("","N%d L%d R%d B%d T%d",TileFIndex,TileFIndexL,TileFIndexR,TileFIndexB,TileFIndexT);
 	/*m_CurrentTile = TileIndex;
 	m_CurrentFTile = TileFIndex;*/
 
