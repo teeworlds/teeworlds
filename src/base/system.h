@@ -949,10 +949,12 @@ int fs_chdir(const char *path);
 		Get the parent directory of a directory
 	
 	Parameters:
-		path - The directory
-		buffer - Buffer to set the parent folder
+		path - The directory string
+
+	Remarks:
+		- The string is treated as zero-termineted string.
 */
-void fs_parent_dir(const char *path, char *buffer);
+void fs_parent_dir(char *path);
 
 /*
 	Group: Undocumented

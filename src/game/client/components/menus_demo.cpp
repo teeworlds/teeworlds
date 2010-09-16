@@ -529,9 +529,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		{
 			if(str_comp(m_lDemos[s_SelectedItem].m_aName, "..") == 0) //parent folder
 			{
-				char aParentFolder[256];
-				fs_parent_dir(m_aCurrentDemoFolder, aParentFolder);
-				str_copy(m_aCurrentDemoFolder, aParentFolder, sizeof(m_aCurrentDemoFolder));
+				fs_parent_dir(m_aCurrentDemoFolder);
 				DemolistPopulate();
 				s_SelectedItem = m_lDemos.size() > 0 ? 0 : -1;
 			}
