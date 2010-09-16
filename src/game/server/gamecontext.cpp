@@ -1419,14 +1419,14 @@ void CGameContext::ConSay(IConsole::IResult *pResult, void *pUserData, int Clien
 void CGameContext::ConSetTeam(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	int ClientId = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	int Team = clamp(pResult->GetInteger(1), -1, 1);
 	
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "moved client %d to team %d", ClientId, Team);
+	str_format(aBuf, sizeof(aBuf), "moved client %d to team %d", Victim, Team);
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
-	if(!pSelf->m_apPlayers[ClientId] || !compare_players(pSelf->m_apPlayers[ClientId], pSelf->m_apPlayers[ClientId]))
-	if(!pSelf->m_apPlayers[ClientId])
+	if(!pSelf->m_apPlayers[Victim] || !compare_players(pSelf->m_apPlayers[ClientId], pSelf->m_apPlayers[Victim]))
+	if(!pSelf->m_apPlayers[Victim])
 		return;
 
 	pSelf->m_apPlayers[ClientId]->SetTeam(Team);
