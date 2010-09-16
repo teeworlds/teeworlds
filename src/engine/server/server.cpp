@@ -542,6 +542,7 @@ int CServer::NewClientCallback(int ClientId, void *pUser)
 	pThis->m_aClients[ClientId].m_aName[0] = 0;
 	pThis->m_aClients[ClientId].m_aClan[0] = 0;
 	pThis->m_aClients[ClientId].m_Authed = 0;
+	pThis->m_aClients[ClientId].m_AuthTries = 0;
 	pThis->m_aClients[ClientId].Reset();
 	return 0;
 }
@@ -567,6 +568,7 @@ int CServer::DelClientCallback(int ClientId, const char *pReason, void *pUser)
 	pThis->m_aClients[ClientId].m_aName[0] = 0;
 	pThis->m_aClients[ClientId].m_aClan[0] = 0;
 	pThis->m_aClients[ClientId].m_Authed = 0;
+	pThis->m_aClients[ClientId].m_AuthTries = 0;
 	pThis->m_aClients[ClientId].m_Snapshots.PurgeAll();
 	return 0;
 }
@@ -806,6 +808,23 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 						str_format(aBuf, sizeof(aBuf), "ClientId=%d authed", ClientId);
 						Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 					}
+					else if(g_Config.m_SvRconMaxTries)
+					{
+						m_aClients[ClientId].m_AuthTries++;
+						char aBuf[128];
+						str_format(aBuf, sizeof(aBuf), "Wrong password %d/%d.", m_aClients[ClientId].m_AuthTries, g_Config.m_SvRconMaxTries);
+						SendRconLine(ClientId, aBuf);
+						if(m_aClients[ClientId].m_AuthTries >= g_Config.m_SvRconMaxTries)
+						{
+							if(!g_Config.m_SvRconBantime)
+								m_NetServer.Drop(ClientId, "Too many remote console authentication tries");
+							else
+							{
+								NETADDR Addr = m_NetServer.ClientAddr(ClientId);
+								BanAdd(Addr, g_Config.m_SvRconBantime*60);
+							}
+						}
+					}
 					else
 					{
 						SendRconLine(ClientId, "Wrong password.");
@@ -928,6 +947,16 @@ void CServer::UpdateServerInfo()
 
 int CServer::BanAdd(NETADDR Addr, int Seconds)
 {
+	Addr.port = 0;
+	char aAddrStr[128];
+	net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
+	char aBuf[256];
+	if(Seconds)
+		str_format(aBuf, sizeof(aBuf), "banned %s for %d minutes", aAddrStr, Seconds/60);
+	else
+		str_format(aBuf, sizeof(aBuf), "banned %s for life", aAddrStr);
+	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+
 	return m_NetServer.BanAdd(Addr, Seconds);	
 }
 
@@ -1228,7 +1257,6 @@ void CServer::ConKick(IConsole::IResult *pResult, void *pUser)
 void CServer::ConBan(IConsole::IResult *pResult, void *pUser)
 {
 	NETADDR Addr;
-	char aAddrStr[128];
 	CServer *pServer = (CServer *)pUser;
 	const char *pStr = pResult->GetString(0);
 	int Minutes = 30;
@@ -1273,16 +1301,6 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser)
 		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "invalid network address to ban");
 		return;
  	}
-	
-	Addr.port = 0;
-	net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
-	
-	char aBuf[256];
-	if(Minutes)
-		str_format(aBuf, sizeof(aBuf), "banned %s for %d minutes", aAddrStr, Minutes);
-	else
-		str_format(aBuf, sizeof(aBuf), "banned %s for life", aAddrStr);
-	pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 }
 
 void CServer::ConUnban(IConsole::IResult *pResult, void *pUser)
