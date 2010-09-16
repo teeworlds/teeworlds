@@ -1483,57 +1483,152 @@ bool CGameContext::CheatsAvailable(int cid) {
 	return g_Config.m_SvCheats;
 }
 
-void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int cid) {
+void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int cid)
+{
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
 	if (!pSelf->CheatsAvailable(cid))
 		return;
-	CCharacter* chr = pSelf->GetPlayerChar(cid);
-	if(chr)
+	int cid1=-1;
+	if(pResult->NumArguments())
+		cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if(cid1 ==-1 || cid1 == cid)
 	{
-		chr->m_Core.m_Pos.x -= 32;
-		if(!g_Config.m_SvCheatTime)
-			chr->m_RaceState = RACE_CHEAT;
+		CCharacter* chr = pSelf->GetPlayerChar(cid);
+		if(chr)
+		{
+			chr->m_Core.m_Pos.x -= 32;
+			if(!g_Config.m_SvCheatTime)
+				chr->m_RaceState = RACE_CHEAT;
+		}
 	}
-}
-void  CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int cid) {
-	CGameContext *pSelf = (CGameContext *)pUserData;
-	if (!pSelf->CheatsAvailable(cid))
-		return;
-	CCharacter* chr = pSelf->GetPlayerChar(cid);
-	if(chr)
+	else if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
 	{
-		chr->m_Core.m_Pos.x += 32;
-		if(!g_Config.m_SvCheatTime)
-			chr->m_RaceState = RACE_CHEAT;
+		CCharacter* chr = pSelf->GetPlayerChar(cid1);
+		if(chr)
+		{
+			chr->m_Core.m_Pos.x -= 32;
+			if(!g_Config.m_SvCheatTime)
+				chr->m_RaceState = RACE_CHEAT;
+		}
 	}
-}
-void  CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int cid) {
-	CGameContext *pSelf = (CGameContext *)pUserData;
-	if (!pSelf->CheatsAvailable(cid))
-		return;
-	CCharacter* chr = pSelf->GetPlayerChar(cid);
-	if(chr)
+	else
 	{
-		chr->m_Core.m_Pos.y -= 32;
-		if(!g_Config.m_SvCheatTime)
-			chr->m_RaceState = RACE_CHEAT;
-	}
-}
-void  CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int cid) {
-	CGameContext *pSelf = (CGameContext *)pUserData;
-	if (!pSelf->CheatsAvailable(cid))
-		return;
-	CCharacter* chr = pSelf->GetPlayerChar(cid);
-	if(chr)
-	{
-		chr->m_Core.m_Pos.y += 32;
-		if(!g_Config.m_SvCheatTime)
-			chr->m_RaceState = RACE_CHEAT;
+		CServer* serv = (CServer*)pSelf->Server();
+		serv->SendRconLine(cid,(pSelf->m_apPlayers[cid]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
 	}
 }
 
-void  CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int cid) {
+void  CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int cid)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	if (!pSelf->CheatsAvailable(cid))
+		return;
+	int cid1=-1;
+	if(pResult->NumArguments())
+		cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if(cid1 ==-1 || cid1 == cid)
+	{
+		CCharacter* chr = pSelf->GetPlayerChar(cid);
+		if(chr)
+		{
+			chr->m_Core.m_Pos.x += 32;
+			if(!g_Config.m_SvCheatTime)
+				chr->m_RaceState = RACE_CHEAT;
+		}
+	}
+	else if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	{
+		CCharacter* chr = pSelf->GetPlayerChar(cid1);
+		if(chr)
+		{
+			chr->m_Core.m_Pos.x += 32;
+			if(!g_Config.m_SvCheatTime)
+				chr->m_RaceState = RACE_CHEAT;
+		}
+	}
+	else
+	{
+		CServer* serv = (CServer*)pSelf->Server();
+		serv->SendRconLine(cid,(pSelf->m_apPlayers[cid]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
+	}
+}
+
+void  CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int cid)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	if (!pSelf->CheatsAvailable(cid))
+		return;
+	int cid1=-1;
+	if(pResult->NumArguments())
+		cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if(cid1 ==-1 || cid1 == cid)
+	{
+		CCharacter* chr = pSelf->GetPlayerChar(cid);
+		if(chr)
+		{
+			chr->m_Core.m_Pos.y += 32;
+			if(!g_Config.m_SvCheatTime)
+				chr->m_RaceState = RACE_CHEAT;
+		}
+	}
+	else if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	{
+		CCharacter* chr = pSelf->GetPlayerChar(cid1);
+		if(chr)
+		{
+			chr->m_Core.m_Pos.y += 32;
+			if(!g_Config.m_SvCheatTime)
+				chr->m_RaceState = RACE_CHEAT;
+		}
+	}
+	else
+	{
+		CServer* serv = (CServer*)pSelf->Server();
+		serv->SendRconLine(cid,(pSelf->m_apPlayers[cid]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
+	}
+}
+
+void  CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int cid)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	if (!pSelf->CheatsAvailable(cid))
+		return;
+	int cid1=-1;
+	if(pResult->NumArguments())
+		cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if(cid1 ==-1 || cid1 == cid)
+	{
+		CCharacter* chr = pSelf->GetPlayerChar(cid);
+		if(chr)
+		{
+			chr->m_Core.m_Pos.y -= 32;
+			if(!g_Config.m_SvCheatTime)
+				chr->m_RaceState = RACE_CHEAT;
+		}
+	}
+	else if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	{
+		CCharacter* chr = pSelf->GetPlayerChar(cid1);
+		if(chr)
+		{
+			chr->m_Core.m_Pos.y -= 32;
+			if(!g_Config.m_SvCheatTime)
+				chr->m_RaceState = RACE_CHEAT;
+		}
+	}
+	else
+	{
+		CServer* serv = (CServer*)pSelf->Server();
+		serv->SendRconLine(cid,(pSelf->m_apPlayers[cid]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
+	}
+}
+
+void  CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int cid)
+{
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	int Seconds = pResult->GetInteger(1);
@@ -1542,7 +1637,8 @@ void  CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int cid
 		Seconds = 10;
 	if (pSelf->m_apPlayers[cid1] && (compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1])))
 	{
-		if (pSelf->m_apPlayers[cid1]->m_Muted < Seconds * pSelf->Server()->TickSpeed()) {
+		if (pSelf->m_apPlayers[cid1]->m_Muted < Seconds * pSelf->Server()->TickSpeed())
+		{
 			pSelf->m_apPlayers[cid1]->m_Muted = Seconds * pSelf->Server()->TickSpeed();
 		}
 		else
@@ -1552,7 +1648,8 @@ void  CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int cid
 	}
 }
 
-void  CGameContext::ConSetlvl(IConsole::IResult *pResult, void *pUserData, int cid) {
+void  CGameContext::ConSetlvl(IConsole::IResult *pResult, void *pUserData, int cid)
+{
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	int level = clamp(pResult->GetInteger(1), 0, 3);
@@ -1563,7 +1660,8 @@ void  CGameContext::ConSetlvl(IConsole::IResult *pResult, void *pUserData, int c
 	}
 }
 
-void CGameContext::ConKillPlayer(IConsole::IResult *pResult, void *pUserData, int cid) {
+void CGameContext::ConKillPlayer(IConsole::IResult *pResult, void *pUserData, int cid)
+{
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	if(!pSelf->m_apPlayers[cid1])
@@ -1578,7 +1676,8 @@ void CGameContext::ConKillPlayer(IConsole::IResult *pResult, void *pUserData, in
 	}
 }
 
-void CGameContext::ConNinjaMe(IConsole::IResult *pResult, void *pUserData, int cid) {
+void CGameContext::ConNinjaMe(IConsole::IResult *pResult, void *pUserData, int cid)
+{
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(!pSelf->CheatsAvailable(cid)) return;
 
@@ -1590,7 +1689,8 @@ void CGameContext::ConNinjaMe(IConsole::IResult *pResult, void *pUserData, int c
 	}
 }
 
-void CGameContext::ConNinja(IConsole::IResult *pResult, void *pUserData, int cid) {
+void CGameContext::ConNinja(IConsole::IResult *pResult, void *pUserData, int cid)
+{
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(!pSelf->CheatsAvailable(cid)) return;
 	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
@@ -1631,7 +1731,7 @@ void CGameContext::ConHammer(IConsole::IResult *pResult, void *pUserData, int ci
 			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
 			str_format(buf, sizeof(buf), "Hammer of cid=%d setted to %d",cid1,type);
-			serv->SendRconLine(cid1, buf);
+			serv->SendRconLine(cid, buf);
 		}
 	}
 }
@@ -1883,7 +1983,7 @@ void CGameContext::ConTimerStop(IConsole::IResult *pResult, void *pUserData, int
 		{
 			chr->m_RaceState=RACE_CHEAT;
 			str_format(buf, sizeof(buf), "Cid=%d Hasn't time now (Timer Stopped)",cid1);
-			serv->SendRconLine(cid1, buf);
+			serv->SendRconLine(cid, buf);
 		}
 	}
 	else
@@ -1909,7 +2009,7 @@ void CGameContext::ConTimerStart(IConsole::IResult *pResult, void *pUserData, in
 		{
 			chr->m_RaceState = RACE_STARTED;
 			str_format(buf, sizeof(buf), "Cid=%d Has time now (Timer Started)",cid1);
-			serv->SendRconLine(cid1, buf);
+			serv->SendRconLine(cid, buf);
 		}
 	}
 	else
@@ -1937,7 +2037,7 @@ void CGameContext::ConTimerZero(IConsole::IResult *pResult, void *pUserData, int
 		chr->m_RaceState=RACE_CHEAT;
 		str_format(buf, sizeof(buf), "Cid=%d time has been reset & stopped.",cid1);
 		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(cid1, buf);
+		serv->SendRconLine(cid, buf);
 	}
 
 }
@@ -1960,7 +2060,7 @@ void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, 
 		chr->m_RaceState=RACE_STARTED;
 		str_format(buf, sizeof(buf), "Cid=%d time has been reset & stopped.",cid1);
 		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(cid1, buf);
+		serv->SendRconLine(cid, buf);
 	}
 
 }
@@ -1983,7 +2083,7 @@ void CGameContext::ConFreeze(IConsole::IResult *pResult, void *pUserData, int ci
 		chr->m_pPlayer->m_RconFreeze = true;
 		str_format(buf, sizeof(buf), "Cid=%d has been Frozen.",cid1);
 		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(cid1, buf);
+		serv->SendRconLine(cid, buf);
 	}
 
 }
@@ -2001,7 +2101,7 @@ void CGameContext::ConUnFreeze(IConsole::IResult *pResult, void *pUserData, int 
 	chr->m_pPlayer->m_RconFreeze = false;
 	str_format(buf, sizeof(buf), "Cid=%d has been UnFreezed.",cid1);
 	CServer* serv = (CServer*)pSelf->Server();
-	serv->SendRconLine(cid1, buf);
+	serv->SendRconLine(cid, buf);
 
 }
 
@@ -2014,7 +2114,7 @@ void CGameContext::ConInvisMe(IConsole::IResult *pResult, void *pUserData, int c
 	pSelf->m_apPlayers[cid]->m_Invisible = true;
 }
 
-void CGameContext::ConUnInvisMe(IConsole::IResult *pResult, void *pUserData, int cid)
+void CGameContext::ConVisMe(IConsole::IResult *pResult, void *pUserData, int cid)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	//if(!pSelf->CheatsAvailable(cid)) return;
@@ -2023,12 +2123,46 @@ void CGameContext::ConUnInvisMe(IConsole::IResult *pResult, void *pUserData, int
 	pSelf->m_apPlayers[cid]->m_Invisible = false;
 }
 
+void CGameContext::ConInvis(IConsole::IResult *pResult, void *pUserData, int cid)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if (!pSelf->m_apPlayers[cid])
+		return;
+	char buf[128];
+	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	{
+		pSelf->m_apPlayers[cid1]->m_Invisible = true;
+		str_format(buf, sizeof(buf), "Cid=%d is now invisible.",cid1);
+		CServer* serv = (CServer*)pSelf->Server();
+		serv->SendRconLine(cid, buf);
+	}
+}
+
+void CGameContext::ConVis(IConsole::IResult *pResult, void *pUserData, int cid)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if (!pSelf->m_apPlayers[cid])
+		return;
+	char buf[128];
+	int cid1 = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if (pSelf->m_apPlayers[cid1] && compare_players(pSelf->m_apPlayers[cid],pSelf->m_apPlayers[cid1]))
+	{
+		pSelf->m_apPlayers[cid1]->m_Invisible = false;
+		str_format(buf, sizeof(buf), "Cid=%d is visible.",cid1);
+		CServer* serv = (CServer*)pSelf->Server();
+		serv->SendRconLine(cid, buf);
+	}
+}
+
 void CGameContext::OnConsoleInit()
 {
 	m_pServer = Kernel()->RequestInterface<IServer>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
-	Console()->Register("invis_me", "", CFGFLAG_SERVER, ConInvisMe, this, "",1);
-	Console()->Register("uninvis_me", "", CFGFLAG_SERVER, ConUnInvisMe, this, "",1);
+	Console()->Register("invis_me", "", CFGFLAG_SERVER, ConInvisMe, this, "Makes you invisible",1);
+	Console()->Register("vis_me", "", CFGFLAG_SERVER, ConVisMe, this, "Makes you visible again",1);
+	Console()->Register("invis", "i", CFGFLAG_SERVER, ConInvis, this, "Makes i invisible",2);
+	Console()->Register("vis", "i", CFGFLAG_SERVER, ConVis, this, "Makes i visible again",2);
 	Console()->Register("freeze", "i?i", CFGFLAG_SERVER, ConFreeze, this, "Freezes Player i1 for i2 seconds Default Infinity",2);
 	Console()->Register("unfreeze", "i", CFGFLAG_SERVER, ConUnFreeze, this, "UnFreezes Player i",2);
 	Console()->Register("timerstop", "i", CFGFLAG_SERVER, ConTimerStop, this, "Stops The Timer of Player i",2);
@@ -2063,23 +2197,22 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("auth", "ii", CFGFLAG_SERVER, ConSetlvl, this, "Authenticates player i1 to the level of i2 ( warining he can use sv_rcon_password_XXXX and get the passwords ) level 0 = logout",3);
 	Console()->Register("mute", "ii", CFGFLAG_SERVER, ConMute, this, "mutes player i1 for i2 seconds", 2);
 
-	Console()->Register("tune", "si", CFGFLAG_SERVER, ConTuneParam, this, "", 4);
-	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConTuneReset, this, "", 4);
-	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConTuneDump, this, "", 4);
+	Console()->Register("tune", "si", CFGFLAG_SERVER, ConTuneParam, this, "modifies tune parameter s to value i", 4);
+	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConTuneReset, this, "resets server tuning", 4);
+	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConTuneDump, this, "shows all tuning options", 4);
 
-	Console()->Register("change_map", "r", CFGFLAG_SERVER, ConChangeMap, this, "", 3);
-	Console()->Register("restart", "?i", CFGFLAG_SERVER, ConRestart, this, "", 3);
-	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConBroadcast, this, "", 3);
-	Console()->Register("say", "r", CFGFLAG_SERVER, ConSay, this, "", 3);
-	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConSetTeam, this, "", 2);
+	Console()->Register("change_map", "r", CFGFLAG_SERVER, ConChangeMap, this, "changes the map", 3);
+	Console()->Register("restart", "?i", CFGFLAG_SERVER, ConRestart, this, "Kills all players", 3);
+	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConBroadcast, this, "Changes the broadcast message foe a moment", 3);
+	Console()->Register("say", "r", CFGFLAG_SERVER, ConSay, this, "Sends a global chat message without a sender's name", 3);
+	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConSetTeam, this, "Changes the team of player i1 to team i2", 2);
 
-	Console()->Register("left", "", CFGFLAG_SERVER, ConGoLeft, this, "",1);
-	Console()->Register("right", "", CFGFLAG_SERVER, ConGoRight, this, "",1);
-	Console()->Register("up", "", CFGFLAG_SERVER, ConGoUp, this, "",1);
-	Console()->Register("down", "", CFGFLAG_SERVER, ConGoDown, this, "",1);
-	//Console()->Register("sv_cheats", "i", CFGFLAG_SERVER, ConCheats , 0, "Turns Cheats On/Off",4);
-	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConAddVote, this, "", 4);
-	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "", 3);
+	Console()->Register("left", "?i", CFGFLAG_SERVER, ConGoLeft, this, "makes you or player i move 1 tile",1);
+	Console()->Register("right", "?i", CFGFLAG_SERVER, ConGoRight, this, "makes you or player i move 1 tile",1);
+	Console()->Register("up", "?i", CFGFLAG_SERVER, ConGoUp, this, "makes you or player i move 1 tile",1);
+	Console()->Register("down", "?i", CFGFLAG_SERVER, ConGoDown, this, "makes you or player i move 1 tile",1);
+	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConAddVote, this, "Adds a Vote entry to the clients", 4);
+	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "Forces the vote to Yes/No", 3);
 
 	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);
 
