@@ -107,6 +107,7 @@ class CGameContext : public IGameServer
 	static void ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	
 	static void ConInvisMe(IConsole::IResult *pResult, void *pUserData, int cid);
+	static void ConUnInvisMe(IConsole::IResult *pResult, void *pUserData, int cid);
 	
 	CGameContext(int Resetting);
 	void Construct(int Resetting);

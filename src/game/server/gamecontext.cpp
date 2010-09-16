@@ -2014,11 +2014,21 @@ void CGameContext::ConInvisMe(IConsole::IResult *pResult, void *pUserData, int c
 	pSelf->m_apPlayers[cid]->m_Invisible = true;
 }
 
+void CGameContext::ConUnInvisMe(IConsole::IResult *pResult, void *pUserData, int cid)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	//if(!pSelf->CheatsAvailable(cid)) return;
+	if (!pSelf->m_apPlayers[cid])
+		return;
+	pSelf->m_apPlayers[cid]->m_Invisible = false;
+}
+
 void CGameContext::OnConsoleInit()
 {
 	m_pServer = Kernel()->RequestInterface<IServer>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	Console()->Register("invis_me", "", CFGFLAG_SERVER, ConInvisMe, this, "",1);
+	Console()->Register("uninvis_me", "", CFGFLAG_SERVER, ConUnInvisMe, this, "",1);
 	Console()->Register("freeze", "i?i", CFGFLAG_SERVER, ConFreeze, this, "Freezes Player i1 for i2 seconds Default Infinity",2);
 	Console()->Register("unfreeze", "i", CFGFLAG_SERVER, ConUnFreeze, this, "UnFreezes Player i",2);
 	Console()->Register("timerstop", "i", CFGFLAG_SERVER, ConTimerStop, this, "Stops The Timer of Player i",2);
