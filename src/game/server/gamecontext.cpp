@@ -2177,7 +2177,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("change_map", "r", CFGFLAG_SERVER, ConChangeMap, this, "Changes the map to r", 3);
 	Console()->Register("restart", "?i", CFGFLAG_SERVER, ConRestart, this, "Kills all players", 3);
 	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConBroadcast, this, "Changes the broadcast message for a moment", 3);
-	Console()->Register("say", "r", CFGFLAG_SERVER, ConSay, this, "Sends a server message without a sender's name", 3);
+	Console()->Register("say", "r", CFGFLAG_SERVER, ConSay, this, "Sends a server message to all players", 3);
 	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConSetTeam, this, "Changes the team of player i1 to team i2", 2);
 
 	Console()->Register("tune", "si", CFGFLAG_SERVER, ConTuneParam, this, "Modifies tune parameter s to value i", 4);
@@ -2189,6 +2189,8 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("auth", "ii", CFGFLAG_SERVER, ConSetlvl, this, "Authenticates player i1 to the level of i2 (level 0 = logout)", 3);
 	
 	Console()->Register("mute", "ii", CFGFLAG_SERVER, ConMute, this, "Mutes player i1 for i2 seconds", 2);
+	
+	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "Forces the current vote to result in r (Yes/No)", 3);
 	
 	Console()->Register("invis_me", "", CFGFLAG_SERVER, ConInvisMe, this, "Makes you invisible", 1);
 	Console()->Register("vis_me", "", CFGFLAG_SERVER, ConVisMe, this, "Makes you visible again", 1);
@@ -2230,7 +2232,6 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("up", "?i", CFGFLAG_SERVER, ConGoUp, this, "Makes you or player i move 1 tile up", 1);
 	Console()->Register("down", "?i", CFGFLAG_SERVER, ConGoDown, this, "Makes you or player i move 1 tile down", 1);
 	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConAddVote, this, "Adds a vote entry to the clients", 4);
-	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "Forces the current vote to result in r (Yes/No)", 3);
 
 	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);
 
