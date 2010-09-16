@@ -137,7 +137,7 @@ void CGameContext::CreateExplosion(vec2 p, int Owner, int Weapon, bool NoDamage,
 		for(int i = 0; i < Num; i++)
 		{
 			vec2 Diff = apEnts[i]->m_Pos - p;
-			vec2 ForceDir(0,1);
+			vec2 ForceDir(0, 1);
 			float l = length(Diff);
 			if(l)
 				ForceDir = normalize(Diff);
@@ -2173,60 +2173,64 @@ void CGameContext::OnConsoleInit()
 {
 	m_pServer = Kernel()->RequestInterface<IServer>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
-	Console()->Register("invis_me", "", CFGFLAG_SERVER, ConInvisMe, this, "Makes you invisible",1);
-	Console()->Register("vis_me", "", CFGFLAG_SERVER, ConVisMe, this, "Makes you visible again",1);
-	Console()->Register("invis", "i", CFGFLAG_SERVER, ConInvis, this, "Makes i invisible",2);
-	Console()->Register("vis", "i", CFGFLAG_SERVER, ConVis, this, "Makes i visible again",2);
-	Console()->Register("freeze", "i?i", CFGFLAG_SERVER, ConFreeze, this, "Freezes Player i1 for i2 seconds Default Infinity",2);
-	Console()->Register("unfreeze", "i", CFGFLAG_SERVER, ConUnFreeze, this, "UnFreezes Player i",2);
-	Console()->Register("timerstop", "i", CFGFLAG_SERVER, ConTimerStop, this, "Stops The Timer of Player i",2);
-	Console()->Register("timerstart", "i", CFGFLAG_SERVER, ConTimerStart, this, "Starts The Timer of Player i",2);
-	Console()->Register("timerrestart", "i", CFGFLAG_SERVER, ConTimerReStart, this, "Starts The Timer of Player i with the time of 00:00:00",2);
-	Console()->Register("timerzero", "i", CFGFLAG_SERVER, ConTimerZero, this, "00:00:00 the timer of Player i and Stops it",1);
 
-	Console()->Register("tele", "ii", CFGFLAG_SERVER, ConTeleport, this, "Teleports Player i1 to i2",2);
-
-	Console()->Register("shotgun", "i", CFGFLAG_SERVER, ConShotgun, this, "Give shotgun weapon to player i",2);
-	Console()->Register("shotgun_me", "", CFGFLAG_SERVER, ConShotgunMe, this, "Give shotgun weapon to self",1);
-	Console()->Register("grenade", "i", CFGFLAG_SERVER, ConGrenade, this, "Give grenade weapon to player i",2);
-	Console()->Register("grenade_me", "", CFGFLAG_SERVER, ConGrenadeMe, this, "Give grenade weapon to self",1);
-	Console()->Register("laser", "i", CFGFLAG_SERVER, ConLaser, this, "Give rifle weapon to player i",2);
-	Console()->Register("laser_me", "", CFGFLAG_SERVER, ConLaserMe, this, "Give rifle weapon to self",1);
-	Console()->Register("weapons", "i", CFGFLAG_SERVER, ConWeapons, this, "Give all weapons to player i",2);
-	Console()->Register("weapons_me", "", CFGFLAG_SERVER, ConWeaponsMe, this, "Give all weapons to self",1);
-
-	Console()->Register("super", "i", CFGFLAG_SERVER, ConSuper, this, "Make player i super",2);
-	Console()->Register("unsuper", "i", CFGFLAG_SERVER, ConUnSuper, this, "Remove super from player i",2);
-	Console()->Register("super_me", "", CFGFLAG_SERVER, ConSuperMe, this, "Make player self super",1);
-	Console()->Register("unsuper_me", "", CFGFLAG_SERVER, ConUnSuperMe, this, "Remove super from self",1);// Mo
-
-	Console()->Register("hammer_me", "i", CFGFLAG_SERVER, ConHammerMe, this, "Sets the hammer of self to the power of i",1);
-	Console()->Register("hammer", "ii", CFGFLAG_SERVER, ConHammer, this, "Sets the hammer of player i1 to the power of i2",2);
-
-	Console()->Register("ninja", "i", CFGFLAG_SERVER, ConNinja, this, "Makes Player i have ninja power-up",2);
-	Console()->Register("ninja_me", "", CFGFLAG_SERVER, ConNinjaMe, this, "Makes self have ninja power-up",1);
-
-
-	Console()->Register("kill_pl", "i", CFGFLAG_SERVER, ConKillPlayer, this, "Kills player with id i and announces the kill",2);
-	Console()->Register("auth", "ii", CFGFLAG_SERVER, ConSetlvl, this, "Authenticates player i1 to the level of i2 ( warining he can use sv_rcon_password_XXXX and get the passwords ) level 0 = logout",3);
-	Console()->Register("mute", "ii", CFGFLAG_SERVER, ConMute, this, "mutes player i1 for i2 seconds", 2);
-
-	Console()->Register("tune", "si", CFGFLAG_SERVER, ConTuneParam, this, "modifies tune parameter s to value i", 4);
-	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConTuneReset, this, "resets server tuning", 4);
-	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConTuneDump, this, "shows all tuning options", 4);
-
-	Console()->Register("change_map", "r", CFGFLAG_SERVER, ConChangeMap, this, "changes the map", 3);
+	Console()->Register("change_map", "r", CFGFLAG_SERVER, ConChangeMap, this, "Changes the map to r", 3);
 	Console()->Register("restart", "?i", CFGFLAG_SERVER, ConRestart, this, "Kills all players", 3);
-	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConBroadcast, this, "Changes the broadcast message foe a moment", 3);
-	Console()->Register("say", "r", CFGFLAG_SERVER, ConSay, this, "Sends a global chat message without a sender's name", 3);
+	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConBroadcast, this, "Changes the broadcast message for a moment", 3);
+	Console()->Register("say", "r", CFGFLAG_SERVER, ConSay, this, "Sends a server message without a sender's name", 3);
 	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConSetTeam, this, "Changes the team of player i1 to team i2", 2);
 
-	Console()->Register("left", "?i", CFGFLAG_SERVER, ConGoLeft, this, "makes you or player i move 1 tile",1);
-	Console()->Register("right", "?i", CFGFLAG_SERVER, ConGoRight, this, "makes you or player i move 1 tile",1);
-	Console()->Register("up", "?i", CFGFLAG_SERVER, ConGoUp, this, "makes you or player i move 1 tile",1);
-	Console()->Register("down", "?i", CFGFLAG_SERVER, ConGoDown, this, "makes you or player i move 1 tile",1);
-	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConAddVote, this, "Adds a Vote entry to the clients", 4);
-	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "Forces the vote to Yes/No", 3);
+	Console()->Register("tune", "si", CFGFLAG_SERVER, ConTuneParam, this, "Modifies tune parameter s to value i", 4);
+	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConTuneReset, this, "Resets all tuning", 4);
+	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConTuneDump, this, "Shows all tuning options", 4);
+
+	Console()->Register("kill_pl", "i", CFGFLAG_SERVER, ConKillPlayer, this, "Kills player i and announces the kill", 2);
+	
+	Console()->Register("auth", "ii", CFGFLAG_SERVER, ConSetlvl, this, "Authenticates player i1 to the level of i2 (level 0 = logout)", 3);
+	
+	Console()->Register("mute", "ii", CFGFLAG_SERVER, ConMute, this, "Mutes player i1 for i2 seconds", 2);
+	
+	Console()->Register("invis_me", "", CFGFLAG_SERVER, ConInvisMe, this, "Makes you invisible", 1);
+	Console()->Register("vis_me", "", CFGFLAG_SERVER, ConVisMe, this, "Makes you visible again", 1);
+	Console()->Register("invis", "i", CFGFLAG_SERVER, ConInvis, this, "Makes player i invisible", 2);
+	Console()->Register("vis", "i", CFGFLAG_SERVER, ConVis, this, "Makes player i visible again", 2);
+	
+	Console()->Register("timerstop", "i", CFGFLAG_SERVER, ConTimerStop, this, "Stops the timer of player i", 2);
+	Console()->Register("timerstart", "i", CFGFLAG_SERVER, ConTimerStart, this, "Starts the timer of player i", 2);
+	Console()->Register("timerrestart", "i", CFGFLAG_SERVER, ConTimerReStart, this, "Sets the timer of player i to 0 and starts it", 2);
+	Console()->Register("timerzero", "i", CFGFLAG_SERVER, ConTimerZero, this, "Sets the timer of player i to 0 and stops it", 2);
+
+	Console()->Register("tele", "ii", CFGFLAG_SERVER, ConTeleport, this, "Teleports player i1 to player i2", 2);
+	
+	Console()->Register("freeze", "i?i", CFGFLAG_SERVER, ConFreeze, this, "Freezes player i1 for i2 seconds (infinity by default)", 2);
+	Console()->Register("unfreeze", "i", CFGFLAG_SERVER, ConUnFreeze, this, "Unfreezes player i", 2);
+
+	Console()->Register("shotgun", "i", CFGFLAG_SERVER, ConShotgun, this, "Gives a shotgun to player i", 2);
+	Console()->Register("shotgun_me", "", CFGFLAG_SERVER, ConShotgunMe, this, "Gives shotgun to yourself", 1);
+	Console()->Register("grenade", "i", CFGFLAG_SERVER, ConGrenade, this, "Gives a grenade launcher to player i", 2);
+	Console()->Register("grenade_me", "", CFGFLAG_SERVER, ConGrenadeMe, this, "Gives grenade launcher to yourself", 1);
+	Console()->Register("laser", "i", CFGFLAG_SERVER, ConLaser, this, "Gives a lasergun to player i", 2);
+	Console()->Register("laser_me", "", CFGFLAG_SERVER, ConLaserMe, this, "Gives lasergun to yourself", 1);
+	Console()->Register("weapons", "i", CFGFLAG_SERVER, ConWeapons, this, "Gives all weapons to player i", 2);
+	Console()->Register("weapons_me", "", CFGFLAG_SERVER, ConWeaponsMe, this, "Gives all weapons to yourself", 1);
+
+	Console()->Register("ninja", "i", CFGFLAG_SERVER, ConNinja, this, "Makes player i a ninja", 2);
+	Console()->Register("ninja_me", "", CFGFLAG_SERVER, ConNinjaMe, this, "Makes yourself a ninja", 1);
+
+	Console()->Register("hammer_me", "i", CFGFLAG_SERVER, ConHammerMe, this, "Sets your hammer power to i", 1);
+	Console()->Register("hammer", "ii", CFGFLAG_SERVER, ConHammer, this, "Sets the hammer power of player i1 to i2", 2);
+
+	Console()->Register("super", "i", CFGFLAG_SERVER, ConSuper, this, "Makes player i super", 2);
+	Console()->Register("unsuper", "i", CFGFLAG_SERVER, ConUnSuper, this, "Removes super from player i", 2);
+	Console()->Register("super_me", "", CFGFLAG_SERVER, ConSuperMe, this, "Makes yourself super", 1);
+	Console()->Register("unsuper_me", "", CFGFLAG_SERVER, ConUnSuperMe, this, "Removes super from yourself", 1);// Mo
+
+	Console()->Register("left", "?i", CFGFLAG_SERVER, ConGoLeft, this, "Makes you or player i move 1 tile left", 1);
+	Console()->Register("right", "?i", CFGFLAG_SERVER, ConGoRight, this, "Makes you or player i move 1 tile right", 1);
+	Console()->Register("up", "?i", CFGFLAG_SERVER, ConGoUp, this, "Makes you or player i move 1 tile up", 1);
+	Console()->Register("down", "?i", CFGFLAG_SERVER, ConGoDown, this, "Makes you or player i move 1 tile down", 1);
+	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConAddVote, this, "Adds a vote entry to the clients", 4);
+	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "Forces the current vote to result in r (Yes/No)", 3);
 
 	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);
 
