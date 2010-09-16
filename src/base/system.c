@@ -984,18 +984,17 @@ int fs_chdir(const char *path)
 		return 1;
 }
 
-void fs_parent_dir(const char *path, char *buffer)
+void fs_parent_dir(char *path)
 {
-	int stop = 0;
-	int i = 0;
-	for(i = 0; i < 256; i++)
+	char *parent = 0;
+	for(; *path; ++path)
 	{
-		if(path[i] == '/')
-			stop = i+1;
+		if(*path == '/' || *path == '\\')
+			parent = path;
 	}
 	
-	//keep the chars which are before the last '/' and remove the chars which are after
-	str_copy(buffer, path, stop);
+	if(parent)
+		*parent = 0;
 }
 
 void swap_endian(void *data, unsigned elem_size, unsigned num)

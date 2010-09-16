@@ -567,13 +567,12 @@ static void CallbackOpenDir(const char *pFileName, void *pUser)
 	{
 		if(str_comp(pEditor->m_aFileDialogPath, "maps") == 0 || str_comp(pEditor->m_aFileDialogPath, "mapres") == 0)
 			return;
-		char aParentFolder[512];
-		fs_parent_dir(pEditor->m_aFileDialogPath, aParentFolder);
-		str_copy(pEditor->m_aFileDialogPath, aParentFolder, sizeof(pEditor->m_aFileDialogPath));
+		fs_parent_dir(pEditor->m_aFileDialogPath);
 	}
 	else
 		str_copy(pEditor->m_aFileDialogPath, pFileName, sizeof(pEditor->m_aFileDialogPath));
 	
+	pEditor->m_aFileDialogFileName[0] = 0;
 	pEditor->FilelistPopulate();
 }
 
@@ -604,6 +603,19 @@ static void CallbackOpenMap(const char *pFileName, void *pUser)
 static void CallbackAppendMap(const char *pFileName, void *pUser)
 {
 	CEditor *pEditor = (CEditor*)pUser;
+	if(str_comp(pEditor->m_aFileDialogFileName, "..") == 0)
+	{
+		CallbackOpenDir("..", pUser);
+		return;
+	}
+	char aCompleteFilename[512];
+	str_format(aCompleteFilename, sizeof(aCompleteFilename), "%s/%s", pEditor->Client()->UserDirectory(), pFileName);
+	if(fs_is_dir(aCompleteFilename))
+	{
+		CallbackOpenDir(pFileName, pUser);
+		return;
+	}
+
 	if(pEditor->Append(pFileName))
 		pEditor->m_aFileName[0] = 0;
 	else
@@ -613,6 +625,20 @@ static void CallbackAppendMap(const char *pFileName, void *pUser)
 }
 static void CallbackSaveMap(const char *pFileName, void *pUser)
 {
+	CEditor *pEditor = static_cast<CEditor*>(pUser);
+	if(str_comp(pEditor->m_aFileDialogFileName, "..") == 0)
+	{
+		CallbackOpenDir("..", pUser);
+		return;
+	}
+	char aCompleteFilename[512];
+	str_format(aCompleteFilename, sizeof(aCompleteFilename), "%s/%s", pEditor->Client()->UserDirectory(), pFileName);
+	if(fs_is_dir(aCompleteFilename))
+	{
+		CallbackOpenDir(pFileName, pUser);
+		return;
+	}
+
 	char aBuf[1024];
 	const int Length = str_length(pFileName);
 	// add map extension
@@ -622,7 +648,6 @@ static void CallbackSaveMap(const char *pFileName, void *pUser)
 		pFileName = aBuf;
 	}
 
-	CEditor *pEditor = static_cast<CEditor*>(pUser);
 	if(pEditor->Save(pFileName))
 		str_copy(pEditor->m_aFileName, pFileName, sizeof(pEditor->m_aFileName));
 	
@@ -2155,6 +2180,9 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 
 static void EditorListdirCallback(const char *pName, int IsDir, void *pUser)
 {
+	if(pName[0] == '.' && pName[1] == 0)
+		return;
+
 	CEditor *pEditor = (CEditor*)pUser;
 	pEditor->m_FileList.add(string(pName));
 }

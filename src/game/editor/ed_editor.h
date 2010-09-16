@@ -492,9 +492,9 @@ public:
 		m_aFileName[0] = 0;
 		
 		m_FileDialogDirTypes = 0;
-		m_pFileDialogTitle = NULL;
-		m_pFileDialogButtonText = NULL;
-		m_pFileDialogUser = NULL;
+		m_pFileDialogTitle = 0;
+		m_pFileDialogButtonText = 0;
+		m_pFileDialogUser = 0;
 		m_aFileDialogFileName[0] = 0;
 		m_aFileDialogPath[0] = 0;
 		m_aFileDialogCompleteFilename[0] = 0;
