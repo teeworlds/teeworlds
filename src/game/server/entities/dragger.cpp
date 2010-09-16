@@ -76,8 +76,15 @@ void CDragger::Drag()
 		}
 		else
 			if (length(m_Pos-m_Target->m_Pos)>28)
-				if(!((m_Target->m_CurrentTile >= TILE_STOPL && m_Target->m_CurrentTile <= TILE_STOPT) || (m_Target->m_CurrentFTile >= TILE_STOPL && m_Target->m_CurrentFTile <= TILE_STOPT)))
-					m_Target->m_Core.m_Vel+=normalize(m_Pos-m_Target->m_Pos)*m_Strength;
+			{
+				//if(!((m_Target->m_CurrentTile >= TILE_STOPL && m_Target->m_CurrentTile <= TILE_STOPT) || (m_Target->m_CurrentFTile >= TILE_STOPL && m_Target->m_CurrentFTile <= TILE_STOPT)))
+					vec2 Temp = m_Target->m_Core.m_Vel +(normalize(m_Pos-m_Target->m_Pos)*m_Strength);
+					if((m_Target->m_Stopped&CCharacter::STOPPED_LEFT && Temp.x > 0)||(m_Target->m_Stopped&CCharacter::STOPPED_RIGHT && Temp.x < 0))
+						Temp.x=0;
+					if((m_Target->m_Stopped&CCharacter::STOPPED_BOTTOM && Temp.y < 0)||(m_Target->m_Stopped&CCharacter::STOPPED_TOP && Temp.y > 0))
+						Temp.y=0;
+					 m_Target->m_Core.m_Vel = Temp;
+			}
 	}
 }
 

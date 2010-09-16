@@ -178,8 +178,16 @@ public:
 	int m_BroadTime;
 	int m_BroadCast;
 
-	int m_CurrentTile;
-	int m_CurrentFTile;
+	/*int m_CurrentTile;
+	int m_CurrentFTile;*/
+	int m_Stopped;
+	enum
+	{
+		STOPPED_LEFT=1,
+		STOPPED_RIGHT=2,
+		STOPPED_BOTTOM=4,
+		STOPPED_TOP=8
+	};
 
 	bool m_EyeEmote;
 	// info for dead reckoning
