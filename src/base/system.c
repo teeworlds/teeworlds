@@ -262,25 +262,17 @@ int mem_check_imp()
 IOHANDLE io_open(const char *filename, int flags)
 {
 	if(flags == IOFLAG_READ)
-	{
-	#if defined(CONF_FAMILY_WINDOWS)
-		// check for filename case sensitive
-		WIN32_FIND_DATA finddata;
-		HANDLE handle;
-		int length;
-		
-		length = str_length(filename);
-		if(!filename || !length || filename[length-1] == '\\')
-			return 0x0;
-		handle = FindFirstFile(filename, &finddata);
-		if(handle == INVALID_HANDLE_VALUE || str_comp(filename+length-str_length(finddata.cFileName), finddata.cFileName))
-			return 0x0;
-		FindClose(handle);
-	#endif
 		return (IOHANDLE)fopen(filename, "rb");
-	}
 	if(flags == IOFLAG_WRITE)
 		return (IOHANDLE)fopen(filename, "wb");
+	if(flags == IOFLAG_RANDOM)
+	{
+		IOHANDLE io;
+		io = (IOHANDLE) fopen(filename, "rb+");
+		if(!io)
+			io = (IOHANDLE) fopen(filename, "wb+");
+		return io;
+	}
 	return 0x0;
 }
 
