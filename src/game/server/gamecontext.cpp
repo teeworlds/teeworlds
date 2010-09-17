@@ -1694,17 +1694,53 @@ void  CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int Cli
 	}
 }
 
-void  CGameContext::ConSetlvl(IConsole::IResult *pResult, void *pUserData, int ClientId)
+void  CGameContext::ConSetlvl3(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	int Level = clamp(pResult->GetInteger(1), 0, 3);
 	CServer* pServ = (CServer*)pSelf->Server();
-	if (pSelf->m_apPlayers[Victim] && (pSelf->m_apPlayers[Victim]->m_Authed > Level) && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
+	if (pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
 	{
-		pSelf->m_apPlayers[Victim]->m_Authed = Level;
-		if(!Level)
-			pServ->LogOut(Victim);
+		pSelf->m_apPlayers[Victim]->m_Authed = 3;
+		pServ->SetRconLevel(Victim,3);
+	}
+}
+
+void  CGameContext::ConSetlvl2(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	CServer* pServ = (CServer*)pSelf->Server();
+	if (pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
+	{
+		pSelf->m_apPlayers[Victim]->m_Authed = 2;
+		pServ->SetRconLevel(Victim,2);
+	}
+}
+
+void  CGameContext::ConSetlvl1(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	CServer* pServ = (CServer*)pSelf->Server();
+	if (pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
+	{
+		pSelf->m_apPlayers[Victim]->m_Authed = 1;
+		pServ->SetRconLevel(Victim,1);
+	}
+}
+
+void  CGameContext::ConLogOut(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	int Victim = ClientId;
+	if(pResult->NumArguments() && pSelf->m_apPlayers[Victim]->m_Authed != 1)
+		Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	CServer* pServ = (CServer*)pSelf->Server();
+	if (pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
+	{
+		pSelf->m_apPlayers[Victim]->m_Authed = 0;
+		pServ->SetRconLevel(Victim,0);
 	}
 }
 
@@ -2236,7 +2272,10 @@ void CGameContext::OnConsoleInit()
 
 	Console()->Register("kill_pl", "i", CFGFLAG_SERVER, ConKillPlayer, this, "Kills player i and announces the kill", 2);
 	
-	Console()->Register("auth", "ii", CFGFLAG_SERVER, ConSetlvl, this, "Authenticates player i1 to the Level of i2 (Level 0 = logout)", 3);
+	Console()->Register("logout", "?i", CFGFLAG_SERVER, ConLogOut, this, "If you are a helper or didn't specify [i] it logs you out, otherwise it logs player i out", 1);
+	Console()->Register("helper", "i", CFGFLAG_SERVER, ConSetlvl1, this, "Authenticates player i to the Level of 1", 2);
+	Console()->Register("moder", "i", CFGFLAG_SERVER, ConSetlvl2, this, "Authenticates player i to the Level of 2", 3);
+	Console()->Register("admin", "i", CFGFLAG_SERVER, ConSetlvl3, this, "Authenticates player i to the Level of 3 (CAUTION: Irreversible, once he is an admin you can;t control him)", 3);
 	
 	Console()->Register("mute", "ii", CFGFLAG_SERVER, ConMute, this, "Mutes player i1 for i2 seconds", 2);
 	

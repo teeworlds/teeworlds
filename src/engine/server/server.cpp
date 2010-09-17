@@ -1770,14 +1770,24 @@ int main(int argc, const char **argv) // ignore_convention
 	return 0;
 }
 
-void CServer::LogOut(int ClientId)
+void CServer::SetRconLevel(int ClientId, int Level)
 {
-	if(m_aClients[ClientId].m_Authed>0)
+	if(!Level)
 	{
-		dbg_msg("server", "%s logged out. ClientId=%x ip=%d.%d.%d.%d",ClientName(ClientId),	ClientId,m_aClients[ClientId].m_Addr.ip[0], m_aClients[ClientId].m_Addr.ip[1], m_aClients[ClientId].m_Addr.ip[2], m_aClients[ClientId].m_Addr.ip[3]	);
+		dbg_msg("server", "%s set to level 0. ClientId=%x ip=%d.%d.%d.%d",ClientName(ClientId),	ClientId, m_aClients[ClientId].m_Addr.ip[0], m_aClients[ClientId].m_Addr.ip[1], m_aClients[ClientId].m_Addr.ip[2], m_aClients[ClientId].m_Addr.ip[3]);
 		CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
 		Msg.AddInt(0);
 		SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
 		m_aClients[ClientId].m_Authed = 0;
 	}
+	else
+	{
+		dbg_msg("server", "%s set to level %d. ClientId=%x ip=%d.%d.%d.%d",ClientName(ClientId), Level, ClientId, m_aClients[ClientId].m_Addr.ip[0], m_aClients[ClientId].m_Addr.ip[1], m_aClients[ClientId].m_Addr.ip[2], m_aClients[ClientId].m_Addr.ip[3]);
+		CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
+		Msg.AddInt(1);
+		SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
+		m_aClients[ClientId].m_Authed = Level;
+	}
+
+
 }

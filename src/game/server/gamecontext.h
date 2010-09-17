@@ -47,7 +47,10 @@ class CGameContext : public IGameServer
 	class IScore *m_pScore;
 
 	static void ConMute(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConSetlvl(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConLogOut(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConSetlvl1(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConSetlvl2(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConSetlvl3(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConKillPlayer(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
 	static void ConNinjaMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
