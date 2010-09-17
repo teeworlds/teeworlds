@@ -600,6 +600,7 @@ void CGameContext::OnClientConnected(int ClientId)
 
 void CGameContext::OnClientDrop(int ClientId)
 {
+	ClientLeave(ClientId);
 	AbortVoteKickOnDisconnect(ClientId);
 	m_apPlayers[ClientId]->OnDisconnect();
 	delete m_apPlayers[ClientId];
@@ -809,19 +810,23 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				if(g_Config.m_SvPauseable)
 				{
 					CCharacter* chr = p->GetCharacter();
-							if(!p->GetTeam() && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos)
-						{
-							p->SaveCharacter();
-							p->SetTeam(-1);
-						}
-						else if (p->GetTeam()==-1)
-						{
-							p->m_PauseInfo.m_Respawn = true;
-							p->SetTeam(0);
-							//p->LoadCharacter();//TODO:Check if this system Works
-						}
-						else
-							SendChatTarget(ClientId, (chr->m_aWeapons[WEAPON_NINJA].m_Got)?"You can't use /pause while you are a ninja":(!chr->IsGrounded())?"You can't use /pause while you are a in air":"You can't use /pause while you are moving");
+					if(!p->GetTeam() && chr && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos && !p->m_InfoSaved)
+					{
+						p->SaveCharacter();
+						p->SetTeam(-1);
+						p->m_InfoSaved = true;
+					}
+					else if (p->GetTeam()==-1 && p->m_InfoSaved)
+					{
+						p->m_InfoSaved = false;
+						p->m_PauseInfo.m_Respawn = true;
+						p->SetTeam(0);
+						//p->LoadCharacter();//TODO:Check if this system Works
+					}
+					else if(chr)
+						SendChatTarget(ClientId, (chr->m_aWeapons[WEAPON_NINJA].m_Got)?"You can't use /pause while you are a ninja":(!chr->IsGrounded())?"You can't use /pause while you are a in air":"You can't use /pause while you are moving");
+					else
+						SendChatTarget(ClientId, "No pause data saved.");
 				}
 				else
 					SendChatTarget(ClientId, "The admin didn't activate /pause");
@@ -1033,6 +1038,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	else if(MsgId == NETMSGTYPE_CL_ISRACE)
 	{
 		p->m_IsUsingRaceClient = true;
+		p->m_ShowOthers = true;
 		// send time of all players
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{

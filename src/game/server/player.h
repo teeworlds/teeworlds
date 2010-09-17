@@ -14,7 +14,7 @@ public:
 	CPlayer(CGameContext *pGameServer, int CID, int Team);
 	~CPlayer();
 
-	void Init(int CID);
+	//void Init(int CID); idk what this does or where it is so i commented it. GreYFoXWas Here
 
 	void TryRespawn();
 	void Respawn();
@@ -57,6 +57,7 @@ public:
 		bool m_Super;
 		int m_PauseTime;
 	} m_PauseInfo;
+	bool m_InfoSaved;
 	void LoadCharacter();
 	void SaveCharacter();
 	

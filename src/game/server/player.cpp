@@ -226,12 +226,15 @@ void CPlayer::SetTeam(int Team)
 
 void CPlayer::TryRespawn()
 {
-	if(m_PauseInfo.m_Respawn) {
+	if(m_PauseInfo.m_Respawn)
+	{
 		Character = new(m_ClientID) CCharacter(&GameServer()->m_World);
 		Character->Spawn(this, m_PauseInfo.m_Core.m_Pos);
 		GameServer()->CreatePlayerSpawn(m_PauseInfo.m_Core.m_Pos);
 		LoadCharacter();
-	} else {
+	}
+	else
+	{
 		vec2 SpawnPos = vec2(100.0f, -60.0f);
 		if(!GameServer()->m_pController->CanSpawn(this, &SpawnPos))
 			return;
@@ -278,6 +281,7 @@ void CPlayer::LoadCharacter() {
 	Character->m_HammerType = m_PauseInfo.m_HammerType;
 	Character->m_Super = m_PauseInfo.m_Super;
 	m_PauseInfo.m_Respawn = false;
+	m_InfoSaved = false;
 }
 
 void CPlayer::SaveCharacter()
