@@ -560,11 +560,14 @@ void CCharacter::OnDirectInput(CNetObj_PlayerInput *pNewInput)
 		HandleWeaponSwitch();
 		FireWeapon();
 	}
+	if(pNewInput->m_Jump&1  && m_Super)
+		HandleFly();
 
 	mem_copy(&m_LatestPrevInput, &m_LatestInput, sizeof(m_LatestInput));
 }
 
-void CCharacter::OnFinish() {
+void CCharacter::OnFinish()
+{
 	//TODO: this ugly
 	float time = (float)(Server()->Tick() - m_StartTime) / ((float)Server()->TickSpeed());
 	CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
@@ -639,14 +642,21 @@ void CCharacter::OnFinish() {
 
 }
 
-int CCharacter::Team() {
+int CCharacter::Team()
+{
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	return Controller->m_Teams.m_Core.Team(m_pPlayer->GetCID());
 }
 
-CGameTeams* CCharacter::Teams() {
+CGameTeams* CCharacter::Teams()
+{
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	return &Controller->m_Teams;
+}
+
+void CCharacter::HandleFly()
+{
+	m_Core.HandleFly();
 }
 
 void CCharacter::Tick()
@@ -1325,7 +1335,8 @@ void CCharacter::Snap(int SnappingClient)
 		m_SendCore.Write(Character);
 	}
 
-	if(m_DoSplash) {
+	if(m_DoSplash)
+	{
 		Character->m_Jumped = 3;
 	}
 	// set emote

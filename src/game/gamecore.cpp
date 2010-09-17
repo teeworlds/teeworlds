@@ -75,6 +75,11 @@ void CCharacterCore::Reset()
 	m_TriggeredEvents = 0;
 }
 
+void CCharacterCore::HandleFly()
+{
+	m_Vel.y = -m_pWorld->m_Tuning.m_AirJumpImpulse;
+}
+
 void CCharacterCore::Tick(bool UseInput)
 {
 	float PhysSize = 28.0f;

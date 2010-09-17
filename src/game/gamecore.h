@@ -202,6 +202,7 @@ public:
 	void Init(CWorldCore *pWorld, CCollision *pCollision, CTeamsCore* pTeams);
 	void Reset();
 	void Tick(bool UseInput);
+	void HandleFly();
 	void Move();
 	
 	void Read(const CNetObj_CharacterCore *pObjCore);
