@@ -97,10 +97,10 @@ class CGameContext : public IGameServer
 	static void ConSay(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConSetTeam(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
-	static void  ConGoLeft(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void  ConGoRight(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void  ConGoUp(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void  ConGoDown(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConGoLeft(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConGoRight(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConGoUp(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConGoDown(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
 	static void ConAddVote(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConVote(IConsole::IResult *pResult, void *pUserData, int ClientId);
@@ -181,7 +181,38 @@ public:
 	void CreateSound(vec2 Pos, int Sound, int Mask=-1);
 	void CreateSoundGlobal(int Sound, int Target=-1);	
 
-
+	bool ClientLeave(int ClientId);
+	bool ClientEnter(int ClientId);
+	struct ReconnectInfo
+	{
+		struct PlayerInfo {
+			CCharacterCore m_Core;
+			int m_StartTime;
+			int m_RaceState;
+			//int m_RefreshTime;
+			int m_FreezeTime;
+			bool m_Doored;
+			vec2 m_OldPos;
+			vec2 m_OlderPos;
+			int m_LastAction;
+			int m_Jumped;
+			int m_Health;
+			int m_Armor;
+			int m_PlayerState;
+			int m_LastMove;
+			vec2 m_PrevPos;
+			int m_ActiveWeapon;
+			int m_LastWeapon;
+			bool m_aHasWeapon[NUM_WEAPONS];
+			int m_HammerType;
+			bool m_Super;
+			int m_PauseTime;
+		} m_PlayerInfo;
+		char Ip[64];
+		int m_ClientId;
+		int m_DisconnectTick;
+	}m_pReconnectInfo[MAX_CLIENTS];
+	bool SearchInfo(int ClientId);
 	enum
 	{
 		CHAT_ALL=-2,

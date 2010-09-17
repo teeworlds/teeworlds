@@ -538,6 +538,7 @@ void CGameContext::OnClientEnter(int ClientId)
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
 	m_VoteUpdate = true;
+	ClientEnter(ClientId);
 }
 
 bool compare_players(CPlayer *pl1, CPlayer *pl2)
@@ -2416,3 +2417,94 @@ const char *CGameContext::Version() { return GAME_VERSION; }
 const char *CGameContext::NetVersion() { return GAME_NETVERSION; }
 
 IGameServer *CreateGameServer() { return new CGameContext; }
+
+bool CGameContext::ClientLeave(int ClientId)
+{
+	Server()->GetClientIP(ClientId,m_pReconnectInfo[ClientId].Ip,sizeof(m_pReconnectInfo[ClientId].Ip));
+	CCharacter *pChr = GetPlayerChar(ClientId);
+	if(pChr)
+	{
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_Core = pChr->m_Core;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_StartTime = pChr->m_StartTime;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_RaceState = pChr->m_RaceState;
+		for(int i = 0; i < WEAPON_NINJA; ++i)
+		{
+			m_pReconnectInfo[ClientId].m_PlayerInfo.m_aHasWeapon[i] = pChr->m_aWeapons[i].m_Got;
+		}
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_FreezeTime=pChr->m_FreezeTime;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_Doored = pChr->m_Doored;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_OldPos = pChr->m_OldPos;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_OlderPos = pChr->m_OlderPos;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_LastAction = pChr->m_LastAction;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_Jumped = pChr->m_Jumped;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_Health = pChr->m_Health;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_Armor = pChr->m_Armor;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_PlayerState = pChr->m_PlayerState;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_LastMove = pChr->m_LastMove;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_PrevPos = pChr->m_PrevPos;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_ActiveWeapon = pChr->m_ActiveWeapon;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_LastWeapon = pChr->m_LastWeapon;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_HammerType = pChr->m_HammerType;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_Super = pChr->m_Super;
+		m_pReconnectInfo[ClientId].m_PlayerInfo.m_PauseTime = Server()->Tick();
+	}
+	m_pReconnectInfo[ClientId].m_DisconnectTick = Server()->Tick();
+	return true;
+}
+
+bool CGameContext::ClientEnter(int ClientId)
+{
+	char Temp[64];
+	Server()->GetClientIP(ClientId,Temp,sizeof(Temp));
+	for(int i =0;i<MAX_CLIENTS;i++)
+		if (!str_comp(Temp,m_pReconnectInfo[i].Ip) && m_pReconnectInfo[i].m_DisconnectTick > Server()->Tick() - (Server()->TickSpeed() * g_Config.m_SvMaxDCRestore))
+		{
+			if(m_apPlayers[ClientId])
+			{
+				m_apPlayers[ClientId]->m_PauseInfo.m_Core = m_pReconnectInfo[i].m_PlayerInfo.m_Core;
+				m_apPlayers[ClientId]->m_PauseInfo.m_StartTime = m_pReconnectInfo[i].m_PlayerInfo.m_StartTime;
+				m_apPlayers[ClientId]->m_PauseInfo.m_RaceState = m_pReconnectInfo[i].m_PlayerInfo.m_RaceState;
+				for(int j = 0; j < WEAPON_NINJA; ++j)
+				{
+					m_apPlayers[ClientId]->m_PauseInfo.m_aHasWeapon[j] = m_pReconnectInfo[i].m_PlayerInfo.m_aHasWeapon[j];
+				}
+				m_apPlayers[ClientId]->m_PauseInfo.m_FreezeTime=m_pReconnectInfo[i].m_PlayerInfo.m_FreezeTime;
+				m_apPlayers[ClientId]->m_PauseInfo.m_Doored = m_pReconnectInfo[i].m_PlayerInfo.m_Doored;
+				m_apPlayers[ClientId]->m_PauseInfo.m_OldPos = m_pReconnectInfo[i].m_PlayerInfo.m_OldPos;
+				m_apPlayers[ClientId]->m_PauseInfo.m_OlderPos = m_pReconnectInfo[i].m_PlayerInfo.m_OlderPos;
+				m_apPlayers[ClientId]->m_PauseInfo.m_LastAction = m_pReconnectInfo[i].m_PlayerInfo.m_LastAction;
+				m_apPlayers[ClientId]->m_PauseInfo.m_Jumped = m_pReconnectInfo[i].m_PlayerInfo.m_Jumped;
+				m_apPlayers[ClientId]->m_PauseInfo.m_Health = m_pReconnectInfo[i].m_PlayerInfo.m_Health;
+				m_apPlayers[ClientId]->m_PauseInfo.m_Armor = m_pReconnectInfo[i].m_PlayerInfo.m_Armor;
+				m_apPlayers[ClientId]->m_PauseInfo.m_PlayerState = m_pReconnectInfo[i].m_PlayerInfo.m_PlayerState;
+				m_apPlayers[ClientId]->m_PauseInfo.m_LastMove = m_pReconnectInfo[i].m_PlayerInfo.m_LastMove;
+				m_apPlayers[ClientId]->m_PauseInfo.m_PrevPos = m_pReconnectInfo[i].m_PlayerInfo.m_PrevPos;
+				m_apPlayers[ClientId]->m_PauseInfo.m_ActiveWeapon = m_pReconnectInfo[i].m_PlayerInfo.m_ActiveWeapon;
+				m_apPlayers[ClientId]->m_PauseInfo.m_LastWeapon = m_pReconnectInfo[i].m_PlayerInfo.m_LastWeapon;
+				m_apPlayers[ClientId]->m_PauseInfo.m_HammerType = m_pReconnectInfo[i].m_PlayerInfo.m_HammerType;
+				m_apPlayers[ClientId]->m_PauseInfo.m_Super = m_pReconnectInfo[i].m_PlayerInfo.m_Super;
+				m_apPlayers[ClientId]->m_PauseInfo.m_PauseTime = m_pReconnectInfo[i].m_DisconnectTick;
+				m_apPlayers[ClientId]->m_InfoSaved = true;
+				m_apPlayers[ClientId]->m_PauseInfo.m_Respawn = true;
+				m_apPlayers[ClientId]->SetTeam(0);
+				mem_zero(m_pReconnectInfo[i].Ip,sizeof(m_pReconnectInfo[i].Ip));
+				SendChatTarget(i,"Welcome back");
+			}
+			return true;
+		}
+		else if(m_pReconnectInfo[i].m_DisconnectTick > Server()->Tick() - (Server()->TickSpeed() * g_Config.m_SvMaxDCRestore))
+			mem_zero(m_pReconnectInfo[i].Ip,sizeof(m_pReconnectInfo[i].Ip));
+	return false;
+}
+
+bool CGameContext::SearchInfo(int ClientId)
+{
+	char Temp[64];
+	Server()->GetClientIP(ClientId,Temp,sizeof(Temp));
+	if (!str_comp(Temp,m_pReconnectInfo[ClientId].Ip))
+	{
+		return true;
+	}
+	return false;
+}
+

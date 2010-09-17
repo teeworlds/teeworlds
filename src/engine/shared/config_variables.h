@@ -66,7 +66,8 @@ MACRO_CONFIG_INT(SvVoteKickTimeDelay, sv_vote_kick_delay,0,0,9999,CFGFLAG_SERVER
 MACRO_CONFIG_INT(SvShotgunBulletSound, sv_shotgun_bullet_sound, 0, 0, 1, CFGFLAG_SERVER, "Crazy shotgun bullet sound on/off", 3)
 
 MACRO_CONFIG_INT(SvPauseable, sv_pauseable, 1, 0, 1, CFGFLAG_SERVER, "Whether players can pause their char or not", 3)
-MACRO_CONFIG_INT(SvPauseTime, sv_pause_time, 0, 0, 1, CFGFLAG_SERVER, "Whether '/pause' pauses the time of player or not", 3)
+MACRO_CONFIG_INT(SvPauseTime, sv_pause_time, 0, 0, 1, CFGFLAG_SERVER, "Whether '/pause' and 'sv_max_dc_restore' pauses the time of player or not", 3)
+MACRO_CONFIG_INT(SvMaxDCRestore, sv_max_dc_restore, 60, 0 , 180, CFGFLAG_SERVER, "The max time that the server will wait before deleting the saved tee of a dropped client", 3)
 
 MACRO_CONFIG_INT(SvScoreIP, sv_score_ip, 1, 0, 1, CFGFLAG_SERVER, "Wheather to save also the IP in the score file", 3)
 MACRO_CONFIG_INT(SvCheckpointSave, sv_checkpoint_save, 1, 0, 1, CFGFLAG_SERVER, "Whether to save checkpoint times to the score file", 3)
