@@ -88,7 +88,7 @@ class CCharacter *CGameContext::GetPlayerChar(int ClientId)
 	return m_apPlayers[ClientId]->GetCharacter();
 }
 
-void CGameContext::CreateDamageInd(vec2 p, float Angle, int Amount, int Mask)
+void CGameContext::CreateDamageInd(vec2 P, float Angle, int Amount, int Mask)
 {
 	float a = 3 * 3.14159f / 2 + Angle;
 	//float a = get_angle(dir);
@@ -100,33 +100,33 @@ void CGameContext::CreateDamageInd(vec2 p, float Angle, int Amount, int Mask)
 		NETEVENT_DAMAGEIND *ev = (NETEVENT_DAMAGEIND *)m_Events.Create(NETEVENTTYPE_DAMAGEIND, sizeof(NETEVENT_DAMAGEIND), Mask);
 		if(ev)
 		{
-			ev->m_X = (int)p.x;
-			ev->m_Y = (int)p.y;
+			ev->m_X = (int)P.x;
+			ev->m_Y = (int)P.y;
 			ev->m_Angle = (int)(f*256.0f);
 		}
 	}
 }
 
-void CGameContext::CreateHammerHit(vec2 p, int Mask)
+void CGameContext::CreateHammerHit(vec2 P, int Mask)
 {
 	// create the event
 	NETEVENT_HAMMERHIT *ev = (NETEVENT_HAMMERHIT *)m_Events.Create(NETEVENTTYPE_HAMMERHIT, sizeof(NETEVENT_HAMMERHIT), Mask);
 	if(ev)
 	{
-		ev->m_X = (int)p.x;
-		ev->m_Y = (int)p.y;
+		ev->m_X = (int)P.x;
+		ev->m_Y = (int)P.y;
 	}
 }
 
 
-void CGameContext::CreateExplosion(vec2 p, int Owner, int Weapon, bool NoDamage, int Mask)
+void CGameContext::CreateExplosion(vec2 P, int Owner, int Weapon, bool NoDamage, int Mask)
 {
 	// create the event
 	NETEVENT_EXPLOSION *ev = (NETEVENT_EXPLOSION *)m_Events.Create(NETEVENTTYPE_EXPLOSION, sizeof(NETEVENT_EXPLOSION), Mask);
 	if(ev)
 	{
-		ev->m_X = (int)p.x;
-		ev->m_Y = (int)p.y;
+		ev->m_X = (int)P.x;
+		ev->m_Y = (int)P.y;
 	}
 
 	/*if (!NoDamage)
@@ -135,10 +135,10 @@ void CGameContext::CreateExplosion(vec2 p, int Owner, int Weapon, bool NoDamage,
 		CCharacter *apEnts[64];
 		float Radius = 135.0f;
 		float InnerRadius = 48.0f;
-		int Num = m_World.FindEntities(p, Radius, (CEntity**)apEnts, 64, NETOBJTYPE_CHARACTER);
+		int Num = m_World.FindEntities(P, Radius, (CEntity**)apEnts, 64, NETOBJTYPE_CHARACTER);
 		for(int i = 0; i < Num; i++)
 		{
-			vec2 Diff = apEnts[i]->m_Pos - p;
+			vec2 Diff = apEnts[i]->m_Pos - P;
 			vec2 ForceDir(0, 1);
 			float l = length(Diff);
 			if(l)
@@ -158,36 +158,36 @@ void CGameContext::CreateExplosion(vec2 p, int Owner, int Weapon, bool NoDamage,
 }
 
 /*
-void create_smoke(vec2 p)
+void create_smoke(vec2 P)
 {
 	// create the event
 	EV_EXPLOSION *ev = (EV_EXPLOSION *)events.create(EVENT_SMOKE, sizeof(EV_EXPLOSION));
 	if(ev)
 	{
-		ev->x = (int)p.x;
-		ev->y = (int)p.y;
+		ev->x = (int)P.x;
+		ev->y = (int)P.y;
 	}
 }*/
 
-void CGameContext::CreatePlayerSpawn(vec2 p, int Mask)
+void CGameContext::CreatePlayerSpawn(vec2 P, int Mask)
 {
 	// create the event
 	NETEVENT_SPAWN *ev = (NETEVENT_SPAWN *)m_Events.Create(NETEVENTTYPE_SPAWN, sizeof(NETEVENT_SPAWN), Mask);
 	if(ev)
 	{
-		ev->m_X = (int)p.x;
-		ev->m_Y = (int)p.y;
+		ev->m_X = (int)P.x;
+		ev->m_Y = (int)P.y;
 	}
 }
 
-void CGameContext::CreateDeath(vec2 p, int ClientId, int Mask)
+void CGameContext::CreateDeath(vec2 P, int ClientId, int Mask)
 {
 	// create the event
 	NETEVENT_DEATH *ev = (NETEVENT_DEATH *)m_Events.Create(NETEVENTTYPE_DEATH, sizeof(NETEVENT_DEATH), Mask);
 	if(ev)
 	{
-		ev->m_X = (int)p.x;
-		ev->m_Y = (int)p.y;
+		ev->m_X = (int)P.x;
+		ev->m_Y = (int)P.y;
 		ev->m_ClientId = ClientId;
 	}
 }
@@ -367,11 +367,11 @@ void CGameContext::CheckPureTuning()
 		str_comp(m_pController->m_pGameType, "TDM")==0 ||
 		str_comp(m_pController->m_pGameType, "CTF")==0)
 	{
-		CTuningParams p;
-		if(mem_comp(&p, &m_Tuning, sizeof(p)) != 0)
+		CTuningParams P;
+		if(mem_comp(&P, &m_Tuning, sizeof(P)) != 0)
 		{
 			Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "resetting tuning due to pure server");
-			m_Tuning = p;
+			m_Tuning = P;
 		}
 	}
 }
@@ -617,7 +617,7 @@ void CGameContext::OnClientDrop(int ClientId)
 void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 {
 	void *pRawMsg = m_NetObjHandler.SecureUnpackMsg(MsgId, pUnpacker);
-	CPlayer *p = m_apPlayers[ClientId];
+	CPlayer *pPlayer = m_apPlayers[ClientId];
 
 	if(!pRawMsg)
 	{
@@ -632,11 +632,11 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		CNetMsg_Cl_Say *pMsg = (CNetMsg_Cl_Say *)pRawMsg;
 		int Team = pMsg->m_Team;
 		if(Team)
-			Team = p->GetTeam();
+			Team = pPlayer->GetTeam();
 		else
 			Team = CGameContext::CHAT_ALL;
 
-		if(/*g_Config.m_SvSpamprotection && */p->m_Last_Chat && p->m_Last_Chat + Server()->TickSpeed() + g_Config.m_SvChatDelay > Server()->Tick())
+		if(/*g_Config.m_SvSpamprotection && */pPlayer->m_Last_Chat && pPlayer->m_Last_Chat + Server()->TickSpeed() + g_Config.m_SvChatDelay > Server()->Tick())
 			return;
 		if(str_length(pMsg->m_pMessage)>370)
 		{
@@ -644,7 +644,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			return;
 		}
 
-		p->m_Last_Chat = Server()->Tick();
+		pPlayer->m_Last_Chat = Server()->Tick();
 
 		// check for invalid chars
 		unsigned char *pMessage = (unsigned char *)pMsg->m_pMessage;
@@ -807,25 +807,25 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			}
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/kill"))
 			{
-				p->KillCharacter(-1);//TODO:GFX Make This have Suicide Penalty ( Tees can't spawn unless they wait 3 seconds )
+				pPlayer->KillCharacter(-1);//TODO:GFX Make This have Suicide Penalty ( Tees can't spawn unless they wait 3 seconds )
 			}
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/pause"))
 			{
 				if(g_Config.m_SvPauseable)
 				{
-					CCharacter* chr = p->GetCharacter();
-					if(!p->GetTeam() && chr && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos && !p->m_InfoSaved)
+					CCharacter* chr = pPlayer->GetCharacter();
+					if(!pPlayer->GetTeam() && chr && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos && !pPlayer->m_InfoSaved)
 					{
-						p->SaveCharacter();
-						p->SetTeam(-1);
-						p->m_InfoSaved = true;
+						pPlayer->SaveCharacter();
+						pPlayer->SetTeam(-1);
+						pPlayer->m_InfoSaved = true;
 					}
-					else if (p->GetTeam()==-1 && p->m_InfoSaved)
+					else if (pPlayer->GetTeam()==-1 && pPlayer->m_InfoSaved)
 					{
-						p->m_InfoSaved = false;
-						p->m_PauseInfo.m_Respawn = true;
-						p->SetTeam(0);
-						//p->LoadCharacter();//TODO:Check if this system Works
+						pPlayer->m_InfoSaved = false;
+						pPlayer->m_PauseInfo.m_Respawn = true;
+						pPlayer->SetTeam(0);
+						//pPlayer->LoadCharacter();//TODO:Check if this system Works
 					}
 					else if(chr)
 						SendChatTarget(ClientId, (chr->m_aWeapons[WEAPON_NINJA].m_Got)?"You can't use /pause while you are a ninja":(!chr->IsGrounded())?"You can't use /pause while you are a in air":"You can't use /pause while you are moving");
@@ -846,18 +846,18 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				int Num;
 				
 				if(sscanf(pMsg->m_pMessage, "/top5 %d", &Num) == 1)
-					Score()->ShowTop5(p->GetCID(), Num);
+					Score()->ShowTop5(pPlayer->GetCID(), Num);
 				else
-					Score()->ShowTop5(p->GetCID());
+					Score()->ShowTop5(pPlayer->GetCID());
 			}
 			else if(!str_comp_num(pMsg->m_pMessage, "/rank", 5))
 			{
 				char aName[256];
 				
 				if(g_Config.m_SvHideScore && sscanf(pMsg->m_pMessage, "/rank %s", aName) == 1)
-					Score()->ShowRank(p->GetCID(), aName, true);
+					Score()->ShowRank(pPlayer->GetCID(), aName, true);
 				else
-					Score()->ShowRank(p->GetCID(), Server()->ClientName(ClientId));
+					Score()->ShowRank(pPlayer->GetCID(), Server()->ClientName(ClientId));
 			}
 			else if(!str_comp_num(pMsg->m_pMessage, "/me", 3))
 			{
@@ -881,15 +881,15 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					SendChatTarget(ClientId, "This command is not allowed on this server.");
 					return;
 				}
-				if(p->m_IsUsingRaceClient)
+				if(pPlayer->m_IsUsingRaceClient)
 					SendChatTarget(ClientId, "Please use the settings to switch this option.");
 				else
-					p->m_ShowOthers = !p->m_ShowOthers;
+					pPlayer->m_ShowOthers = !pPlayer->m_ShowOthers;
 			}*/
 			else if (!str_comp_nocase(pMsg->m_pMessage, "/time") && g_Config.m_SvEmotionalTees)
 
 				{
-					CCharacter* pChr = p->GetCharacter();
+					CCharacter* pChr = pPlayer->GetCharacter();
 					if (pChr)
 					{
 						if(pChr->m_BroadTime)
@@ -905,10 +905,10 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				
 				if(sscanf(pMsg->m_pMessage, "/team %d", &Num) == 1)
 				{
-					if(((CGameControllerDDRace*)m_pController)->m_Teams.SetCharacterTeam(p->GetCID(), Num))
+					if(((CGameControllerDDRace*)m_pController)->m_Teams.SetCharacterTeam(pPlayer->GetCID(), Num))
 					{
 						char aBuf[512];
-						str_format(aBuf, sizeof(aBuf), "%s joined to Team %d", Server()->ClientName(p->GetCID()), Num);
+						str_format(aBuf, sizeof(aBuf), "%s joined to Team %d", Server()->ClientName(pPlayer->GetCID()), Num);
 						SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 					}
 					else
@@ -919,23 +919,34 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				else
 				{
 					char aBuf[512];
-					str_format(aBuf, sizeof(aBuf), "You are in team %d", p->GetCharacter()->Team());
+					str_format(aBuf, sizeof(aBuf), "You are in team %d", pPlayer->GetCharacter()->Team());
 					SendChatTarget(ClientId, aBuf);
 				}
 					
 			}
-
 			else if (!str_comp_nocase(pMsg->m_pMessage, "/eyeemote") && g_Config.m_SvEmotionalTees)
 
 				{
-					CCharacter* pChr = p->GetCharacter();
+					CCharacter* pChr = pPlayer->GetCharacter();
 					if (pChr)
+					{
 						pChr->m_EyeEmote=!pChr->m_EyeEmote;
-					SendChatTarget(ClientId, (pChr->m_EyeEmote)?"You can now use the preset eye emotes.":"You don't have any eye emotes, remember to bind some.(until you die)");
+						SendChatTarget(ClientId, (pChr->m_EyeEmote)?"You can now use the preset eye emotes.":"You don't have any eye emotes, remember to bind some.(until you die)");
+					}
+				}
+			else if (!str_comp_nocase(pMsg->m_pMessage, "/fly"))
+
+				{
+					CCharacter* pChr = pPlayer->GetCharacter();
+					if (pChr && pChr->m_Super)
+					{
+						pChr->m_Fly=!pChr->m_Fly;
+						SendChatTarget(ClientId, (pChr->m_Fly)?"You are not a Tee you are a Bird.":"You are not a Bird you are a Tee.");
+					}
 				}
 			else if (!str_comp_nocase(pMsg->m_pMessage, "/broadcast") && g_Config.m_SvEmotionalTees)
 				{
-					CCharacter* pChr = p->GetCharacter();
+					CCharacter* pChr = pPlayer->GetCharacter();
 					if (pChr)
 					{
 						if(pChr->m_BroadCast)
@@ -952,7 +963,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			else if(!str_comp_num(pMsg->m_pMessage, "/emote pain", 11) && g_Config.m_SvEmotionalTees)
 			{
 				int Num = -1;
-					CCharacter* pChr = p->GetCharacter();
+					CCharacter* pChr = pPlayer->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_PAIN;
@@ -965,7 +976,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			else if(!str_comp_num(pMsg->m_pMessage, "/emote happy", 12) && g_Config.m_SvEmotionalTees)
 			{
 				int Num = -1;
-					CCharacter* pChr = p->GetCharacter();
+					CCharacter* pChr = pPlayer->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_HAPPY;
@@ -978,7 +989,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			else if(!str_comp_num(pMsg->m_pMessage, "/emote angry", 12) && g_Config.m_SvEmotionalTees)
 			{
 				int Num = -1;
-					CCharacter* pChr = p->GetCharacter();
+					CCharacter* pChr = pPlayer->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_ANGRY;
@@ -991,7 +1002,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			else if(!str_comp_num(pMsg->m_pMessage, "/emote close", 12) && g_Config.m_SvEmotionalTees)
 			{
 				int Num = -1;
-					CCharacter* pChr = p->GetCharacter();
+					CCharacter* pChr = pPlayer->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_BLINK;
@@ -1003,7 +1014,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				}
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/emote blink") && g_Config.m_SvEmotionalTees)
 				{
-					CCharacter* pChr = p->GetCharacter();
+					CCharacter* pChr = pPlayer->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_BLINK;
@@ -1013,7 +1024,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			else if(!str_comp_num(pMsg->m_pMessage, "/emote surprise", 15) && g_Config.m_SvEmotionalTees)
 			{
 				int Num = -1;
-					CCharacter* pChr = p->GetCharacter();
+					CCharacter* pChr = pPlayer->GetCharacter();
 					if (pChr)
 					{
 						pChr->m_EmoteType = EMOTE_SURPRISE;
@@ -1041,8 +1052,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	}
 	else if(MsgId == NETMSGTYPE_CL_ISRACE)
 	{
-		p->m_IsUsingRaceClient = true;
-		p->m_ShowOthers = true;
+		pPlayer->m_IsUsingRaceClient = true;
+		pPlayer->m_ShowOthers = true;
 		// send time of all players
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
@@ -1063,24 +1074,24 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	{
 		if(!g_Config.m_SvShowOthers && !Server()->IsAuthed(ClientId))
 			return;
-		if(p->m_Last_ShowOthers && p->m_Last_ShowOthers+Server()->TickSpeed()/2 > Server()->Tick())
+		if(pPlayer->m_Last_ShowOthers && pPlayer->m_Last_ShowOthers+Server()->TickSpeed()/2 > Server()->Tick())
 			return;
-		p->m_Last_ShowOthers = Server()->Tick();
+		pPlayer->m_Last_ShowOthers = Server()->Tick();
 		CNetMsg_Cl_RaceShowOthers *pMsg = (CNetMsg_Cl_RaceShowOthers *)pRawMsg;
-		p->m_ShowOthers = (bool)pMsg->m_Active;
-		if(p->m_ShowOthers)
+		pPlayer->m_ShowOthers = (bool)pMsg->m_Active;
+		if(pPlayer->m_ShowOthers)
 		{
-			((CGameControllerDDRace*)m_pController)->m_Teams.SendAllInfo(p->GetCID());
+			((CGameControllerDDRace*)m_pController)->m_Teams.SendAllInfo(pPlayer->GetCID());
 		}
 	}
 	else if(MsgId == NETMSGTYPE_CL_CALLVOTE)
 	{
-		if(/*g_Config.m_SvSpamprotection && */p->m_Last_VoteTry && p->m_Last_VoteTry + Server()->TickSpeed() * g_Config.m_SvVoteDelay > Server()->Tick())
+		if(/*g_Config.m_SvSpamprotection && */pPlayer->m_Last_VoteTry && pPlayer->m_Last_VoteTry + Server()->TickSpeed() * g_Config.m_SvVoteDelay > Server()->Tick())
 			return;
 
 		int64 Now = Server()->Tick();
-		p->m_Last_VoteTry = Now;
-		if(p->GetTeam() == -1)
+		pPlayer->m_Last_VoteTry = Now;
+		if(pPlayer->GetTeam() == -1)
 		{
 			SendChatTarget(ClientId, "Spectators aren't allowed to start a vote.");
 			return;
@@ -1092,8 +1103,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			return;
 		}
 
-		int Timeleft = p->m_Last_VoteCall + Server()->TickSpeed()*60 - Now;
-		if(p->m_Last_VoteCall && Timeleft > 0)
+		int Timeleft = pPlayer->m_Last_VoteCall + Server()->TickSpeed()*60 - Now;
+		if(pPlayer->m_Last_VoteCall && Timeleft > 0)
 		{
 			char aChatmsg[512] = {0};
 			str_format(aChatmsg, sizeof(aChatmsg), "You must wait %d seconds before making another vote", (Timeleft/Server()->TickSpeed())+1);
@@ -1208,10 +1219,10 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		{
 			SendChat(-1, CGameContext::CHAT_ALL, aChatmsg);
 			StartVote(aDesc, aCmd);
-			p->m_Vote = 1;
-			p->m_VotePos = m_VotePos = 1;
+			pPlayer->m_Vote = 1;
+			pPlayer->m_VotePos = m_VotePos = 1;
 			m_VoteCreator = ClientId;
-			p->m_Last_VoteCall = Now;
+			pPlayer->m_Last_VoteCall = Now;
 		}
 	}
 	else if(MsgId == NETMSGTYPE_CL_VOTE)
@@ -1219,14 +1230,14 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		if(!m_VoteCloseTime)
 			return;
 
-		if(p->m_Vote == 0)
+		if(pPlayer->m_Vote == 0)
 		{
 			CNetMsg_Cl_Vote *pMsg = (CNetMsg_Cl_Vote *)pRawMsg;
 			if(!pMsg->m_Vote)
 				return;
 
-			p->m_Vote = pMsg->m_Vote;
-			p->m_VotePos = ++m_VotePos;
+			pPlayer->m_Vote = pMsg->m_Vote;
+			pPlayer->m_VotePos = ++m_VotePos;
 			m_VoteUpdate = true;
 		}
 	}
@@ -1234,19 +1245,19 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	{
 		CNetMsg_Cl_SetTeam *pMsg = (CNetMsg_Cl_SetTeam *)pRawMsg;
 
-		if(p->GetTeam() == pMsg->m_Team || (/*g_Config.m_SvSpamprotection &&*/ p->m_Last_SetTeam && p->m_Last_SetTeam+Server()->TickSpeed() * g_Config.m_SvTeamChangeDelay > Server()->Tick()))
+		if(pPlayer->GetTeam() == pMsg->m_Team || (/*g_Config.m_SvSpamprotection &&*/ pPlayer->m_Last_SetTeam && pPlayer->m_Last_SetTeam+Server()->TickSpeed() * g_Config.m_SvTeamChangeDelay > Server()->Tick()))
 			return;
 
 		// Switch team on given client and kill/respawn him
 		if(m_pController->CanJoinTeam(pMsg->m_Team, ClientId))
 		{
-			//if(m_pController->CanChangeTeam(p, pMsg->m_Team))
+			//if(m_pController->CanChangeTeam(pPlayer, pMsg->m_Team))
 			//{
 			//CCharacter* pChr=GetPlayerChar(ClientId);
-				p->m_Last_SetTeam = Server()->Tick();
-				if(p->GetTeam() == -1 || pMsg->m_Team == -1)
+				pPlayer->m_Last_SetTeam = Server()->Tick();
+				if(pPlayer->GetTeam() == -1 || pMsg->m_Team == -1)
 					m_VoteUpdate = true;
-				p->SetTeam(pMsg->m_Team);
+				pPlayer->SetTeam(pMsg->m_Team);
 				//if(pChr && pMsg->m_Team!=-1 && pChr->m_Paused)
 					//pChr->LoadPauseData();
 				//TODO:Check if this system Works
@@ -1267,15 +1278,15 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	{
 		CNetMsg_Cl_ChangeInfo *pMsg = (CNetMsg_Cl_ChangeInfo *)pRawMsg;
 
-		if(/*g_Config.m_SvSpamprotection &&*/ p->m_Last_ChangeInfo && p->m_Last_ChangeInfo + Server()->TickSpeed() * g_Config.m_SvInfoChangeDelay > Server()->Tick())
+		if(/*g_Config.m_SvSpamprotection &&*/ pPlayer->m_Last_ChangeInfo && pPlayer->m_Last_ChangeInfo + Server()->TickSpeed() * g_Config.m_SvInfoChangeDelay > Server()->Tick())
 			return;
 
-		p->m_Last_ChangeInfo = time_get();
-		if (!p->m_ColorSet|| g_Config.m_SvAllowColorChange)
+		pPlayer->m_Last_ChangeInfo = time_get();
+		if (!pPlayer->m_ColorSet|| g_Config.m_SvAllowColorChange)
 		{
-			p->m_TeeInfos.m_UseCustomColor = pMsg->m_UseCustomColor;
-			p->m_TeeInfos.m_ColorBody = pMsg->m_ColorBody;
-			p->m_TeeInfos.m_ColorFeet = pMsg->m_ColorFeet;
+			pPlayer->m_TeeInfos.m_UseCustomColor = pMsg->m_UseCustomColor;
+			pPlayer->m_TeeInfos.m_ColorBody = pMsg->m_ColorBody;
+			pPlayer->m_TeeInfos.m_ColorFeet = pMsg->m_ColorFeet;
 		}
 
 		// copy old name
@@ -1291,9 +1302,9 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		}
 
 		// set skin
-		str_copy(p->m_TeeInfos.m_SkinName, pMsg->m_pSkin, sizeof(p->m_TeeInfos.m_SkinName));
+		str_copy(pPlayer->m_TeeInfos.m_SkinName, pMsg->m_pSkin, sizeof(pPlayer->m_TeeInfos.m_SkinName));
 
-		//m_pController->OnPlayerInfoChange(p);
+		//m_pController->OnPlayerInfoChange(pPlayer);
 
 		if(MsgId == NETMSGTYPE_CL_STARTINFO)
 		{
@@ -1321,13 +1332,13 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	{
 		CNetMsg_Cl_Emoticon *pMsg = (CNetMsg_Cl_Emoticon *)pRawMsg;
 
-		if(/*g_Config.m_SvSpamprotection &&*/ p->m_Last_Emote && p->m_Last_Emote+Server()->TickSpeed()*g_Config.m_SvEmoticonDelay > Server()->Tick())
+		if(/*g_Config.m_SvSpamprotection &&*/ pPlayer->m_Last_Emote && pPlayer->m_Last_Emote+Server()->TickSpeed()*g_Config.m_SvEmoticonDelay > Server()->Tick())
 			return;
 
-		p->m_Last_Emote = Server()->Tick();
+		pPlayer->m_Last_Emote = Server()->Tick();
 
 		SendEmoticon(ClientId, pMsg->m_Emoticon);
-		CCharacter* pChr = p->GetCharacter();
+		CCharacter* pChr = pPlayer->GetCharacter();
 		if (pChr && g_Config.m_SvEmotionalTees && pChr->m_EyeEmote)
 		{
 			switch(pMsg->m_Emoticon)
@@ -1364,12 +1375,12 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	
 	else if (MsgId == NETMSGTYPE_CL_KILL && !m_World.m_Paused)
 	{
-		if(p->m_Last_Kill && p->m_Last_Kill+Server()->TickSpeed()*3 > Server()->Tick())
+		if(pPlayer->m_Last_Kill && pPlayer->m_Last_Kill+Server()->TickSpeed()*3 > Server()->Tick())
 			return;
 
-		p->m_Last_Kill = Server()->Tick();
-		p->KillCharacter(WEAPON_SELF);
-		p->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()*3;
+		pPlayer->m_Last_Kill = Server()->Tick();
+		pPlayer->KillCharacter(WEAPON_SELF);
+		pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()*3;
 	}
 }
 
@@ -1393,8 +1404,8 @@ void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData, int
 void CGameContext::ConTuneReset(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	CTuningParams p;
-	*pSelf->Tuning() = p;
+	CTuningParams P;
+	*pSelf->Tuning() = P;
 	pSelf->SendTuningParams(-1);
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "Tuning reset");
 }

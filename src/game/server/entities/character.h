@@ -108,6 +108,7 @@ public:
 	
 	int m_HammerType;
 	bool m_Super;
+	bool m_Fly;
 
 	//DDRace
 	int m_FreezeTime;

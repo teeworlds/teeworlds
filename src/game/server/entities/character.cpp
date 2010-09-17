@@ -75,6 +75,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_BroadTime = true;
 	m_BroadCast = true;
 	m_EyeEmote = true;
+	m_Fly = true;
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision(), &Controller->m_Teams.m_Core);
 	m_Core.m_Pos = m_Pos;
@@ -560,7 +561,7 @@ void CCharacter::OnDirectInput(CNetObj_PlayerInput *pNewInput)
 		HandleWeaponSwitch();
 		FireWeapon();
 	}
-	if(pNewInput->m_Jump&1  && m_Super)
+	if(pNewInput->m_Jump&1  && m_Super && m_Fly)
 		HandleFly();
 
 	mem_copy(&m_LatestPrevInput, &m_LatestInput, sizeof(m_LatestInput));
