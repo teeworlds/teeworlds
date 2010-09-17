@@ -853,7 +853,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			else if(!str_comp_num(pMsg->m_pMessage, "/me", 3))
 			{
 				char aMsg[256]="";
-				if(sscanf(pMsg->m_pMessage, "/me %256c", aMsg))
+				if(sscanf(pMsg->m_pMessage, "/me %256c", aMsg) == 1)
 				{
 					char Temp[256+24]="";
 					strcat(Temp,Server()->ClientName(ClientId));
