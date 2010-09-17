@@ -567,7 +567,7 @@ int CServer::DelClientCallback(int ClientId, const char *pReason, void *pUser)
 
 	NETADDR Addr = pThis->m_NetServer.ClientAddr(ClientId);
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "%s client dropped. ClientId=%d ip=%d.%d.%d.%d reason=\"%s\"", pThis->ClientName(ClientId),
+	str_format(aBuf, sizeof(aBuf), "client dropped. ClientId=%d ip=%d.%d.%d.%d reason='%s'",
 		ClientId,
 		Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3],
 		pReason
