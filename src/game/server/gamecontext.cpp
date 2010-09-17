@@ -703,13 +703,13 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help top5"))
 				SendChatTarget(ClientId, "Displays the top five ranks of this race on this server. /top5 i will show 5 ranks beginningt with rank i.");
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help top5 i"))
-				SendChatTarget(ClientId, "You're a funny stacker... See /top5 for this.");
+				SendChatTarget(ClientId, "You're a funny stacker... See /Help top5 for this.");
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help rank"))
 				SendChatTarget(ClientId, "Shows your rank on the server. /rank <name> will show you the rank of the player with the specified name.");
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help rank name"))
 				SendChatTarget(ClientId, "You're a funny stacker... See /rank for this.");
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help eyeemote"))
-				SendChatTarget(ClientId, "Ask Greyfox, what this means.");
+				SendChatTarget(ClientId, "Toggles whether to use the default eye emote settings for emoticons.");
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help broadcast"))
 				SendChatTarget(ClientId, "Enables/disables the broadcast");
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help emote"))
