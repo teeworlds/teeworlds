@@ -212,7 +212,6 @@ public:
 		int m_ClientId;
 		int m_DisconnectTick;
 	}m_pReconnectInfo[MAX_CLIENTS];
-	bool SearchInfo(int ClientId);
 	enum
 	{
 		CHAT_ALL=-2,
