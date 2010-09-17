@@ -471,13 +471,13 @@ void CGameContext::OnTick()
 				{
 					Console()->ExecuteLine(m_aVoteCommand, 3,-1);
 					SendChat(-1, CGameContext::CHAT_ALL, "Vote passed (enforced by Admin)");
-					dbg_msg("Vote","Due to vote enforcing, vote Level has been set to 3");
+					dbg_msg("Vote","Due to vote enforcing, vote level has been set to 3");
 					EndVote();
 				}
 				else
 				{
 					Console()->ExecuteLine(m_aVoteCommand, 4,-1);
-					dbg_msg("Vote","vote Level is set to 4");
+					dbg_msg("Vote","vote level is set to 4");
 					EndVote();
 					SendChat(-1, CGameContext::CHAT_ALL, "Vote passed");
 				}
@@ -807,7 +807,9 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			}
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/kill"))
 			{
-				pPlayer->KillCharacter(-1);//TODO:GFX Make This have Suicide Penalty ( Tees can't spawn unless they wait 3 seconds )
+				pPlayer->m_Last_Kill = Server()->Tick();
+				pPlayer->KillCharacter(WEAPON_SELF);
+				pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()*3;
 			}
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/pause"))
 			{
@@ -2124,7 +2126,6 @@ void CGameContext::ConTimerZero(IConsole::IResult *pResult, void *pUserData, int
 			chr->m_RefreshTime = pSelf->Server()->Tick();
 			chr->m_RaceState=RACE_CHEAT;
 			str_format(buf, sizeof(buf), "'%s' ClientId=%d time has been reset & stopped.", pServ->ClientName(ClientId), Victim);
-			CServer* pServ = (CServer*)pSelf->Server();
 			pServ->SendRconLine(ClientId, buf);
 		}
 	}
@@ -2154,7 +2155,6 @@ void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, 
 			chr->m_RefreshTime = pSelf->Server()->Tick();
 			chr->m_RaceState=RACE_STARTED;
 			str_format(buf, sizeof(buf), "'%s' ClientId=%d time has been reset & stopped.", pServ->ClientName(ClientId), Victim);
-			CServer* pServ = (CServer*)pSelf->Server();
 			pServ->SendRconLine(ClientId, buf);
 		}
 	}
@@ -2478,10 +2478,9 @@ bool CGameContext::ClientLeave(int ClientId)
 	CCharacter *pChr = GetPlayerChar(ClientId);
 	for(int i =0;i<MAX_CLIENTS;i++)
 	{
-		dbg_msg("","%d %d %s ",i,m_pReconnectInfo[i].Ip[0],m_pReconnectInfo[i].Ip);
-		if (m_pReconnectInfo[i].Ip[0] == 0)
+		if (!str_length(m_pReconnectInfo[i].Ip))
 		{
-			Server()->GetClientIP(i,m_pReconnectInfo[i].Ip,sizeof(m_pReconnectInfo[i].Ip));
+			Server()->GetClientIP(ClientId,m_pReconnectInfo[i].Ip,sizeof(m_pReconnectInfo[i].Ip));
 			if(pChr)
 			{
 				m_pReconnectInfo[i].m_PlayerInfo.m_Core = pChr->m_Core;
@@ -2524,42 +2523,46 @@ bool CGameContext::ClientEnter(int ClientId)
 	char Temp[64];
 	Server()->GetClientIP(ClientId,Temp,sizeof(Temp));
 	for(int i =0;i<MAX_CLIENTS;i++)
-		if (!str_comp(Temp,m_pReconnectInfo[i].Ip) && m_pReconnectInfo[i].m_DisconnectTick > Server()->Tick() - (Server()->TickSpeed() * g_Config.m_SvMaxDCRestore))
-		{
-			if(m_apPlayers[ClientId])
+	{
+		if (!str_comp(Temp,m_pReconnectInfo[dddddddd].Ip))
+			if(m_pReconnectInfo[i].m_DisconnectTick > Server()->Tick() - (Server()->TickSpeed() * g_Config.m_SvMaxDCRestore))
 			{
-				m_apPlayers[ClientId]->m_PauseInfo.m_Core = m_pReconnectInfo[i].m_PlayerInfo.m_Core;
-				m_apPlayers[ClientId]->m_PauseInfo.m_StartTime = m_pReconnectInfo[i].m_PlayerInfo.m_StartTime;
-				m_apPlayers[ClientId]->m_PauseInfo.m_RaceState = m_pReconnectInfo[i].m_PlayerInfo.m_RaceState;
-				for(int j = 0; j < WEAPON_NINJA; ++j)
+				mem_zero(Temp,sizeof(Temp));
+				if(m_apPlayers[ClientId])
 				{
-					m_apPlayers[ClientId]->m_PauseInfo.m_aHasWeapon[j] = m_pReconnectInfo[i].m_PlayerInfo.m_aHasWeapon[j];
+					m_apPlayers[ClientId]->m_PauseInfo.m_Core = m_pReconnectInfo[i].m_PlayerInfo.m_Core;
+					m_apPlayers[ClientId]->m_PauseInfo.m_StartTime = m_pReconnectInfo[i].m_PlayerInfo.m_StartTime;
+					m_apPlayers[ClientId]->m_PauseInfo.m_RaceState = m_pReconnectInfo[i].m_PlayerInfo.m_RaceState;
+					for(int j = 0; j < WEAPON_NINJA; ++j)
+					{
+						m_apPlayers[ClientId]->m_PauseInfo.m_aHasWeapon[j] = m_pReconnectInfo[i].m_PlayerInfo.m_aHasWeapon[j];
+					}
+					m_apPlayers[ClientId]->m_PauseInfo.m_FreezeTime=m_pReconnectInfo[i].m_PlayerInfo.m_FreezeTime;
+					m_apPlayers[ClientId]->m_PauseInfo.m_Doored = m_pReconnectInfo[i].m_PlayerInfo.m_Doored;
+					m_apPlayers[ClientId]->m_PauseInfo.m_OldPos = m_pReconnectInfo[i].m_PlayerInfo.m_OldPos;
+					m_apPlayers[ClientId]->m_PauseInfo.m_OlderPos = m_pReconnectInfo[i].m_PlayerInfo.m_OlderPos;
+					m_apPlayers[ClientId]->m_PauseInfo.m_LastAction = m_pReconnectInfo[i].m_PlayerInfo.m_LastAction;
+					m_apPlayers[ClientId]->m_PauseInfo.m_Jumped = m_pReconnectInfo[i].m_PlayerInfo.m_Jumped;
+					m_apPlayers[ClientId]->m_PauseInfo.m_Health = m_pReconnectInfo[i].m_PlayerInfo.m_Health;
+					m_apPlayers[ClientId]->m_PauseInfo.m_Armor = m_pReconnectInfo[i].m_PlayerInfo.m_Armor;
+					m_apPlayers[ClientId]->m_PauseInfo.m_PlayerState = m_pReconnectInfo[i].m_PlayerInfo.m_PlayerState;
+					m_apPlayers[ClientId]->m_PauseInfo.m_LastMove = m_pReconnectInfo[i].m_PlayerInfo.m_LastMove;
+					m_apPlayers[ClientId]->m_PauseInfo.m_PrevPos = m_pReconnectInfo[i].m_PlayerInfo.m_PrevPos;
+					m_apPlayers[ClientId]->m_PauseInfo.m_ActiveWeapon = m_pReconnectInfo[i].m_PlayerInfo.m_ActiveWeapon;
+					m_apPlayers[ClientId]->m_PauseInfo.m_LastWeapon = m_pReconnectInfo[i].m_PlayerInfo.m_LastWeapon;
+					m_apPlayers[ClientId]->m_PauseInfo.m_HammerType = m_pReconnectInfo[i].m_PlayerInfo.m_HammerType;
+					m_apPlayers[ClientId]->m_PauseInfo.m_Super = m_pReconnectInfo[i].m_PlayerInfo.m_Super;
+					m_apPlayers[ClientId]->m_PauseInfo.m_PauseTime = m_pReconnectInfo[i].m_DisconnectTick;
+					m_apPlayers[ClientId]->m_InfoSaved = true;
+					m_apPlayers[ClientId]->m_PauseInfo.m_Respawn = true;
+					m_apPlayers[ClientId]->SetTeam(0);
+					mem_zero(m_pReconnectInfo[i].Ip,sizeof(m_pReconnectInfo[i].Ip));
+					SendChatTarget(ClientId,"Welcome back");
+					return true;
 				}
-				m_apPlayers[ClientId]->m_PauseInfo.m_FreezeTime=m_pReconnectInfo[i].m_PlayerInfo.m_FreezeTime;
-				m_apPlayers[ClientId]->m_PauseInfo.m_Doored = m_pReconnectInfo[i].m_PlayerInfo.m_Doored;
-				m_apPlayers[ClientId]->m_PauseInfo.m_OldPos = m_pReconnectInfo[i].m_PlayerInfo.m_OldPos;
-				m_apPlayers[ClientId]->m_PauseInfo.m_OlderPos = m_pReconnectInfo[i].m_PlayerInfo.m_OlderPos;
-				m_apPlayers[ClientId]->m_PauseInfo.m_LastAction = m_pReconnectInfo[i].m_PlayerInfo.m_LastAction;
-				m_apPlayers[ClientId]->m_PauseInfo.m_Jumped = m_pReconnectInfo[i].m_PlayerInfo.m_Jumped;
-				m_apPlayers[ClientId]->m_PauseInfo.m_Health = m_pReconnectInfo[i].m_PlayerInfo.m_Health;
-				m_apPlayers[ClientId]->m_PauseInfo.m_Armor = m_pReconnectInfo[i].m_PlayerInfo.m_Armor;
-				m_apPlayers[ClientId]->m_PauseInfo.m_PlayerState = m_pReconnectInfo[i].m_PlayerInfo.m_PlayerState;
-				m_apPlayers[ClientId]->m_PauseInfo.m_LastMove = m_pReconnectInfo[i].m_PlayerInfo.m_LastMove;
-				m_apPlayers[ClientId]->m_PauseInfo.m_PrevPos = m_pReconnectInfo[i].m_PlayerInfo.m_PrevPos;
-				m_apPlayers[ClientId]->m_PauseInfo.m_ActiveWeapon = m_pReconnectInfo[i].m_PlayerInfo.m_ActiveWeapon;
-				m_apPlayers[ClientId]->m_PauseInfo.m_LastWeapon = m_pReconnectInfo[i].m_PlayerInfo.m_LastWeapon;
-				m_apPlayers[ClientId]->m_PauseInfo.m_HammerType = m_pReconnectInfo[i].m_PlayerInfo.m_HammerType;
-				m_apPlayers[ClientId]->m_PauseInfo.m_Super = m_pReconnectInfo[i].m_PlayerInfo.m_Super;
-				m_apPlayers[ClientId]->m_PauseInfo.m_PauseTime = m_pReconnectInfo[i].m_DisconnectTick;
-				m_apPlayers[ClientId]->m_InfoSaved = true;
-				m_apPlayers[ClientId]->m_PauseInfo.m_Respawn = true;
-				m_apPlayers[ClientId]->SetTeam(0);
-				mem_zero(m_pReconnectInfo[i].Ip,sizeof(m_pReconnectInfo[i].Ip));
-				SendChatTarget(i,"Welcome back");
 			}
-			return true;
-		}
-		else if(m_pReconnectInfo[i].m_DisconnectTick > Server()->Tick() - (Server()->TickSpeed() * g_Config.m_SvMaxDCRestore))
-			mem_zero(m_pReconnectInfo[i].Ip,sizeof(m_pReconnectInfo[i].Ip));
+			else
+				mem_zero(m_pReconnectInfo[i].Ip,sizeof(m_pReconnectInfo[i].Ip));
+	}
 	return false;
 }
