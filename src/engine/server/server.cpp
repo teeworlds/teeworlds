@@ -907,9 +907,9 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				//Addr = m_NetServer.ClientAddr(ClientId);
 				if(m_aClients[ClientId].m_Authed > 0)
 				{
-					char aBuf[256];
+					/*char aBuf[256];
 					str_format(aBuf, sizeof(aBuf), "'%s' ClientId=%d rcon='%s'", ClientName(ClientId), ClientId, pCmd);
-					Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
+					Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);*/
 					m_RconClientId = ClientId;
 					Console()->ExecuteLine(pCmd, m_aClients[ClientId].m_Authed, ClientId);
 					m_RconClientId = -1;
