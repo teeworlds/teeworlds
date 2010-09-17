@@ -182,6 +182,7 @@ public:
 	/*int m_CurrentTile;
 	int m_CurrentFTile;*/
 	int m_Stopped;
+	int m_StoppedIndex;
 	enum
 	{
 		STOPPED_LEFT=1,

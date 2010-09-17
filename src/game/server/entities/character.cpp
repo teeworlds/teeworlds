@@ -664,8 +664,8 @@ void CCharacter::Tick()
 {
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	int MapIndex = GameServer()->Collision()->GetMapIndex(m_PrevPos, m_Pos);
-	int MapIndexL = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x + (m_ProximityRadius/2)-5,m_Pos.y), vec2(m_Pos.x + (m_ProximityRadius/2)-5,m_Pos.y));
-	int MapIndexR = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x - (m_ProximityRadius/2)+5,m_Pos.y), vec2(m_Pos.x - (m_ProximityRadius/2)+5,m_Pos.y));
+	int MapIndexL = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x + (m_ProximityRadius/2)+4,m_Pos.y), vec2(m_Pos.x + (m_ProximityRadius/2)+4,m_Pos.y));
+	int MapIndexR = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x - (m_ProximityRadius/2)-4,m_Pos.y), vec2(m_Pos.x - (m_ProximityRadius/2)-4,m_Pos.y));
 	int MapIndexT = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x,m_Pos.y + (m_ProximityRadius/2)+4), vec2(m_Pos.x,m_Pos.y + (m_ProximityRadius/2)+4));
 	int MapIndexB = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x,m_Pos.y - (m_ProximityRadius/2)-4), vec2(m_Pos.x,m_Pos.y - (m_ProximityRadius/2)-4));
 	//dbg_msg("","N%d L%d R%d B%d T%d",MapIndex,MapIndexL,MapIndexR,MapIndexB,MapIndexT);
@@ -819,7 +819,7 @@ void CCharacter::Tick()
 	{
 		UnFreeze();
 	}
-	if(MapIndex != GameServer()->Collision()->GetMapIndex(m_PrevPos,m_PrevPos) || MapIndex == -1)
+	if(MapIndex != m_StoppedIndex)
 		m_Stopped = 0;
 	if((TileIndexL == TILE_STOPA || TileFIndexL == TILE_STOPA || TileIndex == TILE_STOPL || TileIndexL == TILE_STOPL || TileFIndex == TILE_STOPL || TileFIndexL == TILE_STOPL || TileIndexL == TILE_STOPH || TileFIndexL == TILE_STOPH) && m_Core.m_Vel.x > 0)
 	{
@@ -846,6 +846,7 @@ void CCharacter::Tick()
 		m_Core.m_Jumped = 0;
 		m_Stopped |=STOPPED_TOP;
 	}
+	m_StoppedIndex = MapIndex;
 	if (TileIndex == TILE_BOOST_L || TileFIndex == TILE_BOOST_L)
 	{
 		if(m_PrevPos.x-m_Pos.x<0)

@@ -2524,7 +2524,7 @@ bool CGameContext::ClientEnter(int ClientId)
 	Server()->GetClientIP(ClientId,Temp,sizeof(Temp));
 	for(int i =0;i<MAX_CLIENTS;i++)
 	{
-		if (!str_comp(Temp,m_pReconnectInfo[dddddddd].Ip))
+		if (!str_comp(Temp,m_pReconnectInfo[ClientId].Ip))
 			if(m_pReconnectInfo[i].m_DisconnectTick > Server()->Tick() - (Server()->TickSpeed() * g_Config.m_SvMaxDCRestore))
 			{
 				mem_zero(Temp,sizeof(Temp));
