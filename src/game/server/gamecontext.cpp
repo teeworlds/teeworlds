@@ -1,6 +1,7 @@
 #include <new>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 #include <base/math.h>
 #include <engine/shared/config.h>
 #include <engine/server/server.h>
@@ -850,6 +851,20 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					Score()->ShowRank(p->GetCID(), aName, true);
 				else
 					Score()->ShowRank(p->GetCID(), Server()->ClientName(ClientId));
+			}
+			else if(!str_comp_num(pMsg->m_pMessage, "/me", 3))
+			{
+				char aMsg[256]="";
+				if(sscanf(pMsg->m_pMessage, "/me %256c", aMsg))
+				{
+					char Temp[256+24]="";
+					strcat(Temp,Server()->ClientName(ClientId));
+					strcat(Temp," ");
+					strcat(Temp,aMsg);
+					SendChat(-1, CGameContext::CHAT_ALL, Temp);
+					mem_zero(Temp,sizeof(Temp));
+					mem_zero(aMsg,sizeof(aMsg));
+				}
 			}
 			/* disable it for vanilla clients
 			else if(!str_comp(pMsg->m_pMessage, "/show_others"))
@@ -2003,7 +2018,7 @@ void CGameContext::ConTimerStop(IConsole::IResult *pResult, void *pUserData, int
 	else
 	{
 
-		serv->SendRconLine(ClientId, "Command timer does't allowed");
+		serv->SendRconLine(ClientId, "Timer commands are disabled");
 	}
 }
 
@@ -2014,7 +2029,6 @@ void CGameContext::ConTimerStart(IConsole::IResult *pResult, void *pUserData, in
 	CServer* serv = (CServer*)pSelf->Server();
 	if(!g_Config.m_SvTimer)
 	{
-
 		int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
 		if (!chr)
@@ -2029,31 +2043,39 @@ void CGameContext::ConTimerStart(IConsole::IResult *pResult, void *pUserData, in
 	else
 	{
 
-		serv->SendRconLine(ClientId, "Command timer does't allowed");
+		serv->SendRconLine(ClientId, "Timer commands are disabled");
 	}
 }
 
 void CGameContext::ConTimerZero(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
+
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(!pSelf->CheatsAvailable(ClientId)) return;
 	char buf[128];
-
-	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-
-	CCharacter* chr = pSelf->GetPlayerChar(Victim);
-	if (!chr)
-		return;
-	if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	CServer* serv = (CServer*)pSelf->Server();
+	if(!g_Config.m_SvTimer)
 	{
-		chr->m_StartTime = pSelf->Server()->Tick();
-		chr->m_RefreshTime = pSelf->Server()->Tick();
-		chr->m_RaceState=RACE_CHEAT;
-		str_format(buf, sizeof(buf), "Cid=%d time has been reset & stopped.",Victim);
-		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(ClientId, buf);
-	}
+		int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 
+		CCharacter* chr = pSelf->GetPlayerChar(Victim);
+		if (!chr)
+			return;
+		if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+		{
+			chr->m_StartTime = pSelf->Server()->Tick();
+			chr->m_RefreshTime = pSelf->Server()->Tick();
+			chr->m_RaceState=RACE_CHEAT;
+			str_format(buf, sizeof(buf), "Cid=%d time has been reset & stopped.",Victim);
+			CServer* serv = (CServer*)pSelf->Server();
+			serv->SendRconLine(ClientId, buf);
+		}
+	}
+	else
+	{
+
+		serv->SendRconLine(ClientId, "Timer commands are disabled");
+	}
 }
 
 void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, int ClientId)
@@ -2061,22 +2083,29 @@ void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, 
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(!pSelf->CheatsAvailable(ClientId)) return;
 	char buf[128];
-
-	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-
-	CCharacter* chr = pSelf->GetPlayerChar(Victim);
-	if (!chr)
-		return;
-	if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	CServer* serv = (CServer*)pSelf->Server();
+	if(!g_Config.m_SvTimer)
 	{
-		chr->m_StartTime = pSelf->Server()->Tick();
-		chr->m_RefreshTime = pSelf->Server()->Tick();
-		chr->m_RaceState=RACE_STARTED;
-		str_format(buf, sizeof(buf), "Cid=%d time has been reset & stopped.",Victim);
-		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(ClientId, buf);
-	}
+		int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 
+		CCharacter* chr = pSelf->GetPlayerChar(Victim);
+		if (!chr)
+			return;
+		if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+		{
+			chr->m_StartTime = pSelf->Server()->Tick();
+			chr->m_RefreshTime = pSelf->Server()->Tick();
+			chr->m_RaceState=RACE_STARTED;
+			str_format(buf, sizeof(buf), "Cid=%d time has been reset & stopped.",Victim);
+			CServer* serv = (CServer*)pSelf->Server();
+			serv->SendRconLine(ClientId, buf);
+		}
+	}
+	else
+	{
+
+		serv->SendRconLine(ClientId, "Timer commands are disabled");
+	}
 }
 
 void CGameContext::ConFreeze(IConsole::IResult *pResult, void *pUserData, int ClientId)
