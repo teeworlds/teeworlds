@@ -207,7 +207,7 @@ public:
 
 	void RegisterCommands();
 	
-	
+	void LogOut(int ClientId);
 	virtual int SnapNewID();
 	virtual void SnapFreeID(int ID);
 	virtual void *SnapNewItem(int Type, int Id, int Size);

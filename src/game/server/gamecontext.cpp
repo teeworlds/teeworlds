@@ -471,13 +471,13 @@ void CGameContext::OnTick()
 				{
 					Console()->ExecuteLine(m_aVoteCommand, 3,-1);
 					SendChat(-1, CGameContext::CHAT_ALL, "Vote passed (enforced by Admin)");
-					dbg_msg("Vote","Due to vote enforcing, vote level has been set to 3");
+					dbg_msg("Vote","Due to vote enforcing, vote Level has been set to 3");
 					EndVote();
 				}
 				else
 				{
 					Console()->ExecuteLine(m_aVoteCommand, 4,-1);
-					dbg_msg("Vote","vote level is set to 4");
+					dbg_msg("Vote","vote Level is set to 4");
 					EndVote();
 					SendChat(-1, CGameContext::CHAT_ALL, "Vote passed");
 				}
@@ -1698,11 +1698,13 @@ void  CGameContext::ConSetlvl(IConsole::IResult *pResult, void *pUserData, int C
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	int level = clamp(pResult->GetInteger(1), 0, 3);
-
-	if (pSelf->m_apPlayers[Victim] && (pSelf->m_apPlayers[Victim]->m_Authed > level) && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
+	int Level = clamp(pResult->GetInteger(1), 0, 3);
+	CServer* pServ = (CServer*)pSelf->Server();
+	if (pSelf->m_apPlayers[Victim] && (pSelf->m_apPlayers[Victim]->m_Authed > Level) && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
 	{
-		pSelf->m_apPlayers[Victim]->m_Authed = level;
+		pSelf->m_apPlayers[Victim]->m_Authed = Level;
+		if(!Level)
+			pServ->LogOut(Victim);
 	}
 }
 
@@ -2234,7 +2236,7 @@ void CGameContext::OnConsoleInit()
 
 	Console()->Register("kill_pl", "i", CFGFLAG_SERVER, ConKillPlayer, this, "Kills player i and announces the kill", 2);
 	
-	Console()->Register("auth", "ii", CFGFLAG_SERVER, ConSetlvl, this, "Authenticates player i1 to the level of i2 (level 0 = logout)", 3);
+	Console()->Register("auth", "ii", CFGFLAG_SERVER, ConSetlvl, this, "Authenticates player i1 to the Level of i2 (Level 0 = logout)", 3);
 	
 	Console()->Register("mute", "ii", CFGFLAG_SERVER, ConMute, this, "Mutes player i1 for i2 seconds", 2);
 	
