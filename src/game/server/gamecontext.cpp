@@ -1560,8 +1560,8 @@ void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int Cl
 	}
 	else
 	{
-		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(ClientId,(pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
+		CServer* pServ = (CServer*)pSelf->Server();
+		pServ->SendRconLine(ClientId,(pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
 	}
 }
 
@@ -1596,8 +1596,8 @@ void  CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int 
 	}
 	else
 	{
-		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(ClientId,(pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
+		CServer* pServ = (CServer*)pSelf->Server();
+		pServ->SendRconLine(ClientId,(pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
 	}
 }
 
@@ -1632,8 +1632,8 @@ void  CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int C
 	}
 	else
 	{
-		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(ClientId,(pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
+		CServer* pServ = (CServer*)pSelf->Server();
+		pServ->SendRconLine(ClientId,(pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
 	}
 }
 
@@ -1668,8 +1668,8 @@ void  CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int Cli
 	}
 	else
 	{
-		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(ClientId,(pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
+		CServer* pServ = (CServer*)pSelf->Server();
+		pServ->SendRconLine(ClientId,(pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
 	}
 }
 
@@ -1803,10 +1803,10 @@ void CGameContext::ConHammer(IConsole::IResult *pResult, void *pUserData, int Cl
 	CCharacter* chr = pSelf->GetPlayerChar(Victim);
 	if (!chr)
 		return;
-	CServer* serv = (CServer*)pSelf->Server();
+	CServer* pServ = (CServer*)pSelf->Server();
 	if (type>3 || type<0)
 	{
-		serv->SendRconLine(ClientId, "Select hammer between 0 and 3");
+		pServ->SendRconLine(ClientId, "Select hammer between 0 and 3");
 	}
 	else
 	{
@@ -1815,8 +1815,8 @@ void CGameContext::ConHammer(IConsole::IResult *pResult, void *pUserData, int Cl
 			chr->m_HammerType = type;
 			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
-			str_format(buf, sizeof(buf), "Hammer of ClientId=%d setted to %d",Victim,type);
-			serv->SendRconLine(ClientId, buf);
+			str_format(buf, sizeof(buf), "Hammer of '%s' ClientId=%d setted to %d", pServ->ClientName(ClientId), Victim, type);
+			pServ->SendRconLine(ClientId, buf);
 		}
 	}
 }
@@ -1830,10 +1830,10 @@ void CGameContext::ConHammerMe(IConsole::IResult *pResult, void *pUserData, int 
 	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 	if (!chr)
 		return;
-	CServer* serv = (CServer*)pSelf->Server();
+	CServer* pServ = (CServer*)pSelf->Server();
 	if (type>3 || type<0)
 	{
-		serv->SendRconLine(ClientId, "Select hammer between 0 and 3");
+		pServ->SendRconLine(ClientId, "Select hammer between 0 and 3");
 	}
 	else
 	{
@@ -1841,7 +1841,7 @@ void CGameContext::ConHammerMe(IConsole::IResult *pResult, void *pUserData, int 
 		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 		str_format(buf, sizeof(buf), "Hammer setted to %d",type);
-		serv->SendRconLine(ClientId, buf);
+		pServ->SendRconLine(ClientId, buf);
 	}
 }
 
@@ -2057,7 +2057,7 @@ void CGameContext::ConTimerStop(IConsole::IResult *pResult, void *pUserData, int
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	char buf[128];
-	CServer* serv = (CServer*)pSelf->Server();
+	CServer* pServ = (CServer*)pSelf->Server();
 	if(!g_Config.m_SvTimer)
 	{
 
@@ -2068,14 +2068,14 @@ void CGameContext::ConTimerStop(IConsole::IResult *pResult, void *pUserData, int
 		if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 		{
 			chr->m_RaceState=RACE_CHEAT;
-			str_format(buf, sizeof(buf), "Cid=%d Hasn't time now (Timer Stopped)",Victim);
-			serv->SendRconLine(ClientId, buf);
+			str_format(buf, sizeof(buf), "'%s' ClientId=%d Hasn't time now (Timer Stopped)", pServ->ClientName(ClientId), Victim);
+			pServ->SendRconLine(ClientId, buf);
 		}
 	}
 	else
 	{
 
-		serv->SendRconLine(ClientId, "Timer commands are disabled");
+		pServ->SendRconLine(ClientId, "Timer commands are disabled");
 	}
 }
 
@@ -2083,7 +2083,7 @@ void CGameContext::ConTimerStart(IConsole::IResult *pResult, void *pUserData, in
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	char buf[128];
-	CServer* serv = (CServer*)pSelf->Server();
+	CServer* pServ = (CServer*)pSelf->Server();
 	if(!g_Config.m_SvTimer)
 	{
 		int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
@@ -2093,14 +2093,14 @@ void CGameContext::ConTimerStart(IConsole::IResult *pResult, void *pUserData, in
 		if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 		{
 			chr->m_RaceState = RACE_STARTED;
-			str_format(buf, sizeof(buf), "Cid=%d Has time now (Timer Started)",Victim);
-			serv->SendRconLine(ClientId, buf);
+			str_format(buf, sizeof(buf), "'%s' ClientId=%d Has time now (Timer Started)", pServ->ClientName(ClientId), Victim);
+			pServ->SendRconLine(ClientId, buf);
 		}
 	}
 	else
 	{
 
-		serv->SendRconLine(ClientId, "Timer commands are disabled");
+		pServ->SendRconLine(ClientId, "Timer commands are disabled");
 	}
 }
 
@@ -2110,7 +2110,7 @@ void CGameContext::ConTimerZero(IConsole::IResult *pResult, void *pUserData, int
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(!pSelf->CheatsAvailable(ClientId)) return;
 	char buf[128];
-	CServer* serv = (CServer*)pSelf->Server();
+	CServer* pServ = (CServer*)pSelf->Server();
 	if(!g_Config.m_SvTimer)
 	{
 		int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
@@ -2123,15 +2123,15 @@ void CGameContext::ConTimerZero(IConsole::IResult *pResult, void *pUserData, int
 			chr->m_StartTime = pSelf->Server()->Tick();
 			chr->m_RefreshTime = pSelf->Server()->Tick();
 			chr->m_RaceState=RACE_CHEAT;
-			str_format(buf, sizeof(buf), "Cid=%d time has been reset & stopped.",Victim);
-			CServer* serv = (CServer*)pSelf->Server();
-			serv->SendRconLine(ClientId, buf);
+			str_format(buf, sizeof(buf), "'%s' ClientId=%d time has been reset & stopped.", pServ->ClientName(ClientId), Victim);
+			CServer* pServ = (CServer*)pSelf->Server();
+			pServ->SendRconLine(ClientId, buf);
 		}
 	}
 	else
 	{
 
-		serv->SendRconLine(ClientId, "Timer commands are disabled");
+		pServ->SendRconLine(ClientId, "Timer commands are disabled");
 	}
 }
 
@@ -2140,7 +2140,7 @@ void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, 
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(!pSelf->CheatsAvailable(ClientId)) return;
 	char buf[128];
-	CServer* serv = (CServer*)pSelf->Server();
+	CServer* pServ = (CServer*)pSelf->Server();
 	if(!g_Config.m_SvTimer)
 	{
 		int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
@@ -2153,15 +2153,15 @@ void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, 
 			chr->m_StartTime = pSelf->Server()->Tick();
 			chr->m_RefreshTime = pSelf->Server()->Tick();
 			chr->m_RaceState=RACE_STARTED;
-			str_format(buf, sizeof(buf), "Cid=%d time has been reset & stopped.",Victim);
-			CServer* serv = (CServer*)pSelf->Server();
-			serv->SendRconLine(ClientId, buf);
+			str_format(buf, sizeof(buf), "'%s' ClientId=%d time has been reset & stopped.", pServ->ClientName(ClientId), Victim);
+			CServer* pServ = (CServer*)pSelf->Server();
+			pServ->SendRconLine(ClientId, buf);
 		}
 	}
 	else
 	{
 
-		serv->SendRconLine(ClientId, "Timer commands are disabled");
+		pServ->SendRconLine(ClientId, "Timer commands are disabled");
 	}
 }
 
@@ -2181,9 +2181,9 @@ void CGameContext::ConFreeze(IConsole::IResult *pResult, void *pUserData, int Cl
 	{
 		chr->Freeze(((time!=0&&time!=-1)?(pSelf->Server()->TickSpeed()*time):(-1)));
 		chr->m_pPlayer->m_RconFreeze = true;
-		str_format(buf, sizeof(buf), "Cid=%d has been Frozen.",Victim);
-		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(ClientId, buf);
+		CServer* pServ = (CServer*)pSelf->Server();
+		str_format(buf, sizeof(buf), "'%s' ClientId=%d has been Frozen.", pServ->ClientName(ClientId), Victim);
+		pServ->SendRconLine(ClientId, buf);
 	}
 
 }
@@ -2199,9 +2199,9 @@ void CGameContext::ConUnFreeze(IConsole::IResult *pResult, void *pUserData, int 
 		return;
 	chr->m_FreezeTime=2;
 	chr->m_pPlayer->m_RconFreeze = false;
-	str_format(buf, sizeof(buf), "Cid=%d has been UnFreezed.",Victim);
-	CServer* serv = (CServer*)pSelf->Server();
-	serv->SendRconLine(ClientId, buf);
+	CServer* pServ = (CServer*)pSelf->Server();
+	str_format(buf, sizeof(buf), "'%s' ClientId=%d has been UnFreezed.", pServ->ClientName(ClientId), Victim);
+	pServ->SendRconLine(ClientId, buf);
 
 }
 
@@ -2233,9 +2233,9 @@ void CGameContext::ConInvis(IConsole::IResult *pResult, void *pUserData, int Cli
 	if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		pSelf->m_apPlayers[Victim]->m_Invisible = true;
-		str_format(buf, sizeof(buf), "Cid=%d is now invisible.",Victim);
-		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(ClientId, buf);
+		CServer* pServ = (CServer*)pSelf->Server();
+		str_format(buf, sizeof(buf), "'%s' ClientId=%d is now invisible.", pServ->ClientName(ClientId), Victim);
+		pServ->SendRconLine(ClientId, buf);
 	}
 }
 
@@ -2249,9 +2249,9 @@ void CGameContext::ConVis(IConsole::IResult *pResult, void *pUserData, int Clien
 	if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		pSelf->m_apPlayers[Victim]->m_Invisible = false;
-		str_format(buf, sizeof(buf), "Cid=%d is visible.",Victim);
-		CServer* serv = (CServer*)pSelf->Server();
-		serv->SendRconLine(ClientId, buf);
+		CServer* pServ = (CServer*)pSelf->Server();
+		str_format(buf, sizeof(buf), "'%s' ClientId=%d is visible.", pServ->ClientName(ClientId), Victim);
+		pServ->SendRconLine(ClientId, buf);
 	}
 }
 

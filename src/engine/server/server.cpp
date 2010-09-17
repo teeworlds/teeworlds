@@ -567,7 +567,7 @@ int CServer::DelClientCallback(int ClientId, const char *pReason, void *pUser)
 
 	NETADDR Addr = pThis->m_NetServer.ClientAddr(ClientId);
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "client dropped. cid=%d ip=%d.%d.%d.%d reason=\"%s\"",
+	str_format(aBuf, sizeof(aBuf), "%s client dropped. ClientId=%d ip=%d.%d.%d.%d reason=\"%s\"", pThis->ClientName(ClientId),
 		ClientId,
 		Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3],
 		pReason
@@ -902,13 +902,13 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			if(Unpacker.Error() == 0/* && m_aClients[ClientId].m_Authed*/)
 			{
 				char aBuf[256];
-				str_format(aBuf, sizeof(aBuf), "ClientId=%d Level=%d Rcon='%s'", ClientId, m_aClients[ClientId].m_Authed, pCmd);
+				str_format(aBuf, sizeof(aBuf), "'%s' ClientId=%d Level=%d Rcon='%s'", ClientName(ClientId), ClientId, m_aClients[ClientId].m_Authed, pCmd);
 				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
 				//Addr = m_NetServer.ClientAddr(ClientId);
 				if(m_aClients[ClientId].m_Authed > 0)
 				{
 					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "ClientId=%d rcon='%s'", ClientId, pCmd);
+					str_format(aBuf, sizeof(aBuf), "'%s' ClientId=%d rcon='%s'", ClientName(ClientId), ClientId, pCmd);
 					Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
 					m_RconClientId = ClientId;
 					Console()->ExecuteLine(pCmd, m_aClients[ClientId].m_Authed, ClientId);
@@ -970,7 +970,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 						}
 						if(level != -1)
 						{
-							char buf[128]="Authentication successful. Remote console access grantedfor cid=%d with level=%d";
+							char buf[128]="Authentication successful. Remote console access grantedfor ClientId=%d with level=%d";
 							CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
 							Msg.AddInt(1);
 							SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
@@ -979,7 +979,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 							GameServer()->OnSetAuthed(ClientId, m_aClients[ClientId].m_Authed);
 							str_format(buf,sizeof(buf),buf,ClientId,level);
 							SendRconLine(ClientId, buf);
-							dbg_msg("server", "ClientId=%d authed with Level=%d", ClientId, level);
+							dbg_msg("server", "'%s' ClientId=%d authed with Level=%d", ClientName(ClientId), ClientId, level);
 							m_aClients[ClientId].m_PwTries = 0;
 						}
 						else
@@ -988,7 +988,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 							if(++m_aClients[ClientId].m_PwTries > g_Config.m_SvRconTries)
 							{ // rcon Kottizen LemonFace
 								BanAdd(m_NetServer.ClientAddr(ClientId), g_Config.m_SvRconTriesBantime, "exceeding rcon password tries, Bye"); // bye
-								dbg_msg("server", "cid=%d banned, wrong rcon pw", ClientId);
+								dbg_msg("server", "'%s' ClientId=%d banned, wrong rcon pw", ClientName(ClientId), ClientId);
 							}
 						}
 					}
@@ -1034,7 +1034,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			}
 
 			char aBufMsg[256];
-			str_format(aBufMsg, sizeof(aBufMsg), "strange message ClientId=%d msg=%d data_size=%d", ClientId, Msg, pPacket->m_DataSize);
+			str_format(aBufMsg, sizeof(aBufMsg), "strange message from '%s' ClientId=%d msg=%d data_size=%d", ClientName(ClientId), ClientId, Msg, pPacket->m_DataSize);
 			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBufMsg);
 			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
 
