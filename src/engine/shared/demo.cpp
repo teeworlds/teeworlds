@@ -742,3 +742,55 @@ char *CDemoPlayer::GetDemoName()
 	return pDemoShortName;
 }
 
+bool CDemoPlayer::DemoInfo(class IStorage *pStorage, const char *pFilename, CDemoInfo *Info)
+{
+	m_File = pStorage->OpenFile(pFilename, IOFLAG_READ);
+	if(!m_File)
+		return false;
+	
+	// read the header
+	CDemoHeader Header;
+	io_read(m_File, &Header, sizeof(Header));
+	if(mem_comp(Header.m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) != 0)
+	{
+		io_close(m_File);
+		m_File = 0;
+		return false;
+	}
+	
+	// get demo map name
+	str_copy(Info->m_aMap, Header.m_aMap, sizeof(Info->m_aMap));
+	
+	// skip the map data
+	if(Header.m_Version >= gs_VersionWithMap)
+	{
+		unsigned char aBufMapSize[4];
+		io_read(m_File, &aBufMapSize, sizeof(aBufMapSize));
+		int MapSize = (aBufMapSize[0]<<24) | (aBufMapSize[1]<<16) | (aBufMapSize[2]<<8) | (aBufMapSize[3]);
+		io_skip(m_File, MapSize);
+	}
+	
+	// get demo length
+	int FirstTick = -1;
+	int LastTick = -1;
+	int ChunkSize, ChunkType, ChunkTick = 0;
+	while(1)
+	{
+		if(ReadChunkHeader(&ChunkType, &ChunkSize, &ChunkTick))
+			break;
+		if(ChunkType&CHUNKTYPEFLAG_TICKMARKER)
+		{
+			if(FirstTick == -1)
+				FirstTick = ChunkTick;
+			LastTick = ChunkTick;
+		}
+		else if(ChunkSize)
+			io_skip(m_File, ChunkSize);
+	}
+	Info->m_Length = (LastTick-FirstTick);
+	
+	io_close(m_File);
+	m_File = 0;
+	
+	return true;
+}

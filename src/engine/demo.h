@@ -17,6 +17,13 @@ public:
 		int m_CurrentTick;
 		int m_LastTick;
 	};
+	
+	class CDemoInfo
+	{
+	public:
+		char m_aMap[64];
+		int m_Length;
+	};
 
 	~IDemoPlayer() {}
 	virtual void SetSpeed(float Speed) = 0;
@@ -25,6 +32,7 @@ public:
 	virtual void Unpause() = 0;
 	virtual const CInfo *BaseInfo() const = 0;
 	virtual char *GetDemoName() = 0;
+	virtual bool DemoInfo(class IStorage *pStorage, const char *pFilename, CDemoInfo *Info) = 0;
 };
 
 class IDemoRecorder : public IInterface

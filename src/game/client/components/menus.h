@@ -158,6 +158,7 @@ class CMenus : public CComponent
 	{
 		char m_aFilename[512];
 		char m_aName[256];
+		char m_aInfo[128];
 		
 		bool operator<(const CDemoItem &Other) { return str_comp(m_aName, Other.m_aName) < 0; } 
 	};

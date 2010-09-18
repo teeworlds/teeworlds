@@ -112,6 +112,7 @@ public:
 	int SetPos(float Precent);
 	const CInfo *BaseInfo() const { return &m_Info.m_Info; }
 	char *GetDemoName();
+	bool DemoInfo(class IStorage *pStorage, const char *pFilename, CDemoInfo *Info);
 	
 	int Update();
 	

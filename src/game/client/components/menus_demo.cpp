@@ -418,6 +418,7 @@ void CMenus::DemolistFetchCallback(const char *pName, int IsDir, void *pUser)
 	CDemoItem Item;
 	str_format(Item.m_aFilename, sizeof(Item.m_aFilename), "%s/%s/%s", pSelf->Client()->UserDirectory(), pSelf->m_aCurrentDemoFolder, pName);
 	str_copy(Item.m_aName, pName, sizeof(Item.m_aName));
+	Item.m_aInfo[0] = 0;
 	pSelf->m_lDemos.add(Item);
 }
 
@@ -468,6 +469,32 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		m_DemolistDelEntry = false;
 	}
 	
+	char aFooterLabel[128] = "";
+	if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size())
+	{
+		if(m_lDemos[s_SelectedItem].m_aInfo[0] == 0)
+		{
+			if(str_comp(m_lDemos[s_SelectedItem].m_aName, "..") == 0)
+				str_copy(m_lDemos[s_SelectedItem].m_aInfo, "Parent Folder", sizeof(m_lDemos[s_SelectedItem].m_aInfo));
+			else if(IsDir)
+				str_copy(m_lDemos[s_SelectedItem].m_aInfo, "Folder", sizeof(m_lDemos[s_SelectedItem].m_aInfo));
+			else
+			{
+				IDemoPlayer::CDemoInfo Info;
+				bool Valid = DemoPlayer()->DemoInfo(Storage(), m_lDemos[s_SelectedItem].m_aFilename, &Info);
+				if(Valid)
+				{
+					int Minutes = Info.m_Length/Client()->GameTickSpeed()/60;
+					int Seconds = Info.m_Length/Client()->GameTickSpeed()%60;
+					str_format(m_lDemos[s_SelectedItem].m_aInfo, sizeof(m_lDemos[s_SelectedItem].m_aInfo), "Map : %s. Length : %d:%02d.", Info.m_aMap, Minutes, Seconds);
+				}
+				else
+					str_copy(m_lDemos[s_SelectedItem].m_aInfo, "Invalid Demo", sizeof(m_lDemos[s_SelectedItem].m_aInfo));
+			}
+		}
+		str_copy(aFooterLabel, m_lDemos[s_SelectedItem].m_aInfo, sizeof(aFooterLabel));
+	}
+	
 	// render background
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
 	MainView.Margin(10.0f, &MainView);
@@ -479,7 +506,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	static int s_DemoListId = 0;
 	static float s_ScrollValue = 0;
 	
-	UiDoListboxStart(&s_DemoListId, &MainView, 17.0f, Localize("Demos"), "", m_lDemos.size(), 1, s_SelectedItem, s_ScrollValue);
+	UiDoListboxStart(&s_DemoListId, &MainView, 17.0f, Localize("Demos"), aFooterLabel, m_lDemos.size(), 1, s_SelectedItem, s_ScrollValue);
 	//for(int i = 0; i < num_demos; i++)
 	for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
 	{
