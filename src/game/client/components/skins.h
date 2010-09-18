@@ -1,6 +1,7 @@
 #ifndef GAME_CLIENT_COMPONENTS_SKINS_H
 #define GAME_CLIENT_COMPONENTS_SKINS_H
 #include <base/vmath.h>
+#include <base/tl/array.h>
 #include <game/client/component.h>
 
 class CSkins : public CComponent
@@ -11,12 +12,9 @@ public:
 	{
 		int m_OrgTexture;
 		int m_ColorTexture;
-		char m_aName[31];
-		char m_aTerm[1];
+		char m_aName[32];
 		vec3 m_BloodColor;
-	} ;
-
-	CSkins();
+	};
 	
 	void Init();
 	
@@ -26,13 +24,7 @@ public:
 	int Find(const char *pName);
 	
 private:
-	enum
-	{
-		MAX_SKINS=256,
-	};
-
-	CSkin m_aSkins[MAX_SKINS];
-	int m_NumSkins;
+	array<CSkin> m_aSkins;
 
 	static void SkinScan(const char *pName, int IsDir, void *pUser);
 };

@@ -10,16 +10,11 @@
 
 #include "skins.h"
 
-CSkins::CSkins()
-{
-	m_NumSkins = 0;
-}
-
 void CSkins::SkinScan(const char *pName, int IsDir, void *pUser)
 {
 	CSkins *pSelf = (CSkins *)pUser;
 	int l = str_length(pName);
-	if(l < 4 || IsDir || pSelf->m_NumSkins == MAX_SKINS)
+	if(l < 4 || IsDir)
 		return;
 	if(str_comp(pName+l-4, ".png") != 0)
 		return;
@@ -34,7 +29,8 @@ void CSkins::SkinScan(const char *pName, int IsDir, void *pUser)
 		return;
 	}
 	
-	pSelf->m_aSkins[pSelf->m_NumSkins].m_OrgTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+	CSkin Skin;
+	Skin.m_OrgTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 	
 	int BodySize = 96; // body size
 	unsigned char *d = (unsigned char *)Info.m_pData;
@@ -54,7 +50,7 @@ void CSkins::SkinScan(const char *pName, int IsDir, void *pUser)
 				}
 			}
 			
-		pSelf->m_aSkins[pSelf->m_NumSkins].m_BloodColor = normalize(vec3(aColors[0], aColors[1], aColors[2]));
+		Skin.m_BloodColor = normalize(vec3(aColors[0], aColors[1], aColors[2]));
 	}
 	
 	// create colorless version
@@ -107,37 +103,37 @@ void CSkins::SkinScan(const char *pName, int IsDir, void *pUser)
 			}
 	}
 	
-	pSelf->m_aSkins[pSelf->m_NumSkins].m_ColorTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+	Skin.m_ColorTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 	mem_free(Info.m_pData);
 
 	// set skin data	
-	str_copy(pSelf->m_aSkins[pSelf->m_NumSkins].m_aName, pName, min((int)sizeof(pSelf->m_aSkins[pSelf->m_NumSkins].m_aName),l-3));
-	str_format(aBuf, sizeof(aBuf), "load skin %s", pSelf->m_aSkins[pSelf->m_NumSkins].m_aName);
+	str_copy(Skin.m_aName, pName, min((int)sizeof(Skin.m_aName),l-3));
+	str_format(aBuf, sizeof(aBuf), "load skin %s", Skin.m_aName);
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
-	pSelf->m_NumSkins++;
+	pSelf->m_aSkins.add(Skin);
 }
 
 
 void CSkins::Init()
 {
 	// load skins
-	m_NumSkins = 0;
+	m_aSkins.clear();
 	Storage()->ListDirectory(IStorage::TYPE_ALL, "skins", SkinScan, this);
 }
 
 int CSkins::Num()
 {
-	return m_NumSkins;	
+	return m_aSkins.size();	
 }
 
 const CSkins::CSkin *CSkins::Get(int Index)
 {
-	return &m_aSkins[Index%m_NumSkins];
+	return &m_aSkins[Index%m_aSkins.size()];
 }
 
 int CSkins::Find(const char *pName)
 {
-	for(int i = 0; i < m_NumSkins; i++)
+	for(int i = 0; i < m_aSkins.size(); i++)
 	{
 		if(str_comp(m_aSkins[i].m_aName, pName) == 0)
 			return i;
