@@ -81,23 +81,6 @@ void CGameClient::CStack::Add(class CComponent *pComponent) { m_paComponents[m_N
 static int gs_LoadCurrent;
 static int gs_LoadTotal;
 
-/*static void load_sounds_thread(void *do_render)
-{
-	// load sounds
-	for(int s = 0; s < data->num_sounds; s++)
-	{
-		if(do_render)
-			gameclient.menus->render_loading(load_current/(float)load_total);
-		for(int i = 0; i < data->sounds[s].num_sounds; i++)
-		{
-			int id = Sound()->LoadWV(data->sounds[s].sounds[i].filename);
-			data->sounds[s].sounds[i].id = id;
-		}
-
-		if(do_render)
-			load_current++;
-	}
-}*/
 
 #include <base/tl/sorted_array.h>
 

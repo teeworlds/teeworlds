@@ -371,7 +371,6 @@ int CEditor::Load(const char *pFileName)
 int CEditorMap::Load(class IStorage *pStorage, const char *pFileName)
 {
 	CDataFileReader DataFile;
-	//DATAFILE *df = datafile_load(filename);
 	if(!DataFile.Open(pStorage, pFileName))
 		return 0;
 		
@@ -389,8 +388,6 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName)
 	}
 	else if(pItem->m_Version == 1)
 	{
-		//editor.reset(false);
-		
 		// load images
 		{
 			int Start, Num;

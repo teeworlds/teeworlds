@@ -72,9 +72,6 @@ void CScoreboard::RenderGoals(float x, float y, float w)
 			char aBuf[64];
 			str_format(aBuf, sizeof(aBuf), "%s %d/%d", Localize("Round"), m_pClient->m_Snap.m_pGameobj->m_RoundCurrent, m_pClient->m_Snap.m_pGameobj->m_RoundNum);
 			TextRender()->Text(0, x+450.0f, y, 22.0f, aBuf, -1);
-			
-		/*[48c3fd4c][game/scoreboard]: timelimit x:219.428558
-		[48c3fd4c][game/scoreboard]: round x:453.142822*/
 		}
 	}
 }

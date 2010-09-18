@@ -2476,10 +2476,6 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 			{
 				ToolBar.VSplitLeft(15.0f, &Button, &ToolBar);
 
-				/*if(i == 0) draw_func = draw_editor_button_l;
-				else if(i == envelope->channels-1) draw_func = draw_editor_button_r;
-				else draw_func = draw_editor_button_m;*/
-
 				if(DoButton_Editor(&s_aChannelButtons[i], s_paNames[pEnvelope->m_Channels-3][i], s_ActiveChannels&Bit, &Button, 0, paDescriptions[pEnvelope->m_Channels-3][i]))
 					s_ActiveChannels ^= Bit;
 			}
@@ -2952,10 +2948,6 @@ void CEditor::Reset(bool CreateDefault)
 	// create default layers
 	if(CreateDefault)
 		m_Map.CreateDefault(ms_EntitiesTexture);
-
-	/*
-	{
-	}*/
 
 	m_SelectedLayer = 0;
 	m_SelectedGroup = 0;

@@ -388,7 +388,6 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 			UI()->DoLabel(&Label, Localize("Mouse sens."), 14.0f, -1);
 			Button.HMargin(2.0f, &Button);
 			g_Config.m_InpMousesens = (int)(DoScrollbarH(&g_Config.m_InpMousesens, &Button, (g_Config.m_InpMousesens-5)/500.0f)*500.0f)+5;
-			//*key.key = ui_do_key_reader(key.key, &Button, *key.key);
 			MovementSettings.HSplitTop(20.0f, 0, &MovementSettings);
 		}
 
