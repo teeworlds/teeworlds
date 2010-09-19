@@ -181,15 +181,17 @@ public:
 
 	/*int m_CurrentTile;
 	int m_CurrentFTile;*/
-	int m_Stopped;
-	int m_StoppedIndex;
-	enum
-	{
-		STOPPED_LEFT=1,
-		STOPPED_RIGHT=2,
-		STOPPED_BOTTOM=4,
-		STOPPED_TOP=8
-	};
+	int m_TileIndex;
+	int m_TileFIndex;
+	int m_TileIndexL;
+	int m_TileFIndexL;
+	int m_TileIndexR;
+	int m_TileFIndexR;
+	int m_TileIndexT;
+	int m_TileFIndexT;
+	int m_TileIndexB;
+	int m_TileFIndexB;
+
 	vec2 m_Intersection;
 	bool m_EyeEmote;
 	// info for dead reckoning
