@@ -10,6 +10,7 @@
 
 CCamera::CCamera()
 {
+	m_WasSpectator = false;
 	m_Zoom = 1.0f;
 	m_ZoomBind = 1;
 }
@@ -56,6 +57,12 @@ void CCamera::OnRender()
 	// update camera center		
 	if(m_pClient->m_Snap.m_Spectate)
 	{
+		if(!m_WasSpectator)
+		{
+			m_pClient->m_pControls->ClampMousePos();
+			m_WasSpectator = true;
+		}
+		
 		if(m_pClient->m_Freeview)
 			m_Center = m_pClient->m_pControls->m_MousePos;
 		else
@@ -63,7 +70,11 @@ void CCamera::OnRender()
 	}
 	else
 	{
-
+		if(m_WasSpectator)
+		{
+			m_pClient->m_pControls->ClampMousePos();
+			m_WasSpectator = false;
+		}
 		float l = length(m_pClient->m_pControls->m_MousePos);
 		float DeadZone = g_Config.m_ClMouseDeadzone;
 		float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
