@@ -2252,7 +2252,8 @@ void CEditor::RenderFileDialog()
 	// the buttons
 	static int s_OkButton = 0;
 	static int s_CancelButton = 0;
-
+	static int s_ToggleFolderButton = 0;
+	
 	CUIRect Button;
 	ButtonBar.VSplitRight(50.0f, &ButtonBar, &Button);
 	if(DoButton_Editor(&s_OkButton, m_pFileDialogButtonText, 0, &Button, 0, 0) || Input()->KeyPressed(KEY_RETURN))
@@ -2265,12 +2266,30 @@ void CEditor::RenderFileDialog()
 	ButtonBar.VSplitRight(50.0f, &ButtonBar, &Button);
 	if(DoButton_Editor(&s_CancelButton, Localize("Cancel"), 0, &Button, 0, 0) || Input()->KeyPressed(KEY_ESCAPE))
 		m_Dialog = DIALOG_NONE;
+	
+	char aFolder[32];
+	if(str_comp_num(m_aFileDialogPath, "maps", str_length("maps")) == 0)
+		str_copy(aFolder, Localize("Downloaded Maps"), sizeof(aFolder));
+	else
+		str_copy(aFolder, Localize("Maps"), sizeof(aFolder));
+	
+	ButtonBar.VSplitLeft(120.0f, &ButtonBar, &Button);
+	ButtonBar.VSplitRight(120.0f, &ButtonBar, &Button);
+	if(DoButton_Editor(&s_ToggleFolderButton, aFolder, 0, &Button, 0, 0))
+	{
+		if(str_comp_num(m_aFileDialogPath, "maps", str_length("maps")) == 0)
+			str_copy(m_aFileDialogPath, "downloadedmaps", sizeof(m_aFileDialogPath));
+		else
+			str_copy(m_aFileDialogPath, "maps", sizeof(m_aFileDialogPath));
+		m_aFileDialogFileName[0] = 0;
+		FilelistPopulate();
+	}
 }
 
 void CEditor::FilelistPopulate()
 {
 	m_FileList.clear();
-	if(str_comp(m_aFileDialogPath, "maps") != 0 && str_comp(m_aFileDialogPath, "mapres") != 0)
+	if(str_comp(m_aFileDialogPath, "maps") != 0 && str_comp(m_aFileDialogPath, "downloadedmaps") != 0 && str_comp(m_aFileDialogPath, "mapres") != 0)
 		m_FileList.add(string(".."));
 	Storage()->ListDirectory(m_FileDialogDirTypes, m_aFileDialogPath, EditorListdirCallback, this);
 }
