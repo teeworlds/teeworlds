@@ -199,6 +199,13 @@ bool CControls::OnMouseMove(float x, float y)
 		return false;
 	m_MousePos += vec2(x, y); // TODO: ugly
 
+	ClampMousePos();
+
+	return true;
+}
+
+void CControls::ClampMousePos()
+{
 	//
 	float CameraMaxDistance = 200.0f;
 	float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
@@ -230,6 +237,4 @@ bool CControls::OnMouseMove(float x, float y)
 		//if(l > 0.0001f) // make sure that this isn't 0
 			//camera_offset = normalize(mouse_pos)*offset_amount;
 	}
-	
-	return true;
 }
