@@ -184,8 +184,6 @@ public:
 	void CreateSound(vec2 Pos, int Sound, int Mask=-1);
 	void CreateSoundGlobal(int Sound, int Target=-1);	
 
-	bool ClientLeave(int ClientId);
-	bool ClientEnter(int ClientId);
 	struct ReconnectInfo
 	{
 		struct PlayerInfo {
