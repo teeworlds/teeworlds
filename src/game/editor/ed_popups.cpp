@@ -302,8 +302,40 @@ int CEditor::PopupQuad(CEditor *pEditor, CUIRect View)
 		return 1;
 	}
 
-	// square button
 	View.HSplitBottom(10.0f, &View, &Button);
+
+	// aspect ratio button
+	CLayerQuads *pLayer = (CLayerQuads *)pEditor->GetSelectedLayerType(0, LAYERTYPE_QUADS);
+	if(pLayer && pLayer->m_Image >= 0 && pLayer->m_Image < pEditor->m_Map.m_lImages.size())
+	{
+		View.HSplitBottom(12.0f, &View, &Button);
+		static int s_AspectRatioButton = 0;
+		if(pEditor->DoButton_Editor(&s_AspectRatioButton, Localize("Aspect ratio"), 0, &Button, 0, Localize("Resizes the current Quad based on the aspect ratio of the image")))
+		{
+			int Top = pQuad->m_aPoints[0].y;
+			int Left = pQuad->m_aPoints[0].x;
+			int Right = pQuad->m_aPoints[0].x;
+
+			for(int k = 1; k < 4; k++)
+			{
+				if(pQuad->m_aPoints[k].y < Top) Top = pQuad->m_aPoints[k].y;
+				if(pQuad->m_aPoints[k].x < Left) Left = pQuad->m_aPoints[k].x;
+				if(pQuad->m_aPoints[k].x > Right) Right = pQuad->m_aPoints[k].x;
+			}
+
+			int Height = (Right-Left)*pEditor->m_Map.m_lImages[pLayer->m_Image]->m_Height/pEditor->m_Map.m_lImages[pLayer->m_Image]->m_Width;
+			
+			pQuad->m_aPoints[0].x = Left; pQuad->m_aPoints[0].y = Top;
+			pQuad->m_aPoints[1].x = Right; pQuad->m_aPoints[1].y = Top;
+			pQuad->m_aPoints[2].x = Left; pQuad->m_aPoints[2].y = Top+Height;
+			pQuad->m_aPoints[3].x = Right; pQuad->m_aPoints[3].y = Top+Height;
+			return 1;
+		}
+		View.HSplitBottom(6.0f, &View, &Button);
+		
+	}
+
+	// square button
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_Button = 0;
 	if(pEditor->DoButton_Editor(&s_Button, Localize("Square"), 0, &Button, 0, Localize("Squares the current quad")))
