@@ -106,7 +106,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 			{
 				static float PrevAmount = 0.0f;
 				float Amount = (UI()->MouseX()-SeekBar.x)/(float)SeekBar.w;
-				if(Amount > 0 && Amount < 1.0f && PrevAmount != Amount)
+				if(Amount > 0.0f && Amount < 1.0f && absolute(PrevAmount-Amount) >= 0.01f)
 				{
 					PrevAmount = Amount;
 					m_pClient->OnReset();
@@ -529,7 +529,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		{
 			if(str_comp(m_lDemos[s_SelectedItem].m_aName, "..") == 0) //parent folder
 			{
-				DemoSetParentDirectory();
+				fs_parent_dir(m_aCurrentDemoFolder);
 				DemolistPopulate();
 				s_SelectedItem = m_lDemos.size() > 0 ? 0 : -1;
 			}
@@ -566,22 +566,5 @@ void CMenus::RenderDemoList(CUIRect MainView)
 				m_Popup = POPUP_DELETE_DEMO;
 			}
 		}
-	}
-}
-
-void CMenus::DemoSetParentDirectory()
-{
-	int Stop = 0;
-	for(int i = 0; i < 256; i++)
-	{
-		if(m_aCurrentDemoFolder[i] == '/')
-			Stop = i;
-	}
-	
-	//keeps chars which are before the last '/' and remove chars which are after
-	for(int i = 0; i < 256; i++)
-	{
-		if(i >= Stop)
-			m_aCurrentDemoFolder[i] = '\0';
 	}
 }

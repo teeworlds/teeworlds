@@ -17,6 +17,7 @@ class CCamera : public CComponent
 public:
 	vec2 m_Center;
 	float m_Zoom;
+	bool m_WasSpectator;
 	bool m_Free;
 	int m_Follow;
 

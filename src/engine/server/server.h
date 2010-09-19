@@ -97,6 +97,7 @@ public:
 		char m_aClan[MAX_CLANNAME_LENGTH];
 		int m_Score;
 		int m_Authed;
+		int m_AuthTries;
 		
 		int m_Resistent;
 		

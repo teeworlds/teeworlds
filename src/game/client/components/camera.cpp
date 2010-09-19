@@ -29,6 +29,7 @@ void CCamera::ConCameraFree(IConsole::IResult *pResult, void *pUserData, int Cli
 
 CCamera::CCamera()
 {
+	m_WasSpectator = false;
 	m_Zoom = 1.0f;
 	m_Free = false;
 	m_Follow = -1;
@@ -54,6 +55,15 @@ void CCamera::OnRender()
 				float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
 				vec2 CameraOffset(0, 0);
 
+	// update camera center		
+	if(m_pClient->m_Snap.m_Spectate)
+	{
+		if(!m_WasSpectator)
+		{
+			m_pClient->m_pControls->ClampMousePos();
+			m_WasSpectator = true;
+		}
+		m_Center = m_pClient->m_pControls->m_MousePos;
 				float OffsetAmount = max(l-DeadZone, 0.0f) * FollowFactor;
 				if(l > 0.0001f) // make sure that this isn't 0
 					CameraOffset = normalize(m_pClient->m_pControls->m_MousePos)*OffsetAmount;
@@ -62,8 +72,14 @@ void CCamera::OnRender()
 			}
 		}
 	}
+	}
 	else
 	{
+		if(m_WasSpectator)
+		{
+			m_pClient->m_pControls->ClampMousePos();
+			m_WasSpectator = false;
+		}
 		float l = length(m_pClient->m_pControls->m_MousePos);
 		float DeadZone = g_Config.m_ClMouseDeadzone;
 		float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;

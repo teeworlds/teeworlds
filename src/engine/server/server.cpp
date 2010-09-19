@@ -552,6 +552,7 @@ int CServer::NewClientCallback(int ClientId, void *pUser)
 	pThis->m_aClients[ClientId].m_aName[0] = 0;
 	pThis->m_aClients[ClientId].m_aClan[0] = 0;
 	pThis->m_aClients[ClientId].m_Authed = 0;
+	pThis->m_aClients[ClientId].m_AuthTries = 0;
 	pThis->m_aClients[ClientId].m_PwTries = 0; // init pw tries
 	memset(&pThis->m_aClients[ClientId].m_Addr, 0, sizeof(NETADDR)); // init that too
 	pThis->m_aClients[ClientId].m_CmdTriesTimer= 0;
@@ -582,6 +583,7 @@ int CServer::DelClientCallback(int ClientId, const char *pReason, void *pUser)
 	pThis->m_aClients[ClientId].m_aName[0] = 0;
 	pThis->m_aClients[ClientId].m_aClan[0] = 0;
 	pThis->m_aClients[ClientId].m_Authed = 0;
+	pThis->m_aClients[ClientId].m_AuthTries = 0;
 	pThis->m_aClients[ClientId].m_PwTries = 0; // init pw tries
 	memset(&pThis->m_aClients[ClientId].m_Addr, 0, sizeof(NETADDR)); // init that too
 	pThis->m_aClients[ClientId].m_CmdTriesTimer= 0;
@@ -943,6 +945,23 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					{
 						SendRconLine(ClientId, "No rcon password set on server. Set sv_admin_pass/sv_mod_pass/sv_helper_pass to enable the remote console.");
 					}
+					else if(g_Config.m_SvRconMaxTries)
+					{
+						m_aClients[ClientId].m_AuthTries++;
+						char aBuf[128];
+						str_format(aBuf, sizeof(aBuf), "Wrong password %d/%d.", m_aClients[ClientId].m_AuthTries, g_Config.m_SvRconMaxTries);
+						SendRconLine(ClientId, aBuf);
+						if(m_aClients[ClientId].m_AuthTries >= g_Config.m_SvRconMaxTries)
+						{
+							if(!g_Config.m_SvRconBantime)
+								m_NetServer.Drop(ClientId, "Too many remote console authentication tries");
+							else
+							{
+								NETADDR Addr = m_NetServer.ClientAddr(ClientId);
+								BanAdd(Addr, g_Config.m_SvRconBantime*60,"Too many remote console authentication tries");
+							}
+						}
+					}
 					else
 					{
 						/*else if(str_comp(pPw, g_Config.m_SvRconPassword) == 0)
@@ -1103,7 +1122,7 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 	{
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
-			p.AddString(m_aClients[i].m_aName, 48);  // player name
+			p.AddString(ClientName(i), 48);  // player name
 			str_format(aBuf, sizeof(aBuf), "%d", m_aClients[i].m_Score); p.AddString(aBuf, 6);  // player score
 		}
 	}
@@ -1131,6 +1150,16 @@ void CServer::UpdateServerInfo()
 
 int CServer::BanAdd(NETADDR Addr, int Seconds, const char *Reason)
 {
+	Addr.port = 0;
+	char aAddrStr[128];
+	net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr));
+	char aBuf[256];
+	if(Seconds)
+		str_format(aBuf, sizeof(aBuf), "banned %s for %d minutes", aAddrStr, Seconds/60);
+	else
+		str_format(aBuf, sizeof(aBuf), "banned %s for life", aAddrStr);
+	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+
 	return m_NetServer.BanAdd(Addr, Seconds, Reason);
 }
 
