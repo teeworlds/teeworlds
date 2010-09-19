@@ -2148,9 +2148,6 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 
 static void EditorListdirCallback(const char *pName, int IsDir, void *pUser)
 {
-	if(pName[0] == '.' && pName[1] == 0)
-		return;
-
 	CEditor *pEditor = (CEditor*)pUser;
 	pEditor->m_FileList.add(string(pName));
 }

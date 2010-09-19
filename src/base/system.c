@@ -893,7 +893,10 @@ int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, void *user)
 		return 0;
 		
 	while((entry = readdir(d)) != NULL)
-		cb(entry->d_name, 0, user);
+	{
+		if(entry->d_name[0] != '.')
+			cb(entry->d_name, 0, user);
+	}
 
 	/* close the directory and return */
 	closedir(d);

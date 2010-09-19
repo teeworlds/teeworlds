@@ -410,9 +410,6 @@ int CMenus::UiDoListboxEnd(float *pScrollValue, bool *pItemActivated)
 
 void CMenus::DemolistFetchCallback(const char *pName, int IsDir, void *pUser)
 {
-	if(pName[0] == '.')
-		return;
-	
 	CMenus *pSelf = (CMenus *)pUser;
 	
 	CDemoItem Item;
