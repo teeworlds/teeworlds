@@ -919,7 +919,7 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 	{
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
-			p.AddString(m_aClients[i].m_aName, 48);  // player name
+			p.AddString(ClientName(i), 48);  // player name
 			str_format(aBuf, sizeof(aBuf), "%d", m_aClients[i].m_Score); p.AddString(aBuf, 6);  // player score
 		}
 	}
