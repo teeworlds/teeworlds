@@ -553,7 +553,6 @@ int CServer::NewClientCallback(int ClientId, void *pUser)
 	pThis->m_aClients[ClientId].m_aClan[0] = 0;
 	pThis->m_aClients[ClientId].m_Authed = 0;
 	pThis->m_aClients[ClientId].m_AuthTries = 0;
-	pThis->m_aClients[ClientId].m_PwTries = 0; // init pw tries
 	memset(&pThis->m_aClients[ClientId].m_Addr, 0, sizeof(NETADDR)); // init that too
 	pThis->m_aClients[ClientId].m_CmdTriesTimer= 0;
 	pThis->m_aClients[ClientId].m_CmdTries = 0; //Floff init cmd tries
@@ -584,7 +583,6 @@ int CServer::DelClientCallback(int ClientId, const char *pReason, void *pUser)
 	pThis->m_aClients[ClientId].m_aClan[0] = 0;
 	pThis->m_aClients[ClientId].m_Authed = 0;
 	pThis->m_aClients[ClientId].m_AuthTries = 0;
-	pThis->m_aClients[ClientId].m_PwTries = 0; // init pw tries
 	memset(&pThis->m_aClients[ClientId].m_Addr, 0, sizeof(NETADDR)); // init that too
 	pThis->m_aClients[ClientId].m_CmdTriesTimer= 0;
 	pThis->m_aClients[ClientId].m_CmdTries = 0; //Floff init cmd tries
@@ -999,16 +997,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 							str_format(buf,sizeof(buf),buf,ClientId,level);
 							SendRconLine(ClientId, buf);
 							dbg_msg("server", "'%s' ClientId=%d authed with Level=%d", ClientName(ClientId), ClientId, level);
-							m_aClients[ClientId].m_PwTries = 0;
-						}
-						else
-						{
-							SendRconLine(ClientId, "Wrong password.");
-							if(++m_aClients[ClientId].m_PwTries > g_Config.m_SvRconTries)
-							{ // rcon Kottizen LemonFace
-								BanAdd(m_NetServer.ClientAddr(ClientId), g_Config.m_SvRconTriesBantime, "exceeding rcon password tries, Bye"); // bye
-								dbg_msg("server", "'%s' ClientId=%d banned, wrong rcon pw", ClientName(ClientId), ClientId);
-							}
 						}
 					}
 				}
