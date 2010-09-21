@@ -1,4 +1,5 @@
 #include <engine/sound.h>
+#include <engine/shared/config.h>
 #include <game/generated/client_data.h>
 #include <game/client/gameclient.h>
 #include <game/client/components/camera.h>
@@ -52,7 +53,7 @@ void CSounds::ClearQueue()
 void CSounds::Enqueue(int SetId)
 {
 	// add sound to the queue
-	if(m_QueuePos < QUEUE_SIZE)
+	if(!g_Config.m_ClEditor && m_QueuePos < QUEUE_SIZE)
 		m_aQueue[m_QueuePos++] = SetId;
 }
 
