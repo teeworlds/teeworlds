@@ -360,10 +360,10 @@ function OptCCompiler(name, default_driver, default_c, default_cxx, desc)
 			-- no need todo anything if we have a driver
 			-- TODO: test if we can find the compiler
 		else
-			if ExecuteSilent("g++ -v") == 0 then
-				option.driver = "gcc"
-			elseif ExecuteSilent("cl") == 0 then
+			if ExecuteSilent("cl") == 0 then
 				option.driver = "cl"
+			elseif ExecuteSilent("g++ -v") == 0 then
+				option.driver = "gcc"
 			else
 				error("no c/c++ compiler found")
 			end
