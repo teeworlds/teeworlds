@@ -1,5 +1,6 @@
 #include <new>
 #include <stdio.h>
+#include <string.h>
 #include <base/math.h>
 #include <engine/shared/config.h>
 #include <engine/server/server.h>
