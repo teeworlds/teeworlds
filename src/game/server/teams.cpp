@@ -10,7 +10,7 @@ CGameTeams::CGameTeams(CGameContext *pGameContext) : m_pGameContext(pGameContext
 
 void CGameTeams::OnCharacterStart(int id) {
 	int Tick = Server()->Tick();
-	if(m_Core.Team(id) == 0) {
+	if(m_Core.Team(id) == TEAM_FLOCK || m_Core.Team(id) == TEAM_SUPER) {
 		CCharacter* Char = Character(id);
 		Char->m_RaceState = RACE_STARTED;
 		Char->m_StartTime = Tick;
@@ -20,7 +20,7 @@ void CGameTeams::OnCharacterStart(int id) {
 			ChangeTeamState(m_Core.Team(id), STARTED);
 			
 			for(int i = 0; i < MAX_CLIENTS; ++i) {
-				if(m_Core.SameTeam(i, id)) {
+				if(m_Core.Team(id) == m_Core.Team(i)) {
 					CCharacter* Char = Character(i);
 
 					Char->m_RaceState = RACE_STARTED;
@@ -33,14 +33,14 @@ void CGameTeams::OnCharacterStart(int id) {
 }
 
 void CGameTeams::OnCharacterFinish(int id) {
-	if(m_Core.Team(id) == 0) {
+	if(m_Core.Team(id) == TEAM_FLOCK || m_Core.Team(id) == TEAM_SUPER) {
 		Character(id)->OnFinish();
 	} else {
 		m_TeeFinished[id] = true;
 		if(TeamFinished(m_Core.Team(id))) {
 			ChangeTeamState(m_Core.Team(id), FINISHED);//TODO: Make it better
 			for(int i = 0; i < MAX_CLIENTS; ++i) {
-				if(m_Core.SameTeam(i, id)) {
+				if(m_Core.Team(id) == m_Core.Team(i)) {
 					CCharacter * Char = Character(i);
 					if(Char != 0) {
 						Char->OnFinish();
@@ -56,24 +56,35 @@ void CGameTeams::OnCharacterFinish(int id) {
 }
 
 bool CGameTeams::SetCharacterTeam(int id, int Team) {
-	//TODO: Send error message 
-	if(id < 0 || id >= MAX_CLIENTS || Team < 0 || Team >= MAX_CLIENTS) {
+	//Check on wrong parameters. +1 for TEAM_SUPER
+	if(id < 0 || id >= MAX_CLIENTS || Team < 0 || Team >= MAX_CLIENTS + 1) {
 		return false;
 	}
-	if(m_TeamState[Team] >= CLOSED) {
+	//You can join to TEAM_SUPER at any time, but any other group you cannot if it started
+	if(Team != TEAM_SUPER && m_TeamState[Team] >= CLOSED) {
 		return false;
 	}
+	//No need to switch team if you there
+	if(m_Core.Team(id) == Team) {
+		return false;
+	}
+	//You cannot be in TEAM_SUPER if you not super
+	if(Team == TEAM_SUPER && !Character(id)->m_Super) return false;
+	//if you begin race
 	if(Character(id)->m_RaceState != RACE_NONE) {
-		if(Team == 0 && m_Core.Team(id) != 0) {
+		//you will be killed if you try to join FLOCK
+		if(Team == TEAM_FLOCK && m_Core.Team(id) != TEAM_FLOCK) {
 			Character(id)->GetPlayer()->KillCharacter(WEAPON_GAME);
 		} else {
-			return false;
+			if(Team != TEAM_SUPER) {
+				return false;
+			}
 		}
 	}
-	if(m_Core.Team(id) != 0 && m_TeamState[m_Core.Team(id)] != EMPTY) {
+	if(m_Core.Team(id) != TEAM_FLOCK && m_Core.Team(id) != TEAM_SUPER && m_TeamState[m_Core.Team(id)] != EMPTY) {
 		bool NoOneInOldTeam = true;
 		for(int i = 0; i < MAX_CLIENTS; ++i) {
-			if(i != id && m_Core.SameTeam(i, id)) {
+			if(i != id && m_Core.Team(id) == m_Core.Team(i)) {
 				NoOneInOldTeam = false;//all good exists someone in old team
 				break;
 			} 
@@ -83,9 +94,12 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 		}
 	}
 	m_Core.Team(id, Team);
-	if(m_TeamState[Team] == EMPTY) {
+	if(Team != TEAM_SUPER && m_TeamState[Team] == EMPTY) {
 		ChangeTeamState(Team, OPEN);
 	}
+	char aBuf[512];
+	str_format(aBuf, sizeof(aBuf), "Id = %d Team = %d", id, Team);
+	dbg_msg("Teams", aBuf);
 	//GameServer()->CreatePlayerSpawn(Character(id)->m_Core.m_Pos, TeamMask());
 	if(Character(id)->GetPlayer()->m_IsUsingRaceClient)
 	{
@@ -93,9 +107,7 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 		Msg.m_Team = Team;
 		Msg.m_Cid = id;
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
-		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf), "Id = %d Team = %d", id, Team);
-		dbg_msg("Teams", aBuf);
+		//dbg_msg("Teams", "Sended all");
 	}
 	return true;
 }
@@ -116,11 +128,14 @@ bool CGameTeams::TeamFinished(int Team) {
 }
 
 int CGameTeams::TeamMask(int Team) {
+	if(Team == TEAM_SUPER) return -1;
 	int Mask = 0;
 	for(int i = 0; i < MAX_CLIENTS; ++i) {
-		if(m_Core.Team(i) == Team || (Character(i) 
+		if(m_Core.Team(i) == Team 
+			|| (Character(i) 
 				&& Character(i)->GetPlayer() 
-				&& Character(i)->GetPlayer()->m_ShowOthers)) {
+				&& Character(i)->GetPlayer()->m_ShowOthers)
+			|| m_Core.Team(i) == TEAM_SUPER) {
 			Mask |= 1 << i;
 		}
 	}

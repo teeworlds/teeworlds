@@ -76,7 +76,7 @@ public:
 		Returns:
 			Returns a pointer to the closest hit or NULL of there is no intersection.
 	*/
-	class CCharacter *IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2 &NewPos, class CEntity *pNotThis = 0);
+	class CCharacter *IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2 &NewPos, class CCharacter *pNotThis = 0, int CollideWith = -1);
 	
 	/*
 		Function: closest_CCharacter

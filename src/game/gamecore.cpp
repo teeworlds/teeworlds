@@ -223,7 +223,7 @@ void CCharacterCore::Tick(bool UseInput)
 				CCharacterCore *p = m_pWorld->m_apCharacters[i];
 				
 				
-				if(!p || p == this || !m_pTeams->SameTeam(i, m_Id))
+				if(!p || p == this || !m_pTeams->CanCollide(i, m_Id))
 					continue;
 				//char aBuf[512];
 				//str_format(aBuf, sizeof(aBuf), "ThisId = %d Id = %d TheSameTeam? = %d", ThisId, i, m_pTeams->SameTeam(i, ThisId));
@@ -327,7 +327,7 @@ void CCharacterCore::Tick(bool UseInput)
 				continue;
 			
 			//player *p = (player*)ent;
-			if(p == this || (m_Id != -1 && !m_pTeams->SameTeam(m_Id, i))) { // || !(p->flags&FLAG_ALIVE)
+			if(p == this || (m_Id != -1 && !m_pTeams->CanCollide(m_Id, i))) { // || !(p->flags&FLAG_ALIVE)
 				continue; // make sure that we don't nudge our self
 			}
 			// handle player <-> player collision
@@ -424,4 +424,3 @@ void CCharacterCore::Quantize()
 	Write(&Core);
 	Read(&Core);
 }
-

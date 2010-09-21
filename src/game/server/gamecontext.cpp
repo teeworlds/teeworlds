@@ -149,7 +149,7 @@ void CGameContext::CreateExplosion(vec2 P, int Owner, int Weapon, bool NoDamage,
 			if((int)Dmg)
 				if((g_Config.m_SvHit||NoDamage) || Owner == apEnts[i]->m_pPlayer->GetCID())
 				{
-					if(Owner != -1 && apEnts[i]->m_Alive && apEnts[i]->Team() != GetPlayerChar(Owner)->Team()) continue;
+					if(Owner != -1 && apEnts[i]->m_Alive && !apEnts[i]->CanCollide(Owner)) continue;
 					apEnts[i]->TakeDamage(ForceDir*Dmg*2, (int)Dmg, Owner, Weapon);
 					if(!g_Config.m_SvHit||NoDamage) break;
 				}
@@ -1055,6 +1055,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	{
 		pPlayer->m_IsUsingRaceClient = true;
 		pPlayer->m_ShowOthers = true;
+		pPlayer->m_ShowOthers = true;
+		((CGameControllerDDRace*)m_pController)->m_Teams.SendAllInfo(pPlayer->GetCID());
 		// send time of all players
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
@@ -1859,6 +1861,7 @@ void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int Cli
 		{
 			chr->m_Super = true;
 			chr->UnFreeze();
+			chr->Teams()->SetCharacterTeam(Victim, TEAM_SUPER);
 			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
 		}
@@ -1891,6 +1894,7 @@ void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int C
 		{
 			chr->m_Super = true;
 			chr->UnFreeze();
+			chr->Teams()->SetCharacterTeam(ClientId, TEAM_SUPER);
 			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
 		}
