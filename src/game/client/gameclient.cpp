@@ -253,7 +253,7 @@ void CGameClient::OnInit()
 	// load textures
 	for(int i = 0; i < g_pData->m_NumImages; i++)
 	{
-		g_GameClient.m_pMenus->RenderLoading(gs_LoadCurrent/gs_LoadTotal);
+		g_GameClient.m_pMenus->RenderLoading(gs_LoadCurrent/(float)gs_LoadTotal);
 		g_pData->m_aImages[i].m_Id = Graphics()->LoadTexture(g_pData->m_aImages[i].m_pFilename, CImageInfo::FORMAT_AUTO, 0);
 		gs_LoadCurrent++;
 	}
