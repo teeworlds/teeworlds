@@ -22,11 +22,10 @@ CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEner
 bool CLaser::HitCharacter(vec2 From, vec2 To)
 {
 	vec2 At;
-	CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);//TODO: Find all and get closest non in Team
-	CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, To, 0.f, At, m_Bounces != 0 ? 0: OwnerChar);
+	CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);
+	CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, To, 0.f, At, m_Bounces != 0 ? 0: OwnerChar, m_Owner);
 	if(!Hit)
 		return false;
-	if(OwnerChar != 0 && OwnerChar->Team() != Hit->Team()) return false;
 	m_From = From;
 	m_Pos = At;
 	m_Energy = -1;

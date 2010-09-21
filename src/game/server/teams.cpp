@@ -76,7 +76,9 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 		if(Team == TEAM_FLOCK && m_Core.Team(id) != TEAM_FLOCK) {
 			Character(id)->GetPlayer()->KillCharacter(WEAPON_GAME);
 		} else {
-			return false;
+			if(Team != TEAM_SUPER) {
+				return false;
+			}
 		}
 	}
 	if(m_Core.Team(id) != TEAM_FLOCK && m_Core.Team(id) != TEAM_SUPER && m_TeamState[m_Core.Team(id)] != EMPTY) {
@@ -133,7 +135,7 @@ int CGameTeams::TeamMask(int Team) {
 			|| (Character(i) 
 				&& Character(i)->GetPlayer() 
 				&& Character(i)->GetPlayer()->m_ShowOthers)
-			) {
+			|| m_Core.Team(i) == TEAM_SUPER) {
 			Mask |= 1 << i;
 		}
 	}

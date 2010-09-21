@@ -115,6 +115,14 @@ void CCharacter::SetWeapon(int W)
 		m_ActiveWeapon = 0;
 }
 
+bool CCharacter::CanCollide(int Cid) {
+	return Teams()->m_Core.CanCollide(GetPlayer()->GetCID(), Cid);
+}
+
+bool CCharacter::SameTeam(int Cid) {
+	return Teams()->m_Core.SameTeam(GetPlayer()->GetCID(), Cid);
+}
+
 bool CCharacter::IsGrounded()
 {
 	if(GameServer()->Collision()->CheckPoint(m_Pos.x+m_ProximityRadius/2, m_Pos.y+m_ProximityRadius/2+5))
@@ -314,7 +322,7 @@ void CCharacter::FireWeapon()
 				CCharacter *Target = aEnts[i];
 
 				//for DDRace mod or any other mod, which needs hammer hits through the wall remove second condition
-				if ((Target == this || Target->Team() != this->Team()) /*|| GameServer()->Collision()->IntersectLine(ProjStartPos, Target->m_Pos, NULL, NULL)*/)
+				if ((Target == this || !CanCollide(i)) /*|| GameServer()->Collision()->IntersectLine(ProjStartPos, Target->m_Pos, NULL, NULL)*/)
 					continue;
 
 				// set his velocity to fast upward (for now)
@@ -1172,7 +1180,7 @@ void CCharacter::Die(int Killer, int Weapon)
 		m_pPlayer->GetCID(), Server()->ClientName(m_pPlayer->GetCID()), Weapon, ModeSpecial);
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
-	Controller->m_Teams.SetCharacterTeam(m_pPlayer->GetCID(), 0);
+	Controller->m_Teams.m_Core.Team(m_pPlayer->GetCID(), 0);
 
 	// send the kill message
 	CNetMsg_Sv_KillMsg Msg;

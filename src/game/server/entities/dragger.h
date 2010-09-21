@@ -4,7 +4,7 @@
 #define GAME_SERVER_ENTITY_DRAGGER_H
 
 #include <game/server/entity.h>
-
+#include <list>
 class CCharacter;
 
 class CDragger : public CEntity
@@ -14,7 +14,7 @@ class CDragger : public CEntity
 	int m_EvalTick;
 	void Move();
 	void Drag();
-	CCharacter * m_Target;
+	std::list<CCharacter *> m_Targets;
 	bool m_NW;
 public:
 

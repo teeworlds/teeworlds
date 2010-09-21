@@ -16,6 +16,8 @@ public:
 	CTeamsCore(void);
 	
 	bool SameTeam(int Cid1, int Cid2);
+
+	bool CanCollide(int Cid1, int Cid2);
 	
 	int Team(int Cid);
 	void Team(int Cid, int Team);

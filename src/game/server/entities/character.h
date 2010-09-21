@@ -97,6 +97,8 @@ public:
 	
 	void OnFinish();
 	int Team();
+	bool CanCollide(int Cid);
+	bool SameTeam(int Cid);
 	
 		struct
 	{

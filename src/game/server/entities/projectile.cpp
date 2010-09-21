@@ -97,8 +97,8 @@ void CProjectile::Tick()
 	
 	bool isWeaponCollide = false;
 	if(OwnerChar && TargetChr 
-			&& OwnerChar->m_Alive && TargetChr->m_Alive 
-			&& OwnerChar->Team() != TargetChr->Team()) isWeaponCollide = true;
+		&& OwnerChar->m_Alive && TargetChr->m_Alive 
+		&& !TargetChr->CanCollide(m_Owner)) isWeaponCollide = true;
 	
 	if( ((TargetChr && (g_Config.m_SvHit || m_Owner == -1 || TargetChr == OwnerChar)) || Collide) && !isWeaponCollide)//TODO:TEAM
 	{
