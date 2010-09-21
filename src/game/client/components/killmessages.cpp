@@ -131,14 +131,25 @@ void CKillMessages::OnRender()
 				if(m_aKillmsgs[r].m_ModeSpecial&2)
 				{
 					Graphics()->BlendNormal();
-					Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+					if(g_Config.m_TcColoredFlags)
+						Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME_GRAY].m_Id);
+					else
+						Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 					Graphics()->QuadsBegin();
 
-					if(m_aKillmsgs[r].m_KillerTeam == 0)
-						RenderTools()->SelectSprite(SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
-					else
-						RenderTools()->SelectSprite(SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
+					int Team = m_aKillmsgs[r].m_KillerTeam;
+					RenderTools()->SelectSprite(Team?SPRITE_FLAG_RED:SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
 					
+					if(g_Config.m_TcColoredFlags)
+					{
+						vec3 Col = CTeecompUtils::GetTeamColor(Team^1,
+							m_pClient->m_Snap.m_pLocalInfo->m_Team,
+							g_Config.m_TcColoredTeesTeam1,
+							g_Config.m_TcColoredTeesTeam2,
+							g_Config.m_TcColoredTeesMethod);
+						Graphics()->SetColor(Col.r, Col.g, Col.b, 1.0f);
+					}
+				
 					float Size = 56.0f;
 					IGraphics::CQuadItem QuadItem(x-56, y-16, Size/2, Size);
 					Graphics()->QuadsDrawTL(&QuadItem, 1);
