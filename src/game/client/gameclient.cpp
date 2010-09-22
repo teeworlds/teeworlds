@@ -1163,7 +1163,6 @@ void CGameClient::OnNewSnapshot()
 		else
 			m_ServerMode = SERVERMODE_PUREMOD;
 	}
-	
 	// send race msg
 	if(m_Snap.m_pLocalInfo)
 	{
@@ -1246,10 +1245,6 @@ void CGameClient::OnNewSnapshot()
 				m_aClients[i].m_Score = 0;
 		}
 	}
-
-	// update render info
-	for(int i = 0; i < MAX_CLIENTS; i++)
-		m_aClients[i].UpdateRenderInfo(i);
 }
 
 void CGameClient::OnPredict()
