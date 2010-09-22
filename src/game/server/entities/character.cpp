@@ -829,18 +829,18 @@ void CCharacter::Tick()
 	}
 	if((m_TileIndexL == TILE_STOPA || m_TileFIndexL == TILE_STOPA || m_TileIndex == TILE_STOPL || m_TileIndexL == TILE_STOPL || m_TileFIndex == TILE_STOPL || m_TileFIndexL == TILE_STOPL || m_TileIndexL == TILE_STOPH || m_TileFIndexL == TILE_STOPH) && m_Core.m_Vel.x > 0)
 	{
-		if((int)GameServer()->Collision()->GetPos(MapIndex).x)
-			if((int)GameServer()->Collision()->GetPos(MapIndex).x < (int)m_Core.m_Pos.x)
+		if((int)GameServer()->Collision()->GetPos(MapIndexL).x)
+			if((int)GameServer()->Collision()->GetPos(MapIndexL).x < (int)m_Core.m_Pos.x)
 			{
 				m_Core.m_Pos = m_PrevPos;
 				//dbg_msg("Resetting","%d",Server()->Tick());
 			}
 		m_Core.m_Vel.x = 0;
 	}
-	if((m_TileIndexR == TILE_STOPA || m_TileFIndexR == TILE_STOPA || /*m_TileIndex == TILE_STOPR ||*/ m_TileIndexR == TILE_STOPR || /*m_TileFIndex == TILE_STOPR ||*/ m_TileFIndexR == TILE_STOPR || m_TileIndexR == TILE_STOPH || m_TileFIndexR == TILE_STOPH) && m_Core.m_Vel.x < 0)
+	if((m_TileIndexR == TILE_STOPA || m_TileFIndexR == TILE_STOPA || m_TileIndex == TILE_STOPR || m_TileIndexR == TILE_STOPR || m_TileFIndex == TILE_STOPR || m_TileFIndexR == TILE_STOPR || m_TileIndexR == TILE_STOPH || m_TileFIndexR == TILE_STOPH) && m_Core.m_Vel.x < 0)
 	{
-		if((int)GameServer()->Collision()->GetPos(MapIndex).x)
-			if((int)GameServer()->Collision()->GetPos(MapIndex).x > (int)m_Core.m_Pos.x)
+		if((int)GameServer()->Collision()->GetPos(MapIndexR).x)
+			if((int)GameServer()->Collision()->GetPos(MapIndexR).x > (int)m_Core.m_Pos.x)
 			{
 				m_Core.m_Pos = m_PrevPos;
 				//dbg_msg("Resetting","%d",Server()->Tick());
@@ -849,8 +849,8 @@ void CCharacter::Tick()
 	}
 	if((m_TileIndexB == TILE_STOPA || m_TileFIndexB == TILE_STOPA || m_TileIndex == TILE_STOPB || m_TileIndexB == TILE_STOPB || m_TileFIndex == TILE_STOPB || m_TileFIndexB == TILE_STOPB|| m_TileIndexB == TILE_STOPV || m_TileFIndexB == TILE_STOPV) && m_Core.m_Vel.y < 0)
 	{
-		if((int)GameServer()->Collision()->GetPos(MapIndex).y)
-			if((int)GameServer()->Collision()->GetPos(MapIndex).y > (int)m_Core.m_Pos.y)
+		if((int)GameServer()->Collision()->GetPos(MapIndexB).y)
+			if((int)GameServer()->Collision()->GetPos(MapIndexB).y > (int)m_Core.m_Pos.y)
 			{
 				m_Core.m_Pos = m_PrevPos;
 				//dbg_msg("Resetting","%d",Server()->Tick());
@@ -860,8 +860,8 @@ void CCharacter::Tick()
 	if((m_TileIndexT == TILE_STOPA || m_TileFIndexT == TILE_STOPA || m_TileIndex == TILE_STOPT || m_TileIndexT == TILE_STOPT || m_TileFIndex == TILE_STOPT || m_TileFIndexT == TILE_STOPT || m_TileIndexT == TILE_STOPV || m_TileFIndexT == TILE_STOPV) && m_Core.m_Vel.y > 0)
 	{
 		//dbg_msg("","%f %f",GameServer()->Collision()->GetPos(MapIndex).y,m_Core.m_Pos.y);
-		if((int)GameServer()->Collision()->GetPos(MapIndex).y)
-			if((int)GameServer()->Collision()->GetPos(MapIndex).y < (int)m_Core.m_Pos.y)
+		if((int)GameServer()->Collision()->GetPos(MapIndexT).y)
+			if((int)GameServer()->Collision()->GetPos(MapIndexT).y < (int)m_Core.m_Pos.y)
 			{
 				//dbg_msg("Resetting","%d",Server()->Tick());
 				m_Core.m_Pos = m_PrevPos;
