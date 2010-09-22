@@ -152,10 +152,10 @@ CDraggerTeam::CDraggerTeam(CGameWorld *pGameWorld, vec2 Pos, float Strength, boo
 	}
 }
 
-CDraggerTeam::~CDraggerTeam() {
+//CDraggerTeam::~CDraggerTeam() {
 	//for(int i = 0; i < MAX_CLIENTS; ++i) {
 	//	delete m_Draggers[i];
 	//}
-}
+//}
 //? ??? ???
 //? ????
