@@ -77,21 +77,16 @@ void CDragger::Drag()
 		else
 			if (length(m_Pos-m_Target->m_Pos)>28)
 			{
-				//vec2 Temp = m_Target->m_Core.m_Vel +(normalize(m_Pos-m_Target->m_Pos)*m_Strength);
-				if(((m_Target->m_TileIndexL == TILE_STOPA || m_Target->m_TileFIndexL == TILE_STOPA || m_Target->m_TileIndex == TILE_STOPL || m_Target->m_TileIndexL == TILE_STOPL || m_Target->m_TileFIndex == TILE_STOPL || m_Target->m_TileFIndexL == TILE_STOPL || m_Target->m_TileIndexL == TILE_STOPH || m_Target->m_TileFIndexL == TILE_STOPH)) || ((m_Target->m_TileIndexR == TILE_STOPA || m_Target->m_TileFIndexR == TILE_STOPA || m_Target->m_TileIndex == TILE_STOPR || m_Target->m_TileIndexR == TILE_STOPR || m_Target->m_TileFIndex == TILE_STOPR || m_Target->m_TileFIndexR == TILE_STOPR || m_Target->m_TileIndexR == TILE_STOPH || m_Target->m_TileFIndexR == TILE_STOPH)))
-					{
-						m_Target->m_Core.m_Vel.y +=(normalize(m_Pos-m_Target->m_Pos)*m_Strength).y;
-						//dbg_msg("","x");
-						return;
-					}
-				if(((m_Target->m_TileIndexB == TILE_STOPA || m_Target->m_TileFIndexB == TILE_STOPA || m_Target->m_TileIndex == TILE_STOPB || m_Target->m_TileIndexB == TILE_STOPB || m_Target->m_TileFIndex == TILE_STOPB || m_Target->m_TileFIndexB == TILE_STOPB|| m_Target->m_TileIndexB == TILE_STOPV || m_Target->m_TileFIndexB == TILE_STOPV)) || ((m_Target->m_TileIndexT == TILE_STOPA || m_Target->m_TileFIndexT == TILE_STOPA || m_Target->m_TileIndex == TILE_STOPT || m_Target->m_TileIndexT == TILE_STOPT || m_Target->m_TileFIndex == TILE_STOPT || m_Target->m_TileFIndexT == TILE_STOPT || m_Target->m_TileIndexT == TILE_STOPV || m_Target->m_TileFIndexT == TILE_STOPV)))
-					{
-						m_Target->m_Core.m_Vel.x +=(normalize(m_Pos-m_Target->m_Pos)*m_Strength).x;
-						//dbg_msg("y","");
-						return;
-					}
-				//m_Target->m_Core.m_Vel = Temp;
-				m_Target->m_Core.m_Vel +=(normalize(m_Pos-m_Target->m_Pos)*m_Strength);
+				vec2 Temp = m_Target->m_Core.m_Vel +(normalize(m_Pos-m_Target->m_Pos)*m_Strength);
+				if(Temp.x > 0 && (m_Target->m_TileIndexL == TILE_STOPA || m_Target->m_TileFIndexL == TILE_STOPA || m_Target->m_TileIndex == TILE_STOPL || m_Target->m_TileIndexL == TILE_STOPL || m_Target->m_TileFIndex == TILE_STOPL || m_Target->m_TileFIndexL == TILE_STOPL || m_Target->m_TileIndexL == TILE_STOPH || m_Target->m_TileFIndexL == TILE_STOPH))
+					Temp.x = 0;
+				if(Temp.x < 0 && (m_Target->m_TileIndexR == TILE_STOPA || m_Target->m_TileFIndexR == TILE_STOPA || m_Target->m_TileIndex == TILE_STOPR || m_Target->m_TileIndexR == TILE_STOPR || m_Target->m_TileFIndex == TILE_STOPR || m_Target->m_TileFIndexR == TILE_STOPR || m_Target->m_TileIndexR == TILE_STOPH || m_Target->m_TileFIndexR == TILE_STOPH))
+					Temp.x = 0;
+				if(Temp.y < 0 && (m_Target->m_TileIndexB == TILE_STOPA || m_Target->m_TileFIndexB == TILE_STOPA || m_Target->m_TileIndex == TILE_STOPB || m_Target->m_TileIndexB == TILE_STOPB || m_Target->m_TileFIndex == TILE_STOPB || m_Target->m_TileFIndexB == TILE_STOPB|| m_Target->m_TileIndexB == TILE_STOPV || m_Target->m_TileFIndexB == TILE_STOPV))
+					Temp.y = 0;
+				if(Temp.y > 0 && (m_Target->m_TileIndexT == TILE_STOPA || m_Target->m_TileFIndexT == TILE_STOPA || m_Target->m_TileIndex == TILE_STOPT || m_Target->m_TileIndexT == TILE_STOPT || m_Target->m_TileFIndex == TILE_STOPT || m_Target->m_TileFIndexT == TILE_STOPT || m_Target->m_TileIndexT == TILE_STOPV || m_Target->m_TileFIndexT == TILE_STOPV))
+					Temp.y = 0;
+				m_Target->m_Core.m_Vel = Temp;
 			}
 	}
 }

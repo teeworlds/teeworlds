@@ -832,7 +832,7 @@ void CCharacter::Tick()
 		if((int)GameServer()->Collision()->GetPos(MapIndex).x)
 			if((int)GameServer()->Collision()->GetPos(MapIndex).x < (int)m_Core.m_Pos.x)
 			{
-				m_Core.m_Pos.x = m_PrevPos.x;
+				m_Core.m_Pos = m_PrevPos;
 				//dbg_msg("Resetting","%d",Server()->Tick());
 			}
 		m_Core.m_Vel.x = 0;
@@ -842,7 +842,7 @@ void CCharacter::Tick()
 		if((int)GameServer()->Collision()->GetPos(MapIndex).x)
 			if((int)GameServer()->Collision()->GetPos(MapIndex).x > (int)m_Core.m_Pos.x)
 			{
-				m_Core.m_Pos.x = m_PrevPos.x;
+				m_Core.m_Pos = m_PrevPos;
 				//dbg_msg("Resetting","%d",Server()->Tick());
 			}
 		m_Core.m_Vel.x = 0;
@@ -852,7 +852,7 @@ void CCharacter::Tick()
 		if((int)GameServer()->Collision()->GetPos(MapIndex).y)
 			if((int)GameServer()->Collision()->GetPos(MapIndex).y > (int)m_Core.m_Pos.y)
 			{
-				m_Core.m_Pos.y = m_PrevPos.y;
+				m_Core.m_Pos = m_PrevPos;
 				//dbg_msg("Resetting","%d",Server()->Tick());
 			}
 		m_Core.m_Vel.y = 0;
@@ -864,7 +864,7 @@ void CCharacter::Tick()
 			if((int)GameServer()->Collision()->GetPos(MapIndex).y < (int)m_Core.m_Pos.y)
 			{
 				//dbg_msg("Resetting","%d",Server()->Tick());
-				m_Core.m_Pos.y = m_PrevPos.y;
+				m_Core.m_Pos = m_PrevPos;
 			}
 		m_Core.m_Vel.y = 0;
 		m_Core.m_Jumped = 0;
