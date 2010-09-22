@@ -133,13 +133,25 @@ void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, i
 bool CCollision::TestBox(vec2 Pos, vec2 Size)
 {
 	Size *= 0.5f;
-	if(CheckPoint(Pos.x-Size.x, Pos.y-Size.y))
+
+	int Left   = clamp( (round (Pos.x - Size.x) ) / 32, 0, m_Width-1);
+	int Right  = clamp( (round (Pos.x + Size.x) ) / 32, 0, m_Width-1);
+	int Top    = clamp( (round (Pos.y + Size.y) ) / 32, 0, m_Height-1);
+	int Bottom = clamp( (round (Pos.y - Size.y) ) / 32, 0, m_Height-1);
+
+	unsigned char temp;
+	
+	temp = m_pTiles[Top*m_Width+Left].m_Index;
+	if((temp < 128) && temp&COLFLAG_SOLID)
 		return true;
-	if(CheckPoint(Pos.x+Size.x, Pos.y-Size.y))
+	temp = m_pTiles[Top*m_Width+Right].m_Index;
+	if((temp < 128) && temp&COLFLAG_SOLID)
 		return true;
-	if(CheckPoint(Pos.x-Size.x, Pos.y+Size.y))
+	temp = m_pTiles[Bottom*m_Width+Left].m_Index;
+	if((temp < 128) && temp&COLFLAG_SOLID)
 		return true;
-	if(CheckPoint(Pos.x+Size.x, Pos.y+Size.y))
+	temp = m_pTiles[Bottom*m_Width+Right].m_Index;
+	if((temp < 128) && temp&COLFLAG_SOLID)
 		return true;
 	return false;
 }
