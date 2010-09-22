@@ -52,7 +52,7 @@ public:
 	int IsEvilTeleport(int Index);
 	//int IsCheckpoint(int Index);
 	int IsSpeedup(int Index);
-	void GetSpeedup(int Index, vec2 *Dir, int *Force);
+	void GetSpeedup(int Index, vec2 *Dir, int *Force, int *MaxSpeed);
 	
 	int IsSolid(int x, int y);
 	int IsThrough(int x, int y);

@@ -369,6 +369,7 @@ void CRenderTools::RenderSpeedupmap(CSpeedupTile *pSpeedup, int w, int h, float 
 			int c = mx + my*w;
 			
 			int Force = (int)pSpeedup[c].m_Force;
+			int MaxSpeed = (int)pSpeedup[c].m_MaxSpeed;
 			if(Force)
 			{	
 				// draw arrow
@@ -385,6 +386,11 @@ void CRenderTools::RenderSpeedupmap(CSpeedupTile *pSpeedup, int w, int h, float 
 				char aBuf[16];
 				str_format(aBuf, sizeof(aBuf), "%d", Force);
 				UI()->TextRender()->Text(0, mx*Scale, my*Scale+16, Scale-20, aBuf, -1);
+				if(MaxSpeed)
+				{
+					str_format(aBuf, sizeof(aBuf), "%d", MaxSpeed);
+					UI()->TextRender()->Text(0, mx*Scale, my*Scale-2, Scale-20, aBuf, -1);
+				}
 			}
 		}
 		

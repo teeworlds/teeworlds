@@ -190,6 +190,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 					{
 						m_pEditor->m_SpeedupAngle = pGrabbed->m_pSpeedupTile[y*pGrabbed->m_Width+x].m_Angle;
 						m_pEditor->m_SpeedupForce = pGrabbed->m_pSpeedupTile[y*pGrabbed->m_Width+x].m_Force;
+						m_pEditor->m_SpeedupMaxSpeed = pGrabbed->m_pSpeedupTile[y*pGrabbed->m_Width+x].m_MaxSpeed;
 					}
 				}
 	}
@@ -666,6 +667,7 @@ void CLayerSpeedup::BrushDraw(CLayer *pBrush, float wx, float wy)
 				if(m_pEditor->m_SpeedupForce)
 				{
 					m_pSpeedupTile[fy*m_Width+fx].m_Force = m_pEditor->m_SpeedupForce;
+					m_pSpeedupTile[fy*m_Width+fx].m_MaxSpeed = m_pEditor->m_SpeedupMaxSpeed;
 					m_pSpeedupTile[fy*m_Width+fx].m_Angle = m_pEditor->m_SpeedupAngle;
 					m_pSpeedupTile[fy*m_Width+fx].m_Type = l->m_pTiles[y*l->m_Width+x].m_Index;
 					m_pTiles[fy*m_Width+fx].m_Index = l->m_pTiles[y*l->m_Width+x].m_Index;
@@ -673,6 +675,7 @@ void CLayerSpeedup::BrushDraw(CLayer *pBrush, float wx, float wy)
 				else
 				{
 					m_pSpeedupTile[fy*m_Width+fx].m_Force = 0;
+					m_pSpeedupTile[fy*m_Width+fx].m_MaxSpeed = 0;
 					m_pSpeedupTile[fy*m_Width+fx].m_Angle = 0;
 					m_pTiles[fy*m_Width+fx].m_Index = 0;
 				}
@@ -680,6 +683,7 @@ void CLayerSpeedup::BrushDraw(CLayer *pBrush, float wx, float wy)
 			else
 			{
 				m_pSpeedupTile[fy*m_Width+fx].m_Force = 0;
+				m_pSpeedupTile[fy*m_Width+fx].m_MaxSpeed = 0;
 				m_pSpeedupTile[fy*m_Width+fx].m_Angle = 0;
 				m_pTiles[fy*m_Width+fx].m_Index = 0;
 			}
@@ -720,11 +724,13 @@ void CLayerSpeedup::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 				if(!pLt->m_pSpeedupTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_Force && m_pEditor->m_SpeedupForce && m_pTiles[fy*m_Width+fx].m_Index > 0)
 				{
 					m_pSpeedupTile[fy*m_Width+fx].m_Force = m_pEditor->m_SpeedupForce;
+					m_pSpeedupTile[fy*m_Width+fx].m_MaxSpeed = m_pEditor->m_SpeedupMaxSpeed;
 					m_pSpeedupTile[fy*m_Width+fx].m_Angle = m_pEditor->m_SpeedupAngle;
 				}
 				else
 				{
 					m_pSpeedupTile[fy*m_Width+fx].m_Force = pLt->m_pSpeedupTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_Force;
+					m_pSpeedupTile[fy*m_Width+fx].m_MaxSpeed = pLt->m_pSpeedupTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_MaxSpeed;
 					m_pSpeedupTile[fy*m_Width+fx].m_Angle = pLt->m_pSpeedupTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_Angle;
 				}
 			}

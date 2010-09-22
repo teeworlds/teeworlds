@@ -926,13 +926,19 @@ void CCharacter::Tick()
 			m_Core.m_Vel.y += m_Core.m_Vel.y*1.1;
 	}
 	// handle speedup tiles
+	//TODO:GFX Make MaxSpeed and Speed setters relative to Speedometer of the client
 	if(GameServer()->Collision()->IsSpeedup(MapIndex) == TILE_BOOST)
 	{
-		vec2 Direction;
-		int Force;
-		GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force);
-
-		m_Core.m_Vel += Direction*Force;
+		vec2 Direction, TempVel = m_Core.m_Vel;
+		int Force, MaxSpeed = 0;
+		GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force, &MaxSpeed);
+		TempVel += Direction * Force;
+		if(TempVel < Direction*(MaxSpeed) || !MaxSpeed)
+			m_Core.m_Vel = TempVel;
+		else
+		{
+			m_Core.m_Vel = Direction*MaxSpeed;
+		}
 		//dbg_msg("Direction","%f %f   %f %f   %f %f",Direction.x,Direction.y,(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
 
 	}
@@ -940,10 +946,8 @@ void CCharacter::Tick()
 	{
 		vec2 Direction;
 		int Force;
-		GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force);
-		Force/=5;
+		GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force, 0);
 		m_Core.m_Vel = Direction*Force;
-		m_Core.m_Vel+=Direction;
 		//dbg_msg("Direction","%f %f   %f %f   %f %f",Direction.x,Direction.y,(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
 	}
 	m_LastBooster = MapIndex;

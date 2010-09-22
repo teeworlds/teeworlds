@@ -875,7 +875,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		if(DoButton_Ex(&s_SpeedupButton, "Speedup", (pS && pS->m_Speedup)?0:-1, &Button, 0, "Speedup", CUI::CORNER_ALL))
 		{
 			static int s_SpeedupPopupId = 0;
-			UiInvokePopupMenu(&s_SpeedupPopupId, 0, UI()->MouseX(), UI()->MouseY(), 120, 43, PopupSpeedup);
+			UiInvokePopupMenu(&s_SpeedupPopupId, 0, UI()->MouseX(), UI()->MouseY(), 120, 53, PopupSpeedup);
 		}
 
 		TB_Bottom.VSplitLeft(5.0f, &Button, &TB_Bottom);

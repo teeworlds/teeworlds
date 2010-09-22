@@ -568,6 +568,7 @@ public:
 		m_SwitchNum = 1;
 		
 		m_SpeedupForce = 50;
+		m_SpeedupMaxSpeed = 0;
 		m_SpeedupAngle = 0;
 	}
 	
@@ -719,6 +720,7 @@ public:
 	unsigned char m_TeleNum;
 	
 	unsigned char m_SpeedupForce;
+	unsigned char m_SpeedupMaxSpeed;
 	short m_SpeedupAngle;
 
 	unsigned char m_SwitchNum;

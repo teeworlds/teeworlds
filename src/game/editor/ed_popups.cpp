@@ -166,7 +166,8 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 	View.HSplitBottom(10.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_NewQuadLayerButton = 0;
-	if(pEditor->DoButton_Editor(&s_NewQuadLayerButton, Localize("Add quads layer"), 0, &Button, 0, Localize("Creates a new quad layer")))
+	//if(pEditor->DoButton_Editor(&s_NewQuadLayerButton, Localize("Add quads layer"), 0, &Button, 0, Localize("Creates a new quad layer")))
+	if(pEditor->DoButton_Editor(&s_NewQuadLayerButton, Localize("Add Quads layer"), 0, &Button, 0, Localize("Creates a new quad layer")))
 	{
 		CLayer *l = new CLayerQuads;
 		l->m_pEditor = pEditor;
@@ -179,7 +180,8 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 	View.HSplitBottom(5.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_NewTileLayerButton = 0;
-	if(pEditor->DoButton_Editor(&s_NewTileLayerButton, Localize("Add tile layer"), 0, &Button, 0, Localize("Creates a new tile layer")))
+	//if(pEditor->DoButton_Editor(&s_NewTileLayerButton, Localize("Add tile layer"), 0, &Button, 0, Localize("Creates a new tile layer")))
+	if(pEditor->DoButton_Editor(&s_NewTileLayerButton, Localize("Add Tile layer"), 0, &Button, 0, Localize("Creates a new tile layer")))
 	{
 		CLayer *l = new CLayerTiles(50, 50);
 		l->m_pEditor = pEditor;
@@ -577,12 +579,14 @@ int CEditor::PopupSpeedup(CEditor *pEditor, CUIRect View)
 	enum
 	{
 		PROP_FORCE=0,
+		PROP_MAXSPEED,
 		PROP_ANGLE,
-		NUM_PROPS,
+		NUM_PROPS
 	};
 	
 	CProperty aProps[] = {
 		{"Force", pEditor->m_SpeedupForce, PROPTYPE_INT_SCROLL, 0, 255},
+		{"Max Speed", pEditor->m_SpeedupMaxSpeed, PROPTYPE_INT_SCROLL, 0, 255},
 		{"Angle", pEditor->m_SpeedupAngle, PROPTYPE_INT_SCROLL, 0, 359},
 		{0},
 	};
@@ -590,9 +594,11 @@ int CEditor::PopupSpeedup(CEditor *pEditor, CUIRect View)
 	static int s_aIds[NUM_PROPS] = {0};
 	int NewVal = 0;
 	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
-	
+
 	if(Prop == PROP_FORCE)
 		pEditor->m_SpeedupForce = clamp(NewVal, 0, 255);
+	if(Prop == PROP_MAXSPEED)
+		pEditor->m_SpeedupMaxSpeed = clamp(NewVal, 0, 255);
 	if(Prop == PROP_ANGLE)
 		pEditor->m_SpeedupAngle = clamp(NewVal, 0, 359);
 	

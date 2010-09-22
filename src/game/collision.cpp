@@ -565,13 +565,15 @@ int CCollision::IsSpeedup(int Index)
 	return 0;
 }
 
-void CCollision::GetSpeedup(int Index, vec2 *Dir, int *Force)
+void CCollision::GetSpeedup(int Index, vec2 *Dir, int *Force, int *MaxSpeed)
 {
 	if(Index < 0)
 		return;
 	vec2 Direction = vec2(1, 0);
 	float Angle = m_pSpeedup[Index].m_Angle * (3.14159265f/180.0f);
 	*Force = m_pSpeedup[Index].m_Force;
+	if(MaxSpeed)
+		*MaxSpeed = m_pSpeedup[Index].m_MaxSpeed;
 
 	vec2 TmpDir;
 	TmpDir.x = (Direction.x*cos(Angle)) - (Direction.y*sin(Angle));

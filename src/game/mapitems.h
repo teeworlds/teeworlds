@@ -200,6 +200,7 @@ class CSpeedupTile
 {
 public:
 	unsigned char m_Force;
+	unsigned char m_MaxSpeed;
 	unsigned char m_Type;
 	short m_Angle;
 };
