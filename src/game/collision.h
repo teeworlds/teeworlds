@@ -43,10 +43,11 @@ public:
 	int GetFTile(int x, int y);
 	int Entity(int x, int y, bool Front);
 	//DDRace
+	int GetPureMapIndex(vec2 Pos);
 	int GetMapIndex(vec2 PrevPos, vec2 Pos);
 	vec2 GetPos(int Index);
-	int GetCollisionDDRace(int Index);
-	int GetFCollisionDDRace(int Index);
+	int GetTileIndex(int Index);
+	int GetFTileIndex(int Index);
 	int IsTeleport(int Index);
 	int IsEvilTeleport(int Index);
 	//int IsCheckpoint(int Index);

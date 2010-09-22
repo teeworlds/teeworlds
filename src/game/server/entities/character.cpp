@@ -672,21 +672,21 @@ void CCharacter::Tick()
 {
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	int MapIndex = GameServer()->Collision()->GetMapIndex(m_PrevPos, m_Pos);
-	int MapIndexL = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x + (m_ProximityRadius/2)+4,m_Pos.y), vec2(m_Pos.x + (m_ProximityRadius/2)+4,m_Pos.y));
-	int MapIndexR = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x - (m_ProximityRadius/2)-4,m_Pos.y), vec2(m_Pos.x - (m_ProximityRadius/2)-4,m_Pos.y));
-	int MapIndexT = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x,m_Pos.y + (m_ProximityRadius/2)+4), vec2(m_Pos.x,m_Pos.y + (m_ProximityRadius/2)+4));
-	int MapIndexB = GameServer()->Collision()->GetMapIndex(vec2(m_Pos.x,m_Pos.y - (m_ProximityRadius/2)-4), vec2(m_Pos.x,m_Pos.y - (m_ProximityRadius/2)-4));
+	int MapIndexL = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x + (m_ProximityRadius/2)+4,m_Pos.y));
+	int MapIndexR = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x - (m_ProximityRadius/2)-4,m_Pos.y));
+	int MapIndexT = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y + (m_ProximityRadius/2)+4));
+	int MapIndexB = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y - (m_ProximityRadius/2)-4));
 	//dbg_msg("","N%d L%d R%d B%d T%d",MapIndex,MapIndexL,MapIndexR,MapIndexB,MapIndexT);
-	m_TileIndex = GameServer()->Collision()->GetCollisionDDRace(MapIndex);
-	m_TileFIndex = GameServer()->Collision()->GetFCollisionDDRace(MapIndex);
-	m_TileIndexL = GameServer()->Collision()->GetCollisionDDRace(MapIndexL);
-	m_TileFIndexL = GameServer()->Collision()->GetFCollisionDDRace(MapIndexL);
-	m_TileIndexR = GameServer()->Collision()->GetCollisionDDRace(MapIndexR);
-	m_TileFIndexR = GameServer()->Collision()->GetFCollisionDDRace(MapIndexR);
-	m_TileIndexT = GameServer()->Collision()->GetCollisionDDRace(MapIndexT);
-	m_TileFIndexT = GameServer()->Collision()->GetFCollisionDDRace(MapIndexT);
-	m_TileIndexB = GameServer()->Collision()->GetCollisionDDRace(MapIndexB);
-	m_TileFIndexB = GameServer()->Collision()->GetFCollisionDDRace(MapIndexB);
+	m_TileIndex = GameServer()->Collision()->GetTileIndex(MapIndex);
+	m_TileFIndex = GameServer()->Collision()->GetFTileIndex(MapIndex);
+	m_TileIndexL = GameServer()->Collision()->GetTileIndex(MapIndexL);
+	m_TileFIndexL = GameServer()->Collision()->GetFTileIndex(MapIndexL);
+	m_TileIndexR = GameServer()->Collision()->GetTileIndex(MapIndexR);
+	m_TileFIndexR = GameServer()->Collision()->GetFTileIndex(MapIndexR);
+	m_TileIndexT = GameServer()->Collision()->GetTileIndex(MapIndexT);
+	m_TileFIndexT = GameServer()->Collision()->GetFTileIndex(MapIndexT);
+	m_TileIndexB = GameServer()->Collision()->GetTileIndex(MapIndexB);
+	m_TileFIndexB = GameServer()->Collision()->GetFTileIndex(MapIndexB);
 	//dbg_msg("","N%d L%d R%d B%d T%d",m_TileIndex,m_TileIndexL,m_TileIndexR,m_TileIndexB,m_TileIndexT);
 	//dbg_msg("","N%d L%d R%d B%d T%d",m_TileFIndex,m_TileFIndexL,m_TileFIndexR,m_TileFIndexB,m_TileFIndexT);
 	/*m_CurrentTile = m_TileIndex;
@@ -837,7 +837,7 @@ void CCharacter::Tick()
 			}
 		m_Core.m_Vel.x = 0;
 	}
-	if((m_TileIndexR == TILE_STOPA || m_TileFIndexR == TILE_STOPA || m_TileIndex == TILE_STOPR || m_TileIndexR == TILE_STOPR || m_TileFIndex == TILE_STOPR || m_TileFIndexR == TILE_STOPR || m_TileIndexR == TILE_STOPH || m_TileFIndexR == TILE_STOPH) && m_Core.m_Vel.x < 0)
+	if((m_TileIndexR == TILE_STOPA || m_TileFIndexR == TILE_STOPA || /*m_TileIndex == TILE_STOPR ||*/ m_TileIndexR == TILE_STOPR || /*m_TileFIndex == TILE_STOPR ||*/ m_TileFIndexR == TILE_STOPR || m_TileIndexR == TILE_STOPH || m_TileFIndexR == TILE_STOPH) && m_Core.m_Vel.x < 0)
 	{
 		if((int)GameServer()->Collision()->GetPos(MapIndex).x)
 			if((int)GameServer()->Collision()->GetPos(MapIndex).x > (int)m_Core.m_Pos.x)

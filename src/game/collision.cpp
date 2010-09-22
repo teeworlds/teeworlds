@@ -97,6 +97,14 @@ void CCollision::Init(class CLayers *pLayers)
 	}
 }
 
+
+int CCollision::GetPureMapIndex(vec2 Pos)
+{
+	int nx = clamp((int)Pos.x/32, 0, m_Width-1);
+	int ny = clamp((int)Pos.y/32, 0, m_Height-1);
+	return ny*m_Width+nx;
+}
+
 int CCollision::GetMapIndex(vec2 PrevPos, vec2 Pos)
 {
 	float d = distance(PrevPos, Pos);
@@ -156,16 +164,16 @@ vec2 CCollision::GetPos(int Index)
 	return vec2(16+x*32, 16+y*32);
 }
 
-int CCollision::GetCollisionDDRace(int Index)
+int CCollision::GetTileIndex(int Index)
 {
-	/*dbg_msg("GetCollisionDDRace","m_pTiles[%d].m_Index = %d",Index,m_pTiles[Index].m_Index);//Remove*/
+	/*dbg_msg("GetTileIndex","m_pTiles[%d].m_Index = %d",Index,m_pTiles[Index].m_Index);//Remove*/
 	if(Index < 0)
 		return 0;
 	return m_pTiles[Index].m_Index;
 }
-int CCollision::GetFCollisionDDRace(int Index)
+int CCollision::GetFTileIndex(int Index)
 {
-	/*dbg_msg("GetFCollisionDDRace","m_pFront[%d].m_Index = %d",Index,m_pFront[Index].m_Index);//Remove*/
+	/*dbg_msg("GetFTileIndex","m_pFront[%d].m_Index = %d",Index,m_pFront[Index].m_Index);//Remove*/
 
 	if(Index < 0 || !m_pFront)
 		return 0;
