@@ -981,6 +981,23 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 							SendRconLine(ClientId, buf);
 							dbg_msg("server", "'%s' ClientId=%d authed with Level=%d", ClientName(ClientId), ClientId, level);
 						}
+						else if(g_Config.m_SvRconMaxTries)
+						{
+							m_aClients[ClientId].m_AuthTries++;
+							char aBuf[128];
+							str_format(aBuf, sizeof(aBuf), "Wrong password %d/%d.", m_aClients[ClientId].m_AuthTries, g_Config.m_SvRconMaxTries);
+							SendRconLine(ClientId, aBuf);
+							if(m_aClients[ClientId].m_AuthTries >= g_Config.m_SvRconMaxTries)
+							{
+								if(!g_Config.m_SvRconBantime)
+									m_NetServer.Drop(ClientId, "Too many remote console authentication tries");
+								else
+								{
+									NETADDR Addr = m_NetServer.ClientAddr(ClientId);
+									BanAdd(Addr, g_Config.m_SvRconBantime,"Too many remote console authentication tries");
+								}
+							}
+						}
 					}
 				}
 				/*else if(str_comp(pPw, g_Config.m_SvRconPassword) == 0)
@@ -995,23 +1012,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					str_format(aBuf, sizeof(aBuf), "ClientId=%d authed", ClientId);
 					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 				}*/
-				else if(g_Config.m_SvRconMaxTries)
-				{
-					m_aClients[ClientId].m_AuthTries++;
-					char aBuf[128];
-					str_format(aBuf, sizeof(aBuf), "Wrong password %d/%d.", m_aClients[ClientId].m_AuthTries, g_Config.m_SvRconMaxTries);
-					SendRconLine(ClientId, aBuf);
-					if(m_aClients[ClientId].m_AuthTries >= g_Config.m_SvRconMaxTries)
-					{
-						if(!g_Config.m_SvRconBantime)
-							m_NetServer.Drop(ClientId, "Too many remote console authentication tries");
-						else
-						{
-							NETADDR Addr = m_NetServer.ClientAddr(ClientId);
-							BanAdd(Addr, g_Config.m_SvRconBantime,"Too many remote console authentication tries");
-						}
-					}
-				}
 				else
 				{
 					SendRconLine(ClientId, "Wrong password.");

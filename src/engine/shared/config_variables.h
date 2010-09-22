@@ -33,7 +33,7 @@ MACRO_CONFIG_STR(SvRconPasswordHelper, sv_helper_pass, 32, "", CFGFLAG_SERVER, "
 //MACRO_CONFIG_INT(SvRconTries, sv_rcon_tries, 5, 0, 100, CFGFLAG_SERVER, "How many password tries are tolerated before the trying client gets banned", 3)
 //MACRO_CONFIG_INT(SvRconTriesBantime, sv_rcon_tries_bantime, 300, 0, 9999, CFGFLAG_SERVER, "How much time in seconds a client gets banned for too many wrong rcon tries", 3)
 MACRO_CONFIG_INT(SvRconMaxTries, sv_rcon_max_tries, 3, 0, 100, CFGFLAG_SERVER, "Maximum number of tries for remote console authentication", 3)
-MACRO_CONFIG_INT(SvRconBantime, sv_rcon_bantime, 5, 0, 1440, CFGFLAG_SERVER, "The time a client gets banned if remote console authentication fails. 0 makes it just use kick", 3)
+MACRO_CONFIG_INT(SvRconBantime, sv_rcon_bantime, 300, 0, 9999, CFGFLAG_SERVER, "The time a client gets banned if remote console authentication fails. 0 makes it just use kick", 3)
 MACRO_CONFIG_INT(SvNetmsgLimit, sv_netmsg_limit, 0, 0, 100, CFGFLAG_SERVER, "How many unauthorised spam tries are tolerated before the trying client will be ban", 3)
 MACRO_CONFIG_INT(SvNetmsgBanTime, sv_netmsg_bantime, 300, 0, 9999, CFGFLAG_SERVER, "How much time in seconds a client gets banned for too many unauthorised rcon commands", 3)
 
