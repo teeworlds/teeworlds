@@ -238,7 +238,11 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 			// match team names team colors
 			if(str_find(pLine, "entered and joined the red team"))
 			{
+				bool Cut = false;
 				if(!str_comp_num(CurrentServerInfo.m_aVersion, "0.5 trunk", 9) && (pLine[0] == '"' || pLine[0] == '\''))
+					Cut = true;
+				
+				if(Cut)
 					pLine++;
 				
 				int Num = 0;
@@ -252,7 +256,10 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 				}
 			
 				char aName[MAX_NAME_LENGTH];
-				str_copy(aName, pLine, Num);
+				if(Cut)
+					str_copy(aName, pLine, Num);
+				else
+					str_copy(aName, pLine, Num+1);
 				
 				if(m_pClient->m_Snap.m_pLocalInfo)
 					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' entered and joined the %s team", aName, (g_Config.m_TcColoredTeesMethod && m_pClient->m_Snap.m_pLocalInfo->m_Team == 1)?CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2):CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1));
@@ -261,7 +268,11 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 			}
 			else if(str_find(pLine, "entered and joined the blue team"))
 			{
+				bool Cut = false;
 				if(!str_comp_num(CurrentServerInfo.m_aVersion, "0.5 trunk", 9) && (pLine[0] == '"' || pLine[0] == '\''))
+					Cut = true;
+				
+				if(Cut)
 					pLine++;
 				
 				int Num = 0;
@@ -275,7 +286,10 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 				}
 			
 				char aName[MAX_NAME_LENGTH];
-				str_copy(aName, pLine, Num);
+				if(Cut)
+					str_copy(aName, pLine, Num);
+				else
+					str_copy(aName, pLine, Num+1);
 				
 				if(m_pClient->m_Snap.m_pLocalInfo)
 					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' entered and joined the %s team", aName, (g_Config.m_TcColoredTeesMethod && m_pClient->m_Snap.m_pLocalInfo->m_Team == 1)?CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1):CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2));
@@ -284,7 +298,11 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 			}
 			else if(str_find(pLine, "joined the red team"))
 			{
+				bool Cut = false;
 				if(!str_comp_num(CurrentServerInfo.m_aVersion, "0.5 trunk", 9) && (pLine[0] == '"' || pLine[0] == '\''))
+					Cut = true;
+				
+				if(Cut)
 					pLine++;
 				
 				int Num = 0;
@@ -298,7 +316,10 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 				}
 			
 				char aName[MAX_NAME_LENGTH];
-				str_copy(aName, pLine, Num);
+				if(Cut)
+					str_copy(aName, pLine, Num);
+				else
+					str_copy(aName, pLine, Num+1);
 				
 				if(m_pClient->m_Snap.m_pLocalInfo)
 					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' joined the %s team", aName, (g_Config.m_TcColoredTeesMethod && m_pClient->m_Snap.m_pLocalInfo->m_Team == 1)?CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2):CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1));
@@ -307,7 +328,11 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 			}
 			else if(str_find(pLine, "joined the blue team"))
 			{
+				bool Cut = false;
 				if(!str_comp_num(CurrentServerInfo.m_aVersion, "0.5 trunk", 9) && (pLine[0] == '"' || pLine[0] == '\''))
+					Cut = true;
+				
+				if(Cut)
 					pLine++;
 				
 				int Num = 0;
@@ -321,7 +346,10 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 				}
 			
 				char aName[MAX_NAME_LENGTH];
-				str_copy(aName, pLine, Num);
+				if(Cut)
+					str_copy(aName, pLine, Num);
+				else
+					str_copy(aName, pLine, Num+1);
 				
 				if(m_pClient->m_Snap.m_pLocalInfo)
 					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' joined the %s team", aName, (g_Config.m_TcColoredTeesMethod && m_pClient->m_Snap.m_pLocalInfo->m_Team == 1)?CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1):CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2));
