@@ -81,10 +81,9 @@ class CCharacter *CGameContext::GetPlayerChar(int ClientId)
 
 void CGameContext::CreateDamageInd(vec2 p, float Angle, int Amount)
 {
-	float a = 3 * 3.14159f / 2 + Angle;
-	//float a = get_angle(dir);
-	float s = a-pi/3;
-	float e = a+pi/3;
+	float s = 7  * pi / 6 + Angle;
+	float e = 11 * pi / 6 + Angle;
+
 	for(int i = 0; i < Amount; i++)
 	{
 		float f = mix(s, e, float(i+1)/float(Amount+2));
@@ -748,16 +747,16 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		p->m_TeeInfos.m_ColorBody = pMsg->m_ColorBody;
 		p->m_TeeInfos.m_ColorFeet = pMsg->m_ColorFeet;
 
-		// copy old name
-		char aOldName[MAX_NAME_LENGTH];
-		str_copy(aOldName, Server()->ClientName(ClientId), MAX_NAME_LENGTH);
-		
-		Server()->SetClientName(ClientId, pMsg->m_pName);
-		if(MsgId == NETMSGTYPE_CL_CHANGEINFO && str_comp(aOldName, Server()->ClientName(ClientId)) != 0)
+		// set name
+		if(str_comp(Server()->ClientName(ClientId), pMsg->m_pName) != 0)
 		{
-			char aChatText[256];
-			str_format(aChatText, sizeof(aChatText), "'%s' changed name to '%s'", aOldName, Server()->ClientName(ClientId));
-			SendChat(-1, CGameContext::CHAT_ALL, aChatText);
+			if(MsgId == NETMSGTYPE_CL_CHANGEINFO)
+			{
+				char aChatText[256];
+				str_format(aChatText, sizeof(aChatText), "'%s' changed name to '%s'", Server()->ClientName(ClientId), pMsg->m_pName);
+				SendChat(-1, CGameContext::CHAT_ALL, aChatText);
+			}
+			Server()->SetClientName(ClientId, pMsg->m_pName);
 		}
 		
 		// set skin
