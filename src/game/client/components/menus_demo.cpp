@@ -106,7 +106,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 			{
 				static float PrevAmount = 0.0f;
 				float Amount = (UI()->MouseX()-SeekBar.x)/(float)SeekBar.w;
-				if(Amount > 0 && Amount < 1.0f && PrevAmount != Amount)
+				if(Amount > 0.0f && Amount < 1.0f && absolute(PrevAmount-Amount) >= 0.01f)
 				{
 					PrevAmount = Amount;
 					m_pClient->OnReset();

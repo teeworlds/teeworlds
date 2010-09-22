@@ -24,5 +24,6 @@ public:
 	virtual void OnPlayerDeath();
 	
 	int SnapInput(int *pData);
+	void ClampMousePos();
 };
 #endif

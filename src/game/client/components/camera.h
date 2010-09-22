@@ -8,6 +8,7 @@ class CCamera : public CComponent
 public:
 	vec2 m_Center;
 	float m_Zoom;
+	bool m_WasSpectator;
 
 	CCamera();
 	virtual void OnRender();
