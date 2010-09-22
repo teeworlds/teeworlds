@@ -40,6 +40,7 @@ static void BubbleSort(CHuffmanConstructNode **ppList, int Size)
 				Changed = 1;
 			}
 		}
+		Size--;
 	}
 }
 
