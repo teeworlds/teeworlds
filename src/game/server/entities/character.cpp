@@ -73,6 +73,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	
 	GameServer()->m_World.InsertEntity(this);
 	m_Alive = true;
+	
+	m_SpawnProtectionTick = Server()->Tick()+Server()->TickSpeed() * g_Config.m_SvSpawnProtection;
 
 	GameServer()->m_pController->OnCharacterSpawn(this);
 
@@ -704,7 +706,8 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 {
 	m_Core.m_Vel += Force;
 	
-	if(GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From) && !g_Config.m_SvTeamdamage)
+	if( (GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From) && !g_Config.m_SvTeamdamage) ||
+		(Server()->Tick() < m_SpawnProtectionTick) )
 		return false;
 
 	// m_pPlayer only inflicts half damage on self
