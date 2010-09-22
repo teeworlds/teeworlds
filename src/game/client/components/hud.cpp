@@ -422,7 +422,13 @@ void CHud::RenderTime()
 			TextRender()->TextColor(1,1,1,1);
 		}
 	}
-	m_RaceTick+=100/Client()->GameTickSpeed();
+	
+	static int LastChangeTick = 0;
+	if(LastChangeTick != Client()->PredGameTick())
+	{	
+		m_RaceTick += 100/Client()->GameTickSpeed();
+		LastChangeTick = Client()->PredGameTick();
+	}
 	
 	if(m_RaceTick >= 100)
 		m_RaceTick = 0;
