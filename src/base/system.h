@@ -793,7 +793,7 @@ int str_comp_nocase(const char *a, const char *b);
 
 
 /*
-	Function: str_comp_nocase
+	Function: str_comp
 		Compares to strings case sensitive.
 	
 	Parameters:
@@ -811,7 +811,7 @@ int str_comp_nocase(const char *a, const char *b);
 int str_comp(const char *a, const char *b);
 
 /*
-	Function: str_comp_nocase
+	Function: str_comp_num
 		Compares up to num characters of two strings case sensitive.
 	
 	Parameters:
