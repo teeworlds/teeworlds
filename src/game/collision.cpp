@@ -509,43 +509,27 @@ int CCollision::IsFNoLaser(int x, int y)
    return (CCollision::GetFTile(x,y) & COLFLAG_NOLASER);
 }
 
-int CCollision::IsTeleport(int x, int y)
+int CCollision::IsTeleport(int Index)
 {
 	if(!m_pTele)
 		return 0;
 
-	int nx = clamp(x/32, 0, m_pLayers->TeleLayer()->m_Width-1);
-	int ny = clamp(y/32, 0, m_pLayers->TeleLayer()->m_Height-1);
-
-	/*int z = m_pTiles[ny*m_Width+nx].m_Index-1;
-	if(z > 34 && z <= 34 + 50 && z&1)
-		return z;
-	return 0;*/
-
 	int Tele = 0;
-	if(m_pTele[ny*m_pLayers->TeleLayer()->m_Width+nx].m_Type == TILE_TELEIN)
-		Tele = m_pTele[ny*m_pLayers->TeleLayer()->m_Width+nx].m_Number;
+	if(m_pTele[Index].m_Type == TILE_TELEIN)
+		Tele = m_pTele[Index].m_Number;
 
 	return Tele;
 }
 
-int CCollision::IsEvilTeleport(int x, int y)
+int CCollision::IsEvilTeleport(int Index)
 {
 	if(!m_pTele)
 		return 0;
 
-	int nx = clamp(x/32, 0, m_pLayers->TeleLayer()->m_Width-1);
-	int ny = clamp(y/32, 0, m_pLayers->TeleLayer()->m_Height-1);
-
-	/*int z = m_pTiles[ny*m_Width+nx].m_Index-1;
-	if(z > 34 && z <= 34 + 50 && z&1)
-		return z;
-	return 0;*/
-
 	int Tele = 0;
-	if(m_pTele[ny*m_pLayers->TeleLayer()->m_Width+nx].m_Type == TILE_TELEINEVIL)
+	if(m_pTele[Index].m_Type == TILE_TELEINEVIL)
 	{
-		Tele = m_pTele[ny*m_pLayers->TeleLayer()->m_Width+nx].m_Number;
+		Tele = m_pTele[Index].m_Number;
 		dbg_msg("IsEvilTele","%d",Tele);
 	}
 	return Tele;

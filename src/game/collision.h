@@ -47,8 +47,8 @@ public:
 	vec2 GetPos(int Index);
 	int GetCollisionDDRace(int Index);
 	int GetFCollisionDDRace(int Index);
-	int IsTeleport(int x, int y);
-	int IsEvilTeleport(int x, int y);
+	int IsTeleport(int Index);
+	int IsEvilTeleport(int Index);
 	//int IsCheckpoint(int Index);
 	int IsSpeedup(int x, int y);
 	void GetSpeedup(int x, int y, vec2 *Dir, int *Force);

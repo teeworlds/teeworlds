@@ -831,30 +831,39 @@ void CCharacter::Tick()
 	{
 		if((int)GameServer()->Collision()->GetPos(MapIndex).x)
 			if((int)GameServer()->Collision()->GetPos(MapIndex).x < (int)m_Core.m_Pos.x)
+			{
 				m_Core.m_Pos.x = m_PrevPos.x;
+				//dbg_msg("Resetting","%d",Server()->Tick());
+			}
 		m_Core.m_Vel.x = 0;
 	}
 	if((m_TileIndexR == TILE_STOPA || m_TileFIndexR == TILE_STOPA || m_TileIndex == TILE_STOPR || m_TileIndexR == TILE_STOPR || m_TileFIndex == TILE_STOPR || m_TileFIndexR == TILE_STOPR || m_TileIndexR == TILE_STOPH || m_TileFIndexR == TILE_STOPH) && m_Core.m_Vel.x < 0)
 	{
 		if((int)GameServer()->Collision()->GetPos(MapIndex).x)
 			if((int)GameServer()->Collision()->GetPos(MapIndex).x > (int)m_Core.m_Pos.x)
+			{
 				m_Core.m_Pos.x = m_PrevPos.x;
+				//dbg_msg("Resetting","%d",Server()->Tick());
+			}
 		m_Core.m_Vel.x = 0;
 	}
 	if((m_TileIndexB == TILE_STOPA || m_TileFIndexB == TILE_STOPA || m_TileIndex == TILE_STOPB || m_TileIndexB == TILE_STOPB || m_TileFIndex == TILE_STOPB || m_TileFIndexB == TILE_STOPB|| m_TileIndexB == TILE_STOPV || m_TileFIndexB == TILE_STOPV) && m_Core.m_Vel.y < 0)
 	{
 		if((int)GameServer()->Collision()->GetPos(MapIndex).y)
 			if((int)GameServer()->Collision()->GetPos(MapIndex).y > (int)m_Core.m_Pos.y)
+			{
 				m_Core.m_Pos.y = m_PrevPos.y;
+				//dbg_msg("Resetting","%d",Server()->Tick());
+			}
 		m_Core.m_Vel.y = 0;
 	}
 	if((m_TileIndexT == TILE_STOPA || m_TileFIndexT == TILE_STOPA || m_TileIndex == TILE_STOPT || m_TileIndexT == TILE_STOPT || m_TileFIndex == TILE_STOPT || m_TileFIndexT == TILE_STOPT || m_TileIndexT == TILE_STOPV || m_TileFIndexT == TILE_STOPV) && m_Core.m_Vel.y > 0)
 	{
-		//dbg_msg("","%f %f",GameServer()->Collision()->GetPos(MapIndex).y,m_Core.m_Pos.y);
+		dbg_msg("","%f %f",GameServer()->Collision()->GetPos(MapIndex).y,m_Core.m_Pos.y);
 		if((int)GameServer()->Collision()->GetPos(MapIndex).y)
 			if((int)GameServer()->Collision()->GetPos(MapIndex).y < (int)m_Core.m_Pos.y)
 			{
-				//dbg_msg("Resetting","");
+				//dbg_msg("Resetting","%d",Server()->Tick());
 				m_Core.m_Pos.y = m_PrevPos.y;
 			}
 		m_Core.m_Vel.y = 0;
@@ -938,7 +947,7 @@ void CCharacter::Tick()
 		dbg_msg("Direction","%f %f   %f %f   %f %f",Direction.x,Direction.y,(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
 	}
 	m_LastBooster = MapIndex;
-	int z = GameServer()->Collision()->IsTeleport(m_Pos.x, m_Pos.y);
+	int z = GameServer()->Collision()->IsTeleport(MapIndex);
 	if(z)
 	{
 		m_Core.m_HookedPlayer = -1;
@@ -948,7 +957,7 @@ void CCharacter::Tick()
 		m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_pTeleporter[z-1];
 		m_Core.m_HookPos = m_Core.m_Pos;
 	}
-	int evilz = GameServer()->Collision()->IsEvilTeleport(m_Pos.x, m_Pos.y);
+	int evilz = GameServer()->Collision()->IsEvilTeleport(MapIndex);
 	if(evilz && !m_Super)
 	{
 		m_Core.m_HookedPlayer = -1;
@@ -978,7 +987,7 @@ void CCharacter::Tick()
 	if((int)m_Pos.x/32 < -200 || (int)m_Pos.x/32 > GameServer()->Collision()->GetWidth()+200 ||
 		(int)m_Pos.y/32 < -200 || (int)m_Pos.y/32 > GameServer()->Collision()->GetHeight()+200)
 	{
-		Die(m_pPlayer->GetCID(), WEAPON_WORLD);
+		;//Die(m_pPlayer->GetCID(), WEAPON_WORLD);
 	}
 
 	// handle Weapons
