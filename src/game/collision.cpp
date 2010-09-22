@@ -147,6 +147,8 @@ int CCollision::GetMapIndex(vec2 PrevPos, vec2 Pos)
 
 vec2 CCollision::GetPos(int Index)
 {
+	if(Index == -1)
+		return vec2(0,0);
 	int x = Index%m_Width;
 	int y = Index/m_Width;
 
