@@ -32,7 +32,7 @@ class CDraggerTeam {
 public:
 	
 	CDraggerTeam(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW=false);
-	~CDraggerTeam();
+	//~CDraggerTeam();
 };
 
 #endif
