@@ -27,23 +27,19 @@ void CDragger::Move()
 	if (m_Target)
 		return;
 	CCharacter *Ents[16];
-	int Num = -1;
-	Num =  GameServer()->m_World.FindEntities(m_Pos,LENGTH, (CEntity**)Ents, 16, NETOBJTYPE_CHARACTER);
+	int Num = GameServer()->m_World.FindEntities(m_Pos,LENGTH, (CEntity**)Ents, 16, NETOBJTYPE_CHARACTER);
 	int Id=-1;
 	int MinLen=0;
 	for (int i = 0; i < Num; i++)
 	{
 		m_Target = Ents[i];
 		if(m_Target->Team() != m_CatchedTeam) continue;
-		int Res=0;
-		if (!m_NW)
-			Res = GameServer()->Collision()->IntersectNoLaser(m_Pos, m_Target->m_Pos, 0, 0);
-		else
-			Res = GameServer()->Collision()->IntersectNoLaserNW(m_Pos, m_Target->m_Pos, 0, 0);
+		int Res = m_NW ? GameServer()->Collision()->IntersectNoLaserNW(m_Pos, m_Target->m_Pos, 0, 0) :
+			GameServer()->Collision()->IntersectNoLaser(m_Pos, m_Target->m_Pos, 0, 0);
 
 		if (Res==0)
 		{
-			int Len=length(Ents[i]->m_Pos - m_Pos);
+			int Len=length(m_Target->m_Pos - m_Pos);
 			if (MinLen==0 || MinLen>Len)
 			{
 				MinLen=Len;
@@ -51,14 +47,7 @@ void CDragger::Move()
 			}
 		}
 	}
-	if (Id!=-1)
-	{
-		m_Target = Ents[Id];
-	}
-	else
-	{
-		m_Target=0;
-	}
+	m_Target = Id != -1 ? Ents[Id] : 0;
 }
 
 void CDragger::Drag()
