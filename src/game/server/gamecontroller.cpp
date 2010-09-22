@@ -289,11 +289,11 @@ bool IGameController::OnEntity(int Index, vec2 Pos, bool Front)
 	}
    else if(Index>=ENTITY_DRAGGER_WEAK && Index <=ENTITY_DRAGGER_STRONG)
    {
-       new CDragger(&GameServer()->m_World,Pos,Index-ENTITY_DRAGGER_WEAK+1);
+       new CDraggerTeam(&GameServer()->m_World,Pos,Index-ENTITY_DRAGGER_WEAK+1, false);
    }
    else if(Index>=ENTITY_DRAGGER_WEAK_NW && Index <=ENTITY_DRAGGER_STRONG_NW)
    {
-       new CDragger(&GameServer()->m_World, Pos,Index-ENTITY_DRAGGER_WEAK_NW+1,true);
+       new CDraggerTeam(&GameServer()->m_World, Pos,Index-ENTITY_DRAGGER_WEAK_NW+1,true);
    }
    else if(Index==ENTITY_PLASMAE)
    {

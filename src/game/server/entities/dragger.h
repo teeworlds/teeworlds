@@ -4,7 +4,6 @@
 #define GAME_SERVER_ENTITY_DRAGGER_H
 
 #include <game/server/entity.h>
-
 class CCharacter;
 
 class CDragger : public CEntity
@@ -16,14 +15,24 @@ class CDragger : public CEntity
 	void Drag();
 	CCharacter * m_Target;
 	bool m_NW;
+	int m_CatchedTeam;
 public:
 
 
-	CDragger(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW=false);
+	CDragger(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW, int CatchedTeam);
 
 	virtual void Reset();
 	virtual void Tick();
 	virtual void Snap(int snapping_client);
+};
+
+class CDraggerTeam {
+	CDragger * m_Draggers[MAX_CLIENTS];
+	
+public:
+	
+	CDraggerTeam(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW=false);
+	//~CDraggerTeam();
 };
 
 #endif

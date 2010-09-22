@@ -1223,7 +1223,7 @@ void CCharacter::Die(int Killer, int Weapon)
 		m_pPlayer->GetCID(), Server()->ClientName(m_pPlayer->GetCID()), Weapon, ModeSpecial);
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
-	Controller->m_Teams.m_Core.Team(m_pPlayer->GetCID(), 0);
+	Controller->m_Teams.SetForceCharacterTeam(m_pPlayer->GetCID(), 0);
 
 	// send the kill message
 	CNetMsg_Sv_KillMsg Msg;

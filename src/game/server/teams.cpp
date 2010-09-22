@@ -81,6 +81,23 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 			}
 		}
 	}
+	SetForceCharacterTeam(id, Team);
+	char aBuf[512];
+	str_format(aBuf, sizeof(aBuf), "Id = %d Team = %d", id, Team);
+	dbg_msg("Teams", aBuf);
+	//GameServer()->CreatePlayerSpawn(Character(id)->m_Core.m_Pos, TeamMask());
+	if(Character(id)->GetPlayer()->m_IsUsingRaceClient)
+	{
+		CNetMsg_Sv_PlayerTeam Msg;
+		Msg.m_Team = Team;
+		Msg.m_Cid = id;
+		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+		//dbg_msg("Teams", "Sended all");
+	}
+	return true;
+}
+
+void CGameTeams::SetForceCharacterTeam(int id, int Team) {
 	if(m_Core.Team(id) != TEAM_FLOCK && m_Core.Team(id) != TEAM_SUPER && m_TeamState[m_Core.Team(id)] != EMPTY) {
 		bool NoOneInOldTeam = true;
 		for(int i = 0; i < MAX_CLIENTS; ++i) {
@@ -97,19 +114,6 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 	if(Team != TEAM_SUPER && m_TeamState[Team] == EMPTY) {
 		ChangeTeamState(Team, OPEN);
 	}
-	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "Id = %d Team = %d", id, Team);
-	dbg_msg("Teams", aBuf);
-	//GameServer()->CreatePlayerSpawn(Character(id)->m_Core.m_Pos, TeamMask());
-	if(Character(id)->GetPlayer()->m_IsUsingRaceClient)
-	{
-		CNetMsg_Sv_PlayerTeam Msg;
-		Msg.m_Team = Team;
-		Msg.m_Cid = id;
-		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
-		//dbg_msg("Teams", "Sended all");
-	}
-	return true;
 }
 
 void CGameTeams::ChangeTeamState(int Team, int State) {

@@ -11,14 +11,14 @@
 
 const int LENGTH=700;
 
-CDragger::CDragger(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW)
+CDragger::CDragger(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW, int CatchedTeam)
 : CEntity(pGameWorld, NETOBJTYPE_LASER)
 {
 	m_Pos = Pos;
 	m_Strength = Strength;
 	m_EvalTick = Server()->Tick();
 	m_NW = NW;
-
+	m_CatchedTeam = CatchedTeam;
 	GameWorld()->InsertEntity(this);
 }
 
@@ -27,22 +27,19 @@ void CDragger::Move()
 	if (m_Target)
 		return;
 	CCharacter *Ents[16];
-	int Num = -1;
-	Num =  GameServer()->m_World.FindEntities(m_Pos,LENGTH, (CEntity**)Ents, 16, NETOBJTYPE_CHARACTER);
+	int Num = GameServer()->m_World.FindEntities(m_Pos,LENGTH, (CEntity**)Ents, 16, NETOBJTYPE_CHARACTER);
 	int Id=-1;
 	int MinLen=0;
 	for (int i = 0; i < Num; i++)
 	{
 		m_Target = Ents[i];
-		int Res=0;
-		if (!m_NW)
-			Res = GameServer()->Collision()->IntersectNoLaser(m_Pos, m_Target->m_Pos, 0, 0);
-		else
-			Res = GameServer()->Collision()->IntersectNoLaserNW(m_Pos, m_Target->m_Pos, 0, 0);
+		if(m_Target->Team() != m_CatchedTeam) continue;
+		int Res = m_NW ? GameServer()->Collision()->IntersectNoLaserNW(m_Pos, m_Target->m_Pos, 0, 0) :
+			GameServer()->Collision()->IntersectNoLaser(m_Pos, m_Target->m_Pos, 0, 0);
 
 		if (Res==0)
 		{
-			int Len=length(Ents[i]->m_Pos - m_Pos);
+			int Len=length(m_Target->m_Pos - m_Pos);
 			if (MinLen==0 || MinLen>Len)
 			{
 				MinLen=Len;
@@ -50,14 +47,7 @@ void CDragger::Move()
 			}
 		}
 	}
-	if (Id!=-1)
-	{
-		m_Target = Ents[Id];
-	}
-	else
-	{
-		m_Target=0;
-	}
+	m_Target = Id != -1 ? Ents[Id] : 0;
 }
 
 void CDragger::Drag()
@@ -127,7 +117,9 @@ void CDragger::Snap(int SnappingClient)
 			return;
 
 	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
-	if(Char && m_Target && !Char->GetPlayer()->m_ShowOthers && Char->Team() != m_Target->Team()) return;
+	if(Char && m_Target 
+		&& !Char->GetPlayer()->m_ShowOthers 
+		&& Char->Team() != m_Target->Team()) return;
 
 	CNetObj_Laser *obj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_Id, sizeof(CNetObj_Laser)));
 
@@ -152,5 +144,15 @@ void CDragger::Snap(int SnappingClient)
 		StartTick = Server()->Tick();
 	obj->m_StartTick = StartTick;
 }
-//я тут был
-//я тоже
+
+CDraggerTeam::CDraggerTeam(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW) {
+	for(int i = 0; i < MAX_CLIENTS; ++i) {
+		m_Draggers[i] = new CDragger(pGameWorld, Pos, Strength, NW, i);
+	}
+}
+
+//CDraggerTeam::~CDraggerTeam() {
+	//for(int i = 0; i < MAX_CLIENTS; ++i) {
+	//	delete m_Draggers[i];
+	//}
+//}
