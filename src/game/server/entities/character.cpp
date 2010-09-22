@@ -859,7 +859,7 @@ void CCharacter::Tick()
 	}
 	if((m_TileIndexT == TILE_STOPA || m_TileFIndexT == TILE_STOPA || m_TileIndex == TILE_STOPT || m_TileIndexT == TILE_STOPT || m_TileFIndex == TILE_STOPT || m_TileFIndexT == TILE_STOPT || m_TileIndexT == TILE_STOPV || m_TileFIndexT == TILE_STOPV) && m_Core.m_Vel.y > 0)
 	{
-		dbg_msg("","%f %f",GameServer()->Collision()->GetPos(MapIndex).y,m_Core.m_Pos.y);
+		//dbg_msg("","%f %f",GameServer()->Collision()->GetPos(MapIndex).y,m_Core.m_Pos.y);
 		if((int)GameServer()->Collision()->GetPos(MapIndex).y)
 			if((int)GameServer()->Collision()->GetPos(MapIndex).y < (int)m_Core.m_Pos.y)
 			{
@@ -933,7 +933,7 @@ void CCharacter::Tick()
 		GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force);
 
 		m_Core.m_Vel += Direction*Force;
-		dbg_msg("Direction","%f %f   %f %f   %f %f",Direction.x,Direction.y,(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
+		//dbg_msg("Direction","%f %f   %f %f   %f %f",Direction.x,Direction.y,(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
 
 	}
 	else if(GameServer()->Collision()->IsSpeedup(MapIndex) == TILE_BOOSTS)
@@ -944,7 +944,7 @@ void CCharacter::Tick()
 		Force/=5;
 		m_Core.m_Vel = Direction*Force;
 		m_Core.m_Vel+=Direction;
-		dbg_msg("Direction","%f %f   %f %f   %f %f",Direction.x,Direction.y,(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
+		//dbg_msg("Direction","%f %f   %f %f   %f %f",Direction.x,Direction.y,(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
 	}
 	m_LastBooster = MapIndex;
 	int z = GameServer()->Collision()->IsTeleport(MapIndex);
