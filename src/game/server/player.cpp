@@ -51,6 +51,9 @@ CPlayer::~CPlayer()
 void CPlayer::Tick()
 {
 	Server()->SetClientAuthed(m_ClientID, m_Authed);
+	if(!Server()->ClientIngame(m_ClientID))
+		return;
+
 	Server()->SetClientScore(m_ClientID, m_Score);
 
 	if(m_Muted > 0) m_Muted--;
@@ -114,6 +117,9 @@ void CPlayer::Tick()
 
 void CPlayer::Snap(int SnappingClient)
 {
+	if(!Server()->ClientIngame(m_ClientID))
+		return;
+
 	CNetObj_ClientInfo *ClientInfo = static_cast<CNetObj_ClientInfo *>(Server()->SnapNewItem(NETOBJTYPE_CLIENTINFO, m_ClientID, sizeof(CNetObj_ClientInfo)));
 	StrToInts(&ClientInfo->m_Name0, 6, Server()->ClientName(m_ClientID));
 	StrToInts(&ClientInfo->m_Skin0, 6, m_TeeInfos.m_SkinName);
