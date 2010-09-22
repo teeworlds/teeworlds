@@ -926,21 +926,21 @@ void CCharacter::Tick()
 			m_Core.m_Vel.y += m_Core.m_Vel.y*1.1;
 	}
 	// handle speedup tiles
-	if(GameServer()->Collision()->IsSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y) == TILE_BOOST)
+	if(GameServer()->Collision()->IsSpeedup(MapIndex) == TILE_BOOST)
 	{
 		vec2 Direction;
 		int Force;
-		GameServer()->Collision()->GetSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y, &Direction, &Force);
+		GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force);
 
 		m_Core.m_Vel += Direction*Force;
 		dbg_msg("Direction","%f %f   %f %f   %f %f",Direction.x,Direction.y,(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
 
 	}
-	else if(GameServer()->Collision()->IsSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y) == TILE_BOOSTS)
+	else if(GameServer()->Collision()->IsSpeedup(MapIndex) == TILE_BOOSTS)
 	{
 		vec2 Direction;
 		int Force;
-		GameServer()->Collision()->GetSpeedup((int)m_Core.m_Pos.x, (int)m_Core.m_Pos.y, &Direction, &Force);
+		GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force);
 		Force/=5;
 		m_Core.m_Vel = Direction*Force;
 		m_Core.m_Vel+=Direction;

@@ -148,7 +148,7 @@ int CCollision::GetMapIndex(vec2 PrevPos, vec2 Pos)
 
 vec2 CCollision::GetPos(int Index)
 {
-	if(Index == -1)
+	if(Index < 0)
 		return vec2(0,0);
 	int x = Index%m_Width;
 	int y = Index/m_Width;
@@ -511,6 +511,8 @@ int CCollision::IsFNoLaser(int x, int y)
 
 int CCollision::IsTeleport(int Index)
 {
+	if(Index < 0)
+		return 0;
 	if(!m_pTele)
 		return 0;
 
@@ -523,6 +525,8 @@ int CCollision::IsTeleport(int Index)
 
 int CCollision::IsEvilTeleport(int Index)
 {
+	if(Index < 0)
+		return 0;
 	if(!m_pTele)
 		return 0;
 
@@ -535,32 +539,31 @@ int CCollision::IsEvilTeleport(int Index)
 	return Tele;
 }
 
-int CCollision::IsSpeedup(int x, int y)
+int CCollision::IsSpeedup(int Index)
 {
+	if(Index < 0)
+		return 0;
 	if(!m_pSpeedup)
 		return false;
 
 	/*dbg_msg("test", "test");//REMOVE*/
-	int nx = clamp(x/32, 0, m_pLayers->SpeedupLayer()->m_Width-1);
-	int ny = clamp(y/32, 0, m_pLayers->SpeedupLayer()->m_Height-1);
 
-	if(m_pSpeedup[ny*m_pLayers->SpeedupLayer()->m_Width+nx].m_Force > 0)
+	if(m_pSpeedup[Index].m_Force > 0)
 	//{
 		//dbg_msg("IsSpeedup","Index = %d",m_pSpeedup[ny*m_pLayers->SpeedupLayer()->m_Width+nx].m_Type);
-		return m_pSpeedup[ny*m_pLayers->SpeedupLayer()->m_Width+nx].m_Type;
+		return m_pSpeedup[Index].m_Type;
 	//}
 
 	return 0;
 }
 
-void CCollision::GetSpeedup(int x, int y, vec2 *Dir, int *Force)
+void CCollision::GetSpeedup(int Index, vec2 *Dir, int *Force)
 {
-	int nx = clamp(x/32, 0, m_pLayers->SpeedupLayer()->m_Width-1);
-	int ny = clamp(y/32, 0, m_pLayers->SpeedupLayer()->m_Height-1);
-
+	if(Index < 0)
+		return;
 	vec2 Direction = vec2(1, 0);
-	float Angle = m_pSpeedup[ny*m_pLayers->SpeedupLayer()->m_Width+nx].m_Angle * (3.14159265f/180.0f);
-	*Force = m_pSpeedup[ny*m_pLayers->SpeedupLayer()->m_Width+nx].m_Force;
+	float Angle = m_pSpeedup[Index].m_Angle * (3.14159265f/180.0f);
+	*Force = m_pSpeedup[Index].m_Force;
 
 	vec2 TmpDir;
 	TmpDir.x = (Direction.x*cos(Angle)) - (Direction.y*sin(Angle));
@@ -573,6 +576,8 @@ int CCollision::IsCp(int x, int y)
 	int nx = clamp(x/32, 0, m_Width-1);
 	int ny = clamp(y/32, 0, m_Height-1);
 	int Index = m_pTiles[ny*m_Width+nx].m_Index;
+	if(Index < 0)
+		return 0;
 	if (Index >= TILE_CP_D && Index <= TILE_CP_L_F)
 		return Index;
 	else
@@ -592,7 +597,8 @@ int CCollision::IsCheckpoint(int Index)
 
 vec2 CCollision::CpSpeed(int Index)
 {
-
+	if(Index < 0)
+		return vec2(0,0);
    vec2 target;
 
    switch(Index)
