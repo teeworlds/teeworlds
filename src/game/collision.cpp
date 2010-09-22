@@ -99,7 +99,6 @@ void CCollision::Init(class CLayers *pLayers)
 
 int CCollision::GetMapIndex(vec2 PrevPos, vec2 Pos)
 {
-	int Index = 0;
 	float d = distance(PrevPos, Pos);
 
 	if(!d)
@@ -151,7 +150,7 @@ vec2 CCollision::GetPos(int Index)
 	int x = Index%m_Width;
 	int y = Index/m_Width;
 
-	return vec2(x, y);
+	return vec2(16+x*32, 16+y*32);
 }
 
 int CCollision::GetCollisionDDRace(int Index)
