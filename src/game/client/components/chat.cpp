@@ -3,6 +3,7 @@
 #include <engine/textrender.h>
 #include <engine/keys.h>
 #include <engine/shared/config.h>
+#include <engine/serverbrowser.h>
 
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
@@ -230,10 +231,15 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 		{
 			str_copy(m_aLines[m_CurrentLine].m_aName, "*** ", sizeof(m_aLines[m_CurrentLine].m_aName));
 			
+			// get server info
+			CServerInfo CurrentServerInfo;
+			Client()->GetServerInfo(&CurrentServerInfo);
+				
 			// match team names team colors
 			if(str_find(pLine, "entered and joined the red team"))
 			{
-				pLine++;
+				if(!str_comp_num(CurrentServerInfo.m_aVersion, "0.5 trunk", 9) && (pLine[0] == '"' || pLine[0] == '\''))
+					pLine++;
 				
 				int Num = 0;
 				const char* pTmp = pLine;
@@ -255,7 +261,8 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 			}
 			else if(str_find(pLine, "entered and joined the blue team"))
 			{
-				pLine++;
+				if(!str_comp_num(CurrentServerInfo.m_aVersion, "0.5 trunk", 9) && (pLine[0] == '"' || pLine[0] == '\''))
+					pLine++;
 				
 				int Num = 0;
 				const char* pTmp = pLine;
@@ -277,7 +284,8 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 			}
 			else if(str_find(pLine, "joined the red team"))
 			{
-				pLine++;
+				if(!str_comp_num(CurrentServerInfo.m_aVersion, "0.5 trunk", 9) && (pLine[0] == '"' || pLine[0] == '\''))
+					pLine++;
 				
 				int Num = 0;
 				const char* pTmp = pLine;
@@ -299,7 +307,8 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 			}
 			else if(str_find(pLine, "joined the blue team"))
 			{
-				pLine++;
+				if(!str_comp_num(CurrentServerInfo.m_aVersion, "0.5 trunk", 9) && (pLine[0] == '"' || pLine[0] == '\''))
+					pLine++;
 				
 				int Num = 0;
 				const char* pTmp = pLine;

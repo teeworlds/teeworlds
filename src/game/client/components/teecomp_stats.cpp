@@ -1,6 +1,7 @@
 #include <engine/shared/config.h>
 #include <engine/textrender.h>
 #include <engine/graphics.h>
+#include <engine/serverbrowser.h>
 #include <game/generated/client_data.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
@@ -136,6 +137,10 @@ void CTeecompStats::OnMessage(int MsgType, void *pRawMsg)
 			const char *pLookFor = "flag was captured by ";
 			if(str_find_nocase(pMsg->m_pMessage, pLookFor) != 0)
 			{
+				// server info
+				CServerInfo CurrentServerInfo;
+				Client()->GetServerInfo(&CurrentServerInfo);
+			
 				p = str_find_nocase(pMsg->m_pMessage, pLookFor);
 				char aName[64];
 				p += str_length(pLookFor);
@@ -162,6 +167,21 @@ void CTeecompStats::OnMessage(int MsgType, void *pRawMsg)
 					{
 						m_pClient->m_aStats[i].m_FlagCaptures++;
 						break;
+					}
+					
+					// check against trunk version
+					if(!str_comp_num(CurrentServerInfo.m_aVersion, "0.5 trunk", 9) && (aName[0] == '"' || aName[0] == '\''))
+					{
+						char *pName = aName;
+						// strip first and last sign
+						pName++;
+						pName[str_length(pName)-1] = 0;
+						
+						if(str_comp_nocase(m_pClient->m_aClients[i].m_aName, pName) == 0)
+						{
+							m_pClient->m_aStats[i].m_FlagCaptures++;
+							break;
+						}
 					}
 				}
 			}
@@ -258,15 +278,15 @@ void CTeecompStats::RenderGlobalStats()
 	float tw;
 	int px = 525;
 
-	TextRender()->Text(0, x+10, y, 24.0f, "Name", -1);
-	const char *apHeaders[] = { "Frags", "Deaths", "Suicides", "Ratio", "Net", "FPM", "Spree", "Best Spree" };
+	TextRender()->Text(0, x+10, y-5, 24.0f, "Name", -1);
+	const char *apHeaders[] = { "Frags", "Deaths", "Suicides", "Ratio", "Net", "FPM", "Spree", "Best Spree", "Caps" };
 	for(i=0; i<8; i++)
 		if(g_Config.m_TcStatboardInfos & (1<<i))
 		{
 			if(1<<i == TC_STATS_BESTSPREE)
 				px += 40.0f;
 			tw = TextRender()->TextWidth(0, 24.0f, apHeaders[i], -1);
-			TextRender()->Text(0, x+px-tw, y, 24.0f, apHeaders[i], -1);
+			TextRender()->Text(0, x+px-tw, y-5, 24.0f, apHeaders[i], -1);
 			px += 100;
 		}
 
@@ -297,7 +317,7 @@ void CTeecompStats::RenderGlobalStats()
 		Graphics()->QuadsBegin();
 		Graphics()->QuadsSetRotation(0.78f);
 		RenderTools()->SelectSprite(SPRITE_FLAG_RED);
-		RenderTools()->SelectSprite(x+px, y+10, 48);
+		RenderTools()->DrawSprite(x+px, y+15, 48);
 		Graphics()->QuadsEnd();
 	}
 
