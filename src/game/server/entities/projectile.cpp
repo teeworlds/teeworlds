@@ -95,20 +95,23 @@ void CProjectile::Tick()
 	if(m_LifeSpan > -1)
 		m_LifeSpan--;
 	
+	int TeamMask = -1;
 	bool isWeaponCollide = false;
 	if(OwnerChar && TargetChr 
 		&& OwnerChar->m_Alive && TargetChr->m_Alive 
-		&& !TargetChr->CanCollide(m_Owner)) isWeaponCollide = true;
-	
+		&& !TargetChr->CanCollide(m_Owner)) {
+			isWeaponCollide = true;
+			TeamMask = OwnerChar->Teams()->TeamMask( OwnerChar->Team());
+	}
 	if( ((TargetChr && (g_Config.m_SvHit || m_Owner == -1 || TargetChr == OwnerChar)) || Collide) && !isWeaponCollide)//TODO:TEAM
 	{
 		
 		if(m_Explosive/*??*/ && (!TargetChr || (TargetChr && !m_Freeze)))
 		{
-			GameServer()->CreateExplosion(ColPos, m_Owner, m_Weapon, (m_Owner == -1)?true:false, 
-			(m_Owner != -1)? OwnerChar->Teams()->TeamMask(OwnerChar->Team()) : -1);
+			GameServer()->CreateExplosion(ColPos, m_Owner, m_Weapon, m_Owner == -1, 
+			(m_Owner != -1)? TeamMask : -1);
 			GameServer()->CreateSound(ColPos, m_SoundImpact, 
-			(m_Owner != -1)? OwnerChar->Teams()->TeamMask(OwnerChar->Team()) : -1);
+			(m_Owner != -1)? TeamMask : -1);
 		}
 		else if(TargetChr && m_Freeze)
 			TargetChr->Freeze(Server()->TickSpeed()*3);
@@ -125,7 +128,7 @@ void CProjectile::Tick()
 		else if (m_Weapon == WEAPON_GUN)
 		{
 			GameServer()->CreateDamageInd(CurPos, -atan2(m_Direction.x, m_Direction.y), 10,
-			(m_Owner != -1)? OwnerChar->Teams()->TeamMask(OwnerChar->Team()) : -1);
+			(m_Owner != -1)? TeamMask : -1);
 			GameServer()->m_World.DestroyEntity(this);
 		}
 		else
@@ -156,7 +159,7 @@ void CProjectile::Snap(int SnappingClient)
 		return;
 	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
 	if(Char && m_Owner != -1 && !Char->GetPlayer()->m_ShowOthers &&
-	Char->Team() != GameServer()->GetPlayerChar(m_Owner)->Team()) return;
+	Char->CanCollide(m_Owner)) return;
 	CNetObj_Projectile *pProj = static_cast<CNetObj_Projectile *>(Server()->SnapNewItem(NETOBJTYPE_PROJECTILE, m_Id, sizeof(CNetObj_Projectile)));
 	FillInfo(pProj);
 }
