@@ -323,7 +323,7 @@ void CCharacter::FireWeapon()
 				CCharacter *Target = aEnts[i];
 
 				//for DDRace mod or any other mod, which needs hammer hits through the wall remove second condition
-				if ((Target == this || !CanCollide(i)) /*|| GameServer()->Collision()->IntersectLine(ProjStartPos, Target->m_Pos, NULL, NULL)*/)
+				if ((Target == this || !CanCollide(Target->GetPlayer()->GetCID())) /*|| GameServer()->Collision()->IntersectLine(ProjStartPos, Target->m_Pos, NULL, NULL)*/)
 					continue;
 
 				// set his velocity to fast upward (for now)
