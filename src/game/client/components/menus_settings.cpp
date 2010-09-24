@@ -209,28 +209,27 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
         MainView.HSplitTop(MainView.h/2, 0, &MainView);
 
 		// render skinselector
-		static const int s_MaxSkins = 256;
-		static const CSkins::CSkin *s_paSkinList[s_MaxSkins];
-		static int s_NumSkins = -1;
+		static bool s_InitSkinlist = true;
+		static sorted_array<const CSkins::CSkin *> s_paSkinList;
 		static float s_ScrollValue = 0;
-		if(s_NumSkins == -1)
+		if(s_InitSkinlist)
 		{
-			mem_zero(s_paSkinList, sizeof(s_paSkinList));
-			s_NumSkins = 0;
-			for(int i = 0; i < m_pClient->m_pSkins->Num() && i < s_MaxSkins; ++i)
+			s_paSkinList.clear();
+			for(int i = 0; i < m_pClient->m_pSkins->Num(); ++i)
 			{
 				const CSkins::CSkin *s = m_pClient->m_pSkins->Get(i);
 				// no special skins
 				if(s->m_aName[0] == 'x' && s->m_aName[1] == '_')
 					continue;
-				s_paSkinList[s_NumSkins++] = s;
+				s_paSkinList.add(s);
 			}
+			s_InitSkinlist = false;
 		}
 
 		int OldSelected = -1;
-		UiDoListboxStart(&s_NumSkins , &MainView, 50.0f, Localize("Skins"), "", s_NumSkins, 4, OldSelected, s_ScrollValue);
+		UiDoListboxStart(&s_InitSkinlist, &MainView, 50.0f, Localize("Skins"), "", s_paSkinList.size(), 4, OldSelected, s_ScrollValue);
 
-		for(int i = 0; i < s_NumSkins; ++i)
+		for(int i = 0; i < s_paSkinList.size(); ++i)
 		{
 			const CSkins::CSkin *s = s_paSkinList[i];
 			if(s == 0)
