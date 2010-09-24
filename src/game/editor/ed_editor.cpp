@@ -2180,10 +2180,11 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 
 static void EditorListdirCallback(const char *pName, int IsDir, int DirType, void *pUser)
 {
-	if(pName[0] == '.' && pName[1] == 0)
+	CEditor *pEditor = (CEditor*)pUser;
+	if(pName[0] == '.' && (pName[1] == 0 ||
+		(pName[1] == '.' && pName[2] == 0 && (!str_comp(pEditor->m_aFileDialogPath, "maps") || !str_comp(pEditor->m_aFileDialogPath, "mapres")))))
 		return;
 
-	CEditor *pEditor = (CEditor*)pUser;
 	pEditor->m_FileList.add(string(pName));
 }
 
@@ -2305,8 +2306,6 @@ void CEditor::RenderFileDialog()
 void CEditor::FilelistPopulate()
 {
 	m_FileList.clear();
-	if(str_comp(m_aFileDialogPath, "maps") != 0 && str_comp(m_aFileDialogPath, "mapres") != 0)
-		m_FileList.add(string(".."));
 	Storage()->ListDirectory(m_FileDialogDirTypes, m_aFileDialogPath, EditorListdirCallback, this);
 }
 
