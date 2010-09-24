@@ -921,7 +921,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 	io_close(File);
 }
 
-void GatherFonts(const char *pName, int IsDir, void *pUser)
+void GatherFonts(const char *pName, int IsDir, int Type, void *pUser)
 {
 	if(IsDir || pName[0] == '.')
 		return;
@@ -937,7 +937,11 @@ void GatherFonts(const char *pName, int IsDir, void *pUser)
 
 	for(char *p = NiceName; *p; p++)
 		if(*p == '.')
+		{
+			if(str_comp(p, ".ttf"))
+				return;
 			*p = 0;
+		}
 
 	Fonts.add(CFontFile(NiceName, aFileName));
 }
@@ -994,7 +998,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	if(s_Fonts.size() == 0)
 	{
-		fs_listdir("data/fonts", GatherFonts, &s_Fonts);
+		fs_listdir("data/fonts", GatherFonts, IStorage::TYPE_DATA, &s_Fonts);
 		for(int i = 0; i < s_Fonts.size(); i++)
 			if(str_comp(s_Fonts[i].m_FileName, g_Config.m_ClFontfile) == 0)
 			{
