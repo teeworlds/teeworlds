@@ -2361,6 +2361,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 
 	// select gametype
 	m_pController = new CGameControllerDDRace(this);
+	((CGameControllerDDRace*)m_pController)->m_Teams.Reset();
 
 	Server()->SetBrowseInfo(m_pController->m_pGameType, -1);
 

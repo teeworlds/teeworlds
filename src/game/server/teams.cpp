@@ -2,6 +2,11 @@
 
 
 CGameTeams::CGameTeams(CGameContext *pGameContext) : m_pGameContext(pGameContext) {
+	Reset();
+}
+
+void CGameTeams::Reset() {
+	m_Core.Reset();
 	for(int i = 0; i < MAX_CLIENTS; ++i) {
 		m_TeamState[i] = EMPTY;
 		m_TeeFinished[i] = false;
