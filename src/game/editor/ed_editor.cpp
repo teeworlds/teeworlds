@@ -2178,7 +2178,7 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 }
 
 
-static void EditorListdirCallback(const char *pName, int IsDir, void *pUser)
+static void EditorListdirCallback(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	if(pName[0] == '.' && pName[1] == 0)
 		return;

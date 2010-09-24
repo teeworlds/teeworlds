@@ -175,8 +175,7 @@ class CMenus : public CComponent
 	void DemolistPopulate();*/
 	bool m_DemolistDelEntry;
 	
-	static void DemolistCountCallback(const char *pName, int IsDir, void *pUser);
-	static void DemolistFetchCallback(const char *pName, int IsDir, void *pUser);
+	static void DemolistFetchCallback(const char *pName, int IsDir, int DirType, void *pUser);
 	
 	// found in menus.cpp
 	int Render();

@@ -137,22 +137,32 @@ public:
 		// list current directory
 		if(Types&TYPE_CURRENT)
 		{
-			fs_listdir(pPath, pfnCallback, pUser);
+			fs_listdir(pPath, pfnCallback, TYPE_CURRENT, pUser);
 		}
 		
 		// list users directory
 		if(Types&TYPE_SAVE)
 		{
 			str_format(aBuffer, sizeof(aBuffer), "%s/%s", m_aApplicationSavePath, pPath);
-			fs_listdir(aBuffer, pfnCallback, pUser);
+			fs_listdir(aBuffer, pfnCallback, TYPE_SAVE, pUser);
 		}
 		
 		// list datadir directory
 		if(Types&TYPE_DATA)
 		{
 			str_format(aBuffer, sizeof(aBuffer), "%s/%s", m_aDatadir, pPath);
-			fs_listdir(aBuffer, pfnCallback, pUser);
+			fs_listdir(aBuffer, pfnCallback, TYPE_DATA, pUser);
 		}		
+	}
+
+	virtual const char *GetDirectory(int Type) const
+	{
+		switch(Type)
+		{
+		case TYPE_SAVE: return m_aApplicationSavePath;
+		case TYPE_DATA: return m_aDatadir;
+		default: return "";
+		}
 	}
 	
 	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, char *pBuffer = 0, int BufferSize = 0)

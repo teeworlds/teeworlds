@@ -10,7 +10,7 @@
 
 #include "skins.h"
 
-void CSkins::SkinScan(const char *pName, int IsDir, void *pUser)
+void CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	CSkins *pSelf = (CSkins *)pUser;
 	int l = str_length(pName);
