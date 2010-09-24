@@ -408,7 +408,7 @@ int CMenus::UiDoListboxEnd(float *pScrollValue, bool *pItemActivated)
 	return gs_ListBoxNewSelected;
 }
 
-void CMenus::DemolistFetchCallback(const char *pName, int IsDir, void *pUser)
+void CMenus::DemolistFetchCallback(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	if(pName[0] == '.')
 		return;
@@ -416,7 +416,8 @@ void CMenus::DemolistFetchCallback(const char *pName, int IsDir, void *pUser)
 	CMenus *pSelf = (CMenus *)pUser;
 	
 	CDemoItem Item;
-	str_format(Item.m_aFilename, sizeof(Item.m_aFilename), "%s/%s/%s", pSelf->Client()->UserDirectory(), pSelf->m_aCurrentDemoFolder, pName);
+	str_format(Item.m_aFilename, sizeof(Item.m_aFilename), "%s%s%s/%s", pSelf->Storage()->GetDirectory(DirType),
+		pSelf->Storage()->GetDirectory(DirType)[0] ? "/" : "", pSelf->m_aCurrentDemoFolder, pName);
 	str_copy(Item.m_aName, pName, sizeof(Item.m_aName));
 	pSelf->m_lDemos.add(Item);
 }
@@ -433,7 +434,7 @@ void CMenus::DemolistPopulate()
 		m_lDemos.add(Item);
 	}
 	
-	Storage()->ListDirectory(IStorage::TYPE_SAVE, m_aCurrentDemoFolder, DemolistFetchCallback, this);
+	Storage()->ListDirectory(IStorage::TYPE_SAVE|IStorage::TYPE_CURRENT, m_aCurrentDemoFolder, DemolistFetchCallback, this);
 }
 
 

@@ -28,6 +28,6 @@ public:
 private:
 	sorted_array<CSkin> m_aSkins;
 
-	static void SkinScan(const char *pName, int IsDir, void *pUser);
+	static void SkinScan(const char *pName, int IsDir, int DirType, void *pUser);
 };
 #endif
