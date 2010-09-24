@@ -906,15 +906,16 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				
 				if(sscanf(pMsg->m_pMessage, "/team %d", &Num) == 1)
 				{
-					if(((CGameControllerDDRace*)m_pController)->m_Teams.SetCharacterTeam(pPlayer->GetCID(), Num))
-					{
-						char aBuf[512];
-						str_format(aBuf, sizeof(aBuf), "%s joined to Team %d", Server()->ClientName(pPlayer->GetCID()), Num);
-						SendChat(-1, CGameContext::CHAT_ALL, aBuf);
-					}
-					else
-					{
-						SendChatTarget(ClientId, "You cannot join to this team");
+					if(pPlayer->GetCharacter() == 0) {
+						SendChat(-1, CGameContext::CHAT_ALL, "Will be better if you will be alive");
+					} else {
+						if(((CGameControllerDDRace*)m_pController)->m_Teams.SetCharacterTeam(pPlayer->GetCID(), Num)) {
+							char aBuf[512];
+							str_format(aBuf, sizeof(aBuf), "%s joined to Team %d", Server()->ClientName(pPlayer->GetCID()), Num);
+							SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+						} else {
+							SendChatTarget(ClientId, "You cannot join to this team");
+						}
 					}
 				}
 				else
