@@ -418,6 +418,7 @@ void CGameClient::OnReset()
 	m_RaceMsgSent = false;
 	m_ShowOthers = -1;
 	m_FlagPos = vec2(-1, -1);
+	m_Teams.Reset();
 }
 
 

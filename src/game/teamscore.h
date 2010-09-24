@@ -21,6 +21,8 @@ public:
 	
 	int Team(int Cid);
 	void Team(int Cid, int Team);
+
+	void Reset();
 };
 
 #endif
