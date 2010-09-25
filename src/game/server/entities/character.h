@@ -185,14 +185,19 @@ public:
 	int m_CurrentFTile;*/
 	int m_TileIndex;
 	int m_TileFIndex;
+	int m_TileSIndex;
 	int m_TileIndexL;
 	int m_TileFIndexL;
+	int m_TileSIndexL;
 	int m_TileIndexR;
 	int m_TileFIndexR;
+	int m_TileSIndexR;
 	int m_TileIndexT;
 	int m_TileFIndexT;
+	int m_TileSIndexT;
 	int m_TileIndexB;
 	int m_TileFIndexB;
+	int m_TileSIndexB;
 
 	vec2 m_Intersection;
 	bool m_EyeEmote;

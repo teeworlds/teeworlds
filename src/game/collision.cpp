@@ -33,7 +33,10 @@ void CCollision::Init(class CLayers *pLayers)
 	if(m_pLayers->SpeedupLayer())
 		m_pSpeedup = static_cast<CSpeedupTile *>(m_pLayers->Map()->GetData(m_pLayers->SpeedupLayer()->m_Speedup));
 	if(m_pLayers->SwitchLayer())
+	{
 		m_pSwitch = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->SwitchLayer()->m_Switch));
+		m_pDoor = new CDoorTile[m_Width*m_Height];
+	}
 	if(m_pLayers->FrontLayer())
 	{
 		m_pFront = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->FrontLayer()->m_Front));
@@ -118,12 +121,15 @@ int CCollision::GetMapIndex(vec2 PrevPos, vec2 Pos)
 		else if (m_pTele && m_pTele[ny*m_Width+nx].m_Type==TILE_TELEOUT) dbg_msg("TELEOUT","ny*m_Width+nx %d",ny*m_Width+nx);
 		else dbg_msg("GetMapIndex(","ny*m_Width+nx %d",ny*m_Width+nx);//REMOVE */
 
-		if((m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
+		if(
+			(m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
 			((m_pTiles[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
 			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pFront[ny*m_Width+nx].m_Index < TILE_TELEIN)) ||
 			(m_pFront && ((m_pFront[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pFront[ny*m_Width+nx].m_Index <= TILE_NPH))) ||
 			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEINEVIL || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
-			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0))
+			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0) ||
+			(m_pDoor && m_pDoor[ny*m_Width+nx].m_Index)
+		)
 		{
 			return ny*m_Width+nx;
 		}
@@ -140,12 +146,15 @@ int CCollision::GetMapIndex(vec2 PrevPos, vec2 Pos)
 		Tmp = mix(PrevPos, Pos, a);
 		nx = clamp((int)Tmp.x/32, 0, m_Width-1);
 		ny = clamp((int)Tmp.y/32, 0, m_Height-1);
-		if((m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
+		if(
+			(m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
 			((m_pTiles[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
 			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pFront[ny*m_Width+nx].m_Index < TILE_TELEIN)) ||
 			(m_pFront && ((m_pFront[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pFront[ny*m_Width+nx].m_Index <= TILE_NPH))) ||
 			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEINEVIL || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
-			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0))
+			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0) ||
+			(m_pDoor && m_pDoor[ny*m_Width+nx].m_Index)
+		)
 		{
 			return ny*m_Width+nx;
 		}
@@ -171,6 +180,7 @@ int CCollision::GetTileIndex(int Index)
 		return 0;
 	return m_pTiles[Index].m_Index;
 }
+
 int CCollision::GetFTileIndex(int Index)
 {
 	/*dbg_msg("GetFTileIndex","m_pFront[%d].m_Index = %d",Index,m_pFront[Index].m_Index);//Remove*/
@@ -215,12 +225,62 @@ int CCollision::Entity(int x, int y, bool Front)
 	int Index = Front?m_pFront[y*m_Width+x].m_Index:m_pTiles[y*m_Width+x].m_Index;
 	return Index-ENTITY_OFFSET;
 }
+
 void CCollision::SetCollisionAt(float x, float y, int flag)
 {
    int nx = clamp(round(x)/32, 0, m_Width-1);
    int ny = clamp(round(y)/32, 0, m_Height-1);
 
    m_pTiles[ny * m_Width + nx].m_Index = flag;
+}
+
+void CCollision::SetDTile(float x, float y, int Team, bool State)
+{
+	if(!m_pDoor || ((Team < 0 || Team > 16) && Team !=99))
+		return;
+   int nx = clamp(round(x)/32, 0, m_Width-1);
+   int ny = clamp(round(y)/32, 0, m_Height-1);
+
+	if(Team == 99)
+	{
+		for (int i = 0; i < 16; ++i)
+		{
+			m_pDoor[ny * m_Width + nx].m_Team[i] = State;
+		}
+	}
+   else
+	   m_pDoor[ny * m_Width + nx].m_Team[Team] = State;
+}
+
+void CCollision::SetDCollisionAt(float x, float y, int Flag, int Team)
+{
+	if(!m_pDoor || ((Team < 0 || Team > 16) && Team !=99))
+		return;
+   int nx = clamp(round(x)/32, 0, m_Width-1);
+   int ny = clamp(round(y)/32, 0, m_Height-1);
+
+   m_pDoor[ny * m_Width + nx].m_Index = Flag;
+	if(Team == 99)
+	{
+		for (int i = 0; i < 16; ++i)
+		{
+			m_pDoor[ny * m_Width + nx].m_Team[i] = true;
+		}
+	}
+   else
+	   m_pDoor[ny * m_Width + nx].m_Team[Team] = true;
+}
+
+int CCollision::GetDTileIndex(int Index,int Team)
+{
+	if(!m_pDoor && !m_pDoor[Index].m_Index)
+	{
+		return 0;
+	}
+
+	if(m_pDoor[Index].m_Team[Team])
+		return m_pDoor[Index].m_Index;
+	return 0;
 }
 
 // TODO: rewrite this smarter!

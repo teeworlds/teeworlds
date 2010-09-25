@@ -11,7 +11,7 @@ class CTrigger : public CEntity
 	bool m_TeamActivated[MAX_CLIENTS];
 
 	bool HitCharacter();
-	void OpenDoor(int Tick);
+	void OpenDoor(int Teams);
 
 public:
 

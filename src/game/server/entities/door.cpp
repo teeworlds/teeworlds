@@ -11,12 +11,13 @@ CDoor::CDoor(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length, bool 
 	for (int i = 0; i < MAX_CLIENTS; ++i) {
 		m_Opened[i] = false;
 	}//TODO: Check this
-	
+	m_Length = Length;
 
-	vec2 Dir = vec2(sin(Rotation), cos(Rotation));
-	vec2 To = Pos + normalize(Dir)*Length;
+	m_Direction = vec2(sin(Rotation), cos(Rotation));
+	vec2 To = Pos + normalize(m_Direction) * m_Length;
 	
 	GameServer()->Collision()->IntersectNoLaser(Pos, To, &this->m_To, 0);
+	ResetCollision();
 	GameWorld()->InsertEntity(this);
 }
 
@@ -25,54 +26,51 @@ void CDoor::Open(int Tick, bool ActivatedTeam[])
 	for (int i = 0; i < MAX_CLIENTS; ++i) {
 		if(ActivatedTeam[i]) m_EvalTick[i] = Tick;
 		m_Opened[i] = ActivatedTeam[i];
+		if(ActivatedTeam[i]) Open(i);
+	}
+}
+
+
+void CDoor::ResetCollision()
+{
+	for(int i=0;i<m_Length;i++)
+	{
+		GameServer()->Collision()->SetDCollisionAt(m_Pos.x + (m_Direction.x * i), m_Pos.y + (m_Direction.y * i), TILE_STOPA, 99);
+	}
+}
+
+void CDoor::Open(int Team)
+{
+	m_Opened[Team] = true;
+
+	for(int i=0;i<m_Length;i++)
+	{
+		GameServer()->Collision()->SetDTile(m_Pos.x + (m_Direction.x * i), m_Pos.y + (m_Direction.y * i), Team, false);
 	}
 }
 
 void CDoor::Close(int Team)
 {
 	m_Opened[Team] = false;
-}
 
-bool CDoor::HitCharacter(int Team)
-{
-	std::list < CCharacter * > HitCharacters = GameServer()->m_World.IntersectedCharacters(m_Pos, m_To, 1.f, 0);
-	if(HitCharacters.empty()) return false;
-	for(std::list < CCharacter * >::iterator i = HitCharacters.begin(); i != HitCharacters.end(); i++)
+	for(int i=0;i<m_Length;i++)
 	{
-		CCharacter * Char = *i;
-		if(Char->Team() == Team)
-		{
-			//DoDoored(Char);
-			Char->m_Doored = true;
-		}
+		GameServer()->Collision()->SetDTile(m_Pos.x + (m_Direction.x * i), m_Pos.y + (m_Direction.y * i), Team, true);
 	}
-	return true;
-}
-// my problem here is that this will set the values that will tell the character not to go to a certain direction or directions
-//but what will tell it that there isn't a door there if it moves in the other direction or the door opens
-//need a better idea
-//thinking...
-bool CDoor::DoDoored(CCharacter* pChar)
-{
-	vec2 Pos = closest_point_on_line(m_Pos,m_To,pChar->m_Intersection);
-
-	return true;
-
 }
 
 void CDoor::Reset()
 {
 	for (int i = 0; i < MAX_CLIENTS; ++i) {
 		m_Opened[i] = false;
+		Close(i);
 	}
 }
 
 void CDoor::Tick()
 {
 	for (int i = 0; i < MAX_CLIENTS; ++i) {
-		if(!m_Opened[i]) {
-			HitCharacter(i);
-		} else if (m_EvalTick[i] + 10 < Server()->Tick()) {
+		if (m_EvalTick[i] + 10 < Server()->Tick()) {
 			Close(i);
 		}
 	}

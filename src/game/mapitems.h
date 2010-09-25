@@ -215,6 +215,13 @@ struct CMapItemImage
 	int m_ImageData;
 } ;
 
+class CDoorTile
+{
+public:
+	unsigned char m_Index;
+	bool m_Team[16+1];
+};
+
 struct CMapItemGroup_v1
 {
 	int m_Version;

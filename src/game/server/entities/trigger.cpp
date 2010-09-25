@@ -16,7 +16,7 @@ CTrigger::CTrigger(CGameWorld *pGameWorld, vec2 Pos, CEntity *Target)
 	for(int i = 0; i < MAX_CLIENTS; ++i) {
 		m_TeamActivated[i] = false;
 	}
-	
+
 
 	GameWorld()->InsertEntity(this);
 }

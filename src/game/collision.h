@@ -13,6 +13,7 @@ class CCollision
 	class CSpeedupTile *m_pSpeedup;
 	class CTile *m_pFront;
 	class CTeleTile *m_pSwitch;
+	class CDoorTile *m_pDoor;
 
 public:
 	enum
@@ -27,7 +28,10 @@ public:
 	void Init(class CLayers *pLayers);
 	bool CheckPoint(float x, float y) { return IsSolid(round(x), round(y)); }
 	bool CheckPoint(vec2 p) { return CheckPoint(p.x, p.y); }
-	void SetCollisionAt(float x, float y, int flag);
+	void SetCollisionAt(float x, float y, int Flag);
+	void SetDTile(float x, float y, int Team, bool State);
+	void SetDCollisionAt(float x, float y, int Flag, int Team);
+	int GetDTileIndex(int Index,int Team);
 	int GetCollisionAt(float x, float y) { return GetTile(round(x), round(y)); }
 	int GetFCollisionAt(float x, float y) { return GetFTile(round(x), round(y)); }
 	int GetWidth() { return m_Width; };
