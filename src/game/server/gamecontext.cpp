@@ -907,7 +907,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				if(sscanf(pMsg->m_pMessage, "/team %d", &Num) == 1)
 				{
 					if(pPlayer->GetCharacter() == 0) {
-						SendChat(-1, CGameContext::CHAT_ALL, "Will be better if you will be alive");
+						SendChatTarget(ClientId, "You can't change teams while you are dead.");
 					} else {
 						if(((CGameControllerDDRace*)m_pController)->m_Teams.SetCharacterTeam(pPlayer->GetCID(), Num)) {
 							char aBuf[512];
@@ -1037,17 +1037,21 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					}
 			}
 			else
-				SendChatTarget(ClientId, "No such command!");
+				SendChatTarget(ClientId, "No such command! say /CMDList");
 
 		}
 		else if(!str_comp_nocase(pMsg->m_pMessage, "kill"))
-			SendChatTarget(ClientId, "/kill not kill to kill your self" DDRACE_VERSION);	//this will never happen
+			SendChatTarget(ClientId, "kill does nothing, say /kill if you want to die, also you can press f1 and type kill");
 		else
 		{
 			if (m_apPlayers[ClientId]->m_Muted == 0)
 				SendChat(ClientId, Team, pMsg->m_pMessage);
 			else
-				SendChatTarget(ClientId, "You are muted");
+			{
+				char aBuf[64];
+				str_format(aBuf,sizeof(aBuf), "You are muted, Please wait for %d second(s)", m_apPlayers[ClientId]->m_Muted / Server()->TickSpeed());
+				SendChatTarget(ClientId, aBuf);
+			}
 		}
 
 

@@ -48,7 +48,10 @@ bool CDoor::HitCharacter(int Team)
 	}
 	return true;
 }
-
+// my problem here is that this will set the values that will tell the character not to go to a certain direction or directions
+//but what will tell it that there isn't a door there if it moves in the other direction or the door opens
+//need a better idea
+//thinking...
 bool CDoor::DoDoored(CCharacter* pChar)
 {
 	vec2 Pos = closest_point_on_line(m_Pos,m_To,pChar->m_Intersection);
