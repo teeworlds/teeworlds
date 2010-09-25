@@ -342,8 +342,10 @@ int *CServer::LatestInput(int ClientId, int *size)
 
 const char *CServer::ClientName(int ClientId)
 {
-	if(ClientId < 0 || ClientId >= MAX_CLIENTS || m_aClients[ClientId].m_State < CServer::CClient::STATE_READY)
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS || m_aClients[ClientId].m_State == CServer::CClient::STATE_EMPTY)
 		return "(invalid client)";
+	else if(m_aClients[ClientId].m_State < CServer::CClient::STATE_READY)
+		return "(connecting client)";
 	return m_aClients[ClientId].m_aName;
 }	
 
