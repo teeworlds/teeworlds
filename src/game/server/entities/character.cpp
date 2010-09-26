@@ -671,7 +671,7 @@ void CCharacter::HandleFly()
 void CCharacter::Tick()
 {
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
-	std::list < int > Indices = GameServer()->Collision()->GetMapIndices(m_PrevPos, m_Pos, 5);
+	std::list < int > Indices = GameServer()->Collision()->GetMapIndices(m_PrevPos, m_Pos);
 	if(m_pPlayer->m_ForceBalanced)
 				{
 					char Buf[128];

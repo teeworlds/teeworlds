@@ -49,8 +49,7 @@ public:
 	int Entity(int x, int y, bool Front);
 	//DDRace
 	int GetPureMapIndex(vec2 Pos);
-	int GetMapIndex(vec2 PrevPos, vec2 Pos);
-	std::list<int> GetMapIndices(vec2 PrevPos, vec2 Pos, int MaxIndices);
+	std::list<int> GetMapIndices(vec2 PrevPos, vec2 Pos, int MaxIndices = 0);
 	vec2 GetPos(int Index);
 	int GetTileIndex(int Index);
 	int GetFTileIndex(int Index);

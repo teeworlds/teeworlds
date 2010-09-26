@@ -108,61 +108,6 @@ int CCollision::GetPureMapIndex(vec2 Pos)
 	return ny*m_Width+nx;
 }
 
-int CCollision::GetMapIndex(vec2 PrevPos, vec2 Pos)
-{
-	float d = distance(PrevPos, Pos);
-	int End(d+1);
-
-	if(!d)
-	{
-		int nx = clamp((int)Pos.x/32, 0, m_Width-1);
-		int ny = clamp((int)Pos.y/32, 0, m_Height-1);
-		/*if (m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN)) dbg_msg("m_pTele && TELEIN","ny*m_Width+nx %d",ny*m_Width+nx);
-		else if (m_pTele && m_pTele[ny*m_Width+nx].m_Type==TILE_TELEOUT) dbg_msg("TELEOUT","ny*m_Width+nx %d",ny*m_Width+nx);
-		else dbg_msg("GetMapIndex(","ny*m_Width+nx %d",ny*m_Width+nx);//REMOVE */
-
-		if(
-			(m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
-			((m_pTiles[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
-			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pFront[ny*m_Width+nx].m_Index < TILE_TELEIN)) ||
-			(m_pFront && ((m_pFront[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pFront[ny*m_Width+nx].m_Index <= TILE_NPH))) ||
-			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEINEVIL || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
-			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0) ||
-			(m_pDoor && m_pDoor[ny*m_Width+nx].m_Index)
-		)
-		{
-			return ny*m_Width+nx;
-		}
-	}
-
-	float a = 0.0f;
-	vec2 Tmp = vec2(0, 0);
-	int nx = 0;
-	int ny = 0;
-
-	for(int i = 0; i < End; i++)
-	{
-		a = i/d;
-		Tmp = mix(PrevPos, Pos, a);
-		nx = clamp((int)Tmp.x/32, 0, m_Width-1);
-		ny = clamp((int)Tmp.y/32, 0, m_Height-1);
-		if(
-			(m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
-			((m_pTiles[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
-			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pFront[ny*m_Width+nx].m_Index < TILE_TELEIN)) ||
-			(m_pFront && ((m_pFront[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pFront[ny*m_Width+nx].m_Index <= TILE_NPH))) ||
-			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEINEVIL || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
-			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0) ||
-			(m_pDoor && m_pDoor[ny*m_Width+nx].m_Index)
-		)
-		{
-			return ny*m_Width+nx;
-		}
-	}
-
-	return -1;
-}
-
 std::list<int> CCollision::GetMapIndices(vec2 PrevPos, vec2 Pos, int MaxIndices)
 {
 	std::list< int > Indices;
@@ -213,6 +158,7 @@ std::list<int> CCollision::GetMapIndices(vec2 PrevPos, vec2 Pos, int MaxIndices)
 			(m_pDoor && m_pDoor[ny*m_Width+nx].m_Index)
 		)
 		{
+			if(MaxIndices && Indices.size() > MaxIndices) return Indices;
 			Indices.push_back(ny*m_Width+nx);
 		}
 	}
