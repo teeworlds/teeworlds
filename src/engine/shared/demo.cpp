@@ -662,11 +662,6 @@ void CDemoPlayer::SetSpeed(float Speed)
 	m_Info.m_Info.m_Speed = Speed;
 }
 
-float CDemoPlayer::GetSpeed()
-{
-	return m_Info.m_Info.m_Speed;
-}
-
 int CDemoPlayer::Update()
 {
 	int64 Now = time_get();

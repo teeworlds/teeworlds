@@ -118,18 +118,17 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
-		bool IsPaused = pInfo->m_Paused;
 		
-		if(!IsPaused)
+		if(!pInfo->m_Paused)
 		{
-			Pos.x += cosf(Client()->LocalTime()*DemoPlayer()->GetSpeed()*2.0f+Offset)*2.5f;
-			Pos.y += sinf(Client()->LocalTime()*DemoPlayer()->GetSpeed()*2.0f+Offset)*2.5f;
+			Pos.x += cosf(Client()->LocalTime()*pInfo->m_Speed*2.0f+Offset)*2.5f;
+			Pos.y += sinf(Client()->LocalTime()*pInfo->m_Speed*2.0f+Offset)*2.5f;
 		}
 	}
 	else
 	{
-	Pos.x += cosf(Client()->LocalTime()*2.0f+Offset)*2.5f;
-	Pos.y += sinf(Client()->LocalTime()*2.0f+Offset)*2.5f;
+		Pos.x += cosf(Client()->LocalTime()*2.0f+Offset)*2.5f;
+		Pos.y += sinf(Client()->LocalTime()*2.0f+Offset)*2.5f;
 	}
 	RenderTools()->DrawSprite(Pos.x, Pos.y, Size);
 	Graphics()->QuadsEnd();
