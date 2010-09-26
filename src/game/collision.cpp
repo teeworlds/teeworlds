@@ -293,14 +293,14 @@ void CCollision::SetCollisionAt(float x, float y, int flag)
 
 void CCollision::SetDTile(float x, float y, int Team, bool State)
 {
-	if(!m_pDoor || ((Team < 0 || Team > 16) && Team !=99))
+	if(!m_pDoor || ((Team < 0 || Team > 15) && Team !=99))
 		return;
    int nx = clamp(round(x)/32, 0, m_Width-1);
    int ny = clamp(round(y)/32, 0, m_Height-1);
 
 	if(Team == 99)
 	{
-		for (int i = 0; i < 16; ++i)
+		for (int i = 0; i < 15; ++i)
 		{
 			m_pDoor[ny * m_Width + nx].m_Team[i] = State;
 		}
@@ -311,7 +311,7 @@ void CCollision::SetDTile(float x, float y, int Team, bool State)
 
 void CCollision::SetDCollisionAt(float x, float y, int Flag, int Team)
 {
-	if(!m_pDoor || ((Team < 0 || Team > 16) && Team !=99))
+	if(!m_pDoor || ((Team < 0 || Team > 15) && Team !=99))
 		return;
    int nx = clamp(round(x)/32, 0, m_Width-1);
    int ny = clamp(round(y)/32, 0, m_Height-1);
@@ -319,7 +319,7 @@ void CCollision::SetDCollisionAt(float x, float y, int Flag, int Team)
    m_pDoor[ny * m_Width + nx].m_Index = Flag;
 	if(Team == 99)
 	{
-		for (int i = 0; i < 16; ++i)
+		for (int i = 0; i < 15; ++i)
 		{
 			m_pDoor[ny * m_Width + nx].m_Team[i] = true;
 		}
@@ -330,7 +330,7 @@ void CCollision::SetDCollisionAt(float x, float y, int Flag, int Team)
 
 int CCollision::GetDTileIndex(int Index,int Team)
 {
-	if(!m_pDoor && !m_pDoor[Index].m_Index)
+	if(!m_pDoor && !m_pDoor[Index].m_Index || ((Team < 0 || Team > 15) && Team !=99))
 	{
 		return 0;
 	}

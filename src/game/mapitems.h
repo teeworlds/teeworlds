@@ -219,7 +219,7 @@ class CDoorTile
 {
 public:
 	unsigned char m_Index;
-	bool m_Team[16+1];
+	bool m_Team[16];
 };
 
 struct CMapItemGroup_v1
