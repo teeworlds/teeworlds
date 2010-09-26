@@ -109,6 +109,7 @@ public:
 	void Unpause();
 	int Stop();	
 	void SetSpeed(float Speed);
+	float GetSpeed();
 	int SetPos(float Precent);
 	const CInfo *BaseInfo() const { return &m_Info.m_Info; }
 	char *GetDemoName();
