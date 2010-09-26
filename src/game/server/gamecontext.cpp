@@ -1217,7 +1217,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			{
 				char aBuf[64] = {0};
 				Server()->GetClientIP(KickId, aBuf, sizeof(aBuf));
-				str_format(aCmd, sizeof(aCmd), "ban %s %d", aBuf, g_Config.m_SvVoteKickBantime);
+				str_format(aCmd, sizeof(aCmd), "ban %s %d", aBuf, g_Config.m_SvVoteKickBanTime);
 			}
 			m_apPlayers[ClientId]->m_Last_KickVote = time_get();
 			m_VoteKick = true;

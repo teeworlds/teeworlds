@@ -53,7 +53,7 @@ MACRO_CONFIG_INT(SvEmoticonDelay, sv_emoticon_delay, 3, 0, 9999, CFGFLAG_SERVER,
 
 MACRO_CONFIG_INT(SvVotes, sv_votes, 1, 0, 1, CFGFLAG_SERVER, "Whether votes are enabled", 3)
 MACRO_CONFIG_INT(SvVoteKick, sv_vote_kick, 1, 0, 1, CFGFLAG_SERVER, "Allow voting to kick players", 3)
-MACRO_CONFIG_INT(SvVoteKickBantime, sv_vote_kick_bantime, 300, 0, 1000000, CFGFLAG_SERVER, "The time a vote-kicked player will be banned. (0 = take the time from 'kick')", 3)
+MACRO_CONFIG_INT(SvVoteKickBanTime, sv_vote_kick_bantime, 300, 0, 1000000, CFGFLAG_SERVER, "The time a vote-kicked player will be banned. (0 = take the time from 'kick')", 3)
 MACRO_CONFIG_INT(SvVotePercentage, sv_vote_percentage, 50, 1, 100, CFGFLAG_SERVER, "The percent of people that need to agree or deny for the vote to succeed/fail", 3)
 MACRO_CONFIG_INT(SvMaxAfkTime, sv_max_afk_time, 0, 0, 9999, CFGFLAG_SERVER, "The time in seconds a player is allowed to be afk (0 = disabled)", 3)
 

@@ -1,5 +1,6 @@
 #ifndef GAME_MAPITEMS_H
 #define GAME_MAPITEMS_H
+#include<engine\shared\protocol.h>
 
 // layer types
 enum
@@ -219,7 +220,7 @@ class CDoorTile
 {
 public:
 	unsigned char m_Index;
-	bool m_Team[16];
+	bool m_Team[MAX_CLIENTS];
 };
 
 struct CMapItemGroup_v1
