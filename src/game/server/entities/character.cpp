@@ -671,327 +671,331 @@ void CCharacter::HandleFly()
 void CCharacter::Tick()
 {
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
-	int MapIndex = GameServer()->Collision()->GetMapIndex(m_PrevPos, m_Pos);
-	int MapIndexL = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x + (m_ProximityRadius/2)+4,m_Pos.y));
-	int MapIndexR = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x - (m_ProximityRadius/2)-4,m_Pos.y));
-	int MapIndexT = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y + (m_ProximityRadius/2)+4));
-	int MapIndexB = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y - (m_ProximityRadius/2)-4));
-	//dbg_msg("","N%d L%d R%d B%d T%d",MapIndex,MapIndexL,MapIndexR,MapIndexB,MapIndexT);
-	m_TileIndex = GameServer()->Collision()->GetTileIndex(MapIndex);
-	m_TileIndexL = GameServer()->Collision()->GetTileIndex(MapIndexL);
-	m_TileIndexR = GameServer()->Collision()->GetTileIndex(MapIndexR);
-	m_TileIndexB = GameServer()->Collision()->GetTileIndex(MapIndexB);
-	m_TileIndexT = GameServer()->Collision()->GetTileIndex(MapIndexT);
-	m_TileFIndex = GameServer()->Collision()->GetFTileIndex(MapIndex);
-	m_TileFIndexL = GameServer()->Collision()->GetFTileIndex(MapIndexL);
-	m_TileFIndexR = GameServer()->Collision()->GetFTileIndex(MapIndexR);
-	m_TileFIndexB = GameServer()->Collision()->GetFTileIndex(MapIndexB);
-	m_TileFIndexT = GameServer()->Collision()->GetFTileIndex(MapIndexT);
-	m_TileSIndex = GameServer()->Collision()->GetDTileIndex(MapIndex, Team());
-	m_TileSIndexL = GameServer()->Collision()->GetDTileIndex(MapIndexL, Team());
-	m_TileSIndexR = GameServer()->Collision()->GetDTileIndex(MapIndexR, Team());
-	m_TileSIndexB = GameServer()->Collision()->GetDTileIndex(MapIndexB, Team());
-	m_TileSIndexT = GameServer()->Collision()->GetDTileIndex(MapIndexT, Team());
-	//dbg_msg("","N%d L%d R%d B%d T%d",m_TileIndex,m_TileIndexL,m_TileIndexR,m_TileIndexB,m_TileIndexT);
-	//dbg_msg("","N%d L%d R%d B%d T%d",m_TileFIndex,m_TileFIndexL,m_TileFIndexR,m_TileFIndexB,m_TileFIndexT);
-	/*m_CurrentTile = m_TileIndex;
-	m_CurrentFTile = m_TileFIndex;*/
-
-	if(m_pPlayer->m_ForceBalanced)
-	{
-		char Buf[128];
-		str_format(Buf, sizeof(Buf), "You were moved to %s due to team balancing", Controller->GetTeamName(m_pPlayer->GetTeam()));
-		GameServer()->SendBroadcast(Buf, m_pPlayer->GetCID());
-
-		m_pPlayer->m_ForceBalanced = false;
-	}
-	m_Armor=(m_FreezeTime != -1)?10-(m_FreezeTime/15):0;
-	if(m_Input.m_Direction != 0 || m_Input.m_Jump != 0)
-		m_LastMove = Server()->Tick();
-
-	if(m_FreezeTime > 0 || m_FreezeTime == -1)
-	{
-		if (m_FreezeTime % Server()->TickSpeed() == 0 || m_FreezeTime == -1)
+	std::list < int > Indices = GameServer()->Collision()->GetMapIndices(m_PrevPos, m_Pos, 5);
+	if(!Indices.empty())
+		for(std::list < int >::iterator i = Indices.begin(); i != Indices.end(); i++)
 		{
-			GameServer()->CreateDamageInd(m_Pos, 0, m_FreezeTime / Server()->TickSpeed());
-		}
-		if(m_FreezeTime != -1)
-			m_FreezeTime--;
-		else
-			m_Ninja.m_ActivationTick = Server()->Tick();
-		m_Input.m_Direction = 0;
-		m_Input.m_Jump = 0;
-		m_Input.m_Hook = 0;
+			int MapIndex = *i;
+			int MapIndexL = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x + (m_ProximityRadius/2)+4,m_Pos.y));
+			int MapIndexR = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x - (m_ProximityRadius/2)-4,m_Pos.y));
+			int MapIndexT = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y + (m_ProximityRadius/2)+4));
+			int MapIndexB = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y - (m_ProximityRadius/2)-4));
+			//dbg_msg("","N%d L%d R%d B%d T%d",MapIndex,MapIndexL,MapIndexR,MapIndexB,MapIndexT);
+			m_TileIndex = GameServer()->Collision()->GetTileIndex(MapIndex);
+			m_TileIndexL = GameServer()->Collision()->GetTileIndex(MapIndexL);
+			m_TileIndexR = GameServer()->Collision()->GetTileIndex(MapIndexR);
+			m_TileIndexB = GameServer()->Collision()->GetTileIndex(MapIndexB);
+			m_TileIndexT = GameServer()->Collision()->GetTileIndex(MapIndexT);
+			m_TileFIndex = GameServer()->Collision()->GetFTileIndex(MapIndex);
+			m_TileFIndexL = GameServer()->Collision()->GetFTileIndex(MapIndexL);
+			m_TileFIndexR = GameServer()->Collision()->GetFTileIndex(MapIndexR);
+			m_TileFIndexB = GameServer()->Collision()->GetFTileIndex(MapIndexB);
+			m_TileFIndexT = GameServer()->Collision()->GetFTileIndex(MapIndexT);
+			m_TileSIndex = GameServer()->Collision()->GetDTileIndex(MapIndex, Team());
+			m_TileSIndexL = GameServer()->Collision()->GetDTileIndex(MapIndexL, Team());
+			m_TileSIndexR = GameServer()->Collision()->GetDTileIndex(MapIndexR, Team());
+			m_TileSIndexB = GameServer()->Collision()->GetDTileIndex(MapIndexB, Team());
+			m_TileSIndexT = GameServer()->Collision()->GetDTileIndex(MapIndexT, Team());
+			//dbg_msg("","N%d L%d R%d B%d T%d",m_TileIndex,m_TileIndexL,m_TileIndexR,m_TileIndexB,m_TileIndexT);
+			//dbg_msg("","N%d L%d R%d B%d T%d",m_TileFIndex,m_TileFIndexL,m_TileFIndexR,m_TileFIndexB,m_TileFIndexT);
+			/*m_CurrentTile = m_TileIndex;
+			m_CurrentFTile = m_TileFIndex;*/
 
-		//m_Input.m_Fire = 0;
-		if (m_FreezeTime == 1) {
-			UnFreeze();
-		}
-	}
-	m_Core.m_Input = m_Input;
-	m_Core.Tick(true);
-	m_Core.m_Id = GetPlayer()->GetCID();
-
-	m_DoSplash = false;
-	if (g_Config.m_SvEndlessDrag)
-		m_Core.m_HookTick = 0;
-	if (m_Super && m_Core.m_Jumped > 1)
-		m_Core.m_Jumped = 1;
-	if (m_Super && g_Config.m_SvEndlessSuperHook)
-		m_Core.m_HookTick = 0;
-	/*dbg_msg("character","m_TileIndex=%d , m_TileFIndex=%d",m_TileIndex,m_TileFIndex); //REMOVE*/
-	//DDRace
-	char aBuftime[128];
-	float time = (float)(Server()->Tick() - m_StartTime) / ((float)Server()->TickSpeed());
-	CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
-
-	if(Server()->Tick() - m_RefreshTime >= Server()->TickSpeed())
-	{
-		if (m_RaceState == RACE_STARTED) {
-			int IntTime = (int)time;
-			if(m_pPlayer->m_IsUsingRaceClient)
+			if(m_pPlayer->m_ForceBalanced)
 			{
-				CNetMsg_Sv_RaceTime Msg;
-				Msg.m_Time = IntTime;
-				Msg.m_Check = 0;
+				char Buf[128];
+				str_format(Buf, sizeof(Buf), "You were moved to %s due to team balancing", Controller->GetTeamName(m_pPlayer->GetTeam()));
+				GameServer()->SendBroadcast(Buf, m_pPlayer->GetCID());
 
-				if(m_CpActive != -1 && m_CpTick > Server()->Tick())
-				{
-					if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
-					{
-						float Diff = (m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive])*100;
-						Msg.m_Check = (int)Diff;
-					}
-				}
-
-				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
+				m_pPlayer->m_ForceBalanced = false;
 			}
-			else
+			m_Armor=(m_FreezeTime != -1)?10-(m_FreezeTime/15):0;
+			if(m_Input.m_Direction != 0 || m_Input.m_Jump != 0)
+				m_LastMove = Server()->Tick();
+
+			if(m_FreezeTime > 0 || m_FreezeTime == -1)
 			{
-				if(m_BroadTime)
-					str_format(aBuftime, sizeof(aBuftime), "%dm %ds", IntTime/60, IntTime%60);
+				if (m_FreezeTime % Server()->TickSpeed() == 0 || m_FreezeTime == -1)
+				{
+					GameServer()->CreateDamageInd(m_Pos, 0, m_FreezeTime / Server()->TickSpeed());
+				}
+				if(m_FreezeTime != -1)
+					m_FreezeTime--;
 				else
-					str_format(aBuftime, sizeof(aBuftime), "");
+					m_Ninja.m_ActivationTick = Server()->Tick();
+				m_Input.m_Direction = 0;
+				m_Input.m_Jump = 0;
+				m_Input.m_Hook = 0;
 
-				if(m_CpActive != -1 && m_CpTick > Server()->Tick())
-				{
-					if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
+				//m_Input.m_Fire = 0;
+				if (m_FreezeTime == 1) {
+					UnFreeze();
+				}
+			}
+			m_Core.m_Input = m_Input;
+			m_Core.Tick(true);
+			m_Core.m_Id = GetPlayer()->GetCID();
+
+			m_DoSplash = false;
+			if (g_Config.m_SvEndlessDrag)
+				m_Core.m_HookTick = 0;
+			if (m_Super && m_Core.m_Jumped > 1)
+				m_Core.m_Jumped = 1;
+			if (m_Super && g_Config.m_SvEndlessSuperHook)
+				m_Core.m_HookTick = 0;
+			/*dbg_msg("character","m_TileIndex=%d , m_TileFIndex=%d",m_TileIndex,m_TileFIndex); //REMOVE*/
+			//DDRace
+			char aBuftime[128];
+			float time = (float)(Server()->Tick() - m_StartTime) / ((float)Server()->TickSpeed());
+			CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
+
+			if(Server()->Tick() - m_RefreshTime >= Server()->TickSpeed())
+			{
+				if (m_RaceState == RACE_STARTED) {
+					int IntTime = (int)time;
+					if(m_pPlayer->m_IsUsingRaceClient)
 					{
-						char aTmp[128];
-						float Diff = m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive];
-						str_format(aTmp, sizeof(aTmp), "\nCheckpoint | Diff : %+5.2f", Diff);
-						strcat(aBuftime, aTmp);
+						CNetMsg_Sv_RaceTime Msg;
+						Msg.m_Time = IntTime;
+						Msg.m_Check = 0;
+
+						if(m_CpActive != -1 && m_CpTick > Server()->Tick())
+						{
+							if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
+							{
+								float Diff = (m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive])*100;
+								Msg.m_Check = (int)Diff;
+							}
+						}
+
+						Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
+					}
+					else
+					{
+						if(m_BroadTime)
+							str_format(aBuftime, sizeof(aBuftime), "%dm %ds", IntTime/60, IntTime%60);
+						else
+							str_format(aBuftime, sizeof(aBuftime), "");
+
+						if(m_CpActive != -1 && m_CpTick > Server()->Tick())
+						{
+							if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
+							{
+								char aTmp[128];
+								float Diff = m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive];
+								str_format(aTmp, sizeof(aTmp), "\nCheckpoint | Diff : %+5.2f", Diff);
+								strcat(aBuftime, aTmp);
+							}
+						}
+
+						if( g_Config.m_SvBroadcast[0] != 0 && m_BroadCast)
+						{
+							char aTmp[128];
+							str_format(aTmp, sizeof(aTmp), "\n%s\n", g_Config.m_SvBroadcast);
+							strcat(aBuftime, aTmp);
+						}
+						GameServer()->SendBroadcast(aBuftime, m_pPlayer->GetCID());
 					}
 				}
-
-				if( g_Config.m_SvBroadcast[0] != 0 && m_BroadCast)
+				else
 				{
-					char aTmp[128];
-					str_format(aTmp, sizeof(aTmp), "\n%s\n", g_Config.m_SvBroadcast);
-					strcat(aBuftime, aTmp);
+					if( g_Config.m_SvBroadcast[0] != 0) {
+						char aTmp[128];
+						str_format(aTmp, sizeof(aTmp), "%s\n", g_Config.m_SvBroadcast);
+						strcat(aBuftime, aTmp);
+						GameServer()->SendBroadcast(g_Config.m_SvBroadcast, m_pPlayer->GetCID());
+					}
+
 				}
-				GameServer()->SendBroadcast(aBuftime, m_pPlayer->GetCID());
-			}
-		}
-		else
-		{
-			if( g_Config.m_SvBroadcast[0] != 0) {
-				char aTmp[128];
-				str_format(aTmp, sizeof(aTmp), "%s\n", g_Config.m_SvBroadcast);
-				strcat(aBuftime, aTmp);
-				GameServer()->SendBroadcast(g_Config.m_SvBroadcast, m_pPlayer->GetCID());
+				m_RefreshTime = Server()->Tick();
 			}
 
-		}
-		m_RefreshTime = Server()->Tick();
-	}
 
-
-	int cp = GameServer()->Collision()->IsCheckpoint(MapIndex);
-	if(cp != -1 && m_RaceState == RACE_STARTED && cp > m_CpActive)
-	{
-		m_CpActive = cp;
-		m_CpCurrent[cp] = time;
-		m_CpTick = Server()->Tick() + Server()->TickSpeed()*2;
-	}
-	if(((m_TileIndex == TILE_BEGIN) || (m_TileFIndex == TILE_BEGIN)) && (m_RaceState == RACE_NONE || (m_RaceState == RACE_STARTED && !Team())))
-	{
-		Controller->m_Teams.OnCharacterStart(m_pPlayer->GetCID());
-		m_CpActive = -2;
-	}
-
-	if(((m_TileIndex == TILE_END) || (m_TileFIndex == TILE_END)) && m_RaceState == RACE_STARTED)
-	{
-		Controller->m_Teams.OnCharacterFinish(m_pPlayer->GetCID());
-	}
-	if(((m_TileIndex == TILE_FREEZE) || (m_TileFIndex == TILE_FREEZE)) && !m_Super)
-	{
-		Freeze(Server()->TickSpeed()*3);
-	}
-	else if((m_TileIndex == TILE_UNFREEZE) || (m_TileFIndex == TILE_UNFREEZE))
-	{
-		UnFreeze();
-	}
-	if((m_TileIndex == TILE_STOPL || m_TileIndexL == TILE_STOPL || m_TileIndexL == TILE_STOPH || m_TileIndexL == TILE_STOPA || m_TileFIndex == TILE_STOPL || m_TileFIndexL == TILE_STOPL || m_TileFIndexL == TILE_STOPH || m_TileFIndexL == TILE_STOPA || m_TileSIndex == TILE_STOPL || m_TileSIndexL == TILE_STOPL || m_TileSIndexL == TILE_STOPH || m_TileSIndexL == TILE_STOPA) && m_Core.m_Vel.x > 0)
-	{
-		if((int)GameServer()->Collision()->GetPos(MapIndexL).x)
-			if((int)GameServer()->Collision()->GetPos(MapIndexL).x < (int)m_Core.m_Pos.x)
+			int cp = GameServer()->Collision()->IsCheckpoint(MapIndex);
+			if(cp != -1 && m_RaceState == RACE_STARTED && cp > m_CpActive)
 			{
-				m_Core.m_Pos = m_PrevPos;
-				//dbg_msg("Resetting","%d",Server()->Tick());
+				m_CpActive = cp;
+				m_CpCurrent[cp] = time;
+				m_CpTick = Server()->Tick() + Server()->TickSpeed()*2;
 			}
-		m_Core.m_Vel.x = 0;
-	}
-	if((m_TileIndex == TILE_STOPR || m_TileIndexR == TILE_STOPR || m_TileIndexR == TILE_STOPH || m_TileIndexR == TILE_STOPA || m_TileFIndex == TILE_STOPR || m_TileFIndexR == TILE_STOPR || m_TileFIndexR == TILE_STOPH || m_TileFIndexR == TILE_STOPA || m_TileSIndex == TILE_STOPR || m_TileSIndexR == TILE_STOPR || m_TileSIndexR == TILE_STOPH || m_TileSIndexR == TILE_STOPA) && m_Core.m_Vel.x < 0)
-	{
-		if((int)GameServer()->Collision()->GetPos(MapIndexR).x)
-			if((int)GameServer()->Collision()->GetPos(MapIndexR).x > (int)m_Core.m_Pos.x)
+			if(((m_TileIndex == TILE_BEGIN) || (m_TileFIndex == TILE_BEGIN)) && (m_RaceState == RACE_NONE || (m_RaceState == RACE_STARTED && !Team())))
 			{
-				m_Core.m_Pos = m_PrevPos;
-				//dbg_msg("Resetting","%d",Server()->Tick());
+				Controller->m_Teams.OnCharacterStart(m_pPlayer->GetCID());
+				m_CpActive = -2;
 			}
-		m_Core.m_Vel.x = 0;
-	}
-	if((m_TileIndex == TILE_STOPB || m_TileIndexB == TILE_STOPB || m_TileIndexB == TILE_STOPV || m_TileIndexB == TILE_STOPA || m_TileFIndex == TILE_STOPB || m_TileFIndexB == TILE_STOPB || m_TileFIndexB == TILE_STOPV || m_TileFIndexB == TILE_STOPA || m_TileSIndex == TILE_STOPB || m_TileSIndexB == TILE_STOPB || m_TileSIndexB == TILE_STOPV || m_TileSIndexB == TILE_STOPA) && m_Core.m_Vel.y < 0)
-	{
-		if((int)GameServer()->Collision()->GetPos(MapIndexB).y)
-			if((int)GameServer()->Collision()->GetPos(MapIndexB).y > (int)m_Core.m_Pos.y)
-			{
-				m_Core.m_Pos = m_PrevPos;
-				//dbg_msg("Resetting","%d",Server()->Tick());
-			}
-		m_Core.m_Vel.y = 0;
-	}
-	if((m_TileIndex == TILE_STOPT || m_TileIndexT == TILE_STOPT || m_TileIndexT == TILE_STOPV || m_TileIndexT == TILE_STOPA || m_TileFIndex == TILE_STOPT || m_TileFIndexT == TILE_STOPT || m_TileFIndexT == TILE_STOPV || m_TileFIndexT == TILE_STOPA || m_TileSIndex == TILE_STOPT || m_TileSIndexT == TILE_STOPT || m_TileSIndexT == TILE_STOPV || m_TileSIndexT == TILE_STOPA) && m_Core.m_Vel.y > 0)
-	{
-		//dbg_msg("","%f %f",GameServer()->Collision()->GetPos(MapIndex).y,m_Core.m_Pos.y);
-		if((int)GameServer()->Collision()->GetPos(MapIndexT).y)
-			if((int)GameServer()->Collision()->GetPos(MapIndexT).y < (int)m_Core.m_Pos.y)
-			{
-				//dbg_msg("Resetting","%d",Server()->Tick());
-				m_Core.m_Pos = m_PrevPos;
-			}
-		m_Core.m_Vel.y = 0;
-		m_Core.m_Jumped = 0;
-	}
-	if (m_TileIndex == TILE_BOOST_L || m_TileFIndex == TILE_BOOST_L)
-	{
-		if(m_PrevPos.x-m_Pos.x<0)
-			m_Core.m_Vel.x += m_Core.m_Vel.x *-0.5;
-		else if(m_LastBooster != MapIndex)
-			m_Core.m_Vel.x += m_Core.m_Vel.x*0.5;
-	}
-	if (m_TileIndex == TILE_BOOST_R || m_TileFIndex == TILE_BOOST_R)
-	{
-		if(m_PrevPos.x-m_Pos.x>0)
-			m_Core.m_Vel.x += m_Core.m_Vel.x *-0.5;
-		else if(m_LastBooster != MapIndex)
-			m_Core.m_Vel.x += m_Core.m_Vel.x*0.5;
-	}
-	if (m_TileIndex == TILE_BOOST_D || m_TileFIndex == TILE_BOOST_D)
-	{
-		if(m_PrevPos.y-m_Pos.y>0)
-			m_Core.m_Vel.y += m_Core.m_Vel.y *-0.5;
-		else if(m_LastBooster != MapIndex)
-			m_Core.m_Vel.y += m_Core.m_Vel.y*0.5;
-	}
-	if (m_TileIndex == TILE_BOOST_U || m_TileFIndex == TILE_BOOST_U)
-	{
-		if(m_PrevPos.y-m_Pos.y<0)
-			m_Core.m_Vel.y += m_Core.m_Vel.y *-0.5;
-		else if(m_LastBooster != m_TileIndex)
-			m_Core.m_Vel.y += m_Core.m_Vel.y*0.5;
-	}
-	if ((m_TileIndex == TILE_BOOST_L2 || m_TileFIndex == TILE_BOOST_L2) && (m_LastBooster != MapIndex))
-	{
-		if(m_PrevPos.x-m_Pos.x<0)
-			m_Core.m_Vel.x = m_Core.m_Vel.x *-1.1;
-		else
-			m_Core.m_Vel.x += m_Core.m_Vel.x*1.1;
-	}
-	if ((m_TileIndex == TILE_BOOST_R2|| m_TileFIndex == TILE_BOOST_R2) && (m_LastBooster != MapIndex))
-	{
-		if(m_Core.m_Vel.x < 0)
-			m_Core.m_Vel.x = m_Core.m_Vel.x *-1.1;
-		else
-			m_Core.m_Vel.x += m_Core.m_Vel.x*1.1;
-	}
-	if ((m_TileIndex == TILE_BOOST_D2 || m_TileFIndex == TILE_BOOST_D2) && (m_LastBooster != MapIndex))
-	{
-		if(m_PrevPos.y-m_Pos.y>0)
-			m_Core.m_Vel.y = m_Core.m_Vel.y *-1.1;
-		else
-			m_Core.m_Vel.y += m_Core.m_Vel.y*1.1;
-	}
-	if ((m_TileIndex == TILE_BOOST_U2 || m_TileFIndex == TILE_BOOST_U2) && (m_LastBooster != MapIndex))
-	{
-		if(m_PrevPos.y-m_Pos.y<0)
-			m_Core.m_Vel.y = m_Core.m_Vel.y *-1.1;
-		else
-			m_Core.m_Vel.y += m_Core.m_Vel.y*1.1;
-	}
-	// handle speedup tiles
-	if(GameServer()->Collision()->IsSpeedup(MapIndex) == TILE_BOOST)
-	{
-		vec2 Direction, TempVel = m_Core.m_Vel;
-		int Force, MaxSpeed = 0;
-		GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force, &MaxSpeed);
-		TempVel += Direction * Force;
-		if(TempVel < Direction*(MaxSpeed/5) || !MaxSpeed)
-			m_Core.m_Vel = TempVel;
-		else
-		{
-			m_Core.m_Vel = Direction*(MaxSpeed/5) + Direction;
-		}
-		//dbg_msg("Direction","%f %f   %f %f   %f %f",Direction.x,Direction.y,(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
 
-	}
-	else if(GameServer()->Collision()->IsSpeedup(MapIndex) == TILE_BOOSTS)
-	{
-		vec2 Direction;
-		int Force;
-		GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force, 0);
-		Force/=5;
-		m_Core.m_Vel = Direction*Force + Direction;
-		//dbg_msg("Direction","%f %f   %f %f   %f %f",Direction.x,Direction.y,(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
-	}
-	m_LastBooster = MapIndex;
-	int z = GameServer()->Collision()->IsTeleport(MapIndex);
-	if(z)
-	{
-		m_Core.m_HookedPlayer = -1;
-		m_Core.m_HookState = HOOK_RETRACTED;
-		m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
-		m_Core.m_HookState = HOOK_RETRACTED;
-		m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_pTeleporter[z-1];
-		m_Core.m_HookPos = m_Core.m_Pos;
-	}
-	int evilz = GameServer()->Collision()->IsEvilTeleport(MapIndex);
-	if(evilz && !m_Super)
-	{
-		m_Core.m_HookedPlayer = -1;
-		m_Core.m_HookState = HOOK_RETRACTED;
-		m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
-		m_Core.m_HookState = HOOK_RETRACTED;
-		GameWorld()->ReleaseHooked(GetPlayer()->GetCID());
-		m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_pTeleporter[evilz-1];
-		m_Core.m_HookPos = m_Core.m_Pos;
-		m_Core.m_Vel = vec2(0,0);
-	}
-	// handle death-tiles
-	if((GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->Collision()->GetFCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->Collision()->GetFCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->Collision()->GetFCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-		GameServer()->Collision()->GetFCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH)&&
-		!m_Super)
-	{
-		Die(m_pPlayer->GetCID(), WEAPON_WORLD);
-	}
+			if(((m_TileIndex == TILE_END) || (m_TileFIndex == TILE_END)) && m_RaceState == RACE_STARTED)
+			{
+				Controller->m_Teams.OnCharacterFinish(m_pPlayer->GetCID());
+			}
+			if(((m_TileIndex == TILE_FREEZE) || (m_TileFIndex == TILE_FREEZE)) && !m_Super)
+			{
+				Freeze(Server()->TickSpeed()*3);
+			}
+			else if((m_TileIndex == TILE_UNFREEZE) || (m_TileFIndex == TILE_UNFREEZE))
+			{
+				UnFreeze();
+			}
+			if((m_TileIndex == TILE_STOPL || m_TileIndexL == TILE_STOPL || m_TileIndexL == TILE_STOPH || m_TileIndexL == TILE_STOPA || m_TileFIndex == TILE_STOPL || m_TileFIndexL == TILE_STOPL || m_TileFIndexL == TILE_STOPH || m_TileFIndexL == TILE_STOPA || m_TileSIndex == TILE_STOPL || m_TileSIndexL == TILE_STOPL || m_TileSIndexL == TILE_STOPH || m_TileSIndexL == TILE_STOPA) && m_Core.m_Vel.x > 0)
+			{
+				if((int)GameServer()->Collision()->GetPos(MapIndexL).x)
+					if((int)GameServer()->Collision()->GetPos(MapIndexL).x < (int)m_Core.m_Pos.x)
+					{
+						m_Core.m_Pos = m_PrevPos;
+						//dbg_msg("Resetting","%d",Server()->Tick());
+					}
+				m_Core.m_Vel.x = 0;
+			}
+			if((m_TileIndex == TILE_STOPR || m_TileIndexR == TILE_STOPR || m_TileIndexR == TILE_STOPH || m_TileIndexR == TILE_STOPA || m_TileFIndex == TILE_STOPR || m_TileFIndexR == TILE_STOPR || m_TileFIndexR == TILE_STOPH || m_TileFIndexR == TILE_STOPA || m_TileSIndex == TILE_STOPR || m_TileSIndexR == TILE_STOPR || m_TileSIndexR == TILE_STOPH || m_TileSIndexR == TILE_STOPA) && m_Core.m_Vel.x < 0)
+			{
+				if((int)GameServer()->Collision()->GetPos(MapIndexR).x)
+					if((int)GameServer()->Collision()->GetPos(MapIndexR).x > (int)m_Core.m_Pos.x)
+					{
+						m_Core.m_Pos = m_PrevPos;
+						//dbg_msg("Resetting","%d",Server()->Tick());
+					}
+				m_Core.m_Vel.x = 0;
+			}
+			if((m_TileIndex == TILE_STOPB || m_TileIndexB == TILE_STOPB || m_TileIndexB == TILE_STOPV || m_TileIndexB == TILE_STOPA || m_TileFIndex == TILE_STOPB || m_TileFIndexB == TILE_STOPB || m_TileFIndexB == TILE_STOPV || m_TileFIndexB == TILE_STOPA || m_TileSIndex == TILE_STOPB || m_TileSIndexB == TILE_STOPB || m_TileSIndexB == TILE_STOPV || m_TileSIndexB == TILE_STOPA) && m_Core.m_Vel.y < 0)
+			{
+				if((int)GameServer()->Collision()->GetPos(MapIndexB).y)
+					if((int)GameServer()->Collision()->GetPos(MapIndexB).y > (int)m_Core.m_Pos.y)
+					{
+						m_Core.m_Pos = m_PrevPos;
+						//dbg_msg("Resetting","%d",Server()->Tick());
+					}
+				m_Core.m_Vel.y = 0;
+			}
+			if((m_TileIndex == TILE_STOPT || m_TileIndexT == TILE_STOPT || m_TileIndexT == TILE_STOPV || m_TileIndexT == TILE_STOPA || m_TileFIndex == TILE_STOPT || m_TileFIndexT == TILE_STOPT || m_TileFIndexT == TILE_STOPV || m_TileFIndexT == TILE_STOPA || m_TileSIndex == TILE_STOPT || m_TileSIndexT == TILE_STOPT || m_TileSIndexT == TILE_STOPV || m_TileSIndexT == TILE_STOPA) && m_Core.m_Vel.y > 0)
+			{
+				//dbg_msg("","%f %f",GameServer()->Collision()->GetPos(MapIndex).y,m_Core.m_Pos.y);
+				if((int)GameServer()->Collision()->GetPos(MapIndexT).y)
+					if((int)GameServer()->Collision()->GetPos(MapIndexT).y < (int)m_Core.m_Pos.y)
+					{
+						//dbg_msg("Resetting","%d",Server()->Tick());
+						m_Core.m_Pos = m_PrevPos;
+					}
+				m_Core.m_Vel.y = 0;
+				m_Core.m_Jumped = 0;
+			}
+			if (m_TileIndex == TILE_BOOST_L || m_TileFIndex == TILE_BOOST_L)
+			{
+				if(m_PrevPos.x-m_Pos.x<0)
+					m_Core.m_Vel.x += m_Core.m_Vel.x *-0.5;
+				else if(m_LastBooster != MapIndex)
+					m_Core.m_Vel.x += m_Core.m_Vel.x*0.5;
+			}
+			if (m_TileIndex == TILE_BOOST_R || m_TileFIndex == TILE_BOOST_R)
+			{
+				if(m_PrevPos.x-m_Pos.x>0)
+					m_Core.m_Vel.x += m_Core.m_Vel.x *-0.5;
+				else if(m_LastBooster != MapIndex)
+					m_Core.m_Vel.x += m_Core.m_Vel.x*0.5;
+			}
+			if (m_TileIndex == TILE_BOOST_D || m_TileFIndex == TILE_BOOST_D)
+			{
+				if(m_PrevPos.y-m_Pos.y>0)
+					m_Core.m_Vel.y += m_Core.m_Vel.y *-0.5;
+				else if(m_LastBooster != MapIndex)
+					m_Core.m_Vel.y += m_Core.m_Vel.y*0.5;
+			}
+			if (m_TileIndex == TILE_BOOST_U || m_TileFIndex == TILE_BOOST_U)
+			{
+				if(m_PrevPos.y-m_Pos.y<0)
+					m_Core.m_Vel.y += m_Core.m_Vel.y *-0.5;
+				else if(m_LastBooster != m_TileIndex)
+					m_Core.m_Vel.y += m_Core.m_Vel.y*0.5;
+			}
+			if ((m_TileIndex == TILE_BOOST_L2 || m_TileFIndex == TILE_BOOST_L2) && (m_LastBooster != MapIndex))
+			{
+				if(m_PrevPos.x-m_Pos.x<0)
+					m_Core.m_Vel.x = m_Core.m_Vel.x *-1.1;
+				else
+					m_Core.m_Vel.x += m_Core.m_Vel.x*1.1;
+			}
+			if ((m_TileIndex == TILE_BOOST_R2|| m_TileFIndex == TILE_BOOST_R2) && (m_LastBooster != MapIndex))
+			{
+				if(m_Core.m_Vel.x < 0)
+					m_Core.m_Vel.x = m_Core.m_Vel.x *-1.1;
+				else
+					m_Core.m_Vel.x += m_Core.m_Vel.x*1.1;
+			}
+			if ((m_TileIndex == TILE_BOOST_D2 || m_TileFIndex == TILE_BOOST_D2) && (m_LastBooster != MapIndex))
+			{
+				if(m_PrevPos.y-m_Pos.y>0)
+					m_Core.m_Vel.y = m_Core.m_Vel.y *-1.1;
+				else
+					m_Core.m_Vel.y += m_Core.m_Vel.y*1.1;
+			}
+			if ((m_TileIndex == TILE_BOOST_U2 || m_TileFIndex == TILE_BOOST_U2) && (m_LastBooster != MapIndex))
+			{
+				if(m_PrevPos.y-m_Pos.y<0)
+					m_Core.m_Vel.y = m_Core.m_Vel.y *-1.1;
+				else
+					m_Core.m_Vel.y += m_Core.m_Vel.y*1.1;
+			}
+			// handle speedup tiles
+			if(GameServer()->Collision()->IsSpeedup(MapIndex) == TILE_BOOST)
+			{
+				vec2 Direction, TempVel = m_Core.m_Vel;
+				int Force, MaxSpeed = 0;
+				GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force, &MaxSpeed);
+				TempVel += Direction * Force;
+				if(TempVel < Direction*(MaxSpeed/5) || !MaxSpeed)
+					m_Core.m_Vel = TempVel;
+				else
+				{
+					m_Core.m_Vel = Direction*(MaxSpeed/5) + Direction;
+				}
+				//dbg_msg("Direction","%f %f   %f %f   %f %f",Direction.x,Direction.y,(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
 
+			}
+			else if(GameServer()->Collision()->IsSpeedup(MapIndex) == TILE_BOOSTS)
+			{
+				vec2 Direction;
+				int Force;
+				GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force, 0);
+				Force/=5;
+				m_Core.m_Vel = Direction*Force + Direction;
+				//dbg_msg("Direction","%f %f   %f %f   %f %f",Direction.x,Direction.y,(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
+			}
+			m_LastBooster = MapIndex;
+			int z = GameServer()->Collision()->IsTeleport(MapIndex);
+			if(z)
+			{
+				m_Core.m_HookedPlayer = -1;
+				m_Core.m_HookState = HOOK_RETRACTED;
+				m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
+				m_Core.m_HookState = HOOK_RETRACTED;
+				m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_pTeleporter[z-1];
+				m_Core.m_HookPos = m_Core.m_Pos;
+			}
+			int evilz = GameServer()->Collision()->IsEvilTeleport(MapIndex);
+			if(evilz && !m_Super)
+			{
+				m_Core.m_HookedPlayer = -1;
+				m_Core.m_HookState = HOOK_RETRACTED;
+				m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
+				m_Core.m_HookState = HOOK_RETRACTED;
+				GameWorld()->ReleaseHooked(GetPlayer()->GetCID());
+				m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_pTeleporter[evilz-1];
+				m_Core.m_HookPos = m_Core.m_Pos;
+				m_Core.m_Vel = vec2(0,0);
+			}
+			// handle death-tiles
+			if((GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+				GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+				GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+				GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+				GameServer()->Collision()->GetFCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+				GameServer()->Collision()->GetFCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+				GameServer()->Collision()->GetFCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+				GameServer()->Collision()->GetFCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH)&&
+				!m_Super)
+			{
+				Die(m_pPlayer->GetCID(), WEAPON_WORLD);
+			}
+	}
 	// kill player when leaving gamelayer
 	if((int)m_Pos.x/32 < -200 || (int)m_Pos.x/32 > GameServer()->Collision()->GetWidth()+200 ||
 		(int)m_Pos.y/32 < -200 || (int)m_Pos.y/32 > GameServer()->Collision()->GetHeight()+200)

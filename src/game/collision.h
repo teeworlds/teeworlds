@@ -2,6 +2,7 @@
 #define GAME_COLLISION_H
 
 #include <base/vmath.h>
+#include <list>
 
 class CCollision
 {
@@ -49,6 +50,7 @@ public:
 	//DDRace
 	int GetPureMapIndex(vec2 Pos);
 	int GetMapIndex(vec2 PrevPos, vec2 Pos);
+	std::list<int> GetMapIndices(vec2 PrevPos, vec2 Pos, int MaxIndices);
 	vec2 GetPos(int Index);
 	int GetTileIndex(int Index);
 	int GetFTileIndex(int Index);
