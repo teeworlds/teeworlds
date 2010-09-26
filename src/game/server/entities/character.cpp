@@ -672,6 +672,115 @@ void CCharacter::Tick()
 {
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	std::list < int > Indices = GameServer()->Collision()->GetMapIndices(m_PrevPos, m_Pos, 5);
+	if(m_pPlayer->m_ForceBalanced)
+				{
+					char Buf[128];
+					str_format(Buf, sizeof(Buf), "You were moved to %s due to team balancing", Controller->GetTeamName(m_pPlayer->GetTeam()));
+					GameServer()->SendBroadcast(Buf, m_pPlayer->GetCID());
+
+					m_pPlayer->m_ForceBalanced = false;
+				}
+				m_Armor=(m_FreezeTime != -1)?10-(m_FreezeTime/15):0;
+				if(m_Input.m_Direction != 0 || m_Input.m_Jump != 0)
+					m_LastMove = Server()->Tick();
+
+				if(m_FreezeTime > 0 || m_FreezeTime == -1)
+				{
+					if (m_FreezeTime % Server()->TickSpeed() == 0 || m_FreezeTime == -1)
+					{
+						GameServer()->CreateDamageInd(m_Pos, 0, m_FreezeTime / Server()->TickSpeed());
+					}
+					if(m_FreezeTime != -1)
+						m_FreezeTime--;
+					else
+						m_Ninja.m_ActivationTick = Server()->Tick();
+					m_Input.m_Direction = 0;
+					m_Input.m_Jump = 0;
+					m_Input.m_Hook = 0;
+
+					//m_Input.m_Fire = 0;
+					if (m_FreezeTime == 1) {
+						UnFreeze();
+					}
+				}
+				m_Core.m_Input = m_Input;
+				m_Core.Tick(true);
+				m_Core.m_Id = GetPlayer()->GetCID();
+
+				m_DoSplash = false;
+				if (g_Config.m_SvEndlessDrag)
+					m_Core.m_HookTick = 0;
+				if (m_Super && m_Core.m_Jumped > 1)
+					m_Core.m_Jumped = 1;
+				if (m_Super && g_Config.m_SvEndlessSuperHook)
+					m_Core.m_HookTick = 0;
+				/*dbg_msg("character","m_TileIndex=%d , m_TileFIndex=%d",m_TileIndex,m_TileFIndex); //REMOVE*/
+				//DDRace
+				char aBuftime[128];
+				float time = (float)(Server()->Tick() - m_StartTime) / ((float)Server()->TickSpeed());
+				CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
+
+				if(Server()->Tick() - m_RefreshTime >= Server()->TickSpeed())
+				{
+					if (m_RaceState == RACE_STARTED) {
+						int IntTime = (int)time;
+						if(m_pPlayer->m_IsUsingRaceClient)
+						{
+							CNetMsg_Sv_RaceTime Msg;
+							Msg.m_Time = IntTime;
+							Msg.m_Check = 0;
+
+							if(m_CpActive != -1 && m_CpTick > Server()->Tick())
+							{
+								if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
+								{
+									float Diff = (m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive])*100;
+									Msg.m_Check = (int)Diff;
+								}
+							}
+
+							Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
+						}
+						else
+						{
+							if(m_BroadTime)
+								str_format(aBuftime, sizeof(aBuftime), "%dm %ds", IntTime/60, IntTime%60);
+							else
+								str_format(aBuftime, sizeof(aBuftime), "");
+
+							if(m_CpActive != -1 && m_CpTick > Server()->Tick())
+							{
+								if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
+								{
+									char aTmp[128];
+									float Diff = m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive];
+									str_format(aTmp, sizeof(aTmp), "\nCheckpoint | Diff : %+5.2f", Diff);
+									strcat(aBuftime, aTmp);
+								}
+							}
+
+							if( g_Config.m_SvBroadcast[0] != 0 && m_BroadCast)
+							{
+								char aTmp[128];
+								str_format(aTmp, sizeof(aTmp), "\n%s\n", g_Config.m_SvBroadcast);
+								strcat(aBuftime, aTmp);
+							}
+							GameServer()->SendBroadcast(aBuftime, m_pPlayer->GetCID());
+						}
+					}
+					else
+					{
+						if( g_Config.m_SvBroadcast[0] != 0) {
+							char aTmp[128];
+							str_format(aTmp, sizeof(aTmp), "%s\n", g_Config.m_SvBroadcast);
+							strcat(aBuftime, aTmp);
+							GameServer()->SendBroadcast(g_Config.m_SvBroadcast, m_pPlayer->GetCID());
+						}
+
+					}
+					m_RefreshTime = Server()->Tick();
+				}
+
 	if(!Indices.empty())
 		for(std::list < int >::iterator i = Indices.begin(); i != Indices.end(); i++)
 		{
@@ -701,114 +810,6 @@ void CCharacter::Tick()
 			/*m_CurrentTile = m_TileIndex;
 			m_CurrentFTile = m_TileFIndex;*/
 
-			if(m_pPlayer->m_ForceBalanced)
-			{
-				char Buf[128];
-				str_format(Buf, sizeof(Buf), "You were moved to %s due to team balancing", Controller->GetTeamName(m_pPlayer->GetTeam()));
-				GameServer()->SendBroadcast(Buf, m_pPlayer->GetCID());
-
-				m_pPlayer->m_ForceBalanced = false;
-			}
-			m_Armor=(m_FreezeTime != -1)?10-(m_FreezeTime/15):0;
-			if(m_Input.m_Direction != 0 || m_Input.m_Jump != 0)
-				m_LastMove = Server()->Tick();
-
-			if(m_FreezeTime > 0 || m_FreezeTime == -1)
-			{
-				if (m_FreezeTime % Server()->TickSpeed() == 0 || m_FreezeTime == -1)
-				{
-					GameServer()->CreateDamageInd(m_Pos, 0, m_FreezeTime / Server()->TickSpeed());
-				}
-				if(m_FreezeTime != -1)
-					m_FreezeTime--;
-				else
-					m_Ninja.m_ActivationTick = Server()->Tick();
-				m_Input.m_Direction = 0;
-				m_Input.m_Jump = 0;
-				m_Input.m_Hook = 0;
-
-				//m_Input.m_Fire = 0;
-				if (m_FreezeTime == 1) {
-					UnFreeze();
-				}
-			}
-			m_Core.m_Input = m_Input;
-			m_Core.Tick(true);
-			m_Core.m_Id = GetPlayer()->GetCID();
-
-			m_DoSplash = false;
-			if (g_Config.m_SvEndlessDrag)
-				m_Core.m_HookTick = 0;
-			if (m_Super && m_Core.m_Jumped > 1)
-				m_Core.m_Jumped = 1;
-			if (m_Super && g_Config.m_SvEndlessSuperHook)
-				m_Core.m_HookTick = 0;
-			/*dbg_msg("character","m_TileIndex=%d , m_TileFIndex=%d",m_TileIndex,m_TileFIndex); //REMOVE*/
-			//DDRace
-			char aBuftime[128];
-			float time = (float)(Server()->Tick() - m_StartTime) / ((float)Server()->TickSpeed());
-			CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
-
-			if(Server()->Tick() - m_RefreshTime >= Server()->TickSpeed())
-			{
-				if (m_RaceState == RACE_STARTED) {
-					int IntTime = (int)time;
-					if(m_pPlayer->m_IsUsingRaceClient)
-					{
-						CNetMsg_Sv_RaceTime Msg;
-						Msg.m_Time = IntTime;
-						Msg.m_Check = 0;
-
-						if(m_CpActive != -1 && m_CpTick > Server()->Tick())
-						{
-							if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
-							{
-								float Diff = (m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive])*100;
-								Msg.m_Check = (int)Diff;
-							}
-						}
-
-						Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
-					}
-					else
-					{
-						if(m_BroadTime)
-							str_format(aBuftime, sizeof(aBuftime), "%dm %ds", IntTime/60, IntTime%60);
-						else
-							str_format(aBuftime, sizeof(aBuftime), "");
-
-						if(m_CpActive != -1 && m_CpTick > Server()->Tick())
-						{
-							if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
-							{
-								char aTmp[128];
-								float Diff = m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive];
-								str_format(aTmp, sizeof(aTmp), "\nCheckpoint | Diff : %+5.2f", Diff);
-								strcat(aBuftime, aTmp);
-							}
-						}
-
-						if( g_Config.m_SvBroadcast[0] != 0 && m_BroadCast)
-						{
-							char aTmp[128];
-							str_format(aTmp, sizeof(aTmp), "\n%s\n", g_Config.m_SvBroadcast);
-							strcat(aBuftime, aTmp);
-						}
-						GameServer()->SendBroadcast(aBuftime, m_pPlayer->GetCID());
-					}
-				}
-				else
-				{
-					if( g_Config.m_SvBroadcast[0] != 0) {
-						char aTmp[128];
-						str_format(aTmp, sizeof(aTmp), "%s\n", g_Config.m_SvBroadcast);
-						strcat(aBuftime, aTmp);
-						GameServer()->SendBroadcast(g_Config.m_SvBroadcast, m_pPlayer->GetCID());
-					}
-
-				}
-				m_RefreshTime = Server()->Tick();
-			}
 
 
 			int cp = GameServer()->Collision()->IsCheckpoint(MapIndex);
