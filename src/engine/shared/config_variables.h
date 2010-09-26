@@ -52,7 +52,6 @@ MACRO_CONFIG_INT(SvEmotionalTees, sv_emotional_tees, 1, 0, 1, CFGFLAG_SERVER, "W
 MACRO_CONFIG_INT(SvEmoticonDelay, sv_emoticon_delay, 3, 0, 9999, CFGFLAG_SERVER, "The time in seconds between over-head emoticons", 3)
 
 MACRO_CONFIG_INT(SvVotes, sv_votes, 1, 0, 1, CFGFLAG_SERVER, "Whether votes are enabled", 3)
-MACRO_CONFIG_INT(SvVoteKickBanTime, sv_vote_kick_bantime, 300, 0, 9999, CFGFLAG_SERVER, "The time in seconds a player gets banned after a kick vote", 3)
 MACRO_CONFIG_INT(SvVoteKick, sv_vote_kick, 1, 0, 1, CFGFLAG_SERVER, "Allow voting to kick players", 3)
 MACRO_CONFIG_INT(SvVoteKickBantime, sv_vote_kick_bantime, 300, 0, 1000000, CFGFLAG_SERVER, "The time a vote-kicked player will be banned. (0 = take the time from 'kick')", 3)
 MACRO_CONFIG_INT(SvVotePercentage, sv_vote_percentage, 50, 1, 100, CFGFLAG_SERVER, "The percent of people that need to agree or deny for the vote to succeed/fail", 3)
@@ -68,6 +67,7 @@ MACRO_CONFIG_INT(SvVoteKickTimeDelay, sv_vote_kick_delay,0,0,9999,CFGFLAG_SERVER
 
 MACRO_CONFIG_INT(SvShotgunBulletSound, sv_shotgun_bullet_sound, 0, 0, 1, CFGFLAG_SERVER, "Crazy shotgun bullet sound on/off", 3)
 
+MACRO_CONFIG_INT(SvShowOthers, sv_show_others, 1, 0, 1, CFGFLAG_SERVER, "Shows the other players", 3)
 MACRO_CONFIG_INT(SvPauseable, sv_pauseable, 1, 0, 1, CFGFLAG_SERVER, "Whether players can pause their char or not", 3)
 MACRO_CONFIG_INT(SvPauseTime, sv_pause_time, 0, 0, 1, CFGFLAG_SERVER, "Whether '/pause' and 'sv_max_dc_restore' pauses the time of player or not", 3)
 MACRO_CONFIG_INT(SvMaxDCRestore, sv_max_dc_restore, 60, 0 , 180, CFGFLAG_SERVER, "The max time that the server will wait before deleting the saved tee of a dropped client", 3)
@@ -96,7 +96,7 @@ MACRO_CONFIG_STR(SvRulesLine8, sv_rules_line8, 40, "", CFGFLAG_SERVER, "Rules li
 MACRO_CONFIG_STR(SvRulesLine9, sv_rules_line9, 40, "", CFGFLAG_SERVER, "Rules line 9", 4)
 MACRO_CONFIG_STR(SvRulesLine10, sv_rules_line10, 40, "", CFGFLAG_SERVER, "Rules line 10", 4)//of course there are better ways but i am lazy bite me!!
 //===============================
-MACRO_CONFIG_INT(SvShowOthers, sv_show_others, 1, 0, 1, CFGFLAG_SERVER, "Shows the other players", 3)
+
 //MACRO_CONFIG_INT(SvSpamprotection, sv_spamprotection, 1, 0, 1, CFGFLAG_SERVER, "Spam protection", 3)
 MACRO_CONFIG_STR(PlayerName, player_name, 24, "nameless tee", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Name of the player", 0)
 MACRO_CONFIG_STR(ClanName, clan_name, 32, "", CFGFLAG_SAVE|CFGFLAG_CLIENT, "(not used)", 0)
