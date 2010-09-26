@@ -124,9 +124,9 @@ std::list<int> CCollision::GetMapIndices(vec2 PrevPos, vec2 Pos, int MaxIndices)
 
 		if(
 			(m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
-			((m_pTiles[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
+			((m_pTiles[ny*m_Width+nx].m_Index > TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
 			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pFront[ny*m_Width+nx].m_Index < TILE_TELEIN)) ||
-			(m_pFront && ((m_pFront[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pFront[ny*m_Width+nx].m_Index <= TILE_NPH))) ||
+			(m_pFront && ((m_pFront[ny*m_Width+nx].m_Index > TILE_BOOST)&&(m_pFront[ny*m_Width+nx].m_Index <= TILE_NPH))) ||
 			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEINEVIL || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
 			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0) ||
 			(m_pDoor && m_pDoor[ny*m_Width+nx].m_Index)
@@ -150,9 +150,9 @@ std::list<int> CCollision::GetMapIndices(vec2 PrevPos, vec2 Pos, int MaxIndices)
 		ny = clamp((int)Tmp.y/32, 0, m_Height-1);
 		if(
 			(m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
-			((m_pTiles[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
+			((m_pTiles[ny*m_Width+nx].m_Index > TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
 			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pFront[ny*m_Width+nx].m_Index < TILE_TELEIN)) ||
-			(m_pFront && ((m_pFront[ny*m_Width+nx].m_Index >TILE_BOOST)&&(m_pFront[ny*m_Width+nx].m_Index <= TILE_NPH))) ||
+			(m_pFront && ((m_pFront[ny*m_Width+nx].m_Index > TILE_BOOST)&&(m_pFront[ny*m_Width+nx].m_Index <= TILE_NPH))) ||
 			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEINEVIL || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
 			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0) ||
 			(m_pDoor && m_pDoor[ny*m_Width+nx].m_Index)

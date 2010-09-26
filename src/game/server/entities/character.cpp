@@ -904,7 +904,7 @@ void CCharacter::Tick()
 			{
 				if(m_PrevPos.y-m_Pos.y<0)
 					m_Core.m_Vel.y += m_Core.m_Vel.y *-0.5;
-				else if(m_LastBooster != m_TileIndex)
+				else if(m_LastBooster != MapIndex)
 					m_Core.m_Vel.y += m_Core.m_Vel.y*0.5;
 			}
 			if ((m_TileIndex == TILE_BOOST_L2 || m_TileFIndex == TILE_BOOST_L2) && (m_LastBooster != MapIndex))
