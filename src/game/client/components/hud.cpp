@@ -442,8 +442,8 @@ void CHud::RenderRecord()
 		TextRender()->Text(0, 53, 40, 6, aBuf, -1);
 	}
 		
-	if(m_pClient->m_pRaceDemo->GetFinishTime() && (m_LocalRecord == -1 || m_LocalRecord > m_pClient->m_pRaceDemo->GetFinishTime()))
-		m_LocalRecord = m_pClient->m_pRaceDemo->GetFinishTime();
+	if(m_pClient->m_pRaceDemo->m_Time && (m_LocalRecord == -1 || m_LocalRecord > m_pClient->m_pRaceDemo->m_Time))
+		m_LocalRecord = m_pClient->m_pRaceDemo->m_Time;
 	
 	if(m_LocalRecord > 0 && g_Config.m_ClShowLocalRecord && g_Config.m_ClShowRecords)
 	{				

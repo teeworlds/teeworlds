@@ -9,13 +9,13 @@ class CRaceDemo : public CComponent
 {
 	int m_RecordStopTime;
 	int m_DemoStartTick;
-	float m_Time;
 	const char *m_pMap;
 	
 	bool m_Active;
 	
 public:
 
+	float m_Time;
 	int m_RaceState;
 	
 	enum

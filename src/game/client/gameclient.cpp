@@ -607,6 +607,8 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 	{
 		CNetMsg_Sv_PlayerTime *pMsg = (CNetMsg_Sv_PlayerTime *)pRawMsg;
 		m_aClients[pMsg->m_Cid].m_Score = (float)pMsg->m_Time/100;
+		//m_pClient->m_LocalTime = (float)pMsg->m_Time/100;
+		m_pRaceDemo->m_Time = (float)pMsg->m_Time/100;
 	}
 	else if(MsgId == NETMSGTYPE_SV_PLAYERTEAM)
 	{

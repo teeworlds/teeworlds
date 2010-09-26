@@ -530,12 +530,13 @@ void CGameContext::OnClientEnter(int ClientId)
 	//world.insert_entity(&players[client_id]);
 	m_apPlayers[ClientId]->Respawn();
 	
-	m_apPlayers[ClientId]->m_Score = -9999;
-	
 	// init the player
+
 	Score()->PlayerData(ClientId)->Reset();
 	Score()->LoadScore(ClientId);
-	
+	Score()->PlayerData(ClientId)->m_CurrentTime = Score()->PlayerData(ClientId)->m_BestTime;
+	m_apPlayers[ClientId]->m_Score = (Score()->PlayerData(ClientId)->m_BestTime)?Score()->PlayerData(ClientId)->m_BestTime:-9999;
+
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "'%s' entered and joined the %s", Server()->ClientName(ClientId), m_pController->GetTeamName(m_apPlayers[ClientId]->GetTeam()));
 	SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
