@@ -994,7 +994,8 @@ void CCharacter::Tick()
 				m_Core.m_HookState = HOOK_RETRACTED;
 				m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
 				m_Core.m_HookState = HOOK_RETRACTED;
-				m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_pTeleOuts[z-1][rand()%(((CGameControllerDDRace*)GameServer()->m_pController)->m_pNumTele[z-1] - 1)];
+				int Num = (((CGameControllerDDRace*)GameServer()->m_pController)->m_pNumTele[z-1] - 1);
+				m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_pTele2D[z-1][(!Num)?Num:rand() % Num];
 				m_Core.m_HookPos = m_Core.m_Pos;
 			}
 			int evilz = GameServer()->Collision()->IsEvilTeleport(MapIndex);
@@ -1005,7 +1006,8 @@ void CCharacter::Tick()
 				m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
 				m_Core.m_HookState = HOOK_RETRACTED;
 				GameWorld()->ReleaseHooked(GetPlayer()->GetCID());
-				m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_pTeleOuts[evilz-1][rand()%(((CGameControllerDDRace*)GameServer()->m_pController)->m_pNumTele[evilz-1] - 1)];
+				int Num = (((CGameControllerDDRace*)GameServer()->m_pController)->m_pNumTele[z-1] - 1);
+				m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_pTele2D[evilz-1][(!Num)?Num:rand() % Num];
 				m_Core.m_HookPos = m_Core.m_Pos;
 				m_Core.m_Vel = vec2(0,0);
 			}
