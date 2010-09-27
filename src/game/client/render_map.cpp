@@ -80,7 +80,7 @@ static void Rotate(CPoint *pCenter, CPoint *pPoint, float Rotation)
 	pPoint->y = (int)(x * sinf(Rotation) + y * cosf(Rotation) + pCenter->y);
 }
 
-void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, void (*pfnEval)(float TimeOffset, int Env, float *pChannels, void *pUser), void *pUser)
+void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, void (*pfnEval)(float TimeOffset, int Env, float *pChannels, void *pUser), void *pUser, float Zoom)
 {
 	Graphics()->QuadsBegin();
 	float Conv = 1/255.0f;
@@ -155,10 +155,10 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, voi
 		}
 		
 		IGraphics::CFreeformItem Freeform(
-			fx2f(pPoints[0].x)+OffsetX, fx2f(pPoints[0].y)+OffsetY,
-			fx2f(pPoints[1].x)+OffsetX, fx2f(pPoints[1].y)+OffsetY,
-			fx2f(pPoints[2].x)+OffsetX, fx2f(pPoints[2].y)+OffsetY,
-			fx2f(pPoints[3].x)+OffsetX, fx2f(pPoints[3].y)+OffsetY);
+			fx2f(pPoints[0].x*Zoom)+OffsetX, fx2f(pPoints[0].y*Zoom)+OffsetY,
+			fx2f(pPoints[1].x*Zoom)+OffsetX, fx2f(pPoints[1].y*Zoom)+OffsetY,
+			fx2f(pPoints[2].x*Zoom)+OffsetX, fx2f(pPoints[2].y*Zoom)+OffsetY,
+			fx2f(pPoints[3].x*Zoom)+OffsetX, fx2f(pPoints[3].y*Zoom)+OffsetY);
 		Graphics()->QuadsDrawFreeform(&Freeform, 1);
 	}
 	Graphics()->QuadsEnd();	
