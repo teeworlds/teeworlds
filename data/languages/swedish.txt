@@ -1,4 +1,4 @@
-﻿
+
 ##### translated strings #####
 
 %d of %d servers, %d players

@@ -461,7 +461,7 @@ void CEditor::RenderBackground(CUIRect View, int Texture, float Size, float Brig
 	Graphics()->QuadsEnd();
 }
 
-int CEditor::UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, int Current, int Min, int Max, float Scale, const char *pToolTip)
+int CEditor::UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, int Current, int Min, int Max, int Step, float Scale, const char *pToolTip)
 {
     // logic
     static float s_Value;
@@ -488,7 +488,7 @@ int CEditor::UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, int Cu
 			{
 				int Count = (int)(s_Value/Scale);
 				s_Value = fmod(s_Value, Scale);
-				Current += Count;
+				Current += Step*Count;
 				if(Current < Min)
 					Current = Min;
 				if(Current > Max)
@@ -649,8 +649,7 @@ static void CallbackSaveMap(const char *pFileName, void *pUser)
 	}
 
 	if(pEditor->Save(pFileName))
-		if(pEditor->Save(pFileName))
-			str_copy(pEditor->m_aFileName, pFileName, sizeof(pEditor->m_aFileName));
+		str_copy(pEditor->m_aFileName, pFileName, sizeof(pEditor->m_aFileName));
 	
 	pEditor->m_Dialog = DIALOG_NONE;
 }
@@ -792,7 +791,16 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 
 		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 		static int s_RotationAmount = 90;
-		s_RotationAmount = UiDoValueSelector(&s_RotationAmount, &Button, "", s_RotationAmount, 1, 360, 2.0f, Localize("Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise."));
+		bool TileLayer = false;
+		// check for tile layers in brush selection
+		for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
+			if(m_Brush.m_lLayers[i]->m_Type == LAYERTYPE_TILES)
+			{
+				TileLayer = true;
+				s_RotationAmount = max(90, (s_RotationAmount/90)*90);
+				break;
+			}
+		s_RotationAmount = UiDoValueSelector(&s_RotationAmount, &Button, "", s_RotationAmount, TileLayer?90:1, 360, TileLayer?90:1, TileLayer?10.0f:2.0f, Localize("Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise."));
 
 		TB_Top.VSplitLeft(5.0f, &Button, &TB_Top);
 		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
@@ -847,44 +855,10 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		static int s_BorderBut = 0;
 		CLayerTiles *pT = (CLayerTiles *)GetSelectedLayerType(0, LAYERTYPE_TILES);
 		
-		// no border for tele layer and speedup
-		if(pT && (pT->m_Tele || pT->m_Speedup || pT->m_Switch || pT->m_Front))
-			pT = 0;
-			
-		if(DoButton_Editor(&s_BorderBut, "Border", pT?0:-1, &Button, 0, Localize("Border")))
+		if(DoButton_Editor(&s_BorderBut, Localize("Border"), pT?0:-1, &Button, 0, Localize("Border")))
 		{
 			if(pT)
                 DoMapBorder();
-		}
-		
-		// do tele button
-		TB_Bottom.VSplitLeft(5.0f, &Button, &TB_Bottom);
-		TB_Bottom.VSplitLeft(60.0f, &Button, &TB_Bottom);
-		static int s_TeleButton = 0;
-		CLayerTiles *pS = (CLayerTiles *)GetSelectedLayerType(0, LAYERTYPE_TILES);
-		
-		if(DoButton_Ex(&s_TeleButton, "Teleporter", (pS && pS->m_Tele)?0:-1, &Button, 0, "Teleporter", CUI::CORNER_ALL))
-		{
-			static int s_TelePopupId = 0;
-			UiInvokePopupMenu(&s_TelePopupId, 0, UI()->MouseX(), UI()->MouseY(), 120, 23, PopupTele);
-		}
-		
-		TB_Bottom.VSplitLeft(5.0f, &Button, &TB_Bottom);
-		TB_Bottom.VSplitLeft(60.0f, &Button, &TB_Bottom);
-		static int s_SpeedupButton = 0;
-		if(DoButton_Ex(&s_SpeedupButton, "Speedup", (pS && pS->m_Speedup)?0:-1, &Button, 0, "Speedup", CUI::CORNER_ALL))
-		{
-			static int s_SpeedupPopupId = 0;
-			UiInvokePopupMenu(&s_SpeedupPopupId, 0, UI()->MouseX(), UI()->MouseY(), 120, 53, PopupSpeedup);
-		}
-
-		TB_Bottom.VSplitLeft(5.0f, &Button, &TB_Bottom);
-		TB_Bottom.VSplitLeft(60.0f, &Button, &TB_Bottom);
-		static int s_SwitchButton = 0;
-		if(DoButton_Ex(&s_SwitchButton, "Switcher", (pS && pS->m_Switch)?0:-1, &Button, 0, "Switcher", CUI::CORNER_ALL))
-		{
-			static int s_SwitchPopupId = 0;
-			UiInvokePopupMenu(&s_SwitchPopupId, 0, UI()->MouseX(), UI()->MouseY(), 120, 23, PopupSwitch);
 		}
 	}
 
@@ -1204,21 +1178,12 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			//UI()->ClipEnable(&view);
 		}
 
-		// render the game, tele, speedup, front and switch above everything else
-		if(m_Map.m_pGameGroup->m_Visible)
- 		{
- 			m_Map.m_pGameGroup->MapScreen();
-			if(m_Map.m_pGameLayer->m_Visible)
-				m_Map.m_pGameLayer->Render();
-			/*if(m_Map.m_pFrontLayer && m_Map.m_pFrontLayer->m_Visible)
-				m_Map.m_pFrontLayer->Render();
-			if(m_Map.m_pTeleLayer && m_Map.m_pTeleLayer->m_Visible)
-				m_Map.m_pTeleLayer->Render();
-			if(m_Map.m_pSpeedupLayer && m_Map.m_pSpeedupLayer->m_Visible)
-				m_Map.m_pSpeedupLayer->Render();
-			if(m_Map.m_pSwitchLayer && m_Map.m_pSwitchLayer->m_Visible)
-				m_Map.m_pSwitchLayer->Render();*/
- 		}
+		// render the game above everything else
+		if(m_Map.m_pGameGroup->m_Visible && m_Map.m_pGameLayer->m_Visible)
+		{
+			m_Map.m_pGameGroup->MapScreen();
+			m_Map.m_pGameLayer->Render();
+		}
 	}
 
 	static void *s_pEditorId = (void *)&s_pEditorId;
@@ -1712,7 +1677,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIds, int *
 		}
 		else if(pProps[i].m_Type == PROPTYPE_INT_SCROLL)
 		{
-			int NewValue = UiDoValueSelector(&pIds[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, 1.0f, Localize("Use left mouse button to drag and change the value. Hold shift to be more precise."));
+			int NewValue = UiDoValueSelector(&pIds[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, 1, 1.0f, Localize("Use left mouse button to drag and change the value. Hold shift to be more precise."));
 			if(NewValue != pProps[i].m_Value)
 			{
 				*pNewVal = NewValue;
@@ -1728,7 +1693,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIds, int *
 			for(int c = 0; c < 4; c++)
 			{
 				int v = (pProps[i].m_Value >> s_aShift[c])&0xff;
-				NewColor |= UiDoValueSelector(((char *)&pIds[i])+c, &Shifter, s_paTexts[c], v, 0, 255, 1.0f, Localize("Use left mouse button to drag and change the color value. Hold shift to be more precise."))<<s_aShift[c];
+				NewColor |= UiDoValueSelector(((char *)&pIds[i])+c, &Shifter, s_paTexts[c], v, 0, 255, 1, 1.0f, Localize("Use left mouse button to drag and change the color value. Hold shift to be more precise."))<<s_aShift[c];
 
 				if(c != 3)
 				{
@@ -1869,8 +1834,6 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 				if(int Result = DoButton_Ex(m_Map.m_lGroups[g]->m_lLayers[i], aBuf, g==m_SelectedGroup&&i==m_SelectedLayer, &Button,
 					BUTTON_CONTEXT, Localize("Select layer. Right click for properties."), CUI::CORNER_R))
 				{
-					/*if(m_Map.m_lGroups[g]->m_lLayers[i] == m_Map.m_pTeleLayer || m_Map.m_lGroups[g]->m_lLayers[i] == m_Map.m_pSpeedupLayer || m_Map.m_lGroups[g]->m_lLayers[i] == m_Map.m_pSwitchLayer)//Clear the brush on entering tele/speedup/switch layer
-						m_Brush.Clear();*/
 					m_SelectedLayer = i;
 					m_SelectedGroup = g;
 					static int s_LayerPopupId = 0;
@@ -2401,19 +2364,6 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		CUIRect Button;
 		CEnvelope *pNewEnv = 0;
 
-		// Delete button
-		if(m_Map.m_lEnvelopes.size())
-		{
-			ToolBar.VSplitRight(5.0f, &ToolBar, &Button);
-			ToolBar.VSplitRight(50.0f, &ToolBar, &Button);
-			static int s_DelButton = 0;
-			if(DoButton_Editor(&s_DelButton, Localize("Delete"), 0, &Button, 0, Localize("Delete this envelope")))
-				m_Map.DeleteEnvelope(m_SelectedEnvelope);
-		
-			// little space
-			ToolBar.VSplitRight(10.0f, &ToolBar, &Button);
-		}
-		
 		ToolBar.VSplitRight(50.0f, &ToolBar, &Button);
 		static int s_New4dButton = 0;
 		if(DoButton_Editor(&s_New4dButton, Localize("Color+"), 0, &Button, 0, Localize("Creates a new color envelope")))
@@ -2424,7 +2374,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		static int s_New2dButton = 0;
 		if(DoButton_Editor(&s_New2dButton, Localize("Pos.+"), 0, &Button, 0, Localize("Creates a new pos envelope")))
 			pNewEnv = m_Map.NewEnvelope(3);
-			
+
 		// Delete button
 		if(m_SelectedEnvelope >= 0)
 		{
@@ -3061,34 +3011,6 @@ void CEditorMap::MakeGameLayer(CLayer *pLayer)
 	m_pGameLayer->m_TexId = m_pEditor->ms_EntitiesTexture;
 }
 
-void CEditorMap::MakeTeleLayer(CLayer *pLayer)
-{
-	m_pTeleLayer = (CLayerTele *)pLayer;
-	m_pTeleLayer->m_pEditor = m_pEditor;
-	m_pTeleLayer->m_TexId = m_pEditor->ms_EntitiesTexture;
-}
-
-void CEditorMap::MakeSpeedupLayer(CLayer *pLayer)
-{
-	m_pSpeedupLayer = (CLayerSpeedup *)pLayer;
-	m_pSpeedupLayer->m_pEditor = m_pEditor;
-	m_pSpeedupLayer->m_TexId = m_pEditor->ms_EntitiesTexture;
-}
-
-void CEditorMap::MakeFrontLayer(CLayer *pLayer)
-{
-	m_pFrontLayer = (CLayerFront *)pLayer;
-	m_pFrontLayer->m_pEditor = m_pEditor;
-	m_pFrontLayer->m_TexId = m_pEditor->ms_EntitiesTexture;
-}
-
-void CEditorMap::MakeSwitchLayer(CLayer *pLayer)
-{
-	m_pSwitchLayer = (CLayerSwitch *)pLayer;
-	m_pSwitchLayer->m_pEditor = m_pEditor;
-	m_pSwitchLayer->m_TexId = m_pEditor->ms_EntitiesTexture;
-}
-
 void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
 {
 	m_pGameGroup = pGroup;
@@ -3105,10 +3027,6 @@ void CEditorMap::Clean()
 	m_lImages.delete_all();
 
 	m_pGameLayer = 0x0;
-	m_pTeleLayer = 0x0;
-	m_pSpeedupLayer = 0x0;
-	m_pFrontLayer = 0x0;
-	m_pSwitchLayer = 0x0;
 	m_pGameGroup = 0x0;
 }
 
@@ -3135,15 +3053,10 @@ void CEditorMap::CreateDefault(int EntitiesTexture)
 	pQuad->m_aColors[2].b = pQuad->m_aColors[3].b = 255;
 	pGroup->AddLayer(pLayer);
 
-	// add game layer and front
+	// add game layer
 	MakeGameGroup(NewGroup());
 	MakeGameLayer(new CLayerGame(50, 50));
-	MakeFrontLayer(new CLayerFront(50, 50));
 	m_pGameGroup->AddLayer(m_pGameLayer);
-	m_pGameGroup->AddLayer(m_pFrontLayer);
-	m_pTeleLayer = 0x0;
-	m_pSpeedupLayer = 0x0;
-	m_pSwitchLayer = 0x0;
 }
 
 void CEditor::Init()

@@ -7,7 +7,6 @@
 #include <game/client/component.h>
 #include <game/client/components/chat.h>
 #include <game/client/components/menus.h>
-#include <game/client/components/camera.h>
 
 #include "controls.h"
 
@@ -190,7 +189,7 @@ int CControls::SnapInput(int *pData)
 void CControls::OnRender()
 {
 	// update target pos
-	if(m_pClient->m_Snap.m_pGameobj && !(m_pClient->m_Snap.m_pGameobj->m_Paused || m_pClient->m_Snap.m_Spectate || m_pClient->m_pCamera->m_Free))
+	if(m_pClient->m_Snap.m_pGameobj && !(m_pClient->m_Snap.m_pGameobj->m_Paused || m_pClient->m_Snap.m_Spectate))
 		m_TargetPos = m_pClient->m_LocalCharacterPos + m_MousePos;
 }
 
@@ -215,13 +214,13 @@ void CControls::ClampMousePos()
 	
 	//vec2 camera_offset(0, 0);
 
-	if(m_pClient->m_Snap.m_Spectate || m_pClient->m_pCamera->m_Free)
+	if(m_pClient->m_Snap.m_Spectate)
 	{
-		/*if(m_MousePos.x < 200.0f) m_MousePos.x = 200.0f;
+		if(m_MousePos.x < 200.0f) m_MousePos.x = 200.0f;
 		if(m_MousePos.y < 200.0f) m_MousePos.y = 200.0f;
 		if(m_MousePos.x > Collision()->GetWidth()*32-200.0f) m_MousePos.x = Collision()->GetWidth()*32-200.0f;
 		if(m_MousePos.y > Collision()->GetHeight()*32-200.0f) m_MousePos.y = Collision()->GetHeight()*32-200.0f;
-		*/
+		
 		m_TargetPos = m_MousePos;
 	}
 	else

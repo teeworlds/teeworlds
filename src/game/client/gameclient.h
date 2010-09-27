@@ -6,28 +6,7 @@
 #include <engine/console.h>
 #include <game/layers.h>
 #include <game/gamecore.h>
-#include <game/teamscore.h>
-
 #include "render.h"
-
-	const CColor m_PredefinedColors[MAX_CLIENTS] = {
-		{255,255,204, 1}, 
-		{255,204,204, 1}, 
-		{204,153,255, 1}, 
-		{102,153,255, 1},
-		{204, 255, 255, 1},
-		{102,255,0, 1},
-		{204, 255, 51, 1},
-		{204,255,102, 1},
-		{102, 255, 255, 1},
-		{102,255,153, 1},
-		{255, 102, 153, 1},
-		{255, 153, 102, 1},
-		{255, 204, 51, 1},
-		{204,255,51, 1},
-		{255, 255, 255, 1},
-		{204,204,255, 1}
-	};
 
 class CGameClient : public IGameClient
 {
@@ -63,7 +42,6 @@ class CGameClient : public IGameClient
 	
 	CLayers m_Layers;
 	class CCollision m_Collision;
-	class CTeamsCore m_Teams;
 	CUI m_UI;
 	
 	void DispatchInput();
@@ -77,7 +55,6 @@ class CGameClient : public IGameClient
 
 	static void ConTeam(IConsole::IResult *pResult, void *pUserData, int ClientID);
 	static void ConKill(IConsole::IResult *pResult, void *pUserData, int ClientID);
-	static void ConMapHack(IConsole::IResult *pResult, void *pUserData, int ClientID);
 	
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	
@@ -104,13 +81,6 @@ public:
 	bool m_SuppressEvents;
 	bool m_NewTick;
 	bool m_NewPredictedTick;
-	
-	// Race
-	bool m_IsRace;
-	bool m_IsFastCap;
-	bool m_RaceMsgSent;
-	int m_ShowOthers;
-	vec2 m_FlagPos;
 
 	// TODO: move this
 	CTuningParams m_Tuning;
@@ -185,12 +155,9 @@ public:
 		
 		float m_Angle;
 		
-		// race
-		float m_Score;
-		
 		void UpdateRenderInfo();
 	};
-	
+
 	CClientData m_aClients[MAX_CLIENTS];
 	
 	CRenderTools m_RenderTools;
@@ -239,7 +206,6 @@ public:
 	class CMotd *m_pMotd;
 	class CMapImages *m_pMapimages;
 	class CVoting *m_pVoting;
-	class CRaceDemo *m_pRaceDemo;
 	class CScoreboard *m_pScoreboard;
 };
 

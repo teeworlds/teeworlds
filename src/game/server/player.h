@@ -79,12 +79,8 @@ public:
 	int64 m_Last_Emote;
 	int64 m_Last_Kill;
 
-	int m_Last_ShowOthers;
-
-	bool m_ShowOthers;
 	bool m_Invisible;
 	
-	//DDRace  		 
    int m_Muted;  		 
    //int hammer_ type;  		 
  		 
@@ -93,8 +89,7 @@ public:
    int m_Resistent;  
    
    bool m_ColorSet; // Set if player changed color at least once 
-   
-   //DDRace var  		 
+
    int m_Starttime;  		 
    int m_Refreshtime;  		 
    int m_RaceState;  		 
@@ -121,9 +116,6 @@ public:
 	float m_aBestCpTime[25];
 	
 	bool m_ResetPickups;
-	
-	bool m_IsUsingRaceClient;
-	float m_LastSentTime;
 	
 	// afk timer
 	void AfkTimer(int new_target_x, int new_target_y);

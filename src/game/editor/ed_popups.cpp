@@ -93,81 +93,11 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 		return 1;
 	}
 
-	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->m_Map.m_pTeleLayer)
-	{
-		// new tele layer
-		View.HSplitBottom(10.0f, &View, &Button);
-		View.HSplitBottom(12.0f, &View, &Button);
-		static int s_NewSwitchLayerButton = 0;
-		if(pEditor->DoButton_Editor(&s_NewSwitchLayerButton, "Add Tele Layer", 0, &Button, 0, "Creates a new tele layer"))
-		{
-			CLayer *l = new CLayerTele(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
-			pEditor->m_Map.MakeTeleLayer(l);
-			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
-			pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
-			pEditor->m_Brush.Clear();
-			return 1;
-		}
-	}
-
-	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->m_Map.m_pSpeedupLayer)
-	{
-		// new speedup layer
-		View.HSplitBottom(10.0f, &View, &Button);
-		View.HSplitBottom(12.0f, &View, &Button);
-		static int s_NewSwitchLayerButton = 0;
-		if(pEditor->DoButton_Editor(&s_NewSwitchLayerButton, "Add Speedup Layer", 0, &Button, 0, "Creates a new speedup layer"))
-		{
-			CLayer *l = new CLayerSpeedup(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
-			pEditor->m_Map.MakeSpeedupLayer(l);
-			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
-			pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
-			pEditor->m_Brush.Clear();
-			return 1;
-		}
-	}
-	
-	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->m_Map.m_pFrontLayer)
-	{
-		// new force layer
-		View.HSplitBottom(10.0f, &View, &Button);
-		View.HSplitBottom(12.0f, &View, &Button);
-		static int s_NewFrontLayerButton = 0;
-		if(pEditor->DoButton_Editor(&s_NewFrontLayerButton, "Add Front Layer", 0, &Button, 0, "Creates a new item layer"))
-		{
-			CLayer *l = new CLayerFront(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
-			pEditor->m_Map.MakeFrontLayer(l);
-			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
-			pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
-			pEditor->m_Brush.Clear();
-			return 1;
-		}
-	}
-
-	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->m_Map.m_pSwitchLayer)
-	{
-		// new Switch layer
-		View.HSplitBottom(10.0f, &View, &Button);
-		View.HSplitBottom(12.0f, &View, &Button);
-		static int s_NewSwitchLayerButton = 0;
-		if(pEditor->DoButton_Editor(&s_NewSwitchLayerButton, "Add Switch Layer", 0, &Button, 0, "Creates a new switch layer"))
-		{
-			CLayer *l = new CLayerSwitch(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
-			pEditor->m_Map.MakeSwitchLayer(l);
-			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
-			pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
-			pEditor->m_Brush.Clear();
-			return 1;
-		}
-	}
-
-
 	// new tile layer
 	View.HSplitBottom(10.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_NewQuadLayerButton = 0;
-	//if(pEditor->DoButton_Editor(&s_NewQuadLayerButton, Localize("Add quads layer"), 0, &Button, 0, Localize("Creates a new quad layer")))
-	if(pEditor->DoButton_Editor(&s_NewQuadLayerButton, Localize("Add Quads Layer"), 0, &Button, 0, Localize("Creates a new quad layer")))
+	if(pEditor->DoButton_Editor(&s_NewQuadLayerButton, Localize("Add quads layer"), 0, &Button, 0, Localize("Creates a new quad layer")))
 	{
 		CLayer *l = new CLayerQuads;
 		l->m_pEditor = pEditor;
@@ -180,10 +110,9 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 	View.HSplitBottom(5.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_NewTileLayerButton = 0;
-	//if(pEditor->DoButton_Editor(&s_NewTileLayerButton, Localize("Add tile layer"), 0, &Button, 0, Localize("Creates a new tile layer")))
-	if(pEditor->DoButton_Editor(&s_NewTileLayerButton, Localize("Add Tile Layer"), 0, &Button, 0, Localize("Creates a new tile layer")))
+	if(pEditor->DoButton_Editor(&s_NewTileLayerButton, Localize("Add tile layer"), 0, &Button, 0, Localize("Creates a new tile layer")))
 	{
-		CLayer *l = new CLayerTiles(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
+		CLayer *l = new CLayerTiles(50, 50);
 		l->m_pEditor = pEditor;
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
 		pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
@@ -255,16 +184,10 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_DeleteButton = 0;
 	
-	// don't allow deletion of game/front layer
-	if(pEditor->m_Map.m_pGameLayer != pEditor->GetSelectedLayer(0) && pEditor->m_Map.m_pFrontLayer != pEditor->GetSelectedLayer(0) &&
+	// don't allow deletion of game layer
+	if(pEditor->m_Map.m_pGameLayer != pEditor->GetSelectedLayer(0) &&
 		pEditor->DoButton_Editor(&s_DeleteButton, Localize("Delete layer"), 0, &Button, 0, Localize("Deletes the layer")))
 	{
-		if(pEditor->GetSelectedLayer(0) == pEditor->m_Map.m_pTeleLayer)
-			pEditor->m_Map.m_pTeleLayer = 0x0;
-		if(pEditor->GetSelectedLayer(0) == pEditor->m_Map.m_pSpeedupLayer)
-			pEditor->m_Map.m_pSpeedupLayer = 0x0;
-		if(pEditor->GetSelectedLayer(0) == pEditor->m_Map.m_pSwitchLayer)
-			pEditor->m_Map.m_pSwitchLayer = 0x0;
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->DeleteLayer(pEditor->m_SelectedLayer);
 		return 1;
 	}
@@ -289,11 +212,11 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 		{0},
 	};
 
-	if(pEditor->m_Map.m_pGameLayer == pEditor->GetSelectedLayer(0) || pEditor->m_Map.m_pTeleLayer == pEditor->GetSelectedLayer(0) || pEditor->m_Map.m_pSpeedupLayer == pEditor->GetSelectedLayer(0) || pEditor->m_Map.m_pFrontLayer == pEditor->GetSelectedLayer(0) || pEditor->m_Map.m_pSwitchLayer == pEditor->GetSelectedLayer(0)) // dont use Group and Detail from the selection if this is the game layer
+	if(pEditor->m_Map.m_pGameLayer == pEditor->GetSelectedLayer(0)) // dont use Group and Detail from the selection if this is the game layer
 	{
 		aProps[0].m_Type = PROPTYPE_NULL;
- 		aProps[2].m_Type = PROPTYPE_NULL;
- 	}
+		aProps[2].m_Type = PROPTYPE_NULL;
+	}
 	
 	static int s_aIds[NUM_PROPS] = {0};
 	int NewVal = 0;
@@ -545,88 +468,7 @@ int CEditor::PopupSelectImageResult()
 	return g_SelectImageCurrent;
 }
 
-int CEditor::PopupTele(CEditor *pEditor, CUIRect View)
-{
-	CUIRect Button;
-	View.HSplitBottom(12.0f, &View, &Button);
-	
-	enum
-	{
-		PROP_TELE=0,
-		NUM_PROPS,
-	};
-	
-	CProperty aProps[] = {
-		{"Number", pEditor->m_TeleNum, PROPTYPE_INT_STEP, 0, 255},
-		{0},
-	};
 
-	static int s_aIds[NUM_PROPS] = {0};
-	int NewVal = 0;
-	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
-	
-	if(Prop == PROP_TELE)
-		 pEditor->m_TeleNum = clamp(NewVal, 0, 255);
-	
-	return 0;
-}
 
-int CEditor::PopupSpeedup(CEditor *pEditor, CUIRect View)
-{
-	CUIRect Button;
-	View.HSplitBottom(12.0f, &View, &Button);
-	
-	enum
-	{
-		PROP_FORCE=0,
-		PROP_MAXSPEED,
-		PROP_ANGLE,
-		NUM_PROPS
-	};
-	
-	CProperty aProps[] = {
-		{"Force", pEditor->m_SpeedupForce, PROPTYPE_INT_SCROLL, 0, 255},
-		{"Max Speed", pEditor->m_SpeedupMaxSpeed, PROPTYPE_INT_SCROLL, 0, 255},
-		{"Angle", pEditor->m_SpeedupAngle, PROPTYPE_INT_SCROLL, 0, 359},
-		{0},
-	};
 
-	static int s_aIds[NUM_PROPS] = {0};
-	int NewVal = 0;
-	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
 
-	if(Prop == PROP_FORCE)
-		pEditor->m_SpeedupForce = clamp(NewVal, 0, 255);
-	if(Prop == PROP_MAXSPEED)
-		pEditor->m_SpeedupMaxSpeed = clamp(NewVal, 0, 255);
-	if(Prop == PROP_ANGLE)
-		pEditor->m_SpeedupAngle = clamp(NewVal, 0, 359);
-	
-	return 0;
-}
-
-int CEditor::PopupSwitch(CEditor *pEditor, CUIRect View)
-{
-	CUIRect Button;
-	View.HSplitBottom(12.0f, &View, &Button);
-
-	enum
-	{
-		PROP_Switch=0,
-		NUM_PROPS,
-	};
-
-	CProperty aProps[] = {
-		{"Number", pEditor->m_SwitchNum, PROPTYPE_INT_STEP, 0, 255},
-		{0},
-	};
-
-	static int s_aIds[NUM_PROPS] = {0};
-	int NewVal = 0;
-	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
-
-	if(Prop == PROP_Switch)
-		 pEditor->m_SwitchNum = clamp(NewVal, 0, 255);
-
-	return 0;
-}

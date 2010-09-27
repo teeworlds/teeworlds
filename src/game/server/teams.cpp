@@ -91,14 +91,6 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 	str_format(aBuf, sizeof(aBuf), "Id = %d Team = %d", id, Team);
 	dbg_msg("Teams", aBuf);
 	//GameServer()->CreatePlayerSpawn(Character(id)->m_Core.m_Pos, TeamMask());
-	if(Character(id)->GetPlayer()->m_IsUsingRaceClient)
-	{
-		CNetMsg_Sv_PlayerTeam Msg;
-		Msg.m_Team = Team;
-		Msg.m_Cid = id;
-		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
-		//dbg_msg("Teams", "Sended all");
-	}
 	return true;
 }
 
@@ -142,22 +134,10 @@ int CGameTeams::TeamMask(int Team) {
 	for(int i = 0; i < MAX_CLIENTS; ++i) {
 		if(m_Core.Team(i) == Team 
 			|| (Character(i) 
-				&& Character(i)->GetPlayer() 
-				&& Character(i)->GetPlayer()->m_ShowOthers)
+				&& Character(i)->GetPlayer())
 			|| m_Core.Team(i) == TEAM_SUPER) {
 			Mask |= 1 << i;
 		}
 	}
 	return Mask;
-}
-
-void CGameTeams::SendAllInfo(int Cid) {
-	for(int i = 0; i < MAX_CLIENTS; ++i) {
-		if(m_Core.Team(i) != 0) {
-			CNetMsg_Sv_PlayerTeam Msg;
-			Msg.m_Team = m_Core.Team(i);
-			Msg.m_Cid = i;
-			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, Cid);
-		}
-	}
 }

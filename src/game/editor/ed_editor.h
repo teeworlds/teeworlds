@@ -132,6 +132,7 @@ public:
 	{
 	}
 	
+	
 	virtual void BrushSelecting(CUIRect Rect) {}
 	virtual int BrushGrab(CLayerGroup *pBrush, CUIRect Rect) { return 0; }
 	virtual void FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect) {}
@@ -265,10 +266,6 @@ public:
 	array<CEnvelope*> m_lEnvelopes;
 	
 	class CLayerGame *m_pGameLayer;
-	class CLayerTele *m_pTeleLayer;
-	class CLayerSpeedup *m_pSpeedupLayer;
-	class CLayerFront *m_pFrontLayer;
-	class CLayerSwitch *m_pSwitchLayer;
 	CLayerGroup *m_pGameGroup;
 	
 	CEnvelope *NewEnvelope(int Channels)
@@ -322,11 +319,6 @@ public:
 	// io	
 	int Save(class IStorage *pStorage, const char *pFilename);
 	int Load(class IStorage *pStorage, const char *pFilename);
-	
-	void MakeTeleLayer(CLayer *pLayer);
-	void MakeSpeedupLayer(CLayer *pLayer);
-	void MakeFrontLayer(CLayer *pLayer);
-	void MakeSwitchLayer(CLayer *pLayer);
 };
 
 
@@ -362,7 +354,7 @@ public:
 	CLayerTiles(int w, int h);
 	~CLayerTiles();
 
-	virtual void Resize(int NewW, int NewH);
+	void Resize(int NewW, int NewH);
 
 	void MakePalette();
 	virtual void Render();
@@ -380,7 +372,7 @@ public:
 	virtual void BrushFlipX();
 	virtual void BrushFlipY();
 	virtual void BrushRotate(float Amount);
-
+	
 	virtual int RenderProperties(CUIRect *pToolbox);
 
 	virtual void ModifyImageIndex(INDEX_MODIFY_FUNC pfnFunc);
@@ -392,10 +384,6 @@ public:
 	
 	int m_TexId;
 	int m_Game;
-	int m_Tele;
-	int m_Speedup;
-	int m_Front;
-	int m_Switch;
 	int m_Image;
 	int m_Width;
 	int m_Height;
@@ -410,7 +398,7 @@ public:
 
 	virtual void Render();
 	CQuad *NewQuad();
-	
+
 	virtual void BrushSelecting(CUIRect Rect);
 	virtual int BrushGrab(CLayerGroup *pBrush, CUIRect Rect);
 	virtual void BrushPlace(CLayer *pBrush, float wx, float wy);
@@ -437,55 +425,6 @@ public:
 
 	virtual int RenderProperties(CUIRect *pToolbox);
 };
-
-class CLayerTele : public CLayerTiles
-{
-public:
-	CLayerTele(int w, int h);
-	~CLayerTele();
-	
-	CTeleTile *m_pTeleTile;
-	
-	virtual void Resize(int NewW, int NewH);
-	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
-	virtual void FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect);
-};
-
-class CLayerSpeedup : public CLayerTiles
-{
-public:
-	CLayerSpeedup(int w, int h);
-	~CLayerSpeedup();
-	
-	CSpeedupTile *m_pSpeedupTile;
-	
-	virtual void Resize(int NewW, int NewH);
-	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
-	virtual void FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect);
-};
-
-class CLayerFront : public CLayerTiles
-{
-public:
-	CLayerFront(int w, int h);
-
-	virtual void Resize(int NewW, int NewH);
-	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
-};
-
-class CLayerSwitch : public CLayerTiles
-{
-public:
-	CLayerSwitch(int w, int h);
-	~CLayerSwitch();
-
-	CTeleTile *m_pSwitchTile;
-
-	virtual void Resize(int NewW, int NewH);
-	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
-	virtual void FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect);
-};
-
 
 class CEditor : public IEditor
 {
@@ -563,13 +502,6 @@ public:
 		ms_EntitiesTexture = 0;
 		
 		ms_pUiGotContext = 0;
-		
-		m_TeleNum = 1;
-		m_SwitchNum = 1;
-		
-		m_SpeedupForce = 50;
-		m_SpeedupMaxSpeed = 0;
-		m_SpeedupAngle = 0;
 	}
 	
 	virtual void Init();
@@ -676,7 +608,7 @@ public:
 	void UiInvokePopupMenu(void *pId, int Flags, float x, float y, float w, float h, int (*pfnFunc)(CEditor *pEditor, CUIRect Rect), void *pExtra=0);
 	void UiDoPopupMenu();
 	
-	int UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, int Current, int Min, int Max, float Scale, const char *pToolTip);
+	int UiDoValueSelector(void *pId, CUIRect *r, const char *pLabel, int Current, int Min, int Max, int Step, float Scale, const char *pToolTip);
 
 	static int PopupGroup(CEditor *pEditor, CUIRect View);
 	static int PopupLayer(CEditor *pEditor, CUIRect View);
@@ -685,9 +617,6 @@ public:
 	static int PopupSelectImage(CEditor *pEditor, CUIRect View);
 	static int PopupImage(CEditor *pEditor, CUIRect View);
 	static int PopupMenuFile(CEditor *pEditor, CUIRect View);
-	static int PopupTele(CEditor *pEditor, CUIRect View);
-	static int PopupSpeedup(CEditor *pEditor, CUIRect View);
-	static int PopupSwitch(CEditor *pEditor, CUIRect View);
 
 
 	void PopupSelectImageInvoke(int Current, float x, float y);
@@ -716,14 +645,6 @@ public:
 
 	void AddFileDialogEntry(const char *pName, CUIRect *pView);
 	void SortImages();
-	
-	unsigned char m_TeleNum;
-	
-	unsigned char m_SpeedupForce;
-	unsigned char m_SpeedupMaxSpeed;
-	short m_SpeedupAngle;
-
-	unsigned char m_SwitchNum;
 };
 
 // make sure to inline this function

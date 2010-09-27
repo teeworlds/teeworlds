@@ -885,19 +885,6 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					mem_zero(aMsg,sizeof(aMsg));
 				}
 			}
-			/* disable it for vanilla clients
-			else if(!str_comp(pMsg->m_pMessage, "/show_others"))
-			{
-				if(!g_Config.m_SvShowOthers && !Server()->IsAuthed(ClientId))
-				{
-					SendChatTarget(ClientId, "This command is not allowed on this server.");
-					return;
-				}
-				if(pPlayer->m_IsUsingRaceClient)
-					SendChatTarget(ClientId, "Please use the settings to switch this option.");
-				else
-					pPlayer->m_ShowOthers = !pPlayer->m_ShowOthers;
-			}*/
 			else if (!str_comp_nocase(pMsg->m_pMessage, "/time") && g_Config.m_SvEmotionalTees)
 
 				{
@@ -1066,42 +1053,6 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		}
 
 
-	}
-	else if(MsgId == NETMSGTYPE_CL_ISRACE)
-	{
-		pPlayer->m_IsUsingRaceClient = true;
-		pPlayer->m_ShowOthers = true;
-		pPlayer->m_ShowOthers = true;
-		((CGameControllerDDRace*)m_pController)->m_Teams.SendAllInfo(pPlayer->GetCID());
-		// send time of all players
-		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
-			if(m_apPlayers[i] && Score()->PlayerData(i)->m_CurrentTime > 0)
-			{
-				char aBuf[16];
-				str_format(aBuf, sizeof(aBuf), "%.0f", Score()->PlayerData(i)->m_CurrentTime*100.0f); // damn ugly but the only way i know to do it
-				int TimeToSend;
-				sscanf(aBuf, "%d", &TimeToSend);
-				CNetMsg_Sv_PlayerTime Msg;
-				Msg.m_Time = TimeToSend;
-				Msg.m_Cid = i;
-				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientId);
-			}
-		}
-	}
-	else if (MsgId == NETMSGTYPE_CL_RACESHOWOTHERS)
-	{
-		if(!g_Config.m_SvShowOthers && !Server()->IsAuthed(ClientId))
-			return;
-		if(pPlayer->m_Last_ShowOthers && pPlayer->m_Last_ShowOthers+Server()->TickSpeed()/2 > Server()->Tick())
-			return;
-		pPlayer->m_Last_ShowOthers = Server()->Tick();
-		CNetMsg_Cl_RaceShowOthers *pMsg = (CNetMsg_Cl_RaceShowOthers *)pRawMsg;
-		pPlayer->m_ShowOthers = (bool)pMsg->m_Active;
-		if(pPlayer->m_ShowOthers)
-		{
-			((CGameControllerDDRace*)m_pController)->m_Teams.SendAllInfo(pPlayer->GetCID());
-		}
 	}
 	else if(MsgId == NETMSGTYPE_CL_CALLVOTE)
 	{

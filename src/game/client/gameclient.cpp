@@ -42,7 +42,6 @@
 #include "components/skins.h"
 #include "components/sounds.h"
 #include "components/voting.h"
-#include "components/race_demo.h"
 
 CGameClient g_GameClient;
 
@@ -67,7 +66,6 @@ static CSounds gs_Sounds;
 static CEmoticon gs_Emoticon;
 static CDamageInd gsDamageInd;
 static CVoting gs_Voting;
-static CRaceDemo gs_RaceDemo;
 
 static CPlayers gs_Players;
 static CNamePlates gs_NamePlates;
@@ -101,13 +99,10 @@ static int gs_LoadTotal;
 	}
 }*/
 
-
-
 static void ConServerDummy(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	dbg_msg("client", "this command is not available on the client");
 }
-
 
 #include <base/tl/sorted_array.h>
 
@@ -144,7 +139,6 @@ void CGameClient::OnConsoleInit()
 	m_pDamageind = &::gsDamageInd;
 	m_pMapimages = &::gs_MapImages;
 	m_pVoting = &::gs_Voting;
-	m_pRaceDemo = &::gs_RaceDemo;
 	m_pScoreboard = &::gs_Scoreboard;
 	
 	// make a list of all the systems, make sure to add them in the corrent render order
@@ -158,7 +152,6 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(m_pSounds);
 	m_All.Add(m_pVoting);
 	m_All.Add(m_pParticles); // doesn't render anything, just updates all the particles
-	m_All.Add(m_pRaceDemo);
 	
 	m_All.Add(&gs_MapLayersBackGround); // first to render
 	m_All.Add(&m_pParticles->m_RenderTrail);
@@ -196,30 +189,16 @@ void CGameClient::OnConsoleInit()
 	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself", 0);
 	
 	// register server dummy commands for tab completion
-
 	Console()->Register("tune", "si", CFGFLAG_SERVER, ConServerDummy, 0, "Tune variable to value", 0);
 	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConServerDummy, 0, "Reset tuning", 0);
 	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConServerDummy, 0, "Dump tuning", 0);
 	Console()->Register("change_map", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Change map", 0);
 	Console()->Register("restart", "?i", CFGFLAG_SERVER, ConServerDummy, 0, "Restart in x seconds", 0);
 	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Broadcast message", 0);
-	//MACRO_REGISTER_COMMAND("say", "r", CFGFLAG_SERVER, con_serverdummy, 0);
+	Console()->Register("say", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Say in chat", 0);
 	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConServerDummy, 0, "Set team of player to team", 0);
 	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Add a voting option", 0);
-	//MACRO_REGISTER_COMMAND("vote", "", CFGFLAG_SERVER, con_serverdummy, 0);
-	Console()->Register("map_hack", "", CFGFLAG_CLIENT, ConMapHack, 0, "Tune variable to value", 0);
-
-	Console()->Register("tune", "si", CFGFLAG_SERVER, 0, 0, "Tune variable to value", 0);
-	Console()->Register("tune_reset", "", CFGFLAG_SERVER, 0, 0, "Reset tuning", 0);
-	Console()->Register("tune_dump", "", CFGFLAG_SERVER, 0, 0, "Dump tuning", 0);
-	Console()->Register("change_map", "r", CFGFLAG_SERVER, 0, 0, "Change map", 0);
-	Console()->Register("restart", "?i", CFGFLAG_SERVER, 0, 0, "Restart in x seconds", 0);
-	Console()->Register("broadcast", "r", CFGFLAG_SERVER, 0, 0, "Broadcast message", 0);
-	Console()->Register("say", "r", CFGFLAG_SERVER, 0, 0, "Say in chat", 0);
-	Console()->Register("set_team", "ii", CFGFLAG_SERVER, 0, 0, "Set team of player to team", 0);
-	Console()->Register("addvote", "r", CFGFLAG_SERVER, 0, 0, "Add a voting option", 0);
-	Console()->Register("vote", "r", CFGFLAG_SERVER, 0, 0, "Force a vote to yes/no", 0);
-
+	Console()->Register("vote", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Force a vote to yes/no", 0);
 
 
 	// propagate pointers
@@ -320,11 +299,6 @@ void CGameClient::OnInit()
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "gameclient", aBuf);
 	
 	m_ServerMode = SERVERMODE_PURE;
-	
-	m_IsRace = false;
-	m_RaceMsgSent = false;
-	m_ShowOthers = -1;
-	m_FlagPos = vec2(-1, -1);
 }
 
 void CGameClient::DispatchInput()
@@ -406,19 +380,11 @@ void CGameClient::OnReset()
 		m_aClients[i].m_SkinInfo.m_Texture = g_GameClient.m_pSkins->Get(0)->m_ColorTexture;
 		m_aClients[i].m_SkinInfo.m_ColorBody = vec4(1,1,1,1);
 		m_aClients[i].m_SkinInfo.m_ColorFeet = vec4(1,1,1,1);
-		m_aClients[i].m_Score = 0;
 		m_aClients[i].UpdateRenderInfo();
 	}
 	
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
-		
-	// Race
-	m_IsRace = false;
-	m_RaceMsgSent = false;
-	m_ShowOthers = -1;
-	m_FlagPos = vec2(-1, -1);
-	m_Teams.Reset();
 }
 
 
@@ -446,9 +412,8 @@ static void Evolve(CNetObj_Character *pCharacter, int Tick)
 {
 	CWorldCore TempWorld;
 	CCharacterCore TempCore;
-	CTeamsCore TempTeams;
 	mem_zero(&TempCore, sizeof(TempCore));
-	TempCore.Init(&TempWorld, g_GameClient.Collision(), &TempTeams);//????
+	TempCore.Init(&TempWorld, g_GameClient.Collision());
 	TempCore.Read(pCharacter);
 	
 	while(pCharacter->m_Tick < Tick)
@@ -602,22 +567,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			g_GameClient.m_pSounds->Enqueue(pMsg->m_Soundid);
 		else
 			g_GameClient.m_pSounds->Play(CSounds::CHN_GLOBAL, pMsg->m_Soundid, 1.0f, vec2(0,0));
-	}
-	else if(MsgId == NETMSGTYPE_SV_PLAYERTIME)
-	{
-		CNetMsg_Sv_PlayerTime *pMsg = (CNetMsg_Sv_PlayerTime *)pRawMsg;
-		m_aClients[pMsg->m_Cid].m_Score = (float)pMsg->m_Time/100;
-		//m_pClient->m_LocalTime = (float)pMsg->m_Time/100;
-		m_pRaceDemo->m_Time = (float)pMsg->m_Time/100;
-	}
-	else if(MsgId == NETMSGTYPE_SV_PLAYERTEAM)
-	{
-		CNetMsg_Sv_PlayerTeam *pMsg = (CNetMsg_Sv_PlayerTeam *)pRawMsg;
-		m_Teams.Team(pMsg->m_Cid, pMsg->m_Team);
-		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf), "Id = %d Team = %d",pMsg->m_Cid, pMsg->m_Team);
-		dbg_msg("Teams", aBuf);
-	}
+	}		
 }
 
 void CGameClient::OnStateChange(int NewState, int OldState)
@@ -692,9 +642,6 @@ void CGameClient::OnNewSnapshot()
 	mem_zero(&g_GameClient.m_Snap, sizeof(g_GameClient.m_Snap));
 	m_Snap.m_LocalCid = -1;
 
-	// mark all clients offline here
-	bool Online[MAX_CLIENTS] = { 0 };
-	
 	// secure snapshot
 	{
 		int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
@@ -784,8 +731,6 @@ void CGameClient::OnNewSnapshot()
 				m_aClients[Cid].UpdateRenderInfo();
 				g_GameClient.m_Snap.m_NumPlayers++;
 				
-				// mark Player as online
-				Online[Cid] = true;
 			}
 			else if(Item.m_Type == NETOBJTYPE_PLAYERINFO)
 			{
@@ -850,8 +795,6 @@ void CGameClient::OnNewSnapshot()
 		m_Snap.m_Spectate = true;
 	
 	CTuningParams StandardTuning;
-	StandardTuning.m_PlayerCollision = 1;
-	StandardTuning.m_PlayerHooking = 1;
 	CServerInfo CurrentServerInfo;
 	Client()->GetServerInfo(&CurrentServerInfo);
 	if(CurrentServerInfo.m_aGameType[0] != '0')
@@ -863,72 +806,7 @@ void CGameClient::OnNewSnapshot()
 		else
 			m_ServerMode = SERVERMODE_PUREMOD;
 	}
-	// send race msg
-	if(m_Snap.m_pLocalInfo)
-	{
-		CServerInfo CurrentServerInfo;
-		Client()->GetServerInfo(&CurrentServerInfo);
-		if(str_find_nocase(CurrentServerInfo.m_aGameType, "race") || str_find_nocase(CurrentServerInfo.m_aGameType, "fastcap") || str_find_nocase(CurrentServerInfo.m_aGameType, "ddrace"))
-		{
-			if(!m_IsRace)
-				m_IsRace = true;
-			if(str_find_nocase(CurrentServerInfo.m_aGameType, "fastcap"))
-			{
-				m_IsFastCap = true;
-				
-				// get Flag Pos (for demo recording)
-				m_FlagPos = vec2(-1, -1);
-				int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
-				for(int i = 0; i < Num; i++)
-				{
-					IClient::CSnapItem Item;
-					const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
 
-					if(Item.m_Type == NETOBJTYPE_FLAG)
-					{
-						const CNetObj_Flag *pFlag = (const CNetObj_Flag *)pData;
-						if(pFlag->m_CarriedBy == -2 && pFlag->m_Team != m_aClients[m_Snap.m_LocalCid].m_Team)
-							m_FlagPos = vec2(pFlag->m_X, pFlag->m_Y);
-					}
-				}
-			}
-			
-			if(!m_RaceMsgSent && m_Snap.m_pLocalInfo)
-			{
-				CNetMsg_Cl_IsRace Msg;
-				Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
-				m_RaceMsgSent = true;
-			}
-			
-			if(m_ShowOthers == -1 || (m_ShowOthers > -1 && m_ShowOthers != g_Config.m_ClShowOthers))
-			{
-				if(m_ShowOthers == -1 && g_Config.m_ClShowOthers)
-					m_ShowOthers = 1;
-				else
-				{
-					CNetMsg_Cl_RaceShowOthers Msg;
-					Msg.m_Active = g_Config.m_ClShowOthers;
-					Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
-					
-					m_ShowOthers = g_Config.m_ClShowOthers;
-				}
-			}
-		}
-	}
-	
-	// reset all scores of offline players
-	if(m_IsRace)
-	{
-		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
-			if(!Online[i])
-				m_aClients[i].m_Score = 0;
-		}
-	}
-	
-	// update render info
-	for(int i = 0; i < MAX_CLIENTS; i++)
-		m_aClients[i].UpdateRenderInfo();
 }
 
 void CGameClient::OnPredict()
@@ -961,9 +839,8 @@ void CGameClient::OnPredict()
 		if(!m_Snap.m_aCharacters[i].m_Active)
 			continue;
 			
-		g_GameClient.m_aClients[i].m_Predicted.Init(&World, Collision(), &m_Teams);
+		g_GameClient.m_aClients[i].m_Predicted.Init(&World, Collision());
 		World.m_apCharacters[i] = &g_GameClient.m_aClients[i].m_Predicted;
-		World.m_apCharacters[i]->m_Id = m_Snap.m_LocalCid;
 		g_GameClient.m_aClients[i].m_Predicted.Read(&m_Snap.m_aCharacters[i].m_Cur);
 	}
 	
@@ -1124,10 +1001,6 @@ void CGameClient::ConTeam(IConsole::IResult *pResult, void *pUserData, int Clien
 void CGameClient::ConKill(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	((CGameClient*)pUserData)->SendKill(-1);
-}
-
-void CGameClient::ConMapHack(IConsole::IResult *pResult, void *pUserData, int ClientID) {
-	g_Config.m_GfxClearFull ^= 1;
 }
 
 void CGameClient::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)

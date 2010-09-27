@@ -140,16 +140,6 @@ enum
 	ENTITY_OFFSET=255-16*4,
 };
 
-enum
-{
-	LAYER_GAME,
-	LAYER_FRONT,
-	LAYER_LASER,
-	LAYER_TELE,
-	LAYER_SPEEDUP,
-	NUM_LAYERS
-};
-
 struct CPoint
 {
 	int x, y; // 22.10 fixed point

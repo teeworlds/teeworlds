@@ -751,10 +751,8 @@ const char *CClient::ErrorString()
 
 void CClient::Render()
 {
-	//if(g_Config.m_GfxClear)
-	//	Graphics()->Clear(1,1,0);
-	if(g_Config.m_GfxClear || g_Config.m_GfxClearFull)
-		Graphics()->Clear(0.3f,0.3f,0.6f);
+	if(g_Config.m_GfxClear)
+		Graphics()->Clear(1,1,0);
 
 	GameClient()->OnRender();
 	DebugRender();
@@ -1873,31 +1871,6 @@ void CClient::Con_AddFavorite(IConsole::IResult *pResult, void *pUserData, int C
 		pSelf->m_ServerBrowser.AddFavorite(Addr);
 }
 
-// DDRace
-const char* CClient::GetCurrentMap()
-{
-	return m_aCurrentMap;
-}
-
-const char* CClient::RaceRecordStart(const char *pFilename)
-{
-	char aFilename[128];
-	str_format(aFilename, sizeof(aFilename), "demos/%s_%s.demo", m_aCurrentMap, pFilename);
-	
-	if(State() != STATE_ONLINE)
-		dbg_msg("demorec/record", "client is not online");
-	else
-		m_DemoRecorder.Start(Storage(),  m_pConsole, aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
-		
-	return m_aCurrentMap;
-}
-
-void CClient::RaceRecordStop()
-{
-	if(m_DemoRecorder.IsRecording())
-		m_DemoRecorder.Stop();
-}	
-	
 const char *CClient::DemoPlayer_Play(const char *pFilename)
 {
 	int Crc;

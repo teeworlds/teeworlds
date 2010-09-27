@@ -40,8 +40,6 @@ public:
 
 	int TeamMask(int Team);
 	
-	void SendAllInfo(int Cid);
-	
 	//need to be very carefull using this method
 	void SetForceCharacterTeam(int id, int Team);
 	

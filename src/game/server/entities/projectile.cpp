@@ -158,8 +158,7 @@ void CProjectile::Snap(int SnappingClient)
 	if(NetworkClipped(SnappingClient, GetPos(Ct)))
 		return;
 	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
-	if(Char && m_Owner != -1 && !Char->GetPlayer()->m_ShowOthers &&
-	Char->CanCollide(m_Owner)) return;
+	if(Char && m_Owner != -1 &&	Char->CanCollide(m_Owner)) return;
 	CNetObj_Projectile *pProj = static_cast<CNetObj_Projectile *>(Server()->SnapNewItem(NETOBJTYPE_PROJECTILE, m_Id, sizeof(CNetObj_Projectile)));
 	FillInfo(pProj);
 }

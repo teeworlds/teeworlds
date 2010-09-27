@@ -106,7 +106,6 @@ class CMenus : public CComponent
 		PAGE_GAME,
 		PAGE_SERVER_INFO,
 		PAGE_CALLVOTE,
-		PAGE_RCON,
 		PAGE_INTERNET,
 		PAGE_LAN,
 		PAGE_FAVORITES,
@@ -153,7 +152,7 @@ class CMenus : public CComponent
 	// for call vote
 	int m_CallvoteSelectedOption;
 	int m_CallvoteSelectedPlayer;
-	int m_RCONSelectedPlayer;
+	
 	// demo
 	struct CDemoItem
 	{
@@ -163,9 +162,11 @@ class CMenus : public CComponent
 		bool operator<(const CDemoItem &Other) { return str_comp(m_aName, Other.m_aName) < 0; } 
 	};
 	
+	sorted_array<CDemoItem> m_lDemos;
 	char m_aCurrentDemoFolder[256];
 	bool m_DemolistDelEntry;
 	
+	void DemolistPopulate();
 	static void DemolistFetchCallback(const char *pName, int IsDir, int DirType, void *pUser);
 	
 	// found in menus.cpp
@@ -186,9 +187,6 @@ class CMenus : public CComponent
 	void RenderServerControlKick(CUIRect MainView);
 	void RenderServerControlServer(CUIRect MainView);
 	
-	// found in menus_rcon.cpp
-	void RenderRCON(CUIRect MainView);
-	
 	// found in menus_browser.cpp
 	int m_SelectedIndex;
 	void RenderServerbrowserServerList(CUIRect View);
@@ -203,29 +201,15 @@ class CMenus : public CComponent
 	void RenderSettingsControls(CUIRect MainView);
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
-	void RenderSettingsDownloadExtension(CUIRect MainView);
-	void RenderSettingsRace(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
 	
 	void SetActive(bool Active);
-	
-	void ResetDownloadVars();
 public:
 	void RenderBackground();
 
 	void UseMouseButtons(bool Use) { m_UseMouseButtons = Use; }
 
 	static CMenusKeyBinder m_Binder;
-	
-	struct
-	{
-		int m_ElapsedSec;
-		int m_ElapsedTick;
-		float m_Speed;
-		float m_TimeNeeded;
-		int m_LastSize;
-		float m_TimeRemaining;
-	} m_Download;
 	
 	CMenus();
 
@@ -240,8 +224,5 @@ public:
 	virtual void OnRender();
 	virtual bool OnInput(IInput::CEvent Event);
 	virtual bool OnMouseMove(float x, float y);
-	
-	sorted_array<CDemoItem> m_lDemos;
-	void DemolistPopulate();
 };
 #endif

@@ -624,25 +624,6 @@ void CCharacter::OnFinish()
 		if(!GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime || GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime > time)
 		{
 			GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime = time;
-
-			// send it to all players
-			for(int i = 0; i < MAX_CLIENTS; i++)
-			{
-				if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->m_IsUsingRaceClient)
-				{
-					if(g_Config.m_SvHideScore || i == m_pPlayer->GetCID())
-					{
-						CNetMsg_Sv_PlayerTime Msg;
-						char aBuf[16];
-						str_format(aBuf, sizeof(aBuf), "%.0f", time*100.0f); // damn ugly but the only way i know to do it
-						int TimeToSend;
-						sscanf(aBuf, "%d", &TimeToSend);
-						Msg.m_Time = TimeToSend;
-						Msg.m_Cid = m_pPlayer->GetCID();
-						Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
-					}
-				}
-			}
 		}
 
 		int TTime = 0-(int)time;
@@ -724,49 +705,29 @@ void CCharacter::Tick()
 				{
 					if (m_RaceState == RACE_STARTED) {
 						int IntTime = (int)time;
-						if(m_pPlayer->m_IsUsingRaceClient)
-						{
-							CNetMsg_Sv_RaceTime Msg;
-							Msg.m_Time = IntTime;
-							Msg.m_Check = 0;
-
-							if(m_CpActive != -1 && m_CpTick > Server()->Tick())
-							{
-								if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
-								{
-									float Diff = (m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive])*100;
-									Msg.m_Check = (int)Diff;
-								}
-							}
-
-							Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
-						}
+						if(m_BroadTime)
+							str_format(aBuftime, sizeof(aBuftime), "%dm %ds", IntTime/60, IntTime%60);
 						else
+							str_format(aBuftime, sizeof(aBuftime), "");
+
+						if(m_CpActive != -1 && m_CpTick > Server()->Tick())
 						{
-							if(m_BroadTime)
-								str_format(aBuftime, sizeof(aBuftime), "%dm %ds", IntTime/60, IntTime%60);
-							else
-								str_format(aBuftime, sizeof(aBuftime), "");
-
-							if(m_CpActive != -1 && m_CpTick > Server()->Tick())
-							{
-								if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
-								{
-									char aTmp[128];
-									float Diff = m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive];
-									str_format(aTmp, sizeof(aTmp), "\nCheckpoint | Diff : %+5.2f", Diff);
-									strcat(aBuftime, aTmp);
-								}
-							}
-
-							if( g_Config.m_SvBroadcast[0] != 0 && m_BroadCast)
+							if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
 							{
 								char aTmp[128];
-								str_format(aTmp, sizeof(aTmp), "\n%s\n", g_Config.m_SvBroadcast);
+								float Diff = m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive];
+								str_format(aTmp, sizeof(aTmp), "\nCheckpoint | Diff : %+5.2f", Diff);
 								strcat(aBuftime, aTmp);
 							}
-							GameServer()->SendBroadcast(aBuftime, m_pPlayer->GetCID());
 						}
+
+						if( g_Config.m_SvBroadcast[0] != 0 && m_BroadCast)
+						{
+							char aTmp[128];
+							str_format(aTmp, sizeof(aTmp), "\n%s\n", g_Config.m_SvBroadcast);
+							strcat(aBuftime, aTmp);
+						}
+						GameServer()->SendBroadcast(aBuftime, m_pPlayer->GetCID());
 					}
 					else
 					{
@@ -1303,7 +1264,7 @@ void CCharacter::Snap(int SnappingClient)
 
 	CCharacter* SnapChar = GameServer()->GetPlayerChar(SnappingClient);
 	if(!SnapChar 
-		|| (!SnapChar->GetPlayer()->m_ShowOthers && SnapChar->Team() != Team()) 
+		|| (SnapChar->Team() != Team())
 		|| (GetPlayer()->m_Invisible && GetPlayer()->GetCID() != SnappingClient)) return;
 	CNetObj_Character *Character = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
 

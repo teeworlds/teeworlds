@@ -252,7 +252,7 @@ Messages = [
 		NetIntRange("m_Pass", 0, 'MAX_CLIENTS'),
 		NetIntRange("m_Total", 0, 'MAX_CLIENTS'),
 	]),
-
+		
 	### Client messages
 	NetMessage("Cl_Say", [
 		NetBool("m_Team"),
@@ -292,30 +292,5 @@ Messages = [
 	NetMessage("Cl_CallVote", [
 		NetStringStrict("m_Type"),
 		NetStringStrict("m_Value"),
-	]),
-	
-	NetMessage("Cl_IsRace", []),
-	
-	NetMessage("Cl_RaceShowOthers", [
-		NetBool("m_Active"),
-	]),
-	
-	NetMessage("Sv_RaceTime", [
-		NetIntAny("m_Time"),
-		NetIntAny("m_Check"),
-	]),
-	
-	NetMessage("Sv_Record", [
-		NetIntAny("m_Time"),
-	]),
-	
-	NetMessage("Sv_PlayerTime", [
-		NetIntAny("m_Time"),
-		NetIntRange("m_Cid", 0, 'MAX_CLIENTS-1'),
-	]),
-	
-	NetMessage("Sv_PlayerTeam", [
-		NetIntAny("m_Team"),
-		NetIntRange("m_Cid", 0, 'MAX_CLIENTS-1'),
 	]),
 ]

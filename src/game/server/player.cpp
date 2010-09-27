@@ -31,11 +31,6 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	m_SentAfkWarning2 = 0;
 
 	m_PauseInfo.m_Respawn = false;
-
-	m_ShowOthers = false;
-	
-	m_IsUsingRaceClient = false;
-	m_LastSentTime = 0;
 	
 	GameServer()->Score()->PlayerData(CID)->Reset();
 	
@@ -95,24 +90,6 @@ void CPlayer::Tick()
 	}
 	else if(m_Spawning && m_RespawnTick <= Server()->Tick())
 		TryRespawn();
-	
-	// send best time
-	if(m_IsUsingRaceClient)
-	{
-		if(m_LastSentTime > GameServer()->m_pController->m_CurrentRecord || (m_LastSentTime == 0 && GameServer()->m_pController->m_CurrentRecord > 0))
-		{
-			//dbg_msg("player", "Record message sended");
-			char aBuf[16];
-			str_format(aBuf, sizeof(aBuf), "%.0f", GameServer()->m_pController->m_CurrentRecord*100.0f); // damn ugly but the only way i know to do it
-			int TimeToSend;
-			sscanf(aBuf, "%d", &TimeToSend);
-			CNetMsg_Sv_Record Msg;
-			Msg.m_Time = TimeToSend;
-			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_ClientID);
-			
-			m_LastSentTime = GameServer()->m_pController->m_CurrentRecord;
-		}
-	}
 }
 
 void CPlayer::Snap(int SnappingClient)
