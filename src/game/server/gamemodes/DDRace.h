@@ -17,7 +17,9 @@ public:
 	
 	CGameTeams m_Teams;
 
-	vec2 *m_pTeleporter;
+	int *m_pNumTele;
+	vec2 **m_pTeleOuts;
+	int m_TotalTele;
 	
 	void InitTeleporter();
 	void InitSwitcher();

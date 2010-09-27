@@ -37,6 +37,8 @@ void CCollision::Init(class CLayers *pLayers)
 		m_pSwitch = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->SwitchLayer()->m_Switch));
 		m_pDoor = new CDoorTile[m_Width*m_Height];
 	}
+	else
+		m_pDoor = 0;
 	if(m_pLayers->FrontLayer())
 	{
 		m_pFront = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->FrontLayer()->m_Front));

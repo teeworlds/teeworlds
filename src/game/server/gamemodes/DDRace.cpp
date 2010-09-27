@@ -15,7 +15,8 @@ CGameControllerDDRace::CGameControllerDDRace(class CGameContext *pGameServer) : 
 
 CGameControllerDDRace::~CGameControllerDDRace()
 {
-	delete[] m_pTeleporter;
+	delete[] m_pNumTele;
+	delete[][] m_pTeleOuts;
 }
 
 void CGameControllerDDRace::Tick()
@@ -26,6 +27,7 @@ void CGameControllerDDRace::Tick()
 void CGameControllerDDRace::InitTeleporter()
 {
 	int ArraySize = 0;
+	m_TotalTele = 0;
 	if(GameServer()->Collision()->Layers()->TeleLayer())
 	{
 		for(int i = 0; i < GameServer()->Collision()->Layers()->TeleLayer()->m_Width*GameServer()->Collision()->Layers()->TeleLayer()->m_Height; i++)
@@ -38,18 +40,40 @@ void CGameControllerDDRace::InitTeleporter()
 	
 	if(!ArraySize)
 	{
-		m_pTeleporter = 0x0;
+		m_pNumTele = 0x0;
 		return;
 	}
+	int *Count;
+	m_pNumTele = new int[ArraySize];
+	Count = new int[ArraySize];
+	m_pTeleOuts = new vec2*[ArraySize];
+	mem_zero(m_pTeleOuts, ArraySize*sizeof(vec2));
+	mem_zero(m_pNumTele, ArraySize*sizeof(int));
+	mem_zero(Count, ArraySize*sizeof(int));
+	for (int i = 0; i < ArraySize; ++i)
+		Count[i] = m_pNumTele[i] = 0;
 	
-	m_pTeleporter = new vec2[ArraySize];
-	mem_zero(m_pTeleporter, ArraySize*sizeof(vec2));
-	
-	// assign the values
+	// Count
 	for(int i = 0; i < GameServer()->Collision()->Layers()->TeleLayer()->m_Width*GameServer()->Collision()->Layers()->TeleLayer()->m_Height; i++)
 	{
 		if(GameServer()->Collision()->TeleLayer()[i].m_Number > 0 && GameServer()->Collision()->TeleLayer()[i].m_Type == TILE_TELEOUT)
-			m_pTeleporter[GameServer()->Collision()->TeleLayer()[i].m_Number-1] = vec2(i%GameServer()->Collision()->Layers()->TeleLayer()->m_Width*32+16, i/GameServer()->Collision()->Layers()->TeleLayer()->m_Width*32+16);
+		{
+			m_pNumTele[GameServer()->Collision()->TeleLayer()[i].m_Number-1]++;
+			Count[GameServer()->Collision()->TeleLayer()[i].m_Number-1]++;
+			m_TotalTele++;
+		}
+	}
+	for (int i = 0; i < ArraySize; ++i)
+	{
+		m_pTeleOuts[i] = new vec2[m_pNumTele[i]];
+		mem_zero(m_pTeleOuts[i], m_pNumTele[i]*sizeof(vec2));
+	}
+	for(int i = 0; i < GameServer()->Collision()->Layers()->TeleLayer()->m_Width*GameServer()->Collision()->Layers()->TeleLayer()->m_Height; i++)
+	{
+		if(GameServer()->Collision()->TeleLayer()[i].m_Number > 0 && GameServer()->Collision()->TeleLayer()[i].m_Type == TILE_TELEOUT)
+		{
+			m_pTeleOuts[GameServer()->Collision()->TeleLayer()[i].m_Number-1][--Count[GameServer()->Collision()->TeleLayer()[i].m_Number-1]] = vec2(i%GameServer()->Collision()->Layers()->TeleLayer()->m_Width*32+16, i/GameServer()->Collision()->Layers()->TeleLayer()->m_Width*32+16);
+		}
 	}
 }
 
