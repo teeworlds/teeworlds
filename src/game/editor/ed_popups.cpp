@@ -167,7 +167,7 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_NewQuadLayerButton = 0;
 	//if(pEditor->DoButton_Editor(&s_NewQuadLayerButton, Localize("Add quads layer"), 0, &Button, 0, Localize("Creates a new quad layer")))
-	if(pEditor->DoButton_Editor(&s_NewQuadLayerButton, Localize("Add Quads layer"), 0, &Button, 0, Localize("Creates a new quad layer")))
+	if(pEditor->DoButton_Editor(&s_NewQuadLayerButton, Localize("Add Quads Layer"), 0, &Button, 0, Localize("Creates a new quad layer")))
 	{
 		CLayer *l = new CLayerQuads;
 		l->m_pEditor = pEditor;
@@ -181,9 +181,9 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_NewTileLayerButton = 0;
 	//if(pEditor->DoButton_Editor(&s_NewTileLayerButton, Localize("Add tile layer"), 0, &Button, 0, Localize("Creates a new tile layer")))
-	if(pEditor->DoButton_Editor(&s_NewTileLayerButton, Localize("Add Tile layer"), 0, &Button, 0, Localize("Creates a new tile layer")))
+	if(pEditor->DoButton_Editor(&s_NewTileLayerButton, Localize("Add Tile Layer"), 0, &Button, 0, Localize("Creates a new tile layer")))
 	{
-		CLayer *l = new CLayerTiles(50, 50);
+		CLayer *l = new CLayerTiles(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
 		l->m_pEditor = pEditor;
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
 		pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
