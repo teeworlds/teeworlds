@@ -147,6 +147,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename)
 	unsigned ReadSize = io_read(File, m_pDataFile->m_pData, Size);
 	if(ReadSize != Size)
 	{
+		io_close(m_pDataFile->m_File);
 		mem_free(m_pDataFile);
 		m_pDataFile = 0;
 		dbg_msg("datafile", "couldn't load the whole thing, wanted=%d got=%d", Size, ReadSize);
@@ -154,7 +155,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename)
 	}
 
 #if defined(CONF_ARCH_ENDIAN_BIG)
-	swap_endian(m_pDataFile->m_pData, sizeof(int), Header.m_Swaplen / sizeof(int));
+	swap_endian(m_pDataFile->m_pData, sizeof(int), min(Header.m_Swaplen, Size) / sizeof(int));
 #endif
 
 	//if(DEBUG)
@@ -389,8 +390,7 @@ unsigned CDataFileReader::Crc()
 
 bool CDataFileWriter::Open(class IStorage *pStorage, const char *pFilename)
 {
-	int i;
-	//DATAFILE_OUT *df = (DATAFILE_OUT*)mem_alloc(sizeof(DATAFILE_OUT), 1);
+	dbg_assert(!m_File, "a file already exists");
 	m_File = pStorage->OpenFile(pFilename, IOFLAG_WRITE);
 	if(!m_File)
 		return false;
@@ -400,7 +400,7 @@ bool CDataFileWriter::Open(class IStorage *pStorage, const char *pFilename)
 	m_NumItemTypes = 0;
 	mem_zero(&m_aItemTypes, sizeof(m_aItemTypes));
 
-	for(i = 0; i < 0xffff; i++)
+	for(int i = 0; i < 0xffff; i++)
 	{
 		m_aItemTypes[i].m_First = -1;
 		m_aItemTypes[i].m_Last = -1;
@@ -411,16 +411,15 @@ bool CDataFileWriter::Open(class IStorage *pStorage, const char *pFilename)
 
 int CDataFileWriter::AddItem(int Type, int Id, int Size, void *pData)
 {
+	if(!m_File) return 0;
+
+	dbg_assert(Type >= 0 && Type < 0xFFFF, "incorrect type");
+	dbg_assert(m_NumItems < 1024, "too many items");
+	dbg_assert(Size%sizeof(int) == 0, "incorrect boundary");
+
 	m_aItems[m_NumItems].m_Type = Type;
 	m_aItems[m_NumItems].m_Id = Id;
 	m_aItems[m_NumItems].m_Size = Size;
-	
-	/*
-	dbg_msg("datafile", "added item type=%d id=%d size=%d", type, id, size);
-	int i;
-	for(i = 0; i < size/4; i++)
-		dbg_msg("datafile", "\t%d: %08x %d", i, ((int*)data)[i], ((int*)data)[i]);
-	*/
 	
 	// copy data
 	m_aItems[m_NumItems].m_pData = mem_alloc(Size, 1);
@@ -448,9 +447,13 @@ int CDataFileWriter::AddItem(int Type, int Id, int Size, void *pData)
 
 int CDataFileWriter::AddData(int Size, void *pData)
 {
+	if(!m_File) return 0;
+
+	dbg_assert(m_NumDatas < 1024, "too much data");
+
 	CDataInfo *pInfo = &m_aDatas[m_NumDatas];
 	unsigned long s = compressBound(Size);
-	void *pCompData = mem_alloc(s, 1); // temporary buffer that we use duing compression
+	void *pCompData = mem_alloc(s, 1); // temporary buffer that we use during compression
 
 	int Result = compress((Bytef*)pCompData, &s, (Bytef*)pData, Size); // ignore_convention
 	if(Result != Z_OK)
@@ -471,12 +474,13 @@ int CDataFileWriter::AddData(int Size, void *pData)
 
 int CDataFileWriter::AddDataSwapped(int Size, void *pData)
 {
+	dbg_assert(Size%sizeof(int) == 0, "incorrect boundary");
+
 #if defined(CONF_ARCH_ENDIAN_BIG)
-	void *pSwapped = mem_alloc(Size, 1); // temporary buffer that we use duing compression
-	int Index;
+	void *pSwapped = mem_alloc(Size, 1); // temporary buffer that we use during compression
 	mem_copy(pSwapped, pData, Size);
-	swap_endian(&pSwapped, sizeof(int), Size/sizeof(int));
-	Index = AddData(Size, pSwapped);
+	swap_endian(pSwapped, sizeof(int), Size/sizeof(int));
+	int Index = AddData(Size, pSwapped);
 	mem_free(pSwapped);
 	return Index;
 #else
@@ -487,6 +491,8 @@ int CDataFileWriter::AddDataSwapped(int Size, void *pData)
 
 int CDataFileWriter::Finish()
 {
+	if(!m_File) return 1;
+
 	int ItemSize = 0;
 	int TypesSize, HeaderSize, OffsetSize, FileSize, SwapSize;
 	int DataSize = 0;
@@ -511,7 +517,7 @@ int CDataFileWriter::Finish()
 	// calculate the complete size
 	TypesSize = m_NumItemTypes*sizeof(CDatafileItemType);
 	HeaderSize = sizeof(CDatafileHeader);
-	OffsetSize = (m_NumItems + m_NumDatas + m_NumDatas) * sizeof(int); //ItemOffsets, DataOffsets, DataSizes
+	OffsetSize = (m_NumItems + m_NumDatas + m_NumDatas) * sizeof(int); // ItemOffsets, DataOffsets, DataUncompressedSizes
 	FileSize = HeaderSize + TypesSize + OffsetSize + ItemSize + DataSize;
 	SwapSize = FileSize - DataSize;
 	
@@ -535,10 +541,12 @@ int CDataFileWriter::Finish()
 		Header.m_ItemSize = ItemSize;
 		Header.m_DataSize = DataSize;
 		
-		// TODO: apply swapping
 		// write Header
 		if(DEBUG)
 			dbg_msg("datafile", "HeaderSize=%d", sizeof(Header));
+#if defined(CONF_ARCH_ENDIAN_BIG)
+		swap_endian(&Header, sizeof(int), sizeof(Header)/sizeof(int));
+#endif
 		io_write(m_File, &Header, sizeof(Header));
 	}
 	
@@ -554,6 +562,9 @@ int CDataFileWriter::Finish()
 			Info.m_Num = m_aItemTypes[i].m_Num;
 			if(DEBUG)
 				dbg_msg("datafile", "writing type=%x start=%d num=%d", Info.m_Type, Info.m_Start, Info.m_Num);
+#if defined(CONF_ARCH_ENDIAN_BIG)
+			swap_endian(&Info, sizeof(int), sizeof(CDatafileItemType)/sizeof(int));
+#endif
 			io_write(m_File, &Info, sizeof(Info));
 			Count += m_aItemTypes[i].m_Num;
 		}
@@ -570,7 +581,11 @@ int CDataFileWriter::Finish()
 			{
 				if(DEBUG)
 					dbg_msg("datafile", "writing item offset num=%d offset=%d", k, Offset);
-				io_write(m_File, &Offset, sizeof(Offset));
+				int Temp = Offset;
+#if defined(CONF_ARCH_ENDIAN_BIG)
+				swap_endian(&Temp, sizeof(int), sizeof(Temp)/sizeof(int));
+#endif
+				io_write(m_File, &Temp, sizeof(Temp));
 				Offset += m_aItems[k].m_Size + sizeof(CDatafileItem);
 				
 				// next
@@ -584,18 +599,24 @@ int CDataFileWriter::Finish()
 	{
 		if(DEBUG)
 			dbg_msg("datafile", "writing data offset num=%d offset=%d", i, Offset);
-		io_write(m_File, &Offset, sizeof(Offset));
+		int Temp = Offset;
+#if defined(CONF_ARCH_ENDIAN_BIG)
+		swap_endian(&Temp, sizeof(int), sizeof(Temp)/sizeof(int));
+#endif
+		io_write(m_File, &Temp, sizeof(Temp));
 		Offset += m_aDatas[i].m_CompressedSize;
 	}
 
 	// write data uncompressed sizes
 	for(int i = 0; i < m_NumDatas; i++)
 	{
-		/*
 		if(DEBUG)
-			dbg_msg("datafile", "writing data offset num=%d offset=%d", i, offset);
-		*/
-		io_write(m_File, &m_aDatas[i].m_UncompressedSize, sizeof(int));
+			dbg_msg("datafile", "writing data uncompressed size num=%d size=%d", i, m_aDatas[i].m_UncompressedSize);
+		int UncompressedSize = m_aDatas[i].m_UncompressedSize;
+#if defined(CONF_ARCH_ENDIAN_BIG)
+		swap_endian(&UncompressedSize, sizeof(int), sizeof(UncompressedSize)/sizeof(int));
+#endif
+		io_write(m_File, &UncompressedSize, sizeof(UncompressedSize));
 	}
 	
 	// write m_aItems
@@ -613,6 +634,10 @@ int CDataFileWriter::Finish()
 				if(DEBUG)
 					dbg_msg("datafile", "writing item type=%x idx=%d id=%d size=%d", i, k, m_aItems[k].m_Id, m_aItems[k].m_Size);
 				
+#if defined(CONF_ARCH_ENDIAN_BIG)
+				swap_endian(&Item, sizeof(int), sizeof(Item)/sizeof(int));
+				swap_endian(m_aItems[k].m_pData, sizeof(int), m_aItems[k].m_Size/sizeof(int));
+#endif
 				io_write(m_File, &Item, sizeof(Item));
 				io_write(m_File, m_aItems[k].m_pData, m_aItems[k].m_Size);
 				
@@ -633,9 +658,11 @@ int CDataFileWriter::Finish()
 	// free data
 	for(int i = 0; i < m_NumItems; i++)
 		mem_free(m_aItems[i].m_pData);
-
+	for(int i = 0; i < m_NumDatas; ++i)
+		mem_free(m_aDatas[i].m_pCompressedData);
 	
 	io_close(m_File);
+	m_File = 0;
 	
 	if(DEBUG)
 		dbg_msg("datafile", "done");
