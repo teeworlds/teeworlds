@@ -1,4 +1,5 @@
 #include <engine/graphics.h>
+#include <engine/demo.h>
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
 
@@ -111,8 +112,21 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 	Graphics()->QuadsSetRotation(Angle);
 
 	float Offset = Pos.y/32.0f + Pos.x/32.0f;
-	Pos.x += cosf(Client()->LocalTime()*2.0f+Offset)*2.5f;
-	Pos.y += sinf(Client()->LocalTime()*2.0f+Offset)*2.5f;
+	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+	{
+		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
+		
+		if(!pInfo->m_Paused)
+		{
+			Pos.x += cosf(Client()->LocalTime()*pInfo->m_Speed*2.0f+Offset)*2.5f;
+			Pos.y += sinf(Client()->LocalTime()*pInfo->m_Speed*2.0f+Offset)*2.5f;
+		}
+	}
+	else
+	{
+		Pos.x += cosf(Client()->LocalTime()*2.0f+Offset)*2.5f;
+		Pos.y += sinf(Client()->LocalTime()*2.0f+Offset)*2.5f;
+	}
 	RenderTools()->DrawSprite(Pos.x, Pos.y, Size);
 	Graphics()->QuadsEnd();
 }

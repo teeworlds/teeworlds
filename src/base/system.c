@@ -863,7 +863,7 @@ int net_init()
 	return 0;
 }
 
-int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, void *user)
+int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 {
 #if defined(CONF_FAMILY_WINDOWS)
 	WIN32_FIND_DATA finddata;
@@ -879,8 +879,7 @@ int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, void *user)
 	/* add all the entries */
 	do
 	{
-		if(finddata.cFileName[0] != '.')
-			cb(finddata.cFileName, 0, user);
+		cb(finddata.cFileName, 0, type, user);
 	} while (FindNextFileA(handle, &finddata));
 
 	FindClose(handle);
@@ -893,7 +892,7 @@ int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, void *user)
 		return 0;
 		
 	while((entry = readdir(d)) != NULL)
-		cb(entry->d_name, 0, user);
+		cb(entry->d_name, 0, type, user);
 
 	/* close the directory and return */
 	closedir(d);

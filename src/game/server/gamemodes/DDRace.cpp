@@ -16,7 +16,7 @@ CGameControllerDDRace::CGameControllerDDRace(class CGameContext *pGameServer) : 
 CGameControllerDDRace::~CGameControllerDDRace()
 {
 	delete[] m_pNumTele;
-	delete[][] m_pTeleOuts;
+	delete[] m_pTeleOuts;
 }
 
 void CGameControllerDDRace::Tick()

@@ -166,8 +166,7 @@ class CMenus : public CComponent
 	char m_aCurrentDemoFolder[256];
 	bool m_DemolistDelEntry;
 	
-	static void DemolistCountCallback(const char *pName, int IsDir, void *pUser);
-	static void DemolistFetchCallback(const char *pName, int IsDir, void *pUser);
+	static void DemolistFetchCallback(const char *pName, int IsDir, int DirType, void *pUser);
 	
 	// found in menus.cpp
 	int Render();

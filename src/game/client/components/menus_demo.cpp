@@ -408,29 +408,23 @@ int CMenus::UiDoListboxEnd(float *pScrollValue, bool *pItemActivated)
 	return gs_ListBoxNewSelected;
 }
 
-struct FETCH_CALLBACKINFO
-{
-	CMenus *m_pSelf;
-	const char *m_pPrefix;
-};
-
-void CMenus::DemolistFetchCallback(const char *pName, int IsDir, void *pUser)
+void CMenus::DemolistFetchCallback(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	if(pName[0] == '.')
 		return;
 	
-	FETCH_CALLBACKINFO *pInfo = (FETCH_CALLBACKINFO *)pUser;
+	CMenus *pSelf = (CMenus *)pUser;
 	
 	CDemoItem Item;
-	str_format(Item.m_aFilename, sizeof(Item.m_aFilename), "%s/%s", pInfo->m_pPrefix, pName);
+	str_format(Item.m_aFilename, sizeof(Item.m_aFilename), "%s%s%s/%s", pSelf->Storage()->GetDirectory(DirType),
+		pSelf->Storage()->GetDirectory(DirType)[0] ? "/" : "", pSelf->m_aCurrentDemoFolder, pName);
 	str_copy(Item.m_aName, pName, sizeof(Item.m_aName));
-	pInfo->m_pSelf->m_lDemos.add(Item);
+	pSelf->m_lDemos.add(Item);
 }
 
 void CMenus::DemolistPopulate()
 {
 	m_lDemos.clear();
-	
 	
 	if(str_comp(m_aCurrentDemoFolder, "demos") != 0) //add parent folder
 	{
@@ -440,14 +434,7 @@ void CMenus::DemolistPopulate()
 		m_lDemos.add(Item);
 	}
 	
-	
-	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "%s/%s", Client()->UserDirectory(), m_aCurrentDemoFolder);
-	
-	FETCH_CALLBACKINFO Info = {this, aBuf};
-	fs_listdir(aBuf, DemolistFetchCallback, &Info);
-	Info.m_pPrefix = m_aCurrentDemoFolder;
-	fs_listdir(m_aCurrentDemoFolder, DemolistFetchCallback, &Info);
+	Storage()->ListDirectory(IStorage::TYPE_SAVE|IStorage::TYPE_CURRENT, m_aCurrentDemoFolder, DemolistFetchCallback, this);
 }
 
 

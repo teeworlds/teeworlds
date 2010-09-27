@@ -793,7 +793,7 @@ int str_comp_nocase(const char *a, const char *b);
 
 
 /*
-	Function: str_comp_nocase
+	Function: str_comp
 		Compares to strings case sensitive.
 	
 	Parameters:
@@ -811,7 +811,7 @@ int str_comp_nocase(const char *a, const char *b);
 int str_comp(const char *a, const char *b);
 
 /*
-	Function: str_comp_nocase
+	Function: str_comp_num
 		Compares up to num characters of two strings case sensitive.
 	
 	Parameters:
@@ -888,13 +888,14 @@ void str_hex(char *dst, int dst_size, const void *data, int data_size);
 	Parameters:
 		dir - Directory to list
 		cb - Callback function to call for each entry
+		type - Type of the directory
 		user - Pointer to give to the callback
 	
 	Returns:
 		Always returns 0.
 */
-typedef void (*FS_LISTDIR_CALLBACK)(const char *name, int is_dir, void *user);
-int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, void *user);
+typedef void (*FS_LISTDIR_CALLBACK)(const char *name, int is_dir, int dir_type, void *user);
+int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user);
 
 /*
 	Function: fs_makedir
