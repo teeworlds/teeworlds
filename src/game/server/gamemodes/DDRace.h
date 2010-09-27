@@ -10,6 +10,9 @@
 
 class CGameControllerDDRace : public IGameController
 {
+	vec2 *m_pTele1D;
+	int m_TotalTele;
+	int m_ArraySize;
 public:
 	
 	CGameControllerDDRace(class CGameContext *pGameServer);
@@ -18,10 +21,7 @@ public:
 	CGameTeams m_Teams;
 
 	int *m_pNumTele;
-	vec2 *m_pTele1D;
 	vec2 **m_pTele2D;
-	int m_TotalTele;
-	int m_ArraySize;
 	
 	void InitTeleporter();
 	void InitSwitcher();
