@@ -17,6 +17,7 @@ CGameControllerDDRace::~CGameControllerDDRace()
 {
 	delete[] m_pTele1D;
 	delete[] m_pNumTele;
+	m_pTele2D = 0x0;
 }
 
 void CGameControllerDDRace::Tick()
@@ -41,6 +42,8 @@ void CGameControllerDDRace::InitTeleporter()
 	if(!m_ArraySize)
 	{
 		m_pNumTele = 0x0;
+		m_pTele1D = 0x0;
+		m_pTele2D = 0x0;
 		return;
 	}
 	int *Count;
