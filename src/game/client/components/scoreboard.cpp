@@ -412,12 +412,12 @@ void CScoreboard::OnRender()
 	if(g_Config.m_ClRenderScoreboard && !g_Config.m_ClClearAll && m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team != -1)
 	{
 		// we are not a spectator, check if we are ead
-		if(!m_pClient->m_Snap.m_pLocalCharacter || m_pClient->m_Snap.m_pLocalCharacter->m_Health < 0)
+		if((!m_pClient->m_Snap.m_pLocalCharacter || m_pClient->m_Snap.m_pLocalCharacter->m_Health < 0) && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 			DoScoreBoard = true;
 	}
 
 	// if we the game is over
-	if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver)
+	if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		DoScoreBoard = true;
 	
 	// if coopboard or statboard active dont show scoreboard
