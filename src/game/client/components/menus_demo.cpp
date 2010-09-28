@@ -187,7 +187,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		if(pInfo->m_Speed >= 1.0f)
 			str_format(aBuffer, sizeof(aBuffer), "x%.0f", pInfo->m_Speed);
 		else
-			str_format(aBuffer, sizeof(aBuffer), "x%.1f", pInfo->m_Speed);
+			str_format(aBuffer, sizeof(aBuffer), "x%.2f", pInfo->m_Speed);
 		UI()->DoLabel(&ButtonBar, aBuffer, Button.h*0.7f, -1);
 
 		// close button
