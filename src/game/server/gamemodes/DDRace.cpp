@@ -66,7 +66,7 @@ void CGameControllerDDRace::InitTeleporter()
 	}
 	m_pTele1D = new vec2[m_TotalTele];
 	mem_zero(m_pTele1D, m_TotalTele*sizeof(vec2));
-	m_pTele2D = &m_pTele1D;
+	m_pTele2D = (vec2**)m_pTele1D;
 	for (int i = 0; i < m_ArraySize; ++i)
 	{
 		m_pTele2D[i] = new vec2[m_pNumTele[i]];
