@@ -869,6 +869,7 @@ int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	WIN32_FIND_DATA finddata;
 	HANDLE handle;
 	char buffer[1024*2];
+	int length;
 	str_format(buffer, sizeof(buffer), "%s/*", dir);
 
 	handle = FindFirstFileA(buffer, &finddata);
@@ -876,23 +877,36 @@ int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	if (handle == INVALID_HANDLE_VALUE)
 		return 0;
 
+	str_format(buffer, sizeof(buffer), "%s/", dir);
+	length = str_length(buffer);
+
 	/* add all the entries */
 	do
 	{
-		cb(finddata.cFileName, 0, type, user);
-	} while (FindNextFileA(handle, &finddata));
+		str_copy(buffer+length, finddata.cFileName, (int)sizeof(buffer)-length);
+		cb(finddata.cFileName, fs_is_dir(buffer), type, user);
+	}
+	while (FindNextFileA(handle, &finddata));
 
 	FindClose(handle);
 	return 0;
 #else
 	struct dirent *entry;
+	char buffer[1024*2];
+	int length;
 	DIR *d = opendir(dir);
 
 	if(!d)
 		return 0;
 		
+	str_format(buffer, sizeof(buffer), "%s/", dir);
+	length = str_length(buffer);
+
 	while((entry = readdir(d)) != NULL)
-		cb(entry->d_name, 0, type, user);
+	{
+		str_copy(buffer+length, entry->d_name, (int)sizeof(buffer)-length);
+		cb(entry->d_name, fs_is_dir(buffer), type, user);
+	}
 
 	/* close the directory and return */
 	closedir(d);
@@ -1153,6 +1167,37 @@ int str_comp(const char *a, const char *b)
 int str_comp_num(const char *a, const char *b, const int num)
 {
 	return strncmp(a, b, num);
+}
+
+int str_comp_filenames(const char *a, const char *b)
+{
+	int result;
+
+	for(; *a && *b; ++a, ++b)
+	{
+		if(*a >= '0' && *a <= '9' && *b >= '0' && *b <= '9')
+		{
+			result = 0;
+			do
+			{
+				if(!result)
+					result = *a - *b;
+				++a; ++b;
+			}
+			while(*a >= '0' && *a <= '9' && *b >= '0' && *b <= '9');
+
+			if(*a >= '0' && *a <= '9')
+				return 1;
+			else if(*b >= '0' && *b <= '9')
+				return -1;
+			else if(result)
+				return result;
+		}
+
+		if(*a != *b)
+			break;
+	}
+	return *a - *b;
 }
 
 const char *str_find_nocase(const char *haystack, const char *needle)
