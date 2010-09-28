@@ -132,27 +132,30 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename)
 	AllocSize += sizeof(CDatafile); // add space for info structure
 	AllocSize += Header.m_NumRawData*sizeof(void*); // add space for data pointers
 
-	m_pDataFile = (CDatafile*)mem_alloc(AllocSize, 1);
-	m_pDataFile->m_Header = Header;
-	m_pDataFile->m_DataStartOffset = sizeof(CDatafileHeader) + Size;
-	m_pDataFile->m_ppDataPtrs = (char**)(m_pDataFile+1);
-	m_pDataFile->m_pData = (char *)(m_pDataFile+1)+Header.m_NumRawData*sizeof(char *);
-	m_pDataFile->m_File = File;
-	m_pDataFile->m_Crc = Crc;
+	CDatafile *pTmpDataFile = (CDatafile*)mem_alloc(AllocSize, 1);
+	pTmpDataFile->m_Header = Header;
+	pTmpDataFile->m_DataStartOffset = sizeof(CDatafileHeader) + Size;
+	pTmpDataFile->m_ppDataPtrs = (char**)(pTmpDataFile+1);
+	pTmpDataFile->m_pData = (char *)(pTmpDataFile+1)+Header.m_NumRawData*sizeof(char *);
+	pTmpDataFile->m_File = File;
+	pTmpDataFile->m_Crc = Crc;
 	
 	// clear the data pointers
-	mem_zero(m_pDataFile->m_ppDataPtrs, Header.m_NumRawData*sizeof(void*));
+	mem_zero(pTmpDataFile->m_ppDataPtrs, Header.m_NumRawData*sizeof(void*));
 	
 	// read types, offsets, sizes and item data
-	unsigned ReadSize = io_read(File, m_pDataFile->m_pData, Size);
+	unsigned ReadSize = io_read(File, pTmpDataFile->m_pData, Size);
 	if(ReadSize != Size)
 	{
-		io_close(m_pDataFile->m_File);
-		mem_free(m_pDataFile);
-		m_pDataFile = 0;
+		io_close(pTmpDataFile->m_File);
+		mem_free(pTmpDataFile);
+		pTmpDataFile = 0;
 		dbg_msg("datafile", "couldn't load the whole thing, wanted=%d got=%d", Size, ReadSize);
 		return false;
 	}
+
+	Close();
+	m_pDataFile = pTmpDataFile;
 
 #if defined(CONF_ARCH_ENDIAN_BIG)
 	swap_endian(m_pDataFile->m_pData, sizeof(int), min(Header.m_Swaplen, Size) / sizeof(int));
