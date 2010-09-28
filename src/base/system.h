@@ -830,6 +830,24 @@ int str_comp(const char *a, const char *b);
 int str_comp_num(const char *a, const char *b, const int num);
 
 /*
+	Function: str_comp_filenames
+		Compares two strings case sensitive, digit chars will be compared as numbers.
+	
+	Parameters:
+		a - String to compare.
+		b - String to compare.
+	
+	Returns:	
+		<0 - String a is lesser then string b
+		0 - String a is equal to string b
+		>0 - String a is greater then string b
+
+	Remarks:
+		- The strings are treated as zero-termineted strings.
+*/
+int str_comp_filenames(const char *a, const char *b);
+
+/*
 	Function: str_find_nocase
 		Finds a string inside another string case insensitive.
 

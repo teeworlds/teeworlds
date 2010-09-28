@@ -410,61 +410,59 @@ int CMenus::UiDoListboxEnd(float *pScrollValue, bool *pItemActivated)
 
 void CMenus::DemolistFetchCallback(const char *pName, int IsDir, int DirType, void *pUser)
 {
-	if(pName[0] == '.')
+	CMenus *pSelf = (CMenus *)pUser;
+	int Length = str_length(pName);
+	if((pName[0] == '.' && (pName[1] == 0 ||
+		(pName[1] == '.' && pName[2] == 0 && !str_comp(pSelf->m_aCurrentDemoFolder, "demos")))) ||
+		(!IsDir && (Length < 5 || str_comp(pName+Length-5, ".demo"))))
 		return;
 	
-	CMenus *pSelf = (CMenus *)pUser;
-	
 	CDemoItem Item;
-	str_format(Item.m_aFilename, sizeof(Item.m_aFilename), "%s%s%s/%s", pSelf->Storage()->GetDirectory(DirType),
-		pSelf->Storage()->GetDirectory(DirType)[0] ? "/" : "", pSelf->m_aCurrentDemoFolder, pName);
-	str_copy(Item.m_aName, pName, sizeof(Item.m_aName));
+	str_copy(Item.m_aFilename, pName, sizeof(Item.m_aFilename));
+	if(IsDir)
+		str_format(Item.m_aName, sizeof(Item.m_aName), "%s/", pName);
+	else
+		str_format(Item.m_aName, min(static_cast<int>(sizeof(Item.m_aName)), Length), "    %s", pName);
+	Item.m_IsDir = IsDir != 0;
+	Item.m_DirType = DirType;
 	pSelf->m_lDemos.add(Item);
 }
 
 void CMenus::DemolistPopulate()
 {
 	m_lDemos.clear();
-	
-	if(str_comp(m_aCurrentDemoFolder, "demos") != 0) //add parent folder
-	{
-		CDemoItem Item;
-		str_copy(Item.m_aName, "..", sizeof(Item.m_aName));
-		str_copy(Item.m_aFilename, "..", sizeof(Item.m_aFilename));
-		m_lDemos.add(Item);
-	}
-	
 	Storage()->ListDirectory(IStorage::TYPE_SAVE|IStorage::TYPE_CURRENT, m_aCurrentDemoFolder, DemolistFetchCallback, this);
 }
 
+void CMenus::DemolistOnUpdate(bool Reset)
+{
+	m_DemolistSelectedIndex = Reset ? m_lDemos.size() > 0 ? 0 : -1 :
+										m_DemolistSelectedIndex >= m_lDemos.size() ? m_lDemos.size()-1 : m_DemolistSelectedIndex;
+	m_DemolistSelectedIsDir = m_DemolistSelectedIndex < 0 ? false : m_lDemos[m_DemolistSelectedIndex].m_IsDir;
+}
 
 void CMenus::RenderDemoList(CUIRect MainView)
 {
-	static int s_SelectedItem = -1;
 	static int s_Inited = 0;
 	if(!s_Inited)
 	{
 		DemolistPopulate();
+		DemolistOnUpdate(true);
 		s_Inited = 1;
-		if(m_lDemos.size() > 0)
-			s_SelectedItem = 0;
-	}
-
-	bool IsDir = false;
-	if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size())
-	{
-		if(str_comp(m_lDemos[s_SelectedItem].m_aName, "..") == 0 || fs_is_dir(m_lDemos[s_SelectedItem].m_aFilename))
-			IsDir = true;
 	}
 
 	// delete demo
 	if(m_DemolistDelEntry)
 	{
-		if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size() && !IsDir)
+		if(m_DemolistSelectedIndex >= 0 && !m_DemolistSelectedIsDir)
 		{
-			Storage()->RemoveFile(m_lDemos[s_SelectedItem].m_aFilename);
+			char aBuf[512];
+			str_format(aBuf, sizeof(aBuf), "%s%s%s/%s", Storage()->GetDirectory(m_lDemos[m_DemolistSelectedIndex].m_DirType),
+				Storage()->GetDirectory(m_lDemos[m_DemolistSelectedIndex].m_DirType)[0] ? "/" : "",
+				m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
+			Storage()->RemoveFile(aBuf);
 			DemolistPopulate();
-			s_SelectedItem = s_SelectedItem-1 < 0 ? m_lDemos.size() > 0 ? 0 : -1 : s_SelectedItem-1;
+			DemolistOnUpdate(false);
 		}
 		m_DemolistDelEntry = false;
 	}
@@ -473,15 +471,17 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
 	MainView.Margin(10.0f, &MainView);
 	
-	CUIRect ButtonBar;
+	CUIRect ButtonBar, RefreshRect, PlayRect, DeleteRect;
 	MainView.HSplitBottom(ms_ButtonHeight+5.0f, &MainView, &ButtonBar);
 	ButtonBar.HSplitTop(5.0f, 0, &ButtonBar);
+	ButtonBar.VSplitRight(130.0f, &ButtonBar, &PlayRect);
+	ButtonBar.VSplitLeft(130.0f, &RefreshRect, &ButtonBar);
+	ButtonBar.VSplitLeft(10.0f, &DeleteRect, &ButtonBar);
+	ButtonBar.VSplitLeft(120.0f, &DeleteRect, &ButtonBar);
 	
 	static int s_DemoListId = 0;
 	static float s_ScrollValue = 0;
-	
-	UiDoListboxStart(&s_DemoListId, &MainView, 17.0f, Localize("Demos"), "", m_lDemos.size(), 1, s_SelectedItem, s_ScrollValue);
-	//for(int i = 0; i < num_demos; i++)
+	UiDoListboxStart(&s_DemoListId, &MainView, 17.0f, Localize("Demos"), "", m_lDemos.size(), 1, m_DemolistSelectedIndex, s_ScrollValue);
 	for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
 	{
 		CListboxItem Item = UiDoListboxNextItem((void*)(&r.front()));
@@ -489,48 +489,41 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			UI()->DoLabel(&Item.m_Rect, r.front().m_aName, Item.m_Rect.h*ms_FontmodHeight, -1);
 	}
 	bool Activated = false;
-	s_SelectedItem = UiDoListboxEnd(&s_ScrollValue, &Activated);
-	
-	CUIRect RefreshRect, PlayRect, DeleteRect;
-	ButtonBar.VSplitRight(130.0f, &ButtonBar, &PlayRect);
-	ButtonBar.VSplitLeft(130.0f, &RefreshRect, &ButtonBar);
-	ButtonBar.VSplitLeft(10.0f, &DeleteRect, &ButtonBar);
-	ButtonBar.VSplitLeft(120.0f, &DeleteRect, &ButtonBar);
+	m_DemolistSelectedIndex = UiDoListboxEnd(&s_ScrollValue, &Activated);
+	DemolistOnUpdate(false);
 	
 	static int s_RefreshButton = 0;
 	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &RefreshRect))
 	{
 		DemolistPopulate();
+		DemolistOnUpdate(false);
 	}
 	
 	static int s_PlayButton = 0;
-	char aTitleButton[10];
-	if(IsDir)
-		str_copy(aTitleButton, Localize("Open"), sizeof(aTitleButton));
-	else
-		str_copy(aTitleButton, Localize("Play"), sizeof(aTitleButton));
-	
-	if(DoButton_Menu(&s_PlayButton, aTitleButton, 0, &PlayRect) || Activated)
+	if(DoButton_Menu(&s_PlayButton, m_DemolistSelectedIsDir?Localize("Open"):Localize("Play"), 0, &PlayRect) || Activated)
 	{
-		if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size())
+		if(m_DemolistSelectedIndex >= 0)
 		{
-			if(str_comp(m_lDemos[s_SelectedItem].m_aName, "..") == 0) //parent folder
+			if(m_DemolistSelectedIsDir)	// folder
 			{
-				fs_parent_dir(m_aCurrentDemoFolder);
+				if(str_comp(m_lDemos[m_DemolistSelectedIndex].m_aFilename, "..") == 0)	// parent folder
+					fs_parent_dir(m_aCurrentDemoFolder);
+				else	// sub folder
+				{
+					char aTemp[256];
+					str_copy(aTemp, m_aCurrentDemoFolder, sizeof(aTemp));
+					str_format(m_aCurrentDemoFolder, sizeof(m_aCurrentDemoFolder), "%s/%s", aTemp, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
+				}
 				DemolistPopulate();
-				s_SelectedItem = m_lDemos.size() > 0 ? 0 : -1;
+				DemolistOnUpdate(true);
 			}
-			else if(IsDir) //folder
+			else // file
 			{
-				char aTemp[256];
-				str_copy(aTemp, m_aCurrentDemoFolder, sizeof(aTemp));
-				str_format(m_aCurrentDemoFolder, sizeof(m_aCurrentDemoFolder), "%s/%s", aTemp, m_lDemos[s_SelectedItem].m_aName);
-				DemolistPopulate();
-				s_SelectedItem = m_lDemos.size() > 0 ? 0 : -1;
-			}
-			else //file
-			{
-				const char *pError = Client()->DemoPlayer_Play(m_lDemos[s_SelectedItem].m_aFilename);
+				char aBuf[512];
+				str_format(aBuf, sizeof(aBuf), "%s%s%s/%s", Storage()->GetDirectory(m_lDemos[m_DemolistSelectedIndex].m_DirType),
+					Storage()->GetDirectory(m_lDemos[m_DemolistSelectedIndex].m_DirType)[0] ? "/" : "",
+					m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
+				const char *pError = Client()->DemoPlayer_Play(aBuf);
 				if(pError)
 					PopupMessage(Localize("Error"), str_comp(pError, "error loading demo") ? pError : Localize("error loading demo"), Localize("Ok"));
 				else
@@ -542,12 +535,12 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		}
 	}
 	
-	if(!IsDir)
+	if(!m_DemolistSelectedIsDir)
 	{
 		static int s_DeleteButton = 0;
 		if(DoButton_Menu(&s_DeleteButton, Localize("Delete"), 0, &DeleteRect) || m_DeletePressed)
 		{
-			if(s_SelectedItem >= 0 && s_SelectedItem < m_lDemos.size())
+			if(m_DemolistSelectedIndex >= 0)
 			{
 				UI()->SetActiveItem(0);
 				m_Popup = POPUP_DELETE_DEMO;
