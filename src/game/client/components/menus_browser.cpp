@@ -166,14 +166,22 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			if(NewIndex > -1 && NewIndex < NumServers)
 			{
 			    //scroll
-			    if(ScrollNum)
-			    {
-			        if(NewIndex - m_SelectedIndex > 0)
-                        s_ScrollValue += 1.0f/ScrollNum;
-                    else
-                        s_ScrollValue -= 1.0f/ScrollNum;
-			    }
-			    
+			    float IndexY = View.y - s_ScrollValue*ScrollNum*s_aCols[0].m_Rect.h + NewIndex*s_aCols[0].m_Rect.h;
+				int Scroll = View.y > IndexY ? -1 : View.y+View.h < IndexY+s_aCols[0].m_Rect.h ? 1 : 0;
+			    if(Scroll)
+				{
+					if(Scroll < 0)
+					{
+						int NumScrolls = (View.y-IndexY+s_aCols[0].m_Rect.h-1.0f)/s_aCols[0].m_Rect.h;
+						s_ScrollValue -= (1.0f/ScrollNum)*NumScrolls;
+					}
+					else
+					{
+						int NumScrolls = (IndexY+s_aCols[0].m_Rect.h-(View.y+View.h)+s_aCols[0].m_Rect.h-1.0f)/s_aCols[0].m_Rect.h;
+						s_ScrollValue += (1.0f/ScrollNum)*NumScrolls;
+					}
+				}
+
 				m_SelectedIndex = NewIndex;
 				
 				const CServerInfo *pItem = ServerBrowser()->SortedGet(m_SelectedIndex);
