@@ -563,6 +563,8 @@ static void CallbackOpenDir(const char *pFileName, void *pUser)
 {
 	CEditor *pEditor = (CEditor*)pUser;
 	
+	if(str_comp(pEditor->m_aFileDialogFileName, ".") == 0)
+		return;
 	if(str_comp(pFileName, "..") == 0)
 	{
 		if(str_comp(pEditor->m_aFileDialogPath, "maps") == 0 || str_comp(pEditor->m_aFileDialogPath, "mapres") == 0)
