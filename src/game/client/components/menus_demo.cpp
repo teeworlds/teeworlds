@@ -418,13 +418,23 @@ void CMenus::DemolistFetchCallback(const char *pName, int IsDir, int DirType, vo
 		return;
 	
 	CDemoItem Item;
+	
 	str_copy(Item.m_aFilename, pName, sizeof(Item.m_aFilename));
 	if(IsDir)
 		str_format(Item.m_aName, sizeof(Item.m_aName), "%s/", pName);
 	else
 		str_format(Item.m_aName, min(static_cast<int>(sizeof(Item.m_aName)), Length), "    %s", pName);
+	
 	Item.m_IsDir = IsDir != 0;
 	Item.m_DirType = DirType;
+	
+	if(!Item.m_IsDir)
+	{
+		char aBuffer[512];
+		str_format(aBuffer, sizeof(aBuffer), "%s/%s", pSelf->m_aCurrentDemoFolder, Item.m_aFilename);
+		Item.m_Valid = pSelf->DemoPlayer()->GetDemoInfo(pSelf->Storage(), aBuffer, Item.m_aMap);
+	}
+	
 	pSelf->m_lDemos.add(Item);
 }
 
@@ -467,6 +477,19 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		m_DemolistDelEntry = false;
 	}
 	
+	char aFooterLabel[128] = "";
+	if(m_DemolistSelectedIndex >= 0)
+	{
+		if(str_comp(m_lDemos[m_DemolistSelectedIndex].m_aFilename, "..") == 0)
+			str_copy(aFooterLabel, "Parent Folder", sizeof(aFooterLabel));
+		else if(m_DemolistSelectedIsDir)
+			str_copy(aFooterLabel, "Folder", sizeof(aFooterLabel));
+		else if(!m_lDemos[m_DemolistSelectedIndex].m_Valid)
+			str_copy(aFooterLabel, "Invalid Demo", sizeof(aFooterLabel));
+		else
+			str_format(aFooterLabel, sizeof(aFooterLabel), "Map : %s", m_lDemos[m_DemolistSelectedIndex].m_aMap);
+	}
+	
 	// render background
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
 	MainView.Margin(10.0f, &MainView);
@@ -481,7 +504,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	
 	static int s_DemoListId = 0;
 	static float s_ScrollValue = 0;
-	UiDoListboxStart(&s_DemoListId, &MainView, 17.0f, Localize("Demos"), "", m_lDemos.size(), 1, m_DemolistSelectedIndex, s_ScrollValue);
+	UiDoListboxStart(&s_DemoListId, &MainView, 17.0f, Localize("Demos"), aFooterLabel, m_lDemos.size(), 1, m_DemolistSelectedIndex, s_ScrollValue);
 	for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
 	{
 		CListboxItem Item = UiDoListboxNextItem((void*)(&r.front()));
