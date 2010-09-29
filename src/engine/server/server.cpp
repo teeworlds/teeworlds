@@ -1439,7 +1439,7 @@ void CServer::ConKick(IConsole::IResult *pResult, void *pUser, int ClientId)
 {
 	int ClientId1 = pResult->GetInteger(0);
 	char buf[128];
-	if(ClientId1 < 0 || ClientId1 >= MAX_CLIENTS || m_aClients[ClientId1].m_State == CClient::STATE_EMPTY)
+	if(ClientId1 < 0 || ClientId1 >= MAX_CLIENTS || ((CServer *)pUser)->m_aClients[ClientId1].m_State == CClient::STATE_EMPTY)
 	{
 		str_format(buf, sizeof(buf),"Invalid Client ID %d", ClientId1);
 		((CServer *)pUser)->SendRconLine(ClientId,buf);
