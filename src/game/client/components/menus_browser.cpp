@@ -135,14 +135,14 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			UI()->DoLabel(&MsgBox, Localize("No servers match your filter criteria"), 16.0f, 0);
 	}
 
-	int Num = (int)(View.h/s_aCols[0].m_Rect.h);
+	int Num = (int)(View.h/s_aCols[0].m_Rect.h) + 1;
 	static int s_ScrollBar = 0;
 	static float s_ScrollValue = 0;
 
 	Scroll.HMargin(5.0f, &Scroll);
 	s_ScrollValue = DoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
 
-	int ScrollNum = NumServers-Num+10;
+	int ScrollNum = NumServers-Num+1;
 	if(ScrollNum > 0)
 	{
 		if(Input()->KeyPresses(KEY_MOUSE_WHEEL_UP))
