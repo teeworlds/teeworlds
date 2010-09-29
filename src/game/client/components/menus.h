@@ -182,7 +182,6 @@ class CMenus : public CComponent
 	bool m_DemolistSelectedIsDir;
 	
 	void DemolistOnUpdate(bool Reset);
-	void DemolistPopulate();
 	static void DemolistFetchCallback(const char *pName, int IsDir, int DirType, void *pUser);
 	
 	// found in menus.cpp
@@ -244,10 +243,14 @@ public:
 
 	struct CDemoItem
 	{
-		char m_aFilename[512];
-		char m_aName[256];
+		char m_aFilename[128];
+		char m_aName[128];
+		bool m_IsDir;
+		int m_DirType;
 		
-		bool operator<(const CDemoItem &Other) { return str_comp(m_aName, Other.m_aName) < 0; } 
+		bool operator<(const CDemoItem &Other) { return !str_comp(m_aFilename, "..") ? true : !str_comp(Other.m_aFilename, "..") ? false :
+														m_IsDir && !Other.m_IsDir ? true : !m_IsDir && Other.m_IsDir ? false :
+														str_comp_filenames(m_aFilename, Other.m_aFilename) < 0; }
 	};
 	
 	sorted_array<CDemoItem> m_lDemos;
