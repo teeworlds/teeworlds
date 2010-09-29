@@ -9,6 +9,7 @@
 #include <engine/shared/protocol.h>
 #include <game/generated/protocol.h>
 #include "teamscore.h"
+#include "mapitems.h"
 
 class CTuneParam
 {
@@ -176,6 +177,22 @@ class CCharacterCore
 	CWorldCore *m_pWorld;
 	CCollision *m_pCollision;
 	CTeamsCore* m_pTeams;
+
+	int m_TileIndex;
+	int m_TileFIndex;
+	int m_TileSIndex;
+	int m_TileIndexL;
+	int m_TileFIndexL;
+	int m_TileSIndexL;
+	int m_TileIndexR;
+	int m_TileFIndexR;
+	int m_TileSIndexR;
+	int m_TileIndexT;
+	int m_TileFIndexT;
+	int m_TileSIndexT;
+	int m_TileIndexB;
+	int m_TileFIndexB;
+	int m_TileSIndexB;
 
 	
 public:
