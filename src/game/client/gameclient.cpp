@@ -290,7 +290,7 @@ void CGameClient::OnInit()
 	
 	int64 End = time_get();
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "initialisation finished after %f.2ms", ((End-Start)*1000)/(float)time_freq());
+	str_format(aBuf, sizeof(aBuf), "initialisation finished after %.2fms", ((End-Start)*1000)/(float)time_freq());
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "gameclient", aBuf);
 	
 	m_ServerMode = SERVERMODE_PURE;
