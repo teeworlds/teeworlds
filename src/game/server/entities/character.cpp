@@ -731,13 +731,14 @@ void CCharacter::Tick()
 					}
 					else
 					{
-						if( g_Config.m_SvBroadcast[0] != 0) {
-							char aTmp[128];
-							str_format(aTmp, sizeof(aTmp), "%s\n", g_Config.m_SvBroadcast);
-							strcat(aBuftime, aTmp);
-							GameServer()->SendBroadcast(g_Config.m_SvBroadcast, m_pPlayer->GetCID());
-						}
 
+						if( g_Config.m_SvBroadcast[0] != 0) {
+							char aTmp[128],aYourBest[64];
+							str_format(aYourBest, sizeof(aYourBest), "Your Best:'%s%d:%d'", ((pData->m_BestTime / 60) < 10)?"0":"", (int)(pData->m_BestTime / 60), (int)pData->m_BestTime % 60);
+							CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
+							str_format(aTmp, sizeof(aTmp), "%s\nServer Best:'%s%d:%d' %s", g_Config.m_SvBroadcast, ((GameServer()->m_pController->m_CurrentRecord / 60) < 10)?"0":"", (int)(GameServer()->m_pController->m_CurrentRecord / 60), (int)GameServer()->m_pController->m_CurrentRecord % 60, (pData->m_BestTime)?aYourBest:"");
+							GameServer()->SendBroadcast(aTmp, m_pPlayer->GetCID());
+						}
 					}
 					m_RefreshTime = Server()->Tick();
 				}
