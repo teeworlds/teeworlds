@@ -70,6 +70,10 @@ public:
 	static void RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult);
 	void RenderQuads(CQuad *pQuads, int NumQuads, int Flags, void (*pfnEval)(float TimeOffset, int Env, float *pChannels, void *pUser), void *pUser);
 	void RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int Flags);
+	void RenderTelemap(CTeleTile *pTele, int w, int h, float Scale);
+	void RenderSpeedupmap(CSpeedupTile *pTele, int w, int h, float Scale);
+	void RenderFrontmap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int Flags);
+	void RenderSwitchmap(CTeleTile *pSwitch, int w, int h, float Scale);
 
 	// helpers
 	void MapscreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,
