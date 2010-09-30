@@ -38,7 +38,7 @@ class CDataFileWriter
 		int m_UncompressedSize;
 		int m_CompressedSize;
 		void *m_pCompressedData;
-	} ;
+	};
 
 	struct CItemInfo
 	{
@@ -66,6 +66,7 @@ class CDataFileWriter
 	CDataInfo m_aDatas[1024];	
 	
 public:
+	CDataFileWriter() : m_File(0) {}
 	bool Open(class IStorage *pStorage, const char *Filename);
 	int AddData(int Size, void *pData);
 	int AddDataSwapped(int Size, void *pData);
