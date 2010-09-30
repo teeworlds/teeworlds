@@ -256,10 +256,16 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_DeleteButton = 0;
 
-	// don't allow deletion of game layer
-	if(pEditor->m_Map.m_pGameLayer != pEditor->GetSelectedLayer(0) &&
+	// don't allow deletion of game/front layer
+	if(pEditor->m_Map.m_pGameLayer != pEditor->GetSelectedLayer(0) && pEditor->m_Map.m_pFrontLayer != pEditor->GetSelectedLayer(0) &&
 		pEditor->DoButton_Editor(&s_DeleteButton, "Delete layer", 0, &Button, 0, "Deletes the layer"))
 	{
+		if(pEditor->GetSelectedLayer(0) == pEditor->m_Map.m_pTeleLayer)
+			pEditor->m_Map.m_pTeleLayer = 0x0;
+		if(pEditor->GetSelectedLayer(0) == pEditor->m_Map.m_pSpeedupLayer)
+			pEditor->m_Map.m_pSpeedupLayer = 0x0;
+		if(pEditor->GetSelectedLayer(0) == pEditor->m_Map.m_pSwitchLayer)
+			pEditor->m_Map.m_pSwitchLayer = 0x0;
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->DeleteLayer(pEditor->m_SelectedLayer);
 		return 1;
 	}
@@ -296,7 +302,12 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 		{0},
 	};
 
-	if(pEditor->m_Map.m_pGameLayer == pEditor->GetSelectedLayer(0)) // dont use Group and Detail from the selection if this is the game layer
+	// dont use Group and Detail from the selection if this is the game layer
+	if(pEditor->m_Map.m_pGameLayer == pEditor->GetSelectedLayer(0) ||
+		pEditor->m_Map.m_pTeleLayer == pEditor->GetSelectedLayer(0) ||
+		pEditor->m_Map.m_pSpeedupLayer == pEditor->GetSelectedLayer(0) ||
+		pEditor->m_Map.m_pFrontLayer == pEditor->GetSelectedLayer(0) ||
+		pEditor->m_Map.m_pSwitchLayer == pEditor->GetSelectedLayer(0))
 	{
 		aProps[0].m_Type = PROPTYPE_NULL;
 		aProps[2].m_Type = PROPTYPE_NULL;
@@ -1168,6 +1179,94 @@ int CEditor::PopupColorPicker(CEditor *pEditor, CUIRect View)
 	}
 
 	pEditor->m_SelectedPickerColor = hsv;
+
+	return 0;
+}
+
+// DDRace
+
+int CEditor::PopupTele(CEditor *pEditor, CUIRect View)
+{
+	CUIRect Button;
+	View.HSplitBottom(12.0f, &View, &Button);
+
+	enum
+	{
+		PROP_TELE=0,
+		NUM_PROPS,
+	};
+
+	CProperty aProps[] = {
+		{"Number", pEditor->m_TeleNum, PROPTYPE_INT_STEP, 0, 255},
+		{0},
+	};
+
+	static int s_aIds[NUM_PROPS] = {0};
+	int NewVal = 0;
+	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
+
+	if(Prop == PROP_TELE)
+		 pEditor->m_TeleNum = clamp(NewVal, 0, 255);
+
+	return 0;
+}
+
+int CEditor::PopupSpeedup(CEditor *pEditor, CUIRect View)
+{
+	CUIRect Button;
+	View.HSplitBottom(12.0f, &View, &Button);
+
+	enum
+	{
+		PROP_FORCE=0,
+		PROP_MAXSPEED,
+		PROP_ANGLE,
+		NUM_PROPS
+	};
+
+	CProperty aProps[] = {
+		{"Force", pEditor->m_SpeedupForce, PROPTYPE_INT_SCROLL, 0, 255},
+		{"Max Speed", pEditor->m_SpeedupMaxSpeed, PROPTYPE_INT_SCROLL, 0, 255},
+		{"Angle", pEditor->m_SpeedupAngle, PROPTYPE_INT_SCROLL, 0, 359},
+		{0},
+	};
+
+	static int s_aIds[NUM_PROPS] = {0};
+	int NewVal = 0;
+	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
+
+	if(Prop == PROP_FORCE)
+		pEditor->m_SpeedupForce = clamp(NewVal, 0, 255);
+	if(Prop == PROP_MAXSPEED)
+		pEditor->m_SpeedupMaxSpeed = clamp(NewVal, 0, 255);
+	if(Prop == PROP_ANGLE)
+		pEditor->m_SpeedupAngle = clamp(NewVal, 0, 359);
+
+	return 0;
+}
+
+int CEditor::PopupSwitch(CEditor *pEditor, CUIRect View)
+{
+	CUIRect Button;
+	View.HSplitBottom(12.0f, &View, &Button);
+
+	enum
+	{
+		PROP_Switch=0,
+		NUM_PROPS,
+	};
+
+	CProperty aProps[] = {
+		{"Number", pEditor->m_SwitchNum, PROPTYPE_INT_STEP, 0, 255},
+		{0},
+	};
+
+	static int s_aIds[NUM_PROPS] = {0};
+	int NewVal = 0;
+	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
+
+	if(Prop == PROP_Switch)
+		 pEditor->m_SwitchNum = clamp(NewVal, 0, 255);
 
 	return 0;
 }

@@ -6,6 +6,7 @@
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
+#include <engine/shared/protocol.h>
 #include <generated/client_data.h>
 
 #include "render.h"
@@ -1062,3 +1063,4 @@ void CRenderTools::RenderTunemap(CTuneTile *pTune, int w, int h, float Scale, ve
 	Graphics()->QuadsEnd();
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
+
