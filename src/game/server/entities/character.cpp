@@ -459,7 +459,7 @@ void CCharacter::FireWeapon()
 				m_Ninja.m_ActivationDir = Direction;
 				//m_Ninja.m_CurrentMoveTime = g_pData->m_Weapons.m_Ninja.m_Movetime * Server()->TickSpeed() / 1000;
 				m_Ninja.m_CurrentMoveTime = 10;
-				GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE,(!Team()?-1:Team()));
+				GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE,Teams()->TeamMask(Team()));
 		} break;
 
 	}
