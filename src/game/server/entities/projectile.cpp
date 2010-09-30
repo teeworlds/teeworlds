@@ -105,7 +105,6 @@ void CProjectile::Tick()
 	}
 	if( ((TargetChr && (g_Config.m_SvHit || m_Owner == -1 || TargetChr == OwnerChar)) || Collide) && !isWeaponCollide)//TODO:TEAM
 	{
-		
 		if(m_Explosive/*??*/ && (!TargetChr || (TargetChr && !m_Freeze)))
 		{
 			GameServer()->CreateExplosion(ColPos, m_Owner, m_Weapon, m_Owner == -1, 
@@ -159,7 +158,7 @@ void CProjectile::Snap(int SnappingClient)
 		return;
 	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
 	if(Char && m_Owner != -1 && !Char->GetPlayer()->m_ShowOthers &&
-	Char->CanCollide(m_Owner)) return;
+	!Char->CanCollide(m_Owner)) return;
 	CNetObj_Projectile *pProj = static_cast<CNetObj_Projectile *>(Server()->SnapNewItem(NETOBJTYPE_PROJECTILE, m_Id, sizeof(CNetObj_Projectile)));
 	FillInfo(pProj);
 }
