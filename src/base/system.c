@@ -1454,6 +1454,24 @@ int str_utf8_decode(const char **ptr)
 	
 }
 
+int str_utf8_check(const char *str)
+{
+	while(*str)
+	{
+		if((*str&0x80) == 0x0)
+			str++;	
+		else if((*str&0xE0) == 0xC0 && (*(str+1)&0xC0) == 0x80)
+			str += 2;
+		else if((*str&0xF0) == 0xE0 && (*(str+1)&0xC0) == 0x80 && (*(str+2)&0xC0) == 0x80)
+			str += 3;
+		else if((*str&0xF8) == 0xF0 && (*(str+1)&0xC0) == 0x80 && (*(str+2)&0xC0) == 0x80 && (*(str+3)&0xC0) == 0x80)
+			str += 4;
+		else
+			return 0;
+	}
+	return 1;
+}
+
 
 unsigned str_quickhash(const char *str)
 {
