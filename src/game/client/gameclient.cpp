@@ -385,6 +385,7 @@ void CGameClient::OnReset()
 	
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
+	m_Teams.Reset();
 }
 
 
@@ -412,8 +413,9 @@ static void Evolve(CNetObj_Character *pCharacter, int Tick)
 {
 	CWorldCore TempWorld;
 	CCharacterCore TempCore;
+	CTeamsCore TempTeams;
 	mem_zero(&TempCore, sizeof(TempCore));
-	TempCore.Init(&TempWorld, g_GameClient.Collision());
+	TempCore.Init(&TempWorld, g_GameClient.Collision(), &TempTeams);
 	TempCore.Read(pCharacter);
 	
 	while(pCharacter->m_Tick < Tick)
@@ -567,7 +569,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			g_GameClient.m_pSounds->Enqueue(pMsg->m_Soundid);
 		else
 			g_GameClient.m_pSounds->Play(CSounds::CHN_GLOBAL, pMsg->m_Soundid, 1.0f, vec2(0,0));
-	}		
+	}
 }
 
 void CGameClient::OnStateChange(int NewState, int OldState)
@@ -839,8 +841,9 @@ void CGameClient::OnPredict()
 		if(!m_Snap.m_aCharacters[i].m_Active)
 			continue;
 			
-		g_GameClient.m_aClients[i].m_Predicted.Init(&World, Collision());
+		g_GameClient.m_aClients[i].m_Predicted.Init(&World, Collision(), &m_Teams);
 		World.m_apCharacters[i] = &g_GameClient.m_aClients[i].m_Predicted;
+		World.m_apCharacters[i]->m_Id = m_Snap.m_LocalCid;
 		g_GameClient.m_aClients[i].m_Predicted.Read(&m_Snap.m_aCharacters[i].m_Cur);
 	}
 	
