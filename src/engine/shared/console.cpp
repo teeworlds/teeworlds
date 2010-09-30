@@ -383,7 +383,28 @@ static void StrVariableCommand(IConsole::IResult *pResult, void *pUserData)
 	CStrVariableData *pData = (CStrVariableData *)pUserData;
 
 	if(pResult->NumArguments())
-		str_copy(pData->m_pStr, pResult->GetString(0), pData->m_MaxSize);
+	{
+		const char *pString = pResult->GetString(0);
+		if(!str_utf8_check(pString))
+		{
+			char Temp[4];
+			int Length = 0;
+			while(*pString)
+			{
+				int Size = str_utf8_encode(Temp, static_cast<const unsigned char>(*pString++));
+				if(Length+Size < pData->m_MaxSize)
+				{
+					mem_copy(pData->m_pStr+Length, &Temp, Size);
+					Length += Size;
+				}
+				else
+					break;
+			}
+			pData->m_pStr[Length] = 0;
+		}
+		else
+			str_copy(pData->m_pStr, pString, pData->m_MaxSize);
+	}
 	else
 	{
 		char aBuf[1024];
