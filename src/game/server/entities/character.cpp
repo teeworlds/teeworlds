@@ -744,7 +744,7 @@ void CCharacter::Tick()
 						else
 						{
 							if(m_BroadTime)
-								str_format(aBuftime, sizeof(aBuftime), "%dm %ds", IntTime/60, IntTime%60);
+								str_format(aBuftime, sizeof(aBuftime), "%s%d:%s%d", ((IntTime/60) < 10)?"0":"", IntTime/60, ((IntTime%60) < 10)?"0":"", IntTime%60);
 							else
 								str_format(aBuftime, sizeof(aBuftime), "");
 
