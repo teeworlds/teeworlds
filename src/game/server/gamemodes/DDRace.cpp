@@ -17,6 +17,7 @@ CGameControllerDDRace::~CGameControllerDDRace()
 {
 	delete[] m_pTele1D;
 	delete[] m_pNumTele;
+	m_pTele2D = 0x0;
 }
 
 void CGameControllerDDRace::Tick()
@@ -41,6 +42,8 @@ void CGameControllerDDRace::InitTeleporter()
 	if(!m_ArraySize)
 	{
 		m_pNumTele = 0x0;
+		m_pTele1D = 0x0;
+		m_pTele2D = 0x0;
 		return;
 	}
 	int *Count;
@@ -63,7 +66,7 @@ void CGameControllerDDRace::InitTeleporter()
 	}
 	m_pTele1D = new vec2[m_TotalTele];
 	mem_zero(m_pTele1D, m_TotalTele*sizeof(vec2));
-	m_pTele2D = &m_pTele1D;
+	m_pTele2D = (vec2**)m_pTele1D;
 	for (int i = 0; i < m_ArraySize; ++i)
 	{
 		m_pTele2D[i] = new vec2[m_pNumTele[i]];

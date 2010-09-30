@@ -1438,9 +1438,14 @@ int CServer::Run()
 void CServer::ConKick(IConsole::IResult *pResult, void *pUser, int ClientId)
 {
 	int ClientId1 = pResult->GetInteger(0);
-	if (ClientId == -1 || ((CServer *)pUser)->m_aClients[ClientId].m_Authed > ((CServer *)pUser)->m_aClients[ClientId1].m_Authed)
+	char buf[128];
+	if(ClientId1 < 0 || ClientId1 >= MAX_CLIENTS || ((CServer *)pUser)->m_aClients[ClientId1].m_State == CClient::STATE_EMPTY)
 	{
-		char buf[128];
+		str_format(buf, sizeof(buf),"Invalid Client ID %d", ClientId1);
+		((CServer *)pUser)->SendRconLine(ClientId,buf);
+	}
+	else if (ClientId == -1 || ((CServer *)pUser)->m_aClients[ClientId].m_Authed > ((CServer *)pUser)->m_aClients[ClientId1].m_Authed)
+	{
 		str_format(buf, sizeof(buf),"Kicked by %s", ((CServer *)pUser)->ClientName(ClientId));
 		((CServer *)pUser)->Kick(ClientId1, buf);
 	}

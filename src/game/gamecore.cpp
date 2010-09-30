@@ -83,6 +83,27 @@ void CCharacterCore::HandleFly()
 void CCharacterCore::Tick(bool UseInput)
 {
 	float PhysSize = 28.0f;
+	int MapIndex = m_pCollision->GetPureMapIndex(m_Pos);;
+	int MapIndexL = m_pCollision->GetPureMapIndex(vec2(m_Pos.x + (28/2)+4,m_Pos.y));
+	int MapIndexR = m_pCollision->GetPureMapIndex(vec2(m_Pos.x - (28/2)-4,m_Pos.y));
+	int MapIndexT = m_pCollision->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y + (28/2)+4));
+	int MapIndexB = m_pCollision->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y - (28/2)-4));
+	//dbg_msg("","N%d L%d R%d B%d T%d",MapIndex,MapIndexL,MapIndexR,MapIndexB,MapIndexT);
+	m_TileIndex = m_pCollision->GetTileIndex(MapIndex);
+	m_TileIndexL = m_pCollision->GetTileIndex(MapIndexL);
+	m_TileIndexR = m_pCollision->GetTileIndex(MapIndexR);
+	m_TileIndexB = m_pCollision->GetTileIndex(MapIndexB);
+	m_TileIndexT = m_pCollision->GetTileIndex(MapIndexT);
+	m_TileFIndex = m_pCollision->GetFTileIndex(MapIndex);
+	m_TileFIndexL = m_pCollision->GetFTileIndex(MapIndexL);
+	m_TileFIndexR = m_pCollision->GetFTileIndex(MapIndexR);
+	m_TileFIndexB = m_pCollision->GetFTileIndex(MapIndexB);
+	m_TileFIndexT = m_pCollision->GetFTileIndex(MapIndexT);
+	m_TileSIndex = m_pCollision->GetDTileIndex(MapIndex, m_pTeams->Team(m_Id));
+	m_TileSIndexL = m_pCollision->GetDTileIndex(MapIndexL, m_pTeams->Team(m_Id));
+	m_TileSIndexR = m_pCollision->GetDTileIndex(MapIndexR, m_pTeams->Team(m_Id));
+	m_TileSIndexB = m_pCollision->GetDTileIndex(MapIndexB, m_pTeams->Team(m_Id));
+	m_TileSIndexT = m_pCollision->GetDTileIndex(MapIndexT, m_pTeams->Team(m_Id));
 	m_TriggeredEvents = 0;
 	
 	// get ground state
@@ -354,14 +375,32 @@ void CCharacterCore::Tick(bool UseInput)
 				{
 					float Accel = m_pWorld->m_Tuning.m_HookDragAccel * (d/m_pWorld->m_Tuning.m_HookLength);
 					float DragSpeed = m_pWorld->m_Tuning.m_HookDragSpeed;
-					
-					// add force to the hooked player
-					p->m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, p->m_Vel.x, Accel*Dir.x*1.5f);
-					p->m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, p->m_Vel.y, Accel*Dir.y*1.5f);
+					vec2 Temp = p->m_Vel;
+					Temp.x = SaturatedAdd(-DragSpeed, DragSpeed, p->m_Vel.x, Accel*Dir.x*1.5f);
+					Temp.y = SaturatedAdd(-DragSpeed, DragSpeed, p->m_Vel.y, Accel*Dir.y*1.5f);
+					if(Temp.x > 0 && (p->m_TileIndex == TILE_STOPL || p->m_TileIndexL == TILE_STOPL || p->m_TileIndexL == TILE_STOPH || p->m_TileIndexL == TILE_STOPA || p->m_TileFIndex == TILE_STOPL || p->m_TileFIndexL == TILE_STOPL || p->m_TileFIndexL == TILE_STOPH || p->m_TileFIndexL == TILE_STOPA || p->m_TileSIndex == TILE_STOPL || p->m_TileSIndexL == TILE_STOPL || p->m_TileSIndexL == TILE_STOPH || p->m_TileSIndexL == TILE_STOPA))
+						Temp.x = 0;
+					if(Temp.x < 0 && (p->m_TileIndex == TILE_STOPR || p->m_TileIndexR == TILE_STOPR || p->m_TileIndexR == TILE_STOPH || p->m_TileIndexR == TILE_STOPA || p->m_TileFIndex == TILE_STOPR || p->m_TileFIndexR == TILE_STOPR || p->m_TileFIndexR == TILE_STOPH || p->m_TileFIndexR == TILE_STOPA || p->m_TileSIndex == TILE_STOPR || p->m_TileSIndexR == TILE_STOPR || p->m_TileSIndexR == TILE_STOPH || p->m_TileSIndexR == TILE_STOPA))
+						Temp.x = 0;
+					if(Temp.y < 0 && (p->m_TileIndex == TILE_STOPB || p->m_TileIndexB == TILE_STOPB || p->m_TileIndexB == TILE_STOPV || p->m_TileIndexB == TILE_STOPA || p->m_TileFIndex == TILE_STOPB || p->m_TileFIndexB == TILE_STOPB || p->m_TileFIndexB == TILE_STOPV || p->m_TileFIndexB == TILE_STOPA || p->m_TileSIndex == TILE_STOPB || p->m_TileSIndexB == TILE_STOPB || p->m_TileSIndexB == TILE_STOPV || p->m_TileSIndexB == TILE_STOPA))
+						Temp.y = 0;
+					if(Temp.y > 0 && (p->m_TileIndex == TILE_STOPT || p->m_TileIndexT == TILE_STOPT || p->m_TileIndexT == TILE_STOPV || p->m_TileIndexT == TILE_STOPA || p->m_TileFIndex == TILE_STOPT || p->m_TileFIndexT == TILE_STOPT || p->m_TileFIndexT == TILE_STOPV || p->m_TileFIndexT == TILE_STOPA || p->m_TileSIndex == TILE_STOPT || p->m_TileSIndexT == TILE_STOPT || p->m_TileSIndexT == TILE_STOPV || p->m_TileSIndexT == TILE_STOPA))
+						Temp.y = 0;
 
+					// add force to the hooked player
+					p->m_Vel = Temp;
+					Temp.x = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, -Accel*Dir.x*0.25f);
+					Temp.y = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, -Accel*Dir.y*0.25f);
+					if(Temp.x > 0 && (m_TileIndex == TILE_STOPL || m_TileIndexL == TILE_STOPL || m_TileIndexL == TILE_STOPH || m_TileIndexL == TILE_STOPA || m_TileFIndex == TILE_STOPL || m_TileFIndexL == TILE_STOPL || m_TileFIndexL == TILE_STOPH || m_TileFIndexL == TILE_STOPA || m_TileSIndex == TILE_STOPL || m_TileSIndexL == TILE_STOPL || m_TileSIndexL == TILE_STOPH || m_TileSIndexL == TILE_STOPA))
+						Temp.x = 0;
+					if(Temp.x < 0 && (m_TileIndex == TILE_STOPR || m_TileIndexR == TILE_STOPR || m_TileIndexR == TILE_STOPH || m_TileIndexR == TILE_STOPA || m_TileFIndex == TILE_STOPR || m_TileFIndexR == TILE_STOPR || m_TileFIndexR == TILE_STOPH || m_TileFIndexR == TILE_STOPA || m_TileSIndex == TILE_STOPR || m_TileSIndexR == TILE_STOPR || m_TileSIndexR == TILE_STOPH || m_TileSIndexR == TILE_STOPA))
+						Temp.x = 0;
+					if(Temp.y < 0 && (m_TileIndex == TILE_STOPB || m_TileIndexB == TILE_STOPB || m_TileIndexB == TILE_STOPV || m_TileIndexB == TILE_STOPA || m_TileFIndex == TILE_STOPB || m_TileFIndexB == TILE_STOPB || m_TileFIndexB == TILE_STOPV || m_TileFIndexB == TILE_STOPA || m_TileSIndex == TILE_STOPB || m_TileSIndexB == TILE_STOPB || m_TileSIndexB == TILE_STOPV || m_TileSIndexB == TILE_STOPA))
+						Temp.y = 0;
+					if(Temp.y > 0 && (m_TileIndex == TILE_STOPT || m_TileIndexT == TILE_STOPT || m_TileIndexT == TILE_STOPV || m_TileIndexT == TILE_STOPA || m_TileFIndex == TILE_STOPT || m_TileFIndexT == TILE_STOPT || m_TileFIndexT == TILE_STOPV || m_TileFIndexT == TILE_STOPA || m_TileSIndex == TILE_STOPT || m_TileSIndexT == TILE_STOPT || m_TileSIndexT == TILE_STOPV || m_TileSIndexT == TILE_STOPA))
+						Temp.y = 0;
 					// add a little bit force to the guy who has the grip
-					m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, -Accel*Dir.x*0.25f);
-					m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, -Accel*Dir.y*0.25f);
+					m_Vel = Temp;
 				}
 			}
 		}
