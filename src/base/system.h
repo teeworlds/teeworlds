@@ -1147,6 +1147,22 @@ int str_utf8_decode(const char **ptr);
 */
 int str_utf8_encode(char *ptr, int chr);
 
+/*
+	Function: str_utf8_check
+		Checks if a strings contains just valid utf8 characters.
+	
+	Parameters:
+		str - Pointer to a possible utf8 string.
+		
+	Returns:
+		0 - invalid characters found.
+		1 - only valid characters found.
+
+	Remarks:
+		- The string is treated as zero-terminated utf8 string.
+*/
+int str_utf8_check(const char *str);
+
 #ifdef __cplusplus
 }
 #endif
