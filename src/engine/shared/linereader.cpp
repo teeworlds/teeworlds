@@ -51,6 +51,8 @@ char *CLineReader::Get()
 			if(m_aBuffer[m_BufferPos] == '\n' || m_aBuffer[m_BufferPos] == '\r')
 			{
 				// line found
+				if(m_aBuffer[m_BufferPos] == '\r' && m_BufferPos+1 < m_BufferSize && m_aBuffer[m_BufferPos+1] == '\n')
+					m_aBuffer[m_BufferPos++] = 0;
 				m_aBuffer[m_BufferPos] = 0;
 				m_BufferPos++;
 				return &m_aBuffer[LineStart];
