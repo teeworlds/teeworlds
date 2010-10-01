@@ -672,6 +672,7 @@ void CCharacter::Tick()
 {
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	std::list < int > Indices = GameServer()->Collision()->GetMapIndices(m_PrevPos, m_Pos);
+	dbg_msg("Indices","%d",Indices.size());
 	if(m_pPlayer->m_ForceBalanced)
 				{
 					char Buf[128];
@@ -787,10 +788,10 @@ void CCharacter::Tick()
 					}
 					m_RefreshTime = Server()->Tick();
 				}
-
+//int num =0;
 	if(!Indices.empty())
 		for(std::list < int >::iterator i = Indices.begin(); i != Indices.end(); i++)
-		{
+		{//dbg_msg("num","%d",++num);
 			int MapIndex = *i;
 			int MapIndexL = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x + (m_ProximityRadius/2)+4,m_Pos.y));
 			int MapIndexR = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x - (m_ProximityRadius/2)-4,m_Pos.y));
