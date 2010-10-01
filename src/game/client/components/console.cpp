@@ -555,11 +555,11 @@ void CGameConsole::Toggle(int Type)
 
 		if (m_ConsoleState == CONSOLE_CLOSED || m_ConsoleState == CONSOLE_CLOSING)
 		{
-			Input()->MouseModeAbsolute();
-			m_pClient->m_pMenus->UseMouseButtons(false);
+			/*Input()->MouseModeAbsolute();
+			m_pClient->m_pMenus->UseMouseButtons(false);*/
 			m_ConsoleState = CONSOLE_OPENING;
-			// reset controls
-			m_pClient->m_pControls->OnReset();
+			/*// reset controls
+			m_pClient->m_pControls->OnReset();*/
 		}
 		else
 		{
