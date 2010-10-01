@@ -1198,7 +1198,14 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 	if(!ShowPicker)
 	{
 		for(int g = 0; g < m_Map.m_lGroups.size(); g++)
-		{
+		{// don't render the front, tele, speedup and switch layer now we will do it later to make them on top of others
+			if(
+					m_Map.m_lGroups[g] == (CLayerGroup *)m_Map.m_pFrontLayer ||
+					m_Map.m_lGroups[g] == (CLayerGroup *)m_Map.m_pTeleLayer ||
+					m_Map.m_lGroups[g] == (CLayerGroup *)m_Map.m_pSpeedupLayer ||
+					m_Map.m_lGroups[g] == (CLayerGroup *)m_Map.m_pSwitchLayer
+					)
+				continue;
 			if(m_Map.m_lGroups[g]->m_Visible)
 				m_Map.m_lGroups[g]->Render();
 			//UI()->ClipEnable(&view);
@@ -1206,19 +1213,24 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 
 		// render the game, tele, speedup, front and switch above everything else
 		if(m_Map.m_pGameGroup->m_Visible)
- 		{
- 			m_Map.m_pGameGroup->MapScreen();
-			if(m_Map.m_pGameLayer->m_Visible)
-				m_Map.m_pGameLayer->Render();
-			/*if(m_Map.m_pFrontLayer && m_Map.m_pFrontLayer->m_Visible)
-				m_Map.m_pFrontLayer->Render();
-			if(m_Map.m_pTeleLayer && m_Map.m_pTeleLayer->m_Visible)
-				m_Map.m_pTeleLayer->Render();
-			if(m_Map.m_pSpeedupLayer && m_Map.m_pSpeedupLayer->m_Visible)
-				m_Map.m_pSpeedupLayer->Render();
-			if(m_Map.m_pSwitchLayer && m_Map.m_pSwitchLayer->m_Visible)
-				m_Map.m_pSwitchLayer->Render();*/
- 		}
+		{
+			m_Map.m_pGameGroup->MapScreen();
+			for(int i = 0; i < m_Map.m_pGameGroup->m_lLayers.size(); i++)
+			{
+				if
+				(
+						m_Map.m_pGameGroup->m_lLayers[i]->m_Visible &&
+						(
+								m_Map.m_pGameGroup->m_lLayers[i] == m_Map.m_pGameLayer ||
+								m_Map.m_pGameGroup->m_lLayers[i] == m_Map.m_pFrontLayer ||
+								m_Map.m_pGameGroup->m_lLayers[i] == m_Map.m_pTeleLayer ||
+								m_Map.m_pGameGroup->m_lLayers[i] == m_Map.m_pSpeedupLayer ||
+								m_Map.m_pGameGroup->m_lLayers[i] == m_Map.m_pSwitchLayer
+								)
+								)
+					m_Map.m_pGameGroup->m_lLayers[i]->Render();
+			}
+		}
 	}
 
 	static void *s_pEditorId = (void *)&s_pEditorId;
