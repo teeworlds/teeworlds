@@ -918,7 +918,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				if(sscanf(pMsg->m_pMessage, "/team %d", &Num) == 1)
 				{
 					if(pPlayer->GetCharacter() == 0) {
-						SendChatTarget(ClientId, "You can't change teams while you are dead.");
+						SendChatTarget(ClientId, "You can't change teams while you are dead/a spectator.");
 					} else {
 						if(((CGameControllerDDRace*)m_pController)->m_Teams.SetCharacterTeam(pPlayer->GetCID(), Num)) {
 							char aBuf[512];
@@ -932,8 +932,12 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				else
 				{
 					char aBuf[512];
+					if(pPlayer->GetCharacter() == 0) {
+						SendChatTarget(ClientId, "You can't check your team while you are dead/a spectator.");
+					} else {
 					str_format(aBuf, sizeof(aBuf), "You are in team %d", pPlayer->GetCharacter()->Team());
 					SendChatTarget(ClientId, aBuf);
+					}
 				}
 					
 			}
