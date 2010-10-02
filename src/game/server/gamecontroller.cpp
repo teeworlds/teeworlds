@@ -241,36 +241,12 @@ bool IGameController::OnEntity(int Index, vec2 Pos, bool Front)
 		sides2[6]=GameServer()->Collision()->Entity(x-2,y, Front);
 		sides2[7]=GameServer()->Collision()->Entity(x-2,y+2, Front);
 
-		float AngularSpeed;
-		int Ind=Index-ENTITY_LASER_STOP;
-		int M;
-		if (Ind<0)
-		{
-		   Ind=-Ind;
-		   M=1;
-		}
-		else if(Ind==0)
-		   M=0;
-		else
-		   M=-1;
-
-
-		if (Ind==0)
-		   AngularSpeed=0.0f;
-		else if (Ind==1)
-		   AngularSpeed=pi/360;
-		else if (Ind==2)
-		   AngularSpeed=pi/180;
-		else if (Ind==3)
-		   AngularSpeed=pi/90;
-		AngularSpeed*=M;
-
 		for(int i=0; i<8;i++)
 		{
 		   if (sides[i] >= ENTITY_LASER_SHORT && sides[i] <= ENTITY_LASER_LONG)
 		   {
 			   CLight *Lgt = new CLight(&GameServer()->m_World, Pos, pi/4*i,32*3 + 32*(sides[i] - ENTITY_LASER_SHORT)*3);
-			   Lgt->m_AngularSpeed=AngularSpeed;
+			   Lgt->m_RotationSpeed = Index - ENTITY_LASER_STOP;
 			   if (sides2[i]>=ENTITY_LASER_C_SLOW && sides2[i]<=ENTITY_LASER_C_FAST)
 			   {
 				   Lgt->m_Speed=1+(sides2[i]-ENTITY_LASER_C_SLOW)*2;

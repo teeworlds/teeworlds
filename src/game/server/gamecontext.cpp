@@ -905,7 +905,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				if(sscanf(pMsg->m_pMessage, "/team %d", &Num) == 1)
 				{
 					if(pPlayer->GetCharacter() == 0) {
-						SendChatTarget(ClientId, "You can't change teams while you are dead.");
+						SendChatTarget(ClientId, "You can't change teams while you are dead/a spectator.");
 					} else {
 						if(((CGameControllerDDRace*)m_pController)->m_Teams.SetCharacterTeam(pPlayer->GetCID(), Num)) {
 							char aBuf[512];
@@ -919,8 +919,12 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				else
 				{
 					char aBuf[512];
+					if(pPlayer->GetCharacter() == 0) {
+						SendChatTarget(ClientId, "You can't check your team while you are dead/a spectator.");
+					} else {
 					str_format(aBuf, sizeof(aBuf), "You are in team %d", pPlayer->GetCharacter()->Team());
 					SendChatTarget(ClientId, aBuf);
+					}
 				}
 					
 			}
@@ -1828,6 +1832,8 @@ void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int Cli
 		{
 			chr->m_Super = true;
 			chr->UnFreeze();
+			chr->m_TeamBeforeSuper = chr->Team();
+			dbg_msg("Teamb4super","%d",chr->m_TeamBeforeSuper = chr->Team());
 			chr->Teams()->SetCharacterTeam(Victim, TEAM_SUPER);
 			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
@@ -1843,9 +1849,10 @@ void CGameContext::ConUnSuper(IConsole::IResult *pResult, void *pUserData, int C
 	if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if(chr)
+		if(chr && chr->m_Super)
 		{
 			chr->m_Super = false;
+			chr->Teams()->SetForceCharacterTeam(Victim, chr->m_TeamBeforeSuper);
 		}
 	}
 }
@@ -1861,6 +1868,8 @@ void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int C
 		{
 			chr->m_Super = true;
 			chr->UnFreeze();
+			chr->m_TeamBeforeSuper = chr->Team();
+			dbg_msg("Teamb4super","%d",chr->m_TeamBeforeSuper = chr->Team());
 			chr->Teams()->SetCharacterTeam(ClientId, TEAM_SUPER);
 			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
@@ -1875,9 +1884,10 @@ void CGameContext::ConUnSuperMe(IConsole::IResult *pResult, void *pUserData, int
 	if (pSelf->m_apPlayers[ClientId])
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(ClientId);
-		if(chr)
+		if(chr && chr->m_Super)
 		{
 			chr->m_Super = false;
+			chr->Teams()->SetForceCharacterTeam(ClientId, chr->m_TeamBeforeSuper);
 		}
 	}
 }

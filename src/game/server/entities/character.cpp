@@ -76,6 +76,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_BroadCast = true;
 	m_EyeEmote = true;
 	m_Fly = true;
+	m_TeamBeforeSuper = 0;
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision(), &Controller->m_Teams.m_Core);
 	m_Core.m_Pos = m_Pos;
@@ -653,6 +654,7 @@ void CCharacter::Tick()
 {
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	std::list < int > Indices = GameServer()->Collision()->GetMapIndices(m_PrevPos, m_Pos);
+	//dbg_msg("Indices","%d",Indices.size());
 	if(m_pPlayer->m_ForceBalanced)
 				{
 					char Buf[128];
@@ -742,10 +744,10 @@ void CCharacter::Tick()
 					}
 					m_RefreshTime = Server()->Tick();
 				}
-
+//int num =0;
 	if(!Indices.empty())
 		for(std::list < int >::iterator i = Indices.begin(); i != Indices.end(); i++)
-		{
+		{//dbg_msg("num","%d",++num);
 			int MapIndex = *i;
 			int MapIndexL = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x + (m_ProximityRadius/2)+4,m_Pos.y));
 			int MapIndexR = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x - (m_ProximityRadius/2)-4,m_Pos.y));
@@ -888,7 +890,7 @@ void CCharacter::Tick()
 				m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
 				m_Core.m_HookState = HOOK_RETRACTED;
 				GameWorld()->ReleaseHooked(GetPlayer()->GetCID());
-				int Num = (((CGameControllerDDRace*)GameServer()->m_pController)->m_pNumTele[z-1] - 1);
+				int Num = (((CGameControllerDDRace*)GameServer()->m_pController)->m_pNumTele[evilz-1] - 1);
 				m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_pTele2D[evilz-1][(!Num)?Num:rand() % Num];
 				m_Core.m_HookPos = m_Core.m_Pos;
 				m_Core.m_Vel = vec2(0,0);
@@ -1264,9 +1266,22 @@ void CCharacter::Snap(int SnappingClient)
 		return;
 
 	CCharacter* SnapChar = GameServer()->GetPlayerChar(SnappingClient);
-	if(!SnapChar 
-		|| (SnapChar->Team() != Team())
-		|| (GetPlayer()->m_Invisible && GetPlayer()->GetCID() != SnappingClient)) return;
+	if
+	(
+			SnapChar &&
+			!SnapChar->m_Super &&
+			(
+					GameServer()->m_apPlayers[SnappingClient]->GetTeam() != -1 &&
+					SnapChar->Team() != Team() &&
+					Team() != TEAM_SUPER
+					) ||
+		(
+				GetPlayer()->m_Invisible &&
+				GetPlayer()->GetCID() != SnappingClient &&
+				GameServer()->m_apPlayers[SnappingClient]->m_Authed < GetPlayer()->m_Authed
+				)
+				)
+		return;
 	CNetObj_Character *Character = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
 
 	// write down the m_Core

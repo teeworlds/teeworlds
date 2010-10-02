@@ -97,10 +97,24 @@ void CProjectile::Tick()
 	
 	int TeamMask = -1;
 	bool isWeaponCollide = false;
-	if(OwnerChar && TargetChr 
-		&& OwnerChar->m_Alive && TargetChr->m_Alive 
-		&& !TargetChr->CanCollide(m_Owner)) {
+	if
+	(
+			OwnerChar &&
+			TargetChr &&
+			OwnerChar->m_Alive &&
+			TargetChr->m_Alive &&
+			!TargetChr->CanCollide(m_Owner)
+			)
+	{
 			isWeaponCollide = true;
+			TeamMask = OwnerChar->Teams()->TeamMask( OwnerChar->Team());
+	}
+	else if
+	(
+			OwnerChar &&
+			OwnerChar->m_Alive
+			)
+	{
 			TeamMask = OwnerChar->Teams()->TeamMask( OwnerChar->Team());
 	}
 	if( ((TargetChr && (g_Config.m_SvHit || m_Owner == -1 || TargetChr == OwnerChar)) || Collide) && !isWeaponCollide)//TODO:TEAM
@@ -126,8 +140,7 @@ void CProjectile::Tick()
 		}
 		else if (m_Weapon == WEAPON_GUN)
 		{
-			GameServer()->CreateDamageInd(CurPos, -atan2(m_Direction.x, m_Direction.y), 10,
-			(m_Owner != -1)? TeamMask : -1);
+			GameServer()->CreateDamageInd(CurPos, -atan2(m_Direction.x, m_Direction.y), 10, (m_Owner != -1)? TeamMask : -1);
 			GameServer()->m_World.DestroyEntity(this);
 		}
 		else
@@ -156,8 +169,14 @@ void CProjectile::Snap(int SnappingClient)
 	
 	if(NetworkClipped(SnappingClient, GetPos(Ct)))
 		return;
-	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
-	if(Char && m_Owner != -1 && !Char->CanCollide(m_Owner)) return;
+	CCharacter * SnapChar = GameServer()->GetPlayerChar(SnappingClient);
+	if
+	(
+			SnapChar &&
+			m_Owner != -1 &&
+			!SnapChar->CanCollide(m_Owner)
+			)
+		return;
 	CNetObj_Projectile *pProj = static_cast<CNetObj_Projectile *>(Server()->SnapNewItem(NETOBJTYPE_PROJECTILE, m_Id, sizeof(CNetObj_Projectile)));
 	FillInfo(pProj);
 }

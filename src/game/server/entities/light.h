@@ -21,10 +21,9 @@ class CLight : public CEntity
 public:
 	int m_CurveLength;
 	int m_LengthL;
-	float m_AngularSpeed;
 	int m_Speed;
 	int m_Length;
-	
+	int m_RotationSpeed;
 
 	CLight(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length);
 	
