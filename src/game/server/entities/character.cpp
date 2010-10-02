@@ -76,6 +76,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_BroadCast = true;
 	m_EyeEmote = true;
 	m_Fly = true;
+	m_TeamBeforeSuper = 0;
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision(), &Controller->m_Teams.m_Core);
 	m_Core.m_Pos = m_Pos;
@@ -672,7 +673,7 @@ void CCharacter::Tick()
 {
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	std::list < int > Indices = GameServer()->Collision()->GetMapIndices(m_PrevPos, m_Pos);
-	dbg_msg("Indices","%d",Indices.size());
+	//dbg_msg("Indices","%d",Indices.size());
 	if(m_pPlayer->m_ForceBalanced)
 				{
 					char Buf[128];

@@ -1881,6 +1881,8 @@ void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int Cli
 		{
 			chr->m_Super = true;
 			chr->UnFreeze();
+			chr->m_TeamBeforeSuper = chr->Team();
+			dbg_msg("Teamb4super","%d",chr->m_TeamBeforeSuper = chr->Team());
 			chr->Teams()->SetCharacterTeam(Victim, TEAM_SUPER);
 			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
@@ -1899,6 +1901,7 @@ void CGameContext::ConUnSuper(IConsole::IResult *pResult, void *pUserData, int C
 		if(chr)
 		{
 			chr->m_Super = false;
+			chr->Teams()->SetForceCharacterTeam(Victim, chr->m_TeamBeforeSuper);
 		}
 	}
 }
@@ -1914,6 +1917,8 @@ void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int C
 		{
 			chr->m_Super = true;
 			chr->UnFreeze();
+			chr->m_TeamBeforeSuper = chr->Team();
+			dbg_msg("Teamb4super","%d",chr->m_TeamBeforeSuper = chr->Team());
 			chr->Teams()->SetCharacterTeam(ClientId, TEAM_SUPER);
 			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
@@ -1931,6 +1936,7 @@ void CGameContext::ConUnSuperMe(IConsole::IResult *pResult, void *pUserData, int
 		if(chr)
 		{
 			chr->m_Super = false;
+			chr->Teams()->SetForceCharacterTeam(ClientId, chr->m_TeamBeforeSuper);
 		}
 	}
 }

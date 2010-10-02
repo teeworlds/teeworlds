@@ -110,6 +110,7 @@ public:
 	
 	int m_HammerType;
 	bool m_Super;
+	int m_TeamBeforeSuper;
 	bool m_Fly;
 
 	//DDRace

@@ -150,8 +150,8 @@ std::list<int> CCollision::GetMapIndices(vec2 PrevPos, vec2 Pos, int MaxIndices)
 		nx = clamp((int)Tmp.x/32, 0, m_Width-1);
 		ny = clamp((int)Tmp.y/32, 0, m_Height-1);
 		Index = ny*m_Width+nx;
-		dbg_msg("lastindex","%d",LastIndex);
-		dbg_msg("index","%d",Index);
+		//dbg_msg("lastindex","%d",LastIndex);
+		//dbg_msg("index","%d",Index);
 		if(
 			(
 					(m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
@@ -168,7 +168,7 @@ std::list<int> CCollision::GetMapIndices(vec2 PrevPos, vec2 Pos, int MaxIndices)
 			if(MaxIndices && Indices.size() > MaxIndices) return Indices;
 			Indices.push_back(Index);
 			LastIndex = Index;
-			dbg_msg("pushed","%d",Index);
+			//dbg_msg("pushed","%d",Index);
 		}
 	}
 
