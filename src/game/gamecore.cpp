@@ -239,6 +239,27 @@ void CCharacterCore::Tick(bool UseInput)
 		if(m_pWorld && m_pWorld->m_Tuning.m_PlayerHooking)
 		{
 			float Dist = 0.0f;
+			char aBuf[512];
+			str_format(aBuf, sizeof(aBuf), "m_Id = %d", m_Id);
+			dbg_msg("GameCore", aBuf);
+			str_format(aBuf, sizeof(aBuf), "Teams: 0:%d 1:%d 2:%d 3:%d 4:%d 5:%d 6:%d 7:%d 8:%d 9:%d 10:%d 11:%d 12:%d 13:%d 14:%d 15:%d", 
+				m_pTeams->Team(0),
+				m_pTeams->Team(1),
+				m_pTeams->Team(2),
+				m_pTeams->Team(3),
+				m_pTeams->Team(4),
+				m_pTeams->Team(5),
+				m_pTeams->Team(6),
+				m_pTeams->Team(7),
+				m_pTeams->Team(8),
+				m_pTeams->Team(9),
+				m_pTeams->Team(10),
+				m_pTeams->Team(11),
+				m_pTeams->Team(12),
+				m_pTeams->Team(13),
+				m_pTeams->Team(14),
+				m_pTeams->Team(15));
+			dbg_msg("GameCore", aBuf);
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
 				CCharacterCore *p = m_pWorld->m_apCharacters[i];
