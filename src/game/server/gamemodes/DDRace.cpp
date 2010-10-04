@@ -51,11 +51,15 @@ void CGameControllerDDRace::InitTeleporter()
 	Count = new int[m_ArraySize];
 	mem_zero(m_pNumTele, m_ArraySize*sizeof(int));
 	mem_zero(Count, m_ArraySize*sizeof(int));
+	/* No need in it u use mem_zero
 	for (int i = 0; i < m_ArraySize; ++i)
 		Count[i] = m_pNumTele[i] = 0;
+	*/
 	
+	int Width = GameServer()->Collision()->Layers()->TeleLayer()->m_Width;
+	int Height = GameServer()->Collision()->Layers()->TeleLayer()->m_Height;
 	// Count
-	for(int i = 0; i < GameServer()->Collision()->Layers()->TeleLayer()->m_Width*GameServer()->Collision()->Layers()->TeleLayer()->m_Height; i++)
+	for(int i = 0; i < Width*Height; i++)
 	{
 		if(GameServer()->Collision()->TeleLayer()[i].m_Number > 0 && GameServer()->Collision()->TeleLayer()[i].m_Type == TILE_TELEOUT)
 		{
@@ -66,13 +70,16 @@ void CGameControllerDDRace::InitTeleporter()
 	}
 	m_pTele1D = new vec2[m_TotalTele];
 	mem_zero(m_pTele1D, m_TotalTele*sizeof(vec2));
+	
+	//Please rewrite this place in next lines you broke all initialization
 	m_pTele2D = (vec2**)m_pTele1D;
 	for (int i = 0; i < m_ArraySize; ++i)
 	{
 		m_pTele2D[i] = new vec2[m_pNumTele[i]];
 		mem_zero(m_pTele2D[i], m_pNumTele[i]*sizeof(vec2));
 	}
-	for(int i = 0; i < GameServer()->Collision()->Layers()->TeleLayer()->m_Width*GameServer()->Collision()->Layers()->TeleLayer()->m_Height; i++)
+	
+	for(int i = 0; i < Width*Height; i++)
 	{
 		if(GameServer()->Collision()->TeleLayer()[i].m_Number > 0 && GameServer()->Collision()->TeleLayer()[i].m_Type == TILE_TELEOUT)
 		{
