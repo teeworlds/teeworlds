@@ -2409,12 +2409,12 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	//CMapItemLayerTilemap *pFrontMap = m_Layers.FrontLayer(); not needed game layer and front layer are always the same size
 	CTile *pFront=0;
 	if (m_Layers.FrontLayer())
-	pFront = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Front);
-	m_pSwitch=0;
-	if (m_Layers.SwitchLayer()) {
-		m_pSwitch = (CTeleTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Switch);
-		((CGameControllerDDRace *)m_pController)->InitSwitcher();
-	}
+		pFront = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Front);
+	//m_pSwitch=0;
+	//if (m_Layers.SwitchLayer()) {
+		//m_pSwitch = (CTeleTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Switch);
+		//((CGameControllerDDRace *)m_pController)->InitSwitcher();
+	//}
 	
 
 	for(int y = 0; y < pTileMap->m_Height; y++)

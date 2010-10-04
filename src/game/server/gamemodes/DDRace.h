@@ -8,13 +8,11 @@
 #include <game/server/entities/trigger.h>
 
 #include <vector>
+#include <map>
 
 
 class CGameControllerDDRace : public IGameController
 {
-	vec2 *m_pTele1D;
-	int m_TotalTele;
-	int m_ArraySize;
 public:
 	
 	CGameControllerDDRace(class CGameContext *pGameServer);
@@ -22,12 +20,11 @@ public:
 	
 	CGameTeams m_Teams;
 
-	int *m_pNumTele;
-	vec2 **m_pTele2D;
+	std::map < int , std::vector < vec2 > > m_TeleOuts;
 	
 	void InitTeleporter();
 	void InitSwitcher();
-	int m_Size;
+	//int m_Size;
 
 	struct SDoors
 	{
