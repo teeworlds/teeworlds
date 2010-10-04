@@ -15,9 +15,10 @@ CGameControllerDDRace::CGameControllerDDRace(class CGameContext *pGameServer) : 
 
 CGameControllerDDRace::~CGameControllerDDRace()
 {
-	delete[] m_pTele1D;
+	//delete[] m_pTele1D;
+	//TODO make normal cleanup
 	delete[] m_pNumTele;
-	m_pTele2D = 0x0;
+	//m_pTele2D = 0x0;
 }
 
 void CGameControllerDDRace::Tick()
