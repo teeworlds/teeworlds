@@ -16,8 +16,8 @@ CGameControllerDDRace::CGameControllerDDRace(class CGameContext *pGameServer) : 
 CGameControllerDDRace::~CGameControllerDDRace()
 {
 	//delete[] m_pTele1D;
-	//TODO make normal cleanup
-	delete[] m_pNumTele;
+	//TODO make normal cleanup !!!!!!!!
+	//delete[] m_pNumTele;
 	//m_pTele2D = 0x0;
 }
 
@@ -75,8 +75,8 @@ void CGameControllerDDRace::InitTeleporter()
 	//mem_zero(m_pTele1D, m_TotalTele*sizeof(vec2));
 	
 	//Please rewrite this place in next lines you broke all initialization
-	m_pTele2D = new vec2 * [m_TotalTele];
-	for (int i = 0; i < m_TotalTele; ++i)
+	m_pTele2D = new vec2 * [m_ArraySize];
+	for (int i = 0; i < m_ArraySize; ++i)
 	{
 		m_pTele2D[i] = new vec2[m_pNumTele[i]];
 		mem_zero(m_pTele2D[i], m_pNumTele[i]*sizeof(vec2));
