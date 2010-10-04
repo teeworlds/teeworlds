@@ -2411,9 +2411,11 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	if (m_Layers.FrontLayer())
 	pFront = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Front);
 	m_pSwitch=0;
-	if (m_Layers.SwitchLayer())
-	m_pSwitch = (CTeleTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Switch);
-	((CGameControllerDDRace *)m_pController)->InitSwitcher();
+	if (m_Layers.SwitchLayer()) {
+		m_pSwitch = (CTeleTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Switch);
+		((CGameControllerDDRace *)m_pController)->InitSwitcher();
+	}
+	
 
 	for(int y = 0; y < pTileMap->m_Height; y++)
 	{
@@ -2449,15 +2451,6 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 					vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
 					m_pController->OnEntity(Index-ENTITY_OFFSET, Pos,true);
 				}
-			}
-			if (m_pSwitch)
-			{
-				int Index = m_pSwitch[y*pTileMap->m_Width+x].m_Type - ENTITY_OFFSET;
-				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
-				if(Index == ENTITY_TRIGGER)
-					for(int i=0;i<((CGameControllerDDRace *)m_pController)->m_Size;i++)
-						if(((CGameControllerDDRace *)m_pController)->m_SDoors[i].m_Number == m_pSwitch[y*pTileMap->m_Width+x].m_Number)
-							new CTrigger(&m_World,Pos, ((CGameControllerDDRace *)m_pController)->m_SDoors[i].m_Address);
 			}
 		}
 	}

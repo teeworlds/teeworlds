@@ -7,6 +7,8 @@
 #include <game/server/entities/door.h>
 #include <game/server/entities/trigger.h>
 
+#include <vector>
+
 
 class CGameControllerDDRace : public IGameController
 {
@@ -34,7 +36,7 @@ public:
 		CDoor * m_Address;
 	};
 
-	SDoors* m_SDoors;
+	std::vector < SDoors > m_SDoors;
 
 	virtual void Tick();
 };
