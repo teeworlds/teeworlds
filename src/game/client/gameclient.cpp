@@ -419,6 +419,8 @@ void CGameClient::OnReset()
 	m_ShowOthers = -1;
 	m_FlagPos = vec2(-1, -1);
 	m_Teams.Reset();
+	Layers()->Dest();
+	Collision()->Dest();
 }
 
 

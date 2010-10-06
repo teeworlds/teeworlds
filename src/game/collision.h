@@ -26,6 +26,7 @@ public:
 		COLFLAG_THROUGH=16
 	};
 	CCollision();
+	void Dest();
 	void Init(class CLayers *pLayers);
 	bool CheckPoint(float x, float y) { return IsSolid(round(x), round(y)); }
 	bool CheckPoint(vec2 p) { return CheckPoint(p.x, p.y); }

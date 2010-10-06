@@ -20,6 +20,7 @@ class CLayers
 
 public:
 	CLayers();
+	void Dest();
 	void Init(class IKernel *pKernel);
 	int NumGroups() const { return m_GroupsNum; }
 	class IMap *Map() const { return m_pMap; }
