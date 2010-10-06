@@ -95,7 +95,10 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 }
 
 void CGameTeams::SetForceCharacterTeam(int id, int Team) {
-	if(m_Core.Team(id) != TEAM_FLOCK && m_Core.Team(id) != TEAM_SUPER && m_TeamState[m_Core.Team(id)] != EMPTY) {
+	m_TeeFinished[id] = false;
+	if(m_Core.Team(id) != TEAM_FLOCK 
+		&& m_Core.Team(id) != TEAM_SUPER 
+		&& m_TeamState[m_Core.Team(id)] != EMPTY) {
 		bool NoOneInOldTeam = true;
 		for(int i = 0; i < MAX_CLIENTS; ++i) {
 			if(i != id && m_Core.Team(id) == m_Core.Team(i)) {

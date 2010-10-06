@@ -137,7 +137,7 @@ public:
 
 	IGameController *m_pController;
 	CGameWorld m_World;
-	CTeleTile *m_pSwitch;
+	//CTeleTile *m_pSwitch;
 	// helper functions
 	class CCharacter *GetPlayerChar(int ClientId);
 	

@@ -878,8 +878,8 @@ void CCharacter::Tick()
 				m_Core.m_HookState = HOOK_RETRACTED;
 				m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
 				m_Core.m_HookState = HOOK_RETRACTED;
-				int Num = (((CGameControllerDDRace*)GameServer()->m_pController)->m_pNumTele[z-1] - 1);
-				m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_pTele2D[z-1][(!Num)?Num:rand() % Num];
+				int Num = (((CGameControllerDDRace*)GameServer()->m_pController)->m_TeleOuts[z-1].size());
+				m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_TeleOuts[z-1][(!Num)?Num:rand() % Num];
 				m_Core.m_HookPos = m_Core.m_Pos;
 			}
 			int evilz = GameServer()->Collision()->IsEvilTeleport(MapIndex);
@@ -890,25 +890,26 @@ void CCharacter::Tick()
 				m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
 				m_Core.m_HookState = HOOK_RETRACTED;
 				GameWorld()->ReleaseHooked(GetPlayer()->GetCID());
-				int Num = (((CGameControllerDDRace*)GameServer()->m_pController)->m_pNumTele[evilz-1] - 1);
-				m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_pTele2D[evilz-1][(!Num)?Num:rand() % Num];
+				int Num = (((CGameControllerDDRace*)GameServer()->m_pController)->m_TeleOuts[evilz-1].size());
+				m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_TeleOuts[evilz-1][(!Num)?Num:rand() % Num];
 				m_Core.m_HookPos = m_Core.m_Pos;
 				m_Core.m_Vel = vec2(0,0);
 			}
 			// handle death-tiles
-			if((GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-				GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-				GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-				GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-				GameServer()->Collision()->GetFCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-				GameServer()->Collision()->GetFCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-				GameServer()->Collision()->GetFCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
-				GameServer()->Collision()->GetFCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH)&&
-				!m_Super)
-			{
-				Die(m_pPlayer->GetCID(), WEAPON_WORLD);
-			}
+			
 	}
+	if((GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+			GameServer()->Collision()->GetCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+			GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+			GameServer()->Collision()->GetCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+			GameServer()->Collision()->GetFCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+			GameServer()->Collision()->GetFCollisionAt(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+			GameServer()->Collision()->GetFCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH ||
+			GameServer()->Collision()->GetFCollisionAt(m_Pos.x-m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f)&CCollision::COLFLAG_DEATH)&&
+			!m_Super)
+		{
+			Die(m_pPlayer->GetCID(), WEAPON_WORLD);
+		}
 	// kill player when leaving gamelayer
 	if((int)m_Pos.x/32 < -200 || (int)m_Pos.x/32 > GameServer()->Collision()->GetWidth()+200 ||
 		(int)m_Pos.y/32 < -200 || (int)m_Pos.y/32 > GameServer()->Collision()->GetHeight()+200)

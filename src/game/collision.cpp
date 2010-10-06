@@ -124,8 +124,10 @@ std::list<int> CCollision::GetMapIndices(vec2 PrevPos, vec2 Pos, int MaxIndices)
 		else dbg_msg("GetMapIndex(","ny*m_Width+nx %d",ny*m_Width+nx);//REMOVE */
 
 		if(
-			(m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
-			((m_pTiles[ny*m_Width+nx].m_Index > TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
+			(m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE 
+			&& m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
+			((m_pTiles[ny*m_Width+nx].m_Index > TILE_BOOST)
+			&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
 			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pFront[ny*m_Width+nx].m_Index < TILE_TELEIN)) ||
 			(m_pFront && ((m_pFront[ny*m_Width+nx].m_Index > TILE_BOOST)&&(m_pFront[ny*m_Width+nx].m_Index <= TILE_NPH))) ||
 			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEINEVIL || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
