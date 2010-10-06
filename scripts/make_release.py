@@ -61,6 +61,7 @@ os.mkdir(package_dir)
 print "adding files"
 shutil.copy("readme.txt", package_dir)
 shutil.copy("license.txt", package_dir)
+shutil.copy("storage.cfg", package_dir)
 
 if include_data and not use_bundle:
 	os.mkdir(os.path.join(package_dir, "data"))
@@ -133,6 +134,7 @@ if use_bundle:
 	os.mkdir(serverbundle_resource_dir)
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data"))
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data/maps"))
+	os.mkdir(os.path.join(serverbundle_resource_dir, "data/mapres"))
 	copydir("data/maps", serverbundle_resource_dir)
 	shutil.copy("other/icons/Teeworlds_srv.icns", serverbundle_resource_dir)
 	shutil.copy(name+"_srv"+exe_ext, serverbundle_bin_dir)

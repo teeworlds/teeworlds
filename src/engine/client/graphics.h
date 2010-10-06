@@ -87,8 +87,8 @@ public:
 	virtual int LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags);
 
 	// simple uncompressed RGBA loaders
-	virtual int LoadTexture(const char *pFilename, int StoreFormat, int Flags);
-	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename);
+	virtual int LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags);
+	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType);
 
 	void ScreenshotDirect(const char *pFilename);
 

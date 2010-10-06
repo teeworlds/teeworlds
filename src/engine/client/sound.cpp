@@ -325,7 +325,7 @@ int CSound::LoadWV(const char *pFilename)
 	if(!m_pStorage)
 		return -1;
 
-	ms_File = m_pStorage->OpenFile(pFilename, IOFLAG_READ); // TODO: use system.h stuff for this
+	ms_File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!ms_File)
 	{
 		dbg_msg("sound/wv", "failed to open %s", pFilename);

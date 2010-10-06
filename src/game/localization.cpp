@@ -4,6 +4,7 @@
 
 #include <engine/shared/linereader.h>
 #include <engine/console.h>
+#include <engine/storage.h>
 
 const char *Localize(const char *pStr)
 {
@@ -40,7 +41,7 @@ void CLocalizationDatabase::AddString(const char *pOrgStr, const char *pNewStr)
 	m_Strings.add(s);
 }
 
-bool CLocalizationDatabase::Load(const char *pFilename, IConsole *pConsole)
+bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, IConsole *pConsole)
 {
 	// empty string means unload
 	if(pFilename[0] == 0)
@@ -50,7 +51,7 @@ bool CLocalizationDatabase::Load(const char *pFilename, IConsole *pConsole)
 		return true;
 	}
 	
-	IOHANDLE IoHandle = io_open(pFilename, IOFLAG_READ);
+	IOHANDLE IoHandle = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!IoHandle)
 		return false;
 	

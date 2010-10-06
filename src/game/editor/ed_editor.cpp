@@ -559,6 +559,7 @@ CQuad *CEditor::GetSelectedQuad()
 	return 0;
 }
 
+// TODO: fix/rework the whole file dialog stuff
 static void CallbackOpenDir(const char *pFileName, void *pUser)
 {
 	CEditor *pEditor = (CEditor*)pUser;
@@ -586,7 +587,7 @@ static void CallbackOpenMap(const char *pFileName, void *pUser)
 		return;
 	}
 	char aCompleteFilename[512];
-	str_format(aCompleteFilename, sizeof(aCompleteFilename), "%s/%s", pEditor->Client()->UserDirectory(), pFileName);
+	//str_format(aCompleteFilename, sizeof(aCompleteFilename), "%s/%s", pEditor->Client()->UserDirectory(), pFileName);
 	if(fs_is_dir(aCompleteFilename))
 	{
 		CallbackOpenDir(pFileName, pUser);
@@ -609,7 +610,7 @@ static void CallbackAppendMap(const char *pFileName, void *pUser)
 		return;
 	}
 	char aCompleteFilename[512];
-	str_format(aCompleteFilename, sizeof(aCompleteFilename), "%s/%s", pEditor->Client()->UserDirectory(), pFileName);
+	//str_format(aCompleteFilename, sizeof(aCompleteFilename), "%s/%s", pEditor->Client()->UserDirectory(), pFileName);
 	if(fs_is_dir(aCompleteFilename))
 	{
 		CallbackOpenDir(pFileName, pUser);
@@ -632,7 +633,7 @@ static void CallbackSaveMap(const char *pFileName, void *pUser)
 		return;
 	}
 	char aCompleteFilename[512];
-	str_format(aCompleteFilename, sizeof(aCompleteFilename), "%s/%s", pEditor->Client()->UserDirectory(), pFileName);
+	//str_format(aCompleteFilename, sizeof(aCompleteFilename), "%s/%s", pEditor->Client()->UserDirectory(), pFileName);
 	if(fs_is_dir(aCompleteFilename))
 	{
 		CallbackOpenDir(pFileName, pUser);
@@ -1899,7 +1900,7 @@ void CEditor::ReplaceImage(const char *pFileName, void *pUser)
 {
 	CEditor *pEditor = (CEditor *)pUser;
 	CEditorImage ImgInfo(pEditor);
-	if(!pEditor->Graphics()->LoadPNG(&ImgInfo, pFileName))
+	if(!pEditor->Graphics()->LoadPNG(&ImgInfo, pFileName, IStorage::TYPE_ALL))
 		return;
 
 	CEditorImage *pImg = pEditor->m_Map.m_lImages[pEditor->m_SelectedImage];
@@ -1914,7 +1915,7 @@ void CEditor::AddImage(const char *pFileName, void *pUser)
 {
 	CEditor *pEditor = (CEditor *)pUser;
 	CEditorImage ImgInfo(pEditor);
-	if(!pEditor->Graphics()->LoadPNG(&ImgInfo, pFileName))
+	if(!pEditor->Graphics()->LoadPNG(&ImgInfo, pFileName, IStorage::TYPE_ALL))
 		return;
 
 	CEditorImage *pImg = new CEditorImage(pEditor);
@@ -2146,17 +2147,26 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 }
 
 
-static void EditorListdirCallback(const char *pName, int IsDir, int DirType, void *pUser)
+static void EditorListdirCallback(const char *pName, int IsDir, int StorageType, void *pUser)
 {
 	CEditor *pEditor = (CEditor*)pUser;
+	int Length = str_length(pName);
 	if(pName[0] == '.' && (pName[1] == 0 ||
 		(pName[1] == '.' && pName[2] == 0 && (!str_comp(pEditor->m_aFileDialogPath, "maps") || !str_comp(pEditor->m_aFileDialogPath, "mapres")))))
 		return;
 
-	pEditor->m_FileList.add(string(pName));
+	CEditor::CFilelistItem Item;
+	str_copy(Item.m_aFilename, pName, sizeof(Item.m_aFilename));
+	if(IsDir)
+		str_format(Item.m_aName, sizeof(Item.m_aName), "%s/", pName);
+	else
+		str_format(Item.m_aName, static_cast<int>(sizeof(Item.m_aName)), "    %s", pName);
+	Item.m_IsDir = IsDir != 0;
+	Item.m_StorageType = StorageType;
+	pEditor->m_FileList.add(Item);
 }
 
-void CEditor::AddFileDialogEntry(const char *pName, CUIRect *pView)
+void CEditor::AddFileDialogEntry(const CFilelistItem *pItem, CUIRect *pView)
 {
 	if(m_FilesCur > m_FilesNum)
 		m_FilesNum = m_FilesCur;
@@ -2169,9 +2179,9 @@ void CEditor::AddFileDialogEntry(const char *pName, CUIRect *pView)
 	pView->HSplitTop(15.0f, &Button, pView);
 	pView->HSplitTop(2.0f, 0, pView);
 
-	if(DoButton_File((void*)(10+(int)Button.y), pName, 0, &Button, 0, 0))
+	if(DoButton_File((void*)(10+(int)Button.y), pItem->m_aName, 0, &Button, 0, 0))
 	{
-		str_copy(m_aFileDialogFileName, pName, sizeof(m_aFileDialogFileName));
+		str_copy(m_aFileDialogFileName, pItem->m_aFilename, sizeof(m_aFileDialogFileName));
 		
 		str_format(m_aFileDialogCompleteFilename, sizeof(m_aFileDialogCompleteFilename), "%s/%s", m_aFileDialogPath, m_aFileDialogFileName);
 
@@ -2248,7 +2258,7 @@ void CEditor::RenderFileDialog()
 	UI()->ClipEnable(&View);
 
 	for(int i = 0; i < m_FileList.size(); i++)
-		AddFileDialogEntry(m_FileList[i].cstr(), &View);
+		AddFileDialogEntry(&m_FileList[i], &View);
 
 	// disable clipping again
 	UI()->ClipDisable();
@@ -2274,14 +2284,14 @@ void CEditor::RenderFileDialog()
 void CEditor::FilelistPopulate()
 {
 	m_FileList.clear();
-	Storage()->ListDirectory(m_FileDialogDirTypes, m_aFileDialogPath, EditorListdirCallback, this);
+	Storage()->ListDirectory(m_FileDialogStorageType, m_aFileDialogPath, EditorListdirCallback, this);
 }
 
-void CEditor::InvokeFileDialog(int ListDirTypes, const char *pTitle, const char *pButtonText,
+void CEditor::InvokeFileDialog(int StorageType, const char *pTitle, const char *pButtonText,
 	const char *pBasePath, const char *pDefaultName,
 	void (*pfnFunc)(const char *pFileName, void *pUser), void *pUser)
 {
-	m_FileDialogDirTypes = ListDirTypes;
+	m_FileDialogStorageType = StorageType;
 	m_pFileDialogTitle = pTitle;
 	m_pFileDialogButtonText = pButtonText;
 	m_pfnFileDialogFunc = pfnFunc;
@@ -3072,10 +3082,10 @@ void CEditor::Init()
 	m_UI.SetGraphics(m_pGraphics, m_pTextRender);
 	m_Map.m_pEditor = this;
 
-	ms_CheckerTexture = Graphics()->LoadTexture("editor/checker.png", CImageInfo::FORMAT_AUTO, 0);
-	ms_BackgroundTexture = Graphics()->LoadTexture("editor/background.png", CImageInfo::FORMAT_AUTO, 0);
-	ms_CursorTexture = Graphics()->LoadTexture("editor/cursor.png", CImageInfo::FORMAT_AUTO, 0);
-	ms_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png", CImageInfo::FORMAT_AUTO, 0);
+	ms_CheckerTexture = Graphics()->LoadTexture("editor/checker.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+	ms_BackgroundTexture = Graphics()->LoadTexture("editor/background.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+	ms_CursorTexture = Graphics()->LoadTexture("editor/cursor.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+	ms_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 
 	m_TilesetPicker.m_pEditor = this;
 	m_TilesetPicker.MakePalette();

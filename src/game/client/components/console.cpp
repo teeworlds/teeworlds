@@ -588,7 +588,7 @@ void CGameConsole::Dump(int Type)
 	{
 		IOHANDLE io;
 		str_format(aFilename, sizeof(aFilename), "dumps/%s_dump%s-%05d.txt", Type==1?"remote_console":"local_console", aDate, i);
-		io = Storage()->OpenFile(aFilename, IOFLAG_WRITE);
+		io = Storage()->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 		if(io)
 		{
 			#if defined(CONF_FAMILY_WINDOWS)

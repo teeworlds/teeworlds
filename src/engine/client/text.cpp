@@ -70,7 +70,7 @@ struct CFontSizeData
 class CFont
 {
 public:
-	char m_aFilename[128];
+	char m_aFilename[512];
 	FT_Face m_FtFace;
 	CFontSizeData m_aSizes[NUM_FONT_SIZES];
 };
