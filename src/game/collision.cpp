@@ -20,6 +20,15 @@ CCollision::CCollision()
 	m_pTele = 0;
 	m_pSpeedup = 0;
 	m_pFront = 0;
+	m_pSwitch = 0;
+	m_pDoor = 0;
+}
+
+void CCollision::Dest()
+{
+	if(m_pDoor)
+		delete[] m_pDoor;
+	m_pDoor = 0;
 }
 
 void CCollision::Init(class CLayers *pLayers)

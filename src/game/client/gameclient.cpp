@@ -386,6 +386,8 @@ void CGameClient::OnReset()
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
 	m_Teams.Reset();
+	Layers()->Dest();
+	Collision()->Dest();
 }
 
 
