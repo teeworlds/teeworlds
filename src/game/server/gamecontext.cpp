@@ -248,6 +248,7 @@ void CGameContext::SendChat(int ChatterClientId, int Team, const char *pText)
 	}
 	else
 	{
+		CTeamsCore * Teams = &((CGameControllerDDRace*)m_pController)->m_Teams.m_Core;
 		CNetMsg_Sv_Chat Msg;
 		Msg.m_Team = 1;
 		Msg.m_Cid = ChatterClientId;
@@ -255,12 +256,23 @@ void CGameContext::SendChat(int ChatterClientId, int Team, const char *pText)
 
 		// pack one for the recording only
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NOSEND, -1);
-
+		//char aBuf[512];
+		//str_format(aBuf, sizeof(aBuf), "Chat Team = %d", Team);
+		//dbg_msg("Chat", aBuf);
 		// send to the clients
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			if(m_apPlayers[i] && m_apPlayers[i]->GetTeam() == Team)
-				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
+			if(m_apPlayers[i] != 0) {
+				if(Team == CHAT_SPEC) {
+					if(m_apPlayers[i]->GetTeam() == CHAT_SPEC) {
+						Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
+					}
+				} else {
+					if(Teams->Team(i) == Team) {
+						Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
+					}
+				}
+			}
 		}
 	}
 }
@@ -640,11 +652,12 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	if(MsgId == NETMSGTYPE_CL_SAY)
 	{
 		CNetMsg_Cl_Say *pMsg = (CNetMsg_Cl_Say *)pRawMsg;
-		int Team = pMsg->m_Team;
-		if(Team)
-			Team = pPlayer->GetTeam();
-		else
-			Team = CGameContext::CHAT_ALL;
+		//int Team = pMsg->m_Team;
+		//if(Team)
+		int GameTeam = ((CGameControllerDDRace*)m_pController)->m_Teams.m_Core.Team(pPlayer->GetCID());
+		int Team = (pPlayer->GetTeam() == -1) ? CHAT_SPEC : (GameTeam == 0 ? CHAT_ALL : GameTeam);
+		//else
+		//	Team = CGameContext::CHAT_ALL;
 
 		if(/*g_Config.m_SvSpamprotection && */pPlayer->m_Last_Chat && pPlayer->m_Last_Chat + Server()->TickSpeed() + g_Config.m_SvChatDelay > Server()->Tick())
 			return;
