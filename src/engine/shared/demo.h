@@ -103,7 +103,7 @@ public:
 	
 	void SetListner(IListner *pListner);
 		
-	int Load(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename);
+	int Load(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, int StorageType);
 	int Play();
 	void Pause();
 	void Unpause();

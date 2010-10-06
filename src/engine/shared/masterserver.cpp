@@ -119,7 +119,7 @@ public:
 			return -1;
 		
 		// try to open file
-		File = pStorage->OpenFile("masters.cfg", IOFLAG_READ);
+		File = pStorage->OpenFile("masters.cfg", IOFLAG_READ, IStorage::TYPE_SAVE);
 		if(!File)
 			return -1;
 		
@@ -165,7 +165,7 @@ public:
 			return -1;
 			
 		// try to open file
-		File = pStorage->OpenFile("masters.cfg", IOFLAG_WRITE);
+		File = pStorage->OpenFile("masters.cfg", IOFLAG_WRITE, IStorage::TYPE_SAVE);
 		if(!File)
 			return -1;
 

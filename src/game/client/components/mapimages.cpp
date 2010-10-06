@@ -1,5 +1,6 @@
 #include <engine/graphics.h>
 #include <engine/map.h>
+#include <engine/storage.h>
 #include <game/client/component.h>
 #include <game/mapitems.h>
 
@@ -36,7 +37,7 @@ void CMapImages::OnMapLoad()
 			char Buf[256];
 			char *pName = (char *)pMap->GetData(pImg->m_ImageName);
 			str_format(Buf, sizeof(Buf), "mapres/%s.png", pName);
-			m_aTextures[i] = Graphics()->LoadTexture(Buf, CImageInfo::FORMAT_AUTO, 0);
+			m_aTextures[i] = Graphics()->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 		}
 		else
 		{

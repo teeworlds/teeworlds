@@ -884,7 +884,7 @@ public:
 
 void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<CLanguage> *pLanguages)
 {
-	IOHANDLE File = pStorage->OpenFile("data/languages/index.txt", IOFLAG_READ);
+	IOHANDLE File = pStorage->OpenFile("languages/index.txt", IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!File)
 	{
 		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "couldn't open index file");
@@ -915,7 +915,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 		}
 		
 	char aFileName[128];
-		str_format(aFileName, sizeof(aFileName), "data/languages/%s.txt", pLine);
+		str_format(aFileName, sizeof(aFileName), "languages/%s.txt", pLine);
 		pLanguages->add(CLanguage(pReplacement+3, aFileName));
 	}
 	io_close(File);
@@ -985,7 +985,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	if(OldSelectedLanguage != s_SelectedLanguage)
 	{
 		str_copy(g_Config.m_ClLanguagefile, s_Languages[s_SelectedLanguage].m_FileName, sizeof(g_Config.m_ClLanguagefile));
-		g_Localization.Load(s_Languages[s_SelectedLanguage].m_FileName, Console());
+		g_Localization.Load(s_Languages[s_SelectedLanguage].m_FileName, Storage(), Console());
 	}
 
 	MainView.HSplitTop(MainView.h/2 + 10, 0, &MainView);

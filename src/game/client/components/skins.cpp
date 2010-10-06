@@ -20,7 +20,7 @@ void CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "skins/%s", pName);
 	CImageInfo Info;
-	if(!pSelf->Graphics()->LoadPNG(&Info, aBuf))
+	if(!pSelf->Graphics()->LoadPNG(&Info, aBuf, DirType))
 	{
 		str_format(aBuf, sizeof(aBuf), "failed to load skin from %s", pName);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);

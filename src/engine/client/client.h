@@ -259,8 +259,6 @@ public:
 
 	void Update();
 
-	virtual const char *UserDirectory();
-
 	void InitEngine(const char *pAppname);
 	void RegisterInterfaces();
 	void InitInterfaces();
@@ -294,7 +292,7 @@ public:
 	const char *DemoRecord(const char *pName);
 	virtual void DemoRecord_Stop();
 	const char *DemoPlayer_Play(const char *pFilename);
-	void DemoRecorder_Start(const char *pFilename);
+	void DemoRecorder_Start(const char *pFilename, int StorageType);
 
 	virtual class CEngine *Engine() { return &m_Engine; }
 };

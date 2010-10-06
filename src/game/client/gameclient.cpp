@@ -242,7 +242,7 @@ void CGameClient::OnInit()
 	//m_pServerBrowser = Kernel()->RequestInterface<IServerBrowser>();
 	
 	// set the language
-	g_Localization.Load(g_Config.m_ClLanguagefile, Console());
+	g_Localization.Load(g_Config.m_ClLanguagefile, Storage(), Console());
 	
 	// init all components
 	for(int i = 0; i < m_All.m_Num; i++)
@@ -257,11 +257,13 @@ void CGameClient::OnInit()
 	// load font	
 	static CFont *pFont;
 	//default_font = gfx_font_load("data/fonts/sazanami-gothic.ttf");
-	if(!str_comp_num(g_Config.m_ClFontfile, "data/fonts/", 11))
-		pFont = TextRender()->LoadFont(g_Config.m_ClFontfile);
-	else
-		pFont = TextRender()->LoadFont("data/fonts/vera.ttf");
-	TextRender()->SetFont(pFont);
+
+	char aFilename[512];
+	IOHANDLE File = Storage()->OpenFile(g_Config.m_ClFontfile, IOFLAG_READ, IStorage::TYPE_ALL, aFilename, sizeof(aFilename));
+	if(File)
+		io_close(File);
+	pDefaultFont = TextRender()->LoadFont(aFilename);
+	TextRender()->SetDefaultFont(pDefaultFont);
 
 	g_Config.m_ClThreadsoundloading = 0;
 
@@ -275,7 +277,7 @@ void CGameClient::OnInit()
 	for(int i = 0; i < g_pData->m_NumImages; i++)
 	{
 		g_GameClient.m_pMenus->RenderLoading(gs_LoadCurrent/(float)gs_LoadTotal);
-		g_pData->m_aImages[i].m_Id = Graphics()->LoadTexture(g_pData->m_aImages[i].m_pFilename, CImageInfo::FORMAT_AUTO, 0);
+		g_pData->m_aImages[i].m_Id = Graphics()->LoadTexture(g_pData->m_aImages[i].m_pFilename, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 		gs_LoadCurrent++;
 	}
 

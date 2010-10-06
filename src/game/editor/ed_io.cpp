@@ -394,7 +394,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName)
 {
 	CDataFileReader DataFile;
 	//DATAFILE *df = datafile_load(filename);
-	if(!DataFile.Open(pStorage, pFileName))
+	if(!DataFile.Open(pStorage, pFileName, IStorage::TYPE_ALL))
 		return 0;
 		
 	Clean();
@@ -433,7 +433,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName)
 					
 					// load external
 					CEditorImage ImgInfo(m_pEditor);
-					if(m_pEditor->Graphics()->LoadPNG(&ImgInfo, aBuf))
+					if(m_pEditor->Graphics()->LoadPNG(&ImgInfo, aBuf, IStorage::TYPE_ALL))
 					{
 						*pImg = ImgInfo;
 						pImg->m_TexId = m_pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
