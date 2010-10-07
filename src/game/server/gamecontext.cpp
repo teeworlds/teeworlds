@@ -2391,13 +2391,11 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 
 	//TODO: No need any more?
 	char buf[512];
-	str_format(buf, sizeof(buf), "data/maps/%s.cfg", g_Config.m_SvMap); //
+	str_format(buf, sizeof(buf), "data/maps/%s.cfg", g_Config.m_SvMap);
 	Console()->ExecuteFile(buf);
 	str_format(buf, sizeof(buf), "data/maps/%s.map.cfg", g_Config.m_SvMap);
 	Console()->ExecuteFile(buf);
-//   dbg_msg("Note","For map cfgs in windows and linux u need the files");
-//   dbg_msg("Note","in a folder i nthe same dir as teeworlds_srv");
-//   dbg_msg("Note","data/maps/%s.cfg", config.sv_map);
+
 
 	// select gametype
 	m_pController = new CGameControllerDDRace(this);
@@ -2421,15 +2419,9 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	// create all entities from the game layer
 	CMapItemLayerTilemap *pTileMap = m_Layers.GameLayer();
 	CTile *pTiles = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Data);
-	//CMapItemLayerTilemap *pFrontMap = m_Layers.FrontLayer(); not needed game layer and front layer are always the same size
 	CTile *pFront=0;
 	if (m_Layers.FrontLayer())
 		pFront = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Front);
-	//m_pSwitch=0;
-	//if (m_Layers.SwitchLayer()) {
-		//m_pSwitch = (CTeleTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Switch);
-		//((CGameControllerDDRace *)m_pController)->InitSwitcher();
-	//}
 	
 
 	for(int y = 0; y < pTileMap->m_Height; y++)
