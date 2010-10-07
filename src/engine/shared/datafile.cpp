@@ -65,11 +65,11 @@ struct CDatafile
 	char *m_pData;
 };
 
-bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename)
+bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int StorageType)
 {
 	dbg_msg("datafile", "loading. filename='%s'", pFilename);
 
-	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ);
+	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, StorageType);
 	if(!File)
 	{
 		dbg_msg("datafile", "could not open '%s'", pFilename);
@@ -394,7 +394,7 @@ unsigned CDataFileReader::Crc()
 bool CDataFileWriter::Open(class IStorage *pStorage, const char *pFilename)
 {
 	dbg_assert(!m_File, "a file already exists");
-	m_File = pStorage->OpenFile(pFilename, IOFLAG_WRITE);
+	m_File = pStorage->OpenFile(pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 	if(!m_File)
 		return false;
 	

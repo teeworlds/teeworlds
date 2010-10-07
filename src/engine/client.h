@@ -73,7 +73,7 @@ public:
 	virtual void Connect(const char *pAddress) = 0;
 	virtual void Disconnect() = 0;
 	virtual void Quit() = 0;
-	virtual const char *DemoPlayer_Play(const char *pFilename) = 0;
+	virtual const char *DemoPlayer_Play(const char *pFilename, int StorageType) = 0;
 	virtual void DemoRecorder_Start(const char *pFilename) = 0;
 
 	// networking
@@ -120,9 +120,6 @@ public:
 			return -1;
 		return SendMsg(&Packer, Flags);
 	}
-	
-	//
-	virtual const char *UserDirectory() = 0;
 	
 	// 
 	virtual const char *ErrorString() = 0;

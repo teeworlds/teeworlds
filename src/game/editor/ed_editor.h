@@ -519,7 +519,7 @@ public:
 
 		m_aFileName[0] = 0;
 		
-		m_FileDialogDirTypes = 0;
+		m_FileDialogStorageType = 0;
 		m_pFileDialogTitle = 0;
 		m_pFileDialogButtonText = 0;
 		m_pFileDialogUser = 0;
@@ -575,7 +575,7 @@ public:
 	virtual void UpdateAndRender();
 	
 	void FilelistPopulate();
-	void InvokeFileDialog(int ListdirType, const char *pTitle, const char *pButtonText,
+	void InvokeFileDialog(int StorageType, const char *pTitle, const char *pButtonText,
 		const char *pBasepath, const char *pDefaultName,
 		void (*pfnFunc)(const char *pFilename, void *pUser), void *pUser);
 	
@@ -598,7 +598,7 @@ public:
 
 	char m_aFileName[512];
 	
-	int m_FileDialogDirTypes;
+	int m_FileDialogStorageType;
 	const char *m_pFileDialogTitle;
 	const char *m_pFileDialogButtonText;
 	void (*m_pfnFileDialogFunc)(const char *pFileName, void *pUser);
@@ -607,7 +607,19 @@ public:
 	char m_aFileDialogPath[512];
 	char m_aFileDialogCompleteFilename[512];
 	int m_FilesNum;
-	sorted_array<string> m_FileList;
+
+	struct CFilelistItem
+	{
+		char m_aFilename[128];
+		char m_aName[128];
+		bool m_IsDir;
+		int m_StorageType;
+		
+		bool operator<(const CFilelistItem &Other) { return !str_comp(m_aFilename, "..") ? true : !str_comp(Other.m_aFilename, "..") ? false :
+														m_IsDir && !Other.m_IsDir ? true : !m_IsDir && Other.m_IsDir ? false :
+														str_comp_filenames(m_aFilename, Other.m_aFilename) < 0; }
+	};
+	sorted_array<CFilelistItem> m_FileList;
 	int m_FilesStartAt;
 	int m_FilesCur;
 	int m_FilesStopAt;
@@ -713,7 +725,7 @@ public:
 	void RenderMenubar(CUIRect Menubar);
 	void RenderFileDialog();
 
-	void AddFileDialogEntry(const char *pName, CUIRect *pView);
+	void AddFileDialogEntry(const CFilelistItem *pItem, CUIRect *pView);
 	void SortImages();
 	
 	unsigned char m_TeleNum;

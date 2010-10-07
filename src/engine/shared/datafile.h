@@ -12,7 +12,7 @@ public:
 	
 	bool IsOpen() const { return m_pDataFile != 0; }
 	
-	bool Open(class IStorage *pStorage, const char *pFilename);
+	bool Open(class IStorage *pStorage, const char *pFilename, int StorageType);
 	bool Close();
 	
 	void *GetData(int Index);

@@ -28,7 +28,7 @@ public:
 		IStorage *pStorage = Kernel()->RequestInterface<IStorage>();
 		if(!pStorage)
 			return false;
-		return m_DataFile.Open(pStorage, pMapName);
+		return m_DataFile.Open(pStorage, pMapName, IStorage::TYPE_ALL);
 	}
 	
 	virtual bool IsLoaded()

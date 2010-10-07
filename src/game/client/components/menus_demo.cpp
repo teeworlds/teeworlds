@@ -417,7 +417,7 @@ int CMenus::UiDoListboxEnd(float *pScrollValue, bool *pItemActivated)
 	return gs_ListBoxNewSelected;
 }
 
-void CMenus::DemolistFetchCallback(const char *pName, int IsDir, int DirType, void *pUser)
+void CMenus::DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser)
 {
 	CMenus *pSelf = (CMenus *)pUser;
 	int Length = str_length(pName);
@@ -433,14 +433,14 @@ void CMenus::DemolistFetchCallback(const char *pName, int IsDir, int DirType, vo
 	else
 		str_format(Item.m_aName, min(static_cast<int>(sizeof(Item.m_aName)), Length), "    %s", pName);
 	Item.m_IsDir = IsDir != 0;
-	Item.m_DirType = DirType;
+	Item.m_StorageType = StorageType;
 	pSelf->m_lDemos.add(Item);
 }
 
 void CMenus::DemolistPopulate()
 {
 	m_lDemos.clear();
-	Storage()->ListDirectory(IStorage::TYPE_SAVE|IStorage::TYPE_CURRENT, m_aCurrentDemoFolder, DemolistFetchCallback, this);
+	Storage()->ListDirectory(IStorage::TYPE_ALL, m_aCurrentDemoFolder, DemolistFetchCallback, this);
 }
 
 void CMenus::DemolistOnUpdate(bool Reset)
@@ -466,10 +466,8 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		if(m_DemolistSelectedIndex >= 0 && !m_DemolistSelectedIsDir)
 		{
 			char aBuf[512];
-			str_format(aBuf, sizeof(aBuf), "%s%s%s/%s", Storage()->GetDirectory(m_lDemos[m_DemolistSelectedIndex].m_DirType),
-				Storage()->GetDirectory(m_lDemos[m_DemolistSelectedIndex].m_DirType)[0] ? "/" : "",
-				m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
-			Storage()->RemoveFile(aBuf);
+			str_format(aBuf, sizeof(aBuf), "%s/%s", m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
+			Storage()->RemoveFile(aBuf, m_lDemos[m_DemolistSelectedIndex].m_StorageType);
 			DemolistPopulate();
 			DemolistOnUpdate(false);
 		}
@@ -529,10 +527,8 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			else // file
 			{
 				char aBuf[512];
-				str_format(aBuf, sizeof(aBuf), "%s%s%s/%s", Storage()->GetDirectory(m_lDemos[m_DemolistSelectedIndex].m_DirType),
-					Storage()->GetDirectory(m_lDemos[m_DemolistSelectedIndex].m_DirType)[0] ? "/" : "",
-					m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
-				const char *pError = Client()->DemoPlayer_Play(aBuf);
+				str_format(aBuf, sizeof(aBuf), "%s/%s", m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
+				const char *pError = Client()->DemoPlayer_Play(aBuf, m_lDemos[m_DemolistSelectedIndex].m_StorageType);
 				if(pError)
 					PopupMessage(Localize("Error"), str_comp(pError, "error loading demo") ? pError : Localize("error loading demo"), Localize("Ok"));
 				else
