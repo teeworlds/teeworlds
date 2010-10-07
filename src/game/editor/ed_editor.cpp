@@ -2862,6 +2862,11 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	if(do_editor_button(&help, "Help", 0, &help, draw_editor_button_menu, 0, 0))
 		(void)0;
 		*/
+
+	MenuBar.VSplitLeft(40.0f, 0, &MenuBar);
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "File: %s", m_aFileName);
+	UI()->DoLabel(&MenuBar, aBuf, 10.0f, -1, -1);
 }
 
 void CEditor::Render()
