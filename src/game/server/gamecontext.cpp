@@ -1890,7 +1890,7 @@ void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int Cli
 	if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if(chr)
+		if(chr && !chr->m_Super)
 		{
 			chr->m_Super = true;
 			chr->UnFreeze();
@@ -1926,7 +1926,7 @@ void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int C
 	if (pSelf->m_apPlayers[ClientId])
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(ClientId);
-		if(chr)
+		if(chr && !chr->m_Super)
 		{
 			chr->m_Super = true;
 			chr->UnFreeze();
