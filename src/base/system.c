@@ -997,7 +997,7 @@ int fs_chdir(const char *path)
 		return 1;
 }
 
-void fs_parent_dir(char *path)
+int fs_parent_dir(char *path)
 {
 	char *parent = 0;
 	for(; *path; ++path)
@@ -1007,7 +1007,11 @@ void fs_parent_dir(char *path)
 	}
 	
 	if(parent)
+	{
 		*parent = 0;
+		return 0;
+	}
+	return 1;
 }
 
 void swap_endian(void *data, unsigned elem_size, unsigned num)
