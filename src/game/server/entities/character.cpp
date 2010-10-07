@@ -735,10 +735,11 @@ void CCharacter::Tick()
 					{
 
 						if( g_Config.m_SvBroadcast[0] != 0) {
-							char aTmp[128],aYourBest[64];
-							str_format(aYourBest, sizeof(aYourBest), "Your Best:'%s%d:%d'", ((pData->m_BestTime / 60) < 10)?"0":"", (int)(pData->m_BestTime / 60), (int)pData->m_BestTime % 60);
+							char aTmp[128],aYourBest[64],aServerBest[64];
+							str_format(aYourBest, sizeof(aYourBest), "Your Best:'%s%d:%s%d'", ((pData->m_BestTime / 60) < 10)?"0":"", (int)(pData->m_BestTime / 60), (((int)pData->m_BestTime % 60) < 10)?"0":"", (int)pData->m_BestTime % 60);
 							CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
-							str_format(aTmp, sizeof(aTmp), "%s\nServer Best:'%s%d:%d' %s", g_Config.m_SvBroadcast, ((GameServer()->m_pController->m_CurrentRecord / 60) < 10)?"0":"", (int)(GameServer()->m_pController->m_CurrentRecord / 60), (int)GameServer()->m_pController->m_CurrentRecord % 60, (pData->m_BestTime)?aYourBest:"");
+							str_format(aServerBest, sizeof(aServerBest), "Server Best:'%s%d:%s%d'", ((GameServer()->m_pController->m_CurrentRecord / 60) < 10)?"0":"", (int)(GameServer()->m_pController->m_CurrentRecord / 60), (((int)GameServer()->m_pController->m_CurrentRecord % 60) < 10)?"0":"", (int)GameServer()->m_pController->m_CurrentRecord % 60);
+							str_format(aTmp, sizeof(aTmp), "%s\n%s %s", g_Config.m_SvBroadcast, (GameServer()->m_pController->m_CurrentRecord)?aServerBest:"", (pData->m_BestTime)?aYourBest:"");
 							GameServer()->SendBroadcast(aTmp, m_pPlayer->GetCID());
 						}
 					}
