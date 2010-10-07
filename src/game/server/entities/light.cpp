@@ -55,10 +55,8 @@ void CLight::Move()
 			m_CurveLength=0;
 		}
 	}
-	if(m_RotationSpeed < 0)
-		m_Rotation += (pi/360);
-	else if(m_RotationSpeed)
-		m_Rotation -= (pi/360);
+
+	m_Rotation+=m_AngularSpeed*m_Tick;
 	if (m_Rotation>pi*2)
 		m_Rotation-=pi*2;
 	else if(m_Rotation<0)
@@ -81,7 +79,7 @@ void CLight::Reset()
 void CLight::Tick()
 {
 	
-	if (Server()->Tick()%int(m_Tick)==0)
+	if (Server()->Tick()%int(Server()->TickSpeed()*0.15f)==0)
 	{
 		m_EvalTick=Server()->Tick();
 		int index = GameServer()->Collision()->IsCp(m_Pos.x,m_Pos.y);
@@ -90,13 +88,9 @@ void CLight::Tick()
 			m_Core=GameServer()->Collision()->CpSpeed(index);
 		}
 		m_Pos+=m_Core;
-		if(!m_RotationSpeed) Step();
-	}
-	for (int i = 0; i < absolute(m_RotationSpeed); ++i)
-	{
 		Step();
-		HitCharacter();
 	}
+
 	HitCharacter();
 	return;
 
@@ -116,10 +110,10 @@ void CLight::Snap(int snapping_client)
 	pObj->m_FromY = (int)m_To.y;
 
 
-	int StartTick = m_EvalTick;
-	if (StartTick<Server()->Tick()-4)
-		StartTick=Server()->Tick()-4;
-	else if (StartTick>Server()->Tick())
-		StartTick=Server()->Tick();
-	pObj->m_StartTick = StartTick;
+	int start_tick = m_EvalTick;
+	if (start_tick<Server()->Tick()-4)
+		start_tick=Server()->Tick()-4;
+	else if (start_tick>Server()->Tick())
+		start_tick=Server()->Tick();
+	pObj->m_StartTick = start_tick;
 }

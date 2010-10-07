@@ -24,7 +24,6 @@ public:
 	
 	void InitTeleporter();
 	void InitSwitcher();
-	//int m_Size;
 
 	struct SDoors
 	{

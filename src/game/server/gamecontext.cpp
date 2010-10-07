@@ -652,12 +652,14 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	if(MsgId == NETMSGTYPE_CL_SAY)
 	{
 		CNetMsg_Cl_Say *pMsg = (CNetMsg_Cl_Say *)pRawMsg;
-		//int Team = pMsg->m_Team;
+		int Team = pMsg->m_Team;
 		//if(Team)
 		int GameTeam = ((CGameControllerDDRace*)m_pController)->m_Teams.m_Core.Team(pPlayer->GetCID());
-		int Team = (pPlayer->GetTeam() == -1) ? CHAT_SPEC : (GameTeam == 0 ? CHAT_ALL : GameTeam);
-		//else
-		//	Team = CGameContext::CHAT_ALL;
+		if(Team) {
+			Team = (pPlayer->GetTeam() == -1) ? CHAT_SPEC : (GameTeam == 0 ? CHAT_ALL : GameTeam);
+		} else {
+			Team = CHAT_ALL;
+		}
 
 		if(/*g_Config.m_SvSpamprotection && */pPlayer->m_Last_Chat && pPlayer->m_Last_Chat + Server()->TickSpeed() + g_Config.m_SvChatDelay > Server()->Tick())
 			return;
@@ -2340,13 +2342,11 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 
 	//TODO: No need any more?
 	char buf[512];
-	str_format(buf, sizeof(buf), "data/maps/%s.cfg", g_Config.m_SvMap); //
+	str_format(buf, sizeof(buf), "data/maps/%s.cfg", g_Config.m_SvMap);
 	Console()->ExecuteFile(buf);
 	str_format(buf, sizeof(buf), "data/maps/%s.map.cfg", g_Config.m_SvMap);
 	Console()->ExecuteFile(buf);
-//   dbg_msg("Note","For map cfgs in windows and linux u need the files");
-//   dbg_msg("Note","in a folder i nthe same dir as teeworlds_srv");
-//   dbg_msg("Note","data/maps/%s.cfg", config.sv_map);
+
 
 	// select gametype
 	m_pController = new CGameControllerDDRace(this);
@@ -2370,15 +2370,9 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	// create all entities from the game layer
 	CMapItemLayerTilemap *pTileMap = m_Layers.GameLayer();
 	CTile *pTiles = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Data);
-	//CMapItemLayerTilemap *pFrontMap = m_Layers.FrontLayer(); not needed game layer and front layer are always the same size
 	CTile *pFront=0;
 	if (m_Layers.FrontLayer())
 		pFront = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Front);
-	//m_pSwitch=0;
-	//if (m_Layers.SwitchLayer()) {
-		//m_pSwitch = (CTeleTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Switch);
-		//((CGameControllerDDRace *)m_pController)->InitSwitcher();
-	//}
 	
 
 	for(int y = 0; y < pTileMap->m_Height; y++)
