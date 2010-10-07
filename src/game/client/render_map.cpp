@@ -1,7 +1,6 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include <math.h>
 #include <base/math.h>
-#include <engine/demo.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <game/generated/protocol.h>
