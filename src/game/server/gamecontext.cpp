@@ -652,12 +652,14 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	if(MsgId == NETMSGTYPE_CL_SAY)
 	{
 		CNetMsg_Cl_Say *pMsg = (CNetMsg_Cl_Say *)pRawMsg;
-		//int Team = pMsg->m_Team;
+		int Team = pMsg->m_Team;
 		//if(Team)
 		int GameTeam = ((CGameControllerDDRace*)m_pController)->m_Teams.m_Core.Team(pPlayer->GetCID());
-		int Team = (pPlayer->GetTeam() == -1) ? CHAT_SPEC : (GameTeam == 0 ? CHAT_ALL : GameTeam);
-		//else
-		//	Team = CGameContext::CHAT_ALL;
+		if(Team) {
+			Team = (pPlayer->GetTeam() == -1) ? CHAT_SPEC : (GameTeam == 0 ? CHAT_ALL : GameTeam);
+		} else {
+			Team = CHAT_ALL;
+		}
 
 		if(/*g_Config.m_SvSpamprotection && */pPlayer->m_Last_Chat && pPlayer->m_Last_Chat + Server()->TickSpeed() + g_Config.m_SvChatDelay > Server()->Tick())
 			return;
