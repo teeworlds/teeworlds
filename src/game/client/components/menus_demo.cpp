@@ -162,7 +162,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 			else if(pInfo->m_Speed > 1.0f) DemoPlayer()->SetSpeed(1.0f);
 			else if(pInfo->m_Speed > 0.75f) DemoPlayer()->SetSpeed(0.75f);
 			else if(pInfo->m_Speed > 0.5f) DemoPlayer()->SetSpeed(0.5f);
-			else if(pInfo->m_Speed > 0.2f) DemoPlayer()->SetSpeed(0.2f);
+			else if(pInfo->m_Speed > 0.25f) DemoPlayer()->SetSpeed(0.25f);
             else if(pInfo->m_Speed > 0.1f) DemoPlayer()->SetSpeed(0.1f);
 			else DemoPlayer()->SetSpeed(0.05f);
 		}
@@ -174,7 +174,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		if(DoButton_DemoPlayer_Sprite(&s_FastForwardButton, SPRITE_DEMOBUTTON_FASTER, 0, &Button))
 		{
             if(pInfo->m_Speed < 0.1f) DemoPlayer()->SetSpeed(0.1f);
-			else if(pInfo->m_Speed < 0.2f) DemoPlayer()->SetSpeed(0.2f);
+			else if(pInfo->m_Speed < 0.25f) DemoPlayer()->SetSpeed(0.25f);
 			else if(pInfo->m_Speed < 0.5f) DemoPlayer()->SetSpeed(0.5f);
 			else if(pInfo->m_Speed < 0.75f) DemoPlayer()->SetSpeed(0.75f);
 			else if(pInfo->m_Speed < 1.0f) DemoPlayer()->SetSpeed(1.0f);
