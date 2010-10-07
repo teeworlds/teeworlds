@@ -180,6 +180,7 @@ class CMenus : public CComponent
 	bool m_DemolistDelEntry;
 	int m_DemolistSelectedIndex;
 	bool m_DemolistSelectedIsDir;
+	int m_DemolistStorageType;
 	
 	void DemolistOnUpdate(bool Reset);
 	static void DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
