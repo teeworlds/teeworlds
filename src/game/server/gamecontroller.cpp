@@ -378,8 +378,9 @@ void IGameController::StartRound()
 
 void IGameController::ChangeMap(const char *pToMap)
 {
-	str_copy(m_aMapWish, pToMap, sizeof(m_aMapWish));
-	EndRound();
+	/*str_copy(m_aMapWish, pToMap, sizeof(m_aMapWish));
+	EndRound();*/
+	str_copy(g_Config.m_SvMap, pToMap, sizeof(m_aMapWish));
 }
 /*
 void IGameController::CycleMap()
