@@ -26,6 +26,8 @@ class CCharacter : public CEntity
 {
 	MACRO_ALLOC_POOL_ID()
 	void HandleFly();
+	void HandleTiles(int Index);
+	float m_Time;
 public:
 	//character's size
 	static const int ms_PhysSize = 28;

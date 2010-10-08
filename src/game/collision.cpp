@@ -660,6 +660,7 @@ void CCollision::GetSpeedup(int Index, vec2 *Dir, int *Force, int *MaxSpeed)
 	TmpDir.x = (Direction.x*cos(Angle)) - (Direction.y*sin(Angle));
 	TmpDir.y = (Direction.x*sin(Angle)) + (Direction.y*cos(Angle));
 	*Dir = TmpDir;
+	//dbg_msg("GetSpeedup end","Direction %f %f, Force %d, Max Speed %d", (*Dir).x,(*Dir).y, *Force, *MaxSpeed);
 }
 
 int CCollision::IsCp(int x, int y)
