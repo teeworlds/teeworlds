@@ -834,7 +834,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			{
 				pPlayer->m_Last_Kill = Server()->Tick();
 				pPlayer->KillCharacter(WEAPON_SELF);
-				pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()*3;
+				pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed() * g_Config.m_SvSuicidePenalty;
 			}
 			else if(!str_comp_nocase(pMsg->m_pMessage, "/pause"))
 			{
@@ -1369,7 +1369,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 
 		pPlayer->m_Last_Kill = Server()->Tick();
 		pPlayer->KillCharacter(WEAPON_SELF);
-		pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()*3;
+		pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed() * g_Config.m_SvSuicidePenalty;
 	}
 }
 
