@@ -565,6 +565,7 @@ static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser)
 	if(pEditor->Load(pFileName, StorageType))
 	{
 		str_copy(pEditor->m_aFileName, pFileName, 512);
+		pEditor->m_ValidSaveFilename = StorageType == IStorage::TYPE_SAVE && pEditor->m_pFileDialogPath == pEditor->m_aFileDialogCurrentFolder;
 		pEditor->SortImages();
 		pEditor->m_Dialog = DIALOG_NONE;
 	}
@@ -592,7 +593,10 @@ static void CallbackSaveMap(const char *pFileName, int StorageType, void *pUser)
 	}
 
 	if(pEditor->Save(pFileName))
+	{
 		str_copy(pEditor->m_aFileName, pFileName, sizeof(pEditor->m_aFileName));
+		pEditor->m_ValidSaveFilename = StorageType == IStorage::TYPE_SAVE && pEditor->m_pFileDialogPath == pEditor->m_aFileDialogCurrentFolder;
+	}
 	
 	pEditor->m_Dialog = DIALOG_NONE;
 }
@@ -614,7 +618,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	// ctrl+s to save
 	if(Input()->KeyDown('s') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL)))
 	{
-		if(m_aFileName[0])	
+		if(m_aFileName[0] && m_ValidSaveFilename)	
 			CallbackSaveMap(m_aFileName, IStorage::TYPE_SAVE, this);
 		else
 			InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, Localize("Save map"), Localize("Save"), "maps", "", CallbackSaveMap, this);
@@ -2817,7 +2821,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_SaveButton, Localize("Save"), 0, &Slot, 0, Localize("Saves the current map")))
 	{
-		if(pEditor->m_aFileName[0])	
+		if(pEditor->m_aFileName[0] && pEditor->m_ValidSaveFilename)	
 			CallbackSaveMap(pEditor->m_aFileName, IStorage::TYPE_SAVE, pEditor);
 		else
 			pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, Localize("Save map"), Localize("Save"), "maps", "", CallbackSaveMap, pEditor);
