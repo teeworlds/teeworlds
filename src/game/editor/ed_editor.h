@@ -490,6 +490,7 @@ public:
 		m_pTooltip = 0;
 
 		m_aFileName[0] = 0;
+		m_ValidSaveFilename = false;
 		
 		m_FileDialogStorageType = 0;
 		m_pFileDialogTitle = 0;
@@ -570,6 +571,7 @@ public:
 	const char *m_pTooltip;
 
 	char m_aFileName[512];
+	bool m_ValidSaveFilename;
 
 	enum
 	{
