@@ -237,8 +237,8 @@ int CCollision::GetFTile(int x, int y)
 
 int CCollision::Entity(int x, int y, bool Front)
 {
-	if((0 < x || x >= m_Width) || (0 < y || y >= m_Height))
-		dbg_msg("CCollision::Entity","Something is VERY wrong please report this at github");
+	/*if((0 < x || x >= m_Width) || (0 < y || y >= m_Height))
+		dbg_msg("CCollision::Entity","Something is VERY wrong please report this at github");*/
 	int Index = Front?m_pFront[y*m_Width+x].m_Index:m_pTiles[y*m_Width+x].m_Index;
 	return Index-ENTITY_OFFSET;
 }
