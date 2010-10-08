@@ -237,7 +237,7 @@ int CCollision::GetFTile(int x, int y)
 
 int CCollision::Entity(int x, int y, bool Front)
 {
-	if((0 < x || x >= m_Width) || (0 < y || y >= m_Height))
+	if((0 > x || x >= m_Width) || (0 > y || y >= m_Height))
 	{
 		dbg_msg("CCollision::Entity","Something is VERY wrong please report this at github");
 		return 0;
