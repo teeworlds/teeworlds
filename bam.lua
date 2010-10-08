@@ -128,6 +128,7 @@ function build(settings)
 
 	if config.compiler.driver == "cl" then
 		settings.cc.flags:Add("/wd4244")
+		settings.cc.flags:Add("/EHsc")
 	else
 		settings.cc.flags:Add("-Wall")
 		if platform == "macosx" then
