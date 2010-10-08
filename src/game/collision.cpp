@@ -76,7 +76,7 @@ void CCollision::Init(class CLayers *pLayers)
 				}
 
 				// DDRace tiles
-				if(Index >= 6 && Index<=TILE_NPH)
+				if(Index == TILE_THROUGH || Index >= TILE_FREEZE && Index<=TILE_BOOSTS || Index >= TILE_TELEIN && Index<=TILE_STOPA || Index >= TILE_CP_D && Index<=TILE_NPH)
 					m_pFront[i].m_Index = Index;
 			}
 	}
@@ -106,7 +106,7 @@ void CCollision::Init(class CLayers *pLayers)
 		}
 
 		// DDRace tiles
-		if(Index >= 6 && Index<=TILE_NPH)
+		if(Index == TILE_THROUGH || Index >= TILE_FREEZE && Index<=TILE_BOOSTS || Index >= TILE_TELEIN && Index<=TILE_STOPA || Index >= TILE_CP_D && Index<=TILE_NPH)
 			m_pTiles[i].m_Index = Index;
 	}
 }
@@ -133,12 +133,8 @@ std::list<int> CCollision::GetMapIndices(vec2 PrevPos, vec2 Pos, int MaxIndices)
 		else dbg_msg("GetMapIndex(","ny*m_Width+nx %d",ny*m_Width+nx);//REMOVE */
 
 		if(
-			(m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE 
-			&& m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
-			((m_pTiles[ny*m_Width+nx].m_Index > TILE_BOOST)
-			&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
-			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pFront[ny*m_Width+nx].m_Index < TILE_TELEIN)) ||
-			(m_pFront && ((m_pFront[ny*m_Width+nx].m_Index > TILE_BOOST)&&(m_pFront[ny*m_Width+nx].m_Index <= TILE_NPH))) ||
+			(m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ||
+			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pFront[ny*m_Width+nx].m_Index  <= TILE_NPH)) ||
 			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEINEVIL || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
 			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0) ||
 			(m_pDoor && m_pDoor[ny*m_Width+nx].m_Index)
@@ -165,10 +161,8 @@ std::list<int> CCollision::GetMapIndices(vec2 PrevPos, vec2 Pos, int MaxIndices)
 		//dbg_msg("index","%d",Index);
 		if(
 			(
-					(m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pTiles[ny*m_Width+nx].m_Index < TILE_TELEIN) ||
-				((m_pTiles[ny*m_Width+nx].m_Index > TILE_BOOST)&&(m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ) ||
-				(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pFront[ny*m_Width+nx].m_Index < TILE_TELEIN)) ||
-				(m_pFront && ((m_pFront[ny*m_Width+nx].m_Index > TILE_BOOST)&&(m_pFront[ny*m_Width+nx].m_Index <= TILE_NPH))) ||
+				(m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ||
+				(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pFront[ny*m_Width+nx].m_Index  <= TILE_NPH)) ||
 				(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEINEVIL || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
 				(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0) ||
 				(m_pDoor && m_pDoor[ny*m_Width+nx].m_Index)
@@ -243,8 +237,8 @@ int CCollision::GetFTile(int x, int y)
 
 int CCollision::Entity(int x, int y, bool Front)
 {
-	//if(0 < x || x >= m_Width) return 0;
-	//if(0 < y || y >= m_Height) return 0;
+	if((0 < x || x >= m_Width) || (0 < y || y >= m_Height))
+		dbg_msg("CCollision::Entity","Something is VERY wrong please report this at github");
 	int Index = Front?m_pFront[y*m_Width+x].m_Index:m_pTiles[y*m_Width+x].m_Index;
 	return Index-ENTITY_OFFSET;
 }
@@ -635,13 +629,8 @@ int CCollision::IsSpeedup(int Index)
 	if(!m_pSpeedup)
 		return false;
 
-	/*dbg_msg("test", "test");//REMOVE*/
-
 	if(m_pSpeedup[Index].m_Force > 0)
-	//{
-		//dbg_msg("IsSpeedup","Index = %d",m_pSpeedup[ny*m_pLayers->SpeedupLayer()->m_Width+nx].m_Type);
 		return m_pSpeedup[Index].m_Type;
-	//}
 
 	return 0;
 }
