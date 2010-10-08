@@ -440,7 +440,9 @@ void CMenus::DemolistFetchCallback(const char *pName, int IsDir, int StorageType
 void CMenus::DemolistPopulate()
 {
 	m_lDemos.clear();
-	Storage()->ListDirectory(IStorage::TYPE_ALL, m_aCurrentDemoFolder, DemolistFetchCallback, this);
+	if(!str_comp(m_aCurrentDemoFolder, "demos"))
+		m_DemolistStorageType = IStorage::TYPE_ALL;
+	Storage()->ListDirectory(m_DemolistStorageType, m_aCurrentDemoFolder, DemolistFetchCallback, this);
 }
 
 void CMenus::DemolistOnUpdate(bool Reset)
@@ -520,6 +522,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 					char aTemp[256];
 					str_copy(aTemp, m_aCurrentDemoFolder, sizeof(aTemp));
 					str_format(m_aCurrentDemoFolder, sizeof(m_aCurrentDemoFolder), "%s/%s", aTemp, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
+					m_DemolistStorageType = m_lDemos[m_DemolistSelectedIndex].m_StorageType;
 				}
 				DemolistPopulate();
 				DemolistOnUpdate(true);

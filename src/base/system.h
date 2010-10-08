@@ -970,10 +970,13 @@ int fs_chdir(const char *path);
 	Parameters:
 		path - The directory string
 
+	Returns:
+		Returns 0 on success, 1 on failure.
+
 	Remarks:
 		- The string is treated as zero-termineted string.
 */
-void fs_parent_dir(char *path);
+int fs_parent_dir(char *path);
 
 /*
 	Group: Undocumented
