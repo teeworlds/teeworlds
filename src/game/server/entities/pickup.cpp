@@ -118,7 +118,8 @@ void CPickup::Tick()
 				case POWERUP_NINJA:
 					{
 						// activate ninja on target player
-						if(!pChr->m_FreezeTime) pChr->GiveNinja();
+						//if(!pChr->m_FreezeTime) pChr->GiveNinja();
+						pChr->GiveNinja();
 						//RespawnTime = g_pData->m_aPickups[m_Type].m_Respawntime;
 					
 						break;
