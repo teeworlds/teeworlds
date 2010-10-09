@@ -340,6 +340,7 @@ enum
 	PROPTYPE_COLOR,
 	PROPTYPE_IMAGE,
 	PROPTYPE_ENVELOPE,
+	PROPTYPE_SHIFT,
 };
 
 typedef struct
@@ -355,6 +356,7 @@ public:
 	~CLayerTiles();
 
 	void Resize(int NewW, int NewH);
+	void Shift(int Direction);
 
 	void MakePalette();
 	virtual void Render();

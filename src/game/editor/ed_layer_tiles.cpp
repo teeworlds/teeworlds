@@ -280,6 +280,39 @@ void CLayerTiles::Resize(int NewW, int NewH)
 	m_Height = NewH;
 }
 
+void CLayerTiles::Shift(int Direction)
+{
+	switch(Direction)
+	{
+	case 1:
+		{
+			// left
+			for(int y = 0; y < m_Height; ++y)
+				mem_move(&m_pTiles[y*m_Width], &m_pTiles[y*m_Width+1], (m_Width-1)*sizeof(CTile));
+		}
+		break;
+	case 2:
+		{
+			// right
+			for(int y = 0; y < m_Height; ++y)
+				mem_move(&m_pTiles[y*m_Width+1], &m_pTiles[y*m_Width], (m_Width-1)*sizeof(CTile));
+		}
+		break;
+	case 4:
+		{
+			// up
+			for(int y = 0; y < m_Height-1; ++y)
+				mem_copy(&m_pTiles[y*m_Width], &m_pTiles[(y+1)*m_Width], m_Width*sizeof(CTile));
+		}
+		break;
+	case 8:
+		{
+			// down
+			for(int y = m_Height-1; y > 0; --y)
+				mem_copy(&m_pTiles[y*m_Width], &m_pTiles[(y-1)*m_Width], m_Width*sizeof(CTile));
+		}
+	}
+}
 
 int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 {
@@ -327,6 +360,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	{
 		PROP_WIDTH=0,
 		PROP_HEIGHT,
+		PROP_SHIFT,
 		PROP_IMAGE,
 		NUM_PROPS,
 	};
@@ -334,12 +368,13 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	CProperty aProps[] = {
 		{Localize("Width"), m_Width, PROPTYPE_INT_SCROLL, 1, 1000000000},
 		{Localize("Height"), m_Height, PROPTYPE_INT_SCROLL, 1, 1000000000},
+		{Localize("Shift"), 0, PROPTYPE_SHIFT, 0, 0},
 		{Localize("Image"), m_Image, PROPTYPE_IMAGE, 0, 0},
 		{0},
 	};
 	
 	if(m_pEditor->m_Map.m_pGameLayer == this) // remove the image from the selection if this is the game layer
-		aProps[2].m_pName = 0;
+		aProps[3].m_pName = 0;
 	
 	static int s_aIds[NUM_PROPS] = {0};
 	int NewVal = 0;
@@ -349,6 +384,8 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		Resize(NewVal, m_Height);
 	else if(Prop == PROP_HEIGHT && NewVal > 1)
 		Resize(m_Width, NewVal);
+	else if(Prop == PROP_SHIFT)
+		Shift(NewVal);
 	else if(Prop == PROP_IMAGE)
 	{
 		if (NewVal == -1)
