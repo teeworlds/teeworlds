@@ -62,6 +62,12 @@ public:
 	int m_Score;
 	int m_ScoreStartTick;
 	bool m_ForceBalanced;
+	int m_LastActionTick;
+	struct
+	{
+		int m_TargetX;
+		int m_TargetY;
+	} m_LatestActivity;
 	
 private:
 	CCharacter *Character;

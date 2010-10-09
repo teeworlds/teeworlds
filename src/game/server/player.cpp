@@ -15,6 +15,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	Character = 0;
 	this->m_ClientID = CID;
 	m_Team = GameServer()->m_pController->ClampTeam(Team);
+	m_LastActionTick = Server()->Tick();
 }
 
 CPlayer::~CPlayer()
@@ -126,6 +127,16 @@ void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 	
 	if(!Character && m_Team == -1)
 		m_ViewPos = vec2(NewInput->m_TargetX, NewInput->m_TargetY);
+
+	// check for activity
+	if(NewInput->m_Direction || m_LatestActivity.m_TargetX != NewInput->m_TargetX ||
+		m_LatestActivity.m_TargetY != NewInput->m_TargetY || NewInput->m_Jump ||
+		NewInput->m_Fire&1 || NewInput->m_Hook)
+	{
+		m_LatestActivity.m_TargetX = NewInput->m_TargetX;
+		m_LatestActivity.m_TargetY = NewInput->m_TargetY;
+		m_LastActionTick = Server()->Tick();
+	}
 }
 
 CCharacter *CPlayer::GetCharacter()
@@ -165,6 +176,7 @@ void CPlayer::SetTeam(int Team)
 	KillCharacter();
 
 	m_Team = Team;
+	m_LastActionTick = Server()->Tick();
 	// we got to wait 0.5 secs before respawning
 	m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' m_Team=%d", m_ClientID, Server()->ClientName(m_ClientID), m_Team);
