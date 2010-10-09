@@ -2179,7 +2179,7 @@ static void EditorListdirCallback(const char *pName, int IsDir, int StorageType,
 void CEditor::AddFileDialogEntry(int Index, CUIRect *pView)
 {
 	m_FilesCur++;
-	if(m_FilesCur-1 < m_FilesStartAt || m_FilesCur > m_FilesStopAt)
+	if(m_FilesCur-1 < m_FilesStartAt || m_FilesCur >= m_FilesStopAt)
 		return;
 
 	CUIRect Button;
