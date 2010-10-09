@@ -152,6 +152,7 @@ class CMenus : public CComponent
 	// for call vote
 	int m_CallvoteSelectedOption;
 	int m_CallvoteSelectedPlayer;
+	char m_aCallvoteReason[16];
 	
 	// demo
 	struct CDemoItem

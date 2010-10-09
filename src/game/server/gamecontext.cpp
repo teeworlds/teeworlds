@@ -669,15 +669,22 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				return;
 			}
 			
-			str_format(aChatmsg, sizeof(aChatmsg), "'%s' called for vote to kick '%s'", Server()->ClientName(ClientId), Server()->ClientName(KickId));
+			const char *pReason = "No reason given";
+			for(int i = 0; i < str_length(pMsg->m_Value)-1; i++)
+			{
+				if(pMsg->m_Value[i] == ' ')
+					pReason = &pMsg->m_Value[i+1];
+			}
+			
+			str_format(aChatmsg, sizeof(aChatmsg), "'%s' called for vote to kick '%s' (%s)", Server()->ClientName(ClientId), Server()->ClientName(KickId), pReason);
 			str_format(aDesc, sizeof(aDesc), "Kick '%s'", Server()->ClientName(KickId));
 			if (!g_Config.m_SvVoteKickBantime)
-				str_format(aCmd, sizeof(aCmd), "kick %d", KickId);
+				str_format(aCmd, sizeof(aCmd), "kick %d %s", KickId, pReason);
 			else
 			{
 				char aBuf[64] = {0};
 				Server()->GetClientIP(KickId, aBuf, sizeof(aBuf));
-				str_format(aCmd, sizeof(aCmd), "ban %s %d", aBuf, g_Config.m_SvVoteKickBantime);
+				str_format(aCmd, sizeof(aCmd), "ban %s %d %s", aBuf, g_Config.m_SvVoteKickBantime, pReason);
 			}
 		}
 		
