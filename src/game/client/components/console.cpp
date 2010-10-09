@@ -100,8 +100,11 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 		{
 			if(m_Input.GetString()[0])
 			{
-				char *pEntry = m_History.Allocate(m_Input.GetLength()+1);
-				mem_copy(pEntry, m_Input.GetString(), m_Input.GetLength()+1);				
+				if(m_Type != 1 || m_pGameConsole->Client()->RconAuthed())
+				{
+					char *pEntry = m_History.Allocate(m_Input.GetLength()+1);
+					mem_copy(pEntry, m_Input.GetString(), m_Input.GetLength()+1);
+				}
 				ExecuteLine(m_Input.GetString());
 				m_Input.Clear();
 				m_pHistoryEntry = 0x0;
