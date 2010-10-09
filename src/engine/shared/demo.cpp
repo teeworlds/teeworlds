@@ -742,3 +742,22 @@ char *CDemoPlayer::GetDemoName()
 	return pDemoShortName;
 }
 
+bool CDemoPlayer::GetDemoInfo(class IStorage *pStorage, const char *pFilename, int StorageType, char *pMap, int BufferSize) const
+{
+	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, StorageType);
+	if(!File)
+		return false;
+	
+	CDemoHeader Header;
+	io_read(File, &Header, sizeof(Header));
+	if(mem_comp(Header.m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) != 0)
+	{
+		io_close(File);
+		return false;
+	}
+	
+	str_copy(pMap, Header.m_aMap, BufferSize);
+	
+	io_close(File);
+	return true;
+}

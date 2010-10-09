@@ -25,6 +25,7 @@ public:
 	virtual void Unpause() = 0;
 	virtual const CInfo *BaseInfo() const = 0;
 	virtual char *GetDemoName() = 0;
+	virtual bool GetDemoInfo(class IStorage *pStorage, const char *pFilename, int StorageType, char *pMap, int BufferSize) const = 0;
 };
 
 class IDemoRecorder : public IInterface
