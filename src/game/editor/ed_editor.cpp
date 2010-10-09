@@ -1622,18 +1622,12 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIds, int *
 
 			if(DoButton_ButtonDec(&pIds[i], 0, 0, &Dec, 0, Localize("Decrease")))
 			{
-				if(Input()->KeyPressed(KEY_LSHIFT) || Input()->KeyPressed(KEY_RSHIFT))
-					*pNewVal = pProps[i].m_Value-5;
-				else
-					*pNewVal = pProps[i].m_Value-1;
+				*pNewVal = pProps[i].m_Value-1;
 				Change = i;
 			}
 			if(DoButton_ButtonInc(((char *)&pIds[i])+1, 0, 0, &Inc, 0, Localize("Increase")))
 			{
-				if(Input()->KeyPressed(KEY_LSHIFT) || Input()->KeyPressed(KEY_RSHIFT))
-					*pNewVal = pProps[i].m_Value+5;
-				else
-					*pNewVal = pProps[i].m_Value+1;
+				*pNewVal = pProps[i].m_Value+1;
 				Change = i;
 			}
 		}
