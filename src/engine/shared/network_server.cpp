@@ -139,7 +139,7 @@ int CNetServer::BanRemove(NETADDR Addr)
 	return -1;
 }
 
-int CNetServer::BanAdd(NETADDR Addr, int Seconds)
+int CNetServer::BanAdd(NETADDR Addr, int Seconds, const char *pReason)
 {
 	int IpHash = (Addr.ip[0]+Addr.ip[1]+Addr.ip[2]+Addr.ip[3])&0xff;
 	int Stamp = -1;
@@ -213,9 +213,9 @@ int CNetServer::BanAdd(NETADDR Addr, int Seconds)
 		NETADDR BanAddr;
 		
 		if(Seconds)
-			str_format(Buf, sizeof(Buf), "you have been banned for %d minutes", Seconds/60);
+			str_format(Buf, sizeof(Buf), "You have been banned for %d minutes (%s)", Seconds/60, pReason);
 		else
-			str_format(Buf, sizeof(Buf), "you have been banned for life");
+			str_format(Buf, sizeof(Buf), "You have been banned for life (%s)", pReason);
 		
 		for(int i = 0; i < MaxClients(); i++)
 		{
@@ -295,12 +295,12 @@ int CNetServer::Recv(CNetChunk *pChunk)
 				{
 					int Mins = ((pBan->m_Info.m_Expires - Now)+59)/60;
 					if(Mins == 1)
-						str_format(BanStr, sizeof(BanStr), "banned for %d minute", Mins);
+						str_format(BanStr, sizeof(BanStr), "Banned for 1 minute");
 					else
-						str_format(BanStr, sizeof(BanStr), "banned for %d minutes", Mins);
+						str_format(BanStr, sizeof(BanStr), "Banned for %d minutes", Mins);
 				}
 				else
-					str_format(BanStr, sizeof(BanStr), "banned for life");
+					str_format(BanStr, sizeof(BanStr), "Banned for life");
 				CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, BanStr, str_length(BanStr)+1);
 				continue;
 			}
@@ -352,7 +352,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 								if(FoundAddr++ >= m_MaxClientsPerIP)
 								{
 									char aBuf[128];
-									str_format(aBuf, sizeof(aBuf), "only %i players with same ip allowed", m_MaxClientsPerIP);
+									str_format(aBuf, sizeof(aBuf), "Only %d players with the same IP are allowed", m_MaxClientsPerIP);
 									CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, aBuf, sizeof(aBuf));
 									return 0;
 								}
@@ -373,7 +373,7 @@ int CNetServer::Recv(CNetChunk *pChunk)
 						
 						if(!Found)
 						{
-							const char FullMsg[] = "server is full";
+							const char FullMsg[] = "This server is full";
 							CNetBase::SendControlMsg(m_Socket, &Addr, 0, NET_CTRLMSG_CLOSE, FullMsg, sizeof(FullMsg));
 						}
 					}
@@ -429,7 +429,7 @@ int CNetServer::Send(CNetChunk *pChunk)
 		}
 		else
 		{
-			Drop(pChunk->m_ClientID, "error sending data");
+			Drop(pChunk->m_ClientID, "Error sending data");
 		}
 	}
 	return 0;

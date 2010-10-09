@@ -272,10 +272,10 @@ public:
 	int Update();
 	
 	//
-	int Drop(int ClientID, const char *Reason);
+	int Drop(int ClientID, const char *pReason);
 
 	// banning
-	int BanAdd(NETADDR Addr, int Seconds);
+	int BanAdd(NETADDR Addr, int Seconds, const char *pReason);
 	int BanRemove(NETADDR Addr);
 	int BanNum(); // caution, slow
 	int BanGet(int Index, CBanInfo *pInfo); // caution, slow
