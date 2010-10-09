@@ -29,11 +29,14 @@ void CVoting::Callvote(const char *pType, const char *pValue)
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
 
-void CVoting::CallvoteKick(int ClientId)
+void CVoting::CallvoteKick(int ClientId, char *pReason)
 {
-	char Buf[32];
-	str_format(Buf, sizeof(Buf), "%d", ClientId);
-	Callvote("kick", Buf);
+	char aBuf[32];
+	if(pReason[0])
+		str_format(aBuf, sizeof(aBuf), "%d %s", ClientId, pReason);
+	else
+		str_format(aBuf, sizeof(aBuf), "%d", ClientId);
+	Callvote("kick", aBuf);
 }
 
 void CVoting::CallvoteOption(int OptionId)

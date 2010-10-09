@@ -39,7 +39,7 @@ public:
 	
 	void RenderBars(CUIRect Bars, bool Text);
 	
-	void CallvoteKick(int ClientId);
+	void CallvoteKick(int ClientId, char *pReason);
 	void CallvoteOption(int Option);
 	void ForcevoteKick(int ClientId);
 	void ForcevoteOption(int Option);
