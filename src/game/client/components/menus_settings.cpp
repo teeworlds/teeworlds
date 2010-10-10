@@ -998,7 +998,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	if(s_Fonts.size() == 0)
 	{
-		fs_listdir("data/fonts", GatherFonts, IStorage::TYPE_DATA, &s_Fonts);
+		fs_listdir("data/fonts", GatherFonts, IStorage::TYPE_ALL, &s_Fonts);
 		for(int i = 0; i < s_Fonts.size(); i++)
 			if(str_comp(s_Fonts[i].m_FileName, g_Config.m_ClFontfile) == 0)
 			{

@@ -262,8 +262,8 @@ void CGameClient::OnInit()
 	IOHANDLE File = Storage()->OpenFile(g_Config.m_ClFontfile, IOFLAG_READ, IStorage::TYPE_ALL, aFilename, sizeof(aFilename));
 	if(File)
 		io_close(File);
-	pDefaultFont = TextRender()->LoadFont(aFilename);
-	TextRender()->SetDefaultFont(pDefaultFont);
+	pFont = TextRender()->LoadFont(aFilename);
+	TextRender()->SetFont(pFont);
 
 	g_Config.m_ClThreadsoundloading = 0;
 
@@ -348,7 +348,7 @@ void CGameClient::OnInit()
 	g_pData->m_aImages[IMAGE_GAME_GRAY].m_Id = -1;
 
 	CImageInfo Info;
-	if(!Graphics()->LoadPNG(&Info, g_pData->m_aImages[IMAGE_GAME_GRAY].m_pFilename))
+	if(!Graphics()->LoadPNG(&Info, g_pData->m_aImages[IMAGE_GAME_GRAY].m_pFilename, IStorage::TYPE_ALL))
 		return;
 
 	unsigned char *d = (unsigned char *)Info.m_pData;

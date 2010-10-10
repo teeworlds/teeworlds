@@ -16,7 +16,8 @@ public:
 	virtual void ListDirectory(int Type, const char *pPath, FS_LISTDIR_CALLBACK pfnCallback, void *pUser) = 0;
 	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, int Type, char *pBuffer = 0, int BufferSize = 0) = 0;
 	virtual bool RemoveFile(const char *pFilename, int Type) = 0;
-	virtual const char* SavePath(const char *pFilename, char *pBuffer, int Max) = 0;
+	virtual bool RenameFile(const char *pOldFilename, const char *pNewFilename, int Type) = 0;
+	virtual const char *GetPath(int Type, const char *pDir, char *pBuffer, unsigned BufferSize) = 0;
 };
 
 extern IStorage *CreateStorage(const char *pApplicationName, int NumArgs, const char **ppArguments);

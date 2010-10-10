@@ -431,7 +431,7 @@ void CMenus::DemolistFetchCallback(const char *pName, int IsDir, int StorageType
 	}
 	else
 	{
-		str_format(Item.m_aName, min(static_cast<int>(sizeof(Item.m_aName)), Length), "    %s", pName);
+		str_format(Item.m_aName, min(static_cast<int>(sizeof(Item.m_aName)), Length+1), "%s", pName);
 		char aBuffer[512];
 		str_format(aBuffer, sizeof(aBuffer), "%s/%s", pSelf->m_aCurrentDemoFolder, Item.m_aFilename);
 		// TODO: many items slow this down, don't load the info from every file when making the filelist

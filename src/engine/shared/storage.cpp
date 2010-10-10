@@ -300,12 +300,17 @@ public:
 		return remove(GetPath(Type, pFilename, aBuffer, sizeof(aBuffer)));
 	}
 
-	virtual const char* SavePath(const char *pFilename, char *pBuffer, int Max)
+	virtual bool RenameFile(const char *pOldFilename, const char *pNewFilename, int Type)
 	{
-		str_format(pBuffer, Max, "%s/%s", m_aApplicationSavePath, pFilename);
-		return pBuffer;
-	}
+		if(Type < 0 || Type >= m_NumPaths)
+			return false;
 
+		char aOldBuffer[MAX_PATH_LENGTH];
+		char aNewBuffer[MAX_PATH_LENGTH];
+		rename(GetPath(Type, pOldFilename, aOldBuffer, sizeof(aOldBuffer)), GetPath(Type, pNewFilename, aNewBuffer, sizeof(aNewBuffer)));
+		return remove(GetPath(Type, pOldFilename, aOldBuffer, sizeof(aOldBuffer)));
+	}
+	
 	static IStorage *Create(const char *pApplicationName, int NumArgs, const char **ppArguments)
 	{
 		CStorage *p = new CStorage();
