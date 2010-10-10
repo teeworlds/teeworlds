@@ -295,7 +295,7 @@ void CScoreboard::RenderRecordingNotification(float x)
 	Graphics()->QuadsEnd();
 
 	//draw the text
-	TextRender()->Text(0, x+50.0f, 8.0f, 24.0f, "REC", -1);
+	TextRender()->Text(0, x+50.0f, 8.0f, 24.0f, Localize("REC"), -1);
 }
 
 void CScoreboard::OnRender()
