@@ -209,7 +209,7 @@ File
 == Fichier
 
 Filename:
-== Nom du fichier :
+== Nom du fichier:
 
 Filter
 == Filtre
@@ -236,7 +236,7 @@ Game type
 == Type de jeu
 
 Game types:
-== Types de jeu :
+== Types de jeu:
 
 General
 == Général
@@ -335,7 +335,7 @@ Map
 == Carte
 
 Maximum ping:
-== Ping maximum :
+== Ping maximum:
 
 Miscellaneous
 == Divers
@@ -371,7 +371,7 @@ Nickname
 == Pseudonyme
 
 Name:
-== Nom :
+== Nom:
 
 No
 == Non

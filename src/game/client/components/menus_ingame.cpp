@@ -425,13 +425,13 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		if(s_ControlPage == 1)
 		{
 			CUIRect Reason;
-			Bottom.VSplitRight(140.0f, &Bottom, &Reason);
-			Bottom.VSplitRight(200.0f, &Bottom, &Reason);
+			Bottom.VSplitRight(40.0f, &Bottom, 0);
+			Bottom.VSplitRight(160.0f, &Bottom, &Reason);
+			Reason.HSplitTop(5.0f, 0, &Reason);
 			const char *pLabel = Localize("Reason:");
 			UI()->DoLabel(&Reason, pLabel, 14.0f, -1);
 			float w = TextRender()->TextWidth(0, 14.0f, pLabel, -1);
-			Reason.VSplitLeft(w, 0, &Reason);
-			Reason.VSplitLeft(10.0f, 0, &Reason);
+			Reason.VSplitLeft(w+10.0f, 0, &Reason);
 			static float s_Offset = 0.0f;
 			DoEditBox(&m_aCallvoteReason, &Reason, m_aCallvoteReason, sizeof(m_aCallvoteReason), 14.0f, &s_Offset, false, CUI::CORNER_ALL);
 		}
@@ -453,7 +453,8 @@ void CMenus::RenderServerControl(CUIRect MainView)
 					if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
 						m_pClient->m_Snap.m_paPlayerInfos[m_CallvoteSelectedPlayer])
 					{
-						m_pClient->m_pVoting->ForcevoteKick(m_CallvoteSelectedPlayer);
+						m_pClient->m_pVoting->ForcevoteKick(m_CallvoteSelectedPlayer, m_aCallvoteReason);
+						m_aCallvoteReason[0] = 0;
 						SetActive(false);
 					}
 				}

@@ -29,7 +29,7 @@ void CVoting::Callvote(const char *pType, const char *pValue)
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
 
-void CVoting::CallvoteKick(int ClientId, char *pReason)
+void CVoting::CallvoteKick(int ClientId, const char *pReason)
 {
 	char aBuf[32];
 	if(pReason[0])
@@ -55,11 +55,14 @@ void CVoting::CallvoteOption(int OptionId)
 	}
 }
 
-void CVoting::ForcevoteKick(int ClientId)
+void CVoting::ForcevoteKick(int ClientId, const char *pReason)
 {
-	char Buf[32];
-	str_format(Buf, sizeof(Buf), "kick %d", ClientId);
-	Client()->Rcon(Buf);
+	char aBuf[32];
+	if(pReason[0])
+		str_format(aBuf, sizeof(aBuf), "kick %d \"%s\"", ClientId, pReason);
+	else
+		str_format(aBuf, sizeof(aBuf), "kick %d", ClientId);
+	Client()->Rcon(aBuf);
 }
 
 void CVoting::ForcevoteOption(int OptionId)
