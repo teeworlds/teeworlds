@@ -1,0 +1,818 @@
+##### translated strings #####
+
+%ds left
+== faltam %ds
+
+%d of %d servers, %d players
+== %d de %d servidores, %d jogadores
+
+Abort
+== Cancelar
+
+Address
+== Endereço
+
+All
+== Todos
+
+Alpha
+== Alpha
+
+Always show name plates
+== Sempre mostrar apelidos
+
+Are you sure that you want to quit?
+== Você tem certeza que deseja sair?
+
+As this is the first time you have launched the game, please enter your nickname below. It is recommended that you check your settings so you adjust them to your preferences before joining a server.
+== Como esta é a primeira vez que você abriu o jogo, por favor, entre com seu apelido abaixo. É recomendado que você cheque suas configurações e então ajuste elas para suas preferências antes de entrar em um servidor.
+
+Blue team
+== Time azul
+
+Blue team wins!
+== Time azul vence!
+
+Body
+== Corpo
+
+Call vote
+== Votação
+
+Chat
+== Conversa
+
+Close
+== Fechar
+
+Compatible version
+== Versão compatível
+
+Connect
+== Conectar
+
+Connecting to
+== Conectando a
+
+Connection Problems...
+== Problemas de Conexão...
+
+Console
+== Console
+
+Controls
+== Controles
+
+Current
+== Atualmente
+
+Current version: %s
+== Versão atual : %s
+
+Custom colors
+== Cores personalizadas
+
+Demos
+== Demos
+
+Disconnect
+== Desconectar
+
+Disconnected
+== Desconectado
+
+Display Modes
+== Modos de exibição
+
+Downloading map
+== Baixando mapa
+
+Draw!
+== Empate!
+
+Dynamic Camera
+== Câmera dinâmica
+
+Emoticon
+== Emoticon
+
+Enter
+== Entrar
+
+error loading demo
+== erro ao carregar demo
+
+Error
+== Erro
+
+FSAA samples
+== Amostras FSAA
+
+Favorite
+== Favorito
+
+Favorites
+== Favoritos
+
+Feet
+== Pés
+
+Filter
+== Filtro
+
+Fire
+== Atirar
+
+Force vote
+== Forçar
+
+Fullscreen
+== Tela cheia
+
+Game
+== Jogo
+
+Game info
+== Info. sobre o jogo
+
+Game over
+== Fim de Jogo
+
+Game type
+== Tipo de jogo
+
+Game types:
+== Tipos de jogo:
+
+General
+== Geral
+
+Graphics
+== Gráficos
+
+Grenade
+== Granada
+
+Hammer
+== Martelo
+
+Has people playing
+== Tem gente jogando
+
+High Detail
+== Mais detalhes (HD)
+
+Hook
+== Gancho
+
+Host address
+== Endereço do host
+
+Hue
+== Matiz
+
+Info
+== Info.
+
+Internet
+== Internet
+
+Join blue
+== Azul
+
+Join game
+== Entre no jogo
+
+Join red
+== Vermelho
+
+Jump
+== Pular
+
+Kick
+== Kick
+
+LAN
+== LAN
+
+Language
+== Linguagem
+
+Lht.
+== Luz
+
+Loading
+== Carregando
+
+MOTD
+== MOTD
+
+Map
+== Mapa
+
+Maximum ping:
+== Ping máximo:
+
+Miscellaneous
+== Diversos
+
+Mouse sens.
+== Sens. do mouse
+
+Move left
+== Esquerda
+
+Move right
+== Direita
+
+Movement
+== Movimento
+
+Mute when not active
+== Silenciar quando inativo
+
+Name
+== Nome
+
+News
+== Notícia
+
+Next weapon
+== Próxima arma
+
+Nickname
+== Apelido
+
+No
+== Não
+
+No password
+== Sem senha
+
+No servers found
+== Nenhum servidor encontrado
+
+No servers match your filter criteria
+== Nenhum servidor corresponde aos critérios do filtro
+
+Ok
+== Ok
+
+Password
+== Senha
+
+Incorrect password
+== Senha incorreta
+
+Password incorrect
+== Senha incorreta
+
+Ping
+== Ping
+
+Pistol
+== Pistola
+
+Play
+== Assistir
+
+Player
+== Jogador
+
+Players
+== Jogadores
+
+Please balance teams!
+== Por favor, balanceie os times!
+
+Prev. weapon
+== Arma anterior
+
+Quality Textures
+== Texturas de Qualidade
+
+Quick search:
+== Pesquisa rápida:
+
+Quit
+== Sair
+
+Red team
+== Time vermelho
+
+Red team wins!
+== Time vermelho vence!
+
+Refresh
+== Atualizar
+
+Refreshing master servers
+== Atualizando servidores master
+
+Remote console
+== Console remoto
+
+Reset filter
+== Resetar filtro
+
+Reset to defaults
+== Resetar para padrão
+
+Rifle
+== Laser
+
+Round
+== Rodada
+
+Sample rate
+== Taxa de som
+
+Sat.
+== Sat.
+
+Score
+== Pontos
+
+Score board
+== Placar
+
+Score limit
+== Placar máx.
+
+Scoreboard
+== Placar
+
+Screenshot
+== Captura da tela
+
+Server details
+== Detalhes do server
+
+Server info
+== Info do server
+
+Server not full
+== Servidor não cheio
+
+Settings
+== Config.
+
+Shotgun
+== Espingarda
+
+Show chat
+== Mostrar conversa
+
+Show name plates
+== Mostrar apelidos
+
+Show only supported
+== Mostrar apenas suportados
+
+Skins
+== Skins
+
+Sound
+== Som
+
+Sound volume
+== Volume de som
+
+Spectate
+== Observar
+
+Spectators
+== Observadores
+
+Standard gametype
+== Tipo de jogo padrão
+
+Standard map
+== Mapa padrão
+
+Sudden Death
+== Morte Súbita
+
+Switch weapon on pickup
+== Trocar arma ao pegar
+
+Team
+== Time
+
+Team chat
+== Conv. de equipe
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworlds %s foi lançado! Baixe-o em www.teeworlds.com!
+
+Texture Compression
+== Compressão de Textura
+
+The server is running a non-standard tuning on a pure game type.
+== O servidor está rodando uma modificação não padrão em um tipo de jogo puro.
+
+Time limit
+== Tempo máx.
+
+Try again
+== Tente de novo
+
+Type
+== Tipo
+
+UI Color
+== Cor do menu
+
+Use sounds
+== Usar sons
+
+V-Sync
+== V-Sync
+
+Version
+== Versão
+
+Vote no
+== Votar não
+
+Vote yes
+== Votar sim
+
+Voting
+== Votação
+
+Warmup
+== Aquecimento
+
+Weapon
+== Arma
+
+Welcome to Teeworlds
+== Bem-vindo ao Teeworlds!
+
+Yes
+== Sim
+
+You must restart the game for all settings to take effect.
+== Você deve reiniciar o jogo para que todas as alterações tenham efeito.
+
+Your skin
+== Sua skin
+
+##### needs translation ####
+
+Font
+== Font
+
+Password incorrect
+== Password incorrect
+
+Please balance teams!
+== Please balance teams!
+
+Connection Problems...
+== Connection Problems...
+
+Warmup
+== Warmup
+
+Sudden Death
+== Sudden Death
+
+%ds left
+== %ds left
+
+error loading demo
+== error loading demo
+
+Error
+== Error
+
+Open map
+== Open map
+
+Open
+== Open
+
+Save map
+== Save map
+
+Save
+== Save
+
+HD
+== HD
+
+[ctrl+h] Toggle High Detail
+== [ctrl+h] Toggle High Detail
+
+Anim
+== Anim
+
+[ctrl+m] Toggle animation
+== [ctrl+m] Toggle animation
+
+Proof
+== Proof
+
+[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+
+ZO
+== ZO
+
+[NumPad-] Zoom out
+== [NumPad-] Zoom out
+
+[NumPad*] Zoom to normal and remove editor offset
+== [NumPad*] Zoom to normal and remove editor offset
+
+ZI
+== ZI
+
+[NumPad+] Zoom in
+== [NumPad+] Zoom in
+
+Increase animation speed
+== Increase animation speed
+
+Normal animation speed
+== Normal animation speed
+
+Decrease animation speed
+== Decrease animation speed
+
+[N] Flip brush horizontal
+== [N] Flip brush horizontal
+
+[M] Flip brush vertical
+== [M] Flip brush vertical
+
+CCW
+== CCW
+
+[R] Rotates the brush counter clockwise
+== [R] Rotates the brush counter clockwise
+
+CW
+== CW
+
+[T] Rotates the brush clockwise
+== [T] Rotates the brush clockwise
+
+Add Quad
+== Add Quad
+
+Adds a new quad
+== Adds a new quad
+
+Border
+== Border
+
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+
+Left mouse button to move. Hold shift to move the texture.
+== Left mouse button to move. Hold shift to move the texture.
+
+Use left mouse button to drag and create a brush.
+== Use left mouse button to drag and create a brush.
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== Use left mouse button to paint with the brush. Right button clears the brush.
+
+Decrease
+== Decrease
+
+Increase
+== Increase
+
+None
+== None
+
+Toggle group visibility
+== Toggle group visibility
+
+Select group. Right click for properties.
+== Select group. Right click for properties.
+
+Add group
+== Add group
+
+Adds a new group
+== Adds a new group
+
+Embed
+== Embed
+
+Embeds the image into the map file.
+== Embeds the image into the map file.
+
+Make external
+== Make external
+
+Removes the image from the map file.
+== Removes the image from the map file.
+
+Replace
+== Replace
+
+Replaces the image with a new one
+== Replaces the image with a new one
+
+Replace Image
+== Replace Image
+
+Remove
+== Remove
+
+Removes the image from the map
+== Removes the image from the map
+
+Embedded
+== Embedded
+
+External
+== External
+
+Select image
+== Select image
+
+Load a new image to use in the map
+== Load a new image to use in the map
+
+Add Image
+== Add Image
+
+Add
+== Add
+
+Filename:
+== Filename:
+
+Cancel
+== Cancel
+
+Layers
+== Layers
+
+Images
+== Images
+
+Switch between images and layers managment.
+== Switch between images and layers managment.
+
+Envelopes
+== Envelopes
+
+Toggles the envelope editor.
+== Toggles the envelope editor.
+
+%s Right click for context menu.
+== %s Right click for context menu.
+
+Color+
+== Color+
+
+Creates a new color envelope
+== Creates a new color envelope
+
+Pos.+
+== Pos.+
+
+Creates a new pos envelope
+== Creates a new pos envelope
+
+Previous Envelope
+== Previous Envelope
+
+Next Envelope
+== Next Envelope
+
+Name:
+== Name:
+
+Press right mouse button to create a new point
+== Press right mouse button to create a new point
+
+Switch curve type
+== Switch curve type
+
+Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
+== Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
+
+New
+== New
+
+Creates a new map
+== Creates a new map
+
+Opens a map for editing
+== Opens a map for editing
+
+Append
+== Append
+
+Opens a map and adds everything from that map to the current one
+== Opens a map and adds everything from that map to the current one
+
+Append map
+== Append map
+
+Saves the current map
+== Saves the current map
+
+Save As
+== Save As
+
+Saves the current map under a new name
+== Saves the current map under a new name
+
+Exits from the editor
+== Exits from the editor
+
+Clear collision
+== Clear collision
+
+Removes collision from this layer
+== Removes collision from this layer
+
+Make collision
+== Make collision
+
+Constructs collision from this layer
+== Constructs collision from this layer
+
+Width
+== Width
+
+Height
+== Height
+
+Image
+== Image
+
+Delete group
+== Delete group
+
+Add quads layer
+== Add quads layer
+
+Creates a new quad layer
+== Creates a new quad layer
+
+Add tile layer
+== Add tile layer
+
+Creates a new tile layer
+== Creates a new tile layer
+
+Delete layer
+== Delete Layer
+
+Deletes the layer
+== Deletes the layer
+
+Group
+== Group
+
+Order
+== Order
+
+Detail
+== Detail
+
+Delete
+== Delete
+
+Deletes the current quad
+== Deletes the current quad
+
+Square
+== Square
+
+Squares the current quad
+== Squares the current quad
+
+Pos. Env
+== Pos. Env
+
+Pos. TO
+== Pos. TO
+
+Color Env
+== Color Env
+
+Color TO
+== Color TO
+
+Select layer. Right click for properties.
+== Select layer. Right click for properties.
+
+Toggle layer visibility
+== Toggle layer visibility
+
+File
+== File
+
+##### old translations ####

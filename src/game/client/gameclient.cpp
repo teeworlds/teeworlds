@@ -259,7 +259,9 @@ void CGameClient::OnInit()
 	//default_font = gfx_font_load("data/fonts/sazanami-gothic.ttf");
 
 	char aFilename[512];
-	IOHANDLE File = Storage()->OpenFile(g_Config.m_ClFontfile, IOFLAG_READ, IStorage::TYPE_ALL, aFilename, sizeof(aFilename));
+	char aFontPath[512];
+	str_format(aFontPath, sizeof(aFontPath), "fonts/%s", g_Config.m_ClFontfile);
+	IOHANDLE File = Storage()->OpenFile(aFontPath, IOFLAG_READ, IStorage::TYPE_ALL, aFilename, sizeof(aFilename));
 	if(File)
 		io_close(File);
 	pFont = TextRender()->LoadFont(aFilename);

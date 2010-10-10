@@ -928,7 +928,7 @@ void GatherFonts(const char *pName, int IsDir, int Type, void *pUser)
 
 	sorted_array<CFontFile> &Fonts = *((sorted_array<CFontFile> *)pUser);
 	char aFileName[128];
-	str_format(aFileName, sizeof(aFileName), "data/fonts/%s", pName);
+	str_format(aFileName, sizeof(aFileName), "%s", pName);
 
 	char NiceName[128];
 	str_format(NiceName, sizeof(NiceName), "%s", pName);
@@ -998,7 +998,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	if(s_Fonts.size() == 0)
 	{
-		fs_listdir("data/fonts", GatherFonts, IStorage::TYPE_ALL, &s_Fonts);
+		Storage()->ListDirectory(IStorage::TYPE_ALL, "fonts", GatherFonts, &s_Fonts);
 		for(int i = 0; i < s_Fonts.size(); i++)
 			if(str_comp(s_Fonts[i].m_FileName, g_Config.m_ClFontfile) == 0)
 			{
@@ -1025,7 +1025,13 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	if(OldSelectedFont != s_SelectedFont)
 	{
 		str_copy(g_Config.m_ClFontfile, s_Fonts[s_SelectedFont].m_FileName, sizeof(g_Config.m_ClFontfile));
-		TextRender()->SetFont(TextRender()->LoadFont(g_Config.m_ClFontfile));
+		char aRelFontPath[512];
+		str_format(aRelFontPath, sizeof(aRelFontPath), "fonts/%s", g_Config.m_ClFontfile);
+		char aFontPath[512];	
+		IOHANDLE File = Storage()->OpenFile(aRelFontPath, IOFLAG_READ, IStorage::TYPE_ALL, aFontPath, sizeof(aFontPath));
+		if(File)
+			io_close(File);
+		TextRender()->SetFont(TextRender()->LoadFont(aFontPath));
 	}
 }
 

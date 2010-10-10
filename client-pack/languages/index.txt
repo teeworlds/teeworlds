@@ -1,0 +1,23 @@
+
+##### language indices #####
+
+czech
+== Česky
+
+dutch
+== Nederlands
+
+french
+== Français
+
+german
+== Deutsch
+
+italian
+== Italiano
+
+portuguese
+== Português
+
+swedish
+== Svenska
