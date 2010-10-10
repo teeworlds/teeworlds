@@ -25,6 +25,8 @@
 
 #include <mastersrv/mastersrv.h>
 
+#include <string.h>
+
 #include "register.h"
 #include "server.h"
 
