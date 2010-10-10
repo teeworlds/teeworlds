@@ -1,4 +1,3 @@
-//#include "gc_console.h"
 #include <math.h>
 #include <time.h>
 
@@ -38,10 +37,6 @@ enum
 
 CGameConsole::CInstance::CInstance(int Type)
 {
-	// init ringbuffers
-	//history = ringbuf_init(history_data, sizeof(history_data), RINGBUF_FLAG_RECYCLE);
-	//backlog = ringbuf_init(backlog_data, sizeof(backlog_data), RINGBUF_FLAG_RECYCLE);
-	
 	m_pHistoryEntry = 0x0;
 	
 	m_Type = Type;
@@ -67,6 +62,12 @@ void CGameConsole::CInstance::ClearBacklog()
 {
 	m_Backlog.Init();
 	m_BacklogActPage = 0;
+}
+
+void CGameConsole::CInstance::ClearHistory()
+{
+	m_History.Init();
+	m_pHistoryEntry = 0;
 }
 
 void CGameConsole::CInstance::ExecuteLine(const char *pLine)
@@ -673,34 +674,8 @@ void CGameConsole::OnConsoleInit()
 	Console()->Register("dump_remote_console", "", CFGFLAG_CLIENT, ConDumpRemoteConsole, this, "Dump remote console");
 }
 
-/*
-static void con_team(void *result, void *user_data)
+void CGameConsole::OnStateChange(int NewState, int OldState)
 {
-	send_switch_team(console_arg_int(result, 0));
+	if(NewState == IClient::STATE_OFFLINE)
+		m_RemoteConsole.ClearHistory();
 }
-
-static void con_kill(void *result, void *user_data)
-{
-	send_kill(-1);
-}
-
-void send_kill(int client_id);
-
-static void con_emote(void *result, void *user_data)
-{
-	send_emoticon(console_arg_int(result, 0));
-}
-
-extern void con_chat(void *result, void *user_data);
-
-void client_console_init()
-{
-	//
-	MACRO_REGISTER_COMMAND("team", "i", con_team, 0x0);
-	MACRO_REGISTER_COMMAND("kill", "", con_kill, 0x0);
-
-	// chatting
-	MACRO_REGISTER_COMMAND("emote", "i", con_emote, 0);
-	MACRO_REGISTER_COMMAND("+emote", "", con_key_input_state, &emoticon_selector_active);
-}
-*/
