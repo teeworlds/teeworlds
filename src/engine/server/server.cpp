@@ -634,7 +634,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			{
 				// OH FUCK! wrong version, drop him
 				char aReason[256];
-				str_format(aReason, sizeof(aReason), "Wrong version : server is running \"%s\" and client \"%s\"", GameServer()->NetVersion(), aVersion);
+				str_format(aReason, sizeof(aReason), "Wrong version. Server is running '%s' and client '%s'", GameServer()->NetVersion(), aVersion);
 				m_NetServer.Drop(ClientId, aReason);
 				return;
 			}

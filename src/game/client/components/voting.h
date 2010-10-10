@@ -39,9 +39,9 @@ public:
 	
 	void RenderBars(CUIRect Bars, bool Text);
 	
-	void CallvoteKick(int ClientId, char *pReason);
+	void CallvoteKick(int ClientId, const char *pReason);
 	void CallvoteOption(int Option);
-	void ForcevoteKick(int ClientId);
+	void ForcevoteKick(int ClientId, const char *pReason);
 	void ForcevoteOption(int Option);
 	
 	void Vote(int v); // -1 = no, 1 = yes
