@@ -263,8 +263,19 @@ void CGameClient::OnInit()
 	str_format(aFontPath, sizeof(aFontPath), "fonts/%s", g_Config.m_ClFontfile);
 	IOHANDLE File = Storage()->OpenFile(aFontPath, IOFLAG_READ, IStorage::TYPE_ALL, aFilename, sizeof(aFilename));
 	if(File)
+	{
 		io_close(File);
-	pFont = TextRender()->LoadFont(aFilename);
+		pFont = TextRender()->LoadFont(aFilename);
+	}
+	else
+	{
+		// in case the config is broken
+		IOHANDLE File = Storage()->OpenFile("fonts/Free Sans Bold.ttf", IOFLAG_READ, IStorage::TYPE_ALL, aFilename, sizeof(aFilename));
+		if(File)
+			io_close(File);
+		pFont = TextRender()->LoadFont(aFilename);
+		str_copy(g_Config.m_ClFontfile, "Free Sans Bold.ttf", sizeof(g_Config.m_ClFontfile));
+	}
 	TextRender()->SetFont(pFont);
 
 	g_Config.m_ClThreadsoundloading = 0;
