@@ -32,6 +32,7 @@ class CGameConsole : public CComponent
 		void Init(CGameConsole *pGameConsole);
 
 		void ClearBacklog();
+		void ClearHistory();
 
 		void ExecuteLine(const char *pLine);
 		
@@ -72,6 +73,7 @@ public:
 
 	void PrintLine(int Type, const char *pLine);
 
+	virtual void OnStateChange(int NewState, int OldState);
 	virtual void OnConsoleInit();
 	virtual void OnReset();
 	virtual void OnRender();
