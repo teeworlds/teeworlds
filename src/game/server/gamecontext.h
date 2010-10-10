@@ -252,7 +252,6 @@ public:
 	virtual void OnClientPredictedInput(int ClientId, void *pInput);
 	
 	virtual void OnSetAuthed(int ClientId,int Level);
-	virtual void OnSetResistent(int ClientId, int Resistent);
 
 	virtual const char *Version();
 	virtual const char *NetVersion();

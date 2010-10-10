@@ -581,19 +581,13 @@ void CGameContext::OnSetAuthed(int client_id, int Level)
 	{
 		m_apPlayers[client_id]->m_Authed = Level;
 		char buf[11];
-		str_format(buf, sizeof(buf), "ban %d %d", client_id, g_Config.m_SvVoteKickBanTime);
+		str_format(buf, sizeof(buf), "ban %d %d", client_id, g_Config.m_SvVoteKickBantime);
 		if ( !strcmp(m_aVoteCommand,buf))
 		{
 			m_VoteEnforce = CGameContext::VOTE_ENFORCE_NO;
 			dbg_msg("hooks","Aborting vote");
 		}
 	}
-}
-
-void CGameContext::OnSetResistent(int client_id, int Resistent)
-{
-   if(m_apPlayers[client_id])
-       m_apPlayers[client_id]->m_Resistent = Resistent;
 }
 
 void CGameContext::OnClientConnected(int ClientId)
@@ -1195,13 +1189,13 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			}
 			str_format(aChatmsg, sizeof(aChatmsg), "'%s' called for vote to kick '%s'", Server()->ClientName(ClientId), Server()->ClientName(KickId));
 			str_format(aDesc, sizeof(aDesc), "Kick '%s'", Server()->ClientName(KickId));
-			if (!g_Config.m_SvVoteKickBanTime)
+			if (!g_Config.m_SvVoteKickBantime)
 				str_format(aCmd, sizeof(aCmd), "kick %d", KickId);
 			else
 			{
 				char aBuf[64] = {0};
 				Server()->GetClientIP(KickId, aBuf, sizeof(aBuf));
-				str_format(aCmd, sizeof(aCmd), "ban %s %d", aBuf, g_Config.m_SvVoteKickBanTime);
+				str_format(aCmd, sizeof(aCmd), "ban %s %d", aBuf, g_Config.m_SvVoteKickBantime);
 			}
 			m_apPlayers[ClientId]->m_Last_KickVote = time_get();
 			m_VoteKick = true;

@@ -85,8 +85,7 @@ public:
    //int hammer_ type;  		 
  		 
    // TODO: clean this up
-   int m_Authed;  		 
-   int m_Resistent;  
+   int m_Authed;
    
    bool m_ColorSet; // Set if player changed color at least once 
 

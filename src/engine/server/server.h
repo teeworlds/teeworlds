@@ -98,13 +98,9 @@ public:
 		int m_Score;
 		int m_Authed;
 		int m_AuthTries;
-		
-		int m_Resistent;
-		
-		NETADDR m_Addr; // for storing address 
-		int m_CmdTries; //Floff players rcon command tries, to prevent command flood server crash  
-		int64 m_CmdTriesTimer; // time
-		
+
+		NETADDR m_Addr;
+
 		void Reset();
 	};
 	
@@ -155,7 +151,7 @@ public:
 
 	int Init();
 
-	bool IsAuthed(int ClientID);
+	int IsAuthed(int ClientID);
 	int GetClientInfo(int ClientID, CClientInfo *pInfo);
 	void GetClientIP(int ClientID, char *pIPString, int Size);
 	const char *ClientName(int ClientId);
