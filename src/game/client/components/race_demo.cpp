@@ -134,7 +134,6 @@ void CRaceDemo::CheckDemo()
 	m_pClient->m_pMenus->DemolistPopulate();
 	for(int i = 0; i < m_pClient->m_pMenus->m_lDemos.size(); i++)
 	{
-		dbg_msg("test", "\"%s\" | \"%s\" | %d", m_pClient->m_pMenus->m_lDemos[i].m_aName, aDemoName, str_length(aDemoName));
 		if(!str_comp_num(m_pClient->m_pMenus->m_lDemos[i].m_aName, aDemoName, str_length(aDemoName)))
 		{
 			const char *pDemo = m_pClient->m_pMenus->m_lDemos[i].m_aName;
@@ -156,7 +155,6 @@ void CRaceDemo::CheckDemo()
 				
 				// delete old demo
 				char aFilename[512];
-				dbg_msg("test", "\"%s\"", m_pClient->m_pMenus->m_lDemos[i].m_aName);
 				str_format(aFilename, sizeof(aFilename), "demos/%s", m_pClient->m_pMenus->m_lDemos[i].m_aName);
 				Storage()->RemoveFile(aFilename, IStorage::TYPE_SAVE);
 			}
