@@ -1,5 +1,5 @@
 #include <new>
-#include <stdio.h>
+//#include <stdio.h> //TODO:GFX check if linux still needs this
 #include <engine/server.h>
 #include <engine/server/server.h>
 #include <engine/shared/config.h>
@@ -24,11 +24,6 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	this->m_ClientID = CID;
 	m_Team = GameServer()->m_pController->ClampTeam(Team);
 	m_LastActionTick = Server()->Tick();
-	m_LastPlaytime = time_get();
-	m_LastTarget_x = 0;
-	m_LastTarget_y = 0;
-	m_SentAfkWarning = 0; // afk timer's 1st warning after 50% of sv_max_afk_time
-	m_SentAfkWarning2 = 0;
 
 	m_PauseInfo.m_Respawn = false;
 	
@@ -159,7 +154,7 @@ void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 	
 	if(!Character && m_Team == -1)
 		m_ViewPos = vec2(NewInput->m_TargetX, NewInput->m_TargetY);
-	AfkTimer(NewInput->m_TargetX, NewInput->m_TargetY);
+
 	// check for activity
 	if(NewInput->m_Direction || m_LatestActivity.m_TargetX != NewInput->m_TargetX ||
 		m_LatestActivity.m_TargetY != NewInput->m_TargetY || NewInput->m_Jump ||
@@ -307,57 +302,4 @@ void CPlayer::SaveCharacter()
 	m_PauseInfo.m_Super = Character->m_Super;
 	m_PauseInfo.m_PauseTime = Server()->Tick();
 	//m_PauseInfo.m_RefreshTime = Character->m_RefreshTime;
-}
-
-void CPlayer::AfkTimer(int new_target_x, int new_target_y)
-{
-	/*
-		afk timer (x, y = mouse coordinates)
-		Since a player has to move the mouse to play, this is a better method than checking
-		the player's position in the game world, because it can easily be bypassed by just locking a key.
-		Frozen players could be kicked as well, because they can't move.
-		It also works for spectators.
-	*/
-	
-	if(m_Authed) return; // don't kick admins
-	if(g_Config.m_SvMaxAfkTime == 0) return; // 0 = disabled
-	
-	if(new_target_x != m_LastTarget_x || new_target_y != m_LastTarget_y)
-	{
-		m_LastPlaytime = time_get();
-		m_LastTarget_x = new_target_x;
-		m_LastTarget_y = new_target_y;
-		m_SentAfkWarning = 0; // afk timer's 1st warning after 50% of sv_max_afk_time
-		m_SentAfkWarning2 = 0;
-		
-	}
-	else
-	{
-		// not playing, check how long
-		if(m_SentAfkWarning == 0 && m_LastPlaytime < time_get()-time_freq()*(int)(g_Config.m_SvMaxAfkTime*0.5))
-		{
-			sprintf(
-				m_pAfkMsg,
-				"You have been afk for %d seconds now. Please note that you get kicked after not playing for %d seconds.",
-				(int)(g_Config.m_SvMaxAfkTime*0.5),
-				g_Config.m_SvMaxAfkTime
-			);
-			m_pGameServer->SendChatTarget(m_ClientID, m_pAfkMsg);
-			m_SentAfkWarning = 1;
-		} else if(m_SentAfkWarning2 == 0 && m_LastPlaytime < time_get()-time_freq()*(int)(g_Config.m_SvMaxAfkTime*0.9))
-		{
-			sprintf(
-				m_pAfkMsg,
-				"You have been afk for %d seconds now. Please note that you get kicked after not playing for %d seconds.",
-				(int)(g_Config.m_SvMaxAfkTime*0.9),
-				g_Config.m_SvMaxAfkTime
-			);
-			m_pGameServer->SendChatTarget(m_ClientID, m_pAfkMsg);
-			m_SentAfkWarning = 1;
-		} else if(m_LastPlaytime < time_get()-time_freq()*g_Config.m_SvMaxAfkTime)
-		{
-			CServer* serv =	(CServer*)m_pGameServer->Server();
-			serv->Kick(m_ClientID,"Away from keyboard");
-		}
-	}
 }
