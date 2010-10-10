@@ -44,11 +44,20 @@ class CConsole : public IConsole
 	static void Con_Echo(IResult *pResult, void *pUserData, int ClientId);
 	static void Con_Exec(IResult *pResult, void *pUserData, int ClientId);
 
-	void ExecuteFileRecurse(const char *pFilename);
-	void ExecuteLineStroked(int Stroke, const char *pStr, const int ClientLevel, const int ClientId);
+	void ExecuteFileRecurse(const char *pFilename, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0);
+	virtual void ExecuteLineStroked(int Stroke, const char *pStr, const int ClientLevel, const int ClientId, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0);
 	
 	FPrintCallback m_pfnPrintCallback;
 	void *m_pPrintCallbackUserdata;
+	FPrintCallback m_pfnAlternativePrintCallback;
+	void *m_pAlternativePrintCallbackUserdata;
+	int m_PrintUsed;
+
+	FPrintCallback m_pfnPrintResponseCallback;
+	void *m_pPrintResponseCallbackUserdata;
+	FPrintCallback m_pfnAlternativePrintResponseCallback;
+	void *m_pAlternativePrintResponseCallbackUserdata;
+	int m_PrintResponseUsed;
 
 	enum
 	{
@@ -119,11 +128,19 @@ public:
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser);
 	virtual void StoreCommands(bool Store, int ClientId);
 	
-	virtual void ExecuteLine(const char *pStr, const int ClientLevel, const int ClientId);
-	virtual void ExecuteFile(const char *pFilename);
+	virtual void ExecuteLine(const char *pStr, const int ClientLevel, const int ClientId, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0);
+	virtual void ExecuteFile(const char *pFilename, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0);
 
 	virtual void RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUserData);
+	virtual void RegisterAlternativePrintCallback(FPrintCallback pfnAlternativePrintCallback, void *pAlternativeUserData);
+	virtual void ReleaseAlternativePrintCallback();
+
+	virtual void RegisterPrintResponseCallback(FPrintCallback pfnPrintResponseCallback, void *pUserData);
+	virtual void RegisterAlternativePrintResponseCallback(FPrintCallback pfnAlternativePrintCallback, void *pAlternativeUserData);
+	virtual void ReleaseAlternativePrintResponseCallback();
+
 	virtual void Print(int Level, const char *pFrom, const char *pStr);
+	virtual void PrintResponse(int Level, const char *pFrom, const char *pStr);
 };
 
 #endif

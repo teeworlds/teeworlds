@@ -130,7 +130,7 @@ void CGameContext::CreateExplosion(vec2 P, int Owner, int Weapon, bool NoDamage,
 		ev->m_Y = (int)P.y;
 	}
 
-	/*if (!NoDamage)
+	/*if(!NoDamage)
 	{*/
 		// deal damage
 		CCharacter *apEnts[64];
@@ -195,7 +195,7 @@ void CGameContext::CreateDeath(vec2 P, int ClientId, int Mask)
 
 void CGameContext::CreateSound(vec2 Pos, int Sound, int Mask)
 {
-	if (Sound < 0)
+	if(Sound < 0)
 		return;
 
 	// create a sound
@@ -210,7 +210,7 @@ void CGameContext::CreateSound(vec2 Pos, int Sound, int Mask)
 
 void CGameContext::CreateSoundGlobal(int Sound, int Target)
 {
-	if (Sound < 0)
+	if(Sound < 0)
 		return;
 
 	CNetMsg_Sv_SoundGlobal Msg;
@@ -228,6 +228,45 @@ void CGameContext::SendChatTarget(int To, const char *pText)
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, To);
 }
 
+void CGameContext::SendChatResponseAll(const char *pLine, void *pUser)
+{
+	CGameContext *pSelf = (CGameContext *)pUser;
+
+	static volatile int ReentryGuard = 0;
+
+	if(ReentryGuard)
+		return;
+	ReentryGuard++;
+
+	if(*pLine == '[')
+	do
+		pLine++;
+	while(*(pLine - 2) != ':' && *pLine != 0);//remove the category (e.g. [Console]: No Such Command)
+
+	pSelf->SendChat(-1, CHAT_ALL, pLine);
+
+	ReentryGuard--;
+}
+
+void CGameContext::SendChatResponse(const char *pLine, void *pUser)
+{
+	ChatResponseInfo *pInfo = (ChatResponseInfo *)pUser;
+
+	static volatile int ReentryGuard = 0;
+
+	if(ReentryGuard)
+		return;
+	ReentryGuard++;
+
+	if(*pLine == '[')
+	do
+		pLine++;
+	while(*(pLine - 2) != ':' && *pLine != 0); // remove the category (e.g. [Console]: No Such Command)
+
+	pInfo->m_GameContext->SendChatTarget(pInfo->m_To, pLine);
+
+	ReentryGuard--;
+}
 
 void CGameContext::SendChat(int ChatterClientId, int Team, const char *pText)
 {
@@ -482,14 +521,14 @@ void CGameContext::OnTick()
 				//SendChat(-1, CGameContext::CHAT_ALL, "Vote passed");
 				if(m_VoteEnforce == VOTE_ENFORCE_YES)
 				{
-					Console()->ExecuteLine(m_aVoteCommand, 3,-1);
+				Console()->ExecuteLine(m_aVoteCommand, 3, -1, CServer::SendRconLineAuthed, Server(), SendChatResponseAll, this);
 					SendChat(-1, CGameContext::CHAT_ALL, "Vote passed (enforced by Admin)");
 					dbg_msg("Vote","Due to vote enforcing, vote level has been set to 3");
 					EndVote();
 				}
 				else
 				{
-					Console()->ExecuteLine(m_aVoteCommand, 4,-1);
+				Console()->ExecuteLine(m_aVoteCommand, 4, -1, CServer::SendRconLineAuthed, Server(), SendChatResponseAll, this);
 					dbg_msg("Vote","vote level is set to 4");
 					EndVote();
 					SendChat(-1, CGameContext::CHAT_ALL, "Vote passed");
@@ -559,7 +598,7 @@ void CGameContext::OnClientEnter(int ClientId)
 	SendChatTarget(ClientId, "Or visit DDRace.info");
 	SendChatTarget(ClientId, "To see this again say /info");
 	
-	if (g_Config.m_SvWelcome[0]!=0) SendChatTarget(ClientId,g_Config.m_SvWelcome);
+	if(g_Config.m_SvWelcome[0]!=0) SendChatTarget(ClientId,g_Config.m_SvWelcome);
 	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' team=%d", ClientId, Server()->ClientName(ClientId), m_apPlayers[ClientId]->GetTeam());
 	
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
@@ -569,10 +608,10 @@ void CGameContext::OnClientEnter(int ClientId)
 
 bool compare_players(CPlayer *pl1, CPlayer *pl2)
 {
-   if (pl1->m_Authed>pl2->m_Authed)
-       return true;
-   else
-       return false;
+	if(pl1->m_Authed>pl2->m_Authed)
+		return true;
+	else
+		return false;
 }
 
 void CGameContext::OnSetAuthed(int client_id, int Level)
@@ -582,7 +621,7 @@ void CGameContext::OnSetAuthed(int client_id, int Level)
 		m_apPlayers[client_id]->m_Authed = Level;
 		char buf[11];
 		str_format(buf, sizeof(buf), "ban %d %d", client_id, g_Config.m_SvVoteKickBantime);
-		if ( !strcmp(m_aVoteCommand,buf))
+		if( !strcmp(m_aVoteCommand,buf))
 		{
 			m_VoteEnforce = CGameContext::VOTE_ENFORCE_NO;
 			dbg_msg("hooks","Aborting vote");
@@ -675,390 +714,17 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		}
 		if(pMsg->m_pMessage[0]=='/')
 		{
-			if(!str_comp_nocase(pMsg->m_pMessage, "/Credits"))
-			{
+			ChatResponseInfo Info;
+			Info.m_GameContext = this;
+			Info.m_To = ClientId;
 
-				SendChatTarget(ClientId, "This mod was originally created by 3DA");
-				SendChatTarget(ClientId, "Now it is maintained by GreYFoX@GTi and [BlackTee]den among others:");
-				SendChatTarget(ClientId, "Code: LemonFace, noother & Fluxid");
-				SendChatTarget(ClientId, "Documentation: Zeta-Hoernchen");
-				SendChatTarget(ClientId, "Please check the changelog on DDRace.info.");
-				SendChatTarget(ClientId, "Also the commit log on github.com/GreYFoXGTi/DDRace.");
-
-			}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/info"))
-			{
-					SendChatTarget(ClientId, "DDRace Mod. Version: " DDRACE_VERSION);
-					SendChatTarget(ClientId, "Official site: DDRace.info");
-					SendChatTarget(ClientId, "For more Info /CMDList");
-					SendChatTarget(ClientId, "Or visit DDRace.info");
-			}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/CMDList"))
-			{
-				char buf[64];
-				str_format(buf, sizeof(buf), "/help /Info /Credits %s",g_Config.m_SvPauseable?"/pause":"");
-				SendChatTarget(ClientId, buf);
-				SendChatTarget(ClientId, "/rank /emote /top5 /top5 i /team i /broadcast /time /flags /kill");
-			}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help"))
-			{
-				SendChatTarget(ClientId, "/CMDlist will show a list of all chat commands");
-				SendChatTarget(ClientId, "/help + any command will show you the help for this command");
-				SendChatTarget(ClientId, "Example /help flags will display the help about ");
-			}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help Credits"))
-				SendChatTarget(ClientId, "Displays the credits of DDRace.");
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help info"))
-				SendChatTarget(ClientId, "Displays information about the mod.");
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help CMDlist"))
-				SendChatTarget(ClientId, "Displays all chat commands.");
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help Help"))
-				SendChatTarget(ClientId, "This is what you are just using.");
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help Help %s"))
-				SendChatTarget(ClientId, "Well... i think i won't give you any help with this, you funny guy.");
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help flags"))
-				SendChatTarget(ClientId, "Displays information about server options");
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help rules"))
-				SendChatTarget(ClientId, "Displays the server rules.");
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help kill"))
-				SendChatTarget(ClientId, "Kills your tee so you can quickly restart the race.");
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help pause"))
-				SendChatTarget(ClientId, "Pauses your tee. You will join the spectators while your tee is paused. Use the command again to continue.");
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help top5"))
-				SendChatTarget(ClientId, "Displays the top five ranks of this race on this server. /top5 i will show 5 ranks beginningt with rank i.");
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help top5 i"))
-				SendChatTarget(ClientId, "You're a funny stacker... See /Help top5 for this.");
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help rank"))
-				SendChatTarget(ClientId, "Shows your rank on the server. /rank <name> will show you the rank of the player with the specified name.");
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help rank name"))
-				SendChatTarget(ClientId, "You're a funny stacker... See /rank for this.");
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help eyeemote"))
-				SendChatTarget(ClientId, "Toggles whether to use the default eye emote settings for emoticons.");
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help broadcast"))
-				SendChatTarget(ClientId, "Enables/disables the broadcast");
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/Help emote"))
-				SendChatTarget(ClientId, "Shows information about the emote commands. Emote commands change the eyes of your tee.");
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/flags"))
-			{
-				char buf[64];
-				float temp1;
-				float temp2;
-				m_Tuning.Get("player_collision",&temp1);
-				m_Tuning.Get("player_hooking",&temp2);
-				str_format(buf, sizeof(buf), "Flags: cheats[%s]%s%s collision[%s] hooking[%s]",
-							g_Config.m_SvCheats?"yes":"no",
-							(g_Config.m_SvCheats)?" w/Time":"",
-							(g_Config.m_SvCheats)?(g_Config.m_SvCheatTime)?"[yes]":"[no]":"",
-							temp1?"yes":"no",
-							temp2?"yes":"no");
-					SendChatTarget(ClientId, buf);
-					str_format(buf, sizeof(buf), "endless hook[%s] weapons effect others[%s]",g_Config.m_SvEndlessDrag?"yes":"no",g_Config.m_SvHit?"yes":"no");
-					SendChatTarget(ClientId, buf);
-					if(g_Config.m_SvPauseable)
-					{
-						str_format(buf, sizeof(buf), "Server Allows /pause with%s",g_Config.m_SvPauseTime?" time pause.":"out time pause.");
-						SendChatTarget(ClientId, buf);
-					}
-			}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/rules"))
-			{
-				bool printed=false;
-				if(g_Config.m_SvDDRaceRules)
-				{
-					SendChatTarget(ClientId, "No blocking.");
-					SendChatTarget(ClientId, "No insulting / spamming.");
-					SendChatTarget(ClientId, "No fun voting / vote spamming.");
-					SendChatTarget(ClientId, "Breaking any of these rules will result in a penalty, decided by server admins.");
-					printed=true;
-				}
-				if(g_Config.m_SvRulesLine1[0])
-				{
-					SendChatTarget(ClientId, g_Config.m_SvRulesLine1);
-					printed=true;
-				}
-				if(g_Config.m_SvRulesLine2[0])
-				{
-					SendChatTarget(ClientId, g_Config.m_SvRulesLine2);
-					printed=true;
-				}
-				if(g_Config.m_SvRulesLine3[0])
-				{
-					SendChatTarget(ClientId, g_Config.m_SvRulesLine3);
-					printed=true;
-				}
-				if(g_Config.m_SvRulesLine4[0])
-				{
-					SendChatTarget(ClientId, g_Config.m_SvRulesLine4);
-					printed=true;
-				}
-				if(g_Config.m_SvRulesLine5[0])
-				{
-					SendChatTarget(ClientId, g_Config.m_SvRulesLine5);
-					printed=true;
-				}
-				if(g_Config.m_SvRulesLine6[0])
-				{
-					SendChatTarget(ClientId, g_Config.m_SvRulesLine6);
-					printed=true;
-				}
-				if(g_Config.m_SvRulesLine7[0])
-				{
-					SendChatTarget(ClientId, g_Config.m_SvRulesLine7);
-					printed=true;
-				}
-				if(g_Config.m_SvRulesLine8[0])
-				{
-					SendChatTarget(ClientId, g_Config.m_SvRulesLine8);
-					printed=true;
-				}
-				if(g_Config.m_SvRulesLine9[0])
-				{
-					SendChatTarget(ClientId, g_Config.m_SvRulesLine9);
-					printed=true;
-				}
-				if(g_Config.m_SvRulesLine10[0])
-				{
-					SendChatTarget(ClientId, g_Config.m_SvRulesLine10);
-					printed=true;
-				}
-				if(!printed)
-					SendChatTarget(ClientId, "No Rules Defined, Kill em all!!");
-			}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/kill"))
-			{
-				if(pPlayer->m_Last_Kill && pPlayer->m_Last_Kill+Server()->TickSpeed() * g_Config.m_SvKillDelay > Server()->Tick())
-				{
-					pPlayer->m_Last_Kill = Server()->Tick();
-					pPlayer->KillCharacter(WEAPON_SELF);
-					pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed() * g_Config.m_SvSuicidePenalty;
-				}
-			}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/pause"))
-			{
-				if(g_Config.m_SvPauseable)
-				{
-					CCharacter* chr = pPlayer->GetCharacter();
-					if(!pPlayer->GetTeam() && chr && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos && !pPlayer->m_InfoSaved)
-					{
-						pPlayer->SaveCharacter();
-						pPlayer->SetTeam(-1);
-						pPlayer->m_InfoSaved = true;
-					}
-					else if (pPlayer->GetTeam()==-1 && pPlayer->m_InfoSaved)
-					{
-						pPlayer->m_InfoSaved = false;
-						pPlayer->m_PauseInfo.m_Respawn = true;
-						pPlayer->SetTeam(0);
-						//pPlayer->LoadCharacter();//TODO:Check if this system Works
-					}
-					else if(chr)
-						SendChatTarget(ClientId, (chr->m_aWeapons[WEAPON_NINJA].m_Got)?"You can't use /pause while you are a ninja":(!chr->IsGrounded())?"You can't use /pause while you are a in air":"You can't use /pause while you are moving");
-					else
-						SendChatTarget(ClientId, "No pause data saved.");
-				}
-				else
-					SendChatTarget(ClientId, "The admin didn't activate /pause");
-			}
-			else if(!str_comp_num(pMsg->m_pMessage, "/top5", 5))
-			{
-				if(g_Config.m_SvHideScore)
-				{
-					SendChatTarget(ClientId, "Showing the top 5 is not allowed on this server.");
-					return;
-				}
-				
-				int Num;
-				
-				if(sscanf(pMsg->m_pMessage, "/top5 %d", &Num) == 1)
-					Score()->ShowTop5(pPlayer->GetCID(), Num);
-				else
-					Score()->ShowTop5(pPlayer->GetCID());
-			}
-			else if(!str_comp_num(pMsg->m_pMessage, "/rank", 5))
-			{
-				char aName[256];
-				
-				if(g_Config.m_SvHideScore && sscanf(pMsg->m_pMessage, "/rank %s", aName) == 1)
-					Score()->ShowRank(pPlayer->GetCID(), aName, true);
-				else
-					Score()->ShowRank(pPlayer->GetCID(), Server()->ClientName(ClientId));
-			}
-			else if(!str_comp_num(pMsg->m_pMessage, "/me", 3))
-			{
-				char aMsg[256]="";
-				if(sscanf(pMsg->m_pMessage, "/me %256c", aMsg) == 1)
-				{
-					char Temp[256+24]="";
-					strcat(Temp,Server()->ClientName(ClientId));
-					strcat(Temp," ");
-					strcat(Temp,aMsg);
-					SendChat(-1, CGameContext::CHAT_ALL, Temp);
-					mem_zero(Temp,sizeof(Temp));
-					mem_zero(aMsg,sizeof(aMsg));
-				}
-			}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/time") && g_Config.m_SvEmotionalTees)
-
-				{
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if (pChr)
-					{
-						if(pChr->m_BroadTime)
-							pChr->m_BroadTime=false;
-						else
-							pChr->m_BroadTime=true;
-					}
-				}
-
-			else if(!str_comp_num(pMsg->m_pMessage, "/team", 5))
-			{
-				int Num;
-				
-				if(sscanf(pMsg->m_pMessage, "/team %d", &Num) == 1)
-				{
-					if(pPlayer->GetCharacter() == 0) {
-						SendChatTarget(ClientId, "You can't change teams while you are dead/a spectator.");
-					} else {
-						if(((CGameControllerDDRace*)m_pController)->m_Teams.SetCharacterTeam(pPlayer->GetCID(), Num)) {
-							char aBuf[512];
-							str_format(aBuf, sizeof(aBuf), "%s joined to Team %d", Server()->ClientName(pPlayer->GetCID()), Num);
-							SendChat(-1, CGameContext::CHAT_ALL, aBuf);
-						} else {
-							SendChatTarget(ClientId, "You cannot join to this team");
-						}
-					}
-				}
-				else
-				{
-					char aBuf[512];
-					if(pPlayer->GetCharacter() == 0) {
-						SendChatTarget(ClientId, "You can't check your team while you are dead/a spectator.");
-					} else {
-					str_format(aBuf, sizeof(aBuf), "You are in team %d", pPlayer->GetCharacter()->Team());
-					SendChatTarget(ClientId, aBuf);
-					}
-				}
-					
-			}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/eyeemote") && g_Config.m_SvEmotionalTees)
-
-				{
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if (pChr)
-					{
-						pChr->m_EyeEmote=!pChr->m_EyeEmote;
-						SendChatTarget(ClientId, (pChr->m_EyeEmote)?"You can now use the preset eye emotes.":"You don't have any eye emotes, remember to bind some.(until you die)");
-					}
-				}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/fly"))
-
-				{
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if (pChr && pChr->m_Super)
-					{
-						pChr->m_Fly=!pChr->m_Fly;
-						SendChatTarget(ClientId, (pChr->m_Fly)?"You are not a Tee you are a Bird.":"You are not a Bird you are a Tee.");
-					}
-				}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/broadcast") && g_Config.m_SvEmotionalTees)
-				{
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if (pChr)
-					{
-						if(pChr->m_BroadCast)
-							pChr->m_BroadCast=false;
-						else
-							pChr->m_BroadCast=true;
-					}
-				}
-			else if (!str_comp_nocase(pMsg->m_pMessage, "/emote") && g_Config.m_SvEmotionalTees)
-				{
-					SendChatTarget(ClientId, "Emote commands are: /emote surprise /emote blink /emote close /emote angry /emote happy /emote pain");
-					SendChatTarget(ClientId, "Example: /emote surprise 10 for 10 seconds or /emote surprise (default 1 second)");
-				}
-			else if(!str_comp_num(pMsg->m_pMessage, "/emote pain", 11) && g_Config.m_SvEmotionalTees)
-			{
-				int Num = -1;
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if (pChr)
-					{
-						pChr->m_EmoteType = EMOTE_PAIN;
-						if(sscanf(pMsg->m_pMessage, "/emote pain %d", &Num) > 0)
-							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
-						else
-							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
-					}
-				}
-			else if(!str_comp_num(pMsg->m_pMessage, "/emote happy", 12) && g_Config.m_SvEmotionalTees)
-			{
-				int Num = -1;
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if (pChr)
-					{
-						pChr->m_EmoteType = EMOTE_HAPPY;
-						if(sscanf(pMsg->m_pMessage, "/emote happy %d", &Num) > 0)
-							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
-						else
-							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
-					}
-				}
-			else if(!str_comp_num(pMsg->m_pMessage, "/emote angry", 12) && g_Config.m_SvEmotionalTees)
-			{
-				int Num = -1;
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if (pChr)
-					{
-						pChr->m_EmoteType = EMOTE_ANGRY;
-						if(sscanf(pMsg->m_pMessage, "/emote angry %d", &Num) > 0)
-							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
-						else
-							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
-					}
-				}
-			else if(!str_comp_num(pMsg->m_pMessage, "/emote close", 12) && g_Config.m_SvEmotionalTees)
-			{
-				int Num = -1;
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if (pChr)
-					{
-						pChr->m_EmoteType = EMOTE_BLINK;
-						if(sscanf(pMsg->m_pMessage, "/emote close %d", &Num) > 0)
-							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
-						else
-							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
-					}
-				}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/emote blink") && g_Config.m_SvEmotionalTees)
-				{
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if (pChr)
-					{
-						pChr->m_EmoteType = EMOTE_BLINK;
-						pChr->m_EmoteStop = Server()->Tick() + 0.5 * Server()->TickSpeed();
-					}
-				}
-			else if(!str_comp_num(pMsg->m_pMessage, "/emote surprise", 15) && g_Config.m_SvEmotionalTees)
-			{
-				int Num = -1;
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if (pChr)
-					{
-						pChr->m_EmoteType = EMOTE_SURPRISE;
-						if(sscanf(pMsg->m_pMessage, "/emote surprise %d", &Num) > 0)
-							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
-						else
-							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
-					}
-			}
-			else
-				SendChatTarget(ClientId, "No such command! say /CMDList");
-
+			Console()->ExecuteLine(pMsg->m_pMessage + 1, ((CServer *) Server())->m_aClients[ClientId].m_Authed, ClientId, CServer::SendRconLineAuthed, Server(), SendChatResponse, &Info);
 		}
 		else if(!str_comp_nocase(pMsg->m_pMessage, "kill"))
 			SendChatTarget(ClientId, "kill does nothing, say /kill if you want to die, also you can press f1 and type kill");
 		else
 		{
-			if (m_apPlayers[ClientId]->m_Muted == 0)
+			if(m_apPlayers[ClientId]->m_Muted == 0)
 				SendChat(ClientId, Team, pMsg->m_pMessage);
 			else
 			{
@@ -1189,7 +855,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			}
 			str_format(aChatmsg, sizeof(aChatmsg), "'%s' called for vote to kick '%s'", Server()->ClientName(ClientId), Server()->ClientName(KickId));
 			str_format(aDesc, sizeof(aDesc), "Kick '%s'", Server()->ClientName(KickId));
-			if (!g_Config.m_SvVoteKickBantime)
+			if(!g_Config.m_SvVoteKickBantime)
 				str_format(aCmd, sizeof(aCmd), "kick %d", KickId);
 			else
 			{
@@ -1227,7 +893,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			m_VoteUpdate = true;
 		}
 	}
-	else if (MsgId == NETMSGTYPE_CL_SETTEAM && !m_World.m_Paused)
+	else if(MsgId == NETMSGTYPE_CL_SETTEAM && !m_World.m_Paused)
 	{
 		CNetMsg_Cl_SetTeam *pMsg = (CNetMsg_Cl_SetTeam *)pRawMsg;
 
@@ -1260,7 +926,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			SendBroadcast(aBuf, ClientId);
 		}
 	}
-	else if (MsgId == NETMSGTYPE_CL_CHANGEINFO || MsgId == NETMSGTYPE_CL_STARTINFO)
+	else if(MsgId == NETMSGTYPE_CL_CHANGEINFO || MsgId == NETMSGTYPE_CL_STARTINFO)
 	{
 		CNetMsg_Cl_ChangeInfo *pMsg = (CNetMsg_Cl_ChangeInfo *)pRawMsg;
 
@@ -1268,7 +934,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			return;
 
 		pPlayer->m_Last_ChangeInfo = time_get();
-		if (!pPlayer->m_ColorSet|| g_Config.m_SvAllowColorChange)
+		if(!pPlayer->m_ColorSet|| g_Config.m_SvAllowColorChange)
 		{
 			pPlayer->m_TeeInfos.m_UseCustomColor = pMsg->m_UseCustomColor;
 			pPlayer->m_TeeInfos.m_ColorBody = pMsg->m_ColorBody;
@@ -1314,7 +980,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			Server()->SendPackMsg(&m, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientId);
 		}
 	}
-	else if (MsgId == NETMSGTYPE_CL_EMOTICON && !m_World.m_Paused)
+	else if(MsgId == NETMSGTYPE_CL_EMOTICON && !m_World.m_Paused)
 	{
 		CNetMsg_Cl_Emoticon *pMsg = (CNetMsg_Cl_Emoticon *)pRawMsg;
 
@@ -1325,7 +991,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 
 		SendEmoticon(ClientId, pMsg->m_Emoticon);
 		CCharacter* pChr = pPlayer->GetCharacter();
-		if (pChr && g_Config.m_SvEmotionalTees && pChr->m_EyeEmote)
+		if(pChr && g_Config.m_SvEmotionalTees && pChr->m_EyeEmote)
 		{
 			switch(pMsg->m_Emoticon)
 			{
@@ -1359,7 +1025,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		}
 	}
 	
-	else if (MsgId == NETMSGTYPE_CL_KILL && !m_World.m_Paused)
+	else if(MsgId == NETMSGTYPE_CL_KILL && !m_World.m_Paused)
 	{
 		if(pPlayer->m_Last_Kill && pPlayer->m_Last_Kill+Server()->TickSpeed() * g_Config.m_SvKillDelay > Server()->Tick())
 			return;
@@ -1405,7 +1071,7 @@ void CGameContext::ConTuneDump(IConsole::IResult *pResult, void *pUserData, int 
 		float v;
 		pSelf->Tuning()->Get(i, &v);
 		str_format(aBuf, sizeof(aBuf), "%s %.2f", pSelf->Tuning()->m_apNames[i], v);
-		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", aBuf);
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", aBuf);
 	}
 }
 
@@ -1506,11 +1172,11 @@ void CGameContext::ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *p
 }
 
 
-bool CGameContext::CheatsAvailable(int ClientId)
+bool CGameContext::CheatsAvailable(IConsole *pConsole, int ClientId)
 {
 	if(!g_Config.m_SvCheats)
 	{
-		((CServer*)Server())->SendRconLine(ClientId, "Cheats are not available on this server.");
+		pConsole->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "cheats", "Cheats are not available on this server.");
 	}
 	return g_Config.m_SvCheats;
 }
@@ -1519,7 +1185,7 @@ void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int Cl
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	if (!pSelf->CheatsAvailable(ClientId))
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId))
 		return;
 	int Victim=-1;
 	if(pResult->NumArguments())
@@ -1534,7 +1200,7 @@ void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int Cl
 				chr->m_RaceState = RACE_CHEAT;
 		}
 	}
-	else if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	else if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
 		if(chr)
@@ -1547,15 +1213,15 @@ void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int Cl
 	else
 	{
 		CServer* pServ = (CServer*)pSelf->Server();
-		pServ->SendRconLine(ClientId,(pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", (pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
 	}
 }
 
-void  CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int ClientId)
+void CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	if (!pSelf->CheatsAvailable(ClientId))
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId))
 		return;
 	int Victim=-1;
 	if(pResult->NumArguments())
@@ -1570,7 +1236,7 @@ void  CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int 
 				chr->m_RaceState = RACE_CHEAT;
 		}
 	}
-	else if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	else if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
 		if(chr)
@@ -1583,15 +1249,15 @@ void  CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int 
 	else
 	{
 		CServer* pServ = (CServer*)pSelf->Server();
-		pServ->SendRconLine(ClientId,(pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", (pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
 	}
 }
 
-void  CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int ClientId)
+void CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	if (!pSelf->CheatsAvailable(ClientId))
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId))
 		return;
 	int Victim=-1;
 	if(pResult->NumArguments())
@@ -1606,7 +1272,7 @@ void  CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int C
 				chr->m_RaceState = RACE_CHEAT;
 		}
 	}
-	else if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	else if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
 		if(chr)
@@ -1619,15 +1285,15 @@ void  CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int C
 	else
 	{
 		CServer* pServ = (CServer*)pSelf->Server();
-		pServ->SendRconLine(ClientId,(pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", (pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
 	}
 }
 
-void  CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int ClientId)
+void CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	if (!pSelf->CheatsAvailable(ClientId))
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId))
 		return;
 	int Victim=-1;
 	if(pResult->NumArguments())
@@ -1642,7 +1308,7 @@ void  CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int Cli
 				chr->m_RaceState = RACE_CHEAT;
 		}
 	}
-	else if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	else if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
 		if(chr)
@@ -1655,21 +1321,21 @@ void  CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int Cli
 	else
 	{
 		CServer* pServ = (CServer*)pSelf->Server();
-		pServ->SendRconLine(ClientId,(pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", (pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
 	}
 }
 
-void  CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int ClientId)
+void CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	int Seconds = pResult->GetInteger(1);
 	char buf[512];
-	if (Seconds < 10)
+	if(Seconds < 10)
 		Seconds = 10;
-	if (pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim])))
+	if(pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim])))
 	{
-		if (pSelf->m_apPlayers[Victim]->m_Muted < Seconds * pSelf->Server()->TickSpeed())
+		if(pSelf->m_apPlayers[Victim]->m_Muted < Seconds * pSelf->Server()->TickSpeed())
 		{
 			pSelf->m_apPlayers[Victim]->m_Muted = Seconds * pSelf->Server()->TickSpeed();
 		}
@@ -1680,50 +1346,50 @@ void  CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int Cli
 	}
 }
 
-void  CGameContext::ConSetlvl3(IConsole::IResult *pResult, void *pUserData, int ClientId)
+void CGameContext::ConSetlvl3(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	CServer* pServ = (CServer*)pSelf->Server();
-	if (pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
+	if(pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
 	{
 		pSelf->m_apPlayers[Victim]->m_Authed = 3;
 		pServ->SetRconLevel(Victim,3);
 	}
 }
 
-void  CGameContext::ConSetlvl2(IConsole::IResult *pResult, void *pUserData, int ClientId)
+void CGameContext::ConSetlvl2(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	CServer* pServ = (CServer*)pSelf->Server();
-	if (pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
+	if(pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
 	{
 		pSelf->m_apPlayers[Victim]->m_Authed = 2;
 		pServ->SetRconLevel(Victim,2);
 	}
 }
 
-void  CGameContext::ConSetlvl1(IConsole::IResult *pResult, void *pUserData, int ClientId)
+void CGameContext::ConSetlvl1(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	CServer* pServ = (CServer*)pSelf->Server();
-	if (pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
+	if(pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
 	{
 		pSelf->m_apPlayers[Victim]->m_Authed = 1;
 		pServ->SetRconLevel(Victim,1);
 	}
 }
 
-void  CGameContext::ConLogOut(IConsole::IResult *pResult, void *pUserData, int ClientId)
+void CGameContext::ConLogOut(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	int Victim = ClientId;
 	if(pResult->NumArguments() && pSelf->m_apPlayers[Victim]->m_Authed != 1)
 		Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	CServer* pServ = (CServer*)pSelf->Server();
-	if (pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
+	if(pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
 	{
 		pSelf->m_apPlayers[Victim]->m_Authed = 0;
 		pServ->SetRconLevel(Victim,0);
@@ -1737,7 +1403,7 @@ void CGameContext::ConKillPlayer(IConsole::IResult *pResult, void *pUserData, in
 	if(!pSelf->m_apPlayers[Victim])
 		return;
 
-	if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		pSelf->m_apPlayers[Victim]->KillCharacter(WEAPON_GAME);
 		char buf[512];
@@ -1749,7 +1415,7 @@ void CGameContext::ConKillPlayer(IConsole::IResult *pResult, void *pUserData, in
 void CGameContext::ConNinjaMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 
 	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 	if(chr)
@@ -1763,12 +1429,12 @@ void CGameContext::ConNinjaMe(IConsole::IResult *pResult, void *pUserData, int C
 void CGameContext::ConNinja(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	CCharacter* chr = pSelf->GetPlayerChar(Victim);
 	if(chr)
 	{
-		if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+		if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 		{
 			chr->GiveNinja();
 			if(!g_Config.m_SvCheatTime)
@@ -1781,28 +1447,28 @@ void CGameContext::ConNinja(IConsole::IResult *pResult, void *pUserData, int Cli
 void CGameContext::ConHammer(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	char buf[128];
 
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	int type = pResult->GetInteger(1);
 	CCharacter* chr = pSelf->GetPlayerChar(Victim);
-	if (!chr)
+	if(!chr)
 		return;
 	CServer* pServ = (CServer*)pSelf->Server();
-	if (type>3 || type<0)
+	if(type>3 || type<0)
 	{
-		pServ->SendRconLine(ClientId, "Select hammer between 0 and 3");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Select hammer between 0 and 3");
 	}
 	else
 	{
-		if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+		if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 		{
 			chr->m_HammerType = type;
 			if(!g_Config.m_SvCheatTime)
 				chr->m_RaceState = RACE_CHEAT;
 			str_format(buf, sizeof(buf), "Hammer of '%s' ClientId=%d setted to %d", pServ->ClientName(ClientId), Victim, type);
-			pServ->SendRconLine(ClientId, buf);
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 		}
 	}
 }
@@ -1810,16 +1476,16 @@ void CGameContext::ConHammer(IConsole::IResult *pResult, void *pUserData, int Cl
 void CGameContext::ConHammerMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	char buf[128];
 	int type = pResult->GetInteger(0);
 	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
-	if (!chr)
+	if(!chr)
 		return;
 	CServer* pServ = (CServer*)pSelf->Server();
-	if (type>3 || type<0)
+	if(type>3 || type<0)
 	{
-		pServ->SendRconLine(ClientId, "Select hammer between 0 and 3");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Select hammer between 0 and 3");
 	}
 	else
 	{
@@ -1827,7 +1493,7 @@ void CGameContext::ConHammerMe(IConsole::IResult *pResult, void *pUserData, int 
 		if(!g_Config.m_SvCheatTime)
 			chr->m_RaceState = RACE_CHEAT;
 		str_format(buf, sizeof(buf), "Hammer setted to %d",type);
-		pServ->SendRconLine(ClientId, buf);
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 	}
 }
 
@@ -1835,9 +1501,9 @@ void CGameContext::ConHammerMe(IConsole::IResult *pResult, void *pUserData, int 
 void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
 		if(chr && !chr->m_Super)
@@ -1856,9 +1522,9 @@ void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int Cli
 void CGameContext::ConUnSuper(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
 		if(chr && chr->m_Super)
@@ -1872,8 +1538,8 @@ void CGameContext::ConUnSuper(IConsole::IResult *pResult, void *pUserData, int C
 void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
-	if (pSelf->m_apPlayers[ClientId])
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	if(pSelf->m_apPlayers[ClientId])
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 		if(chr && !chr->m_Super)
@@ -1892,8 +1558,8 @@ void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int C
 void CGameContext::ConUnSuperMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
-	if (pSelf->m_apPlayers[ClientId])
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	if(pSelf->m_apPlayers[ClientId])
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 		if(chr && chr->m_Super)
@@ -1907,9 +1573,9 @@ void CGameContext::ConUnSuperMe(IConsole::IResult *pResult, void *pUserData, int
 void CGameContext::ConShotgun(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
 		if(chr)
@@ -1924,7 +1590,7 @@ void CGameContext::ConShotgun(IConsole::IResult *pResult, void *pUserData, int C
 void CGameContext::ConShotgunMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 	if(chr)
 	{
@@ -1937,9 +1603,9 @@ void CGameContext::ConShotgunMe(IConsole::IResult *pResult, void *pUserData, int
 void CGameContext::ConGrenade(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
 		if(chr)
@@ -1954,7 +1620,7 @@ void CGameContext::ConGrenade(IConsole::IResult *pResult, void *pUserData, int C
 void CGameContext::ConGrenadeMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 	if(chr)
 	{
@@ -1967,9 +1633,9 @@ void CGameContext::ConGrenadeMe(IConsole::IResult *pResult, void *pUserData, int
 void CGameContext::ConLaser(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
 		if(chr)
@@ -1984,7 +1650,7 @@ void CGameContext::ConLaser(IConsole::IResult *pResult, void *pUserData, int Cli
 void CGameContext::ConLaserMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 	if(chr)
 	{
@@ -1997,9 +1663,9 @@ void CGameContext::ConLaserMe(IConsole::IResult *pResult, void *pUserData, int C
 void CGameContext::ConWeapons(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
 		if(chr)
@@ -2014,7 +1680,7 @@ void CGameContext::ConWeapons(IConsole::IResult *pResult, void *pUserData, int C
 void CGameContext::ConWeaponsMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
 	if(chr)
 	{
@@ -2027,13 +1693,13 @@ void CGameContext::ConWeaponsMe(IConsole::IResult *pResult, void *pUserData, int
 void CGameContext::ConTeleport(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
- 	int cid2 = clamp(pResult->GetInteger(1), 0, (int)MAX_CLIENTS-1);
+	int cid2 = clamp(pResult->GetInteger(1), 0, (int)MAX_CLIENTS-1);
 	if(pSelf->m_apPlayers[Victim] && pSelf->m_apPlayers[cid2])
 	{
-		if (ClientId==Victim
-			|| (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) &&  compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid2]))
+		if(ClientId==Victim
+			|| (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[cid2]))
 			|| (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) && cid2==ClientId))
 		{
 			CCharacter* chr = pSelf->GetPlayerChar(Victim);
@@ -2057,19 +1723,19 @@ void CGameContext::ConTimerStop(IConsole::IResult *pResult, void *pUserData, int
 
 		int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if (!chr)
+		if(!chr)
 			return;
-		if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+		if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 		{
 			chr->m_RaceState=RACE_CHEAT;
 			str_format(buf, sizeof(buf), "'%s' ClientId=%d Hasn't time now (Timer Stopped)", pServ->ClientName(ClientId), Victim);
-			pServ->SendRconLine(ClientId, buf);
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 		}
 	}
 	else
 	{
 
-		pServ->SendRconLine(ClientId, "Timer commands are disabled");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Timer commands are disabled");
 	}
 }
 
@@ -2082,19 +1748,19 @@ void CGameContext::ConTimerStart(IConsole::IResult *pResult, void *pUserData, in
 	{
 		int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if (!chr)
+		if(!chr)
 			return;
-		if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+		if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 		{
 			chr->m_RaceState = RACE_STARTED;
 			str_format(buf, sizeof(buf), "'%s' ClientId=%d Has time now (Timer Started)", pServ->ClientName(ClientId), Victim);
-			pServ->SendRconLine(ClientId, buf);
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 		}
 	}
 	else
 	{
 
-		pServ->SendRconLine(ClientId, "Timer commands are disabled");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Timer commands are disabled");
 	}
 }
 
@@ -2102,7 +1768,7 @@ void CGameContext::ConTimerZero(IConsole::IResult *pResult, void *pUserData, int
 {
 
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	char buf[128];
 	CServer* pServ = (CServer*)pSelf->Server();
 	if(!g_Config.m_SvTimer)
@@ -2110,28 +1776,28 @@ void CGameContext::ConTimerZero(IConsole::IResult *pResult, void *pUserData, int
 		int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if (!chr)
+		if(!chr)
 			return;
-		if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+		if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 		{
 			chr->m_StartTime = pSelf->Server()->Tick();
 			chr->m_RefreshTime = pSelf->Server()->Tick();
 			chr->m_RaceState=RACE_CHEAT;
 			str_format(buf, sizeof(buf), "'%s' ClientId=%d time has been reset & stopped.", pServ->ClientName(ClientId), Victim);
-			pServ->SendRconLine(ClientId, buf);
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 		}
 	}
 	else
 	{
 
-		pServ->SendRconLine(ClientId, "Timer commands are disabled");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Timer commands are disabled");
 	}
 }
 
 void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(ClientId)) return;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	char buf[128];
 	CServer* pServ = (CServer*)pSelf->Server();
 	if(!g_Config.m_SvTimer)
@@ -2139,43 +1805,43 @@ void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, 
 		int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 
 		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if (!chr)
+		if(!chr)
 			return;
-		if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+		if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 		{
 			chr->m_StartTime = pSelf->Server()->Tick();
 			chr->m_RefreshTime = pSelf->Server()->Tick();
 			chr->m_RaceState=RACE_STARTED;
 			str_format(buf, sizeof(buf), "'%s' ClientId=%d time has been reset & stopped.", pServ->ClientName(ClientId), Victim);
-			pServ->SendRconLine(ClientId, buf);
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 		}
 	}
 	else
 	{
 
-		pServ->SendRconLine(ClientId, "Timer commands are disabled");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Timer commands are disabled");
 	}
 }
 
 void CGameContext::ConFreeze(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	//if(!pSelf->CheatsAvailable(ClientId)) return;
+	//if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	char buf[128];
 	int time=-1;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	if(pResult->NumArguments()>1)
 		time = clamp(pResult->GetInteger(1), -1, 29999);
 	CCharacter* chr = pSelf->GetPlayerChar(Victim);
-	if (!chr)
+	if(!chr)
 		return;
-	if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		chr->Freeze(((time!=0&&time!=-1)?(pSelf->Server()->TickSpeed()*time):(-1)));
 		chr->m_pPlayer->m_RconFreeze = true;
 		CServer* pServ = (CServer*)pSelf->Server();
 		str_format(buf, sizeof(buf), "'%s' ClientId=%d has been Frozen.", pServ->ClientName(ClientId), Victim);
-		pServ->SendRconLine(ClientId, buf);
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 	}
 
 }
@@ -2183,25 +1849,25 @@ void CGameContext::ConFreeze(IConsole::IResult *pResult, void *pUserData, int Cl
 void CGameContext::ConUnFreeze(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	//if(!pSelf->CheatsAvailable(ClientId)) return;
+	//if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
 	char buf[128];
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	CCharacter* chr = pSelf->GetPlayerChar(Victim);
-	if (!chr)
+	if(!chr)
 		return;
 	chr->m_FreezeTime=2;
 	chr->m_pPlayer->m_RconFreeze = false;
 	CServer* pServ = (CServer*)pSelf->Server();
 	str_format(buf, sizeof(buf), "'%s' ClientId=%d has been UnFreezed.", pServ->ClientName(ClientId), Victim);
-	pServ->SendRconLine(ClientId, buf);
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 
 }
 
 void CGameContext::ConInvisMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	//if(!pSelf->CheatsAvailable(ClientId)) return;
-	if (!pSelf->m_apPlayers[ClientId])
+	//if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	if(!pSelf->m_apPlayers[ClientId])
 		return;
 	pSelf->m_apPlayers[ClientId]->m_Invisible = true;
 }
@@ -2209,8 +1875,8 @@ void CGameContext::ConInvisMe(IConsole::IResult *pResult, void *pUserData, int C
 void CGameContext::ConVisMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	//if(!pSelf->CheatsAvailable(ClientId)) return;
-	if (!pSelf->m_apPlayers[ClientId])
+	//if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	if(!pSelf->m_apPlayers[ClientId])
 		return;
 	pSelf->m_apPlayers[ClientId]->m_Invisible = false;
 }
@@ -2218,34 +1884,463 @@ void CGameContext::ConVisMe(IConsole::IResult *pResult, void *pUserData, int Cli
 void CGameContext::ConInvis(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if (!pSelf->m_apPlayers[ClientId])
+	if(!pSelf->m_apPlayers[ClientId])
 		return;
 	char buf[128];
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		pSelf->m_apPlayers[Victim]->m_Invisible = true;
 		CServer* pServ = (CServer*)pSelf->Server();
 		str_format(buf, sizeof(buf), "'%s' ClientId=%d is now invisible.", pServ->ClientName(ClientId), Victim);
-		pServ->SendRconLine(ClientId, buf);
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 	}
 }
 
 void CGameContext::ConVis(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if (!pSelf->m_apPlayers[ClientId])
+	if(!pSelf->m_apPlayers[ClientId])
 		return;
 	char buf[128];
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if (pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
 		pSelf->m_apPlayers[Victim]->m_Invisible = false;
 		CServer* pServ = (CServer*)pSelf->Server();
 		str_format(buf, sizeof(buf), "'%s' ClientId=%d is visible.", pServ->ClientName(ClientId), Victim);
-		pServ->SendRconLine(ClientId, buf);
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 	}
 }
+
+void CGameContext::ConCredits(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "This mod was originally created by 3DA");
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Now it is maintained by GreYFoX@GTi and [BlackTee]den among others:");
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Code: LemonFace, noother & Fluxid");
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Documentation: Zeta-Hoernchen");
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Please check the changelog on DDRace.info.");
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Also the commit log on github.com/GreYFoXGTi/DDRace.");
+}
+
+void CGameContext::ConInfo(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "DDRace Mod. Version: " DDRACE_VERSION);
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Official site: DDRace.info");
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "For more Info /CMDList");
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Or visit DDRace.info");
+}
+
+void CGameContext::ConCmdList(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "List of commands not available in this version.");
+}
+
+void CGameContext::ConHelp(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	if(pResult->NumArguments() == 0)
+	{
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "/cmdlist will show a list of all chat commands");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "/help + any command will show you the help for this command");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Example /help flags will display the help about ");
+	}
+	else
+	{
+	const char *pArg = pResult->GetString(0);
+	IConsole::CCommandInfo *pCmdInfo = pSelf->Console()->GetCommandInfo(pArg, CFGFLAG_SERVER);
+	if(pCmdInfo && pCmdInfo->m_pHelp)
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", pCmdInfo->m_pHelp);
+	/*if(!str_comp_nocase(pArg, "credits"))
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Displays the credits of DDRace.");
+		else if(!str_comp_nocase(pArg, "info"))
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Displays information about the mod.");
+		else if(!str_comp_nocase(pArg, "cmdlist"))
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Displays all chat commands.");
+		else if(!str_comp_nocase(pArg, "help"))
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "This is what you are just using.");
+		else if(!str_comp_nocase(pArg, "flags"))
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Displays information about server options");
+		else if(!str_comp_nocase(pArg, "rules"))
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Displays the server rules.");
+		else if(!str_comp_nocase(pArg, "kill"))
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Kills your tee so you can quickly restart the race.");
+		else if(!str_comp_nocase(pArg, "pause"))
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Pauses your tee. You will join the spectators while your tee is paused. Use the command again to continue.");
+		else if(!str_comp_nocase(pArg, "top5"))
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Displays the top five ranks of this race on this server. /top5 i will show 5 ranks beginningt with rank i.");
+		else if(!str_comp_nocase(pArg, "rank"))
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Shows your rank on the server. /rank <name> will show you the rank of the player with the specified name.");
+		else if(!str_comp_nocase(pArg, "eyeemote"))
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Toggles whether to use the default eye emote settings for emoticons.");
+		else if(!str_comp_nocase(pArg, "broadcast"))
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Enables/disables the broadcast");
+		else if(!str_comp_nocase(pArg, "emote"))
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Shows information about the emote commands. Emote commands change the eyes of your tee.");*/
+		else
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Command is either unknown or you havent given the blank command without any parameters.");
+	}
+}
+
+void CGameContext::ConFlags(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	char buf[64];
+	float temp1;
+	float temp2;
+	pSelf->m_Tuning.Get("player_collision",&temp1);
+	pSelf->m_Tuning.Get("player_hooking",&temp2);
+	str_format(buf, sizeof(buf), "Flags: cheats[%s]%s%s collision[%s] hooking[%s]",
+		g_Config.m_SvCheats?"yes":"no",
+		(g_Config.m_SvCheats)?" w/Time":"",
+		(g_Config.m_SvCheats)?(g_Config.m_SvCheatTime)?"[yes]":"[no]":"",
+		temp1?"yes":"no",
+		temp2?"yes":"no");
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
+
+	str_format(buf, sizeof(buf), "endless hook[%s] weapons effect others[%s]",g_Config.m_SvEndlessDrag?"yes":"no",g_Config.m_SvHit?"yes":"no");
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
+	if(g_Config.m_SvPauseable)
+	{
+		str_format(buf, sizeof(buf), "Server Allows /pause with%s",g_Config.m_SvPauseTime?" time pause.":"out time pause.");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
+	}
+}
+
+void CGameContext::ConRules(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	bool printed=false;
+	if(g_Config.m_SvDDRaceRules)
+	{
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "No blocking.");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "No insulting / spamming.");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "No fun voting / vote spamming.");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Breaking any of these rules will result in a penalty, decided by server admins.");
+		printed=true;
+	}
+	if(g_Config.m_SvRulesLine1[0])
+	{
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvRulesLine1);
+		printed=true;
+	}
+	if(g_Config.m_SvRulesLine2[0])
+	{
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvRulesLine2);
+		printed=true;
+	}
+	if(g_Config.m_SvRulesLine3[0])
+	{
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvRulesLine3);
+		printed=true;
+	}
+	if(g_Config.m_SvRulesLine4[0])
+	{
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvRulesLine4);
+		printed=true;
+	}
+	if(g_Config.m_SvRulesLine5[0])
+	{
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvRulesLine5);
+		printed=true;
+	}
+	if(g_Config.m_SvRulesLine6[0])
+	{
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvRulesLine6);
+		printed=true;
+	}
+	if(g_Config.m_SvRulesLine7[0])
+	{
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvRulesLine7);
+		printed=true;
+	}
+	if(g_Config.m_SvRulesLine8[0])
+	{
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvRulesLine8);
+		printed=true;
+	}
+	if(g_Config.m_SvRulesLine9[0])
+	{
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvRulesLine9);
+		printed=true;
+	}
+	if(g_Config.m_SvRulesLine10[0])
+	{
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvRulesLine10);
+		printed=true;
+	}
+	if(!printed)
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "No Rules Defined, Kill em all!!");
+}
+
+void CGameContext::ConKill(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	CPlayer *pPlayer = pSelf->m_apPlayers[ClientId];
+
+	if(pPlayer->m_Last_Kill && pPlayer->m_Last_Kill + pSelf->Server()->TickSpeed() * g_Config.m_SvKillDelay > pSelf->Server()->Tick())
+		return;
+
+	pPlayer->m_Last_Kill = pSelf->Server()->Tick();
+	pPlayer->KillCharacter(WEAPON_SELF);
+	pPlayer->m_RespawnTick = pSelf->Server()->Tick() + pSelf->Server()->TickSpeed() * g_Config.m_SvSuicidePenalty;
+}
+
+void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	CPlayer *pPlayer = pSelf->m_apPlayers[ClientId];
+
+	if(g_Config.m_SvPauseable)
+	{
+		CCharacter* chr = pPlayer->GetCharacter();
+		if(!pPlayer->GetTeam() && chr && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos && !pPlayer->m_InfoSaved)
+		{
+			pPlayer->SaveCharacter();
+			pPlayer->SetTeam(-1);
+			pPlayer->m_InfoSaved = true;
+		}
+		else if(pPlayer->GetTeam()==-1 && pPlayer->m_InfoSaved)
+		{
+			pPlayer->m_InfoSaved = false;
+			pPlayer->m_PauseInfo.m_Respawn = true;
+			pPlayer->SetTeam(0);
+			//pPlayer->LoadCharacter();//TODO:Check if this system Works
+		}
+		else if(chr)
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", (chr->m_aWeapons[WEAPON_NINJA].m_Got)?"You can't use /pause while you are a ninja":(!chr->IsGrounded())?"You can't use /pause while you are a in air":"You can't use /pause while you are moving");
+		else
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "No pause data saved.");
+	}
+	else
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Pause isn't allowed on this server.");
+}
+
+void CGameContext::ConTop5(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	CPlayer *pPlayer = pSelf->m_apPlayers[ClientId];
+
+	if(g_Config.m_SvHideScore)
+	{
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Showing the top 5 is not allowed on this server.");
+		return;
+	}
+
+	if(pResult->NumArguments() > 0)
+		pSelf->Score()->ShowTop5(pPlayer->GetCID(), pResult->GetInteger(0));
+	else
+		pSelf->Score()->ShowTop5(pPlayer->GetCID());
+}
+
+void CGameContext::ConRank(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	CPlayer *pPlayer = pSelf->m_apPlayers[ClientId];
+
+	if(pResult->NumArguments() > 0)
+		if(!g_Config.m_SvHideScore)
+		pSelf->Score()->ShowRank(pPlayer->GetCID(), pResult->GetString(0), true);
+	else
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Showing the rank of other players is not allowed on this server.");
+	else
+		pSelf->Score()->ShowRank(pPlayer->GetCID(), pSelf->Server()->ClientName(ClientId));
+}
+
+void CGameContext::ConBroadTime(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	CCharacter* pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
+	if(pChr)
+		pChr->m_BroadTime = !pChr->m_BroadTime;
+}
+
+void CGameContext::ConJoinTeam(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+CPlayer *pPlayer = pSelf->m_apPlayers[ClientId];
+
+	if(pResult->NumArguments() > 0)
+	{
+		if(pPlayer->GetCharacter() == 0)
+		{
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You can't change teams while you are dead/a spectator.");
+		}
+		else
+		{
+			if(((CGameControllerDDRace*)pSelf->m_pController)->m_Teams.SetCharacterTeam(pPlayer->GetCID(), pResult->GetInteger(0)))
+			{
+				char aBuf[512];
+				str_format(aBuf, sizeof(aBuf), "%s joined team %d", pSelf->Server()->ClientName(pPlayer->GetCID()), pResult->GetInteger(0));
+				pSelf->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+			}
+			else
+			{
+				pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You cannot join this team");
+			}
+		}
+	}
+	else
+	{
+		char aBuf[512];
+		if(pPlayer->GetCharacter() == 0)
+		{
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You can't check your team while you are dead/a spectator.");
+		}
+		else
+		{
+			str_format(aBuf, sizeof(aBuf), "You are in team %d", pPlayer->GetCharacter()->Team());
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", aBuf);
+		}
+	}
+}
+
+
+void CGameContext::ConToggleFly(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	CCharacter* pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
+	if(pChr && pChr->m_Super)
+	{
+		pChr->m_Fly = !pChr->m_Fly;
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", (pChr->m_Fly) ? "Fly enabled" : "Fly disabled");
+	}
+}
+
+// TODO: add the following commands
+
+
+/*			else if(!str_comp_num(pMsg->m_pMessage, "/me", 3))
+			{
+				char aMsg[256]="";
+				if(sscanf(pMsg->m_pMessage, "/me %256c", aMsg) == 1)
+				{
+					char Temp[256+24]="";
+					strcat(Temp,Server()->ClientName(ClientId));
+					strcat(Temp," ");
+					strcat(Temp,aMsg);
+					SendChat(-1, CGameContext::CHAT_ALL, Temp);
+					mem_zero(Temp,sizeof(Temp));
+					mem_zero(aMsg,sizeof(aMsg));
+				}
+			}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/eyeemote") && g_Config.m_SvEmotionalTees)
+
+				{
+					CCharacter* pChr = pPlayer->GetCharacter();
+					if(pChr)
+					{
+						pChr->m_EyeEmote=!pChr->m_EyeEmote;
+						SendChatTarget(ClientId, (pChr->m_EyeEmote)?"You can now use the preset eye emotes.":"You don't have any eye emotes, remember to bind some.(until you die)");
+					}
+				}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/broadcast") && g_Config.m_SvEmotionalTees)
+				{
+					CCharacter* pChr = pPlayer->GetCharacter();
+					if(pChr)
+					{
+						if(pChr->m_BroadCast)
+							pChr->m_BroadCast=false;
+						else
+							pChr->m_BroadCast=true;
+					}
+				}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/emote") && g_Config.m_SvEmotionalTees)
+				{
+					SendChatTarget(ClientId, "Emote commands are: /emote surprise /emote blink /emote close /emote angry /emote happy /emote pain");
+					SendChatTarget(ClientId, "Example: /emote surprise 10 for 10 seconds or /emote surprise (default 1 second)");
+				}
+			else if(!str_comp_num(pMsg->m_pMessage, "/emote pain", 11) && g_Config.m_SvEmotionalTees)
+			{
+				int Num = -1;
+					CCharacter* pChr = pPlayer->GetCharacter();
+					if(pChr)
+					{
+						pChr->m_EmoteType = EMOTE_PAIN;
+						if(sscanf(pMsg->m_pMessage, "/emote pain %d", &Num) > 0)
+							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
+						else
+							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+					}
+				}
+			else if(!str_comp_num(pMsg->m_pMessage, "/emote happy", 12) && g_Config.m_SvEmotionalTees)
+			{
+				int Num = -1;
+					CCharacter* pChr = pPlayer->GetCharacter();
+					if(pChr)
+					{
+						pChr->m_EmoteType = EMOTE_HAPPY;
+						if(sscanf(pMsg->m_pMessage, "/emote happy %d", &Num) > 0)
+							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
+						else
+							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+					}
+				}
+			else if(!str_comp_num(pMsg->m_pMessage, "/emote angry", 12) && g_Config.m_SvEmotionalTees)
+			{
+				int Num = -1;
+					CCharacter* pChr = pPlayer->GetCharacter();
+					if(pChr)
+					{
+						pChr->m_EmoteType = EMOTE_ANGRY;
+						if(sscanf(pMsg->m_pMessage, "/emote angry %d", &Num) > 0)
+							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
+						else
+							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+					}
+				}
+			else if(!str_comp_num(pMsg->m_pMessage, "/emote close", 12) && g_Config.m_SvEmotionalTees)
+			{
+				int Num = -1;
+					CCharacter* pChr = pPlayer->GetCharacter();
+					if(pChr)
+					{
+						pChr->m_EmoteType = EMOTE_BLINK;
+						if(sscanf(pMsg->m_pMessage, "/emote close %d", &Num) > 0)
+							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
+						else
+							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+					}
+				}
+			else if(!str_comp_nocase(pMsg->m_pMessage, "/emote blink") && g_Config.m_SvEmotionalTees)
+				{
+					CCharacter* pChr = pPlayer->GetCharacter();
+					if(pChr)
+					{
+						pChr->m_EmoteType = EMOTE_BLINK;
+						pChr->m_EmoteStop = Server()->Tick() + 0.5 * Server()->TickSpeed();
+					}
+				}
+			else if(!str_comp_num(pMsg->m_pMessage, "/emote surprise", 15) && g_Config.m_SvEmotionalTees)
+			{
+				int Num = -1;
+					CCharacter* pChr = pPlayer->GetCharacter();
+					if(pChr)
+					{
+						pChr->m_EmoteType = EMOTE_SURPRISE;
+						if(sscanf(pMsg->m_pMessage, "/emote surprise %d", &Num) > 0)
+							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
+						else
+							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
+					}
+			}
+*/
+
 
 void CGameContext::OnConsoleInit()
 {
@@ -2267,7 +2362,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("logout", "?i", CFGFLAG_SERVER, ConLogOut, this, "If you are a helper or didn't specify [i] it logs you out, otherwise it logs player i out", 1);
 	Console()->Register("helper", "i", CFGFLAG_SERVER, ConSetlvl1, this, "Authenticates player i to the Level of 1", 2);
 	Console()->Register("moder", "i", CFGFLAG_SERVER, ConSetlvl2, this, "Authenticates player i to the Level of 2", 3);
-	Console()->Register("admin", "i", CFGFLAG_SERVER, ConSetlvl3, this, "Authenticates player i to the Level of 3 (CAUTION: Irreversible, once he is an admin you can;t control him)", 3);
+	Console()->Register("admin", "i", CFGFLAG_SERVER, ConSetlvl3, this, "Authenticates player i to the Level of 3 (CAUTION: Irreversible, once he is an admin you can't control him)", 3);
 	
 	Console()->Register("mute", "ii", CFGFLAG_SERVER, ConMute, this, "Mutes player i1 for i2 seconds", 2);
 	
@@ -2314,6 +2409,20 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("down", "?i", CFGFLAG_SERVER, ConGoDown, this, "Makes you or player i move 1 tile down", 1);
 	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConAddVote, this, "Adds a vote entry to the clients", 4);
 
+	Console()->Register("credits", "", CFGFLAG_SERVER, ConCredits, this, "Shows the credits of the DDRace mod", 0);
+	Console()->Register("info", "", CFGFLAG_SERVER, ConInfo, this, "Shows info about this server", 0);
+	Console()->Register("cmdlist", "", CFGFLAG_SERVER, ConCmdList, this, "Shows the list of all commands", 0);
+	Console()->Register("help", "?r", CFGFLAG_SERVER, ConHelp, this, "Helps you with commands", 0);
+	Console()->Register("flags", "", CFGFLAG_SERVER, ConFlags, this, "Shows gameplay information for this server", 0);
+	Console()->Register("rules", "", CFGFLAG_SERVER, ConRules, this, "Shows the rules of this server", 0);
+	Console()->Register("kill", "", CFGFLAG_SERVER, ConKill, this, "Kills you", 0);
+	Console()->Register("pause", "", CFGFLAG_SERVER, ConTogglePause, this, "If enabled on this server it pauses the game for you", 0);
+	Console()->Register("top5", "?i", CFGFLAG_SERVER, ConTop5, this, "Shows the top 5 from the 1st, or starting at the specified number", 0);
+	Console()->Register("rank", "?r", CFGFLAG_SERVER, ConRank, this, "Shows either your rank or the rank of the given player", 0);
+	Console()->Register("broadtime", "", CFGFLAG_SERVER, ConBroadTime, this, "", 0); // TODO: add help text, cause idk what this cmd does (heinrich5991)
+	Console()->Register("team", "?i", CFGFLAG_SERVER, ConJoinTeam, this, "Lets you join the specified team", 0);
+	Console()->Register("fly", "", CFGFLAG_SERVER, ConToggleFly, this, "Toggles whether you fly by pressing jump", 1);
+
 	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);
 
 }
@@ -2344,7 +2453,6 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	str_format(buf, sizeof(buf), "data/maps/%s.map.cfg", g_Config.m_SvMap);
 	Console()->ExecuteFile(buf);
 
-
 	// select gametype
 	m_pController = new CGameControllerDDRace(this);
 	((CGameControllerDDRace*)m_pController)->m_Teams.Reset();
@@ -2368,7 +2476,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	CMapItemLayerTilemap *pTileMap = m_Layers.GameLayer();
 	CTile *pTiles = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Data);
 	CTile *pFront=0;
-	if (m_Layers.FrontLayer())
+	if(m_Layers.FrontLayer())
 		pFront = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Front);
 	
 
@@ -2379,27 +2487,27 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 			int Index = pTiles[y*pTileMap->m_Width+x].m_Index;
 			if(Index == TILE_NPC)
 				m_Tuning.Set("player_collision",0);
-			else if (Index == TILE_EHOOK)
+			else if(Index == TILE_EHOOK)
 				g_Config.m_SvEndlessDrag = 1;
-			else if (Index == TILE_NOHIT)
+			else if(Index == TILE_NOHIT)
 				g_Config.m_SvHit = 0;
-			else if (Index == TILE_NPH)
+			else if(Index == TILE_NPH)
 				m_Tuning.Set("player_hooking",0);
 			if(Index >= ENTITY_OFFSET)
 			{
 				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
 				m_pController->OnEntity(Index-ENTITY_OFFSET, Pos,false);
 			}
-			if (pFront)
+			if(pFront)
 			{
 				int Index = pFront[y*pTileMap->m_Width+x].m_Index;
 				if(Index == TILE_NPC)
 					m_Tuning.Set("player_collision",0);
-				else if (Index == TILE_EHOOK)
+				else if(Index == TILE_EHOOK)
 					g_Config.m_SvEndlessDrag = 1;
-				else if (Index == TILE_NOHIT)
+				else if(Index == TILE_NOHIT)
 					g_Config.m_SvHit = 0;
-				else if (Index == TILE_NPH)
+				else if(Index == TILE_NPH)
 					m_Tuning.Set("player_hooking",0);
 				if(Index >= ENTITY_OFFSET)
 				{

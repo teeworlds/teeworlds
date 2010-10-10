@@ -114,6 +114,20 @@ class CGameContext : public IGameServer
 	static void ConInvis(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConVis(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
+  static void ConCredits(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConInfo(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConCmdList(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConHelp(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConFlags(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConRules(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConKill(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConTogglePause(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConTop5(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConRank(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConBroadTime(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConJoinTeam(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConToggleFly(IConsole::IResult *pResult, void *pUserData, int ClientId);
+
 	CGameContext(int Resetting);
 	void Construct(int Resetting);
 
@@ -148,7 +162,7 @@ public:
 	void SendVoteStatus(int ClientId, int Total, int Yes, int No);
 	void AbortVoteKickOnDisconnect(int ClientId);
 	
-	bool CheatsAvailable(int ClientId);
+	bool CheatsAvailable(IConsole *pConsole, int ClientId);
 	
 	bool m_VoteKick;
 	int m_VoteCreator;
@@ -228,7 +242,15 @@ public:
 	void SendWeaponPickup(int ClientId, int Weapon);
 	void SendBroadcast(const char *pText, int ClientId);
 	
+	static void SendChatResponse(const char *pLine, void *pUser);
+	static void SendChatResponseAll(const char *pLine, void *pUser);
 	
+	struct ChatResponseInfo
+	{
+	  CGameContext *m_GameContext;
+	  int m_To;
+	};
+
 	//
 	void CheckPureTuning();
 	void SendTuningParams(int ClientId);

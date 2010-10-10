@@ -54,12 +54,20 @@ public:
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser) = 0;
 	virtual void StoreCommands(bool Store, int ClientId) = 0;
 	
-	virtual void ExecuteLine(const char *Sptr, const int ClientLevel, const int ClientId) = 0;
-	virtual void ExecuteLineStroked(int Stroke, const char *pStr, const int ClientLevel, const int ClientId) = 0;
-	virtual void ExecuteFile(const char *pFilename) = 0;
+	virtual void ExecuteLine(const char *Sptr, const int ClientLevel, const int ClientId, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0,  FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0) = 0;
+	virtual void ExecuteLineStroked(int Stroke, const char *pStr, const int ClientLevel, const int ClientId, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0) = 0;
+	virtual void ExecuteFile(const char *pFilename, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0) = 0;
 	
 	virtual void RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUserData) = 0;
+	virtual void RegisterAlternativePrintCallback(FPrintCallback pfnAlternativePrintCallback, void *pAlternativeUserData) = 0;
+	virtual void ReleaseAlternativePrintCallback() = 0;
+
+	virtual void RegisterPrintResponseCallback(FPrintCallback pfnPrintResponseCallback, void *pUserData) = 0;
+	virtual void RegisterAlternativePrintResponseCallback(FPrintCallback pfnAlternativePrintCallback, void *pAlternativeUserData) = 0;
+	virtual void ReleaseAlternativePrintResponseCallback() = 0;
+
 	virtual void Print(int Level, const char *pFrom, const char *pStr) = 0;
+	virtual void PrintResponse(int Level, const char *pFrom, const char *pStr) = 0;
 };
 
 extern IConsole *CreateConsole(int FlagMask);

@@ -170,7 +170,14 @@ public:
 	void SendMap(int ClientId);
 	void SendRconLine(int ClientId, const char *pLine);
 	static void SendRconLineAuthed(const char *pLine, void *pUser);
-	
+	static void SendRconResponse(const char *pLine, void *pUser);
+
+	struct RconResponseInfo
+	{
+	  CServer *m_Server;
+	  int m_ClientId;
+	};
+
 	void ProcessClientPacket(CNetChunk *pPacket);
 		
 	void SendServerInfo(NETADDR *pAddr, int Token);
