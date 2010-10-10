@@ -348,6 +348,7 @@ enum
 	PROPTYPE_COLOR,
 	PROPTYPE_IMAGE,
 	PROPTYPE_ENVELOPE,
+	PROPTYPE_SHIFT,
 };
 
 typedef struct
@@ -363,6 +364,7 @@ public:
 	~CLayerTiles();
 
 	virtual void Resize(int NewW, int NewH);
+	void Shift(int Direction);
 
 	void MakePalette();
 	virtual void Render();
@@ -518,6 +520,7 @@ public:
 		m_pTooltip = 0;
 
 		m_aFileName[0] = 0;
+		m_ValidSaveFilename = false;
 		
 		m_FileDialogStorageType = 0;
 		m_pFileDialogTitle = 0;
@@ -600,6 +603,7 @@ public:
 	const char *m_pTooltip;
 
 	char m_aFileName[512];
+	bool m_ValidSaveFilename;
 
 	enum
 	{

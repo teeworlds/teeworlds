@@ -160,6 +160,8 @@ class CMenus : public CComponent
 		char m_aName[128];
 		bool m_IsDir;
 		int m_StorageType;
+		bool m_Valid;
+		char m_aMap[64];
 		
 		bool operator<(const CDemoItem &Other) { return !str_comp(m_aFilename, "..") ? true : !str_comp(Other.m_aFilename, "..") ? false :
 														m_IsDir && !Other.m_IsDir ? true : !m_IsDir && Other.m_IsDir ? false :

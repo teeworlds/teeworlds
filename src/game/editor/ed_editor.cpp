@@ -565,6 +565,7 @@ static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser)
 	if(pEditor->Load(pFileName, StorageType))
 	{
 		str_copy(pEditor->m_aFileName, pFileName, 512);
+		pEditor->m_ValidSaveFilename = StorageType == IStorage::TYPE_SAVE && pEditor->m_pFileDialogPath == pEditor->m_aFileDialogCurrentFolder;
 		pEditor->SortImages();
 		pEditor->m_Dialog = DIALOG_NONE;
 	}
@@ -592,8 +593,11 @@ static void CallbackSaveMap(const char *pFileName, int StorageType, void *pUser)
 	}
 
 	if(pEditor->Save(pFileName))
-		if(pEditor->Save(pFileName))
-			str_copy(pEditor->m_aFileName, pFileName, sizeof(pEditor->m_aFileName));
+		if(pEditor->Save(pFileName)) 
+	{
+		str_copy(pEditor->m_aFileName, pFileName, sizeof(pEditor->m_aFileName));
+		pEditor->m_ValidSaveFilename = StorageType == IStorage::TYPE_SAVE && pEditor->m_pFileDialogPath == pEditor->m_aFileDialogCurrentFolder;
+	}
 	
 	pEditor->m_Dialog = DIALOG_NONE;
 }
@@ -615,7 +619,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	// ctrl+s to save
 	if(Input()->KeyDown('s') && (Input()->KeyPressed(KEY_LCTRL) || Input()->KeyPressed(KEY_RCTRL)))
 	{
-		if(m_aFileName[0])	
+		if(m_aFileName[0] && m_ValidSaveFilename)	
 			CallbackSaveMap(m_aFileName, IStorage::TYPE_SAVE, this);
 		else
 			InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, Localize("Save map"), Localize("Save"), "maps", "", CallbackSaveMap, this);
@@ -1643,18 +1647,12 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIds, int *
 
 			if(DoButton_ButtonDec(&pIds[i], 0, 0, &Dec, 0, Localize("Decrease")))
 			{
-				if(Input()->KeyPressed(KEY_LSHIFT) || Input()->KeyPressed(KEY_RSHIFT))
-					*pNewVal = pProps[i].m_Value-5;
-				else
-					*pNewVal = pProps[i].m_Value-1;
+				*pNewVal = pProps[i].m_Value-1;
 				Change = i;
 			}
 			if(DoButton_ButtonInc(((char *)&pIds[i])+1, 0, 0, &Inc, 0, Localize("Increase")))
 			{
-				if(Input()->KeyPressed(KEY_LSHIFT) || Input()->KeyPressed(KEY_RSHIFT))
-					*pNewVal = pProps[i].m_Value+5;
-				else
-					*pNewVal = pProps[i].m_Value+1;
+				*pNewVal = pProps[i].m_Value+1;
 				Change = i;
 			}
 		}
@@ -1722,6 +1720,41 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIds, int *
 			if(r >= -1)
 			{
 				*pNewVal = r;
+				Change = i;
+			}
+		}
+		else if(pProps[i].m_Type == PROPTYPE_SHIFT)
+		{
+			CUIRect Left, Right, Up, Down;
+			Shifter.VSplitMid(&Left, &Up);
+			Left.VSplitRight(1.0f, &Left, 0);
+			Up.VSplitLeft(1.0f, 0, &Up);
+			Left.VSplitLeft(10.0f, &Left, &Shifter);
+			Shifter.VSplitRight(10.0f, &Shifter, &Right);
+			RenderTools()->DrawUIRect(&Shifter, vec4(1,1,1,0.5f), 0, 0.0f);
+			UI()->DoLabel(&Shifter, "X", 10.0f, 0, -1);
+			Up.VSplitLeft(10.0f, &Up, &Shifter);
+			Shifter.VSplitRight(10.0f, &Shifter, &Down);
+			RenderTools()->DrawUIRect(&Shifter, vec4(1,1,1,0.5f), 0, 0.0f);
+			UI()->DoLabel(&Shifter, "Y", 10.0f, 0, -1);
+			if(DoButton_ButtonDec(&pIds[i], "-", 0, &Left, 0, Localize("Left")))
+			{
+				*pNewVal = 1;
+				Change = i;
+			}
+			if(DoButton_ButtonInc(((char *)&pIds[i])+3, "+", 0, &Right, 0, Localize("Right")))
+			{
+				*pNewVal = 2;
+				Change = i;
+			}
+			if(DoButton_ButtonDec(((char *)&pIds[i])+1, "-", 0, &Up, 0, Localize("Up")))
+			{
+				*pNewVal = 4;
+				Change = i;
+			}
+			if(DoButton_ButtonInc(((char *)&pIds[i])+2, "+", 0, &Down, 0, Localize("Down")))
+			{
+				*pNewVal = 8;
 				Change = i;
 			}
 		}
@@ -1836,7 +1869,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 					m_SelectedGroup = g;
 					static int s_LayerPopupId = 0;
 					if(Result == 2)
-						UiInvokePopupMenu(&s_LayerPopupId, 0, UI()->MouseX(), UI()->MouseY(), 120, 150, PopupLayer);
+						UiInvokePopupMenu(&s_LayerPopupId, 0, UI()->MouseX(), UI()->MouseY(), 120, 180, PopupLayer);
 				}
 
 				LayerCur += 14.0f;
@@ -2872,7 +2905,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 	View.HSplitTop(12.0f, &Slot, &View);
 	if(pEditor->DoButton_MenuItem(&s_SaveButton, Localize("Save"), 0, &Slot, 0, Localize("Saves the current map")))
 	{
-		if(pEditor->m_aFileName[0])	
+		if(pEditor->m_aFileName[0] && pEditor->m_ValidSaveFilename)	
 			CallbackSaveMap(pEditor->m_aFileName, IStorage::TYPE_SAVE, pEditor);
 		else
 			pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, Localize("Save map"), Localize("Save"), "maps", "", CallbackSaveMap, pEditor);
