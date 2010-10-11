@@ -127,6 +127,10 @@ class CGameContext : public IGameServer
   static void ConBroadTime(IConsole::IResult *pResult, void *pUserData, int ClientId);
   static void ConJoinTeam(IConsole::IResult *pResult, void *pUserData, int ClientId);
   static void ConToggleFly(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConToggleEyeEmote(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConToggleEyeEmoteBroadcast(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConEyeEmote(IConsole::IResult *pResult, void *pUserData, int ClientId);
 
 	CGameContext(int Resetting);
 	void Construct(int Resetting);
