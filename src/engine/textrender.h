@@ -17,6 +17,7 @@ public:
 	int m_Flags;
 	int m_LineCount;
 	int m_CharCount;
+	int m_MaxLines;
 	
 	float m_StartX;
 	float m_StartY;
