@@ -110,8 +110,8 @@ void CPlayer::Snap(int SnappingClient)
 	if(m_ClientID == SnappingClient)
 		Info->m_Local = 1;	
 	
-	// send 0 if times of otheres are not shown
-	if(SnappingClient != m_ClientID)
+	// send 0 if times of others are not shown
+	if(SnappingClient != m_ClientID && g_Config.m_SvHideScore)
 		Info->m_Score = 0;
 	else
 		Info->m_Score = m_Score;
