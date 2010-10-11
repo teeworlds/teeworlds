@@ -906,10 +906,15 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			//if(m_pController->CanChangeTeam(pPlayer, pMsg->m_Team))
 			//{
 			//CCharacter* pChr=GetPlayerChar(ClientId);
+			if(pPlayer->GetTeam()==-1 && !pPlayer->m_InfoSaved)
+			{
 				pPlayer->m_Last_SetTeam = Server()->Tick();
 				if(pPlayer->GetTeam() == -1 || pMsg->m_Team == -1)
 					m_VoteUpdate = true;
 				pPlayer->SetTeam(pMsg->m_Team);
+			}
+			else
+				SendChatTarget(ClientId,"Use /pause first then you can kill");
 				//if(pChr && pMsg->m_Team!=-1 && pChr->m_Paused)
 					//pChr->LoadPauseData();
 				//TODO:Check if this system Works
