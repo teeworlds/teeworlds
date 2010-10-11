@@ -226,7 +226,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 					SetError(Str);
 				}
 				else
-					SetError("no reason given");
+					SetError("No reason given");
 					
 				if(g_Config.m_Debug)
 					dbg_msg("conn", "closed reason='%s'", ErrorString());
@@ -304,7 +304,7 @@ int CNetConnection::Update()
 		(Now-m_LastRecvTime) > time_freq()*10)
 	{
 		m_State = NET_CONNSTATE_ERROR;
-		SetError("timeout");
+		SetError("Timeout");
 	}
 
 	// fix resends
@@ -316,7 +316,7 @@ int CNetConnection::Update()
 		if(Now-pResend->m_FirstSendTime > time_freq()*10)
 		{
 			m_State = NET_CONNSTATE_ERROR;
-			SetError("too weak connection (not acked for 10 seconds)");
+			SetError("Too weak connection (not acked for 10 seconds)");
 		}
 		else
 		{

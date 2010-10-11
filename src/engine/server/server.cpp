@@ -661,7 +661,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			{
 				// OH FUCK! wrong version, drop him
 				char aReason[256];
-				str_format(aReason, sizeof(aReason), "wrong version. server is running '%s' and client '%s'.", GameServer()->NetVersion(), aVersion);
+				str_format(aReason, sizeof(aReason), "Wrong version. Server is running '%s' and client '%s'", GameServer()->NetVersion(), aVersion);
 				m_NetServer.Drop(ClientId, aReason);
 				return;
 			}
@@ -673,7 +673,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			if(g_Config.m_Password[0] != 0 && str_comp(g_Config.m_Password, pPassword) != 0)
 			{
 				// wrong password
-				m_NetServer.Drop(ClientId, "wrong password");
+				m_NetServer.Drop(ClientId, "Wrong password");
 				return;
 			}
 			
@@ -881,7 +881,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 							else
 							{
 								NETADDR Addr = m_NetServer.ClientAddr(ClientId);
-								BanAdd(Addr, g_Config.m_SvRconBantime*60);
+								BanAdd(Addr, g_Config.m_SvRconBantime*60, "Too many remote console authentication tries");
 							}
 						}
 					}
@@ -1005,7 +1005,7 @@ void CServer::UpdateServerInfo()
 	}
 }
 
-int CServer::BanAdd(NETADDR Addr, int Seconds)
+int CServer::BanAdd(NETADDR Addr, int Seconds, const char *pReason)
 {
 	Addr.port = 0;
 	char aAddrStr[128];
@@ -1017,7 +1017,7 @@ int CServer::BanAdd(NETADDR Addr, int Seconds)
 		str_format(aBuf, sizeof(aBuf), "banned %s for life", aAddrStr);
 	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 
-	return m_NetServer.BanAdd(Addr, Seconds);	
+	return m_NetServer.BanAdd(Addr, Seconds, pReason);	
 }
 
 int CServer::BanRemove(NETADDR Addr)
@@ -1304,7 +1304,7 @@ int CServer::Run()
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
-			m_NetServer.Drop(i, "server shutdown");
+			m_NetServer.Drop(i, "Server shutdown");
 	}
 
 	GameServer()->OnShutdown();
@@ -1317,7 +1317,14 @@ int CServer::Run()
 
 void CServer::ConKick(IConsole::IResult *pResult, void *pUser, int ClientId)
 {
-	((CServer *)pUser)->Kick(pResult->GetInteger(0), "kicked by console");
+	if(pResult->NumArguments() > 1)
+	{
+		char aBuf[128];
+		str_format(aBuf, sizeof(aBuf), "Kicked by console (%s)", pResult->GetString(1));
+		((CServer *)pUser)->Kick(pResult->GetInteger(0), aBuf);
+	}
+	else
+		((CServer *)pUser)->Kick(pResult->GetInteger(0), "Kicked by console");
 }
 
 void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
@@ -1326,9 +1333,13 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
 	CServer *pServer = (CServer *)pUser;
 	const char *pStr = pResult->GetString(0);
 	int Minutes = 30;
+  	const char *pReason = "No reason given";
 	
 	if(pResult->NumArguments() > 1)
 		Minutes = pResult->GetInteger(1);
+	
+	if(pResult->NumArguments() > 2)
+		pReason = pResult->GetString(2);
 	
 	if(net_addr_from_str(&Addr, pStr) == 0)
 	{
@@ -1342,7 +1353,7 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
 				return;
 			}
 		}
-		pServer->BanAdd(Addr, Minutes*60);
+		pServer->BanAdd(Addr, Minutes*60, pReason);
 	}
 	else if(StrAllnum(pStr))
 	{
@@ -1360,7 +1371,7 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
 		}
 
 		Addr = pServer->m_NetServer.ClientAddr(ClientId);
-		pServer->BanAdd(Addr, Minutes*60);
+		pServer->BanAdd(Addr, Minutes*60, pReason);
 	}
 	else
 	{
@@ -1495,8 +1506,8 @@ void CServer::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	
-	Console()->Register("kick", "i", CFGFLAG_SERVER, ConKick, this, "", 2);
-	Console()->Register("ban", "s?i", CFGFLAG_SERVER|CFGFLAG_STORE, ConBan, this, "", 2);
+	Console()->Register("kick", "i?s", CFGFLAG_SERVER, ConKick, this, "", 2);
+	Console()->Register("ban", "s?is", CFGFLAG_SERVER|CFGFLAG_STORE, ConBan, this, "", 2);
 	Console()->Register("unban", "s", CFGFLAG_SERVER|CFGFLAG_STORE, ConUnban, this, "", 2);
 	Console()->Register("bans", "", CFGFLAG_SERVER|CFGFLAG_STORE, ConBans, this, "", 2);
 	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "", 1);
@@ -1707,7 +1718,7 @@ void CServer::CheckPass(int ClientId, const char *pPw)
 					else
 					{
 						NETADDR Addr = m_NetServer.ClientAddr(ClientId);
-						BanAdd(Addr, g_Config.m_SvRconBantime);
+						BanAdd(Addr, g_Config.m_SvRconBantime, "Too many remote console authentication tries");
 					}
 				}
 			}
@@ -1732,6 +1743,6 @@ void CServer::CheckPass(int ClientId, const char *pPw)
 			ClientId,
 			m_aClients[ClientId].m_Addr.ip[0], m_aClients[ClientId].m_Addr.ip[1], m_aClients[ClientId].m_Addr.ip[2], m_aClients[ClientId].m_Addr.ip[3]
 			);
-		BanAdd(m_aClients[ClientId].m_Addr, 0);
+		BanAdd(m_aClients[ClientId].m_Addr, 0, "Being a noob");
 	}
 }

@@ -183,7 +183,7 @@ public:
 	void SendServerInfo(NETADDR *pAddr, int Token);
 	void UpdateServerInfo();
 
-	int BanAdd(NETADDR Addr, int Seconds);
+	int BanAdd(NETADDR Addr, int Seconds, const char *pReason);
 	int BanRemove(NETADDR Addr);
 		
 

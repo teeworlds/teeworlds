@@ -35,6 +35,8 @@ class CChat : public CComponent
 
 	int m_Mode;
 	bool m_Show;
+	bool m_InputUpdate;
+	int m_ChatStringOffset;
 	
 	static void ConSay(IConsole::IResult *pResult, void *pUserData, int ClientID);
 	static void ConSayTeam(IConsole::IResult *pResult, void *pUserData, int ClientID);

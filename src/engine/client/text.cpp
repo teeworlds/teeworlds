@@ -541,6 +541,7 @@ public:
 		int i;
 		int GotNewLine = 0;
 		float DrawX, DrawY;
+		int LineCount;
 		float CursorX, CursorY;
 		const char *pEnd;
 
@@ -590,6 +591,7 @@ public:
 			const char *pEnd = pCurrent+Length;
 			DrawX = CursorX;
 			DrawY = CursorY;
+			LineCount = pCursor->m_LineCount;
 
 			if(pCursor->m_Flags&TEXTFLAG_RENDER)
 			{
@@ -607,7 +609,7 @@ public:
 					Graphics()->SetColor(m_TextR, m_TextG, m_TextB, m_TextA);
 			}
 
-			while(pCurrent < pEnd)
+			while(pCurrent < pEnd && (pCursor->m_MaxLines < 1 || LineCount <= pCursor->m_MaxLines))
 			{
 				int NewLine = 0;
 				const char *pBatchEnd = pEnd;
@@ -666,7 +668,9 @@ public:
 						DrawY += Size;
 						DrawX = (int)(DrawX * FakeToScreenX) / FakeToScreenX; // realign
 						DrawY = (int)(DrawY * FakeToScreenY) / FakeToScreenY;
-						++pCursor->m_LineCount;
+						++LineCount;
+						if(pCursor->m_MaxLines > 0 && LineCount > pCursor->m_MaxLines)
+							break;
 						continue;
 					}
 
@@ -702,7 +706,7 @@ public:
 					GotNewLine = 1;
 					DrawX = (int)(DrawX * FakeToScreenX) / FakeToScreenX; // realign
 					DrawY = (int)(DrawY * FakeToScreenY) / FakeToScreenY;				
-					++pCursor->m_LineCount;
+					++LineCount;
 				}
 			}
 
@@ -711,6 +715,7 @@ public:
 		}
 
 		pCursor->m_X = DrawX;
+		pCursor->m_LineCount = LineCount;
 		
 		if(GotNewLine)
 			pCursor->m_Y = DrawY;
