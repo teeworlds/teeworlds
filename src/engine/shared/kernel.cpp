@@ -33,7 +33,7 @@ class CKernel : public IKernel
 		}
 		return 0x0;
 	}
-	//TODO: Refactor CInterfaceInfo no need in it. It is reinvent std::map<std::string, shared_ptr<IInterface>>
+	
 public:
 
 	CKernel()

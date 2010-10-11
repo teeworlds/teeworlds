@@ -172,7 +172,7 @@ public:
 	void Disconnect(const char *pReason);
 
 	int Update();
-	int Flush();
+	int Flush();	
 
 	int Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr);
 	int QueueChunk(int Flags, int DataSize, const void *pData);
@@ -217,8 +217,6 @@ public:
 	{
 		NETADDR m_Addr;
 		int m_Expires;
-		char m_Reason[100];
-		bool m_Soon;
 	};
 	
 private:
@@ -262,7 +260,7 @@ private:
 	void BanRemoveByObject(CBan *pBan);
 	
 public:
-	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser, const char* reason);
+	int SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser);
 
 	//
 	bool Open(NETADDR BindAddr, int MaxClients, int MaxClientsPerIP, int Flags);
@@ -277,8 +275,7 @@ public:
 	int Drop(int ClientID, const char *Reason);
 
 	// banning
-	int BanAdd(NETADDR Addr, int Seconds, const char *Reason);
-	int BanAddNoDrop(NETADDR Addr, int Seconds);
+	int BanAdd(NETADDR Addr, int Seconds);
 	int BanRemove(NETADDR Addr);
 	int BanNum(); // caution, slow
 	int BanGet(int Index, CBanInfo *pInfo); // caution, slow

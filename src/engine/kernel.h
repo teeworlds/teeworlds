@@ -59,7 +59,6 @@ public:
 	template<class TINTERFACE>
 	TINTERFACE *RequestInterface()
 	{
-		//TODO: IMHO If someone use reinterpret_cast he is idiot. Refactor this with templates.
 		return reinterpret_cast<TINTERFACE *>(RequestInterfaceImpl(TINTERFACE::InterfaceName()));
 	}
 };
