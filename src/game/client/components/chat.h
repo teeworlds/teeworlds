@@ -40,6 +40,7 @@ class CChat : public CComponent
 	bool m_Show;
 	bool m_InputUpdate;
 	int m_ChatStringOffset;
+	int m_OldChatStringLength;
 	
 	bool m_ContainsName;
 	bool m_IgnorePlayer;
