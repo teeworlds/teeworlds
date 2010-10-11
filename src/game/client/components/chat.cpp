@@ -31,6 +31,8 @@ void CChat::OnReset()
 	}
 	
 	m_Show = false;
+	m_InputUpdate = false;
+	m_ChatStringOffset = 0;
 }
 
 void CChat::OnRelease()
@@ -101,7 +103,10 @@ bool CChat::OnInput(IInput::CEvent e)
 		m_pClient->OnRelease();
 	}
 	else
+	{
 		m_Input.ProcessInput(e);
+		m_InputUpdate = true;
+	}
 	
 	return true;
 }
@@ -203,6 +208,7 @@ void CChat::OnRender()
 		CTextCursor Cursor;
 		TextRender()->SetCursor(&Cursor, x, y, 8.0f, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = 200.0f;
+		Cursor.m_MaxLines = 2;
 		
 		if(m_Mode == MODE_ALL)
 			TextRender()->TextEx(&Cursor, Localize("All"), -1);
@@ -213,7 +219,23 @@ void CChat::OnRender()
 
 		TextRender()->TextEx(&Cursor, ": ", -1);
 			
-		TextRender()->TextEx(&Cursor, m_Input.GetString(), m_Input.GetCursorOffset());
+		// check if the visible text has to be moved
+		if(m_InputUpdate)
+		{
+			if(m_ChatStringOffset > m_Input.GetCursorOffset())
+				--m_ChatStringOffset;
+			else
+			{
+				CTextCursor Temp = Cursor;
+				Temp.m_Flags = 0;
+				TextRender()->TextEx(&Temp, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
+				TextRender()->TextEx(&Temp, "|", -1);
+				if(Temp.m_LineCount > 2)
+					++m_ChatStringOffset;
+			}
+		}
+
+		TextRender()->TextEx(&Cursor, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
 		CTextCursor Marker = Cursor;
 		TextRender()->TextEx(&Marker, "|", -1);
 		TextRender()->TextEx(&Cursor, m_Input.GetString()+m_Input.GetCursorOffset(), -1);
