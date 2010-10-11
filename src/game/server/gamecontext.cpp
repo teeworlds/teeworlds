@@ -516,25 +516,29 @@ void CGameContext::OnTick()
 
 			if(m_VoteEnforce == VOTE_ENFORCE_YES)
 			{
-				//Console()->ExecuteLine(m_aVoteCommand, 4, -1);
-				//EndVote();
-				//SendChat(-1, CGameContext::CHAT_ALL, "Vote passed");
-				if(m_VoteEnforce == VOTE_ENFORCE_YES)
-				{
-				Console()->ExecuteLine(m_aVoteCommand, 3, -1, CServer::SendRconLineAuthed, Server(), SendChatResponseAll, this);
-					SendChat(-1, CGameContext::CHAT_ALL, "Vote passed (enforced by Admin)");
-					dbg_msg("Vote","Due to vote enforcing, vote level has been set to 3");
-					EndVote();
-				}
-				else
-				{
-				Console()->ExecuteLine(m_aVoteCommand, 4, -1, CServer::SendRconLineAuthed, Server(), SendChatResponseAll, this);
-					dbg_msg("Vote","vote level is set to 4");
-					EndVote();
-					SendChat(-1, CGameContext::CHAT_ALL, "Vote passed");
-				}
+				Console()->ExecuteLine(m_aVoteCommand, 4, -1);
+				EndVote();
+				SendChat(-1, CGameContext::CHAT_ALL, "Vote passed");
+
 				if(m_apPlayers[m_VoteCreator])
 					m_apPlayers[m_VoteCreator]->m_Last_VoteCall = 0;
+			}
+			else if(m_VoteEnforce == VOTE_ENFORCE_YES_ADMIN)
+			{
+				char aBuf[64];
+				str_format(aBuf, sizeof(aBuf),"Vote passed enforced by '%s'",Server()->ClientName(m_VoteEnforcer));
+				Console()->ExecuteLine(m_aVoteCommand, 3, -1, CServer::SendRconLineAuthed, Server(), SendChatResponseAll, this);
+				SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+				dbg_msg("Vote","Due to vote enforcing, vote level has been set to 3");
+				EndVote();
+				m_VoteEnforcer = -1;
+			}
+			else if(m_VoteEnforce == VOTE_ENFORCE_NO_ADMIN)
+			{
+				char aBuf[64];
+				str_format(aBuf, sizeof(aBuf),"Vote failed enforced by '%s'",Server()->ClientName(m_VoteEnforcer));
+				EndVote();
+				SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 			}
 			else if(m_VoteEnforce == VOTE_ENFORCE_NO || time_get() > m_VoteCloseTime)
 			{
@@ -1163,13 +1167,14 @@ void CGameContext::ConVote(IConsole::IResult *pResult, void *pUserData, int Clie
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	char aBuf[64];
 	if(str_comp_nocase(pResult->GetString(0), "yes") == 0)
-		pSelf->m_VoteEnforce = CGameContext::VOTE_ENFORCE_YES;
+		pSelf->m_VoteEnforce = CGameContext::VOTE_ENFORCE_YES_ADMIN;
 	else if(str_comp_nocase(pResult->GetString(0), "no") == 0)
-		pSelf->m_VoteEnforce = CGameContext::VOTE_ENFORCE_NO;
+		pSelf->m_VoteEnforce = CGameContext::VOTE_ENFORCE_NO_ADMIN;
 	str_format(aBuf, sizeof(aBuf), "vote forced to %s by %s", pResult->GetString(0),pSelf->Server()->ClientName(ClientID));
 	pSelf->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 	str_format(aBuf, sizeof(aBuf), "forcing vote %s", pResult->GetString(0));
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+	pSelf->m_VoteEnforcer = ClientID;
 }
 
 void CGameContext::ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)

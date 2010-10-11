@@ -131,6 +131,7 @@ class CGameContext : public IGameServer
 	CGameContext(int Resetting);
 	void Construct(int Resetting);
 
+	int m_VoteEnforcer;
 	bool m_Resetting;
 public:
 	IServer *Server() const { return m_pServer; }
@@ -177,6 +178,8 @@ public:
 		VOTE_ENFORCE_UNKNOWN=0,
 		VOTE_ENFORCE_NO,
 		VOTE_ENFORCE_YES,
+		VOTE_ENFORCE_NO_ADMIN,
+		VOTE_ENFORCE_YES_ADMIN
 	};
 	struct CVoteOption
 	{
