@@ -150,10 +150,10 @@ void CGameClient::OnConsoleInit()
 	
 	m_All.Add(&gs_MapLayersBackGround); // first to render
 	m_All.Add(&m_pParticles->m_RenderTrail);
-	m_All.Add(&m_pParticles->m_RenderExplosions);
 	m_All.Add(&gs_Items);
 	m_All.Add(&gs_Players);
 	m_All.Add(&gs_MapLayersForeGround);
+	m_All.Add(&m_pParticles->m_RenderExplosions);
 	m_All.Add(&gs_NamePlates);
 	m_All.Add(&m_pParticles->m_RenderGeneral);
 	m_All.Add(m_pDamageind);
