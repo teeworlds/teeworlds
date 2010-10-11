@@ -798,12 +798,22 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				pOption = pOption->m_pNext;
 			}
 
-			if(!pOption && pPlayer->m_Authed < 3) // allow admins to call any vote they want
+			if(!pOption)
 			{
-				str_format(aChatmsg, sizeof(aChatmsg), "'%s' isn't an option on this server", pMsg->m_Value);
-				SendChatTarget(ClientId, aChatmsg);
-				return;
+				if (pPlayer->m_Authed < 3)  // allow admins to call any vote they want
+				{
+					str_format(aChatmsg, sizeof(aChatmsg), "'%s' isn't an option on this server", pMsg->m_Value);
+					SendChatTarget(ClientId, aChatmsg);
+					return;
+				}
+				else
+				{
+					str_format(aChatmsg, sizeof(aChatmsg), "'%s' called vote to change server option '%s'", Server()->ClientName(ClientId), pMsg->m_Value);
+					str_format(aDesc, sizeof(aDesc), "%s", pMsg->m_Value);
+					str_format(aCmd, sizeof(aCmd), "%s", pMsg->m_Value);
+				}
 			}
+			
 			last_mapvote = time_get();
 			m_VoteKick = false;
 		}
