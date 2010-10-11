@@ -409,7 +409,7 @@ void CConsole::ExecuteFile(const char *pFilename,
 		RegisterAlternativePrintCallback(pfnAlternativePrintCallback, pUserData);
 
 		str_format(aBuf, sizeof(aBuf), "executing '%s'", pFilename);
-		Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
+		PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
 		lr.Init(File);
 		ReleaseAlternativePrintCallback();
 
@@ -423,7 +423,7 @@ void CConsole::ExecuteFile(const char *pFilename,
 		RegisterAlternativePrintCallback(pfnAlternativePrintCallback, pUserData);
 
 		str_format(aBuf, sizeof(aBuf), "failed to open '%s'", pFilename);
-		Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
+		PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
 
 		ReleaseAlternativePrintCallback();
 	}
@@ -438,7 +438,10 @@ void CConsole::Con_Echo(IResult *pResult, void *pUserData, int ClientId)
 
 void CConsole::Con_Exec(IResult *pResult, void *pUserData, int ClientId)
 {
-	((CConsole*)pUserData)->ExecuteFile(pResult->GetString(0));
+	CConsole *pSelf = (CConsole *)pUserData;
+  
+	pSelf->ExecuteFile(pResult->GetString(0), pSelf->m_pfnAlternativePrintCallback, pSelf->m_pAlternativePrintCallbackUserdata, 
+			pSelf->m_pfnAlternativePrintResponseCallback, pSelf->m_pAlternativePrintResponseCallbackUserdata);
 }
 
 struct CIntVariableData
