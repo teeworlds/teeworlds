@@ -597,7 +597,7 @@ void CGameContext::OnClientEnter(int ClientId)
 	SendChatTarget(ClientId, "For more Info /CMDList");
 	SendChatTarget(ClientId, "Or visit DDRace.info");
 	SendChatTarget(ClientId, "To see this again say /info");
-	
+	Server()->SetRconLevel(ClientId, m_apPlayers[ClientId]->m_Authed);
 	if(g_Config.m_SvWelcome[0]!=0) SendChatTarget(ClientId,g_Config.m_SvWelcome);
 	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' team=%d", ClientId, Server()->ClientName(ClientId), m_apPlayers[ClientId]->GetTeam());
 	
@@ -777,7 +777,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				if(str_comp_nocase(pMsg->m_Value, pOption->m_aCommand) == 0)
 				{
 					//str_format(aChatmsg, sizeof(aChatmsg), "'%s' called vote to change server option '%s'", Server()->ClientName(ClientId), pOption->m_aCommand);
-					if(m_apPlayers[ClientId]->m_Authed == 0 && strncmp(pOption->m_aCommand, "sv_map ", 7) == 0 && time_get() < last_mapvote + (time_freq() * g_Config.m_SvVoteMapTimeDelay))
+					if(m_apPlayers[ClientId]->m_Authed <= 0 && strncmp(pOption->m_aCommand, "sv_map ", 7) == 0 && time_get() < last_mapvote + (time_freq() * g_Config.m_SvVoteMapTimeDelay))
 						{
 							char chatmsg[512] = {0};
 							str_format(chatmsg, sizeof(chatmsg), "There's a %d second delay between map-votes,Please wait %d Second(s)", g_Config.m_SvVoteMapTimeDelay,((last_mapvote+(g_Config.m_SvVoteMapTimeDelay * time_freq()))/time_freq())-(time_get()/time_freq()));
@@ -1354,7 +1354,7 @@ void CGameContext::ConSetlvl3(IConsole::IResult *pResult, void *pUserData, int C
 	if(pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
 	{
 		pSelf->m_apPlayers[Victim]->m_Authed = 3;
-		pServ->SetRconLevel(Victim,3);
+		pServ->SetRconLevel(Victim, 3);
 	}
 }
 
@@ -1366,7 +1366,7 @@ void CGameContext::ConSetlvl2(IConsole::IResult *pResult, void *pUserData, int C
 	if(pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
 	{
 		pSelf->m_apPlayers[Victim]->m_Authed = 2;
-		pServ->SetRconLevel(Victim,2);
+		pServ->SetRconLevel(Victim, 2);
 	}
 }
 
@@ -1378,7 +1378,7 @@ void CGameContext::ConSetlvl1(IConsole::IResult *pResult, void *pUserData, int C
 	if(pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
 	{
 		pSelf->m_apPlayers[Victim]->m_Authed = 1;
-		pServ->SetRconLevel(Victim,1);
+		pServ->SetRconLevel(Victim, 1);
 	}
 }
 
@@ -1386,13 +1386,13 @@ void CGameContext::ConLogOut(IConsole::IResult *pResult, void *pUserData, int Cl
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	int Victim = ClientId;
-	if(pResult->NumArguments() && pSelf->m_apPlayers[Victim]->m_Authed != 1)
+	if(pResult->NumArguments() && pSelf->m_apPlayers[Victim]->m_Authed > 1)
 		Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	CServer* pServ = (CServer*)pSelf->Server();
 	if(pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]) || ClientId == Victim))
 	{
-		pSelf->m_apPlayers[Victim]->m_Authed = 0;
-		pServ->SetRconLevel(Victim,0);
+		pSelf->m_apPlayers[Victim]->m_Authed = -1;
+		pServ->SetRconLevel(Victim, -1);
 	}
 }
 
@@ -2401,7 +2401,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("super", "i", CFGFLAG_SERVER, ConSuper, this, "Makes player i super", 2);
 	Console()->Register("unsuper", "i", CFGFLAG_SERVER, ConUnSuper, this, "Removes super from player i", 2);
 	Console()->Register("super_me", "", CFGFLAG_SERVER, ConSuperMe, this, "Makes yourself super", 1);
-	Console()->Register("unsuper_me", "", CFGFLAG_SERVER, ConUnSuperMe, this, "Removes super from yourself", 1);// Mo
+	Console()->Register("unsuper_me", "", CFGFLAG_SERVER, ConUnSuperMe, this, "Removes super from yourself", 1);
 
 	Console()->Register("left", "?i", CFGFLAG_SERVER, ConGoLeft, this, "Makes you or player i move 1 tile left", 1);
 	Console()->Register("right", "?i", CFGFLAG_SERVER, ConGoRight, this, "Makes you or player i move 1 tile right", 1);
@@ -2409,18 +2409,18 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("down", "?i", CFGFLAG_SERVER, ConGoDown, this, "Makes you or player i move 1 tile down", 1);
 	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConAddVote, this, "Adds a vote entry to the clients", 4);
 
-	Console()->Register("credits", "", CFGFLAG_SERVER, ConCredits, this, "Shows the credits of the DDRace mod", 0);
-	Console()->Register("info", "", CFGFLAG_SERVER, ConInfo, this, "Shows info about this server", 0);
-	Console()->Register("cmdlist", "", CFGFLAG_SERVER, ConCmdList, this, "Shows the list of all commands", 0);
-	Console()->Register("help", "?r", CFGFLAG_SERVER, ConHelp, this, "Helps you with commands", 0);
-	Console()->Register("flags", "", CFGFLAG_SERVER, ConFlags, this, "Shows gameplay information for this server", 0);
-	Console()->Register("rules", "", CFGFLAG_SERVER, ConRules, this, "Shows the rules of this server", 0);
-	Console()->Register("kill", "", CFGFLAG_SERVER, ConKill, this, "Kills you", 0);
-	Console()->Register("pause", "", CFGFLAG_SERVER, ConTogglePause, this, "If enabled on this server it pauses the game for you", 0);
-	Console()->Register("top5", "?i", CFGFLAG_SERVER, ConTop5, this, "Shows the top 5 from the 1st, or starting at the specified number", 0);
-	Console()->Register("rank", "?r", CFGFLAG_SERVER, ConRank, this, "Shows either your rank or the rank of the given player", 0);
-	Console()->Register("broadtime", "", CFGFLAG_SERVER, ConBroadTime, this, "", 0); // TODO: add help text, cause idk what this cmd does (heinrich5991)
-	Console()->Register("team", "?i", CFGFLAG_SERVER, ConJoinTeam, this, "Lets you join the specified team", 0);
+	Console()->Register("credits", "", CFGFLAG_SERVER, ConCredits, this, "Shows the credits of the DDRace mod", -1);
+	Console()->Register("info", "", CFGFLAG_SERVER, ConInfo, this, "Shows info about this server", -1);
+	Console()->Register("cmdlist", "", CFGFLAG_SERVER, ConCmdList, this, "Shows the list of all commands", -1);
+	Console()->Register("help", "?r", CFGFLAG_SERVER, ConHelp, this, "Helps you with commands", -1);
+	Console()->Register("flags", "", CFGFLAG_SERVER, ConFlags, this, "Shows gameplay information for this server", -1);
+	Console()->Register("rules", "", CFGFLAG_SERVER, ConRules, this, "Shows the rules of this server", -1);
+	Console()->Register("kill", "", CFGFLAG_SERVER, ConKill, this, "Kills you", -1);
+	Console()->Register("pause", "", CFGFLAG_SERVER, ConTogglePause, this, "If enabled on this server it pauses the game for you", -1);
+	Console()->Register("top5", "?i", CFGFLAG_SERVER, ConTop5, this, "Shows the top 5 from the 1st, or starting at the specified number", -1);
+	Console()->Register("rank", "?r", CFGFLAG_SERVER, ConRank, this, "Shows either your rank or the rank of the given player", -1);
+	Console()->Register("broadtime", "", CFGFLAG_SERVER, ConBroadTime, this, "", -1); // TODO: add help text, cause idk what this cmd does (heinrich5991)
+	Console()->Register("team", "?i", CFGFLAG_SERVER, ConJoinTeam, this, "Lets you join the specified team", -1);
 	Console()->Register("fly", "", CFGFLAG_SERVER, ConToggleFly, this, "Toggles whether you fly by pressing jump", 1);
 
 	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);

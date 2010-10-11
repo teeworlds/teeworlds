@@ -852,92 +852,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				
 				if(Unpacker.Error() == 0)
 				{
-					if(pPw[0] != 0)
-					{
-						if(g_Config.m_SvRconPasswordHelper[0] == 0 &&
-							g_Config.m_SvRconPasswordModer[0] == 0 &&
-							g_Config.m_SvRconPasswordAdmin[0] == 0)
-						{
-							SendRconLine(ClientId, "No rcon password set on server. Set sv_admin_pass/sv_mod_pass/sv_helper_pass to enable the remote console.");
-						}
-						else
-						{
-							/*else if(str_comp(pPw, g_Config.m_SvRconPassword) == 0)
-							{
-								CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
-								Msg.AddInt(1);
-								SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
-
-								m_aClients[ClientId].m_Authed = 1;
-								SendRconLine(ClientId, "Authentication successful. Remote console access granted.");
-								dbg_msg("server", "ClientId=%d authed", ClientId);
-							}*/
-							int level = -1;
-							if(str_comp(pPw, g_Config.m_SvRconPasswordHelper) == 0)
-							{
-								level = 1;
-							}
-							else if(str_comp(pPw, g_Config.m_SvRconPasswordModer) == 0)
-							{
-								level = 2;
-							}
-							else if(str_comp(pPw, g_Config.m_SvRconPasswordAdmin) == 0)
-							{
-								level = 3;
-							}
-							if(level != -1)
-							{
-								char buf[128]="Authentication successful. Remote console access grantedfor ClientId=%d with level=%d";
-								CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
-								Msg.AddInt(1);
-								SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
-
-								m_aClients[ClientId].m_Authed = level;
-								GameServer()->OnSetAuthed(ClientId, m_aClients[ClientId].m_Authed);
-								str_format(buf,sizeof(buf),buf,ClientId,level);
-								SendRconLine(ClientId, buf);
-								dbg_msg("server", "'%s' ClientId=%d authed with Level=%d", ClientName(ClientId), ClientId, level);
-							}
-							else if(g_Config.m_SvRconMaxTries)
-							{
-								m_aClients[ClientId].m_AuthTries++;
-								char aBuf[128];
-								str_format(aBuf, sizeof(aBuf), "Wrong password %d/%d.", m_aClients[ClientId].m_AuthTries, g_Config.m_SvRconMaxTries);
-								SendRconLine(ClientId, aBuf);
-								if(m_aClients[ClientId].m_AuthTries >= g_Config.m_SvRconMaxTries)
-								{
-									if(!g_Config.m_SvRconBantime)
-										m_NetServer.Drop(ClientId, "Too many remote console authentication tries");
-									else
-									{
-										NETADDR Addr = m_NetServer.ClientAddr(ClientId);
-										BanAdd(Addr, g_Config.m_SvRconBantime,"Too many remote console authentication tries");
-									}
-								}
-							}
-						}
-					}
-					/*else if(str_comp(pPw, g_Config.m_SvRconPassword) == 0)
-					{
-						CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
-						Msg.AddInt(1);
-						SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
-						
-						m_aClients[ClientId].m_Authed = 1;
-						SendRconLine(ClientId, "Authentication successful. Remote console access granted.");
-						char aBuf[256];
-						str_format(aBuf, sizeof(aBuf), "ClientId=%d authed", ClientId);
-						Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
-					}*/
-					else
-					{
-						SendRconLine(ClientId, "Wrong password.");
-						dbg_msg("server", "Client tried to authenticate with empty password. cid=%x ip=%d.%d.%d.%d",
-							ClientId,
-							m_aClients[ClientId].m_Addr.ip[0], m_aClients[ClientId].m_Addr.ip[1], m_aClients[ClientId].m_Addr.ip[2], m_aClients[ClientId].m_Addr.ip[3]
-							);
-						BanAdd(m_aClients[ClientId].m_Addr, 0, "being a noob GTFO....");
-					}
+					CheckPass(ClientId, pPw);
 				}
 			}
 			else if(Msg == NETMSG_PING)
@@ -1586,6 +1501,12 @@ void CServer::ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pU
 		((CServer *)pUserData)->m_NetServer.SetMaxClientsPerIP(pResult->GetInteger(0));
 }
 
+void CServer::ConLogin(IConsole::IResult *pResult, void *pUser, int ClientId)
+{
+	((CServer *)pUser)->CheckPass(ClientId, pResult->GetString(0));
+
+}
+
 void CServer::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
@@ -1606,6 +1527,9 @@ void CServer::RegisterCommands()
 	Console()->Chain("password", ConchainSpecialInfoupdate, this);
 
 	Console()->Chain("sv_max_clients_per_ip", ConchainMaxclientsperipUpdate, this);
+
+	Console()->Register("login", "r", CFGFLAG_SERVER, ConLogin, this, "", -1);
+	Console()->Register("auth", "r", CFGFLAG_SERVER, ConLogin, this, "", -1);
 }	
 
 
@@ -1723,13 +1647,13 @@ int main(int argc, const char **argv) // ignore_convention
 
 void CServer::SetRconLevel(int ClientId, int Level)
 {
-	if(!Level)
+	if(Level < 0)
 	{
 		dbg_msg("server", "%s set to level 0. ClientId=%x ip=%d.%d.%d.%d",ClientName(ClientId),	ClientId, m_aClients[ClientId].m_Addr.ip[0], m_aClients[ClientId].m_Addr.ip[1], m_aClients[ClientId].m_Addr.ip[2], m_aClients[ClientId].m_Addr.ip[3]);
 		CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
 		Msg.AddInt(0);
 		SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
-		m_aClients[ClientId].m_Authed = 0;
+		m_aClients[ClientId].m_Authed = Level;
 	}
 	else
 	{
@@ -1738,6 +1662,92 @@ void CServer::SetRconLevel(int ClientId, int Level)
 		Msg.AddInt(1);
 		SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
 		m_aClients[ClientId].m_Authed = Level;
+		GameServer()->OnSetAuthed(ClientId, m_aClients[ClientId].m_Authed);
 	}
 }
 
+void CServer::CheckPass(int ClientId, const char *pPw)
+{
+
+	if(pPw[0] != 0)
+	{
+		if(g_Config.m_SvRconPasswordHelper[0] == 0 &&
+			g_Config.m_SvRconPasswordModer[0] == 0 &&
+			g_Config.m_SvRconPasswordAdmin[0] == 0)
+		{
+			SendRconLine(ClientId, "No rcon password set on server. Set sv_admin_pass/sv_mod_pass/sv_helper_pass to enable the remote console.");
+		}
+		else
+		{
+			/*else if(str_comp(pPw, g_Config.m_SvRconPassword) == 0)
+			{
+				CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
+				Msg.AddInt(1);
+				SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
+
+				m_aClients[ClientId].m_Authed = 1;
+				SendRconLine(ClientId, "Authentication successful. Remote console access granted.");
+				dbg_msg("server", "ClientId=%d authed", ClientId);
+			}*/
+			int level = -1;
+			if(str_comp(pPw, g_Config.m_SvRconPasswordHelper) == 0)
+			{
+				level = 1;
+			}
+			else if(str_comp(pPw, g_Config.m_SvRconPasswordModer) == 0)
+			{
+				level = 2;
+			}
+			else if(str_comp(pPw, g_Config.m_SvRconPasswordAdmin) == 0)
+			{
+				level = 3;
+			}
+			if(level != -1)
+			{
+				char buf[128]="Authentication successful. Remote console access grantedfor ClientId=%d with level=%d";
+				SetRconLevel(ClientId,level);
+				str_format(buf,sizeof(buf),buf,ClientId,level);
+				SendRconLine(ClientId, buf);
+				dbg_msg("server", "'%s' ClientId=%d authed with Level=%d", ClientName(ClientId), ClientId, level);
+			}
+			else if(g_Config.m_SvRconMaxTries)
+			{
+				m_aClients[ClientId].m_AuthTries++;
+				char aBuf[128];
+				str_format(aBuf, sizeof(aBuf), "Wrong password %d/%d.", m_aClients[ClientId].m_AuthTries, g_Config.m_SvRconMaxTries);
+				SendRconLine(ClientId, aBuf);
+				if(m_aClients[ClientId].m_AuthTries >= g_Config.m_SvRconMaxTries)
+				{
+					if(!g_Config.m_SvRconBantime)
+						m_NetServer.Drop(ClientId, "Too many remote console authentication tries");
+					else
+					{
+						NETADDR Addr = m_NetServer.ClientAddr(ClientId);
+						BanAdd(Addr, g_Config.m_SvRconBantime,"Too many remote console authentication tries");
+					}
+				}
+			}
+		}
+	}
+	/*else if(str_comp(pPw, g_Config.m_SvRconPassword) == 0)
+	{
+		CMsgPacker Msg(NETMSG_RCON_AUTH_STATUS);
+		Msg.AddInt(1);
+		SendMsgEx(&Msg, MSGFLAG_VITAL, ClientId, true);
+
+		m_aClients[ClientId].m_Authed = 1;
+		SendRconLine(ClientId, "Authentication successful. Remote console access granted.");
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "ClientId=%d authed", ClientId);
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+	}*/
+	else
+	{
+		SendRconLine(ClientId, "Wrong password.");
+		dbg_msg("server", "Client tried to authenticate with empty password. cid=%x ip=%d.%d.%d.%d",
+			ClientId,
+			m_aClients[ClientId].m_Addr.ip[0], m_aClients[ClientId].m_Addr.ip[1], m_aClients[ClientId].m_Addr.ip[2], m_aClients[ClientId].m_Addr.ip[3]
+			);
+		BanAdd(m_aClients[ClientId].m_Addr, 0, "being a noob GTFO....");
+	}
+}

@@ -28,6 +28,8 @@ public:
 	virtual int GetClientInfo(int ClientID, CClientInfo *pInfo) = 0;
 	virtual void GetClientIP(int ClientID, char *pIPString, int Size) = 0;
 	virtual int *LatestInput(int ClientID, int *pSize) = 0;
+
+	virtual void SetRconLevel(int ClientId, int Level) = 0;
 	
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID) = 0;
 

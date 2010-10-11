@@ -207,10 +207,13 @@ public:
 	static void ConMapReload(IConsole::IResult *pResult, void *pUser, int ClientId);
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConLogin(IConsole::IResult *pResult, void *pUser, int ClientId);
 
 	void RegisterCommands();
 	
 	void SetRconLevel(int ClientId, int Level);
+	void CheckPass(int ClientId, const char *pPw);
+
 	virtual int SnapNewID();
 	virtual void SnapFreeID(int ID);
 	virtual void *SnapNewItem(int Type, int Id, int Size);
