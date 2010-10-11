@@ -104,6 +104,7 @@ bool CChat::OnInput(IInput::CEvent e)
 	}
 	else
 	{
+		m_OldChatStringLength = m_Input.GetLength();
 		m_Input.ProcessInput(e);
 		m_InputUpdate = true;
 	}
@@ -222,17 +223,27 @@ void CChat::OnRender()
 		// check if the visible text has to be moved
 		if(m_InputUpdate)
 		{
+			if(m_ChatStringOffset > 0 && m_Input.GetLength() < m_OldChatStringLength)
+				m_ChatStringOffset = max(0, m_ChatStringOffset-(m_OldChatStringLength-m_Input.GetLength()));
+
 			if(m_ChatStringOffset > m_Input.GetCursorOffset())
-				--m_ChatStringOffset;
+				m_ChatStringOffset -= m_ChatStringOffset-m_Input.GetCursorOffset();
 			else
 			{
 				CTextCursor Temp = Cursor;
 				Temp.m_Flags = 0;
 				TextRender()->TextEx(&Temp, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
 				TextRender()->TextEx(&Temp, "|", -1);
-				if(Temp.m_LineCount > 2)
+				while(Temp.m_LineCount > 2)
+				{
 					++m_ChatStringOffset;
+					Temp = Cursor;
+					Temp.m_Flags = 0;
+					TextRender()->TextEx(&Temp, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
+					TextRender()->TextEx(&Temp, "|", -1);
+				}
 			}
+			m_InputUpdate = false;
 		}
 
 		TextRender()->TextEx(&Cursor, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
