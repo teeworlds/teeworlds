@@ -608,7 +608,7 @@ void CGameContext::OnClientEnter(int ClientId)
 
 bool compare_players(CPlayer *pl1, CPlayer *pl2)
 {
-	if(pl1->m_Authed>pl2->m_Authed)
+	if(((pl1->m_Authed >= 0) ? pl1->m_Authed : 0) > ((pl2->m_Authed >= 0) ? pl2->m_Authed : 0))
 		return true;
 	else
 		return false;
@@ -694,15 +694,11 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			Team = CHAT_ALL;
 		}
 
-		if(/*g_Config.m_SvSpamprotection && */pPlayer->m_Last_Chat && pPlayer->m_Last_Chat + Server()->TickSpeed() + g_Config.m_SvChatDelay > Server()->Tick())
-			return;
 		if(str_length(pMsg->m_pMessage)>370)
 		{
 			SendChatTarget(ClientId, "Your Message is too long");
 			return;
 		}
-
-		pPlayer->m_Last_Chat = Server()->Tick();
 
 		// check for invalid chars
 		unsigned char *pMessage = (unsigned char *)pMsg->m_pMessage;
@@ -725,7 +721,14 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		else
 		{
 			if(m_apPlayers[ClientId]->m_Muted == 0)
+			{
+				if(/*g_Config.m_SvSpamprotection && */pPlayer->m_Last_Chat && pPlayer->m_Last_Chat + Server()->TickSpeed() + g_Config.m_SvChatDelay > Server()->Tick())
+					return;
+
 				SendChat(ClientId, Team, pMsg->m_pMessage);
+				
+				pPlayer->m_Last_Chat = Server()->Tick();
+			}
 			else
 			{
 				char aBuf[64];
@@ -795,7 +798,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				pOption = pOption->m_pNext;
 			}
 
-			if(!pOption)
+			if(!pOption && pPlayer->m_Authed < 3) // allow admins to call any vote they want
 			{
 				str_format(aChatmsg, sizeof(aChatmsg), "'%s' isn't an option on this server", pMsg->m_Value);
 				SendChatTarget(ClientId, aChatmsg);
@@ -819,7 +822,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				m_apPlayers[ClientId]->m_Last_KickVote = time_get();
 				return;
 			}
-			else if(!g_Config.m_SvVoteKick)
+			else if(!g_Config.m_SvVoteKick && pPlayer->m_Authed < 3) // allow admins to call kick votes even if they are forbidden
 			{
 				SendChatTarget(ClientId, "Server does not allow voting to kick players");
 				m_apPlayers[ClientId]->m_Last_KickVote = time_get();
@@ -830,15 +833,14 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			if(KickId < 0 || KickId >= MAX_CLIENTS || !m_apPlayers[KickId])
 			{
 				SendChatTarget(ClientId, "Invalid client id to kick");
-				m_apPlayers[ClientId]->m_Last_KickVote = time_get();
 				return;
 			}
 			if(KickId == ClientId)
 			{
-				SendChatTarget(ClientId, "You cant kick yourself");
+				SendChatTarget(ClientId, "You can't kick yourself");
 				return;
 			}
-			if(Server()->IsAuthed(KickId))
+			if(compare_players(pPlayer, m_apPlayers[KickId]))
 			{
 				SendChatTarget(ClientId, "You can't kick admins");
 				m_apPlayers[ClientId]->m_Last_KickVote = time_get();
@@ -1924,7 +1926,7 @@ void CGameContext::ConCredits(IConsole::IResult *pResult, void *pUserData, int C
 
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "This mod was originally created by 3DA");
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Now it is maintained by GreYFoX@GTi and [BlackTee]den among others:");
-	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Code: LemonFace, noother & Fluxid");
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Code: LemonFace, noother, Fluxid and heinrich5991");
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Documentation: Zeta-Hoernchen");
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Please check the changelog on DDRace.info.");
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Also the commit log on github.com/GreYFoXGTi/DDRace.");
@@ -1963,33 +1965,7 @@ void CGameContext::ConHelp(IConsole::IResult *pResult, void *pUserData, int Clie
 	IConsole::CCommandInfo *pCmdInfo = pSelf->Console()->GetCommandInfo(pArg, CFGFLAG_SERVER);
 	if(pCmdInfo && pCmdInfo->m_pHelp)
 		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", pCmdInfo->m_pHelp);
-	/*if(!str_comp_nocase(pArg, "credits"))
-		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Displays the credits of DDRace.");
-		else if(!str_comp_nocase(pArg, "info"))
-			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Displays information about the mod.");
-		else if(!str_comp_nocase(pArg, "cmdlist"))
-			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Displays all chat commands.");
-		else if(!str_comp_nocase(pArg, "help"))
-			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "This is what you are just using.");
-		else if(!str_comp_nocase(pArg, "flags"))
-			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Displays information about server options");
-		else if(!str_comp_nocase(pArg, "rules"))
-			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Displays the server rules.");
-		else if(!str_comp_nocase(pArg, "kill"))
-			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Kills your tee so you can quickly restart the race.");
-		else if(!str_comp_nocase(pArg, "pause"))
-			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Pauses your tee. You will join the spectators while your tee is paused. Use the command again to continue.");
-		else if(!str_comp_nocase(pArg, "top5"))
-			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Displays the top five ranks of this race on this server. /top5 i will show 5 ranks beginningt with rank i.");
-		else if(!str_comp_nocase(pArg, "rank"))
-			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Shows your rank on the server. /rank <name> will show you the rank of the player with the specified name.");
-		else if(!str_comp_nocase(pArg, "eyeemote"))
-			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Toggles whether to use the default eye emote settings for emoticons.");
-		else if(!str_comp_nocase(pArg, "broadcast"))
-			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Enables/disables the broadcast");
-		else if(!str_comp_nocase(pArg, "emote"))
-			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Shows information about the emote commands. Emote commands change the eyes of your tee.");*/
-		else
+	else
 			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Command is either unknown or you havent given the blank command without any parameters.");
 	}
 }
@@ -2227,125 +2203,78 @@ void CGameContext::ConToggleFly(IConsole::IResult *pResult, void *pUserData, int
 	}
 }
 
-// TODO: add the following commands
+void CGameContext::ConMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	char aBuf[256 + 24];
+	
+	str_format(aBuf, 256 + 24, "%s %s", pSelf->Server()->ClientName(ClientId), pResult->GetString(0));
+	pSelf->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+}
 
+void CGameContext::ConToggleEyeEmote(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	
+	CCharacter *pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
 
-/*			else if(!str_comp_num(pMsg->m_pMessage, "/me", 3))
+	if(pChr)
+	{
+		pChr->m_EyeEmote = !pChr->m_EyeEmote;
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", (pChr->m_EyeEmote) ? "You can now use the preset eye emotes." : "You don't have any eye emotes, remember to bind some. (until you die)");
+	}
+}
+
+void CGameContext::ConToggleEyeEmoteBroadcast(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	
+	CCharacter *pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
+
+	if(pChr)
+		pChr->m_BroadCast = !pChr->m_BroadCast;
+}
+
+void CGameContext::ConEyeEmote(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	
+	CCharacter *pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
+	
+	if (pResult->NumArguments() == 0)
+	{
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Emote commands are: /emote surprise /emote blink /emote close /emote angry /emote happy /emote pain");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Example: /emote surprise 10 for 10 seconds or /emote surprise (default 1 second)");
+	}
+	else 
+	{
+	  if (pChr)
+		{
+			if (!str_comp(pResult->GetString(0), "angry"))
+			  pChr->m_EmoteType = EMOTE_ANGRY;
+			else if (!str_comp(pResult->GetString(0), "blink"))
+			  pChr->m_EmoteType = EMOTE_BLINK;
+			else if (!str_comp(pResult->GetString(0), "close"))
+			  pChr->m_EmoteType = EMOTE_BLINK;
+			else if (!str_comp(pResult->GetString(0), "happy"))
+			  pChr->m_EmoteType = EMOTE_HAPPY;
+			else if (!str_comp(pResult->GetString(0), "pain"))
+			  pChr->m_EmoteType = EMOTE_PAIN;
+			else if (!str_comp(pResult->GetString(0), "surprise"))
+			  pChr->m_EmoteType = EMOTE_SURPRISE;
+			else
 			{
-				char aMsg[256]="";
-				if(sscanf(pMsg->m_pMessage, "/me %256c", aMsg) == 1)
-				{
-					char Temp[256+24]="";
-					strcat(Temp,Server()->ClientName(ClientId));
-					strcat(Temp," ");
-					strcat(Temp,aMsg);
-					SendChat(-1, CGameContext::CHAT_ALL, Temp);
-					mem_zero(Temp,sizeof(Temp));
-					mem_zero(aMsg,sizeof(aMsg));
-				}
+				pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Unkown emote... Say /emote");
 			}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/eyeemote") && g_Config.m_SvEmotionalTees)
-
-				{
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if(pChr)
-					{
-						pChr->m_EyeEmote=!pChr->m_EyeEmote;
-						SendChatTarget(ClientId, (pChr->m_EyeEmote)?"You can now use the preset eye emotes.":"You don't have any eye emotes, remember to bind some.(until you die)");
-					}
-				}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/broadcast") && g_Config.m_SvEmotionalTees)
-				{
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if(pChr)
-					{
-						if(pChr->m_BroadCast)
-							pChr->m_BroadCast=false;
-						else
-							pChr->m_BroadCast=true;
-					}
-				}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/emote") && g_Config.m_SvEmotionalTees)
-				{
-					SendChatTarget(ClientId, "Emote commands are: /emote surprise /emote blink /emote close /emote angry /emote happy /emote pain");
-					SendChatTarget(ClientId, "Example: /emote surprise 10 for 10 seconds or /emote surprise (default 1 second)");
-				}
-			else if(!str_comp_num(pMsg->m_pMessage, "/emote pain", 11) && g_Config.m_SvEmotionalTees)
-			{
-				int Num = -1;
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if(pChr)
-					{
-						pChr->m_EmoteType = EMOTE_PAIN;
-						if(sscanf(pMsg->m_pMessage, "/emote pain %d", &Num) > 0)
-							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
-						else
-							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
-					}
-				}
-			else if(!str_comp_num(pMsg->m_pMessage, "/emote happy", 12) && g_Config.m_SvEmotionalTees)
-			{
-				int Num = -1;
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if(pChr)
-					{
-						pChr->m_EmoteType = EMOTE_HAPPY;
-						if(sscanf(pMsg->m_pMessage, "/emote happy %d", &Num) > 0)
-							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
-						else
-							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
-					}
-				}
-			else if(!str_comp_num(pMsg->m_pMessage, "/emote angry", 12) && g_Config.m_SvEmotionalTees)
-			{
-				int Num = -1;
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if(pChr)
-					{
-						pChr->m_EmoteType = EMOTE_ANGRY;
-						if(sscanf(pMsg->m_pMessage, "/emote angry %d", &Num) > 0)
-							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
-						else
-							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
-					}
-				}
-			else if(!str_comp_num(pMsg->m_pMessage, "/emote close", 12) && g_Config.m_SvEmotionalTees)
-			{
-				int Num = -1;
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if(pChr)
-					{
-						pChr->m_EmoteType = EMOTE_BLINK;
-						if(sscanf(pMsg->m_pMessage, "/emote close %d", &Num) > 0)
-							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
-						else
-							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
-					}
-				}
-			else if(!str_comp_nocase(pMsg->m_pMessage, "/emote blink") && g_Config.m_SvEmotionalTees)
-				{
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if(pChr)
-					{
-						pChr->m_EmoteType = EMOTE_BLINK;
-						pChr->m_EmoteStop = Server()->Tick() + 0.5 * Server()->TickSpeed();
-					}
-				}
-			else if(!str_comp_num(pMsg->m_pMessage, "/emote surprise", 15) && g_Config.m_SvEmotionalTees)
-			{
-				int Num = -1;
-					CCharacter* pChr = pPlayer->GetCharacter();
-					if(pChr)
-					{
-						pChr->m_EmoteType = EMOTE_SURPRISE;
-						if(sscanf(pMsg->m_pMessage, "/emote surprise %d", &Num) > 0)
-							pChr->m_EmoteStop = Server()->Tick() + Num * Server()->TickSpeed();
-						else
-							pChr->m_EmoteStop = Server()->Tick() + 1 * Server()->TickSpeed();
-					}
-			}
-*/
-
+			
+			int Duration = 1;
+			if (pResult->NumArguments() > 1)
+				Duration = pResult->GetInteger(1);
+			  
+			pChr->m_EmoteStop = pSelf->Server()->Tick() + Duration * pSelf->Server()->TickSpeed();
+		}
+	}
+}
 
 void CGameContext::OnConsoleInit()
 {
@@ -2364,7 +2293,7 @@ void CGameContext::OnConsoleInit()
 
 	Console()->Register("kill_pl", "i", CFGFLAG_SERVER, ConKillPlayer, this, "Kills player i and announces the kill", 2);
 	
-	Console()->Register("logout", "?i", CFGFLAG_SERVER, ConLogOut, this, "If you are a helper or didn't specify [i] it logs you out, otherwise it logs player i out", 1);
+	Console()->Register("logout", "?i", CFGFLAG_SERVER, ConLogOut, this, "If you are a helper or didn't specify [i] it logs you out, otherwise it logs player i out", 0);
 	Console()->Register("helper", "i", CFGFLAG_SERVER, ConSetlvl1, this, "Authenticates player i to the Level of 1", 2);
 	Console()->Register("moder", "i", CFGFLAG_SERVER, ConSetlvl2, this, "Authenticates player i to the Level of 2", 3);
 	Console()->Register("admin", "i", CFGFLAG_SERVER, ConSetlvl3, this, "Authenticates player i to the Level of 3 (CAUTION: Irreversible, once he is an admin you can't control him)", 3);
@@ -2414,19 +2343,23 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("down", "?i", CFGFLAG_SERVER, ConGoDown, this, "Makes you or player i move 1 tile down", 1);
 	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConAddVote, this, "Adds a vote entry to the clients", 4);
 
-	Console()->Register("credits", "", CFGFLAG_SERVER, ConCredits, this, "Shows the credits of the DDRace mod", -1);
-	Console()->Register("info", "", CFGFLAG_SERVER, ConInfo, this, "Shows info about this server", -1);
-	Console()->Register("cmdlist", "", CFGFLAG_SERVER, ConCmdList, this, "Shows the list of all commands", -1);
-	Console()->Register("help", "?r", CFGFLAG_SERVER, ConHelp, this, "Helps you with commands", -1);
-	Console()->Register("flags", "", CFGFLAG_SERVER, ConFlags, this, "Shows gameplay information for this server", -1);
-	Console()->Register("rules", "", CFGFLAG_SERVER, ConRules, this, "Shows the rules of this server", -1);
-	Console()->Register("kill", "", CFGFLAG_SERVER, ConKill, this, "Kills you", -1);
-	Console()->Register("pause", "", CFGFLAG_SERVER, ConTogglePause, this, "If enabled on this server it pauses the game for you", -1);
-	Console()->Register("top5", "?i", CFGFLAG_SERVER, ConTop5, this, "Shows the top 5 from the 1st, or starting at the specified number", -1);
-	Console()->Register("rank", "?r", CFGFLAG_SERVER, ConRank, this, "Shows either your rank or the rank of the given player", -1);
 	Console()->Register("broadtime", "", CFGFLAG_SERVER, ConBroadTime, this, "", -1); // TODO: add help text, cause idk what this cmd does (heinrich5991)
-	Console()->Register("team", "?i", CFGFLAG_SERVER, ConJoinTeam, this, "Lets you join the specified team", -1);
+	Console()->Register("cmdlist", "", CFGFLAG_SERVER, ConCmdList, this, "Shows the list of all commands", -1);
+	Console()->Register("credits", "", CFGFLAG_SERVER, ConCredits, this, "Shows the credits of the DDRace mod", -1);
+	Console()->Register("emote", "?s?i", CFGFLAG_SERVER, ConEyeEmote, this, "Sets your tee's eye emote", -1);
+	Console()->Register("eyebroadcast", "", CFGFLAG_SERVER, ConToggleEyeEmoteBroadcast, this, "", -1); // TODO: add help text, cause idk what this cmd does (heinrich5991)
+	Console()->Register("eyeemote", "", CFGFLAG_SERVER, ConEyeEmote, this, "Toggles whether you automatically use eyeemotes with standard emotes", -1);
+	Console()->Register("flags", "", CFGFLAG_SERVER, ConFlags, this, "Shows gameplay information for this server", -1);
 	Console()->Register("fly", "", CFGFLAG_SERVER, ConToggleFly, this, "Toggles whether you fly by pressing jump", 1);
+	Console()->Register("help", "?r", CFGFLAG_SERVER, ConHelp, this, "Helps you with commands", -1);
+	Console()->Register("info", "", CFGFLAG_SERVER, ConInfo, this, "Shows info about this server", -1);
+	Console()->Register("kill", "", CFGFLAG_SERVER, ConKill, this, "Kills you", -1);
+	Console()->Register("me", "s", CFGFLAG_SERVER, ConMe, this, "", -1); // TODO: add help text, cause idk how to describe this (heinrich5991)
+	Console()->Register("pause", "", CFGFLAG_SERVER, ConTogglePause, this, "If enabled on this server it pauses the game for you", -1);
+	Console()->Register("rank", "?r", CFGFLAG_SERVER, ConRank, this, "Shows either your rank or the rank of the given player", -1);
+	Console()->Register("rules", "", CFGFLAG_SERVER, ConRules, this, "Shows the rules of this server", -1);
+	Console()->Register("team", "?i", CFGFLAG_SERVER, ConJoinTeam, this, "Lets you join the specified team", -1);
+	Console()->Register("top5", "?i", CFGFLAG_SERVER, ConTop5, this, "Shows the top 5 from the 1st, or starting at the specified number", -1);
 
 	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);
 
