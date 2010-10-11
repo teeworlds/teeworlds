@@ -447,6 +447,7 @@ void CConsole::Con_Exec(IResult *pResult, void *pUserData, int ClientId)
 struct CIntVariableData
 {
 	IConsole *m_pConsole;
+	char *m_Name;
 	int *m_pVariable;
 	int m_Min;
 	int m_Max;
@@ -455,6 +456,7 @@ struct CIntVariableData
 struct CStrVariableData
 {
 	IConsole *m_pConsole;
+	char *m_Name;
 	char *m_pStr;
 	int m_MaxSize;
 };
@@ -477,11 +479,15 @@ static void IntVariableCommand(IConsole::IResult *pResult, void *pUserData, int 
 		}
 
 		*(pData->m_pVariable) = Val;
+
+		char aBuf[1024];
+		str_format(aBuf, sizeof(aBuf), "%s changed to %d", pData->m_Name, *(pData->m_pVariable));
+		pData->m_pConsole->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
 	}
 	else
 	{
 		char aBuf[1024];
-		str_format(aBuf, sizeof(aBuf), "Value: %d", *(pData->m_pVariable));
+		str_format(aBuf, sizeof(aBuf), "%s is %d", pData->m_Name, *(pData->m_pVariable));
 		pData->m_pConsole->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
 	}
 }
@@ -512,11 +518,15 @@ static void StrVariableCommand(IConsole::IResult *pResult, void *pUserData, int 
     }
     else
       str_copy(pData->m_pStr, pString, pData->m_MaxSize);
+
+		char aBuf[1024];
+		str_format(aBuf, sizeof(aBuf), "%s changed to '%s'", pData->m_Name, pData->m_pStr);
+		pData->m_pConsole->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
   }
 	else
 	{
 		char aBuf[1024];
-		str_format(aBuf, sizeof(aBuf), "Value: %s", pData->m_pStr);
+		str_format(aBuf, sizeof(aBuf), "%s is '%s'", pData->m_Name, pData->m_pStr);
 		pData->m_pConsole->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
 	}
 }
@@ -552,13 +562,13 @@ CConsole::CConsole(int FlagMask)
 	// TODO: this should disappear
 	#define MACRO_CONFIG_INT(Name,ScriptName,Def,Min,Max,Flags,Desc,Level) \
 	{ \
-		static CIntVariableData Data = { this, &g_Config.m_##Name, Min, Max }; \
+		static CIntVariableData Data = { this, #ScriptName, &g_Config.m_##Name, Min, Max }; \
 		Register(#ScriptName, "?i", Flags, IntVariableCommand, &Data, Desc, Level); \
 	}
 	
 	#define MACRO_CONFIG_STR(Name,ScriptName,Len,Def,Flags,Desc,Level) \
 	{ \
-		static CStrVariableData Data = { this, g_Config.m_##Name, Len }; \
+		static CStrVariableData Data = { this, #ScriptName, g_Config.m_##Name, Len }; \
 		Register(#ScriptName, "?r", Flags, StrVariableCommand, &Data, Desc, Level); \
 	}
 
