@@ -28,6 +28,7 @@ class CCharacter : public CEntity
 	void HandleFly();
 	void HandleTiles(int Index);
 	float m_Time;
+	int m_LastBroadcast;
 public:
 	//character's size
 	static const int ms_PhysSize = 28;

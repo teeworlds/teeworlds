@@ -655,14 +655,14 @@ void CCharacter::Tick()
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	std::list < int > Indices = GameServer()->Collision()->GetMapIndices(m_PrevPos, m_Pos);
 	//dbg_msg("Indices","%d",Indices.size());
-	if(m_pPlayer->m_ForceBalanced)
+	/*if(m_pPlayer->m_ForceBalanced)
 	{
 		char Buf[128];
 		str_format(Buf, sizeof(Buf), "You were moved to %s due to team balancing", Controller->GetTeamName(m_pPlayer->GetTeam()));
 		GameServer()->SendBroadcast(Buf, m_pPlayer->GetCID());
 
 		m_pPlayer->m_ForceBalanced = false;
-	}
+	}*/
 	m_Armor=(m_FreezeTime != -1)?10-(m_FreezeTime/15):0;
 	if(m_Input.m_Direction != 0 || m_Input.m_Jump != 0)
 		m_LastMove = Server()->Tick();
@@ -729,18 +729,23 @@ void CCharacter::Tick()
 				str_format(aTmp, sizeof(aTmp), "\n%s\n", g_Config.m_SvBroadcast);
 				strcat(aBuftime, aTmp);
 			}
-			GameServer()->SendBroadcast(aBuftime, m_pPlayer->GetCID());
+			if(Server()->Tick() >= (m_LastBroadcast + Server()->TickSpeed()))
+			{
+				GameServer()->SendBroadcast(aBuftime, m_pPlayer->GetCID());
+				m_LastBroadcast = Server()->Tick();
+			}
 		}
 		else
 		{
 
-			if( g_Config.m_SvBroadcast[0] != 0) {
+			if( g_Config.m_SvBroadcast[0] != 0 && (Server()->Tick() > (m_LastBroadcast + (Server()->TickSpeed() * 9)))) {
 				char aTmp[128],aYourBest[64],aServerBest[64];
 				str_format(aYourBest, sizeof(aYourBest), "Your Best:'%s%d:%s%d'", ((pData->m_BestTime / 60) < 10)?"0":"", (int)(pData->m_BestTime / 60), (((int)pData->m_BestTime % 60) < 10)?"0":"", (int)pData->m_BestTime % 60);
 				CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
 				str_format(aServerBest, sizeof(aServerBest), "Server Best:'%s%d:%s%d'", ((GameServer()->m_pController->m_CurrentRecord / 60) < 10)?"0":"", (int)(GameServer()->m_pController->m_CurrentRecord / 60), (((int)GameServer()->m_pController->m_CurrentRecord % 60) < 10)?"0":"", (int)GameServer()->m_pController->m_CurrentRecord % 60);
 				str_format(aTmp, sizeof(aTmp), "%s\n%s %s", g_Config.m_SvBroadcast, (GameServer()->m_pController->m_CurrentRecord)?aServerBest:"", (pData->m_BestTime)?aYourBest:"");
 				GameServer()->SendBroadcast(aTmp, m_pPlayer->GetCID());
+				m_LastBroadcast = Server()->Tick();
 			}
 		}
 		m_RefreshTime = Server()->Tick();
