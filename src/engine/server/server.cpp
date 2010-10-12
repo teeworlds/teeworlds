@@ -844,13 +844,16 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					}
 				}
 			}
-			/*else if(Msg == NETMSG_RCON_AUTH)
+			else if(Msg == NETMSG_RCON_AUTH)
 			{
 				const char *pPw;
 				Unpacker.GetString(); // login name, not used
 				pPw = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 				
 				if(Unpacker.Error() == 0)
+					CheckPass(ClientId,pPw);
+
+				/*if(Unpacker.Error() == 0)
 				{
 					if(g_Config.m_SvRconPassword[0] == 0)
 					{
@@ -889,8 +892,8 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					{
 						SendRconLine(ClientId, "Wrong password.");
 					}
-				}
-			}*/
+				}*/
+			}
 			else if(Msg == NETMSG_PING)
 			{
 				CMsgPacker Msg(NETMSG_PING_REPLY);
@@ -1499,7 +1502,10 @@ void CServer::ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pU
 
 void CServer::ConLogin(IConsole::IResult *pResult, void *pUser, int ClientId)
 {
-	((CServer *)pUser)->CheckPass(ClientId, pResult->GetString(0));
+	if(pResult->NumArguments())
+		((CServer *)pUser)->CheckPass(ClientId, pResult->GetString(0));
+	else
+		SetRconLevel(ClientId, 0);
 }
 
 void CServer::RegisterCommands()
@@ -1523,8 +1529,8 @@ void CServer::RegisterCommands()
 
 	Console()->Chain("sv_max_clients_per_ip", ConchainMaxclientsperipUpdate, this);
 
-	Console()->Register("login", "r", CFGFLAG_SERVER, ConLogin, this, "", -1);
-	Console()->Register("auth", "r", CFGFLAG_SERVER, ConLogin, this, "", -1);
+	Console()->Register("login", "?s", CFGFLAG_SERVER, ConLogin, this, "Allows you access to rcon if no password is given, or changes your level if a password is given", -1);
+	Console()->Register("auth", "?s", CFGFLAG_SERVER, ConLogin, this, "Allows you access to rcon if no password is given, or changes your level if a password is given", -1);
 }	
 
 

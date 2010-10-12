@@ -601,7 +601,7 @@ void CGameContext::OnClientEnter(int ClientId)
 	SendChatTarget(ClientId, "For more Info /CMDList");
 	SendChatTarget(ClientId, "Or visit DDRace.info");
 	SendChatTarget(ClientId, "To see this again say /info");
-	Server()->SetRconLevel(ClientId, m_apPlayers[ClientId]->m_Authed);
+
 	if(g_Config.m_SvWelcome[0]!=0) SendChatTarget(ClientId,g_Config.m_SvWelcome);
 	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' team=%d", ClientId, Server()->ClientName(ClientId), m_apPlayers[ClientId]->GetTeam());
 	
