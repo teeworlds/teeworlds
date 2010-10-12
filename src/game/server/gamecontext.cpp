@@ -1971,7 +1971,8 @@ void CGameContext::ConCmdList(IConsole::IResult *pResult, void *pUserData, int C
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "List of commands not available in this version.");
+	//pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "List of commands not available in this version.");
+	pSelf->Console()->List(pSelf->m_apPlayers[ClientId]->m_Authed, CFGFLAG_SERVER);
 }
 
 void CGameContext::ConHelp(IConsole::IResult *pResult, void *pUserData, int ClientId)

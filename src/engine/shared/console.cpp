@@ -612,6 +612,23 @@ void CConsole::Register(const char *pName, const char *pParams,
 	m_pFirstCommand = pCommand;
 }
 
+void CConsole::List(const int Level, int Flags)
+{
+	CCommand *pCommand = m_pFirstCommand;
+	while(pCommand)
+	{
+		if(pCommand)
+			if(pCommand->m_Level <= Level && pCommand->m_Flags&Flags)
+			{
+				char aBuf[128];
+				str_format(aBuf,sizeof(aBuf),"%s, %s, %s",pCommand->m_pName, pCommand->m_pParams, pCommand->m_pHelp);
+				PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+			}
+
+		pCommand = pCommand->m_pNext;
+	}
+}
+
 void CConsole::Con_Chain(IResult *pResult, void *pUserData, int ClientId)
 {
 	CChain *pInfo = (CChain *)pUserData;
