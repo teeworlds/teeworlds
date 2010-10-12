@@ -278,7 +278,6 @@ public:
 	static void Con_Play(IConsole::IResult *pResult, void *pUserData);
 	static void Con_Record(IConsole::IResult *pResult, void *pUserData);
 	static void Con_StopRecord(IConsole::IResult *pResult, void *pUserData);
-	static void Con_Tmprec(IConsole::IResult *pResult, void *pUserData);
 
 	// Race
 	virtual const char* GetCurrentMap();

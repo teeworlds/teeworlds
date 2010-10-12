@@ -2010,25 +2010,6 @@ void CClient::Con_StopRecord(IConsole::IResult *pResult, void *pUserData)
 	pSelf->m_DemoRecorder.Stop();
 }
 
-void CClient::Con_Tmprec(IConsole::IResult *pResult, void *pUserData)
-{
-	CClient *pSelf = (CClient *)pUserData;
-	if(pSelf->m_State != STATE_ONLINE)
-		dbg_msg("demorec/record", "client is not online");
-	else
-	{
-		char aFilename[512];
-		time_t Rawtime;
-		struct tm *pTmp;
-
-		time(&Rawtime);
-		pTmp = localtime(&Rawtime);
-
-		str_format(aFilename, sizeof(aFilename), "demos/%d%02d%d_%d%d%d.demo", pTmp->tm_year + 1900, pTmp->tm_mon + 1, pTmp->tm_mday, pTmp->tm_hour, pTmp->tm_min, pTmp->tm_sec);
-		pSelf->m_DemoRecorder.Start(pSelf->Storage(), pSelf->m_pConsole, aFilename, pSelf->GameClient()->NetVersion(), pSelf->m_aCurrentMap, pSelf->m_CurrentMapCrc, "client");
-	}
-}
-
 void CClient::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
@@ -2057,8 +2038,6 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording");
 
 	m_pConsole->Register("add_favorite", "s", CFGFLAG_CLIENT, Con_AddFavorite, this, "Add a server as a favorite");
-	
-	m_pConsole->Register("tmprec", "", CFGFLAG_CLIENT, Con_Tmprec, this, "Temp Record");
 }
 
 static CClient m_Client;
