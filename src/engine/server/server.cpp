@@ -1505,7 +1505,7 @@ void CServer::ConLogin(IConsole::IResult *pResult, void *pUser, int ClientId)
 	if(pResult->NumArguments())
 		((CServer *)pUser)->CheckPass(ClientId, pResult->GetString(0));
 	else
-		SetRconLevel(ClientId, 0);
+		((CServer *)pUser)->SetRconLevel(ClientId, 0);
 }
 
 void CServer::RegisterCommands()
