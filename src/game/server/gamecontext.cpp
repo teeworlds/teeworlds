@@ -1987,12 +1987,12 @@ void CGameContext::ConHelp(IConsole::IResult *pResult, void *pUserData, int Clie
 	}
 	else
 	{
-	const char *pArg = pResult->GetString(0);
-	IConsole::CCommandInfo *pCmdInfo = pSelf->Console()->GetCommandInfo(pArg, CFGFLAG_SERVER);
-	if(pCmdInfo && pCmdInfo->m_pHelp)
-		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", pCmdInfo->m_pHelp);
-	else
-			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Command is either unknown or you havent given the blank command without any parameters.");
+		const char *pArg = pResult->GetString(0);
+		IConsole::CCommandInfo *pCmdInfo = pSelf->Console()->GetCommandInfo(pArg, CFGFLAG_SERVER);
+		if(pCmdInfo && pCmdInfo->m_pHelp)
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", pCmdInfo->m_pHelp);
+		else
+				pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Command is either unknown or you have given a blank command without any parameters.");
 	}
 }
 
