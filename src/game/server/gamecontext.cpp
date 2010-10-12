@@ -2250,7 +2250,7 @@ void CGameContext::ConToggleEyeEmote(IConsole::IResult *pResult, void *pUserData
 	}
 }
 
-void CGameContext::ConToggleEyeEmoteBroadcast(IConsole::IResult *pResult, void *pUserData, int ClientId)
+void CGameContext::ConToggleBroadcast(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	
@@ -2368,11 +2368,11 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("down", "?i", CFGFLAG_SERVER, ConGoDown, this, "Makes you or player i move 1 tile down", 1);
 	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConAddVote, this, "Adds a vote entry to the clients", 4);
 
-	Console()->Register("broadtime", "", CFGFLAG_SERVER, ConBroadTime, this, "", -1); // TODO: add help text, cause idk what this cmd does (heinrich5991)
+	Console()->Register("broadtime", "", CFGFLAG_SERVER, ConBroadTime, this, "Toggles Showing the time string in race", -1);
 	Console()->Register("cmdlist", "", CFGFLAG_SERVER, ConCmdList, this, "Shows the list of all commands", -1);
 	Console()->Register("credits", "", CFGFLAG_SERVER, ConCredits, this, "Shows the credits of the DDRace mod", -1);
 	Console()->Register("emote", "?s?i", CFGFLAG_SERVER, ConEyeEmote, this, "Sets your tee's eye emote", -1);
-	Console()->Register("eyebroadcast", "", CFGFLAG_SERVER, ConToggleEyeEmoteBroadcast, this, "", -1); // TODO: add help text, cause idk what this cmd does (heinrich5991)
+	Console()->Register("broadmsg", "", CFGFLAG_SERVER, ConToggleBroadcast, this, "Toggle Showing the Server's Broadcast message during race", -1);
 	Console()->Register("eyeemote", "", CFGFLAG_SERVER, ConEyeEmote, this, "Toggles whether you automatically use eyeemotes with standard emotes", -1);
 	Console()->Register("flags", "", CFGFLAG_SERVER, ConFlags, this, "Shows gameplay information for this server", -1);
 	Console()->Register("fly", "", CFGFLAG_SERVER, ConToggleFly, this, "Toggles whether you fly by pressing jump", 1);
