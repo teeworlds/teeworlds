@@ -78,6 +78,9 @@ public:
 	int64 m_Last_ChangeInfo;
 	int64 m_Last_Emote;
 	int64 m_Last_Kill;
+	char m_LastMessage1[370];
+	char m_LastMessage2[370];
+	int m_SpamCount;
 
 	bool m_Invisible;
 	

@@ -1724,7 +1724,7 @@ void CServer::CheckPass(int ClientId, const char *pPw)
 					else
 					{
 						NETADDR Addr = m_NetServer.ClientAddr(ClientId);
-						BanAdd(Addr, g_Config.m_SvRconBantime, "Too many remote console authentication tries");
+						BanAdd(Addr, g_Config.m_SvRconBantime*60, "Too many remote console authentication tries");
 					}
 				}
 			}
