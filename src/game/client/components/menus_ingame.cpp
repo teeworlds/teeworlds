@@ -135,7 +135,7 @@ void CMenus::RenderGame(CUIRect MainView)
 				str_format(aBuf, sizeof(aBuf), "%s:", Localize("Name"));
 				UI()->DoLabel(&LoginButton, aBuf, 10.0, -1);
 				LoginButton.VSplitLeft(50.0f, 0, &LoginButton);
-				LoginButton.VSplitLeft(160.0f, &LoginButton, 0);
+				LoginButton.VSplitLeft(110.0f, &LoginButton, 0);
 				static float NameOffset = 0.0f;
 				DoEditBox(g_Config.m_ClLvlxName, &LoginButton, g_Config.m_ClLvlxName, sizeof(g_Config.m_ClLvlxName), 10.0f, &NameOffset);
 				
@@ -146,24 +146,16 @@ void CMenus::RenderGame(CUIRect MainView)
 				UI()->DoLabel(&LoginButton, aBuf, 10.0, -1);
 				LoginButton.HSplitTop(12.0f, &LoginButton, 0);
 				LoginButton.VSplitLeft(50.0f, 0, &LoginButton);
-				LoginButton.VSplitLeft(160.0f, &LoginButton, 0);
+				LoginButton.VSplitLeft(110.0f, &LoginButton, 0);
 				static float PassOffset = 0.0f;
 				DoEditBox(g_Config.m_ClLvlxPass, &LoginButton, g_Config.m_ClLvlxPass, sizeof(g_Config.m_ClLvlxPass), 10.0f, &PassOffset, true);
 			}
 		}
 	}
 	
-	if(m_pClient->m_LvlxMsgSent)
-	{
-		MainView.VSplitLeft(360.0f, &Button, &MainView);
-		MainView.VSplitLeft(140.0f, &Button, &MainView);
-	}
-	else
-	{
-		MainView.VSplitLeft(100.0f, &Button, &MainView);
-		MainView.VSplitLeft(150.0f, &Button, &MainView);
-	}
-
+	MainView.VSplitRight(10.0f, &MainView, 0);
+	MainView.VSplitRight(140.0f, &MainView, &Button);
+	
 	static int s_DemoButton = 0;
 	bool Recording = DemoRecorder()->IsRecording();
 	if(DoButton_Menu(&s_DemoButton, Localize(Recording ? "Stop record" : "Record demo"), 0, &Button))	// Localize("Stop record");Localize("Record demo");
