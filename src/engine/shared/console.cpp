@@ -621,7 +621,7 @@ void CConsole::List(const int Level, int Flags)
 			if((pCommand->m_Level <= Level))
 					if((!Flags)?true:pCommand->m_Flags&Flags)
 					{
-						char aBuf[128];
+						char aBuf[300];
 						str_format(aBuf,sizeof(aBuf),"Name: %s, Parameters: %s, Help: %s",pCommand->m_pName, (!str_length(pCommand->m_pParams))?"None.":pCommand->m_pParams, (!str_length(pCommand->m_pHelp))?"No Help String Given":pCommand->m_pHelp);
 						PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
 					}

@@ -1971,8 +1971,15 @@ void CGameContext::ConCmdList(IConsole::IResult *pResult, void *pUserData, int C
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	//pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "List of commands not available in this version.");
-	pSelf->Console()->List(pSelf->m_apPlayers[ClientId]->m_Authed, CFGFLAG_SERVER);
+
+	if(pSelf->m_apPlayers[ClientId]->m_Authed == 3)
+	{
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "O Really!!, You call yourself an admin!!");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "check the documentation on DDRace.info");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "leave cmdlist for others.. too many commands to show you here");
+	}
+	else
+		pSelf->Console()->List(pSelf->m_apPlayers[ClientId]->m_Authed, CFGFLAG_SERVER);
 }
 
 void CGameContext::ConHelp(IConsole::IResult *pResult, void *pUserData, int ClientId)
