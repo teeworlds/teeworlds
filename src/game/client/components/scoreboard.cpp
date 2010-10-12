@@ -107,6 +107,9 @@ void CScoreboard::RenderSpectators(float x, float y, float w)
 			{
 				if(Count)
 					str_append(aBuffer, ", ", sizeof(aBuffer));
+				char aId[3];
+				str_format(aId,sizeof(aId),"%d:",pInfo->m_ClientId);
+				str_append(aBuffer, aId, sizeof(aBuffer));
 				str_append(aBuffer, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, sizeof(aBuffer));
 				Count++;
 			}
@@ -242,7 +245,10 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		FontSizeResize = FontSize;
 		while(TextRender()->TextWidth(0, FontSizeResize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1) > w-163.0f-PingWidth)
 			--FontSizeResize;
-		TextRender()->Text(0, x+128.0f, y+(FontSize-FontSizeResize)/2, FontSizeResize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
+		char aId[64];
+		str_format(aId,sizeof(aId),"%d:",pInfo->m_ClientId);
+		str_append(aId, m_pClient->m_aClients[pInfo->m_ClientId].m_aName,sizeof(aId));
+		TextRender()->Text(0, x+128.0f, y+(FontSize-FontSizeResize)/2, FontSizeResize, aId, -1);
 
 		FontSizeResize = FontSize;
 		str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_Latency, -9999, 9999));
