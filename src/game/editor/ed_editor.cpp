@@ -3217,8 +3217,8 @@ void CEditor::UpdateAndRender()
 			s_MouseY += ry;
 		}
 
-		clamp(s_MouseX, 0.0f, UI()->Screen()->w);
-		clamp(s_MouseY, 0.0f, UI()->Screen()->h);
+		s_MouseX = clamp(s_MouseX, 0.0f, UI()->Screen()->w);
+		s_MouseY = clamp(s_MouseY, 0.0f, UI()->Screen()->h);
 
 		// update the ui
 		mx = s_MouseX;
