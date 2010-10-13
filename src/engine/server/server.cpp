@@ -812,11 +812,12 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				
 				if(Unpacker.Error() == 0/* && m_aClients[ClientId].m_Authed*/)
 				{
-					Console()->RegisterAlternativePrintCallback(0, 0);
 
 					char aBuf[256];
 					if(m_aClients[ClientId].m_Authed >= 0)
 					{
+						Console()->RegisterAlternativePrintCallback(0, 0);
+
 						str_format(aBuf, sizeof(aBuf), "'%s' ClientId=%d Level=%d Rcon='%s'", ClientName(ClientId), ClientId, m_aClients[ClientId].m_Authed, pCmd);
 						Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
 
@@ -833,7 +834,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					}
 					else
 					{
-						dbg_msg("server", "'%s' client tried rcon command ('pCmd') without permissions. Cid=%x ip=%d.%d.%d.%d",
+						dbg_msg("server", "'%s' client tried rcon command ('%s') without permissions. Cid=%x ip=%d.%d.%d.%d",
 						ClientName(ClientId),
 						pCmd,
 						ClientId,
