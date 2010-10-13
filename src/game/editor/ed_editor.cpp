@@ -3194,8 +3194,8 @@ void CEditor::DoMapBorder()
 
 void CEditor::UpdateAndRender()
 {
-	static int s_MouseX = 0;
-	static int s_MouseY = 0;
+	static float s_MouseX = 0.0f;
+	static float s_MouseY = 0.0f;
 
 	if(m_Animate)
 		m_AnimateTime = (time_get()-m_AnimateStart)/(float)time_freq();
@@ -3205,7 +3205,7 @@ void CEditor::UpdateAndRender()
 
 	// handle mouse movement
 	float mx, my, Mwx, Mwy;
-	int rx, ry;
+	float rx, ry;
 	{
 		Input()->MouseRelative(&rx, &ry);
 		m_MouseDeltaX = rx;
@@ -3217,10 +3217,8 @@ void CEditor::UpdateAndRender()
 			s_MouseY += ry;
 		}
 
-		if(s_MouseX < 0) s_MouseX = 0;
-		if(s_MouseY < 0) s_MouseY = 0;
-		if(s_MouseX > UI()->Screen()->w) s_MouseX = (int)UI()->Screen()->w;
-		if(s_MouseY > UI()->Screen()->h) s_MouseY = (int)UI()->Screen()->h;
+		clamp(s_MouseX, 0.0f, UI()->Screen()->w);
+		clamp(s_MouseY, 0.0f, UI()->Screen()->h);
 
 		// update the ui
 		mx = s_MouseX;

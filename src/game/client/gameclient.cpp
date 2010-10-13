@@ -304,9 +304,9 @@ void CGameClient::OnInit()
 void CGameClient::DispatchInput()
 {
 	// handle mouse movement
-	int x=0, y=0;
+	float x = 0.0f, y = 0.0f;
 	Input()->MouseRelative(&x, &y);
-	if(x || y)
+	if(x != 0.0f || y != 0.0f)
 	{
 		for(int h = 0; h < m_Input.m_Num; h++)
 		{
