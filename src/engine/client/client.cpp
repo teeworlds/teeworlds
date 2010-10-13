@@ -2001,7 +2001,7 @@ int main(int argc, const char **argv) // ignore_convention
 	{
 		if(str_comp("-s", argv[i]) == 0 || str_comp("--silent", argv[i]) == 0) // ignore_convention
 		{
-			ShowWindow(GetConsoleWindow(), SW_HIDE);
+			FreeConsole();
 			break;
 		}
 	}
