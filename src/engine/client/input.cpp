@@ -48,7 +48,7 @@ void CInput::Init()
 	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 }
 
-void CInput::MouseRelative(int *x, int *y)
+void CInput::MouseRelative(float *x, float *y)
 {
 	int nx = 0, ny = 0;
 	float Sens = g_Config.m_InpMousesens/100.0f;
@@ -65,8 +65,8 @@ void CInput::MouseRelative(int *x, int *y)
 		}
 	}
 
-	*x = (int)(nx*Sens);
-	*y = (int)(ny*Sens);
+	*x = nx*Sens;
+	*y = ny*Sens;
 }
 
 void CInput::MouseModeAbsolute()
