@@ -67,9 +67,7 @@ MACRO_CONFIG_INT(SvInactiveKickTime, sv_inactivekick_time, 180, 0, 9999, CFGFLAG
 MACRO_CONFIG_INT(SvInactiveKick, sv_inactivekick, 1, 0, 2, CFGFLAG_SERVER, "How to deal with inactive players (0=move to spectator, 1=move to free spectator slot/kick, 2=kick)", 3)
 
 MACRO_CONFIG_INT(SvVoteKick, sv_vote_kick, 1, 0, 1, CFGFLAG_SERVER, "Allow voting to kick players", 3)
-MACRO_CONFIG_INT(SvVoteKickBantime, sv_vote_kick_bantime, 300, 0, 9999, CFGFLAG_SERVER, "The time to ban a player if kicked by vote. 0 makes it just use kick", 3)
-/*MACRO_CONFIG_INT(SvVoteScorelimit, sv_vote_scorelimit, 0, 0, 1, CFGFLAG_SERVER, "Allow voting to change score limit")
-MACRO_CONFIG_INT(SvVoteTimelimit, sv_vote_timelimit, 0, 0, 1, CFGFLAG_SERVER, "Allow voting to change time limit")*/
+MACRO_CONFIG_INT(SvVoteKickBantime, sv_vote_kick_bantime, 5, 0, 1440, CFGFLAG_SERVER, "The time to ban a player if kicked by vote. 0 makes it just use kick", 3)
 
 // debug
 #ifdef CONF_DEBUG // this one can crash the server if not used correctly

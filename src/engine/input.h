@@ -72,7 +72,7 @@ public:
 	virtual void MouseModeAbsolute() = 0;
 	virtual int MouseDoubleClick() = 0;
 	
-	virtual void MouseRelative(int *x, int *y) = 0;
+	virtual void MouseRelative(float *x, float *y) = 0;
 };
 
 

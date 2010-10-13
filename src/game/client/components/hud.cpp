@@ -201,7 +201,7 @@ void CHud::RenderTeambalanceWarning()
 
 void CHud::RenderVoting()
 {
-	if(!m_pClient->m_pVoting->IsVoting())
+	if(!m_pClient->m_pVoting->IsVoting() || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return;
 	
 	Graphics()->TextureSet(-1);
@@ -229,11 +229,11 @@ void CHud::RenderVoting()
 	
 	const char *pYesKey = m_pClient->m_pBinds->GetKey("vote yes");
 	const char *pNoKey = m_pClient->m_pBinds->GetKey("vote no");
-	str_format(Buf, sizeof(Buf), "%s - Vote Yes", pYesKey);
+	str_format(Buf, sizeof(Buf), "%s - %s", pYesKey, Localize("Vote Yes"));
 	Base.y += Base.h+1;
 	UI()->DoLabel(&Base, Buf, 6.0f, -1);
 
-	str_format(Buf, sizeof(Buf), "Vote No - %s", pNoKey);
+	str_format(Buf, sizeof(Buf), "%s - %s", Localize("Vote No"), pNoKey);
 	UI()->DoLabel(&Base, Buf, 6.0f, 1);
 }
 

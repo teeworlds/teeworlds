@@ -19,7 +19,7 @@ public:
 
 	virtual void Init();
 
-	virtual void MouseRelative(int *x, int *y);
+	virtual void MouseRelative(float *x, float *y);
 	virtual void MouseModeAbsolute();
 	virtual void MouseModeRelative();
 	virtual int MouseDoubleClick();

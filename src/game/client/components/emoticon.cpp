@@ -102,7 +102,7 @@ void CEmoticon::OnRender()
 	
 	m_WasActive = true;
 	
-	int x, y;
+	float x, y;
 	Input()->MouseRelative(&x, &y);
 
 	m_SelectorMouse.x += x;
