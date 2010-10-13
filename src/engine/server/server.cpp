@@ -977,7 +977,7 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 	p.AddString(aBuf, 4);
 	
 	str_format(aBuf, sizeof(aBuf), "%d", PlayerCount); p.AddString(aBuf, 3);  // num players
-	str_format(aBuf, sizeof(aBuf), "%d", m_NetServer.MaxClients()); p.AddString(aBuf, 3); // max players
+	str_format(aBuf, sizeof(aBuf), "%d", max(m_NetServer.MaxClients() - g_Config.m_SvReservedSlots, PlayerCount)); p.AddString(aBuf, 3); // max players
 
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
