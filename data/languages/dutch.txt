@@ -1,9 +1,11 @@
+
 ##### translated strings #####
-%ds left
-== %ds over
 
 %d of %d servers, %d players
 == %d van %d Servers, %d spelers
+
+%ds left
+== %ds over
 
 Abort
 == Afbreken
@@ -50,11 +52,11 @@ Compatible version
 Connect
 == Verbinden
 
-Connection Problems...
-== Verbindingsproblemen...
-
 Connecting to
 == Verbinden met
+
+Connection Problems...
+== Verbindingsproblemen...
 
 Console
 == Console
@@ -97,9 +99,6 @@ Emoticon
 
 Enter
 == Starten
-
-error loading demo
-== Fout bij laden demo
 
 Error
 == Fout
@@ -260,9 +259,6 @@ Ok
 Password
 == Wachtwoord
 
-Password Incorrect
-== Wachtwoord verkeerd
-
 Password incorrect
 == Wachtwoord verkeerd
 
@@ -307,7 +303,7 @@ Refresh
 
 Refreshing master servers
 == Hoofdserver vernieuwen
- 
+
 Remote console
 == Remote console
 
@@ -458,313 +454,277 @@ You must restart the game for all settings to take effect.
 Your skin
 == Jouw skin
 
-##### needs translation ####
+error loading demo
+== Fout bij laden demo
 
-Open map
-== Open kaart
+##### needs translation #####
 
-Open
-== Open
+%s Right click for context menu.
+== %s Right click for context menu.
 
-Save map
-== Sla kaart op
+Add
+== Add
 
-Save
-== Opslaan
+Add Image
+== Add Image
 
-HD
-== Det.
+Add Quad
+== Add Quad
 
-[ctrl+h] Toggle High Detail
-== [ctrl+h] Activeer Details
+Add group
+== Add group
+
+Add quads layer
+== Add quads layer
+
+Add tile layer
+== Add tile layer
+
+Adds a new group
+== Adds a new group
+
+Adds a new quad
+== Adds a new quad
+
+Alpha value of the envelope
+== Alpha value of the envelope
 
 Anim
-== Anim.
+== Anim
 
-[ctrl+m] Toggle animation
-== [ctrl+m] Activeer animaties
+Append
+== Append
 
-Proof
-== Test
+Append map
+== Append map
 
-[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-== [ctrl+p] Test grenzen. Deze grenzen laten zien wat een speler maximaal kan zien.
+Are you sure that you want to delete the demo?
+== Are you sure that you want to delete the demo?
 
-ZO
-== ZO
+Aspect ratio
+== Aspect ratio
 
-[NumPad-] Zoom out
-== [NumPad-] Uitzoomen
+Blue value of the envelope
+== Blue value of the envelope
 
-[NumPad*] Zoom to normal and remove editor offset
-== [NumPad*] Zoom naar normaal en verwijder toevoegingen van de editor 
-
-ZI
-== ZI
-
-[NumPad+] Zoom in
-== [NumPad+] Inzoomen
-
-Increase animation speed
-== Vergroot animatie snelheid
-
-Normal animation speed
-== Normale animatie snelheid
-
-Decrease animation speed
-== Verklein animatie snelheid
-
-[N] Flip brush horizontal
-== [N] Draai kwast horizontaal
-
-[M] Flip brush vertical
-== [M] Draai kwast verticaal
+Border
+== Border
 
 CCW
 == CCW
 
-[R] Rotates the brush counter clockwise
-== [R] Draai de kwast tegen de klok in
-
 CW
 == CW
 
-[T] Rotates the brush clockwise
-== [T] Draai de kwast met de klok mee
-
-Add Quad
-== Voeg Quad toe
-
-Adds a new quad
-== Voegt een nieuwe Quad toe
-
-Border
-== Grens
-
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== Linkermuisknop om te bewegen. Druk shift in om te roteren. Druk ctrl om te draaien.
-
-Left mouse button to move. Hold shift to move the texture.
-== Linkermuisknop om te bewegen. Druk shift in om de textuur te bewegen
-
-Use left mouse button to drag and create a brush.
-== Gebruik de linkermuisknop om de kwast te maken en te slepen.
-
-Use left mouse button to paint with the brush. Right button clears the brush.
-== Gebruik de linkermuisknop om de kwast te gebruiken. Rechtermuisknop maakt de kwast schoon. 
-
-Decrease
-== Verkleinen
-
-Increase
-== Vergroten
-
-None
-== Geen
-
-Toggle group visibility
-== Acitveer groepszichtbaarheid
-
-Select group. Right click for properties.
-== Kies een groep. Rechtermuisknop voor eigenschappen.
-
-Add group
-== Voeg groep toe
-
-Adds a new group
-== Voegt een nieuwe groep toe
-
-Embed
-== Insluiten
-
-Embeds the image into the map file.
-== Sluit een afbeelding in in het bestand van de kaart
-
-Make external
-== Maak extern
-
-Removes the image from the map file.
-== Verwijderd de afbeelding uit de kaart.
-
-Replace
-== Vervang
-
-Replaces the image with a new one
-== Vervangt de afbeelding met een nieuwe
-
-Replace Image
-== Vervang afbeelding
-
-Remove
-== Verwijder
-
-Removes the image from the map
-== Verwijderd de afbeelding uit de kaart
-
-Embedded
-== Ingesloten
-
-External
-== Extern
-
-Select image
-== Selecteer afbeelding
-
-Load a new image to use in the map
-== Laad een nieuwe afbeelding om te gebruiken in de kaart
-
-Add Image
-== Voeg afbeelding toe
-
-Add
-== Voeg toe
-
-Filename:
-== Bestandsnaam:
-
 Cancel
-== Annuleren
-
-Layers
-== Lagen
-
-Images
-== Afbeeldingen
-
-Switch between images and layers managment.
-== Wissel tussen afbeeldinglaag en beheerlaag.
-
-Envelopes
-== Envelopes
-
-Toggles the envelope editor.
-== Activeer de envelope editor.
-
-%s Right click for context menu.
-== %s Rechtermuisknop voor context menu.
-
-Color+
-== Kleur+
-
-Creates a new color envelope
-== Maakt een nieuwe kleur envelope
-
-Pos.+
-== Pos.+
-
-Creates a new pos envelope
-== Maakt een nieuwe pos envelope
-
-Previous Envelope
-== Vorige envelope
-
-Next Envelope
-== Volgende envelope
-
-Name:
-== Naam:
-
-Press right mouse button to create a new point
-== Rechtermuisknop om een nieuw punt te maken
-
-Switch curve type
-== Wissel bocht type
-
-Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
-== Linkermuisknop om te slepen. Druk shift in om het punt te veranderen. Rechtermuisknop om te verwijderen.
-
-New
-== Nieuw
-
-Creates a new map
-== Maakt een nieuwe kaart.
-
-Opens a map for editing
-== Opent een kaart om te bewerken
-
-Append
-== Toevoegen
-
-Opens a map and adds everything from that map to the current one
-== Opent een kaart en voegt alles van die kaart toe aan de huidige
-
-Append map
-== Voeg kaart toe
-
-Saves the current map
-== Sla huidige kaart op
-
-Save As
-== Opslaan als
-
-Saves the current map under a new name
-== Sla de huidige kaart op onder een nieuwe naam
-
-Exits from the editor
-== Verlaat de editor
+== Cancel
 
 Clear collision
-== Verwijder botsingen
+== Clear collision
 
-Removes collision from this layer
-== Verwijderd botsingen in deze laag
+Clip H
+== Clip H
 
-Make collision
-== Maak botsing
+Clip W
+== Clip W
+
+Clip X
+== Clip X
+
+Clip Y
+== Clip Y
+
+Color
+== Color
+
+Color Env
+== Color Env
+
+Color TO
+== Color TO
+
+Color+
+== Color+
 
 Constructs collision from this layer
-== Maakt botsing van deze laag
+== Constructs collision from this layer
 
-Width
-== Breedte
+Creates a new color envelope
+== Creates a new color envelope
 
-Height
-== Hoogte
+Creates a new map
+== Creates a new map
 
-Image
-== Afbeelding
-
-Delete group
-== Verwijder groep
-
-Add quads layer
-== Voeg quads laag toe
+Creates a new pos envelope
+== Creates a new pos envelope
 
 Creates a new quad layer
-== Maakt een nieuwe quads laag
-
-Add tile layer
-== Voeg tegel laag toe
+== Creates a new quad layer
 
 Creates a new tile layer
-== Maakt een nieuwe tegel laag
+== Creates a new tile layer
+
+Decrease
+== Decrease
+
+Decrease animation speed
+== Decrease animation speed
+
+Delete
+== Delete
+
+Delete demo
+== Delete demo
+
+Delete group
+== Delete group
 
 Delete layer
-== Verwijder laag
+== Delete layer
+
+Delete this envelope
+== Delete this envelope
+
+Deletes the current quad
+== Deletes the current quad
 
 Deletes the layer
-== Verwijdert de laag
-
-Group
-== Groep
-
-Order
-== Volgorde
+== Deletes the layer
 
 Detail
 == Detail
 
-Delete
-== Verwijder
+Down
+== Down
 
-Deletes the current quad
-== Verwijdert de huidige quad
+Embed
+== Embed
 
-Square
-== Vereffenen
+Embedded
+== Embedded
 
-Squares the current quad
-== Vereffenen de huidige quad
+Embeds the image into the map file.
+== Embeds the image into the map file.
+
+Envelopes
+== Envelopes
+
+Exit
+== Exit
+
+Exits from the editor
+== Exits from the editor
+
+External
+== External
+
+File
+== File
+
+Filename:
+== Filename:
+
+Folder
+== Folder
+
+Green value of the envelope
+== Green value of the envelope
+
+Group
+== Group
+
+HD
+== HD
+
+Height
+== Height
+
+Image
+== Image
+
+Images
+== Images
+
+Increase
+== Increase
+
+Increase animation speed
+== Increase animation speed
+
+Invalid Demo
+== Invalid Demo
+
+Layers
+== Layers
+
+Left
+== Left
+
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+
+Left mouse button to move. Hold shift to move the texture.
+== Left mouse button to move. Hold shift to move the texture.
+
+Left mouse to drag. Hold ctfl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== Left mouse to drag. Hold ctfl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+
+Load
+== Load
+
+Load a new image to use in the map
+== Load a new image to use in the map
+
+Load map
+== Load map
+
+Make collision
+== Make collision
+
+Make external
+== Make external
+
+Name:
+== Name:
+
+New
+== New
+
+Next Envelope
+== Next Envelope
+
+None
+== None
+
+Normal animation speed
+== Normal animation speed
+
+Open
+== Open
+
+Opens a map and adds everything from that map to the current one
+== Opens a map and adds everything from that map to the current one
+
+Opens a map for editing
+== Opens a map for editing
+
+Order
+== Order
+
+Para X
+== Para X
+
+Para Y
+== Para Y
+
+Parent Folder
+== Parent Folder
+
+Pos X
+== Pos X
+
+Pos Y
+== Pos Y
 
 Pos. Env
 == Pos. Env
@@ -772,19 +732,188 @@ Pos. Env
 Pos. TO
 == Pos. TO
 
-Color Env
-== Kleur Env
+Pos.+
+== Pos.+
 
-Color TO
-== Kleur TO
+Press right mouse button to create a new point
+== Press right mouse button to create a new point
+
+Previous Envelope
+== Previous Envelope
+
+Proof
+== Proof
+
+REC
+== REC
+
+Reason:
+== Reason:
+
+Record demo
+== Record demo
+
+Red value of the envelope
+== Red value of the envelope
+
+Refocus
+== Refocus
+
+Remove
+== Remove
+
+Removes collision from this layer
+== Removes collision from this layer
+
+Removes the image from the map
+== Removes the image from the map
+
+Removes the image from the map file.
+== Removes the image from the map file.
+
+Replace
+== Replace
+
+Replace Image
+== Replace Image
+
+Replaces the image with a new one
+== Replaces the image with a new one
+
+Resizes the current Quad based on the aspect ratio of the image
+== Resizes the current Quad based on the aspect ratio of the image
+
+Right
+== Right
+
+Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+
+Rotation of the envelope
+== Rotation of the envelope
+
+Save
+== Save
+
+Save As
+== Save As
+
+Save map
+== Save map
+
+Saves the current map
+== Saves the current map
+
+Saves the current map under a new name
+== Saves the current map under a new name
+
+Select group. Right click for properties.
+== Select group. Right click for properties.
+
+Select image
+== Select image
 
 Select layer. Right click for properties.
-== Selecteer laag. Rechtermuisknop voor eigenschappen.
+== Select layer. Right click for properties.
+
+Shift
+== Shift
+
+Square
+== Square
+
+Squares the current quad
+== Squares the current quad
+
+Stop record
+== Stop record
+
+Switch between images and layers managment.
+== Switch between images and layers managment.
+
+Switch curve type
+== Switch curve type
+
+Toggle group visibility
+== Toggle group visibility
 
 Toggle layer visibility
-== Activeer zichtbaarheid laag
+== Toggle layer visibility
 
-File
-== Bestand
+Toggles the envelope editor.
+== Toggles the envelope editor.
 
-##### old translations ####
+Up
+== Up
+
+Use Clipping
+== Use Clipping
+
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== Use left mouse button to drag and change the color value. Hold shift to be more precise.
+
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Use left mouse button to drag and change the value. Hold shift to be more precise.
+
+Use left mouse button to drag and create a brush.
+== Use left mouse button to drag and create a brush.
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== Use left mouse button to paint with the brush. Right button clears the brush.
+
+Vote No
+== Vote No
+
+Vote Yes
+== Vote Yes
+
+Width
+== Width
+
+X-axis of the envelope
+== X-axis of the envelope
+
+Y-axis of the envelope
+== Y-axis of the envelope
+
+ZI
+== ZI
+
+ZO
+== ZO
+
+[HOME] Restore map focus
+== [HOME] Restore map focus
+
+[M] Flip brush vertical
+== [M] Flip brush vertical
+
+[N] Flip brush horizontal
+== [N] Flip brush horizontal
+
+[NumPad*] Zoom to normal and remove editor offset
+== [NumPad*] Zoom to normal and remove editor offset
+
+[NumPad+] Zoom in
+== [NumPad+] Zoom in
+
+[NumPad-] Zoom out
+== [NumPad-] Zoom out
+
+[R] Rotates the brush counter clockwise
+== [R] Rotates the brush counter clockwise
+
+[T] Rotates the brush clockwise
+== [T] Rotates the brush clockwise
+
+[ctrl+h] Toggle High Detail
+== [ctrl+h] Toggle High Detail
+
+[ctrl+m] Toggle animation
+== [ctrl+m] Toggle animation
+
+[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+
+##### old translations #####
+
