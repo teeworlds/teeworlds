@@ -169,11 +169,10 @@ void CConsole::Print(int Level, const char *pFrom, const char *pStr)
 }
 
 void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
-{
-	CResult *pResult = new(&m_ExecutionQueue.m_pLast->m_Result) CResult;
-	
+{	
 	while(pStr && *pStr)
 	{
+		CResult *pResult = new(&m_ExecutionQueue.m_pLast->m_Result) CResult;
 		const char *pEnd = pStr;
 		const char *pNextPart = 0;
 		int InString = 0;
