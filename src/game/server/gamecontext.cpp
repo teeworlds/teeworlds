@@ -624,7 +624,7 @@ void CGameContext::OnSetAuthed(int client_id, int Level)
 	{
 		m_apPlayers[client_id]->m_Authed = Level;
 		char buf[11];
-		str_format(buf, sizeof(buf), "ban %d %d", client_id, g_Config.m_SvVoteKickBantime*60);
+		str_format(buf, sizeof(buf), "ban %d %d", client_id, g_Config.m_SvVoteKickBantime);
 		if( !strcmp(m_aVoteCommand,buf))
 		{
 			m_VoteEnforce = CGameContext::VOTE_ENFORCE_NO;
@@ -726,27 +726,11 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		{
 			if(m_apPlayers[ClientId]->m_Muted == 0)
 			{
-				if(/*g_Config.m_SvSpamprotection && */pPlayer->m_Last_Chat && pPlayer->m_Last_Chat + Server()->TickSpeed() * g_Config.m_SvChatDelay > Server()->Tick())
+				if(/*g_Config.m_SvSpamprotection && */pPlayer->m_Last_Chat && pPlayer->m_Last_Chat + Server()->TickSpeed() + g_Config.m_SvChatDelay > Server()->Tick())
 					return;
-				if(g_Config.m_SvChatSpamProtection)
-				{
-						if(!str_comp_nocase(pMsg->m_pMessage, pPlayer->m_LastMessage1))
-							if(!str_comp_nocase(pPlayer->m_LastMessage1, pPlayer->m_LastMessage2))
-							{
-								pPlayer->m_SpamCount++;
-								if(pPlayer->m_SpamCount > g_Config.m_SvChatSpamCount)
-									m_apPlayers[ClientId]->m_Muted = g_Config.m_SvChatSpamMuteTime * 60 * Server()->TickSpeed();
-								return;
-							}
-				}
 
 				SendChat(ClientId, Team, pMsg->m_pMessage);
-				if(g_Config.m_SvChatSpamProtection)
-				{
-				str_copy(pPlayer->m_LastMessage2, pPlayer->m_LastMessage1, sizeof(pPlayer->m_LastMessage2));
-				str_copy(pPlayer->m_LastMessage1, pMsg->m_pMessage, sizeof(pPlayer->m_LastMessage1));
-				pPlayer->m_SpamCount = 0;
-				}
+				
 				pPlayer->m_Last_Chat = Server()->Tick();
 			}
 			else
@@ -903,7 +887,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			{
 				char aBuf[64] = {0};
 				Server()->GetClientIP(KickId, aBuf, sizeof(aBuf));
-				str_format(aCmd, sizeof(aCmd), "ban %s %d \"Banned by vote\"", aBuf, g_Config.m_SvVoteKickBantime*60);
+				str_format(aCmd, sizeof(aCmd), "ban %s %d \"Banned by vote\"", aBuf, g_Config.m_SvVoteKickBantime);
 			}
 			m_apPlayers[ClientId]->m_Last_KickVote = time_get();
 			m_VoteKick = true;
