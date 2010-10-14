@@ -106,6 +106,7 @@ class CGameContext : public IGameServer
 	static void ConGoDown(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
 	static void ConAddVote(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConClearVotes(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConVote(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	
