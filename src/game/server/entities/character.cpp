@@ -718,6 +718,10 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	// kill the player
 	Die(From, Weapon);
 	
+	 // do damage Hit sound
+	if(From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
+		GameServer()->CreateSound(GameServer()->m_apPlayers[From]->m_ViewPos, SOUND_HIT, CmaskOne(From));
+
 	// set attacker's face to happy (taunt!)
 	if (From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
 	{
