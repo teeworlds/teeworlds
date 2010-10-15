@@ -15,6 +15,7 @@ class CChat : public CComponent
 	struct CLine
 	{
 		int64 m_Time;
+		float m_YOffset[2];
 		int m_ClientId;
 		int m_Team;
 		int m_NameColor;
