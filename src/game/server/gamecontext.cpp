@@ -624,7 +624,7 @@ void CGameContext::OnSetAuthed(int client_id, int Level)
 	{
 		m_apPlayers[client_id]->m_Authed = Level;
 		char buf[11];
-		str_format(buf, sizeof(buf), "ban %d %d", client_id, g_Config.m_SvVoteKickBantime*60);
+		str_format(buf, sizeof(buf), "ban %d %d", client_id, g_Config.m_SvVoteKickBantime);
 		if( !strcmp(m_aVoteCommand,buf))
 		{
 			m_VoteEnforce = CGameContext::VOTE_ENFORCE_NO;
@@ -726,27 +726,11 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		{
 			if(m_apPlayers[ClientId]->m_Muted == 0)
 			{
-				if(/*g_Config.m_SvSpamprotection && */pPlayer->m_Last_Chat && pPlayer->m_Last_Chat + Server()->TickSpeed() * g_Config.m_SvChatDelay > Server()->Tick())
+				if(/*g_Config.m_SvSpamprotection && */pPlayer->m_Last_Chat && pPlayer->m_Last_Chat + Server()->TickSpeed() + g_Config.m_SvChatDelay > Server()->Tick())
 					return;
-				if(g_Config.m_SvChatSpamProtection)
-				{
-						if(!str_comp_nocase(pMsg->m_pMessage, pPlayer->m_LastMessage1))
-							if(!str_comp_nocase(pPlayer->m_LastMessage1, pPlayer->m_LastMessage2))
-							{
-								pPlayer->m_SpamCount++;
-								if(pPlayer->m_SpamCount > g_Config.m_SvChatSpamCount)
-									m_apPlayers[ClientId]->m_Muted = g_Config.m_SvChatSpamMuteTime * 60 * Server()->TickSpeed();
-								return;
-							}
-				}
 
 				SendChat(ClientId, Team, pMsg->m_pMessage);
-				if(g_Config.m_SvChatSpamProtection)
-				{
-				str_copy(pPlayer->m_LastMessage2, pPlayer->m_LastMessage1, sizeof(pPlayer->m_LastMessage2));
-				str_copy(pPlayer->m_LastMessage1, pMsg->m_pMessage, sizeof(pPlayer->m_LastMessage1));
-				pPlayer->m_SpamCount = 0;
-				}
+				
 				pPlayer->m_Last_Chat = Server()->Tick();
 			}
 			else
@@ -1188,6 +1172,20 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData, int C
 	CNetMsg_Sv_VoteOption OptionMsg;
 	OptionMsg.m_pCommand = pOption->m_aCommand;
 	pSelf->Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, -1);
+}
+
+void CGameContext::ConClearVotes(IConsole::IResult *pResult, void *pUserData, int ClientID)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	pSelf->m_pVoteOptionHeap->Reset();
+	pSelf->m_pVoteOptionFirst = 0;
+	pSelf->m_pVoteOptionLast = 0;
+
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "cleared vote options");
+
+	CNetMsg_Sv_VoteClearOptions ClearOptionsMsg;
+	pSelf->Server()->SendPackMsg(&ClearOptionsMsg, MSGFLAG_VITAL, -1);
 }
 
 void CGameContext::ConVote(IConsole::IResult *pResult, void *pUserData, int ClientID)
@@ -2335,6 +2333,8 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConBroadcast, this, "Changes the broadcast message for a moment", 3);
 	Console()->Register("say", "r", CFGFLAG_SERVER, ConSay, this, "Sends a server message to all players", 3);
 	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConSetTeam, this, "Changes the team of player i1 to team i2", 2);
+	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConAddVote, this, "Adds a vote entry to the clients", 4);
+	Console()->Register("clear_votes", "", CFGFLAG_SERVER, ConClearVotes, this, "Clears the vote list", 4);
 
 	Console()->Register("tune", "si", CFGFLAG_SERVER, ConTuneParam, this, "Modifies tune parameter s to value i", 4);
 	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConTuneReset, this, "Resets all tuning", 4);
@@ -2390,7 +2390,6 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("right", "?i", CFGFLAG_SERVER, ConGoRight, this, "Makes you or player i move 1 tile right", 1);
 	Console()->Register("up", "?i", CFGFLAG_SERVER, ConGoUp, this, "Makes you or player i move 1 tile up", 1);
 	Console()->Register("down", "?i", CFGFLAG_SERVER, ConGoDown, this, "Makes you or player i move 1 tile down", 1);
-	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConAddVote, this, "Adds a vote entry to the clients", 4);
 
 	Console()->Register("broadtime", "", CFGFLAG_SERVER, ConBroadTime, this, "Toggles Showing the time string in race", -1);
 	Console()->Register("cmdlist", "", CFGFLAG_SERVER, ConCmdList, this, "Shows the list of all commands", -1);

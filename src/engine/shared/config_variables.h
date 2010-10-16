@@ -17,6 +17,8 @@ MACRO_CONFIG_INT(ClEditor, cl_editor, 0, 0, 1, CFGFLAG_CLIENT, "", -1)
 
 MACRO_CONFIG_INT(ClEventthread, cl_eventthread, 0, 0, 1, CFGFLAG_CLIENT, "Enables the usage of a thread to pump the events", -1)
 
+MACRO_CONFIG_INT(ClShowIds, cl_show_ids, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Whether to show client ids in scoreboard", -1)
+
 MACRO_CONFIG_INT(InpGrab, inp_grab, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Use forceful input grabbing method", -1)
 
 MACRO_CONFIG_STR(BrFilterString, br_filter_string, 25, "", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Server browser filtering string", -1)
@@ -70,7 +72,7 @@ MACRO_CONFIG_INT(SvHighBandwidth, sv_high_bandwidth, 0, 0, 1, CFGFLAG_SERVER, "U
 MACRO_CONFIG_INT(SvRegister, sv_register, 1, 0, 1, CFGFLAG_SERVER, "Register server with master server for public listing", 3)
 /*MACRO_CONFIG_STR(SvRconPassword, sv_rcon_password, 32, "", CFGFLAG_SERVER, "Remote console password")*/
 MACRO_CONFIG_INT(SvRconMaxTries, sv_rcon_max_tries, 3, 0, 100, CFGFLAG_SERVER, "Maximum number of tries for remote console authentication", 3)
-MACRO_CONFIG_INT(SvRconBantime, sv_rcon_bantime, 5, 0, 1440, CFGFLAG_SERVER, "The time a client gets banned if remote console authentication fails. 0 makes it just use kick", 3)
+MACRO_CONFIG_INT(SvRconBantime, sv_rcon_bantime, 300, 0, 9999, CFGFLAG_SERVER, "The time a client gets banned if remote console authentication fails. 0 makes it just use kick", 3)
 
 MACRO_CONFIG_INT(Debug, debug, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Debug mode", 3)
 MACRO_CONFIG_INT(DbgStress, dbg_stress, 0, 0, 0, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Stress systems", 3)
@@ -105,7 +107,7 @@ MACRO_CONFIG_INT(SvPauseTime, sv_pause_time, 0, 0, 1, CFGFLAG_SERVER, "Whether '
 MACRO_CONFIG_INT(SvEmotionalTees, sv_emotional_tees, 1, 0, 1, CFGFLAG_SERVER, "Whether eye change of tees is enabled or not", 3)
 MACRO_CONFIG_INT(SvEmoticonDelay, sv_emoticon_delay, 3, 0, 9999, CFGFLAG_SERVER, "The time in seconds between over-head emoticons", 3)
 
-MACRO_CONFIG_INT(SvChatDelay, sv_chat_delay, 0, 0, 9999, CFGFLAG_SERVER, "The time in seconds between chat messages", 3)
+MACRO_CONFIG_INT(SvChatDelay, sv_chat_delay, 1, 0, 9999, CFGFLAG_SERVER, "The time in seconds between chat messages", 3)
 MACRO_CONFIG_INT(SvTeamChangeDelay, sv_team_change_delay, 3, 0, 9999, CFGFLAG_SERVER, "The time in seconds between team changes (spectator/in game)", 3)
 MACRO_CONFIG_INT(SvInfoChangeDelay, sv_info_change_delay, 5, 0, 9999, CFGFLAG_SERVER, "The time in seconds between info changes (name/skin/color)", 3)
 MACRO_CONFIG_INT(SvVoteMapTimeDelay, sv_vote_map_delay,0,0,9999,CFGFLAG_SERVER, "The minimum time in seconds between map votes", 3)
@@ -139,9 +141,5 @@ MACRO_CONFIG_STR(SvRulesLine7, sv_rules_line7, 40, "", CFGFLAG_SERVER, "Rules li
 MACRO_CONFIG_STR(SvRulesLine8, sv_rules_line8, 40, "", CFGFLAG_SERVER, "Rules line 8", 4)
 MACRO_CONFIG_STR(SvRulesLine9, sv_rules_line9, 40, "", CFGFLAG_SERVER, "Rules line 9", 4)
 MACRO_CONFIG_STR(SvRulesLine10, sv_rules_line10, 40, "", CFGFLAG_SERVER, "Rules line 10", 4)
-
-MACRO_CONFIG_INT(SvChatSpamMuteTime, sv_chat_spam_mutetime, 1, 0, 1440, CFGFLAG_SERVER, "Time in minutes to mute the spammer", 3)
-MACRO_CONFIG_INT(SvChatSpamCount, sv_chat_spam_count, 4, 0, 20, CFGFLAG_SERVER, "Number of spam tries from the same user before muting him", 3)
-MACRO_CONFIG_INT(SvChatSpamProtection, sv_chat_spam_protection, 1, 0, 1, CFGFLAG_SERVER, "Alternate chat protection system active or not", 3)
 //MACRO_CONFIG_INT(SvReconnectTime, sv_reconnect_time,5,0,9999,CFGFLAG_SERVER, "The time in seconds between leaves and joins of clients with the same ip", 3)
 #endif

@@ -812,11 +812,12 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				
 				if(Unpacker.Error() == 0/* && m_aClients[ClientId].m_Authed*/)
 				{
-					Console()->RegisterAlternativePrintCallback(0, 0);
 
 					char aBuf[256];
 					if(m_aClients[ClientId].m_Authed >= 0)
 					{
+						Console()->RegisterAlternativePrintCallback(0, 0);
+
 						str_format(aBuf, sizeof(aBuf), "'%s' ClientId=%d Level=%d Rcon='%s'", ClientName(ClientId), ClientId, m_aClients[ClientId].m_Authed, pCmd);
 						Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
 
@@ -833,7 +834,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					}
 					else
 					{
-						dbg_msg("server", "'%s' client tried rcon command ('pCmd') without permissions. Cid=%x ip=%d.%d.%d.%d",
+						dbg_msg("server", "'%s' client tried rcon command ('%s') without permissions. Cid=%x ip=%d.%d.%d.%d",
 						ClientName(ClientId),
 						pCmd,
 						ClientId,
@@ -976,7 +977,7 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 	p.AddString(aBuf, 4);
 	
 	str_format(aBuf, sizeof(aBuf), "%d", PlayerCount); p.AddString(aBuf, 3);  // num players
-	str_format(aBuf, sizeof(aBuf), "%d", m_NetServer.MaxClients()); p.AddString(aBuf, 3); // max players
+	str_format(aBuf, sizeof(aBuf), "%d", max(m_NetServer.MaxClients() - g_Config.m_SvReservedSlots, PlayerCount)); p.AddString(aBuf, 3); // max players
 
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
@@ -1724,7 +1725,7 @@ void CServer::CheckPass(int ClientId, const char *pPw)
 					else
 					{
 						NETADDR Addr = m_NetServer.ClientAddr(ClientId);
-						BanAdd(Addr, g_Config.m_SvRconBantime*60, "Too many remote console authentication tries");
+						BanAdd(Addr, g_Config.m_SvRconBantime, "Too many remote console authentication tries");
 					}
 				}
 			}
