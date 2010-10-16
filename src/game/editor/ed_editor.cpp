@@ -1871,36 +1871,20 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 	}
 }
 
-static void ExtractName(const char *pFileName, char *pName)
+static void ExtractName(const char *pFileName, char *pName, int BufferSize)
 {
-	int Len = str_length(pFileName);
-	int Start = Len;
-	int End = Len;
-
-	while(Start > 0)
+	const char *pExtractedName = pFileName;
+	const char *pEnd = 0;
+	for(; *pFileName; ++pFileName)
 	{
-		Start--;
-		if(pFileName[Start] == '/' || pFileName[Start] == '\\')
-		{
-			Start++;
-			break;
-		}
+		if(*pFileName == '/' || *pFileName == '\\')
+			pExtractedName = pFileName+1;
+		else if(*pFileName == '.')
+			pEnd = pFileName;
 	}
 
-	End = Start;
-	for(int i = Start; i < Len; i++)
-	{
-		if(pFileName[i] == '.')
-			End = i;
-	}
-
-	if(End == Start)
-		End = Len;
-
-	int FinalLen = End-Start;
-	mem_copy(pName, &pFileName[Start], FinalLen);
-	pName[FinalLen] = 0;
-	//dbg_msg("", "%s %s %d %d", pFileName, pName, Start, End);
+	int Length = pEnd > pExtractedName ? min(BufferSize, pEnd-pExtractedName+1) : BufferSize;
+	str_copy(pName, pExtractedName, Length);
 }
 
 void CEditor::ReplaceImage(const char *pFileName, int StorageType, void *pUser)
@@ -1911,11 +1895,19 @@ void CEditor::ReplaceImage(const char *pFileName, int StorageType, void *pUser)
 		return;
 
 	CEditorImage *pImg = pEditor->m_Map.m_lImages[pEditor->m_SelectedImage];
+	int External = pImg->m_External;
 	pEditor->Graphics()->UnloadTexture(pImg->m_TexId);
 	*pImg = ImgInfo;
-	ExtractName(pFileName, pImg->m_aName);
+	pImg->m_External = External;
+	ExtractName(pFileName, pImg->m_aName, sizeof(pImg->m_aName));
 	pImg->m_TexId = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
 	pEditor->SortImages();
+	for(int i = 0; i < pEditor->m_Map.m_lImages.size(); ++i)
+	{
+	    if(!str_comp(pEditor->m_Map.m_lImages[i]->m_aName, pImg->m_aName))
+           pEditor->m_SelectedImage = i;
+	}
+	pEditor->m_Dialog = DIALOG_NONE;
 }
 
 void CEditor::AddImage(const char *pFileName, int StorageType, void *pUser)
@@ -1925,20 +1917,32 @@ void CEditor::AddImage(const char *pFileName, int StorageType, void *pUser)
 	if(!pEditor->Graphics()->LoadPNG(&ImgInfo, pFileName, StorageType))
 		return;
 
-	CEditorImage *pImg = new CEditorImage(pEditor);
-	*pImg = ImgInfo;
-	pImg->m_TexId = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
-	pImg->m_External = 1; // external by default
-	ExtractName(pFileName, pImg->m_aName);
-
+	// check if we have that image already
+	char aBuf[128];
+	ExtractName(pFileName, aBuf, sizeof(aBuf));
 	for(int i = 0; i < pEditor->m_Map.m_lImages.size(); ++i)
 	{
-	    if(!str_comp(pEditor->m_Map.m_lImages[i]->m_aName, pImg->m_aName))
+	    if(!str_comp(pEditor->m_Map.m_lImages[i]->m_aName, aBuf))
             return;
 	}
 
+	CEditorImage *pImg = new CEditorImage(pEditor);
+	*pImg = ImgInfo;
+	pImg->m_TexId = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
+	pImg->m_External = 1;	// external by default
+	str_copy(pImg->m_aName, aBuf, sizeof(pImg->m_aName));
 	pEditor->m_Map.m_lImages.add(pImg);
 	pEditor->SortImages();
+	if(pEditor->m_SelectedImage > -1 && pEditor->m_SelectedImage < pEditor->m_Map.m_lImages.size())
+	{
+		for(int i = 0; i <= pEditor->m_SelectedImage; ++i)
+			if(!str_comp(pEditor->m_Map.m_lImages[i]->m_aName, aBuf))
+			{
+				pEditor->m_SelectedImage++;
+				break;
+			}
+	}
+	pEditor->m_Dialog = DIALOG_NONE;
 }
 
 
