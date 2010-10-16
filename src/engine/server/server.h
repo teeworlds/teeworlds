@@ -11,6 +11,8 @@
 #include <engine/server/register.h>
 #include <engine/shared/console.h>
 
+#include <base/math.h>
+
 class CSnapIDPool
 {
 	enum
