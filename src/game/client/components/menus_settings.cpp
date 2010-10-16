@@ -457,16 +457,19 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 {
 	CUIRect Button;
 	char aBuf[128];
+	bool CheckSettings = false;
 
 	static const int MAX_RESOLUTIONS = 256;
 	static CVideoMode s_aModes[MAX_RESOLUTIONS];
-	static int s_NumNodes = -1;
-	const static int s_GfxScreenWidth = g_Config.m_GfxScreenWidth;
-	const static int s_GfxScreenHeight = g_Config.m_GfxScreenHeight;
-	const static int s_GfxColorDepth = g_Config.m_GfxColorDepth;
-
-	if(s_NumNodes == -1)
-		s_NumNodes = Graphics()->GetVideoModes(s_aModes, MAX_RESOLUTIONS);
+	static int s_NumNodes = Graphics()->GetVideoModes(s_aModes, MAX_RESOLUTIONS);
+	static int s_GfxScreenWidth = g_Config.m_GfxScreenWidth;
+	static int s_GfxScreenHeight = g_Config.m_GfxScreenHeight;
+	static int s_GfxColorDepth = g_Config.m_GfxColorDepth;
+	static int s_GfxFullscreen = g_Config.m_GfxFullscreen;
+	static int s_GfxVsync = g_Config.m_GfxVsync;
+	static int s_GfxFsaaSamples = g_Config.m_GfxFsaaSamples;
+	static int s_GfxTextureQuality = g_Config.m_GfxTextureQuality;
+	static int s_GfxTextureCompression = g_Config.m_GfxTextureCompression;
 
 	CUIRect ModeList;
 	MainView.VSplitLeft(300.0f, &MainView, &ModeList);
@@ -510,7 +513,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		g_Config.m_GfxColorDepth = Depth;
 		g_Config.m_GfxScreenWidth = s_aModes[NewSelected].m_Width;
 		g_Config.m_GfxScreenHeight = s_aModes[NewSelected].m_Height;
-		m_NeedRestart = true;
+		CheckSettings = true;
 	}
 
 	// switches
@@ -518,21 +521,21 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	if(DoButton_CheckBox(&g_Config.m_GfxFullscreen, Localize("Fullscreen"), g_Config.m_GfxFullscreen, &Button))
 	{
 		g_Config.m_GfxFullscreen ^= 1;
-		m_NeedRestart = true;
+		CheckSettings = true;
 	}
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_GfxVsync, Localize("V-Sync"), g_Config.m_GfxVsync, &Button))
 	{
 		g_Config.m_GfxVsync ^= 1;
-		m_NeedRestart = true;
+		CheckSettings = true;
 	}
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox_Number(&g_Config.m_GfxFsaaSamples, Localize("FSAA samples"), g_Config.m_GfxFsaaSamples, &Button))
 	{
 		g_Config.m_GfxFsaaSamples = (g_Config.m_GfxFsaaSamples+1)%17;
-		m_NeedRestart = true;
+		CheckSettings = true;
 	}
 
 	MainView.HSplitTop(40.0f, &Button, &MainView);
@@ -540,19 +543,35 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	if(DoButton_CheckBox(&g_Config.m_GfxTextureQuality, Localize("Quality Textures"), g_Config.m_GfxTextureQuality, &Button))
 	{
 		g_Config.m_GfxTextureQuality ^= 1;
-		m_NeedRestart = true;
+		CheckSettings = true;
 	}
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_GfxTextureCompression, Localize("Texture Compression"), g_Config.m_GfxTextureCompression, &Button))
 	{
 		g_Config.m_GfxTextureCompression ^= 1;
-		m_NeedRestart = true;
+		CheckSettings = true;
 	}
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_GfxHighDetail, Localize("High Detail"), g_Config.m_GfxHighDetail, &Button))
 		g_Config.m_GfxHighDetail ^= 1;
+
+	// check if the new settings require a restart
+	if(CheckSettings)
+	{
+		if(s_GfxScreenWidth == g_Config.m_GfxScreenWidth &&
+			s_GfxScreenHeight == g_Config.m_GfxScreenHeight &&
+			s_GfxColorDepth == g_Config.m_GfxColorDepth &&
+			s_GfxFullscreen == g_Config.m_GfxFullscreen &&
+			s_GfxVsync == g_Config.m_GfxVsync &&
+			s_GfxFsaaSamples == g_Config.m_GfxFsaaSamples &&
+			s_GfxTextureQuality == g_Config.m_GfxTextureQuality &&
+			s_GfxTextureCompression == g_Config.m_GfxTextureCompression)
+			m_NeedRestartGraphics = false;
+		else
+			m_NeedRestartGraphics = true;
+	}
 
 	//
 
@@ -588,12 +607,14 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 {
 	CUIRect Button;
 	MainView.VSplitLeft(300.0f, &MainView, 0);
+	static int s_SndEnable = g_Config.m_SndEnable;
+	static int s_SndRate = g_Config.m_SndRate;
 
 	MainView.HSplitTop(20.0f, &Button, &MainView);
 	if(DoButton_CheckBox(&g_Config.m_SndEnable, Localize("Use sounds"), g_Config.m_SndEnable, &Button))
 	{
 		g_Config.m_SndEnable ^= 1;
-		m_NeedRestart = true;
+		m_NeedRestartSound = s_SndEnable == g_Config.m_SndEnable && (!s_SndEnable || s_SndRate == g_Config.m_SndRate) ? false : true;
 	}
 
 	if(!g_Config.m_SndEnable)
@@ -614,13 +635,10 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		static float Offset = 0.0f;
 		DoEditBox(&g_Config.m_SndRate, &Button, aBuf, sizeof(aBuf), 14.0f, &Offset);
 		int Before = g_Config.m_SndRate;
-		g_Config.m_SndRate = str_toint(aBuf);
+		g_Config.m_SndRate = max(1, str_toint(aBuf));
 
 		if(g_Config.m_SndRate != Before)
-			m_NeedRestart = true;
-
-		if(g_Config.m_SndRate < 1)
-			g_Config.m_SndRate = 1;
+			m_NeedRestartSound = s_SndEnable == g_Config.m_SndEnable && s_SndRate == g_Config.m_SndRate ? false : true;
 	}
 
 	// volume slider
@@ -773,7 +791,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 	else if(s_SettingsPage == 4)
 		RenderSettingsSound(MainView);
 
-	if(m_NeedRestart)
+	if(m_NeedRestartGraphics || m_NeedRestartSound)
 	{
 		CUIRect RestartWarning;
 		MainView.HSplitBottom(40, &MainView, &RestartWarning);
