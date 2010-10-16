@@ -680,7 +680,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			// reserved slot
 			if(ClientId >= (g_Config.m_SvMaxClients-g_Config.m_SvReservedSlots) && g_Config.m_SvReservedSlotsPass[0] != 0 && strcmp(g_Config.m_SvReservedSlotsPass, pPassword) != 0)
 			{
-				m_NetServer.Drop(ClientId, "Dropped due reserved slot");
+				m_NetServer.Drop(ClientId, "This server is full");
 				return;
 			}
 
