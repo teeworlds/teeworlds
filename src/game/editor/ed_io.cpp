@@ -240,10 +240,13 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 	}
 	
 	// save layers
-	int LayerCount = 0;
+	int LayerCount = 0, GroupCount = 0;
 	for(int g = 0; g < m_lGroups.size(); g++)
 	{
 		CLayerGroup *pGroup = m_lGroups[g];
+		if(!pGroup->m_SaveToMap)
+			continue;
+
 		CMapItemGroup GItem;
 		GItem.m_Version = CMapItemGroup::CURRENT_VERSION;
 		
@@ -261,6 +264,9 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 		
 		for(int l = 0; l < pGroup->m_lLayers.size(); l++)
 		{
+			if(!pGroup->m_lLayers[l]->m_SaveToMap)
+				continue;
+
 			if(pGroup->m_lLayers[l]->m_Type == LAYERTYPE_TILES)
 			{
 				m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving tiles layer");
@@ -338,7 +344,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 			}
 		}
 		
-		df.AddItem(MAPITEMTYPE_GROUP, g, sizeof(GItem), &GItem);
+		df.AddItem(MAPITEMTYPE_GROUP, GroupCount++, sizeof(GItem), &GItem);
 	}
 	
 	// save envelopes

@@ -42,6 +42,7 @@ CLayerGroup::CLayerGroup()
 {
 	m_pName = "";
 	m_Visible = true;
+	m_SaveToMap = true;
 	m_GameGroup = false;
 	m_OffsetX = 0;
 	m_OffsetY = 0;
@@ -1795,7 +1796,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 				continue;
 			}
 
-			CUIRect VisibleToggle;
+			CUIRect VisibleToggle, SaveCheck;
 			if(LayerCur >= LayerStartAt)
 			{
 				LayersBox.HSplitTop(12.0f, &Slot, &LayersBox);
@@ -1803,9 +1804,14 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 				if(DoButton_Ex(&m_Map.m_lGroups[g]->m_Visible, m_Map.m_lGroups[g]->m_Visible?"V":"H", 0, &VisibleToggle, 0, Localize("Toggle group visibility"), CUI::CORNER_L))
 					m_Map.m_lGroups[g]->m_Visible = !m_Map.m_lGroups[g]->m_Visible;
 
+				Slot.VSplitRight(12.0f, &Slot, &SaveCheck);
+				if(DoButton_Ex(&m_Map.m_lGroups[g]->m_SaveToMap, "S", m_Map.m_lGroups[g]->m_SaveToMap, &SaveCheck, 0, Localize("Enable/disable group for saving"), CUI::CORNER_R))
+					if(!m_Map.m_lGroups[g]->m_GameGroup)
+						m_Map.m_lGroups[g]->m_SaveToMap = !m_Map.m_lGroups[g]->m_SaveToMap;
+
 				str_format(aBuf, sizeof(aBuf),"#%d %s", g, m_Map.m_lGroups[g]->m_pName);
 				if(int Result = DoButton_Ex(&m_Map.m_lGroups[g], aBuf, g==m_SelectedGroup, &Slot,
-					BUTTON_CONTEXT, Localize("Select group. Right click for properties."), CUI::CORNER_R))
+					BUTTON_CONTEXT, Localize("Select group. Right click for properties."), 0))
 				{
 					m_SelectedGroup = g;
 					m_SelectedLayer = 0;
@@ -1836,9 +1842,14 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 				if(DoButton_Ex(&m_Map.m_lGroups[g]->m_lLayers[i]->m_Visible, m_Map.m_lGroups[g]->m_lLayers[i]->m_Visible?"V":"H", 0, &VisibleToggle, 0, Localize("Toggle layer visibility"), CUI::CORNER_L))
 					m_Map.m_lGroups[g]->m_lLayers[i]->m_Visible = !m_Map.m_lGroups[g]->m_lLayers[i]->m_Visible;
 
+				Button.VSplitRight(12.0f, &Button, &SaveCheck);
+				if(DoButton_Ex(&m_Map.m_lGroups[g]->m_lLayers[i]->m_SaveToMap, "S", m_Map.m_lGroups[g]->m_lLayers[i]->m_SaveToMap, &SaveCheck, 0, Localize("Enable/disable layer for saving"), CUI::CORNER_R))
+					if(m_Map.m_lGroups[g]->m_lLayers[i] != m_Map.m_pGameLayer)
+						m_Map.m_lGroups[g]->m_lLayers[i]->m_SaveToMap = !m_Map.m_lGroups[g]->m_lLayers[i]->m_SaveToMap;
+
 				str_format(aBuf, sizeof(aBuf),"#%d %s ", i, m_Map.m_lGroups[g]->m_lLayers[i]->m_pTypeName);
 				if(int Result = DoButton_Ex(m_Map.m_lGroups[g]->m_lLayers[i], aBuf, g==m_SelectedGroup&&i==m_SelectedLayer, &Button,
-					BUTTON_CONTEXT, Localize("Select layer. Right click for properties."), CUI::CORNER_R))
+					BUTTON_CONTEXT, Localize("Select layer. Right click for properties."), 0))
 				{
 					if(m_Map.m_lGroups[g]->m_lLayers[i] == m_Map.m_pTeleLayer || m_Map.m_lGroups[g]->m_lLayers[i] == m_Map.m_pSpeedupLayer)
 						m_Brush.Clear();
