@@ -59,7 +59,7 @@ void CVoting::ForcevoteKick(int ClientId, const char *pReason)
 {
 	char aBuf[32];
 	if(pReason[0])
-		str_format(aBuf, sizeof(aBuf), "kick %d \"%s\"", ClientId, pReason);
+		str_format(aBuf, sizeof(aBuf), "kick %d %s", ClientId, pReason);
 	else
 		str_format(aBuf, sizeof(aBuf), "kick %d", ClientId);
 	Client()->Rcon(aBuf);

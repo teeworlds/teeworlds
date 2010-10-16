@@ -49,7 +49,8 @@ public:
 	virtual void PossibleCommands(const char *pStr, int FlagMask, FPossibleCallback pfnCallback, void *pUser) = 0;
 	virtual void ParseArguments(int NumArgs, const char **ppArguments) = 0;
 
-	virtual void Register(const char *pName, const char *pParams, int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp, const int Level) = 0;
+	virtual void Register(const char *pName, const char *pParams,
+		int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp, const int Level) = 0;
 	virtual void List(const int Level, int Flags) = 0;
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser) = 0;
 	virtual void StoreCommands(bool Store, int ClientId) = 0;
@@ -61,11 +62,9 @@ public:
 	virtual void RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUserData) = 0;
 	virtual void RegisterAlternativePrintCallback(FPrintCallback pfnAlternativePrintCallback, void *pAlternativeUserData) = 0;
 	virtual void ReleaseAlternativePrintCallback() = 0;
-
 	virtual void RegisterPrintResponseCallback(FPrintCallback pfnPrintResponseCallback, void *pUserData) = 0;
 	virtual void RegisterAlternativePrintResponseCallback(FPrintCallback pfnAlternativePrintCallback, void *pAlternativeUserData) = 0;
 	virtual void ReleaseAlternativePrintResponseCallback() = 0;
-
 	virtual void Print(int Level, const char *pFrom, const char *pStr) = 0;
 	virtual void PrintResponse(int Level, const char *pFrom, const char *pStr) = 0;
 };

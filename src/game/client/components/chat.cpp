@@ -160,6 +160,8 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 
 		m_CurrentLine = (m_CurrentLine+1)%MAX_LINES;
 		m_aLines[m_CurrentLine].m_Time = time_get();
+		m_aLines[m_CurrentLine].m_YOffset[0] = -1.0f;
+		m_aLines[m_CurrentLine].m_YOffset[1] = -1.0f;
 		m_aLines[m_CurrentLine].m_ClientId = ClientId;
 		m_aLines[m_CurrentLine].m_Team = Team;
 		m_aLines[m_CurrentLine].m_NameColor = -2;
@@ -257,22 +259,26 @@ void CChat::OnRender()
 	int64 Now = time_get();
 	float LineWidth = m_pClient->m_pScoreboard->Active() ? 95.0f : 200.0f;
 	float HeightLimit = m_pClient->m_pScoreboard->Active() ? 220.0f : m_Show ? 50.0f : 200.0f;
+	float Begin = x;
+	float FontSize = 6.0f;
+	CTextCursor Cursor;
+	int OffsetType = m_pClient->m_pScoreboard->Active() ? 1 : 0;
 	for(int i = 0; i < MAX_LINES; i++)
 	{
 		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
 		if(Now > m_aLines[r].m_Time+15*time_freq() && !m_Show)
 			break;
-
-		float Begin = x;
-		float FontSize = 6.0f;
 		
-		// get the y offset
-		CTextCursor Cursor;
-		TextRender()->SetCursor(&Cursor, Begin, 0, FontSize, 0);
-		Cursor.m_LineWidth = LineWidth;
-		TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
-		TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
-		y -= Cursor.m_Y + Cursor.m_FontSize;
+		// get the y offset (calculate it if we haven't done that yet)
+		if(m_aLines[r].m_YOffset[OffsetType] < 0.0f)
+		{
+			TextRender()->SetCursor(&Cursor, Begin, 0.0f, FontSize, 0);
+			Cursor.m_LineWidth = LineWidth;
+			TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
+			TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
+			m_aLines[r].m_YOffset[OffsetType] = Cursor.m_Y + Cursor.m_FontSize;
+		}
+		y -= m_aLines[r].m_YOffset[OffsetType];
 
 		// cut off if msgs waste too much space
 		if(y < HeightLimit)
@@ -283,32 +289,33 @@ void CChat::OnRender()
 		Cursor.m_LineWidth = LineWidth;
 
 		// render name
-		TextRender()->TextColor(0.8f,0.8f,0.8f,1);
 		if(m_aLines[r].m_ClientId == -1)
-			TextRender()->TextColor(1,1,0.5f,1); // system
+			TextRender()->TextColor(1.0f, 1.0f, 0.5f, 1.0f); // system
 		else if(m_aLines[r].m_Team)
-			TextRender()->TextColor(0.45f,0.9f,0.45f,1); // team message
+			TextRender()->TextColor(0.45f, 0.9f, 0.45f, 1.0f); // team message
 		else if(m_aLines[r].m_NameColor == 0)
-			TextRender()->TextColor(1.0f,0.5f,0.5f,1); // red
+			TextRender()->TextColor(1.0f, 0.5f, 0.5f, 1.0f); // red
 		else if(m_aLines[r].m_NameColor == 1)
-			TextRender()->TextColor(0.7f,0.7f,1.0f,1); // blue
+			TextRender()->TextColor(0.7f, 0.7f, 1.0f, 1.0f); // blue
 		else if(m_aLines[r].m_NameColor == -1)
-			TextRender()->TextColor(0.75f,0.5f,0.75f, 1); // spectator
+			TextRender()->TextColor(0.75f, 0.5f, 0.75f, 1.0f); // spectator
+		else
+			TextRender()->TextColor(0.8f, 0.8f, 0.8f, 1.0f);
 			
-		// render name
 		TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
 
 		// render line
-		TextRender()->TextColor(1,1,1,1);
 		if(m_aLines[r].m_ClientId == -1)
-			TextRender()->TextColor(1,1,0.5f,1); // system
+			TextRender()->TextColor(1.0f, 1.0f, 0.5f, 1.0f); // system
 		else if(m_aLines[r].m_Team)
-			TextRender()->TextColor(0.65f,1,0.65f,1); // team message
+			TextRender()->TextColor(0.65f, 1.0f, 0.65f, 1.0f); // team message
+		else
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 		TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
 	}
 
-	TextRender()->TextColor(1,1,1,1);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void CChat::Say(int Team, const char *pLine)

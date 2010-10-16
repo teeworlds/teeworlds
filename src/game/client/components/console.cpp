@@ -209,9 +209,10 @@ void CGameConsole::CInstance::PrintLine(const char *pLine)
 	if (Len > 255)
 		Len = 255;
 
-	char *pEntry = m_Backlog.Allocate(Len+1);
-	mem_copy(pEntry, pLine, Len);
-	pEntry[Len] = 0;
+	CBacklogEntry *pEntry = m_Backlog.Allocate(sizeof(CBacklogEntry)+Len);
+	pEntry->m_YOffset = -1.0f;
+	mem_copy(pEntry->m_aText, pLine, Len);
+	pEntry->m_aText[Len] = 0;
 }
 
 CGameConsole::CGameConsole()
@@ -481,19 +482,29 @@ void CGameConsole::OnRender()
 		TextRender()->TextColor(1,1,1,1);
 
 		//	render log (actual page, wrap lines)
-		char *pEntry = pConsole->m_Backlog.Last();
-		for(int Page = 0, Lines = 0; Page <= pConsole->m_BacklogActPage; ++Page, Lines = 0)
+		CInstance::CBacklogEntry *pEntry = pConsole->m_Backlog.Last();
+		float OffsetY = 0.0f;
+		float LineOffset = 1.0f;
+		for(int Page = 0; Page <= pConsole->m_BacklogActPage; ++Page, OffsetY = 0.0f)
 		{
 			//	next page when lines reach the top
-			while(y - Lines * RowHeight > RowHeight && pEntry)
+			while(y-OffsetY > RowHeight && pEntry)
 			{
-				Lines += TextRender()->TextLineCount(0, FontSize, pEntry, Screen.w-10);
+				// get y offset (calculate it if we haven't yet)
+				if(pEntry->m_YOffset < 0.0f)
+				{
+					TextRender()->SetCursor(&Cursor, 0.0f, 0.0f, FontSize, 0);
+					Cursor.m_LineWidth = Screen.w-10;
+					TextRender()->TextEx(&Cursor, pEntry->m_aText, -1);
+					pEntry->m_YOffset = Cursor.m_Y+Cursor.m_FontSize+LineOffset;
+				}
+				OffsetY += pEntry->m_YOffset;
 				//	just render output from actual backlog page (render bottom up)
 				if(Page == pConsole->m_BacklogActPage)
 				{
-					TextRender()->SetCursor(&Cursor, 0, y - Lines * RowHeight, FontSize, TEXTFLAG_RENDER);
-					Cursor.m_LineWidth = Screen.w-10;
-					TextRender()->TextEx(&Cursor, pEntry, -1);
+					TextRender()->SetCursor(&Cursor, 0.0f, y-OffsetY, FontSize, TEXTFLAG_RENDER);
+					Cursor.m_LineWidth = Screen.w-10.0f;
+					TextRender()->TextEx(&Cursor, pEntry->m_aText, -1);
 				}
 				pEntry = pConsole->m_Backlog.Prev(pEntry);
 			}
@@ -503,13 +514,12 @@ void CGameConsole::OnRender()
 			{
 				pConsole->m_BacklogActPage = Page;
 				pEntry = pConsole->m_Backlog.First();
-				while(Lines > 0 && pEntry)
+				while(OffsetY > 0.0f && pEntry)
 				{
-					TextRender()->SetCursor(&Cursor, 0, y - Lines * RowHeight, FontSize, TEXTFLAG_RENDER);
-					Cursor.m_LineWidth = Screen.w-10;
-					Cursor.m_LineCount = 1;
-					TextRender()->TextEx(&Cursor, pEntry, -1);
-					Lines -= Cursor.m_LineCount;
+					TextRender()->SetCursor(&Cursor, 0.0f, y-OffsetY, FontSize, TEXTFLAG_RENDER);
+					Cursor.m_LineWidth = Screen.w-10.0f;
+					TextRender()->TextEx(&Cursor, pEntry->m_aText, -1);
+					OffsetY -= pEntry->m_YOffset;
 					pEntry = pConsole->m_Backlog.Next(pEntry);
 				}
 				break;
@@ -601,9 +611,9 @@ void CGameConsole::Dump(int Type)
 				static const char Newline[] = "\n";
 			#endif
 
-			for(char *pEntry = pConsole->m_Backlog.First(); pEntry; pEntry = pConsole->m_Backlog.Next(pEntry))
+			for(CInstance::CBacklogEntry *pEntry = pConsole->m_Backlog.First(); pEntry; pEntry = pConsole->m_Backlog.Next(pEntry))
 			{
-				io_write(io, pEntry, str_length(pEntry));
+				io_write(io, pEntry->m_aText, str_length(pEntry->m_aText));
 				io_write(io, Newline, sizeof(Newline)-1);
 			}
 			io_close(io);

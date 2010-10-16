@@ -124,6 +124,7 @@ public:
 		m_pTypeName = "(invalid)";
 		m_Visible = true;
 		m_Readonly = false;
+		m_SaveToMap = true;
 		m_Flags = 0;
 		m_pEditor = 0;
 	}
@@ -156,6 +157,7 @@ public:
 
 	bool m_Readonly;
 	bool m_Visible;
+	bool m_SaveToMap;
 };
 
 class CLayerGroup
@@ -180,6 +182,7 @@ public:
 	const char *m_pName;
 	bool m_GameGroup;
 	bool m_Visible;
+	bool m_SaveToMap;
 	
 	CLayerGroup();
 	~CLayerGroup();

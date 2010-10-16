@@ -233,6 +233,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 	
 	while(pStr && *pStr)
 	{
+		CResult *pResult = new(&m_ExecutionQueue.m_pLast->m_Result) CResult;
 		const char *pEnd = pStr;
 		const char *pNextPart = 0;
 		int InString = 0;
@@ -279,13 +280,11 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 			{
 				if(ParseArgs(pResult, pCommand->m_pParams))
 				{
-          RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
-
+					RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 					char aBuf[256];
 					str_format(aBuf, sizeof(aBuf), "Invalid arguments... Usage: %s %s", pCommand->m_pName, pCommand->m_pParams);
 					PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
-
-      		ReleaseAlternativePrintResponseCallback();
+			 		ReleaseAlternativePrintResponseCallback();
 				}
 				else if(m_StoreCommands && pCommand->m_Flags&CFGFLAG_STORE)
 				{
@@ -295,17 +294,17 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 				}
 				else if(pCommand->m_Level <= ClientLevel)
 				{
-          RegisterAlternativePrintCallback(pfnAlternativePrintCallback, pUserData);
-          RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
+					RegisterAlternativePrintCallback(pfnAlternativePrintCallback, pUserData);
+					RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 
 					pCommand->m_pfnCallback(pResult, pCommand->m_pUserData, ClientId);
 
-          ReleaseAlternativePrintResponseCallback();
-      		ReleaseAlternativePrintCallback();
+					ReleaseAlternativePrintResponseCallback();
+					ReleaseAlternativePrintCallback();
 				}
 				else
 				{
-          RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
+					RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 
 					char aBuf[256];
 					if (pCommand->m_Level == 100 && ClientLevel < 100)
@@ -318,19 +317,19 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 					}
 					PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
 
-      		ReleaseAlternativePrintResponseCallback();
+					ReleaseAlternativePrintResponseCallback();
 				}
 			}
 		}
 		else if(Stroke)
 		{
-      RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
+			RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "No such command: %s.", pResult->m_pCommand);
 			PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
 
-  		ReleaseAlternativePrintResponseCallback();
+			ReleaseAlternativePrintResponseCallback();
 		}
 		
 		pStr = pNextPart;
@@ -365,20 +364,14 @@ CConsole::CCommand *CConsole::FindCommand(const char *pName, int FlagMask)
 	return 0x0;
 }
 
-void CConsole::ExecuteLine(const char *pStr, const int ClientLevel, const int ClientId,
-	  FPrintCallback pfnAlternativePrintCallback, void *pUserData,
-	  FPrintCallback pfnAlternativePrintResponseCallback, void *pResponseUserData)
+void CConsole::ExecuteLine(const char *pStr, const int ClientLevel, const int ClientId, FPrintCallback pfnAlternativePrintCallback, void *pUserData, FPrintCallback pfnAlternativePrintResponseCallback, void *pResponseUserData)
 {
-	CConsole::ExecuteLineStroked(1, pStr, ClientLevel, ClientId,
-	  pfnAlternativePrintCallback, pUserData, pfnAlternativePrintResponseCallback, pResponseUserData); // press it
-	CConsole::ExecuteLineStroked(0, pStr, ClientLevel, ClientId,
-	  pfnAlternativePrintCallback, pUserData, pfnAlternativePrintResponseCallback, pResponseUserData); // then release it
+	CConsole::ExecuteLineStroked(1, pStr, ClientLevel, ClientId, pfnAlternativePrintCallback, pUserData, pfnAlternativePrintResponseCallback, pResponseUserData); // press it
+	CConsole::ExecuteLineStroked(0, pStr, ClientLevel, ClientId, pfnAlternativePrintCallback, pUserData, pfnAlternativePrintResponseCallback, pResponseUserData); // then release it
 }
 
 
-void CConsole::ExecuteFile(const char *pFilename,
-	  FPrintCallback pfnAlternativePrintCallback, void *pUserData,
-	  FPrintCallback pfnAlternativePrintResponseCallback, void *pResponseUserData)
+void CConsole::ExecuteFile(const char *pFilename, FPrintCallback pfnAlternativePrintCallback, void *pUserData, FPrintCallback pfnAlternativePrintResponseCallback, void *pResponseUserData)
 {
 	// make sure that this isn't being executed already
 	for(CExecFile *pCur = m_pFirstExec; pCur; pCur = pCur->m_pPrev)
@@ -439,9 +432,8 @@ void CConsole::Con_Echo(IResult *pResult, void *pUserData, int ClientId)
 void CConsole::Con_Exec(IResult *pResult, void *pUserData, int ClientId)
 {
 	CConsole *pSelf = (CConsole *)pUserData;
-  
-	pSelf->ExecuteFile(pResult->GetString(0), pSelf->m_pfnAlternativePrintCallback, pSelf->m_pAlternativePrintCallbackUserdata, 
-			pSelf->m_pfnAlternativePrintResponseCallback, pSelf->m_pAlternativePrintResponseCallbackUserdata);
+
+	pSelf->ExecuteFile(pResult->GetString(0), pSelf->m_pfnAlternativePrintCallback, pSelf->m_pAlternativePrintCallbackUserdata, pSelf->m_pfnAlternativePrintResponseCallback, pSelf->m_pAlternativePrintResponseCallbackUserdata);
 }
 
 struct CIntVariableData
@@ -497,32 +489,28 @@ static void StrVariableCommand(IConsole::IResult *pResult, void *pUserData, int 
 	CStrVariableData *pData = (CStrVariableData *)pUserData;
 
 	if(pResult->NumArguments())
-  {
-    const char *pString = pResult->GetString(0);
-    if(!str_utf8_check(pString))
-    {
-      char Temp[4];
-      int Length = 0;
-      while(*pString)
-      {
-        int Size = str_utf8_encode(Temp, static_cast<const unsigned char>(*pString++));
-        if(Length+Size < pData->m_MaxSize)
-        {
-          mem_copy(pData->m_pStr+Length, &Temp, Size);
-          Length += Size;
-        }
-        else
-          break;
-      }
-      pData->m_pStr[Length] = 0;
-    }
-    else
-      str_copy(pData->m_pStr, pString, pData->m_MaxSize);
-
-		char aBuf[1024];
-		str_format(aBuf, sizeof(aBuf), "%s changed to '%s'", pData->m_Name, pData->m_pStr);
-		pData->m_pConsole->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
-  }
+	{
+		const char *pString = pResult->GetString(0);
+		if(!str_utf8_check(pString))
+		{
+			char Temp[4];
+			int Length = 0;
+			while(*pString)
+			{
+				int Size = str_utf8_encode(Temp, static_cast<const unsigned char>(*pString++));
+				if(Length+Size < pData->m_MaxSize)
+				{
+					mem_copy(pData->m_pStr+Length, &Temp, Size);
+					Length += Size;
+				}
+				else
+					break;
+			}
+			pData->m_pStr[Length] = 0;
+		}
+		else
+			str_copy(pData->m_pStr, pString, pData->m_MaxSize);
+	}
 	else
 	{
 		char aBuf[1024];

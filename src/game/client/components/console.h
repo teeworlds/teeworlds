@@ -9,7 +9,12 @@ class CGameConsole : public CComponent
 	class CInstance
 	{
 	public:
-		TStaticRingBuffer<char, 64*1024, CRingBufferBase::FLAG_RECYCLE> m_Backlog;
+		struct CBacklogEntry
+		{
+			float m_YOffset;
+			char m_aText[1];
+		};
+		TStaticRingBuffer<CBacklogEntry, 64*1024, CRingBufferBase::FLAG_RECYCLE> m_Backlog;
 		TStaticRingBuffer<char, 64*1024, CRingBufferBase::FLAG_RECYCLE> m_History;
 		char *m_pHistoryEntry;
 

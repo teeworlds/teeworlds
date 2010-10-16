@@ -140,8 +140,9 @@ class CMenus : public CComponent
 	static float ms_ListheaderHeight;
 	static float ms_FontmodHeight;
 	
-	// for graphic settings
-	bool m_NeedRestart;
+	// for settings
+	bool m_NeedRestartGraphics;
+	bool m_NeedRestartSound;
 	bool m_NeedSendinfo;
 	
 	//
