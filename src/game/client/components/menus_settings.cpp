@@ -751,7 +751,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 	static int s_SettingsPage = 0;
 
 	// render background
-	CUIRect Temp, TabBar;
+	CUIRect Temp, TabBar, RestartWarning;
+	MainView.HSplitBottom(15.0f, &MainView, &RestartWarning);
 	MainView.VSplitRight(120.0f, &MainView, &TabBar);
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_B|CUI::CORNER_TL, 10.0f);
 	TabBar.HSplitTop(50.0f, &Temp, &TabBar);
@@ -792,9 +793,5 @@ void CMenus::RenderSettings(CUIRect MainView)
 		RenderSettingsSound(MainView);
 
 	if(m_NeedRestartGraphics || m_NeedRestartSound)
-	{
-		CUIRect RestartWarning;
-		MainView.HSplitBottom(40, &MainView, &RestartWarning);
-		UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), 15.0f, -1, 220);
-	}
+		UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), 15.0f, -1);
 }
