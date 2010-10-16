@@ -2325,6 +2325,7 @@ void CEditor::RenderFileDialog()
 	// the buttons
 	static int s_OkButton = 0;
 	static int s_CancelButton = 0;
+	static int s_NewFolderButton = 0;
 
 	CUIRect Button;
 	ButtonBar.VSplitRight(50.0f, &ButtonBar, &Button);
@@ -2373,6 +2374,26 @@ void CEditor::RenderFileDialog()
 	ButtonBar.VSplitRight(50.0f, &ButtonBar, &Button);
 	if(DoButton_Editor(&s_CancelButton, Localize("Cancel"), 0, &Button, 0, 0) || Input()->KeyPressed(KEY_ESCAPE))
 		m_Dialog = DIALOG_NONE;
+
+	if(m_FileDialogStorageType == IStorage::TYPE_SAVE)
+	{
+		ButtonBar.VSplitLeft(40.0f, 0, &ButtonBar);
+		ButtonBar.VSplitLeft(70.0f, &Button, &ButtonBar);
+		if(DoButton_Editor(&s_NewFolderButton, Localize("New folder"), 0, &Button, 0, 0))
+		{
+			if(*m_aFileDialogFileName)
+			{
+				char aBuf[512];
+				str_format(aBuf, sizeof(aBuf), "%s/%s", m_pFileDialogPath, m_aFileDialogFileName);
+				Storage()->CreateFolder(aBuf, IStorage::TYPE_SAVE);
+				FilelistPopulate(IStorage::TYPE_SAVE);
+				if(m_FilesSelectedIndex >= 0 && !m_FileList[m_FilesSelectedIndex].m_IsDir)
+					str_copy(m_aFileDialogFileName, m_FileList[m_FilesSelectedIndex].m_aFilename, sizeof(m_aFileDialogFileName));
+				else
+					m_aFileDialogFileName[0] = 0;
+			}
+		}
+	}
 }
 
 void CEditor::FilelistPopulate(int StorageType)

@@ -311,6 +311,15 @@ public:
 		return remove(GetPath(Type, pOldFilename, aOldBuffer, sizeof(aOldBuffer)));
 	}
 	
+	virtual bool CreateFolder(const char *pFoldername, int Type)
+	{
+		if(Type < 0 || Type >= m_NumPaths)
+			return false;
+
+		char aBuffer[MAX_PATH_LENGTH];
+		return fs_makedir(GetPath(Type, pFoldername, aBuffer, sizeof(aBuffer)));
+	}
+
 	static IStorage *Create(const char *pApplicationName, int NumArgs, const char **ppArguments)
 	{
 		CStorage *p = new CStorage();

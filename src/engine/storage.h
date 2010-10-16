@@ -17,6 +17,7 @@ public:
 	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, int Type, char *pBuffer = 0, int BufferSize = 0) = 0;
 	virtual bool RemoveFile(const char *pFilename, int Type) = 0;
 	virtual bool RenameFile(const char *pOldFilename, const char *pNewFilename, int Type) = 0;
+	virtual bool CreateFolder(const char *pFoldername, int Type) = 0;
 };
 
 extern IStorage *CreateStorage(const char *pApplicationName, int NumArgs, const char **ppArguments);
