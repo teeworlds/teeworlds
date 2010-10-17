@@ -5,6 +5,10 @@
 
 class CCamera : public CComponent
 {	
+	static void ConZoomPlus(IConsole::IResult *pResult, void *pUserData, int ClientID);
+	static void ConZoomMinus(IConsole::IResult *pResult, void *pUserData, int ClientID);
+	static void ConZoomReset(IConsole::IResult *pResult, void *pUserData, int ClientID);
+
 public:
 	vec2 m_Center;
 	float m_Zoom;
@@ -12,6 +16,7 @@ public:
 
 	CCamera();
 	virtual void OnRender();
+	virtual void OnConsoleInit();
 };
 
 #endif

@@ -7,7 +7,7 @@ class CMapLayers : public CComponent
 	CLayers *m_pLayers;	// todo refactor: maybe remove it and access it through client*
 	int m_Type;
 
-	void MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup);
+	void MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup, float Zoom = 1.0f);
 	static void EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser);
 public:
 	enum

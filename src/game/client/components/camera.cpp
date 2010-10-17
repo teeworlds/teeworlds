@@ -8,15 +8,30 @@
 #include "camera.h"
 #include "controls.h"
 
+const float ZoomStep = 0.75f;
+void CCamera::ConZoomPlus(IConsole::IResult *pResult, void *pUserData, int ClientID) {
+	//if(g_Config.m_ClRaceCheats == 1 || ((CCamera *)pUserData)->m_pClient->m_IsRace)
+		((CCamera *)pUserData)->m_Zoom *= 1/ZoomStep;
+}
+void CCamera::ConZoomMinus(IConsole::IResult *pResult, void *pUserData, int ClientID) {
+	//if(g_Config.m_ClRaceCheats == 1 || ((CCamera *)pUserData)->m_pClient->m_IsRace)
+		((CCamera *)pUserData)->m_Zoom *= ZoomStep;
+}
+void CCamera::ConZoomReset(IConsole::IResult *pResult, void *pUserData, int ClientID) {
+	//if(g_Config.m_ClRaceCheats == 1 || ((CCamera *)pUserData)->m_pClient->m_IsRace)
+		((CCamera *)pUserData)->m_Zoom = 1.0f;
+}
+
 CCamera::CCamera()
 {
+	m_Zoom = 1.0f;
 	m_WasSpectator = false;
 }
 
 void CCamera::OnRender()
 {
 	//vec2 center;
-	m_Zoom = 1.0f;
+	
 
 	// update camera center		
 	if(m_pClient->m_Snap.m_Spectate)
@@ -46,4 +61,11 @@ void CCamera::OnRender()
 		
 		m_Center = m_pClient->m_LocalCharacterPos + CameraOffset;
 	}
+}
+
+void CCamera::OnConsoleInit()
+{
+	Console()->Register("zoom+", "", CFGFLAG_CLIENT, ConZoomPlus, this, "Zoom increse", 0);
+	Console()->Register("zoom-", "", CFGFLAG_CLIENT, ConZoomMinus, this, "Zoom decrese", 0);
+	Console()->Register("zoom", "", CFGFLAG_CLIENT, ConZoomReset, this, "Zoom reset", 0);
 }
