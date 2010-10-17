@@ -501,23 +501,23 @@ void CChat::OnRender()
 		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
 		if(Now > m_aLines[r].m_Time+15*time_freq() && !m_Show)
 			break;
-		
+
 		// get the y offset (calculate it if we haven't done that yet)
 		if(m_aLines[r].m_YOffset[OffsetType] < 0.0f)
 		{
 			TextRender()->SetCursor(&Cursor, Begin, 0.0f, FontSize, 0);
-		Cursor.m_LineWidth = LineWidth;
-		TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
-		TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
+			Cursor.m_LineWidth = LineWidth;
+			TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
+			TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
+			m_aLines[r].m_YOffset[OffsetType] = Cursor.m_Y + Cursor.m_FontSize;
+		}
+		
 		if(!m_aLines[r].m_Spam && !m_aLines[r].m_Ignore)
 		{
 			if((g_Config.m_ClRenderChat && !g_Config.m_ClRenderServermsg && m_aLines[r].m_ClientId != -1)
-			{
 				|| (!g_Config.m_ClRenderChat && g_Config.m_ClRenderServermsg && m_aLines[r].m_ClientId == -1)
 				|| (g_Config.m_ClRenderChat && g_Config.m_ClRenderServermsg))
-				m_aLines[r].m_YOffset[OffsetType] = Cursor.m_Y + Cursor.m_FontSize;
 				y -= m_aLines[r].m_YOffset[OffsetType];
-			}
 		}
 
 		// cut off if msgs waste too much space
@@ -533,13 +533,13 @@ void CChat::OnRender()
 		{
 			vec3 TColor;
 			if(m_aLines[r].m_ClientId == -1)
-			TextRender()->TextColor(1.0f, 1.0f, 0.5f, 1.0f); // system
+				TextRender()->TextColor(1.0f, 1.0f, 0.5f, 1.0f); // system
 			else if(m_aLines[r].m_Team)
-			TextRender()->TextColor(0.45f, 0.9f, 0.45f, 1.0f); // team message
+				TextRender()->TextColor(0.45f, 0.9f, 0.45f, 1.0f); // m_Team message
 			else if(m_aLines[r].m_NameColor == 0)
 			{
 				if(!m_pClient->m_Snap.m_pLocalInfo)
-					TextRender()->TextColor(1.0f, 0.5f, 0.5f, 1.0f); // red
+					TextRender()->TextColor(1.0f, 0.5f, 0.5f, 1.0f);// red
 				else
 				{
 					TColor = CTeecompUtils::GetTeamColor(0, m_pClient->m_Snap.m_pLocalInfo->m_Team, g_Config.m_TcColoredTeesTeam1,
@@ -559,9 +559,9 @@ void CChat::OnRender()
 				}	
 			}
 			else if(m_aLines[r].m_NameColor == -1)
-			TextRender()->TextColor(0.75f, 0.5f, 0.75f, 1.0f); // spectator
-		else
-			TextRender()->TextColor(0.8f, 0.8f, 0.8f, 1.0f);
+				TextRender()->TextColor(0.75f, 0.5f, 0.75f, 1.0f); // spectator
+			else
+				TextRender()->TextColor(0.8f, 0.8f, 0.8f, 1.0f);
 
 			if(!m_aLines[r].m_Spam && !m_aLines[r].m_Ignore)
 			{
@@ -572,19 +572,16 @@ void CChat::OnRender()
 			}
 
 			// render line
-			if(m_aLines[r].m_ContainsName && g_Config.m_ClChangeColor)
+			if(m_aLines[r].m_Team && m_aLines[r].m_ContainsName && g_Config.m_ClChangeColor)
+				TextRender()->TextColor(0.3f, 1.0f, 0.3f, 1.0f); // team color if name
+			else if(m_aLines[r].m_ClientId == -1)
+				TextRender()->TextColor(1.0f, 1.0f, 0.5f, 1.0f); // system
+			else if(m_aLines[r].m_ContainsName && g_Config.m_ClChangeColor)
 				TextRender()->TextColor(0.6f, 0.6f, 0.6f, 1.0f); // standard color if name
+			else if(m_aLines[r].m_Team)
+				TextRender()->TextColor(0.65f, 1.0f, 0.65f, 1.0f); // team message
 			else
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-			
-			if(m_aLines[r].m_ClientId == -1)
-			TextRender()->TextColor(1.0f, 1.0f, 0.5f, 1.0f); // system
-			else if(m_aLines[r].m_Team && m_aLines[r].m_ContainsName && g_Config.m_ClChangeColor)
-				TextRender()->TextColor(0.3f,1,0.3f,1); // team color if name
-			else if(m_aLines[r].m_Team)
-			TextRender()->TextColor(0.65f, 1.0f, 0.65f, 1.0f); // team message
-		else
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 			if(!m_aLines[r].m_Spam && !m_aLines[r].m_Ignore)
 			{

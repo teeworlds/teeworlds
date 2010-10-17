@@ -1894,7 +1894,7 @@ static void ExtractName(const char *pFileName, char *pName, int BufferSize)
 			pEnd = pFileName;
 	}
 
-	int Length = pEnd > pExtractedName ? min(BufferSize, pEnd-pExtractedName+1) : BufferSize;
+	int Length = pEnd > pExtractedName ? min(BufferSize, (int)(pEnd-pExtractedName+1)) : BufferSize;
 	str_copy(pName, pExtractedName, Length);
 }
 
