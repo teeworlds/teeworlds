@@ -878,22 +878,22 @@ void CCharacter::HandleTiles(int Index)
 				m_Core.m_Pos = m_PrevPos;
 		TempVel += Direction * Force;
 		MaxVel = Direction*(MaxSpeed/5);
-		if(absolute(TempVel.x) > MaxVel.x || absolute(TempVel.y) > MaxVel.y || !MaxSpeed)
+		if(absolute(TempVel.x) < absolute(MaxVel.x) || absolute(TempVel.y) < absolute(MaxVel.y) || !MaxSpeed)
 		{
-			if(Direction.x)
+			if(absolute(Direction.x) > 0)
 				m_Core.m_Vel.x = TempVel.x;
-			if(Direction.y)
+			if(absolute(Direction.y) > 0)
 				m_Core.m_Vel.y = TempVel.y;
 		}
 		else
 		{
-			if(Direction.x)
+			if(absolute(Direction.x) > 0)
 				m_Core.m_Vel.x = MaxVel.x + Direction.x;
-			if(Direction.y)
+			if(absolute(Direction.y) > 0)
 				m_Core.m_Vel.y = MaxVel.y + Direction.y;
 		}
-		dbg_msg("speedup tile end","(Direction*Force) %f %f   m_Core.m_Vel%f %f",(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
-		dbg_msg("speedup tile end","Direction %f %f, Force %d, Max Speed %d", (Direction).x,(Direction).y, Force, MaxSpeed);
+		//dbg_msg("speedup tile end","(Direction*Force) %f %f   m_Core.m_Vel%f %f",(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
+		//dbg_msg("speedup tile end","Direction %f %f, Force %d, Max Speed %d", (Direction).x,(Direction).y, Force, MaxSpeed);
 	}
 	else if(GameServer()->Collision()->IsSpeedup(MapIndex) == TILE_BOOSTS)
 	{
