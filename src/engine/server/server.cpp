@@ -1321,7 +1321,14 @@ int CServer::Run()
 
 void CServer::ConKick(IConsole::IResult *pResult, void *pUser, int ClientId)
 {
-	if(pResult->NumArguments() > 1)
+		int ClientId1 = pResult->GetInteger(0);
+	char buf[128];
+	if(ClientId1 < 0 || ClientId1 >= MAX_CLIENTS || ((CServer *)pUser)->m_aClients[ClientId1].m_State == CClient::STATE_EMPTY)
+	{
+		str_format(buf, sizeof(buf),"Invalid Client ID %d", ClientId1);
+		((CServer *)pUser)->SendRconLine(ClientId,buf);
+	}
+	else if(pResult->NumArguments() > 1)
 	{
 		char aBuf[128];
 		str_format(aBuf, sizeof(aBuf), "Kicked by console (%s)", pResult->GetString(1));
@@ -1357,11 +1364,26 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
 				return;
 			}
 		}
+		for(int i=0;i<MAX_CLIENTS;i++)
+		{
+			NETADDR Temp = pServer->m_NetServer.ClientAddr(i);
+			Addr.port = Temp.port = 0;
+			if(net_addr_comp(&Addr, &Temp) == 0)
+			{
+				if (((CServer *)pUser)->m_aClients[ClientId1].m_Authed <= ((CServer *)pUser)->m_aClients[i].m_Authed)
+				{
+					pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "you can't ban an a player with the higher or same rank!");
+					return;
+				}
+			}
+		}
 		pServer->BanAdd(Addr, Minutes*60, pReason);
 	}
 	else if(StrAllnum(pStr))
 	{
 		int ClientId = str_toint(pStr);
+		if (ClientId1 != -1 && ((CServer *)pUser)->m_aClients[ClientId1].m_Authed <= ((CServer *)pUser)->m_aClients[ClientId].m_Authed)
+			return;
 
 		if(ClientId < 0 || ClientId >= MAX_CLIENTS || pServer->m_aClients[ClientId].m_State == CClient::STATE_EMPTY)
 		{
