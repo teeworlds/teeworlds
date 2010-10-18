@@ -279,7 +279,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			m_NeedSendinfo = true;
 
 		*paColors = Color;
-		RightView.HSplitTop(5.0f, 0, &Button);
+		RightView.HSplitTop(2.0f, 0, &Button);
 		Button.HSplitTop(20.0f, &Button, 0);
 		Button.VSplitLeft(35.0f, 0, &Button);
 		
@@ -870,8 +870,6 @@ void CMenus::RenderSettingsLvlx(CUIRect MainView)
 	*paColors = Color;
 	RightView.HSplitTop(5.0f, 0, &Button);
 	Button.HSplitTop(20.0f, &Button, 0);
-	Button.VSplitLeft(15.0f, 0, &Button);
-	Button.VSplitLeft(300.0f, &Button, 0);
 	
 	RenderTools()->DrawUIRect(&Button, m_pClient->m_pSkins->GetColor(g_Config.m_ClExpBarColor), CUI::CORNER_ALL, 10.0f);
 }

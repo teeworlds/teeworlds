@@ -488,5 +488,5 @@ void CMenus::RenderSettingsTeecompAbout(CUIRect MainView)
 	MainView.HSplitBottom(10.0f, &MainView, &Button);
 	UI()->DoLabel(&Button, "so you can set while u set while u set options", 10.0f, -1);
 	MainView.HSplitBottom(10.0f, &MainView, &Button);
-	UI()->DoLabel(&Button, "Yo dawg I herd you like pTabs so we put pTabs in yo pTabs in yo pTabs", 10.0f, -1);
+	UI()->DoLabel(&Button, "Yo dawg I herd you like tabs so we put tabs in yo tabs in yo tabs", 10.0f, -1);
 }
