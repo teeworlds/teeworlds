@@ -932,7 +932,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 			continue;
 		}
 		
-	char aFileName[128];
+		char aFileName[128];
 		str_format(aFileName, sizeof(aFileName), "languages/%s.txt", pLine);
 		pLanguages->add(CLanguage(pReplacement+3, aFileName));
 	}
@@ -948,12 +948,12 @@ void GatherFonts(const char *pName, int IsDir, int Type, void *pUser)
 	char aFileName[128];
 	str_format(aFileName, sizeof(aFileName), "%s", pName);
 
-	char NiceName[128];
-	str_format(NiceName, sizeof(NiceName), "%s", pName);
-	NiceName[0] = str_uppercase(NiceName[0]);
+	char aNiceName[128];
+	str_format(aNiceName, sizeof(aNiceName), "%s", pName);
+	aNiceName[0] = str_uppercase(aNiceName[0]);
 
 
-	for(char *p = NiceName; *p; p++)
+	for(char *p = aNiceName; *p; p++)
 		if(*p == '.')
 		{
 			if(str_comp(p, ".ttf"))
@@ -961,7 +961,12 @@ void GatherFonts(const char *pName, int IsDir, int Type, void *pUser)
 			*p = 0;
 		}
 
-	Fonts.add(CFontFile(NiceName, aFileName));
+	// check if the font was already added
+	for(int i = 0; i < Fonts.size(); i++)
+		if(!str_comp(Fonts[i].m_Name, aNiceName))
+			return;
+	
+	Fonts.add(CFontFile(aNiceName, aFileName));
 }
 
 void CMenus::RenderSettingsGeneral(CUIRect MainView)
