@@ -448,7 +448,7 @@ void CCharacter::FireWeapon()
 		case WEAPON_RIFLE:
 		{
 				new CLaser(GameWorld(), m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID(), 0);
-				//GameServer()->CreateSound(m_Pos, SOUND_RIFLE_FIRE);
+				GameServer()->CreateSound(m_Pos, SOUND_RIFLE_FIRE, Teams()->TeamMask(Team()));
 		} break;
 
 		case WEAPON_NINJA:
@@ -460,7 +460,7 @@ void CCharacter::FireWeapon()
 				m_Ninja.m_ActivationDir = Direction;
 				//m_Ninja.m_CurrentMoveTime = g_pData->m_Weapons.m_Ninja.m_Movetime * Server()->TickSpeed() / 1000;
 				m_Ninja.m_CurrentMoveTime = 10;
-				GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE,Teams()->TeamMask(Team()));
+				GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE, Teams()->TeamMask(Team()));
 		} break;
 
 	}
