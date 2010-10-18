@@ -1730,7 +1730,7 @@ void CServer::CheckPass(int ClientId, const char *pPw)
 			}
 			if(level != -1)
 			{
-				char buf[128]="Authentication successful. Remote console access grantedfor ClientId=%d with level=%d";
+				char buf[128]="Authentication successful. Remote console access granted for ClientId=%d with level=%d";
 				SetRconLevel(ClientId,level);
 				str_format(buf,sizeof(buf),buf,ClientId,level);
 				SendRconLine(ClientId, buf);
