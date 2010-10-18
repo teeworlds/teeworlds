@@ -1762,6 +1762,6 @@ void CServer::CheckPass(int ClientId, const char *pPw)
 		SetRconLevel(ClientId,0);
 		str_format(buf,sizeof(buf),buf,ClientId,0);
 		SendRconLine(ClientId, buf);
-		dbg_msg("server", "'%s' ClientId=%d authed with Level=%d", ClientName(ClientId), ClientId, level);
+		dbg_msg("server", "'%s' ClientId=%d authed with Level=%d", ClientName(ClientId), ClientId, 0);
 	}
 }
