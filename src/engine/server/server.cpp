@@ -555,6 +555,7 @@ int CServer::NewClientCallback(int ClientId, void *pUser)
 	pThis->m_aClients[ClientId].m_aClan[0] = 0;
 	pThis->m_aClients[ClientId].m_Authed = 0;
 	pThis->m_aClients[ClientId].m_AuthTries = 0;
+	memset(&pThis->m_aClients[ClientId].m_Addr, 0, sizeof(NETADDR));
 	pThis->m_aClients[ClientId].Reset();
 	return 0;
 }
@@ -581,6 +582,7 @@ int CServer::DelClientCallback(int ClientId, const char *pReason, void *pUser)
 	pThis->m_aClients[ClientId].m_aClan[0] = 0;
 	pThis->m_aClients[ClientId].m_Authed = 0;
 	pThis->m_aClients[ClientId].m_AuthTries = 0;
+	memset(&pThis->m_aClients[ClientId].m_Addr, 0, sizeof(NETADDR));
 	pThis->m_aClients[ClientId].m_Snapshots.PurgeAll();
 	return 0;
 }
@@ -738,6 +740,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
 					m_aClients[ClientId].m_State = CClient::STATE_READY;
 					GameServer()->OnClientConnected(ClientId);
+					GameServer()->OnSetAuthed(ClientId, m_aClients[ClientId].m_Authed);
 				}
 			}
 			else if(Msg == NETMSG_ENTERGAME)
