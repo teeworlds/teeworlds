@@ -879,9 +879,9 @@ void CCharacter::HandleTiles(int Index)
 		TempVel += Direction * Force;
 		MaxVel = Direction*(MaxSpeed/5);
 		if(MaxSpeed && Direction.x && (TempVel.x > MaxVel.x && MaxVel.x > 0 || TempVel.x < MaxVel.x && MaxVel.x < 0))
-			TempVel.x = MaxVel.x + Direction.x;
+			TempVel.x = MaxVel.x;
 		if(MaxSpeed && Direction.y && (TempVel.y > MaxVel.y && MaxVel.y > 0 || TempVel.y < MaxVel.y && MaxVel.y < 0))
-			TempVel.y = MaxVel.y + Direction.y;
+			TempVel.y = MaxVel.y;
 		m_Core.m_Vel = TempVel;
 		//dbg_msg("speedup tile end","(Direction*Force) %f %f   m_Core.m_Vel%f %f",(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
 		//dbg_msg("speedup tile end","Direction %f %f, Force %d, Max Speed %d", (Direction).x,(Direction).y, Force, MaxSpeed);
@@ -899,7 +899,7 @@ void CCharacter::HandleTiles(int Index)
 				)
 				m_Core.m_Pos = m_PrevPos;
 		Force /= 5;
-		m_Core.m_Vel = Direction*Force + Direction;
+		m_Core.m_Vel = Direction*Force;
 		//dbg_msg("Direction","%f %f   %f %f   %f %f",Direction.x,Direction.y,(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
 	}
 	m_LastBooster = MapIndex;

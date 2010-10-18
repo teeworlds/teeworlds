@@ -1382,14 +1382,16 @@ void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
 	else if(StrAllnum(pStr))
 	{
 		int ClientId = str_toint(pStr);
-		if (ClientId1 != -1 && ((CServer *)pUser)->m_aClients[ClientId1].m_Authed <= ((CServer *)pUser)->m_aClients[ClientId].m_Authed)
-			return;
 
 		if(ClientId < 0 || ClientId >= MAX_CLIENTS || pServer->m_aClients[ClientId].m_State == CClient::STATE_EMPTY)
 		{
 			pServer->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "server", "invalid client id");
 			return;
 		}
+
+		if (ClientId1 != -1 && ((CServer *)pUser)->m_aClients[ClientId1].m_Authed <= ((CServer *)pUser)->m_aClients[ClientId].m_Authed)
+			return;
+
 		else if(pServer->m_RconClientId == ClientId)
 		{
 			pServer->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "server", "you can't ban yourself");
