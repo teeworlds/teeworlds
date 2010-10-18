@@ -881,8 +881,8 @@ void CCharacter::HandleTiles(int Index)
 		if(MaxSpeed && Direction.x && (TempVel.x > MaxVel.x && MaxVel.x > 0 || TempVel.x < MaxVel.x && MaxVel.x < 0))
 			TempVel.x = MaxVel.x + Direction.x;
 		if(MaxSpeed && Direction.y && (TempVel.y > MaxVel.y && MaxVel.y > 0 || TempVel.y < MaxVel.y && MaxVel.y < 0))
-			TempVel.y = MaxVel.y;
-		m_Core.m_Vel = TempVel + Direction.y;
+			TempVel.y = MaxVel.y + Direction.y;
+		m_Core.m_Vel = TempVel;
 		//dbg_msg("speedup tile end","(Direction*Force) %f %f   m_Core.m_Vel%f %f",(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
 		//dbg_msg("speedup tile end","Direction %f %f, Force %d, Max Speed %d", (Direction).x,(Direction).y, Force, MaxSpeed);
 	}
