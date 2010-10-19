@@ -436,6 +436,10 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 	if (DoButton_CheckBox((char *)&g_Config.m_BrFilterPureMap, Localize("Standard map"), g_Config.m_BrFilterPureMap, &Button))
 		g_Config.m_BrFilterPureMap ^= 1;
 	
+	View.HSplitTop(20.0f, &Button, &View);
+	if (DoButton_CheckBox((char *)&g_Config.m_BrFilterGametypeStrict, Localize("Filter gametype strict"), g_Config.m_BrFilterGametypeStrict, &Button))
+		g_Config.m_BrFilterGametypeStrict ^= 1;
+	
 	View.HSplitTop(5.0f, 0, &View);
 
 	View.HSplitTop(19.0f, &Button, &View);
@@ -467,6 +471,7 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 		g_Config.m_BrFilterFull = 0;
 		g_Config.m_BrFilterEmpty = 0;
 		g_Config.m_BrFilterPw = 0;
+		g_Config.m_BrFilterGametypeStrict = 0;
 		g_Config.m_BrFilterPing = 999;
 		g_Config.m_BrFilterGametype[0] = 0;
 		g_Config.m_BrFilterCompatversion = 1;
