@@ -60,14 +60,19 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 		return;
 	
 	CMapItemEnvelope *pItem = (CMapItemEnvelope *)pThis->m_pLayers->Map()->GetItem(Start+Env, 0, 0);
+	
 	if(pThis->Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = pThis->DemoPlayer()->BaseInfo();
+		static float Time = 0;
+		static float LastLocalTime = pThis->Client()->LocalTime();
 		
 		if(!pInfo->m_Paused)
-			pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, (pThis->Client()->LocalTime()+TimeOffset/(pInfo->m_Speed/3.5f))*pInfo->m_Speed, pChannels);
-		else
-			pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, 0, pChannels);
+			Time += (pThis->Client()->LocalTime()-LastLocalTime)*pInfo->m_Speed;
+		
+		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
+		
+		LastLocalTime = pThis->Client()->LocalTime();
 	}
 	else
 		pThis->RenderTools()->RenderEvalEnvelope(pPoints+pItem->m_StartPoint, pItem->m_NumPoints, 4, pThis->Client()->LocalTime()+TimeOffset, pChannels);

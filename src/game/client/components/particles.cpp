@@ -121,15 +121,16 @@ void CParticles::OnRender()
 {
 	static int64 LastTime = 0;
 	int64 t = time_get();
+	
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
-		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
-		
+		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();		
 		if(!pInfo->m_Paused)
 			Update((float)((t-LastTime)/(double)time_freq())*pInfo->m_Speed);
 	}
 	else
 		Update((float)((t-LastTime)/(double)time_freq()));
+	
 	LastTime = t;
 }
 

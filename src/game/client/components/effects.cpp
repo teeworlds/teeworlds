@@ -259,13 +259,13 @@ void CEffects::OnRender()
 		}
 		else
 			m_Add50hz = false;
-			
+		
+		if(m_Add50hz)
+			m_pClient->m_pFlow->Update();
+		
 		return;
 	}
-		
-	if(m_Add50hz)
-		m_pClient->m_pFlow->Update();
-		
+
 	if(time_get()-LastUpdate100hz > time_freq()/100)
 	{
 		m_Add100hz = true;
