@@ -213,8 +213,16 @@ void CServerBrowser::Filter()
 			if(!Filtered && g_Config.m_BrFilterGametype[0] != 0)
 			{
 				// match against game type
-				if(!str_find_nocase(m_ppServerlist[i]->m_Info.m_aGameType, g_Config.m_BrFilterGametype))
-					Filtered = 1;
+				if (!g_Config.m_BrFilterGametypeStrict)
+				{
+					if(!str_find_nocase(m_ppServerlist[i]->m_Info.m_aGameType, g_Config.m_BrFilterGametype))
+						Filtered = 1;
+				}
+				else 
+				{
+					if (str_comp_nocase(m_ppServerlist[i]->m_Info.m_aGameType, g_Config.m_BrFilterGametype))
+						Filtered = 1;
+				}
 			}
 		}
 
@@ -225,7 +233,8 @@ void CServerBrowser::Filter()
 
 int CServerBrowser::SortHash() const
 {
-	int i = g_Config.m_BrSort&0xf;
+	int i = g_Config.m_BrSort&0x7;
+	i |= g_Config.m_BrFilterGametypeStrict<<3;
 	i |= g_Config.m_BrFilterEmpty<<4;
 	i |= g_Config.m_BrFilterFull<<5;
 	i |= g_Config.m_BrFilterPw<<6;
