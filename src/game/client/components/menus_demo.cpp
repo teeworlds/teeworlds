@@ -171,7 +171,10 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 			if(pInfo->m_Speed > 4.0f) DemoPlayer()->SetSpeed(4.0f);
 			else if(pInfo->m_Speed > 2.0f) DemoPlayer()->SetSpeed(2.0f);
 			else if(pInfo->m_Speed > 1.0f) DemoPlayer()->SetSpeed(1.0f);
+			else if(pInfo->m_Speed > 0.75f) DemoPlayer()->SetSpeed(0.75f);
 			else if(pInfo->m_Speed > 0.5f) DemoPlayer()->SetSpeed(0.5f);
+			else if(pInfo->m_Speed > 0.25f) DemoPlayer()->SetSpeed(0.25f);
+			else if(pInfo->m_Speed > 0.1f) DemoPlayer()->SetSpeed(0.1f);
 			else DemoPlayer()->SetSpeed(0.05f);
 		}
 		
@@ -181,7 +184,10 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		static int s_FastForwardButton = 0;
 		if(DoButton_DemoPlayer_Sprite(&s_FastForwardButton, SPRITE_DEMOBUTTON_FASTER, 0, &Button))
 		{
-			if(pInfo->m_Speed < 0.5f) DemoPlayer()->SetSpeed(0.5f);
+			if(pInfo->m_Speed < 0.1f) DemoPlayer()->SetSpeed(0.1f);
+			else if(pInfo->m_Speed < 0.25f) DemoPlayer()->SetSpeed(0.25f);
+			else if(pInfo->m_Speed < 0.5f) DemoPlayer()->SetSpeed(0.5f);
+			else if(pInfo->m_Speed < 0.75f) DemoPlayer()->SetSpeed(0.75f);
 			else if(pInfo->m_Speed < 1.0f) DemoPlayer()->SetSpeed(1.0f);
 			else if(pInfo->m_Speed < 2.0f) DemoPlayer()->SetSpeed(2.0f);
 			else if(pInfo->m_Speed < 4.0f) DemoPlayer()->SetSpeed(4.0f);
@@ -194,7 +200,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		if(pInfo->m_Speed >= 1.0f)
 			str_format(aBuffer, sizeof(aBuffer), "x%.0f", pInfo->m_Speed);
 		else
-			str_format(aBuffer, sizeof(aBuffer), "x%.1f", pInfo->m_Speed);
+			str_format(aBuffer, sizeof(aBuffer), "x%.2f", pInfo->m_Speed);
 		UI()->DoLabel(&ButtonBar, aBuffer, Button.h*0.7f, -1);
 
 		// close button
