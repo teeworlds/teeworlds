@@ -601,6 +601,7 @@ void CGameContext::OnClientEnter(int ClientId)
 	SendChatTarget(ClientId, "For more Info /CMDList");
 	SendChatTarget(ClientId, "Or visit DDRace.info");
 	SendChatTarget(ClientId, "To see this again say /info");
+	SendChatTarget(ClientId, "Note This is an Alpha release, just for testing, your feedback is important!!");
 
 	if(g_Config.m_SvWelcome[0]!=0) SendChatTarget(ClientId,g_Config.m_SvWelcome);
 	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' team=%d", ClientId, Server()->ClientName(ClientId), m_apPlayers[ClientId]->GetTeam());
@@ -1964,7 +1965,8 @@ void CGameContext::ConCredits(IConsole::IResult *pResult, void *pUserData, int C
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "This mod was originally created by 3DA");
-	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Now it is maintained by GreYFoX@GTi and [BlackTee]den among others:");
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Now it is maintained & coded by:");
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "[Egypt]GreYFoX@GTi and [BlackTee]den among others:");
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Code: heinrich5991");
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Documentation: Zeta-Hoernchen");
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Code (in the past): LemonFace, noother and Fluxid");
