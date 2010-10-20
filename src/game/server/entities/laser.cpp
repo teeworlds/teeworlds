@@ -27,8 +27,9 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 
 	m_From = From;
 	m_Pos = At;
-	m_Energy = -1;		
-	Hit->TakeDamage(vec2(0.f, 0.f), GameServer()->Tuning()->m_LaserDamage, m_Owner, WEAPON_RIFLE);
+	m_Energy = -1;
+	int Damage = m_Bounces > 0 ? GameServer()->Tuning()->m_LaserBounceDamage : GameServer()->Tuning()->m_LaserDamage;
+	Hit->TakeDamage(vec2(0.f, 0.f), Damage, m_Owner, WEAPON_RIFLE);
 	return true;
 }
 
