@@ -522,7 +522,7 @@ Saves the current map under a new name
 
 Select group. Right click for properties.
 == Sélectionner un groupe. Clic-droit pour voir les propriétés.
- 
+
 Select layer. Right click for properties.
 == Sélectionner une couche. Clic-droit pour voir les propriétés.
 
