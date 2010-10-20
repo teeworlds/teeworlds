@@ -191,7 +191,7 @@ Lht.
 == Hell.
 
 Loading DDRace Client
-== Laden DDRace Client
+== Lade DDRace Client
 
 MOTD
 == Nachricht des Tages
