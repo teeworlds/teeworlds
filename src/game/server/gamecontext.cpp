@@ -837,7 +837,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				m_apPlayers[ClientId]->m_Last_KickVote = time_get();
 				return;
 			}
-			else if(!g_Config.m_SvVoteKick && pPlayer->m_Authed < 3) // allow admins to call kick votes even if they are forbidden
+			else if(!g_Config.m_SvVoteKick && pPlayer->m_Authed < 2) // allow admins to call kick votes even if they are forbidden
 			{
 				SendChatTarget(ClientId, "Server does not allow voting to kick players");
 				m_apPlayers[ClientId]->m_Last_KickVote = time_get();
@@ -855,7 +855,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				SendChatTarget(ClientId, "You can't kick yourself");
 				return;
 			}
-			if(compare_players(pPlayer, m_apPlayers[KickId]))
+			if(compare_players(m_apPlayers[KickId], pPlayer))
 			{
 				SendChatTarget(ClientId, "You can't kick admins");
 				m_apPlayers[ClientId]->m_Last_KickVote = time_get();
