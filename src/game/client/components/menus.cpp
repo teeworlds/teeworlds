@@ -141,25 +141,12 @@ void CMenus::DoButton_KeySelect(const void *pID, const char *pText, int Checked,
 
 int CMenus::DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners)
 {
-	vec4 ColorMod(1,1,1,1);
-	
 	if(Checked)
 		RenderTools()->DrawUIRect(pRect, ms_ColorTabbarActive, Corners, 10.0f);
 	else
 		RenderTools()->DrawUIRect(pRect, ms_ColorTabbarInactive, Corners, 10.0f);
 	UI()->DoLabel(pRect, pText, pRect->h*ms_FontmodHeight, 0);
 	
-	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
-}
-
-
-int CMenus::DoButton_SettingsTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
-{
-	if(Checked)
-		RenderTools()->DrawUIRect(pRect, ms_ColorTabbarActive, CUI::CORNER_R, 10.0f);
-	else
-		RenderTools()->DrawUIRect(pRect, ms_ColorTabbarInactive, CUI::CORNER_R, 10.0f);
-	UI()->DoLabel(pRect, pText, pRect->h*ms_FontmodHeight, 0);
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
@@ -171,18 +158,6 @@ int CMenus::DoButton_GridHeader(const void *pID, const char *pText, int Checked,
 	CUIRect t;
 	pRect->VSplitLeft(5.0f, 0, &t);
 	UI()->DoLabel(&t, pText, pRect->h*ms_FontmodHeight, -1);
-	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
-}
-
-int CMenus::DoButton_ListRow(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
-{
-	if(Checked)
-	{
-		CUIRect sr = *pRect;
-		sr.Margin(1.5f, &sr);
-		RenderTools()->DrawUIRect(&sr, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 4.0f);
-	}
-	UI()->DoLabel(pRect, pText, pRect->h*ms_FontmodHeight, -1);
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 

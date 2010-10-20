@@ -374,7 +374,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	{
 		TabBar.HSplitTop(10, &Button, &TabBar);
 		TabBar.HSplitTop(26, &Button, &TabBar);
-		if(DoButton_SettingsTab(paTabs[i], paTabs[i], s_ControlPage == i, &Button))
+		if(DoButton_MenuTab(paTabs[i], paTabs[i], s_ControlPage == i, &Button, CUI::CORNER_R))
 		{
 			s_ControlPage = i;
 			m_CallvoteSelectedPlayer = -1;
