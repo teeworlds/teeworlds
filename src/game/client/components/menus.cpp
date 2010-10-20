@@ -126,8 +126,12 @@ int CMenus::DoButton_BrowseIcon(int What, const CUIRect *pRect)
 }
 
 
-int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
+int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, CUIRect *pRect)
 {
+	float ExWidth = pRect->w;
+	pRect->w = TextRender()->TextWidth(0, pRect->h*ms_FontmodHeight, pText, -1) + 20.0f;
+	pRect->x += (ExWidth-pRect->w) / 2;
+	
 	RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f)*ButtonColorMul(pID), CUI::CORNER_ALL, 5.0f);
 	UI()->DoLabel(pRect, pText, pRect->h*ms_FontmodHeight, 0);
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);

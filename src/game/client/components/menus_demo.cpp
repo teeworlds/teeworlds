@@ -17,8 +17,12 @@
 
 #include "menus.h"
 
-int CMenus::DoButton_DemoPlayer(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
+int CMenus::DoButton_DemoPlayer(const void *pID, const char *pText, int Checked, CUIRect *pRect)
 {
+	float ExWidth = pRect->w;
+	pRect->w = TextRender()->TextWidth(0, pRect->h*ms_FontmodHeight, pText, -1) + 8.0f;
+	pRect->x += (ExWidth-pRect->w) / 2;
+	
 	RenderTools()->DrawUIRect(pRect, vec4(1,1,1, Checked ? 0.10f : 0.5f)*ButtonColorMul(pID), CUI::CORNER_ALL, 5.0f);
 	UI()->DoLabel(pRect, pText, 14.0f, 0);
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);

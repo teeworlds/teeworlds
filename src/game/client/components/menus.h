@@ -32,9 +32,9 @@ class CMenus : public CComponent
 	vec4 ButtonColorMul(const void *pID);
 
 
-	int DoButton_DemoPlayer(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	int DoButton_DemoPlayer(const void *pID, const char *pText, int Checked, CUIRect *pRect);
 	int DoButton_DemoPlayer_Sprite(const void *pID, int SpriteId, int Checked, const CUIRect *pRect);
-	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	int DoButton_Menu(const void *pID, const char *pText, int Checked, CUIRect *pRect);
 	int DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners);
 
 	int DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect);
