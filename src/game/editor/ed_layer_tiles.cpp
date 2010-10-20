@@ -510,6 +510,42 @@ void CLayerTele::Resize(int NewW, int NewH)
 		m_pEditor->m_Map.m_pGameLayer->Resize(NewW, NewH);
 }
 
+void CLayerTele::Shift(int Direction)
+{
+	CLayerTiles::Shift(Direction);
+	
+	switch(Direction)
+	{
+	case 1:
+		{
+			// left
+			for(int y = 0; y < m_Height; ++y)
+				mem_move(&m_pTeleTile[y*m_Width], &m_pTeleTile[y*m_Width+1], (m_Width-1)*sizeof(CTeleTile));
+		}
+		break;
+	case 2:
+		{
+			// right
+			for(int y = 0; y < m_Height; ++y)
+				mem_move(&m_pTeleTile[y*m_Width+1], &m_pTeleTile[y*m_Width], (m_Width-1)*sizeof(CTeleTile));
+		}
+		break;
+	case 4:
+		{
+			// up
+			for(int y = 0; y < m_Height-1; ++y)
+				mem_copy(&m_pTeleTile[y*m_Width], &m_pTeleTile[(y+1)*m_Width], m_Width*sizeof(CTeleTile));
+		}
+		break;
+	case 8:
+		{
+			// down
+			for(int y = m_Height-1; y > 0; --y)
+				mem_copy(&m_pTeleTile[y*m_Width], &m_pTeleTile[(y-1)*m_Width], m_Width*sizeof(CTeleTile));
+		}
+	}
+}
+
 void CLayerTele::BrushDraw(CLayer *pBrush, float wx, float wy)
 {
 	CLayerTele *l = (CLayerTele *)pBrush;
@@ -627,6 +663,42 @@ void CLayerSpeedup::Resize(int NewW, int NewH)
 	// resize gamelayer too
 	if(m_pEditor->m_Map.m_pGameLayer->m_Width != NewW || m_pEditor->m_Map.m_pGameLayer->m_Height != NewH)
 		m_pEditor->m_Map.m_pGameLayer->Resize(NewW, NewH);
+}
+
+void CLayerSpeedup::Shift(int Direction)
+{
+	CLayerTiles::Shift(Direction);
+	
+	switch(Direction)
+	{
+	case 1:
+		{
+			// left
+			for(int y = 0; y < m_Height; ++y)
+				mem_move(&m_pSpeedupTile[y*m_Width], &m_pSpeedupTile[y*m_Width+1], (m_Width-1)*sizeof(CSpeedupTile));
+		}
+		break;
+	case 2:
+		{
+			// right
+			for(int y = 0; y < m_Height; ++y)
+				mem_move(&m_pSpeedupTile[y*m_Width+1], &m_pSpeedupTile[y*m_Width], (m_Width-1)*sizeof(CSpeedupTile));
+		}
+		break;
+	case 4:
+		{
+			// up
+			for(int y = 0; y < m_Height-1; ++y)
+				mem_copy(&m_pSpeedupTile[y*m_Width], &m_pSpeedupTile[(y+1)*m_Width], m_Width*sizeof(CSpeedupTile));
+		}
+		break;
+	case 8:
+		{
+			// down
+			for(int y = m_Height-1; y > 0; --y)
+				mem_copy(&m_pSpeedupTile[y*m_Width], &m_pSpeedupTile[(y-1)*m_Width], m_Width*sizeof(CSpeedupTile));
+		}
+	}
 }
 
 void CLayerSpeedup::BrushDraw(CLayer *pBrush, float wx, float wy)
