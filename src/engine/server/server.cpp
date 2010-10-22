@@ -1200,6 +1200,11 @@ int CServer::Run()
 				if(LoadMap(g_Config.m_SvMap))
 				{
 					Console()->ExecuteLine("tune_reset", 4, -1);
+					Console()->ExecuteLine("tune gun_speed 1400", 4, -1);
+					Console()->ExecuteLine("tune shotgun_curvature 0", 4, -1);
+					Console()->ExecuteLine("tune shotgun_speed 500", 4, -1);
+					Console()->ExecuteLine("tune shotgun_speeddiff 0", 4, -1);
+					Console()->ExecuteLine("tune gun_curvature 0", 4, -1);
 					Console()->ExecuteLine("sv_hit 1",4,-1);
 					Console()->ExecuteLine("sv_npc 0",4,-1);
 					Console()->ExecuteLine("sv_phook 1",4,-1);
@@ -1632,9 +1637,14 @@ int main(int argc, const char **argv) // ignore_convention
 	pGameServer->OnConsoleInit();
 	
 	pConsole->ExecuteLine("tune_reset", 4, -1);
-	pConsole->ExecuteLine("sv_hit 1", 4, -1);
-	pConsole->ExecuteLine("sv_npc 0", 4, -1);
-	pConsole->ExecuteLine("sv_phook 1", 4, -1);
+	pConsole->ExecuteLine("tune gun_speed 1400", 4, -1);
+	pConsole->ExecuteLine("tune shotgun_curvature 0", 4, -1);
+	pConsole->ExecuteLine("tune shotgun_speed 500", 4, -1);
+	pConsole->ExecuteLine("tune shotgun_speeddiff 0", 4, -1);
+	pConsole->ExecuteLine("tune gun_curvature 0", 4, -1);
+	pConsole->ExecuteLine("sv_hit 1",4,-1);
+	pConsole->ExecuteLine("sv_npc 0",4,-1);
+	pConsole->ExecuteLine("sv_phook 1",4,-1);
 	pConsole->ExecuteLine("sv_endless_drag 0",4,-1);
 	// execute autoexec file
 	pConsole->ExecuteFile("autoexec.cfg");
