@@ -796,7 +796,7 @@ int CMenus::Render()
 		s_First = false;
 	}
 	
-	if(Client()->State() == IClient::STATE_ONLINE)
+	if(Client()->State() == IClient::STATE_ONLINE && !g_Config.m_ClServerBrowser)
 	{
 		ms_ColorTabbarInactive = ms_ColorTabbarInactiveIngame;
 		ms_ColorTabbarActive = ms_ColorTabbarActiveIngame;
@@ -829,7 +829,7 @@ int CMenus::Render()
 		}
 		
 		// render current page
-		if(Client()->State() != IClient::STATE_OFFLINE)
+		if(Client()->State() != IClient::STATE_OFFLINE && !g_Config.m_ClServerBrowser)
 		{
 			if(m_GamePage == PAGE_GAME)
 				RenderGame(MainView);
@@ -1072,7 +1072,7 @@ void CMenus::SetActive(bool Active)
 			m_NeedSendinfo = false;
 		}
 
-		if(Client()->State() == IClient::STATE_ONLINE)
+		if(Client()->State() == IClient::STATE_ONLINE && !g_Config.m_ClServerBrowser)
 		{
 			m_pClient->OnRelease();
 		}
@@ -1187,7 +1187,7 @@ void CMenus::OnRender()
 	Graphics()->QuadsDrawTL(60, 60, 5000, 5000);
 	Graphics()->QuadsEnd();
 	return;*/
-	
+
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		SetActive(true);
 
@@ -1197,6 +1197,9 @@ void CMenus::OnRender()
 		Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
 		RenderDemoPlayer(Screen);
 	}
+
+	if(g_Config.m_ClServerBrowser)
+		SetActive(true);
 	
 	if(Client()->State() == IClient::STATE_ONLINE && m_pClient->m_ServerMode == m_pClient->SERVERMODE_PUREMOD)
 	{
@@ -1251,7 +1254,7 @@ void CMenus::OnRender()
 	UI()->Update(mx,my,mx*3.0f,my*3.0f,Buttons);
     
 	// render
-	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	if(Client()->State() != IClient::STATE_DEMOPLAYBACK || g_Config.m_ClServerBrowser)
 		Render();
 
 	// render cursor
