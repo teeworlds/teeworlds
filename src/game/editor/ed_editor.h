@@ -477,6 +477,7 @@ public:
 	CLayerFront(int w, int h);
 
 	virtual void Resize(int NewW, int NewH);
+	virtual void Shift(int Direction);
 	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
 };
 
@@ -489,6 +490,7 @@ public:
 	CTeleTile *m_pSwitchTile;
 
 	virtual void Resize(int NewW, int NewH);
+	virtual void Shift(int Direction);
 	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
 	virtual void FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect);
 };
