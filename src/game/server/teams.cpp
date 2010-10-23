@@ -135,10 +135,7 @@ int CGameTeams::TeamMask(int Team) {
 	if(Team == TEAM_SUPER) return -1;
 	int Mask = 0;
 	for(int i = 0; i < MAX_CLIENTS; ++i) {
-		if(m_Core.Team(i) == Team 
-			|| (Character(i) 
-				&& Character(i)->GetPlayer())
-			|| m_Core.Team(i) == TEAM_SUPER) {
+		if(Character(i) && (m_Core.Team(i) == Team || m_Core.Team(i) == TEAM_SUPER)) {
 			Mask |= 1 << i;
 		}
 	}
