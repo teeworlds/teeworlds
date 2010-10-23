@@ -304,6 +304,8 @@ void CGameClient::OnInit()
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "gameclient", aBuf);
 	
 	m_ServerMode = SERVERMODE_PURE;
+	
+	m_RaceMsgSent = false;
 }
 
 void CGameClient::DispatchInput()
@@ -814,6 +816,13 @@ void CGameClient::OnNewSnapshot()
 			m_ServerMode = SERVERMODE_PURE;
 		else
 			m_ServerMode = SERVERMODE_PUREMOD;
+	}
+	
+	if(!m_RaceMsgSent && m_Snap.m_pLocalInfo)
+	{
+		CNetMsg_Cl_IsRace Msg;
+		Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+		m_RaceMsgSent = true;
 	}
 
 }

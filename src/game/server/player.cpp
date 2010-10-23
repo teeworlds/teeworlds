@@ -30,6 +30,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	GameServer()->Score()->PlayerData(CID)->Reset();
 	
 	m_Invisible = false;
+	m_IsUsingRaceClient = false;
 }
 
 CPlayer::~CPlayer()

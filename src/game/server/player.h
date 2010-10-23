@@ -87,6 +87,8 @@ public:
    // TODO: clean this up
    int m_Authed;
    
+   bool m_IsUsingRaceClient;
+   
    bool m_ColorSet; // Set if player changed color at least once 
 
    int m_Starttime;  		 

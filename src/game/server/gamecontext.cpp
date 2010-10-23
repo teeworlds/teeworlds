@@ -958,6 +958,11 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			SendBroadcast(aBuf, ClientId);
 		}
 	}
+	else if (MsgId == NETMSGTYPE_CL_ISRACE)
+	{
+		pPlayer->m_IsUsingRaceClient = true;
+		
+	}
 	else if(MsgId == NETMSGTYPE_CL_CHANGEINFO || MsgId == NETMSGTYPE_CL_STARTINFO)
 	{
 		CNetMsg_Cl_ChangeInfo *pMsg = (CNetMsg_Cl_ChangeInfo *)pRawMsg;

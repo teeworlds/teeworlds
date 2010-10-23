@@ -293,4 +293,25 @@ Messages = [
 		NetStringStrict("m_Type"),
 		NetStringStrict("m_Value"),
 	]),
+	
+	NetMessage("Cl_IsRace", []),
+	
+	NetMessage("Cl_Team", [
+		NetIntAny("m_Tee0"),
+		NetIntAny("m_Tee1"),
+		NetIntAny("m_Tee2"),
+		NetIntAny("m_Tee3"),
+		NetIntAny("m_Tee4"),
+		NetIntAny("m_Tee5"),
+		NetIntAny("m_Tee6"),
+		NetIntAny("m_Tee7"),
+		NetIntAny("m_Tee8"),
+		NetIntAny("m_Tee9"),
+		NetIntAny("m_Tee10"),
+		NetIntAny("m_Tee11"),
+		NetIntAny("m_Tee12"),
+		NetIntAny("m_Tee13"),
+		NetIntAny("m_Tee14"),
+		NetIntAny("m_Tee15"),
+	]),
 ]
