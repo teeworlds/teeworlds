@@ -41,6 +41,8 @@ void CGun::Fire()
 	for (int i = 0; i < Num; i++)
 	{
 		CCharacter *Target = Ents[i];
+		//now gun doesn't affect on super
+		if(Target->Team() == TEAM_SUPER) continue;
 		int res = GameServer()->Collision()->IntersectLine(m_Pos, Target->m_Pos,0,0,false);
 		if (!res)
 		{
