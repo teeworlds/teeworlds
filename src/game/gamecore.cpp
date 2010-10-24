@@ -242,13 +242,13 @@ void CCharacterCore::Tick(bool UseInput)
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
 				CCharacterCore *p = m_pWorld->m_apCharacters[i];
-				
-				
+				char aBuf[512];
+				str_format(aBuf, sizeof(aBuf), "ThisId = %d Id = %d Team = %d", m_Id, i, m_pTeams->Team(i));
+				dbg_msg("GameCore", aBuf);
 				if(!p || p == this || !m_pTeams->CanCollide(i, m_Id))
 					continue;
-				//char aBuf[512];
-				//str_format(aBuf, sizeof(aBuf), "ThisId = %d Id = %d TheSameTeam? = %d", ThisId, i, m_pTeams->SameTeam(i, ThisId));
-				//dbg_msg("GameCore", aBuf);
+				
+				
 				vec2 ClosestPoint = closest_point_on_line(m_HookPos, NewPos, p->m_Pos);
 				if(distance(p->m_Pos, ClosestPoint) < PhysSize+2.0f)
 				{

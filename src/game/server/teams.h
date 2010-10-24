@@ -44,6 +44,8 @@ public:
 	void SetForceCharacterTeam(int id, int Team);
 	
 	void Reset();
+	
+	void SendTeamsState(int Cid);
 };
 
 #endif

@@ -301,7 +301,7 @@ int CNetConnection::Update()
 	// check for timeout
 	if(State() != NET_CONNSTATE_OFFLINE &&
 		State() != NET_CONNSTATE_CONNECT &&
-		(Now-m_LastRecvTime) > time_freq()*g_Config.m_SvConnTimeout)
+		(Now-m_LastRecvTime) > time_freq()*g_Config.m_ConnTimeout)
 	{
 		m_State = NET_CONNSTATE_ERROR;
 		SetError("Timeout");
@@ -313,11 +313,11 @@ int CNetConnection::Update()
 		CNetChunkResend *pResend = m_Buffer.First();
 
 		// check if we have some really old stuff laying around and abort if not acked
-		if(Now-pResend->m_FirstSendTime > time_freq()*g_Config.m_SvConnTimeout)
+		if(Now-pResend->m_FirstSendTime > time_freq()*g_Config.m_ConnTimeout)
 		{
 			m_State = NET_CONNSTATE_ERROR;
 			char aBuf[512];
-			str_format(aBuf, sizeof(aBuf), "Too weak connection (not acked for %d seconds)", g_Config.m_SvConnTimeout);
+			str_format(aBuf, sizeof(aBuf), "Too weak connection (not acked for %d seconds)", g_Config.m_ConnTimeout);
 			SetError(aBuf);
 		}
 		else

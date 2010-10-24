@@ -296,7 +296,7 @@ Messages = [
 	
 	NetMessage("Cl_IsRace", []),
 	
-	NetMessage("Cl_Team", [
+	NetMessage("Cl_TeamsState", [
 		NetIntAny("m_Tee0"),
 		NetIntAny("m_Tee1"),
 		NetIntAny("m_Tee2"),

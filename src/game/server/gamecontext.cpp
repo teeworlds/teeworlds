@@ -604,7 +604,7 @@ void CGameContext::OnClientEnter(int ClientId)
 	SendChatTarget(ClientId, "Note This is an Alpha release, just for testing, your feedback is important!!");
 
 	if(g_Config.m_SvWelcome[0]!=0) SendChatTarget(ClientId,g_Config.m_SvWelcome);
-	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' team=%d", ClientId, Server()->ClientName(ClientId), m_apPlayers[ClientId]->GetTeam());
+	//str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' team=%d", ClientId, Server()->ClientName(ClientId), m_apPlayers[ClientId]->GetTeam());
 	
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
@@ -961,7 +961,10 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	else if (MsgId == NETMSGTYPE_CL_ISRACE)
 	{
 		pPlayer->m_IsUsingRaceClient = true;
-		
+		char aBuf[128];
+		str_format(aBuf, sizeof(aBuf), "%d use DDRace Client", pPlayer->GetCID());
+		dbg_msg("DDRace", aBuf);
+		((CGameControllerDDRace*)m_pController)->m_Teams.SendTeamsState(ClientId);
 	}
 	else if(MsgId == NETMSGTYPE_CL_CHANGEINFO || MsgId == NETMSGTYPE_CL_STARTINFO)
 	{

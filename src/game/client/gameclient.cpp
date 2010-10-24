@@ -395,6 +395,8 @@ void CGameClient::OnReset()
 	m_Teams.Reset();
 	Layers()->Dest();
 	Collision()->Dest();
+	
+	m_RaceMsgSent = false;
 }
 
 
@@ -578,6 +580,31 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			g_GameClient.m_pSounds->Enqueue(pMsg->m_Soundid);
 		else
 			g_GameClient.m_pSounds->Play(CSounds::CHN_GLOBAL, pMsg->m_Soundid, 1.0f, vec2(0,0));
+	}
+	else if(MsgId == NETMSGTYPE_CL_TEAMSSTATE) {
+		CNetMsg_Cl_TeamsState *pMsg = (CNetMsg_Cl_TeamsState *)pRawMsg;
+		m_Teams.Team(0, pMsg->m_Tee0);
+		m_Teams.Team(1, pMsg->m_Tee1);
+		m_Teams.Team(2, pMsg->m_Tee2);
+		m_Teams.Team(3, pMsg->m_Tee3);
+		m_Teams.Team(4, pMsg->m_Tee4);
+		m_Teams.Team(5, pMsg->m_Tee5);
+		m_Teams.Team(6, pMsg->m_Tee6);
+		m_Teams.Team(7, pMsg->m_Tee7);
+		m_Teams.Team(8, pMsg->m_Tee8);
+		m_Teams.Team(9, pMsg->m_Tee9);
+		m_Teams.Team(10, pMsg->m_Tee10);
+		m_Teams.Team(11, pMsg->m_Tee11);
+		m_Teams.Team(12, pMsg->m_Tee12);
+		m_Teams.Team(13, pMsg->m_Tee13);
+		m_Teams.Team(14, pMsg->m_Tee14);
+		m_Teams.Team(15, pMsg->m_Tee15);
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			char aBuf[512];
+			str_format(aBuf, sizeof(aBuf), "Team = %d", m_Teams.Team(i));
+			dbg_msg("Teams", aBuf);
+		}
 	}
 }
 
@@ -859,7 +886,7 @@ void CGameClient::OnPredict()
 			
 		g_GameClient.m_aClients[i].m_Predicted.Init(&World, Collision(), &m_Teams);
 		World.m_apCharacters[i] = &g_GameClient.m_aClients[i].m_Predicted;
-		World.m_apCharacters[i]->m_Id = m_Snap.m_LocalCid;
+		World.m_apCharacters[i]->m_Id = m_Snap.m_paPlayerInfos[i]->m_ClientId;
 		g_GameClient.m_aClients[i].m_Predicted.Read(&m_Snap.m_aCharacters[i].m_Cur);
 	}
 	

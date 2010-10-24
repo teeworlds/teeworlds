@@ -90,6 +90,9 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "Id = %d Team = %d", id, Team);
 	dbg_msg("Teams", aBuf);
+	if(Character(id) && Character(id)->GetPlayer()->m_IsUsingRaceClient) {
+		SendTeamsState(id);
+	}
 	//GameServer()->CreatePlayerSpawn(Character(id)->m_Core.m_Pos, TeamMask());
 	return true;
 }
@@ -140,4 +143,27 @@ int CGameTeams::TeamMask(int Team) {
 		}
 	}
 	return Mask;
+}
+
+void CGameTeams::SendTeamsState(int Cid) {
+	CNetMsg_Cl_TeamsState Msg;
+	Msg.m_Tee0 = m_Core.Team(0);
+	Msg.m_Tee1 = m_Core.Team(1);
+	Msg.m_Tee2 = m_Core.Team(2);
+	Msg.m_Tee3 = m_Core.Team(3);
+	Msg.m_Tee4 = m_Core.Team(4);
+	Msg.m_Tee5 = m_Core.Team(5);
+	Msg.m_Tee6 = m_Core.Team(6);
+	Msg.m_Tee7 = m_Core.Team(7);
+	Msg.m_Tee8 = m_Core.Team(8);
+	Msg.m_Tee9 = m_Core.Team(9);
+	Msg.m_Tee10 = m_Core.Team(10);
+	Msg.m_Tee11 = m_Core.Team(11);
+	Msg.m_Tee12 = m_Core.Team(12);
+	Msg.m_Tee13 = m_Core.Team(13);
+	Msg.m_Tee14 = m_Core.Team(14);
+	Msg.m_Tee15 = m_Core.Team(15);
+	
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, Cid);
+	
 }

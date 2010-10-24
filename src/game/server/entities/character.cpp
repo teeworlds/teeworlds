@@ -1279,21 +1279,13 @@ void CCharacter::Snap(int SnappingClient)
 		return;
 
 	CCharacter* SnapChar = GameServer()->GetPlayerChar(SnappingClient);
-	if
-	(
-			SnapChar &&
-			!SnapChar->m_Super &&
-			(
-					GameServer()->m_apPlayers[SnappingClient]->GetTeam() != -1 &&
-					SnapChar->Team() != Team() &&
-					Team() != TEAM_SUPER
-					) ||
-		(
-				GetPlayer()->m_Invisible &&
-				GetPlayer()->GetCID() != SnappingClient &&
-				GameServer()->m_apPlayers[SnappingClient]->m_Authed < GetPlayer()->m_Authed
-				)
-				)
+	if(SnapChar && !SnapChar->m_Super && 
+		GameServer()->m_apPlayers[SnappingClient]->GetTeam() != -1 &&
+		!CanCollide(SnappingClient) && !GameServer()->m_apPlayers[SnappingClient]->m_IsUsingRaceClient) return;
+	if(GetPlayer()->m_Invisible &&
+		GetPlayer()->GetCID() != SnappingClient &&
+		GameServer()->m_apPlayers[SnappingClient]->m_Authed < GetPlayer()->m_Authed
+	)
 		return;
 	CNetObj_Character *Character = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
 
