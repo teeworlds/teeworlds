@@ -144,4 +144,7 @@ MACRO_CONFIG_STR(SvRulesLine8, sv_rules_line8, 40, "", CFGFLAG_SERVER, "Rules li
 MACRO_CONFIG_STR(SvRulesLine9, sv_rules_line9, 40, "", CFGFLAG_SERVER, "Rules line 9", 4)
 MACRO_CONFIG_STR(SvRulesLine10, sv_rules_line10, 40, "", CFGFLAG_SERVER, "Rules line 10", 4)
 //MACRO_CONFIG_INT(SvReconnectTime, sv_reconnect_time,5,0,9999,CFGFLAG_SERVER, "The time in seconds between leaves and joins of clients with the same ip", 3)
+
+MACRO_CONFIG_INT(SvTeam, sv_team, 0, -1, 1, CFGFLAG_SERVER, "Teams configuration", 4)
+MACRO_CONFIG_INT(SvTeamStrict, sv_team_strict, 0, 0, 1, CFGFLAG_SERVER, "Kill or not all team if someone left game in team", 4)
 #endif
