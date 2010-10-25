@@ -540,8 +540,6 @@ void CClient::DisconnectWithReason(const char *pReason)
 	// stop demo playback and recorder
 	m_DemoPlayer.Stop();
 	m_DemoRecorder.Stop();
-	
-	g_Config.m_ClServerBrowser = 0;
 
 	//
 	m_RconAuthed = 0;
@@ -1723,9 +1721,6 @@ void CClient::Run()
 			g_Config.m_ClEditor = g_Config.m_ClEditor^1;
 			Input()->MouseModeRelative();
 		}
-		
-		if(Input()->KeyPressed(KEY_LCTRL) && Input()->KeyPressed(KEY_LSHIFT) && Input()->KeyDown('b'))
-			g_Config.m_ClServerBrowser ^= 1;
 
 		/*
 		if(!gfx_window_open())
