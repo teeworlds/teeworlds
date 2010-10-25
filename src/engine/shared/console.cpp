@@ -160,12 +160,61 @@ void CConsole::RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUse
 void CConsole::Print(int Level, const char *pFrom, const char *pStr)
 {
 	dbg_msg(pFrom ,"%s", pStr);
-	if (Level <= g_Config.m_ConsoleOutputLevel && m_pfnPrintCallback)
+	if(Level <= g_Config.m_ConsoleOutputLevel && m_pfnPrintCallback)
 	{
 		char aBuf[1024];
 		str_format(aBuf, sizeof(aBuf), "[%s]: %s", pFrom, pStr);
 		m_pfnPrintCallback(aBuf, m_pPrintCallbackUserdata);
 	}
+}
+
+bool CConsole::LineIsValid(const char *pStr)
+{
+	if(!pStr || *pStr == 0)
+		return false;
+	
+	do
+	{
+		CResult Result;
+		const char *pEnd = pStr;
+		const char *pNextPart = 0;
+		int InString = 0;
+		
+		while(*pEnd)
+		{
+			if(*pEnd == '"')
+				InString ^= 1;
+			else if(*pEnd == '\\') // escape sequences
+			{
+				if(pEnd[1] == '"')
+					pEnd++;
+			}
+			else if(!InString)
+			{
+				if(*pEnd == ';')  // command separator
+				{
+					pNextPart = pEnd+1;
+					break;
+				}
+				else if(*pEnd == '#')  // comment, no need to do anything more
+					break;
+			}
+			
+			pEnd++;
+		}
+		
+		if(ParseStart(&Result, pStr, (pEnd-pStr) + 1) != 0)
+			return false;
+
+		CCommand *pCommand = FindCommand(Result.m_pCommand, m_FlagMask);
+		if(!pCommand || ParseArgs(&Result, pCommand->m_pParams))
+			return false;
+		
+		pStr = pNextPart;
+	}
+	while(pStr && *pStr);
+
+	return true;
 }
 
 void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
