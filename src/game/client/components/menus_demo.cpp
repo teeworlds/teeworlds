@@ -370,7 +370,7 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(void *pId, bool Selected)
 					if(NewIndex > -1 && NewIndex < gs_ListBoxNumItems)
 					{
 						// scroll
-						float Offset = (NewIndex-gs_ListBoxNewSelected)*gs_ListBoxRowHeight;
+						float Offset = (NewIndex/gs_ListBoxItemsPerRow-gs_ListBoxNewSelected/gs_ListBoxItemsPerRow)*gs_ListBoxRowHeight;
 						int Scroll = gs_ListBoxOriginalView.y > Item.m_Rect.y+Offset ? -1 :
 										gs_ListBoxOriginalView.y+gs_ListBoxOriginalView.h < Item.m_Rect.y+Item.m_Rect.h+Offset ? 1 : 0;
 						if(Scroll)
@@ -379,13 +379,13 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(void *pId, bool Selected)
 							int ScrollNum = (gs_ListBoxNumItems+gs_ListBoxItemsPerRow-1)/gs_ListBoxItemsPerRow-NumViewable+1;
 							if(Scroll < 0)
 							{
-								int Num = (gs_ListBoxOriginalView.y-Item.m_Rect.y-Offset+gs_ListBoxRowHeight-1.0f)/(gs_ListBoxItemsPerRow*gs_ListBoxRowHeight);
+								int Num = (gs_ListBoxOriginalView.y-Item.m_Rect.y-Offset+gs_ListBoxRowHeight-1.0f)/gs_ListBoxRowHeight;
 								gs_ListBoxScrollValue -= (1.0f/ScrollNum)*Num;
 							}
 							else
 							{
 								int Num = (Item.m_Rect.y+Item.m_Rect.h+Offset-(gs_ListBoxOriginalView.y+gs_ListBoxOriginalView.h)+gs_ListBoxRowHeight-1.0f)/
-									(gs_ListBoxItemsPerRow*gs_ListBoxRowHeight);
+									gs_ListBoxRowHeight;
 								gs_ListBoxScrollValue += (1.0f/ScrollNum)*Num;
 							}
 							if(gs_ListBoxScrollValue < 0.0f) gs_ListBoxScrollValue = 0.0f;
