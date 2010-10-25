@@ -119,6 +119,7 @@ public:
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser);
 	virtual void StoreCommands(bool Store);
 	
+	virtual bool LineIsValid(const char *pStr);
 	virtual void ExecuteLine(const char *pStr);
 	virtual void ExecuteFile(const char *pFilename);
 
