@@ -757,6 +757,22 @@ void str_sanitize_cc(char *str);
 void str_sanitize(char *str);
 
 /*
+	Function: str_skip_to_whitespace
+		Skips leading non-whitespace characters(all but ' ', '\t', '\n', '\r').
+	
+	Parameters:
+		str - Pointer to the string.
+
+	Returns:
+		Pointer to the first whitespace character found
+		within the string.
+
+	Remarks:
+		- The strings are treated as zero-termineted strings.
+*/
+char *str_skip_to_whitespace(char *str);
+
+/*
 	Function: str_skip_whitespaces
 		Skips leading whitespace characters(' ', '\t', '\n', '\r').
 	

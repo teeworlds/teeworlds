@@ -29,12 +29,6 @@ float CConsole::CResult::GetFloat(unsigned Index)
 }
 
 // the maximum number of tokens occurs in a string of length CONSOLE_MAX_STR_LENGTH with tokens size 1 separated by single spaces
-static char *SkipToBlank(char *pStr)
-{
-	while(*pStr && (*pStr != ' ' && *pStr != '\t' && *pStr != '\n'))
-		pStr++;
-	return pStr;
-}
 
 
 int CConsole::ParseStart(CResult *pResult, const char *pString, int Length)
@@ -50,7 +44,7 @@ int CConsole::ParseStart(CResult *pResult, const char *pString, int Length)
 	// get command
 	pStr = str_skip_whitespaces(pStr);
 	pResult->m_pCommand = pStr;
-	pStr = SkipToBlank(pStr);
+	pStr = str_skip_to_whitespace(pStr);
 	
 	if(*pStr)
 	{
@@ -133,11 +127,11 @@ int CConsole::ParseArgs(CResult *pResult, const char *pFormat)
 				if(Command == 'r') // rest of the string
 					break;
 				else if(Command == 'i') // validate int
-					pStr = SkipToBlank(pStr);
+					pStr = str_skip_to_whitespace(pStr);
 				else if(Command == 'f') // validate float
-					pStr = SkipToBlank(pStr);
+					pStr = str_skip_to_whitespace(pStr);
 				else if(Command == 's') // validate string
-					pStr = SkipToBlank(pStr);
+					pStr = str_skip_to_whitespace(pStr);
 
 				if(pStr[0] != 0) // check for end of string
 				{
