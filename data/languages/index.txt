@@ -19,5 +19,8 @@ italian
 portuguese
 == Português
 
+serbian
+== Srpski
+
 swedish
 == Svenska
