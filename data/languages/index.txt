@@ -1,6 +1,9 @@
 
 ##### language indices #####
 
+bosnian
+== Bosanski
+
 czech
 == Česky
 
