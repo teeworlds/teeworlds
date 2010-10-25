@@ -29,12 +29,6 @@ float CConsole::CResult::GetFloat(unsigned Index)
 }
 
 // the maximum number of tokens occurs in a string of length CONSOLE_MAX_STR_LENGTH with tokens size 1 separated by single spaces
-static char *SkipToBlank(char *pStr)
-{
-	while(*pStr && (*pStr != ' ' && *pStr != '\t' && *pStr != '\n'))
-		pStr++;
-	return pStr;
-}
 
 
 int CConsole::ParseStart(CResult *pResult, const char *pString, int Length)
@@ -50,7 +44,7 @@ int CConsole::ParseStart(CResult *pResult, const char *pString, int Length)
 	// get command
 	pStr = str_skip_whitespaces(pStr);
 	pResult->m_pCommand = pStr;
-	pStr = SkipToBlank(pStr);
+	pStr = str_skip_to_whitespace(pStr);
 	
 	if(*pStr)
 	{
@@ -133,11 +127,11 @@ int CConsole::ParseArgs(CResult *pResult, const char *pFormat)
 				if(Command == 'r') // rest of the string
 					break;
 				else if(Command == 'i') // validate int
-					pStr = SkipToBlank(pStr);
+					pStr = str_skip_to_whitespace(pStr);
 				else if(Command == 'f') // validate float
-					pStr = SkipToBlank(pStr);
+					pStr = str_skip_to_whitespace(pStr);
 				else if(Command == 's') // validate string
-					pStr = SkipToBlank(pStr);
+					pStr = str_skip_to_whitespace(pStr);
 
 				if(pStr[0] != 0) // check for end of string
 				{
@@ -177,7 +171,7 @@ void CConsole::ReleaseAlternativePrintCallback()
 void CConsole::Print(int Level, const char *pFrom, const char *pStr)
 {
 	dbg_msg(pFrom ,"%s", pStr);
-	if (Level <= g_Config.m_ConsoleOutputLevel && m_pfnPrintCallback)
+	if(Level <= g_Config.m_ConsoleOutputLevel && m_pfnPrintCallback)
 	{
 		char aBuf[1024];
 		str_format(aBuf, sizeof(aBuf), "[%s]: %s", pFrom, pStr);
@@ -186,6 +180,55 @@ void CConsole::Print(int Level, const char *pFrom, const char *pStr)
   	else
   	  m_pfnAlternativePrintCallback(aBuf, m_pAlternativePrintCallbackUserdata);
 	}
+}
+
+bool CConsole::LineIsValid(const char *pStr)
+{
+	if(!pStr || *pStr == 0)
+		return false;
+	
+	do
+	{
+		CResult Result;
+		const char *pEnd = pStr;
+		const char *pNextPart = 0;
+		int InString = 0;
+		
+		while(*pEnd)
+		{
+			if(*pEnd == '"')
+				InString ^= 1;
+			else if(*pEnd == '\\') // escape sequences
+			{
+				if(pEnd[1] == '"')
+					pEnd++;
+			}
+			else if(!InString)
+			{
+				if(*pEnd == ';')  // command separator
+				{
+					pNextPart = pEnd+1;
+					break;
+				}
+				else if(*pEnd == '#')  // comment, no need to do anything more
+					break;
+			}
+			
+			pEnd++;
+		}
+		
+		if(ParseStart(&Result, pStr, (pEnd-pStr) + 1) != 0)
+			return false;
+
+		CCommand *pCommand = FindCommand(Result.m_pCommand, m_FlagMask);
+		if(!pCommand || ParseArgs(&Result, pCommand->m_pParams))
+			return false;
+		
+		pStr = pNextPart;
+	}
+	while(pStr && *pStr);
+
+	return true;
 }
 
 void CConsole::RegisterPrintResponseCallback(FPrintCallback pfnPrintResponseCallback, void *pUserData)

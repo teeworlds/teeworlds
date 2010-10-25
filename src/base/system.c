@@ -1146,6 +1146,13 @@ void str_sanitize(char *str_in)
 	}
 }
 
+char *str_skip_to_whitespace(char *str)
+{
+	while(*str && (*str != ' ' && *str != '\t' && *str != '\n'))
+		str++;
+	return str;
+}
+
 char *str_skip_whitespaces(char *str)
 {
 	while(*str && (*str == ' ' || *str == '\t' || *str == '\n' || *str == '\r'))

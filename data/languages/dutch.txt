@@ -307,7 +307,7 @@ Refresh
 
 Refreshing master servers
 == Hoofdserver vernieuwen
- 
+
 Remote console
 == Remote console
 
