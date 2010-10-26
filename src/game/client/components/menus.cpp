@@ -149,6 +149,18 @@ int CMenus::DoButton_MenuTab(const void *pID, const char *pText, int Checked, co
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
 
+int CMenus::DoButton_ListRow(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
+{
+	if(Checked)
+	{
+		CUIRect sr = *pRect;
+		sr.Margin(1.5f, &sr);
+		RenderTools()->DrawUIRect(&sr, vec4(1,1,1,0.5f), CUI::CORNER_ALL, 4.0f);
+	}
+	UI()->DoLabel(pRect, pText, pRect->h*ms_FontmodHeight, -1);
+	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
+}
+
 int CMenus::DoButton_GridHeader(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
 //void CMenus::ui_draw_grid_header(const void *id, const char *text, int checked, const CUIRect *r, const void *extra)
 {
