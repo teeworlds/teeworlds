@@ -1,14 +1,8 @@
-This is a mod DDRace for the game Teeworlds Trunk 0.5
+This is a mod (DDRace) and it's for the game Teeworlds and it's being maintained by GreYFoX@GTi & btd with the help of others like heinrich5991 & 3da, in the previous versions Floff, noother and Fluxid.
 
-and now DDRace is being maintained by GreYFoX@GTi & btd
-with the help of others like Floff, noother and Fluxid.
+DDRace has been rebuilt from scratch by btd based on DDRace-Beta to Teeworlds Trunk 0.5, GreYFoX@GTi helped re-adding features once it was Trunk, you can track this in the commit log.
 
-and now DDRace is rebuilt from scratch by btd based on DDRace-Beta
-
-to keep uptodate with teeworlds trunk
-
-
-Teeworlds is as follow:
+Teeworlds README is as follows:
 Copyright (c) 2010 Magnus Auvinen
 
 

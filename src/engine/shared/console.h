@@ -129,6 +129,7 @@ public:
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser);
 	virtual void StoreCommands(bool Store, int ClientId);
 	
+	virtual bool LineIsValid(const char *pStr);
 	virtual void ExecuteLine(const char *pStr, const int ClientLevel, const int ClientId, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0);
 	virtual void ExecuteFile(const char *pFilename, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0);
 

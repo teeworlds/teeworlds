@@ -1,0 +1,792 @@
+##### translated strings #####
+
+%d of %d servers, %d players
+== %d od %d server(a), %d igrač(a)
+
+Abort
+== Prekini
+
+Address
+== Adresa
+
+All
+== Svi
+
+Alpha
+== Provid.
+
+Always show name plates
+== Uvijek prikaži imena igrača
+
+Are you sure that you want to quit?
+== Jeste li sigurni da želite izići?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Pošto prvi put pokrećete igru, molimo da ispod unesete Vaš nadimak (nick). Preporučujemo da provjerite postavke i podesite ih prema Vašem ukusu prije nego se konektujete na server.
+
+Blue team
+== Plavi tim
+
+Blue team wins!
+== Plavi tim je pobijedio!
+
+Body
+== Tijelo
+
+Call vote
+== Glasanje
+
+Chat
+== Chat
+
+Close
+== Zatvori
+
+Compatible version
+== Kompatibilna verzija
+
+Connect
+== Konektuj
+
+Connecting to
+== Konektujem na
+
+Console
+== Konzola
+
+Controls
+== Kontrole
+
+Current
+== Current
+
+Current version: %s
+== Trenutna verzija: %s
+
+Custom colors
+== Vlastite boje
+
+Demos
+== Demo
+
+Disconnect
+== Diskonektuj
+
+Disconnected
+== Diskonektovan
+
+Display Modes
+== Rezolucija i način prikaza
+
+Downloading map
+== Preuzimam mapu
+
+Draw!
+== Neriješeno!
+
+Dynamic Camera
+== Dinamička kamera
+
+Emoticon
+== Emoticon
+
+Enter
+== Započni
+
+FSAA samples
+== FSAA samples
+
+Favorite
+== Omiljeni
+
+Favorites
+== Omiljeni
+
+Feet
+== Stopala
+
+Filter
+== Filter
+
+Fire
+== Pucanje
+
+Force vote
+== Obavezno glasanje
+
+Fullscreen
+== Čitav ekran
+
+Game
+== Igra
+
+Game info
+== O igri
+
+Game over
+== Igra je završena
+
+Game type
+== Tip igre
+
+Game types:
+== Tipovi igre:
+
+General
+== Opće
+
+Graphics
+== Grafika
+
+Grenade
+== Granate
+
+Hammer
+== Čekić
+
+Has people playing
+== Server nije prazan
+
+High Detail
+== Visoki detalji
+
+Hook
+== Lanac
+
+Host address
+== Adresa servera
+
+Hue
+== Nijans.
+
+Info
+== Info
+
+Internet
+== Internet
+
+Join blue
+== U plavi tim
+
+Join game
+== Uključi se u igru
+
+Join red
+== U crveni tim
+
+Jump
+== Skok
+
+Kick
+== Izbaci
+
+LAN
+== LAN
+
+Language
+== Jezik
+
+Lht.
+== Svjetl.
+
+Loading
+== Učitavam
+
+MOTD
+== Vijest dana
+
+Map
+== Mapa
+
+Maximum ping:
+== Maksimalan ping:
+
+Miscellaneous
+== Razno
+
+Mouse sens.
+== Osjetljivost miša
+
+Move left
+== Nalijevo
+
+Move right
+== Nadesno
+
+Movement
+== Kretanje
+
+Mute when not active
+== Bez zvuka prilikom neaktivnosti
+
+Name
+== Ime
+
+News
+== Novosti
+
+Next weapon
+== Sljedeće oružje
+
+Nickname
+== Nadimak
+
+No
+== Ne
+
+No password
+== Bez lozinke
+
+No servers found
+== Nije pronađen nijedan server
+
+No servers match your filter criteria
+== Nijedan server ne odgovara zadatom kriteriju
+
+Ok
+== OK
+
+Password
+== Lozinka
+
+Password Incorrect
+== Pogrešna lozinka
+
+Ping
+== Ping
+
+Pistol
+== Pištolj
+
+Play
+== Pokreni
+
+Player
+== Igrač
+
+Players
+== Igrači
+
+Prev. weapon
+== Prethodno oružje
+
+Quality Textures
+== Visokokvalitetne teksture
+
+Quick search:
+== Brza pretraga:
+
+Quit
+== Izlaz
+
+Red team
+== Crveni tim
+
+Red team wins!
+== Crveni tim je pobijedio!
+
+Refresh
+== Osvježi
+
+Refreshing master servers
+== Osvježavam glavne servere
+
+Remote console
+== Udaljena konzola
+
+Reset filter
+== Poništi filter
+
+Reset to defaults
+== Vrati na početne postavke
+
+Rifle
+== Laser
+
+Round
+== Runda
+
+Sample rate
+== Frekvencija
+
+Sat.
+== Zasić.
+
+Score
+== Rezultat
+
+Score board
+== Bodovi
+
+Score limit
+== Max. bodova
+
+Scoreboard
+== Bodovi
+
+Screenshot
+== Screenshot
+
+Server details
+== Podaci o serveru
+
+Server info
+== O Serveru
+
+Server not full
+== Server nije pun
+
+Settings
+== Postavke
+
+Shotgun
+== Pumparica
+
+Show chat
+== Prikaži chat
+
+Show name plates
+== Prikaži imena igrača
+
+Show only supported
+== Prikaži samo podržane
+
+Skins
+== Izgled
+
+Sound
+== Zvuk
+
+Sound volume
+== Jačina zvuka
+
+Spectate
+== Posmatraj
+
+Spectators
+== Posmatrači
+
+Standard gametype
+== Standardni tip igre
+
+Standard map
+== Standardna mapa
+
+Switch weapon on pickup
+== Aktiviraj novo oružje prilikom uzimanja
+
+Team
+== Tim
+
+Team chat
+== Timski chat
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworld %s je objavljen! Preuzmi ga na www.teeworlds.com!
+
+Texture Compression
+== Kompresija tekstura
+
+The server is running a non-standard tuning on a pure game type.
+== Server sadrži nestandardne postavke.
+
+Time limit
+== Max. vremena
+
+Try again
+== Pokušaj ponovo
+
+Type
+== Tip
+
+UI Color
+== Boja menija
+
+Use sounds
+== Aktiviraj zvuk
+
+V-Sync
+== V-Sync
+
+Version
+== Verzija
+
+Vote no
+== Ne
+
+Vote yes
+== Da
+
+Voting
+== Glasanje
+
+Weapon
+== Oružje
+
+Welcome to Teeworlds
+== Dobrodošli u Teeworlds
+
+Yes
+== Da
+
+You must restart the game for all settings to take effect.
+== Morate ponovo pokrenuti igru da bi sve postavke bile primijenjene.
+
+Your skin
+== Vaš izgled
+
+Password incorrect
+== Pogrešna lozinka
+
+Please balance teams!
+== Molim uravnotežite timove!
+
+Connection Problems...
+== Problemi sa konekcijom...
+
+Warmup
+== Zagrijavanje
+
+Sudden Death
+== Iznenadna smrt
+
+%ds left
+== Još %ds
+
+error loading demo
+== Greška prilikom učitavanja demo-snimka
+
+Error
+== Greška
+
+Open map
+== Open map
+
+Open
+== Open
+
+Save map
+== Save map
+
+Save
+== Save
+
+HD
+== HD
+
+[ctrl+h] Toggle High Detail
+== [ctrl+h] Toggle High Detail
+
+Anim
+== Anim
+
+[ctrl+m] Toggle animation
+== [ctrl+m] Toggle animation
+
+Proof
+== Proof
+
+[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+
+ZO
+== ZO
+
+[NumPad-] Zoom out
+== [NumPad-] Zoom out
+
+[NumPad*] Zoom to normal and remove editor offset
+== [NumPad*] Zoom to normal and remove editor offset
+
+ZI
+== ZI
+
+[NumPad+] Zoom in
+== [NumPad+] Zoom in
+
+Increase animation speed
+== Increase animation speed
+
+Normal animation speed
+== Normal animation speed
+
+Decrease animation speed
+== Decrease animation speed
+
+[N] Flip brush horizontal
+== [N] Flip brush horizontal
+
+[M] Flip brush vertical
+== [M] Flip brush vertical
+
+CCW
+== CCW
+
+[R] Rotates the brush counter clockwise
+== [R] Rotates the brush counter clockwise
+
+CW
+== CW
+
+[T] Rotates the brush clockwise
+== [T] CW
+
+Add Quad
+== Add Quad
+
+Adds a new quad
+== Adds a new quad
+
+Border
+== Border
+
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+
+Left mouse button to move. Hold shift to move the texture.
+== Left mouse button to move. Hold shift to move the texture.
+
+Use left mouse button to drag and create a brush.
+== Use left mouse button to drag and create a brush.
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== Use left mouse button to paint with the brush. Right button clears the brush.
+
+Decrease
+== Decrease
+
+Increase
+== Increase
+
+None
+== None
+
+Toggle group visibility
+== Toggle group visibility
+
+Select group. Right click for properties.
+== Select group. Right click for properties.
+
+Select layer. Right click for properties.
+== Select layer. Right click for properties.
+
+Add group
+== Add group
+
+Adds a new group
+== Add group
+
+Embed
+== Embed
+
+Embeds the image into the map file.
+== Embeds the image into the map file.
+
+Make external
+== Make external
+
+Removes the image from the map file.
+== Removes the image from the map file.
+
+Replace
+== Replace
+
+Replaces the image with a new one
+== Replaces the image with a new one
+
+Replace Image
+== Replace Image
+
+Remove
+== Remove
+
+Removes the image from the map
+== Removes the image from the map
+
+Embedded
+== Embedded
+
+External
+== External
+
+Select image
+== Select image
+
+Load a new image to use in the map
+== Load a new image to use in the map
+
+Add Image
+== Add Image
+
+Add
+== Add
+
+Filename:
+== Filename:
+
+Cancel
+== Cancel
+
+Layers
+== Layers
+
+Images
+== Images
+
+Switch between images and layers managment.
+== Switch between images and layers managment.
+
+Envelopes
+== Envelopes
+
+Toggles the envelope editor.
+== Toggles the envelope editor.
+
+%s Right click for context menu.
+== %s Right click for context menu.
+
+Color+
+== Color+
+
+Creates a new color envelope
+== Creates a new color envelope
+
+Pos.+
+== Pos.+
+
+Creates a new pos envelope
+== Creates a new pos envelope
+
+Previous Envelope
+== Previous Envelope
+
+Next Envelope
+== Next Envelope
+
+Name:
+== Name:
+
+Press right mouse button to create a new point
+== Press right mouse button to create a new point
+
+Switch curve type
+== Switch curve type
+
+Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
+== Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
+
+New
+== New
+
+Creates a new map
+== Creates a new map
+
+Opens a map for editing
+== Opens a map for editing
+
+Append
+== Append
+
+Opens a map and adds everything from that map to the current one
+== Opens a map and adds everything from that map to the current one
+
+Append map
+== Append map
+
+Saves the current map
+== Saves the current map
+
+Save As
+== Save As
+
+Saves the current map under a new name
+== Saves the current map under a new name
+
+Exits from the editor
+== Exits from the editor
+
+Clear collision
+== Clear collision
+
+Removes collision from this layer
+== Removes collision from this layer
+
+Make collision
+== Make collision
+
+Constructs collision from this layer
+== Constructs collision from this layer
+
+Width
+== Width
+
+Height
+== Height
+
+Image
+== Image
+
+Delete group
+== Delete group
+
+Add quads layer
+== Add quads layer
+
+Creates a new quad layer
+== Creates a new quad layer
+
+Add tile layer
+== Add tile layer
+
+Creates a new tile layer
+== Creates a new tile layer
+
+Delete layer
+== Delete layer
+
+Deletes the layer
+== Deletes the layer
+
+Group
+== Group
+
+Order
+== Order
+
+Detail
+== Detail
+
+Delete
+== Obriši
+
+Deletes the current quad
+== Deletes the current quad
+
+Square
+== Square
+
+Squares the current quad
+== Squares the current quad
+
+Pos. Env
+== Pos. Env
+
+Pos. TO
+== Pos. TO
+
+Color Env
+== Color Env
+
+Color TO
+== Color TO
+
+Toggle layer visibility
+== Toggle layer visibility
+
+File
+== File
+
+##### needs translation ####
+
+
+##### old translations ####

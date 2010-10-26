@@ -36,7 +36,6 @@ class CMenus : public CComponent
 	int DoButton_DemoPlayer_Sprite(const void *pID, int SpriteId, int Checked, const CUIRect *pRect);
 	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 	int DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners);
-	int DoButton_SettingsTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 
 	int DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect);
 	int DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
@@ -50,7 +49,6 @@ class CMenus : public CComponent
 
 	int DoButton_BrowseIcon(int Checked, const CUIRect *pRect);
 	int DoButton_GridHeader(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
-	int DoButton_ListRow(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 
 	//static void ui_draw_browse_icon(int what, const CUIRect *r);
 	//static void ui_draw_grid_header(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);

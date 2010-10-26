@@ -369,6 +369,18 @@ int CNetServer::Recv(CNetChunk *pChunk)
 									m_pfnNewClient(i, m_UserPtr);
 								break;
 							}
+							else
+							{
+								if (m_aSlots[i].m_Fagpings) {
+									dbg_msg("netsrv","dropping a fag (id %i, state %i)\n",i,m_aSlots[i].m_Connection.State());
+									Drop(i,"GTFO");
+									m_aSlots[i].m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr);
+									if(m_pfnNewClient)
+										m_pfnNewClient(i, m_UserPtr);
+									Found=1;
+									break;
+								}
+							}
 						}
 						
 						if(!Found)

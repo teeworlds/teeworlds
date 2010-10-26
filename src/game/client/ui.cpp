@@ -308,21 +308,21 @@ int CUI::DoButton(const void *id, const char *text, int checked, const CUIRect *
     return ret;
 }*/
 
-void CUI::DoLabel(const CUIRect *r, const char *pText, float size, int Align, int MaxWidth)
+void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, int Align, int MaxWidth)
 {
 	// TODO: FIX ME!!!!
     //Graphics()->BlendNormal();
-    size *= Scale();
+    Size *= Scale();
     if(Align == 0)
     {
-    	float tw = TextRender()->TextWidth(0, size, pText, MaxWidth);
-    	TextRender()->Text(0, r->x + r->w/2-tw/2, r->y - size/10, size, pText, MaxWidth);
+    	float tw = TextRender()->TextWidth(0, Size, pText, MaxWidth);
+    	TextRender()->Text(0, r->x + r->w/2-tw/2, r->y - Size/10, Size, pText, MaxWidth);
 	}
 	else if(Align < 0)
-    	TextRender()->Text(0, r->x, r->y - size/10, size, pText, MaxWidth);
+    	TextRender()->Text(0, r->x, r->y - Size/10, Size, pText, MaxWidth);
 	else if(Align > 0)
 	{
-    	float tw = TextRender()->TextWidth(0, size, pText, MaxWidth);
-    	TextRender()->Text(0, r->x + r->w-tw, r->y - size/10, size, pText, MaxWidth);
+    	float tw = TextRender()->TextWidth(0, Size, pText, MaxWidth);
+    	TextRender()->Text(0, r->x + r->w-tw, r->y - Size/10, Size, pText, MaxWidth);
 	}
 }

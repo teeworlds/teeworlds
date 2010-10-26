@@ -147,6 +147,22 @@ function build(settings)
    		if platform == "macosx" then
 			settings.link.frameworks:Add("Carbon")
 			settings.link.frameworks:Add("AppKit")
+			settings.cc.includes:Add("other/mysql/mac/include")
+			settings.cc.includes:Add("other/mysql/mac/include/cppconn") -- this next part has to be wrong but i don't know how else to do it any way it will end up taking ppc 32 bit
+			if arch == "ppc" then
+				if arch == "amd64" then
+					settings.link.libpath:Add("other/mysql/mac/libppc64")
+				else
+					settings.link.libpath:Add("other/mysql/mac/libppc32")
+				end
+			else
+				if arch == "amd64" then
+					settings.link.libpath:Add("other/mysql/mac/lib64")
+				else
+					settings.link.libpath:Add("other/mysql/mac/lib32")
+				end
+			end
+			settings.link.libs:Add("mysqlcppconn-static")
 		else
 			settings.link.libs:Add("pthread")
 			settings.cc.includes:Add("other/mysql/include")

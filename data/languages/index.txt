@@ -1,6 +1,9 @@
 
 ##### language indices #####
 
+bosnian
+== Bosanski
+
 czech
 == Česky
 
@@ -18,6 +21,9 @@ italian
 
 portuguese
 == Português
+
+serbian
+== Srpski
 
 swedish
 == Svenska
