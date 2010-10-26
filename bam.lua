@@ -16,7 +16,7 @@ config:Finalize("config.lua")
 -- data compiler
 function Script(name)
 	if family == "windows" then
-		str_replace(name, "/", "\\") 
+		return str_replace(name, "/", "\\") 
 	end
 	return "python " .. name
 end

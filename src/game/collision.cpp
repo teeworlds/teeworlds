@@ -76,7 +76,7 @@ void CCollision::Init(class CLayers *pLayers)
 				}
 
 				// DDRace tiles
-				if(Index == TILE_THROUGH || Index >= TILE_FREEZE && Index<=TILE_BOOSTS || Index >= TILE_TELEIN && Index<=TILE_STOPA || Index >= TILE_CP_D && Index<=TILE_NPH)
+				if(Index == TILE_THROUGH || (Index >= TILE_FREEZE && Index<=TILE_BOOSTS) || (Index >= TILE_TELEIN && Index<=TILE_STOPA) || (Index >= TILE_CP_D && Index<=TILE_NPH))
 					m_pFront[i].m_Index = Index;
 			}
 	}
@@ -119,7 +119,7 @@ int CCollision::GetPureMapIndex(vec2 Pos)
 	return ny*m_Width+nx;
 }
 
-std::list<int> CCollision::GetMapIndices(vec2 PrevPos, vec2 Pos, int MaxIndices)
+std::list<int> CCollision::GetMapIndices(vec2 PrevPos, vec2 Pos, unsigned MaxIndices)
 {
 	std::list< int > Indices;
 	float d = distance(PrevPos, Pos);
@@ -574,7 +574,7 @@ int CCollision::IsThrough(int x, int y)
 	int nx = clamp(x/32, 0, m_Width-1);
 	int ny = clamp(y/32, 0, m_Height-1);
 	int Index = m_pTiles[ny*m_Width+nx].m_Index;
-	int Findex;
+	int Findex = 0;
 	if (m_pFront)
 		Findex = m_pFront[ny*m_Width+nx].m_Index;
 	if (Index == TILE_THROUGH)
