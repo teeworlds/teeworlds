@@ -79,7 +79,8 @@ void CPlasma::Snap(int SnappingClient)
 	if(NetworkClipped(SnappingClient))
 		return;
 	CCharacter* SnapChar = GameServer()->GetPlayerChar(SnappingClient);
-	if(!SnapChar || (SnapChar->Team() != m_ResponsibleTeam)) return;
+	if(!SnapChar) return;
+	if((SnapChar->Team() != m_ResponsibleTeam) && !SnapChar->GetPlayer()->m_IsUsingRaceClient) return;
 	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_Id, sizeof(CNetObj_Laser)));
 	pObj->m_X = (int)m_Pos.x;
 	pObj->m_Y = (int)m_Pos.y;
