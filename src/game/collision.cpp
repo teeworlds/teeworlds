@@ -33,6 +33,11 @@ void CCollision::Dest()
 
 void CCollision::Init(class CLayers *pLayers)
 {
+	if(m_pDoor)
+	{
+		delete m_pDoor;
+		m_pDoor = 0;
+	}
 	m_pLayers = pLayers;
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
