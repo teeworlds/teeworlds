@@ -298,7 +298,7 @@ void CCollision::SetDCollisionAt(float x, float y, int Flag, int Team)
 
 int CCollision::GetDTileIndex(int Index,int Team)
 {
-	if(!m_pDoor || !m_pDoor[Index].m_Index || ((Team < 0 || Team > (MAX_CLIENTS - 1)) && Team !=99))
+	if(!m_pDoor || Index < 0 || !m_pDoor[Index].m_Index || ((Team < 0 || Team > (MAX_CLIENTS - 1)) && Team !=99))
 		return 0;
 
 	if(m_pDoor[Index].m_Team[Team])
