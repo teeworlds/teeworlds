@@ -228,6 +228,9 @@ int CHuffman::Decompress(const void *pInput, int InputSize, void *pOutput, int O
 		// {C} load symbol now if we didn't that earlier at location {A}
 		if(!pNode)
 			pNode = m_apDecodeLut[Bits&HUFFMAN_LUTMASK];
+		
+		if(!pNode)
+			return -1;
 
 		// {D} check if we hit a symbol already
 		if(pNode->m_NumBits)
