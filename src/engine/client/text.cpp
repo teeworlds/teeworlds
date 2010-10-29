@@ -247,9 +247,9 @@ class CTextRender : public IEngineTextRender
 			m_FontTextureFormat, GL_UNSIGNED_BYTE, pData);
 	}
 
-	// 8k of data used for rendering glyphs
-	unsigned char ms_aGlyphData[(4096/64) * (4096/64)];
-	unsigned char ms_aGlyphDataOutlined[(4096/64) * (4096/64)];
+	// 32k of data used for rendering glyphs
+	unsigned char ms_aGlyphData[(1024/8) * (1024/8)];
+	unsigned char ms_aGlyphDataOutlined[(1024/8) * (1024/8)];
 
 	int GetSlot(CFontSizeData *pSizeData)
 	{
