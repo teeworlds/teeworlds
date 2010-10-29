@@ -150,7 +150,8 @@ void CInput::Update()
 			{
 				// handle keys
 				case SDL_KEYDOWN:
-					if(Event.key.keysym.unicode < 255)	// ignore_convention
+					// skip private use area of the BMP(contains the unicodes for keyboard function keys on MacOS)
+					if(Event.key.keysym.unicode < 0xE000 || Event.key.keysym.unicode > 0xF8FF)	// ignore_convention
 						AddEvent(Event.key.keysym.unicode, 0, 0); // ignore_convention
                     Key = Event.key.keysym.sym;  // ignore_convention
 					break;
