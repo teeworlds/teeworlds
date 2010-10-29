@@ -110,6 +110,7 @@ class CMenus : public CComponent
 		PAGE_DEMOS,
 		PAGE_SETTINGS,
 		PAGE_SYSTEM,
+		PAGE_BROWSER
 	};
 
 	int m_GamePage;
@@ -196,6 +197,7 @@ class CMenus : public CComponent
 	void RenderServerControl(CUIRect MainView);
 	void RenderServerControlKick(CUIRect MainView);
 	void RenderServerControlServer(CUIRect MainView);
+	void RenderInGameBrowser(CUIRect MainView);
 	
 	// found in menus_browser.cpp
 	int m_SelectedIndex;

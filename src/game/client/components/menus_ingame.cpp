@@ -116,7 +116,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	votearea.HSplitTop(10.0f, 0, &votearea);
 	votearea.HSplitTop(25.0f + 10.0f*3 + 25.0f, &votearea, &bars);
 
-	RenderTools()->DrawUIRect(&votearea, color_tabbar_active, CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&votearea, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
 
 	votearea.VMargin(20.0f, &votearea);
 	votearea.HMargin(10.0f, &votearea);
@@ -463,3 +463,59 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	}		
 }
 
+void CMenus::RenderInGameBrowser(CUIRect MainView)
+{
+	CUIRect Box = MainView;
+	CUIRect Button;
+
+	static int PrevPage = g_Config.m_UiPage;
+	static int LastServersPage = g_Config.m_UiPage;
+	int ActivePage = g_Config.m_UiPage;
+	int NewPage = -1;
+
+	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
+
+	Box.HSplitTop(5.0f, &MainView, &MainView);
+	Box.HSplitTop(24.0f, &Box, &MainView);
+	Box.VMargin(20.0f, &Box);
+
+	Box.VSplitLeft(100.0f, &Button, &Box);
+	static int s_InternetButton=0;
+	if(DoButton_MenuTab(&s_InternetButton, Localize("Internet"), ActivePage==PAGE_INTERNET, &Button, CUI::CORNER_TL))
+	{
+		if (PrevPage != PAGE_SETTINGS || LastServersPage != PAGE_INTERNET) ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
+		LastServersPage = PAGE_INTERNET;
+		NewPage = PAGE_INTERNET;
+	}
+
+	//Box.VSplitLeft(4.0f, 0, &Box);
+	Box.VSplitLeft(80.0f, &Button, &Box);
+	static int s_LanButton=0;
+	if(DoButton_MenuTab(&s_LanButton, Localize("LAN"), ActivePage==PAGE_LAN, &Button, 0))
+	{
+		if (PrevPage != PAGE_SETTINGS || LastServersPage != PAGE_LAN) ServerBrowser()->Refresh(IServerBrowser::TYPE_LAN);
+		LastServersPage = PAGE_LAN;
+		NewPage = PAGE_LAN;
+	}
+
+	//box.VSplitLeft(4.0f, 0, &box);
+	Box.VSplitLeft(110.0f, &Button, &Box);
+	static int s_FavoritesButton=0;
+	if(DoButton_MenuTab(&s_FavoritesButton, Localize("Favorites"), ActivePage==PAGE_FAVORITES, &Button, CUI::CORNER_TR))
+	{
+		if (PrevPage != PAGE_SETTINGS || LastServersPage != PAGE_FAVORITES) ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);
+		LastServersPage = PAGE_FAVORITES;
+		NewPage  = PAGE_FAVORITES;
+	}
+
+	if(NewPage != -1)
+	{
+		if(Client()->State() != IClient::STATE_OFFLINE)
+			g_Config.m_UiPage = NewPage;
+	}
+
+	PrevPage = g_Config.m_UiPage;
+
+	RenderServerbrowser(MainView);
+	return;
+}

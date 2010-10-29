@@ -594,7 +594,13 @@ int CMenus::RenderMenubar(CUIRect r)
 		static int s_CallVoteButton=0;
 		if(DoButton_MenuTab(&s_CallVoteButton, Localize("Call vote"), m_ActivePage==PAGE_CALLVOTE, &Button, CUI::CORNER_T))
 			NewPage = PAGE_CALLVOTE;
-			
+
+		Box.VSplitLeft(4.0f, 0, &Box);
+		Box.VSplitLeft(min(100.0f, Box.x - 80.0f - 10.0f - 80.0f - 4.0f), &Button, &Box);
+		static int s_BrowserButton=0;
+		if (DoButton_MenuTab(&s_BrowserButton, Localize("Browser"), m_ActivePage==PAGE_BROWSER, &Button, CUI::CORNER_T))
+			NewPage = PAGE_BROWSER;
+
 		Box.VSplitLeft(30.0f, 0, &Box);
 	}
 		
@@ -812,6 +818,8 @@ int CMenus::Render()
 				RenderServerInfo(MainView);
 			else if(m_GamePage == PAGE_CALLVOTE)
 				RenderServerControl(MainView);
+			else if(m_GamePage == PAGE_BROWSER)
+				RenderInGameBrowser(MainView);
 			else if(m_GamePage == PAGE_SETTINGS)
 				RenderSettings(MainView);
 		}
@@ -1152,10 +1160,10 @@ void CMenus::OnRender()
 
 	CTextCursor cursor;
 	TextRender()->SetCursor(&cursor, 10, 10, 20, TEXTFLAG_RENDER);
-	TextRender()->TextEx(&cursor, "ようこそ - ガイド", -1);
+	TextRender()->TextEx(&cursor, "ã‚ˆã�†ã�“ã�� - ã‚¬ã‚¤ãƒ‰", -1);
 
 	TextRender()->SetCursor(&cursor, 10, 30, 15, TEXTFLAG_RENDER);
-	TextRender()->TextEx(&cursor, "ようこそ - ガイド", -1);
+	TextRender()->TextEx(&cursor, "ã‚ˆã�†ã�“ã�� - ã‚¬ã‚¤ãƒ‰", -1);
 	
 	//Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
