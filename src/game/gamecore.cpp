@@ -290,7 +290,7 @@ void CCharacterCore::Tick(bool UseInput)
 			if(p/*&&*/)
 			{
 				//CCharacter* pl = GameServer()->m_apPlayers[m_HookedPlayer]->GetCharacter();
-				//if (pl->m_RaceState != RACE_PAUSE)
+				//if (pl->m_DDRaceState != DDRACE_PAUSE)
 					m_HookPos = p->m_Pos;
 			}
 			else

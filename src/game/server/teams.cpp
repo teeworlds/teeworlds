@@ -17,7 +17,7 @@ void CGameTeams::OnCharacterStart(int id) {
 	int Tick = Server()->Tick();
 	if(m_Core.Team(id) == TEAM_FLOCK || m_Core.Team(id) == TEAM_SUPER) {
 		CCharacter* Char = Character(id);
-		Char->m_RaceState = RACE_STARTED;
+		Char->m_DDRaceState = DDRACE_STARTED;
 		Char->m_StartTime = Tick;
 		Char->m_RefreshTime = Tick;
 	} else {
@@ -28,7 +28,7 @@ void CGameTeams::OnCharacterStart(int id) {
 				if(m_Core.Team(id) == m_Core.Team(i)) {
 					CCharacter* Char = Character(i);
 
-					Char->m_RaceState = RACE_STARTED;
+					Char->m_DDRaceState = DDRACE_STARTED;
 					Char->m_StartTime = Tick;
 					Char->m_RefreshTime = Tick;
 				}
@@ -76,7 +76,7 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 	//You cannot be in TEAM_SUPER if you not super
 	if(Team == TEAM_SUPER && !Character(id)->m_Super) return false;
 	//if you begin race
-	if(Character(id)->m_RaceState != RACE_NONE) {
+	if(Character(id)->m_DDRaceState != DDRACE_NONE) {
 		//you will be killed if you try to join FLOCK
 		if(Team == TEAM_FLOCK && m_Core.Team(id) != TEAM_FLOCK) {
 			Character(id)->GetPlayer()->KillCharacter(WEAPON_GAME);
@@ -90,7 +90,7 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "Id = %d Team = %d", id, Team);
 	dbg_msg("Teams", aBuf);
-	if(Character(id) && Character(id)->GetPlayer()->m_IsUsingRaceClient) {
+	if(Character(id) && Character(id)->GetPlayer()->m_IsUsingDDRaceClient) {
 		SendTeamsState(id);
 	}
 	//GameServer()->CreatePlayerSpawn(Character(id)->m_Core.m_Pos, TeamMask());

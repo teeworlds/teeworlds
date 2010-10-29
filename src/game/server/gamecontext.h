@@ -211,7 +211,7 @@ public:
 		struct PlayerInfo {
 			CCharacterCore m_Core;
 			int m_StartTime;
-			int m_RaceState;
+			int m_DDRaceState;
 			//int m_RefreshTime;
 			int m_FreezeTime;
 			bool m_Doored;

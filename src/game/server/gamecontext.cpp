@@ -958,9 +958,9 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			SendBroadcast(aBuf, ClientId);
 		}
 	}
-	else if (MsgId == NETMSGTYPE_CL_ISRACE)
+	else if (MsgId == NETMSGTYPE_CL_ISDDRACE)
 	{
-		pPlayer->m_IsUsingRaceClient = true;
+		pPlayer->m_IsUsingDDRaceClient = true;
 		char aBuf[128];
 		str_format(aBuf, sizeof(aBuf), "%d use DDRace Client", pPlayer->GetCID());
 		dbg_msg("DDRace", aBuf);
@@ -1261,7 +1261,7 @@ void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int Cl
 		{
 			chr->m_Core.m_Pos.x -= 32;
 			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
+				chr->m_DDRaceState = DDRACE_CHEAT;
 		}
 	}
 	else if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
@@ -1271,7 +1271,7 @@ void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int Cl
 		{
 			chr->m_Core.m_Pos.x -= 32;
 			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
+				chr->m_DDRaceState = DDRACE_CHEAT;
 		}
 	}
 	else
@@ -1297,7 +1297,7 @@ void CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int C
 		{
 			chr->m_Core.m_Pos.x += 32;
 			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
+				chr->m_DDRaceState = DDRACE_CHEAT;
 		}
 	}
 	else if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
@@ -1307,7 +1307,7 @@ void CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int C
 		{
 			chr->m_Core.m_Pos.x += 32;
 			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
+				chr->m_DDRaceState = DDRACE_CHEAT;
 		}
 	}
 	else
@@ -1333,7 +1333,7 @@ void CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int Cl
 		{
 			chr->m_Core.m_Pos.y += 32;
 			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
+				chr->m_DDRaceState = DDRACE_CHEAT;
 		}
 	}
 	else if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
@@ -1343,7 +1343,7 @@ void CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int Cl
 		{
 			chr->m_Core.m_Pos.y += 32;
 			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
+				chr->m_DDRaceState = DDRACE_CHEAT;
 		}
 	}
 	else
@@ -1369,7 +1369,7 @@ void CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int Clie
 		{
 			chr->m_Core.m_Pos.y -= 32;
 			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
+				chr->m_DDRaceState = DDRACE_CHEAT;
 		}
 	}
 	else if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
@@ -1379,7 +1379,7 @@ void CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int Clie
 		{
 			chr->m_Core.m_Pos.y -= 32;
 			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
+				chr->m_DDRaceState = DDRACE_CHEAT;
 		}
 	}
 	else
@@ -1486,7 +1486,7 @@ void CGameContext::ConNinjaMe(IConsole::IResult *pResult, void *pUserData, int C
 	{
 		chr->GiveNinja();
 		if(!g_Config.m_SvCheatTime)
-			chr->m_RaceState = RACE_CHEAT;
+			chr->m_DDRaceState = DDRACE_CHEAT;
 	}
 }
 
@@ -1502,7 +1502,7 @@ void CGameContext::ConNinja(IConsole::IResult *pResult, void *pUserData, int Cli
 		{
 			chr->GiveNinja();
 			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
+				chr->m_DDRaceState = DDRACE_CHEAT;
 		}
 	}
 }
@@ -1530,7 +1530,7 @@ void CGameContext::ConHammer(IConsole::IResult *pResult, void *pUserData, int Cl
 		{
 			chr->m_HammerType = type;
 			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
+				chr->m_DDRaceState = DDRACE_CHEAT;
 			str_format(buf, sizeof(buf), "Hammer of '%s' ClientId=%d setted to %d", pServ->ClientName(ClientId), Victim, type);
 			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 		}
@@ -1555,7 +1555,7 @@ void CGameContext::ConHammerMe(IConsole::IResult *pResult, void *pUserData, int 
 	{
 		chr->m_HammerType = type;
 		if(!g_Config.m_SvCheatTime)
-			chr->m_RaceState = RACE_CHEAT;
+			chr->m_DDRaceState = DDRACE_CHEAT;
 		str_format(buf, sizeof(buf), "Hammer setted to %d",type);
 		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 	}
@@ -1578,7 +1578,7 @@ void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int Cli
 			dbg_msg("Teamb4super","%d",chr->m_TeamBeforeSuper = chr->Team());
 			chr->Teams()->SetCharacterTeam(Victim, TEAM_SUPER);
 			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
+				chr->m_DDRaceState = DDRACE_CHEAT;
 		}
 	}
 }
@@ -1614,7 +1614,7 @@ void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int C
 			dbg_msg("Teamb4super","%d",chr->m_TeamBeforeSuper = chr->Team());
 			chr->Teams()->SetCharacterTeam(ClientId, TEAM_SUPER);
 			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
+				chr->m_DDRaceState = DDRACE_CHEAT;
 		}
 	}
 }
@@ -1646,7 +1646,7 @@ void CGameContext::ConShotgun(IConsole::IResult *pResult, void *pUserData, int C
 		{
 			chr->GiveWeapon(WEAPON_SHOTGUN,-1);
 			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
+				chr->m_DDRaceState = DDRACE_CHEAT;
 		}
 	}
 }
@@ -1660,7 +1660,7 @@ void CGameContext::ConShotgunMe(IConsole::IResult *pResult, void *pUserData, int
 	{
 		chr->GiveWeapon(WEAPON_SHOTGUN,-1);
 		if(!g_Config.m_SvCheatTime)
-			chr->m_RaceState = RACE_CHEAT;
+			chr->m_DDRaceState = DDRACE_CHEAT;
 	}
 }
 
@@ -1676,7 +1676,7 @@ void CGameContext::ConGrenade(IConsole::IResult *pResult, void *pUserData, int C
 		{
 			chr->GiveWeapon(WEAPON_GRENADE,-1);
 			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
+				chr->m_DDRaceState = DDRACE_CHEAT;
 		}
 	}
 }
@@ -1690,7 +1690,7 @@ void CGameContext::ConGrenadeMe(IConsole::IResult *pResult, void *pUserData, int
 	{
 		chr->GiveWeapon(WEAPON_GRENADE,-1);
 		if(!g_Config.m_SvCheatTime)
-			chr->m_RaceState = RACE_CHEAT;
+			chr->m_DDRaceState = DDRACE_CHEAT;
 	}
 }
 
@@ -1706,7 +1706,7 @@ void CGameContext::ConLaser(IConsole::IResult *pResult, void *pUserData, int Cli
 		{
 			chr->GiveWeapon(WEAPON_RIFLE,-1);
 			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
+				chr->m_DDRaceState = DDRACE_CHEAT;
 		}
 	}
 }
@@ -1720,7 +1720,7 @@ void CGameContext::ConLaserMe(IConsole::IResult *pResult, void *pUserData, int C
 	{
 		chr->GiveWeapon(WEAPON_RIFLE,-1);
 		if(!g_Config.m_SvCheatTime)
-			chr->m_RaceState = RACE_CHEAT;
+			chr->m_DDRaceState = DDRACE_CHEAT;
 	}
 }
 
@@ -1736,7 +1736,7 @@ void CGameContext::ConWeapons(IConsole::IResult *pResult, void *pUserData, int C
 		{
 			chr->GiveAllWeapons();
 			if(!g_Config.m_SvCheatTime)
-				chr->m_RaceState = RACE_CHEAT;
+				chr->m_DDRaceState = DDRACE_CHEAT;
 		}
 	}
 }
@@ -1750,7 +1750,7 @@ void CGameContext::ConWeaponsMe(IConsole::IResult *pResult, void *pUserData, int
 	{
 		chr->GiveAllWeapons();
 		if(!g_Config.m_SvCheatTime)
-			chr->m_RaceState = RACE_CHEAT;
+			chr->m_DDRaceState = DDRACE_CHEAT;
 	}
 }
 
@@ -1771,7 +1771,7 @@ void CGameContext::ConTeleport(IConsole::IResult *pResult, void *pUserData, int 
 			{
 				chr->m_Core.m_Pos = pSelf->m_apPlayers[cid2]->m_ViewPos;
 				if(!g_Config.m_SvCheatTime)
-					chr->m_RaceState = RACE_CHEAT;
+					chr->m_DDRaceState = DDRACE_CHEAT;
 			}
 		}
 	}
@@ -1791,7 +1791,7 @@ void CGameContext::ConTimerStop(IConsole::IResult *pResult, void *pUserData, int
 			return;
 		if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 		{
-			chr->m_RaceState=RACE_CHEAT;
+			chr->m_DDRaceState=DDRACE_CHEAT;
 			str_format(buf, sizeof(buf), "'%s' ClientId=%d Hasn't time now (Timer Stopped)", pServ->ClientName(ClientId), Victim);
 			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 		}
@@ -1816,7 +1816,7 @@ void CGameContext::ConTimerStart(IConsole::IResult *pResult, void *pUserData, in
 			return;
 		if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 		{
-			chr->m_RaceState = RACE_STARTED;
+			chr->m_DDRaceState = DDRACE_STARTED;
 			str_format(buf, sizeof(buf), "'%s' ClientId=%d Has time now (Timer Started)", pServ->ClientName(ClientId), Victim);
 			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 		}
@@ -1846,7 +1846,7 @@ void CGameContext::ConTimerZero(IConsole::IResult *pResult, void *pUserData, int
 		{
 			chr->m_StartTime = pSelf->Server()->Tick();
 			chr->m_RefreshTime = pSelf->Server()->Tick();
-			chr->m_RaceState=RACE_CHEAT;
+			chr->m_DDRaceState=DDRACE_CHEAT;
 			str_format(buf, sizeof(buf), "'%s' ClientId=%d time has been reset & stopped.", pServ->ClientName(ClientId), Victim);
 			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 		}
@@ -1875,7 +1875,7 @@ void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, 
 		{
 			chr->m_StartTime = pSelf->Server()->Tick();
 			chr->m_RefreshTime = pSelf->Server()->Tick();
-			chr->m_RaceState=RACE_STARTED;
+			chr->m_DDRaceState=DDRACE_STARTED;
 			str_format(buf, sizeof(buf), "'%s' ClientId=%d time has been reset & stopped.", pServ->ClientName(ClientId), Victim);
 			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 		}

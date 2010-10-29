@@ -1,4 +1,4 @@
-/*Based on rajh's, Redix's & Sushi Tee's, Race mod stuff and tweaked byt btd and GreYFoX@GTi with STL to fit our DDRace needs*/
+/*Based on rajh's, Redix's & Sushi Tee's, DDRace mod stuff and tweaked byt btd and GreYFoX@GTi with STL to fit our DDRace needs*/
 #include <engine/server.h>
 #include <game/mapitems.h>
 #include <game/server/entities/character.h>

@@ -30,7 +30,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	GameServer()->Score()->PlayerData(CID)->Reset();
 	
 	m_Invisible = false;
-	m_IsUsingRaceClient = false;
+	m_IsUsingDDRaceClient = false;
 }
 
 CPlayer::~CPlayer()
@@ -248,7 +248,7 @@ void CPlayer::LoadCharacter()
 		Character->m_StartTime = Server()->Tick() - (m_PauseInfo.m_PauseTime - m_PauseInfo.m_StartTime);
 	else
 		Character->m_StartTime = m_PauseInfo.m_StartTime;
-	Character->m_RaceState = m_PauseInfo.m_RaceState;
+	Character->m_DDRaceState = m_PauseInfo.m_DDRaceState;
 	Character->m_RefreshTime = Server()->Tick();
 	for(int i = 0; i < NUM_WEAPONS; ++i)
 	{
@@ -281,7 +281,7 @@ void CPlayer::SaveCharacter()
 {
 	m_PauseInfo.m_Core = Character->m_Core;
 	m_PauseInfo.m_StartTime = Character->m_StartTime;
-	m_PauseInfo.m_RaceState = Character->m_RaceState;
+	m_PauseInfo.m_DDRaceState = Character->m_DDRaceState;
 	for(int i = 0; i < WEAPON_NINJA; ++i)
 	{
 		m_PauseInfo.m_aHasWeapon[i] = Character->m_aWeapons[i].m_Got;

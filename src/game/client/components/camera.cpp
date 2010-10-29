@@ -10,15 +10,15 @@
 
 const float ZoomStep = 0.75f;
 void CCamera::ConZoomPlus(IConsole::IResult *pResult, void *pUserData, int ClientID) {
-	//if(g_Config.m_ClRaceCheats == 1 || ((CCamera *)pUserData)->m_pClient->m_IsRace)
+	//if(g_Config.m_ClDDRaceCheats == 1 || ((CCamera *)pUserData)->m_pClient->m_IsDDRace)
 		((CCamera *)pUserData)->m_Zoom *= 1/ZoomStep;
 }
 void CCamera::ConZoomMinus(IConsole::IResult *pResult, void *pUserData, int ClientID) {
-	//if(g_Config.m_ClRaceCheats == 1 || ((CCamera *)pUserData)->m_pClient->m_IsRace)
+	//if(g_Config.m_ClDDRaceCheats == 1 || ((CCamera *)pUserData)->m_pClient->m_IsDDRace)
 		((CCamera *)pUserData)->m_Zoom *= ZoomStep;
 }
 void CCamera::ConZoomReset(IConsole::IResult *pResult, void *pUserData, int ClientID) {
-	//if(g_Config.m_ClRaceCheats == 1 || ((CCamera *)pUserData)->m_pClient->m_IsRace)
+	//if(g_Config.m_ClDDRaceCheats == 1 || ((CCamera *)pUserData)->m_pClient->m_IsDDRace)
 		((CCamera *)pUserData)->m_Zoom = 1.0f;
 }
 

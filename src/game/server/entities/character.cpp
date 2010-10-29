@@ -69,7 +69,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_Pos = Pos;
 	m_OlderPos = Pos;
 	m_OldPos = Pos;
-	m_RaceState = RACE_NONE;
+	m_DDRaceState = DDRACE_NONE;
 	m_PrevPos = Pos;
 	m_Core.Reset();
 	m_BroadTime = true;
@@ -620,7 +620,7 @@ void CCharacter::OnFinish()
 				
 		}
 
-		m_RaceState = RACE_NONE;
+		m_DDRaceState = DDRACE_NONE;
 		// set player score
 		if(!GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime || GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime > time)
 		{
@@ -705,7 +705,7 @@ void CCharacter::Tick()
 
 	if(Server()->Tick() - m_RefreshTime >= Server()->TickSpeed())
 	{
-		if (m_RaceState == RACE_STARTED) {
+		if (m_DDRaceState == DDRACE_STARTED) {
 			int IntTime = (int)m_Time;
 			if(m_BroadTime)
 				str_format(aBuftime, sizeof(aBuftime), "%s%d:%s%d", ((IntTime/60) > 9)?"":"0", IntTime/60, ((IntTime%60) > 9)?"":"0", IntTime%60);
@@ -808,19 +808,19 @@ void CCharacter::HandleTiles(int Index)
 	//dbg_msg("","N%d L%d R%d B%d T%d",m_TileFIndex,m_TileFIndexL,m_TileFIndexR,m_TileFIndexB,m_TileFIndexT);
 
 	int cp = GameServer()->Collision()->IsCheckpoint(MapIndex);
-	if(cp != -1 && m_RaceState == RACE_STARTED && cp > m_CpActive)
+	if(cp != -1 && m_DDRaceState == DDRACE_STARTED && cp > m_CpActive)
 	{
 		m_CpActive = cp;
 		m_CpCurrent[cp] = m_Time;
 		m_CpTick = Server()->Tick() + Server()->TickSpeed()*2;
 	}
-	if(((m_TileIndex == TILE_BEGIN) || (m_TileFIndex == TILE_BEGIN)) && (m_RaceState == RACE_NONE || (m_RaceState == RACE_STARTED && !Team())))
+	if(((m_TileIndex == TILE_BEGIN) || (m_TileFIndex == TILE_BEGIN)) && (m_DDRaceState == DDRACE_NONE || (m_DDRaceState == DDRACE_STARTED && !Team())))
 	{
 		Controller->m_Teams.OnCharacterStart(m_pPlayer->GetCID());
 		m_CpActive = -2;
 	}
 
-	if(((m_TileIndex == TILE_END) || (m_TileFIndex == TILE_END)) && m_RaceState == RACE_STARTED)
+	if(((m_TileIndex == TILE_END) || (m_TileFIndex == TILE_END)) && m_DDRaceState == DDRACE_STARTED)
 	{
 		Controller->m_Teams.OnCharacterFinish(m_pPlayer->GetCID());
 	}
@@ -1281,7 +1281,7 @@ void CCharacter::Snap(int SnappingClient)
 	CCharacter* SnapChar = GameServer()->GetPlayerChar(SnappingClient);
 	if(SnapChar && !SnapChar->m_Super && 
 		GameServer()->m_apPlayers[SnappingClient]->GetTeam() != -1 &&
-		!CanCollide(SnappingClient) && !GameServer()->m_apPlayers[SnappingClient]->m_IsUsingRaceClient) return;
+		!CanCollide(SnappingClient) && !GameServer()->m_apPlayers[SnappingClient]->m_IsUsingDDRaceClient) return;
 	if(GetPlayer()->m_Invisible &&
 		GetPlayer()->GetCID() != SnappingClient &&
 		GameServer()->m_apPlayers[SnappingClient]->m_Authed < GetPlayer()->m_Authed

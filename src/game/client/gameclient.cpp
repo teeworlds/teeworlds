@@ -305,7 +305,7 @@ void CGameClient::OnInit()
 	
 	m_ServerMode = SERVERMODE_PURE;
 	
-	m_RaceMsgSent = false;
+	m_DDRaceMsgSent = false;
 }
 
 void CGameClient::DispatchInput()
@@ -396,7 +396,7 @@ void CGameClient::OnReset()
 	Layers()->Dest();
 	Collision()->Dest();
 	
-	m_RaceMsgSent = false;
+	m_DDRaceMsgSent = false;
 }
 
 
@@ -845,11 +845,11 @@ void CGameClient::OnNewSnapshot()
 			m_ServerMode = SERVERMODE_PUREMOD;
 	}
 	
-	if(!m_RaceMsgSent && m_Snap.m_pLocalInfo)
+	if(!m_DDRaceMsgSent && m_Snap.m_pLocalInfo)
 	{
-		CNetMsg_Cl_IsRace Msg;
+		CNetMsg_Cl_IsDDRace Msg;
 		Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
-		m_RaceMsgSent = true;
+		m_DDRaceMsgSent = true;
 	}
 
 }

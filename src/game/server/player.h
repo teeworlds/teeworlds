@@ -36,7 +36,7 @@ public:
 	struct PauseInfo {
 		CCharacterCore m_Core;
 		int m_StartTime;
-		int m_RaceState;
+		int m_DDRaceState;
 		//int m_RefreshTime;
 		int m_FreezeTime;
 		bool m_Doored;
@@ -87,13 +87,13 @@ public:
    // TODO: clean this up
    int m_Authed;
    
-   bool m_IsUsingRaceClient;
+   bool m_IsUsingDDRaceClient;
    
    bool m_ColorSet; // Set if player changed color at least once 
 
    int m_Starttime;  		 
    int m_Refreshtime;  		 
-   int m_RaceState;  		 
+   int m_DDRaceState;  		 
    int m_Besttick;  		 
    int m_Lasttick;  		 
    float m_BestLap;  

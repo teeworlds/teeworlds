@@ -17,9 +17,9 @@ enum
 
 enum 
 {
-	RACE_NONE = 0,
-	RACE_STARTED,
-	RACE_CHEAT // no time and won't start again unless ordered by a mod or death
+	DDRACE_NONE = 0,
+	DDRACE_STARTED,
+	DDRACE_CHEAT // no time and won't start again unless ordered by a mod or death
 };
 
 class CCharacter : public CEntity
@@ -96,7 +96,7 @@ public:
 	// player controlling this character
 	class CPlayer *m_pPlayer;
 
-	int m_RaceState;
+	int m_DDRaceState;
 	
 	void OnFinish();
 	int Team();

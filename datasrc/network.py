@@ -294,7 +294,7 @@ Messages = [
 		NetStringStrict("m_Value"),
 	]),
 	
-	NetMessage("Cl_IsRace", []),
+	NetMessage("Cl_IsDDRace", []),
 	
 	NetMessage("Cl_TeamsState", [
 		NetIntAny("m_Tee0"),
