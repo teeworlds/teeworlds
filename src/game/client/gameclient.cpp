@@ -241,7 +241,7 @@ void CGameClient::OnInit()
 	//default_font = gfx_font_load("data/fonts/sazanami-gothic.ttf");
 
 	char aFilename[512];
-	IOHANDLE File = Storage()->OpenFile("fonts/vera.ttf", IOFLAG_READ, IStorage::TYPE_ALL, aFilename, sizeof(aFilename));
+	IOHANDLE File = Storage()->OpenFile("fonts/DejaVuSans.ttf", IOFLAG_READ, IStorage::TYPE_ALL, aFilename, sizeof(aFilename));
 	if(File)
 		io_close(File);
 	pDefaultFont = TextRender()->LoadFont(aFilename);
