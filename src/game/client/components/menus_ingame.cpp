@@ -472,7 +472,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		}
 		
 		static int s_CallVoteButton = 0;
-		if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), (pOption->m_aCommand[0] < 97 || pOption->m_aCommand[0] > 122)?-1:0, &Button))
+		if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), (pOption && (pOption->m_aCommand[0] < 97 || pOption->m_aCommand[0] > 122))?-1:0, &Button))
 		{
 			if(s_ControlPage == 0)
 			{
