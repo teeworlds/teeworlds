@@ -1,4 +1,5 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
+#include <base/math.h>
 #include <base/system.h>
 #include <engine/storage.h>
 #include "datafile.h"
@@ -158,7 +159,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 	m_pDataFile = pTmpDataFile;
 
 #if defined(CONF_ARCH_ENDIAN_BIG)
-	swap_endian(m_pDataFile->m_pData, sizeof(int), min(Header.m_Swaplen, Size) / sizeof(int));
+	swap_endian(m_pDataFile->m_pData, sizeof(int), min(static_cast<unsigned>(Header.m_Swaplen), Size) / sizeof(int));
 #endif
 
 	//if(DEBUG)

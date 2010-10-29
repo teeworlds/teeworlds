@@ -1368,14 +1368,14 @@ int str_utf8_forward(const char *str, int cursor)
 	{
 		if(!buf[1]) return cursor+1;
 		if(!buf[2]) return cursor+2;
-		return cursor+2;
+		return cursor+3;
 	}
 	else if((*buf & 0xF8) == 0xF0)	/* 11110xxx */
 	{
 		if(!buf[1]) return cursor+1;
 		if(!buf[2]) return cursor+2;
 		if(!buf[3]) return cursor+3;
-		return cursor+3;
+		return cursor+4;
 	}
 	
 	/* invalid */
@@ -1399,16 +1399,16 @@ int str_utf8_encode(char *ptr, int chr)
 	else if(chr <= 0xFFFF)
 	{
 		ptr[0] = 0xE0|((chr>>12)&0x0F);
-		ptr[1] = 0xC0|((chr>>6)&0x3F);
-		ptr[2] = 0xC0|(chr&0x3F);
+		ptr[1] = 0x80|((chr>>6)&0x3F);
+		ptr[2] = 0x80|(chr&0x3F);
 		return 3;
 	}
 	else if(chr <= 0x10FFFF)
 	{
 		ptr[0] = 0xF0|((chr>>18)&0x07);
-		ptr[1] = 0xC0|((chr>>12)&0x3F);
-		ptr[2] = 0xC0|((chr>>6)&0x3F);
-		ptr[3] = 0xC0|(chr&0x3F);
+		ptr[1] = 0x80|((chr>>12)&0x3F);
+		ptr[2] = 0x80|((chr>>6)&0x3F);
+		ptr[3] = 0x80|(chr&0x3F);
 		return 4;
 	}
 	
