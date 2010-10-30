@@ -339,6 +339,13 @@ void CGameContext::SendBroadcast(const char *pText, int ClientId)
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientId);
 }
 
+void CGameContext::SendRecord(int ClientId) {
+	CNetMsg_Sv_Record RecordsMsg;
+	RecordsMsg.m_PlayerTimeBest = Score()->PlayerData(ClientId)->m_BestTime * 100.0f;//
+	RecordsMsg.m_ServerTimeBest = m_pController->m_CurrentRecord * 100.0f;//TODO: finish this
+	Server()->SendPackMsg(&RecordsMsg, MSGFLAG_VITAL, ClientId);
+}
+
 //
 void CGameContext::StartVote(const char *pDesc, const char *pCommand)
 {
@@ -961,10 +968,34 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	else if (MsgId == NETMSGTYPE_CL_ISRACE)
 	{
 		pPlayer->m_IsUsingDDRaceClient = true;
+		
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "%d use DDRace Client", pPlayer->GetCID());
+		str_format(aBuf, sizeof(aBuf), "%d use DDRace Client", ClientId);
 		dbg_msg("DDRace", aBuf);
+		
+		//first update his teams state
 		((CGameControllerDDRace*)m_pController)->m_Teams.SendTeamsState(ClientId);
+		
+		//second give him records
+		SendRecord(ClientId);
+		
+		
+		//third give him others current time for table score
+		if(g_Config.m_SvHideScore) return;
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(m_apPlayers[i] && Score()->PlayerData(i)->m_CurrentTime > 0)
+			{
+				char aBuf[16];
+				str_format(aBuf, sizeof(aBuf), "%.0f", Score()->PlayerData(i)->m_CurrentTime*100.0f); // damn ugly but the only way i know to do it
+				int TimeToSend;
+				sscanf(aBuf, "%d", &TimeToSend);
+				CNetMsg_Sv_PlayerTime Msg;
+				Msg.m_Time = TimeToSend;
+				Msg.m_Cid = i;
+				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientId);
+			}
+		}
 	}
 	else if(MsgId == NETMSGTYPE_CL_CHANGEINFO || MsgId == NETMSGTYPE_CL_STARTINFO)
 	{
