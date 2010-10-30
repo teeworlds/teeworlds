@@ -1932,14 +1932,20 @@ void CClient::DemoRecorder_HandleAutoStart()
 			DemoRecorder_Start("autorecord");
 		else
 		{
-			m_WillRotateDemoFiles = true;
 			DemoRecorder_Start("current", false);
+			m_WillRotateDemoFiles = true;
 		}
 	}
 }
 
 void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp)
 {
+	// if a previous autorecord was halted because of a error, 
+	// then is flag isn't cleared. Clear it now so it won't rotate.
+	// (caller should set this flag after calling us)
+	m_WillRotateDemoFiles = false;
+
+
 	if(State() != IClient::STATE_ONLINE)
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/record", "client is not online");
 	else
