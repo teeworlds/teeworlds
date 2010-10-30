@@ -30,6 +30,7 @@ public:
 	// interface functions
 	void Refresh(int Type);
 	bool IsRefreshingMasters() const;
+	int LoadingProgression() const;
 
 	int NumServers() const { return m_NumServers; }
 
