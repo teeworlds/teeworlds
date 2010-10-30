@@ -1405,8 +1405,16 @@ void CServer::ConShutdown(IConsole::IResult *pResult, void *pUser)
 void CServer::ConRecord(IConsole::IResult *pResult, void *pUser)
 {
 	char aFilename[512];
-	str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pResult->GetString(0));
-	((CServer *)pUser)->m_DemoRecorder.Start(((CServer *)pUser)->Storage(), ((CServer *)pUser)->Console(), aFilename, ((CServer *)pUser)->GameServer()->NetVersion(), ((CServer *)pUser)->m_aCurrentMap, ((CServer *)pUser)->m_CurrentMapCrc, "server");
+
+	CServer* pServer = (CServer *)pUser;
+
+	if (!pServer->Storage()->FindNewUniqueFilename("demos", pResult->GetString(0), ".demo", IStorage::TYPE_SAVE, aFilename, sizeof(aFilename)))
+	{
+		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/record", "Unable to create a unique filename");
+		return;
+	}
+
+	pServer->m_DemoRecorder.Start(pServer->Storage(), pServer->Console(), aFilename, pServer->GameServer()->NetVersion(), pServer->m_aCurrentMap, pServer->m_CurrentMapCrc, "server");
 }
 
 void CServer::ConStopRecord(IConsole::IResult *pResult, void *pUser)

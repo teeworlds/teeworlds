@@ -1,5 +1,3 @@
-#include <time.h>
-
 #include <base/math.h>
 
 #include <engine/demo.h>
@@ -99,14 +97,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	if(DoButton_Menu(&s_DemoButton, Localize(Recording ? "Stop record" : "Record demo"), 0, &Button))	// Localize("Stop record");Localize("Record demo");
 	{
 		if(!Recording)
-		{
-			char aFilename[128];
-			time_t Time;
-			time(&Time);
-			tm* TimeInfo = localtime(&Time);
-			strftime(aFilename, sizeof(aFilename), "demo-%Y-%m-%d_%H-%M-%S", TimeInfo);
-			Client()->DemoRecorder_Start(aFilename);
-		}
+			Client()->DemoRecorder_Start("demo");
 		else
 			DemoRecorder()->Stop();
 	}

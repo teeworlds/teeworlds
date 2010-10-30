@@ -1922,14 +1922,24 @@ void CClient::Con_Play(IConsole::IResult *pResult, void *pUserData)
 	pSelf->DemoPlayer_Play(pResult->GetString(0), IStorage::TYPE_ALL);
 }
 
-void CClient::DemoRecorder_Start(const char *pFilename)
+void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp)
 {
 	if(State() != IClient::STATE_ONLINE)
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/record", "client is not online");
 	else
 	{
 		char aFilename[512];
-		str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pFilename);
+		if (WithTimestamp)
+		{
+			char aFilenameBase[512];
+			str_format(aFilenameBase, sizeof(aFilenameBase), "%s-%s", pFilename, m_aCurrentMap);
+			if (!Storage()->FindNewUniqueFilename("demos", aFilenameBase, ".demo", IStorage::TYPE_SAVE, aFilename, sizeof(aFilename)))
+			{
+				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/record", "Unable to create a unique filename");
+				return;
+			}
+		} else
+			str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pFilename);
 		m_DemoRecorder.Start(Storage(), m_pConsole, aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
 	}
 }
