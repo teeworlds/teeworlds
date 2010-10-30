@@ -392,10 +392,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			UI()->SetActiveItem(&g_Config.m_BrFilterString);
 		}
 	}
-
+	
 	// render status
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), Localize("%d of %d servers, %d players"), ServerBrowser()->NumSortedServers(), ServerBrowser()->NumServers(), NumPlayers);
+	str_format(aBuf, sizeof(aBuf), Localize("%d of %d servers, %d players (%d%% loaded)"), ServerBrowser()->NumSortedServers(), ServerBrowser()->NumServers(), NumPlayers, ServerBrowser()->LoadingProgression());
 	Status.VSplitRight(TextRender()->TextWidth(0, 14.0f, aBuf, -1), 0, &Status);
 	UI()->DoLabel(&Status, aBuf, 14.0f, -1);
 }
