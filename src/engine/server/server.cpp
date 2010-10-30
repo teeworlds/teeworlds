@@ -1405,10 +1405,12 @@ void CServer::ConShutdown(IConsole::IResult *pResult, void *pUser)
 void CServer::ConRecord(IConsole::IResult *pResult, void *pUser)
 {
 	char aFilename[512];
-
+	char aFilenameBase[512];
 	CServer* pServer = (CServer *)pUser;
 
-	if (!pServer->Storage()->FindNewUniqueFilename("demos", pResult->GetString(0), ".demo", IStorage::TYPE_SAVE, aFilename, sizeof(aFilename)))
+	str_format(aFilenameBase, sizeof(aFilenameBase), "%s-%s", pResult->GetString(0), pServer->m_aCurrentMap);
+
+	if (!pServer->Storage()->FindNewUniqueFilename("demos", aFilenameBase, ".demo", IStorage::TYPE_SAVE, aFilename, sizeof(aFilename)))
 	{
 		pServer->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/record", "Unable to create a unique filename");
 		return;
