@@ -867,6 +867,7 @@ void CCharacter::HandleTiles(int Index)
 	{
 		vec2 Direction, MaxVel, TempVel = m_Core.m_Vel;
 		int Force, MaxSpeed = 0;
+		const float Zero=0;
 		GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force, &MaxSpeed);
 		//dbg_msg("speedup tile start","Direction %f %f, Force %d, Max Speed %d", (Direction).x,(Direction).y, Force, MaxSpeed);
 		if(
@@ -878,9 +879,9 @@ void CCharacter::HandleTiles(int Index)
 				m_Core.m_Pos = m_PrevPos;
 		TempVel += Direction * Force;
 		MaxVel = Direction*(MaxSpeed/5);
-		if(MaxSpeed && Direction.x && (TempVel.x > MaxVel.x && MaxVel.x > 0 || TempVel.x < MaxVel.x && MaxVel.x < 0))
+		if(MaxSpeed && (fabs(Direction.x) > 0.000001) && (TempVel.x > MaxVel.x && MaxVel.x > 0 || TempVel.x < MaxVel.x && MaxVel.x < 0))
 			TempVel.x = MaxVel.x;
-		if(MaxSpeed && Direction.y && (TempVel.y > MaxVel.y && MaxVel.y > 0 || TempVel.y < MaxVel.y && MaxVel.y < 0))
+		if(MaxSpeed && (fabs(Direction.y) > 0.000001) && (TempVel.y > MaxVel.y && MaxVel.y > 0 || TempVel.y < MaxVel.y && MaxVel.y < 0))
 			TempVel.y = MaxVel.y;
 		m_Core.m_Vel = TempVel;
 		//dbg_msg("speedup tile end","(Direction*Force) %f %f   m_Core.m_Vel%f %f",(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
