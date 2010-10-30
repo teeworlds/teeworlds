@@ -1,5 +1,5 @@
-#ifndef ENGINE_SHARED_DEMOREC_H
-#define ENGINE_SHARED_DEMOREC_H
+#ifndef ENGINE_SHARED_DEMO_H
+#define ENGINE_SHARED_DEMO_H
 
 #include <engine/demo.h>
 #include "snapshot.h"
@@ -20,6 +20,8 @@ class CDemoRecorder : public IDemoRecorder
 	IOHANDLE m_File;
 	int m_LastTickMarker;
 	int m_LastKeyFrame;
+	int m_FirstTick;
+
 	unsigned char m_aLastSnapshotData[CSnapshot::MAX_SIZE];
 	class CSnapshotDelta *m_pSnapshotDelta;
 	
@@ -35,6 +37,8 @@ public:
 	void RecordMessage(const void *pData, int Size);
 
 	bool IsRecording() const { return m_File != 0; }
+
+	int TickCount();
 };
 
 class CDemoPlayer : public IDemoPlayer
