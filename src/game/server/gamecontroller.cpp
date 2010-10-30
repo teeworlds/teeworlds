@@ -187,8 +187,6 @@ const char *IGameController::GetTeamName(int Team)
 	return "spectators";
 }
 
-static bool IsSeparator(char c) { return c == ';' || c == ' ' || c == ',' || c == '\t'; }
-
 void IGameController::StartRound()
 {
 	ResetGame();
@@ -223,64 +221,16 @@ void IGameController::CycleMap()
 		m_RoundCount = 0;
 		return;
 	}
+	
 	if(!str_length(g_Config.m_SvMaprotation))
 		return;
-
+	
 	if(m_RoundCount < g_Config.m_SvRoundsPerMap-1)
 		return;
-		
-	// handle maprotation
-	const char *pMapRotation = g_Config.m_SvMaprotation;
-	const char *pCurrentMap = g_Config.m_SvMap;
 	
-	int CurrentMapLen = str_length(pCurrentMap);
-	const char *pNextMap = pMapRotation;
-	while(*pNextMap)
-	{
-		int WordLen = 0;
-		while(pNextMap[WordLen] && !IsSeparator(pNextMap[WordLen]))
-			WordLen++;
-		
-		if(WordLen == CurrentMapLen && str_comp_num(pNextMap, pCurrentMap, CurrentMapLen) == 0)
-		{
-			// map found
-			pNextMap += CurrentMapLen;
-			while(*pNextMap && IsSeparator(*pNextMap))
-				pNextMap++;
-				
-			break;
-		}
-		
-		pNextMap++;
-	}
-	
-	// restart rotation
-	if(pNextMap[0] == 0)
-		pNextMap = pMapRotation;
-
-	// cut out the next map	
-	char aBuf[512];
-	for(int i = 0; i < 512; i++)
-	{
-		aBuf[i] = pNextMap[i];
-		if(IsSeparator(pNextMap[i]) || pNextMap[i] == 0)
-		{
-			aBuf[i] = 0;
-			break;
-		}
-	}
-	
-	// skip spaces
-	int i = 0;
-	while(IsSeparator(aBuf[i]))
-		i++;
+	Server()->NextMap();
 	
 	m_RoundCount = 0;
-	
-	char aBufMsg[256];
-	str_format(aBufMsg, sizeof(aBufMsg), "rotating map to %s", &aBuf[i]);
-	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
-	str_copy(g_Config.m_SvMap, &aBuf[i], sizeof(g_Config.m_SvMap));
 }
 
 void IGameController::PostReset()

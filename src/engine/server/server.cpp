@@ -1054,6 +1054,62 @@ int CServer::LoadMap(const char *pMapName)
 	return 1;
 }
 
+static bool IsSeparator(char c) { return c == ';' || c == ' ' || c == ',' || c == '\t'; }
+
+void CServer::NextMap()
+{
+	// handle maprotation
+	const char *pMapRotation = g_Config.m_SvMaprotation;
+	const char *pCurrentMap = g_Config.m_SvMap;
+	
+	int CurrentMapLen = str_length(pCurrentMap);
+	const char *pNextMap = pMapRotation;
+	while(*pNextMap)
+	{
+		int WordLen = 0;
+		while(pNextMap[WordLen] && !IsSeparator(pNextMap[WordLen]))
+			WordLen++;
+		
+		if(WordLen == CurrentMapLen && str_comp_num(pNextMap, pCurrentMap, CurrentMapLen) == 0)
+		{
+			// map found
+			pNextMap += CurrentMapLen;
+			while(*pNextMap && IsSeparator(*pNextMap))
+				pNextMap++;
+			
+			break;
+		}
+		
+		pNextMap++;
+	}
+	
+	// restart rotation
+	if(pNextMap[0] == 0)
+		pNextMap = pMapRotation;
+	
+	// cut out the next map	
+	char aBuf[512];
+	for(int i = 0; i < 512; i++)
+	{
+		aBuf[i] = pNextMap[i];
+		if(IsSeparator(pNextMap[i]) || pNextMap[i] == 0)
+		{
+			aBuf[i] = 0;
+			break;
+		}
+	}
+	
+	// skip spaces
+	int i = 0;
+	while(IsSeparator(aBuf[i]))
+		i++;
+	
+	char aBufMsg[256];
+	str_format(aBufMsg, sizeof(aBufMsg), "rotating map to %s", &aBuf[i]);
+	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+	str_copy(g_Config.m_SvMap, &aBuf[i], sizeof(g_Config.m_SvMap));
+}
+
 void CServer::InitEngine(const char *pAppname)
 {
 	m_Engine.Init(pAppname);
@@ -1419,6 +1475,14 @@ void CServer::ConMapReload(IConsole::IResult *pResult, void *pUser)
 	((CServer *)pUser)->m_MapReload = 1;
 }
 
+void CServer::ConNextMap(IConsole::IResult *pResult, void *pUser)
+{
+	if(!str_length(g_Config.m_SvMaprotation))
+		return;
+	
+	((CServer *)pUser)->NextMap();
+}
+
 void CServer::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData);
@@ -1448,6 +1512,7 @@ void CServer::RegisterCommands()
 	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "");
 	
 	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "");
+	Console()->Register("next_map", "", CFGFLAG_SERVER, ConNextMap, this, "");
 
 	Console()->Chain("sv_name", ConchainSpecialInfoupdate, this);
 	Console()->Chain("password", ConchainSpecialInfoupdate, this);
