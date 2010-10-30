@@ -283,6 +283,7 @@ public:
 
 	const char *DemoPlayer_Play(const char *pFilename, int StorageType);
 	void DemoRecorder_Start(const char *pFilename, bool WithTimestamp = true);
+	void DemoRecorder_Stop();
 
 	virtual class CEngine *Engine() { return &m_Engine; }
 };

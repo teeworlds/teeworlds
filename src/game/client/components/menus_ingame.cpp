@@ -99,7 +99,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		if(!Recording)
 			Client()->DemoRecorder_Start("demo");
 		else
-			DemoRecorder()->Stop();
+			Client()->DemoRecorder_Stop();
 	}
 	
 	/*

@@ -525,7 +525,7 @@ void CClient::Connect(const char *pAddress)
 	SetState(IClient::STATE_CONNECTING);
 
 	if(m_DemoRecorder.IsRecording())
-		m_DemoRecorder.Stop();
+		DemoRecorder_Stop();
 
 	m_InputtimeMarginGraph.Init(-150.0f, 150.0f);
 	m_GametimeMarginGraph.Init(-150.0f, 150.0f);
@@ -539,7 +539,7 @@ void CClient::DisconnectWithReason(const char *pReason)
 
 	// stop demo playback and recorder
 	m_DemoPlayer.Stop();
-	m_DemoRecorder.Stop();
+	DemoRecorder_Stop();
 
 	//
 	m_RconAuthed = 0;
@@ -779,7 +779,7 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, unsigned 
 	}
 
 	// stop demo recording if we loaded a new map
-	m_DemoRecorder.Stop();
+	DemoRecorder_Stop();
 
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "loaded map '%s'", pFilename);
@@ -1950,10 +1950,15 @@ void CClient::Con_Record(IConsole::IResult *pResult, void *pUserData)
 	pSelf->DemoRecorder_Start(pResult->GetString(0));
 }
 
+void CClient::DemoRecorder_Stop()
+{
+	m_DemoRecorder.Stop();
+}
+
 void CClient::Con_StopRecord(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
-	pSelf->m_DemoRecorder.Stop();
+	pSelf->DemoRecorder_Stop();
 }
 
 void CClient::RegisterCommands()
