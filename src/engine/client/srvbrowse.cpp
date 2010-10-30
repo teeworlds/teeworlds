@@ -615,7 +615,6 @@ void CServerBrowser::Update()
 		{
 			// timeout
 			RemoveRequest(pEntry);
-			m_NumRequests--;
 		}
 
 		pEntry = pNext;
@@ -712,6 +711,17 @@ void CServerBrowser::RemoveFavorite(const NETADDR &Addr)
 bool CServerBrowser::IsRefreshingMasters() const
 {
 	return m_pMasterServer->IsRefreshing();
+}
+
+
+int CServerBrowser::LoadingProgression() const
+{
+	if(m_NumServers == 0)
+		return 0;
+	
+	int Servers = m_NumServers;
+	int Loaded = m_NumServers-m_NumRequests;
+	return 100.0f * Loaded/Servers;
 }
 
 
