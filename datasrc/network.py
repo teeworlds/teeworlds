@@ -296,6 +296,24 @@ Messages = [
 	
 	NetMessage("Cl_IsRace", []),
 	
+	NetMessage("Cl_RaceShowOthers", [
+		NetBool("m_Active"),
+	]),
+	
+	NetMessage("Sv_RaceTime", [
+		NetIntAny("m_Time"),
+		NetIntAny("m_Check"),
+	]),
+	
+	NetMessage("Sv_Record", [
+		NetIntAny("m_Time"),
+	]),
+	
+	NetMessage("Sv_PlayerTime", [
+		NetIntAny("m_Time"),
+		NetIntRange("m_Cid", 0, 'MAX_CLIENTS-1'),
+	]),
+	
 	NetMessage("Cl_TeamsState", [
 		NetIntAny("m_Tee0"),
 		NetIntAny("m_Tee1"),

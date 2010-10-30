@@ -430,19 +430,19 @@ void CHud::OnRender()
 
 void CHud::OnMessage(int MsgType, void *pRawMsg)
 {
-	if(MsgType == NETMSGTYPE_SV_DDRACETIME)
+	if(MsgType == NETMSGTYPE_SV_RACETIME)
 	{
 		m_DDRaceTimeReceived = true;
 		
-		CNetMsg_Sv_DDRaceTime *pMsg = (CNetMsg_Sv_DDRaceTime *)pRawMsg;
+		CNetMsg_Sv_RaceTime *pMsg = (CNetMsg_Sv_RaceTime *)pRawMsg;
 		m_DDRaceTime = pMsg->m_Time;
 		m_DDRaceTick = 0;
 		
 		m_LastReceivedTimeTick = Client()->GameTick();
 		
-		m_FinishTime = pMsg->m_Finish ? true : false;
+		m_FinishTime = (pMsg->m_Check == 99);
 		
-		if(pMsg->m_Check)
+		if(pMsg->m_Check && pMsg->m_Check != 99)
 		{
 			m_CheckpointDiff = (float)pMsg->m_Check/100;
 			m_CheckpointTick = Client()->GameTick();
@@ -460,7 +460,11 @@ void CHud::OnMessage(int MsgType, void *pRawMsg)
 	else if(MsgType == NETMSGTYPE_SV_RECORD)
 	{
 		CNetMsg_Sv_Record *pMsg = (CNetMsg_Sv_Record *)pRawMsg;
-		m_ServerRecord = (float)pMsg->m_ServerTimeBest/100;
-		m_PlayerRecord = (float)pMsg->m_PlayerTimeBest/100;
+		m_ServerRecord = (float)pMsg->m_Time/100;
+	}
+	else if(MsgType == NETMSGTYPE_SV_PLAYERTIME)
+	{
+		CNetMsg_Sv_PlayerTime *pMsg = (CNetMsg_Sv_PlayerTime *)pRawMsg;
+		m_PlayerRecord = (float)pMsg->m_Time/100;
 	}
 }

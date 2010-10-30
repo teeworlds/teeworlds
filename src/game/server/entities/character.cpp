@@ -657,10 +657,10 @@ void CCharacter::OnFinish()
 		}
 		
 		if(GetPlayer()->m_IsUsingDDRaceClient) {
-			CNetMsg_Sv_DDRaceTime Msg;
+			CNetMsg_Sv_RaceTime Msg;
 			Msg.m_Time = (int)(time * 100.0f);
-			Msg.m_Check = 0;
-			Msg.m_Finish = 1;
+			Msg.m_Check = 99;
+			//Msg.m_Finish = 1;
 			
 			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
 		}
@@ -747,10 +747,10 @@ void CCharacter::Tick()
 			int IntTime = (int)m_Time;
 			
 			if(m_pPlayer->m_IsUsingDDRaceClient) {
-				CNetMsg_Sv_DDRaceTime Msg;
+				CNetMsg_Sv_RaceTime Msg;
 				Msg.m_Time = IntTime;
 				Msg.m_Check = 0;
-				Msg.m_Finish = 0;
+				//Msg.m_Finish = 0;
 				
 				if(m_CpActive != -1 && m_CpTick > Server()->Tick())
 				{
