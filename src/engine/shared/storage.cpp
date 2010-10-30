@@ -320,6 +320,15 @@ public:
 		}
 		return p;
 	}
+
+	virtual bool MoveFile(const char* pOldFilename, const char* pNewFilename, int Type)
+	{
+		if(Type < 0 || Type >= m_NumPaths)
+			return false;
+		char aOldBuffer[MAX_PATH_LENGTH];
+		char aNewBuffer[MAX_PATH_LENGTH];
+		return fs_move_file(GetPath(Type, pOldFilename, aOldBuffer, sizeof(aOldBuffer)), GetPath(Type, pNewFilename, aNewBuffer, sizeof (aNewBuffer)));
+	}
 };
 
 IStorage *CreateStorage(const char *pApplicationName, int NumArgs, const char **ppArguments) { return CStorage::Create(pApplicationName, NumArgs, ppArguments); }

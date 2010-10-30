@@ -995,6 +995,26 @@ int fs_chdir(const char *path);
 int fs_parent_dir(char *path);
 
 /*
+	Function: fs_move_file
+		Move or rename a file, erasing the destination if it already exists.
+
+	Parameters:
+		oldpath - The path to the file.
+		newpath - The new path once the file has been moved.
+
+	Returns:
+		Returns 0 on success, 1 on failure.
+
+	Remarks:
+		- The Strings are treated as zero-terminated strings.
+		- The OS may prevent the operation if the file is in use
+		or if the file is moved from a device to another.
+*/
+
+int fs_move_file(const char* oldpath, const char* newpath);
+
+
+/*
 	Group: Undocumented
 */
 

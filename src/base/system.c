@@ -1014,6 +1014,13 @@ int fs_parent_dir(char *path)
 	return 1;
 }
 
+int fs_move_file(const char* oldpath, const char* newpath)
+{
+	if (rename(oldpath, newpath) < 0)
+		return 1;
+	return 0;
+}
+
 void swap_endian(void *data, unsigned elem_size, unsigned num)
 {
 	char *src = (char*) data;
