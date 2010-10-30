@@ -1,5 +1,5 @@
-#ifndef ENGINE_SHARED_DEMOREC_H
-#define ENGINE_SHARED_DEMOREC_H
+#ifndef ENGINE_SHARED_DEMO_H
+#define ENGINE_SHARED_DEMO_H
 
 #include <engine/demo.h>
 #include "snapshot.h"
