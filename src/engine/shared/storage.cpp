@@ -4,6 +4,7 @@
 #include <engine/storage.h>
 #include "engine.h"
 #include "linereader.h"
+#include <time.h>
 
 // compiled-in data-dir path
 #define DATA_DIR "data"
@@ -251,6 +252,32 @@ public:
 		return pBuffer;
 	}
 	
+	virtual bool FindNewUniqueFilename(const char* pDirectoryName, const char *pFilenameBase, const char *pFileExtention, int Type, char *pFilename, int FilenameSize)
+	{
+		// find a free filename
+		int Index;
+
+		time_t Time;
+		char aDate[20];
+
+		time(&Time);
+		tm* TimeInfo = localtime(&Time);
+		strftime(aDate, sizeof(aDate), "%Y-%m-%d_%H-%M-%S", TimeInfo);
+
+		for(Index = 1; Index < 10000; Index++)
+		{
+			IOHANDLE io;
+			str_format(pFilename, FilenameSize, "%s/%s-%s-%05d%s", pDirectoryName, pFilenameBase, aDate, Index, pFileExtention);
+			io = OpenFile(pFilename, IOFLAG_READ, Type);
+			if(io)
+				io_close(io);
+			else
+				return true;
+		}
+		pFilename[0] = 0;
+		return false;
+	}
+
 	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, int Type, char *pBuffer = 0, int BufferSize = 0)
 	{
 		char aBuffer[MAX_PATH_LENGTH];
