@@ -59,6 +59,10 @@ MACRO_CONFIG_INT(GfxFinish, gfx_finish, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, ""
 
 MACRO_CONFIG_INT(InpMousesens, inp_mousesens, 100, 5, 100000, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Mouse sensitivity")
 
+MACRO_CONFIG_INT(DemoAutoStart, dem_autorecord, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Automatically Record Demos")
+MACRO_CONFIG_INT(DemoAutoStart_SaveAll, dem_autorecord_keepall, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Keep All Auto-recorded Demos")
+
+
 MACRO_CONFIG_STR(SvName, sv_name, 128, "unnamed server", CFGFLAG_SERVER, "Server name")
 MACRO_CONFIG_STR(SvBindaddr, sv_bindaddr, 128, "", CFGFLAG_SERVER, "Address to bind the server to")
 MACRO_CONFIG_INT(SvPort, sv_port, 8303, 0, 0, CFGFLAG_SERVER, "Port to use for the server")

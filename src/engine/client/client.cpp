@@ -274,6 +274,7 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_RecivedSnapshots = 0;
 
 	m_VersionInfo.m_State = 0;
+	m_WillRotateDemoFiles = false;
 }
 
 // ----- send functions -----
@@ -1275,6 +1276,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 							m_aSnapshots[SNAP_CURRENT] = m_SnapshotStorage.m_pLast;
 							m_LocalStartTime = time_get();
 							SetState(IClient::STATE_ONLINE);
+							DemoRecorder_HandleAutoStart();
 						}
 
 						// adjust game time
@@ -1922,6 +1924,20 @@ void CClient::Con_Play(IConsole::IResult *pResult, void *pUserData)
 	pSelf->DemoPlayer_Play(pResult->GetString(0), IStorage::TYPE_ALL);
 }
 
+void CClient::DemoRecorder_HandleAutoStart()
+{
+	if (g_Config.m_DemoAutoStart)
+	{
+		if (g_Config.m_DemoAutoStart_SaveAll)
+			DemoRecorder_Start("autorecord");
+		else
+		{
+			m_WillRotateDemoFiles = true;
+			DemoRecorder_Start("current", false);
+		}
+	}
+}
+
 void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp)
 {
 	if(State() != IClient::STATE_ONLINE)
@@ -1953,6 +1969,22 @@ void CClient::Con_Record(IConsole::IResult *pResult, void *pUserData)
 void CClient::DemoRecorder_Stop()
 {
 	m_DemoRecorder.Stop();
+
+	if (m_WillRotateDemoFiles)
+	{
+		/* If someones stops the demo-recording without using this function, then the current.demo file
+		will get overwritten. So unless there is an error, don't stop the recording directly. */
+		
+		if (m_DemoRecorder.TickCount() > 10 * SERVER_TICK_SPEED) {
+			// rotate the auto-recorded demos.
+
+			// the renaming may fail, we ignore that.
+			Storage()->MoveFile("demos/last.demo", "demos/old.demo", IStorage::TYPE_SAVE);
+			Storage()->MoveFile("demos/current.demo", "demos/last.demo", IStorage::TYPE_SAVE);
+
+		}
+		m_WillRotateDemoFiles = false;
+	}
 }
 
 void CClient::Con_StopRecord(IConsole::IResult *pResult, void *pUserData)

@@ -177,6 +177,8 @@ class CClient : public IClient, public CDemoPlayer::IListner
 		int m_State;
 		CHostLookup m_VersionServeraddr;
 	} m_VersionInfo;
+
+	bool m_WillRotateDemoFiles;
 public:
 	IEngineGraphics *Graphics() { return m_pGraphics; }
 	IEngineInput *Input() { return m_pInput; }
@@ -283,6 +285,7 @@ public:
 
 	const char *DemoPlayer_Play(const char *pFilename, int StorageType);
 	void DemoRecorder_Start(const char *pFilename, bool WithTimestamp = true);
+	void DemoRecorder_HandleAutoStart();
 	void DemoRecorder_Stop();
 
 	virtual class CEngine *Engine() { return &m_Engine; }
