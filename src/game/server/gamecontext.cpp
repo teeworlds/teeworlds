@@ -958,7 +958,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			SendBroadcast(aBuf, ClientId);
 		}
 	}
-	else if (MsgId == NETMSGTYPE_CL_ISDDRACE)
+	else if (MsgId == NETMSGTYPE_CL_ISRACE)
 	{
 		pPlayer->m_IsUsingDDRaceClient = true;
 		char aBuf[128];

@@ -847,7 +847,7 @@ void CGameClient::OnNewSnapshot()
 	
 	if(!m_DDRaceMsgSent && m_Snap.m_pLocalInfo)
 	{
-		CNetMsg_Cl_IsDDRace Msg;
+		CNetMsg_Cl_IsRace Msg;
 		Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 		m_DDRaceMsgSent = true;
 	}
