@@ -249,6 +249,7 @@ public:
 	void SendEmoticon(int ClientId, int Emoticon);
 	void SendWeaponPickup(int ClientId, int Weapon);
 	void SendBroadcast(const char *pText, int ClientId);
+	void SendRecord(int ClientId);
 	
 	static void SendChatResponse(const char *pLine, void *pUser);
 	static void SendChatResponseAll(const char *pLine, void *pUser);

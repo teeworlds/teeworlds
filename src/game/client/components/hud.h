@@ -7,6 +7,17 @@ class CHud : public CComponent
 	float m_Width;
 	float m_AverageFPS;
 	
+	float m_CheckpointDiff;
+	int m_DDRaceTime;
+	int m_LastReceivedTimeTick;
+	int m_CheckpointTick;
+	int m_DDRaceTick;
+	bool m_FinishTime;
+	float m_ServerRecord;
+	float m_PlayerRecord;
+	bool m_DDRaceTimeReceived;
+	
+	
 	void RenderCursor();
 	
 	void RenderFps();
@@ -18,6 +29,8 @@ class CHud : public CComponent
 	void RenderSuddenDeath();
 	void RenderScoreHud();
 	void RenderWarmupTimer();
+	void RenderTime();
+	void RenderRecord();
 
 	void MapscreenToGroup(float CenterX, float CenterY, struct CMapItemGroup *PGroup);
 public:
@@ -25,6 +38,7 @@ public:
 	
 	virtual void OnReset();
 	virtual void OnRender();
+	virtual void OnMessage(int MsgType, void *pRawMsg);
 };
 
 #endif

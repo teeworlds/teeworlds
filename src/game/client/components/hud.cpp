@@ -19,10 +19,20 @@ CHud::CHud()
 {
 	// won't work if zero
 	m_AverageFPS = 1.0f;
+	OnReset();
 }
 	
 void CHud::OnReset()
 {
+	m_CheckpointDiff = 0.0f;
+	m_DDRaceTime = 0;
+	m_LastReceivedTimeTick = 0;
+	m_CheckpointTick = 0;
+	m_DDRaceTick = 0;
+	m_FinishTime = false;
+	m_ServerRecord = -1.0f;
+	m_PlayerRecord = -1.0f;
+	m_DDRaceTimeReceived = false;
 }
 
 void CHud::RenderGameTimer()
@@ -307,6 +317,86 @@ void CHud::RenderHealthAndAmmo()
 	Graphics()->QuadsEnd();
 }
 
+void CHud::RenderTime()
+{
+	// check racestate
+	if(m_FinishTime && m_LastReceivedTimeTick + Client()->GameTickSpeed()*2 < Client()->GameTick())
+	{
+		m_FinishTime = false;
+		m_DDRaceTimeReceived = false;
+		return;
+	}
+	
+	if(m_DDRaceTime)
+	{
+		char aBuf[64];
+		if(m_FinishTime)
+		{
+			str_format(aBuf, sizeof(aBuf), "Finish time: %02d:%02d.%02d", m_DDRaceTime/6000, m_DDRaceTime/100-m_DDRaceTime/6000 * 60, m_DDRaceTime % 100);
+			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,aBuf,-1)/2, 20, 12, aBuf, -1);
+		}
+		else if(m_DDRaceTimeReceived)
+		{
+			str_format(aBuf, sizeof(aBuf), "%02d:%02d.%d", m_DDRaceTime/60, m_DDRaceTime%60, m_DDRaceTick/10);
+			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,"00:00.0",-1)/2, 20, 12, aBuf, -1); // use fixed value for text width so its not shaky
+		}
+	
+		if(m_CheckpointTick+Client()->GameTickSpeed()*6 > Client()->GameTick())
+		{
+			str_format(aBuf, sizeof(aBuf), "%+5.2f", m_CheckpointDiff);
+			
+			// calculate alpha (4 sec 1 than get lower the next 2 sec)
+			float a = 1.0f;
+			if(m_CheckpointTick+Client()->GameTickSpeed()*4 < Client()->GameTick() && m_CheckpointTick+Client()->GameTickSpeed()*6 > Client()->GameTick())
+			{
+				// lower the alpha slowly to blend text out
+				a = ((float)(m_CheckpointTick+Client()->GameTickSpeed()*6) - (float)Client()->GameTick()) / (float)(Client()->GameTickSpeed()*2);
+			}
+			
+			if(m_CheckpointDiff > 0)
+				TextRender()->TextColor(1.0f,0.5f,0.5f,a); // red
+			else if(m_CheckpointDiff < 0)
+				TextRender()->TextColor(0.5f,1.0f,0.5f,a); // green
+			else if(!m_CheckpointDiff)
+				TextRender()->TextColor(1,1,1,a); // white
+			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0, 10, aBuf, -1)/2, 33, 10, aBuf, -1);
+			
+			TextRender()->TextColor(1,1,1,1);
+		}
+	}
+	
+	static int LastChangeTick = 0;
+	if(LastChangeTick != Client()->PredGameTick())
+	{	
+		m_DDRaceTick += 100/Client()->GameTickSpeed();
+		LastChangeTick = Client()->PredGameTick();
+	}
+	
+	if(m_DDRaceTick >= 100)
+		m_DDRaceTick = 0;
+}
+
+void CHud::RenderRecord()
+{	
+	if(m_ServerRecord > 0 )
+	{
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "Server best:");
+		TextRender()->Text(0, 5, 40, 6, aBuf, -1);
+		str_format(aBuf, sizeof(aBuf), "%02d:%05.2f", (int)m_ServerRecord/60, m_ServerRecord-((int)m_ServerRecord/60*60));
+		TextRender()->Text(0, 53, 40, 6, aBuf, -1);
+	}
+	
+	if(m_PlayerRecord > 0 )
+	{				
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "Personal best:");
+		TextRender()->Text(0, 5, 47, 6, aBuf, -1);
+		str_format(aBuf, sizeof(aBuf), "%02d:%05.2f", (int)m_PlayerRecord/60, m_PlayerRecord-((int)m_PlayerRecord/60*60));
+		TextRender()->Text(0, 53, 47, 6, aBuf, -1);
+	}
+}
+
 void CHud::OnRender()
 {
 	if(!m_pClient->m_Snap.m_pGameobj)
@@ -318,8 +408,11 @@ void CHud::OnRender()
 	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team == -1)
 		Spectate = true;
 	
-	if(m_pClient->m_Snap.m_pLocalCharacter && !Spectate && !(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver))
+	if(m_pClient->m_Snap.m_pLocalCharacter && !Spectate && !(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver)) {
 		RenderHealthAndAmmo();
+		RenderTime();
+	}
+		
 
 	RenderGameTimer();
 	RenderSuddenDeath();
@@ -330,5 +423,44 @@ void CHud::OnRender()
 		RenderConnectionWarning();
 	RenderTeambalanceWarning();
 	RenderVoting();
+	RenderRecord();
 	RenderCursor();
+	
+}
+
+void CHud::OnMessage(int MsgType, void *pRawMsg)
+{
+	if(MsgType == NETMSGTYPE_SV_DDRACETIME)
+	{
+		m_DDRaceTimeReceived = true;
+		
+		CNetMsg_Sv_DDRaceTime *pMsg = (CNetMsg_Sv_DDRaceTime *)pRawMsg;
+		m_DDRaceTime = pMsg->m_Time;
+		m_DDRaceTick = 0;
+		
+		m_LastReceivedTimeTick = Client()->GameTick();
+		
+		m_FinishTime = pMsg->m_Finish ? true : false;
+		
+		if(pMsg->m_Check)
+		{
+			m_CheckpointDiff = (float)pMsg->m_Check/100;
+			m_CheckpointTick = Client()->GameTick();
+		}
+	}
+	else if(MsgType == NETMSGTYPE_SV_KILLMSG)
+	{
+		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
+		if(pMsg->m_Victim == m_pClient->m_Snap.m_LocalCid)
+		{
+			m_CheckpointTick = 0;
+			m_DDRaceTime = 0;
+		}
+	}
+	else if(MsgType == NETMSGTYPE_SV_RECORD)
+	{
+		CNetMsg_Sv_Record *pMsg = (CNetMsg_Sv_Record *)pRawMsg;
+		m_ServerRecord = (float)pMsg->m_ServerTimeBest/100;
+		m_PlayerRecord = (float)pMsg->m_PlayerTimeBest/100;
+	}
 }

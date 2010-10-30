@@ -607,7 +607,7 @@ void CCharacter::OnFinish()
 			if(str_comp_num(Server()->ClientName(m_pPlayer->GetCID()), "nameless tee", 12) != 0)
 				GameServer()->Score()->SaveScore(m_pPlayer->GetCID(), time, this);
 		}
-		
+		bool NeedToSendNewRecord = false;
 		// update server best time
 		if(GameServer()->m_pController->m_CurrentRecord == 0 || time < GameServer()->m_pController->m_CurrentRecord)
 		{
@@ -615,7 +615,8 @@ void CCharacter::OnFinish()
 			if(str_comp_num(Server()->ClientName(m_pPlayer->GetCID()), "nameless tee", 12) != 0) {
 				GameServer()->m_pController->m_CurrentRecord = time;
 				//dbg_msg("character", "Finish");
-//				GetPlayer()->SendServerRecord();
+				NeedToSendNewRecord = true;
+				
 			}
 				
 		}
@@ -625,6 +626,43 @@ void CCharacter::OnFinish()
 		if(!GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime || GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime > time)
 		{
 			GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime = time;
+			NeedToSendNewRecord = true;
+			for(int i = 0; i < MAX_CLIENTS; i++)
+			{
+				if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->m_IsUsingDDRaceClient)
+				{
+					if(!g_Config.m_SvHideScore || i == m_pPlayer->GetCID())
+					{
+						CNetMsg_Sv_PlayerTime Msg;
+						char aBuf[16];
+						str_format(aBuf, sizeof(aBuf), "%.0f", time*100.0f); // damn ugly but the only way i know to do it
+						int TimeToSend;
+						sscanf(aBuf, "%d", &TimeToSend);
+						Msg.m_Time = TimeToSend;
+						Msg.m_Cid = m_pPlayer->GetCID();
+						Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
+					}
+				}
+			}
+		}
+		
+		if(NeedToSendNewRecord && GetPlayer()->m_IsUsingDDRaceClient) { 
+			for(int i = 0; i < MAX_CLIENTS; i++)
+			{
+				if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->m_IsUsingDDRaceClient)
+				{
+					GameServer()->SendRecord(i);
+				}
+			}
+		}
+		
+		if(GetPlayer()->m_IsUsingDDRaceClient) {
+			CNetMsg_Sv_DDRaceTime Msg;
+			Msg.m_Time = (int)(time * 100.0f);
+			Msg.m_Check = 0;
+			Msg.m_Finish = 1;
+			
+			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
 		}
 
 		int TTime = 0-(int)time;
@@ -707,42 +745,69 @@ void CCharacter::Tick()
 	{
 		if (m_DDRaceState == DDRACE_STARTED) {
 			int IntTime = (int)m_Time;
-			if(m_BroadTime)
-				str_format(aBuftime, sizeof(aBuftime), "%s%d:%s%d", ((IntTime/60) > 9)?"":"0", IntTime/60, ((IntTime%60) > 9)?"":"0", IntTime%60);
-			else
-				str_format(aBuftime, sizeof(aBuftime), "");
-
-			if(m_CpActive != -1 && m_CpTick > Server()->Tick())
-			{
-				if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
+			
+			if(m_pPlayer->m_IsUsingDDRaceClient) {
+				CNetMsg_Sv_DDRaceTime Msg;
+				Msg.m_Time = IntTime;
+				Msg.m_Check = 0;
+				Msg.m_Finish = 0;
+				
+				if(m_CpActive != -1 && m_CpTick > Server()->Tick())
+				{
+					if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
+					{
+						float Diff = (m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive])*100;
+						Msg.m_Check = (int)Diff;
+					}
+				}
+				
+				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
+			} else {
+				if(m_BroadTime)
+					str_format(aBuftime, sizeof(aBuftime), "%s%d:%s%d", ((IntTime/60) > 9)?"":"0", IntTime/60, ((IntTime%60) > 9)?"":"0", IntTime%60);
+				else
+					str_format(aBuftime, sizeof(aBuftime), "");
+				
+				if(m_CpActive != -1 && m_CpTick > Server()->Tick())
+				{
+					if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
+					{
+						char aTmp[128];
+						float Diff = m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive];
+						str_format(aTmp, sizeof(aTmp), "\nCheckpoint | Diff : %+5.2f", Diff);
+						strcat(aBuftime, aTmp);
+					}
+				}
+				if( g_Config.m_SvBroadcast[0] != 0 && m_BroadCast)
 				{
 					char aTmp[128];
-					float Diff = m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive];
-					str_format(aTmp, sizeof(aTmp), "\nCheckpoint | Diff : %+5.2f", Diff);
+					str_format(aTmp, sizeof(aTmp), "\n%s\n", g_Config.m_SvBroadcast);
 					strcat(aBuftime, aTmp);
 				}
+				if(Server()->Tick() >= (m_LastBroadcast + Server()->TickSpeed()))
+				{
+					GameServer()->SendBroadcast(aBuftime, m_pPlayer->GetCID());
+					m_LastBroadcast = Server()->Tick();
+				}
 			}
+			
+			
 
-			if( g_Config.m_SvBroadcast[0] != 0 && m_BroadCast)
-			{
-				char aTmp[128];
-				str_format(aTmp, sizeof(aTmp), "\n%s\n", g_Config.m_SvBroadcast);
-				strcat(aBuftime, aTmp);
-			}
-			if(Server()->Tick() >= (m_LastBroadcast + Server()->TickSpeed()))
-			{
-				GameServer()->SendBroadcast(aBuftime, m_pPlayer->GetCID());
-				m_LastBroadcast = Server()->Tick();
-			}
+			
+
+			
 		}
-		else
+		else if(!m_pPlayer->m_IsUsingDDRaceClient) 
 		{
 
 			if( g_Config.m_SvBroadcast[0] != 0 && (Server()->Tick() > (m_LastBroadcast + (Server()->TickSpeed() * 9)))) {
-				char aTmp[128],aYourBest[64],aServerBest[64];
+				char aTmp[128], aYourBest[64],aServerBest[64];
 				str_format(aYourBest, sizeof(aYourBest), "Your Best:'%s%d:%s%d'", ((pData->m_BestTime / 60) < 10)?"0":"", (int)(pData->m_BestTime / 60), (((int)pData->m_BestTime % 60) < 10)?"0":"", (int)pData->m_BestTime % 60);
+				
 				CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
+				
 				str_format(aServerBest, sizeof(aServerBest), "Server Best:'%s%d:%s%d'", ((GameServer()->m_pController->m_CurrentRecord / 60) < 10)?"0":"", (int)(GameServer()->m_pController->m_CurrentRecord / 60), (((int)GameServer()->m_pController->m_CurrentRecord % 60) < 10)?"0":"", (int)GameServer()->m_pController->m_CurrentRecord % 60);
+				
 				str_format(aTmp, sizeof(aTmp), "%s\n%s %s", g_Config.m_SvBroadcast, (GameServer()->m_pController->m_CurrentRecord)?aServerBest:"", (pData->m_BestTime)?aYourBest:"");
 				GameServer()->SendBroadcast(aTmp, m_pPlayer->GetCID());
 				m_LastBroadcast = Server()->Tick();
