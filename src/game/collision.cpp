@@ -682,6 +682,17 @@ int CCollision::IsCheckpoint(int Index)
 	return -1;
 }
 
+int CCollision::IsFCheckpoint(int Index)
+{
+	if(Index < 0 || !m_pFront)
+		return -1;
+
+	int z = m_pFront[Index].m_Index;
+	if(z >= 35 && z <= 59)
+		return z-35;
+	return -1;
+}
+
 vec2 CCollision::CpSpeed(int Index)
 {
 	if(Index < 0)

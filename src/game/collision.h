@@ -64,8 +64,9 @@ public:
 	int IsThrough(int x, int y);
 	int IsNoLaser(int x, int y);
 	int IsFNoLaser(int x, int y);
-	
+
 	int IsCheckpoint(int Index);
+	int IsFCheckpoint(int Index);
 	
 	int IsCp(int x, int y);
 

@@ -879,6 +879,13 @@ void CCharacter::HandleTiles(int Index)
 		m_CpCurrent[cp] = m_Time;
 		m_CpTick = Server()->Tick() + Server()->TickSpeed()*2;
 	}
+	int cpf = GameServer()->Collision()->IsFCheckpoint(MapIndex);
+	if(cpf != -1 && m_DDRaceState == DDRACE_STARTED && cpf > m_CpActive)
+	{
+		m_CpActive = cpf;
+		m_CpCurrent[cpf] = m_Time;
+		m_CpTick = Server()->Tick() + Server()->TickSpeed()*2;
+	}
 	if(((m_TileIndex == TILE_BEGIN) || (m_TileFIndex == TILE_BEGIN)) && (m_DDRaceState == DDRACE_NONE || (m_DDRaceState == DDRACE_STARTED && !Team())))
 	{
 		Controller->m_Teams.OnCharacterStart(m_pPlayer->GetCID());
