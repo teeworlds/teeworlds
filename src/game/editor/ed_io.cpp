@@ -1,3 +1,4 @@
+#include <engine/client.h>
 #include <engine/console.h>
 #include <engine/graphics.h>
 #include <engine/storage.h>
@@ -381,11 +382,8 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving done");
 	
 	// send rcon.. if we can
-	/*
-	if(Client()->RconAuthed())
-	{
-		Client()->Rcon("sv_map_reload 1");
-	}*/
+	if(m_pEditor->Client()->RconAuthed())
+		m_pEditor->Client()->Rcon("reload");
 	
 	return 1;
 }
