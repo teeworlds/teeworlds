@@ -974,11 +974,11 @@ void CCharacter::HandleTiles(int Index)
 			else
 				TeeAngle = asin(-1.0f);
 			
-			TeeSpeed = sqrt(pow(TempVel.x, 2) + pow(TempVel.y, 2));
-			
 			if(TeeAngle < 0)
 				TeeAngle = 4.0f * asin(1.0f) + TeeAngle;
 			
+			TeeSpeed = sqrt(pow(TempVel.x, 2) + pow(TempVel.y, 2));
+
 			DiffAngle = SpeederAngle - TeeAngle;
 			SpeedLeft = MaxSpeed / 5.0f - cos(DiffAngle) * TeeSpeed;
 			
