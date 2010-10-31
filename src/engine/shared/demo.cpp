@@ -406,7 +406,13 @@ void CDemoPlayer::DoTick()
 		{
 			// stop on error or eof
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "demo_player", "end of file");
-			Pause();
+			if(m_Info.m_PreviousTick == -1)
+			{
+				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_player", "empty demo");
+				Stop();
+			}
+			else
+				Pause();
 			break;
 		}
 		
