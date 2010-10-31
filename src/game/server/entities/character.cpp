@@ -942,6 +942,7 @@ void CCharacter::HandleTiles(int Index)
 		float TeeAngle, SpeederAngle, DiffAngle, SpeedLeft, TeeSpeed;
 		const float Zero=0;
 		GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force, &MaxSpeed);
+		if(MaxSpeed > 0 && MaxSpeed < 5) MaxSpeed = 5;
 		//dbg_msg("speedup tile start","Direction %f %f, Force %d, Max Speed %d", (Direction).x,(Direction).y, Force, MaxSpeed);
 		if(
 				((Direction.x < 0) && ((int)GameServer()->Collision()->GetPos(MapIndexL).x) && ((int)GameServer()->Collision()->GetPos(MapIndexL).x < (int)m_Core.m_Pos.x)) ||
