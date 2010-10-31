@@ -243,12 +243,7 @@ void CCharacterCore::Tick(bool UseInput)
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
 				CCharacterCore *p = m_pWorld->m_apCharacters[i];
-				if(g_Config.m_DbgCGCore)
-				{
-					char aBuf[512];
-					str_format(aBuf, sizeof(aBuf), "ThisId = %d Id = %d Team = %d", m_Id, i, m_pTeams->Team(i));
-					dbg_msg("GameCore", aBuf);
-				}
+				dbg_msg1("GameCore", "ThisId = %d Id = %d Team = %d", m_Id, i, m_pTeams->Team(i));
 				if(!p || p == this || !m_pTeams->CanCollide(i, m_Id))
 					continue;
 				

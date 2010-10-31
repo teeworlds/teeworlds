@@ -294,19 +294,18 @@ Messages = [
 		NetStringStrict("m_Value"),
 	]),
 	
-	NetMessage("Cl_IsRace", []),
+	NetMessage("Cl_IsDDRace", []),
 	
-	NetMessage("Cl_RaceShowOthers", [
-		NetBool("m_Active"),
-	]),
 	
-	NetMessage("Sv_RaceTime", [
+	NetMessage("Sv_DDRaceTime", [
 		NetIntAny("m_Time"),
 		NetIntAny("m_Check"),
+		NetIntRange("m_Finish", 0, 1),
 	]),
 	
 	NetMessage("Sv_Record", [
-		NetIntAny("m_Time"),
+		NetIntAny("m_ServerTimeBest"),
+		NetIntAny("m_PlayerTimeBest"),
 	]),
 	
 	NetMessage("Sv_PlayerTime", [
