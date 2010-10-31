@@ -1,0 +1,791 @@
+##### translated strings #####
+
+%d of %d servers, %d players
+== %d/%d palvelinta, %d pelaajaa
+
+Abort
+== Keskeytä
+
+Address
+== Osoite
+
+All
+== Kaikki
+
+Alpha
+== Alfa
+
+Always show name plates
+== Näytä nimikyltit aina
+
+Are you sure that you want to quit?
+== Oletko varma, että haluat lopettaa?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Tämä on ensimmäinen kerta kun käynnistät pelin, ole hyvä ja kirjoita nimimerkkisi alle. On suositeltua, että tarkistat asetukset ja muutat niitä mielesi mukaan ennen kuin liityt palvelimille.
+
+Blue team
+== Sininen joukkue
+
+Blue team wins!
+== Sininen joukkue voitti!
+
+Body
+== Vartalo
+
+Call vote
+== Aloita äänestys
+
+Chat
+== Chatti
+
+Close
+== Sulje
+
+Compatible version
+== Yhteensopiva versio
+
+Connect
+== Yhdistä
+
+Connecting to
+== Yhdistetään
+
+Console
+== Konsoli
+
+Controls
+== Kontrollit
+
+Current
+== Nykyinen
+
+Current version: %s
+== Nykyinen versio: %s
+
+Custom colors
+== Omat värit
+
+Demos
+== Demot
+
+Disconnect
+== Katkaise yhteys
+
+Disconnected
+== Yhteys katkaistu
+
+Display Modes
+== Näyttötilat
+
+Downloading map
+== Ladataan kenttää
+
+Draw!
+== Tasapeli!
+
+Dynamic Camera
+== Dynaaminen kamera
+
+Emoticon
+== Hymiö
+
+Enter
+== Jatka
+
+FSAA samples
+== FSAA näytteet
+
+Favorite
+== Suosikki
+
+Favorites
+== Suosikit
+
+Feet
+== Jalat
+
+Filter
+== Suotimet
+
+Fire
+== Ammu
+
+Fullscreen
+== Koko näyttö
+
+Game
+== Peli
+
+Game info
+== Pelin tiedot
+
+Game over
+== Peli loppui
+
+Game type
+== Pelityyppi
+
+Game types:
+== Pelityypit:
+
+General
+== Yleinen
+
+Graphics
+== Grafiikat
+
+Grenade
+== Kranaatti
+
+Hammer
+== Nuija
+
+Has people playing
+== Ihmisiä pelaamassa
+
+High Detail
+== Korkea yksityiskohtataso
+
+Hook
+== Koukku
+
+Host address
+== Palvelimen osoite
+
+Hue
+== Värisävy
+
+Info
+== Info
+
+Internet
+== Internet
+
+Join blue
+== Liity sinisiin
+
+Join game
+== Liity peliin
+
+Join red
+== Liity punaisiin
+
+Jump
+== Hyppää
+
+Kick
+== Kick
+
+LAN
+== LAN
+
+Language
+== Kieli
+
+Lht.
+== Valoisuus
+
+Loading
+== Ladataan
+
+MOTD
+== Palvelimen viesti
+
+Map
+== Kenttä
+
+Maximum ping:
+== Maksimiping:
+
+Miscellaneous
+== Sekalaista
+
+Mouse sens.
+== Hiiren herkkyys
+
+Move left
+== Liiku vasemmalle
+
+Move right
+== Liiku oikealle
+
+Movement
+== Liike
+
+Mute when not active
+== Mykistä, kun ei aktiivinen
+
+Name
+== Nimi
+
+News
+== Uutiset
+
+Next weapon
+== Seuraava ase
+
+Nickname
+== Nimimerkki
+
+No
+== Ei
+
+No password
+== Ei salasanaa
+
+No servers found
+== Palvelimia ei löytynyt
+
+No servers match your filter criteria
+== Yksikään palvelin ei läpäissyt suodinkriteerejäsi
+
+Ok
+== Ok
+
+Password
+== Salasana
+
+Password Incorrect
+== Väärä salasana
+
+Ping
+== Ping
+
+Pistol
+== Pistooli
+
+Play
+== Toista
+
+Player
+== Pelaaja
+
+Players
+== Pelaajia
+
+Prev. weapon
+== Edellinen ase
+
+Quality Textures
+== Hyvälaatuiset tekstuurit
+
+Quick search:
+== Pikahaku:
+
+Quit
+== Lopeta
+
+Red team
+== Punainen joukkue
+
+Red team wins!
+== Punainen joukkue voitti!
+
+Refresh
+== Päivitä
+
+Refreshing master servers
+== Päivitetään isäntäpalvelimia
+
+Remote console
+== Etäkonsoli
+
+Reset filter
+== Nollaa suotimet
+
+Reset to defaults
+== Palaa oletusasetuksiin
+
+Rifle
+== Kivääri
+
+Round
+== Kierros
+
+Sample rate
+== Näytteenottotaajuus
+
+Sat.
+== Kylläisyys
+
+Score
+== Pisteet
+
+Score board
+== Tulostaulu
+
+Score limit
+== Pisteraja
+
+Scoreboard
+== Tuloslista
+
+Screenshot
+== Kuvankaappaus
+
+Server details
+== Palvelimen yksityiskohdat
+
+Server info
+== Palvelimen tiedot
+
+Server not full
+== Palvelin ei täysi
+
+Settings
+== Asetukset
+
+Shotgun
+== Haulikko
+
+Show name plates
+== Näytä nimikyltit
+
+Show only supported
+== Näytä vain tuetut
+
+Skins
+== Ulkonäkö
+
+Sound
+== Äänet
+
+Sound volume
+== Äänenvoimakkuus
+
+Spectate
+== Katso
+
+Spectators
+== Katsojat
+
+Standard gametype
+== Standardipelityyppi
+
+Standard map
+== Standardikenttä
+
+Switch weapon on pickup
+== Vaihda asetta nostaessasi uuden
+
+Team
+== Joukkue
+
+Team chat
+== Joukkuechatti
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Teeworlds %s on julkaistu! Lataa se osoitteesta www.teeworlds.com!
+
+Texture Compression
+== Tekstuuripakkaus
+
+The server is running a non-standard tuning on a pure game type.
+== Tämä palvelin ajaa ei-standardeja virityksiä standardipelityypillä.
+
+Time limit
+== Aikaraja
+
+Try again
+== Yritä uudelleen
+
+Type
+== Tyyppi
+
+UI Color
+== Käyttöliittymäväri
+
+Use sounds
+== Käytä ääniefektejä
+
+V-Sync
+== V-Sync
+
+Version
+== Versio
+
+Vote no
+== Äänestä ei
+
+Vote yes
+== Äänestä kyllä
+
+Voting
+== Äänestys
+
+Weapon
+== Ase
+
+Welcome to Teeworlds
+== Tervetuloa Teeworldsiin
+
+Yes
+== Kyllä
+
+You must restart the game for all settings to take effect.
+== Sinun täytyy uudelleenkäynnistää peli, jotta kaikki asetukset tulisivat voimaan.
+
+Force vote
+== Pakota äänestys
+
+Show chat
+== Näytä chatti
+
+Your skin
+== Sinun ulkonäkösi
+
+Password incorrect
+== Väärä salasana
+
+Please balance teams!
+== Ole hyvä ja tasoita joukkueet!
+
+Connection Problems...
+== Yhteysongelmia...
+
+Warmup
+== Lämmittely
+
+Sudden Death
+== Äkkikuolema
+
+%ds left
+== %ds poistui
+
+error loading demo
+== virhe ladattaessa demoa
+
+Error
+== Virhe
+
+Open map
+== Open map
+
+Open
+== Avaa
+
+Save map
+== Save map
+
+Save
+== Save
+
+HD
+== HD
+
+[ctrl+h] Toggle High Detail
+== [ctrl+h] Toggle High Detail
+
+Anim
+== Anim
+
+[ctrl+m] Toggle animation
+== [ctrl+m] Toggle animation
+
+Proof
+== Proof
+
+[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+
+ZO
+== ZO
+
+[NumPad-] Zoom out
+== [NumPad-] Zoom out
+
+[NumPad*] Zoom to normal and remove editor offset
+== [NumPad*] Zoom to normal and remove editor offset
+
+ZI
+== ZI
+
+[NumPad+] Zoom in
+== [NumPad+] Zoom in
+
+Increase animation speed
+== Increase animation speed
+
+Normal animation speed
+== Normal animation speed
+
+Decrease animation speed
+== Decrease animation speed
+
+[N] Flip brush horizontal
+== [N] Flip brush horizontal
+
+[M] Flip brush vertical
+== [M] Flip brush vertical
+
+CCW
+== CCW
+
+[R] Rotates the brush counter clockwise
+== [R] Rotates the brush counter clockwise
+
+CW
+== CW
+
+[T] Rotates the brush clockwise
+== [T] CW
+
+Add Quad
+== Add Quad
+
+Adds a new quad
+== Adds a new quad
+
+Border
+== Border
+
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+
+Left mouse button to move. Hold shift to move the texture.
+== Left mouse button to move. Hold shift to move the texture.
+
+Use left mouse button to drag and create a brush.
+== Use left mouse button to drag and create a brush.
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== Use left mouse button to paint with the brush. Right button clears the brush.
+
+Decrease
+== Decrease
+
+Increase
+== Increase
+
+None
+== None
+
+Toggle group visibility
+== Toggle group visibility
+
+Select group. Right click for properties.
+== Select group. Right click for properties.
+
+Select layer. Right click for properties.
+== Select layer. Right click for properties.
+
+Add group
+== Add group
+
+Adds a new group
+== Add group
+
+Embed
+== Embed
+
+Embeds the image into the map file.
+== Embeds the image into the map file.
+
+Make external
+== Make external
+
+Removes the image from the map file.
+== Removes the image from the map file.
+
+Replace
+== Replace
+
+Replaces the image with a new one
+== Replaces the image with a new one
+
+Replace Image
+== Replace Image
+
+Remove
+== Remove
+
+Removes the image from the map
+== Removes the image from the map
+
+Embedded
+== Embedded
+
+External
+== External
+
+Select image
+== Select image
+
+Load a new image to use in the map
+== Load a new image to use in the map
+
+Add Image
+== Add Image
+
+Add
+== Add
+
+Filename:
+== Filename:
+
+Cancel
+== Cancel
+
+Layers
+== Layers
+
+Images
+== Images
+
+Switch between images and layers managment.
+== Switch between images and layers managment.
+
+Envelopes
+== Envelopes
+
+Toggles the envelope editor.
+== Toggles the envelope editor.
+
+%s Right click for context menu.
+== %s Right click for context menu.
+
+Color+
+== Color+
+
+Creates a new color envelope
+== Creates a new color envelope
+
+Pos.+
+== Pos.+
+
+Creates a new pos envelope
+== Creates a new pos envelope
+
+Previous Envelope
+== Previous Envelope
+
+Next Envelope
+== Next Envelope
+
+Name:
+== Name:
+
+Press right mouse button to create a new point
+== Press right mouse button to create a new point
+
+Switch curve type
+== Switch curve type
+
+Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
+== Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
+
+New
+== New
+
+Creates a new map
+== Creates a new map
+
+Opens a map for editing
+== Opens a map for editing
+
+Append
+== Append
+
+Opens a map and adds everything from that map to the current one
+== Opens a map and adds everything from that map to the current one
+
+Append map
+== Append map
+
+Saves the current map
+== Saves the current map
+
+Save As
+== Save As
+
+Saves the current map under a new name
+== Saves the current map under a new name
+
+Exits from the editor
+== Exits from the editor
+
+Clear collision
+== Clear collision
+
+Removes collision from this layer
+== Removes collision from this layer
+
+Make collision
+== Make collision
+
+Constructs collision from this layer
+== Constructs collision from this layer
+
+Width
+== Width
+
+Height
+== Height
+
+Image
+== Image
+
+Delete group
+== Delete group
+
+Add quads layer
+== Add quads layer
+
+Creates a new quad layer
+== Creates a new quad layer
+
+Add tile layer
+== Add tile layer
+
+Creates a new tile layer
+== Creates a new tile layer
+
+Delete layer
+== Delete layer
+
+Deletes the layer
+== Deletes the layer
+
+Group
+== Group
+
+Order
+== Order
+
+Detail
+== Detail
+
+Delete
+== Poista
+
+Deletes the current quad
+== Deletes the current quad
+
+Square
+== Square
+
+Squares the current quad
+== Squares the current quad
+
+Pos. Env
+== Pos. Env
+
+Pos. TO
+== Pos. TO
+
+Color Env
+== Color Env
+
+Color TO
+== Color TO
+
+Toggle layer visibility
+== Toggle layer visibility
+
+File
+== File
+
+##### needs translation ####
+
+##### old translations ####
