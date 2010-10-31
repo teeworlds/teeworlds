@@ -1493,6 +1493,8 @@ unsigned str_quickhash(const char *str)
 }
 
 
+
+
 #if defined(__cplusplus)
 }
 #endif

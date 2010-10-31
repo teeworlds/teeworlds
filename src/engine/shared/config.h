@@ -12,6 +12,12 @@ struct CConfiguration
 
 extern CConfiguration g_Config;
 
+
+
+void dbg_msg1(char * where, char * format, ...);
+
+
+
 enum
 {
 	CFGFLAG_SAVE=1,
