@@ -939,6 +939,7 @@ void CCharacter::HandleTiles(int Index)
 	{
 		vec2 Direction, MaxVel, TempVel = m_Core.m_Vel;
 		int Force, MaxSpeed = 0;
+		float TeeAngle, SpeederAngle, DiffAngle, SpeedLeft, TeeSpeed;
 		const float Zero=0;
 		GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force, &MaxSpeed);
 		//dbg_msg("speedup tile start","Direction %f %f, Force %d, Max Speed %d", (Direction).x,(Direction).y, Force, MaxSpeed);
@@ -949,13 +950,51 @@ void CCharacter::HandleTiles(int Index)
 				((Direction.y < 0) && ((int)GameServer()->Collision()->GetPos(MapIndexT).y) && ((int)GameServer()->Collision()->GetPos(MapIndexT).y < (int)m_Core.m_Pos.y))
 				)
 				m_Core.m_Pos = m_PrevPos;
-		TempVel += Direction * Force;
-		MaxVel.x = (MaxSpeed/5)/Direction.x;
-		MaxVel.y = (MaxSpeed/5)/Direction.y;
-		if(MaxSpeed && (fabs(Direction.x) > 0.000001) && (TempVel.x > MaxVel.x && MaxVel.x > 0 || TempVel.x < MaxVel.x && MaxVel.x < 0))
-			TempVel.x = MaxVel.x;
-		if(MaxSpeed && (fabs(Direction.y) > 0.000001) && (TempVel.y > MaxVel.y && MaxVel.y > 0 || TempVel.y < MaxVel.y && MaxVel.y < 0))
-			TempVel.y = MaxVel.y;
+		
+		if(MaxSpeed > 0)
+		{
+			if(Direction.x > 0.0000001f)
+				SpeederAngle = -atan(Direction.y / Direction.x);
+			else if(Direction.x < 0.0000001f)
+				SpeederAngle = atan(Direction.y / Direction.x) + 2.0f * asin(1.0f);
+			else if(Direction.y > 0.0000001f)
+				SpeederAngle = asin(1.0f);
+			else
+				SpeederAngle = asin(-1.0f);
+			
+			if(SpeederAngle < 0)
+				SpeederAngle = 4.0f * asin(1.0f) + SpeederAngle;
+			
+			if(TempVel.x > 0.0000001f)
+				TeeAngle = -atan(TempVel.y / TempVel.x);
+			else if(TempVel.x < 0.0000001f)
+				TeeAngle = atan(TempVel.y / TempVel.x) + 2.0f * asin(1.0f);
+			else if(TempVel.y > 0.0000001f)
+				TeeAngle = asin(1.0f);
+			else
+				TeeAngle = asin(-1.0f);
+			
+			if(TeeAngle < 0)
+				TeeAngle = 4.0f * asin(1.0f) + TeeAngle;
+			
+			TeeSpeed = sqrt(pow(TempVel.x, 2) + pow(TempVel.y, 2));
+
+			DiffAngle = SpeederAngle - TeeAngle;
+			SpeedLeft = MaxSpeed / 5.0f - cos(DiffAngle) * TeeSpeed;
+			
+			//dbg_msg("speedup tile debug","MaxSpeed %i, TeeSpeed %f, SpeedLeft %f, SpeederAngle %f, TeeAngle %f", MaxSpeed, TeeSpeed, SpeedLeft, SpeederAngle, TeeAngle);
+			
+			if(abs(SpeedLeft) > Force && SpeedLeft > 0.0000001f)
+				TempVel += Direction * Force;
+			else if(abs(SpeedLeft) > Force)
+				TempVel += Direction * -Force;
+			else
+				TempVel += Direction * SpeedLeft;
+		}
+		else
+			TempVel += Direction * Force;
+
+		
 		m_Core.m_Vel = TempVel;
 		//dbg_msg("speedup tile end","(Direction*Force) %f %f   m_Core.m_Vel%f %f",(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
 		//dbg_msg("speedup tile end","Direction %f %f, Force %d, Max Speed %d", (Direction).x,(Direction).y, Force, MaxSpeed);
