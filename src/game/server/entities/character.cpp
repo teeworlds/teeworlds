@@ -991,6 +991,9 @@ void CCharacter::HandleTiles(int Index)
 			else
 				TempVel += Direction * SpeedLeft;
 		}
+		else
+			TempVel += Direction * Force;
+
 		
 		m_Core.m_Vel = TempVel;
 		//dbg_msg("speedup tile end","(Direction*Force) %f %f   m_Core.m_Vel%f %f",(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
