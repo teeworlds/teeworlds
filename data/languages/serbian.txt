@@ -574,7 +574,7 @@ Add group
 == Add group
 
 Adds a new group
-== Add group
+== Adds a new group
 
 Embed
 == Embed
