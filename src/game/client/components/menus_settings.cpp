@@ -937,34 +937,24 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 	io_close(File);
 }
 
-void GatherFonts(const char *pName, int IsDir, int Type, void *pUser)
+void GatherFonts(const char *pFileName, int IsDir, int Type, void *pUser)
 {
-	if(IsDir || pName[0] == '.')
+	const int PathLength = str_length(pFileName);
+	if(IsDir || PathLength <= 4 || pFileName[PathLength-4] != '.' || str_comp_nocase(pFileName+PathLength-3, "ttf") || pFileName[0] == '.')
 		return;
 
 	sorted_array<CFontFile> &Fonts = *((sorted_array<CFontFile> *)pUser);
-	char aFileName[128];
-	str_format(aFileName, sizeof(aFileName), "%s", pName);
-
+	
 	char aNiceName[128];
-	str_format(aNiceName, sizeof(aNiceName), "%s", pName);
+	str_copy(aNiceName, pFileName, PathLength-3);
 	aNiceName[0] = str_uppercase(aNiceName[0]);
-
-
-	for(char *p = aNiceName; *p; p++)
-		if(*p == '.')
-		{
-			if(str_comp(p, ".ttf"))
-				return;
-			*p = 0;
-		}
 
 	// check if the font was already added
 	for(int i = 0; i < Fonts.size(); i++)
 		if(!str_comp(Fonts[i].m_Name, aNiceName))
 			return;
 	
-	Fonts.add(CFontFile(aNiceName, aFileName));
+	Fonts.add(CFontFile(aNiceName, pFileName));
 }
 
 void CMenus::RenderSettingsGeneral(CUIRect MainView)
