@@ -1,163 +1,160 @@
 ##### translated strings #####
 
 %d of %d servers, %d players
-== %d od %d server(a), %d igrač(a)
+== %d/%d palvelinta, %d pelaajaa
 
 Abort
-== Prekini
+== Keskeytä
 
 Address
-== Adresa
+== Osoite
 
 All
-== Svi
+== Kaikki
 
 Alpha
-== Provid.
+== Alfa
 
 Always show name plates
-== Uvijek prikaži imena igrača
+== Näytä nimikyltit aina
 
 Are you sure that you want to quit?
-== Jeste li sigurni da želite izići?
+== Oletko varma, että haluat lopettaa?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Pošto prvi put pokrećete igru, molimo da ispod unesete Vaš nadimak (nick). Preporučujemo da provjerite postavke i podesite ih prema Vašem ukusu prije nego se konektujete na server.
+== Tämä on ensimmäinen kerta kun käynnistät pelin, ole hyvä ja kirjoita nimimerkkisi alle. On suositeltua, että tarkistat asetukset ja muutat niitä mielesi mukaan ennen kuin liityt palvelimille.
 
 Blue team
-== Plavi tim
+== Sininen joukkue
 
 Blue team wins!
-== Plavi tim je pobijedio!
+== Sininen joukkue voitti!
 
 Body
-== Tijelo
+== Vartalo
 
 Call vote
-== Glasanje
+== Aloita äänestys
 
 Chat
-== Chat
+== Chatti
 
 Close
-== Zatvori
+== Sulje
 
 Compatible version
-== Kompatibilna verzija
+== Yhteensopiva versio
 
 Connect
-== Konektuj
+== Yhdistä
 
 Connecting to
-== Konektujem na
+== Yhdistetään
 
 Console
-== Konzola
+== Konsoli
 
 Controls
-== Kontrole
+== Kontrollit
 
 Current
-== Current
+== Nykyinen
 
 Current version: %s
-== Trenutna verzija: %s
+== Nykyinen versio: %s
 
 Custom colors
-== Vlastite boje
+== Omat värit
 
 Demos
-== Demo
+== Demot
 
 Disconnect
-== Diskonektuj
+== Katkaise yhteys
 
 Disconnected
-== Diskonektovan
+== Yhteys katkaistu
 
 Display Modes
-== Rezolucija i način prikaza
+== Näyttötilat
 
 Downloading map
-== Preuzimam mapu
+== Ladataan kenttää
 
 Draw!
-== Neriješeno!
+== Tasapeli!
 
 Dynamic Camera
-== Dinamička kamera
+== Dynaaminen kamera
 
 Emoticon
-== Emoticon
+== Hymiö
 
 Enter
-== Započni
+== Jatka
 
 FSAA samples
-== FSAA samples
+== FSAA näytteet
 
 Favorite
-== Omiljeni
+== Suosikki
 
 Favorites
-== Omiljeni
+== Suosikit
 
 Feet
-== Stopala
+== Jalat
 
 Filter
-== Filter
+== Suotimet
 
 Fire
-== Pucanje
-
-Force vote
-== Obavezno glasanje
+== Ammu
 
 Fullscreen
-== Čitav ekran
+== Koko näyttö
 
 Game
-== Igra
+== Peli
 
 Game info
-== O igri
+== Pelin tiedot
 
 Game over
-== Igra je završena
+== Peli loppui
 
 Game type
-== Tip igre
+== Pelityyppi
 
 Game types:
-== Tipovi igre:
+== Pelityypit:
 
 General
-== Opće
+== Yleinen
 
 Graphics
-== Grafika
+== Grafiikat
 
 Grenade
-== Granate
+== Kranaatti
 
 Hammer
-== Čekić
+== Nuija
 
 Has people playing
-== Server nije prazan
+== Ihmisiä pelaamassa
 
 High Detail
-== Visoki detalji
+== Korkea yksityiskohtataso
 
 Hook
-== Lanac
+== Koukku
 
 Host address
-== Adresa servera
+== Palvelimen osoite
 
 Hue
-== Nijans.
+== Värisävy
 
 Info
 == Info
@@ -166,304 +163,307 @@ Internet
 == Internet
 
 Join blue
-== U plavi tim
+== Liity sinisiin
 
 Join game
-== Uključi se u igru
+== Liity peliin
 
 Join red
-== U crveni tim
+== Liity punaisiin
 
 Jump
-== Skok
+== Hyppää
 
 Kick
-== Izbaci
+== Kick
 
 LAN
 == LAN
 
 Language
-== Jezik
+== Kieli
 
 Lht.
-== Svjetl.
+== Valoisuus
 
 Loading
-== Učitavam
+== Ladataan
 
 MOTD
-== Vijest dana
+== Palvelimen viesti
 
 Map
-== Mapa
+== Kenttä
 
 Maximum ping:
-== Maksimalan ping:
+== Maksimiping:
 
 Miscellaneous
-== Razno
+== Sekalaista
 
 Mouse sens.
-== Osjetljivost miša
+== Hiiren herkkyys
 
 Move left
-== Nalijevo
+== Liiku vasemmalle
 
 Move right
-== Nadesno
+== Liiku oikealle
 
 Movement
-== Kretanje
+== Liike
 
 Mute when not active
-== Bez zvuka prilikom neaktivnosti
+== Mykistä, kun ei aktiivinen
 
 Name
-== Ime
+== Nimi
 
 News
-== Novosti
+== Uutiset
 
 Next weapon
-== Sljedeće oružje
+== Seuraava ase
 
 Nickname
-== Nadimak
+== Nimimerkki
 
 No
-== Ne
+== Ei
 
 No password
-== Bez lozinke
+== Ei salasanaa
 
 No servers found
-== Nije pronađen nijedan server
+== Palvelimia ei löytynyt
 
 No servers match your filter criteria
-== Nijedan server ne odgovara zadatom kriteriju
+== Yksikään palvelin ei läpäissyt suodinkriteerejäsi
 
 Ok
-== OK
+== Ok
 
 Password
-== Lozinka
+== Salasana
 
 Password Incorrect
-== Pogrešna lozinka
+== Väärä salasana
 
 Ping
 == Ping
 
 Pistol
-== Pištolj
+== Pistooli
 
 Play
-== Pokreni
+== Toista
 
 Player
-== Igrač
+== Pelaaja
 
 Players
-== Igrači
+== Pelaajia
 
 Prev. weapon
-== Prethodno oružje
+== Edellinen ase
 
 Quality Textures
-== Visokokvalitetne teksture
+== Hyvälaatuiset tekstuurit
 
 Quick search:
-== Brza pretraga:
+== Pikahaku:
 
 Quit
-== Izlaz
+== Lopeta
 
 Red team
-== Crveni tim
+== Punainen joukkue
 
 Red team wins!
-== Crveni tim je pobijedio!
+== Punainen joukkue voitti!
 
 Refresh
-== Osvježi
+== Päivitä
 
 Refreshing master servers
-== Osvježavam glavne servere
+== Päivitetään isäntäpalvelimia
 
 Remote console
-== Udaljena konzola
+== Etäkonsoli
 
 Reset filter
-== Poništi filter
+== Nollaa suotimet
 
 Reset to defaults
-== Vrati na početne postavke
+== Palaa oletusasetuksiin
 
 Rifle
-== Laser
+== Kivääri
 
 Round
-== Runda
+== Kierros
 
 Sample rate
-== Frekvencija
+== Näytteenottotaajuus
 
 Sat.
-== Zasić.
+== Kylläisyys
 
 Score
-== Rezultat
+== Pisteet
 
 Score board
-== Bodovi
+== Tulostaulu
 
 Score limit
-== Max. bodova
+== Pisteraja
 
 Scoreboard
-== Bodovi
+== Tuloslista
 
 Screenshot
-== Screenshot
+== Kuvankaappaus
 
 Server details
-== Podaci o serveru
+== Palvelimen yksityiskohdat
 
 Server info
-== O Serveru
+== Palvelimen tiedot
 
 Server not full
-== Server nije pun
+== Palvelin ei täysi
 
 Settings
-== Postavke
+== Asetukset
 
 Shotgun
-== Pumparica
-
-Show chat
-== Prikaži chat
+== Haulikko
 
 Show name plates
-== Prikaži imena igrača
+== Näytä nimikyltit
 
 Show only supported
-== Prikaži samo podržane
+== Näytä vain tuetut
 
 Skins
-== Izgled
+== Ulkonäkö
 
 Sound
-== Zvuk
+== Äänet
 
 Sound volume
-== Jačina zvuka
+== Äänenvoimakkuus
 
 Spectate
-== Posmatraj
+== Katso
 
 Spectators
-== Posmatrači
+== Katsojat
 
 Standard gametype
-== Standardni tip igre
+== Standardipelityyppi
 
 Standard map
-== Standardna mapa
+== Standardikenttä
 
 Switch weapon on pickup
-== Aktiviraj novo oružje prilikom uzimanja
+== Vaihda asetta nostaessasi uuden
 
 Team
-== Tim
+== Joukkue
 
 Team chat
-== Timski chat
+== Joukkuechatti
 
 Teeworlds %s is out! Download it at www.teeworlds.com!
-== Teeworld %s je objavljen! Preuzmi ga na www.teeworlds.com!
+== Teeworlds %s on julkaistu! Lataa se osoitteesta www.teeworlds.com!
 
 Texture Compression
-== Kompresija tekstura
+== Tekstuuripakkaus
 
 The server is running a non-standard tuning on a pure game type.
-== Server sadrži nestandardne postavke.
+== Tämä palvelin ajaa ei-standardeja virityksiä standardipelityypillä.
 
 Time limit
-== Max. vremena
+== Aikaraja
 
 Try again
-== Pokušaj ponovo
+== Yritä uudelleen
 
 Type
-== Tip
+== Tyyppi
 
 UI Color
-== Boja menija
+== Käyttöliittymäväri
 
 Use sounds
-== Aktiviraj zvuk
+== Käytä ääniefektejä
 
 V-Sync
 == V-Sync
 
 Version
-== Verzija
+== Versio
 
 Vote no
-== Ne
+== Äänestä ei
 
 Vote yes
-== Da
+== Äänestä kyllä
 
 Voting
-== Glasanje
+== Äänestys
 
 Weapon
-== Oružje
+== Ase
 
 Welcome to Teeworlds
-== Dobrodošli u Teeworlds
+== Tervetuloa Teeworldsiin
 
 Yes
-== Da
+== Kyllä
 
 You must restart the game for all settings to take effect.
-== Morate ponovo pokrenuti igru da bi sve postavke bile primijenjene.
+== Sinun täytyy uudelleenkäynnistää peli, jotta kaikki asetukset tulisivat voimaan.
+
+Force vote
+== Pakota äänestys
+
+Show chat
+== Näytä chatti
 
 Your skin
-== Vaš izgled
+== Sinun ulkonäkösi
 
 Password incorrect
-== Pogrešna lozinka
+== Väärä salasana
 
 Please balance teams!
-== Molim uravnotežite timove!
+== Ole hyvä ja tasoita joukkueet!
 
 Connection Problems...
-== Problemi sa konekcijom...
+== Yhteysongelmia...
 
 Warmup
-== Zagrijavanje
+== Lämmittely
 
 Sudden Death
-== Iznenadna smrt
+== Äkkikuolema
 
 %ds left
-== Još %ds
+== %ds poistui
 
 error loading demo
-== Greška prilikom učitavanja demo-snimka
+== virhe ladattaessa demoa
 
 Error
-== Greška
+== Virhe
 
 Open map
 == Open map
 
 Open
-== Open
+== Avaa
 
 Save map
 == Save map
@@ -757,7 +757,7 @@ Detail
 == Detail
 
 Delete
-== Obriši
+== Poista
 
 Deletes the current quad
 == Deletes the current quad
@@ -787,6 +787,5 @@ File
 == File
 
 ##### needs translation ####
-
 
 ##### old translations ####
