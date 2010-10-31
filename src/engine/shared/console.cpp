@@ -497,10 +497,22 @@ void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
 	for(int i = 0; i < NumArgs; i++)
 	{
 		// check for scripts to execute
-		if(ppArguments[i][0] == '-' && ppArguments[i][1] == 'f' && ppArguments[i][2] == 0 && NumArgs - i > 1)
+		if(ppArguments[i][0] == '-' && ppArguments[i][1] == 'f' && ppArguments[i][2] == 0)
 		{
-			ExecuteFile(ppArguments[i+1]);
+			if(NumArgs - i > 1)
+				ExecuteFile(ppArguments[i+1]);
 			i++;
+		}
+		else if(!str_comp("-s", ppArguments[i]) || !str_comp("--silent", ppArguments[i]))
+		{
+			// skip silent param
+			continue;
+		}
+		else if(ppArguments[i][0] == '-' && ppArguments[i][1] == 'd' && ppArguments[i][2] == 0)
+		{
+			// skip datadir param
+			++i;
+			continue;
 		}
 		else
 		{
