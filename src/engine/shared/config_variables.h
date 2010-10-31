@@ -150,4 +150,5 @@ MACRO_CONFIG_INT(SvTeam, sv_team, 0, -1, 1, CFGFLAG_SERVER, "Teams configuration
 MACRO_CONFIG_INT(SvTeamStrict, sv_team_strict, 0, 0, 1, CFGFLAG_SERVER, "Kill or not all team if someone left game in team", 4)
 
 MACRO_CONFIG_INT(ConnTimeout, conn_timeout, 15, 5, 100, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Network timeout", 4)
+MACRO_CONFIG_INT(DbgCGCore, dbg_gcore, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Whether to display the annoying GameCore dbg_msgs or not", 3)
 #endif
