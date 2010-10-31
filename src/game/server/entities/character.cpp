@@ -950,8 +950,8 @@ void CCharacter::HandleTiles(int Index)
 				)
 				m_Core.m_Pos = m_PrevPos;
 		TempVel += Direction * Force;
-		MaxVel.x = clamp((MaxSpeed/5)/Direction.x,-(float)(MaxSpeed/5),(float)(MaxSpeed/5));
-		MaxVel.y = clamp((MaxSpeed/5)/Direction.y,-(float)(MaxSpeed/5),(float)(MaxSpeed/5));
+		MaxVel.x = (MaxSpeed/5)/Direction.x;
+		MaxVel.y = (MaxSpeed/5)/Direction.y;
 		if(MaxSpeed && (fabs(Direction.x) > 0.000001) && (TempVel.x > MaxVel.x && MaxVel.x > 0 || TempVel.x < MaxVel.x && MaxVel.x < 0))
 			TempVel.x = MaxVel.x;
 		if(MaxSpeed && (fabs(Direction.y) > 0.000001) && (TempVel.y > MaxVel.y && MaxVel.y > 0 || TempVel.y < MaxVel.y && MaxVel.y < 0))
