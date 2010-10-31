@@ -796,21 +796,25 @@ void CCharacter::Tick()
 			
 
 			
-		}
-		else if(!m_pPlayer->m_IsUsingDDRaceClient) 
-		{
+		} else {
+			
+			if(!m_pPlayer->m_IsUsingDDRaceClient) 
+			{
 
-			if( g_Config.m_SvBroadcast[0] != 0 && (Server()->Tick() > (m_LastBroadcast + (Server()->TickSpeed() * 9)))) {
-				char aTmp[128], aYourBest[64],aServerBest[64];
-				str_format(aYourBest, sizeof(aYourBest), "Your Best:'%s%d:%s%d'", ((pData->m_BestTime / 60) < 10)?"0":"", (int)(pData->m_BestTime / 60), (((int)pData->m_BestTime % 60) < 10)?"0":"", (int)pData->m_BestTime % 60);
-				
-				CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
-				
-				str_format(aServerBest, sizeof(aServerBest), "Server Best:'%s%d:%s%d'", ((GameServer()->m_pController->m_CurrentRecord / 60) < 10)?"0":"", (int)(GameServer()->m_pController->m_CurrentRecord / 60), (((int)GameServer()->m_pController->m_CurrentRecord % 60) < 10)?"0":"", (int)GameServer()->m_pController->m_CurrentRecord % 60);
-				
-				str_format(aTmp, sizeof(aTmp), "%s\n%s %s", g_Config.m_SvBroadcast, (GameServer()->m_pController->m_CurrentRecord)?aServerBest:"", (pData->m_BestTime)?aYourBest:"");
-				GameServer()->SendBroadcast(aTmp, m_pPlayer->GetCID());
-				m_LastBroadcast = Server()->Tick();
+				if( g_Config.m_SvBroadcast[0] != 0 && (Server()->Tick() > (m_LastBroadcast + (Server()->TickSpeed() * 9)))) {
+					char aTmp[128], aYourBest[64],aServerBest[64];
+					str_format(aYourBest, sizeof(aYourBest), "Your Best:'%s%d:%s%d'", ((pData->m_BestTime / 60) < 10)?"0":"", (int)(pData->m_BestTime / 60), (((int)pData->m_BestTime % 60) < 10)?"0":"", (int)pData->m_BestTime % 60);
+					
+					CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
+					
+					str_format(aServerBest, sizeof(aServerBest), "Server Best:'%s%d:%s%d'", ((GameServer()->m_pController->m_CurrentRecord / 60) < 10)?"0":"", (int)(GameServer()->m_pController->m_CurrentRecord / 60), (((int)GameServer()->m_pController->m_CurrentRecord % 60) < 10)?"0":"", (int)GameServer()->m_pController->m_CurrentRecord % 60);
+					
+					str_format(aTmp, sizeof(aTmp), "%s\n%s %s", g_Config.m_SvBroadcast, (GameServer()->m_pController->m_CurrentRecord)?aServerBest:"", (pData->m_BestTime)?aYourBest:"");
+					GameServer()->SendBroadcast(aTmp, m_pPlayer->GetCID());
+					m_LastBroadcast = Server()->Tick();
+				}
+			} else {
+				//make there smthing with broadcast
 			}
 		}
 		m_RefreshTime = Server()->Tick();

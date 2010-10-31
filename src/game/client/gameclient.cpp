@@ -601,9 +601,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		m_Teams.Team(15, pMsg->m_Tee15);
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			char aBuf[512];
-			str_format(aBuf, sizeof(aBuf), "Team = %d", m_Teams.Team(i));
-			dbg_msg("Teams", aBuf);
+			dbg_msg1("Teams", "Team = %d", m_Teams.Team(i));
 		}
 	}
 }
