@@ -335,7 +335,10 @@ void IGameController::OnCharacterSpawn(class CCharacter *pChr)
 	pChr->IncreaseHealth(10);
 	
 	// give default weapons
-	pChr->GiveWeapon(WEAPON_GRENADE, -1);
+	if(g_Config.m_SvInfiniteAmmo)
+		pChr->GiveWeapon(WEAPON_GRENADE, -1);
+	else
+		pChr->GiveWeapon(WEAPON_GRENADE, 5);
 }
 
 void IGameController::DoWarmup(int Seconds)

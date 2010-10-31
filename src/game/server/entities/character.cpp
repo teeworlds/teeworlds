@@ -74,6 +74,9 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	GameServer()->m_World.InsertEntity(this);
 	m_Alive = true;
 
+	m_Kills = 0;
+	m_LastKill = 0;
+	
 	GameServer()->m_pController->OnCharacterSpawn(this);
 
 	return true;
@@ -446,8 +449,8 @@ void CCharacter::HandleWeapons()
 	FireWeapon();
 
 	// ammo regen
-	int AmmoRegenTime = g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Ammoregentime;
-	if(AmmoRegenTime)
+	int AmmoRegenTime = g_Config.m_SvAmmoRegen;
+	if(AmmoRegenTime && m_aWeapons[m_ActiveWeapon].m_Ammo < 5 && !g_Config.m_SvInfiniteAmmo)
 	{
 		// If equipped and not active, regen ammo?
 		if (m_ReloadTimer <= 0)
@@ -561,6 +564,10 @@ void CCharacter::Tick()
 	// handle Weapons
 	HandleWeapons();
 
+	// handle kill counter
+	if(m_Kills > 0 && m_LastKill + Server()->TickSpeed()*2 < Server()->Tick())
+		m_Kills = 0;
+	
 	m_PlayerState = m_Input.m_PlayerState;
 
 	// Previnput
@@ -714,25 +721,55 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 	// no self damage
 	if(From == m_pPlayer->GetCID())
 		return false;
-
-	// kill the player
-	Die(From, Weapon);
 	
-	 // do damage Hit sound
+	// do damage Hit sound
 	if(From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
 		GameServer()->CreateSound(GameServer()->m_apPlayers[From]->m_ViewPos, SOUND_HIT, CmaskOne(From));
-
-	// set attacker's face to happy (taunt!)
-	if (From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
+	
+	CCharacter *pChr = GameServer()->GetPlayerChar(From);
+	if(pChr)
 	{
-		CCharacter *pChr = GameServer()->m_apPlayers[From]->GetCharacter();
-		if (pChr)
+		// give the attacker full ammo
+		if(!GameServer()->m_pController->IsFriendlyFire(m_pPlayer->GetCID(), From))
+		{
+			if(!g_Config.m_SvInfiniteAmmo && g_Config.m_SvKillAmmo)
+				pChr->GiveWeapon(WEAPON_GRENADE, 5);
+			
+			// count the kills
+			pChr->m_Kills++;
+			pChr->m_LastKill = Server()->Tick();
+			
+			// send emoteicon
+			if(pChr->m_Kills > 1)
+			{
+				CNetMsg_Sv_Emoticon Msg;
+				Msg.m_Cid = pChr->GetPlayer()->GetCID();
+				switch(pChr->m_Kills)
+				{
+				case 2:
+					Msg.m_Emoticon = 1;
+					break;
+				case 3:
+					Msg.m_Emoticon = 10;
+					break;
+				default:
+					Msg.m_Emoticon = 14;
+				}
+				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+			}
+		}
+		
+		// set attacker's face to happy (taunt!)
+		if(From >= 0 && From != m_pPlayer->GetCID())
 		{
 			pChr->m_EmoteType = EMOTE_HAPPY;
 			pChr->m_EmoteStop = Server()->Tick() + Server()->TickSpeed();
 		}
 	}
-
+	
+	// kill the player
+	Die(From, Weapon);
+	
 	return true;
 }
 
