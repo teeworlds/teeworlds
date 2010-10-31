@@ -651,7 +651,7 @@ void CCollision::GetSpeedup(int Index, vec2 *Dir, int *Force, int *MaxSpeed)
 	if(Index < 0)
 		return;
 	vec2 Direction = vec2(1, 0);
-	float Angle = m_pSpeedup[Index].m_Angle * (3.14159265f/180.0f);
+	float Angle = m_pSpeedup[Index].m_Angle * (pi / 180.0f);
 	*Force = m_pSpeedup[Index].m_Force;
 	*Dir = vec2(cos(Angle), sin(Angle));
 	if(MaxSpeed)
@@ -677,6 +677,17 @@ int CCollision::IsCheckpoint(int Index)
 		return -1;
 		
 	int z = m_pTiles[Index].m_Index;
+	if(z >= 35 && z <= 59)
+		return z-35;
+	return -1;
+}
+
+int CCollision::IsFCheckpoint(int Index)
+{
+	if(Index < 0 || !m_pFront)
+		return -1;
+
+	int z = m_pFront[Index].m_Index;
 	if(z >= 35 && z <= 59)
 		return z-35;
 	return -1;

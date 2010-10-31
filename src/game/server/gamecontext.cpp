@@ -341,8 +341,10 @@ void CGameContext::SendBroadcast(const char *pText, int ClientId)
 
 void CGameContext::SendRecord(int ClientId) {
 	CNetMsg_Sv_Record RecordsMsg;
-	RecordsMsg.m_PlayerTimeBest = Score()->PlayerData(ClientId)->m_BestTime * 100.0f;//
-	RecordsMsg.m_ServerTimeBest = m_pController->m_CurrentRecord * 100.0f;//TODO: finish this
+	CNetMsg_Sv_PlayerTime PlayerTimeMsg;
+	RecordsMsg.m_Time = m_pController->m_CurrentRecord * 100.0f;//TODO: finish this
+	PlayerTimeMsg.m_Time = Score()->PlayerData(ClientId)->m_BestTime * 100.0f;//
+	Server()->SendPackMsg(&PlayerTimeMsg, MSGFLAG_VITAL, ClientId);
 	Server()->SendPackMsg(&RecordsMsg, MSGFLAG_VITAL, ClientId);
 }
 
@@ -965,7 +967,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			SendBroadcast(aBuf, ClientId);
 		}
 	}
-	else if (MsgId == NETMSGTYPE_CL_ISDDRACE)
+	else if (MsgId == NETMSGTYPE_CL_ISRACE)
 	{
 		pPlayer->m_IsUsingDDRaceClient = true;
 		

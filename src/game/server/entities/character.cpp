@@ -657,10 +657,10 @@ void CCharacter::OnFinish()
 		}
 		
 		if(GetPlayer()->m_IsUsingDDRaceClient) {
-			CNetMsg_Sv_DDRaceTime Msg;
+			CNetMsg_Sv_RaceTime Msg;
 			Msg.m_Time = (int)(time * 100.0f);
-			Msg.m_Check = 0;
-			Msg.m_Finish = 1;
+			Msg.m_Check = 99;
+			//Msg.m_Finish = 1;
 			
 			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
 		}
@@ -747,10 +747,10 @@ void CCharacter::Tick()
 			int IntTime = (int)m_Time;
 			
 			if(m_pPlayer->m_IsUsingDDRaceClient) {
-				CNetMsg_Sv_DDRaceTime Msg;
+				CNetMsg_Sv_RaceTime Msg;
 				Msg.m_Time = IntTime;
 				Msg.m_Check = 0;
-				Msg.m_Finish = 0;
+				//Msg.m_Finish = 0;
 				
 				if(m_CpActive != -1 && m_CpTick > Server()->Tick())
 				{
@@ -879,6 +879,13 @@ void CCharacter::HandleTiles(int Index)
 		m_CpCurrent[cp] = m_Time;
 		m_CpTick = Server()->Tick() + Server()->TickSpeed()*2;
 	}
+	int cpf = GameServer()->Collision()->IsFCheckpoint(MapIndex);
+	if(cpf != -1 && m_DDRaceState == DDRACE_STARTED && cpf > m_CpActive)
+	{
+		m_CpActive = cpf;
+		m_CpCurrent[cpf] = m_Time;
+		m_CpTick = Server()->Tick() + Server()->TickSpeed()*2;
+	}
 	if(((m_TileIndex == TILE_BEGIN) || (m_TileFIndex == TILE_BEGIN)) && (m_DDRaceState == DDRACE_NONE || (m_DDRaceState == DDRACE_STARTED && !Team())))
 	{
 		Controller->m_Teams.OnCharacterStart(m_pPlayer->GetCID());
@@ -932,7 +939,10 @@ void CCharacter::HandleTiles(int Index)
 	{
 		vec2 Direction, MaxVel, TempVel = m_Core.m_Vel;
 		int Force, MaxSpeed = 0;
+		float TeeAngle, SpeederAngle, DiffAngle, SpeedLeft, TeeSpeed;
+		const float Zero=0;
 		GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force, &MaxSpeed);
+		if(MaxSpeed > 0 && MaxSpeed < 5) MaxSpeed = 5;
 		//dbg_msg("speedup tile start","Direction %f %f, Force %d, Max Speed %d", (Direction).x,(Direction).y, Force, MaxSpeed);
 		if(
 				((Direction.x < 0) && ((int)GameServer()->Collision()->GetPos(MapIndexL).x) && ((int)GameServer()->Collision()->GetPos(MapIndexL).x < (int)m_Core.m_Pos.x)) ||
@@ -941,12 +951,51 @@ void CCharacter::HandleTiles(int Index)
 				((Direction.y < 0) && ((int)GameServer()->Collision()->GetPos(MapIndexT).y) && ((int)GameServer()->Collision()->GetPos(MapIndexT).y < (int)m_Core.m_Pos.y))
 				)
 				m_Core.m_Pos = m_PrevPos;
-		TempVel += Direction * Force;
-		MaxVel = Direction*(MaxSpeed/5);
-		if(MaxSpeed && Direction.x && (TempVel.x > MaxVel.x && MaxVel.x > 0 || TempVel.x < MaxVel.x && MaxVel.x < 0))
-			TempVel.x = MaxVel.x;
-		if(MaxSpeed && Direction.y && (TempVel.y > MaxVel.y && MaxVel.y > 0 || TempVel.y < MaxVel.y && MaxVel.y < 0))
-			TempVel.y = MaxVel.y;
+		
+		if(MaxSpeed > 0)
+		{
+			if(Direction.x > 0.0000001f)
+				SpeederAngle = -atan(Direction.y / Direction.x);
+			else if(Direction.x < 0.0000001f)
+				SpeederAngle = atan(Direction.y / Direction.x) + 2.0f * asin(1.0f);
+			else if(Direction.y > 0.0000001f)
+				SpeederAngle = asin(1.0f);
+			else
+				SpeederAngle = asin(-1.0f);
+			
+			if(SpeederAngle < 0)
+				SpeederAngle = 4.0f * asin(1.0f) + SpeederAngle;
+			
+			if(TempVel.x > 0.0000001f)
+				TeeAngle = -atan(TempVel.y / TempVel.x);
+			else if(TempVel.x < 0.0000001f)
+				TeeAngle = atan(TempVel.y / TempVel.x) + 2.0f * asin(1.0f);
+			else if(TempVel.y > 0.0000001f)
+				TeeAngle = asin(1.0f);
+			else
+				TeeAngle = asin(-1.0f);
+			
+			if(TeeAngle < 0)
+				TeeAngle = 4.0f * asin(1.0f) + TeeAngle;
+			
+			TeeSpeed = sqrt(pow(TempVel.x, 2) + pow(TempVel.y, 2));
+
+			DiffAngle = SpeederAngle - TeeAngle;
+			SpeedLeft = MaxSpeed / 5.0f - cos(DiffAngle) * TeeSpeed;
+			
+			//dbg_msg("speedup tile debug","MaxSpeed %i, TeeSpeed %f, SpeedLeft %f, SpeederAngle %f, TeeAngle %f", MaxSpeed, TeeSpeed, SpeedLeft, SpeederAngle, TeeAngle);
+			
+			if(abs(SpeedLeft) > Force && SpeedLeft > 0.0000001f)
+				TempVel += Direction * Force;
+			else if(abs(SpeedLeft) > Force)
+				TempVel += Direction * -Force;
+			else
+				TempVel += Direction * SpeedLeft;
+		}
+		else
+			TempVel += Direction * Force;
+
+		
 		m_Core.m_Vel = TempVel;
 		//dbg_msg("speedup tile end","(Direction*Force) %f %f   m_Core.m_Vel%f %f",(Direction*Force).x,(Direction*Force).y,m_Core.m_Vel.x,m_Core.m_Vel.y);
 		//dbg_msg("speedup tile end","Direction %f %f, Force %d, Max Speed %d", (Direction).x,(Direction).y, Force, MaxSpeed);

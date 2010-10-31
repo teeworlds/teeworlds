@@ -151,5 +151,9 @@ MACRO_CONFIG_INT(SvTeamStrict, sv_team_strict, 0, 0, 1, CFGFLAG_SERVER, "Kill or
 
 MACRO_CONFIG_INT(ConnTimeout, conn_timeout, 15, 5, 100, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Network timeout", 4)
 
+
 MACRO_CONFIG_INT(DbgMsg, dbg_msg, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Display or not debug messages", 4)
+
+MACRO_CONFIG_INT(DbgCGCore, dbg_gcore, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Whether to display the annoying GameCore dbg_msgs or not", 3)
+
 #endif

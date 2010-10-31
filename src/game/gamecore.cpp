@@ -1,5 +1,6 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include "gamecore.h"
+#include <engine/shared/config.h>
 
 const char *CTuningParams::m_apNames[] =
 {
@@ -242,9 +243,12 @@ void CCharacterCore::Tick(bool UseInput)
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
 				CCharacterCore *p = m_pWorld->m_apCharacters[i];
-				char aBuf[512];
-				str_format(aBuf, sizeof(aBuf), "ThisId = %d Id = %d Team = %d", m_Id, i, m_pTeams->Team(i));
-				dbg_msg("GameCore", aBuf);
+				if(g_Config.m_DbgCGCore)
+				{
+					char aBuf[512];
+					str_format(aBuf, sizeof(aBuf), "ThisId = %d Id = %d Team = %d", m_Id, i, m_pTeams->Team(i));
+					dbg_msg("GameCore", aBuf);
+				}
 				if(!p || p == this || !m_pTeams->CanCollide(i, m_Id))
 					continue;
 				
