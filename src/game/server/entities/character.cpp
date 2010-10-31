@@ -953,11 +953,11 @@ void CCharacter::HandleTiles(int Index)
 		
 		if(MaxSpeed > 0)
 		{
-			if(Direction.x > 0)
+			if(Direction.x > 0.0000001f)
 				SpeederAngle = -atan(Direction.y / Direction.x);
-			else if(Direction.x < 0)
+			else if(Direction.x < 0.0000001f)
 				SpeederAngle = atan(Direction.y / Direction.x) + 2.0f * asin(1.0f);
-			else if(Direction.y > 0)
+			else if(Direction.y > 0.0000001f)
 				SpeederAngle = asin(1.0f);
 			else
 				SpeederAngle = asin(-1.0f);
@@ -965,11 +965,11 @@ void CCharacter::HandleTiles(int Index)
 			if(SpeederAngle < 0)
 				SpeederAngle = 4.0f * asin(1.0f) + SpeederAngle;
 			
-			if(TempVel.x > 0)
+			if(TempVel.x > 0.0000001f)
 				TeeAngle = -atan(TempVel.y / TempVel.x);
-			else if(TempVel.x < 0)
+			else if(TempVel.x < 0.0000001f)
 				TeeAngle = atan(TempVel.y / TempVel.x) + 2.0f * asin(1.0f);
-			else if(TempVel.y > 0)
+			else if(TempVel.y > 0.0000001f)
 				TeeAngle = asin(1.0f);
 			else
 				TeeAngle = asin(-1.0f);
@@ -984,7 +984,7 @@ void CCharacter::HandleTiles(int Index)
 			
 			//dbg_msg("speedup tile debug","MaxSpeed %i, TeeSpeed %f, SpeedLeft %f, SpeederAngle %f, TeeAngle %f", MaxSpeed, TeeSpeed, SpeedLeft, SpeederAngle, TeeAngle);
 			
-			if(abs(SpeedLeft) > Force && SpeedLeft > 0)
+			if(abs(SpeedLeft) > Force && SpeedLeft > 0.0000001f)
 				TempVel += Direction * Force;
 			else if(abs(SpeedLeft) > Force)
 				TempVel += Direction * -Force;
