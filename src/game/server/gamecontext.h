@@ -88,6 +88,11 @@ class CGameContext : public IGameServer
 	static void ConUnWeapons(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConUnWeaponsMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
+	static void ConAddWeapon(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConRemoveWeapon(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	
+	void ModifyWeapons(int ClientId, int Victim, int Weapon, bool Remove);
+	
 	static void ConTeleport(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
 	static void ConTuneParam(IConsole::IResult *pResult, void *pUserData, int ClientId);

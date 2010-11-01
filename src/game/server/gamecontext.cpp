@@ -1909,6 +1909,94 @@ void CGameContext::ConUnWeaponsMe(IConsole::IResult *pResult, void *pUserData, i
 	}
 }
 
+void CGameContext::ConAddWeapon(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	
+	if (pResult->NumArguments() > 1)
+		pSelf->ModifyWeapons(ClientId, pResult->GetInteger(0), pResult->GetInteger(1), false);
+	else
+		pSelf->ModifyWeapons(ClientId, ClientId, pResult->GetInteger(0), false);	
+}
+
+void CGameContext::ConRemoveWeapon(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	
+	if (pResult->NumArguments() > 1)
+		pSelf->ModifyWeapons(ClientId, pResult->GetInteger(0), pResult->GetInteger(1), true);
+	else
+		pSelf->ModifyWeapons(ClientId, ClientId, pResult->GetInteger(0), true);	
+}
+
+void CGameContext::ModifyWeapons(int ClientId, int Victim, int Weapon, bool Remove)
+{
+	if(!CheatsAvailable(Console(), ClientId))
+		return;
+	
+	if(clamp(Victim, 0, (int) MAX_CLIENTS - 1) != Victim || GetPlayerChar(ClientId) == 0)
+	{
+		Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "invalid client id");
+		return;
+	}
+	
+	if(ClientId != Victim && m_apPlayers[ClientId]->m_Authed <= 1)
+	{
+		Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You have too low level to add/remove weapons from players");
+	}
+	
+	if(ClientId != Victim && !compare_players(m_apPlayers[ClientId], m_apPlayers[Victim]))
+	{
+		Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You can't add/remove weapons from players with the same or a higher rank");
+		return;
+	}
+	
+	if(clamp(Weapon, -1, NUM_WEAPONS - 1) != Weapon)
+	{
+		Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "invalid weapon id");
+		return;
+	}
+	
+	CCharacter* pChr = GetPlayerChar(Victim);
+	if(Weapon == -1)
+	{
+		if(Remove && pChr->m_ActiveWeapon == WEAPON_SHOTGUN || pChr->m_ActiveWeapon == WEAPON_GRENADE || pChr->m_ActiveWeapon == WEAPON_RIFLE)
+			pChr->m_ActiveWeapon = WEAPON_GUN;
+		
+		if(Remove)
+		{
+			pChr->m_aWeapons[WEAPON_SHOTGUN].m_Got = false;
+			pChr->m_aWeapons[WEAPON_GRENADE].m_Got = false;
+			pChr->m_aWeapons[WEAPON_RIFLE].m_Got = false;
+		}
+		else
+			pChr->GiveAllWeapons();	
+	}
+	else if(Weapon != WEAPON_NINJA)
+	{
+		if(Remove && pChr->m_ActiveWeapon == Weapon)
+			pChr->m_ActiveWeapon = WEAPON_GUN;
+		
+		if(Remove)
+			pChr->m_aWeapons[Weapon].m_Got = false;
+		else
+			pChr->GiveWeapon(Weapon, -1);
+	}
+	else
+	{
+		if(Remove)
+		{
+			Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "you can't remove ninja");
+			return;
+		}
+		
+		pChr->GiveNinja();
+	}
+
+	if(!Remove && !g_Config.m_SvCheatTime)
+		pChr->m_DDRaceState =	DDRACE_CHEAT;
+}
+
 void CGameContext::ConTeleport(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
@@ -2540,6 +2628,9 @@ void CGameContext::OnConsoleInit()
 	
 	Console()->Register("freeze", "i?i", CFGFLAG_SERVER, ConFreeze, this, "Freezes player i1 for i2 seconds (infinity by default)", 2);
 	Console()->Register("unfreeze", "i", CFGFLAG_SERVER, ConUnFreeze, this, "Unfreezes player i", 2);
+
+	Console()->Register("addweapon", "i?i", CFGFLAG_SERVER, ConAddWeapon, this, "First optional parameter is client id, next parameter is weapon (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, rifle = 4, ninja = 5)", 1);
+	Console()->Register("removeweapon", "i?i", CFGFLAG_SERVER, ConRemoveWeapon, this, "First optional parameter is client id, next parameter is weapon (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, rifle = 4)", 1);
 
 	Console()->Register("shotgun", "i", CFGFLAG_SERVER, ConShotgun, this, "Gives a shotgun to player i", 2);
 	Console()->Register("shotgun_me", "", CFGFLAG_SERVER, ConShotgunMe, this, "Gives shotgun to yourself", 1);
