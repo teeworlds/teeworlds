@@ -120,6 +120,9 @@ class CGameContext : public IGameServer
 	static void ConGoUp(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConGoDown(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
+	static void ConMove(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConMoveRaw(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	
 	static void ConAddVote(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConClearVotes(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConVote(IConsole::IResult *pResult, void *pUserData, int ClientId);
