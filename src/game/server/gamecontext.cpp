@@ -1510,32 +1510,15 @@ void CGameContext::ConKillPlayer(IConsole::IResult *pResult, void *pUserData, in
 void CGameContext::ConNinjaMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-
-	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
-	if(chr)
-	{
-		chr->GiveNinja();
-		if(!g_Config.m_SvCheatTime)
-			chr->m_DDRaceState = DDRACE_CHEAT;
-	}
+	
+	pSelf->ModifyWeapons(ClientId, ClientId, WEAPON_NINJA, false);
 }
 
 void CGameContext::ConNinja(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	CCharacter* chr = pSelf->GetPlayerChar(Victim);
-	if(chr)
-	{
-		if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
-		{
-			chr->GiveNinja();
-			if(!g_Config.m_SvCheatTime)
-				chr->m_DDRaceState = DDRACE_CHEAT;
-		}
-	}
+	
+	pSelf->ModifyWeapons(ClientId, pResult->GetInteger(0), WEAPON_NINJA, false);
 }
 
 
@@ -1668,245 +1651,113 @@ void CGameContext::ConUnSuperMe(IConsole::IResult *pResult, void *pUserData, int
 void CGameContext::ConShotgun(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
-	{
-		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if(chr)
-		{
-			chr->GiveWeapon(WEAPON_SHOTGUN,-1);
-			if(!g_Config.m_SvCheatTime)
-				chr->m_DDRaceState = DDRACE_CHEAT;
-		}
-	}
+	
+	pSelf->ModifyWeapons(ClientId, pResult->GetInteger(0), WEAPON_SHOTGUN, false);
 }
 
 void CGameContext::ConShotgunMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
-	if(chr)
-	{
-		chr->GiveWeapon(WEAPON_SHOTGUN,-1);
-		if(!g_Config.m_SvCheatTime)
-			chr->m_DDRaceState = DDRACE_CHEAT;
-	}
+	
+	pSelf->ModifyWeapons(ClientId, ClientId, WEAPON_SHOTGUN, false);
 }
 
 void CGameContext::ConGrenade(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
-	{
-		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if(chr)
-		{
-			chr->GiveWeapon(WEAPON_GRENADE,-1);
-			if(!g_Config.m_SvCheatTime)
-				chr->m_DDRaceState = DDRACE_CHEAT;
-		}
-	}
+	
+	pSelf->ModifyWeapons(ClientId, pResult->GetInteger(0), WEAPON_GRENADE, false);
 }
 
 void CGameContext::ConGrenadeMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
-	if(chr)
-	{
-		chr->GiveWeapon(WEAPON_GRENADE,-1);
-		if(!g_Config.m_SvCheatTime)
-			chr->m_DDRaceState = DDRACE_CHEAT;
-	}
+	
+	pSelf->ModifyWeapons(ClientId, ClientId, WEAPON_GRENADE, false);
 }
 
 void CGameContext::ConRifle(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
-	{
-		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if(chr)
-		{
-			chr->GiveWeapon(WEAPON_RIFLE,-1);
-			if(!g_Config.m_SvCheatTime)
-				chr->m_DDRaceState = DDRACE_CHEAT;
-		}
-	}
+	
+	pSelf->ModifyWeapons(ClientId, pResult->GetInteger(0), WEAPON_RIFLE, false);
 }
 
 void CGameContext::ConRifleMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
-	if(chr)
-	{
-		chr->GiveWeapon(WEAPON_RIFLE,-1);
-		if(!g_Config.m_SvCheatTime)
-			chr->m_DDRaceState = DDRACE_CHEAT;
-	}
+	
+	pSelf->ModifyWeapons(ClientId, ClientId, WEAPON_RIFLE, false);
 }
 
 void CGameContext::ConWeapons(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
-	{
-		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if(chr)
-		{
-			chr->GiveAllWeapons();
-			if(!g_Config.m_SvCheatTime)
-				chr->m_DDRaceState = DDRACE_CHEAT;
-		}
-	}
+	
+	pSelf->ModifyWeapons(ClientId, pResult->GetInteger(0), -1, false);
 }
 
 void CGameContext::ConWeaponsMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
-	if(chr)
-	{
-		chr->GiveAllWeapons();
-		if(!g_Config.m_SvCheatTime)
-			chr->m_DDRaceState = DDRACE_CHEAT;
-	}
+	
+	pSelf->ModifyWeapons(ClientId, ClientId, -1, false);
 }
 
 void CGameContext::ConUnShotgun(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
-	{
-		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if(chr)
-		{
-			if(chr->m_ActiveWeapon == WEAPON_SHOTGUN)
-				chr->m_ActiveWeapon = WEAPON_GUN;
-			chr->m_aWeapons[WEAPON_SHOTGUN].m_Got = false;
-		}
-	}
+	
+	pSelf->ModifyWeapons(ClientId, pResult->GetInteger(0), WEAPON_SHOTGUN, true);
 }
 
 void CGameContext::ConUnShotgunMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
-	if(chr)
-	{
-		if(chr->m_ActiveWeapon == WEAPON_SHOTGUN)
-			chr->m_ActiveWeapon = WEAPON_GUN;
-		chr->m_aWeapons[WEAPON_SHOTGUN].m_Got = false;
-	}
+	
+	pSelf->ModifyWeapons(ClientId, ClientId, WEAPON_SHOTGUN, true);
 }
 
 void CGameContext::ConUnGrenade(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
-	{
-		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if(chr)
-		{
-			if(chr->m_ActiveWeapon == WEAPON_GRENADE)
-				chr->m_ActiveWeapon = WEAPON_GUN;
-			chr->m_aWeapons[WEAPON_GRENADE].m_Got = false;
-		}
-	}
+	
+	pSelf->ModifyWeapons(ClientId, pResult->GetInteger(0), WEAPON_GRENADE, true);
 }
 
 void CGameContext::ConUnGrenadeMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
-	if(chr)
-	{
-		if(chr->m_ActiveWeapon == WEAPON_GRENADE)
-			chr->m_ActiveWeapon = WEAPON_GUN;
-		chr->m_aWeapons[WEAPON_GRENADE].m_Got = false;
-	}
+	
+	pSelf->ModifyWeapons(ClientId, ClientId, WEAPON_GRENADE, true);
 }
 
 void CGameContext::ConUnRifle(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
-	{
-		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if(chr)
-		{
-			if(chr->m_ActiveWeapon == WEAPON_RIFLE)
-				chr->m_ActiveWeapon = WEAPON_GUN;
-			chr->m_aWeapons[WEAPON_RIFLE].m_Got = false;
-		}
-	}
+	
+	pSelf->ModifyWeapons(ClientId, pResult->GetInteger(0), WEAPON_RIFLE, true);
 }
 
 void CGameContext::ConUnRifleMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
-	if(chr)
-	{
-		if(chr->m_ActiveWeapon == WEAPON_RIFLE)
-			chr->m_ActiveWeapon = WEAPON_GUN;
-		chr->m_aWeapons[WEAPON_RIFLE].m_Got = false;
-	}
+	
+	pSelf->ModifyWeapons(ClientId, ClientId, WEAPON_RIFLE, true);
 }
 
 void CGameContext::ConUnWeapons(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
-	{
-		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if(chr)
-		{
-			if(chr->m_ActiveWeapon == WEAPON_SHOTGUN || chr->m_ActiveWeapon == WEAPON_GRENADE || chr->m_ActiveWeapon == WEAPON_RIFLE)
-				chr->m_ActiveWeapon = WEAPON_GUN;
-			chr->m_aWeapons[WEAPON_SHOTGUN].m_Got = false;
-			chr->m_aWeapons[WEAPON_GRENADE].m_Got = false;
-			chr->m_aWeapons[WEAPON_RIFLE].m_Got = false;
-		}
-	}
+	
+	pSelf->ModifyWeapons(ClientId, pResult->GetInteger(0), -1, true);
 }
 
 void CGameContext::ConUnWeaponsMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
-	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
-	if(chr)
-	{
-		if(chr->m_ActiveWeapon == WEAPON_SHOTGUN || chr->m_ActiveWeapon == WEAPON_GRENADE || chr->m_ActiveWeapon == WEAPON_RIFLE)
-			chr->m_ActiveWeapon = WEAPON_GUN;
-		chr->m_aWeapons[WEAPON_SHOTGUN].m_Got = false;
-		chr->m_aWeapons[WEAPON_GRENADE].m_Got = false;
-		chr->m_aWeapons[WEAPON_RIFLE].m_Got = false;
-	}
+	
+	pSelf->ModifyWeapons(ClientId, ClientId, -1, true);
 }
 
 void CGameContext::ConAddWeapon(IConsole::IResult *pResult, void *pUserData, int ClientId)
