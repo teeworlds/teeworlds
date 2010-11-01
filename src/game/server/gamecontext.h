@@ -92,6 +92,7 @@ class CGameContext : public IGameServer
 	static void ConRemoveWeapon(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
 	void ModifyWeapons(int ClientId, int Victim, int Weapon, bool Remove);
+	void MoveCharacter(int ClientId, int Victim, int X, int Y, bool Raw = false);
 	
 	static void ConTeleport(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	

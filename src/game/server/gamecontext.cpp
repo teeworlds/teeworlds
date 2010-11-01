@@ -1420,6 +1420,38 @@ void CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int Clie
 	}
 }
 
+void CGameContext::MoveCharacter(int ClientId, int Victim, int X, int Y, bool Raw)
+{
+	if(!CheatsAvailable(pSelf->Console(), ClientId))
+		return;
+
+	if(clamp(Victim, 0, (int) MAX_CLIENTS - 1) != Victim || GetPlayerChar(ClientId) == 0)
+	{
+		Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "invalid client id");
+		return;
+	}
+	
+	if(ClientId != Victim && m_apPlayers[ClientId]->m_Authed <= 1)
+	{
+		Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You have too low level to move the tees of other players");
+		return;
+	}
+	
+	if(ClientId != Victim && !compare_players(m_apPlayers[ClientId], m_apPlayers[Victim]))
+	{
+		Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You can't move the tee of players with the same or a higher rank");
+		return;
+	}
+	
+	CCharacter* pChr = GetPlayerChar(ClientId);
+
+	pChr->m_Core.m_Pos.x += ((Raw) ? 1 : 32) * X;
+	pChr->m_Core.m_Pos.y += ((Raw) ? 1 : 32) * Y;
+
+	if(!g_Config.m_SvCheatTime)
+		pChr->m_DDRaceState = DDRACE_CHEAT;
+}
+
 void CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
@@ -1793,7 +1825,8 @@ void CGameContext::ModifyWeapons(int ClientId, int Victim, int Weapon, bool Remo
 	
 	if(ClientId != Victim && m_apPlayers[ClientId]->m_Authed <= 1)
 	{
-		Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You have too low level to add/remove weapons from players");
+		Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You have too low level to add/remove weapons from other players");
+		return;
 	}
 	
 	if(ClientId != Victim && !compare_players(m_apPlayers[ClientId], m_apPlayers[Victim]))
