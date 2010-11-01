@@ -155,7 +155,6 @@ bool IGameController::OnEntity(int Index, vec2 Pos, bool Front, int Flags)
 
 	else if(Index == ENTITY_CRAZY_SHOTGUN_EX/* && Index <= ENTITY_CRAZY_SHOTGUN_L_EX*/)
 	{
-		dbg_msg("","Flags %d",Flags);
 		int Dir;
 		if(!Flags)
 			Dir = 0;
