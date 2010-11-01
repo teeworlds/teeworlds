@@ -3,8 +3,11 @@
 #include <stdlib.h> // qsort
 #include <stdarg.h>
 #include <math.h>
+#include <time.h>
 
 #include <base/system.h>
+#include <base/tl/string.h>
+#include <base/tl/sorted_array.h>
 #include <engine/shared/engine.h>
 
 #include <engine/shared/protocol.h>
@@ -275,6 +278,7 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 
 	m_VersionInfo.m_State = 0;
 	m_WillRotateDemoFiles = false;
+	m_CurrentDemoFilename[0] = 0;
 }
 
 // ----- send functions -----
@@ -1928,16 +1932,10 @@ void CClient::DemoRecorder_HandleAutoStart()
 {
 	if (g_Config.m_DemoAutoStart)
 	{
-		if (g_Config.m_DemoAutoStart_SaveAll)
-			DemoRecorder_Start("autorecord");
-		else
-		{
-			DemoRecorder_Start("current", false);
-			m_WillRotateDemoFiles = true;
-		}
+		DemoRecorder_Start("autorecord");
+		m_WillRotateDemoFiles = true;
 	}
 }
-
 void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp)
 {
 	// if a previous autorecord was halted because of a error, 
@@ -1950,19 +1948,18 @@ void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp)
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/record", "client is not online");
 	else
 	{
-		char aFilename[512];
 		if (WithTimestamp)
 		{
 			char aFilenameBase[512];
-			str_format(aFilenameBase, sizeof(aFilenameBase), "%s-%s", pFilename, m_aCurrentMap);
-			if (!Storage()->FindNewUniqueFilename("demos", aFilenameBase, ".demo", IStorage::TYPE_SAVE, aFilename, sizeof(aFilename)))
+			str_format(aFilenameBase, sizeof(aFilenameBase), "%s_%s", pFilename, m_aCurrentMap);
+			if (!Storage()->FindNewUniqueFilename("demos", aFilenameBase, ".demo", IStorage::TYPE_SAVE, m_CurrentDemoFilename, sizeof(m_CurrentDemoFilename)))
 			{
 				m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/record", "Unable to create a unique filename");
 				return;
 			}
 		} else
-			str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pFilename);
-		m_DemoRecorder.Start(Storage(), m_pConsole, aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
+			str_format(m_CurrentDemoFilename, sizeof(m_CurrentDemoFilename), "demos/%s.demo", pFilename);
+		m_DemoRecorder.Start(Storage(), m_pConsole, m_CurrentDemoFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
 	}
 }
 
@@ -1972,25 +1969,97 @@ void CClient::Con_Record(IConsole::IResult *pResult, void *pUserData)
 	pSelf->DemoRecorder_Start(pResult->GetString(0));
 }
 
+// this simple class is basically used as the pUser argument of IStorage::ListDirectory
+// it rotates old autorecorded demos.
+class DemoFileRotater
+{
+	class DatedDemo
+	{
+		string m_Filename;
+		int m_Time;
+		int m_SequenceNumber;
+		public:
+		// sorted_array needs this.
+		DatedDemo() {}
+		// the synthetised assignment operator and the copy constructor are good enought.
+		DatedDemo(const char* pFilename, int Time, int SequenceNumber) : m_Filename(pFilename), m_Time(Time), m_SequenceNumber(SequenceNumber) {}
+		// we want to be sorted in reverse order.
+		bool operator < (const DatedDemo& aDemo) const
+		{
+			if (m_Time == aDemo.m_Time)
+				return m_SequenceNumber > aDemo.m_SequenceNumber;
+			return m_Time > aDemo.m_Time;
+		}
+		const char* FilePath() const
+		{
+			return m_Filename;
+		}
+	};
+	sorted_array<DatedDemo> m_DemoArray;
+	int m_MaxSize;
+	IStorage* m_pStorage;
+	IConsole* m_pConsole;
+	bool RemoveDemoFile(const char* pFilename)
+	{
+		char aBuff[512];
+		str_format(aBuff, sizeof(aBuff), "demos/%s", pFilename);
+		bool Ret = m_pStorage->RemoveFile(aBuff, IStorage::TYPE_SAVE);
+		str_format(aBuff, sizeof(aBuff), Ret ? "deleted old autorecorded demo demos/%s" : "failed to delete old autorecorded demo demos/%s", pFilename);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/rotate", aBuff);
+		return Ret;
+	}
+	public:
+	DemoFileRotater(int Size, IStorage* pStorage, IConsole* pConsole) : m_DemoArray(), m_MaxSize(Size), m_pStorage(pStorage), m_pConsole(pConsole) {}
+	bool FoundDemoFile(const char* pFilename, int CTime, int Sequence)
+	{
+		m_DemoArray.add(DatedDemo(pFilename, CTime, Sequence));
+		if (m_DemoArray.size() < m_MaxSize + 1)
+			return true;
+
+		// the last element is the oldest file. Delete it.
+		bool ret = RemoveDemoFile(m_DemoArray[m_MaxSize].FilePath());
+		m_DemoArray.remove_index(m_MaxSize);
+		return ret;
+	}
+	private:
+	static void DirectoryListCB(const char* pPath, int IsDir, int DirType, void* ThisAsVoidStar)
+	{
+		if (IsDir)
+			return;
+
+		DemoFileRotater* This = (DemoFileRotater*)ThisAsVoidStar;
+		struct tm aTimeInfo;
+		int aSequenceNumber;
+		if (!This->m_pStorage->ExtractDateFromUniqueFilename(pPath, "autorecord", ".demo", &aTimeInfo, &aSequenceNumber))
+			return; // not one of our autorecorded demo.
+		This->FoundDemoFile(pPath, mktime(&aTimeInfo), aSequenceNumber);
+	}
+	public:
+	void RotateDemoFiles()
+	{
+		m_pStorage->ListDirectory(IStorage::TYPE_SAVE, "demos", DirectoryListCB, this);
+	}
+};
+
 void CClient::DemoRecorder_Stop()
 {
 	m_DemoRecorder.Stop();
 
-	if (m_WillRotateDemoFiles)
-	{
-		/* If someones stops the demo-recording without using this function, then the current.demo file
-		will get overwritten. So unless there is an error, don't stop the recording directly. */
+	if (!m_WillRotateDemoFiles)
+		return;
+
+	m_WillRotateDemoFiles = false;
 		
-		if (m_DemoRecorder.TickCount() > 10 * SERVER_TICK_SPEED) {
-			// rotate the auto-recorded demos.
-
-			// the renaming may fail, we ignore that.
-			Storage()->MoveFile("demos/last.demo", "demos/old.demo", IStorage::TYPE_SAVE);
-			Storage()->MoveFile("demos/current.demo", "demos/last.demo", IStorage::TYPE_SAVE);
-
-		}
-		m_WillRotateDemoFiles = false;
+	if (m_DemoRecorder.TickCount() < 8 * SERVER_TICK_SPEED) {
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "demorec/rotate", "Not keeping auto-recorded demo as it is too short");
+		Storage()->RemoveFile(m_CurrentDemoFilename, IStorage::TYPE_SAVE);
+		return;
 	}
+	if (g_Config.m_DemoAutoStart_Keep <= 0)
+		return;
+
+	DemoFileRotater aDemoRotater(g_Config.m_DemoAutoStart_Keep, Storage(), m_pConsole);
+	aDemoRotater.RotateDemoFiles();
 }
 
 void CClient::Con_StopRecord(IConsole::IResult *pResult, void *pUserData)

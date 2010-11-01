@@ -179,6 +179,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	} m_VersionInfo;
 
 	bool m_WillRotateDemoFiles;
+	char m_CurrentDemoFilename[512];
 public:
 	IEngineGraphics *Graphics() { return m_pGraphics; }
 	IEngineInput *Input() { return m_pInput; }

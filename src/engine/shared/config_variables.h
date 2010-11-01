@@ -60,7 +60,7 @@ MACRO_CONFIG_INT(GfxFinish, gfx_finish, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, ""
 MACRO_CONFIG_INT(InpMousesens, inp_mousesens, 100, 5, 100000, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Mouse sensitivity")
 
 MACRO_CONFIG_INT(DemoAutoStart, dem_autorecord, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Automatically Record Demos")
-MACRO_CONFIG_INT(DemoAutoStart_SaveAll, dem_autorecord_keepall, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Keep All Auto-recorded Demos")
+MACRO_CONFIG_INT(DemoAutoStart_Keep, dem_autorecord_keep, 10, 0, 1000, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Number of Auto-recorded Demos to keep (0 = infinite)")
 
 
 MACRO_CONFIG_STR(SvName, sv_name, 128, "unnamed server", CFGFLAG_SERVER, "Server name")
