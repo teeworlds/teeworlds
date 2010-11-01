@@ -280,7 +280,7 @@ public:
 			return false;
 
 		char aBuffer[MAX_PATH_LENGTH];
-		return remove(GetPath(Type, pFilename, aBuffer, sizeof(aBuffer)));
+		return !remove(GetPath(Type, pFilename, aBuffer, sizeof(aBuffer)));
 	}
 
 	virtual bool CreateFolder(const char *pFoldername, int Type)
@@ -289,7 +289,7 @@ public:
 			return false;
 
 		char aBuffer[MAX_PATH_LENGTH];
-		return fs_makedir(GetPath(Type, pFoldername, aBuffer, sizeof(aBuffer)));
+		return !fs_makedir(GetPath(Type, pFoldername, aBuffer, sizeof(aBuffer)));
 	}
 
 	static IStorage *Create(const char *pApplicationName, int NumArgs, const char **ppArguments)
