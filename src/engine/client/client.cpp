@@ -2025,6 +2025,11 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("rules", "", CFGFLAG_SERVER, 0, 0, "Shows the rules of this server", -1);
 	m_pConsole->Register("team", "?i", CFGFLAG_SERVER, 0, 0, "Lets you join the specified team", -1);
 	m_pConsole->Register("top5", "?i", CFGFLAG_SERVER, 0, 0, "Shows the top 5 from the 1st, or starting at the specified number", -1);
+	m_pConsole->Register("addweapon", "i?i", CFGFLAG_SERVER, 0, 0, "First optional parameter is client id, next parameter is weapon (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, rifle = 4, ninja = 5)", -1);
+	m_pConsole->Register("removeweapon", "i?i", CFGFLAG_SERVER, 0, 0, "First optional parameter is client id, next parameter is weapon (all = -1, hammer = 0, gun = 1, shotgun = 2, grenade = 3, rifle = 4)", -1);
+	m_pConsole->Register("move", "ii?i", CFGFLAG_SERVER, 0, 0, "First optional parameter is client id, next parameters are x-axis change and y-axis change (1 = 1 tile)", -1);
+	m_pConsole->Register("move_raw", "ii?i", CFGFLAG_SERVER, 0, 0, "First optional parameter is client id, next parameters are x-axis change and y-axis change (1 = 1 pixel)", -1);
+
 
 	m_pConsole->Register("quit", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Quit, this, "Quit Teeworlds", 0);
 	m_pConsole->Register("exit", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Quit, this, "Quit Teeworlds", 0);
