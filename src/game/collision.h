@@ -32,8 +32,9 @@ public:
 	bool CheckPoint(vec2 p) { return CheckPoint(p.x, p.y); }
 	void SetCollisionAt(float x, float y, int Flag);
 	void SetDTile(float x, float y, int Team, bool State);
-	void SetDCollisionAt(float x, float y, int Flag, int Team);
+	void SetDCollisionAt(float x, float y, int Type, int Team, int Flags = 0);
 	int GetDTileIndex(int Index,int Team);
+	int GetDTileFlags(int Index,int Team);
 	int GetCollisionAt(float x, float y) { return GetTile(round(x), round(y)); }
 	int GetFCollisionAt(float x, float y) { return GetFTile(round(x), round(y)); }
 	int GetWidth() { return m_Width; };
@@ -54,6 +55,8 @@ public:
 	vec2 GetPos(int Index);
 	int GetTileIndex(int Index);
 	int GetFTileIndex(int Index);
+	int GetTileFlags(int Index);
+	int GetFTileFlags(int Index);
 	int IsTeleport(int Index);
 	int IsEvilTeleport(int Index);
 	//int IsCheckpoint(int Index);
@@ -68,9 +71,9 @@ public:
 	int IsCheckpoint(int Index);
 	int IsFCheckpoint(int Index);
 	
-	int IsCp(int x, int y);
+	int IsCp(int x, int y, int* Flags);
 
-	vec2 CpSpeed(int index);
+	vec2 CpSpeed(int index, int Flags = 0);
 	
 	class CTeleTile *TeleLayer() { return m_pTele; }
 	//class CSpeedupTile *SpeedupLayer() { return m_pSpeedup; }

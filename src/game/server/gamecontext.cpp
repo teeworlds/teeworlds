@@ -2533,7 +2533,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 			if(Index >= ENTITY_OFFSET)
 			{
 				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
-				m_pController->OnEntity(Index-ENTITY_OFFSET, Pos,false);
+				m_pController->OnEntity(Index-ENTITY_OFFSET, Pos, false, pTiles[y*pTileMap->m_Width+x].m_Flags);
 			}
 			if(pFront)
 			{
@@ -2549,7 +2549,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 				if(Index >= ENTITY_OFFSET)
 				{
 					vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
-					m_pController->OnEntity(Index-ENTITY_OFFSET, Pos,true);
+					m_pController->OnEntity(Index-ENTITY_OFFSET, Pos, true, pFront[y*pTileMap->m_Width+x].m_Flags);
 				}
 			}
 		}

@@ -859,20 +859,35 @@ void CCharacter::HandleTiles(int Index)
 	int MapIndexB = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y - (m_ProximityRadius/2)-4));
 	//dbg_msg("","N%d L%d R%d B%d T%d",MapIndex,MapIndexL,MapIndexR,MapIndexB,MapIndexT);
 	m_TileIndex = GameServer()->Collision()->GetTileIndex(MapIndex);
+	m_TileFlags = GameServer()->Collision()->GetTileFlags(MapIndex);
 	m_TileIndexL = GameServer()->Collision()->GetTileIndex(MapIndexL);
+	m_TileFlagsL = GameServer()->Collision()->GetTileFlags(MapIndexL);
 	m_TileIndexR = GameServer()->Collision()->GetTileIndex(MapIndexR);
+	m_TileFlagsR = GameServer()->Collision()->GetTileFlags(MapIndexR);
 	m_TileIndexB = GameServer()->Collision()->GetTileIndex(MapIndexB);
+	m_TileFlagsB = GameServer()->Collision()->GetTileFlags(MapIndexB);
 	m_TileIndexT = GameServer()->Collision()->GetTileIndex(MapIndexT);
+	m_TileFlagsT = GameServer()->Collision()->GetTileFlags(MapIndexT);
 	m_TileFIndex = GameServer()->Collision()->GetFTileIndex(MapIndex);
+	m_TileFFlags = GameServer()->Collision()->GetFTileFlags(MapIndex);
 	m_TileFIndexL = GameServer()->Collision()->GetFTileIndex(MapIndexL);
+	m_TileFFlagsL = GameServer()->Collision()->GetFTileFlags(MapIndexL);
 	m_TileFIndexR = GameServer()->Collision()->GetFTileIndex(MapIndexR);
+	m_TileFFlagsR = GameServer()->Collision()->GetFTileFlags(MapIndexR);
 	m_TileFIndexB = GameServer()->Collision()->GetFTileIndex(MapIndexB);
+	m_TileFFlagsB = GameServer()->Collision()->GetFTileFlags(MapIndexB);
 	m_TileFIndexT = GameServer()->Collision()->GetFTileIndex(MapIndexT);
+	m_TileFFlagsT = GameServer()->Collision()->GetFTileFlags(MapIndexT);
 	m_TileSIndex = GameServer()->Collision()->GetDTileIndex(MapIndex, Team());
+	m_TileSFlags = GameServer()->Collision()->GetDTileFlags(MapIndex, Team());
 	m_TileSIndexL = GameServer()->Collision()->GetDTileIndex(MapIndexL, Team());
+	m_TileSFlagsL = GameServer()->Collision()->GetDTileFlags(MapIndexL, Team());
 	m_TileSIndexR = GameServer()->Collision()->GetDTileIndex(MapIndexR, Team());
+	m_TileSFlagsR = GameServer()->Collision()->GetDTileFlags(MapIndexR, Team());
 	m_TileSIndexB = GameServer()->Collision()->GetDTileIndex(MapIndexB, Team());
+	m_TileSFlagsB = GameServer()->Collision()->GetDTileFlags(MapIndexB, Team());
 	m_TileSIndexT = GameServer()->Collision()->GetDTileIndex(MapIndexT, Team());
+	m_TileSFlagsT = GameServer()->Collision()->GetDTileFlags(MapIndexT, Team());
 	//dbg_msg("","N%d L%d R%d B%d T%d",m_TileIndex,m_TileIndexL,m_TileIndexR,m_TileIndexB,m_TileIndexT);
 	//dbg_msg("","N%d L%d R%d B%d T%d",m_TileFIndex,m_TileFIndexL,m_TileFIndexR,m_TileFIndexB,m_TileFIndexT);
 
@@ -908,28 +923,28 @@ void CCharacter::HandleTiles(int Index)
 	{
 		UnFreeze();
 	}
-	if((m_TileIndex == TILE_STOPL || m_TileIndexL == TILE_STOPL || m_TileIndexL == TILE_STOPH || m_TileIndexL == TILE_STOPA || m_TileFIndex == TILE_STOPL || m_TileFIndexL == TILE_STOPL || m_TileFIndexL == TILE_STOPH || m_TileFIndexL == TILE_STOPA || m_TileSIndex == TILE_STOPL || m_TileSIndexL == TILE_STOPL || m_TileSIndexL == TILE_STOPH || m_TileSIndexL == TILE_STOPA) && m_Core.m_Vel.x > 0)
+	if(((m_TileIndex == TILE_STOP && m_TileFlags == ROTATION_270) || (m_TileIndexL == TILE_STOP && m_TileFlagsL == ROTATION_270) || (m_TileIndexL == TILE_STOPS && (m_TileFlagsL == ROTATION_90 || m_TileFlagsL ==ROTATION_270)) || (m_TileIndexL == TILE_STOPA) || (m_TileFIndex == TILE_STOP && m_TileFFlags == ROTATION_270) || (m_TileFIndexL == TILE_STOP && m_TileFFlagsL == ROTATION_270) || (m_TileFIndexL == TILE_STOPS && (m_TileFFlagsL == ROTATION_90 || m_TileFFlagsL == ROTATION_270)) || (m_TileFIndexL == TILE_STOPA) || (m_TileSIndex == TILE_STOP && m_TileSFlags == ROTATION_270) || (m_TileSIndexL == TILE_STOP && m_TileSFlagsL == ROTATION_270) || (m_TileSIndexL == TILE_STOPS && (m_TileSFlagsL == ROTATION_90 || m_TileSFlagsL == ROTATION_270)) || (m_TileSIndexL == TILE_STOPA)) && m_Core.m_Vel.x > 0)
 	{
 		if((int)GameServer()->Collision()->GetPos(MapIndexL).x)
 			if((int)GameServer()->Collision()->GetPos(MapIndexL).x < (int)m_Core.m_Pos.x)
 				m_Core.m_Pos = m_PrevPos;
 		m_Core.m_Vel.x = 0;
 	}
-	if((m_TileIndex == TILE_STOPR || m_TileIndexR == TILE_STOPR || m_TileIndexR == TILE_STOPH || m_TileIndexR == TILE_STOPA || m_TileFIndex == TILE_STOPR || m_TileFIndexR == TILE_STOPR || m_TileFIndexR == TILE_STOPH || m_TileFIndexR == TILE_STOPA || m_TileSIndex == TILE_STOPR || m_TileSIndexR == TILE_STOPR || m_TileSIndexR == TILE_STOPH || m_TileSIndexR == TILE_STOPA) && m_Core.m_Vel.x < 0)
+	if(((m_TileIndex == TILE_STOP && m_TileFlags == ROTATION_90) || (m_TileIndexR == TILE_STOP && m_TileFlagsR == ROTATION_90) || (m_TileIndexR == TILE_STOPS && (m_TileFlagsR == ROTATION_90 || m_TileFlagsR == ROTATION_270)) || (m_TileIndexR == TILE_STOPA) || (m_TileFIndex == TILE_STOP && m_TileFFlags == ROTATION_90) || (m_TileFIndexR == TILE_STOP && m_TileFFlagsR == ROTATION_90) || (m_TileFIndexR == TILE_STOPS && (m_TileFFlagsR == ROTATION_90 || m_TileFFlagsR == ROTATION_270)) || (m_TileFIndexR == TILE_STOPA) || (m_TileSIndex == TILE_STOP && m_TileSFlags == ROTATION_90) || (m_TileSIndexR == TILE_STOP && m_TileSFlagsR == ROTATION_90) || (m_TileSIndexR == TILE_STOPS && (m_TileSFlagsR == ROTATION_90 || m_TileSFlagsR == ROTATION_270)) || (m_TileSIndexR == TILE_STOPA)) && m_Core.m_Vel.x < 0)
 	{
 		if((int)GameServer()->Collision()->GetPos(MapIndexR).x)
 			if((int)GameServer()->Collision()->GetPos(MapIndexR).x > (int)m_Core.m_Pos.x)
 				m_Core.m_Pos = m_PrevPos;
 		m_Core.m_Vel.x = 0;
 	}
-	if((m_TileIndex == TILE_STOPB || m_TileIndexB == TILE_STOPB || m_TileIndexB == TILE_STOPV || m_TileIndexB == TILE_STOPA || m_TileFIndex == TILE_STOPB || m_TileFIndexB == TILE_STOPB || m_TileFIndexB == TILE_STOPV || m_TileFIndexB == TILE_STOPA || m_TileSIndex == TILE_STOPB || m_TileSIndexB == TILE_STOPB || m_TileSIndexB == TILE_STOPV || m_TileSIndexB == TILE_STOPA) && m_Core.m_Vel.y < 0)
+	if(((m_TileIndex == TILE_STOP && m_TileFlags == ROTATION_180) || (m_TileIndexB == TILE_STOP && m_TileFlagsB == ROTATION_180) || (m_TileIndexB == TILE_STOPS && (m_TileFlagsB == ROTATION_0 || m_TileFlagsB == ROTATION_180)) || (m_TileIndexB == TILE_STOPA) || (m_TileFIndex == TILE_STOP && m_TileFFlags == ROTATION_180) || (m_TileFIndexB == TILE_STOP && m_TileFFlagsB == ROTATION_180) || (m_TileFIndexB == TILE_STOPS && (m_TileFFlagsB == ROTATION_0 || m_TileFFlagsB == ROTATION_180)) || (m_TileFIndexB == TILE_STOPA) || (m_TileSIndex == TILE_STOP && m_TileSFlags == ROTATION_180) || (m_TileSIndexB == TILE_STOP && m_TileSFlagsB == ROTATION_180) || (m_TileSIndexB == TILE_STOPS && (m_TileSFlagsB == ROTATION_0 || m_TileSFlagsB == ROTATION_180)) || (m_TileSIndexB == TILE_STOPA)) && m_Core.m_Vel.y < 0)
 	{
 		if((int)GameServer()->Collision()->GetPos(MapIndexB).y)
 			if((int)GameServer()->Collision()->GetPos(MapIndexB).y > (int)m_Core.m_Pos.y)
 				m_Core.m_Pos = m_PrevPos;
 		m_Core.m_Vel.y = 0;
 	}
-	if((m_TileIndex == TILE_STOPT || m_TileIndexT == TILE_STOPT || m_TileIndexT == TILE_STOPV || m_TileIndexT == TILE_STOPA || m_TileFIndex == TILE_STOPT || m_TileFIndexT == TILE_STOPT || m_TileFIndexT == TILE_STOPV || m_TileFIndexT == TILE_STOPA || m_TileSIndex == TILE_STOPT || m_TileSIndexT == TILE_STOPT || m_TileSIndexT == TILE_STOPV || m_TileSIndexT == TILE_STOPA) && m_Core.m_Vel.y > 0)
+	if(((m_TileIndex == TILE_STOP && m_TileFlags == ROTATION_0) || (m_TileIndexT == TILE_STOP && m_TileFlagsT == ROTATION_0) || (m_TileIndexT == TILE_STOPS && (m_TileFlagsT == ROTATION_0 || m_TileFlagsT == ROTATION_180)) || (m_TileIndexT == TILE_STOPA) || (m_TileFIndex == TILE_STOP && m_TileFFlags == ROTATION_0) || (m_TileFIndexT == TILE_STOP && m_TileFFlagsT == ROTATION_0) || (m_TileFIndexT == TILE_STOPS && (m_TileFFlagsT == ROTATION_0 || m_TileFFlagsT == ROTATION_180)) || (m_TileFIndexT == TILE_STOPA) || (m_TileSIndex == TILE_STOP && m_TileSFlags == ROTATION_0) || (m_TileSIndexT == TILE_STOP && m_TileSFlagsT == ROTATION_0) || (m_TileSIndexT == TILE_STOPS && (m_TileSFlagsT == ROTATION_0 || m_TileSFlagsT == ROTATION_180)) || (m_TileSIndexT == TILE_STOPA)) && m_Core.m_Vel.y > 0)
 	{
 		//dbg_msg("","%f %f",GameServer()->Collision()->GetPos(MapIndex).y,m_Core.m_Pos.y);
 		if((int)GameServer()->Collision()->GetPos(MapIndexT).y)

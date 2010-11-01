@@ -91,20 +91,35 @@ void CCharacterCore::Tick(bool UseInput)
 	int MapIndexB = m_pCollision->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y - (28/2)-4));
 	//dbg_msg("","N%d L%d R%d B%d T%d",MapIndex,MapIndexL,MapIndexR,MapIndexB,MapIndexT);
 	m_TileIndex = m_pCollision->GetTileIndex(MapIndex);
+	m_TileFlags = m_pCollision->GetTileFlags(MapIndex);
 	m_TileIndexL = m_pCollision->GetTileIndex(MapIndexL);
+	m_TileFlagsL = m_pCollision->GetTileFlags(MapIndexL);
 	m_TileIndexR = m_pCollision->GetTileIndex(MapIndexR);
+	m_TileFlagsR = m_pCollision->GetTileFlags(MapIndexR);
 	m_TileIndexB = m_pCollision->GetTileIndex(MapIndexB);
+	m_TileFlagsB = m_pCollision->GetTileFlags(MapIndexB);
 	m_TileIndexT = m_pCollision->GetTileIndex(MapIndexT);
+	m_TileFlagsT = m_pCollision->GetTileFlags(MapIndexT);
 	m_TileFIndex = m_pCollision->GetFTileIndex(MapIndex);
+	m_TileFFlags = m_pCollision->GetFTileFlags(MapIndex);
 	m_TileFIndexL = m_pCollision->GetFTileIndex(MapIndexL);
+	m_TileFFlagsL = m_pCollision->GetFTileFlags(MapIndexL);
 	m_TileFIndexR = m_pCollision->GetFTileIndex(MapIndexR);
+	m_TileFFlagsR = m_pCollision->GetFTileFlags(MapIndexR);
 	m_TileFIndexB = m_pCollision->GetFTileIndex(MapIndexB);
+	m_TileFFlagsB = m_pCollision->GetFTileFlags(MapIndexB);
 	m_TileFIndexT = m_pCollision->GetFTileIndex(MapIndexT);
+	m_TileFFlagsT = m_pCollision->GetFTileFlags(MapIndexT);
 	m_TileSIndex = m_pCollision->GetDTileIndex(MapIndex, m_pTeams->Team(m_Id));
+	m_TileSFlags = m_pCollision->GetDTileFlags(MapIndex, m_pTeams->Team(m_Id));
 	m_TileSIndexL = m_pCollision->GetDTileIndex(MapIndexL, m_pTeams->Team(m_Id));
+	m_TileSFlagsL = m_pCollision->GetDTileFlags(MapIndexL, m_pTeams->Team(m_Id));
 	m_TileSIndexR = m_pCollision->GetDTileIndex(MapIndexR, m_pTeams->Team(m_Id));
+	m_TileSFlagsR = m_pCollision->GetDTileFlags(MapIndexR, m_pTeams->Team(m_Id));
 	m_TileSIndexB = m_pCollision->GetDTileIndex(MapIndexB, m_pTeams->Team(m_Id));
+	m_TileSFlagsB = m_pCollision->GetDTileFlags(MapIndexB, m_pTeams->Team(m_Id));
 	m_TileSIndexT = m_pCollision->GetDTileIndex(MapIndexT, m_pTeams->Team(m_Id));
+	m_TileSFlagsT = m_pCollision->GetDTileFlags(MapIndexT, m_pTeams->Team(m_Id));
 	m_TriggeredEvents = 0;
 	
 	// get ground state
@@ -377,26 +392,26 @@ void CCharacterCore::Tick(bool UseInput)
 					vec2 Temp = p->m_Vel;
 					Temp.x = SaturatedAdd(-DragSpeed, DragSpeed, p->m_Vel.x, Accel*Dir.x*1.5f);
 					Temp.y = SaturatedAdd(-DragSpeed, DragSpeed, p->m_Vel.y, Accel*Dir.y*1.5f);
-					if(Temp.x > 0 && (p->m_TileIndex == TILE_STOPL || p->m_TileIndexL == TILE_STOPL || p->m_TileIndexL == TILE_STOPH || p->m_TileIndexL == TILE_STOPA || p->m_TileFIndex == TILE_STOPL || p->m_TileFIndexL == TILE_STOPL || p->m_TileFIndexL == TILE_STOPH || p->m_TileFIndexL == TILE_STOPA || p->m_TileSIndex == TILE_STOPL || p->m_TileSIndexL == TILE_STOPL || p->m_TileSIndexL == TILE_STOPH || p->m_TileSIndexL == TILE_STOPA))
+					if(Temp.x > 0 && ((p->m_TileIndex == TILE_STOP && p->m_TileFlags == ROTATION_270) || (p->m_TileIndexL == TILE_STOP && p->m_TileFlagsL == ROTATION_270) || (p->m_TileIndexL == TILE_STOPS && (p->m_TileFlagsL == ROTATION_90 || p->m_TileFlagsL ==ROTATION_270)) || (p->m_TileIndexL == TILE_STOPA) || (p->m_TileFIndex == TILE_STOP && p->m_TileFFlags == ROTATION_270) || (p->m_TileFIndexL == TILE_STOP && p->m_TileFFlagsL == ROTATION_270) || (p->m_TileFIndexL == TILE_STOPS && (p->m_TileFFlagsL == ROTATION_90 || p->m_TileFFlagsL == ROTATION_270)) || (p->m_TileFIndexL == TILE_STOPA) || (p->m_TileSIndex == TILE_STOP && p->m_TileSFlags == ROTATION_270) || (p->m_TileSIndexL == TILE_STOP && p->m_TileSFlagsL == ROTATION_270) || (p->m_TileSIndexL == TILE_STOPS && (p->m_TileSFlagsL == ROTATION_90 || p->m_TileSFlagsL == ROTATION_270)) || (p->m_TileSIndexL == TILE_STOPA)))
 						Temp.x = 0;
-					if(Temp.x < 0 && (p->m_TileIndex == TILE_STOPR || p->m_TileIndexR == TILE_STOPR || p->m_TileIndexR == TILE_STOPH || p->m_TileIndexR == TILE_STOPA || p->m_TileFIndex == TILE_STOPR || p->m_TileFIndexR == TILE_STOPR || p->m_TileFIndexR == TILE_STOPH || p->m_TileFIndexR == TILE_STOPA || p->m_TileSIndex == TILE_STOPR || p->m_TileSIndexR == TILE_STOPR || p->m_TileSIndexR == TILE_STOPH || p->m_TileSIndexR == TILE_STOPA))
+					if(Temp.x < 0 && ((p->m_TileIndex == TILE_STOP && p->m_TileFlags == ROTATION_90) || (p->m_TileIndexR == TILE_STOP && p->m_TileFlagsR == ROTATION_90) || (p->m_TileIndexR == TILE_STOPS && (p->m_TileFlagsR == ROTATION_90 || p->m_TileFlagsR == ROTATION_270)) || (p->m_TileIndexR == TILE_STOPA) || (p->m_TileFIndex == TILE_STOP && p->m_TileFFlags == ROTATION_90) || (p->m_TileFIndexR == TILE_STOP && p->m_TileFFlagsR == ROTATION_90) || (p->m_TileFIndexR == TILE_STOPS && (p->m_TileFFlagsR == ROTATION_90 || p->m_TileFFlagsR == ROTATION_270)) || (p->m_TileFIndexR == TILE_STOPA) || (p->m_TileSIndex == TILE_STOP && p->m_TileSFlags == ROTATION_90) || (p->m_TileSIndexR == TILE_STOP && p->m_TileSFlagsR == ROTATION_90) || (p->m_TileSIndexR == TILE_STOPS && (p->m_TileSFlagsR == ROTATION_90 || p->m_TileSFlagsR == ROTATION_270)) || (p->m_TileSIndexR == TILE_STOPA)))
 						Temp.x = 0;
-					if(Temp.y < 0 && (p->m_TileIndex == TILE_STOPB || p->m_TileIndexB == TILE_STOPB || p->m_TileIndexB == TILE_STOPV || p->m_TileIndexB == TILE_STOPA || p->m_TileFIndex == TILE_STOPB || p->m_TileFIndexB == TILE_STOPB || p->m_TileFIndexB == TILE_STOPV || p->m_TileFIndexB == TILE_STOPA || p->m_TileSIndex == TILE_STOPB || p->m_TileSIndexB == TILE_STOPB || p->m_TileSIndexB == TILE_STOPV || p->m_TileSIndexB == TILE_STOPA))
+					if(Temp.y < 0 && ((p->m_TileIndex == TILE_STOP && p->m_TileFlags == ROTATION_180) || (p->m_TileIndexB == TILE_STOP && p->m_TileFlagsB == ROTATION_180) || (p->m_TileIndexB == TILE_STOPS && (p->m_TileFlagsB == ROTATION_0 || p->m_TileFlagsB == ROTATION_180)) || (p->m_TileIndexB == TILE_STOPA) || (p->m_TileFIndex == TILE_STOP && p->m_TileFFlags == ROTATION_180) || (p->m_TileFIndexB == TILE_STOP && p->m_TileFFlagsB == ROTATION_180) || (p->m_TileFIndexB == TILE_STOPS && (p->m_TileFFlagsB == ROTATION_0 || p->m_TileFFlagsB == ROTATION_180)) || (p->m_TileFIndexB == TILE_STOPA) || (p->m_TileSIndex == TILE_STOP && p->m_TileSFlags == ROTATION_180) || (p->m_TileSIndexB == TILE_STOP && p->m_TileSFlagsB == ROTATION_180) || (p->m_TileSIndexB == TILE_STOPS && (p->m_TileSFlagsB == ROTATION_0 || p->m_TileSFlagsB == ROTATION_180)) || (p->m_TileSIndexB == TILE_STOPA)))
 						Temp.y = 0;
-					if(Temp.y > 0 && (p->m_TileIndex == TILE_STOPT || p->m_TileIndexT == TILE_STOPT || p->m_TileIndexT == TILE_STOPV || p->m_TileIndexT == TILE_STOPA || p->m_TileFIndex == TILE_STOPT || p->m_TileFIndexT == TILE_STOPT || p->m_TileFIndexT == TILE_STOPV || p->m_TileFIndexT == TILE_STOPA || p->m_TileSIndex == TILE_STOPT || p->m_TileSIndexT == TILE_STOPT || p->m_TileSIndexT == TILE_STOPV || p->m_TileSIndexT == TILE_STOPA))
+					if(Temp.y > 0 && ((p->m_TileIndex == TILE_STOP && p->m_TileFlags == ROTATION_0) || (p->m_TileIndexT == TILE_STOP && p->m_TileFlagsT == ROTATION_0) || (p->m_TileIndexT == TILE_STOPS && (p->m_TileFlagsT == ROTATION_0 || p->m_TileFlagsT == ROTATION_180)) || (p->m_TileIndexT == TILE_STOPA) || (p->m_TileFIndex == TILE_STOP && p->m_TileFFlags == ROTATION_0) || (p->m_TileFIndexT == TILE_STOP && p->m_TileFFlagsT == ROTATION_0) || (p->m_TileFIndexT == TILE_STOPS && (p->m_TileFFlagsT == ROTATION_0 || p->m_TileFFlagsT == ROTATION_180)) || (p->m_TileFIndexT == TILE_STOPA) || (p->m_TileSIndex == TILE_STOP && p->m_TileSFlags == ROTATION_0) || (p->m_TileSIndexT == TILE_STOP && p->m_TileSFlagsT == ROTATION_0) || (p->m_TileSIndexT == TILE_STOPS && (p->m_TileSFlagsT == ROTATION_0 || p->m_TileSFlagsT == ROTATION_180)) || (p->m_TileSIndexT == TILE_STOPA)))
 						Temp.y = 0;
 
 					// add force to the hooked player
 					p->m_Vel = Temp;
 					Temp.x = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, -Accel*Dir.x*0.25f);
 					Temp.y = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, -Accel*Dir.y*0.25f);
-					if(Temp.x > 0 && (m_TileIndex == TILE_STOPL || m_TileIndexL == TILE_STOPL || m_TileIndexL == TILE_STOPH || m_TileIndexL == TILE_STOPA || m_TileFIndex == TILE_STOPL || m_TileFIndexL == TILE_STOPL || m_TileFIndexL == TILE_STOPH || m_TileFIndexL == TILE_STOPA || m_TileSIndex == TILE_STOPL || m_TileSIndexL == TILE_STOPL || m_TileSIndexL == TILE_STOPH || m_TileSIndexL == TILE_STOPA))
+					if(Temp.x > 0 && ((m_TileIndex == TILE_STOP && m_TileFlags == ROTATION_270) || (m_TileIndexL == TILE_STOP && m_TileFlagsL == ROTATION_270) || (m_TileIndexL == TILE_STOPS && (m_TileFlagsL == ROTATION_90 || m_TileFlagsL ==ROTATION_270)) || (m_TileIndexL == TILE_STOPA) || (m_TileFIndex == TILE_STOP && m_TileFFlags == ROTATION_270) || (m_TileFIndexL == TILE_STOP && m_TileFFlagsL == ROTATION_270) || (m_TileFIndexL == TILE_STOPS && (m_TileFFlagsL == ROTATION_90 || m_TileFFlagsL == ROTATION_270)) || (m_TileFIndexL == TILE_STOPA) || (m_TileSIndex == TILE_STOP && m_TileSFlags == ROTATION_270) || (m_TileSIndexL == TILE_STOP && m_TileSFlagsL == ROTATION_270) || (m_TileSIndexL == TILE_STOPS && (m_TileSFlagsL == ROTATION_90 || m_TileSFlagsL == ROTATION_270)) || (m_TileSIndexL == TILE_STOPA)))
 						Temp.x = 0;
-					if(Temp.x < 0 && (m_TileIndex == TILE_STOPR || m_TileIndexR == TILE_STOPR || m_TileIndexR == TILE_STOPH || m_TileIndexR == TILE_STOPA || m_TileFIndex == TILE_STOPR || m_TileFIndexR == TILE_STOPR || m_TileFIndexR == TILE_STOPH || m_TileFIndexR == TILE_STOPA || m_TileSIndex == TILE_STOPR || m_TileSIndexR == TILE_STOPR || m_TileSIndexR == TILE_STOPH || m_TileSIndexR == TILE_STOPA))
+					if(Temp.x < 0 && ((m_TileIndex == TILE_STOP && m_TileFlags == ROTATION_90) || (m_TileIndexR == TILE_STOP && m_TileFlagsR == ROTATION_90) || (m_TileIndexR == TILE_STOPS && (m_TileFlagsR == ROTATION_90 || m_TileFlagsR == ROTATION_270)) || (m_TileIndexR == TILE_STOPA) || (m_TileFIndex == TILE_STOP && m_TileFFlags == ROTATION_90) || (m_TileFIndexR == TILE_STOP && m_TileFFlagsR == ROTATION_90) || (m_TileFIndexR == TILE_STOPS && (m_TileFFlagsR == ROTATION_90 || m_TileFFlagsR == ROTATION_270)) || (m_TileFIndexR == TILE_STOPA) || (m_TileSIndex == TILE_STOP && m_TileSFlags == ROTATION_90) || (m_TileSIndexR == TILE_STOP && m_TileSFlagsR == ROTATION_90) || (m_TileSIndexR == TILE_STOPS && (m_TileSFlagsR == ROTATION_90 || m_TileSFlagsR == ROTATION_270)) || (m_TileSIndexR == TILE_STOPA)))
 						Temp.x = 0;
-					if(Temp.y < 0 && (m_TileIndex == TILE_STOPB || m_TileIndexB == TILE_STOPB || m_TileIndexB == TILE_STOPV || m_TileIndexB == TILE_STOPA || m_TileFIndex == TILE_STOPB || m_TileFIndexB == TILE_STOPB || m_TileFIndexB == TILE_STOPV || m_TileFIndexB == TILE_STOPA || m_TileSIndex == TILE_STOPB || m_TileSIndexB == TILE_STOPB || m_TileSIndexB == TILE_STOPV || m_TileSIndexB == TILE_STOPA))
+					if(Temp.y < 0 && ((m_TileIndex == TILE_STOP && m_TileFlags == ROTATION_180) || (m_TileIndexB == TILE_STOP && m_TileFlagsB == ROTATION_180) || (m_TileIndexB == TILE_STOPS && (m_TileFlagsB == ROTATION_0 || m_TileFlagsB == ROTATION_180)) || (m_TileIndexB == TILE_STOPA) || (m_TileFIndex == TILE_STOP && m_TileFFlags == ROTATION_180) || (m_TileFIndexB == TILE_STOP && m_TileFFlagsB == ROTATION_180) || (m_TileFIndexB == TILE_STOPS && (m_TileFFlagsB == ROTATION_0 || m_TileFFlagsB == ROTATION_180)) || (m_TileFIndexB == TILE_STOPA) || (m_TileSIndex == TILE_STOP && m_TileSFlags == ROTATION_180) || (m_TileSIndexB == TILE_STOP && m_TileSFlagsB == ROTATION_180) || (m_TileSIndexB == TILE_STOPS && (m_TileSFlagsB == ROTATION_0 || m_TileSFlagsB == ROTATION_180)) || (m_TileSIndexB == TILE_STOPA)))
 						Temp.y = 0;
-					if(Temp.y > 0 && (m_TileIndex == TILE_STOPT || m_TileIndexT == TILE_STOPT || m_TileIndexT == TILE_STOPV || m_TileIndexT == TILE_STOPA || m_TileFIndex == TILE_STOPT || m_TileFIndexT == TILE_STOPT || m_TileFIndexT == TILE_STOPV || m_TileFIndexT == TILE_STOPA || m_TileSIndex == TILE_STOPT || m_TileSIndexT == TILE_STOPT || m_TileSIndexT == TILE_STOPV || m_TileSIndexT == TILE_STOPA))
+					if(Temp.y > 0 && ((m_TileIndex == TILE_STOP && m_TileFlags == ROTATION_0) || (m_TileIndexT == TILE_STOP && m_TileFlagsT == ROTATION_0) || (m_TileIndexT == TILE_STOPS && (m_TileFlagsT == ROTATION_0 || m_TileFlagsT == ROTATION_180)) || (m_TileIndexT == TILE_STOPA) || (m_TileFIndex == TILE_STOP && m_TileFFlags == ROTATION_0) || (m_TileFIndexT == TILE_STOP && m_TileFFlagsT == ROTATION_0) || (m_TileFIndexT == TILE_STOPS && (m_TileFFlagsT == ROTATION_0 || m_TileFFlagsT == ROTATION_180)) || (m_TileFIndexT == TILE_STOPA) || (m_TileSIndex == TILE_STOP && m_TileSFlags == ROTATION_0) || (m_TileSIndexT == TILE_STOP && m_TileSFlagsT == ROTATION_0) || (m_TileSIndexT == TILE_STOPS && (m_TileSFlagsT == ROTATION_0 || m_TileSFlagsT == ROTATION_180)) || (m_TileSIndexT == TILE_STOPA)))
 						Temp.y = 0;
 					// add a little bit force to the guy who has the grip
 					m_Vel = Temp;

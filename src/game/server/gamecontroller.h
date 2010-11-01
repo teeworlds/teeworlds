@@ -106,7 +106,7 @@ public:
 		Returns:
 			bool?
 	*/
-	virtual bool OnEntity(int Index, vec2 Pos, bool Front);
+	virtual bool OnEntity(int Index, vec2 Pos, bool Front, int Flags);
 	
 	
 	/*

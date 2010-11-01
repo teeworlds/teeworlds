@@ -72,11 +72,12 @@ void CGun::Tick()
 {
 	if (Server()->Tick()%int(Server()->TickSpeed()*0.15f)==0)
 	{
+		int Flags;
 		m_EvalTick=Server()->Tick();
-		int Index = GameServer()->Collision()->IsCp(m_Pos.x,m_Pos.y);
-		if (Index)
+		int index = GameServer()->Collision()->IsCp(m_Pos.x,m_Pos.y, &Flags);
+		if (index)
 		{
-			m_Core=GameServer()->Collision()->CpSpeed(Index);
+			m_Core=GameServer()->Collision()->CpSpeed(index, Flags);
 		}
 		m_Pos+=m_Core;
 		Fire();

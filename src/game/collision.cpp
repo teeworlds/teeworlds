@@ -84,7 +84,7 @@ void CCollision::Init(class CLayers *pLayers)
 				}
 
 				// DDRace tiles
-				if(Index == TILE_THROUGH || (Index >= TILE_FREEZE && Index<=TILE_BOOSTS) || (Index >= TILE_TELEIN && Index<=TILE_STOPA) || (Index >= TILE_CP_D && Index<=TILE_NPH))
+				if(Index == TILE_THROUGH || (Index >= TILE_FREEZE && Index <= TILE_BOOSTS) || (Index >= TILE_TELEIN && Index<=TILE_BOOST) || (Index >= TILE_BEGIN && Index <= TILE_STOPA) || Index == TILE_CP || Index == TILE_CP_F || (Index >= TILE_NPC && Index <= TILE_NPH))
 					m_pFront[i].m_Index = Index;
 			}
 	}
@@ -114,7 +114,7 @@ void CCollision::Init(class CLayers *pLayers)
 		}
 
 		// DDRace tiles
-		if(Index == TILE_THROUGH || Index >= TILE_FREEZE && Index<=TILE_BOOSTS || Index >= TILE_TELEIN && Index<=TILE_STOPA || Index >= TILE_CP_D && Index<=TILE_NPH)
+		if(Index == TILE_THROUGH || (Index >= TILE_FREEZE && Index <= TILE_BOOSTS) || (Index >= TILE_TELEIN && Index<=TILE_BOOST) || (Index >= TILE_BEGIN && Index <= TILE_STOPA) || Index == TILE_CP || Index == TILE_CP_F || (Index >= TILE_NPC && Index <= TILE_NPH))
 			m_pTiles[i].m_Index = Index;
 	}
 }
@@ -215,6 +215,23 @@ int CCollision::GetFTileIndex(int Index)
 	return m_pFront[Index].m_Index;
 }
 
+int CCollision::GetTileFlags(int Index)
+{
+	/*dbg_msg("GetTileIndex","m_pTiles[%d].m_Index = %d",Index,m_pTiles[Index].m_Index);//Remove*/
+	if(Index < 0)
+		return 0;
+	return m_pTiles[Index].m_Flags;
+}
+
+int CCollision::GetFTileFlags(int Index)
+{
+	/*dbg_msg("GetFTileIndex","m_pFront[%d].m_Index = %d",Index,m_pFront[Index].m_Index);//Remove*/
+
+	if(Index < 0 || !m_pFront)
+		return 0;
+	return m_pFront[Index].m_Flags;
+}
+
 int CCollision::GetTile(int x, int y)
 {
 	int nx = clamp(x/32, 0, m_Width-1);
@@ -280,14 +297,15 @@ void CCollision::SetDTile(float x, float y, int Team, bool State)
 	   m_pDoor[ny * m_Width + nx].m_Team[Team] = State;
 }
 
-void CCollision::SetDCollisionAt(float x, float y, int Flag, int Team)
+void CCollision::SetDCollisionAt(float x, float y, int Type, int Team, int Flags)
 {
 	if(!m_pDoor || ((Team < 0 || Team > (MAX_CLIENTS - 1)) && Team !=99))
 		return;
    int nx = clamp(round(x)/32, 0, m_Width-1);
    int ny = clamp(round(y)/32, 0, m_Height-1);
 
-   m_pDoor[ny * m_Width + nx].m_Index = Flag;
+   m_pDoor[ny * m_Width + nx].m_Index = Type;
+   m_pDoor[ny * m_Width + nx].m_Flags = Flags;// currently only doors in all sides use this so no need for rotation
 	if(Team == 99)
 	{
 		for (int i = 0; i < (MAX_CLIENTS - 1); ++i)
@@ -306,6 +324,16 @@ int CCollision::GetDTileIndex(int Index,int Team)
 
 	if(m_pDoor[Index].m_Team[Team])
 		return m_pDoor[Index].m_Index;
+	return 0;
+}
+
+int CCollision::GetDTileFlags(int Index,int Team)
+{
+	if(!m_pDoor || Index < 0 || !m_pDoor[Index].m_Index || ((Team < 0 || Team > (MAX_CLIENTS - 1)) && Team !=99))
+		return 0;
+
+	if(m_pDoor[Index].m_Team[Team])
+		return m_pDoor[Index].m_Flags;
 	return 0;
 }
 
@@ -658,14 +686,15 @@ void CCollision::GetSpeedup(int Index, vec2 *Dir, int *Force, int *MaxSpeed)
 		*MaxSpeed = m_pSpeedup[Index].m_MaxSpeed;
 }
 
-int CCollision::IsCp(int x, int y)
+int CCollision::IsCp(int x, int y, int* Flags)
 {
 	int nx = clamp(x/32, 0, m_Width-1);
 	int ny = clamp(y/32, 0, m_Height-1);
 	int Index = m_pTiles[ny*m_Width+nx].m_Index;
+	*Flags = m_pTiles[ny*m_Width+nx].m_Flags;
 	if(Index < 0)
 		return 0;
-	if (Index >= TILE_CP_D && Index <= TILE_CP_L_F)
+	if (Index == TILE_CP || Index == TILE_CP_F)
 		return Index;
 	else
 		return 0;
@@ -693,39 +722,35 @@ int CCollision::IsFCheckpoint(int Index)
 	return -1;
 }
 
-vec2 CCollision::CpSpeed(int Index)
+vec2 CCollision::CpSpeed(int Index, int Flags)
 {
 	if(Index < 0)
 		return vec2(0,0);
    vec2 target;
-
-   switch(Index)
-   {
-   case TILE_CP_U:
-   case TILE_CP_U_F:
-       target.x=0;
-       target.y=-4;
-       break;
-   case TILE_CP_R:
-   case TILE_CP_R_F:
-       target.x=4;
-       target.y=0;
-       break;
-   case TILE_CP_D:
-   case TILE_CP_D_F:
-       target.x=0;
-       target.y=4;
-       break;
-   case TILE_CP_L:
-   case TILE_CP_L_F:
-       target.x=-4;
-       target.y=0;
-       break;
-   default:
-       target=vec2(0,0);
-       break;
-   }
-   if (Index>=TILE_CP_D_F && Index<=TILE_CP_L_F)
+   if(Index == TILE_CP || Index == TILE_CP_F)
+	   switch(Flags)
+	   {
+	   case ROTATION_0:
+		   target.x=0;
+		   target.y=-4;
+		   break;
+	   case ROTATION_90:
+		   target.x=4;
+		   target.y=0;
+		   break;
+	   case ROTATION_180:
+		   target.x=0;
+		   target.y=4;
+		   break;
+	   case ROTATION_270:
+		   target.x=-4;
+		   target.y=0;
+		   break;
+	   default:
+		   target=vec2(0,0);
+		   break;
+	   }
+   if (Index == TILE_CP_F)
        target*=4;
    return target;
 

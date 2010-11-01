@@ -123,7 +123,7 @@ bool IGameController::CanSpawn(CPlayer *pPlayer, vec2 *pOutPos)
 	return Eval.m_Got;
 }
 
-bool IGameController::OnEntity(int Index, vec2 Pos, bool Front)
+bool IGameController::OnEntity(int Index, vec2 Pos, bool Front, int Flags)
 {
 	if (Index<0)
 		return false;
@@ -153,53 +153,59 @@ bool IGameController::OnEntity(int Index, vec2 Pos, bool Front)
 	else if(Index == ENTITY_SPAWN_BLUE)
 		m_aaSpawnPoints[2][m_aNumSpawnPoints[2]++] = Pos;
 
-	else if(Index >= ENTITY_CRAZY_SHOTGUN_U_EX && Index <= ENTITY_CRAZY_SHOTGUN_L_EX)
+	else if(Index == ENTITY_CRAZY_SHOTGUN_EX/* && Index <= ENTITY_CRAZY_SHOTGUN_L_EX*/)
 	{
-		for (int i = 0; i < 4; i++)
-		{
-			if (Index - ENTITY_CRAZY_SHOTGUN_U_EX == i)
-			{
-				float Deg = i*(pi/2);
-				CProjectile *bullet = new CProjectile
-					(
-					&GameServer()->m_World,
-					WEAPON_SHOTGUN, //Type
-					-1, //Owner
-					Pos, //Pos
-					vec2(sin(Deg),cos(Deg)), //Dir
-					-2, //Span
-					true, //Freeze
-					true, //Explosive
-					0,//Force
-					(g_Config.m_SvShotgunBulletSound)?SOUND_GRENADE_EXPLODE:-1,//SoundImpact
-					WEAPON_SHOTGUN//Weapon
-					);
-				bullet->SetBouncing(2 - (i % 2));
-
-			}
-		}
+		dbg_msg("","Flags %d",Flags);
+		int Dir;
+		if(!Flags)
+			Dir = 0;
+		else if(Flags == ROTATION_90)
+			Dir = 1;
+		else if(Flags == ROTATION_180)
+			Dir = 2;
+		else
+			Dir = 3;
+		float Deg = Dir*(pi/2);
+		CProjectile *bullet = new CProjectile
+			(
+			&GameServer()->m_World,
+			WEAPON_SHOTGUN, //Type
+			-1, //Owner
+			Pos, //Pos
+			vec2(sin(Deg),cos(Deg)), //Dir
+			-2, //Span
+			true, //Freeze
+			true, //Explosive
+			0,//Force
+			(g_Config.m_SvShotgunBulletSound)?SOUND_GRENADE_EXPLODE:-1,//SoundImpact
+			WEAPON_SHOTGUN//Weapon
+			);
+		bullet->SetBouncing(2 - (Dir % 2));
 	}
-	else if(Index >= ENTITY_CRAZY_SHOTGUN_U && Index <= ENTITY_CRAZY_SHOTGUN_L)
+	else if(Index == ENTITY_CRAZY_SHOTGUN)
 	{
-		for (int i = 0; i < 4; i++)
-		{
-			if (Index - ENTITY_CRAZY_SHOTGUN_U == i)
-			{
-				float Deg = i*(pi/2);
-				CProjectile *bullet = new CProjectile(&GameServer()->m_World,
-					WEAPON_SHOTGUN, //Type
-					-1, //Owner
-					Pos, //Pos
-					vec2(sin(Deg),cos(Deg)), //Dir
-					-2, //Span
-					true, //Freeze
-					false, //Explosive
-					0,
-					SOUND_GRENADE_EXPLODE,
-					WEAPON_SHOTGUN);
-				bullet->SetBouncing(2 - (i % 2));
-			}
-		}
+		int Dir;
+		if(!Flags)
+			Dir=0;
+		else if(Flags == (TILEFLAG_ROTATE))
+			Dir = 1;
+		else if(Flags == (TILEFLAG_VFLIP|TILEFLAG_HFLIP))
+			Dir = 2;
+		else
+			Dir = 3;
+		float Deg = Dir*(pi/2);
+		CProjectile *bullet = new CProjectile(&GameServer()->m_World,
+			WEAPON_SHOTGUN, //Type
+			-1, //Owner
+			Pos, //Pos
+			vec2(sin(Deg),cos(Deg)), //Dir
+			-2, //Span
+			true, //Freeze
+			false, //Explosive
+			0,
+			SOUND_GRENADE_EXPLODE,
+			WEAPON_SHOTGUN);
+		bullet->SetBouncing(2 - (Dir % 2));
 	}
 
 	if(Index == ENTITY_ARMOR_1)
