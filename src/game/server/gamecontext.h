@@ -92,6 +92,7 @@ class CGameContext : public IGameServer
 	static void ConRemoveWeapon(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
 	void ModifyWeapons(int ClientId, int Victim, int Weapon, bool Remove);
+	void MoveCharacter(int ClientId, int Victim, int X, int Y, bool Raw = false);
 	
 	static void ConTeleport(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
@@ -118,6 +119,9 @@ class CGameContext : public IGameServer
 	static void ConGoRight(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConGoUp(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConGoDown(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	
+	static void ConMove(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConMoveRaw(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
 	static void ConAddVote(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConClearVotes(IConsole::IResult *pResult, void *pUserData, int ClientId);

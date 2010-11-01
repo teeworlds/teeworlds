@@ -1280,144 +1280,80 @@ void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int Cl
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId))
-		return;
-	int Victim=-1;
-	if(pResult->NumArguments())
-		Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if(Victim ==-1 || Victim == ClientId)
-	{
-		CCharacter* chr = pSelf->GetPlayerChar(ClientId);
-		if(chr)
-		{
-			chr->m_Core.m_Pos.x -= 32;
-			if(!g_Config.m_SvCheatTime)
-				chr->m_DDRaceState = DDRACE_CHEAT;
-		}
-	}
-	else if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
-	{
-		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if(chr)
-		{
-			chr->m_Core.m_Pos.x -= 32;
-			if(!g_Config.m_SvCheatTime)
-				chr->m_DDRaceState = DDRACE_CHEAT;
-		}
-	}
-	else
-	{
-		CServer* pServ = (CServer*)pSelf->Server();
-		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", (pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
-	}
+	pSelf->MoveCharacter(ClientId, (pResult->NumArguments() > 0) ? pResult->GetInteger(0) : ClientId, -1, 0);
 }
 
 void CGameContext::ConGoRight(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId))
-		return;
-	int Victim=-1;
-	if(pResult->NumArguments())
-		Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if(Victim ==-1 || Victim == ClientId)
-	{
-		CCharacter* chr = pSelf->GetPlayerChar(ClientId);
-		if(chr)
-		{
-			chr->m_Core.m_Pos.x += 32;
-			if(!g_Config.m_SvCheatTime)
-				chr->m_DDRaceState = DDRACE_CHEAT;
-		}
-	}
-	else if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
-	{
-		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if(chr)
-		{
-			chr->m_Core.m_Pos.x += 32;
-			if(!g_Config.m_SvCheatTime)
-				chr->m_DDRaceState = DDRACE_CHEAT;
-		}
-	}
-	else
-	{
-		CServer* pServ = (CServer*)pSelf->Server();
-		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", (pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
-	}
+	pSelf->MoveCharacter(ClientId, (pResult->NumArguments() > 0) ? pResult->GetInteger(0) : ClientId, 1, 0);
 }
 
 void CGameContext::ConGoDown(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId))
-		return;
-	int Victim=-1;
-	if(pResult->NumArguments())
-		Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if(Victim ==-1 || Victim == ClientId)
-	{
-		CCharacter* chr = pSelf->GetPlayerChar(ClientId);
-		if(chr)
-		{
-			chr->m_Core.m_Pos.y += 32;
-			if(!g_Config.m_SvCheatTime)
-				chr->m_DDRaceState = DDRACE_CHEAT;
-		}
-	}
-	else if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
-	{
-		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if(chr)
-		{
-			chr->m_Core.m_Pos.y += 32;
-			if(!g_Config.m_SvCheatTime)
-				chr->m_DDRaceState = DDRACE_CHEAT;
-		}
-	}
-	else
-	{
-		CServer* pServ = (CServer*)pSelf->Server();
-		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", (pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
-	}
+	pSelf->MoveCharacter(ClientId, (pResult->NumArguments() > 0) ? pResult->GetInteger(0) : ClientId, 0, 1);
 }
 
 void CGameContext::ConGoUp(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId))
-		return;
-	int Victim=-1;
-	if(pResult->NumArguments())
-		Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
-	if(Victim ==-1 || Victim == ClientId)
-	{
-		CCharacter* chr = pSelf->GetPlayerChar(ClientId);
-		if(chr)
-		{
-			chr->m_Core.m_Pos.y -= 32;
-			if(!g_Config.m_SvCheatTime)
-				chr->m_DDRaceState = DDRACE_CHEAT;
-		}
-	}
-	else if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
-	{
-		CCharacter* chr = pSelf->GetPlayerChar(Victim);
-		if(chr)
-		{
-			chr->m_Core.m_Pos.y -= 32;
-			if(!g_Config.m_SvCheatTime)
-				chr->m_DDRaceState = DDRACE_CHEAT;
-		}
-	}
+	pSelf->MoveCharacter(ClientId, (pResult->NumArguments() > 0) ? pResult->GetInteger(0) : ClientId, 0, -1);
+}
+
+void CGameContext::ConMove(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	
+	if (pResult->NumArguments() > 2)
+		pSelf->MoveCharacter(ClientId, pResult->GetInteger(0), pResult->GetInteger(1), pResult->GetInteger(2));
 	else
+		pSelf->MoveCharacter(ClientId, ClientId, pResult->GetInteger(0), pResult->GetInteger(1));
+}
+
+void CGameContext::ConMoveRaw(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	
+	if (pResult->NumArguments() > 2)
+		pSelf->MoveCharacter(ClientId, pResult->GetInteger(0), pResult->GetInteger(1), pResult->GetInteger(2), true);
+	else
+		pSelf->MoveCharacter(ClientId, ClientId, pResult->GetInteger(0), pResult->GetInteger(1), true);
+}
+
+void CGameContext::MoveCharacter(int ClientId, int Victim, int X, int Y, bool Raw)
+{
+	if(!CheatsAvailable(Console(), ClientId))
+		return;
+
+	if(clamp(Victim, 0, (int) MAX_CLIENTS - 1) != Victim || GetPlayerChar(ClientId) == 0)
 	{
-		CServer* pServ = (CServer*)pSelf->Server();
-		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", (pSelf->m_apPlayers[ClientId]->m_Authed>1)?"You can't move a player with the same or higher rank":"You can't move others as a helper");
+		Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "invalid client id");
+		return;
 	}
+	
+	if(ClientId != Victim && m_apPlayers[ClientId]->m_Authed <= 1)
+	{
+		Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You have too low level to move the tees of other players");
+		return;
+	}
+	
+	if(ClientId != Victim && !compare_players(m_apPlayers[ClientId], m_apPlayers[Victim]))
+	{
+		Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You can't move the tee of players with the same or a higher rank");
+		return;
+	}
+	
+	CCharacter* pChr = GetPlayerChar(ClientId);
+
+	pChr->m_Core.m_Pos.x += ((Raw) ? 1 : 32) * X;
+	pChr->m_Core.m_Pos.y += ((Raw) ? 1 : 32) * Y;
+
+	if(!g_Config.m_SvCheatTime)
+		pChr->m_DDRaceState = DDRACE_CHEAT;
 }
 
 void CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int ClientId)
@@ -1793,7 +1729,8 @@ void CGameContext::ModifyWeapons(int ClientId, int Victim, int Weapon, bool Remo
 	
 	if(ClientId != Victim && m_apPlayers[ClientId]->m_Authed <= 1)
 	{
-		Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You have too low level to add/remove weapons from players");
+		Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You have too low level to add/remove weapons from other players");
+		return;
 	}
 	
 	if(ClientId != Victim && !compare_players(m_apPlayers[ClientId], m_apPlayers[Victim]))
@@ -2516,6 +2453,9 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("right", "?i", CFGFLAG_SERVER, ConGoRight, this, "Makes you or player i move 1 tile right", 1);
 	Console()->Register("up", "?i", CFGFLAG_SERVER, ConGoUp, this, "Makes you or player i move 1 tile up", 1);
 	Console()->Register("down", "?i", CFGFLAG_SERVER, ConGoDown, this, "Makes you or player i move 1 tile down", 1);
+	
+	Console()->Register("move", "ii?i", CFGFLAG_SERVER, ConMove, this, "First optional parameter is client id, next parameters are x-axis change and y-axis change (1 = 1 tile)", 1);
+	Console()->Register("move_raw", "ii?i", CFGFLAG_SERVER, ConMoveRaw, this, "First optional parameter is client id, next parameters are x-axis change and y-axis change (1 = 1 pixel)", 1);
 
 	Console()->Register("broadtime", "", CFGFLAG_SERVER, ConBroadTime, this, "Toggles Showing the time string in race", -1);
 	Console()->Register("cmdlist", "", CFGFLAG_SERVER, ConCmdList, this, "Shows the list of all commands", -1);
