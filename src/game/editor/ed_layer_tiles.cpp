@@ -186,7 +186,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 				for(int x = 0; x < r.w; x++)
 				{
 					pGrabbed->m_pSpeedupTile[y*pGrabbed->m_Width+x] = ((CLayerSpeedup*)this)->m_pSpeedupTile[(r.y+y)*m_Width+(r.x+x)];
-					if(pGrabbed->m_pSpeedupTile[y*pGrabbed->m_Width+x].m_Type == TILE_BOOST || pGrabbed->m_pSpeedupTile[y*pGrabbed->m_Width+x].m_Type == TILE_BOOSTS)
+					if(pGrabbed->m_pSpeedupTile[y*pGrabbed->m_Width+x].m_Type == TILE_BOOST)
 					{
 						m_pEditor->m_SpeedupAngle = pGrabbed->m_pSpeedupTile[y*pGrabbed->m_Width+x].m_Angle;
 						m_pEditor->m_SpeedupForce = pGrabbed->m_pSpeedupTile[y*pGrabbed->m_Width+x].m_Force;
@@ -287,7 +287,7 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 				continue;
 				
 			// dont allow tele in and out tiles... same with speedup tile in game layer
-			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pGameLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEINEVIL || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOSTS || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_TRIGGER + ENTITY_OFFSET)|| l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_DOOR + ENTITY_OFFSET)))
+			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pGameLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEINEVIL || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_TRIGGER + ENTITY_OFFSET)|| l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_DOOR + ENTITY_OFFSET)))
 				continue;
 
 			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
@@ -768,7 +768,7 @@ void CLayerSpeedup::BrushDraw(CLayer *pBrush, float wx, float wy)
 			if(fx<0 || fx >= m_Width || fy < 0 || fy >= m_Height)
 				continue;
 			
-			if(l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOSTS)
+			if(l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST)
 			{
 				/*if(l->m_pSpeedupTile[y*l->m_Width+x].m_Force || l->m_pSpeedupTile[y*l->m_Width+x].m_Angle)
 				{
@@ -924,7 +924,7 @@ void CLayerFront::BrushDraw(CLayer *pBrush, float wx, float wy)
 				continue;
 
 			// dont allow tele in and out tiles... same with speedup tile and alot more in front
-			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pFrontLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEINEVIL || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOSTS || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOSTS || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_TRIGGER + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_DOOR + ENTITY_OFFSET)) || l->m_pTiles[y*l->m_Width+x].m_Index == (TILE_SOLID) || l->m_pTiles[y*l->m_Width+x].m_Index == (TILE_NOHOOK) || l->m_pTiles[y*l->m_Width+x].m_Index ==TILE_CP || l->m_pTiles[y*l->m_Width+x].m_Index ==TILE_CP_F)
+			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pFrontLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEINEVIL || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_TRIGGER + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_DOOR + ENTITY_OFFSET)) || l->m_pTiles[y*l->m_Width+x].m_Index == (TILE_SOLID) || l->m_pTiles[y*l->m_Width+x].m_Index == (TILE_NOHOOK) || l->m_pTiles[y*l->m_Width+x].m_Index ==TILE_CP || l->m_pTiles[y*l->m_Width+x].m_Index ==TILE_CP_F)
 				continue;
 			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
 		}

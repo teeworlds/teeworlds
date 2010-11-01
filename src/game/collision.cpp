@@ -84,7 +84,7 @@ void CCollision::Init(class CLayers *pLayers)
 				}
 
 				// DDRace tiles
-				if(Index == TILE_THROUGH || (Index >= TILE_FREEZE && Index <= TILE_BOOSTS) || (Index >= TILE_TELEIN && Index<=TILE_BOOST) || (Index >= TILE_BEGIN && Index <= TILE_STOPA) || Index == TILE_CP || Index == TILE_CP_F || (Index >= TILE_NPC && Index <= TILE_NPH))
+				if(Index == TILE_THROUGH || (Index >= TILE_FREEZE && Index <= TILE_UNFREEZE) || (Index >= TILE_TELEIN && Index<=TILE_BOOST) || (Index >= TILE_BEGIN && Index <= TILE_STOPA) || Index == TILE_CP || Index == TILE_CP_F || (Index >= TILE_NPC && Index <= TILE_NPH))
 					m_pFront[i].m_Index = Index;
 			}
 	}
@@ -114,7 +114,7 @@ void CCollision::Init(class CLayers *pLayers)
 		}
 
 		// DDRace tiles
-		if(Index == TILE_THROUGH || (Index >= TILE_FREEZE && Index <= TILE_BOOSTS) || (Index >= TILE_TELEIN && Index<=TILE_BOOST) || (Index >= TILE_BEGIN && Index <= TILE_STOPA) || Index == TILE_CP || Index == TILE_CP_F || (Index >= TILE_NPC && Index <= TILE_NPH))
+		if(Index == TILE_THROUGH || (Index >= TILE_FREEZE && Index <= TILE_UNFREEZE) || (Index >= TILE_TELEIN && Index<=TILE_BOOST) || (Index >= TILE_BEGIN && Index <= TILE_STOPA) || Index == TILE_CP || Index == TILE_CP_F || (Index >= TILE_NPC && Index <= TILE_NPH))
 			m_pTiles[i].m_Index = Index;
 	}
 }
