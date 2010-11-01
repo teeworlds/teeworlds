@@ -1725,7 +1725,7 @@ void CGameContext::ConGrenadeMe(IConsole::IResult *pResult, void *pUserData, int
 	}
 }
 
-void CGameContext::ConLaser(IConsole::IResult *pResult, void *pUserData, int ClientId)
+void CGameContext::ConRifle(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
@@ -1742,7 +1742,7 @@ void CGameContext::ConLaser(IConsole::IResult *pResult, void *pUserData, int Cli
 	}
 }
 
-void CGameContext::ConLaserMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
+void CGameContext::ConRifleMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
@@ -1782,6 +1782,130 @@ void CGameContext::ConWeaponsMe(IConsole::IResult *pResult, void *pUserData, int
 		chr->GiveAllWeapons();
 		if(!g_Config.m_SvCheatTime)
 			chr->m_DDRaceState = DDRACE_CHEAT;
+	}
+}
+
+void CGameContext::ConUnShotgun(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	{
+		CCharacter* chr = pSelf->GetPlayerChar(Victim);
+		if(chr)
+		{
+			if(chr->m_ActiveWeapon == WEAPON_SHOTGUN)
+				chr->m_ActiveWeapon = WEAPON_GUN;
+			chr->m_aWeapons[WEAPON_SHOTGUN].m_Got = false;
+		}
+	}
+}
+
+void CGameContext::ConUnShotgunMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
+	if(chr)
+	{
+		if(chr->m_ActiveWeapon == WEAPON_SHOTGUN)
+			chr->m_ActiveWeapon = WEAPON_GUN;
+		chr->m_aWeapons[WEAPON_SHOTGUN].m_Got = false;
+	}
+}
+
+void CGameContext::ConUnGrenade(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	{
+		CCharacter* chr = pSelf->GetPlayerChar(Victim);
+		if(chr)
+		{
+			if(chr->m_ActiveWeapon == WEAPON_GRENADE)
+				chr->m_ActiveWeapon = WEAPON_GUN;
+			chr->m_aWeapons[WEAPON_GRENADE].m_Got = false;
+		}
+	}
+}
+
+void CGameContext::ConUnGrenadeMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
+	if(chr)
+	{
+		if(chr->m_ActiveWeapon == WEAPON_GRENADE)
+			chr->m_ActiveWeapon = WEAPON_GUN;
+		chr->m_aWeapons[WEAPON_GRENADE].m_Got = false;
+	}
+}
+
+void CGameContext::ConUnRifle(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	{
+		CCharacter* chr = pSelf->GetPlayerChar(Victim);
+		if(chr)
+		{
+			if(chr->m_ActiveWeapon == WEAPON_RIFLE)
+				chr->m_ActiveWeapon = WEAPON_GUN;
+			chr->m_aWeapons[WEAPON_RIFLE].m_Got = false;
+		}
+	}
+}
+
+void CGameContext::ConUnRifleMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
+	if(chr)
+	{
+		if(chr->m_ActiveWeapon == WEAPON_RIFLE)
+			chr->m_ActiveWeapon = WEAPON_GUN;
+		chr->m_aWeapons[WEAPON_RIFLE].m_Got = false;
+	}
+}
+
+void CGameContext::ConUnWeapons(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	{
+		CCharacter* chr = pSelf->GetPlayerChar(Victim);
+		if(chr)
+		{
+			if(chr->m_ActiveWeapon == WEAPON_SHOTGUN || chr->m_ActiveWeapon == WEAPON_GRENADE || chr->m_ActiveWeapon == WEAPON_RIFLE)
+				chr->m_ActiveWeapon = WEAPON_GUN;
+			chr->m_aWeapons[WEAPON_SHOTGUN].m_Got = false;
+			chr->m_aWeapons[WEAPON_GRENADE].m_Got = false;
+			chr->m_aWeapons[WEAPON_RIFLE].m_Got = false;
+		}
+	}
+}
+
+void CGameContext::ConUnWeaponsMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
+	if(chr)
+	{
+		if(chr->m_ActiveWeapon == WEAPON_SHOTGUN || chr->m_ActiveWeapon == WEAPON_GRENADE || chr->m_ActiveWeapon == WEAPON_RIFLE)
+			chr->m_ActiveWeapon = WEAPON_GUN;
+		chr->m_aWeapons[WEAPON_SHOTGUN].m_Got = false;
+		chr->m_aWeapons[WEAPON_GRENADE].m_Got = false;
+		chr->m_aWeapons[WEAPON_RIFLE].m_Got = false;
 	}
 }
 
@@ -2421,10 +2545,19 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("shotgun_me", "", CFGFLAG_SERVER, ConShotgunMe, this, "Gives shotgun to yourself", 1);
 	Console()->Register("grenade", "i", CFGFLAG_SERVER, ConGrenade, this, "Gives a grenade launcher to player i", 2);
 	Console()->Register("grenade_me", "", CFGFLAG_SERVER, ConGrenadeMe, this, "Gives grenade launcher to yourself", 1);
-	Console()->Register("laser", "i", CFGFLAG_SERVER, ConLaser, this, "Gives a lasergun to player i", 2);
-	Console()->Register("laser_me", "", CFGFLAG_SERVER, ConLaserMe, this, "Gives lasergun to yourself", 1);
+	Console()->Register("rifle", "i", CFGFLAG_SERVER, ConRifle, this, "Gives a rifle to player i", 2);
+	Console()->Register("rifle_me", "", CFGFLAG_SERVER, ConRifleMe, this, "Gives rifle to yourself", 1);
 	Console()->Register("weapons", "i", CFGFLAG_SERVER, ConWeapons, this, "Gives all weapons to player i", 2);
 	Console()->Register("weapons_me", "", CFGFLAG_SERVER, ConWeaponsMe, this, "Gives all weapons to yourself", 1);
+
+	Console()->Register("unshotgun", "i", CFGFLAG_SERVER, ConUnShotgun, this, "Takes a shotgun from player i", 2);
+	Console()->Register("unshotgun_me", "", CFGFLAG_SERVER, ConUnShotgunMe, this, "Takes shotgun from yourself", 1);
+	Console()->Register("ungrenade", "i", CFGFLAG_SERVER, ConUnGrenade, this, "Takes a grenade launcher from player i", 2);
+	Console()->Register("ungrenade_me", "", CFGFLAG_SERVER, ConUnGrenadeMe, this, "Takes grenade launcher from yourself", 1);
+	Console()->Register("unrifle", "i", CFGFLAG_SERVER, ConUnRifle, this, "Takes a rifle from player i", 2);
+	Console()->Register("unrifle_me", "", CFGFLAG_SERVER, ConUnRifleMe, this, "Takes rifle from yourself", 1);
+	Console()->Register("unweapons", "i", CFGFLAG_SERVER, ConUnWeapons, this, "Takes all weapons from player i", 2);
+	Console()->Register("unweapons_me", "", CFGFLAG_SERVER, ConUnWeaponsMe, this, "Takes all weapons from yourself", 1);
 
 	Console()->Register("ninja", "i", CFGFLAG_SERVER, ConNinja, this, "Makes player i a ninja", 2);
 	Console()->Register("ninja_me", "", CFGFLAG_SERVER, ConNinjaMe, this, "Makes yourself a ninja", 1);
@@ -2453,7 +2586,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("help", "?r", CFGFLAG_SERVER, ConHelp, this, "Helps you with commands", -1);
 	Console()->Register("info", "", CFGFLAG_SERVER, ConInfo, this, "Shows info about this server", -1);
 	Console()->Register("kill", "", CFGFLAG_SERVER, ConKill, this, "Kills you", -1);
-	Console()->Register("me", "s", CFGFLAG_SERVER, ConMe, this, "", -1); // TODO: add help text, cause idk how to describe this (heinrich5991)
+	Console()->Register("me", "s", CFGFLAG_SERVER, ConMe, this, "Like the famous irc commands /me says hi, will display YOURNAME says hi", -1);
 	Console()->Register("pause", "", CFGFLAG_SERVER, ConTogglePause, this, "If enabled on this server it pauses the game for you", -1);
 	Console()->Register("rank", "?r", CFGFLAG_SERVER, ConRank, this, "Shows either your rank or the rank of the given player", -1);
 	Console()->Register("rules", "", CFGFLAG_SERVER, ConRules, this, "Shows the rules of this server", -1);

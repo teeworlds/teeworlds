@@ -69,15 +69,24 @@ class CGameContext : public IGameServer
 	
 	static void ConGrenade(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConGrenadeMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
-
+	
 	static void ConRifle(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConRifleMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	
-	static void ConLaser(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConLaserMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
 
 	static void ConWeapons(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConWeaponsMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
+
+	static void ConUnShotgun(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConUnShotgunMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
+
+	static void ConUnGrenade(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConUnGrenadeMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
+
+	static void ConUnRifle(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConUnRifleMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
+
+	static void ConUnWeapons(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConUnWeaponsMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
 	static void ConTeleport(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
