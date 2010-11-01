@@ -194,7 +194,6 @@ void CNetConnection::Disconnect(const char *pReason)
 int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 {
 	int64 Now = time_get();
-	m_LastRecvTime = Now;
 	
 	// check if resend is requested
 	if(pPacket->m_Flags&NET_PACKETFLAG_RESEND)
@@ -256,20 +255,12 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 				// connection made
 				if(CtrlMsg == NET_CTRLMSG_CONNECTACCEPT)
 				{
+					m_LastRecvTime = Now;
 					SendControl(NET_CTRLMSG_ACCEPT, 0, 0);
 					m_State = NET_CONNSTATE_ONLINE;
 					if(g_Config.m_Debug)
 						dbg_msg("connection", "got connect+accept, sending accept. connection online");
 				}
-			}
-			else if(State() == NET_CONNSTATE_ONLINE)
-			{
-				// connection made
-				/*
-				if(ctrlmsg == NET_CTRLMSG_CONNECTACCEPT)
-				{
-					
-				}*/
 			}
 		}
 	}
@@ -277,6 +268,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 	{
 		if(State() == NET_CONNSTATE_PENDING)
 		{
+			m_LastRecvTime = Now;
 			m_State = NET_CONNSTATE_ONLINE;
 			if(g_Config.m_Debug)
 				dbg_msg("connection", "connecting online");
@@ -285,6 +277,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 	
 	if(State() == NET_CONNSTATE_ONLINE)
 	{
+		m_LastRecvTime = Now;
 		AckChunks(pPacket->m_Ack);
 	}
 	
