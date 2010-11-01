@@ -2590,7 +2590,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("pause", "", CFGFLAG_SERVER, ConTogglePause, this, "If enabled on this server it pauses the game for you", -1);
 	Console()->Register("rank", "?r", CFGFLAG_SERVER, ConRank, this, "Shows either your rank or the rank of the given player", -1);
 	Console()->Register("rules", "", CFGFLAG_SERVER, ConRules, this, "Shows the rules of this server", -1);
-	Console()->Register("team", "?i", CFGFLAG_SERVER, ConJoinTeam, this, "Lets you join the specified team", -1);
+	//Console()->Register("team", "?i", CFGFLAG_SERVER, ConJoinTeam, this, "Lets you join the specified team", -1);
 	Console()->Register("top5", "?i", CFGFLAG_SERVER, ConTop5, this, "Shows the top 5 from the 1st, or starting at the specified number", -1);
 
 	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);
