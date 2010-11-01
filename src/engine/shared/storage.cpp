@@ -267,7 +267,7 @@ public:
 		for(Index = 1; Index < 10000; Index++)
 		{
 			IOHANDLE io;
-			str_format(pFilename, FilenameSize, "%s/%s-%s-%05d%s", pDirectoryName, pFilenameBase, aDate, Index, pFileExtention);
+			str_format(pFilename, FilenameSize, "%s/%s_%s_%05d%s", pDirectoryName, pFilenameBase, aDate, Index, pFileExtention);
 			io = OpenFile(pFilename, IOFLAG_READ, Type);
 			if(io)
 				io_close(io);
@@ -277,6 +277,42 @@ public:
 		pFilename[0] = 0;
 		return false;
 	}
+	virtual bool ExtractDateFromUniqueFilename(const char* pFilename, const char* pFilenameBasePrefix, const char* pFileExtention, struct tm* pTimeInfo, int* pSequence = NULL) {
+                const int DateLength = 1+4+1+2+1+2+1+2+1+2+1+2+1;
+
+                int BasenameLength = str_length(pFilenameBasePrefix);
+                int ExtentionLength = str_length(pFileExtention);
+                int FilenameLength = str_length(pFilename);
+                // filename format : prefix........-somedate-00000.ext
+                if (FilenameLength <= BasenameLength + ExtentionLength + DateLength+5)
+                        return false;
+                if (str_comp_num(pFilename, pFilenameBasePrefix, BasenameLength))
+                        return false;
+                if (str_comp(pFilename+FilenameLength - ExtentionLength, pFileExtention))
+                        return false;
+                int DateStartIndex = FilenameLength - ExtentionLength - DateLength - 5;
+
+                struct tm Time;
+                int CurrentDateLength = -1;
+                int Sequence;
+                sscanf(pFilename+DateStartIndex, "_%d-%d-%d_%d-%d-%d_%d%n", &Time.tm_year, &Time.tm_mon, &Time.tm_mday, &Time.tm_hour, &Time.tm_min, &Time.tm_sec, &Sequence, &CurrentDateLength);
+                if (CurrentDateLength != DateLength + 5)
+                        return false;
+                if (pSequence)
+                        *pSequence = Sequence;
+                // fix the struct tm
+                Time.tm_mon--; // tm_mon starts at 0
+                Time.tm_year -= 1900;
+                Time.tm_wday = Time.tm_yday = Time.tm_isdst = -1; // -1 for isdst means 'unknown'
+                time_t LocalCTime = mktime(&Time);
+		if (LocalCTime == -1)
+			return false; // bogus date/time.
+                const struct tm *CompleteTime = localtime(&LocalCTime);
+		if (!CompleteTime)
+			return false;
+                mem_copy(pTimeInfo, CompleteTime, sizeof (*CompleteTime));
+                return true;
+        }
 
 	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, int Type, char *pBuffer = 0, int BufferSize = 0)
 	{
