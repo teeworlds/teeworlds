@@ -301,7 +301,7 @@ int CNetConnection::Update()
 	// check for timeout
 	if(State() != NET_CONNSTATE_OFFLINE &&
 		State() != NET_CONNSTATE_CONNECT &&
-		(Now-m_LastRecvTime) > time_freq()*10)
+		(Now-m_LastRecvTime) > time_freq()*NET_TIMEOUT)
 	{
 		m_State = NET_CONNSTATE_ERROR;
 		SetError("Timeout");
