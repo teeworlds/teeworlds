@@ -861,10 +861,11 @@ void CCharacter::HandleTiles(int Index)
 {//dbg_msg("num","%d",++num);
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	int MapIndex = Index;
-	int MapIndexL = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x + (m_ProximityRadius/2)+5,m_Pos.y));
-	int MapIndexR = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x - (m_ProximityRadius/2)-5,m_Pos.y));
-	int MapIndexT = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y + (m_ProximityRadius/2)+5));
-	int MapIndexB = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y - (m_ProximityRadius/2)-5));
+	float Offset = 4;
+	int MapIndexL = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x + (m_ProximityRadius/2)+Offset,m_Pos.y));
+	int MapIndexR = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x - (m_ProximityRadius/2)-Offset,m_Pos.y));
+	int MapIndexT = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y + (m_ProximityRadius/2)+Offset));
+	int MapIndexB = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y - (m_ProximityRadius/2)-Offset));
 	//dbg_msg("","N%d L%d R%d B%d T%d",MapIndex,MapIndexL,MapIndexR,MapIndexB,MapIndexT);
 	m_TileIndex = GameServer()->Collision()->GetTileIndex(MapIndex);
 	m_TileFlags = GameServer()->Collision()->GetTileFlags(MapIndex);
