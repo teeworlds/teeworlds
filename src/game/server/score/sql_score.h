@@ -46,6 +46,8 @@ class CSqlScore : public IScore
 	// anti SQL injection
 	void ClearString(char *pString);
 	
+	void NormalizeMapname(char *pString);
+	
 public:
 	
 	CSqlScore(CGameContext *pGameServer);

@@ -20,6 +20,7 @@ CSqlScore::CSqlScore(CGameContext *pGameServer)
 {
 	str_copy(m_aMap, g_Config.m_SvMap, sizeof(m_aMap));
 	ClearString(m_aMap);
+	NormalizeMapname(m_aMap);
 	
 	if(gs_SqlLock == 0)
 		gs_SqlLock = lock_create();
@@ -513,6 +514,16 @@ void CSqlScore::ClearString(char *pString)
 			pString[i] = '\0';
 		else
 			break;
+	}
+}
+
+void CSqlScore::NormalizeMapname(char *pString) {
+	std::string validChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_");
+	
+	for(int i=0;i<str_length(pString);i++) {
+		if(validChars.find(pString[i]) == std::string::npos) {
+			pString[i] = '_';
+		}
 	}
 }
 
