@@ -17,6 +17,7 @@ public:
 	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, int Type, char *pBuffer = 0, int BufferSize = 0) = 0;
 	virtual bool FindNewUniqueFilename(const char* pDirectoryName, const char *pFilenameBase, const char *pFileExtention, int Type, char *pFilename, int FilenameSize) = 0;
 	virtual bool ExtractDateFromUniqueFilename(const char* pFilename, const char* pFilenameBasePrefix, const char* pFileExtention, struct tm* pTimeInfo, int* pSequence) = 0;
+	virtual bool RotateUniqueFilenames(int Type, const char* pDirectoryName, const char* pFilenameBase, const char* pFileExtention, int NumberOfFileToKeep) = 0;
 	virtual bool RemoveFile(const char *pFilename, int Type) = 0;
 	virtual bool CreateFolder(const char *pFoldername, int Type) = 0;
 	virtual bool MoveFile(const char* pOldFilename, const char* pNewFilename, int Type) = 0;

@@ -1,6 +1,8 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
 #include <stdio.h> //remove()
 #include <base/system.h>
+#include <base/tl/sorted_array.h>
+#include <base/tl/string.h>
 #include <engine/storage.h>
 #include "engine.h"
 #include "linereader.h"
@@ -11,6 +13,34 @@
 
 class CStorage : public IStorage
 {
+	class DatedUniqueFilename
+	{
+		string m_Filename;
+		int m_Time;
+		int m_SequenceNumber;
+		public:
+		// sorted_array needs this.
+		DatedUniqueFilename() {}
+		// the synthetised assignment operator and the copy constructor are good enought.
+		DatedUniqueFilename(const char* pFilename, int Time, int SequenceNumber) : m_Filename(pFilename), m_Time(Time), m_SequenceNumber(SequenceNumber) {}
+		// we want to be sorted in reverse order.
+		bool operator < (const DatedUniqueFilename& aDemo) const
+		{
+			if (m_Time == aDemo.m_Time)
+				return m_SequenceNumber > aDemo.m_SequenceNumber;
+			return m_Time > aDemo.m_Time;
+		}
+		const char* FilePath() const
+		{
+			return m_Filename;
+		}
+	};
+	int m_Rotate_DirectoryType;
+	string m_Rotate_DirectoryName;
+	string m_Rotate_FilenameBase;
+	string m_Rotate_FileExtention;
+	int m_Rotate_NumberOfUniqueFileToKeep;
+	sorted_array<DatedUniqueFilename> m_Rotate_UniqueFiles;
 public:
 	enum
 	{
@@ -277,7 +307,8 @@ public:
 		pFilename[0] = 0;
 		return false;
 	}
-	virtual bool ExtractDateFromUniqueFilename(const char* pFilename, const char* pFilenameBasePrefix, const char* pFileExtention, struct tm* pTimeInfo, int* pSequence = NULL) {
+	virtual bool ExtractDateFromUniqueFilename(const char* pFilename, const char* pFilenameBasePrefix, const char* pFileExtention, struct tm* pTimeInfo, int* pSequence = NULL)
+	{
                 const int DateLength = 1+4+1+2+1+2+1+2+1+2+1+2+1;
 
                 int BasenameLength = str_length(pFilenameBasePrefix);
@@ -313,7 +344,50 @@ public:
                 mem_copy(pTimeInfo, CompleteTime, sizeof (*CompleteTime));
                 return true;
         }
+private:
+	virtual void RotateDirectoryListCB(const char* pFilename, int IsDir, int DirType)
+	{
+		if (IsDir)
+			return;
 
+		struct tm aTimeInfo;
+		int aSequenceNumber;
+		if (!ExtractDateFromUniqueFilename(pFilename, m_Rotate_FilenameBase, m_Rotate_FileExtention, &aTimeInfo, &aSequenceNumber))
+			return; // not one of our autorecorded demo.
+
+		m_Rotate_UniqueFiles.add(DatedUniqueFilename(pFilename, mktime(&aTimeInfo), aSequenceNumber));
+		if (m_Rotate_UniqueFiles.size() < m_Rotate_NumberOfUniqueFileToKeep + 1)
+			return;
+
+		// the last element is the oldest file. Delete it.
+		char aFilePath[512];
+		str_format(aFilePath, sizeof(aFilePath), "%s/%s", m_Rotate_DirectoryName.cstr(), m_Rotate_UniqueFiles[m_Rotate_NumberOfUniqueFileToKeep].FilePath());
+		bool Ret = RemoveFile(aFilePath, m_Rotate_DirectoryType);
+		char aBuff[512];
+		str_format(aBuff, sizeof(aBuff), Ret ? "deleted old file %s" : "failed to delete old file %s", aFilePath);
+		dbg_msg("storage", aBuff);
+
+		m_Rotate_UniqueFiles.remove_index(m_Rotate_NumberOfUniqueFileToKeep);
+	}
+	static void RotateDirectoryListCB(const char* pPath, int IsDir, int DirType, void* ThisAsVoidStar)
+	{
+		((CStorage*)ThisAsVoidStar)->RotateDirectoryListCB(pPath, IsDir, DirType);
+	}
+
+public:
+	virtual bool RotateUniqueFilenames(int Type, const char* pDirectoryName, const char* pFilenameBase, const char* pFileExtention, int NumberOfFileToKeep)
+	{
+		m_Rotate_UniqueFiles.clear();
+		m_Rotate_DirectoryType = Type;
+		m_Rotate_DirectoryName = pDirectoryName;
+		m_Rotate_FilenameBase = pFilenameBase;
+		m_Rotate_FileExtention = pFileExtention;
+		m_Rotate_NumberOfUniqueFileToKeep = NumberOfFileToKeep;
+		ListDirectory(Type, pDirectoryName, CStorage::RotateDirectoryListCB, this);
+		m_Rotate_UniqueFiles.clear();
+
+		return false;
+	}
 	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, int Type, char *pBuffer = 0, int BufferSize = 0)
 	{
 		char aBuffer[MAX_PATH_LENGTH];

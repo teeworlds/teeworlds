@@ -6,8 +6,6 @@
 #include <time.h>
 
 #include <base/system.h>
-#include <base/tl/string.h>
-#include <base/tl/sorted_array.h>
 #include <engine/shared/engine.h>
 
 #include <engine/shared/protocol.h>
@@ -1968,79 +1966,6 @@ void CClient::Con_Record(IConsole::IResult *pResult, void *pUserData)
 	CClient *pSelf = (CClient *)pUserData;
 	pSelf->DemoRecorder_Start(pResult->GetString(0));
 }
-
-// this simple class is basically used as the pUser argument of IStorage::ListDirectory
-// it rotates old autorecorded demos.
-class DemoFileRotater
-{
-	class DatedDemo
-	{
-		string m_Filename;
-		int m_Time;
-		int m_SequenceNumber;
-		public:
-		// sorted_array needs this.
-		DatedDemo() {}
-		// the synthetised assignment operator and the copy constructor are good enought.
-		DatedDemo(const char* pFilename, int Time, int SequenceNumber) : m_Filename(pFilename), m_Time(Time), m_SequenceNumber(SequenceNumber) {}
-		// we want to be sorted in reverse order.
-		bool operator < (const DatedDemo& aDemo) const
-		{
-			if (m_Time == aDemo.m_Time)
-				return m_SequenceNumber > aDemo.m_SequenceNumber;
-			return m_Time > aDemo.m_Time;
-		}
-		const char* FilePath() const
-		{
-			return m_Filename;
-		}
-	};
-	sorted_array<DatedDemo> m_DemoArray;
-	int m_MaxSize;
-	IStorage* m_pStorage;
-	IConsole* m_pConsole;
-	bool RemoveDemoFile(const char* pFilename)
-	{
-		char aBuff[512];
-		str_format(aBuff, sizeof(aBuff), "demos/%s", pFilename);
-		bool Ret = m_pStorage->RemoveFile(aBuff, IStorage::TYPE_SAVE);
-		str_format(aBuff, sizeof(aBuff), Ret ? "deleted old autorecorded demo demos/%s" : "failed to delete old autorecorded demo demos/%s", pFilename);
-		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/rotate", aBuff);
-		return Ret;
-	}
-	public:
-	DemoFileRotater(int Size, IStorage* pStorage, IConsole* pConsole) : m_DemoArray(), m_MaxSize(Size), m_pStorage(pStorage), m_pConsole(pConsole) {}
-	bool FoundDemoFile(const char* pFilename, int CTime, int Sequence)
-	{
-		m_DemoArray.add(DatedDemo(pFilename, CTime, Sequence));
-		if (m_DemoArray.size() < m_MaxSize + 1)
-			return true;
-
-		// the last element is the oldest file. Delete it.
-		bool ret = RemoveDemoFile(m_DemoArray[m_MaxSize].FilePath());
-		m_DemoArray.remove_index(m_MaxSize);
-		return ret;
-	}
-	private:
-	static void DirectoryListCB(const char* pPath, int IsDir, int DirType, void* ThisAsVoidStar)
-	{
-		if (IsDir)
-			return;
-
-		DemoFileRotater* This = (DemoFileRotater*)ThisAsVoidStar;
-		struct tm aTimeInfo;
-		int aSequenceNumber;
-		if (!This->m_pStorage->ExtractDateFromUniqueFilename(pPath, "autorecord", ".demo", &aTimeInfo, &aSequenceNumber))
-			return; // not one of our autorecorded demo.
-		This->FoundDemoFile(pPath, mktime(&aTimeInfo), aSequenceNumber);
-	}
-	public:
-	void RotateDemoFiles()
-	{
-		m_pStorage->ListDirectory(IStorage::TYPE_SAVE, "demos", DirectoryListCB, this);
-	}
-};
-
 void CClient::DemoRecorder_Stop()
 {
 	m_DemoRecorder.Stop();
@@ -2058,8 +1983,7 @@ void CClient::DemoRecorder_Stop()
 	if (g_Config.m_DemoAutoStart_Keep <= 0)
 		return;
 
-	DemoFileRotater aDemoRotater(g_Config.m_DemoAutoStart_Keep, Storage(), m_pConsole);
-	aDemoRotater.RotateDemoFiles();
+	Storage()->RotateUniqueFilenames(IStorage::TYPE_SAVE, "demos", "autorecord", ".demo", g_Config.m_DemoAutoStart_Keep);
 }
 
 void CClient::Con_StopRecord(IConsole::IResult *pResult, void *pUserData)
