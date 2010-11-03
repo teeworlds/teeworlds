@@ -30,6 +30,7 @@ void CLocConstString::Reload()
 
 CLocalizationDatabase::CLocalizationDatabase()
 {
+	m_VersionCounter = 0;
 	m_CurrentVersion = 0;
 }
 
@@ -89,7 +90,7 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 		AddString(pLine, pReplacement);
 	}
 	
-	m_CurrentVersion++;
+	m_CurrentVersion = ++m_VersionCounter;
 	return true;
 }
 
