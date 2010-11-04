@@ -298,9 +298,15 @@ void CCharacter::FireWeapon()
 	// check for ammo
 	if(!m_aWeapons[m_ActiveWeapon].m_Ammo)
 	{
-		// 125ms is a magical limit of how fast a human can click
+/*		// 125ms is a magical limit of how fast a human can click
 		m_ReloadTimer = 1 * Server()->TickSpeed();
-		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG);
+		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG);*/
+		// Timerstuff to avoid shrieking orchestra caused by unfreeze-plasma
+		if(m_PainSoundTimer<=0)
+		{
+				m_PainSoundTimer = 1 * Server()->TickSpeed();
+				GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG);
+		}
 		return;
 	}
 
@@ -489,6 +495,9 @@ void CCharacter::HandleWeapons()
 	HandleNinja();
 
 	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
+	// check PainSoundTimer - Hmm, maybe sometimes shrieking can be a weapon too? ;)
+	if(m_PainSoundTimer>0)
+		m_PainSoundTimer--;
 
 	// check reload timer
 	if(m_ReloadTimer)
@@ -1270,9 +1279,11 @@ bool CCharacter::UnFreeze()
 			 {
 				 m_aWeapons[i].m_Ammo = -1;
 			 }
-		if(!m_aWeapons[m_ActiveWeapon].m_Got) m_ActiveWeapon=WEAPON_GUN;
-		m_FreezeTime=0;
-		m_FreezeTick=0;
+		if(!m_aWeapons[m_ActiveWeapon].m_Got)
+			m_ActiveWeapon = WEAPON_GUN;
+		m_FreezeTime = 0;
+		m_FreezeTick = 0;
+		m_ReloadTimer = 0;
 		 return true;
 	}
 	return false;
