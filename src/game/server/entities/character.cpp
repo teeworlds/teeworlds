@@ -592,7 +592,7 @@ void CCharacter::OnFinish()
 	char aBuf[128];
 		m_CpActive=-2;
 		str_format(aBuf, sizeof(aBuf), "%s finished in: %d minute(s) %5.2f second(s)", Server()->ClientName(m_pPlayer->GetCID()), (int)time/60, time-((int)time/60*60));
-		if(!g_Config.m_SvHideScore)
+		if(g_Config.m_SvHideScore)
 			GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
 		else
 			GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
@@ -601,7 +601,7 @@ void CCharacter::OnFinish()
 		{
 			// new record \o/
 			str_format(aBuf, sizeof(aBuf), "New record: %5.2f second(s) better", time - pData->m_BestTime);
-			if(!g_Config.m_SvHideScore)
+			if(g_Config.m_SvHideScore)
 				GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
 			else
 				GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
