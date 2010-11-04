@@ -600,11 +600,16 @@ void CCharacter::OnFinish()
 		if(time - pData->m_BestTime < 0)
 		{
 			// new record \o/
-			str_format(aBuf, sizeof(aBuf), "New record: %5.2f second(s) better", time - pData->m_BestTime);
+			str_format(aBuf, sizeof(aBuf), "New record: %5.2f second(s) better.", fabs(time - pData->m_BestTime));
 			if(g_Config.m_SvHideScore)
 				GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
 			else
 				GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+		}
+		else
+		{
+			str_format(aBuf, sizeof(aBuf), "%5.2f second(s) worse, better luck next time.", fabs(pData->m_BestTime - time));
+				GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);//this is private, sent only to the tee
 		}
 
 		if(!pData->m_BestTime || time < pData->m_BestTime)
