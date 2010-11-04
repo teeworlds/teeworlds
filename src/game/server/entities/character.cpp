@@ -76,6 +76,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_BroadCast = true;
 	m_EyeEmote = true;
 	m_Fly = true;
+	m_TimerReseted = false;
 	m_TeamBeforeSuper = 0;
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision(), &Controller->m_Teams.m_Core);
@@ -748,6 +749,16 @@ void CCharacter::Tick()
 	char aBuftime[128];
 	m_Time = (float)(Server()->Tick() - m_StartTime) / ((float)Server()->TickSpeed());
 	CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
+	
+	if(!m_TimerReseted && m_DDRaceState == DDRACE_CHEAT) {
+		m_TimerReseted = true;
+		CNetMsg_Sv_DDRaceTime Msg;
+		Msg.m_Time = 0;
+		Msg.m_Check = 0;
+		Msg.m_Finish = 0;
+		
+		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
+	}
 
 	if(Server()->Tick() - m_RefreshTime >= Server()->TickSpeed())
 	{
