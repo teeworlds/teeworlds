@@ -2468,7 +2468,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("help", "?r", CFGFLAG_SERVER, ConHelp, this, "Helps you with commands", -1);
 	Console()->Register("info", "", CFGFLAG_SERVER, ConInfo, this, "Shows info about this server", -1);
 	Console()->Register("kill", "", CFGFLAG_SERVER, ConKill, this, "Kills you", -1);
-	Console()->Register("me", "s", CFGFLAG_SERVER, ConMe, this, "Like the famous irc commands /me says hi, will display YOURNAME says hi", -1);
+	Console()->Register("me", "r", CFGFLAG_SERVER, ConMe, this, "Like the famous irc commands /me says hi, will display YOURNAME says hi", -1);
 	Console()->Register("pause", "", CFGFLAG_SERVER, ConTogglePause, this, "If enabled on this server it pauses the game for you", -1);
 	Console()->Register("rank", "?r", CFGFLAG_SERVER, ConRank, this, "Shows either your rank or the rank of the given player", -1);
 	Console()->Register("rules", "", CFGFLAG_SERVER, ConRules, this, "Shows the rules of this server", -1);
