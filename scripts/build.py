@@ -1,5 +1,6 @@
 import imp, os, sys, shutil, zipfile, re
 from optparse import OptionParser
+os.chdir(os.getcwd() + "/" + re.search("(.*?)/[^/]*?$", sys.argv[0]).group(1))
 imp.load_source("_compatibility", "../datasrc/_compatibility.py")
 import _compatibility
 url_lib = _compatibility._import(("urllib", "urllib.request"))
@@ -31,14 +32,12 @@ if options.release_type == None:
 	options.release_type = content[3].decode("utf-8").partition(" ")[2].rstrip()
 
 bam = options.url_bam[7:].split("/")
-domain_bam = bam[0]
 version_bam = re.search(r"\d\.\d\.\d", bam[len(bam)-1])
 if version_bam:
 	version_bam = version_bam.group(0)
 else:
 	version_bam = "trunk"
 teeworlds = options.url_teeworlds[7:].split("/")
-domain_teeworlds = teeworlds[0]
 version_teeworlds = re.search(r"\d\.\d\.\d", teeworlds[len(teeworlds)-1])
 if version_teeworlds:
 	version_teeworlds = version_teeworlds.group(0)
@@ -91,11 +90,13 @@ def fetch_file(url):
 		url_lib.urlretrieve(real_url, local)
 		return local
 	except:
-		pass
-	return False
+		return False
 
 def unzip(filename, where):
-	z = zipfile.ZipFile(filename, "r")
+	try:
+		z = zipfile.ZipFile(filename, "r")
+	except:
+		return False
 	list = "\n"
 	for name in z.namelist():
 		list += "%s\n" % name
@@ -160,18 +161,33 @@ os.chdir(work_dir)
 if flag_download:
 	print("*** downloading bam source package ***")
 	src_package_bam = fetch_file(options.url_bam)
-	if not src_package_bam:
-			bail("couldn't find source package and couldn't download it")
-		
+	if src_package_bam:
+		if version_bam == 'trunk':
+			version = re.search(r"-[^-]*?([^-]*?)\.[^.]*$", src_package_bam)
+			if version:
+				version_bam = version.group(1)
+	else:
+		bail("couldn't find source package and couldn't download it")
+
 	print("*** downloading %s source package ***" % name)
 	src_package_teeworlds = fetch_file(options.url_teeworlds)
-	if not src_package_teeworlds:
+	if src_package_teeworlds:
+		if version_teeworlds == 'trunk':
+			version = re.search(r"-[^-]*?([^-]*?)\.[^.]*$", src_package_teeworlds)
+			if version:
+				version_teeworlds = version.group(1)
+	else:
 		bail("couldn't find source package and couldn't download it")
 
 # unpack
 print("*** unpacking source ***")
 src_dir_bam = unzip(src_package_bam, ".")
+if not src_dir_bam:
+	bail("couldn't unpack source package")
+
 src_dir_teeworlds = unzip(src_package_teeworlds, ".")
+if not src_dir_teeworlds:
+	bail("couldn't unpack source package")
 
 # build bam
 if 1:
