@@ -1044,7 +1044,7 @@ void CCharacter::HandleTiles(int Index)
 	}
 	m_LastBooster = MapIndex;
 	int z = GameServer()->Collision()->IsTeleport(MapIndex);
-	if(z)
+	if(z && ((CGameControllerDDRace*)GameServer()->m_pController)->m_TeleOuts[z-1].size())
 	{
 		m_Core.m_HookedPlayer = -1;
 		m_Core.m_HookState = HOOK_RETRACTED;
@@ -1056,7 +1056,7 @@ void CCharacter::HandleTiles(int Index)
 		return;
 	}
 	int evilz = GameServer()->Collision()->IsEvilTeleport(MapIndex);
-	if(evilz && !m_Super)
+	if(evilz && !m_Super && ((CGameControllerDDRace*)GameServer()->m_pController)->m_TeleOuts[evilz-1].size())
 	{
 		m_Core.m_HookedPlayer = -1;
 		m_Core.m_HookState = HOOK_RETRACTED;
