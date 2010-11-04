@@ -154,6 +154,8 @@ public:
 		int m_EmoticonStart;
 		CCharacterCore m_Predicted;
 		
+		int m_Score;
+		
 		CTeeRenderInfo m_SkinInfo; // this is what the server reports
 		CTeeRenderInfo m_RenderInfo; // this is what we use
 		

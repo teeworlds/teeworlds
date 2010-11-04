@@ -994,7 +994,21 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				Msg.m_Time = TimeToSend;
 				Msg.m_Cid = i;
 				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientId);
+				//also send its time to others
+				
 			}
+		}
+		//also send its time to others
+		if(Score()->PlayerData(ClientId)->m_CurrentTime > 0) {
+			//TODO: make function for this fucking steps
+			char aBuf[16];
+			str_format(aBuf, sizeof(aBuf), "%.0f", Score()->PlayerData(ClientId)->m_CurrentTime*100.0f); // damn ugly but the only way i know to do it
+			int TimeToSend;
+			sscanf(aBuf, "%d", &TimeToSend);
+			CNetMsg_Sv_PlayerTime Msg;
+			Msg.m_Time = TimeToSend;
+			Msg.m_Cid = ClientId;
+			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 		}
 	}
 	else if(MsgId == NETMSGTYPE_CL_CHANGEINFO || MsgId == NETMSGTYPE_CL_STARTINFO)

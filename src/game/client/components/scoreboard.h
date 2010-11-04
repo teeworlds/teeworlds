@@ -20,6 +20,7 @@ public:
 	virtual void OnRender();
 	virtual void OnRelease();
 
+
 	bool Active();
 };
 
