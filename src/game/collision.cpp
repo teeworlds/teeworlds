@@ -41,6 +41,8 @@ void CCollision::Dest()
 
 void CCollision::Init(class CLayers *pLayers)
 {
+	if(m_pLayers) m_pLayers->Dest();
+	Dest();
 	m_pLayers = pLayers;
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
