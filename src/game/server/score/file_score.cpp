@@ -9,12 +9,11 @@
 
 static LOCK gs_ScoreLock = 0;
 
-CFileScore::CPlayerScore::CPlayerScore(const char *pName, float Score, const char *pIP, float aCpTime[NUM_TELEPORT])
+CFileScore::CPlayerScore::CPlayerScore(const char *pName, float Score, float aCpTime[NUM_CHECKPOINTS])
 {
 	str_copy(m_aName, pName, sizeof(m_aName));
 	m_Score = Score;
-	str_copy(m_aIP, pIP, sizeof(m_aIP));
-	for(int i = 0; i < NUM_TELEPORT; i++)
+	for(int i = 0; i < NUM_CHECKPOINTS; i++)
 		m_aCpTime[i] = aCpTime[i];
 }
 
@@ -57,10 +56,10 @@ void CFileScore::SaveScoreThread(void *pUser)
 		int t = 0;
 		for(sorted_array<CPlayerScore>::range r = pSelf->m_Top.all(); !r.empty(); r.pop_front())
 		{
-			f << r.front().m_aName << std::endl << r.front().m_Score << std::endl  << r.front().m_aIP << std::endl;
+			f << r.front().m_aName << std::endl << r.front().m_Score << std::endl;
 			if(g_Config.m_SvCheckpointSave)
 			{
-				for(int c = 0; c < NUM_TELEPORT; c++)
+				for(int c = 0; c < NUM_CHECKPOINTS; c++)
 					f << r.front().m_aCpTime[c] << " ";
 				f << std::endl;
 			}
@@ -94,26 +93,25 @@ void CFileScore::Init()
 	
 	while(!f.eof() && !f.fail())
 	{
-		std::string TmpName, TmpScore, TmpIP, TmpCpLine;
+		std::string TmpName, TmpScore, TmpCpLine;
 		std::getline(f, TmpName);
 		if(!f.eof() && TmpName != "")
 		{
 			std::getline(f, TmpScore);
-			std::getline(f, TmpIP);
-			float aTmpCpTime[NUM_TELEPORT] = {0};
+			float aTmpCpTime[NUM_CHECKPOINTS] = {0};
 			if(g_Config.m_SvCheckpointSave)
 			{
 				std::getline(f, TmpCpLine);
 				char *pTime = strtok((char*)TmpCpLine.c_str(), " ");
 				int i = 0;
-				while(pTime != NULL && i < NUM_TELEPORT)
+				while(pTime != NULL && i < NUM_CHECKPOINTS)
 				{
 					aTmpCpTime[i] = atof(pTime);
 					pTime = strtok(NULL, " ");
 					i++;
 				}
 			}
-			m_Top.add(*new CPlayerScore(TmpName.c_str(), atof(TmpScore.c_str()), TmpIP.c_str(), aTmpCpTime));
+			m_Top.add(*new CPlayerScore(TmpName.c_str(), atof(TmpScore.c_str()), aTmpCpTime));
 		}
 	}
 	f.close();
@@ -122,26 +120,6 @@ void CFileScore::Init()
 	// save the current best score
 	if(m_Top.size())
 		((CGameControllerDDRace*)GameServer()->m_pController)->m_CurrentRecord = m_Top[0].m_Score;
-}
-
-CFileScore::CPlayerScore *CFileScore::SearchScore(int ID, bool ScoreIP, int *pPosition)
-{
-	char aIP[16];
-	Server()->GetClientIP(ID, aIP, sizeof(aIP));
-	
-	int Pos = 1;
-	for(sorted_array<CPlayerScore>::range r = m_Top.all(); !r.empty(); r.pop_front())
-	{
-		if(!strcmp(r.front().m_aIP, aIP) && g_Config.m_SvScoreIP && ScoreIP)
-		{
-			if(pPosition)
-				*pPosition = Pos;
-			return &r.front();
-		}
-		Pos++;
-	}
-	
-	return SearchName(Server()->ClientName(ID), pPosition, 0);
 }
 
 CFileScore::CPlayerScore *CFileScore::SearchName(const char *pName, int *pPosition, bool NoCase)
@@ -174,18 +152,16 @@ CFileScore::CPlayerScore *CFileScore::SearchName(const char *pName, int *pPositi
 	return pPlayer;
 }
 
-void CFileScore::UpdatePlayer(int ID, float Score, float aCpTime[NUM_TELEPORT])
+void CFileScore::UpdatePlayer(int ID, float Score, float aCpTime[NUM_CHECKPOINTS])
 {
 	const char *pName = Server()->ClientName(ID);
-	char aIP[16];
-	Server()->GetClientIP(ID, aIP, sizeof(aIP));
 	
 	lock_wait(gs_ScoreLock);
-	CPlayerScore *pPlayer = SearchScore(ID, 1, 0);
+	CPlayerScore *pPlayer = SearchScore(ID, 0);
 	
 	if(pPlayer)
 	{
-		for(int c = 0; c < NUM_TELEPORT; c++)
+		for(int c = 0; c < NUM_CHECKPOINTS; c++)
 				pPlayer->m_aCpTime[c] = aCpTime[c];
 		
 		pPlayer->m_Score = Score;
@@ -194,7 +170,7 @@ void CFileScore::UpdatePlayer(int ID, float Score, float aCpTime[NUM_TELEPORT])
 		sort(m_Top.all());
 	}
 	else
-		m_Top.add(*new CPlayerScore(pName, Score, aIP, aCpTime));
+		m_Top.add(*new CPlayerScore(pName, Score, aCpTime));
 	
 	lock_release(gs_ScoreLock);
 	Save();
@@ -202,13 +178,10 @@ void CFileScore::UpdatePlayer(int ID, float Score, float aCpTime[NUM_TELEPORT])
 
 void CFileScore::LoadScore(int ClientID)
 {
-	char aIP[16];
-	Server()->GetClientIP(ClientID, aIP, sizeof(aIP));
-	CPlayerScore *pPlayer = SearchScore(ClientID, 0, 0);
-	if(pPlayer && strcmp(pPlayer->m_aIP, aIP) != 0)
+	CPlayerScore *pPlayer = SearchScore(ClientID, 0);
+	if(pPlayer)
 	{
 		lock_wait(gs_ScoreLock);
-		str_copy(pPlayer->m_aIP, aIP, sizeof(pPlayer->m_aIP));
 		lock_release(gs_ScoreLock);
 		Save();
 	}
@@ -246,7 +219,7 @@ void CFileScore::ShowRank(int ClientID, const char* pName, bool Search)
 	char aBuf[512];
 	
 	if(!Search)
-		pScore = SearchScore(ClientID, 1, &Pos);
+		pScore = SearchScore(ClientID, &Pos);
 	else
 		pScore = SearchName(pName, &Pos, 1);
 	
