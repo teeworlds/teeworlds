@@ -4,7 +4,7 @@
 #include "entities/character.h"
 #include "gamecontext.h"
 
-#define NUM_TELEPORT 25
+#define NUM_CHECKPOINTS 25
 
 class CPlayerData
 {
@@ -18,20 +18,20 @@ public:
 	{
 		m_BestTime = 0;
 		m_CurrentTime = 0;
-		for(int i = 0; i < NUM_TELEPORT; i++)
+		for(int i = 0; i < NUM_CHECKPOINTS; i++)
 			m_aBestCpTime[i] = 0;
 	}
 	
-	void Set(float Time, float CpTime[NUM_TELEPORT])
+	void Set(float Time, float CpTime[NUM_CHECKPOINTS])
 	{
 		m_BestTime = Time;
-		for(int i = 0; i < NUM_TELEPORT; i++)
+		for(int i = 0; i < NUM_CHECKPOINTS; i++)
 			m_aBestCpTime[i] = CpTime[i];
 	}
 	
 	float m_BestTime;
 	float m_CurrentTime;
-	float m_aBestCpTime[NUM_TELEPORT];
+	float m_aBestCpTime[NUM_CHECKPOINTS];
 };
 
 class IScore

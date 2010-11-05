@@ -131,12 +131,13 @@ public:
 	CEntity *m_apHitObjects[10];
 	int m_NumObjectsHit;
 	
-	
+	bool m_TimerReseted;
 	
 
 	int m_QueuedWeapon;
 	
 	int m_ReloadTimer;
+	int m_PainSoundTimer;
 	int m_AttackTick;
 	
 	int m_DamageTaken;

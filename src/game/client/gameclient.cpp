@@ -393,9 +393,6 @@ void CGameClient::OnReset()
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
 	m_Teams.Reset();
-	Layers()->Dest();
-	Collision()->Dest();
-	
 	m_DDRaceMsgSent = false;
 }
 
@@ -603,7 +600,11 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		{
 			dbg_msg1("Teams", "Team = %d", m_Teams.Team(i));
 		}
+	} else if(MsgId == NETMSGTYPE_SV_PLAYERTIME) {
+		CNetMsg_Sv_PlayerTime *pMsg = (CNetMsg_Sv_PlayerTime *)pRawMsg;
+		m_aClients[pMsg->m_Cid].m_Score = pMsg->m_Time;
 	}
+	
 }
 
 void CGameClient::OnStateChange(int NewState, int OldState)
