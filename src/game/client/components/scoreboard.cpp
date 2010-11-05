@@ -239,7 +239,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 
 		float FontSizeResize = FontSize;
 		float Width;
-		const float ScoreWidth = 60.0f;
+		const float ScoreWidth = 150.0f;
 		const float PingWidth = 60.0f;
 	
 			// reset time
@@ -252,7 +252,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			str_format(aBuf, sizeof(aBuf), "%02d:%02d.%02d", Time/6000, Time/100-(Time/6000*60), Time % 100);
 			while((Width = TextRender()->TextWidth(0, FontSizeResize, aBuf, -1)) > ScoreWidth)
 				--FontSizeResize;
-			TextRender()->Text(0, x+ScoreWidth-Width, y+(FontSize-FontSizeResize * 2.5)/2, FontSizeResize * 2.5, aBuf, -1);
+			TextRender()->Text(0, x+ScoreWidth-Width, y+(FontSize-FontSizeResize)/2, FontSizeResize, aBuf, -1);
 		}
 		
 	

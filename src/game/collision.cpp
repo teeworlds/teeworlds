@@ -232,6 +232,15 @@ int CCollision::GetFTileFlags(int Index)
 	return m_pFront[Index].m_Flags;
 }
 
+int CCollision::GetIndex(int nx, int ny) {
+	return m_pTiles[ny*m_Width+nx].m_Index;
+}
+
+int CCollision::GetFIndex(int nx, int ny) {
+	if(!m_pFront) return 0;
+	return m_pFront[ny*m_Width+nx].m_Index;
+}
+
 int CCollision::GetTile(int x, int y)
 {
 	int nx = clamp(x/32, 0, m_Width-1);
@@ -281,7 +290,7 @@ void CCollision::SetCollisionAt(float x, float y, int flag)
 
 void CCollision::SetDTile(float x, float y, int Team, bool State)
 {
-	if(!m_pDoor || ((Team < 0 || Team > (MAX_CLIENTS - 1)) && Team !=99))
+	if(!m_pDoor) 
 		return;
    int nx = clamp(round(x)/32, 0, m_Width-1);
    int ny = clamp(round(y)/32, 0, m_Height-1);
@@ -413,13 +422,18 @@ int CCollision::IntersectNoLaser(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2
 	{
 		float a = f/d;
 		vec2 Pos = mix(Pos0, Pos1, a);
-		if(IsSolid(round(Pos.x), round(Pos.y)) || (IsNoLaser(round(Pos.x), round(Pos.y)) || IsFNoLaser(round(Pos.x), round(Pos.y))))
+		int nx = clamp(round(Pos.x)/32, 0, m_Width-1);
+		int ny = clamp(round(Pos.y)/32, 0, m_Height-1);
+		if(GetIndex(nx, ny) == COLFLAG_SOLID 
+			|| GetIndex(nx, ny) == (COLFLAG_SOLID|COLFLAG_NOHOOK) 
+			|| GetIndex(nx, ny) == COLFLAG_NOLASER 
+			|| GetFIndex(nx, ny) == COLFLAG_NOLASER)
 		{
 			if(pOutCollision)
 				*pOutCollision = Pos;
 			if(pOutBeforeCollision)
 				*pOutBeforeCollision = Last;
-			if (IsFNoLaser(round(Pos.x), round(Pos.y)))	return GetFCollisionAt(Pos.x, Pos.y);
+			if (GetFIndex(nx, ny) == COLFLAG_NOLASER)	return GetFCollisionAt(Pos.x, Pos.y);
 			else return GetCollisionAt(Pos.x, Pos.y);
 			
 		}
