@@ -41,6 +41,8 @@ void CCollision::Dest()
 
 void CCollision::Init(class CLayers *pLayers)
 {
+	if(m_pLayers) m_pLayers->Dest();
+	Dest();
 	m_pLayers = pLayers;
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
@@ -245,6 +247,11 @@ int CCollision::GetTile(int x, int y)
 {
 	int nx = clamp(x/32, 0, m_Width-1);
 	int ny = clamp(y/32, 0, m_Height-1);
+	if(!m_pTiles || ny < 0 || nx < 0)
+{
+		//dbg_msg("Collision","Something is terribly wrong, !m_pTiles %d, ny %d, ny %d", !m_pTiles, ny, ny);
+		return 0;
+}
 	/*dbg_msg("GetTile","m_Index %d",m_pTiles[ny*m_Width+nx].m_Index);//Remove */
 	if(m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_SOLID
 		|| m_pTiles[ny*m_Width+nx].m_Index == (COLFLAG_SOLID|COLFLAG_NOHOOK)

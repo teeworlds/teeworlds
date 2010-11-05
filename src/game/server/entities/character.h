@@ -137,6 +137,7 @@ public:
 	int m_QueuedWeapon;
 	
 	int m_ReloadTimer;
+	int m_PainSoundTimer;
 	int m_AttackTick;
 	
 	int m_DamageTaken;

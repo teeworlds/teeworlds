@@ -298,9 +298,15 @@ void CCharacter::FireWeapon()
 	// check for ammo
 	if(!m_aWeapons[m_ActiveWeapon].m_Ammo)
 	{
-		// 125ms is a magical limit of how fast a human can click
+/*		// 125ms is a magical limit of how fast a human can click
 		m_ReloadTimer = 1 * Server()->TickSpeed();
-		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG);
+		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG);*/
+		// Timerstuff to avoid shrieking orchestra caused by unfreeze-plasma
+		if(m_PainSoundTimer<=0)
+		{
+				m_PainSoundTimer = 1 * Server()->TickSpeed();
+				GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG);
+		}
 		return;
 	}
 
@@ -489,6 +495,9 @@ void CCharacter::HandleWeapons()
 	HandleNinja();
 
 	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
+	// check PainSoundTimer - Hmm, maybe sometimes shrieking can be a weapon too? ;)
+	if(m_PainSoundTimer>0)
+		m_PainSoundTimer--;
 
 	// check reload timer
 	if(m_ReloadTimer)
@@ -593,7 +602,7 @@ void CCharacter::OnFinish()
 	char aBuf[128];
 		m_CpActive=-2;
 		str_format(aBuf, sizeof(aBuf), "%s finished in: %d minute(s) %5.2f second(s)", Server()->ClientName(m_pPlayer->GetCID()), (int)time/60, time-((int)time/60*60));
-		if(!g_Config.m_SvHideScore)
+		if(g_Config.m_SvHideScore)
 			GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
 		else
 			GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
@@ -601,11 +610,16 @@ void CCharacter::OnFinish()
 		if(time - pData->m_BestTime < 0)
 		{
 			// new record \o/
-			str_format(aBuf, sizeof(aBuf), "New record: %5.2f second(s) better", time - pData->m_BestTime);
-			if(!g_Config.m_SvHideScore)
+			str_format(aBuf, sizeof(aBuf), "New record: %5.2f second(s) better.", fabs(time - pData->m_BestTime));
+			if(g_Config.m_SvHideScore)
 				GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);
 			else
 				GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+		}
+		else
+		{
+			str_format(aBuf, sizeof(aBuf), "%5.2f second(s) worse, better luck next time.", fabs(pData->m_BestTime - time));
+				GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);//this is private, sent only to the tee
 		}
 
 		if(!pData->m_BestTime || time < pData->m_BestTime)
@@ -1265,9 +1279,11 @@ bool CCharacter::UnFreeze()
 			 {
 				 m_aWeapons[i].m_Ammo = -1;
 			 }
-		if(!m_aWeapons[m_ActiveWeapon].m_Got) m_ActiveWeapon=WEAPON_GUN;
-		m_FreezeTime=0;
-		m_FreezeTick=0;
+		if(!m_aWeapons[m_ActiveWeapon].m_Got)
+			m_ActiveWeapon = WEAPON_GUN;
+		m_FreezeTime = 0;
+		m_FreezeTick = 0;
+		m_ReloadTimer = 0;
 		 return true;
 	}
 	return false;
