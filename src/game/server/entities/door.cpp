@@ -51,8 +51,8 @@ void CDoor::Open(int Team)
 
 void CDoor::Close(int Team)
 {
+	//if (Team < 0 || Team > (MAX_CLIENTS - 1) && Team !=99) return;
 	m_Opened[Team] = false;
-
 	for(int i=0;i<m_Length;i++)
 	{
 		GameServer()->Collision()->SetDTile(m_Pos.x + (m_Direction.x * i), m_Pos.y + (m_Direction.y * i), Team, true);
@@ -70,7 +70,7 @@ void CDoor::Reset()
 void CDoor::Tick()
 {
 	for (int i = 0; i < MAX_CLIENTS; ++i) {
-		if (m_EvalTick[i] + 10 < Server()->Tick()) {
+		if (m_EvalTick[i] + 10 < Server()->Tick() && m_Opened[i]) {
 			Close(i);
 		}
 	}

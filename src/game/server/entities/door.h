@@ -14,6 +14,7 @@ class CDoor : public CEntity
 	int m_Length;
 	vec2 m_Direction;
 	int m_Angle;
+	
 public:
 	void Open(int Tick, bool ActivatedTeam[]);
 	void Open(int Team);

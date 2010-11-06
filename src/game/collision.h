@@ -46,6 +46,10 @@ public:
 	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *Bpounces);
 	void MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity);
 	bool TestBox(vec2 Pos, vec2 Size);
+	
+	int GetIndex(int x, int y);
+	int GetFIndex(int x, int y);
+	
 	int GetTile(int x, int y);
 	int GetFTile(int x, int y);
 	int Entity(int x, int y, bool Front);
