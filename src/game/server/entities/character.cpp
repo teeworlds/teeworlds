@@ -948,8 +948,18 @@ void CCharacter::HandleTiles(int Index)
 	}
 	if(((m_TileIndex == TILE_BEGIN) || (m_TileFIndex == TILE_BEGIN)) && (m_DDRaceState == DDRACE_NONE || (m_DDRaceState == DDRACE_STARTED && !Team())))
 	{
-		Controller->m_Teams.OnCharacterStart(m_pPlayer->GetCID());
-		m_CpActive = -2;
+		bool CanBegin = true;
+		if(g_Config.m_SvTeam == 1 && (Team() == TEAM_FLOCK || Teams()->Count(Team()) <= 1) ) {
+			GameServer()->SendChat(-1, GetPlayer()->GetCID(),"I already told you that you must find a friend");//need to make this better
+			CanBegin = false;
+		}
+		if(CanBegin) {
+			Controller->m_Teams.OnCharacterStart(m_pPlayer->GetCID());
+			m_CpActive = -2;
+		} else {
+			
+		}
+		
 	}
 
 	if(((m_TileIndex == TILE_END) || (m_TileFIndex == TILE_END)) && m_DDRaceState == DDRACE_STARTED)

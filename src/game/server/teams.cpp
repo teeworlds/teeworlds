@@ -1,5 +1,5 @@
 #include "teams.h"
-
+#include <engine/shared/config.h>
 
 CGameTeams::CGameTeams(CGameContext *pGameContext) : m_pGameContext(pGameContext) {
 	Reset();
@@ -10,6 +10,7 @@ void CGameTeams::Reset() {
 	for(int i = 0; i < MAX_CLIENTS; ++i) {
 		m_TeamState[i] = EMPTY;
 		m_TeeFinished[i] = false;
+		m_MembersCount[i] = 0;
 	}
 }
 
@@ -87,9 +88,9 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 		}
 	}
 	SetForceCharacterTeam(id, Team);
-	char aBuf[512];
-	str_format(aBuf, sizeof(aBuf), "Id = %d Team = %d", id, Team);
-	dbg_msg("Teams", aBuf);
+	
+	dbg_msg1("Teams", "Id = %d Team = %d", id, Team);
+	
 	if(Character(id) && Character(id)->GetPlayer()->m_IsUsingDDRaceClient) {
 		SendTeamsState(id);
 	}
@@ -113,11 +114,20 @@ void CGameTeams::SetForceCharacterTeam(int id, int Team) {
 			m_TeamState[m_Core.Team(id)] = EMPTY;
 		}
 	}
+	if(Count(m_Core.Team(id)) > 0) m_MembersCount[m_Core.Team(id)]--;
 	m_Core.Team(id, Team);
+	if(m_Core.Team(id) != TEAM_SUPER) m_MembersCount[m_Core.Team(id)]++;
 	if(Team != TEAM_SUPER && m_TeamState[Team] == EMPTY) {
 		ChangeTeamState(Team, OPEN);
 	}
 }
+
+int CGameTeams::Count(int Team) const{
+	if(Team == TEAM_SUPER) return -1;
+	return m_MembersCount[Team];
+}
+
+
 
 void CGameTeams::ChangeTeamState(int Team, int State) {
 	m_TeamState[Team] = State;

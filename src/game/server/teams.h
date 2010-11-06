@@ -6,9 +6,11 @@
 
 class CGameTeams {
 	int m_TeamState[MAX_CLIENTS];
+	int m_MembersCount[MAX_CLIENTS];
 	bool m_TeeFinished[MAX_CLIENTS];
 	
 	class CGameContext * m_pGameContext;
+	
 	
 public:
 	enum {
@@ -39,6 +41,8 @@ public:
 	bool TeamFinished(int Team);
 
 	int TeamMask(int Team);
+	
+	int Count(int Team) const;
 	
 	//need to be very carefull using this method
 	void SetForceCharacterTeam(int id, int Team);

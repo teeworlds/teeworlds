@@ -2263,9 +2263,15 @@ void CGameContext::ConBroadTime(IConsole::IResult *pResult, void *pUserData, int
 
 void CGameContext::ConJoinTeam(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
+	
 	CGameContext *pSelf = (CGameContext *)pUserData;
-
-CPlayer *pPlayer = pSelf->m_apPlayers[ClientId];
+	if(g_Config.m_SvTeam == -1) {
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Admin disable teams");
+		return;
+	} else if (g_Config.m_SvTeam == 1) {
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You must join to any team and play with anybody or you will not play");
+	}
+	CPlayer *pPlayer = pSelf->m_apPlayers[ClientId];
 
 	if(pResult->NumArguments() > 0)
 	{
