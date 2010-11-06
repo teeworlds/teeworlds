@@ -616,10 +616,17 @@ void CCharacter::OnFinish()
 			else
 				GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 		}
-		else
+		else if(pData->m_BestTime != 0) // tee has already finished?
 		{
-			str_format(aBuf, sizeof(aBuf), "%5.2f second(s) worse, better luck next time.", fabs(pData->m_BestTime - time));
+			if(fabs(time - pData->m_BestTime) <= 0.005)
+			{
+				GameServer()->SendChatTarget(m_pPlayer->GetCID(), "You finished with your best time.");
+			}
+			else
+			{
+				str_format(aBuf, sizeof(aBuf), "%5.2f second(s) worse, better luck next time.", fabs(pData->m_BestTime - time));
 				GameServer()->SendChatTarget(m_pPlayer->GetCID(), aBuf);//this is private, sent only to the tee
+			}
 		}
 
 		if(!pData->m_BestTime || time < pData->m_BestTime)
