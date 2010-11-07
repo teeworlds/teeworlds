@@ -27,6 +27,7 @@ public:
 		virtual int GetInteger(unsigned Index) = 0;
 		virtual float GetFloat(unsigned Index) = 0;
 		virtual const char *GetString(unsigned Index) = 0;
+		virtual int GetVictim() = 0;
 		
 		int NumArguments() const { return m_NumArgs; }
 	};
@@ -44,7 +45,10 @@ public:
 	typedef void (*FPossibleCallback)(const char *pCmd, void *pUser);
 	typedef void (*FCommandCallback)(IResult *pResult, void *pUserData, int ClientId);
 	typedef void (*FChainCommandCallback)(IResult *pResult, void *pUserData, FCommandCallback pfnCallback, void *pCallbackUserData);
-
+	
+	typedef bool (*FCompareClientsCallback)(int ClientLevel, int Victim, void *pUserData);
+	typedef bool (*FClientOnlineCallback)(int ClientId, void *pUserData);
+	
 	virtual CCommandInfo *GetCommandInfo(const char *pName, int FlagMask) = 0;
 	virtual void PossibleCommands(const char *pStr, int FlagMask, FPossibleCallback pfnCallback, void *pUser) = 0;
 	virtual void ParseArguments(int NumArgs, const char **ppArguments) = 0;
@@ -68,6 +72,9 @@ public:
 	virtual void ReleaseAlternativePrintResponseCallback() = 0;
 	virtual void Print(int Level, const char *pFrom, const char *pStr) = 0;
 	virtual void PrintResponse(int Level, const char *pFrom, const char *pStr) = 0;
+
+	virtual void RegisterCompareClientsCallback(FCompareClientsCallback pfnCallback, void *pUserData) = 0;
+	virtual void RegisterClientOnlineCallback(FClientOnlineCallback pfnCallback, void *pUserData) = 0;
 };
 
 extern IConsole *CreateConsole(int FlagMask);
