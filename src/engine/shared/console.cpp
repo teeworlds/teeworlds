@@ -405,7 +405,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 					if(pResult->GetVictim() == -2)
 						pResult->SetVictim(ClientId);
 					
-					if((ClientLevel < pCommand->m_Level && !(pCommand->m_Flags & CCommand::CMDFLAG_HELPERCMD)) || (ClientLevel < 1 && (pCommand->m_Flags & CCommand::CMDFLAG_HELPERCMD)))
+					if((ClientLevel < pCommand->m_Level && !(pCommand->m_Flags & CMDFLAG_HELPERCMD)) || (ClientLevel < 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD)))
 					{
 						RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 
@@ -423,21 +423,21 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 
 						ReleaseAlternativePrintResponseCallback();
 					}					
-					else if(ClientLevel == 1 && (pCommand->m_Flags & CCommand::CMDFLAG_HELPERCMD) && pResult->GetVictim() != ClientId)
+					else if(ClientLevel == 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD) && pResult->GetVictim() != ClientId)
 					{
 						RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 						PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", "As a helper you can't use commands on others.");
 						dbg_msg("server", "helper tried rcon command ('%s') on others without permission. ClientId=%d", pCommand->m_pName, ClientId);
 						ReleaseAlternativePrintResponseCallback();
 					}
-					else if(!g_Config.m_SvCheats && (pCommand->m_Flags & CCommand::CMDFLAG_CHEAT))
+					else if(!g_Config.m_SvCheats && (pCommand->m_Flags & CMDFLAG_CHEAT))
 					{
 						RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 						PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", "Cheats are not available on this server");
 						dbg_msg("server", "client tried rcon cheat ('%s') with cheats off. ClientId=%d", pCommand->m_pName, ClientId);
 						ReleaseAlternativePrintResponseCallback();
 					}
-					else if(!g_Config.m_SvTimer && (pCommand->m_Flags & CCommand::CMDFLAG_TIMER))
+					else if(!g_Config.m_SvTimer && (pCommand->m_Flags & CMDFLAG_TIMER))
 					{
 						RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 						PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", "Timer commands are not available on this server");
@@ -473,7 +473,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 									PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", "client is offline");
 									ReleaseAlternativePrintResponseCallback();
 								}
-								else if (!CompareClients(ClientLevel, pResult->GetVictim()))
+								else if (!CompareClients(ClientLevel, pResult->GetVictim()) && ClientId != pResult->GetVictim())
 								{
 									RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 									PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", "you can not use commands on players with the same or higher level than you");

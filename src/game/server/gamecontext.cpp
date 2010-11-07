@@ -618,7 +618,7 @@ void CGameContext::OnClientEnter(int ClientId)
 	m_VoteUpdate = true;
 }
 
-bool compare_players(CPlayer *pl1, CPlayer *pl2)
+bool ComparePlayers(CPlayer *pl1, CPlayer *pl2)
 {
 	if(((pl1->m_Authed >= 0) ? pl1->m_Authed : 0) > ((pl2->m_Authed >= 0) ? pl2->m_Authed : 0))
 		return true;
@@ -862,7 +862,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				SendChatTarget(ClientId, "You can't kick yourself");
 				return;
 			}
-			if(compare_players(m_apPlayers[KickId], pPlayer))
+			if(ComparePlayers(m_apPlayers[KickId], pPlayer))
 			{
 				SendChatTarget(ClientId, "You can't kick admins");
 				m_apPlayers[ClientId]->m_Last_KickVote = time_get();
@@ -1326,7 +1326,7 @@ void CGameContext::MoveCharacter(int ClientId, int Victim, int X, int Y, bool Ra
 void CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	int Victim = pResult->GetVictim());
+	int Victim = pResult->GetVictim();
 	int Seconds = pResult->GetInteger(0);
 	char buf[512];
 	if(Seconds < 10)
@@ -1341,7 +1341,6 @@ void CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int Clie
 
 	str_format(buf, sizeof(buf), "%s muted by %s for %d seconds", pSelf->Server()->ClientName(Victim), pSelf->Server()->ClientName(ClientId), Seconds);
 	pSelf->SendChat(-1, CGameContext::CHAT_ALL, buf);
-}
 }
 
 void CGameContext::ConSetlvl3(IConsole::IResult *pResult, void *pUserData, int ClientId)
@@ -1585,7 +1584,6 @@ void CGameContext::ModifyWeapons(int ClientId, int Victim, int Weapon, bool Remo
 void CGameContext::ConTeleport(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable()) return;
 	int Victim = pResult->GetVictim();
 	int TeleTo = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	if(pSelf->m_apPlayers[TeleTo])
@@ -1669,7 +1667,7 @@ void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, 
 	CCharacter* chr = pSelf->GetPlayerChar(Victim);
 	if(!chr)
 		return;
-	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
+	if(pSelf->m_apPlayers[Victim])
 	{
 		chr->m_StartTime = pSelf->Server()->Tick();
 		chr->m_RefreshTime = pSelf->Server()->Tick();

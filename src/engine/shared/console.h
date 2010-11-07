@@ -13,13 +13,6 @@ class CConsole : public IConsole
 		int m_Flags;
 		FCommandCallback m_pfnCallback;
 		void *m_pUserData;
-		
-		enum
-		{
-			CMDFLAG_CHEAT = 16,
-			CMDFLAG_TIMER = 32,
-			CMDFLAG_HELPERCMD = 64,
-		};
 	};
 		
 
