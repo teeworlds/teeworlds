@@ -1569,7 +1569,7 @@ void CServer::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	
-	Console()->Register("kick", "i?t", CFGFLAG_SERVER, ConKick, this, "", 2);
+	Console()->Register("kick", "v?t", CFGFLAG_SERVER, ConKick, this, "", 2);
 	Console()->Register("ban", "s?ir", CFGFLAG_SERVER|CFGFLAG_STORE, ConBan, this, "", 2);
 	Console()->Register("unban", "s", CFGFLAG_SERVER|CFGFLAG_STORE, ConUnban, this, "", 2);
 	Console()->Register("bans", "", CFGFLAG_SERVER|CFGFLAG_STORE, ConBans, this, "", 2);
