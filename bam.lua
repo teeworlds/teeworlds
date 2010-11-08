@@ -73,7 +73,7 @@ function Dat2c(datafile, sourcefile, arrayname)
 	AddJob(
 		sourcefile,
 		"dat2c " .. PathFilename(sourcefile) .. " = " .. PathFilename(datafile),
-		Script("scripts/safewrapper.py") .. " \"" .. Script("scripts/dat2c.py")..  "\" " .. sourcefile .. " " .. datafile .. " " .. arrayname
+		Script("scripts/dat2c.py")..  "\" " .. sourcefile .. " " .. datafile .. " " .. arrayname
 	)
 	AddDependency(sourcefile, datafile)
 	return sourcefile
@@ -84,7 +84,7 @@ function ContentCompile(action, output)
 	AddJob(
 		output,
 		action .. " > " .. output,
-		--Script("scripts/safewrapper.py") .. " \"" .. Script("datasrc/compile.py") .. "\" ".. Path(output) .. " " .. action
+		--Script("datasrc/compile.py") .. "\" ".. Path(output) .. " " .. action
 		Script("datasrc/compile.py") .. " " .. action ..  " > " .. Path(output)
 	)
 	AddDependency(output, Path("datasrc/content.py")) -- do this more proper
