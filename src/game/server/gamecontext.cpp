@@ -1380,12 +1380,7 @@ void CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int Clie
 		Seconds = 10;
 	if(pSelf->m_apPlayers[Victim] && (compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim])))
 	{
-		if(pSelf->m_apPlayers[Victim]->m_Muted < Seconds * pSelf->Server()->TickSpeed())
-		{
-			pSelf->m_apPlayers[Victim]->m_Muted = Seconds * pSelf->Server()->TickSpeed();
-		}
-		else
-			Seconds = pSelf->m_apPlayers[Victim]->m_Muted / pSelf->Server()->TickSpeed();
+		pSelf->m_apPlayers[Victim]->m_Muted = Seconds * pSelf->Server()->TickSpeed();
 		str_format(buf, sizeof(buf), "%s muted by %s for %d seconds", pSelf->Server()->ClientName(Victim), pSelf->Server()->ClientName(ClientId), Seconds);
 		pSelf->SendChat(-1, CGameContext::CHAT_ALL, buf);
 	}
