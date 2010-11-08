@@ -986,12 +986,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		{
 			if(m_apPlayers[i] && Score()->PlayerData(i)->m_CurrentTime > 0)
 			{
-				char aBuf[16];
-				str_format(aBuf, sizeof(aBuf), "%.0f", Score()->PlayerData(i)->m_CurrentTime*100.0f); // damn ugly but the only way i know to do it
-				int TimeToSend;
-				sscanf(aBuf, "%d", &TimeToSend);
 				CNetMsg_Sv_PlayerTime Msg;
-				Msg.m_Time = TimeToSend;
+				Msg.m_Time = Score()->PlayerData(i)->m_CurrentTime * 100;
 				Msg.m_Cid = i;
 				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientId);
 				//also send its time to others
@@ -1001,12 +997,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		//also send its time to others
 		if(Score()->PlayerData(ClientId)->m_CurrentTime > 0) {
 			//TODO: make function for this fucking steps
-			char aBuf[16];
-			str_format(aBuf, sizeof(aBuf), "%.0f", Score()->PlayerData(ClientId)->m_CurrentTime*100.0f); // damn ugly but the only way i know to do it
-			int TimeToSend;
-			sscanf(aBuf, "%d", &TimeToSend);
 			CNetMsg_Sv_PlayerTime Msg;
-			Msg.m_Time = TimeToSend;
+			Msg.m_Time = Score()->PlayerData(ClientId)->m_CurrentTime * 100;
 			Msg.m_Cid = ClientId;
 			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 		}
@@ -1281,11 +1273,11 @@ void CGameContext::ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *p
 }
 
 
-bool CGameContext::CheatsAvailable(IConsole *pConsole, int ClientId)
+bool CGameContext::CheatsAvailable()
 {
 	if(!g_Config.m_SvCheats)
 	{
-		pConsole->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "cheats", "Cheats are not available on this server.");
+		Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "cheats", "Cheats are not available on this server.");
 	}
 	return g_Config.m_SvCheats;
 }
@@ -1340,7 +1332,7 @@ void CGameContext::ConMoveRaw(IConsole::IResult *pResult, void *pUserData, int C
 
 void CGameContext::MoveCharacter(int ClientId, int Victim, int X, int Y, bool Raw)
 {
-	if(!CheatsAvailable(Console(), ClientId))
+	if(!CheatsAvailable())
 		return;
 
 	if(clamp(Victim, 0, (int) MAX_CLIENTS - 1) != Victim || GetPlayerChar(ClientId) == 0)
@@ -1470,7 +1462,7 @@ void CGameContext::ConNinja(IConsole::IResult *pResult, void *pUserData, int Cli
 void CGameContext::ConHammer(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	if(!pSelf->CheatsAvailable()) return;
 	char buf[128];
 
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
@@ -1499,7 +1491,7 @@ void CGameContext::ConHammer(IConsole::IResult *pResult, void *pUserData, int Cl
 void CGameContext::ConHammerMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	if(!pSelf->CheatsAvailable()) return;
 	char buf[128];
 	int type = pResult->GetInteger(0);
 	CCharacter* chr = pSelf->GetPlayerChar(ClientId);
@@ -1524,7 +1516,7 @@ void CGameContext::ConHammerMe(IConsole::IResult *pResult, void *pUserData, int 
 void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	if(!pSelf->CheatsAvailable()) return;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
@@ -1545,7 +1537,7 @@ void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int Cli
 void CGameContext::ConUnSuper(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	if(!pSelf->CheatsAvailable()) return;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	if(pSelf->m_apPlayers[Victim] && compare_players(pSelf->m_apPlayers[ClientId],pSelf->m_apPlayers[Victim]))
 	{
@@ -1561,7 +1553,7 @@ void CGameContext::ConUnSuper(IConsole::IResult *pResult, void *pUserData, int C
 void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	if(!pSelf->CheatsAvailable()) return;
 	if(pSelf->m_apPlayers[ClientId])
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(ClientId);
@@ -1581,7 +1573,7 @@ void CGameContext::ConSuperMe(IConsole::IResult *pResult, void *pUserData, int C
 void CGameContext::ConUnSuperMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	if(!pSelf->CheatsAvailable()) return;
 	if(pSelf->m_apPlayers[ClientId])
 	{
 		CCharacter* chr = pSelf->GetPlayerChar(ClientId);
@@ -1727,7 +1719,7 @@ void CGameContext::ConRemoveWeapon(IConsole::IResult *pResult, void *pUserData, 
 
 void CGameContext::ModifyWeapons(int ClientId, int Victim, int Weapon, bool Remove)
 {
-	if(!CheatsAvailable(Console(), ClientId))
+	if(!CheatsAvailable())
 		return;
 	
 	if(clamp(Victim, 0, (int) MAX_CLIENTS - 1) != Victim || GetPlayerChar(ClientId) == 0)
@@ -1797,7 +1789,7 @@ void CGameContext::ModifyWeapons(int ClientId, int Victim, int Weapon, bool Remo
 void CGameContext::ConTeleport(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	if(!pSelf->CheatsAvailable()) return;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	int cid2 = clamp(pResult->GetInteger(1), 0, (int)MAX_CLIENTS-1);
 	if(pSelf->m_apPlayers[Victim] && pSelf->m_apPlayers[cid2])
@@ -1872,7 +1864,7 @@ void CGameContext::ConTimerZero(IConsole::IResult *pResult, void *pUserData, int
 {
 
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	if(!pSelf->CheatsAvailable()) return;
 	char buf[128];
 	CServer* pServ = (CServer*)pSelf->Server();
 	if(!g_Config.m_SvTimer)
@@ -1901,7 +1893,7 @@ void CGameContext::ConTimerZero(IConsole::IResult *pResult, void *pUserData, int
 void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	if(!pSelf->CheatsAvailable()) return;
 	char buf[128];
 	CServer* pServ = (CServer*)pSelf->Server();
 	if(!g_Config.m_SvTimer)
@@ -1930,7 +1922,7 @@ void CGameContext::ConTimerReStart(IConsole::IResult *pResult, void *pUserData, 
 void CGameContext::ConFreeze(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	//if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	//if(!pSelf->CheatsAvailable()) return;
 	char buf[128];
 	int time=-1;
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
@@ -1953,7 +1945,7 @@ void CGameContext::ConFreeze(IConsole::IResult *pResult, void *pUserData, int Cl
 void CGameContext::ConUnFreeze(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	//if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	//if(!pSelf->CheatsAvailable()) return;
 	char buf[128];
 	int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
 	CCharacter* chr = pSelf->GetPlayerChar(Victim);
@@ -1970,7 +1962,7 @@ void CGameContext::ConUnFreeze(IConsole::IResult *pResult, void *pUserData, int 
 void CGameContext::ConInvisMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	//if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	//if(!pSelf->CheatsAvailable()) return;
 	if(!pSelf->m_apPlayers[ClientId])
 		return;
 	pSelf->m_apPlayers[ClientId]->m_Invisible = true;
@@ -1979,7 +1971,7 @@ void CGameContext::ConInvisMe(IConsole::IResult *pResult, void *pUserData, int C
 void CGameContext::ConVisMe(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	//if(!pSelf->CheatsAvailable(pSelf->Console(), ClientId)) return;
+	//if(!pSelf->CheatsAvailable()) return;
 	if(!pSelf->m_apPlayers[ClientId])
 		return;
 	pSelf->m_apPlayers[ClientId]->m_Invisible = false;
