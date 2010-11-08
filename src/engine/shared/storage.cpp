@@ -167,14 +167,14 @@ public:
 		}
 		
 		// 2) use data-dir in PWD if present
-		if(fs_is_dir("data/mapres"))
+		if(fs_is_dir("data/maps"))
 		{
 			str_copy(m_aDatadir, "data", sizeof(m_aDatadir));
 			return;
 		}
 		
 		// 3) use compiled-in data-dir if present
-		if(fs_is_dir(DATA_DIR "/mapres"))
+		if(fs_is_dir(DATA_DIR "/maps"))
 		{
 			str_copy(m_aDatadir, DATA_DIR, sizeof(m_aDatadir));
 			return;
@@ -226,7 +226,7 @@ public:
 	#endif
 		
 		// no data-dir found
-		dbg_msg("storage", "warning no data directory found");
+		dbg_msg("storage", "warning no valid data directory found");
 	}
 
 	virtual void ListDirectory(int Type, const char *pPath, FS_LISTDIR_CALLBACK pfnCallback, void *pUser)
