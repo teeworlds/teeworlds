@@ -1,5 +1,6 @@
 #include <new>
 #include <base/system.h>
+#include <base/math.h>
 #include <engine/shared/protocol.h>
 #include <engine/storage.h>
 #include "console.h"
@@ -27,6 +28,36 @@ float CConsole::CResult::GetFloat(unsigned Index)
 		return 0.0f;
 	return str_tofloat(m_apArgs[Index]);
 }
+
+int CConsole::CResult::GetVictim()
+{
+	return m_Victim;
+}
+
+void CConsole::CResult::ResetVictim()
+{
+	m_Victim = -3;
+}
+
+bool CConsole::CResult::HasVictim()
+{
+	return m_Victim != -3;
+}
+
+void CConsole::CResult::SetVictim(int Victim)
+{
+	m_Victim = clamp<int>(Victim, 0, MAX_CLIENTS);
+}
+
+void CConsole::CResult::SetVictim(const char *pVictim)
+{
+	if(!str_comp(pVictim, "me"))
+		m_Victim = -2;
+	if(!str_comp(pVictim, "all"))
+		m_Victim = -1;
+	m_Victim = clamp<int>(str_toint(pVictim), 0, MAX_CLIENTS);
+}
+
 
 // the maximum number of tokens occurs in a string of length CONSOLE_MAX_STR_LENGTH with tokens size 1 separated by single spaces
 
@@ -62,6 +93,8 @@ int CConsole::ParseArgs(CResult *pResult, const char *pFormat)
 	char *pStr;
 	int Optional = 0;
 	int Error = 0;
+
+	pResult->ResetVictim();
 	
 	pStr = pResult->m_pArgsStart;
 
@@ -122,10 +155,15 @@ int CConsole::ParseArgs(CResult *pResult, const char *pFormat)
 			}
 			else
 			{
-				pResult->AddArgument(pStr);
+				if (Command != 'v')
+					pResult->AddArgument(pStr);
+				else
+					pResult->SetVictim(pStr);
 				
 				if(Command == 'r') // rest of the string
 					break;
+				else if(Command == 'v')
+					pStr = str_skip_to_whitespace(pStr);
 				else if(Command == 'i') // validate int
 					pStr = str_skip_to_whitespace(pStr);
 				else if(Command == 'f') // validate float
@@ -167,6 +205,33 @@ void CConsole::ReleaseAlternativePrintCallback()
   m_PrintUsed--;
 }
 
+void CConsole::RegisterClientOnlineCallback(FClientOnlineCallback pfnCallback, void *pUserData)
+{
+	m_pfnClientOnlineCallback = pfnCallback;
+	m_pClientOnlineUserdata = pUserData;
+}
+
+void CConsole::RegisterCompareClientsCallback(FCompareClientsCallback pfnCallback, void *pUserData)
+{
+	m_pfnCompareClientsCallback = pfnCallback;
+	m_pCompareClientsUserdata = pUserData;
+}
+
+bool CConsole::ClientOnline(int ClientId)
+{
+	if(!m_pfnClientOnlineCallback)
+		return true;
+	
+	return m_pfnClientOnlineCallback(ClientId, m_pClientOnlineUserdata);
+}
+
+bool CConsole::CompareClients(int ClientId, int Victim)
+{
+	if(!m_pfnCompareClientsCallback)
+		return true;
+	
+	return m_pfnCompareClientsCallback(ClientId, Victim, m_pCompareClientsUserdata);	
+}
 
 void CConsole::Print(int Level, const char *pFrom, const char *pStr)
 {
@@ -335,33 +400,108 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 					m_ExecutionQueue.m_pLast->m_pCommandUserData = pCommand->m_pUserData;
 					m_ExecutionQueue.AddEntry();
 				}
-				else if(pCommand->m_Level <= ClientLevel)
+				else 
 				{
-					RegisterAlternativePrintCallback(pfnAlternativePrintCallback, pUserData);
-					RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
-
-					pCommand->m_pfnCallback(pResult, pCommand->m_pUserData, ClientId);
-
-					ReleaseAlternativePrintResponseCallback();
-					ReleaseAlternativePrintCallback();
-				}
-				else
-				{
-					RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
-
-					char aBuf[256];
-					if (pCommand->m_Level == 100 && ClientLevel < 100)
+					if(pResult->GetVictim() == -2)
+						pResult->SetVictim(ClientId);
+					
+					if((ClientLevel < pCommand->m_Level && !(pCommand->m_Flags & CMDFLAG_HELPERCMD)) || (ClientLevel < 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD)))
 					{
-						str_format(aBuf, sizeof(aBuf), "You can't use this command: %s", pCommand->m_pName);
+						RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
+
+						char aBuf[256];
+						if (pCommand->m_Level == 100 && ClientLevel < 100)
+						{
+							str_format(aBuf, sizeof(aBuf), "You can't use this command: %s", pCommand->m_pName);
+						}
+						else
+						{
+							str_format(aBuf, sizeof(aBuf), "You have too low level to use command: %s. Your level: %d. Need level: %d", pCommand->m_pName, ClientLevel, pCommand->m_Level);
+							dbg_msg("server", "client tried rcon command ('%s') without permisson. ClientId=%d ", pCommand->m_pName, ClientId);
+						}
+						PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+
+						ReleaseAlternativePrintResponseCallback();
+					}					
+					else if(ClientLevel == 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD) && pResult->GetVictim() != ClientId)
+					{
+						RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
+						PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", "As a helper you can't use commands on others.");
+						dbg_msg("server", "helper tried rcon command ('%s') on others without permission. ClientId=%d", pCommand->m_pName, ClientId);
+						ReleaseAlternativePrintResponseCallback();
+					}
+					else if(!g_Config.m_SvCheats && (pCommand->m_Flags & CMDFLAG_CHEAT))
+					{
+						RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
+						PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", "Cheats are not available on this server");
+						dbg_msg("server", "client tried rcon cheat ('%s') with cheats off. ClientId=%d", pCommand->m_pName, ClientId);
+						ReleaseAlternativePrintResponseCallback();
+					}
+					else if(!g_Config.m_SvTimer && (pCommand->m_Flags & CMDFLAG_TIMER))
+					{
+						RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
+						PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", "Timer commands are not available on this server");
+						dbg_msg("server", "client tried timer command ('%s') with timer commands off. ClientId=%d", pCommand->m_pName, ClientId);
+						ReleaseAlternativePrintResponseCallback();
 					}
 					else
 					{
-						str_format(aBuf, sizeof(aBuf), "You have low level to use command: %s. Your level: %d. Need level: %d", pCommand->m_pName, ClientLevel, pCommand->m_Level);
-						dbg_msg("server", "client tried rcon command ('%s') without permisson. ClientId=%d ", pCommand->m_pName, ClientId);
-					}
-					PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+						if (pResult->HasVictim())
+						{
+							if(pResult->GetVictim() == -1)
+							{
+								for (int i = 0; i < MAX_CLIENTS; i++)
+								{
+									if (ClientOnline(i) && CompareClients(ClientLevel, i))
+									{
+										pResult->SetVictim(i);
+										RegisterAlternativePrintCallback(pfnAlternativePrintCallback, pUserData);
+										RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 
-					ReleaseAlternativePrintResponseCallback();
+										pCommand->m_pfnCallback(pResult, pCommand->m_pUserData, ClientId);
+
+										ReleaseAlternativePrintResponseCallback();
+										ReleaseAlternativePrintCallback();
+									}
+								}
+							}
+							else
+							{
+								if (!ClientOnline(pResult->GetVictim()))
+								{
+									RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
+									PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", "client is offline");
+									ReleaseAlternativePrintResponseCallback();
+								}
+								else if (!CompareClients(ClientLevel, pResult->GetVictim()) && ClientId != pResult->GetVictim())
+								{
+									RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
+									PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", "you can not use commands on players with the same or higher level than you");
+									ReleaseAlternativePrintResponseCallback();
+								}
+								else
+								{
+									RegisterAlternativePrintCallback(pfnAlternativePrintCallback, pUserData);
+									RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
+
+									pCommand->m_pfnCallback(pResult, pCommand->m_pUserData, ClientId);
+
+									ReleaseAlternativePrintResponseCallback();
+									ReleaseAlternativePrintCallback();
+								}
+							}
+						}
+						else
+						{
+							RegisterAlternativePrintCallback(pfnAlternativePrintCallback, pUserData);
+							RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
+
+							pCommand->m_pfnCallback(pResult, pCommand->m_pUserData, ClientId);
+
+							ReleaseAlternativePrintResponseCallback();
+							ReleaseAlternativePrintCallback();
+						}
+					}
 				}
 			}
 		}
@@ -584,6 +724,11 @@ CConsole::CConsole(int FlagMask)
 	m_pAlternativePrintResponseCallbackUserdata = 0;
 	m_pfnAlternativePrintResponseCallback = 0;
 	m_PrintResponseUsed = 0;
+	
+	m_pfnClientOnlineCallback = 0;
+	m_pfnCompareClientsCallback = 0;
+	m_pClientOnlineUserdata = 0;
+	m_pCompareClientsUserdata = 0;
 	
 	m_pStorage = 0;
 	
