@@ -1334,7 +1334,7 @@ int CServer::Run()
 
 void CServer::ConKick(IConsole::IResult *pResult, void *pUser, int ClientId)
 {
-		int ClientId1 = pResult->GetInteger(0);
+	int ClientId1 = pResult->GetVictim();
 	char buf[128];
 	if(ClientId1 < 0 || ClientId1 >= MAX_CLIENTS || ((CServer *)pUser)->m_aClients[ClientId1].m_State == CClient::STATE_EMPTY)
 	{

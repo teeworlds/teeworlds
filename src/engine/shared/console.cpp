@@ -53,9 +53,10 @@ void CConsole::CResult::SetVictim(const char *pVictim)
 {
 	if(!str_comp(pVictim, "me"))
 		m_Victim = -2;
-	if(!str_comp(pVictim, "all"))
+	else if(!str_comp(pVictim, "all"))
 		m_Victim = -1;
-	m_Victim = clamp<int>(str_toint(pVictim), 0, MAX_CLIENTS);
+	else
+		m_Victim = clamp<int>(str_toint(pVictim), 0, MAX_CLIENTS);
 }
 
 
