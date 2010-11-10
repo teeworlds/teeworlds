@@ -53,41 +53,18 @@ class CGameContext : public IGameServer
 	static void ConSetlvl3(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConKillPlayer(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
-	static void ConNinjaMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConNinja(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	
-	static void ConHammerMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConHammer(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	
-	static void ConUnSuperMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConUnSuper(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConSuper(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConSuperMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
-
 	static void ConShotgun(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConShotgunMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	
 	static void ConGrenade(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConGrenadeMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	
 	static void ConRifle(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConRifleMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
-
 	static void ConWeapons(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConWeaponsMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
-
 	static void ConUnShotgun(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConUnShotgunMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
-
 	static void ConUnGrenade(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConUnGrenadeMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
-
 	static void ConUnRifle(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConUnRifleMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
-
 	static void ConUnWeapons(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConUnWeaponsMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	
 	static void ConAddWeapon(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConRemoveWeapon(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
