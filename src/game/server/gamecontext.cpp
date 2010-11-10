@@ -268,8 +268,15 @@ void CGameContext::SendChatResponse(const char *pLine, void *pUser)
 	ReentryGuard--;
 }
 
-void CGameContext::SendChat(int ChatterClientId, int Team, const char *pText)
+void CGameContext::SendChat(int ChatterClientId, int Team, const char *pText, int SpamProtectionClientId)
 {
+	if(SpamProtectionClientId >= 0 && SpamProtectionClientId < MAX_CLIENTS)
+		if(/*g_Config.m_SvSpamprotection && */m_apPlayers[SpamProtectionClientId]->m_Last_Chat 
+			&& m_apPlayers[SpamProtectionClientId]->m_Last_Chat + Server()->TickSpeed() + g_Config.m_SvChatDelay > Server()->Tick())
+			return;
+		else
+			m_apPlayers[SpamProtectionClientId]->m_Last_Chat = Server()->Tick();
+
 	char aBuf[256];
 	if(ChatterClientId >= 0 && ChatterClientId < MAX_CLIENTS)
 		str_format(aBuf, sizeof(aBuf), "%d:%d:%s: %s", ChatterClientId, Team, Server()->ClientName(ChatterClientId), pText);
@@ -734,12 +741,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		{
 			if(m_apPlayers[ClientId]->m_Muted == 0)
 			{
-				if(/*g_Config.m_SvSpamprotection && */pPlayer->m_Last_Chat && pPlayer->m_Last_Chat + Server()->TickSpeed() + g_Config.m_SvChatDelay > Server()->Tick())
-					return;
-
-				SendChat(ClientId, Team, pMsg->m_pMessage);
-				
-				pPlayer->m_Last_Chat = Server()->Tick();
+				SendChat(ClientId, Team, pMsg->m_pMessage, ClientId);
 			}
 			else
 			{
@@ -1251,8 +1253,9 @@ void CGameContext::ConVote(IConsole::IResult *pResult, void *pUserData, int Clie
 		pSelf->m_VoteEnforce = CGameContext::VOTE_ENFORCE_YES_ADMIN;
 	else if(str_comp_nocase(pResult->GetString(0), "no") == 0)
 		pSelf->m_VoteEnforce = CGameContext::VOTE_ENFORCE_NO_ADMIN;
-	str_format(aBuf, sizeof(aBuf), "vote forced to %s by %s", pResult->GetString(0),pSelf->Server()->ClientName(ClientID));
-	pSelf->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+	else
+		return;
+	
 	str_format(aBuf, sizeof(aBuf), "forcing vote %s", pResult->GetString(0));
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 	pSelf->m_VoteEnforcer = ClientID;
@@ -1972,11 +1975,16 @@ void CGameContext::ConRank(IConsole::IResult *pResult, void *pUserData, int Clie
 
 	CPlayer *pPlayer = pSelf->m_apPlayers[ClientId];
 
+	if(/*g_Config.m_SvSpamprotection && */pPlayer->m_Last_Chat && pPlayer->m_Last_Chat + pSelf->Server()->TickSpeed() + g_Config.m_SvChatDelay > pSelf->Server()->Tick())
+		return;
+	
+	pPlayer->m_Last_Chat = pSelf->Server()->Tick();
+
 	if(pResult->NumArguments() > 0)
 		if(!g_Config.m_SvHideScore)
-		pSelf->Score()->ShowRank(pPlayer->GetCID(), pResult->GetString(0), true);
-	else
-		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Showing the rank of other players is not allowed on this server.");
+			pSelf->Score()->ShowRank(pPlayer->GetCID(), pResult->GetString(0), true);
+		else
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Showing the rank of other players is not allowed on this server.");
 	else
 		pSelf->Score()->ShowRank(pPlayer->GetCID(), pSelf->Server()->ClientName(ClientId));
 }
@@ -2056,7 +2064,7 @@ void CGameContext::ConMe(IConsole::IResult *pResult, void *pUserData, int Client
 	char aBuf[256 + 24];
 	
 	str_format(aBuf, 256 + 24, "%s %s", pSelf->Server()->ClientName(ClientId), pResult->GetString(0));
-	pSelf->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+	pSelf->SendChat(-1, CGameContext::CHAT_ALL, aBuf, ClientId);
 }
 
 void CGameContext::ConToggleEyeEmote(IConsole::IResult *pResult, void *pUserData, int ClientId)
