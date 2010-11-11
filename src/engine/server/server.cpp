@@ -1144,6 +1144,8 @@ int CServer::Run()
 	//
 	Console()->RegisterPrintCallback(SendRconLineAuthed, this);
 	Console()->RegisterPrintResponseCallback(SendRconLineAuthed, this);
+	Console()->RegisterClientOnlineCallback(ClientOnline, this);
+	Console()->RegisterCompareClientsCallback(CompareClients, this);
 
 	// load map
 	if(!LoadMap(g_Config.m_SvMap))
@@ -1544,11 +1546,30 @@ void CServer::ConLogin(IConsole::IResult *pResult, void *pUser, int ClientId)
 		((CServer *)pUser)->SetRconLevel(ClientId, 0);
 }
 
+bool CServer::CompareClients(int ClientLevel, int Victim, void *pUser)
+{
+	CServer* pSelf = (CServer *)pUser;
+
+	if(!ClientOnline(Victim, pSelf))
+		return false;
+
+	return clamp(ClientLevel, 0, 4) > clamp(pSelf->m_aClients[Victim].m_Authed, 0, 4);
+}
+
+bool CServer::ClientOnline(int ClientId, void *pUser)
+{
+	CServer* pSelf = (CServer *)pUser;
+	if(ClientId < 0 || ClientId >= MAX_CLIENTS)
+		return false;
+	
+	return pSelf->m_aClients[ClientId].m_State != CClient::STATE_EMPTY;
+}
+
 void CServer::RegisterCommands()
 {
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	
-	Console()->Register("kick", "i?t", CFGFLAG_SERVER, ConKick, this, "", 2);
+	Console()->Register("kick", "v?t", CFGFLAG_SERVER, ConKick, this, "", 2);
 	Console()->Register("ban", "s?ir", CFGFLAG_SERVER|CFGFLAG_STORE, ConBan, this, "", 2);
 	Console()->Register("unban", "s", CFGFLAG_SERVER|CFGFLAG_STORE, ConUnban, this, "", 2);
 	Console()->Register("bans", "", CFGFLAG_SERVER|CFGFLAG_STORE, ConBans, this, "", 2);

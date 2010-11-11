@@ -210,6 +210,9 @@ public:
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConLogin(IConsole::IResult *pResult, void *pUser, int ClientId);
+	
+	static bool CompareClients(int ClientId, int Victim, void *pUser);
+	static bool ClientOnline(int ClientId, void *pUser);
 
 	void RegisterCommands();
 	

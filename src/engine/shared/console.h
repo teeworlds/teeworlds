@@ -58,6 +58,11 @@ class CConsole : public IConsole
 	FPrintCallback m_pfnAlternativePrintResponseCallback;
 	void *m_pAlternativePrintResponseCallbackUserdata;
 	int m_PrintResponseUsed;
+	
+	FCompareClientsCallback m_pfnCompareClientsCallback;
+	void *m_pCompareClientsUserdata;
+	FClientOnlineCallback m_pfnClientOnlineCallback;
+	void *m_pClientOnlineUserdata;
 
 	enum
 	{
@@ -74,14 +79,22 @@ class CConsole : public IConsole
 		const char *m_pCommand;
 		const char *m_apArgs[MAX_PARTS];
 		
+		int m_Victim;
+		
 		void AddArgument(const char *pArg)
 		{
 			m_apArgs[m_NumArgs++] = pArg;
 		}
-
+		
+		void ResetVictim();
+		bool HasVictim();
+		void SetVictim(int Victim);
+		void SetVictim(const char *pVictim);
+		
 		virtual const char *GetString(unsigned Index);
 		virtual int GetInteger(unsigned Index);
 		virtual float GetFloat(unsigned Index);
+		virtual int GetVictim();
 	};
 	
 	int ParseStart(CResult *pResult, const char *pString, int Length);
@@ -140,6 +153,12 @@ public:
 	virtual void RegisterPrintResponseCallback(FPrintCallback pfnPrintResponseCallback, void *pUserData);
 	virtual void RegisterAlternativePrintResponseCallback(FPrintCallback pfnAlternativePrintCallback, void *pAlternativeUserData);
 	virtual void ReleaseAlternativePrintResponseCallback();
+
+	virtual void RegisterCompareClientsCallback(FCompareClientsCallback pfnCallback, void *pUserData);
+	virtual void RegisterClientOnlineCallback(FClientOnlineCallback pfnCallback, void *pUserData);
+	
+	virtual bool CompareClients(int ClientLevel, int Victim);
+	virtual bool ClientOnline(int ClientId);
 
 	virtual void Print(int Level, const char *pFrom, const char *pStr);
 	virtual void PrintResponse(int Level, const char *pFrom, const char *pStr);

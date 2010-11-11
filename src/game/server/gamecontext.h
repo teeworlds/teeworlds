@@ -186,8 +186,6 @@ public:
 	void SendVoteStatus(int ClientId, int Total, int Yes, int No);
 	void AbortVoteKickOnDisconnect(int ClientId);
 	
-	bool CheatsAvailable(IConsole *pConsole, int ClientId);
-	
 	bool m_VoteKick;
 	int m_VoteCreator;
 	int64 m_VoteCloseTime;
