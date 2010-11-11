@@ -120,7 +120,7 @@ void CGameContext::CreateHammerHit(vec2 P, int Mask)
 }
 
 
-void CGameContext::CreateExplosion(vec2 P, int Owner, int Weapon, bool NoDamage, int Mask)
+void CGameContext::CreateExplosion(vec2 P, int Owner, int Weapon, bool NoDamage, int ActivatedTeam,int Mask)
 {
 	// create the event
 	NETEVENT_EXPLOSION *ev = (NETEVENT_EXPLOSION *)m_Events.Create(NETEVENTTYPE_EXPLOSION, sizeof(NETEVENT_EXPLOSION), Mask);
@@ -150,6 +150,7 @@ void CGameContext::CreateExplosion(vec2 P, int Owner, int Weapon, bool NoDamage,
 				if((g_Config.m_SvHit||NoDamage) || Owner == apEnts[i]->m_pPlayer->GetCID())
 				{
 					if(Owner != -1 && apEnts[i]->m_Alive && !apEnts[i]->CanCollide(Owner)) continue;
+					if(Owner == -1 && apEnts[i]->m_Alive && apEnts[i]->Team() != ActivatedTeam) continue;
 					apEnts[i]->TakeDamage(ForceDir*Dmg*2, (int)Dmg, Owner, Weapon);
 					if(!g_Config.m_SvHit||NoDamage) break;
 				}
