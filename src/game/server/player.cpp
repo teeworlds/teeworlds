@@ -35,7 +35,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 
 CPlayer::~CPlayer()
 {
-	if(!Character) Character->Destroy();
+	if(Character) Character->Destroy();
 }
 
 void CPlayer::Tick()
