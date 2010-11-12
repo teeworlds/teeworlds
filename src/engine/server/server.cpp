@@ -1604,6 +1604,8 @@ void CServer::RegisterCommands()
 
 	Console()->Register("login", "?s", CFGFLAG_SERVER, ConLogin, this, "Allows you access to rcon if no password is given, or changes your level if a password is given", -1);
 	Console()->Register("auth", "?s", CFGFLAG_SERVER, ConLogin, this, "Allows you access to rcon if no password is given, or changes your level if a password is given", -1);
+
+	Console()->Register("cmdlist", "", CFGFLAG_SERVER, ConCmdList, this, "Shows the list of all commands", -1);
 }	
 
 
