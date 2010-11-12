@@ -76,6 +76,10 @@ public:
 	class CGameContext *GameServer() { return GameWorld()->GameServer(); }
 	class IServer *Server() { return GameWorld()->Server(); }
 	
+	void MarkDestroy() {
+		m_MarkedForDestroy = true;
+	}
+	
 	
 	CEntity *TypeNext() { return m_pNextTypeEntity; }
 	CEntity *TypePrev() { return m_pPrevTypeEntity; }

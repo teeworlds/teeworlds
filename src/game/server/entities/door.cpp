@@ -25,7 +25,7 @@ void CDoor::Open(int Tick, bool ActivatedTeam[])
 {
 	for (int i = 0; i < MAX_CLIENTS; ++i) {
 		if(ActivatedTeam[i]) m_EvalTick[i] = Tick;
-		m_Opened[i] = ActivatedTeam[i];
+		//m_Opened[i] = ActivatedTeam[i];
 		if(ActivatedTeam[i]) Open(i);
 	}
 }
@@ -62,7 +62,7 @@ void CDoor::Close(int Team)
 void CDoor::Reset()
 {
 	for (int i = 0; i < MAX_CLIENTS; ++i) {
-		m_Opened[i] = false;
+		//m_Opened[i] = false;
 		Close(i);
 	}
 }
