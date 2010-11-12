@@ -1,12 +1,25 @@
 /*
-   Copyright 2007 - 2008 MySQL AB, 2008 - 2009 Sun Microsystems, Inc.  All rights reserved.
+  Copyright (c) 2008, 2010, Oracle and/or its affiliates. All rights reserved.
 
-   The MySQL Connector/C++ is licensed under the terms of the GPL
-   <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>, like most
-   MySQL Connectors. There are special exceptions to the terms and
-   conditions of the GPL as it is applied to this software, see the
-   FLOSS License Exception
-   <http://www.mysql.com/about/legal/licensing/foss-exception.html>.
+  The MySQL Connector/C++ is licensed under the terms of the GPLv2
+  <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>, like most
+  MySQL Connectors. There are special exceptions to the terms and
+  conditions of the GPLv2 as it is applied to this software, see the
+  FLOSS License Exception
+  <http://www.mysql.com/about/legal/licensing/foss-exception.html>.
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published
+  by the Free Software Foundation; version 2 of the License.
+
+  This program is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+  for more details.
+
+  You should have received a copy of the GNU General Public License along
+  with this program; if not, write to the Free Software Foundation, Inc.,
+  51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 */
 
 #ifndef _SQL_WARNING_H_
@@ -16,6 +29,7 @@
 #include <stdexcept>
 #include <string>
 #include <memory>
+#include "sqlstring.h"
 
 namespace sql
 {
@@ -27,66 +41,25 @@ namespace sql
 
 class SQLWarning
 {
-protected:
-
-	const std::string	sql_state;
-	const int			errNo;
-	SQLWarning *		next;
-	const std::string	descr;
-
 public:
 
-	SQLWarning(const std::string& reason, const std::string& SQLState, int vendorCode) :sql_state(SQLState), errNo(vendorCode),descr(reason)
-	{
-	}
+	SQLWarning(){}
 
-	SQLWarning(const std::string& reason, const std::string& SQLState) :sql_state (SQLState), errNo(0), descr(reason)
-	{
-	}
+	virtual const sql::SQLString & getMessage() const = 0;
 
-	SQLWarning(const std::string& reason) : sql_state ("HY000"), errNo(0), descr(reason)
-	{
-	}
+	virtual const sql::SQLString & getSQLState() const = 0;
 
-	SQLWarning() : sql_state ("HY000"), errNo(0) {}
+	virtual int getErrorCode() const = 0;
 
+	virtual const SQLWarning * getNextWarning() const = 0;
 
-	const std::string & getMessage() const
-	{
-		return descr;
-	}
-
-
-	const std::string & getSQLState() const
-	{
-		return sql_state;
-	}
-
-	int getErrorCode() const
-	{
-		return errNo;
-	}
-
-	const SQLWarning * getNextWarning() const
-	{
-		return next;
-	}
-
-	void setNextWarning(SQLWarning * _next)
-	{
-		next = _next;
-	}
-
-	virtual ~SQLWarning() throw () {};
+	virtual void setNextWarning(const SQLWarning * _next) = 0;
 
 protected:
 
-	SQLWarning(const SQLWarning& e) : sql_state(e.sql_state), errNo(e.errNo), next(e.next), descr(e.descr) {}
+	virtual ~SQLWarning(){};
 
-	virtual SQLWarning * copy()
-	{
-		return new SQLWarning(*this);
-	}
+	SQLWarning(const SQLWarning& e){};
 
 private:
 	const SQLWarning & operator = (const SQLWarning & rhs);
