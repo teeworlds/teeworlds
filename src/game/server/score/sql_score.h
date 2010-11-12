@@ -63,7 +63,7 @@ struct CSqlScoreData
 {
 	CSqlScore *m_pSqlData;
 	int m_ClientID;
-	char m_aName[16];
+	char m_aName[64];
 	float m_Time;
 	float m_aCpCurrent[NUM_CHECKPOINTS];
 	int m_Num;
