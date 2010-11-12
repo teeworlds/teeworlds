@@ -43,7 +43,6 @@ CONSOLE_COMMAND("down", "v", CFGFLAG_SERVER|CMDFLAG_CHEAT|CMDFLAG_HELPERCMD, Con
 CONSOLE_COMMAND("move", "vii", CFGFLAG_SERVER|CMDFLAG_CHEAT|CMDFLAG_HELPERCMD, ConMove, this, "First optional parameter is client id, next parameters are x-axis change and y-axis change (1 = 1 tile)", 1)
 CONSOLE_COMMAND("move_raw", "vii", CFGFLAG_SERVER|CMDFLAG_CHEAT|CMDFLAG_HELPERCMD, ConMoveRaw, this, "First optional parameter is client id, next parameters are x-axis change and y-axis change (1 = 1 pixel)", 1)
 CONSOLE_COMMAND("broadtime", "", CFGFLAG_SERVER, ConBroadTime, this, "Toggles Showing the time string in race", -1)
-CONSOLE_COMMAND("cmdlist", "", CFGFLAG_SERVER, ConCmdList, this, "Shows the list of all commands", -1)
 CONSOLE_COMMAND("credits", "", CFGFLAG_SERVER, ConCredits, this, "Shows the credits of the DDRace mod", -1)
 CONSOLE_COMMAND("emote", "?si", CFGFLAG_SERVER, ConEyeEmote, this, "Sets your tee's eye emote", -1)
 CONSOLE_COMMAND("broadmsg", "", CFGFLAG_SERVER, ConToggleBroadcast, this, "Toggle Showing the Server's Broadcast message during race", -1)

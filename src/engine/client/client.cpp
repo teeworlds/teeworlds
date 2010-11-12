@@ -1962,6 +1962,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("login", "?s", CFGFLAG_SERVER, 0, 0, "Allows you access to rcon if no password is given, or changes your level if a password is given", -1);
 	m_pConsole->Register("auth", "?s", CFGFLAG_SERVER, 0, 0, "Allows you access to rcon if no password is given, or changes your level if a password is given", -1);
 	m_pConsole->Register("vote", "r", CFGFLAG_SERVER, 0, 0, "Forces the current vote to result in r (Yes/No)", 3);
+	m_pConsole->Register("cmdlist", "", CFGFLAG_SERVER, 0, 0, "Shows the list of all commands", 0);
 
 	#define CONSOLE_COMMAND(name, params, flags, callback, userdata, help, level) m_pConsole->Register(name, params, flags, 0, 0, help, level);
 	#include <game/ddracecommands.h>
@@ -1978,7 +1979,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("play", "r", CFGFLAG_CLIENT, Con_Play, this, "Play the file specified", 0);
 	m_pConsole->Register("record", "s", CFGFLAG_CLIENT, Con_Record, this, "Record to the file", 0);
 	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording", 0);
-
+	
 	m_pConsole->Register("add_favorite", "s", CFGFLAG_CLIENT, Con_AddFavorite, this, "Add a server as a favorite", 0);
 }
 
