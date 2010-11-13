@@ -150,7 +150,7 @@ void CGameContext::CreateExplosion(vec2 P, int Owner, int Weapon, bool NoDamage,
 				if((g_Config.m_SvHit||NoDamage) || Owner == apEnts[i]->m_pPlayer->GetCID())
 				{
 					if(Owner != -1 && apEnts[i]->m_Alive && !apEnts[i]->CanCollide(Owner)) continue;
-					if(Owner == -1 && apEnts[i]->m_Alive && apEnts[i]->Team() != ActivatedTeam) continue;
+					if(Owner == -1 && ActivatedTeam != -1 && apEnts[i]->m_Alive && apEnts[i]->Team() != ActivatedTeam) continue;
 					apEnts[i]->TakeDamage(ForceDir*Dmg*2, (int)Dmg, Owner, Weapon);
 					if(!g_Config.m_SvHit||NoDamage) break;
 				}

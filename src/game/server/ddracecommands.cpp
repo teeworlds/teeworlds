@@ -1,5 +1,9 @@
 #include "gamecontext.h"
-
+#include <engine/shared/config.h>
+#include <engine/server/server.h>
+#include <game/server/teams.h>
+#include <game/server/gamemodes/DDRace.h>
+#include <game/version.h>
 
 void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
