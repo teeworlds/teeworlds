@@ -19,7 +19,7 @@ class CDragger : public CEntity
 public:
 
 
-	CDragger(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW, int CatchedTeam);
+	CDragger(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW, int CatchedTeam, int Layer = 0, int Number = 0);
 
 	virtual void Reset();
 	virtual void Tick();
@@ -31,7 +31,7 @@ class CDraggerTeam {
 	
 public:
 	
-	CDraggerTeam(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW=false);
+	CDraggerTeam(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW=false, int Layer = 0, int Number = 0);
 	//~CDraggerTeam();
 };
 

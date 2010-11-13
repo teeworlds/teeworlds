@@ -12,9 +12,11 @@ const int RANGE=700;
 //////////////////////////////////////////////////
 // CGun
 //////////////////////////////////////////////////
-CGun::CGun(CGameWorld *pGameWorld, vec2 Pos, bool Freeze, bool Explosive)
+CGun::CGun(CGameWorld *pGameWorld, vec2 Pos, bool Freeze, bool Explosive, int Layer, int Number)
 : CEntity(pGameWorld, NETOBJTYPE_LASER)
 {
+	m_Layer = Layer;
+	m_Number = Number;
 	m_Delay = Server()->TickSpeed()*0.3f;
 	m_Pos = Pos;
 	m_EvalTick = Server()->Tick();
@@ -43,6 +45,7 @@ void CGun::Fire()
 		CCharacter *Target = Ents[i];
 		//now gun doesn't affect on super
 		if(Target->Team() == TEAM_SUPER) continue;
+		if(m_Layer == LAYER_SWITCH && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[Target->Team()]) continue;
 		int res = GameServer()->Collision()->IntersectLine(m_Pos, Target->m_Pos,0,0,false);
 		if (!res)
 		{

@@ -5,7 +5,6 @@
 #include <game/server/gamecontroller.h>
 #include <game/server/teams.h>
 #include <game/server/entities/door.h>
-#include <game/server/entities/trigger.h>
 
 #include <vector>
 #include <map>
@@ -23,17 +22,6 @@ public:
 	std::map < int , std::vector < vec2 > > m_TeleOuts;
 	
 	void InitTeleporter();
-	void InitSwitcher();
-
-	struct SDoors
-	{
-		int m_Number;
-		vec2 m_Pos;
-		CDoor * m_Address;
-	};
-
-	std::vector < SDoors > m_SDoors;
-
 	virtual void Tick();
 };
 #endif

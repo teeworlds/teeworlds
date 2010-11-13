@@ -939,7 +939,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		// Switch team on given client and kill/respawn him
 		if(m_pController->CanJoinTeam(pMsg->m_Team, ClientId))
 		{
-			//if(m_pController->CanChangeTeam(pPlayer, pMsg->m_Team))
+			//if(m_pController->CanChangeTeam(pPlayer, pMsg->m_Number))
 			//{
 			//CCharacter* pChr=GetPlayerChar(ClientId);
 			if(pPlayer->GetTeam()==-1 && pPlayer->m_InfoSaved)
@@ -951,7 +951,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				pPlayer->SetTeam(pMsg->m_Team);
 			}
 
-				//if(pChr && pMsg->m_Team!=-1 && pChr->m_Paused)
+				//if(pChr && pMsg->m_Number!=-1 && pChr->m_Paused)
 					//pChr->LoadPauseData();
 				//TODO:Check if this system Works
 
@@ -2190,10 +2190,12 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	// create all entities from the game layer
 	CMapItemLayerTilemap *pTileMap = m_Layers.GameLayer();
 	CTile *pTiles = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Data);
-	CTile *pFront=0;
+	CTile *pFront = 0;
+	CSwitchTile *pSwitch = 0;
 	if(m_Layers.FrontLayer())
 		pFront = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Front);
-	
+	if(m_Layers.SwitchLayer())
+		pSwitch = (CSwitchTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Switch);
 
 	for(int y = 0; y < pTileMap->m_Height; y++)
 	{
@@ -2211,11 +2213,11 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 			if(Index >= ENTITY_OFFSET)
 			{
 				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
-				m_pController->OnEntity(Index-ENTITY_OFFSET, Pos, false, pTiles[y*pTileMap->m_Width+x].m_Flags);
+				m_pController->OnEntity(Index-ENTITY_OFFSET, Pos, LAYER_GAME, pTiles[y*pTileMap->m_Width+x].m_Flags);
 			}
 			if(pFront)
 			{
-				int Index = pFront[y*pTileMap->m_Width+x].m_Index;
+				Index = pFront[y*pTileMap->m_Width+x].m_Index;
 				if(Index == TILE_NPC)
 					m_Tuning.Set("player_collision",0);
 				else if(Index == TILE_EHOOK)
@@ -2227,7 +2229,16 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 				if(Index >= ENTITY_OFFSET)
 				{
 					vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
-					m_pController->OnEntity(Index-ENTITY_OFFSET, Pos, true, pFront[y*pTileMap->m_Width+x].m_Flags);
+					m_pController->OnEntity(Index-ENTITY_OFFSET, Pos, LAYER_FRONT, pFront[y*pTileMap->m_Width+x].m_Flags);
+				}
+			}
+			if(pSwitch)
+			{
+				Index = pSwitch[y*pTileMap->m_Width+x].m_Type;
+				if(Index >= ENTITY_OFFSET)
+				{
+					vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
+					m_pController->OnEntity(Index-ENTITY_OFFSET, Pos, LAYER_SWITCH, pSwitch[y*pTileMap->m_Width+x].m_Flags, pSwitch[y*pTileMap->m_Width+x].m_Number);//TODO:GFX Add Flags to switch layer
 				}
 			}
 		}

@@ -16,7 +16,9 @@ public:
 		bool Explosive,
 		float Force,
 		int SoundImpact,
-		int Weapon
+		int Weapon,
+		int Layer = 0,
+		int Number = 0
 	);
 
 	vec2 GetPos(float Time);
@@ -40,7 +42,7 @@ private:
 	bool m_Explosive;
 	int m_Bouncing;
 	bool m_Freeze;
-	bool m_Collised; 
+	bool m_Collised;
 };
 
 #endif

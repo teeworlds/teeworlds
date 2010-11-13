@@ -915,17 +915,18 @@ void CCharacter::HandleTiles(int Index)
 	m_TileFIndexB = GameServer()->Collision()->GetFTileIndex(MapIndexB);
 	m_TileFFlagsB = GameServer()->Collision()->GetFTileFlags(MapIndexB);
 	m_TileFIndexT = GameServer()->Collision()->GetFTileIndex(MapIndexT);
-	m_TileFFlagsT = GameServer()->Collision()->GetFTileFlags(MapIndexT);
-	m_TileSIndex = GameServer()->Collision()->GetDTileIndex(MapIndex, Team());
-	m_TileSFlags = GameServer()->Collision()->GetDTileFlags(MapIndex, Team());
-	m_TileSIndexL = GameServer()->Collision()->GetDTileIndex(MapIndexL, Team());
-	m_TileSFlagsL = GameServer()->Collision()->GetDTileFlags(MapIndexL, Team());
-	m_TileSIndexR = GameServer()->Collision()->GetDTileIndex(MapIndexR, Team());
-	m_TileSFlagsR = GameServer()->Collision()->GetDTileFlags(MapIndexR, Team());
-	m_TileSIndexB = GameServer()->Collision()->GetDTileIndex(MapIndexB, Team());
-	m_TileSFlagsB = GameServer()->Collision()->GetDTileFlags(MapIndexB, Team());
-	m_TileSIndexT = GameServer()->Collision()->GetDTileIndex(MapIndexT, Team());
-	m_TileSFlagsT = GameServer()->Collision()->GetDTileFlags(MapIndexT, Team());
+	m_TileFFlagsT = GameServer()->Collision()->GetFTileFlags(MapIndexT);//
+	m_TileSIndex = (GameServer()->Collision()->m_pSwitchers && GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndex)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileIndex(MapIndex):0:0;
+	m_TileSFlags = (GameServer()->Collision()->m_pSwitchers && GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndex)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileFlags(MapIndex):0:0;
+	m_TileSIndexL = (GameServer()->Collision()->m_pSwitchers && GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndexL)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileIndex(MapIndexL):0:0;
+	m_TileSFlagsL = (GameServer()->Collision()->m_pSwitchers &&GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndexL)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileFlags(MapIndexL):0:0;
+	m_TileSIndexR = (GameServer()->Collision()->m_pSwitchers &&GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndexR)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileIndex(MapIndexR):0:0;
+	m_TileSFlagsR = (GameServer()->Collision()->m_pSwitchers &&GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndexR)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileFlags(MapIndexR):0:0;
+	m_TileSIndexB = (GameServer()->Collision()->m_pSwitchers &&GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndexB)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileIndex(MapIndexB):0:0;
+	m_TileSFlagsB = (GameServer()->Collision()->m_pSwitchers &&GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndexB)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileFlags(MapIndexB):0:0;
+	m_TileSIndexT = (GameServer()->Collision()->m_pSwitchers &&GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndexT)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileIndex(MapIndexT):0:0;
+	m_TileSFlagsT = (GameServer()->Collision()->m_pSwitchers &&GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndexT)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileFlags(MapIndexT):0:0;
+	//dbg_msg("Tiles","%d, %d, %d, %d, %d", m_TileSIndex, m_TileSIndexL, m_TileSIndexR, m_TileSIndexB, m_TileSIndexT);
 	//Sensitivity
 	int S1 = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f));
 	int S2 = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f));
@@ -1013,6 +1014,11 @@ void CCharacter::HandleTiles(int Index)
 		m_Core.m_Vel.y = 0;
 		m_Core.m_Jumped = 0;
 	}
+	// handle switch tiles
+	if(GameServer()->Collision()->IsSwitch(MapIndex) == TILE_SWITCHOPEN)
+		GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetSWitchNumber(MapIndex)].m_Status[Team()] = true;
+	if(GameServer()->Collision()->IsSwitch(MapIndex) == TILE_SWITCHCLOSE)
+		GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetSWitchNumber(MapIndex)].m_Status[Team()] = false;
 	// handle speedup tiles
 	if(GameServer()->Collision()->IsSpeedup(MapIndex) == TILE_BOOST)
 	{
@@ -1095,27 +1101,27 @@ void CCharacter::HandleTiles(int Index)
 	}
 	m_LastBooster = MapIndex;
 	int z = GameServer()->Collision()->IsTeleport(MapIndex);
-	if(z && ((CGameControllerDDRace*)GameServer()->m_pController)->m_TeleOuts[z-1].size())
+	if(z && DDRace()->m_TeleOuts[z-1].size())
 	{
 		m_Core.m_HookedPlayer = -1;
 		m_Core.m_HookState = HOOK_RETRACTED;
 		m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
 		m_Core.m_HookState = HOOK_RETRACTED;
-		int Num = (((CGameControllerDDRace*)GameServer()->m_pController)->m_TeleOuts[z-1].size());
-		m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_TeleOuts[z-1][(!Num)?Num:rand() % Num];
+		int Num = (DDRace()->m_TeleOuts[z-1].size());
+		m_Core.m_Pos = DDRace()->m_TeleOuts[z-1][(!Num)?Num:rand() % Num];
 		m_Core.m_HookPos = m_Core.m_Pos;
 		return;
 	}
 	int evilz = GameServer()->Collision()->IsEvilTeleport(MapIndex);
-	if(evilz && !m_Super && ((CGameControllerDDRace*)GameServer()->m_pController)->m_TeleOuts[evilz-1].size())
+	if(evilz && !m_Super && DDRace()->m_TeleOuts[evilz-1].size())
 	{
 		m_Core.m_HookedPlayer = -1;
 		m_Core.m_HookState = HOOK_RETRACTED;
 		m_Core.m_TriggeredEvents |= COREEVENT_HOOK_RETRACT;
 		m_Core.m_HookState = HOOK_RETRACTED;
 		GameWorld()->ReleaseHooked(GetPlayer()->GetCID());
-		int Num = (((CGameControllerDDRace*)GameServer()->m_pController)->m_TeleOuts[evilz-1].size());
-		m_Core.m_Pos = ((CGameControllerDDRace*)GameServer()->m_pController)->m_TeleOuts[evilz-1][(!Num)?Num:rand() % Num];
+		int Num = (DDRace()->m_TeleOuts[evilz-1].size());
+		m_Core.m_Pos = DDRace()->m_TeleOuts[evilz-1][(!Num)?Num:rand() % Num];
 		m_Core.m_HookPos = m_Core.m_Pos;
 		m_Core.m_Vel = vec2(0,0);
 		return;

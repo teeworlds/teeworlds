@@ -208,7 +208,7 @@ class CCharacterCore
 	int m_TileFFlagsB;
 	int m_TileSIndexB;
 	int m_TileSFlagsB;
-
+	bool IsRightTeam(int MapIndex);
 	
 public:
 	int m_Id;
@@ -230,7 +230,7 @@ public:
 	
 	bool m_pReset;
 	int m_TriggeredEvents;
-	
+	class CCollision *Collision() { return m_pCollision; }
 	void Init(CWorldCore *pWorld, CCollision *pCollision, CTeamsCore* pTeams);
 	void Reset();
 	void Tick(bool UseInput);

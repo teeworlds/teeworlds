@@ -20,7 +20,7 @@ class CGun : public CEntity
 	int m_Delay;
 	
 public:
-	CGun(CGameWorld *pGameWorld, vec2 Pos, bool Freeze, bool Explosive);
+	CGun(CGameWorld *pGameWorld, vec2 Pos, bool Freeze, bool Explosive, int Layer = 0, int Number = 0);
 
 	virtual void Reset();
 	virtual void Tick();

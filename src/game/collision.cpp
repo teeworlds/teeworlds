@@ -22,12 +22,15 @@ CCollision::CCollision()
 	m_pFront = 0;
 	m_pSwitch = 0;
 	m_pDoor = 0;
+	m_pSwitchers = 0;
 }
 
 void CCollision::Dest()
 {
 	if(m_pDoor)
 		delete[] m_pDoor;
+	if(m_pSwitchers)
+		delete[] m_pSwitchers;
 	m_pTiles = 0;
 	m_Width = 0;
 	m_Height = 0;
@@ -37,12 +40,14 @@ void CCollision::Dest()
 	m_pFront = 0;
 	m_pSwitch = 0;
 	m_pDoor = 0;
+	m_pSwitchers = 0;
 }
 
 void CCollision::Init(class CLayers *pLayers)
 {
 	if(m_pLayers) m_pLayers->Dest();
 	Dest();
+	int NumSwitchers = 0;
 	m_pLayers = pLayers;
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
@@ -53,71 +58,97 @@ void CCollision::Init(class CLayers *pLayers)
 		m_pSpeedup = static_cast<CSpeedupTile *>(m_pLayers->Map()->GetData(m_pLayers->SpeedupLayer()->m_Speedup));
 	if(m_pLayers->SwitchLayer())
 	{
-		m_pSwitch = static_cast<CTeleTile *>(m_pLayers->Map()->GetData(m_pLayers->SwitchLayer()->m_Switch));
+		m_pSwitch = static_cast<CSwitchTile *>(m_pLayers->Map()->GetData(m_pLayers->SwitchLayer()->m_Switch));
 		m_pDoor = new CDoorTile[m_Width*m_Height];
+		mem_zero(m_pDoor, m_Width*m_Height*sizeof(m_pDoor));
 	}
 	else
+	{
 		m_pDoor = 0;
+		m_pSwitchers = 0;
+	}
 	if(m_pLayers->FrontLayer())
 	{
 		m_pFront = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->FrontLayer()->m_Front));
-		for(int i = 0; i < m_Width*m_Height; i++)
-			{
-				int Index = m_pFront[i].m_Index;
-				if(Index > TILE_NPH)
-					continue;
 
-				switch(Index)
-				{
-				case TILE_DEATH:
-					m_pFront[i].m_Index = COLFLAG_DEATH;
-					break;
-				case TILE_SOLID:
-					m_pFront[i].m_Index = 0;
-					break;
-				case TILE_NOHOOK:
-					m_pFront[i].m_Index = 0;
-					break;
-				case TILE_NOLASER:
-					m_pFront[i].m_Index = COLFLAG_NOLASER;
-					break;
-				default:
-					m_pFront[i].m_Index = 0;
-				}
-
-				// DDRace tiles
-				if(Index == TILE_THROUGH || (Index >= TILE_FREEZE && Index <= TILE_UNFREEZE) || (Index >= TILE_TELEIN && Index<=TILE_BOOST) || (Index >= TILE_BEGIN && Index <= TILE_STOPA) || Index == TILE_CP || Index == TILE_CP_F || (Index >= TILE_NPC && Index <= TILE_NPH))
-					m_pFront[i].m_Index = Index;
-			}
 	}
-
 	for(int i = 0; i < m_Width*m_Height; i++)
 	{
-		int Index = m_pTiles[i].m_Index;
-		if(Index > TILE_NPH)
-			continue;
-
-		switch(Index)
+		int Index;
+		if(m_pSwitch)
 		{
-		case TILE_DEATH:
-			m_pTiles[i].m_Index = COLFLAG_DEATH;
-			break;
-		case TILE_SOLID:
-			m_pTiles[i].m_Index = COLFLAG_SOLID;
-			break;
-		case TILE_NOHOOK:
-			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
-			break;
-		case TILE_NOLASER:
-			m_pTiles[i].m_Index = COLFLAG_NOLASER;
-			break;
-		default:
-			m_pTiles[i].m_Index = 0;
+			if(m_pSwitch[i].m_Number > NumSwitchers)
+				NumSwitchers = m_pSwitch[i].m_Number;
+			if(m_pSwitch[i].m_Number)
+				m_pDoor[i].m_Number = m_pSwitch[i].m_Number;
+			else
+				m_pDoor[i].m_Number = 0;
 		}
+		if(m_pFront)
+		{
+			Index = m_pFront[i].m_Index;
+			if(Index > TILE_NPH)
+				continue;
 
-		// DDRace tiles
-		if(Index == TILE_THROUGH || (Index >= TILE_FREEZE && Index <= TILE_UNFREEZE) || (Index >= TILE_TELEIN && Index<=TILE_BOOST) || (Index >= TILE_BEGIN && Index <= TILE_STOPA) || Index == TILE_CP || Index == TILE_CP_F || (Index >= TILE_NPC && Index <= TILE_NPH))
-			m_pTiles[i].m_Index = Index;
+			switch(Index)
+			{
+			case TILE_DEATH:
+				m_pFront[i].m_Index = COLFLAG_DEATH;
+				break;
+			case TILE_SOLID:
+				m_pFront[i].m_Index = 0;
+				break;
+			case TILE_NOHOOK:
+				m_pFront[i].m_Index = 0;
+				break;
+			case TILE_NOLASER:
+				m_pFront[i].m_Index = COLFLAG_NOLASER;
+				break;
+			default:
+				m_pFront[i].m_Index = 0;
+			}
+
+			// DDRace tiles
+			if(Index == TILE_THROUGH || (Index >= TILE_FREEZE && Index <= TILE_UNFREEZE) || (Index >= TILE_SWITCHOPEN && Index<=TILE_BOOST) || (Index >= TILE_BEGIN && Index <= TILE_STOPA) || Index == TILE_CP || Index == TILE_CP_F || (Index >= TILE_NPC && Index <= TILE_NPH))
+				m_pFront[i].m_Index = Index;
+		}
+		Index = m_pTiles[i].m_Index;
+		if(Index <= TILE_NPH)
+		{
+			switch(Index)
+			{
+			case TILE_DEATH:
+				m_pTiles[i].m_Index = COLFLAG_DEATH;
+				break;
+			case TILE_SOLID:
+				m_pTiles[i].m_Index = COLFLAG_SOLID;
+				break;
+			case TILE_NOHOOK:
+				m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
+				break;
+			case TILE_NOLASER:
+				m_pTiles[i].m_Index = COLFLAG_NOLASER;
+				break;
+			default:
+				m_pTiles[i].m_Index = 0;
+			}
+
+			// DDRace tiles
+			if(Index == TILE_THROUGH || (Index >= TILE_FREEZE && Index <= TILE_UNFREEZE) || (Index >= TILE_SWITCHOPEN && Index<=TILE_BOOST) || (Index >= TILE_BEGIN && Index <= TILE_STOPA) || Index == TILE_CP || Index == TILE_CP_F || (Index >= TILE_NPC && Index <= TILE_NPH))
+				m_pTiles[i].m_Index = Index;
+		}
+	}
+	if(NumSwitchers)
+	{
+		m_pSwitchers = new SSwitchers[NumSwitchers+1];
+	
+		for (int i = 0; i < NumSwitchers+1; ++i)
+		{
+			for (int j = 0; j < 16; ++j)
+			{
+				m_pSwitchers[i].m_Status[j] = true;
+			}
+		}
 	}
 }
 
@@ -276,15 +307,29 @@ int CCollision::GetFTile(int x, int y)
 		return 0;
 }
 
-int CCollision::Entity(int x, int y, bool Front)
+int CCollision::Entity(int x, int y, int Layer)
 {
 	if((0 > x || x >= m_Width) || (0 > y || y >= m_Height))
 	{
 		dbg_msg("CCollision::Entity","Something is VERY wrong please report this at github");
 		return 0;
 	}
-	int Index = Front?m_pFront[y*m_Width+x].m_Index:m_pTiles[y*m_Width+x].m_Index;
-	return Index-ENTITY_OFFSET;
+	switch (Layer)
+	{
+		case LAYER_GAME:
+			return m_pTiles[y*m_Width+x].m_Index - ENTITY_OFFSET;
+		case LAYER_FRONT:
+			return m_pFront[y*m_Width+x].m_Index - ENTITY_OFFSET;
+		case LAYER_SWITCH:
+			return m_pSwitch[y*m_Width+x].m_Type - ENTITY_OFFSET;
+		case LAYER_TELE:
+			return m_pTele[y*m_Width+x].m_Type - ENTITY_OFFSET;
+		case LAYER_SPEEDUP:
+			return m_pSpeedup[y*m_Width+x].m_Type - ENTITY_OFFSET;
+		default:
+			return 0;
+			break;
+	}
 }
 
 void CCollision::SetCollisionAt(float x, float y, int flag)
@@ -295,62 +340,38 @@ void CCollision::SetCollisionAt(float x, float y, int flag)
    m_pTiles[ny * m_Width + nx].m_Index = flag;
 }
 
-void CCollision::SetDTile(float x, float y, int Team, bool State)
+void CCollision::SetDCollisionAt(float x, float y, int Type, int Flags, int Number)
 {
-	if(!m_pDoor) 
-		return;
-   int nx = clamp(round(x)/32, 0, m_Width-1);
-   int ny = clamp(round(y)/32, 0, m_Height-1);
-
-	if(Team == 99)
-	{
-		for (int i = 0; i < (MAX_CLIENTS - 1); ++i)
-		{
-			m_pDoor[ny * m_Width + nx].m_Team[i] = State;
-		}
-	}
-   else
-	   m_pDoor[ny * m_Width + nx].m_Team[Team] = State;
-}
-
-void CCollision::SetDCollisionAt(float x, float y, int Type, int Team, int Flags)
-{
-	if(!m_pDoor || ((Team < 0 || Team > (MAX_CLIENTS - 1)) && Team !=99))
+	if(!m_pDoor)
 		return;
    int nx = clamp(round(x)/32, 0, m_Width-1);
    int ny = clamp(round(y)/32, 0, m_Height-1);
 
    m_pDoor[ny * m_Width + nx].m_Index = Type;
-   m_pDoor[ny * m_Width + nx].m_Flags = Flags;// currently only doors in all sides use this so no need for rotation
-	if(Team == 99)
-	{
-		for (int i = 0; i < (MAX_CLIENTS - 1); ++i)
-		{
-			m_pDoor[ny * m_Width + nx].m_Team[i] = true;
-		}
-	}
-   else
-	   m_pDoor[ny * m_Width + nx].m_Team[Team] = true;
+   m_pDoor[ny * m_Width + nx].m_Flags = Flags;
+   m_pDoor[ny * m_Width + nx].m_Number = Number;
 }
 
-int CCollision::GetDTileIndex(int Index,int Team)
+int CCollision::GetDTileIndex(int Index)
 {
-	if(!m_pDoor || Index < 0 || !m_pDoor[Index].m_Index || ((Team < 0 || Team > (MAX_CLIENTS - 1)) && Team !=99))
+	if(!m_pDoor || Index < 0 || !m_pDoor[Index].m_Index)
 		return 0;
+	return m_pDoor[Index].m_Index;
+}
 
-	if(m_pDoor[Index].m_Team[Team])
-		return m_pDoor[Index].m_Index;
+int CCollision::GetDTileNumber(int Index)
+{
+	if(!m_pDoor || Index < 0 || !m_pDoor[Index].m_Index)
+		return 0;
+	if(m_pDoor[Index].m_Number) return m_pDoor[Index].m_Number;
 	return 0;
 }
 
-int CCollision::GetDTileFlags(int Index,int Team)
+int CCollision::GetDTileFlags(int Index)
 {
-	if(!m_pDoor || Index < 0 || !m_pDoor[Index].m_Index || ((Team < 0 || Team > (MAX_CLIENTS - 1)) && Team !=99))
+	if(!m_pDoor || Index < 0 || !m_pDoor[Index].m_Index)
 		return 0;
-
-	if(m_pDoor[Index].m_Team[Team])
-		return m_pDoor[Index].m_Flags;
-	return 0;
+	return m_pDoor[Index].m_Flags;
 }
 
 // TODO: rewrite this smarter!
@@ -705,6 +726,32 @@ void CCollision::GetSpeedup(int Index, vec2 *Dir, int *Force, int *MaxSpeed)
 	*Dir = vec2(cos(Angle), sin(Angle));
 	if(MaxSpeed)
 		*MaxSpeed = m_pSpeedup[Index].m_MaxSpeed;
+}
+
+int CCollision::IsSwitch(int Index)
+{
+	if(Index < 0)
+		return 0;
+	if(!m_pSwitch)
+		return false;
+
+	if(m_pSwitch[Index].m_Type > 0)
+		return m_pSwitch[Index].m_Type;
+
+	return 0;
+}
+
+int CCollision::GetSWitchNumber(int Index)
+{
+	if(Index < 0)
+		return 0;
+	if(!m_pSwitch)
+		return false;
+
+	if(m_pSwitch[Index].m_Type > 0)
+		return m_pSwitch[Index].m_Number;
+
+	return 0;
 }
 
 int CCollision::IsCp(int x, int y, int* Flags)

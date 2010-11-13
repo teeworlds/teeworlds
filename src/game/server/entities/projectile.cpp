@@ -16,10 +16,14 @@ CProjectile::CProjectile
 		bool Explosive,
 		float Force,
 		int SoundImpact,
-		int Weapon
+		int Weapon,
+		int Layer,
+		int Number
 	)
 : CEntity(pGameWorld, NETOBJTYPE_PROJECTILE)
 {
+	m_Layer = Layer;
+	m_Number = Number;
 	m_Type = Type;
 	m_Pos = Pos;
 	m_Direction = Dir;
@@ -91,6 +95,7 @@ void CProjectile::Tick()
 		OwnerChar = GameServer()->GetPlayerChar(m_Owner);
 	
 	CCharacter *TargetChr = GameServer()->m_World.IntersectCharacter(PrevPos, ColPos, (m_Freeze) ? 1.0f : 6.0f, ColPos, OwnerChar);
+	if(TargetChr && m_Layer == LAYER_SWITCH && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[TargetChr->Team()]) return;
 
 	if(m_LifeSpan > -1)
 		m_LifeSpan--;

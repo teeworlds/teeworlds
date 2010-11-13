@@ -12,9 +12,11 @@
 
 
 
-CLight::CLight(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length)
+CLight::CLight(CGameWorld *pGameWorld, vec2 Pos, float Rotation, int Length, int Layer, int Number)
 : CEntity(pGameWorld, NETOBJTYPE_LASER)
 {
+	m_Layer = Layer;
+	m_Number = Number;
 	m_Tick=(Server()->TickSpeed()*0.15f);
 	m_Pos = Pos;
 	m_Rotation = Rotation;
@@ -31,6 +33,7 @@ bool CLight::HitCharacter()
 	if(HitCharacters.empty()) return false;
 	for(std::list < CCharacter * >::iterator i = HitCharacters.begin(); i != HitCharacters.end(); i++) {
 		CCharacter * Char = *i;
+		if(m_Layer == LAYER_SWITCH && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[Char->Team()]) continue;
 		Char->Freeze(Server()->TickSpeed()*3);
 	}
 	return true;
@@ -98,17 +101,39 @@ void CLight::Tick()
 
 }
 
-void CLight::Snap(int snapping_client)
+void CLight::Snap(int SnappingClient)
 {
-	if(NetworkClipped(snapping_client,m_Pos) && NetworkClipped(snapping_client,m_To))
+	if(NetworkClipped(SnappingClient,m_Pos) && NetworkClipped(SnappingClient,m_To))
 		return;
 
 	
 	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_Id, sizeof(CNetObj_Laser)));
 	pObj->m_X = (int)m_Pos.x;
 	pObj->m_Y = (int)m_Pos.y;
-	pObj->m_FromX = (int)m_To.x;
-	pObj->m_FromY = (int)m_To.y;
+
+	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
+	if(Char == 0) return;
+
+	if(Char->Team() == TEAM_SUPER)
+	{
+		pObj->m_FromX = (int)m_Pos.x;
+		pObj->m_FromY = (int)m_Pos.y;
+	}
+	else if(GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[Char->Team()])
+	{
+		pObj->m_FromX = (int)m_To.x;
+		pObj->m_FromY = (int)m_To.y;
+	}
+	else if(!GameServer()->Collision()->m_pSwitchers)
+	{
+		pObj->m_FromX = (int)m_To.x;
+		pObj->m_FromY = (int)m_To.y;
+	}
+	else
+	{
+		pObj->m_FromX = (int)m_Pos.x;
+		pObj->m_FromY = (int)m_Pos.y;
+	}
 
 
 	int start_tick = m_EvalTick;

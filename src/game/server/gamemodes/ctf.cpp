@@ -149,7 +149,7 @@ void CGameControllerCTF::Tick()
 				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == -1 || GameServer()->Collision()->IntersectLine(F->m_Pos, apCloseCCharacters[i]->m_Pos, NULL, NULL))
 					continue;
 				
-				if(apCloseCCharacters[i]->GetPlayer()->GetTeam() == F->m_Team)
+				if(apCloseCCharacters[i]->GetPlayer()->GetTeam() == F->m_Number)
 				{
 					// return the flag
 					if(!F->m_AtStand)

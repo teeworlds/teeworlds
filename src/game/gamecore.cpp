@@ -86,45 +86,55 @@ void CCharacterCore::HandleFly()
 	m_Vel.y = Temp.y;
 }
 
+bool CCharacterCore::IsRightTeam(int MapIndex)
+{
+	if(Collision()->m_pSwitchers)
+		if(m_pTeams->Team(m_Id) != TEAM_SUPER)
+			return Collision()->m_pSwitchers[Collision()->GetDTileNumber(MapIndex)].m_Status[m_pTeams->Team(m_Id)];
+	else
+		return false;
+	return false;
+}
+
 void CCharacterCore::Tick(bool UseInput)
 {
 	float PhysSize = 28.0f;
-	int MapIndex = m_pCollision->GetPureMapIndex(m_Pos);;
-	int MapIndexL = m_pCollision->GetPureMapIndex(vec2(m_Pos.x + (28/2)+4,m_Pos.y));
-	int MapIndexR = m_pCollision->GetPureMapIndex(vec2(m_Pos.x - (28/2)-4,m_Pos.y));
-	int MapIndexT = m_pCollision->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y + (28/2)+4));
-	int MapIndexB = m_pCollision->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y - (28/2)-4));
+	int MapIndex = Collision()->GetPureMapIndex(m_Pos);;
+	int MapIndexL = Collision()->GetPureMapIndex(vec2(m_Pos.x + (28/2)+4,m_Pos.y));
+	int MapIndexR = Collision()->GetPureMapIndex(vec2(m_Pos.x - (28/2)-4,m_Pos.y));
+	int MapIndexT = Collision()->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y + (28/2)+4));
+	int MapIndexB = Collision()->GetPureMapIndex(vec2(m_Pos.x,m_Pos.y - (28/2)-4));
 	//dbg_msg("","N%d L%d R%d B%d T%d",MapIndex,MapIndexL,MapIndexR,MapIndexB,MapIndexT);
-	m_TileIndex = m_pCollision->GetTileIndex(MapIndex);
-	m_TileFlags = m_pCollision->GetTileFlags(MapIndex);
-	m_TileIndexL = m_pCollision->GetTileIndex(MapIndexL);
-	m_TileFlagsL = m_pCollision->GetTileFlags(MapIndexL);
-	m_TileIndexR = m_pCollision->GetTileIndex(MapIndexR);
-	m_TileFlagsR = m_pCollision->GetTileFlags(MapIndexR);
-	m_TileIndexB = m_pCollision->GetTileIndex(MapIndexB);
-	m_TileFlagsB = m_pCollision->GetTileFlags(MapIndexB);
-	m_TileIndexT = m_pCollision->GetTileIndex(MapIndexT);
-	m_TileFlagsT = m_pCollision->GetTileFlags(MapIndexT);
-	m_TileFIndex = m_pCollision->GetFTileIndex(MapIndex);
-	m_TileFFlags = m_pCollision->GetFTileFlags(MapIndex);
-	m_TileFIndexL = m_pCollision->GetFTileIndex(MapIndexL);
-	m_TileFFlagsL = m_pCollision->GetFTileFlags(MapIndexL);
-	m_TileFIndexR = m_pCollision->GetFTileIndex(MapIndexR);
-	m_TileFFlagsR = m_pCollision->GetFTileFlags(MapIndexR);
-	m_TileFIndexB = m_pCollision->GetFTileIndex(MapIndexB);
-	m_TileFFlagsB = m_pCollision->GetFTileFlags(MapIndexB);
-	m_TileFIndexT = m_pCollision->GetFTileIndex(MapIndexT);
-	m_TileFFlagsT = m_pCollision->GetFTileFlags(MapIndexT);
-	m_TileSIndex = m_pCollision->GetDTileIndex(MapIndex, m_pTeams->Team(m_Id));
-	m_TileSFlags = m_pCollision->GetDTileFlags(MapIndex, m_pTeams->Team(m_Id));
-	m_TileSIndexL = m_pCollision->GetDTileIndex(MapIndexL, m_pTeams->Team(m_Id));
-	m_TileSFlagsL = m_pCollision->GetDTileFlags(MapIndexL, m_pTeams->Team(m_Id));
-	m_TileSIndexR = m_pCollision->GetDTileIndex(MapIndexR, m_pTeams->Team(m_Id));
-	m_TileSFlagsR = m_pCollision->GetDTileFlags(MapIndexR, m_pTeams->Team(m_Id));
-	m_TileSIndexB = m_pCollision->GetDTileIndex(MapIndexB, m_pTeams->Team(m_Id));
-	m_TileSFlagsB = m_pCollision->GetDTileFlags(MapIndexB, m_pTeams->Team(m_Id));
-	m_TileSIndexT = m_pCollision->GetDTileIndex(MapIndexT, m_pTeams->Team(m_Id));
-	m_TileSFlagsT = m_pCollision->GetDTileFlags(MapIndexT, m_pTeams->Team(m_Id));
+	m_TileIndex = Collision()->GetTileIndex(MapIndex);
+	m_TileFlags = Collision()->GetTileFlags(MapIndex);
+	m_TileIndexL = Collision()->GetTileIndex(MapIndexL);
+	m_TileFlagsL = Collision()->GetTileFlags(MapIndexL);
+	m_TileIndexR = Collision()->GetTileIndex(MapIndexR);
+	m_TileFlagsR = Collision()->GetTileFlags(MapIndexR);
+	m_TileIndexB = Collision()->GetTileIndex(MapIndexB);
+	m_TileFlagsB = Collision()->GetTileFlags(MapIndexB);
+	m_TileIndexT = Collision()->GetTileIndex(MapIndexT);
+	m_TileFlagsT = Collision()->GetTileFlags(MapIndexT);
+	m_TileFIndex = Collision()->GetFTileIndex(MapIndex);
+	m_TileFFlags = Collision()->GetFTileFlags(MapIndex);
+	m_TileFIndexL = Collision()->GetFTileIndex(MapIndexL);
+	m_TileFFlagsL = Collision()->GetFTileFlags(MapIndexL);
+	m_TileFIndexR = Collision()->GetFTileIndex(MapIndexR);
+	m_TileFFlagsR = Collision()->GetFTileFlags(MapIndexR);
+	m_TileFIndexB = Collision()->GetFTileIndex(MapIndexB);
+	m_TileFFlagsB = Collision()->GetFTileFlags(MapIndexB);
+	m_TileFIndexT = Collision()->GetFTileIndex(MapIndexT);
+	m_TileFFlagsT = Collision()->GetFTileFlags(MapIndexT);
+	m_TileSIndex = (UseInput && IsRightTeam(MapIndex))?Collision()->GetDTileIndex(MapIndex):0;
+	m_TileSFlags = (UseInput && IsRightTeam(MapIndex))?Collision()->GetDTileFlags(MapIndex):0;
+	m_TileSIndexL = (UseInput && IsRightTeam(MapIndexL))?Collision()->GetDTileIndex(MapIndexL):0;
+	m_TileSFlagsL = (UseInput && IsRightTeam(MapIndexL))?Collision()->GetDTileFlags(MapIndexL):0;
+	m_TileSIndexR = (UseInput && IsRightTeam(MapIndexR))?Collision()->GetDTileIndex(MapIndexR):0;
+	m_TileSFlagsR = (UseInput && IsRightTeam(MapIndexR))?Collision()->GetDTileFlags(MapIndexR):0;
+	m_TileSIndexB = (UseInput && IsRightTeam(MapIndexB))?Collision()->GetDTileIndex(MapIndexB):0;
+	m_TileSFlagsB = (UseInput && IsRightTeam(MapIndexB))?Collision()->GetDTileFlags(MapIndexB):0;
+	m_TileSIndexT = (UseInput && IsRightTeam(MapIndexT))?Collision()->GetDTileIndex(MapIndexT):0;
+	m_TileSFlagsT = (UseInput && IsRightTeam(MapIndexT))?Collision()->GetDTileFlags(MapIndexT):0;
 	m_TriggeredEvents = 0;
 	
 	// get ground state
@@ -305,11 +315,9 @@ void CCharacterCore::Tick(bool UseInput)
 		if(m_HookedPlayer != -1)
 		{
 			CCharacterCore *p = m_pWorld->m_apCharacters[m_HookedPlayer];
-			//
-			if(p/*&&*/)
+
+			if(p)
 			{
-				//CCharacter* pl = GameServer()->m_apPlayers[m_HookedPlayer]->GetCharacter();
-				//if (pl->m_DDRaceState != DDRACE_PAUSE)
 					m_HookPos = p->m_Pos;
 			}
 			else

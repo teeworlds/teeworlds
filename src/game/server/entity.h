@@ -68,6 +68,8 @@ protected:
 	bool m_MarkedForDestroy;
 	int m_Id;
 	int m_Objtype;
+	int m_Number;
+	int m_Layer;
 public:
 	CEntity(CGameWorld *pGameWorld, int Objtype);
 	virtual ~CEntity();

@@ -12,8 +12,6 @@
 #include "gameworld.h"
 #include "player.h"
 #include "score.h"
-#include <game/server/entities/door.h>
-#include <game/server/entities/trigger.h>
 
 /*
 	Tick

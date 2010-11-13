@@ -2,9 +2,11 @@
 #include <game/server/gamecontext.h>
 #include "pickup.h"
 
-CPickup::CPickup(CGameWorld *pGameWorld, int Type, int SubType)
+CPickup::CPickup(CGameWorld *pGameWorld, int Type, int SubType, int Layer, int Number)
 : CEntity(pGameWorld, NETOBJTYPE_PICKUP)
 {
+	m_Layer = Layer;
+	m_Number = Number;
 	m_Type = Type;
 	m_Subtype = SubType;
 	m_ProximityRadius = PickupPhysSize;
@@ -62,6 +64,7 @@ void CPickup::Tick()
 		CCharacter * pChr = apEnts[i];
 		if(pChr && pChr->IsAlive())
 		{
+			if(m_Layer == LAYER_SWITCH && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[pChr->Team()]) continue;
 			bool sound = false;
 			// player picked us up, is someone was hooking us, let them go
 			int RespawnTime = -1;
@@ -72,6 +75,7 @@ void CPickup::Tick()
 					break;
 				
 				case POWERUP_ARMOR:
+					if(pChr->Team() == TEAM_SUPER) continue;
 					for(int i=WEAPON_SHOTGUN;i<NUM_WEAPONS;i++)
 					{
 						if (pChr->m_aWeapons[i].m_Got)

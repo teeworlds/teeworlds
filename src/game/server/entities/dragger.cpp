@@ -11,9 +11,11 @@
 
 const int LENGTH=700;
 
-CDragger::CDragger(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW, int CatchedTeam)
+CDragger::CDragger(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW, int CatchedTeam, int Layer, int Number)
 : CEntity(pGameWorld, NETOBJTYPE_LASER)
 {
+	m_Layer = Layer;
+	m_Number = Number;
 	m_Pos = Pos;
 	m_Strength = Strength;
 	m_EvalTick = Server()->Tick();
@@ -24,7 +26,9 @@ CDragger::CDragger(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW, in
 
 void CDragger::Move()
 {
-	if (m_Target)
+	if(m_Target && m_Target->m_Super)
+		m_Target = 0;
+	if(m_Target)
 		return;
 	CCharacter *Ents[16];
 	int Num = GameServer()->m_World.FindEntities(m_Pos,LENGTH, (CEntity**)Ents, 16, NETOBJTYPE_CHARACTER);
@@ -34,6 +38,7 @@ void CDragger::Move()
 	{
 		m_Target = Ents[i];
 		if(m_Target->Team() != m_CatchedTeam) continue;
+		if(m_Layer == LAYER_SWITCH && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[m_Target->Team()]) continue;
 		int Res = m_NW ? GameServer()->Collision()->IntersectNoLaserNW(m_Pos, m_Target->m_Pos, 0, 0) :
 			GameServer()->Collision()->IntersectNoLaser(m_Pos, m_Target->m_Pos, 0, 0);
 
@@ -144,9 +149,9 @@ void CDragger::Snap(int SnappingClient)
 	obj->m_StartTick = StartTick;
 }
 
-CDraggerTeam::CDraggerTeam(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW) {
+CDraggerTeam::CDraggerTeam(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW, int Layer, int Number){
 	for(int i = 0; i < MAX_CLIENTS; ++i) {
-		m_Draggers[i] = new CDragger(pGameWorld, Pos, Strength, NW, i);
+		m_Draggers[i] = new CDragger(pGameWorld, Pos, Strength, NW, i, Layer, Number);
 	}
 }
 

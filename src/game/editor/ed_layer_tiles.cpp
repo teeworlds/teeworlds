@@ -215,7 +215,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 				for(int x = 0; x < r.w; x++)
 				{
 					pGrabbed->m_pSwitchTile[y*pGrabbed->m_Width+x] = ((CLayerSwitch*)this)->m_pSwitchTile[(r.y+y)*m_Width+(r.x+x)];
-					if(pGrabbed->m_pSwitchTile[y*pGrabbed->m_Width+x].m_Type == ENTITY_DOOR + ENTITY_OFFSET || pGrabbed->m_pSwitchTile[y*pGrabbed->m_Width+x].m_Type == ENTITY_TRIGGER + ENTITY_OFFSET || pGrabbed->m_pSwitchTile[y*pGrabbed->m_Width+x].m_Type == ENTITY_LASER_LONG + ENTITY_OFFSET || pGrabbed->m_pSwitchTile[y*pGrabbed->m_Width+x].m_Type == ENTITY_LASER_MIDDLE + ENTITY_OFFSET || pGrabbed->m_pSwitchTile[y*pGrabbed->m_Width+x].m_Type == ENTITY_LASER_SHORT + ENTITY_OFFSET)
+					if(pGrabbed->m_pSwitchTile[y*pGrabbed->m_Width+x].m_Type == ENTITY_DOOR + ENTITY_OFFSET || pGrabbed->m_pSwitchTile[y*pGrabbed->m_Width+x].m_Type == TILE_SWITCHOPEN || pGrabbed->m_pSwitchTile[y*pGrabbed->m_Width+x].m_Type == TILE_SWITCHCLOSE || pGrabbed->m_pSwitchTile[y*pGrabbed->m_Width+x].m_Type == ENTITY_LASER_LONG + ENTITY_OFFSET || pGrabbed->m_pSwitchTile[y*pGrabbed->m_Width+x].m_Type == ENTITY_LASER_MEDIUM + ENTITY_OFFSET || pGrabbed->m_pSwitchTile[y*pGrabbed->m_Width+x].m_Type == ENTITY_LASER_SHORT + ENTITY_OFFSET)
 						m_pEditor->m_SwitchNum = pGrabbed->m_pSwitchTile[y*pGrabbed->m_Width+x].m_Number;
 				}
 	}
@@ -287,7 +287,7 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 				continue;
 				
 			// dont allow tele in and out tiles... same with speedup tile in game layer
-			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pGameLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEINEVIL || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_TRIGGER + ENTITY_OFFSET)|| l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_DOOR + ENTITY_OFFSET)))
+			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pGameLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEINEVIL || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_SWITCHOPEN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_SWITCHCLOSE || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_DOOR + ENTITY_OFFSET)))
 				continue;
 
 			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
@@ -924,7 +924,7 @@ void CLayerFront::BrushDraw(CLayer *pBrush, float wx, float wy)
 				continue;
 
 			// dont allow tele in and out tiles... same with speedup tile and alot more in front
-			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pFrontLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEINEVIL || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_TRIGGER + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_DOOR + ENTITY_OFFSET)) || l->m_pTiles[y*l->m_Width+x].m_Index == (TILE_SOLID) || l->m_pTiles[y*l->m_Width+x].m_Index == (TILE_NOHOOK) || l->m_pTiles[y*l->m_Width+x].m_Index ==TILE_CP || l->m_pTiles[y*l->m_Width+x].m_Index ==TILE_CP_F)
+			if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pFrontLayer && (l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEINEVIL || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_SWITCHOPEN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_SWITCHCLOSE || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_DOOR + ENTITY_OFFSET)) || l->m_pTiles[y*l->m_Width+x].m_Index == (TILE_SOLID) || l->m_pTiles[y*l->m_Width+x].m_Index == (TILE_NOHOOK) || l->m_pTiles[y*l->m_Width+x].m_Index ==TILE_CP || l->m_pTiles[y*l->m_Width+x].m_Index ==TILE_CP_F)
 				continue;
 			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
 		}
@@ -936,8 +936,8 @@ CLayerSwitch::CLayerSwitch(int w, int h)
 	m_pTypeName = "Switch";
 	m_Switch = 1;
 
-	m_pSwitchTile = new CTeleTile[w*h];
-	mem_zero(m_pSwitchTile, w*h*sizeof(CTeleTile));
+	m_pSwitchTile = new CSwitchTile[w*h];
+	mem_zero(m_pSwitchTile, w*h*sizeof(CSwitchTile));
 }
 
 CLayerSwitch::~CLayerSwitch()
@@ -948,12 +948,12 @@ CLayerSwitch::~CLayerSwitch()
 void CLayerSwitch::Resize(int NewW, int NewH)
 {
 	// resize switch data
-	CTeleTile *pNewSwitchData = new CTeleTile[NewW*NewH];
-	mem_zero(pNewSwitchData, NewW*NewH*sizeof(CTeleTile));
+	CSwitchTile *pNewSwitchData = new CSwitchTile[NewW*NewH];
+	mem_zero(pNewSwitchData, NewW*NewH*sizeof(CSwitchTile));
 
 	// copy old data
 	for(int y = 0; y < min(NewH, m_Height); y++)
-		mem_copy(&pNewSwitchData[y*NewW], &m_pSwitchTile[y*m_Width], min(m_Width, NewW)*sizeof(CTeleTile));
+		mem_copy(&pNewSwitchData[y*NewW], &m_pSwitchTile[y*m_Width], min(m_Width, NewW)*sizeof(CSwitchTile));
 
 	// replace old
 	delete [] m_pSwitchTile;
@@ -977,28 +977,28 @@ void CLayerSwitch::Shift(int Direction)
 		{
 			// left
 			for(int y = 0; y < m_Height; ++y)
-				mem_move(&m_pSwitchTile[y*m_Width], &m_pSwitchTile[y*m_Width+1], (m_Width-1)*sizeof(CTeleTile));
+				mem_move(&m_pSwitchTile[y*m_Width], &m_pSwitchTile[y*m_Width+1], (m_Width-1)*sizeof(CSwitchTile));
 		}
 		break;
 	case 2:
 		{
 			// right
 			for(int y = 0; y < m_Height; ++y)
-				mem_move(&m_pSwitchTile[y*m_Width+1], &m_pSwitchTile[y*m_Width], (m_Width-1)*sizeof(CTeleTile));
+				mem_move(&m_pSwitchTile[y*m_Width+1], &m_pSwitchTile[y*m_Width], (m_Width-1)*sizeof(CSwitchTile));
 		}
 		break;
 	case 4:
 		{
 			// up
 			for(int y = 0; y < m_Height-1; ++y)
-				mem_copy(&m_pSwitchTile[y*m_Width], &m_pSwitchTile[(y+1)*m_Width], m_Width*sizeof(CTeleTile));
+				mem_copy(&m_pSwitchTile[y*m_Width], &m_pSwitchTile[(y+1)*m_Width], m_Width*sizeof(CSwitchTile));
 		}
 		break;
 	case 8:
 		{
 			// down
 			for(int y = m_Height-1; y > 0; --y)
-				mem_copy(&m_pSwitchTile[y*m_Width], &m_pSwitchTile[(y-1)*m_Width], m_Width*sizeof(CTeleTile));
+				mem_copy(&m_pSwitchTile[y*m_Width], &m_pSwitchTile[(y-1)*m_Width], m_Width*sizeof(CSwitchTile));
 		}
 	}
 }
@@ -1017,7 +1017,7 @@ void CLayerSwitch::BrushDraw(CLayer *pBrush, float wx, float wy)
 			if(fx<0 || fx >= m_Width || fy < 0 || fy >= m_Height)
 				continue;
 
-			if(l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_DOOR + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_TRIGGER + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_LASER_LONG + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_LASER_MIDDLE + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == (ENTITY_LASER_SHORT + ENTITY_OFFSET))
+			if(l->m_pTiles[y*l->m_Width+x].m_Index >= (ENTITY_HEALTH_1 + ENTITY_OFFSET) && l->m_pTiles[y*l->m_Width+x].m_Index <= (ENTITY_DOOR + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_SWITCHOPEN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_SWITCHCLOSE)
 			{
 				/*if(l->m_pSwitchTile[y*l->m_Width+x].m_Number)
 					m_pSwitchTile[fy*m_Width+fx].m_Number = l->m_pSwitchTile[y*l->m_Width+x].m_Number;
@@ -1027,6 +1027,7 @@ void CLayerSwitch::BrushDraw(CLayer *pBrush, float wx, float wy)
 					{
 						m_pSwitchTile[fy*m_Width+fx].m_Number = 0;
 						m_pSwitchTile[fy*m_Width+fx].m_Type = 0;
+						m_pSwitchTile[fy*m_Width+fx].m_Flags = 0;
 						m_pTiles[fy*m_Width+fx].m_Index = 0;
 						continue;
 					}
@@ -1035,12 +1036,14 @@ void CLayerSwitch::BrushDraw(CLayer *pBrush, float wx, float wy)
 				}
 
 				m_pSwitchTile[fy*m_Width+fx].m_Type = l->m_pTiles[y*l->m_Width+x].m_Index;
+				m_pSwitchTile[fy*m_Width+fx].m_Flags = l->m_pTiles[y*l->m_Width+x].m_Flags;
 				m_pTiles[fy*m_Width+fx].m_Index = l->m_pTiles[y*l->m_Width+x].m_Index;
 			}
 			else
 			{
 				m_pSwitchTile[fy*m_Width+fx].m_Number = 0;
 				m_pSwitchTile[fy*m_Width+fx].m_Type = 0;
+				m_pSwitchTile[fy*m_Width+fx].m_Flags = 0;
 				m_pTiles[fy*m_Width+fx].m_Index = 0;
 			}
 		}

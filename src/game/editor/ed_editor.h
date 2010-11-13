@@ -487,7 +487,7 @@ public:
 	CLayerSwitch(int w, int h);
 	~CLayerSwitch();
 
-	CTeleTile *m_pSwitchTile;
+	CSwitchTile *m_pSwitchTile;
 
 	virtual void Resize(int NewW, int NewH);
 	virtual void Shift(int Direction);
