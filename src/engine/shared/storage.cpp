@@ -124,30 +124,35 @@ public:
 		if(m_NumPaths >= MAX_PATHS || !pPath[0])
 			return;
 
-		int OldNum = m_NumPaths;
-
 		if(!str_comp(pPath, "$USERDIR"))
 		{
 			if(m_aUserdir[0])
+			{
 				str_copy(m_aaStoragePaths[m_NumPaths++], m_aUserdir, MAX_PATH_LENGTH);
+				dbg_msg("storage", "added path '$USERDIR' ('%s')", m_aUserdir);
+			}
 		}
 		else if(!str_comp(pPath, "$DATADIR"))
 		{
 			if(m_aDatadir[0])
+			{
 				str_copy(m_aaStoragePaths[m_NumPaths++], m_aDatadir, MAX_PATH_LENGTH);
+				dbg_msg("storage", "added path '$DATADIR' ('%s')", m_aDatadir);
+			}
 		}
 		else if(!str_comp(pPath, "$CURRENTDIR"))
 		{
 			m_aaStoragePaths[m_NumPaths++][0] = 0;
+			dbg_msg("storage", "added path '$CURRENTDIR'");
 		}
 		else
 		{
 			if(fs_is_dir(pPath))
+			{
 				str_copy(m_aaStoragePaths[m_NumPaths++], pPath, MAX_PATH_LENGTH);
+				dbg_msg("storage", "added path '%s'", pPath);
+			}
 		}
-
-		if(OldNum != m_NumPaths)
-			dbg_msg("storage", "added path '%s'", pPath);
 	}
 		
 	void FindDatadir(const char *pArgv0)
