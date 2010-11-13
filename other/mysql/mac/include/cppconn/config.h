@@ -1,5 +1,5 @@
 /*
-   Copyright 2009 Sun Microsystems, Inc.  All rights reserved.
+   Copyright (c) 2009, 2010, Oracle and/or its affiliates. All rights reserved.
 
    The MySQL Connector/C++ is licensed under the terms of the GPL
    <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>, like most
@@ -53,10 +53,10 @@
 #include <inttypes.h>
 #endif
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
 #ifndef CPPCONN_DONT_TYPEDEF_MS_TYPES_TO_C99_TYPES
 
-#ifdef HAVE_MS_INT8
+#if !defined(HAVE_INT8_T) && defined(HAVE_MS_INT8)
 typedef __int8			int8_t;
 #endif
 

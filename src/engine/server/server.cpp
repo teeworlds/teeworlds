@@ -1524,6 +1524,22 @@ void CServer::ConMapReload(IConsole::IResult *pResult, void *pUser, int ClientId
 	((CServer *)pUser)->m_MapReload = 1;
 }
 
+void CServer::ConCmdList(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CServer *pSelf = (CServer *)pUserData;
+
+	if(pSelf->m_aClients[ClientId].m_Authed == 3)
+	{
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "O Really!!, You call yourself an admin!!");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "check the documentation on DDRace.info");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "leave cmdlist for others.. too many commands to show you here");
+	}
+	else
+		pSelf->Console()->List(pSelf->m_aClients[ClientId].m_Authed, CFGFLAG_SERVER);
+}
+
+
+
 void CServer::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData, -1);
@@ -1588,6 +1604,8 @@ void CServer::RegisterCommands()
 
 	Console()->Register("login", "?s", CFGFLAG_SERVER, ConLogin, this, "Allows you access to rcon if no password is given, or changes your level if a password is given", -1);
 	Console()->Register("auth", "?s", CFGFLAG_SERVER, ConLogin, this, "Allows you access to rcon if no password is given, or changes your level if a password is given", -1);
+
+	Console()->Register("cmdlist", "", CFGFLAG_SERVER, ConCmdList, this, "Shows the list of all commands", -1);
 }	
 
 
