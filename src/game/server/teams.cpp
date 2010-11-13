@@ -89,11 +89,7 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 	}
 	SetForceCharacterTeam(id, Team);
 	
-	dbg_msg1("Teams", "Id = %d Team = %d", id, Team);
 	
-	if(Character(id) && Character(id)->GetPlayer()->m_IsUsingDDRaceClient) {
-		SendTeamsState(id);
-	}
 	//GameServer()->CreatePlayerSpawn(Character(id)->m_Core.m_Pos, TeamMask());
 	return true;
 }
@@ -119,6 +115,11 @@ void CGameTeams::SetForceCharacterTeam(int id, int Team) {
 	if(m_Core.Team(id) != TEAM_SUPER) m_MembersCount[m_Core.Team(id)]++;
 	if(Team != TEAM_SUPER && m_TeamState[Team] == EMPTY) {
 		ChangeTeamState(Team, OPEN);
+	}
+	dbg_msg1("Teams", "Id = %d Team = %d", id, Team);
+	
+	if(Character(id) && Character(id)->GetPlayer()->m_IsUsingDDRaceClient) {
+		SendTeamsState(id);
 	}
 }
 
