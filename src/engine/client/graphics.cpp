@@ -706,7 +706,6 @@ bool CGraphics_OpenGL::Init()
 	};
 	
 	m_InvalidTexture = LoadTextureRaw(4,4,CImageInfo::FORMAT_RGBA,aNullTextureData,CImageInfo::FORMAT_RGBA,TEXLOAD_NORESAMPLE);
-	dbg_msg("", "invalid texture id: %d %d", m_InvalidTexture, m_aTextures[m_InvalidTexture].m_Tex);
 	
 	return true;
 }
