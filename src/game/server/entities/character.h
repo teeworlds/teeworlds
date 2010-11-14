@@ -29,7 +29,6 @@ class CCharacter : public CEntity
 	void HandleTiles(int Index);
 	float m_Time;
 	int m_LastBroadcast;
-	class CGameControllerDDRace* m_pDDRace;
 public:
 	//character's size
 	static const int ms_PhysSize = 28;
@@ -82,7 +81,6 @@ public:
 	
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
-	class CGameControllerDDRace *DDRace() { return m_pDDRace; }
 		// the player core for the physics	
 	CCharacterCore m_Core;
 	struct WeaponStat
