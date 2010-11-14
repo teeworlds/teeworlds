@@ -95,7 +95,6 @@ void CProjectile::Tick()
 		OwnerChar = GameServer()->GetPlayerChar(m_Owner);
 	
 	CCharacter *TargetChr = GameServer()->m_World.IntersectCharacter(PrevPos, ColPos, (m_Freeze) ? 1.0f : 6.0f, ColPos, OwnerChar);
-	if(TargetChr && m_Layer == LAYER_SWITCH && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[TargetChr->Team()]) return;
 
 	if(m_LifeSpan > -1)
 		m_LifeSpan--;
@@ -128,7 +127,7 @@ void CProjectile::Tick()
 			GameServer()->CreateSound(ColPos, m_SoundImpact, 
 			(m_Owner != -1)? TeamMask : -1);
 		}
-		else if(TargetChr && m_Freeze)
+		else if(TargetChr && m_Freeze && ((m_Layer == LAYER_SWITCH && GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[TargetChr->Team()]) || m_Layer != LAYER_SWITCH))
 			TargetChr->Freeze(Server()->TickSpeed()*3);
 		if(Collide && m_Bouncing != 0)
 		{
@@ -172,6 +171,8 @@ void CProjectile::Snap(int SnappingClient)
 	if(NetworkClipped(SnappingClient, GetPos(Ct)))
 		return;
 	CCharacter * SnapChar = GameServer()->GetPlayerChar(SnappingClient);
+	if (!GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[SnapChar->Team()]) return;
+
 	if
 	(
 			SnapChar &&

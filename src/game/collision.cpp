@@ -311,7 +311,28 @@ int CCollision::Entity(int x, int y, int Layer)
 {
 	if((0 > x || x >= m_Width) || (0 > y || y >= m_Height))
 	{
-		dbg_msg("CCollision::Entity","Something is VERY wrong please report this at github");
+		char aBuf[12];
+		switch (Layer)
+		{
+			case LAYER_GAME:
+				str_format(aBuf,sizeof(aBuf), "Game");
+				break;
+			case LAYER_FRONT:
+				str_format(aBuf,sizeof(aBuf), "Front");
+				break;
+			case LAYER_SWITCH:
+				str_format(aBuf,sizeof(aBuf), "Switch");
+				break;
+			case LAYER_TELE:
+				str_format(aBuf,sizeof(aBuf), "Tele");
+				break;
+			case LAYER_SPEEDUP:
+				str_format(aBuf,sizeof(aBuf), "Speedup");
+				break;
+			default:
+				str_format(aBuf,sizeof(aBuf), "Unknown");
+		}
+		dbg_msg("CCollision::Entity","Something is VERY wrong in the layer %s please report this at http://DDRace.info, but you may haven't read the news section so go there and read first", aBuf);
 		return 0;
 	}
 	switch (Layer)
