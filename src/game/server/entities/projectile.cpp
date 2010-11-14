@@ -171,8 +171,8 @@ void CProjectile::Snap(int SnappingClient)
 	if(NetworkClipped(SnappingClient, GetPos(Ct)))
 		return;
 	CCharacter * SnapChar = GameServer()->GetPlayerChar(SnappingClient);
-	int Tick = (Server()->Tick()%Server()->TickSpeed())%6;
-	if (SnapChar && SnapChar->m_Alive && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[SnapChar->Team()] && (Tick)) return;
+	int Tick = (Server()->Tick()%Server()->TickSpeed())%((m_Explosive)?6:20);
+	if (SnapChar && SnapChar->m_Alive && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[SnapChar->Team()] && (!Tick)) return;
 
 	if
 	(
