@@ -631,20 +631,24 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 
 							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
 							{
+								if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type > (ENTITY_CRAZY_SHOTGUN + ENTITY_OFFSET) && ((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type < (ENTITY_DRAGGER_WEAK + ENTITY_OFFSET))
+									continue;
 								if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == TILE_SWITCHOPEN)
+								{
 									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_SWITCHOPEN;
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Flags = ((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Flags;
+								}
 								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == TILE_SWITCHCLOSE)
+								{
 									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_SWITCHCLOSE;
-								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_DOOR + ENTITY_OFFSET))
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_DOOR + ENTITY_OFFSET);
-								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_LASER_SHORT + ENTITY_OFFSET))
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_LASER_SHORT + ENTITY_OFFSET);
-								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_LASER_MEDIUM + ENTITY_OFFSET))
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_LASER_MEDIUM + ENTITY_OFFSET);
-								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_LASER_LONG + ENTITY_OFFSET))
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_LASER_LONG + ENTITY_OFFSET);
-								else
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = 0;
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Flags = ((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Flags;
+								}
+								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type >= (ENTITY_ARMOR_1 + ENTITY_OFFSET) && ((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type <= (ENTITY_DOOR + ENTITY_OFFSET))
+								{
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = ((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type;
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Flags = ((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Flags;
+								}
+
 							}
 							DataFile.UnloadData(pTilemapItem->m_Switch);
 						}
