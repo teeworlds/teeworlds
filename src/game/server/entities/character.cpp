@@ -1018,9 +1018,9 @@ void CCharacter::HandleTiles(int Index)
 		m_Core.m_Jumped = 0;
 	}
 	// handle switch tiles
-	if(GameServer()->Collision()->IsSwitch(MapIndex) == TILE_SWITCHOPEN)
+	if(GameServer()->Collision()->IsSwitch(MapIndex) == TILE_SWITCHOPEN && Team() != TEAM_SUPER)
 		GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetSWitchNumber(MapIndex)].m_Status[Team()] = true;
-	if(GameServer()->Collision()->IsSwitch(MapIndex) == TILE_SWITCHCLOSE)
+	if(GameServer()->Collision()->IsSwitch(MapIndex) == TILE_SWITCHCLOSE && Team() != TEAM_SUPER)
 		GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetSWitchNumber(MapIndex)].m_Status[Team()] = false;
 	// handle speedup tiles
 	if(GameServer()->Collision()->IsSpeedup(MapIndex) == TILE_BOOST)
@@ -1318,7 +1318,7 @@ bool CCharacter::UnFreeze()
 			m_ActiveWeapon = WEAPON_GUN;
 		m_FreezeTime = 0;
 		m_FreezeTick = 0;
-		m_ReloadTimer = 0;
+		if (m_ActiveWeapon==WEAPON_HAMMER) m_ReloadTimer = 0;
 		 return true;
 	}
 	return false;
