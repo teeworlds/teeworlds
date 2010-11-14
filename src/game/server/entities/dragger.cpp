@@ -26,7 +26,7 @@ CDragger::CDragger(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW, in
 
 void CDragger::Move()
 {
-	if(m_Target && m_Target->m_Super)
+	if(m_Target && m_Target->m_Alive && (m_Target->m_Super || m_Layer == LAYER_SWITCH && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[m_Target->Team()]))
 		m_Target = 0;
 	if(m_Target)
 		return;
@@ -123,6 +123,8 @@ void CDragger::Snap(int SnappingClient)
 			return;
 
 	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
+	int Tick = (Server()->Tick()%Server()->TickSpeed())%11;
+	if (Char && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[Char->Team()] && (!Tick)) return;
 	if(Char && m_Target && Char->Team() != m_Target->Team()) return;
 
 	CNetObj_Laser *obj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_Id, sizeof(CNetObj_Laser)));

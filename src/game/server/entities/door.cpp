@@ -65,6 +65,8 @@ void CDoor::Snap(int SnappingClient)
 	pObj->m_Y = (int)m_Pos.y;
 
 	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
+	int Tick = (Server()->Tick()%Server()->TickSpeed())%11;
+	if (Char && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[Char->Team()] && (!Tick)) return;
 	if(Char == 0) return;
 
 	if(Char->Team() == TEAM_SUPER)
