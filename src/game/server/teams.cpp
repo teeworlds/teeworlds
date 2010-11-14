@@ -18,6 +18,7 @@ void CGameTeams::OnCharacterStart(int id) {
 	int Tick = Server()->Tick();
 	if(m_Core.Team(id) == TEAM_FLOCK || m_Core.Team(id) == TEAM_SUPER) {
 		CCharacter* Char = Character(id);
+		if(!Char) return; // for some reason i had a crash here
 		Char->m_DDRaceState = DDRACE_STARTED;
 		Char->m_StartTime = Tick;
 		Char->m_RefreshTime = Tick;
