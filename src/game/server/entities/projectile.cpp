@@ -123,7 +123,7 @@ void CProjectile::Tick()
 	{
 		if(m_Explosive/*??*/ && (!TargetChr || (TargetChr && !m_Freeze)))
 		{
-			GameServer()->CreateExplosion(ColPos, m_Owner, m_Weapon, m_Owner == -1, (TargetChr ? -1 : TargetChr->Team()),
+			GameServer()->CreateExplosion(ColPos, m_Owner, m_Weapon, m_Owner == -1, (!TargetChr ? -1 : TargetChr->Team()),
 			(m_Owner != -1)? TeamMask : -1);
 			GameServer()->CreateSound(ColPos, m_SoundImpact, 
 			(m_Owner != -1)? TeamMask : -1);
