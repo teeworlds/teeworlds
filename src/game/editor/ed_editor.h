@@ -573,6 +573,10 @@ public:
 		ms_BackgroundTexture = 0;
 		ms_CursorTexture = 0;
 		ms_EntitiesTexture = 0;
+		ms_FrontTexture = 0;
+		ms_TeleTexture = 0;
+		ms_SpeedupTexture = 0;
+		ms_SwitchTexture = 0;
 		
 		ms_pUiGotContext = 0;
 		
@@ -685,6 +689,10 @@ public:
 	static int ms_BackgroundTexture;
 	static int ms_CursorTexture;
 	static int ms_EntitiesTexture;
+	static int ms_FrontTexture;
+	static int ms_TeleTexture;
+	static int ms_SpeedupTexture;
+	static int ms_SwitchTexture;
 	
 	CLayerGroup m_Brush;
 	CLayerTiles m_TilesetPicker;
