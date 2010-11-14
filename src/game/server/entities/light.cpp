@@ -106,15 +106,17 @@ void CLight::Snap(int SnappingClient)
 	if(NetworkClipped(SnappingClient,m_Pos) && NetworkClipped(SnappingClient,m_To))
 		return;
 
+	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
+	int Tick = (Server()->Tick()%Server()->TickSpeed())%6;
+	if(!Char) return;
+	if (Char->m_Alive && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[Char->Team()] && (Tick)) return;
+
 	
 	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_Id, sizeof(CNetObj_Laser)));
 	pObj->m_X = (int)m_Pos.x;
 	pObj->m_Y = (int)m_Pos.y;
 
-	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
-	int Tick = (Server()->Tick()%Server()->TickSpeed())%6;
-	if(!Char) return;
-	if (Char->m_Alive && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[Char->Team()] && (Tick)) return;
+
 
 	if(Char->Team() == TEAM_SUPER)
 	{
