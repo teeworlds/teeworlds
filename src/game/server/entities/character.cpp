@@ -93,7 +93,9 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	if(m_pPlayer->m_RconFreeze) Freeze(-1);
 	GameServer()->m_pController->OnCharacterSpawn(this);
 	
-	
+	if(GetPlayer()->m_IsUsingDDRaceClient) {
+		Controller->m_Teams.SendTeamsState(GetPlayer()->GetCID());
+	}
 
 	return true;
 }
@@ -102,6 +104,7 @@ void CCharacter::Destroy()
 {
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
 	m_Alive = false;
+	CEntity::Destroy();
 }
 
 void CCharacter::SetWeapon(int W)
@@ -1374,7 +1377,7 @@ void CCharacter::Die(int Killer, int Weapon)
 	m_pPlayer->m_DieTick = Server()->Tick();
 
 	m_Alive = false;
-	GameServer()->m_World.RemoveEntity(this);
+	MarkDestroy();
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
 	GameServer()->CreateDeath(m_Pos, m_pPlayer->GetCID());
 

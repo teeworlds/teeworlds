@@ -35,8 +35,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 
 CPlayer::~CPlayer()
 {
-	delete Character;
-	Character = 0;
+	if(Character) Character->Destroy();
 }
 
 void CPlayer::Tick()
@@ -80,7 +79,7 @@ void CPlayer::Tick()
 		}
 		else
 		{
-			delete Character;
+			Character->MarkDestroy();
 			Character = 0;
 		}
 	}
@@ -179,7 +178,7 @@ void CPlayer::KillCharacter(int Weapon)
 	if(Character)
 	{
 		Character->Die(m_ClientID, Weapon);
-		delete Character;
+		//delete Character;
 		Character = 0;
 	}
 }
@@ -207,8 +206,8 @@ void CPlayer::SetTeam(int Team)
 	m_LastActionTick = Server()->Tick();
 	// we got to wait 0.5 secs before respawning
 	m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
-	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' m_Team=%d", m_ClientID, Server()->ClientName(m_ClientID), m_Team);
-	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+	//str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' m_Team=%d", m_ClientID, Server()->ClientName(m_ClientID), m_Team);
+	//GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 	
 	//GameServer()->m_pController->OnPlayerInfoChange(GameServer()->m_apPlayers[m_ClientID]);
 }
