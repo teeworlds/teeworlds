@@ -37,7 +37,11 @@
 	#include <windows.h>
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
-	#include <wspiapi.h>
+
+	#if(_WIN32_WINNT == _WIN32_WINNT_WIN2K) && defined(_MSC_VER)
+		#include <wspiapi.h>
+	#endif
+
 	#include <fcntl.h>
 	#include <direct.h>
 	#include <errno.h>
