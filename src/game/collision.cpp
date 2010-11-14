@@ -83,6 +83,15 @@ void CCollision::Init(class CLayers *pLayers)
 				m_pDoor[i].m_Number = m_pSwitch[i].m_Number;
 			else
 				m_pDoor[i].m_Number = 0;
+
+			Index = m_pSwitch[i].m_Type;
+			if(Index > TILE_NPH)
+				continue;
+
+			if(Index == TILE_SWITCHOPEN || Index == TILE_SWITCHCLOSE)
+				m_pSwitch[i].m_Type = Index;
+			else
+				m_pSwitch[i].m_Type = 0;
 		}
 		if(m_pFront)
 		{
