@@ -864,7 +864,7 @@ void CCharacter::Tick()
 		for(std::list < int >::iterator i = Indices.begin(); i != Indices.end(); i++)
 			HandleTiles(*i);
 	else
-		HandleTiles(-1);
+		HandleTiles(GameServer()->Collision()->GetPureMapIndex(m_Pos));
 
 	// kill player when leaving gamelayer
 	if((int)m_Pos.x/32 < -200 || (int)m_Pos.x/32 > GameServer()->Collision()->GetWidth()+200 ||

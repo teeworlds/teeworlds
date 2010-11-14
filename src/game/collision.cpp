@@ -178,7 +178,8 @@ std::list<int> CCollision::GetMapIndices(vec2 PrevPos, vec2 Pos, unsigned MaxInd
 			(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pFront[ny*m_Width+nx].m_Index  <= TILE_NPH)) ||
 			(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEINEVIL || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
 			(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0) ||
-			(m_pDoor && m_pDoor[ny*m_Width+nx].m_Index)
+			(m_pDoor && m_pDoor[ny*m_Width+nx].m_Index) ||
+			(m_pSwitch && m_pSwitch[ny*m_Width+nx].m_Type)
 		)
 		{
 			Indices.push_back(ny*m_Width+nx);
@@ -202,11 +203,12 @@ std::list<int> CCollision::GetMapIndices(vec2 PrevPos, vec2 Pos, unsigned MaxInd
 		//dbg_msg("index","%d",Index);
 		if(
 			(
-				(m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ||
-				(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pFront[ny*m_Width+nx].m_Index  <= TILE_NPH)) ||
-				(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEINEVIL || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
-				(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0) ||
-				(m_pDoor && m_pDoor[ny*m_Width+nx].m_Index)
+					(m_pTiles[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pTiles[ny*m_Width+nx].m_Index <= TILE_NPH) ||
+					(m_pFront && (m_pFront[ny*m_Width+nx].m_Index >= TILE_FREEZE && m_pFront[ny*m_Width+nx].m_Index  <= TILE_NPH)) ||
+					(m_pTele && (m_pTele[ny*m_Width+nx].m_Type == TILE_TELEIN || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEINEVIL || m_pTele[ny*m_Width+nx].m_Type == TILE_TELEOUT)) ||
+					(m_pSpeedup && m_pSpeedup[ny*m_Width+nx].m_Force > 0) ||
+					(m_pDoor && m_pDoor[ny*m_Width+nx].m_Index) ||
+					(m_pSwitch && m_pSwitch[ny*m_Width+nx].m_Type)
 			) &&
 			LastIndex != Index
 		)
@@ -751,12 +753,13 @@ void CCollision::GetSpeedup(int Index, vec2 *Dir, int *Force, int *MaxSpeed)
 
 int CCollision::IsSwitch(int Index)
 {
+	//dbg_msg("IsSwitch","Index %d, pSwitch %d, m_Type %d, m_Number %d", Index, m_pSwitch, (m_pSwitch)?m_pSwitch[Index].m_Type:0, (m_pSwitch)?m_pSwitch[Index].m_Number:0);
 	if(Index < 0)
 		return 0;
 	if(!m_pSwitch)
 		return false;
 
-	if(m_pSwitch[Index].m_Type > 0)
+	if(m_pSwitch[Index].m_Type > 0 && m_pSwitch[Index].m_Number > 0)
 		return m_pSwitch[Index].m_Type;
 
 	return 0;
@@ -764,12 +767,13 @@ int CCollision::IsSwitch(int Index)
 
 int CCollision::GetSWitchNumber(int Index)
 {
+	//dbg_msg("GetSWitchNumber","Index %d, pSwitch %d, m_Type %d, m_Number %d", Index, m_pSwitch, (m_pSwitch)?m_pSwitch[Index].m_Type:0, (m_pSwitch)?m_pSwitch[Index].m_Number:0);
 	if(Index < 0)
 		return 0;
 	if(!m_pSwitch)
 		return false;
 
-	if(m_pSwitch[Index].m_Type > 0)
+	if(m_pSwitch[Index].m_Type > 0 && m_pSwitch[Index].m_Number > 0)
 		return m_pSwitch[Index].m_Number;
 
 	return 0;
