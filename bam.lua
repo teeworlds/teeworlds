@@ -55,8 +55,13 @@ DuplicateDirectoryStructure("src", "src", "objs")
 
 function ResCompile(scriptfile)
 	scriptfile = Path(scriptfile)
-	output = PathBase(scriptfile) .. ".res"
-	AddJob(output, "rc " .. scriptfile, "rc /fo " .. output .. " " .. scriptfile)
+	if config.compiler.driver == "cl" then
+		output = PathBase(scriptfile) .. ".res"
+		AddJob(output, "rc " .. scriptfile, "rc /fo " .. output .. " " .. scriptfile)
+	elseif config.compiler.driver == "gcc" then
+		output = PathBase(scriptfile) .. ".coff"
+		AddJob(output, "windres " .. scriptfile, "windres -i " .. scriptfile .. " -o " .. output)
+	end
 	AddDependency(output, scriptfile)
 	return output
 end
@@ -108,11 +113,12 @@ client_depends = {}
 
 if family == "windows" then
 	table.insert(client_depends, CopyToDirectory(".", "other\\sdl\\vc2005libs\\SDL.dll"))
-end
-	
 
-if config.compiler.driver == "cl" then
-	client_link_other = {ResCompile("other/icons/teeworlds.rc")}
+	if config.compiler.driver == "cl" then
+		client_link_other = {ResCompile("other/icons/teeworlds_cl.rc")}
+	elseif config.compiler.driver == "gcc" then
+		client_link_other = {ResCompile("other/icons/teeworlds_gcc.rc")}
+	end
 end
 
 function Intermediate_Output(settings, input)
