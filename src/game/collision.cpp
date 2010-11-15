@@ -730,7 +730,6 @@ int CCollision::IsEvilTeleport(int Index)
 	if(m_pTele[Index].m_Type == TILE_TELEINEVIL)
 	{
 		Tele = m_pTele[Index].m_Number;
-		dbg_msg("IsEvilTele","%d",Tele);
 	}
 	return Tele;
 }
