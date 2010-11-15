@@ -424,7 +424,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 
 						ReleaseAlternativePrintResponseCallback();
 					}					
-					else if(ClientLevel == 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD) && (pResult->GetVictim() != ClientId && pResult->GetVictim() != -2))
+					else if(ClientLevel == 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD) && pResult->GetVictim() != ClientId)
 					{
 						RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 						PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", "As a helper you can't use commands on others.");
