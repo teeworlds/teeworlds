@@ -156,11 +156,13 @@ int CConsole::ParseArgs(CResult *pResult, const char *pFormat)
 			}
 			else
 			{
+				char* pVictim = 0;
+				
 				if (Command != 'v')
 					pResult->AddArgument(pStr);
 				else
-					pResult->SetVictim(pStr);
-				
+					pVictim = pStr;
+
 				if(Command == 'r') // rest of the string
 					break;
 				else if(Command == 'v')
@@ -177,6 +179,9 @@ int CConsole::ParseArgs(CResult *pResult, const char *pFormat)
 					pStr[0] = 0;
 					pStr++;
 				}
+				
+				if (pVictim)
+					pResult->SetVictim(pVictim);
 			}
 		}
 	}

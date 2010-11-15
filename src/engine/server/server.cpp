@@ -1334,21 +1334,16 @@ int CServer::Run()
 
 void CServer::ConKick(IConsole::IResult *pResult, void *pUser, int ClientId)
 {
-	int ClientId1 = pResult->GetVictim();
+	int Victim = pResult->GetVictim();
 	char buf[128];
-	if(ClientId1 < 0 || ClientId1 >= MAX_CLIENTS || ((CServer *)pUser)->m_aClients[ClientId1].m_State == CClient::STATE_EMPTY)
-	{
-		str_format(buf, sizeof(buf),"Invalid Client ID %d", ClientId1);
-		((CServer *)pUser)->SendRconLine(ClientId,buf);
-	}
-	else if(pResult->NumArguments() > 1)
+	if(pResult->NumArguments() >= 1)
 	{
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "Kicked by console (%s)", pResult->GetString(1));
-		((CServer *)pUser)->Kick(pResult->GetInteger(0), aBuf);
+		str_format(aBuf, sizeof(aBuf), "Kicked by console (%s)", pResult->GetString(0));
+		((CServer *)pUser)->Kick(Victim, aBuf);
 	}
 	else
-		((CServer *)pUser)->Kick(pResult->GetInteger(0), "Kicked by console");
+		((CServer *)pUser)->Kick(Victim, "Kicked by console");
 }
 
 void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
