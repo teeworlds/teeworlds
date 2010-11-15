@@ -85,41 +85,41 @@ void CCollision::Init(class CLayers *pLayers)
 				m_pDoor[i].m_Number = 0;
 
 			Index = m_pSwitch[i].m_Type;
-			if(Index > TILE_NPH)
-				continue;
-
-			if(Index == TILE_SWITCHOPEN || Index == TILE_SWITCHCLOSE)
-				m_pSwitch[i].m_Type = Index;
-			else
-				m_pSwitch[i].m_Type = 0;
+			if(Index <= TILE_NPH)
+			{
+				if(Index == TILE_SWITCHOPEN || Index == TILE_SWITCHCLOSE)
+					m_pSwitch[i].m_Type = Index;
+				else
+					m_pSwitch[i].m_Type = 0;
+			}
 		}
 		if(m_pFront)
 		{
 			Index = m_pFront[i].m_Index;
-			if(Index > TILE_NPH)
-				continue;
-
-			switch(Index)
+			if(Index <= TILE_NPH)
 			{
-			case TILE_DEATH:
-				m_pFront[i].m_Index = COLFLAG_DEATH;
-				break;
-			case TILE_SOLID:
-				m_pFront[i].m_Index = 0;
-				break;
-			case TILE_NOHOOK:
-				m_pFront[i].m_Index = 0;
-				break;
-			case TILE_NOLASER:
-				m_pFront[i].m_Index = COLFLAG_NOLASER;
-				break;
-			default:
-				m_pFront[i].m_Index = 0;
-			}
+				switch(Index)
+				{
+				case TILE_DEATH:
+					m_pFront[i].m_Index = COLFLAG_DEATH;
+					break;
+				case TILE_SOLID:
+					m_pFront[i].m_Index = 0;
+					break;
+				case TILE_NOHOOK:
+					m_pFront[i].m_Index = 0;
+					break;
+				case TILE_NOLASER:
+					m_pFront[i].m_Index = COLFLAG_NOLASER;
+					break;
+				default:
+					m_pFront[i].m_Index = 0;
+				}
 
-			// DDRace tiles
-			if(Index == TILE_THROUGH || (Index >= TILE_FREEZE && Index <= TILE_UNFREEZE) || (Index >= TILE_SWITCHOPEN && Index<=TILE_BOOST) || (Index >= TILE_BEGIN && Index <= TILE_STOPA) || Index == TILE_CP || Index == TILE_CP_F || (Index >= TILE_NPC && Index <= TILE_NPH))
-				m_pFront[i].m_Index = Index;
+				// DDRace tiles
+				if(Index == TILE_THROUGH || (Index >= TILE_FREEZE && Index <= TILE_UNFREEZE) || (Index >= TILE_SWITCHOPEN && Index<=TILE_BOOST) || (Index >= TILE_BEGIN && Index <= TILE_STOPA) || Index == TILE_CP || Index == TILE_CP_F || (Index >= TILE_NPC && Index <= TILE_NPH))
+					m_pFront[i].m_Index = Index;
+			}
 		}
 		Index = m_pTiles[i].m_Index;
 		if(Index <= TILE_NPH)
