@@ -36,12 +36,12 @@ int CConsole::CResult::GetVictim()
 
 void CConsole::CResult::ResetVictim()
 {
-	m_Victim = -3;
+	m_Victim = VICTIM_NONE;
 }
 
 bool CConsole::CResult::HasVictim()
 {
-	return m_Victim != -3;
+	return m_Victim != VICTIM_NONE;
 }
 
 void CConsole::CResult::SetVictim(int Victim)
@@ -52,11 +52,11 @@ void CConsole::CResult::SetVictim(int Victim)
 void CConsole::CResult::SetVictim(const char *pVictim)
 {
 	if(!str_comp(pVictim, "me"))
-		m_Victim = -2;
+		m_Victim = VICTIM_ME;
 	else if(!str_comp(pVictim, "all"))
-		m_Victim = -1;
+		m_Victim = VICTIM_ALL;
 	else
-		m_Victim = clamp<int>(str_toint(pVictim), 0, MAX_CLIENTS);
+		m_Victim = clamp<int>(str_toint(pVictim), 0, MAX_CLIENTS - 1);
 }
 
 
@@ -408,7 +408,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 				}
 				else 
 				{
-					if(pResult->GetVictim() == -2)
+					if(pResult->GetVictim() == CResult::VICTIM_ME)
 						pResult->SetVictim(ClientId);
 					
 					if((ClientLevel < pCommand->m_Level && !(pCommand->m_Flags & CMDFLAG_HELPERCMD)) || (ClientLevel < 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD)))
@@ -454,7 +454,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 					{
 						if (pResult->HasVictim())
 						{
-							if(pResult->GetVictim() == -1)
+							if(pResult->GetVictim() == CResult::VICTIM_ALL)
 							{
 								for (int i = 0; i < MAX_CLIENTS; i++)
 								{
