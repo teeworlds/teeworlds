@@ -1,4 +1,5 @@
-/* CSqlScore Class by Sushi */
+/* CSqlScore Class by Sushi Tee*/
+#if !defined(CONF_PLATFORM_MACOSX)
 #ifndef GAME_SERVER_SQLSCORE_H
 #define GAME_SERVER_SQLSCORE_H
 
@@ -71,4 +72,5 @@ struct CSqlScoreData
 	char m_aRequestingPlayer[MAX_NAME_LENGTH];
 };
 
+#endif
 #endif

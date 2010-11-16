@@ -14,7 +14,9 @@
 
 #include "score.h"
 #include "score/file_score.h"
+#if !defined(CONF_PLATFORM_MACOSX)
 #include "score/sql_score.h"
+#endif
 
 enum
 {

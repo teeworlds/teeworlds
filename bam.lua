@@ -132,8 +132,8 @@ function build(settings)
 	else
 		settings.cc.flags:Add("-Wall")
 		if platform == "macosx" then
-			settings.cc.flags:Add("-mmacosx-version-min=10.5", "-isysroot /Developer/SDKs/MacOSX10.6.sdk")
-			settings.link.flags:Add("-mmacosx-version-min=10.5", "-isysroot /Developer/SDKs/MacOSX10.6.sdk")
+			settings.cc.flags:Add("-mmacosx-version-min=10.4", "-isysroot /Developer/SDKs/MacOSX10.4u.sdk")
+			settings.link.flags:Add("-mmacosx-version-min=10.4", "-isysroot /Developer/SDKs/MacOSX10.4u.sdk")
 		elseif config.stackprotector.value == 1 then
 			settings.cc.flags:Add("-fstack-protector", "-fstack-protector-all")
 			settings.link.flags:Add("-fstack-protector", "-fstack-protector-all")
@@ -144,19 +144,9 @@ function build(settings)
 	settings.cc.includes:Add("src")
 
 	if family == "unix" then
-		if platform == "macosx" then
+   		if platform == "macosx" then
 			settings.link.frameworks:Add("Carbon")
 			settings.link.frameworks:Add("AppKit")
-			settings.cc.includes:Add("other/mysql/mac/include")
-			settings.cc.includes:Add("other/mysql/mac/include/cppconn")
-			settings.cc.includes:Add("other/mysql/mac/include/boost") 
-			if arch == "amd64" then
-				settings.link.libpath:Add("other/mysql/mac/lib64")
-			else
-				settings.link.libpath:Add("other/mysql/mac/lib32")
-			end
-			settings.link.libs:Add("mysqlclient")
-			settings.link.libs:Add("mysqlcppconn-static")
 		else
 			settings.link.libs:Add("pthread")
 			settings.cc.includes:Add("other/mysql/include")
