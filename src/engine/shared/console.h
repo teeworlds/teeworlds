@@ -79,6 +79,13 @@ class CConsole : public IConsole
 		const char *m_pCommand;
 		const char *m_apArgs[MAX_PARTS];
 		
+		enum
+		{
+			VICTIM_NONE=-3,
+			VICTIM_ME=-2,
+			VICTIM_ALL=-1,
+		};
+		
 		int m_Victim;
 		
 		void AddArgument(const char *pArg)
