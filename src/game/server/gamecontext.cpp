@@ -14,8 +14,10 @@
 
 #include "score.h"
 #include "score/file_score.h"
+#if defined(CONF_SQL)
 #if !defined(CONF_PLATFORM_MACOSX)
 #include "score/sql_score.h"
+#endif
 #endif
 
 enum
@@ -1182,9 +1184,11 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 		delete m_pScore;
 		
 	// create score object (add sql later)
+#if defined(CONF_SQL)
 	if(g_Config.m_SvUseSQL)
 		m_pScore = new CSqlScore(this);
 	else
+#endif
 		m_pScore = new CFileScore(this);
 	// setup core world
 	//for(int i = 0; i < MAX_CLIENTS; i++)

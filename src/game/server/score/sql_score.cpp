@@ -1,4 +1,7 @@
 /* CSqlScore class by Sushi */
+#if defined(CONF_SQL)
+#if !defined(CONF_PLATFORM_MACOSX)
+
 #include <string.h>
 
 #include <engine/shared/config.h>
@@ -476,5 +479,7 @@ void CSqlScore::NormalizeMapname(char *pString) {
 		}
 	}
 }
+#endif
+#endif
 
 

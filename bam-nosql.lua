@@ -105,12 +105,9 @@ nethash = CHash("src/game/generated/nethash.c", "src/engine/shared/protocol.h", 
 
 client_link_other = {}
 client_depends = {}
-server_depends = {}
 
 if family == "windows" then
 	table.insert(client_depends, CopyToDirectory(".", "other\\sdl\\vc2005libs\\SDL.dll"))
-	table.insert(server_depends, CopyToDirectory(".", "other\\mysql\\vc2005libs\\mysqlcppconn.dll"))
-	table.insert(server_depends, CopyToDirectory(".", "other\\mysql\\vc2005libs\\libmysql.dll"))
 end
 	
 
@@ -149,15 +146,6 @@ function build(settings)
 			settings.link.frameworks:Add("AppKit")
 		else
 			settings.link.libs:Add("pthread")
-			settings.cc.includes:Add("other/mysql/include")
-			settings.cc.includes:Add("other/mysql/include/cppconn")
-			if arch == "amd64" then
-				settings.link.libpath:Add("other/mysql/lib64")
-			else
-				settings.link.libpath:Add("other/mysql/lib32")
-			end
-			settings.link.libs:Add("mysqlcppconn-static")
-			settings.link.libs:Add("mysqlclient")
 		end
 	elseif family == "windows" then
 		settings.link.flags:Add("/FORCE:MULTIPLE")
@@ -166,9 +154,6 @@ function build(settings)
 		settings.link.libs:Add("ws2_32")
 		settings.link.libs:Add("ole32")
 		settings.link.libs:Add("shell32")
-		settings.cc.includes:Add("other/mysql/include")
-		settings.link.libpath:Add("other/mysql/vc2005libs")
-		settings.link.libs:Add("mysqlcppconn")
 	end
 	
 	-- compile zlib if needed
@@ -282,14 +267,14 @@ debug_settings.config_name = "debug"
 debug_settings.config_ext = "_d"
 debug_settings.debug = 1
 debug_settings.optimize = 0
-debug_settings.cc.defines:Add("CONF_DEBUG", "CONF_SQL")
+debug_settings.cc.defines:Add("CONF_DEBUG")
 
 release_settings = NewSettings()
 release_settings.config_name = "release"
 release_settings.config_ext = ""
 release_settings.debug = 0
 release_settings.optimize = 1
-release_settings.cc.defines:Add("CONF_RELEASE", "CONF_SQL")
+release_settings.cc.defines:Add("CONF_RELEASE")
 
 if platform == "macosx"  and arch == "ia32" then
 	debug_settings_ppc = debug_settings:Copy()
