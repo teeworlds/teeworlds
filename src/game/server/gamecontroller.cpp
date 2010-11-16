@@ -483,7 +483,7 @@ void IGameController::Tick()
 								if(GameServer()->m_apPlayers[j] && GameServer()->m_apPlayers[j]->GetTeam() == -1)
 									++Spectators;
 							if(Spectators >= g_Config.m_SvSpectatorSlots)
-								Server()->Kick(i, "kicked for inactivity");
+								Server()->Kick(i, "Kicked for inactivity");
 							else
 								GameServer()->m_apPlayers[i]->SetTeam(-1);
 						}
