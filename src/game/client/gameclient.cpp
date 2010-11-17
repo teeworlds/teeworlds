@@ -586,7 +586,7 @@ void CGameClient::OnEnterGame() {}
 
 void CGameClient::OnRconLine(const char *pLine)
 {
-	m_pGameConsole->PrintLine(1, pLine);
+	m_pGameConsole->PrintLine(CGameConsole::CONSOLETYPE_REMOTE, pLine);
 }
 
 void CGameClient::ProcessEvents()

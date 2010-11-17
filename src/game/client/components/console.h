@@ -74,6 +74,12 @@ class CGameConsole : public CComponent
 	static void ConDumpRemoteConsole(IConsole::IResult *pResult, void *pUserData);
 	
 public:
+	enum
+	{
+		CONSOLETYPE_LOCAL=0,
+		CONSOLETYPE_REMOTE,
+	};
+
 	CGameConsole();
 
 	void PrintLine(int Type, const char *pLine);
