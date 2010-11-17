@@ -29,6 +29,7 @@ public:
 
 	// interface functions
 	void Refresh(int Type);
+	bool IsRefreshing() const;
 	bool IsRefreshingMasters() const;
 	int LoadingProgression() const;
 
