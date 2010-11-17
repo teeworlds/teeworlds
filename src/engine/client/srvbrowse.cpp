@@ -707,6 +707,10 @@ void CServerBrowser::RemoveFavorite(const NETADDR &Addr)
 	}
 }
 
+bool CServerBrowser::IsRefreshing() const
+{
+	return m_pFirstReqServer != 0;
+}
 
 bool CServerBrowser::IsRefreshingMasters() const
 {
