@@ -861,7 +861,7 @@ void CGameContext::ConTuneDump(IConsole::IResult *pResult, void *pUserData)
 void CGameContext::ConChangeMap(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	pSelf->m_pController->ChangeMap(pResult->GetString(0));
+	pSelf->m_pController->ChangeMap(pResult->NumArguments() ? pResult->GetString(0) : "");
 }
 
 void CGameContext::ConRestart(IConsole::IResult *pResult, void *pUserData)
@@ -970,7 +970,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConTuneReset, this, "");
 	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConTuneDump, this, "");
 
-	Console()->Register("change_map", "r", CFGFLAG_SERVER|CFGFLAG_STORE, ConChangeMap, this, "");
+	Console()->Register("change_map", "?r", CFGFLAG_SERVER|CFGFLAG_STORE, ConChangeMap, this, "");
 	Console()->Register("restart", "?i", CFGFLAG_SERVER|CFGFLAG_STORE, ConRestart, this, "");
 	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConBroadcast, this, "");
 	Console()->Register("say", "r", CFGFLAG_SERVER, ConSay, this, "");
