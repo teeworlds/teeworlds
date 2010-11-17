@@ -119,11 +119,10 @@ if family == "windows" then
 end
 	
 
-	if config.compiler.driver == "cl" then
-		client_link_other = {ResCompile("other/icons/teeworlds_cl.rc")}
-	elseif config.compiler.driver == "gcc" then
-		client_link_other = {ResCompile("other/icons/teeworlds_gcc.rc")}
-	end
+if config.compiler.driver == "cl" then
+	client_link_other = {ResCompile("other/icons/teeworlds_cl.rc")}
+elseif config.compiler.driver == "gcc" then
+	client_link_other = {ResCompile("other/icons/teeworlds_gcc.rc")}
 end
 
 function Intermediate_Output(settings, input)
