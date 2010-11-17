@@ -35,15 +35,6 @@ public:
 		// get userdir
 		fs_storage_path(pApplicationName, m_aUserdir, sizeof(m_aUserdir));
 
-		// check for datadir override
-		for(int i = 1; i < NumArgs; i++)
-		{
-			if(ppArguments[i][0] == '-' && ppArguments[i][1] == 'd' && ppArguments[i][2] == 0 && NumArgs - i > 1)
-			{
-				str_copy(m_aDatadir, ppArguments[i+1], sizeof(m_aDatadir));
-				break;
-			}
-		}
 		// get datadir
 		FindDatadir(ppArguments[0]);
 
@@ -157,35 +148,21 @@ public:
 		
 	void FindDatadir(const char *pArgv0)
 	{
-		// 1) use provided data-dir override
-		if(m_aDatadir[0])
-		{
-			char aBuffer[MAX_PATH_LENGTH];
-			str_format(aBuffer, sizeof(aBuffer), "%s/mapres", m_aDatadir);
-			if(!fs_is_dir(aBuffer))
-			{
-				dbg_msg("storage", "specified data directory '%s' does not exist", m_aDatadir);
-				m_aDatadir[0] = 0;
-			}
-			else
-				return;
-		}
-		
-		// 2) use data-dir in PWD if present
+		// 1) use data-dir in PWD if present
 		if(fs_is_dir("data/mapres"))
 		{
 			str_copy(m_aDatadir, "data", sizeof(m_aDatadir));
 			return;
 		}
 		
-		// 3) use compiled-in data-dir if present
+		// 2) use compiled-in data-dir if present
 		if(fs_is_dir(DATA_DIR "/mapres"))
 		{
 			str_copy(m_aDatadir, DATA_DIR, sizeof(m_aDatadir));
 			return;
 		}
 		
-		// 4) check for usable path in argv[0]
+		// 3) check for usable path in argv[0]
 		{
 			unsigned int Pos = ~0U;
 			for(unsigned i = 0; pArgv0[i]; i++)
@@ -207,7 +184,7 @@ public:
 		}
 		
 	#if defined(CONF_FAMILY_UNIX)
-		// 5) check for all default locations
+		// 4) check for all default locations
 		{
 			const char *aDirs[] = {
 				"/usr/share/teeworlds/data/mapres",
