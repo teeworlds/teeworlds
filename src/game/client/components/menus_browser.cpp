@@ -273,7 +273,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			if(Id == COL_FLAG_LOCK)
 			{
 				if(pItem->m_Flags & SERVER_FLAG_PASSWORD)
-					DoButton_BrowseIcon(SPRITE_BROWSE_LOCK, &Button);
+					DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_LOCK, &Button);
 			}
 			else if(Id == COL_FLAG_PURE)
 			{
@@ -286,13 +286,13 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				else
 				{
 					// unpure
-					DoButton_BrowseIcon(SPRITE_BROWSE_UNPURE, &Button);
+					DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_UNPURE, &Button);
 				}
 			}
 			else if(Id == COL_FLAG_FAV)
 			{
 				if(pItem->m_Favorite)
-					DoButton_BrowseIcon(SPRITE_BROWSE_HEART, &Button);
+					DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_HEART, &Button);
 			}
 			else if(Id == COL_NAME)
 			{
