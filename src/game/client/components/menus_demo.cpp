@@ -436,7 +436,7 @@ void CMenus::DemolistFetchCallback(const char *pName, int IsDir, int StorageType
 	}
 	else
 	{
-		str_format(Item.m_aName, min(static_cast<int>(sizeof(Item.m_aName)), Length), "    %s", pName);
+		str_copy(Item.m_aName, pName, min(static_cast<int>(sizeof(Item.m_aName)), Length));
 		char aBuffer[512];
 		str_format(aBuffer, sizeof(aBuffer), "%s/%s", pSelf->m_aCurrentDemoFolder, Item.m_aFilename);
 		// TODO: many items slow this down, don't load the info from every file when making the filelist
@@ -503,7 +503,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_ALL, 10.0f);
 	MainView.Margin(10.0f, &MainView);
 	
-	CUIRect ButtonBar, RefreshRect, PlayRect, DeleteRect;
+	CUIRect ButtonBar, RefreshRect, PlayRect, DeleteRect, FileIcon;
 	MainView.HSplitBottom(ms_ButtonHeight+5.0f, &MainView, &ButtonBar);
 	ButtonBar.HSplitTop(5.0f, 0, &ButtonBar);
 	ButtonBar.VSplitRight(130.0f, &ButtonBar, &PlayRect);
@@ -518,7 +518,12 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	{
 		CListboxItem Item = UiDoListboxNextItem((void*)(&r.front()));
 		if(Item.m_Visible)
+		{
+			Item.m_Rect.VSplitLeft(Item.m_Rect.h, &FileIcon, &Item.m_Rect);
+			Item.m_Rect.VSplitLeft(5.0f, 0, &Item.m_Rect);
+			DoButton_Icon(IMAGE_FILEICONS, r.front().m_IsDir?SPRITE_FILE_FOLDER:SPRITE_FILE_DEMO1, &FileIcon);
 			UI()->DoLabel(&Item.m_Rect, r.front().m_aName, Item.m_Rect.h*ms_FontmodHeight, -1);
+		}
 	}
 	bool Activated = false;
 	m_DemolistSelectedIndex = UiDoListboxEnd(&s_ScrollValue, &Activated);

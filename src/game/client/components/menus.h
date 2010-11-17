@@ -47,7 +47,7 @@ class CMenus : public CComponent
 	static void ui_draw_settings_tab_button(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
 	*/
 
-	int DoButton_BrowseIcon(int Checked, const CUIRect *pRect);
+	int DoButton_Icon(int ImageId, int SpriteId, const CUIRect *pRect);
 	int DoButton_GridHeader(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 
 	//static void ui_draw_browse_icon(int what, const CUIRect *r);
