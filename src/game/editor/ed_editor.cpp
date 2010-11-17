@@ -16,6 +16,7 @@
 #include <game/client/ui.h>
 #include <game/gamecore.h>
 #include <game/client/render.h>
+#include <game/generated/client_data.h>
 
 #include "ed_editor.h"
 #include <game/client/lineinput.h>
@@ -2168,7 +2169,7 @@ static void EditorListdirCallback(const char *pName, int IsDir, int StorageType,
 	if(IsDir)
 		str_format(Item.m_aName, sizeof(Item.m_aName), "%s/", pName);
 	else
-		str_format(Item.m_aName, min(static_cast<int>(sizeof(Item.m_aName)), Length+1), "    %s", pName);
+		str_copy(Item.m_aName, pName, min(static_cast<int>(sizeof(Item.m_aName)), Length+1));
 	Item.m_IsDir = IsDir != 0;
 	Item.m_IsLink = false;
 	Item.m_StorageType = StorageType;
@@ -2181,9 +2182,18 @@ void CEditor::AddFileDialogEntry(int Index, CUIRect *pView)
 	if(m_FilesCur-1 < m_FilesStartAt || m_FilesCur >= m_FilesStopAt)
 		return;
 
-	CUIRect Button;
+	CUIRect Button, FileIcon;
 	pView->HSplitTop(15.0f, &Button, pView);
 	pView->HSplitTop(2.0f, 0, pView);
+	Button.VSplitLeft(Button.h, &FileIcon, &Button);
+	Button.VSplitLeft(5.0f, 0, &Button);
+
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_FILEICONS].m_Id);
+	Graphics()->QuadsBegin();
+	RenderTools()->SelectSprite(m_FileList[Index].m_IsDir?SPRITE_FILE_FOLDER:SPRITE_FILE_MAP2);
+	IGraphics::CQuadItem QuadItem(FileIcon.x, FileIcon.y, FileIcon.w, FileIcon.h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
 
 	if(DoButton_File((void*)(10+(int)Button.y), m_FileList[Index].m_aName, m_FilesSelectedIndex == Index, &Button, 0, 0))
 	{
