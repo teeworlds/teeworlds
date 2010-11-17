@@ -508,12 +508,6 @@ void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
 			// skip silent param
 			continue;
 		}
-		else if(ppArguments[i][0] == '-' && ppArguments[i][1] == 'd' && ppArguments[i][2] == 0)
-		{
-			// skip datadir param
-			++i;
-			continue;
-		}
 		else
 		{
 			// search arguments for overrides
