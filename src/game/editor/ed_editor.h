@@ -680,6 +680,21 @@ public:
 
 	void AddFileDialogEntry(int Index, CUIRect *pView);
 	void SortImages();
+	static void ExtractName(const char *pFileName, char *pName, int BufferSize)
+	{
+		const char *pExtractedName = pFileName;
+		const char *pEnd = 0;
+		for(; *pFileName; ++pFileName)
+		{
+			if(*pFileName == '/' || *pFileName == '\\')
+				pExtractedName = pFileName+1;
+			else if(*pFileName == '.')
+				pEnd = pFileName;
+		}
+
+		int Length = pEnd > pExtractedName ? min(BufferSize, (int)(pEnd-pExtractedName+1)) : BufferSize;
+		str_copy(pName, pExtractedName, Length);
+	}
 };
 
 // make sure to inline this function
