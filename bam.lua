@@ -116,13 +116,12 @@ if family == "windows" then
 	table.insert(client_depends, CopyToDirectory(".", "other\\sdl\\vc2005libs\\SDL.dll"))
 	table.insert(server_depends, CopyToDirectory(".", "other\\mysql\\vc2005libs\\mysqlcppconn.dll"))
 	table.insert(server_depends, CopyToDirectory(".", "other\\mysql\\vc2005libs\\libmysql.dll"))
-end
-	
 
-if config.compiler.driver == "cl" then
-	client_link_other = {ResCompile("other/icons/teeworlds_cl.rc")}
-elseif config.compiler.driver == "gcc" then
-	client_link_other = {ResCompile("other/icons/teeworlds_gcc.rc")}
+	if config.compiler.driver == "cl" then
+		client_link_other = {ResCompile("other/icons/teeworlds_cl.rc")}
+	elseif config.compiler.driver == "gcc" then
+		client_link_other = {ResCompile("other/icons/teeworlds_gcc.rc")}
+	end
 end
 
 function Intermediate_Output(settings, input)
