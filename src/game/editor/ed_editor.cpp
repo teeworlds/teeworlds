@@ -1882,22 +1882,6 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 	}
 }
 
-static void ExtractName(const char *pFileName, char *pName, int BufferSize)
-{
-	const char *pExtractedName = pFileName;
-	const char *pEnd = 0;
-	for(; *pFileName; ++pFileName)
-	{
-		if(*pFileName == '/' || *pFileName == '\\')
-			pExtractedName = pFileName+1;
-		else if(*pFileName == '.')
-			pEnd = pFileName;
-	}
-
-	int Length = pEnd > pExtractedName ? min(BufferSize, (int)(pEnd-pExtractedName+1)) : BufferSize;
-	str_copy(pName, pExtractedName, Length);
-}
-
 void CEditor::ReplaceImage(const char *pFileName, int StorageType, void *pUser)
 {
 	CEditor *pEditor = (CEditor *)pUser;
@@ -1910,7 +1894,7 @@ void CEditor::ReplaceImage(const char *pFileName, int StorageType, void *pUser)
 	pEditor->Graphics()->UnloadTexture(pImg->m_TexId);
 	*pImg = ImgInfo;
 	pImg->m_External = External;
-	ExtractName(pFileName, pImg->m_aName, sizeof(pImg->m_aName));
+	pEditor->ExtractName(pFileName, pImg->m_aName, sizeof(pImg->m_aName));
 	pImg->m_TexId = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
 	pEditor->SortImages();
 	for(int i = 0; i < pEditor->m_Map.m_lImages.size(); ++i)
