@@ -461,7 +461,7 @@ void IGameController::Tick()
 	{
 		for(int i = 0; i < MAX_CLIENTS; ++i)
 		{
-			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != -1)
+			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != -1 && !Server()->IsAuthed(i))
 			{
 				if(Server()->Tick() > GameServer()->m_apPlayers[i]->m_LastActionTick+g_Config.m_SvInactiveKickTime*Server()->TickSpeed()*60)
 				{
@@ -481,7 +481,7 @@ void IGameController::Tick()
 								if(GameServer()->m_apPlayers[j] && GameServer()->m_apPlayers[j]->GetTeam() == -1)
 									++Spectators;
 							if(Spectators >= g_Config.m_SvSpectatorSlots)
-								Server()->Kick(i, "kicked for inactivity");
+								Server()->Kick(i, "Kicked for inactivity");
 							else
 								GameServer()->m_apPlayers[i]->SetTeam(-1);
 						}

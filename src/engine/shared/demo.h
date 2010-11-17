@@ -1,5 +1,5 @@
-#ifndef ENGINE_SHARED_DEMOREC_H
-#define ENGINE_SHARED_DEMOREC_H
+#ifndef ENGINE_SHARED_DEMO_H
+#define ENGINE_SHARED_DEMO_H
 
 #include <engine/demo.h>
 #include "snapshot.h"
@@ -43,6 +43,7 @@ public:
 	class IListner
 	{
 	public:
+		virtual ~IListner() {}
 		virtual void OnDemoPlayerSnapshot(void *pData, int Size) = 0;
 		virtual void OnDemoPlayerMessage(void *pData, int Size) = 0;
 	};
