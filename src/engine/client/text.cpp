@@ -540,8 +540,8 @@ public:
 		int ActualSize;
 		int i;
 		int GotNewLine = 0;
-		float DrawX, DrawY;
-		int LineCount;
+		float DrawX = 0.0f, DrawY = 0.0f;
+		int LineCount = 0;
 		float CursorX, CursorY;
 		const char *pEnd;
 

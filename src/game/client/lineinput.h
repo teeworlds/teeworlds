@@ -25,7 +25,7 @@ public:
 	void Set(const char *pString);
 	const char *GetString() const { return m_Str; }
 	int GetLength() const { return m_Len; }
-	unsigned GetCursorOffset() const { return m_CursorPos; }
+	int GetCursorOffset() const { return m_CursorPos; }
 };
 
 #endif
