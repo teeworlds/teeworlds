@@ -987,10 +987,12 @@ int fs_is_dir(const char *path)
 
 int fs_chdir(const char *path)
 {
-	if (fs_is_dir(path))
+	if(fs_is_dir(path))
 	{
-		chdir(path);
-		return 0;
+		if(chdir(path))
+			return 1;
+		else
+			return 0;
 	}
 	else
 		return 1;
@@ -1306,7 +1308,7 @@ void gui_messagebox(const char *title, const char *message)
 		title,
 		message);
 
-	system(cmd);
+	(void)system(cmd);
 #elif defined(CONF_FAMILY_WINDOWS)
 	MessageBox(NULL,
 		message,

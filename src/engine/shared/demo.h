@@ -43,6 +43,7 @@ public:
 	class IListner
 	{
 	public:
+		virtual ~IListner() {}
 		virtual void OnDemoPlayerSnapshot(void *pData, int Size) = 0;
 		virtual void OnDemoPlayerMessage(void *pData, int Size) = 0;
 	};

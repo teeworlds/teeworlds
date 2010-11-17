@@ -1125,7 +1125,7 @@ void CGameContext::OnConsoleInit()
 	m_pServer = Kernel()->RequestInterface<IServer>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 
-	Console()->Register("change_map", "r", CFGFLAG_SERVER, ConChangeMap, this, "Changes the map to r", 3);
+	Console()->Register("change_map", "?r", CFGFLAG_SERVER, ConChangeMap, this, "Changes the map to r", 3);
 	Console()->Register("restart", "?i", CFGFLAG_SERVER, ConRestart, this, "Kills all players", 3);
 	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConBroadcast, this, "Changes the broadcast message for a moment", 3);
 	Console()->Register("say", "r", CFGFLAG_SERVER, ConSay, this, "Sends a server message to all players", 3);

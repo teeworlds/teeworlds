@@ -112,12 +112,12 @@ vec4 CMenus::ButtonColorMul(const void *pID)
 	return vec4(1,1,1,1);
 }
 
-int CMenus::DoButton_BrowseIcon(int What, const CUIRect *pRect)
+int CMenus::DoButton_Icon(int ImageId, int SpriteId, const CUIRect *pRect)
 {
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_BROWSEICONS].m_Id);
+	Graphics()->TextureSet(g_pData->m_aImages[ImageId].m_Id);
 	
 	Graphics()->QuadsBegin();
-	RenderTools()->SelectSprite(What);
+	RenderTools()->SelectSprite(SpriteId);
 	IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();

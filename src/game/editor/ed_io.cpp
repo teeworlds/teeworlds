@@ -1,5 +1,7 @@
+#include <engine/client.h>
 #include <engine/console.h>
 #include <engine/graphics.h>
+#include <engine/serverbrowser.h>
 #include <engine/storage.h>
 #include <game/gamecore.h>
 #include "ed_editor.h"
@@ -401,11 +403,15 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving done");
 	
 	// send rcon.. if we can
-	/*
-	if(Client()->RconAuthed())
+	if(m_pEditor->Client()->RconAuthed())
 	{
-		Client()->Rcon("sv_map_reload 1");
-	}*/
+		CServerInfo CurrentServerInfo;
+		m_pEditor->Client()->GetServerInfo(&CurrentServerInfo);
+		char aMapName[128];
+		m_pEditor->ExtractName(pFileName, aMapName, sizeof(aMapName));
+		if(!str_comp(aMapName, CurrentServerInfo.m_aMap))
+			m_pEditor->Client()->Rcon("reload");
+	}
 	
 	return 1;
 }

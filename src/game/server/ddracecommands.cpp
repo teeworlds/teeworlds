@@ -47,7 +47,7 @@ void CGameContext::ConTuneDump(IConsole::IResult *pResult, void *pUserData, int 
 void CGameContext::ConChangeMap(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	pSelf->m_pController->ChangeMap(pResult->GetString(0));
+	pSelf->m_pController->ChangeMap(pResult->NumArguments() ? pResult->GetString(0) : "");
 }
 
 void CGameContext::ConRestart(IConsole::IResult *pResult, void *pUserData, int ClientId)

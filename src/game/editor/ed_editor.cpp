@@ -16,6 +16,7 @@
 #include <game/client/ui.h>
 #include <game/gamecore.h>
 #include <game/client/render.h>
+#include <game/generated/client_data.h>
 
 #include "ed_editor.h"
 #include <game/client/lineinput.h>
@@ -1910,22 +1911,6 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 	}
 }
 
-static void ExtractName(const char *pFileName, char *pName, int BufferSize)
-{
-	const char *pExtractedName = pFileName;
-	const char *pEnd = 0;
-	for(; *pFileName; ++pFileName)
-	{
-		if(*pFileName == '/' || *pFileName == '\\')
-			pExtractedName = pFileName+1;
-		else if(*pFileName == '.')
-			pEnd = pFileName;
-	}
-
-	int Length = pEnd > pExtractedName ? min(BufferSize, (int)(pEnd-pExtractedName+1)) : BufferSize;
-	str_copy(pName, pExtractedName, Length);
-}
-
 void CEditor::ReplaceImage(const char *pFileName, int StorageType, void *pUser)
 {
 	CEditor *pEditor = (CEditor *)pUser;
@@ -1938,7 +1923,7 @@ void CEditor::ReplaceImage(const char *pFileName, int StorageType, void *pUser)
 	pEditor->Graphics()->UnloadTexture(pImg->m_TexId);
 	*pImg = ImgInfo;
 	pImg->m_External = External;
-	ExtractName(pFileName, pImg->m_aName, sizeof(pImg->m_aName));
+	pEditor->ExtractName(pFileName, pImg->m_aName, sizeof(pImg->m_aName));
 	pImg->m_TexId = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
 	pEditor->SortImages();
 	for(int i = 0; i < pEditor->m_Map.m_lImages.size(); ++i)
@@ -2203,8 +2188,8 @@ static void EditorListdirCallback(const char *pName, int IsDir, int StorageType,
 	int Length = str_length(pName);
 	if((pName[0] == '.' && (pName[1] == 0 ||
 		(pName[1] == '.' && pName[2] == 0 && (!str_comp(pEditor->m_pFileDialogPath, "maps") || !str_comp(pEditor->m_pFileDialogPath, "mapres"))))) ||
-		(!IsDir && (pEditor->m_FileDialogFileType == CEditor::FILETYPE_MAP && (Length < 4 || str_comp(pName+Length-4, ".map"))) ||
-		(pEditor->m_FileDialogFileType == CEditor::FILETYPE_IMG && (Length < 4 || str_comp(pName+Length-4, ".png")))))
+		(!IsDir && ((pEditor->m_FileDialogFileType == CEditor::FILETYPE_MAP && (Length < 4 || str_comp(pName+Length-4, ".map"))) ||
+		(pEditor->m_FileDialogFileType == CEditor::FILETYPE_IMG && (Length < 4 || str_comp(pName+Length-4, ".png"))))))
 		return;
 
 	CEditor::CFilelistItem Item;
@@ -2212,7 +2197,7 @@ static void EditorListdirCallback(const char *pName, int IsDir, int StorageType,
 	if(IsDir)
 		str_format(Item.m_aName, sizeof(Item.m_aName), "%s/", pName);
 	else
-		str_format(Item.m_aName, min(static_cast<int>(sizeof(Item.m_aName)), Length+1), "    %s", pName);
+		str_copy(Item.m_aName, pName, min(static_cast<int>(sizeof(Item.m_aName)), Length+1));
 	Item.m_IsDir = IsDir != 0;
 	Item.m_IsLink = false;
 	Item.m_StorageType = StorageType;
@@ -2225,9 +2210,18 @@ void CEditor::AddFileDialogEntry(int Index, CUIRect *pView)
 	if(m_FilesCur-1 < m_FilesStartAt || m_FilesCur >= m_FilesStopAt)
 		return;
 
-	CUIRect Button;
+	CUIRect Button, FileIcon;
 	pView->HSplitTop(15.0f, &Button, pView);
 	pView->HSplitTop(2.0f, 0, pView);
+	Button.VSplitLeft(Button.h, &FileIcon, &Button);
+	Button.VSplitLeft(5.0f, 0, &Button);
+
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_FILEICONS].m_Id);
+	Graphics()->QuadsBegin();
+	RenderTools()->SelectSprite(m_FileList[Index].m_IsDir?SPRITE_FILE_FOLDER:SPRITE_FILE_MAP2);
+	IGraphics::CQuadItem QuadItem(FileIcon.x, FileIcon.y, FileIcon.w, FileIcon.h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
 
 	if(DoButton_File((void*)(10+(int)Button.y), m_FileList[Index].m_aName, m_FilesSelectedIndex == Index, &Button, 0, 0))
 	{
