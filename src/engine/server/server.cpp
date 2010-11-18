@@ -1,8 +1,5 @@
 // copyright (c) 2007 magnus auvinen, see licence.txt for more info
 
-#include <cstdlib>
-#include <ctime>
-
 #include <base/system.h>
 
 #include <engine/shared/config.h>
@@ -690,12 +687,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			}
 
 			m_aClients[ClientId].m_State = CClient::STATE_CONNECTING;
-
-			int num = m_NetServer.getSlot(ClientId).m_Fagpings = (rand() % (g_Config.m_SvMaxFagpings - g_Config.m_SvMinFagpings + 1)) + g_Config.m_SvMinFagpings;
-			while(num--) {
-				CMsgPacker Ping(NETMSG_PING);
-				SendMsgEx(&Ping, 0, ClientId, true);
-			}
 			SendMap(ClientId);
 		}
 	}
@@ -900,11 +891,6 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			{
 				CMsgPacker Msg(NETMSG_PING_REPLY);
 				SendMsgEx(&Msg, 0, ClientId, true);
-			}
-			else if(Msg == NETMSG_PING_REPLY)
-			{
-				if (m_aClients[ClientId].m_State == CClient::STATE_CONNECTING)
-					m_NetServer.getSlot(ClientId).m_Fagpings--;
 			}
 			else
 			{
@@ -1334,21 +1320,16 @@ int CServer::Run()
 
 void CServer::ConKick(IConsole::IResult *pResult, void *pUser, int ClientId)
 {
-	int ClientId1 = pResult->GetVictim();
+	int Victim = pResult->GetVictim();
 	char buf[128];
-	if(ClientId1 < 0 || ClientId1 >= MAX_CLIENTS || ((CServer *)pUser)->m_aClients[ClientId1].m_State == CClient::STATE_EMPTY)
-	{
-		str_format(buf, sizeof(buf),"Invalid Client ID %d", ClientId1);
-		((CServer *)pUser)->SendRconLine(ClientId,buf);
-	}
-	else if(pResult->NumArguments() > 1)
+	if(pResult->NumArguments() >= 1)
 	{
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "Kicked by console (%s)", pResult->GetString(1));
-		((CServer *)pUser)->Kick(pResult->GetInteger(0), aBuf);
+		str_format(aBuf, sizeof(aBuf), "Kicked by console (%s)", pResult->GetString(0));
+		((CServer *)pUser)->Kick(Victim, aBuf);
 	}
 	else
-		((CServer *)pUser)->Kick(pResult->GetInteger(0), "Kicked by console");
+		((CServer *)pUser)->Kick(Victim, "Kicked by console");
 }
 
 void CServer::ConBan(IConsole::IResult *pResult, void *pUser, int ClientId1)
@@ -1646,7 +1627,7 @@ int main(int argc, const char **argv) // ignore_convention
 		}
 	}
 #endif
-	srand(time(NULL)); //we need this only for slot blocker exploit protection
+
 	// init the engine
 	dbg_msg("server", "starting...");
 	CServer *pServer = CreateServer();

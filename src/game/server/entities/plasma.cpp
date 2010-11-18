@@ -36,7 +36,7 @@ bool CPlasma::HitCharacter()
 	if(Hit->Team() != m_ResponsibleTeam) return false;
 	m_Freeze ? Hit->Freeze(Server()->TickSpeed()*3) : Hit->UnFreeze();
 	if(m_Explosive)
-		GameServer()->CreateExplosion(m_Pos, -1, WEAPON_GRENADE, true, Hit->Teams()->TeamMask(m_ResponsibleTeam));
+		GameServer()->CreateExplosion(m_Pos, -1, WEAPON_GRENADE, true, m_ResponsibleTeam, Hit->Teams()->TeamMask(m_ResponsibleTeam));
 	GameServer()->m_World.DestroyEntity(this);
 	return true;
 }
@@ -68,7 +68,7 @@ void CPlasma::Tick()
 	if(Res)
 	{
 		if(m_Explosive)
-			GameServer()->CreateExplosion(m_Pos, -1, WEAPON_GRENADE, true);
+			GameServer()->CreateExplosion(m_Pos, -1, WEAPON_GRENADE, true, m_ResponsibleTeam, -1);//TODO: Fix mask
 		Reset();
 	}
 	
@@ -79,7 +79,9 @@ void CPlasma::Snap(int SnappingClient)
 	if(NetworkClipped(SnappingClient))
 		return;
 	CCharacter* SnapChar = GameServer()->GetPlayerChar(SnappingClient);
+	int Tick = (Server()->Tick()%Server()->TickSpeed())%11;
 	if(!SnapChar) return;
+	if (SnapChar->m_Alive && (m_Layer == LAYER_SWITCH && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[SnapChar->Team()]) && (!Tick)) return;
 	if((SnapChar->Team() != m_ResponsibleTeam) && !SnapChar->GetPlayer()->m_IsUsingDDRaceClient) return;
 	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_Id, sizeof(CNetObj_Laser)));
 	pObj->m_X = (int)m_Pos.x;

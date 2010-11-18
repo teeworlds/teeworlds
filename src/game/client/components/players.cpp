@@ -1,3 +1,4 @@
+#include <engine/demo.h>
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
 #include <game/generated/protocol.h>
@@ -417,8 +418,16 @@ void CPlayers::RenderPlayer(
 			if ((Client()->GameTick()-Player.m_AttackTick) <= (SERVER_TICK_SPEED / 6) && g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles)
 			{
 				int IteX = rand() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
-				float Alpha = 1.0f;
-				if (Alpha > 0.0f && g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[IteX])
+				if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+				{
+					static int s_LastIteX = IteX;
+					const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
+					if(pInfo->m_Paused)
+						IteX = s_LastIteX;
+					else
+						s_LastIteX = IteX;
+				}
+				if(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[IteX])
 				{
 					vec2 Dir = vec2(pPlayerChar->m_X,pPlayerChar->m_Y) - vec2(pPrevChar->m_X, pPrevChar->m_Y);
 					Dir = normalize(Dir);

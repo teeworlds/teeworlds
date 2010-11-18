@@ -68,6 +68,8 @@ protected:
 	bool m_MarkedForDestroy;
 	int m_Id;
 	int m_Objtype;
+	int m_Number;
+	int m_Layer;
 public:
 	CEntity(CGameWorld *pGameWorld, int Objtype);
 	virtual ~CEntity();
@@ -75,6 +77,10 @@ public:
 	class CGameWorld *GameWorld() { return m_pGameWorld; }
 	class CGameContext *GameServer() { return GameWorld()->GameServer(); }
 	class IServer *Server() { return GameWorld()->Server(); }
+	
+	void MarkDestroy() {
+		m_MarkedForDestroy = true;
+	}
 	
 	
 	CEntity *TypeNext() { return m_pNextTypeEntity; }

@@ -224,7 +224,6 @@ private:
 	{
 	public:
 		CNetConnection m_Connection;
-		int m_Fagpings;
 	};
 	
 	class CBan
@@ -288,8 +287,6 @@ public:
 
 	//
 	void SetMaxClientsPerIP(int Max);
-
-	CSlot& getSlot(int ClientID) { return m_aSlots[ClientID]; }
 };
 
 

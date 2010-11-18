@@ -12,8 +12,6 @@
 #include "gameworld.h"
 #include "player.h"
 #include "score.h"
-#include <game/server/entities/door.h>
-#include <game/server/entities/trigger.h>
 
 /*
 	Tick
@@ -190,7 +188,7 @@ public:
 
 	// helper functions
 	void CreateDamageInd(vec2 Pos, float AngleMod, int Amount, int Mask=-1);
-	void CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage, int Mask=-1);
+	void CreateExplosion(vec2 Pos, int Owner, int Weapon, bool NoDamage, int ActivatedTeam, int Mask);
 	void CreateSmoke(vec2 Pos, int Mask=-1);
 	void CreateHammerHit(vec2 Pos, int Mask=-1);
 	void CreatePlayerSpawn(vec2 Pos, int Mask=-1);

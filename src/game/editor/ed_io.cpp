@@ -1,5 +1,7 @@
+#include <engine/client.h>
 #include <engine/console.h>
 #include <engine/graphics.h>
+#include <engine/serverbrowser.h>
 #include <engine/storage.h>
 #include <game/gamecore.h>
 #include "ed_editor.h"
@@ -328,7 +330,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 					CTile *Tiles = new CTile[pLayer->m_Width*pLayer->m_Height];
 					mem_zero(Tiles, pLayer->m_Width*pLayer->m_Height*sizeof(CTile));
 					Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), Tiles);
-					Item.m_Switch = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTeleTile), ((CLayerSwitch *)pLayer)->m_pSwitchTile);
+					Item.m_Switch = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CSwitchTile), ((CLayerSwitch *)pLayer)->m_pSwitchTile);
 					delete[] Tiles;
 				}
 				else
@@ -401,11 +403,15 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 	m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving done");
 	
 	// send rcon.. if we can
-	/*
-	if(Client()->RconAuthed())
+	if(m_pEditor->Client()->RconAuthed())
 	{
-		Client()->Rcon("sv_map_reload 1");
-	}*/
+		CServerInfo CurrentServerInfo;
+		m_pEditor->Client()->GetServerInfo(&CurrentServerInfo);
+		char aMapName[128];
+		m_pEditor->ExtractName(pFileName, aMapName, sizeof(aMapName));
+		if(!str_comp(aMapName, CurrentServerInfo.m_aMap))
+			m_pEditor->Client()->Rcon("reload");
+	}
 	
 	return 1;
 }
@@ -627,22 +633,28 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						else if(pTiles->m_Switch)
 						{
 							void *pSwitchData = DataFile.GetData(pTilemapItem->m_Switch);
-							mem_copy(((CLayerSwitch*)pTiles)->m_pSwitchTile, pSwitchData, pTiles->m_Width*pTiles->m_Height*sizeof(CTeleTile));
+							mem_copy(((CLayerSwitch*)pTiles)->m_pSwitchTile, pSwitchData, pTiles->m_Width*pTiles->m_Height*sizeof(CSwitchTile));
 
 							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
 							{
-								if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_TRIGGER + ENTITY_OFFSET))
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_TRIGGER + ENTITY_OFFSET);
-								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_DOOR + ENTITY_OFFSET))
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_DOOR + ENTITY_OFFSET);
-								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_LASER_SHORT + ENTITY_OFFSET))
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_LASER_SHORT + ENTITY_OFFSET);
-								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_LASER_MIDDLE + ENTITY_OFFSET))
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_LASER_MIDDLE + ENTITY_OFFSET);
-								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_LASER_LONG + ENTITY_OFFSET))
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = (ENTITY_LASER_LONG + ENTITY_OFFSET);
-								else
-									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = 0;
+								if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type > (ENTITY_CRAZY_SHOTGUN + ENTITY_OFFSET) && ((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type < (ENTITY_DRAGGER_WEAK + ENTITY_OFFSET))
+									continue;
+								if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == TILE_SWITCHOPEN)
+								{
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_SWITCHOPEN;
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Flags = ((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Flags;
+								}
+								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == TILE_SWITCHCLOSE)
+								{
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = TILE_SWITCHCLOSE;
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Flags = ((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Flags;
+								}
+								else if(((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type >= (ENTITY_ARMOR_1 + ENTITY_OFFSET) && ((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type <= (ENTITY_DOOR + ENTITY_OFFSET))
+								{
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Index = ((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type;
+									((CLayerTiles*)pTiles)->m_pTiles[i].m_Flags = ((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Flags;
+								}
+
 							}
 							DataFile.UnloadData(pTilemapItem->m_Switch);
 						}

@@ -192,7 +192,7 @@ void CGameClient::OnConsoleInit()
 	Console()->Register("tune", "si", CFGFLAG_SERVER, ConServerDummy, 0, "Tune variable to value", 0);
 	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConServerDummy, 0, "Reset tuning", 0);
 	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConServerDummy, 0, "Dump tuning", 0);
-	Console()->Register("change_map", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Change map", 0);
+	Console()->Register("change_map", "?r", CFGFLAG_SERVER, ConServerDummy, 0, "Change map", 0);
 	Console()->Register("restart", "?i", CFGFLAG_SERVER, ConServerDummy, 0, "Restart in x seconds", 0);
 	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Broadcast message", 0);
 	Console()->Register("say", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Say in chat", 0);
@@ -623,7 +623,7 @@ void CGameClient::OnEnterGame() {}
 
 void CGameClient::OnRconLine(const char *pLine)
 {
-	m_pGameConsole->PrintLine(1, pLine);
+	m_pGameConsole->PrintLine(CGameConsole::CONSOLETYPE_REMOTE, pLine);
 }
 
 void CGameClient::ProcessEvents()

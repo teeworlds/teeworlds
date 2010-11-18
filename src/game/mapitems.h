@@ -49,7 +49,7 @@ enum
 	ENTITY_LASER_FAST_CCW,
 	//DDRace - Laser Modifiers
 	ENTITY_LASER_SHORT,
-	ENTITY_LASER_MIDDLE,
+	ENTITY_LASER_MEDIUM,
 	ENTITY_LASER_LONG,
 	ENTITY_LASER_C_SLOW,
 	ENTITY_LASER_C_NORMAL,
@@ -73,17 +73,8 @@ enum
 	ENTITY_DRAGGER_WEAK_NW,
 	ENTITY_DRAGGER_NORMAL_NW,
 	ENTITY_DRAGGER_STRONG_NW,
-	//DDrace - Doors
+	//Doors
 	ENTITY_DOOR=49,
-	ENTITY_TRIGGER,
-	ENTITY_CONNECTOR_D=52,//TODO: in ddrace stable used this one no need others rename ENTITY_CONNECTOR
-	ENTITY_CONNECTOR_DR,
-	ENTITY_CONNECTOR_R,
-	ENTITY_CONNECTOR_RU,
-	ENTITY_CONNECTOR_U,
-	ENTITY_CONNECTOR_UL,
-	ENTITY_CONNECTOR_L,
-	ENTITY_CONNECTOR_LD,
 	//End Of Lower Tiles
 	NUM_ENTITIES,
 	//Start From Top Left
@@ -97,7 +88,10 @@ enum
 	TILE_FREEZE = 9,
 	TILE_TELEINEVIL,
 	TILE_UNFREEZE,
-	TILE_TELEIN=26,
+	//Switches
+	TILE_SWITCHOPEN = 24,
+	TILE_SWITCHCLOSE,
+	TILE_TELEIN,
 	TILE_TELEOUT,
 	TILE_BOOST,
 	TILE_BEGIN = 33,
@@ -112,23 +106,27 @@ enum
 	TILE_NOHIT,
 	TILE_NPH,//Remember to change this in collision.cpp if you add anymore tiles
 	//End of higher tiles
-	//Untouchable Elements
+	//Layers
+	LAYER_GAME=0,
+	LAYER_FRONT,
+	LAYER_TELE,
+	LAYER_SPEEDUP,
+	LAYER_SWITCH,
+	NUM_LAYERS,
+	//Flags
 	TILEFLAG_VFLIP=1,
 	TILEFLAG_HFLIP=2,
 	TILEFLAG_OPAQUE=4,
 	TILEFLAG_ROTATE=8,
+	//Rotation
+	ROTATION_0 = 0,
+	ROTATION_90 = TILEFLAG_ROTATE,
+	ROTATION_180 = (TILEFLAG_VFLIP|TILEFLAG_HFLIP),
+	ROTATION_270 = (TILEFLAG_VFLIP|TILEFLAG_HFLIP|TILEFLAG_ROTATE),
 	
 	LAYERFLAG_DETAIL=1,
 	
 	ENTITY_OFFSET=255-16*4,
-};
-
-enum
-{
-	ROTATION_0,
-	ROTATION_90 = TILEFLAG_ROTATE,
-	ROTATION_180 = (TILEFLAG_VFLIP|TILEFLAG_HFLIP),
-	ROTATION_270 = (TILEFLAG_VFLIP|TILEFLAG_HFLIP|TILEFLAG_ROTATE)
 };
 
 struct CPoint
@@ -179,6 +177,14 @@ public:
 	short m_Angle;
 };
 
+class CSwitchTile
+{
+public:
+	unsigned char m_Number;
+	unsigned char m_Type;
+	unsigned char m_Flags;
+};
+
 struct CMapItemImage
 {
 	int m_Version;
@@ -194,7 +200,7 @@ class CDoorTile
 public:
 	unsigned char m_Index;
 	unsigned char m_Flags;
-	bool m_Team[MAX_CLIENTS];
+	int m_Number;
 };
 
 struct CMapItemGroup_v1

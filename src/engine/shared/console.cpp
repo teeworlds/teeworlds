@@ -36,12 +36,12 @@ int CConsole::CResult::GetVictim()
 
 void CConsole::CResult::ResetVictim()
 {
-	m_Victim = -3;
+	m_Victim = VICTIM_NONE;
 }
 
 bool CConsole::CResult::HasVictim()
 {
-	return m_Victim != -3;
+	return m_Victim != VICTIM_NONE;
 }
 
 void CConsole::CResult::SetVictim(int Victim)
@@ -52,11 +52,11 @@ void CConsole::CResult::SetVictim(int Victim)
 void CConsole::CResult::SetVictim(const char *pVictim)
 {
 	if(!str_comp(pVictim, "me"))
-		m_Victim = -2;
+		m_Victim = VICTIM_ME;
 	else if(!str_comp(pVictim, "all"))
-		m_Victim = -1;
+		m_Victim = VICTIM_ALL;
 	else
-		m_Victim = clamp<int>(str_toint(pVictim), 0, MAX_CLIENTS);
+		m_Victim = clamp<int>(str_toint(pVictim), 0, MAX_CLIENTS - 1);
 }
 
 
@@ -156,11 +156,13 @@ int CConsole::ParseArgs(CResult *pResult, const char *pFormat)
 			}
 			else
 			{
+				char* pVictim = 0;
+				
 				if (Command != 'v')
 					pResult->AddArgument(pStr);
 				else
-					pResult->SetVictim(pStr);
-				
+					pVictim = pStr;
+
 				if(Command == 'r') // rest of the string
 					break;
 				else if(Command == 'v')
@@ -177,6 +179,9 @@ int CConsole::ParseArgs(CResult *pResult, const char *pFormat)
 					pStr[0] = 0;
 					pStr++;
 				}
+				
+				if (pVictim)
+					pResult->SetVictim(pVictim);
 			}
 		}
 	}
@@ -403,7 +408,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 				}
 				else 
 				{
-					if(pResult->GetVictim() == -2)
+					if(pResult->GetVictim() == CResult::VICTIM_ME)
 						pResult->SetVictim(ClientId);
 					
 					if((ClientLevel < pCommand->m_Level && !(pCommand->m_Flags & CMDFLAG_HELPERCMD)) || (ClientLevel < 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD)))
@@ -424,7 +429,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 
 						ReleaseAlternativePrintResponseCallback();
 					}					
-					else if(ClientLevel == 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD) && (pResult->GetVictim() != ClientId && pResult->GetVictim() != -2))
+					else if(ClientLevel == 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD) && pResult->GetVictim() != ClientId)
 					{
 						RegisterAlternativePrintResponseCallback(pfnAlternativePrintResponseCallback, pResponseUserData);
 						PrintResponse(OUTPUT_LEVEL_STANDARD, "Console", "As a helper you can't use commands on others.");
@@ -449,7 +454,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 					{
 						if (pResult->HasVictim())
 						{
-							if(pResult->GetVictim() == -1)
+							if(pResult->GetVictim() == CResult::VICTIM_ALL)
 							{
 								for (int i = 0; i < MAX_CLIENTS; i++)
 								{
@@ -770,12 +775,6 @@ void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
 		else if(!str_comp("-s", ppArguments[i]) || !str_comp("--silent", ppArguments[i]))
 		{
 			// skip silent param
-			continue;
-		}
-		else if(ppArguments[i][0] == '-' && ppArguments[i][1] == 'd' && ppArguments[i][2] == 0)
-		{
-			// skip datadir param
-			++i;
 			continue;
 		}
 		else

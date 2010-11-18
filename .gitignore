@@ -7,7 +7,7 @@ config.lua
 Debug
 teeworlds_d*
 teeworlds_srv_d*
-bam*
+bam
 build server.bat
 buildlog.txt
 autoexec.cfg

@@ -93,7 +93,9 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	if(m_pPlayer->m_RconFreeze) Freeze(-1);
 	GameServer()->m_pController->OnCharacterSpawn(this);
 	
-	
+	if(GetPlayer()->m_IsUsingDDRaceClient) {
+		Controller->m_Teams.SendTeamsState(GetPlayer()->GetCID());
+	}
 
 	return true;
 }
@@ -102,6 +104,7 @@ void CCharacter::Destroy()
 {
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
 	m_Alive = false;
+	CEntity::Destroy();
 }
 
 void CCharacter::SetWeapon(int W)
@@ -861,7 +864,7 @@ void CCharacter::Tick()
 		for(std::list < int >::iterator i = Indices.begin(); i != Indices.end(); i++)
 			HandleTiles(*i);
 	else
-		HandleTiles(-1);
+		HandleTiles(GameServer()->Collision()->GetPureMapIndex(m_Pos));
 
 	// kill player when leaving gamelayer
 	if((int)m_Pos.x/32 < -200 || (int)m_Pos.x/32 > GameServer()->Collision()->GetWidth()+200 ||
@@ -915,17 +918,18 @@ void CCharacter::HandleTiles(int Index)
 	m_TileFIndexB = GameServer()->Collision()->GetFTileIndex(MapIndexB);
 	m_TileFFlagsB = GameServer()->Collision()->GetFTileFlags(MapIndexB);
 	m_TileFIndexT = GameServer()->Collision()->GetFTileIndex(MapIndexT);
-	m_TileFFlagsT = GameServer()->Collision()->GetFTileFlags(MapIndexT);
-	m_TileSIndex = GameServer()->Collision()->GetDTileIndex(MapIndex, Team());
-	m_TileSFlags = GameServer()->Collision()->GetDTileFlags(MapIndex, Team());
-	m_TileSIndexL = GameServer()->Collision()->GetDTileIndex(MapIndexL, Team());
-	m_TileSFlagsL = GameServer()->Collision()->GetDTileFlags(MapIndexL, Team());
-	m_TileSIndexR = GameServer()->Collision()->GetDTileIndex(MapIndexR, Team());
-	m_TileSFlagsR = GameServer()->Collision()->GetDTileFlags(MapIndexR, Team());
-	m_TileSIndexB = GameServer()->Collision()->GetDTileIndex(MapIndexB, Team());
-	m_TileSFlagsB = GameServer()->Collision()->GetDTileFlags(MapIndexB, Team());
-	m_TileSIndexT = GameServer()->Collision()->GetDTileIndex(MapIndexT, Team());
-	m_TileSFlagsT = GameServer()->Collision()->GetDTileFlags(MapIndexT, Team());
+	m_TileFFlagsT = GameServer()->Collision()->GetFTileFlags(MapIndexT);//
+	m_TileSIndex = (GameServer()->Collision()->m_pSwitchers && GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndex)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileIndex(MapIndex):0:0;
+	m_TileSFlags = (GameServer()->Collision()->m_pSwitchers && GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndex)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileFlags(MapIndex):0:0;
+	m_TileSIndexL = (GameServer()->Collision()->m_pSwitchers && GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndexL)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileIndex(MapIndexL):0:0;
+	m_TileSFlagsL = (GameServer()->Collision()->m_pSwitchers &&GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndexL)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileFlags(MapIndexL):0:0;
+	m_TileSIndexR = (GameServer()->Collision()->m_pSwitchers &&GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndexR)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileIndex(MapIndexR):0:0;
+	m_TileSFlagsR = (GameServer()->Collision()->m_pSwitchers &&GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndexR)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileFlags(MapIndexR):0:0;
+	m_TileSIndexB = (GameServer()->Collision()->m_pSwitchers &&GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndexB)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileIndex(MapIndexB):0:0;
+	m_TileSFlagsB = (GameServer()->Collision()->m_pSwitchers &&GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndexB)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileFlags(MapIndexB):0:0;
+	m_TileSIndexT = (GameServer()->Collision()->m_pSwitchers &&GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndexT)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileIndex(MapIndexT):0:0;
+	m_TileSFlagsT = (GameServer()->Collision()->m_pSwitchers &&GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetDTileNumber(MapIndexT)].m_Status[Team()])?(Team() != TEAM_SUPER)?GameServer()->Collision()->GetDTileFlags(MapIndexT):0:0;
+	//dbg_msg("Tiles","%d, %d, %d, %d, %d", m_TileSIndex, m_TileSIndexL, m_TileSIndexR, m_TileSIndexB, m_TileSIndexT);
 	//Sensitivity
 	int S1 = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y-m_ProximityRadius/3.f));
 	int S2 = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x+m_ProximityRadius/3.f, m_Pos.y+m_ProximityRadius/3.f));
@@ -1013,6 +1017,11 @@ void CCharacter::HandleTiles(int Index)
 		m_Core.m_Vel.y = 0;
 		m_Core.m_Jumped = 0;
 	}
+	// handle switch tiles
+	if(GameServer()->Collision()->IsSwitch(MapIndex) == TILE_SWITCHOPEN && Team() != TEAM_SUPER)
+		GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetSWitchNumber(MapIndex)].m_Status[Team()] = true;
+	if(GameServer()->Collision()->IsSwitch(MapIndex) == TILE_SWITCHCLOSE && Team() != TEAM_SUPER)
+		GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetSWitchNumber(MapIndex)].m_Status[Team()] = false;
 	// handle speedup tiles
 	if(GameServer()->Collision()->IsSpeedup(MapIndex) == TILE_BOOST)
 	{
@@ -1309,7 +1318,7 @@ bool CCharacter::UnFreeze()
 			m_ActiveWeapon = WEAPON_GUN;
 		m_FreezeTime = 0;
 		m_FreezeTick = 0;
-		m_ReloadTimer = 0;
+		if (m_ActiveWeapon==WEAPON_HAMMER) m_ReloadTimer = 0;
 		 return true;
 	}
 	return false;
@@ -1368,7 +1377,7 @@ void CCharacter::Die(int Killer, int Weapon)
 	m_pPlayer->m_DieTick = Server()->Tick();
 
 	m_Alive = false;
-	GameServer()->m_World.RemoveEntity(this);
+	MarkDestroy();
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
 	GameServer()->CreateDeath(m_Pos, m_pPlayer->GetCID());
 

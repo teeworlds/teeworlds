@@ -11,7 +11,7 @@ public:
 	vec2 m_Vel;
 	vec2 m_StandPos;
 	
-	int m_Team;
+	int m_Number;
 	int m_AtStand;
 	int m_DropTick;
 	int m_GrabTick;

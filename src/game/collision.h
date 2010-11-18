@@ -13,8 +13,12 @@ class CCollision
 	class CTeleTile *m_pTele;
 	class CSpeedupTile *m_pSpeedup;
 	class CTile *m_pFront;
-	class CTeleTile *m_pSwitch;
+	class CSwitchTile *m_pSwitch;
 	class CDoorTile *m_pDoor;
+	struct SSwitchers
+	{
+		bool m_Status[16];
+	};
 
 public:
 	enum
@@ -31,10 +35,11 @@ public:
 	bool CheckPoint(float x, float y) { return IsSolid(round(x), round(y)); }
 	bool CheckPoint(vec2 p) { return CheckPoint(p.x, p.y); }
 	void SetCollisionAt(float x, float y, int Flag);
-	void SetDTile(float x, float y, int Team, bool State);
-	void SetDCollisionAt(float x, float y, int Type, int Team, int Flags = 0);
-	int GetDTileIndex(int Index,int Team);
-	int GetDTileFlags(int Index,int Team);
+	void SetDTile(float x, float y, bool State);
+	void SetDCollisionAt(float x, float y, int Type, int Flags, int Number);
+	int GetDTileIndex(int Index);
+	int GetDTileFlags(int Index);
+	int GetDTileNumber(int Index);
 	int GetCollisionAt(float x, float y) { return GetTile(round(x), round(y)); }
 	int GetFCollisionAt(float x, float y) { return GetFTile(round(x), round(y)); }
 	int GetWidth() { return m_Width; };
@@ -52,7 +57,7 @@ public:
 	
 	int GetTile(int x, int y);
 	int GetFTile(int x, int y);
-	int Entity(int x, int y, bool Front);
+	int Entity(int x, int y, int Layer);
 	//DDRace
 	int GetPureMapIndex(vec2 Pos);
 	std::list<int> GetMapIndices(vec2 PrevPos, vec2 Pos, unsigned MaxIndices = 0);
@@ -66,6 +71,8 @@ public:
 	//int IsCheckpoint(int Index);
 	int IsSpeedup(int Index);
 	void GetSpeedup(int Index, vec2 *Dir, int *Force, int *MaxSpeed);
+	int IsSwitch(int Index);
+	int GetSWitchNumber(int Index);
 	
 	int IsSolid(int x, int y);
 	int IsThrough(int x, int y);
@@ -82,8 +89,9 @@ public:
 	class CTeleTile *TeleLayer() { return m_pTele; }
 	//class CSpeedupTile *SpeedupLayer() { return m_pSpeedup; }
 	//class CTile *FrontLayer() { m_pFront; }
-	class CTeleTile *SwitchLayer() { return m_pSwitch; }
+	class CSwitchTile *SwitchLayer() { return m_pSwitch; }
 	class CLayers *Layers() { return m_pLayers; }
+	SSwitchers* m_pSwitchers;
 };
 
 #endif

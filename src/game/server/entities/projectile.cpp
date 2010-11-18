@@ -16,10 +16,14 @@ CProjectile::CProjectile
 		bool Explosive,
 		float Force,
 		int SoundImpact,
-		int Weapon
+		int Weapon,
+		int Layer,
+		int Number
 	)
 : CEntity(pGameWorld, NETOBJTYPE_PROJECTILE)
 {
+	m_Layer = Layer;
+	m_Number = Number;
 	m_Type = Type;
 	m_Pos = Pos;
 	m_Direction = Dir;
@@ -118,12 +122,12 @@ void CProjectile::Tick()
 	{
 		if(m_Explosive/*??*/ && (!TargetChr || (TargetChr && !m_Freeze)))
 		{
-			GameServer()->CreateExplosion(ColPos, m_Owner, m_Weapon, m_Owner == -1, 
+			GameServer()->CreateExplosion(ColPos, m_Owner, m_Weapon, m_Owner == -1, (!TargetChr ? -1 : TargetChr->Team()),
 			(m_Owner != -1)? TeamMask : -1);
 			GameServer()->CreateSound(ColPos, m_SoundImpact, 
 			(m_Owner != -1)? TeamMask : -1);
 		}
-		else if(TargetChr && m_Freeze)
+		else if(TargetChr && m_Freeze && ((m_Layer == LAYER_SWITCH && GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[TargetChr->Team()]) || m_Layer != LAYER_SWITCH))
 			TargetChr->Freeze(Server()->TickSpeed()*3);
 		if(Collide && m_Bouncing != 0)
 		{
@@ -167,6 +171,9 @@ void CProjectile::Snap(int SnappingClient)
 	if(NetworkClipped(SnappingClient, GetPos(Ct)))
 		return;
 	CCharacter * SnapChar = GameServer()->GetPlayerChar(SnappingClient);
+	int Tick = (Server()->Tick()%Server()->TickSpeed())%((m_Explosive)?6:20);
+	if (SnapChar && SnapChar->m_Alive && (m_Layer == LAYER_SWITCH && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[SnapChar->Team()] && (!Tick))) return;
+
 	if
 	(
 			SnapChar &&
