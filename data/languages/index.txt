@@ -25,6 +25,9 @@ italian
 portuguese
 == Português
 
+russian
+== Русский
+
 serbian
 == Srpski
 
