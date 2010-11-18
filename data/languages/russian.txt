@@ -1,0 +1,807 @@
+##### translated strings #####
+
+%d of %d servers, %d players
+== %d/%d серверов, %d игроков
+
+%ds left
+== осталось %d сек.
+
+%d%% loaded
+== %d%% загружено
+
+[N] Flip brush horizontal
+== [N] Зеркалировать кисть по горизонтали
+
+[NumPad+] Zoom in
+== [ClavierNum+] Увеличить
+
+[NumPad-] Zoom out
+== [ClavierNum-] Уменьшить
+
+[M] Flip brush vertical
+== [M] Зеркалировать кисть по вертикали
+
+Abort
+== Отмена
+
+Add
+== Добавить
+
+Add group
+== Добавить группу
+
+Add Image
+== Добавить изображение
+
+Address
+== Адрес
+
+Adds a new group
+== Добавить новую группу
+
+All
+== Все
+
+Alpha
+== Прозрачн..
+
+Always show name plates
+== Всегда показывать ники игроков
+
+Anim
+== Аним.
+
+Append
+== Вставить
+
+Append map
+== Вставить карту в текущую
+
+Are you sure that you want to quit?
+== Вы действительно желаете выйти?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Так как это ваш первый запуск игры, пожалуйста, введите свой ник в поле ниже. Также рекоммендуется проверить настройки игры и поменять некоторые из них перед тем, как начать играть.
+
+Blue team
+== Синие
+
+Blue team wins!
+== Синие победили!
+
+Body
+== Тело
+
+Border
+== Создать края
+
+Call vote
+== Голосовать
+
+Cancel
+== Отмена
+
+Chat
+== Чат
+
+Clear collision
+== Очистить коллизии
+
+Close
+== Закрыть
+
+Color+
+== Цвет+
+
+Compatible version
+== Совместимая версия
+
+Connect
+== Подключиться
+
+Connecting to
+== Подключение к
+
+Connection Problems...
+== Проблемы со связью...
+
+Console
+== Консоль
+
+Controls
+== Управление
+
+Constructs collision from this layer
+== Создать коллизии из этого слоя
+
+Creates a new map
+== Создать новую карту
+
+Current
+== Текущий
+
+Current version: %s
+== Текущая версия: %s
+
+Custom colors
+== Свои цвета
+
+Decrease
+== Уменьшить
+
+Decrease animation speed
+== Уменьшить скорость анимации
+
+Delete
+== Удалить
+
+Delete group
+== Удалить группу
+
+Delete layer
+== Удалить слой
+
+Deletes the layer
+== Удалить слой
+
+Demos
+== Демо
+
+Detail
+== Детальный
+
+Disconnect
+== Отключить
+
+Disconnected
+== Отключено
+
+Display Modes
+== Режимы дисплея
+
+Downloading map
+== Скачивание карты 
+
+Draw!
+== Ничья!
+
+Dynamic Camera
+== Динамическая камера
+
+Embed
+== Встроить
+
+Embedded
+== Встроенные
+
+Embeds the image into the map file.
+== Встроить изображение в саму карту
+
+Emoticon
+== Эмоция
+
+Enter
+== Вход
+
+Error
+== Ошибка
+
+error loading demo
+== ошибка при загрузке демо
+
+Exit
+== Выход
+
+Exits from the editor
+== Выход из редактора
+
+External
+== Внешние
+
+FSAA samples
+== Сэмплов FSAA
+
+Favorite
+== Избранный
+
+Favorites
+== Избранные
+
+Feet
+== Ноги
+
+File
+== Файл
+
+Filename:
+== Имя файла:
+
+Filter
+== Фильтр
+
+Fire
+== Выстрел
+
+Force vote
+== Форсировать
+
+Fullscreen
+== Полноэкранный режим
+
+Game
+== Игра
+
+Game info
+== Инфо об игре
+
+Game over
+== Игра окончена
+
+Game type
+== Тип игры
+
+Game types:
+== Тип игры:
+
+General
+== Основные
+
+Graphics
+== Графика
+
+Grenade
+== Граната
+
+Group
+== Группа
+
+Hammer
+== Молоток
+
+Has people playing
+== Сервер не пустой
+
+Height
+== Высота
+
+High Detail
+== Высокая детализация
+
+Hook
+== Веревка
+
+Host address
+== Адрес сервера
+
+Hue
+== Оттенок
+
+Image
+== Изображение
+
+Images
+== Изображения
+
+Increase
+== Увеличить
+
+Increase animation speed
+== Увеличить скорость анимации
+
+Info
+== Инфо
+
+Internet
+== Интернет
+
+Join blue
+== За синих
+
+Join game
+== Наблюдать
+
+Join red
+== За красных
+
+Jump
+== Прыжок
+
+Kick
+== Выкинуть
+
+LAN
+== LAN
+
+Language
+== Язык
+
+Layers
+== Слои
+
+Lht.
+== Яркость
+
+Load
+== Загрузить
+
+Load a new image to use in the map
+== Загрузить новое изображение для использования его в карте
+
+Loading
+== Загрузка
+
+MOTD
+== MOTD
+
+Make collision
+== Создать коллизии
+
+Make external
+== Сделать внешним
+
+Map
+== Карта
+
+Maximum ping:
+== Макс. пинг:
+
+min
+== мин.
+
+Miscellaneous
+== Дополнительно
+
+Mouse sens.
+== Чувств. мыши
+
+Move left
+== Влево
+
+Move right
+== Вправо
+
+Movement
+== Перемещение
+
+Mute when not active
+== Глушить звуки, когда игра неактивна
+
+Name
+== Имя
+
+New
+== Новый
+
+News
+== Новости
+
+Next weapon
+== След. оружие
+
+Nickname
+== Ник
+
+Name:
+== Имя:
+
+No
+== Нет
+
+No password
+== Без пароля
+
+No servers found
+== Сервера не найдены
+
+No servers match your filter criteria
+== Нет серверов, отвечающих вашим критериям
+
+None
+== Ничего
+
+Normal animation speed
+== Нормальная скорость анимации
+
+Ok
+== Ок
+
+Open
+== Открыть
+
+Open map
+== Открыть карту
+
+Opens a map and adds everything from that map to the current one
+== Открыть карту и добавить из нее все в текущую
+
+Opens a map for editing
+== Открыть карту для редактирования
+
+Order
+== Порядок
+
+Password
+== Пароль
+
+Password incorrect
+== Неверный пароль
+
+Ping
+== Пинг
+
+Pistol
+== Пистолет
+
+Play
+== Просмотр
+
+Player
+== Игрок
+
+Players
+== Игроки
+
+Please balance teams!
+== Сбалансируйте команды!
+
+Pos.+
+== Поз.+
+
+Press right mouse button to create a new point
+== Нажмите правую кнопку мыши для создания новой точки
+
+Prev. weapon
+== Пред. оружие
+
+Quality Textures
+== Качественные текстуры
+
+Quick search:
+== Быстрый поиск:
+
+Quit
+== Выход
+
+Red team
+== Красные
+
+Red team wins!
+== Красные победили!
+
+Reason:
+== Причина:
+
+Refocus
+== Вернуть фокус
+
+Refresh
+== Обновить
+
+Refreshing master servers
+== Обновление списка мастер-серверов
+
+Remote console
+== Консоль сервера
+
+Remove
+== Удалить
+
+Removes collision from this layer
+== Удалить коллизии из этого слоя
+
+Removes the image from the map file.
+== Удалить изображение из файла с картой
+
+Removes the image from the map
+== Удалить изображение из карты
+
+Replace
+== Заменить
+
+Replace Image
+== Заменить изображение
+
+Replaces the image with a new one
+== Заменить это изображение другим
+
+Reset filter
+== Сбросить фильтры
+
+Reset to defaults
+== Сбросить настройки
+
+Rifle
+== Лазер
+
+Round
+== Раунд
+
+Sample rate
+== Частота
+
+Sat.
+== Контраст.
+
+Save
+== Сохранить
+
+Save As
+== Сохранить как
+
+Save map
+== Сохранить карту
+
+Saves the current map
+== Сохранить текущую карту
+
+Saves the current map under a new name
+== Сохранить текущую карту под новым названием
+
+Select group. Right click for properties.
+== Выберите группу. Правый клик открывает свойства.
+
+Select layer. Right click for properties.
+== Выберите слой. Правый клик открывает свойства.
+
+Score
+== Очки
+
+Score board
+== Табло
+
+Score limit
+== Лимит очков
+
+Scoreboard
+== Ход игры
+
+Screenshot
+== Скриншот
+
+Select image
+== Выберите изображение
+
+Server details
+== Детали сервера
+
+Server info
+== Информация
+
+Server not full
+== Сервер не заполнен
+
+Settings
+== Настройки
+
+Shotgun
+== Дробовик
+
+Show chat
+== Показать чат
+
+Show name plates
+== Показывать ники игроков
+
+Show only supported
+== Только поддерживаемые режимы
+
+Skins
+== Скины
+
+Sound
+== Звук
+
+Sound volume
+== Громкость звука
+
+Spectate
+== Наблюдать
+
+Spectators
+== Наблюдатели
+
+Square
+== Квадрат
+
+Standard gametype
+== Стандартный тип игры
+
+Standard map
+== Стандартная карта
+
+Sudden Death
+== Быстрая смерть
+
+Switch weapon on pickup
+== Переключать оружие при подборе
+
+Team
+== Команда
+
+Team chat
+== Командный чат
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Вышла Teeworlds %s! Скачивайте на www.teeworlds.com!
+
+Texture Compression
+== Сжатие текстур
+
+The server is running a non-standard tuning on a pure game type.
+== Сервер запущен с нестандартными настройками на стандартном типе игры.
+
+Time limit
+== Лимит
+
+Try again
+== Попробовать снова
+
+Type
+== Тип
+
+UI Color
+== Цвет интерфейса
+
+Use sounds
+== Использовать звуки
+
+V-Sync
+== Вертикальная синхронизация
+
+Version
+== Версия
+
+Vote no
+== Против
+
+Vote yes
+== За
+
+Voting
+== Голосование
+
+Warmup
+== Разминка
+
+Weapon
+== Оружие
+
+Welcome to Teeworlds
+== Добро пожаловать в Teeworlds!
+
+Width
+== Ширина
+
+Yes
+== Да
+
+You must restart the game for all settings to take effect.
+== Перезапустите игру для применения изменений.
+
+Your skin
+== Ваш скин
+
+ZI
+== Z+
+
+ZO
+== Z-
+
+
+##### needs translation ####
+
+HD
+== HD
+
+[ctrl+h] Toggle High Detail
+== [ctrl+h] Переключить высокую детализацию
+
+[ctrl+m] Toggle animation
+== [ctrl+m] Переключить анимацию
+
+Proof
+== Границы
+
+[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== [ctrl+p] Показать или скрыть границы, в пределах которых игрок может видеть карту
+
+[NumPad*] Zoom to normal and remove editor offset
+== [NumPad*] Установить нормальное увеличение и убрать смещение редактора
+
+CCW
+== CCW
+
+[R] Rotates the brush counter clockwise
+== [R] Повернуть кисть против часовой стрелки
+
+CW
+== CW
+
+[T] Rotates the brush clockwise
+== [T] Повернуть кисть по часовой стрелке
+
+Add Quad
+== Добавить квад
+
+Adds a new quad
+== Добавить новый квад
+
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== Левая кнопка мыши для перемещения. Зажмите Shift для перемещения опоры. Зажмите Ctrl для поворота.
+
+Left mouse button to move. Hold shift to move the texture.
+== Левая кнопка мыши для перемещения. Зажмите Shift для перемещения текстуры.
+
+Use left mouse button to drag and create a brush.
+== Используйте левую кнопку мыши для перемещения и создания кисти
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== Используйте левую кнопку мыши для рисования кистью. Правая кнопка мыши очищает кисть.
+
+Toggle group visibility
+== Переключить видимость группы
+
+Switch between images and layers managment.
+== Переключиться между управлением слоями и изображениями
+
+Envelopes
+== Кривые
+
+Toggles the envelope editor.
+== Показать или скрыть редактор кривых
+
+%s Right click for context menu.
+== %s Правая кнопка мыши для контекстного меню
+
+Creates a new color envelope
+== Создать новую кривую цвета
+
+Creates a new pos envelope
+== Создать новую кривую позиции
+
+Previous Envelope
+== Предыдущая кривая
+
+Next Envelope
+== Следуюая кривая
+
+Switch curve type
+== Изменить тип кривой
+
+Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
+== Левая кнопка мыши для перемещения. Зажмите Shift для изменения момента времени. Правая кнопка мыши для удаления
+
+Add quads layer
+== Добавить слой квадов
+
+Creates a new quad layer
+== Создать новый слой квадов
+
+Add tile layer
+== Добавить слой тайлов
+
+Creates a new tile layer
+== Создать новый слой тайлов
+
+Deletes the current quad
+== Удалить текущий квад
+
+Squares the current quad
+== Преобразовать текущий квад в квадрат
+
+Pos. Env
+== Поз. крив.
+
+Pos. TO
+== Поз. TO
+
+Color Env
+== Цвет. крив.
+
+Color TO
+== Цвет. TO
+
+Toggle layer visibility
+== Переключить видимость слоя
+
+##### old translations ####
