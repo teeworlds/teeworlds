@@ -282,11 +282,18 @@ void CGameContext::SendChat(int ChatterClientId, int Team, const char *pText, in
 		else
 			m_apPlayers[SpamProtectionClientId]->m_Last_Chat = Server()->Tick();
 
-	char aBuf[256];
+	char aBuf[256], aText[256];
+	str_copy(aText, pText, sizeof(aText));
 	if(ChatterClientId >= 0 && ChatterClientId < MAX_CLIENTS)
-		str_format(aBuf, sizeof(aBuf), "%d:%d:%s: %s", ChatterClientId, Team, Server()->ClientName(ChatterClientId), pText);
+		str_format(aBuf, sizeof(aBuf), "%d:%d:%s: %s", ChatterClientId, Team, Server()->ClientName(ChatterClientId), aText);
+	else if(ChatterClientId == -2)
+	{
+		str_format(aBuf, sizeof(aBuf), "### %s", aText);
+		str_copy(aText, aBuf, sizeof(aText));
+		ChatterClientId = -1;
+	}
 	else
-		str_format(aBuf, sizeof(aBuf), "*** %s", pText);
+		str_format(aBuf, sizeof(aBuf), "*** %s", aText);
 	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "chat", aBuf);
 
 	if(Team == CHAT_ALL)
@@ -294,7 +301,7 @@ void CGameContext::SendChat(int ChatterClientId, int Team, const char *pText, in
 		CNetMsg_Sv_Chat Msg;
 		Msg.m_Team = 0;
 		Msg.m_Cid = ChatterClientId;
-		Msg.m_pMessage = pText;
+		Msg.m_pMessage = aText;
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 	}
 	else
@@ -303,7 +310,7 @@ void CGameContext::SendChat(int ChatterClientId, int Team, const char *pText, in
 		CNetMsg_Sv_Chat Msg;
 		Msg.m_Team = 1;
 		Msg.m_Cid = ChatterClientId;
-		Msg.m_pMessage = pText;
+		Msg.m_pMessage = aText;
 
 		// pack one for the recording only
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NOSEND, -1);

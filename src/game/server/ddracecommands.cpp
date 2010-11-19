@@ -938,8 +938,8 @@ void CGameContext::ConMe(IConsole::IResult *pResult, void *pUserData, int Client
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	char aBuf[256 + 24];
 	
-	str_format(aBuf, 256 + 24, "%s %s", pSelf->Server()->ClientName(ClientId), pResult->GetString(0));
-	pSelf->SendChat(-1, CGameContext::CHAT_ALL, aBuf, ClientId);
+	str_format(aBuf, 256 + 24, "'%s' %s", pSelf->Server()->ClientName(ClientId), pResult->GetString(0));
+	pSelf->SendChat(-2, CGameContext::CHAT_ALL, aBuf, ClientId);
 }
 
 void CGameContext::ConToggleEyeEmote(IConsole::IResult *pResult, void *pUserData, int ClientId)
