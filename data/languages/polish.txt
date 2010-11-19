@@ -1,0 +1,793 @@
+
+##### translated strings #####
+
+%d of %d servers, %d players
+== %d z %d serwerów, %d graczy
+
+Abort
+== Anuluj
+
+Address
+== Adres
+
+All
+== Wszystki
+
+Alpha
+== Alfa
+
+Always show name plates
+== Zawsze pokazuj nicki
+
+Are you sure that you want to quit?
+== Czy na pewno chcesz opuścić grę?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== To pierwsze uruchomienie gry, podaj swój nick poniżej. Zalecane jest też sprawdzenie ustawień i dopasowanie ich do siebie przed dołączeniem do gry.
+
+Blue team
+== Drużyna niebieskich
+
+Blue team wins!
+== Drużyna niebieskich wygrała!
+
+Body
+== Ciało
+
+Call vote
+== Głosowanie
+
+Chat
+== Chat
+
+Close
+== Zamknij
+
+Compatible version
+== Kompatybilna wersja
+
+Connect
+== Połącz
+
+Connecting to
+== Łączenie z
+
+Console
+== Konsola
+
+Controls
+== Sterowanie
+
+Current
+== Aktualnie
+
+Current version: %s
+== Aktualna wersja: %s
+
+Custom colors
+== Własne kolory
+
+Demos
+== Dema
+
+Disconnect
+== Rozłącz
+
+Disconnected
+== Rozłączono
+
+Display Modes
+== Tryby wyświetlania
+
+Downloading map
+== Pobieranie mapy
+
+Draw!
+== Remis!
+
+Dynamic Camera
+== Dynamiczna kamera
+
+Emoticon
+== Emotikonka
+
+Enter
+== Wejdź
+
+FSAA samples
+== próbki FSAA (anti-aliasing)
+
+Favorite
+== Ulubiony
+
+Favorites
+== Ulubione
+
+Feet
+== Stopy
+
+Filter
+== Filtr
+
+Fire
+== Strzał
+
+Force vote
+== Wymuś głosowanie
+
+Fullscreen
+== Pełny ekran
+
+Game
+== Gra
+
+Game info
+== Informacje o grze
+
+Game over
+== Koniec gry
+
+Game type
+== Typ gry
+
+Game types:
+== Typy gier:
+
+General
+== Ogólne
+
+Graphics
+== Grafika
+
+Grenade
+== Granatnik
+
+Hammer
+== Młot
+
+Has people playing
+== Nie pokazuj pustych
+
+High Detail
+== Wysoka jakość obrazu
+
+Hook
+== Hak
+
+Host address
+== Adres serwera
+
+Hue
+== Kolor
+
+Info
+== Info
+
+Internet
+== Internet
+
+Join blue
+== Dołącz do niebieskich
+
+Join game
+== Dołącz
+
+Join red
+== Dołącz do czerwonych
+
+Jump
+== Skok
+
+Kick
+== Kopnięcie
+
+LAN
+== LAN
+
+Language
+== Język
+
+Lht.
+== Jasn.
+
+Loading
+== Ładowanie
+
+MOTD
+== Wiadomość dnia
+
+Map
+== Mapa
+
+Maximum ping:
+== Maksymalny ping:
+
+Miscellaneous
+== Różne
+
+Mouse sens.
+== Czułość myszy
+
+Move left
+== Lewo
+
+Move right
+== Prawo
+
+Movement
+== Ruch
+
+Mute when not active
+== Wycisz kiedy gra nieaktywna
+
+Name
+== Nick
+
+News
+== News
+
+Next weapon
+== Następna broń
+
+Nickname
+== Nick
+
+No
+== Nie
+
+No password
+== Bez hasła
+
+No servers found
+== Nie znaleziono serwerów
+
+No servers match your filter criteria
+== Nie znaleziono serwerów spełniających twoje kryteria
+
+Ok
+== OK
+
+Password
+== Hasło
+
+Password Incorrect
+== Błędne hasło
+
+Ping
+== Ping
+
+Pistol
+== Pistolet
+
+Play
+== Start
+
+Player
+== Gracz
+
+Players
+== Gracze
+
+Prev. weapon
+== Poprzednia broń
+
+Quality Textures
+== Szczegółowe tekstury
+
+Quick search:
+== Szybkie wyszukiwanie:
+
+Quit
+== Wyjście
+
+Red team
+== Drużyna czerwonych
+
+Red team wins!
+== Drużyna czerwonych wygrała!
+
+Refresh
+== Odśwież
+
+Refreshing master servers
+== Odświeżanie głównych serwerów
+
+Remote console
+== Zdalna konsola
+
+Reset filter
+== Domyślne filtry
+
+Reset to defaults
+== Przywróć domyślne
+
+Rifle
+== Laser
+
+Round
+== Runda
+
+Sample rate
+== Próbkowanie
+
+Sat.
+== Nasyc.
+
+Score
+== Wynik
+
+Score board
+== Tablica wyników
+
+Score limit
+== Limit punktów
+
+Scoreboard
+== Tablica wyników
+
+Screenshot
+== Screenshot
+
+Server details
+== Szczegóły serwera
+
+Server info
+== Informacje o serwerze
+
+Server not full
+== Nie pokazuj pełnych
+
+Settings
+== Opcje
+
+Shotgun
+== Shotgun
+
+Show chat
+== Pokaż chat
+
+Show name plates
+== Pokaż nicki
+
+Show only supported
+== Pokaż tylko wspierane
+
+Skins
+== Motywy
+
+Sound
+== Dźwięk
+
+Sound volume
+== Głośność
+
+Spectate
+== Obserwuj
+
+Spectators
+== Obserwatorzy
+
+Standard gametype
+== Standardowy typ gry
+
+Standard map
+== Standardowa mapa
+
+Switch weapon on pickup
+== Zmień broń po podniesieniu
+
+Team
+== Drużyna
+
+Team chat
+== Chat drużynowy
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Wydano Teeworlds %s! Ściągnij je z www.teeworlds.com!
+
+Texture Compression
+== Kompresja tekstur
+
+The server is running a non-standard tuning on a pure game type.
+== Ten serwer nie korzysta ze standardowych ustawień.
+
+Time limit
+== Limit czasu
+
+Try again
+== Ponów próbę
+
+Type
+== Typ
+
+UI Color
+== Kolor menu
+
+Use sounds
+== Włącz dźwięki
+
+V-Sync
+== V-Sync
+
+Version
+== Wersja
+
+Vote no
+== Nie
+
+Vote yes
+== Tak
+
+Voting
+== Głosowanie
+
+Weapon
+== Bronie
+
+Welcome to Teeworlds
+== Witaj w Teeworlds
+
+Yes
+== Tak
+
+You must restart the game for all settings to take effect.
+== Gra musi zostać uruchomiona ponownie, żeby nowe ustawienia weszły w życie.
+
+Your skin
+== Twój wygląd
+
+Password incorrect
+== Błędne hasło
+
+Please balance teams!
+== Konieczne wyrównanie drużyn!
+
+Connection Problems...
+== Problemy z połączeniem...
+
+Warmup
+== Rozgrzewka
+
+Sudden Death
+== Nagła śmierć
+
+%ds left
+== Jeszcze %d
+
+error loading demo
+== Błąd przy ładowaniu demo
+
+Error
+== Błąd
+
+Open map
+== Otwórz mapę
+
+Open
+== Otwórz
+
+Save map
+== Zapisz mapę
+
+Save
+== Zapisz
+
+HD
+== HD
+
+[ctrl+h] Toggle High Detail
+== [Ctrl+H] Przełącz jakość obrazu
+
+Anim
+== Animacja
+
+[ctrl+m] Toggle animation
+== [Ctrl+M] Przełącz animacje
+
+Proof
+== Test
+
+[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== [Ctrl+P] Przełącza granice testowania. Te granice pokazują, ile najwięcej może zobaczyć gracz.
+
+ZO
+== Oddal
+
+[NumPad-] Zoom out
+== [NumPad-] Oddal
+
+[NumPad*] Zoom to normal and remove editor offset
+== [NumPad*] Normalny rozmiar
+
+ZI
+== Przybliż
+
+[NumPad+] Zoom in
+== [NumPad+] Przybliż
+
+Increase animation speed
+== Zwiększ prędkość animacji
+
+Normal animation speed
+== Normalna prędkość animacji
+
+Decrease animation speed
+== Zmniejsz prędkość animacji
+
+[N] Flip brush horizontal
+== [N] Obróć pędzel poziomo
+
+[M] Flip brush vertical
+== [M] Obróć pędzel pionowo
+
+CCW
+== CCW
+
+[R] Rotates the brush counter clockwise
+== [R] Obraca pędzel odwrotnie do wskazówek zegara
+
+CW
+== CW
+
+[T] Rotates the brush clockwise
+== [T] Obraca pędzel zgodnie ze wskazówkami zegara
+
+Add Quad
+== Dodaj Quad
+
+Adds a new quad
+== Dodaje nowy quad
+
+Border
+== Granice
+
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== Lewy przycisk myszy aby się poruszać. Przytrzymaj Shift aby przesuwać oś. Przytrzymaj Ctrl aby obrócić.
+
+Left mouse button to move. Hold shift to move the texture.
+== Lewy przycisk myszy aby się poruszać. Przytrzymaj Shift aby przesuwać teksturę.
+
+Use left mouse button to drag and create a brush.
+== Lewy przycisk myszy aby przesuwać i tworzyć pędzel.
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== Lewy przycisk myszy aby malować bieżącym pędzlem. Prawy przycisk myszy czyści pędzel.
+
+Decrease
+== Zmniejsz
+
+Increase
+== Zwiększ
+
+None
+== Brak
+
+Toggle group visibility
+== Zmień widzialność grupy
+
+Select group. Right click for properties.
+== Wybierz grupę. Prawy przycisk myszy da więcej informacji.
+
+Select layer. Right click for properties.
+== Wybierz warstwę. Prawy przycisk myszy da więcej informacji.
+
+Add group
+== Dodaj grupę
+
+Adds a new group
+== Dodaje nową grupę
+
+Embed
+== Zintegruj
+
+Embeds the image into the map file.
+== Integruje obrazek z plikiem mapy.
+
+Make external
+== Użyj jako zewnętrzny
+
+Removes the image from the map file.
+== Usuwa obrazek z pliku mapy.
+
+Replace
+== Zamień
+
+Replaces the image with a new one
+== Zamienia obrazek na nowy
+
+Replace Image
+== Zamień obrazek
+
+Remove
+== Usuń
+
+Removes the image from the map
+== Usuwa obrazek z mapy
+
+Embedded
+== Zintegrowany
+
+External
+== Zewnętrzny
+
+Select image
+== Wybierz obrazek
+
+Load a new image to use in the map
+== Wybierz nowy obrazek do tej mapy:
+
+Add Image
+== Dodaj obrazek
+
+Add
+== Dodaj
+
+Filename:
+== Nazwa pliku:
+
+Cancel
+== Anuluj
+
+Layers
+== Warstwy
+
+Images
+== Obrazki
+
+Switch between images and layers managment.
+== Przełącz pomiędzy widokiem obrazków i warstw.
+
+Envelopes
+== Animacje
+
+Toggles the envelope editor.
+== Włącza edytor animacji.
+
+%s Right click for context menu.
+== %s Prawy przycisk myszy aby włączyć menu.
+
+Color+
+== Kolor+
+
+Creates a new color envelope
+== Tworzy nowy kolor animacji
+
+Pos.+
+== Poz.+
+
+Creates a new pos envelope
+== Tworzy nową pozycję animacji
+
+Previous Envelope
+== Poprzednia animacja
+
+Next Envelope
+== Następna animacja
+
+Name:
+== Nazwa:
+
+Press right mouse button to create a new point
+== Prawy przycisk myszy aby utworzyć nowy punkt
+
+Switch curve type
+== Przełącz typ krzywej
+
+Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
+== Lewy przycisk myszy aby przeciągnąć. Przytrzymaj Shift aby zmienić również punkt czasowy. Prawy przycisk myszy by skasować.
+
+New
+== Nowy
+
+Creates a new map
+== Tworzy nową mapę
+
+Opens a map for editing
+== Otwiera mapę do edycji
+
+Append
+== Importuj
+
+Opens a map and adds everything from that map to the current one
+== Otwiera mapę i dodaje wszystko z tamtej mapy do bieżącej.
+
+Append map
+== Importuje mapę
+
+Saves the current map
+== Zapisuje bieżącą mapę
+
+Save As
+== Zapisz jako
+
+Saves the current map under a new name
+== Zapisuje bieżącą mapę pod nową nazwą
+
+Exits from the editor
+== Wyjście z edytora
+
+Clear collision
+== Wyczyść kolizję
+
+Removes collision from this layer
+== Usuwa kolizję z tej warstwy
+
+Make collision
+== Stwórz kolizję
+
+Constructs collision from this layer
+== Tworzy kolizję z tej warstwy
+
+Width
+== Szerokość
+
+Height
+== Wysokość
+
+Image
+== Obrazek
+
+Delete group
+== Usuń grupę
+
+Add quads layer
+== Dodaj warstwę quad
+
+Creates a new quad layer
+== Tworzy nową warstwę quad
+
+Add tile layer
+== Dodaj warstwę tile
+
+Creates a new tile layer
+== Tworzy nową warstwę tile
+
+Delete layer
+== Usuń warstwę
+
+Deletes the layer
+== Usuwa warstwę
+
+Group
+== Grupa
+
+Order
+== Kolejność
+
+Detail
+== Szczegóły
+
+Delete
+== Usuń
+
+Deletes the current quad
+== Usuwa bieżący quad
+
+Square
+== Kwadrat
+
+Squares the current quad
+== Zmienia bieżący quad w kwadrat
+
+Pos. Env
+== Pos. Env
+
+Pos. TO
+== Pos. TO
+
+Color Env
+== Color Env
+
+Color TO
+== Color TO
+
+Toggle layer visibility
+== Przełącz widoczność warstwy
+
+File
+== Plik
+
+##### needs translation ####
+
+
+##### old translations ####
