@@ -801,6 +801,10 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	{
 		CNetMsg_Cl_Emoticon *pMsg = (CNetMsg_Cl_Emoticon *)pRawMsg;
 		
+		// dont allow emotes used by the mod
+		if(pMsg->m_Emoticon == 1 || pMsg->m_Emoticon == 10 || pMsg->m_Emoticon == 14)
+			return;
+			
 		if(g_Config.m_SvSpamprotection && p->m_Last_Emote && p->m_Last_Emote+Server()->TickSpeed()*3 > Server()->Tick())
 			return;
 			

@@ -742,20 +742,17 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 			// send emoteicon
 			if(pChr->m_Kills > 1)
 			{
-				CNetMsg_Sv_Emoticon Msg;
-				Msg.m_Cid = pChr->GetPlayer()->GetCID();
 				switch(pChr->m_Kills)
 				{
 				case 2:
-					Msg.m_Emoticon = 1;
+					GameServer()->SendEmoticon(pChr->GetPlayer()->GetCID(), 1);
 					break;
 				case 3:
-					Msg.m_Emoticon = 10;
+					GameServer()->SendEmoticon(pChr->GetPlayer()->GetCID(), 10);
 					break;
 				default:
-					Msg.m_Emoticon = 14;
+					GameServer()->SendEmoticon(pChr->GetPlayer()->GetCID(), 14);
 				}
-				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 			}
 		}
 		
