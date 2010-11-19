@@ -190,7 +190,7 @@ Lht.
 == Svetl.
 
 Loading
-== Učitavam
+== Učitavam DDRace
 
 MOTD
 == Vest dana
