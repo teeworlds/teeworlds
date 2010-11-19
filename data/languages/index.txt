@@ -22,6 +22,9 @@ german
 italian
 == Italiano
 
+polish
+== Polski
+
 portuguese
 == Português
 
