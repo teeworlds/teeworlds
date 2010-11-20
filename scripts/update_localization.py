@@ -1,33 +1,5 @@
 import sys, os
 
-
-
-def _import(library):
-	if sys.version_info[0] == 2:
-		return library[0]
-	if sys.version_info[0] == 3:
-		return library[1]
-
-def _input(output):
-	if sys.version_info[0] == 2:
-		raw_input(output)
-	if sys.version_info[0] == 3:
-		input(output)
-
-def _ord(character):
-	if sys.version_info[0] == 2:
-		return ord(character)
-	if sys.version_info[0] == 3:
-		return character
-
-def _xrange(start = 0, stop = 0, step = 1):
-	if sys.version_info[0] == 2:
-		return xrange(start, stop, step)
-	if sys.version_info[0] == 3:
-		return range(start, stop, step)
-
-
-
 source_exts = [".c", ".cpp", ".h"]
 
 def parse_source():
@@ -58,12 +30,10 @@ def load_languagefile(filename):
 	
 	stringtable = {}
 
-	for i in _xrange(0, len(lines)-1):
+	for i in range(0, len(lines)-1):
 		l = lines[i].decode("utf-8").strip()
-		if len(l) and l[0] == '#' and "needs translation" in l:
-			break
 		if len(l) and not l[0] == '=' and not l[0] == '#':
-			stringtable[l] = lines[i+1][2:].decode("utf-8").rstrip()
+			stringtable[l] = lines[i+1][3:].decode("utf-8").rstrip()
 	
 	return stringtable
 
@@ -82,21 +52,21 @@ def generate_languagefile(outputfilename, srctable, loctable):
 	content = "\n##### translated strings #####\n\n"
 	for k in srctable_keys:
 		if k in loctable and len(loctable[k]):
-			content += "%s\n==%s\n\n" % (k, loctable[k])
+			content += "%s\n== %s\n\n" % (k, loctable[k])
 			num_items += 1
 
 
 	content += "##### needs translation #####\n\n"
 	for k in srctable_keys:
 		if not k in loctable or len(loctable[k]) == 0:
-			content += "%s\n== %s\n\n" % (k, k)
+			content += "%s\n== \n\n" % (k)
 			num_items += 1
 			new_items += 1
 
 	content += "##### old translations #####\n\n"
 	for k in loctable:
 		if not k in srctable:
-			#content += "%s\n==%s\n\n" % (k, loctable[k])
+			content += "%s\n== %s\n\n" % (k, loctable[k])
 			num_items += 1
 			old_items += 1
 	
@@ -116,4 +86,3 @@ for filename in os.listdir("../data/languages"):
 		
 	filename = "../data/languages/" + filename
 	generate_languagefile(filename, srctable, load_languagefile(filename))
-_input("Press enter to exit\n")
