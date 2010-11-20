@@ -1,25 +1,17 @@
+
 ##### translated strings #####
 
 %d of %d servers, %d players
 == %d/%d серверов, %d игроков
 
-%ds left
-== осталось %d сек.
-
 %d%% loaded
 == %d%% загружено
 
-[N] Flip brush horizontal
-== [N] Зеркалировать кисть по горизонтали
+%ds left
+== осталось %d сек.
 
-[NumPad+] Zoom in
-== [ClavierNum+] Увеличить
-
-[NumPad-] Zoom out
-== [ClavierNum-] Уменьшить
-
-[M] Flip brush vertical
-== [M] Зеркалировать кисть по вертикали
+%s Right click for context menu.
+== %s Правая кнопка мыши для контекстного меню
 
 Abort
 == Отмена
@@ -27,17 +19,29 @@ Abort
 Add
 == Добавить
 
+Add Image
+== Добавить изображение
+
+Add Quad
+== Добавить квад
+
 Add group
 == Добавить группу
 
-Add Image
-== Добавить изображение
+Add quads layer
+== Добавить слой квадов
+
+Add tile layer
+== Добавить слой тайлов
 
 Address
 == Адрес
 
 Adds a new group
 == Добавить новую группу
+
+Adds a new quad
+== Добавить новый квад
 
 All
 == Все
@@ -75,6 +79,12 @@ Body
 Border
 == Создать края
 
+CCW
+== CCW
+
+CW
+== CW
+
 Call vote
 == Голосовать
 
@@ -89,6 +99,12 @@ Clear collision
 
 Close
 == Закрыть
+
+Color Env
+== Цвет. крив.
+
+Color TO
+== Цвет. TO
 
 Color+
 == Цвет+
@@ -108,14 +124,26 @@ Connection Problems...
 Console
 == Консоль
 
-Controls
-== Управление
-
 Constructs collision from this layer
 == Создать коллизии из этого слоя
 
+Controls
+== Управление
+
+Creates a new color envelope
+== Создать новую кривую цвета
+
 Creates a new map
 == Создать новую карту
+
+Creates a new pos envelope
+== Создать новую кривую позиции
+
+Creates a new quad layer
+== Создать новый слой квадов
+
+Creates a new tile layer
+== Создать новый слой тайлов
 
 Current
 == Текущий
@@ -141,6 +169,9 @@ Delete group
 Delete layer
 == Удалить слой
 
+Deletes the current quad
+== Удалить текущий квад
+
 Deletes the layer
 == Удалить слой
 
@@ -160,7 +191,7 @@ Display Modes
 == Режимы дисплея
 
 Downloading map
-== Скачивание карты 
+== Скачивание карты
 
 Draw!
 == Ничья!
@@ -183,10 +214,13 @@ Emoticon
 Enter
 == Вход
 
+Envelopes
+== Кривые
+
 Error
 == Ошибка
 
-error loading demo
+Error loading demo
 == ошибка при загрузке демо
 
 Exit
@@ -255,6 +289,9 @@ Grenade
 Group
 == Группа
 
+HD
+== HD
+
 Hammer
 == Молоток
 
@@ -318,6 +355,12 @@ Language
 Layers
 == Слои
 
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== Левая кнопка мыши для перемещения. Зажмите Shift для перемещения опоры. Зажмите Ctrl для поворота.
+
+Left mouse button to move. Hold shift to move the texture.
+== Левая кнопка мыши для перемещения. Зажмите Shift для перемещения текстуры.
+
 Lht.
 == Яркость
 
@@ -345,9 +388,6 @@ Map
 Maximum ping:
 == Макс. пинг:
 
-min
-== мин.
-
 Miscellaneous
 == Дополнительно
 
@@ -369,20 +409,23 @@ Mute when not active
 Name
 == Имя
 
+Name:
+== Имя:
+
 New
 == Новый
 
 News
 == Новости
 
+Next Envelope
+== Следуюая кривая
+
 Next weapon
 == След. оружие
 
 Nickname
 == Ник
-
-Name:
-== Имя:
 
 No
 == Нет
@@ -407,9 +450,6 @@ Ok
 
 Open
 == Открыть
-
-Open map
-== Открыть карту
 
 Opens a map and adds everything from that map to the current one
 == Открыть карту и добавить из нее все в текущую
@@ -444,6 +484,12 @@ Players
 Please balance teams!
 == Сбалансируйте команды!
 
+Pos. Env
+== Поз. крив.
+
+Pos. TO
+== Поз. TO
+
 Pos.+
 == Поз.+
 
@@ -452,6 +498,12 @@ Press right mouse button to create a new point
 
 Prev. weapon
 == Пред. оружие
+
+Previous Envelope
+== Предыдущая кривая
+
+Proof
+== Границы
 
 Quality Textures
 == Качественные текстуры
@@ -462,14 +514,14 @@ Quick search:
 Quit
 == Выход
 
+Reason:
+== Причина:
+
 Red team
 == Красные
 
 Red team wins!
 == Красные победили!
-
-Reason:
-== Причина:
 
 Refocus
 == Вернуть фокус
@@ -489,11 +541,11 @@ Remove
 Removes collision from this layer
 == Удалить коллизии из этого слоя
 
-Removes the image from the map file.
-== Удалить изображение из файла с картой
-
 Removes the image from the map
 == Удалить изображение из карты
+
+Removes the image from the map file.
+== Удалить изображение из файла с картой
 
 Replace
 == Заменить
@@ -537,12 +589,6 @@ Saves the current map
 Saves the current map under a new name
 == Сохранить текущую карту под новым названием
 
-Select group. Right click for properties.
-== Выберите группу. Правый клик открывает свойства.
-
-Select layer. Right click for properties.
-== Выберите слой. Правый клик открывает свойства.
-
 Score
 == Очки
 
@@ -558,8 +604,14 @@ Scoreboard
 Screenshot
 == Скриншот
 
+Select group. Right click for properties.
+== Выберите группу. Правый клик открывает свойства.
+
 Select image
 == Выберите изображение
+
+Select layer. Right click for properties.
+== Выберите слой. Правый клик открывает свойства.
 
 Server details
 == Детали сервера
@@ -603,6 +655,9 @@ Spectators
 Square
 == Квадрат
 
+Squares the current quad
+== Преобразовать текущий квад в квадрат
+
 Standard gametype
 == Стандартный тип игры
 
@@ -611,6 +666,12 @@ Standard map
 
 Sudden Death
 == Быстрая смерть
+
+Switch between images and layers managment.
+== Переключиться между управлением слоями и изображениями
+
+Switch curve type
+== Изменить тип кривой
 
 Switch weapon on pickup
 == Переключать оружие при подборе
@@ -633,6 +694,15 @@ The server is running a non-standard tuning on a pure game type.
 Time limit
 == Лимит
 
+Toggle group visibility
+== Переключить видимость группы
+
+Toggle layer visibility
+== Переключить видимость слоя
+
+Toggles the envelope editor.
+== Показать или скрыть редактор кривых
+
 Try again
 == Попробовать снова
 
@@ -641,6 +711,12 @@ Type
 
 UI Color
 == Цвет интерфейса
+
+Use left mouse button to drag and create a brush.
+== Используйте левую кнопку мыши для перемещения и создания кисти
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== Используйте левую кнопку мыши для рисования кистью. Правая кнопка мыши очищает кисть.
 
 Use sounds
 == Использовать звуки
@@ -687,11 +763,26 @@ ZI
 ZO
 == Z-
 
+[M] Flip brush vertical
+== [M] Зеркалировать кисть по вертикали
 
-##### needs translation ####
+[N] Flip brush horizontal
+== [N] Зеркалировать кисть по горизонтали
 
-HD
-== HD
+[NumPad*] Zoom to normal and remove editor offset
+== [NumPad*] Установить нормальное увеличение и убрать смещение редактора
+
+[NumPad+] Zoom in
+== [ClavierNum+] Увеличить
+
+[NumPad-] Zoom out
+== [ClavierNum-] Уменьшить
+
+[R] Rotates the brush counter clockwise
+== [R] Повернуть кисть против часовой стрелки
+
+[T] Rotates the brush clockwise
+== [T] Повернуть кисть по часовой стрелке
 
 [ctrl+h] Toggle High Detail
 == [ctrl+h] Переключить высокую детализацию
@@ -699,109 +790,145 @@ HD
 [ctrl+m] Toggle animation
 == [ctrl+m] Переключить анимацию
 
-Proof
-== Границы
-
 [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
 == [ctrl+p] Показать или скрыть границы, в пределах которых игрок может видеть карту
 
-[NumPad*] Zoom to normal and remove editor offset
-== [NumPad*] Установить нормальное увеличение и убрать смещение редактора
+##### needs translation #####
 
-CCW
-== CCW
+Alpha value of the envelope
+== 
 
-[R] Rotates the brush counter clockwise
-== [R] Повернуть кисть против часовой стрелки
+Are you sure that you want to delete the demo?
+== 
 
-CW
-== CW
+Aspect ratio
+== 
 
-[T] Rotates the brush clockwise
-== [T] Повернуть кисть по часовой стрелке
+Blue value of the envelope
+== 
 
-Add Quad
-== Добавить квад
+Clip H
+== 
 
-Adds a new quad
-== Добавить новый квад
+Clip W
+== 
 
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== Левая кнопка мыши для перемещения. Зажмите Shift для перемещения опоры. Зажмите Ctrl для поворота.
+Clip X
+== 
 
-Left mouse button to move. Hold shift to move the texture.
-== Левая кнопка мыши для перемещения. Зажмите Shift для перемещения текстуры.
+Clip Y
+== 
 
-Use left mouse button to drag and create a brush.
-== Используйте левую кнопку мыши для перемещения и создания кисти
+Color
+== 
 
-Use left mouse button to paint with the brush. Right button clears the brush.
-== Используйте левую кнопку мыши для рисования кистью. Правая кнопка мыши очищает кисть.
+Delete demo
+== 
 
-Toggle group visibility
-== Переключить видимость группы
+Delete this envelope
+== 
 
-Switch between images and layers managment.
-== Переключиться между управлением слоями и изображениями
+Down
+== 
 
-Envelopes
-== Кривые
+Enable/disable group for saving
+== 
 
-Toggles the envelope editor.
-== Показать или скрыть редактор кривых
+Enable/disable layer for saving
+== 
 
-%s Right click for context menu.
-== %s Правая кнопка мыши для контекстного меню
+Folder
+== 
 
-Creates a new color envelope
-== Создать новую кривую цвета
+Green value of the envelope
+== 
 
-Creates a new pos envelope
-== Создать новую кривую позиции
+Invalid Demo
+== 
 
-Previous Envelope
-== Предыдущая кривая
+Left
+== 
 
-Next Envelope
-== Следуюая кривая
+Left mouse to drag. Hold ctfl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== 
 
-Switch curve type
-== Изменить тип кривой
+Load map
+== 
 
-Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
-== Левая кнопка мыши для перемещения. Зажмите Shift для изменения момента времени. Правая кнопка мыши для удаления
+New folder
+== 
 
-Add quads layer
-== Добавить слой квадов
+Para X
+== 
 
-Creates a new quad layer
-== Создать новый слой квадов
+Para Y
+== 
 
-Add tile layer
-== Добавить слой тайлов
+Parent Folder
+== 
 
-Creates a new tile layer
-== Создать новый слой тайлов
+Pos X
+== 
 
-Deletes the current quad
-== Удалить текущий квад
+Pos Y
+== 
 
-Squares the current quad
-== Преобразовать текущий квад в квадрат
+REC
+== 
 
-Pos. Env
-== Поз. крив.
+Record demo
+== 
 
-Pos. TO
-== Поз. TO
+Red value of the envelope
+== 
 
-Color Env
-== Цвет. крив.
+Resizes the current Quad based on the aspect ratio of the image
+== 
 
-Color TO
-== Цвет. TO
+Right
+== 
 
-Toggle layer visibility
-== Переключить видимость слоя
+Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
 
-##### old translations ####
+Rotation of the envelope
+== 
+
+Shift
+== 
+
+Stop record
+== 
+
+Time limit: %d min
+== 
+
+Up
+== 
+
+Use Clipping
+== 
+
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== 
+
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
+
+Vote No
+== 
+
+Vote Yes
+== 
+
+X-axis of the envelope
+== 
+
+Y-axis of the envelope
+== 
+
+[HOME] Restore map focus
+== 
+
+##### old translations #####
+
