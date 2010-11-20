@@ -40,7 +40,7 @@ void CLocalizationDatabase::AddString(const char *pOrgStr, const char *pNewStr)
 {
 	CString s;
 	s.m_Hash = str_quickhash(pOrgStr);
-	s.m_Replacement = pNewStr;
+	s.m_Replacement = *pNewStr ? pNewStr : pOrgStr;
 	m_Strings.add(s);
 }
 
