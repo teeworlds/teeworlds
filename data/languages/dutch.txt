@@ -1,15 +1,44 @@
+
 ##### translated strings #####
-%ds left
-== %ds over
 
 %d of %d servers, %d players
 == %d van %d Servers, %d spelers
 
+%ds left
+== %ds over
+
+%s Right click for context menu.
+== %s Rechtermuisknop voor context menu.
+
 Abort
 == Afbreken
 
+Add
+== Voeg toe
+
+Add Image
+== Voeg afbeelding toe
+
+Add Quad
+== Voeg Quad toe
+
+Add group
+== Voeg groep toe
+
+Add quads layer
+== Voeg quads laag toe
+
+Add tile layer
+== Voeg tegel laag toe
+
 Address
 == Adres
+
+Adds a new group
+== Voegt een nieuwe groep toe
+
+Adds a new quad
+== Voegt een nieuwe Quad toe
 
 All
 == Alle
@@ -19,6 +48,15 @@ Alpha
 
 Always show name plates
 == Altijd namen laten zien
+
+Anim
+== Anim.
+
+Append
+== Toevoegen
+
+Append map
+== Voeg kaart toe
 
 Are you sure that you want to quit?
 == Weet je zeker dat je wil stoppen?
@@ -35,14 +73,38 @@ Blue team wins!
 Body
 == Lichaam
 
+Border
+== Grens
+
+CCW
+== CCW
+
+CW
+== CW
+
 Call vote
 == Stem
+
+Cancel
+== Annuleren
 
 Chat
 == Chat
 
+Clear collision
+== Verwijder botsingen
+
 Close
 == Sluiten
+
+Color Env
+== Kleur Env
+
+Color TO
+== Kleur TO
+
+Color+
+== Kleur+
 
 Compatible version
 == Werkende versie
@@ -50,17 +112,35 @@ Compatible version
 Connect
 == Verbinden
 
-Connection Problems...
-== Verbindingsproblemen...
-
 Connecting to
 == Verbinden met
+
+Connection Problems...
+== Verbindingsproblemen...
 
 Console
 == Console
 
+Constructs collision from this layer
+== Maakt botsing van deze laag
+
 Controls
 == Besturing
+
+Creates a new color envelope
+== Maakt een nieuwe kleur envelope
+
+Creates a new map
+== Maakt een nieuwe kaart.
+
+Creates a new pos envelope
+== Maakt een nieuwe pos envelope
+
+Creates a new quad layer
+== Maakt een nieuwe quads laag
+
+Creates a new tile layer
+== Maakt een nieuwe tegel laag
 
 Current
 == Huidig
@@ -71,8 +151,32 @@ Current version: %s
 Custom colors
 == Eigen kleuren
 
+Decrease
+== Verkleinen
+
+Decrease animation speed
+== Verklein animatie snelheid
+
+Delete
+== Verwijder
+
+Delete group
+== Verwijder groep
+
+Delete layer
+== Verwijder laag
+
+Deletes the current quad
+== Verwijdert de huidige quad
+
+Deletes the layer
+== Verwijdert de laag
+
 Demos
 == Demos
+
+Detail
+== Detail
 
 Disconnect
 == Stoppen
@@ -92,17 +196,35 @@ Draw!
 Dynamic Camera
 == Dynamische camera
 
+Embed
+== Insluiten
+
+Embedded
+== Ingesloten
+
+Embeds the image into the map file.
+== Sluit een afbeelding in in het bestand van de kaart
+
 Emoticon
 == Emotie
 
 Enter
 == Starten
 
-error loading demo
-== Fout bij laden demo
+Envelopes
+== Envelopes
 
 Error
 == Fout
+
+Error loading demo
+== Fout bij laden demo
+
+Exits from the editor
+== Verlaat de editor
+
+External
+== Extern
 
 FSAA samples
 == FSAA voorbeelden
@@ -115,6 +237,12 @@ Favorites
 
 Feet
 == Voeten
+
+File
+== Bestand
+
+Filename:
+== Bestandsnaam:
 
 Filter
 == Filter
@@ -152,11 +280,20 @@ Graphics
 Grenade
 == Granaat
 
+Group
+== Groep
+
+HD
+== Det.
+
 Hammer
 == Hamer
 
 Has people playing
 == Er spelen mensen
+
+Height
+== Hoogte
 
 High Detail
 == Veel details
@@ -169,6 +306,18 @@ Host address
 
 Hue
 == Tint
+
+Image
+== Afbeelding
+
+Images
+== Afbeeldingen
+
+Increase
+== Vergroten
+
+Increase animation speed
+== Vergroot animatie snelheid
 
 Info
 == Info
@@ -197,14 +346,32 @@ LAN
 Language
 == Taal
 
+Layers
+== Lagen
+
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== Linkermuisknop om te bewegen. Druk shift in om te roteren. Druk ctrl om te draaien.
+
+Left mouse button to move. Hold shift to move the texture.
+== Linkermuisknop om te bewegen. Druk shift in om de textuur te bewegen
+
 Lht.
 == Licht
+
+Load a new image to use in the map
+== Laad een nieuwe afbeelding om te gebruiken in de kaart
 
 Loading
 == Laden
 
 MOTD
 == MOTD
+
+Make collision
+== Maak botsing
+
+Make external
+== Maak extern
 
 Map
 == Kaart
@@ -233,8 +400,17 @@ Mute when not active
 Name
 == Naam
 
+Name:
+== Naam:
+
+New
+== Nieuw
+
 News
 == Nieuws
+
+Next Envelope
+== Volgende envelope
 
 Next weapon
 == Volgend wapen
@@ -254,14 +430,29 @@ No servers found
 No servers match your filter criteria
 == Geen servers gevonden op zoekopdracht
 
+None
+== Geen
+
+Normal animation speed
+== Normale animatie snelheid
+
 Ok
 == Oké
 
+Open
+== Open
+
+Opens a map and adds everything from that map to the current one
+== Opent een kaart en voegt alles van die kaart toe aan de huidige
+
+Opens a map for editing
+== Opent een kaart om te bewerken
+
+Order
+== Volgorde
+
 Password
 == Wachtwoord
-
-Password Incorrect
-== Wachtwoord verkeerd
 
 Password incorrect
 == Wachtwoord verkeerd
@@ -284,8 +475,26 @@ Players
 Please balance teams!
 == Breng teams in balans!
 
+Pos. Env
+== Pos. Env
+
+Pos. TO
+== Pos. TO
+
+Pos.+
+== Pos.+
+
+Press right mouse button to create a new point
+== Rechtermuisknop om een nieuw punt te maken
+
 Prev. weapon
 == Vorig wapen
+
+Previous Envelope
+== Vorige envelope
+
+Proof
+== Test
 
 Quality Textures
 == Structuurkwaliteit
@@ -311,6 +520,27 @@ Refreshing master servers
 Remote console
 == Remote console
 
+Remove
+== Verwijder
+
+Removes collision from this layer
+== Verwijderd botsingen in deze laag
+
+Removes the image from the map
+== Verwijderd de afbeelding uit de kaart
+
+Removes the image from the map file.
+== Verwijderd de afbeelding uit de kaart.
+
+Replace
+== Vervang
+
+Replace Image
+== Vervang afbeelding
+
+Replaces the image with a new one
+== Vervangt de afbeelding met een nieuwe
+
 Reset filter
 == Herstel filter
 
@@ -329,6 +559,21 @@ Sample rate
 Sat.
 == Verz.
 
+Save
+== Opslaan
+
+Save As
+== Opslaan als
+
+Save map
+== Sla kaart op
+
+Saves the current map
+== Sla huidige kaart op
+
+Saves the current map under a new name
+== Sla de huidige kaart op onder een nieuwe naam
+
 Score
 == Score
 
@@ -343,6 +588,15 @@ Scoreboard
 
 Screenshot
 == Screenshot
+
+Select group. Right click for properties.
+== Kies een groep. Rechtermuisknop voor eigenschappen.
+
+Select image
+== Selecteer afbeelding
+
+Select layer. Right click for properties.
+== Selecteer laag. Rechtermuisknop voor eigenschappen.
 
 Server details
 == Serverdetails
@@ -383,6 +637,12 @@ Spectate
 Spectators
 == Toeschouwers
 
+Square
+== Vereffenen
+
+Squares the current quad
+== Vereffenen de huidige quad
+
 Standard gametype
 == Standaard speltype
 
@@ -391,6 +651,12 @@ Standard map
 
 Sudden Death
 == Sudden Death
+
+Switch between images and layers managment.
+== Wissel tussen afbeeldinglaag en beheerlaag.
+
+Switch curve type
+== Wissel bocht type
 
 Switch weapon on pickup
 == Verander wapen bij opakken
@@ -413,6 +679,15 @@ The server is running a non-standard tuning on a pure game type.
 Time limit
 == Tijdlimiet
 
+Toggle group visibility
+== Acitveer groepszichtbaarheid
+
+Toggle layer visibility
+== Activeer zichtbaarheid laag
+
+Toggles the envelope editor.
+== Activeer de envelope editor.
+
 Try again
 == Probeer opnieuw
 
@@ -421,6 +696,12 @@ Type
 
 UI Color
 == UI kleur
+
+Use left mouse button to drag and create a brush.
+== Gebruik de linkermuisknop om de kwast te maken en te slepen.
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== Gebruik de linkermuisknop om de kwast te gebruiken. Rechtermuisknop maakt de kwast schoon.
 
 Use sounds
 == Gebruik geluid
@@ -449,6 +730,9 @@ Weapon
 Welcome to Teeworlds
 == Welkom bij Teeworlds
 
+Width
+== Breedte
+
 Yes
 == Ja
 
@@ -458,333 +742,193 @@ You must restart the game for all settings to take effect.
 Your skin
 == Jouw skin
 
-##### needs translation ####
-
-Open map
-== Open kaart
-
-Open
-== Open
-
-Save map
-== Sla kaart op
-
-Save
-== Opslaan
-
-HD
-== Det.
-
-[ctrl+h] Toggle High Detail
-== [ctrl+h] Activeer Details
-
-Anim
-== Anim.
-
-[ctrl+m] Toggle animation
-== [ctrl+m] Activeer animaties
-
-Proof
-== Test
-
-[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-== [ctrl+p] Test grenzen. Deze grenzen laten zien wat een speler maximaal kan zien.
+ZI
+== ZI
 
 ZO
 == ZO
 
-[NumPad-] Zoom out
-== [NumPad-] Uitzoomen
-
-[NumPad*] Zoom to normal and remove editor offset
-== [NumPad*] Zoom naar normaal en verwijder toevoegingen van de editor 
-
-ZI
-== ZI
-
-[NumPad+] Zoom in
-== [NumPad+] Inzoomen
-
-Increase animation speed
-== Vergroot animatie snelheid
-
-Normal animation speed
-== Normale animatie snelheid
-
-Decrease animation speed
-== Verklein animatie snelheid
+[M] Flip brush vertical
+== [M] Draai kwast verticaal
 
 [N] Flip brush horizontal
 == [N] Draai kwast horizontaal
 
-[M] Flip brush vertical
-== [M] Draai kwast verticaal
+[NumPad*] Zoom to normal and remove editor offset
+== [NumPad*] Zoom naar normaal en verwijder toevoegingen van de editor
 
-CCW
-== CCW
+[NumPad+] Zoom in
+== [NumPad+] Inzoomen
+
+[NumPad-] Zoom out
+== [NumPad-] Uitzoomen
 
 [R] Rotates the brush counter clockwise
 == [R] Draai de kwast tegen de klok in
 
-CW
-== CW
-
 [T] Rotates the brush clockwise
 == [T] Draai de kwast met de klok mee
 
-Add Quad
-== Voeg Quad toe
+[ctrl+h] Toggle High Detail
+== [ctrl+h] Activeer Details
 
-Adds a new quad
-== Voegt een nieuwe Quad toe
+[ctrl+m] Toggle animation
+== [ctrl+m] Activeer animaties
 
-Border
-== Grens
+[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== [ctrl+p] Test grenzen. Deze grenzen laten zien wat een speler maximaal kan zien.
 
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== Linkermuisknop om te bewegen. Druk shift in om te roteren. Druk ctrl om te draaien.
+##### needs translation #####
 
-Left mouse button to move. Hold shift to move the texture.
-== Linkermuisknop om te bewegen. Druk shift in om de textuur te bewegen
+%d%% loaded
+== 
 
-Use left mouse button to drag and create a brush.
-== Gebruik de linkermuisknop om de kwast te maken en te slepen.
+Alpha value of the envelope
+== 
 
-Use left mouse button to paint with the brush. Right button clears the brush.
-== Gebruik de linkermuisknop om de kwast te gebruiken. Rechtermuisknop maakt de kwast schoon. 
+Are you sure that you want to delete the demo?
+== 
 
-Decrease
-== Verkleinen
+Aspect ratio
+== 
 
-Increase
-== Vergroten
+Blue value of the envelope
+== 
 
-None
-== Geen
+Clip H
+== 
 
-Toggle group visibility
-== Acitveer groepszichtbaarheid
+Clip W
+== 
 
-Select group. Right click for properties.
-== Kies een groep. Rechtermuisknop voor eigenschappen.
+Clip X
+== 
 
-Add group
-== Voeg groep toe
+Clip Y
+== 
 
-Adds a new group
-== Voegt een nieuwe groep toe
+Color
+== 
 
-Embed
-== Insluiten
+Delete demo
+== 
 
-Embeds the image into the map file.
-== Sluit een afbeelding in in het bestand van de kaart
+Delete this envelope
+== 
 
-Make external
-== Maak extern
+Down
+== 
 
-Removes the image from the map file.
-== Verwijderd de afbeelding uit de kaart.
+Enable/disable group for saving
+== 
 
-Replace
-== Vervang
+Enable/disable layer for saving
+== 
 
-Replaces the image with a new one
-== Vervangt de afbeelding met een nieuwe
+Exit
+== 
 
-Replace Image
-== Vervang afbeelding
+Folder
+== 
 
-Remove
-== Verwijder
+Green value of the envelope
+== 
 
-Removes the image from the map
-== Verwijderd de afbeelding uit de kaart
+Invalid Demo
+== 
 
-Embedded
-== Ingesloten
+Left
+== 
 
-External
-== Extern
+Left mouse to drag. Hold ctfl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== 
 
-Select image
-== Selecteer afbeelding
+Load
+== 
 
-Load a new image to use in the map
-== Laad een nieuwe afbeelding om te gebruiken in de kaart
+Load map
+== 
 
-Add Image
-== Voeg afbeelding toe
+New folder
+== 
 
-Add
-== Voeg toe
+Para X
+== 
 
-Filename:
-== Bestandsnaam:
+Para Y
+== 
 
-Cancel
-== Annuleren
+Parent Folder
+== 
 
-Layers
-== Lagen
+Pos X
+== 
 
-Images
-== Afbeeldingen
+Pos Y
+== 
 
-Switch between images and layers managment.
-== Wissel tussen afbeeldinglaag en beheerlaag.
+REC
+== 
 
-Envelopes
-== Envelopes
+Reason:
+== 
 
-Toggles the envelope editor.
-== Activeer de envelope editor.
+Record demo
+== 
 
-%s Right click for context menu.
-== %s Rechtermuisknop voor context menu.
+Red value of the envelope
+== 
 
-Color+
-== Kleur+
+Refocus
+== 
 
-Creates a new color envelope
-== Maakt een nieuwe kleur envelope
+Resizes the current Quad based on the aspect ratio of the image
+== 
 
-Pos.+
-== Pos.+
+Right
+== 
 
-Creates a new pos envelope
-== Maakt een nieuwe pos envelope
+Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
 
-Previous Envelope
-== Vorige envelope
+Rotation of the envelope
+== 
 
-Next Envelope
-== Volgende envelope
+Shift
+== 
 
-Name:
-== Naam:
+Stop record
+== 
 
-Press right mouse button to create a new point
-== Rechtermuisknop om een nieuw punt te maken
+Time limit: %d min
+== 
 
-Switch curve type
-== Wissel bocht type
+Up
+== 
 
-Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
-== Linkermuisknop om te slepen. Druk shift in om het punt te veranderen. Rechtermuisknop om te verwijderen.
+Use Clipping
+== 
 
-New
-== Nieuw
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== 
 
-Creates a new map
-== Maakt een nieuwe kaart.
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
 
-Opens a map for editing
-== Opent een kaart om te bewerken
+Vote No
+== 
 
-Append
-== Toevoegen
+Vote Yes
+== 
 
-Opens a map and adds everything from that map to the current one
-== Opent een kaart en voegt alles van die kaart toe aan de huidige
+X-axis of the envelope
+== 
 
-Append map
-== Voeg kaart toe
+Y-axis of the envelope
+== 
 
-Saves the current map
-== Sla huidige kaart op
+[HOME] Restore map focus
+== 
 
-Save As
-== Opslaan als
+##### old translations #####
 
-Saves the current map under a new name
-== Sla de huidige kaart op onder een nieuwe naam
-
-Exits from the editor
-== Verlaat de editor
-
-Clear collision
-== Verwijder botsingen
-
-Removes collision from this layer
-== Verwijderd botsingen in deze laag
-
-Make collision
-== Maak botsing
-
-Constructs collision from this layer
-== Maakt botsing van deze laag
-
-Width
-== Breedte
-
-Height
-== Hoogte
-
-Image
-== Afbeelding
-
-Delete group
-== Verwijder groep
-
-Add quads layer
-== Voeg quads laag toe
-
-Creates a new quad layer
-== Maakt een nieuwe quads laag
-
-Add tile layer
-== Voeg tegel laag toe
-
-Creates a new tile layer
-== Maakt een nieuwe tegel laag
-
-Delete layer
-== Verwijder laag
-
-Deletes the layer
-== Verwijdert de laag
-
-Group
-== Groep
-
-Order
-== Volgorde
-
-Detail
-== Detail
-
-Delete
-== Verwijder
-
-Deletes the current quad
-== Verwijdert de huidige quad
-
-Square
-== Vereffenen
-
-Squares the current quad
-== Vereffenen de huidige quad
-
-Pos. Env
-== Pos. Env
-
-Pos. TO
-== Pos. TO
-
-Color Env
-== Kleur Env
-
-Color TO
-== Kleur TO
-
-Select layer. Right click for properties.
-== Selecteer laag. Rechtermuisknop voor eigenschappen.
-
-Toggle layer visibility
-== Activeer zichtbaarheid laag
-
-File
-== Bestand
-
-##### old translations ####
