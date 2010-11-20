@@ -13,7 +13,6 @@
 #include <game/client/components/scoreboard.h>
 #include <game/client/components/sounds.h>
 #include <game/localization.h>
-
 #include "chat.h"
 
 
@@ -37,8 +36,6 @@ void CChat::OnReset()
 	
 	m_aCompletionBuffer[0] = 0;
 	m_CompletionChosen = -1;
-	m_CompletionRenderOffset = 0.0f;
-
 }
 
 void CChat::OnRelease()
@@ -366,8 +363,11 @@ void CChat::PossibleNames(const char *pStr)
 	{
 		if(str_find_nocase(CurrentServerInfo.m_aPlayers[i].m_aName, pStr))
 		{
-			if(m_CompletionChosen == m_CompletionEnumerationCount)
-				m_Input.Set(CurrentServerInfo.m_aPlayers[i].m_aName);
+			if(m_CompletionChosen == m_CompletionEnumerationCount){
+				char aBuf[128];
+				str_format(aBuf, sizeof(aBuf), "%s:", CurrentServerInfo.m_aPlayers[i].m_aName);
+				m_Input.Set(aBuf);
+				}
 			m_CompletionEnumerationCount++;
 		}
 	}	
