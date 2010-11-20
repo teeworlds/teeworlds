@@ -162,6 +162,8 @@ class CMenus : public CComponent
 		char m_aName[128];
 		bool m_IsDir;
 		int m_StorageType;
+		
+		bool m_InfosLoaded;
 		bool m_Valid;
 		char m_aMap[64];
 		
