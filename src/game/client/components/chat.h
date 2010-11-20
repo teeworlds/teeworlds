@@ -6,7 +6,8 @@
 class CChat : public CComponent
 {
 	CLineInput m_Input;
-	
+
+
 	enum 
 	{
 		MAX_LINES = 25,
@@ -39,6 +40,15 @@ class CChat : public CComponent
 	bool m_InputUpdate;
 	int m_ChatStringOffset;
 	int m_OldChatStringLength;
+
+	int m_CompletionEnumerationCount;
+	
+	char m_aCompletionBuffer[128];
+	int m_CompletionChosen;
+	float m_CompletionRenderOffset;
+		
+
+	void PossibleNames(const char*);
 	
 	static void ConSay(IConsole::IResult *pResult, void *pUserData);
 	static void ConSayTeam(IConsole::IResult *pResult, void *pUserData);
@@ -55,6 +65,7 @@ public:
 	void EnableMode(int Team);
 	
 	void Say(int Team, const char *pLine);
+
 	
 	virtual void OnReset();
 	virtual void OnConsoleInit();

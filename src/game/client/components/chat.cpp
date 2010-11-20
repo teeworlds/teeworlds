@@ -3,6 +3,7 @@
 #include <engine/textrender.h>
 #include <engine/keys.h>
 #include <engine/shared/config.h>
+#include <engine/serverbrowser.h>
 
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
@@ -33,6 +34,11 @@ void CChat::OnReset()
 	m_Show = false;
 	m_InputUpdate = false;
 	m_ChatStringOffset = 0;
+	
+	m_aCompletionBuffer[0] = 0;
+	m_CompletionChosen = -1;
+	m_CompletionRenderOffset = 0.0f;
+
 }
 
 void CChat::OnRelease()
@@ -102,8 +108,29 @@ bool CChat::OnInput(IInput::CEvent e)
 		m_Mode = MODE_NONE;
 		m_pClient->OnRelease();
 	}
+
+	else if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key == KEY_TAB)
+	{
+		m_CompletionChosen++;
+		m_CompletionEnumerationCount = 0;
+		PossibleNames(m_aCompletionBuffer);
+
+		// handle wrapping
+		if(m_CompletionEnumerationCount && m_CompletionChosen >= m_CompletionEnumerationCount)
+		{
+			m_CompletionChosen %= m_CompletionEnumerationCount;
+			m_CompletionEnumerationCount = 0;
+			PossibleNames(m_aCompletionBuffer);
+		}
+	}
 	else
 	{
+		if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key != KEY_TAB)
+		{
+			m_CompletionChosen = -1;
+			str_copy(m_aCompletionBuffer, m_Input.GetString(), sizeof(m_aCompletionBuffer));
+		}
+
 		m_OldChatStringLength = m_Input.GetLength();
 		m_Input.ProcessInput(e);
 		m_InputUpdate = true;
@@ -326,3 +353,24 @@ void CChat::Say(int Team, const char *pLine)
 	Msg.m_pMessage = pLine;
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
+
+
+
+
+
+void CChat::PossibleNames(const char *pStr)
+{
+	CServerInfo CurrentServerInfo;
+	Client()->GetServerInfo(&CurrentServerInfo);
+	for(int i=0; i<CurrentServerInfo.m_NumPlayers; i++)
+	{
+		if(str_find_nocase(CurrentServerInfo.m_aPlayers[i].m_aName, pStr))
+		{
+			if(m_CompletionChosen == m_CompletionEnumerationCount)
+				m_Input.Set(CurrentServerInfo.m_aPlayers[i].m_aName);
+			m_CompletionEnumerationCount++;
+		}
+	}	
+}
+
+
