@@ -22,7 +22,7 @@ Always show name plates
 Are you sure that you want to quit?
 == Ukončit hru?
 
-As this is the first time you have launched the game, please enter your nickname below. It is recommended that you check your settings so you adjust them to your preferences before joining a server.
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Vítejte ve hře TeeWorlds. Před tím, než se poprvé připojíte na herní server, je doporučováno nastavit si hru svým požadavkům. Vložte do políčka níže jméno pro Vašeho tee a pokračujte klepnutím na tlačítko.
 
 Blue team
@@ -250,7 +250,7 @@ Ok
 Password
 == Heslo
 
-Incorrect password
+Password incorrect
 == Nesprávné heslo
 
 Ping
@@ -433,360 +433,502 @@ You must restart the game for all settings to take effect.
 Your skin
 == Váš skin
 
-##### needs translation ####
+##### needs translation #####
 
-Show chat
-== Show chat
-
-Password incorrect
-== Password incorrect
-
-Please balance teams!
-== Please balance teams!
-
-Connection Problems...
-== Connection Problems...
-
-Warmup
-== Warmup
-
-Sudden Death
-== Sudden Death
+%d%% loaded
+== 
 
 %ds left
-== %ds left
-
-error loading demo
-== error loading demo
-
-Error
-== Error
-
-Open map
-== Open map
-
-Open
-== Open
-
-Save map
-== Save map
-
-Save
-== Save
-
-HD
-== HD
-
-[ctrl+h] Toggle High Detail
-== [ctrl+h] Toggle High Detail
-
-Anim
-== Anim
-
-[ctrl+m] Toggle animation
-== [ctrl+m] Toggle animation
-
-Proof
-== Proof
-
-[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-== [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-
-ZO
-== ZO
-
-[NumPad-] Zoom out
-== [NumPad-] Zoom out
-
-[NumPad*] Zoom to normal and remove editor offset
-== [NumPad*] Zoom to normal and remove editor offset
-
-ZI
-== ZI
-
-[NumPad+] Zoom in
-== [NumPad+] Zoom in
-
-Increase animation speed
-== Increase animation speed
-
-Normal animation speed
-== Normal animation speed
-
-Decrease animation speed
-== Decrease animation speed
-
-[N] Flip brush horizontal
-== [N] Flip brush horizontal
-
-[M] Flip brush vertical
-== [M] Flip brush vertical
-
-CCW
-== CCW
-
-[R] Rotates the brush counter clockwise
-== [R] Rotates the brush counter clockwise
-
-CW
-== CW
-
-[T] Rotates the brush clockwise
-== [T] Rotates the brush clockwise
-
-Add Quad
-== Add Quad
-
-Adds a new quad
-== Adds a new quad
-
-Border
-== Border
-
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-
-Left mouse button to move. Hold shift to move the texture.
-== Left mouse button to move. Hold shift to move the texture.
-
-Use left mouse button to drag and create a brush.
-== Use left mouse button to drag and create a brush.
-
-Use left mouse button to paint with the brush. Right button clears the brush.
-== Use left mouse button to paint with the brush. Right button clears the brush.
-
-Decrease
-== Decrease
-
-Increase
-== Increase
-
-None
-== None
-
-Toggle group visibility
-== Toggle group visibility
-
-Select group. Right click for properties.
-== Select group. Right click for properties.
-
-Add group
-== Add group
-
-Adds a new group
-== Adds a new group
-
-Embed
-== Embed
-
-Embeds the image into the map file.
-== Embeds the image into the map file.
-
-Make external
-== Make external
-
-Removes the image from the map file.
-== Removes the image from the map file.
-
-Replace
-== Replace
-
-Replaces the image with a new one
-== Replaces the image with a new one
-
-Replace Image
-== Replace Image
-
-Remove
-== Remove
-
-Removes the image from the map
-== Removes the image from the map
-
-Embedded
-== Embedded
-
-External
-== External
-
-Select image
-== Select image
-
-Load a new image to use in the map
-== Load a new image to use in the map
-
-Add Image
-== Add Image
-
-Add
-== Add
-
-Filename:
-== Filename:
-
-Cancel
-== Cancel
-
-Layers
-== Layers
-
-Images
-== Images
-
-Switch between images and layers managment.
-== Switch between images and layers managment.
-
-Envelopes
-== Envelopes
-
-Toggles the envelope editor.
-== Toggles the envelope editor.
+== 
 
 %s Right click for context menu.
-== %s Right click for context menu.
+== 
 
-Color+
-== Color+
+Add
+== 
 
-Creates a new color envelope
-== Creates a new color envelope
+Add Image
+== 
 
-Pos.+
-== Pos.+
+Add Quad
+== 
 
-Creates a new pos envelope
-== Creates a new pos envelope
-
-Previous Envelope
-== Previous Envelope
-
-Next Envelope
-== Next Envelope
-
-Name:
-== Name:
-
-Press right mouse button to create a new point
-== Press right mouse button to create a new point
-
-Switch curve type
-== Switch curve type
-
-Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
-== Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
-
-New
-== New
-
-Creates a new map
-== Creates a new map
-
-Opens a map for editing
-== Opens a map for editing
-
-Append
-== Append
-
-Opens a map and adds everything from that map to the current one
-== Opens a map and adds everything from that map to the current one
-
-Append map
-== Append map
-
-Saves the current map
-== Saves the current map
-
-Save As
-== Save As
-
-Saves the current map under a new name
-== Saves the current map under a new name
-
-Exits from the editor
-== Exits from the editor
-
-Clear collision
-== Clear collision
-
-Removes collision from this layer
-== Removes collision from this layer
-
-Make collision
-== Make collision
-
-Constructs collision from this layer
-== Constructs collision from this layer
-
-Width
-== Width
-
-Height
-== Height
-
-Image
-== Image
-
-Delete group
-== Delete group
+Add group
+== 
 
 Add quads layer
-== Add quads layer
-
-Creates a new quad layer
-== Creates a new quad layer
+== 
 
 Add tile layer
-== Add tile layer
+== 
 
-Creates a new tile layer
-== Creates a new tile layer
+Adds a new group
+== 
 
-Delete layer
-== Delete Layer
+Adds a new quad
+== 
 
-Deletes the layer
-== Deletes the layer
+Alpha value of the envelope
+== 
 
-Group
-== Group
+Anim
+== 
 
-Order
-== Order
+Append
+== 
 
-Detail
-== Detail
+Append map
+== 
 
-Delete
-== Delete
+Are you sure that you want to delete the demo?
+== 
 
-Deletes the current quad
-== Deletes the current quad
+Aspect ratio
+== 
 
-Square
-== Square
+Blue value of the envelope
+== 
 
-Squares the current quad
-== Squares the current quad
+Border
+== 
 
-Pos. Env
-== Pos. Env
+CCW
+== 
 
-Pos. TO
-== Pos. TO
+CW
+== 
+
+Cancel
+== 
+
+Clear collision
+== 
+
+Clip H
+== 
+
+Clip W
+== 
+
+Clip X
+== 
+
+Clip Y
+== 
+
+Color
+== 
 
 Color Env
-== Color Env
+== 
 
 Color TO
-== Color TO
+== 
 
-Select layer. Right click for properties.
-== Select layer. Right click for properties.
+Color+
+== 
 
-Toggle layer visibility
-== Toggle layer visibility
+Connection Problems...
+== 
+
+Constructs collision from this layer
+== 
+
+Creates a new color envelope
+== 
+
+Creates a new map
+== 
+
+Creates a new pos envelope
+== 
+
+Creates a new quad layer
+== 
+
+Creates a new tile layer
+== 
+
+Decrease
+== 
+
+Decrease animation speed
+== 
+
+Delete
+== 
+
+Delete demo
+== 
+
+Delete group
+== 
+
+Delete layer
+== 
+
+Delete this envelope
+== 
+
+Deletes the current quad
+== 
+
+Deletes the layer
+== 
+
+Detail
+== 
+
+Down
+== 
+
+Embed
+== 
+
+Embedded
+== 
+
+Embeds the image into the map file.
+== 
+
+Enable/disable group for saving
+== 
+
+Enable/disable layer for saving
+== 
+
+Envelopes
+== 
+
+Error
+== 
+
+Error loading demo
+== 
+
+Exit
+== 
+
+Exits from the editor
+== 
+
+External
+== 
 
 File
-== File
+== 
 
-##### old translations ####
+Filename:
+== 
+
+Folder
+== 
+
+Green value of the envelope
+== 
+
+Group
+== 
+
+HD
+== 
+
+Height
+== 
+
+Image
+== 
+
+Images
+== 
+
+Increase
+== 
+
+Increase animation speed
+== 
+
+Invalid Demo
+== 
+
+Layers
+== 
+
+Left
+== 
+
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== 
+
+Left mouse button to move. Hold shift to move the texture.
+== 
+
+Left mouse to drag. Hold ctfl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== 
+
+Load
+== 
+
+Load a new image to use in the map
+== 
+
+Load map
+== 
+
+Make collision
+== 
+
+Make external
+== 
+
+Name:
+== 
+
+New
+== 
+
+New folder
+== 
+
+Next Envelope
+== 
+
+None
+== 
+
+Normal animation speed
+== 
+
+Open
+== 
+
+Opens a map and adds everything from that map to the current one
+== 
+
+Opens a map for editing
+== 
+
+Order
+== 
+
+Para X
+== 
+
+Para Y
+== 
+
+Parent Folder
+== 
+
+Please balance teams!
+== 
+
+Pos X
+== 
+
+Pos Y
+== 
+
+Pos. Env
+== 
+
+Pos. TO
+== 
+
+Pos.+
+== 
+
+Press right mouse button to create a new point
+== 
+
+Previous Envelope
+== 
+
+Proof
+== 
+
+REC
+== 
+
+Reason:
+== 
+
+Record demo
+== 
+
+Red value of the envelope
+== 
+
+Refocus
+== 
+
+Remove
+== 
+
+Removes collision from this layer
+== 
+
+Removes the image from the map
+== 
+
+Removes the image from the map file.
+== 
+
+Replace
+== 
+
+Replace Image
+== 
+
+Replaces the image with a new one
+== 
+
+Resizes the current Quad based on the aspect ratio of the image
+== 
+
+Right
+== 
+
+Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
+
+Rotation of the envelope
+== 
+
+Save
+== 
+
+Save As
+== 
+
+Save map
+== 
+
+Saves the current map
+== 
+
+Saves the current map under a new name
+== 
+
+Select group. Right click for properties.
+== 
+
+Select image
+== 
+
+Select layer. Right click for properties.
+== 
+
+Shift
+== 
+
+Show chat
+== 
+
+Square
+== 
+
+Squares the current quad
+== 
+
+Stop record
+== 
+
+Sudden Death
+== 
+
+Switch between images and layers managment.
+== 
+
+Switch curve type
+== 
+
+Time limit: %d min
+== 
+
+Toggle group visibility
+== 
+
+Toggle layer visibility
+== 
+
+Toggles the envelope editor.
+== 
+
+Up
+== 
+
+Use Clipping
+== 
+
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== 
+
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
+
+Use left mouse button to drag and create a brush.
+== 
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== 
+
+Vote No
+== 
+
+Vote Yes
+== 
+
+Warmup
+== 
+
+Width
+== 
+
+X-axis of the envelope
+== 
+
+Y-axis of the envelope
+== 
+
+ZI
+== 
+
+ZO
+== 
+
+[HOME] Restore map focus
+== 
+
+[M] Flip brush vertical
+== 
+
+[N] Flip brush horizontal
+== 
+
+[NumPad*] Zoom to normal and remove editor offset
+== 
+
+[NumPad+] Zoom in
+== 
+
+[NumPad-] Zoom out
+== 
+
+[R] Rotates the brush counter clockwise
+== 
+
+[T] Rotates the brush clockwise
+== 
+
+[ctrl+h] Toggle High Detail
+== 
+
+[ctrl+m] Toggle animation
+== 
+
+[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== 
+
+##### old translations #####
+
