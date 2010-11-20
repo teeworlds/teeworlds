@@ -42,10 +42,11 @@ class CChat : public CComponent
 
 	int m_CompletionEnumerationCount;
 	
+	bool m_aCompletionMiddle;
 	char m_aCompletionBuffer[128];
 	int m_CompletionChosen;
 
-	void PossibleNames(const char*);
+	void PossibleNames(const char*, const bool);
 	static void ConSay(IConsole::IResult *pResult, void *pUserData);
 	static void ConSayTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConChat(IConsole::IResult *pResult, void *pUserData);

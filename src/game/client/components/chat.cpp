@@ -1,4 +1,4 @@
-
+#include <string.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/keys.h>
@@ -33,7 +33,7 @@ void CChat::OnReset()
 	m_Show = false;
 	m_InputUpdate = false;
 	m_ChatStringOffset = 0;
-	
+	m_aCompletionMiddle = false;
 	m_aCompletionBuffer[0] = 0;
 	m_CompletionChosen = -1;
 }
@@ -110,14 +110,14 @@ bool CChat::OnInput(IInput::CEvent e)
 	{
 		m_CompletionChosen++;
 		m_CompletionEnumerationCount = 0;
-		PossibleNames(m_aCompletionBuffer);
+		PossibleNames(m_aCompletionBuffer, m_aCompletionMiddle);
 
 		// handle wrapping
 		if(m_CompletionEnumerationCount && m_CompletionChosen >= m_CompletionEnumerationCount)
 		{
 			m_CompletionChosen %= m_CompletionEnumerationCount;
 			m_CompletionEnumerationCount = 0;
-			PossibleNames(m_aCompletionBuffer);
+			PossibleNames(m_aCompletionBuffer, m_aCompletionMiddle);
 		}
 	}
 	else
@@ -125,7 +125,18 @@ bool CChat::OnInput(IInput::CEvent e)
 		if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key != KEY_TAB)
 		{
 			m_CompletionChosen = -1;
-			str_copy(m_aCompletionBuffer, m_Input.GetString(), sizeof(m_aCompletionBuffer));
+			const char * aBuf = strrchr(m_Input.GetString(), ' ');
+			if (aBuf)
+			{
+				strncpy(m_aCompletionBuffer,
+					aBuf+1, strlen(aBuf));
+			}
+			else
+			{
+				str_copy(m_aCompletionBuffer,
+					m_Input.GetString(), sizeof(m_aCompletionBuffer));
+			}
+			m_aCompletionMiddle = aBuf;
 		}
 
 		m_OldChatStringLength = m_Input.GetLength();
@@ -355,7 +366,7 @@ void CChat::Say(int Team, const char *pLine)
 
 
 
-void CChat::PossibleNames(const char *pStr)
+void CChat::PossibleNames(const char *pStr, const bool inmiddle)
 {
 	CServerInfo CurrentServerInfo;
 	Client()->GetServerInfo(&CurrentServerInfo);
@@ -364,10 +375,24 @@ void CChat::PossibleNames(const char *pStr)
 		if(str_find_nocase(CurrentServerInfo.m_aPlayers[i].m_aName, pStr))
 		{
 			if(m_CompletionChosen == m_CompletionEnumerationCount){
-				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "%s:", CurrentServerInfo.m_aPlayers[i].m_aName);
-				m_Input.Set(aBuf);
+				if(inmiddle)
+				{
+					char st[512];
+					const char * aBuf = strrchr(m_Input.GetString(), ' ');
+					strncpy(st, m_Input.GetString(),
+							aBuf-m_Input.GetString()+1);
+
+					strcat(st, CurrentServerInfo.m_aPlayers[i].m_aName);
+						
+					m_Input.Set(st);
 				}
+				else
+				{
+					char aBuf[128];
+					str_format(aBuf, sizeof(aBuf), "%s:", CurrentServerInfo.m_aPlayers[i].m_aName);
+					m_Input.Set(aBuf);
+				}
+			}
 			m_CompletionEnumerationCount++;
 		}
 	}	
