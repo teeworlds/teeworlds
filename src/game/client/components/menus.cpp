@@ -881,7 +881,7 @@ int CMenus::Render()
 		else if(m_Popup == POPUP_PASSWORD)
 		{
 			pTitle = Localize("Password incorrect");
-			pExtraText = Client()->ErrorString();
+			pExtraText = "";
 			pButtonText = Localize("Try again");
 		}
 		else if(m_Popup == POPUP_QUIT)
