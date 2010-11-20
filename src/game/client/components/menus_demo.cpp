@@ -445,10 +445,7 @@ void CMenus::DemolistFetchCallback(const char *pName, int IsDir, int StorageType
 	else
 	{
 		str_copy(Item.m_aName, pName, min(static_cast<int>(sizeof(Item.m_aName)), Length));
-		char aBuffer[512];
-		str_format(aBuffer, sizeof(aBuffer), "%s/%s", pSelf->m_aCurrentDemoFolder, Item.m_aFilename);
-		// TODO: many items slow this down, don't load the info from every file when making the filelist
-		Item.m_Valid = pSelf->DemoPlayer()->GetDemoInfo(pSelf->Storage(), aBuffer, StorageType, Item.m_aMap, sizeof(Item.m_aMap));
+		Item.m_InfosLoaded = false;
 	}
 	Item.m_IsDir = IsDir != 0;
 	Item.m_StorageType = StorageType;
@@ -497,14 +494,25 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	char aFooterLabel[128] = {0};
 	if(m_DemolistSelectedIndex >= 0)
 	{
-		if(str_comp(m_lDemos[m_DemolistSelectedIndex].m_aFilename, "..") == 0)
+		CDemoItem *Item = &m_lDemos[m_DemolistSelectedIndex];
+		if(str_comp(Item->m_aFilename, "..") == 0)
 			str_copy(aFooterLabel, Localize("Parent Folder"), sizeof(aFooterLabel));
 		else if(m_DemolistSelectedIsDir)
 			str_copy(aFooterLabel, Localize("Folder"), sizeof(aFooterLabel));
-		else if(!m_lDemos[m_DemolistSelectedIndex].m_Valid)
-			str_copy(aFooterLabel, Localize("Invalid Demo"), sizeof(aFooterLabel));
 		else
-			str_format(aFooterLabel, sizeof(aFooterLabel), "%s: %s", Localize("Map"), m_lDemos[m_DemolistSelectedIndex].m_aMap);
+		{
+			if(!Item->m_InfosLoaded)
+			{
+				char aBuffer[512];
+				str_format(aBuffer, sizeof(aBuffer), "%s/%s", m_aCurrentDemoFolder, Item->m_aFilename);
+				Item->m_Valid = DemoPlayer()->GetDemoInfo(Storage(), aBuffer, Item->m_StorageType, Item->m_aMap, sizeof(Item->m_aMap));
+				Item->m_InfosLoaded = true;
+			}
+			if(!Item->m_Valid)
+				str_copy(aFooterLabel, Localize("Invalid Demo"), sizeof(aFooterLabel));
+			else
+				str_format(aFooterLabel, sizeof(aFooterLabel), "%s: %s", Localize("Map"), Item->m_aMap);
+		}
 	}
 	
 	// render background
