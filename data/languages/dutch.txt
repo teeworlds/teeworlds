@@ -1,4 +1,3 @@
-
 ##### translated strings #####
 
 %d of %d servers, %d players
@@ -65,16 +64,16 @@ As this is the first time you launch the game, please enter your nick name below
 == Omdat dit de eerste keer is dat je het spel opstart, moet je een nicknaam kiezen. Doe dat hieronder. Het is aanbevolen om de instellingen te controleren, voordat je een spel start.
 
 Blue team
-== Blauw
+== Blauwe team
 
 Blue team wins!
-== Blauw wint!
+== Blauwe team wint!
 
 Body
 == Lichaam
 
 Border
-== Grens
+== Rand
 
 CCW
 == CCW
@@ -107,7 +106,7 @@ Color+
 == Kleur+
 
 Compatible version
-== Werkende versie
+== Samenwerkende versie
 
 Connect
 == Verbinden
@@ -122,7 +121,7 @@ Console
 == Console
 
 Constructs collision from this layer
-== Maakt botsing van deze laag
+== Maakt deze laag botsend
 
 Controls
 == Besturing
@@ -149,13 +148,13 @@ Current version: %s
 == Huidige versie: %s
 
 Custom colors
-== Eigen kleuren
+== Aangepaste kleuren
 
 Decrease
 == Verkleinen
 
 Decrease animation speed
-== Verklein animatie snelheid
+== Maak animatie langzamer
 
 Delete
 == Verwijder
@@ -173,13 +172,13 @@ Deletes the layer
 == Verwijdert de laag
 
 Demos
-== Demos
+== Demo's
 
 Detail
 == Detail
 
 Disconnect
-== Stoppen
+== Verbreken
 
 Disconnected
 == Verbinding verbroken
@@ -206,10 +205,10 @@ Embeds the image into the map file.
 == Sluit een afbeelding in in het bestand van de kaart
 
 Emoticon
-== Emotie
+== Emoticon
 
 Enter
-== Starten
+== Binnenkomen
 
 Envelopes
 == Envelopes
@@ -227,7 +226,7 @@ External
 == Extern
 
 FSAA samples
-== FSAA voorbeelden
+== FSAA samples
 
 Favorite
 == Favoriet
@@ -248,13 +247,13 @@ Filter
 == Filter
 
 Fire
-== Schiet
+== Vuur
 
 Force vote
 == Forceer stem
 
 Fullscreen
-== Volledig Scherm
+== Volledig scherm
 
 Game
 == Spel
@@ -269,7 +268,7 @@ Game type
 == Speltype
 
 Game types:
-== Speltypen:
+== Speltypes:
 
 General
 == Algemeen
@@ -290,7 +289,7 @@ Hammer
 == Hamer
 
 Has people playing
-== Er spelen mensen
+== Mensen in server
 
 Height
 == Hoogte
@@ -299,7 +298,7 @@ High Detail
 == Veel details
 
 Hook
-== Haak
+== Hook
 
 Host address
 == Server adres
@@ -317,7 +316,7 @@ Increase
 == Vergroten
 
 Increase animation speed
-== Vergroot animatie snelheid
+== Maak animatie sneller
 
 Info
 == Info
@@ -326,13 +325,13 @@ Internet
 == Internet
 
 Join blue
-== Ga bij Blauw
+== Ga bij blauw
 
 Join game
 == Binnenkomen
 
 Join red
-== Ga bij Rood
+== Ga bij rood
 
 Jump
 == Springen
@@ -350,10 +349,10 @@ Layers
 == Lagen
 
 Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== Linkermuisknop om te bewegen. Druk shift in om te roteren. Druk ctrl om te draaien.
+== Linkermuisknop om te bewegen. Houd shift ingedrukt om te roteren. Houd ctrl ingedrukt om te draaien.
 
 Left mouse button to move. Hold shift to move the texture.
-== Linkermuisknop om te bewegen. Druk shift in om de textuur te bewegen
+== Linkermuisknop om te bewegen. Houd shift ingedrukt om de textuur te bewegen
 
 Lht.
 == Licht
@@ -368,7 +367,7 @@ MOTD
 == MOTD
 
 Make collision
-== Maak botsing
+== Maak botsend
 
 Make external
 == Maak extern
@@ -377,13 +376,13 @@ Map
 == Kaart
 
 Maximum ping:
-== Maximale Ping:
+== Hoogste ping:
 
 Miscellaneous
 == Diverse
 
 Mouse sens.
-== Muis gevoeligheid
+== Muis resolutie
 
 Move left
 == Naar links
@@ -425,7 +424,7 @@ No password
 == Geen wachtwoord
 
 No servers found
-== Geen server gevonden
+== Geen servers gevonden
 
 No servers match your filter criteria
 == Geen servers gevonden op zoekopdracht
@@ -473,7 +472,7 @@ Players
 == Spelers
 
 Please balance teams!
-== Breng teams in balans!
+== Balanceer teams!
 
 Pos. Env
 == Pos. Env
@@ -515,7 +514,7 @@ Refresh
 == Vernieuwen
 
 Refreshing master servers
-== Hoofdserver vernieuwen
+== Masterservers vernieuwen
 
 Remote console
 == Remote console
@@ -524,13 +523,13 @@ Remove
 == Verwijder
 
 Removes collision from this layer
-== Verwijderd botsingen in deze laag
+== Verwijdert botsingen in deze laag
 
 Removes the image from the map
-== Verwijderd de afbeelding uit de kaart
+== Verwijdert de afbeelding uit de kaart
 
 Removes the image from the map file.
-== Verwijderd de afbeelding uit de kaart.
+== Verwijdert de afbeelding uit de kaart.
 
 Replace
 == Vervang
@@ -545,16 +544,16 @@ Reset filter
 == Herstel filter
 
 Reset to defaults
-== Standaardinstelling
+== Standaardinstellingen
 
 Rifle
-== Geweer
+== Laser
 
 Round
 == Ronde
 
 Sample rate
-== Voorbeeld rate
+== Voorbeeldssnelheid
 
 Sat.
 == Verz.
@@ -611,7 +610,7 @@ Settings
 == Instellingen
 
 Shotgun
-== Jachtgeweer
+== Geweer
 
 Show chat
 == Laat chat zien
@@ -620,7 +619,7 @@ Show name plates
 == Laat namen zien
 
 Show only supported
-== Laat alleen werkende servers zien
+== Laat alleen compatibele servers zien
 
 Skins
 == Skins
@@ -632,16 +631,16 @@ Sound volume
 == Volume
 
 Spectate
-== Toeschouwer
+== Schouw toe
 
 Spectators
 == Toeschouwers
 
 Square
-== Vereffenen
+== Maak vierkant
 
 Squares the current quad
-== Vereffenen de huidige quad
+== Maakt de huidige quad viekant
 
 Standard gametype
 == Standaard speltype
@@ -653,13 +652,13 @@ Sudden Death
 == Sudden Death
 
 Switch between images and layers managment.
-== Wissel tussen afbeeldinglaag en beheerlaag.
+== Wissel tussen afbeeldingslaag en beheerlaag.
 
 Switch curve type
 == Wissel bocht type
 
 Switch weapon on pickup
-== Verander wapen bij opakken
+== Verander wapen bij het oppakken
 
 Team
 == Team
@@ -668,10 +667,10 @@ Team chat
 == Team chat
 
 Teeworlds %s is out! Download it at www.teeworlds.com!
-== Teeworld %s is uit! Download het op www.teeworlds.com!
+== Teeworlds %s is uit! Download het op www.teeworlds.com!
 
 Texture Compression
-== Structuur verkleinen
+== Structuurscompressie
 
 The server is running a non-standard tuning on a pure game type.
 == The server draait geen standaard spel type.
@@ -698,7 +697,7 @@ UI Color
 == UI kleur
 
 Use left mouse button to drag and create a brush.
-== Gebruik de linkermuisknop om de kwast te maken en te slepen.
+== Gebruik de linkermuisknop om de kwast te maken en deze te slepen.
 
 Use left mouse button to paint with the brush. Right button clears the brush.
 == Gebruik de linkermuisknop om de kwast te gebruiken. Rechtermuisknop maakt de kwast schoon.
@@ -713,10 +712,10 @@ Version
 == Versie
 
 Vote no
-== No
+== Stem nee
 
 Vote yes
-== Ja
+== Stem ja
 
 Voting
 == Stemmen
@@ -749,10 +748,10 @@ ZO
 == ZO
 
 [M] Flip brush vertical
-== [M] Draai kwast verticaal
+== [M] Spiegel kwast verticaal
 
 [N] Flip brush horizontal
-== [N] Draai kwast horizontaal
+== [N] Spiegel kwast horizontaal
 
 [NumPad*] Zoom to normal and remove editor offset
 == [NumPad*] Zoom naar normaal en verwijder toevoegingen van de editor
@@ -781,157 +780,158 @@ ZO
 ##### needs translation #####
 
 %d%% loaded
-== 
+== %d%% is geladen
 
 Alpha value of the envelope
-== 
+== Doorzichtbaarheid van de envelope
 
 Are you sure that you want to delete the demo?
-== 
+== Weet je zeker dat je de demo wil verwijderen?
 
 Aspect ratio
-== 
+== Beeldverhouding
 
 Blue value of the envelope
-== 
+== Hoeveelheid blauw van de envelope
 
 Clip H
-== 
+== Clip H
 
 Clip W
-== 
+== Clip B
 
 Clip X
-== 
+== Clip X
 
 Clip Y
-== 
+== Clip Y
 
 Color
-== 
+== Kleur
 
 Delete demo
-== 
+== Verwijder demo
 
 Delete this envelope
-== 
+== Verwijder deze envelope
 
 Down
-== 
+== Omlaag
 
+##### Not sure about these 2 #####
 Enable/disable group for saving
-== 
+== Sla de group wel/niet op
 
 Enable/disable layer for saving
-== 
+== Sla de laag wel/niet op
 
 Exit
-== 
+== Afsluiten
 
 File: %s
-== 
+== Bestand: %s
 
 Folder
-== 
+== Map
 
 Green value of the envelope
-== 
+== Hoeveelheid groen van de envelope
 
 Invalid Demo
-== 
+== Ongeldige demo
 
 Left
-== 
+== Links
 
 Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
-== 
+== Linkermuisknop om te slepen. Ctrl om precieser te zijn. Shift om tijdspunt ook te veranderen. Rechtsklik om te verwijderen.
 
 Load
-== 
+== Laad
 
 Load map
-== 
+== Laad kaart
 
 New folder
-== 
+== Nieuwe map
 
 Para X
-== 
+== Para X
 
 Para Y
-== 
+== Para Y
 
 Parent Folder
-== 
+== Vorige map
 
 Pos X
-== 
+== Pos X
 
 Pos Y
-== 
+== Pos Y
 
 Quads
-== 
+== Quads
 
 REC
-== 
+== REC
 
 Reason:
-== 
+== Reden:
 
 Record demo
-== 
+== Neem demo op
 
 Red value of the envelope
-== 
+== Hoeveel heid rood van de envelope
 
 Refocus
-== 
+== Herfocus
 
 Resizes the current Quad based on the aspect ratio of the image
-== 
+== Verkleint/vergroot de huidige quad gebaseerd op de verhouding van de afbeelding.
 
 Right
 == 
 
 Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
-== 
+== Rotatie van de kwast in graden. Linkermuisknop om te slepen en de waarde te veranderen. Shift om meer precies te zijn.
 
 Rotation of the envelope
-== 
+== Rotatie van de envelope
 
 Shift
-== 
+== Shift
 
 Stop record
-== 
+== Stop met opnemen
 
 Tiles
-== 
+== Tegels
 
 Time limit: %d min
-== 
+== Tijdslimiet: %d minuten
 
 Up
-== 
+== Omhoog
 
 Use Clipping
-== 
+== Gebruik Clipping
 
 Use left mouse button to drag and change the color value. Hold shift to be more precise.
-== 
+== Linkermuisknop om te slepen en de kleur te veranderen. Shift om meer precies te zijn.
 
 Use left mouse button to drag and change the value. Hold shift to be more precise.
-== 
+== Linkermuisknop om te slepen en de waarde te veranderen. Shift om meer precies te zijn.
 
 X-axis of the envelope
-== 
+== X-as van de envelope
 
 Y-axis of the envelope
-== 
+== Y-as van de envelope
 
 [HOME] Restore map focus
-== 
+== [HOME] Herstel kaart focus
 
 ##### old translations #####
 
