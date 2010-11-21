@@ -444,7 +444,7 @@ void CMenus::DemolistFetchCallback(const char *pName, int IsDir, int StorageType
 	}
 	else
 	{
-		str_copy(Item.m_aName, pName, min(static_cast<int>(sizeof(Item.m_aName)), Length));
+		str_copy(Item.m_aName, pName, min(static_cast<int>(sizeof(Item.m_aName)), Length-4));
 		Item.m_InfosLoaded = false;
 	}
 	Item.m_IsDir = IsDir != 0;
