@@ -197,7 +197,7 @@ void CControls::OnRender()
 
 bool CControls::OnMouseMove(float x, float y)
 {
-	if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Paused)
+	if((m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Paused) || (m_pClient->m_Snap.m_Spectate && m_pClient->m_pChat->IsActive()))
 		return false;
 	m_MousePos += vec2(x, y); // TODO: ugly
 
