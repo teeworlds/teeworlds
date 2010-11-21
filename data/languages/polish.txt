@@ -828,6 +828,9 @@ Enable/disable layer for saving
 Exit
 == 
 
+File: %s
+== 
+
 Folder
 == 
 
@@ -840,7 +843,7 @@ Invalid Demo
 Left
 == 
 
-Left mouse to drag. Hold ctfl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
 == 
 
 Load
@@ -865,6 +868,9 @@ Pos X
 == 
 
 Pos Y
+== 
+
+Quads
 == 
 
 REC
@@ -898,6 +904,9 @@ Shift
 == 
 
 Stop record
+== 
+
+Tiles
 == 
 
 Time limit: %d min

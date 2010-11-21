@@ -1819,7 +1819,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 					if(m_Map.m_lGroups[g]->m_lLayers[i] != m_Map.m_pGameLayer)
 						m_Map.m_lGroups[g]->m_lLayers[i]->m_SaveToMap = !m_Map.m_lGroups[g]->m_lLayers[i]->m_SaveToMap;
 
-				str_format(aBuf, sizeof(aBuf),"#%d %s ", i, m_Map.m_lGroups[g]->m_lLayers[i]->m_pTypeName);
+				str_format(aBuf, sizeof(aBuf),"#%d %s ", i, Localize(m_Map.m_lGroups[g]->m_lLayers[i]->m_pTypeName));	// Localize("Game");Localize("Quads");Localize("Tiles");
 				if(int Result = DoButton_Ex(m_Map.m_lGroups[g]->m_lLayers[i], aBuf, g==m_SelectedGroup&&i==m_SelectedLayer, &Button,
 					BUTTON_CONTEXT, Localize("Select layer. Right click for properties."), 0))
 				{
@@ -2819,7 +2819,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 						ColorMod = 100.0f;
 						Graphics()->SetColor(1,0.75f,0.75f,1);
-						m_pTooltip = Localize("Left mouse to drag. Hold ctfl to be more precise. Hold shift to alter time point aswell. Right click to delete.");
+						m_pTooltip = Localize("Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.");
 					}
 
 					if(UI()->ActiveItem() == pId || UI()->HotItem() == pId)
@@ -2929,7 +2929,7 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 
 	MenuBar.VSplitLeft(40.0f, 0, &MenuBar);
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "File: %s", m_aFileName);
+	str_format(aBuf, sizeof(aBuf), Localize("File: %s"), m_aFileName);
 	UI()->DoLabel(&MenuBar, aBuf, 10.0f, -1, -1);
 }
 

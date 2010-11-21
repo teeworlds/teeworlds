@@ -618,6 +618,9 @@ External
 File
 == 
 
+File: %s
+== 
+
 Filename:
 == 
 
@@ -663,7 +666,7 @@ Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
 Left mouse button to move. Hold shift to move the texture.
 == 
 
-Left mouse to drag. Hold ctfl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
 == 
 
 Load
@@ -745,6 +748,9 @@ Previous Envelope
 == 
 
 Proof
+== 
+
+Quads
 == 
 
 REC
@@ -841,6 +847,9 @@ Switch between images and layers managment.
 == 
 
 Switch curve type
+== 
+
+Tiles
 == 
 
 Time limit: %d min
