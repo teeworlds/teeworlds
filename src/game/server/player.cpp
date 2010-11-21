@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <new>
 //#include <stdio.h> //TODO:GFX check if linux still needs this
 #include <engine/server.h>

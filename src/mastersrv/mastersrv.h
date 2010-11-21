@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef MASTERSRV_MASTERSRV_H
 #define MASTERSRV_MASTERSRV_H
 static const int MASTERSERVER_PORT = 8300;

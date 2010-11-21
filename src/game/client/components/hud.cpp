@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
@@ -239,11 +241,11 @@ void CHud::RenderVoting()
 	
 	const char *pYesKey = m_pClient->m_pBinds->GetKey("vote yes");
 	const char *pNoKey = m_pClient->m_pBinds->GetKey("vote no");
-	str_format(Buf, sizeof(Buf), "%s - %s", pYesKey, Localize("Vote Yes"));
+	str_format(Buf, sizeof(Buf), "%s - %s", pYesKey, Localize("Vote yes"));
 	Base.y += Base.h+1;
 	UI()->DoLabel(&Base, Buf, 6.0f, -1);
 
-	str_format(Buf, sizeof(Buf), "%s - %s", Localize("Vote No"), pNoKey);
+	str_format(Buf, sizeof(Buf), "%s - %s", Localize("Vote no"), pNoKey);
 	UI()->DoLabel(&Base, Buf, 6.0f, 1);
 }
 

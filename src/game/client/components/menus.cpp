@@ -1,4 +1,5 @@
-// copyright (c) 2007 magnus auvinen, see licence.txt for more info
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <math.h>
 
 #include <base/system.h>
@@ -888,7 +889,7 @@ int CMenus::Render()
 		else if(m_Popup == POPUP_PASSWORD)
 		{
 			pTitle = Localize("Password incorrect");
-			pExtraText = Client()->ErrorString();
+			pExtraText = "";
 			pButtonText = Localize("Try again");
 		}
 		else if(m_Popup == POPUP_QUIT)
