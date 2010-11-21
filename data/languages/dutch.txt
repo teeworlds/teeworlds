@@ -1,4 +1,3 @@
-
 ##### translated strings #####
 
 %d of %d servers, %d players
@@ -185,7 +184,7 @@ Decrease
 == Verkleinen
 
 Decrease animation speed
-== Maak animatie langzamer
+== Verlaag animatiesnelheid
 
 Delete
 == Verwijder
@@ -215,7 +214,7 @@ Detail
 == Detail
 
 Disconnect
-== Verbreken
+== Stoppen
 
 Disconnected
 == Verbinding verbroken
@@ -254,7 +253,7 @@ Enable/disable layer for saving
 == Sla de laag wel/niet op
 
 Enter
-== Binnenkomen
+== Starten
 
 Envelopes
 == Envelopes
@@ -299,7 +298,7 @@ Filter
 == Filter
 
 Fire
-== Vuur
+== Schieten
 
 Folder
 == Map
@@ -356,7 +355,7 @@ High Detail
 == Veel details
 
 Hook
-== Hook
+== Haak
 
 Host address
 == Server adres
@@ -374,7 +373,7 @@ Increase
 == Vergroten
 
 Increase animation speed
-== Maak animatie sneller
+== Verhoog animatiesnelheid
 
 Info
 == Info
@@ -509,7 +508,7 @@ None
 == Geen
 
 Normal animation speed
-== Normale animatie snelheid
+== Normale animatiesnelheid
 
 Ok
 == Oké
@@ -533,7 +532,7 @@ Para Y
 == Para Y
 
 Parent Folder
-== Vorige map
+== Bovenliggende map
 
 Password
 == Wachtwoord
@@ -614,7 +613,7 @@ Red team wins!
 == Rood wint!
 
 Red value of the envelope
-== Hoeveel heid rood van de envelope
+== Hoeveelheid rood van de envelope
 
 Refocus
 == Herfocus
@@ -657,6 +656,9 @@ Reset to defaults
 
 Resizes the current Quad based on the aspect ratio of the image
 == Verkleint/vergroot de huidige quad gebaseerd op de verhouding van de afbeelding.
+
+Right
+== Rechts
 
 Rifle
 == Laser
@@ -752,7 +754,7 @@ Sound volume
 == Volume
 
 Spectate
-== Schouw toe
+== Toekijken
 
 Spectators
 == Toeschouwers
@@ -930,8 +932,4 @@ ZO
 
 ##### needs translation #####
 
-Right
-== 
-
 ##### old translations #####
-
