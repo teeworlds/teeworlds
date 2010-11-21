@@ -876,12 +876,6 @@ Use left mouse button to drag and create a brush.
 Use left mouse button to paint with the brush. Right button clears the brush.
 == 
 
-Vote No
-== 
-
-Vote Yes
-== 
-
 Width
 == 
 
