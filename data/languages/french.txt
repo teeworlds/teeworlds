@@ -4,6 +4,9 @@
 %d of %d servers, %d players
 == %d/%d serveurs, %d joueurs
 
+%d%% loaded
+== %d%% chargé
+
 %ds left
 == %ds a quitté
 
@@ -43,6 +46,9 @@ Append
 Append map
 == Joindre une carte
 
+Are you sure that you want to delete the demo?
+== Êtes-vous sûr de vouloir supprimer cette démo ?
+
 Are you sure that you want to quit?
 == Êtes-vous sûr de vouloir quitter ?
 
@@ -75,6 +81,9 @@ Clear collision
 
 Close
 == Fermer
+
+Color
+== Couleur
 
 Color+
 == Couleur+
@@ -121,6 +130,9 @@ Decrease animation speed
 Delete
 == Supprimer
 
+Delete demo
+== Supprimer la démo
+
 Delete group
 == Supprimer le groupe
 
@@ -144,6 +156,9 @@ Disconnected
 
 Display Modes
 == Modes d'affichages
+
+Down
+== Bas
 
 Downloading map
 == Téléchargement de la carte
@@ -173,7 +188,10 @@ Error
 == Erreur
 
 Error loading demo
-== erreur de chargement de la démo
+== Erreur pendant le chargement de la démo
+
+Exit
+== Quitter
 
 Exits from the editor
 == Ferme l'éditeur
@@ -204,6 +222,9 @@ Filter
 
 Fire
 == Tirer
+
+Folder
+== Dossier
 
 Force vote
 == Forcer le vote
@@ -277,6 +298,9 @@ Info
 Internet
 == Internet
 
+Invalid Demo
+== Démo invalide
+
 Join blue
 == Rej. Bleus
 
@@ -301,11 +325,20 @@ Language
 Layers
 == Couches
 
+Left
+== Gauche
+
 Lht.
 == Lum.
 
+Load
+== Charger
+
 Load a new image to use in the map
 == Charger une image pour l'utiliser dans la carte
+
+Load map
+== Charger une map
 
 Loading
 == Chargement
@@ -352,6 +385,9 @@ Name:
 New
 == Nouveau
 
+New folder
+== Nouveau dossier
+
 News
 == Nouvelles
 
@@ -394,6 +430,9 @@ Opens a map for editing
 Order
 == Ordre
 
+Parent Folder
+== Dossier parent
+
 Password
 == Mot de passe
 
@@ -435,6 +474,12 @@ Quick search:
 
 Quit
 == Quitter
+
+Reason:
+== Raison :
+
+REC
+== REC
 
 Red team
 == Équipe rouge
@@ -480,6 +525,9 @@ Reset to defaults
 
 Rifle
 == Laser
+
+Right
+== Droite
 
 Round
 == Round
@@ -601,6 +649,9 @@ The server is running a non-standard tuning on a pure game type.
 Time limit
 == Temps limite
 
+Time limit: %d min
+== Temps limite : %d min
+
 Try again
 == Réessayer
 
@@ -609,6 +660,9 @@ Type
 
 UI Color
 == Couleur du menu
+
+Up
+== Haut
 
 Use sounds
 == Jouer les sons
@@ -619,8 +673,14 @@ V-Sync
 Version
 == Version
 
+Vote No
+== Voter Non
+
 Vote no
 == Voter non
+
+Vote Yes
+== Voter Oui
 
 Vote yes
 == Voter oui
@@ -669,9 +729,6 @@ ZO
 
 ##### needs translation #####
 
-%d%% loaded
-== 
-
 %s Right click for context menu.
 == 
 
@@ -688,9 +745,6 @@ Adds a new quad
 == 
 
 Alpha value of the envelope
-== 
-
-Are you sure that you want to delete the demo?
 == 
 
 Aspect ratio
@@ -717,9 +771,6 @@ Clip X
 Clip Y
 == 
 
-Color
-== 
-
 Color Env
 == 
 
@@ -738,16 +789,10 @@ Creates a new quad layer
 Creates a new tile layer
 == 
 
-Delete demo
-== 
-
 Delete this envelope
 == 
 
 Deletes the current quad
-== 
-
-Down
 == 
 
 Enable/disable group for saving
@@ -759,22 +804,10 @@ Enable/disable layer for saving
 Envelopes
 == 
 
-Exit
-== 
-
-Folder
-== 
-
 Green value of the envelope
 == 
 
 HD
-== 
-
-Invalid Demo
-== 
-
-Left
 == 
 
 Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
@@ -786,15 +819,6 @@ Left mouse button to move. Hold shift to move the texture.
 Left mouse to drag. Hold ctfl to be more precise. Hold shift to alter time point aswell. Right click to delete.
 == 
 
-Load
-== 
-
-Load map
-== 
-
-New folder
-== 
-
 Next Envelope
 == 
 
@@ -802,9 +826,6 @@ Para X
 == 
 
 Para Y
-== 
-
-Parent Folder
 == 
 
 Pos X
@@ -825,12 +846,6 @@ Previous Envelope
 Proof
 == 
 
-REC
-== 
-
-Reason:
-== 
-
 Record demo
 == 
 
@@ -841,9 +856,6 @@ Refocus
 == 
 
 Resizes the current Quad based on the aspect ratio of the image
-== 
-
-Right
 == 
 
 Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
@@ -867,9 +879,6 @@ Switch between images and layers managment.
 Switch curve type
 == 
 
-Time limit: %d min
-== 
-
 Toggle group visibility
 == 
 
@@ -877,9 +886,6 @@ Toggle layer visibility
 == 
 
 Toggles the envelope editor.
-== 
-
-Up
 == 
 
 Use Clipping
@@ -895,12 +901,6 @@ Use left mouse button to drag and create a brush.
 == 
 
 Use left mouse button to paint with the brush. Right button clears the brush.
-== 
-
-Vote No
-== 
-
-Vote Yes
 == 
 
 X-axis of the envelope
