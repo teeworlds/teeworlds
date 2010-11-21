@@ -4,6 +4,9 @@
 %d of %d servers, %d players
 == %d von %d Servern, %d Spieler
 
+%d%% loaded
+== %d%% geladen
+
 %ds left
 == Noch %ds
 
@@ -20,16 +23,16 @@ Add Image
 == Grafik hinzufügen
 
 Add Quad
-== Quad hinz.
+== Viere. hinz.
 
 Add group
 == Gruppe hinz.
 
 Add quads layer
-== Quad-Ebene hinzufg.
+== Viereck-Ebene hinzu.
 
 Add tile layer
-== Tile-Ebene hinzufg.
+== Platten-Ebene hinzuf.
 
 Address
 == Adresse
@@ -38,7 +41,7 @@ Adds a new group
 == Fügt eine neue Gruppe hinzu
 
 Adds a new quad
-== Fügt ein neues Quad hinzu
+== Fügt ein neues Viereck hinzu
 
 All
 == Alle
@@ -46,11 +49,14 @@ All
 Alpha
 == Alpha
 
+Alpha value of the envelope
+== Alpha-Wert der Animation
+
 Always show name plates
 == Spielernamen immer anzeigen
 
 Anim
-== Anim
+== Anima.
 
 Append
 == Anhängen
@@ -58,11 +64,17 @@ Append
 Append map
 == Karte anhängen
 
+Are you sure that you want to delete the demo?
+== Möchtest du die Demo wirklich löschen?
+
 Are you sure that you want to quit?
 == Bist du sicher, dass du beenden möchtest?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Da dies der erste Start des Spiels ist, gib bitte unten deinen Namen ein. Es wird empfohlen die Einstellungen zu überprüfen, um sie deinen Vorstellungen anzupassen, bevor du einem Server beitrittst.
+
+Aspect ratio
+== Seitenverhältnis
 
 Blue team
 == Blaues Team
@@ -70,11 +82,14 @@ Blue team
 Blue team wins!
 == Blaues Team gewinnt!
 
+Blue value of the envelope
+== Blau-Wert der Animation
+
 Body
 == Körper
 
 Border
-== Rahmen
+== Rand
 
 CCW
 == GUZS
@@ -83,10 +98,10 @@ CW
 == UZS
 
 Call vote
-== Abstimmung
+== Abstimmen
 
 Cancel
-== Abbrechen
+== Abbrech.
 
 Chat
 == Chat
@@ -94,17 +109,32 @@ Chat
 Clear collision
 == Kollision löschen
 
+Clip H
+== Aussch. H
+
+Clip W
+== Aussch. W
+
+Clip X
+== Aussch. X
+
+Clip Y
+== Aussch. Y
+
 Close
-== Schließen
+== Schließ.
+
+Color
+== Farbe
 
 Color Env
-== Color Env
+== Farbanim.
 
 Color TO
-== Color TO
+== Farbe zu
 
 Color+
-== Color+
+== Farbe+
 
 Compatible version
 == Kompatible Version
@@ -137,7 +167,7 @@ Creates a new pos envelope
 == Erstellt eine neue Positionsanimation
 
 Creates a new quad layer
-== Erstellt eine neue Quad-Ebene
+== Erstellt eine neue Viereck-Ebene
 
 Creates a new tile layer
 == Erstellt eine neue Tile-Ebene
@@ -160,14 +190,20 @@ Decrease animation speed
 Delete
 == Löschen
 
+Delete demo
+== Demo löschen
+
 Delete group
 == Gruppe löschen
 
 Delete layer
 == Ebene löschen
 
+Delete this envelope
+== Löscht die Animation
+
 Deletes the current quad
-== Entfernt das ausgewählte Quad
+== Entfernt das ausgewählte Viereck
 
 Deletes the layer
 == Entfernt die Ebene
@@ -187,8 +223,11 @@ Disconnected
 Display Modes
 == Auflösungen
 
+Down
+== Unten
+
 Downloading map
-== Map herunterladen
+== Karte herunterladen
 
 Draw!
 == Unentschieden!
@@ -208,17 +247,26 @@ Embeds the image into the map file.
 Emoticon
 == Emoticon
 
+Enable/disable group for saving
+== Aktiviert/deaktiviert die Gruppe beim speichern
+
+Enable/disable layer for saving
+== Aktiviert/deaktiviert die Ebene beim speichern
+
 Enter
 == Starten
 
 Envelopes
-== Animationen
+== Animation.
 
 Error
 == Fehlgeschlagen
 
 Error loading demo
 == Fehler beim Laden der Demo, die Datei ist ungültig.
+
+Exit
+== Beenden
 
 Exits from the editor
 == Schließt den Editor
@@ -241,8 +289,11 @@ Feet
 File
 == Datei
 
+File: %s
+== Datei: %s
+
 Filename:
-== Dateiname:
+== Dateina.:
 
 Filter
 == Filter
@@ -250,8 +301,11 @@ Filter
 Fire
 == Feuern
 
+Folder
+== Ordner
+
 Force vote
-== Abstimmung erzwingen
+== Erzwingen
 
 Fullscreen
 == Vollbild
@@ -277,6 +331,9 @@ General
 Graphics
 == Grafik
 
+Green value of the envelope
+== Grün-Wert der Animation
+
 Grenade
 == Granate
 
@@ -299,7 +356,7 @@ High Detail
 == Hohe Details
 
 Hook
-== Hook
+== Haken
 
 Host address
 == Serveradresse
@@ -325,6 +382,9 @@ Info
 Internet
 == Internet
 
+Invalid Demo
+== Ungültige Demo
+
 Join blue
 == zu Blau
 
@@ -349,17 +409,29 @@ Language
 Layers
 == Ebenen
 
+Left
+== Links
+
 Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
 == Linke Maustaste zum Bewegen. Umschalttaste gedrückt halten, um die Achse zu bewegen. Strg gedrückt halten zum drehen.
 
 Left mouse button to move. Hold shift to move the texture.
 == Linke Maustaste zum Bewegen. Umschalttaste gedrückt halten, um die Textur zu bewegen.
 
+Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== Mit linker Maustaste ziehen. Strg für eine höhere Genauigkeit gedrückt halten. Umschalt gedrückt halten, um die Zeitlinie auszuwählen. Rechtsklick zum löschen.
+
 Lht.
 == Hell.
 
+Load
+== Laden
+
 Load a new image to use in the map
 == Lädt eine neue Grafik, um sie in der Karte zu benutzen.
+
+Load map
+== Karte laden
 
 Loading
 == Laden
@@ -371,7 +443,7 @@ Make collision
 == Kollision erstellen
 
 Make external
-== Extern machen.
+== Extern machen
 
 Map
 == Karte
@@ -405,6 +477,9 @@ Name:
 
 New
 == Neu
+
+New folder
+== Neuer Ordner
 
 News
 == News
@@ -449,7 +524,16 @@ Opens a map for editing
 == Öffnet eine Map zum Bearbeiten
 
 Order
-== Reihenfolge
+== Reihenf.
+
+Para X
+== Para. X
+
+Para Y
+== Para. Y
+
+Parent Folder
+== Übergeordneter Ordner
 
 Password
 == Passwort
@@ -475,11 +559,17 @@ Players
 Please balance teams!
 == Bitte Teams ausgleichen!
 
+Pos X
+== Pos. X
+
+Pos Y
+== Pos. Y
+
 Pos. Env
-== Pos. Env
+== Pos. anim.
 
 Pos. TO
-== Pos. TO
+== Pos. zu
 
 Pos.+
 == Pos.+
@@ -494,7 +584,10 @@ Previous Envelope
 == Vorherige Animation
 
 Proof
-== Proof
+== Testra.
+
+Quads
+== Vier.
 
 Quality Textures
 == Hochaufgelöste Texturen
@@ -505,11 +598,26 @@ Quick search:
 Quit
 == Beenden
 
+REC
+== REC
+
+Reason:
+== Grund
+
+Record demo
+== Demo aufneh.
+
 Red team
 == Rotes team
 
 Red team wins!
 == Rotes Team gewinnt!
+
+Red value of the envelope
+== Rot-Wert der Animation
+
+Refocus
+== Wiederh.
 
 Refresh
 == Erneuern
@@ -547,8 +655,20 @@ Reset filter
 Reset to defaults
 == Standardeinstellung
 
+Resizes the current Quad based on the aspect ratio of the image
+== Ändert die Größe des aktuellen Vierecks basierend auf dem Seitenverhältnis des Bildes
+
 Rifle
 == Laser
+
+Right
+== Rechts
+
+Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Rotation des Pinsels in Grad. Mit gedrückter linker Maustaste ziehen, um den Wert zu ändern. Umschalt gedrückt halten, um die Genauigkeit zu erhöhen.
+
+Rotation of the envelope
+== Rotation der Animation
 
 Round
 == Runde
@@ -566,7 +686,7 @@ Save As
 == Speichern unter
 
 Save map
-== Map speichern
+== Karte speichern
 
 Saves the current map
 == Speichert die aktuelle Karte
@@ -610,6 +730,9 @@ Server not full
 Settings
 == Optionen
 
+Shift
+== Verschie.
+
 Shotgun
 == Schrotflinte
 
@@ -641,13 +764,16 @@ Square
 == Quadrat
 
 Squares the current quad
-== Macht das ausgewählte Quad zum Quadrat
+== Macht das ausgewählte Viereck rechteckig
 
 Standard gametype
 == Standard-Spieltyp
 
 Standard map
 == Standardkarte
+
+Stop record
+== Aufnahme be.
 
 Sudden Death
 == Sudden Death
@@ -676,8 +802,14 @@ Texture Compression
 The server is running a non-standard tuning on a pure game type.
 == Der Server läuft nicht mit Standardeinstellungen.
 
+Tiles
+== Plat.
+
 Time limit
 == Zeitlimit
+
+Time limit: %d min
+== Zeitlimit: %d min
 
 Toggle group visibility
 == Gruppensichtbarkeit umschalten
@@ -696,6 +828,18 @@ Type
 
 UI Color
 == Menüfarbe
+
+Up
+== Oben
+
+Use Clipping
+== Aussch. b.
+
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== Mit gedrückter linker Maustaste ziehen, um den Farbwert zu ändern. Umschalt gedrückt halten, um die Genauigkeit zu erhöhen.
+
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Mit gedrückter linker Maustaste ziehen, um den Wert zu ändern. Umschalt gedrückt halten, um die Genauigkeit zu erhöhen.
 
 Use left mouse button to drag and create a brush.
 == Benutze die linke Maustaste, um zu ziehen und einen Pinsel zu erstellen.
@@ -733,6 +877,12 @@ Welcome to Teeworlds
 Width
 == Breite
 
+X-axis of the envelope
+== X-Achse der Animation
+
+Y-axis of the envelope
+== Y-Achse der Animation
+
 Yes
 == Ja
 
@@ -747,6 +897,9 @@ ZI
 
 ZO
 == ZO
+
+[HOME] Restore map focus
+== [HOME] Setzt das Blickfeld der Karte zurück
 
 [M] Flip brush vertical
 == [M] Pinsel vertikal umdrehen
@@ -779,150 +932,6 @@ ZO
 == [Strg+P] Schaltet Testrahmen um. Diese Rahmen zeigen, wie viel der Spieler höchstens sehen kann.
 
 ##### needs translation #####
-
-%d%% loaded
-== 
-
-Alpha value of the envelope
-== 
-
-Are you sure that you want to delete the demo?
-== 
-
-Aspect ratio
-== 
-
-Blue value of the envelope
-== 
-
-Clip H
-== 
-
-Clip W
-== 
-
-Clip X
-== 
-
-Clip Y
-== 
-
-Color
-== 
-
-Delete demo
-== 
-
-Delete this envelope
-== 
-
-Down
-== 
-
-Enable/disable group for saving
-== 
-
-Enable/disable layer for saving
-== 
-
-Exit
-== 
-
-Folder
-== 
-
-Green value of the envelope
-== 
-
-Invalid Demo
-== 
-
-Left
-== 
-
-Left mouse to drag. Hold ctfl to be more precise. Hold shift to alter time point aswell. Right click to delete.
-== 
-
-Load
-== 
-
-Load map
-== 
-
-New folder
-== 
-
-Para X
-== 
-
-Para Y
-== 
-
-Parent Folder
-== 
-
-Pos X
-== 
-
-Pos Y
-== 
-
-REC
-== 
-
-Reason:
-== 
-
-Record demo
-== 
-
-Red value of the envelope
-== 
-
-Refocus
-== 
-
-Resizes the current Quad based on the aspect ratio of the image
-== 
-
-Right
-== 
-
-Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
-== 
-
-Rotation of the envelope
-== 
-
-Shift
-== 
-
-Stop record
-== 
-
-Time limit: %d min
-== 
-
-Up
-== 
-
-Use Clipping
-== 
-
-Use left mouse button to drag and change the color value. Hold shift to be more precise.
-== 
-
-Use left mouse button to drag and change the value. Hold shift to be more precise.
-== 
-
-X-axis of the envelope
-== 
-
-Y-axis of the envelope
-== 
-
-[HOME] Restore map focus
-== 
 
 ##### old translations #####
 
