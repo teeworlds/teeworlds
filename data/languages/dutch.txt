@@ -1,7 +1,11 @@
+
 ##### translated strings #####
 
 %d of %d servers, %d players
 == %d van %d Servers, %d spelers
+
+%d%% loaded
+== %d%% is geladen
 
 %ds left
 == %ds over
@@ -45,6 +49,9 @@ All
 Alpha
 == Alpha
 
+Alpha value of the envelope
+== Doorzichtbaarheid van de envelope
+
 Always show name plates
 == Altijd namen laten zien
 
@@ -57,17 +64,26 @@ Append
 Append map
 == Voeg kaart toe
 
+Are you sure that you want to delete the demo?
+== Weet je zeker dat je de demo wil verwijderen?
+
 Are you sure that you want to quit?
 == Weet je zeker dat je wil stoppen?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Omdat dit de eerste keer is dat je het spel opstart, moet je een nicknaam kiezen. Doe dat hieronder. Het is aanbevolen om de instellingen te controleren, voordat je een spel start.
 
+Aspect ratio
+== Beeldverhouding
+
 Blue team
 == Blauwe team
 
 Blue team wins!
 == Blauwe team wint!
+
+Blue value of the envelope
+== Hoeveelheid blauw van de envelope
 
 Body
 == Lichaam
@@ -93,8 +109,23 @@ Chat
 Clear collision
 == Verwijder botsingen
 
+Clip H
+== Clip H
+
+Clip W
+== Clip B
+
+Clip X
+== Clip X
+
+Clip Y
+== Clip Y
+
 Close
 == Sluiten
+
+Color
+== Kleur
 
 Color Env
 == Kleur Env
@@ -159,11 +190,17 @@ Decrease animation speed
 Delete
 == Verwijder
 
+Delete demo
+== Verwijder demo
+
 Delete group
 == Verwijder groep
 
 Delete layer
 == Verwijder laag
+
+Delete this envelope
+== Verwijder deze envelope
 
 Deletes the current quad
 == Verwijdert de huidige quad
@@ -186,6 +223,9 @@ Disconnected
 Display Modes
 == Laat modes zien
 
+Down
+== Omlaag
+
 Downloading map
 == Kaart downloaden
 
@@ -207,6 +247,12 @@ Embeds the image into the map file.
 Emoticon
 == Emoticon
 
+Enable/disable group for saving
+== Sla de group wel/niet op
+
+Enable/disable layer for saving
+== Sla de laag wel/niet op
+
 Enter
 == Binnenkomen
 
@@ -218,6 +264,9 @@ Error
 
 Error loading demo
 == Fout bij laden demo
+
+Exit
+== Afsluiten
 
 Exits from the editor
 == Verlaat de editor
@@ -240,6 +289,9 @@ Feet
 File
 == Bestand
 
+File: %s
+== Bestand: %s
+
 Filename:
 == Bestandsnaam:
 
@@ -248,6 +300,9 @@ Filter
 
 Fire
 == Vuur
+
+Folder
+== Map
 
 Force vote
 == Forceer stem
@@ -275,6 +330,9 @@ General
 
 Graphics
 == Beeld
+
+Green value of the envelope
+== Hoeveelheid groen van de envelope
 
 Grenade
 == Granaat
@@ -324,6 +382,9 @@ Info
 Internet
 == Internet
 
+Invalid Demo
+== Ongeldige demo
+
 Join blue
 == Ga bij blauw
 
@@ -348,17 +409,29 @@ Language
 Layers
 == Lagen
 
+Left
+== Links
+
 Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
 == Linkermuisknop om te bewegen. Houd shift ingedrukt om te roteren. Houd ctrl ingedrukt om te draaien.
 
 Left mouse button to move. Hold shift to move the texture.
 == Linkermuisknop om te bewegen. Houd shift ingedrukt om de textuur te bewegen
 
+Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== Linkermuisknop om te slepen. Ctrl om precieser te zijn. Shift om tijdspunt ook te veranderen. Rechtsklik om te verwijderen.
+
 Lht.
 == Licht
 
+Load
+== Laad
+
 Load a new image to use in the map
 == Laad een nieuwe afbeelding om te gebruiken in de kaart
+
+Load map
+== Laad kaart
 
 Loading
 == Laden
@@ -405,6 +478,9 @@ Name:
 New
 == Nieuw
 
+New folder
+== Nieuwe map
+
 News
 == Nieuws
 
@@ -450,6 +526,15 @@ Opens a map for editing
 Order
 == Volgorde
 
+Para X
+== Para X
+
+Para Y
+== Para Y
+
+Parent Folder
+== Vorige map
+
 Password
 == Wachtwoord
 
@@ -474,6 +559,12 @@ Players
 Please balance teams!
 == Balanceer teams!
 
+Pos X
+== Pos X
+
+Pos Y
+== Pos Y
+
 Pos. Env
 == Pos. Env
 
@@ -495,6 +586,9 @@ Previous Envelope
 Proof
 == Test
 
+Quads
+== Quads
+
 Quality Textures
 == Structuurkwaliteit
 
@@ -504,11 +598,26 @@ Quick search:
 Quit
 == Stoppen
 
+REC
+== REC
+
+Reason:
+== Reden:
+
+Record demo
+== Neem demo op
+
 Red team
 == Rood
 
 Red team wins!
 == Rood wint!
+
+Red value of the envelope
+== Hoeveel heid rood van de envelope
+
+Refocus
+== Herfocus
 
 Refresh
 == Vernieuwen
@@ -546,8 +655,17 @@ Reset filter
 Reset to defaults
 == Standaardinstellingen
 
+Resizes the current Quad based on the aspect ratio of the image
+== Verkleint/vergroot de huidige quad gebaseerd op de verhouding van de afbeelding.
+
 Rifle
 == Laser
+
+Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Rotatie van de kwast in graden. Linkermuisknop om te slepen en de waarde te veranderen. Shift om meer precies te zijn.
+
+Rotation of the envelope
+== Rotatie van de envelope
 
 Round
 == Ronde
@@ -609,6 +727,9 @@ Server not full
 Settings
 == Instellingen
 
+Shift
+== Shift
+
 Shotgun
 == Geweer
 
@@ -648,6 +769,9 @@ Standard gametype
 Standard map
 == Standaard kaart
 
+Stop record
+== Stop met opnemen
+
 Sudden Death
 == Sudden Death
 
@@ -675,8 +799,14 @@ Texture Compression
 The server is running a non-standard tuning on a pure game type.
 == The server draait geen standaard spel type.
 
+Tiles
+== Tegels
+
 Time limit
 == Tijdlimiet
+
+Time limit: %d min
+== Tijdslimiet: %d minuten
 
 Toggle group visibility
 == Acitveer groepszichtbaarheid
@@ -695,6 +825,18 @@ Type
 
 UI Color
 == UI kleur
+
+Up
+== Omhoog
+
+Use Clipping
+== Gebruik Clipping
+
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== Linkermuisknop om te slepen en de kleur te veranderen. Shift om meer precies te zijn.
+
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Linkermuisknop om te slepen en de waarde te veranderen. Shift om meer precies te zijn.
 
 Use left mouse button to drag and create a brush.
 == Gebruik de linkermuisknop om de kwast te maken en deze te slepen.
@@ -732,6 +874,12 @@ Welcome to Teeworlds
 Width
 == Breedte
 
+X-axis of the envelope
+== X-as van de envelope
+
+Y-axis of the envelope
+== Y-as van de envelope
+
 Yes
 == Ja
 
@@ -746,6 +894,9 @@ ZI
 
 ZO
 == ZO
+
+[HOME] Restore map focus
+== [HOME] Herstel kaart focus
 
 [M] Flip brush vertical
 == [M] Spiegel kwast verticaal
@@ -779,159 +930,8 @@ ZO
 
 ##### needs translation #####
 
-%d%% loaded
-== %d%% is geladen
-
-Alpha value of the envelope
-== Doorzichtbaarheid van de envelope
-
-Are you sure that you want to delete the demo?
-== Weet je zeker dat je de demo wil verwijderen?
-
-Aspect ratio
-== Beeldverhouding
-
-Blue value of the envelope
-== Hoeveelheid blauw van de envelope
-
-Clip H
-== Clip H
-
-Clip W
-== Clip B
-
-Clip X
-== Clip X
-
-Clip Y
-== Clip Y
-
-Color
-== Kleur
-
-Delete demo
-== Verwijder demo
-
-Delete this envelope
-== Verwijder deze envelope
-
-Down
-== Omlaag
-
-##### Not sure about these 2 #####
-Enable/disable group for saving
-== Sla de group wel/niet op
-
-Enable/disable layer for saving
-== Sla de laag wel/niet op
-
-Exit
-== Afsluiten
-
-File: %s
-== Bestand: %s
-
-Folder
-== Map
-
-Green value of the envelope
-== Hoeveelheid groen van de envelope
-
-Invalid Demo
-== Ongeldige demo
-
-Left
-== Links
-
-Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
-== Linkermuisknop om te slepen. Ctrl om precieser te zijn. Shift om tijdspunt ook te veranderen. Rechtsklik om te verwijderen.
-
-Load
-== Laad
-
-Load map
-== Laad kaart
-
-New folder
-== Nieuwe map
-
-Para X
-== Para X
-
-Para Y
-== Para Y
-
-Parent Folder
-== Vorige map
-
-Pos X
-== Pos X
-
-Pos Y
-== Pos Y
-
-Quads
-== Quads
-
-REC
-== REC
-
-Reason:
-== Reden:
-
-Record demo
-== Neem demo op
-
-Red value of the envelope
-== Hoeveel heid rood van de envelope
-
-Refocus
-== Herfocus
-
-Resizes the current Quad based on the aspect ratio of the image
-== Verkleint/vergroot de huidige quad gebaseerd op de verhouding van de afbeelding.
-
 Right
 == 
-
-Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
-== Rotatie van de kwast in graden. Linkermuisknop om te slepen en de waarde te veranderen. Shift om meer precies te zijn.
-
-Rotation of the envelope
-== Rotatie van de envelope
-
-Shift
-== Shift
-
-Stop record
-== Stop met opnemen
-
-Tiles
-== Tegels
-
-Time limit: %d min
-== Tijdslimiet: %d minuten
-
-Up
-== Omhoog
-
-Use Clipping
-== Gebruik Clipping
-
-Use left mouse button to drag and change the color value. Hold shift to be more precise.
-== Linkermuisknop om te slepen en de kleur te veranderen. Shift om meer precies te zijn.
-
-Use left mouse button to drag and change the value. Hold shift to be more precise.
-== Linkermuisknop om te slepen en de waarde te veranderen. Shift om meer precies te zijn.
-
-X-axis of the envelope
-== X-as van de envelope
-
-Y-axis of the envelope
-== Y-as van de envelope
-
-[HOME] Restore map focus
-== [HOME] Herstel kaart focus
 
 ##### old translations #####
 
