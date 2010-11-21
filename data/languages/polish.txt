@@ -915,12 +915,6 @@ Use left mouse button to drag and change the color value. Hold shift to be more 
 Use left mouse button to drag and change the value. Hold shift to be more precise.
 == 
 
-Vote No
-== 
-
-Vote Yes
-== 
-
 X-axis of the envelope
 == 
 

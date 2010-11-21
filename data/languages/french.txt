@@ -673,14 +673,8 @@ V-Sync
 Version
 == Version
 
-Vote No
-== Voter Non
-
 Vote no
 == Voter non
-
-Vote Yes
-== Voter Oui
 
 Vote yes
 == Voter oui
