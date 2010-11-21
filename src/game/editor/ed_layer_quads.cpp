@@ -13,7 +13,7 @@
 CLayerQuads::CLayerQuads()
 {
 	m_Type = LAYERTYPE_QUADS;
-	m_pTypeName = "Quads";
+	m_pTypeName = Localize("Quads");
 	m_Image = -1;
 }
 

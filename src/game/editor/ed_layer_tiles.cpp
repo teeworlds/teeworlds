@@ -14,7 +14,7 @@
 CLayerTiles::CLayerTiles(int w, int h)
 {
 	m_Type = LAYERTYPE_TILES;
-	m_pTypeName = "Tiles";
+	m_pTypeName = Localize("Tiles");
 	m_Width = w;
 	m_Height = h;
 	m_Image = -1;
