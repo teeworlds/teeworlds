@@ -1,5 +1,5 @@
 
-##### language indices #####
+##### translated strings #####
 
 bosnian
 == Bosanski
@@ -36,3 +36,8 @@ serbian
 
 swedish
 == Svenska
+
+##### needs translation #####
+
+##### old translations #####
+
