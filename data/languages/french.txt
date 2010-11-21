@@ -475,11 +475,11 @@ Quick search:
 Quit
 == Quitter
 
-Reason:
-== Raison :
-
 REC
 == REC
+
+Reason:
+== Raison :
 
 Red team
 == Équipe rouge
@@ -798,6 +798,9 @@ Enable/disable layer for saving
 Envelopes
 == 
 
+File: %s
+== 
+
 Green value of the envelope
 == 
 
@@ -810,7 +813,7 @@ Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
 Left mouse button to move. Hold shift to move the texture.
 == 
 
-Left mouse to drag. Hold ctfl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
 == 
 
 Next Envelope
@@ -838,6 +841,9 @@ Previous Envelope
 == 
 
 Proof
+== 
+
+Quads
 == 
 
 Record demo
@@ -871,6 +877,9 @@ Switch between images and layers managment.
 == 
 
 Switch curve type
+== 
+
+Tiles
 == 
 
 Toggle group visibility
