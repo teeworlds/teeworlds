@@ -991,6 +991,8 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 
 						m_MapdownloadChunk = 0;
 						str_copy(m_aMapdownloadName, pMap, sizeof(m_aMapdownloadName));
+						if(m_MapdownloadFile)
+							io_close(m_MapdownloadFile);
 						m_MapdownloadFile = Storage()->OpenFile(m_aMapdownloadFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 						m_MapdownloadCrc = MapCrc;
 						m_MapdownloadTotalsize = -1;
@@ -1029,7 +1031,8 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 					const char *pError;
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "download complete, loading map");
 
-					io_close(m_MapdownloadFile);
+					if(m_MapdownloadFile)
+						io_close(m_MapdownloadFile);
 					m_MapdownloadFile = 0;
 					m_MapdownloadAmount = 0;
 					m_MapdownloadTotalsize = -1;
