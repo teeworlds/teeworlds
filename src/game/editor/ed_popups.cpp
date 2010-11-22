@@ -613,12 +613,14 @@ int CEditor::PopupSwitch(CEditor *pEditor, CUIRect View)
 
 	enum
 	{
-		PROP_Switch=0,
+		PROP_SwitchNumber=0,
+		PROP_SwitchDelay,
 		NUM_PROPS,
 	};
 
 	CProperty aProps[] = {
 		{"Number", pEditor->m_SwitchNum, PROPTYPE_INT_STEP, 0, 255},
+		{"Delay", pEditor->m_SwitchDelay, PROPTYPE_INT_STEP, 0, 255},
 		{0},
 	};
 
@@ -626,8 +628,10 @@ int CEditor::PopupSwitch(CEditor *pEditor, CUIRect View)
 	int NewVal = 0;
 	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
 
-	if(Prop == PROP_Switch)
+	if(Prop == PROP_SwitchNumber)
 		 pEditor->m_SwitchNum = clamp(NewVal, 0, 255);
+	if(Prop == PROP_SwitchDelay)
+		 pEditor->m_SwitchDelay = clamp(NewVal, 0, 255);
 
 	return 0;
 }

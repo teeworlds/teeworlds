@@ -578,12 +578,33 @@ void CGameContext::OnTick()
 			}
 		}
 	}
+
 if(Server()->Tick() % Server()->TickSpeed() * 60 == g_Config.m_SvAnnouncementInterval)
 {
 	char *Line = ((CServer *) Server())->GetLine(g_Config.m_SvAnnouncementFileName, m_AnnouncementLine++);
 	if(Line)
 		SendChat(-1, CGameContext::CHAT_ALL, Line);
 }
+
+if(Collision()->m_NumSwitchers)
+	for (int i = 0; i < Collision()->m_NumSwitchers+1; ++i)
+	{
+		for (int j = 0; j < 16; ++j)
+		{
+			if(Collision()->m_pSwitchers[i].m_EndTick[j] <= Server()->Tick() && Collision()->m_pSwitchers[i].m_Type[j] == TILE_SWITCHTIMEDOPEN)
+			{
+				Collision()->m_pSwitchers[i].m_Status[j] = false;
+				Collision()->m_pSwitchers[i].m_EndTick[j] = 0;
+				Collision()->m_pSwitchers[i].m_Type[j] = TILE_SWITCHCLOSE;
+			}
+			else if(Collision()->m_pSwitchers[i].m_EndTick[j] <= Server()->Tick() && Collision()->m_pSwitchers[i].m_Type[j] == TILE_SWITCHTIMEDCLOSE)
+			{
+				Collision()->m_pSwitchers[i].m_Status[j] = true;
+				Collision()->m_pSwitchers[i].m_EndTick[j] = 0;
+				Collision()->m_pSwitchers[i].m_Type[j] = TILE_SWITCHOPEN;
+			}
+		}
+	}
 
 #ifdef CONF_DEBUG
 	if(g_Config.m_DbgDummies)

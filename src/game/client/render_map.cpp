@@ -429,7 +429,15 @@ void CRenderTools::RenderSwitchmap(CSwitchTile *pSwitch, int w, int h, float Sca
 			{
 				char aBuf[16];
 				str_format(aBuf, sizeof(aBuf), "%d", Index);
-				UI()->TextRender()->Text(0, mx*Scale-2, my*Scale-4, Scale-5, aBuf, -1);
+				UI()->TextRender()->Text(0, mx*Scale, my*Scale+16, Scale-20, aBuf, -1);
+			}
+
+			unsigned char Delay = pSwitch[c].m_Delay;
+			if(Delay)
+			{
+				char aBuf[16];
+				str_format(aBuf, sizeof(aBuf), "%d", Delay);
+				UI()->TextRender()->Text(0, mx*Scale, my*Scale-2, Scale-20, aBuf, -1);
 			}
 		}
 

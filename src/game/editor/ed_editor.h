@@ -584,6 +584,7 @@ public:
 		
 		m_TeleNum = 1;
 		m_SwitchNum = 1;
+		m_SwitchDelay = 0;
 		
 		m_SpeedupForce = 50;
 		m_SpeedupMaxSpeed = 0;
@@ -787,6 +788,7 @@ public:
 	short m_SpeedupAngle;
 
 	unsigned char m_SwitchNum;
+	unsigned char m_SwitchDelay;
 };
 
 // make sure to inline this function

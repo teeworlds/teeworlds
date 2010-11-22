@@ -48,7 +48,7 @@ void CCollision::Init(class CLayers *pLayers)
 {
 	if(m_pLayers) m_pLayers->Dest();
 	Dest();
-	int NumSwitchers = 0;
+	m_NumSwitchers = 0;
 	m_pLayers = pLayers;
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
@@ -78,8 +78,8 @@ void CCollision::Init(class CLayers *pLayers)
 		int Index;
 		if(m_pSwitch)
 		{
-			if(m_pSwitch[i].m_Number > NumSwitchers)
-				NumSwitchers = m_pSwitch[i].m_Number;
+			if(m_pSwitch[i].m_Number > m_NumSwitchers)
+				m_NumSwitchers = m_pSwitch[i].m_Number;
 			if(m_pSwitch[i].m_Number)
 				m_pDoor[i].m_Number = m_pSwitch[i].m_Number;
 			else
@@ -88,7 +88,7 @@ void CCollision::Init(class CLayers *pLayers)
 			Index = m_pSwitch[i].m_Type;
 			if(Index <= TILE_NPH)
 			{
-				if(Index == TILE_SWITCHOPEN || Index == TILE_SWITCHCLOSE)
+				if(Index >= TILE_SWITCHTIMEDOPEN && Index <= TILE_SWITCHCLOSE)
 					m_pSwitch[i].m_Type = Index;
 				else
 					m_pSwitch[i].m_Type = 0;
@@ -148,15 +148,17 @@ void CCollision::Init(class CLayers *pLayers)
 				m_pTiles[i].m_Index = Index;
 		}
 	}
-	if(NumSwitchers)
+	if(m_NumSwitchers)
 	{
-		m_pSwitchers = new SSwitchers[NumSwitchers+1];
+		m_pSwitchers = new SSwitchers[m_NumSwitchers+1];
 	
-		for (int i = 0; i < NumSwitchers+1; ++i)
+		for (int i = 0; i < m_NumSwitchers+1; ++i)
 		{
 			for (int j = 0; j < 16; ++j)
 			{
 				m_pSwitchers[i].m_Status[j] = true;
+				m_pSwitchers[i].m_EndTick[j] = 0;
+				m_pSwitchers[i].m_Type[j] = 0;
 			}
 		}
 	}
@@ -774,9 +776,9 @@ int CCollision::IsSwitch(int Index)
 	return 0;
 }
 
-int CCollision::GetSWitchNumber(int Index)
+int CCollision::GetSwitchNumber(int Index)
 {
-	//dbg_msg("GetSWitchNumber","Index %d, pSwitch %d, m_Type %d, m_Number %d", Index, m_pSwitch, (m_pSwitch)?m_pSwitch[Index].m_Type:0, (m_pSwitch)?m_pSwitch[Index].m_Number:0);
+	//dbg_msg("GetSwitchNumber","Index %d, pSwitch %d, m_Type %d, m_Number %d", Index, m_pSwitch, (m_pSwitch)?m_pSwitch[Index].m_Type:0, (m_pSwitch)?m_pSwitch[Index].m_Number:0);
 	if(Index < 0)
 		return 0;
 	if(!m_pSwitch)
@@ -784,6 +786,20 @@ int CCollision::GetSWitchNumber(int Index)
 
 	if(m_pSwitch[Index].m_Type > 0 && m_pSwitch[Index].m_Number > 0)
 		return m_pSwitch[Index].m_Number;
+
+	return 0;
+}
+
+int CCollision::GetSwitchDelay(int Index)
+{
+	//dbg_msg("GetSwitchNumber","Index %d, pSwitch %d, m_Type %d, m_Number %d", Index, m_pSwitch, (m_pSwitch)?m_pSwitch[Index].m_Type:0, (m_pSwitch)?m_pSwitch[Index].m_Number:0);
+	if(Index < 0)
+		return 0;
+	if(!m_pSwitch)
+		return false;
+
+	if(m_pSwitch[Index].m_Type > 0 && m_pSwitch[Index].m_Number > 0)
+		return m_pSwitch[Index].m_Delay;
 
 	return 0;
 }

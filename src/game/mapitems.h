@@ -91,7 +91,9 @@ enum
 	TILE_TELEINEVIL,
 	TILE_UNFREEZE,
 	//Switches
-	TILE_SWITCHOPEN = 24,
+	TILE_SWITCHTIMEDOPEN = 22,
+	TILE_SWITCHTIMEDCLOSE,
+	TILE_SWITCHOPEN,
 	TILE_SWITCHCLOSE,
 	TILE_TELEIN,
 	TILE_TELEOUT,
@@ -185,6 +187,7 @@ public:
 	unsigned char m_Number;
 	unsigned char m_Type;
 	unsigned char m_Flags;
+	unsigned char m_Delay;
 };
 
 struct CMapItemImage
