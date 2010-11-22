@@ -563,7 +563,7 @@ void CConsole::ExecuteLine(const char *pStr, const int ClientLevel, const int Cl
 }
 
 
-void CConsole::ExecuteFile(const char *pFilename, FPrintCallback pfnAlternativePrintCallback, void *pUserData, FPrintCallback pfnAlternativePrintResponseCallback, void *pResponseUserData)
+void CConsole::ExecuteFile(const char *pFilename, FPrintCallback pfnAlternativePrintCallback, void *pUserData, FPrintCallback pfnAlternativePrintResponseCallback, void *pResponseUserData, int Level)
 {
 	// make sure that this isn't being executed already
 	for(CExecFile *pCur = m_pFirstExec; pCur; pCur = pCur->m_pPrev)
@@ -599,7 +599,7 @@ void CConsole::ExecuteFile(const char *pFilename, FPrintCallback pfnAlternativeP
 		ReleaseAlternativePrintCallback();
 
 		while((pLine = lr.Get()))
-			ExecuteLine(pLine, 4, -1, pfnAlternativePrintCallback, pUserData, pfnAlternativePrintResponseCallback, pResponseUserData);
+			ExecuteLine(pLine, Level, -1, pfnAlternativePrintCallback, pUserData, pfnAlternativePrintResponseCallback, pResponseUserData);
 
 		io_close(File);
 	}

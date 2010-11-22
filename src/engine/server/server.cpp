@@ -1211,7 +1211,7 @@ int CServer::Run()
 					Console()->ExecuteLine("sv_hit 1",4,-1);
 					Console()->ExecuteLine("sv_npc 0",4,-1);
 					Console()->ExecuteLine("sv_phook 1",4,-1);
-					Console()->ExecuteLine("sv_endless_drag 0",4,-1); //TODO: Such string executed where autoexec executed. No need??
+					Console()->ExecuteLine("sv_endless_drag 0",4,-1);
 					// new map loaded
 					GameServer()->OnShutdown();
 					
@@ -1678,7 +1678,7 @@ int main(int argc, const char **argv) // ignore_convention
 	pConsole->ExecuteLine("sv_phook 1",4,-1);
 	pConsole->ExecuteLine("sv_endless_drag 0",4,-1);
 	// execute autoexec file
-	pConsole->ExecuteFile("autoexec.cfg");
+	pConsole->ExecuteFile("autoexec.cfg", 0, 0, 0, 0, 4);
 
 	// parse the command line arguments
 	if(argc > 1) // ignore_convention
