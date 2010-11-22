@@ -534,9 +534,9 @@ void CGameContext::OnTick()
 						No++;
 				}
 
-				if(Yes >= (Total/(100/g_Config.m_SvVotePercentage)))
+				if(Yes > Total / (100.0 / g_Config.m_SvVotePercentage))
 					m_VoteEnforce = VOTE_ENFORCE_YES;
-				else if(No >= (int)((Total+1)/((1.0/g_Config.m_SvVotePercentage)*100.0)))
+				else if(No >= Total - Total / (100.0 / g_Config.m_SvVotePercentage))
 					m_VoteEnforce = VOTE_ENFORCE_NO;
 			}
 
