@@ -65,6 +65,7 @@ class CConsole : public IConsole
 	void *m_pCompareClientsUserdata;
 	FClientOnlineCallback m_pfnClientOnlineCallback;
 	void *m_pClientOnlineUserdata;
+	int m_aCommandCount[5];
 
 	enum
 	{
@@ -147,7 +148,7 @@ public:
 
 	virtual void ParseArguments(int NumArgs, const char **ppArguments);
 	virtual void Register(const char *pName, const char *pParams, int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp, const int Level);
-	virtual void List(const int Level, int Flags);
+	virtual void List(const int Level, int Flags, int Page = 0);
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser);
 	virtual void StoreCommands(bool Store, int ClientId);
 	

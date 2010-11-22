@@ -721,6 +721,11 @@ CConsole::CConsole(int FlagMask)
 	m_pFirstCommand = 0;
 	m_pFirstExec = 0;
 
+	for (int i = 0; i < 5; ++i)
+	{
+		m_aCommandCount[i] = 0;
+	}
+
 	m_pPrintCallbackUserdata = 0;
 	m_pfnPrintCallback = 0;
 	m_pAlternativePrintCallbackUserdata = 0;
@@ -801,21 +806,38 @@ void CConsole::Register(const char *pName, const char *pParams,
 	
 	pCommand->m_pNext = m_pFirstCommand;
 	m_pFirstCommand = pCommand;
+	m_aCommandCount[pCommand->m_Level]++;
 }
 
-void CConsole::List(const int Level, int Flags)
+void CConsole::List(const int Level, int Flags, int Page)
 {
+	int Count = 0;
+	if(!Page)
+	{
+		for (int i = 0; i <= Level; ++i)
+		{
+			Count += m_aCommandCount[i];
+		}
+
+		char aBuf[300];
+		str_format(aBuf,sizeof(aBuf),"The Number of Pages is %d, use 'CMDList i' (where i is the page number)", Count);
+		PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+		return;
+	}
 	CCommand *pCommand = m_pFirstCommand;
 	while(pCommand)
 	{
 		if(pCommand)
 			if((pCommand->m_Level <= Level))
-					if((!Flags)?true:pCommand->m_Flags&Flags)
+				if((!Flags)?true:pCommand->m_Flags&Flags)
+				{
+					if(++Count/5 == Page)
 					{
-						char aBuf[300];
-						str_format(aBuf,sizeof(aBuf),"Name: %s, Parameters: %s, Help: %s",pCommand->m_pName, (!str_length(pCommand->m_pParams))?"None.":pCommand->m_pParams, (!str_length(pCommand->m_pHelp))?"No Help String Given":pCommand->m_pHelp);
-						PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+					char aBuf[300];
+					str_format(aBuf,sizeof(aBuf),"Name: %s, Parameters: %s, Help: %s",pCommand->m_pName, (!str_length(pCommand->m_pParams))?"None.":pCommand->m_pParams, (!str_length(pCommand->m_pHelp))?"No Help String Given":pCommand->m_pHelp);
+					PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
 					}
+				}
 		pCommand = pCommand->m_pNext;
 	}
 }
