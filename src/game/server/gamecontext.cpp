@@ -578,7 +578,12 @@ void CGameContext::OnTick()
 			}
 		}
 	}
-
+if(Server()->Tick() % Server()->TickSpeed() * 60 == g_Config.m_SvAnnouncementInterval)
+{
+	char *Line = ((CServer *) Server())->GetLine(g_Config.m_SvAnnouncementFileName, m_AnnouncementLine++);
+	if(Line)
+		SendChat(-1, CGameContext::CHAT_ALL, Line);
+}
 
 #ifdef CONF_DEBUG
 	if(g_Config.m_DbgDummies)
@@ -1416,7 +1421,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 			}
 		}
 	}
-
+m_AnnouncementLine = 0;
 #ifdef CONF_DEBUG
 	if(g_Config.m_DbgDummies)
 	{

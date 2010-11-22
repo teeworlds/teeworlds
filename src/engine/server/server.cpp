@@ -30,6 +30,8 @@
 
 #include "register.h"
 #include "server.h"
+#include "../shared/linereader.h"
+#include <vector>
 
 #if defined(CONF_FAMILY_WINDOWS) 
 	#define _WIN32_WINNT 0x0500
@@ -1808,4 +1810,24 @@ void CServer::CheckPass(int ClientId, const char *pPw)
 		SendRconLine(ClientId, buf);
 		dbg_msg("server", "'%s' ClientId=%d authed with Level=%d", ClientName(ClientId), ClientId, 0);
 	}
+}
+
+
+char *CServer::GetLine(char const *FileName, int Line)
+{
+	IOHANDLE File = m_pStorage->OpenFile(FileName, IOFLAG_READ, IStorage::TYPE_ALL);
+	if(File)
+	{
+		std::vector<char*> v;
+		char *pLine;
+		CLineReader *lr = new CLineReader();
+		lr->Init(File);
+		while(pLine = lr->Get())
+			if(str_length(pLine))
+				v.push_back(pLine);
+		if(Line >= v.size())
+			Line %= v.size();
+		return v[Line];
+	}
+	return 0;
 }
