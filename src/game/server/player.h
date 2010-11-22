@@ -58,6 +58,7 @@ public:
 		int m_HammerType;
 		bool m_Super;
 		int m_PauseTime;
+		int m_Team;
 	} m_PauseInfo;
 	bool m_InfoSaved;
 	void LoadCharacter();
