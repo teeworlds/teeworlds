@@ -1,0 +1,43 @@
+Dear Mac OSX User...
+
+to get this mod compiled with MySQL on a Mac running OSX 10.5 or newer you need to download and unzip three little things first.
+
+1. Download:
+   * the appropiate Version (e.g. 32 vs. 64 bit) of the MySQL Community Server at
+     http://www.mysql.com/downloads/mysql/
+   * the appropiate Version (e.g. 32 vs. 64 bit) of the MySQL Connector/C++ at
+     http://www.mysql.com/downloads/connector/cpp/
+   * boost at (the connector needs it)
+     http://www.boost.org/
+
+2. Unzip:
+   * the MySQL Community Server files and move them to
+     /usr/local/mysql/
+   * Unzip the MySQL Connector/C++ files and move them to
+     /usr/local/mysql/
+   * Unzip the boost files and move the boost folder >inside of< boost to (it will be a collection of header files) to
+     /usr/local/mysql/includes
+
+Of course you could extract only the needed lib and header files and put them somewhere else (e.g. in your teeworlds folder) but above solution is intended to be easy and quick to apply.
+
+Thanks for reading
+Allisone
+
+
+DDRace README is as follows
+
+This is a mod (DDRace) and it's for the game Teeworlds and it's being maintained by GreYFoX@GTi & btd with the help of others like heinrich5991 & 3da, in the previous versions Floff, noother and Fluxid.
+
+DDRace has been rebuilt from scratch by btd based on DDRace-Beta to Teeworlds Trunk 0.5, GreYFoX@GTi helped re-adding features once it was Trunk, you can track this in the commit log.
+
+Teeworlds README is as follows:
+Copyright (c) 2010 Magnus Auvinen
+
+
+This software is provided 'as-is', without any express or implied
+warranty. In no event will the authors be held liable for any damages
+arising from the use of this software.
+
+
+Please visit http://www.teeworlds.com for up-to-date information about
+the game, including new versions, custom maps and much more

@@ -832,12 +832,6 @@ void CCharacter::Tick()
 					m_LastBroadcast = Server()->Tick();
 				}
 			}
-			
-			
-
-			
-
-			
 		} else {
 			
 			if(!m_pPlayer->m_IsUsingDDRaceClient) 
