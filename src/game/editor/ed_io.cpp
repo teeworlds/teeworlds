@@ -644,6 +644,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 								if(((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Type)
 								{
 									if(((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Type = ENTITY_DOOR+1+ENTITY_OFFSET)
+									if(((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Type == ENTITY_DOOR+1+ENTITY_OFFSET)
 										((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type = TILE_SWITCHTIMEDCLOSE;
 									else
 										((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type = ((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Type;
@@ -658,6 +659,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 								((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Flags = 0;
 								((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Delay = 0;
 							}
+
 							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
 							{
 								if((((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type > (ENTITY_CRAZY_SHOTGUN + ENTITY_OFFSET) && ((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type < (ENTITY_DRAGGER_WEAK + ENTITY_OFFSET) || ((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type == (ENTITY_LASER_O_FAST + 1 + ENTITY_OFFSET)))
