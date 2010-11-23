@@ -346,7 +346,7 @@ int CCollision::Entity(int x, int y, int Layer)
 			default:
 				str_format(aBuf,sizeof(aBuf), "Unknown");
 		}
-		dbg_msg("CCollision::Entity","Something is VERY wrong in the layer %s please report this at http://DDRace.info, but you may haven't read the news section so go there and read first", aBuf);
+		dbg_msg("CCollision::Entity","Something is VERY wrong with the %s layer please report this at http://DDRace.info, you will need to post the map as well and any steps tht u think may led to this, Please Also Read the News Section every once and a while", aBuf);
 		return 0;
 	}
 	switch (Layer)
