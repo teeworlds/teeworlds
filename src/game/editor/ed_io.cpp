@@ -643,7 +643,10 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 							{
 								if(((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Type)
 								{
-									((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type = ((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Type;
+									if(((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Type = ENTITY_DOOR+1+ENTITY_OFFSET)
+										((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type = TILE_SWITCHTIMEDCLOSE;
+									else
+										((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type = ((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Type;
 									((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Number = ((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Number;
 								}
 								else
