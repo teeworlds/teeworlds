@@ -643,7 +643,6 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 							{
 								if(((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Type)
 								{
-									if(((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Type = ENTITY_DOOR+1+ENTITY_OFFSET)
 									if(((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Type == ENTITY_DOOR+1+ENTITY_OFFSET)
 										((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type = TILE_SWITCHTIMEDCLOSE;
 									else
@@ -655,7 +654,6 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 									((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type = 0;
 									((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Number = 0;
 								}
-
 								((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Flags = 0;
 								((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Delay = 0;
 							}
