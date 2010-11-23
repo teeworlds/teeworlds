@@ -3219,6 +3219,13 @@ void CEditorMap::MakeSwitchLayer(CLayer *pLayer)
 	m_pSwitchLayer->m_TexId = m_pEditor->ms_SwitchTexture;
 }
 
+void CEditorMap::MakeSwitchLayerOlder(CLayer *pLayer)
+{
+	m_pSwitchLayerOlder = (CLayerSwitchOlder *)pLayer;
+	m_pSwitchLayerOlder->m_pEditor = m_pEditor;
+	m_pSwitchLayerOlder->m_TexId = m_pEditor->ms_SwitchTexture;
+}
+
 void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
 {
 	m_pGameGroup = pGroup;
