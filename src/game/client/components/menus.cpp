@@ -25,6 +25,8 @@
 #include <game/localization.h>
 #include <mastersrv/mastersrv.h>
 
+#include <time.h> // this is for progress bar
+
 vec4 CMenus::ms_GuiColor;
 vec4 CMenus::ms_ColorTabbarInactiveOutgame;
 vec4 CMenus::ms_ColorTabbarActiveOutgame;
@@ -102,6 +104,8 @@ CMenus::CMenus()
 	
 	str_copy(m_aCurrentDemoFolder, "demos", sizeof(m_aCurrentDemoFolder));
 	m_aCallvoteReason[0] = 0;
+	
+	m_DownloadLastCheckSize = 0;
 }
 
 vec4 CMenus::ButtonColorMul(const void *pID)
@@ -839,6 +843,8 @@ int CMenus::Render()
 		const char *pExtraText = "";
 		const char *pButtonText = "";
 		int ExtraAlign = 0;
+		bool bProgressBar = false;
+		float fProgress = 0.0f;
 		
 		if(m_Popup == POPUP_MESSAGE)
 		{
@@ -853,9 +859,69 @@ int CMenus::Render()
 			pButtonText = Localize("Abort");
 			if(Client()->MapDownloadTotalsize() > 0)
 			{
+				int currTime = (int)time(0);
+
+				if (!m_DownloadLastCheckSize || m_DownloadLastCheckSize > (unsigned long)Client()->MapDownloadAmount())
+				{
+					m_DownloadSpeed = 0;
+					m_DownloadLastCheckSize = 1; // we'll think that we've got 1 byte
+					m_DownloadLastCheckTime = currTime;
+				} else {
+					int diffTime = currTime - m_DownloadLastCheckTime;
+					int diffSize = Client()->MapDownloadAmount() - m_DownloadLastCheckSize;
+					float currSpeed = diffTime ? diffSize / diffTime : 0;
+
+					if (diffTime >= 1.0f && diffSize > 0)
+					{
+						if (m_DownloadSpeed == 0)
+							m_DownloadSpeed = currSpeed;
+						else
+							m_DownloadSpeed = (m_DownloadSpeed + currSpeed) * 0.5f;
+
+						m_DownloadLastCheckSize = Client()->MapDownloadAmount();
+						m_DownloadLastCheckTime = currTime;
+					}
+				}
+
 				pTitle = Localize("Downloading map");
-				str_format(aBuf, sizeof(aBuf), "%d/%d KiB", Client()->MapDownloadAmount()/1024, Client()->MapDownloadTotalsize()/1024);
+				if (m_DownloadSpeed == 0)
+				{
+					str_format(aBuf, sizeof(aBuf), Localize("%d/%d KiB"), Client()->MapDownloadAmount()/1024, Client()->MapDownloadTotalsize()/1024);
+				} else {
+					char aBuf2[256];
+
+					double remaining = abs( (Client()->MapDownloadTotalsize() - Client()->MapDownloadAmount()) / m_DownloadSpeed );
+					str_format(aBuf, sizeof(aBuf), Localize("%d/%d KiB (%.1f KiB/sec)"), Client()->MapDownloadAmount() / 1024, Client()->MapDownloadTotalsize() / 1024, m_DownloadSpeed / 1024.0f);
+
+					char * aBufEnd = aBuf + str_length(aBuf);
+					char * aBufMax = aBuf + sizeof(aBuf);
+                                                                      
+					str_format(aBufEnd, aBufMax - aBufEnd, "\n\n%s ", Localize("Please wait"));
+					while (aBufEnd[0]) aBufEnd++;
+
+					if (remaining > 60.0)
+					{
+						int minutes = (int)(remaining / 60.0);
+						int seconds = (int)remaining % 60;
+
+						str_format(aBuf2, sizeof(aBuf2), Localize("%d minute(s)"), minutes);
+						str_format(aBufEnd, aBufMax - aBufEnd, "%s ", Localize(aBuf2)); // localize number texts
+						while (aBufEnd[0]) aBufEnd++;
+
+						if (seconds)
+						{
+							str_format(aBuf2, sizeof(aBuf2), Localize("%d second(s)"), seconds);
+							str_format(aBufEnd, aBufMax - aBufEnd, "%s", Localize(aBuf2)); // localize number texts
+						}
+					} else {
+						str_format(aBuf2, sizeof(aBuf2), Localize("%d second(s)"), (int)remaining);
+						str_format(aBufEnd, aBufMax - aBufEnd, "%s", Localize(aBuf2)); // localize number texts
+					}
+				}
 				pExtraText = aBuf;
+
+				bProgressBar = true;
+				fProgress = clamp((float)Client()->MapDownloadAmount() / (float)Client()->MapDownloadTotalsize(), 0.0f, 1.0f);
 			}
 		}
 		else if(m_Popup == POPUP_DISCONNECTED)
@@ -916,6 +982,19 @@ int CMenus::Render()
 			UI()->DoLabel(&Part, pExtraText, 20.f, -1, (int)Part.w);
 		else
 			UI()->DoLabel(&Part, pExtraText, 20.f, 0, -1);
+
+		if(bProgressBar)
+		{
+			CUIRect Rect;
+			Rect.x = Screen.x + 175.0f;
+			Rect.y = Screen.h - 225.0f;
+			Rect.w = Screen.w - 350.0f;
+			Rect.h = 25.0f;
+			RenderTools()->DrawUIRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+			Rect.w *= fProgress;
+			RenderTools()->DrawUIRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.5f), CUI::CORNER_ALL, 5.0f);
+		}
 
 		if(m_Popup == POPUP_QUIT)
 		{
