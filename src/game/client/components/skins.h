@@ -22,7 +22,8 @@ public:
 	
 	void Init();
 	
-	vec4 GetColor(int v);
+	vec3 GetColorV3(int v);
+	vec4 GetColorV4(int v);
 	int Num();
 	const CSkin *Get(int Index);
 	int Find(const char *pName);
