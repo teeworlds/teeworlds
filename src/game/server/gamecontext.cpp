@@ -650,7 +650,7 @@ void CGameContext::OnClientEnter(int ClientId)
 	
 	SendChatTarget(ClientId, "DDRace Mod. Version: " DDRACE_VERSION);
 	SendChatTarget(ClientId, "Official site: DDRace.info");
-	SendChatTarget(ClientId, "For more Info /CMDList");
+	SendChatTarget(ClientId, "For more Info /cmdlist");
 	SendChatTarget(ClientId, "Or visit DDRace.info");
 	SendChatTarget(ClientId, "To see this again say /info");
 	SendChatTarget(ClientId, "Note This is an Alpha release, just for testing, your feedback is important!!");
@@ -1231,7 +1231,7 @@ void CGameContext::ConSetTeam(IConsole::IResult *pResult, void *pUserData, int C
 	str_format(aBuf, sizeof(aBuf), "moved client %d to team %d", Victim, Team);
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 
-	pSelf->m_apPlayers[ClientId]->SetTeam(Team);
+	pSelf->m_apPlayers[Victim]->SetTeam(Team);
 	//(void)pSelf->m_pController->CheckTeamBalance();
 }
 

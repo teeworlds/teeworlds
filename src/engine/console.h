@@ -57,7 +57,7 @@ public:
 
 	virtual void Register(const char *pName, const char *pParams,
 		int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp, const int Level) = 0;
-	virtual void List(const int Level, int Flags, int Page = 0) = 0;
+	virtual void List(const int Level, int Flags) = 0;
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser) = 0;
 	virtual void StoreCommands(bool Store, int ClientId) = 0;
 	

@@ -8,7 +8,7 @@
 
 CONSOLE_COMMAND("clear_votes", "", CFGFLAG_SERVER, ConClearVotes, this, "Clears the vote list", 4)
 CONSOLE_COMMAND("kill", "v", CFGFLAG_SERVER, ConKillPlayer, this, "Kills player i and announces the kill", 2)
-CONSOLE_COMMAND("logout", "v", CFGFLAG_SERVER, ConLogOut, this, "If you are a helper or didn't specify [i] it logs you out, otherwise it logs player i out", 0)
+CONSOLE_COMMAND("logout", "v", CFGFLAG_SERVER, ConLogOut, this, "If you are a helper or didn't specify [i] it logs you out, otherwise it logs player i out", -1)
 CONSOLE_COMMAND("helper", "v", CFGFLAG_SERVER, ConSetlvl1, this, "Authenticates player i to the Level of 1", 2)
 CONSOLE_COMMAND("moder", "v", CFGFLAG_SERVER, ConSetlvl2, this, "Authenticates player i to the Level of 2", 3)
 CONSOLE_COMMAND("admin", "v", CFGFLAG_SERVER, ConSetlvl3, this, "Authenticates player i to the Level of 3 (CAUTION: Irreversible, once he is an admin you can't control him)", 3)
