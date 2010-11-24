@@ -5,6 +5,7 @@
 
 class CInput : public IEngineInput
 {
+	IClient *m_pClient;
 	IEngineGraphics *m_pGraphics;
 
 	int m_InputGrabbed;
@@ -14,6 +15,7 @@ class CInput : public IEngineInput
 
 	void AddEvent(int Unicode, int Key, int Flags);
 
+	IClient *Client() { return m_pClient; }
 	IEngineGraphics *Graphics() { return m_pGraphics; }
 
 public:

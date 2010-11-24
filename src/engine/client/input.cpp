@@ -4,6 +4,7 @@
 
 #include <base/system.h>
 #include <engine/shared/config.h>
+#include <engine/client.h>
 #include <engine/graphics.h>
 #include <engine/input.h>
 #include <engine/keys.h>
@@ -44,6 +45,7 @@ CInput::CInput()
 
 void CInput::Init()
 {
+	m_pClient = Kernel()->RequestInterface<IClient>();
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	SDL_EnableUNICODE(1);
 	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
@@ -185,8 +187,7 @@ void CInput::Update()
 
 				// other messages
 				case SDL_QUIT:
-					// TODO: cleaner exit
-					exit(0); // ignore_convention
+					Client()->Quit();
 					break;
 			}
 
