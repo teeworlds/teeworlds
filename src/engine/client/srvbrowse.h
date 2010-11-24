@@ -3,6 +3,7 @@
 #ifndef ENGINE_CLIENT_SRVBROWSE_H
 #define ENGINE_CLIENT_SRVBROWSE_H
 
+#include <base/tl/array.h>
 #include <engine/serverbrowser.h>
 
 class CServerBrowser : public IServerBrowser
@@ -20,11 +21,6 @@ public:
 
 		CServerEntry *m_pPrevReq; // request list
 		CServerEntry *m_pNextReq;
-	};
-
-	enum
-	{
-		MAX_FAVORITES=256
 	};
 
 	CServerBrowser();
@@ -61,8 +57,7 @@ private:
 	CServerEntry **m_ppServerlist;
 	int *m_pSortedServerlist;
 
-	NETADDR m_aFavoriteServers[MAX_FAVORITES];
-	int m_NumFavoriteServers;
+	array<NETADDR> m_aFavoriteServers;
 
 	CServerEntry *m_aServerlistIp[256]; // ip hash list
 

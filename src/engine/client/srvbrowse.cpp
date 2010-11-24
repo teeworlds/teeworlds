@@ -33,7 +33,7 @@ CServerBrowser::CServerBrowser()
 	m_ppServerlist = 0;
 	m_pSortedServerlist = 0;
 
-	m_NumFavoriteServers = 0;
+	m_aFavoriteServers.clear();
 
 	mem_zero(m_aServerlistIp, sizeof(m_aServerlistIp));
 
@@ -375,7 +375,7 @@ CServerBrowser::CServerEntry *CServerBrowser::Add(const NETADDR &Addr)
 		pEntry->m_Info.latency = (time_get()-broadcast_time)*1000/time_freq();*/
 
 	// check if it's a favorite
-	for(i = 0; i < m_NumFavoriteServers; i++)
+	for(i = 0; i < m_aFavoriteServers.size(); i++)
 	{
 		if(net_addr_comp(&Addr, &m_aFavoriteServers[i]) == 0)
 			pEntry->m_Info.m_Favorite = 1;
@@ -523,7 +523,7 @@ void CServerBrowser::Refresh(int Type)
 		m_NeedRefresh = 1;
 	else if(Type == IServerBrowser::TYPE_FAVORITES)
 	{
-		for(int i = 0; i < m_NumFavoriteServers; i++)
+		for(int i = 0; i < m_aFavoriteServers.size(); i++)
 			Set(m_aFavoriteServers[i], IServerBrowser::SET_FAV_ADD, -1, 0);
 	}
 }
@@ -650,8 +650,7 @@ void CServerBrowser::Update()
 bool CServerBrowser::IsFavorite(const NETADDR &Addr) const
 {
 	// search for the address
-	int i;
-	for(i = 0; i < m_NumFavoriteServers; i++)
+	for(int i = 0; i < m_aFavoriteServers.size(); i++)
 	{
 		if(net_addr_comp(&Addr, &m_aFavoriteServers[i]) == 0)
 			return true;
@@ -663,18 +662,15 @@ void CServerBrowser::AddFavorite(const NETADDR &Addr)
 {
 	CServerEntry *pEntry;
 
-	if(m_NumFavoriteServers == MAX_FAVORITES)
-		return;
-
 	// make sure that we don't already have the server in our list
-	for(int i = 0; i < m_NumFavoriteServers; i++)
+	for(int i = 0; i < m_aFavoriteServers.size(); i++)
 	{
 		if(net_addr_comp(&Addr, &m_aFavoriteServers[i]) == 0)
 			return;
 	}
 
 	// add the server to the list
-	m_aFavoriteServers[m_NumFavoriteServers++] = Addr;
+	m_aFavoriteServers.add(Addr);
 	pEntry = Find(Addr);
 	if(pEntry)
 		pEntry->m_Info.m_Favorite = 1;
@@ -689,23 +685,15 @@ void CServerBrowser::AddFavorite(const NETADDR &Addr)
 
 void CServerBrowser::RemoveFavorite(const NETADDR &Addr)
 {
-	int i;
-	CServerEntry *pEntry;
-
-	for(i = 0; i < m_NumFavoriteServers; i++)
+	for(int i = 0; i < m_aFavoriteServers.size(); i++)
 	{
 		if(net_addr_comp(&Addr, &m_aFavoriteServers[i]) == 0)
-		{
-			mem_move(&m_aFavoriteServers[i], &m_aFavoriteServers[i+1], sizeof(NETADDR)*(m_NumFavoriteServers-(i+1)));
-			m_NumFavoriteServers--;
-
-			pEntry = Find(Addr);
-			if(pEntry)
-				pEntry->m_Info.m_Favorite = 0;
-
-			return;
-		}
+			m_aFavoriteServers.remove_index(i);
 	}
+	
+	CServerEntry *pEntry = Find(Addr);
+	if(pEntry)
+		pEntry->m_Info.m_Favorite = 0;
 }
 
 bool CServerBrowser::IsRefreshing() const
@@ -734,10 +722,9 @@ void CServerBrowser::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 {
 	CServerBrowser *pSelf = (CServerBrowser *)pUserData;
 
-	int i;
 	char aAddrStr[128];
 	char aBuffer[256];
-	for(i = 0; i < pSelf->m_NumFavoriteServers; i++)
+	for(int i = 0; i < pSelf->m_aFavoriteServers.size(); i++)
 	{
 		net_addr_str(&pSelf->m_aFavoriteServers[i], aAddrStr, sizeof(aAddrStr));
 		str_format(aBuffer, sizeof(aBuffer), "add_favorite %s", aAddrStr);
