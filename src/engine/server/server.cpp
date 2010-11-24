@@ -1512,10 +1512,12 @@ void CServer::ConCmdList(IConsole::IResult *pResult, void *pUserData, int Client
 {
 	CServer *pSelf = (CServer *)pUserData;
 
-	if(pResult->NumArguments())
-		pSelf->Console()->List(pSelf->m_aClients[ClientId].m_Authed, CFGFLAG_SERVER, pResult->GetInteger(0));
+	if(pResult->NumArguments() == 0)
+		pSelf->Console()->List((pSelf->m_aClients[ClientId].m_Authed != 0) ? pSelf->m_aClients[ClientId].m_Authed : -1, CFGFLAG_SERVER);
+	else if (pResult->GetInteger(0) == 0)
+		pSelf->Console()->List(-1, CFGFLAG_SERVER);
 	else
-		pSelf->Console()->List(pSelf->m_aClients[ClientId].m_Authed, CFGFLAG_SERVER);
+		pSelf->Console()->List(pResult->GetInteger(0), CFGFLAG_SERVER);
 }
 
 
@@ -1585,7 +1587,7 @@ void CServer::RegisterCommands()
 	Console()->Register("login", "?s", CFGFLAG_SERVER, ConLogin, this, "Allows you access to rcon if no password is given, or changes your level if a password is given", -1);
 	Console()->Register("auth", "?s", CFGFLAG_SERVER, ConLogin, this, "Allows you access to rcon if no password is given, or changes your level if a password is given", -1);
 
-	Console()->Register("cmdlist", "?i", CFGFLAG_SERVER, ConCmdList, this, "With Parameter i Shows a Certain Page of the Commands, Without Shows the page Count", -1);
+	Console()->Register("cmdlist", "?i", CFGFLAG_SERVER, ConCmdList, this, "Shows you the commands available for your remote console access. Specify the level if you want to see other level's commands", -1);
 }	
 
 

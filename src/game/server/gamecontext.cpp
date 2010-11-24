@@ -629,7 +629,7 @@ void CGameContext::OnClientEnter(int ClientId)
 	
 	SendChatTarget(ClientId, "DDRace Mod. Version: " DDRACE_VERSION);
 	SendChatTarget(ClientId, "Official site: DDRace.info");
-	SendChatTarget(ClientId, "For more Info /CMDList");
+	SendChatTarget(ClientId, "For more Info /cmdlist");
 	SendChatTarget(ClientId, "Or visit DDRace.info");
 	SendChatTarget(ClientId, "To see this again say /info");
 	SendChatTarget(ClientId, "Note This is an Alpha release, just for testing, your feedback is important!!");
