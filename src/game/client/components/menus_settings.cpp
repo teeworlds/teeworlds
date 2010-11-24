@@ -116,8 +116,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
             if(g_Config.m_PlayerUseCustomColor)
             {
-                OwnSkinInfo.m_ColorBody = m_pClient->m_pSkins->GetColor(g_Config.m_PlayerColorBody);
-                OwnSkinInfo.m_ColorFeet = m_pClient->m_pSkins->GetColor(g_Config.m_PlayerColorFeet);
+                OwnSkinInfo.m_ColorBody = m_pClient->m_pSkins->GetColorV4(g_Config.m_PlayerColorBody);
+                OwnSkinInfo.m_ColorFeet = m_pClient->m_pSkins->GetColorV4(g_Config.m_PlayerColorFeet);
                 OwnSkinInfo.m_Texture = pOwnSkin->m_ColorTexture;
             }
 
@@ -250,8 +250,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 				if(g_Config.m_PlayerUseCustomColor)
 				{
-					Info.m_ColorBody = m_pClient->m_pSkins->GetColor(g_Config.m_PlayerColorBody);
-					Info.m_ColorFeet = m_pClient->m_pSkins->GetColor(g_Config.m_PlayerColorFeet);
+					Info.m_ColorBody = m_pClient->m_pSkins->GetColorV4(g_Config.m_PlayerColorBody);
+					Info.m_ColorFeet = m_pClient->m_pSkins->GetColorV4(g_Config.m_PlayerColorFeet);
 					Info.m_Texture = s->m_ColorTexture;
 				}
 
@@ -261,9 +261,10 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 				if(g_Config.m_Debug)
 				{
+					vec3 BloodColor = g_Config.m_PlayerUseCustomColor ? m_pClient->m_pSkins->GetColorV3(g_Config.m_PlayerColorBody) : s->m_BloodColor;
 					Graphics()->TextureSet(-1);
 					Graphics()->QuadsBegin();
-					Graphics()->SetColor(s->m_BloodColor.r, s->m_BloodColor.g, s->m_BloodColor.b, 1.0f);
+					Graphics()->SetColor(BloodColor.r, BloodColor.g, BloodColor.b, 1.0f);
 					IGraphics::CQuadItem QuadItem(Item.m_Rect.x, Item.m_Rect.y, 12, 12);
 					Graphics()->QuadsDrawTL(&QuadItem, 1);
 					Graphics()->QuadsEnd();
