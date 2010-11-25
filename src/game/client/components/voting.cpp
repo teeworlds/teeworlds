@@ -108,7 +108,7 @@ void CVoting::OnReset()
 {
 	m_Closetime = 0;
 	m_aDescription[0] = 0;
-	m_aCommand[0] = 0;
+	m_aKickReason[0] = 0;
 	m_Yes = m_No = m_Pass = m_Total = 0;
 	m_Voted = 0;
 }
@@ -128,7 +128,7 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 		{
 			OnReset();
 			str_copy(m_aDescription, pMsg->m_pDescription, sizeof(m_aDescription));
-			str_copy(m_aCommand, pMsg->m_pCommand, sizeof(m_aCommand));
+			str_copy(m_aKickReason, pMsg->m_pKickReason, sizeof(m_aKickReason));
 			m_Closetime = time_get() + time_freq() * pMsg->m_Timeout;
 		}
 		else

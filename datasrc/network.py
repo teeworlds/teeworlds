@@ -243,7 +243,7 @@ Messages = [
 	NetMessage("Sv_VoteSet", [
 		NetIntRange("m_Timeout", 0, 60),
 		NetStringStrict("m_pDescription"),
-		NetStringStrict("m_pCommand"),
+		NetStringStrict("m_pKickReason"),
 	]),
 
 	NetMessage("Sv_VoteStatus", [

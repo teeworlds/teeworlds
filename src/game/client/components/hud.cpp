@@ -209,7 +209,7 @@ void CHud::RenderVoting()
 	Graphics()->TextureSet(-1);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(0,0,0,0.40f);
-	RenderTools()->DrawRoundRect(-10, 60-2, 100+10+4+5, 28, 5.0f);
+	RenderTools()->DrawRoundRect(-10, 60-2, 100+10+4+5, 34, 5.0f);
 	Graphics()->QuadsEnd();
 
 	TextRender()->TextColor(1,1,1,1);
@@ -219,14 +219,19 @@ void CHud::RenderVoting()
 	float tw = TextRender()->TextWidth(0x0, 6, Buf, -1);
 
 	CTextCursor Cursor;
+	
 	TextRender()->SetCursor(&Cursor, 5.0f, 60.0f, 6.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 	Cursor.m_LineWidth = 100-tw;
 	TextRender()->TextEx(&Cursor, m_pClient->m_pVoting->VoteDescription(), -1);
-
+	
+	TextRender()->SetCursor(&Cursor, 5.0f, 66.0f, 6.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+	Cursor.m_LineWidth = 100;
+	TextRender()->TextEx(&Cursor, m_pClient->m_pVoting->VoteKickReason(), -1);
+	
 	TextRender()->Text(0x0, 5+100-tw, 60, 6, Buf, -1);
 	
 
-	CUIRect Base = {5, 70, 100, 4};
+	CUIRect Base = {5, 76, 100, 4};
 	m_pClient->m_pVoting->RenderBars(Base, false);
 	
 	const char *pYesKey = m_pClient->m_pBinds->GetKey("vote yes");

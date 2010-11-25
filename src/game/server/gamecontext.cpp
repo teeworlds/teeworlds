@@ -275,7 +275,7 @@ void CGameContext::SendBroadcast(const char *pText, int ClientId)
 }
 
 // 
-void CGameContext::StartVote(const char *pDesc, const char *pCommand)
+void CGameContext::StartVote(const char *pDesc, const char *pCommand, const char *pKickReason)
 {
 	// check if a vote is already running
 	if(m_VoteCloseTime)
@@ -296,6 +296,7 @@ void CGameContext::StartVote(const char *pDesc, const char *pCommand)
 	m_VoteCloseTime = time_get() + time_freq()*25;
 	str_copy(m_aVoteDescription, pDesc, sizeof(m_aVoteDescription));
 	str_copy(m_aVoteCommand, pCommand, sizeof(m_aVoteCommand));
+	str_copy(m_aVoteKickReason, pKickReason, sizeof(m_aVoteKickReason));
 	SendVoteSet(-1);
 	m_VoteUpdate = true;
 }
@@ -314,13 +315,13 @@ void CGameContext::SendVoteSet(int ClientId)
 	{
 		Msg.m_Timeout = (m_VoteCloseTime-time_get())/time_freq();
 		Msg.m_pDescription = m_aVoteDescription;
-		Msg.m_pCommand = "";
+		Msg.m_pKickReason = m_aVoteKickReason;
 	}
 	else
 	{
 		Msg.m_Timeout = 0;
 		Msg.m_pDescription = "";
-		Msg.m_pCommand = "";
+		Msg.m_pKickReason = "";
 	}
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientId);
 }
@@ -619,6 +620,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		char aChatmsg[512] = {0};
 		char aDesc[512] = {0};
 		char aCmd[512] = {0};
+		char aKickReason[512] = {0};
 		CNetMsg_Cl_CallVote *pMsg = (CNetMsg_Cl_CallVote *)pRawMsg;
 		if(str_comp_nocase(pMsg->m_Type, "option") == 0)
 		{
@@ -683,6 +685,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			
 			str_format(aChatmsg, sizeof(aChatmsg), "'%s' called for vote to kick '%s' (%s)", Server()->ClientName(ClientId), Server()->ClientName(KickId), pReason);
 			str_format(aDesc, sizeof(aDesc), "Kick '%s'", Server()->ClientName(KickId));
+			str_format(aKickReason, sizeof(aKickReason), "Reason: %s", pReason);
 			if (!g_Config.m_SvVoteKickBantime)
 				str_format(aCmd, sizeof(aCmd), "kick %d Kicked by vote", KickId);
 			else
@@ -696,7 +699,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		if(aCmd[0])
 		{
 			SendChat(-1, CGameContext::CHAT_ALL, aChatmsg);
-			StartVote(aDesc, aCmd);
+			StartVote(aDesc, aCmd, aKickReason);
 			p->m_Vote = 1;
 			p->m_VotePos = m_VotePos = 1;
 			m_VoteCreator = ClientId;

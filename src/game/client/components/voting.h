@@ -15,7 +15,7 @@ class CVoting : public CComponent
 	
 	int64 m_Closetime;
 	char m_aDescription[512];
-	char m_aCommand[512];
+	char m_aKickReason[512];
 	int m_Voted;
 	
 	void ClearOptions();
@@ -52,7 +52,7 @@ public:
 	bool IsVoting() { return m_Closetime != 0; }
 	int TakenChoice() const { return m_Voted; }
 	const char *VoteDescription() const { return m_aDescription; }
-	const char *VoteCommand() const { return m_aCommand; }
+	const char *VoteKickReason() const { return m_aKickReason; }
 	
 	int m_Yes, m_No, m_Pass, m_Total;
 };
