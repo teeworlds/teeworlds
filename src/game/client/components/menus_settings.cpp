@@ -100,11 +100,17 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 		//if(config.cl_nameplates)
 		{
+			CUIRect Button;
 			LeftView.HSplitTop(20.0f, &Button, &LeftView);
 			Button.VSplitLeft(15.0f, 0, &Button);
 			if(DoButton_CheckBox(&g_Config.m_ClNameplatesAlways, Localize("Always show name plates"), g_Config.m_ClNameplatesAlways, &Button))
 				g_Config.m_ClNameplatesAlways ^= 1;
 		}
+
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
+		if (DoButton_CheckBox(&g_Config.m_ClColorNicks, Localize("Color nicks"), g_Config.m_ClColorNicks, &Button))
+			g_Config.m_ClColorNicks ^= 1;
+
 
         {
             const CSkins::CSkin *pOwnSkin = m_pClient->m_pSkins->Get(max(0, m_pClient->m_pSkins->Find(g_Config.m_PlayerSkin)));

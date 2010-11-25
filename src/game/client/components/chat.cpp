@@ -16,6 +16,7 @@
 #include <game/localization.h>
 
 #include "chat.h"
+#include "hud.h"
 
 
 CChat::CChat()
@@ -302,7 +303,15 @@ void CChat::OnRender()
 		else if(m_aLines[r].m_NameColor == -1)
 			TextRender()->TextColor(0.75f, 0.5f, 0.75f, 1.0f); // spectator
 		else
-			TextRender()->TextColor(0.8f, 0.8f, 0.8f, 1.0f);
+		{
+			if (m_pClient->m_Snap.m_paPlayerInfos[m_aLines[r].m_ClientId])
+			{
+				vec3 color = m_pClient->m_pHud->GetNickColor(m_pClient->m_Snap.m_paPlayerInfos[m_aLines[r].m_ClientId]);
+				TextRender()->TextColor(color.r, color.g, color.b, 1.0f);
+			} else {
+				TextRender()->TextColor(0.8f, 0.8f, 0.8f, 1.0f);
+			}
+		}
 			
 		TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
 

@@ -141,7 +141,7 @@ int CSkins::Find(const char *pName)
 }
 
 // these converter functions were nicked from some random internet pages
-static float HueToRgb(float v1, float v2, float h)
+float HueToRgb(float v1, float v2, float h)
 {
    if(h < 0) h += 1;
    if(h > 1) h -= 1;
@@ -151,7 +151,7 @@ static float HueToRgb(float v1, float v2, float h)
    return v1;
 }
 
-static vec3 HslToRgb(vec3 in)
+vec3 HslToRgb(vec3 in)
 {
 	float v1, v2;
 	vec3 Out;

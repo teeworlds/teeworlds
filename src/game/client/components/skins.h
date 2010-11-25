@@ -33,4 +33,7 @@ private:
 
 	static void SkinScan(const char *pName, int IsDir, int DirType, void *pUser);
 };
+
+extern vec3 HslToRgb(vec3 in);
+
 #endif

@@ -9,6 +9,7 @@
 #include <game/client/animstate.h>
 #include "nameplates.h"
 #include "controls.h"
+#include "hud.h"
 
 void CNamePlates::RenderNameplate(
 	const CNetObj_Character *pPrevChar,
@@ -30,7 +31,13 @@ void CNamePlates::RenderNameplate(
 			
 		const char *pName = m_pClient->m_aClients[pPlayerInfo->m_ClientId].m_aName;
 		float tw = TextRender()->TextWidth(0, 28.0f, pName, -1);
-		TextRender()->TextColor(1,1,1,a);
+		if (g_Config.m_ClColorNicks)
+		{
+			vec3 color = m_pClient->m_pHud->GetNickColor(pPlayerInfo);
+			TextRender()->TextColor(color.r, color.g, color.b, a);
+		} else {
+			TextRender()->TextColor(1,1,1,a);
+		}
 		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-60, 28.0f, pName, -1);
 		
 		if(g_Config.m_Debug) // render client id when in debug aswell

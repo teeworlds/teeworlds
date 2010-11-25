@@ -16,6 +16,7 @@
 #include "hud.h"
 #include "voting.h"
 #include "binds.h"
+#include "skins.h"
 
 CHud::CHud()
 {
@@ -116,6 +117,13 @@ void CHud::RenderScoreHud()
 					int Id = m_pClient->m_Snap.m_paFlags[t]->m_CarriedBy%MAX_CLIENTS;
 					const char *pName = m_pClient->m_aClients[Id].m_aName;
 					float w = TextRender()->TextWidth(0, 10.0f, pName, -1);
+
+					if (g_Config.m_ClColorNicks && m_pClient->m_Snap.m_paPlayerInfos[Id])
+					{
+						vec3 color = GetNickColor(m_pClient->m_Snap.m_paPlayerInfos[Id]);
+						TextRender()->TextColor(color.r, color.g, color.b, 1.0f);
+					}
+
 					TextRender()->Text(0, Whole-ScoreWidthMax-ImageSize-3*Split-w, 247.0f+t*20, 10.0f, pName, -1);
 
 					// draw tee of the flag holder
@@ -125,6 +133,8 @@ void CHud::RenderScoreHud()
 						vec2(Whole-ScoreWidthMax-Info.m_Size/2-Split, 246.0f+Info.m_Size/2+t*20));
 				}
 			}
+
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 		}
 	}
 }
@@ -333,4 +343,24 @@ void CHud::OnRender()
 	RenderTeambalanceWarning();
 	RenderVoting();
 	RenderCursor();
+}
+
+vec3 CHud::GetNickColor(const CNetObj_PlayerInfo * pPlayerInfo)
+{
+	if (!pPlayerInfo)
+		return vec3(1.0f, 1.0f, 1.0f);
+
+	if (m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS)
+	{
+		if (pPlayerInfo->m_Team)
+		{
+			return vec3(0.7f, 0.7f, 1.0f);
+		} else {
+			return vec3(1.0f, 0.5f, 0.5f);
+		}
+	}
+	
+	float q = fabs(sinf((float)pPlayerInfo->m_ClientId / (float)MAX_CLIENTS));
+	vec3 color = HslToRgb(vec3(q, 1.0f, 0.8f));
+	return color;
 }

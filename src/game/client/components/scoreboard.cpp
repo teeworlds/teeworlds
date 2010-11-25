@@ -12,6 +12,7 @@
 #include <game/client/components/motd.h>
 #include <game/localization.h>
 #include "scoreboard.h"
+#include "hud.h"
 
 
 CScoreboard::CScoreboard()
@@ -136,6 +137,16 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			pTitle = Localize("Game over");
 		else
 			pTitle = Localize("Score board");
+	} else {
+		if (g_Config.m_ClColorNicks && m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS && Team >= 0)
+		{
+			if (Team)
+			{
+				TextRender()->TextColor(0.7f, 0.7f, 1.0f, 1.0f);
+			} else {
+				TextRender()->TextColor(1.0f, 0.5f, 0.5f, 1.0f);
+			}
+		}
 	}
 
 	float tw = TextRender()->TextWidth(0, 48, pTitle, -1);
@@ -235,6 +246,13 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		float Width;
 		const float ScoreWidth = 60.0f;
 		const float PingWidth = 60.0f;
+
+		if (g_Config.m_ClColorNicks)
+		{
+			vec3 color = m_pClient->m_pHud->GetNickColor(pInfo);
+			TextRender()->TextColor(color.r, color.g, color.b, 1.0f);
+		}
+
 		str_format(aBuf, sizeof(aBuf), "%d", clamp(pInfo->m_Score, -9999, 9999));
 		while((Width = TextRender()->TextWidth(0, FontSizeResize, aBuf, -1)) > ScoreWidth)
 			--FontSizeResize;
@@ -275,6 +293,8 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		
 		y += LineHeight;
 	}
+
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void CScoreboard::RenderRecordingNotification(float x)

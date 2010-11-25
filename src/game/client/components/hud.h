@@ -27,6 +27,8 @@ public:
 	
 	virtual void OnReset();
 	virtual void OnRender();
+
+	vec3 GetNickColor(const CNetObj_PlayerInfo * pPlayerInfo);
 };
 
 #endif
