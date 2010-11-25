@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/serverbrowser.h>
 #include <engine/textrender.h>
 #include <engine/keys.h>
@@ -273,7 +275,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			if(Id == COL_FLAG_LOCK)
 			{
 				if(pItem->m_Flags & SERVER_FLAG_PASSWORD)
-					DoButton_BrowseIcon(SPRITE_BROWSE_LOCK, &Button);
+					DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_LOCK, &Button);
 			}
 			else if(Id == COL_FLAG_PURE)
 			{
@@ -286,18 +288,18 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				else
 				{
 					// unpure
-					DoButton_BrowseIcon(SPRITE_BROWSE_UNPURE, &Button);
+					DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_UNPURE, &Button);
 				}
 			}
 			else if(Id == COL_FLAG_FAV)
 			{
 				if(pItem->m_Favorite)
-					DoButton_BrowseIcon(SPRITE_BROWSE_HEART, &Button);
+					DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_HEART, &Button);
 			}
 			else if(Id == COL_NAME)
 			{
 				CTextCursor Cursor;
-				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f * UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = Button.w;
 
 				if(g_Config.m_BrFilterString[0] && (pItem->m_QuickSearchHit&IServerBrowser::QUICK_SERVERNAME))
@@ -392,10 +394,13 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			UI()->SetActiveItem(&g_Config.m_BrFilterString);
 		}
 	}
-
+	
 	// render status
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), Localize("%d of %d servers, %d players"), ServerBrowser()->NumSortedServers(), ServerBrowser()->NumServers(), NumPlayers);
+	if(ServerBrowser()->IsRefreshing())
+		str_format(aBuf, sizeof(aBuf), Localize("%d%% loaded"), ServerBrowser()->LoadingProgression());
+	else
+		str_format(aBuf, sizeof(aBuf), Localize("%d of %d servers, %d players"), ServerBrowser()->NumSortedServers(), ServerBrowser()->NumServers(), NumPlayers);
 	Status.VSplitRight(TextRender()->TextWidth(0, 14.0f, aBuf, -1), 0, &Status);
 	UI()->DoLabel(&Status, aBuf, 14.0f, -1);
 }

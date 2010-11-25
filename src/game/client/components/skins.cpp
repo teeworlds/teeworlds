@@ -1,4 +1,5 @@
-// copyright (c) 2007 magnus auvinen, see licence.txt for more info
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <math.h>
 
 #include <base/system.h>
@@ -178,7 +179,12 @@ static vec3 HslToRgb(vec3 in)
 	return Out;
 }
 
-vec4 CSkins::GetColor(int v)
+vec3 CSkins::GetColorV3(int v)
+{
+	return HslToRgb(vec3(((v>>16)&0xff)/255.0f, ((v>>8)&0xff)/255.0f, 0.5f+(v&0xff)/255.0f*0.5f));
+}
+
+vec4 CSkins::GetColorV4(int v)
 {
 	vec3 r = HslToRgb(vec3(((v>>16)&0xff)/255.0f, ((v>>8)&0xff)/255.0f, 0.5f+(v&0xff)/255.0f*0.5f));
 	return vec4(r.r, r.g, r.b, 1.0f);

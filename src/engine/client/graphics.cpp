@@ -1,4 +1,5 @@
-// copyright (c) 2007 magnus auvinen, see licence.txt for more info
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
 #include <base/detect.h>
 
@@ -705,7 +706,6 @@ bool CGraphics_OpenGL::Init()
 	};
 	
 	m_InvalidTexture = LoadTextureRaw(4,4,CImageInfo::FORMAT_RGBA,aNullTextureData,CImageInfo::FORMAT_RGBA,TEXLOAD_NORESAMPLE);
-	dbg_msg("", "invalid texture id: %d %d", m_InvalidTexture, m_aTextures[m_InvalidTexture].m_Tex);
 	
 	return true;
 }

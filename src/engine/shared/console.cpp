@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <new>
 #include <base/system.h>
 #include <engine/shared/protocol.h>
@@ -506,12 +508,6 @@ void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
 		else if(!str_comp("-s", ppArguments[i]) || !str_comp("--silent", ppArguments[i]))
 		{
 			// skip silent param
-			continue;
-		}
-		else if(ppArguments[i][0] == '-' && ppArguments[i][1] == 'd' && ppArguments[i][2] == 0)
-		{
-			// skip datadir param
-			++i;
 			continue;
 		}
 		else

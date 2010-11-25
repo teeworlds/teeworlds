@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/math.h>
 #include <engine/graphics.h>
 #include <engine/demo.h>
@@ -35,13 +37,21 @@ void CParticles::OnReset()
 
 void CParticles::Add(int Group, CParticle *pPart)
 {
+	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+	{
+		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();		
+		if(pInfo->m_Paused)
+			return;
+	}
+
 	if (m_FirstFree == -1)
 		return;
 		
 	// remove from the free list
 	int Id = m_FirstFree;
 	m_FirstFree = m_aParticles[Id].m_NextPart;
-	m_aParticles[m_FirstFree].m_PrevPart = -1;
+	if(m_FirstFree != -1)
+		m_aParticles[m_FirstFree].m_PrevPart = -1;
 	
 	// copy data
 	m_aParticles[Id] = *pPart;

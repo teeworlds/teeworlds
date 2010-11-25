@@ -4,20 +4,11 @@
 %d of %d servers, %d players
 == %d/%d serveurs, %d joueurs
 
+%d%% loaded
+== %d%% chargé
+
 %ds left
 == %ds a quitté
-
-[N] Flip brush horizontal
-== [N] Retourner horizontalement
-
-[NumPad+] Zoom in
-== [ClavierNum+] Zoomer
-
-[NumPad-] Zoom out
-== [ClavierNum-] Dézoomer
-
-[M] Flip brush vertical
-== [M] Retourner verticalement
 
 Abort
 == Annuler
@@ -25,11 +16,11 @@ Abort
 Add
 == Ajouter
 
-Add group
-== Ajouter un groupe
-
 Add Image
 == Ajouter une image
+
+Add group
+== Ajouter un groupe
 
 Address
 == Adresse
@@ -54,6 +45,9 @@ Append
 
 Append map
 == Joindre une carte
+
+Are you sure that you want to delete the demo?
+== Êtes-vous sûr de vouloir supprimer cette démo ?
 
 Are you sure that you want to quit?
 == Êtes-vous sûr de vouloir quitter ?
@@ -88,6 +82,9 @@ Clear collision
 Close
 == Fermer
 
+Color
+== Couleur
+
 Color+
 == Couleur+
 
@@ -98,7 +95,7 @@ Connect
 == Connecter
 
 Connecting to
-== Connexion à  
+== Connexion à
 
 Connection Problems...
 == Problèmes de connexion...
@@ -106,11 +103,11 @@ Connection Problems...
 Console
 == Console
 
-Controls
-== Contrôles
-
 Constructs collision from this layer
 == Fait la collision depuis cette couche
+
+Controls
+== Contrôles
 
 Creates a new map
 == Crée une nouvelle carte
@@ -132,6 +129,9 @@ Decrease animation speed
 
 Delete
 == Supprimer
+
+Delete demo
+== Supprimer la démo
 
 Delete group
 == Supprimer le groupe
@@ -157,8 +157,11 @@ Disconnected
 Display Modes
 == Modes d'affichages
 
+Down
+== Bas
+
 Downloading map
-== Téléchargement de la carte 
+== Téléchargement de la carte
 
 Draw!
 == Égalité !
@@ -184,8 +187,11 @@ Enter
 Error
 == Erreur
 
-error loading demo
-== erreur de chargement de la démo
+Error loading demo
+== Erreur pendant le chargement de la démo
+
+Exit
+== Quitter
 
 Exits from the editor
 == Ferme l'éditeur
@@ -216,6 +222,9 @@ Filter
 
 Fire
 == Tirer
+
+Folder
+== Dossier
 
 Force vote
 == Forcer le vote
@@ -289,6 +298,9 @@ Info
 Internet
 == Internet
 
+Invalid Demo
+== Démo invalide
+
 Join blue
 == Rej. Bleus
 
@@ -313,11 +325,20 @@ Language
 Layers
 == Couches
 
+Left
+== Gauche
+
 Lht.
 == Lum.
 
+Load
+== Charger
+
 Load a new image to use in the map
 == Charger une image pour l'utiliser dans la carte
+
+Load map
+== Charger une map
 
 Loading
 == Chargement
@@ -358,8 +379,14 @@ Mute when not active
 Name
 == Nom
 
+Name:
+== Nom:
+
 New
 == Nouveau
+
+New folder
+== Nouveau dossier
 
 News
 == Nouvelles
@@ -369,9 +396,6 @@ Next weapon
 
 Nickname
 == Pseudonyme
-
-Name:
-== Nom:
 
 No
 == Non
@@ -397,9 +421,6 @@ Ok
 Open
 == Ouvrir
 
-Open map
-== Ouvrir une carte
-
 Opens a map and adds everything from that map to the current one
 == Ouvre une carte et ajoute son contenu dans la carte actuelle
 
@@ -408,6 +429,9 @@ Opens a map for editing
 
 Order
 == Ordre
+
+Parent Folder
+== Dossier parent
 
 Password
 == Mot de passe
@@ -451,6 +475,12 @@ Quick search:
 Quit
 == Quitter
 
+REC
+== REC
+
+Reason:
+== Raison :
+
 Red team
 == Équipe rouge
 
@@ -472,11 +502,11 @@ Remove
 Removes collision from this layer
 == Enlève la collision depuis cette couche
 
-Removes the image from the map file.
-== Enlève l'image de la carte.
-
 Removes the image from the map
 == Enlève l'image de la carte
+
+Removes the image from the map file.
+== Enlève l'image de la carte.
 
 Replace
 == Remplacer
@@ -495,6 +525,9 @@ Reset to defaults
 
 Rifle
 == Laser
+
+Right
+== Droite
 
 Round
 == Round
@@ -520,12 +553,6 @@ Saves the current map
 Saves the current map under a new name
 == Enregistre la carte actuelle sous un autre nom
 
-Select group. Right click for properties.
-== Sélectionner un groupe. Clic-droit pour voir les propriétés.
-
-Select layer. Right click for properties.
-== Sélectionner une couche. Clic-droit pour voir les propriétés.
-
 Score
 == Score
 
@@ -541,8 +568,14 @@ Scoreboard
 Screenshot
 == Capture d'écran
 
+Select group. Right click for properties.
+== Sélectionner un groupe. Clic-droit pour voir les propriétés.
+
 Select image
 == Sélectionner une image
+
+Select layer. Right click for properties.
+== Sélectionner une couche. Clic-droit pour voir les propriétés.
 
 Server details
 == Détails du serveur
@@ -616,6 +649,9 @@ The server is running a non-standard tuning on a pure game type.
 Time limit
 == Temps limite
 
+Time limit: %d min
+== Temps limite : %d min
+
 Try again
 == Réessayer
 
@@ -624,6 +660,9 @@ Type
 
 UI Color
 == Couleur du menu
+
+Up
+== Haut
 
 Use sounds
 == Jouer les sons
@@ -670,121 +709,229 @@ ZI
 ZO
 == Z-
 
+[M] Flip brush vertical
+== [M] Retourner verticalement
 
-##### needs translation ####
+[N] Flip brush horizontal
+== [N] Retourner horizontalement
 
-HD
-== HD
+[NumPad+] Zoom in
+== [ClavierNum+] Zoomer
 
-[ctrl+h] Toggle High Detail
-== [ctrl+h] Toggle High Detail
+[NumPad-] Zoom out
+== [ClavierNum-] Dézoomer
 
-[ctrl+m] Toggle animation
-== [ctrl+m] Toggle animation
-
-Proof
-== Proof
-
-[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-== [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-
-[NumPad*] Zoom to normal and remove editor offset
-== [NumPad*] Zoom to normal and remove editor offset
-
-CCW
-== CCW
-
-[R] Rotates the brush counter clockwise
-== [R] Rotates the brush counter clockwise
-
-CW
-== CW
-
-[T] Rotates the brush clockwise
-== [T] Rotates the brush clockwise
-
-Add Quad
-== Add Quad
-
-Adds a new quad
-== Adds a new quad
-
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-
-Left mouse button to move. Hold shift to move the texture.
-== Left mouse button to move. Hold shift to move the texture.
-
-Use left mouse button to drag and create a brush.
-== Use left mouse button to drag and create a brush.
-
-Use left mouse button to paint with the brush. Right button clears the brush.
-== Use left mouse button to paint with the brush. Right button clears the brush.
-
-Toggle group visibility
-== Toggle group visibility
-
-Switch between images and layers managment.
-== Switch between images and layers managment.
-
-Envelopes
-== Envelopes
-
-Toggles the envelope editor.
-== Toggles the envelope editor.
+##### needs translation #####
 
 %s Right click for context menu.
-== %s Right click for context menu.
+== 
 
-Creates a new color envelope
-== Creates a new color envelope
-
-Creates a new pos envelope
-== Creates a new pos envelope
-
-Previous Envelope
-== Previous Envelope
-
-Next Envelope
-== Next Envelope
-
-Switch curve type
-== Switch curve type
-
-Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
-== Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
+Add Quad
+== 
 
 Add quads layer
-== Add quads layer
-
-Creates a new quad layer
-== Creates a new quad layer
+== 
 
 Add tile layer
-== Add tile layer
+== 
 
-Creates a new tile layer
-== Creates a new tile layer
+Adds a new quad
+== 
 
-Deletes the current quad
-== Deletes the current quad
+Alpha value of the envelope
+== 
 
-Squares the current quad
-== Squares the current quad
+Aspect ratio
+== 
 
-Pos. Env
-== Pos. Env
+Blue value of the envelope
+== 
 
-Pos. TO
-== Pos. TO
+CCW
+== 
+
+CW
+== 
+
+Clip H
+== 
+
+Clip W
+== 
+
+Clip X
+== 
+
+Clip Y
+== 
 
 Color Env
-== Color Env
+== 
 
 Color TO
-== Color TO
+== 
+
+Creates a new color envelope
+== 
+
+Creates a new pos envelope
+== 
+
+Creates a new quad layer
+== 
+
+Creates a new tile layer
+== 
+
+Delete this envelope
+== 
+
+Deletes the current quad
+== 
+
+Enable/disable group for saving
+== 
+
+Enable/disable layer for saving
+== 
+
+Envelopes
+== 
+
+File: %s
+== 
+
+Green value of the envelope
+== 
+
+HD
+== 
+
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== 
+
+Left mouse button to move. Hold shift to move the texture.
+== 
+
+Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== 
+
+Next Envelope
+== 
+
+Para X
+== 
+
+Para Y
+== 
+
+Pos X
+== 
+
+Pos Y
+== 
+
+Pos. Env
+== 
+
+Pos. TO
+== 
+
+Previous Envelope
+== 
+
+Proof
+== 
+
+Quads
+== 
+
+Record demo
+== 
+
+Red value of the envelope
+== 
+
+Refocus
+== 
+
+Resizes the current Quad based on the aspect ratio of the image
+== 
+
+Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
+
+Rotation of the envelope
+== 
+
+Shift
+== 
+
+Squares the current quad
+== 
+
+Stop record
+== 
+
+Switch between images and layers managment.
+== 
+
+Switch curve type
+== 
+
+Tiles
+== 
+
+Toggle group visibility
+== 
 
 Toggle layer visibility
-== Toggle layer visibility
+== 
 
-##### old translations ####
+Toggles the envelope editor.
+== 
+
+Use Clipping
+== 
+
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== 
+
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
+
+Use left mouse button to drag and create a brush.
+== 
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== 
+
+X-axis of the envelope
+== 
+
+Y-axis of the envelope
+== 
+
+[HOME] Restore map focus
+== 
+
+[NumPad*] Zoom to normal and remove editor offset
+== 
+
+[R] Rotates the brush counter clockwise
+== 
+
+[T] Rotates the brush clockwise
+== 
+
+[ctrl+h] Toggle High Detail
+== 
+
+[ctrl+m] Toggle animation
+== 
+
+[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== 
+
+##### old translations #####
+

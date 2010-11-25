@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
 #include "localization.h"
 #include <base/tl/algorithm.h>
@@ -30,6 +32,7 @@ void CLocConstString::Reload()
 
 CLocalizationDatabase::CLocalizationDatabase()
 {
+	m_VersionCounter = 0;
 	m_CurrentVersion = 0;
 }
 
@@ -37,7 +40,7 @@ void CLocalizationDatabase::AddString(const char *pOrgStr, const char *pNewStr)
 {
 	CString s;
 	s.m_Hash = str_quickhash(pOrgStr);
-	s.m_Replacement = pNewStr;
+	s.m_Replacement = *pNewStr ? pNewStr : pOrgStr;
 	m_Strings.add(s);
 }
 
@@ -89,7 +92,7 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 		AddString(pLine, pReplacement);
 	}
 	
-	m_CurrentVersion++;
+	m_CurrentVersion = ++m_VersionCounter;
 	return true;
 }
 

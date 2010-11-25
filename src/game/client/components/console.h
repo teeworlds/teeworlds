@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_CONSOLE_H
 #define GAME_CLIENT_COMPONENTS_CONSOLE_H
 #include <engine/shared/ringbuffer.h>
@@ -74,6 +76,12 @@ class CGameConsole : public CComponent
 	static void ConDumpRemoteConsole(IConsole::IResult *pResult, void *pUserData);
 	
 public:
+	enum
+	{
+		CONSOLETYPE_LOCAL=0,
+		CONSOLETYPE_REMOTE,
+	};
+
 	CGameConsole();
 
 	void PrintLine(int Type, const char *pLine);

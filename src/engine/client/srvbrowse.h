@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef ENGINE_CLIENT_SRVBROWSE_H
 #define ENGINE_CLIENT_SRVBROWSE_H
 
@@ -29,7 +31,9 @@ public:
 
 	// interface functions
 	void Refresh(int Type);
+	bool IsRefreshing() const;
 	bool IsRefreshingMasters() const;
+	int LoadingProgression() const;
 
 	int NumServers() const { return m_NumServers; }
 
