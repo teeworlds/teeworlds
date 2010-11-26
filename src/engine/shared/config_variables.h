@@ -154,5 +154,5 @@ MACRO_CONFIG_INT(SvAnnouncementInterval, sv_announcement_interval, 30, 15, 9999,
 
 MACRO_CONFIG_INT(ConnTimeout, conn_timeout, 15, 5, 100, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Network timeout", 4)
 
-MACRO_CONFIG_INT(DbgMsg, dbg_msg, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Display or not debug messages", 4)
+MACRO_CONFIG_INT(DbgMsg, dbg_msg, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Display or not debug messages", 3)
 #endif
