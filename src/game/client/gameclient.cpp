@@ -906,7 +906,11 @@ void CGameClient::OnStateChange(int NewState, int OldState)
 		Client()->TeecompDemoStart();
 }
 
-void CGameClient::OnShutdown() {}
+void CGameClient::OnShutdown()
+{
+	m_pRaceDemo->OnShutdown();
+}
+
 void CGameClient::OnEnterGame() {}
 
 void CGameClient::OnRconLine(const char *pLine)

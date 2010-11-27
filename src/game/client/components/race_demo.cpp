@@ -69,6 +69,18 @@ void CRaceDemo::OnReset()
 	m_DemoStartTick = 0;
 }
 
+void CRaceDemo::OnShutdown()
+{
+	if(Client()->DemoIsRecording())
+	{
+		Client()->DemoRecord_Stop();
+		
+		char aFilename[512];
+		str_format(aFilename, sizeof(aFilename), "demos/%s_tmp.demo", m_pMap);
+		Storage()->RemoveFile(aFilename, IStorage::TYPE_SAVE);
+	}
+}
+
 void CRaceDemo::OnMessage(int MsgType, void *pRawMsg)
 {
 	if(!g_Config.m_ClAutoRecord || m_pClient->m_Snap.m_Spectate)

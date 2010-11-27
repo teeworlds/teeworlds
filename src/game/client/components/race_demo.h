@@ -29,6 +29,7 @@ public:
 	
 	virtual void OnReset();
 	virtual void OnRender();
+	virtual void OnShutdown();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	
 	float GetFinishTime() { return m_Time; }
