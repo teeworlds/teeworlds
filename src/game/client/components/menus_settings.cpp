@@ -285,7 +285,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		Button.HSplitTop(20.0f, &Button, 0);
 		Button.VSplitLeft(35.0f, 0, &Button);
 		
-		RenderTools()->DrawUIRect(&Button, m_pClient->m_pSkins->GetColor(g_Config.m_ClLaserColor), CUI::CORNER_ALL, 10.0f);
+		RenderTools()->DrawUIRect(&Button, m_pClient->m_pSkins->GetColorV4(g_Config.m_ClLaserColor), CUI::CORNER_ALL, 10.0f);
 		
         MainView.HSplitTop(MainView.h/2, 0, &MainView);
 
@@ -874,7 +874,7 @@ void CMenus::RenderSettingsLvlx(CUIRect MainView)
 	RightView.HSplitTop(5.0f, 0, &Button);
 	Button.HSplitTop(20.0f, &Button, 0);
 	
-	RenderTools()->DrawUIRect(&Button, m_pClient->m_pSkins->GetColor(g_Config.m_ClExpBarColor), CUI::CORNER_ALL, 10.0f);
+	RenderTools()->DrawUIRect(&Button, m_pClient->m_pSkins->GetColorV4(g_Config.m_ClExpBarColor), CUI::CORNER_ALL, 10.0f);
 }
 
 class CLanguage

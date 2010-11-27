@@ -133,8 +133,8 @@ void CStatboard::RenderStatboard()
 	if(g_Config.m_PlayerUseCustomColor)
 	{
 		SkinInfo.m_Texture = m_pClient->m_pSkins->Get(m_pClient->m_pSkins->Find(g_Config.m_PlayerSkin))->m_ColorTexture;
-		SkinInfo.m_ColorBody = m_pClient->m_pSkins->GetColor(g_Config.m_PlayerColorBody);
-		SkinInfo.m_ColorFeet = m_pClient->m_pSkins->GetColor(g_Config.m_PlayerColorFeet);
+		SkinInfo.m_ColorBody = m_pClient->m_pSkins->GetColorV4(g_Config.m_PlayerColorBody);
+		SkinInfo.m_ColorFeet = m_pClient->m_pSkins->GetColorV4(g_Config.m_PlayerColorFeet);
 	}
 	SkinInfo.m_Size = UI()->Scale()*100.0f;
 	

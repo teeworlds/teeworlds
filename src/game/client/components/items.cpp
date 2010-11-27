@@ -235,7 +235,7 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 
 	// do inner	
 	Out = vec2(Dir.y, -Dir.x) * (5.0f*Ia);
-	vec3 Rgb = vec3(m_pClient->m_pSkins->GetColor(g_Config.m_ClLaserColor).r, m_pClient->m_pSkins->GetColor(g_Config.m_ClLaserColor).g, m_pClient->m_pSkins->GetColor(g_Config.m_ClLaserColor).b);
+	vec3 Rgb = vec3(m_pClient->m_pSkins->GetColorV4(g_Config.m_ClLaserColor).r, m_pClient->m_pSkins->GetColorV4(g_Config.m_ClLaserColor).g, m_pClient->m_pSkins->GetColorV4(g_Config.m_ClLaserColor).b);
 	Graphics()->SetColor(Rgb.r, Rgb.g, Rgb.b, 1.0f); // center
 
 	Freeform = IGraphics::CFreeformItem(

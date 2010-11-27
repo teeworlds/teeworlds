@@ -1504,9 +1504,9 @@ void CGameClient::CClientData::UpdateRenderInfo(int Cid)
 
 			if(CTeecompUtils::GetForceDmColors(m_Team, LocalTeam))
 			{
-			m_RenderInfo.m_Texture = g_GameClient.m_pSkins->Get(m_SkinId)->m_ColorTexture;
-			m_RenderInfo.m_ColorBody = g_GameClient.m_pSkins->GetColorV4(TeamColors[m_Team]);
-			m_RenderInfo.m_ColorFeet = g_GameClient.m_pSkins->GetColorV4(TeamColors[m_Team]);
+				m_RenderInfo.m_Texture = g_GameClient.m_pSkins->Get(Sid)->m_OrgTexture;
+				m_RenderInfo.m_ColorBody = vec4(1,1,1,1);
+				m_RenderInfo.m_ColorFeet = vec4(1,1,1,1);
 			}
 			else
 			{

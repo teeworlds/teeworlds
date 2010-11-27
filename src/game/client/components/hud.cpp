@@ -928,7 +928,7 @@ void CHud::RenderExpBar()
 	
 	if(m_pClient->m_Exp > 4.8)
 	{
-		vec4 RectColor = m_pClient->m_pSkins->GetColor(g_Config.m_ClExpBarColor);
+		vec4 RectColor = m_pClient->m_pSkins->GetColorV4(g_Config.m_ClExpBarColor);
 		Graphics()->SetColor(RectColor.r, RectColor.g, RectColor.b, 0.75);
 		RenderTools()->DrawRoundRect(2, 42.5, m_pClient->m_Exp*0.8, 5, 2.0f);
 	}
