@@ -55,13 +55,11 @@ void CRaceDemo::OnRender()
 void CRaceDemo::OnReset()
 {
 	if(Client()->DemoIsRecording())
-	{
 		Client()->DemoRecord_Stop();
 		
-		char aFilename[512];
-		str_format(aFilename, sizeof(aFilename), "demos/%s_tmp.demo", m_pMap);
-		Storage()->RemoveFile(aFilename, IStorage::TYPE_SAVE);
-	}
+	char aFilename[512];
+	str_format(aFilename, sizeof(aFilename), "demos/%s_tmp.demo", m_pMap);
+	Storage()->RemoveFile(aFilename, IStorage::TYPE_SAVE);
 	
 	m_Time = 0;
 	m_RaceState = RACE_NONE;
@@ -72,13 +70,11 @@ void CRaceDemo::OnReset()
 void CRaceDemo::OnShutdown()
 {
 	if(Client()->DemoIsRecording())
-	{
 		Client()->DemoRecord_Stop();
 		
-		char aFilename[512];
-		str_format(aFilename, sizeof(aFilename), "demos/%s_tmp.demo", m_pMap);
-		Storage()->RemoveFile(aFilename, IStorage::TYPE_SAVE);
-	}
+	char aFilename[512];
+	str_format(aFilename, sizeof(aFilename), "demos/%s_tmp.demo", m_pMap);
+	Storage()->RemoveFile(aFilename, IStorage::TYPE_SAVE);
 }
 
 void CRaceDemo::OnMessage(int MsgType, void *pRawMsg)
