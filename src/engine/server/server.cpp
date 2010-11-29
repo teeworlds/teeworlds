@@ -1826,7 +1826,8 @@ char *CServer::GetLine(char const *FileName, int Line)
 		lr->Init(File);
 		while(pLine = lr->Get())
 			if(str_length(pLine))
-				v.push_back(pLine);
+				if(pLine[0]!='/' || pLine[1]!='/')
+					v.push_back(pLine);
 		if(Line >= v.size())
 			Line %= v.size();
 		return v[Line];

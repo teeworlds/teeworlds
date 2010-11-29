@@ -1,1 +1,2 @@
 Please Visit DDRace.info to report any bugs Thanks
+//This File must always have a line break at the end of file
