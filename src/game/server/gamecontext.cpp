@@ -579,7 +579,7 @@ void CGameContext::OnTick()
 		}
 	}
 
-if(Server()->Tick() % Server()->TickSpeed() * 60 == g_Config.m_SvAnnouncementInterval)
+if(Server()->Tick() % (g_Config.m_SvAnnouncementInterval * Server()->TickSpeed() * 60) == 0)
 {
 	char *Line = ((CServer *) Server())->GetLine(g_Config.m_SvAnnouncementFileName, m_AnnouncementLine++);
 	if(Line)
