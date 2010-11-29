@@ -586,7 +586,7 @@ if(Server()->Tick() % Server()->TickSpeed() * 60 == g_Config.m_SvAnnouncementInt
 		SendChat(-1, CGameContext::CHAT_ALL, Line);
 }
 
-if(Collision()->m_NumSwitchers)
+if(Collision()->m_NumSwitchers > 0)
 	for (int i = 0; i < Collision()->m_NumSwitchers+1; ++i)
 	{
 		for (int j = 0; j < 16; ++j)
