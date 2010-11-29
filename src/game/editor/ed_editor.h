@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_EDITOR_ED_EDITOR_H
 #define GAME_EDITOR_ED_EDITOR_H
 
@@ -582,6 +584,7 @@ public:
 		
 		m_TeleNum = 1;
 		m_SwitchNum = 1;
+		m_SwitchDelay = 0;
 		
 		m_SpeedupForce = 50;
 		m_SpeedupMaxSpeed = 0;
@@ -785,6 +788,7 @@ public:
 	short m_SpeedupAngle;
 
 	unsigned char m_SwitchNum;
+	unsigned char m_SwitchDelay;
 };
 
 // make sure to inline this function

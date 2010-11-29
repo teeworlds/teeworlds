@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef ENGINE_SHARED_CONSOLE_H
 #define ENGINE_SHARED_CONSOLE_H
 
@@ -44,7 +46,7 @@ class CConsole : public IConsole
 	static void Con_Echo(IResult *pResult, void *pUserData, int ClientId);
 	static void Con_Exec(IResult *pResult, void *pUserData, int ClientId);
 
-	void ExecuteFileRecurse(const char *pFilename, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0);
+	void ExecuteFileRecurse(const char *pFilename, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0, int Level = 3);
 	virtual void ExecuteLineStroked(int Stroke, const char *pStr, const int ClientLevel, const int ClientId, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0);
 	
 	FPrintCallback m_pfnPrintCallback;
@@ -63,6 +65,7 @@ class CConsole : public IConsole
 	void *m_pCompareClientsUserdata;
 	FClientOnlineCallback m_pfnClientOnlineCallback;
 	void *m_pClientOnlineUserdata;
+	int m_aCommandCount[5];
 
 	enum
 	{
@@ -151,7 +154,7 @@ public:
 	
 	virtual bool LineIsValid(const char *pStr);
 	virtual void ExecuteLine(const char *pStr, const int ClientLevel, const int ClientId, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0);
-	virtual void ExecuteFile(const char *pFilename, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0);
+	virtual void ExecuteFile(const char *pFilename, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0, int Level = 3);
 
 	virtual void RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUserData);
 	virtual void RegisterAlternativePrintCallback(FPrintCallback pfnAlternativePrintCallback, void *pAlternativeUserData);

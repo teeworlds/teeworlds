@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_COLLISION_H
 #define GAME_COLLISION_H
 
@@ -18,6 +20,8 @@ class CCollision
 	struct SSwitchers
 	{
 		bool m_Status[16];
+		int m_EndTick[16];
+		int m_Type[16];
 	};
 
 public:
@@ -72,7 +76,8 @@ public:
 	int IsSpeedup(int Index);
 	void GetSpeedup(int Index, vec2 *Dir, int *Force, int *MaxSpeed);
 	int IsSwitch(int Index);
-	int GetSWitchNumber(int Index);
+	int GetSwitchNumber(int Index);
+	int GetSwitchDelay(int Index);
 	
 	int IsSolid(int x, int y);
 	int IsThrough(int x, int y);
@@ -92,6 +97,7 @@ public:
 	class CSwitchTile *SwitchLayer() { return m_pSwitch; }
 	class CLayers *Layers() { return m_pLayers; }
 	SSwitchers* m_pSwitchers;
+	int m_NumSwitchers;
 };
 
 #endif

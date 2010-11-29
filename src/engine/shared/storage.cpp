@@ -1,4 +1,5 @@
-// copyright (c) 2007 magnus auvinen, see licence.txt for more info
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <stdio.h> //remove()
 #include <base/system.h>
 #include <engine/storage.h>
@@ -279,7 +280,7 @@ public:
 			return false;
 
 		char aBuffer[MAX_PATH_LENGTH];
-		return remove(GetPath(Type, pFilename, aBuffer, sizeof(aBuffer)));
+		return !remove(GetPath(Type, pFilename, aBuffer, sizeof(aBuffer)));
 	}
 
 	virtual bool CreateFolder(const char *pFoldername, int Type)
@@ -288,7 +289,7 @@ public:
 			return false;
 
 		char aBuffer[MAX_PATH_LENGTH];
-		return fs_makedir(GetPath(Type, pFoldername, aBuffer, sizeof(aBuffer)));
+		return !fs_makedir(GetPath(Type, pFoldername, aBuffer, sizeof(aBuffer)));
 	}
 
 	static IStorage *Create(const char *pApplicationName, int NumArgs, const char **ppArguments)

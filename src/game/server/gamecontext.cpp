@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <new>
 #include <stdio.h>
 #include <string.h>
@@ -15,9 +17,7 @@
 #include "score.h"
 #include "score/file_score.h"
 #if defined(CONF_SQL)
-#if !defined(CONF_PLATFORM_MACOSX)
 #include "score/sql_score.h"
-#endif
 #endif
 
 enum
@@ -282,11 +282,18 @@ void CGameContext::SendChat(int ChatterClientId, int Team, const char *pText, in
 		else
 			m_apPlayers[SpamProtectionClientId]->m_Last_Chat = Server()->Tick();
 
-	char aBuf[256];
+	char aBuf[256], aText[256];
+	str_copy(aText, pText, sizeof(aText));
 	if(ChatterClientId >= 0 && ChatterClientId < MAX_CLIENTS)
-		str_format(aBuf, sizeof(aBuf), "%d:%d:%s: %s", ChatterClientId, Team, Server()->ClientName(ChatterClientId), pText);
+		str_format(aBuf, sizeof(aBuf), "%d:%d:%s: %s", ChatterClientId, Team, Server()->ClientName(ChatterClientId), aText);
+	else if(ChatterClientId == -2)
+	{
+		str_format(aBuf, sizeof(aBuf), "### %s", aText);
+		str_copy(aText, aBuf, sizeof(aText));
+		ChatterClientId = -1;
+	}
 	else
-		str_format(aBuf, sizeof(aBuf), "*** %s", pText);
+		str_format(aBuf, sizeof(aBuf), "*** %s", aText);
 	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "chat", aBuf);
 
 	if(Team == CHAT_ALL)
@@ -294,7 +301,7 @@ void CGameContext::SendChat(int ChatterClientId, int Team, const char *pText, in
 		CNetMsg_Sv_Chat Msg;
 		Msg.m_Team = 0;
 		Msg.m_Cid = ChatterClientId;
-		Msg.m_pMessage = pText;
+		Msg.m_pMessage = aText;
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 	}
 	else
@@ -303,7 +310,7 @@ void CGameContext::SendChat(int ChatterClientId, int Team, const char *pText, in
 		CNetMsg_Sv_Chat Msg;
 		Msg.m_Team = 1;
 		Msg.m_Cid = ChatterClientId;
-		Msg.m_pMessage = pText;
+		Msg.m_pMessage = aText;
 
 		// pack one for the recording only
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NOSEND, -1);
@@ -527,9 +534,9 @@ void CGameContext::OnTick()
 						No++;
 				}
 
-				if(Yes >= (Total/(100/g_Config.m_SvVotePercentage)))
+				if(Yes > Total / (100.0 / g_Config.m_SvVotePercentage))
 					m_VoteEnforce = VOTE_ENFORCE_YES;
-				else if(No >= (int)((Total+1)/((1.0/g_Config.m_SvVotePercentage)*100.0)))
+				else if(No >= Total - Total / (100.0 / g_Config.m_SvVotePercentage))
 					m_VoteEnforce = VOTE_ENFORCE_NO;
 			}
 
@@ -572,6 +579,32 @@ void CGameContext::OnTick()
 		}
 	}
 
+if(Server()->Tick() % (g_Config.m_SvAnnouncementInterval * Server()->TickSpeed() * 60) == 0)
+{
+	char *Line = ((CServer *) Server())->GetLine(g_Config.m_SvAnnouncementFileName, m_AnnouncementLine++);
+	if(Line)
+		SendChat(-1, CGameContext::CHAT_ALL, Line);
+}
+
+if(Collision()->m_NumSwitchers > 0)
+	for (int i = 0; i < Collision()->m_NumSwitchers+1; ++i)
+	{
+		for (int j = 0; j < 16; ++j)
+		{
+			if(Collision()->m_pSwitchers[i].m_EndTick[j] <= Server()->Tick() && Collision()->m_pSwitchers[i].m_Type[j] == TILE_SWITCHTIMEDOPEN)
+			{
+				Collision()->m_pSwitchers[i].m_Status[j] = false;
+				Collision()->m_pSwitchers[i].m_EndTick[j] = 0;
+				Collision()->m_pSwitchers[i].m_Type[j] = TILE_SWITCHCLOSE;
+			}
+			else if(Collision()->m_pSwitchers[i].m_EndTick[j] <= Server()->Tick() && Collision()->m_pSwitchers[i].m_Type[j] == TILE_SWITCHTIMEDCLOSE)
+			{
+				Collision()->m_pSwitchers[i].m_Status[j] = true;
+				Collision()->m_pSwitchers[i].m_EndTick[j] = 0;
+				Collision()->m_pSwitchers[i].m_Type[j] = TILE_SWITCHOPEN;
+			}
+		}
+	}
 
 #ifdef CONF_DEBUG
 	if(g_Config.m_DbgDummies)
@@ -617,7 +650,7 @@ void CGameContext::OnClientEnter(int ClientId)
 	
 	SendChatTarget(ClientId, "DDRace Mod. Version: " DDRACE_VERSION);
 	SendChatTarget(ClientId, "Official site: DDRace.info");
-	SendChatTarget(ClientId, "For more Info /CMDList");
+	SendChatTarget(ClientId, "For more Info /cmdlist");
 	SendChatTarget(ClientId, "Or visit DDRace.info");
 	SendChatTarget(ClientId, "To see this again say /info");
 	SendChatTarget(ClientId, "Note This is an Alpha release, just for testing, your feedback is important!!");
@@ -1119,6 +1152,166 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed() * g_Config.m_SvSuicidePenalty;
 	}
 }
+void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	const char *pParamName = pResult->GetString(0);
+	float NewValue = pResult->GetFloat(1);
+
+	if(pSelf->Tuning()->Set(pParamName, NewValue))
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "%s changed to %.2f", pParamName, NewValue);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", aBuf);
+		pSelf->SendTuningParams(-1);
+	}
+	else
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "No such tuning parameter");
+}
+
+void CGameContext::ConTuneReset(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	CTuningParams P;
+	*pSelf->Tuning() = P;
+	pSelf->SendTuningParams(-1);
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "Tuning reset");
+}
+
+void CGameContext::ConTuneDump(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	char aBuf[256];
+	for(int i = 0; i < pSelf->Tuning()->Num(); i++)
+	{
+		float v;
+		pSelf->Tuning()->Get(i, &v);
+		str_format(aBuf, sizeof(aBuf), "%s %.2f", pSelf->Tuning()->m_apNames[i], v);
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", aBuf);
+	}
+}
+
+void CGameContext::ConChangeMap(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	pSelf->m_pController->ChangeMap(pResult->NumArguments() ? pResult->GetString(0) : "");
+}
+
+void CGameContext::ConRestart(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	if(pResult->NumArguments())
+		pSelf->m_pController->DoWarmup(pResult->GetInteger(0));
+	else
+		pSelf->m_pController->StartRound();
+}
+
+void CGameContext::ConBroadcast(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	pSelf->SendBroadcast(pResult->GetString(0), -1);
+}
+
+void CGameContext::ConSay(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	pSelf->SendChat(-1, CGameContext::CHAT_ALL, pResult->GetString(0));
+}
+
+void CGameContext::ConSetTeam(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	int Victim = pResult->GetVictim();
+	int Team = clamp(pResult->GetInteger(0), -1, 1);
+
+	if(!pSelf->m_apPlayers[Victim])
+		return;
+
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "moved client %d to team %d", Victim, Team);
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+
+	pSelf->m_apPlayers[Victim]->SetTeam(Team);
+	//(void)pSelf->m_pController->CheckTeamBalance();
+}
+
+void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData, int ClientID)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	const char *pString = pResult->GetString(0);
+
+	// check for valid option
+	if(!pSelf->Console()->LineIsValid(pResult->GetString(0)))
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "skipped invalid option '%s'", pResult->GetString(0));
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+		return;
+	}
+
+	CGameContext::CVoteOption *pOption = pSelf->m_pVoteOptionFirst;
+	while(pOption)
+	{
+		if(str_comp_nocase(pString, pOption->m_aCommand) == 0)
+		{
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "option '%s' already exists", pString);
+			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+			return;
+		}
+		pOption = pOption->m_pNext;
+	}
+
+	int Len = str_length(pString);
+
+	pOption = (CGameContext::CVoteOption *)pSelf->m_pVoteOptionHeap->Allocate(sizeof(CGameContext::CVoteOption) + Len);
+	pOption->m_pNext = 0;
+	pOption->m_pPrev = pSelf->m_pVoteOptionLast;
+	if(pOption->m_pPrev)
+		pOption->m_pPrev->m_pNext = pOption;
+	pSelf->m_pVoteOptionLast = pOption;
+	if(!pSelf->m_pVoteOptionFirst)
+		pSelf->m_pVoteOptionFirst = pOption;
+
+	mem_copy(pOption->m_aCommand, pString, Len+1);
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "added option '%s'", pOption->m_aCommand);
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+
+	CNetMsg_Sv_VoteOption OptionMsg;
+	OptionMsg.m_pCommand = pOption->m_aCommand;
+	pSelf->Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, -1);
+}
+
+void CGameContext::ConVote(IConsole::IResult *pResult, void *pUserData, int ClientID)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	char aBuf[64];
+	if(str_comp_nocase(pResult->GetString(0), "yes") == 0)
+		pSelf->m_VoteEnforce = CGameContext::VOTE_ENFORCE_YES_ADMIN;
+	else if(str_comp_nocase(pResult->GetString(0), "no") == 0)
+		pSelf->m_VoteEnforce = CGameContext::VOTE_ENFORCE_NO_ADMIN;
+	else
+		return;
+
+	str_format(aBuf, sizeof(aBuf), "forcing vote %s", pResult->GetString(0));
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+	pSelf->m_VoteEnforcer = ClientID;
+}
+
+void CGameContext::ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData, -1);
+	if(pResult->NumArguments())
+	{
+		CNetMsg_Sv_Motd Msg;
+		Msg.m_pMessage = g_Config.m_SvMotd;
+		CGameContext *pSelf = (CGameContext *)pUserData;
+		for(int i = 0; i < MAX_CLIENTS; ++i)
+			if(pSelf->m_apPlayers[i])
+				pSelf->Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
+	}
+}
 
 void CGameContext::OnConsoleInit()
 {
@@ -1168,9 +1361,9 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 	//TODO: No need any more?
 	char buf[512];
 	str_format(buf, sizeof(buf), "data/maps/%s.cfg", g_Config.m_SvMap);
-	Console()->ExecuteFile(buf);
+	Console()->ExecuteFile(buf, 0, 0, 0, 0, 4);
 	str_format(buf, sizeof(buf), "data/maps/%s.map.cfg", g_Config.m_SvMap);
-	Console()->ExecuteFile(buf);
+	Console()->ExecuteFile(buf, 0, 0, 0, 0, 4);
 
 	// select gametype
 	m_pController = new CGameControllerDDRace(this);
@@ -1185,11 +1378,9 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 		
 	// create score object (add sql later)
 #if defined(CONF_SQL)
-#if !defined(CONF_PLATFORM_MACOSX)
 	if(g_Config.m_SvUseSQL)
 		m_pScore = new CSqlScore(this);
 	else
-#endif
 #endif
 		m_pScore = new CFileScore(this);
 	// setup core world
@@ -1251,7 +1442,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 			}
 		}
 	}
-
+m_AnnouncementLine = 0;
 #ifdef CONF_DEBUG
 	if(g_Config.m_DbgDummies)
 	{

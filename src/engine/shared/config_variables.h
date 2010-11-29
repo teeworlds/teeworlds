@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef ENGINE_SHARED_E_CONFIG_VARIABLES_H
 #define ENGINE_SHARED_E_CONFIG_VARIABLES_H
 #undef ENGINE_SHARED_E_CONFIG_VARIABLES_H // this file will be included several times
@@ -123,7 +125,6 @@ MACRO_CONFIG_INT(SvShotgunBulletSound, sv_shotgun_bullet_sound, 0, 0, 1, CFGFLAG
 MACRO_CONFIG_INT(SvCheckpointSave, sv_checkpoint_save, 1, 0, 1, CFGFLAG_SERVER, "Whether to save checkpoint times to the score file", 3)
 MACRO_CONFIG_STR(SvScoreFolder, sv_score_folder, 32, "records", CFGFLAG_SERVER, "Folder to save score files to", 3)
 
-#if !defined(CONF_PLATFORM_MACOSX)
 MACRO_CONFIG_INT(SvUseSQL, sv_use_sql, 0, 0, 1, CFGFLAG_SERVER, "Enables SQL DB instead of record file", 4)
 MACRO_CONFIG_STR(SvSqlUser, sv_sql_user, 32, "nameless", CFGFLAG_SERVER, "SQL User", 4)
 MACRO_CONFIG_STR(SvSqlPw, sv_sql_pw, 32, "tee", CFGFLAG_SERVER, "SQL Password", 4)
@@ -131,7 +132,7 @@ MACRO_CONFIG_STR(SvSqlIp, sv_sql_ip, 32, "127.0.0.1", CFGFLAG_SERVER, "SQL Datab
 MACRO_CONFIG_INT(SvSqlPort, sv_sql_port, 3306, 0, 65535, CFGFLAG_SERVER, "SQL Database port", 4)
 MACRO_CONFIG_STR(SvSqlDatabase, sv_sql_database, 16, "teeworlds", CFGFLAG_SERVER, "SQL Database name", 4)
 MACRO_CONFIG_STR(SvSqlPrefix, sv_sql_prefix, 16, "record", CFGFLAG_SERVER, "SQL Database table prefix", 4)
-#endif
+
 MACRO_CONFIG_INT(SvDDRaceRules, sv_ddrace_rules, 1, 0, 1, CFGFLAG_SERVER, "Whether the default mod rules are displayed or not", 4)
 MACRO_CONFIG_STR(SvRulesLine1, sv_rules_line1, 40, "", CFGFLAG_SERVER, "Rules line 1", 4)
 MACRO_CONFIG_STR(SvRulesLine2, sv_rules_line2, 40, "", CFGFLAG_SERVER, "Rules line 2", 4)
@@ -148,7 +149,10 @@ MACRO_CONFIG_STR(SvRulesLine10, sv_rules_line10, 40, "", CFGFLAG_SERVER, "Rules 
 MACRO_CONFIG_INT(SvTeam, sv_team, 0, -1, 1, CFGFLAG_SERVER, "Teams configuration", 3)
 MACRO_CONFIG_INT(SvTeamStrict, sv_team_strict, 0, 0, 1, CFGFLAG_SERVER, "Kill or not all team if someone left game in team", 4)
 
+MACRO_CONFIG_STR(SvAnnouncementFileName, sv_announcement_filename, 24, "announcement.txt", CFGFLAG_SERVER, "file which will have the announcement, each one at a line", 3)
+MACRO_CONFIG_INT(SvAnnouncementInterval, sv_announcement_interval, 30, 15, 9999, CFGFLAG_SERVER, "time(minutes) in which the announcement will be displayed from the announcement file", 3)
+
 MACRO_CONFIG_INT(ConnTimeout, conn_timeout, 15, 5, 100, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Network timeout", 4)
 
-MACRO_CONFIG_INT(DbgMsg, dbg_msg, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Display or not debug messages", 4)
+MACRO_CONFIG_INT(DbgMsg, dbg_msg, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SERVER, "Display or not debug messages", 3)
 #endif

@@ -138,8 +138,8 @@ function build(settings)
 	else
 		settings.cc.flags:Add("-Wall")
 		if platform == "macosx" then
-			settings.cc.flags:Add("-mmacosx-version-min=10.4", "-isysroot /Developer/SDKs/MacOSX10.4u.sdk")
-			settings.link.flags:Add("-mmacosx-version-min=10.4", "-isysroot /Developer/SDKs/MacOSX10.4u.sdk")
+			settings.cc.flags:Add("-mmacosx-version-min=10.5", "-isysroot /Developer/SDKs/MacOSX10.6.sdk")
+			settings.link.flags:Add("-mmacosx-version-min=10.5", "-isysroot /Developer/SDKs/MacOSX10.6.sdk")
 		elseif config.stackprotector.value == 1 then
 			settings.cc.flags:Add("-fstack-protector", "-fstack-protector-all")
 			settings.link.flags:Add("-fstack-protector", "-fstack-protector-all")
@@ -153,6 +153,11 @@ function build(settings)
    		if platform == "macosx" then
 			settings.link.frameworks:Add("Carbon")
 			settings.link.frameworks:Add("AppKit")
+			settings.cc.includes:Add("/usr/local/mysql/include")
+			settings.cc.includes:Add("/usr/local/mysql/include/cppconn")			
+			settings.link.libpath:Add("/usr/local/mysql/lib")			
+			settings.link.libs:Add("mysqlcppconn-static")
+			settings.link.libs:Add("mysqlclient")
 		else
 			settings.link.libs:Add("pthread")
 			settings.cc.includes:Add("other/mysql/include")
@@ -303,24 +308,24 @@ if platform == "macosx"  and arch == "ia32" then
 	debug_settings_ppc.config_ext = "_ppc_d"
 	debug_settings_ppc.cc.flags:Add("-arch ppc")
 	debug_settings_ppc.link.flags:Add("-arch ppc")
-	debug_settings_ppc.cc.defines:Add("CONF_DEBUG")
+	debug_settings_ppc.cc.defines:Add("CONF_DEBUG", "CONF_SQL")
 
 	release_settings_ppc = release_settings:Copy()
 	release_settings_ppc.config_name = "release_ppc"
 	release_settings_ppc.config_ext = "_ppc"
 	release_settings_ppc.cc.flags:Add("-arch ppc")
 	release_settings_ppc.link.flags:Add("-arch ppc")
-	release_settings_ppc.cc.defines:Add("CONF_RELEASE")
+	release_settings_ppc.cc.defines:Add("CONF_RELEASE", "CONF_SQL")
 
 	debug_settings_x86 = debug_settings:Copy()
 	debug_settings_x86.config_name = "debug_x86"
 	debug_settings_x86.config_ext = "_x86_d"
-	debug_settings_x86.cc.defines:Add("CONF_DEBUG")
+	debug_settings_x86.cc.defines:Add("CONF_DEBUG", "CONF_SQL")
 
 	release_settings_x86 = release_settings:Copy()
 	release_settings_x86.config_name = "release_x86"
 	release_settings_x86.config_ext = "_x86"
-	release_settings_x86.cc.defines:Add("CONF_RELEASE")
+	release_settings_x86.cc.defines:Add("CONF_RELEASE", "CONF_SQL")
 
 	ppc_d = build(debug_settings_ppc)
 	x86_d = build(debug_settings_x86)

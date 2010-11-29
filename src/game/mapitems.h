@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_MAPITEMS_H
 #define GAME_MAPITEMS_H
 #include<engine/shared/protocol.h>
@@ -89,7 +91,9 @@ enum
 	TILE_TELEINEVIL,
 	TILE_UNFREEZE,
 	//Switches
-	TILE_SWITCHOPEN = 24,
+	TILE_SWITCHTIMEDOPEN = 22,
+	TILE_SWITCHTIMEDCLOSE,
+	TILE_SWITCHOPEN,
 	TILE_SWITCHCLOSE,
 	TILE_TELEIN,
 	TILE_TELEOUT,
@@ -183,6 +187,7 @@ public:
 	unsigned char m_Number;
 	unsigned char m_Type;
 	unsigned char m_Flags;
+	unsigned char m_Delay;
 };
 
 struct CMapItemImage

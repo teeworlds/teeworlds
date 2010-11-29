@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_SKINS_H
 #define GAME_CLIENT_COMPONENTS_SKINS_H
 #include <base/vmath.h>
@@ -20,7 +22,8 @@ public:
 	
 	void Init();
 	
-	vec4 GetColor(int v);
+	vec3 GetColorV3(int v);
+	vec4 GetColorV4(int v);
 	int Num();
 	const CSkin *Get(int Index);
 	int Find(const char *pName);

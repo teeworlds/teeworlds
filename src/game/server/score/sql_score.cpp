@@ -1,7 +1,5 @@
 /* CSqlScore class by Sushi */
 #if defined(CONF_SQL)
-#if !defined(CONF_PLATFORM_MACOSX)
-
 #include <string.h>
 
 #include <engine/shared/config.h>
@@ -61,6 +59,10 @@ bool CSqlScore::Connect()
 	} 
 	catch (sql::SQLException &e)
 	{
+		char aBuf[256];		
+		str_format(aBuf, sizeof(aBuf), "MySQL Error: %s", e.what());
+		dbg_msg("SQL", aBuf);
+	
 		dbg_msg("SQL", "ERROR: SQL connection failed");
 		return false;
 	}
@@ -90,7 +92,7 @@ void CSqlScore::Init()
 		{
 			// create tables
 			char aBuf[768];
-			str_format(aBuf, sizeof(aBuf), "CREATE TABLE IF NOT EXISTS %s_%s_race (Name VARCHAR(%d) NOT NULL, Time FLOAT DEFAULT 0, cp1 FLOAT DEFAULT 0, cp2 FLOAT DEFAULT 0, cp3 FLOAT DEFAULT 0, cp4 FLOAT DEFAULT 0, cp5 FLOAT DEFAULT 0, cp6 FLOAT DEFAULT 0, cp7 FLOAT DEFAULT 0, cp8 FLOAT DEFAULT 0, cp9 FLOAT DEFAULT 0, cp10 FLOAT DEFAULT 0, cp11 FLOAT DEFAULT 0, cp12 FLOAT DEFAULT 0, cp13 FLOAT DEFAULT 0, cp14 FLOAT DEFAULT 0, cp15 FLOAT DEFAULT 0, cp16 FLOAT DEFAULT 0, cp17 FLOAT DEFAULT 0, cp18 FLOAT DEFAULT 0, cp19 FLOAT DEFAULT 0, cp20 FLOAT DEFAULT 0, cp21 FLOAT DEFAULT 0, cp22 FLOAT DEFAULT 0, cp23 FLOAT DEFAULT 0, cp24 FLOAT DEFAULT 0, cp25 FLOAT DEFAULT 0);", m_pPrefix, m_aMap, MAX_NAME_LENGTH);
+			str_format(aBuf, sizeof(aBuf), "CREATE TABLE IF NOT EXISTS %s_%s_race (Name VARCHAR(%d) NOT NULL, Time FLOAT DEFAULT 0, cp1 FLOAT DEFAULT 0, cp2 FLOAT DEFAULT 0, cp3 FLOAT DEFAULT 0, cp4 FLOAT DEFAULT 0, cp5 FLOAT DEFAULT 0, cp6 FLOAT DEFAULT 0, cp7 FLOAT DEFAULT 0, cp8 FLOAT DEFAULT 0, cp9 FLOAT DEFAULT 0, cp10 FLOAT DEFAULT 0, cp11 FLOAT DEFAULT 0, cp12 FLOAT DEFAULT 0, cp13 FLOAT DEFAULT 0, cp14 FLOAT DEFAULT 0, cp15 FLOAT DEFAULT 0, cp16 FLOAT DEFAULT 0, cp17 FLOAT DEFAULT 0, cp18 FLOAT DEFAULT 0, cp19 FLOAT DEFAULT 0, cp20 FLOAT DEFAULT 0, cp21 FLOAT DEFAULT 0, cp22 FLOAT DEFAULT 0, cp23 FLOAT DEFAULT 0, cp24 FLOAT DEFAULT 0, cp25 FLOAT DEFAULT 0)  CHARACTER SET utf8 ;", m_pPrefix, m_aMap, MAX_NAME_LENGTH);
 			m_pStatement->execute(aBuf);
 			dbg_msg("SQL", "Tables were created successfully");
 			
@@ -113,6 +115,9 @@ void CSqlScore::Init()
 		}
 		catch (sql::SQLException &e)
 		{
+			char aBuf[256];		
+			str_format(aBuf, sizeof(aBuf), "MySQL Error: %s", e.what());
+			dbg_msg("SQL", aBuf);	
 			dbg_msg("SQL", "ERROR: Tables were NOT created");
 		}
 
@@ -163,7 +168,10 @@ void CSqlScore::LoadScoreThread(void *pUser)
 			delete pData->m_pSqlData->m_pResults;
 		}
 		catch (sql::SQLException &e)
-		{
+		{	
+			char aBuf[256];		
+			str_format(aBuf, sizeof(aBuf), "MySQL Error: %s", e.what());
+			dbg_msg("SQL", aBuf);
 			dbg_msg("SQL", "ERROR: Could not update account");
 		}
 		
@@ -247,6 +255,9 @@ void CSqlScore::SaveScoreThread(void *pUser)
 		}
 		catch (sql::SQLException &e)
 		{
+			char aBuf[256];		
+			str_format(aBuf, sizeof(aBuf), "MySQL Error: %s", e.what());
+			dbg_msg("SQL", aBuf);	
 			dbg_msg("SQL", "ERROR: Could not update time");
 		}
 		
@@ -291,36 +302,30 @@ void CSqlScore::ShowRankThread(void *pUser)
 			
 			// check sort methode
 			char aBuf[512];
-			str_format(aBuf, sizeof(aBuf), "SELECT Name, Time FROM %s_%s_race ORDER BY `Time` ASC;", pData->m_pSqlData->m_pPrefix, pData->m_pSqlData->m_aMap);
+						
+			pData->m_pSqlData->m_pStatement->execute("SET @rownum := 0;");
+			str_format(aBuf, sizeof(aBuf), 	"SELECT Rank, Name, Time "
+											"FROM ("
+												"SELECT @rownum := @rownum + 1 AS RANK, Name, Time FROM %s_%s_race ORDER BY Time ASC"
+												") as Query "
+											"WHERE Name = '%s';", pData->m_pSqlData->m_pPrefix, pData->m_pSqlData->m_aMap,pData->m_aName);
+										
 			pData->m_pSqlData->m_pResults = pData->m_pSqlData->m_pStatement->executeQuery(aBuf);
-			int RowCount = 0;
-			bool Found = false;
-			while(pData->m_pSqlData->m_pResults->next())
-			{
-				RowCount++;
-				
-				if(pData->m_Search)
-				{
-					if(str_find_nocase(pData->m_pSqlData->m_pResults->getString("Name").c_str(), pData->m_aName))
-					{
-						Found = true;
-						break;
-					}
-				}
-			}
 			
-			if(!Found)
+			if(pData->m_pSqlData->m_pResults->rowsCount() != 1)
 			{
 				str_format(aBuf, sizeof(aBuf), "%s is not ranked", pData->m_aName);
 				pData->m_pSqlData->GameServer()->SendChatTarget(pData->m_ClientID, aBuf);
 			}
 			else
 			{
-				float Time = (float)pData->m_pSqlData->m_pResults->getDouble("Time");
+				pData->m_pSqlData->m_pResults->next();			
+				float Time = (float)pData->m_pSqlData->m_pResults->getDouble("Time");			
+				int Rank = (float)pData->m_pSqlData->m_pResults->getInt("Rank");				
 				if(g_Config.m_SvHideScore)
 					str_format(aBuf, sizeof(aBuf), "Your time: %d minute(s) %5.2f second(s)", (int)(Time/60), Time-((int)Time/60*60));
 				else
-					str_format(aBuf, sizeof(aBuf), "%d. %s Time: %d minute(s) %5.2f second(s)", RowCount, pData->m_pSqlData->m_pResults->getString("Name").c_str(), (int)(Time/60), Time-((int)Time/60*60));
+					str_format(aBuf, sizeof(aBuf), "%d. %s Time: %d minute(s) %5.2f second(s)", Rank, pData->m_pSqlData->m_pResults->getString("Name").c_str(), (int)(Time/60), Time-((int)Time/60*60));
 				
 				if(pData->m_Search)
 					strcat(aBuf, pData->m_aRequestingPlayer);
@@ -336,6 +341,9 @@ void CSqlScore::ShowRankThread(void *pUser)
 		}
 		catch (sql::SQLException &e)
 		{
+			char aBuf[256];		
+			str_format(aBuf, sizeof(aBuf), "MySQL Error: %s", e.what());
+			dbg_msg("SQL", aBuf);			
 			dbg_msg("SQL", "ERROR: Could not show rank");
 		}
 		
@@ -401,6 +409,9 @@ void CSqlScore::ShowTop5Thread(void *pUser)
 		}
 		catch (sql::SQLException &e)
 		{
+			char aBuf[256];		
+			str_format(aBuf, sizeof(aBuf), "MySQL Error: %s", e.what());
+			dbg_msg("SQL", aBuf);		
 			dbg_msg("SQL", "ERROR: Could not show top5");
 		}
 		
@@ -480,6 +491,3 @@ void CSqlScore::NormalizeMapname(char *pString) {
 	}
 }
 #endif
-#endif
-
-

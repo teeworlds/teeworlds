@@ -1,4 +1,5 @@
-// copyright (c) 2007 magnus auvinen, see licence.txt for more info
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <math.h>
 #include <base/math.h>
 #include <engine/graphics.h>
@@ -428,7 +429,15 @@ void CRenderTools::RenderSwitchmap(CSwitchTile *pSwitch, int w, int h, float Sca
 			{
 				char aBuf[16];
 				str_format(aBuf, sizeof(aBuf), "%d", Index);
-				UI()->TextRender()->Text(0, mx*Scale-2, my*Scale-4, Scale-5, aBuf, -1);
+				UI()->TextRender()->Text(0, mx*Scale, my*Scale+16, Scale-20, aBuf, -1);
+			}
+
+			unsigned char Delay = pSwitch[c].m_Delay;
+			if(Delay)
+			{
+				char aBuf[16];
+				str_format(aBuf, sizeof(aBuf), "%d", Delay);
+				UI()->TextRender()->Text(0, mx*Scale, my*Scale-2, Scale-20, aBuf, -1);
 			}
 		}
 

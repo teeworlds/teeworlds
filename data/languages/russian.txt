@@ -1,62 +1,149 @@
-﻿
+
 ##### translated strings #####
 
 %d of %d servers, %d players
-== %d из %d серверов, %d игроков
+== %d/%d серверов, %d игроков
+
+%d%% loaded
+== %d%% загружено
+
+%ds left
+== осталось %d сек.
+
+%s Right click for context menu.
+== %s Правая кнопка мыши для контекстного меню
 
 Abort
-== Отменить
+== Отмена
+
+Add
+== Добавить
+
+Add Image
+== Добавить изображение
+
+Add Quad
+== Добавить квад
+
+Add group
+== Добавить группу
+
+Add quads layer
+== Добавить слой квадов
+
+Add tile layer
+== Добавить слой тайлов
 
 Address
 == Адрес
+
+Adds a new group
+== Добавить новую группу
+
+Adds a new quad
+== Добавить новый квад
 
 All
 == Все
 
 Alpha
-== A
+== Прозрачн..
 
 Always show name plates
-== Всегда показывать имена
+== Всегда показывать ники игроков
+
+Anim
+== Аним.
+
+Append
+== Вставить
+
+Append map
+== Вставить карту в текущую
 
 Are you sure that you want to quit?
-== Точно выйти?
+== Вы действительно желаете выйти?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Da dies der erste Start des Spiels ist, gib bitte unten deinen Namen ein. Es wird empfohlen die Einstellungen zu überprüfen, um sie deinen Vorstellungen anzupassen, bevor du einem Server beitrittst.
+== Так как это ваш первый запуск игры, пожалуйста, введите свой ник в поле ниже. Также рекоммендуется проверить настройки игры и поменять некоторые из них перед тем, как начать играть.
 
 Blue team
 == Синие
 
 Blue team wins!
-== Красная команда победила!
+== Синие победили!
 
 Body
 == Тело
 
+Border
+== Создать края
+
+CCW
+== CCW
+
+CW
+== CW
+
 Call vote
-== Голосование
+== Голосовать
+
+Cancel
+== Отмена
 
 Chat
 == Чат
 
+Clear collision
+== Очистить коллизии
+
 Close
 == Закрыть
+
+Color Env
+== Цвет. крив.
+
+Color TO
+== Цвет. TO
+
+Color+
+== Цвет+
 
 Compatible version
 == Совместимая версия
 
 Connect
-== Войти
+== Подключиться
 
 Connecting to
 == Подключение к
 
+Connection Problems...
+== Проблемы со связью...
+
 Console
 == Консоль
 
+Constructs collision from this layer
+== Создать коллизии из этого слоя
+
 Controls
 == Управление
+
+Creates a new color envelope
+== Создать новую кривую цвета
+
+Creates a new map
+== Создать новую карту
+
+Creates a new pos envelope
+== Создать новую кривую позиции
+
+Creates a new quad layer
+== Создать новый слой квадов
+
+Creates a new tile layer
+== Создать новый слой тайлов
 
 Current
 == Текущий
@@ -67,62 +154,119 @@ Current version: %s
 Custom colors
 == Свои цвета
 
+Decrease
+== Уменьшить
+
+Decrease animation speed
+== Уменьшить скорость анимации
+
+Delete
+== Удалить
+
+Delete group
+== Удалить группу
+
+Delete layer
+== Удалить слой
+
+Deletes the current quad
+== Удалить текущий квад
+
+Deletes the layer
+== Удалить слой
+
 Demos
-== Демки
+== Демо
+
+Detail
+== Детальный
 
 Disconnect
-== Отключиться
+== Отключить
 
 Disconnected
-== Отключен
+== Отключено
 
 Display Modes
-== Режимы экрана
+== Режимы дисплея
 
 Downloading map
-== Загрузка карты
+== Скачивание карты
 
 Draw!
-== Unentschieden!
+== Ничья!
 
 Dynamic Camera
-== Двигающаяся камера
+== Динамическая камера
+
+Embed
+== Встроить
+
+Embedded
+== Встроенные
+
+Embeds the image into the map file.
+== Встроить изображение в саму карту
 
 Emoticon
-== Эмоции
+== Эмоция
 
 Enter
-== Starten
+== Вход
+
+Envelopes
+== Кривые
+
+Error
+== Ошибка
+
+Error loading demo
+== ошибка при загрузке демо
+
+Exit
+== Выход
+
+Exits from the editor
+== Выход из редактора
+
+External
+== Внешние
 
 FSAA samples
-== Сглаживание
+== Сэмплов FSAA
 
 Favorite
-== В избранное
+== Избранный
 
 Favorites
-== Избранное
+== Избранные
 
 Feet
-== Стопы
+== Ноги
+
+File
+== Файл
+
+Filename:
+== Имя файла:
 
 Filter
 == Фильтр
 
 Fire
-== Огонь
+== Выстрел
 
 Force vote
-== Force vote
+== Форсировать
 
 Fullscreen
-== Полный экран
+== Полноэкранный режим
 
 Game
 == Игра
 
 Game info
-== Информация по игре
+== Инфо об игре
 
 Game over
 == Игра окончена
@@ -134,43 +278,64 @@ Game types:
 == Тип игры:
 
 General
-== Общее
+== Основные
 
 Graphics
 == Графика
 
 Grenade
-== Базука
+== Граната
+
+Group
+== Группа
+
+HD
+== HD
 
 Hammer
-== Молот
+== Молоток
 
 Has people playing
-== Есть игроки
+== Сервер не пустой
+
+Height
+== Высота
 
 High Detail
-== Высокая четкость
+== Высокая детализация
 
 Hook
-== Крюк
+== Веревка
 
 Host address
 == Адрес сервера
 
 Hue
-== H
+== Оттенок
+
+Image
+== Изображение
+
+Images
+== Изображения
+
+Increase
+== Увеличить
+
+Increase animation speed
+== Увеличить скорость анимации
 
 Info
 == Инфо
 
 Internet
-== Internet
+== Интернет
 
 Join blue
 == За синих
 
 Join game
-== Войти
+== Наблюдать
 
 Join red
 == За красных
@@ -187,14 +352,35 @@ LAN
 Language
 == Язык
 
-Lht.
-== L
+Layers
+== Слои
 
-Loading DDRace Client
-== Загрузка DDRace Client
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== Левая кнопка мыши для перемещения. Зажмите Shift для перемещения опоры. Зажмите Ctrl для поворота.
+
+Left mouse button to move. Hold shift to move the texture.
+== Левая кнопка мыши для перемещения. Зажмите Shift для перемещения текстуры.
+
+Lht.
+== Яркость
+
+Load
+== Загрузить
+
+Load a new image to use in the map
+== Загрузить новое изображение для использования его в карте
+
+Loading
+== Загрузка
 
 MOTD
 == MOTD
+
+Make collision
+== Создать коллизии
+
+Make external
+== Сделать внешним
 
 Map
 == Карта
@@ -203,10 +389,10 @@ Maximum ping:
 == Макс. пинг:
 
 Miscellaneous
-== Различное
+== Дополнительно
 
 Mouse sens.
-== Чувст. мышки
+== Чувств. мыши
 
 Move left
 == Влево
@@ -215,16 +401,25 @@ Move right
 == Вправо
 
 Movement
-== Движение
+== Перемещение
 
 Mute when not active
-== Выключать звук, пока не активен
+== Глушить звуки, когда игра неактивна
 
 Name
 == Имя
 
+Name:
+== Имя:
+
+New
+== Новый
+
 News
-== News
+== Новости
+
+Next Envelope
+== Следуюая кривая
 
 Next weapon
 == След. оружие
@@ -239,28 +434,46 @@ No password
 == Без пароля
 
 No servers found
-== Не найдено ни одного сервера
+== Сервера не найдены
 
 No servers match your filter criteria
-== Ни один сервер не удовлетворяет условиям фильтра
+== Нет серверов, отвечающих вашим критериям
+
+None
+== Ничего
+
+Normal animation speed
+== Нормальная скорость анимации
 
 Ok
-== OK
+== Ок
+
+Open
+== Открыть
+
+Opens a map and adds everything from that map to the current one
+== Открыть карту и добавить из нее все в текущую
+
+Opens a map for editing
+== Открыть карту для редактирования
+
+Order
+== Порядок
 
 Password
 == Пароль
 
-Password Incorrect
-== Пароль не верен
+Password incorrect
+== Неверный пароль
 
 Ping
-== Ping
+== Пинг
 
 Pistol
 == Пистолет
 
 Play
-== Играть
+== Просмотр
 
 Player
 == Игрок
@@ -268,8 +481,29 @@ Player
 Players
 == Игроки
 
+Please balance teams!
+== Сбалансируйте команды!
+
+Pos. Env
+== Поз. крив.
+
+Pos. TO
+== Поз. TO
+
+Pos.+
+== Поз.+
+
+Press right mouse button to create a new point
+== Нажмите правую кнопку мыши для создания новой точки
+
 Prev. weapon
 == Пред. оружие
+
+Previous Envelope
+== Предыдущая кривая
+
+Proof
+== Границы
 
 Quality Textures
 == Качественные текстуры
@@ -280,26 +514,53 @@ Quick search:
 Quit
 == Выход
 
+Reason:
+== Причина:
+
 Red team
 == Красные
 
 Red team wins!
 == Красные победили!
 
+Refocus
+== Вернуть фокус
+
 Refresh
 == Обновить
 
 Refreshing master servers
-== Обновление master серверов
+== Обновление списка мастер-серверов
 
 Remote console
-== Удаленная консоль
+== Консоль сервера
+
+Remove
+== Удалить
+
+Removes collision from this layer
+== Удалить коллизии из этого слоя
+
+Removes the image from the map
+== Удалить изображение из карты
+
+Removes the image from the map file.
+== Удалить изображение из файла с картой
+
+Replace
+== Заменить
+
+Replace Image
+== Заменить изображение
+
+Replaces the image with a new one
+== Заменить это изображение другим
 
 Reset filter
-== Сбросить фильтр
+== Сбросить фильтры
 
 Reset to defaults
-== По умолчанию
+== Сбросить настройки
 
 Rifle
 == Лазер
@@ -311,7 +572,22 @@ Sample rate
 == Частота
 
 Sat.
-== S
+== Контраст.
+
+Save
+== Сохранить
+
+Save As
+== Сохранить как
+
+Save map
+== Сохранить карту
+
+Saves the current map
+== Сохранить текущую карту
+
+Saves the current map under a new name
+== Сохранить текущую карту под новым названием
 
 Score
 == Очки
@@ -320,22 +596,31 @@ Score board
 == Табло
 
 Score limit
-== Очки
+== Лимит очков
 
 Scoreboard
-== Табло
+== Ход игры
 
 Screenshot
-== Снимок экрана
+== Скриншот
+
+Select group. Right click for properties.
+== Выберите группу. Правый клик открывает свойства.
+
+Select image
+== Выберите изображение
+
+Select layer. Right click for properties.
+== Выберите слой. Правый клик открывает свойства.
 
 Server details
-== Детали
+== Детали сервера
 
 Server info
 == Информация
 
 Server not full
-== Не полный
+== Сервер не заполнен
 
 Settings
 == Настройки
@@ -347,10 +632,10 @@ Show chat
 == Показать чат
 
 Show name plates
-== Показывать имена
+== Показывать ники игроков
 
 Show only supported
-== Показывать только совместимые
+== Только поддерживаемые режимы
 
 Skins
 == Скины
@@ -359,7 +644,7 @@ Sound
 == Звук
 
 Sound volume
-== Уровень звука
+== Громкость звука
 
 Spectate
 == Наблюдать
@@ -367,47 +652,77 @@ Spectate
 Spectators
 == Наблюдатели
 
+Square
+== Квадрат
+
+Squares the current quad
+== Преобразовать текущий квад в квадрат
+
 Standard gametype
-== Стандартный тип
+== Стандартный тип игры
 
 Standard map
 == Стандартная карта
 
+Sudden Death
+== Быстрая смерть
+
+Switch between images and layers managment.
+== Переключиться между управлением слоями и изображениями
+
+Switch curve type
+== Изменить тип кривой
+
 Switch weapon on pickup
-== Менять на найденное оружие
+== Переключать оружие при подборе
 
 Team
 == Команда
 
 Team chat
-== Чат команды
+== Командный чат
 
 Teeworlds %s is out! Download it at www.teeworlds.com!
-== Вышла версия %s! Ее можно загрузить на www.teeworlds.com!
+== Вышла Teeworlds %s! Скачивайте на www.teeworlds.com!
 
 Texture Compression
 == Сжатие текстур
 
 The server is running a non-standard tuning on a pure game type.
-== Der Server läuft nicht mit Standardeinstellungen.
+== Сервер запущен с нестандартными настройками на стандартном типе игры.
 
 Time limit
-== Время
+== Лимит
+
+Toggle group visibility
+== Переключить видимость группы
+
+Toggle layer visibility
+== Переключить видимость слоя
+
+Toggles the envelope editor.
+== Показать или скрыть редактор кривых
 
 Try again
-== Попробуй еще
+== Попробовать снова
 
 Type
 == Тип
 
 UI Color
-== Цвет UI
+== Цвет интерфейса
+
+Use left mouse button to drag and create a brush.
+== Используйте левую кнопку мыши для перемещения и создания кисти
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== Используйте левую кнопку мыши для рисования кистью. Правая кнопка мыши очищает кисть.
 
 Use sounds
-== Включить звук
+== Использовать звуки
 
 V-Sync
-== V-Sync
+== Вертикальная синхронизация
 
 Version
 == Версия
@@ -421,373 +736,205 @@ Vote yes
 Voting
 == Голосование
 
+Warmup
+== Разминка
+
 Weapon
 == Оружие
 
 Welcome to Teeworlds
-== Добро пожаловать в Teeworlds
+== Добро пожаловать в Teeworlds!
+
+Width
+== Ширина
 
 Yes
 == Да
 
 You must restart the game for all settings to take effect.
-== Чтобы изменения вступили в силу нужно перезапустить игру.
+== Перезапустите игру для применения изменений.
 
 Your skin
 == Ваш скин
 
-Password incorrect
-== Пароль неверен
-
-Please balance teams!
-== Сбалансируйте команды!
-
-Connection Problems...
-== Проблемы с соединением...
-
-Warmup
-== Подготовка
-
-Sudden Death
-== Внезапная смерть
-
-%ds left
-== Осталось %ds
-
-error loading demo
-== Ошибка при загрузке демо.
-
-Error
-== Ошибка
-
-Open map
-== Открыть карту
-
-Open
-== Открыть
-
-Save map
-== Сохранить карту
-
-Save
-== Сохранить
-
-HD
-== HD
-
-[ctrl+h] Toggle High Detail
-== [ctrl+h] Hohe Details umschalten
-
-Anim
-== Anim
-
-[ctrl+m] Toggle animation
-== [Strg+M] Animation umschalten
-
-Proof
-== Proof
-
-[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-== [Strg+P] Schaltet Testrahmen um. Diese Rahmen zeigen, wie viel der Spieler höchstens sehen kann.
+ZI
+== Z+
 
 ZO
-== ZO
-
-[NumPad-] Zoom out
-== [NumBlock-] Verkleinern
-
-[NumPad*] Zoom to normal and remove editor offset
-== [NumBlock*] Normale Größe
-
-ZI
-== ZI
-
-[NumPad+] Zoom in
-== [NumBlock+] Vergrößern
-
-Increase animation speed
-== Animationsgeschwindigkeit erhöhen
-
-Normal animation speed
-== Normale Animationsgeschwindigkeit
-
-Decrease animation speed
-== Animationsgeschwindigkeit verringern
-
-[N] Flip brush horizontal
-== [N] Pinsel horizontal umdrehen
+== Z-
 
 [M] Flip brush vertical
-== [M] Pinsel vertikal umdrehen
+== [M] Зеркалировать кисть по вертикали
 
-CCW
-== GUZS
+[N] Flip brush horizontal
+== [N] Зеркалировать кисть по горизонтали
+
+[NumPad*] Zoom to normal and remove editor offset
+== [NumPad*] Установить нормальное увеличение и убрать смещение редактора
+
+[NumPad+] Zoom in
+== [ClavierNum+] Увеличить
+
+[NumPad-] Zoom out
+== [ClavierNum-] Уменьшить
 
 [R] Rotates the brush counter clockwise
-== [R] Dreht den Pinsel gegen den Uhrzeigersinn
-
-CW
-== UZS
+== [R] Повернуть кисть против часовой стрелки
 
 [T] Rotates the brush clockwise
-== [T] dreht den Pinsel im Uhrzeigersinn
+== [T] Повернуть кисть по часовой стрелке
 
-Add Quad
-== Quad hinz.
+[ctrl+h] Toggle High Detail
+== [ctrl+h] Переключить высокую детализацию
 
-Adds a new quad
-== Fügt ein neues Quad hinzu
+[ctrl+m] Toggle animation
+== [ctrl+m] Переключить анимацию
 
-Border
-== Rahmen
+[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== [ctrl+p] Показать или скрыть границы, в пределах которых игрок может видеть карту
 
-Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
-== Linke Maustaste zum Bewegen. Umschalttaste gedrückt halten, um die Achse zu bewegen. Strg gedrückt halten zum drehen.
+##### needs translation #####
 
-Left mouse button to move. Hold shift to move the texture.
-== Linke Maustaste zum Bewegen. Umschalttaste gedrückt halten, um die Textur zu bewegen.
+Alpha value of the envelope
+== 
 
-Use left mouse button to drag and create a brush.
-== Benutze die linke Maustaste, um zu ziehen und einen Pinsel zu erstellen.
+Are you sure that you want to delete the demo?
+== 
 
-Use left mouse button to paint with the brush. Right button clears the brush.
-== Benutze die linke Maustaste um mit dem Pinsel zu malen. Die rechte Maustaste löscht den Pinsel.
+Aspect ratio
+== 
 
-Decrease
-== Verringern
+Blue value of the envelope
+== 
 
-Increase
-== Vergrößern
+Clip H
+== 
 
-None
-== Kein
+Clip W
+== 
 
-Toggle group visibility
-== Gruppensichtbarkeit umschalten
+Clip X
+== 
 
-Select group. Right click for properties.
-== Gruppe auswählen. Rechtsklick für Eigenschaften.
+Clip Y
+== 
 
-Select layer. Right click for properties.
-== Ebene auswählen. Rechtsklick für Eigenschaften.
+Color
+== 
 
-Add group
-== Gruppe hinz.
+Delete demo
+== 
 
-Adds a new group
-== Fügt eine neue Gruppe hinzu
+Delete this envelope
+== 
 
-Embed
-== Einbetten
+Down
+== 
 
-Embeds the image into the map file.
-== Bettet die Grafik in die Kartendatei ein.
+Enable/disable group for saving
+== 
 
-Make external
-== Extern machen.
+Enable/disable layer for saving
+== 
 
-Removes the image from the map file.
-== Entfernt die Grafik aus der Kartendatei.
+File: %s
+== 
 
-Replace
-== Ersetzen
+Folder
+== 
 
-Replaces the image with a new one
-== Ersetzt die Grafik durch ein neues
+Green value of the envelope
+== 
 
-Replace Image
-== Grafik ersetzen
+Invalid Demo
+== 
 
-Remove
-== Entfernen
+Left
+== 
 
-Removes the image from the map
-== Entfernt die Grafik aus der Karte
+Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== 
 
-Embedded
-== Eingebettet
+Load map
+== 
 
-External
-== Extern
+New folder
+== 
 
-Select image
-== Grafik auswählen
+Para X
+== 
 
-Load a new image to use in the map
-== Lädt eine neue Grafik, um sie in der Karte zu benutzen.
+Para Y
+== 
 
-Add Image
-== Grafik hinzufügen
+Parent Folder
+== 
 
-Add
-== Hinzufügen
+Pos X
+== 
 
-Filename:
-== Dateiname:
+Pos Y
+== 
 
-Cancel
-== Отмена
+Quads
+== 
 
-Layers
-== Ebenen
+REC
+== 
 
-Images
-== Grafiken
+Record demo
+== 
 
-Switch between images and layers managment.
-== Zwischen Ebenen- und Bildverwaltung umschalten.
+Red value of the envelope
+== 
 
-Envelopes
-== Animationen
+Resizes the current Quad based on the aspect ratio of the image
+== 
 
-Toggles the envelope editor.
-== Schaltet den Animationseditor um.
+Right
+== 
 
-%s Right click for context menu.
-== %s Rechtsklick für Kontextmenü.
+Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
 
-Color+
-== Color+
+Rotation of the envelope
+== 
 
-Creates a new color envelope
-== Erstellt eine neue Farbanimation
+Shift
+== 
 
-Pos.+
-== Pos.+
+Stop record
+== 
 
-Creates a new pos envelope
-== Erstellt eine neue Positionsanimation
+Tiles
+== 
 
-Previous Envelope
-== Vorherige Animation
+Time limit: %d min
+== 
 
-Next Envelope
-== Nächste Animation
+Up
+== 
 
-Name:
-== Название:
+Use Clipping
+== 
 
-Press right mouse button to create a new point
-== Drücke die rechte Maustaste, um einen neuen Punkt zu erstellen
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== 
 
-Switch curve type
-== Kurventyp ändern
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== 
 
-Left mouse to drag. Hold shift to alter time point aswell. Right click to delete.
-== Linke Maustaste zum ziehen. Halte die Umschalttaste, um auch den Zeit-Punkt zu verändern. Rechtsklick zum Löschen.
+X-axis of the envelope
+== 
 
-New
-== Neu
+Y-axis of the envelope
+== 
 
-Creates a new map
-== Создать новую карту
+[HOME] Restore map focus
+== 
 
-Opens a map for editing
-== Öffnet eine Map zum Bearbeiten
 
-Append
-== Anhängen
+Loading DDRace Client
+== Загрузка DDRace Client
+##### old translations #####
 
-Opens a map and adds everything from that map to the current one
-== Открыть карту и добавить все из нее к текущей карте
-
-Append map
-== Karte anhängen
-
-Saves the current map
-== Сохранить карту
-
-Save As
-== Сохранить как
-
-Saves the current map under a new name
-== Сохранить карту под новым именем
-
-Exits from the editor
-== Выйти из редактора
-
-Clear collision
-== Kollision löschen
-
-Removes collision from this layer
-== Entfernt die Kollision aus dieser Ebene
-
-Make collision
-== Kollision erstellen
-
-Constructs collision from this layer
-== Erstellt die Kollision aus dieser Ebene
-
-Width
-== Ширина
-
-Height
-== Высота
-
-Image
-== Grafik
-
-Delete group
-== Gruppe löschen
-
-Add quads layer
-== Quad-Ebene hinzufg.
-
-Creates a new quad layer
-== Erstellt eine neue Quad-Ebene
-
-Add tile layer
-== Tile-Ebene hinzufg.
-
-Creates a new tile layer
-== Erstellt eine neue Tile-Ebene
-
-Delete layer
-== Ebene löschen
-
-Deletes the layer
-== Entfernt die Ebene
-
-Group
-== Gruppe
-
-Order
-== Порядок
-
-Detail
-== Детали
-
-Delete
-== Löschen
-
-Deletes the current quad
-== Entfernt das ausgewählte Quad
-
-Square
-== Quadrat
-
-Squares the current quad
-== Macht das ausgewählte Quad zum Quadrat
-
-Pos. Env
-== Pos. Env
-
-Pos. TO
-== Pos. TO
-
-Color Env
-== Color Env
-
-Color TO
-== Color TO
-
-Toggle layer visibility
-== Sichtbarkeit der Ebene umschalten
-
-File
-== Файл
-
-##### needs translation ####
-
-
-##### old translations ####

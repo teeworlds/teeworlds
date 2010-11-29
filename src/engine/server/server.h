@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef ENGINE_SERVER_SERVER_H
 #define ENGINE_SERVER_SERVER_H
 
@@ -219,6 +221,7 @@ public:
 	
 	void SetRconLevel(int ClientId, int Level);
 	void CheckPass(int ClientId, const char *pPw);
+	char *GetLine(char const *FileName, int Line);
 
 	virtual int SnapNewID();
 	virtual void SnapFreeID(int ID);

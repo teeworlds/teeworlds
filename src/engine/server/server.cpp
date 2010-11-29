@@ -1,4 +1,5 @@
-// copyright (c) 2007 magnus auvinen, see licence.txt for more info
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
 #include <base/system.h>
 
@@ -29,6 +30,8 @@
 
 #include "register.h"
 #include "server.h"
+#include "../shared/linereader.h"
+#include <vector>
 
 #if defined(CONF_FAMILY_WINDOWS) 
 	#define _WIN32_WINNT 0x0500
@@ -1210,7 +1213,7 @@ int CServer::Run()
 					Console()->ExecuteLine("sv_hit 1",4,-1);
 					Console()->ExecuteLine("sv_npc 0",4,-1);
 					Console()->ExecuteLine("sv_phook 1",4,-1);
-					Console()->ExecuteLine("sv_endless_drag 0",4,-1); //TODO: Such string executed where autoexec executed. No need??
+					Console()->ExecuteLine("sv_endless_drag 0",4,-1);
 					// new map loaded
 					GameServer()->OnShutdown();
 					
@@ -1509,14 +1512,12 @@ void CServer::ConCmdList(IConsole::IResult *pResult, void *pUserData, int Client
 {
 	CServer *pSelf = (CServer *)pUserData;
 
-	if(pSelf->m_aClients[ClientId].m_Authed == 3)
-	{
-		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "O Really!!, You call yourself an admin!!");
-		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "check the documentation on DDRace.info");
-		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "leave cmdlist for others.. too many commands to show you here");
-	}
+	if(pResult->NumArguments() == 0)
+		pSelf->Console()->List((pSelf->m_aClients[ClientId].m_Authed != 0) ? pSelf->m_aClients[ClientId].m_Authed : -1, CFGFLAG_SERVER);
+	else if (pResult->GetInteger(0) == 0)
+		pSelf->Console()->List(-1, CFGFLAG_SERVER);
 	else
-		pSelf->Console()->List(pSelf->m_aClients[ClientId].m_Authed, CFGFLAG_SERVER);
+		pSelf->Console()->List(pResult->GetInteger(0), CFGFLAG_SERVER);
 }
 
 
@@ -1586,7 +1587,7 @@ void CServer::RegisterCommands()
 	Console()->Register("login", "?s", CFGFLAG_SERVER, ConLogin, this, "Allows you access to rcon if no password is given, or changes your level if a password is given", -1);
 	Console()->Register("auth", "?s", CFGFLAG_SERVER, ConLogin, this, "Allows you access to rcon if no password is given, or changes your level if a password is given", -1);
 
-	Console()->Register("cmdlist", "", CFGFLAG_SERVER, ConCmdList, this, "Shows the list of all commands", -1);
+	Console()->Register("cmdlist", "?i", CFGFLAG_SERVER, ConCmdList, this, "Shows you the commands available for your remote console access. Specify the level if you want to see other level's commands", -1);
 }	
 
 
@@ -1681,7 +1682,7 @@ int main(int argc, const char **argv) // ignore_convention
 	pConsole->ExecuteLine("sv_phook 1",4,-1);
 	pConsole->ExecuteLine("sv_endless_drag 0",4,-1);
 	// execute autoexec file
-	pConsole->ExecuteFile("autoexec.cfg");
+	pConsole->ExecuteFile("autoexec.cfg", 0, 0, 0, 0, 4);
 
 	// parse the command line arguments
 	if(argc > 1) // ignore_convention
@@ -1811,4 +1812,25 @@ void CServer::CheckPass(int ClientId, const char *pPw)
 		SendRconLine(ClientId, buf);
 		dbg_msg("server", "'%s' ClientId=%d authed with Level=%d", ClientName(ClientId), ClientId, 0);
 	}
+}
+
+
+char *CServer::GetLine(char const *FileName, int Line)
+{
+	IOHANDLE File = m_pStorage->OpenFile(FileName, IOFLAG_READ, IStorage::TYPE_ALL);
+	if(File)
+	{
+		std::vector<char*> v;
+		char *pLine;
+		CLineReader *lr = new CLineReader();
+		lr->Init(File);
+		while(pLine = lr->Get())
+			if(str_length(pLine))
+				if(pLine[0]!='/' || pLine[1]!='/')
+					v.push_back(pLine);
+		if(Line >= v.size())
+			Line %= v.size();
+		return v[Line];
+	}
+	return 0;
 }

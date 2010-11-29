@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <new>
 //#include <stdio.h> //TODO:GFX check if linux still needs this
 #include <engine/server.h>
@@ -132,7 +134,7 @@ void CPlayer::OnDisconnect()
 		str_format(aBuf, sizeof(aBuf), "leave player='%d:%s'", m_ClientID, Server()->ClientName(m_ClientID));
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf);
 		if(m_Muted > 0) {
-			str_format(Cmd, sizeof(Cmd), "ban %d %d '%s'", m_ClientID, m_Muted/Server()->TickSpeed(), "ppc");
+			str_format(Cmd, sizeof(Cmd), "ban %d %d '%s'", m_ClientID, m_Muted/Server()->TickSpeed(), "Mute evasion");
 			GameServer()->Console()->ExecuteLine(Cmd, 3, -1);
 		}
 	}
@@ -272,6 +274,8 @@ void CPlayer::LoadCharacter()
 	Character->m_LastWeapon = m_PauseInfo.m_LastWeapon;
 	Character->m_HammerType = m_PauseInfo.m_HammerType;
 	Character->m_Super = m_PauseInfo.m_Super;
+	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
+	Controller->m_Teams.m_Core.Team(GetCID(), m_PauseInfo.m_Team);
 	m_PauseInfo.m_Respawn = false;
 	m_InfoSaved = false;
 }
@@ -300,6 +304,8 @@ void CPlayer::SaveCharacter()
 	m_PauseInfo.m_LastWeapon = Character->m_LastWeapon;
 	m_PauseInfo.m_HammerType = Character->m_HammerType;
 	m_PauseInfo.m_Super = Character->m_Super;
+	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
+	m_PauseInfo.m_Team = Controller->m_Teams.m_Core.Team(GetCID());
 	m_PauseInfo.m_PauseTime = Server()->Tick();
 	//m_PauseInfo.m_RefreshTime = Character->m_RefreshTime;
 }

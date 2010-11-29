@@ -5,122 +5,6 @@
 #include <game/server/gamemodes/DDRace.h>
 #include <game/version.h>
 
-void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData, int ClientId)
-{
-	CGameContext *pSelf = (CGameContext *)pUserData;
-	const char *pParamName = pResult->GetString(0);
-	float NewValue = pResult->GetFloat(1);
-
-	if(pSelf->Tuning()->Set(pParamName, NewValue))
-	{
-		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "%s changed to %.2f", pParamName, NewValue);
-		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", aBuf);
-		pSelf->SendTuningParams(-1);
-	}
-	else
-		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "No such tuning parameter");
-}
-
-void CGameContext::ConTuneReset(IConsole::IResult *pResult, void *pUserData, int ClientId)
-{
-	CGameContext *pSelf = (CGameContext *)pUserData;
-	CTuningParams P;
-	*pSelf->Tuning() = P;
-	pSelf->SendTuningParams(-1);
-	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "Tuning reset");
-}
-
-void CGameContext::ConTuneDump(IConsole::IResult *pResult, void *pUserData, int ClientId)
-{
-	CGameContext *pSelf = (CGameContext *)pUserData;
-	char aBuf[256];
-	for(int i = 0; i < pSelf->Tuning()->Num(); i++)
-	{
-		float v;
-		pSelf->Tuning()->Get(i, &v);
-		str_format(aBuf, sizeof(aBuf), "%s %.2f", pSelf->Tuning()->m_apNames[i], v);
-		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", aBuf);
-	}
-}
-
-void CGameContext::ConChangeMap(IConsole::IResult *pResult, void *pUserData, int ClientId)
-{
-	CGameContext *pSelf = (CGameContext *)pUserData;
-	pSelf->m_pController->ChangeMap(pResult->NumArguments() ? pResult->GetString(0) : "");
-}
-
-void CGameContext::ConRestart(IConsole::IResult *pResult, void *pUserData, int ClientId)
-{
-	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(pResult->NumArguments())
-		pSelf->m_pController->DoWarmup(pResult->GetInteger(0));
-	else
-		pSelf->m_pController->StartRound();
-}
-
-void CGameContext::ConBroadcast(IConsole::IResult *pResult, void *pUserData, int ClientId)
-{
-	CGameContext *pSelf = (CGameContext *)pUserData;
-	pSelf->SendBroadcast(pResult->GetString(0), -1);
-}
-
-void CGameContext::ConSay(IConsole::IResult *pResult, void *pUserData, int ClientId)
-{
-	CGameContext *pSelf = (CGameContext *)pUserData;
-	pSelf->SendChat(-1, CGameContext::CHAT_ALL, pResult->GetString(0));
-}
-
-void CGameContext::ConSetTeam(IConsole::IResult *pResult, void *pUserData, int ClientId)
-{
-	CGameContext *pSelf = (CGameContext *)pUserData;
-	int Victim = pResult->GetVictim();
-	int Team = clamp(pResult->GetInteger(0), -1, 1);
-	
-	if(!pSelf->m_apPlayers[Victim])
-		return;
-
-	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "moved client %d to team %d", Victim, Team);
-	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
-
-	pSelf->m_apPlayers[ClientId]->SetTeam(Team);
-	//(void)pSelf->m_pController->CheckTeamBalance();
-}
-
-void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData, int ClientID)
-{
-	CGameContext *pSelf = (CGameContext *)pUserData;
-	// check for valid option
-	if(!pSelf->Console()->LineIsValid(pResult->GetString(0)))
-	{
-		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "skipped invalid option '%s'", pResult->GetString(0));
-		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
-		return;
-	}
-
-	int Len = str_length(pResult->GetString(0));
-
-	CGameContext::CVoteOption *pOption = (CGameContext::CVoteOption *)pSelf->m_pVoteOptionHeap->Allocate(sizeof(CGameContext::CVoteOption) + Len);
-	pOption->m_pNext = 0;
-	pOption->m_pPrev = pSelf->m_pVoteOptionLast;
-	if(pOption->m_pPrev)
-		pOption->m_pPrev->m_pNext = pOption;
-	pSelf->m_pVoteOptionLast = pOption;
-	if(!pSelf->m_pVoteOptionFirst)
-		pSelf->m_pVoteOptionFirst = pOption;
-
-	mem_copy(pOption->m_aCommand, pResult->GetString(0), Len+1);
-	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "added option '%s'", pOption->m_aCommand);
-	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
-
-	CNetMsg_Sv_VoteOption OptionMsg;
-	OptionMsg.m_pCommand = pOption->m_aCommand;
-	pSelf->Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, -1);
-}
-
 void CGameContext::ConClearVotes(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
@@ -134,37 +18,6 @@ void CGameContext::ConClearVotes(IConsole::IResult *pResult, void *pUserData, in
 	CNetMsg_Sv_VoteClearOptions ClearOptionsMsg;
 	pSelf->Server()->SendPackMsg(&ClearOptionsMsg, MSGFLAG_VITAL, -1);
 }
-
-void CGameContext::ConVote(IConsole::IResult *pResult, void *pUserData, int ClientID)
-{
-	CGameContext *pSelf = (CGameContext *)pUserData;
-	char aBuf[64];
-	if(str_comp_nocase(pResult->GetString(0), "yes") == 0)
-		pSelf->m_VoteEnforce = CGameContext::VOTE_ENFORCE_YES_ADMIN;
-	else if(str_comp_nocase(pResult->GetString(0), "no") == 0)
-		pSelf->m_VoteEnforce = CGameContext::VOTE_ENFORCE_NO_ADMIN;
-	else
-		return;
-	
-	str_format(aBuf, sizeof(aBuf), "forcing vote %s", pResult->GetString(0));
-	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
-	pSelf->m_VoteEnforcer = ClientID;
-}
-
-void CGameContext::ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
-{
-	pfnCallback(pResult, pCallbackUserData, -1);
-	if(pResult->NumArguments())
-	{
-		CNetMsg_Sv_Motd Msg;
-		Msg.m_pMessage = g_Config.m_SvMotd;
-		CGameContext *pSelf = (CGameContext *)pUserData;
-		for(int i = 0; i < MAX_CLIENTS; ++i)
-			if(pSelf->m_apPlayers[i])
-				pSelf->Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
-	}
-}
-
 
 void CGameContext::ConGoLeft(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
@@ -605,7 +458,7 @@ void CGameContext::ConUnFreeze(IConsole::IResult *pResult, void *pUserData, int 
 	chr->m_FreezeTime=2;
 	chr->m_pPlayer->m_RconFreeze = false;
 	CServer* pServ = (CServer*)pSelf->Server();
-	str_format(buf, sizeof(buf), "'%s' ClientId=%d has been UnFreezed.", pServ->ClientName(ClientId), Victim);
+	str_format(buf, sizeof(buf), "'%s' ClientId=%d has been defrosted.", pServ->ClientName(ClientId), Victim);
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 }
 
@@ -664,7 +517,7 @@ void CGameContext::ConInfo(IConsole::IResult *pResult, void *pUserData, int Clie
 
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "DDRace Mod. Version: " DDRACE_VERSION);
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Official site: DDRace.info");
-	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "For more Info /CMDList");
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "For more Info /cmdlist");
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Or visit DDRace.info");
 }
 
@@ -938,8 +791,8 @@ void CGameContext::ConMe(IConsole::IResult *pResult, void *pUserData, int Client
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	char aBuf[256 + 24];
 	
-	str_format(aBuf, 256 + 24, "%s %s", pSelf->Server()->ClientName(ClientId), pResult->GetString(0));
-	pSelf->SendChat(-1, CGameContext::CHAT_ALL, aBuf, ClientId);
+	str_format(aBuf, 256 + 24, "'%s' %s", pSelf->Server()->ClientName(ClientId), pResult->GetString(0));
+	pSelf->SendChat(-2, CGameContext::CHAT_ALL, aBuf, ClientId);
 }
 
 void CGameContext::ConToggleEyeEmote(IConsole::IResult *pResult, void *pUserData, int ClientId)

@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_SERVER_PLAYER_H
 #define GAME_SERVER_PLAYER_H
 
@@ -56,6 +58,7 @@ public:
 		int m_HammerType;
 		bool m_Super;
 		int m_PauseTime;
+		int m_Team;
 	} m_PauseInfo;
 	bool m_InfoSaved;
 	void LoadCharacter();

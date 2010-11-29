@@ -1,4 +1,5 @@
-// copyright (c) 2007 magnus auvinen, see licence.txt for more info
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <game/generated/protocol.h>
 #include <game/server/gamecontext.h>
 #include <engine/shared/config.h>
@@ -126,7 +127,7 @@ void CLaser::Snap(int SnappingClient)
 	if(NetworkClipped(SnappingClient))
 		return;
 	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
-	if(Char && Char->m_Alive && m_Owner != -1 &&	Char->Team() != GameServer()->GetPlayerChar(m_Owner)->Team()) return;
+	if(Char && Char->m_Alive && m_Owner != -1 && GameServer()->GetPlayerChar(m_Owner)->m_Alive && Char->Team() != GameServer()->GetPlayerChar(m_Owner)->Team()) return;
 	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_Id, sizeof(CNetObj_Laser)));
 	pObj->m_X = (int)m_Pos.x;
 	pObj->m_Y = (int)m_Pos.y;

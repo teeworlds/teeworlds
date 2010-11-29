@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <new>
 #include <base/system.h>
 #include <base/math.h>
@@ -561,7 +563,7 @@ void CConsole::ExecuteLine(const char *pStr, const int ClientLevel, const int Cl
 }
 
 
-void CConsole::ExecuteFile(const char *pFilename, FPrintCallback pfnAlternativePrintCallback, void *pUserData, FPrintCallback pfnAlternativePrintResponseCallback, void *pResponseUserData)
+void CConsole::ExecuteFile(const char *pFilename, FPrintCallback pfnAlternativePrintCallback, void *pUserData, FPrintCallback pfnAlternativePrintResponseCallback, void *pResponseUserData, int Level)
 {
 	// make sure that this isn't being executed already
 	for(CExecFile *pCur = m_pFirstExec; pCur; pCur = pCur->m_pPrev)
@@ -597,7 +599,7 @@ void CConsole::ExecuteFile(const char *pFilename, FPrintCallback pfnAlternativeP
 		ReleaseAlternativePrintCallback();
 
 		while((pLine = lr.Get()))
-			ExecuteLine(pLine, 4, -1, pfnAlternativePrintCallback, pUserData, pfnAlternativePrintResponseCallback, pResponseUserData);
+			ExecuteLine(pLine, Level, -1, pfnAlternativePrintCallback, pUserData, pfnAlternativePrintResponseCallback, pResponseUserData);
 
 		io_close(File);
 	}
@@ -719,6 +721,11 @@ CConsole::CConsole(int FlagMask)
 	m_pFirstCommand = 0;
 	m_pFirstExec = 0;
 
+	for (int i = 0; i < 5; ++i)
+	{
+		m_aCommandCount[i] = 0;
+	}
+
 	m_pPrintCallbackUserdata = 0;
 	m_pfnPrintCallback = 0;
 	m_pAlternativePrintCallbackUserdata = 0;
@@ -769,7 +776,7 @@ void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
 		if(ppArguments[i][0] == '-' && ppArguments[i][1] == 'f' && ppArguments[i][2] == 0)
 		{
 			if(NumArgs - i > 1)
-				ExecuteFile(ppArguments[i+1]);
+				ExecuteFile(ppArguments[i+1], 0, 0, 0, 0, 4);
 			i++;
 		}
 		else if(!str_comp("-s", ppArguments[i]) || !str_comp("--silent", ppArguments[i]))
@@ -799,22 +806,58 @@ void CConsole::Register(const char *pName, const char *pParams,
 	
 	pCommand->m_pNext = m_pFirstCommand;
 	m_pFirstCommand = pCommand;
+	m_aCommandCount[pCommand->m_Level]++;
 }
 
 void CConsole::List(const int Level, int Flags)
 {
+	switch(Level)
+	{
+		case 4: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "command cmdlist is not allowed for config files"); return;
+		case 3: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "=== cmdlist for admins ==="); break;
+		case 2: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "=== cmdlist for mods ==="); break;
+		case 1: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "=== cmdlist for helpers ==="); break;
+		default: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "=== cmdlist ==="); break;
+	}
+	
+	char aBuf[50 + 1] = { 0 };
 	CCommand *pCommand = m_pFirstCommand;
+	int Length = 0;
+	
 	while(pCommand)
 	{
-		if(pCommand)
-			if((pCommand->m_Level <= Level))
-					if((!Flags)?true:pCommand->m_Flags&Flags)
-					{
-						char aBuf[300];
-						str_format(aBuf,sizeof(aBuf),"Name: %s, Parameters: %s, Help: %s",pCommand->m_pName, (!str_length(pCommand->m_pParams))?"None.":pCommand->m_pParams, (!str_length(pCommand->m_pHelp))?"No Help String Given":pCommand->m_pHelp);
-						PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
-					}
+		if(str_comp_num(pCommand->m_pName, "sv_", 3) && str_comp_num(pCommand->m_pName, "dbg_", 4))	// ignore configs and debug commands
+		{
+			if((pCommand->m_Flags & Flags) == Flags && (pCommand->m_Level == Level || (Level == 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD))))
+			{
+				int CommandLength = str_length(pCommand->m_pName);
+				if(Length + CommandLength + 2 >= sizeof(aBuf) || aBuf[0] == 0)
+				{
+					if(aBuf[0])
+						PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
+					aBuf[0] = 0;
+					Length = CommandLength;
+					str_copy(aBuf, pCommand->m_pName, sizeof(aBuf));
+				}
+				else
+				{
+					str_format(aBuf, sizeof(aBuf), "%s, %s", aBuf, pCommand->m_pName);
+					Length += CommandLength + 2;
+				}
+			}
+		}
 		pCommand = pCommand->m_pNext;
+	}
+	
+	if (aBuf[0])
+		PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+
+	switch(Level)
+	{
+		case 3: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "see 'cmdlist 0,1,2' for more commands, which don't require admin rights"); break;
+		case 2: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "see 'cmdlist 0,1' for more commands, which don't require mod rights"); break;
+		case 1: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "see 'cmdlist 0' for more commands, which don't require helper rights"); break;
+		default: break;
 	}
 }
 

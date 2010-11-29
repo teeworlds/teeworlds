@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef ENGINE_CONSOLE_H
 #define ENGINE_CONSOLE_H
 
@@ -62,7 +64,7 @@ public:
 	virtual bool LineIsValid(const char *pStr) = 0;
 	virtual void ExecuteLine(const char *Sptr, const int ClientLevel, const int ClientId, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0,  FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0) = 0;
 	virtual void ExecuteLineStroked(int Stroke, const char *pStr, const int ClientLevel, const int ClientId, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0) = 0;
-	virtual void ExecuteFile(const char *pFilename, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0) = 0;
+	virtual void ExecuteFile(const char *pFilename, FPrintCallback pfnAlternativePrintCallback = 0, void *pUserData = 0, FPrintCallback pfnAlternativePrintResponseCallback = 0, void *pResponseUserData = 0, int Level = 3) = 0;
 	
 	virtual void RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUserData) = 0;
 	virtual void RegisterAlternativePrintCallback(FPrintCallback pfnAlternativePrintCallback, void *pAlternativeUserData) = 0;
