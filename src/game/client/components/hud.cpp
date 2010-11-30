@@ -339,7 +339,6 @@ void CHud::RenderDDRaceEffects()
 		{
 			str_format(aBuf, sizeof(aBuf), "Finish time: %02d:%02d.%02d", m_DDRaceTime/6000, m_DDRaceTime/100-m_DDRaceTime/6000 * 60, m_DDRaceTime % 100);
 			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,aBuf,-1)/2, 20, 12, aBuf, -1);
-			m_CheckpointTick = 0;
 		}
 		else if(m_CheckpointTick + Client()->GameTickSpeed()*6 > Client()->GameTick())
 		{

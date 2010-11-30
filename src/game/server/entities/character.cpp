@@ -661,9 +661,9 @@ void CCharacter::OnFinish()
 
 		m_DDRaceState = DDRACE_NONE;
 		// set player score
-		if(!GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime || GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime > time)
+		if(!pData->m_CurrentTime || pData->m_CurrentTime > time)
 		{
-			GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime = time;
+			pData->m_CurrentTime = time;
 			NeedToSendNewRecord = true;
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
@@ -695,6 +695,12 @@ void CCharacter::OnFinish()
 			Msg.m_Time = (int)(time * 100.0f);
 			Msg.m_Check = 0;
 			Msg.m_Finish = 1;
+
+				if(pData->m_BestTime)
+				{
+					float Diff = (time - pData->m_BestTime)*100;
+					Msg.m_Check = (int)Diff;
+				}
 			
 			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
 		}
