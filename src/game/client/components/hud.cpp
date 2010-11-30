@@ -56,9 +56,12 @@ void CHud::RenderGameTimer()
 		else
 			Time = (Client()->GameTick()-m_pClient->m_Snap.m_pGameobj->m_RoundStartTick)/Client()->GameTickSpeed();
 
-		str_format(Buf, sizeof(Buf), "%d:%02d", Time/60, Time%60);
+		if(Time <= 0)
+			str_format(Buf, sizeof(Buf), "00:00.0");
+		else
+			str_format(Buf, sizeof(Buf), "%02d:%02d.%d", Time/60, Time%60, m_DDRaceTick/10);
 		float FontSize = 10.0f;
-		float w = TextRender()->TextWidth(0, FontSize, Buf, -1);
+		float w = TextRender()->TextWidth(0, 12,"00:00.0",-1);
 		TextRender()->Text(0, Half-w/2, 2, FontSize, Buf, -1);
 	}
 }
@@ -319,7 +322,7 @@ void CHud::RenderHealthAndAmmo()
 	Graphics()->QuadsEnd();
 }
 
-void CHud::RenderTime()
+void CHud::RenderDDRaceEffects()
 {
 	// check racestate
 	if(m_FinishTime && m_LastReceivedTimeTick + Client()->GameTickSpeed()*2 < Client()->GameTick())
@@ -336,14 +339,9 @@ void CHud::RenderTime()
 		{
 			str_format(aBuf, sizeof(aBuf), "Finish time: %02d:%02d.%02d", m_DDRaceTime/6000, m_DDRaceTime/100-m_DDRaceTime/6000 * 60, m_DDRaceTime % 100);
 			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,aBuf,-1)/2, 20, 12, aBuf, -1);
+			m_CheckpointTick = 0;
 		}
-		else if(m_DDRaceTimeReceived)
-		{
-			str_format(aBuf, sizeof(aBuf), "%02d:%02d.%d", m_DDRaceTime/60, m_DDRaceTime%60, m_DDRaceTick/10);
-			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,"00:00.0",-1)/2, 20, 12, aBuf, -1); // use fixed value for text width so its not shaky
-		}
-	
-		if(m_CheckpointTick+Client()->GameTickSpeed()*6 > Client()->GameTick())
+		else if(m_CheckpointTick + Client()->GameTickSpeed()*6 > Client()->GameTick())
 		{
 			str_format(aBuf, sizeof(aBuf), "%+5.2f", m_CheckpointDiff);
 			
@@ -361,11 +359,18 @@ void CHud::RenderTime()
 				TextRender()->TextColor(0.5f,1.0f,0.5f,a); // green
 			else if(!m_CheckpointDiff)
 				TextRender()->TextColor(1,1,1,a); // white
-			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0, 10, aBuf, -1)/2, 33, 10, aBuf, -1);
+			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0, 10, aBuf, -1)/2, 20, 10, aBuf, -1);
 			
 			TextRender()->TextColor(1,1,1,1);
 		}
 	}
+		/*else if(m_DDRaceTimeReceived)
+		{
+			str_format(aBuf, sizeof(aBuf), "%02d:%02d.%d", m_DDRaceTime/60, m_DDRaceTime%60, m_DDRaceTick/10);
+			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0, 12,"00:00.0",-1)/2, 20, 12, aBuf, -1); // use fixed value for text width so its not shaky
+		}*/
+
+
 	
 	static int LastChangeTick = 0;
 	if(LastChangeTick != Client()->PredGameTick())
@@ -412,7 +417,7 @@ void CHud::OnRender()
 	
 	if(m_pClient->m_Snap.m_pLocalCharacter && !Spectate && !(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver)) {
 		RenderHealthAndAmmo();
-		RenderTime();
+		RenderDDRaceEffects();
 	}
 		
 
