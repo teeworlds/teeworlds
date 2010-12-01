@@ -1402,15 +1402,30 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 		{
 			int Index = pTiles[y*pTileMap->m_Width+x].m_Index;
 			if(Index == TILE_OLDLASER)
+			{
 				g_Config.m_SvOldLaser = 1;
+				dbg_msg("MapTile","Old Laser");
+			}
 			else if(Index == TILE_NPC)
+			{
 				m_Tuning.Set("player_collision",0);
+				dbg_msg("MapTile","No Collision");
+			}
 			else if(Index == TILE_EHOOK)
+			{
 				g_Config.m_SvEndlessDrag = 1;
+				dbg_msg("MapTile","No Unlimited hook time");
+			}
 			else if(Index == TILE_NOHIT)
+			{
 				g_Config.m_SvHit = 0;
+				dbg_msg("MapTile","No Weapons Hitting others");
+			}
 			else if(Index == TILE_NPH)
+			{
 				m_Tuning.Set("player_hooking",0);
+				dbg_msg("MapTile","No Player Hooking");
+			}
 			if(Index >= ENTITY_OFFSET)
 			{
 				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
