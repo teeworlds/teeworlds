@@ -1401,7 +1401,9 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 		for(int x = 0; x < pTileMap->m_Width; x++)
 		{
 			int Index = pTiles[y*pTileMap->m_Width+x].m_Index;
-			if(Index == TILE_NPC)
+			if(Index == TILE_OLDLASER)
+				g_Config.m_SvOldLaser = 1;
+			else if(Index == TILE_NPC)
 				m_Tuning.Set("player_collision",0);
 			else if(Index == TILE_EHOOK)
 				g_Config.m_SvEndlessDrag = 1;
@@ -1417,7 +1419,9 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 			if(pFront)
 			{
 				Index = pFront[y*pTileMap->m_Width+x].m_Index;
-				if(Index == TILE_NPC)
+				if(Index == TILE_OLDLASER)
+					g_Config.m_SvOldLaser = 1;
+				else if(Index == TILE_NPC)
 					m_Tuning.Set("player_collision",0);
 				else if(Index == TILE_EHOOK)
 					g_Config.m_SvEndlessDrag = 1;
