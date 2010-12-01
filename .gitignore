@@ -29,3 +29,10 @@ DDRace_Trunk_d*
 *.prefs
 *.lnk
 *.pdb
+*.sdf
+*.sln
+*.suo
+*.vcxproj
+*.filters
+*.user
+*.cmd
