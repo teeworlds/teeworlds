@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <base/math.h>
+#include <base/tl/sorted_array.h>
 #include <engine/shared/config.h>
 #include <engine/server/server.h>
 #include <engine/map.h>
