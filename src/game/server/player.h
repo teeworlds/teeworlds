@@ -92,8 +92,6 @@ public:
    
    bool m_IsUsingDDRaceClient;
    
-   bool m_ColorSet; // Set if player changed color at least once 
-
    int m_Starttime;  		 
    int m_Refreshtime;  		 
    int m_DDRaceState;  		 

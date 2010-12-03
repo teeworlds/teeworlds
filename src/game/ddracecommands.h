@@ -47,7 +47,7 @@ CONSOLE_COMMAND("credits", "", CFGFLAG_SERVER, ConCredits, this, "Shows the cred
 CONSOLE_COMMAND("emote", "?si", CFGFLAG_SERVER, ConEyeEmote, this, "Sets your tee's eye emote", -1)
 CONSOLE_COMMAND("broadmsg", "", CFGFLAG_SERVER, ConToggleBroadcast, this, "Toggle Showing the Server's Broadcast message during race", -1)
 CONSOLE_COMMAND("eyeemote", "", CFGFLAG_SERVER, ConEyeEmote, this, "Toggles whether you automatically use eyeemotes with standard emotes", -1)
-CONSOLE_COMMAND("flags", "", CFGFLAG_SERVER, ConFlags, this, "Shows gameplay information for this server", -1)
+CONSOLE_COMMAND("settings", "?s", CFGFLAG_SERVER, ConSettings, this, "Shows gameplay information for this server", -1)
 CONSOLE_COMMAND("fly", "", CFGFLAG_SERVER, ConToggleFly, this, "Toggles whether you fly by pressing jump", 1)
 CONSOLE_COMMAND("help", "?r", CFGFLAG_SERVER, ConHelp, this, "Helps you with commands", -1)
 CONSOLE_COMMAND("info", "", CFGFLAG_SERVER, ConInfo, this, "Shows info about this server", -1)

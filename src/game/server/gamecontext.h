@@ -113,7 +113,7 @@ class CGameContext : public IGameServer
   static void ConCredits(IConsole::IResult *pResult, void *pUserData, int ClientId);
   static void ConInfo(IConsole::IResult *pResult, void *pUserData, int ClientId);
   static void ConHelp(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConFlags(IConsole::IResult *pResult, void *pUserData, int ClientId);
+  static void ConSettings(IConsole::IResult *pResult, void *pUserData, int ClientId);
   static void ConRules(IConsole::IResult *pResult, void *pUserData, int ClientId);
   static void ConKill(IConsole::IResult *pResult, void *pUserData, int ClientId);
   static void ConTogglePause(IConsole::IResult *pResult, void *pUserData, int ClientId);
