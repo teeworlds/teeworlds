@@ -130,8 +130,12 @@ void CLaser::Snap(int SnappingClient)
 {
 	if(NetworkClipped(SnappingClient))
 		return;
-	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
-	if(Char && Char->m_Alive && m_Owner != -1 && GameServer()->GetPlayerChar(m_Owner)->m_Alive && Char->Team() != GameServer()->GetPlayerChar(m_Owner)->Team()) return;
+	CCharacter * SnappingChar = GameServer()->GetPlayerChar(SnappingClient);
+	CCharacter * OwnerChar = 0;
+	if(m_Owner > 0)
+		OwnerChar = GameServer()->GetPlayerChar(m_Owner);
+	if(SnappingChar && SnappingChar->m_Alive && OwnerChar && OwnerChar->m_Alive && SnappingChar->Team() != OwnerChar->Team())
+		return;
 	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_Id, sizeof(CNetObj_Laser)));
 	pObj->m_X = (int)m_Pos.x;
 	pObj->m_Y = (int)m_Pos.y;
