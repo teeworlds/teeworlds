@@ -277,7 +277,7 @@ void CGameContext::SendChatResponse(const char *pLine, void *pUser)
 void CGameContext::SendChat(int ChatterClientId, int Team, const char *pText, int SpamProtectionClientId)
 {
 	if(SpamProtectionClientId >= 0 && SpamProtectionClientId < MAX_CLIENTS)
-		if(/*g_Config.m_SvSpamprotection && */m_apPlayers[SpamProtectionClientId]->m_Last_Chat 
+		if(g_Config.m_SvSpamprotection && m_apPlayers[SpamProtectionClientId]->m_Last_Chat
 			&& m_apPlayers[SpamProtectionClientId]->m_Last_Chat + Server()->TickSpeed() + g_Config.m_SvChatDelay > Server()->Tick())
 			return;
 		else
@@ -730,7 +730,7 @@ void CGameContext::OnClientDrop(int ClientId)
 void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 {
 	void *pRawMsg = m_NetObjHandler.SecureUnpackMsg(MsgId, pUnpacker);
-	CPlayer *pPlayer = m_apPlayers[ClientId];
+	CPlayer *p = m_apPlayers[ClientId];
 
 	if(!pRawMsg)
 	{
@@ -745,9 +745,9 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		CNetMsg_Cl_Say *pMsg = (CNetMsg_Cl_Say *)pRawMsg;
 		int Team = pMsg->m_Team;
 		//if(Team)
-		int GameTeam = ((CGameControllerDDRace*)m_pController)->m_Teams.m_Core.Team(pPlayer->GetCID());
+		int GameTeam = ((CGameControllerDDRace*)m_pController)->m_Teams.m_Core.Team(p->GetCID());
 		if(Team) {
-			Team = (pPlayer->GetTeam() == -1) ? CHAT_SPEC : (GameTeam == 0 ? CHAT_ALL : GameTeam);
+			Team = (p->GetTeam() == -1) ? CHAT_SPEC : (GameTeam == 0 ? CHAT_ALL : GameTeam);
 		} else {
 			Team = CHAT_ALL;
 		}
@@ -794,12 +794,12 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	}
 	else if(MsgId == NETMSGTYPE_CL_CALLVOTE)
 	{
-		if(/*g_Config.m_SvSpamprotection && */pPlayer->m_Last_VoteTry && pPlayer->m_Last_VoteTry + Server()->TickSpeed() * g_Config.m_SvVoteDelay > Server()->Tick())
+		if(g_Config.m_SvSpamprotection && p->m_Last_VoteTry && p->m_Last_VoteTry + Server()->TickSpeed() * g_Config.m_SvVoteDelay > Server()->Tick())
 			return;
 
 		int64 Now = Server()->Tick();
-		pPlayer->m_Last_VoteTry = Now;
-		if(pPlayer->GetTeam() == -1)
+		p->m_Last_VoteTry = Now;
+		if(p->GetTeam() == -1)
 		{
 			SendChatTarget(ClientId, "Spectators aren't allowed to start a vote.");
 			return;
@@ -811,8 +811,8 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			return;
 		}
 
-		int Timeleft = pPlayer->m_Last_VoteCall + Server()->TickSpeed()*60 - Now;
-		if(pPlayer->m_Last_VoteCall && Timeleft > 0)
+		int Timeleft = p->m_Last_VoteCall + Server()->TickSpeed()*60 - Now;
+		if(p->m_Last_VoteCall && Timeleft > 0)
 		{
 			char aChatmsg[512] = {0};
 			str_format(aChatmsg, sizeof(aChatmsg), "You must wait %d seconds before making another vote", (Timeleft/Server()->TickSpeed())+1);
@@ -853,7 +853,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 
 			if(!pOption)
 			{
-				if (pPlayer->m_Authed < 3)  // allow admins to call any vote they want
+				if (p->m_Authed < 3)  // allow admins to call any vote they want
 				{
 					str_format(aChatmsg, sizeof(aChatmsg), "'%s' isn't an option on this server", pMsg->m_Value);
 					SendChatTarget(ClientId, aChatmsg);
@@ -885,7 +885,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				m_apPlayers[ClientId]->m_Last_KickVote = time_get();
 				return;
 			}
-			else if(!g_Config.m_SvVoteKick && pPlayer->m_Authed < 2) // allow admins to call kick votes even if they are forbidden
+			else if(!g_Config.m_SvVoteKick && p->m_Authed < 2) // allow admins to call kick votes even if they are forbidden
 			{
 				SendChatTarget(ClientId, "Server does not allow voting to kick players");
 				m_apPlayers[ClientId]->m_Last_KickVote = time_get();
@@ -903,7 +903,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				SendChatTarget(ClientId, "You can't kick yourself");
 				return;
 			}
-			if(ComparePlayers(m_apPlayers[KickId], pPlayer))
+			if(ComparePlayers(m_apPlayers[KickId], p))
 			{
 				SendChatTarget(ClientId, "You can't kick admins");
 				m_apPlayers[ClientId]->m_Last_KickVote = time_get();
@@ -946,10 +946,10 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		{
 			SendChat(-1, CGameContext::CHAT_ALL, aChatmsg);
 			StartVote(aDesc, aCmd);
-			pPlayer->m_Vote = 1;
-			pPlayer->m_VotePos = m_VotePos = 1;
+			p->m_Vote = 1;
+			p->m_VotePos = m_VotePos = 1;
 			m_VoteCreator = ClientId;
-			pPlayer->m_Last_VoteCall = Now;
+			p->m_Last_VoteCall = Now;
 		}
 	}
 	else if(MsgId == NETMSGTYPE_CL_VOTE)
@@ -957,14 +957,14 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		if(!m_VoteCloseTime)
 			return;
 
-		if(pPlayer->m_Vote == 0)
+		if(p->m_Vote == 0)
 		{
 			CNetMsg_Cl_Vote *pMsg = (CNetMsg_Cl_Vote *)pRawMsg;
 			if(!pMsg->m_Vote)
 				return;
 
-			pPlayer->m_Vote = pMsg->m_Vote;
-			pPlayer->m_VotePos = ++m_VotePos;
+			p->m_Vote = pMsg->m_Vote;
+			p->m_VotePos = ++m_VotePos;
 			m_VoteUpdate = true;
 		}
 	}
@@ -972,7 +972,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	{
 		CNetMsg_Cl_SetTeam *pMsg = (CNetMsg_Cl_SetTeam *)pRawMsg;
 
-		if(pPlayer->GetTeam() == pMsg->m_Team || (/*g_Config.m_SvSpamprotection &&*/ pPlayer->m_Last_SetTeam && pPlayer->m_Last_SetTeam+Server()->TickSpeed() * g_Config.m_SvTeamChangeDelay > Server()->Tick()))
+		if(p->GetTeam() == pMsg->m_Team || (g_Config.m_SvSpamprotection && p->m_Last_SetTeam && p->m_Last_SetTeam+Server()->TickSpeed() * g_Config.m_SvTeamChangeDelay > Server()->Tick()))
 			return;
 
 		// Switch team on given client and kill/respawn him
@@ -981,13 +981,13 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			//if(m_pController->CanChangeTeam(pPlayer, pMsg->m_Number))
 			//{
 			//CCharacter* pChr=GetPlayerChar(ClientId);
-			if(pPlayer->GetTeam()==-1 && pPlayer->m_InfoSaved)
+			if(p->GetTeam()==-1 && p->m_InfoSaved)
 				SendChatTarget(ClientId,"Use /pause first then you can kill");
 			else{
-				pPlayer->m_Last_SetTeam = Server()->Tick();
-				if(pPlayer->GetTeam() == -1 || pMsg->m_Team == -1)
+				p->m_Last_SetTeam = Server()->Tick();
+				if(p->GetTeam() == -1 || pMsg->m_Team == -1)
 					m_VoteUpdate = true;
-				pPlayer->SetTeam(pMsg->m_Team);
+				p->SetTeam(pMsg->m_Team);
 			}
 
 				//if(pChr && pMsg->m_Number!=-1 && pChr->m_Paused)
@@ -1008,7 +1008,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	}
 	else if (MsgId == NETMSGTYPE_CL_ISDDRACE)
 	{
-		pPlayer->m_IsUsingDDRaceClient = true;
+		p->m_IsUsingDDRaceClient = true;
 		
 		char aBuf[128];
 		str_format(aBuf, sizeof(aBuf), "%d use DDRace Client", ClientId);
@@ -1044,20 +1044,18 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 		}
 	}
-	else if(MsgId == NETMSGTYPE_CL_CHANGEINFO || MsgId == NETMSGTYPE_CL_STARTINFO)
+	else if (MsgId == NETMSGTYPE_CL_CHANGEINFO || MsgId == NETMSGTYPE_CL_STARTINFO)
 	{
 		CNetMsg_Cl_ChangeInfo *pMsg = (CNetMsg_Cl_ChangeInfo *)pRawMsg;
 
-		if(/*g_Config.m_SvSpamprotection &&*/ pPlayer->m_Last_ChangeInfo && pPlayer->m_Last_ChangeInfo + Server()->TickSpeed() * g_Config.m_SvInfoChangeDelay > Server()->Tick())
+		if(g_Config.m_SvSpamprotection && p->m_Last_ChangeInfo && p->m_Last_ChangeInfo + Server()->TickSpeed() * g_Config.m_SvInfoChangeDelay > Server()->Tick())
 			return;
 
-		pPlayer->m_Last_ChangeInfo = time_get();
-		if(!pPlayer->m_ColorSet|| g_Config.m_SvAllowColorChange)
-		{
-			pPlayer->m_TeeInfos.m_UseCustomColor = pMsg->m_UseCustomColor;
-			pPlayer->m_TeeInfos.m_ColorBody = pMsg->m_ColorBody;
-			pPlayer->m_TeeInfos.m_ColorFeet = pMsg->m_ColorFeet;
-		}
+		p->m_Last_ChangeInfo = Server()->Tick();
+
+		p->m_TeeInfos.m_UseCustomColor = pMsg->m_UseCustomColor;
+		p->m_TeeInfos.m_ColorBody = pMsg->m_ColorBody;
+		p->m_TeeInfos.m_ColorFeet = pMsg->m_ColorFeet;
 
 		// copy old name
 		char aOldName[MAX_NAME_LENGTH];
@@ -1072,9 +1070,9 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		}
 
 		// set skin
-		str_copy(pPlayer->m_TeeInfos.m_SkinName, pMsg->m_pSkin, sizeof(pPlayer->m_TeeInfos.m_SkinName));
+		str_copy(p->m_TeeInfos.m_SkinName, pMsg->m_pSkin, sizeof(p->m_TeeInfos.m_SkinName));
 
-		//m_pController->OnPlayerInfoChange(pPlayer);
+		//m_pController->OnPlayerInfoChange(p);
 
 		if(MsgId == NETMSGTYPE_CL_STARTINFO)
 		{
@@ -1102,13 +1100,13 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	{
 		CNetMsg_Cl_Emoticon *pMsg = (CNetMsg_Cl_Emoticon *)pRawMsg;
 
-		if(/*g_Config.m_SvSpamprotection &&*/ pPlayer->m_Last_Emote && pPlayer->m_Last_Emote+Server()->TickSpeed()*g_Config.m_SvEmoticonDelay > Server()->Tick())
+		if(g_Config.m_SvSpamprotection && p->m_Last_Emote && p->m_Last_Emote+Server()->TickSpeed()*g_Config.m_SvEmoticonDelay > Server()->Tick())
 			return;
 
-		pPlayer->m_Last_Emote = Server()->Tick();
+		p->m_Last_Emote = Server()->Tick();
 
 		SendEmoticon(ClientId, pMsg->m_Emoticon);
-		CCharacter* pChr = pPlayer->GetCharacter();
+		CCharacter* pChr = p->GetCharacter();
 		if(pChr && g_Config.m_SvEmotionalTees && pChr->m_EyeEmote)
 		{
 			switch(pMsg->m_Emoticon)
@@ -1145,12 +1143,12 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 	
 	else if(MsgId == NETMSGTYPE_CL_KILL && !m_World.m_Paused)
 	{
-		if(pPlayer->m_Last_Kill && pPlayer->m_Last_Kill+Server()->TickSpeed() * g_Config.m_SvKillDelay > Server()->Tick())
+		if(p->m_Last_Kill && p->m_Last_Kill+Server()->TickSpeed() * g_Config.m_SvKillDelay > Server()->Tick())
 			return;
 
-		pPlayer->m_Last_Kill = Server()->Tick();
-		pPlayer->KillCharacter(WEAPON_SELF);
-		pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed() * g_Config.m_SvSuicidePenalty;
+		p->m_Last_Kill = Server()->Tick();
+		p->KillCharacter(WEAPON_SELF);
+		p->m_RespawnTick = Server()->Tick()+Server()->TickSpeed() * g_Config.m_SvSuicidePenalty;
 	}
 }
 void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData, int ClientId)

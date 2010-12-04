@@ -166,6 +166,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 					if(pGrabbed->m_pTeleTile[y*pGrabbed->m_Width+x].m_Type == TILE_TELEIN || pGrabbed->m_pTeleTile[y*pGrabbed->m_Width+x].m_Type == TILE_TELEOUT || pGrabbed->m_pTeleTile[y*pGrabbed->m_Width+x].m_Type == TILE_TELEINEVIL)
 						m_pEditor->m_TeleNum = pGrabbed->m_pTeleTile[y*pGrabbed->m_Width+x].m_Number;
 				}
+		pGrabbed->m_TeleNum = m_pEditor->m_TeleNum;
 	}
 	else if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pSpeedupLayer)
 	{
@@ -195,6 +196,9 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 						m_pEditor->m_SpeedupMaxSpeed = pGrabbed->m_pSpeedupTile[y*pGrabbed->m_Width+x].m_MaxSpeed;
 					}
 				}
+		pGrabbed->m_SpeedupForce = m_pEditor->m_SpeedupForce;
+		pGrabbed->m_SpeedupMaxSpeed = m_pEditor->m_SpeedupMaxSpeed;
+		pGrabbed->m_SpeedupAngle = m_pEditor->m_SpeedupAngle;
 	}
 	else if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pSwitchLayer)
 	{
@@ -223,6 +227,8 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 						m_pEditor->m_SwitchDelay = pGrabbed->m_pSwitchTile[y*pGrabbed->m_Width+x].m_Delay;
 					}
 				}
+		pGrabbed->m_SwitchNum = m_pEditor->m_SwitchNum;
+		pGrabbed->m_SwitchDelay = m_pEditor->m_SwitchDelay;
 	}
 	else
 	{
@@ -620,9 +626,13 @@ void CLayerTele::BrushDraw(CLayer *pBrush, float wx, float wy)
 			
 			if(l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEIN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEINEVIL || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_TELEOUT)
 			{
-				/*if(l->m_pTeleTile[y*l->m_Width+x].m_Number)
+				if(m_pEditor->m_TeleNum != l->m_TeleNum)
+				{
+					m_pTeleTile[fy*m_Width+fx].m_Number = m_pEditor->m_TeleNum;
+				}
+				else if(l->m_pTeleTile[y*l->m_Width+x].m_Number)
 					m_pTeleTile[fy*m_Width+fx].m_Number = l->m_pTeleTile[y*l->m_Width+x].m_Number;
-				else*/
+				else
 				{
 					if(!m_pEditor->m_TeleNum)
 					{
@@ -772,18 +782,26 @@ void CLayerSpeedup::BrushDraw(CLayer *pBrush, float wx, float wy)
 			int fy = y+sy;
 			if(fx<0 || fx >= m_Width || fy < 0 || fy >= m_Height)
 				continue;
-			
+
 			if(l->m_pTiles[y*l->m_Width+x].m_Index == TILE_BOOST)
 			{
-				/*if(l->m_pSpeedupTile[y*l->m_Width+x].m_Force || l->m_pSpeedupTile[y*l->m_Width+x].m_Angle)
+				if(m_pEditor->m_SpeedupAngle != l->m_SpeedupAngle || m_pEditor->m_SpeedupForce != l->m_SpeedupForce || m_pEditor->m_SpeedupMaxSpeed != l->m_SpeedupMaxSpeed)
 				{
-					m_pSpeedupTile[fy*m_Width+fx].m_Force = l->m_pSpeedupTile[y*l->m_Width+x].m_Force;
-					m_pSpeedupTile[fy*m_Width+fx].m_Angle = l->m_pSpeedupTile[y*l->m_Width+x].m_Angle;
+					m_pSpeedupTile[fy*m_Width+fx].m_Force = m_pEditor->m_SpeedupForce;
+					m_pSpeedupTile[fy*m_Width+fx].m_MaxSpeed = m_pEditor->m_SpeedupMaxSpeed;
+					m_pSpeedupTile[fy*m_Width+fx].m_Angle = m_pEditor->m_SpeedupAngle;
 					m_pSpeedupTile[fy*m_Width+fx].m_Type = l->m_pTiles[y*l->m_Width+x].m_Index;
 					m_pTiles[fy*m_Width+fx].m_Index = l->m_pTiles[y*l->m_Width+x].m_Index;
 				}
-				else */
-				if(m_pEditor->m_SpeedupForce)
+				else if(l->m_pSpeedupTile[y*l->m_Width+x].m_Force)
+				{
+					m_pSpeedupTile[fy*m_Width+fx].m_Force = l->m_pSpeedupTile[y*l->m_Width+x].m_Force;
+					m_pSpeedupTile[fy*m_Width+fx].m_Angle = l->m_pSpeedupTile[y*l->m_Width+x].m_Angle;
+					m_pSpeedupTile[fy*m_Width+fx].m_MaxSpeed = l->m_pSpeedupTile[y*l->m_Width+x].m_MaxSpeed;
+					m_pSpeedupTile[fy*m_Width+fx].m_Type = l->m_pTiles[y*l->m_Width+x].m_Index;
+					m_pTiles[fy*m_Width+fx].m_Index = l->m_pTiles[y*l->m_Width+x].m_Index;
+				}
+				else if(m_pEditor->m_SpeedupForce)
 				{
 					m_pSpeedupTile[fy*m_Width+fx].m_Force = m_pEditor->m_SpeedupForce;
 					m_pSpeedupTile[fy*m_Width+fx].m_MaxSpeed = m_pEditor->m_SpeedupMaxSpeed;
@@ -843,13 +861,11 @@ void CLayerSpeedup::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 				if(!pLt->m_pSpeedupTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_Force && m_pEditor->m_SpeedupForce && m_pTiles[fy*m_Width+fx].m_Index > 0)
 				{
 					m_pSpeedupTile[fy*m_Width+fx].m_Force = m_pEditor->m_SpeedupForce;
-					m_pSpeedupTile[fy*m_Width+fx].m_MaxSpeed = m_pEditor->m_SpeedupMaxSpeed;
 					m_pSpeedupTile[fy*m_Width+fx].m_Angle = m_pEditor->m_SpeedupAngle;
 				}
 				else
 				{
 					m_pSpeedupTile[fy*m_Width+fx].m_Force = pLt->m_pSpeedupTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_Force;
-					m_pSpeedupTile[fy*m_Width+fx].m_MaxSpeed = pLt->m_pSpeedupTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_MaxSpeed;
 					m_pSpeedupTile[fy*m_Width+fx].m_Angle = pLt->m_pSpeedupTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_Angle;
 				}
 			}
@@ -1024,9 +1040,17 @@ void CLayerSwitch::BrushDraw(CLayer *pBrush, float wx, float wy)
 
 			if(l->m_pTiles[y*l->m_Width+x].m_Index >= (ENTITY_ARMOR_1 + ENTITY_OFFSET) && l->m_pTiles[y*l->m_Width+x].m_Index <= (ENTITY_DOOR + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_SWITCHOPEN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_SWITCHCLOSE || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_SWITCHTIMEDOPEN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_SWITCHTIMEDCLOSE)
 			{
-				/*if(l->m_pSwitchTile[y*l->m_Width+x].m_Number)
+				if(m_pEditor->m_SwitchNum != l->m_SwitchNum || m_pEditor->m_SwitchDelay != l->m_SwitchDelay)
+				{
+					m_pSwitchTile[fy*m_Width+fx].m_Number = m_pEditor->m_SwitchNum;
+					m_pSwitchTile[fy*m_Width+fx].m_Delay = m_pEditor->m_SwitchDelay;
+				}
+				else if(l->m_pSwitchTile[y*l->m_Width+x].m_Number)
+				{
 					m_pSwitchTile[fy*m_Width+fx].m_Number = l->m_pSwitchTile[y*l->m_Width+x].m_Number;
-				else*/
+					m_pSwitchTile[fy*m_Width+fx].m_Delay  = l->m_pSwitchTile[y*l->m_Width+x].m_Delay;
+				}
+				else
 				{
 					if(!m_pEditor->m_SwitchNum)
 					{
@@ -1038,12 +1062,14 @@ void CLayerSwitch::BrushDraw(CLayer *pBrush, float wx, float wy)
 						continue;
 					}
 					else
+					{
 						m_pSwitchTile[fy*m_Width+fx].m_Number = m_pEditor->m_SwitchNum;
+						m_pSwitchTile[fy*m_Width+fx].m_Delay = m_pEditor->m_SwitchDelay;
+					}
 				}
 
 				m_pSwitchTile[fy*m_Width+fx].m_Type = l->m_pTiles[y*l->m_Width+x].m_Index;
 				m_pSwitchTile[fy*m_Width+fx].m_Flags = l->m_pTiles[y*l->m_Width+x].m_Flags;
-				m_pSwitchTile[fy*m_Width+fx].m_Delay = m_pEditor->m_SwitchDelay;
 				m_pTiles[fy*m_Width+fx].m_Index = l->m_pTiles[y*l->m_Width+x].m_Index;
 			}
 			else
