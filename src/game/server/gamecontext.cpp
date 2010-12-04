@@ -774,8 +774,6 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 
 			Console()->ExecuteLine(pMsg->m_pMessage + 1, ((CServer *) Server())->m_aClients[ClientId].m_Authed, ClientId, CServer::SendRconLineAuthed, Server(), SendChatResponse, &Info);
 		}
-		else if(!str_comp_nocase(pMsg->m_pMessage, "kill"))
-			SendChatTarget(ClientId, "kill does nothing, say /kill if you want to die, also you can press f1 and type kill");
 		else
 		{
 			if(m_apPlayers[ClientId]->m_Muted == 0)
@@ -789,8 +787,6 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				SendChatTarget(ClientId, aBuf);
 			}
 		}
-
-
 	}
 	else if(MsgId == NETMSGTYPE_CL_CALLVOTE)
 	{
