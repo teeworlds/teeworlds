@@ -1,5 +1,4 @@
 /* CSqlScore Class by Sushi Tee*/
-#if defined(CONF_SQL)
 #ifndef GAME_SERVER_SQLSCORE_H
 #define GAME_SERVER_SQLSCORE_H
 
@@ -64,7 +63,12 @@ struct CSqlScoreData
 {
 	CSqlScore *m_pSqlData;
 	int m_ClientID;
+#if defined(CONF_FAMILY_WINDOWS)
+	char m_aName[16];
+#else
 	char m_aName[MAX_NAME_LENGTH];
+#endif
+
 	float m_Time;
 	float m_aCpCurrent[NUM_CHECKPOINTS];
 	int m_Num;
@@ -72,5 +76,4 @@ struct CSqlScoreData
 	char m_aRequestingPlayer[MAX_NAME_LENGTH];
 };
 
-#endif
 #endif
