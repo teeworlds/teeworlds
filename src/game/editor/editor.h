@@ -555,6 +555,7 @@ public:
 	~CLayerTele();
 
 	CTeleTile *m_pTeleTile;
+	unsigned m_TeleNum;
 
 	virtual void Resize(int NewW, int NewH);
 	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
@@ -568,6 +569,9 @@ public:
 	~CLayerSpeedup();
 
 	CSpeedupTile *m_pSpeedupTile;
+	unsigned m_SpeedupForce;
+	unsigned m_SpeedupMaxSpeed;
+	unsigned m_SpeedupAngle;
 
 	virtual void Resize(int NewW, int NewH);
 	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
@@ -590,6 +594,8 @@ public:
 	~CLayerSwitch();
 
 	CSwitchTile *m_pSwitchTile;
+	unsigned m_SwitchNum;
+	unsigned m_SwitchDelay;
 
 	virtual void Resize(int NewW, int NewH);
 	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
