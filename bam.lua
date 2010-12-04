@@ -304,44 +304,44 @@ end
 
 debug_settings = NewSettings()
 debug_settings.config_name = "debug"
-debug_settings.config_ext = "_sql_d"
+debug_settings.config_ext = "_d"
 debug_settings.debug = 1
 debug_settings.optimize = 0
 debug_settings.cc.defines:Add("CONF_DEBUG", "CONF_SQL")
 
-debug_sql_settings = NewSettings()
-debug_sql_settings.config_name = "nosql_debug"
-debug_sql_settings.config_ext = "_nosql_d"
-debug_sql_settings.debug = 1
-debug_sql_settings.optimize = 0
-debug_sql_settings.cc.defines:Add("CONF_DEBUG")
+debug_nosql_settings = NewSettings()
+debug_nosql_settings.config_name = "nosql_debug"
+debug_nosql_settings.config_ext = "_nosql_d"
+debug_nosql_settings.debug = 1
+debug_nosql_settings.optimize = 0
+debug_nosql_settings.cc.defines:Add("CONF_DEBUG")
 
 release_settings = NewSettings()
 release_settings.config_name = "release"
-
+release_settings.config_ext = ""
 release_settings.debug = 0
 release_settings.optimize = 1
 if family == "windows" then
 	release_settings.cc.defines:Add("CONF_RELEASE")
-	release_settings.config_ext = "_nosql"
+	release_settings.config_ext = ""
 	
-	release_sql_settings = NewSettings()
-	release_sql_settings.config_name = "sql_release"
-	release_sql_settings.config_ext = ""
-	release_sql_settings.debug = 0
-	release_sql_settings.optimize = 1
-	release_sql_settings.cc.defines:Add("CONF_RELEASE", "CONF_SQL")
+	release_nosql_settings = NewSettings()
+	release_nosql_settings.config_name = "sql_release"
+	release_nosql_settings.config_ext = "_sql"
+	release_nosql_settings.debug = 0
+	release_nosql_settings.optimize = 1
+	release_nosql_settings.cc.defines:Add("CONF_RELEASE", "CONF_SQL")
 else
 
 	release_settings.cc.defines:Add("CONF_RELEASE", "CONF_SQL")
 	release_settings.config_ext = ""
 	
-	release_sql_settings = NewSettings()
-	release_sql_settings.config_name = "nosql_release"
-	release_sql_settings.config_ext = "_nosql"
-	release_sql_settings.debug = 0
-	release_sql_settings.optimize = 1
-	release_sql_settings.cc.defines:Add("CONF_RELEASE")
+	release_nosql_settings = NewSettings()
+	release_nosql_settings.config_name = "nosql_release"
+	release_nosql_settings.config_ext = "_nosql"
+	release_nosql_settings.debug = 0
+	release_nosql_settings.optimize = 1
+	release_nosql_settings.cc.defines:Add("CONF_RELEASE")
 end
 
 if platform == "macosx"  and arch == "ia32" then
@@ -352,12 +352,12 @@ if platform == "macosx"  and arch == "ia32" then
 	debug_settings_ppc.link.flags:Add("-arch ppc")
 	debug_settings_ppc.cc.defines:Add("CONF_DEBUG", "CONF_SQL")
 
-	debug_sql_settings_ppc = debug_sql_settings:Copy()
-	debug_sql_settings_ppc.config_name = "nosql_debug_ppc"
-	debug_sql_settings_ppc.config_ext = "_nosql_ppc_d"
-	debug_sql_settings_ppc.cc.flags:Add("-arch ppc")
-	debug_sql_settings_ppc.link.flags:Add("-arch ppc")
-	debug_sql_settings_ppc.cc.defines:Add("CONF_DEBUG")
+	debug_nosql_settings_ppc = debug_sql_settings:Copy()
+	debug_nosql_settings_ppc.config_name = "nosql_debug_ppc"
+	debug_nosql_settings_ppc.config_ext = "_nosql_ppc_d"
+	debug_nosql_settings_ppc.cc.flags:Add("-arch ppc")
+	debug_nosql_settings_ppc.link.flags:Add("-arch ppc")
+	debug_nosql_settings_ppc.cc.defines:Add("CONF_DEBUG")
 	
 	release_settings_ppc = release_settings:Copy()
 	release_settings_ppc.config_name = "release_ppc"
@@ -366,32 +366,32 @@ if platform == "macosx"  and arch == "ia32" then
 	release_settings_ppc.link.flags:Add("-arch ppc")
 	release_settings_ppc.cc.defines:Add("CONF_RELEASE", "CONF_SQL")
 	
-	release_sql_settings_ppc = release_sql_settings:Copy()
-	release_sql_settings_ppc.config_name = "nosql_release_ppc"
-	release_sql_settings_ppc.config_ext = "_nosql_ppc"
-	release_sql_settings_ppc.cc.flags:Add("-arch ppc")
-	release_sql_settings_ppc.link.flags:Add("-arch ppc")
-	release_sql_settings_ppc.cc.defines:Add("CONF_RELEASE")
+	release_nosql_settings_ppc = release_sql_settings:Copy()
+	release_nosql_settings_ppc.config_name = "nosql_release_ppc"
+	release_nosql_settings_ppc.config_ext = "_nosql_ppc"
+	release_nosql_settings_ppc.cc.flags:Add("-arch ppc")
+	release_nosql_settings_ppc.link.flags:Add("-arch ppc")
+	release_nosql_settings_ppc.cc.defines:Add("CONF_RELEASE")
 
 	debug_settings_x86 = debug_settings:Copy()
 	debug_settings_x86.config_name = "debug_x86"
 	debug_settings_x86.config_ext = "_x86_d"
 	debug_settings_x86.cc.defines:Add("CONF_DEBUG", "CONF_SQL")
 
-	debug_sql_settings_x86 = debug_sql_settings:Copy()
-	debug_sql_settings_x86.config_name = "nosql_debug_x86"
-	debug_sql_settings_x86.config_ext = "_nosql_x86_d"
-	debug_sql_settings_x86.cc.defines:Add("CONF_DEBUG")
+	debug_nosql_settings_x86 = debug_sql_settings:Copy()
+	debug_nosql_settings_x86.config_name = "nosql_debug_x86"
+	debug_nosql_settings_x86.config_ext = "_nosql_x86_d"
+	debug_nosql_settings_x86.cc.defines:Add("CONF_DEBUG")
 	
 	release_settings_x86 = release_settings:Copy()
 	release_settings_x86.config_name = "release_x86"
 	release_settings_x86.config_ext = "_x86"
 	release_settings_x86.cc.defines:Add("CONF_RELEASE", "CONF_SQL")
 	
-	release_sql_settings_x86 = release_sql_settings:Copy()
-	release_sql_settings_x86.config_name = "nosql_release_x86"
-	release_sql_settings_x86.config_ext = "_nosql_x86"
-	release_sql_settings_x86.cc.defines:Add("CONF_RELEASE")
+	release_nosql_settings_x86 = release_sql_settings:Copy()
+	release_nosql_settings_x86.config_name = "nosql_release_x86"
+	release_nosql_settings_x86.config_ext = "_nosql_x86"
+	release_nosql_settings_x86.cc.defines:Add("CONF_RELEASE")
 
 	ppc_d = build(debug_settings_ppc)
 	x86_d = build(debug_settings_x86)
@@ -403,9 +403,9 @@ if platform == "macosx"  and arch == "ia32" then
 	sql_x86_r = build(release_sql_settings_x86)
 	DefaultTarget("game_debug_x86")
 	PseudoTarget("release", ppc_r, x86_r)
-	PseudoTarget("sql_release", sql_ppc_r, sql_x86_r)
+	PseudoTarget("nosql_release", nosql_ppc_r, nosql_x86_r)
 	PseudoTarget("debug", ppc_d, x86_d)
-	PseudoTarget("sql_debug", sql_ppc_d, sql_x86_d)
+	PseudoTarget("nosql_debug", nosql_ppc_d, nosql_x86_d)
 
 	PseudoTarget("server_release", "server_release_x86", "server_release_ppc")
 	PseudoTarget("server_nosql_release", "server_nosql_release_x86", "server_nosql_release_ppc")
@@ -415,8 +415,8 @@ if platform == "macosx"  and arch == "ia32" then
 	PseudoTarget("client_debug", "client_debug_x86", "client_debug_ppc")
 else
 	build(debug_settings)
-	build(debug_sql_settings)
+	build(debug_nosql_settings)
 	build(release_settings)
-	build(release_sql_settings)
+	build(release_nosql_settings)
 	DefaultTarget("game_debug")
 end
