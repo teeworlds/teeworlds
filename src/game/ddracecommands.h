@@ -56,7 +56,7 @@ CONSOLE_COMMAND("me", "r", CFGFLAG_SERVER, ConMe, this, "Like the famous irc com
 CONSOLE_COMMAND("pause", "", CFGFLAG_SERVER, ConTogglePause, this, "If enabled on this server it pauses the game for you", -1)
 CONSOLE_COMMAND("rank", "?r", CFGFLAG_SERVER, ConRank, this, "Shows either your rank or the rank of the given player", -1)
 CONSOLE_COMMAND("rules", "", CFGFLAG_SERVER, ConRules, this, "Shows the rules of this server", -1)
-//CONSOLE_COMMAND("team", "?i", CFGFLAG_SERVER, ConJoinTeam, this, "Lets you join the specified team", -1)
+CONSOLE_COMMAND("team", "?i", CFGFLAG_SERVER, ConJoinTeam, this, "Lets you join the specified team", -1)
 CONSOLE_COMMAND("top5", "?i", CFGFLAG_SERVER, ConTop5, this, "Shows the top 5 from the 1st, or starting at the specified number", -1)
 
 #undef CONSOLE_COMMAND
