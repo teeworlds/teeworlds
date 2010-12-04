@@ -132,7 +132,7 @@ void CLaser::Snap(int SnappingClient)
 		return;
 	CCharacter * SnappingChar = GameServer()->GetPlayerChar(SnappingClient);
 	CCharacter * OwnerChar = 0;
-	if(m_Owner > 0)
+	if(m_Owner >= 0)
 		OwnerChar = GameServer()->GetPlayerChar(m_Owner);
 	if(!SnappingChar || !OwnerChar)
 		return;
