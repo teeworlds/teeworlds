@@ -281,7 +281,15 @@ function build(settings)
 	if string.find(settings.config_name, "nosql") then
 		s = PseudoTarget("server".."_"..settings.config_name, server_exe, serverlaunch)
 	else
-		s = PseudoTarget("server".."_"..settings.config_name, server_exe, serverlaunch, server_sql_depends)
+		if family == "windows" then
+			if string.find(settings.config_name, "sql") or not string.find(settings.config_name, "release") then
+				s = PseudoTarget("server".."_"..settings.config_name, server_exe, serverlaunch, server_sql_depends)
+			else
+				s = PseudoTarget("server".."_"..settings.config_name, server_exe, serverlaunch)
+			end
+		else
+				s = PseudoTarget("server".."_"..settings.config_name, server_exe, serverlaunch, server_sql_depends)
+		end
 	end
 	g = PseudoTarget("game".."_"..settings.config_name, client_exe, server_exe)
 
@@ -296,7 +304,7 @@ end
 
 debug_settings = NewSettings()
 debug_settings.config_name = "debug"
-debug_settings.config_ext = "_d"
+debug_settings.config_ext = "_sql_d"
 debug_settings.debug = 1
 debug_settings.optimize = 0
 debug_settings.cc.defines:Add("CONF_DEBUG", "CONF_SQL")
@@ -310,17 +318,31 @@ debug_sql_settings.cc.defines:Add("CONF_DEBUG")
 
 release_settings = NewSettings()
 release_settings.config_name = "release"
-release_settings.config_ext = ""
+
 release_settings.debug = 0
 release_settings.optimize = 1
-release_settings.cc.defines:Add("CONF_RELEASE", "CONF_SQL")
+if family == "windows" then
+	release_settings.cc.defines:Add("CONF_RELEASE")
+	release_settings.config_ext = "_nosql"
+	
+	release_sql_settings = NewSettings()
+	release_sql_settings.config_name = "sql_release"
+	release_sql_settings.config_ext = ""
+	release_sql_settings.debug = 0
+	release_sql_settings.optimize = 1
+	release_sql_settings.cc.defines:Add("CONF_RELEASE", "CONF_SQL")
+else
 
-release_sql_settings = NewSettings()
-release_sql_settings.config_name = "nosql_release"
-release_sql_settings.config_ext = "_nosql"
-release_sql_settings.debug = 0
-release_sql_settings.optimize = 1
-release_sql_settings.cc.defines:Add("CONF_RELEASE")
+	release_settings.cc.defines:Add("CONF_RELEASE", "CONF_SQL")
+	release_settings.config_ext = ""
+	
+	release_sql_settings = NewSettings()
+	release_sql_settings.config_name = "nosql_release"
+	release_sql_settings.config_ext = "_nosql"
+	release_sql_settings.debug = 0
+	release_sql_settings.optimize = 1
+	release_sql_settings.cc.defines:Add("CONF_RELEASE")
+end
 
 if platform == "macosx"  and arch == "ia32" then
 	debug_settings_ppc = debug_settings:Copy()
