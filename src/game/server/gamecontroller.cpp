@@ -741,7 +741,13 @@ void IGameController::Snap(int SnappingClient)
 
 	//pGameObj->m_ScoreLimit = g_Config.m_SvScorelimit;
 	//pGameObj->m_TimeLimit = g_Config.m_SvTimelimit;
-	pGameObj->m_RoundStartTick = m_RoundStartTick;
+
+	CCharacter *pChar;
+	CPlayer *pPlayer;
+	if (pPlayer = GameServer()->m_apPlayers[SnappingClient])
+		if(pChar = pPlayer->GetCharacter())
+			pGameObj->m_RoundStartTick = (pChar->m_DDRaceState == DDRACE_STARTED)?pChar->m_StartTime:Server()->Tick();
+
 	pGameObj->m_Flags = m_GameFlags;
 
 	pGameObj->m_Warmup = m_Warmup;

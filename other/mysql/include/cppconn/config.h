@@ -35,7 +35,7 @@
 /* #undef HAVE_UINT32_T */
 /* #undef HAVE_INT64_T */
 /* #undef HAVE_UINT64_T */
-//#define HAVE_MS_INT8     1
+#define HAVE_MS_INT8     1
 #define HAVE_MS_UINT8    1
 #define HAVE_MS_INT16    1
 #define HAVE_MS_UINT16   1

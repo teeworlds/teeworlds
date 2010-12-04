@@ -59,9 +59,44 @@ bool CSqlScore::Connect()
 	} 
 	catch (sql::SQLException &e)
 	{
-		char aBuf[256];		
+		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "MySQL Error: %s", e.what());
 		dbg_msg("SQL", aBuf);
+	
+		dbg_msg("SQL", "ERROR: SQL connection failed");
+		return false;
+	}
+	catch (const std::exception& ex) {
+	    // ...
+		dbg_msg("SQL", "1 %s",ex.what());
+
+	} catch (const std::string& ex) {
+	    // ...
+		dbg_msg("SQL", "2 %s",ex.c_str());
+	}
+   catch( int )
+   {
+      dbg_msg("SQL", "3 %s");
+   }
+   catch( float )
+   {
+      dbg_msg("SQL", "4 %s");
+   }
+   
+   catch( char[] )
+   {
+      dbg_msg("SQL", "5 %s");
+   }
+   
+   catch( char )
+   {
+      dbg_msg("SQL", "6 %s");
+   }
+	catch (...)
+	{
+		char aBuf[256];		
+		//str_format(aBuf, sizeof(aBuf), "MySQL Error: %s", e.what());
+		dbg_msg("SQL", "Unknown Error cause by the MySQL/C++ Connector, my advice compile server_debug and use it");
 	
 		dbg_msg("SQL", "ERROR: SQL connection failed");
 		return false;
