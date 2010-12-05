@@ -867,6 +867,7 @@ void CCharacter::HandleTiles(int Index)
 {//dbg_msg("num","%d",++num);
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	int MapIndex = Index;
+	int PureMapIndex = GameServer()->Collision()->GetPureMapIndex(m_Pos);
 	float Offset = 4;
 	int MapIndexL = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x + (m_ProximityRadius/2)+Offset,m_Pos.y));
 	int MapIndexR = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x - (m_ProximityRadius/2)-Offset,m_Pos.y));
@@ -1053,7 +1054,7 @@ void CCharacter::HandleTiles(int Index)
 		GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetSwitchNumber(MapIndex)].m_Type[Team()] = TILE_SWITCHCLOSE;
 	}
 	// handle speedup tiles
-	if(GameServer()->Collision()->IsSpeedup(MapIndex) == TILE_BOOST)
+	if(GameServer()->Collision()->IsSpeedup(PureMapIndex) == TILE_BOOST)
 	{
 		vec2 Direction, MaxVel, TempVel = m_Core.m_Vel;
 		int Force, MaxSpeed = 0;
