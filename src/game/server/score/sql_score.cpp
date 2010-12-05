@@ -20,7 +20,6 @@ CSqlScore::CSqlScore(CGameContext *pGameServer)
   m_Port(g_Config.m_SvSqlPort)
 {
 	str_copy(m_aMap, g_Config.m_SvMap, sizeof(m_aMap));
-	ClearString(m_aMap);
 	NormalizeMapname(m_aMap);
 	
 	if(gs_SqlLock == 0)
@@ -333,6 +332,8 @@ void CSqlScore::ShowRankThread(void *pUser)
 		try
 		{
 			// check strings
+			char originalName[MAX_NAME_LENGTH];
+			strcpy(originalName,pData->m_aName);
 			pData->m_pSqlData->ClearString(pData->m_aName);
 			
 			// check sort methode
@@ -349,7 +350,7 @@ void CSqlScore::ShowRankThread(void *pUser)
 			
 			if(pData->m_pSqlData->m_pResults->rowsCount() != 1)
 			{
-				str_format(aBuf, sizeof(aBuf), "%s is not ranked", pData->m_aName);
+				str_format(aBuf, sizeof(aBuf), "%s is not ranked", originalName);
 				pData->m_pSqlData->GameServer()->SendChatTarget(pData->m_ClientID, aBuf);
 			}
 			else
@@ -473,47 +474,30 @@ void CSqlScore::ShowTop5(int ClientID, int Debut)
 }
 
 // anti SQL injection
+
 void CSqlScore::ClearString(char *pString)
-{	
-	// replace ' ' ' with ' \' ' and remove '\'
-	for(int i = 0; i < str_length(pString); i++)
-	{
-		// replace '-' with '_'
-		if(pString[i] == '-')
-			pString[i] = '_';
-		
-		if(pString[i] == '\'')
-		{
-			// count \ before the '
-			int SlashCount = 0;
-			for(int j = i-1; j >= 0; j--)
-			{
-				if(pString[i] != '\\')
-					break;
-				
-				SlashCount++;
-			}
-			
-			if(SlashCount % 2 == 0)
-			{
-				for(int j = str_length(pString)-1; j > i; j--)
-				{
-					pString[j] = pString[j-1];
-				}
-				pString[i] = '\\';
-				i++;
-			}
+{
+	char newString[MAX_NAME_LENGTH*2-1];
+	int pos = 0;
+	
+	for(int i=0;i<str_length(pString);i++) {
+		if(pString[i] == '\\') {
+			newString[pos++] = '\\';
+			newString[pos++] = '\\';
+		} else if(pString[i] == '\'') {
+			newString[pos++] = '\\';
+			newString[pos++] = '\'';
+		} else if(pString[i] == '"') {
+			newString[pos++] = '\\';
+			newString[pos++] = '"';
+		} else {
+			newString[pos++] = pString[i];
 		}
 	}
-
-	// aaand remove spaces and \ at the end xD
-	for(int i = str_length(pString)-1; i >= 0; i--)
-	{
-		if(pString[i] == ' ' || pString[i] == '\\')
-			pString[i] = '\0';
-		else
-			break;
-	}
+	
+	newString[pos] = '\0';
+	
+	strcpy(pString,newString);
 }
 
 void CSqlScore::NormalizeMapname(char *pString) {

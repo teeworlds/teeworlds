@@ -64,9 +64,9 @@ struct CSqlScoreData
 	CSqlScore *m_pSqlData;
 	int m_ClientID;
 #if defined(CONF_FAMILY_WINDOWS)
-	char m_aName[16];
+	char m_aName[47];
 #else
-	char m_aName[MAX_NAME_LENGTH];
+	char m_aName[MAX_NAME_LENGTH*2-1];
 #endif
 
 	float m_Time;
