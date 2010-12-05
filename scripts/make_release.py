@@ -78,7 +78,8 @@ if include_src:
 	for p in ["src", "scripts", "datasrc", "other", "objs"]:
 		os.mkdir(os.path.join(package_dir, p))
 		copydir(p, package_dir)
-	shutil.copy("default.bam", package_dir)
+	shutil.copy("bam.lua", package_dir)
+	shutil.copy("configure.lua", package_dir)
 
 if use_bundle:
 	os.system("lipo -create -output teeworlds_srv teeworlds_srv_ppc teeworlds_srv_x86")
