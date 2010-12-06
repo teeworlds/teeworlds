@@ -182,11 +182,8 @@ public:
 	int m_CpActive;
 	float m_CpCurrent[25];
 
-	int m_BroadTime;
 	int m_BroadCast;
 
-	/*int m_CurrentTile;
-	int m_CurrentFTile;*/
 	int m_TileIndex;
 	int m_TileFlags;
 	int m_TileFIndex;

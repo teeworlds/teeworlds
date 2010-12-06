@@ -775,15 +775,6 @@ void CGameContext::ConRank(IConsole::IResult *pResult, void *pUserData, int Clie
 		pSelf->Score()->ShowRank(pPlayer->GetCID(), pSelf->Server()->ClientName(ClientId));
 }
 
-void CGameContext::ConBroadTime(IConsole::IResult *pResult, void *pUserData, int ClientId)
-{
-	CGameContext *pSelf = (CGameContext *)pUserData;
-
-	CCharacter* pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
-	if(pChr)
-		pChr->m_BroadTime = !pChr->m_BroadTime;
-}
-
 void CGameContext::ConJoinTeam(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	

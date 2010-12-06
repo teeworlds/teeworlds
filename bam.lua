@@ -258,11 +258,11 @@ function build(settings)
 	end
 	
 	-- build client, server, version server and master server
-	client_exe = Link(client_settings, "DDRace_Trunk-Client", game_shared, game_client,
+	client_exe = Link(client_settings, "DDRace", game_shared, game_client,
 		engine, client, game_editor, zlib, pnglite, wavpack,
 		client_link_other, client_osxlaunch)
 
-	server_exe = Link(server_settings, "DDRace_Trunk-Server", engine, server,
+	server_exe = Link(server_settings, "DDRace-Server", engine, server,
 		game_shared, game_server, zlib)
 
 	serverlaunch = {}
