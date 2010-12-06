@@ -74,7 +74,6 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_DDRaceState = DDRACE_NONE;
 	m_PrevPos = Pos;
 	m_Core.Reset();
-	m_BroadTime = true;
 	m_BroadCast = true;
 	m_EyeEmote = true;
 	m_Fly = true;

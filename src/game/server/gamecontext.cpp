@@ -582,7 +582,7 @@ void CGameContext::OnTick()
 
 if(Server()->Tick() % (g_Config.m_SvAnnouncementInterval * Server()->TickSpeed() * 60) == 0)
 {
-	char *Line = ((CServer *) Server())->GetLine(g_Config.m_SvAnnouncementFileName, m_AnnouncementLine++);
+	char *Line = ((CServer *) Server())->GetAnnouncementLine(g_Config.m_SvAnnouncementFileName);
 	if(Line)
 		SendChat(-1, CGameContext::CHAT_ALL, Line);
 }
@@ -1236,7 +1236,7 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData, int C
 	const char *pString = pResult->GetString(0);
 
 	// check for valid option
-	if(!pSelf->Console()->LineIsValid(pResult->GetString(0)) && pResult->GetString(0) != '#')
+	if(!pSelf->Console()->LineIsValid(pResult->GetString(0)) && pResult->GetString(0)[0] != '#')
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "skipped invalid option '%s'", pResult->GetString(0));
@@ -1456,7 +1456,6 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 			}
 		}
 	}
-m_AnnouncementLine = 0;
 #ifdef CONF_DEBUG
 	if(g_Config.m_DbgDummies)
 	{
