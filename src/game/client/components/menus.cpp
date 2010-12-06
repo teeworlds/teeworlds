@@ -129,7 +129,7 @@ int CMenus::DoButton_Icon(int ImageId, int SpriteId, const CUIRect *pRect)
 
 int CMenus::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
 {
-	RenderTools()->DrawUIRect(pRect, (Checked<0)?vec4(0,0,0,0.5f):vec4(1,1,1,0.5f)*ButtonColorMul(pID), CUI::CORNER_ALL, 5.0f);
+	RenderTools()->DrawUIRect(pRect, vec4(1,1,1,0.5f)*ButtonColorMul(pID), CUI::CORNER_ALL, 5.0f);
 	UI()->DoLabel(pRect, pText, pRect->h*ms_FontmodHeight, 0);
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
