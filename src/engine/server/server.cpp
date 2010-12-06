@@ -305,6 +305,7 @@ int CServer::Init()
 	}
 
 	m_CurrentGameTick = 0;
+	m_AnnouncementLastLine = 0;
 
 	return 0;
 }
@@ -1817,7 +1818,7 @@ void CServer::CheckPass(int ClientId, const char *pPw)
 }
 
 
-char *CServer::GetLine(char const *FileName, int Line)
+char *CServer::GetAnnouncementLine(char const *FileName)
 {
 	IOHANDLE File = m_pStorage->OpenFile(FileName, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(File)
@@ -1830,9 +1831,25 @@ char *CServer::GetLine(char const *FileName, int Line)
 			if(str_length(pLine))
 				if(pLine[0]!='#')
 					v.push_back(pLine);
-		if(Line >= v.size())
-			Line %= v.size();
-		return v[Line];
+		if(v.size() == 1)
+		{
+			m_AnnouncementLastLine = 0;
+		}
+		else if(!g_Config.m_SvAnnouncementRandom)
+		{
+			if(m_AnnouncementLastLine >= v.size())
+				m_AnnouncementLastLine %= v.size();
+		}
+		else
+		{
+			int Rand;
+			do
+				Rand = rand() % v.size();
+			while(Rand == m_AnnouncementLastLine);
+				
+			m_AnnouncementLastLine = Rand;
+		}
+		return v[m_AnnouncementLastLine];
 	}
 	return 0;
 }
