@@ -996,6 +996,21 @@ int fs_chdir(const char *path);
 int fs_parent_dir(char *path);
 
 /*
+	Function: fs_remove
+		Deletes the file with the specified name.
+	
+	Parameters:
+		filename - The file to delete
+
+	Returns:
+		Returns 0 on success, 1 on failure.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+int fs_remove(const char *filename);
+
+/*
 	Function: fs_rename
 		Renames the file or directory. If the paths differ the file will be moved.
 	
