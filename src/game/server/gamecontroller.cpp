@@ -127,8 +127,6 @@ bool IGameController::OnEntity(int Index, vec2 Pos, int Layer, int Flags, int Nu
 {
 	if (Index<0)
 		return false;
-		int temp1=Pos.x;
-		int	temp2=Pos.y;
 	
 	int Type = -1;
 	int SubType = 0;
@@ -744,8 +742,8 @@ void IGameController::Snap(int SnappingClient)
 
 	CCharacter *pChar;
 	CPlayer *pPlayer;
-	if (pPlayer = GameServer()->m_apPlayers[SnappingClient])
-		if(pChar = pPlayer->GetCharacter())
+	if ((pPlayer = GameServer()->m_apPlayers[SnappingClient]))
+		if((pChar = pPlayer->GetCharacter()))
 			pGameObj->m_RoundStartTick = (pChar->m_DDRaceState == DDRACE_STARTED)?pChar->m_StartTime:Server()->Tick();
 
 	pGameObj->m_Flags = m_GameFlags;

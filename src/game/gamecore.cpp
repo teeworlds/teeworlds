@@ -92,8 +92,6 @@ bool CCharacterCore::IsRightTeam(int MapIndex)
 	if(Collision()->m_pSwitchers)
 		if(m_pTeams->Team(m_Id) != TEAM_SUPER)
 			return Collision()->m_pSwitchers[Collision()->GetDTileNumber(MapIndex)].m_Status[m_pTeams->Team(m_Id)];
-	else
-		return false;
 	return false;
 }
 

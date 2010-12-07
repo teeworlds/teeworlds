@@ -287,7 +287,7 @@ void CGameContext::ModifyWeapons(int ClientId, int Victim, int Weapon, bool Remo
 	
 	if(Weapon == -1)
 	{
-		if(Remove && pChr->m_ActiveWeapon == WEAPON_SHOTGUN || pChr->m_ActiveWeapon == WEAPON_GRENADE || pChr->m_ActiveWeapon == WEAPON_RIFLE)
+		if(Remove && (pChr->m_ActiveWeapon == WEAPON_SHOTGUN || pChr->m_ActiveWeapon == WEAPON_GRENADE || pChr->m_ActiveWeapon == WEAPON_RIFLE))
 			pChr->m_ActiveWeapon = WEAPON_GUN;
 		
 		if(Remove)

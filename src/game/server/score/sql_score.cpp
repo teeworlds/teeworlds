@@ -93,8 +93,6 @@ bool CSqlScore::Connect()
    }
 	catch (...)
 	{
-		char aBuf[256];		
-		//str_format(aBuf, sizeof(aBuf), "MySQL Error: %s", e.what());
 		dbg_msg("SQL", "Unknown Error cause by the MySQL/C++ Connector, my advice compile server_debug and use it");
 	
 		dbg_msg("SQL", "ERROR: SQL connection failed");

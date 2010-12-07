@@ -16,7 +16,7 @@ extern CConfiguration g_Config;
 
 
 
-void dbg_msg1(char * where, char * format, ...);
+void dbg_msg1(const char * where, const char * format, ...);
 
 
 
