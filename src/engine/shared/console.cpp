@@ -629,7 +629,7 @@ void CConsole::Con_Exec(IResult *pResult, void *pUserData, int ClientId)
 struct CIntVariableData
 {
 	IConsole *m_pConsole;
-	char *m_Name;
+	const char *m_Name;
 	int *m_pVariable;
 	int m_Min;
 	int m_Max;
@@ -638,7 +638,7 @@ struct CIntVariableData
 struct CStrVariableData
 {
 	IConsole *m_pConsole;
-	char *m_Name;
+	const char *m_Name;
 	char *m_pStr;
 	int m_MaxSize;
 };
