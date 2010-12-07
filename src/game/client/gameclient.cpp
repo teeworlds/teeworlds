@@ -101,8 +101,6 @@ static int gs_LoadTotal;
 	}
 }*/
 
-#include <base/tl/sorted_array.h>
-
 const char *CGameClient::Version() { return GAME_VERSION; }
 const char *CGameClient::NetVersion() { return GAME_NETVERSION; }
 const char *CGameClient::GetItemName(int Type) { return m_NetObjHandler.GetObjName(Type); }
