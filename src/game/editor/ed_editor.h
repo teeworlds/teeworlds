@@ -452,7 +452,7 @@ public:
 	~CLayerTele();
 	
 	CTeleTile *m_pTeleTile;
-	unsigned m_TeleNum;
+	unsigned char m_TeleNum;
 	
 	virtual void Resize(int NewW, int NewH);
 	virtual void Shift(int Direction);
@@ -467,9 +467,9 @@ public:
 	~CLayerSpeedup();
 	
 	CSpeedupTile *m_pSpeedupTile;
-	unsigned m_SpeedupForce;
-	unsigned m_SpeedupMaxSpeed;
-	unsigned m_SpeedupAngle;
+	unsigned char m_SpeedupForce;
+	unsigned char m_SpeedupMaxSpeed;
+	unsigned char m_SpeedupAngle;
 	
 	virtual void Resize(int NewW, int NewH);
 	virtual void Shift(int Direction);
@@ -494,8 +494,8 @@ public:
 	~CLayerSwitch();
 
 	CSwitchTile *m_pSwitchTile;
-	unsigned m_SwitchNum;
-	unsigned m_SwitchDelay;
+	unsigned char m_SwitchNumber;
+	unsigned char m_SwitchDelay;
 
 	virtual void Resize(int NewW, int NewH);
 	virtual void Shift(int Direction);
@@ -588,7 +588,7 @@ public:
 		
 		ms_pUiGotContext = 0;
 		
-		m_TeleNum = 1;
+		m_TeleNumber = 1;
 		m_SwitchNum = 1;
 		m_SwitchDelay = 0;
 		
@@ -787,7 +787,7 @@ public:
 		str_copy(pName, pExtractedName, Length);
 	}
 	
-	unsigned char m_TeleNum;
+	unsigned char m_TeleNumber;
 	
 	unsigned char m_SpeedupForce;
 	unsigned char m_SpeedupMaxSpeed;
