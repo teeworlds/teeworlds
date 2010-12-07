@@ -1,7 +1,5 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include <time.h>
-
 #include <base/math.h>
 
 #include <engine/demo.h>
@@ -103,10 +101,10 @@ void CMenus::RenderGame(CUIRect MainView)
 		if(!Recording)
 		{
 			char aFilename[128];
-			time_t Time;
-			time(&Time);
-			tm* TimeInfo = localtime(&Time);
-			strftime(aFilename, sizeof(aFilename), "demo-%Y-%m-%d_%H-%M-%S", TimeInfo);
+			char aDate[20];
+
+			str_timestamp(aDate, sizeof(aDate));
+			str_format(aFilename, sizeof(aFilename), "demo_%s.png", aDate);
 			Client()->DemoRecorder_Start(aFilename);
 		}
 		else
