@@ -110,7 +110,7 @@ void CMenus::RenderGame(CUIRect MainView)
 			Client()->DemoRecorder_Start(aFilename);
 		}
 		else
-			DemoRecorder()->Stop();
+			Client()->DemoRecorder_Stop();
 	}
 	
 	/*
