@@ -1016,6 +1016,13 @@ int fs_parent_dir(char *path)
 	return 1;
 }
 
+int fs_rename(const char *oldname, const char *newname)
+{
+	if(rename(oldname, newname) != 0)
+		return 1;
+	return 0;
+}
+
 void swap_endian(void *data, unsigned elem_size, unsigned num)
 {
 	char *src = (char*) data;
