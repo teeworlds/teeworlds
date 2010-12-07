@@ -283,6 +283,15 @@ public:
 		return !remove(GetPath(Type, pFilename, aBuffer, sizeof(aBuffer)));
 	}
 
+	virtual bool RenameFile(const char* pOldFilename, const char* pNewFilename, int Type)
+	{
+		if(Type < 0 || Type >= m_NumPaths)
+			return false;
+		char aOldBuffer[MAX_PATH_LENGTH];
+		char aNewBuffer[MAX_PATH_LENGTH];
+		return !fs_rename(GetPath(Type, pOldFilename, aOldBuffer, sizeof(aOldBuffer)), GetPath(Type, pNewFilename, aNewBuffer, sizeof (aNewBuffer)));
+	}
+
 	virtual bool CreateFolder(const char *pFoldername, int Type)
 	{
 		if(Type < 0 || Type >= m_NumPaths)
