@@ -105,6 +105,7 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	
 	m_LastKeyFrame = -1;
 	m_LastTickMarker = -1;
+	m_FirstTick = -1;
 	
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "Recording to '%s'", pFilename);
@@ -164,6 +165,8 @@ void CDemoRecorder::WriteTickMarker(int Tick, int Keyframe)
 	}	
 
 	m_LastTickMarker = Tick;
+	if(m_FirstTick < 0)
+		m_FirstTick = Tick;
 }
 
 void CDemoRecorder::Write(int Type, const void *pData, int Size)
