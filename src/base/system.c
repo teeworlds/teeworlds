@@ -1016,6 +1016,13 @@ int fs_parent_dir(char *path)
 	return 1;
 }
 
+int fs_remove(const char *filename)
+{
+	if(remove(filename) != 0)
+		return 1;
+	return 0;
+}
+
 int fs_rename(const char *oldname, const char *newname)
 {
 	if(rename(oldname, newname) != 0)
