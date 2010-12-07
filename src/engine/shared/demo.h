@@ -22,6 +22,7 @@ class CDemoRecorder : public IDemoRecorder
 	IOHANDLE m_File;
 	int m_LastTickMarker;
 	int m_LastKeyFrame;
+	int m_FirstTick;
 	unsigned char m_aLastSnapshotData[CSnapshot::MAX_SIZE];
 	class CSnapshotDelta *m_pSnapshotDelta;
 	
@@ -37,6 +38,8 @@ public:
 	void RecordMessage(const void *pData, int Size);
 
 	bool IsRecording() const { return m_File != 0; }
+
+	int TickCount() const { return m_LastTickMarker - m_FirstTick; }
 };
 
 class CDemoPlayer : public IDemoPlayer
