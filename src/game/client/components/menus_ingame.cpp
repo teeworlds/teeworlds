@@ -99,14 +99,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	if(DoButton_Menu(&s_DemoButton, Localize(Recording ? "Stop record" : "Record demo"), 0, &Button))	// Localize("Stop record");Localize("Record demo");
 	{
 		if(!Recording)
-		{
-			char aFilename[128];
-			char aDate[20];
-
-			str_timestamp(aDate, sizeof(aDate));
-			str_format(aFilename, sizeof(aFilename), "demo_%s.png", aDate);
-			Client()->DemoRecorder_Start(aFilename);
-		}
+			Client()->DemoRecorder_Start("demo", true);
 		else
 			Client()->DemoRecorder_Stop();
 	}
