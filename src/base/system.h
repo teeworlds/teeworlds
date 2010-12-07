@@ -996,6 +996,22 @@ int fs_chdir(const char *path);
 int fs_parent_dir(char *path);
 
 /*
+	Function: fs_rename
+		Renames the file or directory. If the paths differ the file will be moved.
+	
+	Parameters:
+		oldname - The actual name
+		newname - The new name
+
+	Returns:
+		Returns 0 on success, 1 on failure.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+int fs_rename(const char *oldname, const char *newname);
+
+/*
 	Group: Undocumented
 */
 
