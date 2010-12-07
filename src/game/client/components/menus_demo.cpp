@@ -478,9 +478,11 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		{
 			char aBuf[512];
 			str_format(aBuf, sizeof(aBuf), "%s/%s", m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
-			Storage()->RemoveFile(aBuf, m_lDemos[m_DemolistSelectedIndex].m_StorageType);
-			DemolistPopulate();
-			DemolistOnUpdate(false);
+			if(Storage()->RemoveFile(aBuf, m_lDemos[m_DemolistSelectedIndex].m_StorageType))
+			{
+				DemolistPopulate();
+				DemolistOnUpdate(false);
+			}
 		}
 		m_DemolistDelEntry = false;
 	}
