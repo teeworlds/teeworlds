@@ -277,11 +277,13 @@ void CGameContext::SendChatResponse(const char *pLine, void *pUser)
 void CGameContext::SendChat(int ChatterClientId, int Team, const char *pText, int SpamProtectionClientId)
 {
 	if(SpamProtectionClientId >= 0 && SpamProtectionClientId < MAX_CLIENTS)
+	{
 		if(g_Config.m_SvSpamprotection && m_apPlayers[SpamProtectionClientId]->m_Last_Chat
 			&& m_apPlayers[SpamProtectionClientId]->m_Last_Chat + Server()->TickSpeed() + g_Config.m_SvChatDelay > Server()->Tick())
 			return;
 		else
 			m_apPlayers[SpamProtectionClientId]->m_Last_Chat = Server()->Tick();
+	}
 
 	char aBuf[256], aText[256];
 	str_copy(aText, pText, sizeof(aText));

@@ -345,8 +345,6 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 	  FPrintCallback pfnAlternativePrintCallback, void *pUserData,
 	  FPrintCallback pfnAlternativePrintResponseCallback, void *pResponseUserData)
 {
-	CResult *pResult = new(&m_ExecutionQueue.m_pLast->m_Result) CResult;
-	
 	while(pStr && *pStr)
 	{
 		CResult *pResult = new(&m_ExecutionQueue.m_pLast->m_Result) CResult;
@@ -631,7 +629,7 @@ void CConsole::Con_Exec(IResult *pResult, void *pUserData, int ClientId)
 struct CIntVariableData
 {
 	IConsole *m_pConsole;
-	char *m_Name;
+	const char *m_Name;
 	int *m_pVariable;
 	int m_Min;
 	int m_Max;
@@ -640,7 +638,7 @@ struct CIntVariableData
 struct CStrVariableData
 {
 	IConsole *m_pConsole;
-	char *m_Name;
+	const char *m_Name;
 	char *m_pStr;
 	int m_MaxSize;
 };
@@ -822,7 +820,7 @@ void CConsole::List(const int Level, int Flags)
 	
 	char aBuf[50 + 1] = { 0 };
 	CCommand *pCommand = m_pFirstCommand;
-	int Length = 0;
+	unsigned Length = 0;
 	
 	while(pCommand)
 	{
@@ -830,7 +828,7 @@ void CConsole::List(const int Level, int Flags)
 		{
 			if((pCommand->m_Flags & Flags) == Flags && (pCommand->m_Level == Level || (Level == 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD))))
 			{
-				int CommandLength = str_length(pCommand->m_pName);
+				unsigned CommandLength = str_length(pCommand->m_pName);
 				if(Length + CommandLength + 2 >= sizeof(aBuf) || aBuf[0] == 0)
 				{
 					if(aBuf[0])

@@ -558,7 +558,7 @@ int CEditor::PopupTele(CEditor *pEditor, CUIRect View)
 	};
 	
 	CProperty aProps[] = {
-		{"Number", pEditor->m_TeleNum, PROPTYPE_INT_STEP, 0, 255},
+		{"Number", pEditor->m_TeleNumber, PROPTYPE_INT_STEP, 0, 255},
 		{0},
 	};
 
@@ -567,7 +567,7 @@ int CEditor::PopupTele(CEditor *pEditor, CUIRect View)
 	int Prop = pEditor->DoProperties(&View, aProps, s_aIds, &NewVal);
 	
 	if(Prop == PROP_TELE)
-		 pEditor->m_TeleNum = clamp(NewVal, 0, 255);
+		 pEditor->m_TeleNumber = clamp(NewVal, 0, 255);
 	
 	return 0;
 }

@@ -288,6 +288,8 @@ void CCharacter::FireWeapon()
 	bool FullAuto = false;
 	if(m_ActiveWeapon == WEAPON_GRENADE || m_ActiveWeapon == WEAPON_SHOTGUN || m_ActiveWeapon == WEAPON_RIFLE)
 		FullAuto = true;
+			if(m_ActiveWeapon == WEAPON_NINJA && g_Config.m_SvContNinja)
+			FullAuto = true; // NEVER RUN THIS AT THE SAME TIME AS MEGAWEPONS
 	
 
 	// check if we gonna fire
@@ -474,8 +476,7 @@ void CCharacter::FireWeapon()
 
 		case WEAPON_NINJA:
 		{
-			if(m_ActiveWeapon == WEAPON_NINJA && g_Config.m_SvContNinja)
-			FullAuto = true;
+
 				// reset Hit objects
 				m_NumObjectsHit = 0;
 
@@ -731,7 +732,6 @@ void CCharacter::HandleFly()
 
 void CCharacter::Tick()
 {
-	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	std::list < int > Indices = GameServer()->Collision()->GetMapIndices(m_PrevPos, m_Pos);
 	//dbg_msg("Indices","%d",Indices.size());
 	/*if(m_pPlayer->m_ForceBalanced)
@@ -1064,7 +1064,6 @@ void CCharacter::HandleTiles(int Index)
 		vec2 Direction, MaxVel, TempVel = m_Core.m_Vel;
 		int Force, MaxSpeed = 0;
 		float TeeAngle, SpeederAngle, DiffAngle, SpeedLeft, TeeSpeed;
-		const float Zero=0;
 		GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force, &MaxSpeed);
 		if(Force == 255 && MaxSpeed)
 		{
