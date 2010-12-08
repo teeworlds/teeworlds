@@ -287,7 +287,6 @@ public:
 
 	void RegisterCommands();
 
-	virtual void TeecompDemoStart();
 	virtual bool DemoIsRecording();
 	virtual bool DemoIsPlaying();
 	const char *DemoRecord(const char *pName);

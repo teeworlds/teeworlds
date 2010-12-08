@@ -129,7 +129,6 @@ public:
 	virtual const char *LatestVersion() = 0;
 	virtual bool ConnectionProblems() = 0;
 	
-	virtual void TeecompDemoStart() = 0;
 	virtual bool DemoIsRecording() = 0;
 	virtual bool DemoIsPlaying() = 0;
 	virtual void DemoRecord_Stop() = 0;

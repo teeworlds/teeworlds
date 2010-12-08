@@ -455,19 +455,6 @@ void CClient::SetState(int s)
 		GameClient()->OnStateChange(m_State, Old);
 }
 
-void CClient::TeecompDemoStart()
-{
-	char aFilename[512];
-	time_t Rawtime;
-	struct tm *pTmp;
-
-	time(&Rawtime);
-	pTmp = localtime(&Rawtime);
-
-	str_format(aFilename, sizeof(aFilename), "demos/%d-%02d-%d_%02d-%02d-%02d_%s.demo", pTmp->tm_year + 1900, pTmp->tm_mon + 1, pTmp->tm_mday, pTmp->tm_hour, pTmp->tm_min, pTmp->tm_sec, m_aCurrentMap);
-	m_DemoRecorder.Start(Storage(), m_pConsole, aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
-}
-
 bool CClient::DemoIsRecording()
 {
 	return m_DemoRecorder.IsRecording();

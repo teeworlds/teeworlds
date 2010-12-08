@@ -899,9 +899,6 @@ void CGameClient::OnStateChange(int NewState, int OldState)
 	// then change the state
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnStateChange(NewState, OldState);
-	
-	if(NewState == IClient::STATE_ONLINE && g_Config.m_TcAutodemo)
-		Client()->TeecompDemoStart();
 }
 
 void CGameClient::OnShutdown()
@@ -1415,13 +1412,7 @@ void CGameClient::OnAutoScreenStatsTick()
 }
 
 void CGameClient::OnGameRestart()
-{
-	if(!Client()->DemoIsPlaying() && g_Config.m_TcAutodemo && Client()->DemoIsRecording())
-	{
-		Client()->DemoRecord_Stop();
-		Client()->TeecompDemoStart();
-	}
-	
+{	
 	m_pTeecompStats->OnReset();
 	
 	m_AutoScreenStatsTick = -1;

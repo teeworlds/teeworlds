@@ -437,8 +437,8 @@ void CMenus::RenderSettingsTeecompMisc(CUIRect MainView)
 		g_Config.m_TcHideCarrying ^= 1;
 
 	RightView.HSplitTop(20.0f, &Button, &RightView);
-	if(DoButton_CheckBox(&g_Config.m_TcAutodemo, "Enable automatic demo recording", g_Config.m_TcAutodemo, &Button))
-		g_Config.m_TcAutodemo ^= 1;
+	if(DoButton_CheckBox(&g_Config.m_ClAutoDemoRecord, Localize("Automatically record demos"), g_Config.m_ClAutoDemoRecord, &Button))
+		g_Config.m_ClAutoDemoRecord ^= 1;
 
 	RightView.HSplitTop(20.0f, &Button, &RightView);
 	if(DoButton_CheckBox(&g_Config.m_TcAutoscreen, "Enable end game automatic screenshot", g_Config.m_TcAutoscreen, &Button))
