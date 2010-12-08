@@ -1279,6 +1279,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 							m_aSnapshots[SNAP_CURRENT] = m_SnapshotStorage.m_pLast;
 							m_LocalStartTime = time_get();
 							SetState(IClient::STATE_ONLINE);
+							DemoRecorder_HandleAutoStart();
 						}
 
 						// adjust game time
@@ -1943,6 +1944,12 @@ void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp)
 			str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pFilename);
 		m_DemoRecorder.Start(Storage(), m_pConsole, aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
 	}
+}
+
+void CClient::DemoRecorder_HandleAutoStart()
+{
+	if(g_Config.m_ClAutoDemoRecord)
+		DemoRecorder_Start("autorecord", true);
 }
 
 void CClient::DemoRecorder_Stop()
