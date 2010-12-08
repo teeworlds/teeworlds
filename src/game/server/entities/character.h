@@ -166,6 +166,7 @@ public:
 
 
 	int m_PlayerState;// if the client is chatting, accessing a menu or so
+
 	
 	bool m_IsWater;
 	bool m_DoSplash;
