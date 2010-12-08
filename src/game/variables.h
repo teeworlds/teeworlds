@@ -86,7 +86,7 @@ MACRO_CONFIG_INT(ClAntiRainbowCount, cl_anti_rainbow_count, 2, 0, 20, CFGFLAG_CL
 MACRO_CONFIG_INT(ClAntiRainbow, cl_anti_rainbow, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Enable anti rainbow")
 
 /* race - client */
-MACRO_CONFIG_INT(ClAutoRecord, cl_auto_record, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Save the best demo of each race")
+MACRO_CONFIG_INT(ClAutoRaceRecord, cl_auto_race_record, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Save the best demo of each race")
 MACRO_CONFIG_INT(ClDemoName, cl_demo_name, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Save the playername within the demo")
 MACRO_CONFIG_INT(ClShowOthers, cl_show_others, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Turn other players off in race")
 MACRO_CONFIG_INT(ClShowCheckpointDiff, cl_show_checkpoint_diff, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show checkpoint diff")

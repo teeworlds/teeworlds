@@ -1270,10 +1270,10 @@ void CMenus::RenderSettingsRace(CUIRect MainView)
 	UI()->DoLabel(&Button, Localize("Race specific settings"), 14.0f, -1);
 	
 	LeftView.HSplitTop(20.0f, &Button, &LeftView);
-	if(DoButton_CheckBox(&g_Config.m_ClAutoRecord, Localize("Auto record"), g_Config.m_ClAutoRecord, &Button))
-		g_Config.m_ClAutoRecord ^= 1;
+	if(DoButton_CheckBox(&g_Config.m_ClAutoRaceRecord, Localize("Auto record"), g_Config.m_ClAutoRaceRecord, &Button))
+		g_Config.m_ClAutoRaceRecord ^= 1;
 	
-	if(g_Config.m_ClAutoRecord)
+	if(g_Config.m_ClAutoRaceRecord)
 	{
 		LeftView.HSplitTop(20.0f, &Button, &LeftView);
 		Button.VSplitLeft(15.0f, 0, &Button);
