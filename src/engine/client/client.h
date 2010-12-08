@@ -293,6 +293,7 @@ public:
 	const char *DemoRecord(const char *pName);
 	virtual void DemoRecord_Stop();
 	const char *DemoPlayer_Play(const char *pFilename, int StorageType);
+	void DemoRecorder_Init();
 	void DemoRecorder_Start(const char *pFilename, bool WithTimestamp);
 	void DemoRecorder_HandleAutoStart();
 	void DemoRecorder_Stop();
