@@ -729,7 +729,14 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	int OldSelected = s_SelectedLanguage;
 
-	CUIRect List = MainView;
+	CUIRect List, Button;
+	MainView.HSplitBottom(10.0f, &MainView, 0);
+	MainView.HSplitBottom(20.0f, &MainView, &Button);
+	MainView.HSplitBottom(20.0f, &List, &MainView);
+
+	if(DoButton_CheckBox(&g_Config.m_ClAutoDemoRecord, Localize("Automatically record demos"), g_Config.m_ClAutoDemoRecord, &Button))
+		g_Config.m_ClAutoDemoRecord ^= 1;
+
 	UiDoListboxStart(&s_LanguageList , &List, 24.0f, Localize("Language"), "", s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);
 
 	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
