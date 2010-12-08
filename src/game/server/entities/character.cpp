@@ -288,7 +288,7 @@ void CCharacter::FireWeapon()
 	bool FullAuto = false;
 	if(m_ActiveWeapon == WEAPON_GRENADE || m_ActiveWeapon == WEAPON_SHOTGUN || m_ActiveWeapon == WEAPON_RIFLE)
 		FullAuto = true;
-
+	
 
 	// check if we gonna fire
 	bool WillFire = false;
@@ -474,6 +474,8 @@ void CCharacter::FireWeapon()
 
 		case WEAPON_NINJA:
 		{
+			if(m_ActiveWeapon == WEAPON_NINJA && g_Config.m_SvContNinja)
+			FullAuto = true;
 				// reset Hit objects
 				m_NumObjectsHit = 0;
 
@@ -740,6 +742,10 @@ void CCharacter::Tick()
 
 		m_pPlayer->m_ForceBalanced = false;
 	}*/
+	
+	if(g_Config.m_SvMegaWeapons)
+	m_ReloadTimer = 0; 
+
 	m_Armor=(m_FreezeTime != -1)?10-(m_FreezeTime/15):0;
 	if(m_Input.m_Direction != 0 || m_Input.m_Jump != 0)
 		m_LastMove = Server()->Tick();
