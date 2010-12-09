@@ -903,7 +903,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 			}
 			if(ComparePlayers(m_apPlayers[KickId], p))
 			{
-				SendChatTarget(ClientId, "You can't kick admins");
+				SendChatTarget(ClientId, "You can't kick this person at the current time.");
 				m_apPlayers[ClientId]->m_Last_KickVote = time_get();
 				char aBufKick[128];
 				str_format(aBufKick, sizeof(aBufKick), "'%s' called for vote to kick you", Server()->ClientName(ClientId));

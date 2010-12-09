@@ -1317,10 +1317,11 @@ int CServer::Run()
 
 	GameServer()->OnShutdown();
 	m_pMap->Unload();
-
+	dbg_msg("CServer","Server shutting down");
 	if(m_pCurrentMapData)
 		mem_free(m_pCurrentMapData);
 	return 0;
+
 }
 
 void CServer::ConKick(IConsole::IResult *pResult, void *pUser, int ClientId)
