@@ -127,7 +127,6 @@ MACRO_CONFIG_STR(SvScoreFolder, sv_score_folder, 32, "records", CFGFLAG_SERVER, 
 MACRO_CONFIG_INT(SvMegaWeapons, sv_megaweapons, 0, 0, 1, CFGFLAG_SERVER, "MegaWeapons", 4)
 MACRO_CONFIG_INT(SvContNinja, sv_contninja, 0, 0, 1, CFGFLAG_SERVER, "continuous ninja", 4)
 
-
 #if defined(CONF_SQL)
 MACRO_CONFIG_INT(SvUseSQL, sv_use_sql, 0, 0, 1, CFGFLAG_SERVER, "Enables SQL DB instead of record file", 4)
 MACRO_CONFIG_STR(SvSqlUser, sv_sql_user, 32, "nameless", CFGFLAG_SERVER, "SQL User", 4)
