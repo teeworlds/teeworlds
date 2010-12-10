@@ -18,6 +18,8 @@ teeworlds_d
 teeworlds_srv_d
 DDRace_Trunk*
 DDRace_Trunk_d*
+DDRace
+DDRace-Server*
 .cproject
 .project
 *.dtb
