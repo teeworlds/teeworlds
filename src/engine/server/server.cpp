@@ -1495,9 +1495,18 @@ void CServer::ConShutdown(IConsole::IResult *pResult, void *pUser, int ClientId)
 
 void CServer::ConRecord(IConsole::IResult *pResult, void *pUser, int ClientId)
 {
-	char aFilename[512];
-	str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pResult->GetString(0));
-	((CServer *)pUser)->m_DemoRecorder.Start(((CServer *)pUser)->Storage(), ((CServer *)pUser)->Console(), aFilename, ((CServer *)pUser)->GameServer()->NetVersion(), ((CServer *)pUser)->m_aCurrentMap, ((CServer *)pUser)->m_CurrentMapCrc, "server");
+	CServer* pServer = (CServer *)pUser;
+	char aFilename[128];
+
+	if(pResult->NumArguments())
+		str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pResult->GetString(0));
+	else
+	{
+		char aDate[20];
+		str_timestamp(aDate, sizeof(aDate));
+		str_format(aFilename, sizeof(aFilename), "demos/demo_%s.demo", aDate);
+	}
+	pServer->m_DemoRecorder.Start(pServer->Storage(), pServer->Console(), aFilename, pServer->GameServer()->NetVersion(), pServer->m_aCurrentMap, pServer->m_CurrentMapCrc, "server");
 }
 
 void CServer::ConStopRecord(IConsole::IResult *pResult, void *pUser, int ClientId)
@@ -1576,7 +1585,7 @@ void CServer::RegisterCommands()
 	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "", 1);
 	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "", 3);
 
-	Console()->Register("record", "s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "", 3);
+	Console()->Register("record", "?s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "", 3);
 	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "", 3);
 	
 	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "", 3);
