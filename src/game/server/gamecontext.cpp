@@ -555,7 +555,7 @@ void CGameContext::OnTick()
 			else if(m_VoteEnforce == VOTE_ENFORCE_YES_ADMIN)
 			{
 				char aBuf[64];
-				str_format(aBuf, sizeof(aBuf),"Vote passed enforced by '%s'",Server()->ClientName(m_VoteEnforcer));
+				str_format(aBuf, sizeof(aBuf),"Vote passed enforced by server.");
 				Console()->ExecuteLine(m_aVoteCommand, 3, -1, CServer::SendRconLineAuthed, Server(), SendChatResponseAll, this);
 				SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 				dbg_msg("Vote","Due to vote enforcing, vote level has been set to 3");
@@ -565,7 +565,7 @@ void CGameContext::OnTick()
 			else if(m_VoteEnforce == VOTE_ENFORCE_NO_ADMIN)
 			{
 				char aBuf[64];
-				str_format(aBuf, sizeof(aBuf),"Vote failed enforced by '%s'",Server()->ClientName(m_VoteEnforcer));
+				str_format(aBuf, sizeof(aBuf),"Vote failed enforced by server.");
 				EndVote();
 				SendChat(-1, CGameContext::CHAT_ALL, aBuf);
 			}
@@ -651,7 +651,7 @@ void CGameContext::OnClientEnter(int ClientId)
 	str_format(aBuf, sizeof(aBuf), "'%s' entered and joined the %s", Server()->ClientName(ClientId), m_pController->GetTeamName(m_apPlayers[ClientId]->GetTeam()));
 	SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
 	
-	SendChatTarget(ClientId, "DDRace Mod.);
+	SendChatTarget(ClientId, "DDRace Mod.");
 
 	if(g_Config.m_SvWelcome[0]!=0) SendChatTarget(ClientId,g_Config.m_SvWelcome);
 	//str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' team=%d", ClientId, Server()->ClientName(ClientId), m_apPlayers[ClientId]->GetTeam());
