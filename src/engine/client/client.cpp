@@ -526,7 +526,7 @@ void CClient::Connect(const char *pAddress)
 	SetState(IClient::STATE_CONNECTING);
 
 	if(m_DemoRecorder.IsRecording())
-		m_DemoRecorder.Stop();
+		DemoRecorder_Stop();
 
 	m_InputtimeMarginGraph.Init(-150.0f, 150.0f);
 	m_GametimeMarginGraph.Init(-150.0f, 150.0f);
@@ -540,7 +540,7 @@ void CClient::DisconnectWithReason(const char *pReason)
 
 	// stop demo playback and recorder
 	m_DemoPlayer.Stop();
-	m_DemoRecorder.Stop();
+	DemoRecorder_Stop();
 
 	//
 	m_RconAuthed = 0;
@@ -780,7 +780,7 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, unsigned 
 	}
 
 	// stop demo recording if we loaded a new map
-	m_DemoRecorder.Stop();
+	DemoRecorder_Stop();
 
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "loaded map '%s'", pFilename);
@@ -1279,6 +1279,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 							m_aSnapshots[SNAP_CURRENT] = m_SnapshotStorage.m_pLast;
 							m_LocalStartTime = time_get();
 							SetState(IClient::STATE_ONLINE);
+							DemoRecorder_HandleAutoStart();
 						}
 
 						// adjust game time
@@ -1629,6 +1630,8 @@ void CClient::Run()
 	if(!LoadData())
 		return;
 
+	DemoRecorder_Init();
+
 	GameClient()->OnInit();
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "version %s", GameClient()->NetVersion());
@@ -1926,28 +1929,55 @@ void CClient::Con_Play(IConsole::IResult *pResult, void *pUserData)
 	pSelf->DemoPlayer_Play(pResult->GetString(0), IStorage::TYPE_ALL);
 }
 
-void CClient::DemoRecorder_Start(const char *pFilename)
+void CClient::DemoRecorder_Init()
+{
+	if(!Storage()->CreateFolder("demos/auto", IStorage::TYPE_SAVE))
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/record", "unable to create auto record folder");
+}
+
+void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp)
 {
 	if(State() != IClient::STATE_ONLINE)
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/record", "client is not online");
 	else
 	{
-		char aFilename[512];
-		str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pFilename);
+		char aFilename[128];
+		if(WithTimestamp)
+		{
+			char aDate[20];
+			str_timestamp(aDate, sizeof(aDate));
+			str_format(aFilename, sizeof(aFilename), "demos/%s_%s.demo", pFilename, aDate);
+		}
+		else
+			str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pFilename);
 		m_DemoRecorder.Start(Storage(), m_pConsole, aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
 	}
+}
+
+void CClient::DemoRecorder_HandleAutoStart()
+{
+	if(g_Config.m_ClAutoDemoRecord)
+		DemoRecorder_Start("auto/autorecord", true);
+}
+
+void CClient::DemoRecorder_Stop()
+{
+	m_DemoRecorder.Stop();
 }
 
 void CClient::Con_Record(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
-	pSelf->DemoRecorder_Start(pResult->GetString(0));
+	if(pResult->NumArguments())
+		pSelf->DemoRecorder_Start(pResult->GetString(0), false);
+	else
+		pSelf->DemoRecorder_Start("demo", true);
 }
 
 void CClient::Con_StopRecord(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
-	pSelf->m_DemoRecorder.Stop();
+	pSelf->DemoRecorder_Stop();
 }
 
 void CClient::RegisterCommands()
@@ -1960,7 +1990,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("bans", "", CFGFLAG_SERVER, 0, 0, "Show banlist");
 	m_pConsole->Register("status", "", CFGFLAG_SERVER, 0, 0, "List players");
 	m_pConsole->Register("shutdown", "", CFGFLAG_SERVER, 0, 0, "Shut down");
-	m_pConsole->Register("record", "s", CFGFLAG_SERVER, 0, 0, "Record to a file");
+	m_pConsole->Register("record", "?s", CFGFLAG_SERVER, 0, 0, "Record to a file");
 	m_pConsole->Register("stoprecord", "", CFGFLAG_SERVER, 0, 0, "Stop recording");
 	m_pConsole->Register("reload", "", CFGFLAG_SERVER, 0, 0, "Reload the map");
 
@@ -1974,7 +2004,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("rcon", "r", CFGFLAG_CLIENT, Con_Rcon, this, "Send specified command to rcon");
 	m_pConsole->Register("rcon_auth", "s", CFGFLAG_CLIENT, Con_RconAuth, this, "Authenticate to rcon");
 	m_pConsole->Register("play", "r", CFGFLAG_CLIENT, Con_Play, this, "Play the file specified");
-	m_pConsole->Register("record", "s", CFGFLAG_CLIENT, Con_Record, this, "Record to the file");
+	m_pConsole->Register("record", "?s", CFGFLAG_CLIENT, Con_Record, this, "Record to the file");
 	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording");
 
 	m_pConsole->Register("add_favorite", "s", CFGFLAG_CLIENT, Con_AddFavorite, this, "Add a server as a favorite");
