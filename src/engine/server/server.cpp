@@ -1326,7 +1326,6 @@ int CServer::Run()
 void CServer::ConKick(IConsole::IResult *pResult, void *pUser, int ClientId)
 {
 	int Victim = pResult->GetVictim();
-	char buf[128];
 	if(pResult->NumArguments() >= 1)
 	{
 		char aBuf[128];
@@ -1836,7 +1835,7 @@ char *CServer::GetAnnouncementLine(char const *FileName)
 		char *pLine;
 		CLineReader *lr = new CLineReader();
 		lr->Init(File);
-		while(pLine = lr->Get())
+		while((pLine = lr->Get()))
 			if(str_length(pLine))
 				if(pLine[0]!='#')
 					v.push_back(pLine);
@@ -1851,7 +1850,7 @@ char *CServer::GetAnnouncementLine(char const *FileName)
 		}
 		else
 		{
-			int Rand;
+			unsigned Rand;
 			do
 				Rand = rand() % v.size();
 			while(Rand == m_AnnouncementLastLine);

@@ -158,11 +158,11 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	{
 		TextRender()->Text(0, x+10, y, 48, pTitle, -1);
 
-		if(m_pClient->m_Snap.m_pGameobj)
+		/*if(m_pClient->m_Snap.m_pGameobj) // This is Useless
 		{
 			char aBuf[128];
 			int Score = Team ? m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue : m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed;
-		}
+		}*/
 	}
 
 	y += 54.0f;
