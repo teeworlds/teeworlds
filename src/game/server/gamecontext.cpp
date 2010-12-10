@@ -508,7 +508,8 @@ void CGameContext::OnTick()
 				bool aVoteChecked[MAX_CLIENTS] = {0};
 				for(int i = 0; i < MAX_CLIENTS; i++)
 				{
-
+					if(!m_apPlayers[i] || aVoteChecked[i])
+						continue;
 					if(m_VoteKick && 
 						GetPlayerChar(m_VoteCreator) && GetPlayerChar(i) &&
 						GetPlayerChar(m_VoteCreator)->Team() != GetPlayerChar(i)->Team()) continue;
@@ -791,8 +792,6 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 
 		int64 Now = Server()->Tick();
 		p->m_Last_VoteTry = Now;
-		if(p->GetTeam() == -1)
-
 
 		if(m_VoteCloseTime)
 		{
