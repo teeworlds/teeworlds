@@ -81,7 +81,7 @@ void CGameContext::ConMute(IConsole::IResult *pResult, void *pUserData, int Clie
 	if(pSelf->m_apPlayers[Victim]->m_Muted < Seconds * pSelf->Server()->TickSpeed())
 	{
 		pSelf->m_apPlayers[Victim]->m_Muted = Seconds * pSelf->Server()->TickSpeed();
-		str_format(buf, sizeof(buf), "%s muted by an admin for %d seconds", pSelf->Server()->ClientName(Victim), Seconds);
+		str_format(buf, sizeof(buf), "%s muted by an the server for %d seconds", pSelf->Server()->ClientName(Victim), Seconds);
 		pSelf->SendChat(-1, CGameContext::CHAT_ALL, buf);
 	}
 }
@@ -144,7 +144,7 @@ void CGameContext::ConKillPlayer(IConsole::IResult *pResult, void *pUserData, in
 	{
 		pSelf->m_apPlayers[Victim]->KillCharacter(WEAPON_GAME);
 		char buf[512];
-		str_format(buf, sizeof(buf), "%s was killed by an admin", pSelf->Server()->ClientName(Victim));
+		str_format(buf, sizeof(buf), "%s was killed by the server.", pSelf->Server()->ClientName(Victim));
 		pSelf->SendChat(-1, CGameContext::CHAT_ALL, buf);
 	}
 }
