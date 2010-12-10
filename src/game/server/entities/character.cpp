@@ -1350,8 +1350,10 @@ bool CCharacter::UnFreeze()
 			m_ActiveWeapon = WEAPON_GUN;
 		m_FreezeTime = 0;
 		m_FreezeTick = 0;
+		if (m_ActiveWeapon==WEAPON_HAMMER) m_ReloadTimer = 0;
+		if(g_Config.m_SvAutoShoot)
 		m_ReloadTimer = 0;
-		 return true;
+		return true;
 	}
 	return false;
 }
