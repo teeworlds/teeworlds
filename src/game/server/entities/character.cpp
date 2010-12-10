@@ -742,9 +742,6 @@ void CCharacter::Tick()
 
 		m_pPlayer->m_ForceBalanced = false;
 	}*/
-	
-	if(g_Config.m_SvMegaWeapons)
-	m_ReloadTimer = 0; 
 
 	m_Armor=(m_FreezeTime != -1)?10-(m_FreezeTime/15):0;
 	if(m_Input.m_Direction != 0 || m_Input.m_Jump != 0)
@@ -1353,7 +1350,7 @@ bool CCharacter::UnFreeze()
 			m_ActiveWeapon = WEAPON_GUN;
 		m_FreezeTime = 0;
 		m_FreezeTick = 0;
-		if (m_ActiveWeapon==WEAPON_HAMMER) m_ReloadTimer = 0;
+		m_ReloadTimer = 0;
 		 return true;
 	}
 	return false;
