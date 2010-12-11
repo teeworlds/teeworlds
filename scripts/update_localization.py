@@ -1,4 +1,7 @@
-import sys, os
+import os, re, sys
+match = re.search("(.*?)/[^/]*?$", sys.argv[0])
+if match != None:
+	os.chdir(os.getcwd() + "/" + match.group(1))
 
 source_exts = [".c", ".cpp", ".h"]
 
