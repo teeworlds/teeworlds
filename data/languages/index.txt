@@ -36,3 +36,6 @@ serbian
 
 swedish
 == Svenska
+
+ukrainian
+== Українська
