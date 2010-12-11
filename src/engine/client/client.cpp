@@ -1856,7 +1856,8 @@ void CClient::Run()
 		}
 
 		// update input
-		Input()->Update();
+		if(Input()->Update())
+			break;	// SDL_QUIT
 
 		// update sound
 		Sound()->Update();

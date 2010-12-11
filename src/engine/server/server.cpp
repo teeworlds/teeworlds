@@ -1329,7 +1329,7 @@ void CServer::ConKick(IConsole::IResult *pResult, void *pUser, int ClientId)
 	if(pResult->NumArguments() >= 1)
 	{
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "Kicked by console (%s)", pResult->GetString(0));
+		str_format(aBuf, sizeof(aBuf), "Kicked by (%s)", pResult->GetString(0));
 		((CServer *)pUser)->Kick(Victim, aBuf);
 	}
 	else
