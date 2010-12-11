@@ -933,5 +933,14 @@ ZO
 
 ##### needs translation #####
 
+Automatically record demos
+== 
+
+Max demos
+== 
+
+no limit
+== 
+
 ##### old translations #####
 
