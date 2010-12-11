@@ -804,6 +804,9 @@ Are you sure that you want to delete the demo?
 Aspect ratio
 == 
 
+Automatically record demos
+== 
+
 Blue value of the envelope
 == 
 
@@ -856,6 +859,9 @@ Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point
 == 
 
 Load map
+== 
+
+Max demos
 == 
 
 New folder
@@ -931,6 +937,9 @@ Y-axis of the envelope
 == 
 
 [HOME] Restore map focus
+== 
+
+no limit
 == 
 
 ##### old translations #####
