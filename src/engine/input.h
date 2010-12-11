@@ -83,7 +83,7 @@ class IEngineInput : public IInput
 	MACRO_INTERFACE("engineinput", 0)
 public:
 	virtual void Init() = 0;
-	virtual void Update() = 0;
+	virtual int Update() = 0;
 };
 
 extern IEngineInput *CreateEngineInput();
