@@ -729,13 +729,30 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	int OldSelected = s_SelectedLanguage;
 
-	CUIRect List, Button;
+	CUIRect List, Button, Label, Left;
 	MainView.HSplitBottom(10.0f, &MainView, 0);
-	MainView.HSplitBottom(20.0f, &MainView, &Button);
+	MainView.HSplitBottom(70.0f, &MainView, &Left);
+	Left.VSplitMid(&Left, 0);
+	Left.HSplitTop(20.0f, &Button, &Left);
 	MainView.HSplitBottom(20.0f, &List, &MainView);
 
-	if(DoButton_CheckBox(&g_Config.m_ClAutoDemoRecord, Localize("Automatically record demos"), g_Config.m_ClAutoDemoRecord, &Button))
-		g_Config.m_ClAutoDemoRecord ^= 1;
+	// auto demo settings
+	{
+		if(DoButton_CheckBox(&g_Config.m_ClAutoDemoRecord, Localize("Automatically record demos"), g_Config.m_ClAutoDemoRecord, &Button))
+			g_Config.m_ClAutoDemoRecord ^= 1;
+
+		Left.HSplitTop(10.0f, 0, &Left);
+		Left.VSplitLeft(20.0f, 0, &Left);
+		Left.HSplitTop(20.0f, &Label, &Button);
+		Button.VSplitRight(20.0f, &Button, 0);
+		char aBuf[64];
+		if(g_Config.m_ClAutoDemoMax)
+			str_format(aBuf, sizeof(aBuf), "%s: %i", Localize("Max demos"), g_Config.m_ClAutoDemoMax);
+		else
+			str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Max demos"), Localize("no limit"));
+		UI()->DoLabel(&Label, aBuf, 13.0f, -1);
+		g_Config.m_ClAutoDemoMax = static_cast<int>(DoScrollbarH(&g_Config.m_ClAutoDemoMax, &Button, g_Config.m_ClAutoDemoMax/1000.0f)*1000.0f+0.1f);
+	}
 
 	UiDoListboxStart(&s_LanguageList , &List, 24.0f, Localize("Language"), "", s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);
 
