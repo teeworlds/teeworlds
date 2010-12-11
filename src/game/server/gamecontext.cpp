@@ -652,6 +652,7 @@ void CGameContext::OnClientEnter(int ClientId)
 	SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
 	
 	SendChatTarget(ClientId, "DDRace Mod.");
+	SendChatTarget(ClientId, "Say /info for more infomation.");
 
 	if(g_Config.m_SvWelcome[0]!=0) SendChatTarget(ClientId,g_Config.m_SvWelcome);
 	//str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' team=%d", ClientId, Server()->ClientName(ClientId), m_apPlayers[ClientId]->GetTeam());
