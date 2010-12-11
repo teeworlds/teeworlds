@@ -994,6 +994,15 @@ int fs_is_dir(const char *path);
 int fs_chdir(const char *path);
 
 /*
+	Function: fs_getcwd
+		Gets the current working directory.
+	
+	Returns:
+		Returns a pointer to the buffer on success, 0 on failure.
+*/
+char *fs_getcwd(char *buffer, int buffer_size);
+
+/*
 	Function: fs_parent_dir
 		Get the parent directory of a directory
 	
