@@ -383,18 +383,22 @@ if platform == "macosx"  and arch == "ia32" then
 	debug_nosql_settings_x86 = debug_sql_settings:Copy()
 	debug_nosql_settings_x86.config_name = "nosql_debug_x86"
 	debug_nosql_settings_x86.config_ext = "_nosql_x86_d"
+	debug_nosql_settings_x86.cc.flags:Add("-arch i386")
+	debug_nosql_settings_x86.link.flags:Add("-arch i386")
 	debug_nosql_settings_x86.cc.defines:Add("CONF_DEBUG")
 	
 	release_settings_x86 = release_settings:Copy()
 	release_settings_x86.config_name = "release_x86"
 	release_settings_x86.config_ext = "_x86"
-	release_settings_x86.cc.defines:Add("CONF_RELEASE", "CONF_SQL")
-	
 	release_settings_x86.cc.flags:Add("-arch i386")
 	release_settings_x86.link.flags:Add("-arch i386")
+	release_settings_x86.cc.defines:Add("CONF_RELEASE", "CONF_SQL")
+	
 	release_nosql_settings_x86 = release_sql_settings:Copy()
 	release_nosql_settings_x86.config_name = "nosql_release_x86"
 	release_nosql_settings_x86.config_ext = "_nosql_x86"
+	release_nosql_settings_x86.cc.flags:Add("-arch i386")
+	release_nosql_settings_x86.link.flags:Add("-arch i386")
 	release_nosql_settings_x86.cc.defines:Add("CONF_RELEASE")
 
 	ppc_d = build(debug_settings_ppc)
