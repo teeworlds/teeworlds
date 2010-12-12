@@ -747,6 +747,9 @@ Aspect ratio
 Automatically record demos
 == 
 
+Automatically take game over screenshot
+== 
+
 Blue value of the envelope
 == 
 
@@ -817,6 +820,9 @@ Left mouse button to move. Hold shift to move the texture.
 == 
 
 Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== 
+
+Max Screenshots
 == 
 
 Max demos

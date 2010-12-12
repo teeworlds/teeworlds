@@ -729,17 +729,21 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	int OldSelected = s_SelectedLanguage;
 
-	CUIRect List, Button, Label, Left;
+	CUIRect List, Button, Label, Left, Right;
 	MainView.HSplitBottom(10.0f, &MainView, 0);
 	MainView.HSplitBottom(70.0f, &MainView, &Left);
-	Left.VSplitMid(&Left, 0);
-	Left.HSplitTop(20.0f, &Button, &Left);
+	Left.VSplitMid(&Left, &Right);
 	MainView.HSplitBottom(20.0f, &List, &MainView);
 
 	// auto demo settings
 	{
+		Left.HSplitTop(20.0f, &Button, &Left);
 		if(DoButton_CheckBox(&g_Config.m_ClAutoDemoRecord, Localize("Automatically record demos"), g_Config.m_ClAutoDemoRecord, &Button))
 			g_Config.m_ClAutoDemoRecord ^= 1;
+
+		Right.HSplitTop(20.0f, &Button, &Right);
+		if(DoButton_CheckBox(&g_Config.m_ClAutoScreenshot, Localize("Automatically take game over screenshot"), g_Config.m_ClAutoScreenshot, &Button))
+			g_Config.m_ClAutoScreenshot ^= 1;
 
 		Left.HSplitTop(10.0f, 0, &Left);
 		Left.VSplitLeft(20.0f, 0, &Left);
@@ -752,6 +756,17 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Max demos"), Localize("no limit"));
 		UI()->DoLabel(&Label, aBuf, 13.0f, -1);
 		g_Config.m_ClAutoDemoMax = static_cast<int>(DoScrollbarH(&g_Config.m_ClAutoDemoMax, &Button, g_Config.m_ClAutoDemoMax/1000.0f)*1000.0f+0.1f);
+
+		Right.HSplitTop(10.0f, 0, &Right);
+		Right.VSplitLeft(20.0f, 0, &Right);
+		Right.HSplitTop(20.0f, &Label, &Button);
+		Button.VSplitRight(20.0f, &Button, 0);
+		if(g_Config.m_ClAutoScreenshotMax)
+			str_format(aBuf, sizeof(aBuf), "%s: %i", Localize("Max Screenshots"), g_Config.m_ClAutoScreenshotMax);
+		else
+			str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Max Screenshots"), Localize("no limit"));
+		UI()->DoLabel(&Label, aBuf, 13.0f, -1);
+		g_Config.m_ClAutoScreenshotMax = static_cast<int>(DoScrollbarH(&g_Config.m_ClAutoScreenshotMax, &Button, g_Config.m_ClAutoScreenshotMax/1000.0f)*1000.0f+0.1f);
 	}
 
 	UiDoListboxStart(&s_LanguageList , &List, 24.0f, Localize("Language"), "", s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);

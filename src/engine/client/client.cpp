@@ -413,6 +413,7 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 
 	m_WindowMustRefocus = 0;
 	m_SnapCrcErrors = 0;
+	m_AutoScreenshotRecycle = false;
 
 	m_AckGameTick = -1;
 	m_CurrentRecvTick = 0;
@@ -1938,6 +1939,8 @@ void CClient::Run()
 			}
 		}
 
+		AutoScreenshot_Cleanup();
+
 		// check conditions
 		if(State() == IClient::STATE_QUITING)
 			break;
@@ -2023,10 +2026,33 @@ void CClient::Con_Ping(IConsole::IResult *pResult, void *pUserData)
 	pSelf->m_PingStartTime = time_get();
 }
 
+void CClient::AutoScreenshot_Start()
+{
+	if(g_Config.m_ClAutoScreenshot)
+	{
+		Graphics()->TakeScreenshot("auto/autoscreen");
+		m_AutoScreenshotRecycle = true;
+	}
+}
+
+void CClient::AutoScreenshot_Cleanup()
+{
+	if(m_AutoScreenshotRecycle)
+	{
+		if(g_Config.m_ClAutoScreenshotMax)
+		{
+			// clean up auto taken screens
+			CFileCollection AutoScreens;
+			AutoScreens.Init(Storage(), "screenshots/auto", "autoscreen", ".png", g_Config.m_ClAutoScreenshotMax);
+		}
+		m_AutoScreenshotRecycle = false;
+	}
+}
+
 void CClient::Con_Screenshot(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
-	pSelf->Graphics()->TakeScreenshot();
+	pSelf->Graphics()->TakeScreenshot(0);
 }
 
 void CClient::Con_Rcon(IConsole::IResult *pResult, void *pUserData)
