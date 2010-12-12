@@ -103,6 +103,7 @@ class CMenus : public CComponent
 		POPUP_MESSAGE,
 		POPUP_DISCONNECTED,
 		POPUP_PURE,
+		POPUP_LANGUAGE,
 		POPUP_DELETE_DEMO,
 		POPUP_PASSWORD,
 		POPUP_QUIT, 
@@ -219,6 +220,7 @@ class CMenus : public CComponent
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	
 	// found in menus_settings.cpp
+	void RenderLanguageSelection(CUIRect MainView);
 	void RenderSettingsGeneral(CUIRect MainView);
 	void RenderSettingsPlayer(CUIRect MainView);
 	void RenderSettingsControls(CUIRect MainView);
