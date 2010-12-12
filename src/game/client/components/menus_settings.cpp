@@ -960,7 +960,139 @@ void GatherFonts(const char *pFileName, int IsDir, int Type, void *pUser)
 	Fonts.add(CFontFile(aNiceName, pFileName));
 }
 
+void CMenus::RenderLanguageSelection(CUIRect MainView)
+{
+	static int s_LanguageList = 0;
+	static int s_SelectedLanguage = 0;
+	static sorted_array<CLanguage> s_Languages;
+	static float s_ScrollValue = 0;
+
+	if(s_Languages.size() == 0)
+	{
+		s_Languages.add(CLanguage("English", ""));
+		LoadLanguageIndexfile(Storage(), Console(), &s_Languages);
+		for(int i = 0; i < s_Languages.size(); i++)
+			if(str_comp(s_Languages[i].m_FileName, g_Config.m_ClLanguagefile) == 0)
+			{
+				s_SelectedLanguage = i;
+				break;
+			}
+	}
+
+	int OldSelected = s_SelectedLanguage;
+
+	UiDoListboxStart(&s_LanguageList , &MainView, 24.0f, Localize("Language"), "", s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);
+
+	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
+	{
+		CListboxItem Item = UiDoListboxNextItem(&r.front());
+
+		if(Item.m_Visible)
+			UI()->DoLabel(&Item.m_Rect, r.front().m_Name, 16.0f, -1);
+	}
+
+	s_SelectedLanguage = UiDoListboxEnd(&s_ScrollValue, 0);
+
+	if(OldSelected != s_SelectedLanguage)
+	{
+		str_copy(g_Config.m_ClLanguagefile, s_Languages[s_SelectedLanguage].m_FileName, sizeof(g_Config.m_ClLanguagefile));
+		g_Localization.Load(s_Languages[s_SelectedLanguage].m_FileName, Storage(), Console());
+	}
+}
+
+void CMenus::RenderFontSelection(CUIRect MainView)
+{
+	static int s_FontList  = 0;
+	static int s_SelectedFont = 0;
+	static sorted_array<CFontFile> s_Fonts;
+	static float s_ScrollValue = 0;
+
+	if(s_Fonts.size() == 0)
+	{
+		Storage()->ListDirectory(IStorage::TYPE_ALL, "fonts", GatherFonts, &s_Fonts);
+		for(int i = 0; i < s_Fonts.size(); i++)
+			if(str_comp(s_Fonts[i].m_FileName, g_Config.m_ClFontfile) == 0)
+			{
+				s_SelectedFont = i;
+				break;
+			}
+	}
+
+	int OldSelectedFont = s_SelectedFont;
+
+	UiDoListboxStart(&s_FontList , &MainView, 24.0f, Localize("Fonts"), "", s_Fonts.size(), 1, s_SelectedFont, s_ScrollValue);
+
+	for(sorted_array<CFontFile>::range r = s_Fonts.all(); !r.empty(); r.pop_front())
+	{
+		CListboxItem Item = UiDoListboxNextItem(&r.front());
+
+		if(Item.m_Visible)
+			UI()->DoLabel(&Item.m_Rect, r.front().m_Name, 16.0f, -1);
+	}
+
+	s_SelectedFont = UiDoListboxEnd(&s_ScrollValue, 0);
+
+	if(OldSelectedFont != s_SelectedFont)
+	{
+		str_copy(g_Config.m_ClFontfile, s_Fonts[s_SelectedFont].m_FileName, sizeof(g_Config.m_ClFontfile));
+		char aRelFontPath[512];
+		str_format(aRelFontPath, sizeof(aRelFontPath), "fonts/%s", g_Config.m_ClFontfile);
+		char aFontPath[512];	
+		IOHANDLE File = Storage()->OpenFile(aRelFontPath, IOFLAG_READ, IStorage::TYPE_ALL, aFontPath, sizeof(aFontPath));
+		if(File)
+			io_close(File);
+		TextRender()->SetFont(TextRender()->LoadFont(aFontPath));
+	}
+}
 void CMenus::RenderSettingsGeneral(CUIRect MainView)
+{
+	CUIRect List, FontList, Button, Label, Left, Right;
+	MainView.HSplitBottom(10.0f, &MainView, 0);
+	MainView.HSplitBottom(70.0f, &MainView, &Left);
+	Left.VSplitMid(&Left, &Right);
+	MainView.HSplitBottom(MainView.h/2.0f, &List, &MainView);
+	MainView.HSplitTop(10.f, 0, &MainView);
+	MainView.HSplitBottom(20.0f, &FontList, &MainView);
+
+	// auto demo settings
+	{
+		Left.HSplitTop(20.0f, &Button, &Left);
+		if(DoButton_CheckBox(&g_Config.m_ClAutoDemoRecord, Localize("Automatically record demos"), g_Config.m_ClAutoDemoRecord, &Button))
+			g_Config.m_ClAutoDemoRecord ^= 1;
+
+		Right.HSplitTop(20.0f, &Button, &Right);
+		if(DoButton_CheckBox(&g_Config.m_ClAutoScreenshot, Localize("Automatically take game over screenshot"), g_Config.m_ClAutoScreenshot, &Button))
+			g_Config.m_ClAutoScreenshot ^= 1;
+
+		Left.HSplitTop(10.0f, 0, &Left);
+		Left.VSplitLeft(20.0f, 0, &Left);
+		Left.HSplitTop(20.0f, &Label, &Button);
+		Button.VSplitRight(20.0f, &Button, 0);
+		char aBuf[64];
+		if(g_Config.m_ClAutoDemoMax)
+			str_format(aBuf, sizeof(aBuf), "%s: %i", Localize("Max demos"), g_Config.m_ClAutoDemoMax);
+		else
+			str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Max demos"), Localize("no limit"));
+		UI()->DoLabel(&Label, aBuf, 13.0f, -1);
+		g_Config.m_ClAutoDemoMax = static_cast<int>(DoScrollbarH(&g_Config.m_ClAutoDemoMax, &Button, g_Config.m_ClAutoDemoMax/1000.0f)*1000.0f+0.1f);
+
+		Right.HSplitTop(10.0f, 0, &Right);
+		Right.VSplitLeft(20.0f, 0, &Right);
+		Right.HSplitTop(20.0f, &Label, &Button);
+		Button.VSplitRight(20.0f, &Button, 0);
+		if(g_Config.m_ClAutoScreenshotMax)
+			str_format(aBuf, sizeof(aBuf), "%s: %i", Localize("Max Screenshots"), g_Config.m_ClAutoScreenshotMax);
+		else
+			str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Max Screenshots"), Localize("no limit"));
+		UI()->DoLabel(&Label, aBuf, 13.0f, -1);
+		g_Config.m_ClAutoScreenshotMax = static_cast<int>(DoScrollbarH(&g_Config.m_ClAutoScreenshotMax, &Button, g_Config.m_ClAutoScreenshotMax/1000.0f)*1000.0f+0.1f);
+	}
+
+	RenderLanguageSelection(List);
+	RenderFontSelection(FontList);
+}
+
+/*void CMenus::RenderSettingsGeneral(CUIRect MainView)
 {
 	// Render language list
 	static int s_LanguageList  = 0;
@@ -1024,17 +1156,21 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	int OldSelectedFont = s_SelectedFont;
 
-	CUIRect ListFont, Button, Label, Left;
+	CUIRect ListFont, Button, Label, Left, Right;
 	MainView.HSplitBottom(10.0f, &MainView, 0);
 	MainView.HSplitBottom(70.0f, &MainView, &Left);
-	Left.VSplitMid(&Left, 0);
-	Left.HSplitTop(20.0f, &Button, &Left);
+	Left.VSplitMid(&Left, &Right);
 	MainView.HSplitBottom(20.0f, &ListFont, &MainView);
 
 	// auto demo settings
 	{
+		Left.HSplitTop(20.0f, &Button, &Left);
 		if(DoButton_CheckBox(&g_Config.m_ClAutoDemoRecord, Localize("Automatically record demos"), g_Config.m_ClAutoDemoRecord, &Button))
 			g_Config.m_ClAutoDemoRecord ^= 1;
+
+		Right.HSplitTop(20.0f, &Button, &Right);
+		if(DoButton_CheckBox(&g_Config.m_ClAutoScreenshot, Localize("Automatically take game over screenshot"), g_Config.m_ClAutoScreenshot, &Button))
+			g_Config.m_ClAutoScreenshot ^= 1;
 
 		Left.HSplitTop(10.0f, 0, &Left);
 		Left.VSplitLeft(20.0f, 0, &Left);
@@ -1047,10 +1183,23 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Max demos"), Localize("no limit"));
 		UI()->DoLabel(&Label, aBuf, 13.0f, -1);
 		g_Config.m_ClAutoDemoMax = static_cast<int>(DoScrollbarH(&g_Config.m_ClAutoDemoMax, &Button, g_Config.m_ClAutoDemoMax/1000.0f)*1000.0f+0.1f);
+
+		Right.HSplitTop(10.0f, 0, &Right);
+		Right.VSplitLeft(20.0f, 0, &Right);
+		Right.HSplitTop(20.0f, &Label, &Button);
+		Button.VSplitRight(20.0f, &Button, 0);
+		if(g_Config.m_ClAutoScreenshotMax)
+			str_format(aBuf, sizeof(aBuf), "%s: %i", Localize("Max Screenshots"), g_Config.m_ClAutoScreenshotMax);
+		else
+			str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Max Screenshots"), Localize("no limit"));
+		UI()->DoLabel(&Label, aBuf, 13.0f, -1);
+		g_Config.m_ClAutoScreenshotMax = static_cast<int>(DoScrollbarH(&g_Config.m_ClAutoScreenshotMax, &Button, g_Config.m_ClAutoScreenshotMax/1000.0f)*1000.0f+0.1f);
 	}
 
 	UiDoListboxStart(&s_FontList , &ListFont, 24.0f, Localize("Font"), "", s_Fonts.size(), 1, s_SelectedFont, s_FontScrollValue);
 
+	RenderLanguageSelection(List);
+	
 	for(sorted_array<CFontFile>::range r = s_Fonts.all(); !r.empty(); r.pop_front())
 	{
 		CListboxItem Item = UiDoListboxNextItem(&r.front());
@@ -1072,7 +1221,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			io_close(File);
 		TextRender()->SetFont(TextRender()->LoadFont(aFontPath));
 	}
-}
+}*/
 
 void CMenus::RenderSettingsBeep(CUIRect MainView)
 {
