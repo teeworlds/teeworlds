@@ -20,6 +20,8 @@ void CNamePlates::RenderNameplate(
 	
 	vec2 Position = mix(vec2(pPrevChar->m_X, pPrevChar->m_Y), vec2(pPlayerChar->m_X, pPlayerChar->m_Y), IntraTick);
 	
+
+	float fontsize = 11.0f + 20.0f * g_Config.m_ClNameplatesSize / 100.0f;
 	// render name plate
 	if(!pPlayerInfo->m_Local)
 	{
@@ -29,9 +31,9 @@ void CNamePlates::RenderNameplate(
 			a = clamp(1-powf(distance(m_pClient->m_pControls->m_TargetPos, Position)/200.0f,16.0f), 0.0f, 1.0f);
 			
 		const char *pName = m_pClient->m_aClients[pPlayerInfo->m_ClientId].m_aName;
-		float tw = TextRender()->TextWidth(0, 28.0f, pName, -1);
+		float tw = TextRender()->TextWidth(0, fontsize, pName, -1);
 		TextRender()->TextColor(1,1,1,a);
-		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-60, 28.0f, pName, -1);
+		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-50 - 15*g_Config.m_ClNameplatesSize/100, fontsize, pName, -1);
 		
 		if(g_Config.m_Debug) // render client id when in debug aswell
 		{

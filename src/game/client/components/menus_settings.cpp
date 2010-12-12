@@ -106,6 +106,18 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 				g_Config.m_ClNameplatesAlways ^= 1;
 		}
 
+		// draw nameplates size slider
+		{
+			CUIRect Button, Label;
+			LeftView.HSplitTop(20.0f, &Button, &MainView);
+			Button.VSplitLeft(140.0f, &Label, &Button);
+			Button.HMargin(2.0f, &Button);
+			UI()->DoLabel(&Label, Localize("Nameplates size"), 14.0f, -1);
+			g_Config.m_ClNameplatesSize = (int)(DoScrollbarH(&g_Config.m_ClNameplatesSize, &Button, g_Config.m_ClNameplatesSize/100.0f)*100.0f);
+			Button.VSplitRight(40.0f, &Label, &Button);
+			Button.VSplitLeft(40.0f, &Label, &Button);
+		}
+
         {
             const CSkins::CSkin *pOwnSkin = m_pClient->m_pSkins->Get(max(0, m_pClient->m_pSkins->Find(g_Config.m_PlayerSkin)));
 
@@ -208,7 +220,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			}
 		}
 
-        MainView.HSplitTop(MainView.h/2, 0, &MainView);
+        MainView.HSplitTop(MainView.h/4, 0, &MainView);
 
 		// render skinselector
 		static bool s_InitSkinlist = true;
