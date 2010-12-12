@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+/* Outline modification for freetype by Damian "Rush" Kaczmarek (known as Ergo Proxy)        */
 #include <base/system.h>
 #include <base/math.h>
 #include <engine/graphics.h>
@@ -18,8 +19,14 @@
 #endif
 
 // ft2 texture
+
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_OUTLINE_H
+#include FT_STROKER_H
+#include FT_GLYPH_H
+#include FT_TRUETYPE_IDS_H
+#include FT_BITMAP_H
 
 // TODO: Refactor: clean this up
 
@@ -120,31 +127,6 @@ class CTextRender : public IEngineTextRender
 	}
 	
 
-
-	void Grow(unsigned char *pIn, unsigned char *pOut, int w, int h)
-	{
-		for(int y = 0; y < h; y++) 
-			for(int x = 0; x < w; x++) 
-			{ 
-				int c = pIn[y*w+x]; 
-
-				for(int sy = -1; sy <= 1; sy++)
-					for(int sx = -1; sx <= 1; sx++)
-					{
-						int GetX = x+sx;
-						int GetY = y+sy;
-						if (GetX >= 0 && GetY >= 0 && GetX < w && GetY < h)
-						{
-							int Index = GetY*w+GetX;
-							if(pIn[Index] > c)
-								c = pIn[Index]; 
-						}
-					}
-
-				pOut[y*w+x] = c;
-			}
-	}
-
 	void InitTexture(CFontSizeData *pSizeData, int CharWidth, int CharHeight, int Xchars, int Ychars)
 	{
 		static int FontMemoryUsage = 0;
@@ -210,6 +192,7 @@ class CTextRender : public IEngineTextRender
 			{   
 				// do stuff
 				FT_Load_Glyph(pFont->m_FtFace, GlyphIndex, FT_LOAD_DEFAULT);
+				
 				
 				if(pFont->m_FtFace->glyph->metrics.width > MaxW) MaxW = pFont->m_FtFace->glyph->metrics.width; // ignore_convention
 				if(pFont->m_FtFace->glyph->metrics.height > MaxH) MaxH = pFont->m_FtFace->glyph->metrics.height; // ignore_convention
@@ -286,6 +269,8 @@ class CTextRender : public IEngineTextRender
 	int RenderGlyph(CFont *pFont, CFontSizeData *pSizeData, int Chr)
 	{
 		FT_Bitmap *pBitmap;
+
+
 		int SlotId = 0;
 		int SlotW = pSizeData->m_TextureWidth / pSizeData->m_NumXChars;
 		int SlotH = pSizeData->m_TextureHeight / pSizeData->m_NumYChars;
@@ -295,16 +280,26 @@ class CTextRender : public IEngineTextRender
 		int y = 1;
 		int px, py;
 
+		FT_Error error;
+
 		FT_Set_Pixel_Sizes(pFont->m_FtFace, 0, pSizeData->m_FontSize);
 
-		if(FT_Load_Char(pFont->m_FtFace, Chr, FT_LOAD_RENDER|FT_LOAD_NO_BITMAP))
+		if( (error = FT_Load_Char(pFont->m_FtFace, Chr, FT_LOAD_DEFAULT|FT_LOAD_NO_BITMAP)) != 0)
 		{
-			dbg_msg("pFont", "error loading glyph %d", Chr);
+			dbg_msg("pFont", "error loading glyph %d, freetype error %d", Chr, error);
 			return -1;
 		}
 
-		pBitmap = &pFont->m_FtFace->glyph->bitmap; // ignore_convention
-		
+		FT_Glyph bitmap_glyph;
+		FT_Get_Glyph( pFont->m_FtFace->glyph, &bitmap_glyph );
+		FT_Stroker stroker;
+		FT_Stroker_New( m_FTLibrary, &stroker );
+		FT_Stroker_Set( stroker, OutlineThickness * 128, FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
+		FT_Glyph_StrokeBorder(&bitmap_glyph, stroker, false, 1);
+		FT_Stroker_Done(stroker);
+		FT_Glyph_To_Bitmap(&bitmap_glyph, ft_render_mode_normal, 0, 1);
+		pBitmap = &((FT_BitmapGlyph)bitmap_glyph)->bitmap;
+
 		// fetch slot
 		SlotId = GetSlot(pSizeData);
 		if(SlotId < 0)
@@ -318,42 +313,25 @@ class CTextRender : public IEngineTextRender
 
 		// prepare glyph data
 		mem_zero(ms_aGlyphData, SlotSize);
+		mem_zero(ms_aGlyphDataOutlined, SlotSize);
 
-		if(pBitmap->pixel_mode == FT_PIXEL_MODE_GRAY) // ignore_convention
-		{
-			for(py = 0; py < pBitmap->rows; py++) // ignore_convention
-				for(px = 0; px < pBitmap->width; px++) // ignore_convention
-					ms_aGlyphData[(py+y)*SlotW+px+x] = pBitmap->buffer[py*pBitmap->pitch+px]; // ignore_convention
-		}
-		else if(pBitmap->pixel_mode == FT_PIXEL_MODE_MONO) // ignore_convention
-		{
-			for(py = 0; py < pBitmap->rows; py++)  // ignore_convention
-				for(px = 0; px < pBitmap->width; px++) // ignore_convention
-				{
-					if(pBitmap->buffer[py*pBitmap->pitch+px/8]&(1<<(7-(px%8)))) // ignore_convention
-						ms_aGlyphData[(py+y)*SlotW+px+x] = 255;
-				}
-		}
-
-		if(0) for(py = 0; py < SlotW; py++) 
-			for(px = 0; px < SlotH; px++) 
-				ms_aGlyphData[py*SlotW+px] = 255;
+		for(py = 0; py < pBitmap->rows; py++) // ignore_convention
+			for(px = 0; px < pBitmap->width; px++) // ignore_convention
+				ms_aGlyphDataOutlined[(py+y)*SlotW+px+x] = pBitmap->buffer[py*pBitmap->pitch+px]; // ignore_convention
+		FT_Render_Glyph(pFont->m_FtFace->glyph, ft_render_mode_normal);
+		FT_Get_Glyph( pFont->m_FtFace->glyph, &bitmap_glyph );
+		pBitmap = &((FT_BitmapGlyph)bitmap_glyph)->bitmap;
+		for(py = 0; py < pBitmap->rows; py++) // ignore_convention
+			for(px = 0; px < pBitmap->width; px++) // ignore_convention
+				ms_aGlyphData[(py+y)*SlotW+px+x] = pBitmap->buffer[py*pBitmap->pitch+px]; // ignore_convention
 		
 		// upload the glyph
 		UploadGlyph(pSizeData, 0, SlotId, Chr, ms_aGlyphData);
-		
-		if(OutlineThickness == 1)
+		if(OutlineThickness)
 		{
-			Grow(ms_aGlyphData, ms_aGlyphDataOutlined, SlotW, SlotH);
 			UploadGlyph(pSizeData, 1, SlotId, Chr, ms_aGlyphDataOutlined);
 		}
-		else
-		{
-			Grow(ms_aGlyphData, ms_aGlyphDataOutlined, SlotW, SlotH);
-			Grow(ms_aGlyphDataOutlined, ms_aGlyphData, SlotW, SlotH);
-			UploadGlyph(pSizeData, 1, SlotId, Chr, ms_aGlyphData);
-		}
-		
+
 		// set char info
 		{
 			CFontChar *pFontchr = &pSizeData->m_aCharacters[SlotId];
@@ -375,7 +353,9 @@ class CTextRender : public IEngineTextRender
 			pFontchr->m_aUvs[2] = pFontchr->m_aUvs[0] + Width*Uscale;
 			pFontchr->m_aUvs[3] = pFontchr->m_aUvs[1] + Height*Vscale;
 		}
-		
+
+		FT_Done_Glyph(bitmap_glyph);
+
 		return SlotId;
 	}
 
