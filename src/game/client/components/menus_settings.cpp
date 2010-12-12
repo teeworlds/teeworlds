@@ -708,7 +708,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 	io_close(File);
 }
 
-void CMenus::RenderSettingsGeneral(CUIRect MainView)
+void CMenus::RenderLanguageSelection(CUIRect MainView)
 {
 	static int s_LanguageList  = 0;
 	static int s_SelectedLanguage = 0;
@@ -729,6 +729,27 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	int OldSelected = s_SelectedLanguage;
 
+	UiDoListboxStart(&s_LanguageList , &MainView, 24.0f, Localize("Language"), "", s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);
+
+	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
+	{
+		CListboxItem Item = UiDoListboxNextItem(&r.front());
+
+		if(Item.m_Visible)
+			UI()->DoLabel(&Item.m_Rect, r.front().m_Name, 16.0f, -1);
+	}
+
+	s_SelectedLanguage = UiDoListboxEnd(&s_ScrollValue, 0);
+
+	if(OldSelected != s_SelectedLanguage)
+	{
+		str_copy(g_Config.m_ClLanguagefile, s_Languages[s_SelectedLanguage].m_FileName, sizeof(g_Config.m_ClLanguagefile));
+		g_Localization.Load(s_Languages[s_SelectedLanguage].m_FileName, Storage(), Console());
+	}
+}
+
+void CMenus::RenderSettingsGeneral(CUIRect MainView)
+{
 	CUIRect List, Button, Label, Left, Right;
 	MainView.HSplitBottom(10.0f, &MainView, 0);
 	MainView.HSplitBottom(70.0f, &MainView, &Left);
@@ -769,23 +790,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		g_Config.m_ClAutoScreenshotMax = static_cast<int>(DoScrollbarH(&g_Config.m_ClAutoScreenshotMax, &Button, g_Config.m_ClAutoScreenshotMax/1000.0f)*1000.0f+0.1f);
 	}
 
-	UiDoListboxStart(&s_LanguageList , &List, 24.0f, Localize("Language"), "", s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);
-
-	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
-	{
-		CListboxItem Item = UiDoListboxNextItem(&r.front());
-
-		if(Item.m_Visible)
-			UI()->DoLabel(&Item.m_Rect, r.front().m_Name, 16.0f, -1);
-	}
-
-	s_SelectedLanguage = UiDoListboxEnd(&s_ScrollValue, 0);
-
-	if(OldSelected != s_SelectedLanguage)
-	{
-		str_copy(g_Config.m_ClLanguagefile, s_Languages[s_SelectedLanguage].m_FileName, sizeof(g_Config.m_ClLanguagefile));
-		g_Localization.Load(s_Languages[s_SelectedLanguage].m_FileName, Storage(), Console());
-	}
+	RenderLanguageSelection(List);
 }
 
 void CMenus::RenderSettings(CUIRect MainView)
