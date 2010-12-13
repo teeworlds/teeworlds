@@ -33,6 +33,9 @@ CPlayer::CPlayer(CGameContext *pGameServer, int CID, int Team)
 	
 	m_Invisible = false;
 	m_IsUsingDDRaceClient = false;
+
+	// Variable initialized:
+	m_Last_Pause = 0;
 }
 
 CPlayer::~CPlayer()
