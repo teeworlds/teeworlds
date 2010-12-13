@@ -219,16 +219,18 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *_pStr)
 	   making it possible to do binds such as:
 bind f "cl_nameplates 1; cl_nameplates_always 1 | cl_nameplates 0; cl_nameplates_always 0"
 	  which will show nameplates for the time of pressing the key */
+	const char *pStr = _pStr;
 	{
-		const char *pStr = _pStr, *ptr;
+		const char* ptr;
 		if(!Stroke) { // on release try to handle other part of the command
 			if((ptr = str_find(pStr, "|")) != NULL) {
 				pStr = ptr + 1;
 				Stroke = 1; // treat a non stroke command as a stroke one
 			}
 		}
+		pStr = str_skip_whitespaces((char*)pStr);
 	}
-	pStr = str_skip_whitespaces((char*)pStr);
+	
 
 	while(pStr && *pStr)
 	{
