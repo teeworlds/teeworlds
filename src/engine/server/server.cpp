@@ -356,9 +356,7 @@ int *CServer::LatestInput(int ClientId, int *size)
 
 const char *CServer::ClientName(int ClientId)
 {
-	if(ClientId < 0 || ClientId >= MAX_CLIENTS || m_aClients[ClientId].m_State == CServer::CClient::STATE_EMPTY)
-		return "(invalid client)";
-	else if(m_aClients[ClientId].m_State < CServer::CClient::STATE_READY)
+	if(m_aClients[ClientId].m_State < CServer::CClient::STATE_READY)
 		return "(connecting client)";
 	return m_aClients[ClientId].m_aName;
 }	
@@ -1330,7 +1328,7 @@ void CServer::ConKick(IConsole::IResult *pResult, void *pUser, int ClientId)
 	if(pResult->NumArguments() >= 1)
 	{
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "Kicked by console (%s)", pResult->GetString(0));
+		str_format(aBuf, sizeof(aBuf), "Kicked by (%s)", pResult->GetString(0));
 		((CServer *)pUser)->Kick(Victim, aBuf);
 	}
 	else
@@ -1476,7 +1474,7 @@ void CServer::ConStatus(IConsole::IResult *pResult, void *pUser, int ClientId)
 		if(pServer->m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
 			Addr = pServer->m_NetServer.ClientAddr(i);
-			if(pServer->m_aClients[i].m_State == CClient::STATE_INGAME)
+			if(pServer->m_aClients[i].m_State == CClient::STATE_INGAME);
 				str_format(aBuf, sizeof(aBuf), "id=%d addr=%d.%d.%d.%d:%d name='%s' level=%d",
 					i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], Addr.port,
 					pServer->m_aClients[i].m_aName, pServer->m_aClients[i].m_Authed);
@@ -1662,7 +1660,7 @@ int main(int argc, const char **argv) // ignore_convention
 
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pServer); // register as both
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMap*>(pEngineMap)); // register as both
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMap*>(pEngineMap));
+		RegisterFail = RegisterFail || !pKernel->Rsrc/engine/server/server.cppegisterInterface(static_cast<IMap*>(pEngineMap));
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pGameServer);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConsole);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pStorage);
@@ -1777,7 +1775,7 @@ void CServer::CheckPass(int ClientId, const char *pPw)
 			{
 				level = 3;
 			}
-			if(level != -1)
+			if(level != -1)src/engine/server/server.cpp
 			{
 				char buf[128]="Authentication successful. Remote console access granted for ClientId=%d with level=%d";
 				SetRconLevel(ClientId,level);
@@ -1797,7 +1795,7 @@ void CServer::CheckPass(int ClientId, const char *pPw)
 						m_NetServer.Drop(ClientId, "Too many remote console authentication tries");
 					else
 					{
-						NETADDR Addr = m_NetServer.ClientAddr(ClientId);
+						NETADDR Addr = m_NetServer.ClientAddr(ClientId);src/engine/server/server.cpp
 						BanAdd(Addr, g_Config.m_SvRconBantime, "Too many remote console authentication tries");
 					}
 				}

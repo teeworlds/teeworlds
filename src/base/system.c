@@ -999,6 +999,17 @@ int fs_chdir(const char *path)
 		return 1;
 }
 
+char *fs_getcwd(char *buffer, int buffer_size)
+{
+	if(buffer == 0)
+		return 0;
+#if defined(CONF_FAMILY_WINDOWS)
+	return _getcwd(buffer, buffer_size);
+#else
+	return getcwd(buffer, buffer_size);
+#endif
+}
+
 int fs_parent_dir(char *path)
 {
 	char *parent = 0;

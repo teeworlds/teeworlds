@@ -936,5 +936,14 @@ Loading DDRace Client
 
 ##### needs translation #####
 
+Automatically record demos
+== 
+
+Max demos
+== 
+
+no limit
+== 
+
 ##### old translations #####
 

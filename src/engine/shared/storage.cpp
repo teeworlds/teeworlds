@@ -21,6 +21,7 @@ public:
 	int m_NumPaths;
 	char m_aDatadir[MAX_PATH_LENGTH];
 	char m_aUserdir[MAX_PATH_LENGTH];
+	char m_aCurrentdir[MAX_PATH_LENGTH];
 	
 	CStorage()
 	{
@@ -37,6 +38,10 @@ public:
 
 		// get datadir
 		FindDatadir(ppArguments[0]);
+
+		// get currentdir
+		if(!fs_getcwd(m_aCurrentdir, sizeof(m_aCurrentdir)))
+			m_aCurrentdir[0] = 0;
 
 		// load paths from storage.cfg
 		LoadPaths(ppArguments[0]);
@@ -134,7 +139,7 @@ public:
 		else if(!str_comp(pPath, "$CURRENTDIR"))
 		{
 			m_aaStoragePaths[m_NumPaths++][0] = 0;
-			dbg_msg("storage", "added path '$CURRENTDIR'");
+			dbg_msg("storage", "added path '$CURRENTDIR' ('%s')", m_aCurrentdir);
 		}
 		else
 		{
@@ -187,18 +192,20 @@ public:
 		// 4) check for all default locations
 		{
 			const char *aDirs[] = {
-				"/usr/share/teeworlds/data/mapres",
-				"/usr/share/games/teeworlds/data/mapres",
-				"/usr/local/share/teeworlds/data/mapres",
-				"/usr/local/share/games/teeworlds/data/mapres",
-				"/opt/teeworlds/data/mapres"
+				"/usr/share/teeworlds/data",
+				"/usr/share/games/teeworlds/data",
+				"/usr/local/share/teeworlds/data",
+				"/usr/local/share/games/teeworlds/data",
+				"/opt/teeworlds/data"
 			};
 			const int DirsCount = sizeof(aDirs) / sizeof(aDirs[0]);
 			
 			int i;
 			for (i = 0; i < DirsCount; i++)
 			{
-				if (fs_is_dir(aDirs[i]))
+				char aBuf[128];
+				str_format(aBuf, sizeof(aBuf), "%s/mapres", aDirs[i]);
+				if(fs_is_dir(aBuf))
 				{
 					str_copy(m_aDatadir, aDirs[i], sizeof(m_aDatadir));
 					return;
