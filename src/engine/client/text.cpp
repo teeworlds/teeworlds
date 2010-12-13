@@ -37,7 +37,7 @@ enum
 };
 
 
-static int aFontSizes[] = {8,9,10,11,12,13,14,15,16,17,18,19,20,36};
+static int aFontSizes[] = {8,9,10,11,12,13,14,15,16,17,18,19,20,36,64};
 #define NUM_FONT_SIZES (sizeof(aFontSizes)/sizeof(int))
 
 struct CFontChar
@@ -160,6 +160,15 @@ class CTextRender : public IEngineTextRender
 		mem_free(pMem);
 	}
 
+	static int AdjustOutlineThicknessToFontSize(int OutlineThickness, int FontSize)
+	{
+		if(FontSize > 36)
+			OutlineThickness *= 4;
+		else if(FontSize >= 18)
+			OutlineThickness *= 2;
+		return OutlineThickness;
+	}
+
 	void IncreaseTextureSize(CFontSizeData *pSizeData)
 	{
 		if(pSizeData->m_TextureWidth < pSizeData->m_TextureHeight)
@@ -173,14 +182,14 @@ class CTextRender : public IEngineTextRender
 	// TODO: Refactor: move this into a pFont class
 	void InitIndex(CFont *pFont, int Index)
 	{
-		int OutlineThickness = 1;
+		float OutlineThickness = 1.0;
 		CFontSizeData *pSizeData = &pFont->m_aSizes[Index];
 		
 		pSizeData->m_FontSize = aFontSizes[Index];
 		FT_Set_Pixel_Sizes(pFont->m_FtFace, 0, pSizeData->m_FontSize);
 		
-		if(pSizeData->m_FontSize >= 18)
-			OutlineThickness = 2;
+
+		OutlineThickness = AdjustOutlineThicknessToFontSize(OutlineThickness, pSizeData->m_FontSize);
 			
 		{
 			unsigned GlyphIndex;
@@ -275,7 +284,7 @@ class CTextRender : public IEngineTextRender
 		int SlotW = pSizeData->m_TextureWidth / pSizeData->m_NumXChars;
 		int SlotH = pSizeData->m_TextureHeight / pSizeData->m_NumYChars;
 		int SlotSize = SlotW*SlotH;
-		int OutlineThickness = 1;
+		float OutlineThickness = 1.0;
 		int x = 1;
 		int y = 1;
 		int px, py;
@@ -290,15 +299,13 @@ class CTextRender : public IEngineTextRender
 			return -1;
 		}
 
-		// adjust spacing
-		if(pSizeData->m_FontSize >= 18)
-			OutlineThickness = 2;
+		OutlineThickness = AdjustOutlineThicknessToFontSize(OutlineThickness, pSizeData->m_FontSize);
 
 		FT_Glyph bitmap_glyph;
 		FT_Get_Glyph( pFont->m_FtFace->glyph, &bitmap_glyph );
 		FT_Stroker stroker;
 		FT_Stroker_New( m_FTLibrary, &stroker );
-		FT_Stroker_Set( stroker, OutlineThickness * 64, FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
+		FT_Stroker_Set( stroker, OutlineThickness*64, FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
 		FT_Glyph_StrokeBorder(&bitmap_glyph, stroker, false, 1);
 		FT_Stroker_Done(stroker);
 		FT_Glyph_To_Bitmap(&bitmap_glyph, ft_render_mode_normal, 0, 1);
