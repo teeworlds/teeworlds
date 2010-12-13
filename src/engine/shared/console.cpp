@@ -44,9 +44,9 @@ int CConsole::ParseStart(CResult *pResult, const char *pString, int Length)
 	pStr = pResult->m_aStringStorage;
 	
 	// get command
-	pStr = str_skip_whitespaces(pStr);
+	pStr = (char*)str_skip_whitespaces(pStr);
 	pResult->m_pCommand = pStr;
-	pStr = str_skip_to_whitespace(pStr);
+	pStr = (char*)str_skip_to_whitespace(pStr);
 	
 	if(*pStr)
 	{
@@ -213,8 +213,23 @@ bool CConsole::LineIsValid(const char *pStr)
 	return true;
 }
 
-void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
+void CConsole::ExecuteLineStroked(int Stroke, const char *_pStr)
 {	
+	/* The following feature makes it possible to execute commands on key release
+	   making it possible to do binds such as:
+bind f "cl_nameplates 1; cl_nameplates_always 1 | cl_nameplates 0; cl_nameplates_always 0"
+	  which will show nameplates for the time of pressing the key */
+	{
+		const char *pStr = _pStr, *ptr;
+		if(!Stroke) { // on release try to handle other part of the command
+			if((ptr = str_find(pStr, "|")) != NULL) {
+				pStr = ptr + 1;
+				Stroke = 1; // treat a non stroke command as a stroke one
+			}
+		}
+	}
+	pStr = str_skip_whitespaces((char*)pStr);
+
 	while(pStr && *pStr)
 	{
 		CResult *pResult = new(&m_ExecutionQueue.m_pLast->m_Result) CResult;
@@ -240,6 +255,8 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
 				}
 				else if(*pEnd == '#')  // comment, no need to do anything more
 					break;
+				else if(*pEnd == '|') // the other part of the string is handled
+					break;			  //on the begining of the function
 			}
 			
 			pEnd++;
@@ -247,7 +264,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
 		
 		if(ParseStart(pResult, pStr, (pEnd-pStr) + 1) != 0)
 			return;
-
+		
 		CCommand *pCommand = FindCommand(pResult->m_pCommand, m_FlagMask);
 
 		if(pCommand)
