@@ -290,11 +290,15 @@ class CTextRender : public IEngineTextRender
 			return -1;
 		}
 
+		// adjust spacing
+		if(pSizeData->m_FontSize >= 18)
+			OutlineThickness = 2;
+
 		FT_Glyph bitmap_glyph;
 		FT_Get_Glyph( pFont->m_FtFace->glyph, &bitmap_glyph );
 		FT_Stroker stroker;
 		FT_Stroker_New( m_FTLibrary, &stroker );
-		FT_Stroker_Set( stroker, OutlineThickness * 128, FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
+		FT_Stroker_Set( stroker, OutlineThickness * 64, FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
 		FT_Glyph_StrokeBorder(&bitmap_glyph, stroker, false, 1);
 		FT_Stroker_Done(stroker);
 		FT_Glyph_To_Bitmap(&bitmap_glyph, ft_render_mode_normal, 0, 1);
@@ -305,9 +309,7 @@ class CTextRender : public IEngineTextRender
 		if(SlotId < 0)
 			return -1;
 		
-		// adjust spacing
-		if(pSizeData->m_FontSize >= 18)
-			OutlineThickness = 2;
+
 		x += OutlineThickness;
 		y += OutlineThickness;
 
