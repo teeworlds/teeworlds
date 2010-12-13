@@ -510,6 +510,9 @@ Aspect ratio
 Automatically record demos
 == 
 
+Automatically take game over screenshot
+== 
+
 Blue value of the envelope
 == 
 
@@ -697,6 +700,9 @@ Make collision
 == 
 
 Make external
+== 
+
+Max Screenshots
 == 
 
 Max demos

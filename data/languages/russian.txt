@@ -807,6 +807,9 @@ Aspect ratio
 Automatically record demos
 == 
 
+Automatically take game over screenshot
+== 
+
 Blue value of the envelope
 == 
 
@@ -859,6 +862,9 @@ Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point
 == 
 
 Load map
+== 
+
+Max Screenshots
 == 
 
 Max demos

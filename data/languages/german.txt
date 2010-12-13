@@ -939,6 +939,12 @@ Loading DDRace Client
 Automatically record demos
 == 
 
+Automatically take game over screenshot
+== 
+
+Max Screenshots
+== 
+
 Max demos
 == 
 

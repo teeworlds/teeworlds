@@ -743,7 +743,7 @@ void CMenus::OnInit()
 	// */
 	
 	if(g_Config.m_ClShowWelcome)
-		m_Popup = POPUP_FIRST_LAUNCH;
+		m_Popup = POPUP_LANGUAGE;
 	g_Config.m_ClShowWelcome = 0;
 
 	Console()->Chain("add_favorite", ConchainServerbrowserUpdate, this);
@@ -978,6 +978,23 @@ int CMenus::Render()
 			UI()->DoLabel(&Label, Localize("Password"), 18.0f, -1);
 			static float Offset = 0.0f;
 			DoEditBox(&g_Config.m_Password, &TextBox, g_Config.m_Password, sizeof(g_Config.m_Password), 12.0f, &Offset, true);
+		}
+		else if(m_Popup == POPUP_LANGUAGE)
+		{
+			Box = Screen;
+			Box.VMargin(150.0f, &Box);
+			Box.HMargin(150.0f, &Box);
+			Box.HSplitTop(20.f, &Part, &Box);
+			Box.HSplitBottom(20.f, &Box, &Part);
+			Box.HSplitBottom(24.f, &Box, &Part);
+			Box.HSplitBottom(20.f, &Box, 0);
+			Box.VMargin(20.0f, &Box);
+			RenderLanguageSelection(Box);
+			Part.VMargin(120.0f, &Part);
+
+			static int s_Button = 0;
+			if(DoButton_Menu(&s_Button, Localize("Ok"), 0, &Part) || m_EscapePressed || m_EnterPressed)
+				m_Popup = POPUP_FIRST_LAUNCH;
 		}
 		else if(m_Popup == POPUP_DELETE_DEMO)
 		{
