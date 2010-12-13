@@ -873,8 +873,11 @@ int CGraphics_SDL::WindowOpen()
 
 }
 
-void CGraphics_SDL::TakeScreenshot()
+void CGraphics_SDL::TakeScreenshot(const char *pFilename)
 {
+	char aDate[20];
+	str_timestamp(aDate, sizeof(aDate));
+	str_format(m_aScreenshotName, sizeof(m_aScreenshotName), "screenshots/%s_%s.png", pFilename?pFilename:"screenshot", aDate);
 	m_DoScreenshot = true;
 }
 
@@ -882,12 +885,7 @@ void CGraphics_SDL::Swap()
 {
 	if(m_DoScreenshot)
 	{
-		char aFilename[128];
-		char aDate[20];
-
-		str_timestamp(aDate, sizeof(aDate));
-		str_format(aFilename, sizeof(aFilename), "screenshots/screenshot_%s.png", aDate);
-		ScreenshotDirect(aFilename);
+		ScreenshotDirect(m_aScreenshotName);
 		m_DoScreenshot = false;
 	}
 	

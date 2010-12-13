@@ -140,6 +140,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	NETADDR m_ServerAddress;
 	int m_WindowMustRefocus;
 	int m_SnapCrcErrors;
+	bool m_AutoScreenshotRecycle;
 
 	int m_AckGameTick;
 	int m_CurrentRecvTick;
@@ -318,6 +319,9 @@ public:
 	void DemoRecorder_Start(const char *pFilename, bool WithTimestamp);
 	void DemoRecorder_HandleAutoStart();
 	void DemoRecorder_Stop();
+
+	void AutoScreenshot_Start();
+	void AutoScreenshot_Cleanup();
 
 	virtual class CEngine *Engine() { return &m_Engine; }
 };

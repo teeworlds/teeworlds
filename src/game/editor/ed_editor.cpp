@@ -3420,7 +3420,7 @@ void CEditor::UpdateAndRender()
 
 	if(Input()->KeyDown(KEY_F10))
 	{
-		Graphics()->TakeScreenshot();
+		Graphics()->TakeScreenshot(0);
 		m_ShowMousePointer = true;
 	}
 
