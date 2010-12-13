@@ -795,6 +795,9 @@ Aspect ratio
 Automatically record demos
 == 
 
+Automatically take game over screenshot
+== 
+
 Blue value of the envelope
 == 
 
@@ -853,6 +856,9 @@ Load
 == 
 
 Load map
+== 
+
+Max Screenshots
 == 
 
 Max demos

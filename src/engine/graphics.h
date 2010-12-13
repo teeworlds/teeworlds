@@ -127,7 +127,7 @@ public:
 	virtual void SetColorVertex(const CColorVertex *pArray, int Num) = 0;
 	virtual void SetColor(float r, float g, float b, float a) = 0;
 	
-	virtual void TakeScreenshot() = 0;
+	virtual void TakeScreenshot(const char *pFilename) = 0;
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes) = 0;
 
 	virtual void Swap() = 0;
