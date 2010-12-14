@@ -164,6 +164,8 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 	static bool s_DoScroll = false;
 	static float s_ScrollStart = 0.0f;
 
+	FontSize *= UI()->Scale();
+
 	if(UI()->LastActiveItem() == pID)
 	{
 		int Len = str_length(pStr);
@@ -259,11 +261,11 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 	// check if the text has to be moved
 	if(UI()->LastActiveItem() == pID && !JustGotActive && (UpdateOffset || m_NumInputEvents))
 	{
-		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex)*UI()->Scale();
+		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex);
 		if(w-*Offset > Textbox.w)
 		{
 			// move to the left
-			float wt = TextRender()->TextWidth(0, FontSize, pDisplayStr, -1)*UI()->Scale();
+			float wt = TextRender()->TextWidth(0, FontSize, pDisplayStr, -1);
 			do
 			{
 				*Offset += min(wt-*Offset-Textbox.w, Textbox.w/3);
@@ -281,7 +283,7 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 		}
 	}
 	UI()->ClipEnable(pRect);
-	Textbox.x -= *Offset*UI()->Scale();
+	Textbox.x -= *Offset;
 
 	UI()->DoLabel(&Textbox, pDisplayStr, FontSize, -1);
 	
@@ -291,7 +293,7 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex);
 		Textbox = *pRect;
 		Textbox.VSplitLeft(2.0f, 0, &Textbox);
-		Textbox.x += (w-*Offset-TextRender()->TextWidth(0, FontSize, "|", -1)/2)*UI()->Scale();
+		Textbox.x += (w-*Offset-TextRender()->TextWidth(0, FontSize, "|", -1)/2);
 
 		if((2*time_get()/time_freq()) % 2)	// make it blink
 			UI()->DoLabel(&Textbox, "|", FontSize, -1);
@@ -609,7 +611,7 @@ void CMenus::RenderLoading(float Percent)
 	
     CUIRect Screen = *UI()->Screen();
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
-	
+
 	RenderBackground();
 
 	float tw;
@@ -860,23 +862,23 @@ int CMenus::Render()
 		
 		CUIRect Box, Part;
 		Box = Screen;
-		Box.VMargin(150.0f, &Box);
-		Box.HMargin(150.0f, &Box);
+		Box.VMargin(150.0f/UI()->Scale(), &Box);
+		Box.HMargin(150.0f/UI()->Scale(), &Box);
 		
 		// render the box
 		RenderTools()->DrawUIRect(&Box, vec4(0,0,0,0.5f), CUI::CORNER_ALL, 15.0f);
 		 
-		Box.HSplitTop(20.f, &Part, &Box);
-		Box.HSplitTop(24.f, &Part, &Box);
-		UI()->DoLabel(&Part, pTitle, 24.f, 0);
-		Box.HSplitTop(20.f, &Part, &Box);
-		Box.HSplitTop(24.f, &Part, &Box);
-		Part.VMargin(20.f, &Part);
+		Box.HSplitTop(20.f/UI()->Scale(), &Part, &Box);
+		Box.HSplitTop(24.f/UI()->Scale(), &Part, &Box);
+		UI()->DoLabelScaled(&Part, pTitle, 24.f, 0);
+		Box.HSplitTop(20.f/UI()->Scale(), &Part, &Box);
+		Box.HSplitTop(24.f/UI()->Scale(), &Part, &Box);
+		Part.VMargin(20.f/UI()->Scale(), &Part);
 		
 		if(ExtraAlign == -1)
-			UI()->DoLabel(&Part, pExtraText, 20.f, -1, (int)Part.w);
+			UI()->DoLabelScaled(&Part, pExtraText, 20.f, -1, (int)Part.w);
 		else
-			UI()->DoLabel(&Part, pExtraText, 20.f, 0, -1);
+			UI()->DoLabelScaled(&Part, pExtraText, 20.f, 0, -1);
 
 		if(m_Popup == POPUP_QUIT)
 		{
