@@ -30,5 +30,6 @@ public:
 	~CHeap();
 	void Reset();
 	void *Allocate(unsigned Size);
+	bool Deallocate(void *pWantedChunk);
 };
 #endif

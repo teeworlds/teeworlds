@@ -952,6 +952,46 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 	pSelf->Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, -1);
 }
 
+void CGameContext::ConRemoveVote(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	const char *pString = pResult->GetString(0);
+	
+	CGameContext::CVoteOption *pOption = 0x0;
+	for(pOption = pSelf->m_pVoteOptionFirst; pOption; pOption = pOption->m_pNext)
+	{
+		if(str_comp_nocase(pString, pOption->m_aCommand) == 0)
+			break;
+	}
+	if(!pOption)
+	{
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "option '%s' does not exist", pString);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+		return;
+	}
+	
+	CGameContext::CVoteOption *pNext = pOption->m_pNext;
+	CGameContext::CVoteOption *pPrev = pOption->m_pPrev;
+	if(pNext)
+		pNext->m_pPrev = pPrev;
+	if(pPrev)
+		pPrev->m_pNext = pNext;
+	if(pSelf->m_pVoteOptionFirst == pOption)
+		pSelf->m_pVoteOptionFirst = pNext;
+	if(pSelf->m_pVoteOptionLast == pOption)
+		pSelf->m_pVoteOptionLast = pPrev;
+	pSelf->m_pVoteOptionHeap->Deallocate(pOption);
+	
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "removed option '%s'", pOption->m_aCommand);
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+	
+	CNetMsg_Sv_VoteOption OptionMsg;
+	OptionMsg.m_pCommand = pOption->m_aCommand;
+	pSelf->Server()->SendPackMsg(&OptionMsg, MSGFLAG_VITAL, -1);
+}
+
 void CGameContext::ConVote(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
@@ -994,6 +1034,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConSetTeam, this, "");
 
 	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConAddVote, this, "");
+	Console()->Register("remvote", "r", CFGFLAG_SERVER, ConRemoveVote, this, "");
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "");
 
 	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);

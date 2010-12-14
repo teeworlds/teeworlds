@@ -149,9 +149,31 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 	else if(MsgType == NETMSGTYPE_SV_VOTEOPTION)
 	{
 		CNetMsg_Sv_VoteOption *pMsg = (CNetMsg_Sv_VoteOption *)pRawMsg;
+		
+		CVoteOption *pOption = m_pFirst;
+		while(pOption)
+		{
+			if(str_comp_nocase(pMsg->m_pCommand, pOption->m_aCommand) == 0)
+			{
+				CVoteOption *pNext = pOption->m_pNext;
+				CVoteOption *pPrev = pOption->m_pPrev;
+				if(pNext)
+					pNext->m_pPrev = pPrev;
+				if(pPrev)
+					pPrev->m_pNext = pNext;
+				if(m_pFirst == pOption)
+					m_pFirst = pNext;
+				if(m_pLast == pOption)
+					m_pLast = pPrev;
+				m_Heap.Deallocate(pOption);
+				return;
+			}
+			pOption = pOption->m_pNext;
+		}
+		
 		int Len = str_length(pMsg->m_pCommand);
-	
-		CVoteOption *pOption = (CVoteOption *)m_Heap.Allocate(sizeof(CVoteOption) + Len);
+		
+		pOption = (CVoteOption *)m_Heap.Allocate(sizeof(CVoteOption) + Len);
 		pOption->m_pNext = 0;
 		pOption->m_pPrev = m_pLast;
 		if(pOption->m_pPrev)

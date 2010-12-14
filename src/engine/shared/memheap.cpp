@@ -95,3 +95,25 @@ void *CHeap::Allocate(unsigned Size)
 	
 	return pMem;
 }
+
+//
+bool CHeap::Deallocate(void *pWantedChunk)
+{
+	CChunk *pLastChunk = 0x0;
+	CChunk *pChunk = m_pCurrent;
+	
+	while(pChunk)
+	{
+		if(pChunk == pWantedChunk)
+		{
+			if(pChunk == m_pCurrent)
+				m_pCurrent = pLastChunk;
+			pLastChunk->m_pNext = pChunk->m_pNext;
+			mem_free(pChunk);
+			return true;
+		}
+		pChunk = pChunk->m_pNext;
+	}
+	
+	return false;
+}
