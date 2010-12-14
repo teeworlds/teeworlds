@@ -622,6 +622,30 @@ if(Collision()->m_NumSwitchers > 0)
 #endif
 }
 
+void CGameContext::ConWhisper(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+    CGameContext *pSelf = (CGameContext *)pUserData;
+    if(pSelf->Console(), ClientId) return;
+    
+    int Victim = clamp(pResult->GetInteger(0), 0, (int)MAX_CLIENTS-1);
+    const char *message = pResult->GetString(1);
+    
+
+    
+
+        CCharacter* chr = pSelf->GetPlayerChar(ClientId);
+        if(chr)
+        {
+            
+            char aBuf[256];
+            str_format(aBuf, sizeof(aBuf), "%s: %s" ,pSelf->Server()->ClientName(ClientId),message);
+            pSelf->SendChatTarget(Victim, aBuf);
+
+        }
+}
+
+
+
 // Server hooks
 void CGameContext::OnClientDirectInput(int ClientID, void *pInput)
 {
@@ -1318,8 +1342,12 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConTuneReset, this, "Resets all tuning", 4);
 	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConTuneDump, this, "Shows all tuning options", 4);
 
+
 	
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "Forces the current vote to result in r (Yes/No)", 3);
+
+    Console()->Register("whisper", "ir", CFGFLAG_SERVER, ConWhisper, this, "Whispers r to player i", 1);
+    Console()->Register("w", "ir", CFGFLAG_SERVER, ConWhisper, this, "Whispers r to player i", 1);
 	
 	#define CONSOLE_COMMAND(name, params, flags, callback, userdata, help, level) m_pConsole->Register(name, params, flags, callback, userdata, help, level);
 	#include "game/ddracecommands.h"
