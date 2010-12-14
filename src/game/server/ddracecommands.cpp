@@ -717,9 +717,15 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 		CCharacter* chr = pPlayer->GetCharacter();
 		if(!pPlayer->GetTeam() && chr && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos && !pPlayer->m_InfoSaved)
 		{
-			pPlayer->SaveCharacter();
-			pPlayer->SetTeam(-1);
-			pPlayer->m_InfoSaved = true;
+			if(pPlayer->m_Last_Pause + pSelf->Server()->TickSpeed() * g_Config.m_SvPauseFrequency <= pSelf->Server()->Tick()) {
+				pPlayer->SaveCharacter();
+				pPlayer->SetTeam(-1);
+				pPlayer->m_InfoSaved = true;
+				pPlayer->m_Last_Pause = pSelf->Server()->Tick();
+			}
+			else
+				pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You can\'t pause that often.");
+
 		}
 		else if(pPlayer->GetTeam()==-1 && pPlayer->m_InfoSaved)
 		{
@@ -872,10 +878,16 @@ void CGameContext::ConToggleBroadcast(IConsole::IResult *pResult, void *pUserDat
 
 void CGameContext::ConEyeEmote(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
+		
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	
 	CCharacter *pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
 	
+
+if ( !g_Config.m_SvEmoteString )
+		{	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Eye emotes are disabled");
+		}
+
 	if (pResult->NumArguments() == 0)
 	{
 		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Emote commands are: /emote surprise /emote blink /emote close /emote angry /emote happy /emote pain");
@@ -883,7 +895,7 @@ void CGameContext::ConEyeEmote(IConsole::IResult *pResult, void *pUserData, int 
 	}
 	else 
 	{
-	  if (pChr)
+	  if (pChr && g_Config.m_SvEmoteString)
 		{
 			if (!str_comp(pResult->GetString(0), "angry"))
 			  pChr->m_EmoteType = EMOTE_ANGRY;
@@ -901,7 +913,9 @@ void CGameContext::ConEyeEmote(IConsole::IResult *pResult, void *pUserData, int 
 			{
 				pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Unkown emote... Say /emote");
 			}
-			
+
+
+				
 			int Duration = 1;
 			if (pResult->NumArguments() > 1)
 				Duration = pResult->GetInteger(1);
@@ -910,3 +924,4 @@ void CGameContext::ConEyeEmote(IConsole::IResult *pResult, void *pUserData, int 
 		}
 	}
 }
+

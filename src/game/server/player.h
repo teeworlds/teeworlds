@@ -81,6 +81,7 @@ public:
 	int64 m_Last_ChangeInfo;
 	int64 m_Last_Emote;
 	int64 m_Last_Kill;
+	int64 m_Last_Pause;
 
 	bool m_Invisible;
 	
