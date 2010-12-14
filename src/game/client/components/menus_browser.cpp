@@ -130,11 +130,11 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		MsgBox.y += View.h/3;
 
 		if(m_ActivePage == PAGE_INTERNET && ServerBrowser()->IsRefreshingMasters())
-			UI()->DoLabel(&MsgBox, Localize("Refreshing master servers"), 16.0f, 0);
+			UI()->DoLabelScaled(&MsgBox, Localize("Refreshing master servers"), 16.0f, 0);
 		else if(!ServerBrowser()->NumServers())
-			UI()->DoLabel(&MsgBox, Localize("No servers found"), 16.0f, 0);
+			UI()->DoLabelScaled(&MsgBox, Localize("No servers found"), 16.0f, 0);
 		else if(ServerBrowser()->NumServers() && !NumServers)
-			UI()->DoLabel(&MsgBox, Localize("No servers match your filter criteria"), 16.0f, 0);
+			UI()->DoLabelScaled(&MsgBox, Localize("No servers match your filter criteria"), 16.0f, 0);
 	}
 
 	int Num = (int)(View.h/s_aCols[0].m_Rect.h) + 1;
@@ -323,7 +323,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			else if(Id == COL_MAP)
 			{
 				CTextCursor Cursor;
-				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f * UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = Button.w;
 				TextRender()->TextEx(&Cursor, pItem->m_aMap, -1);
 			}
@@ -332,25 +332,23 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				str_format(aTemp, sizeof(aTemp), "%i/%i", pItem->m_NumPlayers, pItem->m_MaxPlayers);
 				if(g_Config.m_BrFilterString[0] && (pItem->m_QuickSearchHit&IServerBrowser::QUICK_PLAYERNAME))
 					TextRender()->TextColor(0.4f,0.4f,1.0f,1);
-				UI()->DoLabel(&Button, aTemp, 12.0f, 1);
+				UI()->DoLabelScaled(&Button, aTemp, 12.0f, 1);
 				TextRender()->TextColor(1,1,1,1);
 			}
 			else if(Id == COL_PING)
 			{
 				str_format(aTemp, sizeof(aTemp), "%i", pItem->m_Latency);
-				UI()->DoLabel(&Button, aTemp, 12.0f, 1);
+				UI()->DoLabelScaled(&Button, aTemp, 12.0f, 1);
 			}
 			else if(Id == COL_VERSION)
 			{
 				const char *pVersion = pItem->m_aVersion;
-				if(str_comp(pVersion, "0.3 e2d7973c6647a13c") == 0) // TODO: remove me later on
-					pVersion = "0.3.0";
-				UI()->DoLabel(&Button, pVersion, 12.0f, 1);
+				UI()->DoLabelScaled(&Button, pVersion, 12.0f, 1);
 			}
 			else if(Id == COL_GAMETYPE)
 			{
 				CTextCursor Cursor;
-				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f*UI()->Scale(), TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = Button.w;
 				TextRender()->TextEx(&Cursor, pItem->m_aGameType, -1);
 			}
@@ -376,7 +374,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	CUIRect QuickSearch, Button;
 	Status.VSplitLeft(260.0f, &QuickSearch, &Status);
 	const char *pLabel = Localize("Quick search:");
-	UI()->DoLabel(&QuickSearch, pLabel, 12.0f, -1);
+	UI()->DoLabelScaled(&QuickSearch, pLabel, 12.0f, -1);
 	float w = TextRender()->TextWidth(0, 12.0f, pLabel, -1);
 	QuickSearch.VSplitLeft(w, 0, &QuickSearch);
 	QuickSearch.VSplitLeft(5.0f, 0, &QuickSearch);
@@ -402,7 +400,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	else
 		str_format(aBuf, sizeof(aBuf), Localize("%d of %d servers, %d players"), ServerBrowser()->NumSortedServers(), ServerBrowser()->NumServers(), NumPlayers);
 	Status.VSplitRight(TextRender()->TextWidth(0, 14.0f, aBuf, -1), 0, &Status);
-	UI()->DoLabel(&Status, aBuf, 14.0f, -1);
+	UI()->DoLabelScaled(&Status, aBuf, 14.0f, -1);
 }
 
 void CMenus::RenderServerbrowserFilters(CUIRect View)
@@ -444,7 +442,7 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 	View.HSplitTop(5.0f, 0, &View);
 
 	View.HSplitTop(19.0f, &Button, &View);
-	UI()->DoLabel(&Button, Localize("Game types:"), 12.0f, -1);
+	UI()->DoLabelScaled(&Button, Localize("Game types:"), 12.0f, -1);
 	Button.VSplitLeft(95.0f, 0, &Button);
 	View.HSplitTop(3.0f, 0, &View);
 	static float Offset = 0.0f;
@@ -456,7 +454,7 @@ void CMenus::RenderServerbrowserFilters(CUIRect View)
 		Button.VSplitRight(50.0f, &Button, &EditBox);
 		EditBox.VSplitRight(5.0f, &EditBox, 0);
 		
-		UI()->DoLabel(&Button, Localize("Maximum ping:"), 12.0f, -1);
+		UI()->DoLabelScaled(&Button, Localize("Maximum ping:"), 12.0f, -1);
 		
 		char aBuf[5];
 		str_format(aBuf, sizeof(aBuf), "%d", g_Config.m_BrFilterPing);
@@ -500,7 +498,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 	RenderTools()->DrawUIRect(&ServerHeader, vec4(1,1,1,0.25f), CUI::CORNER_T, 4.0f);
 	RenderTools()->DrawUIRect(&ServerDetails, vec4(0,0,0,0.15f), CUI::CORNER_B, 4.0f);
 	ServerHeader.VSplitLeft(8.0f, 0x0, &ServerHeader);
-	UI()->DoLabel(&ServerHeader, Localize("Server details"), FontSize+2.0f, -1);
+	UI()->DoLabelScaled(&ServerHeader, Localize("Server details"), FontSize+2.0f, -1);
 
 	ServerDetails.VSplitLeft(5.0f, 0x0, &ServerDetails);
 
@@ -538,19 +536,19 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 		for (unsigned int i = 0; i < sizeof(s_aLabels) / sizeof(s_aLabels[0]); i++)
 		{
 			LeftColumn.HSplitTop(15.0f, &Row, &LeftColumn);
-			UI()->DoLabel(&Row, s_aLabels[i], FontSize, -1);
+			UI()->DoLabelScaled(&Row, s_aLabels[i], FontSize, -1);
 		}
 
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
-		UI()->DoLabel(&Row, pSelectedServer->m_aVersion, FontSize, -1);
+		UI()->DoLabelScaled(&Row, pSelectedServer->m_aVersion, FontSize, -1);
 
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
-		UI()->DoLabel(&Row, pSelectedServer->m_aGameType, FontSize, -1);
+		UI()->DoLabelScaled(&Row, pSelectedServer->m_aGameType, FontSize, -1);
 
 		char aTemp[16];
 		str_format(aTemp, sizeof(aTemp), "%d", pSelectedServer->m_Latency);
 		RightColumn.HSplitTop(15.0f, &Row, &RightColumn);
-		UI()->DoLabel(&Row, aTemp, FontSize, -1);
+		UI()->DoLabelScaled(&Row, aTemp, FontSize, -1);
 
 	}
 
@@ -561,7 +559,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 	RenderTools()->DrawUIRect(&ServerHeader, vec4(1,1,1,0.25f), CUI::CORNER_T, 4.0f);
 	RenderTools()->DrawUIRect(&ServerScoreBoard, vec4(0,0,0,0.15f), CUI::CORNER_B, 4.0f);
 	ServerHeader.VSplitLeft(8.0f, 0x0, &ServerHeader);
-	UI()->DoLabel(&ServerHeader, Localize("Scoreboard"), FontSize+2.0f, -1);
+	UI()->DoLabelScaled(&ServerHeader, Localize("Scoreboard"), FontSize+2.0f, -1);
 
 	ServerScoreBoard.VSplitLeft(5.0f, 0x0, &ServerScoreBoard);
 
@@ -576,7 +574,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View)
 			ServerScoreBoard.HSplitTop(16.0f, &Row, &ServerScoreBoard);
 
 			str_format(aTemp, sizeof(aTemp), "%d", pSelectedServer->m_aPlayers[i].m_Score);
-			UI()->DoLabel(&Row, aTemp, FontSize, -1);
+			UI()->DoLabelScaled(&Row, aTemp, FontSize, -1);
 
 			Row.VSplitLeft(25.0f, 0x0, &Row);
 
@@ -695,7 +693,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 			str_format(aBuf, sizeof(aBuf), Localize("Teeworlds %s is out! Download it at www.teeworlds.com!"), Client()->LatestVersion());
 		else
 			str_format(aBuf, sizeof(aBuf), Localize("Current version: %s"), GAME_VERSION);
-		UI()->DoLabel(&StatusToolBox, aBuf, 14.0f, -1);
+		UI()->DoLabelScaled(&StatusToolBox, aBuf, 14.0f, -1);
 	}
 
 	// do the button box
@@ -722,7 +720,7 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 		static float Offset = 0.0f;
 		DoEditBox(&g_Config.m_UiServerAddress, &Button, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress), 14.0f, &Offset);
 		ButtonBox.HSplitBottom(20.0f, &ButtonBox, &Button);
-		UI()->DoLabel(&Button, Localize("Host address"), 14.0f, -1);
+		UI()->DoLabelScaled(&Button, Localize("Host address"), 14.0f, -1);
 	}
 }
 
