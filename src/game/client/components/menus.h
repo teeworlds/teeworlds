@@ -81,7 +81,7 @@ class CMenus : public CComponent
 	void UiDoListboxStart(void *pId, const CUIRect *pRect, float RowHeight, const char *pTitle, const char *pBottomText, int NumItems,
 						  int ItemsPerRow, int SelectedIndex, float ScrollValue);
 	CListboxItem UiDoListboxNextItem(void *pID, bool Selected = false);
-	static CListboxItem UiDoListboxNextRow();
+	CListboxItem UiDoListboxNextRow();
 	int UiDoListboxEnd(float *pScrollValue, bool *pItemActivated);
 	
 	//static void demolist_listdir_callback(const char *name, int is_dir, void *user);
