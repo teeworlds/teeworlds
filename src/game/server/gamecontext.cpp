@@ -508,7 +508,7 @@ void CGameContext::OnTick()
 				bool aVoteChecked[MAX_CLIENTS] = {0};
 				for(int i = 0; i < MAX_CLIENTS; i++)
 				{
-					if(!m_apPlayers[i] || m_apPlayers[i]->GetTeam() == -1 && g_Config.m_SvSpecCantVote || aVoteChecked[i]) // votes not counted if ur spectator and SvSpecCantVote enabled
+					if(!m_apPlayers[i] || m_apPlayers[i]->GetTeam() == -1 && g_Config.m_SvSpecVote || aVoteChecked[i]) // votes not counted if ur spectator and SvSpecCantVote enabled
 						continue;
 					if(m_VoteKick && 
 						GetPlayerChar(m_VoteCreator) && GetPlayerChar(i) &&
@@ -817,7 +817,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 
 		int64 Now = Server()->Tick();
 		p->m_Last_VoteTry = Now;
-		if(p->GetTeam() == -1 && g_Config.m_SvSpecCantVote)
+		if(p->GetTeam() == -1 && !g_Config.m_SvSpecVote)
 		{
 			SendChatTarget(ClientId, "Spectators aren't allowed to start a vote.");
 			return;

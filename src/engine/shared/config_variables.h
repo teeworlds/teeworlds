@@ -133,7 +133,7 @@ MACRO_CONFIG_INT(SvCheckpointSave, sv_checkpoint_save, 1, 0, 1, CFGFLAG_SERVER, 
 MACRO_CONFIG_STR(SvScoreFolder, sv_score_folder, 32, "records", CFGFLAG_SERVER, "Folder to save score files to", 3)
 MACRO_CONFIG_INT(SvContNinja, sv_contninja, 0, 0, 1, CFGFLAG_SERVER, "continuous ninja", 4)
 MACRO_CONFIG_INT(SvAutoShoot, sv_autoshoot, 0, 0, 1, CFGFLAG_SERVER, "Autoshoot", 4)
-MACRO_CONFIG_INT(SvSpecCantVote, sv_speccantvote, 0, 0, 1, CFGFLAG_SERVER, "If spec can vote or not ( 1 for yes )", 4)
+MACRO_CONFIG_INT(SvSpecVote, sv_specvote, 1, 0, 1, CFGFLAG_SERVER, "Weather spec can vote or not", 4)
 
 
 #if defined(CONF_SQL)
