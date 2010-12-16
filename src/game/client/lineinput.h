@@ -28,6 +28,7 @@ public:
 	const char *GetString() const { return m_Str; }
 	int GetLength() const { return m_Len; }
 	int GetCursorOffset() const { return m_CursorPos; }
+	void SetCursorOffset(int Offset) { m_CursorPos = Offset > m_Len ? m_Len : Offset < 0 ? 0 : Offset; }
 };
 
 #endif
