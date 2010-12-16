@@ -945,7 +945,22 @@ ZO
 [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
 == 
 
+left
+== 
+
+minute
+== 
+
+minutes
+== 
+
 no limit
+== 
+
+second
+== 
+
+seconds
 == 
 
 ##### old translations #####
