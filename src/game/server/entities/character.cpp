@@ -793,20 +793,22 @@ void CCharacter::Snap(int SnappingClient)
 	if(NetworkClipped(SnappingClient))
 		return;
 	
-	CNetObj_Character *Character = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
+	CNetObj_Character *pCharacter = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
+	if(!pCharacter)
+		return;
 	
 	// write down the m_Core
 	if(!m_ReckoningTick || GameServer()->m_World.m_Paused)
 	{
 		// no dead reckoning when paused because the client doesn't know
 		// how far to perform the reckoning
-		Character->m_Tick = 0;
-		m_Core.Write(Character);
+		pCharacter->m_Tick = 0;
+		m_Core.Write(pCharacter);
 	}
 	else
 	{
-		Character->m_Tick = m_ReckoningTick;
-		m_SendCore.Write(Character);
+		pCharacter->m_Tick = m_ReckoningTick;
+		m_SendCore.Write(pCharacter);
 	}
 	
 	// set emote
@@ -816,30 +818,30 @@ void CCharacter::Snap(int SnappingClient)
 		m_EmoteStop = -1;
 	}
 
-	Character->m_Emote = m_EmoteType;
+	pCharacter->m_Emote = m_EmoteType;
 
-	Character->m_AmmoCount = 0;
-	Character->m_Health = 0;
-	Character->m_Armor = 0;
+	pCharacter->m_AmmoCount = 0;
+	pCharacter->m_Health = 0;
+	pCharacter->m_Armor = 0;
 	
-	Character->m_Weapon = m_ActiveWeapon;
-	Character->m_AttackTick = m_AttackTick;
+	pCharacter->m_Weapon = m_ActiveWeapon;
+	pCharacter->m_AttackTick = m_AttackTick;
 
-	Character->m_Direction = m_Input.m_Direction;
+	pCharacter->m_Direction = m_Input.m_Direction;
 
 	if(m_pPlayer->GetCID() == SnappingClient)
 	{
-		Character->m_Health = m_Health;
-		Character->m_Armor = m_Armor;
+		pCharacter->m_Health = m_Health;
+		pCharacter->m_Armor = m_Armor;
 		if(m_aWeapons[m_ActiveWeapon].m_Ammo > 0)
-			Character->m_AmmoCount = m_aWeapons[m_ActiveWeapon].m_Ammo;
+			pCharacter->m_AmmoCount = m_aWeapons[m_ActiveWeapon].m_Ammo;
 	}
 
-	if (Character->m_Emote == EMOTE_NORMAL)
+	if(pCharacter->m_Emote == EMOTE_NORMAL)
 	{
 		if(250 - ((Server()->Tick() - m_LastAction)%(250)) < 5)
-			Character->m_Emote = EMOTE_BLINK;
+			pCharacter->m_Emote = EMOTE_BLINK;
 	}
 
-	Character->m_PlayerState = m_PlayerState;
+	pCharacter->m_PlayerState = m_PlayerState;
 }
