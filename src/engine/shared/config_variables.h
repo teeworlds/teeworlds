@@ -111,6 +111,7 @@ MACRO_CONFIG_INT(SvHideScore, sv_hide_score, 0, 0, 1, CFGFLAG_SERVER, "Whether p
 MACRO_CONFIG_INT(SvTimer, sv_timer, 0, 0, 1, CFGFLAG_SERVER, "Whether timer commands are allowed or not", 3)
 MACRO_CONFIG_INT(SvPauseable, sv_pauseable, 1, 0, 1, CFGFLAG_SERVER, "Whether players can pause their char or not", 3)
 MACRO_CONFIG_INT(SvPauseTime, sv_pause_time, 0, 0, 1, CFGFLAG_SERVER, "Whether '/pause' and 'sv_max_dc_restore' pauses the time of player or not", 3)
+MACRO_CONFIG_INT(SvPauseFrequency, sv_pause_frequency, 5, 0, 9999, CFGFLAG_SERVER, "The minimum allowed delay between pauses", 3)
 
 MACRO_CONFIG_INT(SvEmotionalTees, sv_emotional_tees, 1, 0, 1, CFGFLAG_SERVER, "Whether eye change of tees is enabled or not", 3)
 MACRO_CONFIG_INT(SvEmoticonDelay, sv_emoticon_delay, 3, 0, 9999, CFGFLAG_SERVER, "The time in seconds between over-head emoticons", 3)
@@ -120,7 +121,8 @@ MACRO_CONFIG_INT(SvTeamChangeDelay, sv_team_change_delay, 3, 0, 9999, CFGFLAG_SE
 MACRO_CONFIG_INT(SvInfoChangeDelay, sv_info_change_delay, 5, 0, 9999, CFGFLAG_SERVER, "The time in seconds between info changes (name/skin/color), to avoid ranbow mod set this to a very high time", 3)
 MACRO_CONFIG_INT(SvVoteMapTimeDelay, sv_vote_map_delay,0,0,9999,CFGFLAG_SERVER, "The minimum time in seconds between map votes", 3)
 MACRO_CONFIG_INT(SvVoteDelay, sv_vote_delay, 3, 0, 9999, CFGFLAG_SERVER, "The time in seconds between any vote", 3)
-MACRO_CONFIG_INT(SvVoteKickTimeDelay, sv_vote_kick_delay,0,0,9999,CFGFLAG_SERVER, "The minimum time in seconds between kick votes", 3)
+MACRO_CONFIG_INT(SvVoteKickTimeDelay, sv_vote_kick_delay, 0, 0, 9999, CFGFLAG_SERVER, "The minimum time in seconds between kick votes", 3)
+MACRO_CONFIG_INT(SvSpectatorVotes, sv_spectator_votes, 1, 0, 1, CFGFLAG_SERVER, "Choose if spectators are allowed to start votes", 3)
 MACRO_CONFIG_INT(SvKillDelay, sv_kill_delay,3,0,9999,CFGFLAG_SERVER, "The minimum time in seconds between kills", 3)
 MACRO_CONFIG_INT(SvSuicidePenalty, sv_suicide_penalty,0,0,9999,CFGFLAG_SERVER, "The minimum time in seconds between kill or /kills and respawn", 3)
 
