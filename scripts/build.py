@@ -11,18 +11,19 @@ if match != None:
 	os.chdir(os.getcwd() + "/" + match.group(1))
 
 url_bam = "http://github.com/matricks/bam/zipball/master"
+url_DDRace = "http://github.com/GreYFoXGTi/DDRace/zipball/master"
 url_teeworlds = "http://github.com/oy/teeworlds/zipball/master"
 release_type = "server_release client_release"
 
 arguments = OptionParser()
 arguments.add_option("-b", "--url_bam", dest = "url_bam")
-arguments.add_option("-t", "--url_teeworlds", dest = "url_teeworlds")
+arguments.add_option("-t", "--url_DDRace", dest = "url_DDRace")
 arguments.add_option("-r", "--release_type", dest = "release_type")
 (options, arguments) = arguments.parse_args()
 if options.url_bam == None:
 	options.url_bam = url_bam
-if options.url_teeworlds == None:
-	options.url_teeworlds = url_teeworlds
+if options.url_DDRace == None:
+	options.url_DDRace = url_DDRace
 if options.release_type == None:
 	options.release_type = release_type
 
@@ -32,7 +33,7 @@ if version_bam:
 	version_bam = version_bam.group(0)
 else:
 	version_bam = "trunk"
-teeworlds = options.url_teeworlds[7:].split("/")
+teeworlds = options.url_DDRace[7:].split("/")
 version_teeworlds = re.search(r"\d\.\d\.\d", teeworlds[len(teeworlds)-1])
 if version_teeworlds:
 	version_teeworlds = version_teeworlds.group(0)
@@ -43,7 +44,7 @@ bam_execution_path = ""
 if version_bam < "0.3.0":
 	bam_execution_path = "src%s" % os.sep
 
-name = "teeworlds"
+name = "DDRace"
 
 flag_download = True
 flag_clean = True
@@ -158,7 +159,7 @@ if flag_download:
 		bail("couldn't find source package and couldn't download it")
 
 	print("*** downloading %s source package ***" % name)
-	src_package_teeworlds = fetch_file(options.url_teeworlds)
+	src_package_teeworlds = fetch_file(options.url_DDRace)
 	if src_package_teeworlds:
 		if version_teeworlds == 'trunk':
 			version = re.search(r"-[^-]*?([^-]*?)\.[^.]*$", src_package_teeworlds)
