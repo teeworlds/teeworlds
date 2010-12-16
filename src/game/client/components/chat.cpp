@@ -324,7 +324,7 @@ void CChat::OnRender()
 	for(int i = 0; i < MAX_LINES; i++)
 	{
 		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
-		if(Now > m_aLines[r].m_Time+15*time_freq() && !m_Show)
+		if(Now > m_aLines[r].m_Time+16*time_freq() && !m_Show)
 			break;
 		
 		// get the y offset (calculate it if we haven't done that yet)
@@ -342,35 +342,37 @@ void CChat::OnRender()
 		if(y < HeightLimit)
 			break;
 		
+		float Blend = Now > m_aLines[r].m_Time+14*time_freq() && !m_Show ? 1.0f-(Now-m_aLines[r].m_Time-14*time_freq())/(2.0f*time_freq()) : 1.0f;
+
 		// reset the cursor
 		TextRender()->SetCursor(&Cursor, Begin, y, FontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = LineWidth;
 
 		// render name
 		if(m_aLines[r].m_ClientId == -1)
-			TextRender()->TextColor(1.0f, 1.0f, 0.5f, 1.0f); // system
+			TextRender()->TextColor(1.0f, 1.0f, 0.5f, Blend); // system
 		else if(m_aLines[r].m_Team)
-			TextRender()->TextColor(0.45f, 0.9f, 0.45f, 1.0f); // team message
+			TextRender()->TextColor(0.45f, 0.9f, 0.45f, Blend); // team message
 		else if(m_aLines[r].m_NameColor == 0)
-			TextRender()->TextColor(1.0f, 0.5f, 0.5f, 1.0f); // red
+			TextRender()->TextColor(1.0f, 0.5f, 0.5f, Blend); // red
 		else if(m_aLines[r].m_NameColor == 1)
-			TextRender()->TextColor(0.7f, 0.7f, 1.0f, 1.0f); // blue
+			TextRender()->TextColor(0.7f, 0.7f, 1.0f, Blend); // blue
 		else if(m_aLines[r].m_NameColor == -1)
-			TextRender()->TextColor(0.75f, 0.5f, 0.75f, 1.0f); // spectator
+			TextRender()->TextColor(0.75f, 0.5f, 0.75f, Blend); // spectator
 		else
-			TextRender()->TextColor(0.8f, 0.8f, 0.8f, 1.0f);
+			TextRender()->TextColor(0.8f, 0.8f, 0.8f, Blend);
 			
 		TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
 
 		// render line
 		if(m_aLines[r].m_ClientId == -1)
-			TextRender()->TextColor(1.0f, 1.0f, 0.5f, 1.0f); // system
+			TextRender()->TextColor(1.0f, 1.0f, 0.5f, Blend); // system
 		else if(m_aLines[r].m_Highlighted)
-			TextRender()->TextColor(1.0f, 0.5f, 0.5f, 1.0f); // highlighted
+			TextRender()->TextColor(1.0f, 0.5f, 0.5f, Blend); // highlighted
 		else if(m_aLines[r].m_Team)
-			TextRender()->TextColor(0.65f, 1.0f, 0.65f, 1.0f); // team message
+			TextRender()->TextColor(0.65f, 1.0f, 0.65f, Blend); // team message
 		else
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
 
 		TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
 	}
