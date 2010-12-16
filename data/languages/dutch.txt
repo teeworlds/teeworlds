@@ -1,4 +1,3 @@
-
 ##### translated strings #####
 
 %d of %d servers, %d players
@@ -75,6 +74,12 @@ As this is the first time you launch the game, please enter your nick name below
 
 Aspect ratio
 == Beeldverhouding
+
+Automatically record demos
+== Automatisch demo's opnemen
+
+Automatically take game over screenshot
+== Automatisch schermafbeeldingen nemen
 
 Blue team
 == Blauwe team
@@ -412,6 +417,9 @@ Layers
 Left
 == Links
 
+left
+== nog
+
 Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
 == Linkermuisknop om te bewegen. Houd shift ingedrukt om te roteren. Houd ctrl ingedrukt om te draaien.
 
@@ -448,8 +456,20 @@ Make external
 Map
 == Kaart
 
+Max demos
+== Maximaal aantal demo's
+
+Max Screenshots
+== Maximaal aantal schermafbeeldingen
+
 Maximum ping:
 == Hoogste ping:
+
+minute
+== minuut
+
+minutes
+== minuten
 
 Miscellaneous
 == Diverse
@@ -467,7 +487,7 @@ Movement
 == Bewegen
 
 Mute when not active
-== Demp, waneer niet actief
+== Dempen wanneer inactief
 
 Name
 == Naam
@@ -495,6 +515,9 @@ Nickname
 
 No
 == Nee
+
+no limit
+== ongelimiteerd
 
 No password
 == Geen wachtwoord
@@ -707,7 +730,13 @@ Scoreboard
 == Scorebord
 
 Screenshot
-== Screenshot
+== Schermafbeelding
+
+second
+== seconde
+
+seconds
+== seconden
 
 Select group. Right click for properties.
 == Kies een groep. Rechtermuisknop voor eigenschappen.
@@ -932,36 +961,6 @@ ZO
 == [ctrl+p] Test grenzen. Deze grenzen laten zien wat een speler maximaal kan zien.
 
 ##### needs translation #####
-
-Automatically record demos
-== 
-
-Automatically take game over screenshot
-== 
-
-Max Screenshots
-== 
-
-Max demos
-== 
-
-left
-== 
-
-minute
-== 
-
-minutes
-== 
-
-no limit
-== 
-
-second
-== 
-
-seconds
-== 
 
 ##### old translations #####
 
