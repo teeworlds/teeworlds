@@ -6,11 +6,12 @@
 
 class CBroadcast : public CComponent
 {
-public:
 	// broadcasts
 	char m_aBroadcastText[1024];
 	int64 m_BroadcastTime;
-	
+	float m_BroadcastRenderOffset;
+
+public:
 	virtual void OnReset();
 	virtual void OnRender();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
