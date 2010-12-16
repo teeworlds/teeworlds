@@ -26,6 +26,7 @@ class CChat : public CComponent
 		int m_Spam;
 		char m_aName[64];
 		char m_aText[512];
+		bool m_Highlighted;
 	};
 
 	CLine m_aLines[MAX_LINES];
@@ -44,6 +45,10 @@ class CChat : public CComponent
 	bool m_InputUpdate;
 	int m_ChatStringOffset;
 	int m_OldChatStringLength;
+	int m_CompletionChosen;
+	char m_aCompletionBuffer[256];
+	int m_PlaceholderOffset;
+	int m_PlaceholderLength;
 	
 	bool m_ContainsName;
 	bool m_IgnorePlayer;
