@@ -94,31 +94,34 @@ void CPlayer::Snap(int SnappingClient)
 	if(!Server()->ClientIngame(m_ClientID))
 		return;
 
-	CNetObj_ClientInfo *ClientInfo = static_cast<CNetObj_ClientInfo *>(Server()->SnapNewItem(NETOBJTYPE_CLIENTINFO, m_ClientID, sizeof(CNetObj_ClientInfo)));
-	StrToInts(&ClientInfo->m_Name0, 6, Server()->ClientName(m_ClientID));
-	StrToInts(&ClientInfo->m_Skin0, 6, m_TeeInfos.m_SkinName);
-	ClientInfo->m_UseCustomColor = m_TeeInfos.m_UseCustomColor;
-	ClientInfo->m_ColorBody = m_TeeInfos.m_ColorBody;
-	ClientInfo->m_ColorFeet = m_TeeInfos.m_ColorFeet;
+	CNetObj_ClientInfo *pClientInfo = static_cast<CNetObj_ClientInfo *>(Server()->SnapNewItem(NETOBJTYPE_CLIENTINFO, m_ClientID, sizeof(CNetObj_ClientInfo)));
+	if(!pClientInfo)
+		return;
 
-	CNetObj_PlayerInfo *Info = static_cast<CNetObj_PlayerInfo *>(Server()->SnapNewItem(NETOBJTYPE_PLAYERINFO, m_ClientID, sizeof(CNetObj_PlayerInfo)));
+	StrToInts(&pClientInfo->m_Name0, 6, Server()->ClientName(m_ClientID));
+	StrToInts(&pClientInfo->m_Skin0, 6, m_TeeInfos.m_SkinName);
+	pClientInfo->m_UseCustomColor = m_TeeInfos.m_UseCustomColor;
+	pClientInfo->m_ColorBody = m_TeeInfos.m_ColorBody;
+	pClientInfo->m_ColorFeet = m_TeeInfos.m_ColorFeet;
 
-	Info->m_Latency = m_Latency.m_Min;
-	Info->m_LatencyFlux = m_Latency.m_Max-m_Latency.m_Min;
-	Info->m_Local = 0;
-	Info->m_ClientId = m_ClientID;
+	CNetObj_PlayerInfo *pPlayerInfo = static_cast<CNetObj_PlayerInfo *>(Server()->SnapNewItem(NETOBJTYPE_PLAYERINFO, m_ClientID, sizeof(CNetObj_PlayerInfo)));
+	if(!pPlayerInfo)
+		return;
 
-
+	pPlayerInfo->m_Latency = m_Latency.m_Min;
+	pPlayerInfo->m_LatencyFlux = m_Latency.m_Max-m_Latency.m_Min;
+	pPlayerInfo->m_Local = 0;
+	pPlayerInfo->m_ClientId = m_ClientID;
 	if(m_ClientID == SnappingClient)
-		Info->m_Local = 1;	
+		pPlayerInfo->m_Local = 1;	
 	
 	// send 0 if times of others are not shown
 	if(SnappingClient != m_ClientID && g_Config.m_SvHideScore)
-		Info->m_Score = 0;
+		pPlayerInfo->m_Score = 0;
 	else
-		Info->m_Score = m_Score;
+		pPlayerInfo->m_Score = m_Score;
 		
-	Info->m_Team = m_Team;
+	pPlayerInfo->m_Team = m_Team;
 }
 
 void CPlayer::OnDisconnect()

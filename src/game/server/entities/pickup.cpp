@@ -158,6 +158,9 @@ void CPickup::Snap(int SnappingClient)
 	int Tick = (Server()->Tick()%Server()->TickSpeed())%11;
 	if (SnapChar && SnapChar->m_Alive && (m_Layer == LAYER_SWITCH && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[SnapChar->Team()]) && (!Tick)) return;
 	CNetObj_Pickup *pP = static_cast<CNetObj_Pickup *>(Server()->SnapNewItem(NETOBJTYPE_PICKUP, m_Id, sizeof(CNetObj_Pickup)));
+	if(!pP)
+		return;
+
 	pP->m_X = (int)m_Pos.x;
 	pP->m_Y = (int)m_Pos.y;
 	pP->m_Type = m_Type;
