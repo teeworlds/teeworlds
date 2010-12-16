@@ -203,29 +203,26 @@ if 1:
 # build the game
 if 1:
 	print("*** building %s ***" % name)
+	command  = 1
 	if os.name == "nt":
-		winreg_lib = _compatibility._import(("_winreg", "winreg"))
-		exec("import %s" % winreg_lib)
-		exec("winreg_lib = %s" % winreg_lib)
-		try:
-			key = winreg_lib.OpenKey(winreg_lib.HKEY_LOCAL_MACHINE, "SOFTWARE\Microsoft\VisualStudio\SxS\VS7")
-			try:
-				vsinstalldir = winreg_lib.QueryValueEx(key, "10.0")[0]
-			except:
-				try:
-					vsinstalldir = winreg_lib.QueryValueEx(key, "9.0")[0]
-				except:
-					try:
-						vsinstalldir = winreg_lib.QueryValueEx(key, "8.0")[0]
-					except:
-						bail("failed to build %s" % name)
-			winreg_lib.CloseKey(key)
-			file = open("build.bat", "wb")
-			file.write(('call "%sVC\\vcvarsall.bat"\ncd %s\n"%s\\%s%sbam" config\n"%s\\%s%sbam" %s' % (vsinstalldir, src_dir_teeworlds, work_dir, src_dir_bam, bam_execution_path, work_dir, src_dir_bam, bam_execution_path, options.release_type)).encode("utf-8"))
-			file.close()
-			command = os.system("build.bat")
-		except:
-			pass
+		file = open("build.bat", "wb")
+		content = "@echo off\n"
+		content += "@REM check if we already have the tools in the environment\n"
+		content += "if exist \"%VCINSTALLDIR%\" (\ngoto compile\n)\n"
+		content += "@REM Check for Visual Studio\n"
+		content += "if exist \"%VS100COMNTOOLS%\" (\nset VSPATH=\"%VS100COMNTOOLS%\"\ngoto set_env\n)\n"
+		content += "if exist \"%VS90COMNTOOLS%\" (\nset VSPATH=\"%VS90COMNTOOLS%\"\ngoto set_env\n)\n"
+		content += "if exist \"%VS80COMNTOOLS%\" (\nset VSPATH=\"%VS80COMNTOOLS%\"\ngoto set_env\n)\n\n"
+		content += "echo You need Microsoft Visual Studio 8, 9 or 10 installed\n"
+		content += "exit\n"
+		content += "@ setup the environment\n"
+		content += ":set_env\n"
+		content += "call %VSPATH%vsvars32.bat\n\n"
+		content += ":compile\n"
+		content += 'cd %s\n"%s\\%s%sbam" config\n"%s\\%s%sbam" %s' % (src_dir_teeworlds, work_dir, src_dir_bam, bam_execution_path, work_dir, src_dir_bam, bam_execution_path, options.release_type)
+		file.write(content)
+		file.close()
+		command = os.system("build.bat")
 	else:
 		os.chdir(src_dir_teeworlds)
 		command = os.system("%s/%s%sbam %s" % (work_dir, src_dir_bam, bam_execution_path, options.release_type))
