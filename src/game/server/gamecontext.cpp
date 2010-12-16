@@ -942,7 +942,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				}
 			}
 			
-			str_format(aChatmsg, sizeof(aChatmsg), "Vote called too kick '%s' (%s)", Server()->ClientName(ClientId), Server()->ClientName(KickId), pReason);
+			str_format(aChatmsg, sizeof(aChatmsg), "Vote called too kick '%s' (%s)", Server()->ClientName(KickId), pReason);
 			str_format(aDesc, sizeof(aDesc), "Kick '%s'", Server()->ClientName(KickId));
 			if(!g_Config.m_SvVoteKickBantime)
 				str_format(aCmd, sizeof(aCmd), "kick %d Kicked by vote", KickId);
@@ -1342,12 +1342,9 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConTuneReset, this, "Resets all tuning", 4);
 	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConTuneDump, this, "Shows all tuning options", 4);
 
-
-	
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "Forces the current vote to result in r (Yes/No)", 3);
 
     Console()->Register("whisper", "ir", CFGFLAG_SERVER, ConWhisper, this, "Whispers r to player i", 1);
-    Console()->Register("w", "ir", CFGFLAG_SERVER, ConWhisper, this, "Whispers r to player i", 1);
 	
 	#define CONSOLE_COMMAND(name, params, flags, callback, userdata, help, level) m_pConsole->Register(name, params, flags, callback, userdata, help, level);
 	#include "game/ddracecommands.h"
