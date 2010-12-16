@@ -804,6 +804,12 @@ Are you sure that you want to delete the demo?
 Aspect ratio
 == 
 
+Automatically record demos
+== 
+
+Automatically take game over screenshot
+== 
+
 Blue value of the envelope
 == 
 
@@ -856,6 +862,12 @@ Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point
 == 
 
 Load map
+== 
+
+Max Screenshots
+== 
+
+Max demos
 == 
 
 New folder
@@ -931,6 +943,11 @@ Y-axis of the envelope
 == 
 
 [HOME] Restore map focus
+== 
+
+no limit
+== 
+
 == 
 
 

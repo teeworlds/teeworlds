@@ -116,8 +116,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
             if(g_Config.m_PlayerUseCustomColor)
             {
-                OwnSkinInfo.m_ColorBody = m_pClient->m_pSkins->GetColor(g_Config.m_PlayerColorBody);
-                OwnSkinInfo.m_ColorFeet = m_pClient->m_pSkins->GetColor(g_Config.m_PlayerColorFeet);
+                OwnSkinInfo.m_ColorBody = m_pClient->m_pSkins->GetColorV4(g_Config.m_PlayerColorBody);
+                OwnSkinInfo.m_ColorFeet = m_pClient->m_pSkins->GetColorV4(g_Config.m_PlayerColorFeet);
                 OwnSkinInfo.m_Texture = pOwnSkin->m_ColorTexture;
             }
 
@@ -250,8 +250,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 				if(g_Config.m_PlayerUseCustomColor)
 				{
-					Info.m_ColorBody = m_pClient->m_pSkins->GetColor(g_Config.m_PlayerColorBody);
-					Info.m_ColorFeet = m_pClient->m_pSkins->GetColor(g_Config.m_PlayerColorFeet);
+					Info.m_ColorBody = m_pClient->m_pSkins->GetColorV4(g_Config.m_PlayerColorBody);
+					Info.m_ColorFeet = m_pClient->m_pSkins->GetColorV4(g_Config.m_PlayerColorFeet);
 					Info.m_Texture = s->m_ColorTexture;
 				}
 
@@ -261,9 +261,10 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 				if(g_Config.m_Debug)
 				{
+					vec3 BloodColor = g_Config.m_PlayerUseCustomColor ? m_pClient->m_pSkins->GetColorV3(g_Config.m_PlayerColorBody) : s->m_BloodColor;
 					Graphics()->TextureSet(-1);
 					Graphics()->QuadsBegin();
-					Graphics()->SetColor(s->m_BloodColor.r, s->m_BloodColor.g, s->m_BloodColor.b, 1.0f);
+					Graphics()->SetColor(BloodColor.r, BloodColor.g, BloodColor.b, 1.0f);
 					IGraphics::CQuadItem QuadItem(Item.m_Rect.x, Item.m_Rect.y, 12, 12);
 					Graphics()->QuadsDrawTL(&QuadItem, 1);
 					Graphics()->QuadsEnd();
@@ -707,7 +708,7 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 	io_close(File);
 }
 
-void CMenus::RenderSettingsGeneral(CUIRect MainView)
+void CMenus::RenderLanguageSelection(CUIRect MainView)
 {
 	static int s_LanguageList  = 0;
 	static int s_SelectedLanguage = 0;
@@ -728,8 +729,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	int OldSelected = s_SelectedLanguage;
 
-	CUIRect List = MainView;
-	UiDoListboxStart(&s_LanguageList , &List, 24.0f, Localize("Language"), "", s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);
+	UiDoListboxStart(&s_LanguageList , &MainView, 24.0f, Localize("Language"), "", s_Languages.size(), 1, s_SelectedLanguage, s_ScrollValue);
 
 	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
 	{
@@ -746,6 +746,51 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		str_copy(g_Config.m_ClLanguagefile, s_Languages[s_SelectedLanguage].m_FileName, sizeof(g_Config.m_ClLanguagefile));
 		g_Localization.Load(s_Languages[s_SelectedLanguage].m_FileName, Storage(), Console());
 	}
+}
+
+void CMenus::RenderSettingsGeneral(CUIRect MainView)
+{
+	CUIRect List, Button, Label, Left, Right;
+	MainView.HSplitBottom(10.0f, &MainView, 0);
+	MainView.HSplitBottom(70.0f, &MainView, &Left);
+	Left.VSplitMid(&Left, &Right);
+	MainView.HSplitBottom(20.0f, &List, &MainView);
+
+	// auto demo settings
+	{
+		Left.HSplitTop(20.0f, &Button, &Left);
+		if(DoButton_CheckBox(&g_Config.m_ClAutoDemoRecord, Localize("Automatically record demos"), g_Config.m_ClAutoDemoRecord, &Button))
+			g_Config.m_ClAutoDemoRecord ^= 1;
+
+		Right.HSplitTop(20.0f, &Button, &Right);
+		if(DoButton_CheckBox(&g_Config.m_ClAutoScreenshot, Localize("Automatically take game over screenshot"), g_Config.m_ClAutoScreenshot, &Button))
+			g_Config.m_ClAutoScreenshot ^= 1;
+
+		Left.HSplitTop(10.0f, 0, &Left);
+		Left.VSplitLeft(20.0f, 0, &Left);
+		Left.HSplitTop(20.0f, &Label, &Button);
+		Button.VSplitRight(20.0f, &Button, 0);
+		char aBuf[64];
+		if(g_Config.m_ClAutoDemoMax)
+			str_format(aBuf, sizeof(aBuf), "%s: %i", Localize("Max demos"), g_Config.m_ClAutoDemoMax);
+		else
+			str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Max demos"), Localize("no limit"));
+		UI()->DoLabel(&Label, aBuf, 13.0f, -1);
+		g_Config.m_ClAutoDemoMax = static_cast<int>(DoScrollbarH(&g_Config.m_ClAutoDemoMax, &Button, g_Config.m_ClAutoDemoMax/1000.0f)*1000.0f+0.1f);
+
+		Right.HSplitTop(10.0f, 0, &Right);
+		Right.VSplitLeft(20.0f, 0, &Right);
+		Right.HSplitTop(20.0f, &Label, &Button);
+		Button.VSplitRight(20.0f, &Button, 0);
+		if(g_Config.m_ClAutoScreenshotMax)
+			str_format(aBuf, sizeof(aBuf), "%s: %i", Localize("Max Screenshots"), g_Config.m_ClAutoScreenshotMax);
+		else
+			str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Max Screenshots"), Localize("no limit"));
+		UI()->DoLabel(&Label, aBuf, 13.0f, -1);
+		g_Config.m_ClAutoScreenshotMax = static_cast<int>(DoScrollbarH(&g_Config.m_ClAutoScreenshotMax, &Button, g_Config.m_ClAutoScreenshotMax/1000.0f)*1000.0f+0.1f);
+	}
+
+	RenderLanguageSelection(List);
 }
 
 void CMenus::RenderSettings(CUIRect MainView)

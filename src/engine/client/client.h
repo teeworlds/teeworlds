@@ -73,6 +73,36 @@ public:
 };
 
 
+class CFileCollection
+{
+	enum
+	{
+		MAX_ENTRIES=1000,
+		TIMESTAMP_LENGTH=20,	// _YYYY-MM-DD_HH-MM-SS
+	};
+
+	int64 m_aTimestamps[MAX_ENTRIES];
+	int m_NumTimestamps;
+	int m_MaxEntries;
+	char m_aFileDesc[128];
+	int m_FileDescLength;
+	char m_aFileExt[32];
+	int m_FileExtLength;
+	char m_aPath[512];
+	IStorage *m_pStorage;
+
+	bool IsFilenameValid(const char *pFilename);
+	int64 ExtractTimestamp(const char *pTimestring);
+	void BuildTimestring(int64 Timestamp, char *pTimestring);
+
+public:
+	void Init(IStorage *pStorage, const char *pPath, const char *pFileDesc, const char *pFileExt, int MaxEntries);
+	void AddEntry(int64 Timestamp);
+
+	static void FilelistCallback(const char *pFilename, int IsDir, int StorageType, void *pUser);
+};
+
+
 class CClient : public IClient, public CDemoPlayer::IListner
 {
 	// needed interfaces
@@ -110,6 +140,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	NETADDR m_ServerAddress;
 	int m_WindowMustRefocus;
 	int m_SnapCrcErrors;
+	bool m_AutoScreenshotRecycle;
 
 	int m_AckGameTick;
 	int m_CurrentRecvTick;
@@ -284,7 +315,13 @@ public:
 	void RegisterCommands();
 
 	const char *DemoPlayer_Play(const char *pFilename, int StorageType);
-	void DemoRecorder_Start(const char *pFilename);
+	void DemoRecorder_Init();
+	void DemoRecorder_Start(const char *pFilename, bool WithTimestamp);
+	void DemoRecorder_HandleAutoStart();
+	void DemoRecorder_Stop();
+
+	void AutoScreenshot_Start();
+	void AutoScreenshot_Cleanup();
 
 	virtual class CEngine *Engine() { return &m_Engine; }
 };

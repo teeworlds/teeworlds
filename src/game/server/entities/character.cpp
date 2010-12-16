@@ -74,17 +74,17 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_DDRaceState = DDRACE_NONE;
 	m_PrevPos = Pos;
 	m_Core.Reset();
-	m_BroadTime = true;
 	m_BroadCast = true;
 	m_EyeEmote = true;
 	m_Fly = true;
-	m_TimerReseted = false;
+	m_LastBroadcast = 0;
 	m_TeamBeforeSuper = 0;
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision(), &Controller->m_Teams.m_Core);
 	m_Core.m_Pos = m_Pos;
 	m_Core.m_Id = GetPlayer()->GetCID();
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = &m_Core;
+	dbg_msg("CCHaracter::Spawn", "ID %d Player %d m_Core %d", GetPlayer()->GetCID() ,GetPlayer() ,&m_Core);
 			
 	m_ReckoningTick = 0;
 	mem_zero(&m_SendCore, sizeof(m_SendCore));
@@ -104,7 +104,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 
 void CCharacter::Destroy()
 {
-	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
+	//GameServer()->m_World.m_Core.m_apCharacters[m_MarkedId] = 0; This caused the Marked Char for delete to always Delete ID 0 Core
+	dbg_msg("CCHaracter::Destroy", "ID %d Player %d m_Core %d", GetPlayer()->GetCID() ,GetPlayer() ,&m_Core);
 	m_Alive = false;
 	CEntity::Destroy();
 }
@@ -659,9 +660,9 @@ void CCharacter::OnFinish()
 
 		m_DDRaceState = DDRACE_NONE;
 		// set player score
-		if(!GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime || GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime > time)
+		if(!pData->m_CurrentTime || pData->m_CurrentTime > time)
 		{
-			GameServer()->Score()->PlayerData(m_pPlayer->GetCID())->m_CurrentTime = time;
+			pData->m_CurrentTime = time;
 			NeedToSendNewRecord = true;
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
@@ -693,6 +694,12 @@ void CCharacter::OnFinish()
 			Msg.m_Time = (int)(time * 100.0f);
 			Msg.m_Check = 0;
 			Msg.m_Finish = 1;
+
+				if(pData->m_BestTime)
+				{
+					float Diff = (time - pData->m_BestTime)*100;
+					Msg.m_Check = (int)Diff;
+				}
 			
 			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
 		}
@@ -722,7 +729,6 @@ void CCharacter::HandleFly()
 
 void CCharacter::Tick()
 {
-	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	std::list < int > Indices = GameServer()->Collision()->GetMapIndices(m_PrevPos, m_Pos);
 	//dbg_msg("Indices","%d",Indices.size());
 	/*if(m_pPlayer->m_ForceBalanced)
@@ -769,88 +775,58 @@ void CCharacter::Tick()
 		m_Core.m_HookTick = 0;
 	/*dbg_msg("character","m_TileIndex=%d , m_TileFIndex=%d",m_TileIndex,m_TileFIndex); //REMOVE*/
 	//DDRace
-	char aBuftime[128];
+	char aBroadcast[128];
 	m_Time = (float)(Server()->Tick() - m_StartTime) / ((float)Server()->TickSpeed());
 	CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
-	
-	if(!m_TimerReseted && m_DDRaceState == DDRACE_CHEAT) {
-		m_TimerReseted = true;
-		CNetMsg_Sv_DDRaceTime Msg;
-		Msg.m_Time = 0;
-		Msg.m_Check = 0;
-		Msg.m_Finish = 0;
-		
-		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
-	}
 
 	if(Server()->Tick() - m_RefreshTime >= Server()->TickSpeed())
 	{
-		if (m_DDRaceState == DDRACE_STARTED) {
-			int IntTime = (int)m_Time;
-			
-			if(m_pPlayer->m_IsUsingDDRaceClient) {
-				CNetMsg_Sv_DDRaceTime Msg;
-				Msg.m_Time = IntTime;
-				Msg.m_Check = 0;
-				Msg.m_Finish = 0;
-				
-				if(m_CpActive != -1 && m_CpTick > Server()->Tick())
+		if (m_DDRaceState == DDRACE_STARTED)
+		{
+			if(m_CpActive != -1 && m_CpTick > Server()->Tick() && !m_pPlayer->m_IsUsingDDRaceClient)
+			{
+				if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
 				{
-					if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
-					{
-						float Diff = (m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive])*100;
-						Msg.m_Check = (int)Diff;
-					}
-				}
-				
-				Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
-			} else {
-				if(m_BroadTime)
-					str_format(aBuftime, sizeof(aBuftime), "%s%d:%s%d", ((IntTime/60) > 9)?"":"0", IntTime/60, ((IntTime%60) > 9)?"":"0", IntTime%60);
-				else
-					str_format(aBuftime, sizeof(aBuftime), "");
-				
-				if(m_CpActive != -1 && m_CpTick > Server()->Tick())
-				{
-					if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
-					{
-						char aTmp[128];
-						float Diff = m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive];
-						str_format(aTmp, sizeof(aTmp), "\nCheckpoint | Diff : %+5.2f", Diff);
-						strcat(aBuftime, aTmp);
-					}
-				}
-				if( g_Config.m_SvBroadcast[0] != 0 && m_BroadCast)
-				{
-					char aTmp[128];
-					str_format(aTmp, sizeof(aTmp), "\n%s\n", g_Config.m_SvBroadcast);
-					strcat(aBuftime, aTmp);
-				}
-				if(Server()->Tick() >= (m_LastBroadcast + Server()->TickSpeed()))
-				{
-					GameServer()->SendBroadcast(aBuftime, m_pPlayer->GetCID());
+					float Diff = m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive];
+					str_format(aBroadcast, sizeof(aBroadcast), "Checkpoint | Diff : %+5.2f", Diff);
+					GameServer()->SendBroadcast(aBroadcast, m_pPlayer->GetCID());
 					m_LastBroadcast = Server()->Tick();
 				}
 			}
-		} else {
-			
+			else if( g_Config.m_SvBroadcast[0] != 0 && m_BroadCast)
+			{
+				str_format(aBroadcast, sizeof(aBroadcast), "%s", g_Config.m_SvBroadcast);
+
+				if(Server()->Tick() >= (m_LastBroadcast + Server()->TickSpeed()))
+				{
+					GameServer()->SendBroadcast(aBroadcast, m_pPlayer->GetCID());
+					m_LastBroadcast = Server()->Tick();
+				}
+			}
+		}
+		else
+		{
+			char aTmp[128];
 			if(!m_pPlayer->m_IsUsingDDRaceClient) 
 			{
-
-				if( g_Config.m_SvBroadcast[0] != 0 && (Server()->Tick() > (m_LastBroadcast + (Server()->TickSpeed() * 9)))) {
-					char aTmp[128], aYourBest[64],aServerBest[64];
+				if( g_Config.m_SvBroadcast[0] != 0 && (Server()->Tick() > (m_LastBroadcast + (Server()->TickSpeed() * 9))))
+				{
+					char aYourBest[64],aServerBest[64];
 					str_format(aYourBest, sizeof(aYourBest), "Your Best:'%s%d:%s%d'", ((pData->m_BestTime / 60) < 10)?"0":"", (int)(pData->m_BestTime / 60), (((int)pData->m_BestTime % 60) < 10)?"0":"", (int)pData->m_BestTime % 60);
 					
 					CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
 					
 					str_format(aServerBest, sizeof(aServerBest), "Server Best:'%s%d:%s%d'", ((GameServer()->m_pController->m_CurrentRecord / 60) < 10)?"0":"", (int)(GameServer()->m_pController->m_CurrentRecord / 60), (((int)GameServer()->m_pController->m_CurrentRecord % 60) < 10)?"0":"", (int)GameServer()->m_pController->m_CurrentRecord % 60);
-					
-					str_format(aTmp, sizeof(aTmp), "%s\n%s %s", g_Config.m_SvBroadcast, (GameServer()->m_pController->m_CurrentRecord)?aServerBest:"", (pData->m_BestTime)?aYourBest:"");
+					str_format(aTmp, sizeof(aTmp), "%s %s", (GameServer()->m_pController->m_CurrentRecord)?aServerBest:"", (pData->m_BestTime)?aYourBest:"");
 					GameServer()->SendBroadcast(aTmp, m_pPlayer->GetCID());
 					m_LastBroadcast = Server()->Tick();
 				}
-			} else {
-				//make there smthing with broadcast
+			}
+			else if( g_Config.m_SvBroadcast[0] != 0 && (Server()->Tick() > (m_LastBroadcast + (Server()->TickSpeed() * 9))))
+			{
+				str_format(aTmp, sizeof(aTmp), "%s", g_Config.m_SvBroadcast);
+				GameServer()->SendBroadcast(aTmp, m_pPlayer->GetCID());
+				m_LastBroadcast = Server()->Tick();
 			}
 		}
 		m_RefreshTime = Server()->Tick();
@@ -889,6 +865,7 @@ void CCharacter::HandleTiles(int Index)
 {//dbg_msg("num","%d",++num);
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	int MapIndex = Index;
+	int PureMapIndex = GameServer()->Collision()->GetPureMapIndex(m_Pos);
 	float Offset = 4;
 	int MapIndexL = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x + (m_ProximityRadius/2)+Offset,m_Pos.y));
 	int MapIndexR = GameServer()->Collision()->GetPureMapIndex(vec2(m_Pos.x - (m_ProximityRadius/2)-Offset,m_Pos.y));
@@ -948,6 +925,24 @@ void CCharacter::HandleTiles(int Index)
 		m_CpActive = cp;
 		m_CpCurrent[cp] = m_Time;
 		m_CpTick = Server()->Tick() + Server()->TickSpeed()*2;
+		if(m_pPlayer->m_IsUsingDDRaceClient) {
+			CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
+			CNetMsg_Sv_DDRaceTime Msg;
+			Msg.m_Time = (int)m_Time;
+			Msg.m_Check = 0;
+			Msg.m_Finish = 0;
+
+			if(m_CpActive != -1 && m_CpTick > Server()->Tick())
+			{
+				if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
+				{
+					float Diff = (m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive])*100;
+					Msg.m_Check = (int)Diff;
+				}
+			}
+
+			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
+		}
 	}
 	int cpf = GameServer()->Collision()->IsFCheckpoint(MapIndex);
 	if(cpf != -1 && m_DDRaceState == DDRACE_STARTED && cpf > m_CpActive)
@@ -955,6 +950,24 @@ void CCharacter::HandleTiles(int Index)
 		m_CpActive = cpf;
 		m_CpCurrent[cpf] = m_Time;
 		m_CpTick = Server()->Tick() + Server()->TickSpeed()*2;
+		if(m_pPlayer->m_IsUsingDDRaceClient) {
+			CPlayerData *pData = GameServer()->Score()->PlayerData(m_pPlayer->GetCID());
+			CNetMsg_Sv_DDRaceTime Msg;
+			Msg.m_Time = (int)m_Time;
+			Msg.m_Check = 0;
+			Msg.m_Finish = 0;
+
+			if(m_CpActive != -1 && m_CpTick > Server()->Tick())
+			{
+				if(pData->m_BestTime && pData->m_aBestCpTime[m_CpActive] != 0)
+				{
+					float Diff = (m_CpCurrent[m_CpActive] - pData->m_aBestCpTime[m_CpActive])*100;
+					Msg.m_Check = (int)Diff;
+				}
+			}
+
+			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
+		}
 	}
 	if(((m_TileIndex == TILE_BEGIN) || (m_TileFIndex == TILE_BEGIN) || FTile1 == TILE_BEGIN || FTile2 == TILE_BEGIN || FTile3 == TILE_BEGIN || FTile4 == TILE_BEGIN || Tile1 == TILE_BEGIN || Tile2 == TILE_BEGIN || Tile3 == TILE_BEGIN || Tile4 == TILE_BEGIN) && (m_DDRaceState == DDRACE_NONE || (m_DDRaceState == DDRACE_STARTED && !Team())))
 	{
@@ -1039,12 +1052,11 @@ void CCharacter::HandleTiles(int Index)
 		GameServer()->Collision()->m_pSwitchers[GameServer()->Collision()->GetSwitchNumber(MapIndex)].m_Type[Team()] = TILE_SWITCHCLOSE;
 	}
 	// handle speedup tiles
-	if(GameServer()->Collision()->IsSpeedup(MapIndex) == TILE_BOOST)
+	if(GameServer()->Collision()->IsSpeedup(PureMapIndex) == TILE_BOOST)
 	{
 		vec2 Direction, MaxVel, TempVel = m_Core.m_Vel;
 		int Force, MaxSpeed = 0;
 		float TeeAngle, SpeederAngle, DiffAngle, SpeedLeft, TeeSpeed;
-		const float Zero=0;
 		GameServer()->Collision()->GetSpeedup(MapIndex, &Direction, &Force, &MaxSpeed);
 		if(Force == 255 && MaxSpeed)
 		{
@@ -1395,6 +1407,7 @@ void CCharacter::Die(int Killer, int Weapon)
 	m_Alive = false;
 	MarkDestroy();
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
+	dbg_msg("CCHaracter::Die", "ID %d Player %d m_Core %d", GetPlayer()->GetCID() ,GetPlayer() ,&m_Core);
 	GameServer()->CreateDeath(m_Pos, m_pPlayer->GetCID());
 
 	// we got to wait 0.5 secs before respawning

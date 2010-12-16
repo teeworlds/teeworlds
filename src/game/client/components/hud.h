@@ -31,7 +31,7 @@ class CHud : public CComponent
 	void RenderSuddenDeath();
 	void RenderScoreHud();
 	void RenderWarmupTimer();
-	void RenderTime();
+	void RenderDDRaceEffects();
 	void RenderRecord();
 
 	void MapscreenToGroup(float CenterX, float CenterY, struct CMapItemGroup *PGroup);

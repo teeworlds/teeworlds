@@ -2419,12 +2419,14 @@ void CEditor::RenderFileDialog()
 			{
 				char aBuf[512];
 				str_format(aBuf, sizeof(aBuf), "%s/%s", m_pFileDialogPath, m_aFileDialogFileName);
-				Storage()->CreateFolder(aBuf, IStorage::TYPE_SAVE);
-				FilelistPopulate(IStorage::TYPE_SAVE);
-				if(m_FilesSelectedIndex >= 0 && !m_FileList[m_FilesSelectedIndex].m_IsDir)
-					str_copy(m_aFileDialogFileName, m_FileList[m_FilesSelectedIndex].m_aFilename, sizeof(m_aFileDialogFileName));
-				else
-					m_aFileDialogFileName[0] = 0;
+				if(Storage()->CreateFolder(aBuf, IStorage::TYPE_SAVE))
+				{
+					FilelistPopulate(IStorage::TYPE_SAVE);
+					if(m_FilesSelectedIndex >= 0 && !m_FileList[m_FilesSelectedIndex].m_IsDir)
+						str_copy(m_aFileDialogFileName, m_FileList[m_FilesSelectedIndex].m_aFilename, sizeof(m_aFileDialogFileName));
+					else
+						m_aFileDialogFileName[0] = 0;
+				}
 			}
 		}
 	}
@@ -2539,6 +2541,19 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		CUIRect Button;
 		CEnvelope *pNewEnv = 0;
 
+		// Delete button
+		if(m_Map.m_lEnvelopes.size())
+		{
+			ToolBar.VSplitRight(5.0f, &ToolBar, &Button);
+			ToolBar.VSplitRight(50.0f, &ToolBar, &Button);
+			static int s_DelButton = 0;
+			if(DoButton_Editor(&s_DelButton, Localize("Delete"), 0, &Button, 0, Localize("Delete this envelope")))
+				m_Map.DeleteEnvelope(m_SelectedEnvelope);
+		
+			// little space
+			ToolBar.VSplitRight(10.0f, &ToolBar, &Button);
+		}
+		
 		ToolBar.VSplitRight(50.0f, &ToolBar, &Button);
 		static int s_New4dButton = 0;
 		if(DoButton_Editor(&s_New4dButton, Localize("Color+"), 0, &Button, 0, Localize("Creates a new color envelope")))
@@ -2549,7 +2564,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		static int s_New2dButton = 0;
 		if(DoButton_Editor(&s_New2dButton, Localize("Pos.+"), 0, &Button, 0, Localize("Creates a new pos envelope")))
 			pNewEnv = m_Map.NewEnvelope(3);
-
+			
 		// Delete button
 		if(m_SelectedEnvelope >= 0)
 		{
@@ -3412,7 +3427,7 @@ void CEditor::UpdateAndRender()
 
 	if(Input()->KeyDown(KEY_F10))
 	{
-		Graphics()->TakeScreenshot();
+		Graphics()->TakeScreenshot(0);
 		m_ShowMousePointer = true;
 	}
 

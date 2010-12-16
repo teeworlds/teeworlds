@@ -1,3 +1,4 @@
+
 ##### translated strings #####
 
 %d of %d servers, %d players
@@ -658,11 +659,11 @@ Reset to defaults
 Resizes the current Quad based on the aspect ratio of the image
 == Verkleint/vergroot de huidige quad gebaseerd op de verhouding van de afbeelding.
 
-Right
-== Rechts
-
 Rifle
 == Laser
+
+Right
+== Rechts
 
 Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
 == Rotatie van de kwast in graden. Linkermuisknop om te slepen en de waarde te veranderen. Shift om meer precies te zijn.
@@ -933,7 +934,24 @@ ZO
 
 ##### needs translation #####
 
+Automatically record demos
+== 
+
+Automatically take game over screenshot
+== 
+
+Max Screenshots
+== 
+
+Max demos
+== 
+
+no limit
+== 
+
+
 
 Loading DDRace Client
 == Laden DDRace Client
 ##### old translations #####
+

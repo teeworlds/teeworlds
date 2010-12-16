@@ -2,12 +2,6 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 /*#include <game/mapitems.h>
 =======
-// copyright (c) 2007 magnus auvinen, see licence.txt for more info
-/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
-/* If you are missing that file, acquire a complete release at teeworlds.com.                */
-/*
-#include <game/mapitems.h>
->>>>>>> 72e05efc53009137a398e1ec19d9e61a94bb6262
 #include <game/server/entities/character.h>
 #include <game/server/entities/flag.h>
 #include <game/server/player.h>
@@ -220,4 +214,3 @@ void CGameControllerCTF::Tick()
 	}
 }
 */
-

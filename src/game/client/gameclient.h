@@ -186,6 +186,7 @@ public:
 	virtual void OnShutdown();
 	virtual void OnEnterGame();
 	virtual void OnRconLine(const char *pLine);
+	virtual void OnGameOver();
 	
 	virtual const char *GetItemName(int Type);
 	virtual const char *Version();

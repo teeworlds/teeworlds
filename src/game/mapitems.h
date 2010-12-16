@@ -105,7 +105,8 @@ enum
 	TILE_STOPA,
 	TILE_CP = 64,
 	TILE_CP_F,
-	TILE_NPC = 72,
+	TILE_OLDLASER = 71,
+	TILE_NPC,
 	TILE_EHOOK,
 	TILE_NOHIT,
 	TILE_NPH,//Remember to change this in collision.cpp if you add anymore tiles

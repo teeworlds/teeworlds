@@ -7,7 +7,7 @@ if len(sys.argv) != 3:
 	print sys.argv[0], "VERSION PLATFORM"
 	sys.exit(-1)
 
-name = "teeworlds"
+name = "DDRace"
 version = sys.argv[1]
 platform = sys.argv[2]
 exe_ext = ""
@@ -62,6 +62,7 @@ print "adding files"
 shutil.copy("readme.txt", package_dir)
 shutil.copy("license.txt", package_dir)
 shutil.copy("storage.cfg", package_dir)
+shutil.copy("announcement.txt", package_dir)
 
 if include_data and not use_bundle:
 	os.mkdir(os.path.join(package_dir, "data"))
@@ -72,17 +73,18 @@ if include_data and not use_bundle:
 
 if include_exe and not use_bundle:
 	shutil.copy(name+exe_ext, package_dir)
-	shutil.copy(name+"_srv"+exe_ext, package_dir)
+	shutil.copy(name+"-Server"+exe_ext, package_dir)
 	
 if include_src:
 	for p in ["src", "scripts", "datasrc", "other", "objs"]:
 		os.mkdir(os.path.join(package_dir, p))
 		copydir(p, package_dir)
-	shutil.copy("default.bam", package_dir)
+	shutil.copy("bam.lua", package_dir)
+	shutil.copy("configure.lua", package_dir)
 
 if use_bundle:
-	os.system("lipo -create -output teeworlds_srv teeworlds_srv_ppc teeworlds_srv_x86")
-	os.system("lipo -create -output teeworlds teeworlds_ppc teeworlds_x86")
+	os.system("lipo -create -output "+name+"_srv "+name+"_srv"+"_ppc "+name+"_srv"+"_x86")
+	os.system("lipo -create -output "+name+" "+name+"_ppc "+name+"_x86")
 	os.system("lipo -create -output serverlaunch serverlaunch_ppc serverlaunch_x86")
 
 	# create Teeworlds appfolder
@@ -137,8 +139,8 @@ if use_bundle:
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data/mapres"))
 	copydir("data/maps", serverbundle_resource_dir)
 	shutil.copy("other/icons/Teeworlds_srv.icns", serverbundle_resource_dir)
-	shutil.copy(name+"_srv"+exe_ext, serverbundle_bin_dir)
-	shutil.copy("serverlaunch"+exe_ext, serverbundle_bin_dir + "/teeworlds_server")
+	shutil.copy(name+"-Server"+exe_ext, serverbundle_bin_dir)
+	shutil.copy("serverlaunch"+exe_ext, serverbundle_bin_dir + "/"+name+"_server")
 	file(os.path.join(serverbundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

@@ -1,0 +1,952 @@
+
+##### translated strings #####
+
+%d of %d servers, %d players
+== %d/%d серверів, %d гравців
+
+%d%% loaded
+== %d%% завантажено
+
+%ds left
+== залишилось %d сек.
+
+%s Right click for context menu.
+== %s Права кнопка миші для контекстного меню
+
+Abort
+== Відміна
+
+Add
+== Додати
+
+Add Image
+== Додати зображення
+
+Add Quad
+== Додати квад
+
+Add group
+== Додати групу
+
+Add quads layer
+== Додати шар квадів
+
+Add tile layer
+== Додати шар тайлів
+
+Address
+== Адреса
+
+Adds a new group
+== Додати нову групу
+
+Adds a new quad
+== Додати новий квад
+
+All
+== Всі
+
+Alpha
+== Прозор..
+
+Always show name plates
+== Завжди показувати ніки гравців
+
+Anim
+== Анім.
+
+Append
+== Вставити
+
+Append map
+== Вставити карту в поточну
+
+Are you sure that you want to delete the demo?
+== Ви впевнені, що хочете видалити демо?
+
+Are you sure that you want to quit?
+== Ви дійсно бажаєте вийти?
+
+As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
+== Так як це ваш перший запуск гри, будь ласка, введіть свій нік у полі нижче. Також рекомендуємо перевірити налаштування гри і змінити деякі з них, перед тим, як почати грати.
+
+Aspect ratio
+== Співвідношення сторін
+
+Blue team
+== Сині
+
+Blue team wins!
+== Сині перемогли!
+
+Body
+== Тіло
+
+Border
+== Створити межі
+
+CCW
+== CCW
+
+CW
+== CW
+
+Call vote
+== Голосувати
+
+Cancel
+== Відміна
+
+Chat
+== Чат
+
+Clear collision
+== Очистити колізію
+
+Close
+== Закрити
+
+Color Env
+== Колір. Env.
+
+Color TO
+== Колір. TO
+
+Color+
+== Колір+
+
+Compatible version
+== Сумісна версія
+
+Connect
+== Під’єднатись
+
+Connecting to
+== Підключення до
+
+Connection Problems...
+== Проблеми зі з'єднанням...
+
+Console
+== Консоль
+
+Constructs collision from this layer
+== Створити колізії з цього шару
+
+Controls
+== Управління
+
+Creates a new color envelope
+== Створити нову криву кольору
+
+Creates a new map
+== Створити нову карту
+
+Creates a new pos envelope
+== Створити нову криву позиції
+
+Creates a new quad layer
+== Створити новий шар квадів
+
+Creates a new tile layer
+== Створити новий шар тайлів
+
+Current
+== Поточний
+
+Current version: %s
+== Поточна версія: %s
+
+Custom colors
+== Особистий колір
+
+Decrease
+== Зменшити
+
+Decrease animation speed
+== Зменшити швидкість анімації
+
+Delete
+== Видалити
+
+Delete group
+== Видалити групу
+
+Delete layer
+== Видалити шар
+
+Deletes the current quad
+== Видалити поточний квад
+
+Deletes the layer
+== Видалити шар
+
+Demos
+== Демо
+
+Detail
+== Детальний
+
+Disconnect
+== # Відключитись
+
+Disconnected
+== Відключено
+
+Display Modes
+== Режими дисплея
+
+Down
+== Вниз
+
+Downloading map
+== Завантаження карти
+
+Draw!
+== Нічия!
+
+Dynamic Camera
+== Динамічна камера
+
+Embed
+== Вбудувати
+
+Embedded
+== Вбудовані
+
+Embeds the image into the map file.
+== Вмонтувати зображення в саму карту
+
+Emoticon
+== Емоція
+
+Enable/disable group for saving
+== Включити / виключити групу для збереження
+
+Enable/disable layer for saving
+== Включити / виключити шар для збереження
+
+Enter
+== Вхід
+
+Envelopes
+== Криві
+
+Error
+== Помилка
+
+Error loading demo
+== Помилка при завантаженні демо
+
+Exit
+== Вихід
+
+Exits from the editor
+== Вихід з редактора
+
+External
+== зовнішні
+
+FSAA samples
+== Семплів FSAA
+
+Favorite
+== Обраний
+
+Favorites
+== Обрані
+
+Feet
+== Ноги
+
+File
+== Файл
+
+Filename:
+== Назва файлу:
+
+Filter
+== Фільтр
+
+Fire
+== Постріл
+
+Folder
+== Папка
+
+Force vote
+== Форсувати
+
+Fullscreen
+== Повноекранний режим
+
+Game
+== Гра
+
+Game info
+== Інфо по грі
+
+Game over
+== Гра закінчена
+
+Game type
+== Тип гри
+
+Game types:
+== Тип гри:
+
+General
+== Основні
+
+Graphics
+== Графіка
+
+Grenade
+== Граната
+
+Group
+== Група
+
+HD
+== HD
+
+Hammer
+== Молоток
+
+Has people playing
+== Сервер не порожній
+
+Height
+== Висота
+
+High Detail
+== Висока деталізація
+
+Hook
+== Гак
+
+Host address
+== Адреса сервера
+
+Hue
+== Відтінок
+
+Image
+== Зображення
+
+Images
+== Зображення
+
+Increase
+== Збільшити
+
+Increase animation speed
+== Збільшити швидкість анімації
+
+Info
+== Інфо
+
+Internet
+== Інтернет
+
+Invalid Demo
+== Невірне демо
+
+Join blue
+== За синіх
+
+Join game
+== Приєднатись до гри
+
+Join red
+== За червоних
+
+Jump
+== Стрибок
+
+Kick
+== Викинути
+
+LAN
+== LAN
+
+Language
+== Мова
+
+Layers
+== Шари
+
+Left
+== Вліво
+
+Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
+== Ліва кнопка миші для переміщення. Затисніть Shift для переміщення опори. Затисніть Ctrl для повороту.
+
+Left mouse button to move. Hold shift to move the texture.
+== Ліва кнопка миші для переміщення. Затисніть Shift для переміщення текстури.
+
+Lht.
+== Яскравість
+
+Load
+== Завантажити
+
+Load a new image to use in the map
+== Завантажити нове зображення для використання його в карті
+
+Loading
+== Завантиження
+
+MOTD
+== MOTD
+
+Make collision
+== Створити колізії
+
+Make external
+== Зробити зовнішнім
+
+Map
+== Карта
+
+Maximum ping:
+== Макс. пінг:
+
+Miscellaneous
+== Додатково
+
+Mouse sens.
+== Чутлив. миші
+
+Move left
+== Вліво
+
+Move right
+== Вправо
+
+Movement
+== Переміщення
+
+Mute when not active
+== Глушити звуки, коли гра неактивна
+
+Name
+== Імя
+
+Name:
+== Ім'я:
+
+New
+== Новий
+
+New folder
+== нова папка
+
+News
+== Новини
+
+Next Envelope
+== Наступна крива
+
+Next weapon
+== Наступ. зброя
+
+Nickname
+== Нік
+
+No
+== Ні
+
+No password
+== Без пароля
+
+No servers found
+== Сервера не знайдені
+
+No servers match your filter criteria
+== Не знайдено ні одного сервара, який би відповідав вашим критеріям
+
+None
+== Нічого
+
+Normal animation speed
+== Нормальна швидкість анімації
+
+Ok
+== Ок
+
+Open
+== Відкрити
+
+Opens a map and adds everything from that map to the current one
+== Відкрити карту і додати з неї все в поточну
+
+Opens a map for editing
+== Відкрити карту для редагування
+
+Order
+== ордер
+
+Password
+== Пароль
+
+Password incorrect
+== пароль введено невірно
+
+Ping
+== Пінг
+
+Pistol
+== Пістолет
+
+Play
+== Перегляд
+
+Player
+== Гравець
+
+Players
+== Гравці
+
+Please balance teams!
+== Збалансуйте команди!
+
+Pos. Env
+== Поз. крив.
+
+Pos. TO
+== Поз. TO
+
+Pos.+
+== Поз.+
+
+Press right mouse button to create a new point
+== Натисніть праву кнопку миші для створення нової точки
+
+Prev. weapon
+== Попер. зброя
+
+Previous Envelope
+== Попередня крива
+
+Proof
+== Межі
+
+Quality Textures
+== Якісні текстури
+
+Quick search:
+== Швидкий пошук:
+
+Quit
+== Вихід
+
+Reason:
+== Причина:
+
+Record demo
+== Запис демо
+
+Red team
+== Червоні
+
+Red team wins!
+== Червоні перемогли!
+
+Refocus
+== Повернути фокус
+
+Refresh
+== Оновити
+
+Refreshing master servers
+== Оновлення списку майстер-сервера
+
+Remote console
+== Консоль сервера
+
+Remove
+== Видалити
+
+Removes collision from this layer
+== Видалити колізії з цього шару
+
+Removes the image from the map
+== Видалити зображення з карти
+
+Removes the image from the map file.
+== Видалити зображення з файлу з картою
+
+Replace
+== Замінити
+
+Replace Image
+== Замінити зображення
+
+Replaces the image with a new one
+== Замінити це зображення нове
+
+Reset filter
+== Сикнути фільтри
+
+Reset to defaults
+== Скинути налаштування
+
+Resizes the current Quad based on the aspect ratio of the image
+== Змінює поточний квад на основі пропорції зображення
+
+Rifle
+== Лазер
+
+Right
+== Право
+
+Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Обертання щітки в градусах. Використовуйте ліву кнопку миші щоб перетягнути і змінити його значення. Утримуйте Shift більшої точності#####
+
+Round
+== Раунд
+
+Sample rate
+== Частота
+
+Sat.
+== Контраст.
+
+Save
+== Зберегти
+
+Save As
+== Зберегти як
+
+Save map
+== Зберегти карту
+
+Saves the current map
+== Зберегти поточну карту
+
+Saves the current map under a new name
+== Зберегти поточну карту під новою назвою
+
+Score
+== Очки
+
+Score board
+== Табло
+
+Score limit
+== Ліміт очок
+
+Scoreboard
+== Хід гри
+
+Screenshot
+== Скріншот
+
+Select group. Right click for properties.
+== Виберіть групу. Правий клік відкриває властивості.
+
+Select image
+== Виберіть зображення
+
+Select layer. Right click for properties.
+== Виберіть шар. Правий клік відкриває властивості.
+
+Server details
+== Деталі сервера
+
+Server info
+== Інформація
+
+Server not full
+== Сервер не заповнений
+
+Settings
+== Налаштування
+
+Shotgun
+== Дробовик
+
+Show chat
+== Показати чат
+
+Show name plates
+== Показувати ніки гравців
+
+Show only supported
+== Тільки підтримувані режими
+
+Skins
+== Скіни
+
+Sound
+== Звук
+
+Sound volume
+== Гучність звуку
+
+Spectate
+== Спостерігати
+
+Spectators
+== Спостерігачі
+
+Square
+== Квадрат
+
+Squares the current quad
+== Перетворити поточний квад в квадрат
+
+Standard gametype
+== Стандартний тип гри
+
+Standard map
+== Стандартна карта
+
+Stop record
+== Зупинити запис
+
+Sudden Death
+== Швидка смерть
+
+Switch between images and layers managment.
+== Переключитися між управлінням шарами і зображеннями
+
+Switch curve type
+== Змінити тип кривої
+
+Switch weapon on pickup
+== Перемикати зброю при підборі
+
+Team
+== Команда
+
+Team chat
+== Командний чат
+
+Teeworlds %s is out! Download it at www.teeworlds.com!
+== Вийшла Teeworlds %s! Завантажуйте на www.teeworlds.com!
+
+Texture Compression
+== Стиснення текстур
+
+The server is running a non-standard tuning on a pure game type.
+== Сервер запущено з нестандартними налаштуваннями на стандартному типі гри.
+
+Tiles
+== Тайли
+
+Time limit
+== Ліміт часу
+
+Time limit: %d min
+== Ліміт часу: %d хв
+
+Toggle group visibility
+== Переключити видимість групи
+
+Toggle layer visibility
+== Переключити видимість шару
+
+Toggles the envelope editor.
+== Показати або приховати редактор кривих
+
+Try again
+== Спробувати знову
+
+Type
+== Тип
+
+UI Color
+== колір інтерфейсу
+
+Use left mouse button to drag and change the color value. Hold shift to be more precise.
+== Використовуйте ліву кнопку миші щоб перетягнути або змінити значення кольору. Утримуйте Shift для більшої точності
+
+Use left mouse button to drag and change the value. Hold shift to be more precise.
+== Використовуйте ліву кнопку миші щоб перетягувати і змінювати його значення. Утримуйте Shift для більшої точності.
+
+Use left mouse button to drag and create a brush.
+== Використовуйте ліву кнопку миші для переміщення і створення кисті
+
+Use left mouse button to paint with the brush. Right button clears the brush.
+== Використовуйте ліву кнопку миші для малювання пензлем. Права кнопка миші очищає кисть.
+
+Use sounds
+== Використовувати звуки
+
+V-Sync
+== Вертикальна синхронізація
+
+Version
+== Версія
+
+Vote no
+== Проти
+
+Vote yes
+== За
+
+Voting
+== Голосування
+
+Warmup
+== Розминка
+
+Weapon
+== зброя
+
+Welcome to Teeworlds
+== Ласкаво просимо в Teeworlds!
+
+Width
+== Ширина
+
+Yes
+== Так
+
+You must restart the game for all settings to take effect.
+== Перезапустіть гру для застосування змін.
+
+Your skin
+== Ваш скін
+
+ZI
+== Z+
+
+ZO
+== Z-
+
+[M] Flip brush vertical
+== [M] Віддзеркалювати кисть по вертикалі
+
+[N] Flip brush horizontal
+== [N] Віддзеркалювати кисть по горизонталі
+
+[NumPad*] Zoom to normal and remove editor offset
+== [NumPad*] Встановити нормальне збільшення і прибрати зсув редактора
+
+[NumPad+] Zoom in
+== [ClavierNum+] Збільшити
+
+[NumPad-] Zoom out
+== [ClavierNum-] Зменшити
+
+[R] Rotates the brush counter clockwise
+== [R] Повернути кисть проти годинникової стрілки
+
+[T] Rotates the brush clockwise
+== [T] Повернути кисть по годинниковій стрілці
+
+[ctrl+h] Toggle High Detail
+== [ctrl+h] Переключити на високу деталізацію
+
+[ctrl+m] Toggle animation
+== [ctrl+m] Переключити анімацію
+
+[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== [ctrl+p] Показати або приховати межі, в яких гравець може бачити карту#####
+
+##### needs translation #####
+
+Alpha value of the envelope
+== 
+
+Automatically record demos
+== 
+
+Automatically take game over screenshot
+== 
+
+Blue value of the envelope
+== 
+
+Clip H
+== 
+
+Clip W
+== 
+
+Clip X
+== 
+
+Clip Y
+== 
+
+Color
+== 
+
+Delete demo
+== 
+
+Delete this envelope
+== 
+
+File: %s
+== 
+
+Green value of the envelope
+== 
+
+Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== 
+
+Load map
+== 
+
+Max Screenshots
+== 
+
+Max demos
+== 
+
+Para X
+== 
+
+Para Y
+== 
+
+Parent Folder
+== 
+
+Pos X
+== 
+
+Pos Y
+== 
+
+Quads
+== 
+
+REC
+== 
+
+Red value of the envelope
+== 
+
+Rotation of the envelope
+== 
+
+Shift
+== 
+
+Up
+== 
+
+Use Clipping
+== 
+
+X-axis of the envelope
+== 
+
+Y-axis of the envelope
+== 
+
+[HOME] Restore map focus
+== 
+
+no limit
+== 
+
+##### old translations #####
+

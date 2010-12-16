@@ -623,6 +623,12 @@ void CGameClient::OnStateChange(int NewState, int OldState)
 void CGameClient::OnShutdown() {}
 void CGameClient::OnEnterGame() {}
 
+void CGameClient::OnGameOver()
+{
+	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
+		Client()->AutoScreenshot_Start();
+}
+
 void CGameClient::OnRconLine(const char *pLine)
 {
 	m_pGameConsole->PrintLine(CGameConsole::CONSOLETYPE_REMOTE, pLine);
@@ -745,8 +751,8 @@ void CGameClient::OnNewSnapshot()
 				if(m_aClients[Cid].m_aSkinName[0] == 'x' || m_aClients[Cid].m_aSkinName[1] == '_')
 					str_copy(m_aClients[Cid].m_aSkinName, "default", 64);
 					
-				m_aClients[Cid].m_SkinInfo.m_ColorBody = m_pSkins->GetColor(m_aClients[Cid].m_ColorBody);
-				m_aClients[Cid].m_SkinInfo.m_ColorFeet = m_pSkins->GetColor(m_aClients[Cid].m_ColorFeet);
+				m_aClients[Cid].m_SkinInfo.m_ColorBody = m_pSkins->GetColorV4(m_aClients[Cid].m_ColorBody);
+				m_aClients[Cid].m_SkinInfo.m_ColorFeet = m_pSkins->GetColorV4(m_aClients[Cid].m_ColorFeet);
 				m_aClients[Cid].m_SkinInfo.m_Size = 64;
 				
 				// find new skin
@@ -808,7 +814,13 @@ void CGameClient::OnNewSnapshot()
 				}
 			}
 			else if(Item.m_Type == NETOBJTYPE_GAME)
+			{
+				static int s_GameOver = 0;
 				m_Snap.m_pGameobj = (CNetObj_Game *)pData;
+				if(s_GameOver == 0 && m_Snap.m_pGameobj->m_GameOver != 0)
+					OnGameOver();
+				s_GameOver = m_Snap.m_pGameobj->m_GameOver;
+			}
 			else if(Item.m_Type == NETOBJTYPE_FLAG)
 				m_Snap.m_paFlags[Item.m_Id%2] = (const CNetObj_Flag *)pData;
 		}
@@ -993,8 +1005,8 @@ void CGameClient::CClientData::UpdateRenderInfo()
 		if(m_Team >= 0 && m_Team <= 1)
 		{
 			m_RenderInfo.m_Texture = g_GameClient.m_pSkins->Get(m_SkinId)->m_ColorTexture;
-			m_RenderInfo.m_ColorBody = g_GameClient.m_pSkins->GetColor(TeamColors[m_Team]);
-			m_RenderInfo.m_ColorFeet = g_GameClient.m_pSkins->GetColor(TeamColors[m_Team]);
+			m_RenderInfo.m_ColorBody = g_GameClient.m_pSkins->GetColorV4(TeamColors[m_Team]);
+			m_RenderInfo.m_ColorFeet = g_GameClient.m_pSkins->GetColorV4(TeamColors[m_Team]);
 		}
 	}		
 }

@@ -29,7 +29,6 @@
 #include <engine/console.h>
 
 #include <math.h>
-#include <time.h>
 
 #include "graphics.h"
 
@@ -874,8 +873,11 @@ int CGraphics_SDL::WindowOpen()
 
 }
 
-void CGraphics_SDL::TakeScreenshot()
+void CGraphics_SDL::TakeScreenshot(const char *pFilename)
 {
+	char aDate[20];
+	str_timestamp(aDate, sizeof(aDate));
+	str_format(m_aScreenshotName, sizeof(m_aScreenshotName), "screenshots/%s_%s.png", pFilename?pFilename:"screenshot", aDate);
 	m_DoScreenshot = true;
 }
 
@@ -883,29 +885,7 @@ void CGraphics_SDL::Swap()
 {
 	if(m_DoScreenshot)
 	{
-		// find filename
-		char aFilename[128];
-		static int Index = 1;
-
-		time_t Time;
-		char aDate[20];
-
-		time(&Time);
-		tm* TimeInfo = localtime(&Time);
-		strftime(aDate, sizeof(aDate), "%Y-%m-%d_%I-%M", TimeInfo);
-
-		for(; Index < 10000; Index++)
-		{
-			IOHANDLE io;
-			str_format(aFilename, sizeof(aFilename), "screenshots/screenshot%s-%05d.png", aDate, Index);
-			io = m_pStorage->OpenFile(aFilename, IOFLAG_READ, IStorage::TYPE_SAVE);
-			if(io)
-				io_close(io);
-			else
-				break;
-		}
-
-		ScreenshotDirect(aFilename);
+		ScreenshotDirect(m_aScreenshotName);
 		m_DoScreenshot = false;
 	}
 	

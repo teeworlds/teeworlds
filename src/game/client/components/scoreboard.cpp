@@ -158,11 +158,11 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	{
 		TextRender()->Text(0, x+10, y, 48, pTitle, -1);
 
-		if(m_pClient->m_Snap.m_pGameobj)
+		/*if(m_pClient->m_Snap.m_pGameobj) // This is Useless
 		{
 			char aBuf[128];
 			int Score = Team ? m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue : m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed;
-		}
+		}*/
 	}
 
 	y += 54.0f;
@@ -263,12 +263,15 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		
 		while(TextRender()->TextWidth(0, FontSizeResize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1) > w-163.0f-Offset-PingWidth)
 			--FontSizeResize;
-		if (g_Config.m_ClShowIds) {
+		if (g_Config.m_ClShowIds)
+		{
 			char aId[64] = "";
 			str_format(aId, sizeof(aId),"%d:", pInfo->m_ClientId);
 			str_append(aId, m_pClient->m_aClients[pInfo->m_ClientId].m_aName,sizeof(aId));
+			TextRender()->Text(0, x+128.0f+Offset, y+(FontSize-FontSizeResize)/2, FontSizeResize, aId, -1);
 		}
-		TextRender()->Text(0, x+128.0f+Offset, y+(FontSize-FontSizeResize)/2, FontSizeResize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
+		else
+			TextRender()->Text(0, x+128.0f+Offset, y+(FontSize-FontSizeResize)/2, FontSizeResize, m_pClient->m_aClients[pInfo->m_ClientId].m_aName, -1);
 
 		FontSizeResize = FontSize;
 		

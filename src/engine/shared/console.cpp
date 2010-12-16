@@ -345,8 +345,6 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int Client
 	  FPrintCallback pfnAlternativePrintCallback, void *pUserData,
 	  FPrintCallback pfnAlternativePrintResponseCallback, void *pResponseUserData)
 {
-	CResult *pResult = new(&m_ExecutionQueue.m_pLast->m_Result) CResult;
-	
 	while(pStr && *pStr)
 	{
 		CResult *pResult = new(&m_ExecutionQueue.m_pLast->m_Result) CResult;
@@ -631,7 +629,7 @@ void CConsole::Con_Exec(IResult *pResult, void *pUserData, int ClientId)
 struct CIntVariableData
 {
 	IConsole *m_pConsole;
-	char *m_Name;
+	const char *m_Name;
 	int *m_pVariable;
 	int m_Min;
 	int m_Max;
@@ -640,7 +638,7 @@ struct CIntVariableData
 struct CStrVariableData
 {
 	IConsole *m_pConsole;
-	char *m_Name;
+	const char *m_Name;
 	char *m_pStr;
 	int m_MaxSize;
 };
@@ -776,7 +774,7 @@ void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
 		if(ppArguments[i][0] == '-' && ppArguments[i][1] == 'f' && ppArguments[i][2] == 0)
 		{
 			if(NumArgs - i > 1)
-				ExecuteFile(ppArguments[i+1]);
+				ExecuteFile(ppArguments[i+1], 0, 0, 0, 0, 4);
 			i++;
 		}
 		else if(!str_comp("-s", ppArguments[i]) || !str_comp("--silent", ppArguments[i]))
@@ -809,36 +807,55 @@ void CConsole::Register(const char *pName, const char *pParams,
 	m_aCommandCount[pCommand->m_Level]++;
 }
 
-void CConsole::List(const int Level, int Flags, int Page)
+void CConsole::List(const int Level, int Flags)
 {
-	int Count = 0;
-	if(!Page)
+	switch(Level)
 	{
-		for (int i = 0; i <= Level; ++i)
-		{
-			Count += m_aCommandCount[i];
-		}
-
-		char aBuf[300];
-		str_format(aBuf,sizeof(aBuf),"The Number of Pages is %d, use 'CMDList i' (where i is the page number)", Count);
-		PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
-		return;
+		case 4: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "command cmdlist is not allowed for config files"); return;
+		case 3: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "=== cmdlist for admins ==="); break;
+		case 2: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "=== cmdlist for mods ==="); break;
+		case 1: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "=== cmdlist for helpers ==="); break;
+		default: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "=== cmdlist ==="); break;
 	}
+	
+	char aBuf[50 + 1] = { 0 };
 	CCommand *pCommand = m_pFirstCommand;
+	unsigned Length = 0;
+	
 	while(pCommand)
 	{
-		if(pCommand)
-			if((pCommand->m_Level <= Level))
-				if((!Flags)?true:pCommand->m_Flags&Flags)
+		if(str_comp_num(pCommand->m_pName, "sv_", 3) && str_comp_num(pCommand->m_pName, "dbg_", 4))	// ignore configs and debug commands
+		{
+			if((pCommand->m_Flags & Flags) == Flags && (pCommand->m_Level == Level || (Level == 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD))))
+			{
+				unsigned CommandLength = str_length(pCommand->m_pName);
+				if(Length + CommandLength + 2 >= sizeof(aBuf) || aBuf[0] == 0)
 				{
-					if(++Count/5 == Page)
-					{
-					char aBuf[300];
-					str_format(aBuf,sizeof(aBuf),"Name: %s, Parameters: %s, Help: %s",pCommand->m_pName, (!str_length(pCommand->m_pParams))?"None.":pCommand->m_pParams, (!str_length(pCommand->m_pHelp))?"No Help String Given":pCommand->m_pHelp);
-					PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
-					}
+					if(aBuf[0])
+						PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
+					aBuf[0] = 0;
+					Length = CommandLength;
+					str_copy(aBuf, pCommand->m_pName, sizeof(aBuf));
 				}
+				else
+				{
+					str_format(aBuf, sizeof(aBuf), "%s, %s", aBuf, pCommand->m_pName);
+					Length += CommandLength + 2;
+				}
+			}
+		}
 		pCommand = pCommand->m_pNext;
+	}
+	
+	if (aBuf[0])
+		PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+
+	switch(Level)
+	{
+		case 3: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "see 'cmdlist 0,1,2' for more commands, which don't require admin rights"); break;
+		case 2: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "see 'cmdlist 0,1' for more commands, which don't require mod rights"); break;
+		case 1: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "see 'cmdlist 0' for more commands, which don't require helper rights"); break;
+		default: break;
 	}
 }
 

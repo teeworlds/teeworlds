@@ -56,7 +56,6 @@ void CDoor::Tick()
 
 void CDoor::Snap(int SnappingClient)
 {
-	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	if(NetworkClipped(SnappingClient, m_Pos) && NetworkClipped(SnappingClient, m_To))
 		return;
 

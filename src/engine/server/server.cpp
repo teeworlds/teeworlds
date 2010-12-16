@@ -305,6 +305,7 @@ int CServer::Init()
 	}
 
 	m_CurrentGameTick = 0;
+	m_AnnouncementLastLine = 0;
 
 	return 0;
 }
@@ -1214,6 +1215,7 @@ int CServer::Run()
 					Console()->ExecuteLine("sv_npc 0",4,-1);
 					Console()->ExecuteLine("sv_phook 1",4,-1);
 					Console()->ExecuteLine("sv_endless_drag 0",4,-1);
+					Console()->ExecuteLine("sv_old_laser 0",4,-1);
 					// new map loaded
 					GameServer()->OnShutdown();
 					
@@ -1324,11 +1326,10 @@ int CServer::Run()
 void CServer::ConKick(IConsole::IResult *pResult, void *pUser, int ClientId)
 {
 	int Victim = pResult->GetVictim();
-	char buf[128];
 	if(pResult->NumArguments() >= 1)
 	{
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "Kicked by console (%s)", pResult->GetString(0));
+		str_format(aBuf, sizeof(aBuf), "Kicked by (%s)", pResult->GetString(0));
 		((CServer *)pUser)->Kick(Victim, aBuf);
 	}
 	else
@@ -1493,9 +1494,18 @@ void CServer::ConShutdown(IConsole::IResult *pResult, void *pUser, int ClientId)
 
 void CServer::ConRecord(IConsole::IResult *pResult, void *pUser, int ClientId)
 {
-	char aFilename[512];
-	str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pResult->GetString(0));
-	((CServer *)pUser)->m_DemoRecorder.Start(((CServer *)pUser)->Storage(), ((CServer *)pUser)->Console(), aFilename, ((CServer *)pUser)->GameServer()->NetVersion(), ((CServer *)pUser)->m_aCurrentMap, ((CServer *)pUser)->m_CurrentMapCrc, "server");
+	CServer* pServer = (CServer *)pUser;
+	char aFilename[128];
+
+	if(pResult->NumArguments())
+		str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pResult->GetString(0));
+	else
+	{
+		char aDate[20];
+		str_timestamp(aDate, sizeof(aDate));
+		str_format(aFilename, sizeof(aFilename), "demos/demo_%s.demo", aDate);
+	}
+	pServer->m_DemoRecorder.Start(pServer->Storage(), pServer->Console(), aFilename, pServer->GameServer()->NetVersion(), pServer->m_aCurrentMap, pServer->m_CurrentMapCrc, "server");
 }
 
 void CServer::ConStopRecord(IConsole::IResult *pResult, void *pUser, int ClientId)
@@ -1512,10 +1522,12 @@ void CServer::ConCmdList(IConsole::IResult *pResult, void *pUserData, int Client
 {
 	CServer *pSelf = (CServer *)pUserData;
 
-	if(pResult->NumArguments())
-		pSelf->Console()->List(pSelf->m_aClients[ClientId].m_Authed, CFGFLAG_SERVER, pResult->GetInteger(0));
+	if(pResult->NumArguments() == 0)
+		pSelf->Console()->List((pSelf->m_aClients[ClientId].m_Authed != 0) ? pSelf->m_aClients[ClientId].m_Authed : -1, CFGFLAG_SERVER);
+	else if (pResult->GetInteger(0) == 0)
+		pSelf->Console()->List(-1, CFGFLAG_SERVER);
 	else
-		pSelf->Console()->List(pSelf->m_aClients[ClientId].m_Authed, CFGFLAG_SERVER);
+		pSelf->Console()->List(pResult->GetInteger(0), CFGFLAG_SERVER);
 }
 
 
@@ -1572,7 +1584,7 @@ void CServer::RegisterCommands()
 	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "", 1);
 	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "", 3);
 
-	Console()->Register("record", "s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "", 3);
+	Console()->Register("record", "?s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "", 3);
 	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "", 3);
 	
 	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "", 3);
@@ -1585,7 +1597,7 @@ void CServer::RegisterCommands()
 	Console()->Register("login", "?s", CFGFLAG_SERVER, ConLogin, this, "Allows you access to rcon if no password is given, or changes your level if a password is given", -1);
 	Console()->Register("auth", "?s", CFGFLAG_SERVER, ConLogin, this, "Allows you access to rcon if no password is given, or changes your level if a password is given", -1);
 
-	Console()->Register("cmdlist", "?i", CFGFLAG_SERVER, ConCmdList, this, "With Parameter i Shows a Certain Page of the Commands, Without Shows the page Count", -1);
+	Console()->Register("cmdlist", "?i", CFGFLAG_SERVER, ConCmdList, this, "Shows you the commands available for your remote console access. Specify the level if you want to see other level's commands", -1);
 }	
 
 
@@ -1679,6 +1691,7 @@ int main(int argc, const char **argv) // ignore_convention
 	pConsole->ExecuteLine("sv_npc 0",4,-1);
 	pConsole->ExecuteLine("sv_phook 1",4,-1);
 	pConsole->ExecuteLine("sv_endless_drag 0",4,-1);
+	pConsole->ExecuteLine("sv_old_laser 0",4,-1);
 	// execute autoexec file
 	pConsole->ExecuteFile("autoexec.cfg", 0, 0, 0, 0, 4);
 
@@ -1813,7 +1826,7 @@ void CServer::CheckPass(int ClientId, const char *pPw)
 }
 
 
-char *CServer::GetLine(char const *FileName, int Line)
+char *CServer::GetAnnouncementLine(char const *FileName)
 {
 	IOHANDLE File = m_pStorage->OpenFile(FileName, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(File)
@@ -1822,12 +1835,29 @@ char *CServer::GetLine(char const *FileName, int Line)
 		char *pLine;
 		CLineReader *lr = new CLineReader();
 		lr->Init(File);
-		while(pLine = lr->Get())
+		while((pLine = lr->Get()))
 			if(str_length(pLine))
-				v.push_back(pLine);
-		if(Line >= v.size())
-			Line %= v.size();
-		return v[Line];
+				if(pLine[0]!='#')
+					v.push_back(pLine);
+		if(v.size() == 1)
+		{
+			m_AnnouncementLastLine = 0;
+		}
+		else if(!g_Config.m_SvAnnouncementRandom)
+		{
+			if(m_AnnouncementLastLine >= v.size())
+				m_AnnouncementLastLine %= v.size();
+		}
+		else
+		{
+			unsigned Rand;
+			do
+				Rand = rand() % v.size();
+			while(Rand == m_AnnouncementLastLine);
+				
+			m_AnnouncementLastLine = Rand;
+		}
+		return v[m_AnnouncementLastLine];
 	}
 	return 0;
 }

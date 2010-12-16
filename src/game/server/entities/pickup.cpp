@@ -69,7 +69,6 @@ void CPickup::Tick()
 			if(m_Layer == LAYER_SWITCH && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[pChr->Team()]) continue;
 			bool sound = false;
 			// player picked us up, is someone was hooking us, let them go
-			int RespawnTime = -1;
 			switch (m_Type)
 			{
 				case POWERUP_HEALTH:

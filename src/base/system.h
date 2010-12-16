@@ -914,6 +914,19 @@ const char *str_find(const char *haystack, const char *needle);
 */
 void str_hex(char *dst, int dst_size, const void *data, int data_size);
 
+/*
+	Function: str_timestamp
+		Copies a time stamp in the format year-month-day_hour-minute-second to the string.
+
+	Parameters:
+		buffer - Pointer to a buffer that shall receive the time stamp string.
+		buffer_size - Size of the buffer.
+
+	Remarks:
+		- Guarantees that buffer string will contain zero-termination.
+*/
+void str_timestamp(char *buffer, int buffer_size);
+
 /* Group: Filesystem */
 
 /*
@@ -981,6 +994,15 @@ int fs_is_dir(const char *path);
 int fs_chdir(const char *path);
 
 /*
+	Function: fs_getcwd
+		Gets the current working directory.
+	
+	Returns:
+		Returns a pointer to the buffer on success, 0 on failure.
+*/
+char *fs_getcwd(char *buffer, int buffer_size);
+
+/*
 	Function: fs_parent_dir
 		Get the parent directory of a directory
 	
@@ -994,6 +1016,37 @@ int fs_chdir(const char *path);
 		- The string is treated as zero-termineted string.
 */
 int fs_parent_dir(char *path);
+
+/*
+	Function: fs_remove
+		Deletes the file with the specified name.
+	
+	Parameters:
+		filename - The file to delete
+
+	Returns:
+		Returns 0 on success, 1 on failure.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+int fs_remove(const char *filename);
+
+/*
+	Function: fs_rename
+		Renames the file or directory. If the paths differ the file will be moved.
+	
+	Parameters:
+		oldname - The actual name
+		newname - The new name
+
+	Returns:
+		Returns 0 on success, 1 on failure.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+int fs_rename(const char *oldname, const char *newname);
 
 /*
 	Group: Undocumented

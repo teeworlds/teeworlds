@@ -92,8 +92,6 @@ bool CCharacterCore::IsRightTeam(int MapIndex)
 	if(Collision()->m_pSwitchers)
 		if(m_pTeams->Team(m_Id) != TEAM_SUPER)
 			return Collision()->m_pSwitchers[Collision()->GetDTileNumber(MapIndex)].m_Status[m_pTeams->Team(m_Id)];
-	else
-		return false;
 	return false;
 }
 
@@ -274,10 +272,12 @@ void CCharacterCore::Tick(bool UseInput)
 			for(int i = 0; i < MAX_CLIENTS; i++)
 			{
 				CCharacterCore *p = m_pWorld->m_apCharacters[i];
-				dbg_msg1("GameCore", "ThisId = %d Id = %d Team = %d", m_Id, i, m_pTeams->Team(i));
 				if(!p || p == this || !m_pTeams->CanCollide(i, m_Id))
+				{
+					dbg_msg1("GameCore Continue", "ThisId = %d Id = %d Team = %d", m_Id, i, m_pTeams->Team(i));
 					continue;
-				
+				}
+				dbg_msg1("GameCore Past  Continue", "ThisId = %d Id = %d Team = %d", m_Id, i, m_pTeams->Team(i));
 				
 				vec2 ClosestPoint = closest_point_on_line(m_HookPos, NewPos, p->m_Pos);
 				if(distance(p->m_Pos, ClosestPoint) < PhysSize+2.0f)
@@ -288,6 +288,7 @@ void CCharacterCore::Tick(bool UseInput)
 						m_HookState = HOOK_GRABBED;
 						m_HookedPlayer = i;
 						Dist = distance(m_HookPos, p->m_Pos);
+						dbg_msg1("GameCore Hooked", "ThisId = %d Id = %d Team = %d", m_Id, i, m_pTeams->Team(i));
 					}
 				}
 			}

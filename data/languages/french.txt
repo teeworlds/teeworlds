@@ -746,6 +746,12 @@ Alpha value of the envelope
 Aspect ratio
 == 
 
+Automatically record demos
+== 
+
+Automatically take game over screenshot
+== 
+
 Blue value of the envelope
 == 
 
@@ -816,6 +822,12 @@ Left mouse button to move. Hold shift to move the texture.
 == 
 
 Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
+== 
+
+Max Screenshots
+== 
+
+Max demos
 == 
 
 Next Envelope
@@ -933,6 +945,9 @@ Y-axis of the envelope
 == 
 
 [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== 
+
+no limit
 == 
 
 Loading DDRace Client

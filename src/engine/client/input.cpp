@@ -108,7 +108,7 @@ int CInput::KeyState(int Key)
 	return m_aInputState[m_InputCurrent][Key];
 }
 
-void CInput::Update()
+int CInput::Update()
 {
 	if(m_InputGrabbed && !Graphics()->WindowActive())
 		MouseModeAbsolute();
@@ -185,9 +185,7 @@ void CInput::Update()
 
 				// other messages
 				case SDL_QUIT:
-					// TODO: cleaner exit
-					exit(0); // ignore_convention
-					break;
+					return 1;
 			}
 
 			//
@@ -201,6 +199,8 @@ void CInput::Update()
 
 		}
 	}
+
+	return 0;
 }
 
 

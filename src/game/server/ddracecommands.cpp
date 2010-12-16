@@ -287,7 +287,7 @@ void CGameContext::ModifyWeapons(int ClientId, int Victim, int Weapon, bool Remo
 	
 	if(Weapon == -1)
 	{
-		if(Remove && pChr->m_ActiveWeapon == WEAPON_SHOTGUN || pChr->m_ActiveWeapon == WEAPON_GRENADE || pChr->m_ActiveWeapon == WEAPON_RIFLE)
+		if(Remove && (pChr->m_ActiveWeapon == WEAPON_SHOTGUN || pChr->m_ActiveWeapon == WEAPON_GRENADE || pChr->m_ActiveWeapon == WEAPON_RIFLE))
 			pChr->m_ActiveWeapon = WEAPON_GUN;
 		
 		if(Remove)
@@ -517,7 +517,7 @@ void CGameContext::ConInfo(IConsole::IResult *pResult, void *pUserData, int Clie
 
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "DDRace Mod. Version: " DDRACE_VERSION);
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Official site: DDRace.info");
-	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "For more Info /CMDList");
+	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "For more Info /cmdlist");
 	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Or visit DDRace.info");
 }
 
@@ -529,7 +529,7 @@ void CGameContext::ConHelp(IConsole::IResult *pResult, void *pUserData, int Clie
 	{
 		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "/cmdlist will show a list of all chat commands");
 		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "/help + any command will show you the help for this command");
-		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Example /help flags will display the help about ");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Example /help settings will display the help about ");
 	}
 	else
 	{
@@ -542,29 +542,87 @@ void CGameContext::ConHelp(IConsole::IResult *pResult, void *pUserData, int Clie
 	}
 }
 
-void CGameContext::ConFlags(IConsole::IResult *pResult, void *pUserData, int ClientId)
+void CGameContext::ConSettings(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
-	char buf[64];
-	float temp1;
-	float temp2;
-	pSelf->m_Tuning.Get("player_collision",&temp1);
-	pSelf->m_Tuning.Get("player_hooking",&temp2);
-	str_format(buf, sizeof(buf), "Flags: cheats[%s]%s%s collision[%s] hooking[%s]",
-		g_Config.m_SvCheats?"yes":"no",
-		(g_Config.m_SvCheats)?" w/Time":"",
-		(g_Config.m_SvCheats)?(g_Config.m_SvCheatTime)?"[yes]":"[no]":"",
-		temp1?"yes":"no",
-		temp2?"yes":"no");
-	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
-
-	str_format(buf, sizeof(buf), "endless hook[%s] weapons effect others[%s]",g_Config.m_SvEndlessDrag?"yes":"no",g_Config.m_SvHit?"yes":"no");
-	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
-	if(g_Config.m_SvPauseable)
+	if(pResult->NumArguments() == 0)
 	{
-		str_format(buf, sizeof(buf), "Server Allows /pause with%s",g_Config.m_SvPauseTime?" time pause.":"out time pause.");
-		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "to check a server setting say /settings and setting's name, setting names are:");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "teams, cheats, collision, hooking, endlesshooking, me, ");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "hitting, oldlaser, timeout, votes, pause and scores");
+	}
+	else
+	{
+		const char *pArg = pResult->GetString(0);
+		char aBuf[256];
+		float ColTemp;
+		float HookTemp;
+		pSelf->m_Tuning.Get("player_collision", &ColTemp);
+		pSelf->m_Tuning.Get("player_hooking", &HookTemp);
+		if(str_comp(pArg, "cheats") == 0)
+		{
+			str_format(aBuf, sizeof(aBuf), "%s%s",
+					g_Config.m_SvCheats?"People can cheat":"People can't cheat",
+					(g_Config.m_SvCheats)?(g_Config.m_SvCheatTime)?" with time":" without time":"");
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", aBuf);
+			if(g_Config.m_SvCheats)
+			{
+				str_format(aBuf, sizeof(aBuf), "%s", g_Config.m_SvEndlessSuperHook?"super can hook you forever":"super can only hook you for limited time");
+				pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", aBuf);
+				str_format(aBuf, sizeof(aBuf), "%s", g_Config.m_SvTimer?"admins have the power to control your time":"admins have no power over your time");
+				pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", aBuf);
+			}
+		}
+		else if(str_comp(pArg, "teams") == 0)
+		{
+			str_format(aBuf, sizeof(aBuf), "%s %s", !g_Config.m_SvTeam?"Teams are available on this server":g_Config.m_SvTeam==-1?"Teams are not available on this server":"You have to be in a team to play on this server", !g_Config.m_SvTeamStrict?"and if you die in a team only you die":"and if you die in a team all of you die");
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", aBuf);
+		}
+		else if(str_comp(pArg, "collision") == 0)
+		{
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", ColTemp?"Players can collide on this server":"Players Can't collide on this server");
+		}
+		else if(str_comp(pArg, "hooking") == 0)
+		{
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", HookTemp?"Players can hook each other on this server":"Players Can't hook each other on this server");
+		}
+		else if(str_comp(pArg, "endlesshooking") == 0)
+		{
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvEndlessDrag?"Players can hook time is unlimited":"Players can hook time is limited");
+		}
+		else if(str_comp(pArg, "hitting") == 0)
+		{
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvHit?"Player's weapons affect each other":"Player's weapons has no affect on each other");
+		}
+		else if(str_comp(pArg, "oldlaser") == 0)
+		{
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvOldLaser?"Lasers can hit you if you shot them and that they pull you towards the bounce origin (Like DDRace Beta)":"Lasers can't hit you if you shot them, and they pull others towards the shooter");
+		}
+		else if(str_comp(pArg, "me") == 0)
+		{
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvSlashMe?"Players can use /me commands the famous IRC Command":"Players Can't use the /me command");
+		}
+		else if(str_comp(pArg, "timeout") == 0)
+		{
+			str_format(aBuf, sizeof(aBuf), "The Server Timeout is currently set to %d", g_Config.m_ConnTimeout);
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", aBuf);
+		}
+		else if(str_comp(pArg, "votes") == 0)
+		{
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvVoteKick?"Players can use Callvote menu tab to kick offenders":"Players Can't use the Callvote menu tab to kick offenders");
+			if(g_Config.m_SvVoteKick)
+				str_format(aBuf, sizeof(aBuf), "Players are banned for %d second(s) if they get voted off", g_Config.m_SvVoteKickBantime);
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvVoteKickBantime?aBuf:"Players are just kicked and not banned if they get voted off");
+		}
+		else if(str_comp(pArg, "pause") == 0)
+		{
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvPauseable?g_Config.m_SvPauseTime?"/pause is available on this server and it pauses your time too":"/pause is available on this server but it doesn't pause your time":"/pause is NOT available on this server");
+		}
+		else if(str_comp(pArg, "scores") == 0)
+		{
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", g_Config.m_SvHideScore?"Scores are private on this server":"Scores are public on this server");
+		}
 	}
 }
 
@@ -717,15 +775,6 @@ void CGameContext::ConRank(IConsole::IResult *pResult, void *pUserData, int Clie
 		pSelf->Score()->ShowRank(pPlayer->GetCID(), pSelf->Server()->ClientName(ClientId));
 }
 
-void CGameContext::ConBroadTime(IConsole::IResult *pResult, void *pUserData, int ClientId)
-{
-	CGameContext *pSelf = (CGameContext *)pUserData;
-
-	CCharacter* pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
-	if(pChr)
-		pChr->m_BroadTime = !pChr->m_BroadTime;
-}
-
 void CGameContext::ConJoinTeam(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	
@@ -792,7 +841,10 @@ void CGameContext::ConMe(IConsole::IResult *pResult, void *pUserData, int Client
 	char aBuf[256 + 24];
 	
 	str_format(aBuf, 256 + 24, "'%s' %s", pSelf->Server()->ClientName(ClientId), pResult->GetString(0));
-	pSelf->SendChat(-2, CGameContext::CHAT_ALL, aBuf, ClientId);
+	if(g_Config.m_SvSlashMe)
+		pSelf->SendChat(-2, CGameContext::CHAT_ALL, aBuf, ClientId);
+	else
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "/me is disabled on this server, admin can enable it by using sv_slash_me");
 }
 
 void CGameContext::ConToggleEyeEmote(IConsole::IResult *pResult, void *pUserData, int ClientId)

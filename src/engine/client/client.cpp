@@ -3,8 +3,8 @@
 
 #include <stdlib.h> // qsort
 #include <stdarg.h>
-#include <math.h>
 
+#include <base/math.h>
 #include <base/system.h>
 #include <engine/shared/engine.h>
 
@@ -217,6 +217,183 @@ void CSmoothTime::Update(CGraph *pGraph, int64 Target, int TimeLeft, int AdjustD
 }
 
 
+bool CFileCollection::IsFilenameValid(const char *pFilename)
+{
+	if(str_length(pFilename) != m_FileDescLength+TIMESTAMP_LENGTH+m_FileExtLength ||
+		str_comp_num(pFilename, m_aFileDesc, m_FileDescLength) ||
+		str_comp(pFilename+m_FileDescLength+TIMESTAMP_LENGTH, m_aFileExt))
+		return false;
+
+	pFilename += m_FileDescLength;
+	if(pFilename[0] == '_' &&
+		pFilename[1] >= '0' && pFilename[1] <= '9' &&
+		pFilename[2] >= '0' && pFilename[2] <= '9' &&
+		pFilename[3] >= '0' && pFilename[3] <= '9' &&
+		pFilename[4] >= '0' && pFilename[4] <= '9' &&
+		pFilename[5] == '-' &&
+		pFilename[6] >= '0' && pFilename[6] <= '9' &&
+		pFilename[7] >= '0' && pFilename[7] <= '9' &&
+		pFilename[8] == '-' &&
+		pFilename[9] >= '0' && pFilename[9] <= '9' &&
+		pFilename[10] >= '0' && pFilename[10] <= '9' &&
+		pFilename[11] == '_' &&
+		pFilename[12] >= '0' && pFilename[12] <= '9' &&
+		pFilename[13] >= '0' && pFilename[13] <= '9' &&
+		pFilename[14] == '-' &&
+		pFilename[15] >= '0' && pFilename[15] <= '9' &&
+		pFilename[16] >= '0' && pFilename[16] <= '9' &&
+		pFilename[17] == '-' &&
+		pFilename[18] >= '0' && pFilename[18] <= '9' &&
+		pFilename[19] >= '0' && pFilename[19] <= '9')
+		return true;
+
+	return false;
+}
+
+int64 CFileCollection::ExtractTimestamp(const char *pTimestring)
+{
+	int64 Timestamp = pTimestring[0]-'0'; Timestamp <<= 4;
+	Timestamp += pTimestring[1]-'0'; Timestamp <<= 4;
+	Timestamp += pTimestring[2]-'0'; Timestamp <<= 4;
+	Timestamp += pTimestring[3]-'0'; Timestamp <<= 4;
+	Timestamp += pTimestring[5]-'0'; Timestamp <<= 4;
+	Timestamp += pTimestring[6]-'0'; Timestamp <<= 4;
+	Timestamp += pTimestring[8]-'0'; Timestamp <<= 4;
+	Timestamp += pTimestring[9]-'0'; Timestamp <<= 4;
+	Timestamp += pTimestring[11]-'0'; Timestamp <<= 4;
+	Timestamp += pTimestring[12]-'0'; Timestamp <<= 4;
+	Timestamp += pTimestring[14]-'0'; Timestamp <<= 4;
+	Timestamp += pTimestring[15]-'0'; Timestamp <<= 4;
+	Timestamp += pTimestring[17]-'0'; Timestamp <<= 4;
+	Timestamp += pTimestring[18]-'0';
+
+	return Timestamp;
+}
+
+void CFileCollection::BuildTimestring(int64 Timestamp, char *pTimestring)
+{
+	pTimestring[19] = 0;
+	pTimestring[18] = (Timestamp&0xF)+'0'; Timestamp >>= 4;
+	pTimestring[17] = (Timestamp&0xF)+'0'; Timestamp >>= 4;
+	pTimestring[16] = '-';
+	pTimestring[15] = (Timestamp&0xF)+'0'; Timestamp >>= 4;
+	pTimestring[14] = (Timestamp&0xF)+'0'; Timestamp >>= 4;
+	pTimestring[13] = '-';
+	pTimestring[12] = (Timestamp&0xF)+'0'; Timestamp >>= 4;
+	pTimestring[11] = (Timestamp&0xF)+'0'; Timestamp >>= 4;
+	pTimestring[10] = '_';
+	pTimestring[9] = (Timestamp&0xF)+'0'; Timestamp >>= 4;
+	pTimestring[8] = (Timestamp&0xF)+'0'; Timestamp >>= 4;
+	pTimestring[7] = '-';
+	pTimestring[6] = (Timestamp&0xF)+'0'; Timestamp >>= 4;
+	pTimestring[5] = (Timestamp&0xF)+'0'; Timestamp >>= 4;
+	pTimestring[4] = '-';
+	pTimestring[3] = (Timestamp&0xF)+'0'; Timestamp >>= 4;
+	pTimestring[2] = (Timestamp&0xF)+'0'; Timestamp >>= 4;
+	pTimestring[1] = (Timestamp&0xF)+'0'; Timestamp >>= 4;
+	pTimestring[0] = (Timestamp&0xF)+'0';
+}
+
+void CFileCollection::Init(IStorage *pStorage, const char *pPath, const char *pFileDesc, const char *pFileExt, int MaxEntries)
+{
+	mem_zero(m_aTimestamps, sizeof(m_aTimestamps));
+	m_NumTimestamps = 0;
+	m_MaxEntries = clamp(MaxEntries, 1, static_cast<int>(MAX_ENTRIES));
+	str_copy(m_aFileDesc, pFileDesc, sizeof(m_aFileDesc));
+	m_FileDescLength = str_length(m_aFileDesc);
+	str_copy(m_aFileExt, pFileExt, sizeof(m_aFileExt));
+	m_FileExtLength = str_length(m_aFileExt);
+	str_copy(m_aPath, pPath, sizeof(m_aPath));
+	m_pStorage = pStorage;
+
+	m_pStorage->ListDirectory(IStorage::TYPE_SAVE, m_aPath, FilelistCallback, this);
+}
+
+void CFileCollection::AddEntry(int64 Timestamp)
+{
+	if(m_NumTimestamps == 0)
+	{
+		// empty list
+		m_aTimestamps[m_NumTimestamps++] = Timestamp;
+	}
+	else
+	{
+		// remove old file
+		if(m_NumTimestamps == m_MaxEntries)
+		{
+			char aBuf[512];
+			char aTimestring[TIMESTAMP_LENGTH];
+			BuildTimestring(m_aTimestamps[0], aTimestring);
+			str_format(aBuf, sizeof(aBuf), "%s/%s_%s%s", m_aPath, m_aFileDesc, aTimestring, m_aFileExt);
+			m_pStorage->RemoveFile(aBuf, IStorage::TYPE_SAVE);
+		}
+
+		// add entry to the sorted list
+		if(m_aTimestamps[0] > Timestamp)
+		{
+			// first entry
+			if(m_NumTimestamps < m_MaxEntries)
+			{
+				mem_move(m_aTimestamps+1, m_aTimestamps, m_NumTimestamps*sizeof(int64));
+				m_aTimestamps[0] = Timestamp;
+				++m_NumTimestamps;
+			}
+		}
+		else if(m_aTimestamps[m_NumTimestamps-1] <= Timestamp)
+		{
+			// last entry
+			if(m_NumTimestamps == m_MaxEntries)
+			{
+				mem_move(m_aTimestamps, m_aTimestamps+1, (m_NumTimestamps-1)*sizeof(int64));
+				m_aTimestamps[m_NumTimestamps-1] = Timestamp;
+			}
+			else
+				m_aTimestamps[m_NumTimestamps++] = Timestamp;
+		}
+		else
+		{
+			// middle entry
+			int Left = 0, Right = m_NumTimestamps-1;
+			while(Right-Left > 1)
+			{
+				int Mid = (Left+Right)/2;
+				if(m_aTimestamps[Mid] > Timestamp)
+					Right = Mid;
+				else
+					Left = Mid;
+			}
+
+			if(m_NumTimestamps == m_MaxEntries)
+			{
+				mem_move(m_aTimestamps, m_aTimestamps+1, (Right-1)*sizeof(int64));
+				m_aTimestamps[Right-1] = Timestamp;
+			}
+			else
+			{
+				mem_move(m_aTimestamps+Right+1, m_aTimestamps+Right, (m_NumTimestamps-Right)*sizeof(int64));
+				m_aTimestamps[Right] = Timestamp;
+				++m_NumTimestamps;
+			}
+		}
+	}
+}
+
+void CFileCollection::FilelistCallback(const char *pFilename, int IsDir, int StorageType, void *pUser)
+{
+	CFileCollection *pThis = static_cast<CFileCollection *>(pUser);
+
+	// check for valid file name format
+	if(IsDir || !pThis->IsFilenameValid(pFilename))
+		return;
+
+	// extract the timestamp
+	int64 Timestamp = pThis->ExtractTimestamp(pFilename+pThis->m_FileDescLength+1);
+
+	// add the entry
+	pThis->AddEntry(Timestamp);
+}
+
+
 CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotDelta)
 {
 	m_pEditor = 0;
@@ -236,6 +413,7 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 
 	m_WindowMustRefocus = 0;
 	m_SnapCrcErrors = 0;
+	m_AutoScreenshotRecycle = false;
 
 	m_AckGameTick = -1;
 	m_CurrentRecvTick = 0;
@@ -526,7 +704,7 @@ void CClient::Connect(const char *pAddress)
 	SetState(IClient::STATE_CONNECTING);
 
 	if(m_DemoRecorder.IsRecording())
-		m_DemoRecorder.Stop();
+		DemoRecorder_Stop();
 
 	m_InputtimeMarginGraph.Init(-150.0f, 150.0f);
 	m_GametimeMarginGraph.Init(-150.0f, 150.0f);
@@ -540,7 +718,7 @@ void CClient::DisconnectWithReason(const char *pReason)
 
 	// stop demo playback and recorder
 	m_DemoPlayer.Stop();
-	m_DemoRecorder.Stop();
+	DemoRecorder_Stop();
 
 	//
 	m_RconAuthed = 0;
@@ -780,7 +958,7 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, unsigned 
 	}
 
 	// stop demo recording if we loaded a new map
-	m_DemoRecorder.Stop();
+	DemoRecorder_Stop();
 
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "loaded map '%s'", pFilename);
@@ -1279,6 +1457,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 							m_aSnapshots[SNAP_CURRENT] = m_SnapshotStorage.m_pLast;
 							m_LocalStartTime = time_get();
 							SetState(IClient::STATE_ONLINE);
+							DemoRecorder_HandleAutoStart();
 						}
 
 						// adjust game time
@@ -1629,6 +1808,8 @@ void CClient::Run()
 	if(!LoadData())
 		return;
 
+	DemoRecorder_Init();
+
 	GameClient()->OnInit();
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "version %s", GameClient()->NetVersion());
@@ -1676,7 +1857,8 @@ void CClient::Run()
 		}
 
 		// update input
-		Input()->Update();
+		if(Input()->Update())
+			break;	// SDL_QUIT
 
 		// update sound
 		Sound()->Update();
@@ -1756,6 +1938,8 @@ void CClient::Run()
 				m_pGraphics->Swap();
 			}
 		}
+
+		AutoScreenshot_Cleanup();
 
 		// check conditions
 		if(State() == IClient::STATE_QUITING)
@@ -1842,10 +2026,33 @@ void CClient::Con_Ping(IConsole::IResult *pResult, void *pUserData, int ClientID
 	pSelf->m_PingStartTime = time_get();
 }
 
+void CClient::AutoScreenshot_Start()
+{
+	if(g_Config.m_ClAutoScreenshot)
+	{
+		Graphics()->TakeScreenshot("auto/autoscreen");
+		m_AutoScreenshotRecycle = true;
+	}
+}
+
+void CClient::AutoScreenshot_Cleanup()
+{
+	if(m_AutoScreenshotRecycle)
+	{
+		if(g_Config.m_ClAutoScreenshotMax)
+		{
+			// clean up auto taken screens
+			CFileCollection AutoScreens;
+			AutoScreens.Init(Storage(), "screenshots/auto", "autoscreen", ".png", g_Config.m_ClAutoScreenshotMax);
+		}
+		m_AutoScreenshotRecycle = false;
+	}
+}
+
 void CClient::Con_Screenshot(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CClient *pSelf = (CClient *)pUserData;
-	pSelf->Graphics()->TakeScreenshot();
+	pSelf->Graphics()->TakeScreenshot(0);
 }
 
 void CClient::Con_Rcon(IConsole::IResult *pResult, void *pUserData, int ClientID)
@@ -1926,28 +2133,63 @@ void CClient::Con_Play(IConsole::IResult *pResult, void *pUserData, int ClientID
 	pSelf->DemoPlayer_Play(pResult->GetString(0), IStorage::TYPE_ALL);
 }
 
-void CClient::DemoRecorder_Start(const char *pFilename)
+void CClient::DemoRecorder_Init()
+{
+	if(!Storage()->CreateFolder("demos/auto", IStorage::TYPE_SAVE))
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/record", "unable to create auto record folder");
+}
+
+void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp)
 {
 	if(State() != IClient::STATE_ONLINE)
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/record", "client is not online");
 	else
 	{
-		char aFilename[512];
-		str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pFilename);
+		char aFilename[128];
+		if(WithTimestamp)
+		{
+			char aDate[20];
+			str_timestamp(aDate, sizeof(aDate));
+			str_format(aFilename, sizeof(aFilename), "demos/%s_%s.demo", pFilename, aDate);
+		}
+		else
+			str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pFilename);
 		m_DemoRecorder.Start(Storage(), m_pConsole, aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapCrc, "client");
 	}
+}
+
+void CClient::DemoRecorder_HandleAutoStart()
+{
+	if(g_Config.m_ClAutoDemoRecord)
+	{
+		DemoRecorder_Start("auto/autorecord", true);
+		if(g_Config.m_ClAutoDemoMax)
+		{
+			// clean up auto recorded demos
+			CFileCollection AutoDemos;
+			AutoDemos.Init(Storage(), "demos/auto", "autorecord", ".demo", g_Config.m_ClAutoDemoMax);
+		}
+	}
+}
+
+void CClient::DemoRecorder_Stop()
+{
+	m_DemoRecorder.Stop();
 }
 
 void CClient::Con_Record(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CClient *pSelf = (CClient *)pUserData;
-	pSelf->DemoRecorder_Start(pResult->GetString(0));
+	if(pResult->NumArguments())
+		pSelf->DemoRecorder_Start(pResult->GetString(0), false);
+	else
+		pSelf->DemoRecorder_Start("demo", true);
 }
 
 void CClient::Con_StopRecord(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CClient *pSelf = (CClient *)pUserData;
-	pSelf->m_DemoRecorder.Stop();
+	pSelf->DemoRecorder_Stop();
 }
 
 void CClient::RegisterCommands()
@@ -1960,7 +2202,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("bans", "", CFGFLAG_SERVER, 0, 0, "Show banlist", 0);
 	m_pConsole->Register("status", "", CFGFLAG_SERVER, 0, 0, "List players", 0);
 	m_pConsole->Register("shutdown", "", CFGFLAG_SERVER, 0, 0, "Shut down", 0);
-	m_pConsole->Register("record", "s", CFGFLAG_SERVER, 0, 0, "Record to a file", 0);
+	m_pConsole->Register("record", "?s", CFGFLAG_SERVER, 0, 0, "Record to a file", 0);
 	m_pConsole->Register("stoprecord", "", CFGFLAG_SERVER, 0, 0, "Stop recording", 0);
 	m_pConsole->Register("reload", "", CFGFLAG_SERVER, 0, 0, "Reload the map", 0);
 	m_pConsole->Register("login", "?s", CFGFLAG_SERVER, 0, 0, "Allows you access to rcon if no password is given, or changes your level if a password is given", -1);
@@ -1981,7 +2223,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("rcon", "r", CFGFLAG_CLIENT, Con_Rcon, this, "Send specified command to rcon", 0);
 	m_pConsole->Register("rcon_auth", "s", CFGFLAG_CLIENT, Con_RconAuth, this, "Authenticate to rcon", 0);
 	m_pConsole->Register("play", "r", CFGFLAG_CLIENT, Con_Play, this, "Play the file specified", 0);
-	m_pConsole->Register("record", "s", CFGFLAG_CLIENT, Con_Record, this, "Record to the file", 0);
+	m_pConsole->Register("record", "?s", CFGFLAG_CLIENT, Con_Record, this, "Record to the file", 0);
 	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording", 0);
 	
 	m_pConsole->Register("add_favorite", "s", CFGFLAG_CLIENT, Con_AddFavorite, this, "Add a server as a favorite", 0);

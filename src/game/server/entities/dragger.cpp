@@ -26,7 +26,7 @@ CDragger::CDragger(CGameWorld *pGameWorld, vec2 Pos, float Strength, bool NW, in
 
 void CDragger::Move()
 {
-	if(m_Target && m_Target->m_Alive && (m_Target->m_Super || m_Layer == LAYER_SWITCH && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[m_Target->Team()]))
+	if(m_Target && m_Target->m_Alive && (m_Target->m_Super || (m_Layer == LAYER_SWITCH && !GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[m_Target->Team()])))
 		m_Target = 0;
 	if(m_Target)
 		return;

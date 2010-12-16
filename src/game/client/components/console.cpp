@@ -1,7 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <math.h>
-#include <time.h>
 
 #include <game/generated/client_data.h>
 
@@ -593,34 +592,25 @@ void CGameConsole::Dump(int Type)
 {
 	CInstance *pConsole = Type == CONSOLETYPE_REMOTE ? &m_RemoteConsole : &m_LocalConsole;
 	char aFilename[128];
-	time_t Time;
 	char aDate[20];
 
-	time(&Time);
-	tm* TimeInfo = localtime(&Time);
-	strftime(aDate, sizeof(aDate), "%Y-%m-%d_%I-%M", TimeInfo);
-
-	for(int i = 0; i < 10; i++)
+	str_timestamp(aDate, sizeof(aDate));
+	str_format(aFilename, sizeof(aFilename), "dumps/%s_dump_%s.txt", Type==CONSOLETYPE_REMOTE?"remote_console":"local_console", aDate);
+	IOHANDLE io = Storage()->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	if(io)
 	{
-		IOHANDLE io;
-		str_format(aFilename, sizeof(aFilename), "dumps/%s_dump%s-%05d.txt", Type==CONSOLETYPE_REMOTE?"remote_console":"local_console", aDate, i);
-		io = Storage()->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
-		if(io)
-		{
-			#if defined(CONF_FAMILY_WINDOWS)
-				static const char Newline[] = "\r\n";
-			#else
-				static const char Newline[] = "\n";
-			#endif
+		#if defined(CONF_FAMILY_WINDOWS)
+			static const char Newline[] = "\r\n";
+		#else
+			static const char Newline[] = "\n";
+		#endif
 
-			for(CInstance::CBacklogEntry *pEntry = pConsole->m_Backlog.First(); pEntry; pEntry = pConsole->m_Backlog.Next(pEntry))
-			{
-				io_write(io, pEntry->m_aText, str_length(pEntry->m_aText));
-				io_write(io, Newline, sizeof(Newline)-1);
-			}
-			io_close(io);
-			break;
+		for(CInstance::CBacklogEntry *pEntry = pConsole->m_Backlog.First(); pEntry; pEntry = pConsole->m_Backlog.Next(pEntry))
+		{
+			io_write(io, pEntry->m_aText, str_length(pEntry->m_aText));
+			io_write(io, Newline, sizeof(Newline)-1);
 		}
+		io_close(io);
 	}
 }
 

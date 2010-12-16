@@ -25,14 +25,18 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 	vec2 At;
 	CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);
 	CCharacter *Hit = GameServer()->m_World.IntersectCharacter(m_Pos, To, 0.f, At, m_Bounces != 0 ? 0: OwnerChar, m_Owner);
-	if(!Hit)
+	if(!Hit || (Hit == OwnerChar && g_Config.m_SvOldLaser))
 		return false;
 	m_From = From;
 	m_Pos = At;
 	m_Energy = -1;
 	if (m_Type == 1 && g_Config.m_SvHit)
 	{
-		vec2 Temp = Hit->m_Core.m_Vel + normalize(m_PrevPos - Hit->m_Core.m_Pos) * 10;
+		vec2 Temp;
+		if(!g_Config.m_SvOldLaser)
+			Temp = Hit->m_Core.m_Vel + normalize(m_PrevPos - Hit->m_Core.m_Pos) * 10;
+		else
+			Temp = Hit->m_Core.m_Vel + normalize(OwnerChar->m_Core.m_Pos-Hit->m_Core.m_Pos)*10;
 		if(Temp.x > 0 && ((Hit->m_TileIndex == TILE_STOP && Hit->m_TileFlags == ROTATION_270) || (Hit->m_TileIndexL == TILE_STOP && Hit->m_TileFlagsL == ROTATION_270) || (Hit->m_TileIndexL == TILE_STOPS && (Hit->m_TileFlagsL == ROTATION_90 || Hit->m_TileFlagsL ==ROTATION_270)) || (Hit->m_TileIndexL == TILE_STOPA) || (Hit->m_TileFIndex == TILE_STOP && Hit->m_TileFFlags == ROTATION_270) || (Hit->m_TileFIndexL == TILE_STOP && Hit->m_TileFFlagsL == ROTATION_270) || (Hit->m_TileFIndexL == TILE_STOPS && (Hit->m_TileFFlagsL == ROTATION_90 || Hit->m_TileFFlagsL == ROTATION_270)) || (Hit->m_TileFIndexL == TILE_STOPA) || (Hit->m_TileSIndex == TILE_STOP && Hit->m_TileSFlags == ROTATION_270) || (Hit->m_TileSIndexL == TILE_STOP && Hit->m_TileSFlagsL == ROTATION_270) || (Hit->m_TileSIndexL == TILE_STOPS && (Hit->m_TileSFlagsL == ROTATION_90 || Hit->m_TileSFlagsL == ROTATION_270)) || (Hit->m_TileSIndexL == TILE_STOPA)))
 			Temp.x = 0;
 		if(Temp.x < 0 && ((Hit->m_TileIndex == TILE_STOP && Hit->m_TileFlags == ROTATION_90) || (Hit->m_TileIndexR == TILE_STOP && Hit->m_TileFlagsR == ROTATION_90) || (Hit->m_TileIndexR == TILE_STOPS && (Hit->m_TileFlagsR == ROTATION_90 || Hit->m_TileFlagsR == ROTATION_270)) || (Hit->m_TileIndexR == TILE_STOPA) || (Hit->m_TileFIndex == TILE_STOP && Hit->m_TileFFlags == ROTATION_90) || (Hit->m_TileFIndexR == TILE_STOP && Hit->m_TileFFlagsR == ROTATION_90) || (Hit->m_TileFIndexR == TILE_STOPS && (Hit->m_TileFFlagsR == ROTATION_90 || Hit->m_TileFFlagsR == ROTATION_270)) || (Hit->m_TileFIndexR == TILE_STOPA) || (Hit->m_TileSIndex == TILE_STOP && Hit->m_TileSFlags == ROTATION_90) || (Hit->m_TileSIndexR == TILE_STOP && Hit->m_TileSFlagsR == ROTATION_90) || (Hit->m_TileSIndexR == TILE_STOPS && (Hit->m_TileSFlagsR == ROTATION_90 || Hit->m_TileSFlagsR == ROTATION_270)) || (Hit->m_TileSIndexR == TILE_STOPA)))
@@ -126,8 +130,14 @@ void CLaser::Snap(int SnappingClient)
 {
 	if(NetworkClipped(SnappingClient))
 		return;
-	CCharacter * Char = GameServer()->GetPlayerChar(SnappingClient);
-	if(Char && Char->m_Alive && m_Owner != -1 && GameServer()->GetPlayerChar(m_Owner)->m_Alive && Char->Team() != GameServer()->GetPlayerChar(m_Owner)->Team()) return;
+	CCharacter * SnappingChar = GameServer()->GetPlayerChar(SnappingClient);
+	CCharacter * OwnerChar = 0;
+	if(m_Owner >= 0)
+		OwnerChar = GameServer()->GetPlayerChar(m_Owner);
+	if(!SnappingChar || !OwnerChar)
+		return;
+	if(SnappingChar->m_Alive && OwnerChar->m_Alive && SnappingChar->Team() != OwnerChar->Team())
+		return;
 	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_Id, sizeof(CNetObj_Laser)));
 	pObj->m_X = (int)m_Pos.x;
 	pObj->m_Y = (int)m_Pos.y;

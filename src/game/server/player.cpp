@@ -134,7 +134,7 @@ void CPlayer::OnDisconnect()
 		str_format(aBuf, sizeof(aBuf), "leave player='%d:%s'", m_ClientID, Server()->ClientName(m_ClientID));
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf);
 		if(m_Muted > 0) {
-			str_format(Cmd, sizeof(Cmd), "ban %d %d '%s'", m_ClientID, m_Muted/Server()->TickSpeed(), "ppc");
+			str_format(Cmd, sizeof(Cmd), "ban %d %d '%s'", m_ClientID, m_Muted/Server()->TickSpeed(), "Mute evasion");
 			GameServer()->Console()->ExecuteLine(Cmd, 3, -1);
 		}
 	}
@@ -254,10 +254,12 @@ void CPlayer::LoadCharacter()
 	for(int i = 0; i < NUM_WEAPONS; ++i)
 	{
 		if(m_PauseInfo.m_aHasWeapon[i])
-		 if(!m_PauseInfo.m_FreezeTime)
-			Character->GiveWeapon(i, -1);
-		 else
-			 Character->GiveWeapon(i, 0);
+		{
+			if(!m_PauseInfo.m_FreezeTime)
+				Character->GiveWeapon(i, -1);
+			else
+				Character->GiveWeapon(i, 0);
+		}
 	}
 	Character->m_FreezeTime = m_PauseInfo.m_FreezeTime;
 	Character->m_Doored = m_PauseInfo.m_Doored;

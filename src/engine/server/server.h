@@ -221,7 +221,8 @@ public:
 	
 	void SetRconLevel(int ClientId, int Level);
 	void CheckPass(int ClientId, const char *pPw);
-	char *GetLine(char const *FileName, int Line);
+	char *GetAnnouncementLine(char const *FileName);
+	unsigned m_AnnouncementLastLine;
 
 	virtual int SnapNewID();
 	virtual void SnapFreeID(int ID);

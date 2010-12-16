@@ -486,6 +486,12 @@ Are you sure that you want to delete the demo?
 Aspect ratio
 == 
 
+Automatically record demos
+== 
+
+Automatically take game over screenshot
+== 
+
 Blue value of the envelope
 == 
 
@@ -682,6 +688,12 @@ Make collision
 == 
 
 Make external
+== 
+
+Max Screenshots
+== 
+
+Max demos
 == 
 
 Name:
@@ -931,6 +943,9 @@ ZO
 == 
 
 [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
+== 
+
+no limit
 == 
 
 ##### old translations #####
