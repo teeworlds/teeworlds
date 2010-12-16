@@ -945,13 +945,29 @@ Y-axis of the envelope
 [HOME] Restore map focus
 == 
 
+left
+== 
+
+minute
+== 
+
+minutes
+== 
+
 no limit
 == 
 
+second
 == 
 
+seconds
+== 
 
+== 
+
+##### old translations #####
+
+##### DDRace #####
 Loading DDRace Client
 == Загрузка DDRace Client
-##### old translations #####
 
