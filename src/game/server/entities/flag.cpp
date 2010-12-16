@@ -26,6 +26,9 @@ void CFlag::Reset()
 void CFlag::Snap(int SnappingClient)
 {
 	CNetObj_Flag *pFlag = (CNetObj_Flag *)Server()->SnapNewItem(NETOBJTYPE_FLAG, m_Team, sizeof(CNetObj_Flag));
+	if(!pFlag)
+		return;
+
 	pFlag->m_X = (int)m_Pos.x;
 	pFlag->m_Y = (int)m_Pos.y;
 	pFlag->m_Team = m_Team;
