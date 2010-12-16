@@ -115,6 +115,8 @@ int CSnapIDPool::NewID()
 	
 	int Id = m_FirstFree;
 	dbg_assert(Id != -1, "id error");
+	if(Id == -1)
+		return Id;
 	m_FirstFree = m_aIDs[m_FirstFree].m_Next;
 	m_aIDs[Id].m_State = 1;
 	m_Usage++;
@@ -131,6 +133,8 @@ void CSnapIDPool::TimeoutIDs()
 
 void CSnapIDPool::FreeID(int Id)
 {
+	if(Id < 0)
+		return;
 	dbg_assert(m_aIDs[Id].m_State == 1, "id is not alloced");
 
 	m_InUsage--;
@@ -1481,7 +1485,7 @@ void *CServer::SnapNewItem(int Type, int Id, int Size)
 {
 	dbg_assert(Type >= 0 && Type <=0xffff, "incorrect type");
 	dbg_assert(Id >= 0 && Id <=0xffff, "incorrect id");
-	return m_SnapshotBuilder.NewItem(Type, Id, Size);		
+	return Id < 0 ? 0 : m_SnapshotBuilder.NewItem(Type, Id, Size);		
 }
 
 void CServer::SnapSetStaticsize(int ItemType, int Size)
