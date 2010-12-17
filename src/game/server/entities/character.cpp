@@ -77,6 +77,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_BroadCast = true;
 	m_EyeEmote = true;
 	m_Fly = true;
+	m_DeepFreeze = false;
 	m_LastBroadcast = 0;
 	m_TeamBeforeSuper = 0;
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
@@ -745,11 +746,11 @@ void CCharacter::Tick()
 
 	if(m_FreezeTime > 0 || m_FreezeTime == -1)
 	{
-		if (m_FreezeTime % Server()->TickSpeed() == 0 || m_FreezeTime == -1)
+		if (!m_DeepFreeze && (m_FreezeTime % Server()->TickSpeed() == 0 || m_FreezeTime == -1))
 		{
 			GameServer()->CreateDamageInd(m_Pos, 0, m_FreezeTime / Server()->TickSpeed());
 		}
-		if(m_FreezeTime != -1)
+		if(m_FreezeTime != -1 && !m_DeepFreeze)
 			m_FreezeTime--;
 		else
 			m_Ninja.m_ActivationTick = Server()->Tick();
@@ -990,10 +991,19 @@ void CCharacter::HandleTiles(int Index)
 	}
 	if(((m_TileIndex == TILE_FREEZE) || (m_TileFIndex == TILE_FREEZE)) && !m_Super)
 	{
-		Freeze(Server()->TickSpeed()*3);
+		Freeze(Server()->TickSpeed()*3, false);
+	}
+	else if(((m_TileIndex == TILE_DEEPFREEZE) || (m_TileFIndex == TILE_DEEPFREEZE)) && !m_Super)
+	{
+		Freeze(Server()->TickSpeed()*3, true);
 	}
 	else if((m_TileIndex == TILE_UNFREEZE) || (m_TileFIndex == TILE_UNFREEZE))
 	{
+		UnFreeze();
+	}
+	else if((m_TileIndex == TILE_DEEPUNFREEZE) || (m_TileFIndex == TILE_DEEPUNFREEZE))
+	{
+		m_DeepFreeze = false;
 		UnFreeze();
 	}
 	if(((m_TileIndex == TILE_STOP && m_TileFlags == ROTATION_270) || (m_TileIndexL == TILE_STOP && m_TileFlagsL == ROTATION_270) || (m_TileIndexL == TILE_STOPS && (m_TileFlagsL == ROTATION_90 || m_TileFlagsL ==ROTATION_270)) || (m_TileIndexL == TILE_STOPA) || (m_TileFIndex == TILE_STOP && m_TileFFlags == ROTATION_270) || (m_TileFIndexL == TILE_STOP && m_TileFFlagsL == ROTATION_270) || (m_TileFIndexL == TILE_STOPS && (m_TileFFlagsL == ROTATION_90 || m_TileFFlagsL == ROTATION_270)) || (m_TileFIndexL == TILE_STOPA) || (m_TileSIndex == TILE_STOP && m_TileSFlags == ROTATION_270) || (m_TileSIndexL == TILE_STOP && m_TileSFlagsL == ROTATION_270) || (m_TileSIndexL == TILE_STOPS && (m_TileSFlagsL == ROTATION_90 || m_TileSFlagsL == ROTATION_270)) || (m_TileSIndexL == TILE_STOPA)) && m_Core.m_Vel.x > 0)
@@ -1292,7 +1302,7 @@ void CCharacter::TickDefered()
 	}
 }
 
-bool CCharacter::Freeze(int Time)
+bool CCharacter::Freeze(int Time, bool Deep)
 {
 	if ((Time <= 1 || m_Super || m_FreezeTime == -1) && Time != -1)
 		 return false;
@@ -1306,13 +1316,16 @@ bool CCharacter::Freeze(int Time)
 		m_Armor=0;
 		m_FreezeTime=Time;
 		m_FreezeTick=Server()->Tick();
+		if (!m_DeepFreeze && Deep) 
+			m_DeepFreeze = true;
 		return true;
 	}
 	return false;
 }
 
-bool CCharacter::Freeze()
+bool CCharacter::Freeze(bool Deep)
 {
+	//why the fuck not just: return Freeze(Server()->TickSpeed()*3);
 	int Time = Server()->TickSpeed()*3;
 	if (Time <= 1 || m_Super || m_FreezeTime == -1)
 		 return false;
@@ -1327,6 +1340,9 @@ bool CCharacter::Freeze()
 		m_Ninja.m_ActivationTick = Server()->Tick();
 		m_FreezeTime=Time;
 		m_FreezeTick=Server()->Tick();
+		if (!m_DeepFreeze && Deep) 
+                        m_DeepFreeze = true;
+
 		return true;
 	}
 	return false;
@@ -1334,7 +1350,7 @@ bool CCharacter::Freeze()
 
 bool CCharacter::UnFreeze()
 {
-	if (m_FreezeTime>0)
+	if (m_FreezeTime>0 && !m_DeepFreeze)
 	{
 		m_Armor=10;
 		for(int i=0;i<NUM_WEAPONS;i++)

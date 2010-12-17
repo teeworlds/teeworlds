@@ -130,7 +130,7 @@ void CProjectile::Tick()
 			(m_Owner != -1)? TeamMask : -1);
 		}
 		else if(TargetChr && m_Freeze && ((m_Layer == LAYER_SWITCH && GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[TargetChr->Team()]) || m_Layer != LAYER_SWITCH))
-			TargetChr->Freeze(Server()->TickSpeed()*3);
+			TargetChr->Freeze(Server()->TickSpeed()*3, false);
 		if(Collide && m_Bouncing != 0)
 		{
 			m_StartTick = Server()->Tick();

@@ -72,7 +72,7 @@ void CPickup::Tick()
 			switch (m_Type)
 			{
 				case POWERUP_HEALTH:
-					if(pChr->Freeze()) GameServer()->CreateSound(m_Pos, SOUND_PICKUP_HEALTH);
+					if(pChr->Freeze(false)) GameServer()->CreateSound(m_Pos, SOUND_PICKUP_HEALTH);
 					break;
 				
 				case POWERUP_ARMOR:
