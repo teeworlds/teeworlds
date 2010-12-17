@@ -139,8 +139,10 @@ void CPlayer::OnDisconnect()
 		char Cmd[64];
 		str_format(aBuf, sizeof(aBuf), "leave player='%d:%s'", m_ClientID, Server()->ClientName(m_ClientID));
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf);
+		char aIp[24];
+		Server()->GetClientIP(m_ClientID, aIp, sizeof(aIp));
 		if(m_Muted > 0) {
-			str_format(Cmd, sizeof(Cmd), "ban %d %d '%s'", m_ClientID, m_Muted/Server()->TickSpeed(), "Mute evasion");
+			str_format(Cmd, sizeof(Cmd), "ban %s %d %s", aIp, (m_Muted/Server()->TickSpeed()/60)+1, "Mute evasion");
 			GameServer()->Console()->ExecuteLine(Cmd, 3, -1);
 		}
 	}
