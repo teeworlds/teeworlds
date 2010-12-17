@@ -158,12 +158,12 @@ class CMenus : public CComponent
 	bool m_EscapePressed;
 	bool m_EnterPressed;
 	bool m_DeletePressed;
-
+	
 	// for map download popup
 	int64 m_DownloadLastCheckTime;
 	int m_DownloadLastCheckSize;
 	float m_DownloadSpeed;
-	
+
 	// for call vote
 	int m_CallvoteSelectedOption;
 	int m_CallvoteSelectedPlayer;
@@ -226,6 +226,7 @@ class CMenus : public CComponent
 	
 	// found in menus_settings.cpp
 	void RenderLanguageSelection(CUIRect MainView);
+	void RenderFontSelection(CUIRect MainView);
 	void RenderSettingsGeneral(CUIRect MainView);
 	void RenderSettingsPlayer(CUIRect MainView);
 	void RenderSettingsControls(CUIRect MainView);
