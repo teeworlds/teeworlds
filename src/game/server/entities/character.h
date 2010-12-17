@@ -73,8 +73,8 @@ public:
 	
 	void ResetPos();
 	
-	bool Freeze(int Time);
-	bool Freeze();
+	bool Freeze(int Time, bool Deep);
+	bool Freeze(bool Deep);
 	bool UnFreeze();
 	
 	void GiveAllWeapons();  
@@ -121,6 +121,7 @@ public:
 	//DDRace
 	int m_FreezeTime;
 	int m_FreezeTick;
+	bool m_DeepFreeze;	
 	
 	int m_Doored;
 

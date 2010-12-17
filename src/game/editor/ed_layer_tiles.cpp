@@ -1142,3 +1142,159 @@ void CLayerSwitch::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 		}
 	}
 }
+
+
+CLayerSwitchOlder::CLayerSwitchOlder(int w, int h)
+: CLayerTiles(w, h)
+{
+	m_pTypeName = "Switch";
+	m_Switch = 1;
+
+	m_pSwitchTile = new CTeleTile[w*h];
+	mem_zero(m_pSwitchTile, w*h*sizeof(CTeleTile));
+}
+
+CLayerSwitchOlder::~CLayerSwitchOlder()
+{
+	delete[] m_pSwitchTile;
+}
+
+void CLayerSwitchOlder::Resize(int NewW, int NewH)
+{
+	// resize switch data
+	CTeleTile *pNewSwitchData = new CTeleTile[NewW*NewH];
+	mem_zero(pNewSwitchData, NewW*NewH*sizeof(CTeleTile));
+
+	// copy old data
+	for(int y = 0; y < min(NewH, m_Height); y++)
+		mem_copy(&pNewSwitchData[y*NewW], &m_pSwitchTile[y*m_Width], min(m_Width, NewW)*sizeof(CTeleTile));
+
+	// replace old
+	delete [] m_pSwitchTile;
+	m_pSwitchTile = pNewSwitchData;
+
+	// resize tile data
+	CLayerTiles::Resize(NewW, NewH);
+
+	// resize gamelayer too
+	if(m_pEditor->m_Map.m_pGameLayer->m_Width != NewW || m_pEditor->m_Map.m_pGameLayer->m_Height != NewH)
+		m_pEditor->m_Map.m_pGameLayer->Resize(NewW, NewH);
+}
+
+void CLayerSwitchOlder::Shift(int Direction)
+{
+	CLayerTiles::Shift(Direction);
+
+	switch(Direction)
+	{
+	case 1:
+		{
+			// left
+			for(int y = 0; y < m_Height; ++y)
+				mem_move(&m_pSwitchTile[y*m_Width], &m_pSwitchTile[y*m_Width+1], (m_Width-1)*sizeof(CTeleTile));
+		}
+		break;
+	case 2:
+		{
+			// right
+			for(int y = 0; y < m_Height; ++y)
+				mem_move(&m_pSwitchTile[y*m_Width+1], &m_pSwitchTile[y*m_Width], (m_Width-1)*sizeof(CTeleTile));
+		}
+		break;
+	case 4:
+		{
+			// up
+			for(int y = 0; y < m_Height-1; ++y)
+				mem_copy(&m_pSwitchTile[y*m_Width], &m_pSwitchTile[(y+1)*m_Width], m_Width*sizeof(CTeleTile));
+		}
+		break;
+	case 8:
+		{
+			// down
+			for(int y = m_Height-1; y > 0; --y)
+				mem_copy(&m_pSwitchTile[y*m_Width], &m_pSwitchTile[(y-1)*m_Width], m_Width*sizeof(CTeleTile));
+		}
+	}
+}
+
+void CLayerSwitchOlder::BrushDraw(CLayer *pBrush, float wx, float wy)
+{
+	CLayerSwitch *l = (CLayerSwitch *)pBrush;
+	int sx = ConvertX(wx);
+	int sy = ConvertY(wy);
+
+	for(int y = 0; y < l->m_Height; y++)
+		for(int x = 0; x < l->m_Width; x++)
+		{
+			int fx = x+sx;
+			int fy = y+sy;
+			if(fx<0 || fx >= m_Width || fy < 0 || fy >= m_Height)
+				continue;
+
+			if(l->m_pTiles[y*l->m_Width+x].m_Index >= (ENTITY_ARMOR_1 + ENTITY_OFFSET) && l->m_pTiles[y*l->m_Width+x].m_Index <= (ENTITY_DOOR + ENTITY_OFFSET) || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_SWITCHOPEN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_SWITCHCLOSE || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_SWITCHTIMEDOPEN || l->m_pTiles[y*l->m_Width+x].m_Index == TILE_SWITCHTIMEDCLOSE)
+			{
+				/*if(l->m_pSwitchTile[y*l->m_Width+x].m_Number)
+					m_pSwitchTile[fy*m_Width+fx].m_Number = l->m_pSwitchTile[y*l->m_Width+x].m_Number;
+				else*/
+				{
+					if(!m_pEditor->m_SwitchNum)
+					{
+						m_pSwitchTile[fy*m_Width+fx].m_Number = 0;
+						m_pSwitchTile[fy*m_Width+fx].m_Type = 0;
+						m_pTiles[fy*m_Width+fx].m_Index = 0;
+						continue;
+					}
+					else
+						m_pSwitchTile[fy*m_Width+fx].m_Number = m_pEditor->m_SwitchNum;
+				}
+
+				m_pSwitchTile[fy*m_Width+fx].m_Type = l->m_pTiles[y*l->m_Width+x].m_Index;
+				m_pTiles[fy*m_Width+fx].m_Index = l->m_pTiles[y*l->m_Width+x].m_Index;
+			}
+			else
+			{
+				m_pSwitchTile[fy*m_Width+fx].m_Number = 0;
+				m_pSwitchTile[fy*m_Width+fx].m_Type = 0;
+				m_pTiles[fy*m_Width+fx].m_Index = 0;
+			}
+		}
+}
+
+void CLayerSwitchOlder::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
+{
+	if(m_Readonly)
+		return;
+
+	int sx = ConvertX(Rect.x);
+	int sy = ConvertY(Rect.y);
+	int w = ConvertX(Rect.w);
+	int h = ConvertY(Rect.h);
+
+	CLayerSwitch *pLt = static_cast<CLayerSwitch*>(pBrush);
+
+	for(int y = 0; y <= h; y++)
+	{
+		for(int x = 0; x <= w; x++)
+		{
+			int fx = x+sx;
+			int fy = y+sy;
+
+			if(fx < 0 || fx >= m_Width || fy < 0 || fy >= m_Height)
+				continue;
+
+			if(Empty)
+			{
+                m_pTiles[fy*m_Width+fx].m_Index = 0;
+				m_pSwitchTile[fy*m_Width+fx].m_Number = 0;
+			}
+            else
+			{
+                m_pTiles[fy*m_Width+fx] = pLt->m_pTiles[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)];
+				if(!pLt->m_pSwitchTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_Number && m_pEditor->m_SwitchNum && m_pTiles[fy*m_Width+fx].m_Index > 0)
+					m_pSwitchTile[fy*m_Width+fx].m_Number = m_pEditor->m_SwitchNum;
+				else
+					m_pSwitchTile[fy*m_Width+fx].m_Number = pLt->m_pSwitchTile[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)].m_Number;
+			}
+		}
+	}
+}

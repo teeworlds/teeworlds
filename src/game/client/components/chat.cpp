@@ -35,6 +35,10 @@ void CChat::OnReset()
 	m_Show = false;
 	m_InputUpdate = false;
 	m_ChatStringOffset = 0;
+	m_CompletionChosen = -1;
+	m_aCompletionBuffer[0] = 0;
+	m_PlaceholderOffset = 0;
+	m_PlaceholderLength = 0;
 }
 
 void CChat::OnRelease()
@@ -104,8 +108,58 @@ bool CChat::OnInput(IInput::CEvent e)
 		m_Mode = MODE_NONE;
 		m_pClient->OnRelease();
 	}
+	if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key == KEY_TAB)
+	{
+		// fill the completion buffer
+		if(m_CompletionChosen < 0)
+		{
+			const char *pCursor = m_Input.GetString()+m_Input.GetCursorOffset();
+			for(int Count = 0; Count < m_Input.GetCursorOffset() && *(pCursor-1) != ' '; --pCursor, ++Count);
+			m_PlaceholderOffset = pCursor-m_Input.GetString();
+
+			for(m_PlaceholderLength = 0; *pCursor && *pCursor != ' '; ++pCursor)
+				++m_PlaceholderLength;
+			
+			str_copy(m_aCompletionBuffer, m_Input.GetString()+m_PlaceholderOffset, min(static_cast<int>(sizeof(m_aCompletionBuffer)), m_PlaceholderLength+1));
+		}
+
+		// find next possible name
+		const char *pCompletionString = 0;
+		m_CompletionChosen = (m_CompletionChosen+1)%MAX_CLIENTS;
+		for(int i = 0; i < MAX_CLIENTS; ++i)
+		{
+			int Index = (m_CompletionChosen+i)%MAX_CLIENTS;
+			if(!m_pClient->m_Snap.m_paPlayerInfos[Index])
+				continue;
+
+			if(str_find_nocase(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer))
+			{
+				pCompletionString = m_pClient->m_aClients[Index].m_aName;
+				m_CompletionChosen = Index;
+				break;
+			}
+		}
+
+		// insert the name
+		if(pCompletionString)
+		{
+			char aBuf[256];
+			str_copy(aBuf, m_Input.GetString(), min(static_cast<int>(sizeof(aBuf)), m_PlaceholderOffset+1));
+			str_append(aBuf, pCompletionString, sizeof(aBuf));
+			str_append(aBuf, m_Input.GetString()+m_PlaceholderOffset+m_PlaceholderLength, sizeof(aBuf));
+			m_PlaceholderLength = str_length(pCompletionString);
+			m_OldChatStringLength = m_Input.GetLength();
+			m_Input.Set(aBuf);
+			m_Input.SetCursorOffset(m_PlaceholderOffset+m_PlaceholderLength);
+			m_InputUpdate = true;
+		}
+	}
 	else
 	{
+		// reset name completion process
+		if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key != KEY_TAB)
+			m_CompletionChosen = -1;
+
 		m_OldChatStringLength = m_Input.GetLength();
 		m_Input.ProcessInput(e);
 		m_InputUpdate = true;
@@ -129,6 +183,7 @@ void CChat::EnableMode(int Team)
 		
 		m_Input.Clear();
 		Input()->ClearEvents();
+		m_CompletionChosen = -1;
 	}
 }
 
@@ -167,6 +222,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 		m_aLines[m_CurrentLine].m_ClientId = ClientId;
 		m_aLines[m_CurrentLine].m_Team = Team;
 		m_aLines[m_CurrentLine].m_NameColor = -2;
+		m_aLines[m_CurrentLine].m_Highlighted = str_find_nocase(pLine, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalCid].m_aName) != 0;
 
 		if(ClientId == -1) // server message
 		{
@@ -268,7 +324,7 @@ void CChat::OnRender()
 	for(int i = 0; i < MAX_LINES; i++)
 	{
 		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
-		if(Now > m_aLines[r].m_Time+15*time_freq() && !m_Show)
+		if(Now > m_aLines[r].m_Time+16*time_freq() && !m_Show)
 			break;
 		
 		// get the y offset (calculate it if we haven't done that yet)
@@ -286,33 +342,37 @@ void CChat::OnRender()
 		if(y < HeightLimit)
 			break;
 		
+		float Blend = Now > m_aLines[r].m_Time+14*time_freq() && !m_Show ? 1.0f-(Now-m_aLines[r].m_Time-14*time_freq())/(2.0f*time_freq()) : 1.0f;
+
 		// reset the cursor
 		TextRender()->SetCursor(&Cursor, Begin, y, FontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = LineWidth;
 
 		// render name
 		if(m_aLines[r].m_ClientId == -1)
-			TextRender()->TextColor(1.0f, 1.0f, 0.5f, 1.0f); // system
+			TextRender()->TextColor(1.0f, 1.0f, 0.5f, Blend); // system
 		else if(m_aLines[r].m_Team)
-			TextRender()->TextColor(0.45f, 0.9f, 0.45f, 1.0f); // team message
+			TextRender()->TextColor(0.45f, 0.9f, 0.45f, Blend); // team message
 		else if(m_aLines[r].m_NameColor == 0)
-			TextRender()->TextColor(1.0f, 0.5f, 0.5f, 1.0f); // red
+			TextRender()->TextColor(1.0f, 0.5f, 0.5f, Blend); // red
 		else if(m_aLines[r].m_NameColor == 1)
-			TextRender()->TextColor(0.7f, 0.7f, 1.0f, 1.0f); // blue
+			TextRender()->TextColor(0.7f, 0.7f, 1.0f, Blend); // blue
 		else if(m_aLines[r].m_NameColor == -1)
-			TextRender()->TextColor(0.75f, 0.5f, 0.75f, 1.0f); // spectator
+			TextRender()->TextColor(0.75f, 0.5f, 0.75f, Blend); // spectator
 		else
-			TextRender()->TextColor(0.8f, 0.8f, 0.8f, 1.0f);
+			TextRender()->TextColor(0.8f, 0.8f, 0.8f, Blend);
 			
 		TextRender()->TextEx(&Cursor, m_aLines[r].m_aName, -1);
 
 		// render line
 		if(m_aLines[r].m_ClientId == -1)
-			TextRender()->TextColor(1.0f, 1.0f, 0.5f, 1.0f); // system
+			TextRender()->TextColor(1.0f, 1.0f, 0.5f, Blend); // system
+		else if(m_aLines[r].m_Highlighted)
+			TextRender()->TextColor(1.0f, 0.5f, 0.5f, Blend); // highlighted
 		else if(m_aLines[r].m_Team)
-			TextRender()->TextColor(0.65f, 1.0f, 0.65f, 1.0f); // team message
+			TextRender()->TextColor(0.65f, 1.0f, 0.65f, Blend); // team message
 		else
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
 
 		TextRender()->TextEx(&Cursor, m_aLines[r].m_aText, -1);
 	}

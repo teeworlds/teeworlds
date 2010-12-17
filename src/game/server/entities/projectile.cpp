@@ -130,7 +130,7 @@ void CProjectile::Tick()
 			(m_Owner != -1)? TeamMask : -1);
 		}
 		else if(TargetChr && m_Freeze && ((m_Layer == LAYER_SWITCH && GameServer()->Collision()->m_pSwitchers[m_Number].m_Status[TargetChr->Team()]) || m_Layer != LAYER_SWITCH))
-			TargetChr->Freeze(Server()->TickSpeed()*3);
+			TargetChr->Freeze(Server()->TickSpeed()*3, false);
 		if(Collide && m_Bouncing != 0)
 		{
 			m_StartTick = Server()->Tick();
@@ -184,5 +184,6 @@ void CProjectile::Snap(int SnappingClient)
 			)
 		return;
 	CNetObj_Projectile *pProj = static_cast<CNetObj_Projectile *>(Server()->SnapNewItem(NETOBJTYPE_PROJECTILE, m_Id, sizeof(CNetObj_Projectile)));
-	FillInfo(pProj);
+	if(pProj)
+		FillInfo(pProj);
 }

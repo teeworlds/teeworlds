@@ -756,7 +756,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 				s_RotationAmount = max(90, (s_RotationAmount/90)*90);
 				break;
 			}
-		s_RotationAmount = UiDoValueSelector(&s_RotationAmount, &Button, "", s_RotationAmount, TileLayer?90:1, 360, TileLayer?90:1, TileLayer?10.0f:2.0f, Localize("Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise."));
+		s_RotationAmount = UiDoValueSelector(&s_RotationAmount, &Button, "", s_RotationAmount, TileLayer?90:1, 359, TileLayer?90:1, TileLayer?10.0f:2.0f, Localize("Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise."));
 
 		TB_Top.VSplitLeft(5.0f, &Button, &TB_Top);
 		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
@@ -3232,6 +3232,13 @@ void CEditorMap::MakeSwitchLayer(CLayer *pLayer)
 	m_pSwitchLayer = (CLayerSwitch *)pLayer;
 	m_pSwitchLayer->m_pEditor = m_pEditor;
 	m_pSwitchLayer->m_TexId = m_pEditor->ms_SwitchTexture;
+}
+
+void CEditorMap::MakeSwitchLayerOlder(CLayer *pLayer)
+{
+	m_pSwitchLayerOlder = (CLayerSwitchOlder *)pLayer;
+	m_pSwitchLayerOlder->m_pEditor = m_pEditor;
+	m_pSwitchLayerOlder->m_TexId = m_pEditor->ms_SwitchTexture;
 }
 
 void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)

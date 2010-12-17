@@ -733,6 +733,9 @@ bool IGameController::IsTeamplay() const
 void IGameController::Snap(int SnappingClient)
 {
 	CNetObj_Game *pGameObj = (CNetObj_Game *)Server()->SnapNewItem(NETOBJTYPE_GAME, 0, sizeof(CNetObj_Game));
+	if(!pGameObj)
+		return;
+
 	pGameObj->m_Paused = GameServer()->m_World.m_Paused;
 	pGameObj->m_GameOver = m_GameOverTick==-1?0:1;
 	pGameObj->m_SuddenDeath = m_SuddenDeath;

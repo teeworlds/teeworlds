@@ -946,12 +946,29 @@ Max Screenshots
 Max demos
 == 
 
+left
+== 
+
+minute
+== 
+
+minutes
+== 
+
 no limit
 == 
 
+second
+== 
 
+seconds
+== 
+
+##### old translations #####
+
+
+##### DDRace #####
 
 Loading DDRace Client
 == Laden DDRace Client
-##### old translations #####
 

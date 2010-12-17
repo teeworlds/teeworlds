@@ -151,6 +151,11 @@ class CMenus : public CComponent
 	bool m_EscapePressed;
 	bool m_EnterPressed;
 	bool m_DeletePressed;
+
+	// for map download popup
+	int64 m_DownloadLastCheckTime;
+	int m_DownloadLastCheckSize;
+	float m_DownloadSpeed;
 	
 	// for call vote
 	int m_CallvoteSelectedOption;

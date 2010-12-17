@@ -77,6 +77,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_BroadCast = true;
 	m_EyeEmote = true;
 	m_Fly = true;
+	m_DeepFreeze = false;
 	m_LastBroadcast = 0;
 	m_TeamBeforeSuper = 0;
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
@@ -749,11 +750,11 @@ void CCharacter::Tick()
 
 	if(m_FreezeTime > 0 || m_FreezeTime == -1)
 	{
-		if (m_FreezeTime % Server()->TickSpeed() == 0 || m_FreezeTime == -1)
+		if (!m_DeepFreeze && (m_FreezeTime % Server()->TickSpeed() == 0 || m_FreezeTime == -1))
 		{
 			GameServer()->CreateDamageInd(m_Pos, 0, m_FreezeTime / Server()->TickSpeed());
 		}
-		if(m_FreezeTime != -1)
+		if(m_FreezeTime != -1 && !m_DeepFreeze)
 			m_FreezeTime--;
 		else
 			m_Ninja.m_ActivationTick = Server()->Tick();
@@ -994,10 +995,19 @@ void CCharacter::HandleTiles(int Index)
 	}
 	if(((m_TileIndex == TILE_FREEZE) || (m_TileFIndex == TILE_FREEZE)) && !m_Super)
 	{
-		Freeze(Server()->TickSpeed()*3);
+		Freeze(Server()->TickSpeed()*3, false);
+	}
+	else if(((m_TileIndex == TILE_DEEPFREEZE) || (m_TileFIndex == TILE_DEEPFREEZE)) && !m_Super)
+	{
+		Freeze(Server()->TickSpeed()*3, true);
 	}
 	else if((m_TileIndex == TILE_UNFREEZE) || (m_TileFIndex == TILE_UNFREEZE))
 	{
+		UnFreeze();
+	}
+	else if((m_TileIndex == TILE_DEEPUNFREEZE) || (m_TileFIndex == TILE_DEEPUNFREEZE))
+	{
+		m_DeepFreeze = false;
 		UnFreeze();
 	}
 	if(((m_TileIndex == TILE_STOP && m_TileFlags == ROTATION_270) || (m_TileIndexL == TILE_STOP && m_TileFlagsL == ROTATION_270) || (m_TileIndexL == TILE_STOPS && (m_TileFlagsL == ROTATION_90 || m_TileFlagsL ==ROTATION_270)) || (m_TileIndexL == TILE_STOPA) || (m_TileFIndex == TILE_STOP && m_TileFFlags == ROTATION_270) || (m_TileFIndexL == TILE_STOP && m_TileFFlagsL == ROTATION_270) || (m_TileFIndexL == TILE_STOPS && (m_TileFFlagsL == ROTATION_90 || m_TileFFlagsL == ROTATION_270)) || (m_TileFIndexL == TILE_STOPA) || (m_TileSIndex == TILE_STOP && m_TileSFlags == ROTATION_270) || (m_TileSIndexL == TILE_STOP && m_TileSFlagsL == ROTATION_270) || (m_TileSIndexL == TILE_STOPS && (m_TileSFlagsL == ROTATION_90 || m_TileSFlagsL == ROTATION_270)) || (m_TileSIndexL == TILE_STOPA)) && m_Core.m_Vel.x > 0)
@@ -1296,7 +1306,7 @@ void CCharacter::TickDefered()
 	}
 }
 
-bool CCharacter::Freeze(int Time)
+bool CCharacter::Freeze(int Time, bool Deep)
 {
 	if ((Time <= 1 || m_Super || m_FreezeTime == -1) && Time != -1)
 		 return false;
@@ -1310,13 +1320,16 @@ bool CCharacter::Freeze(int Time)
 		m_Armor=0;
 		m_FreezeTime=Time;
 		m_FreezeTick=Server()->Tick();
+		if (!m_DeepFreeze && Deep) 
+			m_DeepFreeze = true;
 		return true;
 	}
 	return false;
 }
 
-bool CCharacter::Freeze()
+bool CCharacter::Freeze(bool Deep)
 {
+	//why the fuck not just: return Freeze(Server()->TickSpeed()*3);
 	int Time = Server()->TickSpeed()*3;
 	if (Time <= 1 || m_Super || m_FreezeTime == -1)
 		 return false;
@@ -1331,6 +1344,9 @@ bool CCharacter::Freeze()
 		m_Ninja.m_ActivationTick = Server()->Tick();
 		m_FreezeTime=Time;
 		m_FreezeTick=Server()->Tick();
+		if (!m_DeepFreeze && Deep) 
+                        m_DeepFreeze = true;
+
 		return true;
 	}
 	return false;
@@ -1338,7 +1354,7 @@ bool CCharacter::Freeze()
 
 bool CCharacter::UnFreeze()
 {
-	if (m_FreezeTime>0)
+	if (m_FreezeTime>0 && !m_DeepFreeze)
 	{
 		m_Armor=10;
 		for(int i=0;i<NUM_WEAPONS;i++)
@@ -1533,25 +1549,27 @@ void CCharacter::Snap(int SnappingClient)
 		GameServer()->m_apPlayers[SnappingClient]->m_Authed < GetPlayer()->m_Authed
 	)
 		return;
-	CNetObj_Character *Character = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
+	CNetObj_Character *pCharacter = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
+	if(!pCharacter)
+		return;
 
 	// write down the m_Core
 	if(!m_ReckoningTick || GameServer()->m_World.m_Paused)
 	{
 		// no dead reckoning when paused because the client doesn't know
 		// how far to perform the reckoning
-		Character->m_Tick = 0;
-		m_Core.Write(Character);
+		pCharacter->m_Tick = 0;
+		m_Core.Write(pCharacter);
 	}
 	else
 	{
-		Character->m_Tick = m_ReckoningTick;
-		m_SendCore.Write(Character);
+		pCharacter->m_Tick = m_ReckoningTick;
+		m_SendCore.Write(pCharacter);
 	}
 
 	if(m_DoSplash)
 	{
-		Character->m_Jumped = 3;
+		pCharacter->m_Jumped = 3;
 	}
 	// set emote
 	if (m_EmoteStop < Server()->Tick())
@@ -1560,37 +1578,37 @@ void CCharacter::Snap(int SnappingClient)
 		m_EmoteStop = -1;
 	}
 
-	Character->m_Emote = m_EmoteType;
+	pCharacter->m_Emote = m_EmoteType;
 
-	Character->m_AmmoCount = 0;
-	Character->m_Health = 0;
-	Character->m_Armor = 0;
+	pCharacter->m_AmmoCount = 0;
+	pCharacter->m_Health = 0;
+	pCharacter->m_Armor = 0;
 
 	if (m_FreezeTime > 0 || m_FreezeTime == -1)
 	{
-		Character->m_Emote = EMOTE_BLINK;
-		Character->m_Weapon = WEAPON_NINJA;
-		Character->m_AmmoCount = 0;
+		pCharacter->m_Emote = EMOTE_BLINK;
+		pCharacter->m_Weapon = WEAPON_NINJA;
+		pCharacter->m_AmmoCount = 0;
 	}
 	else
-		Character->m_Weapon = m_ActiveWeapon;
-	Character->m_AttackTick = m_AttackTick;
+		pCharacter->m_Weapon = m_ActiveWeapon;
+	pCharacter->m_AttackTick = m_AttackTick;
 
-	Character->m_Direction = m_Input.m_Direction;
+	pCharacter->m_Direction = m_Input.m_Direction;
 
 	if(m_pPlayer->GetCID() == SnappingClient)
 	{
-		Character->m_Health = m_Health;
-		Character->m_Armor = m_Armor;
+		pCharacter->m_Health = m_Health;
+		pCharacter->m_Armor = m_Armor;
 		if(m_aWeapons[m_ActiveWeapon].m_Ammo > 0)
-			Character->m_AmmoCount = (!m_FreezeTime)?m_aWeapons[m_ActiveWeapon].m_Ammo:0;
+			pCharacter->m_AmmoCount = (!m_FreezeTime)?m_aWeapons[m_ActiveWeapon].m_Ammo:0;
 	}
 
-	if (Character->m_Emote == EMOTE_NORMAL)
+	if(pCharacter->m_Emote == EMOTE_NORMAL)
 	{
 		if(250 - ((Server()->Tick() - m_LastAction)%(250)) < 5)
-			Character->m_Emote = EMOTE_BLINK;
+			pCharacter->m_Emote = EMOTE_BLINK;
 	}
 
-	Character->m_PlayerState = m_PlayerState;
+	pCharacter->m_PlayerState = m_PlayerState;
 }
