@@ -1474,22 +1474,21 @@ void CServer::ConStatus(IConsole::IResult *pResult, void *pUser, int ClientId)
 		if(pServer->m_aClients[i].m_State != CClient::STATE_EMPTY)
 		{
 			Addr = pServer->m_NetServer.ClientAddr(i);
-			if(pServer->m_aClients[i].m_State == CClient::STATE_INGAME);
+			if(pServer->m_aClients[i].m_State == CClient::STATE_INGAME)
 	
 				str_format(aBuf, sizeof(aBuf), "id=%d addr=%d.%d.%d.%d:%d name='%s' level=%d",
 					i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], Addr.port,
 		
 					pServer->m_aClients[i].m_aName, pServer->m_aClients[i].m_Authed);
 
-}
 			else
-			
 				str_format(aBuf, sizeof(aBuf), "id=%d addr=%d.%d.%d.%d:%d connecting",
 					i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], Addr.port);
 			
 			pServer->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aBuf);
 		}
 	}
+}
 
 void CServer::ConShutdown(IConsole::IResult *pResult, void *pUser, int ClientId)
 {
@@ -1780,7 +1779,8 @@ void CServer::CheckPass(int ClientId, const char *pPw)
 			{
 				level = 3;
 			}
-			if(level != -1)			{
+			if(level != -1)			
+			{
 				char buf[128]="Authentication successful. Remote console access granted for ClientId=%d with level=%d";
 				SetRconLevel(ClientId,level);
 				str_format(buf,sizeof(buf),buf,ClientId,level);
@@ -1799,7 +1799,9 @@ void CServer::CheckPass(int ClientId, const char *pPw)
 						m_NetServer.Drop(ClientId, "Too many remote console authentication tries");
 					else
 					{
-						NETADDR Addr = m_NetServer.ClientAddr(ClientId);						BanAdd(Addr, g_Config.m_SvRconBantime, "Too many remote console authentication tries");
+					NETADDR Addr = m_NetServer.ClientAddr(ClientId);
+						BanAdd(Addr, g_Config.m_SvRconBantime, "Too many remote console authentication tries");
+
 					}
 				}
 			}
