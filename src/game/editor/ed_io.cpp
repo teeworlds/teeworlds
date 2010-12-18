@@ -644,7 +644,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						else if(pTiles->m_Switch)
 						{
 							void *pSwitchData = DataFile.GetData(pTilemapItem->m_Switch);
-							mem_copy(((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile, pSwitchData, pTiles->m_Width*pTiles->m_Height*sizeof(CTeleTile));
+mem_copy(((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile, pSwitchData, pTiles->m_Width*pTiles->m_Height*sizeof(CTeleTile));
 							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
 							{
 								if(((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Type)
