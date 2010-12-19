@@ -407,6 +407,7 @@ public:
 	int m_Width;
 	int m_Height;
 	CTile *m_pTiles;
+	char m_aFileName[512];
 };
 
 class CLayerQuads : public CLayer

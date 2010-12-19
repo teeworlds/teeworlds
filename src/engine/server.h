@@ -82,6 +82,9 @@ public:
 	virtual void OnClientPredictedInput(int ClientID, void *pInput) = 0;
 	
 	virtual void OnSetAuthed(int ClientId,int Level) = 0;
+	
+	virtual bool PlayerCollision() = 0;
+	virtual bool PlayerHooking() = 0;
 
 	virtual const char *Version() = 0;
 	virtual const char *NetVersion() = 0;

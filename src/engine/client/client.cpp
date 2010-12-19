@@ -1083,6 +1083,11 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 				// don't add invalid info to the server browser list
 				if(Info.m_NumPlayers < 0 || Info.m_NumPlayers > MAX_CLIENTS || Info.m_MaxPlayers < 0 || Info.m_MaxPlayers > MAX_CLIENTS)
 					return;
+				
+				if((Info.m_Flags | SERVER_FLAGS_VERSION) != SERVER_FLAG_VERSION || !str_find_nocase(Info.m_aGameType, "ddrace"))
+					Info.m_Flags &= SERVER_FLAGS_DEFAULT;
+				else
+					Info.m_Flags &= SERVER_FLAGS_ALL;
 
 				str_format(Info.m_aAddress, sizeof(Info.m_aAddress), "%d.%d.%d.%d:%d",
 					pPacket->m_Address.ip[0], pPacket->m_Address.ip[1], pPacket->m_Address.ip[2],
