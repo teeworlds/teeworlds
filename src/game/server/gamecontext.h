@@ -276,6 +276,9 @@ public:
 	
 	virtual void OnSetAuthed(int ClientId,int Level);
 
+	virtual bool PlayerCollision();
+	virtual bool PlayerHooking();
+
 	virtual const char *Version();
 	virtual const char *NetVersion();
 };

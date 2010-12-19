@@ -674,6 +674,20 @@ bool ComparePlayers(CPlayer *pl1, CPlayer *pl2)
 		return false;
 }
 
+bool CGameContext::PlayerCollision()
+{
+	float Temp;
+	m_Tuning.Get("player_collision", &Temp);
+	return Temp != 0.0;
+}
+
+bool CGameContext::PlayerHooking()
+{
+	float Temp;
+	m_Tuning.Get("player_hooking", &Temp);
+	return Temp != 0.0;
+}
+
 void CGameContext::OnSetAuthed(int client_id, int Level)
 {
 	if(m_apPlayers[client_id])
