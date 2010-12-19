@@ -539,7 +539,6 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 					{
 						CMapItemLayerTilemap *pTilemapItem = (CMapItemLayerTilemap *)pLayerItem;
 						CLayerTiles *pTiles = 0;
-						CLayerTiles *pTilesTemp = 0;
 						
 						if(pTilemapItem->m_Flags&1)
 						{
@@ -566,8 +565,6 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						{
 							pTiles = new CLayerSwitch(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							MakeSwitchLayer(pTiles);
-							pTilesTemp = new CLayerSwitchOlder(pTilemapItem->m_Width, pTilemapItem->m_Height);
-							MakeSwitchLayerOlder(pTilesTemp);
 						}
 						else
 						{
@@ -644,25 +641,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						else if(pTiles->m_Switch)
 						{
 							void *pSwitchData = DataFile.GetData(pTilemapItem->m_Switch);
-							mem_copy(((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile, pSwitchData, pTiles->m_Width*pTiles->m_Height*sizeof(CTeleTile));
-							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
-							{
-								if(((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Type)
-								{
-									if(((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Type == ENTITY_DOOR+1+ENTITY_OFFSET)
-										((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type = TILE_SWITCHTIMEDCLOSE;
-									else
-										((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type = ((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Type;
-									((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Number = ((CLayerSwitchOlder*)pTilesTemp)->m_pSwitchTile[i].m_Number;
-								}
-								else
-								{
-									((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Type = 0;
-									((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Number = 0;
-								}
-								((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Flags = 0;
-								((CLayerSwitch*)pTiles)->m_pSwitchTile[i].m_Delay = 0;
-							}
+							mem_copy(((CLayerSwitch*)pTiles)->m_pSwitchTile, pSwitchData, pTiles->m_Width*pTiles->m_Height*sizeof(CSwitchTile));
 
 							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
 							{
