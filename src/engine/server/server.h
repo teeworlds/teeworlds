@@ -158,6 +158,7 @@ public:
 	int IsAuthed(int ClientID);
 	int GetClientInfo(int ClientID, CClientInfo *pInfo);
 	void GetClientIP(int ClientID, char *pIPString, int Size);
+	NETADDR GetClientIP(int ClientID);
 	const char *ClientName(int ClientId);
 	bool ClientIngame(int ClientID);
 
