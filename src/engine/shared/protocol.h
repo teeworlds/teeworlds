@@ -71,7 +71,37 @@ enum
 enum
 {
 	SERVER_TICK_SPEED=50,
-	SERVER_FLAG_PASSWORD = 0x1,
+
+	SERVER_FLAG_PASSWORD            =       0x1, // A
+	SERVER_FLAG_TEAMS               =     0x100, // B
+	SERVER_FLAG_STRICTTEAMS         =     0x200, // C
+	SERVER_FLAG_CHEATS              =    0x1000, // D
+	SERVER_FLAG_PAUSE               =    0x2000, // E
+	SERVER_FLAG_ENDLESSSUPERHOOKING =    0x4000, // F
+	SERVER_FLAG_TIMERCOMMANDS       =   0x10000, // G
+	SERVER_FLAG_TIMECHEAT           =   0x20000, // H
+	SERVER_FLAG_PAUSETIME           =   0x40000, // I
+	SERVER_FLAG_PLAYERCOLLISION     =  0x100000, // K
+	SERVER_FLAG_PLAYERHOOKING       =  0x200000, // L
+	SERVER_FLAG_ENDLESSHOOKING      =  0x400000, // M
+	SERVER_FLAG_HIT                 =  0x800000, // N
+	SERVER_FLAG_MAPTEST             = 0x1000000, // O
+	SERVER_FLAG_SERVERTEST          = 0x2000000, // P
+
+	SERVER_FLAG_VERSION            = 0x10000000,
+
+	SERVER_FLAGS_DEFAULT  =       0x1,
+	SERVER_FLAGS_TEAMS    =      0x30,
+	SERVER_FLAGS_CHEATS   =     0x700,
+	SERVER_FLAGS_TIME     =    0x7000,
+	SERVER_FLAGS_GAMEPLAY =   0xF0000,
+	SERVER_FLAGS_TESTING  =  0x300000,
+	SERVER_FLAGS_VERSION  = 0xF000000,
+
+	SERVER_FLAGS_ALL      = 0xF3F7731,
+
+	// version | testing | gameplay | time | cheats | teams | unused | default
+	// 0001    | 00PO    | NMLK     | 0IHG | 0FED   | 00CB  | 0000   | 000A    - 0 means unused, letter means used
 
 	MAX_CLIENTS=16,
 

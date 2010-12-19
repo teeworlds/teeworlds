@@ -963,10 +963,41 @@ void CServer::SendServerInfo(NETADDR *pAddr, int Token)
 
 	// flags
 	int i = 0;
+	
+	i |= SERVER_FLAG_VERSION;
 	if(g_Config.m_Password[0])   // password set
 		i |= SERVER_FLAG_PASSWORD;
+	if(g_Config.m_SvTeam)
+		i |= SERVER_FLAG_TEAMS;
+	if(g_Config.m_SvTeamStrict)
+		i |= SERVER_FLAG_STRICTTEAMS;
+	if(g_Config.m_SvCheats)
+		i |= SERVER_FLAG_CHEATS;
+	if(g_Config.m_SvPauseable)
+		i |= SERVER_FLAG_PAUSE;
+	if(g_Config.m_SvEndlessSuperHook)
+		i |= SERVER_FLAG_ENDLESSSUPERHOOKING;
+	if(g_Config.m_SvTimer)
+		i |= SERVER_FLAG_TIMERCOMMANDS;
+	if(g_Config.m_SvCheatTime)
+		i |= SERVER_FLAG_TIMECHEAT;
+	if(g_Config.m_SvPauseTime)
+		i |= SERVER_FLAG_PAUSETIME;
+	if(GameServer()->PlayerCollision())
+		i |= SERVER_FLAG_PLAYERCOLLISION;
+	if(GameServer()->PlayerHooking())
+		i |= SERVER_FLAG_PLAYERHOOKING;
+	if(g_Config.m_SvEndlessDrag)
+		i |= SERVER_FLAG_ENDLESSHOOKING;
+	if(g_Config.m_SvHit)
+		i |= SERVER_FLAG_HIT;
+	if(g_Config.m_SvMapTest)
+		i |= SERVER_FLAG_MAPTEST;
+	if(g_Config.m_SvServerTest)
+		i |= SERVER_FLAG_SERVERTEST;
+	
 	str_format(aBuf, sizeof(aBuf), "%d", i);
-	p.AddString(aBuf, 2);
+	p.AddString(aBuf, 11);
 
 	// progression
 	str_format(aBuf, sizeof(aBuf), "%d", m_BrowseinfoProgression);
