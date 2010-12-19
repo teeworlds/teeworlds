@@ -1869,3 +1869,8 @@ char *CServer::GetAnnouncementLine(char const *FileName)
 	}
 	return 0;
 }
+
+NETADDR CServer::GetClientIP(int ClientID)//this may exist already but i couldn't find it cause i am tired :D
+{
+	return m_NetServer.ClientAddr(ClientID);
+}

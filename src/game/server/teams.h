@@ -50,6 +50,8 @@ public:
 	void Reset();
 	
 	void SendTeamsState(int Cid);
+
+	int m_LastChat[MAX_CLIENTS];
 };
 
 #endif
