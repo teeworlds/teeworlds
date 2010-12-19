@@ -11,28 +11,66 @@ void CGameTeams::Reset() {
 		m_TeamState[i] = EMPTY;
 		m_TeeFinished[i] = false;
 		m_MembersCount[i] = 0;
+		m_LastChat[i] = 0;
 	}
 }
 
 void CGameTeams::OnCharacterStart(int id) {
 	int Tick = Server()->Tick();
-	if(m_Core.Team(id) == TEAM_FLOCK || m_Core.Team(id) == TEAM_SUPER) {
-		CCharacter* Char = Character(id);
-		if(!Char) return; // for some reason i had a crash here
-		Char->m_DDRaceState = DDRACE_STARTED;
-		Char->m_StartTime = Tick;
-		Char->m_RefreshTime = Tick;
-	} else {
-		if(m_TeamState[m_Core.Team(id)] <= CLOSED) {
-			ChangeTeamState(m_Core.Team(id), STARTED);
-			
-			for(int i = 0; i < MAX_CLIENTS; ++i) {
-				if(m_Core.Team(id) == m_Core.Team(i)) {
-					CCharacter* Char = Character(i);
+	CCharacter* StartingChar = Character(id);
+	if(!StartingChar)
+		return;
+	if(StartingChar->m_DDRaceState == DDRACE_FINISHED)
+		StartingChar->m_DDRaceState = DDRACE_NONE;
+	if(m_Core.Team(id) == TEAM_FLOCK || m_Core.Team(id) == TEAM_SUPER)
+	{
+		StartingChar->m_DDRaceState = DDRACE_STARTED;
+		StartingChar->m_StartTime = Tick;
+		StartingChar->m_RefreshTime = Tick;
+	}
+	else
+	{
+		bool Waiting = false;
+		for(int i = 0; i < MAX_CLIENTS; ++i)
+		{
+			if(m_Core.Team(id) == m_Core.Team(i))
+			{
+				CCharacter* Char = Character(i);
+				if(Char->m_DDRaceState == DDRACE_FINISHED)
+				{
+					Waiting = true;
+					if(m_LastChat[id] + Server()->TickSpeed() + g_Config.m_SvChatDelay < Tick)
+					{
+						char aBuf[128];
+						str_format(aBuf, sizeof(aBuf), "%s has finished and didn't go through start yet, wait for him or join another team.", Server()->ClientName(i));
+						GameServer()->SendChatTarget(id, aBuf);
+						m_LastChat[id] = Tick;
+					}
+					if(m_LastChat[i] + Server()->TickSpeed() + g_Config.m_SvChatDelay < Tick)
+					{
+						char aBuf[128];
+						str_format(aBuf, sizeof(aBuf), "%s wants to start a new round, kill or walk to start.", Server()->ClientName(id));
+						GameServer()->SendChatTarget(i, aBuf);
+						m_LastChat[i] = Tick;
+					}
+				}
+			}
+		}
 
-					Char->m_DDRaceState = DDRACE_STARTED;
-					Char->m_StartTime = Tick;
-					Char->m_RefreshTime = Tick;
+		if(m_TeamState[m_Core.Team(id)] <= CLOSED && !Waiting)
+		{
+			ChangeTeamState(m_Core.Team(id), STARTED);
+			for(int i = 0; i < MAX_CLIENTS; ++i)
+			{
+				if(m_Core.Team(id) == m_Core.Team(i))
+				{
+					CCharacter* Char = Character(i);
+					if(Char)
+					{
+						Char->m_DDRaceState = DDRACE_STARTED;
+						Char->m_StartTime = Tick;
+						Char->m_RefreshTime = Tick;
+					}
 				}
 			}
 		}
@@ -40,21 +78,32 @@ void CGameTeams::OnCharacterStart(int id) {
 }
 
 void CGameTeams::OnCharacterFinish(int id) {
-	if(m_Core.Team(id) == TEAM_FLOCK || m_Core.Team(id) == TEAM_SUPER) {
+	if(m_Core.Team(id) == TEAM_FLOCK || m_Core.Team(id) == TEAM_SUPER)
+	{
 		Character(id)->OnFinish();
-	} else {
+	}
+	else
+	{
 		m_TeeFinished[id] = true;
-		if(TeamFinished(m_Core.Team(id))) {
-			ChangeTeamState(m_Core.Team(id), FINISHED);//TODO: Make it better
-			for(int i = 0; i < MAX_CLIENTS; ++i) {
-				if(m_Core.Team(id) == m_Core.Team(i)) {
+		if(TeamFinished(m_Core.Team(id)))
+		{
+			//ChangeTeamState(m_Core.Team(id), FINISHED);//TODO: Make it better
+			ChangeTeamState(m_Core.Team(id), OPEN);
+			for(int i = 0; i < MAX_CLIENTS; ++i)
+			{
+				if(m_Core.Team(id) == m_Core.Team(i))
+				{
 					CCharacter * Char = Character(i);
-					if(Char != 0) {
+					if(Char != 0)
+					{
 						Char->OnFinish();
 						m_TeeFinished[i] = false;
-					} //else {
-					//	m_Core.Team(id) = 0; //i saw zomby =)
-					//}
+					}
+					/*else
+					 *{
+					 *	m_Core.Team(id) = 0; //i saw zomby =)
+					 *}
+					 */
 				}
 			}
 			
