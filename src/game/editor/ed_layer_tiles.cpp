@@ -167,6 +167,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 						m_pEditor->m_TeleNumber = pGrabbed->m_pTeleTile[y*pGrabbed->m_Width+x].m_Number;
 				}
 		pGrabbed->m_TeleNum = m_pEditor->m_TeleNumber;
+		str_copy(pGrabbed->m_aFileName, m_pEditor->m_aFileName, sizeof(pGrabbed->m_aFileName));
 	}
 	else if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pSpeedupLayer)
 	{
@@ -199,6 +200,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 		pGrabbed->m_SpeedupForce = m_pEditor->m_SpeedupForce;
 		pGrabbed->m_SpeedupMaxSpeed = m_pEditor->m_SpeedupMaxSpeed;
 		pGrabbed->m_SpeedupAngle = m_pEditor->m_SpeedupAngle;
+		str_copy(pGrabbed->m_aFileName, m_pEditor->m_aFileName, sizeof(pGrabbed->m_aFileName));
 	}
 	else if(m_pEditor->GetSelectedLayer(0) == m_pEditor->m_Map.m_pSwitchLayer)
 	{
@@ -229,6 +231,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 				}
 		pGrabbed->m_SwitchNumber = m_pEditor->m_SwitchNum;
 		pGrabbed->m_SwitchDelay = m_pEditor->m_SwitchDelay;
+		str_copy(pGrabbed->m_aFileName, m_pEditor->m_aFileName, sizeof(pGrabbed->m_aFileName));
 	}
 	else
 	{
@@ -244,6 +247,7 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 		for(int y = 0; y < r.h; y++)
 			for(int x = 0; x < r.w; x++)
 				pGrabbed->m_pTiles[y*pGrabbed->m_Width+x] = m_pTiles[(r.y+y)*m_Width+(r.x+x)];
+		str_copy(pGrabbed->m_aFileName, m_pEditor->m_aFileName, sizeof(pGrabbed->m_aFileName));
 	}
 
 	return 1;
@@ -615,6 +619,11 @@ void CLayerTele::BrushDraw(CLayer *pBrush, float wx, float wy)
 	CLayerTele *l = (CLayerTele *)pBrush;
 	int sx = ConvertX(wx);
 	int sy = ConvertY(wy);
+	if(str_comp(l->m_aFileName, m_pEditor->m_aFileName))
+	{
+		m_pEditor->m_TeleNumber = l->m_TeleNum;
+
+	}
 	
 	for(int y = 0; y < l->m_Height; y++)
 		for(int x = 0; x < l->m_Width; x++)
@@ -779,6 +788,12 @@ void CLayerSpeedup::BrushDraw(CLayer *pBrush, float wx, float wy)
 	CLayerSpeedup *l = (CLayerSpeedup *)pBrush;
 	int sx = ConvertX(wx);
 	int sy = ConvertY(wy);
+	if(str_comp(l->m_aFileName, m_pEditor->m_aFileName))
+	{
+		m_pEditor->m_SpeedupAngle = l->m_SpeedupAngle;
+		m_pEditor->m_SpeedupForce = l->m_SpeedupForce;
+		m_pEditor->m_SpeedupMaxSpeed = l->m_SpeedupMaxSpeed;
+	}
 	
 	for(int y = 0; y < l->m_Height; y++)
 		for(int x = 0; x < l->m_Width; x++)
@@ -1040,6 +1055,11 @@ void CLayerSwitch::BrushDraw(CLayer *pBrush, float wx, float wy)
 	CLayerSwitch *l = (CLayerSwitch *)pBrush;
 	int sx = ConvertX(wx);
 	int sy = ConvertY(wy);
+	if(str_comp(l->m_aFileName, m_pEditor->m_aFileName))
+	{
+		m_pEditor->m_SwitchNum = l->m_SwitchNumber;
+		m_pEditor->m_SwitchDelay = l->m_SwitchDelay;
+	}
 
 	for(int y = 0; y < l->m_Height; y++)
 		for(int x = 0; x < l->m_Width; x++)
