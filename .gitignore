@@ -1,3 +1,6 @@
+*.orig
+*.exe
+*.rej
 .bam
 .settings
 src/game/generated
@@ -16,8 +19,6 @@ bam.exe
 *.bat
 teeworlds_d
 teeworlds_srv_d
-DDRace_Trunk*
-DDRace_Trunk_d*
 DDRace*
 DDRace-Server*
 .cproject
