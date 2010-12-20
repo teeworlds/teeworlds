@@ -394,6 +394,7 @@ public:
 	int m_Image;
 	int m_Width;
 	int m_Height;
+	ivec4 m_Color;
 	CTile *m_pTiles;
 };
 
