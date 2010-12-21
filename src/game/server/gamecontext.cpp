@@ -680,10 +680,10 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 					break;
 				}
 			}
-			if(!strcmp(pReason, "No reason given")
-                                str_format(aChatmsg, sizeof(aChatmsg), "\"%s\" called for vote to kick \"%s\"", Server()->ClientName(ClientId), Server()->ClientName(KickId));
-                        else
-			        str_format(aChatmsg, sizeof(aChatmsg), "\"%s\" called for vote to kick \"%s\" (%s)", Server()->ClientName(ClientId), Server()->ClientName(KickId), pReason);
+			if(!str_comp(pReason, "No reason given"))
+				str_format(aChatmsg, sizeof(aChatmsg), "\"%s\" called for vote to kick \"%s\"", Server()->ClientName(ClientId), Server()->ClientName(KickId));
+			else
+				str_format(aChatmsg, sizeof(aChatmsg), "\"%s\" called for vote to kick \"%s\" (%s)", Server()->ClientName(ClientId), Server()->ClientName(KickId), pReason);
 			str_format(aDesc, sizeof(aDesc), "Kick '%s'", Server()->ClientName(KickId));
 			if (!g_Config.m_SvVoteKickBantime)
 				str_format(aCmd, sizeof(aCmd), "kick %d Kicked by vote", KickId);
