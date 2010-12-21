@@ -619,7 +619,7 @@ Quick search:
 == Snel zoeken:
 
 Quit
-== Stoppen
+== Afsluiten
 
 REC
 == REC
