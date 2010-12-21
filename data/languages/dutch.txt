@@ -220,7 +220,7 @@ Detail
 == Detail
 
 Disconnect
-== Verbreken
+== Stoppen
 
 Disconnected
 == Verbinding verbroken
@@ -619,7 +619,7 @@ Quick search:
 == Snel zoeken:
 
 Quit
-== Stoppen
+== Afsluiten
 
 REC
 == REC
