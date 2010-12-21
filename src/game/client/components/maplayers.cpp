@@ -185,7 +185,8 @@ void CMapLayers::OnRender()
 					
 					CTile *pTiles = (CTile *)m_pLayers->Map()->GetData(pTMap->m_Data);
 					Graphics()->BlendNone();
-					vec4 Color = vec4(pTMap->m_Color.r/255.0f, pTMap->m_Color.g/255.0f, pTMap->m_Color.b/255.0f, 1.0f);
+					ivec3 C = HslToRgb(ivec3(pTMap->m_Color.h, pTMap->m_Color.s, pTMap->m_Color.l));
+					vec4 Color = vec4(C.r/255.0f, C.g/255.0f, C.b/255.0f, 1.0f);
 					RenderTools()->RenderTilemap(pTiles, pTMap->m_Width, pTMap->m_Height, 32.0f, Color, TILERENDERFLAG_EXTEND|LAYERRENDERFLAG_OPAQUE);
 					Graphics()->BlendNormal();
 					RenderTools()->RenderTilemap(pTiles, pTMap->m_Width, pTMap->m_Height, 32.0f, Color, TILERENDERFLAG_EXTEND|LAYERRENDERFLAG_TRANSPARENT);

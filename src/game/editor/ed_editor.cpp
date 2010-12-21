@@ -1628,7 +1628,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIds, int *
 				Change = i;
 			}
 		}
-		else if(pProps[i].m_Type == PROPTYPE_COLOR)
+		else if(pProps[i].m_Type == PROPTYPE_COLOR_RGBA)
 		{
 			static const char *s_paTexts[4] = {"R", "G", "B", "A"};
 			static int s_aShift[] = {24, 16, 8, 0};
@@ -1640,6 +1640,31 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIds, int *
 				NewColor |= UiDoValueSelector(((char *)&pIds[i])+c, &Shifter, s_paTexts[c], v, 0, 255, 1, 1.0f, Localize("Use left mouse button to drag and change the color value. Hold shift to be more precise."))<<s_aShift[c];
 
 				if(c != 3)
+				{
+					pToolBox->HSplitTop(13.0f, &Slot, pToolBox);
+					Slot.VSplitMid(0, &Shifter);
+					Shifter.HMargin(1.0f, &Shifter);
+				}
+			}
+
+			if(NewColor != pProps[i].m_Value)
+			{
+				*pNewVal = NewColor;
+				Change = i;
+			}
+		}
+		else if(pProps[i].m_Type == PROPTYPE_COLOR_HSL)
+		{
+			static const char *s_paTexts[3] = {"H", "S", "L"};
+			static int s_aShift[] = {16, 8, 0};
+			int NewColor = 0;
+
+			for(int c = 0; c < 3; c++)
+			{
+				int v = (pProps[i].m_Value >> s_aShift[c])&0xff;
+				NewColor |= UiDoValueSelector(((char *)&pIds[i])+c, &Shifter, s_paTexts[c], v, 0, 255, 1, 1.0f, Localize("Use left mouse button to drag and change the color value. Hold shift to be more precise."))<<s_aShift[c];
+
+				if(c != 2)
 				{
 					pToolBox->HSplitTop(13.0f, &Slot, pToolBox);
 					Slot.VSplitMid(0, &Shifter);

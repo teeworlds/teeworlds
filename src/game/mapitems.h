@@ -62,15 +62,20 @@ struct CPoint
 	int x, y; // 22.10 fixed point
 };
 
-struct CColor
+struct CColorRGBA
 {
 	int r, g, b, a;
+};
+
+struct CColorHSLA
+{
+	int h, s, l, a;
 };
 
 struct CQuad
 {
 	CPoint m_aPoints[5];
-	CColor m_aColors[4];
+	CColorRGBA m_aColors[4];
 	CPoint m_aTexcoords[4];
 	
 	int m_PosEnv;
@@ -139,7 +144,7 @@ struct CMapItemLayerTilemap
 	int m_Height;
 	int m_Flags;
 	
-	CColor m_Color;
+	CColorHSLA m_Color;
 	int m_ColorEnv;
 	int m_ColorEnvOffset;
 	

@@ -283,10 +283,10 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				Item.m_Layer.m_Flags = pLayer->m_Flags;
 				Item.m_Layer.m_Type = pLayer->m_Type;
 				
-				Item.m_Color.r = pLayer->m_Color.r;
-				Item.m_Color.g = pLayer->m_Color.g;
-				Item.m_Color.b = pLayer->m_Color.b;
-				Item.m_Color.a = pLayer->m_Color.a;
+				Item.m_Color.h = pLayer->m_Color.h;
+				Item.m_Color.s = pLayer->m_Color.s;
+				Item.m_Color.l = pLayer->m_Color.l;
+				Item.m_Color.a = 255;
 				Item.m_ColorEnv = -1; // not in use right now
 				Item.m_ColorEnvOffset = 0;
 				
@@ -508,10 +508,9 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						{
 							pTiles = new CLayerTiles(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							pTiles->m_pEditor = m_pEditor;
-							pTiles->m_Color.r = pTilemapItem->m_Color.r;
-							pTiles->m_Color.g = pTilemapItem->m_Color.g;
-							pTiles->m_Color.b = pTilemapItem->m_Color.b;
-							pTiles->m_Color.a = pTilemapItem->m_Color.a;
+							pTiles->m_Color.h = pTilemapItem->m_Color.h;
+							pTiles->m_Color.s = pTilemapItem->m_Color.s;
+							pTiles->m_Color.l = pTilemapItem->m_Color.l;
 						}
 
 						pLayer = pTiles;

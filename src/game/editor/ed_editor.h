@@ -342,7 +342,8 @@ enum
 	PROPTYPE_BOOL,
 	PROPTYPE_INT_STEP,
 	PROPTYPE_INT_SCROLL,
-	PROPTYPE_COLOR,
+	PROPTYPE_COLOR_RGBA,
+	PROPTYPE_COLOR_HSL,
 	PROPTYPE_IMAGE,
 	PROPTYPE_ENVELOPE,
 	PROPTYPE_SHIFT,
@@ -394,7 +395,7 @@ public:
 	int m_Image;
 	int m_Width;
 	int m_Height;
-	ivec4 m_Color;
+	ivec3 m_Color;
 	CTile *m_pTiles;
 };
 

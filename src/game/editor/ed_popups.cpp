@@ -381,7 +381,7 @@ int CEditor::PopupPoint(CEditor *pEditor, CUIRect View)
 	
 	
 	CProperty aProps[] = {
-		{Localize("Color"), Color, PROPTYPE_COLOR, -1, pEditor->m_Map.m_lEnvelopes.size()},
+		{Localize("Color"), Color, PROPTYPE_COLOR_RGBA, -1, pEditor->m_Map.m_lEnvelopes.size()},
 		{0},
 	};
 	

@@ -20,7 +20,7 @@ CLayerTiles::CLayerTiles(int w, int h)
 	m_Image = -1;
 	m_TexId = -1;
 	m_Game = 0;
-	m_Color = ivec4(255, 255, 255, 255);
+	m_Color = ivec3(255, 255, 255);
 	
 	m_pTiles = new CTile[m_Width*m_Height];
 	mem_zero(m_pTiles, m_Width*m_Height*sizeof(CTile));
@@ -57,7 +57,8 @@ void CLayerTiles::Render()
 	if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size())
 		m_TexId = m_pEditor->m_Map.m_lImages[m_Image]->m_TexId;
 	Graphics()->TextureSet(m_TexId);
-	vec4 Color = vec4(m_Color.r/255.0f, m_Color.g/255.0f, m_Color.b/255.0f, 1.0f);
+	ivec3 C = HslToRgb(m_Color);
+	vec4 Color = vec4(C.r/255.0f, C.g/255.0f, C.b/255.0f, 1.0f);
 	m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT);
 }
 
@@ -371,17 +372,16 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	};
 	
 	int Color = 0;
-	Color |= m_Color.r<<24;
-	Color |= m_Color.g<<16;
-	Color |= m_Color.b<<8;
-	Color |= m_Color.a;
+	Color |= m_Color.h<<16;
+	Color |= m_Color.s<<8;
+	Color |= m_Color.l;
 	
 	CProperty aProps[] = {
 		{Localize("Width"), m_Width, PROPTYPE_INT_SCROLL, 1, 1000000000},
 		{Localize("Height"), m_Height, PROPTYPE_INT_SCROLL, 1, 1000000000},
 		{Localize("Shift"), 0, PROPTYPE_SHIFT, 0, 0},
 		{Localize("Image"), m_Image, PROPTYPE_IMAGE, 0, 0},
-		{Localize("Color"), Color, PROPTYPE_COLOR, 0, 0},
+		{Localize("Color"), Color, PROPTYPE_COLOR_HSL, 0, 0},
 		{0},
 	};
 	
@@ -413,10 +413,9 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	}
 	else if(Prop == PROP_COLOR)
 	{
-		m_Color.r = (NewVal>>24)&0xff;
-		m_Color.g = (NewVal>>16)&0xff;
-		m_Color.b = (NewVal>>8)&0xff;
-		m_Color.a = NewVal&0xff;
+		m_Color.h = (NewVal>>16)&0xff;
+		m_Color.s = (NewVal>>8)&0xff;
+		m_Color.l = NewVal&0xff;
 	}
 	
 	return 0;
