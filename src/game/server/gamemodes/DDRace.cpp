@@ -8,7 +8,7 @@
 
 CGameControllerDDRace::CGameControllerDDRace(class CGameContext *pGameServer) : IGameController(pGameServer), m_Teams(pGameServer)
 {
-	m_pGameType = "DDRacemaximuM";
+	m_pGameType = "DDRaceExtra";
 
 	InitTeleporter();
 }
