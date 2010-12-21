@@ -220,7 +220,7 @@ Detail
 == Detail
 
 Disconnect
-== Stoppen
+== Verbreken
 
 Disconnected
 == Verbinding verbroken
