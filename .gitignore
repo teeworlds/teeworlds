@@ -6,3 +6,8 @@ config.lua
 
 teeworlds_d
 teeworlds_srv_d
+teeworlds
+teeworlds_srv
+crapnet
+*.exe
+*.pdb
