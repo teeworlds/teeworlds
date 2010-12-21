@@ -155,6 +155,48 @@ typedef vector3_base<float> vec3;
 typedef vector3_base<bool> bvec3;
 typedef vector3_base<int> ivec3;
 
+
+// these converter functions were nicked from some random internet pages
+
+inline float HueToRgb(float v1, float v2, float h)
+{
+   if(h < 0) h += 1;
+   if(h > 1) h -= 1;
+   if((6 * h) < 1) return v1 + ( v2 - v1 ) * 6 * h;
+   if((2 * h) < 1) return v2;
+   if((3 * h) < 2) return v1 + ( v2 - v1 ) * ((2.0f/3.0f) - h) * 6;
+   return v1;
+}
+
+inline ivec3 HslToRgb(ivec3 Hsl)
+{
+	float v1, v2;
+	vec3 In = vec3(Hsl.r/255.0f, Hsl.g/255.0f, Hsl.b/255.0f);
+	vec3 Out;
+
+	if(In.s == 0)
+	{
+		Out.r = In.l;
+		Out.g = In.l;
+		Out.b = In.l;
+	}
+	else
+	{
+		if(In.l < 0.5f) 
+			v2 = In.l * (1 + In.s);
+		else           
+			v2 = (In.l+In.s) - (In.s*In.l);
+
+		v1 = 2 * In.l - v2;
+
+		Out.r = HueToRgb(v1, v2, In.h + (1.0f/3.0f));
+		Out.g = HueToRgb(v1, v2, In.h);
+		Out.b = HueToRgb(v1, v2, In.h - (1.0f/3.0f));
+	} 
+
+	return ivec3(Out.r*255, Out.g*255, Out.b*255);
+}
+
 // ------------------------------------
 
 template<typename T>

@@ -41,44 +41,6 @@ float CMenus::ms_FontmodHeight = 0.8f;
 IInput::CEvent CMenus::m_aInputEvents[MAX_INPUTEVENTS];
 int CMenus::m_NumInputEvents;
 
-inline float HueToRgb(float v1, float v2, float h)
-{
-   if(h < 0) h += 1;
-   if(h > 1) h -= 1;
-   if((6 * h) < 1) return v1 + ( v2 - v1 ) * 6 * h;
-   if((2 * h) < 1) return v2;
-   if((3 * h) < 2) return v1 + ( v2 - v1 ) * ((2.0f/3.0f) - h) * 6;
-   return v1;
-}
-
-inline vec3 HslToRgb(vec3 In)
-{
-	float v1, v2;
-	vec3 Out;
-
-	if(In.s == 0)
-	{
-		Out.r = In.l;
-		Out.g = In.l;
-		Out.b = In.l;
-	}
-	else
-	{
-		if(In.l < 0.5f) 
-			v2 = In.l * (1 + In.s);
-		else           
-			v2 = (In.l+In.s) - (In.s*In.l);
-
-		v1 = 2 * In.l - v2;
-
-		Out.r = HueToRgb(v1, v2, In.h + (1.0f/3.0f));
-		Out.g = HueToRgb(v1, v2, In.h);
-		Out.b = HueToRgb(v1, v2, In.h - (1.0f/3.0f));
-	} 
-
-	return Out;
-}
-
 
 CMenus::CMenus()
 {
@@ -642,8 +604,8 @@ void CMenus::RenderLoading(float Percent)
 	LastLoadRender = time_get();
 	
 	// need up date this here to get correct
-	vec3 Rgb = HslToRgb(vec3(g_Config.m_UiColorHue/255.0f, g_Config.m_UiColorSat/255.0f, g_Config.m_UiColorLht/255.0f));
-	ms_GuiColor = vec4(Rgb.r, Rgb.g, Rgb.b, g_Config.m_UiColorAlpha/255.0f);
+	ivec3 Rgb = HslToRgb(ivec3(g_Config.m_UiColorHue, g_Config.m_UiColorSat, g_Config.m_UiColorLht));
+	ms_GuiColor = vec4(Rgb.r/255.0f, Rgb.g/255.0f, Rgb.b/255.0f, g_Config.m_UiColorAlpha/255.0f);
 	
     CUIRect Screen = *UI()->Screen();
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
@@ -1269,8 +1231,8 @@ void CMenus::OnRender()
 	}
 	
 	// update colors
-	vec3 Rgb = HslToRgb(vec3(g_Config.m_UiColorHue/255.0f, g_Config.m_UiColorSat/255.0f, g_Config.m_UiColorLht/255.0f));
-	ms_GuiColor = vec4(Rgb.r, Rgb.g, Rgb.b, g_Config.m_UiColorAlpha/255.0f);
+	ivec3 Rgb = HslToRgb(ivec3(g_Config.m_UiColorHue, g_Config.m_UiColorSat, g_Config.m_UiColorLht));
+	ms_GuiColor = vec4(Rgb.r/255.0f, Rgb.g/255.0f, Rgb.b/255.0f, g_Config.m_UiColorAlpha/255.0f);
 
 	ms_ColorTabbarInactiveOutgame = vec4(0,0,0,0.25f);
 	ms_ColorTabbarActiveOutgame = vec4(0,0,0,0.5f);
