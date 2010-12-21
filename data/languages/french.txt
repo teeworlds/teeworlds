@@ -53,13 +53,13 @@ Are you sure that you want to quit?
 == Êtes-vous sûr de vouloir quitter ?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== Comme c'est la première fois que vous lancez le jeu, veuillez entrer votre pseudonyme ci-dessous. Vous devriez vérifier les réglages et les ajuster avant de rejoindre un serveur.
+== Comme c’est la première fois que vous lancez le jeu, veuillez entrer votre pseudonyme ci-dessous. Vous devriez vérifier les réglages et les ajuster avant de rejoindre un serveur.
 
 Blue team
 == Équipe bleue
 
 Blue team wins!
-== L'équipe bleue gagne !
+== L’équipe bleue gagne !
 
 Body
 == Corps
@@ -155,7 +155,7 @@ Disconnected
 == Déconnecté
 
 Display Modes
-== Modes d'affichages
+== Modes d’affichages
 
 Down
 == Bas
@@ -176,7 +176,7 @@ Embedded
 == Intégré
 
 Embeds the image into the map file.
-== Intègre l'image dans la carte.
+== Intègre l’image dans la carte.
 
 Emoticon
 == Émoticônes
@@ -194,7 +194,7 @@ Exit
 == Quitter
 
 Exits from the editor
-== Ferme l'éditeur
+== Ferme l’éditeur
 
 External
 == Externe
@@ -335,7 +335,7 @@ Load
 == Charger
 
 Load a new image to use in the map
-== Charger une image pour l'utiliser dans la carte
+== Charger une image pour l’utiliser dans la carte
 
 Load map
 == Charger une map
@@ -374,7 +374,7 @@ Movement
 == Mouvement
 
 Mute when not active
-== Rendre muet en cas d'inactivité
+== Rendre muet en cas d’inactivité
 
 Name
 == Nom
@@ -485,7 +485,7 @@ Red team
 == Équipe rouge
 
 Red team wins!
-== L'équipe rouge gagne !
+== L’équipe rouge gagne !
 
 Refresh
 == Rafraîchir
@@ -503,19 +503,19 @@ Removes collision from this layer
 == Enlève la collision depuis cette couche
 
 Removes the image from the map
-== Enlève l'image de la carte
+== Enlève l’image de la carte
 
 Removes the image from the map file.
-== Enlève l'image de la carte.
+== Enlève l’image de la carte.
 
 Replace
 == Remplacer
 
 Replace Image
-== Remplacer l'image
+== Remplacer l’image
 
 Replaces the image with a new one
-== Remplace l'image par une nouvelle
+== Remplace l’image par une nouvelle
 
 Reset filter
 == Filtres par défaut
@@ -566,7 +566,7 @@ Scoreboard
 == Scores
 
 Screenshot
-== Capture d'écran
+== Capture d’écran
 
 Select group. Right click for properties.
 == Sélectionner un groupe. Clic-droit pour voir les propriétés.
@@ -629,7 +629,7 @@ Sudden Death
 == Mort Subite
 
 Switch weapon on pickup
-== Sélectionner l'arme ramassée
+== Sélectionner l’arme ramassée
 
 Team
 == Équipe

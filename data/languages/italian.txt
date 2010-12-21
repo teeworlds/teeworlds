@@ -23,7 +23,7 @@ Are you sure that you want to quit?
 == Sicuro di voler uscire?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
-== E' la prima volta che avvii il gioco, ti preghiamo di inserire il tuo nickname. E' consigliabile che tu controlli le impostazioni per aggiustarle in base alle tue preferenze prima di entrare in un server.
+== E’ la prima volta che avvii il gioco, ti preghiamo di inserire il tuo nickname. E’ consigliabile che tu controlli le impostazioni per aggiustarle in base alle tue preferenze prima di entrare in un server.
 
 Blue team
 == Squadra Blu
@@ -377,7 +377,7 @@ Team chat
 == Chat di squadra
 
 Teeworlds %s is out! Download it at www.teeworlds.com!
-== E' uscito Teeworlds %s! Scaricalo da www.teeworlds.com !
+== E’ uscito Teeworlds %s! Scaricalo da www.teeworlds.com !
 
 Texture Compression
 == Compressione Texture
@@ -425,7 +425,7 @@ Yes
 == Si
 
 You must restart the game for all settings to take effect.
-== E' necessario riavviare il gioco per rendere effettive le modifiche.
+== E’ necessario riavviare il gioco per rendere effettive le modifiche.
 
 ##### needs translation #####
 

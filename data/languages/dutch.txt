@@ -209,7 +209,7 @@ Deletes the layer
 == Verwijdert de laag
 
 Demos
-== Demo's
+== Demo’s
 
 Detail
 == Detail
