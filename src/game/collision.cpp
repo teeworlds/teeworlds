@@ -48,6 +48,10 @@ void CCollision::Init(class CLayers *pLayers)
 		default:
 			m_pTiles[i].m_Index = 0;
 		}
+		
+		// race tiles
+		if(Index >= 28 && Index <= 59)
+			m_pTiles[i].m_Index = Index;
 	}
 }
 
@@ -55,8 +59,11 @@ int CCollision::GetTile(int x, int y)
 {
 	int nx = clamp(x/32, 0, m_Width-1);
 	int ny = clamp(y/32, 0, m_Height-1);
-	
-	return m_pTiles[ny*m_Width+nx].m_Index > 128 ? 0 : m_pTiles[ny*m_Width+nx].m_Index;
+
+	if(m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_SOLID || m_pTiles[ny*m_Width+nx].m_Index == (COLFLAG_SOLID|COLFLAG_NOHOOK) || m_pTiles[ny*m_Width+nx].m_Index == COLFLAG_DEATH)
+		return m_pTiles[ny*m_Width+nx].m_Index;
+	else
+		return 0;
 }
 
 bool CCollision::IsTileSolid(int x, int y)
