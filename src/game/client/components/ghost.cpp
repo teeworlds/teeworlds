@@ -70,11 +70,7 @@ void CGhost::AddInfos()
 	
 	//TODO: I don't know what the fuck is happening atm
 	if(m_CurPath.size() == 0)
-	{
 		m_CurPath.add(m_CurrentInfos);
-		m_CurPath.add(m_CurrentInfos);
-		m_CurPath.add(m_CurrentInfos);
-	}
 	m_CurPath.add(m_CurrentInfos);
 }
 
