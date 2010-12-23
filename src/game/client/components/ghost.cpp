@@ -40,6 +40,7 @@ CGhost::CGhost()
 	m_PrevTime = -1;
 	m_StartRenderTick = -1;
 	m_StartRecordTick = -1;
+	m_RecordTick = 0;
 }
 
 void CGhost::SetGeneralInfos(CNetObj_Character Player, CTeeRenderInfo RenderInfo, CAnimState AnimState)
@@ -83,7 +84,7 @@ void CGhost::OnRender()
 	// only for race
 	if(!m_pClient->m_IsRace || !g_Config.m_ClGhost)
 		return;
-
+	
 	// Check if the race line is crossed then start the render of the ghost if one
 	//TODO: Is it working for high speed ?
 	if(m_RaceState != RACE_STARTED && (m_pClient->Collision()->GetCollisionRace(m_pClient->Collision()->GetIndex(m_pClient->m_LocalCharacterPos, m_pClient->m_LocalCharacterPos)) == TILE_BEGIN))
@@ -111,7 +112,7 @@ void CGhost::OnRender()
 	if(!m_Rendering)
 		return;
 	
-	m_CurPos = Client()->GameTick()-m_StartRenderTick;
+	m_CurPos = Client()->PredGameTick()-m_StartRenderTick;
 
 	if(m_BestPath.size() == 0 || m_CurPos < 0 || m_CurPos >= m_BestPath.size())
 	{
@@ -138,7 +139,7 @@ void CGhost::RenderGhost()
 
 	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, Client()->IntraGameTick())/256.0f;
 	vec2 Direction = GetDirection((int)(Angle*256.0f));
-	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->IntraGameTick()*2);
+	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->PredIntraGameTick());
 
 	// Render ghost
 	RenderTools()->RenderTee(&State, &RenderInfo, 0, Direction, Position, true);
@@ -155,7 +156,7 @@ void CGhost::RenderGhostWeapon()
 
 	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, Client()->IntraGameTick())/256.0f;
 	vec2 Direction = GetDirection((int)(Angle*256.0f));
-	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->IntraGameTick()*2);
+	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->PredIntraGameTick());
 
 	if (Player.m_Weapon != WEAPON_GRENADE)
 		return;
@@ -193,9 +194,9 @@ void CGhost::RenderGhostHook()
 
 	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, Client()->IntraGameTick())/256.0f;
 	vec2 Direction = GetDirection((int)(Angle*256.0f));
-	vec2 Pos = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->IntraGameTick()*2);
+	vec2 Pos = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->PredIntraGameTick());
 
-	vec2 HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), Client()->IntraGameTick());
+	vec2 HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), Client()->PredIntraGameTick());
 	float d = distance(Pos, HookPos);
 	vec2 Dir = normalize(Pos-HookPos);
 
@@ -205,7 +206,7 @@ void CGhost::RenderGhostHook()
 
 	// render head
 	RenderTools()->SelectSprite(SPRITE_HOOK_HEAD);
-	IGraphics::CQuadItem QuadItem(HookPos.x, HookPos.y, 24,16);
+	IGraphics::CQuadItem QuadItem(HookPos.x, HookPos.y, 24, 16);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 
 	// render chain
@@ -215,7 +216,7 @@ void CGhost::RenderGhostHook()
 	for(float f = 24; f < d && i < 1024; f += 24, i++)
 	{
 		vec2 p = HookPos + Dir*f;
-		Array[i] = IGraphics::CQuadItem(p.x, p.y,24,16);
+		Array[i] = IGraphics::CQuadItem(p.x, p.y, 24, 16);
 	}
 
 	Graphics()->QuadsDraw(Array, i);
@@ -240,7 +241,7 @@ void CGhost::StartRender()
 {
 	m_CurPos = 0;
 	m_Rendering = true;
-	m_StartRenderTick = Client()->GameTick();
+	m_StartRenderTick = Client()->PredGameTick();
 }
 
 void CGhost::StopRender()
@@ -335,6 +336,7 @@ void CGhost::OnReset()
 	m_NewRecord = false;
 	m_CurPath.clear();
 	m_StartRenderTick = -1;
+	m_RecordTick = 0;
 	dbg_msg("ghost","Reset");
 }
 
