@@ -140,10 +140,8 @@ void CGhost::RenderGhost()
 	vec2 Direction = GetDirection((int)(Angle*256.0f));
 	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->IntraGameTick()*2);
 
-	RenderInfo.m_ColorBody.a = 0.5f;
-	RenderInfo.m_ColorFeet.a = 0.5f;
 	// Render ghost
-	RenderTools()->RenderTee(&State, &RenderInfo, 0, Direction, Position);
+	RenderTools()->RenderTee(&State, &RenderInfo, 0, Direction, Position, true);
 }
 
 void CGhost::RenderGhostWeapon()

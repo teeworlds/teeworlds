@@ -165,7 +165,7 @@ void CRenderTools::DrawUIRect(const CUIRect *r, vec4 Color, int Corners, float R
 	Graphics()->QuadsEnd();
 }
 
-void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos)
+void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, bool Ghost)
 {
 	vec2 Direction = Dir;
 	vec2 Position = Pos;
@@ -192,10 +192,8 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
 
 				// draw body
-				// Alpha was disabled maybe because of cheaters making themselves invisible
-				// TODO: do this nicer
-				if(pInfo->m_ColorBody.a == 0.5f)
-					Graphics()->SetColor(pInfo->m_ColorBody.r, pInfo->m_ColorBody.g, pInfo->m_ColorBody.b, pInfo->m_ColorBody.a);
+				if(Ghost)
+					Graphics()->SetColor(pInfo->m_ColorBody.r, pInfo->m_ColorBody.g, pInfo->m_ColorBody.b, 0.5f);
 				else
 					Graphics()->SetColor(pInfo->m_ColorBody.r, pInfo->m_ColorBody.g, pInfo->m_ColorBody.b, 1.0f);
 				vec2 BodyPos = Position + vec2(pAnim->GetBody()->m_X, pAnim->GetBody()->m_Y)*AnimScale;
@@ -256,9 +254,8 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 					cs = 0.5f;
 			}
 			
-			// TODO: do this nicer
-			if(pInfo->m_ColorFeet.a == 0.5f)
-				Graphics()->SetColor(pInfo->m_ColorFeet.r*cs, pInfo->m_ColorFeet.g*cs, pInfo->m_ColorFeet.b*cs, pInfo->m_ColorFeet.a*cs);
+			if(Ghost)
+				Graphics()->SetColor(pInfo->m_ColorFeet.r*cs, pInfo->m_ColorFeet.g*cs, pInfo->m_ColorFeet.b*cs, 0.5f*cs);
 			else
 				Graphics()->SetColor(pInfo->m_ColorFeet.r*cs, pInfo->m_ColorFeet.g*cs, pInfo->m_ColorFeet.b*cs, 1.0f);
 			IGraphics::CQuadItem QuadItem(Position.x+pFoot->m_X*AnimScale, Position.y+pFoot->m_Y*AnimScale, w, h);
@@ -267,8 +264,6 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 	}
 
 	Graphics()->QuadsEnd();
-	
-	
 }
 
 static void CalcScreenParams(float Amount, float WMax, float HMax, float Aspect, float *w, float *h)
