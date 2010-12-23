@@ -202,3 +202,47 @@ void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elas
 	*pInoutPos = Pos;
 	*pInoutVel = Vel;
 }
+
+// race
+int CCollision::GetIndex(vec2 PrevPos, vec2 Pos)
+{
+	float d = distance(PrevPos, Pos);
+	
+	if(!d)
+	{
+		int nx = clamp((int)Pos.x/32, 0, m_Width-1);
+		int ny = clamp((int)Pos.y/32, 0, m_Height-1);
+
+		if(m_pTiles[ny*m_Width+nx].m_Index >= TILE_STOPL && m_pTiles[ny*m_Width+nx].m_Index <= 59)
+		{
+			return ny*m_Width+nx;
+		}
+	}
+
+	float a = 0.0f;
+	vec2 Tmp = vec2(0, 0);
+	int nx = 0;
+	int ny = 0;
+
+	for(float f = 0; f < d; f++)
+	{
+		a = f/d;
+		Tmp = mix(PrevPos, Pos, a);
+		nx = clamp((int)Tmp.x/32, 0, m_Width-1);
+		ny = clamp((int)Tmp.y/32, 0, m_Height-1);
+		if(m_pTiles[ny*m_Width+nx].m_Index >= TILE_STOPL && m_pTiles[ny*m_Width+nx].m_Index <= 59)
+		{
+			return ny*m_Width+nx;
+		}
+	}
+
+	return -1;
+}
+
+int CCollision::GetCollisionRace(int Index)
+{
+	if(Index < 0)
+		return 0;
+	
+	return m_pTiles[Index].m_Index;
+}

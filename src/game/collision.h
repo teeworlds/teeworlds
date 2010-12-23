@@ -34,6 +34,10 @@ public:
 	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *Bpounces);
 	void MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity);
 	bool TestBox(vec2 Pos, vec2 Size);
+	
+	// race
+	int GetIndex(vec2 PrevPos, vec2 Pos);
+	int GetCollisionRace(int Index);
 };
 
 #endif

@@ -86,8 +86,7 @@ void CGhost::OnRender()
 		return;
 	
 	// Check if the race line is crossed then start the render of the ghost if one
-	//TODO: Is it working for high speed ?
-	if(m_RaceState != RACE_STARTED && (m_pClient->Collision()->GetCollisionRace(m_pClient->Collision()->GetIndex(m_pClient->m_LocalCharacterPos, m_pClient->m_LocalCharacterPos)) == TILE_BEGIN))
+	if(m_RaceState != RACE_STARTED && (m_pClient->Collision()->GetCollisionRace(m_pClient->Collision()->GetIndex(m_pClient->m_PredictedPrevChar.m_Pos, m_pClient->m_LocalCharacterPos)) == TILE_BEGIN))
 	{
 		//dbg_msg("ghost","race started");
 		m_RaceState = RACE_STARTED;
