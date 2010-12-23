@@ -133,15 +133,18 @@ void CPlayer::OnDisconnect()
 
 	if(Server()->ClientIngame(m_ClientID))
 	{
-		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf),  "'%s' has left the game", Server()->ClientName(m_ClientID));
-		str_format(aBuf, sizeof(aBuf), "leave player='%d:%s'", m_ClientID, Server()->ClientName(m_ClientID));
-		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf);
 		if(m_Muted > 0)
 		{
-			((CServer *)Server())->BanAdd(((CServer *)Server())->GetClientIP(m_ClientID), ((m_Muted/Server()->TickSpeed())+1), "Mute evasion");
+			int Temp = m_Muted;
+			m_Muted = 0;
+			((CServer *)Server())->BanAdd(((CServer *)Server())->GetClientIP(m_ClientID), ((Temp/Server()->TickSpeed())+1), "Mute evasion");
 			return;
 		}
+		char aBuf[512];
+		str_format(aBuf, sizeof(aBuf),  "'%s' has left the game", Server()->ClientName(m_ClientID));
+		GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf);
+		str_format(aBuf, sizeof(aBuf), "leave player='%d:%s'", m_ClientID, Server()->ClientName(m_ClientID));
+		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf);
 	}
 }
 
