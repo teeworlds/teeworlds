@@ -1,3 +1,5 @@
+/* (c) Redix and Sushi */
+
 #include <stdio.h>
 
 #include <engine/shared/config.h>

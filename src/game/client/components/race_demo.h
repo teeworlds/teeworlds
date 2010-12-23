@@ -1,3 +1,5 @@
+/* (c) Redix and Sushi */
+
 #ifndef GAME_CLIENT_COMPONENTS_RACE_DEMO_H
 #define GAME_CLIENT_COMPONENTS_RACE_DEMO_H
 

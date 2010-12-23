@@ -17,6 +17,7 @@
 #include <game/client/components/effects.h>
 #include <game/client/components/sounds.h>
 #include <game/client/components/controls.h>
+#include <game/client/components/ghost.h>
 
 #include "players.h"
 
@@ -515,6 +516,12 @@ void CPlayers::RenderPlayer(
 		Ghost.m_ColorBody.a = 0.5f;
 		Ghost.m_ColorFeet.a = 0.5f;
 		RenderTools()->RenderTee(&State, &Ghost, Player.m_Emote, Direction, GhostPosition); // render ghost
+	}
+
+	if(pInfo.m_Local)
+	{
+		if(NewTick)
+			m_pClient->m_pGhost->SetGeneralInfos(Player, RenderInfo, State);
 	}
 
 	RenderInfo.m_Size = 64.0f; // force some settings

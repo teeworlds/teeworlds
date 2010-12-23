@@ -295,6 +295,8 @@ public:
 	class CStatboard *m_pStatboard;
 	class CHud *m_pHud;
 	class CScoreboard *m_pScoreboard;
+	//TODO: This is ugly
+	class CGhost *m_pGhost;
 };
 
 extern const char *Localize(const char *Str);
