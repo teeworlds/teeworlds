@@ -159,6 +159,7 @@ void CGhost::RenderGhostWeapon()
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 	Graphics()->QuadsSetRotation(State.GetAttach()->m_Angle*pi*2+Angle);
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
 
 	// normal weapons
 	int iw = clamp(Player.m_Weapon, 0, NUM_WEAPONS-1);
@@ -198,6 +199,7 @@ void CGhost::RenderGhostHook()
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 	Graphics()->QuadsSetRotation(GetAngle(Dir)+pi);
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
 
 	// render head
 	RenderTools()->SelectSprite(SPRITE_HOOK_HEAD);
