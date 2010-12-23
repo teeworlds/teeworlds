@@ -100,6 +100,7 @@ void CGhost::OnRender()
 		{
 			//dbg_msg("ghost","new path saved");
 			m_NewRecord = false;
+			m_BestPath.clear();
 			m_BestPath = m_CurPath;
 		}
 		StopRecord();
