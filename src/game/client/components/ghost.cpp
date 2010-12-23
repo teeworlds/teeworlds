@@ -40,7 +40,6 @@ CGhost::CGhost()
 	m_PrevTime = -1;
 	m_StartRenderTick = -1;
 	m_StartRecordTick = -1;
-	m_RecordTick = 0;
 }
 
 void CGhost::SetGeneralInfos(CNetObj_Character Player, CTeeRenderInfo RenderInfo, CAnimState AnimState)
@@ -336,7 +335,6 @@ void CGhost::OnReset()
 	m_NewRecord = false;
 	m_CurPath.clear();
 	m_StartRenderTick = -1;
-	m_RecordTick = 0;
 	dbg_msg("ghost","Reset");
 }
 

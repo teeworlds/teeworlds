@@ -35,7 +35,6 @@ private:
 	int m_RaceState;
 	float m_PrevTime;
 	bool m_NewRecord;
-	int m_RecordTick;
 
 	enum
 	{
