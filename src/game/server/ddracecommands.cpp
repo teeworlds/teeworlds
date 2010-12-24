@@ -731,7 +731,7 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 		{
 			pPlayer->m_InfoSaved = false;
 			pPlayer->m_PauseInfo.m_Respawn = true;
-			pPlayer->SetTeam(0);
+			//pPlayer->SetTeam(0);
 			//pPlayer->LoadCharacter();//TODO:Check if this system Works
 		}
 		else if(chr)
