@@ -105,8 +105,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 
 void CCharacter::Destroy()
 {
-	//GameServer()->m_World.m_Core.m_apCharacters[m_MarkedId] = 0; This caused the Marked Char for delete to always Delete ID 0 Core
-	dbg_msg("CCHaracter::Destroy", "ID %d Player %d m_Core %d", GetPlayer()->GetCID() ,GetPlayer() ,&m_Core);
+	//dbg_msg("CCHaracter::Destroy", "ID %d Player %d m_Core %d", GetPlayer()->GetCID() ,GetPlayer() ,&m_Core);
 	m_Alive = false;
 	CEntity::Destroy();
 }
