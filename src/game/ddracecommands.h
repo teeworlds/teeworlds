@@ -59,7 +59,6 @@ CONSOLE_COMMAND("rules", "", CFGFLAG_SERVER, ConRules, this, "Shows the server r
 CONSOLE_COMMAND("team", "?i", CFGFLAG_SERVER, ConJoinTeam, this, "Lets you join team i (shows your team if left blank)", -1)
 CONSOLE_COMMAND("top5", "?i", CFGFLAG_SERVER, ConTop5, this, "Shows five ranks of the ladder beginning with rank i (1 by default)", -1)
 
-
 #undef CONSOLE_COMMAND
 
 #endif

@@ -8,7 +8,7 @@
 #include <engine/masterserver.h>
 
 #include <mastersrv/mastersrv.h>
-
+#include <game/ddracecommands.h>
 #include "register.h"
 
 CRegister::CRegister()

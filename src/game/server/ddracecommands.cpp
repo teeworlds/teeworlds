@@ -743,6 +743,7 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Pause isn't allowed on this server.");
 }
 
+
 void CGameContext::ConTop5(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
