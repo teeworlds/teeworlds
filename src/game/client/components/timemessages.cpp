@@ -90,10 +90,9 @@ void CTimeMessages::OnRender()
 	float StartX = Width*1.5f-10.0f;
 	float y = 20.0f;
 
-	for(int i = 0; i < MAX_TIMEMSGS; i++)
+	for(int i = 1; i <= MAX_TIMEMSGS; i++)
 	{
-
-		int r = (m_TimemsgCurrent+i+1)%MAX_TIMEMSGS;
+		int r = (m_TimemsgCurrent+i)%MAX_TIMEMSGS;
 		if(Client()->GameTick() > m_aTimemsgs[r].m_Tick+50*10)
 			continue;
 
