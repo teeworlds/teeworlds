@@ -1039,7 +1039,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		p->m_IsUsingDDRaceClient = true;
 		
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "%d use DDRace Client", ClientId);
+		str_format(aBuf, sizeof(aBuf), "%d uses DDRace Client", ClientId);
 		dbg_msg("DDRace", aBuf);
 		
 		//first update his teams state
