@@ -51,10 +51,9 @@ void CKillMessages::OnRender()
 	float StartX = Width*1.5f-10.0f;
 	float y = 20.0f;
 
-	for(int i = 0; i < MAX_KILLMSGS; i++)
+	for(int i = 1; i <= MAX_KILLMSGS; i++)
 	{
-
-		int r = (m_KillmsgCurrent+i+1)%MAX_KILLMSGS;
+		int r = (m_KillmsgCurrent+i)%MAX_KILLMSGS;
 		if(Client()->GameTick() > m_aKillmsgs[r].m_Tick+50*10)
 			continue;
 
