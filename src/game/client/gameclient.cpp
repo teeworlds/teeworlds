@@ -34,6 +34,7 @@
 #include "components/hud.h"
 #include "components/items.h"
 #include "components/killmessages.h"
+#include "components/timemessages.h"
 #include "components/mapimages.h"
 #include "components/maplayers.h"
 #include "components/menus.h"
@@ -55,6 +56,7 @@ CGameClient g_GameClient;
 
 // instanciate all systems
 static CKillMessages gs_KillMessages;
+static CTimeMessages gs_TimeMessages;
 static CCamera gs_Camera;
 static CChat gs_Chat;
 static CMotd gs_Motd;
@@ -178,6 +180,7 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(&gs_Hud);
 	m_All.Add(&gs_Emoticon);
 	m_All.Add(&gs_KillMessages);
+	m_All.Add(&gs_TimeMessages);
 	m_All.Add(m_pChat);
 	m_All.Add(&gs_Broadcast);
 	m_All.Add(&gs_DebugHud);

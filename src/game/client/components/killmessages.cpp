@@ -23,6 +23,10 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 {
 	if(MsgType == NETMSGTYPE_SV_KILLMSG)
 	{
+		// no killmessages for race
+		if(m_pClient->m_IsRace)
+			return;
+		
 		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
 		
 		// unpack messages
