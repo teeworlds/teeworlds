@@ -132,7 +132,9 @@ void CGhost::RenderGhost()
 
 	CAnimState State = m_BestPath[m_CurPos].AnimState;
 	CTeeRenderInfo RenderInfo = m_BestPath[m_CurPos].RenderInfo;
-
+	RenderInfo.m_ColorBody.a = 0.5f;
+	RenderInfo.m_ColorFeet.a = 0.5f;
+	
 	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, Client()->IntraGameTick())/256.0f;
 	vec2 Direction = GetDirection((int)(Angle*256.0f));
 	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), Client()->PredIntraGameTick());

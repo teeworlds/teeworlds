@@ -103,7 +103,7 @@ void CTimeMessages::OnRender()
 
 		float Blend = Now > m_aTimemsgs[r].m_Tick+8*time_freq() ? 1.0f-(Now-m_aTimemsgs[r].m_Tick-8*time_freq())/(2.0f*time_freq()) : 1.0f;
 		
-		float FontSize = 42.0f;
+		float FontSize = 44.0f;
 		float PlayerNameW = TextRender()->TextWidth(0, FontSize, m_aTimemsgs[r].m_aPlayerName, -1);
 		
 		// time
@@ -128,7 +128,7 @@ void CTimeMessages::OnRender()
 			else
 				TextRender()->TextColor(0.7f, 0.7f, 0.7f, Blend);
 			TextRender()->Text(0, x, y, FontSize, aDiff, -1);
-			if(m_aTimemsgs[r].m_LocalDiff > 0 || m_aTimemsgs[r].m_PlayerID != m_pClient->m_Snap.m_LocalCid)
+			if(m_aTimemsgs[r].m_PlayerID != m_pClient->m_Snap.m_LocalCid)
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
 			
 			x -= 16.0f;
@@ -144,6 +144,8 @@ void CTimeMessages::OnRender()
 			x -= DiffW;
 			TextRender()->TextColor(0.5f, 0.5f, 1.0f, Blend);
 			TextRender()->Text(0, x, y, FontSize, aDiff, -1);
+			if(m_aTimemsgs[r].m_PlayerID != m_pClient->m_Snap.m_LocalCid)
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
 			
 			x -= 16.0f;
 		}
@@ -159,12 +161,15 @@ void CTimeMessages::OnRender()
 		x -= PlayerNameW;
 		TextRender()->Text(0, x, y, FontSize, m_aTimemsgs[r].m_aPlayerName, -1);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f); // reset color
-		x -= 24.0f;
+		x -= 28.0f;
 		
 		// render player tee
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aTimemsgs[r].m_PlayerRenderInfo, EMOTE_HAPPY, vec2(-1,0), vec2(x, y+28), false, Blend);
+		m_aTimemsgs[r].m_PlayerRenderInfo.m_Size = 65.0f;
+		m_aTimemsgs[r].m_PlayerRenderInfo.m_ColorBody.a = Blend;
+		m_aTimemsgs[r].m_PlayerRenderInfo.m_ColorFeet.a = Blend;
+		RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aTimemsgs[r].m_PlayerRenderInfo, EMOTE_HAPPY, vec2(-1,0), vec2(x, y+34), true);
 		
 		// new line
-		y += 48;
+		y += 50;
 	}
 }
