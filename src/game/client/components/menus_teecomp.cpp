@@ -353,7 +353,7 @@ void CMenus::RenderSettingsTeecompStats(CUIRect MainView)
 
 void CMenus::RenderSettingsTeecompMisc(CUIRect MainView)
 {
-	CUIRect LeftView, RightView, Button, Label, Left;
+	CUIRect LeftView, RightView, Button;
 
 	MainView.VSplitLeft(MainView.w/2, &LeftView, &RightView);
 

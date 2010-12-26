@@ -45,7 +45,6 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 			Time.m_LocalDiff = 0;
 			
 			// store the name
-			char aName[MAX_NAME_LENGTH];
 			str_copy(Time.m_aPlayerName, pMsg->m_pMessage, Num+1);
 			
 			// prepare values and state for saving
