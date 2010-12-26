@@ -194,7 +194,11 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
-				// dont show "finished in" message when race		if(m_pClient->m_IsRace && pMsg->m_Cid < 0 && (str_find(pMsg->m_pMessage, " finished in: ") || str_find(pMsg->m_pMessage, "New record: ")))			return;		const char *pMessage = pMsg->m_pMessage;
+		// dont show "finished in" message when race
+		if(m_pClient->m_IsRace && pMsg->m_Cid < 0 && (str_find(pMsg->m_pMessage, " finished in: ") || str_find(pMsg->m_pMessage, "New record: ")))
+			return;
+
+		const char *pMessage = pMsg->m_pMessage;
 		
 		// save last message for each player
 		m_Spam = false;
