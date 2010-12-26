@@ -239,7 +239,7 @@ void CHud::RenderFps()
 		m_AverageFPS = (m_AverageFPS*(1.0f-(1.0f/m_AverageFPS))) + (FPS*(1.0f/m_AverageFPS));
 		char Buf[512];
 		str_format(Buf, sizeof(Buf), "%d", (int)m_AverageFPS);
-		TextRender()->Text(0, m_Width-10-TextRender()->TextWidth(0,12,Buf,-1), 5, 12, Buf, -1);
+		TextRender()->Text(0, m_Width-5-TextRender()->TextWidth(0,8,Buf,-1), 2, 8, Buf, -1);
 	}
 }
 

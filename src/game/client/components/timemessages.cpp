@@ -4,6 +4,7 @@
 
 #include <engine/graphics.h>
 #include <engine/textrender.h>
+#include <engine/shared/config.h>
 #include <game/generated/protocol.h>
 #include <game/generated/client_data.h>
 
@@ -87,12 +88,14 @@ void CTimeMessages::OnRender()
 	if(!m_pClient->m_IsRace)
 		return;
 	
-	float Width = 400*3.0f*Graphics()->ScreenAspect();
-	float Height = 400*3.0f;
+	float Width = 330*3.0f*Graphics()->ScreenAspect();
+	float Height = 330*3.0f;
 
 	Graphics()->MapScreen(0, 0, Width*1.5f, Height*1.5f);
 	float StartX = Width*1.5f-10.0f;
 	float y = 20.0f;
+	if(g_Config.m_ClShowfps)
+		y = 60.0f;
 
 	int64 Now = time_get();
 	for(int i = 1; i <= MAX_TIMEMSGS; i++)
@@ -103,12 +106,12 @@ void CTimeMessages::OnRender()
 
 		float Blend = Now > m_aTimemsgs[r].m_Tick+8*time_freq() ? 1.0f-(Now-m_aTimemsgs[r].m_Tick-8*time_freq())/(2.0f*time_freq()) : 1.0f;
 		
-		float FontSize = 44.0f;
+		float FontSize = 36.0f;
 		float PlayerNameW = TextRender()->TextWidth(0, FontSize, m_aTimemsgs[r].m_aPlayerName, -1);
 		
 		// time
 		char aTime[32];
-		str_format(aTime, sizeof(aTime), "%02d:%02.2f", m_aTimemsgs[r].m_Minutes, m_aTimemsgs[r].m_Seconds);
+		str_format(aTime, sizeof(aTime), "%02d:%05.2f", m_aTimemsgs[r].m_Minutes, m_aTimemsgs[r].m_Seconds);
 		float TimeW = TextRender()->TextWidth(0, FontSize, aTime, -1);
 		
 		float x = StartX;
@@ -164,12 +167,11 @@ void CTimeMessages::OnRender()
 		x -= 28.0f;
 		
 		// render player tee
-		m_aTimemsgs[r].m_PlayerRenderInfo.m_Size = 65.0f;
 		m_aTimemsgs[r].m_PlayerRenderInfo.m_ColorBody.a = Blend;
 		m_aTimemsgs[r].m_PlayerRenderInfo.m_ColorFeet.a = Blend;
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aTimemsgs[r].m_PlayerRenderInfo, EMOTE_HAPPY, vec2(-1,0), vec2(x, y+34), true);
+		RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aTimemsgs[r].m_PlayerRenderInfo, EMOTE_HAPPY, vec2(-1,0), vec2(x, y+28), true);
 		
 		// new line
-		y += 50;
+		y += 46;
 	}
 }
