@@ -77,7 +77,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_BroadCast = true;
 	m_EyeEmote = true;
 	m_Fly = true;
-	m_DeepFreeze = false;
+	m_DeepFreeze = true;
 	m_LastBroadcast = 0;
 	m_TeamBeforeSuper = 0;
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
@@ -108,6 +108,7 @@ void CCharacter::Destroy()
 	//dbg_msg("CCHaracter::Destroy", "ID %d Player %d m_Core %d", GetPlayer()->GetCID() ,GetPlayer() ,&m_Core);
 	m_Alive = false;
 	CEntity::Destroy();
+	m_DeepFreeze = false;
 }
 
 void CCharacter::SetWeapon(int W)
