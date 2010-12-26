@@ -40,7 +40,8 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 			}
 			
 			CTimeMsg Time;
-			Time.m_Diff = 0;
+			Time.m_ServerDiff = 0;
+			Time.m_LocalDiff = 0;
 			
 			// store the name
 			char aName[MAX_NAME_LENGTH];
@@ -49,20 +50,23 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 			// prepare values and state for saving
 			if(sscanf(pMessage, " finished in: %d minute(s) %f", &Time.m_Minutes, &Time.m_Seconds) == 2)
 			{
-				int PlayerID = -1;
+				Time.m_PlayerID = -1;
 				for(int i = 0; i < MAX_CLIENTS; i++)
 					if(!str_comp(Time.m_aPlayerName, m_pClient->m_aClients[i].m_aName))
 					{
-						PlayerID = i;
+						Time.m_PlayerID = i;
 						break;
 					}
 				
 				// some proof
-				if(PlayerID < 0)
+				if(Time.m_PlayerID < 0)
 					return;
 				
-				Time.m_PlayerRenderInfo = m_pClient->m_aClients[PlayerID].m_RenderInfo;
-				Time.m_Tick = Client()->GameTick();
+				float FinishTime = (float)(Time.m_Minutes*60) + Time.m_Seconds;
+				if(m_pClient->m_aClients[Time.m_PlayerID].m_Score > 0)
+					Time.m_LocalDiff = FinishTime - m_pClient->m_aClients[Time.m_PlayerID].m_Score;
+				Time.m_PlayerRenderInfo = m_pClient->m_aClients[Time.m_PlayerID].m_RenderInfo;
+				Time.m_Tick = time_get();
 				
 				m_TimemsgCurrent = (m_TimemsgCurrent+1)%MAX_TIMEMSGS;
 				m_aTimemsgs[m_TimemsgCurrent] = Time;
@@ -72,8 +76,8 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 		{
 			const char* pMessage = pMsg->m_pMessage;
 			
-			if(sscanf(pMessage, "New record: %f", &m_aTimemsgs[m_TimemsgCurrent].m_Diff) != 1)
-				m_aTimemsgs[m_TimemsgCurrent].m_Diff = 0;
+			if(sscanf(pMessage, "New record: %f", &m_aTimemsgs[m_TimemsgCurrent].m_ServerDiff) != 1)
+				m_aTimemsgs[m_TimemsgCurrent].m_ServerDiff = 0;
 		}
 	}
 }
@@ -90,33 +94,56 @@ void CTimeMessages::OnRender()
 	float StartX = Width*1.5f-10.0f;
 	float y = 20.0f;
 
+	int64 Now = time_get();
 	for(int i = 1; i <= MAX_TIMEMSGS; i++)
 	{
 		int r = (m_TimemsgCurrent+i)%MAX_TIMEMSGS;
-		if(Client()->GameTick() > m_aTimemsgs[r].m_Tick+50*10)
+		if(Now > m_aTimemsgs[r].m_Tick+10*time_freq())
 			continue;
 
+		float Blend = Now > m_aTimemsgs[r].m_Tick+8*time_freq() ? 1.0f-(Now-m_aTimemsgs[r].m_Tick-8*time_freq())/(2.0f*time_freq()) : 1.0f;
+		
 		float FontSize = 42.0f;
 		float PlayerNameW = TextRender()->TextWidth(0, FontSize, m_aTimemsgs[r].m_aPlayerName, -1);
 		
 		// time
 		char aTime[32];
-		str_format(aTime, sizeof(aTime), "- Time: %d:%.2f", m_aTimemsgs[r].m_Minutes, m_aTimemsgs[r].m_Seconds);
+		str_format(aTime, sizeof(aTime), "%02d:%02.2f", m_aTimemsgs[r].m_Minutes, m_aTimemsgs[r].m_Seconds);
 		float TimeW = TextRender()->TextWidth(0, FontSize, aTime, -1);
 		
 		float x = StartX;
 		
-		// render diff
-		if(m_aTimemsgs[r].m_Diff)
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
+		
+		// render local diff
+		if(m_aTimemsgs[r].m_LocalDiff && !m_aTimemsgs[r].m_ServerDiff)
 		{
 			char aDiff[32];
-			str_format(aDiff, sizeof(aDiff), "%+.2f", m_aTimemsgs[r].m_Diff);
+			str_format(aDiff, sizeof(aDiff), "(%+.2f)", m_aTimemsgs[r].m_LocalDiff);
 			float DiffW = TextRender()->TextWidth(0, FontSize, aDiff, -1);
 			
 			x -= DiffW;
-			TextRender()->TextColor(0.5f, 1.0f, 0.5f, 1.0f);
+			if(m_aTimemsgs[r].m_LocalDiff < 0)
+				TextRender()->TextColor(0.5f, 1.0f, 0.5f, Blend);
+			else
+				TextRender()->TextColor(0.7f, 0.7f, 0.7f, Blend);
 			TextRender()->Text(0, x, y, FontSize, aDiff, -1);
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			if(m_aTimemsgs[r].m_LocalDiff > 0 || m_aTimemsgs[r].m_PlayerID != m_pClient->m_Snap.m_LocalCid)
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
+			
+			x -= 16.0f;
+		}
+		
+		// render server diff
+		if(m_aTimemsgs[r].m_ServerDiff)
+		{
+			char aDiff[32];
+			str_format(aDiff, sizeof(aDiff), "(%+.2f)", m_aTimemsgs[r].m_ServerDiff);
+			float DiffW = TextRender()->TextWidth(0, FontSize, aDiff, -1);
+			
+			x -= DiffW;
+			TextRender()->TextColor(0.5f, 0.5f, 1.0f, Blend);
+			TextRender()->Text(0, x, y, FontSize, aDiff, -1);
 			
 			x -= 16.0f;
 		}
@@ -131,11 +158,11 @@ void CTimeMessages::OnRender()
 		// render player name
 		x -= PlayerNameW;
 		TextRender()->Text(0, x, y, FontSize, m_aTimemsgs[r].m_aPlayerName, -1);
-
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f); // reset color
 		x -= 24.0f;
 		
 		// render player tee
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aTimemsgs[r].m_PlayerRenderInfo, EMOTE_HAPPY, vec2(-1,0), vec2(x, y+28));
+		RenderTools()->RenderTee(CAnimState::GetIdle(), &m_aTimemsgs[r].m_PlayerRenderInfo, EMOTE_HAPPY, vec2(-1,0), vec2(x, y+28), false, Blend);
 		
 		// new line
 		y += 48;

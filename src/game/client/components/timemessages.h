@@ -12,15 +12,17 @@ public:
 	{
 		int m_Minutes;
 		float m_Seconds;
-		float m_Diff;
+		float m_LocalDiff;
+		float m_ServerDiff;
+		int m_PlayerID;
 		char m_aPlayerName[MAX_NAME_LENGTH];
 		CTeeRenderInfo m_PlayerRenderInfo;
-		int m_Tick;
+		int64 m_Tick;
 	};
 	
 	enum
 	{
-		MAX_TIMEMSGS = 5,
+		MAX_TIMEMSGS = 7,
 	};
 
 	CTimeMsg m_aTimemsgs[MAX_TIMEMSGS];
