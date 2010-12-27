@@ -440,7 +440,7 @@ void CGameContext::ConFreeze(IConsole::IResult *pResult, void *pUserData, int Cl
 		chr->Freeze(((time!=0&&time!=-1)?(pSelf->Server()->TickSpeed()*time):(-1)), false);
 		chr->m_pPlayer->m_RconFreeze = true;
 		CServer* pServ = (CServer*)pSelf->Server();
-		str_format(buf, sizeof(buf), "'%s' ClientId=%d has been Frozen.", pServ->ClientName(ClientId), Victim);
+		str_format(buf, sizeof(buf), "'%s' ClientId=%d has been frozen.", pServ->ClientName(ClientId), Victim);
 		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", buf);
 	}
 
