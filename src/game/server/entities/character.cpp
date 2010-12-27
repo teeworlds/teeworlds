@@ -978,7 +978,7 @@ void CCharacter::HandleTiles(int Index)
 	{
 		bool CanBegin = true;
 		if(g_Config.m_SvTeam == 1 && (Team() == TEAM_FLOCK || Teams()->Count(Team()) <= 1) ) {
-			GameServer()->SendChat(-1, GetPlayer()->GetCID(),"I already told you that you must find a friend");//need to make this better
+			GameServer()->SendChat(-1, GetPlayer()->GetCID(),"Please join a team before you start.");//need to make this better
 			CanBegin = false;
 		}
 		if(CanBegin) {
@@ -999,7 +999,7 @@ void CCharacter::HandleTiles(int Index)
 	}
 	else if(((m_TileIndex == TILE_DEEPFREEZE) || (m_TileFIndex == TILE_DEEPFREEZE)) && !m_Super)
 	{
-		Freeze(Server()->TickSpeed()*3, true);
+		Freeze(Server()->TickSpeed(), true);
 	}
 	else if((m_TileIndex == TILE_UNFREEZE) || (m_TileFIndex == TILE_UNFREEZE))
 	{
