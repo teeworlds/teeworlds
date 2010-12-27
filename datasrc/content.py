@@ -252,6 +252,7 @@ container.images.Add(image_lvlxstats)
 container.images.Add(image_speedup_arrow)
 container.images.Add(image_demobuttons)
 container.images.Add(image_fileicons)
+container.images.Add(Image("raceflag", "race_flag.png"))
 
 container.pickups.Add(Pickup("health"))
 container.pickups.Add(Pickup("armor"))

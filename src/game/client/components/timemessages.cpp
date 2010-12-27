@@ -157,12 +157,23 @@ void CTimeMessages::OnRender()
 		x -= TimeW;
 		TextRender()->Text(0, x, y, FontSize, aTime, -1);
 		
-		x -= 16.0f;
+		x -= 52.0f;
+		
+		// render flag
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_RACEFLAG].m_Id);
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, Blend);
+		IGraphics::CQuadItem QuadItem(x, y, 52, 52);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+		Graphics()->QuadsEnd();
+		
+		x -= 10.0f;
 		
 		// render player name
 		x -= PlayerNameW;
 		TextRender()->Text(0, x, y, FontSize, m_aTimemsgs[r].m_aPlayerName, -1);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f); // reset color
+		
 		x -= 28.0f;
 		
 		// render player tee
