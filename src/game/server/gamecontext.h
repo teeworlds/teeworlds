@@ -127,7 +127,6 @@ class CGameContext : public IGameServer
   static void ConToggleBroadcast(IConsole::IResult *pResult, void *pUserData, int ClientId);
   static void ConEyeEmote(IConsole::IResult *pResult, void *pUserData, int ClientId);
   static void ConWhisper(IConsole::IResult *pResult, void *pUserData, int ClientId);
-
 	CGameContext(int Resetting);
 	void Construct(int Resetting);
 

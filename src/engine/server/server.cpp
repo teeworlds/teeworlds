@@ -1524,7 +1524,6 @@ void CServer::ConStatus(IConsole::IResult *pResult, void *pUser, int ClientId)
 		}
 	}
 }
-
 void CServer::ConShutdown(IConsole::IResult *pResult, void *pUser, int ClientId)
 {
 	((CServer *)pUser)->m_RunServer = 0;
