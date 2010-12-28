@@ -120,7 +120,7 @@ MACRO_CONFIG_INT(SvPauseFrequency, sv_pause_frequency, 5, 0, 9999, CFGFLAG_SERVE
 
 MACRO_CONFIG_INT(SvEmotionalTees, sv_emotional_tees, 1, 0, 1, CFGFLAG_SERVER, "Whether eye change of tees is enabled or not", 3)
 MACRO_CONFIG_INT(SvEmoticonDelay, sv_emoticon_delay, 3, 0, 9999, CFGFLAG_SERVER, "The time in seconds between over-head emoticons", 3)
-MACRO_CONFIG_INT(SvSlashEmote, sv_emote_string, 0, 1, 1, CFGFLAG_SERVER, "weather people can do /emote or not", 3)
+MACRO_CONFIG_INT(SvSlashEmote, sv_slash_emote, 1, 0, 1, CFGFLAG_SERVER, "weather people can do /emote or not", 3)
 
 MACRO_CONFIG_INT(SvChatDelay, sv_chat_delay, 1, 0, 9999, CFGFLAG_SERVER, "The time in seconds between chat messages", 3)
 MACRO_CONFIG_INT(SvTeamChangeDelay, sv_team_change_delay, 3, 0, 9999, CFGFLAG_SERVER, "The time in seconds between team changes (spectator/in game)", 3)
