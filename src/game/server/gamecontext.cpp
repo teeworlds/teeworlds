@@ -1268,7 +1268,7 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData, int C
 	const char *pString = pResult->GetString(0);
 
 	// check for valid option
-	if(!pSelf->Console()->LineIsValid(pResult->GetString(0)) && pResult->GetString(0)[0] != '#')
+	if(!pSelf->Console()->LineIsValid(pResult->GetString(0)) && pResult->GetString(0)[0] != '#' && !g_Config.m_SvHeaderVote)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "skipped invalid option '%s'", pResult->GetString(0));
@@ -1354,11 +1354,10 @@ void CGameContext::OnConsoleInit()
 
 	Console()->Register("tune", "si", CFGFLAG_SERVER, ConTuneParam, this, "Modifies tune parameter s to value i", 4);
 	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConTuneReset, this, "Resets all tuning", 4);
-	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConTuneDump, this, "Shows all tuning options", 4);
+	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConTuneDump, this, "Shows all tuning options", 3);
 
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "Forces the current vote to result in r (Yes/No)", 3);
-
-    Console()->Register("whisper", "ir", CFGFLAG_SERVER, ConWhisper, this, "Whispers r to player i", 1);
+	Console()->Register("whisper", "ir", CFGFLAG_SERVER, ConWhisper, this, "Whispers too i with r", 1);
 	
 	#define CONSOLE_COMMAND(name, params, flags, callback, userdata, help, level) m_pConsole->Register(name, params, flags, callback, userdata, help, level);
 	#include "game/ddracecommands.h"
@@ -1442,7 +1441,7 @@ void CGameContext::OnInit(/*class IKernel *pKernel*/)
 			else if(Index == TILE_EHOOK)
 			{
 				g_Config.m_SvEndlessDrag = 1;
-				dbg_msg("MapTile","No Unlimited hook time");
+				dbg_msg("MapTile","Unlimited hook time");
 			}
 			else if(Index == TILE_NOHIT)
 			{

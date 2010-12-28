@@ -143,6 +143,7 @@ MACRO_CONFIG_STR(SvScoreFolder, sv_score_folder, 32, "records", CFGFLAG_SERVER, 
 MACRO_CONFIG_INT(SvContNinja, sv_contninja, 0, 0, 1, CFGFLAG_SERVER, "continuous ninja", 4)
 MACRO_CONFIG_INT(SvAutoShoot, sv_autoshoot, 0, 0, 1, CFGFLAG_SERVER, "Autoshoot", 4)
 MACRO_CONFIG_INT(SvSpecVote, sv_specvote, 1, 0, 1, CFGFLAG_SERVER, "Weather spec can vote or not", 4)
+MACRO_CONFIG_INT(SvHeaderVote, sv_header_vote, 1, 0, 1, CFGFLAG_SERVER, "Weather you can add invalid votes", 4)
 
 
 #if defined(CONF_SQL)

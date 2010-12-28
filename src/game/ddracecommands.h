@@ -6,7 +6,6 @@
 #define CONSOLE_COMMAND(name, params, flags, callback, userdata, help, level)
 #endif
 
-CONSOLE_COMMAND("clear_votes", "", CFGFLAG_SERVER, ConClearVotes, this, "Clears the vote list", 4)
 CONSOLE_COMMAND("kill_pl", "v", CFGFLAG_SERVER, ConKillPlayer, this, "Kills player v and announces the kill", 2)
 CONSOLE_COMMAND("logout", "v", CFGFLAG_SERVER, ConLogOut, this, "Logs player v out from the console", -1)
 CONSOLE_COMMAND("helper", "v", CFGFLAG_SERVER, ConSetlvl1, this, "Authenticates player v to the level of 1", 2)
