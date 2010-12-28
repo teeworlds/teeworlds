@@ -677,6 +677,8 @@ void CGameContext::OnClientEnter(int ClientId)
 	
 	SendChatTarget(ClientId, "DDRace Mod.");
 	SendChatTarget(ClientId, "Say /info for more infomation.");
+	if (g_Config.m_SvTeam == 1)
+	SendChatTarget(ClientId, "Please join a team or you wont be able too play");
 
 	if(g_Config.m_SvWelcome[0]!=0) SendChatTarget(ClientId,g_Config.m_SvWelcome);
 	//str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' team=%d", ClientId, Server()->ClientName(ClientId), m_apPlayers[ClientId]->GetTeam());
@@ -1001,7 +1003,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 		CNetMsg_Cl_SetTeam *pMsg = (CNetMsg_Cl_SetTeam *)pRawMsg;
 
 		if(p->GetTeam() == pMsg->m_Team || (g_Config.m_SvSpamprotection && p->m_Last_SetTeam && p->m_Last_SetTeam+Server()->TickSpeed() * g_Config.m_SvTeamChangeDelay > Server()->Tick()))
-			return;
+				return;
 
 		// Switch team on given client and kill/respawn him
 		if(m_pController->CanJoinTeam(pMsg->m_Team, ClientId))

@@ -787,10 +787,8 @@ void CGameContext::ConJoinTeam(IConsole::IResult *pResult, void *pUserData, int 
 	
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(g_Config.m_SvTeam == -1) {
-		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Admin disable teams");
+		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Teams disabled by admin");
 		return;
-	} else if (g_Config.m_SvTeam == 1) {
-		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You must join to any team and play with anybody or you will not play");
 	}
 	CPlayer *pPlayer = pSelf->m_apPlayers[ClientId];
 
@@ -885,7 +883,7 @@ void CGameContext::ConEyeEmote(IConsole::IResult *pResult, void *pUserData, int 
 	CCharacter *pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
 	
 
-if ( !g_Config.m_SvEmoteString )
+if ( !g_Config.m_SvSlashEmote )
 		{	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Eye emotes are disabled");
 		}
 
@@ -896,7 +894,7 @@ if ( !g_Config.m_SvEmoteString )
 	}
 	else 
 	{
-	  if (pChr && g_Config.m_SvEmoteString)
+	  if (pChr && g_Config.m_SvSlashEmote)
 		{
 			if (!str_comp(pResult->GetString(0), "angry"))
 			  pChr->m_EmoteType = EMOTE_ANGRY;
@@ -915,8 +913,6 @@ if ( !g_Config.m_SvEmoteString )
 				pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Unkown emote... Say /emote");
 			}
 
-
-				
 			int Duration = 1;
 			if (pResult->NumArguments() > 1)
 				Duration = pResult->GetInteger(1);

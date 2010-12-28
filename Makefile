@@ -3,3 +3,4 @@ clean:
 	
 build:
 	./bam server_release
+	./bam client_release

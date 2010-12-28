@@ -209,7 +209,6 @@ void CPlayer::SetTeam(int Team)
 	GameServer()->SendChat(-1, CGameContext::CHAT_ALL, aBuf); 
 	
 	KillCharacter();
-
 	m_Team = Team;
 	m_LastActionTick = Server()->Tick();
 	// we got to wait 0.5 secs before respawning

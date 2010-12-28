@@ -85,7 +85,6 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_Core.m_Pos = m_Pos;
 	m_Core.m_Id = GetPlayer()->GetCID();
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = &m_Core;
-	//dbg_msg("CCHaracter::Spawn", "ID %d Player %d m_Core %d", GetPlayer()->GetCID() ,GetPlayer() ,&m_Core);
 			
 	m_ReckoningTick = 0;
 	mem_zero(&m_SendCore, sizeof(m_SendCore));
@@ -108,7 +107,6 @@ void CCharacter::Destroy()
 	//dbg_msg("CCHaracter::Destroy", "ID %d Player %d m_Core %d", GetPlayer()->GetCID() ,GetPlayer() ,&m_Core);
 	m_Alive = false;
 	CEntity::Destroy();
-	m_DeepFreeze = false;
 }
 
 void CCharacter::SetWeapon(int W)
