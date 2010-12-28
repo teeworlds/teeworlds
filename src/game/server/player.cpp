@@ -140,7 +140,9 @@ void CPlayer::OnDisconnect()
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf);
 		if(m_Muted > 0)
 		{
-			((CServer *)Server())->BanAdd(((CServer *)Server())->GetClientIP(m_ClientID), ((m_Muted/Server()->TickSpeed())+1), "Mute evasion");
+			int Temp = m_Muted;
+			m_Muted = 0;
+			((CServer *)Server())->BanAdd(((CServer *)Server())->GetClientIP(m_ClientID), ((Temp/Server()->TickSpeed())+1), "Mute evasion");
 			return;
 		}
 	}
