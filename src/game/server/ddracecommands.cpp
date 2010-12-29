@@ -713,15 +713,12 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 
 	CPlayer *pPlayer = pSelf->m_apPlayers[ClientId];
 
-	CCharacter* pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
+	CCharacter *pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
 
-//FIX PAUSE ;D
-
-
-	if(g_Config.m_SvPauseable && !pChr->m_DeepFreeze)
+	if(g_Config.m_SvPauseable)
 	{
 		CCharacter* chr = pPlayer->GetCharacter();
-		if(!pPlayer->GetTeam() && chr && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos && !pPlayer->m_InfoSaved)
+		if(!pPlayer->GetTeam() && chr && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos && !pPlayer->m_InfoSaved && pChr->m_DeepFreeze == false)
 		{
 			if(pPlayer->m_Last_Pause + pSelf->Server()->TickSpeed() * g_Config.m_SvPauseFrequency <= pSelf->Server()->Tick()) {
 				pPlayer->SaveCharacter();
@@ -736,11 +733,11 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 		{
 			pPlayer->m_InfoSaved = false;
 			pPlayer->m_PauseInfo.m_Respawn = true;
-			//pPlayer->SetTeam(0);
+			pPlayer->SetTeam(0);
 			//pPlayer->LoadCharacter();//TODO:Check if this system Works
 		}
 		else if(chr)
-			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", (chr->m_aWeapons[WEAPON_NINJA].m_Got)?"You can't use /pause while you are a ninja":(!chr->IsGrounded())?"You can't use /pause while you are a in air":"You can't use /pause while you are moving");
+			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", (chr->m_aWeapons[WEAPON_NINJA].m_Got)?"You can't use pause while you are a ninja":(!chr->IsGrounded())?"You can't use pause while you are a in air":"You can't use pause while you are deepfrozen or moving.");
 		else
 			pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "No pause data saved.");
 	}
