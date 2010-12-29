@@ -103,7 +103,6 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 
 void CCharacter::Destroy()
 {
-	//dbg_msg("CCHaracter::Destroy", "ID %d Player %d m_Core %d", GetPlayer()->GetCID() ,GetPlayer() ,&m_Core);
 	m_Alive = false;
 	CEntity::Destroy();
 	m_DeepFreeze = false;
@@ -1427,7 +1426,6 @@ void CCharacter::Die(int Killer, int Weapon)
 	m_Alive = false;
 	MarkDestroy();
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
-	//dbg_msg("CCHaracter::Die", "ID %d Player %d m_Core %d", GetPlayer()->GetCID() ,GetPlayer() ,&m_Core);
 	GameServer()->CreateDeath(m_Pos, m_pPlayer->GetCID());
 
 	// we got to wait 0.5 secs before respawning
