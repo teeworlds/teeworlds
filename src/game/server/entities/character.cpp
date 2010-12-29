@@ -975,7 +975,7 @@ void CCharacter::HandleTiles(int Index)
 	{
 		bool CanBegin = true;
 		if(g_Config.m_SvTeam == 1 && (Team() == TEAM_FLOCK || Teams()->Count(Team()) <= 1) ) {
-			GameServer()->SendChat(-1, GetPlayer()->GetCID(),"Please join a team before you start.");//need to make this better
+			GameServer()->SendChat(-1, GetPlayer()->GetCID(),"Please join a team before you start.");
 			CanBegin = false;
 		}
 		if(CanBegin) {
@@ -1363,11 +1363,12 @@ bool CCharacter::UnFreeze()
 			m_ActiveWeapon = WEAPON_GUN;
 		m_FreezeTime = 0;
 		m_FreezeTick = 0;
-		if (m_ActiveWeapon==WEAPON_HAMMER) m_ReloadTimer = 0;
-		if(g_Config.m_SvAutoShoot)
+		if (m_ActiveWeapon==WEAPON_HAMMER)
 		m_ReloadTimer = 0;
-		return true;
-	}
+			if(g_Config.m_SvAutoShoot)
+				m_ReloadTimer = 0;
+			return true;
+		}
 	return false;
 }
 
