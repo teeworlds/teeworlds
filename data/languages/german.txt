@@ -76,6 +76,12 @@ As this is the first time you launch the game, please enter your nick name below
 Aspect ratio
 == Seitenverhältnis
 
+Automatically record demos
+== Automatisch Demos aufnehmen
+
+Automatically take game over screenshot
+== Automatisch am Ende einer Runde ein Bildschirmfoto erstellen
+
 Blue team
 == Blaues Team
 
@@ -447,6 +453,12 @@ Make external
 
 Map
 == Karte
+
+Max Screenshots
+== Maximale Bildschirmfotos
+
+Max demos
+== Maximale Demos
 
 Maximum ping:
 == Maximaler Ping:
@@ -931,37 +943,25 @@ ZO
 [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
 == [Strg+P] Schaltet Testrahmen um. Diese Rahmen zeigen, wie viel der Spieler höchstens sehen kann.
 
-##### needs translation #####
-
-Automatically record demos
-== 
-
-Automatically take game over screenshot
-== 
-
-Max Screenshots
-== 
-
-Max demos
-== 
-
 left
-== 
+== noch
 
 minute
-== 
+== Minute
 
 minutes
-== 
+== Minuten
 
 no limit
-== 
+== Keine Begrenzung
 
 second
-== 
+== Sekunde
 
 seconds
-== 
+== Sekunden
+
+##### needs translation #####
 
 ##### old translations #####
 
