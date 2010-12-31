@@ -451,6 +451,7 @@ void CGameContext::ConFreeze(IConsole::IResult *pResult, void *pUserData, int Cl
 void CGameContext::ConUnFreeze(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
+	CCharacter *pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
 	int Victim = pResult->GetVictim();
 
 	char buf[128];
@@ -458,6 +459,7 @@ void CGameContext::ConUnFreeze(IConsole::IResult *pResult, void *pUserData, int 
 	if(!chr)
 		return;
 	chr->m_FreezeTime=2;
+	pChr->m_DeepFreeze = false;
 	chr->m_pPlayer->m_RconFreeze = false;
 	CServer* pServ = (CServer*)pSelf->Server();
 	str_format(buf, sizeof(buf), "'%s' ClientId=%d has been defrosted.", pServ->ClientName(ClientId), Victim);
@@ -735,7 +737,7 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 		{
 			pPlayer->m_InfoSaved = false;
 			pPlayer->m_PauseInfo.m_Respawn = true;
-			pPlayer->SetTeam(0);
+			//pPlayer->SetTeam(0);
 			//pPlayer->LoadCharacter();//TODO:Check if this system Works
 		}
 		else if(chr)
