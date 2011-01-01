@@ -719,8 +719,6 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 
 	CCharacter *pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
 	
-
-	
 	if(g_Config.m_SvPauseable)
 	{
 		CCharacter* chr = pPlayer->GetCharacter();
@@ -741,7 +739,7 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 		{
 			pPlayer->m_InfoSaved = false;
 			pPlayer->m_PauseInfo.m_Respawn = true;
-			pPlayer->SetTeam('%d' , chr->m_TeamBeforePause = chr->Team());
+			pPlayer->SetTeam('chr->m_TeamBeforePause = chr->Team()');
 			//pPlayer->LoadCharacter();//TODO:Check if this system Works
 		}
 		else if(chr)
