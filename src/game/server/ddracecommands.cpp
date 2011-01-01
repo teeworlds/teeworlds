@@ -718,7 +718,9 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 	CPlayer *pPlayer = pSelf->m_apPlayers[ClientId];
 
 	CCharacter *pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
+	
 
+	
 	if(g_Config.m_SvPauseable)
 	{
 		CCharacter* chr = pPlayer->GetCharacter();
@@ -726,6 +728,7 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 		{
 			if(pPlayer->m_Last_Pause + pSelf->Server()->TickSpeed() * g_Config.m_SvPauseFrequency <= pSelf->Server()->Tick()) {
 				chr->m_TeamBeforePause = chr->Team();
+				dbg_msg("Teamb4pause","%d",chr->m_TeamBeforePause = chr->Team());
 				pPlayer->SaveCharacter();
 				pPlayer->SetTeam(-1);
 				pPlayer->m_InfoSaved = true;
@@ -738,8 +741,7 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 		{
 			pPlayer->m_InfoSaved = false;
 			pPlayer->m_PauseInfo.m_Respawn = true;
-			//pPlayer->SetTeam(0);
-			pPlayer->SetTeam(chr->m_TeamBeforePause);
+			pPlayer->SetTeam('%d' , chr->m_TeamBeforePause = chr->Team());
 			//pPlayer->LoadCharacter();//TODO:Check if this system Works
 		}
 		else if(chr)
