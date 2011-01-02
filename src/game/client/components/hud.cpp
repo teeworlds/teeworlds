@@ -1129,12 +1129,11 @@ void CHud::OnMessage(int MsgType, void *pRawMsg)
 	{
 		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
 		if(pMsg->m_Victim == m_pClient->m_Snap.m_LocalCid)
-	{
+		{
 			m_CheckpointTick = 0;
 			m_RaceTime = 0;
+			m_RaceState = RACE_NONE;
 		}
-		
-		m_RaceState = RACE_NONE;
 	}
 	else if(MsgType == NETMSGTYPE_SV_RECORD)
 	{
