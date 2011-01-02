@@ -110,7 +110,7 @@ void CTimeMessages::OnRender()
 		
 		// time
 		char aTime[32];
-		str_format(aTime, sizeof(aTime), "%02d:%05.2f", m_aTimemsgs[r].m_Minutes, m_aTimemsgs[r].m_Seconds);
+		str_format(aTime, sizeof(aTime), "%02d:%06.3f", m_aTimemsgs[r].m_Minutes, m_aTimemsgs[r].m_Seconds);
 		float TimeW = TextRender()->TextWidth(0, FontSize, aTime, -1);
 		
 		float x = StartX;
@@ -121,7 +121,7 @@ void CTimeMessages::OnRender()
 		if(m_aTimemsgs[r].m_LocalDiff && !m_aTimemsgs[r].m_ServerDiff)
 		{
 			char aDiff[32];
-			str_format(aDiff, sizeof(aDiff), "(%+.2f)", m_aTimemsgs[r].m_LocalDiff);
+			str_format(aDiff, sizeof(aDiff), "(%+5.3f)", m_aTimemsgs[r].m_LocalDiff);
 			float DiffW = TextRender()->TextWidth(0, FontSize, aDiff, -1);
 			
 			x -= DiffW;
@@ -140,7 +140,7 @@ void CTimeMessages::OnRender()
 		if(m_aTimemsgs[r].m_ServerDiff)
 		{
 			char aDiff[32];
-			str_format(aDiff, sizeof(aDiff), "(%+.2f)", m_aTimemsgs[r].m_ServerDiff);
+			str_format(aDiff, sizeof(aDiff), "(%+5.3f)", m_aTimemsgs[r].m_ServerDiff);
 			float DiffW = TextRender()->TextWidth(0, FontSize, aDiff, -1);
 			
 			x -= DiffW;

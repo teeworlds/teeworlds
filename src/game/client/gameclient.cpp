@@ -1,5 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <stdio.h>
+
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/sound.h>
@@ -838,7 +840,52 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 	else if(MsgId == NETMSGTYPE_SV_PLAYERTIME)
 	{
 		CNetMsg_Sv_PlayerTime *pMsg = (CNetMsg_Sv_PlayerTime *)pRawMsg;
-		m_aClients[pMsg->m_Cid].m_Score = (float)pMsg->m_Time/100;
+		m_aClients[pMsg->m_Cid].m_Score = (float)pMsg->m_Time/1000.0f;
+	}
+	else if(MsgId == NETMSGTYPE_SV_CHAT)
+	{
+		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
+		if(pMsg->m_Cid == -1 && str_find(pMsg->m_pMessage, " finished in: "))
+		{
+			const char* pMessage = pMsg->m_pMessage;
+			
+			int Num = 0;
+			while(str_comp_num(pMessage, " finished in: ", 14))
+			{
+				pMessage++;
+				Num++;
+				if(!pMessage[0])
+					return;
+			}
+			
+			int Minutes = 0;
+			float Seconds = 0;
+			
+			// store the name
+			char Playername[MAX_NAME_LENGTH];
+			str_copy(Playername, pMsg->m_pMessage, Num+1);
+			
+			// get time
+			if(sscanf(pMessage, " finished in: %d minute(s) %f", &Minutes, &Seconds) == 2)
+			{
+				int PlayerID = -1;
+				for(int i = 0; i < MAX_CLIENTS; i++)
+					if(!str_comp(Playername, m_aClients[i].m_aName))
+					{
+						PlayerID = i;
+						break;
+					}
+				
+				// some proof
+				if(PlayerID < 0)
+					return;
+				
+				float Time = (float)(Minutes*60) + Seconds;
+				
+				if(m_aClients[PlayerID].m_Score == 0 || Time < m_aClients[PlayerID].m_Score)
+					m_aClients[PlayerID].m_Score = Time;
+			}
+		}
 	}
 	else if(MsgId == NETMSGTYPE_SV_LOGGEDIN)
 	{	

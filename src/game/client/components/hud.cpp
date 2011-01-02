@@ -464,6 +464,7 @@ void CHud::RenderTime()
 		return;
 	}
 		
+	// TODO: fix this
 	if(m_RaceTime)
 	{
 		if(!m_FinishTime && m_pClient->m_pRaceDemo->GetRaceState() == CRaceDemo::RACE_FINISHED)
@@ -521,6 +522,7 @@ void CHud::RenderRecord()
 	if(!m_pClient->m_IsRace)
 		return;
 		
+	// TODO: fix this
 	if(m_Record && g_Config.m_ClShowServerRecord && g_Config.m_ClShowRecords)
 	{
 		char aBuf[64];
