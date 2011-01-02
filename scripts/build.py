@@ -234,7 +234,7 @@ if 1:
 if 1:
 	print("*** making release ***")
 	os.chdir(src_dir_teeworlds)
-	command = '"%smake_release.py" %s %s' % (root_dir, version_teeworlds, platform)
+	command = '"%s/%s/scripts/make_release.py" %s %s' % (work_dir, src_dir_teeworlds, version_teeworlds, platform)
 	if os.name != "nt":
 		command = "python %s" % command
 	if os.system(command) != 0:
