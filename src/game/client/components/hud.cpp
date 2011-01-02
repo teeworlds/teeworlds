@@ -41,8 +41,8 @@ void CHud::OnReset()
 	m_CheckpointDiff = 0;
 	m_RaceTime = 0;
 	m_Record = 0;
-	m_LocalRecord = -1.0f;
 	m_LastReceivedTimeTick = -1;
+	m_RaceState = RACE_NONE;
 	
 	// lvlx
 	m_GotRequest = false;
@@ -457,26 +457,16 @@ void CHud::RenderTime()
 	if(!m_pClient->m_IsRace)
 		return;
 	
-	// check racestate
-	if(m_pClient->m_pRaceDemo->GetRaceState() != CRaceDemo::RACE_FINISHED && m_LastReceivedTimeTick+Client()->GameTickSpeed()*2 < Client()->GameTick())
+	char aBuf[64];
+	if(m_FinishTime && m_RaceState == RACE_FINISHED)
 	{
-		m_pClient->m_pRaceDemo->m_RaceState = CRaceDemo::RACE_NONE;
-		return;
+		str_format(aBuf, sizeof(aBuf), "Finish time: %02d:%06.3f", (int)m_FinishTime/60, m_FinishTime-((int)m_FinishTime/60*60));
+		TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,aBuf,-1)/2, 20, 12, aBuf, -1);
 	}
 		
-	// TODO: fix this
 	if(m_RaceTime)
 	{
-		if(!m_FinishTime && m_pClient->m_pRaceDemo->GetRaceState() == CRaceDemo::RACE_FINISHED)
-			m_FinishTime = m_pClient->m_pRaceDemo->GetFinishTime();
-
-		char aBuf[64];
-		if(m_FinishTime)
-		{
-			str_format(aBuf, sizeof(aBuf), "Finish time: %02d:%05.2f", (int)m_FinishTime/60, m_FinishTime-((int)m_FinishTime/60*60));
-			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,aBuf,-1)/2, 20, 12, aBuf, -1);
-		}
-		else if(m_pClient->m_pRaceDemo->GetRaceState() == CRaceDemo::RACE_STARTED)
+		if(m_RaceState == RACE_STARTED)
 		{
 			str_format(aBuf, sizeof(aBuf), "%02d:%02d.%d", m_RaceTime/60, m_RaceTime%60, m_RaceTick/10);
 			TextRender()->Text(0, 150*Graphics()->ScreenAspect()-TextRender()->TextWidth(0,12,"00:00.0",-1)/2, 20, 12, aBuf, -1); // use fixed value for text width so its not shaky
@@ -528,20 +518,8 @@ void CHud::RenderRecord()
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "Server best:");
 		TextRender()->Text(0, 5, 40, 6, aBuf, -1);
-		str_format(aBuf, sizeof(aBuf), "%02d:%05.2f", (int)m_Record/60, m_Record-((int)m_Record/60*60));
+		str_format(aBuf, sizeof(aBuf), "%02d:%06.3f", (int)m_Record/60, m_Record-((int)m_Record/60*60));
 		TextRender()->Text(0, 53, 40, 6, aBuf, -1);
-	}
-		
-	if(m_pClient->m_pRaceDemo->GetFinishTime() && (m_LocalRecord == -1 || m_LocalRecord > m_pClient->m_pRaceDemo->GetFinishTime()))
-		m_LocalRecord = m_pClient->m_pRaceDemo->GetFinishTime();
-	
-	if(m_LocalRecord > 0 && g_Config.m_ClShowLocalRecord && g_Config.m_ClShowRecords)
-	{				
-		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "Personal best:");
-		TextRender()->Text(0, 5, 47, 6, aBuf, -1);
-		str_format(aBuf, sizeof(aBuf), "%02d:%05.2f", (int)m_LocalRecord/60, m_LocalRecord-((int)m_LocalRecord/60*60));
-		TextRender()->Text(0, 53, 47, 6, aBuf, -1);
 	}
 }
 
@@ -1132,7 +1110,7 @@ void CHud::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_RACETIME)
 	{
 		// activate racestate just in case
-		m_pClient->m_pRaceDemo->m_RaceState = CRaceDemo::RACE_STARTED;
+		m_RaceState = RACE_STARTED;
 			
 		CNetMsg_Sv_RaceTime *pMsg = (CNetMsg_Sv_RaceTime *)pRawMsg;
 		m_RaceTime = pMsg->m_Time;
@@ -1140,9 +1118,7 @@ void CHud::OnMessage(int MsgType, void *pRawMsg)
 		
 		m_LastReceivedTimeTick = Client()->GameTick();
 		
-		if(m_FinishTime)
-			m_FinishTime = 0;
-
+		
 		if(pMsg->m_Check)
 		{
 			m_CheckpointDiff = (float)pMsg->m_Check/100;
@@ -1157,11 +1133,45 @@ void CHud::OnMessage(int MsgType, void *pRawMsg)
 			m_CheckpointTick = 0;
 			m_RaceTime = 0;
 		}
+		
+		m_RaceState = RACE_NONE;
 	}
 	else if(MsgType == NETMSGTYPE_SV_RECORD)
 	{
 		CNetMsg_Sv_Record *pMsg = (CNetMsg_Sv_Record *)pRawMsg;
-		m_Record = (float)pMsg->m_Time/100;
+		m_Record = (float)pMsg->m_Time/1000.f;
+	}
+	else if(MsgType == NETMSGTYPE_SV_CHAT)
+	{
+		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
+		if(pMsg->m_Cid == -1 && str_find(pMsg->m_pMessage, " finished in: "))
+		{
+			const char* pMessage = pMsg->m_pMessage;
+			
+			int Num = 0;
+			while(str_comp_num(pMessage, " finished in: ", 14))
+			{
+				pMessage++;
+				Num++;
+				if(!pMessage[0])
+					return;
+			}
+			
+			// store the name
+			char PlayerName[MAX_NAME_LENGTH];
+			str_copy(PlayerName, pMsg->m_pMessage, Num+1);
+			
+			if(!str_comp(PlayerName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalCid].m_aName))
+			{
+				int Minutes = 0;
+				float Seconds = 0.0f;
+				if(sscanf(pMessage, " finished in: %d minute(s) %f", &Minutes, &Seconds) == 2)
+				{
+					m_RaceState = RACE_FINISHED;
+					m_FinishTime = (float)(Minutes*60) + Seconds;
+				}
+			}
+		}
 	}
 	else if(MsgType == NETMSGTYPE_SV_COOPREQUEST)
 	{

@@ -35,10 +35,17 @@ class CHud : public CComponent
 	int m_LastReceivedTimeTick;
 	int m_CheckpointTick;
 	int m_RaceTick;
-	float m_FinishTime;
 	float m_Record;
-	float m_LocalRecord;
+	float m_FinishTime;
+	int m_RaceState;
 
+	enum
+	{
+		RACE_NONE = 0,
+		RACE_STARTED,
+		RACE_FINISHED,
+	};
+	
 	void RenderCursor();
 	
 	void RenderFps();
