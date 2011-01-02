@@ -983,12 +983,9 @@ void CCharacter::HandleTiles(int Index)
 		if((lastup + (Server()->TickSpeed() >> 0)) < Server()->Tick() * 0.5 && g_Config.m_SvTeam == 1 && (Team() == TEAM_FLOCK || Teams()->Count(Team()) <= 1)) {
 			GameServer()->SendChat(-1, GetPlayer()->GetCID(),"Please join a team before you start.");
 				lastup = Server()->Tick();
+				if(g_Config.m_SvTeam == 1 && (Team() == TEAM_FLOCK || Teams()->Count(Team()) <= 1))
+					CanBegin = false;
 		}
-		
-		if(g_Config.m_SvTeam == 1 && (Team() == TEAM_FLOCK || Teams()->Count(Team()) <= 1))
-			{
-			CanBegin = false;
-			}
 		if(CanBegin) {
 			Controller->m_Teams.OnCharacterStart(m_pPlayer->GetCID());
 			m_CpActive = -2;
