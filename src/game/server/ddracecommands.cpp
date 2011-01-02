@@ -718,13 +718,14 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 	CPlayer *pPlayer = pSelf->m_apPlayers[ClientId];
 
 	CCharacter *pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
-
+	
 	if(g_Config.m_SvPauseable)
 	{
 		CCharacter* chr = pPlayer->GetCharacter();
 		if(!pPlayer->GetTeam() && chr && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos && !pPlayer->m_InfoSaved && pChr->m_DeepFreeze == false)
 		{
 			if(pPlayer->m_Last_Pause + pSelf->Server()->TickSpeed() * g_Config.m_SvPauseFrequency <= pSelf->Server()->Tick()) {
+				chr->m_TeamBeforePause = chr->Team();
 				pPlayer->SaveCharacter();
 				pPlayer->SetTeam(-1);
 				pPlayer->m_InfoSaved = true;
@@ -737,7 +738,7 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 		{
 			pPlayer->m_InfoSaved = false;
 			pPlayer->m_PauseInfo.m_Respawn = true;
-			//pPlayer->SetTeam(0);
+			pPlayer->SetTeam('%s');
 			//pPlayer->LoadCharacter();//TODO:Check if this system Works
 		}
 		else if(chr)

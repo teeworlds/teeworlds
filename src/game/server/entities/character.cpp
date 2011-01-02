@@ -64,8 +64,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_PlayerState = PLAYERSTATE_UNKNOWN;
 	m_EmoteStop = -1;
 	m_LastAction = -1;
-	m_ActiveWeapon = WEAPON_GUN;
-	m_LastWeapon = WEAPON_HAMMER;
+	m_ActiveWeapon = WEAPON_HAMMER;
+	m_LastWeapon = WEAPON_GUN;
 	m_QueuedWeapon = -1;
 	m_pPlayer = pPlayer;
 	m_Pos = Pos;
@@ -79,6 +79,7 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 	m_Fly = true;
 	m_LastBroadcast = 0;
 	m_TeamBeforeSuper = 0;
+	m_TeamBeforePause = 0;
 	CGameControllerDDRace* Controller = (CGameControllerDDRace*)GameServer()->m_pController;
 	m_Core.Init(&GameServer()->m_World.m_Core, GameServer()->Collision(), &Controller->m_Teams.m_Core);
 	m_Core.m_Pos = m_Pos;
@@ -971,12 +972,19 @@ void CCharacter::HandleTiles(int Index)
 			Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, m_pPlayer->GetCID());
 		}
 	}
+	if(g_Config.m_SvTeam == 1 && (Team() == TEAM_FLOCK || Teams()->Count(Team()) <= 1) && (lastup + (Server()->TickSpeed() >> 0)) < Server()->Tick() * 0.25)
+	{	GameServer()->SendChat(-1, GetPlayer()->GetCID(),"Please join a team before you start.");
+	lastup = Server()->Tick();
+	}
+
 	if(((m_TileIndex == TILE_BEGIN) || (m_TileFIndex == TILE_BEGIN) || FTile1 == TILE_BEGIN || FTile2 == TILE_BEGIN || FTile3 == TILE_BEGIN || FTile4 == TILE_BEGIN || Tile1 == TILE_BEGIN || Tile2 == TILE_BEGIN || Tile3 == TILE_BEGIN || Tile4 == TILE_BEGIN) && (m_DDRaceState == DDRACE_NONE || m_DDRaceState == DDRACE_FINISHED || (m_DDRaceState == DDRACE_STARTED && !Team())))
 	{
 		bool CanBegin = true;
-		if(g_Config.m_SvTeam == 1 && (Team() == TEAM_FLOCK || Teams()->Count(Team()) <= 1) ) {
+		if((lastup + (Server()->TickSpeed() >> 0)) < Server()->Tick() * 0.5 && g_Config.m_SvTeam == 1 && (Team() == TEAM_FLOCK || Teams()->Count(Team()) <= 1)) {
 			GameServer()->SendChat(-1, GetPlayer()->GetCID(),"Please join a team before you start.");
-			CanBegin = false;
+				lastup = Server()->Tick();
+				if(g_Config.m_SvTeam == 1 && (Team() == TEAM_FLOCK || Teams()->Count(Team()) <= 1))
+					CanBegin = false;
 		}
 		if(CanBegin) {
 			Controller->m_Teams.OnCharacterStart(m_pPlayer->GetCID());
@@ -1005,7 +1013,7 @@ void CCharacter::HandleTiles(int Index)
 	else if((m_TileIndex == TILE_DEEPUNFREEZE) || (m_TileFIndex == TILE_DEEPUNFREEZE))
 	{
 		m_DeepFreeze = false;
-		UnFreeze();
+		/*UnFreeze();*/ // not sure about this... -.-"
 	}
 	if(((m_TileIndex == TILE_STOP && m_TileFlags == ROTATION_270) || (m_TileIndexL == TILE_STOP && m_TileFlagsL == ROTATION_270) || (m_TileIndexL == TILE_STOPS && (m_TileFlagsL == ROTATION_90 || m_TileFlagsL ==ROTATION_270)) || (m_TileIndexL == TILE_STOPA) || (m_TileFIndex == TILE_STOP && m_TileFFlags == ROTATION_270) || (m_TileFIndexL == TILE_STOP && m_TileFFlagsL == ROTATION_270) || (m_TileFIndexL == TILE_STOPS && (m_TileFFlagsL == ROTATION_90 || m_TileFFlagsL == ROTATION_270)) || (m_TileFIndexL == TILE_STOPA) || (m_TileSIndex == TILE_STOP && m_TileSFlags == ROTATION_270) || (m_TileSIndexL == TILE_STOP && m_TileSFlagsL == ROTATION_270) || (m_TileSIndexL == TILE_STOPS && (m_TileSFlagsL == ROTATION_90 || m_TileSFlagsL == ROTATION_270)) || (m_TileSIndexL == TILE_STOPA)) && m_Core.m_Vel.x > 0)
 	{
@@ -1422,8 +1430,9 @@ void CCharacter::Die(int Killer, int Weapon)
 	GameServer()->CreateSound(m_Pos, SOUND_PLAYER_DIE);
 
 	// this is for auto respawn after 3 secs
-	m_pPlayer->m_DieTick = Server()->Tick();
-
+	if(!g_Config.m_SvAutoKill)
+	{ m_pPlayer->m_DieTick = Server()->Tick();
+	}
 	m_Alive = false;
 	MarkDestroy();
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
@@ -1526,9 +1535,9 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 		}
 	}*///Removed you can set your emote via /emoteEMOTENAME
 	//set the attacked face to pain
-	m_EmoteType = EMOTE_PAIN;
-	m_EmoteStop = Server()->Tick() + 500 * Server()->TickSpeed() / 1000;
-
+	/*m_EmoteType = EMOTE_PAIN;
+	m_EmoteStop = Server()->Tick() + 500 * Server()->TickSpeed() / 1000;*///For noother. 
+	
 	return true;
 }
 
