@@ -123,8 +123,8 @@ public:
 	//DDRace
 	int m_FreezeTime;
 	int m_FreezeTick;
-	bool m_DeepFreeze;	
-	
+	bool m_DeepFreeze;
+	int lastup;
 	int m_Doored;
 
 	vec2 m_OldPos;
