@@ -1345,11 +1345,6 @@ void CMenus::RenderSettingsRace(CUIRect MainView)
 		Button.VSplitLeft(15.0f, 0, &Button);
 		if(DoButton_CheckBox(&g_Config.m_ClShowServerRecord, Localize("Show best time on server"), g_Config.m_ClShowServerRecord, &Button))
 			g_Config.m_ClShowServerRecord ^= 1;
-			
-		LeftView.HSplitTop(20.0f, &Button, &LeftView);
-		Button.VSplitLeft(15.0f, 0, &Button);
-		if(DoButton_CheckBox(&g_Config.m_ClShowLocalRecord, Localize("Show personal best time"), g_Config.m_ClShowLocalRecord, &Button))
-			g_Config.m_ClShowLocalRecord ^= 1;
 	}
 	else
 		LeftView.HSplitTop(40.0f, &Button, &LeftView);

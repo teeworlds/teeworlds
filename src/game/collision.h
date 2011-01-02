@@ -36,7 +36,6 @@ public:
 	bool TestBox(vec2 Pos, vec2 Size);
 	
 	// race
-	int GetIndex(vec2 Pos);
 	int GetIndex(vec2 PrevPos, vec2 Pos);
 	int GetCollisionRace(int Index);
 };
