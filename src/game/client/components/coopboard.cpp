@@ -61,7 +61,7 @@ void CCoopboard::RenderCoopboard()
 		if(Item.m_Type == NETOBJTYPE_PLAYERINFO)
 		{
 			const CNetObj_PlayerInfo *pInfo = (const CNetObj_PlayerInfo *)pData;
-			if(pInfo->m_Team == -1 && pInfo->m_ClientId != m_pClient->m_Snap.m_LocalCid && pInfo->m_ClientId != m_Partner && !str_find(m_pClient->m_aClients[pInfo->m_ClientId].m_aName, "[NOT LOGGED IN]"))
+			if(pInfo->m_Team == TEAM_SPECTATORS && pInfo->m_ClientId != m_pClient->m_Snap.m_LocalCid && pInfo->m_ClientId != m_Partner && !str_find(m_pClient->m_aClients[pInfo->m_ClientId].m_aName, "[NOT LOGGED IN]"))
 			{
 				paPlayers[NumPlayers] = pInfo;
 				NumPlayers++;

@@ -331,7 +331,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 					str_copy(aName, pLine, Num+1);
 				
 				if(m_pClient->m_Snap.m_pLocalInfo)
-					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' entered and joined the %s team", aName, (g_Config.m_TcColoredTeesMethod && m_pClient->m_Snap.m_pLocalInfo->m_Team == 1)?CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2):CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1));
+					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' entered and joined the %s team", aName, (g_Config.m_TcColoredTeesMethod && m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE)?CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2):CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1));
 				else
 					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "%s entered and joined the %s team", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1));
 			}
@@ -361,7 +361,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 					str_copy(aName, pLine, Num+1);
 				
 				if(m_pClient->m_Snap.m_pLocalInfo)
-					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' entered and joined the %s team", aName, (g_Config.m_TcColoredTeesMethod && m_pClient->m_Snap.m_pLocalInfo->m_Team == 1)?CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1):CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2));
+					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' entered and joined the %s team", aName, (g_Config.m_TcColoredTeesMethod && m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE)?CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1):CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2));
 				else
 					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "%s entered and joined the %s team", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2));
 			}
@@ -391,7 +391,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 					str_copy(aName, pLine, Num+1);
 				
 				if(m_pClient->m_Snap.m_pLocalInfo)
-					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' joined the %s team", aName, (g_Config.m_TcColoredTeesMethod && m_pClient->m_Snap.m_pLocalInfo->m_Team == 1)?CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2):CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1));
+					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' joined the %s team", aName, (g_Config.m_TcColoredTeesMethod && m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE)?CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2):CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1));
 				else
 					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "%s joined the %s team", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1));
 			}
@@ -421,7 +421,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 					str_copy(aName, pLine, Num+1);
 				
 				if(m_pClient->m_Snap.m_pLocalInfo)
-					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' joined the %s team", aName, (g_Config.m_TcColoredTeesMethod && m_pClient->m_Snap.m_pLocalInfo->m_Team == 1)?CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1):CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2));
+					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "'%s' joined the %s team", aName, (g_Config.m_TcColoredTeesMethod && m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE)?CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1):CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2));
 				else
 					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "%s joined the %s team", aName, CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2));
 			}
@@ -431,7 +431,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 					pLine++;
 				
 				if(m_pClient->m_Snap.m_pLocalInfo)
-					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "The %s %s", (g_Config.m_TcColoredTeesMethod && m_pClient->m_Snap.m_pLocalInfo->m_Team == 1)?CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2):CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1), pLine);
+					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "The %s %s", (g_Config.m_TcColoredTeesMethod && m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE)?CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2):CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1), pLine);
 				else
 					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "The %s %s", CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1), pLine);
 			}
@@ -441,7 +441,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 					pLine++;
 				
 				if(m_pClient->m_Snap.m_pLocalInfo)
-					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "The %s %s", (g_Config.m_TcColoredTeesMethod && m_pClient->m_Snap.m_pLocalInfo->m_Team == 1)?CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1):CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2), pLine);
+					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "The %s %s", (g_Config.m_TcColoredTeesMethod && m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_BLUE)?CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam1):CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2), pLine);
 				else
 					str_format(m_aLines[m_CurrentLine].m_aText, sizeof(m_aLines[m_CurrentLine].m_aText), "The %s %s", CTeecompUtils::TeamColorToName(g_Config.m_TcColoredTeesTeam2), pLine);
 			}
@@ -458,7 +458,7 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 			else
 			{
 				m_aLines[m_CurrentLine].m_ContainsName = (int)m_ContainsName;
-				if(m_pClient->m_aClients[ClientId].m_Team == -1)
+				if(m_pClient->m_aClients[ClientId].m_Team == TEAM_SPECTATORS)
 					m_aLines[m_CurrentLine].m_NameColor = -1;
 				else
 					m_aLines[m_CurrentLine].m_NameColor = -2;

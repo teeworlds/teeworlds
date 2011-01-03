@@ -602,7 +602,7 @@ void CGameClient::UpdateLocalCharacterPos()
 		m_Freeview = true;
 	if(m_Snap.m_Spectate && !m_Freeview)
 	{
-		if(!m_Snap.m_aCharacters[m_SpectateCid].m_Active || m_aClients[m_SpectateCid].m_Team == -1)
+		if(!m_Snap.m_aCharacters[m_SpectateCid].m_Active || m_aClients[m_SpectateCid].m_Team == TEAM_SPECTATORS)
 		{
 			FindNextSpectableCid();
 			return;
@@ -615,7 +615,7 @@ void CGameClient::UpdateLocalCharacterPos()
 
 void CGameClient::FindNextSpectableCid()
 {
-	if(!m_Freeview && (m_SpectateCid != m_KillerCid) && m_Snap.m_aCharacters[m_KillerCid].m_Active && !(m_aClients[m_KillerCid].m_Team == -1))
+	if(!m_Freeview && (m_SpectateCid != m_KillerCid) && m_Snap.m_aCharacters[m_KillerCid].m_Active && !(m_aClients[m_KillerCid].m_Team == TEAM_SPECTATORS))
 	{
 		m_SpectateCid = m_KillerCid;
 		return;
@@ -623,7 +623,7 @@ void CGameClient::FindNextSpectableCid()
 	int Next = m_SpectateCid+1;
 	Next %= MAX_CLIENTS;
 	int Prev = Next;
-	while(!m_Snap.m_aCharacters[Next].m_Active || m_aClients[Next].m_Team == -1)
+	while(!m_Snap.m_aCharacters[Next].m_Active || m_aClients[Next].m_Team == TEAM_SPECTATORS)
 	{
 		Next++;
 		Next %= MAX_CLIENTS;
@@ -1061,7 +1061,7 @@ void CGameClient::OnNewSnapshot()
 
 	// go trough all the items in the snapshot and gather the info we want
 	{
-		m_Snap.m_aTeamSize[0] = m_Snap.m_aTeamSize[1] = 0;
+		m_Snap.m_aTeamSize[TEAM_RED] = m_Snap.m_aTeamSize[TEAM_BLUE] = 0;
 		
 		// TeeComp
 		for(int i = 0; i < MAX_CLIENTS; i++)
@@ -1128,12 +1128,12 @@ void CGameClient::OnNewSnapshot()
 					m_Snap.m_LocalCid = Item.m_Id;
 					m_Snap.m_pLocalInfo = pInfo;
 					
-					if (pInfo->m_Team == -1)
+					if (pInfo->m_Team == TEAM_SPECTATORS)
 						m_Snap.m_Spectate = true;
 				}
 				
 				// calculate team-balance
-				if(pInfo->m_Team != -1)
+				if(pInfo->m_Team != TEAM_SPECTATORS)
 				{
 					m_Snap.m_aTeamSize[pInfo->m_Team]++;
 					m_aStats[pInfo->m_ClientId].m_Active = true;
@@ -1514,7 +1514,7 @@ void CGameClient::CClientData::UpdateRenderInfo(int Cid)
 			LocalTeam = g_GameClient.m_Snap.m_pLocalInfo->m_Team;
 		else // local_info null when joining a server
 			LocalTeam = 0;
-		if(m_Team != -1)
+		if(m_Team != TEAM_SPECTATORS)
 		{			
 			const char* pForcedSkin;
 			int Sid = m_SkinId;

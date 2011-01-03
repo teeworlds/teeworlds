@@ -177,7 +177,7 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent)
 		Graphics()->SetColor(Col.r, Col.g, Col.b, 1.0f);
 	}
 
-	if(pCurrent->m_Team == 0) // red team
+	if(pCurrent->m_Team == TEAM_RED)
 		RenderTools()->SelectSprite(SPRITE_FLAG_RED);
 	else
 		RenderTools()->SelectSprite(SPRITE_FLAG_BLUE);
