@@ -748,11 +748,11 @@ void CCharacter::Tick()
 
 	if(m_FreezeTime > 0 || m_FreezeTime == -1)
 	{
-		if (/*!m_DeepFreeze && */(m_FreezeTime % Server()->TickSpeed() == 0 || m_FreezeTime == -1))
+		if (!m_DeepFreeze && (m_FreezeTime % Server()->TickSpeed() == 0 || m_FreezeTime == -1))
 		{
 			GameServer()->CreateDamageInd(m_Pos, 0, m_FreezeTime / Server()->TickSpeed());
 		}
-		if(m_FreezeTime != -1/* && !m_DeepFreeze*/)
+		if(m_FreezeTime != -1 && !m_DeepFreeze)
 			m_FreezeTime--;
 		else
 			m_Ninja.m_ActivationTick = Server()->Tick();
@@ -1001,7 +1001,8 @@ void CCharacter::HandleTiles(int Index)
 	}
 	else if(((m_TileIndex == TILE_DEEPFREEZE) || (m_TileFIndex == TILE_DEEPFREEZE)) && !m_Super)
 	{
-		Freeze(Server()->TickSpeed()*1, true);
+		Freeze(Server()->TickSpeed()*3, true);
+		m_DeepFreeze = true;
 	}
 	else if((m_TileIndex == TILE_UNFREEZE) || (m_TileFIndex == TILE_UNFREEZE))
 	{
@@ -1322,7 +1323,7 @@ bool CCharacter::Freeze(int Time, bool Deep)
 		m_Armor=0;
 		m_FreezeTime=Time;
 		m_FreezeTick=Server()->Tick();
-		if (/*!*/m_DeepFreeze/* && Deep*/) 
+		if (!m_DeepFreeze && Deep) 
 			m_DeepFreeze = true;
 		return true;
 	}
@@ -1346,7 +1347,7 @@ bool CCharacter::Freeze(bool Deep)
 		m_Ninja.m_ActivationTick = Server()->Tick();
 		m_FreezeTime=Time;
 		m_FreezeTick=Server()->Tick();
-		if (/*!*/m_DeepFreeze/* && Deep*/) 
+		if (!m_DeepFreeze && Deep) 
                         m_DeepFreeze = true;
 
 		return true;
