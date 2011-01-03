@@ -187,16 +187,14 @@ void CGameContext::ConHammer(IConsole::IResult *pResult, void *pUserData, int Cl
 void CGameContext::ConSuper(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	CCharacter *pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
 	int Victim = pResult->GetVictim();
 	CCharacter* chr = pSelf->GetPlayerChar(Victim);
 	if(chr && !chr->m_Super)
 	{
-		pChr->m_DeepFreeze = false;
+		chr->m_DeepFreeze = false;
 		chr->m_Super = true;
 		chr->UnFreeze();
 		chr->m_TeamBeforeSuper = chr->Team();
-		dbg_msg("Teamb4super","%d",chr->m_TeamBeforeSuper = chr->Team());
 		chr->Teams()->SetCharacterTeam(Victim, TEAM_SUPER);
 		if(!g_Config.m_SvCheatTime)
 			chr->m_DDRaceState = DDRACE_CHEAT;

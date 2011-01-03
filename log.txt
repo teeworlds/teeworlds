@@ -1,3 +1,138 @@
+
+commit 646b41c225ef12159db48eac973ac73ac6780b4e
+Author: Julian- <logsarehere@gmail.com>
+Date:   Mon Jan 3 15:34:02 2011 +1100
+
+    updated log
+
+commit d75081112b6f3727ecd1245f1f94397df611b3d8
+Author: flaminflash <logsarehere@gmail.com>
+Date:   Mon Jan 3 14:38:37 2011 +1100
+
+    fixed addvote super 0
+
+commit db2971ad4dfa8a068feb77704a2d5df95541c28e
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Mon Jan 3 01:32:55 2011 +1100
+
+    fixed bug... made message if your not in a team and sv_team 1, faster
+
+commit 558d9a3f2d00417486cbb8995505ae343c690182
+Author: flaminflash <logsarehere@gmail.com>
+Date:   Sun Jan 2 22:58:23 2011 +1100
+
+    for home computer
+
+commit 100fc95b37d8716f3a231eaaed51375f4a276ff2
+Merge: 5a27e52 f5ffa1d
+Author: flaminflash <logsarehere@gmail.com>
+Date:   Sun Jan 2 22:19:20 2011 +1100
+
+    Merge branch 'master' of github.com:JulianAssange/DDraceExtra
+
+commit f5ffa1df9f14c4169f1158b9a31852685cec332b
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Sun Jan 2 22:04:00 2011 +1100
+
+    commit for my laptop
+
+commit ef2bd65cb5a5e9870d066fd28f49ab129517dc00
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Sun Jan 2 21:43:01 2011 +1100
+
+    fixed the windows compiling error.. omg im so stupid :D
+
+commit 887af573d67efaf08726082c6a2c5c16952e0132
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Sun Jan 2 21:26:12 2011 +1100
+
+    fixed message if not in a team being sent even without being in teamflock
+
+commit 19ed7b945666a34ecaaae527e9f43a50438b0790
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Sun Jan 2 11:09:52 2011 +1100
+
+    :))))
+
+commit 5e3ca138dc0584a55c01b1b9e967a06c64c79efd
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Sat Jan 1 20:20:32 2011 +1100
+
+    lold @ greyfox fail, probs due too irl stuff :P well, this is important, pause is currently broken in the offical ddrace and you can actully cheat using it, what i think it fucking epic. this is fix.
+
+commit cc58e27adb0d74860f393e4850a46488eab1b96a
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Sat Jan 1 20:18:44 2011 +1100
+
+    git reset... ;))))))
+
+commit 8381e6818a187d90eff3c515787566ff56d552d0
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Sat Jan 1 20:11:16 2011 +1100
+
+    fixed it lol didnt know i could do this.
+
+commit e436e7c54d939d964b49edbf62fbaa541d8951d3
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Sat Jan 1 19:46:52 2011 +1100
+
+    oO how too fix? or atleast emulate the same thing i want too do.
+
+commit f1fa80705fdd6bd96195eeb9ef7c99b69d41842c
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Sat Jan 1 19:03:18 2011 +1100
+
+    ????
+
+commit 5a27e52e7c57e622128dcbb82ac741e3bbc3d28a
+Merge: 63163d3 c7844ed
+Author: flaminflash <logsarehere@gmail.com>
+Date:   Sat Jan 1 17:37:43 2011 +1100
+
+    Merge branch 'master' of github.com:flaminflash/DDracemaX
+
+commit c7844edc04870c7f1527a7ef3fd1fb6889069290
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Sat Jan 1 15:09:19 2011 +1100
+
+    how stupid can i get?
+
+commit f69c043f0c89aabcf205024ff440d3d72b414bff
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Sat Jan 1 14:38:45 2011 +1100
+
+    lo
+
+commit fecf6e8ccb5fff506ee82df3a114d922987db483
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Sat Jan 1 00:38:41 2011 +1100
+
+    woops
+
+commit a4b9032d51a69a425ad822ac4d6e03f76e3f6616
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Sat Jan 1 00:37:45 2011 +1100
+
+    deepunfreeze plx
+
+commit e05645d54fa0f80ef3ea402c23a32057c9b7c4a3
+Author: Demonul <demonul@Demonul.(none)>
+Date:   Thu Dec 30 11:21:28 2010 +1100
+
+    ! use this tileset ( for ama and tvgucker )
+
+commit 8dcdd6b4ac02f1d08302057c18b7c2fed694001a
+Author: Demonul <demonul@Demonul.(none)>
+Date:   Thu Dec 30 11:21:08 2010 +1100
+
+    iv got no idea tbh,.. -.0
+
+commit 63163d306633a8cc5e2e0e34672ca6a0c23326e0
+Author: flaminflash <logsarehere@gmail.com>
+Date:   Thu Dec 30 01:39:28 2010 +1100
+
+    ;D
+
 commit 3aa326973dc294755378412af322c144400aa87d
 Author: flaminflash <logsarehere@gmail.com>
 Date:   Wed Dec 29 15:52:42 2010 +1100
