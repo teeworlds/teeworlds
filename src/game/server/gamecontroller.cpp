@@ -23,8 +23,8 @@ IGameController::IGameController(class CGameContext *pGameServer)
 	m_RoundStartTick = Server()->Tick();
 	m_RoundCount = 0;
 	m_GameFlags = 0;
-	m_aTeamscore[0] = 0;
-	m_aTeamscore[1] = 0;
+	m_aTeamscore[TEAM_RED] = 0;
+	m_aTeamscore[TEAM_BLUE] = 0;
 	m_aMapWish[0] = 0;
 	
 	m_UnbalancedTick = -1;
@@ -81,7 +81,7 @@ bool IGameController::CanSpawn(CPlayer *pPlayer, vec2 *pOutPos)
 	CSpawnEval Eval;
 	
 	// spectators can't spawn
-	if(pPlayer->GetTeam() == -1)
+	if(pPlayer->GetTeam() == TEAM_SPECTATORS)
 		return false;
 	
 	if(IsTeamplay())
@@ -174,9 +174,9 @@ const char *IGameController::GetTeamName(int Team)
 {
 	if(IsTeamplay())
 	{
-		if(Team == 0)
+		if(Team == TEAM_RED)
 			return "red team";
-		else if(Team == 1)
+		else if(Team == TEAM_BLUE)
 			return "blue team";
 	}
 	else
@@ -198,8 +198,8 @@ void IGameController::StartRound()
 	m_SuddenDeath = 0;
 	m_GameOverTick = -1;
 	GameServer()->m_World.m_Paused = false;
-	m_aTeamscore[0] = 0;
-	m_aTeamscore[1] = 0;
+	m_aTeamscore[TEAM_RED] = 0;
+	m_aTeamscore[TEAM_BLUE] = 0;
 	m_ForceBalanced = false;
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "start round type='%s' teamplay='%d'", m_pGameType, m_GameFlags&GAMEFLAG_TEAMS);
@@ -303,7 +303,7 @@ void IGameController::OnPlayerInfoChange(class CPlayer *pP)
 	const int aTeamColors[2] = {65387, 10223467};
 	if(IsTeamplay())
 	{
-		if(pP->GetTeam() >= 0 || pP->GetTeam() <= 1)
+		if(pP->GetTeam() >= TEAM_RED && pP->GetTeam() <= TEAM_BLUE)
 		{
 			pP->m_TeeInfos.m_UseCustomColor = 1;
 			pP->m_TeeInfos.m_ColorBody = aTeamColors[pP->GetTeam()];
@@ -412,7 +412,7 @@ void IGameController::Tick()
 		float aPScore[MAX_CLIENTS] = {0.0f};
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != -1)
+			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS)
 			{
 				aT[GameServer()->m_apPlayers[i]->GetTeam()]++;
 				aPScore[i] = GameServer()->m_apPlayers[i]->m_Score*Server()->TickSpeed()*60.0f/
@@ -462,7 +462,7 @@ void IGameController::Tick()
 	{
 		for(int i = 0; i < MAX_CLIENTS; ++i)
 		{
-			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != -1 && !Server()->IsAuthed(i))
+			if(GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() != TEAM_SPECTATORS && !Server()->IsAuthed(i))
 			{
 				if(Server()->Tick() > GameServer()->m_apPlayers[i]->m_LastActionTick+g_Config.m_SvInactiveKickTime*Server()->TickSpeed()*60)
 				{
@@ -471,7 +471,7 @@ void IGameController::Tick()
 					case 0:
 						{
 							// move player to spectator
-							GameServer()->m_apPlayers[i]->SetTeam(-1);
+							GameServer()->m_apPlayers[i]->SetTeam(TEAM_SPECTATORS);
 						}
 						break;
 					case 1:
@@ -479,12 +479,12 @@ void IGameController::Tick()
 							// move player to spectator if the reserved slots aren't filled yet, kick him otherwise
 							int Spectators = 0;
 							for(int j = 0; j < MAX_CLIENTS; ++j)
-								if(GameServer()->m_apPlayers[j] && GameServer()->m_apPlayers[j]->GetTeam() == -1)
+								if(GameServer()->m_apPlayers[j] && GameServer()->m_apPlayers[j]->GetTeam() == TEAM_SPECTATORS)
 									++Spectators;
 							if(Spectators >= g_Config.m_SvSpectatorSlots)
 								Server()->Kick(i, "Kicked for inactivity");
 							else
-								GameServer()->m_apPlayers[i]->SetTeam(-1);
+								GameServer()->m_apPlayers[i]->SetTeam(TEAM_SPECTATORS);
 						}
 						break;
 					case 2:
@@ -507,8 +507,8 @@ void IGameController::Tick()
 	{
 		if(IsTeamplay())
 		{
-			Prog = max(Prog, (m_aTeamscore[0]*100)/g_Config.m_SvScorelimit);
-			Prog = max(Prog, (m_aTeamscore[1]*100)/g_Config.m_SvScorelimit);
+			Prog = max(Prog, (m_aTeamscore[TEAM_RED]*100)/g_Config.m_SvScorelimit);
+			Prog = max(Prog, (m_aTeamscore[TEAM_BLUE]*100)/g_Config.m_SvScorelimit);
 		}
 		else
 		{
@@ -556,14 +556,14 @@ void IGameController::Snap(int SnappingClient)
 	if(SnappingClient == -1)
 	{
 		// we are recording a demo, just set the scores
-		pGameObj->m_TeamscoreRed = m_aTeamscore[0];
-		pGameObj->m_TeamscoreBlue = m_aTeamscore[1];
+		pGameObj->m_TeamscoreRed = m_aTeamscore[TEAM_RED];
+		pGameObj->m_TeamscoreBlue = m_aTeamscore[TEAM_BLUE];
 	}
 	else
 	{
 		// TODO: this little hack should be removed
-		pGameObj->m_TeamscoreRed = IsTeamplay() ? m_aTeamscore[0] : GameServer()->m_apPlayers[SnappingClient]->m_Score;
-		pGameObj->m_TeamscoreBlue = m_aTeamscore[1];
+		pGameObj->m_TeamscoreRed = IsTeamplay() ? m_aTeamscore[TEAM_RED] : GameServer()->m_apPlayers[SnappingClient]->m_Score;
+		pGameObj->m_TeamscoreBlue = m_aTeamscore[TEAM_BLUE];
 	}
 }
 
@@ -578,14 +578,14 @@ int IGameController::GetAutoTeam(int Notthisid)
 	{
 		if(GameServer()->m_apPlayers[i] && i != Notthisid)
 		{
-			if(GameServer()->m_apPlayers[i]->GetTeam() == 0 || GameServer()->m_apPlayers[i]->GetTeam() == 1)
+			if(GameServer()->m_apPlayers[i]->GetTeam() >= TEAM_RED && GameServer()->m_apPlayers[i]->GetTeam() <= TEAM_BLUE)
 				aNumplayers[GameServer()->m_apPlayers[i]->GetTeam()]++;
 		}
 	}
 
 	int Team = 0;
 	if(IsTeamplay())
-		Team = aNumplayers[0] > aNumplayers[1] ? 1 : 0;
+		Team = aNumplayers[TEAM_RED] > aNumplayers[TEAM_BLUE] ? TEAM_BLUE : TEAM_RED;
 		
 	if(CanJoinTeam(Team, Notthisid))
 		return Team;
@@ -594,7 +594,7 @@ int IGameController::GetAutoTeam(int Notthisid)
 
 bool IGameController::CanJoinTeam(int Team, int Notthisid)
 {
-	if(Team == -1 || (GameServer()->m_apPlayers[Notthisid] && GameServer()->m_apPlayers[Notthisid]->GetTeam() != -1))
+	if(Team == TEAM_SPECTATORS || (GameServer()->m_apPlayers[Notthisid] && GameServer()->m_apPlayers[Notthisid]->GetTeam() != TEAM_SPECTATORS))
 		return true;
 
 	int aNumplayers[2] = {0,0};
@@ -602,7 +602,7 @@ bool IGameController::CanJoinTeam(int Team, int Notthisid)
 	{
 		if(GameServer()->m_apPlayers[i] && i != Notthisid)
 		{
-			if(GameServer()->m_apPlayers[i]->GetTeam() >= 0 || GameServer()->m_apPlayers[i]->GetTeam() == 1)
+			if(GameServer()->m_apPlayers[i]->GetTeam() >= TEAM_RED && GameServer()->m_apPlayers[i]->GetTeam() <= TEAM_BLUE)
 				aNumplayers[GameServer()->m_apPlayers[i]->GetTeam()]++;
 		}
 	}
@@ -619,7 +619,7 @@ bool IGameController::CheckTeamBalance()
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		CPlayer *pP = GameServer()->m_apPlayers[i];
-		if(pP && pP->GetTeam() != -1)
+		if(pP && pP->GetTeam() != TEAM_SPECTATORS)
 			aT[pP->GetTeam()]++;
 	}
 	
@@ -645,26 +645,26 @@ bool IGameController::CanChangeTeam(CPlayer *pPlayer, int JoinTeam)
 {
 	int aT[2] = {0, 0};
 	
-	if (!IsTeamplay() || JoinTeam == -1 || !g_Config.m_SvTeambalanceTime)
+	if (!IsTeamplay() || JoinTeam == TEAM_SPECTATORS || !g_Config.m_SvTeambalanceTime)
 		return true;
 	
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		CPlayer *pP = GameServer()->m_apPlayers[i];
-		if(pP && pP->GetTeam() != -1)
+		if(pP && pP->GetTeam() != TEAM_SPECTATORS)
 			aT[pP->GetTeam()]++;
 	}
 	
 	// simulate what would happen if changed team
 	aT[JoinTeam]++;
-	if (pPlayer->GetTeam() != -1)
+	if (pPlayer->GetTeam() != TEAM_SPECTATORS)
 		aT[JoinTeam^1]--;
 	
 	// there is a player-difference of at least 2
 	if(absolute(aT[0]-aT[1]) >= 2)
 	{
 		// player wants to join team with less players
-		if ((aT[0] < aT[1] && JoinTeam == 0) || (aT[0] > aT[1] && JoinTeam == 1))
+		if ((aT[0] < aT[1] && JoinTeam == TEAM_RED) || (aT[0] > aT[1] && JoinTeam == TEAM_BLUE))
 			return true;
 		else
 			return false;
@@ -711,10 +711,10 @@ void IGameController::DoTeamScoreWincheck()
 	if(m_GameOverTick == -1 && !m_Warmup)
 	{
 		// check score win condition
-		if((g_Config.m_SvScorelimit > 0 && (m_aTeamscore[0] >= g_Config.m_SvScorelimit || m_aTeamscore[1] >= g_Config.m_SvScorelimit)) ||
+		if((g_Config.m_SvScorelimit > 0 && (m_aTeamscore[TEAM_RED] >= g_Config.m_SvScorelimit || m_aTeamscore[TEAM_BLUE] >= g_Config.m_SvScorelimit)) ||
 			(g_Config.m_SvTimelimit > 0 && (Server()->Tick()-m_RoundStartTick) >= g_Config.m_SvTimelimit*Server()->TickSpeed()*60))
 		{
-			if(m_aTeamscore[0] != m_aTeamscore[1])
+			if(m_aTeamscore[TEAM_RED] != m_aTeamscore[TEAM_BLUE])
 				EndRound();
 			else
 				m_SuddenDeath = 1;
@@ -724,9 +724,9 @@ void IGameController::DoTeamScoreWincheck()
 
 int IGameController::ClampTeam(int Team)
 {
-	if(Team < 0) // spectator
-		return -1;
+	if(Team < 0)
+		return TEAM_SPECTATORS;
 	if(IsTeamplay())
 		return Team&1;
-	return  0;
+	return 0;
 }

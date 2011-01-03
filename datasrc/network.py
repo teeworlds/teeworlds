@@ -14,7 +14,14 @@ RawHeader = '''
 
 enum
 {
-	INPUT_STATE_MASK=0x3f,
+	INPUT_STATE_MASK=0x3f
+};
+
+enum
+{
+	TEAM_SPECTATORS=-1,
+	TEAM_RED,
+	TEAM_BLUE
 };
 '''
 
@@ -83,7 +90,7 @@ Objects = [
 		NetIntAny("m_X"),
 		NetIntAny("m_Y"),
 		
-		NetIntRange("m_Team", 0, 1),
+		NetIntRange("m_Team", 'TEAM_RED', 'TEAM_BLUE'),
 		NetIntRange("m_CarriedBy", -2, 'MAX_CLIENTS-1')
 	]),
 
@@ -141,7 +148,7 @@ Objects = [
 	NetObject("PlayerInfo", [
 		NetIntRange("m_Local", 0, 1),
 		NetIntRange("m_ClientId", 0, 'MAX_CLIENTS-1'),
-		NetIntRange("m_Team", -1, 1),
+		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
 
 		NetIntAny("m_Score"),
 		NetIntAny("m_Latency"),
@@ -204,7 +211,7 @@ Messages = [
 	]),
 
 	NetMessage("Sv_Chat", [
-		NetIntRange("m_Team", -1, 1),
+		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
 		NetIntRange("m_Cid", -1, 'MAX_CLIENTS-1'),
 		NetString("m_pMessage"),
 	]),
@@ -260,7 +267,7 @@ Messages = [
 	]),
 
 	NetMessage("Cl_SetTeam", [
-		NetIntRange("m_Team", -1, 1),
+		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
 	]),
 	
 	NetMessage("Cl_StartInfo", [
