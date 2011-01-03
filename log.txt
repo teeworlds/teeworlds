@@ -1,3 +1,43 @@
+commit 10943118e89049ce2a58f11a76f633ff7e3e26d0
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Tue Jan 4 01:36:16 2011 +1100
+
+    removed the wait 3 seconds before respawn, AND removed undeepfreeze on unfreeze rcon command
+
+commit 4ed6d8731d8713e0fb617c89029c6e9863d8a360
+Merge: 248b439 9652ae1
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Tue Jan 4 01:17:32 2011 +1100
+
+    Merge branch 'master' of github.com:JulianAssange/DDraceExtra
+
+commit 248b439c49c5723451b89531f859b89419f05c75
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Tue Jan 4 01:15:28 2011 +1100
+
+    fixed bug second time.. Could go through deep freeze by being frozen. :))) Ty Teengoten.
+
+commit 2a72f54d4a2b3465d69244e06e14a9578142af93
+Merge: db2971a d9c71f4
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Tue Jan 4 00:46:05 2011 +1100
+
+    Merge branch 'master' of https://github.com/oy/teeworlds
+    
+    Conflicts:
+    	data/languages/german.txt
+
+commit 9652ae1fc1cbaf4906cf20998d34dc38f81fdb2d
+Author: JulianAssange <logsarehere@gmail.com>
+Date:   Mon Jan 3 15:38:06 2011 +1100
+
+    test
+
+commit 4913755e88e5818f981b4cbfa778d443aa6a3a22
+Author: Julian- <logsarehere@gmail.com>
+Date:   Mon Jan 3 15:35:52 2011 +1100
+
+    test
 
 commit 646b41c225ef12159db48eac973ac73ac6780b4e
 Author: Julian- <logsarehere@gmail.com>
@@ -10,6 +50,18 @@ Author: flaminflash <logsarehere@gmail.com>
 Date:   Mon Jan 3 14:38:37 2011 +1100
 
     fixed addvote super 0
+
+commit d9c71f49f37afe0403d1dbe6b3b6f6ae5daebac7
+Author: Yoyo117 <jpshadow@web.de>
+Date:   Sat Dec 25 23:43:05 2010 +0100
+
+    minor improvement
+
+commit cbc76c924750c4614d8fb99659c0f9bf7258d86f
+Author: Lars Funke <larsfunke1996@gmail.com>
+Date:   Fri Dec 31 00:23:58 2010 +0100
+
+    Updated german l10n
 
 commit db2971ad4dfa8a068feb77704a2d5df95541c28e
 Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
