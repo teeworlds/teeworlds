@@ -457,7 +457,6 @@ void CGameContext::ConUnFreeze(IConsole::IResult *pResult, void *pUserData, int 
 	if(!chr)
 		return;
 	chr->m_FreezeTime=2;
-	pChr->m_DeepFreeze = false;
 	chr->m_pPlayer->m_RconFreeze = false;
 	CServer* pServ = (CServer*)pSelf->Server();
 	str_format(buf, sizeof(buf), "'%s' ClientId=%d has been defrosted.", pServ->ClientName(ClientId), Victim);

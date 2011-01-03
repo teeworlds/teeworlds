@@ -1427,10 +1427,8 @@ void CCharacter::Die(int Killer, int Weapon)
 	// a nice sound
 	GameServer()->CreateSound(m_Pos, SOUND_PLAYER_DIE);
 
-	// this is for auto respawn after 3 secs
-	if(!g_Config.m_SvAutoKill)
-	{ m_pPlayer->m_DieTick = Server()->Tick();
-	}
+	// this is for auto respawn after 3 secs -- Removed by Julian-Assange
+	/*m_pPlayer->m_DieTick = Server()->Tick();*/
 	m_Alive = false;
 	MarkDestroy();
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
