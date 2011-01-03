@@ -100,8 +100,7 @@ MACRO_CONFIG_STR(SvRconPasswordHelper, sv_helper_pass, 32, "", CFGFLAG_SERVER, "
 MACRO_CONFIG_INT(SvHit, sv_hit, 1, 0, 1, CFGFLAG_SERVER, "Whether players can hammer/grenade/laser eachother or not", 4)
 MACRO_CONFIG_INT(SvEndlessDrag, sv_endless_drag, 0, 0, 1, CFGFLAG_SERVER, "Turns endless hooking on/off", 4)
 
-MACRO_CONFIG_INT(SvMapTest, sv_map_test, 0, 0, 1, CFGFLAG_SERVER, "Whether this server is just for map testing", 3)
-MACRO_CONFIG_INT(SvAutoKill, sv_autokill, 1, 0, 1, CFGFLAG_SERVER, "Whether when you kill, it goes fast.", 3)
+MACRO_CONFIG_INT(SvMapTest, sv_map_test, 0, 0, 1, CFGFLAG_SERVER, "Whether this server is just for map testing", 3) // what is this?
 
 #ifndef CONF_DEBUG
 MACRO_CONFIG_INT(SvServerTest, sv_server_test, 0, 0, 0, CFGFLAG_SERVER, "Whether this server is for testing the mod (only available for debug compilation)", 4)
@@ -111,7 +110,7 @@ MACRO_CONFIG_INT(SvServerTest, sv_server_test, 1, 0, 1, CFGFLAG_SERVER, "Whether
 
 MACRO_CONFIG_INT(SvCheats, sv_cheats, 0, 0, 1, CFGFLAG_SERVER, "Turns cheats on/off", 4)
 MACRO_CONFIG_INT(SvCheatTime, sv_cheattime, 0, 0, 1, CFGFLAG_SERVER, "Whether the time of players will be stopped on cheating or not", 4)
-MACRO_CONFIG_INT(SvEndlessSuperHook, sv_endless_super_hook, 0, 0, 1, CFGFLAG_SERVER, "Endless hook for super players on/off", 4)
+MACRO_CONFIG_INT(SvEndlessSuperHook, sv_endless_super_hook, 1, 0, 1, CFGFLAG_SERVER, "Endless hook for super players on/off", 4)
 
 MACRO_CONFIG_INT(SvHideScore, sv_hide_score, 0, 0, 1, CFGFLAG_SERVER, "Whether players scores will be announced or not", 4)
 MACRO_CONFIG_INT(SvTimer, sv_timer, 0, 0, 1, CFGFLAG_SERVER, "Whether timer commands are allowed or not", 3)
@@ -139,7 +138,7 @@ MACRO_CONFIG_INT(SvShotgunBulletSound, sv_shotgun_bullet_sound, 0, 0, 1, CFGFLAG
 MACRO_CONFIG_INT(SvCheckpointSave, sv_checkpoint_save, 1, 0, 1, CFGFLAG_SERVER, "Whether to save checkpoint times to the score file", 3)
 MACRO_CONFIG_STR(SvScoreFolder, sv_score_folder, 32, "records", CFGFLAG_SERVER, "Folder to save score files to", 3)
 MACRO_CONFIG_INT(SvContNinja, sv_contninja, 0, 0, 1, CFGFLAG_SERVER, "continuous ninja", 4)
-MACRO_CONFIG_INT(SvAutoShoot, sv_autoshoot, 0, 0, 1, CFGFLAG_SERVER, "Autoshoot", 4)
+MACRO_CONFIG_INT(SvAutoShoot, sv_autoshoot, 1, 0, 1, CFGFLAG_SERVER, "Autoshoot", 4)
 MACRO_CONFIG_INT(SvSpecVote, sv_specvote, 1, 0, 1, CFGFLAG_SERVER, "Weather spec can vote or not", 4)
 MACRO_CONFIG_INT(SvHeaderVote, sv_header_vote, 1, 0, 1, CFGFLAG_SERVER, "Weather you can add invalid votes", 4)
 

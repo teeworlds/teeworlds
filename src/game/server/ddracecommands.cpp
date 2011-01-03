@@ -449,7 +449,6 @@ void CGameContext::ConFreeze(IConsole::IResult *pResult, void *pUserData, int Cl
 void CGameContext::ConUnFreeze(IConsole::IResult *pResult, void *pUserData, int ClientId)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	CCharacter *pChr = pSelf->m_apPlayers[ClientId]->GetCharacter();
 	int Victim = pResult->GetVictim();
 
 	char buf[128];
