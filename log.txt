@@ -1,3 +1,9 @@
+commit 646b41c225ef12159db48eac973ac73ac6780b4e
+Author: Julian- <logsarehere@gmail.com>
+Date:   Mon Jan 3 15:34:02 2011 +1100
+
+    updated log
+
 commit d75081112b6f3727ecd1245f1f94397df611b3d8
 Author: flaminflash <logsarehere@gmail.com>
 Date:   Mon Jan 3 14:38:37 2011 +1100
