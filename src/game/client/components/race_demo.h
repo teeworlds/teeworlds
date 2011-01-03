@@ -34,8 +34,6 @@ public:
 	virtual void OnShutdown();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 	
-	float GetFinishTime() { return m_Time; }
-	int GetRaceState() { return m_RaceState; }
 	void CheckDemo();
 	void SaveDemo(const char* pDemo);
 };
