@@ -20,6 +20,10 @@ CLayerTiles::CLayerTiles(int w, int h)
 	m_Image = -1;
 	m_TexId = -1;
 	m_Game = 0;
+	m_Color.r = 255;
+	m_Color.g = 255;
+	m_Color.b = 255;
+	m_Color.a = 255;
 	
 	m_pTiles = new CTile[m_Width*m_Height];
 	mem_zero(m_pTiles, m_Width*m_Height*sizeof(CTile));
@@ -36,7 +40,7 @@ void CLayerTiles::PrepareForSave()
 		for(int x = 0; x < m_Width; x++)
 			m_pTiles[y*m_Width+x].m_Flags &= TILEFLAG_VFLIP|TILEFLAG_HFLIP|TILEFLAG_ROTATE;
 
-	if(m_Image != -1)
+	if(m_Image != -1 && m_Color.a == 255)
 	{
 		for(int y = 0; y < m_Height; y++)
 			for(int x = 0; x < m_Width; x++)
@@ -56,7 +60,8 @@ void CLayerTiles::Render()
 	if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size())
 		m_TexId = m_pEditor->m_Map.m_lImages[m_Image]->m_TexId;
 	Graphics()->TextureSet(m_TexId);
-	m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, vec4(1,1,1,1), LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT);
+	vec4 Color = vec4(m_Color.r/255.0f, m_Color.g/255.0f, m_Color.b/255.0f, m_Color.a/255.0f);
+	m_pEditor->RenderTools()->RenderTilemap(m_pTiles, m_Width, m_Height, 32.0f, Color, LAYERRENDERFLAG_OPAQUE|LAYERRENDERFLAG_TRANSPARENT);
 }
 
 int CLayerTiles::ConvertX(float x) const { return (int)(x/32.0f); }
@@ -373,19 +378,30 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		PROP_HEIGHT,
 		PROP_SHIFT,
 		PROP_IMAGE,
+		PROP_COLOR,
 		NUM_PROPS,
 	};
+	
+	int Color = 0;
+	Color |= m_Color.r<<24;
+	Color |= m_Color.g<<16;
+	Color |= m_Color.b<<8;
+	Color |= m_Color.a;
 	
 	CProperty aProps[] = {
 		{Localize("Width"), m_Width, PROPTYPE_INT_SCROLL, 1, 1000000000},
 		{Localize("Height"), m_Height, PROPTYPE_INT_SCROLL, 1, 1000000000},
 		{Localize("Shift"), 0, PROPTYPE_SHIFT, 0, 0},
 		{Localize("Image"), m_Image, PROPTYPE_IMAGE, 0, 0},
+		{Localize("Color"), Color, PROPTYPE_COLOR, 0, 0},
 		{0},
 	};
 	
-	if(m_pEditor->m_Map.m_pGameLayer == this) // remove the image from the selection if this is the game layer
+	if(m_pEditor->m_Map.m_pGameLayer == this) // remove the image and color properties if this is the game layer
+	{
 		aProps[3].m_pName = 0;
+		aProps[4].m_pName = 0;
+	}
 	
 	static int s_aIds[NUM_PROPS] = {0};
 	int NewVal = 0;
@@ -406,6 +422,13 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		}
 		else
 			m_Image = NewVal%m_pEditor->m_Map.m_lImages.size();
+	}
+	else if(Prop == PROP_COLOR)
+	{
+		m_Color.r = (NewVal>>24)&0xff;
+		m_Color.g = (NewVal>>16)&0xff;
+		m_Color.b = (NewVal>>8)&0xff;
+		m_Color.a = NewVal&0xff;
 	}
 	
 	return 0;
