@@ -22,6 +22,8 @@ void CNamePlates::RenderNameplate(
 	
 	vec2 Position = mix(vec2(pPrevChar->m_X, pPrevChar->m_Y), vec2(pPlayerChar->m_X, pPlayerChar->m_Y), IntraTick);
 	
+
+	float FontSize = 18.0f + 20.0f * g_Config.m_ClNameplatesSize / 100.0f;
 	// render name plate
 	if(!pPlayerInfo->m_Local)
 	{
@@ -35,7 +37,7 @@ void CNamePlates::RenderNameplate(
 			str_format(aName, 256, "%s", m_pClient->m_aClients[pPlayerInfo->m_ClientId].m_aName);
 		else
 			str_format(aName, 256, "%s (%d)", m_pClient->m_aClients[pPlayerInfo->m_ClientId].m_aName, pPlayerInfo->m_Score);
-		float tw = TextRender()->TextWidth(0, 28.0f, aName, -1);
+		float tw = TextRender()->TextWidth(0, FontSize, aName, -1);
 		if(g_Config.m_TcNameplateShadow)
 		{
 			TextRender()->TextColor(0,0,0,a);
@@ -56,6 +58,8 @@ void CNamePlates::RenderNameplate(
 		else // FFA or no colored plates
 			TextRender()->TextColor(1,1,1,a);
 		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-60, 28.0f, aName, -1);
+		
+		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-FontSize-38.0f, FontSize, pName, -1);
 		
 		if(g_Config.m_Debug || g_Config.m_ClNameplateClientId) // render client id when in debug aswell
 		{

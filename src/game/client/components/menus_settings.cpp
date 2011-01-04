@@ -107,9 +107,9 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		if(DoButton_CheckBox(&g_Config.m_ClNameplates, Localize("Show name plates"), g_Config.m_ClNameplates, &Button))
 			g_Config.m_ClNameplates ^= 1;
 
+		LeftView.HSplitTop(20.0f, &Button, &LeftView);
 		if(g_Config.m_ClNameplates)
 		{
-			LeftView.HSplitTop(20.0f, &Button, &LeftView);
 			Button.VSplitLeft(15.0f, 0, &Button);
 			if(DoButton_CheckBox(&g_Config.m_ClNameplatesAlways, Localize("Always show name plates"), g_Config.m_ClNameplatesAlways, &Button))
 				g_Config.m_ClNameplatesAlways ^= 1;
@@ -118,9 +118,19 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			Button.VSplitLeft(15.0f, 0, &Button);
 			if(DoButton_CheckBox(&g_Config.m_ClNameplateClientId, Localize("Client ID"), g_Config.m_ClNameplateClientId, &Button))
 				g_Config.m_ClNameplateClientId ^= 1;
+
+			// draw nameplates size slider
+			CUIRect Label;
+			LeftView.HSplitTop(20.0f, &Button, &LeftView);
+			Button.VSplitLeft(15.0f, 0, &Button);
+			Button.VSplitRight(10.0f, &Button, 0);
+			Button.VSplitLeft(140.0f, &Label, &Button);
+			Button.HMargin(2.0f, &Button);
+			UI()->DoLabel(&Label, Localize("Name plates size"), 13.0f, -1);
+			g_Config.m_ClNameplatesSize = (int)(DoScrollbarH(&g_Config.m_ClNameplatesSize, &Button, g_Config.m_ClNameplatesSize/100.0f)*100.0f+0.1f);
 		}
 		else
-			LeftView.HSplitTop(40.0f, &Button, &LeftView);
+			LeftView.HSplitTop(20.0f, &Button, &LeftView);
 
 		LeftView.HSplitTop(20.0f, &Button, &LeftView);
 		if(DoButton_CheckBox(&g_Config.m_ClAntiRainbow, Localize("Anti rainbow"), g_Config.m_ClAntiRainbow, &Button))
