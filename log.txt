@@ -1,3 +1,21 @@
+commit 34ad56efdb94f804cda447d27d1a273337b6f862
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Tue Jan 4 02:15:27 2011 +1100
+
+    Gonna take a look at door layer tommorrow.
+
+commit 58445747900d2a73edceb686fd3256c84aec9cb3
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Tue Jan 4 02:13:43 2011 +1100
+
+    removed useless def and redid some config_var's
+
+commit e2bb90f0e807b12a561ad46d9c539382730d3185
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Tue Jan 4 01:45:30 2011 +1100
+
+    updated log.txt
+
 commit 10943118e89049ce2a58f11a76f633ff7e3e26d0
 Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
 Date:   Tue Jan 4 01:36:16 2011 +1100
