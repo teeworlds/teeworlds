@@ -31,7 +31,7 @@ enum
 };
 
 
-static int aFontSizes[] = {8,9,10,11,12,13,14,15,16,17,18,19,20,36};
+static int aFontSizes[] = {8,9,10,11,12,13,14,15,16,17,18,19,20,36,64};
 #define NUM_FONT_SIZES (sizeof(aFontSizes)/sizeof(int))
 
 struct CFontChar
@@ -180,6 +180,15 @@ class CTextRender : public IEngineTextRender
 		mem_free(pMem);
 	}
 
+	int AdjustOutlineThicknessToFontSize(int OutlineThickness, int FontSize)
+	{
+		if(FontSize > 36)
+			OutlineThickness *= 4;
+		else if(FontSize >= 18)
+			OutlineThickness *= 2;
+		return OutlineThickness;
+	}
+
 	void IncreaseTextureSize(CFontSizeData *pSizeData)
 	{
 		if(pSizeData->m_TextureWidth < pSizeData->m_TextureHeight)
@@ -193,14 +202,12 @@ class CTextRender : public IEngineTextRender
 	// TODO: Refactor: move this into a pFont class
 	void InitIndex(CFont *pFont, int Index)
 	{
-		int OutlineThickness = 1;
 		CFontSizeData *pSizeData = &pFont->m_aSizes[Index];
 		
 		pSizeData->m_FontSize = aFontSizes[Index];
 		FT_Set_Pixel_Sizes(pFont->m_FtFace, 0, pSizeData->m_FontSize);
 		
-		if(pSizeData->m_FontSize >= 18)
-			OutlineThickness = 2;
+		int OutlineThickness = AdjustOutlineThicknessToFontSize(1, pSizeData->m_FontSize);
 			
 		{
 			unsigned GlyphIndex;
@@ -292,7 +299,6 @@ class CTextRender : public IEngineTextRender
 		int SlotW = pSizeData->m_TextureWidth / pSizeData->m_NumXChars;
 		int SlotH = pSizeData->m_TextureHeight / pSizeData->m_NumYChars;
 		int SlotSize = SlotW*SlotH;
-		int OutlineThickness = 1;
 		int x = 1;
 		int y = 1;
 		int px, py;
@@ -313,8 +319,7 @@ class CTextRender : public IEngineTextRender
 			return -1;
 		
 		// adjust spacing
-		if(pSizeData->m_FontSize >= 18)
-			OutlineThickness = 2;
+		int OutlineThickness = AdjustOutlineThicknessToFontSize(1, pSizeData->m_FontSize);
 		x += OutlineThickness;
 		y += OutlineThickness;
 
