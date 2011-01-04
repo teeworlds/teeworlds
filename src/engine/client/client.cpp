@@ -1808,8 +1808,6 @@ void CClient::Run()
 	if(!LoadData())
 		return;
 
-	DemoRecorder_Init();
-
 	GameClient()->OnInit();
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "version %s", GameClient()->NetVersion());
@@ -2131,12 +2129,6 @@ void CClient::Con_Play(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
 	pSelf->DemoPlayer_Play(pResult->GetString(0), IStorage::TYPE_ALL);
-}
-
-void CClient::DemoRecorder_Init()
-{
-	if(!Storage()->CreateFolder("demos/auto", IStorage::TYPE_SAVE))
-		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/record", "unable to create auto record folder");
 }
 
 void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp)
