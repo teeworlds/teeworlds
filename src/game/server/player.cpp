@@ -159,10 +159,10 @@ void CPlayer::OnDirectInput(CNetObj_PlayerInput *NewInput)
 	if(Character)
 		Character->OnDirectInput(NewInput);
 
-	if(!Character && m_Team >= 0 && (NewInput->m_Fire&1))
+	if(!Character && m_Team != TEAM_SPECTATORS && (NewInput->m_Fire&1))
 		m_Spawning = true;
 	
-	if(!Character && m_Team == -1)
+	if(!Character && m_Team == TEAM_SPECTATORS)
 		m_ViewPos = vec2(NewInput->m_TargetX, NewInput->m_TargetY);
 
 	// check for activity
@@ -195,7 +195,7 @@ void CPlayer::KillCharacter(int Weapon)
 
 void CPlayer::Respawn()
 {
-	if(m_Team > -1)
+	if(m_Team != TEAM_SPECTATORS)
 		m_Spawning = true;
 }
 

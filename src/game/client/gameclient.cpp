@@ -728,7 +728,7 @@ void CGameClient::OnNewSnapshot()
 
 	// go trough all the items in the snapshot and gather the info we want
 	{
-		m_Snap.m_aTeamSize[0] = m_Snap.m_aTeamSize[1] = 0;
+		m_Snap.m_aTeamSize[TEAM_RED] = m_Snap.m_aTeamSize[TEAM_BLUE] = 0;
 		
 		int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
 		for(int i = 0; i < Num; i++)
@@ -789,12 +789,12 @@ void CGameClient::OnNewSnapshot()
 					m_Snap.m_LocalCid = Item.m_Id;
 					m_Snap.m_pLocalInfo = pInfo;
 					
-					if (pInfo->m_Team == -1)
+					if(pInfo->m_Team == TEAM_SPECTATORS)
 						m_Snap.m_Spectate = true;
 				}
 				
 				// calculate team-balance
-				if(pInfo->m_Team != -1)
+				if(pInfo->m_Team != TEAM_SPECTATORS)
 					m_Snap.m_aTeamSize[pInfo->m_Team]++;
 				
 			}
@@ -1002,7 +1002,7 @@ void CGameClient::CClientData::UpdateRenderInfo()
 	if(g_GameClient.m_Snap.m_pGameobj && g_GameClient.m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS)
 	{
 		const int TeamColors[2] = {65387, 10223467};
-		if(m_Team >= 0 && m_Team <= 1)
+		if(m_Team >= TEAM_RED && m_Team <= TEAM_BLUE)
 		{
 			m_RenderInfo.m_Texture = g_GameClient.m_pSkins->Get(m_SkinId)->m_ColorTexture;
 			m_RenderInfo.m_ColorBody = g_GameClient.m_pSkins->GetColorV4(TeamColors[m_Team]);

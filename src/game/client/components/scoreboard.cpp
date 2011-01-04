@@ -105,7 +105,7 @@ void CScoreboard::RenderSpectators(float x, float y, float w)
 		if(Item.m_Type == NETOBJTYPE_PLAYERINFO)
 		{
 			const CNetObj_PlayerInfo *pInfo = (const CNetObj_PlayerInfo *)pData;
-			if(pInfo->m_Team == -1)
+			if(pInfo->m_Team == TEAM_SPECTATORS)
 			{
 				if(Count)
 					str_append(aBuffer, ", ", sizeof(aBuffer));
@@ -150,7 +150,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 	
 	float tw = TextRender()->TextWidth(0, 48, pTitle, -1);
 
-	if(Team == -1)
+	if(Team == TEAM_SPECTATORS)
 	{
 		TextRender()->Text(0, x+w/2-tw/2, y, 48, pTitle, -1);
 	}
@@ -161,7 +161,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 		/*if(m_pClient->m_Snap.m_pGameobj) // This is Useless
 		{
 			char aBuf[128];
-			int Score = Team ? m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue : m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed;
+			int Score = Team == TEAM_RED ? m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed : m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue;
 		}*/
 	}
 
@@ -288,7 +288,7 @@ void CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const ch
 			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 			Graphics()->QuadsBegin();
 
-			if(pInfo->m_Team == 0) RenderTools()->SelectSprite(SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
+			if(pInfo->m_Team == TEAM_RED) RenderTools()->SelectSprite(SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
 			else RenderTools()->SelectSprite(SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
 			
 			float size = 64.0f;
@@ -337,7 +337,7 @@ void CScoreboard::OnRender()
 	if(m_Active)
 		DoScoreBoard = true;
 		
-	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team != -1)
+	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team != TEAM_SPECTATORS)
 	{
 		// we are not a spectator, check if we are ead
 		if(!m_pClient->m_Snap.m_pLocalCharacter || m_pClient->m_Snap.m_pLocalCharacter->m_Health < 0)
@@ -383,8 +383,8 @@ void CScoreboard::OnRender()
 			TextRender()->Text(0, Width/2-w/2, 45, 92.0f, pText, -1);
 		}
 		
-		RenderScoreboard(Width/2-w-20, 150.0f, w, 0, Localize("Red team"));
-		RenderScoreboard(Width/2 + 20, 150.0f, w, 1, Localize("Blue team"));
+		RenderScoreboard(Width/2-w-20, 150.0f, w, TEAM_RED, Localize("Red team"));
+		RenderScoreboard(Width/2 + 20, 150.0f, w, TEAM_BLUE, Localize("Blue team"));
 	}
 
 	RenderGoals(Width/2-w/2, 150+750+25, w);

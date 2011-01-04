@@ -87,10 +87,10 @@ void CHud::RenderScoreHud()
 	if(!(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver) && (GameFlags&GAMEFLAG_TEAMS))
 	{
 		char aScoreTeam[2][32];
-		str_format(aScoreTeam[0], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed);
-		str_format(aScoreTeam[1], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue);
-		float aScoreTeamWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScoreTeam[0], -1), TextRender()->TextWidth(0, 14.0f, aScoreTeam[1], -1)};
-		float ScoreWidthMax = max(max(aScoreTeamWidth[0], aScoreTeamWidth[1]), TextRender()->TextWidth(0, 14.0f, "100", -1));
+		str_format(aScoreTeam[TEAM_RED], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed);
+		str_format(aScoreTeam[TEAM_BLUE], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue);
+		float aScoreTeamWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_RED], -1), TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_BLUE], -1)};
+		float ScoreWidthMax = max(max(aScoreTeamWidth[TEAM_RED], aScoreTeamWidth[TEAM_BLUE]), TextRender()->TextWidth(0, 14.0f, "100", -1));
 		float Split = 3.0f;
 		float ImageSize = GameFlags&GAMEFLAG_FLAGS ? 16.0f : Split;
 		
@@ -199,7 +199,7 @@ void CHud::RenderTeambalanceWarning()
 	bool Flash = time_get()/(time_freq()/2)%2 == 0;
 	if (m_pClient->m_Snap.m_pGameobj && (m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS) != 0)
 	{	
-		int TeamDiff = m_pClient->m_Snap.m_aTeamSize[0]-m_pClient->m_Snap.m_aTeamSize[1];
+		int TeamDiff = m_pClient->m_Snap.m_aTeamSize[TEAM_RED]-m_pClient->m_Snap.m_aTeamSize[TEAM_BLUE];
 		if (g_Config.m_ClWarningTeambalance && (TeamDiff >= 2 || TeamDiff <= -2))
 		{
 			const char *pText = Localize("Please balance teams!");
@@ -411,7 +411,7 @@ void CHud::OnRender()
 	m_Width = 300*Graphics()->ScreenAspect();
 
 	bool Spectate = false;
-	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team == -1)
+	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_SPECTATORS)
 		Spectate = true;
 	
 	if(m_pClient->m_Snap.m_pLocalCharacter && !Spectate && !(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver)) {

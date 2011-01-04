@@ -231,15 +231,15 @@ void CChat::AddLine(int ClientId, int Team, const char *pLine)
 		}
 		else
 		{
-			if(m_pClient->m_aClients[ClientId].m_Team == -1)
-				m_aLines[m_CurrentLine].m_NameColor = -1;
+			if(m_pClient->m_aClients[ClientId].m_Team == TEAM_SPECTATORS)
+				m_aLines[m_CurrentLine].m_NameColor = TEAM_SPECTATORS;
 
 			if(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS)
 			{
-				if(m_pClient->m_aClients[ClientId].m_Team == 0)
-					m_aLines[m_CurrentLine].m_NameColor = 0;
-				else if(m_pClient->m_aClients[ClientId].m_Team == 1)
-					m_aLines[m_CurrentLine].m_NameColor = 1;
+				if(m_pClient->m_aClients[ClientId].m_Team == TEAM_RED)
+					m_aLines[m_CurrentLine].m_NameColor = TEAM_RED;
+				else if(m_pClient->m_aClients[ClientId].m_Team == TEAM_BLUE)
+					m_aLines[m_CurrentLine].m_NameColor = TEAM_BLUE;
 			}
 			
 			str_copy(m_aLines[m_CurrentLine].m_aName, m_pClient->m_aClients[ClientId].m_aName, sizeof(m_aLines[m_CurrentLine].m_aName));
@@ -353,11 +353,11 @@ void CChat::OnRender()
 			TextRender()->TextColor(1.0f, 1.0f, 0.5f, Blend); // system
 		else if(m_aLines[r].m_Team)
 			TextRender()->TextColor(0.45f, 0.9f, 0.45f, Blend); // team message
-		else if(m_aLines[r].m_NameColor == 0)
+		else if(m_aLines[r].m_NameColor == TEAM_RED)
 			TextRender()->TextColor(1.0f, 0.5f, 0.5f, Blend); // red
-		else if(m_aLines[r].m_NameColor == 1)
+		else if(m_aLines[r].m_NameColor == TEAM_BLUE)
 			TextRender()->TextColor(0.7f, 0.7f, 1.0f, Blend); // blue
-		else if(m_aLines[r].m_NameColor == -1)
+		else if(m_aLines[r].m_NameColor == TEAM_SPECTATORS)
 			TextRender()->TextColor(0.75f, 0.5f, 0.75f, Blend); // spectator
 		else
 			TextRender()->TextColor(0.8f, 0.8f, 0.8f, Blend);

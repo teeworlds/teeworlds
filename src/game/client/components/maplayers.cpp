@@ -182,12 +182,13 @@ void CMapLayers::OnRender()
 						Graphics()->TextureSet(-1);
 					else
 						Graphics()->TextureSet(m_pClient->m_pMapimages->Get(pTMap->m_Image));
-						
+					
 					CTile *pTiles = (CTile *)m_pLayers->Map()->GetData(pTMap->m_Data);
 					Graphics()->BlendNone();
-					RenderTools()->RenderTilemap(pTiles, pTMap->m_Width, pTMap->m_Height, 32.0f, vec4(1,1,1,1), TILERENDERFLAG_EXTEND|LAYERRENDERFLAG_OPAQUE);
+					vec4 Color = vec4(pTMap->m_Color.r/255.0f, pTMap->m_Color.g/255.0f, pTMap->m_Color.b/255.0f, pTMap->m_Color.a/255.0f);
+					RenderTools()->RenderTilemap(pTiles, pTMap->m_Width, pTMap->m_Height, 32.0f, Color, TILERENDERFLAG_EXTEND|LAYERRENDERFLAG_OPAQUE);
 					Graphics()->BlendNormal();
-					RenderTools()->RenderTilemap(pTiles, pTMap->m_Width, pTMap->m_Height, 32.0f, vec4(1,1,1,1), TILERENDERFLAG_EXTEND|LAYERRENDERFLAG_TRANSPARENT);
+					RenderTools()->RenderTilemap(pTiles, pTMap->m_Width, pTMap->m_Height, 32.0f, Color, TILERENDERFLAG_EXTEND|LAYERRENDERFLAG_TRANSPARENT);
 				}
 				else if(pLayer->m_Type == LAYERTYPE_QUADS)
 				{
