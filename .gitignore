@@ -12,7 +12,6 @@ teeworlds_d*
 teeworlds_srv_d*
 bam
 build server.bat
-buildlog.txt
 autoexec.cfg
 teeworlds
 bam.exe
