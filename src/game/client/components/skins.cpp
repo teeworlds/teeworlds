@@ -140,45 +140,6 @@ int CSkins::Find(const char *pName)
 	return -1;
 }
 
-// these converter functions were nicked from some random internet pages
-static float HueToRgb(float v1, float v2, float h)
-{
-   if(h < 0) h += 1;
-   if(h > 1) h -= 1;
-   if((6 * h) < 1) return v1 + ( v2 - v1 ) * 6 * h;
-   if((2 * h) < 1) return v2;
-   if((3 * h) < 2) return v1 + ( v2 - v1 ) * ((2.0f/3.0f) - h) * 6;
-   return v1;
-}
-
-static vec3 HslToRgb(vec3 in)
-{
-	float v1, v2;
-	vec3 Out;
-
-	if(in.s == 0)
-	{
-		Out.r = in.l;
-		Out.g = in.l;
-		Out.b = in.l;
-	}
-	else
-	{
-		if(in.l < 0.5f) 
-			v2 = in.l * (1 + in.s);
-		else           
-			v2 = (in.l+in.s) - (in.s*in.l);
-
-		v1 = 2 * in.l - v2;
-
-		Out.r = HueToRgb(v1, v2, in.h + (1.0f/3.0f));
-		Out.g = HueToRgb(v1, v2, in.h);
-		Out.b = HueToRgb(v1, v2, in.h - (1.0f/3.0f));
-	} 
-
-	return Out;
-}
-
 vec3 CSkins::GetColorV3(int v)
 {
 	return HslToRgb(vec3(((v>>16)&0xff)/255.0f, ((v>>8)&0xff)/255.0f, 0.5f+(v&0xff)/255.0f*0.5f));
@@ -186,6 +147,6 @@ vec3 CSkins::GetColorV3(int v)
 
 vec4 CSkins::GetColorV4(int v)
 {
-	vec3 r = HslToRgb(vec3(((v>>16)&0xff)/255.0f, ((v>>8)&0xff)/255.0f, 0.5f+(v&0xff)/255.0f*0.5f));
+	vec3 r = GetColorV3(v);
 	return vec4(r.r, r.g, r.b, 1.0f);
 }
