@@ -963,5 +963,8 @@ seconds
 
 ##### needs translation #####
 
+Name plates size
+== 
+
 ##### old translations #####
 

@@ -1,3 +1,4 @@
+
 ##### translated strings #####
 
 %d of %d servers, %d players
@@ -417,9 +418,6 @@ Layers
 Left
 == Links
 
-left
-== nog
-
 Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
 == Linkermuisknop om te bewegen. Houd shift ingedrukt om te roteren. Houd ctrl ingedrukt om te draaien.
 
@@ -456,20 +454,14 @@ Make external
 Map
 == Kaart
 
-Max demos
-== Maximaal aantal demo's
-
 Max Screenshots
 == Maximaal aantal schermafbeeldingen
 
+Max demos
+== Maximaal aantal demo's
+
 Maximum ping:
 == Hoogste ping:
-
-minute
-== minuut
-
-minutes
-== minuten
 
 Miscellaneous
 == Diverse
@@ -515,9 +507,6 @@ Nickname
 
 No
 == Nee
-
-no limit
-== ongelimiteerd
 
 No password
 == Geen wachtwoord
@@ -731,12 +720,6 @@ Scoreboard
 
 Screenshot
 == Schermafbeelding
-
-second
-== seconde
-
-seconds
-== seconden
 
 Select group. Right click for properties.
 == Kies een groep. Rechtermuisknop voor eigenschappen.
@@ -960,7 +943,28 @@ ZO
 [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
 == [ctrl+p] Test grenzen. Deze grenzen laten zien wat een speler maximaal kan zien.
 
+left
+== nog
+
+minute
+== minuut
+
+minutes
+== minuten
+
+no limit
+== ongelimiteerd
+
+second
+== seconde
+
+seconds
+== seconden
+
 ##### needs translation #####
+
+Name plates size
+== 
 
 ##### old translations #####
 
