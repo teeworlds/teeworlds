@@ -870,6 +870,9 @@ Max Screenshots
 Max demos
 == 
 
+Name plates size
+== 
+
 New folder
 == 
 
