@@ -364,9 +364,6 @@ void CMenus::UiDoGetButtons(int Start, int Stop, CUIRect View)
 
 void CMenus::RenderSettingsControls(CUIRect MainView)
 {
-	float oldScale = UI()->Scale();
-	UI()->SetScale(1.0);
-
 	// this is kinda slow, but whatever
 	for(int i = 0; i < g_KeyCount; i++)
 		gs_aKeys[i].m_KeyId = 0;
@@ -454,7 +451,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	// misc settings
 	{
 		MiscSettings.HSplitTop(10.0f, 0, &MiscSettings);
-		MiscSettings.HSplitTop(MainView.h/2-5.0f/(UI()->Scale())-45.0f, &MiscSettings, &ResetButton);
+		MiscSettings.HSplitBottom(50.0f*UI()->Scale(), &MiscSettings, &ResetButton);
 		RenderTools()->DrawUIRect(&MiscSettings, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 		MiscSettings.Margin(10.0f, &MiscSettings);
 
@@ -469,8 +466,6 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	static int s_DefaultButton = 0;
 	if(DoButton_Menu((void*)&s_DefaultButton, Localize("Reset to defaults"), 0, &ResetButton))
 		m_pClient->m_pBinds->SetDefaults();
-
-	UI()->SetScale(oldScale);
 }
 
 void CMenus::RenderSettingsGraphics(CUIRect MainView)
