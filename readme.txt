@@ -3,7 +3,7 @@ This is a mod (DDRace) and it's for the game Teeworlds and it's being maintained
 DDRace has been rebuilt from scratch by btd based on DDRace-Beta to Teeworlds Trunk 0.5, GreYFoX@GTi helped re-adding features once it was Trunk, you can track this in the commit log.
 
 Teeworlds README is as follows:
-Copyright (c) 2010 Magnus Auvinen
+Copyright (c) 2011 Magnus Auvinen
 
 
 This software is provided 'as-is', without any express or implied

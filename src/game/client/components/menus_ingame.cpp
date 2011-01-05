@@ -192,8 +192,8 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	MainView.Margin(10.0f, &View);
 	
 	// serverinfo
-	View.HSplitTop(View.h/2-5.0f, &ServerInfo, &Motd);
-	ServerInfo.VSplitLeft(View.w/2-5.0f, &ServerInfo, &GameInfo);
+	View.HSplitTop(View.h/2/UI()->Scale()-5.0f, &ServerInfo, &Motd);
+	ServerInfo.VSplitLeft(View.w/2/UI()->Scale()-5.0f, &ServerInfo, &GameInfo);
 	RenderTools()->DrawUIRect(&ServerInfo, vec4(1,1,1,0.25f), CUI::CORNER_ALL, 10.0f);
 	
 	ServerInfo.Margin(5.0f, &ServerInfo);
@@ -299,7 +299,7 @@ void CMenus::RenderServerControlServer(CUIRect MainView)
 		CListboxItem Item = UiDoListboxNextItem(pOption);
 		
 		if(Item.m_Visible)
-			UI()->DoLabel(&Item.m_Rect, FormatCommand(pOption->m_aCommand), 16.0f, -1);
+			UI()->DoLabelScaled(&Item.m_Rect, FormatCommand(pOption->m_aCommand), 16.0f, -1);
 	}
 	
 	m_CallvoteSelectedOption = UiDoListboxEnd(&s_ScrollValue, 0);
@@ -335,7 +335,7 @@ void CMenus::RenderServerControlKick(CUIRect MainView)
 			Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0), vec2(Item.m_Rect.x+Item.m_Rect.h/2, Item.m_Rect.y+Item.m_Rect.h/2));
 			Item.m_Rect.x +=Info.m_Size;
-			UI()->DoLabel(&Item.m_Rect, m_pClient->m_aClients[aPlayerIDs[i]].m_aName, 16.0f, -1);
+			UI()->DoLabelScaled(&Item.m_Rect, m_pClient->m_aClients[aPlayerIDs[i]].m_aName, 16.0f, -1);
 		}
 	}
 	
@@ -422,7 +422,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			Bottom.VSplitRight(160.0f, &Bottom, &Reason);
 			Reason.HSplitTop(5.0f, 0, &Reason);
 			const char *pLabel = Localize("Reason:");
-			UI()->DoLabel(&Reason, pLabel, 14.0f, -1);
+			UI()->DoLabelScaled(&Reason, pLabel, 14.0f, -1);
 			float w = TextRender()->TextWidth(0, 14.0f, pLabel, -1);
 			Reason.VSplitLeft(w+10.0f, 0, &Reason);
 			static float s_Offset = 0.0f;

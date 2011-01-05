@@ -795,6 +795,18 @@ ZO
 
 ##### needs translation #####
 
+%i minute left
+== 
+
+%i minutes left
+== 
+
+%i second left
+== 
+
+%i seconds left
+== 
+
 Alpha value of the envelope
 == 
 
@@ -868,6 +880,9 @@ Max Screenshots
 == 
 
 Max demos
+== 
+
+Name plates size
 == 
 
 New folder
@@ -945,22 +960,7 @@ Y-axis of the envelope
 [HOME] Restore map focus
 == 
 
-left
-== 
-
-minute
-== 
-
-minutes
-== 
-
 no limit
-== 
-
-second
-== 
-
-seconds
 == 
 
 == 
