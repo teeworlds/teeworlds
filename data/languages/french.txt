@@ -10,6 +10,18 @@
 %ds left
 == %ds a quitté
 
+%i minute left
+== %i minute restante
+
+%i minutes left
+== %i minutes restantes
+
+%i second left
+== %i seconde restante
+
+%i seconds left
+== %i secondes restantes
+
 Abort
 == Annuler
 
@@ -55,6 +67,12 @@ Are you sure that you want to quit?
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Comme c'est la première fois que vous lancez le jeu, veuillez entrer votre pseudonyme ci-dessous. Vous devriez vérifier les réglages et les ajuster avant de rejoindre un serveur.
 
+Automatically record demos
+== Enregistrer automatiquement une démo
+
+Automatically take game over screenshot
+== Faire automatiquement une capture d'écran à la fin de la partie
+
 Blue team
 == Équipe bleue
 
@@ -66,6 +84,12 @@ Body
 
 Border
 == Bordure
+
+CCW
+== SAH
+
+CW
+== SH
 
 Call vote
 == Voter
@@ -214,6 +238,9 @@ Feet
 File
 == Fichier
 
+File: %s
+== Fichier : %s
+
 Filename:
 == Nom du fichier:
 
@@ -258,6 +285,9 @@ Grenade
 
 Group
 == Groupe
+
+HD
+== HD
 
 Hammer
 == Maillet
@@ -354,6 +384,12 @@ Make external
 
 Map
 == Carte
+
+Max Screenshots
+== Nombre max de captures d'écran
+
+Max demos
+== Nombre max de démos
 
 Maximum ping:
 == Ping maximum:
@@ -721,19 +757,10 @@ ZO
 [NumPad-] Zoom out
 == [ClavierNum-] Dézoomer
 
+no limit
+== pas de limite
+
 ##### needs translation #####
-
-%i minute left
-== 
-
-%i minutes left
-== 
-
-%i second left
-== 
-
-%i seconds left
-== 
 
 %s Right click for context menu.
 == 
@@ -756,19 +783,7 @@ Alpha value of the envelope
 Aspect ratio
 == 
 
-Automatically record demos
-== 
-
-Automatically take game over screenshot
-== 
-
 Blue value of the envelope
-== 
-
-CCW
-== 
-
-CW
 == 
 
 Clip H
@@ -816,9 +831,6 @@ Enable/disable layer for saving
 Envelopes
 == 
 
-File: %s
-== 
-
 Green value of the envelope
 == 
 
@@ -832,12 +844,6 @@ Left mouse button to move. Hold shift to move the texture.
 == 
 
 Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.
-== 
-
-Max Screenshots
-== 
-
-Max demos
 == 
 
 Name plates size
@@ -958,9 +964,6 @@ Y-axis of the envelope
 == 
 
 [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
-== 
-
-no limit
 == 
 
 ##### old translations #####
