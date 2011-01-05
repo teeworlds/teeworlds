@@ -693,6 +693,9 @@ Max Screenshots
 Max demos
 == 
 
+Name plates size
+== 
+
 Name:
 == 
 
