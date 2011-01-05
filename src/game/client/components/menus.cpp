@@ -53,7 +53,6 @@ CMenus::CMenus()
 	m_NeedSendinfo = false;
 	m_MenuActive = true;
 	m_UseMouseButtons = true;
-	m_DemolistDelEntry = false;
 	
 	m_EscapePressed = false;
 	m_EnterPressed = false;
@@ -1034,7 +1033,19 @@ int CMenus::Render()
 			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Yes"), 0, &Yes) || m_EnterPressed)
 			{
 				m_Popup = POPUP_NONE;
-				m_DemolistDelEntry = true;
+				// delete demo
+				if(m_DemolistSelectedIndex >= 0 && !m_DemolistSelectedIsDir)
+				{
+					char aBuf[512];
+					str_format(aBuf, sizeof(aBuf), "%s/%s", m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
+					if(Storage()->RemoveFile(aBuf, m_lDemos[m_DemolistSelectedIndex].m_StorageType))
+					{
+						DemolistPopulate();
+						DemolistOnUpdate(false);
+					}
+					else
+						PopupMessage(Localize("Error"), Localize("Unable to delete the demo"), Localize("Ok"));
+				}
 			}
 		}
 		else if(m_Popup == POPUP_FIRST_LAUNCH)
