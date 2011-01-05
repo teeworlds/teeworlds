@@ -477,22 +477,6 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		s_Inited = 1;
 	}
 
-	// delete demo
-	if(m_DemolistDelEntry)
-	{
-		if(m_DemolistSelectedIndex >= 0 && !m_DemolistSelectedIsDir)
-		{
-			char aBuf[512];
-			str_format(aBuf, sizeof(aBuf), "%s/%s", m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
-			if(Storage()->RemoveFile(aBuf, m_lDemos[m_DemolistSelectedIndex].m_StorageType))
-			{
-				DemolistPopulate();
-				DemolistOnUpdate(false);
-			}
-		}
-		m_DemolistDelEntry = false;
-	}
-
 	char aFooterLabel[128] = {0};
 	if(m_DemolistSelectedIndex >= 0)
 	{
