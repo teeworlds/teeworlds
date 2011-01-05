@@ -1,8 +1,17 @@
 .bam
-src/game/generated
-objs
-datasrc/*.pyc
 config.lua
+datasrc/__pycache__
+datasrc/*.pyc
+objs
+src/game/generated
 
-teeworlds_d
-teeworlds_srv_d
+crapnet*
+dilate*
+fake_server*
+map_resave*
+mastersrv*
+packetgen*
+teeworlds*
+teeworlds_srv*
+tileset_borderfix*
+versionsrv*
