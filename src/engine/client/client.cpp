@@ -2111,6 +2111,11 @@ const char* CClient::GetCurrentMap()
 	return m_aCurrentMap;
 }
 
+int CClient::GetCurrentMapCrc()
+{
+	return m_CurrentMapCrc;
+}
+
 const char* CClient::RaceRecordStart(const char *pFilename)
 {
 	char aFilename[128];

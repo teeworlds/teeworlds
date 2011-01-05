@@ -518,11 +518,11 @@ void CPlayers::RenderPlayer(
 		RenderTools()->RenderTee(&State, &Ghost, Player.m_Emote, Direction, GhostPosition); // render ghost
 	}
 
-	if(pInfo.m_Local)
+	/*if(pInfo.m_Local)
 	{
 		if(NewTick)
-			m_pClient->m_pGhost->SetGeneralInfos(Player, RenderInfo, State);
-	}
+			m_pClient->m_pGhost->SetGeneralInfos(Player, pInfo);
+	}*/
 
 	RenderInfo.m_Size = 64.0f; // force some settings
 	RenderInfo.m_ColorBody.a = 1.0f;

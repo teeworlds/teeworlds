@@ -314,6 +314,7 @@ public:
 
 	// Race
 	virtual const char* GetCurrentMap();
+	virtual int GetCurrentMapCrc();
 	virtual const char* RaceRecordStart(const char *pFilename);
 
 	void RegisterCommands();
