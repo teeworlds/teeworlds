@@ -180,7 +180,6 @@ class CMenus : public CComponent
 	
 	sorted_array<CDemoItem> m_lDemos;
 	char m_aCurrentDemoFolder[256];
-	bool m_DemolistDelEntry;
 	int m_DemolistSelectedIndex;
 	bool m_DemolistSelectedIsDir;
 	int m_DemolistStorageType;
