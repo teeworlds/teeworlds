@@ -1503,7 +1503,6 @@ void CServer::ConStatus(IConsole::IResult *pResult, void *pUser, int ClientId)
 	NETADDR Addr;
 	char aBuf[1024];
 	CServer* pServer = (CServer *)pUser;
-
 	for(i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(pServer->m_aClients[i].m_State != CClient::STATE_EMPTY)
@@ -1511,6 +1510,7 @@ void CServer::ConStatus(IConsole::IResult *pResult, void *pUser, int ClientId)
 			Addr = pServer->m_NetServer.ClientAddr(i);
 			if(pServer->m_aClients[i].m_State == CClient::STATE_INGAME)
 	
+
 				str_format(aBuf, sizeof(aBuf), "id=%d addr=%d.%d.%d.%d:%d name='%s' level=%d",
 					i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], Addr.port,
 		
