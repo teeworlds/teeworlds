@@ -4,7 +4,7 @@ Emotes = ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"]
 PlayerStates = ["UNKNOWN", "PLAYING", "IN_MENU", "CHATTING"]
 GameFlags = ["TEAMS", "FLAGS"]
 
-Emoticons = [str(x) for x in xrange(1,16)]
+Emoticons = [str(x) for x in range(1,16)]
 
 Powerups = ["HEALTH", "ARMOR", "WEAPON", "NINJA"]
 

@@ -169,7 +169,7 @@ class DataContainer(Struct):
 		self.weapons = Weapons()
 
 def FileList(format, num):
-	return [format%(x+1) for x in xrange(0,num)]
+	return [format%(x+1) for x in range(0,num)]
 
 container = DataContainer()
 container.sounds.Add(SoundSet("gun_fire", FileList("audio/wp_gun_fire-%02d.wv", 3)))
