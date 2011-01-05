@@ -943,25 +943,22 @@ ZO
 [ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.
 == [ctrl+p] Test grenzen. Deze grenzen laten zien wat een speler maximaal kan zien.
 
-left
-== nog
-
-minute
-== minuut
-
-minutes
-== minuten
-
 no limit
 == ongelimiteerd
 
-second
-== seconde
-
-seconds
-== seconden
-
 ##### needs translation #####
+
+%i minute left
+== 
+
+%i minutes left
+== 
+
+%i second left
+== 
+
+%i seconds left
+== 
 
 Name plates size
 == 

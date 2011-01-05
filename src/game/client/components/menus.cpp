@@ -979,13 +979,13 @@ int CMenus::Render()
 				if(TimeLeft >= 60)
 				{
 					TimeLeft /= 60;
-					pTimeLeftString = TimeLeft == 1 ? Localize("minute") : Localize("minutes");
+					pTimeLeftString = TimeLeft == 1 ? Localize("%i minute left") : Localize("%i minutes left");
 				}
 				else
-					pTimeLeftString = TimeLeft == 1 ? Localize("second") : Localize("seconds");
+					pTimeLeftString = TimeLeft == 1 ? Localize("%i second left") : Localize("%i seconds left");
 				Box.HSplitTop(20.f, 0, &Box);
 				Box.HSplitTop(24.f, &Part, &Box);
-				str_format(aBuf, sizeof(aBuf), "%i %s %s", TimeLeft, pTimeLeftString, Localize("left"));
+				str_format(aBuf, sizeof(aBuf), pTimeLeftString, TimeLeft);
 				UI()->DoLabel(&Part, aBuf, 20.f, 0, -1);
 
 				// progress bar
