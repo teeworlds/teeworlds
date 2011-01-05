@@ -4,8 +4,23 @@
 %d of %d servers, %d players
 == %d od %d server(a), %d igrač(a)
 
+%d%% loaded
+== Učitano %d%%
+
 %ds left
 == Još %ds
+
+%i minute left
+== Preostalo: %i min.
+
+%i minutes left
+== Preostalo: %i min.
+
+%i second left
+== Preostalo: %i sek.
+
+%i seconds left
+== Preostalo: %i sek.
 
 Abort
 == Prekini
@@ -22,11 +37,20 @@ Alpha
 Always show name plates
 == Uvijek prikaži imena igrača
 
+Are you sure that you want to delete the demo?
+== Jeste li sigurni da želite obrisati demo-snimak?
+
 Are you sure that you want to quit?
 == Jeste li sigurni da želite izići?
 
 As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.
 == Pošto prvi put pokrećete igru, molimo da ispod unesete Vaš nadimak (nick). Preporučujemo da provjerite postavke i podesite ih prema Vašem ukusu prije nego se konektujete na server.
+
+Automatically record demos
+== Automatski demo-snimci
+
+Automatically take game over screenshot
+== Automatski screenshot po završetku igre
 
 Blue team
 == Plavi tim
@@ -75,6 +99,9 @@ Custom colors
 
 Delete
 == Obriši
+
+Delete demo
+== Brisanje demo-snimka
 
 Demos
 == Demo
@@ -126,6 +153,9 @@ Filter
 
 Fire
 == Pucanje
+
+Folder
+== Direktorij
 
 Force vote
 == Obavezno glasanje
@@ -181,6 +211,9 @@ Info
 Internet
 == Internet
 
+Invalid Demo
+== Neispravan demo-snimak
+
 Join blue
 == U plavi tim
 
@@ -213,6 +246,12 @@ MOTD
 
 Map
 == Mapa
+
+Max Screenshots
+== Maksimalan broj screenshot-a
+
+Max demos
+== Maximalan broj demo-snimaka
 
 Maximum ping:
 == Maksimalan ping:
@@ -262,6 +301,12 @@ No servers match your filter criteria
 Ok
 == OK
 
+Open
+== Otvori
+
+Parent Folder
+== Prethodni direktorij
+
 Password
 == Lozinka
 
@@ -275,7 +320,7 @@ Pistol
 == Pištolj
 
 Play
-== Pokreni
+== Pogledaj
 
 Player
 == Igrač
@@ -297,6 +342,9 @@ Quick search:
 
 Quit
 == Izlaz
+
+Record demo
+== Snimi demo
 
 Red team
 == Crveni tim
@@ -415,6 +463,9 @@ The server is running a non-standard tuning on a pure game type.
 Time limit
 == Max. vremena
 
+Time limit: %d min
+== Max. vremena: %d min.
+
 Try again
 == Pokušaj ponovo
 
@@ -462,21 +513,6 @@ Your skin
 
 ##### needs translation #####
 
-%d%% loaded
-== 
-
-%i minute left
-== 
-
-%i minutes left
-== 
-
-%i second left
-== 
-
-%i seconds left
-== 
-
 %s Right click for context menu.
 == 
 
@@ -516,16 +552,7 @@ Append
 Append map
 == 
 
-Are you sure that you want to delete the demo?
-== 
-
 Aspect ratio
-== 
-
-Automatically record demos
-== 
-
-Automatically take game over screenshot
 == 
 
 Blue value of the envelope
@@ -594,9 +621,6 @@ Decrease
 Decrease animation speed
 == 
 
-Delete demo
-== 
-
 Delete group
 == 
 
@@ -654,9 +678,6 @@ File: %s
 Filename:
 == 
 
-Folder
-== 
-
 Green value of the envelope
 == 
 
@@ -679,9 +700,6 @@ Increase
 == 
 
 Increase animation speed
-== 
-
-Invalid Demo
 == 
 
 Layers
@@ -714,12 +732,6 @@ Make collision
 Make external
 == 
 
-Max Screenshots
-== 
-
-Max demos
-== 
-
 Name plates size
 == 
 
@@ -741,9 +753,6 @@ None
 Normal animation speed
 == 
 
-Open
-== 
-
 Opens a map and adds everything from that map to the current one
 == 
 
@@ -757,9 +766,6 @@ Para X
 == 
 
 Para Y
-== 
-
-Parent Folder
 == 
 
 Pos X
@@ -793,9 +799,6 @@ REC
 == 
 
 Reason:
-== 
-
-Record demo
 == 
 
 Red value of the envelope
@@ -880,9 +883,6 @@ Switch curve type
 == 
 
 Tiles
-== 
-
-Time limit: %d min
 == 
 
 Toggle group visibility
