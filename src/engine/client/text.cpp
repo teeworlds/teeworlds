@@ -354,8 +354,11 @@ class CTextRender : public IEngineTextRender
 		}
 		else
 		{
-			Grow(ms_aGlyphData, ms_aGlyphDataOutlined, SlotW, SlotH);
-			Grow(ms_aGlyphDataOutlined, ms_aGlyphData, SlotW, SlotH);
+			for(int i = OutlineThickness; i > 0; i-=2)
+			{
+				Grow(ms_aGlyphData, ms_aGlyphDataOutlined, SlotW, SlotH);
+				Grow(ms_aGlyphDataOutlined, ms_aGlyphData, SlotW, SlotH);
+			}
 			UploadGlyph(pSizeData, 1, SlotId, Chr, ms_aGlyphData);
 		}
 		
