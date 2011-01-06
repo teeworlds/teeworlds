@@ -904,6 +904,22 @@ void CGameContext::ConSetTeam(IConsole::IResult *pResult, void *pUserData)
 	(void)pSelf->m_pController->CheckTeamBalance();
 }
 
+void CGameContext::ConSetTeamAll(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	int Team = clamp(pResult->GetInteger(0), -1, 1);
+	
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "moved all clients to team %d", Team);
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+	
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+		if(pSelf->m_apPlayers[i])
+			pSelf->m_apPlayers[i]->SetTeam(Team);
+	
+	(void)pSelf->m_pController->CheckTeamBalance();
+}
+
 void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
@@ -992,6 +1008,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConBroadcast, this, "");
 	Console()->Register("say", "r", CFGFLAG_SERVER, ConSay, this, "");
 	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConSetTeam, this, "");
+	Console()->Register("set_team_all", "i", CFGFLAG_SERVER, ConSetTeamAll, this, "");
 
 	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConAddVote, this, "");
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "");
