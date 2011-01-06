@@ -26,7 +26,7 @@ def cstrip(lines):
 
 f = ""
 for filename in sys.argv[1:]:
-	f += cstrip([l.decode("iso8859-1").strip() for l in open(filename, "rb")])
+	f += cstrip([l.strip() for l in open(filename, "rb")])
 
 hash = hashlib.md5(f.encode()).hexdigest().lower()[16:]
 # TODO: refactor hash that is equal to the 0.5 hash, remove when we 
