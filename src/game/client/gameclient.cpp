@@ -249,8 +249,6 @@ void CGameClient::OnConsoleInit()
 
 void CGameClient::OnInit()
 {
-	//m_pServerBrowser = Kernel()->RequestInterface<IServerBrowser>();
-	
 	// set the language
 	g_Localization.Load(g_Config.m_ClLanguagefile, Storage(), Console());
 	
@@ -264,9 +262,8 @@ void CGameClient::OnInit()
 	
 	int64 Start = time_get();
 	
-	// load font	
-	static CFont *pFont;
-	//default_font = gfx_font_load("data/fonts/sazanami-gothic.ttf");
+	// load default font	
+	static CFont *pFont = 0;
 
 	char aFilename[512];
 	char aFontPath[512];
@@ -287,6 +284,9 @@ void CGameClient::OnInit()
 		str_copy(g_Config.m_ClFontfile, "Free Sans Bold.ttf", sizeof(g_Config.m_ClFontfile));
 	}
 	TextRender()->SetFont(pFont);
+	}
+	if(!pDefaultFont)
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gameclient", "failed to load font. filename='fonts/DejaVuSans.ttf'");
 
 	g_Config.m_ClThreadsoundloading = 0;
 
@@ -304,8 +304,10 @@ void CGameClient::OnInit()
 		gs_LoadCurrent++;
 	}
 
+	// load skins
 	::gs_Skins.Init();
-	
+	if(!::gs_Skins.Num())
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gameclient", "failed to load skins. folder='skins/'");
 	
 	// TODO: Refactor: fix threaded loading of sounds again
 	// load sounds
@@ -317,8 +319,8 @@ void CGameClient::OnInit()
 				g_GameClient.m_pMenus->RenderLoading(gs_LoadCurrent/(float)gs_LoadTotal);
 			for(int i = 0; i < g_pData->m_aSounds[s].m_NumSounds; i++)
 			{
-				int id = Sound()->LoadWV(g_pData->m_aSounds[s].m_aSounds[i].m_pFilename);
-				g_pData->m_aSounds[s].m_aSounds[i].m_Id = id;
+				int Id = Sound()->LoadWV(g_pData->m_aSounds[s].m_aSounds[i].m_pFilename);
+				g_pData->m_aSounds[s].m_aSounds[i].m_Id = Id;
 			}
 
 			if(DoRender)
