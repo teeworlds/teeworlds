@@ -127,7 +127,6 @@ int CLayerQuads::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 		
 		if(px > Rect.x && px < Rect.x+Rect.w && py > Rect.y && py < Rect.y+Rect.h)
 		{
-			m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", "grabbed one");
 			CQuad n;
 			n = *q;
 			
