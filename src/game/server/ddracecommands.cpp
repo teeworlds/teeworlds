@@ -720,18 +720,18 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 		{
 			if(pPlayer->m_Last_Pause + pSelf->Server()->TickSpeed() * g_Config.m_SvPauseFrequency <= pSelf->Server()->Tick()) {
 				pPlayer->SaveCharacter();
-				pPlayer->SetTeam(-1);
+				pPlayer->SetTeam(TEAM_SPECTATORS);
 				pPlayer->m_InfoSaved = true;
 				pPlayer->m_Last_Pause = pSelf->Server()->Tick();
 			}
 			else
 				pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You can\'t pause that often.");
 		}
-		else if(pPlayer->GetTeam()==-1 && pPlayer->m_InfoSaved)
+		else if(pPlayer->GetTeam()==TEAM_SPECTATORS && pPlayer->m_InfoSaved)
 		{
 			pPlayer->m_InfoSaved = false;
 			pPlayer->m_PauseInfo.m_Respawn = true;
-			//pPlayer->SetTeam(0);
+			pPlayer->SetTeam(TEAM_RED);
 			//pPlayer->LoadCharacter();//TODO:Check if this system Works
 		}
 		else if(chr)
