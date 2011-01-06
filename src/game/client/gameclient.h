@@ -252,6 +252,7 @@ public:
 	virtual void OnEnterGame();
 	virtual void OnRconLine(const char *pLine);
 	virtual void OnGameOver();
+	virtual void OnStartGame();
 	
 	// TeeComp hooks
 	int m_LastGameOver;
