@@ -46,6 +46,19 @@ class CGameContext : public IGameServer
 	CTuningParams m_Tuning;
 	class IScore *m_pScore;
 
+	static void ConTuneParam(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConTuneReset(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConTuneDump(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConChangeMap(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConRestart(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConBroadcast(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConSay(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConSetTeam(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConSetTeamAll(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConAddVote(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConVote(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	
 	static void ConMute(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConLogOut(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConSetlvl1(IConsole::IResult *pResult, void *pUserData, int ClientId);
@@ -72,11 +85,6 @@ class CGameContext : public IGameServer
 	void MoveCharacter(int ClientId, int Victim, int X, int Y, bool Raw = false);
 	
 	static void ConTeleport(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	
-	static void ConTuneParam(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConTuneReset(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConTuneDump(IConsole::IResult *pResult, void *pUserData, int ClientId);
-
 	static void ConPhook(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	
 	static void ConFreeze(IConsole::IResult *pResult, void *pUserData, int ClientId);
@@ -85,13 +93,6 @@ class CGameContext : public IGameServer
 	static void ConTimerStart(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConTimerReStart(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConTimerZero(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConChangeMap(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConRestart(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConBroadcast(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	
-	static void ConSay(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConSetTeam(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	
 	static void ConGoLeft(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConGoRight(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConGoUp(IConsole::IResult *pResult, void *pUserData, int ClientId);
@@ -99,34 +100,29 @@ class CGameContext : public IGameServer
 	
 	static void ConMove(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConMoveRaw(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	
-	static void ConAddVote(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConClearVotes(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConVote(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	static void ConchainSpecialMotdupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
-	
 	static void ConInvisMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConVisMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConInvis(IConsole::IResult *pResult, void *pUserData, int ClientId);
 	static void ConVis(IConsole::IResult *pResult, void *pUserData, int ClientId);
-	
-  static void ConCredits(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConInfo(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConHelp(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConSettings(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConRules(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConKill(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConTogglePause(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConTop5(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConRank(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConBroadTime(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConJoinTeam(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConToggleFly(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConToggleEyeEmote(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConToggleBroadcast(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConEyeEmote(IConsole::IResult *pResult, void *pUserData, int ClientId);
-  static void ConShowOthers(IConsole::IResult *pResult, void *pUserData, int ClientId);
+
+	static void ConCredits(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConInfo(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConHelp(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConSettings(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConRules(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConKill(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConTogglePause(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConTop5(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConRank(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConBroadTime(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConJoinTeam(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConToggleFly(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConMe(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConToggleEyeEmote(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConToggleBroadcast(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConEyeEmote(IConsole::IResult *pResult, void *pUserData, int ClientId);
+	static void ConShowOthers(IConsole::IResult *pResult, void *pUserData, int ClientId);
 
 	CGameContext(int Resetting);
 	void Construct(int Resetting);
@@ -139,7 +135,7 @@ public:
 	CCollision *Collision() { return &m_Collision; }
 	CLayers *Layers() { return &m_Layers; }
 	CTuningParams *Tuning() { return &m_Tuning; }
-	
+
 	class IScore *Score() { return m_pScore; }
 
 	CGameContext();
