@@ -68,7 +68,7 @@ if gen_client_content_header or gen_server_content_header:
 	contentlines = open("datasrc/content.py", "rb").readlines()
 	order = []
 	for line in contentlines:
-		line = line.decode("iso8859-1").strip()
+		line = line.strip()
 		if line[:6] == "class " and '(Struct)' in line:
 			order += [line.split()[1].split("(")[0]]
 	for name in order:
