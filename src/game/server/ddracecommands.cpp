@@ -916,3 +916,14 @@ void CGameContext::ConEyeEmote(IConsole::IResult *pResult, void *pUserData, int 
 		}
 	}
 }
+
+void CGameContext::ConShowOthers(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+
+	if(pSelf->m_apPlayers[ClientId]->m_IsUsingDDRaceClient)
+		pSelf->m_apPlayers[ClientId]->m_ShowOthers = !pSelf->m_apPlayers[ClientId]->m_ShowOthers;
+	else
+		pSelf->SendChatTarget(ClientId, "Showing players from other teams is only available with DDRace Client, http://DDRace.info");
+}
+
