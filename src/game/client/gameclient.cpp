@@ -581,7 +581,8 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		else
 			g_GameClient.m_pSounds->Play(CSounds::CHN_GLOBAL, pMsg->m_Soundid, 1.0f, vec2(0,0));
 	}		
-	else if(MsgId == NETMSGTYPE_CL_TEAMSSTATE) {
+	else if(MsgId == NETMSGTYPE_CL_TEAMSSTATE)
+	{
 		CNetMsg_Cl_TeamsState *pMsg = (CNetMsg_Cl_TeamsState *)pRawMsg;
 		m_Teams.Team(0, pMsg->m_Tee0);
 		m_Teams.Team(1, pMsg->m_Tee1);
@@ -600,10 +601,10 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		m_Teams.Team(14, pMsg->m_Tee14);
 		m_Teams.Team(15, pMsg->m_Tee15);
 		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
 			dbg_msg1("Teams", "Team = %d", m_Teams.Team(i));
-		}
-	} else if(MsgId == NETMSGTYPE_SV_PLAYERTIME) {
+	}
+	else if(MsgId == NETMSGTYPE_SV_PLAYERTIME)
+	{
 		CNetMsg_Sv_PlayerTime *pMsg = (CNetMsg_Sv_PlayerTime *)pRawMsg;
 		m_aClients[pMsg->m_Cid].m_Score = pMsg->m_Time;
 	}

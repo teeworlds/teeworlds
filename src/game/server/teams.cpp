@@ -1,13 +1,16 @@
 #include "teams.h"
 #include <engine/shared/config.h>
 
-CGameTeams::CGameTeams(CGameContext *pGameContext) : m_pGameContext(pGameContext) {
+CGameTeams::CGameTeams(CGameContext *pGameContext) : m_pGameContext(pGameContext)
+{
 	Reset();
 }
 
-void CGameTeams::Reset() {
+void CGameTeams::Reset()
+{
 	m_Core.Reset();
-	for(int i = 0; i < MAX_CLIENTS; ++i) {
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
 		m_TeamState[i] = EMPTY;
 		m_TeeFinished[i] = false;
 		m_MembersCount[i] = 0;
@@ -15,7 +18,7 @@ void CGameTeams::Reset() {
 	}
 }
 
-void CGameTeams::OnCharacterStart(int id) {
+void CGameTeams::OnCharacterStart(int id){
 	int Tick = Server()->Tick();
 	CCharacter* StartingChar = Character(id);
 	if(!StartingChar)
@@ -77,7 +80,8 @@ void CGameTeams::OnCharacterStart(int id) {
 	}
 }
 
-void CGameTeams::OnCharacterFinish(int id) {
+void CGameTeams::OnCharacterFinish(int id)
+{
 	if(m_Core.Team(id) == TEAM_FLOCK || m_Core.Team(id) == TEAM_SUPER)
 	{
 		Character(id)->OnFinish();
@@ -111,32 +115,26 @@ void CGameTeams::OnCharacterFinish(int id) {
 	}
 }
 
-bool CGameTeams::SetCharacterTeam(int id, int Team) {
+bool CGameTeams::SetCharacterTeam(int id, int Team)
+{
 	//Check on wrong parameters. +1 for TEAM_SUPER
-	if(id < 0 || id >= MAX_CLIENTS || Team < 0 || Team >= MAX_CLIENTS + 1) {
+	if(id < 0 || id >= MAX_CLIENTS || Team < 0 || Team >= MAX_CLIENTS + 1)
 		return false;
-	}
 	//You can join to TEAM_SUPER at any time, but any other group you cannot if it started
-	if(Team != TEAM_SUPER && m_TeamState[Team] >= CLOSED) {
+	if(Team != TEAM_SUPER && m_TeamState[Team] >= CLOSED)
 		return false;
-	}
 	//No need to switch team if you there
-	if(m_Core.Team(id) == Team) {
+	if(m_Core.Team(id) == Team)
 		return false;
-	}
 	//You cannot be in TEAM_SUPER if you not super
 	if(Team == TEAM_SUPER && !Character(id)->m_Super) return false;
 	//if you begin race
-	if(Character(id)->m_DDRaceState != DDRACE_NONE) {
+	if(Character(id)->m_DDRaceState != DDRACE_NONE)
 		//you will be killed if you try to join FLOCK
-		if(Team == TEAM_FLOCK && m_Core.Team(id) != TEAM_FLOCK) {
+		if(Team == TEAM_FLOCK && m_Core.Team(id) != TEAM_FLOCK)
 			Character(id)->GetPlayer()->KillCharacter(WEAPON_GAME);
-		} else {
-			if(Team != TEAM_SUPER) {
-				return false;
-			}
-		}
-	}
+		else if(Team != TEAM_SUPER)
+			return false;
 	SetForceCharacterTeam(id, Team);
 	
 	
@@ -144,28 +142,28 @@ bool CGameTeams::SetCharacterTeam(int id, int Team) {
 	return true;
 }
 
-void CGameTeams::SetForceCharacterTeam(int id, int Team) {
+void CGameTeams::SetForceCharacterTeam(int id, int Team)
+{
 	m_TeeFinished[id] = false;
 	if(m_Core.Team(id) != TEAM_FLOCK 
 		&& m_Core.Team(id) != TEAM_SUPER 
-		&& m_TeamState[m_Core.Team(id)] != EMPTY) {
+		&& m_TeamState[m_Core.Team(id)] != EMPTY)
+	{
 		bool NoOneInOldTeam = true;
-		for(int i = 0; i < MAX_CLIENTS; ++i) {
-			if(i != id && m_Core.Team(id) == m_Core.Team(i)) {
+		for(int i = 0; i < MAX_CLIENTS; ++i)
+			if(i != id && m_Core.Team(id) == m_Core.Team(i))
+			{
 				NoOneInOldTeam = false;//all good exists someone in old team
 				break;
 			} 
-		}
-		if(NoOneInOldTeam) {
+		if(NoOneInOldTeam)
 			m_TeamState[m_Core.Team(id)] = EMPTY;
-		}
 	}
 	if(Count(m_Core.Team(id)) > 0) m_MembersCount[m_Core.Team(id)]--;
 	m_Core.Team(id, Team);
 	if(m_Core.Team(id) != TEAM_SUPER) m_MembersCount[m_Core.Team(id)]++;
-	if(Team != TEAM_SUPER && m_TeamState[Team] == EMPTY) {
+	if(Team != TEAM_SUPER && m_TeamState[Team] == EMPTY)
 		ChangeTeamState(Team, OPEN);
-	}
 	dbg_msg1("Teams", "Id = %d Team = %d", id, Team);
 	
 	for (int ClientID = 0; ClientID < MAX_CLIENTS; ++ClientID)
@@ -175,41 +173,42 @@ void CGameTeams::SetForceCharacterTeam(int id, int Team) {
 	}
 }
 
-int CGameTeams::Count(int Team) const{
+int CGameTeams::Count(int Team) const
+{
 	if(Team == TEAM_SUPER) return -1;
 	return m_MembersCount[Team];
 }
 
 
 
-void CGameTeams::ChangeTeamState(int Team, int State) {
+void CGameTeams::ChangeTeamState(int Team, int State)
+{
 	m_TeamState[Team] = State;
 }
 
 
 
-bool CGameTeams::TeamFinished(int Team) {
-	for(int i = 0; i < MAX_CLIENTS; ++i) {
-		if(m_Core.Team(i) == Team && !m_TeeFinished[i]) {
+bool CGameTeams::TeamFinished(int Team)
+{
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+		if(m_Core.Team(i) == Team && !m_TeeFinished[i])
 			return false;
-		}
-	}
 	return true;
 }
 
-int CGameTeams::TeamMask(int Team) {
+int CGameTeams::TeamMask(int Team)
+{
 	if(Team == TEAM_SUPER) return -1;
 	int Mask = 0;
-	for(int i = 0; i < MAX_CLIENTS; ++i) {
+	for(int i = 0; i < MAX_CLIENTS; ++i)
 		if((Character(i) && (m_Core.Team(i) == Team || m_Core.Team(i) == TEAM_SUPER)) 
-			|| (GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() == -1)) {
+			|| (GameServer()->m_apPlayers[i] && GameServer()->m_apPlayers[i]->GetTeam() == -1))
 			Mask |= 1 << i;
-		}
-	}
 	return Mask;
 }
 
-void CGameTeams::SendTeamsState(int Cid) {
+void CGameTeams::SendTeamsState(int Cid)
+{
 	CNetMsg_Cl_TeamsState Msg;
 	Msg.m_Tee0 = m_Core.Team(0);
 	Msg.m_Tee1 = m_Core.Team(1);
