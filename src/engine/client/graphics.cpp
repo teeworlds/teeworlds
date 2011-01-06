@@ -389,7 +389,7 @@ int CGraphics_OpenGL::LoadPNG(CImageInfo *pImg, const char *pFilename, int Stora
 		io_close(File);
 	else
 	{
-		dbg_msg("game/png", "failed to open file. filename='%s'", aCompleteFilename);
+		dbg_msg("game/png", "failed to open file. filename='%s'", pFilename);
 		return 0;
 	}
 	
