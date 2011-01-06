@@ -44,6 +44,7 @@
 #include "components/skins.h"
 #include "components/sounds.h"
 #include "components/voting.h"
+#include <base/tl/sorted_array.h>
 
 CGameClient g_GameClient;
 
@@ -105,8 +106,6 @@ static void ConServerDummy(IConsole::IResult *pResult, void *pUserData, int Clie
 {
 	dbg_msg("client", "this command is not available on the client");
 }
-
-#include <base/tl/sorted_array.h>
 
 const char *CGameClient::Version() { return GAME_VERSION; }
 const char *CGameClient::NetVersion() { return GAME_NETVERSION; }
@@ -306,7 +305,7 @@ void CGameClient::OnInit()
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "gameclient", aBuf);
 	
 	m_ServerMode = SERVERMODE_PURE;
-	
+
 	m_DDRaceMsgSent = false;
 }
 
@@ -394,6 +393,7 @@ void CGameClient::OnReset()
 	
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
+
 	m_Teams.Reset();
 	m_DDRaceMsgSent = false;
 }
@@ -425,6 +425,7 @@ static void Evolve(CNetObj_Character *pCharacter, int Tick)
 	CCharacterCore TempCore;
 	CTeamsCore TempTeams;
 	mem_zero(&TempCore, sizeof(TempCore));
+	mem_zero(&TempTeams, sizeof(TempTeams));
 	TempCore.Init(&TempWorld, g_GameClient.Collision(), &TempTeams);
 	TempCore.Read(pCharacter);
 	
@@ -579,7 +580,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			g_GameClient.m_pSounds->Enqueue(pMsg->m_Soundid);
 		else
 			g_GameClient.m_pSounds->Play(CSounds::CHN_GLOBAL, pMsg->m_Soundid, 1.0f, vec2(0,0));
-	}
+	}		
 	else if(MsgId == NETMSGTYPE_CL_TEAMSSTATE) {
 		CNetMsg_Cl_TeamsState *pMsg = (CNetMsg_Cl_TeamsState *)pRawMsg;
 		m_Teams.Team(0, pMsg->m_Tee0);
@@ -606,7 +607,6 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		CNetMsg_Sv_PlayerTime *pMsg = (CNetMsg_Sv_PlayerTime *)pRawMsg;
 		m_aClients[pMsg->m_Cid].m_Score = pMsg->m_Time;
 	}
-	
 }
 
 void CGameClient::OnStateChange(int NewState, int OldState)
@@ -857,7 +857,7 @@ void CGameClient::OnNewSnapshot()
 		else
 			m_ServerMode = SERVERMODE_PUREMOD;
 	}
-	
+
 	if(!m_DDRaceMsgSent && m_Snap.m_pLocalInfo)
 	{
 		CNetMsg_Cl_IsDDRace Msg;

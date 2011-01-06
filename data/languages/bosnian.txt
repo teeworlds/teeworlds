@@ -239,7 +239,7 @@ Lht.
 == Svjetl.
 
 Loading
-== Učitavam DDRace
+== Učitavam
 
 MOTD
 == Vijest dana
@@ -964,4 +964,9 @@ no limit
 == 
 
 ##### old translations #####
+
+##### DDRace #####
+
+Loading DDRace Client
+== Učitavam DDRace
 

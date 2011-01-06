@@ -1,4 +1,4 @@
-
+﻿
 ##### translated strings #####
 
 %d of %d servers, %d players
@@ -441,7 +441,6 @@ Load map
 
 Loading
 == Laden
-
 
 MOTD
 == MOTD
@@ -966,9 +965,7 @@ Name plates size
 
 ##### old translations #####
 
-
 ##### DDRace #####
 
 Loading DDRace Client
-== Laden DDRace Client
-
+== Laden DDRace

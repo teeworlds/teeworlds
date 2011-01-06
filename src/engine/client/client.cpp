@@ -1084,7 +1084,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 				if(Info.m_NumPlayers < 0 || Info.m_NumPlayers > MAX_CLIENTS || Info.m_MaxPlayers < 0 || Info.m_MaxPlayers > MAX_CLIENTS)
 					return;
 				
-				if((Info.m_Flags | SERVER_FLAGS_VERSION) != SERVER_FLAG_VERSION || !str_find_nocase(Info.m_aGameType, "ddrace"))
+				if((Info.m_Flags | SERVER_FLAGS_VERSION) != SERVER_FLAG_VERSION || !str_find_nocase(Info.m_aGameType, "DDRace"))
 					Info.m_Flags &= SERVER_FLAGS_DEFAULT;
 				else
 					Info.m_Flags &= SERVER_FLAGS_ALL;
@@ -2222,7 +2222,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("play", "r", CFGFLAG_CLIENT, Con_Play, this, "Play the file specified", 0);
 	m_pConsole->Register("record", "?s", CFGFLAG_CLIENT, Con_Record, this, "Record to the file", 0);
 	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording", 0);
-	
+
 	m_pConsole->Register("add_favorite", "s", CFGFLAG_CLIENT, Con_AddFavorite, this, "Add a server as a favorite", 0);
 }
 

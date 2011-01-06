@@ -125,7 +125,7 @@ public:
 
 void dbg_msg1(const char * where,const char * format, ...) {
 	if(g_Config.m_DbgMsg == 1) {
-		const size_t buffer_size = 1024;//i hope this will enought
+		const size_t buffer_size = 1024;//i hope this will be enough
 		char buffer[buffer_size]; 
 		va_list ap;
 		va_start(ap, format);

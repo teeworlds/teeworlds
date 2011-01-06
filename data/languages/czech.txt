@@ -190,8 +190,8 @@ Language
 Lht.
 == Světel.
 
-Loading DDRace Client
-== Nahrávám DDRace Client
+Loading
+== Nahrávám
 
 MOTD
 == MOTD
@@ -964,4 +964,9 @@ no limit
 == 
 
 ##### old translations #####
+
+##### DDRace #####
+
+Loading DDRace Client
+== Nahrávám DDRace
 

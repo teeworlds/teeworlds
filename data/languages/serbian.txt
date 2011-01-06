@@ -206,7 +206,7 @@ Lht.
 == Svetl.
 
 Loading
-== Učitavam DDRace
+== Učitavam
 
 MOTD
 == Vest dana
@@ -964,4 +964,9 @@ no limit
 == 
 
 ##### old translations #####
+
+##### DDRace #####
+
+Loading DDRace Client
+== Učitavam DDRace
 

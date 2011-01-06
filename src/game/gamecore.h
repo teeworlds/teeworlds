@@ -13,6 +13,7 @@
 #include "teamscore.h"
 #include "mapitems.h"
 
+
 class CTuneParam
 {
 	int m_Value;
@@ -170,7 +171,6 @@ public:
 	}
 	
 	CTuningParams m_Tuning;
-	
 	class CCharacterCore *m_apCharacters[MAX_CLIENTS];
 };
 

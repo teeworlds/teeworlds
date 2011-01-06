@@ -1,9 +1,10 @@
 .bam
-.settings
 src/game/generated
 objs
 datasrc/*.pyc
 config.lua
+teeworlds_d
+teeworlds_srv_d
 Debug
 teeworlds_d*
 teeworlds_srv_d*
@@ -14,8 +15,6 @@ autoexec.cfg
 teeworlds
 bam.exe
 *.bat
-teeworlds_d
-teeworlds_srv_d
 DDRace_Trunk*
 DDRace_Trunk_d*
 .cproject
@@ -36,3 +35,5 @@ DDRace_Trunk_d*
 *.filters
 *.user
 *.cmd
+.settings
+

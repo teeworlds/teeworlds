@@ -965,6 +965,8 @@ Name plates size
 
 ##### old translations #####
 
+##### DDRace #####
+
 Loading DDRace Client
-== Lade DDRace Client
+== Lade DDRace
 

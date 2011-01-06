@@ -61,7 +61,6 @@ void CConsole::CResult::SetVictim(const char *pVictim)
 		m_Victim = clamp<int>(str_toint(pVictim), 0, MAX_CLIENTS - 1);
 }
 
-
 // the maximum number of tokens occurs in a string of length CONSOLE_MAX_STR_LENGTH with tokens size 1 separated by single spaces
 
 
@@ -197,50 +196,6 @@ void CConsole::RegisterPrintCallback(FPrintCallback pfnPrintCallback, void *pUse
 	m_pPrintCallbackUserdata = pUserData;
 }
 
-void CConsole::RegisterAlternativePrintCallback(FPrintCallback pfnAlternativePrintCallback, void *pAlternativeUserData)
-{
-  while (m_pfnAlternativePrintCallback != pfnAlternativePrintCallback && m_PrintUsed)
-    ; // wait for other threads to finish their commands, TODO: implement this with LOCK
-
-	m_pfnAlternativePrintCallback = pfnAlternativePrintCallback;
-	m_pAlternativePrintCallbackUserdata = pAlternativeUserData;
-
-  m_PrintUsed++;
-}
-
-void CConsole::ReleaseAlternativePrintCallback()
-{
-  m_PrintUsed--;
-}
-
-void CConsole::RegisterClientOnlineCallback(FClientOnlineCallback pfnCallback, void *pUserData)
-{
-	m_pfnClientOnlineCallback = pfnCallback;
-	m_pClientOnlineUserdata = pUserData;
-}
-
-void CConsole::RegisterCompareClientsCallback(FCompareClientsCallback pfnCallback, void *pUserData)
-{
-	m_pfnCompareClientsCallback = pfnCallback;
-	m_pCompareClientsUserdata = pUserData;
-}
-
-bool CConsole::ClientOnline(int ClientId)
-{
-	if(!m_pfnClientOnlineCallback)
-		return true;
-	
-	return m_pfnClientOnlineCallback(ClientId, m_pClientOnlineUserdata);
-}
-
-bool CConsole::CompareClients(int ClientId, int Victim)
-{
-	if(!m_pfnCompareClientsCallback)
-		return true;
-	
-	return m_pfnCompareClientsCallback(ClientId, Victim, m_pCompareClientsUserdata);	
-}
-
 void CConsole::Print(int Level, const char *pFrom, const char *pStr)
 {
 	dbg_msg(pFrom ,"%s", pStr);
@@ -249,9 +204,9 @@ void CConsole::Print(int Level, const char *pFrom, const char *pStr)
 		char aBuf[1024];
 		str_format(aBuf, sizeof(aBuf), "[%s]: %s", pFrom, pStr);
 		if (!m_pfnAlternativePrintCallback || m_PrintUsed == 0)
-  		m_pfnPrintCallback(aBuf, m_pPrintCallbackUserdata);
-  	else
-  	  m_pfnAlternativePrintCallback(aBuf, m_pAlternativePrintCallbackUserdata);
+		m_pfnPrintCallback(aBuf, m_pPrintCallbackUserdata);
+	else
+		m_pfnAlternativePrintCallback(aBuf, m_pAlternativePrintCallbackUserdata);
 	}
 }
 
@@ -304,46 +259,8 @@ bool CConsole::LineIsValid(const char *pStr)
 	return true;
 }
 
-void CConsole::RegisterPrintResponseCallback(FPrintCallback pfnPrintResponseCallback, void *pUserData)
-{
-	m_pfnPrintResponseCallback = pfnPrintResponseCallback;
-	m_pPrintResponseCallbackUserdata = pUserData;
-}
 
-void CConsole::RegisterAlternativePrintResponseCallback(FPrintCallback pfnAlternativePrintResponseCallback, void *pAlternativeUserData)
-{
-  while (m_pfnAlternativePrintResponseCallback != pfnAlternativePrintResponseCallback && m_PrintResponseUsed)
-    ; // wait for other threads to finish their commands, TODO: implement this with LOCK
-
-	m_pfnAlternativePrintResponseCallback = pfnAlternativePrintResponseCallback;
-	m_pAlternativePrintResponseCallbackUserdata = pAlternativeUserData;
-
-  m_PrintResponseUsed++;
-}
-
-void CConsole::ReleaseAlternativePrintResponseCallback()
-{
-  m_PrintResponseUsed--;
-}
-
-
-void CConsole::PrintResponse(int Level, const char *pFrom, const char *pStr)
-{
-	dbg_msg(pFrom ,"%s", pStr);
-	if (Level <= g_Config.m_ConsoleOutputLevel && m_pfnPrintResponseCallback)
-	{
-		char aBuf[1024];
-		str_format(aBuf, sizeof(aBuf), "[%s]: %s", pFrom, pStr);
-		if (!m_pfnAlternativePrintResponseCallback || m_PrintResponseUsed == 0)
-  		m_pfnPrintResponseCallback(aBuf, m_pPrintResponseCallbackUserdata);
-  	else
-  	  m_pfnAlternativePrintResponseCallback(aBuf, m_pAlternativePrintResponseCallbackUserdata);
-	}
-}
-
-void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int ClientLevel, const int ClientId,
-	  FPrintCallback pfnAlternativePrintCallback, void *pUserData,
-	  FPrintCallback pfnAlternativePrintResponseCallback, void *pResponseUserData)
+void CConsole::ExecuteLineStroked(int Stroke, const char *pStr, const int ClientLevel, const int ClientId, FPrintCallback pfnAlternativePrintCallback, void *pUserData, FPrintCallback pfnAlternativePrintResponseCallback, void *pResponseUserData)
 {
 	while(pStr && *pStr)
 	{
@@ -802,61 +719,10 @@ void CConsole::Register(const char *pName, const char *pParams,
 	pCommand->m_Flags = Flags;
 	pCommand->m_Level = Level;
 	
+	
 	pCommand->m_pNext = m_pFirstCommand;
 	m_pFirstCommand = pCommand;
 	m_aCommandCount[pCommand->m_Level]++;
-}
-
-void CConsole::List(const int Level, int Flags)
-{
-	switch(Level)
-	{
-		case 4: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "command cmdlist is not allowed for config files"); return;
-		case 3: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "=== cmdlist for admins ==="); break;
-		case 2: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "=== cmdlist for mods ==="); break;
-		case 1: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "=== cmdlist for helpers ==="); break;
-		default: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "=== cmdlist ==="); break;
-	}
-	
-	char aBuf[50 + 1] = { 0 };
-	CCommand *pCommand = m_pFirstCommand;
-	unsigned Length = 0;
-	
-	while(pCommand)
-	{
-		if(str_comp_num(pCommand->m_pName, "sv_", 3) && str_comp_num(pCommand->m_pName, "dbg_", 4))	// ignore configs and debug commands
-		{
-			if((pCommand->m_Flags & Flags) == Flags && (pCommand->m_Level == Level || (Level == 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD))))
-			{
-				unsigned CommandLength = str_length(pCommand->m_pName);
-				if(Length + CommandLength + 2 >= sizeof(aBuf) || aBuf[0] == 0)
-				{
-					if(aBuf[0])
-						PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
-					aBuf[0] = 0;
-					Length = CommandLength;
-					str_copy(aBuf, pCommand->m_pName, sizeof(aBuf));
-				}
-				else
-				{
-					str_format(aBuf, sizeof(aBuf), "%s, %s", aBuf, pCommand->m_pName);
-					Length += CommandLength + 2;
-				}
-			}
-		}
-		pCommand = pCommand->m_pNext;
-	}
-	
-	if (aBuf[0])
-		PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
-
-	switch(Level)
-	{
-		case 3: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "see 'cmdlist 0,1,2' for more commands, which don't require admin rights"); break;
-		case 2: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "see 'cmdlist 0,1' for more commands, which don't require mod rights"); break;
-		case 1: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "see 'cmdlist 0' for more commands, which don't require helper rights"); break;
-		default: break;
-	}
 }
 
 void CConsole::Con_Chain(IResult *pResult, void *pUserData, int ClientId)
@@ -911,3 +777,136 @@ IConsole::CCommandInfo *CConsole::GetCommandInfo(const char *pName, int FlagMask
 
 
 extern IConsole *CreateConsole(int FlagMask) { return new CConsole(FlagMask); }
+
+void CConsole::RegisterAlternativePrintCallback(FPrintCallback pfnAlternativePrintCallback, void *pAlternativeUserData)
+{
+  while (m_pfnAlternativePrintCallback != pfnAlternativePrintCallback && m_PrintUsed)
+    ; // wait for other threads to finish their commands, TODO: implement this with LOCK
+
+	m_pfnAlternativePrintCallback = pfnAlternativePrintCallback;
+	m_pAlternativePrintCallbackUserdata = pAlternativeUserData;
+
+  m_PrintUsed++;
+}
+
+void CConsole::ReleaseAlternativePrintCallback()
+{
+  m_PrintUsed--;
+}
+
+void CConsole::RegisterClientOnlineCallback(FClientOnlineCallback pfnCallback, void *pUserData)
+{
+	m_pfnClientOnlineCallback = pfnCallback;
+	m_pClientOnlineUserdata = pUserData;
+}
+
+void CConsole::RegisterCompareClientsCallback(FCompareClientsCallback pfnCallback, void *pUserData)
+{
+	m_pfnCompareClientsCallback = pfnCallback;
+	m_pCompareClientsUserdata = pUserData;
+}
+
+bool CConsole::ClientOnline(int ClientId)
+{
+	if(!m_pfnClientOnlineCallback)
+		return true;
+	
+	return m_pfnClientOnlineCallback(ClientId, m_pClientOnlineUserdata);
+}
+
+bool CConsole::CompareClients(int ClientId, int Victim)
+{
+	if(!m_pfnCompareClientsCallback)
+		return true;
+	
+	return m_pfnCompareClientsCallback(ClientId, Victim, m_pCompareClientsUserdata);	
+}
+
+void CConsole::RegisterPrintResponseCallback(FPrintCallback pfnPrintResponseCallback, void *pUserData)
+{
+	m_pfnPrintResponseCallback = pfnPrintResponseCallback;
+	m_pPrintResponseCallbackUserdata = pUserData;
+}
+
+void CConsole::RegisterAlternativePrintResponseCallback(FPrintCallback pfnAlternativePrintResponseCallback, void *pAlternativeUserData)
+{
+  while (m_pfnAlternativePrintResponseCallback != pfnAlternativePrintResponseCallback && m_PrintResponseUsed)
+    ; // wait for other threads to finish their commands, TODO: implement this with LOCK
+
+	m_pfnAlternativePrintResponseCallback = pfnAlternativePrintResponseCallback;
+	m_pAlternativePrintResponseCallbackUserdata = pAlternativeUserData;
+
+  m_PrintResponseUsed++;
+}
+
+void CConsole::ReleaseAlternativePrintResponseCallback()
+{
+  m_PrintResponseUsed--;
+}
+
+void CConsole::PrintResponse(int Level, const char *pFrom, const char *pStr)
+{
+	dbg_msg(pFrom ,"%s", pStr);
+	if (Level <= g_Config.m_ConsoleOutputLevel && m_pfnPrintResponseCallback)
+	{
+		char aBuf[1024];
+		str_format(aBuf, sizeof(aBuf), "[%s]: %s", pFrom, pStr);
+		if (!m_pfnAlternativePrintResponseCallback || m_PrintResponseUsed == 0)
+  		m_pfnPrintResponseCallback(aBuf, m_pPrintResponseCallbackUserdata);
+  	else
+  	  m_pfnAlternativePrintResponseCallback(aBuf, m_pAlternativePrintResponseCallbackUserdata);
+	}
+}
+
+void CConsole::List(const int Level, int Flags)
+{
+	switch(Level)
+	{
+		case 4: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "command cmdlist is not allowed for config files"); return;
+		case 3: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "=== cmdlist for admins ==="); break;
+		case 2: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "=== cmdlist for mods ==="); break;
+		case 1: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "=== cmdlist for helpers ==="); break;
+		default: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "=== cmdlist ==="); break;
+	}
+	
+	char aBuf[50 + 1] = { 0 };
+	CCommand *pCommand = m_pFirstCommand;
+	unsigned Length = 0;
+	
+	while(pCommand)
+	{
+		if(str_comp_num(pCommand->m_pName, "sv_", 3) && str_comp_num(pCommand->m_pName, "dbg_", 4))	// ignore configs and debug commands
+		{
+			if((pCommand->m_Flags & Flags) == Flags && (pCommand->m_Level == Level || (Level == 1 && (pCommand->m_Flags & CMDFLAG_HELPERCMD))))
+			{
+				unsigned CommandLength = str_length(pCommand->m_pName);
+				if(Length + CommandLength + 2 >= sizeof(aBuf) || aBuf[0] == 0)
+				{
+					if(aBuf[0])
+						PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
+					aBuf[0] = 0;
+					Length = CommandLength;
+					str_copy(aBuf, pCommand->m_pName, sizeof(aBuf));
+				}
+				else
+				{
+					str_format(aBuf, sizeof(aBuf), "%s, %s", aBuf, pCommand->m_pName);
+					Length += CommandLength + 2;
+				}
+			}
+		}
+		pCommand = pCommand->m_pNext;
+	}
+	
+	if (aBuf[0])
+		PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+
+	switch(Level)
+	{
+		case 3: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "see 'cmdlist 0,1,2' for more commands, which don't require admin rights"); break;
+		case 2: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "see 'cmdlist 0,1' for more commands, which don't require mod rights"); break;
+		case 1: PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "console", "see 'cmdlist 0' for more commands, which don't require helper rights"); break;
+		default: break;
+	}
+}
+

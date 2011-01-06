@@ -12,7 +12,7 @@ CGameWorld::CGameWorld()
 {
 	m_pGameServer = 0x0;
 	m_pServer = 0x0;
-
+	
 	m_Paused = false;
 	m_ResetRequested = false;
 	m_pFirstEntity = 0x0;
@@ -161,7 +161,7 @@ void CGameWorld::Tick()
 		// update all objects
 		for(CEntity *pEnt = m_pFirstEntity; pEnt; pEnt = pEnt->m_pNextEntity)
 			pEnt->Tick();
-
+		
 		for(CEntity *pEnt = m_pFirstEntity; pEnt; pEnt = pEnt->m_pNextEntity)
 			pEnt->TickDefered();
 	}
@@ -197,22 +197,23 @@ CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, v
 			}
 		}
 	}
-
+	
 	return pClosest;
 }
+
 
 CCharacter *CGameWorld::ClosestCharacter(vec2 Pos, float Radius, CEntity *pNotThis)
 {
 	// Find other players
 	float ClosestRange = Radius*2;
 	CCharacter *pClosest = 0;
-
+		
 	CCharacter *p = (CCharacter *)GameServer()->m_World.FindFirst(NETOBJTYPE_CHARACTER);
 	for(; p; p = (CCharacter *)p->TypeNext())
  	{
 		if(p == pNotThis)
 			continue;
-
+			
 		float Len = distance(Pos, p->m_Pos);
 		if(Len < p->m_ProximityRadius+Radius)
 		{
@@ -223,10 +224,9 @@ CCharacter *CGameWorld::ClosestCharacter(vec2 Pos, float Radius, CEntity *pNotTh
 			}
 		}
 	}
-
+	
 	return pClosest;
 }
-
 std::list<class CCharacter *> CGameWorld::IntersectedCharacters(vec2 Pos0, vec2 Pos1, float Radius, class CEntity *pNotThis)
 {
 	std::list< CCharacter * > listOfChars;

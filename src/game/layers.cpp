@@ -17,14 +17,6 @@ CLayers::CLayers()
 	m_pMap = 0;
 }
 
-void CLayers::Dest()
-{
-	m_pTeleLayer = 0;
-	m_pSpeedupLayer = 0;
-	m_pFrontLayer = 0;
-	m_pSwitchLayer = 0;
-}
-
 void CLayers::Init(class IKernel *pKernel)
 {
 	m_pMap = pKernel->RequestInterface<IMap>();
@@ -85,3 +77,12 @@ CMapItemLayer *CLayers::GetLayer(int Index) const
 {
 	return static_cast<CMapItemLayer *>(m_pMap->GetItem(m_LayersStart+Index, 0, 0));
 }
+
+void CLayers::Dest()
+{
+	m_pTeleLayer = 0;
+	m_pSpeedupLayer = 0;
+	m_pFrontLayer = 0;
+	m_pSwitchLayer = 0;
+}
+

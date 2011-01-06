@@ -206,7 +206,7 @@ Lht.
 == Valoisuus
 
 Loading
-== Ladataan DDRace
+== Ladataan
 
 MOTD
 == Palvelimen viesti
@@ -964,4 +964,9 @@ no limit
 == 
 
 ##### old translations #####
+
+##### DDRace #####
+
+Loading DDRace Client
+== Ladataan DDRace
 

@@ -203,9 +203,10 @@ int CServer::TrySetClientName(int ClientID, const char *pName)
 	// trim the name
 	str_copy(aTrimmedName, StrLtrim(pName), sizeof(aTrimmedName));
 	StrRtrim(aTrimmedName);
-	/*char aBuf[256];
+	//TODO: See if this still needs commenting
+	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "'%s' -> '%s'", pName, aTrimmedName);
-	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);*/
+	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
 	pName = aTrimmedName;
 	
 	
@@ -1565,8 +1566,6 @@ void CServer::ConCmdList(IConsole::IResult *pResult, void *pUserData, int Client
 		pSelf->Console()->List(pResult->GetInteger(0), CFGFLAG_SERVER);
 }
 
-
-
 void CServer::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData, -1);
@@ -1832,7 +1831,7 @@ void CServer::CheckPass(int ClientId, const char *pPw)
 					else
 					{
 						NETADDR Addr = m_NetServer.ClientAddr(ClientId);
-						BanAdd(Addr, g_Config.m_SvRconBantime, "Too many remote console authentication tries");
+						BanAdd(Addr, g_Config.m_SvRconBantime*60, "Too many remote console authentication tries");
 					}
 				}
 			}
@@ -1901,3 +1900,4 @@ NETADDR CServer::GetClientIP(int ClientID)//this may exist already but i couldn'
 {
 	return m_NetServer.ClientAddr(ClientID);
 }
+

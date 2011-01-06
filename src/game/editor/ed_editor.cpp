@@ -2564,7 +2564,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		static int s_New2dButton = 0;
 		if(DoButton_Editor(&s_New2dButton, Localize("Pos.+"), 0, &Button, 0, Localize("Creates a new pos envelope")))
 			pNewEnv = m_Map.NewEnvelope(3);
-			
+
 		// Delete button
 		if(m_SelectedEnvelope >= 0)
 		{

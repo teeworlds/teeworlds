@@ -373,8 +373,6 @@ Load map
 Loading
 == Chargement
 
-
-
 MOTD
 == MOTD
 
@@ -974,5 +972,5 @@ Y-axis of the envelope
 ##### DDRace #####
 
 Loading DDRace Client
-== Chargement DDRace Client
+== Chargement DDRace
 

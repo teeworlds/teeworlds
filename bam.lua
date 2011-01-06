@@ -136,7 +136,7 @@ function build(settings)
 		settings.cc.flags:Add("/wd4244")
 		settings.cc.flags:Add("/EHsc")
 	else
-		settings.cc.flags:Add("-Wall")
+		settings.cc.flags:Add("-Wall", "-fno-exceptions")
 		if platform == "macosx" then
 			settings.cc.flags:Add("-mmacosx-version-min=10.5", "-isysroot /Developer/SDKs/MacOSX10.5.sdk")
 			settings.link.flags:Add("-mmacosx-version-min=10.5", "-isysroot /Developer/SDKs/MacOSX10.5.sdk")
@@ -150,8 +150,8 @@ function build(settings)
 	settings.cc.includes:Add("src")
 	settings.cc.includes:Add("other/mysql/include")
 
-	if family == "unix" then		
-   		if platform == "macosx" then
+	if family == "unix" then
+		if platform == "macosx" then
 			settings.link.frameworks:Add("Carbon")
 			settings.link.frameworks:Add("AppKit")
 		else
@@ -193,7 +193,7 @@ function build(settings)
 			server_settings.link.libs:Add("mysqlclient")
 		end
 		
-   		if platform == "macosx" then
+		if platform == "macosx" then
 			client_settings.link.frameworks:Add("OpenGL")
 			client_settings.link.frameworks:Add("AGL")
 			client_settings.link.frameworks:Add("Carbon")
@@ -428,3 +428,4 @@ else
 	build(release_nosql_settings)
 	DefaultTarget("game_debug")
 end
+

@@ -309,7 +309,6 @@ class NetIntAny(NetVariable):
 		return ["pMsg->%s = pUnpacker->GetInt();" % self.name]
 	def emit_pack(self):
 		return ["pPacker->AddInt(%s);" % self.name]
-		
 
 class NetIntRange(NetIntAny):
 	def __init__(self, name, min, max):

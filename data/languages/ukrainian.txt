@@ -1,4 +1,4 @@
-
+﻿
 ##### translated strings #####
 
 %d of %d servers, %d players
@@ -965,3 +965,7 @@ no limit
 
 ##### old translations #####
 
+##### DDRace #####
+
+Loading DDRace Client
+== Завантиження DDRace

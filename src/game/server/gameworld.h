@@ -63,18 +63,18 @@ public:
 			Number of entities found and added to the ents array.
 	*/
 	int FindEntities(vec2 Pos, float Radius, CEntity **ppEnts, int Max, int Type = -1);
-
+	
 	/*
 		Function: InterserctCharacters
 			Finds the CCharacters that intersects the line. // made for types lasers=1 and doors=0
-
+			
 		Arguments:
 			pos0 - Start position
 			pos2 - End position
 			radius - How for from the line the CCharacter is allowed to be.
 			new_pos - Intersection position
 			notthis - Entity to ignore intersecting with
-
+			
 		Returns:
 			Returns a pointer to the closest hit or NULL of there is no intersection.
 	*/
@@ -139,7 +139,6 @@ public:
 		
 	*/
 	void Tick();
-
 
 	std::list<class CCharacter *> IntersectedCharacters(vec2 Pos0, vec2 Pos1, float Radius, vec2 &NewPos, class CEntity *pNotThis);
 	void ReleaseHooked(int ClientId);

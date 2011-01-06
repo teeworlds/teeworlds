@@ -187,8 +187,8 @@ Language
 Lht.
 == Lum.
 
-Loading DDRace Client
-== Caricamento DDRace Client
+Loading
+== Caricamento
 
 MOTD
 == MDG
@@ -964,4 +964,9 @@ no limit
 == 
 
 ##### old translations #####
+
+##### DDRace #####
+
+Loading DDRace Client
+== Caricamento DDRace
 

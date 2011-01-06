@@ -56,7 +56,7 @@ class CGameClient : public IGameClient
 	int m_LastNewPredictedTick;
 
 	int64 m_LastSendInfo;
-	
+
 	bool m_DDRaceMsgSent;
 
 	static void ConTeam(IConsole::IResult *pResult, void *pUserData, int ClientID);
@@ -157,7 +157,7 @@ public:
 		CCharacterCore m_Predicted;
 		
 		int m_Score;
-		
+
 		CTeeRenderInfo m_SkinInfo; // this is what the server reports
 		CTeeRenderInfo m_RenderInfo; // this is what we use
 		
