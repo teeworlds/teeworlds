@@ -168,8 +168,10 @@ void CGameTeams::SetForceCharacterTeam(int id, int Team) {
 	}
 	dbg_msg1("Teams", "Id = %d Team = %d", id, Team);
 	
-	if(Character(id) && Character(id)->GetPlayer()->m_IsUsingDDRaceClient) {
-		SendTeamsState(id);
+	for (int ClientID = 0; ClientID < MAX_CLIENTS; ++ClientID)
+	{
+		if(Character(ClientID) && Character(ClientID)->GetPlayer()->m_IsUsingDDRaceClient)
+			SendTeamsState(ClientID);
 	}
 }
 
