@@ -266,8 +266,6 @@ void CGameClient::OnInit()
 
 	// load skins
 	::gs_Skins.Init();
-	if(!::gs_Skins.Num())
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gameclient", "failed to load skins. folder='skins/'");
 	
 	// TODO: Refactor: fix threaded loading of sounds again
 	// load sounds
