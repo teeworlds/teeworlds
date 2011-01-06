@@ -973,10 +973,10 @@ void CCharacter::HandleTiles(int Index)
 		}
 	}
 	if(g_Config.m_SvTeam == 1 && (Team() == TEAM_FLOCK || Teams()->Count(Team()) <= 1) && (lastup + (Server()->TickSpeed() >> 0)) < Server()->Tick() * 0.5)
-	{	GameServer()->SendChat(-1, GetPlayer()->GetCID(),"Please join a team and get a teammate before you start.");
-	lastup = Server()->Tick();
+	{
+		GameServer()->SendChat(-1, GetPlayer()->GetCID(),"Please join a team and get a teammate before you start.");
+		lastup = Server()->Tick();
 	}
-
 	if(((m_TileIndex == TILE_BEGIN) || (m_TileFIndex == TILE_BEGIN) || FTile1 == TILE_BEGIN || FTile2 == TILE_BEGIN || FTile3 == TILE_BEGIN || FTile4 == TILE_BEGIN || Tile1 == TILE_BEGIN || Tile2 == TILE_BEGIN || Tile3 == TILE_BEGIN || Tile4 == TILE_BEGIN) && (m_DDRaceState == DDRACE_NONE || m_DDRaceState == DDRACE_FINISHED || (m_DDRaceState == DDRACE_STARTED && !Team())))
 	{
 		bool CanBegin = true;
