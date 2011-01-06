@@ -130,11 +130,13 @@ bool CGameTeams::SetCharacterTeam(int id, int Team)
 	if(Team == TEAM_SUPER && !Character(id)->m_Super) return false;
 	//if you begin race
 	if(Character(id)->m_DDRaceState != DDRACE_NONE)
+	{
 		//you will be killed if you try to join FLOCK
 		if(Team == TEAM_FLOCK && m_Core.Team(id) != TEAM_FLOCK)
 			Character(id)->GetPlayer()->KillCharacter(WEAPON_GAME);
 		else if(Team != TEAM_SUPER)
 			return false;
+	}
 	SetForceCharacterTeam(id, Team);
 	
 	
