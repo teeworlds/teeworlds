@@ -192,6 +192,7 @@ void CGameClient::OnConsoleInit()
 	Console()->Register("broadcast", "r", CFGFLAG_SERVER, 0, 0, "Broadcast message");
 	Console()->Register("say", "r", CFGFLAG_SERVER, 0, 0, "Say in chat");
 	Console()->Register("set_team", "ii", CFGFLAG_SERVER, 0, 0, "Set team of player to team");
+	Console()->Register("set_team_all", "i", CFGFLAG_SERVER, 0, 0, "Set team of all players to team");
 	Console()->Register("addvote", "r", CFGFLAG_SERVER, 0, 0, "Add a voting option");
 	Console()->Register("vote", "r", CFGFLAG_SERVER, 0, 0, "Force a vote to yes/no");
 
