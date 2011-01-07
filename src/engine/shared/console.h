@@ -66,6 +66,29 @@ class CConsole : public IConsole
 		
 		const char *m_pCommand;
 		const char *m_apArgs[MAX_PARTS];
+
+		CResult() : IResult()
+		{
+			mem_zero(m_aStringStorage, sizeof(m_aStringStorage));
+			m_pArgsStart = 0;
+			m_pCommand = 0;
+			mem_zero(m_apArgs, sizeof(m_apArgs));
+		}
+
+		CResult &operator =(const CResult &Other)
+		{
+			if(this != &Other)
+			{
+				IResult::operator=(Other);
+				int Offset = m_aStringStorage - Other.m_aStringStorage;
+				mem_copy(m_aStringStorage, Other.m_aStringStorage, sizeof(m_aStringStorage));
+				m_pArgsStart = Other.m_pArgsStart + Offset;
+				m_pCommand = Other.m_pCommand + Offset;
+				for(int i = 0; i < Other.m_NumArgs; ++i)
+					m_apArgs[i] = Other.m_apArgs[i] + Offset;
+			}
+			return *this;
+		}
 		
 		void AddArgument(const char *pArg)
 		{
@@ -97,14 +120,17 @@ class CConsole : public IConsole
 		{
 			CQueueEntry *pEntry = static_cast<CQueueEntry *>(m_Queue.Allocate(sizeof(CQueueEntry)));
 			pEntry->m_pNext = 0;
-			m_pLast->m_pNext = pEntry;
+			if(!m_pFirst)
+				m_pFirst = pEntry;
+			if(m_pLast)
+				m_pLast->m_pNext = pEntry;
 			m_pLast = pEntry;
+			(void)new(&(pEntry->m_Result)) CResult;
 		}
 		void Reset()
 		{
 			m_Queue.Reset();
-			m_pFirst = m_pLast = static_cast<CQueueEntry *>(m_Queue.Allocate(sizeof(CQueueEntry)));
-			m_pLast->m_pNext = 0;
+			m_pFirst = m_pLast = 0;
 		}
 	} m_ExecutionQueue;
 
