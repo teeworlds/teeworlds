@@ -104,4 +104,6 @@ public:
 	int m_NumSwitchers;
 };
 
+void ThroughOffset(vec2 Pos0, vec2 Pos1, int *Ox, int *Oy);
+
 #endif
