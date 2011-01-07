@@ -100,7 +100,7 @@ MACRO_CONFIG_STR(SvRconPasswordHelper, sv_helper_pass, 32, "", CFGFLAG_SERVER, "
 MACRO_CONFIG_INT(SvHit, sv_hit, 1, 0, 1, CFGFLAG_SERVER, "Whether players can hammer/grenade/laser eachother or not", 4)
 MACRO_CONFIG_INT(SvEndlessDrag, sv_endless_drag, 0, 0, 1, CFGFLAG_SERVER, "Turns endless hooking on/off", 4)
 
-MACRO_CONFIG_INT(SvMapTest, sv_map_test, 0, 0, 1, CFGFLAG_SERVER, "Whether this server is just for map testing", 3)// what is this?
+MACRO_CONFIG_INT(SvMapTest, sv_map_test, 0, 0, 1, CFGFLAG_SERVER, "Whether this server is just for map testing", 3)
 
 #ifndef CONF_DEBUG
 MACRO_CONFIG_INT(SvServerTest, sv_server_test, 0, 0, 0, CFGFLAG_SERVER, "Whether this server is for testing the mod (only available for debug compilation)", 4)
