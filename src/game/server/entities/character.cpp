@@ -99,6 +99,8 @@ bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 		Controller->m_Teams.SendTeamsState(GetPlayer()->GetCID());
 	}
 
+	m_DefEmote = EMOTE_NORMAL;
+	m_DefEmoteReset = -1;
 	return true;
 }
 
@@ -766,6 +768,13 @@ void CCharacter::Tick()
 	m_Core.Tick(true);
 	m_Core.m_Id = GetPlayer()->GetCID();
 
+	if (m_DefEmoteReset >= 0 && m_DefEmoteReset <= Server()->Tick())
+	{
+		m_DefEmoteReset = -1;
+		m_EmoteType = m_DefEmote = EMOTE_NORMAL;
+		m_EmoteStop = -1;
+	}
+	
 	m_DoSplash = false;
 	if (g_Config.m_SvEndlessDrag)
 		m_Core.m_HookTick = 0;
@@ -1552,7 +1561,7 @@ void CCharacter::Snap(int SnappingClient)
 	// set emote
 	if (m_EmoteStop < Server()->Tick())
 	{
-		m_EmoteType = EMOTE_NORMAL;
+		m_EmoteType = m_DefEmote;
 		m_EmoteStop = -1;
 	}
 
