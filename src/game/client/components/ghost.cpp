@@ -7,15 +7,9 @@
 #include <engine/shared/config.h>
 #include <engine/shared/compression.h>
 #include <engine/shared/network.h>
-#include <game/generated/protocol.h>
+
 #include <game/generated/client_data.h>
-
 #include <game/client/animstate.h>
-#include <game/client/gameclient.h>
-#include <game/client/ui.h>
-#include <game/client/render.h>
-
-#include <game/client/components/effects.h>
 #include <game/client/components/skins.h>
 
 #include "ghost.h"
@@ -34,7 +28,6 @@ static const unsigned char gs_ActVersion = 1;
 
 CGhost::CGhost()
 {
-	// TODO: Load a bestPath from a file ?
 	m_CurPath.clear();
 	m_BestPath.clear();
 	m_CurPos = 0;
@@ -47,16 +40,10 @@ CGhost::CGhost()
 	m_StartRecordTick = -1;
 }
 
-void CGhost::AddInfos(CNetObj_Character Player, CNetObj_ClientInfo Info)
+void CGhost::AddInfos(CNetObj_Character Player)
 {
 	if(!m_Recording)
 		return;
-	
-	StrToInts(&Info.m_Name0, 6, "");
-	
-	CGhostInfo CurrentInfos;
-	CurrentInfos.m_Player = Player;
-	CurrentInfos.m_Info = Info;
 
 	// Just to be sure it doesnt eat too much memory, the first test should be enough anyway
 	if((Client()->GameTick()-m_StartRecordTick) > Client()->GameTickSpeed()*60*10 || m_CurPath.size() > 50*15*60)
@@ -69,19 +56,17 @@ void CGhost::AddInfos(CNetObj_Character Player, CNetObj_ClientInfo Info)
 	
 	// TODO: I don't know what the fuck is happening atm
 	if(m_CurPath.size() == 0)
-		m_CurPath.add(CurrentInfos);
-	m_CurPath.add(CurrentInfos);
+		m_CurPath.add(Player);
+	m_CurPath.add(Player);
 }
 
 void CGhost::OnRender()
 {
-	int LocalCid = m_pClient->m_Snap.m_LocalCid;
-	CNetObj_ClientInfo *pInfo = (CNetObj_ClientInfo *) Client()->SnapFindItem(IClient::SNAP_CURRENT, NETOBJTYPE_CLIENTINFO, LocalCid);
-	CNetObj_Character Player = m_pClient->m_Snap.m_aCharacters[LocalCid].m_Cur;
+	CNetObj_Character Player = m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_LocalCid].m_Cur;
 	m_pClient->m_PredictedChar.Write(&Player);
 	
 	if(m_pClient->m_NewPredictedTick)
-		AddInfos(Player, *pInfo);
+		AddInfos(Player);
 	
 	// only for race
 	if(!m_pClient->m_IsRace || !g_Config.m_ClGhost)
@@ -105,6 +90,7 @@ void CGhost::OnRender()
 			m_NewRecord = false;
 			m_BestPath.clear();
 			m_BestPath = m_CurPath;
+			m_GhostInfo = m_CurInfo;
 			Save();
 		}
 		StopRecord();
@@ -131,16 +117,14 @@ void CGhost::OnRender()
 
 void CGhost::RenderGhost()
 {
-	CNetObj_Character Player = m_BestPath[m_CurPos].m_Player;
-	CNetObj_Character Prev = m_BestPath[m_CurPos].m_Player;
-	
-	CNetObj_ClientInfo Info = m_BestPath[m_CurPos].m_Info;
+	CNetObj_Character Player = m_BestPath[m_CurPos];
+	CNetObj_Character Prev = m_BestPath[m_CurPos];
 	
 	if(m_CurPos > 0)
-		Prev = m_BestPath[m_CurPos-1].m_Player;
+		Prev = m_BestPath[m_CurPos-1];
 	
 	char aSkinName[64];
-	IntsToStr(&Info.m_Skin0, 6, aSkinName);
+	IntsToStr(&m_GhostInfo.m_Skin0, 6, aSkinName);
 	int SkinId = m_pClient->m_pSkins->Find(aSkinName);
 	if(SkinId < 0)
 	{
@@ -150,10 +134,10 @@ void CGhost::RenderGhost()
 	}
 	
 	CTeeRenderInfo RenderInfo;
-	RenderInfo.m_ColorBody = m_pClient->m_pSkins->GetColorV4(Info.m_ColorBody);
-	RenderInfo.m_ColorFeet = m_pClient->m_pSkins->GetColorV4(Info.m_ColorFeet);
+	RenderInfo.m_ColorBody = m_pClient->m_pSkins->GetColorV4(m_GhostInfo.m_ColorBody);
+	RenderInfo.m_ColorFeet = m_pClient->m_pSkins->GetColorV4(m_GhostInfo.m_ColorFeet);
 	
-	if(Info.m_UseCustomColor)
+	if(m_GhostInfo.m_UseCustomColor)
 		RenderInfo.m_Texture = m_pClient->m_pSkins->Get(SkinId)->m_ColorTexture;
 	else
 	{
@@ -216,11 +200,11 @@ void CGhost::RenderGhost()
 
 void CGhost::RenderGhostHook()
 {
-	CNetObj_Character Player = m_BestPath[m_CurPos].m_Player;
-	CNetObj_Character Prev = m_BestPath[m_CurPos].m_Player;
+	CNetObj_Character Player = m_BestPath[m_CurPos];
+	CNetObj_Character Prev = m_BestPath[m_CurPos];
 	
 	if(m_CurPos > 0)
-		Prev = m_BestPath[m_CurPos-1].m_Player;
+		Prev = m_BestPath[m_CurPos-1];
 
 	if (Prev.m_HookState<=0 || Player.m_HookState<=0)
 		return;
@@ -262,6 +246,8 @@ void CGhost::StartRecord()
 {
 	m_Recording = true;
 	m_CurPath.clear();
+	CNetObj_ClientInfo *pInfo = (CNetObj_ClientInfo *) Client()->SnapFindItem(IClient::SNAP_CURRENT, NETOBJTYPE_CLIENTINFO, m_pClient->m_Snap.m_LocalCid);
+	m_CurInfo = *pInfo;
 	m_StartRecordTick = Client()->GameTick();
 }
 
@@ -293,6 +279,7 @@ void CGhost::Save()
 		return;
 	
 	// write header
+	// TODO: save netversion, mapname, crc ...?
 	mem_zero(&Header, sizeof(Header));
 	mem_copy(Header.m_aMarker, gs_aHeaderMarker, sizeof(Header.m_aMarker));
 	Header.m_Version = gs_ActVersion;
@@ -301,19 +288,27 @@ void CGhost::Save()
 	// write time
 	io_write(File, &m_PrevTime, sizeof(m_PrevTime));
 	
-	int CompSize = 0;
+	// write client info
+	io_write(File, &m_GhostInfo, sizeof(m_GhostInfo));
 	
 	// write data
-	for(int i = 0; i < m_BestPath.size(); i++)
+	int ItemsPerPackage = 500; // 500 ticks per package
+	int Num = m_BestPath.size();
+	CNetObj_Character *Data = &m_BestPath[0];
+	
+	while(Num)
 	{
-		char aBuffer[256];
-		char aBuffer2[256];
+		int Items = min(Num, ItemsPerPackage);
+		Num -= Items;
+		
+		char aBuffer[100*500];
+		char aBuffer2[100*500];
 		unsigned char aSize[4];
 		
-		int Size = sizeof(CGhostInfo);
-		mem_copy(aBuffer2, &m_BestPath[i], Size);
-		while(Size&3)
-			aBuffer2[Size++] = 0;
+		int Size = sizeof(CNetObj_Character)*Items;
+		mem_copy(aBuffer2, Data, Size);
+		Data += Items;
+		
 		Size = CVariableInt::Compress(aBuffer2, Size, aBuffer);
 		Size = CNetBase::Compress(aBuffer, Size, aBuffer2, sizeof(aBuffer2));
 		
@@ -322,13 +317,9 @@ void CGhost::Save()
 		aSize[2] = (Size>>8)&0xff;
 		aSize[3] = (Size)&0xff;
 		
-		CompSize += sizeof(CGhostInfo) - Size;
-		
 		io_write(File, aSize, sizeof(aSize));
 		io_write(File, aBuffer2, Size);
 	}
-	
-	//dbg_msg("ghost", "saved: %d", CompSize);
 	
 	io_close(File);
 }
@@ -362,14 +353,17 @@ void CGhost::Load()
 	// read time
 	io_read(File, &m_PrevTime, sizeof(m_PrevTime));
 	
+	// read client info
+	io_read(File, &m_GhostInfo, sizeof(m_GhostInfo));
+	
 	// read data
 	m_BestPath.clear();
 	
 	while(1)
 	{
-		static char aCompresseddata[256];
-		static char aDecompressed[256];
-		static char aData[256];
+		static char aCompresseddata[100*500];
+		static char aDecompressed[100*500];
+		static char aData[100*500];
 		
 		unsigned char aSize[4];
 		if(io_read(File, aSize, sizeof(aSize)) != sizeof(aSize))
@@ -396,8 +390,12 @@ void CGhost::Load()
 			break;
 		}
 		
-		CGhostInfo *Tmp = (CGhostInfo*)aData;
-		m_BestPath.add(*Tmp);
+		CNetObj_Character *Tmp = (CNetObj_Character*)aData;
+		for(int i = 0; i < Size/sizeof(CNetObj_Character); i++)
+		{
+			m_BestPath.add(*Tmp);
+			Tmp++;
+		}
 	}
 	
 	io_close(File);

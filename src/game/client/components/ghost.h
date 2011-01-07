@@ -3,15 +3,7 @@
 #ifndef GAME_CLIENT_COMPONENTS_GHOST_H
 #define GAME_CLIENT_COMPONENTS_GHOST_H
 
-#include <base/tl/array.h>
 #include <game/client/component.h>
-
-#include <game/client/animstate.h>
-#include <game/client/gameclient.h>
-#include <game/client/ui.h>
-#include <game/client/render.h>
-
-#include "players.h"
 
 class CGhost : public CComponent
 {
@@ -21,16 +13,12 @@ private:
 		unsigned char m_aMarker[8];
 		unsigned char m_Version;
 	};
-
-	// All infos needed
-	struct CGhostInfo
-	{
-		CNetObj_Character m_Player;
-		CNetObj_ClientInfo m_Info;
-	};
 	
-	array<CGhostInfo> m_CurPath;
-	array<CGhostInfo> m_BestPath;
+	array<CNetObj_Character> m_CurPath;
+	array<CNetObj_Character> m_BestPath;
+	
+	CNetObj_ClientInfo m_CurInfo;
+	CNetObj_ClientInfo m_GhostInfo;
 
 	int m_StartRenderTick;
 	int m_StartRecordTick;
@@ -48,11 +36,8 @@ private:
 		RACE_FINISHED,
 	};
 	
-	void AddInfos(CNetObj_Character Player, CNetObj_ClientInfo Info);
-
-public:
-	CGhost();
-
+	void AddInfos(CNetObj_Character Player);
+	
 	void StartRecord();
 	void StopRecord();
 	void StartRender();
@@ -64,6 +49,9 @@ public:
 	void Load();
 
 	static void ConGPlay(IConsole::IResult *pResult, void *pUserData);
+
+public:
+	CGhost();
 
 	virtual void OnRender();
 	virtual void OnConsoleInit();
