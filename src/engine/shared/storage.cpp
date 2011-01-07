@@ -63,6 +63,7 @@ public:
 			fs_makedir(GetPath(TYPE_SAVE, "downloadedmaps", aPath, sizeof(aPath)));
 			fs_makedir(GetPath(TYPE_SAVE, "demos", aPath, sizeof(aPath)));
 			fs_makedir(GetPath(TYPE_SAVE, "demos/auto", aPath, sizeof(aPath)));
+			fs_makedir(GetPath(TYPE_SAVE, "ghost", aPath, sizeof(aPath)));
 		}
 
 		return m_NumPaths ? 0 : 1;
