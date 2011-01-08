@@ -144,7 +144,7 @@ void CTimeMessages::OnRender()
 			float DiffW = TextRender()->TextWidth(0, FontSize, aDiff, -1);
 			
 			x -= DiffW;
-			TextRender()->TextColor(0.5f, 0.5f, 1.0f, Blend);
+			TextRender()->TextColor(0.0f, 0.5f, 1.0f, Blend);
 			TextRender()->Text(0, x, y, FontSize, aDiff, -1);
 			if(m_aTimemsgs[r].m_PlayerID != m_pClient->m_Snap.m_LocalCid)
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
