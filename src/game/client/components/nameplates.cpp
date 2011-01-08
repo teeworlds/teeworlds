@@ -41,7 +41,7 @@ void CNamePlates::RenderNameplate(
 		if(g_Config.m_TcNameplateShadow)
 		{
 			TextRender()->TextColor(0,0,0,a);
-			TextRender()->Text(0, Position.x-tw/2.0f+2, Position.y-60+2, 28.0f, aName, -1);
+			TextRender()->Text(0, Position.x-tw/2.0f+2, Position.y-FontSize-38.0f, FontSize, aName, -1);
 		}
 		bool IsTeamplay;
 		IsTeamplay = m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS;
@@ -57,15 +57,14 @@ void CNamePlates::RenderNameplate(
 		}
 		else // FFA or no colored plates
 			TextRender()->TextColor(1,1,1,a);
-		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-60, 28.0f, aName, -1);
-		
-		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-FontSize-38.0f, FontSize, pName, -1);
+		TextRender()->Text(0, Position.x-tw/2.0f, Position.y-FontSize-38.0f, FontSize, aName, -1);
 		
 		if(g_Config.m_Debug || g_Config.m_ClNameplateClientId) // render client id when in debug aswell
 		{
 			char aBuf[128];
 			str_format(aBuf, sizeof(aBuf),"%d", pPlayerInfo->m_ClientId);
-			TextRender()->Text(0, Position.x, Position.y-90, 28.0f, aBuf, -1);
+			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1);
+			TextRender()->Text(0, Position.x-tw/2.0f, Position.y-(FontSize*2.0f)-38.0f, FontSize, aBuf, -1);
 		}
 
 		TextRender()->TextColor(1,1,1,1);

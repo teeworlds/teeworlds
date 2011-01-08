@@ -190,7 +190,6 @@ class CMenus : public CComponent
 	char m_aCurrentDemoFolder[256];
 	
 	void DemolistPopulate();*/
-	bool m_DemolistDelEntry;
 	int m_DemolistSelectedIndex;
 	bool m_DemolistSelectedIsDir;
 	int m_DemolistStorageType;

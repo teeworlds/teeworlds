@@ -130,7 +130,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			g_Config.m_ClNameplatesSize = (int)(DoScrollbarH(&g_Config.m_ClNameplatesSize, &Button, g_Config.m_ClNameplatesSize/100.0f)*100.0f+0.1f);
 		}
 		else
-			LeftView.HSplitTop(20.0f, &Button, &LeftView);
+			LeftView.HSplitTop(40.0f, &Button, &LeftView);
 
 		LeftView.HSplitTop(20.0f, &Button, &LeftView);
 		if(DoButton_CheckBox(&g_Config.m_ClAntiRainbow, Localize("Anti rainbow"), g_Config.m_ClAntiRainbow, &Button))
@@ -169,7 +169,6 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
             OwnSkinInfo.m_Size = 50.0f*UI()->Scale();
 
-            LeftView.HSplitTop(20.0f, &Button, &LeftView);
             LeftView.HSplitTop(20.0f, &Button, &LeftView);
 
             str_format(aBuf, sizeof(aBuf), "%s:", Localize("Your skin"));

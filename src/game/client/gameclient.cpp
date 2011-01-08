@@ -284,8 +284,8 @@ void CGameClient::OnInit()
 		str_copy(g_Config.m_ClFontfile, "Free Sans Bold.ttf", sizeof(g_Config.m_ClFontfile));
 	}
 	TextRender()->SetFont(pFont);
-	}
-	if(!pDefaultFont)
+	
+	if(!pFont)
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gameclient", "failed to load font. filename='fonts/DejaVuSans.ttf'");
 
 	g_Config.m_ClThreadsoundloading = 0;
