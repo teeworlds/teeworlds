@@ -901,17 +901,17 @@ if ( !g_Config.m_SvSlashEmote )
 	  if (pChr && g_Config.m_SvSlashEmote)
 		{
 			if (!str_comp(pResult->GetString(0), "angry"))
-			  pChr->m_EmoteType = EMOTE_ANGRY;
+			  pChr->m_DefEmote = EMOTE_ANGRY;
 			else if (!str_comp(pResult->GetString(0), "blink"))
-			  pChr->m_EmoteType = EMOTE_BLINK;
+			  pChr->m_DefEmote = EMOTE_BLINK;
 			else if (!str_comp(pResult->GetString(0), "close"))
-			  pChr->m_EmoteType = EMOTE_BLINK;
+			  pChr->m_DefEmote = EMOTE_BLINK;
 			else if (!str_comp(pResult->GetString(0), "happy"))
-			  pChr->m_EmoteType = EMOTE_HAPPY;
+			  pChr->m_DefEmote = EMOTE_HAPPY;
 			else if (!str_comp(pResult->GetString(0), "pain"))
-			  pChr->m_EmoteType = EMOTE_PAIN;
+			  pChr->m_DefEmote = EMOTE_PAIN;
 			else if (!str_comp(pResult->GetString(0), "surprise"))
-			  pChr->m_EmoteType = EMOTE_SURPRISE;
+			  pChr->m_DefEmote = EMOTE_SURPRISE;
 			else
 			{
 				pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Unkown emote... Say /emote");
@@ -921,7 +921,7 @@ if ( !g_Config.m_SvSlashEmote )
 			if (pResult->NumArguments() > 1)
 				Duration = pResult->GetInteger(1);
 			  
-			pChr->m_EmoteStop = pSelf->Server()->Tick() + Duration * pSelf->Server()->TickSpeed();
+			pChr->m_DefEmoteReset = pSelf->Server()->Tick() + Duration * pSelf->Server()->TickSpeed();
 		}
 	}
 }
