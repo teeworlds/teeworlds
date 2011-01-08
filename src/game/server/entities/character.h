@@ -145,6 +145,9 @@ public:
 	int m_EmoteType;
 	int m_EmoteStop;
 	
+	int m_DefEmote; //used to override the default emote through /emote
+	int m_DefEmoteReset; //tick when it gets reset
+
 	// last tick that the player took any action ie some input
 	int m_LastAction;
 
