@@ -890,7 +890,7 @@ if ( !g_Config.m_SvSlashEmote )
 		{	pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Eye emotes are disabled");
 		}
 
-	if (pResult->NumArguments() == 0)
+	if (pResult->NumArguments() == 0 && g_Config.m_SvSlashEmote)
 	{
 		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Emote commands are: /emote surprise /emote blink /emote close /emote angry /emote happy /emote pain");
 		pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "Example: /emote surprise 10 for 10 seconds or /emote surprise (default 1 second)");
