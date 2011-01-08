@@ -137,7 +137,8 @@ public:
 	*/
 	int NetworkClipped(int SnappingClient);
 	int NetworkClipped(int SnappingClient, vec2 CheckPos);
-		
+	
+	bool GameLayerClipped(vec2 CheckPos);
 
 	/*
 		Variable: proximity_radius
