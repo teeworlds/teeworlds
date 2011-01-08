@@ -721,7 +721,6 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 		if(!pPlayer->GetTeam() && chr && (!chr->m_aWeapons[WEAPON_NINJA].m_Got || chr->m_FreezeTime) && chr->IsGrounded() && chr->m_Pos==chr->m_PrevPos && !pPlayer->m_InfoSaved && pChr->m_DeepFreeze == false)
 		{
 			if(pPlayer->m_Last_Pause + pSelf->Server()->TickSpeed() * g_Config.m_SvPauseFrequency <= pSelf->Server()->Tick()) {
-				chr->m_TeamBeforePause = chr->Team();
 				pPlayer->SaveCharacter();
 				pPlayer->SetTeam(TEAM_SPECTATORS);
 				pPlayer->m_InfoSaved = true;
@@ -735,7 +734,7 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 			pPlayer->m_InfoSaved = false;
 			pPlayer->m_PauseInfo.m_Respawn = true;
 
-			pPlayer->SetTeam('%s');
+			pPlayer->SetTeam(TEAM_RED);
 			//pPlayer->LoadCharacter();//TODO:Check if this system Works
 		}
 		else if(chr)

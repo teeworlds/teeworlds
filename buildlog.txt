@@ -1,3 +1,329 @@
+commit 3a1f73464b7bb86db42301cd8fa0f7ea5645993e
+Merge: c1ef7b7 3c5a430
+Author: JulianAssange <logsarehere@gmail.com>
+Date:   Sat Jan 8 17:51:10 2011 +1100
+
+    Merge branch 'master' of https://github.com/GreYFoXGTi/DDRace
+
+commit c1ef7b76ea41b88a48baa0228dc00db54ac05272
+Merge: f9cb87e 544eb12
+Author: JulianAssange <logsarehere@gmail.com>
+Date:   Sat Jan 8 17:51:02 2011 +1100
+
+    Merge branch 'master' of https://github.com/GreYFoXGTi/DDRace
+    
+    Conflicts:
+    	.gitignore
+    	data/languages/german.txt
+    	readme.txt
+    	src/engine/server/server.cpp
+    	src/engine/shared/config_variables.h
+    	src/game/server/ddracecommands.cpp
+    	src/game/server/gamecontext.cpp
+    	src/game/server/gamecontext.h
+    	src/game/version.h
+
+commit 3c5a430135b9d6f969182aab806e56d964430be5
+Merge: 544eb12 2a4bb8e
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Sat Jan 8 08:17:28 2011 +0200
+
+    Merge branch 'ddrace-emotefix' of https://github.com/fisted/teeworlds
+
+commit 544eb124c1a980c67f7a774af038cae9fb6d0c9b
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Sat Jan 8 01:26:17 2011 +0200
+
+    yet another woops
+
+commit 2a4bb8e631ea60a3247c817328155a876f3c911a
+Author: fisted <van.fisted@googlemail.com>
+Date:   Fri Jan 7 23:26:28 2011 +0100
+
+    fixed /emote reset
+
+commit 395c87a7ad3b606ca5b8755e8eeb1045bfc7d0f0
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Fri Jan 7 20:37:21 2011 +0200
+
+    woops
+
+commit f9cb87e953713bc4868cad55d9f963eb0a2f0e04
+Author: JulianAssange <logsarehere@gmail.com>
+Date:   Fri Jan 7 23:51:18 2011 +1100
+
+    cant remember what i did because i did it on the flight =/
+
+commit 6889adc0bb04f0c9043cdfa841fb8a3a28eb88f5
+Merge: 802dc7a 7487a22
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Thu Jan 6 23:30:28 2011 +0200
+
+    Merge branch 'master' of http://github.com/oy/teeworlds
+    
+    Conflicts:
+    	.gitignore
+    	src/game/client/gameclient.cpp
+    	src/game/editor/ed_editor.cpp
+    	src/game/server/gamecontext.cpp
+    	src/game/server/gamecontext.h & Cleaned it up
+
+commit 7487a22956680c601e57b9a0edd93eda1e33e287
+Author: oy <Tom_Adams@web.de>
+Date:   Thu Jan 6 21:58:42 2011 +0100
+
+    added better texture moving in the editor by nsinreal. Closes #372
+
+commit 802dc7a73d7f017f7d7252bd6d98ab21029b0808
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Thu Jan 6 15:31:54 2011 +0200
+
+    Revert "dunno who added this or why!", i seem to have confused Spectator/In-Game with teams system
+    
+    used team constants
+    
+    This reverts commit 27c3f06f27efe28d391767e1ae427979e5e4a055.
+
+commit 1306b62ce2e7c3494326889788b0fbacd371a709
+Author: oy <Tom_Adams@web.de>
+Date:   Thu Jan 6 13:37:28 2011 +0100
+
+    added command to move all players to a team. Closes #384
+
+commit b5f545f0e7418b1e021c928d0f9ac42be6cb021b
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Thu Jan 6 14:24:30 2011 +0200
+
+    Fixed Mistake
+
+commit 21994e017f9b7e7ac5bf1f919fb970eddbf44b5f
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Thu Jan 6 14:13:49 2011 +0200
+
+    fixed warnings
+
+commit 73010e7d2e501c08bcc10adf26c3c0084e5f6553
+Author: oy <Tom_Adams@web.de>
+Date:   Thu Jan 6 13:21:13 2011 +0100
+
+    removed a debug message. Closes #373
+
+commit 418dd8eccc5ab881b8c05dd857603ce0ccf6cd6c
+Author: oy <Tom_Adams@web.de>
+Date:   Thu Jan 6 13:17:54 2011 +0100
+
+    added fix by CarmineZ for missing option in the control settings. Closes #395
+
+commit e71263d686f712deb9ac5d3ed737c415dec815e2
+Author: oy <Tom_Adams@web.de>
+Date:   Thu Jan 6 12:41:24 2011 +0100
+
+    fixed last commit
+
+commit 4ff61fcdaa84e874c862374976bf06bb1f367b7f
+Author: Sworddragon <sworddragon2@aol.com>
+Date:   Thu Jan 6 00:51:31 2011 +0100
+
+    Made compiling process Python 3 compatible
+
+commit b90a015daff77074d9749585903c4d263cbadb88
+Author: Sworddragon <sworddragon2@aol.com>
+Date:   Thu Jan 6 00:42:49 2011 +0100
+
+    Added entries in .gitignore
+
+commit af160c840188fbc1c600c85f179beeb12ab10284
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Thu Jan 6 07:58:37 2011 +0200
+
+    Can't pause while you are in a team
+
+commit 22aa8940a7d171afef7651d18eefeb7241c91f6e
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Thu Jan 6 07:30:19 2011 +0200
+
+    Code Style of some files converted from K&R to BSD/Allman
+
+commit b909829b618954fbbd6cc68823b8f31f76464dc9
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Thu Jan 6 07:22:08 2011 +0200
+
+    Fixed team state sending, it was illogical
+
+commit babe838cabcb0de1852ffce8416272c0977443e3
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Thu Jan 6 07:08:12 2011 +0200
+
+    Added /ShowOthers
+
+commit 82eac5cf3b29870469aab92c7abab4b06a7996f0
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Thu Jan 6 06:45:53 2011 +0200
+
+    ScoreBoard now is different for DDRace only
+
+commit ddc5dd7ab3217d990ea05186c6e84da1cce59d15
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Thu Jan 6 05:46:10 2011 +0200
+
+    Cleaned up & Re-arranged stuff
+
+commit 4697f2cca29c710c9de844cc05caa2ba3a5ecace
+Author: JulianAssange <logsarehere@gmail.com>
+Date:   Thu Jan 6 11:03:39 2011 +1100
+
+    not sure what i did lol
+
+commit 1719ad554eec559b48ab620b52a0a196d829b491
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Thu Jan 6 01:51:22 2011 +0200
+
+    Moved a var
+
+commit 1d9190fd5be1e069adcca93d49399da52dceb362
+Merge: c564831 13902fe
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Thu Jan 6 01:49:58 2011 +0200
+
+    Merge branch 'master' of http://github.com/oy/teeworlds
+    
+    Conflicts:
+    	data/languages/russian.txt
+    	readme.txt
+    	src/game/variables.h
+
+commit 13902fef6c04697f334f4c6b1815e50eb17fdbfc
+Author: oy <Tom_Adams@web.de>
+Date:   Wed Jan 5 22:22:07 2011 +0100
+
+    show an error popup when demo deletion fails
+
+commit 64e36b5095fc4838692bede15e36bf953cd44459
+Author: oy <Tom_Adams@web.de>
+Date:   Wed Jan 5 22:13:44 2011 +0100
+
+    updated french l10n by Choupom
+
+commit ebd93382eae84e0c7f2ddecb873952228e3a1716
+Author: Choupom <andycootlapin@hotmail.fr>
+Date:   Wed Jan 5 19:30:26 2011 +0100
+
+    updated copyright
+
+commit 68ead898da7d4e1efc1d0bf3892592d4ad6cec48
+Author: JulianAssange <logsarehere@gmail.com>
+Date:   Thu Jan 6 06:51:18 2011 +1100
+
+    removed normal unfreeze on deepunfreeze
+
+commit 6bf5c0bef277a9b2b8c6c9be6dc7cdbc20ddcef6
+Author: oy <Tom_Adams@web.de>
+Date:   Wed Jan 5 18:48:00 2011 +0100
+
+    added updated Bosnian translation by ***
+
+commit 18461535fde4b7f5196c8b5ee8b396de2fc3c391
+Author: oy <Tom_Adams@web.de>
+Date:   Wed Jan 5 17:28:53 2011 +0100
+
+    changed time left localisation in the map download popup to allow better translations
+
+commit 7b46d386dd3b145290664cf7f26d4c1397f482f3
+Author: m!nus <m1nus@online.de>
+Date:   Sun Dec 26 02:37:22 2010 +0100
+
+    requesting serverinfo now uses gie2 instead of the legacy gief.
+
+commit 2992d9a6c679081841d1448dd628e1b6ba5b0d38
+Author: oy <Tom_Adams@web.de>
+Date:   Wed Jan 5 12:19:06 2011 +0100
+
+    scale control settings as well
+
+commit 073044747b5a3f172e5b03ab58b373cdd645c087
+Author: Damian Kaczmarek <rush@rushbase.net>
+Date:   Tue Dec 14 01:20:47 2010 +0100
+
+    -Working ui_scale parameter.
+    (doing it properly would require lots of framework/interface job ...)
+
+commit aad2438882943b23a72cee28c1b71d217883ebf9
+Author: oy <Tom_Adams@web.de>
+Date:   Wed Jan 5 12:12:23 2011 +0100
+
+    fixed outlines for larger font sizes
+
+commit 023763e1a484e66285b3004cf30cecf5e75224b9
+Author: oy <Tom_Adams@web.de>
+Date:   Wed Jan 5 12:08:38 2011 +0100
+
+    updated localisations based on last commit
+
+commit c5648311edd6cce8fc9183e27bcc4669d32a6e18
+Merge: 27c3f06 67f86e3
+Author: GreYFoXGTi <GreYFoXGTi@GMaiL.CoM>
+Date:   Tue Jan 4 22:30:15 2011 +0200
+
+    Merge branch 'master' of http://github.com/oy/teeworlds
+    
+    Conflicts:
+    	data/languages/german.txt
+    	src/game/client/components/scoreboard.cpp
+    	src/game/editor/ed_layer_tiles.cpp
+    	src/game/server/entities/character.cpp
+    	src/game/server/gamecontext.cpp
+    	src/game/server/gamecontroller.cpp
+    	src/game/variables.h
+
+commit 67f86e35476fc3e8a812d399f12021b320bc51d6
+Author: oy <Tom_Adams@web.de>
+Date:   Tue Jan 4 13:11:01 2011 +0100
+
+    added option to change nameplates size by RushPL
+
+commit 1928a757c6054a622fc7895e316ac89f102007ff
+Author: oy <Tom_Adams@web.de>
+Date:   Tue Jan 4 12:30:40 2011 +0100
+
+    added fix for rendering big fonts on large resolutions by RushPL
+
+commit 5dbe75fd7bca578c3d768021d8e3f4da75be1e79
+Author: oy <Tom_Adams@web.de>
+Date:   Tue Jan 4 12:00:34 2011 +0100
+
+    removed duplicate stuff
+
+commit bcba9e5c89fad11afc34e2f9c0124edf2d0da74f
+Author: oy <Tom_Adams@web.de>
+Date:   Tue Jan 4 11:58:25 2011 +0100
+
+    moved HslToRgb stuff
+
+commit 336f00ae89be5051be20632c728076a436d93d3c
+Author: oy <Tom_Adams@web.de>
+Date:   Tue Jan 4 11:38:14 2011 +0100
+
+    added colours for tile layers by Choupom
+
+commit 18861d6a108dc4f015b10c41b61fcd130d2687d2
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Tue Jan 4 15:44:03 2011 +1100
+
+    d1d 1 j8st d0 t2i1s?
+
+commit ce0f21abff1fb741e95bdf06469c9f87f78c3788
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Tue Jan 4 15:24:00 2011 +1100
+
+    	modified:   .gitignore
+    	renamed:    log.txt -> buildlog.txt
+
+commit 712a5c5c337b0acc20df54aa1a165de65a757abb
+Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
+Date:   Tue Jan 4 15:16:49 2011 +1100
+
+    updated log.
+
 commit 34ad56efdb94f804cda447d27d1a273337b6f862
 Author: DemonulPierdut/-/Julian /[Assange/] <logsarehere@gmail.com>
 Date:   Tue Jan 4 02:15:27 2011 +1100
@@ -44,6 +370,37 @@ Date:   Tue Jan 4 00:46:05 2011 +1100
     
     Conflicts:
     	data/languages/german.txt
+
+commit 533d28e35a8f7278456abb6ef1b4d5e9e36063a9
+Author: Choupom <andycootlapin@hotmail.fr>
+Date:   Wed Dec 15 13:31:27 2010 +0100
+
+    made team colors for nameplates (fixes #207)
+
+commit b565d4ab18e9517e6d20924cf3e05fa2994252f3
+Author: Choupom <andycootlapin@hotmail.fr>
+Date:   Wed Dec 15 12:49:36 2010 +0100
+
+    fixed so Make/Clear Collision buttons are hidden on game layer
+
+commit a72848e78032014adb1bf053c4556bf1072b0c2d
+Author: oy <Tom_Adams@web.de>
+Date:   Mon Jan 3 12:50:38 2011 +0100
+
+    added constants for teams by Choupom
+
+commit b29b6d0bcff3d22fe5dac3453689fb8d315cf3ee
+Author: vierkant <sanderb18@gmail.com>
+Date:   Mon Dec 20 21:33:27 2010 -0800
+
+    Difference made for disconnect and quit
+
+commit 3f1fa001a5e4c287a36ed0d372b81c4bfc890af1
+Author: vierkant <sanderb18@gmail.com>
+Date:   Thu Dec 16 10:44:49 2010 -0800
+
+    Dutch translation updated.
+    "seconds and minutes left" in map download in Dutch can better be translated as "left seconds and minutes'" with left in front of the time unit.
 
 commit 9652ae1fc1cbaf4906cf20998d34dc38f81fdb2d
 Author: JulianAssange <logsarehere@gmail.com>
