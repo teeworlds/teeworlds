@@ -1,4 +1,4 @@
-/* (c) Rajh. */
+/* (c) Rajh, Redix and Sushi. */
 
 #ifndef GAME_CLIENT_COMPONENTS_GHOST_H
 #define GAME_CLIENT_COMPONENTS_GHOST_H

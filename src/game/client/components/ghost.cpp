@@ -1,4 +1,4 @@
-/* (c) Rajh. */
+/* (c) Rajh, Redix and Sushi. */
 
 #include <cstdio>
 
@@ -69,7 +69,7 @@ void CGhost::OnRender()
 		AddInfos(Player);
 	
 	// only for race
-	if(!m_pClient->m_IsRace || !g_Config.m_ClGhost)
+	if(!m_pClient->m_IsRace || !g_Config.m_ClRaceGhost)
 		return;
 	
 	// Check if the race line is crossed then start the render of the ghost if one
@@ -99,7 +99,7 @@ void CGhost::OnRender()
 	}
 
 	// Play the ghost
-	if(!m_Rendering)
+	if(!m_Rendering || !g_Config.m_ClRaceShowGhost)
 		return;
 	
 	m_CurPos = Client()->PredGameTick()-m_StartRenderTick;
@@ -270,6 +270,9 @@ void CGhost::StopRender()
 
 void CGhost::Save()
 {
+	if(!g_Config.m_ClRaceSaveGhost)
+		return;
+		
 	CGhostHeader Header;
 	
 	char aFilename[128];
@@ -414,7 +417,7 @@ void CGhost::OnConsoleInit()
 
 void CGhost::OnMessage(int MsgType, void *pRawMsg)
 {
-	if(!g_Config.m_ClGhost || m_pClient->m_Snap.m_Spectate)
+	if(!g_Config.m_ClRaceGhost || m_pClient->m_Snap.m_Spectate)
 		return;
 	
 	// only for race
