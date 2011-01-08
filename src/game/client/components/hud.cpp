@@ -87,10 +87,10 @@ void CHud::RenderScoreHud()
 	if(!(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver) && (GameFlags&GAMEFLAG_TEAMS))
 	{
 		char aScoreTeam[2][32];
-		str_format(aScoreTeam[0], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed);
-		str_format(aScoreTeam[1], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue);
-		float aScoreTeamWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScoreTeam[0], -1), TextRender()->TextWidth(0, 14.0f, aScoreTeam[1], -1)};
-		float ScoreWidthMax = max(max(aScoreTeamWidth[0], aScoreTeamWidth[1]), TextRender()->TextWidth(0, 14.0f, "100", -1));
+		str_format(aScoreTeam[TEAM_RED], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreRed);
+		str_format(aScoreTeam[TEAM_BLUE], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameobj->m_TeamscoreBlue);
+		float aScoreTeamWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_RED], -1), TextRender()->TextWidth(0, 14.0f, aScoreTeam[TEAM_BLUE], -1)};
+		float ScoreWidthMax = max(max(aScoreTeamWidth[TEAM_RED], aScoreTeamWidth[TEAM_BLUE]), TextRender()->TextWidth(0, 14.0f, "100", -1));
 		float Split = 3.0f;
 		float ImageSize = GameFlags&GAMEFLAG_FLAGS ? 16.0f : Split;
 		
@@ -199,7 +199,7 @@ void CHud::RenderTeambalanceWarning()
 	bool Flash = time_get()/(time_freq()/2)%2 == 0;
 	if (m_pClient->m_Snap.m_pGameobj && (m_pClient->m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS) != 0)
 	{	
-		int TeamDiff = m_pClient->m_Snap.m_aTeamSize[0]-m_pClient->m_Snap.m_aTeamSize[1];
+		int TeamDiff = m_pClient->m_Snap.m_aTeamSize[TEAM_RED]-m_pClient->m_Snap.m_aTeamSize[TEAM_BLUE];
 		if (g_Config.m_ClWarningTeambalance && (TeamDiff >= 2 || TeamDiff <= -2))
 		{
 			const char *pText = Localize("Please balance teams!");
@@ -322,6 +322,75 @@ void CHud::RenderHealthAndAmmo()
 	Graphics()->QuadsEnd();
 }
 
+void CHud::OnRender()
+{
+	if(!m_pClient->m_Snap.m_pGameobj)
+		return;
+		
+	m_Width = 300*Graphics()->ScreenAspect();
+
+	bool Spectate = false;
+	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team == TEAM_SPECTATORS)
+		Spectate = true;
+	
+	if(m_pClient->m_Snap.m_pLocalCharacter && !Spectate && !(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver)) {
+		RenderHealthAndAmmo();
+		RenderDDRaceEffects();
+	}
+
+	RenderGameTimer();
+	RenderSuddenDeath();
+	RenderScoreHud();
+	RenderWarmupTimer();
+	RenderFps();
+	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
+		RenderConnectionWarning();
+	RenderTeambalanceWarning();
+	RenderVoting();
+	RenderRecord();
+	RenderCursor();
+	
+}
+
+void CHud::OnMessage(int MsgType, void *pRawMsg)
+{
+
+	if(MsgType == NETMSGTYPE_SV_DDRACETIME)
+	{
+		m_DDRaceTimeReceived = true;
+		
+		CNetMsg_Sv_DDRaceTime *pMsg = (CNetMsg_Sv_DDRaceTime *)pRawMsg;
+
+		m_DDRaceTime = pMsg->m_Time;
+		m_DDRaceTick = 0;
+		
+		m_LastReceivedTimeTick = Client()->GameTick();
+		
+		m_FinishTime = pMsg->m_Finish ? true : false;
+		
+		if(pMsg->m_Check)
+		{
+			m_CheckpointDiff = (float)pMsg->m_Check/100;
+			m_CheckpointTick = Client()->GameTick();
+		}
+	}
+	else if(MsgType == NETMSGTYPE_SV_KILLMSG)
+	{
+		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
+		if(pMsg->m_Victim == m_pClient->m_Snap.m_LocalCid)
+		{
+			m_CheckpointTick = 0;
+			m_DDRaceTime = 0;
+		}
+	}
+	else if(MsgType == NETMSGTYPE_SV_RECORD)
+	{
+		CNetMsg_Sv_Record *pMsg = (CNetMsg_Sv_Record *)pRawMsg;
+		m_ServerRecord = (float)pMsg->m_ServerTimeBest/100;
+		m_PlayerRecord = (float)pMsg->m_PlayerTimeBest/100;
+	}
+}
+
 void CHud::RenderDDRaceEffects()
 {
 	// check racestate
@@ -403,72 +472,3 @@ void CHud::RenderRecord()
 	}
 }
 
-void CHud::OnRender()
-{
-	if(!m_pClient->m_Snap.m_pGameobj)
-		return;
-		
-	m_Width = 300*Graphics()->ScreenAspect();
-
-	bool Spectate = false;
-	if(m_pClient->m_Snap.m_pLocalInfo && m_pClient->m_Snap.m_pLocalInfo->m_Team == -1)
-		Spectate = true;
-	
-	if(m_pClient->m_Snap.m_pLocalCharacter && !Spectate && !(m_pClient->m_Snap.m_pGameobj && m_pClient->m_Snap.m_pGameobj->m_GameOver)) {
-		RenderHealthAndAmmo();
-		RenderDDRaceEffects();
-	}
-		
-
-	RenderGameTimer();
-	RenderSuddenDeath();
-	RenderScoreHud();
-	RenderWarmupTimer();
-	RenderFps();
-	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
-		RenderConnectionWarning();
-	RenderTeambalanceWarning();
-	RenderVoting();
-	RenderRecord();
-	RenderCursor();
-	
-}
-
-void CHud::OnMessage(int MsgType, void *pRawMsg)
-{
-
-	if(MsgType == NETMSGTYPE_SV_DDRACETIME)
-	{
-		m_DDRaceTimeReceived = true;
-		
-		CNetMsg_Sv_DDRaceTime *pMsg = (CNetMsg_Sv_DDRaceTime *)pRawMsg;
-
-		m_DDRaceTime = pMsg->m_Time;
-		m_DDRaceTick = 0;
-		
-		m_LastReceivedTimeTick = Client()->GameTick();
-		
-		m_FinishTime = pMsg->m_Finish ? true : false;
-		
-		if(pMsg->m_Check)
-		{
-			m_CheckpointDiff = (float)pMsg->m_Check/100;
-			m_CheckpointTick = Client()->GameTick();
-		}
-	}
-	else if(MsgType == NETMSGTYPE_SV_KILLMSG)
-	{
-		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
-		if(pMsg->m_Victim == m_pClient->m_Snap.m_LocalCid)
-		{
-			m_CheckpointTick = 0;
-			m_DDRaceTime = 0;
-		}
-	}
-	else if(MsgType == NETMSGTYPE_SV_RECORD)
-	{
-		CNetMsg_Sv_Record *pMsg = (CNetMsg_Sv_Record *)pRawMsg;
-		m_ServerRecord = (float)pMsg->m_ServerTimeBest/100;
-		m_PlayerRecord = (float)pMsg->m_PlayerTimeBest/100;
-	}
-}

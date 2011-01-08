@@ -4,7 +4,8 @@
 #include <game/teamscore.h>
 #include <game/server/gamecontext.h>
 
-class CGameTeams {
+class CGameTeams
+{
 	int m_TeamState[MAX_CLIENTS];
 	int m_MembersCount[MAX_CLIENTS];
 	bool m_TeeFinished[MAX_CLIENTS];
@@ -13,7 +14,8 @@ class CGameTeams {
 	
 	
 public:
-	enum {
+	enum
+	{
 		EMPTY, 
 		OPEN,
 		CLOSED,

@@ -591,7 +591,7 @@ void CCharacter::OnDirectInput(CNetObj_PlayerInput *pNewInput)
 	mem_copy(&m_LatestPrevInput, &m_LatestInput, sizeof(m_LatestInput));
 	mem_copy(&m_LatestInput, pNewInput, sizeof(m_LatestInput));
 
-	if(m_NumInputs > 2 && m_pPlayer->GetTeam() != -1)
+	if(m_NumInputs > 2 && m_pPlayer->GetTeam() != TEAM_SPECTATORS)
 	{
 		HandleWeaponSwitch();
 		FireWeapon();
@@ -1282,7 +1282,7 @@ void CCharacter::TickDefered()
 	if(Events&COREEVENT_HOOK_HIT_NOHOOK) GameServer()->CreateSound(m_Pos, SOUND_HOOK_NOATTACH, Mask);
 
 
-	if(m_pPlayer->GetTeam() == -1)
+	if(m_pPlayer->GetTeam() == TEAM_SPECTATORS)
 	{
 		m_Pos.x = m_Input.m_TargetX;
 		m_Pos.y = m_Input.m_TargetY;
@@ -1544,7 +1544,7 @@ void CCharacter::Snap(int SnappingClient)
 	CCharacter* SnapChar = GameServer()->GetPlayerChar(SnappingClient);
 	if(SnapChar && !SnapChar->m_Super && 
 		GameServer()->m_apPlayers[SnappingClient]->GetTeam() != -1 &&
-		!CanCollide(SnappingClient) && !GameServer()->m_apPlayers[SnappingClient]->m_IsUsingDDRaceClient) return;
+		!CanCollide(SnappingClient) && (!GameServer()->m_apPlayers[SnappingClient]->m_IsUsingDDRaceClient || (GameServer()->m_apPlayers[SnappingClient]->m_IsUsingDDRaceClient && !GameServer()->m_apPlayers[SnappingClient]->m_ShowOthers))) return;
 	if(GetPlayer()->m_Invisible &&
 		GetPlayer()->GetCID() != SnappingClient &&
 		GameServer()->m_apPlayers[SnappingClient]->m_Authed < GetPlayer()->m_Authed

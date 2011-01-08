@@ -44,6 +44,7 @@
 #include "components/skins.h"
 #include "components/sounds.h"
 #include "components/voting.h"
+#include <base/tl/sorted_array.h>
 
 CGameClient g_GameClient;
 
@@ -105,8 +106,6 @@ static void ConServerDummy(IConsole::IResult *pResult, void *pUserData, int Clie
 {
 	dbg_msg("client", "this command is not available on the client");
 }
-
-#include <base/tl/sorted_array.h>
 
 const char *CGameClient::Version() { return GAME_VERSION; }
 const char *CGameClient::NetVersion() { return GAME_NETVERSION; }
@@ -199,6 +198,7 @@ void CGameClient::OnConsoleInit()
 	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Broadcast message", 0);
 	Console()->Register("say", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Say in chat", 0);
 	Console()->Register("set_team", "ii", CFGFLAG_SERVER, ConServerDummy, 0, "Set team of player to team", 0);
+	Console()->Register("set_team_all", "i", CFGFLAG_SERVER, 0, 0, "Set team of all players to team", 0);
 	Console()->Register("addvote", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Add a voting option", 0);
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConServerDummy, 0, "Force a vote to yes/no", 0);
 
@@ -306,7 +306,7 @@ void CGameClient::OnInit()
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "gameclient", aBuf);
 	
 	m_ServerMode = SERVERMODE_PURE;
-	
+
 	m_DDRaceMsgSent = false;
 }
 
@@ -394,6 +394,7 @@ void CGameClient::OnReset()
 	
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
+
 	m_Teams.Reset();
 	m_DDRaceMsgSent = false;
 }
@@ -425,6 +426,7 @@ static void Evolve(CNetObj_Character *pCharacter, int Tick)
 	CCharacterCore TempCore;
 	CTeamsCore TempTeams;
 	mem_zero(&TempCore, sizeof(TempCore));
+	mem_zero(&TempTeams, sizeof(TempTeams));
 	TempCore.Init(&TempWorld, g_GameClient.Collision(), &TempTeams);
 	TempCore.Read(pCharacter);
 	
@@ -579,8 +581,9 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			g_GameClient.m_pSounds->Enqueue(pMsg->m_Soundid);
 		else
 			g_GameClient.m_pSounds->Play(CSounds::CHN_GLOBAL, pMsg->m_Soundid, 1.0f, vec2(0,0));
-	}
-	else if(MsgId == NETMSGTYPE_CL_TEAMSSTATE) {
+	}		
+	else if(MsgId == NETMSGTYPE_CL_TEAMSSTATE)
+	{
 		CNetMsg_Cl_TeamsState *pMsg = (CNetMsg_Cl_TeamsState *)pRawMsg;
 		m_Teams.Team(0, pMsg->m_Tee0);
 		m_Teams.Team(1, pMsg->m_Tee1);
@@ -599,14 +602,13 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		m_Teams.Team(14, pMsg->m_Tee14);
 		m_Teams.Team(15, pMsg->m_Tee15);
 		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
 			dbg_msg1("Teams", "Team = %d", m_Teams.Team(i));
-		}
-	} else if(MsgId == NETMSGTYPE_SV_PLAYERTIME) {
+	}
+	else if(MsgId == NETMSGTYPE_SV_PLAYERTIME)
+	{
 		CNetMsg_Sv_PlayerTime *pMsg = (CNetMsg_Sv_PlayerTime *)pRawMsg;
 		m_aClients[pMsg->m_Cid].m_Score = pMsg->m_Time;
 	}
-	
 }
 
 void CGameClient::OnStateChange(int NewState, int OldState)
@@ -728,7 +730,7 @@ void CGameClient::OnNewSnapshot()
 
 	// go trough all the items in the snapshot and gather the info we want
 	{
-		m_Snap.m_aTeamSize[0] = m_Snap.m_aTeamSize[1] = 0;
+		m_Snap.m_aTeamSize[TEAM_RED] = m_Snap.m_aTeamSize[TEAM_BLUE] = 0;
 		
 		int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
 		for(int i = 0; i < Num; i++)
@@ -789,12 +791,12 @@ void CGameClient::OnNewSnapshot()
 					m_Snap.m_LocalCid = Item.m_Id;
 					m_Snap.m_pLocalInfo = pInfo;
 					
-					if (pInfo->m_Team == -1)
+					if(pInfo->m_Team == TEAM_SPECTATORS)
 						m_Snap.m_Spectate = true;
 				}
 				
 				// calculate team-balance
-				if(pInfo->m_Team != -1)
+				if(pInfo->m_Team != TEAM_SPECTATORS)
 					m_Snap.m_aTeamSize[pInfo->m_Team]++;
 				
 			}
@@ -857,7 +859,7 @@ void CGameClient::OnNewSnapshot()
 		else
 			m_ServerMode = SERVERMODE_PUREMOD;
 	}
-	
+
 	if(!m_DDRaceMsgSent && m_Snap.m_pLocalInfo)
 	{
 		CNetMsg_Cl_IsDDRace Msg;
@@ -1002,7 +1004,7 @@ void CGameClient::CClientData::UpdateRenderInfo()
 	if(g_GameClient.m_Snap.m_pGameobj && g_GameClient.m_Snap.m_pGameobj->m_Flags&GAMEFLAG_TEAMS)
 	{
 		const int TeamColors[2] = {65387, 10223467};
-		if(m_Team >= 0 && m_Team <= 1)
+		if(m_Team >= TEAM_RED && m_Team <= TEAM_BLUE)
 		{
 			m_RenderInfo.m_Texture = g_GameClient.m_pSkins->Get(m_SkinId)->m_ColorTexture;
 			m_RenderInfo.m_ColorBody = g_GameClient.m_pSkins->GetColorV4(TeamColors[m_Team]);

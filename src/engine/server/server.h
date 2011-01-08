@@ -19,7 +19,7 @@ class CSnapIDPool
 {
 	enum
 	{
-		MAX_IDS = 32*1024,
+		MAX_IDS = 16*1024,//TODO
 	};
 
 	class CID
@@ -102,7 +102,7 @@ public:
 		int m_Score;
 		int m_Authed;
 		int m_AuthTries;
-
+		
 		NETADDR m_Addr;
 
 		void Reset();
@@ -175,6 +175,7 @@ public:
 	void SendMap(int ClientId);
 	void SendRconLine(int ClientId, const char *pLine);
 	static void SendRconLineAuthed(const char *pLine, void *pUser);
+
 	static void SendRconResponse(const char *pLine, void *pUser);
 
 	struct RconResponseInfo
@@ -212,9 +213,10 @@ public:
 	static void ConMapReload(IConsole::IResult *pResult, void *pUser, int ClientId);
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+
 	static void ConLogin(IConsole::IResult *pResult, void *pUser, int ClientId);
 	static void ConCmdList(IConsole::IResult *pResult, void *pUser, int ClientId);
-	
+
 	static bool CompareClients(int ClientId, int Victim, void *pUser);
 	static bool ClientOnline(int ClientId, void *pUser);
 

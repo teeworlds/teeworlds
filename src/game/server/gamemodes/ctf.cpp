@@ -1,7 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-/*#include <game/mapitems.h>
-=======
+/*
+#include <game/mapitems.h>
 #include <game/server/entities/character.h>
 #include <game/server/entities/flag.h>
 #include <game/server/player.h>
@@ -23,8 +23,8 @@ bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
 		return true;
 	
 	int Team = -1;
-	if(Index == ENTITY_FLAGSTAND_RED) Team = 0;
-	if(Index == ENTITY_FLAGSTAND_BLUE) Team = 1;
+	if(Index == ENTITY_FLAGSTAND_RED) Team = TEAM_RED;
+	if(Index == ENTITY_FLAGSTAND_BLUE) Team = TEAM_BLUE;
 	if(Team == -1 || m_apFlags[Team])
 		return false;
 		
@@ -143,10 +143,10 @@ void CGameControllerCTF::Tick()
 			int Num = GameServer()->m_World.FindEntities(F->m_Pos, CFlag::ms_PhysSize, (CEntity**)apCloseCCharacters, MAX_CLIENTS, NETOBJTYPE_CHARACTER);
 			for(int i = 0; i < Num; i++)
 			{
-				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == -1 || GameServer()->Collision()->IntersectLine(F->m_Pos, apCloseCCharacters[i]->m_Pos, NULL, NULL))
+				if(!apCloseCCharacters[i]->IsAlive() || apCloseCCharacters[i]->GetPlayer()->GetTeam() == TEAM_SPECTATORS || GameServer()->Collision()->IntersectLine(F->m_Pos, apCloseCCharacters[i]->m_Pos, NULL, NULL))
 					continue;
 				
-				if(apCloseCCharacters[i]->GetPlayer()->GetTeam() == F->m_Number)
+				if(apCloseCCharacters[i]->GetPlayer()->GetTeam() == F->m_Team)
 				{
 					// return the flag
 					if(!F->m_AtStand)

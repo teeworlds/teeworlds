@@ -1084,7 +1084,7 @@ void CClient::ProcessPacket(CNetChunk *pPacket)
 				if(Info.m_NumPlayers < 0 || Info.m_NumPlayers > MAX_CLIENTS || Info.m_MaxPlayers < 0 || Info.m_MaxPlayers > MAX_CLIENTS)
 					return;
 				
-				if((Info.m_Flags | SERVER_FLAGS_VERSION) != SERVER_FLAG_VERSION || !str_find_nocase(Info.m_aGameType, "ddrace"))
+				if((Info.m_Flags | SERVER_FLAGS_VERSION) != SERVER_FLAG_VERSION || !str_find_nocase(Info.m_aGameType, "DDRace"))
 					Info.m_Flags &= SERVER_FLAGS_DEFAULT;
 				else
 					Info.m_Flags &= SERVER_FLAGS_ALL;
@@ -1813,8 +1813,6 @@ void CClient::Run()
 	if(!LoadData())
 		return;
 
-	DemoRecorder_Init();
-
 	GameClient()->OnInit();
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "version %s", GameClient()->NetVersion());
@@ -2138,12 +2136,6 @@ void CClient::Con_Play(IConsole::IResult *pResult, void *pUserData, int ClientID
 	pSelf->DemoPlayer_Play(pResult->GetString(0), IStorage::TYPE_ALL);
 }
 
-void CClient::DemoRecorder_Init()
-{
-	if(!Storage()->CreateFolder("demos/auto", IStorage::TYPE_SAVE))
-		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demorec/record", "unable to create auto record folder");
-}
-
 void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp)
 {
 	if(State() != IClient::STATE_ONLINE)
@@ -2230,7 +2222,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("play", "r", CFGFLAG_CLIENT, Con_Play, this, "Play the file specified", 0);
 	m_pConsole->Register("record", "?s", CFGFLAG_CLIENT, Con_Record, this, "Record to the file", 0);
 	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording", 0);
-	
+
 	m_pConsole->Register("add_favorite", "s", CFGFLAG_CLIENT, Con_AddFavorite, this, "Add a server as a favorite", 0);
 }
 

@@ -304,7 +304,7 @@ CMenus::CListboxItem CMenus::UiDoListboxNextRow()
 	if(gs_ListBoxItemIndex%gs_ListBoxItemsPerRow == 0)
 		gs_ListBoxView.HSplitTop(gs_ListBoxRowHeight /*-2.0f*/, &s_RowView, &gs_ListBoxView);
 
-	s_RowView.VSplitLeft(s_RowView.w/(gs_ListBoxItemsPerRow-gs_ListBoxItemIndex%gs_ListBoxItemsPerRow), &Item.m_Rect, &s_RowView);
+	s_RowView.VSplitLeft(s_RowView.w/(gs_ListBoxItemsPerRow-gs_ListBoxItemIndex%gs_ListBoxItemsPerRow)/(UI()->Scale()), &Item.m_Rect, &s_RowView);
 
 	Item.m_Visible = 1;
 	//item.rect = row;
@@ -475,22 +475,6 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		DemolistPopulate();
 		DemolistOnUpdate(true);
 		s_Inited = 1;
-	}
-
-	// delete demo
-	if(m_DemolistDelEntry)
-	{
-		if(m_DemolistSelectedIndex >= 0 && !m_DemolistSelectedIsDir)
-		{
-			char aBuf[512];
-			str_format(aBuf, sizeof(aBuf), "%s/%s", m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
-			if(Storage()->RemoveFile(aBuf, m_lDemos[m_DemolistSelectedIndex].m_StorageType))
-			{
-				DemolistPopulate();
-				DemolistOnUpdate(false);
-			}
-		}
-		m_DemolistDelEntry = false;
 	}
 
 	char aFooterLabel[128] = {0};

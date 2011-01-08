@@ -508,7 +508,7 @@ void CGameContext::OnTick()
 				bool aVoteChecked[MAX_CLIENTS] = {0};
 				for(int i = 0; i < MAX_CLIENTS; i++)
 				{
-					if(!m_apPlayers[i] || (g_Config.m_SvSpectatorVotes == 0 && m_apPlayers[i]->GetTeam() == -1) || aVoteChecked[i])	// don't count in votes by spectators
+					if(!m_apPlayers[i] || (g_Config.m_SvSpectatorVotes == 0 && m_apPlayers[i]->GetTeam() == TEAM_SPECTATORS) || aVoteChecked[i])	// don't count in votes by spectators
 						continue;
 					if(m_VoteKick && 
 						GetPlayerChar(m_VoteCreator) && GetPlayerChar(i) &&
@@ -728,7 +728,7 @@ void CGameContext::OnSetAuthed(int client_id, int Level)
 void CGameContext::OnClientConnected(int ClientId)
 {
 	// Check which team the player should be on
-	const int StartTeam = g_Config.m_SvTournamentMode ? -1 : m_pController->GetAutoTeam(ClientId);
+	const int StartTeam = g_Config.m_SvTournamentMode ? TEAM_SPECTATORS : m_pController->GetAutoTeam(ClientId);
 
 	m_apPlayers[ClientId] = new(ClientId) CPlayer(this, ClientId, StartTeam);
 	//players[client_id].init(client_id);
@@ -833,7 +833,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 
 		int64 Now = Server()->Tick();
 		p->m_Last_VoteTry = Now;
-		if(g_Config.m_SvSpectatorVotes == 0 && p->GetTeam() == -1)
+		if(g_Config.m_SvSpectatorVotes == 0 && p->GetTeam() == TEAM_SPECTATORS)
 		{
 			SendChatTarget(ClientId, "Spectators aren't allowed to start a vote.");
 			return;
@@ -1015,7 +1015,7 @@ void CGameContext::OnMessage(int MsgId, CUnpacker *pUnpacker, int ClientId)
 				SendChatTarget(ClientId,"Use /pause first then you can kill");
 			else{
 				p->m_Last_SetTeam = Server()->Tick();
-				if(p->GetTeam() == -1 || pMsg->m_Team == -1)
+				if(p->GetTeam() == TEAM_SPECTATORS || pMsg->m_Team == TEAM_SPECTATORS)
 					m_VoteUpdate = true;
 				p->SetTeam(pMsg->m_Team);
 			}
@@ -1264,6 +1264,22 @@ void CGameContext::ConSetTeam(IConsole::IResult *pResult, void *pUserData, int C
 	//(void)pSelf->m_pController->CheckTeamBalance();
 }
 
+void CGameContext::ConSetTeamAll(IConsole::IResult *pResult, void *pUserData, int ClientID)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
+	int Team = clamp(pResult->GetInteger(0), -1, 1);
+	
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "moved all clients to team %d", Team);
+	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+	
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+		if(pSelf->m_apPlayers[i])
+			pSelf->m_apPlayers[i]->SetTeam(Team);
+	
+	//(void)pSelf->m_pController->CheckTeamBalance();
+}
+
 void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData, int ClientID)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
@@ -1357,6 +1373,7 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("tune", "si", CFGFLAG_SERVER, ConTuneParam, this, "Modifies tune parameter s to value i", 4);
 	Console()->Register("tune_reset", "", CFGFLAG_SERVER, ConTuneReset, this, "Resets all tuning", 4);
 	Console()->Register("tune_dump", "", CFGFLAG_SERVER, ConTuneDump, this, "Shows all tuning options", 3);
+	Console()->Register("set_team_all", "i", CFGFLAG_SERVER, ConSetTeamAll, this, "", 3);
 
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "Forces the current vote to result in r (Yes/No)", 3);
 	Console()->Register("whisper", "ir", CFGFLAG_SERVER, ConWhisper, this, "Whispers too i with r", 1);

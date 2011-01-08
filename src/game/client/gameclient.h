@@ -56,7 +56,7 @@ class CGameClient : public IGameClient
 	int m_LastNewPredictedTick;
 
 	int64 m_LastSendInfo;
-	
+
 	bool m_DDRaceMsgSent;
 
 	static void ConTeam(IConsole::IResult *pResult, void *pUserData, int ClientID);
@@ -157,7 +157,7 @@ public:
 		CCharacterCore m_Predicted;
 		
 		int m_Score;
-		
+
 		CTeeRenderInfo m_SkinInfo; // this is what the server reports
 		CTeeRenderInfo m_RenderInfo; // this is what we use
 		
@@ -217,6 +217,31 @@ public:
 	class CVoting *m_pVoting;
 	class CScoreboard *m_pScoreboard;
 };
+
+
+inline float HueToRgb(float v1, float v2, float h)
+{
+   if(h < 0.0f) h += 1;
+   if(h > 1.0f) h -= 1;
+   if((6.0f * h) < 1.0f) return v1 + (v2 - v1) * 6.0f * h;
+   if((2.0f * h) < 1.0f) return v2;
+   if((3.0f * h) < 2.0f) return v1 + (v2 - v1) * ((2.0f/3.0f) - h) * 6.0f;
+   return v1;
+}
+
+inline vec3 HslToRgb(vec3 HSL)
+{
+	if(HSL.s == 0.0f)
+		return vec3(HSL.l, HSL.l, HSL.l);
+	else
+	{
+		float v2 = HSL.l < 0.5f ? HSL.l * (1.0f + HSL.s) : (HSL.l+HSL.s) - (HSL.s*HSL.l);
+		float v1 = 2.0f * HSL.l - v2;
+
+		return vec3(HueToRgb(v1, v2, HSL.h + (1.0f/3.0f)), HueToRgb(v1, v2, HSL.h), HueToRgb(v1, v2, HSL.h - (1.0f/3.0f)));
+	}
+}
+
 
 extern const char *Localize(const char *Str);
 

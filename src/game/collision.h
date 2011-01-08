@@ -24,15 +24,19 @@ class CCollision
 		int m_Type[16];
 	};
 
+	//bool IsTileSolid(int x, int y);
+
 public:
 	enum
 	{
 		COLFLAG_SOLID=1,
 		COLFLAG_DEATH=2,
 		COLFLAG_NOHOOK=4,
+		//DDRace
 		COLFLAG_NOLASER=8,
 		COLFLAG_THROUGH=16
 	};
+
 	CCollision();
 	void Dest();
 	void Init(class CLayers *pLayers);
@@ -99,5 +103,7 @@ public:
 	SSwitchers* m_pSwitchers;
 	int m_NumSwitchers;
 };
+
+void ThroughOffset(vec2 Pos0, vec2 Pos1, int *Ox, int *Oy);
 
 #endif

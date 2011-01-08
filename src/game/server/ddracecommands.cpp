@@ -723,17 +723,18 @@ void CGameContext::ConTogglePause(IConsole::IResult *pResult, void *pUserData, i
 			if(pPlayer->m_Last_Pause + pSelf->Server()->TickSpeed() * g_Config.m_SvPauseFrequency <= pSelf->Server()->Tick()) {
 				chr->m_TeamBeforePause = chr->Team();
 				pPlayer->SaveCharacter();
-				pPlayer->SetTeam(-1);
+				pPlayer->SetTeam(TEAM_SPECTATORS);
 				pPlayer->m_InfoSaved = true;
 				pPlayer->m_Last_Pause = pSelf->Server()->Tick();
 			}
 			else
 				pSelf->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "info", "You can\'t pause that often.");
 		}
-		else if(pPlayer->GetTeam()==-1 && pPlayer->m_InfoSaved)
+		else if(pPlayer->GetTeam()==TEAM_SPECTATORS && pPlayer->m_InfoSaved)
 		{
 			pPlayer->m_InfoSaved = false;
 			pPlayer->m_PauseInfo.m_Respawn = true;
+
 			pPlayer->SetTeam('%s');
 			//pPlayer->LoadCharacter();//TODO:Check if this system Works
 		}
@@ -924,4 +925,12 @@ if ( !g_Config.m_SvSlashEmote )
 		}
 	}
 }
+void CGameContext::ConShowOthers(IConsole::IResult *pResult, void *pUserData, int ClientId)
+{
+	CGameContext *pSelf = (CGameContext *)pUserData;
 
+	if(pSelf->m_apPlayers[ClientId]->m_IsUsingDDRaceClient)
+		pSelf->m_apPlayers[ClientId]->m_ShowOthers = !pSelf->m_apPlayers[ClientId]->m_ShowOthers;
+	else
+		pSelf->SendChatTarget(ClientId, "Showing players from other teams is only available with DDRace Client, http://DDRace.info");
+}

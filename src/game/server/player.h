@@ -90,8 +90,9 @@ public:
  		 
    // TODO: clean this up
    int m_Authed;
-   
+
    bool m_IsUsingDDRaceClient;
+   bool m_ShowOthers;
    
    int m_Starttime;  		 
    int m_Refreshtime;  		 
