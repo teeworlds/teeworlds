@@ -289,30 +289,30 @@ void CCharacter::FireWeapon()
 			m_NumObjectsHit = 0;
 			GameServer()->CreateSound(m_Pos, SOUND_HAMMER_FIRE);
 			
-			CCharacter *aEnts[64];
+			CCharacter *apEnts[64];
 			int Hits = 0;
-			int Num = GameServer()->m_World.FindEntities(ProjStartPos, m_ProximityRadius*0.5f, (CEntity**)aEnts, 
+			int Num = GameServer()->m_World.FindEntities(ProjStartPos, m_ProximityRadius*0.5f, (CEntity**)apEnts, 
 			64, NETOBJTYPE_CHARACTER);
 
 			for (int i = 0; i < Num; ++i)
 			{
-				CCharacter *Target = aEnts[i];
+				CCharacter *pTarget = apEnts[i];
 				
 				//for race mod or any other mod, which needs hammer hits through the wall remove second condition
-				if ((Target == this) || GameServer()->Collision()->IntersectLine(ProjStartPos, Target->m_Pos, NULL, NULL))
+				if ((pTarget == this) || GameServer()->Collision()->IntersectLine(ProjStartPos, pTarget->m_Pos, NULL, NULL))
 					continue;
 
 				// set his velocity to fast upward (for now)
 				GameServer()->CreateHammerHit(m_Pos);
-				aEnts[i]->TakeDamage(vec2(0.f, -1.f), g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage, m_pPlayer->GetCID(), m_ActiveWeapon);
+				pTarget->TakeDamage(vec2(0.f, -1.f), g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage, m_pPlayer->GetCID(), m_ActiveWeapon);
 				
 				vec2 Dir;
-				if (length(Target->m_Pos - m_Pos) > 0.0f)
-					Dir = normalize(Target->m_Pos - m_Pos);
+				if (length(pTarget->m_Pos - m_Pos) > 0.0f)
+					Dir = normalize(pTarget->m_Pos - m_Pos);
 				else
 					Dir = vec2(0.f, -1.f);
 					
-				Target->m_Core.m_Vel += normalize(Dir + vec2(0.f, -1.1f)) * 10.0f;
+				pTarget->m_Core.m_Vel += normalize(Dir + vec2(0.f, -1.1f)) * 10.0f;
 				Hits++;
 			}
 			
@@ -324,7 +324,7 @@ void CCharacter::FireWeapon()
 
 		case WEAPON_GUN:
 		{
-			CProjectile *Proj = new CProjectile(GameWorld(), WEAPON_GUN,
+			CProjectile *pProj = new CProjectile(GameWorld(), WEAPON_GUN,
 				m_pPlayer->GetCID(),
 				ProjStartPos,
 				Direction,
@@ -333,7 +333,7 @@ void CCharacter::FireWeapon()
 				
 			// pack the Projectile and send it to the client Directly
 			CNetObj_Projectile p;
-			Proj->FillInfo(&p);
+			pProj->FillInfo(&p);
 			
 			CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
 			Msg.AddInt(1);
@@ -359,7 +359,7 @@ void CCharacter::FireWeapon()
 				a += Spreading[i+2];
 				float v = 1-(absolute(i)/(float)ShotSpread);
 				float Speed = mix((float)GameServer()->Tuning()->m_ShotgunSpeeddiff, 1.0f, v);
-				CProjectile *Proj = new CProjectile(GameWorld(), WEAPON_SHOTGUN,
+				CProjectile *pProj = new CProjectile(GameWorld(), WEAPON_SHOTGUN,
 					m_pPlayer->GetCID(),
 					ProjStartPos,
 					vec2(cosf(a), sinf(a))*Speed,
@@ -368,7 +368,7 @@ void CCharacter::FireWeapon()
 					
 				// pack the Projectile and send it to the client Directly
 				CNetObj_Projectile p;
-				Proj->FillInfo(&p);
+				pProj->FillInfo(&p);
 				
 				for(unsigned i = 0; i < sizeof(CNetObj_Projectile)/sizeof(int); i++)
 					Msg.AddInt(((int *)&p)[i]);
@@ -381,7 +381,7 @@ void CCharacter::FireWeapon()
 
 		case WEAPON_GRENADE:
 		{
-			CProjectile *Proj = new CProjectile(GameWorld(), WEAPON_GRENADE,
+			CProjectile *pProj = new CProjectile(GameWorld(), WEAPON_GRENADE,
 				m_pPlayer->GetCID(),
 				ProjStartPos,
 				Direction,
@@ -390,7 +390,7 @@ void CCharacter::FireWeapon()
 
 			// pack the Projectile and send it to the client Directly
 			CNetObj_Projectile p;
-			Proj->FillInfo(&p);
+			pProj->FillInfo(&p);
 			
 			CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
 			Msg.AddInt(1);
