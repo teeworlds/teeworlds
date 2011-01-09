@@ -3,6 +3,7 @@
 #ifndef GAME_CLIENT_COMPONENTS_GHOST_H
 #define GAME_CLIENT_COMPONENTS_GHOST_H
 
+#include <base/tl/array.h>
 #include <game/client/component.h>
 
 class CGhost : public CComponent
