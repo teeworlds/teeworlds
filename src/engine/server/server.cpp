@@ -1507,12 +1507,12 @@ void CServer::ConBans(IConsole::IResult *pResult, void *pUser, int ClientId)
 		
 		if(Info.m_Expires == -1)
 		{
-			str_format(aBuf, sizeof(aBuf), "#%d %d.%d.%d.%d for life name'%s'", i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3] , pServer->m_aClients[i].m_aName);
+			str_format(aBuf, sizeof(aBuf), "#%d %d.%d.%d.%d for life.", i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3]);
 		}
 		else
 		{
 			unsigned t = Info.m_Expires - Now;
-			str_format(aBuf, sizeof(aBuf), "#%d %d.%d.%d.%d for %d minutes and %d seconds name %s", i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], t/60, t%60, pServer->m_aClients[i].m_aName);
+			str_format(aBuf, sizeof(aBuf), "#%d %d.%d.%d.%d for %d minutes and %d seconds.", i, Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3], t/60, t%60);
 		}
 		pServer->Console()->PrintResponse(IConsole::OUTPUT_LEVEL_STANDARD, "Server", aBuf);
 	}
