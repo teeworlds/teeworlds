@@ -697,6 +697,9 @@ Type
 UI Color
 == Couleur du menu
 
+Unable to delete the demo
+== Impossible de supprimer la démo
+
 Up
 == Haut
 
@@ -832,9 +835,6 @@ Envelopes
 == 
 
 Green value of the envelope
-== 
-
-HD
 == 
 
 Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate.
