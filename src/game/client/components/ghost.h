@@ -38,7 +38,7 @@ private:
 	bool m_Recording;
 	bool m_Rendering;
 	int m_RaceState;
-	float m_PrevTime;
+	float m_BestTime;
 	bool m_NewRecord;
 
 	enum

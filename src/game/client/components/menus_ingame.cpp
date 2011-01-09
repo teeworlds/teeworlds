@@ -763,7 +763,6 @@ void CMenus::RenderGhost(CUIRect MainView)
 		for(int c = 0; c < NumCols; c++)
 		{
 			CUIRect Button;
-			char aTemp[64];
 			Button.x = s_aCols[c].m_Rect.x;
 			Button.y = Row.y;
 			Button.h = Row.h;

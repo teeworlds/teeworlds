@@ -36,7 +36,7 @@ CGhost::CGhost()
 	m_Rendering = false;
 	m_RaceState = RACE_NONE;
 	m_NewRecord = false;
-	m_PrevTime = -1;
+	m_BestTime = -1;
 	m_StartRenderTick = -1;
 	m_StartRecordTick = -1;
 }
@@ -49,7 +49,7 @@ void CGhost::AddInfos(CNetObj_Character Player)
 	// Just to be sure it doesnt eat too much memory, the first test should be enough anyway
 	if((Client()->GameTick()-m_StartRecordTick) > Client()->GameTickSpeed()*60*10 || m_CurPath.size() > 50*15*60)
 	{
-		dbg_msg("ghost","10 minutes elapsed. Stopping ghost record");
+		dbg_msg("ghost", "10 minutes elapsed. Stopping ghost record");
 		StopRecord();
 		m_CurPath.clear();
 		return;
@@ -68,7 +68,7 @@ void CGhost::OnRender()
 	if(m_RaceState != RACE_STARTED && ((m_pClient->Collision()->GetCollisionRace(m_pClient->Collision()->GetIndex(m_pClient->m_PredictedPrevChar.m_Pos, m_pClient->m_LocalCharacterPos)) == TILE_BEGIN) ||
 		(m_pClient->m_IsFastCap && m_pClient->m_FlagPos != vec2(-1, -1) && distance(m_pClient->m_LocalCharacterPos, m_pClient->m_FlagPos) < 32)))
 	{
-		//dbg_msg("ghost","race started");
+		//dbg_msg("ghost", "race started");
 		m_RaceState = RACE_STARTED;
 		StartRender();
 		StartRecord();
@@ -84,9 +84,9 @@ void CGhost::OnRender()
 				break;
 			}
 					
-		if(m_NewRecord || OwnIndex < 0)
+		if(m_NewRecord)
 		{
-			//dbg_msg("ghost","new path saved");
+			//dbg_msg("ghost", "new path saved"); 
 			m_NewRecord = false;
 			CGhostList Ghost;
 			Ghost.m_ID = -1;
@@ -119,7 +119,7 @@ void CGhost::OnRender()
 
 	if(m_lGhosts.size() == 0 || m_CurPos < 0)
 	{
-		//dbg_msg("ghost","Ghost path done");
+		//dbg_msg("ghost", "Ghost path done");
 		m_Rendering = false;
 		return;
 	}
@@ -311,7 +311,7 @@ void CGhost::Save()
 	
 	char aFilename[256];
 	char aBuf[256];
-	str_format(aFilename, sizeof(aFilename), "%s_%s_%.3f_%08x.gho", Client()->GetCurrentMap(), aName, m_PrevTime, Client()->GetCurrentMapCrc());
+	str_format(aFilename, sizeof(aFilename), "%s_%s_%.3f_%08x.gho", Client()->GetCurrentMap(), aName, m_BestTime, Client()->GetCurrentMapCrc());
 	str_format(aBuf, sizeof(aBuf), "ghosts/%s", aFilename);
 	IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 	if(!File)
@@ -328,7 +328,7 @@ void CGhost::Save()
 	Header.m_aCrc[1] = (Crc>>16)&0xff;
 	Header.m_aCrc[2] = (Crc>>8)&0xff;
 	Header.m_aCrc[3] = (Crc)&0xff;
-	Header.m_Time = m_PrevTime;
+	Header.m_Time = m_BestTime;
 	io_write(File, &Header, sizeof(Header));
 	
 	// write client info
@@ -376,7 +376,7 @@ void CGhost::Save()
 			str_format(aFile, sizeof(aFile), "ghosts/%s", TmpItem.m_aFilename);
 			Storage()->RemoveFile(aFile, IStorage::TYPE_SAVE);
 			m_pClient->m_pMenus->m_lGhosts.remove_index(i);
-			break; // TODO remove other ghosts
+			break; // TODO: remove other ghosts?
 		}
 	}
 	
@@ -384,7 +384,7 @@ void CGhost::Save()
 	CMenus::CGhostItem Item;
 	str_copy(Item.m_aFilename, aFilename, sizeof(Item.m_aFilename));
 	str_copy(Item.m_aPlayer, Header.m_aOwner, sizeof(Item.m_aPlayer));
-	Item.m_Time = m_PrevTime;
+	Item.m_Time = m_BestTime;
 	Item.m_Active = true;
 	Item.m_ID = -1;
 	m_pClient->m_pMenus->m_lGhosts.add(Item);
@@ -443,7 +443,8 @@ void CGhost::Load(const char* pFilename, int ID)
 		return;
 	}
 	
-	m_PrevTime = Header.m_Time;
+	if(ID == -1)
+		m_BestTime = Header.m_Time;
 	
 	// create ghost
 	CGhostList Ghost;
@@ -487,7 +488,7 @@ void CGhost::Load(const char* pFilename, int ID)
 		}
 		
 		CNetObj_Character *Tmp = (CNetObj_Character*)aData;
-		for(int i = 0; i < Size/sizeof(CNetObj_Character); i++)
+		for(int i = 0; i < (signed)(Size/sizeof(CNetObj_Character)); i++)
 		{
 			Ghost.m_BestPath.add(*Tmp);
 			Tmp++;
@@ -565,15 +566,13 @@ void CGhost::OnMessage(int MsgType, void *pRawMsg)
 			if(!str_comp(aName, m_pClient->m_aClients[m_pClient->m_Snap.m_LocalCid].m_aName) && sscanf(pMessage, " finished in: %d minute(s) %f", &Minutes, &Seconds) == 2)
 			{
 				m_RaceState = RACE_FINISHED;
-				/*if(m_PrevTime != -1)
-					dbg_msg("ghost","Finished, ghost time : %f", m_PrevTime);*/
 				if(m_Recording)
 				{
 					float CurTime = Minutes*60 + Seconds;
-					if(CurTime < m_PrevTime || m_PrevTime == -1)
+					if(CurTime < m_BestTime || m_BestTime == -1)
 					{
 						m_NewRecord = true;
-						m_PrevTime = CurTime;
+						m_BestTime = CurTime;
 					}
 				}
 			}
@@ -594,7 +593,7 @@ void CGhost::OnReset()
 void CGhost::OnMapLoad()
 {
 	OnReset();
-	m_PrevTime = -1;
+	m_BestTime = -1;
 	m_lGhosts.clear();
 	m_pClient->m_pMenus->GhostlistPopulate();
 }
