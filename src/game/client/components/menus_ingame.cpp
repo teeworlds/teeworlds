@@ -588,9 +588,6 @@ void CMenus::GhostlistPopulate()
 void CMenus::RenderGhost(CUIRect MainView)
 {
 	// render background
-	CUIRect TabBar;
-	
-	// MainView.VSplitRight(120.0f, &MainView, &TabBar);
 	RenderTools()->DrawUIRect(&MainView, ms_ColorTabbarActive, CUI::CORNER_B|CUI::CORNER_TL, 10.0f);
 	
 	MainView.HSplitTop(10.0f, 0, &MainView);
