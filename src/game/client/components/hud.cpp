@@ -49,7 +49,14 @@ void CHud::RenderGameTimer()
 		str_format(Buf, sizeof(Buf), "%d:%02d", Time/60, Time%60);
 		float FontSize = 10.0f;
 		float w = TextRender()->TextWidth(0, FontSize, Buf, -1);
+		// last 60 sec red, last 10 sec blink
+		if(m_pClient->m_Snap.m_pGameobj->m_TimeLimit && Time <= 60)
+		{
+			float Alpha = Time <= 10 && (2*time_get()/time_freq()) % 2 ? 0.5f : 1.0f;
+			TextRender()->TextColor(1.0f, 0.25f, 0.25f, Alpha);
+		}
 		TextRender()->Text(0, Half-w/2, 2, FontSize, Buf, -1);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 }
 
