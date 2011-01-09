@@ -130,8 +130,9 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 	if(CurrentTick == TotalTicks)
 	{
-	DemoPlayer()->Pause();
-	DemoPlayer()->SetPos(0);
+		m_pClient->OnReset();
+		DemoPlayer()->Pause();
+		DemoPlayer()->SetPos(0);
 	}
 
 	if(m_MenuActive)
@@ -160,6 +161,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		static int s_ResetButton = 0;
 		if(DoButton_DemoPlayer_Sprite(&s_ResetButton, SPRITE_DEMOBUTTON_STOP, false, &Button))
 		{
+			m_pClient->OnReset();
 			DemoPlayer()->Pause(); 
 			DemoPlayer()->SetPos(0);
 		}
